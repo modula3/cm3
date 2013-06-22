@@ -11,7 +11,6 @@ MODULE QtPaletteRaw;
 
 
 
-REVEAL
-QPalette = UNTRACED BRANDED REF RECORD (*Dummy*) END;
+REVEAL QPalette = UNTRACED BRANDED REF RECORD (*Dummy*) END;
 BEGIN
 END QtPaletteRaw.

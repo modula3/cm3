@@ -15,235 +15,166 @@ IMPORT Ctypes AS C;
 
 
 <* EXTERNAL New_QTabWidget0 *>
-PROCEDURE New_QTabWidget0 ( parent: ADDRESS;
-): QTabWidget;
+PROCEDURE New_QTabWidget0 (parent: ADDRESS; ): QTabWidget;
 
 <* EXTERNAL New_QTabWidget1 *>
 PROCEDURE New_QTabWidget1 (): QTabWidget;
 
 <* EXTERNAL Delete_QTabWidget *>
-PROCEDURE Delete_QTabWidget ( self: QTabWidget;
-);
+PROCEDURE Delete_QTabWidget (self: QTabWidget; );
 
 <* EXTERNAL QTabWidget_addTab *>
-PROCEDURE QTabWidget_addTab ( self: QTabWidget;
- widget, arg3: ADDRESS;
-): C.int;
+PROCEDURE QTabWidget_addTab (self: QTabWidget; widget, arg3: ADDRESS; ):
+  C.int;
 
 <* EXTERNAL QTabWidget_addTab1 *>
-PROCEDURE QTabWidget_addTab1 ( self: QTabWidget;
- widget, icon, label: ADDRESS;
-): C.int;
+PROCEDURE QTabWidget_addTab1
+  (self: QTabWidget; widget, icon, label: ADDRESS; ): C.int;
 
 <* EXTERNAL QTabWidget_insertTab *>
-PROCEDURE QTabWidget_insertTab ( self: QTabWidget;
-index: C.int;
- widget, arg4: ADDRESS;
-): C.int;
+PROCEDURE QTabWidget_insertTab
+  (self: QTabWidget; index: C.int; widget, arg4: ADDRESS; ): C.int;
 
 <* EXTERNAL QTabWidget_insertTab1 *>
-PROCEDURE QTabWidget_insertTab1 ( self: QTabWidget;
-index: C.int;
- widget, icon, label: ADDRESS;
-): C.int;
+PROCEDURE QTabWidget_insertTab1
+  (self: QTabWidget; index: C.int; widget, icon, label: ADDRESS; ): C.int;
 
 <* EXTERNAL QTabWidget_removeTab *>
-PROCEDURE QTabWidget_removeTab ( self: QTabWidget;
-index: C.int;
-);
+PROCEDURE QTabWidget_removeTab (self: QTabWidget; index: C.int; );
 
 <* EXTERNAL QTabWidget_isTabEnabled *>
-PROCEDURE QTabWidget_isTabEnabled ( self: QTabWidget;
-index: C.int;
-): BOOLEAN;
+PROCEDURE QTabWidget_isTabEnabled (self: QTabWidget; index: C.int; ):
+  BOOLEAN;
 
 <* EXTERNAL QTabWidget_setTabEnabled *>
-PROCEDURE QTabWidget_setTabEnabled ( self: QTabWidget;
-index: C.int;
-arg3: BOOLEAN;
-);
+PROCEDURE QTabWidget_setTabEnabled
+  (self: QTabWidget; index: C.int; arg3: BOOLEAN; );
 
 <* EXTERNAL QTabWidget_tabText *>
-PROCEDURE QTabWidget_tabText ( self: QTabWidget;
-index: C.int;
-): ADDRESS;
+PROCEDURE QTabWidget_tabText (self: QTabWidget; index: C.int; ): ADDRESS;
 
 <* EXTERNAL QTabWidget_setTabText *>
-PROCEDURE QTabWidget_setTabText ( self: QTabWidget;
-index: C.int;
- arg3: ADDRESS;
-);
+PROCEDURE QTabWidget_setTabText
+  (self: QTabWidget; index: C.int; arg3: ADDRESS; );
 
 <* EXTERNAL QTabWidget_tabIcon *>
-PROCEDURE QTabWidget_tabIcon ( self: QTabWidget;
-index: C.int;
-): ADDRESS;
+PROCEDURE QTabWidget_tabIcon (self: QTabWidget; index: C.int; ): ADDRESS;
 
 <* EXTERNAL QTabWidget_setTabIcon *>
-PROCEDURE QTabWidget_setTabIcon ( self: QTabWidget;
-index: C.int;
- icon: ADDRESS;
-);
+PROCEDURE QTabWidget_setTabIcon
+  (self: QTabWidget; index: C.int; icon: ADDRESS; );
 
 <* EXTERNAL QTabWidget_setTabToolTip *>
-PROCEDURE QTabWidget_setTabToolTip ( self: QTabWidget;
-index: C.int;
- tip: ADDRESS;
-);
+PROCEDURE QTabWidget_setTabToolTip
+  (self: QTabWidget; index: C.int; tip: ADDRESS; );
 
 <* EXTERNAL QTabWidget_tabToolTip *>
-PROCEDURE QTabWidget_tabToolTip ( self: QTabWidget;
-index: C.int;
-): ADDRESS;
+PROCEDURE QTabWidget_tabToolTip (self: QTabWidget; index: C.int; ):
+  ADDRESS;
 
 <* EXTERNAL QTabWidget_setTabWhatsThis *>
-PROCEDURE QTabWidget_setTabWhatsThis ( self: QTabWidget;
-index: C.int;
- text: ADDRESS;
-);
+PROCEDURE QTabWidget_setTabWhatsThis
+  (self: QTabWidget; index: C.int; text: ADDRESS; );
 
 <* EXTERNAL QTabWidget_tabWhatsThis *>
-PROCEDURE QTabWidget_tabWhatsThis ( self: QTabWidget;
-index: C.int;
-): ADDRESS;
+PROCEDURE QTabWidget_tabWhatsThis (self: QTabWidget; index: C.int; ):
+  ADDRESS;
 
 <* EXTERNAL QTabWidget_currentIndex *>
-PROCEDURE QTabWidget_currentIndex ( self: QTabWidget;
-): C.int;
+PROCEDURE QTabWidget_currentIndex (self: QTabWidget; ): C.int;
 
 <* EXTERNAL QTabWidget_currentWidget *>
-PROCEDURE QTabWidget_currentWidget ( self: QTabWidget;
-): ADDRESS;
+PROCEDURE QTabWidget_currentWidget (self: QTabWidget; ): ADDRESS;
 
 <* EXTERNAL QTabWidget_widget *>
-PROCEDURE QTabWidget_widget ( self: QTabWidget;
-index: C.int;
-): ADDRESS;
+PROCEDURE QTabWidget_widget (self: QTabWidget; index: C.int; ): ADDRESS;
 
 <* EXTERNAL QTabWidget_indexOf *>
-PROCEDURE QTabWidget_indexOf ( self: QTabWidget;
- widget: ADDRESS;
-): C.int;
+PROCEDURE QTabWidget_indexOf (self: QTabWidget; widget: ADDRESS; ): C.int;
 
 <* EXTERNAL QTabWidget_count *>
-PROCEDURE QTabWidget_count ( self: QTabWidget;
-): C.int;
+PROCEDURE QTabWidget_count (self: QTabWidget; ): C.int;
 
 <* EXTERNAL QTabWidget_tabPosition *>
-PROCEDURE QTabWidget_tabPosition ( self: QTabWidget;
-): C.int;
+PROCEDURE QTabWidget_tabPosition (self: QTabWidget; ): C.int;
 
 <* EXTERNAL QTabWidget_setTabPosition *>
-PROCEDURE QTabWidget_setTabPosition ( self: QTabWidget;
-arg2: C.int;
-);
+PROCEDURE QTabWidget_setTabPosition (self: QTabWidget; arg2: C.int; );
 
 <* EXTERNAL QTabWidget_tabsClosable *>
-PROCEDURE QTabWidget_tabsClosable ( self: QTabWidget;
-): BOOLEAN;
+PROCEDURE QTabWidget_tabsClosable (self: QTabWidget; ): BOOLEAN;
 
 <* EXTERNAL QTabWidget_setTabsClosable *>
-PROCEDURE QTabWidget_setTabsClosable ( self: QTabWidget;
-closeable: BOOLEAN;
-);
+PROCEDURE QTabWidget_setTabsClosable
+  (self: QTabWidget; closeable: BOOLEAN; );
 
 <* EXTERNAL QTabWidget_isMovable *>
-PROCEDURE QTabWidget_isMovable ( self: QTabWidget;
-): BOOLEAN;
+PROCEDURE QTabWidget_isMovable (self: QTabWidget; ): BOOLEAN;
 
 <* EXTERNAL QTabWidget_setMovable *>
-PROCEDURE QTabWidget_setMovable ( self: QTabWidget;
-movable: BOOLEAN;
-);
+PROCEDURE QTabWidget_setMovable (self: QTabWidget; movable: BOOLEAN; );
 
 <* EXTERNAL QTabWidget_tabShape *>
-PROCEDURE QTabWidget_tabShape ( self: QTabWidget;
-): C.int;
+PROCEDURE QTabWidget_tabShape (self: QTabWidget; ): C.int;
 
 <* EXTERNAL QTabWidget_setTabShape *>
-PROCEDURE QTabWidget_setTabShape ( self: QTabWidget;
-s: C.int;
-);
+PROCEDURE QTabWidget_setTabShape (self: QTabWidget; s: C.int; );
 
 <* EXTERNAL QTabWidget_sizeHint *>
-PROCEDURE QTabWidget_sizeHint ( self: QTabWidget;
-): ADDRESS;
+PROCEDURE QTabWidget_sizeHint (self: QTabWidget; ): ADDRESS;
 
 <* EXTERNAL QTabWidget_minimumSizeHint *>
-PROCEDURE QTabWidget_minimumSizeHint ( self: QTabWidget;
-): ADDRESS;
+PROCEDURE QTabWidget_minimumSizeHint (self: QTabWidget; ): ADDRESS;
 
 <* EXTERNAL QTabWidget_setCornerWidget *>
-PROCEDURE QTabWidget_setCornerWidget ( self: QTabWidget;
- w: ADDRESS;
-corner: C.int;
-);
+PROCEDURE QTabWidget_setCornerWidget
+  (self: QTabWidget; w: ADDRESS; corner: C.int; );
 
 <* EXTERNAL QTabWidget_setCornerWidget1 *>
-PROCEDURE QTabWidget_setCornerWidget1 ( self: QTabWidget;
- w: ADDRESS;
-);
+PROCEDURE QTabWidget_setCornerWidget1 (self: QTabWidget; w: ADDRESS; );
 
 <* EXTERNAL QTabWidget_cornerWidget *>
-PROCEDURE QTabWidget_cornerWidget ( self: QTabWidget;
-corner: C.int;
-): ADDRESS;
+PROCEDURE QTabWidget_cornerWidget (self: QTabWidget; corner: C.int; ):
+  ADDRESS;
 
 <* EXTERNAL QTabWidget_cornerWidget1 *>
-PROCEDURE QTabWidget_cornerWidget1 ( self: QTabWidget;
-): ADDRESS;
+PROCEDURE QTabWidget_cornerWidget1 (self: QTabWidget; ): ADDRESS;
 
 <* EXTERNAL QTabWidget_elideMode *>
-PROCEDURE QTabWidget_elideMode ( self: QTabWidget;
-): C.int;
+PROCEDURE QTabWidget_elideMode (self: QTabWidget; ): C.int;
 
 <* EXTERNAL QTabWidget_setElideMode *>
-PROCEDURE QTabWidget_setElideMode ( self: QTabWidget;
-arg2: C.int;
-);
+PROCEDURE QTabWidget_setElideMode (self: QTabWidget; arg2: C.int; );
 
 <* EXTERNAL QTabWidget_iconSize *>
-PROCEDURE QTabWidget_iconSize ( self: QTabWidget;
-): ADDRESS;
+PROCEDURE QTabWidget_iconSize (self: QTabWidget; ): ADDRESS;
 
 <* EXTERNAL QTabWidget_setIconSize *>
-PROCEDURE QTabWidget_setIconSize ( self: QTabWidget;
- size: ADDRESS;
-);
+PROCEDURE QTabWidget_setIconSize (self: QTabWidget; size: ADDRESS; );
 
 <* EXTERNAL QTabWidget_usesScrollButtons *>
-PROCEDURE QTabWidget_usesScrollButtons ( self: QTabWidget;
-): BOOLEAN;
+PROCEDURE QTabWidget_usesScrollButtons (self: QTabWidget; ): BOOLEAN;
 
 <* EXTERNAL QTabWidget_setUsesScrollButtons *>
-PROCEDURE QTabWidget_setUsesScrollButtons ( self: QTabWidget;
-useButtons: BOOLEAN;
-);
+PROCEDURE QTabWidget_setUsesScrollButtons
+  (self: QTabWidget; useButtons: BOOLEAN; );
 
 <* EXTERNAL QTabWidget_documentMode *>
-PROCEDURE QTabWidget_documentMode ( self: QTabWidget;
-): BOOLEAN;
+PROCEDURE QTabWidget_documentMode (self: QTabWidget; ): BOOLEAN;
 
 <* EXTERNAL QTabWidget_setDocumentMode *>
-PROCEDURE QTabWidget_setDocumentMode ( self: QTabWidget;
-set: BOOLEAN;
-);
+PROCEDURE QTabWidget_setDocumentMode (self: QTabWidget; set: BOOLEAN; );
 
 <* EXTERNAL QTabWidget_clear *>
-PROCEDURE QTabWidget_clear ( self: QTabWidget;
-);
+PROCEDURE QTabWidget_clear (self: QTabWidget; );
 
 <* EXTERNAL QTabWidget_setCurrentIndex *>
-PROCEDURE QTabWidget_setCurrentIndex ( self: QTabWidget;
-index: C.int;
-);
+PROCEDURE QTabWidget_setCurrentIndex (self: QTabWidget; index: C.int; );
 
 <* EXTERNAL QTabWidget_setCurrentWidget *>
-PROCEDURE QTabWidget_setCurrentWidget ( self: QTabWidget;
- widget: ADDRESS;
-);
+PROCEDURE QTabWidget_setCurrentWidget
+  (self: QTabWidget; widget: ADDRESS; );
 
-TYPE
-QTabWidget = ADDRESS;
+TYPE QTabWidget = ADDRESS;
 
 END QtTabWidgetRaw.

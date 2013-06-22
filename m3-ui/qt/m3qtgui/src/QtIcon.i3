@@ -11,167 +11,97 @@ INTERFACE QtIcon;
 FROM QtStringList IMPORT QStringList;
 FROM QtSize IMPORT QSize;
 FROM QtPixmap IMPORT QPixmap;
-FROM QGuiStubs IMPORT QIconEngineV2,QIconEngine,QPainter;
+FROM QGuiStubs IMPORT QIconEngineV2, QIconEngine, QPainter;
 FROM QtRect IMPORT QRect;
 FROM QtNamespace IMPORT AlignmentFlag;
 
 
 
-TYPE
-  T = QIcon;
+TYPE T = QIcon;
 
 
-TYPE (* Enum Mode *)
-  Mode = {
- Normal,
- Disabled,
- Active,
- Selected};
+TYPE                             (* Enum Mode *)
+  Mode = {Normal, Disabled, Active, Selected};
 
-TYPE (* Enum State *)
-  State = {
- On,
- Off};
-PROCEDURE FromTheme ( name: TEXT;
- fallback: QIcon;
-): QIcon;
+TYPE                             (* Enum State *)
+  State = {On, Off};
+PROCEDURE FromTheme (name: TEXT; fallback: QIcon; ): QIcon;
 
-PROCEDURE FromTheme1 ( name: TEXT;
-): QIcon;
+PROCEDURE FromTheme1 (name: TEXT; ): QIcon;
 
-PROCEDURE HasThemeIcon ( name: TEXT;
-): BOOLEAN;
+PROCEDURE HasThemeIcon (name: TEXT; ): BOOLEAN;
 
 PROCEDURE ThemeSearchPaths (): QStringList;
 
-PROCEDURE SetThemeSearchPaths ( searchpath: QStringList;
-);
+PROCEDURE SetThemeSearchPaths (searchpath: QStringList; );
 
 PROCEDURE ThemeName (): TEXT;
 
-PROCEDURE SetThemeName ( path: TEXT;
-);
+PROCEDURE SetThemeName (path: TEXT; );
 
 
 TYPE
-QIcon <: QIconPublic;
-QIconPublic =
- BRANDED OBJECT
-cxxObj:ADDRESS;
-METHODS
-init_0 () : QIcon;
-init_1 ( pixmap: QPixmap;
-) : QIcon;
-init_2 ( other: QIcon;
-) : QIcon;
-init_3 ( fileName: TEXT;
-) : QIcon;
-init_4 ( engine: QIconEngine;
-) : QIcon;
-init_5 ( engine: QIconEngineV2;
-) : QIcon;
-pixmap( size: QSize;
-mode: Mode;
-state: State;
-): QPixmap;
-pixmap1( size: QSize;
-mode: Mode;
-): QPixmap;
-pixmap2( size: QSize;
-): QPixmap;
-pixmap3(w, h: INTEGER;
-mode: Mode;
-state: State;
-): QPixmap;
-pixmap4(w, h: INTEGER;
-mode: Mode;
-): QPixmap;
-pixmap5(w, h: INTEGER;
-): QPixmap;
-pixmap6(extent: INTEGER;
-mode: Mode;
-state: State;
-): QPixmap;
-pixmap7(extent: INTEGER;
-mode: Mode;
-): QPixmap;
-pixmap8(extent: INTEGER;
-): QPixmap;
-actualSize( size: QSize;
-mode: Mode;
-state: State;
-): QSize;
-actualSize1( size: QSize;
-mode: Mode;
-): QSize;
-actualSize2( size: QSize;
-): QSize;
-paint( painter: QPainter;
- rect: QRect;
-alignment: AlignmentFlag;
-mode: Mode;
-state: State;
-);
-paint1( painter: QPainter;
- rect: QRect;
-alignment: AlignmentFlag;
-mode: Mode;
-);
-paint2( painter: QPainter;
- rect: QRect;
-alignment: AlignmentFlag;
-);
-paint3( painter: QPainter;
- rect: QRect;
-);
-paint4( painter: QPainter;
-x, y, w, h: INTEGER;
-alignment: AlignmentFlag;
-mode: Mode;
-state: State;
-);
-paint5( painter: QPainter;
-x, y, w, h: INTEGER;
-alignment: AlignmentFlag;
-mode: Mode;
-);
-paint6( painter: QPainter;
-x, y, w, h: INTEGER;
-alignment: AlignmentFlag;
-);
-paint7( painter: QPainter;
-x, y, w, h: INTEGER;
-);
-isNull(): BOOLEAN;
-isDetached(): BOOLEAN;
-detach();
-serialNumber(): INTEGER;
-cacheKey(): CARDINAL;
-addPixmap( pixmap: QPixmap;
-mode: Mode;
-state: State;
-);
-addPixmap1( pixmap: QPixmap;
-mode: Mode;
-);
-addPixmap2( pixmap: QPixmap;
-);
-addFile( fileName: TEXT;
- size: QSize;
-mode: Mode;
-state: State;
-);
-addFile1( fileName: TEXT;
- size: QSize;
-mode: Mode;
-);
-addFile2( fileName: TEXT;
- size: QSize;
-);
-addFile3( fileName: TEXT;
-);
-destroyCxx();
-END;
+  QIcon <: QIconPublic;
+  QIconPublic =
+    BRANDED OBJECT
+      cxxObj: ADDRESS;
+    METHODS
+      init_0      (): QIcon;
+      init_1      (pixmap: QPixmap; ): QIcon;
+      init_2      (other: QIcon; ): QIcon;
+      init_3      (fileName: TEXT; ): QIcon;
+      init_4      (engine: QIconEngine; ): QIcon;
+      init_5      (engine: QIconEngineV2; ): QIcon;
+      pixmap      (size: QSize; mode: Mode; state: State; ): QPixmap;
+      pixmap1     (size: QSize; mode: Mode; ): QPixmap;
+      pixmap2     (size: QSize; ): QPixmap;
+      pixmap3     (w, h: INTEGER; mode: Mode; state: State; ): QPixmap;
+      pixmap4     (w, h: INTEGER; mode: Mode; ): QPixmap;
+      pixmap5     (w, h: INTEGER; ): QPixmap;
+      pixmap6     (extent: INTEGER; mode: Mode; state: State; ): QPixmap;
+      pixmap7     (extent: INTEGER; mode: Mode; ): QPixmap;
+      pixmap8     (extent: INTEGER; ): QPixmap;
+      actualSize  (size: QSize; mode: Mode; state: State; ): QSize;
+      actualSize1 (size: QSize; mode: Mode; ): QSize;
+      actualSize2 (size: QSize; ): QSize;
+      paint (painter  : QPainter;
+             rect     : QRect;
+             alignment: AlignmentFlag;
+             mode     : Mode;
+             state    : State;         );
+      paint1 (painter  : QPainter;
+              rect     : QRect;
+              alignment: AlignmentFlag;
+              mode     : Mode;          );
+      paint2 (painter: QPainter; rect: QRect; alignment: AlignmentFlag; );
+      paint3 (painter: QPainter; rect: QRect; );
+      paint4 (painter   : QPainter;
+              x, y, w, h: INTEGER;
+              alignment : AlignmentFlag;
+              mode      : Mode;
+              state     : State;         );
+      paint5 (painter   : QPainter;
+              x, y, w, h: INTEGER;
+              alignment : AlignmentFlag;
+              mode      : Mode;          );
+      paint6 (painter   : QPainter;
+              x, y, w, h: INTEGER;
+              alignment : AlignmentFlag; );
+      paint7       (painter: QPainter; x, y, w, h: INTEGER; );
+      isNull       (): BOOLEAN;
+      isDetached   (): BOOLEAN;
+      detach       ();
+      serialNumber (): INTEGER;
+      cacheKey     (): CARDINAL;
+      addPixmap    (pixmap: QPixmap; mode: Mode; state: State; );
+      addPixmap1   (pixmap: QPixmap; mode: Mode; );
+      addPixmap2   (pixmap: QPixmap; );
+      addFile    (fileName: TEXT; size: QSize; mode: Mode; state: State; );
+      addFile1   (fileName: TEXT; size: QSize; mode: Mode; );
+      addFile2   (fileName: TEXT; size: QSize; );
+      addFile3   (fileName: TEXT; );
+      destroyCxx ();
+    END;
 
 
 END QtIcon.

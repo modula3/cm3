@@ -16,7 +16,8 @@ FROM QtStatusBar IMPORT QStatusBar;
 FROM QtMenu IMPORT QMenu;
 FROM QtPoint IMPORT QPoint;
 FROM QtDockWidget IMPORT QDockWidget;
-FROM QtNamespace IMPORT WindowTypes,Corner,ToolBarArea,Orientation,DockWidgetArea,ToolButtonStyle;
+FROM QtNamespace IMPORT WindowTypes, Corner, ToolBarArea, Orientation,
+                        DockWidgetArea, ToolButtonStyle;
 FROM QtToolBar IMPORT QToolBar;
 
 
@@ -25,121 +26,79 @@ TYPE
   DockOptions = INTEGER;
 
 
-CONST
-QT_NO_TABWIDGET = 1;
+CONST QT_NO_TABWIDGET = 1;
 
-CONST (* Enum DockOption *)
-  AnimatedDocks = 1;
+CONST                            (* Enum DockOption *)
+  AnimatedDocks    = 1;
   AllowNestedDocks = 2;
   AllowTabbedDocks = 4;
   ForceTabbedDocks = 8;
-  VerticalTabs = 16;
+  VerticalTabs     = 16;
 
-TYPE (* Enum DockOption *)
-  DockOption = [1..16];
+TYPE                             (* Enum DockOption *)
+  DockOption = [1 .. 16];
 
 TYPE
-QMainWindow <: QMainWindowPublic;
-QMainWindowPublic =
-QWidget BRANDED OBJECT
-METHODS
-init_0 ( parent: QWidget;
-flags: WindowTypes;
-) : QMainWindow;
-init_1 ( parent: QWidget;
-) : QMainWindow;
-init_2 () : QMainWindow;
-iconSize(): QSize;
-setIconSize( iconSize: QSize;
-);
-toolButtonStyle(): ToolButtonStyle;
-setToolButtonStyle(toolButtonStyle: ToolButtonStyle;
-);
-isAnimated(): BOOLEAN;
-isDockNestingEnabled(): BOOLEAN;
-documentMode(): BOOLEAN;
-setDocumentMode(enabled: BOOLEAN;
-);
-setDockOptions(options: DockOptions;
-);
-dockOptions(): DockOptions;
-isSeparator( pos: QPoint;
-): BOOLEAN;
-menuBar(): QMenuBar;
-setMenuBar( menubar: QMenuBar;
-);
-menuWidget(): QWidget;
-setMenuWidget( menubar: QWidget;
-);
-statusBar(): QStatusBar;
-setStatusBar( statusbar: QStatusBar;
-);
-centralWidget(): QWidget;
-setCentralWidget( widget: QWidget;
-);
-setCorner(corner: Corner;
-area: DockWidgetArea;
-);
-corner(corner: Corner;
-): DockWidgetArea;
-addToolBarBreak(area: ToolBarArea;
-);
-addToolBarBreak1();
-insertToolBarBreak( before: QToolBar;
-);
-addToolBar(area: ToolBarArea;
- toolbar: QToolBar;
-);
-addToolBar1( toolbar: QToolBar;
-);
-addToolBar2( title: TEXT;
-): QToolBar;
-insertToolBar( before, toolbar: QToolBar;
-);
-removeToolBar( toolbar: QToolBar;
-);
-removeToolBarBreak( before: QToolBar;
-);
-setUnifiedTitleAndToolBarOnMac(set: BOOLEAN;
-);
-unifiedTitleAndToolBarOnMac(): BOOLEAN;
-toolBarArea( toolbar: QToolBar;
-): ToolBarArea;
-toolBarBreak( toolbar: QToolBar;
-): BOOLEAN;
-addDockWidget(area: DockWidgetArea;
- dockwidget: QDockWidget;
-);
-addDockWidget1(area: DockWidgetArea;
- dockwidget: QDockWidget;
-orientation: Orientation;
-);
-splitDockWidget( after, dockwidget: QDockWidget;
-orientation: Orientation;
-);
-tabifyDockWidget( first, second: QDockWidget;
-);
-removeDockWidget( dockwidget: QDockWidget;
-);
-restoreDockWidget( dockwidget: QDockWidget;
-): BOOLEAN;
-dockWidgetArea( dockwidget: QDockWidget;
-): DockWidgetArea;
-saveState(version: INTEGER;
-): QByteArray;
-saveState1(): QByteArray;
-restoreState( state: QByteArray;
-version: INTEGER;
-): BOOLEAN;
-restoreState1( state: QByteArray;
-): BOOLEAN;
-createPopupMenu(): QMenu;  (*  virtual *)
-setAnimated(enabled: BOOLEAN;
-);
-setDockNestingEnabled(enabled: BOOLEAN;
-);
-destroyCxx();
-END;
+  QMainWindow <: QMainWindowPublic;
+  QMainWindowPublic =
+    QWidget BRANDED OBJECT
+    METHODS
+      init_0          (parent: QWidget; flags: WindowTypes; ): QMainWindow;
+      init_1          (parent: QWidget; ): QMainWindow;
+      init_2          (): QMainWindow;
+      iconSize        (): QSize;
+      setIconSize     (iconSize: QSize; );
+      toolButtonStyle (): ToolButtonStyle;
+      setToolButtonStyle   (toolButtonStyle: ToolButtonStyle; );
+      isAnimated           (): BOOLEAN;
+      isDockNestingEnabled (): BOOLEAN;
+      documentMode         (): BOOLEAN;
+      setDocumentMode      (enabled: BOOLEAN; );
+      setDockOptions       (options: DockOptions; );
+      dockOptions          (): DockOptions;
+      isSeparator          (pos: QPoint; ): BOOLEAN;
+      menuBar              (): QMenuBar;
+      setMenuBar           (menubar: QMenuBar; );
+      menuWidget           (): QWidget;
+      setMenuWidget        (menubar: QWidget; );
+      statusBar            (): QStatusBar;
+      setStatusBar         (statusbar: QStatusBar; );
+      centralWidget        (): QWidget;
+      setCentralWidget     (widget: QWidget; );
+      setCorner            (corner: Corner; area: DockWidgetArea; );
+      corner               (corner: Corner; ): DockWidgetArea;
+      addToolBarBreak      (area: ToolBarArea; );
+      addToolBarBreak1     ();
+      insertToolBarBreak   (before: QToolBar; );
+      addToolBar           (area: ToolBarArea; toolbar: QToolBar; );
+      addToolBar1          (toolbar: QToolBar; );
+      addToolBar2          (title: TEXT; ): QToolBar;
+      insertToolBar        (before, toolbar: QToolBar; );
+      removeToolBar        (toolbar: QToolBar; );
+      removeToolBarBreak   (before: QToolBar; );
+      setUnifiedTitleAndToolBarOnMac (set: BOOLEAN; );
+      unifiedTitleAndToolBarOnMac    (): BOOLEAN;
+      toolBarArea                    (toolbar: QToolBar; ): ToolBarArea;
+      toolBarBreak                   (toolbar: QToolBar; ): BOOLEAN;
+      addDockWidget (area: DockWidgetArea; dockwidget: QDockWidget; );
+      addDockWidget1 (area       : DockWidgetArea;
+                      dockwidget : QDockWidget;
+                      orientation: Orientation;    );
+      splitDockWidget (after, dockwidget: QDockWidget;
+                       orientation      : Orientation; );
+      tabifyDockWidget  (first, second: QDockWidget; );
+      removeDockWidget  (dockwidget: QDockWidget; );
+      restoreDockWidget (dockwidget: QDockWidget; ): BOOLEAN;
+      dockWidgetArea    (dockwidget: QDockWidget; ): DockWidgetArea;
+      saveState         (version: INTEGER; ): QByteArray;
+      saveState1        (): QByteArray;
+      restoreState      (state: QByteArray; version: INTEGER; ): BOOLEAN;
+      restoreState1     (state: QByteArray; ): BOOLEAN;
+      createPopupMenu   (): QMenu; (* virtual *)
+      setAnimated       (enabled: BOOLEAN; );
+      setDockNestingEnabled (enabled: BOOLEAN; );
+      destroyCxx            ();
+    END;
 
 
 END QtMainWindow.

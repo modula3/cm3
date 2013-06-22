@@ -11,7 +11,6 @@ MODULE QtPaintDeviceRaw;
 
 
 
-REVEAL
-QPaintDevice = UNTRACED BRANDED REF RECORD (*Dummy*) END;
+REVEAL QPaintDevice = UNTRACED BRANDED REF RECORD (*Dummy*) END;
 BEGIN
 END QtPaintDeviceRaw.

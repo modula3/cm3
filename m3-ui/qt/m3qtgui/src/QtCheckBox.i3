@@ -14,33 +14,25 @@ FROM QtNamespace IMPORT CheckState;
 
 
 FROM QtAbstractButton IMPORT QAbstractButton;
-TYPE
-  T = QCheckBox;
+TYPE T = QCheckBox;
 
 
 TYPE
-QCheckBox <: QCheckBoxPublic;
-QCheckBoxPublic =
-QAbstractButton BRANDED OBJECT
-METHODS
-init_0 ( parent: QWidget;
-) : QCheckBox;
-init_1 () : QCheckBox;
-init_2 ( text: TEXT;
- parent: QWidget;
-) : QCheckBox;
-init_3 ( text: TEXT;
-) : QCheckBox;
-sizeHint(): QSize;  (*  virtual *)
-setTristate(y: BOOLEAN;
-);
-setTristate1();
-isTristate(): BOOLEAN;
-checkState(): CheckState;
-setCheckState(state: CheckState;
-);
-destroyCxx();
-END;
+  QCheckBox <: QCheckBoxPublic;
+  QCheckBoxPublic = QAbstractButton BRANDED OBJECT
+                    METHODS
+                      init_0   (parent: QWidget; ): QCheckBox;
+                      init_1   (): QCheckBox;
+                      init_2   (text: TEXT; parent: QWidget; ): QCheckBox;
+                      init_3   (text: TEXT; ): QCheckBox;
+                      sizeHint (): QSize; (* virtual *)
+                      setTristate   (y: BOOLEAN; );
+                      setTristate1  ();
+                      isTristate    (): BOOLEAN;
+                      checkState    (): CheckState;
+                      setCheckState (state: CheckState; );
+                      destroyCxx    ();
+                    END;
 
 
 END QtCheckBox.

@@ -15,126 +15,100 @@ IMPORT Ctypes AS C;
 
 
 <* EXTERNAL New_QAbstractSlider0 *>
-PROCEDURE New_QAbstractSlider0 ( parent: ADDRESS;
-): QAbstractSlider;
+PROCEDURE New_QAbstractSlider0 (parent: ADDRESS; ): QAbstractSlider;
 
 <* EXTERNAL New_QAbstractSlider1 *>
 PROCEDURE New_QAbstractSlider1 (): QAbstractSlider;
 
 <* EXTERNAL Delete_QAbstractSlider *>
-PROCEDURE Delete_QAbstractSlider ( self: QAbstractSlider;
-);
+PROCEDURE Delete_QAbstractSlider (self: QAbstractSlider; );
 
 <* EXTERNAL QAbstractSlider_orientation *>
-PROCEDURE QAbstractSlider_orientation ( self: QAbstractSlider;
-): C.int;
+PROCEDURE QAbstractSlider_orientation (self: QAbstractSlider; ): C.int;
 
 <* EXTERNAL QAbstractSlider_setMinimum *>
-PROCEDURE QAbstractSlider_setMinimum ( self: QAbstractSlider;
-arg2: C.int;
-);
+PROCEDURE QAbstractSlider_setMinimum
+  (self: QAbstractSlider; arg2: C.int; );
 
 <* EXTERNAL QAbstractSlider_minimum *>
-PROCEDURE QAbstractSlider_minimum ( self: QAbstractSlider;
-): C.int;
+PROCEDURE QAbstractSlider_minimum (self: QAbstractSlider; ): C.int;
 
 <* EXTERNAL QAbstractSlider_setMaximum *>
-PROCEDURE QAbstractSlider_setMaximum ( self: QAbstractSlider;
-arg2: C.int;
-);
+PROCEDURE QAbstractSlider_setMaximum
+  (self: QAbstractSlider; arg2: C.int; );
 
 <* EXTERNAL QAbstractSlider_maximum *>
-PROCEDURE QAbstractSlider_maximum ( self: QAbstractSlider;
-): C.int;
+PROCEDURE QAbstractSlider_maximum (self: QAbstractSlider; ): C.int;
 
 <* EXTERNAL QAbstractSlider_setRange *>
-PROCEDURE QAbstractSlider_setRange ( self: QAbstractSlider;
-min, max: C.int;
-);
+PROCEDURE QAbstractSlider_setRange
+  (self: QAbstractSlider; min, max: C.int; );
 
 <* EXTERNAL QAbstractSlider_setSingleStep *>
-PROCEDURE QAbstractSlider_setSingleStep ( self: QAbstractSlider;
-arg2: C.int;
-);
+PROCEDURE QAbstractSlider_setSingleStep
+  (self: QAbstractSlider; arg2: C.int; );
 
 <* EXTERNAL QAbstractSlider_singleStep *>
-PROCEDURE QAbstractSlider_singleStep ( self: QAbstractSlider;
-): C.int;
+PROCEDURE QAbstractSlider_singleStep (self: QAbstractSlider; ): C.int;
 
 <* EXTERNAL QAbstractSlider_setPageStep *>
-PROCEDURE QAbstractSlider_setPageStep ( self: QAbstractSlider;
-arg2: C.int;
-);
+PROCEDURE QAbstractSlider_setPageStep
+  (self: QAbstractSlider; arg2: C.int; );
 
 <* EXTERNAL QAbstractSlider_pageStep *>
-PROCEDURE QAbstractSlider_pageStep ( self: QAbstractSlider;
-): C.int;
+PROCEDURE QAbstractSlider_pageStep (self: QAbstractSlider; ): C.int;
 
 <* EXTERNAL QAbstractSlider_setTracking *>
-PROCEDURE QAbstractSlider_setTracking ( self: QAbstractSlider;
-enable: BOOLEAN;
-);
+PROCEDURE QAbstractSlider_setTracking
+  (self: QAbstractSlider; enable: BOOLEAN; );
 
 <* EXTERNAL QAbstractSlider_hasTracking *>
-PROCEDURE QAbstractSlider_hasTracking ( self: QAbstractSlider;
-): BOOLEAN;
+PROCEDURE QAbstractSlider_hasTracking (self: QAbstractSlider; ): BOOLEAN;
 
 <* EXTERNAL QAbstractSlider_setSliderDown *>
-PROCEDURE QAbstractSlider_setSliderDown ( self: QAbstractSlider;
-arg2: BOOLEAN;
-);
+PROCEDURE QAbstractSlider_setSliderDown
+  (self: QAbstractSlider; arg2: BOOLEAN; );
 
 <* EXTERNAL QAbstractSlider_isSliderDown *>
-PROCEDURE QAbstractSlider_isSliderDown ( self: QAbstractSlider;
-): BOOLEAN;
+PROCEDURE QAbstractSlider_isSliderDown (self: QAbstractSlider; ): BOOLEAN;
 
 <* EXTERNAL QAbstractSlider_setSliderPosition *>
-PROCEDURE QAbstractSlider_setSliderPosition ( self: QAbstractSlider;
-arg2: C.int;
-);
+PROCEDURE QAbstractSlider_setSliderPosition
+  (self: QAbstractSlider; arg2: C.int; );
 
 <* EXTERNAL QAbstractSlider_sliderPosition *>
-PROCEDURE QAbstractSlider_sliderPosition ( self: QAbstractSlider;
-): C.int;
+PROCEDURE QAbstractSlider_sliderPosition (self: QAbstractSlider; ): C.int;
 
 <* EXTERNAL QAbstractSlider_setInvertedAppearance *>
-PROCEDURE QAbstractSlider_setInvertedAppearance ( self: QAbstractSlider;
-arg2: BOOLEAN;
-);
+PROCEDURE QAbstractSlider_setInvertedAppearance
+  (self: QAbstractSlider; arg2: BOOLEAN; );
 
 <* EXTERNAL QAbstractSlider_invertedAppearance *>
-PROCEDURE QAbstractSlider_invertedAppearance ( self: QAbstractSlider;
-): BOOLEAN;
+PROCEDURE QAbstractSlider_invertedAppearance (self: QAbstractSlider; ):
+  BOOLEAN;
 
 <* EXTERNAL QAbstractSlider_setInvertedControls *>
-PROCEDURE QAbstractSlider_setInvertedControls ( self: QAbstractSlider;
-arg2: BOOLEAN;
-);
+PROCEDURE QAbstractSlider_setInvertedControls
+  (self: QAbstractSlider; arg2: BOOLEAN; );
 
 <* EXTERNAL QAbstractSlider_invertedControls *>
-PROCEDURE QAbstractSlider_invertedControls ( self: QAbstractSlider;
-): BOOLEAN;
+PROCEDURE QAbstractSlider_invertedControls (self: QAbstractSlider; ):
+  BOOLEAN;
 
 <* EXTERNAL QAbstractSlider_value *>
-PROCEDURE QAbstractSlider_value ( self: QAbstractSlider;
-): C.int;
+PROCEDURE QAbstractSlider_value (self: QAbstractSlider; ): C.int;
 
 <* EXTERNAL QAbstractSlider_triggerAction *>
-PROCEDURE QAbstractSlider_triggerAction ( self: QAbstractSlider;
-action: C.int;
-);
+PROCEDURE QAbstractSlider_triggerAction
+  (self: QAbstractSlider; action: C.int; );
 
 <* EXTERNAL QAbstractSlider_setValue *>
-PROCEDURE QAbstractSlider_setValue ( self: QAbstractSlider;
-arg2: C.int;
-);
+PROCEDURE QAbstractSlider_setValue (self: QAbstractSlider; arg2: C.int; );
 
 <* EXTERNAL QAbstractSlider_setOrientation *>
-PROCEDURE QAbstractSlider_setOrientation ( self: QAbstractSlider;
-arg2: C.int;
-);
+PROCEDURE QAbstractSlider_setOrientation
+  (self: QAbstractSlider; arg2: C.int; );
 
-TYPE
-QAbstractSlider = ADDRESS;
+TYPE QAbstractSlider = ADDRESS;
 
 END QtAbstractSliderRaw.

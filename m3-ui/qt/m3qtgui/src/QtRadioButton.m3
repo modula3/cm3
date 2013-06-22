@@ -17,109 +17,105 @@ IMPORT QtRadioButtonRaw;
 
 IMPORT WeakRef;
 
-PROCEDURE New_QRadioButton0 (self:QRadioButton; parent: QWidget;
-): QRadioButton =
-VAR
-result : ADDRESS;
-arg1tmp :=  LOOPHOLE(parent.cxxObj,ADDRESS);
-BEGIN
-result := QtRadioButtonRaw.New_QRadioButton0(arg1tmp);
+PROCEDURE New_QRadioButton0 (self: QRadioButton; parent: QWidget; ):
+  QRadioButton =
+  VAR
+    result : ADDRESS;
+    arg1tmp          := LOOPHOLE(parent.cxxObj, ADDRESS);
+  BEGIN
+    result := QtRadioButtonRaw.New_QRadioButton0(arg1tmp);
 
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QRadioButton);
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QRadioButton);
 
-RETURN self;
-END New_QRadioButton0;
+    RETURN self;
+  END New_QRadioButton0;
 
-PROCEDURE New_QRadioButton1 (self:QRadioButton;): QRadioButton =
-VAR
-result : ADDRESS;
-BEGIN
-result := QtRadioButtonRaw.New_QRadioButton1();
+PROCEDURE New_QRadioButton1 (self: QRadioButton; ): QRadioButton =
+  VAR result: ADDRESS;
+  BEGIN
+    result := QtRadioButtonRaw.New_QRadioButton1();
 
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QRadioButton);
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QRadioButton);
 
-RETURN self;
-END New_QRadioButton1;
+    RETURN self;
+  END New_QRadioButton1;
 
-PROCEDURE New_QRadioButton2 (self:QRadioButton; text: TEXT;
- parent: QWidget;
-): QRadioButton =
-VAR
-result : ADDRESS;
-qstr_text := NEW(QString).initQString(text);
-arg1tmp :=  LOOPHOLE(qstr_text.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(parent.cxxObj,ADDRESS);
-BEGIN
-result := QtRadioButtonRaw.New_QRadioButton2(arg1tmp, arg2tmp);
+PROCEDURE New_QRadioButton2
+  (self: QRadioButton; text: TEXT; parent: QWidget; ): QRadioButton =
+  VAR
+    result   : ADDRESS;
+    qstr_text          := NEW(QString).initQString(text);
+    arg1tmp            := LOOPHOLE(qstr_text.cxxObj, ADDRESS);
+    arg2tmp            := LOOPHOLE(parent.cxxObj, ADDRESS);
+  BEGIN
+    result := QtRadioButtonRaw.New_QRadioButton2(arg1tmp, arg2tmp);
 
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QRadioButton);
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QRadioButton);
 
-RETURN self;
-END New_QRadioButton2;
+    RETURN self;
+  END New_QRadioButton2;
 
-PROCEDURE New_QRadioButton3 (self:QRadioButton; text: TEXT;
-): QRadioButton =
-VAR
-result : ADDRESS;
-qstr_text := NEW(QString).initQString(text);
-arg1tmp :=  LOOPHOLE(qstr_text.cxxObj,ADDRESS);
-BEGIN
-result := QtRadioButtonRaw.New_QRadioButton3(arg1tmp);
+PROCEDURE New_QRadioButton3 (self: QRadioButton; text: TEXT; ):
+  QRadioButton =
+  VAR
+    result   : ADDRESS;
+    qstr_text          := NEW(QString).initQString(text);
+    arg1tmp            := LOOPHOLE(qstr_text.cxxObj, ADDRESS);
+  BEGIN
+    result := QtRadioButtonRaw.New_QRadioButton3(arg1tmp);
 
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QRadioButton);
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QRadioButton);
 
-RETURN self;
-END New_QRadioButton3;
+    RETURN self;
+  END New_QRadioButton3;
 
-PROCEDURE QRadioButton_sizeHint ( self: QRadioButton;
-): QSize =
-VAR
-ret:ADDRESS; result : QSize;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtRadioButtonRaw.QRadioButton_sizeHint(selfAdr);
+PROCEDURE QRadioButton_sizeHint (self: QRadioButton; ): QSize =
+  VAR
+    ret    : ADDRESS;
+    result : QSize;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtRadioButtonRaw.QRadioButton_sizeHint(selfAdr);
 
-  result := NEW(QSize);
-  result.cxxObj := ret;
-  result.destroyCxx();
+    result := NEW(QSize);
+    result.cxxObj := ret;
+    result.destroyCxx();
 
-RETURN result;
-END QRadioButton_sizeHint;
+    RETURN result;
+  END QRadioButton_sizeHint;
 
-PROCEDURE Delete_QRadioButton ( self: QRadioButton;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtRadioButtonRaw.Delete_QRadioButton(selfAdr);
-END Delete_QRadioButton;
+PROCEDURE Delete_QRadioButton (self: QRadioButton; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtRadioButtonRaw.Delete_QRadioButton(selfAdr);
+  END Delete_QRadioButton;
 
-PROCEDURE Cleanup_QRadioButton(<*UNUSED*>READONLY self: WeakRef.T; ref: REFANY) =
-VAR obj : QRadioButton := ref;
-BEGIN
-  Delete_QRadioButton(obj);
- END Cleanup_QRadioButton;
+PROCEDURE Cleanup_QRadioButton
+  (<* UNUSED *> READONLY self: WeakRef.T; ref: REFANY) =
+  VAR obj: QRadioButton := ref;
+  BEGIN
+    Delete_QRadioButton(obj);
+  END Cleanup_QRadioButton;
 
-PROCEDURE Destroy_QRadioButton(self : QRadioButton) =
-BEGIN
-  EVAL WeakRef.FromRef(self,Cleanup_QRadioButton);
-END Destroy_QRadioButton;
+PROCEDURE Destroy_QRadioButton (self: QRadioButton) =
+  BEGIN
+    EVAL WeakRef.FromRef(self, Cleanup_QRadioButton);
+  END Destroy_QRadioButton;
 
 REVEAL
-QRadioButton =
-QRadioButtonPublic BRANDED OBJECT
-OVERRIDES
-init_0 := New_QRadioButton0;
-init_1 := New_QRadioButton1;
-init_2 := New_QRadioButton2;
-init_3 := New_QRadioButton3;
-sizeHint := QRadioButton_sizeHint;
-destroyCxx := Destroy_QRadioButton;
-END;
+  QRadioButton = QRadioButtonPublic BRANDED OBJECT
+                 OVERRIDES
+                   init_0     := New_QRadioButton0;
+                   init_1     := New_QRadioButton1;
+                   init_2     := New_QRadioButton2;
+                   init_3     := New_QRadioButton3;
+                   sizeHint   := QRadioButton_sizeHint;
+                   destroyCxx := Destroy_QRadioButton;
+                 END;
 
 
 BEGIN

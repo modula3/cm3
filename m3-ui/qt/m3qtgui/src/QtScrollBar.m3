@@ -17,105 +17,100 @@ FROM QtNamespace IMPORT Orientation;
 
 IMPORT WeakRef;
 
-PROCEDURE New_QScrollBar0 (self:QScrollBar; parent: QWidget;
-): QScrollBar =
-VAR
-result : ADDRESS;
-arg1tmp :=  LOOPHOLE(parent.cxxObj,ADDRESS);
-BEGIN
-result := QtScrollBarRaw.New_QScrollBar0(arg1tmp);
+PROCEDURE New_QScrollBar0 (self: QScrollBar; parent: QWidget; ):
+  QScrollBar =
+  VAR
+    result : ADDRESS;
+    arg1tmp          := LOOPHOLE(parent.cxxObj, ADDRESS);
+  BEGIN
+    result := QtScrollBarRaw.New_QScrollBar0(arg1tmp);
 
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QScrollBar);
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QScrollBar);
 
-RETURN self;
-END New_QScrollBar0;
+    RETURN self;
+  END New_QScrollBar0;
 
-PROCEDURE New_QScrollBar1 (self:QScrollBar;): QScrollBar =
-VAR
-result : ADDRESS;
-BEGIN
-result := QtScrollBarRaw.New_QScrollBar1();
+PROCEDURE New_QScrollBar1 (self: QScrollBar; ): QScrollBar =
+  VAR result: ADDRESS;
+  BEGIN
+    result := QtScrollBarRaw.New_QScrollBar1();
 
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QScrollBar);
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QScrollBar);
 
-RETURN self;
-END New_QScrollBar1;
+    RETURN self;
+  END New_QScrollBar1;
 
-PROCEDURE New_QScrollBar2 (self:QScrollBar;arg1: Orientation;
- parent: QWidget;
-): QScrollBar =
-VAR
-result : ADDRESS;
-arg2tmp :=  LOOPHOLE(parent.cxxObj,ADDRESS);
-BEGIN
-result := QtScrollBarRaw.New_QScrollBar2(ORD(arg1), arg2tmp);
+PROCEDURE New_QScrollBar2
+  (self: QScrollBar; arg1: Orientation; parent: QWidget; ): QScrollBar =
+  VAR
+    result : ADDRESS;
+    arg2tmp          := LOOPHOLE(parent.cxxObj, ADDRESS);
+  BEGIN
+    result := QtScrollBarRaw.New_QScrollBar2(ORD(arg1), arg2tmp);
 
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QScrollBar);
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QScrollBar);
 
-RETURN self;
-END New_QScrollBar2;
+    RETURN self;
+  END New_QScrollBar2;
 
-PROCEDURE New_QScrollBar3 (self:QScrollBar;arg1: Orientation;
-): QScrollBar =
-VAR
-result : ADDRESS;
-BEGIN
-result := QtScrollBarRaw.New_QScrollBar3(ORD(arg1));
+PROCEDURE New_QScrollBar3 (self: QScrollBar; arg1: Orientation; ):
+  QScrollBar =
+  VAR result: ADDRESS;
+  BEGIN
+    result := QtScrollBarRaw.New_QScrollBar3(ORD(arg1));
 
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QScrollBar);
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QScrollBar);
 
-RETURN self;
-END New_QScrollBar3;
+    RETURN self;
+  END New_QScrollBar3;
 
-PROCEDURE Delete_QScrollBar ( self: QScrollBar;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtScrollBarRaw.Delete_QScrollBar(selfAdr);
-END Delete_QScrollBar;
+PROCEDURE Delete_QScrollBar (self: QScrollBar; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtScrollBarRaw.Delete_QScrollBar(selfAdr);
+  END Delete_QScrollBar;
 
-PROCEDURE QScrollBar_sizeHint ( self: QScrollBar;
-): QSize =
-VAR
-ret:ADDRESS; result : QSize;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtScrollBarRaw.QScrollBar_sizeHint(selfAdr);
+PROCEDURE QScrollBar_sizeHint (self: QScrollBar; ): QSize =
+  VAR
+    ret    : ADDRESS;
+    result : QSize;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtScrollBarRaw.QScrollBar_sizeHint(selfAdr);
 
-  result := NEW(QSize);
-  result.cxxObj := ret;
-  result.destroyCxx();
+    result := NEW(QSize);
+    result.cxxObj := ret;
+    result.destroyCxx();
 
-RETURN result;
-END QScrollBar_sizeHint;
+    RETURN result;
+  END QScrollBar_sizeHint;
 
-PROCEDURE Cleanup_QScrollBar(<*UNUSED*>READONLY self: WeakRef.T; ref: REFANY) =
-VAR obj : QScrollBar := ref;
-BEGIN
-  Delete_QScrollBar(obj);
- END Cleanup_QScrollBar;
+PROCEDURE Cleanup_QScrollBar
+  (<* UNUSED *> READONLY self: WeakRef.T; ref: REFANY) =
+  VAR obj: QScrollBar := ref;
+  BEGIN
+    Delete_QScrollBar(obj);
+  END Cleanup_QScrollBar;
 
-PROCEDURE Destroy_QScrollBar(self : QScrollBar) =
-BEGIN
-  EVAL WeakRef.FromRef(self,Cleanup_QScrollBar);
-END Destroy_QScrollBar;
+PROCEDURE Destroy_QScrollBar (self: QScrollBar) =
+  BEGIN
+    EVAL WeakRef.FromRef(self, Cleanup_QScrollBar);
+  END Destroy_QScrollBar;
 
 REVEAL
-QScrollBar =
-QScrollBarPublic BRANDED OBJECT
-OVERRIDES
-init_0 := New_QScrollBar0;
-init_1 := New_QScrollBar1;
-init_2 := New_QScrollBar2;
-init_3 := New_QScrollBar3;
-sizeHint := QScrollBar_sizeHint;
-destroyCxx := Destroy_QScrollBar;
-END;
+  QScrollBar = QScrollBarPublic BRANDED OBJECT
+               OVERRIDES
+                 init_0     := New_QScrollBar0;
+                 init_1     := New_QScrollBar1;
+                 init_2     := New_QScrollBar2;
+                 init_3     := New_QScrollBar3;
+                 sizeHint   := QScrollBar_sizeHint;
+                 destroyCxx := Destroy_QScrollBar;
+               END;
 
 
 BEGIN

@@ -14,7 +14,7 @@ FROM QtSize IMPORT QSize;
 FROM QtLayout IMPORT QLayout;
 IMPORT QtFormLayoutRaw;
 FROM QtWidget IMPORT QWidget;
-FROM QtNamespace IMPORT AlignmentFlag,Orientations;
+FROM QtNamespace IMPORT AlignmentFlag, Orientations;
 FROM QtRect IMPORT QRect;
 
 
@@ -22,646 +22,573 @@ IMPORT WeakRef;
 IMPORT Ctypes AS C;
 FROM QtString IMPORT QString;
 
-PROCEDURE New_QFormLayout0 (self:QFormLayout; parent: QWidget;
-): QFormLayout =
-VAR
-result : ADDRESS;
-arg1tmp :=  LOOPHOLE(parent.cxxObj,ADDRESS);
-BEGIN
-result := QtFormLayoutRaw.New_QFormLayout0(arg1tmp);
-
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QFormLayout);
-
-RETURN self;
-END New_QFormLayout0;
-
-PROCEDURE New_QFormLayout1 (self:QFormLayout;): QFormLayout =
-VAR
-result : ADDRESS;
-BEGIN
-result := QtFormLayoutRaw.New_QFormLayout1();
-
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QFormLayout);
-
-RETURN self;
-END New_QFormLayout1;
-
-PROCEDURE Delete_QFormLayout ( self: QFormLayout;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtFormLayoutRaw.Delete_QFormLayout(selfAdr);
-END Delete_QFormLayout;
-
-PROCEDURE QFormLayout_setFieldGrowthPolicy ( self: QFormLayout;
-policy: FieldGrowthPolicy;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtFormLayoutRaw.QFormLayout_setFieldGrowthPolicy(selfAdr, ORD(policy));
-END QFormLayout_setFieldGrowthPolicy;
-
-PROCEDURE QFormLayout_fieldGrowthPolicy ( self: QFormLayout;
-): FieldGrowthPolicy =
-VAR
-ret:INTEGER; result : FieldGrowthPolicy;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtFormLayoutRaw.QFormLayout_fieldGrowthPolicy(selfAdr);
-result := VAL(ret,FieldGrowthPolicy);  
-RETURN result;
-END QFormLayout_fieldGrowthPolicy;
-
-PROCEDURE QFormLayout_setRowWrapPolicy ( self: QFormLayout;
-policy: RowWrapPolicy;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtFormLayoutRaw.QFormLayout_setRowWrapPolicy(selfAdr, ORD(policy));
-END QFormLayout_setRowWrapPolicy;
-
-PROCEDURE QFormLayout_rowWrapPolicy ( self: QFormLayout;
-): RowWrapPolicy =
-VAR
-ret:INTEGER; result : RowWrapPolicy;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtFormLayoutRaw.QFormLayout_rowWrapPolicy(selfAdr);
-result := VAL(ret,RowWrapPolicy);  
-RETURN result;
-END QFormLayout_rowWrapPolicy;
-
-PROCEDURE QFormLayout_setLabelAlignment ( self: QFormLayout;
-alignment: AlignmentFlag;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtFormLayoutRaw.QFormLayout_setLabelAlignment(selfAdr, ORD(alignment));
-END QFormLayout_setLabelAlignment;
-
-PROCEDURE QFormLayout_labelAlignment ( self: QFormLayout;
-): AlignmentFlag =
-VAR
-ret:INTEGER; result : AlignmentFlag;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtFormLayoutRaw.QFormLayout_labelAlignment(selfAdr);
-result := VAL(ret,AlignmentFlag);  
-RETURN result;
-END QFormLayout_labelAlignment;
-
-PROCEDURE QFormLayout_setFormAlignment ( self: QFormLayout;
-alignment: AlignmentFlag;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtFormLayoutRaw.QFormLayout_setFormAlignment(selfAdr, ORD(alignment));
-END QFormLayout_setFormAlignment;
-
-PROCEDURE QFormLayout_formAlignment ( self: QFormLayout;
-): AlignmentFlag =
-VAR
-ret:INTEGER; result : AlignmentFlag;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtFormLayoutRaw.QFormLayout_formAlignment(selfAdr);
-result := VAL(ret,AlignmentFlag);  
-RETURN result;
-END QFormLayout_formAlignment;
-
-PROCEDURE QFormLayout_setHorizontalSpacing ( self: QFormLayout;
-spacing: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtFormLayoutRaw.QFormLayout_setHorizontalSpacing(selfAdr, spacing);
-END QFormLayout_setHorizontalSpacing;
-
-PROCEDURE QFormLayout_horizontalSpacing ( self: QFormLayout;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtFormLayoutRaw.QFormLayout_horizontalSpacing(selfAdr);
-END QFormLayout_horizontalSpacing;
-
-PROCEDURE QFormLayout_setVerticalSpacing ( self: QFormLayout;
-spacing: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtFormLayoutRaw.QFormLayout_setVerticalSpacing(selfAdr, spacing);
-END QFormLayout_setVerticalSpacing;
-
-PROCEDURE QFormLayout_verticalSpacing ( self: QFormLayout;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtFormLayoutRaw.QFormLayout_verticalSpacing(selfAdr);
-END QFormLayout_verticalSpacing;
-
-PROCEDURE QFormLayout_spacing ( self: QFormLayout;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtFormLayoutRaw.QFormLayout_spacing(selfAdr);
-END QFormLayout_spacing;
-
-PROCEDURE QFormLayout_setSpacing ( self: QFormLayout;
-arg2: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtFormLayoutRaw.QFormLayout_setSpacing(selfAdr, arg2);
-END QFormLayout_setSpacing;
-
-PROCEDURE QFormLayout_addRow ( self: QFormLayout;
- label, field: QWidget;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(label.cxxObj,ADDRESS);
-arg3tmp :=  LOOPHOLE(field.cxxObj,ADDRESS);
-BEGIN
-QtFormLayoutRaw.QFormLayout_addRow(selfAdr, arg2tmp, arg3tmp);
-END QFormLayout_addRow;
-
-PROCEDURE QFormLayout_addRow1 ( self: QFormLayout;
- label: QWidget;
- field: QLayout;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(label.cxxObj,ADDRESS);
-arg3tmp :=  LOOPHOLE(field.cxxObj,ADDRESS);
-BEGIN
-QtFormLayoutRaw.QFormLayout_addRow1(selfAdr, arg2tmp, arg3tmp);
-END QFormLayout_addRow1;
-
-PROCEDURE QFormLayout_addRow2 ( self: QFormLayout;
- labelText: TEXT;
- field: QWidget;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-qstr_labelText := NEW(QString).initQString(labelText);
-arg2tmp :=  LOOPHOLE(qstr_labelText.cxxObj,ADDRESS);
-arg3tmp :=  LOOPHOLE(field.cxxObj,ADDRESS);
-BEGIN
-QtFormLayoutRaw.QFormLayout_addRow2(selfAdr, arg2tmp, arg3tmp);
-END QFormLayout_addRow2;
-
-PROCEDURE QFormLayout_addRow3 ( self: QFormLayout;
- labelText: TEXT;
- field: QLayout;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-qstr_labelText := NEW(QString).initQString(labelText);
-arg2tmp :=  LOOPHOLE(qstr_labelText.cxxObj,ADDRESS);
-arg3tmp :=  LOOPHOLE(field.cxxObj,ADDRESS);
-BEGIN
-QtFormLayoutRaw.QFormLayout_addRow3(selfAdr, arg2tmp, arg3tmp);
-END QFormLayout_addRow3;
-
-PROCEDURE QFormLayout_addRow4 ( self: QFormLayout;
- widget: QWidget;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(widget.cxxObj,ADDRESS);
-BEGIN
-QtFormLayoutRaw.QFormLayout_addRow4(selfAdr, arg2tmp);
-END QFormLayout_addRow4;
-
-PROCEDURE QFormLayout_addRow5 ( self: QFormLayout;
- layout: QLayout;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(layout.cxxObj,ADDRESS);
-BEGIN
-QtFormLayoutRaw.QFormLayout_addRow5(selfAdr, arg2tmp);
-END QFormLayout_addRow5;
-
-PROCEDURE QFormLayout_insertRow ( self: QFormLayout;
-row: INTEGER;
- label, field: QWidget;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg3tmp :=  LOOPHOLE(label.cxxObj,ADDRESS);
-arg4tmp :=  LOOPHOLE(field.cxxObj,ADDRESS);
-BEGIN
-QtFormLayoutRaw.QFormLayout_insertRow(selfAdr, row, arg3tmp, arg4tmp);
-END QFormLayout_insertRow;
-
-PROCEDURE QFormLayout_insertRow1 ( self: QFormLayout;
-row: INTEGER;
- label: QWidget;
- field: QLayout;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg3tmp :=  LOOPHOLE(label.cxxObj,ADDRESS);
-arg4tmp :=  LOOPHOLE(field.cxxObj,ADDRESS);
-BEGIN
-QtFormLayoutRaw.QFormLayout_insertRow1(selfAdr, row, arg3tmp, arg4tmp);
-END QFormLayout_insertRow1;
-
-PROCEDURE QFormLayout_insertRow2 ( self: QFormLayout;
-row: INTEGER;
- labelText: TEXT;
- field: QWidget;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-qstr_labelText := NEW(QString).initQString(labelText);
-arg3tmp :=  LOOPHOLE(qstr_labelText.cxxObj,ADDRESS);
-arg4tmp :=  LOOPHOLE(field.cxxObj,ADDRESS);
-BEGIN
-QtFormLayoutRaw.QFormLayout_insertRow2(selfAdr, row, arg3tmp, arg4tmp);
-END QFormLayout_insertRow2;
-
-PROCEDURE QFormLayout_insertRow3 ( self: QFormLayout;
-row: INTEGER;
- labelText: TEXT;
- field: QLayout;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-qstr_labelText := NEW(QString).initQString(labelText);
-arg3tmp :=  LOOPHOLE(qstr_labelText.cxxObj,ADDRESS);
-arg4tmp :=  LOOPHOLE(field.cxxObj,ADDRESS);
-BEGIN
-QtFormLayoutRaw.QFormLayout_insertRow3(selfAdr, row, arg3tmp, arg4tmp);
-END QFormLayout_insertRow3;
-
-PROCEDURE QFormLayout_insertRow4 ( self: QFormLayout;
-row: INTEGER;
- widget: QWidget;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg3tmp :=  LOOPHOLE(widget.cxxObj,ADDRESS);
-BEGIN
-QtFormLayoutRaw.QFormLayout_insertRow4(selfAdr, row, arg3tmp);
-END QFormLayout_insertRow4;
-
-PROCEDURE QFormLayout_insertRow5 ( self: QFormLayout;
-row: INTEGER;
- layout: QLayout;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg3tmp :=  LOOPHOLE(layout.cxxObj,ADDRESS);
-BEGIN
-QtFormLayoutRaw.QFormLayout_insertRow5(selfAdr, row, arg3tmp);
-END QFormLayout_insertRow5;
-
-PROCEDURE QFormLayout_setItem ( self: QFormLayout;
-row: INTEGER;
-role: ItemRole;
- item: QLayoutItem;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg4tmp :=  LOOPHOLE(item.cxxObj,ADDRESS);
-BEGIN
-QtFormLayoutRaw.QFormLayout_setItem(selfAdr, row, ORD(role), arg4tmp);
-END QFormLayout_setItem;
-
-PROCEDURE QFormLayout_setWidget ( self: QFormLayout;
-row: INTEGER;
-role: ItemRole;
- widget: QWidget;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg4tmp :=  LOOPHOLE(widget.cxxObj,ADDRESS);
-BEGIN
-QtFormLayoutRaw.QFormLayout_setWidget(selfAdr, row, ORD(role), arg4tmp);
-END QFormLayout_setWidget;
-
-PROCEDURE QFormLayout_setLayout ( self: QFormLayout;
-row: INTEGER;
-role: ItemRole;
- layout: QLayout;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg4tmp :=  LOOPHOLE(layout.cxxObj,ADDRESS);
-BEGIN
-QtFormLayoutRaw.QFormLayout_setLayout(selfAdr, row, ORD(role), arg4tmp);
-END QFormLayout_setLayout;
-
-PROCEDURE QFormLayout_itemAt ( self: QFormLayout;
-row: INTEGER;
-role: ItemRole;
-): QLayoutItem =
-VAR
-ret:ADDRESS; result : QLayoutItem;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtFormLayoutRaw.QFormLayout_itemAt(selfAdr, row, ORD(role));
-
-  result := NEW(QLayoutItem);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QFormLayout_itemAt;
-
-PROCEDURE QFormLayout_getItemPosition ( self: QFormLayout;
-index: INTEGER;
-VAR rowPtr: INTEGER;
-VAR rolePtr: ItemRole;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg3tmp: C.int;
-BEGIN
-arg3tmp := rowPtr;
-QtFormLayoutRaw.QFormLayout_getItemPosition(selfAdr, index, arg3tmp, rolePtr);
-rowPtr := arg3tmp;
-END QFormLayout_getItemPosition;
-
-PROCEDURE QFormLayout_getWidgetPosition ( self: QFormLayout;
- widget: QWidget;
-VAR rowPtr: INTEGER;
-VAR rolePtr: ItemRole;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(widget.cxxObj,ADDRESS);
-arg3tmp: C.int;
-BEGIN
-arg3tmp := rowPtr;
-QtFormLayoutRaw.QFormLayout_getWidgetPosition(selfAdr, arg2tmp, arg3tmp, rolePtr);
-rowPtr := arg3tmp;
-END QFormLayout_getWidgetPosition;
-
-PROCEDURE QFormLayout_getLayoutPosition ( self: QFormLayout;
- layout: QLayout;
-VAR rowPtr: INTEGER;
-VAR rolePtr: ItemRole;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(layout.cxxObj,ADDRESS);
-arg3tmp: C.int;
-BEGIN
-arg3tmp := rowPtr;
-QtFormLayoutRaw.QFormLayout_getLayoutPosition(selfAdr, arg2tmp, arg3tmp, rolePtr);
-rowPtr := arg3tmp;
-END QFormLayout_getLayoutPosition;
-
-PROCEDURE QFormLayout_labelForField ( self: QFormLayout;
- field: QWidget;
-): QWidget =
-VAR
-ret:ADDRESS; result : QWidget;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(field.cxxObj,ADDRESS);
-BEGIN
-ret := QtFormLayoutRaw.QFormLayout_labelForField(selfAdr, arg2tmp);
-
-  result := NEW(QWidget);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QFormLayout_labelForField;
-
-PROCEDURE QFormLayout_labelForField1 ( self: QFormLayout;
- field: QLayout;
-): QWidget =
-VAR
-ret:ADDRESS; result : QWidget;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(field.cxxObj,ADDRESS);
-BEGIN
-ret := QtFormLayoutRaw.QFormLayout_labelForField1(selfAdr, arg2tmp);
-
-  result := NEW(QWidget);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QFormLayout_labelForField1;
-
-PROCEDURE QFormLayout_addItem ( self: QFormLayout;
- item: QLayoutItem;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(item.cxxObj,ADDRESS);
-BEGIN
-QtFormLayoutRaw.QFormLayout_addItem(selfAdr, arg2tmp);
-END QFormLayout_addItem;
-
-PROCEDURE QFormLayout_itemAt1 ( self: QFormLayout;
-index: INTEGER;
-): QLayoutItem =
-VAR
-ret:ADDRESS; result : QLayoutItem;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtFormLayoutRaw.QFormLayout_itemAt1(selfAdr, index);
-
-  result := NEW(QLayoutItem);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QFormLayout_itemAt1;
-
-PROCEDURE QFormLayout_takeAt ( self: QFormLayout;
-index: INTEGER;
-): QLayoutItem =
-VAR
-ret:ADDRESS; result : QLayoutItem;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtFormLayoutRaw.QFormLayout_takeAt(selfAdr, index);
-
-  result := NEW(QLayoutItem);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QFormLayout_takeAt;
-
-PROCEDURE QFormLayout_setGeometry ( self: QFormLayout;
- rect: QRect;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(rect.cxxObj,ADDRESS);
-BEGIN
-QtFormLayoutRaw.QFormLayout_setGeometry(selfAdr, arg2tmp);
-END QFormLayout_setGeometry;
-
-PROCEDURE QFormLayout_minimumSize ( self: QFormLayout;
-): QSize =
-VAR
-ret:ADDRESS; result : QSize;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtFormLayoutRaw.QFormLayout_minimumSize(selfAdr);
-
-  result := NEW(QSize);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QFormLayout_minimumSize;
-
-PROCEDURE QFormLayout_sizeHint ( self: QFormLayout;
-): QSize =
-VAR
-ret:ADDRESS; result : QSize;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtFormLayoutRaw.QFormLayout_sizeHint(selfAdr);
-
-  result := NEW(QSize);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QFormLayout_sizeHint;
-
-PROCEDURE QFormLayout_invalidate ( self: QFormLayout;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtFormLayoutRaw.QFormLayout_invalidate(selfAdr);
-END QFormLayout_invalidate;
-
-PROCEDURE QFormLayout_hasHeightForWidth ( self: QFormLayout;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtFormLayoutRaw.QFormLayout_hasHeightForWidth(selfAdr);
-END QFormLayout_hasHeightForWidth;
-
-PROCEDURE QFormLayout_heightForWidth ( self: QFormLayout;
-width: INTEGER;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtFormLayoutRaw.QFormLayout_heightForWidth(selfAdr, width);
-END QFormLayout_heightForWidth;
-
-PROCEDURE QFormLayout_expandingDirections ( self: QFormLayout;
-): Orientations =
-VAR
-ret:INTEGER; result : Orientations;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtFormLayoutRaw.QFormLayout_expandingDirections(selfAdr);
-result := VAL(ret,Orientations);  
-RETURN result;
-END QFormLayout_expandingDirections;
-
-PROCEDURE QFormLayout_count ( self: QFormLayout;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtFormLayoutRaw.QFormLayout_count(selfAdr);
-END QFormLayout_count;
-
-PROCEDURE QFormLayout_rowCount ( self: QFormLayout;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtFormLayoutRaw.QFormLayout_rowCount(selfAdr);
-END QFormLayout_rowCount;
-
-PROCEDURE Cleanup_QFormLayout(<*UNUSED*>READONLY self: WeakRef.T; ref: REFANY) =
-VAR obj : QFormLayout := ref;
-BEGIN
-  Delete_QFormLayout(obj);
- END Cleanup_QFormLayout;
-
-PROCEDURE Destroy_QFormLayout(self : QFormLayout) =
-BEGIN
-  EVAL WeakRef.FromRef(self,Cleanup_QFormLayout);
-END Destroy_QFormLayout;
+PROCEDURE New_QFormLayout0 (self: QFormLayout; parent: QWidget; ):
+  QFormLayout =
+  VAR
+    result : ADDRESS;
+    arg1tmp          := LOOPHOLE(parent.cxxObj, ADDRESS);
+  BEGIN
+    result := QtFormLayoutRaw.New_QFormLayout0(arg1tmp);
+
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QFormLayout);
+
+    RETURN self;
+  END New_QFormLayout0;
+
+PROCEDURE New_QFormLayout1 (self: QFormLayout; ): QFormLayout =
+  VAR result: ADDRESS;
+  BEGIN
+    result := QtFormLayoutRaw.New_QFormLayout1();
+
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QFormLayout);
+
+    RETURN self;
+  END New_QFormLayout1;
+
+PROCEDURE Delete_QFormLayout (self: QFormLayout; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtFormLayoutRaw.Delete_QFormLayout(selfAdr);
+  END Delete_QFormLayout;
+
+PROCEDURE QFormLayout_setFieldGrowthPolicy
+  (self: QFormLayout; policy: FieldGrowthPolicy; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtFormLayoutRaw.QFormLayout_setFieldGrowthPolicy(selfAdr, ORD(policy));
+  END QFormLayout_setFieldGrowthPolicy;
+
+PROCEDURE QFormLayout_fieldGrowthPolicy (self: QFormLayout; ):
+  FieldGrowthPolicy =
+  VAR
+    ret    : INTEGER;
+    result : FieldGrowthPolicy;
+    selfAdr: ADDRESS           := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtFormLayoutRaw.QFormLayout_fieldGrowthPolicy(selfAdr);
+    result := VAL(ret, FieldGrowthPolicy);
+    RETURN result;
+  END QFormLayout_fieldGrowthPolicy;
+
+PROCEDURE QFormLayout_setRowWrapPolicy
+  (self: QFormLayout; policy: RowWrapPolicy; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtFormLayoutRaw.QFormLayout_setRowWrapPolicy(selfAdr, ORD(policy));
+  END QFormLayout_setRowWrapPolicy;
+
+PROCEDURE QFormLayout_rowWrapPolicy (self: QFormLayout; ): RowWrapPolicy =
+  VAR
+    ret    : INTEGER;
+    result : RowWrapPolicy;
+    selfAdr: ADDRESS       := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtFormLayoutRaw.QFormLayout_rowWrapPolicy(selfAdr);
+    result := VAL(ret, RowWrapPolicy);
+    RETURN result;
+  END QFormLayout_rowWrapPolicy;
+
+PROCEDURE QFormLayout_setLabelAlignment
+  (self: QFormLayout; alignment: AlignmentFlag; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtFormLayoutRaw.QFormLayout_setLabelAlignment(selfAdr, ORD(alignment));
+  END QFormLayout_setLabelAlignment;
+
+PROCEDURE QFormLayout_labelAlignment (self: QFormLayout; ): AlignmentFlag =
+  VAR
+    ret    : INTEGER;
+    result : AlignmentFlag;
+    selfAdr: ADDRESS       := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtFormLayoutRaw.QFormLayout_labelAlignment(selfAdr);
+    result := VAL(ret, AlignmentFlag);
+    RETURN result;
+  END QFormLayout_labelAlignment;
+
+PROCEDURE QFormLayout_setFormAlignment
+  (self: QFormLayout; alignment: AlignmentFlag; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtFormLayoutRaw.QFormLayout_setFormAlignment(selfAdr, ORD(alignment));
+  END QFormLayout_setFormAlignment;
+
+PROCEDURE QFormLayout_formAlignment (self: QFormLayout; ): AlignmentFlag =
+  VAR
+    ret    : INTEGER;
+    result : AlignmentFlag;
+    selfAdr: ADDRESS       := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtFormLayoutRaw.QFormLayout_formAlignment(selfAdr);
+    result := VAL(ret, AlignmentFlag);
+    RETURN result;
+  END QFormLayout_formAlignment;
+
+PROCEDURE QFormLayout_setHorizontalSpacing
+  (self: QFormLayout; spacing: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtFormLayoutRaw.QFormLayout_setHorizontalSpacing(selfAdr, spacing);
+  END QFormLayout_setHorizontalSpacing;
+
+PROCEDURE QFormLayout_horizontalSpacing (self: QFormLayout; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtFormLayoutRaw.QFormLayout_horizontalSpacing(selfAdr);
+  END QFormLayout_horizontalSpacing;
+
+PROCEDURE QFormLayout_setVerticalSpacing
+  (self: QFormLayout; spacing: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtFormLayoutRaw.QFormLayout_setVerticalSpacing(selfAdr, spacing);
+  END QFormLayout_setVerticalSpacing;
+
+PROCEDURE QFormLayout_verticalSpacing (self: QFormLayout; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtFormLayoutRaw.QFormLayout_verticalSpacing(selfAdr);
+  END QFormLayout_verticalSpacing;
+
+PROCEDURE QFormLayout_spacing (self: QFormLayout; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtFormLayoutRaw.QFormLayout_spacing(selfAdr);
+  END QFormLayout_spacing;
+
+PROCEDURE QFormLayout_setSpacing (self: QFormLayout; arg2: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtFormLayoutRaw.QFormLayout_setSpacing(selfAdr, arg2);
+  END QFormLayout_setSpacing;
+
+PROCEDURE QFormLayout_addRow (self: QFormLayout; label, field: QWidget; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(label.cxxObj, ADDRESS);
+    arg3tmp          := LOOPHOLE(field.cxxObj, ADDRESS);
+  BEGIN
+    QtFormLayoutRaw.QFormLayout_addRow(selfAdr, arg2tmp, arg3tmp);
+  END QFormLayout_addRow;
+
+PROCEDURE QFormLayout_addRow1
+  (self: QFormLayout; label: QWidget; field: QLayout; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(label.cxxObj, ADDRESS);
+    arg3tmp          := LOOPHOLE(field.cxxObj, ADDRESS);
+  BEGIN
+    QtFormLayoutRaw.QFormLayout_addRow1(selfAdr, arg2tmp, arg3tmp);
+  END QFormLayout_addRow1;
+
+PROCEDURE QFormLayout_addRow2
+  (self: QFormLayout; labelText: TEXT; field: QWidget; ) =
+  VAR
+    selfAdr       : ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    qstr_labelText          := NEW(QString).initQString(labelText);
+    arg2tmp                 := LOOPHOLE(qstr_labelText.cxxObj, ADDRESS);
+    arg3tmp                 := LOOPHOLE(field.cxxObj, ADDRESS);
+  BEGIN
+    QtFormLayoutRaw.QFormLayout_addRow2(selfAdr, arg2tmp, arg3tmp);
+  END QFormLayout_addRow2;
+
+PROCEDURE QFormLayout_addRow3
+  (self: QFormLayout; labelText: TEXT; field: QLayout; ) =
+  VAR
+    selfAdr       : ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    qstr_labelText          := NEW(QString).initQString(labelText);
+    arg2tmp                 := LOOPHOLE(qstr_labelText.cxxObj, ADDRESS);
+    arg3tmp                 := LOOPHOLE(field.cxxObj, ADDRESS);
+  BEGIN
+    QtFormLayoutRaw.QFormLayout_addRow3(selfAdr, arg2tmp, arg3tmp);
+  END QFormLayout_addRow3;
+
+PROCEDURE QFormLayout_addRow4 (self: QFormLayout; widget: QWidget; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(widget.cxxObj, ADDRESS);
+  BEGIN
+    QtFormLayoutRaw.QFormLayout_addRow4(selfAdr, arg2tmp);
+  END QFormLayout_addRow4;
+
+PROCEDURE QFormLayout_addRow5 (self: QFormLayout; layout: QLayout; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(layout.cxxObj, ADDRESS);
+  BEGIN
+    QtFormLayoutRaw.QFormLayout_addRow5(selfAdr, arg2tmp);
+  END QFormLayout_addRow5;
+
+PROCEDURE QFormLayout_insertRow
+  (self: QFormLayout; row: INTEGER; label, field: QWidget; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg3tmp          := LOOPHOLE(label.cxxObj, ADDRESS);
+    arg4tmp          := LOOPHOLE(field.cxxObj, ADDRESS);
+  BEGIN
+    QtFormLayoutRaw.QFormLayout_insertRow(selfAdr, row, arg3tmp, arg4tmp);
+  END QFormLayout_insertRow;
+
+PROCEDURE QFormLayout_insertRow1
+  (self: QFormLayout; row: INTEGER; label: QWidget; field: QLayout; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg3tmp          := LOOPHOLE(label.cxxObj, ADDRESS);
+    arg4tmp          := LOOPHOLE(field.cxxObj, ADDRESS);
+  BEGIN
+    QtFormLayoutRaw.QFormLayout_insertRow1(selfAdr, row, arg3tmp, arg4tmp);
+  END QFormLayout_insertRow1;
+
+PROCEDURE QFormLayout_insertRow2
+  (self: QFormLayout; row: INTEGER; labelText: TEXT; field: QWidget; ) =
+  VAR
+    selfAdr       : ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    qstr_labelText          := NEW(QString).initQString(labelText);
+    arg3tmp                 := LOOPHOLE(qstr_labelText.cxxObj, ADDRESS);
+    arg4tmp                 := LOOPHOLE(field.cxxObj, ADDRESS);
+  BEGIN
+    QtFormLayoutRaw.QFormLayout_insertRow2(selfAdr, row, arg3tmp, arg4tmp);
+  END QFormLayout_insertRow2;
+
+PROCEDURE QFormLayout_insertRow3
+  (self: QFormLayout; row: INTEGER; labelText: TEXT; field: QLayout; ) =
+  VAR
+    selfAdr       : ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    qstr_labelText          := NEW(QString).initQString(labelText);
+    arg3tmp                 := LOOPHOLE(qstr_labelText.cxxObj, ADDRESS);
+    arg4tmp                 := LOOPHOLE(field.cxxObj, ADDRESS);
+  BEGIN
+    QtFormLayoutRaw.QFormLayout_insertRow3(selfAdr, row, arg3tmp, arg4tmp);
+  END QFormLayout_insertRow3;
+
+PROCEDURE QFormLayout_insertRow4
+  (self: QFormLayout; row: INTEGER; widget: QWidget; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg3tmp          := LOOPHOLE(widget.cxxObj, ADDRESS);
+  BEGIN
+    QtFormLayoutRaw.QFormLayout_insertRow4(selfAdr, row, arg3tmp);
+  END QFormLayout_insertRow4;
+
+PROCEDURE QFormLayout_insertRow5
+  (self: QFormLayout; row: INTEGER; layout: QLayout; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg3tmp          := LOOPHOLE(layout.cxxObj, ADDRESS);
+  BEGIN
+    QtFormLayoutRaw.QFormLayout_insertRow5(selfAdr, row, arg3tmp);
+  END QFormLayout_insertRow5;
+
+PROCEDURE QFormLayout_setItem
+  (self: QFormLayout; row: INTEGER; role: ItemRole; item: QLayoutItem; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg4tmp          := LOOPHOLE(item.cxxObj, ADDRESS);
+  BEGIN
+    QtFormLayoutRaw.QFormLayout_setItem(selfAdr, row, ORD(role), arg4tmp);
+  END QFormLayout_setItem;
+
+PROCEDURE QFormLayout_setWidget
+  (self: QFormLayout; row: INTEGER; role: ItemRole; widget: QWidget; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg4tmp          := LOOPHOLE(widget.cxxObj, ADDRESS);
+  BEGIN
+    QtFormLayoutRaw.QFormLayout_setWidget(selfAdr, row, ORD(role), arg4tmp);
+  END QFormLayout_setWidget;
+
+PROCEDURE QFormLayout_setLayout
+  (self: QFormLayout; row: INTEGER; role: ItemRole; layout: QLayout; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg4tmp          := LOOPHOLE(layout.cxxObj, ADDRESS);
+  BEGIN
+    QtFormLayoutRaw.QFormLayout_setLayout(selfAdr, row, ORD(role), arg4tmp);
+  END QFormLayout_setLayout;
+
+PROCEDURE QFormLayout_itemAt
+  (self: QFormLayout; row: INTEGER; role: ItemRole; ): QLayoutItem =
+  VAR
+    ret    : ADDRESS;
+    result : QLayoutItem;
+    selfAdr: ADDRESS     := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtFormLayoutRaw.QFormLayout_itemAt(selfAdr, row, ORD(role));
+
+    result := NEW(QLayoutItem);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QFormLayout_itemAt;
+
+PROCEDURE QFormLayout_getItemPosition (    self   : QFormLayout;
+                                           index  : INTEGER;
+                                       VAR rowPtr : INTEGER;
+                                       VAR rolePtr: ItemRole;    ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg3tmp: C.int;
+  BEGIN
+    arg3tmp := rowPtr;
+    QtFormLayoutRaw.QFormLayout_getItemPosition(
+      selfAdr, index, arg3tmp, rolePtr);
+    rowPtr := arg3tmp;
+  END QFormLayout_getItemPosition;
+
+PROCEDURE QFormLayout_getWidgetPosition (    self   : QFormLayout;
+                                             widget : QWidget;
+                                         VAR rowPtr : INTEGER;
+                                         VAR rolePtr: ItemRole;    ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(widget.cxxObj, ADDRESS);
+    arg3tmp: C.int;
+  BEGIN
+    arg3tmp := rowPtr;
+    QtFormLayoutRaw.QFormLayout_getWidgetPosition(
+      selfAdr, arg2tmp, arg3tmp, rolePtr);
+    rowPtr := arg3tmp;
+  END QFormLayout_getWidgetPosition;
+
+PROCEDURE QFormLayout_getLayoutPosition (    self   : QFormLayout;
+                                             layout : QLayout;
+                                         VAR rowPtr : INTEGER;
+                                         VAR rolePtr: ItemRole;    ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(layout.cxxObj, ADDRESS);
+    arg3tmp: C.int;
+  BEGIN
+    arg3tmp := rowPtr;
+    QtFormLayoutRaw.QFormLayout_getLayoutPosition(
+      selfAdr, arg2tmp, arg3tmp, rolePtr);
+    rowPtr := arg3tmp;
+  END QFormLayout_getLayoutPosition;
+
+PROCEDURE QFormLayout_labelForField (self: QFormLayout; field: QWidget; ):
+  QWidget =
+  VAR
+    ret    : ADDRESS;
+    result : QWidget;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(field.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtFormLayoutRaw.QFormLayout_labelForField(selfAdr, arg2tmp);
+
+    result := NEW(QWidget);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QFormLayout_labelForField;
+
+PROCEDURE QFormLayout_labelForField1 (self: QFormLayout; field: QLayout; ):
+  QWidget =
+  VAR
+    ret    : ADDRESS;
+    result : QWidget;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(field.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtFormLayoutRaw.QFormLayout_labelForField1(selfAdr, arg2tmp);
+
+    result := NEW(QWidget);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QFormLayout_labelForField1;
+
+PROCEDURE QFormLayout_addItem (self: QFormLayout; item: QLayoutItem; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(item.cxxObj, ADDRESS);
+  BEGIN
+    QtFormLayoutRaw.QFormLayout_addItem(selfAdr, arg2tmp);
+  END QFormLayout_addItem;
+
+PROCEDURE QFormLayout_itemAt1 (self: QFormLayout; index: INTEGER; ):
+  QLayoutItem =
+  VAR
+    ret    : ADDRESS;
+    result : QLayoutItem;
+    selfAdr: ADDRESS     := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtFormLayoutRaw.QFormLayout_itemAt1(selfAdr, index);
+
+    result := NEW(QLayoutItem);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QFormLayout_itemAt1;
+
+PROCEDURE QFormLayout_takeAt (self: QFormLayout; index: INTEGER; ):
+  QLayoutItem =
+  VAR
+    ret    : ADDRESS;
+    result : QLayoutItem;
+    selfAdr: ADDRESS     := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtFormLayoutRaw.QFormLayout_takeAt(selfAdr, index);
+
+    result := NEW(QLayoutItem);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QFormLayout_takeAt;
+
+PROCEDURE QFormLayout_setGeometry (self: QFormLayout; rect: QRect; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(rect.cxxObj, ADDRESS);
+  BEGIN
+    QtFormLayoutRaw.QFormLayout_setGeometry(selfAdr, arg2tmp);
+  END QFormLayout_setGeometry;
+
+PROCEDURE QFormLayout_minimumSize (self: QFormLayout; ): QSize =
+  VAR
+    ret    : ADDRESS;
+    result : QSize;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtFormLayoutRaw.QFormLayout_minimumSize(selfAdr);
+
+    result := NEW(QSize);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QFormLayout_minimumSize;
+
+PROCEDURE QFormLayout_sizeHint (self: QFormLayout; ): QSize =
+  VAR
+    ret    : ADDRESS;
+    result : QSize;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtFormLayoutRaw.QFormLayout_sizeHint(selfAdr);
+
+    result := NEW(QSize);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QFormLayout_sizeHint;
+
+PROCEDURE QFormLayout_invalidate (self: QFormLayout; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtFormLayoutRaw.QFormLayout_invalidate(selfAdr);
+  END QFormLayout_invalidate;
+
+PROCEDURE QFormLayout_hasHeightForWidth (self: QFormLayout; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtFormLayoutRaw.QFormLayout_hasHeightForWidth(selfAdr);
+  END QFormLayout_hasHeightForWidth;
+
+PROCEDURE QFormLayout_heightForWidth (self: QFormLayout; width: INTEGER; ):
+  INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtFormLayoutRaw.QFormLayout_heightForWidth(selfAdr, width);
+  END QFormLayout_heightForWidth;
+
+PROCEDURE QFormLayout_expandingDirections (self: QFormLayout; ):
+  Orientations =
+  VAR
+    ret    : INTEGER;
+    result : Orientations;
+    selfAdr: ADDRESS      := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtFormLayoutRaw.QFormLayout_expandingDirections(selfAdr);
+    result := VAL(ret, Orientations);
+    RETURN result;
+  END QFormLayout_expandingDirections;
+
+PROCEDURE QFormLayout_count (self: QFormLayout; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtFormLayoutRaw.QFormLayout_count(selfAdr);
+  END QFormLayout_count;
+
+PROCEDURE QFormLayout_rowCount (self: QFormLayout; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtFormLayoutRaw.QFormLayout_rowCount(selfAdr);
+  END QFormLayout_rowCount;
+
+PROCEDURE Cleanup_QFormLayout
+  (<* UNUSED *> READONLY self: WeakRef.T; ref: REFANY) =
+  VAR obj: QFormLayout := ref;
+  BEGIN
+    Delete_QFormLayout(obj);
+  END Cleanup_QFormLayout;
+
+PROCEDURE Destroy_QFormLayout (self: QFormLayout) =
+  BEGIN
+    EVAL WeakRef.FromRef(self, Cleanup_QFormLayout);
+  END Destroy_QFormLayout;
 
 REVEAL
-QFormLayout =
-QFormLayoutPublic BRANDED OBJECT
-OVERRIDES
-init_0 := New_QFormLayout0;
-init_1 := New_QFormLayout1;
-setFieldGrowthPolicy := QFormLayout_setFieldGrowthPolicy;
-fieldGrowthPolicy := QFormLayout_fieldGrowthPolicy;
-setRowWrapPolicy := QFormLayout_setRowWrapPolicy;
-rowWrapPolicy := QFormLayout_rowWrapPolicy;
-setLabelAlignment := QFormLayout_setLabelAlignment;
-labelAlignment := QFormLayout_labelAlignment;
-setFormAlignment := QFormLayout_setFormAlignment;
-formAlignment := QFormLayout_formAlignment;
-setHorizontalSpacing := QFormLayout_setHorizontalSpacing;
-horizontalSpacing := QFormLayout_horizontalSpacing;
-setVerticalSpacing := QFormLayout_setVerticalSpacing;
-verticalSpacing := QFormLayout_verticalSpacing;
-spacing := QFormLayout_spacing;
-setSpacing := QFormLayout_setSpacing;
-addRow := QFormLayout_addRow;
-addRow1 := QFormLayout_addRow1;
-addRow2 := QFormLayout_addRow2;
-addRow3 := QFormLayout_addRow3;
-addRow4 := QFormLayout_addRow4;
-addRow5 := QFormLayout_addRow5;
-insertRow := QFormLayout_insertRow;
-insertRow1 := QFormLayout_insertRow1;
-insertRow2 := QFormLayout_insertRow2;
-insertRow3 := QFormLayout_insertRow3;
-insertRow4 := QFormLayout_insertRow4;
-insertRow5 := QFormLayout_insertRow5;
-setItem := QFormLayout_setItem;
-setWidget := QFormLayout_setWidget;
-setLayout := QFormLayout_setLayout;
-itemAt := QFormLayout_itemAt;
-getItemPosition := QFormLayout_getItemPosition;
-getWidgetPosition := QFormLayout_getWidgetPosition;
-getLayoutPosition := QFormLayout_getLayoutPosition;
-labelForField := QFormLayout_labelForField;
-labelForField1 := QFormLayout_labelForField1;
-addItem := QFormLayout_addItem;
-itemAt1 := QFormLayout_itemAt1;
-takeAt := QFormLayout_takeAt;
-setGeometry := QFormLayout_setGeometry;
-minimumSize := QFormLayout_minimumSize;
-sizeHint := QFormLayout_sizeHint;
-invalidate := QFormLayout_invalidate;
-hasHeightForWidth := QFormLayout_hasHeightForWidth;
-heightForWidth := QFormLayout_heightForWidth;
-expandingDirections := QFormLayout_expandingDirections;
-count := QFormLayout_count;
-rowCount := QFormLayout_rowCount;
-destroyCxx := Destroy_QFormLayout;
-END;
+  QFormLayout = QFormLayoutPublic BRANDED OBJECT
+                OVERRIDES
+                  init_0               := New_QFormLayout0;
+                  init_1               := New_QFormLayout1;
+                  setFieldGrowthPolicy := QFormLayout_setFieldGrowthPolicy;
+                  fieldGrowthPolicy    := QFormLayout_fieldGrowthPolicy;
+                  setRowWrapPolicy     := QFormLayout_setRowWrapPolicy;
+                  rowWrapPolicy        := QFormLayout_rowWrapPolicy;
+                  setLabelAlignment    := QFormLayout_setLabelAlignment;
+                  labelAlignment       := QFormLayout_labelAlignment;
+                  setFormAlignment     := QFormLayout_setFormAlignment;
+                  formAlignment        := QFormLayout_formAlignment;
+                  setHorizontalSpacing := QFormLayout_setHorizontalSpacing;
+                  horizontalSpacing    := QFormLayout_horizontalSpacing;
+                  setVerticalSpacing   := QFormLayout_setVerticalSpacing;
+                  verticalSpacing      := QFormLayout_verticalSpacing;
+                  spacing              := QFormLayout_spacing;
+                  setSpacing           := QFormLayout_setSpacing;
+                  addRow               := QFormLayout_addRow;
+                  addRow1              := QFormLayout_addRow1;
+                  addRow2              := QFormLayout_addRow2;
+                  addRow3              := QFormLayout_addRow3;
+                  addRow4              := QFormLayout_addRow4;
+                  addRow5              := QFormLayout_addRow5;
+                  insertRow            := QFormLayout_insertRow;
+                  insertRow1           := QFormLayout_insertRow1;
+                  insertRow2           := QFormLayout_insertRow2;
+                  insertRow3           := QFormLayout_insertRow3;
+                  insertRow4           := QFormLayout_insertRow4;
+                  insertRow5           := QFormLayout_insertRow5;
+                  setItem              := QFormLayout_setItem;
+                  setWidget            := QFormLayout_setWidget;
+                  setLayout            := QFormLayout_setLayout;
+                  itemAt               := QFormLayout_itemAt;
+                  getItemPosition      := QFormLayout_getItemPosition;
+                  getWidgetPosition    := QFormLayout_getWidgetPosition;
+                  getLayoutPosition    := QFormLayout_getLayoutPosition;
+                  labelForField        := QFormLayout_labelForField;
+                  labelForField1       := QFormLayout_labelForField1;
+                  addItem              := QFormLayout_addItem;
+                  itemAt1              := QFormLayout_itemAt1;
+                  takeAt               := QFormLayout_takeAt;
+                  setGeometry          := QFormLayout_setGeometry;
+                  minimumSize          := QFormLayout_minimumSize;
+                  sizeHint             := QFormLayout_sizeHint;
+                  invalidate           := QFormLayout_invalidate;
+                  hasHeightForWidth    := QFormLayout_hasHeightForWidth;
+                  heightForWidth       := QFormLayout_heightForWidth;
+                  expandingDirections  := QFormLayout_expandingDirections;
+                  count                := QFormLayout_count;
+                  rowCount             := QFormLayout_rowCount;
+                  destroyCxx           := Destroy_QFormLayout;
+                END;
 
 
 BEGIN

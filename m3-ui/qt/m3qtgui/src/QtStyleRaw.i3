@@ -15,172 +15,134 @@ IMPORT Ctypes AS C;
 
 
 <* EXTERNAL Delete_QStyle *>
-PROCEDURE Delete_QStyle ( self: QStyle;
-);
+PROCEDURE Delete_QStyle (self: QStyle; );
 
 <* EXTERNAL QStyle_polish *>
-PROCEDURE QStyle_polish ( self: QStyle;
- arg2: ADDRESS;
-);
+PROCEDURE QStyle_polish (self: QStyle; arg2: ADDRESS; );
 
 <* EXTERNAL QStyle_unpolish *>
-PROCEDURE QStyle_unpolish ( self: QStyle;
- arg2: ADDRESS;
-);
+PROCEDURE QStyle_unpolish (self: QStyle; arg2: ADDRESS; );
 
 <* EXTERNAL QStyle_polish1 *>
-PROCEDURE QStyle_polish1 ( self: QStyle;
- arg2: ADDRESS;
-);
+PROCEDURE QStyle_polish1 (self: QStyle; arg2: ADDRESS; );
 
 <* EXTERNAL QStyle_unpolish1 *>
-PROCEDURE QStyle_unpolish1 ( self: QStyle;
- arg2: ADDRESS;
-);
+PROCEDURE QStyle_unpolish1 (self: QStyle; arg2: ADDRESS; );
 
 <* EXTERNAL QStyle_polish2 *>
-PROCEDURE QStyle_polish2 ( self: QStyle;
- arg2: ADDRESS;
-);
+PROCEDURE QStyle_polish2 (self: QStyle; arg2: ADDRESS; );
 
 <* EXTERNAL QStyle_itemTextRect *>
-PROCEDURE QStyle_itemTextRect ( self: QStyle;
- fm, r: ADDRESS;
-flags: C.int;
-enabled: BOOLEAN;
- text: ADDRESS;
-): ADDRESS;
+PROCEDURE QStyle_itemTextRect (self   : QStyle;
+                               fm, r  : ADDRESS;
+                               flags  : C.int;
+                               enabled: BOOLEAN;
+                               text   : ADDRESS; ): ADDRESS;
 
 <* EXTERNAL QStyle_itemPixmapRect *>
-PROCEDURE QStyle_itemPixmapRect ( self: QStyle;
- r: ADDRESS;
-flags: C.int;
- pixmap: ADDRESS;
-): ADDRESS;
+PROCEDURE QStyle_itemPixmapRect
+  (self: QStyle; r: ADDRESS; flags: C.int; pixmap: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL QStyle_drawItemText *>
-PROCEDURE QStyle_drawItemText ( self: QStyle;
- painter, rect: ADDRESS;
-flags: C.int;
- pal: ADDRESS;
-enabled: BOOLEAN;
- text: ADDRESS;
-textRole: C.int;
-);
+PROCEDURE QStyle_drawItemText (self         : QStyle;
+                               painter, rect: ADDRESS;
+                               flags        : C.int;
+                               pal          : ADDRESS;
+                               enabled      : BOOLEAN;
+                               text         : ADDRESS;
+                               textRole     : C.int;   );
 
 <* EXTERNAL QStyle_drawItemText1 *>
-PROCEDURE QStyle_drawItemText1 ( self: QStyle;
- painter, rect: ADDRESS;
-flags: C.int;
- pal: ADDRESS;
-enabled: BOOLEAN;
- text: ADDRESS;
-);
+PROCEDURE QStyle_drawItemText1 (self         : QStyle;
+                                painter, rect: ADDRESS;
+                                flags        : C.int;
+                                pal          : ADDRESS;
+                                enabled      : BOOLEAN;
+                                text         : ADDRESS; );
 
 <* EXTERNAL QStyle_drawItemPixmap *>
-PROCEDURE QStyle_drawItemPixmap ( self: QStyle;
- painter, rect: ADDRESS;
-alignment: C.int;
- pixmap: ADDRESS;
-);
+PROCEDURE QStyle_drawItemPixmap (self         : QStyle;
+                                 painter, rect: ADDRESS;
+                                 alignment    : C.int;
+                                 pixmap       : ADDRESS; );
 
 <* EXTERNAL QStyle_standardPalette *>
-PROCEDURE QStyle_standardPalette ( self: QStyle;
-): ADDRESS;
+PROCEDURE QStyle_standardPalette (self: QStyle; ): ADDRESS;
 
 <* EXTERNAL QStyle_standardIcon *>
-PROCEDURE QStyle_standardIcon ( self: QStyle;
-standardIcon: C.int;
- option, widget: ADDRESS;
-): ADDRESS;
+PROCEDURE QStyle_standardIcon
+  (self: QStyle; standardIcon: C.int; option, widget: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL QStyle_standardIcon1 *>
-PROCEDURE QStyle_standardIcon1 ( self: QStyle;
-standardIcon: C.int;
- option: ADDRESS;
-): ADDRESS;
+PROCEDURE QStyle_standardIcon1
+  (self: QStyle; standardIcon: C.int; option: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL QStyle_standardIcon2 *>
-PROCEDURE QStyle_standardIcon2 ( self: QStyle;
-standardIcon: C.int;
-): ADDRESS;
+PROCEDURE QStyle_standardIcon2 (self: QStyle; standardIcon: C.int; ):
+  ADDRESS;
 
 <* EXTERNAL VisualRect *>
-PROCEDURE VisualRect (direction: C.int;
- boundingRect, logicalRect: ADDRESS;
-): ADDRESS;
+PROCEDURE VisualRect
+  (direction: C.int; boundingRect, logicalRect: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL VisualPos *>
-PROCEDURE VisualPos (direction: C.int;
- boundingRect, logicalPos: ADDRESS;
-): ADDRESS;
+PROCEDURE VisualPos
+  (direction: C.int; boundingRect, logicalPos: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL SliderPositionFromValue *>
-PROCEDURE SliderPositionFromValue (min, max, val, space: C.int;
-upsideDown: BOOLEAN;
-): C.int;
+PROCEDURE SliderPositionFromValue
+  (min, max, val, space: C.int; upsideDown: BOOLEAN; ): C.int;
 
 <* EXTERNAL SliderPositionFromValue1 *>
-PROCEDURE SliderPositionFromValue1 (min, max, val, space: C.int;
-): C.int;
+PROCEDURE SliderPositionFromValue1 (min, max, val, space: C.int; ): C.int;
 
 <* EXTERNAL SliderValueFromPosition *>
-PROCEDURE SliderValueFromPosition (min, max, pos, space: C.int;
-upsideDown: BOOLEAN;
-): C.int;
+PROCEDURE SliderValueFromPosition
+  (min, max, pos, space: C.int; upsideDown: BOOLEAN; ): C.int;
 
 <* EXTERNAL SliderValueFromPosition1 *>
-PROCEDURE SliderValueFromPosition1 (min, max, pos, space: C.int;
-): C.int;
+PROCEDURE SliderValueFromPosition1 (min, max, pos, space: C.int; ): C.int;
 
 <* EXTERNAL VisualAlignment *>
-PROCEDURE VisualAlignment (direction, alignment: C.int;
-): C.int;
+PROCEDURE VisualAlignment (direction, alignment: C.int; ): C.int;
 
 <* EXTERNAL AlignedRect *>
-PROCEDURE AlignedRect (direction, alignment: C.int;
- size, rectangle: ADDRESS;
-): ADDRESS;
+PROCEDURE AlignedRect
+  (direction, alignment: C.int; size, rectangle: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL QStyle_layoutSpacing *>
-PROCEDURE QStyle_layoutSpacing ( self: QStyle;
-control1, control2, orientation: C.int;
- option, widget: ADDRESS;
-): C.int;
+PROCEDURE QStyle_layoutSpacing
+  (self                           : QStyle;
+   control1, control2, orientation: C.int;
+   option, widget                 : ADDRESS; ): C.int;
 
 <* EXTERNAL QStyle_layoutSpacing1 *>
-PROCEDURE QStyle_layoutSpacing1 ( self: QStyle;
-control1, control2, orientation: C.int;
- option: ADDRESS;
-): C.int;
+PROCEDURE QStyle_layoutSpacing1
+  (self: QStyle; control1, control2, orientation: C.int; option: ADDRESS; ):
+  C.int;
 
 <* EXTERNAL QStyle_layoutSpacing2 *>
-PROCEDURE QStyle_layoutSpacing2 ( self: QStyle;
-control1, control2, orientation: C.int;
-): C.int;
+PROCEDURE QStyle_layoutSpacing2
+  (self: QStyle; control1, control2, orientation: C.int; ): C.int;
 
 <* EXTERNAL QStyle_combinedLayoutSpacing *>
-PROCEDURE QStyle_combinedLayoutSpacing ( self: QStyle;
-controls1, controls2, orientation: C.int;
- option, widget: ADDRESS;
-): C.int;
+PROCEDURE QStyle_combinedLayoutSpacing
+  (self                             : QStyle;
+   controls1, controls2, orientation: C.int;
+   option, widget                   : ADDRESS; ): C.int;
 
 <* EXTERNAL QStyle_combinedLayoutSpacing1 *>
-PROCEDURE QStyle_combinedLayoutSpacing1 ( self: QStyle;
-controls1, controls2, orientation: C.int;
- option: ADDRESS;
-): C.int;
+PROCEDURE QStyle_combinedLayoutSpacing1
+  (self: QStyle; controls1, controls2, orientation: C.int; option: ADDRESS; ):
+  C.int;
 
 <* EXTERNAL QStyle_combinedLayoutSpacing2 *>
-PROCEDURE QStyle_combinedLayoutSpacing2 ( self: QStyle;
-controls1, controls2, orientation: C.int;
-): C.int;
+PROCEDURE QStyle_combinedLayoutSpacing2
+  (self: QStyle; controls1, controls2, orientation: C.int; ): C.int;
 
 <* EXTERNAL QStyle_proxy *>
-PROCEDURE QStyle_proxy ( self: QStyle;
-): UNTRACED REF QStyle;
+PROCEDURE QStyle_proxy (self: QStyle; ): UNTRACED REF QStyle;
 
-TYPE
-QStyle = ADDRESS;
+TYPE QStyle = ADDRESS;
 
 END QtStyleRaw.

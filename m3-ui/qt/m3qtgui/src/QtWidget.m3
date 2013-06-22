@@ -10,18 +10,24 @@ UNSAFE MODULE QtWidget;
 
 
 FROM QtPoint IMPORT QPoint;
-FROM QtNamespace IMPORT WindowTypes,GestureFlags,WindowStates,FocusPolicy,ContextMenuPolicy,WindowType,WidgetAttribute,InputMethodHints,WindowModality,ShortcutContext,GestureType,LayoutDirection,FocusReason;
+FROM QtNamespace IMPORT WindowTypes, GestureFlags, WindowStates,
+                        FocusPolicy, ContextMenuPolicy, WindowType,
+                        WidgetAttribute, InputMethodHints, WindowModality,
+                        ShortcutContext, GestureType, LayoutDirection,
+                        FocusReason;
 FROM QtFont IMPORT QFont;
 FROM QtBitmap IMPORT QBitmap;
-FROM QGuiStubs IMPORT QFontMetrics,QLocale,QFontInfo,QPaintEngine,QGraphicsEffect,QWindowSurface,QCursor,QGraphicsProxyWidget,QInputContext;
+FROM QGuiStubs IMPORT QFontMetrics, QLocale, QFontInfo, QPaintEngine,
+                      QGraphicsEffect, QWindowSurface, QCursor,
+                      QGraphicsProxyWidget, QInputContext;
 FROM QtSize IMPORT QSize;
 FROM QtByteArray IMPORT QByteArray;
-FROM QtSizePolicy IMPORT Policy,QSizePolicy;
+FROM QtSizePolicy IMPORT Policy, QSizePolicy;
 FROM QtMargins IMPORT QMargins;
 FROM QtRect IMPORT QRect;
 FROM QtIcon IMPORT QIcon;
 FROM QtString IMPORT QString;
-FROM QtPalette IMPORT ColorRole,QPalette;
+FROM QtPalette IMPORT ColorRole, QPalette;
 FROM QtStyle IMPORT QStyle;
 FROM QtKeySequence IMPORT QKeySequence;
 FROM QtRegion IMPORT QRegion;
@@ -33,2931 +39,2555 @@ IMPORT WeakRef;
 IMPORT Ctypes AS C;
 FROM QtLayout IMPORT QLayout;
 
-PROCEDURE New_QWidget0 (self:QWidget; parent: QWidget;
-f: WindowTypes;
-): QWidget =
-VAR
-result : ADDRESS;
-arg1tmp :=  LOOPHOLE(parent.cxxObj,ADDRESS);
-BEGIN
-result := QtWidgetRaw.New_QWidget0(arg1tmp, ORD(f));
-
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QWidget);
-
-RETURN self;
-END New_QWidget0;
-
-PROCEDURE New_QWidget1 (self:QWidget; parent: QWidget;
-): QWidget =
-VAR
-result : ADDRESS;
-arg1tmp :=  LOOPHOLE(parent.cxxObj,ADDRESS);
-BEGIN
-result := QtWidgetRaw.New_QWidget1(arg1tmp);
-
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QWidget);
-
-RETURN self;
-END New_QWidget1;
-
-PROCEDURE New_init_widget (self:QWidget;): QWidget =
-VAR
-result : ADDRESS;
-BEGIN
-result := QtWidgetRaw.New_init_widget();
-
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QWidget);
-
-RETURN self;
-END New_init_widget;
-
-PROCEDURE Delete_QWidget ( self: QWidget;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.Delete_QWidget(selfAdr);
-END Delete_QWidget;
-
-PROCEDURE QWidget_devType ( self: QWidget;
-): INTEGER =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtWidgetRaw.QWidget_devType(selfAdr);
-END QWidget_devType;
-
-PROCEDURE QWidget_winId ( self: QWidget;
-): INTEGER =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtWidgetRaw.QWidget_winId(selfAdr);
-END QWidget_winId;
-
-PROCEDURE QWidget_createWinId ( self: QWidget;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_createWinId(selfAdr);
-END QWidget_createWinId;
-
-PROCEDURE QWidget_effectiveWinId ( self: QWidget;
-): INTEGER =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtWidgetRaw.QWidget_effectiveWinId(selfAdr);
-END QWidget_effectiveWinId;
-
-PROCEDURE QWidget_style ( self: QWidget;
-): QStyle =
-VAR
-ret:ADDRESS; result : QStyle;
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtWidgetRaw.QWidget_style(selfAdr);
-
-  result := NEW(QStyle);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QWidget_style;
-
-PROCEDURE QWidget_setStyle ( self: QWidget;
- arg2: QStyle;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(arg2.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_setStyle(selfAdr, arg2tmp);
-END QWidget_setStyle;
-
-PROCEDURE QWidget_isTopLevel ( self: QWidget;
-): BOOLEAN =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtWidgetRaw.QWidget_isTopLevel(selfAdr);
-END QWidget_isTopLevel;
-
-PROCEDURE QWidget_isWindow ( self: QWidget;
-): BOOLEAN =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtWidgetRaw.QWidget_isWindow(selfAdr);
-END QWidget_isWindow;
-
-PROCEDURE QWidget_isModal ( self: QWidget;
-): BOOLEAN =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtWidgetRaw.QWidget_isModal(selfAdr);
-END QWidget_isModal;
-
-PROCEDURE QWidget_windowModality ( self: QWidget;
-): WindowModality =
-VAR
-ret:INTEGER; result : WindowModality;
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtWidgetRaw.QWidget_windowModality(selfAdr);
-result := VAL(ret,WindowModality);  
-RETURN result;
-END QWidget_windowModality;
-
-PROCEDURE QWidget_setWindowModality ( self: QWidget;
-windowModality: WindowModality;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_setWindowModality(selfAdr, ORD(windowModality));
-END QWidget_setWindowModality;
-
-PROCEDURE QWidget_isEnabled ( self: QWidget;
-): BOOLEAN =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtWidgetRaw.QWidget_isEnabled(selfAdr);
-END QWidget_isEnabled;
-
-PROCEDURE QWidget_isEnabledTo ( self, arg2: QWidget;
-): BOOLEAN =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(arg2.cxxObj,ADDRESS);
-BEGIN
-RETURN QtWidgetRaw.QWidget_isEnabledTo(selfAdr, arg2tmp);
-END QWidget_isEnabledTo;
-
-PROCEDURE QWidget_isEnabledToTLW ( self: QWidget;
-): BOOLEAN =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtWidgetRaw.QWidget_isEnabledToTLW(selfAdr);
-END QWidget_isEnabledToTLW;
-
-PROCEDURE QWidget_setEnabled ( self: QWidget;
-arg2: BOOLEAN;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_setEnabled(selfAdr, arg2);
-END QWidget_setEnabled;
-
-PROCEDURE QWidget_setDisabled ( self: QWidget;
-arg2: BOOLEAN;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_setDisabled(selfAdr, arg2);
-END QWidget_setDisabled;
-
-PROCEDURE QWidget_setWindowModified ( self: QWidget;
-arg2: BOOLEAN;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_setWindowModified(selfAdr, arg2);
-END QWidget_setWindowModified;
-
-PROCEDURE QWidget_frameGeometry ( self: QWidget;
-): QRect =
-VAR
-ret:ADDRESS; result : QRect;
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtWidgetRaw.QWidget_frameGeometry(selfAdr);
-
-  result := NEW(QRect);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QWidget_frameGeometry;
-
-PROCEDURE QWidget_geometry ( self: QWidget;
-): QRect =
-VAR
-ret:ADDRESS; result : QRect;
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtWidgetRaw.QWidget_geometry(selfAdr);
-
-  result := NEW(QRect);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QWidget_geometry;
-
-PROCEDURE QWidget_normalGeometry ( self: QWidget;
-): QRect =
-VAR
-ret:ADDRESS; result : QRect;
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtWidgetRaw.QWidget_normalGeometry(selfAdr);
-
-  result := NEW(QRect);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QWidget_normalGeometry;
-
-PROCEDURE QWidget_x ( self: QWidget;
-): INTEGER =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtWidgetRaw.QWidget_x(selfAdr);
-END QWidget_x;
-
-PROCEDURE QWidget_y ( self: QWidget;
-): INTEGER =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtWidgetRaw.QWidget_y(selfAdr);
-END QWidget_y;
-
-PROCEDURE QWidget_pos ( self: QWidget;
-): QPoint =
-VAR
-ret:ADDRESS; result : QPoint;
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtWidgetRaw.QWidget_pos(selfAdr);
-
-  result := NEW(QPoint);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QWidget_pos;
-
-PROCEDURE QWidget_frameSize ( self: QWidget;
-): QSize =
-VAR
-ret:ADDRESS; result : QSize;
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtWidgetRaw.QWidget_frameSize(selfAdr);
-
-  result := NEW(QSize);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QWidget_frameSize;
-
-PROCEDURE QWidget_size ( self: QWidget;
-): QSize =
-VAR
-ret:ADDRESS; result : QSize;
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtWidgetRaw.QWidget_size(selfAdr);
-
-  result := NEW(QSize);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QWidget_size;
-
-PROCEDURE QWidget_width ( self: QWidget;
-): INTEGER =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtWidgetRaw.QWidget_width(selfAdr);
-END QWidget_width;
-
-PROCEDURE QWidget_height ( self: QWidget;
-): INTEGER =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtWidgetRaw.QWidget_height(selfAdr);
-END QWidget_height;
-
-PROCEDURE QWidget_rect ( self: QWidget;
-): QRect =
-VAR
-ret:ADDRESS; result : QRect;
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtWidgetRaw.QWidget_rect(selfAdr);
-
-  result := NEW(QRect);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QWidget_rect;
-
-PROCEDURE QWidget_childrenRect ( self: QWidget;
-): QRect =
-VAR
-ret:ADDRESS; result : QRect;
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtWidgetRaw.QWidget_childrenRect(selfAdr);
-
-  result := NEW(QRect);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QWidget_childrenRect;
-
-PROCEDURE QWidget_childrenRegion ( self: QWidget;
-): QRegion =
-VAR
-ret:ADDRESS; result : QRegion;
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtWidgetRaw.QWidget_childrenRegion(selfAdr);
-
-  result := NEW(QRegion);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QWidget_childrenRegion;
-
-PROCEDURE QWidget_minimumSize ( self: QWidget;
-): QSize =
-VAR
-ret:ADDRESS; result : QSize;
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtWidgetRaw.QWidget_minimumSize(selfAdr);
-
-  result := NEW(QSize);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QWidget_minimumSize;
-
-PROCEDURE QWidget_maximumSize ( self: QWidget;
-): QSize =
-VAR
-ret:ADDRESS; result : QSize;
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtWidgetRaw.QWidget_maximumSize(selfAdr);
-
-  result := NEW(QSize);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QWidget_maximumSize;
-
-PROCEDURE QWidget_minimumWidth ( self: QWidget;
-): INTEGER =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtWidgetRaw.QWidget_minimumWidth(selfAdr);
-END QWidget_minimumWidth;
-
-PROCEDURE QWidget_minimumHeight ( self: QWidget;
-): INTEGER =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtWidgetRaw.QWidget_minimumHeight(selfAdr);
-END QWidget_minimumHeight;
-
-PROCEDURE QWidget_maximumWidth ( self: QWidget;
-): INTEGER =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtWidgetRaw.QWidget_maximumWidth(selfAdr);
-END QWidget_maximumWidth;
-
-PROCEDURE QWidget_maximumHeight ( self: QWidget;
-): INTEGER =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtWidgetRaw.QWidget_maximumHeight(selfAdr);
-END QWidget_maximumHeight;
-
-PROCEDURE QWidget_setMinimumSize ( self: QWidget;
- arg2: QSize;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(arg2.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_setMinimumSize(selfAdr, arg2tmp);
-END QWidget_setMinimumSize;
-
-PROCEDURE QWidget_setMinimumSize1 ( self: QWidget;
-minw, minh: INTEGER;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_setMinimumSize1(selfAdr, minw, minh);
-END QWidget_setMinimumSize1;
-
-PROCEDURE QWidget_setMaximumSize ( self: QWidget;
- arg2: QSize;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(arg2.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_setMaximumSize(selfAdr, arg2tmp);
-END QWidget_setMaximumSize;
-
-PROCEDURE QWidget_setMaximumSize1 ( self: QWidget;
-maxw, maxh: INTEGER;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_setMaximumSize1(selfAdr, maxw, maxh);
-END QWidget_setMaximumSize1;
-
-PROCEDURE QWidget_setMinimumWidth ( self: QWidget;
-minw: INTEGER;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_setMinimumWidth(selfAdr, minw);
-END QWidget_setMinimumWidth;
-
-PROCEDURE QWidget_setMinimumHeight ( self: QWidget;
-minh: INTEGER;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_setMinimumHeight(selfAdr, minh);
-END QWidget_setMinimumHeight;
-
-PROCEDURE QWidget_setMaximumWidth ( self: QWidget;
-maxw: INTEGER;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_setMaximumWidth(selfAdr, maxw);
-END QWidget_setMaximumWidth;
-
-PROCEDURE QWidget_setMaximumHeight ( self: QWidget;
-maxh: INTEGER;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_setMaximumHeight(selfAdr, maxh);
-END QWidget_setMaximumHeight;
-
-PROCEDURE QWidget_sizeIncrement ( self: QWidget;
-): QSize =
-VAR
-ret:ADDRESS; result : QSize;
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtWidgetRaw.QWidget_sizeIncrement(selfAdr);
-
-  result := NEW(QSize);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QWidget_sizeIncrement;
-
-PROCEDURE QWidget_setSizeIncrement ( self: QWidget;
- arg2: QSize;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(arg2.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_setSizeIncrement(selfAdr, arg2tmp);
-END QWidget_setSizeIncrement;
-
-PROCEDURE QWidget_setSizeIncrement1 ( self: QWidget;
-w, h: INTEGER;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_setSizeIncrement1(selfAdr, w, h);
-END QWidget_setSizeIncrement1;
-
-PROCEDURE QWidget_baseSize ( self: QWidget;
-): QSize =
-VAR
-ret:ADDRESS; result : QSize;
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtWidgetRaw.QWidget_baseSize(selfAdr);
-
-  result := NEW(QSize);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QWidget_baseSize;
-
-PROCEDURE QWidget_setBaseSize ( self: QWidget;
- arg2: QSize;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(arg2.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_setBaseSize(selfAdr, arg2tmp);
-END QWidget_setBaseSize;
-
-PROCEDURE QWidget_setBaseSize1 ( self: QWidget;
-basew, baseh: INTEGER;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_setBaseSize1(selfAdr, basew, baseh);
-END QWidget_setBaseSize1;
-
-PROCEDURE QWidget_setFixedSize ( self: QWidget;
- arg2: QSize;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(arg2.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_setFixedSize(selfAdr, arg2tmp);
-END QWidget_setFixedSize;
-
-PROCEDURE QWidget_setFixedSize1 ( self: QWidget;
-w, h: INTEGER;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_setFixedSize1(selfAdr, w, h);
-END QWidget_setFixedSize1;
-
-PROCEDURE QWidget_setFixedWidth ( self: QWidget;
-w: INTEGER;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_setFixedWidth(selfAdr, w);
-END QWidget_setFixedWidth;
-
-PROCEDURE QWidget_setFixedHeight ( self: QWidget;
-h: INTEGER;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_setFixedHeight(selfAdr, h);
-END QWidget_setFixedHeight;
-
-PROCEDURE QWidget_mapToGlobal ( self: QWidget;
- arg2: QPoint;
-): QPoint =
-VAR
-ret:ADDRESS; result : QPoint;
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(arg2.cxxObj,ADDRESS);
-BEGIN
-ret := QtWidgetRaw.QWidget_mapToGlobal(selfAdr, arg2tmp);
-
-  result := NEW(QPoint);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QWidget_mapToGlobal;
-
-PROCEDURE QWidget_mapFromGlobal ( self: QWidget;
- arg2: QPoint;
-): QPoint =
-VAR
-ret:ADDRESS; result : QPoint;
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(arg2.cxxObj,ADDRESS);
-BEGIN
-ret := QtWidgetRaw.QWidget_mapFromGlobal(selfAdr, arg2tmp);
-
-  result := NEW(QPoint);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QWidget_mapFromGlobal;
-
-PROCEDURE QWidget_mapToParent ( self: QWidget;
- arg2: QPoint;
-): QPoint =
-VAR
-ret:ADDRESS; result : QPoint;
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(arg2.cxxObj,ADDRESS);
-BEGIN
-ret := QtWidgetRaw.QWidget_mapToParent(selfAdr, arg2tmp);
-
-  result := NEW(QPoint);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QWidget_mapToParent;
-
-PROCEDURE QWidget_mapFromParent ( self: QWidget;
- arg2: QPoint;
-): QPoint =
-VAR
-ret:ADDRESS; result : QPoint;
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(arg2.cxxObj,ADDRESS);
-BEGIN
-ret := QtWidgetRaw.QWidget_mapFromParent(selfAdr, arg2tmp);
-
-  result := NEW(QPoint);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QWidget_mapFromParent;
-
-PROCEDURE QWidget_mapTo ( self, arg2: QWidget;
- arg3: QPoint;
-): QPoint =
-VAR
-ret:ADDRESS; result : QPoint;
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(arg2.cxxObj,ADDRESS);
-arg3tmp :=  LOOPHOLE(arg3.cxxObj,ADDRESS);
-BEGIN
-ret := QtWidgetRaw.QWidget_mapTo(selfAdr, arg2tmp, arg3tmp);
-
-  result := NEW(QPoint);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QWidget_mapTo;
-
-PROCEDURE QWidget_mapFrom ( self, arg2: QWidget;
- arg3: QPoint;
-): QPoint =
-VAR
-ret:ADDRESS; result : QPoint;
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(arg2.cxxObj,ADDRESS);
-arg3tmp :=  LOOPHOLE(arg3.cxxObj,ADDRESS);
-BEGIN
-ret := QtWidgetRaw.QWidget_mapFrom(selfAdr, arg2tmp, arg3tmp);
-
-  result := NEW(QPoint);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QWidget_mapFrom;
-
-PROCEDURE QWidget_window ( self: QWidget;
-): QWidget =
-VAR
-ret:ADDRESS; result : QWidget;
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtWidgetRaw.QWidget_window(selfAdr);
-
-IF ISTYPE(result,QWidget) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QWidget);
-ELSE
-  result := NEW(QWidget);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QWidget_window;
-
-PROCEDURE QWidget_nativeParentWidget ( self: QWidget;
-): QWidget =
-VAR
-ret:ADDRESS; result : QWidget;
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtWidgetRaw.QWidget_nativeParentWidget(selfAdr);
-
-IF ISTYPE(result,QWidget) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QWidget);
-ELSE
-  result := NEW(QWidget);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QWidget_nativeParentWidget;
-
-PROCEDURE QWidget_topLevelWidget ( self: QWidget;
-): QWidget =
-VAR
-ret:ADDRESS; result : QWidget;
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtWidgetRaw.QWidget_topLevelWidget(selfAdr);
-
-IF ISTYPE(result,QWidget) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QWidget);
-ELSE
-  result := NEW(QWidget);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QWidget_topLevelWidget;
-
-PROCEDURE QWidget_palette ( self: QWidget;
-): QPalette =
-VAR
-ret:ADDRESS; result : QPalette;
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtWidgetRaw.QWidget_palette(selfAdr);
-
-  result := NEW(QPalette);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QWidget_palette;
-
-PROCEDURE QWidget_setPalette ( self: QWidget;
- arg2: QPalette;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(arg2.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_setPalette(selfAdr, arg2tmp);
-END QWidget_setPalette;
-
-PROCEDURE QWidget_setBackgroundRole ( self: QWidget;
-arg2: ColorRole;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_setBackgroundRole(selfAdr, ORD(arg2));
-END QWidget_setBackgroundRole;
-
-PROCEDURE QWidget_backgroundRole ( self: QWidget;
-): ColorRole =
-VAR
-ret:INTEGER; result : ColorRole;
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtWidgetRaw.QWidget_backgroundRole(selfAdr);
-result := VAL(ret,ColorRole);  
-RETURN result;
-END QWidget_backgroundRole;
-
-PROCEDURE QWidget_setForegroundRole ( self: QWidget;
-arg2: ColorRole;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_setForegroundRole(selfAdr, ORD(arg2));
-END QWidget_setForegroundRole;
-
-PROCEDURE QWidget_foregroundRole ( self: QWidget;
-): ColorRole =
-VAR
-ret:INTEGER; result : ColorRole;
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtWidgetRaw.QWidget_foregroundRole(selfAdr);
-result := VAL(ret,ColorRole);  
-RETURN result;
-END QWidget_foregroundRole;
-
-PROCEDURE QWidget_font ( self: QWidget;
-): QFont =
-VAR
-ret:ADDRESS; result : QFont;
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtWidgetRaw.QWidget_font(selfAdr);
-
-  result := NEW(QFont);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QWidget_font;
-
-PROCEDURE QWidget_setFont ( self: QWidget;
- arg2: QFont;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(arg2.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_setFont(selfAdr, arg2tmp);
-END QWidget_setFont;
-
-PROCEDURE QWidget_fontMetrics ( self: QWidget;
-): QFontMetrics =
-VAR
-ret:ADDRESS; result : QFontMetrics;
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtWidgetRaw.QWidget_fontMetrics(selfAdr);
-
-  result := NEW(QFontMetrics);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QWidget_fontMetrics;
-
-PROCEDURE QWidget_fontInfo ( self: QWidget;
-): QFontInfo =
-VAR
-ret:ADDRESS; result : QFontInfo;
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtWidgetRaw.QWidget_fontInfo(selfAdr);
-
-  result := NEW(QFontInfo);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QWidget_fontInfo;
-
-PROCEDURE QWidget_cursor ( self: QWidget;
-): QCursor =
-VAR
-ret:ADDRESS; result : QCursor;
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtWidgetRaw.QWidget_cursor(selfAdr);
-
-  result := NEW(QCursor);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QWidget_cursor;
-
-PROCEDURE QWidget_setCursor ( self: QWidget;
- arg2: QCursor;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(arg2.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_setCursor(selfAdr, arg2tmp);
-END QWidget_setCursor;
-
-PROCEDURE QWidget_unsetCursor ( self: QWidget;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_unsetCursor(selfAdr);
-END QWidget_unsetCursor;
-
-PROCEDURE QWidget_setMouseTracking ( self: QWidget;
-enable: BOOLEAN;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_setMouseTracking(selfAdr, enable);
-END QWidget_setMouseTracking;
-
-PROCEDURE QWidget_hasMouseTracking ( self: QWidget;
-): BOOLEAN =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtWidgetRaw.QWidget_hasMouseTracking(selfAdr);
-END QWidget_hasMouseTracking;
-
-PROCEDURE QWidget_underMouse ( self: QWidget;
-): BOOLEAN =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtWidgetRaw.QWidget_underMouse(selfAdr);
-END QWidget_underMouse;
-
-PROCEDURE QWidget_setMask ( self: QWidget;
- arg2: QBitmap;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(arg2.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_setMask(selfAdr, arg2tmp);
-END QWidget_setMask;
-
-PROCEDURE QWidget_setMask1 ( self: QWidget;
- arg2: QRegion;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(arg2.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_setMask1(selfAdr, arg2tmp);
-END QWidget_setMask1;
-
-PROCEDURE QWidget_mask ( self: QWidget;
-): QRegion =
-VAR
-ret:ADDRESS; result : QRegion;
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtWidgetRaw.QWidget_mask(selfAdr);
-
-  result := NEW(QRegion);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QWidget_mask;
-
-PROCEDURE QWidget_clearMask ( self: QWidget;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_clearMask(selfAdr);
-END QWidget_clearMask;
-
-PROCEDURE QWidget_graphicsEffect ( self: QWidget;
-): QGraphicsEffect =
-VAR
-ret:ADDRESS; result : QGraphicsEffect;
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtWidgetRaw.QWidget_graphicsEffect(selfAdr);
-
-  result := NEW(QGraphicsEffect);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QWidget_graphicsEffect;
-
-PROCEDURE QWidget_setGraphicsEffect ( self: QWidget;
- effect: QGraphicsEffect;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(effect.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_setGraphicsEffect(selfAdr, arg2tmp);
-END QWidget_setGraphicsEffect;
-
-PROCEDURE QWidget_grabGesture ( self: QWidget;
-type: GestureType;
-flags: GestureFlags;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_grabGesture(selfAdr, ORD(type), ORD(flags));
-END QWidget_grabGesture;
-
-PROCEDURE QWidget_grabGesture1 ( self: QWidget;
-type: GestureType;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_grabGesture1(selfAdr, ORD(type));
-END QWidget_grabGesture1;
-
-PROCEDURE QWidget_ungrabGesture ( self: QWidget;
-type: GestureType;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_ungrabGesture(selfAdr, ORD(type));
-END QWidget_ungrabGesture;
-
-PROCEDURE QWidget_setWindowTitle ( self: QWidget;
- arg2: TEXT;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-qstr_arg2 := NEW(QString).initQString(arg2);
-arg2tmp :=  LOOPHOLE(qstr_arg2.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_setWindowTitle(selfAdr, arg2tmp);
-END QWidget_setWindowTitle;
-
-PROCEDURE QWidget_setStyleSheet ( self: QWidget;
- styleSheet: TEXT;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-qstr_styleSheet := NEW(QString).initQString(styleSheet);
-arg2tmp :=  LOOPHOLE(qstr_styleSheet.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_setStyleSheet(selfAdr, arg2tmp);
-END QWidget_setStyleSheet;
-
-PROCEDURE QWidget_styleSheet ( self: QWidget;
-): TEXT =
-VAR
-ret : ADDRESS;
-qstr := NEW(QString);
-ba : QByteArray;
-result : TEXT;
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtWidgetRaw.QWidget_styleSheet(selfAdr);
-
-  qstr.cxxObj := ret;
-  ba := qstr.toLocal8Bit();
-  result := ba.data();
-
-RETURN result;
-END QWidget_styleSheet;
-
-PROCEDURE QWidget_windowTitle ( self: QWidget;
-): TEXT =
-VAR
-ret : ADDRESS;
-qstr := NEW(QString);
-ba : QByteArray;
-result : TEXT;
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtWidgetRaw.QWidget_windowTitle(selfAdr);
-
-  qstr.cxxObj := ret;
-  ba := qstr.toLocal8Bit();
-  result := ba.data();
-
-RETURN result;
-END QWidget_windowTitle;
-
-PROCEDURE QWidget_setWindowIcon ( self: QWidget;
- icon: QIcon;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(icon.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_setWindowIcon(selfAdr, arg2tmp);
-END QWidget_setWindowIcon;
-
-PROCEDURE QWidget_setWindowIconText ( self: QWidget;
- arg2: TEXT;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-qstr_arg2 := NEW(QString).initQString(arg2);
-arg2tmp :=  LOOPHOLE(qstr_arg2.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_setWindowIconText(selfAdr, arg2tmp);
-END QWidget_setWindowIconText;
-
-PROCEDURE QWidget_windowIconText ( self: QWidget;
-): TEXT =
-VAR
-ret : ADDRESS;
-qstr := NEW(QString);
-ba : QByteArray;
-result : TEXT;
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtWidgetRaw.QWidget_windowIconText(selfAdr);
-
-  qstr.cxxObj := ret;
-  ba := qstr.toLocal8Bit();
-  result := ba.data();
-
-RETURN result;
-END QWidget_windowIconText;
-
-PROCEDURE QWidget_setWindowRole ( self: QWidget;
- arg2: TEXT;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-qstr_arg2 := NEW(QString).initQString(arg2);
-arg2tmp :=  LOOPHOLE(qstr_arg2.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_setWindowRole(selfAdr, arg2tmp);
-END QWidget_setWindowRole;
-
-PROCEDURE QWidget_windowRole ( self: QWidget;
-): TEXT =
-VAR
-ret : ADDRESS;
-qstr := NEW(QString);
-ba : QByteArray;
-result : TEXT;
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtWidgetRaw.QWidget_windowRole(selfAdr);
-
-  qstr.cxxObj := ret;
-  ba := qstr.toLocal8Bit();
-  result := ba.data();
-
-RETURN result;
-END QWidget_windowRole;
-
-PROCEDURE QWidget_setWindowFilePath ( self: QWidget;
- filePath: TEXT;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-qstr_filePath := NEW(QString).initQString(filePath);
-arg2tmp :=  LOOPHOLE(qstr_filePath.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_setWindowFilePath(selfAdr, arg2tmp);
-END QWidget_setWindowFilePath;
-
-PROCEDURE QWidget_windowFilePath ( self: QWidget;
-): TEXT =
-VAR
-ret : ADDRESS;
-qstr := NEW(QString);
-ba : QByteArray;
-result : TEXT;
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtWidgetRaw.QWidget_windowFilePath(selfAdr);
-
-  qstr.cxxObj := ret;
-  ba := qstr.toLocal8Bit();
-  result := ba.data();
-
-RETURN result;
-END QWidget_windowFilePath;
-
-PROCEDURE QWidget_setWindowOpacity ( self: QWidget;
-level: LONGREAL;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_setWindowOpacity(selfAdr, level);
-END QWidget_setWindowOpacity;
-
-PROCEDURE QWidget_windowOpacity ( self: QWidget;
-): LONGREAL =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtWidgetRaw.QWidget_windowOpacity(selfAdr);
-END QWidget_windowOpacity;
-
-PROCEDURE QWidget_isWindowModified ( self: QWidget;
-): BOOLEAN =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtWidgetRaw.QWidget_isWindowModified(selfAdr);
-END QWidget_isWindowModified;
-
-PROCEDURE QWidget_setToolTip ( self: QWidget;
- arg2: TEXT;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-qstr_arg2 := NEW(QString).initQString(arg2);
-arg2tmp :=  LOOPHOLE(qstr_arg2.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_setToolTip(selfAdr, arg2tmp);
-END QWidget_setToolTip;
-
-PROCEDURE QWidget_toolTip ( self: QWidget;
-): TEXT =
-VAR
-ret : ADDRESS;
-qstr := NEW(QString);
-ba : QByteArray;
-result : TEXT;
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtWidgetRaw.QWidget_toolTip(selfAdr);
-
-  qstr.cxxObj := ret;
-  ba := qstr.toLocal8Bit();
-  result := ba.data();
-
-RETURN result;
-END QWidget_toolTip;
-
-PROCEDURE QWidget_setStatusTip ( self: QWidget;
- arg2: TEXT;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-qstr_arg2 := NEW(QString).initQString(arg2);
-arg2tmp :=  LOOPHOLE(qstr_arg2.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_setStatusTip(selfAdr, arg2tmp);
-END QWidget_setStatusTip;
-
-PROCEDURE QWidget_statusTip ( self: QWidget;
-): TEXT =
-VAR
-ret : ADDRESS;
-qstr := NEW(QString);
-ba : QByteArray;
-result : TEXT;
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtWidgetRaw.QWidget_statusTip(selfAdr);
-
-  qstr.cxxObj := ret;
-  ba := qstr.toLocal8Bit();
-  result := ba.data();
-
-RETURN result;
-END QWidget_statusTip;
-
-PROCEDURE QWidget_setWhatsThis ( self: QWidget;
- arg2: TEXT;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-qstr_arg2 := NEW(QString).initQString(arg2);
-arg2tmp :=  LOOPHOLE(qstr_arg2.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_setWhatsThis(selfAdr, arg2tmp);
-END QWidget_setWhatsThis;
-
-PROCEDURE QWidget_whatsThis ( self: QWidget;
-): TEXT =
-VAR
-ret : ADDRESS;
-qstr := NEW(QString);
-ba : QByteArray;
-result : TEXT;
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtWidgetRaw.QWidget_whatsThis(selfAdr);
-
-  qstr.cxxObj := ret;
-  ba := qstr.toLocal8Bit();
-  result := ba.data();
-
-RETURN result;
-END QWidget_whatsThis;
-
-PROCEDURE QWidget_accessibleName ( self: QWidget;
-): TEXT =
-VAR
-ret : ADDRESS;
-qstr := NEW(QString);
-ba : QByteArray;
-result : TEXT;
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtWidgetRaw.QWidget_accessibleName(selfAdr);
-
-  qstr.cxxObj := ret;
-  ba := qstr.toLocal8Bit();
-  result := ba.data();
-
-RETURN result;
-END QWidget_accessibleName;
-
-PROCEDURE QWidget_setAccessibleName ( self: QWidget;
- name: TEXT;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-qstr_name := NEW(QString).initQString(name);
-arg2tmp :=  LOOPHOLE(qstr_name.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_setAccessibleName(selfAdr, arg2tmp);
-END QWidget_setAccessibleName;
-
-PROCEDURE QWidget_accessibleDescription ( self: QWidget;
-): TEXT =
-VAR
-ret : ADDRESS;
-qstr := NEW(QString);
-ba : QByteArray;
-result : TEXT;
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtWidgetRaw.QWidget_accessibleDescription(selfAdr);
-
-  qstr.cxxObj := ret;
-  ba := qstr.toLocal8Bit();
-  result := ba.data();
-
-RETURN result;
-END QWidget_accessibleDescription;
-
-PROCEDURE QWidget_setAccessibleDescription ( self: QWidget;
- description: TEXT;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-qstr_description := NEW(QString).initQString(description);
-arg2tmp :=  LOOPHOLE(qstr_description.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_setAccessibleDescription(selfAdr, arg2tmp);
-END QWidget_setAccessibleDescription;
-
-PROCEDURE QWidget_setLayoutDirection ( self: QWidget;
-direction: LayoutDirection;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_setLayoutDirection(selfAdr, ORD(direction));
-END QWidget_setLayoutDirection;
-
-PROCEDURE QWidget_layoutDirection ( self: QWidget;
-): LayoutDirection =
-VAR
-ret:INTEGER; result : LayoutDirection;
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtWidgetRaw.QWidget_layoutDirection(selfAdr);
-result := VAL(ret,LayoutDirection);  
-RETURN result;
-END QWidget_layoutDirection;
-
-PROCEDURE QWidget_unsetLayoutDirection ( self: QWidget;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_unsetLayoutDirection(selfAdr);
-END QWidget_unsetLayoutDirection;
-
-PROCEDURE QWidget_setLocale ( self: QWidget;
- locale: QLocale;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(locale.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_setLocale(selfAdr, arg2tmp);
-END QWidget_setLocale;
-
-PROCEDURE QWidget_unsetLocale ( self: QWidget;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_unsetLocale(selfAdr);
-END QWidget_unsetLocale;
-
-PROCEDURE QWidget_isRightToLeft ( self: QWidget;
-): BOOLEAN =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtWidgetRaw.QWidget_isRightToLeft(selfAdr);
-END QWidget_isRightToLeft;
-
-PROCEDURE QWidget_isLeftToRight ( self: QWidget;
-): BOOLEAN =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtWidgetRaw.QWidget_isLeftToRight(selfAdr);
-END QWidget_isLeftToRight;
-
-PROCEDURE QWidget_setFocus ( self: QWidget;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_setFocus(selfAdr);
-END QWidget_setFocus;
-
-PROCEDURE QWidget_isActiveWindow ( self: QWidget;
-): BOOLEAN =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtWidgetRaw.QWidget_isActiveWindow(selfAdr);
-END QWidget_isActiveWindow;
-
-PROCEDURE QWidget_activateWindow ( self: QWidget;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_activateWindow(selfAdr);
-END QWidget_activateWindow;
-
-PROCEDURE QWidget_clearFocus ( self: QWidget;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_clearFocus(selfAdr);
-END QWidget_clearFocus;
-
-PROCEDURE QWidget_setFocus1 ( self: QWidget;
-reason: FocusReason;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_setFocus1(selfAdr, ORD(reason));
-END QWidget_setFocus1;
-
-PROCEDURE QWidget_focusPolicy ( self: QWidget;
-): FocusPolicy =
-VAR
-ret:INTEGER; result : FocusPolicy;
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtWidgetRaw.QWidget_focusPolicy(selfAdr);
-result := VAL(ret,FocusPolicy);  
-RETURN result;
-END QWidget_focusPolicy;
-
-PROCEDURE QWidget_setFocusPolicy ( self: QWidget;
-policy: FocusPolicy;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_setFocusPolicy(selfAdr, ORD(policy));
-END QWidget_setFocusPolicy;
-
-PROCEDURE QWidget_hasFocus ( self: QWidget;
-): BOOLEAN =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtWidgetRaw.QWidget_hasFocus(selfAdr);
-END QWidget_hasFocus;
-
-PROCEDURE SetTabOrder ( arg1, arg2: QWidget;
-) =
-VAR
-arg1tmp :=  LOOPHOLE(arg1.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(arg2.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.SetTabOrder(arg1tmp, arg2tmp);
-END SetTabOrder;
-
-PROCEDURE QWidget_setFocusProxy ( self, arg2: QWidget;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(arg2.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_setFocusProxy(selfAdr, arg2tmp);
-END QWidget_setFocusProxy;
-
-PROCEDURE QWidget_focusProxy ( self: QWidget;
-): QWidget =
-VAR
-ret:ADDRESS; result : QWidget;
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtWidgetRaw.QWidget_focusProxy(selfAdr);
-
-IF ISTYPE(result,QWidget) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QWidget);
-ELSE
-  result := NEW(QWidget);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QWidget_focusProxy;
-
-PROCEDURE QWidget_contextMenuPolicy ( self: QWidget;
-): ContextMenuPolicy =
-VAR
-ret:INTEGER; result : ContextMenuPolicy;
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtWidgetRaw.QWidget_contextMenuPolicy(selfAdr);
-result := VAL(ret,ContextMenuPolicy);  
-RETURN result;
-END QWidget_contextMenuPolicy;
-
-PROCEDURE QWidget_setContextMenuPolicy ( self: QWidget;
-policy: ContextMenuPolicy;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_setContextMenuPolicy(selfAdr, ORD(policy));
-END QWidget_setContextMenuPolicy;
-
-PROCEDURE QWidget_grabMouse ( self: QWidget;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_grabMouse(selfAdr);
-END QWidget_grabMouse;
-
-PROCEDURE QWidget_grabMouse1 ( self: QWidget;
- arg2: QCursor;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(arg2.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_grabMouse1(selfAdr, arg2tmp);
-END QWidget_grabMouse1;
-
-PROCEDURE QWidget_releaseMouse ( self: QWidget;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_releaseMouse(selfAdr);
-END QWidget_releaseMouse;
-
-PROCEDURE QWidget_grabKeyboard ( self: QWidget;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_grabKeyboard(selfAdr);
-END QWidget_grabKeyboard;
-
-PROCEDURE QWidget_releaseKeyboard ( self: QWidget;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_releaseKeyboard(selfAdr);
-END QWidget_releaseKeyboard;
-
-PROCEDURE QWidget_grabShortcut ( self: QWidget;
- key: QKeySequence;
-context: ShortcutContext;
-): INTEGER =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(key.cxxObj,ADDRESS);
-BEGIN
-RETURN QtWidgetRaw.QWidget_grabShortcut(selfAdr, arg2tmp, ORD(context));
-END QWidget_grabShortcut;
-
-PROCEDURE QWidget_grabShortcut1 ( self: QWidget;
- key: QKeySequence;
-): INTEGER =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(key.cxxObj,ADDRESS);
-BEGIN
-RETURN QtWidgetRaw.QWidget_grabShortcut1(selfAdr, arg2tmp);
-END QWidget_grabShortcut1;
-
-PROCEDURE QWidget_releaseShortcut ( self: QWidget;
-id: INTEGER;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_releaseShortcut(selfAdr, id);
-END QWidget_releaseShortcut;
-
-PROCEDURE QWidget_setShortcutEnabled ( self: QWidget;
-id: INTEGER;
-enable: BOOLEAN;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_setShortcutEnabled(selfAdr, id, enable);
-END QWidget_setShortcutEnabled;
-
-PROCEDURE QWidget_setShortcutEnabled1 ( self: QWidget;
-id: INTEGER;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_setShortcutEnabled1(selfAdr, id);
-END QWidget_setShortcutEnabled1;
-
-PROCEDURE QWidget_setShortcutAutoRepeat ( self: QWidget;
-id: INTEGER;
-enable: BOOLEAN;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_setShortcutAutoRepeat(selfAdr, id, enable);
-END QWidget_setShortcutAutoRepeat;
-
-PROCEDURE QWidget_setShortcutAutoRepeat1 ( self: QWidget;
-id: INTEGER;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_setShortcutAutoRepeat1(selfAdr, id);
-END QWidget_setShortcutAutoRepeat1;
+PROCEDURE New_QWidget0 (self: QWidget; parent: QWidget; f: WindowTypes; ):
+  QWidget =
+  VAR
+    result : ADDRESS;
+    arg1tmp          := LOOPHOLE(parent.cxxObj, ADDRESS);
+  BEGIN
+    result := QtWidgetRaw.New_QWidget0(arg1tmp, ORD(f));
+
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QWidget);
+
+    RETURN self;
+  END New_QWidget0;
+
+PROCEDURE New_QWidget1 (self: QWidget; parent: QWidget; ): QWidget =
+  VAR
+    result : ADDRESS;
+    arg1tmp          := LOOPHOLE(parent.cxxObj, ADDRESS);
+  BEGIN
+    result := QtWidgetRaw.New_QWidget1(arg1tmp);
+
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QWidget);
+
+    RETURN self;
+  END New_QWidget1;
+
+PROCEDURE New_init_widget (self: QWidget; ): QWidget =
+  VAR result: ADDRESS;
+  BEGIN
+    result := QtWidgetRaw.New_init_widget();
+
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QWidget);
+
+    RETURN self;
+  END New_init_widget;
+
+PROCEDURE Delete_QWidget (self: QWidget; ) =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.Delete_QWidget(selfAdr);
+  END Delete_QWidget;
+
+PROCEDURE QWidget_devType (self: QWidget; ): INTEGER =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtWidgetRaw.QWidget_devType(selfAdr);
+  END QWidget_devType;
+
+PROCEDURE QWidget_winId (self: QWidget; ): INTEGER =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtWidgetRaw.QWidget_winId(selfAdr);
+  END QWidget_winId;
+
+PROCEDURE QWidget_createWinId (self: QWidget; ) =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_createWinId(selfAdr);
+  END QWidget_createWinId;
+
+PROCEDURE QWidget_effectiveWinId (self: QWidget; ): INTEGER =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtWidgetRaw.QWidget_effectiveWinId(selfAdr);
+  END QWidget_effectiveWinId;
+
+PROCEDURE QWidget_style (self: QWidget; ): QStyle =
+  VAR
+    ret    : ADDRESS;
+    result : QStyle;
+    selfAdr          := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWidgetRaw.QWidget_style(selfAdr);
+
+    result := NEW(QStyle);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QWidget_style;
+
+PROCEDURE QWidget_setStyle (self: QWidget; arg2: QStyle; ) =
+  VAR
+    selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp := LOOPHOLE(arg2.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_setStyle(selfAdr, arg2tmp);
+  END QWidget_setStyle;
+
+PROCEDURE QWidget_isTopLevel (self: QWidget; ): BOOLEAN =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtWidgetRaw.QWidget_isTopLevel(selfAdr);
+  END QWidget_isTopLevel;
+
+PROCEDURE QWidget_isWindow (self: QWidget; ): BOOLEAN =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtWidgetRaw.QWidget_isWindow(selfAdr);
+  END QWidget_isWindow;
+
+PROCEDURE QWidget_isModal (self: QWidget; ): BOOLEAN =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtWidgetRaw.QWidget_isModal(selfAdr);
+  END QWidget_isModal;
+
+PROCEDURE QWidget_windowModality (self: QWidget; ): WindowModality =
+  VAR
+    ret    : INTEGER;
+    result : WindowModality;
+    selfAdr                 := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWidgetRaw.QWidget_windowModality(selfAdr);
+    result := VAL(ret, WindowModality);
+    RETURN result;
+  END QWidget_windowModality;
+
+PROCEDURE QWidget_setWindowModality
+  (self: QWidget; windowModality: WindowModality; ) =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_setWindowModality(selfAdr, ORD(windowModality));
+  END QWidget_setWindowModality;
+
+PROCEDURE QWidget_isEnabled (self: QWidget; ): BOOLEAN =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtWidgetRaw.QWidget_isEnabled(selfAdr);
+  END QWidget_isEnabled;
+
+PROCEDURE QWidget_isEnabledTo (self, arg2: QWidget; ): BOOLEAN =
+  VAR
+    selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp := LOOPHOLE(arg2.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtWidgetRaw.QWidget_isEnabledTo(selfAdr, arg2tmp);
+  END QWidget_isEnabledTo;
+
+PROCEDURE QWidget_isEnabledToTLW (self: QWidget; ): BOOLEAN =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtWidgetRaw.QWidget_isEnabledToTLW(selfAdr);
+  END QWidget_isEnabledToTLW;
+
+PROCEDURE QWidget_setEnabled (self: QWidget; arg2: BOOLEAN; ) =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_setEnabled(selfAdr, arg2);
+  END QWidget_setEnabled;
+
+PROCEDURE QWidget_setDisabled (self: QWidget; arg2: BOOLEAN; ) =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_setDisabled(selfAdr, arg2);
+  END QWidget_setDisabled;
+
+PROCEDURE QWidget_setWindowModified (self: QWidget; arg2: BOOLEAN; ) =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_setWindowModified(selfAdr, arg2);
+  END QWidget_setWindowModified;
+
+PROCEDURE QWidget_frameGeometry (self: QWidget; ): QRect =
+  VAR
+    ret    : ADDRESS;
+    result : QRect;
+    selfAdr          := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWidgetRaw.QWidget_frameGeometry(selfAdr);
+
+    result := NEW(QRect);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QWidget_frameGeometry;
+
+PROCEDURE QWidget_geometry (self: QWidget; ): QRect =
+  VAR
+    ret    : ADDRESS;
+    result : QRect;
+    selfAdr          := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWidgetRaw.QWidget_geometry(selfAdr);
+
+    result := NEW(QRect);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QWidget_geometry;
+
+PROCEDURE QWidget_normalGeometry (self: QWidget; ): QRect =
+  VAR
+    ret    : ADDRESS;
+    result : QRect;
+    selfAdr          := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWidgetRaw.QWidget_normalGeometry(selfAdr);
+
+    result := NEW(QRect);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QWidget_normalGeometry;
+
+PROCEDURE QWidget_x (self: QWidget; ): INTEGER =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtWidgetRaw.QWidget_x(selfAdr);
+  END QWidget_x;
+
+PROCEDURE QWidget_y (self: QWidget; ): INTEGER =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtWidgetRaw.QWidget_y(selfAdr);
+  END QWidget_y;
+
+PROCEDURE QWidget_pos (self: QWidget; ): QPoint =
+  VAR
+    ret    : ADDRESS;
+    result : QPoint;
+    selfAdr          := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWidgetRaw.QWidget_pos(selfAdr);
+
+    result := NEW(QPoint);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QWidget_pos;
+
+PROCEDURE QWidget_frameSize (self: QWidget; ): QSize =
+  VAR
+    ret    : ADDRESS;
+    result : QSize;
+    selfAdr          := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWidgetRaw.QWidget_frameSize(selfAdr);
+
+    result := NEW(QSize);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QWidget_frameSize;
+
+PROCEDURE QWidget_size (self: QWidget; ): QSize =
+  VAR
+    ret    : ADDRESS;
+    result : QSize;
+    selfAdr          := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWidgetRaw.QWidget_size(selfAdr);
+
+    result := NEW(QSize);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QWidget_size;
+
+PROCEDURE QWidget_width (self: QWidget; ): INTEGER =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtWidgetRaw.QWidget_width(selfAdr);
+  END QWidget_width;
+
+PROCEDURE QWidget_height (self: QWidget; ): INTEGER =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtWidgetRaw.QWidget_height(selfAdr);
+  END QWidget_height;
+
+PROCEDURE QWidget_rect (self: QWidget; ): QRect =
+  VAR
+    ret    : ADDRESS;
+    result : QRect;
+    selfAdr          := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWidgetRaw.QWidget_rect(selfAdr);
+
+    result := NEW(QRect);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QWidget_rect;
+
+PROCEDURE QWidget_childrenRect (self: QWidget; ): QRect =
+  VAR
+    ret    : ADDRESS;
+    result : QRect;
+    selfAdr          := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWidgetRaw.QWidget_childrenRect(selfAdr);
+
+    result := NEW(QRect);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QWidget_childrenRect;
+
+PROCEDURE QWidget_childrenRegion (self: QWidget; ): QRegion =
+  VAR
+    ret    : ADDRESS;
+    result : QRegion;
+    selfAdr          := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWidgetRaw.QWidget_childrenRegion(selfAdr);
+
+    result := NEW(QRegion);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QWidget_childrenRegion;
+
+PROCEDURE QWidget_minimumSize (self: QWidget; ): QSize =
+  VAR
+    ret    : ADDRESS;
+    result : QSize;
+    selfAdr          := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWidgetRaw.QWidget_minimumSize(selfAdr);
+
+    result := NEW(QSize);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QWidget_minimumSize;
+
+PROCEDURE QWidget_maximumSize (self: QWidget; ): QSize =
+  VAR
+    ret    : ADDRESS;
+    result : QSize;
+    selfAdr          := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWidgetRaw.QWidget_maximumSize(selfAdr);
+
+    result := NEW(QSize);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QWidget_maximumSize;
+
+PROCEDURE QWidget_minimumWidth (self: QWidget; ): INTEGER =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtWidgetRaw.QWidget_minimumWidth(selfAdr);
+  END QWidget_minimumWidth;
+
+PROCEDURE QWidget_minimumHeight (self: QWidget; ): INTEGER =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtWidgetRaw.QWidget_minimumHeight(selfAdr);
+  END QWidget_minimumHeight;
+
+PROCEDURE QWidget_maximumWidth (self: QWidget; ): INTEGER =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtWidgetRaw.QWidget_maximumWidth(selfAdr);
+  END QWidget_maximumWidth;
+
+PROCEDURE QWidget_maximumHeight (self: QWidget; ): INTEGER =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtWidgetRaw.QWidget_maximumHeight(selfAdr);
+  END QWidget_maximumHeight;
+
+PROCEDURE QWidget_setMinimumSize (self: QWidget; arg2: QSize; ) =
+  VAR
+    selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp := LOOPHOLE(arg2.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_setMinimumSize(selfAdr, arg2tmp);
+  END QWidget_setMinimumSize;
+
+PROCEDURE QWidget_setMinimumSize1 (self: QWidget; minw, minh: INTEGER; ) =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_setMinimumSize1(selfAdr, minw, minh);
+  END QWidget_setMinimumSize1;
+
+PROCEDURE QWidget_setMaximumSize (self: QWidget; arg2: QSize; ) =
+  VAR
+    selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp := LOOPHOLE(arg2.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_setMaximumSize(selfAdr, arg2tmp);
+  END QWidget_setMaximumSize;
+
+PROCEDURE QWidget_setMaximumSize1 (self: QWidget; maxw, maxh: INTEGER; ) =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_setMaximumSize1(selfAdr, maxw, maxh);
+  END QWidget_setMaximumSize1;
+
+PROCEDURE QWidget_setMinimumWidth (self: QWidget; minw: INTEGER; ) =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_setMinimumWidth(selfAdr, minw);
+  END QWidget_setMinimumWidth;
+
+PROCEDURE QWidget_setMinimumHeight (self: QWidget; minh: INTEGER; ) =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_setMinimumHeight(selfAdr, minh);
+  END QWidget_setMinimumHeight;
+
+PROCEDURE QWidget_setMaximumWidth (self: QWidget; maxw: INTEGER; ) =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_setMaximumWidth(selfAdr, maxw);
+  END QWidget_setMaximumWidth;
+
+PROCEDURE QWidget_setMaximumHeight (self: QWidget; maxh: INTEGER; ) =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_setMaximumHeight(selfAdr, maxh);
+  END QWidget_setMaximumHeight;
+
+PROCEDURE QWidget_sizeIncrement (self: QWidget; ): QSize =
+  VAR
+    ret    : ADDRESS;
+    result : QSize;
+    selfAdr          := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWidgetRaw.QWidget_sizeIncrement(selfAdr);
+
+    result := NEW(QSize);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QWidget_sizeIncrement;
+
+PROCEDURE QWidget_setSizeIncrement (self: QWidget; arg2: QSize; ) =
+  VAR
+    selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp := LOOPHOLE(arg2.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_setSizeIncrement(selfAdr, arg2tmp);
+  END QWidget_setSizeIncrement;
+
+PROCEDURE QWidget_setSizeIncrement1 (self: QWidget; w, h: INTEGER; ) =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_setSizeIncrement1(selfAdr, w, h);
+  END QWidget_setSizeIncrement1;
+
+PROCEDURE QWidget_baseSize (self: QWidget; ): QSize =
+  VAR
+    ret    : ADDRESS;
+    result : QSize;
+    selfAdr          := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWidgetRaw.QWidget_baseSize(selfAdr);
+
+    result := NEW(QSize);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QWidget_baseSize;
+
+PROCEDURE QWidget_setBaseSize (self: QWidget; arg2: QSize; ) =
+  VAR
+    selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp := LOOPHOLE(arg2.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_setBaseSize(selfAdr, arg2tmp);
+  END QWidget_setBaseSize;
+
+PROCEDURE QWidget_setBaseSize1 (self: QWidget; basew, baseh: INTEGER; ) =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_setBaseSize1(selfAdr, basew, baseh);
+  END QWidget_setBaseSize1;
+
+PROCEDURE QWidget_setFixedSize (self: QWidget; arg2: QSize; ) =
+  VAR
+    selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp := LOOPHOLE(arg2.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_setFixedSize(selfAdr, arg2tmp);
+  END QWidget_setFixedSize;
+
+PROCEDURE QWidget_setFixedSize1 (self: QWidget; w, h: INTEGER; ) =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_setFixedSize1(selfAdr, w, h);
+  END QWidget_setFixedSize1;
+
+PROCEDURE QWidget_setFixedWidth (self: QWidget; w: INTEGER; ) =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_setFixedWidth(selfAdr, w);
+  END QWidget_setFixedWidth;
+
+PROCEDURE QWidget_setFixedHeight (self: QWidget; h: INTEGER; ) =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_setFixedHeight(selfAdr, h);
+  END QWidget_setFixedHeight;
+
+PROCEDURE QWidget_mapToGlobal (self: QWidget; arg2: QPoint; ): QPoint =
+  VAR
+    ret    : ADDRESS;
+    result : QPoint;
+    selfAdr          := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(arg2.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWidgetRaw.QWidget_mapToGlobal(selfAdr, arg2tmp);
+
+    result := NEW(QPoint);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QWidget_mapToGlobal;
+
+PROCEDURE QWidget_mapFromGlobal (self: QWidget; arg2: QPoint; ): QPoint =
+  VAR
+    ret    : ADDRESS;
+    result : QPoint;
+    selfAdr          := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(arg2.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWidgetRaw.QWidget_mapFromGlobal(selfAdr, arg2tmp);
+
+    result := NEW(QPoint);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QWidget_mapFromGlobal;
+
+PROCEDURE QWidget_mapToParent (self: QWidget; arg2: QPoint; ): QPoint =
+  VAR
+    ret    : ADDRESS;
+    result : QPoint;
+    selfAdr          := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(arg2.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWidgetRaw.QWidget_mapToParent(selfAdr, arg2tmp);
+
+    result := NEW(QPoint);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QWidget_mapToParent;
+
+PROCEDURE QWidget_mapFromParent (self: QWidget; arg2: QPoint; ): QPoint =
+  VAR
+    ret    : ADDRESS;
+    result : QPoint;
+    selfAdr          := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(arg2.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWidgetRaw.QWidget_mapFromParent(selfAdr, arg2tmp);
+
+    result := NEW(QPoint);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QWidget_mapFromParent;
+
+PROCEDURE QWidget_mapTo (self, arg2: QWidget; arg3: QPoint; ): QPoint =
+  VAR
+    ret    : ADDRESS;
+    result : QPoint;
+    selfAdr          := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(arg2.cxxObj, ADDRESS);
+    arg3tmp          := LOOPHOLE(arg3.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWidgetRaw.QWidget_mapTo(selfAdr, arg2tmp, arg3tmp);
+
+    result := NEW(QPoint);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QWidget_mapTo;
+
+PROCEDURE QWidget_mapFrom (self, arg2: QWidget; arg3: QPoint; ): QPoint =
+  VAR
+    ret    : ADDRESS;
+    result : QPoint;
+    selfAdr          := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(arg2.cxxObj, ADDRESS);
+    arg3tmp          := LOOPHOLE(arg3.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWidgetRaw.QWidget_mapFrom(selfAdr, arg2tmp, arg3tmp);
+
+    result := NEW(QPoint);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QWidget_mapFrom;
+
+PROCEDURE QWidget_window (self: QWidget; ): QWidget =
+  VAR
+    ret    : ADDRESS;
+    result : QWidget;
+    selfAdr          := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWidgetRaw.QWidget_window(selfAdr);
+
+    IF ISTYPE(result, QWidget) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QWidget);
+    ELSE
+      result := NEW(QWidget);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QWidget_window;
+
+PROCEDURE QWidget_nativeParentWidget (self: QWidget; ): QWidget =
+  VAR
+    ret    : ADDRESS;
+    result : QWidget;
+    selfAdr          := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWidgetRaw.QWidget_nativeParentWidget(selfAdr);
+
+    IF ISTYPE(result, QWidget) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QWidget);
+    ELSE
+      result := NEW(QWidget);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QWidget_nativeParentWidget;
+
+PROCEDURE QWidget_topLevelWidget (self: QWidget; ): QWidget =
+  VAR
+    ret    : ADDRESS;
+    result : QWidget;
+    selfAdr          := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWidgetRaw.QWidget_topLevelWidget(selfAdr);
+
+    IF ISTYPE(result, QWidget) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QWidget);
+    ELSE
+      result := NEW(QWidget);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QWidget_topLevelWidget;
+
+PROCEDURE QWidget_palette (self: QWidget; ): QPalette =
+  VAR
+    ret    : ADDRESS;
+    result : QPalette;
+    selfAdr           := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWidgetRaw.QWidget_palette(selfAdr);
+
+    result := NEW(QPalette);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QWidget_palette;
+
+PROCEDURE QWidget_setPalette (self: QWidget; arg2: QPalette; ) =
+  VAR
+    selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp := LOOPHOLE(arg2.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_setPalette(selfAdr, arg2tmp);
+  END QWidget_setPalette;
+
+PROCEDURE QWidget_setBackgroundRole (self: QWidget; arg2: ColorRole; ) =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_setBackgroundRole(selfAdr, ORD(arg2));
+  END QWidget_setBackgroundRole;
+
+PROCEDURE QWidget_backgroundRole (self: QWidget; ): ColorRole =
+  VAR
+    ret    : INTEGER;
+    result : ColorRole;
+    selfAdr            := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWidgetRaw.QWidget_backgroundRole(selfAdr);
+    result := VAL(ret, ColorRole);
+    RETURN result;
+  END QWidget_backgroundRole;
+
+PROCEDURE QWidget_setForegroundRole (self: QWidget; arg2: ColorRole; ) =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_setForegroundRole(selfAdr, ORD(arg2));
+  END QWidget_setForegroundRole;
+
+PROCEDURE QWidget_foregroundRole (self: QWidget; ): ColorRole =
+  VAR
+    ret    : INTEGER;
+    result : ColorRole;
+    selfAdr            := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWidgetRaw.QWidget_foregroundRole(selfAdr);
+    result := VAL(ret, ColorRole);
+    RETURN result;
+  END QWidget_foregroundRole;
+
+PROCEDURE QWidget_font (self: QWidget; ): QFont =
+  VAR
+    ret    : ADDRESS;
+    result : QFont;
+    selfAdr          := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWidgetRaw.QWidget_font(selfAdr);
+
+    result := NEW(QFont);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QWidget_font;
+
+PROCEDURE QWidget_setFont (self: QWidget; arg2: QFont; ) =
+  VAR
+    selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp := LOOPHOLE(arg2.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_setFont(selfAdr, arg2tmp);
+  END QWidget_setFont;
+
+PROCEDURE QWidget_fontMetrics (self: QWidget; ): QFontMetrics =
+  VAR
+    ret    : ADDRESS;
+    result : QFontMetrics;
+    selfAdr               := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWidgetRaw.QWidget_fontMetrics(selfAdr);
+
+    result := NEW(QFontMetrics);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QWidget_fontMetrics;
+
+PROCEDURE QWidget_fontInfo (self: QWidget; ): QFontInfo =
+  VAR
+    ret    : ADDRESS;
+    result : QFontInfo;
+    selfAdr            := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWidgetRaw.QWidget_fontInfo(selfAdr);
+
+    result := NEW(QFontInfo);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QWidget_fontInfo;
+
+PROCEDURE QWidget_cursor (self: QWidget; ): QCursor =
+  VAR
+    ret    : ADDRESS;
+    result : QCursor;
+    selfAdr          := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWidgetRaw.QWidget_cursor(selfAdr);
+
+    result := NEW(QCursor);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QWidget_cursor;
+
+PROCEDURE QWidget_setCursor (self: QWidget; arg2: QCursor; ) =
+  VAR
+    selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp := LOOPHOLE(arg2.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_setCursor(selfAdr, arg2tmp);
+  END QWidget_setCursor;
+
+PROCEDURE QWidget_unsetCursor (self: QWidget; ) =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_unsetCursor(selfAdr);
+  END QWidget_unsetCursor;
+
+PROCEDURE QWidget_setMouseTracking (self: QWidget; enable: BOOLEAN; ) =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_setMouseTracking(selfAdr, enable);
+  END QWidget_setMouseTracking;
+
+PROCEDURE QWidget_hasMouseTracking (self: QWidget; ): BOOLEAN =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtWidgetRaw.QWidget_hasMouseTracking(selfAdr);
+  END QWidget_hasMouseTracking;
+
+PROCEDURE QWidget_underMouse (self: QWidget; ): BOOLEAN =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtWidgetRaw.QWidget_underMouse(selfAdr);
+  END QWidget_underMouse;
+
+PROCEDURE QWidget_setMask (self: QWidget; arg2: QBitmap; ) =
+  VAR
+    selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp := LOOPHOLE(arg2.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_setMask(selfAdr, arg2tmp);
+  END QWidget_setMask;
+
+PROCEDURE QWidget_setMask1 (self: QWidget; arg2: QRegion; ) =
+  VAR
+    selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp := LOOPHOLE(arg2.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_setMask1(selfAdr, arg2tmp);
+  END QWidget_setMask1;
+
+PROCEDURE QWidget_mask (self: QWidget; ): QRegion =
+  VAR
+    ret    : ADDRESS;
+    result : QRegion;
+    selfAdr          := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWidgetRaw.QWidget_mask(selfAdr);
+
+    result := NEW(QRegion);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QWidget_mask;
+
+PROCEDURE QWidget_clearMask (self: QWidget; ) =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_clearMask(selfAdr);
+  END QWidget_clearMask;
+
+PROCEDURE QWidget_graphicsEffect (self: QWidget; ): QGraphicsEffect =
+  VAR
+    ret    : ADDRESS;
+    result : QGraphicsEffect;
+    selfAdr                  := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWidgetRaw.QWidget_graphicsEffect(selfAdr);
+
+    result := NEW(QGraphicsEffect);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QWidget_graphicsEffect;
+
+PROCEDURE QWidget_setGraphicsEffect
+  (self: QWidget; effect: QGraphicsEffect; ) =
+  VAR
+    selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp := LOOPHOLE(effect.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_setGraphicsEffect(selfAdr, arg2tmp);
+  END QWidget_setGraphicsEffect;
+
+PROCEDURE QWidget_grabGesture
+  (self: QWidget; type: GestureType; flags: GestureFlags; ) =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_grabGesture(selfAdr, ORD(type), ORD(flags));
+  END QWidget_grabGesture;
+
+PROCEDURE QWidget_grabGesture1 (self: QWidget; type: GestureType; ) =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_grabGesture1(selfAdr, ORD(type));
+  END QWidget_grabGesture1;
+
+PROCEDURE QWidget_ungrabGesture (self: QWidget; type: GestureType; ) =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_ungrabGesture(selfAdr, ORD(type));
+  END QWidget_ungrabGesture;
+
+PROCEDURE QWidget_setWindowTitle (self: QWidget; arg2: TEXT; ) =
+  VAR
+    selfAdr   := LOOPHOLE(self.cxxObj, ADDRESS);
+    qstr_arg2 := NEW(QString).initQString(arg2);
+    arg2tmp   := LOOPHOLE(qstr_arg2.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_setWindowTitle(selfAdr, arg2tmp);
+  END QWidget_setWindowTitle;
+
+PROCEDURE QWidget_setStyleSheet (self: QWidget; styleSheet: TEXT; ) =
+  VAR
+    selfAdr         := LOOPHOLE(self.cxxObj, ADDRESS);
+    qstr_styleSheet := NEW(QString).initQString(styleSheet);
+    arg2tmp         := LOOPHOLE(qstr_styleSheet.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_setStyleSheet(selfAdr, arg2tmp);
+  END QWidget_setStyleSheet;
+
+PROCEDURE QWidget_styleSheet (self: QWidget; ): TEXT =
+  VAR
+    ret    : ADDRESS;
+    qstr                := NEW(QString);
+    ba     : QByteArray;
+    result : TEXT;
+    selfAdr             := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWidgetRaw.QWidget_styleSheet(selfAdr);
+
+    qstr.cxxObj := ret;
+    ba := qstr.toLocal8Bit();
+    result := ba.data();
+
+    RETURN result;
+  END QWidget_styleSheet;
+
+PROCEDURE QWidget_windowTitle (self: QWidget; ): TEXT =
+  VAR
+    ret    : ADDRESS;
+    qstr                := NEW(QString);
+    ba     : QByteArray;
+    result : TEXT;
+    selfAdr             := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWidgetRaw.QWidget_windowTitle(selfAdr);
+
+    qstr.cxxObj := ret;
+    ba := qstr.toLocal8Bit();
+    result := ba.data();
+
+    RETURN result;
+  END QWidget_windowTitle;
+
+PROCEDURE QWidget_setWindowIcon (self: QWidget; icon: QIcon; ) =
+  VAR
+    selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp := LOOPHOLE(icon.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_setWindowIcon(selfAdr, arg2tmp);
+  END QWidget_setWindowIcon;
+
+PROCEDURE QWidget_setWindowIconText (self: QWidget; arg2: TEXT; ) =
+  VAR
+    selfAdr   := LOOPHOLE(self.cxxObj, ADDRESS);
+    qstr_arg2 := NEW(QString).initQString(arg2);
+    arg2tmp   := LOOPHOLE(qstr_arg2.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_setWindowIconText(selfAdr, arg2tmp);
+  END QWidget_setWindowIconText;
+
+PROCEDURE QWidget_windowIconText (self: QWidget; ): TEXT =
+  VAR
+    ret    : ADDRESS;
+    qstr                := NEW(QString);
+    ba     : QByteArray;
+    result : TEXT;
+    selfAdr             := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWidgetRaw.QWidget_windowIconText(selfAdr);
+
+    qstr.cxxObj := ret;
+    ba := qstr.toLocal8Bit();
+    result := ba.data();
+
+    RETURN result;
+  END QWidget_windowIconText;
+
+PROCEDURE QWidget_setWindowRole (self: QWidget; arg2: TEXT; ) =
+  VAR
+    selfAdr   := LOOPHOLE(self.cxxObj, ADDRESS);
+    qstr_arg2 := NEW(QString).initQString(arg2);
+    arg2tmp   := LOOPHOLE(qstr_arg2.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_setWindowRole(selfAdr, arg2tmp);
+  END QWidget_setWindowRole;
+
+PROCEDURE QWidget_windowRole (self: QWidget; ): TEXT =
+  VAR
+    ret    : ADDRESS;
+    qstr                := NEW(QString);
+    ba     : QByteArray;
+    result : TEXT;
+    selfAdr             := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWidgetRaw.QWidget_windowRole(selfAdr);
+
+    qstr.cxxObj := ret;
+    ba := qstr.toLocal8Bit();
+    result := ba.data();
+
+    RETURN result;
+  END QWidget_windowRole;
+
+PROCEDURE QWidget_setWindowFilePath (self: QWidget; filePath: TEXT; ) =
+  VAR
+    selfAdr       := LOOPHOLE(self.cxxObj, ADDRESS);
+    qstr_filePath := NEW(QString).initQString(filePath);
+    arg2tmp       := LOOPHOLE(qstr_filePath.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_setWindowFilePath(selfAdr, arg2tmp);
+  END QWidget_setWindowFilePath;
+
+PROCEDURE QWidget_windowFilePath (self: QWidget; ): TEXT =
+  VAR
+    ret    : ADDRESS;
+    qstr                := NEW(QString);
+    ba     : QByteArray;
+    result : TEXT;
+    selfAdr             := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWidgetRaw.QWidget_windowFilePath(selfAdr);
+
+    qstr.cxxObj := ret;
+    ba := qstr.toLocal8Bit();
+    result := ba.data();
+
+    RETURN result;
+  END QWidget_windowFilePath;
+
+PROCEDURE QWidget_setWindowOpacity (self: QWidget; level: LONGREAL; ) =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_setWindowOpacity(selfAdr, level);
+  END QWidget_setWindowOpacity;
+
+PROCEDURE QWidget_windowOpacity (self: QWidget; ): LONGREAL =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtWidgetRaw.QWidget_windowOpacity(selfAdr);
+  END QWidget_windowOpacity;
+
+PROCEDURE QWidget_isWindowModified (self: QWidget; ): BOOLEAN =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtWidgetRaw.QWidget_isWindowModified(selfAdr);
+  END QWidget_isWindowModified;
+
+PROCEDURE QWidget_setToolTip (self: QWidget; arg2: TEXT; ) =
+  VAR
+    selfAdr   := LOOPHOLE(self.cxxObj, ADDRESS);
+    qstr_arg2 := NEW(QString).initQString(arg2);
+    arg2tmp   := LOOPHOLE(qstr_arg2.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_setToolTip(selfAdr, arg2tmp);
+  END QWidget_setToolTip;
+
+PROCEDURE QWidget_toolTip (self: QWidget; ): TEXT =
+  VAR
+    ret    : ADDRESS;
+    qstr                := NEW(QString);
+    ba     : QByteArray;
+    result : TEXT;
+    selfAdr             := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWidgetRaw.QWidget_toolTip(selfAdr);
+
+    qstr.cxxObj := ret;
+    ba := qstr.toLocal8Bit();
+    result := ba.data();
+
+    RETURN result;
+  END QWidget_toolTip;
+
+PROCEDURE QWidget_setStatusTip (self: QWidget; arg2: TEXT; ) =
+  VAR
+    selfAdr   := LOOPHOLE(self.cxxObj, ADDRESS);
+    qstr_arg2 := NEW(QString).initQString(arg2);
+    arg2tmp   := LOOPHOLE(qstr_arg2.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_setStatusTip(selfAdr, arg2tmp);
+  END QWidget_setStatusTip;
+
+PROCEDURE QWidget_statusTip (self: QWidget; ): TEXT =
+  VAR
+    ret    : ADDRESS;
+    qstr                := NEW(QString);
+    ba     : QByteArray;
+    result : TEXT;
+    selfAdr             := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWidgetRaw.QWidget_statusTip(selfAdr);
+
+    qstr.cxxObj := ret;
+    ba := qstr.toLocal8Bit();
+    result := ba.data();
+
+    RETURN result;
+  END QWidget_statusTip;
+
+PROCEDURE QWidget_setWhatsThis (self: QWidget; arg2: TEXT; ) =
+  VAR
+    selfAdr   := LOOPHOLE(self.cxxObj, ADDRESS);
+    qstr_arg2 := NEW(QString).initQString(arg2);
+    arg2tmp   := LOOPHOLE(qstr_arg2.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_setWhatsThis(selfAdr, arg2tmp);
+  END QWidget_setWhatsThis;
+
+PROCEDURE QWidget_whatsThis (self: QWidget; ): TEXT =
+  VAR
+    ret    : ADDRESS;
+    qstr                := NEW(QString);
+    ba     : QByteArray;
+    result : TEXT;
+    selfAdr             := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWidgetRaw.QWidget_whatsThis(selfAdr);
+
+    qstr.cxxObj := ret;
+    ba := qstr.toLocal8Bit();
+    result := ba.data();
+
+    RETURN result;
+  END QWidget_whatsThis;
+
+PROCEDURE QWidget_accessibleName (self: QWidget; ): TEXT =
+  VAR
+    ret    : ADDRESS;
+    qstr                := NEW(QString);
+    ba     : QByteArray;
+    result : TEXT;
+    selfAdr             := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWidgetRaw.QWidget_accessibleName(selfAdr);
+
+    qstr.cxxObj := ret;
+    ba := qstr.toLocal8Bit();
+    result := ba.data();
+
+    RETURN result;
+  END QWidget_accessibleName;
+
+PROCEDURE QWidget_setAccessibleName (self: QWidget; name: TEXT; ) =
+  VAR
+    selfAdr   := LOOPHOLE(self.cxxObj, ADDRESS);
+    qstr_name := NEW(QString).initQString(name);
+    arg2tmp   := LOOPHOLE(qstr_name.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_setAccessibleName(selfAdr, arg2tmp);
+  END QWidget_setAccessibleName;
+
+PROCEDURE QWidget_accessibleDescription (self: QWidget; ): TEXT =
+  VAR
+    ret    : ADDRESS;
+    qstr                := NEW(QString);
+    ba     : QByteArray;
+    result : TEXT;
+    selfAdr             := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWidgetRaw.QWidget_accessibleDescription(selfAdr);
+
+    qstr.cxxObj := ret;
+    ba := qstr.toLocal8Bit();
+    result := ba.data();
+
+    RETURN result;
+  END QWidget_accessibleDescription;
+
+PROCEDURE QWidget_setAccessibleDescription
+  (self: QWidget; description: TEXT; ) =
+  VAR
+    selfAdr          := LOOPHOLE(self.cxxObj, ADDRESS);
+    qstr_description := NEW(QString).initQString(description);
+    arg2tmp          := LOOPHOLE(qstr_description.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_setAccessibleDescription(selfAdr, arg2tmp);
+  END QWidget_setAccessibleDescription;
+
+PROCEDURE QWidget_setLayoutDirection
+  (self: QWidget; direction: LayoutDirection; ) =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_setLayoutDirection(selfAdr, ORD(direction));
+  END QWidget_setLayoutDirection;
+
+PROCEDURE QWidget_layoutDirection (self: QWidget; ): LayoutDirection =
+  VAR
+    ret    : INTEGER;
+    result : LayoutDirection;
+    selfAdr                  := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWidgetRaw.QWidget_layoutDirection(selfAdr);
+    result := VAL(ret, LayoutDirection);
+    RETURN result;
+  END QWidget_layoutDirection;
+
+PROCEDURE QWidget_unsetLayoutDirection (self: QWidget; ) =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_unsetLayoutDirection(selfAdr);
+  END QWidget_unsetLayoutDirection;
+
+PROCEDURE QWidget_setLocale (self: QWidget; locale: QLocale; ) =
+  VAR
+    selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp := LOOPHOLE(locale.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_setLocale(selfAdr, arg2tmp);
+  END QWidget_setLocale;
+
+PROCEDURE QWidget_unsetLocale (self: QWidget; ) =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_unsetLocale(selfAdr);
+  END QWidget_unsetLocale;
+
+PROCEDURE QWidget_isRightToLeft (self: QWidget; ): BOOLEAN =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtWidgetRaw.QWidget_isRightToLeft(selfAdr);
+  END QWidget_isRightToLeft;
+
+PROCEDURE QWidget_isLeftToRight (self: QWidget; ): BOOLEAN =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtWidgetRaw.QWidget_isLeftToRight(selfAdr);
+  END QWidget_isLeftToRight;
+
+PROCEDURE QWidget_setFocus (self: QWidget; ) =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_setFocus(selfAdr);
+  END QWidget_setFocus;
+
+PROCEDURE QWidget_isActiveWindow (self: QWidget; ): BOOLEAN =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtWidgetRaw.QWidget_isActiveWindow(selfAdr);
+  END QWidget_isActiveWindow;
+
+PROCEDURE QWidget_activateWindow (self: QWidget; ) =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_activateWindow(selfAdr);
+  END QWidget_activateWindow;
+
+PROCEDURE QWidget_clearFocus (self: QWidget; ) =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_clearFocus(selfAdr);
+  END QWidget_clearFocus;
+
+PROCEDURE QWidget_setFocus1 (self: QWidget; reason: FocusReason; ) =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_setFocus1(selfAdr, ORD(reason));
+  END QWidget_setFocus1;
+
+PROCEDURE QWidget_focusPolicy (self: QWidget; ): FocusPolicy =
+  VAR
+    ret    : INTEGER;
+    result : FocusPolicy;
+    selfAdr              := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWidgetRaw.QWidget_focusPolicy(selfAdr);
+    result := VAL(ret, FocusPolicy);
+    RETURN result;
+  END QWidget_focusPolicy;
+
+PROCEDURE QWidget_setFocusPolicy (self: QWidget; policy: FocusPolicy; ) =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_setFocusPolicy(selfAdr, ORD(policy));
+  END QWidget_setFocusPolicy;
+
+PROCEDURE QWidget_hasFocus (self: QWidget; ): BOOLEAN =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtWidgetRaw.QWidget_hasFocus(selfAdr);
+  END QWidget_hasFocus;
+
+PROCEDURE SetTabOrder (arg1, arg2: QWidget; ) =
+  VAR
+    arg1tmp := LOOPHOLE(arg1.cxxObj, ADDRESS);
+    arg2tmp := LOOPHOLE(arg2.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.SetTabOrder(arg1tmp, arg2tmp);
+  END SetTabOrder;
+
+PROCEDURE QWidget_setFocusProxy (self, arg2: QWidget; ) =
+  VAR
+    selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp := LOOPHOLE(arg2.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_setFocusProxy(selfAdr, arg2tmp);
+  END QWidget_setFocusProxy;
+
+PROCEDURE QWidget_focusProxy (self: QWidget; ): QWidget =
+  VAR
+    ret    : ADDRESS;
+    result : QWidget;
+    selfAdr          := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWidgetRaw.QWidget_focusProxy(selfAdr);
+
+    IF ISTYPE(result, QWidget) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QWidget);
+    ELSE
+      result := NEW(QWidget);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QWidget_focusProxy;
+
+PROCEDURE QWidget_contextMenuPolicy (self: QWidget; ): ContextMenuPolicy =
+  VAR
+    ret    : INTEGER;
+    result : ContextMenuPolicy;
+    selfAdr                    := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWidgetRaw.QWidget_contextMenuPolicy(selfAdr);
+    result := VAL(ret, ContextMenuPolicy);
+    RETURN result;
+  END QWidget_contextMenuPolicy;
+
+PROCEDURE QWidget_setContextMenuPolicy
+  (self: QWidget; policy: ContextMenuPolicy; ) =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_setContextMenuPolicy(selfAdr, ORD(policy));
+  END QWidget_setContextMenuPolicy;
+
+PROCEDURE QWidget_grabMouse (self: QWidget; ) =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_grabMouse(selfAdr);
+  END QWidget_grabMouse;
+
+PROCEDURE QWidget_grabMouse1 (self: QWidget; arg2: QCursor; ) =
+  VAR
+    selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp := LOOPHOLE(arg2.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_grabMouse1(selfAdr, arg2tmp);
+  END QWidget_grabMouse1;
+
+PROCEDURE QWidget_releaseMouse (self: QWidget; ) =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_releaseMouse(selfAdr);
+  END QWidget_releaseMouse;
+
+PROCEDURE QWidget_grabKeyboard (self: QWidget; ) =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_grabKeyboard(selfAdr);
+  END QWidget_grabKeyboard;
+
+PROCEDURE QWidget_releaseKeyboard (self: QWidget; ) =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_releaseKeyboard(selfAdr);
+  END QWidget_releaseKeyboard;
+
+PROCEDURE QWidget_grabShortcut
+  (self: QWidget; key: QKeySequence; context: ShortcutContext; ): INTEGER =
+  VAR
+    selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp := LOOPHOLE(key.cxxObj, ADDRESS);
+  BEGIN
+    RETURN
+      QtWidgetRaw.QWidget_grabShortcut(selfAdr, arg2tmp, ORD(context));
+  END QWidget_grabShortcut;
+
+PROCEDURE QWidget_grabShortcut1 (self: QWidget; key: QKeySequence; ):
+  INTEGER =
+  VAR
+    selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp := LOOPHOLE(key.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtWidgetRaw.QWidget_grabShortcut1(selfAdr, arg2tmp);
+  END QWidget_grabShortcut1;
+
+PROCEDURE QWidget_releaseShortcut (self: QWidget; id: INTEGER; ) =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_releaseShortcut(selfAdr, id);
+  END QWidget_releaseShortcut;
+
+PROCEDURE QWidget_setShortcutEnabled
+  (self: QWidget; id: INTEGER; enable: BOOLEAN; ) =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_setShortcutEnabled(selfAdr, id, enable);
+  END QWidget_setShortcutEnabled;
+
+PROCEDURE QWidget_setShortcutEnabled1 (self: QWidget; id: INTEGER; ) =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_setShortcutEnabled1(selfAdr, id);
+  END QWidget_setShortcutEnabled1;
+
+PROCEDURE QWidget_setShortcutAutoRepeat
+  (self: QWidget; id: INTEGER; enable: BOOLEAN; ) =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_setShortcutAutoRepeat(selfAdr, id, enable);
+  END QWidget_setShortcutAutoRepeat;
+
+PROCEDURE QWidget_setShortcutAutoRepeat1 (self: QWidget; id: INTEGER; ) =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_setShortcutAutoRepeat1(selfAdr, id);
+  END QWidget_setShortcutAutoRepeat1;
 
 PROCEDURE MouseGrabber (): QWidget =
-VAR
-ret:ADDRESS; result : QWidget;
-BEGIN
-ret := QtWidgetRaw.MouseGrabber();
+  VAR
+    ret   : ADDRESS;
+    result: QWidget;
+  BEGIN
+    ret := QtWidgetRaw.MouseGrabber();
 
-  result := NEW(QWidget);
-  result.cxxObj := ret;
-  result.destroyCxx();
+    result := NEW(QWidget);
+    result.cxxObj := ret;
+    result.destroyCxx();
 
-RETURN result;
-END MouseGrabber;
+    RETURN result;
+  END MouseGrabber;
 
 PROCEDURE KeyboardGrabber (): QWidget =
-VAR
-ret:ADDRESS; result : QWidget;
-BEGIN
-ret := QtWidgetRaw.KeyboardGrabber();
-
-  result := NEW(QWidget);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END KeyboardGrabber;
-
-PROCEDURE QWidget_updatesEnabled ( self: QWidget;
-): BOOLEAN =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtWidgetRaw.QWidget_updatesEnabled(selfAdr);
-END QWidget_updatesEnabled;
-
-PROCEDURE QWidget_setUpdatesEnabled ( self: QWidget;
-enable: BOOLEAN;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_setUpdatesEnabled(selfAdr, enable);
-END QWidget_setUpdatesEnabled;
-
-PROCEDURE QWidget_graphicsProxyWidget ( self: QWidget;
-): QGraphicsProxyWidget =
-VAR
-ret:ADDRESS; result : QGraphicsProxyWidget;
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtWidgetRaw.QWidget_graphicsProxyWidget(selfAdr);
-
-  result := NEW(QGraphicsProxyWidget);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QWidget_graphicsProxyWidget;
-
-PROCEDURE QWidget_update ( self: QWidget;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_update(selfAdr);
-END QWidget_update;
-
-PROCEDURE QWidget_repaint ( self: QWidget;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_repaint(selfAdr);
-END QWidget_repaint;
-
-PROCEDURE QWidget_update1 ( self: QWidget;
-x, y, w, h: INTEGER;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_update1(selfAdr, x, y, w, h);
-END QWidget_update1;
-
-PROCEDURE QWidget_update2 ( self: QWidget;
- arg2: QRect;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(arg2.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_update2(selfAdr, arg2tmp);
-END QWidget_update2;
-
-PROCEDURE QWidget_update3 ( self: QWidget;
- arg2: QRegion;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(arg2.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_update3(selfAdr, arg2tmp);
-END QWidget_update3;
-
-PROCEDURE QWidget_repaint1 ( self: QWidget;
-x, y, w, h: INTEGER;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_repaint1(selfAdr, x, y, w, h);
-END QWidget_repaint1;
-
-PROCEDURE QWidget_repaint2 ( self: QWidget;
- arg2: QRect;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(arg2.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_repaint2(selfAdr, arg2tmp);
-END QWidget_repaint2;
-
-PROCEDURE QWidget_repaint3 ( self: QWidget;
- arg2: QRegion;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(arg2.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_repaint3(selfAdr, arg2tmp);
-END QWidget_repaint3;
-
-PROCEDURE QWidget_setVisible ( self: QWidget;
-visible: BOOLEAN;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_setVisible(selfAdr, visible);
-END QWidget_setVisible;
-
-PROCEDURE QWidget_setHidden ( self: QWidget;
-hidden: BOOLEAN;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_setHidden(selfAdr, hidden);
-END QWidget_setHidden;
-
-PROCEDURE QWidget_show ( self: QWidget;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_show(selfAdr);
-END QWidget_show;
-
-PROCEDURE QWidget_hide ( self: QWidget;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_hide(selfAdr);
-END QWidget_hide;
-
-PROCEDURE QWidget_setShown ( self: QWidget;
-shown: BOOLEAN;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_setShown(selfAdr, shown);
-END QWidget_setShown;
-
-PROCEDURE QWidget_showMinimized ( self: QWidget;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_showMinimized(selfAdr);
-END QWidget_showMinimized;
-
-PROCEDURE QWidget_showMaximized ( self: QWidget;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_showMaximized(selfAdr);
-END QWidget_showMaximized;
-
-PROCEDURE QWidget_showFullScreen ( self: QWidget;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_showFullScreen(selfAdr);
-END QWidget_showFullScreen;
-
-PROCEDURE QWidget_showNormal ( self: QWidget;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_showNormal(selfAdr);
-END QWidget_showNormal;
-
-PROCEDURE QWidget_close ( self: QWidget;
-): BOOLEAN =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtWidgetRaw.QWidget_close(selfAdr);
-END QWidget_close;
-
-PROCEDURE QWidget_raise ( self: QWidget;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_raise(selfAdr);
-END QWidget_raise;
-
-PROCEDURE QWidget_lower ( self: QWidget;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_lower(selfAdr);
-END QWidget_lower;
-
-PROCEDURE QWidget_stackUnder ( self, arg2: QWidget;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(arg2.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_stackUnder(selfAdr, arg2tmp);
-END QWidget_stackUnder;
-
-PROCEDURE QWidget_move ( self: QWidget;
-x, y: INTEGER;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_move(selfAdr, x, y);
-END QWidget_move;
-
-PROCEDURE QWidget_move1 ( self: QWidget;
- arg2: QPoint;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(arg2.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_move1(selfAdr, arg2tmp);
-END QWidget_move1;
-
-PROCEDURE QWidget_resize ( self: QWidget;
-w, h: INTEGER;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_resize(selfAdr, w, h);
-END QWidget_resize;
-
-PROCEDURE QWidget_resize1 ( self: QWidget;
- arg2: QSize;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(arg2.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_resize1(selfAdr, arg2tmp);
-END QWidget_resize1;
-
-PROCEDURE QWidget_setGeometry ( self: QWidget;
-x, y, w, h: INTEGER;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_setGeometry(selfAdr, x, y, w, h);
-END QWidget_setGeometry;
-
-PROCEDURE QWidget_setGeometry1 ( self: QWidget;
- arg2: QRect;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(arg2.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_setGeometry1(selfAdr, arg2tmp);
-END QWidget_setGeometry1;
-
-PROCEDURE QWidget_saveGeometry ( self: QWidget;
-): QByteArray =
-VAR
-ret:ADDRESS; result : QByteArray;
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtWidgetRaw.QWidget_saveGeometry(selfAdr);
-
-  result := NEW(QByteArray);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QWidget_saveGeometry;
-
-PROCEDURE QWidget_restoreGeometry ( self: QWidget;
- geometry: QByteArray;
-): BOOLEAN =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(geometry.cxxObj,ADDRESS);
-BEGIN
-RETURN QtWidgetRaw.QWidget_restoreGeometry(selfAdr, arg2tmp);
-END QWidget_restoreGeometry;
-
-PROCEDURE QWidget_adjustSize ( self: QWidget;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_adjustSize(selfAdr);
-END QWidget_adjustSize;
-
-PROCEDURE QWidget_isVisible ( self: QWidget;
-): BOOLEAN =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtWidgetRaw.QWidget_isVisible(selfAdr);
-END QWidget_isVisible;
-
-PROCEDURE QWidget_isVisibleTo ( self, arg2: QWidget;
-): BOOLEAN =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(arg2.cxxObj,ADDRESS);
-BEGIN
-RETURN QtWidgetRaw.QWidget_isVisibleTo(selfAdr, arg2tmp);
-END QWidget_isVisibleTo;
-
-PROCEDURE QWidget_isHidden ( self: QWidget;
-): BOOLEAN =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtWidgetRaw.QWidget_isHidden(selfAdr);
-END QWidget_isHidden;
-
-PROCEDURE QWidget_isMinimized ( self: QWidget;
-): BOOLEAN =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtWidgetRaw.QWidget_isMinimized(selfAdr);
-END QWidget_isMinimized;
-
-PROCEDURE QWidget_isMaximized ( self: QWidget;
-): BOOLEAN =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtWidgetRaw.QWidget_isMaximized(selfAdr);
-END QWidget_isMaximized;
-
-PROCEDURE QWidget_isFullScreen ( self: QWidget;
-): BOOLEAN =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtWidgetRaw.QWidget_isFullScreen(selfAdr);
-END QWidget_isFullScreen;
-
-PROCEDURE QWidget_windowState ( self: QWidget;
-): WindowStates =
-VAR
-ret:INTEGER; result : WindowStates;
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtWidgetRaw.QWidget_windowState(selfAdr);
-result := VAL(ret,WindowStates);  
-RETURN result;
-END QWidget_windowState;
-
-PROCEDURE QWidget_setWindowState ( self: QWidget;
-state: WindowStates;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_setWindowState(selfAdr, ORD(state));
-END QWidget_setWindowState;
-
-PROCEDURE QWidget_overrideWindowState ( self: QWidget;
-state: WindowStates;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_overrideWindowState(selfAdr, ORD(state));
-END QWidget_overrideWindowState;
-
-PROCEDURE QWidget_sizeHint ( self: QWidget;
-): QSize =
-VAR
-ret:ADDRESS; result : QSize;
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtWidgetRaw.QWidget_sizeHint(selfAdr);
-
-  result := NEW(QSize);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QWidget_sizeHint;
-
-PROCEDURE QWidget_minimumSizeHint ( self: QWidget;
-): QSize =
-VAR
-ret:ADDRESS; result : QSize;
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtWidgetRaw.QWidget_minimumSizeHint(selfAdr);
-
-  result := NEW(QSize);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QWidget_minimumSizeHint;
-
-PROCEDURE QWidget_sizePolicy ( self: QWidget;
-): QSizePolicy =
-VAR
-ret:ADDRESS; result : QSizePolicy;
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtWidgetRaw.QWidget_sizePolicy(selfAdr);
-
-  result := NEW(QSizePolicy);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QWidget_sizePolicy;
-
-PROCEDURE QWidget_setSizePolicy ( self: QWidget;
- arg2: QSizePolicy;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(arg2.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_setSizePolicy(selfAdr, arg2tmp);
-END QWidget_setSizePolicy;
-
-PROCEDURE QWidget_setSizePolicy1 ( self: QWidget;
-horizontal, vertical: Policy;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_setSizePolicy1(selfAdr, ORD(horizontal), ORD(vertical));
-END QWidget_setSizePolicy1;
-
-PROCEDURE QWidget_heightForWidth ( self: QWidget;
-arg2: INTEGER;
-): INTEGER =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtWidgetRaw.QWidget_heightForWidth(selfAdr, arg2);
-END QWidget_heightForWidth;
-
-PROCEDURE QWidget_visibleRegion ( self: QWidget;
-): QRegion =
-VAR
-ret:ADDRESS; result : QRegion;
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtWidgetRaw.QWidget_visibleRegion(selfAdr);
-
-  result := NEW(QRegion);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QWidget_visibleRegion;
-
-PROCEDURE QWidget_setContentsMargins ( self: QWidget;
-left, top, right, bottom: INTEGER;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_setContentsMargins(selfAdr, left, top, right, bottom);
-END QWidget_setContentsMargins;
-
-PROCEDURE QWidget_setContentsMargins1 ( self: QWidget;
- margins: QMargins;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(margins.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_setContentsMargins1(selfAdr, arg2tmp);
-END QWidget_setContentsMargins1;
-
-PROCEDURE QWidget_getContentsMargins ( self: QWidget;
-VAR left, top, right, bottom: INTEGER;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp: C.int;
-arg3tmp: C.int;
-arg4tmp: C.int;
-arg5tmp: C.int;
-BEGIN
-arg2tmp := left;
-arg3tmp := top;
-arg4tmp := right;
-arg5tmp := bottom;
-QtWidgetRaw.QWidget_getContentsMargins(selfAdr, arg2tmp, arg3tmp, arg4tmp, arg5tmp);
-left := arg2tmp;
-top := arg3tmp;
-right := arg4tmp;
-bottom := arg5tmp;
-END QWidget_getContentsMargins;
-
-PROCEDURE QWidget_contentsMargins ( self: QWidget;
-): QMargins =
-VAR
-ret:ADDRESS; result : QMargins;
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtWidgetRaw.QWidget_contentsMargins(selfAdr);
-
-  result := NEW(QMargins);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QWidget_contentsMargins;
-
-PROCEDURE QWidget_contentsRect ( self: QWidget;
-): QRect =
-VAR
-ret:ADDRESS; result : QRect;
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtWidgetRaw.QWidget_contentsRect(selfAdr);
-
-  result := NEW(QRect);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QWidget_contentsRect;
-
-PROCEDURE QWidget_layout ( self: QWidget;
-): REFANY =
-VAR
-ret:ADDRESS; result : QLayout;
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtWidgetRaw.QWidget_layout(selfAdr);
-
-  result := NEW(QLayout);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QWidget_layout;
-
-PROCEDURE QWidget_setLayout ( self: QWidget;
- arg2: REFANY;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(NARROW(arg2,QLayout).cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_setLayout(selfAdr, arg2tmp);
-END QWidget_setLayout;
-
-PROCEDURE QWidget_updateGeometry ( self: QWidget;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_updateGeometry(selfAdr);
-END QWidget_updateGeometry;
-
-PROCEDURE QWidget_setParent ( self, parent: QWidget;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(parent.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_setParent(selfAdr, arg2tmp);
-END QWidget_setParent;
-
-PROCEDURE QWidget_setParent1 ( self, parent: QWidget;
-f: WindowTypes;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(parent.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_setParent1(selfAdr, arg2tmp, ORD(f));
-END QWidget_setParent1;
-
-PROCEDURE QWidget_scroll ( self: QWidget;
-dx, dy: INTEGER;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_scroll(selfAdr, dx, dy);
-END QWidget_scroll;
-
-PROCEDURE QWidget_scroll1 ( self: QWidget;
-dx, dy: INTEGER;
- arg4: QRect;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg4tmp :=  LOOPHOLE(arg4.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_scroll1(selfAdr, dx, dy, arg4tmp);
-END QWidget_scroll1;
-
-PROCEDURE QWidget_focusWidget ( self: QWidget;
-): QWidget =
-VAR
-ret:ADDRESS; result : QWidget;
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtWidgetRaw.QWidget_focusWidget(selfAdr);
-
-IF ISTYPE(result,QWidget) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QWidget);
-ELSE
-  result := NEW(QWidget);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QWidget_focusWidget;
-
-PROCEDURE QWidget_nextInFocusChain ( self: QWidget;
-): QWidget =
-VAR
-ret:ADDRESS; result : QWidget;
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtWidgetRaw.QWidget_nextInFocusChain(selfAdr);
-
-IF ISTYPE(result,QWidget) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QWidget);
-ELSE
-  result := NEW(QWidget);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QWidget_nextInFocusChain;
-
-PROCEDURE QWidget_previousInFocusChain ( self: QWidget;
-): QWidget =
-VAR
-ret:ADDRESS; result : QWidget;
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtWidgetRaw.QWidget_previousInFocusChain(selfAdr);
-
-IF ISTYPE(result,QWidget) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QWidget);
-ELSE
-  result := NEW(QWidget);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QWidget_previousInFocusChain;
-
-PROCEDURE QWidget_acceptDrops ( self: QWidget;
-): BOOLEAN =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtWidgetRaw.QWidget_acceptDrops(selfAdr);
-END QWidget_acceptDrops;
-
-PROCEDURE QWidget_setAcceptDrops ( self: QWidget;
-on: BOOLEAN;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_setAcceptDrops(selfAdr, on);
-END QWidget_setAcceptDrops;
-
-PROCEDURE QWidget_addAction ( self: QWidget;
- action: QAction;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(action.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_addAction(selfAdr, arg2tmp);
-END QWidget_addAction;
-
-PROCEDURE QWidget_insertAction ( self: QWidget;
- before, action: QAction;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(before.cxxObj,ADDRESS);
-arg3tmp :=  LOOPHOLE(action.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_insertAction(selfAdr, arg2tmp, arg3tmp);
-END QWidget_insertAction;
-
-PROCEDURE QWidget_removeAction ( self: QWidget;
- action: QAction;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(action.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_removeAction(selfAdr, arg2tmp);
-END QWidget_removeAction;
-
-PROCEDURE QWidget_parentWidget ( self: QWidget;
-): QWidget =
-VAR
-ret:ADDRESS; result : QWidget;
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtWidgetRaw.QWidget_parentWidget(selfAdr);
-
-IF ISTYPE(result,QWidget) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QWidget);
-ELSE
-  result := NEW(QWidget);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QWidget_parentWidget;
-
-PROCEDURE QWidget_setWindowFlags ( self: QWidget;
-type: WindowTypes;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_setWindowFlags(selfAdr, ORD(type));
-END QWidget_setWindowFlags;
-
-PROCEDURE QWidget_windowFlags ( self: QWidget;
-): WindowTypes =
-VAR
-ret:INTEGER; result : WindowTypes;
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtWidgetRaw.QWidget_windowFlags(selfAdr);
-result := VAL(ret,WindowTypes);  
-RETURN result;
-END QWidget_windowFlags;
-
-PROCEDURE QWidget_overrideWindowFlags ( self: QWidget;
-type: WindowTypes;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_overrideWindowFlags(selfAdr, ORD(type));
-END QWidget_overrideWindowFlags;
-
-PROCEDURE QWidget_windowType ( self: QWidget;
-): WindowType =
-VAR
-ret:INTEGER; result : WindowType;
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtWidgetRaw.QWidget_windowType(selfAdr);
-result := VAL(ret,WindowType);  
-RETURN result;
-END QWidget_windowType;
-
-PROCEDURE Find (arg1: INTEGER;
-): QWidget =
-VAR
-ret:ADDRESS; result : QWidget;
-BEGIN
-ret := QtWidgetRaw.Find(arg1);
-
-  result := NEW(QWidget);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END Find;
-
-PROCEDURE QWidget_childAt ( self: QWidget;
-x, y: INTEGER;
-): QWidget =
-VAR
-ret:ADDRESS; result : QWidget;
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtWidgetRaw.QWidget_childAt(selfAdr, x, y);
-
-IF ISTYPE(result,QWidget) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QWidget);
-ELSE
-  result := NEW(QWidget);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QWidget_childAt;
-
-PROCEDURE QWidget_childAt1 ( self: QWidget;
- p: QPoint;
-): QWidget =
-VAR
-ret:ADDRESS; result : QWidget;
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(p.cxxObj,ADDRESS);
-BEGIN
-ret := QtWidgetRaw.QWidget_childAt1(selfAdr, arg2tmp);
-
-IF ISTYPE(result,QWidget) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QWidget);
-ELSE
-  result := NEW(QWidget);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
-
-RETURN result;
-END QWidget_childAt1;
-
-PROCEDURE QWidget_setAttribute ( self: QWidget;
-arg2: WidgetAttribute;
-on: BOOLEAN;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_setAttribute(selfAdr, ORD(arg2), on);
-END QWidget_setAttribute;
-
-PROCEDURE QWidget_setAttribute1 ( self: QWidget;
-arg2: WidgetAttribute;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_setAttribute1(selfAdr, ORD(arg2));
-END QWidget_setAttribute1;
-
-PROCEDURE QWidget_testAttribute ( self: QWidget;
-arg2: WidgetAttribute;
-): BOOLEAN =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtWidgetRaw.QWidget_testAttribute(selfAdr, ORD(arg2));
-END QWidget_testAttribute;
-
-PROCEDURE QWidget_paintEngine ( self: QWidget;
-): QPaintEngine =
-VAR
-ret:ADDRESS; result : QPaintEngine;
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtWidgetRaw.QWidget_paintEngine(selfAdr);
-
-  result := NEW(QPaintEngine);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QWidget_paintEngine;
-
-PROCEDURE QWidget_ensurePolished ( self: QWidget;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_ensurePolished(selfAdr);
-END QWidget_ensurePolished;
-
-PROCEDURE QWidget_inputContext ( self: QWidget;
-): QInputContext =
-VAR
-ret:ADDRESS; result : QInputContext;
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtWidgetRaw.QWidget_inputContext(selfAdr);
-
-  result := NEW(QInputContext);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QWidget_inputContext;
-
-PROCEDURE QWidget_setInputContext ( self: QWidget;
- arg2: QInputContext;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(arg2.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_setInputContext(selfAdr, arg2tmp);
-END QWidget_setInputContext;
-
-PROCEDURE QWidget_isAncestorOf ( self, child: QWidget;
-): BOOLEAN =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(child.cxxObj,ADDRESS);
-BEGIN
-RETURN QtWidgetRaw.QWidget_isAncestorOf(selfAdr, arg2tmp);
-END QWidget_isAncestorOf;
-
-PROCEDURE QWidget_autoFillBackground ( self: QWidget;
-): BOOLEAN =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtWidgetRaw.QWidget_autoFillBackground(selfAdr);
-END QWidget_autoFillBackground;
-
-PROCEDURE QWidget_setAutoFillBackground ( self: QWidget;
-enabled: BOOLEAN;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_setAutoFillBackground(selfAdr, enabled);
-END QWidget_setAutoFillBackground;
-
-PROCEDURE QWidget_setWindowSurface ( self: QWidget;
- surface: QWindowSurface;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(surface.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_setWindowSurface(selfAdr, arg2tmp);
-END QWidget_setWindowSurface;
-
-PROCEDURE QWidget_windowSurface ( self: QWidget;
-): QWindowSurface =
-VAR
-ret:ADDRESS; result : QWindowSurface;
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtWidgetRaw.QWidget_windowSurface(selfAdr);
-
-  result := NEW(QWindowSurface);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QWidget_windowSurface;
-
-PROCEDURE QWidget_inputMethodHints ( self: QWidget;
-): InputMethodHints =
-VAR
-ret:INTEGER; result : InputMethodHints;
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtWidgetRaw.QWidget_inputMethodHints(selfAdr);
-result := VAL(ret,InputMethodHints);  
-RETURN result;
-END QWidget_inputMethodHints;
-
-PROCEDURE QWidget_setInputMethodHints ( self: QWidget;
-hints: InputMethodHints;
-) =
-VAR
-selfAdr :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWidgetRaw.QWidget_setInputMethodHints(selfAdr, ORD(hints));
-END QWidget_setInputMethodHints;
-
-PROCEDURE Cleanup_QWidget(<*UNUSED*>READONLY self: WeakRef.T; ref: REFANY) =
-VAR obj : QWidget := ref;
-BEGIN
-  Delete_QWidget(obj);
- END Cleanup_QWidget;
-
-PROCEDURE Destroy_QWidget(self : QWidget) =
-BEGIN
-  EVAL WeakRef.FromRef(self,Cleanup_QWidget);
-END Destroy_QWidget;
+  VAR
+    ret   : ADDRESS;
+    result: QWidget;
+  BEGIN
+    ret := QtWidgetRaw.KeyboardGrabber();
+
+    result := NEW(QWidget);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END KeyboardGrabber;
+
+PROCEDURE QWidget_updatesEnabled (self: QWidget; ): BOOLEAN =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtWidgetRaw.QWidget_updatesEnabled(selfAdr);
+  END QWidget_updatesEnabled;
+
+PROCEDURE QWidget_setUpdatesEnabled (self: QWidget; enable: BOOLEAN; ) =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_setUpdatesEnabled(selfAdr, enable);
+  END QWidget_setUpdatesEnabled;
+
+PROCEDURE QWidget_graphicsProxyWidget (self: QWidget; ):
+  QGraphicsProxyWidget =
+  VAR
+    ret    : ADDRESS;
+    result : QGraphicsProxyWidget;
+    selfAdr                       := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWidgetRaw.QWidget_graphicsProxyWidget(selfAdr);
+
+    result := NEW(QGraphicsProxyWidget);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QWidget_graphicsProxyWidget;
+
+PROCEDURE QWidget_update (self: QWidget; ) =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_update(selfAdr);
+  END QWidget_update;
+
+PROCEDURE QWidget_repaint (self: QWidget; ) =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_repaint(selfAdr);
+  END QWidget_repaint;
+
+PROCEDURE QWidget_update1 (self: QWidget; x, y, w, h: INTEGER; ) =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_update1(selfAdr, x, y, w, h);
+  END QWidget_update1;
+
+PROCEDURE QWidget_update2 (self: QWidget; arg2: QRect; ) =
+  VAR
+    selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp := LOOPHOLE(arg2.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_update2(selfAdr, arg2tmp);
+  END QWidget_update2;
+
+PROCEDURE QWidget_update3 (self: QWidget; arg2: QRegion; ) =
+  VAR
+    selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp := LOOPHOLE(arg2.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_update3(selfAdr, arg2tmp);
+  END QWidget_update3;
+
+PROCEDURE QWidget_repaint1 (self: QWidget; x, y, w, h: INTEGER; ) =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_repaint1(selfAdr, x, y, w, h);
+  END QWidget_repaint1;
+
+PROCEDURE QWidget_repaint2 (self: QWidget; arg2: QRect; ) =
+  VAR
+    selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp := LOOPHOLE(arg2.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_repaint2(selfAdr, arg2tmp);
+  END QWidget_repaint2;
+
+PROCEDURE QWidget_repaint3 (self: QWidget; arg2: QRegion; ) =
+  VAR
+    selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp := LOOPHOLE(arg2.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_repaint3(selfAdr, arg2tmp);
+  END QWidget_repaint3;
+
+PROCEDURE QWidget_setVisible (self: QWidget; visible: BOOLEAN; ) =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_setVisible(selfAdr, visible);
+  END QWidget_setVisible;
+
+PROCEDURE QWidget_setHidden (self: QWidget; hidden: BOOLEAN; ) =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_setHidden(selfAdr, hidden);
+  END QWidget_setHidden;
+
+PROCEDURE QWidget_show (self: QWidget; ) =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_show(selfAdr);
+  END QWidget_show;
+
+PROCEDURE QWidget_hide (self: QWidget; ) =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_hide(selfAdr);
+  END QWidget_hide;
+
+PROCEDURE QWidget_setShown (self: QWidget; shown: BOOLEAN; ) =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_setShown(selfAdr, shown);
+  END QWidget_setShown;
+
+PROCEDURE QWidget_showMinimized (self: QWidget; ) =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_showMinimized(selfAdr);
+  END QWidget_showMinimized;
+
+PROCEDURE QWidget_showMaximized (self: QWidget; ) =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_showMaximized(selfAdr);
+  END QWidget_showMaximized;
+
+PROCEDURE QWidget_showFullScreen (self: QWidget; ) =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_showFullScreen(selfAdr);
+  END QWidget_showFullScreen;
+
+PROCEDURE QWidget_showNormal (self: QWidget; ) =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_showNormal(selfAdr);
+  END QWidget_showNormal;
+
+PROCEDURE QWidget_close (self: QWidget; ): BOOLEAN =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtWidgetRaw.QWidget_close(selfAdr);
+  END QWidget_close;
+
+PROCEDURE QWidget_raise (self: QWidget; ) =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_raise(selfAdr);
+  END QWidget_raise;
+
+PROCEDURE QWidget_lower (self: QWidget; ) =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_lower(selfAdr);
+  END QWidget_lower;
+
+PROCEDURE QWidget_stackUnder (self, arg2: QWidget; ) =
+  VAR
+    selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp := LOOPHOLE(arg2.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_stackUnder(selfAdr, arg2tmp);
+  END QWidget_stackUnder;
+
+PROCEDURE QWidget_move (self: QWidget; x, y: INTEGER; ) =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_move(selfAdr, x, y);
+  END QWidget_move;
+
+PROCEDURE QWidget_move1 (self: QWidget; arg2: QPoint; ) =
+  VAR
+    selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp := LOOPHOLE(arg2.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_move1(selfAdr, arg2tmp);
+  END QWidget_move1;
+
+PROCEDURE QWidget_resize (self: QWidget; w, h: INTEGER; ) =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_resize(selfAdr, w, h);
+  END QWidget_resize;
+
+PROCEDURE QWidget_resize1 (self: QWidget; arg2: QSize; ) =
+  VAR
+    selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp := LOOPHOLE(arg2.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_resize1(selfAdr, arg2tmp);
+  END QWidget_resize1;
+
+PROCEDURE QWidget_setGeometry (self: QWidget; x, y, w, h: INTEGER; ) =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_setGeometry(selfAdr, x, y, w, h);
+  END QWidget_setGeometry;
+
+PROCEDURE QWidget_setGeometry1 (self: QWidget; arg2: QRect; ) =
+  VAR
+    selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp := LOOPHOLE(arg2.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_setGeometry1(selfAdr, arg2tmp);
+  END QWidget_setGeometry1;
+
+PROCEDURE QWidget_saveGeometry (self: QWidget; ): QByteArray =
+  VAR
+    ret    : ADDRESS;
+    result : QByteArray;
+    selfAdr             := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWidgetRaw.QWidget_saveGeometry(selfAdr);
+
+    result := NEW(QByteArray);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QWidget_saveGeometry;
+
+PROCEDURE QWidget_restoreGeometry (self: QWidget; geometry: QByteArray; ):
+  BOOLEAN =
+  VAR
+    selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp := LOOPHOLE(geometry.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtWidgetRaw.QWidget_restoreGeometry(selfAdr, arg2tmp);
+  END QWidget_restoreGeometry;
+
+PROCEDURE QWidget_adjustSize (self: QWidget; ) =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_adjustSize(selfAdr);
+  END QWidget_adjustSize;
+
+PROCEDURE QWidget_isVisible (self: QWidget; ): BOOLEAN =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtWidgetRaw.QWidget_isVisible(selfAdr);
+  END QWidget_isVisible;
+
+PROCEDURE QWidget_isVisibleTo (self, arg2: QWidget; ): BOOLEAN =
+  VAR
+    selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp := LOOPHOLE(arg2.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtWidgetRaw.QWidget_isVisibleTo(selfAdr, arg2tmp);
+  END QWidget_isVisibleTo;
+
+PROCEDURE QWidget_isHidden (self: QWidget; ): BOOLEAN =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtWidgetRaw.QWidget_isHidden(selfAdr);
+  END QWidget_isHidden;
+
+PROCEDURE QWidget_isMinimized (self: QWidget; ): BOOLEAN =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtWidgetRaw.QWidget_isMinimized(selfAdr);
+  END QWidget_isMinimized;
+
+PROCEDURE QWidget_isMaximized (self: QWidget; ): BOOLEAN =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtWidgetRaw.QWidget_isMaximized(selfAdr);
+  END QWidget_isMaximized;
+
+PROCEDURE QWidget_isFullScreen (self: QWidget; ): BOOLEAN =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtWidgetRaw.QWidget_isFullScreen(selfAdr);
+  END QWidget_isFullScreen;
+
+PROCEDURE QWidget_windowState (self: QWidget; ): WindowStates =
+  VAR
+    ret    : INTEGER;
+    result : WindowStates;
+    selfAdr               := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWidgetRaw.QWidget_windowState(selfAdr);
+    result := VAL(ret, WindowStates);
+    RETURN result;
+  END QWidget_windowState;
+
+PROCEDURE QWidget_setWindowState (self: QWidget; state: WindowStates; ) =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_setWindowState(selfAdr, ORD(state));
+  END QWidget_setWindowState;
+
+PROCEDURE QWidget_overrideWindowState
+  (self: QWidget; state: WindowStates; ) =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_overrideWindowState(selfAdr, ORD(state));
+  END QWidget_overrideWindowState;
+
+PROCEDURE QWidget_sizeHint (self: QWidget; ): QSize =
+  VAR
+    ret    : ADDRESS;
+    result : QSize;
+    selfAdr          := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWidgetRaw.QWidget_sizeHint(selfAdr);
+
+    result := NEW(QSize);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QWidget_sizeHint;
+
+PROCEDURE QWidget_minimumSizeHint (self: QWidget; ): QSize =
+  VAR
+    ret    : ADDRESS;
+    result : QSize;
+    selfAdr          := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWidgetRaw.QWidget_minimumSizeHint(selfAdr);
+
+    result := NEW(QSize);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QWidget_minimumSizeHint;
+
+PROCEDURE QWidget_sizePolicy (self: QWidget; ): QSizePolicy =
+  VAR
+    ret    : ADDRESS;
+    result : QSizePolicy;
+    selfAdr              := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWidgetRaw.QWidget_sizePolicy(selfAdr);
+
+    result := NEW(QSizePolicy);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QWidget_sizePolicy;
+
+PROCEDURE QWidget_setSizePolicy (self: QWidget; arg2: QSizePolicy; ) =
+  VAR
+    selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp := LOOPHOLE(arg2.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_setSizePolicy(selfAdr, arg2tmp);
+  END QWidget_setSizePolicy;
+
+PROCEDURE QWidget_setSizePolicy1
+  (self: QWidget; horizontal, vertical: Policy; ) =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_setSizePolicy1(
+      selfAdr, ORD(horizontal), ORD(vertical));
+  END QWidget_setSizePolicy1;
+
+PROCEDURE QWidget_heightForWidth (self: QWidget; arg2: INTEGER; ):
+  INTEGER =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtWidgetRaw.QWidget_heightForWidth(selfAdr, arg2);
+  END QWidget_heightForWidth;
+
+PROCEDURE QWidget_visibleRegion (self: QWidget; ): QRegion =
+  VAR
+    ret    : ADDRESS;
+    result : QRegion;
+    selfAdr          := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWidgetRaw.QWidget_visibleRegion(selfAdr);
+
+    result := NEW(QRegion);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QWidget_visibleRegion;
+
+PROCEDURE QWidget_setContentsMargins
+  (self: QWidget; left, top, right, bottom: INTEGER; ) =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_setContentsMargins(
+      selfAdr, left, top, right, bottom);
+  END QWidget_setContentsMargins;
+
+PROCEDURE QWidget_setContentsMargins1
+  (self: QWidget; margins: QMargins; ) =
+  VAR
+    selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp := LOOPHOLE(margins.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_setContentsMargins1(selfAdr, arg2tmp);
+  END QWidget_setContentsMargins1;
+
+PROCEDURE QWidget_getContentsMargins
+  (self: QWidget; VAR left, top, right, bottom: INTEGER; ) =
+  VAR
+    selfAdr        := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp: C.int;
+    arg3tmp: C.int;
+    arg4tmp: C.int;
+    arg5tmp: C.int;
+  BEGIN
+    arg2tmp := left;
+    arg3tmp := top;
+    arg4tmp := right;
+    arg5tmp := bottom;
+    QtWidgetRaw.QWidget_getContentsMargins(
+      selfAdr, arg2tmp, arg3tmp, arg4tmp, arg5tmp);
+    left := arg2tmp;
+    top := arg3tmp;
+    right := arg4tmp;
+    bottom := arg5tmp;
+  END QWidget_getContentsMargins;
+
+PROCEDURE QWidget_contentsMargins (self: QWidget; ): QMargins =
+  VAR
+    ret    : ADDRESS;
+    result : QMargins;
+    selfAdr           := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWidgetRaw.QWidget_contentsMargins(selfAdr);
+
+    result := NEW(QMargins);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QWidget_contentsMargins;
+
+PROCEDURE QWidget_contentsRect (self: QWidget; ): QRect =
+  VAR
+    ret    : ADDRESS;
+    result : QRect;
+    selfAdr          := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWidgetRaw.QWidget_contentsRect(selfAdr);
+
+    result := NEW(QRect);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QWidget_contentsRect;
+
+PROCEDURE QWidget_layout (self: QWidget; ): REFANY =
+  VAR
+    ret    : ADDRESS;
+    result : QLayout;
+    selfAdr          := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWidgetRaw.QWidget_layout(selfAdr);
+
+    result := NEW(QLayout);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QWidget_layout;
+
+PROCEDURE QWidget_setLayout (self: QWidget; arg2: REFANY; ) =
+  VAR
+    selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp := LOOPHOLE(NARROW(arg2, QLayout).cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_setLayout(selfAdr, arg2tmp);
+  END QWidget_setLayout;
+
+PROCEDURE QWidget_updateGeometry (self: QWidget; ) =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_updateGeometry(selfAdr);
+  END QWidget_updateGeometry;
+
+PROCEDURE QWidget_setParent (self, parent: QWidget; ) =
+  VAR
+    selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp := LOOPHOLE(parent.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_setParent(selfAdr, arg2tmp);
+  END QWidget_setParent;
+
+PROCEDURE QWidget_setParent1 (self, parent: QWidget; f: WindowTypes; ) =
+  VAR
+    selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp := LOOPHOLE(parent.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_setParent1(selfAdr, arg2tmp, ORD(f));
+  END QWidget_setParent1;
+
+PROCEDURE QWidget_scroll (self: QWidget; dx, dy: INTEGER; ) =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_scroll(selfAdr, dx, dy);
+  END QWidget_scroll;
+
+PROCEDURE QWidget_scroll1 (self: QWidget; dx, dy: INTEGER; arg4: QRect; ) =
+  VAR
+    selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg4tmp := LOOPHOLE(arg4.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_scroll1(selfAdr, dx, dy, arg4tmp);
+  END QWidget_scroll1;
+
+PROCEDURE QWidget_focusWidget (self: QWidget; ): QWidget =
+  VAR
+    ret    : ADDRESS;
+    result : QWidget;
+    selfAdr          := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWidgetRaw.QWidget_focusWidget(selfAdr);
+
+    IF ISTYPE(result, QWidget) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QWidget);
+    ELSE
+      result := NEW(QWidget);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QWidget_focusWidget;
+
+PROCEDURE QWidget_nextInFocusChain (self: QWidget; ): QWidget =
+  VAR
+    ret    : ADDRESS;
+    result : QWidget;
+    selfAdr          := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWidgetRaw.QWidget_nextInFocusChain(selfAdr);
+
+    IF ISTYPE(result, QWidget) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QWidget);
+    ELSE
+      result := NEW(QWidget);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QWidget_nextInFocusChain;
+
+PROCEDURE QWidget_previousInFocusChain (self: QWidget; ): QWidget =
+  VAR
+    ret    : ADDRESS;
+    result : QWidget;
+    selfAdr          := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWidgetRaw.QWidget_previousInFocusChain(selfAdr);
+
+    IF ISTYPE(result, QWidget) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QWidget);
+    ELSE
+      result := NEW(QWidget);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QWidget_previousInFocusChain;
+
+PROCEDURE QWidget_acceptDrops (self: QWidget; ): BOOLEAN =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtWidgetRaw.QWidget_acceptDrops(selfAdr);
+  END QWidget_acceptDrops;
+
+PROCEDURE QWidget_setAcceptDrops (self: QWidget; on: BOOLEAN; ) =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_setAcceptDrops(selfAdr, on);
+  END QWidget_setAcceptDrops;
+
+PROCEDURE QWidget_addAction (self: QWidget; action: QAction; ) =
+  VAR
+    selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp := LOOPHOLE(action.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_addAction(selfAdr, arg2tmp);
+  END QWidget_addAction;
+
+PROCEDURE QWidget_insertAction (self: QWidget; before, action: QAction; ) =
+  VAR
+    selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp := LOOPHOLE(before.cxxObj, ADDRESS);
+    arg3tmp := LOOPHOLE(action.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_insertAction(selfAdr, arg2tmp, arg3tmp);
+  END QWidget_insertAction;
+
+PROCEDURE QWidget_removeAction (self: QWidget; action: QAction; ) =
+  VAR
+    selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp := LOOPHOLE(action.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_removeAction(selfAdr, arg2tmp);
+  END QWidget_removeAction;
+
+PROCEDURE QWidget_parentWidget (self: QWidget; ): QWidget =
+  VAR
+    ret    : ADDRESS;
+    result : QWidget;
+    selfAdr          := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWidgetRaw.QWidget_parentWidget(selfAdr);
+
+    IF ISTYPE(result, QWidget) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QWidget);
+    ELSE
+      result := NEW(QWidget);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QWidget_parentWidget;
+
+PROCEDURE QWidget_setWindowFlags (self: QWidget; type: WindowTypes; ) =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_setWindowFlags(selfAdr, ORD(type));
+  END QWidget_setWindowFlags;
+
+PROCEDURE QWidget_windowFlags (self: QWidget; ): WindowTypes =
+  VAR
+    ret    : INTEGER;
+    result : WindowTypes;
+    selfAdr              := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWidgetRaw.QWidget_windowFlags(selfAdr);
+    result := VAL(ret, WindowTypes);
+    RETURN result;
+  END QWidget_windowFlags;
+
+PROCEDURE QWidget_overrideWindowFlags
+  (self: QWidget; type: WindowTypes; ) =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_overrideWindowFlags(selfAdr, ORD(type));
+  END QWidget_overrideWindowFlags;
+
+PROCEDURE QWidget_windowType (self: QWidget; ): WindowType =
+  VAR
+    ret    : INTEGER;
+    result : WindowType;
+    selfAdr             := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWidgetRaw.QWidget_windowType(selfAdr);
+    result := VAL(ret, WindowType);
+    RETURN result;
+  END QWidget_windowType;
+
+PROCEDURE Find (arg1: INTEGER; ): QWidget =
+  VAR
+    ret   : ADDRESS;
+    result: QWidget;
+  BEGIN
+    ret := QtWidgetRaw.Find(arg1);
+
+    result := NEW(QWidget);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END Find;
+
+PROCEDURE QWidget_childAt (self: QWidget; x, y: INTEGER; ): QWidget =
+  VAR
+    ret    : ADDRESS;
+    result : QWidget;
+    selfAdr          := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWidgetRaw.QWidget_childAt(selfAdr, x, y);
+
+    IF ISTYPE(result, QWidget) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QWidget);
+    ELSE
+      result := NEW(QWidget);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QWidget_childAt;
+
+PROCEDURE QWidget_childAt1 (self: QWidget; p: QPoint; ): QWidget =
+  VAR
+    ret    : ADDRESS;
+    result : QWidget;
+    selfAdr          := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(p.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWidgetRaw.QWidget_childAt1(selfAdr, arg2tmp);
+
+    IF ISTYPE(result, QWidget) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QWidget);
+    ELSE
+      result := NEW(QWidget);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QWidget_childAt1;
+
+PROCEDURE QWidget_setAttribute
+  (self: QWidget; arg2: WidgetAttribute; on: BOOLEAN; ) =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_setAttribute(selfAdr, ORD(arg2), on);
+  END QWidget_setAttribute;
+
+PROCEDURE QWidget_setAttribute1 (self: QWidget; arg2: WidgetAttribute; ) =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_setAttribute1(selfAdr, ORD(arg2));
+  END QWidget_setAttribute1;
+
+PROCEDURE QWidget_testAttribute (self: QWidget; arg2: WidgetAttribute; ):
+  BOOLEAN =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtWidgetRaw.QWidget_testAttribute(selfAdr, ORD(arg2));
+  END QWidget_testAttribute;
+
+PROCEDURE QWidget_paintEngine (self: QWidget; ): QPaintEngine =
+  VAR
+    ret    : ADDRESS;
+    result : QPaintEngine;
+    selfAdr               := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWidgetRaw.QWidget_paintEngine(selfAdr);
+
+    result := NEW(QPaintEngine);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QWidget_paintEngine;
+
+PROCEDURE QWidget_ensurePolished (self: QWidget; ) =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_ensurePolished(selfAdr);
+  END QWidget_ensurePolished;
+
+PROCEDURE QWidget_inputContext (self: QWidget; ): QInputContext =
+  VAR
+    ret    : ADDRESS;
+    result : QInputContext;
+    selfAdr                := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWidgetRaw.QWidget_inputContext(selfAdr);
+
+    result := NEW(QInputContext);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QWidget_inputContext;
+
+PROCEDURE QWidget_setInputContext (self: QWidget; arg2: QInputContext; ) =
+  VAR
+    selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp := LOOPHOLE(arg2.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_setInputContext(selfAdr, arg2tmp);
+  END QWidget_setInputContext;
+
+PROCEDURE QWidget_isAncestorOf (self, child: QWidget; ): BOOLEAN =
+  VAR
+    selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp := LOOPHOLE(child.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtWidgetRaw.QWidget_isAncestorOf(selfAdr, arg2tmp);
+  END QWidget_isAncestorOf;
+
+PROCEDURE QWidget_autoFillBackground (self: QWidget; ): BOOLEAN =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtWidgetRaw.QWidget_autoFillBackground(selfAdr);
+  END QWidget_autoFillBackground;
+
+PROCEDURE QWidget_setAutoFillBackground
+  (self: QWidget; enabled: BOOLEAN; ) =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_setAutoFillBackground(selfAdr, enabled);
+  END QWidget_setAutoFillBackground;
+
+PROCEDURE QWidget_setWindowSurface
+  (self: QWidget; surface: QWindowSurface; ) =
+  VAR
+    selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp := LOOPHOLE(surface.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_setWindowSurface(selfAdr, arg2tmp);
+  END QWidget_setWindowSurface;
+
+PROCEDURE QWidget_windowSurface (self: QWidget; ): QWindowSurface =
+  VAR
+    ret    : ADDRESS;
+    result : QWindowSurface;
+    selfAdr                 := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWidgetRaw.QWidget_windowSurface(selfAdr);
+
+    result := NEW(QWindowSurface);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QWidget_windowSurface;
+
+PROCEDURE QWidget_inputMethodHints (self: QWidget; ): InputMethodHints =
+  VAR
+    ret    : INTEGER;
+    result : InputMethodHints;
+    selfAdr                   := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWidgetRaw.QWidget_inputMethodHints(selfAdr);
+    result := VAL(ret, InputMethodHints);
+    RETURN result;
+  END QWidget_inputMethodHints;
+
+PROCEDURE QWidget_setInputMethodHints
+  (self: QWidget; hints: InputMethodHints; ) =
+  VAR selfAdr := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWidgetRaw.QWidget_setInputMethodHints(selfAdr, ORD(hints));
+  END QWidget_setInputMethodHints;
+
+PROCEDURE Cleanup_QWidget
+  (<* UNUSED *> READONLY self: WeakRef.T; ref: REFANY) =
+  VAR obj: QWidget := ref;
+  BEGIN
+    Delete_QWidget(obj);
+  END Cleanup_QWidget;
+
+PROCEDURE Destroy_QWidget (self: QWidget) =
+  BEGIN
+    EVAL WeakRef.FromRef(self, Cleanup_QWidget);
+  END Destroy_QWidget;
 
 REVEAL
-QWidget =
-QWidgetPublic BRANDED OBJECT
-OVERRIDES
-init_0 := New_QWidget0;
-init_1 := New_QWidget1;
-init_widget := New_init_widget;
-devType := QWidget_devType;
-winId := QWidget_winId;
-createWinId := QWidget_createWinId;
-effectiveWinId := QWidget_effectiveWinId;
-style := QWidget_style;
-setStyle := QWidget_setStyle;
-isTopLevel := QWidget_isTopLevel;
-isWindow := QWidget_isWindow;
-isModal := QWidget_isModal;
-windowModality := QWidget_windowModality;
-setWindowModality := QWidget_setWindowModality;
-isEnabled := QWidget_isEnabled;
-isEnabledTo := QWidget_isEnabledTo;
-isEnabledToTLW := QWidget_isEnabledToTLW;
-setEnabled := QWidget_setEnabled;
-setDisabled := QWidget_setDisabled;
-setWindowModified := QWidget_setWindowModified;
-frameGeometry := QWidget_frameGeometry;
-geometry := QWidget_geometry;
-normalGeometry := QWidget_normalGeometry;
-x := QWidget_x;
-y := QWidget_y;
-pos := QWidget_pos;
-frameSize := QWidget_frameSize;
-size := QWidget_size;
-width := QWidget_width;
-height := QWidget_height;
-rect := QWidget_rect;
-childrenRect := QWidget_childrenRect;
-childrenRegion := QWidget_childrenRegion;
-minimumSize := QWidget_minimumSize;
-maximumSize := QWidget_maximumSize;
-minimumWidth := QWidget_minimumWidth;
-minimumHeight := QWidget_minimumHeight;
-maximumWidth := QWidget_maximumWidth;
-maximumHeight := QWidget_maximumHeight;
-setMinimumSize := QWidget_setMinimumSize;
-setMinimumSize1 := QWidget_setMinimumSize1;
-setMaximumSize := QWidget_setMaximumSize;
-setMaximumSize1 := QWidget_setMaximumSize1;
-setMinimumWidth := QWidget_setMinimumWidth;
-setMinimumHeight := QWidget_setMinimumHeight;
-setMaximumWidth := QWidget_setMaximumWidth;
-setMaximumHeight := QWidget_setMaximumHeight;
-sizeIncrement := QWidget_sizeIncrement;
-setSizeIncrement := QWidget_setSizeIncrement;
-setSizeIncrement1 := QWidget_setSizeIncrement1;
-baseSize := QWidget_baseSize;
-setBaseSize := QWidget_setBaseSize;
-setBaseSize1 := QWidget_setBaseSize1;
-setFixedSize := QWidget_setFixedSize;
-setFixedSize1 := QWidget_setFixedSize1;
-setFixedWidth := QWidget_setFixedWidth;
-setFixedHeight := QWidget_setFixedHeight;
-mapToGlobal := QWidget_mapToGlobal;
-mapFromGlobal := QWidget_mapFromGlobal;
-mapToParent := QWidget_mapToParent;
-mapFromParent := QWidget_mapFromParent;
-mapTo := QWidget_mapTo;
-mapFrom := QWidget_mapFrom;
-window := QWidget_window;
-nativeParentWidget := QWidget_nativeParentWidget;
-topLevelWidget := QWidget_topLevelWidget;
-palette := QWidget_palette;
-setPalette := QWidget_setPalette;
-setBackgroundRole := QWidget_setBackgroundRole;
-backgroundRole := QWidget_backgroundRole;
-setForegroundRole := QWidget_setForegroundRole;
-foregroundRole := QWidget_foregroundRole;
-font := QWidget_font;
-setFont := QWidget_setFont;
-fontMetrics := QWidget_fontMetrics;
-fontInfo := QWidget_fontInfo;
-cursor := QWidget_cursor;
-setCursor := QWidget_setCursor;
-unsetCursor := QWidget_unsetCursor;
-setMouseTracking := QWidget_setMouseTracking;
-hasMouseTracking := QWidget_hasMouseTracking;
-underMouse := QWidget_underMouse;
-setMask := QWidget_setMask;
-setMask1 := QWidget_setMask1;
-mask := QWidget_mask;
-clearMask := QWidget_clearMask;
-graphicsEffect := QWidget_graphicsEffect;
-setGraphicsEffect := QWidget_setGraphicsEffect;
-grabGesture := QWidget_grabGesture;
-grabGesture1 := QWidget_grabGesture1;
-ungrabGesture := QWidget_ungrabGesture;
-setWindowTitle := QWidget_setWindowTitle;
-setStyleSheet := QWidget_setStyleSheet;
-styleSheet := QWidget_styleSheet;
-windowTitle := QWidget_windowTitle;
-setWindowIcon := QWidget_setWindowIcon;
-setWindowIconText := QWidget_setWindowIconText;
-windowIconText := QWidget_windowIconText;
-setWindowRole := QWidget_setWindowRole;
-windowRole := QWidget_windowRole;
-setWindowFilePath := QWidget_setWindowFilePath;
-windowFilePath := QWidget_windowFilePath;
-setWindowOpacity := QWidget_setWindowOpacity;
-windowOpacity := QWidget_windowOpacity;
-isWindowModified := QWidget_isWindowModified;
-setToolTip := QWidget_setToolTip;
-toolTip := QWidget_toolTip;
-setStatusTip := QWidget_setStatusTip;
-statusTip := QWidget_statusTip;
-setWhatsThis := QWidget_setWhatsThis;
-whatsThis := QWidget_whatsThis;
-accessibleName := QWidget_accessibleName;
-setAccessibleName := QWidget_setAccessibleName;
-accessibleDescription := QWidget_accessibleDescription;
-setAccessibleDescription := QWidget_setAccessibleDescription;
-setLayoutDirection := QWidget_setLayoutDirection;
-layoutDirection := QWidget_layoutDirection;
-unsetLayoutDirection := QWidget_unsetLayoutDirection;
-setLocale := QWidget_setLocale;
-unsetLocale := QWidget_unsetLocale;
-isRightToLeft := QWidget_isRightToLeft;
-isLeftToRight := QWidget_isLeftToRight;
-setFocus := QWidget_setFocus;
-isActiveWindow := QWidget_isActiveWindow;
-activateWindow := QWidget_activateWindow;
-clearFocus := QWidget_clearFocus;
-setFocus1 := QWidget_setFocus1;
-focusPolicy := QWidget_focusPolicy;
-setFocusPolicy := QWidget_setFocusPolicy;
-hasFocus := QWidget_hasFocus;
-setFocusProxy := QWidget_setFocusProxy;
-focusProxy := QWidget_focusProxy;
-contextMenuPolicy := QWidget_contextMenuPolicy;
-setContextMenuPolicy := QWidget_setContextMenuPolicy;
-grabMouse := QWidget_grabMouse;
-grabMouse1 := QWidget_grabMouse1;
-releaseMouse := QWidget_releaseMouse;
-grabKeyboard := QWidget_grabKeyboard;
-releaseKeyboard := QWidget_releaseKeyboard;
-grabShortcut := QWidget_grabShortcut;
-grabShortcut1 := QWidget_grabShortcut1;
-releaseShortcut := QWidget_releaseShortcut;
-setShortcutEnabled := QWidget_setShortcutEnabled;
-setShortcutEnabled1 := QWidget_setShortcutEnabled1;
-setShortcutAutoRepeat := QWidget_setShortcutAutoRepeat;
-setShortcutAutoRepeat1 := QWidget_setShortcutAutoRepeat1;
-updatesEnabled := QWidget_updatesEnabled;
-setUpdatesEnabled := QWidget_setUpdatesEnabled;
-graphicsProxyWidget := QWidget_graphicsProxyWidget;
-update := QWidget_update;
-repaint := QWidget_repaint;
-update1 := QWidget_update1;
-update2 := QWidget_update2;
-update3 := QWidget_update3;
-repaint1 := QWidget_repaint1;
-repaint2 := QWidget_repaint2;
-repaint3 := QWidget_repaint3;
-setVisible := QWidget_setVisible;
-setHidden := QWidget_setHidden;
-show := QWidget_show;
-hide := QWidget_hide;
-setShown := QWidget_setShown;
-showMinimized := QWidget_showMinimized;
-showMaximized := QWidget_showMaximized;
-showFullScreen := QWidget_showFullScreen;
-showNormal := QWidget_showNormal;
-close := QWidget_close;
-raise := QWidget_raise;
-lower := QWidget_lower;
-stackUnder := QWidget_stackUnder;
-move := QWidget_move;
-move1 := QWidget_move1;
-resize := QWidget_resize;
-resize1 := QWidget_resize1;
-setGeometry := QWidget_setGeometry;
-setGeometry1 := QWidget_setGeometry1;
-saveGeometry := QWidget_saveGeometry;
-restoreGeometry := QWidget_restoreGeometry;
-adjustSize := QWidget_adjustSize;
-isVisible := QWidget_isVisible;
-isVisibleTo := QWidget_isVisibleTo;
-isHidden := QWidget_isHidden;
-isMinimized := QWidget_isMinimized;
-isMaximized := QWidget_isMaximized;
-isFullScreen := QWidget_isFullScreen;
-windowState := QWidget_windowState;
-setWindowState := QWidget_setWindowState;
-overrideWindowState := QWidget_overrideWindowState;
-sizeHint := QWidget_sizeHint;
-minimumSizeHint := QWidget_minimumSizeHint;
-sizePolicy := QWidget_sizePolicy;
-setSizePolicy := QWidget_setSizePolicy;
-setSizePolicy1 := QWidget_setSizePolicy1;
-heightForWidth := QWidget_heightForWidth;
-visibleRegion := QWidget_visibleRegion;
-setContentsMargins := QWidget_setContentsMargins;
-setContentsMargins1 := QWidget_setContentsMargins1;
-getContentsMargins := QWidget_getContentsMargins;
-contentsMargins := QWidget_contentsMargins;
-contentsRect := QWidget_contentsRect;
-layout := QWidget_layout;
-setLayout := QWidget_setLayout;
-updateGeometry := QWidget_updateGeometry;
-setParent := QWidget_setParent;
-setParent1 := QWidget_setParent1;
-scroll := QWidget_scroll;
-scroll1 := QWidget_scroll1;
-focusWidget := QWidget_focusWidget;
-nextInFocusChain := QWidget_nextInFocusChain;
-previousInFocusChain := QWidget_previousInFocusChain;
-acceptDrops := QWidget_acceptDrops;
-setAcceptDrops := QWidget_setAcceptDrops;
-addAction := QWidget_addAction;
-insertAction := QWidget_insertAction;
-removeAction := QWidget_removeAction;
-parentWidget := QWidget_parentWidget;
-setWindowFlags := QWidget_setWindowFlags;
-windowFlags := QWidget_windowFlags;
-overrideWindowFlags := QWidget_overrideWindowFlags;
-windowType := QWidget_windowType;
-childAt := QWidget_childAt;
-childAt1 := QWidget_childAt1;
-setAttribute := QWidget_setAttribute;
-setAttribute1 := QWidget_setAttribute1;
-testAttribute := QWidget_testAttribute;
-paintEngine := QWidget_paintEngine;
-ensurePolished := QWidget_ensurePolished;
-inputContext := QWidget_inputContext;
-setInputContext := QWidget_setInputContext;
-isAncestorOf := QWidget_isAncestorOf;
-autoFillBackground := QWidget_autoFillBackground;
-setAutoFillBackground := QWidget_setAutoFillBackground;
-setWindowSurface := QWidget_setWindowSurface;
-windowSurface := QWidget_windowSurface;
-inputMethodHints := QWidget_inputMethodHints;
-setInputMethodHints := QWidget_setInputMethodHints;
-destroyCxx := Destroy_QWidget;
-END;
+  QWidget = QWidgetPublic BRANDED OBJECT
+            OVERRIDES
+              init_0                   := New_QWidget0;
+              init_1                   := New_QWidget1;
+              init_widget              := New_init_widget;
+              devType                  := QWidget_devType;
+              winId                    := QWidget_winId;
+              createWinId              := QWidget_createWinId;
+              effectiveWinId           := QWidget_effectiveWinId;
+              style                    := QWidget_style;
+              setStyle                 := QWidget_setStyle;
+              isTopLevel               := QWidget_isTopLevel;
+              isWindow                 := QWidget_isWindow;
+              isModal                  := QWidget_isModal;
+              windowModality           := QWidget_windowModality;
+              setWindowModality        := QWidget_setWindowModality;
+              isEnabled                := QWidget_isEnabled;
+              isEnabledTo              := QWidget_isEnabledTo;
+              isEnabledToTLW           := QWidget_isEnabledToTLW;
+              setEnabled               := QWidget_setEnabled;
+              setDisabled              := QWidget_setDisabled;
+              setWindowModified        := QWidget_setWindowModified;
+              frameGeometry            := QWidget_frameGeometry;
+              geometry                 := QWidget_geometry;
+              normalGeometry           := QWidget_normalGeometry;
+              x                        := QWidget_x;
+              y                        := QWidget_y;
+              pos                      := QWidget_pos;
+              frameSize                := QWidget_frameSize;
+              size                     := QWidget_size;
+              width                    := QWidget_width;
+              height                   := QWidget_height;
+              rect                     := QWidget_rect;
+              childrenRect             := QWidget_childrenRect;
+              childrenRegion           := QWidget_childrenRegion;
+              minimumSize              := QWidget_minimumSize;
+              maximumSize              := QWidget_maximumSize;
+              minimumWidth             := QWidget_minimumWidth;
+              minimumHeight            := QWidget_minimumHeight;
+              maximumWidth             := QWidget_maximumWidth;
+              maximumHeight            := QWidget_maximumHeight;
+              setMinimumSize           := QWidget_setMinimumSize;
+              setMinimumSize1          := QWidget_setMinimumSize1;
+              setMaximumSize           := QWidget_setMaximumSize;
+              setMaximumSize1          := QWidget_setMaximumSize1;
+              setMinimumWidth          := QWidget_setMinimumWidth;
+              setMinimumHeight         := QWidget_setMinimumHeight;
+              setMaximumWidth          := QWidget_setMaximumWidth;
+              setMaximumHeight         := QWidget_setMaximumHeight;
+              sizeIncrement            := QWidget_sizeIncrement;
+              setSizeIncrement         := QWidget_setSizeIncrement;
+              setSizeIncrement1        := QWidget_setSizeIncrement1;
+              baseSize                 := QWidget_baseSize;
+              setBaseSize              := QWidget_setBaseSize;
+              setBaseSize1             := QWidget_setBaseSize1;
+              setFixedSize             := QWidget_setFixedSize;
+              setFixedSize1            := QWidget_setFixedSize1;
+              setFixedWidth            := QWidget_setFixedWidth;
+              setFixedHeight           := QWidget_setFixedHeight;
+              mapToGlobal              := QWidget_mapToGlobal;
+              mapFromGlobal            := QWidget_mapFromGlobal;
+              mapToParent              := QWidget_mapToParent;
+              mapFromParent            := QWidget_mapFromParent;
+              mapTo                    := QWidget_mapTo;
+              mapFrom                  := QWidget_mapFrom;
+              window                   := QWidget_window;
+              nativeParentWidget       := QWidget_nativeParentWidget;
+              topLevelWidget           := QWidget_topLevelWidget;
+              palette                  := QWidget_palette;
+              setPalette               := QWidget_setPalette;
+              setBackgroundRole        := QWidget_setBackgroundRole;
+              backgroundRole           := QWidget_backgroundRole;
+              setForegroundRole        := QWidget_setForegroundRole;
+              foregroundRole           := QWidget_foregroundRole;
+              font                     := QWidget_font;
+              setFont                  := QWidget_setFont;
+              fontMetrics              := QWidget_fontMetrics;
+              fontInfo                 := QWidget_fontInfo;
+              cursor                   := QWidget_cursor;
+              setCursor                := QWidget_setCursor;
+              unsetCursor              := QWidget_unsetCursor;
+              setMouseTracking         := QWidget_setMouseTracking;
+              hasMouseTracking         := QWidget_hasMouseTracking;
+              underMouse               := QWidget_underMouse;
+              setMask                  := QWidget_setMask;
+              setMask1                 := QWidget_setMask1;
+              mask                     := QWidget_mask;
+              clearMask                := QWidget_clearMask;
+              graphicsEffect           := QWidget_graphicsEffect;
+              setGraphicsEffect        := QWidget_setGraphicsEffect;
+              grabGesture              := QWidget_grabGesture;
+              grabGesture1             := QWidget_grabGesture1;
+              ungrabGesture            := QWidget_ungrabGesture;
+              setWindowTitle           := QWidget_setWindowTitle;
+              setStyleSheet            := QWidget_setStyleSheet;
+              styleSheet               := QWidget_styleSheet;
+              windowTitle              := QWidget_windowTitle;
+              setWindowIcon            := QWidget_setWindowIcon;
+              setWindowIconText        := QWidget_setWindowIconText;
+              windowIconText           := QWidget_windowIconText;
+              setWindowRole            := QWidget_setWindowRole;
+              windowRole               := QWidget_windowRole;
+              setWindowFilePath        := QWidget_setWindowFilePath;
+              windowFilePath           := QWidget_windowFilePath;
+              setWindowOpacity         := QWidget_setWindowOpacity;
+              windowOpacity            := QWidget_windowOpacity;
+              isWindowModified         := QWidget_isWindowModified;
+              setToolTip               := QWidget_setToolTip;
+              toolTip                  := QWidget_toolTip;
+              setStatusTip             := QWidget_setStatusTip;
+              statusTip                := QWidget_statusTip;
+              setWhatsThis             := QWidget_setWhatsThis;
+              whatsThis                := QWidget_whatsThis;
+              accessibleName           := QWidget_accessibleName;
+              setAccessibleName        := QWidget_setAccessibleName;
+              accessibleDescription    := QWidget_accessibleDescription;
+              setAccessibleDescription := QWidget_setAccessibleDescription;
+              setLayoutDirection       := QWidget_setLayoutDirection;
+              layoutDirection          := QWidget_layoutDirection;
+              unsetLayoutDirection     := QWidget_unsetLayoutDirection;
+              setLocale                := QWidget_setLocale;
+              unsetLocale              := QWidget_unsetLocale;
+              isRightToLeft            := QWidget_isRightToLeft;
+              isLeftToRight            := QWidget_isLeftToRight;
+              setFocus                 := QWidget_setFocus;
+              isActiveWindow           := QWidget_isActiveWindow;
+              activateWindow           := QWidget_activateWindow;
+              clearFocus               := QWidget_clearFocus;
+              setFocus1                := QWidget_setFocus1;
+              focusPolicy              := QWidget_focusPolicy;
+              setFocusPolicy           := QWidget_setFocusPolicy;
+              hasFocus                 := QWidget_hasFocus;
+              setFocusProxy            := QWidget_setFocusProxy;
+              focusProxy               := QWidget_focusProxy;
+              contextMenuPolicy        := QWidget_contextMenuPolicy;
+              setContextMenuPolicy     := QWidget_setContextMenuPolicy;
+              grabMouse                := QWidget_grabMouse;
+              grabMouse1               := QWidget_grabMouse1;
+              releaseMouse             := QWidget_releaseMouse;
+              grabKeyboard             := QWidget_grabKeyboard;
+              releaseKeyboard          := QWidget_releaseKeyboard;
+              grabShortcut             := QWidget_grabShortcut;
+              grabShortcut1            := QWidget_grabShortcut1;
+              releaseShortcut          := QWidget_releaseShortcut;
+              setShortcutEnabled       := QWidget_setShortcutEnabled;
+              setShortcutEnabled1      := QWidget_setShortcutEnabled1;
+              setShortcutAutoRepeat    := QWidget_setShortcutAutoRepeat;
+              setShortcutAutoRepeat1   := QWidget_setShortcutAutoRepeat1;
+              updatesEnabled           := QWidget_updatesEnabled;
+              setUpdatesEnabled        := QWidget_setUpdatesEnabled;
+              graphicsProxyWidget      := QWidget_graphicsProxyWidget;
+              update                   := QWidget_update;
+              repaint                  := QWidget_repaint;
+              update1                  := QWidget_update1;
+              update2                  := QWidget_update2;
+              update3                  := QWidget_update3;
+              repaint1                 := QWidget_repaint1;
+              repaint2                 := QWidget_repaint2;
+              repaint3                 := QWidget_repaint3;
+              setVisible               := QWidget_setVisible;
+              setHidden                := QWidget_setHidden;
+              show                     := QWidget_show;
+              hide                     := QWidget_hide;
+              setShown                 := QWidget_setShown;
+              showMinimized            := QWidget_showMinimized;
+              showMaximized            := QWidget_showMaximized;
+              showFullScreen           := QWidget_showFullScreen;
+              showNormal               := QWidget_showNormal;
+              close                    := QWidget_close;
+              raise                    := QWidget_raise;
+              lower                    := QWidget_lower;
+              stackUnder               := QWidget_stackUnder;
+              move                     := QWidget_move;
+              move1                    := QWidget_move1;
+              resize                   := QWidget_resize;
+              resize1                  := QWidget_resize1;
+              setGeometry              := QWidget_setGeometry;
+              setGeometry1             := QWidget_setGeometry1;
+              saveGeometry             := QWidget_saveGeometry;
+              restoreGeometry          := QWidget_restoreGeometry;
+              adjustSize               := QWidget_adjustSize;
+              isVisible                := QWidget_isVisible;
+              isVisibleTo              := QWidget_isVisibleTo;
+              isHidden                 := QWidget_isHidden;
+              isMinimized              := QWidget_isMinimized;
+              isMaximized              := QWidget_isMaximized;
+              isFullScreen             := QWidget_isFullScreen;
+              windowState              := QWidget_windowState;
+              setWindowState           := QWidget_setWindowState;
+              overrideWindowState      := QWidget_overrideWindowState;
+              sizeHint                 := QWidget_sizeHint;
+              minimumSizeHint          := QWidget_minimumSizeHint;
+              sizePolicy               := QWidget_sizePolicy;
+              setSizePolicy            := QWidget_setSizePolicy;
+              setSizePolicy1           := QWidget_setSizePolicy1;
+              heightForWidth           := QWidget_heightForWidth;
+              visibleRegion            := QWidget_visibleRegion;
+              setContentsMargins       := QWidget_setContentsMargins;
+              setContentsMargins1      := QWidget_setContentsMargins1;
+              getContentsMargins       := QWidget_getContentsMargins;
+              contentsMargins          := QWidget_contentsMargins;
+              contentsRect             := QWidget_contentsRect;
+              layout                   := QWidget_layout;
+              setLayout                := QWidget_setLayout;
+              updateGeometry           := QWidget_updateGeometry;
+              setParent                := QWidget_setParent;
+              setParent1               := QWidget_setParent1;
+              scroll                   := QWidget_scroll;
+              scroll1                  := QWidget_scroll1;
+              focusWidget              := QWidget_focusWidget;
+              nextInFocusChain         := QWidget_nextInFocusChain;
+              previousInFocusChain     := QWidget_previousInFocusChain;
+              acceptDrops              := QWidget_acceptDrops;
+              setAcceptDrops           := QWidget_setAcceptDrops;
+              addAction                := QWidget_addAction;
+              insertAction             := QWidget_insertAction;
+              removeAction             := QWidget_removeAction;
+              parentWidget             := QWidget_parentWidget;
+              setWindowFlags           := QWidget_setWindowFlags;
+              windowFlags              := QWidget_windowFlags;
+              overrideWindowFlags      := QWidget_overrideWindowFlags;
+              windowType               := QWidget_windowType;
+              childAt                  := QWidget_childAt;
+              childAt1                 := QWidget_childAt1;
+              setAttribute             := QWidget_setAttribute;
+              setAttribute1            := QWidget_setAttribute1;
+              testAttribute            := QWidget_testAttribute;
+              paintEngine              := QWidget_paintEngine;
+              ensurePolished           := QWidget_ensurePolished;
+              inputContext             := QWidget_inputContext;
+              setInputContext          := QWidget_setInputContext;
+              isAncestorOf             := QWidget_isAncestorOf;
+              autoFillBackground       := QWidget_autoFillBackground;
+              setAutoFillBackground    := QWidget_setAutoFillBackground;
+              setWindowSurface         := QWidget_setWindowSurface;
+              windowSurface            := QWidget_windowSurface;
+              inputMethodHints         := QWidget_inputMethodHints;
+              setInputMethodHints      := QWidget_setInputMethodHints;
+              destroyCxx               := Destroy_QWidget;
+            END;
 
 
 BEGIN

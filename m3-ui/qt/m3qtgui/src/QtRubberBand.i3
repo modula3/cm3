@@ -14,40 +14,27 @@ FROM QtPoint IMPORT QPoint;
 FROM QtRect IMPORT QRect;
 
 
-TYPE
-  T = QRubberBand;
+TYPE T = QRubberBand;
 
 
-TYPE (* Enum Shape *)
-  Shape = {
- Line,
- Rectangle};
+TYPE                             (* Enum Shape *)
+  Shape = {Line, Rectangle};
 
 TYPE
-QRubberBand <: QRubberBandPublic;
-QRubberBandPublic =
-QWidget BRANDED OBJECT
-METHODS
-init_0 (arg1: Shape;
- arg2: QWidget;
-) : QRubberBand;
-init_1 (arg1: Shape;
-) : QRubberBand;
-shape(): Shape;
-setGeometry( r: QRect;
-);
-setGeometry1(x, y, w, h: INTEGER;
-);
-move(x, y: INTEGER;
-);
-move1( p: QPoint;
-);
-resize(w, h: INTEGER;
-);
-resize1( s: QSize;
-);
-destroyCxx();
-END;
+  QRubberBand <: QRubberBandPublic;
+  QRubberBandPublic = QWidget BRANDED OBJECT
+                      METHODS
+                        init_0 (arg1: Shape; arg2: QWidget; ): QRubberBand;
+                        init_1 (arg1: Shape; ): QRubberBand;
+                        shape  (): Shape;
+                        setGeometry  (r: QRect; );
+                        setGeometry1 (x, y, w, h: INTEGER; );
+                        move         (x, y: INTEGER; );
+                        move1        (p: QPoint; );
+                        resize       (w, h: INTEGER; );
+                        resize1      (s: QSize; );
+                        destroyCxx   ();
+                      END;
 
 
 END QtRubberBand.

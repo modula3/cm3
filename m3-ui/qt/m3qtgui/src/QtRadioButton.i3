@@ -13,26 +13,21 @@ FROM QtWidget IMPORT QWidget;
 
 
 FROM QtAbstractButton IMPORT QAbstractButton;
-TYPE
-  T = QRadioButton;
+TYPE T = QRadioButton;
 
 
 TYPE
-QRadioButton <: QRadioButtonPublic;
-QRadioButtonPublic =
-QAbstractButton BRANDED OBJECT
-METHODS
-init_0 ( parent: QWidget;
-) : QRadioButton;
-init_1 () : QRadioButton;
-init_2 ( text: TEXT;
- parent: QWidget;
-) : QRadioButton;
-init_3 ( text: TEXT;
-) : QRadioButton;
-sizeHint(): QSize;  (*  virtual *)
-destroyCxx();
-END;
+  QRadioButton <: QRadioButtonPublic;
+  QRadioButtonPublic =
+    QAbstractButton BRANDED OBJECT
+    METHODS
+      init_0     (parent: QWidget; ): QRadioButton;
+      init_1     (): QRadioButton;
+      init_2     (text: TEXT; parent: QWidget; ): QRadioButton;
+      init_3     (text: TEXT; ): QRadioButton;
+      sizeHint   (): QSize;      (* virtual *)
+      destroyCxx ();
+    END;
 
 
 END QtRadioButton.

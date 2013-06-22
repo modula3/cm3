@@ -13,44 +13,33 @@ FROM QtPoint IMPORT QPoint;
 FROM QtRect IMPORT QRect;
 
 
-TYPE
-  T = QDesktopWidget;
+TYPE T = QDesktopWidget;
 
 
 TYPE
-QDesktopWidget <: QDesktopWidgetPublic;
-QDesktopWidgetPublic =
-QWidget BRANDED OBJECT
-METHODS
-init_0 () : QDesktopWidget;
-isVirtualDesktop(): BOOLEAN;
-numScreens(): INTEGER;
-screenCount(): INTEGER;
-primaryScreen(): INTEGER;
-screenNumber( widget: QWidget;
-): INTEGER;
-screenNumber1(): INTEGER;
-screenNumber2( arg1: QPoint;
-): INTEGER;
-screen(screen: INTEGER;
-): QWidget;
-screen1(): QWidget;
-screenGeometry(screen: INTEGER;
-): QRect;
-screenGeometry1(): QRect;
-screenGeometry2( widget: QWidget;
-): QRect;
-screenGeometry3( point: QPoint;
-): QRect;
-availableGeometry(screen: INTEGER;
-): QRect;
-availableGeometry1(): QRect;
-availableGeometry2( widget: QWidget;
-): QRect;
-availableGeometry3( point: QPoint;
-): QRect;
-destroyCxx();
-END;
+  QDesktopWidget <: QDesktopWidgetPublic;
+  QDesktopWidgetPublic = QWidget BRANDED OBJECT
+                         METHODS
+                           init_0             (): QDesktopWidget;
+                           isVirtualDesktop   (): BOOLEAN;
+                           numScreens         (): INTEGER;
+                           screenCount        (): INTEGER;
+                           primaryScreen      (): INTEGER;
+                           screenNumber       (widget: QWidget; ): INTEGER;
+                           screenNumber1      (): INTEGER;
+                           screenNumber2      (arg1: QPoint; ): INTEGER;
+                           screen             (screen: INTEGER; ): QWidget;
+                           screen1            (): QWidget;
+                           screenGeometry     (screen: INTEGER; ): QRect;
+                           screenGeometry1    (): QRect;
+                           screenGeometry2    (widget: QWidget; ): QRect;
+                           screenGeometry3    (point: QPoint; ): QRect;
+                           availableGeometry  (screen: INTEGER; ): QRect;
+                           availableGeometry1 (): QRect;
+                           availableGeometry2 (widget: QWidget; ): QRect;
+                           availableGeometry3 (point: QPoint; ): QRect;
+                           destroyCxx         ();
+                         END;
 
 
 END QtDesktopWidget.

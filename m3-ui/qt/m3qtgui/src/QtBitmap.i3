@@ -8,7 +8,7 @@
 
 INTERFACE QtBitmap;
 
-FROM QtImage IMPORT QImage,Format;
+FROM QtImage IMPORT QImage, Format;
 FROM QtSize IMPORT QSize;
 FROM QtPixmap IMPORT QPixmap;
 FROM QtMatrix IMPORT QMatrix;
@@ -17,49 +17,34 @@ FROM QtNamespace IMPORT ImageConversionFlags;
 
 
 
-TYPE
-  T = QBitmap;
+TYPE T = QBitmap;
 
-PROCEDURE FromBitmapImage ( image: QImage;
-flags: ImageConversionFlags;
-): QBitmap;
+PROCEDURE FromBitmapImage (image: QImage; flags: ImageConversionFlags; ):
+  QBitmap;
 
-PROCEDURE FromBitmapImage1 ( image: QImage;
-): QBitmap;
+PROCEDURE FromBitmapImage1 (image: QImage; ): QBitmap;
 
-PROCEDURE FromData ( size: QSize;
- bits: UNTRACED REF CHAR;
-monoFormat: Format;
-): QBitmap;
+PROCEDURE FromData
+  (size: QSize; bits: UNTRACED REF CHAR; monoFormat: Format; ): QBitmap;
 
-PROCEDURE FromData1 ( size: QSize;
- bits: UNTRACED REF CHAR;
-): QBitmap;
+PROCEDURE FromData1 (size: QSize; bits: UNTRACED REF CHAR; ): QBitmap;
 
 
 TYPE
-QBitmap <: QBitmapPublic;
-QBitmapPublic =
-QPixmap BRANDED OBJECT
-METHODS
-init_0 () : QBitmap;
-init_1 ( arg1: QPixmap;
-) : QBitmap;
-init_2 (w, h: INTEGER;
-) : QBitmap;
-init_3 ( arg1: QSize;
-) : QBitmap;
-init_4 ( fileName, format: TEXT;
-) : QBitmap;
-init_5 ( fileName: TEXT;
-) : QBitmap;
-clear();
-transformed( arg1: QMatrix;
-): QBitmap;
-transformed1( matrix: QTransform;
-): QBitmap;
-destroyCxx();
-END;
+  QBitmap <: QBitmapPublic;
+  QBitmapPublic = QPixmap BRANDED OBJECT
+                  METHODS
+                    init_0       (): QBitmap;
+                    init_1       (arg1: QPixmap; ): QBitmap;
+                    init_2       (w, h: INTEGER; ): QBitmap;
+                    init_3       (arg1: QSize; ): QBitmap;
+                    init_4       (fileName, format: TEXT; ): QBitmap;
+                    init_5       (fileName: TEXT; ): QBitmap;
+                    clear        ();
+                    transformed  (arg1: QMatrix; ): QBitmap;
+                    transformed1 (matrix: QTransform; ): QBitmap;
+                    destroyCxx   ();
+                  END;
 
 
 END QtBitmap.

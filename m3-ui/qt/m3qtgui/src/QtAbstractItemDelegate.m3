@@ -9,9 +9,9 @@
 UNSAFE MODULE QtAbstractItemDelegate;
 
 
-FROM QtAbstractItemModel IMPORT QModelIndex,QAbstractItemModel;
+FROM QtAbstractItemModel IMPORT QModelIndex, QAbstractItemModel;
 FROM QtEvent IMPORT QEvent;
-FROM QGuiStubs IMPORT QFontMetrics,QStyleOptionViewItem,QHelpEvent;
+FROM QGuiStubs IMPORT QFontMetrics, QStyleOptionViewItem, QHelpEvent;
 FROM QtWidget IMPORT QWidget;
 IMPORT QtAbstractItemDelegateRaw;
 FROM QtNamespace IMPORT TextElideMode;
@@ -22,153 +22,157 @@ IMPORT WeakRef;
 FROM QtString IMPORT QString;
 FROM QtByteArray IMPORT QByteArray;
 
-PROCEDURE Delete_QAbstractItemDelegate ( self: QAbstractItemDelegate;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtAbstractItemDelegateRaw.Delete_QAbstractItemDelegate(selfAdr);
-END Delete_QAbstractItemDelegate;
+PROCEDURE Delete_QAbstractItemDelegate (self: QAbstractItemDelegate; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtAbstractItemDelegateRaw.Delete_QAbstractItemDelegate(selfAdr);
+  END Delete_QAbstractItemDelegate;
 
-PROCEDURE QAbstractItemDelegate_createEditor ( self: QAbstractItemDelegate;
- parent: QWidget;
- option: QStyleOptionViewItem;
- index: QModelIndex;
-): QWidget =
-VAR
-ret:ADDRESS; result : QWidget;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(parent.cxxObj,ADDRESS);
-arg3tmp :=  LOOPHOLE(option.cxxObj,ADDRESS);
-arg4tmp :=  LOOPHOLE(index.cxxObj,ADDRESS);
-BEGIN
-ret := QtAbstractItemDelegateRaw.QAbstractItemDelegate_createEditor(selfAdr, arg2tmp, arg3tmp, arg4tmp);
+PROCEDURE QAbstractItemDelegate_createEditor
+  (self  : QAbstractItemDelegate;
+   parent: QWidget;
+   option: QStyleOptionViewItem;
+   index : QModelIndex;           ): QWidget =
+  VAR
+    ret    : ADDRESS;
+    result : QWidget;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(parent.cxxObj, ADDRESS);
+    arg3tmp          := LOOPHOLE(option.cxxObj, ADDRESS);
+    arg4tmp          := LOOPHOLE(index.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtAbstractItemDelegateRaw.QAbstractItemDelegate_createEditor(
+             selfAdr, arg2tmp, arg3tmp, arg4tmp);
 
-  result := NEW(QWidget);
-  result.cxxObj := ret;
-  result.destroyCxx();
+    result := NEW(QWidget);
+    result.cxxObj := ret;
+    result.destroyCxx();
 
-RETURN result;
-END QAbstractItemDelegate_createEditor;
+    RETURN result;
+  END QAbstractItemDelegate_createEditor;
 
-PROCEDURE QAbstractItemDelegate_setEditorData ( self: QAbstractItemDelegate;
- editor: QWidget;
- index: QModelIndex;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(editor.cxxObj,ADDRESS);
-arg3tmp :=  LOOPHOLE(index.cxxObj,ADDRESS);
-BEGIN
-QtAbstractItemDelegateRaw.QAbstractItemDelegate_setEditorData(selfAdr, arg2tmp, arg3tmp);
-END QAbstractItemDelegate_setEditorData;
+PROCEDURE QAbstractItemDelegate_setEditorData
+  (self: QAbstractItemDelegate; editor: QWidget; index: QModelIndex; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(editor.cxxObj, ADDRESS);
+    arg3tmp          := LOOPHOLE(index.cxxObj, ADDRESS);
+  BEGIN
+    QtAbstractItemDelegateRaw.QAbstractItemDelegate_setEditorData(
+      selfAdr, arg2tmp, arg3tmp);
+  END QAbstractItemDelegate_setEditorData;
 
-PROCEDURE QAbstractItemDelegate_setModelData ( self: QAbstractItemDelegate;
- editor: QWidget;
- model: QAbstractItemModel;
- index: QModelIndex;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(editor.cxxObj,ADDRESS);
-arg3tmp :=  LOOPHOLE(model.cxxObj,ADDRESS);
-arg4tmp :=  LOOPHOLE(index.cxxObj,ADDRESS);
-BEGIN
-QtAbstractItemDelegateRaw.QAbstractItemDelegate_setModelData(selfAdr, arg2tmp, arg3tmp, arg4tmp);
-END QAbstractItemDelegate_setModelData;
+PROCEDURE QAbstractItemDelegate_setModelData
+  (self  : QAbstractItemDelegate;
+   editor: QWidget;
+   model : QAbstractItemModel;
+   index : QModelIndex;           ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(editor.cxxObj, ADDRESS);
+    arg3tmp          := LOOPHOLE(model.cxxObj, ADDRESS);
+    arg4tmp          := LOOPHOLE(index.cxxObj, ADDRESS);
+  BEGIN
+    QtAbstractItemDelegateRaw.QAbstractItemDelegate_setModelData(
+      selfAdr, arg2tmp, arg3tmp, arg4tmp);
+  END QAbstractItemDelegate_setModelData;
 
-PROCEDURE QAbstractItemDelegate_updateEditorGeometry ( self: QAbstractItemDelegate;
- editor: QWidget;
- option: QStyleOptionViewItem;
- index: QModelIndex;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(editor.cxxObj,ADDRESS);
-arg3tmp :=  LOOPHOLE(option.cxxObj,ADDRESS);
-arg4tmp :=  LOOPHOLE(index.cxxObj,ADDRESS);
-BEGIN
-QtAbstractItemDelegateRaw.QAbstractItemDelegate_updateEditorGeometry(selfAdr, arg2tmp, arg3tmp, arg4tmp);
-END QAbstractItemDelegate_updateEditorGeometry;
+PROCEDURE QAbstractItemDelegate_updateEditorGeometry
+  (self  : QAbstractItemDelegate;
+   editor: QWidget;
+   option: QStyleOptionViewItem;
+   index : QModelIndex;           ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(editor.cxxObj, ADDRESS);
+    arg3tmp          := LOOPHOLE(option.cxxObj, ADDRESS);
+    arg4tmp          := LOOPHOLE(index.cxxObj, ADDRESS);
+  BEGIN
+    QtAbstractItemDelegateRaw.QAbstractItemDelegate_updateEditorGeometry(
+      selfAdr, arg2tmp, arg3tmp, arg4tmp);
+  END QAbstractItemDelegate_updateEditorGeometry;
 
-PROCEDURE QAbstractItemDelegate_editorEvent ( self: QAbstractItemDelegate;
- event: QEvent;
- model: QAbstractItemModel;
- option: QStyleOptionViewItem;
- index: QModelIndex;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(event.cxxObj,ADDRESS);
-arg3tmp :=  LOOPHOLE(model.cxxObj,ADDRESS);
-arg4tmp :=  LOOPHOLE(option.cxxObj,ADDRESS);
-arg5tmp :=  LOOPHOLE(index.cxxObj,ADDRESS);
-BEGIN
-RETURN QtAbstractItemDelegateRaw.QAbstractItemDelegate_editorEvent(selfAdr, arg2tmp, arg3tmp, arg4tmp, arg5tmp);
-END QAbstractItemDelegate_editorEvent;
+PROCEDURE QAbstractItemDelegate_editorEvent
+  (self  : QAbstractItemDelegate;
+   event : QEvent;
+   model : QAbstractItemModel;
+   option: QStyleOptionViewItem;
+   index : QModelIndex;           ): BOOLEAN =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(event.cxxObj, ADDRESS);
+    arg3tmp          := LOOPHOLE(model.cxxObj, ADDRESS);
+    arg4tmp          := LOOPHOLE(option.cxxObj, ADDRESS);
+    arg5tmp          := LOOPHOLE(index.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtAbstractItemDelegateRaw.QAbstractItemDelegate_editorEvent(
+             selfAdr, arg2tmp, arg3tmp, arg4tmp, arg5tmp);
+  END QAbstractItemDelegate_editorEvent;
 
-PROCEDURE ElidedText ( fontMetrics: QFontMetrics;
-width: INTEGER;
-mode: TextElideMode;
- text: TEXT;
-): TEXT =
-VAR
-ret : ADDRESS;
-qstr := NEW(QString);
-ba : QByteArray;
-result : TEXT;
-arg1tmp :=  LOOPHOLE(fontMetrics.cxxObj,ADDRESS);
-qstr_text := NEW(QString).initQString(text);
-arg4tmp :=  LOOPHOLE(qstr_text.cxxObj,ADDRESS);
-BEGIN
-ret := QtAbstractItemDelegateRaw.ElidedText(arg1tmp, width, ORD(mode), arg4tmp);
+PROCEDURE ElidedText (fontMetrics: QFontMetrics;
+                      width      : INTEGER;
+                      mode       : TextElideMode;
+                      text       : TEXT;          ): TEXT =
+  VAR
+    ret      : ADDRESS;
+    qstr                  := NEW(QString);
+    ba       : QByteArray;
+    result   : TEXT;
+    arg1tmp               := LOOPHOLE(fontMetrics.cxxObj, ADDRESS);
+    qstr_text             := NEW(QString).initQString(text);
+    arg4tmp               := LOOPHOLE(qstr_text.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtAbstractItemDelegateRaw.ElidedText(
+             arg1tmp, width, ORD(mode), arg4tmp);
 
-  qstr.cxxObj := ret;
-  ba := qstr.toLocal8Bit();
-  result := ba.data();
+    qstr.cxxObj := ret;
+    ba := qstr.toLocal8Bit();
+    result := ba.data();
 
-RETURN result;
-END ElidedText;
+    RETURN result;
+  END ElidedText;
 
-PROCEDURE QAbstractItemDelegate_helpEvent ( self: QAbstractItemDelegate;
- event: QHelpEvent;
- view: QAbstractItemView;
- option: QStyleOptionViewItem;
- index: QModelIndex;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(event.cxxObj,ADDRESS);
-arg3tmp :=  LOOPHOLE(view.cxxObj,ADDRESS);
-arg4tmp :=  LOOPHOLE(option.cxxObj,ADDRESS);
-arg5tmp :=  LOOPHOLE(index.cxxObj,ADDRESS);
-BEGIN
-RETURN QtAbstractItemDelegateRaw.QAbstractItemDelegate_helpEvent(selfAdr, arg2tmp, arg3tmp, arg4tmp, arg5tmp);
-END QAbstractItemDelegate_helpEvent;
+PROCEDURE QAbstractItemDelegate_helpEvent
+  (self  : QAbstractItemDelegate;
+   event : QHelpEvent;
+   view  : QAbstractItemView;
+   option: QStyleOptionViewItem;
+   index : QModelIndex;           ): BOOLEAN =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(event.cxxObj, ADDRESS);
+    arg3tmp          := LOOPHOLE(view.cxxObj, ADDRESS);
+    arg4tmp          := LOOPHOLE(option.cxxObj, ADDRESS);
+    arg5tmp          := LOOPHOLE(index.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtAbstractItemDelegateRaw.QAbstractItemDelegate_helpEvent(
+             selfAdr, arg2tmp, arg3tmp, arg4tmp, arg5tmp);
+  END QAbstractItemDelegate_helpEvent;
 
-PROCEDURE Cleanup_QAbstractItemDelegate(<*UNUSED*>READONLY self: WeakRef.T; ref: REFANY) =
-VAR obj : QAbstractItemDelegate := ref;
-BEGIN
-  Delete_QAbstractItemDelegate(obj);
- END Cleanup_QAbstractItemDelegate;
+PROCEDURE Cleanup_QAbstractItemDelegate
+  (<* UNUSED *> READONLY self: WeakRef.T; ref: REFANY) =
+  VAR obj: QAbstractItemDelegate := ref;
+  BEGIN
+    Delete_QAbstractItemDelegate(obj);
+  END Cleanup_QAbstractItemDelegate;
 
-PROCEDURE Destroy_QAbstractItemDelegate(self : QAbstractItemDelegate) =
-BEGIN
-  EVAL WeakRef.FromRef(self,Cleanup_QAbstractItemDelegate);
-END Destroy_QAbstractItemDelegate;
+PROCEDURE Destroy_QAbstractItemDelegate (self: QAbstractItemDelegate) =
+  BEGIN
+    EVAL WeakRef.FromRef(self, Cleanup_QAbstractItemDelegate);
+  END Destroy_QAbstractItemDelegate;
 
 REVEAL
-QAbstractItemDelegate =
-QAbstractItemDelegatePublic BRANDED OBJECT
-OVERRIDES
-createEditor := QAbstractItemDelegate_createEditor;
-setEditorData := QAbstractItemDelegate_setEditorData;
-setModelData := QAbstractItemDelegate_setModelData;
-updateEditorGeometry := QAbstractItemDelegate_updateEditorGeometry;
-editorEvent := QAbstractItemDelegate_editorEvent;
-helpEvent := QAbstractItemDelegate_helpEvent;
-destroyCxx := Destroy_QAbstractItemDelegate;
-END;
+  QAbstractItemDelegate =
+    QAbstractItemDelegatePublic BRANDED OBJECT
+    OVERRIDES
+      createEditor         := QAbstractItemDelegate_createEditor;
+      setEditorData        := QAbstractItemDelegate_setEditorData;
+      setModelData         := QAbstractItemDelegate_setModelData;
+      updateEditorGeometry := QAbstractItemDelegate_updateEditorGeometry;
+      editorEvent          := QAbstractItemDelegate_editorEvent;
+      helpEvent            := QAbstractItemDelegate_helpEvent;
+      destroyCxx           := Destroy_QAbstractItemDelegate;
+    END;
 
 
 BEGIN

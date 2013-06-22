@@ -11,7 +11,6 @@ MODULE QtListWidgetRaw;
 
 
 
-REVEAL
-QListWidgetItem = UNTRACED BRANDED REF RECORD (*Dummy*) END;
+REVEAL QListWidgetItem = UNTRACED BRANDED REF RECORD (*Dummy*) END;
 BEGIN
 END QtListWidgetRaw.

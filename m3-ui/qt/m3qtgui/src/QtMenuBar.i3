@@ -19,69 +19,44 @@ FROM QtRect IMPORT QRect;
 FROM QtNamespace IMPORT Corner;
 
 
-TYPE
-  T = QMenuBar;
+TYPE T = QMenuBar;
 
 
 TYPE
-QMenuBar <: QMenuBarPublic;
-QMenuBarPublic =
-QWidget BRANDED OBJECT
-METHODS
-init_0 ( parent: QWidget;
-) : QMenuBar;
-init_1 () : QMenuBar;
-addAction0_0( action: QAction;
-);
-addAction1( text: TEXT;
-): QAction;
-addAction2( text: TEXT;
- receiver: QObject;
- member: TEXT;
-): QAction;
-addMenu( menu: QMenu;
-): QAction;
-addMenu1( title: TEXT;
-): QMenu;
-addMenu2( icon: QIcon;
- title: TEXT;
-): QMenu;
-addSeparator(): QAction;
-insertSeparator( before: QAction;
-): QAction;
-insertMenu( before: QAction;
- menu: QMenu;
-): QAction;
-clear();
-activeAction(): QAction;
-setActiveAction( action: QAction;
-);
-setDefaultUp(arg1: BOOLEAN;
-);
-isDefaultUp(): BOOLEAN;
-sizeHint(): QSize;  (*  virtual *)
-minimumSizeHint(): QSize;  (*  virtual *)
-heightForWidth(arg1: INTEGER;
-): INTEGER;  (*  virtual *)
-actionGeometry( arg1: QAction;
-): QRect;
-actionAt( arg1: QPoint;
-): QAction;
-setCornerWidget( w: QWidget;
-corner: Corner;
-);
-setCornerWidget1( w: QWidget;
-);
-cornerWidget(corner: Corner;
-): QWidget;
-cornerWidget1(): QWidget;
-isNativeMenuBar(): BOOLEAN;
-setNativeMenuBar(nativeMenuBar: BOOLEAN;
-);
-setVisible(visible: BOOLEAN;
-);  (*  virtual *)
-destroyCxx();
-END;
+  QMenuBar <: QMenuBarPublic;
+  QMenuBarPublic =
+    QWidget BRANDED OBJECT
+    METHODS
+      init_0       (parent: QWidget; ): QMenuBar;
+      init_1       (): QMenuBar;
+      addAction0_0 (action: QAction; );
+      addAction1   (text: TEXT; ): QAction;
+      addAction2 (text: TEXT; receiver: QObject; member: TEXT; ): QAction;
+      addMenu    (menu: QMenu; ): QAction;
+      addMenu1   (title: TEXT; ): QMenu;
+      addMenu2   (icon: QIcon; title: TEXT; ): QMenu;
+      addSeparator     (): QAction;
+      insertSeparator  (before: QAction; ): QAction;
+      insertMenu       (before: QAction; menu: QMenu; ): QAction;
+      clear            ();
+      activeAction     (): QAction;
+      setActiveAction  (action: QAction; );
+      setDefaultUp     (arg1: BOOLEAN; );
+      isDefaultUp      (): BOOLEAN;
+      sizeHint         (): QSize; (* virtual *)
+      minimumSizeHint  (): QSize; (* virtual *)
+      heightForWidth   (arg1: INTEGER; ): INTEGER; (* virtual *)
+      actionGeometry   (arg1: QAction; ): QRect;
+      actionAt         (arg1: QPoint; ): QAction;
+      setCornerWidget  (w: QWidget; corner: Corner; );
+      setCornerWidget1 (w: QWidget; );
+      cornerWidget     (corner: Corner; ): QWidget;
+      cornerWidget1    (): QWidget;
+      isNativeMenuBar  (): BOOLEAN;
+      setNativeMenuBar (nativeMenuBar: BOOLEAN; );
+      setVisible       (visible: BOOLEAN; ); (* virtual *)
+      destroyCxx       ();
+    END;
 
 
 END QtMenuBar.

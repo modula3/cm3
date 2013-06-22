@@ -15,26 +15,21 @@ FROM QtNamespace IMPORT Orientation;
 
 FROM QtAbstractSlider IMPORT QAbstractSlider;
 
-TYPE
-  T = QScrollBar;
+TYPE T = QScrollBar;
 
 
 TYPE
-QScrollBar <: QScrollBarPublic;
-QScrollBarPublic =
-QAbstractSlider BRANDED OBJECT
-METHODS
-init_0 ( parent: QWidget;
-) : QScrollBar;
-init_1 () : QScrollBar;
-init_2 (arg1: Orientation;
- parent: QWidget;
-) : QScrollBar;
-init_3 (arg1: Orientation;
-) : QScrollBar;
-sizeHint(): QSize;  (*  virtual *)
-destroyCxx();
-END;
+  QScrollBar <: QScrollBarPublic;
+  QScrollBarPublic =
+    QAbstractSlider BRANDED OBJECT
+    METHODS
+      init_0     (parent: QWidget; ): QScrollBar;
+      init_1     (): QScrollBar;
+      init_2     (arg1: Orientation; parent: QWidget; ): QScrollBar;
+      init_3     (arg1: Orientation; ): QScrollBar;
+      sizeHint   (): QSize;      (* virtual *)
+      destroyCxx ();
+    END;
 
 
 END QtScrollBar.

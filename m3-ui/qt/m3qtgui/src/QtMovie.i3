@@ -17,85 +17,59 @@ FROM QtColor IMPORT QColor;
 FROM QtRect IMPORT QRect;
 
 
-TYPE
-  T = QMovie;
+TYPE T = QMovie;
 
 
-TYPE (* Enum MovieState *)
-  MovieState = {
- NotRunning,
- Paused,
- Running};
+TYPE                             (* Enum MovieState *)
+  MovieState = {NotRunning, Paused, Running};
 
-TYPE (* Enum CacheMode *)
-  CacheMode = {
- CacheNone,
- CacheAll};
+TYPE                             (* Enum CacheMode *)
+  CacheMode = {CacheNone, CacheAll};
 
 TYPE
-QMovie <: QMoviePublic;
-QMoviePublic =
-QObject BRANDED OBJECT
-METHODS
-init_0 ( parent: QObject;
-) : QMovie;
-init_1 () : QMovie;
-init_2 ( device: QIODevice;
- format: QByteArray;
- parent: QObject;
-) : QMovie;
-init_3 ( device: QIODevice;
- format: QByteArray;
-) : QMovie;
-init_4 ( device: QIODevice;
-) : QMovie;
-init_5 ( fileName: TEXT;
- format: QByteArray;
- parent: QObject;
-) : QMovie;
-init_6 ( fileName: TEXT;
- format: QByteArray;
-) : QMovie;
-init_7 ( fileName: TEXT;
-) : QMovie;
-setDevice( device: QIODevice;
-);
-device(): QIODevice;
-setFileName( fileName: TEXT;
-);
-fileName(): TEXT;
-setFormat( format: QByteArray;
-);
-format(): QByteArray;
-setBackgroundColor( color: QColor;
-);
-state(): MovieState;
-frameRect(): QRect;
-currentImage(): QImage;
-isValid(): BOOLEAN;
-jumpToFrame(frameNumber: INTEGER;
-): BOOLEAN;
-loopCount(): INTEGER;
-frameCount(): INTEGER;
-nextFrameDelay(): INTEGER;
-currentFrameNumber(): INTEGER;
-speed(): INTEGER;
-scaledSize(): QSize;
-setScaledSize( size: QSize;
-);
-cacheMode(): CacheMode;
-setCacheMode(mode: CacheMode;
-);
-cacheMode1(): CacheMode;
-start();
-jumpToNextFrame(): BOOLEAN;
-setPaused(paused: BOOLEAN;
-);
-stop();
-setSpeed(percentSpeed: INTEGER;
-);
-destroyCxx();
-END;
+  QMovie <: QMoviePublic;
+  QMoviePublic =
+    QObject BRANDED OBJECT
+    METHODS
+      init_0 (parent: QObject; ): QMovie;
+      init_1 (): QMovie;
+      init_2 (device: QIODevice; format: QByteArray; parent: QObject; ):
+              QMovie;
+      init_3 (device: QIODevice; format: QByteArray; ): QMovie;
+      init_4 (device: QIODevice; ): QMovie;
+      init_5 (fileName: TEXT; format: QByteArray; parent: QObject; ):
+              QMovie;
+      init_6             (fileName: TEXT; format: QByteArray; ): QMovie;
+      init_7             (fileName: TEXT; ): QMovie;
+      setDevice          (device: QIODevice; );
+      device             (): QIODevice;
+      setFileName        (fileName: TEXT; );
+      fileName           (): TEXT;
+      setFormat          (format: QByteArray; );
+      format             (): QByteArray;
+      setBackgroundColor (color: QColor; );
+      state              (): MovieState;
+      frameRect          (): QRect;
+      currentImage       (): QImage;
+      isValid            (): BOOLEAN;
+      jumpToFrame        (frameNumber: INTEGER; ): BOOLEAN;
+      loopCount          (): INTEGER;
+      frameCount         (): INTEGER;
+      nextFrameDelay     (): INTEGER;
+      currentFrameNumber (): INTEGER;
+      speed              (): INTEGER;
+      scaledSize         (): QSize;
+      setScaledSize      (size: QSize; );
+      cacheMode          (): CacheMode;
+      setCacheMode       (mode: CacheMode; );
+      cacheMode1         (): CacheMode;
+      start              ();
+      jumpToNextFrame    (): BOOLEAN;
+      setPaused          (paused: BOOLEAN; );
+      stop               ();
+      setSpeed           (percentSpeed: INTEGER; );
+      destroyCxx         ();
+    END;
 
 
 END QtMovie.

@@ -15,130 +15,99 @@ IMPORT Ctypes AS C;
 
 
 <* EXTERNAL Delete_QAbstractButton *>
-PROCEDURE Delete_QAbstractButton ( self: QAbstractButton;
-);
+PROCEDURE Delete_QAbstractButton (self: QAbstractButton; );
 
 <* EXTERNAL QAbstractButton_setText *>
-PROCEDURE QAbstractButton_setText ( self: QAbstractButton;
- text: ADDRESS;
-);
+PROCEDURE QAbstractButton_setText (self: QAbstractButton; text: ADDRESS; );
 
 <* EXTERNAL QAbstractButton_text *>
-PROCEDURE QAbstractButton_text ( self: QAbstractButton;
-): ADDRESS;
+PROCEDURE QAbstractButton_text (self: QAbstractButton; ): ADDRESS;
 
 <* EXTERNAL QAbstractButton_setIcon *>
-PROCEDURE QAbstractButton_setIcon ( self: QAbstractButton;
- icon: ADDRESS;
-);
+PROCEDURE QAbstractButton_setIcon (self: QAbstractButton; icon: ADDRESS; );
 
 <* EXTERNAL QAbstractButton_icon *>
-PROCEDURE QAbstractButton_icon ( self: QAbstractButton;
-): ADDRESS;
+PROCEDURE QAbstractButton_icon (self: QAbstractButton; ): ADDRESS;
 
 <* EXTERNAL QAbstractButton_iconSize *>
-PROCEDURE QAbstractButton_iconSize ( self: QAbstractButton;
-): ADDRESS;
+PROCEDURE QAbstractButton_iconSize (self: QAbstractButton; ): ADDRESS;
 
 <* EXTERNAL QAbstractButton_setShortcut *>
-PROCEDURE QAbstractButton_setShortcut ( self: QAbstractButton;
- key: ADDRESS;
-);
+PROCEDURE QAbstractButton_setShortcut
+  (self: QAbstractButton; key: ADDRESS; );
 
 <* EXTERNAL QAbstractButton_shortcut *>
-PROCEDURE QAbstractButton_shortcut ( self: QAbstractButton;
-): ADDRESS;
+PROCEDURE QAbstractButton_shortcut (self: QAbstractButton; ): ADDRESS;
 
 <* EXTERNAL QAbstractButton_setCheckable *>
-PROCEDURE QAbstractButton_setCheckable ( self: QAbstractButton;
-arg2: BOOLEAN;
-);
+PROCEDURE QAbstractButton_setCheckable
+  (self: QAbstractButton; arg2: BOOLEAN; );
 
 <* EXTERNAL QAbstractButton_isCheckable *>
-PROCEDURE QAbstractButton_isCheckable ( self: QAbstractButton;
-): BOOLEAN;
+PROCEDURE QAbstractButton_isCheckable (self: QAbstractButton; ): BOOLEAN;
 
 <* EXTERNAL QAbstractButton_isChecked *>
-PROCEDURE QAbstractButton_isChecked ( self: QAbstractButton;
-): BOOLEAN;
+PROCEDURE QAbstractButton_isChecked (self: QAbstractButton; ): BOOLEAN;
 
 <* EXTERNAL QAbstractButton_setDown *>
-PROCEDURE QAbstractButton_setDown ( self: QAbstractButton;
-arg2: BOOLEAN;
-);
+PROCEDURE QAbstractButton_setDown (self: QAbstractButton; arg2: BOOLEAN; );
 
 <* EXTERNAL QAbstractButton_isDown *>
-PROCEDURE QAbstractButton_isDown ( self: QAbstractButton;
-): BOOLEAN;
+PROCEDURE QAbstractButton_isDown (self: QAbstractButton; ): BOOLEAN;
 
 <* EXTERNAL QAbstractButton_setAutoRepeat *>
-PROCEDURE QAbstractButton_setAutoRepeat ( self: QAbstractButton;
-arg2: BOOLEAN;
-);
+PROCEDURE QAbstractButton_setAutoRepeat
+  (self: QAbstractButton; arg2: BOOLEAN; );
 
 <* EXTERNAL QAbstractButton_autoRepeat *>
-PROCEDURE QAbstractButton_autoRepeat ( self: QAbstractButton;
-): BOOLEAN;
+PROCEDURE QAbstractButton_autoRepeat (self: QAbstractButton; ): BOOLEAN;
 
 <* EXTERNAL QAbstractButton_setAutoRepeatDelay *>
-PROCEDURE QAbstractButton_setAutoRepeatDelay ( self: QAbstractButton;
-arg2: C.int;
-);
+PROCEDURE QAbstractButton_setAutoRepeatDelay
+  (self: QAbstractButton; arg2: C.int; );
 
 <* EXTERNAL QAbstractButton_autoRepeatDelay *>
-PROCEDURE QAbstractButton_autoRepeatDelay ( self: QAbstractButton;
-): C.int;
+PROCEDURE QAbstractButton_autoRepeatDelay (self: QAbstractButton; ): C.int;
 
 <* EXTERNAL QAbstractButton_setAutoRepeatInterval *>
-PROCEDURE QAbstractButton_setAutoRepeatInterval ( self: QAbstractButton;
-arg2: C.int;
-);
+PROCEDURE QAbstractButton_setAutoRepeatInterval
+  (self: QAbstractButton; arg2: C.int; );
 
 <* EXTERNAL QAbstractButton_autoRepeatInterval *>
-PROCEDURE QAbstractButton_autoRepeatInterval ( self: QAbstractButton;
-): C.int;
+PROCEDURE QAbstractButton_autoRepeatInterval (self: QAbstractButton; ):
+  C.int;
 
 <* EXTERNAL QAbstractButton_setAutoExclusive *>
-PROCEDURE QAbstractButton_setAutoExclusive ( self: QAbstractButton;
-arg2: BOOLEAN;
-);
+PROCEDURE QAbstractButton_setAutoExclusive
+  (self: QAbstractButton; arg2: BOOLEAN; );
 
 <* EXTERNAL QAbstractButton_autoExclusive *>
-PROCEDURE QAbstractButton_autoExclusive ( self: QAbstractButton;
-): BOOLEAN;
+PROCEDURE QAbstractButton_autoExclusive (self: QAbstractButton; ): BOOLEAN;
 
 <* EXTERNAL QAbstractButton_group *>
-PROCEDURE QAbstractButton_group ( self: QAbstractButton;
-): ADDRESS;
+PROCEDURE QAbstractButton_group (self: QAbstractButton; ): ADDRESS;
 
 <* EXTERNAL QAbstractButton_setIconSize *>
-PROCEDURE QAbstractButton_setIconSize ( self: QAbstractButton;
- size: ADDRESS;
-);
+PROCEDURE QAbstractButton_setIconSize
+  (self: QAbstractButton; size: ADDRESS; );
 
 <* EXTERNAL QAbstractButton_animateClick *>
-PROCEDURE QAbstractButton_animateClick ( self: QAbstractButton;
-msec: C.int;
-);
+PROCEDURE QAbstractButton_animateClick
+  (self: QAbstractButton; msec: C.int; );
 
 <* EXTERNAL QAbstractButton_animateClick1 *>
-PROCEDURE QAbstractButton_animateClick1 ( self: QAbstractButton;
-);
+PROCEDURE QAbstractButton_animateClick1 (self: QAbstractButton; );
 
 <* EXTERNAL QAbstractButton_click *>
-PROCEDURE QAbstractButton_click ( self: QAbstractButton;
-);
+PROCEDURE QAbstractButton_click (self: QAbstractButton; );
 
 <* EXTERNAL QAbstractButton_toggle *>
-PROCEDURE QAbstractButton_toggle ( self: QAbstractButton;
-);
+PROCEDURE QAbstractButton_toggle (self: QAbstractButton; );
 
 <* EXTERNAL QAbstractButton_setChecked *>
-PROCEDURE QAbstractButton_setChecked ( self: QAbstractButton;
-arg2: BOOLEAN;
-);
+PROCEDURE QAbstractButton_setChecked
+  (self: QAbstractButton; arg2: BOOLEAN; );
 
-TYPE
-QAbstractButton = ADDRESS;
+TYPE QAbstractButton = ADDRESS;
 
 END QtAbstractButtonRaw.

@@ -15,83 +15,61 @@ IMPORT Ctypes AS C;
 
 
 <* EXTERNAL New_QToolButton0 *>
-PROCEDURE New_QToolButton0 ( parent: ADDRESS;
-): QToolButton;
+PROCEDURE New_QToolButton0 (parent: ADDRESS; ): QToolButton;
 
 <* EXTERNAL New_QToolButton1 *>
 PROCEDURE New_QToolButton1 (): QToolButton;
 
 <* EXTERNAL Delete_QToolButton *>
-PROCEDURE Delete_QToolButton ( self: QToolButton;
-);
+PROCEDURE Delete_QToolButton (self: QToolButton; );
 
 <* EXTERNAL QToolButton_sizeHint *>
-PROCEDURE QToolButton_sizeHint ( self: QToolButton;
-): ADDRESS;
+PROCEDURE QToolButton_sizeHint (self: QToolButton; ): ADDRESS;
 
 <* EXTERNAL QToolButton_minimumSizeHint *>
-PROCEDURE QToolButton_minimumSizeHint ( self: QToolButton;
-): ADDRESS;
+PROCEDURE QToolButton_minimumSizeHint (self: QToolButton; ): ADDRESS;
 
 <* EXTERNAL QToolButton_toolButtonStyle *>
-PROCEDURE QToolButton_toolButtonStyle ( self: QToolButton;
-): C.int;
+PROCEDURE QToolButton_toolButtonStyle (self: QToolButton; ): C.int;
 
 <* EXTERNAL QToolButton_arrowType *>
-PROCEDURE QToolButton_arrowType ( self: QToolButton;
-): C.int;
+PROCEDURE QToolButton_arrowType (self: QToolButton; ): C.int;
 
 <* EXTERNAL QToolButton_setArrowType *>
-PROCEDURE QToolButton_setArrowType ( self: QToolButton;
-type: C.int;
-);
+PROCEDURE QToolButton_setArrowType (self: QToolButton; type: C.int; );
 
 <* EXTERNAL QToolButton_setMenu *>
-PROCEDURE QToolButton_setMenu ( self: QToolButton;
- menu: ADDRESS;
-);
+PROCEDURE QToolButton_setMenu (self: QToolButton; menu: ADDRESS; );
 
 <* EXTERNAL QToolButton_menu *>
-PROCEDURE QToolButton_menu ( self: QToolButton;
-): ADDRESS;
+PROCEDURE QToolButton_menu (self: QToolButton; ): ADDRESS;
 
 <* EXTERNAL QToolButton_setPopupMode *>
-PROCEDURE QToolButton_setPopupMode ( self: QToolButton;
-mode: C.int;
-);
+PROCEDURE QToolButton_setPopupMode (self: QToolButton; mode: C.int; );
 
 <* EXTERNAL QToolButton_popupMode *>
-PROCEDURE QToolButton_popupMode ( self: QToolButton;
-): C.int;
+PROCEDURE QToolButton_popupMode (self: QToolButton; ): C.int;
 
 <* EXTERNAL QToolButton_defaultAction *>
-PROCEDURE QToolButton_defaultAction ( self: QToolButton;
-): ADDRESS;
+PROCEDURE QToolButton_defaultAction (self: QToolButton; ): ADDRESS;
 
 <* EXTERNAL QToolButton_setAutoRaise *>
-PROCEDURE QToolButton_setAutoRaise ( self: QToolButton;
-enable: BOOLEAN;
-);
+PROCEDURE QToolButton_setAutoRaise (self: QToolButton; enable: BOOLEAN; );
 
 <* EXTERNAL QToolButton_autoRaise *>
-PROCEDURE QToolButton_autoRaise ( self: QToolButton;
-): BOOLEAN;
+PROCEDURE QToolButton_autoRaise (self: QToolButton; ): BOOLEAN;
 
 <* EXTERNAL QToolButton_showMenu *>
-PROCEDURE QToolButton_showMenu ( self: QToolButton;
-);
+PROCEDURE QToolButton_showMenu (self: QToolButton; );
 
 <* EXTERNAL QToolButton_setToolButtonStyle *>
-PROCEDURE QToolButton_setToolButtonStyle ( self: QToolButton;
-style: C.int;
-);
+PROCEDURE QToolButton_setToolButtonStyle
+  (self: QToolButton; style: C.int; );
 
 <* EXTERNAL QToolButton_setDefaultAction *>
-PROCEDURE QToolButton_setDefaultAction ( self: QToolButton;
- arg2: ADDRESS;
-);
+PROCEDURE QToolButton_setDefaultAction
+  (self: QToolButton; arg2: ADDRESS; );
 
-TYPE
-QToolButton = ADDRESS;
+TYPE QToolButton = ADDRESS;
 
 END QtToolButtonRaw.

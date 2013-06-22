@@ -15,253 +15,185 @@ IMPORT Ctypes AS C;
 
 
 <* EXTERNAL New_QFormLayout0 *>
-PROCEDURE New_QFormLayout0 ( parent: ADDRESS;
-): QFormLayout;
+PROCEDURE New_QFormLayout0 (parent: ADDRESS; ): QFormLayout;
 
 <* EXTERNAL New_QFormLayout1 *>
 PROCEDURE New_QFormLayout1 (): QFormLayout;
 
 <* EXTERNAL Delete_QFormLayout *>
-PROCEDURE Delete_QFormLayout ( self: QFormLayout;
-);
+PROCEDURE Delete_QFormLayout (self: QFormLayout; );
 
 <* EXTERNAL QFormLayout_setFieldGrowthPolicy *>
-PROCEDURE QFormLayout_setFieldGrowthPolicy ( self: QFormLayout;
-policy: C.int;
-);
+PROCEDURE QFormLayout_setFieldGrowthPolicy
+  (self: QFormLayout; policy: C.int; );
 
 <* EXTERNAL QFormLayout_fieldGrowthPolicy *>
-PROCEDURE QFormLayout_fieldGrowthPolicy ( self: QFormLayout;
-): C.int;
+PROCEDURE QFormLayout_fieldGrowthPolicy (self: QFormLayout; ): C.int;
 
 <* EXTERNAL QFormLayout_setRowWrapPolicy *>
-PROCEDURE QFormLayout_setRowWrapPolicy ( self: QFormLayout;
-policy: C.int;
-);
+PROCEDURE QFormLayout_setRowWrapPolicy
+  (self: QFormLayout; policy: C.int; );
 
 <* EXTERNAL QFormLayout_rowWrapPolicy *>
-PROCEDURE QFormLayout_rowWrapPolicy ( self: QFormLayout;
-): C.int;
+PROCEDURE QFormLayout_rowWrapPolicy (self: QFormLayout; ): C.int;
 
 <* EXTERNAL QFormLayout_setLabelAlignment *>
-PROCEDURE QFormLayout_setLabelAlignment ( self: QFormLayout;
-alignment: C.int;
-);
+PROCEDURE QFormLayout_setLabelAlignment
+  (self: QFormLayout; alignment: C.int; );
 
 <* EXTERNAL QFormLayout_labelAlignment *>
-PROCEDURE QFormLayout_labelAlignment ( self: QFormLayout;
-): C.int;
+PROCEDURE QFormLayout_labelAlignment (self: QFormLayout; ): C.int;
 
 <* EXTERNAL QFormLayout_setFormAlignment *>
-PROCEDURE QFormLayout_setFormAlignment ( self: QFormLayout;
-alignment: C.int;
-);
+PROCEDURE QFormLayout_setFormAlignment
+  (self: QFormLayout; alignment: C.int; );
 
 <* EXTERNAL QFormLayout_formAlignment *>
-PROCEDURE QFormLayout_formAlignment ( self: QFormLayout;
-): C.int;
+PROCEDURE QFormLayout_formAlignment (self: QFormLayout; ): C.int;
 
 <* EXTERNAL QFormLayout_setHorizontalSpacing *>
-PROCEDURE QFormLayout_setHorizontalSpacing ( self: QFormLayout;
-spacing: C.int;
-);
+PROCEDURE QFormLayout_setHorizontalSpacing
+  (self: QFormLayout; spacing: C.int; );
 
 <* EXTERNAL QFormLayout_horizontalSpacing *>
-PROCEDURE QFormLayout_horizontalSpacing ( self: QFormLayout;
-): C.int;
+PROCEDURE QFormLayout_horizontalSpacing (self: QFormLayout; ): C.int;
 
 <* EXTERNAL QFormLayout_setVerticalSpacing *>
-PROCEDURE QFormLayout_setVerticalSpacing ( self: QFormLayout;
-spacing: C.int;
-);
+PROCEDURE QFormLayout_setVerticalSpacing
+  (self: QFormLayout; spacing: C.int; );
 
 <* EXTERNAL QFormLayout_verticalSpacing *>
-PROCEDURE QFormLayout_verticalSpacing ( self: QFormLayout;
-): C.int;
+PROCEDURE QFormLayout_verticalSpacing (self: QFormLayout; ): C.int;
 
 <* EXTERNAL QFormLayout_spacing *>
-PROCEDURE QFormLayout_spacing ( self: QFormLayout;
-): C.int;
+PROCEDURE QFormLayout_spacing (self: QFormLayout; ): C.int;
 
 <* EXTERNAL QFormLayout_setSpacing *>
-PROCEDURE QFormLayout_setSpacing ( self: QFormLayout;
-arg2: C.int;
-);
+PROCEDURE QFormLayout_setSpacing (self: QFormLayout; arg2: C.int; );
 
 <* EXTERNAL QFormLayout_addRow *>
-PROCEDURE QFormLayout_addRow ( self: QFormLayout;
- label, field: ADDRESS;
-);
+PROCEDURE QFormLayout_addRow (self: QFormLayout; label, field: ADDRESS; );
 
 <* EXTERNAL QFormLayout_addRow1 *>
-PROCEDURE QFormLayout_addRow1 ( self: QFormLayout;
- label, field: ADDRESS;
-);
+PROCEDURE QFormLayout_addRow1 (self: QFormLayout; label, field: ADDRESS; );
 
 <* EXTERNAL QFormLayout_addRow2 *>
-PROCEDURE QFormLayout_addRow2 ( self: QFormLayout;
- labelText, field: ADDRESS;
-);
+PROCEDURE QFormLayout_addRow2
+  (self: QFormLayout; labelText, field: ADDRESS; );
 
 <* EXTERNAL QFormLayout_addRow3 *>
-PROCEDURE QFormLayout_addRow3 ( self: QFormLayout;
- labelText, field: ADDRESS;
-);
+PROCEDURE QFormLayout_addRow3
+  (self: QFormLayout; labelText, field: ADDRESS; );
 
 <* EXTERNAL QFormLayout_addRow4 *>
-PROCEDURE QFormLayout_addRow4 ( self: QFormLayout;
- widget: ADDRESS;
-);
+PROCEDURE QFormLayout_addRow4 (self: QFormLayout; widget: ADDRESS; );
 
 <* EXTERNAL QFormLayout_addRow5 *>
-PROCEDURE QFormLayout_addRow5 ( self: QFormLayout;
- layout: ADDRESS;
-);
+PROCEDURE QFormLayout_addRow5 (self: QFormLayout; layout: ADDRESS; );
 
 <* EXTERNAL QFormLayout_insertRow *>
-PROCEDURE QFormLayout_insertRow ( self: QFormLayout;
-row: C.int;
- label, field: ADDRESS;
-);
+PROCEDURE QFormLayout_insertRow
+  (self: QFormLayout; row: C.int; label, field: ADDRESS; );
 
 <* EXTERNAL QFormLayout_insertRow1 *>
-PROCEDURE QFormLayout_insertRow1 ( self: QFormLayout;
-row: C.int;
- label, field: ADDRESS;
-);
+PROCEDURE QFormLayout_insertRow1
+  (self: QFormLayout; row: C.int; label, field: ADDRESS; );
 
 <* EXTERNAL QFormLayout_insertRow2 *>
-PROCEDURE QFormLayout_insertRow2 ( self: QFormLayout;
-row: C.int;
- labelText, field: ADDRESS;
-);
+PROCEDURE QFormLayout_insertRow2
+  (self: QFormLayout; row: C.int; labelText, field: ADDRESS; );
 
 <* EXTERNAL QFormLayout_insertRow3 *>
-PROCEDURE QFormLayout_insertRow3 ( self: QFormLayout;
-row: C.int;
- labelText, field: ADDRESS;
-);
+PROCEDURE QFormLayout_insertRow3
+  (self: QFormLayout; row: C.int; labelText, field: ADDRESS; );
 
 <* EXTERNAL QFormLayout_insertRow4 *>
-PROCEDURE QFormLayout_insertRow4 ( self: QFormLayout;
-row: C.int;
- widget: ADDRESS;
-);
+PROCEDURE QFormLayout_insertRow4
+  (self: QFormLayout; row: C.int; widget: ADDRESS; );
 
 <* EXTERNAL QFormLayout_insertRow5 *>
-PROCEDURE QFormLayout_insertRow5 ( self: QFormLayout;
-row: C.int;
- layout: ADDRESS;
-);
+PROCEDURE QFormLayout_insertRow5
+  (self: QFormLayout; row: C.int; layout: ADDRESS; );
 
 <* EXTERNAL QFormLayout_setItem *>
-PROCEDURE QFormLayout_setItem ( self: QFormLayout;
-row, role: C.int;
- item: ADDRESS;
-);
+PROCEDURE QFormLayout_setItem
+  (self: QFormLayout; row, role: C.int; item: ADDRESS; );
 
 <* EXTERNAL QFormLayout_setWidget *>
-PROCEDURE QFormLayout_setWidget ( self: QFormLayout;
-row, role: C.int;
- widget: ADDRESS;
-);
+PROCEDURE QFormLayout_setWidget
+  (self: QFormLayout; row, role: C.int; widget: ADDRESS; );
 
 <* EXTERNAL QFormLayout_setLayout *>
-PROCEDURE QFormLayout_setLayout ( self: QFormLayout;
-row, role: C.int;
- layout: ADDRESS;
-);
+PROCEDURE QFormLayout_setLayout
+  (self: QFormLayout; row, role: C.int; layout: ADDRESS; );
 
 <* EXTERNAL QFormLayout_itemAt *>
-PROCEDURE QFormLayout_itemAt ( self: QFormLayout;
-row, role: C.int;
-): ADDRESS;
+PROCEDURE QFormLayout_itemAt (self: QFormLayout; row, role: C.int; ):
+  ADDRESS;
 
 <* EXTERNAL QFormLayout_getItemPosition *>
-PROCEDURE QFormLayout_getItemPosition ( self: QFormLayout;
-index: C.int;
- rowPtr: C.int;
-READONLY rolePtr: C.int;
-);
+PROCEDURE QFormLayout_getItemPosition (         self   : QFormLayout;
+                                                index  : C.int;
+                                                rowPtr : C.int;
+                                       READONLY rolePtr: C.int;       );
 
 <* EXTERNAL QFormLayout_getWidgetPosition *>
-PROCEDURE QFormLayout_getWidgetPosition ( self: QFormLayout;
- widget: ADDRESS;
- rowPtr: C.int;
-READONLY rolePtr: C.int;
-);
+PROCEDURE QFormLayout_getWidgetPosition (         self   : QFormLayout;
+                                                  widget : ADDRESS;
+                                                  rowPtr : C.int;
+                                         READONLY rolePtr: C.int;       );
 
 <* EXTERNAL QFormLayout_getLayoutPosition *>
-PROCEDURE QFormLayout_getLayoutPosition ( self: QFormLayout;
- layout: ADDRESS;
- rowPtr: C.int;
-READONLY rolePtr: C.int;
-);
+PROCEDURE QFormLayout_getLayoutPosition (         self   : QFormLayout;
+                                                  layout : ADDRESS;
+                                                  rowPtr : C.int;
+                                         READONLY rolePtr: C.int;       );
 
 <* EXTERNAL QFormLayout_labelForField *>
-PROCEDURE QFormLayout_labelForField ( self: QFormLayout;
- field: ADDRESS;
-): ADDRESS;
+PROCEDURE QFormLayout_labelForField (self: QFormLayout; field: ADDRESS; ):
+  ADDRESS;
 
 <* EXTERNAL QFormLayout_labelForField1 *>
-PROCEDURE QFormLayout_labelForField1 ( self: QFormLayout;
- field: ADDRESS;
-): ADDRESS;
+PROCEDURE QFormLayout_labelForField1 (self: QFormLayout; field: ADDRESS; ):
+  ADDRESS;
 
 <* EXTERNAL QFormLayout_addItem *>
-PROCEDURE QFormLayout_addItem ( self: QFormLayout;
- item: ADDRESS;
-);
+PROCEDURE QFormLayout_addItem (self: QFormLayout; item: ADDRESS; );
 
 <* EXTERNAL QFormLayout_itemAt1 *>
-PROCEDURE QFormLayout_itemAt1 ( self: QFormLayout;
-index: C.int;
-): ADDRESS;
+PROCEDURE QFormLayout_itemAt1 (self: QFormLayout; index: C.int; ): ADDRESS;
 
 <* EXTERNAL QFormLayout_takeAt *>
-PROCEDURE QFormLayout_takeAt ( self: QFormLayout;
-index: C.int;
-): ADDRESS;
+PROCEDURE QFormLayout_takeAt (self: QFormLayout; index: C.int; ): ADDRESS;
 
 <* EXTERNAL QFormLayout_setGeometry *>
-PROCEDURE QFormLayout_setGeometry ( self: QFormLayout;
- rect: ADDRESS;
-);
+PROCEDURE QFormLayout_setGeometry (self: QFormLayout; rect: ADDRESS; );
 
 <* EXTERNAL QFormLayout_minimumSize *>
-PROCEDURE QFormLayout_minimumSize ( self: QFormLayout;
-): ADDRESS;
+PROCEDURE QFormLayout_minimumSize (self: QFormLayout; ): ADDRESS;
 
 <* EXTERNAL QFormLayout_sizeHint *>
-PROCEDURE QFormLayout_sizeHint ( self: QFormLayout;
-): ADDRESS;
+PROCEDURE QFormLayout_sizeHint (self: QFormLayout; ): ADDRESS;
 
 <* EXTERNAL QFormLayout_invalidate *>
-PROCEDURE QFormLayout_invalidate ( self: QFormLayout;
-);
+PROCEDURE QFormLayout_invalidate (self: QFormLayout; );
 
 <* EXTERNAL QFormLayout_hasHeightForWidth *>
-PROCEDURE QFormLayout_hasHeightForWidth ( self: QFormLayout;
-): BOOLEAN;
+PROCEDURE QFormLayout_hasHeightForWidth (self: QFormLayout; ): BOOLEAN;
 
 <* EXTERNAL QFormLayout_heightForWidth *>
-PROCEDURE QFormLayout_heightForWidth ( self: QFormLayout;
-width: C.int;
-): C.int;
+PROCEDURE QFormLayout_heightForWidth (self: QFormLayout; width: C.int; ):
+  C.int;
 
 <* EXTERNAL QFormLayout_expandingDirections *>
-PROCEDURE QFormLayout_expandingDirections ( self: QFormLayout;
-): C.int;
+PROCEDURE QFormLayout_expandingDirections (self: QFormLayout; ): C.int;
 
 <* EXTERNAL QFormLayout_count *>
-PROCEDURE QFormLayout_count ( self: QFormLayout;
-): C.int;
+PROCEDURE QFormLayout_count (self: QFormLayout; ): C.int;
 
 <* EXTERNAL QFormLayout_rowCount *>
-PROCEDURE QFormLayout_rowCount ( self: QFormLayout;
-): C.int;
+PROCEDURE QFormLayout_rowCount (self: QFormLayout; ): C.int;
 
-TYPE
-QFormLayout = ADDRESS;
+TYPE QFormLayout = ADDRESS;
 
 END QtFormLayoutRaw.

@@ -14,23 +14,17 @@ INTERFACE QtSizeGripRaw;
 
 
 <* EXTERNAL New_QSizeGrip0 *>
-PROCEDURE New_QSizeGrip0 ( parent: ADDRESS;
-): QSizeGrip;
+PROCEDURE New_QSizeGrip0 (parent: ADDRESS; ): QSizeGrip;
 
 <* EXTERNAL Delete_QSizeGrip *>
-PROCEDURE Delete_QSizeGrip ( self: QSizeGrip;
-);
+PROCEDURE Delete_QSizeGrip (self: QSizeGrip; );
 
 <* EXTERNAL QSizeGrip_sizeHint *>
-PROCEDURE QSizeGrip_sizeHint ( self: QSizeGrip;
-): ADDRESS;
+PROCEDURE QSizeGrip_sizeHint (self: QSizeGrip; ): ADDRESS;
 
 <* EXTERNAL QSizeGrip_setVisible *>
-PROCEDURE QSizeGrip_setVisible ( self: QSizeGrip;
-arg2: BOOLEAN;
-);
+PROCEDURE QSizeGrip_setVisible (self: QSizeGrip; arg2: BOOLEAN; );
 
-TYPE
-QSizeGrip = ADDRESS;
+TYPE QSizeGrip = ADDRESS;
 
 END QtSizeGripRaw.

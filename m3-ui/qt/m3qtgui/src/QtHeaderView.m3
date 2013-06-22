@@ -13,618 +13,521 @@ FROM QtSize IMPORT QSize;
 IMPORT QtHeaderViewRaw;
 FROM QtAbstractItemModel IMPORT QAbstractItemModel;
 FROM QtPoint IMPORT QPoint;
-FROM QtNamespace IMPORT Orientation,AlignmentFlag,SortOrder;
+FROM QtNamespace IMPORT Orientation, AlignmentFlag, SortOrder;
 
 
 IMPORT WeakRef;
 
-PROCEDURE Delete_QHeaderView ( self: QHeaderView;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtHeaderViewRaw.Delete_QHeaderView(selfAdr);
-END Delete_QHeaderView;
+PROCEDURE Delete_QHeaderView (self: QHeaderView; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtHeaderViewRaw.Delete_QHeaderView(selfAdr);
+  END Delete_QHeaderView;
 
-PROCEDURE QHeaderView_setModel ( self: QHeaderView;
- model: QAbstractItemModel;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(model.cxxObj,ADDRESS);
-BEGIN
-QtHeaderViewRaw.QHeaderView_setModel(selfAdr, arg2tmp);
-END QHeaderView_setModel;
+PROCEDURE QHeaderView_setModel
+  (self: QHeaderView; model: QAbstractItemModel; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(model.cxxObj, ADDRESS);
+  BEGIN
+    QtHeaderViewRaw.QHeaderView_setModel(selfAdr, arg2tmp);
+  END QHeaderView_setModel;
 
-PROCEDURE QHeaderView_orientation ( self: QHeaderView;
-): Orientation =
-VAR
-ret:INTEGER; result : Orientation;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtHeaderViewRaw.QHeaderView_orientation(selfAdr);
-result := VAL(ret,Orientation);  
-RETURN result;
-END QHeaderView_orientation;
+PROCEDURE QHeaderView_orientation (self: QHeaderView; ): Orientation =
+  VAR
+    ret    : INTEGER;
+    result : Orientation;
+    selfAdr: ADDRESS     := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtHeaderViewRaw.QHeaderView_orientation(selfAdr);
+    result := VAL(ret, Orientation);
+    RETURN result;
+  END QHeaderView_orientation;
 
-PROCEDURE QHeaderView_offset ( self: QHeaderView;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtHeaderViewRaw.QHeaderView_offset(selfAdr);
-END QHeaderView_offset;
+PROCEDURE QHeaderView_offset (self: QHeaderView; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtHeaderViewRaw.QHeaderView_offset(selfAdr);
+  END QHeaderView_offset;
 
-PROCEDURE QHeaderView_length ( self: QHeaderView;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtHeaderViewRaw.QHeaderView_length(selfAdr);
-END QHeaderView_length;
+PROCEDURE QHeaderView_length (self: QHeaderView; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtHeaderViewRaw.QHeaderView_length(selfAdr);
+  END QHeaderView_length;
 
-PROCEDURE QHeaderView_sizeHint ( self: QHeaderView;
-): QSize =
-VAR
-ret:ADDRESS; result : QSize;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtHeaderViewRaw.QHeaderView_sizeHint(selfAdr);
+PROCEDURE QHeaderView_sizeHint (self: QHeaderView; ): QSize =
+  VAR
+    ret    : ADDRESS;
+    result : QSize;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtHeaderViewRaw.QHeaderView_sizeHint(selfAdr);
 
-  result := NEW(QSize);
-  result.cxxObj := ret;
-  result.destroyCxx();
+    result := NEW(QSize);
+    result.cxxObj := ret;
+    result.destroyCxx();
 
-RETURN result;
-END QHeaderView_sizeHint;
+    RETURN result;
+  END QHeaderView_sizeHint;
 
-PROCEDURE QHeaderView_sectionSizeHint ( self: QHeaderView;
-logicalIndex: INTEGER;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtHeaderViewRaw.QHeaderView_sectionSizeHint(selfAdr, logicalIndex);
-END QHeaderView_sectionSizeHint;
+PROCEDURE QHeaderView_sectionSizeHint
+  (self: QHeaderView; logicalIndex: INTEGER; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN
+      QtHeaderViewRaw.QHeaderView_sectionSizeHint(selfAdr, logicalIndex);
+  END QHeaderView_sectionSizeHint;
 
-PROCEDURE QHeaderView_visualIndexAt ( self: QHeaderView;
-position: INTEGER;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtHeaderViewRaw.QHeaderView_visualIndexAt(selfAdr, position);
-END QHeaderView_visualIndexAt;
+PROCEDURE QHeaderView_visualIndexAt
+  (self: QHeaderView; position: INTEGER; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtHeaderViewRaw.QHeaderView_visualIndexAt(selfAdr, position);
+  END QHeaderView_visualIndexAt;
 
-PROCEDURE QHeaderView_logicalIndexAt ( self: QHeaderView;
-position: INTEGER;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtHeaderViewRaw.QHeaderView_logicalIndexAt(selfAdr, position);
-END QHeaderView_logicalIndexAt;
+PROCEDURE QHeaderView_logicalIndexAt
+  (self: QHeaderView; position: INTEGER; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtHeaderViewRaw.QHeaderView_logicalIndexAt(selfAdr, position);
+  END QHeaderView_logicalIndexAt;
 
-PROCEDURE QHeaderView_logicalIndexAt1 ( self: QHeaderView;
-x, y: INTEGER;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtHeaderViewRaw.QHeaderView_logicalIndexAt1(selfAdr, x, y);
-END QHeaderView_logicalIndexAt1;
+PROCEDURE QHeaderView_logicalIndexAt1 (self: QHeaderView; x, y: INTEGER; ):
+  INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtHeaderViewRaw.QHeaderView_logicalIndexAt1(selfAdr, x, y);
+  END QHeaderView_logicalIndexAt1;
 
-PROCEDURE QHeaderView_logicalIndexAt2 ( self: QHeaderView;
- pos: QPoint;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(pos.cxxObj,ADDRESS);
-BEGIN
-RETURN QtHeaderViewRaw.QHeaderView_logicalIndexAt2(selfAdr, arg2tmp);
-END QHeaderView_logicalIndexAt2;
+PROCEDURE QHeaderView_logicalIndexAt2 (self: QHeaderView; pos: QPoint; ):
+  INTEGER =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(pos.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtHeaderViewRaw.QHeaderView_logicalIndexAt2(selfAdr, arg2tmp);
+  END QHeaderView_logicalIndexAt2;
 
-PROCEDURE QHeaderView_sectionSize ( self: QHeaderView;
-logicalIndex: INTEGER;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtHeaderViewRaw.QHeaderView_sectionSize(selfAdr, logicalIndex);
-END QHeaderView_sectionSize;
+PROCEDURE QHeaderView_sectionSize
+  (self: QHeaderView; logicalIndex: INTEGER; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtHeaderViewRaw.QHeaderView_sectionSize(selfAdr, logicalIndex);
+  END QHeaderView_sectionSize;
 
-PROCEDURE QHeaderView_sectionPosition ( self: QHeaderView;
-logicalIndex: INTEGER;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtHeaderViewRaw.QHeaderView_sectionPosition(selfAdr, logicalIndex);
-END QHeaderView_sectionPosition;
+PROCEDURE QHeaderView_sectionPosition
+  (self: QHeaderView; logicalIndex: INTEGER; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN
+      QtHeaderViewRaw.QHeaderView_sectionPosition(selfAdr, logicalIndex);
+  END QHeaderView_sectionPosition;
 
-PROCEDURE QHeaderView_sectionViewportPosition ( self: QHeaderView;
-logicalIndex: INTEGER;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtHeaderViewRaw.QHeaderView_sectionViewportPosition(selfAdr, logicalIndex);
-END QHeaderView_sectionViewportPosition;
+PROCEDURE QHeaderView_sectionViewportPosition
+  (self: QHeaderView; logicalIndex: INTEGER; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtHeaderViewRaw.QHeaderView_sectionViewportPosition(
+             selfAdr, logicalIndex);
+  END QHeaderView_sectionViewportPosition;
 
-PROCEDURE QHeaderView_moveSection ( self: QHeaderView;
-from, to: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtHeaderViewRaw.QHeaderView_moveSection(selfAdr, from, to);
-END QHeaderView_moveSection;
+PROCEDURE QHeaderView_moveSection
+  (self: QHeaderView; from, to: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtHeaderViewRaw.QHeaderView_moveSection(selfAdr, from, to);
+  END QHeaderView_moveSection;
 
-PROCEDURE QHeaderView_swapSections ( self: QHeaderView;
-first, second: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtHeaderViewRaw.QHeaderView_swapSections(selfAdr, first, second);
-END QHeaderView_swapSections;
+PROCEDURE QHeaderView_swapSections
+  (self: QHeaderView; first, second: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtHeaderViewRaw.QHeaderView_swapSections(selfAdr, first, second);
+  END QHeaderView_swapSections;
 
-PROCEDURE QHeaderView_resizeSection ( self: QHeaderView;
-logicalIndex, size: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtHeaderViewRaw.QHeaderView_resizeSection(selfAdr, logicalIndex, size);
-END QHeaderView_resizeSection;
+PROCEDURE QHeaderView_resizeSection
+  (self: QHeaderView; logicalIndex, size: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtHeaderViewRaw.QHeaderView_resizeSection(selfAdr, logicalIndex, size);
+  END QHeaderView_resizeSection;
 
-PROCEDURE QHeaderView_resizeSections ( self: QHeaderView;
-mode: ResizeMode;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtHeaderViewRaw.QHeaderView_resizeSections(selfAdr, ORD(mode));
-END QHeaderView_resizeSections;
+PROCEDURE QHeaderView_resizeSections
+  (self: QHeaderView; mode: ResizeMode; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtHeaderViewRaw.QHeaderView_resizeSections(selfAdr, ORD(mode));
+  END QHeaderView_resizeSections;
 
-PROCEDURE QHeaderView_isSectionHidden ( self: QHeaderView;
-logicalIndex: INTEGER;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtHeaderViewRaw.QHeaderView_isSectionHidden(selfAdr, logicalIndex);
-END QHeaderView_isSectionHidden;
+PROCEDURE QHeaderView_isSectionHidden
+  (self: QHeaderView; logicalIndex: INTEGER; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN
+      QtHeaderViewRaw.QHeaderView_isSectionHidden(selfAdr, logicalIndex);
+  END QHeaderView_isSectionHidden;
 
-PROCEDURE QHeaderView_setSectionHidden ( self: QHeaderView;
-logicalIndex: INTEGER;
-hide: BOOLEAN;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtHeaderViewRaw.QHeaderView_setSectionHidden(selfAdr, logicalIndex, hide);
-END QHeaderView_setSectionHidden;
+PROCEDURE QHeaderView_setSectionHidden
+  (self: QHeaderView; logicalIndex: INTEGER; hide: BOOLEAN; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtHeaderViewRaw.QHeaderView_setSectionHidden(
+      selfAdr, logicalIndex, hide);
+  END QHeaderView_setSectionHidden;
 
-PROCEDURE QHeaderView_hiddenSectionCount ( self: QHeaderView;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtHeaderViewRaw.QHeaderView_hiddenSectionCount(selfAdr);
-END QHeaderView_hiddenSectionCount;
+PROCEDURE QHeaderView_hiddenSectionCount (self: QHeaderView; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtHeaderViewRaw.QHeaderView_hiddenSectionCount(selfAdr);
+  END QHeaderView_hiddenSectionCount;
 
-PROCEDURE QHeaderView_hideSection ( self: QHeaderView;
-logicalIndex: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtHeaderViewRaw.QHeaderView_hideSection(selfAdr, logicalIndex);
-END QHeaderView_hideSection;
+PROCEDURE QHeaderView_hideSection
+  (self: QHeaderView; logicalIndex: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtHeaderViewRaw.QHeaderView_hideSection(selfAdr, logicalIndex);
+  END QHeaderView_hideSection;
 
-PROCEDURE QHeaderView_showSection ( self: QHeaderView;
-logicalIndex: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtHeaderViewRaw.QHeaderView_showSection(selfAdr, logicalIndex);
-END QHeaderView_showSection;
+PROCEDURE QHeaderView_showSection
+  (self: QHeaderView; logicalIndex: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtHeaderViewRaw.QHeaderView_showSection(selfAdr, logicalIndex);
+  END QHeaderView_showSection;
 
-PROCEDURE QHeaderView_count ( self: QHeaderView;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtHeaderViewRaw.QHeaderView_count(selfAdr);
-END QHeaderView_count;
+PROCEDURE QHeaderView_count (self: QHeaderView; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtHeaderViewRaw.QHeaderView_count(selfAdr);
+  END QHeaderView_count;
 
-PROCEDURE QHeaderView_visualIndex ( self: QHeaderView;
-logicalIndex: INTEGER;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtHeaderViewRaw.QHeaderView_visualIndex(selfAdr, logicalIndex);
-END QHeaderView_visualIndex;
+PROCEDURE QHeaderView_visualIndex
+  (self: QHeaderView; logicalIndex: INTEGER; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtHeaderViewRaw.QHeaderView_visualIndex(selfAdr, logicalIndex);
+  END QHeaderView_visualIndex;
 
-PROCEDURE QHeaderView_logicalIndex ( self: QHeaderView;
-visualIndex: INTEGER;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtHeaderViewRaw.QHeaderView_logicalIndex(selfAdr, visualIndex);
-END QHeaderView_logicalIndex;
+PROCEDURE QHeaderView_logicalIndex
+  (self: QHeaderView; visualIndex: INTEGER; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtHeaderViewRaw.QHeaderView_logicalIndex(selfAdr, visualIndex);
+  END QHeaderView_logicalIndex;
 
-PROCEDURE QHeaderView_setMovable ( self: QHeaderView;
-movable: BOOLEAN;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtHeaderViewRaw.QHeaderView_setMovable(selfAdr, movable);
-END QHeaderView_setMovable;
+PROCEDURE QHeaderView_setMovable (self: QHeaderView; movable: BOOLEAN; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtHeaderViewRaw.QHeaderView_setMovable(selfAdr, movable);
+  END QHeaderView_setMovable;
 
-PROCEDURE QHeaderView_isMovable ( self: QHeaderView;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtHeaderViewRaw.QHeaderView_isMovable(selfAdr);
-END QHeaderView_isMovable;
+PROCEDURE QHeaderView_isMovable (self: QHeaderView; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtHeaderViewRaw.QHeaderView_isMovable(selfAdr);
+  END QHeaderView_isMovable;
 
-PROCEDURE QHeaderView_setClickable ( self: QHeaderView;
-clickable: BOOLEAN;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtHeaderViewRaw.QHeaderView_setClickable(selfAdr, clickable);
-END QHeaderView_setClickable;
+PROCEDURE QHeaderView_setClickable
+  (self: QHeaderView; clickable: BOOLEAN; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtHeaderViewRaw.QHeaderView_setClickable(selfAdr, clickable);
+  END QHeaderView_setClickable;
 
-PROCEDURE QHeaderView_isClickable ( self: QHeaderView;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtHeaderViewRaw.QHeaderView_isClickable(selfAdr);
-END QHeaderView_isClickable;
+PROCEDURE QHeaderView_isClickable (self: QHeaderView; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtHeaderViewRaw.QHeaderView_isClickable(selfAdr);
+  END QHeaderView_isClickable;
 
-PROCEDURE QHeaderView_setHighlightSections ( self: QHeaderView;
-highlight: BOOLEAN;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtHeaderViewRaw.QHeaderView_setHighlightSections(selfAdr, highlight);
-END QHeaderView_setHighlightSections;
+PROCEDURE QHeaderView_setHighlightSections
+  (self: QHeaderView; highlight: BOOLEAN; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtHeaderViewRaw.QHeaderView_setHighlightSections(selfAdr, highlight);
+  END QHeaderView_setHighlightSections;
 
-PROCEDURE QHeaderView_highlightSections ( self: QHeaderView;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtHeaderViewRaw.QHeaderView_highlightSections(selfAdr);
-END QHeaderView_highlightSections;
+PROCEDURE QHeaderView_highlightSections (self: QHeaderView; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtHeaderViewRaw.QHeaderView_highlightSections(selfAdr);
+  END QHeaderView_highlightSections;
 
-PROCEDURE QHeaderView_setResizeMode ( self: QHeaderView;
-mode: ResizeMode;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtHeaderViewRaw.QHeaderView_setResizeMode(selfAdr, ORD(mode));
-END QHeaderView_setResizeMode;
+PROCEDURE QHeaderView_setResizeMode
+  (self: QHeaderView; mode: ResizeMode; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtHeaderViewRaw.QHeaderView_setResizeMode(selfAdr, ORD(mode));
+  END QHeaderView_setResizeMode;
 
-PROCEDURE QHeaderView_setResizeMode1 ( self: QHeaderView;
-logicalIndex: INTEGER;
-mode: ResizeMode;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtHeaderViewRaw.QHeaderView_setResizeMode1(selfAdr, logicalIndex, ORD(mode));
-END QHeaderView_setResizeMode1;
+PROCEDURE QHeaderView_setResizeMode1
+  (self: QHeaderView; logicalIndex: INTEGER; mode: ResizeMode; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtHeaderViewRaw.QHeaderView_setResizeMode1(
+      selfAdr, logicalIndex, ORD(mode));
+  END QHeaderView_setResizeMode1;
 
-PROCEDURE QHeaderView_resizeMode ( self: QHeaderView;
-logicalIndex: INTEGER;
-): ResizeMode =
-VAR
-ret:INTEGER; result : ResizeMode;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtHeaderViewRaw.QHeaderView_resizeMode(selfAdr, logicalIndex);
-result := VAL(ret,ResizeMode);  
-RETURN result;
-END QHeaderView_resizeMode;
+PROCEDURE QHeaderView_resizeMode
+  (self: QHeaderView; logicalIndex: INTEGER; ): ResizeMode =
+  VAR
+    ret    : INTEGER;
+    result : ResizeMode;
+    selfAdr: ADDRESS    := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtHeaderViewRaw.QHeaderView_resizeMode(selfAdr, logicalIndex);
+    result := VAL(ret, ResizeMode);
+    RETURN result;
+  END QHeaderView_resizeMode;
 
-PROCEDURE QHeaderView_stretchSectionCount ( self: QHeaderView;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtHeaderViewRaw.QHeaderView_stretchSectionCount(selfAdr);
-END QHeaderView_stretchSectionCount;
+PROCEDURE QHeaderView_stretchSectionCount (self: QHeaderView; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtHeaderViewRaw.QHeaderView_stretchSectionCount(selfAdr);
+  END QHeaderView_stretchSectionCount;
 
-PROCEDURE QHeaderView_setSortIndicatorShown ( self: QHeaderView;
-show: BOOLEAN;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtHeaderViewRaw.QHeaderView_setSortIndicatorShown(selfAdr, show);
-END QHeaderView_setSortIndicatorShown;
+PROCEDURE QHeaderView_setSortIndicatorShown
+  (self: QHeaderView; show: BOOLEAN; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtHeaderViewRaw.QHeaderView_setSortIndicatorShown(selfAdr, show);
+  END QHeaderView_setSortIndicatorShown;
 
-PROCEDURE QHeaderView_isSortIndicatorShown ( self: QHeaderView;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtHeaderViewRaw.QHeaderView_isSortIndicatorShown(selfAdr);
-END QHeaderView_isSortIndicatorShown;
+PROCEDURE QHeaderView_isSortIndicatorShown (self: QHeaderView; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtHeaderViewRaw.QHeaderView_isSortIndicatorShown(selfAdr);
+  END QHeaderView_isSortIndicatorShown;
 
-PROCEDURE QHeaderView_setSortIndicator ( self: QHeaderView;
-logicalIndex: INTEGER;
-order: SortOrder;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtHeaderViewRaw.QHeaderView_setSortIndicator(selfAdr, logicalIndex, ORD(order));
-END QHeaderView_setSortIndicator;
+PROCEDURE QHeaderView_setSortIndicator
+  (self: QHeaderView; logicalIndex: INTEGER; order: SortOrder; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtHeaderViewRaw.QHeaderView_setSortIndicator(
+      selfAdr, logicalIndex, ORD(order));
+  END QHeaderView_setSortIndicator;
 
-PROCEDURE QHeaderView_sortIndicatorSection ( self: QHeaderView;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtHeaderViewRaw.QHeaderView_sortIndicatorSection(selfAdr);
-END QHeaderView_sortIndicatorSection;
+PROCEDURE QHeaderView_sortIndicatorSection (self: QHeaderView; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtHeaderViewRaw.QHeaderView_sortIndicatorSection(selfAdr);
+  END QHeaderView_sortIndicatorSection;
 
-PROCEDURE QHeaderView_sortIndicatorOrder ( self: QHeaderView;
-): SortOrder =
-VAR
-ret:INTEGER; result : SortOrder;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtHeaderViewRaw.QHeaderView_sortIndicatorOrder(selfAdr);
-result := VAL(ret,SortOrder);  
-RETURN result;
-END QHeaderView_sortIndicatorOrder;
+PROCEDURE QHeaderView_sortIndicatorOrder (self: QHeaderView; ): SortOrder =
+  VAR
+    ret    : INTEGER;
+    result : SortOrder;
+    selfAdr: ADDRESS   := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtHeaderViewRaw.QHeaderView_sortIndicatorOrder(selfAdr);
+    result := VAL(ret, SortOrder);
+    RETURN result;
+  END QHeaderView_sortIndicatorOrder;
 
-PROCEDURE QHeaderView_stretchLastSection ( self: QHeaderView;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtHeaderViewRaw.QHeaderView_stretchLastSection(selfAdr);
-END QHeaderView_stretchLastSection;
+PROCEDURE QHeaderView_stretchLastSection (self: QHeaderView; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtHeaderViewRaw.QHeaderView_stretchLastSection(selfAdr);
+  END QHeaderView_stretchLastSection;
 
-PROCEDURE QHeaderView_setStretchLastSection ( self: QHeaderView;
-stretch: BOOLEAN;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtHeaderViewRaw.QHeaderView_setStretchLastSection(selfAdr, stretch);
-END QHeaderView_setStretchLastSection;
+PROCEDURE QHeaderView_setStretchLastSection
+  (self: QHeaderView; stretch: BOOLEAN; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtHeaderViewRaw.QHeaderView_setStretchLastSection(selfAdr, stretch);
+  END QHeaderView_setStretchLastSection;
 
-PROCEDURE QHeaderView_cascadingSectionResizes ( self: QHeaderView;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtHeaderViewRaw.QHeaderView_cascadingSectionResizes(selfAdr);
-END QHeaderView_cascadingSectionResizes;
+PROCEDURE QHeaderView_cascadingSectionResizes (self: QHeaderView; ):
+  BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtHeaderViewRaw.QHeaderView_cascadingSectionResizes(selfAdr);
+  END QHeaderView_cascadingSectionResizes;
 
-PROCEDURE QHeaderView_setCascadingSectionResizes ( self: QHeaderView;
-enable: BOOLEAN;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtHeaderViewRaw.QHeaderView_setCascadingSectionResizes(selfAdr, enable);
-END QHeaderView_setCascadingSectionResizes;
+PROCEDURE QHeaderView_setCascadingSectionResizes
+  (self: QHeaderView; enable: BOOLEAN; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtHeaderViewRaw.QHeaderView_setCascadingSectionResizes(selfAdr, enable);
+  END QHeaderView_setCascadingSectionResizes;
 
-PROCEDURE QHeaderView_defaultSectionSize ( self: QHeaderView;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtHeaderViewRaw.QHeaderView_defaultSectionSize(selfAdr);
-END QHeaderView_defaultSectionSize;
+PROCEDURE QHeaderView_defaultSectionSize (self: QHeaderView; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtHeaderViewRaw.QHeaderView_defaultSectionSize(selfAdr);
+  END QHeaderView_defaultSectionSize;
 
-PROCEDURE QHeaderView_setDefaultSectionSize ( self: QHeaderView;
-size: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtHeaderViewRaw.QHeaderView_setDefaultSectionSize(selfAdr, size);
-END QHeaderView_setDefaultSectionSize;
+PROCEDURE QHeaderView_setDefaultSectionSize
+  (self: QHeaderView; size: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtHeaderViewRaw.QHeaderView_setDefaultSectionSize(selfAdr, size);
+  END QHeaderView_setDefaultSectionSize;
 
-PROCEDURE QHeaderView_minimumSectionSize ( self: QHeaderView;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtHeaderViewRaw.QHeaderView_minimumSectionSize(selfAdr);
-END QHeaderView_minimumSectionSize;
+PROCEDURE QHeaderView_minimumSectionSize (self: QHeaderView; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtHeaderViewRaw.QHeaderView_minimumSectionSize(selfAdr);
+  END QHeaderView_minimumSectionSize;
 
-PROCEDURE QHeaderView_setMinimumSectionSize ( self: QHeaderView;
-size: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtHeaderViewRaw.QHeaderView_setMinimumSectionSize(selfAdr, size);
-END QHeaderView_setMinimumSectionSize;
+PROCEDURE QHeaderView_setMinimumSectionSize
+  (self: QHeaderView; size: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtHeaderViewRaw.QHeaderView_setMinimumSectionSize(selfAdr, size);
+  END QHeaderView_setMinimumSectionSize;
 
-PROCEDURE QHeaderView_defaultAlignment ( self: QHeaderView;
-): AlignmentFlag =
-VAR
-ret:INTEGER; result : AlignmentFlag;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtHeaderViewRaw.QHeaderView_defaultAlignment(selfAdr);
-result := VAL(ret,AlignmentFlag);  
-RETURN result;
-END QHeaderView_defaultAlignment;
+PROCEDURE QHeaderView_defaultAlignment (self: QHeaderView; ):
+  AlignmentFlag =
+  VAR
+    ret    : INTEGER;
+    result : AlignmentFlag;
+    selfAdr: ADDRESS       := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtHeaderViewRaw.QHeaderView_defaultAlignment(selfAdr);
+    result := VAL(ret, AlignmentFlag);
+    RETURN result;
+  END QHeaderView_defaultAlignment;
 
-PROCEDURE QHeaderView_setDefaultAlignment ( self: QHeaderView;
-alignment: AlignmentFlag;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtHeaderViewRaw.QHeaderView_setDefaultAlignment(selfAdr, ORD(alignment));
-END QHeaderView_setDefaultAlignment;
+PROCEDURE QHeaderView_setDefaultAlignment
+  (self: QHeaderView; alignment: AlignmentFlag; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtHeaderViewRaw.QHeaderView_setDefaultAlignment(
+      selfAdr, ORD(alignment));
+  END QHeaderView_setDefaultAlignment;
 
-PROCEDURE QHeaderView_doItemsLayout ( self: QHeaderView;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtHeaderViewRaw.QHeaderView_doItemsLayout(selfAdr);
-END QHeaderView_doItemsLayout;
+PROCEDURE QHeaderView_doItemsLayout (self: QHeaderView; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtHeaderViewRaw.QHeaderView_doItemsLayout(selfAdr);
+  END QHeaderView_doItemsLayout;
 
-PROCEDURE QHeaderView_sectionsMoved ( self: QHeaderView;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtHeaderViewRaw.QHeaderView_sectionsMoved(selfAdr);
-END QHeaderView_sectionsMoved;
+PROCEDURE QHeaderView_sectionsMoved (self: QHeaderView; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtHeaderViewRaw.QHeaderView_sectionsMoved(selfAdr);
+  END QHeaderView_sectionsMoved;
 
-PROCEDURE QHeaderView_sectionsHidden ( self: QHeaderView;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtHeaderViewRaw.QHeaderView_sectionsHidden(selfAdr);
-END QHeaderView_sectionsHidden;
+PROCEDURE QHeaderView_sectionsHidden (self: QHeaderView; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtHeaderViewRaw.QHeaderView_sectionsHidden(selfAdr);
+  END QHeaderView_sectionsHidden;
 
-PROCEDURE QHeaderView_reset ( self: QHeaderView;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtHeaderViewRaw.QHeaderView_reset(selfAdr);
-END QHeaderView_reset;
+PROCEDURE QHeaderView_reset (self: QHeaderView; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtHeaderViewRaw.QHeaderView_reset(selfAdr);
+  END QHeaderView_reset;
 
-PROCEDURE QHeaderView_setOffset ( self: QHeaderView;
-offset: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtHeaderViewRaw.QHeaderView_setOffset(selfAdr, offset);
-END QHeaderView_setOffset;
+PROCEDURE QHeaderView_setOffset (self: QHeaderView; offset: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtHeaderViewRaw.QHeaderView_setOffset(selfAdr, offset);
+  END QHeaderView_setOffset;
 
-PROCEDURE QHeaderView_setOffsetToSectionPosition ( self: QHeaderView;
-visualIndex: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtHeaderViewRaw.QHeaderView_setOffsetToSectionPosition(selfAdr, visualIndex);
-END QHeaderView_setOffsetToSectionPosition;
+PROCEDURE QHeaderView_setOffsetToSectionPosition
+  (self: QHeaderView; visualIndex: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtHeaderViewRaw.QHeaderView_setOffsetToSectionPosition(
+      selfAdr, visualIndex);
+  END QHeaderView_setOffsetToSectionPosition;
 
-PROCEDURE QHeaderView_setOffsetToLastSection ( self: QHeaderView;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtHeaderViewRaw.QHeaderView_setOffsetToLastSection(selfAdr);
-END QHeaderView_setOffsetToLastSection;
+PROCEDURE QHeaderView_setOffsetToLastSection (self: QHeaderView; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtHeaderViewRaw.QHeaderView_setOffsetToLastSection(selfAdr);
+  END QHeaderView_setOffsetToLastSection;
 
-PROCEDURE QHeaderView_headerDataChanged ( self: QHeaderView;
-orientation: Orientation;
-logicalFirst, logicalLast: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtHeaderViewRaw.QHeaderView_headerDataChanged(selfAdr, ORD(orientation), logicalFirst, logicalLast);
-END QHeaderView_headerDataChanged;
+PROCEDURE QHeaderView_headerDataChanged
+  (self                     : QHeaderView;
+   orientation              : Orientation;
+   logicalFirst, logicalLast: INTEGER;     ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtHeaderViewRaw.QHeaderView_headerDataChanged(
+      selfAdr, ORD(orientation), logicalFirst, logicalLast);
+  END QHeaderView_headerDataChanged;
 
-PROCEDURE Cleanup_QHeaderView(<*UNUSED*>READONLY self: WeakRef.T; ref: REFANY) =
-VAR obj : QHeaderView := ref;
-BEGIN
-  Delete_QHeaderView(obj);
- END Cleanup_QHeaderView;
+PROCEDURE Cleanup_QHeaderView
+  (<* UNUSED *> READONLY self: WeakRef.T; ref: REFANY) =
+  VAR obj: QHeaderView := ref;
+  BEGIN
+    Delete_QHeaderView(obj);
+  END Cleanup_QHeaderView;
 
-PROCEDURE Destroy_QHeaderView(self : QHeaderView) =
-BEGIN
-  EVAL WeakRef.FromRef(self,Cleanup_QHeaderView);
-END Destroy_QHeaderView;
+PROCEDURE Destroy_QHeaderView (self: QHeaderView) =
+  BEGIN
+    EVAL WeakRef.FromRef(self, Cleanup_QHeaderView);
+  END Destroy_QHeaderView;
 
 REVEAL
-QHeaderView =
-QHeaderViewPublic BRANDED OBJECT
-OVERRIDES
-setModel := QHeaderView_setModel;
-orientation := QHeaderView_orientation;
-offset := QHeaderView_offset;
-length := QHeaderView_length;
-sizeHint := QHeaderView_sizeHint;
-sectionSizeHint := QHeaderView_sectionSizeHint;
-visualIndexAt := QHeaderView_visualIndexAt;
-logicalIndexAt := QHeaderView_logicalIndexAt;
-logicalIndexAt1 := QHeaderView_logicalIndexAt1;
-logicalIndexAt2 := QHeaderView_logicalIndexAt2;
-sectionSize := QHeaderView_sectionSize;
-sectionPosition := QHeaderView_sectionPosition;
-sectionViewportPosition := QHeaderView_sectionViewportPosition;
-moveSection := QHeaderView_moveSection;
-swapSections := QHeaderView_swapSections;
-resizeSection := QHeaderView_resizeSection;
-resizeSections := QHeaderView_resizeSections;
-isSectionHidden := QHeaderView_isSectionHidden;
-setSectionHidden := QHeaderView_setSectionHidden;
-hiddenSectionCount := QHeaderView_hiddenSectionCount;
-hideSection := QHeaderView_hideSection;
-showSection := QHeaderView_showSection;
-count := QHeaderView_count;
-visualIndex := QHeaderView_visualIndex;
-logicalIndex := QHeaderView_logicalIndex;
-setMovable := QHeaderView_setMovable;
-isMovable := QHeaderView_isMovable;
-setClickable := QHeaderView_setClickable;
-isClickable := QHeaderView_isClickable;
-setHighlightSections := QHeaderView_setHighlightSections;
-highlightSections := QHeaderView_highlightSections;
-setResizeMode := QHeaderView_setResizeMode;
-setResizeMode1 := QHeaderView_setResizeMode1;
-resizeMode := QHeaderView_resizeMode;
-stretchSectionCount := QHeaderView_stretchSectionCount;
-setSortIndicatorShown := QHeaderView_setSortIndicatorShown;
-isSortIndicatorShown := QHeaderView_isSortIndicatorShown;
-setSortIndicator := QHeaderView_setSortIndicator;
-sortIndicatorSection := QHeaderView_sortIndicatorSection;
-sortIndicatorOrder := QHeaderView_sortIndicatorOrder;
-stretchLastSection := QHeaderView_stretchLastSection;
-setStretchLastSection := QHeaderView_setStretchLastSection;
-cascadingSectionResizes := QHeaderView_cascadingSectionResizes;
-setCascadingSectionResizes := QHeaderView_setCascadingSectionResizes;
-defaultSectionSize := QHeaderView_defaultSectionSize;
-setDefaultSectionSize := QHeaderView_setDefaultSectionSize;
-minimumSectionSize := QHeaderView_minimumSectionSize;
-setMinimumSectionSize := QHeaderView_setMinimumSectionSize;
-defaultAlignment := QHeaderView_defaultAlignment;
-setDefaultAlignment := QHeaderView_setDefaultAlignment;
-doItemsLayout := QHeaderView_doItemsLayout;
-sectionsMoved := QHeaderView_sectionsMoved;
-sectionsHidden := QHeaderView_sectionsHidden;
-reset := QHeaderView_reset;
-setOffset := QHeaderView_setOffset;
-setOffsetToSectionPosition := QHeaderView_setOffsetToSectionPosition;
-setOffsetToLastSection := QHeaderView_setOffsetToLastSection;
-headerDataChanged := QHeaderView_headerDataChanged;
-destroyCxx := Destroy_QHeaderView;
-END;
+  QHeaderView =
+    QHeaderViewPublic BRANDED OBJECT
+    OVERRIDES
+      setModel                   := QHeaderView_setModel;
+      orientation                := QHeaderView_orientation;
+      offset                     := QHeaderView_offset;
+      length                     := QHeaderView_length;
+      sizeHint                   := QHeaderView_sizeHint;
+      sectionSizeHint            := QHeaderView_sectionSizeHint;
+      visualIndexAt              := QHeaderView_visualIndexAt;
+      logicalIndexAt             := QHeaderView_logicalIndexAt;
+      logicalIndexAt1            := QHeaderView_logicalIndexAt1;
+      logicalIndexAt2            := QHeaderView_logicalIndexAt2;
+      sectionSize                := QHeaderView_sectionSize;
+      sectionPosition            := QHeaderView_sectionPosition;
+      sectionViewportPosition    := QHeaderView_sectionViewportPosition;
+      moveSection                := QHeaderView_moveSection;
+      swapSections               := QHeaderView_swapSections;
+      resizeSection              := QHeaderView_resizeSection;
+      resizeSections             := QHeaderView_resizeSections;
+      isSectionHidden            := QHeaderView_isSectionHidden;
+      setSectionHidden           := QHeaderView_setSectionHidden;
+      hiddenSectionCount         := QHeaderView_hiddenSectionCount;
+      hideSection                := QHeaderView_hideSection;
+      showSection                := QHeaderView_showSection;
+      count                      := QHeaderView_count;
+      visualIndex                := QHeaderView_visualIndex;
+      logicalIndex               := QHeaderView_logicalIndex;
+      setMovable                 := QHeaderView_setMovable;
+      isMovable                  := QHeaderView_isMovable;
+      setClickable               := QHeaderView_setClickable;
+      isClickable                := QHeaderView_isClickable;
+      setHighlightSections       := QHeaderView_setHighlightSections;
+      highlightSections          := QHeaderView_highlightSections;
+      setResizeMode              := QHeaderView_setResizeMode;
+      setResizeMode1             := QHeaderView_setResizeMode1;
+      resizeMode                 := QHeaderView_resizeMode;
+      stretchSectionCount        := QHeaderView_stretchSectionCount;
+      setSortIndicatorShown      := QHeaderView_setSortIndicatorShown;
+      isSortIndicatorShown       := QHeaderView_isSortIndicatorShown;
+      setSortIndicator           := QHeaderView_setSortIndicator;
+      sortIndicatorSection       := QHeaderView_sortIndicatorSection;
+      sortIndicatorOrder         := QHeaderView_sortIndicatorOrder;
+      stretchLastSection         := QHeaderView_stretchLastSection;
+      setStretchLastSection      := QHeaderView_setStretchLastSection;
+      cascadingSectionResizes    := QHeaderView_cascadingSectionResizes;
+      setCascadingSectionResizes := QHeaderView_setCascadingSectionResizes;
+      defaultSectionSize         := QHeaderView_defaultSectionSize;
+      setDefaultSectionSize      := QHeaderView_setDefaultSectionSize;
+      minimumSectionSize         := QHeaderView_minimumSectionSize;
+      setMinimumSectionSize      := QHeaderView_setMinimumSectionSize;
+      defaultAlignment           := QHeaderView_defaultAlignment;
+      setDefaultAlignment        := QHeaderView_setDefaultAlignment;
+      doItemsLayout              := QHeaderView_doItemsLayout;
+      sectionsMoved              := QHeaderView_sectionsMoved;
+      sectionsHidden             := QHeaderView_sectionsHidden;
+      reset                      := QHeaderView_reset;
+      setOffset                  := QHeaderView_setOffset;
+      setOffsetToSectionPosition := QHeaderView_setOffsetToSectionPosition;
+      setOffsetToLastSection     := QHeaderView_setOffsetToLastSection;
+      headerDataChanged          := QHeaderView_headerDataChanged;
+      destroyCxx                 := Destroy_QHeaderView;
+    END;
 
 
 BEGIN

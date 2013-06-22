@@ -19,312 +19,310 @@ FROM QtNamespace IMPORT Orientation;
 
 IMPORT WeakRef;
 
-PROCEDURE New_QDialogButtonBox0 (self:QDialogButtonBox; parent: QWidget;
-): QDialogButtonBox =
-VAR
-result : ADDRESS;
-arg1tmp :=  LOOPHOLE(parent.cxxObj,ADDRESS);
-BEGIN
-result := QtDialogButtonBoxRaw.New_QDialogButtonBox0(arg1tmp);
+PROCEDURE New_QDialogButtonBox0
+  (self: QDialogButtonBox; parent: QWidget; ): QDialogButtonBox =
+  VAR
+    result : ADDRESS;
+    arg1tmp          := LOOPHOLE(parent.cxxObj, ADDRESS);
+  BEGIN
+    result := QtDialogButtonBoxRaw.New_QDialogButtonBox0(arg1tmp);
 
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QDialogButtonBox);
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QDialogButtonBox);
 
-RETURN self;
-END New_QDialogButtonBox0;
+    RETURN self;
+  END New_QDialogButtonBox0;
 
-PROCEDURE New_QDialogButtonBox1 (self:QDialogButtonBox;): QDialogButtonBox =
-VAR
-result : ADDRESS;
-BEGIN
-result := QtDialogButtonBoxRaw.New_QDialogButtonBox1();
+PROCEDURE New_QDialogButtonBox1 (self: QDialogButtonBox; ):
+  QDialogButtonBox =
+  VAR result: ADDRESS;
+  BEGIN
+    result := QtDialogButtonBoxRaw.New_QDialogButtonBox1();
 
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QDialogButtonBox);
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QDialogButtonBox);
 
-RETURN self;
-END New_QDialogButtonBox1;
+    RETURN self;
+  END New_QDialogButtonBox1;
 
-PROCEDURE New_QDialogButtonBox2 (self:QDialogButtonBox;orientation: Orientation;
- parent: QWidget;
-): QDialogButtonBox =
-VAR
-result : ADDRESS;
-arg2tmp :=  LOOPHOLE(parent.cxxObj,ADDRESS);
-BEGIN
-result := QtDialogButtonBoxRaw.New_QDialogButtonBox2(ORD(orientation), arg2tmp);
+PROCEDURE New_QDialogButtonBox2
+  (self: QDialogButtonBox; orientation: Orientation; parent: QWidget; ):
+  QDialogButtonBox =
+  VAR
+    result : ADDRESS;
+    arg2tmp          := LOOPHOLE(parent.cxxObj, ADDRESS);
+  BEGIN
+    result := QtDialogButtonBoxRaw.New_QDialogButtonBox2(
+                ORD(orientation), arg2tmp);
 
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QDialogButtonBox);
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QDialogButtonBox);
 
-RETURN self;
-END New_QDialogButtonBox2;
+    RETURN self;
+  END New_QDialogButtonBox2;
 
-PROCEDURE New_QDialogButtonBox3 (self:QDialogButtonBox;orientation: Orientation;
-): QDialogButtonBox =
-VAR
-result : ADDRESS;
-BEGIN
-result := QtDialogButtonBoxRaw.New_QDialogButtonBox3(ORD(orientation));
+PROCEDURE New_QDialogButtonBox3
+  (self: QDialogButtonBox; orientation: Orientation; ): QDialogButtonBox =
+  VAR result: ADDRESS;
+  BEGIN
+    result := QtDialogButtonBoxRaw.New_QDialogButtonBox3(ORD(orientation));
 
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QDialogButtonBox);
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QDialogButtonBox);
 
-RETURN self;
-END New_QDialogButtonBox3;
+    RETURN self;
+  END New_QDialogButtonBox3;
 
-PROCEDURE New_QDialogButtonBox4 (self:QDialogButtonBox;buttons: StandardButtons;
-orientation: Orientation;
- parent: QWidget;
-): QDialogButtonBox =
-VAR
-result : ADDRESS;
-arg3tmp :=  LOOPHOLE(parent.cxxObj,ADDRESS);
-BEGIN
-result := QtDialogButtonBoxRaw.New_QDialogButtonBox4(ORD(buttons), ORD(orientation), arg3tmp);
+PROCEDURE New_QDialogButtonBox4 (self       : QDialogButtonBox;
+                                 buttons    : StandardButtons;
+                                 orientation: Orientation;
+                                 parent     : QWidget;          ):
+  QDialogButtonBox =
+  VAR
+    result : ADDRESS;
+    arg3tmp          := LOOPHOLE(parent.cxxObj, ADDRESS);
+  BEGIN
+    result := QtDialogButtonBoxRaw.New_QDialogButtonBox4(
+                ORD(buttons), ORD(orientation), arg3tmp);
 
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QDialogButtonBox);
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QDialogButtonBox);
 
-RETURN self;
-END New_QDialogButtonBox4;
+    RETURN self;
+  END New_QDialogButtonBox4;
 
-PROCEDURE New_QDialogButtonBox5 (self:QDialogButtonBox;buttons: StandardButtons;
-orientation: Orientation;
-): QDialogButtonBox =
-VAR
-result : ADDRESS;
-BEGIN
-result := QtDialogButtonBoxRaw.New_QDialogButtonBox5(ORD(buttons), ORD(orientation));
+PROCEDURE New_QDialogButtonBox5 (self       : QDialogButtonBox;
+                                 buttons    : StandardButtons;
+                                 orientation: Orientation;      ):
+  QDialogButtonBox =
+  VAR result: ADDRESS;
+  BEGIN
+    result := QtDialogButtonBoxRaw.New_QDialogButtonBox5(
+                ORD(buttons), ORD(orientation));
 
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QDialogButtonBox);
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QDialogButtonBox);
 
-RETURN self;
-END New_QDialogButtonBox5;
+    RETURN self;
+  END New_QDialogButtonBox5;
 
-PROCEDURE New_QDialogButtonBox6 (self:QDialogButtonBox;buttons: StandardButtons;
-): QDialogButtonBox =
-VAR
-result : ADDRESS;
-BEGIN
-result := QtDialogButtonBoxRaw.New_QDialogButtonBox6(ORD(buttons));
+PROCEDURE New_QDialogButtonBox6
+  (self: QDialogButtonBox; buttons: StandardButtons; ): QDialogButtonBox =
+  VAR result: ADDRESS;
+  BEGIN
+    result := QtDialogButtonBoxRaw.New_QDialogButtonBox6(ORD(buttons));
 
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QDialogButtonBox);
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QDialogButtonBox);
 
-RETURN self;
-END New_QDialogButtonBox6;
+    RETURN self;
+  END New_QDialogButtonBox6;
 
-PROCEDURE Delete_QDialogButtonBox ( self: QDialogButtonBox;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtDialogButtonBoxRaw.Delete_QDialogButtonBox(selfAdr);
-END Delete_QDialogButtonBox;
+PROCEDURE Delete_QDialogButtonBox (self: QDialogButtonBox; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtDialogButtonBoxRaw.Delete_QDialogButtonBox(selfAdr);
+  END Delete_QDialogButtonBox;
 
-PROCEDURE QDialogButtonBox_setOrientation ( self: QDialogButtonBox;
-orientation: Orientation;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtDialogButtonBoxRaw.QDialogButtonBox_setOrientation(selfAdr, ORD(orientation));
-END QDialogButtonBox_setOrientation;
+PROCEDURE QDialogButtonBox_setOrientation
+  (self: QDialogButtonBox; orientation: Orientation; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtDialogButtonBoxRaw.QDialogButtonBox_setOrientation(
+      selfAdr, ORD(orientation));
+  END QDialogButtonBox_setOrientation;
 
-PROCEDURE QDialogButtonBox_orientation ( self: QDialogButtonBox;
-): Orientation =
-VAR
-ret:INTEGER; result : Orientation;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtDialogButtonBoxRaw.QDialogButtonBox_orientation(selfAdr);
-result := VAL(ret,Orientation);  
-RETURN result;
-END QDialogButtonBox_orientation;
+PROCEDURE QDialogButtonBox_orientation (self: QDialogButtonBox; ):
+  Orientation =
+  VAR
+    ret    : INTEGER;
+    result : Orientation;
+    selfAdr: ADDRESS     := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtDialogButtonBoxRaw.QDialogButtonBox_orientation(selfAdr);
+    result := VAL(ret, Orientation);
+    RETURN result;
+  END QDialogButtonBox_orientation;
 
-PROCEDURE QDialogButtonBox_addButton ( self: QDialogButtonBox;
- button: QAbstractButton;
-role: ButtonRole;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(button.cxxObj,ADDRESS);
-BEGIN
-QtDialogButtonBoxRaw.QDialogButtonBox_addButton(selfAdr, arg2tmp, ORD(role));
-END QDialogButtonBox_addButton;
+PROCEDURE QDialogButtonBox_addButton
+  (self: QDialogButtonBox; button: QAbstractButton; role: ButtonRole; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(button.cxxObj, ADDRESS);
+  BEGIN
+    QtDialogButtonBoxRaw.QDialogButtonBox_addButton(
+      selfAdr, arg2tmp, ORD(role));
+  END QDialogButtonBox_addButton;
 
-PROCEDURE QDialogButtonBox_addButton1 ( self: QDialogButtonBox;
- text: TEXT;
-role: ButtonRole;
-): QPushButton =
-VAR
-ret:ADDRESS; result : QPushButton;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-qstr_text := NEW(QString).initQString(text);
-arg2tmp :=  LOOPHOLE(qstr_text.cxxObj,ADDRESS);
-BEGIN
-ret := QtDialogButtonBoxRaw.QDialogButtonBox_addButton1(selfAdr, arg2tmp, ORD(role));
+PROCEDURE QDialogButtonBox_addButton1
+  (self: QDialogButtonBox; text: TEXT; role: ButtonRole; ): QPushButton =
+  VAR
+    ret      : ADDRESS;
+    result   : QPushButton;
+    selfAdr  : ADDRESS     := LOOPHOLE(self.cxxObj, ADDRESS);
+    qstr_text              := NEW(QString).initQString(text);
+    arg2tmp                := LOOPHOLE(qstr_text.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtDialogButtonBoxRaw.QDialogButtonBox_addButton1(
+             selfAdr, arg2tmp, ORD(role));
 
-  result := NEW(QPushButton);
-  result.cxxObj := ret;
-  result.destroyCxx();
+    result := NEW(QPushButton);
+    result.cxxObj := ret;
+    result.destroyCxx();
 
-RETURN result;
-END QDialogButtonBox_addButton1;
+    RETURN result;
+  END QDialogButtonBox_addButton1;
 
-PROCEDURE QDialogButtonBox_addButton2 ( self: QDialogButtonBox;
-button: StandardButton;
-): QPushButton =
-VAR
-ret:ADDRESS; result : QPushButton;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtDialogButtonBoxRaw.QDialogButtonBox_addButton2(selfAdr, ORD(button));
+PROCEDURE QDialogButtonBox_addButton2
+  (self: QDialogButtonBox; button: StandardButton; ): QPushButton =
+  VAR
+    ret    : ADDRESS;
+    result : QPushButton;
+    selfAdr: ADDRESS     := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtDialogButtonBoxRaw.QDialogButtonBox_addButton2(
+             selfAdr, ORD(button));
 
-  result := NEW(QPushButton);
-  result.cxxObj := ret;
-  result.destroyCxx();
+    result := NEW(QPushButton);
+    result.cxxObj := ret;
+    result.destroyCxx();
 
-RETURN result;
-END QDialogButtonBox_addButton2;
+    RETURN result;
+  END QDialogButtonBox_addButton2;
 
-PROCEDURE QDialogButtonBox_removeButton ( self: QDialogButtonBox;
- button: QAbstractButton;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(button.cxxObj,ADDRESS);
-BEGIN
-QtDialogButtonBoxRaw.QDialogButtonBox_removeButton(selfAdr, arg2tmp);
-END QDialogButtonBox_removeButton;
+PROCEDURE QDialogButtonBox_removeButton
+  (self: QDialogButtonBox; button: QAbstractButton; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(button.cxxObj, ADDRESS);
+  BEGIN
+    QtDialogButtonBoxRaw.QDialogButtonBox_removeButton(selfAdr, arg2tmp);
+  END QDialogButtonBox_removeButton;
 
-PROCEDURE QDialogButtonBox_clear ( self: QDialogButtonBox;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtDialogButtonBoxRaw.QDialogButtonBox_clear(selfAdr);
-END QDialogButtonBox_clear;
+PROCEDURE QDialogButtonBox_clear (self: QDialogButtonBox; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtDialogButtonBoxRaw.QDialogButtonBox_clear(selfAdr);
+  END QDialogButtonBox_clear;
 
-PROCEDURE QDialogButtonBox_buttonRole ( self: QDialogButtonBox;
- button: QAbstractButton;
-): ButtonRole =
-VAR
-ret:INTEGER; result : ButtonRole;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(button.cxxObj,ADDRESS);
-BEGIN
-ret := QtDialogButtonBoxRaw.QDialogButtonBox_buttonRole(selfAdr, arg2tmp);
-result := VAL(ret,ButtonRole);  
-RETURN result;
-END QDialogButtonBox_buttonRole;
+PROCEDURE QDialogButtonBox_buttonRole
+  (self: QDialogButtonBox; button: QAbstractButton; ): ButtonRole =
+  VAR
+    ret    : INTEGER;
+    result : ButtonRole;
+    selfAdr: ADDRESS    := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp             := LOOPHOLE(button.cxxObj, ADDRESS);
+  BEGIN
+    ret :=
+      QtDialogButtonBoxRaw.QDialogButtonBox_buttonRole(selfAdr, arg2tmp);
+    result := VAL(ret, ButtonRole);
+    RETURN result;
+  END QDialogButtonBox_buttonRole;
 
-PROCEDURE QDialogButtonBox_setStandardButtons ( self: QDialogButtonBox;
-buttons: StandardButtons;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtDialogButtonBoxRaw.QDialogButtonBox_setStandardButtons(selfAdr, ORD(buttons));
-END QDialogButtonBox_setStandardButtons;
+PROCEDURE QDialogButtonBox_setStandardButtons
+  (self: QDialogButtonBox; buttons: StandardButtons; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtDialogButtonBoxRaw.QDialogButtonBox_setStandardButtons(
+      selfAdr, ORD(buttons));
+  END QDialogButtonBox_setStandardButtons;
 
-PROCEDURE QDialogButtonBox_standardButtons ( self: QDialogButtonBox;
-): StandardButtons =
-VAR
-ret:INTEGER; result : StandardButtons;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtDialogButtonBoxRaw.QDialogButtonBox_standardButtons(selfAdr);
-result := VAL(ret,StandardButtons);  
-RETURN result;
-END QDialogButtonBox_standardButtons;
+PROCEDURE QDialogButtonBox_standardButtons (self: QDialogButtonBox; ):
+  StandardButtons =
+  VAR
+    ret    : INTEGER;
+    result : StandardButtons;
+    selfAdr: ADDRESS         := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtDialogButtonBoxRaw.QDialogButtonBox_standardButtons(selfAdr);
+    result := VAL(ret, StandardButtons);
+    RETURN result;
+  END QDialogButtonBox_standardButtons;
 
-PROCEDURE QDialogButtonBox_standardButton ( self: QDialogButtonBox;
- button: QAbstractButton;
-): StandardButton =
-VAR
-ret:INTEGER; result : StandardButton;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(button.cxxObj,ADDRESS);
-BEGIN
-ret := QtDialogButtonBoxRaw.QDialogButtonBox_standardButton(selfAdr, arg2tmp);
-result := VAL(ret,StandardButton);  
-RETURN result;
-END QDialogButtonBox_standardButton;
+PROCEDURE QDialogButtonBox_standardButton
+  (self: QDialogButtonBox; button: QAbstractButton; ): StandardButton =
+  VAR
+    ret    : INTEGER;
+    result : StandardButton;
+    selfAdr: ADDRESS        := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp                 := LOOPHOLE(button.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtDialogButtonBoxRaw.QDialogButtonBox_standardButton(
+             selfAdr, arg2tmp);
+    result := VAL(ret, StandardButton);
+    RETURN result;
+  END QDialogButtonBox_standardButton;
 
-PROCEDURE QDialogButtonBox_button ( self: QDialogButtonBox;
-which: StandardButton;
-): QPushButton =
-VAR
-ret:ADDRESS; result : QPushButton;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtDialogButtonBoxRaw.QDialogButtonBox_button(selfAdr, ORD(which));
+PROCEDURE QDialogButtonBox_button
+  (self: QDialogButtonBox; which: StandardButton; ): QPushButton =
+  VAR
+    ret    : ADDRESS;
+    result : QPushButton;
+    selfAdr: ADDRESS     := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret :=
+      QtDialogButtonBoxRaw.QDialogButtonBox_button(selfAdr, ORD(which));
 
-  result := NEW(QPushButton);
-  result.cxxObj := ret;
-  result.destroyCxx();
+    result := NEW(QPushButton);
+    result.cxxObj := ret;
+    result.destroyCxx();
 
-RETURN result;
-END QDialogButtonBox_button;
+    RETURN result;
+  END QDialogButtonBox_button;
 
-PROCEDURE QDialogButtonBox_setCenterButtons ( self: QDialogButtonBox;
-center: BOOLEAN;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtDialogButtonBoxRaw.QDialogButtonBox_setCenterButtons(selfAdr, center);
-END QDialogButtonBox_setCenterButtons;
+PROCEDURE QDialogButtonBox_setCenterButtons
+  (self: QDialogButtonBox; center: BOOLEAN; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtDialogButtonBoxRaw.QDialogButtonBox_setCenterButtons(selfAdr, center);
+  END QDialogButtonBox_setCenterButtons;
 
-PROCEDURE QDialogButtonBox_centerButtons ( self: QDialogButtonBox;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtDialogButtonBoxRaw.QDialogButtonBox_centerButtons(selfAdr);
-END QDialogButtonBox_centerButtons;
+PROCEDURE QDialogButtonBox_centerButtons (self: QDialogButtonBox; ):
+  BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtDialogButtonBoxRaw.QDialogButtonBox_centerButtons(selfAdr);
+  END QDialogButtonBox_centerButtons;
 
-PROCEDURE Cleanup_QDialogButtonBox(<*UNUSED*>READONLY self: WeakRef.T; ref: REFANY) =
-VAR obj : QDialogButtonBox := ref;
-BEGIN
-  Delete_QDialogButtonBox(obj);
- END Cleanup_QDialogButtonBox;
+PROCEDURE Cleanup_QDialogButtonBox
+  (<* UNUSED *> READONLY self: WeakRef.T; ref: REFANY) =
+  VAR obj: QDialogButtonBox := ref;
+  BEGIN
+    Delete_QDialogButtonBox(obj);
+  END Cleanup_QDialogButtonBox;
 
-PROCEDURE Destroy_QDialogButtonBox(self : QDialogButtonBox) =
-BEGIN
-  EVAL WeakRef.FromRef(self,Cleanup_QDialogButtonBox);
-END Destroy_QDialogButtonBox;
+PROCEDURE Destroy_QDialogButtonBox (self: QDialogButtonBox) =
+  BEGIN
+    EVAL WeakRef.FromRef(self, Cleanup_QDialogButtonBox);
+  END Destroy_QDialogButtonBox;
 
 REVEAL
-QDialogButtonBox =
-QDialogButtonBoxPublic BRANDED OBJECT
-OVERRIDES
-init_0 := New_QDialogButtonBox0;
-init_1 := New_QDialogButtonBox1;
-init_2 := New_QDialogButtonBox2;
-init_3 := New_QDialogButtonBox3;
-init_4 := New_QDialogButtonBox4;
-init_5 := New_QDialogButtonBox5;
-init_6 := New_QDialogButtonBox6;
-setOrientation := QDialogButtonBox_setOrientation;
-orientation := QDialogButtonBox_orientation;
-addButton := QDialogButtonBox_addButton;
-addButton1 := QDialogButtonBox_addButton1;
-addButton2 := QDialogButtonBox_addButton2;
-removeButton := QDialogButtonBox_removeButton;
-clear := QDialogButtonBox_clear;
-buttonRole := QDialogButtonBox_buttonRole;
-setStandardButtons := QDialogButtonBox_setStandardButtons;
-standardButtons := QDialogButtonBox_standardButtons;
-standardButton := QDialogButtonBox_standardButton;
-button := QDialogButtonBox_button;
-setCenterButtons := QDialogButtonBox_setCenterButtons;
-centerButtons := QDialogButtonBox_centerButtons;
-destroyCxx := Destroy_QDialogButtonBox;
-END;
+  QDialogButtonBox =
+    QDialogButtonBoxPublic BRANDED OBJECT
+    OVERRIDES
+      init_0             := New_QDialogButtonBox0;
+      init_1             := New_QDialogButtonBox1;
+      init_2             := New_QDialogButtonBox2;
+      init_3             := New_QDialogButtonBox3;
+      init_4             := New_QDialogButtonBox4;
+      init_5             := New_QDialogButtonBox5;
+      init_6             := New_QDialogButtonBox6;
+      setOrientation     := QDialogButtonBox_setOrientation;
+      orientation        := QDialogButtonBox_orientation;
+      addButton          := QDialogButtonBox_addButton;
+      addButton1         := QDialogButtonBox_addButton1;
+      addButton2         := QDialogButtonBox_addButton2;
+      removeButton       := QDialogButtonBox_removeButton;
+      clear              := QDialogButtonBox_clear;
+      buttonRole         := QDialogButtonBox_buttonRole;
+      setStandardButtons := QDialogButtonBox_setStandardButtons;
+      standardButtons    := QDialogButtonBox_standardButtons;
+      standardButton     := QDialogButtonBox_standardButton;
+      button             := QDialogButtonBox_button;
+      setCenterButtons   := QDialogButtonBox_setCenterButtons;
+      centerButtons      := QDialogButtonBox_centerButtons;
+      destroyCxx         := Destroy_QDialogButtonBox;
+    END;
 
 
 BEGIN

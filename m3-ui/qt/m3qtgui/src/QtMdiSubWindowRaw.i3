@@ -15,106 +15,82 @@ IMPORT Ctypes AS C;
 
 
 <* EXTERNAL New_QMdiSubWindow0 *>
-PROCEDURE New_QMdiSubWindow0 ( parent: ADDRESS;
-flags: C.int;
-): QMdiSubWindow;
+PROCEDURE New_QMdiSubWindow0 (parent: ADDRESS; flags: C.int; ):
+  QMdiSubWindow;
 
 <* EXTERNAL New_QMdiSubWindow1 *>
-PROCEDURE New_QMdiSubWindow1 ( parent: ADDRESS;
-): QMdiSubWindow;
+PROCEDURE New_QMdiSubWindow1 (parent: ADDRESS; ): QMdiSubWindow;
 
 <* EXTERNAL New_QMdiSubWindow2 *>
 PROCEDURE New_QMdiSubWindow2 (): QMdiSubWindow;
 
 <* EXTERNAL Delete_QMdiSubWindow *>
-PROCEDURE Delete_QMdiSubWindow ( self: QMdiSubWindow;
-);
+PROCEDURE Delete_QMdiSubWindow (self: QMdiSubWindow; );
 
 <* EXTERNAL QMdiSubWindow_sizeHint *>
-PROCEDURE QMdiSubWindow_sizeHint ( self: QMdiSubWindow;
-): ADDRESS;
+PROCEDURE QMdiSubWindow_sizeHint (self: QMdiSubWindow; ): ADDRESS;
 
 <* EXTERNAL QMdiSubWindow_minimumSizeHint *>
-PROCEDURE QMdiSubWindow_minimumSizeHint ( self: QMdiSubWindow;
-): ADDRESS;
+PROCEDURE QMdiSubWindow_minimumSizeHint (self: QMdiSubWindow; ): ADDRESS;
 
 <* EXTERNAL QMdiSubWindow_setWidget *>
-PROCEDURE QMdiSubWindow_setWidget ( self: QMdiSubWindow;
- widget: ADDRESS;
-);
+PROCEDURE QMdiSubWindow_setWidget (self: QMdiSubWindow; widget: ADDRESS; );
 
 <* EXTERNAL QMdiSubWindow_widget *>
-PROCEDURE QMdiSubWindow_widget ( self: QMdiSubWindow;
-): ADDRESS;
+PROCEDURE QMdiSubWindow_widget (self: QMdiSubWindow; ): ADDRESS;
 
 <* EXTERNAL QMdiSubWindow_maximizedButtonsWidget *>
-PROCEDURE QMdiSubWindow_maximizedButtonsWidget ( self: QMdiSubWindow;
-): ADDRESS;
+PROCEDURE QMdiSubWindow_maximizedButtonsWidget (self: QMdiSubWindow; ):
+  ADDRESS;
 
 <* EXTERNAL QMdiSubWindow_maximizedSystemMenuIconWidget *>
-PROCEDURE QMdiSubWindow_maximizedSystemMenuIconWidget ( self: QMdiSubWindow;
-): ADDRESS;
+PROCEDURE QMdiSubWindow_maximizedSystemMenuIconWidget
+  (self: QMdiSubWindow; ): ADDRESS;
 
 <* EXTERNAL QMdiSubWindow_isShaded *>
-PROCEDURE QMdiSubWindow_isShaded ( self: QMdiSubWindow;
-): BOOLEAN;
+PROCEDURE QMdiSubWindow_isShaded (self: QMdiSubWindow; ): BOOLEAN;
 
 <* EXTERNAL QMdiSubWindow_setOption *>
-PROCEDURE QMdiSubWindow_setOption ( self: QMdiSubWindow;
-option: C.int;
-on: BOOLEAN;
-);
+PROCEDURE QMdiSubWindow_setOption
+  (self: QMdiSubWindow; option: C.int; on: BOOLEAN; );
 
 <* EXTERNAL QMdiSubWindow_setOption1 *>
-PROCEDURE QMdiSubWindow_setOption1 ( self: QMdiSubWindow;
-option: C.int;
-);
+PROCEDURE QMdiSubWindow_setOption1 (self: QMdiSubWindow; option: C.int; );
 
 <* EXTERNAL QMdiSubWindow_testOption *>
-PROCEDURE QMdiSubWindow_testOption ( self: QMdiSubWindow;
-arg2: C.int;
-): BOOLEAN;
+PROCEDURE QMdiSubWindow_testOption (self: QMdiSubWindow; arg2: C.int; ):
+  BOOLEAN;
 
 <* EXTERNAL QMdiSubWindow_setKeyboardSingleStep *>
-PROCEDURE QMdiSubWindow_setKeyboardSingleStep ( self: QMdiSubWindow;
-step: C.int;
-);
+PROCEDURE QMdiSubWindow_setKeyboardSingleStep
+  (self: QMdiSubWindow; step: C.int; );
 
 <* EXTERNAL QMdiSubWindow_keyboardSingleStep *>
-PROCEDURE QMdiSubWindow_keyboardSingleStep ( self: QMdiSubWindow;
-): C.int;
+PROCEDURE QMdiSubWindow_keyboardSingleStep (self: QMdiSubWindow; ): C.int;
 
 <* EXTERNAL QMdiSubWindow_setKeyboardPageStep *>
-PROCEDURE QMdiSubWindow_setKeyboardPageStep ( self: QMdiSubWindow;
-step: C.int;
-);
+PROCEDURE QMdiSubWindow_setKeyboardPageStep
+  (self: QMdiSubWindow; step: C.int; );
 
 <* EXTERNAL QMdiSubWindow_keyboardPageStep *>
-PROCEDURE QMdiSubWindow_keyboardPageStep ( self: QMdiSubWindow;
-): C.int;
+PROCEDURE QMdiSubWindow_keyboardPageStep (self: QMdiSubWindow; ): C.int;
 
 <* EXTERNAL QMdiSubWindow_setSystemMenu *>
-PROCEDURE QMdiSubWindow_setSystemMenu ( self: QMdiSubWindow;
- systemMenu: ADDRESS;
-);
+PROCEDURE QMdiSubWindow_setSystemMenu
+  (self: QMdiSubWindow; systemMenu: ADDRESS; );
 
 <* EXTERNAL QMdiSubWindow_systemMenu *>
-PROCEDURE QMdiSubWindow_systemMenu ( self: QMdiSubWindow;
-): ADDRESS;
+PROCEDURE QMdiSubWindow_systemMenu (self: QMdiSubWindow; ): ADDRESS;
 
 <* EXTERNAL QMdiSubWindow_mdiArea *>
-PROCEDURE QMdiSubWindow_mdiArea ( self: QMdiSubWindow;
-): ADDRESS;
+PROCEDURE QMdiSubWindow_mdiArea (self: QMdiSubWindow; ): ADDRESS;
 
 <* EXTERNAL QMdiSubWindow_showSystemMenu *>
-PROCEDURE QMdiSubWindow_showSystemMenu ( self: QMdiSubWindow;
-);
+PROCEDURE QMdiSubWindow_showSystemMenu (self: QMdiSubWindow; );
 
 <* EXTERNAL QMdiSubWindow_showShaded *>
-PROCEDURE QMdiSubWindow_showShaded ( self: QMdiSubWindow;
-);
+PROCEDURE QMdiSubWindow_showShaded (self: QMdiSubWindow; );
 
-TYPE
-QMdiSubWindow = ADDRESS;
+TYPE QMdiSubWindow = ADDRESS;
 
 END QtMdiSubWindowRaw.

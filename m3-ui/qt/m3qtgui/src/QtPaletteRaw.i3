@@ -18,229 +18,164 @@ IMPORT Ctypes AS C;
 PROCEDURE New_QPalette0 (): QPalette;
 
 <* EXTERNAL New_QPalette1 *>
-PROCEDURE New_QPalette1 ( button: ADDRESS;
-): QPalette;
+PROCEDURE New_QPalette1 (button: ADDRESS; ): QPalette;
 
 <* EXTERNAL New_QPalette2 *>
-PROCEDURE New_QPalette2 (button: C.int;
-): QPalette;
+PROCEDURE New_QPalette2 (button: C.int; ): QPalette;
 
 <* EXTERNAL New_QPalette3 *>
-PROCEDURE New_QPalette3 ( button, window: ADDRESS;
-): QPalette;
+PROCEDURE New_QPalette3 (button, window: ADDRESS; ): QPalette;
 
 <* EXTERNAL New_QPalette4 *>
-PROCEDURE New_QPalette4 ( windowText, button, light, dark, mid, text, bright_text, base, window: ADDRESS;
-): QPalette;
+PROCEDURE New_QPalette4 (windowText, button, light, dark, mid, text,
+                           bright_text, base, window: ADDRESS; ): QPalette;
 
 <* EXTERNAL New_QPalette5 *>
-PROCEDURE New_QPalette5 ( windowText, window, light, dark, mid, text, base: ADDRESS;
-): QPalette;
+PROCEDURE New_QPalette5
+  (windowText, window, light, dark, mid, text, base: ADDRESS; ): QPalette;
 
 <* EXTERNAL New_QPalette6 *>
-PROCEDURE New_QPalette6 ( palette: ADDRESS;
-): QPalette;
+PROCEDURE New_QPalette6 (palette: ADDRESS; ): QPalette;
 
 <* EXTERNAL Delete_QPalette *>
-PROCEDURE Delete_QPalette ( self: QPalette;
-);
+PROCEDURE Delete_QPalette (self: QPalette; );
 
 <* EXTERNAL QPalette_Op_Brush_Assign *>
-PROCEDURE QPalette_Op_Brush_Assign ( self: QPalette;
- palette: ADDRESS;
-): ADDRESS;
+PROCEDURE QPalette_Op_Brush_Assign (self: QPalette; palette: ADDRESS; ):
+  ADDRESS;
 
 <* EXTERNAL QPalette_currentColorGroup *>
-PROCEDURE QPalette_currentColorGroup ( self: QPalette;
-): C.int;
+PROCEDURE QPalette_currentColorGroup (self: QPalette; ): C.int;
 
 <* EXTERNAL QPalette_setCurrentColorGroup *>
-PROCEDURE QPalette_setCurrentColorGroup ( self: QPalette;
-cg: C.int;
-);
+PROCEDURE QPalette_setCurrentColorGroup (self: QPalette; cg: C.int; );
 
 <* EXTERNAL QPalette_color *>
-PROCEDURE QPalette_color ( self: QPalette;
-cg, cr: C.int;
-): ADDRESS;
+PROCEDURE QPalette_color (self: QPalette; cg, cr: C.int; ): ADDRESS;
 
 <* EXTERNAL QPalette_brush *>
-PROCEDURE QPalette_brush ( self: QPalette;
-cg, cr: C.int;
-): ADDRESS;
+PROCEDURE QPalette_brush (self: QPalette; cg, cr: C.int; ): ADDRESS;
 
 <* EXTERNAL QPalette_setColor *>
-PROCEDURE QPalette_setColor ( self: QPalette;
-cg, cr: C.int;
- color: ADDRESS;
-);
+PROCEDURE QPalette_setColor
+  (self: QPalette; cg, cr: C.int; color: ADDRESS; );
 
 <* EXTERNAL QPalette_setColor1 *>
-PROCEDURE QPalette_setColor1 ( self: QPalette;
-cr: C.int;
- color: ADDRESS;
-);
+PROCEDURE QPalette_setColor1 (self: QPalette; cr: C.int; color: ADDRESS; );
 
 <* EXTERNAL QPalette_setBrush *>
-PROCEDURE QPalette_setBrush ( self: QPalette;
-cr: C.int;
- brush: ADDRESS;
-);
+PROCEDURE QPalette_setBrush (self: QPalette; cr: C.int; brush: ADDRESS; );
 
 <* EXTERNAL QPalette_isBrushSet *>
-PROCEDURE QPalette_isBrushSet ( self: QPalette;
-cg, cr: C.int;
-): BOOLEAN;
+PROCEDURE QPalette_isBrushSet (self: QPalette; cg, cr: C.int; ): BOOLEAN;
 
 <* EXTERNAL QPalette_setBrush1 *>
-PROCEDURE QPalette_setBrush1 ( self: QPalette;
-cg, cr: C.int;
- brush: ADDRESS;
-);
+PROCEDURE QPalette_setBrush1
+  (self: QPalette; cg, cr: C.int; brush: ADDRESS; );
 
 <* EXTERNAL QPalette_setColorGroup *>
-PROCEDURE QPalette_setColorGroup ( self: QPalette;
-cr: C.int;
- windowText, button, light, dark, mid, text, bright_text, base, window: ADDRESS;
-);
+PROCEDURE QPalette_setColorGroup
+  (self: QPalette;
+   cr  : C.int;
+   windowText, button, light, dark, mid, text, bright_text, base, window: ADDRESS; );
 
 <* EXTERNAL QPalette_isEqual *>
-PROCEDURE QPalette_isEqual ( self: QPalette;
-cr1, cr2: C.int;
-): BOOLEAN;
+PROCEDURE QPalette_isEqual (self: QPalette; cr1, cr2: C.int; ): BOOLEAN;
 
 <* EXTERNAL QPalette_color1 *>
-PROCEDURE QPalette_color1 ( self: QPalette;
-cr: C.int;
-): ADDRESS;
+PROCEDURE QPalette_color1 (self: QPalette; cr: C.int; ): ADDRESS;
 
 <* EXTERNAL QPalette_brush1 *>
-PROCEDURE QPalette_brush1 ( self: QPalette;
-cr: C.int;
-): ADDRESS;
+PROCEDURE QPalette_brush1 (self: QPalette; cr: C.int; ): ADDRESS;
 
 <* EXTERNAL QPalette_foreground *>
-PROCEDURE QPalette_foreground ( self: QPalette;
-): ADDRESS;
+PROCEDURE QPalette_foreground (self: QPalette; ): ADDRESS;
 
 <* EXTERNAL QPalette_windowText *>
-PROCEDURE QPalette_windowText ( self: QPalette;
-): ADDRESS;
+PROCEDURE QPalette_windowText (self: QPalette; ): ADDRESS;
 
 <* EXTERNAL QPalette_button *>
-PROCEDURE QPalette_button ( self: QPalette;
-): ADDRESS;
+PROCEDURE QPalette_button (self: QPalette; ): ADDRESS;
 
 <* EXTERNAL QPalette_light *>
-PROCEDURE QPalette_light ( self: QPalette;
-): ADDRESS;
+PROCEDURE QPalette_light (self: QPalette; ): ADDRESS;
 
 <* EXTERNAL QPalette_dark *>
-PROCEDURE QPalette_dark ( self: QPalette;
-): ADDRESS;
+PROCEDURE QPalette_dark (self: QPalette; ): ADDRESS;
 
 <* EXTERNAL QPalette_mid *>
-PROCEDURE QPalette_mid ( self: QPalette;
-): ADDRESS;
+PROCEDURE QPalette_mid (self: QPalette; ): ADDRESS;
 
 <* EXTERNAL QPalette_text *>
-PROCEDURE QPalette_text ( self: QPalette;
-): ADDRESS;
+PROCEDURE QPalette_text (self: QPalette; ): ADDRESS;
 
 <* EXTERNAL QPalette_base *>
-PROCEDURE QPalette_base ( self: QPalette;
-): ADDRESS;
+PROCEDURE QPalette_base (self: QPalette; ): ADDRESS;
 
 <* EXTERNAL QPalette_alternateBase *>
-PROCEDURE QPalette_alternateBase ( self: QPalette;
-): ADDRESS;
+PROCEDURE QPalette_alternateBase (self: QPalette; ): ADDRESS;
 
 <* EXTERNAL QPalette_toolTipBase *>
-PROCEDURE QPalette_toolTipBase ( self: QPalette;
-): ADDRESS;
+PROCEDURE QPalette_toolTipBase (self: QPalette; ): ADDRESS;
 
 <* EXTERNAL QPalette_toolTipText *>
-PROCEDURE QPalette_toolTipText ( self: QPalette;
-): ADDRESS;
+PROCEDURE QPalette_toolTipText (self: QPalette; ): ADDRESS;
 
 <* EXTERNAL QPalette_background *>
-PROCEDURE QPalette_background ( self: QPalette;
-): ADDRESS;
+PROCEDURE QPalette_background (self: QPalette; ): ADDRESS;
 
 <* EXTERNAL QPalette_window *>
-PROCEDURE QPalette_window ( self: QPalette;
-): ADDRESS;
+PROCEDURE QPalette_window (self: QPalette; ): ADDRESS;
 
 <* EXTERNAL QPalette_midlight *>
-PROCEDURE QPalette_midlight ( self: QPalette;
-): ADDRESS;
+PROCEDURE QPalette_midlight (self: QPalette; ): ADDRESS;
 
 <* EXTERNAL QPalette_brightText *>
-PROCEDURE QPalette_brightText ( self: QPalette;
-): ADDRESS;
+PROCEDURE QPalette_brightText (self: QPalette; ): ADDRESS;
 
 <* EXTERNAL QPalette_buttonText *>
-PROCEDURE QPalette_buttonText ( self: QPalette;
-): ADDRESS;
+PROCEDURE QPalette_buttonText (self: QPalette; ): ADDRESS;
 
 <* EXTERNAL QPalette_shadow *>
-PROCEDURE QPalette_shadow ( self: QPalette;
-): ADDRESS;
+PROCEDURE QPalette_shadow (self: QPalette; ): ADDRESS;
 
 <* EXTERNAL QPalette_highlight *>
-PROCEDURE QPalette_highlight ( self: QPalette;
-): ADDRESS;
+PROCEDURE QPalette_highlight (self: QPalette; ): ADDRESS;
 
 <* EXTERNAL QPalette_highlightedText *>
-PROCEDURE QPalette_highlightedText ( self: QPalette;
-): ADDRESS;
+PROCEDURE QPalette_highlightedText (self: QPalette; ): ADDRESS;
 
 <* EXTERNAL QPalette_link *>
-PROCEDURE QPalette_link ( self: QPalette;
-): ADDRESS;
+PROCEDURE QPalette_link (self: QPalette; ): ADDRESS;
 
 <* EXTERNAL QPalette_linkVisited *>
-PROCEDURE QPalette_linkVisited ( self: QPalette;
-): ADDRESS;
+PROCEDURE QPalette_linkVisited (self: QPalette; ): ADDRESS;
 
 <* EXTERNAL QPalette_Op_Brush_Equals *>
-PROCEDURE QPalette_Op_Brush_Equals ( self: QPalette;
- p: ADDRESS;
-): BOOLEAN;
+PROCEDURE QPalette_Op_Brush_Equals (self: QPalette; p: ADDRESS; ): BOOLEAN;
 
 <* EXTERNAL QPalette_Op_Brush_NotEquals *>
-PROCEDURE QPalette_Op_Brush_NotEquals ( self: QPalette;
- p: ADDRESS;
-): BOOLEAN;
+PROCEDURE QPalette_Op_Brush_NotEquals (self: QPalette; p: ADDRESS; ):
+  BOOLEAN;
 
 <* EXTERNAL QPalette_isCopyOf *>
-PROCEDURE QPalette_isCopyOf ( self: QPalette;
- p: ADDRESS;
-): BOOLEAN;
+PROCEDURE QPalette_isCopyOf (self: QPalette; p: ADDRESS; ): BOOLEAN;
 
 <* EXTERNAL QPalette_serialNumber *>
-PROCEDURE QPalette_serialNumber ( self: QPalette;
-): C.int;
+PROCEDURE QPalette_serialNumber (self: QPalette; ): C.int;
 
 <* EXTERNAL QPalette_cacheKey *>
-PROCEDURE QPalette_cacheKey ( self: QPalette;
-): C.unsigned_long;
+PROCEDURE QPalette_cacheKey (self: QPalette; ): C.unsigned_long;
 
 <* EXTERNAL QPalette_resolve *>
-PROCEDURE QPalette_resolve ( self: QPalette;
- arg2: ADDRESS;
-): ADDRESS;
+PROCEDURE QPalette_resolve (self: QPalette; arg2: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL QPalette_resolve1 *>
-PROCEDURE QPalette_resolve1 ( self: QPalette;
-): C.unsigned_int;
+PROCEDURE QPalette_resolve1 (self: QPalette; ): C.unsigned_int;
 
 <* EXTERNAL QPalette_resolve2 *>
-PROCEDURE QPalette_resolve2 ( self: QPalette;
-mask: CARDINAL;
-);
+PROCEDURE QPalette_resolve2 (self: QPalette; mask: CARDINAL; );
 
-TYPE
-QPalette <: ADDRESS;
+TYPE QPalette <: ADDRESS;
 
 END QtPaletteRaw.

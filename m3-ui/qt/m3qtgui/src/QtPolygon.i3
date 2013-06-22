@@ -8,101 +8,65 @@
 
 INTERFACE QtPolygon;
 
-FROM QtPoint IMPORT QPoint,QPointF;
-FROM QtRect IMPORT QRect,QRectF;
+FROM QtPoint IMPORT QPoint, QPointF;
+FROM QtRect IMPORT QRect, QRectF;
 FROM QtNamespace IMPORT FillRule;
 
 
-TYPE
-  T = QPolygon;
+TYPE T = QPolygon;
 
 
 TYPE
-QPolygon <: QPolygonPublic;
-QPolygonPublic =
- BRANDED OBJECT
-cxxObj:ADDRESS;
-METHODS
-init_0 () : QPolygon;
-init_1 (size: INTEGER;
-) : QPolygon;
-init_2 ( a: QPolygon;
-) : QPolygon;
-init_3 ( r: QRect;
-closed: BOOLEAN;
-) : QPolygon;
-init_4 ( r: QRect;
-) : QPolygon;
-init_5 (nPoints: INTEGER;
-VAR points: INTEGER;
-) : QPolygon;
-translate(dx, dy: INTEGER;
-);
-translate1( offset: QPoint;
-);
-translated(dx, dy: INTEGER;
-): QPolygon;
-translated1( offset: QPoint;
-): QPolygon;
-boundingRect(): QRect;
-point(i: INTEGER;
-VAR x, y: INTEGER;
-);
-point1(i: INTEGER;
-): QPoint;
-setPoint(index, x, y: INTEGER;
-);
-setPoint1(index: INTEGER;
- p: QPoint;
-);
-containsPoint( pt: QPoint;
-fillRule: FillRule;
-): BOOLEAN;
-united( r: QPolygon;
-): QPolygon;
-intersected( r: QPolygon;
-): QPolygon;
-subtracted( r: QPolygon;
-): QPolygon;
-destroyCxx();
-END;
+  QPolygon <: QPolygonPublic;
+  QPolygonPublic =
+    BRANDED OBJECT
+      cxxObj: ADDRESS;
+    METHODS
+      init_0        (): QPolygon;
+      init_1        (size: INTEGER; ): QPolygon;
+      init_2        (a: QPolygon; ): QPolygon;
+      init_3        (r: QRect; closed: BOOLEAN; ): QPolygon;
+      init_4        (r: QRect; ): QPolygon;
+      init_5        (nPoints: INTEGER; VAR points: INTEGER; ): QPolygon;
+      translate     (dx, dy: INTEGER; );
+      translate1    (offset: QPoint; );
+      translated    (dx, dy: INTEGER; ): QPolygon;
+      translated1   (offset: QPoint; ): QPolygon;
+      boundingRect  (): QRect;
+      point         (i: INTEGER; VAR x, y: INTEGER; );
+      point1        (i: INTEGER; ): QPoint;
+      setPoint      (index, x, y: INTEGER; );
+      setPoint1     (index: INTEGER; p: QPoint; );
+      containsPoint (pt: QPoint; fillRule: FillRule; ): BOOLEAN;
+      united        (r: QPolygon; ): QPolygon;
+      intersected   (r: QPolygon; ): QPolygon;
+      subtracted    (r: QPolygon; ): QPolygon;
+      destroyCxx    ();
+    END;
 
-QPolygonF <: QPolygonFPublic;
-QPolygonFPublic =
- BRANDED OBJECT
-cxxObj:ADDRESS;
-METHODS
-init_0 () : QPolygonF;
-init_1 (size: INTEGER;
-) : QPolygonF;
-init_2 ( a: QPolygonF;
-) : QPolygonF;
-init_3 ( r: QRectF;
-) : QPolygonF;
-init_4 ( a: QPolygon;
-) : QPolygonF;
-translate(dx, dy: LONGREAL;
-);
-translate1( offset: QPointF;
-);
-translated(dx, dy: LONGREAL;
-): QPolygonF;
-translated1( offset: QPointF;
-): QPolygonF;
-toPolygon(): QPolygon;
-isClosed(): BOOLEAN;
-boundingRect(): QRectF;
-containsPoint( pt: QPointF;
-fillRule: FillRule;
-): BOOLEAN;
-united( r: QPolygonF;
-): QPolygonF;
-intersected( r: QPolygonF;
-): QPolygonF;
-subtracted( r: QPolygonF;
-): QPolygonF;
-destroyCxx();
-END;
+  QPolygonF <: QPolygonFPublic;
+  QPolygonFPublic =
+    BRANDED OBJECT
+      cxxObj: ADDRESS;
+    METHODS
+      init_0        (): QPolygonF;
+      init_1        (size: INTEGER; ): QPolygonF;
+      init_2        (a: QPolygonF; ): QPolygonF;
+      init_3        (r: QRectF; ): QPolygonF;
+      init_4        (a: QPolygon; ): QPolygonF;
+      translate     (dx, dy: LONGREAL; );
+      translate1    (offset: QPointF; );
+      translated    (dx, dy: LONGREAL; ): QPolygonF;
+      translated1   (offset: QPointF; ): QPolygonF;
+      toPolygon     (): QPolygon;
+      isClosed      (): BOOLEAN;
+      boundingRect  (): QRectF;
+      containsPoint (pt: QPointF; fillRule: FillRule; ): BOOLEAN;
+      united        (r: QPolygonF; ): QPolygonF;
+      intersected   (r: QPolygonF; ): QPolygonF;
+      subtracted    (r: QPolygonF; ): QPolygonF;
+      destroyCxx    ();
+    END;
 
 
 END QtPolygon.

@@ -15,30 +15,23 @@ IMPORT Ctypes AS C;
 
 
 <* EXTERNAL New_QScrollBar0 *>
-PROCEDURE New_QScrollBar0 ( parent: ADDRESS;
-): QScrollBar;
+PROCEDURE New_QScrollBar0 (parent: ADDRESS; ): QScrollBar;
 
 <* EXTERNAL New_QScrollBar1 *>
 PROCEDURE New_QScrollBar1 (): QScrollBar;
 
 <* EXTERNAL New_QScrollBar2 *>
-PROCEDURE New_QScrollBar2 (arg1: C.int;
- parent: ADDRESS;
-): QScrollBar;
+PROCEDURE New_QScrollBar2 (arg1: C.int; parent: ADDRESS; ): QScrollBar;
 
 <* EXTERNAL New_QScrollBar3 *>
-PROCEDURE New_QScrollBar3 (arg1: C.int;
-): QScrollBar;
+PROCEDURE New_QScrollBar3 (arg1: C.int; ): QScrollBar;
 
 <* EXTERNAL Delete_QScrollBar *>
-PROCEDURE Delete_QScrollBar ( self: QScrollBar;
-);
+PROCEDURE Delete_QScrollBar (self: QScrollBar; );
 
 <* EXTERNAL QScrollBar_sizeHint *>
-PROCEDURE QScrollBar_sizeHint ( self: QScrollBar;
-): ADDRESS;
+PROCEDURE QScrollBar_sizeHint (self: QScrollBar; ): ADDRESS;
 
-TYPE
-QScrollBar = ADDRESS;
+TYPE QScrollBar = ADDRESS;
 
 END QtScrollBarRaw.

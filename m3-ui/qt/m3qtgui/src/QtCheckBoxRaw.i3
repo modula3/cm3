@@ -15,51 +15,38 @@ IMPORT Ctypes AS C;
 
 
 <* EXTERNAL New_QCheckBox0 *>
-PROCEDURE New_QCheckBox0 ( parent: ADDRESS;
-): QCheckBox;
+PROCEDURE New_QCheckBox0 (parent: ADDRESS; ): QCheckBox;
 
 <* EXTERNAL New_QCheckBox1 *>
 PROCEDURE New_QCheckBox1 (): QCheckBox;
 
 <* EXTERNAL New_QCheckBox2 *>
-PROCEDURE New_QCheckBox2 ( text, parent: ADDRESS;
-): QCheckBox;
+PROCEDURE New_QCheckBox2 (text, parent: ADDRESS; ): QCheckBox;
 
 <* EXTERNAL New_QCheckBox3 *>
-PROCEDURE New_QCheckBox3 ( text: ADDRESS;
-): QCheckBox;
+PROCEDURE New_QCheckBox3 (text: ADDRESS; ): QCheckBox;
 
 <* EXTERNAL QCheckBox_sizeHint *>
-PROCEDURE QCheckBox_sizeHint ( self: QCheckBox;
-): ADDRESS;
+PROCEDURE QCheckBox_sizeHint (self: QCheckBox; ): ADDRESS;
 
 <* EXTERNAL QCheckBox_setTristate *>
-PROCEDURE QCheckBox_setTristate ( self: QCheckBox;
-y: BOOLEAN;
-);
+PROCEDURE QCheckBox_setTristate (self: QCheckBox; y: BOOLEAN; );
 
 <* EXTERNAL QCheckBox_setTristate1 *>
-PROCEDURE QCheckBox_setTristate1 ( self: QCheckBox;
-);
+PROCEDURE QCheckBox_setTristate1 (self: QCheckBox; );
 
 <* EXTERNAL QCheckBox_isTristate *>
-PROCEDURE QCheckBox_isTristate ( self: QCheckBox;
-): BOOLEAN;
+PROCEDURE QCheckBox_isTristate (self: QCheckBox; ): BOOLEAN;
 
 <* EXTERNAL QCheckBox_checkState *>
-PROCEDURE QCheckBox_checkState ( self: QCheckBox;
-): C.int;
+PROCEDURE QCheckBox_checkState (self: QCheckBox; ): C.int;
 
 <* EXTERNAL QCheckBox_setCheckState *>
-PROCEDURE QCheckBox_setCheckState ( self: QCheckBox;
-state: C.int;
-);
+PROCEDURE QCheckBox_setCheckState (self: QCheckBox; state: C.int; );
 
 <* EXTERNAL Delete_QCheckBox *>
-PROCEDURE Delete_QCheckBox ( self: QCheckBox;
-);
+PROCEDURE Delete_QCheckBox (self: QCheckBox; );
 
-TYPE
-QCheckBox = ADDRESS;
+TYPE QCheckBox = ADDRESS;
 
 END QtCheckBoxRaw.

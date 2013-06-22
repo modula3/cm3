@@ -10,7 +10,7 @@ UNSAFE MODULE QtTreeWidget;
 
 
 FROM QtPoint IMPORT QPoint;
-FROM QtNamespace IMPORT ItemFlags,CheckState,SortOrder;
+FROM QtNamespace IMPORT ItemFlags, CheckState, SortOrder;
 FROM QtColor IMPORT QColor;
 FROM QtFont IMPORT QFont;
 FROM QtAbstractItemView IMPORT ScrollHint;
@@ -29,1660 +29,1546 @@ IMPORT QtTreeWidgetRaw;
 IMPORT WeakRef;
 FROM QtByteArray IMPORT QByteArray;
 
-PROCEDURE New_QTreeWidgetItem0 (self:QTreeWidgetItem;type: INTEGER;
-): QTreeWidgetItem =
-VAR
-result : ADDRESS;
-BEGIN
-result := QtTreeWidgetRaw.New_QTreeWidgetItem0(type);
-
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QTreeWidgetItem);
-
-RETURN self;
-END New_QTreeWidgetItem0;
-
-PROCEDURE New_QTreeWidgetItem1 (self:QTreeWidgetItem;): QTreeWidgetItem =
-VAR
-result : ADDRESS;
-BEGIN
-result := QtTreeWidgetRaw.New_QTreeWidgetItem1();
-
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QTreeWidgetItem);
-
-RETURN self;
-END New_QTreeWidgetItem1;
-
-PROCEDURE New_QTreeWidgetItem2 (self:QTreeWidgetItem; strings: QStringList;
-type: INTEGER;
-): QTreeWidgetItem =
-VAR
-result : ADDRESS;
-arg1tmp :=  LOOPHOLE(strings.cxxObj,ADDRESS);
-BEGIN
-result := QtTreeWidgetRaw.New_QTreeWidgetItem2(arg1tmp, type);
-
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QTreeWidgetItem);
-
-RETURN self;
-END New_QTreeWidgetItem2;
-
-PROCEDURE New_QTreeWidgetItem3 (self:QTreeWidgetItem; strings: QStringList;
-): QTreeWidgetItem =
-VAR
-result : ADDRESS;
-arg1tmp :=  LOOPHOLE(strings.cxxObj,ADDRESS);
-BEGIN
-result := QtTreeWidgetRaw.New_QTreeWidgetItem3(arg1tmp);
-
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QTreeWidgetItem);
-
-RETURN self;
-END New_QTreeWidgetItem3;
-
-PROCEDURE New_QTreeWidgetItem4 (self:QTreeWidgetItem; view: QTreeWidget;
-type: INTEGER;
-): QTreeWidgetItem =
-VAR
-result : ADDRESS;
-arg1tmp :=  LOOPHOLE(view.cxxObj,ADDRESS);
-BEGIN
-result := QtTreeWidgetRaw.New_QTreeWidgetItem4(arg1tmp, type);
-
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QTreeWidgetItem);
-
-RETURN self;
-END New_QTreeWidgetItem4;
-
-PROCEDURE New_QTreeWidgetItem5 (self:QTreeWidgetItem; view: QTreeWidget;
-): QTreeWidgetItem =
-VAR
-result : ADDRESS;
-arg1tmp :=  LOOPHOLE(view.cxxObj,ADDRESS);
-BEGIN
-result := QtTreeWidgetRaw.New_QTreeWidgetItem5(arg1tmp);
-
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QTreeWidgetItem);
-
-RETURN self;
-END New_QTreeWidgetItem5;
-
-PROCEDURE New_QTreeWidgetItem6 (self:QTreeWidgetItem; view: QTreeWidget;
- strings: QStringList;
-type: INTEGER;
-): QTreeWidgetItem =
-VAR
-result : ADDRESS;
-arg1tmp :=  LOOPHOLE(view.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(strings.cxxObj,ADDRESS);
-BEGIN
-result := QtTreeWidgetRaw.New_QTreeWidgetItem6(arg1tmp, arg2tmp, type);
-
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QTreeWidgetItem);
-
-RETURN self;
-END New_QTreeWidgetItem6;
-
-PROCEDURE New_QTreeWidgetItem7 (self:QTreeWidgetItem; view: QTreeWidget;
- strings: QStringList;
-): QTreeWidgetItem =
-VAR
-result : ADDRESS;
-arg1tmp :=  LOOPHOLE(view.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(strings.cxxObj,ADDRESS);
-BEGIN
-result := QtTreeWidgetRaw.New_QTreeWidgetItem7(arg1tmp, arg2tmp);
-
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QTreeWidgetItem);
-
-RETURN self;
-END New_QTreeWidgetItem7;
-
-PROCEDURE New_QTreeWidgetItem8 (self:QTreeWidgetItem; view: QTreeWidget;
- after: QTreeWidgetItem;
-type: INTEGER;
-): QTreeWidgetItem =
-VAR
-result : ADDRESS;
-arg1tmp :=  LOOPHOLE(view.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(after.cxxObj,ADDRESS);
-BEGIN
-result := QtTreeWidgetRaw.New_QTreeWidgetItem8(arg1tmp, arg2tmp, type);
-
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QTreeWidgetItem);
-
-RETURN self;
-END New_QTreeWidgetItem8;
-
-PROCEDURE New_QTreeWidgetItem9 (self:QTreeWidgetItem; view: QTreeWidget;
- after: QTreeWidgetItem;
-): QTreeWidgetItem =
-VAR
-result : ADDRESS;
-arg1tmp :=  LOOPHOLE(view.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(after.cxxObj,ADDRESS);
-BEGIN
-result := QtTreeWidgetRaw.New_QTreeWidgetItem9(arg1tmp, arg2tmp);
-
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QTreeWidgetItem);
-
-RETURN self;
-END New_QTreeWidgetItem9;
-
-PROCEDURE New_QTreeWidgetItem10 (self:QTreeWidgetItem; parent: QTreeWidgetItem;
-type: INTEGER;
-): QTreeWidgetItem =
-VAR
-result : ADDRESS;
-arg1tmp :=  LOOPHOLE(parent.cxxObj,ADDRESS);
-BEGIN
-result := QtTreeWidgetRaw.New_QTreeWidgetItem10(arg1tmp, type);
-
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QTreeWidgetItem);
-
-RETURN self;
-END New_QTreeWidgetItem10;
-
-PROCEDURE New_QTreeWidgetItem11 (self:QTreeWidgetItem; parent: QTreeWidgetItem;
-): QTreeWidgetItem =
-VAR
-result : ADDRESS;
-arg1tmp :=  LOOPHOLE(parent.cxxObj,ADDRESS);
-BEGIN
-result := QtTreeWidgetRaw.New_QTreeWidgetItem11(arg1tmp);
-
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QTreeWidgetItem);
-
-RETURN self;
-END New_QTreeWidgetItem11;
-
-PROCEDURE New_QTreeWidgetItem12 (self:QTreeWidgetItem; parent: QTreeWidgetItem;
- strings: QStringList;
-type: INTEGER;
-): QTreeWidgetItem =
-VAR
-result : ADDRESS;
-arg1tmp :=  LOOPHOLE(parent.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(strings.cxxObj,ADDRESS);
-BEGIN
-result := QtTreeWidgetRaw.New_QTreeWidgetItem12(arg1tmp, arg2tmp, type);
-
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QTreeWidgetItem);
-
-RETURN self;
-END New_QTreeWidgetItem12;
-
-PROCEDURE New_QTreeWidgetItem13 (self:QTreeWidgetItem; parent: QTreeWidgetItem;
- strings: QStringList;
-): QTreeWidgetItem =
-VAR
-result : ADDRESS;
-arg1tmp :=  LOOPHOLE(parent.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(strings.cxxObj,ADDRESS);
-BEGIN
-result := QtTreeWidgetRaw.New_QTreeWidgetItem13(arg1tmp, arg2tmp);
-
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QTreeWidgetItem);
-
-RETURN self;
-END New_QTreeWidgetItem13;
-
-PROCEDURE New_QTreeWidgetItem14 (self:QTreeWidgetItem; parent, after: QTreeWidgetItem;
-type: INTEGER;
-): QTreeWidgetItem =
-VAR
-result : ADDRESS;
-arg1tmp :=  LOOPHOLE(parent.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(after.cxxObj,ADDRESS);
-BEGIN
-result := QtTreeWidgetRaw.New_QTreeWidgetItem14(arg1tmp, arg2tmp, type);
-
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QTreeWidgetItem);
-
-RETURN self;
-END New_QTreeWidgetItem14;
-
-PROCEDURE New_QTreeWidgetItem15 (self:QTreeWidgetItem; parent, after: QTreeWidgetItem;
-): QTreeWidgetItem =
-VAR
-result : ADDRESS;
-arg1tmp :=  LOOPHOLE(parent.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(after.cxxObj,ADDRESS);
-BEGIN
-result := QtTreeWidgetRaw.New_QTreeWidgetItem15(arg1tmp, arg2tmp);
-
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QTreeWidgetItem);
-
-RETURN self;
-END New_QTreeWidgetItem15;
-
-PROCEDURE New_QTreeWidgetItem16 (self:QTreeWidgetItem; other: QTreeWidgetItem;
-): QTreeWidgetItem =
-VAR
-result : ADDRESS;
-arg1tmp :=  LOOPHOLE(other.cxxObj,ADDRESS);
-BEGIN
-result := QtTreeWidgetRaw.New_QTreeWidgetItem16(arg1tmp);
-
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QTreeWidgetItem);
-
-RETURN self;
-END New_QTreeWidgetItem16;
-
-PROCEDURE Delete_QTreeWidgetItem ( self: QTreeWidgetItem;
-) =
-VAR
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtTreeWidgetRaw.Delete_QTreeWidgetItem(arg1tmp);
-END Delete_QTreeWidgetItem;
-
-PROCEDURE QTreeWidgetItem_clone ( self: QTreeWidgetItem;
-): QTreeWidgetItem =
-VAR
-result : ADDRESS;
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-result := QtTreeWidgetRaw.QTreeWidgetItem_clone(arg1tmp);
-
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QTreeWidgetItem);
-
-RETURN self;
-END QTreeWidgetItem_clone;
-
-PROCEDURE QTreeWidgetItem_treeWidget ( self: QTreeWidgetItem;
-): QTreeWidget =
-VAR
-ret:ADDRESS; result : QTreeWidget;
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtTreeWidgetRaw.QTreeWidgetItem_treeWidget(arg1tmp);
-
-  result := NEW(QTreeWidget);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QTreeWidgetItem_treeWidget;
-
-PROCEDURE QTreeWidgetItem_setSelected ( self: QTreeWidgetItem;
-select: BOOLEAN;
-) =
-VAR
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtTreeWidgetRaw.QTreeWidgetItem_setSelected(arg1tmp, select);
-END QTreeWidgetItem_setSelected;
-
-PROCEDURE QTreeWidgetItem_isSelected ( self: QTreeWidgetItem;
-): BOOLEAN =
-VAR
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtTreeWidgetRaw.QTreeWidgetItem_isSelected(arg1tmp);
-END QTreeWidgetItem_isSelected;
-
-PROCEDURE QTreeWidgetItem_setHidden ( self: QTreeWidgetItem;
-hide: BOOLEAN;
-) =
-VAR
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtTreeWidgetRaw.QTreeWidgetItem_setHidden(arg1tmp, hide);
-END QTreeWidgetItem_setHidden;
-
-PROCEDURE QTreeWidgetItem_isHidden ( self: QTreeWidgetItem;
-): BOOLEAN =
-VAR
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtTreeWidgetRaw.QTreeWidgetItem_isHidden(arg1tmp);
-END QTreeWidgetItem_isHidden;
-
-PROCEDURE QTreeWidgetItem_setExpanded ( self: QTreeWidgetItem;
-expand: BOOLEAN;
-) =
-VAR
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtTreeWidgetRaw.QTreeWidgetItem_setExpanded(arg1tmp, expand);
-END QTreeWidgetItem_setExpanded;
-
-PROCEDURE QTreeWidgetItem_isExpanded ( self: QTreeWidgetItem;
-): BOOLEAN =
-VAR
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtTreeWidgetRaw.QTreeWidgetItem_isExpanded(arg1tmp);
-END QTreeWidgetItem_isExpanded;
-
-PROCEDURE QTreeWidgetItem_setFirstColumnSpanned ( self: QTreeWidgetItem;
-span: BOOLEAN;
-) =
-VAR
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtTreeWidgetRaw.QTreeWidgetItem_setFirstColumnSpanned(arg1tmp, span);
-END QTreeWidgetItem_setFirstColumnSpanned;
-
-PROCEDURE QTreeWidgetItem_isFirstColumnSpanned ( self: QTreeWidgetItem;
-): BOOLEAN =
-VAR
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtTreeWidgetRaw.QTreeWidgetItem_isFirstColumnSpanned(arg1tmp);
-END QTreeWidgetItem_isFirstColumnSpanned;
-
-PROCEDURE QTreeWidgetItem_setDisabled ( self: QTreeWidgetItem;
-disabled: BOOLEAN;
-) =
-VAR
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtTreeWidgetRaw.QTreeWidgetItem_setDisabled(arg1tmp, disabled);
-END QTreeWidgetItem_setDisabled;
-
-PROCEDURE QTreeWidgetItem_isDisabled ( self: QTreeWidgetItem;
-): BOOLEAN =
-VAR
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtTreeWidgetRaw.QTreeWidgetItem_isDisabled(arg1tmp);
-END QTreeWidgetItem_isDisabled;
-
-PROCEDURE QTreeWidgetItem_setChildIndicatorPolicy ( self: QTreeWidgetItem;
-policy: ChildIndicatorPolicy;
-) =
-VAR
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtTreeWidgetRaw.QTreeWidgetItem_setChildIndicatorPolicy(arg1tmp, ORD(policy));
-END QTreeWidgetItem_setChildIndicatorPolicy;
-
-PROCEDURE QTreeWidgetItem_childIndicatorPolicy ( self: QTreeWidgetItem;
-): ChildIndicatorPolicy =
-VAR
-ret:INTEGER; result : ChildIndicatorPolicy;
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtTreeWidgetRaw.QTreeWidgetItem_childIndicatorPolicy(arg1tmp);
-result := VAL(ret,ChildIndicatorPolicy);  
-RETURN result;
-END QTreeWidgetItem_childIndicatorPolicy;
-
-PROCEDURE QTreeWidgetItem_flags ( self: QTreeWidgetItem;
-): ItemFlags =
-VAR
-ret:INTEGER; result : ItemFlags;
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtTreeWidgetRaw.QTreeWidgetItem_flags(arg1tmp);
-result := VAL(ret,ItemFlags);  
-RETURN result;
-END QTreeWidgetItem_flags;
-
-PROCEDURE QTreeWidgetItem_setFlags ( self: QTreeWidgetItem;
-flags: ItemFlags;
-) =
-VAR
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtTreeWidgetRaw.QTreeWidgetItem_setFlags(arg1tmp, ORD(flags));
-END QTreeWidgetItem_setFlags;
-
-PROCEDURE QTreeWidgetItem_text ( self: QTreeWidgetItem;
-column: INTEGER;
-): TEXT =
-VAR
-ret : ADDRESS;
-qstr := NEW(QString);
-ba : QByteArray;
-result : TEXT;
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtTreeWidgetRaw.QTreeWidgetItem_text(arg1tmp, column);
-
-  qstr.cxxObj := ret;
-  ba := qstr.toLocal8Bit();
-  result := ba.data();
-
-RETURN result;
-END QTreeWidgetItem_text;
-
-PROCEDURE QTreeWidgetItem_setText ( self: QTreeWidgetItem;
-column: INTEGER;
- text: TEXT;
-) =
-VAR
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-qstr_text := NEW(QString).initQString(text);
-arg3tmp :=  LOOPHOLE(qstr_text.cxxObj,ADDRESS);
-BEGIN
-QtTreeWidgetRaw.QTreeWidgetItem_setText(arg1tmp, column, arg3tmp);
-END QTreeWidgetItem_setText;
-
-PROCEDURE QTreeWidgetItem_icon ( self: QTreeWidgetItem;
-column: INTEGER;
-): QIcon =
-VAR
-ret:ADDRESS; result : QIcon;
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtTreeWidgetRaw.QTreeWidgetItem_icon(arg1tmp, column);
-
-  result := NEW(QIcon);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QTreeWidgetItem_icon;
-
-PROCEDURE QTreeWidgetItem_setIcon ( self: QTreeWidgetItem;
-column: INTEGER;
- icon: QIcon;
-) =
-VAR
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg3tmp :=  LOOPHOLE(icon.cxxObj,ADDRESS);
-BEGIN
-QtTreeWidgetRaw.QTreeWidgetItem_setIcon(arg1tmp, column, arg3tmp);
-END QTreeWidgetItem_setIcon;
-
-PROCEDURE QTreeWidgetItem_statusTip ( self: QTreeWidgetItem;
-column: INTEGER;
-): TEXT =
-VAR
-ret : ADDRESS;
-qstr := NEW(QString);
-ba : QByteArray;
-result : TEXT;
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtTreeWidgetRaw.QTreeWidgetItem_statusTip(arg1tmp, column);
-
-  qstr.cxxObj := ret;
-  ba := qstr.toLocal8Bit();
-  result := ba.data();
-
-RETURN result;
-END QTreeWidgetItem_statusTip;
-
-PROCEDURE QTreeWidgetItem_setStatusTip ( self: QTreeWidgetItem;
-column: INTEGER;
- statusTip: TEXT;
-) =
-VAR
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-qstr_statusTip := NEW(QString).initQString(statusTip);
-arg3tmp :=  LOOPHOLE(qstr_statusTip.cxxObj,ADDRESS);
-BEGIN
-QtTreeWidgetRaw.QTreeWidgetItem_setStatusTip(arg1tmp, column, arg3tmp);
-END QTreeWidgetItem_setStatusTip;
-
-PROCEDURE QTreeWidgetItem_toolTip ( self: QTreeWidgetItem;
-column: INTEGER;
-): TEXT =
-VAR
-ret : ADDRESS;
-qstr := NEW(QString);
-ba : QByteArray;
-result : TEXT;
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtTreeWidgetRaw.QTreeWidgetItem_toolTip(arg1tmp, column);
-
-  qstr.cxxObj := ret;
-  ba := qstr.toLocal8Bit();
-  result := ba.data();
-
-RETURN result;
-END QTreeWidgetItem_toolTip;
-
-PROCEDURE QTreeWidgetItem_setToolTip ( self: QTreeWidgetItem;
-column: INTEGER;
- toolTip: TEXT;
-) =
-VAR
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-qstr_toolTip := NEW(QString).initQString(toolTip);
-arg3tmp :=  LOOPHOLE(qstr_toolTip.cxxObj,ADDRESS);
-BEGIN
-QtTreeWidgetRaw.QTreeWidgetItem_setToolTip(arg1tmp, column, arg3tmp);
-END QTreeWidgetItem_setToolTip;
-
-PROCEDURE QTreeWidgetItem_whatsThis ( self: QTreeWidgetItem;
-column: INTEGER;
-): TEXT =
-VAR
-ret : ADDRESS;
-qstr := NEW(QString);
-ba : QByteArray;
-result : TEXT;
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtTreeWidgetRaw.QTreeWidgetItem_whatsThis(arg1tmp, column);
-
-  qstr.cxxObj := ret;
-  ba := qstr.toLocal8Bit();
-  result := ba.data();
-
-RETURN result;
-END QTreeWidgetItem_whatsThis;
-
-PROCEDURE QTreeWidgetItem_setWhatsThis ( self: QTreeWidgetItem;
-column: INTEGER;
- whatsThis: TEXT;
-) =
-VAR
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-qstr_whatsThis := NEW(QString).initQString(whatsThis);
-arg3tmp :=  LOOPHOLE(qstr_whatsThis.cxxObj,ADDRESS);
-BEGIN
-QtTreeWidgetRaw.QTreeWidgetItem_setWhatsThis(arg1tmp, column, arg3tmp);
-END QTreeWidgetItem_setWhatsThis;
-
-PROCEDURE QTreeWidgetItem_font ( self: QTreeWidgetItem;
-column: INTEGER;
-): QFont =
-VAR
-ret:ADDRESS; result : QFont;
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtTreeWidgetRaw.QTreeWidgetItem_font(arg1tmp, column);
-
-  result := NEW(QFont);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QTreeWidgetItem_font;
-
-PROCEDURE QTreeWidgetItem_setFont ( self: QTreeWidgetItem;
-column: INTEGER;
- font: QFont;
-) =
-VAR
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg3tmp :=  LOOPHOLE(font.cxxObj,ADDRESS);
-BEGIN
-QtTreeWidgetRaw.QTreeWidgetItem_setFont(arg1tmp, column, arg3tmp);
-END QTreeWidgetItem_setFont;
-
-PROCEDURE QTreeWidgetItem_textAlignment ( self: QTreeWidgetItem;
-column: INTEGER;
-): INTEGER =
-VAR
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtTreeWidgetRaw.QTreeWidgetItem_textAlignment(arg1tmp, column);
-END QTreeWidgetItem_textAlignment;
-
-PROCEDURE QTreeWidgetItem_setTextAlignment ( self: QTreeWidgetItem;
-column, alignment: INTEGER;
-) =
-VAR
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtTreeWidgetRaw.QTreeWidgetItem_setTextAlignment(arg1tmp, column, alignment);
-END QTreeWidgetItem_setTextAlignment;
-
-PROCEDURE QTreeWidgetItem_backgroundColor ( self: QTreeWidgetItem;
-column: INTEGER;
-): QColor =
-VAR
-ret:ADDRESS; result : QColor;
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtTreeWidgetRaw.QTreeWidgetItem_backgroundColor(arg1tmp, column);
-
-  result := NEW(QColor);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QTreeWidgetItem_backgroundColor;
-
-PROCEDURE QTreeWidgetItem_setBackgroundColor ( self: QTreeWidgetItem;
-column: INTEGER;
- color: QColor;
-) =
-VAR
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg3tmp :=  LOOPHOLE(color.cxxObj,ADDRESS);
-BEGIN
-QtTreeWidgetRaw.QTreeWidgetItem_setBackgroundColor(arg1tmp, column, arg3tmp);
-END QTreeWidgetItem_setBackgroundColor;
-
-PROCEDURE QTreeWidgetItem_background ( self: QTreeWidgetItem;
-column: INTEGER;
-): QBrush =
-VAR
-ret:ADDRESS; result : QBrush;
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtTreeWidgetRaw.QTreeWidgetItem_background(arg1tmp, column);
-
-  result := NEW(QBrush);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QTreeWidgetItem_background;
-
-PROCEDURE QTreeWidgetItem_setBackground ( self: QTreeWidgetItem;
-column: INTEGER;
- brush: QBrush;
-) =
-VAR
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg3tmp :=  LOOPHOLE(brush.cxxObj,ADDRESS);
-BEGIN
-QtTreeWidgetRaw.QTreeWidgetItem_setBackground(arg1tmp, column, arg3tmp);
-END QTreeWidgetItem_setBackground;
-
-PROCEDURE QTreeWidgetItem_textColor ( self: QTreeWidgetItem;
-column: INTEGER;
-): QColor =
-VAR
-ret:ADDRESS; result : QColor;
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtTreeWidgetRaw.QTreeWidgetItem_textColor(arg1tmp, column);
-
-  result := NEW(QColor);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QTreeWidgetItem_textColor;
-
-PROCEDURE QTreeWidgetItem_setTextColor ( self: QTreeWidgetItem;
-column: INTEGER;
- color: QColor;
-) =
-VAR
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg3tmp :=  LOOPHOLE(color.cxxObj,ADDRESS);
-BEGIN
-QtTreeWidgetRaw.QTreeWidgetItem_setTextColor(arg1tmp, column, arg3tmp);
-END QTreeWidgetItem_setTextColor;
-
-PROCEDURE QTreeWidgetItem_foreground ( self: QTreeWidgetItem;
-column: INTEGER;
-): QBrush =
-VAR
-ret:ADDRESS; result : QBrush;
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtTreeWidgetRaw.QTreeWidgetItem_foreground(arg1tmp, column);
-
-  result := NEW(QBrush);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QTreeWidgetItem_foreground;
-
-PROCEDURE QTreeWidgetItem_setForeground ( self: QTreeWidgetItem;
-column: INTEGER;
- brush: QBrush;
-) =
-VAR
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg3tmp :=  LOOPHOLE(brush.cxxObj,ADDRESS);
-BEGIN
-QtTreeWidgetRaw.QTreeWidgetItem_setForeground(arg1tmp, column, arg3tmp);
-END QTreeWidgetItem_setForeground;
-
-PROCEDURE QTreeWidgetItem_checkState ( self: QTreeWidgetItem;
-column: INTEGER;
-): CheckState =
-VAR
-ret:INTEGER; result : CheckState;
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtTreeWidgetRaw.QTreeWidgetItem_checkState(arg1tmp, column);
-result := VAL(ret,CheckState);  
-RETURN result;
-END QTreeWidgetItem_checkState;
-
-PROCEDURE QTreeWidgetItem_setCheckState ( self: QTreeWidgetItem;
-column: INTEGER;
-state: CheckState;
-) =
-VAR
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtTreeWidgetRaw.QTreeWidgetItem_setCheckState(arg1tmp, column, ORD(state));
-END QTreeWidgetItem_setCheckState;
-
-PROCEDURE QTreeWidgetItem_sizeHint ( self: QTreeWidgetItem;
-column: INTEGER;
-): QSize =
-VAR
-ret:ADDRESS; result : QSize;
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtTreeWidgetRaw.QTreeWidgetItem_sizeHint(arg1tmp, column);
-
-  result := NEW(QSize);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QTreeWidgetItem_sizeHint;
-
-PROCEDURE QTreeWidgetItem_setSizeHint ( self: QTreeWidgetItem;
-column: INTEGER;
- size: QSize;
-) =
-VAR
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg3tmp :=  LOOPHOLE(size.cxxObj,ADDRESS);
-BEGIN
-QtTreeWidgetRaw.QTreeWidgetItem_setSizeHint(arg1tmp, column, arg3tmp);
-END QTreeWidgetItem_setSizeHint;
-
-PROCEDURE QTreeWidgetItem_data ( self: QTreeWidgetItem;
-column, role: INTEGER;
-): QVariant =
-VAR
-ret:ADDRESS; result : QVariant;
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtTreeWidgetRaw.QTreeWidgetItem_data(arg1tmp, column, role);
-
-  result := NEW(QVariant);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QTreeWidgetItem_data;
-
-PROCEDURE QTreeWidgetItem_setData ( self: QTreeWidgetItem;
-column, role: INTEGER;
- value: QVariant;
-) =
-VAR
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg4tmp :=  LOOPHOLE(value.cxxObj,ADDRESS);
-BEGIN
-QtTreeWidgetRaw.QTreeWidgetItem_setData(arg1tmp, column, role, arg4tmp);
-END QTreeWidgetItem_setData;
-
-PROCEDURE QTreeWidgetItem_parent ( self: QTreeWidgetItem;
-): QTreeWidgetItem =
-VAR
-result : ADDRESS;
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-result := QtTreeWidgetRaw.QTreeWidgetItem_parent(arg1tmp);
-
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QTreeWidgetItem);
-
-RETURN self;
-END QTreeWidgetItem_parent;
-
-PROCEDURE QTreeWidgetItem_child ( self: QTreeWidgetItem;
-index: INTEGER;
-): QTreeWidgetItem =
-VAR
-result : ADDRESS;
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-result := QtTreeWidgetRaw.QTreeWidgetItem_child(arg1tmp, index);
-
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QTreeWidgetItem);
-
-RETURN self;
-END QTreeWidgetItem_child;
-
-PROCEDURE QTreeWidgetItem_childCount ( self: QTreeWidgetItem;
-): INTEGER =
-VAR
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtTreeWidgetRaw.QTreeWidgetItem_childCount(arg1tmp);
-END QTreeWidgetItem_childCount;
-
-PROCEDURE QTreeWidgetItem_columnCount ( self: QTreeWidgetItem;
-): INTEGER =
-VAR
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtTreeWidgetRaw.QTreeWidgetItem_columnCount(arg1tmp);
-END QTreeWidgetItem_columnCount;
-
-PROCEDURE QTreeWidgetItem_indexOfChild ( self, child: QTreeWidgetItem;
-): INTEGER =
-VAR
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(child.cxxObj,ADDRESS);
-BEGIN
-RETURN QtTreeWidgetRaw.QTreeWidgetItem_indexOfChild(arg1tmp, arg2tmp);
-END QTreeWidgetItem_indexOfChild;
-
-PROCEDURE QTreeWidgetItem_addChild ( self, child: QTreeWidgetItem;
-) =
-VAR
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(child.cxxObj,ADDRESS);
-BEGIN
-QtTreeWidgetRaw.QTreeWidgetItem_addChild(arg1tmp, arg2tmp);
-END QTreeWidgetItem_addChild;
-
-PROCEDURE QTreeWidgetItem_insertChild ( self: QTreeWidgetItem;
-index: INTEGER;
- child: QTreeWidgetItem;
-) =
-VAR
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg3tmp :=  LOOPHOLE(child.cxxObj,ADDRESS);
-BEGIN
-QtTreeWidgetRaw.QTreeWidgetItem_insertChild(arg1tmp, index, arg3tmp);
-END QTreeWidgetItem_insertChild;
-
-PROCEDURE QTreeWidgetItem_removeChild ( self, child: QTreeWidgetItem;
-) =
-VAR
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(child.cxxObj,ADDRESS);
-BEGIN
-QtTreeWidgetRaw.QTreeWidgetItem_removeChild(arg1tmp, arg2tmp);
-END QTreeWidgetItem_removeChild;
-
-PROCEDURE QTreeWidgetItem_takeChild ( self: QTreeWidgetItem;
-index: INTEGER;
-): QTreeWidgetItem =
-VAR
-result : ADDRESS;
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-result := QtTreeWidgetRaw.QTreeWidgetItem_takeChild(arg1tmp, index);
-
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QTreeWidgetItem);
-
-RETURN self;
-END QTreeWidgetItem_takeChild;
-
-PROCEDURE QTreeWidgetItem_type ( self: QTreeWidgetItem;
-): INTEGER =
-VAR
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtTreeWidgetRaw.QTreeWidgetItem_type(arg1tmp);
-END QTreeWidgetItem_type;
-
-PROCEDURE QTreeWidgetItem_sortChildren ( self: QTreeWidgetItem;
-column: INTEGER;
-order: SortOrder;
-) =
-VAR
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtTreeWidgetRaw.QTreeWidgetItem_sortChildren(arg1tmp, column, ORD(order));
-END QTreeWidgetItem_sortChildren;
-
-PROCEDURE Cleanup_QTreeWidgetItem(<*UNUSED*>READONLY self: WeakRef.T; ref: REFANY) =
-VAR obj : QTreeWidgetItem := ref;
-BEGIN
-  Delete_QTreeWidgetItem(obj);
- END Cleanup_QTreeWidgetItem;
-
-PROCEDURE Destroy_QTreeWidgetItem(self : QTreeWidgetItem) =
-BEGIN
-  EVAL WeakRef.FromRef(self,Cleanup_QTreeWidgetItem);
-END Destroy_QTreeWidgetItem;
+PROCEDURE New_QTreeWidgetItem0 (self: QTreeWidgetItem; type: INTEGER; ):
+  QTreeWidgetItem =
+  VAR result: ADDRESS;
+  BEGIN
+    result := QtTreeWidgetRaw.New_QTreeWidgetItem0(type);
+
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QTreeWidgetItem);
+
+    RETURN self;
+  END New_QTreeWidgetItem0;
+
+PROCEDURE New_QTreeWidgetItem1 (self: QTreeWidgetItem; ): QTreeWidgetItem =
+  VAR result: ADDRESS;
+  BEGIN
+    result := QtTreeWidgetRaw.New_QTreeWidgetItem1();
+
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QTreeWidgetItem);
+
+    RETURN self;
+  END New_QTreeWidgetItem1;
+
+PROCEDURE New_QTreeWidgetItem2
+  (self: QTreeWidgetItem; strings: QStringList; type: INTEGER; ):
+  QTreeWidgetItem =
+  VAR
+    result : ADDRESS;
+    arg1tmp          := LOOPHOLE(strings.cxxObj, ADDRESS);
+  BEGIN
+    result := QtTreeWidgetRaw.New_QTreeWidgetItem2(arg1tmp, type);
+
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QTreeWidgetItem);
+
+    RETURN self;
+  END New_QTreeWidgetItem2;
+
+PROCEDURE New_QTreeWidgetItem3
+  (self: QTreeWidgetItem; strings: QStringList; ): QTreeWidgetItem =
+  VAR
+    result : ADDRESS;
+    arg1tmp          := LOOPHOLE(strings.cxxObj, ADDRESS);
+  BEGIN
+    result := QtTreeWidgetRaw.New_QTreeWidgetItem3(arg1tmp);
+
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QTreeWidgetItem);
+
+    RETURN self;
+  END New_QTreeWidgetItem3;
+
+PROCEDURE New_QTreeWidgetItem4
+  (self: QTreeWidgetItem; view: QTreeWidget; type: INTEGER; ):
+  QTreeWidgetItem =
+  VAR
+    result : ADDRESS;
+    arg1tmp          := LOOPHOLE(view.cxxObj, ADDRESS);
+  BEGIN
+    result := QtTreeWidgetRaw.New_QTreeWidgetItem4(arg1tmp, type);
+
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QTreeWidgetItem);
+
+    RETURN self;
+  END New_QTreeWidgetItem4;
+
+PROCEDURE New_QTreeWidgetItem5
+  (self: QTreeWidgetItem; view: QTreeWidget; ): QTreeWidgetItem =
+  VAR
+    result : ADDRESS;
+    arg1tmp          := LOOPHOLE(view.cxxObj, ADDRESS);
+  BEGIN
+    result := QtTreeWidgetRaw.New_QTreeWidgetItem5(arg1tmp);
+
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QTreeWidgetItem);
+
+    RETURN self;
+  END New_QTreeWidgetItem5;
+
+PROCEDURE New_QTreeWidgetItem6 (self   : QTreeWidgetItem;
+                                view   : QTreeWidget;
+                                strings: QStringList;
+                                type   : INTEGER;         ):
+  QTreeWidgetItem =
+  VAR
+    result : ADDRESS;
+    arg1tmp          := LOOPHOLE(view.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(strings.cxxObj, ADDRESS);
+  BEGIN
+    result := QtTreeWidgetRaw.New_QTreeWidgetItem6(arg1tmp, arg2tmp, type);
+
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QTreeWidgetItem);
+
+    RETURN self;
+  END New_QTreeWidgetItem6;
+
+PROCEDURE New_QTreeWidgetItem7
+  (self: QTreeWidgetItem; view: QTreeWidget; strings: QStringList; ):
+  QTreeWidgetItem =
+  VAR
+    result : ADDRESS;
+    arg1tmp          := LOOPHOLE(view.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(strings.cxxObj, ADDRESS);
+  BEGIN
+    result := QtTreeWidgetRaw.New_QTreeWidgetItem7(arg1tmp, arg2tmp);
+
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QTreeWidgetItem);
+
+    RETURN self;
+  END New_QTreeWidgetItem7;
+
+PROCEDURE New_QTreeWidgetItem8 (self : QTreeWidgetItem;
+                                view : QTreeWidget;
+                                after: QTreeWidgetItem;
+                                type : INTEGER;         ):
+  QTreeWidgetItem =
+  VAR
+    result : ADDRESS;
+    arg1tmp          := LOOPHOLE(view.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(after.cxxObj, ADDRESS);
+  BEGIN
+    result := QtTreeWidgetRaw.New_QTreeWidgetItem8(arg1tmp, arg2tmp, type);
+
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QTreeWidgetItem);
+
+    RETURN self;
+  END New_QTreeWidgetItem8;
+
+PROCEDURE New_QTreeWidgetItem9
+  (self: QTreeWidgetItem; view: QTreeWidget; after: QTreeWidgetItem; ):
+  QTreeWidgetItem =
+  VAR
+    result : ADDRESS;
+    arg1tmp          := LOOPHOLE(view.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(after.cxxObj, ADDRESS);
+  BEGIN
+    result := QtTreeWidgetRaw.New_QTreeWidgetItem9(arg1tmp, arg2tmp);
+
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QTreeWidgetItem);
+
+    RETURN self;
+  END New_QTreeWidgetItem9;
+
+PROCEDURE New_QTreeWidgetItem10
+  (self: QTreeWidgetItem; parent: QTreeWidgetItem; type: INTEGER; ):
+  QTreeWidgetItem =
+  VAR
+    result : ADDRESS;
+    arg1tmp          := LOOPHOLE(parent.cxxObj, ADDRESS);
+  BEGIN
+    result := QtTreeWidgetRaw.New_QTreeWidgetItem10(arg1tmp, type);
+
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QTreeWidgetItem);
+
+    RETURN self;
+  END New_QTreeWidgetItem10;
+
+PROCEDURE New_QTreeWidgetItem11
+  (self: QTreeWidgetItem; parent: QTreeWidgetItem; ): QTreeWidgetItem =
+  VAR
+    result : ADDRESS;
+    arg1tmp          := LOOPHOLE(parent.cxxObj, ADDRESS);
+  BEGIN
+    result := QtTreeWidgetRaw.New_QTreeWidgetItem11(arg1tmp);
+
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QTreeWidgetItem);
+
+    RETURN self;
+  END New_QTreeWidgetItem11;
+
+PROCEDURE New_QTreeWidgetItem12 (self   : QTreeWidgetItem;
+                                 parent : QTreeWidgetItem;
+                                 strings: QStringList;
+                                 type   : INTEGER;         ):
+  QTreeWidgetItem =
+  VAR
+    result : ADDRESS;
+    arg1tmp          := LOOPHOLE(parent.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(strings.cxxObj, ADDRESS);
+  BEGIN
+    result :=
+      QtTreeWidgetRaw.New_QTreeWidgetItem12(arg1tmp, arg2tmp, type);
+
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QTreeWidgetItem);
+
+    RETURN self;
+  END New_QTreeWidgetItem12;
+
+PROCEDURE New_QTreeWidgetItem13
+  (self: QTreeWidgetItem; parent: QTreeWidgetItem; strings: QStringList; ):
+  QTreeWidgetItem =
+  VAR
+    result : ADDRESS;
+    arg1tmp          := LOOPHOLE(parent.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(strings.cxxObj, ADDRESS);
+  BEGIN
+    result := QtTreeWidgetRaw.New_QTreeWidgetItem13(arg1tmp, arg2tmp);
+
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QTreeWidgetItem);
+
+    RETURN self;
+  END New_QTreeWidgetItem13;
+
+PROCEDURE New_QTreeWidgetItem14
+  (self: QTreeWidgetItem; parent, after: QTreeWidgetItem; type: INTEGER; ):
+  QTreeWidgetItem =
+  VAR
+    result : ADDRESS;
+    arg1tmp          := LOOPHOLE(parent.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(after.cxxObj, ADDRESS);
+  BEGIN
+    result :=
+      QtTreeWidgetRaw.New_QTreeWidgetItem14(arg1tmp, arg2tmp, type);
+
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QTreeWidgetItem);
+
+    RETURN self;
+  END New_QTreeWidgetItem14;
+
+PROCEDURE New_QTreeWidgetItem15
+  (self: QTreeWidgetItem; parent, after: QTreeWidgetItem; ):
+  QTreeWidgetItem =
+  VAR
+    result : ADDRESS;
+    arg1tmp          := LOOPHOLE(parent.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(after.cxxObj, ADDRESS);
+  BEGIN
+    result := QtTreeWidgetRaw.New_QTreeWidgetItem15(arg1tmp, arg2tmp);
+
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QTreeWidgetItem);
+
+    RETURN self;
+  END New_QTreeWidgetItem15;
+
+PROCEDURE New_QTreeWidgetItem16
+  (self: QTreeWidgetItem; other: QTreeWidgetItem; ): QTreeWidgetItem =
+  VAR
+    result : ADDRESS;
+    arg1tmp          := LOOPHOLE(other.cxxObj, ADDRESS);
+  BEGIN
+    result := QtTreeWidgetRaw.New_QTreeWidgetItem16(arg1tmp);
+
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QTreeWidgetItem);
+
+    RETURN self;
+  END New_QTreeWidgetItem16;
+
+PROCEDURE Delete_QTreeWidgetItem (self: QTreeWidgetItem; ) =
+  VAR arg1tmp := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtTreeWidgetRaw.Delete_QTreeWidgetItem(arg1tmp);
+  END Delete_QTreeWidgetItem;
+
+PROCEDURE QTreeWidgetItem_clone (self: QTreeWidgetItem; ):
+  QTreeWidgetItem =
+  VAR
+    result : ADDRESS;
+    arg1tmp          := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    result := QtTreeWidgetRaw.QTreeWidgetItem_clone(arg1tmp);
+
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QTreeWidgetItem);
+
+    RETURN self;
+  END QTreeWidgetItem_clone;
+
+PROCEDURE QTreeWidgetItem_treeWidget (self: QTreeWidgetItem; ):
+  QTreeWidget =
+  VAR
+    ret    : ADDRESS;
+    result : QTreeWidget;
+    arg1tmp              := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtTreeWidgetRaw.QTreeWidgetItem_treeWidget(arg1tmp);
+
+    result := NEW(QTreeWidget);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QTreeWidgetItem_treeWidget;
+
+PROCEDURE QTreeWidgetItem_setSelected
+  (self: QTreeWidgetItem; select: BOOLEAN; ) =
+  VAR arg1tmp := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtTreeWidgetRaw.QTreeWidgetItem_setSelected(arg1tmp, select);
+  END QTreeWidgetItem_setSelected;
+
+PROCEDURE QTreeWidgetItem_isSelected (self: QTreeWidgetItem; ): BOOLEAN =
+  VAR arg1tmp := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtTreeWidgetRaw.QTreeWidgetItem_isSelected(arg1tmp);
+  END QTreeWidgetItem_isSelected;
+
+PROCEDURE QTreeWidgetItem_setHidden
+  (self: QTreeWidgetItem; hide: BOOLEAN; ) =
+  VAR arg1tmp := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtTreeWidgetRaw.QTreeWidgetItem_setHidden(arg1tmp, hide);
+  END QTreeWidgetItem_setHidden;
+
+PROCEDURE QTreeWidgetItem_isHidden (self: QTreeWidgetItem; ): BOOLEAN =
+  VAR arg1tmp := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtTreeWidgetRaw.QTreeWidgetItem_isHidden(arg1tmp);
+  END QTreeWidgetItem_isHidden;
+
+PROCEDURE QTreeWidgetItem_setExpanded
+  (self: QTreeWidgetItem; expand: BOOLEAN; ) =
+  VAR arg1tmp := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtTreeWidgetRaw.QTreeWidgetItem_setExpanded(arg1tmp, expand);
+  END QTreeWidgetItem_setExpanded;
+
+PROCEDURE QTreeWidgetItem_isExpanded (self: QTreeWidgetItem; ): BOOLEAN =
+  VAR arg1tmp := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtTreeWidgetRaw.QTreeWidgetItem_isExpanded(arg1tmp);
+  END QTreeWidgetItem_isExpanded;
+
+PROCEDURE QTreeWidgetItem_setFirstColumnSpanned
+  (self: QTreeWidgetItem; span: BOOLEAN; ) =
+  VAR arg1tmp := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtTreeWidgetRaw.QTreeWidgetItem_setFirstColumnSpanned(arg1tmp, span);
+  END QTreeWidgetItem_setFirstColumnSpanned;
+
+PROCEDURE QTreeWidgetItem_isFirstColumnSpanned (self: QTreeWidgetItem; ):
+  BOOLEAN =
+  VAR arg1tmp := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtTreeWidgetRaw.QTreeWidgetItem_isFirstColumnSpanned(arg1tmp);
+  END QTreeWidgetItem_isFirstColumnSpanned;
+
+PROCEDURE QTreeWidgetItem_setDisabled
+  (self: QTreeWidgetItem; disabled: BOOLEAN; ) =
+  VAR arg1tmp := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtTreeWidgetRaw.QTreeWidgetItem_setDisabled(arg1tmp, disabled);
+  END QTreeWidgetItem_setDisabled;
+
+PROCEDURE QTreeWidgetItem_isDisabled (self: QTreeWidgetItem; ): BOOLEAN =
+  VAR arg1tmp := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtTreeWidgetRaw.QTreeWidgetItem_isDisabled(arg1tmp);
+  END QTreeWidgetItem_isDisabled;
+
+PROCEDURE QTreeWidgetItem_setChildIndicatorPolicy
+  (self: QTreeWidgetItem; policy: ChildIndicatorPolicy; ) =
+  VAR arg1tmp := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtTreeWidgetRaw.QTreeWidgetItem_setChildIndicatorPolicy(
+      arg1tmp, ORD(policy));
+  END QTreeWidgetItem_setChildIndicatorPolicy;
+
+PROCEDURE QTreeWidgetItem_childIndicatorPolicy (self: QTreeWidgetItem; ):
+  ChildIndicatorPolicy =
+  VAR
+    ret    : INTEGER;
+    result : ChildIndicatorPolicy;
+    arg1tmp                       := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtTreeWidgetRaw.QTreeWidgetItem_childIndicatorPolicy(arg1tmp);
+    result := VAL(ret, ChildIndicatorPolicy);
+    RETURN result;
+  END QTreeWidgetItem_childIndicatorPolicy;
+
+PROCEDURE QTreeWidgetItem_flags (self: QTreeWidgetItem; ): ItemFlags =
+  VAR
+    ret    : INTEGER;
+    result : ItemFlags;
+    arg1tmp            := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtTreeWidgetRaw.QTreeWidgetItem_flags(arg1tmp);
+    result := VAL(ret, ItemFlags);
+    RETURN result;
+  END QTreeWidgetItem_flags;
+
+PROCEDURE QTreeWidgetItem_setFlags
+  (self: QTreeWidgetItem; flags: ItemFlags; ) =
+  VAR arg1tmp := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtTreeWidgetRaw.QTreeWidgetItem_setFlags(arg1tmp, ORD(flags));
+  END QTreeWidgetItem_setFlags;
+
+PROCEDURE QTreeWidgetItem_text (self: QTreeWidgetItem; column: INTEGER; ):
+  TEXT =
+  VAR
+    ret    : ADDRESS;
+    qstr                := NEW(QString);
+    ba     : QByteArray;
+    result : TEXT;
+    arg1tmp             := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtTreeWidgetRaw.QTreeWidgetItem_text(arg1tmp, column);
+
+    qstr.cxxObj := ret;
+    ba := qstr.toLocal8Bit();
+    result := ba.data();
+
+    RETURN result;
+  END QTreeWidgetItem_text;
+
+PROCEDURE QTreeWidgetItem_setText
+  (self: QTreeWidgetItem; column: INTEGER; text: TEXT; ) =
+  VAR
+    arg1tmp   := LOOPHOLE(self.cxxObj, ADDRESS);
+    qstr_text := NEW(QString).initQString(text);
+    arg3tmp   := LOOPHOLE(qstr_text.cxxObj, ADDRESS);
+  BEGIN
+    QtTreeWidgetRaw.QTreeWidgetItem_setText(arg1tmp, column, arg3tmp);
+  END QTreeWidgetItem_setText;
+
+PROCEDURE QTreeWidgetItem_icon (self: QTreeWidgetItem; column: INTEGER; ):
+  QIcon =
+  VAR
+    ret    : ADDRESS;
+    result : QIcon;
+    arg1tmp          := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtTreeWidgetRaw.QTreeWidgetItem_icon(arg1tmp, column);
+
+    result := NEW(QIcon);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QTreeWidgetItem_icon;
+
+PROCEDURE QTreeWidgetItem_setIcon
+  (self: QTreeWidgetItem; column: INTEGER; icon: QIcon; ) =
+  VAR
+    arg1tmp := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg3tmp := LOOPHOLE(icon.cxxObj, ADDRESS);
+  BEGIN
+    QtTreeWidgetRaw.QTreeWidgetItem_setIcon(arg1tmp, column, arg3tmp);
+  END QTreeWidgetItem_setIcon;
+
+PROCEDURE QTreeWidgetItem_statusTip
+  (self: QTreeWidgetItem; column: INTEGER; ): TEXT =
+  VAR
+    ret    : ADDRESS;
+    qstr                := NEW(QString);
+    ba     : QByteArray;
+    result : TEXT;
+    arg1tmp             := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtTreeWidgetRaw.QTreeWidgetItem_statusTip(arg1tmp, column);
+
+    qstr.cxxObj := ret;
+    ba := qstr.toLocal8Bit();
+    result := ba.data();
+
+    RETURN result;
+  END QTreeWidgetItem_statusTip;
+
+PROCEDURE QTreeWidgetItem_setStatusTip
+  (self: QTreeWidgetItem; column: INTEGER; statusTip: TEXT; ) =
+  VAR
+    arg1tmp        := LOOPHOLE(self.cxxObj, ADDRESS);
+    qstr_statusTip := NEW(QString).initQString(statusTip);
+    arg3tmp        := LOOPHOLE(qstr_statusTip.cxxObj, ADDRESS);
+  BEGIN
+    QtTreeWidgetRaw.QTreeWidgetItem_setStatusTip(arg1tmp, column, arg3tmp);
+  END QTreeWidgetItem_setStatusTip;
+
+PROCEDURE QTreeWidgetItem_toolTip
+  (self: QTreeWidgetItem; column: INTEGER; ): TEXT =
+  VAR
+    ret    : ADDRESS;
+    qstr                := NEW(QString);
+    ba     : QByteArray;
+    result : TEXT;
+    arg1tmp             := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtTreeWidgetRaw.QTreeWidgetItem_toolTip(arg1tmp, column);
+
+    qstr.cxxObj := ret;
+    ba := qstr.toLocal8Bit();
+    result := ba.data();
+
+    RETURN result;
+  END QTreeWidgetItem_toolTip;
+
+PROCEDURE QTreeWidgetItem_setToolTip
+  (self: QTreeWidgetItem; column: INTEGER; toolTip: TEXT; ) =
+  VAR
+    arg1tmp      := LOOPHOLE(self.cxxObj, ADDRESS);
+    qstr_toolTip := NEW(QString).initQString(toolTip);
+    arg3tmp      := LOOPHOLE(qstr_toolTip.cxxObj, ADDRESS);
+  BEGIN
+    QtTreeWidgetRaw.QTreeWidgetItem_setToolTip(arg1tmp, column, arg3tmp);
+  END QTreeWidgetItem_setToolTip;
+
+PROCEDURE QTreeWidgetItem_whatsThis
+  (self: QTreeWidgetItem; column: INTEGER; ): TEXT =
+  VAR
+    ret    : ADDRESS;
+    qstr                := NEW(QString);
+    ba     : QByteArray;
+    result : TEXT;
+    arg1tmp             := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtTreeWidgetRaw.QTreeWidgetItem_whatsThis(arg1tmp, column);
+
+    qstr.cxxObj := ret;
+    ba := qstr.toLocal8Bit();
+    result := ba.data();
+
+    RETURN result;
+  END QTreeWidgetItem_whatsThis;
+
+PROCEDURE QTreeWidgetItem_setWhatsThis
+  (self: QTreeWidgetItem; column: INTEGER; whatsThis: TEXT; ) =
+  VAR
+    arg1tmp        := LOOPHOLE(self.cxxObj, ADDRESS);
+    qstr_whatsThis := NEW(QString).initQString(whatsThis);
+    arg3tmp        := LOOPHOLE(qstr_whatsThis.cxxObj, ADDRESS);
+  BEGIN
+    QtTreeWidgetRaw.QTreeWidgetItem_setWhatsThis(arg1tmp, column, arg3tmp);
+  END QTreeWidgetItem_setWhatsThis;
+
+PROCEDURE QTreeWidgetItem_font (self: QTreeWidgetItem; column: INTEGER; ):
+  QFont =
+  VAR
+    ret    : ADDRESS;
+    result : QFont;
+    arg1tmp          := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtTreeWidgetRaw.QTreeWidgetItem_font(arg1tmp, column);
+
+    result := NEW(QFont);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QTreeWidgetItem_font;
+
+PROCEDURE QTreeWidgetItem_setFont
+  (self: QTreeWidgetItem; column: INTEGER; font: QFont; ) =
+  VAR
+    arg1tmp := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg3tmp := LOOPHOLE(font.cxxObj, ADDRESS);
+  BEGIN
+    QtTreeWidgetRaw.QTreeWidgetItem_setFont(arg1tmp, column, arg3tmp);
+  END QTreeWidgetItem_setFont;
+
+PROCEDURE QTreeWidgetItem_textAlignment
+  (self: QTreeWidgetItem; column: INTEGER; ): INTEGER =
+  VAR arg1tmp := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtTreeWidgetRaw.QTreeWidgetItem_textAlignment(arg1tmp, column);
+  END QTreeWidgetItem_textAlignment;
+
+PROCEDURE QTreeWidgetItem_setTextAlignment
+  (self: QTreeWidgetItem; column, alignment: INTEGER; ) =
+  VAR arg1tmp := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtTreeWidgetRaw.QTreeWidgetItem_setTextAlignment(
+      arg1tmp, column, alignment);
+  END QTreeWidgetItem_setTextAlignment;
+
+PROCEDURE QTreeWidgetItem_backgroundColor
+  (self: QTreeWidgetItem; column: INTEGER; ): QColor =
+  VAR
+    ret    : ADDRESS;
+    result : QColor;
+    arg1tmp          := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret :=
+      QtTreeWidgetRaw.QTreeWidgetItem_backgroundColor(arg1tmp, column);
+
+    result := NEW(QColor);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QTreeWidgetItem_backgroundColor;
+
+PROCEDURE QTreeWidgetItem_setBackgroundColor
+  (self: QTreeWidgetItem; column: INTEGER; color: QColor; ) =
+  VAR
+    arg1tmp := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg3tmp := LOOPHOLE(color.cxxObj, ADDRESS);
+  BEGIN
+    QtTreeWidgetRaw.QTreeWidgetItem_setBackgroundColor(
+      arg1tmp, column, arg3tmp);
+  END QTreeWidgetItem_setBackgroundColor;
+
+PROCEDURE QTreeWidgetItem_background
+  (self: QTreeWidgetItem; column: INTEGER; ): QBrush =
+  VAR
+    ret    : ADDRESS;
+    result : QBrush;
+    arg1tmp          := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtTreeWidgetRaw.QTreeWidgetItem_background(arg1tmp, column);
+
+    result := NEW(QBrush);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QTreeWidgetItem_background;
+
+PROCEDURE QTreeWidgetItem_setBackground
+  (self: QTreeWidgetItem; column: INTEGER; brush: QBrush; ) =
+  VAR
+    arg1tmp := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg3tmp := LOOPHOLE(brush.cxxObj, ADDRESS);
+  BEGIN
+    QtTreeWidgetRaw.QTreeWidgetItem_setBackground(arg1tmp, column, arg3tmp);
+  END QTreeWidgetItem_setBackground;
+
+PROCEDURE QTreeWidgetItem_textColor
+  (self: QTreeWidgetItem; column: INTEGER; ): QColor =
+  VAR
+    ret    : ADDRESS;
+    result : QColor;
+    arg1tmp          := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtTreeWidgetRaw.QTreeWidgetItem_textColor(arg1tmp, column);
+
+    result := NEW(QColor);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QTreeWidgetItem_textColor;
+
+PROCEDURE QTreeWidgetItem_setTextColor
+  (self: QTreeWidgetItem; column: INTEGER; color: QColor; ) =
+  VAR
+    arg1tmp := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg3tmp := LOOPHOLE(color.cxxObj, ADDRESS);
+  BEGIN
+    QtTreeWidgetRaw.QTreeWidgetItem_setTextColor(arg1tmp, column, arg3tmp);
+  END QTreeWidgetItem_setTextColor;
+
+PROCEDURE QTreeWidgetItem_foreground
+  (self: QTreeWidgetItem; column: INTEGER; ): QBrush =
+  VAR
+    ret    : ADDRESS;
+    result : QBrush;
+    arg1tmp          := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtTreeWidgetRaw.QTreeWidgetItem_foreground(arg1tmp, column);
+
+    result := NEW(QBrush);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QTreeWidgetItem_foreground;
+
+PROCEDURE QTreeWidgetItem_setForeground
+  (self: QTreeWidgetItem; column: INTEGER; brush: QBrush; ) =
+  VAR
+    arg1tmp := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg3tmp := LOOPHOLE(brush.cxxObj, ADDRESS);
+  BEGIN
+    QtTreeWidgetRaw.QTreeWidgetItem_setForeground(arg1tmp, column, arg3tmp);
+  END QTreeWidgetItem_setForeground;
+
+PROCEDURE QTreeWidgetItem_checkState
+  (self: QTreeWidgetItem; column: INTEGER; ): CheckState =
+  VAR
+    ret    : INTEGER;
+    result : CheckState;
+    arg1tmp             := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtTreeWidgetRaw.QTreeWidgetItem_checkState(arg1tmp, column);
+    result := VAL(ret, CheckState);
+    RETURN result;
+  END QTreeWidgetItem_checkState;
+
+PROCEDURE QTreeWidgetItem_setCheckState
+  (self: QTreeWidgetItem; column: INTEGER; state: CheckState; ) =
+  VAR arg1tmp := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtTreeWidgetRaw.QTreeWidgetItem_setCheckState(
+      arg1tmp, column, ORD(state));
+  END QTreeWidgetItem_setCheckState;
+
+PROCEDURE QTreeWidgetItem_sizeHint
+  (self: QTreeWidgetItem; column: INTEGER; ): QSize =
+  VAR
+    ret    : ADDRESS;
+    result : QSize;
+    arg1tmp          := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtTreeWidgetRaw.QTreeWidgetItem_sizeHint(arg1tmp, column);
+
+    result := NEW(QSize);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QTreeWidgetItem_sizeHint;
+
+PROCEDURE QTreeWidgetItem_setSizeHint
+  (self: QTreeWidgetItem; column: INTEGER; size: QSize; ) =
+  VAR
+    arg1tmp := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg3tmp := LOOPHOLE(size.cxxObj, ADDRESS);
+  BEGIN
+    QtTreeWidgetRaw.QTreeWidgetItem_setSizeHint(arg1tmp, column, arg3tmp);
+  END QTreeWidgetItem_setSizeHint;
+
+PROCEDURE QTreeWidgetItem_data
+  (self: QTreeWidgetItem; column, role: INTEGER; ): QVariant =
+  VAR
+    ret    : ADDRESS;
+    result : QVariant;
+    arg1tmp           := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtTreeWidgetRaw.QTreeWidgetItem_data(arg1tmp, column, role);
+
+    result := NEW(QVariant);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QTreeWidgetItem_data;
+
+PROCEDURE QTreeWidgetItem_setData
+  (self: QTreeWidgetItem; column, role: INTEGER; value: QVariant; ) =
+  VAR
+    arg1tmp := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg4tmp := LOOPHOLE(value.cxxObj, ADDRESS);
+  BEGIN
+    QtTreeWidgetRaw.QTreeWidgetItem_setData(arg1tmp, column, role, arg4tmp);
+  END QTreeWidgetItem_setData;
+
+PROCEDURE QTreeWidgetItem_parent (self: QTreeWidgetItem; ):
+  QTreeWidgetItem =
+  VAR
+    result : ADDRESS;
+    arg1tmp          := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    result := QtTreeWidgetRaw.QTreeWidgetItem_parent(arg1tmp);
+
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QTreeWidgetItem);
+
+    RETURN self;
+  END QTreeWidgetItem_parent;
+
+PROCEDURE QTreeWidgetItem_child (self: QTreeWidgetItem; index: INTEGER; ):
+  QTreeWidgetItem =
+  VAR
+    result : ADDRESS;
+    arg1tmp          := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    result := QtTreeWidgetRaw.QTreeWidgetItem_child(arg1tmp, index);
+
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QTreeWidgetItem);
+
+    RETURN self;
+  END QTreeWidgetItem_child;
+
+PROCEDURE QTreeWidgetItem_childCount (self: QTreeWidgetItem; ): INTEGER =
+  VAR arg1tmp := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtTreeWidgetRaw.QTreeWidgetItem_childCount(arg1tmp);
+  END QTreeWidgetItem_childCount;
+
+PROCEDURE QTreeWidgetItem_columnCount (self: QTreeWidgetItem; ): INTEGER =
+  VAR arg1tmp := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtTreeWidgetRaw.QTreeWidgetItem_columnCount(arg1tmp);
+  END QTreeWidgetItem_columnCount;
+
+PROCEDURE QTreeWidgetItem_indexOfChild (self, child: QTreeWidgetItem; ):
+  INTEGER =
+  VAR
+    arg1tmp := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp := LOOPHOLE(child.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtTreeWidgetRaw.QTreeWidgetItem_indexOfChild(arg1tmp, arg2tmp);
+  END QTreeWidgetItem_indexOfChild;
+
+PROCEDURE QTreeWidgetItem_addChild (self, child: QTreeWidgetItem; ) =
+  VAR
+    arg1tmp := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp := LOOPHOLE(child.cxxObj, ADDRESS);
+  BEGIN
+    QtTreeWidgetRaw.QTreeWidgetItem_addChild(arg1tmp, arg2tmp);
+  END QTreeWidgetItem_addChild;
+
+PROCEDURE QTreeWidgetItem_insertChild
+  (self: QTreeWidgetItem; index: INTEGER; child: QTreeWidgetItem; ) =
+  VAR
+    arg1tmp := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg3tmp := LOOPHOLE(child.cxxObj, ADDRESS);
+  BEGIN
+    QtTreeWidgetRaw.QTreeWidgetItem_insertChild(arg1tmp, index, arg3tmp);
+  END QTreeWidgetItem_insertChild;
+
+PROCEDURE QTreeWidgetItem_removeChild (self, child: QTreeWidgetItem; ) =
+  VAR
+    arg1tmp := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp := LOOPHOLE(child.cxxObj, ADDRESS);
+  BEGIN
+    QtTreeWidgetRaw.QTreeWidgetItem_removeChild(arg1tmp, arg2tmp);
+  END QTreeWidgetItem_removeChild;
+
+PROCEDURE QTreeWidgetItem_takeChild
+  (self: QTreeWidgetItem; index: INTEGER; ): QTreeWidgetItem =
+  VAR
+    result : ADDRESS;
+    arg1tmp          := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    result := QtTreeWidgetRaw.QTreeWidgetItem_takeChild(arg1tmp, index);
+
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QTreeWidgetItem);
+
+    RETURN self;
+  END QTreeWidgetItem_takeChild;
+
+PROCEDURE QTreeWidgetItem_type (self: QTreeWidgetItem; ): INTEGER =
+  VAR arg1tmp := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtTreeWidgetRaw.QTreeWidgetItem_type(arg1tmp);
+  END QTreeWidgetItem_type;
+
+PROCEDURE QTreeWidgetItem_sortChildren
+  (self: QTreeWidgetItem; column: INTEGER; order: SortOrder; ) =
+  VAR arg1tmp := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtTreeWidgetRaw.QTreeWidgetItem_sortChildren(
+      arg1tmp, column, ORD(order));
+  END QTreeWidgetItem_sortChildren;
+
+PROCEDURE Cleanup_QTreeWidgetItem
+  (<* UNUSED *> READONLY self: WeakRef.T; ref: REFANY) =
+  VAR obj: QTreeWidgetItem := ref;
+  BEGIN
+    Delete_QTreeWidgetItem(obj);
+  END Cleanup_QTreeWidgetItem;
+
+PROCEDURE Destroy_QTreeWidgetItem (self: QTreeWidgetItem) =
+  BEGIN
+    EVAL WeakRef.FromRef(self, Cleanup_QTreeWidgetItem);
+  END Destroy_QTreeWidgetItem;
 
 REVEAL
-QTreeWidgetItem =
-QTreeWidgetItemPublic BRANDED OBJECT
-OVERRIDES
-init_0 := New_QTreeWidgetItem0;
-init_1 := New_QTreeWidgetItem1;
-init_2 := New_QTreeWidgetItem2;
-init_3 := New_QTreeWidgetItem3;
-init_4 := New_QTreeWidgetItem4;
-init_5 := New_QTreeWidgetItem5;
-init_6 := New_QTreeWidgetItem6;
-init_7 := New_QTreeWidgetItem7;
-init_8 := New_QTreeWidgetItem8;
-init_9 := New_QTreeWidgetItem9;
-init_10 := New_QTreeWidgetItem10;
-init_11 := New_QTreeWidgetItem11;
-init_12 := New_QTreeWidgetItem12;
-init_13 := New_QTreeWidgetItem13;
-init_14 := New_QTreeWidgetItem14;
-init_15 := New_QTreeWidgetItem15;
-init_16 := New_QTreeWidgetItem16;
-clone := QTreeWidgetItem_clone;
-treeWidget := QTreeWidgetItem_treeWidget;
-setSelected := QTreeWidgetItem_setSelected;
-isSelected := QTreeWidgetItem_isSelected;
-setHidden := QTreeWidgetItem_setHidden;
-isHidden := QTreeWidgetItem_isHidden;
-setExpanded := QTreeWidgetItem_setExpanded;
-isExpanded := QTreeWidgetItem_isExpanded;
-setFirstColumnSpanned := QTreeWidgetItem_setFirstColumnSpanned;
-isFirstColumnSpanned := QTreeWidgetItem_isFirstColumnSpanned;
-setDisabled := QTreeWidgetItem_setDisabled;
-isDisabled := QTreeWidgetItem_isDisabled;
-setChildIndicatorPolicy := QTreeWidgetItem_setChildIndicatorPolicy;
-childIndicatorPolicy := QTreeWidgetItem_childIndicatorPolicy;
-flags := QTreeWidgetItem_flags;
-setFlags := QTreeWidgetItem_setFlags;
-text := QTreeWidgetItem_text;
-setText := QTreeWidgetItem_setText;
-icon := QTreeWidgetItem_icon;
-setIcon := QTreeWidgetItem_setIcon;
-statusTip := QTreeWidgetItem_statusTip;
-setStatusTip := QTreeWidgetItem_setStatusTip;
-toolTip := QTreeWidgetItem_toolTip;
-setToolTip := QTreeWidgetItem_setToolTip;
-whatsThis := QTreeWidgetItem_whatsThis;
-setWhatsThis := QTreeWidgetItem_setWhatsThis;
-font := QTreeWidgetItem_font;
-setFont := QTreeWidgetItem_setFont;
-textAlignment := QTreeWidgetItem_textAlignment;
-setTextAlignment := QTreeWidgetItem_setTextAlignment;
-backgroundColor := QTreeWidgetItem_backgroundColor;
-setBackgroundColor := QTreeWidgetItem_setBackgroundColor;
-background := QTreeWidgetItem_background;
-setBackground := QTreeWidgetItem_setBackground;
-textColor := QTreeWidgetItem_textColor;
-setTextColor := QTreeWidgetItem_setTextColor;
-foreground := QTreeWidgetItem_foreground;
-setForeground := QTreeWidgetItem_setForeground;
-checkState := QTreeWidgetItem_checkState;
-setCheckState := QTreeWidgetItem_setCheckState;
-sizeHint := QTreeWidgetItem_sizeHint;
-setSizeHint := QTreeWidgetItem_setSizeHint;
-data := QTreeWidgetItem_data;
-setData := QTreeWidgetItem_setData;
-parent := QTreeWidgetItem_parent;
-child := QTreeWidgetItem_child;
-childCount := QTreeWidgetItem_childCount;
-columnCount := QTreeWidgetItem_columnCount;
-indexOfChild := QTreeWidgetItem_indexOfChild;
-addChild := QTreeWidgetItem_addChild;
-insertChild := QTreeWidgetItem_insertChild;
-removeChild := QTreeWidgetItem_removeChild;
-takeChild := QTreeWidgetItem_takeChild;
-type := QTreeWidgetItem_type;
-sortChildren := QTreeWidgetItem_sortChildren;
-destroyCxx := Destroy_QTreeWidgetItem;
-END;
-
-PROCEDURE New_QTreeWidget0 (self:QTreeWidget; parent: QWidget;
-): QTreeWidget =
-VAR
-result : ADDRESS;
-arg1tmp :=  LOOPHOLE(parent.cxxObj,ADDRESS);
-BEGIN
-result := QtTreeWidgetRaw.New_QTreeWidget0(arg1tmp);
-
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QTreeWidget);
-
-RETURN self;
-END New_QTreeWidget0;
-
-PROCEDURE New_QTreeWidget1 (self:QTreeWidget;): QTreeWidget =
-VAR
-result : ADDRESS;
-BEGIN
-result := QtTreeWidgetRaw.New_QTreeWidget1();
-
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QTreeWidget);
-
-RETURN self;
-END New_QTreeWidget1;
-
-PROCEDURE Delete_QTreeWidget ( self: QTreeWidget;
-) =
-VAR
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtTreeWidgetRaw.Delete_QTreeWidget(arg1tmp);
-END Delete_QTreeWidget;
-
-PROCEDURE QTreeWidget_columnCount ( self: QTreeWidget;
-): INTEGER =
-VAR
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtTreeWidgetRaw.QTreeWidget_columnCount(arg1tmp);
-END QTreeWidget_columnCount;
-
-PROCEDURE QTreeWidget_setColumnCount ( self: QTreeWidget;
-columns: INTEGER;
-) =
-VAR
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtTreeWidgetRaw.QTreeWidget_setColumnCount(arg1tmp, columns);
-END QTreeWidget_setColumnCount;
-
-PROCEDURE QTreeWidget_invisibleRootItem ( self: QTreeWidget;
-): QTreeWidgetItem =
-VAR
-ret:ADDRESS; result : QTreeWidgetItem;
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtTreeWidgetRaw.QTreeWidget_invisibleRootItem(arg1tmp);
-
-  result := NEW(QTreeWidgetItem);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QTreeWidget_invisibleRootItem;
-
-PROCEDURE QTreeWidget_topLevelItem ( self: QTreeWidget;
-index: INTEGER;
-): QTreeWidgetItem =
-VAR
-ret:ADDRESS; result : QTreeWidgetItem;
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtTreeWidgetRaw.QTreeWidget_topLevelItem(arg1tmp, index);
-
-  result := NEW(QTreeWidgetItem);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QTreeWidget_topLevelItem;
-
-PROCEDURE QTreeWidget_topLevelItemCount ( self: QTreeWidget;
-): INTEGER =
-VAR
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtTreeWidgetRaw.QTreeWidget_topLevelItemCount(arg1tmp);
-END QTreeWidget_topLevelItemCount;
-
-PROCEDURE QTreeWidget_insertTopLevelItem ( self: QTreeWidget;
-index: INTEGER;
- item: QTreeWidgetItem;
-) =
-VAR
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg3tmp :=  LOOPHOLE(item.cxxObj,ADDRESS);
-BEGIN
-QtTreeWidgetRaw.QTreeWidget_insertTopLevelItem(arg1tmp, index, arg3tmp);
-END QTreeWidget_insertTopLevelItem;
-
-PROCEDURE QTreeWidget_addTopLevelItem ( self: QTreeWidget;
- item: QTreeWidgetItem;
-) =
-VAR
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(item.cxxObj,ADDRESS);
-BEGIN
-QtTreeWidgetRaw.QTreeWidget_addTopLevelItem(arg1tmp, arg2tmp);
-END QTreeWidget_addTopLevelItem;
-
-PROCEDURE QTreeWidget_takeTopLevelItem ( self: QTreeWidget;
-index: INTEGER;
-): QTreeWidgetItem =
-VAR
-ret:ADDRESS; result : QTreeWidgetItem;
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtTreeWidgetRaw.QTreeWidget_takeTopLevelItem(arg1tmp, index);
-
-  result := NEW(QTreeWidgetItem);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QTreeWidget_takeTopLevelItem;
-
-PROCEDURE QTreeWidget_indexOfTopLevelItem ( self: QTreeWidget;
- item: QTreeWidgetItem;
-): INTEGER =
-VAR
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(item.cxxObj,ADDRESS);
-BEGIN
-RETURN QtTreeWidgetRaw.QTreeWidget_indexOfTopLevelItem(arg1tmp, arg2tmp);
-END QTreeWidget_indexOfTopLevelItem;
-
-PROCEDURE QTreeWidget_indexOfTopLevelItem1 ( self: QTreeWidget;
- item: QTreeWidgetItem;
-): INTEGER =
-VAR
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(item.cxxObj,ADDRESS);
-BEGIN
-RETURN QtTreeWidgetRaw.QTreeWidget_indexOfTopLevelItem1(arg1tmp, arg2tmp);
-END QTreeWidget_indexOfTopLevelItem1;
-
-PROCEDURE QTreeWidget_headerItem ( self: QTreeWidget;
-): QTreeWidgetItem =
-VAR
-ret:ADDRESS; result : QTreeWidgetItem;
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtTreeWidgetRaw.QTreeWidget_headerItem(arg1tmp);
-
-  result := NEW(QTreeWidgetItem);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QTreeWidget_headerItem;
-
-PROCEDURE QTreeWidget_setHeaderItem ( self: QTreeWidget;
- item: QTreeWidgetItem;
-) =
-VAR
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(item.cxxObj,ADDRESS);
-BEGIN
-QtTreeWidgetRaw.QTreeWidget_setHeaderItem(arg1tmp, arg2tmp);
-END QTreeWidget_setHeaderItem;
-
-PROCEDURE QTreeWidget_setHeaderLabels ( self: QTreeWidget;
- labels: QStringList;
-) =
-VAR
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(labels.cxxObj,ADDRESS);
-BEGIN
-QtTreeWidgetRaw.QTreeWidget_setHeaderLabels(arg1tmp, arg2tmp);
-END QTreeWidget_setHeaderLabels;
-
-PROCEDURE QTreeWidget_setHeaderLabel ( self: QTreeWidget;
- label: TEXT;
-) =
-VAR
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-qstr_label := NEW(QString).initQString(label);
-arg2tmp :=  LOOPHOLE(qstr_label.cxxObj,ADDRESS);
-BEGIN
-QtTreeWidgetRaw.QTreeWidget_setHeaderLabel(arg1tmp, arg2tmp);
-END QTreeWidget_setHeaderLabel;
-
-PROCEDURE QTreeWidget_currentItem ( self: QTreeWidget;
-): QTreeWidgetItem =
-VAR
-ret:ADDRESS; result : QTreeWidgetItem;
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtTreeWidgetRaw.QTreeWidget_currentItem(arg1tmp);
-
-  result := NEW(QTreeWidgetItem);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QTreeWidget_currentItem;
-
-PROCEDURE QTreeWidget_currentColumn ( self: QTreeWidget;
-): INTEGER =
-VAR
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtTreeWidgetRaw.QTreeWidget_currentColumn(arg1tmp);
-END QTreeWidget_currentColumn;
-
-PROCEDURE QTreeWidget_itemAt ( self: QTreeWidget;
- p: QPoint;
-): QTreeWidgetItem =
-VAR
-ret:ADDRESS; result : QTreeWidgetItem;
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(p.cxxObj,ADDRESS);
-BEGIN
-ret := QtTreeWidgetRaw.QTreeWidget_itemAt(arg1tmp, arg2tmp);
-
-  result := NEW(QTreeWidgetItem);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QTreeWidget_itemAt;
-
-PROCEDURE QTreeWidget_itemAt1 ( self: QTreeWidget;
-x, y: INTEGER;
-): QTreeWidgetItem =
-VAR
-ret:ADDRESS; result : QTreeWidgetItem;
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtTreeWidgetRaw.QTreeWidget_itemAt1(arg1tmp, x, y);
-
-  result := NEW(QTreeWidgetItem);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QTreeWidget_itemAt1;
-
-PROCEDURE QTreeWidget_visualItemRect ( self: QTreeWidget;
- item: QTreeWidgetItem;
-): QRect =
-VAR
-ret:ADDRESS; result : QRect;
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(item.cxxObj,ADDRESS);
-BEGIN
-ret := QtTreeWidgetRaw.QTreeWidget_visualItemRect(arg1tmp, arg2tmp);
-
-  result := NEW(QRect);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QTreeWidget_visualItemRect;
-
-PROCEDURE QTreeWidget_sortColumn ( self: QTreeWidget;
-): INTEGER =
-VAR
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtTreeWidgetRaw.QTreeWidget_sortColumn(arg1tmp);
-END QTreeWidget_sortColumn;
-
-PROCEDURE QTreeWidget_sortItems ( self: QTreeWidget;
-column: INTEGER;
-order: SortOrder;
-) =
-VAR
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtTreeWidgetRaw.QTreeWidget_sortItems(arg1tmp, column, ORD(order));
-END QTreeWidget_sortItems;
-
-PROCEDURE QTreeWidget_setSortingEnabled ( self: QTreeWidget;
-enable: BOOLEAN;
-) =
-VAR
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtTreeWidgetRaw.QTreeWidget_setSortingEnabled(arg1tmp, enable);
-END QTreeWidget_setSortingEnabled;
-
-PROCEDURE QTreeWidget_isSortingEnabled ( self: QTreeWidget;
-): BOOLEAN =
-VAR
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtTreeWidgetRaw.QTreeWidget_isSortingEnabled(arg1tmp);
-END QTreeWidget_isSortingEnabled;
-
-PROCEDURE QTreeWidget_editItem ( self: QTreeWidget;
- item: QTreeWidgetItem;
-column: INTEGER;
-) =
-VAR
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(item.cxxObj,ADDRESS);
-BEGIN
-QtTreeWidgetRaw.QTreeWidget_editItem(arg1tmp, arg2tmp, column);
-END QTreeWidget_editItem;
-
-PROCEDURE QTreeWidget_editItem1 ( self: QTreeWidget;
- item: QTreeWidgetItem;
-) =
-VAR
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(item.cxxObj,ADDRESS);
-BEGIN
-QtTreeWidgetRaw.QTreeWidget_editItem1(arg1tmp, arg2tmp);
-END QTreeWidget_editItem1;
-
-PROCEDURE QTreeWidget_openPersistentEditor ( self: QTreeWidget;
- item: QTreeWidgetItem;
-column: INTEGER;
-) =
-VAR
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(item.cxxObj,ADDRESS);
-BEGIN
-QtTreeWidgetRaw.QTreeWidget_openPersistentEditor(arg1tmp, arg2tmp, column);
-END QTreeWidget_openPersistentEditor;
-
-PROCEDURE QTreeWidget_openPersistentEditor1 ( self: QTreeWidget;
- item: QTreeWidgetItem;
-) =
-VAR
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(item.cxxObj,ADDRESS);
-BEGIN
-QtTreeWidgetRaw.QTreeWidget_openPersistentEditor1(arg1tmp, arg2tmp);
-END QTreeWidget_openPersistentEditor1;
-
-PROCEDURE QTreeWidget_closePersistentEditor ( self: QTreeWidget;
- item: QTreeWidgetItem;
-column: INTEGER;
-) =
-VAR
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(item.cxxObj,ADDRESS);
-BEGIN
-QtTreeWidgetRaw.QTreeWidget_closePersistentEditor(arg1tmp, arg2tmp, column);
-END QTreeWidget_closePersistentEditor;
-
-PROCEDURE QTreeWidget_closePersistentEditor1 ( self: QTreeWidget;
- item: QTreeWidgetItem;
-) =
-VAR
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(item.cxxObj,ADDRESS);
-BEGIN
-QtTreeWidgetRaw.QTreeWidget_closePersistentEditor1(arg1tmp, arg2tmp);
-END QTreeWidget_closePersistentEditor1;
-
-PROCEDURE QTreeWidget_itemWidget ( self: QTreeWidget;
- item: QTreeWidgetItem;
-column: INTEGER;
-): QWidget =
-VAR
-ret:ADDRESS; result : QWidget;
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(item.cxxObj,ADDRESS);
-BEGIN
-ret := QtTreeWidgetRaw.QTreeWidget_itemWidget(arg1tmp, arg2tmp, column);
-
-  result := NEW(QWidget);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QTreeWidget_itemWidget;
-
-PROCEDURE QTreeWidget_setItemWidget ( self: QTreeWidget;
- item: QTreeWidgetItem;
-column: INTEGER;
- widget: QWidget;
-) =
-VAR
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(item.cxxObj,ADDRESS);
-arg4tmp :=  LOOPHOLE(widget.cxxObj,ADDRESS);
-BEGIN
-QtTreeWidgetRaw.QTreeWidget_setItemWidget(arg1tmp, arg2tmp, column, arg4tmp);
-END QTreeWidget_setItemWidget;
-
-PROCEDURE QTreeWidget_removeItemWidget ( self: QTreeWidget;
- item: QTreeWidgetItem;
-column: INTEGER;
-) =
-VAR
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(item.cxxObj,ADDRESS);
-BEGIN
-QtTreeWidgetRaw.QTreeWidget_removeItemWidget(arg1tmp, arg2tmp, column);
-END QTreeWidget_removeItemWidget;
-
-PROCEDURE QTreeWidget_isItemSelected ( self: QTreeWidget;
- item: QTreeWidgetItem;
-): BOOLEAN =
-VAR
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(item.cxxObj,ADDRESS);
-BEGIN
-RETURN QtTreeWidgetRaw.QTreeWidget_isItemSelected(arg1tmp, arg2tmp);
-END QTreeWidget_isItemSelected;
-
-PROCEDURE QTreeWidget_setItemSelected ( self: QTreeWidget;
- item: QTreeWidgetItem;
-select: BOOLEAN;
-) =
-VAR
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(item.cxxObj,ADDRESS);
-BEGIN
-QtTreeWidgetRaw.QTreeWidget_setItemSelected(arg1tmp, arg2tmp, select);
-END QTreeWidget_setItemSelected;
-
-PROCEDURE QTreeWidget_isItemHidden ( self: QTreeWidget;
- item: QTreeWidgetItem;
-): BOOLEAN =
-VAR
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(item.cxxObj,ADDRESS);
-BEGIN
-RETURN QtTreeWidgetRaw.QTreeWidget_isItemHidden(arg1tmp, arg2tmp);
-END QTreeWidget_isItemHidden;
-
-PROCEDURE QTreeWidget_setItemHidden ( self: QTreeWidget;
- item: QTreeWidgetItem;
-hide: BOOLEAN;
-) =
-VAR
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(item.cxxObj,ADDRESS);
-BEGIN
-QtTreeWidgetRaw.QTreeWidget_setItemHidden(arg1tmp, arg2tmp, hide);
-END QTreeWidget_setItemHidden;
-
-PROCEDURE QTreeWidget_isItemExpanded ( self: QTreeWidget;
- item: QTreeWidgetItem;
-): BOOLEAN =
-VAR
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(item.cxxObj,ADDRESS);
-BEGIN
-RETURN QtTreeWidgetRaw.QTreeWidget_isItemExpanded(arg1tmp, arg2tmp);
-END QTreeWidget_isItemExpanded;
-
-PROCEDURE QTreeWidget_setItemExpanded ( self: QTreeWidget;
- item: QTreeWidgetItem;
-expand: BOOLEAN;
-) =
-VAR
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(item.cxxObj,ADDRESS);
-BEGIN
-QtTreeWidgetRaw.QTreeWidget_setItemExpanded(arg1tmp, arg2tmp, expand);
-END QTreeWidget_setItemExpanded;
-
-PROCEDURE QTreeWidget_isFirstItemColumnSpanned ( self: QTreeWidget;
- item: QTreeWidgetItem;
-): BOOLEAN =
-VAR
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(item.cxxObj,ADDRESS);
-BEGIN
-RETURN QtTreeWidgetRaw.QTreeWidget_isFirstItemColumnSpanned(arg1tmp, arg2tmp);
-END QTreeWidget_isFirstItemColumnSpanned;
-
-PROCEDURE QTreeWidget_setFirstItemColumnSpanned ( self: QTreeWidget;
- item: QTreeWidgetItem;
-span: BOOLEAN;
-) =
-VAR
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(item.cxxObj,ADDRESS);
-BEGIN
-QtTreeWidgetRaw.QTreeWidget_setFirstItemColumnSpanned(arg1tmp, arg2tmp, span);
-END QTreeWidget_setFirstItemColumnSpanned;
-
-PROCEDURE QTreeWidget_itemAbove ( self: QTreeWidget;
- item: QTreeWidgetItem;
-): QTreeWidgetItem =
-VAR
-ret:ADDRESS; result : QTreeWidgetItem;
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(item.cxxObj,ADDRESS);
-BEGIN
-ret := QtTreeWidgetRaw.QTreeWidget_itemAbove(arg1tmp, arg2tmp);
-
-  result := NEW(QTreeWidgetItem);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QTreeWidget_itemAbove;
-
-PROCEDURE QTreeWidget_itemBelow ( self: QTreeWidget;
- item: QTreeWidgetItem;
-): QTreeWidgetItem =
-VAR
-ret:ADDRESS; result : QTreeWidgetItem;
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(item.cxxObj,ADDRESS);
-BEGIN
-ret := QtTreeWidgetRaw.QTreeWidget_itemBelow(arg1tmp, arg2tmp);
-
-  result := NEW(QTreeWidgetItem);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QTreeWidget_itemBelow;
-
-PROCEDURE QTreeWidget_setSelectionModel ( self: QTreeWidget;
- selectionModel: QItemSelectionModel;
-) =
-VAR
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(selectionModel.cxxObj,ADDRESS);
-BEGIN
-QtTreeWidgetRaw.QTreeWidget_setSelectionModel(arg1tmp, arg2tmp);
-END QTreeWidget_setSelectionModel;
-
-PROCEDURE QTreeWidget_scrollToItem ( self: QTreeWidget;
- item: QTreeWidgetItem;
-hint: ScrollHint;
-) =
-VAR
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(item.cxxObj,ADDRESS);
-BEGIN
-QtTreeWidgetRaw.QTreeWidget_scrollToItem(arg1tmp, arg2tmp, ORD(hint));
-END QTreeWidget_scrollToItem;
-
-PROCEDURE QTreeWidget_scrollToItem1 ( self: QTreeWidget;
- item: QTreeWidgetItem;
-) =
-VAR
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(item.cxxObj,ADDRESS);
-BEGIN
-QtTreeWidgetRaw.QTreeWidget_scrollToItem1(arg1tmp, arg2tmp);
-END QTreeWidget_scrollToItem1;
-
-PROCEDURE QTreeWidget_expandItem ( self: QTreeWidget;
- item: QTreeWidgetItem;
-) =
-VAR
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(item.cxxObj,ADDRESS);
-BEGIN
-QtTreeWidgetRaw.QTreeWidget_expandItem(arg1tmp, arg2tmp);
-END QTreeWidget_expandItem;
-
-PROCEDURE QTreeWidget_collapseItem ( self: QTreeWidget;
- item: QTreeWidgetItem;
-) =
-VAR
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(item.cxxObj,ADDRESS);
-BEGIN
-QtTreeWidgetRaw.QTreeWidget_collapseItem(arg1tmp, arg2tmp);
-END QTreeWidget_collapseItem;
-
-PROCEDURE QTreeWidget_clear ( self: QTreeWidget;
-) =
-VAR
-arg1tmp :=  LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtTreeWidgetRaw.QTreeWidget_clear(arg1tmp);
-END QTreeWidget_clear;
-
-PROCEDURE Cleanup_QTreeWidget(<*UNUSED*>READONLY self: WeakRef.T; ref: REFANY) =
-VAR obj : QTreeWidget := ref;
-BEGIN
-  Delete_QTreeWidget(obj);
- END Cleanup_QTreeWidget;
-
-PROCEDURE Destroy_QTreeWidget(self : QTreeWidget) =
-BEGIN
-  EVAL WeakRef.FromRef(self,Cleanup_QTreeWidget);
-END Destroy_QTreeWidget;
+  QTreeWidgetItem =
+    QTreeWidgetItemPublic BRANDED OBJECT
+    OVERRIDES
+      init_0                  := New_QTreeWidgetItem0;
+      init_1                  := New_QTreeWidgetItem1;
+      init_2                  := New_QTreeWidgetItem2;
+      init_3                  := New_QTreeWidgetItem3;
+      init_4                  := New_QTreeWidgetItem4;
+      init_5                  := New_QTreeWidgetItem5;
+      init_6                  := New_QTreeWidgetItem6;
+      init_7                  := New_QTreeWidgetItem7;
+      init_8                  := New_QTreeWidgetItem8;
+      init_9                  := New_QTreeWidgetItem9;
+      init_10                 := New_QTreeWidgetItem10;
+      init_11                 := New_QTreeWidgetItem11;
+      init_12                 := New_QTreeWidgetItem12;
+      init_13                 := New_QTreeWidgetItem13;
+      init_14                 := New_QTreeWidgetItem14;
+      init_15                 := New_QTreeWidgetItem15;
+      init_16                 := New_QTreeWidgetItem16;
+      clone                   := QTreeWidgetItem_clone;
+      treeWidget              := QTreeWidgetItem_treeWidget;
+      setSelected             := QTreeWidgetItem_setSelected;
+      isSelected              := QTreeWidgetItem_isSelected;
+      setHidden               := QTreeWidgetItem_setHidden;
+      isHidden                := QTreeWidgetItem_isHidden;
+      setExpanded             := QTreeWidgetItem_setExpanded;
+      isExpanded              := QTreeWidgetItem_isExpanded;
+      setFirstColumnSpanned   := QTreeWidgetItem_setFirstColumnSpanned;
+      isFirstColumnSpanned    := QTreeWidgetItem_isFirstColumnSpanned;
+      setDisabled             := QTreeWidgetItem_setDisabled;
+      isDisabled              := QTreeWidgetItem_isDisabled;
+      setChildIndicatorPolicy := QTreeWidgetItem_setChildIndicatorPolicy;
+      childIndicatorPolicy    := QTreeWidgetItem_childIndicatorPolicy;
+      flags                   := QTreeWidgetItem_flags;
+      setFlags                := QTreeWidgetItem_setFlags;
+      text                    := QTreeWidgetItem_text;
+      setText                 := QTreeWidgetItem_setText;
+      icon                    := QTreeWidgetItem_icon;
+      setIcon                 := QTreeWidgetItem_setIcon;
+      statusTip               := QTreeWidgetItem_statusTip;
+      setStatusTip            := QTreeWidgetItem_setStatusTip;
+      toolTip                 := QTreeWidgetItem_toolTip;
+      setToolTip              := QTreeWidgetItem_setToolTip;
+      whatsThis               := QTreeWidgetItem_whatsThis;
+      setWhatsThis            := QTreeWidgetItem_setWhatsThis;
+      font                    := QTreeWidgetItem_font;
+      setFont                 := QTreeWidgetItem_setFont;
+      textAlignment           := QTreeWidgetItem_textAlignment;
+      setTextAlignment        := QTreeWidgetItem_setTextAlignment;
+      backgroundColor         := QTreeWidgetItem_backgroundColor;
+      setBackgroundColor      := QTreeWidgetItem_setBackgroundColor;
+      background              := QTreeWidgetItem_background;
+      setBackground           := QTreeWidgetItem_setBackground;
+      textColor               := QTreeWidgetItem_textColor;
+      setTextColor            := QTreeWidgetItem_setTextColor;
+      foreground              := QTreeWidgetItem_foreground;
+      setForeground           := QTreeWidgetItem_setForeground;
+      checkState              := QTreeWidgetItem_checkState;
+      setCheckState           := QTreeWidgetItem_setCheckState;
+      sizeHint                := QTreeWidgetItem_sizeHint;
+      setSizeHint             := QTreeWidgetItem_setSizeHint;
+      data                    := QTreeWidgetItem_data;
+      setData                 := QTreeWidgetItem_setData;
+      parent                  := QTreeWidgetItem_parent;
+      child                   := QTreeWidgetItem_child;
+      childCount              := QTreeWidgetItem_childCount;
+      columnCount             := QTreeWidgetItem_columnCount;
+      indexOfChild            := QTreeWidgetItem_indexOfChild;
+      addChild                := QTreeWidgetItem_addChild;
+      insertChild             := QTreeWidgetItem_insertChild;
+      removeChild             := QTreeWidgetItem_removeChild;
+      takeChild               := QTreeWidgetItem_takeChild;
+      type                    := QTreeWidgetItem_type;
+      sortChildren            := QTreeWidgetItem_sortChildren;
+      destroyCxx              := Destroy_QTreeWidgetItem;
+    END;
+
+PROCEDURE New_QTreeWidget0 (self: QTreeWidget; parent: QWidget; ):
+  QTreeWidget =
+  VAR
+    result : ADDRESS;
+    arg1tmp          := LOOPHOLE(parent.cxxObj, ADDRESS);
+  BEGIN
+    result := QtTreeWidgetRaw.New_QTreeWidget0(arg1tmp);
+
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QTreeWidget);
+
+    RETURN self;
+  END New_QTreeWidget0;
+
+PROCEDURE New_QTreeWidget1 (self: QTreeWidget; ): QTreeWidget =
+  VAR result: ADDRESS;
+  BEGIN
+    result := QtTreeWidgetRaw.New_QTreeWidget1();
+
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QTreeWidget);
+
+    RETURN self;
+  END New_QTreeWidget1;
+
+PROCEDURE Delete_QTreeWidget (self: QTreeWidget; ) =
+  VAR arg1tmp := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtTreeWidgetRaw.Delete_QTreeWidget(arg1tmp);
+  END Delete_QTreeWidget;
+
+PROCEDURE QTreeWidget_columnCount (self: QTreeWidget; ): INTEGER =
+  VAR arg1tmp := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtTreeWidgetRaw.QTreeWidget_columnCount(arg1tmp);
+  END QTreeWidget_columnCount;
+
+PROCEDURE QTreeWidget_setColumnCount
+  (self: QTreeWidget; columns: INTEGER; ) =
+  VAR arg1tmp := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtTreeWidgetRaw.QTreeWidget_setColumnCount(arg1tmp, columns);
+  END QTreeWidget_setColumnCount;
+
+PROCEDURE QTreeWidget_invisibleRootItem (self: QTreeWidget; ):
+  QTreeWidgetItem =
+  VAR
+    ret    : ADDRESS;
+    result : QTreeWidgetItem;
+    arg1tmp                  := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtTreeWidgetRaw.QTreeWidget_invisibleRootItem(arg1tmp);
+
+    result := NEW(QTreeWidgetItem);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QTreeWidget_invisibleRootItem;
+
+PROCEDURE QTreeWidget_topLevelItem (self: QTreeWidget; index: INTEGER; ):
+  QTreeWidgetItem =
+  VAR
+    ret    : ADDRESS;
+    result : QTreeWidgetItem;
+    arg1tmp                  := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtTreeWidgetRaw.QTreeWidget_topLevelItem(arg1tmp, index);
+
+    result := NEW(QTreeWidgetItem);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QTreeWidget_topLevelItem;
+
+PROCEDURE QTreeWidget_topLevelItemCount (self: QTreeWidget; ): INTEGER =
+  VAR arg1tmp := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtTreeWidgetRaw.QTreeWidget_topLevelItemCount(arg1tmp);
+  END QTreeWidget_topLevelItemCount;
+
+PROCEDURE QTreeWidget_insertTopLevelItem
+  (self: QTreeWidget; index: INTEGER; item: QTreeWidgetItem; ) =
+  VAR
+    arg1tmp := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg3tmp := LOOPHOLE(item.cxxObj, ADDRESS);
+  BEGIN
+    QtTreeWidgetRaw.QTreeWidget_insertTopLevelItem(arg1tmp, index, arg3tmp);
+  END QTreeWidget_insertTopLevelItem;
+
+PROCEDURE QTreeWidget_addTopLevelItem
+  (self: QTreeWidget; item: QTreeWidgetItem; ) =
+  VAR
+    arg1tmp := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp := LOOPHOLE(item.cxxObj, ADDRESS);
+  BEGIN
+    QtTreeWidgetRaw.QTreeWidget_addTopLevelItem(arg1tmp, arg2tmp);
+  END QTreeWidget_addTopLevelItem;
+
+PROCEDURE QTreeWidget_takeTopLevelItem
+  (self: QTreeWidget; index: INTEGER; ): QTreeWidgetItem =
+  VAR
+    ret    : ADDRESS;
+    result : QTreeWidgetItem;
+    arg1tmp                  := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtTreeWidgetRaw.QTreeWidget_takeTopLevelItem(arg1tmp, index);
+
+    result := NEW(QTreeWidgetItem);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QTreeWidget_takeTopLevelItem;
+
+PROCEDURE QTreeWidget_indexOfTopLevelItem
+  (self: QTreeWidget; item: QTreeWidgetItem; ): INTEGER =
+  VAR
+    arg1tmp := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp := LOOPHOLE(item.cxxObj, ADDRESS);
+  BEGIN
+    RETURN
+      QtTreeWidgetRaw.QTreeWidget_indexOfTopLevelItem(arg1tmp, arg2tmp);
+  END QTreeWidget_indexOfTopLevelItem;
+
+PROCEDURE QTreeWidget_indexOfTopLevelItem1
+  (self: QTreeWidget; item: QTreeWidgetItem; ): INTEGER =
+  VAR
+    arg1tmp := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp := LOOPHOLE(item.cxxObj, ADDRESS);
+  BEGIN
+    RETURN
+      QtTreeWidgetRaw.QTreeWidget_indexOfTopLevelItem1(arg1tmp, arg2tmp);
+  END QTreeWidget_indexOfTopLevelItem1;
+
+PROCEDURE QTreeWidget_headerItem (self: QTreeWidget; ): QTreeWidgetItem =
+  VAR
+    ret    : ADDRESS;
+    result : QTreeWidgetItem;
+    arg1tmp                  := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtTreeWidgetRaw.QTreeWidget_headerItem(arg1tmp);
+
+    result := NEW(QTreeWidgetItem);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QTreeWidget_headerItem;
+
+PROCEDURE QTreeWidget_setHeaderItem
+  (self: QTreeWidget; item: QTreeWidgetItem; ) =
+  VAR
+    arg1tmp := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp := LOOPHOLE(item.cxxObj, ADDRESS);
+  BEGIN
+    QtTreeWidgetRaw.QTreeWidget_setHeaderItem(arg1tmp, arg2tmp);
+  END QTreeWidget_setHeaderItem;
+
+PROCEDURE QTreeWidget_setHeaderLabels
+  (self: QTreeWidget; labels: QStringList; ) =
+  VAR
+    arg1tmp := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp := LOOPHOLE(labels.cxxObj, ADDRESS);
+  BEGIN
+    QtTreeWidgetRaw.QTreeWidget_setHeaderLabels(arg1tmp, arg2tmp);
+  END QTreeWidget_setHeaderLabels;
+
+PROCEDURE QTreeWidget_setHeaderLabel (self: QTreeWidget; label: TEXT; ) =
+  VAR
+    arg1tmp    := LOOPHOLE(self.cxxObj, ADDRESS);
+    qstr_label := NEW(QString).initQString(label);
+    arg2tmp    := LOOPHOLE(qstr_label.cxxObj, ADDRESS);
+  BEGIN
+    QtTreeWidgetRaw.QTreeWidget_setHeaderLabel(arg1tmp, arg2tmp);
+  END QTreeWidget_setHeaderLabel;
+
+PROCEDURE QTreeWidget_currentItem (self: QTreeWidget; ): QTreeWidgetItem =
+  VAR
+    ret    : ADDRESS;
+    result : QTreeWidgetItem;
+    arg1tmp                  := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtTreeWidgetRaw.QTreeWidget_currentItem(arg1tmp);
+
+    result := NEW(QTreeWidgetItem);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QTreeWidget_currentItem;
+
+PROCEDURE QTreeWidget_currentColumn (self: QTreeWidget; ): INTEGER =
+  VAR arg1tmp := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtTreeWidgetRaw.QTreeWidget_currentColumn(arg1tmp);
+  END QTreeWidget_currentColumn;
+
+PROCEDURE QTreeWidget_itemAt (self: QTreeWidget; p: QPoint; ):
+  QTreeWidgetItem =
+  VAR
+    ret    : ADDRESS;
+    result : QTreeWidgetItem;
+    arg1tmp                  := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp                  := LOOPHOLE(p.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtTreeWidgetRaw.QTreeWidget_itemAt(arg1tmp, arg2tmp);
+
+    result := NEW(QTreeWidgetItem);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QTreeWidget_itemAt;
+
+PROCEDURE QTreeWidget_itemAt1 (self: QTreeWidget; x, y: INTEGER; ):
+  QTreeWidgetItem =
+  VAR
+    ret    : ADDRESS;
+    result : QTreeWidgetItem;
+    arg1tmp                  := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtTreeWidgetRaw.QTreeWidget_itemAt1(arg1tmp, x, y);
+
+    result := NEW(QTreeWidgetItem);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QTreeWidget_itemAt1;
+
+PROCEDURE QTreeWidget_visualItemRect
+  (self: QTreeWidget; item: QTreeWidgetItem; ): QRect =
+  VAR
+    ret    : ADDRESS;
+    result : QRect;
+    arg1tmp          := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(item.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtTreeWidgetRaw.QTreeWidget_visualItemRect(arg1tmp, arg2tmp);
+
+    result := NEW(QRect);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QTreeWidget_visualItemRect;
+
+PROCEDURE QTreeWidget_sortColumn (self: QTreeWidget; ): INTEGER =
+  VAR arg1tmp := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtTreeWidgetRaw.QTreeWidget_sortColumn(arg1tmp);
+  END QTreeWidget_sortColumn;
+
+PROCEDURE QTreeWidget_sortItems
+  (self: QTreeWidget; column: INTEGER; order: SortOrder; ) =
+  VAR arg1tmp := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtTreeWidgetRaw.QTreeWidget_sortItems(arg1tmp, column, ORD(order));
+  END QTreeWidget_sortItems;
+
+PROCEDURE QTreeWidget_setSortingEnabled
+  (self: QTreeWidget; enable: BOOLEAN; ) =
+  VAR arg1tmp := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtTreeWidgetRaw.QTreeWidget_setSortingEnabled(arg1tmp, enable);
+  END QTreeWidget_setSortingEnabled;
+
+PROCEDURE QTreeWidget_isSortingEnabled (self: QTreeWidget; ): BOOLEAN =
+  VAR arg1tmp := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtTreeWidgetRaw.QTreeWidget_isSortingEnabled(arg1tmp);
+  END QTreeWidget_isSortingEnabled;
+
+PROCEDURE QTreeWidget_editItem
+  (self: QTreeWidget; item: QTreeWidgetItem; column: INTEGER; ) =
+  VAR
+    arg1tmp := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp := LOOPHOLE(item.cxxObj, ADDRESS);
+  BEGIN
+    QtTreeWidgetRaw.QTreeWidget_editItem(arg1tmp, arg2tmp, column);
+  END QTreeWidget_editItem;
+
+PROCEDURE QTreeWidget_editItem1
+  (self: QTreeWidget; item: QTreeWidgetItem; ) =
+  VAR
+    arg1tmp := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp := LOOPHOLE(item.cxxObj, ADDRESS);
+  BEGIN
+    QtTreeWidgetRaw.QTreeWidget_editItem1(arg1tmp, arg2tmp);
+  END QTreeWidget_editItem1;
+
+PROCEDURE QTreeWidget_openPersistentEditor
+  (self: QTreeWidget; item: QTreeWidgetItem; column: INTEGER; ) =
+  VAR
+    arg1tmp := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp := LOOPHOLE(item.cxxObj, ADDRESS);
+  BEGIN
+    QtTreeWidgetRaw.QTreeWidget_openPersistentEditor(
+      arg1tmp, arg2tmp, column);
+  END QTreeWidget_openPersistentEditor;
+
+PROCEDURE QTreeWidget_openPersistentEditor1
+  (self: QTreeWidget; item: QTreeWidgetItem; ) =
+  VAR
+    arg1tmp := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp := LOOPHOLE(item.cxxObj, ADDRESS);
+  BEGIN
+    QtTreeWidgetRaw.QTreeWidget_openPersistentEditor1(arg1tmp, arg2tmp);
+  END QTreeWidget_openPersistentEditor1;
+
+PROCEDURE QTreeWidget_closePersistentEditor
+  (self: QTreeWidget; item: QTreeWidgetItem; column: INTEGER; ) =
+  VAR
+    arg1tmp := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp := LOOPHOLE(item.cxxObj, ADDRESS);
+  BEGIN
+    QtTreeWidgetRaw.QTreeWidget_closePersistentEditor(
+      arg1tmp, arg2tmp, column);
+  END QTreeWidget_closePersistentEditor;
+
+PROCEDURE QTreeWidget_closePersistentEditor1
+  (self: QTreeWidget; item: QTreeWidgetItem; ) =
+  VAR
+    arg1tmp := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp := LOOPHOLE(item.cxxObj, ADDRESS);
+  BEGIN
+    QtTreeWidgetRaw.QTreeWidget_closePersistentEditor1(arg1tmp, arg2tmp);
+  END QTreeWidget_closePersistentEditor1;
+
+PROCEDURE QTreeWidget_itemWidget
+  (self: QTreeWidget; item: QTreeWidgetItem; column: INTEGER; ): QWidget =
+  VAR
+    ret    : ADDRESS;
+    result : QWidget;
+    arg1tmp          := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(item.cxxObj, ADDRESS);
+  BEGIN
+    ret :=
+      QtTreeWidgetRaw.QTreeWidget_itemWidget(arg1tmp, arg2tmp, column);
+
+    result := NEW(QWidget);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QTreeWidget_itemWidget;
+
+PROCEDURE QTreeWidget_setItemWidget (self  : QTreeWidget;
+                                     item  : QTreeWidgetItem;
+                                     column: INTEGER;
+                                     widget: QWidget;         ) =
+  VAR
+    arg1tmp := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp := LOOPHOLE(item.cxxObj, ADDRESS);
+    arg4tmp := LOOPHOLE(widget.cxxObj, ADDRESS);
+  BEGIN
+    QtTreeWidgetRaw.QTreeWidget_setItemWidget(
+      arg1tmp, arg2tmp, column, arg4tmp);
+  END QTreeWidget_setItemWidget;
+
+PROCEDURE QTreeWidget_removeItemWidget
+  (self: QTreeWidget; item: QTreeWidgetItem; column: INTEGER; ) =
+  VAR
+    arg1tmp := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp := LOOPHOLE(item.cxxObj, ADDRESS);
+  BEGIN
+    QtTreeWidgetRaw.QTreeWidget_removeItemWidget(arg1tmp, arg2tmp, column);
+  END QTreeWidget_removeItemWidget;
+
+PROCEDURE QTreeWidget_isItemSelected
+  (self: QTreeWidget; item: QTreeWidgetItem; ): BOOLEAN =
+  VAR
+    arg1tmp := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp := LOOPHOLE(item.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtTreeWidgetRaw.QTreeWidget_isItemSelected(arg1tmp, arg2tmp);
+  END QTreeWidget_isItemSelected;
+
+PROCEDURE QTreeWidget_setItemSelected
+  (self: QTreeWidget; item: QTreeWidgetItem; select: BOOLEAN; ) =
+  VAR
+    arg1tmp := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp := LOOPHOLE(item.cxxObj, ADDRESS);
+  BEGIN
+    QtTreeWidgetRaw.QTreeWidget_setItemSelected(arg1tmp, arg2tmp, select);
+  END QTreeWidget_setItemSelected;
+
+PROCEDURE QTreeWidget_isItemHidden
+  (self: QTreeWidget; item: QTreeWidgetItem; ): BOOLEAN =
+  VAR
+    arg1tmp := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp := LOOPHOLE(item.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtTreeWidgetRaw.QTreeWidget_isItemHidden(arg1tmp, arg2tmp);
+  END QTreeWidget_isItemHidden;
+
+PROCEDURE QTreeWidget_setItemHidden
+  (self: QTreeWidget; item: QTreeWidgetItem; hide: BOOLEAN; ) =
+  VAR
+    arg1tmp := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp := LOOPHOLE(item.cxxObj, ADDRESS);
+  BEGIN
+    QtTreeWidgetRaw.QTreeWidget_setItemHidden(arg1tmp, arg2tmp, hide);
+  END QTreeWidget_setItemHidden;
+
+PROCEDURE QTreeWidget_isItemExpanded
+  (self: QTreeWidget; item: QTreeWidgetItem; ): BOOLEAN =
+  VAR
+    arg1tmp := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp := LOOPHOLE(item.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtTreeWidgetRaw.QTreeWidget_isItemExpanded(arg1tmp, arg2tmp);
+  END QTreeWidget_isItemExpanded;
+
+PROCEDURE QTreeWidget_setItemExpanded
+  (self: QTreeWidget; item: QTreeWidgetItem; expand: BOOLEAN; ) =
+  VAR
+    arg1tmp := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp := LOOPHOLE(item.cxxObj, ADDRESS);
+  BEGIN
+    QtTreeWidgetRaw.QTreeWidget_setItemExpanded(arg1tmp, arg2tmp, expand);
+  END QTreeWidget_setItemExpanded;
+
+PROCEDURE QTreeWidget_isFirstItemColumnSpanned
+  (self: QTreeWidget; item: QTreeWidgetItem; ): BOOLEAN =
+  VAR
+    arg1tmp := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp := LOOPHOLE(item.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtTreeWidgetRaw.QTreeWidget_isFirstItemColumnSpanned(
+             arg1tmp, arg2tmp);
+  END QTreeWidget_isFirstItemColumnSpanned;
+
+PROCEDURE QTreeWidget_setFirstItemColumnSpanned
+  (self: QTreeWidget; item: QTreeWidgetItem; span: BOOLEAN; ) =
+  VAR
+    arg1tmp := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp := LOOPHOLE(item.cxxObj, ADDRESS);
+  BEGIN
+    QtTreeWidgetRaw.QTreeWidget_setFirstItemColumnSpanned(
+      arg1tmp, arg2tmp, span);
+  END QTreeWidget_setFirstItemColumnSpanned;
+
+PROCEDURE QTreeWidget_itemAbove
+  (self: QTreeWidget; item: QTreeWidgetItem; ): QTreeWidgetItem =
+  VAR
+    ret    : ADDRESS;
+    result : QTreeWidgetItem;
+    arg1tmp                  := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp                  := LOOPHOLE(item.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtTreeWidgetRaw.QTreeWidget_itemAbove(arg1tmp, arg2tmp);
+
+    result := NEW(QTreeWidgetItem);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QTreeWidget_itemAbove;
+
+PROCEDURE QTreeWidget_itemBelow
+  (self: QTreeWidget; item: QTreeWidgetItem; ): QTreeWidgetItem =
+  VAR
+    ret    : ADDRESS;
+    result : QTreeWidgetItem;
+    arg1tmp                  := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp                  := LOOPHOLE(item.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtTreeWidgetRaw.QTreeWidget_itemBelow(arg1tmp, arg2tmp);
+
+    result := NEW(QTreeWidgetItem);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QTreeWidget_itemBelow;
+
+PROCEDURE QTreeWidget_setSelectionModel
+  (self: QTreeWidget; selectionModel: QItemSelectionModel; ) =
+  VAR
+    arg1tmp := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp := LOOPHOLE(selectionModel.cxxObj, ADDRESS);
+  BEGIN
+    QtTreeWidgetRaw.QTreeWidget_setSelectionModel(arg1tmp, arg2tmp);
+  END QTreeWidget_setSelectionModel;
+
+PROCEDURE QTreeWidget_scrollToItem
+  (self: QTreeWidget; item: QTreeWidgetItem; hint: ScrollHint; ) =
+  VAR
+    arg1tmp := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp := LOOPHOLE(item.cxxObj, ADDRESS);
+  BEGIN
+    QtTreeWidgetRaw.QTreeWidget_scrollToItem(arg1tmp, arg2tmp, ORD(hint));
+  END QTreeWidget_scrollToItem;
+
+PROCEDURE QTreeWidget_scrollToItem1
+  (self: QTreeWidget; item: QTreeWidgetItem; ) =
+  VAR
+    arg1tmp := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp := LOOPHOLE(item.cxxObj, ADDRESS);
+  BEGIN
+    QtTreeWidgetRaw.QTreeWidget_scrollToItem1(arg1tmp, arg2tmp);
+  END QTreeWidget_scrollToItem1;
+
+PROCEDURE QTreeWidget_expandItem
+  (self: QTreeWidget; item: QTreeWidgetItem; ) =
+  VAR
+    arg1tmp := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp := LOOPHOLE(item.cxxObj, ADDRESS);
+  BEGIN
+    QtTreeWidgetRaw.QTreeWidget_expandItem(arg1tmp, arg2tmp);
+  END QTreeWidget_expandItem;
+
+PROCEDURE QTreeWidget_collapseItem
+  (self: QTreeWidget; item: QTreeWidgetItem; ) =
+  VAR
+    arg1tmp := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp := LOOPHOLE(item.cxxObj, ADDRESS);
+  BEGIN
+    QtTreeWidgetRaw.QTreeWidget_collapseItem(arg1tmp, arg2tmp);
+  END QTreeWidget_collapseItem;
+
+PROCEDURE QTreeWidget_clear (self: QTreeWidget; ) =
+  VAR arg1tmp := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtTreeWidgetRaw.QTreeWidget_clear(arg1tmp);
+  END QTreeWidget_clear;
+
+PROCEDURE Cleanup_QTreeWidget
+  (<* UNUSED *> READONLY self: WeakRef.T; ref: REFANY) =
+  VAR obj: QTreeWidget := ref;
+  BEGIN
+    Delete_QTreeWidget(obj);
+  END Cleanup_QTreeWidget;
+
+PROCEDURE Destroy_QTreeWidget (self: QTreeWidget) =
+  BEGIN
+    EVAL WeakRef.FromRef(self, Cleanup_QTreeWidget);
+  END Destroy_QTreeWidget;
 
 REVEAL
-QTreeWidget =
-QTreeWidgetPublic BRANDED OBJECT
-OVERRIDES
-init_0 := New_QTreeWidget0;
-init_1 := New_QTreeWidget1;
-columnCount := QTreeWidget_columnCount;
-setColumnCount := QTreeWidget_setColumnCount;
-invisibleRootItem := QTreeWidget_invisibleRootItem;
-topLevelItem := QTreeWidget_topLevelItem;
-topLevelItemCount := QTreeWidget_topLevelItemCount;
-insertTopLevelItem := QTreeWidget_insertTopLevelItem;
-addTopLevelItem := QTreeWidget_addTopLevelItem;
-takeTopLevelItem := QTreeWidget_takeTopLevelItem;
-indexOfTopLevelItem := QTreeWidget_indexOfTopLevelItem;
-indexOfTopLevelItem1 := QTreeWidget_indexOfTopLevelItem1;
-headerItem := QTreeWidget_headerItem;
-setHeaderItem := QTreeWidget_setHeaderItem;
-setHeaderLabels := QTreeWidget_setHeaderLabels;
-setHeaderLabel := QTreeWidget_setHeaderLabel;
-currentItem := QTreeWidget_currentItem;
-currentColumn := QTreeWidget_currentColumn;
-itemAt := QTreeWidget_itemAt;
-itemAt1 := QTreeWidget_itemAt1;
-visualItemRect := QTreeWidget_visualItemRect;
-sortColumn := QTreeWidget_sortColumn;
-sortItems := QTreeWidget_sortItems;
-setSortingEnabled := QTreeWidget_setSortingEnabled;
-isSortingEnabled := QTreeWidget_isSortingEnabled;
-editItem := QTreeWidget_editItem;
-editItem1 := QTreeWidget_editItem1;
-openPersistentEditor := QTreeWidget_openPersistentEditor;
-openPersistentEditor1 := QTreeWidget_openPersistentEditor1;
-closePersistentEditor := QTreeWidget_closePersistentEditor;
-closePersistentEditor1 := QTreeWidget_closePersistentEditor1;
-itemWidget := QTreeWidget_itemWidget;
-setItemWidget := QTreeWidget_setItemWidget;
-removeItemWidget := QTreeWidget_removeItemWidget;
-isItemSelected := QTreeWidget_isItemSelected;
-setItemSelected := QTreeWidget_setItemSelected;
-isItemHidden := QTreeWidget_isItemHidden;
-setItemHidden := QTreeWidget_setItemHidden;
-isItemExpanded := QTreeWidget_isItemExpanded;
-setItemExpanded := QTreeWidget_setItemExpanded;
-isFirstItemColumnSpanned := QTreeWidget_isFirstItemColumnSpanned;
-setFirstItemColumnSpanned := QTreeWidget_setFirstItemColumnSpanned;
-itemAbove := QTreeWidget_itemAbove;
-itemBelow := QTreeWidget_itemBelow;
-setSelectionModel := QTreeWidget_setSelectionModel;
-scrollToItem := QTreeWidget_scrollToItem;
-scrollToItem1 := QTreeWidget_scrollToItem1;
-expandItem := QTreeWidget_expandItem;
-collapseItem := QTreeWidget_collapseItem;
-clear := QTreeWidget_clear;
-destroyCxx := Destroy_QTreeWidget;
-END;
+  QTreeWidget =
+    QTreeWidgetPublic BRANDED OBJECT
+    OVERRIDES
+      init_0                    := New_QTreeWidget0;
+      init_1                    := New_QTreeWidget1;
+      columnCount               := QTreeWidget_columnCount;
+      setColumnCount            := QTreeWidget_setColumnCount;
+      invisibleRootItem         := QTreeWidget_invisibleRootItem;
+      topLevelItem              := QTreeWidget_topLevelItem;
+      topLevelItemCount         := QTreeWidget_topLevelItemCount;
+      insertTopLevelItem        := QTreeWidget_insertTopLevelItem;
+      addTopLevelItem           := QTreeWidget_addTopLevelItem;
+      takeTopLevelItem          := QTreeWidget_takeTopLevelItem;
+      indexOfTopLevelItem       := QTreeWidget_indexOfTopLevelItem;
+      indexOfTopLevelItem1      := QTreeWidget_indexOfTopLevelItem1;
+      headerItem                := QTreeWidget_headerItem;
+      setHeaderItem             := QTreeWidget_setHeaderItem;
+      setHeaderLabels           := QTreeWidget_setHeaderLabels;
+      setHeaderLabel            := QTreeWidget_setHeaderLabel;
+      currentItem               := QTreeWidget_currentItem;
+      currentColumn             := QTreeWidget_currentColumn;
+      itemAt                    := QTreeWidget_itemAt;
+      itemAt1                   := QTreeWidget_itemAt1;
+      visualItemRect            := QTreeWidget_visualItemRect;
+      sortColumn                := QTreeWidget_sortColumn;
+      sortItems                 := QTreeWidget_sortItems;
+      setSortingEnabled         := QTreeWidget_setSortingEnabled;
+      isSortingEnabled          := QTreeWidget_isSortingEnabled;
+      editItem                  := QTreeWidget_editItem;
+      editItem1                 := QTreeWidget_editItem1;
+      openPersistentEditor      := QTreeWidget_openPersistentEditor;
+      openPersistentEditor1     := QTreeWidget_openPersistentEditor1;
+      closePersistentEditor     := QTreeWidget_closePersistentEditor;
+      closePersistentEditor1    := QTreeWidget_closePersistentEditor1;
+      itemWidget                := QTreeWidget_itemWidget;
+      setItemWidget             := QTreeWidget_setItemWidget;
+      removeItemWidget          := QTreeWidget_removeItemWidget;
+      isItemSelected            := QTreeWidget_isItemSelected;
+      setItemSelected           := QTreeWidget_setItemSelected;
+      isItemHidden              := QTreeWidget_isItemHidden;
+      setItemHidden             := QTreeWidget_setItemHidden;
+      isItemExpanded            := QTreeWidget_isItemExpanded;
+      setItemExpanded           := QTreeWidget_setItemExpanded;
+      isFirstItemColumnSpanned  := QTreeWidget_isFirstItemColumnSpanned;
+      setFirstItemColumnSpanned := QTreeWidget_setFirstItemColumnSpanned;
+      itemAbove                 := QTreeWidget_itemAbove;
+      itemBelow                 := QTreeWidget_itemBelow;
+      setSelectionModel         := QTreeWidget_setSelectionModel;
+      scrollToItem              := QTreeWidget_scrollToItem;
+      scrollToItem1             := QTreeWidget_scrollToItem1;
+      expandItem                := QTreeWidget_expandItem;
+      collapseItem              := QTreeWidget_collapseItem;
+      clear                     := QTreeWidget_clear;
+      destroyCxx                := Destroy_QTreeWidget;
+    END;
 
 
 BEGIN

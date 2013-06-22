@@ -13,123 +13,76 @@ FROM QtLayoutItem IMPORT QLayoutItem;
 FROM QtLayout IMPORT QLayout;
 FROM QtWidget IMPORT QWidget;
 FROM QtRect IMPORT QRect;
-FROM QtNamespace IMPORT Corner,Orientation,AlignmentFlag,Orientations;
+FROM QtNamespace IMPORT Corner, Orientation, AlignmentFlag, Orientations;
+
+
+TYPE T = QGridLayout;
 
 
 TYPE
-  T = QGridLayout;
-
-
-TYPE
-QGridLayout <: QGridLayoutPublic;
-QGridLayoutPublic =
-QLayout BRANDED OBJECT
-METHODS
-init_0 ( parent: QWidget;
-) : QGridLayout;
-init_1 () : QGridLayout;
-sizeHint(): QSize;  (*  virtual *)
-minimumSize(): QSize;  (*  virtual *)
-maximumSize(): QSize;  (*  virtual *)
-setHorizontalSpacing(spacing: INTEGER;
-);
-horizontalSpacing(): INTEGER;
-setVerticalSpacing(spacing: INTEGER;
-);
-verticalSpacing(): INTEGER;
-setSpacing(spacing: INTEGER;
-);
-spacing(): INTEGER;
-setRowStretch(row, stretch: INTEGER;
-);
-setColumnStretch(column, stretch: INTEGER;
-);
-rowStretch(row: INTEGER;
-): INTEGER;
-columnStretch(column: INTEGER;
-): INTEGER;
-setRowMinimumHeight(row, minSize: INTEGER;
-);
-setColumnMinimumWidth(column, minSize: INTEGER;
-);
-rowMinimumHeight(row: INTEGER;
-): INTEGER;
-columnMinimumWidth(column: INTEGER;
-): INTEGER;
-columnCount(): INTEGER;
-rowCount(): INTEGER;
-cellRect(row, column: INTEGER;
-): QRect;
-hasHeightForWidth(): BOOLEAN;  (*  virtual *)
-heightForWidth(arg1: INTEGER;
-): INTEGER;  (*  virtual *)
-minimumHeightForWidth(arg1: INTEGER;
-): INTEGER;  (*  virtual *)
-expandingDirections(): Orientations;  (*  virtual *)
-invalidate();  (*  virtual *)
-addWidget( w: QWidget;
-);
-addWidget1( arg1: QWidget;
-row, column: INTEGER;
-arg4: AlignmentFlag;
-);
-addWidget2( arg1: QWidget;
-row, column: INTEGER;
-);
-addWidget3( arg1: QWidget;
-row, column, rowSpan, columnSpan: INTEGER;
-arg6: AlignmentFlag;
-);
-addWidget4( arg1: QWidget;
-row, column, rowSpan, columnSpan: INTEGER;
-);
-addLayout( arg1: QLayout;
-row, column: INTEGER;
-arg4: AlignmentFlag;
-);
-addLayout1( arg1: QLayout;
-row, column: INTEGER;
-);
-addLayout2( arg1: QLayout;
-row, column, rowSpan, columnSpan: INTEGER;
-arg6: AlignmentFlag;
-);
-addLayout3( arg1: QLayout;
-row, column, rowSpan, columnSpan: INTEGER;
-);
-setOriginCorner(arg1: Corner;
-);
-originCorner(): Corner;
-itemAt(index: INTEGER;
-): QLayoutItem;  (*  virtual *)
-itemAtPosition(row, column: INTEGER;
-): QLayoutItem;
-takeAt(index: INTEGER;
-): QLayoutItem;  (*  virtual *)
-count(): INTEGER;  (*  virtual *)
-setGeometry( arg1: QRect;
-);  (*  virtual *)
-addItem( item: QLayoutItem;
-row, column, rowSpan, columnSpan: INTEGER;
-arg6: AlignmentFlag;
-);
-addItem1( item: QLayoutItem;
-row, column, rowSpan, columnSpan: INTEGER;
-);
-addItem2( item: QLayoutItem;
-row, column, rowSpan: INTEGER;
-);
-addItem3( item: QLayoutItem;
-row, column: INTEGER;
-);
-setDefaultPositioning(n: INTEGER;
-orient: Orientation;
-);
-getItemPosition(idx: INTEGER;
-VAR row, column, rowSpan, columnSpan: INTEGER;
-);
-destroyCxx();
-END;
+  QGridLayout <: QGridLayoutPublic;
+  QGridLayoutPublic =
+    QLayout BRANDED OBJECT
+    METHODS
+      init_0                (parent: QWidget; ): QGridLayout;
+      init_1                (): QGridLayout;
+      sizeHint              (): QSize; (* virtual *)
+      minimumSize           (): QSize; (* virtual *)
+      maximumSize           (): QSize; (* virtual *)
+      setHorizontalSpacing  (spacing: INTEGER; );
+      horizontalSpacing     (): INTEGER;
+      setVerticalSpacing    (spacing: INTEGER; );
+      verticalSpacing       (): INTEGER;
+      setSpacing            (spacing: INTEGER; );
+      spacing               (): INTEGER;
+      setRowStretch         (row, stretch: INTEGER; );
+      setColumnStretch      (column, stretch: INTEGER; );
+      rowStretch            (row: INTEGER; ): INTEGER;
+      columnStretch         (column: INTEGER; ): INTEGER;
+      setRowMinimumHeight   (row, minSize: INTEGER; );
+      setColumnMinimumWidth (column, minSize: INTEGER; );
+      rowMinimumHeight      (row: INTEGER; ): INTEGER;
+      columnMinimumWidth    (column: INTEGER; ): INTEGER;
+      columnCount           (): INTEGER;
+      rowCount              (): INTEGER;
+      cellRect              (row, column: INTEGER; ): QRect;
+      hasHeightForWidth     (): BOOLEAN; (* virtual *)
+      heightForWidth        (arg1: INTEGER; ): INTEGER; (* virtual *)
+      minimumHeightForWidth (arg1: INTEGER; ): INTEGER; (* virtual *)
+      expandingDirections   (): Orientations; (* virtual *)
+      invalidate            ();  (* virtual *)
+      addWidget             (w: QWidget; );
+      addWidget1 (arg1: QWidget; row, column: INTEGER; arg4: AlignmentFlag; );
+      addWidget2 (arg1: QWidget; row, column: INTEGER; );
+      addWidget3 (arg1                            : QWidget;
+                  row, column, rowSpan, columnSpan: INTEGER;
+                  arg6                            : AlignmentFlag; );
+      addWidget4 (arg1: QWidget; row, column, rowSpan, columnSpan: INTEGER; );
+      addLayout (arg1: QLayout; row, column: INTEGER; arg4: AlignmentFlag; );
+      addLayout1 (arg1: QLayout; row, column: INTEGER; );
+      addLayout2 (arg1                            : QLayout;
+                  row, column, rowSpan, columnSpan: INTEGER;
+                  arg6                            : AlignmentFlag; );
+      addLayout3 (arg1: QLayout; row, column, rowSpan, columnSpan: INTEGER; );
+      setOriginCorner (arg1: Corner; );
+      originCorner    (): Corner;
+      itemAt          (index: INTEGER; ): QLayoutItem; (* virtual *)
+      itemAtPosition  (row, column: INTEGER; ): QLayoutItem;
+      takeAt          (index: INTEGER; ): QLayoutItem; (* virtual *)
+      count           (): INTEGER; (* virtual *)
+      setGeometry     (arg1: QRect; ); (* virtual *)
+      addItem (item                            : QLayoutItem;
+               row, column, rowSpan, columnSpan: INTEGER;
+               arg6                            : AlignmentFlag; );
+      addItem1 (item                            : QLayoutItem;
+                row, column, rowSpan, columnSpan: INTEGER;     );
+      addItem2 (item: QLayoutItem; row, column, rowSpan: INTEGER; );
+      addItem3 (item: QLayoutItem; row, column: INTEGER; );
+      setDefaultPositioning (n: INTEGER; orient: Orientation; );
+      getItemPosition (    idx                             : INTEGER;
+                       VAR row, column, rowSpan, columnSpan: INTEGER; );
+      destroyCxx ();
+    END;
 
 
 END QtGridLayout.

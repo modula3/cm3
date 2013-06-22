@@ -14,26 +14,20 @@ INTERFACE QtFocusFrameRaw;
 
 
 <* EXTERNAL New_QFocusFrame0 *>
-PROCEDURE New_QFocusFrame0 ( parent: ADDRESS;
-): QFocusFrame;
+PROCEDURE New_QFocusFrame0 (parent: ADDRESS; ): QFocusFrame;
 
 <* EXTERNAL New_QFocusFrame1 *>
 PROCEDURE New_QFocusFrame1 (): QFocusFrame;
 
 <* EXTERNAL Delete_QFocusFrame *>
-PROCEDURE Delete_QFocusFrame ( self: QFocusFrame;
-);
+PROCEDURE Delete_QFocusFrame (self: QFocusFrame; );
 
 <* EXTERNAL QFocusFrame_setWidget *>
-PROCEDURE QFocusFrame_setWidget ( self: QFocusFrame;
- widget: ADDRESS;
-);
+PROCEDURE QFocusFrame_setWidget (self: QFocusFrame; widget: ADDRESS; );
 
 <* EXTERNAL QFocusFrame_widget *>
-PROCEDURE QFocusFrame_widget ( self: QFocusFrame;
-): ADDRESS;
+PROCEDURE QFocusFrame_widget (self: QFocusFrame; ): ADDRESS;
 
-TYPE
-QFocusFrame = ADDRESS;
+TYPE QFocusFrame = ADDRESS;
 
 END QtFocusFrameRaw.

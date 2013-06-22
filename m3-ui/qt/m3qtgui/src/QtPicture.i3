@@ -9,115 +9,82 @@
 INTERFACE QtPicture;
 
 FROM QtByteArray IMPORT QByteArray;
-FROM QGuiStubs IMPORT QPainter,QPaintEngine,QIODevice;
+FROM QGuiStubs IMPORT QPainter, QPaintEngine, QIODevice;
 FROM QtRect IMPORT QRect;
 
 
 FROM QtPaintDevice IMPORT QPaintDevice;
-TYPE
-  T = QPicture;
+TYPE T = QPicture;
 
-PROCEDURE PicFormat ( fileName: TEXT;
-): TEXT;
+PROCEDURE PicFormat (fileName: TEXT; ): TEXT;
 
 
 TYPE
-QPicture <: QPicturePublic;
-QPicturePublic =
-QPaintDevice BRANDED OBJECT
-METHODS
-init_0 (formatVersion: INTEGER;
-) : QPicture;
-init_1 () : QPicture;
-init_2 ( arg1: QPicture;
-) : QPicture;
-isNull(): BOOLEAN;
-devType(): INTEGER;  (*  virtual *)
-size(): CARDINAL;
-data(): TEXT;
-setData( data: TEXT;
-size: CARDINAL;
-);  (*  virtual *)
-play( p: QPainter;
-): BOOLEAN;
-load( dev: QIODevice;
- format: TEXT;
-): BOOLEAN;
-load1( dev: QIODevice;
-): BOOLEAN;
-load2( fileName, format: TEXT;
-): BOOLEAN;
-load3( fileName: TEXT;
-): BOOLEAN;
-save( dev: QIODevice;
- format: TEXT;
-): BOOLEAN;
-save1( dev: QIODevice;
-): BOOLEAN;
-save2( fileName, format: TEXT;
-): BOOLEAN;
-save3( fileName: TEXT;
-): BOOLEAN;
-boundingRect(): QRect;
-setBoundingRect( r: QRect;
-);
-detach();
-isDetached(): BOOLEAN;
-paintEngine(): QPaintEngine;  (*  virtual *)
-data_ptr(): UNTRACED REF CHAR;
-destroyCxx();
-END;
+  QPicture <: QPicturePublic;
+  QPicturePublic = QPaintDevice BRANDED OBJECT
+                   METHODS
+                     init_0  (formatVersion: INTEGER; ): QPicture;
+                     init_1  (): QPicture;
+                     init_2  (arg1: QPicture; ): QPicture;
+                     isNull  (): BOOLEAN;
+                     devType (): INTEGER; (* virtual *)
+                     size    (): CARDINAL;
+                     data    (): TEXT;
+                     setData (data: TEXT; size: CARDINAL; ); (* virtual *)
+                     play    (p: QPainter; ): BOOLEAN;
+                     load    (dev: QIODevice; format: TEXT; ): BOOLEAN;
+                     load1   (dev: QIODevice; ): BOOLEAN;
+                     load2   (fileName, format: TEXT; ): BOOLEAN;
+                     load3   (fileName: TEXT; ): BOOLEAN;
+                     save    (dev: QIODevice; format: TEXT; ): BOOLEAN;
+                     save1   (dev: QIODevice; ): BOOLEAN;
+                     save2   (fileName, format: TEXT; ): BOOLEAN;
+                     save3   (fileName: TEXT; ): BOOLEAN;
+                     boundingRect    (): QRect;
+                     setBoundingRect (r: QRect; );
+                     detach          ();
+                     isDetached      (): BOOLEAN;
+                     paintEngine     (): QPaintEngine; (* virtual *)
+                     data_ptr        (): UNTRACED REF CHAR;
+                     destroyCxx      ();
+                   END;
 
-PROCEDURE PictureFormat ( fileName: TEXT;
-): QByteArray;
+PROCEDURE PictureFormat (fileName: TEXT; ): QByteArray;
 
-PROCEDURE PictureFormat1 ( arg1: QIODevice;
-): QByteArray;
+PROCEDURE PictureFormat1 (arg1: QIODevice; ): QByteArray;
 
 
 TYPE
-QPictureIO <: QPictureIOPublic;
-QPictureIOPublic =
- BRANDED OBJECT
-cxxObj:ADDRESS;
-METHODS
-init_0 () : QPictureIO;
-init_1 ( ioDevice: QIODevice;
- format: TEXT;
-) : QPictureIO;
-init_2 ( fileName, format: TEXT;
-) : QPictureIO;
-picture(): QPicture;
-status(): INTEGER;
-format(): TEXT;
-ioDevice(): QIODevice;
-fileName(): TEXT;
-quality(): INTEGER;
-description(): TEXT;
-parameters(): TEXT;
-gamma(): REAL;
-setPicture( arg1: QPicture;
-);
-setStatus(arg1: INTEGER;
-);
-setFormat( arg1: TEXT;
-);
-setIODevice( arg1: QIODevice;
-);
-setFileName( arg1: TEXT;
-);
-setQuality(arg1: INTEGER;
-);
-setDescription( arg1: TEXT;
-);
-setParameters( arg1: TEXT;
-);
-setGamma(arg1: REAL;
-);
-read(): BOOLEAN;
-write(): BOOLEAN;
-destroyCxx();
-END;
+  QPictureIO <: QPictureIOPublic;
+  QPictureIOPublic =
+    BRANDED OBJECT
+      cxxObj: ADDRESS;
+    METHODS
+      init_0         (): QPictureIO;
+      init_1         (ioDevice: QIODevice; format: TEXT; ): QPictureIO;
+      init_2         (fileName, format: TEXT; ): QPictureIO;
+      picture        (): QPicture;
+      status         (): INTEGER;
+      format         (): TEXT;
+      ioDevice       (): QIODevice;
+      fileName       (): TEXT;
+      quality        (): INTEGER;
+      description    (): TEXT;
+      parameters     (): TEXT;
+      gamma          (): REAL;
+      setPicture     (arg1: QPicture; );
+      setStatus      (arg1: INTEGER; );
+      setFormat      (arg1: TEXT; );
+      setIODevice    (arg1: QIODevice; );
+      setFileName    (arg1: TEXT; );
+      setQuality     (arg1: INTEGER; );
+      setDescription (arg1: TEXT; );
+      setParameters  (arg1: TEXT; );
+      setGamma       (arg1: REAL; );
+      read           (): BOOLEAN;
+      write          (): BOOLEAN;
+      destroyCxx     ();
+    END;
 
 
 END QtPicture.

@@ -17,749 +17,652 @@ FROM QtWidget IMPORT QWidget;
 FROM QtString IMPORT QString;
 IMPORT Ctypes AS C;
 IMPORT QtWizardRaw;
-FROM QtNamespace IMPORT WindowTypes,TextFormat;
+FROM QtNamespace IMPORT WindowTypes, TextFormat;
 
 
 IMPORT WeakRef;
 FROM QtByteArray IMPORT QByteArray;
 
-PROCEDURE New_QWizard0 (self:QWizard; parent: QWidget;
-flags: WindowTypes;
-): QWizard =
-VAR
-result : ADDRESS;
-arg1tmp :=  LOOPHOLE(parent.cxxObj,ADDRESS);
-BEGIN
-result := QtWizardRaw.New_QWizard0(arg1tmp, ORD(flags));
+PROCEDURE New_QWizard0
+  (self: QWizard; parent: QWidget; flags: WindowTypes; ): QWizard =
+  VAR
+    result : ADDRESS;
+    arg1tmp          := LOOPHOLE(parent.cxxObj, ADDRESS);
+  BEGIN
+    result := QtWizardRaw.New_QWizard0(arg1tmp, ORD(flags));
 
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QWizard);
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QWizard);
 
-RETURN self;
-END New_QWizard0;
+    RETURN self;
+  END New_QWizard0;
 
-PROCEDURE New_QWizard1 (self:QWizard; parent: QWidget;
-): QWizard =
-VAR
-result : ADDRESS;
-arg1tmp :=  LOOPHOLE(parent.cxxObj,ADDRESS);
-BEGIN
-result := QtWizardRaw.New_QWizard1(arg1tmp);
+PROCEDURE New_QWizard1 (self: QWizard; parent: QWidget; ): QWizard =
+  VAR
+    result : ADDRESS;
+    arg1tmp          := LOOPHOLE(parent.cxxObj, ADDRESS);
+  BEGIN
+    result := QtWizardRaw.New_QWizard1(arg1tmp);
 
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QWizard);
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QWizard);
 
-RETURN self;
-END New_QWizard1;
+    RETURN self;
+  END New_QWizard1;
 
-PROCEDURE New_QWizard2 (self:QWizard;): QWizard =
-VAR
-result : ADDRESS;
-BEGIN
-result := QtWizardRaw.New_QWizard2();
+PROCEDURE New_QWizard2 (self: QWizard; ): QWizard =
+  VAR result: ADDRESS;
+  BEGIN
+    result := QtWizardRaw.New_QWizard2();
 
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QWizard);
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QWizard);
 
-RETURN self;
-END New_QWizard2;
+    RETURN self;
+  END New_QWizard2;
 
-PROCEDURE Delete_QWizard ( self: QWizard;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWizardRaw.Delete_QWizard(selfAdr);
-END Delete_QWizard;
+PROCEDURE Delete_QWizard (self: QWizard; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWizardRaw.Delete_QWizard(selfAdr);
+  END Delete_QWizard;
 
-PROCEDURE QWizard_addPage ( self: QWizard;
- page: QWizardPage;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(page.cxxObj,ADDRESS);
-BEGIN
-RETURN QtWizardRaw.QWizard_addPage(selfAdr, arg2tmp);
-END QWizard_addPage;
+PROCEDURE QWizard_addPage (self: QWizard; page: QWizardPage; ): INTEGER =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(page.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtWizardRaw.QWizard_addPage(selfAdr, arg2tmp);
+  END QWizard_addPage;
 
-PROCEDURE QWizard_setPage ( self: QWizard;
-id: INTEGER;
- page: QWizardPage;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg3tmp :=  LOOPHOLE(page.cxxObj,ADDRESS);
-BEGIN
-QtWizardRaw.QWizard_setPage(selfAdr, id, arg3tmp);
-END QWizard_setPage;
+PROCEDURE QWizard_setPage
+  (self: QWizard; id: INTEGER; page: QWizardPage; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg3tmp          := LOOPHOLE(page.cxxObj, ADDRESS);
+  BEGIN
+    QtWizardRaw.QWizard_setPage(selfAdr, id, arg3tmp);
+  END QWizard_setPage;
 
-PROCEDURE QWizard_removePage ( self: QWizard;
-id: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWizardRaw.QWizard_removePage(selfAdr, id);
-END QWizard_removePage;
+PROCEDURE QWizard_removePage (self: QWizard; id: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWizardRaw.QWizard_removePage(selfAdr, id);
+  END QWizard_removePage;
 
-PROCEDURE QWizard_page ( self: QWizard;
-id: INTEGER;
-): QWizardPage =
-VAR
-ret:ADDRESS; result : QWizardPage;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtWizardRaw.QWizard_page(selfAdr, id);
+PROCEDURE QWizard_page (self: QWizard; id: INTEGER; ): QWizardPage =
+  VAR
+    ret    : ADDRESS;
+    result : QWizardPage;
+    selfAdr: ADDRESS     := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWizardRaw.QWizard_page(selfAdr, id);
 
-  result := NEW(QWizardPage);
-  result.cxxObj := ret;
-  result.destroyCxx();
+    result := NEW(QWizardPage);
+    result.cxxObj := ret;
+    result.destroyCxx();
 
-RETURN result;
-END QWizard_page;
+    RETURN result;
+  END QWizard_page;
 
-PROCEDURE QWizard_hasVisitedPage ( self: QWizard;
-id: INTEGER;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtWizardRaw.QWizard_hasVisitedPage(selfAdr, id);
-END QWizard_hasVisitedPage;
+PROCEDURE QWizard_hasVisitedPage (self: QWizard; id: INTEGER; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtWizardRaw.QWizard_hasVisitedPage(selfAdr, id);
+  END QWizard_hasVisitedPage;
 
-PROCEDURE QWizard_setStartId ( self: QWizard;
-id: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWizardRaw.QWizard_setStartId(selfAdr, id);
-END QWizard_setStartId;
+PROCEDURE QWizard_setStartId (self: QWizard; id: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWizardRaw.QWizard_setStartId(selfAdr, id);
+  END QWizard_setStartId;
 
-PROCEDURE QWizard_startId ( self: QWizard;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtWizardRaw.QWizard_startId(selfAdr);
-END QWizard_startId;
+PROCEDURE QWizard_startId (self: QWizard; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtWizardRaw.QWizard_startId(selfAdr);
+  END QWizard_startId;
 
-PROCEDURE QWizard_currentPage ( self: QWizard;
-): QWizardPage =
-VAR
-ret:ADDRESS; result : QWizardPage;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtWizardRaw.QWizard_currentPage(selfAdr);
+PROCEDURE QWizard_currentPage (self: QWizard; ): QWizardPage =
+  VAR
+    ret    : ADDRESS;
+    result : QWizardPage;
+    selfAdr: ADDRESS     := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWizardRaw.QWizard_currentPage(selfAdr);
 
-  result := NEW(QWizardPage);
-  result.cxxObj := ret;
-  result.destroyCxx();
+    result := NEW(QWizardPage);
+    result.cxxObj := ret;
+    result.destroyCxx();
 
-RETURN result;
-END QWizard_currentPage;
+    RETURN result;
+  END QWizard_currentPage;
 
-PROCEDURE QWizard_currentId ( self: QWizard;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtWizardRaw.QWizard_currentId(selfAdr);
-END QWizard_currentId;
+PROCEDURE QWizard_currentId (self: QWizard; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtWizardRaw.QWizard_currentId(selfAdr);
+  END QWizard_currentId;
 
-PROCEDURE QWizard_validateCurrentPage ( self: QWizard;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtWizardRaw.QWizard_validateCurrentPage(selfAdr);
-END QWizard_validateCurrentPage;
+PROCEDURE QWizard_validateCurrentPage (self: QWizard; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtWizardRaw.QWizard_validateCurrentPage(selfAdr);
+  END QWizard_validateCurrentPage;
 
-PROCEDURE QWizard_nextId ( self: QWizard;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtWizardRaw.QWizard_nextId(selfAdr);
-END QWizard_nextId;
+PROCEDURE QWizard_nextId (self: QWizard; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtWizardRaw.QWizard_nextId(selfAdr);
+  END QWizard_nextId;
 
-PROCEDURE QWizard_setWizardStyle ( self: QWizard;
-style: WizardStyle;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWizardRaw.QWizard_setWizardStyle(selfAdr, ORD(style));
-END QWizard_setWizardStyle;
+PROCEDURE QWizard_setWizardStyle (self: QWizard; style: WizardStyle; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWizardRaw.QWizard_setWizardStyle(selfAdr, ORD(style));
+  END QWizard_setWizardStyle;
 
-PROCEDURE QWizard_wizardStyle ( self: QWizard;
-): WizardStyle =
-VAR
-ret:INTEGER; result : WizardStyle;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtWizardRaw.QWizard_wizardStyle(selfAdr);
-result := VAL(ret,WizardStyle);  
-RETURN result;
-END QWizard_wizardStyle;
+PROCEDURE QWizard_wizardStyle (self: QWizard; ): WizardStyle =
+  VAR
+    ret    : INTEGER;
+    result : WizardStyle;
+    selfAdr: ADDRESS     := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWizardRaw.QWizard_wizardStyle(selfAdr);
+    result := VAL(ret, WizardStyle);
+    RETURN result;
+  END QWizard_wizardStyle;
 
-PROCEDURE QWizard_setOption ( self: QWizard;
-option: WizardOption;
-on: BOOLEAN;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWizardRaw.QWizard_setOption(selfAdr, ORD(option), on);
-END QWizard_setOption;
+PROCEDURE QWizard_setOption
+  (self: QWizard; option: WizardOption; on: BOOLEAN; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWizardRaw.QWizard_setOption(selfAdr, ORD(option), on);
+  END QWizard_setOption;
 
-PROCEDURE QWizard_setOption1 ( self: QWizard;
-option: WizardOption;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWizardRaw.QWizard_setOption1(selfAdr, ORD(option));
-END QWizard_setOption1;
+PROCEDURE QWizard_setOption1 (self: QWizard; option: WizardOption; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWizardRaw.QWizard_setOption1(selfAdr, ORD(option));
+  END QWizard_setOption1;
 
-PROCEDURE QWizard_testOption ( self: QWizard;
-option: WizardOption;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtWizardRaw.QWizard_testOption(selfAdr, ORD(option));
-END QWizard_testOption;
+PROCEDURE QWizard_testOption (self: QWizard; option: WizardOption; ):
+  BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtWizardRaw.QWizard_testOption(selfAdr, ORD(option));
+  END QWizard_testOption;
 
-PROCEDURE QWizard_setOptions ( self: QWizard;
-options: WizardOptions;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWizardRaw.QWizard_setOptions(selfAdr, ORD(options));
-END QWizard_setOptions;
+PROCEDURE QWizard_setOptions (self: QWizard; options: WizardOptions; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWizardRaw.QWizard_setOptions(selfAdr, ORD(options));
+  END QWizard_setOptions;
 
-PROCEDURE QWizard_options ( self: QWizard;
-): WizardOptions =
-VAR
-ret:INTEGER; result : WizardOptions;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtWizardRaw.QWizard_options(selfAdr);
-result := VAL(ret,WizardOptions);  
-RETURN result;
-END QWizard_options;
+PROCEDURE QWizard_options (self: QWizard; ): WizardOptions =
+  VAR
+    ret    : INTEGER;
+    result : WizardOptions;
+    selfAdr: ADDRESS       := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWizardRaw.QWizard_options(selfAdr);
+    result := VAL(ret, WizardOptions);
+    RETURN result;
+  END QWizard_options;
 
-PROCEDURE QWizard_setButtonText ( self: QWizard;
-which: WizardButton;
- text: TEXT;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-qstr_text := NEW(QString).initQString(text);
-arg3tmp :=  LOOPHOLE(qstr_text.cxxObj,ADDRESS);
-BEGIN
-QtWizardRaw.QWizard_setButtonText(selfAdr, ORD(which), arg3tmp);
-END QWizard_setButtonText;
+PROCEDURE QWizard_setButtonText
+  (self: QWizard; which: WizardButton; text: TEXT; ) =
+  VAR
+    selfAdr  : ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    qstr_text          := NEW(QString).initQString(text);
+    arg3tmp            := LOOPHOLE(qstr_text.cxxObj, ADDRESS);
+  BEGIN
+    QtWizardRaw.QWizard_setButtonText(selfAdr, ORD(which), arg3tmp);
+  END QWizard_setButtonText;
 
-PROCEDURE QWizard_buttonText ( self: QWizard;
-which: WizardButton;
-): TEXT =
-VAR
-ret : ADDRESS;
-qstr := NEW(QString);
-ba : QByteArray;
-result : TEXT;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtWizardRaw.QWizard_buttonText(selfAdr, ORD(which));
+PROCEDURE QWizard_buttonText (self: QWizard; which: WizardButton; ): TEXT =
+  VAR
+    ret    : ADDRESS;
+    qstr                := NEW(QString);
+    ba     : QByteArray;
+    result : TEXT;
+    selfAdr: ADDRESS    := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWizardRaw.QWizard_buttonText(selfAdr, ORD(which));
 
-  qstr.cxxObj := ret;
-  ba := qstr.toLocal8Bit();
-  result := ba.data();
+    qstr.cxxObj := ret;
+    ba := qstr.toLocal8Bit();
+    result := ba.data();
 
-RETURN result;
-END QWizard_buttonText;
+    RETURN result;
+  END QWizard_buttonText;
 
-PROCEDURE QWizard_setButton ( self: QWizard;
-which: WizardButton;
- button: QAbstractButton;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg3tmp :=  LOOPHOLE(button.cxxObj,ADDRESS);
-BEGIN
-QtWizardRaw.QWizard_setButton(selfAdr, ORD(which), arg3tmp);
-END QWizard_setButton;
+PROCEDURE QWizard_setButton
+  (self: QWizard; which: WizardButton; button: QAbstractButton; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg3tmp          := LOOPHOLE(button.cxxObj, ADDRESS);
+  BEGIN
+    QtWizardRaw.QWizard_setButton(selfAdr, ORD(which), arg3tmp);
+  END QWizard_setButton;
 
-PROCEDURE QWizard_button ( self: QWizard;
-which: WizardButton;
-): QAbstractButton =
-VAR
-ret:ADDRESS; result : QAbstractButton;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtWizardRaw.QWizard_button(selfAdr, ORD(which));
+PROCEDURE QWizard_button (self: QWizard; which: WizardButton; ):
+  QAbstractButton =
+  VAR
+    ret    : ADDRESS;
+    result : QAbstractButton;
+    selfAdr: ADDRESS         := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWizardRaw.QWizard_button(selfAdr, ORD(which));
 
-  result := NEW(QAbstractButton);
-  result.cxxObj := ret;
-  result.destroyCxx();
+    result := NEW(QAbstractButton);
+    result.cxxObj := ret;
+    result.destroyCxx();
 
-RETURN result;
-END QWizard_button;
+    RETURN result;
+  END QWizard_button;
 
-PROCEDURE QWizard_setTitleFormat ( self: QWizard;
-format: TextFormat;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWizardRaw.QWizard_setTitleFormat(selfAdr, ORD(format));
-END QWizard_setTitleFormat;
+PROCEDURE QWizard_setTitleFormat (self: QWizard; format: TextFormat; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWizardRaw.QWizard_setTitleFormat(selfAdr, ORD(format));
+  END QWizard_setTitleFormat;
 
-PROCEDURE QWizard_titleFormat ( self: QWizard;
-): TextFormat =
-VAR
-ret:INTEGER; result : TextFormat;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtWizardRaw.QWizard_titleFormat(selfAdr);
-result := VAL(ret,TextFormat);  
-RETURN result;
-END QWizard_titleFormat;
+PROCEDURE QWizard_titleFormat (self: QWizard; ): TextFormat =
+  VAR
+    ret    : INTEGER;
+    result : TextFormat;
+    selfAdr: ADDRESS    := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWizardRaw.QWizard_titleFormat(selfAdr);
+    result := VAL(ret, TextFormat);
+    RETURN result;
+  END QWizard_titleFormat;
 
-PROCEDURE QWizard_setSubTitleFormat ( self: QWizard;
-format: TextFormat;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWizardRaw.QWizard_setSubTitleFormat(selfAdr, ORD(format));
-END QWizard_setSubTitleFormat;
+PROCEDURE QWizard_setSubTitleFormat (self: QWizard; format: TextFormat; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWizardRaw.QWizard_setSubTitleFormat(selfAdr, ORD(format));
+  END QWizard_setSubTitleFormat;
 
-PROCEDURE QWizard_subTitleFormat ( self: QWizard;
-): TextFormat =
-VAR
-ret:INTEGER; result : TextFormat;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtWizardRaw.QWizard_subTitleFormat(selfAdr);
-result := VAL(ret,TextFormat);  
-RETURN result;
-END QWizard_subTitleFormat;
+PROCEDURE QWizard_subTitleFormat (self: QWizard; ): TextFormat =
+  VAR
+    ret    : INTEGER;
+    result : TextFormat;
+    selfAdr: ADDRESS    := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWizardRaw.QWizard_subTitleFormat(selfAdr);
+    result := VAL(ret, TextFormat);
+    RETURN result;
+  END QWizard_subTitleFormat;
 
-PROCEDURE QWizard_setPixmap ( self: QWizard;
-which: WizardPixmap;
- pixmap: QPixmap;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg3tmp :=  LOOPHOLE(pixmap.cxxObj,ADDRESS);
-BEGIN
-QtWizardRaw.QWizard_setPixmap(selfAdr, ORD(which), arg3tmp);
-END QWizard_setPixmap;
+PROCEDURE QWizard_setPixmap
+  (self: QWizard; which: WizardPixmap; pixmap: QPixmap; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg3tmp          := LOOPHOLE(pixmap.cxxObj, ADDRESS);
+  BEGIN
+    QtWizardRaw.QWizard_setPixmap(selfAdr, ORD(which), arg3tmp);
+  END QWizard_setPixmap;
 
-PROCEDURE QWizard_pixmap ( self: QWizard;
-which: WizardPixmap;
-): QPixmap =
-VAR
-ret:ADDRESS; result : QPixmap;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtWizardRaw.QWizard_pixmap(selfAdr, ORD(which));
+PROCEDURE QWizard_pixmap (self: QWizard; which: WizardPixmap; ): QPixmap =
+  VAR
+    ret    : ADDRESS;
+    result : QPixmap;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWizardRaw.QWizard_pixmap(selfAdr, ORD(which));
 
-  result := NEW(QPixmap);
-  result.cxxObj := ret;
-  result.destroyCxx();
+    result := NEW(QPixmap);
+    result.cxxObj := ret;
+    result.destroyCxx();
 
-RETURN result;
-END QWizard_pixmap;
+    RETURN result;
+  END QWizard_pixmap;
 
-PROCEDURE QWizard_setDefaultProperty ( self: QWizard;
- className, property, changedSignal: TEXT;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp: C.char_star;
-arg3tmp: C.char_star;
-arg4tmp: C.char_star;
-BEGIN
-arg2tmp := M3toC.CopyTtoS(className);
-arg3tmp := M3toC.CopyTtoS(property);
-arg4tmp := M3toC.CopyTtoS(changedSignal);
-QtWizardRaw.QWizard_setDefaultProperty(selfAdr, arg2tmp, arg3tmp, arg4tmp);
+PROCEDURE QWizard_setDefaultProperty
+  (self: QWizard; className, property, changedSignal: TEXT; ) =
+  VAR
+    selfAdr: ADDRESS     := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp: C.char_star;
+    arg3tmp: C.char_star;
+    arg4tmp: C.char_star;
+  BEGIN
+    arg2tmp := M3toC.CopyTtoS(className);
+    arg3tmp := M3toC.CopyTtoS(property);
+    arg4tmp := M3toC.CopyTtoS(changedSignal);
+    QtWizardRaw.QWizard_setDefaultProperty(
+      selfAdr, arg2tmp, arg3tmp, arg4tmp);
 
 
 
 
 
 
-END QWizard_setDefaultProperty;
+  END QWizard_setDefaultProperty;
 
-PROCEDURE QWizard_setVisible ( self: QWizard;
-visible: BOOLEAN;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWizardRaw.QWizard_setVisible(selfAdr, visible);
-END QWizard_setVisible;
+PROCEDURE QWizard_setVisible (self: QWizard; visible: BOOLEAN; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWizardRaw.QWizard_setVisible(selfAdr, visible);
+  END QWizard_setVisible;
 
-PROCEDURE QWizard_sizeHint ( self: QWizard;
-): QSize =
-VAR
-ret:ADDRESS; result : QSize;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtWizardRaw.QWizard_sizeHint(selfAdr);
+PROCEDURE QWizard_sizeHint (self: QWizard; ): QSize =
+  VAR
+    ret    : ADDRESS;
+    result : QSize;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWizardRaw.QWizard_sizeHint(selfAdr);
 
-  result := NEW(QSize);
-  result.cxxObj := ret;
-  result.destroyCxx();
+    result := NEW(QSize);
+    result.cxxObj := ret;
+    result.destroyCxx();
 
-RETURN result;
-END QWizard_sizeHint;
+    RETURN result;
+  END QWizard_sizeHint;
 
-PROCEDURE QWizard_back ( self: QWizard;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWizardRaw.QWizard_back(selfAdr);
-END QWizard_back;
+PROCEDURE QWizard_back (self: QWizard; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWizardRaw.QWizard_back(selfAdr);
+  END QWizard_back;
 
-PROCEDURE QWizard_next ( self: QWizard;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWizardRaw.QWizard_next(selfAdr);
-END QWizard_next;
+PROCEDURE QWizard_next (self: QWizard; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWizardRaw.QWizard_next(selfAdr);
+  END QWizard_next;
 
-PROCEDURE QWizard_restart ( self: QWizard;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWizardRaw.QWizard_restart(selfAdr);
-END QWizard_restart;
+PROCEDURE QWizard_restart (self: QWizard; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWizardRaw.QWizard_restart(selfAdr);
+  END QWizard_restart;
 
-PROCEDURE Cleanup_QWizard(<*UNUSED*>READONLY self: WeakRef.T; ref: REFANY) =
-VAR obj : QWizard := ref;
-BEGIN
-  Delete_QWizard(obj);
- END Cleanup_QWizard;
+PROCEDURE Cleanup_QWizard
+  (<* UNUSED *> READONLY self: WeakRef.T; ref: REFANY) =
+  VAR obj: QWizard := ref;
+  BEGIN
+    Delete_QWizard(obj);
+  END Cleanup_QWizard;
 
-PROCEDURE Destroy_QWizard(self : QWizard) =
-BEGIN
-  EVAL WeakRef.FromRef(self,Cleanup_QWizard);
-END Destroy_QWizard;
+PROCEDURE Destroy_QWizard (self: QWizard) =
+  BEGIN
+    EVAL WeakRef.FromRef(self, Cleanup_QWizard);
+  END Destroy_QWizard;
 
 REVEAL
-QWizard =
-QWizardPublic BRANDED OBJECT
-OVERRIDES
-init_0 := New_QWizard0;
-init_1 := New_QWizard1;
-init_2 := New_QWizard2;
-addPage := QWizard_addPage;
-setPage := QWizard_setPage;
-removePage := QWizard_removePage;
-page := QWizard_page;
-hasVisitedPage := QWizard_hasVisitedPage;
-setStartId := QWizard_setStartId;
-startId := QWizard_startId;
-currentPage := QWizard_currentPage;
-currentId := QWizard_currentId;
-validateCurrentPage := QWizard_validateCurrentPage;
-nextId := QWizard_nextId;
-setWizardStyle := QWizard_setWizardStyle;
-wizardStyle := QWizard_wizardStyle;
-setOption := QWizard_setOption;
-setOption1 := QWizard_setOption1;
-testOption := QWizard_testOption;
-setOptions := QWizard_setOptions;
-options := QWizard_options;
-setButtonText := QWizard_setButtonText;
-buttonText := QWizard_buttonText;
-setButton := QWizard_setButton;
-button := QWizard_button;
-setTitleFormat := QWizard_setTitleFormat;
-titleFormat := QWizard_titleFormat;
-setSubTitleFormat := QWizard_setSubTitleFormat;
-subTitleFormat := QWizard_subTitleFormat;
-setPixmap := QWizard_setPixmap;
-pixmap := QWizard_pixmap;
-setDefaultProperty := QWizard_setDefaultProperty;
-setVisible := QWizard_setVisible;
-sizeHint := QWizard_sizeHint;
-back := QWizard_back;
-next := QWizard_next;
-restart := QWizard_restart;
-destroyCxx := Destroy_QWizard;
-END;
+  QWizard = QWizardPublic BRANDED OBJECT
+            OVERRIDES
+              init_0              := New_QWizard0;
+              init_1              := New_QWizard1;
+              init_2              := New_QWizard2;
+              addPage             := QWizard_addPage;
+              setPage             := QWizard_setPage;
+              removePage          := QWizard_removePage;
+              page                := QWizard_page;
+              hasVisitedPage      := QWizard_hasVisitedPage;
+              setStartId          := QWizard_setStartId;
+              startId             := QWizard_startId;
+              currentPage         := QWizard_currentPage;
+              currentId           := QWizard_currentId;
+              validateCurrentPage := QWizard_validateCurrentPage;
+              nextId              := QWizard_nextId;
+              setWizardStyle      := QWizard_setWizardStyle;
+              wizardStyle         := QWizard_wizardStyle;
+              setOption           := QWizard_setOption;
+              setOption1          := QWizard_setOption1;
+              testOption          := QWizard_testOption;
+              setOptions          := QWizard_setOptions;
+              options             := QWizard_options;
+              setButtonText       := QWizard_setButtonText;
+              buttonText          := QWizard_buttonText;
+              setButton           := QWizard_setButton;
+              button              := QWizard_button;
+              setTitleFormat      := QWizard_setTitleFormat;
+              titleFormat         := QWizard_titleFormat;
+              setSubTitleFormat   := QWizard_setSubTitleFormat;
+              subTitleFormat      := QWizard_subTitleFormat;
+              setPixmap           := QWizard_setPixmap;
+              pixmap              := QWizard_pixmap;
+              setDefaultProperty  := QWizard_setDefaultProperty;
+              setVisible          := QWizard_setVisible;
+              sizeHint            := QWizard_sizeHint;
+              back                := QWizard_back;
+              next                := QWizard_next;
+              restart             := QWizard_restart;
+              destroyCxx          := Destroy_QWizard;
+            END;
 
-PROCEDURE New_QWizardPage0 (self:QWizardPage; parent: QWidget;
-): QWizardPage =
-VAR
-result : ADDRESS;
-arg1tmp :=  LOOPHOLE(parent.cxxObj,ADDRESS);
-BEGIN
-result := QtWizardRaw.New_QWizardPage0(arg1tmp);
+PROCEDURE New_QWizardPage0 (self: QWizardPage; parent: QWidget; ):
+  QWizardPage =
+  VAR
+    result : ADDRESS;
+    arg1tmp          := LOOPHOLE(parent.cxxObj, ADDRESS);
+  BEGIN
+    result := QtWizardRaw.New_QWizardPage0(arg1tmp);
 
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QWizardPage);
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QWizardPage);
 
-RETURN self;
-END New_QWizardPage0;
+    RETURN self;
+  END New_QWizardPage0;
 
-PROCEDURE New_QWizardPage1 (self:QWizardPage;): QWizardPage =
-VAR
-result : ADDRESS;
-BEGIN
-result := QtWizardRaw.New_QWizardPage1();
+PROCEDURE New_QWizardPage1 (self: QWizardPage; ): QWizardPage =
+  VAR result: ADDRESS;
+  BEGIN
+    result := QtWizardRaw.New_QWizardPage1();
 
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QWizardPage);
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QWizardPage);
 
-RETURN self;
-END New_QWizardPage1;
+    RETURN self;
+  END New_QWizardPage1;
 
-PROCEDURE QWizardPage_setTitle ( self: QWizardPage;
- title: TEXT;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-qstr_title := NEW(QString).initQString(title);
-arg2tmp :=  LOOPHOLE(qstr_title.cxxObj,ADDRESS);
-BEGIN
-QtWizardRaw.QWizardPage_setTitle(selfAdr, arg2tmp);
-END QWizardPage_setTitle;
+PROCEDURE QWizardPage_setTitle (self: QWizardPage; title: TEXT; ) =
+  VAR
+    selfAdr   : ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    qstr_title          := NEW(QString).initQString(title);
+    arg2tmp             := LOOPHOLE(qstr_title.cxxObj, ADDRESS);
+  BEGIN
+    QtWizardRaw.QWizardPage_setTitle(selfAdr, arg2tmp);
+  END QWizardPage_setTitle;
 
-PROCEDURE QWizardPage_title ( self: QWizardPage;
-): TEXT =
-VAR
-ret : ADDRESS;
-qstr := NEW(QString);
-ba : QByteArray;
-result : TEXT;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtWizardRaw.QWizardPage_title(selfAdr);
+PROCEDURE QWizardPage_title (self: QWizardPage; ): TEXT =
+  VAR
+    ret    : ADDRESS;
+    qstr                := NEW(QString);
+    ba     : QByteArray;
+    result : TEXT;
+    selfAdr: ADDRESS    := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWizardRaw.QWizardPage_title(selfAdr);
 
-  qstr.cxxObj := ret;
-  ba := qstr.toLocal8Bit();
-  result := ba.data();
+    qstr.cxxObj := ret;
+    ba := qstr.toLocal8Bit();
+    result := ba.data();
 
-RETURN result;
-END QWizardPage_title;
+    RETURN result;
+  END QWizardPage_title;
 
-PROCEDURE QWizardPage_setSubTitle ( self: QWizardPage;
- subTitle: TEXT;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-qstr_subTitle := NEW(QString).initQString(subTitle);
-arg2tmp :=  LOOPHOLE(qstr_subTitle.cxxObj,ADDRESS);
-BEGIN
-QtWizardRaw.QWizardPage_setSubTitle(selfAdr, arg2tmp);
-END QWizardPage_setSubTitle;
+PROCEDURE QWizardPage_setSubTitle (self: QWizardPage; subTitle: TEXT; ) =
+  VAR
+    selfAdr      : ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    qstr_subTitle          := NEW(QString).initQString(subTitle);
+    arg2tmp                := LOOPHOLE(qstr_subTitle.cxxObj, ADDRESS);
+  BEGIN
+    QtWizardRaw.QWizardPage_setSubTitle(selfAdr, arg2tmp);
+  END QWizardPage_setSubTitle;
 
-PROCEDURE QWizardPage_subTitle ( self: QWizardPage;
-): TEXT =
-VAR
-ret : ADDRESS;
-qstr := NEW(QString);
-ba : QByteArray;
-result : TEXT;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtWizardRaw.QWizardPage_subTitle(selfAdr);
+PROCEDURE QWizardPage_subTitle (self: QWizardPage; ): TEXT =
+  VAR
+    ret    : ADDRESS;
+    qstr                := NEW(QString);
+    ba     : QByteArray;
+    result : TEXT;
+    selfAdr: ADDRESS    := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWizardRaw.QWizardPage_subTitle(selfAdr);
 
-  qstr.cxxObj := ret;
-  ba := qstr.toLocal8Bit();
-  result := ba.data();
+    qstr.cxxObj := ret;
+    ba := qstr.toLocal8Bit();
+    result := ba.data();
 
-RETURN result;
-END QWizardPage_subTitle;
+    RETURN result;
+  END QWizardPage_subTitle;
 
-PROCEDURE QWizardPage_setPixmap ( self: QWizardPage;
-which: WizardPixmap;
- pixmap: QPixmap;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg3tmp :=  LOOPHOLE(pixmap.cxxObj,ADDRESS);
-BEGIN
-QtWizardRaw.QWizardPage_setPixmap(selfAdr, ORD(which), arg3tmp);
-END QWizardPage_setPixmap;
+PROCEDURE QWizardPage_setPixmap
+  (self: QWizardPage; which: WizardPixmap; pixmap: QPixmap; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg3tmp          := LOOPHOLE(pixmap.cxxObj, ADDRESS);
+  BEGIN
+    QtWizardRaw.QWizardPage_setPixmap(selfAdr, ORD(which), arg3tmp);
+  END QWizardPage_setPixmap;
 
-PROCEDURE QWizardPage_pixmap ( self: QWizardPage;
-which: WizardPixmap;
-): QPixmap =
-VAR
-ret:ADDRESS; result : QPixmap;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtWizardRaw.QWizardPage_pixmap(selfAdr, ORD(which));
+PROCEDURE QWizardPage_pixmap (self: QWizardPage; which: WizardPixmap; ):
+  QPixmap =
+  VAR
+    ret    : ADDRESS;
+    result : QPixmap;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWizardRaw.QWizardPage_pixmap(selfAdr, ORD(which));
 
-  result := NEW(QPixmap);
-  result.cxxObj := ret;
-  result.destroyCxx();
+    result := NEW(QPixmap);
+    result.cxxObj := ret;
+    result.destroyCxx();
 
-RETURN result;
-END QWizardPage_pixmap;
+    RETURN result;
+  END QWizardPage_pixmap;
 
-PROCEDURE QWizardPage_setFinalPage ( self: QWizardPage;
-finalPage: BOOLEAN;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWizardRaw.QWizardPage_setFinalPage(selfAdr, finalPage);
-END QWizardPage_setFinalPage;
+PROCEDURE QWizardPage_setFinalPage
+  (self: QWizardPage; finalPage: BOOLEAN; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWizardRaw.QWizardPage_setFinalPage(selfAdr, finalPage);
+  END QWizardPage_setFinalPage;
 
-PROCEDURE QWizardPage_isFinalPage ( self: QWizardPage;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtWizardRaw.QWizardPage_isFinalPage(selfAdr);
-END QWizardPage_isFinalPage;
+PROCEDURE QWizardPage_isFinalPage (self: QWizardPage; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtWizardRaw.QWizardPage_isFinalPage(selfAdr);
+  END QWizardPage_isFinalPage;
 
-PROCEDURE QWizardPage_setCommitPage ( self: QWizardPage;
-commitPage: BOOLEAN;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWizardRaw.QWizardPage_setCommitPage(selfAdr, commitPage);
-END QWizardPage_setCommitPage;
+PROCEDURE QWizardPage_setCommitPage
+  (self: QWizardPage; commitPage: BOOLEAN; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWizardRaw.QWizardPage_setCommitPage(selfAdr, commitPage);
+  END QWizardPage_setCommitPage;
 
-PROCEDURE QWizardPage_isCommitPage ( self: QWizardPage;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtWizardRaw.QWizardPage_isCommitPage(selfAdr);
-END QWizardPage_isCommitPage;
+PROCEDURE QWizardPage_isCommitPage (self: QWizardPage; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtWizardRaw.QWizardPage_isCommitPage(selfAdr);
+  END QWizardPage_isCommitPage;
 
-PROCEDURE QWizardPage_setButtonText ( self: QWizardPage;
-which: WizardButton;
- text: TEXT;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-qstr_text := NEW(QString).initQString(text);
-arg3tmp :=  LOOPHOLE(qstr_text.cxxObj,ADDRESS);
-BEGIN
-QtWizardRaw.QWizardPage_setButtonText(selfAdr, ORD(which), arg3tmp);
-END QWizardPage_setButtonText;
+PROCEDURE QWizardPage_setButtonText
+  (self: QWizardPage; which: WizardButton; text: TEXT; ) =
+  VAR
+    selfAdr  : ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    qstr_text          := NEW(QString).initQString(text);
+    arg3tmp            := LOOPHOLE(qstr_text.cxxObj, ADDRESS);
+  BEGIN
+    QtWizardRaw.QWizardPage_setButtonText(selfAdr, ORD(which), arg3tmp);
+  END QWizardPage_setButtonText;
 
-PROCEDURE QWizardPage_buttonText ( self: QWizardPage;
-which: WizardButton;
-): TEXT =
-VAR
-ret : ADDRESS;
-qstr := NEW(QString);
-ba : QByteArray;
-result : TEXT;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtWizardRaw.QWizardPage_buttonText(selfAdr, ORD(which));
+PROCEDURE QWizardPage_buttonText
+  (self: QWizardPage; which: WizardButton; ): TEXT =
+  VAR
+    ret    : ADDRESS;
+    qstr                := NEW(QString);
+    ba     : QByteArray;
+    result : TEXT;
+    selfAdr: ADDRESS    := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWizardRaw.QWizardPage_buttonText(selfAdr, ORD(which));
 
-  qstr.cxxObj := ret;
-  ba := qstr.toLocal8Bit();
-  result := ba.data();
+    qstr.cxxObj := ret;
+    ba := qstr.toLocal8Bit();
+    result := ba.data();
 
-RETURN result;
-END QWizardPage_buttonText;
+    RETURN result;
+  END QWizardPage_buttonText;
 
-PROCEDURE QWizardPage_initializePage ( self: QWizardPage;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWizardRaw.QWizardPage_initializePage(selfAdr);
-END QWizardPage_initializePage;
+PROCEDURE QWizardPage_initializePage (self: QWizardPage; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWizardRaw.QWizardPage_initializePage(selfAdr);
+  END QWizardPage_initializePage;
 
-PROCEDURE QWizardPage_cleanupPage ( self: QWizardPage;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWizardRaw.QWizardPage_cleanupPage(selfAdr);
-END QWizardPage_cleanupPage;
+PROCEDURE QWizardPage_cleanupPage (self: QWizardPage; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWizardRaw.QWizardPage_cleanupPage(selfAdr);
+  END QWizardPage_cleanupPage;
 
-PROCEDURE QWizardPage_validatePage ( self: QWizardPage;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtWizardRaw.QWizardPage_validatePage(selfAdr);
-END QWizardPage_validatePage;
+PROCEDURE QWizardPage_validatePage (self: QWizardPage; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtWizardRaw.QWizardPage_validatePage(selfAdr);
+  END QWizardPage_validatePage;
 
-PROCEDURE QWizardPage_isComplete ( self: QWizardPage;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtWizardRaw.QWizardPage_isComplete(selfAdr);
-END QWizardPage_isComplete;
+PROCEDURE QWizardPage_isComplete (self: QWizardPage; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtWizardRaw.QWizardPage_isComplete(selfAdr);
+  END QWizardPage_isComplete;
 
-PROCEDURE QWizardPage_nextId ( self: QWizardPage;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtWizardRaw.QWizardPage_nextId(selfAdr);
-END QWizardPage_nextId;
+PROCEDURE QWizardPage_nextId (self: QWizardPage; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtWizardRaw.QWizardPage_nextId(selfAdr);
+  END QWizardPage_nextId;
 
-PROCEDURE Delete_QWizardPage ( self: QWizardPage;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtWizardRaw.Delete_QWizardPage(selfAdr);
-END Delete_QWizardPage;
+PROCEDURE Delete_QWizardPage (self: QWizardPage; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtWizardRaw.Delete_QWizardPage(selfAdr);
+  END Delete_QWizardPage;
 
-PROCEDURE Cleanup_QWizardPage(<*UNUSED*>READONLY self: WeakRef.T; ref: REFANY) =
-VAR obj : QWizardPage := ref;
-BEGIN
-  Delete_QWizardPage(obj);
- END Cleanup_QWizardPage;
+PROCEDURE Cleanup_QWizardPage
+  (<* UNUSED *> READONLY self: WeakRef.T; ref: REFANY) =
+  VAR obj: QWizardPage := ref;
+  BEGIN
+    Delete_QWizardPage(obj);
+  END Cleanup_QWizardPage;
 
-PROCEDURE Destroy_QWizardPage(self : QWizardPage) =
-BEGIN
-  EVAL WeakRef.FromRef(self,Cleanup_QWizardPage);
-END Destroy_QWizardPage;
+PROCEDURE Destroy_QWizardPage (self: QWizardPage) =
+  BEGIN
+    EVAL WeakRef.FromRef(self, Cleanup_QWizardPage);
+  END Destroy_QWizardPage;
 
 REVEAL
-QWizardPage =
-QWizardPagePublic BRANDED OBJECT
-OVERRIDES
-init_0 := New_QWizardPage0;
-init_1 := New_QWizardPage1;
-setTitle := QWizardPage_setTitle;
-title := QWizardPage_title;
-setSubTitle := QWizardPage_setSubTitle;
-subTitle := QWizardPage_subTitle;
-setPixmap := QWizardPage_setPixmap;
-pixmap := QWizardPage_pixmap;
-setFinalPage := QWizardPage_setFinalPage;
-isFinalPage := QWizardPage_isFinalPage;
-setCommitPage := QWizardPage_setCommitPage;
-isCommitPage := QWizardPage_isCommitPage;
-setButtonText := QWizardPage_setButtonText;
-buttonText := QWizardPage_buttonText;
-initializePage := QWizardPage_initializePage;
-cleanupPage := QWizardPage_cleanupPage;
-validatePage := QWizardPage_validatePage;
-isComplete := QWizardPage_isComplete;
-nextId := QWizardPage_nextId;
-destroyCxx := Destroy_QWizardPage;
-END;
+  QWizardPage = QWizardPagePublic BRANDED OBJECT
+                OVERRIDES
+                  init_0         := New_QWizardPage0;
+                  init_1         := New_QWizardPage1;
+                  setTitle       := QWizardPage_setTitle;
+                  title          := QWizardPage_title;
+                  setSubTitle    := QWizardPage_setSubTitle;
+                  subTitle       := QWizardPage_subTitle;
+                  setPixmap      := QWizardPage_setPixmap;
+                  pixmap         := QWizardPage_pixmap;
+                  setFinalPage   := QWizardPage_setFinalPage;
+                  isFinalPage    := QWizardPage_isFinalPage;
+                  setCommitPage  := QWizardPage_setCommitPage;
+                  isCommitPage   := QWizardPage_isCommitPage;
+                  setButtonText  := QWizardPage_setButtonText;
+                  buttonText     := QWizardPage_buttonText;
+                  initializePage := QWizardPage_initializePage;
+                  cleanupPage    := QWizardPage_cleanupPage;
+                  validatePage   := QWizardPage_validatePage;
+                  isComplete     := QWizardPage_isComplete;
+                  nextId         := QWizardPage_nextId;
+                  destroyCxx     := Destroy_QWizardPage;
+                END;
 
 
 BEGIN

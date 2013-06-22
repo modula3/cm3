@@ -8,121 +8,77 @@
 
 INTERFACE QtTableView;
 
-FROM QtAbstractItemModel IMPORT QAbstractItemModel,QModelIndex;
+FROM QtAbstractItemModel IMPORT QAbstractItemModel, QModelIndex;
 FROM QtWidget IMPORT QWidget;
 FROM QtItemSelectionModel IMPORT QItemSelectionModel;
 FROM QtHeaderView IMPORT QHeaderView;
-FROM QtNamespace IMPORT PenStyle,SortOrder;
+FROM QtNamespace IMPORT PenStyle, SortOrder;
 FROM QtRect IMPORT QRect;
 FROM QtAbstractItemView IMPORT ScrollHint;
 
 
 FROM QtAbstractItemView IMPORT QAbstractItemView;
 
-TYPE
-  T = QTableView;
+TYPE T = QTableView;
 
 
 TYPE
-QTableView <: QTableViewPublic;
-QTableViewPublic =
-QAbstractItemView BRANDED OBJECT
-METHODS
-init_0 ( parent: QWidget;
-) : QTableView;
-init_1 () : QTableView;
-setModel( model: QAbstractItemModel;
-);  (*  virtual *)
-setRootIndex( index: QModelIndex;
-);  (*  virtual *)
-setSelectionModel( selectionModel: QItemSelectionModel;
-);  (*  virtual *)
-horizontalHeader(): QHeaderView;
-verticalHeader(): QHeaderView;
-setHorizontalHeader( header: QHeaderView;
-);
-setVerticalHeader( header: QHeaderView;
-);
-rowViewportPosition(row: INTEGER;
-): INTEGER;
-rowAt(y: INTEGER;
-): INTEGER;
-setRowHeight(row, height: INTEGER;
-);
-rowHeight(row: INTEGER;
-): INTEGER;
-columnViewportPosition(column: INTEGER;
-): INTEGER;
-columnAt(x: INTEGER;
-): INTEGER;
-setColumnWidth(column, width: INTEGER;
-);
-columnWidth(column: INTEGER;
-): INTEGER;
-isRowHidden(row: INTEGER;
-): BOOLEAN;
-setRowHidden(row: INTEGER;
-hide: BOOLEAN;
-);
-isColumnHidden(column: INTEGER;
-): BOOLEAN;
-setColumnHidden(column: INTEGER;
-hide: BOOLEAN;
-);
-setSortingEnabled(enable: BOOLEAN;
-);
-isSortingEnabled(): BOOLEAN;
-showGrid(): BOOLEAN;
-gridStyle(): PenStyle;
-setGridStyle(style: PenStyle;
-);
-setWordWrap(on: BOOLEAN;
-);
-wordWrap(): BOOLEAN;
-setCornerButtonEnabled(enable: BOOLEAN;
-);
-isCornerButtonEnabled(): BOOLEAN;
-visualRect( index: QModelIndex;
-): QRect;  (*  virtual *)
-scrollTo( index: QModelIndex;
-hint: ScrollHint;
-);  (*  virtual *)
-scrollTo1( index: QModelIndex;
-);  (*  virtual *)
-setSpan(row, column, rowSpan, columnSpan: INTEGER;
-);
-rowSpan(row, column: INTEGER;
-): INTEGER;
-columnSpan(row, column: INTEGER;
-): INTEGER;
-clearSpans();
-sortByColumn(column: INTEGER;
-order: SortOrder;
-);
-selectRow(row: INTEGER;
-);
-selectColumn(column: INTEGER;
-);
-hideRow(row: INTEGER;
-);
-hideColumn(column: INTEGER;
-);
-showRow(row: INTEGER;
-);
-showColumn(column: INTEGER;
-);
-resizeRowToContents(row: INTEGER;
-);
-resizeRowsToContents();
-resizeColumnToContents(column: INTEGER;
-);
-resizeColumnsToContents();
-sortByColumn1(column: INTEGER;
-);
-setShowGrid(show: BOOLEAN;
-);
-destroyCxx();
-END;
+  QTableView <: QTableViewPublic;
+  QTableViewPublic =
+    QAbstractItemView BRANDED OBJECT
+    METHODS
+      init_0       (parent: QWidget; ): QTableView;
+      init_1       (): QTableView;
+      setModel     (model: QAbstractItemModel; ); (* virtual *)
+      setRootIndex (index: QModelIndex; ); (* virtual *)
+      setSelectionModel (selectionModel: QItemSelectionModel; ); (* virtual *)
+      horizontalHeader       (): QHeaderView;
+      verticalHeader         (): QHeaderView;
+      setHorizontalHeader    (header: QHeaderView; );
+      setVerticalHeader      (header: QHeaderView; );
+      rowViewportPosition    (row: INTEGER; ): INTEGER;
+      rowAt                  (y: INTEGER; ): INTEGER;
+      setRowHeight           (row, height: INTEGER; );
+      rowHeight              (row: INTEGER; ): INTEGER;
+      columnViewportPosition (column: INTEGER; ): INTEGER;
+      columnAt               (x: INTEGER; ): INTEGER;
+      setColumnWidth         (column, width: INTEGER; );
+      columnWidth            (column: INTEGER; ): INTEGER;
+      isRowHidden            (row: INTEGER; ): BOOLEAN;
+      setRowHidden           (row: INTEGER; hide: BOOLEAN; );
+      isColumnHidden         (column: INTEGER; ): BOOLEAN;
+      setColumnHidden        (column: INTEGER; hide: BOOLEAN; );
+      setSortingEnabled      (enable: BOOLEAN; );
+      isSortingEnabled       (): BOOLEAN;
+      showGrid               (): BOOLEAN;
+      gridStyle              (): PenStyle;
+      setGridStyle           (style: PenStyle; );
+      setWordWrap            (on: BOOLEAN; );
+      wordWrap               (): BOOLEAN;
+      setCornerButtonEnabled (enable: BOOLEAN; );
+      isCornerButtonEnabled  (): BOOLEAN;
+      visualRect             (index: QModelIndex; ): QRect; (* virtual *)
+      scrollTo     (index: QModelIndex; hint: ScrollHint; ); (* virtual *)
+      scrollTo1    (index: QModelIndex; ); (* virtual *)
+      setSpan      (row, column, rowSpan, columnSpan: INTEGER; );
+      rowSpan      (row, column: INTEGER; ): INTEGER;
+      columnSpan   (row, column: INTEGER; ): INTEGER;
+      clearSpans   ();
+      sortByColumn (column: INTEGER; order: SortOrder; );
+      selectRow    (row: INTEGER; );
+      selectColumn (column: INTEGER; );
+      hideRow      (row: INTEGER; );
+      hideColumn   (column: INTEGER; );
+      showRow      (row: INTEGER; );
+      showColumn   (column: INTEGER; );
+      resizeRowToContents     (row: INTEGER; );
+      resizeRowsToContents    ();
+      resizeColumnToContents  (column: INTEGER; );
+      resizeColumnsToContents ();
+      sortByColumn1           (column: INTEGER; );
+      setShowGrid             (show: BOOLEAN; );
+      destroyCxx              ();
+    END;
 
 
 END QtTableView.

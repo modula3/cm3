@@ -17,135 +17,78 @@ FROM QtNamespace IMPORT TextElideMode;
 FROM QtRect IMPORT QRect;
 
 
-TYPE
-  T = QTabBar;
+TYPE T = QTabBar;
 
 
-TYPE (* Enum Shape *)
-  Shape = {
- RoundedNorth,
- RoundedSouth,
- RoundedWest,
- RoundedEast,
- TriangularNorth,
- TriangularSouth,
- TriangularWest,
- TriangularEast};
+TYPE                             (* Enum Shape *)
+  Shape =
+    {RoundedNorth, RoundedSouth, RoundedWest, RoundedEast, TriangularNorth,
+     TriangularSouth, TriangularWest, TriangularEast};
 
-TYPE (* Enum ButtonPosition *)
-  ButtonPosition = {
- LeftSide,
- RightSide};
+TYPE                             (* Enum ButtonPosition *)
+  ButtonPosition = {LeftSide, RightSide};
 
-TYPE (* Enum SelectionBehavior *)
-  SelectionBehavior = {
- SelectLeftTab,
- SelectRightTab,
- SelectPreviousTab};
+TYPE                             (* Enum SelectionBehavior *)
+  SelectionBehavior = {SelectLeftTab, SelectRightTab, SelectPreviousTab};
 
 TYPE
-QTabBar <: QTabBarPublic;
-QTabBarPublic =
-QWidget BRANDED OBJECT
-METHODS
-init_0 ( parent: QWidget;
-) : QTabBar;
-init_1 () : QTabBar;
-shape(): Shape;
-setShape(shape: Shape;
-);
-addTab( text: TEXT;
-): INTEGER;
-addTab1( icon: QIcon;
- text: TEXT;
-): INTEGER;
-insertTab(index: INTEGER;
- text: TEXT;
-): INTEGER;
-insertTab1(index: INTEGER;
- icon: QIcon;
- text: TEXT;
-): INTEGER;
-removeTab(index: INTEGER;
-);
-moveTab(from, to: INTEGER;
-);
-isTabEnabled(index: INTEGER;
-): BOOLEAN;
-setTabEnabled(index: INTEGER;
-arg2: BOOLEAN;
-);
-tabText(index: INTEGER;
-): TEXT;
-setTabText(index: INTEGER;
- text: TEXT;
-);
-tabTextColor(index: INTEGER;
-): QColor;
-setTabTextColor(index: INTEGER;
- color: QColor;
-);
-tabIcon(index: INTEGER;
-): QIcon;
-setTabIcon(index: INTEGER;
- icon: QIcon;
-);
-elideMode(): TextElideMode;
-setElideMode(arg1: TextElideMode;
-);
-setTabToolTip(index: INTEGER;
- tip: TEXT;
-);
-tabToolTip(index: INTEGER;
-): TEXT;
-setTabWhatsThis(index: INTEGER;
- text: TEXT;
-);
-tabWhatsThis(index: INTEGER;
-): TEXT;
-tabRect(index: INTEGER;
-): QRect;
-tabAt( pos: QPoint;
-): INTEGER;
-currentIndex(): INTEGER;
-count(): INTEGER;
-sizeHint(): QSize;  (*  virtual *)
-minimumSizeHint(): QSize;  (*  virtual *)
-setDrawBase(drawTheBase: BOOLEAN;
-);
-drawBase(): BOOLEAN;
-iconSize(): QSize;
-setIconSize( size: QSize;
-);
-usesScrollButtons(): BOOLEAN;
-setUsesScrollButtons(useButtons: BOOLEAN;
-);
-tabsClosable(): BOOLEAN;
-setTabsClosable(closable: BOOLEAN;
-);
-setTabButton(index: INTEGER;
-position: ButtonPosition;
- widget: QWidget;
-);
-tabButton(index: INTEGER;
-position: ButtonPosition;
-): QWidget;
-selectionBehaviorOnRemove(): SelectionBehavior;
-setSelectionBehaviorOnRemove(behavior: SelectionBehavior;
-);
-expanding(): BOOLEAN;
-setExpanding(enabled: BOOLEAN;
-);
-isMovable(): BOOLEAN;
-setMovable(movable: BOOLEAN;
-);
-documentMode(): BOOLEAN;
-setDocumentMode(set: BOOLEAN;
-);
-setCurrentIndex(index: INTEGER;
-);
-destroyCxx();
-END;
+  QTabBar <: QTabBarPublic;
+  QTabBarPublic =
+    QWidget BRANDED OBJECT
+    METHODS
+      init_0          (parent: QWidget; ): QTabBar;
+      init_1          (): QTabBar;
+      shape           (): Shape;
+      setShape        (shape: Shape; );
+      addTab          (text: TEXT; ): INTEGER;
+      addTab1         (icon: QIcon; text: TEXT; ): INTEGER;
+      insertTab       (index: INTEGER; text: TEXT; ): INTEGER;
+      insertTab1      (index: INTEGER; icon: QIcon; text: TEXT; ): INTEGER;
+      removeTab       (index: INTEGER; );
+      moveTab         (from, to: INTEGER; );
+      isTabEnabled    (index: INTEGER; ): BOOLEAN;
+      setTabEnabled   (index: INTEGER; arg2: BOOLEAN; );
+      tabText         (index: INTEGER; ): TEXT;
+      setTabText      (index: INTEGER; text: TEXT; );
+      tabTextColor    (index: INTEGER; ): QColor;
+      setTabTextColor (index: INTEGER; color: QColor; );
+      tabIcon         (index: INTEGER; ): QIcon;
+      setTabIcon      (index: INTEGER; icon: QIcon; );
+      elideMode       (): TextElideMode;
+      setElideMode    (arg1: TextElideMode; );
+      setTabToolTip   (index: INTEGER; tip: TEXT; );
+      tabToolTip      (index: INTEGER; ): TEXT;
+      setTabWhatsThis (index: INTEGER; text: TEXT; );
+      tabWhatsThis    (index: INTEGER; ): TEXT;
+      tabRect         (index: INTEGER; ): QRect;
+      tabAt           (pos: QPoint; ): INTEGER;
+      currentIndex    (): INTEGER;
+      count           (): INTEGER;
+      sizeHint        (): QSize; (* virtual *)
+      minimumSizeHint (): QSize; (* virtual *)
+      setDrawBase     (drawTheBase: BOOLEAN; );
+      drawBase        (): BOOLEAN;
+      iconSize        (): QSize;
+      setIconSize     (size: QSize; );
+      usesScrollButtons    (): BOOLEAN;
+      setUsesScrollButtons (useButtons: BOOLEAN; );
+      tabsClosable         (): BOOLEAN;
+      setTabsClosable      (closable: BOOLEAN; );
+      setTabButton (index   : INTEGER;
+                    position: ButtonPosition;
+                    widget  : QWidget;        );
+      tabButton (index: INTEGER; position: ButtonPosition; ): QWidget;
+      selectionBehaviorOnRemove    (): SelectionBehavior;
+      setSelectionBehaviorOnRemove (behavior: SelectionBehavior; );
+      expanding                    (): BOOLEAN;
+      setExpanding                 (enabled: BOOLEAN; );
+      isMovable                    (): BOOLEAN;
+      setMovable                   (movable: BOOLEAN; );
+      documentMode                 (): BOOLEAN;
+      setDocumentMode              (set: BOOLEAN; );
+      setCurrentIndex              (index: INTEGER; );
+      destroyCxx                   ();
+    END;
 
 
 END QtTabBar.

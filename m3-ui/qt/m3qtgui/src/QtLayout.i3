@@ -13,90 +13,63 @@ FROM QtSize IMPORT QSize;
 FROM QtMargins IMPORT QMargins;
 FROM QtWidget IMPORT QWidget;
 FROM QtRect IMPORT QRect;
-FROM QtNamespace IMPORT AlignmentFlag,Orientations;
+FROM QtNamespace IMPORT AlignmentFlag, Orientations;
 
 
 FROM QtObject IMPORT QObject;
-TYPE
-  T = QLayout;
+TYPE T = QLayout;
 
 
-TYPE (* Enum SizeConstraint *)
-  SizeConstraint = {
- SetDefaultConstraint,
- SetNoConstraint,
- SetMinimumSize,
- SetFixedSize,
- SetMaximumSize,
- SetMinAndMaxSize};
-PROCEDURE ClosestAcceptableSize ( w: QWidget;
- s: QSize;
-): QSize;
+TYPE                             (* Enum SizeConstraint *)
+  SizeConstraint = {SetDefaultConstraint, SetNoConstraint, SetMinimumSize,
+                    SetFixedSize, SetMaximumSize, SetMinAndMaxSize};
+PROCEDURE ClosestAcceptableSize (w: QWidget; s: QSize; ): QSize;
 
 
 TYPE
-QLayout <: QLayoutPublic;
-QLayoutPublic =
-QObject BRANDED OBJECT
-METHODS
-margin(): INTEGER;
-spacing(): INTEGER;
-setMargin(arg1: INTEGER;
-);
-setSpacing(arg1: INTEGER;
-);
-setContentsMargins(left, top, right, bottom: INTEGER;
-);
-setContentsMargins1( margins: QMargins;
-);
-getContentsMargins(VAR left, top, right, bottom: INTEGER;
-);
-contentsMargins(): QMargins;
-contentsRect(): QRect;
-setAlignment( w: QWidget;
-alignment: AlignmentFlag;
-): BOOLEAN;
-setAlignment1( l: QLayout;
-alignment: AlignmentFlag;
-): BOOLEAN;
-setAlignment2_0(a: AlignmentFlag;
-);
-setSizeConstraint(arg1: SizeConstraint;
-);
-sizeConstraint(): SizeConstraint;
-setMenuBar( w: QWidget;
-);
-menuBar(): QWidget;
-parentWidget(): QWidget;
-invalidate();  (*  virtual *)
-geometry(): QRect;  (*  virtual *)
-activate(): BOOLEAN;
-update();
-addWidget( w: QWidget;
-);
-removeWidget( w: QWidget;
-);
-removeItem( arg1: QLayoutItem;
-);
-expandingDirections(): Orientations;  (*  virtual *)
-minimumSize(): QSize;  (*  virtual *)
-maximumSize(): QSize;  (*  virtual *)
-setGeometry( arg1: QRect;
-);  (*  virtual *)
-indexOf( arg1: QWidget;
-): INTEGER;  (*  virtual *)
-isEmpty(): BOOLEAN;  (*  virtual *)
-totalHeightForWidth(w: INTEGER;
-): INTEGER;
-totalMinimumSize(): QSize;
-totalMaximumSize(): QSize;
-totalSizeHint(): QSize;
-layout(): REFANY;  (*  virtual *)
-setEnabled(arg1: BOOLEAN;
-);
-isEnabled(): BOOLEAN;
-destroyCxx();
-END;
+  QLayout <: QLayoutPublic;
+  QLayoutPublic =
+    QObject BRANDED OBJECT
+    METHODS
+      margin              (): INTEGER;
+      spacing             (): INTEGER;
+      setMargin           (arg1: INTEGER; );
+      setSpacing          (arg1: INTEGER; );
+      setContentsMargins  (left, top, right, bottom: INTEGER; );
+      setContentsMargins1 (margins: QMargins; );
+      getContentsMargins  (VAR left, top, right, bottom: INTEGER; );
+      contentsMargins     (): QMargins;
+      contentsRect        (): QRect;
+      setAlignment      (w: QWidget; alignment: AlignmentFlag; ): BOOLEAN;
+      setAlignment1     (l: QLayout; alignment: AlignmentFlag; ): BOOLEAN;
+      setAlignment2_0   (a: AlignmentFlag; );
+      setSizeConstraint (arg1: SizeConstraint; );
+      sizeConstraint    (): SizeConstraint;
+      setMenuBar        (w: QWidget; );
+      menuBar           (): QWidget;
+      parentWidget      (): QWidget;
+      invalidate        ();      (* virtual *)
+      geometry          (): QRect; (* virtual *)
+      activate          (): BOOLEAN;
+      update            ();
+      addWidget         (w: QWidget; );
+      removeWidget      (w: QWidget; );
+      removeItem        (arg1: QLayoutItem; );
+      expandingDirections (): Orientations; (* virtual *)
+      minimumSize         (): QSize; (* virtual *)
+      maximumSize         (): QSize; (* virtual *)
+      setGeometry         (arg1: QRect; ); (* virtual *)
+      indexOf             (arg1: QWidget; ): INTEGER; (* virtual *)
+      isEmpty             (): BOOLEAN; (* virtual *)
+      totalHeightForWidth (w: INTEGER; ): INTEGER;
+      totalMinimumSize    (): QSize;
+      totalMaximumSize    (): QSize;
+      totalSizeHint       (): QSize;
+      layout              (): REFANY; (* virtual *)
+      setEnabled          (arg1: BOOLEAN; );
+      isEnabled           (): BOOLEAN;
+      destroyCxx          ();
+    END;
 
 
 END QtLayout.

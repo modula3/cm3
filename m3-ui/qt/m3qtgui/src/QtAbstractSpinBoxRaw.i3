@@ -15,144 +15,117 @@ IMPORT Ctypes AS C;
 
 
 <* EXTERNAL New_QAbstractSpinBox0 *>
-PROCEDURE New_QAbstractSpinBox0 ( parent: ADDRESS;
-): QAbstractSpinBox;
+PROCEDURE New_QAbstractSpinBox0 (parent: ADDRESS; ): QAbstractSpinBox;
 
 <* EXTERNAL New_QAbstractSpinBox1 *>
 PROCEDURE New_QAbstractSpinBox1 (): QAbstractSpinBox;
 
 <* EXTERNAL Delete_QAbstractSpinBox *>
-PROCEDURE Delete_QAbstractSpinBox ( self: QAbstractSpinBox;
-);
+PROCEDURE Delete_QAbstractSpinBox (self: QAbstractSpinBox; );
 
 <* EXTERNAL QAbstractSpinBox_buttonSymbols *>
-PROCEDURE QAbstractSpinBox_buttonSymbols ( self: QAbstractSpinBox;
-): C.int;
+PROCEDURE QAbstractSpinBox_buttonSymbols (self: QAbstractSpinBox; ): C.int;
 
 <* EXTERNAL QAbstractSpinBox_setButtonSymbols *>
-PROCEDURE QAbstractSpinBox_setButtonSymbols ( self: QAbstractSpinBox;
-bs: C.int;
-);
+PROCEDURE QAbstractSpinBox_setButtonSymbols
+  (self: QAbstractSpinBox; bs: C.int; );
 
 <* EXTERNAL QAbstractSpinBox_setCorrectionMode *>
-PROCEDURE QAbstractSpinBox_setCorrectionMode ( self: QAbstractSpinBox;
-cm: C.int;
-);
+PROCEDURE QAbstractSpinBox_setCorrectionMode
+  (self: QAbstractSpinBox; cm: C.int; );
 
 <* EXTERNAL QAbstractSpinBox_correctionMode *>
-PROCEDURE QAbstractSpinBox_correctionMode ( self: QAbstractSpinBox;
-): C.int;
+PROCEDURE QAbstractSpinBox_correctionMode (self: QAbstractSpinBox; ):
+  C.int;
 
 <* EXTERNAL QAbstractSpinBox_hasAcceptableInput *>
-PROCEDURE QAbstractSpinBox_hasAcceptableInput ( self: QAbstractSpinBox;
-): BOOLEAN;
+PROCEDURE QAbstractSpinBox_hasAcceptableInput (self: QAbstractSpinBox; ):
+  BOOLEAN;
 
 <* EXTERNAL QAbstractSpinBox_text *>
-PROCEDURE QAbstractSpinBox_text ( self: QAbstractSpinBox;
-): ADDRESS;
+PROCEDURE QAbstractSpinBox_text (self: QAbstractSpinBox; ): ADDRESS;
 
 <* EXTERNAL QAbstractSpinBox_specialValueText *>
-PROCEDURE QAbstractSpinBox_specialValueText ( self: QAbstractSpinBox;
-): ADDRESS;
+PROCEDURE QAbstractSpinBox_specialValueText (self: QAbstractSpinBox; ):
+  ADDRESS;
 
 <* EXTERNAL QAbstractSpinBox_setSpecialValueText *>
-PROCEDURE QAbstractSpinBox_setSpecialValueText ( self: QAbstractSpinBox;
- txt: ADDRESS;
-);
+PROCEDURE QAbstractSpinBox_setSpecialValueText
+  (self: QAbstractSpinBox; txt: ADDRESS; );
 
 <* EXTERNAL QAbstractSpinBox_wrapping *>
-PROCEDURE QAbstractSpinBox_wrapping ( self: QAbstractSpinBox;
-): BOOLEAN;
+PROCEDURE QAbstractSpinBox_wrapping (self: QAbstractSpinBox; ): BOOLEAN;
 
 <* EXTERNAL QAbstractSpinBox_setWrapping *>
-PROCEDURE QAbstractSpinBox_setWrapping ( self: QAbstractSpinBox;
-w: BOOLEAN;
-);
+PROCEDURE QAbstractSpinBox_setWrapping
+  (self: QAbstractSpinBox; w: BOOLEAN; );
 
 <* EXTERNAL QAbstractSpinBox_setReadOnly *>
-PROCEDURE QAbstractSpinBox_setReadOnly ( self: QAbstractSpinBox;
-r: BOOLEAN;
-);
+PROCEDURE QAbstractSpinBox_setReadOnly
+  (self: QAbstractSpinBox; r: BOOLEAN; );
 
 <* EXTERNAL QAbstractSpinBox_isReadOnly *>
-PROCEDURE QAbstractSpinBox_isReadOnly ( self: QAbstractSpinBox;
-): BOOLEAN;
+PROCEDURE QAbstractSpinBox_isReadOnly (self: QAbstractSpinBox; ): BOOLEAN;
 
 <* EXTERNAL QAbstractSpinBox_setKeyboardTracking *>
-PROCEDURE QAbstractSpinBox_setKeyboardTracking ( self: QAbstractSpinBox;
-kt: BOOLEAN;
-);
+PROCEDURE QAbstractSpinBox_setKeyboardTracking
+  (self: QAbstractSpinBox; kt: BOOLEAN; );
 
 <* EXTERNAL QAbstractSpinBox_keyboardTracking *>
-PROCEDURE QAbstractSpinBox_keyboardTracking ( self: QAbstractSpinBox;
-): BOOLEAN;
+PROCEDURE QAbstractSpinBox_keyboardTracking (self: QAbstractSpinBox; ):
+  BOOLEAN;
 
 <* EXTERNAL QAbstractSpinBox_setAlignment *>
-PROCEDURE QAbstractSpinBox_setAlignment ( self: QAbstractSpinBox;
-flag: C.int;
-);
+PROCEDURE QAbstractSpinBox_setAlignment
+  (self: QAbstractSpinBox; flag: C.int; );
 
 <* EXTERNAL QAbstractSpinBox_alignment *>
-PROCEDURE QAbstractSpinBox_alignment ( self: QAbstractSpinBox;
-): C.int;
+PROCEDURE QAbstractSpinBox_alignment (self: QAbstractSpinBox; ): C.int;
 
 <* EXTERNAL QAbstractSpinBox_setFrame *>
-PROCEDURE QAbstractSpinBox_setFrame ( self: QAbstractSpinBox;
-arg2: BOOLEAN;
-);
+PROCEDURE QAbstractSpinBox_setFrame
+  (self: QAbstractSpinBox; arg2: BOOLEAN; );
 
 <* EXTERNAL QAbstractSpinBox_hasFrame *>
-PROCEDURE QAbstractSpinBox_hasFrame ( self: QAbstractSpinBox;
-): BOOLEAN;
+PROCEDURE QAbstractSpinBox_hasFrame (self: QAbstractSpinBox; ): BOOLEAN;
 
 <* EXTERNAL QAbstractSpinBox_setAccelerated *>
-PROCEDURE QAbstractSpinBox_setAccelerated ( self: QAbstractSpinBox;
-on: BOOLEAN;
-);
+PROCEDURE QAbstractSpinBox_setAccelerated
+  (self: QAbstractSpinBox; on: BOOLEAN; );
 
 <* EXTERNAL QAbstractSpinBox_isAccelerated *>
-PROCEDURE QAbstractSpinBox_isAccelerated ( self: QAbstractSpinBox;
-): BOOLEAN;
+PROCEDURE QAbstractSpinBox_isAccelerated (self: QAbstractSpinBox; ):
+  BOOLEAN;
 
 <* EXTERNAL QAbstractSpinBox_sizeHint *>
-PROCEDURE QAbstractSpinBox_sizeHint ( self: QAbstractSpinBox;
-): ADDRESS;
+PROCEDURE QAbstractSpinBox_sizeHint (self: QAbstractSpinBox; ): ADDRESS;
 
 <* EXTERNAL QAbstractSpinBox_minimumSizeHint *>
-PROCEDURE QAbstractSpinBox_minimumSizeHint ( self: QAbstractSpinBox;
-): ADDRESS;
+PROCEDURE QAbstractSpinBox_minimumSizeHint (self: QAbstractSpinBox; ):
+  ADDRESS;
 
 <* EXTERNAL QAbstractSpinBox_interpretText *>
-PROCEDURE QAbstractSpinBox_interpretText ( self: QAbstractSpinBox;
-);
+PROCEDURE QAbstractSpinBox_interpretText (self: QAbstractSpinBox; );
 
 <* EXTERNAL QAbstractSpinBox_fixup *>
-PROCEDURE QAbstractSpinBox_fixup ( self: QAbstractSpinBox;
- input: ADDRESS;
-);
+PROCEDURE QAbstractSpinBox_fixup
+  (self: QAbstractSpinBox; input: ADDRESS; );
 
 <* EXTERNAL QAbstractSpinBox_stepBy *>
-PROCEDURE QAbstractSpinBox_stepBy ( self: QAbstractSpinBox;
-steps: C.int;
-);
+PROCEDURE QAbstractSpinBox_stepBy (self: QAbstractSpinBox; steps: C.int; );
 
 <* EXTERNAL QAbstractSpinBox_stepUp *>
-PROCEDURE QAbstractSpinBox_stepUp ( self: QAbstractSpinBox;
-);
+PROCEDURE QAbstractSpinBox_stepUp (self: QAbstractSpinBox; );
 
 <* EXTERNAL QAbstractSpinBox_stepDown *>
-PROCEDURE QAbstractSpinBox_stepDown ( self: QAbstractSpinBox;
-);
+PROCEDURE QAbstractSpinBox_stepDown (self: QAbstractSpinBox; );
 
 <* EXTERNAL QAbstractSpinBox_selectAll *>
-PROCEDURE QAbstractSpinBox_selectAll ( self: QAbstractSpinBox;
-);
+PROCEDURE QAbstractSpinBox_selectAll (self: QAbstractSpinBox; );
 
 <* EXTERNAL QAbstractSpinBox_clear *>
-PROCEDURE QAbstractSpinBox_clear ( self: QAbstractSpinBox;
-);
+PROCEDURE QAbstractSpinBox_clear (self: QAbstractSpinBox; );
 
-TYPE
-QAbstractSpinBox = ADDRESS;
+TYPE QAbstractSpinBox = ADDRESS;
 
 END QtAbstractSpinBoxRaw.

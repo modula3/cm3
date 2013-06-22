@@ -15,348 +15,255 @@ IMPORT Ctypes AS C;
 
 
 <* EXTERNAL New_QListWidgetItem0 *>
-PROCEDURE New_QListWidgetItem0 ( view: ADDRESS;
-type: C.int;
-): QListWidgetItem;
+PROCEDURE New_QListWidgetItem0 (view: ADDRESS; type: C.int; ):
+  QListWidgetItem;
 
 <* EXTERNAL New_QListWidgetItem1 *>
-PROCEDURE New_QListWidgetItem1 ( view: ADDRESS;
-): QListWidgetItem;
+PROCEDURE New_QListWidgetItem1 (view: ADDRESS; ): QListWidgetItem;
 
 <* EXTERNAL New_QListWidgetItem2 *>
 PROCEDURE New_QListWidgetItem2 (): QListWidgetItem;
 
 <* EXTERNAL New_QListWidgetItem3 *>
-PROCEDURE New_QListWidgetItem3 ( text, view: ADDRESS;
-type: C.int;
-): QListWidgetItem;
+PROCEDURE New_QListWidgetItem3 (text, view: ADDRESS; type: C.int; ):
+  QListWidgetItem;
 
 <* EXTERNAL New_QListWidgetItem4 *>
-PROCEDURE New_QListWidgetItem4 ( text, view: ADDRESS;
-): QListWidgetItem;
+PROCEDURE New_QListWidgetItem4 (text, view: ADDRESS; ): QListWidgetItem;
 
 <* EXTERNAL New_QListWidgetItem5 *>
-PROCEDURE New_QListWidgetItem5 ( text: ADDRESS;
-): QListWidgetItem;
+PROCEDURE New_QListWidgetItem5 (text: ADDRESS; ): QListWidgetItem;
 
 <* EXTERNAL New_QListWidgetItem6 *>
-PROCEDURE New_QListWidgetItem6 ( icon, text, view: ADDRESS;
-type: C.int;
-): QListWidgetItem;
+PROCEDURE New_QListWidgetItem6 (icon, text, view: ADDRESS; type: C.int; ):
+  QListWidgetItem;
 
 <* EXTERNAL New_QListWidgetItem7 *>
-PROCEDURE New_QListWidgetItem7 ( icon, text, view: ADDRESS;
-): QListWidgetItem;
+PROCEDURE New_QListWidgetItem7 (icon, text, view: ADDRESS; ):
+  QListWidgetItem;
 
 <* EXTERNAL New_QListWidgetItem8 *>
-PROCEDURE New_QListWidgetItem8 ( icon, text: ADDRESS;
-): QListWidgetItem;
+PROCEDURE New_QListWidgetItem8 (icon, text: ADDRESS; ): QListWidgetItem;
 
 <* EXTERNAL New_QListWidgetItem9 *>
-PROCEDURE New_QListWidgetItem9 ( other: ADDRESS;
-): QListWidgetItem;
+PROCEDURE New_QListWidgetItem9 (other: ADDRESS; ): QListWidgetItem;
 
 <* EXTERNAL Delete_QListWidgetItem *>
-PROCEDURE Delete_QListWidgetItem ( self: ADDRESS;
-);
+PROCEDURE Delete_QListWidgetItem (self: ADDRESS; );
 
 <* EXTERNAL QListWidgetItem_clone *>
-PROCEDURE QListWidgetItem_clone ( self: ADDRESS;
-): QListWidgetItem;
+PROCEDURE QListWidgetItem_clone (self: ADDRESS; ): QListWidgetItem;
 
 <* EXTERNAL QListWidgetItem_listWidget *>
-PROCEDURE QListWidgetItem_listWidget ( self: ADDRESS;
-): ADDRESS;
+PROCEDURE QListWidgetItem_listWidget (self: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL QListWidgetItem_setSelected *>
-PROCEDURE QListWidgetItem_setSelected ( self: ADDRESS;
-select: BOOLEAN;
-);
+PROCEDURE QListWidgetItem_setSelected (self: ADDRESS; select: BOOLEAN; );
 
 <* EXTERNAL QListWidgetItem_isSelected *>
-PROCEDURE QListWidgetItem_isSelected ( self: ADDRESS;
-): BOOLEAN;
+PROCEDURE QListWidgetItem_isSelected (self: ADDRESS; ): BOOLEAN;
 
 <* EXTERNAL QListWidgetItem_setHidden *>
-PROCEDURE QListWidgetItem_setHidden ( self: ADDRESS;
-hide: BOOLEAN;
-);
+PROCEDURE QListWidgetItem_setHidden (self: ADDRESS; hide: BOOLEAN; );
 
 <* EXTERNAL QListWidgetItem_isHidden *>
-PROCEDURE QListWidgetItem_isHidden ( self: ADDRESS;
-): BOOLEAN;
+PROCEDURE QListWidgetItem_isHidden (self: ADDRESS; ): BOOLEAN;
 
 <* EXTERNAL QListWidgetItem_flags *>
-PROCEDURE QListWidgetItem_flags ( self: ADDRESS;
-): C.int;
+PROCEDURE QListWidgetItem_flags (self: ADDRESS; ): C.int;
 
 <* EXTERNAL QListWidgetItem_setFlags *>
-PROCEDURE QListWidgetItem_setFlags ( self: ADDRESS;
-flags: C.int;
-);
+PROCEDURE QListWidgetItem_setFlags (self: ADDRESS; flags: C.int; );
 
 <* EXTERNAL QListWidgetItem_text *>
-PROCEDURE QListWidgetItem_text ( self: ADDRESS;
-): ADDRESS;
+PROCEDURE QListWidgetItem_text (self: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL QListWidgetItem_setText *>
-PROCEDURE QListWidgetItem_setText ( self, text: ADDRESS;
-);
+PROCEDURE QListWidgetItem_setText (self, text: ADDRESS; );
 
 <* EXTERNAL QListWidgetItem_icon *>
-PROCEDURE QListWidgetItem_icon ( self: ADDRESS;
-): ADDRESS;
+PROCEDURE QListWidgetItem_icon (self: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL QListWidgetItem_setIcon *>
-PROCEDURE QListWidgetItem_setIcon ( self, icon: ADDRESS;
-);
+PROCEDURE QListWidgetItem_setIcon (self, icon: ADDRESS; );
 
 <* EXTERNAL QListWidgetItem_statusTip *>
-PROCEDURE QListWidgetItem_statusTip ( self: ADDRESS;
-): ADDRESS;
+PROCEDURE QListWidgetItem_statusTip (self: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL QListWidgetItem_setStatusTip *>
-PROCEDURE QListWidgetItem_setStatusTip ( self, statusTip: ADDRESS;
-);
+PROCEDURE QListWidgetItem_setStatusTip (self, statusTip: ADDRESS; );
 
 <* EXTERNAL QListWidgetItem_toolTip *>
-PROCEDURE QListWidgetItem_toolTip ( self: ADDRESS;
-): ADDRESS;
+PROCEDURE QListWidgetItem_toolTip (self: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL QListWidgetItem_setToolTip *>
-PROCEDURE QListWidgetItem_setToolTip ( self, toolTip: ADDRESS;
-);
+PROCEDURE QListWidgetItem_setToolTip (self, toolTip: ADDRESS; );
 
 <* EXTERNAL QListWidgetItem_whatsThis *>
-PROCEDURE QListWidgetItem_whatsThis ( self: ADDRESS;
-): ADDRESS;
+PROCEDURE QListWidgetItem_whatsThis (self: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL QListWidgetItem_setWhatsThis *>
-PROCEDURE QListWidgetItem_setWhatsThis ( self, whatsThis: ADDRESS;
-);
+PROCEDURE QListWidgetItem_setWhatsThis (self, whatsThis: ADDRESS; );
 
 <* EXTERNAL QListWidgetItem_font *>
-PROCEDURE QListWidgetItem_font ( self: ADDRESS;
-): ADDRESS;
+PROCEDURE QListWidgetItem_font (self: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL QListWidgetItem_setFont *>
-PROCEDURE QListWidgetItem_setFont ( self, font: ADDRESS;
-);
+PROCEDURE QListWidgetItem_setFont (self, font: ADDRESS; );
 
 <* EXTERNAL QListWidgetItem_textAlignment *>
-PROCEDURE QListWidgetItem_textAlignment ( self: ADDRESS;
-): C.int;
+PROCEDURE QListWidgetItem_textAlignment (self: ADDRESS; ): C.int;
 
 <* EXTERNAL QListWidgetItem_setTextAlignment *>
-PROCEDURE QListWidgetItem_setTextAlignment ( self: ADDRESS;
-alignment: C.int;
-);
+PROCEDURE QListWidgetItem_setTextAlignment
+  (self: ADDRESS; alignment: C.int; );
 
 <* EXTERNAL QListWidgetItem_backgroundColor *>
-PROCEDURE QListWidgetItem_backgroundColor ( self: ADDRESS;
-): ADDRESS;
+PROCEDURE QListWidgetItem_backgroundColor (self: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL QListWidgetItem_setBackgroundColor *>
-PROCEDURE QListWidgetItem_setBackgroundColor ( self, color: ADDRESS;
-);
+PROCEDURE QListWidgetItem_setBackgroundColor (self, color: ADDRESS; );
 
 <* EXTERNAL QListWidgetItem_background *>
-PROCEDURE QListWidgetItem_background ( self: ADDRESS;
-): ADDRESS;
+PROCEDURE QListWidgetItem_background (self: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL QListWidgetItem_setBackground *>
-PROCEDURE QListWidgetItem_setBackground ( self, brush: ADDRESS;
-);
+PROCEDURE QListWidgetItem_setBackground (self, brush: ADDRESS; );
 
 <* EXTERNAL QListWidgetItem_textColor *>
-PROCEDURE QListWidgetItem_textColor ( self: ADDRESS;
-): ADDRESS;
+PROCEDURE QListWidgetItem_textColor (self: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL QListWidgetItem_setTextColor *>
-PROCEDURE QListWidgetItem_setTextColor ( self, color: ADDRESS;
-);
+PROCEDURE QListWidgetItem_setTextColor (self, color: ADDRESS; );
 
 <* EXTERNAL QListWidgetItem_foreground *>
-PROCEDURE QListWidgetItem_foreground ( self: ADDRESS;
-): ADDRESS;
+PROCEDURE QListWidgetItem_foreground (self: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL QListWidgetItem_setForeground *>
-PROCEDURE QListWidgetItem_setForeground ( self, brush: ADDRESS;
-);
+PROCEDURE QListWidgetItem_setForeground (self, brush: ADDRESS; );
 
 <* EXTERNAL QListWidgetItem_checkState *>
-PROCEDURE QListWidgetItem_checkState ( self: ADDRESS;
-): C.int;
+PROCEDURE QListWidgetItem_checkState (self: ADDRESS; ): C.int;
 
 <* EXTERNAL QListWidgetItem_setCheckState *>
-PROCEDURE QListWidgetItem_setCheckState ( self: ADDRESS;
-state: C.int;
-);
+PROCEDURE QListWidgetItem_setCheckState (self: ADDRESS; state: C.int; );
 
 <* EXTERNAL QListWidgetItem_sizeHint *>
-PROCEDURE QListWidgetItem_sizeHint ( self: ADDRESS;
-): ADDRESS;
+PROCEDURE QListWidgetItem_sizeHint (self: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL QListWidgetItem_setSizeHint *>
-PROCEDURE QListWidgetItem_setSizeHint ( self, size: ADDRESS;
-);
+PROCEDURE QListWidgetItem_setSizeHint (self, size: ADDRESS; );
 
 <* EXTERNAL QListWidgetItem_type *>
-PROCEDURE QListWidgetItem_type ( self: ADDRESS;
-): C.int;
+PROCEDURE QListWidgetItem_type (self: ADDRESS; ): C.int;
 
-TYPE
-QListWidgetItem <: ADDRESS;
+TYPE QListWidgetItem <: ADDRESS;
 
 <* EXTERNAL New_QListWidget0 *>
-PROCEDURE New_QListWidget0 ( parent: ADDRESS;
-): QListWidget;
+PROCEDURE New_QListWidget0 (parent: ADDRESS; ): QListWidget;
 
 <* EXTERNAL New_QListWidget1 *>
 PROCEDURE New_QListWidget1 (): QListWidget;
 
 <* EXTERNAL Delete_QListWidget *>
-PROCEDURE Delete_QListWidget ( self: ADDRESS;
-);
+PROCEDURE Delete_QListWidget (self: ADDRESS; );
 
 <* EXTERNAL QListWidget_item *>
-PROCEDURE QListWidget_item ( self: ADDRESS;
-row: C.int;
-): ADDRESS;
+PROCEDURE QListWidget_item (self: ADDRESS; row: C.int; ): ADDRESS;
 
 <* EXTERNAL QListWidget_row *>
-PROCEDURE QListWidget_row ( self, item: ADDRESS;
-): C.int;
+PROCEDURE QListWidget_row (self, item: ADDRESS; ): C.int;
 
 <* EXTERNAL QListWidget_insertItem *>
-PROCEDURE QListWidget_insertItem ( self: ADDRESS;
-row: C.int;
- item: ADDRESS;
-);
+PROCEDURE QListWidget_insertItem
+  (self: ADDRESS; row: C.int; item: ADDRESS; );
 
 <* EXTERNAL QListWidget_insertItem1 *>
-PROCEDURE QListWidget_insertItem1 ( self: ADDRESS;
-row: C.int;
- label: ADDRESS;
-);
+PROCEDURE QListWidget_insertItem1
+  (self: ADDRESS; row: C.int; label: ADDRESS; );
 
 <* EXTERNAL QListWidget_addItem *>
-PROCEDURE QListWidget_addItem ( self, label: ADDRESS;
-);
+PROCEDURE QListWidget_addItem (self, label: ADDRESS; );
 
 <* EXTERNAL QListWidget_addItem1 *>
-PROCEDURE QListWidget_addItem1 ( self, item: ADDRESS;
-);
+PROCEDURE QListWidget_addItem1 (self, item: ADDRESS; );
 
 <* EXTERNAL QListWidget_takeItem *>
-PROCEDURE QListWidget_takeItem ( self: ADDRESS;
-row: C.int;
-): ADDRESS;
+PROCEDURE QListWidget_takeItem (self: ADDRESS; row: C.int; ): ADDRESS;
 
 <* EXTERNAL QListWidget_count *>
-PROCEDURE QListWidget_count ( self: ADDRESS;
-): C.int;
+PROCEDURE QListWidget_count (self: ADDRESS; ): C.int;
 
 <* EXTERNAL QListWidget_currentItem *>
-PROCEDURE QListWidget_currentItem ( self: ADDRESS;
-): ADDRESS;
+PROCEDURE QListWidget_currentItem (self: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL QListWidget_currentRow *>
-PROCEDURE QListWidget_currentRow ( self: ADDRESS;
-): C.int;
+PROCEDURE QListWidget_currentRow (self: ADDRESS; ): C.int;
 
 <* EXTERNAL QListWidget_setCurrentRow *>
-PROCEDURE QListWidget_setCurrentRow ( self: ADDRESS;
-row: C.int;
-);
+PROCEDURE QListWidget_setCurrentRow (self: ADDRESS; row: C.int; );
 
 <* EXTERNAL QListWidget_itemAt *>
-PROCEDURE QListWidget_itemAt ( self, p: ADDRESS;
-): ADDRESS;
+PROCEDURE QListWidget_itemAt (self, p: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL QListWidget_itemAt1 *>
-PROCEDURE QListWidget_itemAt1 ( self: ADDRESS;
-x, y: C.int;
-): ADDRESS;
+PROCEDURE QListWidget_itemAt1 (self: ADDRESS; x, y: C.int; ): ADDRESS;
 
 <* EXTERNAL QListWidget_visualItemRect *>
-PROCEDURE QListWidget_visualItemRect ( self, item: ADDRESS;
-): ADDRESS;
+PROCEDURE QListWidget_visualItemRect (self, item: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL QListWidget_sortItems *>
-PROCEDURE QListWidget_sortItems ( self: ADDRESS;
-order: C.int;
-);
+PROCEDURE QListWidget_sortItems (self: ADDRESS; order: C.int; );
 
 <* EXTERNAL QListWidget_sortItems1 *>
-PROCEDURE QListWidget_sortItems1 ( self: ADDRESS;
-);
+PROCEDURE QListWidget_sortItems1 (self: ADDRESS; );
 
 <* EXTERNAL QListWidget_setSortingEnabled *>
-PROCEDURE QListWidget_setSortingEnabled ( self: ADDRESS;
-enable: BOOLEAN;
-);
+PROCEDURE QListWidget_setSortingEnabled (self: ADDRESS; enable: BOOLEAN; );
 
 <* EXTERNAL QListWidget_isSortingEnabled *>
-PROCEDURE QListWidget_isSortingEnabled ( self: ADDRESS;
-): BOOLEAN;
+PROCEDURE QListWidget_isSortingEnabled (self: ADDRESS; ): BOOLEAN;
 
 <* EXTERNAL QListWidget_editItem *>
-PROCEDURE QListWidget_editItem ( self, item: ADDRESS;
-);
+PROCEDURE QListWidget_editItem (self, item: ADDRESS; );
 
 <* EXTERNAL QListWidget_openPersistentEditor *>
-PROCEDURE QListWidget_openPersistentEditor ( self, item: ADDRESS;
-);
+PROCEDURE QListWidget_openPersistentEditor (self, item: ADDRESS; );
 
 <* EXTERNAL QListWidget_closePersistentEditor *>
-PROCEDURE QListWidget_closePersistentEditor ( self, item: ADDRESS;
-);
+PROCEDURE QListWidget_closePersistentEditor (self, item: ADDRESS; );
 
 <* EXTERNAL QListWidget_itemWidget *>
-PROCEDURE QListWidget_itemWidget ( self, item: ADDRESS;
-): ADDRESS;
+PROCEDURE QListWidget_itemWidget (self, item: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL QListWidget_setItemWidget *>
-PROCEDURE QListWidget_setItemWidget ( self, item, widget: ADDRESS;
-);
+PROCEDURE QListWidget_setItemWidget (self, item, widget: ADDRESS; );
 
 <* EXTERNAL QListWidget_removeItemWidget *>
-PROCEDURE QListWidget_removeItemWidget ( self, item: ADDRESS;
-);
+PROCEDURE QListWidget_removeItemWidget (self, item: ADDRESS; );
 
 <* EXTERNAL QListWidget_isItemSelected *>
-PROCEDURE QListWidget_isItemSelected ( self, item: ADDRESS;
-): BOOLEAN;
+PROCEDURE QListWidget_isItemSelected (self, item: ADDRESS; ): BOOLEAN;
 
 <* EXTERNAL QListWidget_setItemSelected *>
-PROCEDURE QListWidget_setItemSelected ( self, item: ADDRESS;
-select: BOOLEAN;
-);
+PROCEDURE QListWidget_setItemSelected
+  (self, item: ADDRESS; select: BOOLEAN; );
 
 <* EXTERNAL QListWidget_isItemHidden *>
-PROCEDURE QListWidget_isItemHidden ( self, item: ADDRESS;
-): BOOLEAN;
+PROCEDURE QListWidget_isItemHidden (self, item: ADDRESS; ): BOOLEAN;
 
 <* EXTERNAL QListWidget_setItemHidden *>
-PROCEDURE QListWidget_setItemHidden ( self, item: ADDRESS;
-hide: BOOLEAN;
-);
+PROCEDURE QListWidget_setItemHidden (self, item: ADDRESS; hide: BOOLEAN; );
 
 <* EXTERNAL QListWidget_scrollToItem *>
-PROCEDURE QListWidget_scrollToItem ( self, item: ADDRESS;
-hint: C.int;
-);
+PROCEDURE QListWidget_scrollToItem (self, item: ADDRESS; hint: C.int; );
 
 <* EXTERNAL QListWidget_scrollToItem1 *>
-PROCEDURE QListWidget_scrollToItem1 ( self, item: ADDRESS;
-);
+PROCEDURE QListWidget_scrollToItem1 (self, item: ADDRESS; );
 
 <* EXTERNAL QListWidget_clear *>
-PROCEDURE QListWidget_clear ( self: ADDRESS;
-);
+PROCEDURE QListWidget_clear (self: ADDRESS; );
 
-TYPE
-QListWidget = ADDRESS;
+TYPE QListWidget = ADDRESS;
 
 END QtListWidgetRaw.

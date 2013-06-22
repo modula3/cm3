@@ -17,102 +17,68 @@ FROM QtAbstractItemView IMPORT ScrollHint;
 
 FROM QtAbstractItemView IMPORT QAbstractItemView;
 
-TYPE
-  T = QListView;
+TYPE T = QListView;
 
 
-TYPE (* Enum Movement *)
-  Movement = {
- Static,
- Free,
- Snap};
+TYPE                             (* Enum Movement *)
+  Movement = {Static, Free, Snap};
 
-TYPE (* Enum Flow *)
-  Flow = {
- LeftToRight,
- TopToBottom};
+TYPE                             (* Enum Flow *)
+  Flow = {LeftToRight, TopToBottom};
 
-TYPE (* Enum ResizeMode *)
-  ResizeMode = {
- Fixed,
- Adjust};
+TYPE                             (* Enum ResizeMode *)
+  ResizeMode = {Fixed, Adjust};
 
-TYPE (* Enum LayoutMode *)
-  LayoutMode = {
- SinglePass,
- Batched};
+TYPE                             (* Enum LayoutMode *)
+  LayoutMode = {SinglePass, Batched};
 
-TYPE (* Enum ViewMode *)
-  ViewMode = {
- ListMode,
- IconMode};
+TYPE                             (* Enum ViewMode *)
+  ViewMode = {ListMode, IconMode};
 
 TYPE
-QListView <: QListViewPublic;
-QListViewPublic =
-QAbstractItemView BRANDED OBJECT
-METHODS
-init_0 ( parent: QWidget;
-) : QListView;
-init_1 () : QListView;
-setMovement(movement: Movement;
-);
-movement(): Movement;
-setFlow(flow: Flow;
-);
-flow(): Flow;
-setWrapping(enable: BOOLEAN;
-);
-isWrapping(): BOOLEAN;
-setResizeMode(mode: ResizeMode;
-);
-resizeMode(): ResizeMode;
-setLayoutMode(mode: LayoutMode;
-);
-layoutMode(): LayoutMode;
-setSpacing(space: INTEGER;
-);
-spacing(): INTEGER;
-setBatchSize(batchSize: INTEGER;
-);
-batchSize(): INTEGER;
-setGridSize( size: QSize;
-);
-gridSize(): QSize;
-setViewMode(mode: ViewMode;
-);
-viewMode(): ViewMode;
-clearPropertyFlags();
-isRowHidden(row: INTEGER;
-): BOOLEAN;
-setRowHidden(row: INTEGER;
-hide: BOOLEAN;
-);
-setModelColumn(column: INTEGER;
-);
-modelColumn(): INTEGER;
-setUniformItemSizes(enable: BOOLEAN;
-);
-uniformItemSizes(): BOOLEAN;
-setWordWrap(on: BOOLEAN;
-);
-wordWrap(): BOOLEAN;
-setSelectionRectVisible(show: BOOLEAN;
-);
-isSelectionRectVisible(): BOOLEAN;
-visualRect( index: QModelIndex;
-): QRect;  (*  virtual *)
-scrollTo( index: QModelIndex;
-hint: ScrollHint;
-);  (*  virtual *)
-scrollTo1( index: QModelIndex;
-);  (*  virtual *)
-doItemsLayout();  (*  virtual *)
-reset();  (*  virtual *)
-setRootIndex( index: QModelIndex;
-);  (*  virtual *)
-destroyCxx();
-END;
+  QListView <: QListViewPublic;
+  QListViewPublic =
+    QAbstractItemView BRANDED OBJECT
+    METHODS
+      init_0                  (parent: QWidget; ): QListView;
+      init_1                  (): QListView;
+      setMovement             (movement: Movement; );
+      movement                (): Movement;
+      setFlow                 (flow: Flow; );
+      flow                    (): Flow;
+      setWrapping             (enable: BOOLEAN; );
+      isWrapping              (): BOOLEAN;
+      setResizeMode           (mode: ResizeMode; );
+      resizeMode              (): ResizeMode;
+      setLayoutMode           (mode: LayoutMode; );
+      layoutMode              (): LayoutMode;
+      setSpacing              (space: INTEGER; );
+      spacing                 (): INTEGER;
+      setBatchSize            (batchSize: INTEGER; );
+      batchSize               (): INTEGER;
+      setGridSize             (size: QSize; );
+      gridSize                (): QSize;
+      setViewMode             (mode: ViewMode; );
+      viewMode                (): ViewMode;
+      clearPropertyFlags      ();
+      isRowHidden             (row: INTEGER; ): BOOLEAN;
+      setRowHidden            (row: INTEGER; hide: BOOLEAN; );
+      setModelColumn          (column: INTEGER; );
+      modelColumn             (): INTEGER;
+      setUniformItemSizes     (enable: BOOLEAN; );
+      uniformItemSizes        (): BOOLEAN;
+      setWordWrap             (on: BOOLEAN; );
+      wordWrap                (): BOOLEAN;
+      setSelectionRectVisible (show: BOOLEAN; );
+      isSelectionRectVisible  (): BOOLEAN;
+      visualRect              (index: QModelIndex; ): QRect; (* virtual *)
+      scrollTo      (index: QModelIndex; hint: ScrollHint; ); (* virtual *)
+      scrollTo1     (index: QModelIndex; ); (* virtual *)
+      doItemsLayout ();          (* virtual *)
+      reset         ();          (* virtual *)
+      setRootIndex  (index: QModelIndex; ); (* virtual *)
+      destroyCxx    ();
+    END;
 
 
 END QtListView.

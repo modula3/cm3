@@ -15,107 +15,86 @@ IMPORT Ctypes AS C;
 
 
 <* EXTERNAL New_QDialogButtonBox0 *>
-PROCEDURE New_QDialogButtonBox0 ( parent: ADDRESS;
-): QDialogButtonBox;
+PROCEDURE New_QDialogButtonBox0 (parent: ADDRESS; ): QDialogButtonBox;
 
 <* EXTERNAL New_QDialogButtonBox1 *>
 PROCEDURE New_QDialogButtonBox1 (): QDialogButtonBox;
 
 <* EXTERNAL New_QDialogButtonBox2 *>
-PROCEDURE New_QDialogButtonBox2 (orientation: C.int;
- parent: ADDRESS;
-): QDialogButtonBox;
+PROCEDURE New_QDialogButtonBox2 (orientation: C.int; parent: ADDRESS; ):
+  QDialogButtonBox;
 
 <* EXTERNAL New_QDialogButtonBox3 *>
-PROCEDURE New_QDialogButtonBox3 (orientation: C.int;
-): QDialogButtonBox;
+PROCEDURE New_QDialogButtonBox3 (orientation: C.int; ): QDialogButtonBox;
 
 <* EXTERNAL New_QDialogButtonBox4 *>
-PROCEDURE New_QDialogButtonBox4 (buttons, orientation: C.int;
- parent: ADDRESS;
-): QDialogButtonBox;
+PROCEDURE New_QDialogButtonBox4
+  (buttons, orientation: C.int; parent: ADDRESS; ): QDialogButtonBox;
 
 <* EXTERNAL New_QDialogButtonBox5 *>
-PROCEDURE New_QDialogButtonBox5 (buttons, orientation: C.int;
-): QDialogButtonBox;
+PROCEDURE New_QDialogButtonBox5 (buttons, orientation: C.int; ):
+  QDialogButtonBox;
 
 <* EXTERNAL New_QDialogButtonBox6 *>
-PROCEDURE New_QDialogButtonBox6 (buttons: C.int;
-): QDialogButtonBox;
+PROCEDURE New_QDialogButtonBox6 (buttons: C.int; ): QDialogButtonBox;
 
 <* EXTERNAL Delete_QDialogButtonBox *>
-PROCEDURE Delete_QDialogButtonBox ( self: QDialogButtonBox;
-);
+PROCEDURE Delete_QDialogButtonBox (self: QDialogButtonBox; );
 
 <* EXTERNAL QDialogButtonBox_setOrientation *>
-PROCEDURE QDialogButtonBox_setOrientation ( self: QDialogButtonBox;
-orientation: C.int;
-);
+PROCEDURE QDialogButtonBox_setOrientation
+  (self: QDialogButtonBox; orientation: C.int; );
 
 <* EXTERNAL QDialogButtonBox_orientation *>
-PROCEDURE QDialogButtonBox_orientation ( self: QDialogButtonBox;
-): C.int;
+PROCEDURE QDialogButtonBox_orientation (self: QDialogButtonBox; ): C.int;
 
 <* EXTERNAL QDialogButtonBox_addButton *>
-PROCEDURE QDialogButtonBox_addButton ( self: QDialogButtonBox;
- button: ADDRESS;
-role: C.int;
-);
+PROCEDURE QDialogButtonBox_addButton
+  (self: QDialogButtonBox; button: ADDRESS; role: C.int; );
 
 <* EXTERNAL QDialogButtonBox_addButton1 *>
-PROCEDURE QDialogButtonBox_addButton1 ( self: QDialogButtonBox;
- text: ADDRESS;
-role: C.int;
-): ADDRESS;
+PROCEDURE QDialogButtonBox_addButton1
+  (self: QDialogButtonBox; text: ADDRESS; role: C.int; ): ADDRESS;
 
 <* EXTERNAL QDialogButtonBox_addButton2 *>
-PROCEDURE QDialogButtonBox_addButton2 ( self: QDialogButtonBox;
-button: C.int;
-): ADDRESS;
+PROCEDURE QDialogButtonBox_addButton2
+  (self: QDialogButtonBox; button: C.int; ): ADDRESS;
 
 <* EXTERNAL QDialogButtonBox_removeButton *>
-PROCEDURE QDialogButtonBox_removeButton ( self: QDialogButtonBox;
- button: ADDRESS;
-);
+PROCEDURE QDialogButtonBox_removeButton
+  (self: QDialogButtonBox; button: ADDRESS; );
 
 <* EXTERNAL QDialogButtonBox_clear *>
-PROCEDURE QDialogButtonBox_clear ( self: QDialogButtonBox;
-);
+PROCEDURE QDialogButtonBox_clear (self: QDialogButtonBox; );
 
 <* EXTERNAL QDialogButtonBox_buttonRole *>
-PROCEDURE QDialogButtonBox_buttonRole ( self: QDialogButtonBox;
- button: ADDRESS;
-): C.int;
+PROCEDURE QDialogButtonBox_buttonRole
+  (self: QDialogButtonBox; button: ADDRESS; ): C.int;
 
 <* EXTERNAL QDialogButtonBox_setStandardButtons *>
-PROCEDURE QDialogButtonBox_setStandardButtons ( self: QDialogButtonBox;
-buttons: C.int;
-);
+PROCEDURE QDialogButtonBox_setStandardButtons
+  (self: QDialogButtonBox; buttons: C.int; );
 
 <* EXTERNAL QDialogButtonBox_standardButtons *>
-PROCEDURE QDialogButtonBox_standardButtons ( self: QDialogButtonBox;
-): C.int;
+PROCEDURE QDialogButtonBox_standardButtons (self: QDialogButtonBox; ):
+  C.int;
 
 <* EXTERNAL QDialogButtonBox_standardButton *>
-PROCEDURE QDialogButtonBox_standardButton ( self: QDialogButtonBox;
- button: ADDRESS;
-): C.int;
+PROCEDURE QDialogButtonBox_standardButton
+  (self: QDialogButtonBox; button: ADDRESS; ): C.int;
 
 <* EXTERNAL QDialogButtonBox_button *>
-PROCEDURE QDialogButtonBox_button ( self: QDialogButtonBox;
-which: C.int;
-): ADDRESS;
+PROCEDURE QDialogButtonBox_button (self: QDialogButtonBox; which: C.int; ):
+  ADDRESS;
 
 <* EXTERNAL QDialogButtonBox_setCenterButtons *>
-PROCEDURE QDialogButtonBox_setCenterButtons ( self: QDialogButtonBox;
-center: BOOLEAN;
-);
+PROCEDURE QDialogButtonBox_setCenterButtons
+  (self: QDialogButtonBox; center: BOOLEAN; );
 
 <* EXTERNAL QDialogButtonBox_centerButtons *>
-PROCEDURE QDialogButtonBox_centerButtons ( self: QDialogButtonBox;
-): BOOLEAN;
+PROCEDURE QDialogButtonBox_centerButtons (self: QDialogButtonBox; ):
+  BOOLEAN;
 
-TYPE
-QDialogButtonBox = ADDRESS;
+TYPE QDialogButtonBox = ADDRESS;
 
 END QtDialogButtonBoxRaw.

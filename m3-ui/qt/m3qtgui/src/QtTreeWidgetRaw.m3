@@ -11,7 +11,6 @@ MODULE QtTreeWidgetRaw;
 
 
 
-REVEAL
-QTreeWidgetItem = UNTRACED BRANDED REF RECORD (*Dummy*) END;
+REVEAL QTreeWidgetItem = UNTRACED BRANDED REF RECORD (*Dummy*) END;
 BEGIN
 END QtTreeWidgetRaw.

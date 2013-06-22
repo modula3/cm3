@@ -18,198 +18,177 @@ IMPORT WeakRef;
 FROM QtString IMPORT QString;
 FROM QtAction IMPORT QAction;
 
-PROCEDURE New_QActionGroup0 (self:QActionGroup; parent: QObject;
-): QActionGroup =
-VAR
-result : ADDRESS;
-arg1tmp :=  LOOPHOLE(parent.cxxObj,ADDRESS);
-BEGIN
-result := QtActionGroupRaw.New_QActionGroup0(arg1tmp);
+PROCEDURE New_QActionGroup0 (self: QActionGroup; parent: QObject; ):
+  QActionGroup =
+  VAR
+    result : ADDRESS;
+    arg1tmp          := LOOPHOLE(parent.cxxObj, ADDRESS);
+  BEGIN
+    result := QtActionGroupRaw.New_QActionGroup0(arg1tmp);
 
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QActionGroup);
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QActionGroup);
 
-RETURN self;
-END New_QActionGroup0;
+    RETURN self;
+  END New_QActionGroup0;
 
-PROCEDURE Delete_QActionGroup ( self: QActionGroup;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtActionGroupRaw.Delete_QActionGroup(selfAdr);
-END Delete_QActionGroup;
+PROCEDURE Delete_QActionGroup (self: QActionGroup; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtActionGroupRaw.Delete_QActionGroup(selfAdr);
+  END Delete_QActionGroup;
 
-PROCEDURE QActionGroup_addAction ( self: QActionGroup;
- a: REFANY (*QAction*);
-): REFANY =
-VAR
-ret:ADDRESS; result : QAction;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(NARROW(a,QAction).cxxObj,ADDRESS);
-BEGIN
-ret := QtActionGroupRaw.QActionGroup_addAction(selfAdr, arg2tmp);
+PROCEDURE QActionGroup_addAction
+  (self: QActionGroup; a: REFANY (*QAction*); ): REFANY =
+  VAR
+    ret    : ADDRESS;
+    result : QAction;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(NARROW(a, QAction).cxxObj, ADDRESS);
+  BEGIN
+    ret := QtActionGroupRaw.QActionGroup_addAction(selfAdr, arg2tmp);
 
-  result := NEW(QAction);
-  result.cxxObj := ret;
-  result.destroyCxx();
+    result := NEW(QAction);
+    result.cxxObj := ret;
+    result.destroyCxx();
 
-RETURN result;
-END QActionGroup_addAction;
+    RETURN result;
+  END QActionGroup_addAction;
 
-PROCEDURE QActionGroup_addAction1 ( self: QActionGroup;
- text: TEXT;
-): REFANY =
-VAR
-ret:ADDRESS; result : QAction;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-qstr_text := NEW(QString).initQString(text);
-arg2tmp :=  LOOPHOLE(qstr_text.cxxObj,ADDRESS);
-BEGIN
-ret := QtActionGroupRaw.QActionGroup_addAction1(selfAdr, arg2tmp);
+PROCEDURE QActionGroup_addAction1 (self: QActionGroup; text: TEXT; ):
+  REFANY =
+  VAR
+    ret      : ADDRESS;
+    result   : QAction;
+    selfAdr  : ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    qstr_text          := NEW(QString).initQString(text);
+    arg2tmp            := LOOPHOLE(qstr_text.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtActionGroupRaw.QActionGroup_addAction1(selfAdr, arg2tmp);
 
-  result := NEW(QAction);
-  result.cxxObj := ret;
-  result.destroyCxx();
+    result := NEW(QAction);
+    result.cxxObj := ret;
+    result.destroyCxx();
 
-RETURN result;
-END QActionGroup_addAction1;
+    RETURN result;
+  END QActionGroup_addAction1;
 
-PROCEDURE QActionGroup_addAction2 ( self: QActionGroup;
- icon: QIcon;
- text: TEXT;
-): REFANY =
-VAR
-ret:ADDRESS; result : QAction;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(icon.cxxObj,ADDRESS);
-qstr_text := NEW(QString).initQString(text);
-arg3tmp :=  LOOPHOLE(qstr_text.cxxObj,ADDRESS);
-BEGIN
-ret := QtActionGroupRaw.QActionGroup_addAction2(selfAdr, arg2tmp, arg3tmp);
+PROCEDURE QActionGroup_addAction2
+  (self: QActionGroup; icon: QIcon; text: TEXT; ): REFANY =
+  VAR
+    ret      : ADDRESS;
+    result   : QAction;
+    selfAdr  : ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp            := LOOPHOLE(icon.cxxObj, ADDRESS);
+    qstr_text          := NEW(QString).initQString(text);
+    arg3tmp            := LOOPHOLE(qstr_text.cxxObj, ADDRESS);
+  BEGIN
+    ret :=
+      QtActionGroupRaw.QActionGroup_addAction2(selfAdr, arg2tmp, arg3tmp);
 
-  result := NEW(QAction);
-  result.cxxObj := ret;
-  result.destroyCxx();
+    result := NEW(QAction);
+    result.cxxObj := ret;
+    result.destroyCxx();
 
-RETURN result;
-END QActionGroup_addAction2;
+    RETURN result;
+  END QActionGroup_addAction2;
 
-PROCEDURE QActionGroup_removeAction ( self: QActionGroup;
- a: REFANY (*QAction*);
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(NARROW(a,QAction).cxxObj,ADDRESS);
-BEGIN
-QtActionGroupRaw.QActionGroup_removeAction(selfAdr, arg2tmp);
-END QActionGroup_removeAction;
+PROCEDURE QActionGroup_removeAction
+  (self: QActionGroup; a: REFANY (*QAction*); ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(NARROW(a, QAction).cxxObj, ADDRESS);
+  BEGIN
+    QtActionGroupRaw.QActionGroup_removeAction(selfAdr, arg2tmp);
+  END QActionGroup_removeAction;
 
-PROCEDURE QActionGroup_checkedAction ( self: QActionGroup;
-): REFANY =
-VAR
-ret:ADDRESS; result : QAction;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtActionGroupRaw.QActionGroup_checkedAction(selfAdr);
+PROCEDURE QActionGroup_checkedAction (self: QActionGroup; ): REFANY =
+  VAR
+    ret    : ADDRESS;
+    result : QAction;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtActionGroupRaw.QActionGroup_checkedAction(selfAdr);
 
-  result := NEW(QAction);
-  result.cxxObj := ret;
-  result.destroyCxx();
+    result := NEW(QAction);
+    result.cxxObj := ret;
+    result.destroyCxx();
 
-RETURN result;
-END QActionGroup_checkedAction;
+    RETURN result;
+  END QActionGroup_checkedAction;
 
-PROCEDURE QActionGroup_isExclusive ( self: QActionGroup;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtActionGroupRaw.QActionGroup_isExclusive(selfAdr);
-END QActionGroup_isExclusive;
+PROCEDURE QActionGroup_isExclusive (self: QActionGroup; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtActionGroupRaw.QActionGroup_isExclusive(selfAdr);
+  END QActionGroup_isExclusive;
 
-PROCEDURE QActionGroup_isEnabled ( self: QActionGroup;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtActionGroupRaw.QActionGroup_isEnabled(selfAdr);
-END QActionGroup_isEnabled;
+PROCEDURE QActionGroup_isEnabled (self: QActionGroup; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtActionGroupRaw.QActionGroup_isEnabled(selfAdr);
+  END QActionGroup_isEnabled;
 
-PROCEDURE QActionGroup_isVisible ( self: QActionGroup;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtActionGroupRaw.QActionGroup_isVisible(selfAdr);
-END QActionGroup_isVisible;
+PROCEDURE QActionGroup_isVisible (self: QActionGroup; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtActionGroupRaw.QActionGroup_isVisible(selfAdr);
+  END QActionGroup_isVisible;
 
-PROCEDURE QActionGroup_setEnabled ( self: QActionGroup;
-arg2: BOOLEAN;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtActionGroupRaw.QActionGroup_setEnabled(selfAdr, arg2);
-END QActionGroup_setEnabled;
+PROCEDURE QActionGroup_setEnabled (self: QActionGroup; arg2: BOOLEAN; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtActionGroupRaw.QActionGroup_setEnabled(selfAdr, arg2);
+  END QActionGroup_setEnabled;
 
-PROCEDURE QActionGroup_setDisabled ( self: QActionGroup;
-b: BOOLEAN;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtActionGroupRaw.QActionGroup_setDisabled(selfAdr, b);
-END QActionGroup_setDisabled;
+PROCEDURE QActionGroup_setDisabled (self: QActionGroup; b: BOOLEAN; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtActionGroupRaw.QActionGroup_setDisabled(selfAdr, b);
+  END QActionGroup_setDisabled;
 
-PROCEDURE QActionGroup_setVisible ( self: QActionGroup;
-arg2: BOOLEAN;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtActionGroupRaw.QActionGroup_setVisible(selfAdr, arg2);
-END QActionGroup_setVisible;
+PROCEDURE QActionGroup_setVisible (self: QActionGroup; arg2: BOOLEAN; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtActionGroupRaw.QActionGroup_setVisible(selfAdr, arg2);
+  END QActionGroup_setVisible;
 
-PROCEDURE QActionGroup_setExclusive ( self: QActionGroup;
-arg2: BOOLEAN;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtActionGroupRaw.QActionGroup_setExclusive(selfAdr, arg2);
-END QActionGroup_setExclusive;
+PROCEDURE QActionGroup_setExclusive (self: QActionGroup; arg2: BOOLEAN; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtActionGroupRaw.QActionGroup_setExclusive(selfAdr, arg2);
+  END QActionGroup_setExclusive;
 
-PROCEDURE Cleanup_QActionGroup(<*UNUSED*>READONLY self: WeakRef.T; ref: REFANY) =
-VAR obj : QActionGroup := ref;
-BEGIN
-  Delete_QActionGroup(obj);
- END Cleanup_QActionGroup;
+PROCEDURE Cleanup_QActionGroup
+  (<* UNUSED *> READONLY self: WeakRef.T; ref: REFANY) =
+  VAR obj: QActionGroup := ref;
+  BEGIN
+    Delete_QActionGroup(obj);
+  END Cleanup_QActionGroup;
 
-PROCEDURE Destroy_QActionGroup(self : QActionGroup) =
-BEGIN
-  EVAL WeakRef.FromRef(self,Cleanup_QActionGroup);
-END Destroy_QActionGroup;
+PROCEDURE Destroy_QActionGroup (self: QActionGroup) =
+  BEGIN
+    EVAL WeakRef.FromRef(self, Cleanup_QActionGroup);
+  END Destroy_QActionGroup;
 
 REVEAL
-QActionGroup =
-QActionGroupPublic BRANDED OBJECT
-OVERRIDES
-init_0 := New_QActionGroup0;
-addAction := QActionGroup_addAction;
-addAction1 := QActionGroup_addAction1;
-addAction2 := QActionGroup_addAction2;
-removeAction := QActionGroup_removeAction;
-checkedAction := QActionGroup_checkedAction;
-isExclusive := QActionGroup_isExclusive;
-isEnabled := QActionGroup_isEnabled;
-isVisible := QActionGroup_isVisible;
-setEnabled := QActionGroup_setEnabled;
-setDisabled := QActionGroup_setDisabled;
-setVisible := QActionGroup_setVisible;
-setExclusive := QActionGroup_setExclusive;
-destroyCxx := Destroy_QActionGroup;
-END;
+  QActionGroup = QActionGroupPublic BRANDED OBJECT
+                 OVERRIDES
+                   init_0        := New_QActionGroup0;
+                   addAction     := QActionGroup_addAction;
+                   addAction1    := QActionGroup_addAction1;
+                   addAction2    := QActionGroup_addAction2;
+                   removeAction  := QActionGroup_removeAction;
+                   checkedAction := QActionGroup_checkedAction;
+                   isExclusive   := QActionGroup_isExclusive;
+                   isEnabled     := QActionGroup_isEnabled;
+                   isVisible     := QActionGroup_isVisible;
+                   setEnabled    := QActionGroup_setEnabled;
+                   setDisabled   := QActionGroup_setDisabled;
+                   setVisible    := QActionGroup_setVisible;
+                   setExclusive  := QActionGroup_setExclusive;
+                   destroyCxx    := Destroy_QActionGroup;
+                 END;
 
 
 BEGIN

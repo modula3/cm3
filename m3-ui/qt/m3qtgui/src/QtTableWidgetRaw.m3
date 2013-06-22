@@ -12,7 +12,7 @@ MODULE QtTableWidgetRaw;
 
 
 REVEAL
-QTableWidgetSelectionRange = UNTRACED BRANDED REF RECORD (*Dummy*) END;
-QTableWidgetItem = UNTRACED BRANDED REF RECORD (*Dummy*) END;
+  QTableWidgetSelectionRange = UNTRACED BRANDED REF RECORD (*Dummy*) END;
+  QTableWidgetItem = UNTRACED BRANDED REF RECORD (*Dummy*) END;
 BEGIN
 END QtTableWidgetRaw.

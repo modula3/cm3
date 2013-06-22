@@ -15,83 +15,66 @@ IMPORT Ctypes AS C;
 
 
 <* EXTERNAL New_QPageSetupDialog0 *>
-PROCEDURE New_QPageSetupDialog0 ( printer, parent: ADDRESS;
-): QPageSetupDialog;
+PROCEDURE New_QPageSetupDialog0 (printer, parent: ADDRESS; ):
+  QPageSetupDialog;
 
 <* EXTERNAL New_QPageSetupDialog1 *>
-PROCEDURE New_QPageSetupDialog1 ( printer: ADDRESS;
-): QPageSetupDialog;
+PROCEDURE New_QPageSetupDialog1 (printer: ADDRESS; ): QPageSetupDialog;
 
 <* EXTERNAL New_QPageSetupDialog2 *>
-PROCEDURE New_QPageSetupDialog2 ( parent: ADDRESS;
-): QPageSetupDialog;
+PROCEDURE New_QPageSetupDialog2 (parent: ADDRESS; ): QPageSetupDialog;
 
 <* EXTERNAL New_QPageSetupDialog3 *>
 PROCEDURE New_QPageSetupDialog3 (): QPageSetupDialog;
 
 <* EXTERNAL QPageSetupDialog_addEnabledOption *>
-PROCEDURE QPageSetupDialog_addEnabledOption ( self: QPageSetupDialog;
-option: C.int;
-);
+PROCEDURE QPageSetupDialog_addEnabledOption
+  (self: QPageSetupDialog; option: C.int; );
 
 <* EXTERNAL QPageSetupDialog_setEnabledOptions *>
-PROCEDURE QPageSetupDialog_setEnabledOptions ( self: QPageSetupDialog;
-options: C.int;
-);
+PROCEDURE QPageSetupDialog_setEnabledOptions
+  (self: QPageSetupDialog; options: C.int; );
 
 <* EXTERNAL QPageSetupDialog_enabledOptions *>
-PROCEDURE QPageSetupDialog_enabledOptions ( self: QPageSetupDialog;
-): C.int;
+PROCEDURE QPageSetupDialog_enabledOptions (self: QPageSetupDialog; ):
+  C.int;
 
 <* EXTERNAL QPageSetupDialog_isOptionEnabled *>
-PROCEDURE QPageSetupDialog_isOptionEnabled ( self: QPageSetupDialog;
-option: C.int;
-): BOOLEAN;
+PROCEDURE QPageSetupDialog_isOptionEnabled
+  (self: QPageSetupDialog; option: C.int; ): BOOLEAN;
 
 <* EXTERNAL QPageSetupDialog_setOption *>
-PROCEDURE QPageSetupDialog_setOption ( self: QPageSetupDialog;
-option: C.int;
-on: BOOLEAN;
-);
+PROCEDURE QPageSetupDialog_setOption
+  (self: QPageSetupDialog; option: C.int; on: BOOLEAN; );
 
 <* EXTERNAL QPageSetupDialog_setOption1 *>
-PROCEDURE QPageSetupDialog_setOption1 ( self: QPageSetupDialog;
-option: C.int;
-);
+PROCEDURE QPageSetupDialog_setOption1
+  (self: QPageSetupDialog; option: C.int; );
 
 <* EXTERNAL QPageSetupDialog_testOption *>
-PROCEDURE QPageSetupDialog_testOption ( self: QPageSetupDialog;
-option: C.int;
-): BOOLEAN;
+PROCEDURE QPageSetupDialog_testOption
+  (self: QPageSetupDialog; option: C.int; ): BOOLEAN;
 
 <* EXTERNAL QPageSetupDialog_setOptions *>
-PROCEDURE QPageSetupDialog_setOptions ( self: QPageSetupDialog;
-options: C.int;
-);
+PROCEDURE QPageSetupDialog_setOptions
+  (self: QPageSetupDialog; options: C.int; );
 
 <* EXTERNAL QPageSetupDialog_options *>
-PROCEDURE QPageSetupDialog_options ( self: QPageSetupDialog;
-): C.int;
+PROCEDURE QPageSetupDialog_options (self: QPageSetupDialog; ): C.int;
 
 <* EXTERNAL QPageSetupDialog_exec *>
-PROCEDURE QPageSetupDialog_exec ( self: QPageSetupDialog;
-): C.int;
+PROCEDURE QPageSetupDialog_exec (self: QPageSetupDialog; ): C.int;
 
 <* EXTERNAL QPageSetupDialog_open0_0 *>
-PROCEDURE QPageSetupDialog_open0_0 ( self: QPageSetupDialog;
-);
+PROCEDURE QPageSetupDialog_open0_0 (self: QPageSetupDialog; );
 
 <* EXTERNAL QPageSetupDialog_open1 *>
-PROCEDURE QPageSetupDialog_open1 ( self: QPageSetupDialog;
- receiver: ADDRESS;
- member: C.char_star;
-);
+PROCEDURE QPageSetupDialog_open1
+  (self: QPageSetupDialog; receiver: ADDRESS; member: C.char_star; );
 
 <* EXTERNAL Delete_QPageSetupDialog *>
-PROCEDURE Delete_QPageSetupDialog ( self: QPageSetupDialog;
-);
+PROCEDURE Delete_QPageSetupDialog (self: QPageSetupDialog; );
 
-TYPE
-QPageSetupDialog <: ADDRESS;
+TYPE QPageSetupDialog <: ADDRESS;
 
 END QtPageSetupDialogRaw.

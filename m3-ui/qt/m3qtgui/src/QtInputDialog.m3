@@ -24,1160 +24,1071 @@ FROM QtNamespace IMPORT WindowTypes;
 IMPORT WeakRef;
 FROM QtByteArray IMPORT QByteArray;
 
-PROCEDURE New_QInputDialog0 (self:QInputDialog; parent: QWidget;
-flags: WindowTypes;
-): QInputDialog =
-VAR
-result : ADDRESS;
-arg1tmp :=  LOOPHOLE(parent.cxxObj,ADDRESS);
-BEGIN
-result := QtInputDialogRaw.New_QInputDialog0(arg1tmp, ORD(flags));
-
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QInputDialog);
-
-RETURN self;
-END New_QInputDialog0;
-
-PROCEDURE New_QInputDialog1 (self:QInputDialog; parent: QWidget;
-): QInputDialog =
-VAR
-result : ADDRESS;
-arg1tmp :=  LOOPHOLE(parent.cxxObj,ADDRESS);
-BEGIN
-result := QtInputDialogRaw.New_QInputDialog1(arg1tmp);
-
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QInputDialog);
-
-RETURN self;
-END New_QInputDialog1;
-
-PROCEDURE New_QInputDialog2 (self:QInputDialog;): QInputDialog =
-VAR
-result : ADDRESS;
-BEGIN
-result := QtInputDialogRaw.New_QInputDialog2();
-
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QInputDialog);
-
-RETURN self;
-END New_QInputDialog2;
-
-PROCEDURE Delete_QInputDialog ( self: QInputDialog;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtInputDialogRaw.Delete_QInputDialog(selfAdr);
-END Delete_QInputDialog;
-
-PROCEDURE QInputDialog_setInputMode ( self: QInputDialog;
-mode: InputMode;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtInputDialogRaw.QInputDialog_setInputMode(selfAdr, ORD(mode));
-END QInputDialog_setInputMode;
-
-PROCEDURE QInputDialog_inputMode ( self: QInputDialog;
-): InputMode =
-VAR
-ret:INTEGER; result : InputMode;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtInputDialogRaw.QInputDialog_inputMode(selfAdr);
-result := VAL(ret,InputMode);  
-RETURN result;
-END QInputDialog_inputMode;
-
-PROCEDURE QInputDialog_setLabelText ( self: QInputDialog;
- text: TEXT;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-qstr_text := NEW(QString).initQString(text);
-arg2tmp :=  LOOPHOLE(qstr_text.cxxObj,ADDRESS);
-BEGIN
-QtInputDialogRaw.QInputDialog_setLabelText(selfAdr, arg2tmp);
-END QInputDialog_setLabelText;
-
-PROCEDURE QInputDialog_labelText ( self: QInputDialog;
-): TEXT =
-VAR
-ret : ADDRESS;
-qstr := NEW(QString);
-ba : QByteArray;
-result : TEXT;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtInputDialogRaw.QInputDialog_labelText(selfAdr);
-
-  qstr.cxxObj := ret;
-  ba := qstr.toLocal8Bit();
-  result := ba.data();
-
-RETURN result;
-END QInputDialog_labelText;
-
-PROCEDURE QInputDialog_setOption ( self: QInputDialog;
-option: InputDialogOption;
-on: BOOLEAN;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtInputDialogRaw.QInputDialog_setOption(selfAdr, ORD(option), on);
-END QInputDialog_setOption;
-
-PROCEDURE QInputDialog_setOption1 ( self: QInputDialog;
-option: InputDialogOption;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtInputDialogRaw.QInputDialog_setOption1(selfAdr, ORD(option));
-END QInputDialog_setOption1;
-
-PROCEDURE QInputDialog_testOption ( self: QInputDialog;
-option: InputDialogOption;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtInputDialogRaw.QInputDialog_testOption(selfAdr, ORD(option));
-END QInputDialog_testOption;
-
-PROCEDURE QInputDialog_setOptions ( self: QInputDialog;
-options: InputDialogOptions;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtInputDialogRaw.QInputDialog_setOptions(selfAdr, ORD(options));
-END QInputDialog_setOptions;
-
-PROCEDURE QInputDialog_options ( self: QInputDialog;
-): InputDialogOptions =
-VAR
-ret:INTEGER; result : InputDialogOptions;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtInputDialogRaw.QInputDialog_options(selfAdr);
-result := VAL(ret,InputDialogOptions);  
-RETURN result;
-END QInputDialog_options;
-
-PROCEDURE QInputDialog_setTextValue ( self: QInputDialog;
- text: TEXT;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-qstr_text := NEW(QString).initQString(text);
-arg2tmp :=  LOOPHOLE(qstr_text.cxxObj,ADDRESS);
-BEGIN
-QtInputDialogRaw.QInputDialog_setTextValue(selfAdr, arg2tmp);
-END QInputDialog_setTextValue;
-
-PROCEDURE QInputDialog_textValue ( self: QInputDialog;
-): TEXT =
-VAR
-ret : ADDRESS;
-qstr := NEW(QString);
-ba : QByteArray;
-result : TEXT;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtInputDialogRaw.QInputDialog_textValue(selfAdr);
-
-  qstr.cxxObj := ret;
-  ba := qstr.toLocal8Bit();
-  result := ba.data();
-
-RETURN result;
-END QInputDialog_textValue;
-
-PROCEDURE QInputDialog_setTextEchoMode ( self: QInputDialog;
-mode: EchoMode;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtInputDialogRaw.QInputDialog_setTextEchoMode(selfAdr, ORD(mode));
-END QInputDialog_setTextEchoMode;
-
-PROCEDURE QInputDialog_textEchoMode ( self: QInputDialog;
-): EchoMode =
-VAR
-ret:INTEGER; result : EchoMode;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtInputDialogRaw.QInputDialog_textEchoMode(selfAdr);
-result := VAL(ret,EchoMode);  
-RETURN result;
-END QInputDialog_textEchoMode;
-
-PROCEDURE QInputDialog_setComboBoxEditable ( self: QInputDialog;
-editable: BOOLEAN;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtInputDialogRaw.QInputDialog_setComboBoxEditable(selfAdr, editable);
-END QInputDialog_setComboBoxEditable;
-
-PROCEDURE QInputDialog_isComboBoxEditable ( self: QInputDialog;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtInputDialogRaw.QInputDialog_isComboBoxEditable(selfAdr);
-END QInputDialog_isComboBoxEditable;
-
-PROCEDURE QInputDialog_setComboBoxItems ( self: QInputDialog;
- items: QStringList;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(items.cxxObj,ADDRESS);
-BEGIN
-QtInputDialogRaw.QInputDialog_setComboBoxItems(selfAdr, arg2tmp);
-END QInputDialog_setComboBoxItems;
-
-PROCEDURE QInputDialog_comboBoxItems ( self: QInputDialog;
-): QStringList =
-VAR
-ret:ADDRESS; result : QStringList;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtInputDialogRaw.QInputDialog_comboBoxItems(selfAdr);
-
-  result := NEW(QStringList);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QInputDialog_comboBoxItems;
-
-PROCEDURE QInputDialog_setIntValue ( self: QInputDialog;
-value: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtInputDialogRaw.QInputDialog_setIntValue(selfAdr, value);
-END QInputDialog_setIntValue;
-
-PROCEDURE QInputDialog_intValue ( self: QInputDialog;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtInputDialogRaw.QInputDialog_intValue(selfAdr);
-END QInputDialog_intValue;
-
-PROCEDURE QInputDialog_setIntMinimum ( self: QInputDialog;
-min: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtInputDialogRaw.QInputDialog_setIntMinimum(selfAdr, min);
-END QInputDialog_setIntMinimum;
-
-PROCEDURE QInputDialog_intMinimum ( self: QInputDialog;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtInputDialogRaw.QInputDialog_intMinimum(selfAdr);
-END QInputDialog_intMinimum;
-
-PROCEDURE QInputDialog_setIntMaximum ( self: QInputDialog;
-max: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtInputDialogRaw.QInputDialog_setIntMaximum(selfAdr, max);
-END QInputDialog_setIntMaximum;
-
-PROCEDURE QInputDialog_intMaximum ( self: QInputDialog;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtInputDialogRaw.QInputDialog_intMaximum(selfAdr);
-END QInputDialog_intMaximum;
-
-PROCEDURE QInputDialog_setIntRange ( self: QInputDialog;
-min, max: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtInputDialogRaw.QInputDialog_setIntRange(selfAdr, min, max);
-END QInputDialog_setIntRange;
-
-PROCEDURE QInputDialog_setIntStep ( self: QInputDialog;
-step: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtInputDialogRaw.QInputDialog_setIntStep(selfAdr, step);
-END QInputDialog_setIntStep;
-
-PROCEDURE QInputDialog_intStep ( self: QInputDialog;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtInputDialogRaw.QInputDialog_intStep(selfAdr);
-END QInputDialog_intStep;
-
-PROCEDURE QInputDialog_setDoubleValue ( self: QInputDialog;
-value: LONGREAL;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtInputDialogRaw.QInputDialog_setDoubleValue(selfAdr, value);
-END QInputDialog_setDoubleValue;
-
-PROCEDURE QInputDialog_doubleValue ( self: QInputDialog;
-): LONGREAL =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtInputDialogRaw.QInputDialog_doubleValue(selfAdr);
-END QInputDialog_doubleValue;
-
-PROCEDURE QInputDialog_setDoubleMinimum ( self: QInputDialog;
-min: LONGREAL;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtInputDialogRaw.QInputDialog_setDoubleMinimum(selfAdr, min);
-END QInputDialog_setDoubleMinimum;
-
-PROCEDURE QInputDialog_doubleMinimum ( self: QInputDialog;
-): LONGREAL =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtInputDialogRaw.QInputDialog_doubleMinimum(selfAdr);
-END QInputDialog_doubleMinimum;
-
-PROCEDURE QInputDialog_setDoubleMaximum ( self: QInputDialog;
-max: LONGREAL;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtInputDialogRaw.QInputDialog_setDoubleMaximum(selfAdr, max);
-END QInputDialog_setDoubleMaximum;
-
-PROCEDURE QInputDialog_doubleMaximum ( self: QInputDialog;
-): LONGREAL =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtInputDialogRaw.QInputDialog_doubleMaximum(selfAdr);
-END QInputDialog_doubleMaximum;
-
-PROCEDURE QInputDialog_setDoubleRange ( self: QInputDialog;
-min, max: LONGREAL;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtInputDialogRaw.QInputDialog_setDoubleRange(selfAdr, min, max);
-END QInputDialog_setDoubleRange;
-
-PROCEDURE QInputDialog_setDoubleDecimals ( self: QInputDialog;
-decimals: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtInputDialogRaw.QInputDialog_setDoubleDecimals(selfAdr, decimals);
-END QInputDialog_setDoubleDecimals;
-
-PROCEDURE QInputDialog_doubleDecimals ( self: QInputDialog;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtInputDialogRaw.QInputDialog_doubleDecimals(selfAdr);
-END QInputDialog_doubleDecimals;
-
-PROCEDURE QInputDialog_setOkButtonText ( self: QInputDialog;
- text: TEXT;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-qstr_text := NEW(QString).initQString(text);
-arg2tmp :=  LOOPHOLE(qstr_text.cxxObj,ADDRESS);
-BEGIN
-QtInputDialogRaw.QInputDialog_setOkButtonText(selfAdr, arg2tmp);
-END QInputDialog_setOkButtonText;
-
-PROCEDURE QInputDialog_okButtonText ( self: QInputDialog;
-): TEXT =
-VAR
-ret : ADDRESS;
-qstr := NEW(QString);
-ba : QByteArray;
-result : TEXT;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtInputDialogRaw.QInputDialog_okButtonText(selfAdr);
-
-  qstr.cxxObj := ret;
-  ba := qstr.toLocal8Bit();
-  result := ba.data();
-
-RETURN result;
-END QInputDialog_okButtonText;
-
-PROCEDURE QInputDialog_setCancelButtonText ( self: QInputDialog;
- text: TEXT;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-qstr_text := NEW(QString).initQString(text);
-arg2tmp :=  LOOPHOLE(qstr_text.cxxObj,ADDRESS);
-BEGIN
-QtInputDialogRaw.QInputDialog_setCancelButtonText(selfAdr, arg2tmp);
-END QInputDialog_setCancelButtonText;
-
-PROCEDURE QInputDialog_cancelButtonText ( self: QInputDialog;
-): TEXT =
-VAR
-ret : ADDRESS;
-qstr := NEW(QString);
-ba : QByteArray;
-result : TEXT;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtInputDialogRaw.QInputDialog_cancelButtonText(selfAdr);
-
-  qstr.cxxObj := ret;
-  ba := qstr.toLocal8Bit();
-  result := ba.data();
-
-RETURN result;
-END QInputDialog_cancelButtonText;
-
-PROCEDURE QInputDialog_open0_0 ( self: QInputDialog;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtInputDialogRaw.QInputDialog_open0_0(selfAdr);
-END QInputDialog_open0_0;
-
-PROCEDURE QInputDialog_open1 ( self: QInputDialog;
- receiver: QObject;
- member: TEXT;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(receiver.cxxObj,ADDRESS);
-arg3tmp: C.char_star;
-BEGIN
-arg3tmp := M3toC.CopyTtoS(member);
-QtInputDialogRaw.QInputDialog_open1(selfAdr, arg2tmp, arg3tmp);
-
-
-END QInputDialog_open1;
-
-PROCEDURE QInputDialog_minimumSizeHint ( self: QInputDialog;
-): QSize =
-VAR
-ret:ADDRESS; result : QSize;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtInputDialogRaw.QInputDialog_minimumSizeHint(selfAdr);
-
-  result := NEW(QSize);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QInputDialog_minimumSizeHint;
-
-PROCEDURE QInputDialog_sizeHint ( self: QInputDialog;
-): QSize =
-VAR
-ret:ADDRESS; result : QSize;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtInputDialogRaw.QInputDialog_sizeHint(selfAdr);
-
-  result := NEW(QSize);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QInputDialog_sizeHint;
-
-PROCEDURE QInputDialog_setVisible ( self: QInputDialog;
-visible: BOOLEAN;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtInputDialogRaw.QInputDialog_setVisible(selfAdr, visible);
-END QInputDialog_setVisible;
-
-PROCEDURE GetText ( parent: QWidget;
- title, label: TEXT;
-echo: EchoMode;
- text: TEXT;
-VAR ok: BOOLEAN;
-flags: WindowTypes;
-): TEXT =
-VAR
-ret : ADDRESS;
-qstr := NEW(QString);
-ba : QByteArray;
-result : TEXT;
-arg1tmp :=  LOOPHOLE(parent.cxxObj,ADDRESS);
-qstr_title := NEW(QString).initQString(title);
-arg2tmp :=  LOOPHOLE(qstr_title.cxxObj,ADDRESS);
-qstr_label := NEW(QString).initQString(label);
-arg3tmp :=  LOOPHOLE(qstr_label.cxxObj,ADDRESS);
-qstr_text := NEW(QString).initQString(text);
-arg5tmp :=  LOOPHOLE(qstr_text.cxxObj,ADDRESS);
-BEGIN
-ret := QtInputDialogRaw.GetText(arg1tmp, arg2tmp, arg3tmp, ORD(echo), arg5tmp, ok, ORD(flags));
-
-  qstr.cxxObj := ret;
-  ba := qstr.toLocal8Bit();
-  result := ba.data();
-
-RETURN result;
-END GetText;
-
-PROCEDURE GetText1 ( parent: QWidget;
- title, label: TEXT;
-echo: EchoMode;
- text: TEXT;
-VAR ok: BOOLEAN;
-): TEXT =
-VAR
-ret : ADDRESS;
-qstr := NEW(QString);
-ba : QByteArray;
-result : TEXT;
-arg1tmp :=  LOOPHOLE(parent.cxxObj,ADDRESS);
-qstr_title := NEW(QString).initQString(title);
-arg2tmp :=  LOOPHOLE(qstr_title.cxxObj,ADDRESS);
-qstr_label := NEW(QString).initQString(label);
-arg3tmp :=  LOOPHOLE(qstr_label.cxxObj,ADDRESS);
-qstr_text := NEW(QString).initQString(text);
-arg5tmp :=  LOOPHOLE(qstr_text.cxxObj,ADDRESS);
-BEGIN
-ret := QtInputDialogRaw.GetText1(arg1tmp, arg2tmp, arg3tmp, ORD(echo), arg5tmp, ok);
-
-  qstr.cxxObj := ret;
-  ba := qstr.toLocal8Bit();
-  result := ba.data();
-
-RETURN result;
-END GetText1;
-
-PROCEDURE GetText2 ( parent: QWidget;
- title, label: TEXT;
-echo: EchoMode;
- text: TEXT;
-): TEXT =
-VAR
-ret : ADDRESS;
-qstr := NEW(QString);
-ba : QByteArray;
-result : TEXT;
-arg1tmp :=  LOOPHOLE(parent.cxxObj,ADDRESS);
-qstr_title := NEW(QString).initQString(title);
-arg2tmp :=  LOOPHOLE(qstr_title.cxxObj,ADDRESS);
-qstr_label := NEW(QString).initQString(label);
-arg3tmp :=  LOOPHOLE(qstr_label.cxxObj,ADDRESS);
-qstr_text := NEW(QString).initQString(text);
-arg5tmp :=  LOOPHOLE(qstr_text.cxxObj,ADDRESS);
-BEGIN
-ret := QtInputDialogRaw.GetText2(arg1tmp, arg2tmp, arg3tmp, ORD(echo), arg5tmp);
-
-  qstr.cxxObj := ret;
-  ba := qstr.toLocal8Bit();
-  result := ba.data();
-
-RETURN result;
-END GetText2;
-
-PROCEDURE GetText3 ( parent: QWidget;
- title, label: TEXT;
-echo: EchoMode;
-): TEXT =
-VAR
-ret : ADDRESS;
-qstr := NEW(QString);
-ba : QByteArray;
-result : TEXT;
-arg1tmp :=  LOOPHOLE(parent.cxxObj,ADDRESS);
-qstr_title := NEW(QString).initQString(title);
-arg2tmp :=  LOOPHOLE(qstr_title.cxxObj,ADDRESS);
-qstr_label := NEW(QString).initQString(label);
-arg3tmp :=  LOOPHOLE(qstr_label.cxxObj,ADDRESS);
-BEGIN
-ret := QtInputDialogRaw.GetText3(arg1tmp, arg2tmp, arg3tmp, ORD(echo));
-
-  qstr.cxxObj := ret;
-  ba := qstr.toLocal8Bit();
-  result := ba.data();
-
-RETURN result;
-END GetText3;
-
-PROCEDURE GetText4 ( parent: QWidget;
- title, label: TEXT;
-): TEXT =
-VAR
-ret : ADDRESS;
-qstr := NEW(QString);
-ba : QByteArray;
-result : TEXT;
-arg1tmp :=  LOOPHOLE(parent.cxxObj,ADDRESS);
-qstr_title := NEW(QString).initQString(title);
-arg2tmp :=  LOOPHOLE(qstr_title.cxxObj,ADDRESS);
-qstr_label := NEW(QString).initQString(label);
-arg3tmp :=  LOOPHOLE(qstr_label.cxxObj,ADDRESS);
-BEGIN
-ret := QtInputDialogRaw.GetText4(arg1tmp, arg2tmp, arg3tmp);
-
-  qstr.cxxObj := ret;
-  ba := qstr.toLocal8Bit();
-  result := ba.data();
-
-RETURN result;
-END GetText4;
-
-PROCEDURE GetInt ( parent: QWidget;
- title, label: TEXT;
-value, minValue, maxValue, step: INTEGER;
-VAR ok: BOOLEAN;
-flags: WindowTypes;
-): INTEGER =
-VAR
-arg1tmp :=  LOOPHOLE(parent.cxxObj,ADDRESS);
-qstr_title := NEW(QString).initQString(title);
-arg2tmp :=  LOOPHOLE(qstr_title.cxxObj,ADDRESS);
-qstr_label := NEW(QString).initQString(label);
-arg3tmp :=  LOOPHOLE(qstr_label.cxxObj,ADDRESS);
-BEGIN
-RETURN QtInputDialogRaw.GetInt(arg1tmp, arg2tmp, arg3tmp, value, minValue, maxValue, step, ok, ORD(flags));
-END GetInt;
-
-PROCEDURE GetInt1 ( parent: QWidget;
- title, label: TEXT;
-value, minValue, maxValue, step: INTEGER;
-VAR ok: BOOLEAN;
-): INTEGER =
-VAR
-arg1tmp :=  LOOPHOLE(parent.cxxObj,ADDRESS);
-qstr_title := NEW(QString).initQString(title);
-arg2tmp :=  LOOPHOLE(qstr_title.cxxObj,ADDRESS);
-qstr_label := NEW(QString).initQString(label);
-arg3tmp :=  LOOPHOLE(qstr_label.cxxObj,ADDRESS);
-BEGIN
-RETURN QtInputDialogRaw.GetInt1(arg1tmp, arg2tmp, arg3tmp, value, minValue, maxValue, step, ok);
-END GetInt1;
-
-PROCEDURE GetInt2 ( parent: QWidget;
- title, label: TEXT;
-value, minValue, maxValue, step: INTEGER;
-): INTEGER =
-VAR
-arg1tmp :=  LOOPHOLE(parent.cxxObj,ADDRESS);
-qstr_title := NEW(QString).initQString(title);
-arg2tmp :=  LOOPHOLE(qstr_title.cxxObj,ADDRESS);
-qstr_label := NEW(QString).initQString(label);
-arg3tmp :=  LOOPHOLE(qstr_label.cxxObj,ADDRESS);
-BEGIN
-RETURN QtInputDialogRaw.GetInt2(arg1tmp, arg2tmp, arg3tmp, value, minValue, maxValue, step);
-END GetInt2;
-
-PROCEDURE GetInt3 ( parent: QWidget;
- title, label: TEXT;
-value, minValue, maxValue: INTEGER;
-): INTEGER =
-VAR
-arg1tmp :=  LOOPHOLE(parent.cxxObj,ADDRESS);
-qstr_title := NEW(QString).initQString(title);
-arg2tmp :=  LOOPHOLE(qstr_title.cxxObj,ADDRESS);
-qstr_label := NEW(QString).initQString(label);
-arg3tmp :=  LOOPHOLE(qstr_label.cxxObj,ADDRESS);
-BEGIN
-RETURN QtInputDialogRaw.GetInt3(arg1tmp, arg2tmp, arg3tmp, value, minValue, maxValue);
-END GetInt3;
-
-PROCEDURE GetInt4 ( parent: QWidget;
- title, label: TEXT;
-value, minValue: INTEGER;
-): INTEGER =
-VAR
-arg1tmp :=  LOOPHOLE(parent.cxxObj,ADDRESS);
-qstr_title := NEW(QString).initQString(title);
-arg2tmp :=  LOOPHOLE(qstr_title.cxxObj,ADDRESS);
-qstr_label := NEW(QString).initQString(label);
-arg3tmp :=  LOOPHOLE(qstr_label.cxxObj,ADDRESS);
-BEGIN
-RETURN QtInputDialogRaw.GetInt4(arg1tmp, arg2tmp, arg3tmp, value, minValue);
-END GetInt4;
-
-PROCEDURE GetInt5 ( parent: QWidget;
- title, label: TEXT;
-value: INTEGER;
-): INTEGER =
-VAR
-arg1tmp :=  LOOPHOLE(parent.cxxObj,ADDRESS);
-qstr_title := NEW(QString).initQString(title);
-arg2tmp :=  LOOPHOLE(qstr_title.cxxObj,ADDRESS);
-qstr_label := NEW(QString).initQString(label);
-arg3tmp :=  LOOPHOLE(qstr_label.cxxObj,ADDRESS);
-BEGIN
-RETURN QtInputDialogRaw.GetInt5(arg1tmp, arg2tmp, arg3tmp, value);
-END GetInt5;
-
-PROCEDURE GetInt6 ( parent: QWidget;
- title, label: TEXT;
-): INTEGER =
-VAR
-arg1tmp :=  LOOPHOLE(parent.cxxObj,ADDRESS);
-qstr_title := NEW(QString).initQString(title);
-arg2tmp :=  LOOPHOLE(qstr_title.cxxObj,ADDRESS);
-qstr_label := NEW(QString).initQString(label);
-arg3tmp :=  LOOPHOLE(qstr_label.cxxObj,ADDRESS);
-BEGIN
-RETURN QtInputDialogRaw.GetInt6(arg1tmp, arg2tmp, arg3tmp);
-END GetInt6;
-
-PROCEDURE GetDouble ( parent: QWidget;
- title, label: TEXT;
-value, minValue, maxValue: LONGREAL;
-decimals: INTEGER;
-VAR ok: BOOLEAN;
-flags: WindowTypes;
-): LONGREAL =
-VAR
-arg1tmp :=  LOOPHOLE(parent.cxxObj,ADDRESS);
-qstr_title := NEW(QString).initQString(title);
-arg2tmp :=  LOOPHOLE(qstr_title.cxxObj,ADDRESS);
-qstr_label := NEW(QString).initQString(label);
-arg3tmp :=  LOOPHOLE(qstr_label.cxxObj,ADDRESS);
-BEGIN
-RETURN QtInputDialogRaw.GetDouble(arg1tmp, arg2tmp, arg3tmp, value, minValue, maxValue, decimals, ok, ORD(flags));
-END GetDouble;
-
-PROCEDURE GetDouble1 ( parent: QWidget;
- title, label: TEXT;
-value, minValue, maxValue: LONGREAL;
-decimals: INTEGER;
-VAR ok: BOOLEAN;
-): LONGREAL =
-VAR
-arg1tmp :=  LOOPHOLE(parent.cxxObj,ADDRESS);
-qstr_title := NEW(QString).initQString(title);
-arg2tmp :=  LOOPHOLE(qstr_title.cxxObj,ADDRESS);
-qstr_label := NEW(QString).initQString(label);
-arg3tmp :=  LOOPHOLE(qstr_label.cxxObj,ADDRESS);
-BEGIN
-RETURN QtInputDialogRaw.GetDouble1(arg1tmp, arg2tmp, arg3tmp, value, minValue, maxValue, decimals, ok);
-END GetDouble1;
-
-PROCEDURE GetDouble2 ( parent: QWidget;
- title, label: TEXT;
-value, minValue, maxValue: LONGREAL;
-decimals: INTEGER;
-): LONGREAL =
-VAR
-arg1tmp :=  LOOPHOLE(parent.cxxObj,ADDRESS);
-qstr_title := NEW(QString).initQString(title);
-arg2tmp :=  LOOPHOLE(qstr_title.cxxObj,ADDRESS);
-qstr_label := NEW(QString).initQString(label);
-arg3tmp :=  LOOPHOLE(qstr_label.cxxObj,ADDRESS);
-BEGIN
-RETURN QtInputDialogRaw.GetDouble2(arg1tmp, arg2tmp, arg3tmp, value, minValue, maxValue, decimals);
-END GetDouble2;
-
-PROCEDURE GetDouble3 ( parent: QWidget;
- title, label: TEXT;
-value, minValue, maxValue: LONGREAL;
-): LONGREAL =
-VAR
-arg1tmp :=  LOOPHOLE(parent.cxxObj,ADDRESS);
-qstr_title := NEW(QString).initQString(title);
-arg2tmp :=  LOOPHOLE(qstr_title.cxxObj,ADDRESS);
-qstr_label := NEW(QString).initQString(label);
-arg3tmp :=  LOOPHOLE(qstr_label.cxxObj,ADDRESS);
-BEGIN
-RETURN QtInputDialogRaw.GetDouble3(arg1tmp, arg2tmp, arg3tmp, value, minValue, maxValue);
-END GetDouble3;
-
-PROCEDURE GetDouble4 ( parent: QWidget;
- title, label: TEXT;
-value, minValue: LONGREAL;
-): LONGREAL =
-VAR
-arg1tmp :=  LOOPHOLE(parent.cxxObj,ADDRESS);
-qstr_title := NEW(QString).initQString(title);
-arg2tmp :=  LOOPHOLE(qstr_title.cxxObj,ADDRESS);
-qstr_label := NEW(QString).initQString(label);
-arg3tmp :=  LOOPHOLE(qstr_label.cxxObj,ADDRESS);
-BEGIN
-RETURN QtInputDialogRaw.GetDouble4(arg1tmp, arg2tmp, arg3tmp, value, minValue);
-END GetDouble4;
-
-PROCEDURE GetDouble5 ( parent: QWidget;
- title, label: TEXT;
-value: LONGREAL;
-): LONGREAL =
-VAR
-arg1tmp :=  LOOPHOLE(parent.cxxObj,ADDRESS);
-qstr_title := NEW(QString).initQString(title);
-arg2tmp :=  LOOPHOLE(qstr_title.cxxObj,ADDRESS);
-qstr_label := NEW(QString).initQString(label);
-arg3tmp :=  LOOPHOLE(qstr_label.cxxObj,ADDRESS);
-BEGIN
-RETURN QtInputDialogRaw.GetDouble5(arg1tmp, arg2tmp, arg3tmp, value);
-END GetDouble5;
-
-PROCEDURE GetDouble6 ( parent: QWidget;
- title, label: TEXT;
-): LONGREAL =
-VAR
-arg1tmp :=  LOOPHOLE(parent.cxxObj,ADDRESS);
-qstr_title := NEW(QString).initQString(title);
-arg2tmp :=  LOOPHOLE(qstr_title.cxxObj,ADDRESS);
-qstr_label := NEW(QString).initQString(label);
-arg3tmp :=  LOOPHOLE(qstr_label.cxxObj,ADDRESS);
-BEGIN
-RETURN QtInputDialogRaw.GetDouble6(arg1tmp, arg2tmp, arg3tmp);
-END GetDouble6;
-
-PROCEDURE GetItem ( parent: QWidget;
- title, label: TEXT;
- items: QStringList;
-current: INTEGER;
-editable: BOOLEAN;
-VAR ok: BOOLEAN;
-flags: WindowTypes;
-): TEXT =
-VAR
-ret : ADDRESS;
-qstr := NEW(QString);
-ba : QByteArray;
-result : TEXT;
-arg1tmp :=  LOOPHOLE(parent.cxxObj,ADDRESS);
-qstr_title := NEW(QString).initQString(title);
-arg2tmp :=  LOOPHOLE(qstr_title.cxxObj,ADDRESS);
-qstr_label := NEW(QString).initQString(label);
-arg3tmp :=  LOOPHOLE(qstr_label.cxxObj,ADDRESS);
-arg4tmp :=  LOOPHOLE(items.cxxObj,ADDRESS);
-BEGIN
-ret := QtInputDialogRaw.GetItem(arg1tmp, arg2tmp, arg3tmp, arg4tmp, current, editable, ok, ORD(flags));
-
-  qstr.cxxObj := ret;
-  ba := qstr.toLocal8Bit();
-  result := ba.data();
-
-RETURN result;
-END GetItem;
-
-PROCEDURE GetItem1 ( parent: QWidget;
- title, label: TEXT;
- items: QStringList;
-current: INTEGER;
-editable: BOOLEAN;
-VAR ok: BOOLEAN;
-): TEXT =
-VAR
-ret : ADDRESS;
-qstr := NEW(QString);
-ba : QByteArray;
-result : TEXT;
-arg1tmp :=  LOOPHOLE(parent.cxxObj,ADDRESS);
-qstr_title := NEW(QString).initQString(title);
-arg2tmp :=  LOOPHOLE(qstr_title.cxxObj,ADDRESS);
-qstr_label := NEW(QString).initQString(label);
-arg3tmp :=  LOOPHOLE(qstr_label.cxxObj,ADDRESS);
-arg4tmp :=  LOOPHOLE(items.cxxObj,ADDRESS);
-BEGIN
-ret := QtInputDialogRaw.GetItem1(arg1tmp, arg2tmp, arg3tmp, arg4tmp, current, editable, ok);
-
-  qstr.cxxObj := ret;
-  ba := qstr.toLocal8Bit();
-  result := ba.data();
-
-RETURN result;
-END GetItem1;
-
-PROCEDURE GetItem2 ( parent: QWidget;
- title, label: TEXT;
- items: QStringList;
-current: INTEGER;
-editable: BOOLEAN;
-): TEXT =
-VAR
-ret : ADDRESS;
-qstr := NEW(QString);
-ba : QByteArray;
-result : TEXT;
-arg1tmp :=  LOOPHOLE(parent.cxxObj,ADDRESS);
-qstr_title := NEW(QString).initQString(title);
-arg2tmp :=  LOOPHOLE(qstr_title.cxxObj,ADDRESS);
-qstr_label := NEW(QString).initQString(label);
-arg3tmp :=  LOOPHOLE(qstr_label.cxxObj,ADDRESS);
-arg4tmp :=  LOOPHOLE(items.cxxObj,ADDRESS);
-BEGIN
-ret := QtInputDialogRaw.GetItem2(arg1tmp, arg2tmp, arg3tmp, arg4tmp, current, editable);
-
-  qstr.cxxObj := ret;
-  ba := qstr.toLocal8Bit();
-  result := ba.data();
-
-RETURN result;
-END GetItem2;
-
-PROCEDURE GetItem3 ( parent: QWidget;
- title, label: TEXT;
- items: QStringList;
-current: INTEGER;
-): TEXT =
-VAR
-ret : ADDRESS;
-qstr := NEW(QString);
-ba : QByteArray;
-result : TEXT;
-arg1tmp :=  LOOPHOLE(parent.cxxObj,ADDRESS);
-qstr_title := NEW(QString).initQString(title);
-arg2tmp :=  LOOPHOLE(qstr_title.cxxObj,ADDRESS);
-qstr_label := NEW(QString).initQString(label);
-arg3tmp :=  LOOPHOLE(qstr_label.cxxObj,ADDRESS);
-arg4tmp :=  LOOPHOLE(items.cxxObj,ADDRESS);
-BEGIN
-ret := QtInputDialogRaw.GetItem3(arg1tmp, arg2tmp, arg3tmp, arg4tmp, current);
-
-  qstr.cxxObj := ret;
-  ba := qstr.toLocal8Bit();
-  result := ba.data();
-
-RETURN result;
-END GetItem3;
-
-PROCEDURE GetItem4 ( parent: QWidget;
- title, label: TEXT;
- items: QStringList;
-): TEXT =
-VAR
-ret : ADDRESS;
-qstr := NEW(QString);
-ba : QByteArray;
-result : TEXT;
-arg1tmp :=  LOOPHOLE(parent.cxxObj,ADDRESS);
-qstr_title := NEW(QString).initQString(title);
-arg2tmp :=  LOOPHOLE(qstr_title.cxxObj,ADDRESS);
-qstr_label := NEW(QString).initQString(label);
-arg3tmp :=  LOOPHOLE(qstr_label.cxxObj,ADDRESS);
-arg4tmp :=  LOOPHOLE(items.cxxObj,ADDRESS);
-BEGIN
-ret := QtInputDialogRaw.GetItem4(arg1tmp, arg2tmp, arg3tmp, arg4tmp);
-
-  qstr.cxxObj := ret;
-  ba := qstr.toLocal8Bit();
-  result := ba.data();
-
-RETURN result;
-END GetItem4;
-
-PROCEDURE GetInteger ( parent: QWidget;
- title, label: TEXT;
-value, minValue, maxValue, step: INTEGER;
-VAR ok: BOOLEAN;
-flags: WindowTypes;
-): INTEGER =
-VAR
-arg1tmp :=  LOOPHOLE(parent.cxxObj,ADDRESS);
-qstr_title := NEW(QString).initQString(title);
-arg2tmp :=  LOOPHOLE(qstr_title.cxxObj,ADDRESS);
-qstr_label := NEW(QString).initQString(label);
-arg3tmp :=  LOOPHOLE(qstr_label.cxxObj,ADDRESS);
-BEGIN
-RETURN QtInputDialogRaw.GetInteger(arg1tmp, arg2tmp, arg3tmp, value, minValue, maxValue, step, ok, ORD(flags));
-END GetInteger;
-
-PROCEDURE GetInteger1 ( parent: QWidget;
- title, label: TEXT;
-value, minValue, maxValue, step: INTEGER;
-VAR ok: BOOLEAN;
-): INTEGER =
-VAR
-arg1tmp :=  LOOPHOLE(parent.cxxObj,ADDRESS);
-qstr_title := NEW(QString).initQString(title);
-arg2tmp :=  LOOPHOLE(qstr_title.cxxObj,ADDRESS);
-qstr_label := NEW(QString).initQString(label);
-arg3tmp :=  LOOPHOLE(qstr_label.cxxObj,ADDRESS);
-BEGIN
-RETURN QtInputDialogRaw.GetInteger1(arg1tmp, arg2tmp, arg3tmp, value, minValue, maxValue, step, ok);
-END GetInteger1;
-
-PROCEDURE GetInteger2 ( parent: QWidget;
- title, label: TEXT;
-value, minValue, maxValue, step: INTEGER;
-): INTEGER =
-VAR
-arg1tmp :=  LOOPHOLE(parent.cxxObj,ADDRESS);
-qstr_title := NEW(QString).initQString(title);
-arg2tmp :=  LOOPHOLE(qstr_title.cxxObj,ADDRESS);
-qstr_label := NEW(QString).initQString(label);
-arg3tmp :=  LOOPHOLE(qstr_label.cxxObj,ADDRESS);
-BEGIN
-RETURN QtInputDialogRaw.GetInteger2(arg1tmp, arg2tmp, arg3tmp, value, minValue, maxValue, step);
-END GetInteger2;
-
-PROCEDURE GetInteger3 ( parent: QWidget;
- title, label: TEXT;
-value, minValue, maxValue: INTEGER;
-): INTEGER =
-VAR
-arg1tmp :=  LOOPHOLE(parent.cxxObj,ADDRESS);
-qstr_title := NEW(QString).initQString(title);
-arg2tmp :=  LOOPHOLE(qstr_title.cxxObj,ADDRESS);
-qstr_label := NEW(QString).initQString(label);
-arg3tmp :=  LOOPHOLE(qstr_label.cxxObj,ADDRESS);
-BEGIN
-RETURN QtInputDialogRaw.GetInteger3(arg1tmp, arg2tmp, arg3tmp, value, minValue, maxValue);
-END GetInteger3;
-
-PROCEDURE GetInteger4 ( parent: QWidget;
- title, label: TEXT;
-value, minValue: INTEGER;
-): INTEGER =
-VAR
-arg1tmp :=  LOOPHOLE(parent.cxxObj,ADDRESS);
-qstr_title := NEW(QString).initQString(title);
-arg2tmp :=  LOOPHOLE(qstr_title.cxxObj,ADDRESS);
-qstr_label := NEW(QString).initQString(label);
-arg3tmp :=  LOOPHOLE(qstr_label.cxxObj,ADDRESS);
-BEGIN
-RETURN QtInputDialogRaw.GetInteger4(arg1tmp, arg2tmp, arg3tmp, value, minValue);
-END GetInteger4;
-
-PROCEDURE GetInteger5 ( parent: QWidget;
- title, label: TEXT;
-value: INTEGER;
-): INTEGER =
-VAR
-arg1tmp :=  LOOPHOLE(parent.cxxObj,ADDRESS);
-qstr_title := NEW(QString).initQString(title);
-arg2tmp :=  LOOPHOLE(qstr_title.cxxObj,ADDRESS);
-qstr_label := NEW(QString).initQString(label);
-arg3tmp :=  LOOPHOLE(qstr_label.cxxObj,ADDRESS);
-BEGIN
-RETURN QtInputDialogRaw.GetInteger5(arg1tmp, arg2tmp, arg3tmp, value);
-END GetInteger5;
-
-PROCEDURE GetInteger6 ( parent: QWidget;
- title, label: TEXT;
-): INTEGER =
-VAR
-arg1tmp :=  LOOPHOLE(parent.cxxObj,ADDRESS);
-qstr_title := NEW(QString).initQString(title);
-arg2tmp :=  LOOPHOLE(qstr_title.cxxObj,ADDRESS);
-qstr_label := NEW(QString).initQString(label);
-arg3tmp :=  LOOPHOLE(qstr_label.cxxObj,ADDRESS);
-BEGIN
-RETURN QtInputDialogRaw.GetInteger6(arg1tmp, arg2tmp, arg3tmp);
-END GetInteger6;
-
-PROCEDURE QInputDialog_done ( self: QInputDialog;
-result: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtInputDialogRaw.QInputDialog_done(selfAdr, result);
-END QInputDialog_done;
-
-PROCEDURE Cleanup_QInputDialog(<*UNUSED*>READONLY self: WeakRef.T; ref: REFANY) =
-VAR obj : QInputDialog := ref;
-BEGIN
-  Delete_QInputDialog(obj);
- END Cleanup_QInputDialog;
-
-PROCEDURE Destroy_QInputDialog(self : QInputDialog) =
-BEGIN
-  EVAL WeakRef.FromRef(self,Cleanup_QInputDialog);
-END Destroy_QInputDialog;
+PROCEDURE New_QInputDialog0
+  (self: QInputDialog; parent: QWidget; flags: WindowTypes; ):
+  QInputDialog =
+  VAR
+    result : ADDRESS;
+    arg1tmp          := LOOPHOLE(parent.cxxObj, ADDRESS);
+  BEGIN
+    result := QtInputDialogRaw.New_QInputDialog0(arg1tmp, ORD(flags));
+
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QInputDialog);
+
+    RETURN self;
+  END New_QInputDialog0;
+
+PROCEDURE New_QInputDialog1 (self: QInputDialog; parent: QWidget; ):
+  QInputDialog =
+  VAR
+    result : ADDRESS;
+    arg1tmp          := LOOPHOLE(parent.cxxObj, ADDRESS);
+  BEGIN
+    result := QtInputDialogRaw.New_QInputDialog1(arg1tmp);
+
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QInputDialog);
+
+    RETURN self;
+  END New_QInputDialog1;
+
+PROCEDURE New_QInputDialog2 (self: QInputDialog; ): QInputDialog =
+  VAR result: ADDRESS;
+  BEGIN
+    result := QtInputDialogRaw.New_QInputDialog2();
+
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QInputDialog);
+
+    RETURN self;
+  END New_QInputDialog2;
+
+PROCEDURE Delete_QInputDialog (self: QInputDialog; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtInputDialogRaw.Delete_QInputDialog(selfAdr);
+  END Delete_QInputDialog;
+
+PROCEDURE QInputDialog_setInputMode
+  (self: QInputDialog; mode: InputMode; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtInputDialogRaw.QInputDialog_setInputMode(selfAdr, ORD(mode));
+  END QInputDialog_setInputMode;
+
+PROCEDURE QInputDialog_inputMode (self: QInputDialog; ): InputMode =
+  VAR
+    ret    : INTEGER;
+    result : InputMode;
+    selfAdr: ADDRESS   := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtInputDialogRaw.QInputDialog_inputMode(selfAdr);
+    result := VAL(ret, InputMode);
+    RETURN result;
+  END QInputDialog_inputMode;
+
+PROCEDURE QInputDialog_setLabelText (self: QInputDialog; text: TEXT; ) =
+  VAR
+    selfAdr  : ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    qstr_text          := NEW(QString).initQString(text);
+    arg2tmp            := LOOPHOLE(qstr_text.cxxObj, ADDRESS);
+  BEGIN
+    QtInputDialogRaw.QInputDialog_setLabelText(selfAdr, arg2tmp);
+  END QInputDialog_setLabelText;
+
+PROCEDURE QInputDialog_labelText (self: QInputDialog; ): TEXT =
+  VAR
+    ret    : ADDRESS;
+    qstr                := NEW(QString);
+    ba     : QByteArray;
+    result : TEXT;
+    selfAdr: ADDRESS    := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtInputDialogRaw.QInputDialog_labelText(selfAdr);
+
+    qstr.cxxObj := ret;
+    ba := qstr.toLocal8Bit();
+    result := ba.data();
+
+    RETURN result;
+  END QInputDialog_labelText;
+
+PROCEDURE QInputDialog_setOption
+  (self: QInputDialog; option: InputDialogOption; on: BOOLEAN; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtInputDialogRaw.QInputDialog_setOption(selfAdr, ORD(option), on);
+  END QInputDialog_setOption;
+
+PROCEDURE QInputDialog_setOption1
+  (self: QInputDialog; option: InputDialogOption; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtInputDialogRaw.QInputDialog_setOption1(selfAdr, ORD(option));
+  END QInputDialog_setOption1;
+
+PROCEDURE QInputDialog_testOption
+  (self: QInputDialog; option: InputDialogOption; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtInputDialogRaw.QInputDialog_testOption(selfAdr, ORD(option));
+  END QInputDialog_testOption;
+
+PROCEDURE QInputDialog_setOptions
+  (self: QInputDialog; options: InputDialogOptions; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtInputDialogRaw.QInputDialog_setOptions(selfAdr, ORD(options));
+  END QInputDialog_setOptions;
+
+PROCEDURE QInputDialog_options (self: QInputDialog; ): InputDialogOptions =
+  VAR
+    ret    : INTEGER;
+    result : InputDialogOptions;
+    selfAdr: ADDRESS            := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtInputDialogRaw.QInputDialog_options(selfAdr);
+    result := VAL(ret, InputDialogOptions);
+    RETURN result;
+  END QInputDialog_options;
+
+PROCEDURE QInputDialog_setTextValue (self: QInputDialog; text: TEXT; ) =
+  VAR
+    selfAdr  : ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    qstr_text          := NEW(QString).initQString(text);
+    arg2tmp            := LOOPHOLE(qstr_text.cxxObj, ADDRESS);
+  BEGIN
+    QtInputDialogRaw.QInputDialog_setTextValue(selfAdr, arg2tmp);
+  END QInputDialog_setTextValue;
+
+PROCEDURE QInputDialog_textValue (self: QInputDialog; ): TEXT =
+  VAR
+    ret    : ADDRESS;
+    qstr                := NEW(QString);
+    ba     : QByteArray;
+    result : TEXT;
+    selfAdr: ADDRESS    := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtInputDialogRaw.QInputDialog_textValue(selfAdr);
+
+    qstr.cxxObj := ret;
+    ba := qstr.toLocal8Bit();
+    result := ba.data();
+
+    RETURN result;
+  END QInputDialog_textValue;
+
+PROCEDURE QInputDialog_setTextEchoMode
+  (self: QInputDialog; mode: EchoMode; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtInputDialogRaw.QInputDialog_setTextEchoMode(selfAdr, ORD(mode));
+  END QInputDialog_setTextEchoMode;
+
+PROCEDURE QInputDialog_textEchoMode (self: QInputDialog; ): EchoMode =
+  VAR
+    ret    : INTEGER;
+    result : EchoMode;
+    selfAdr: ADDRESS  := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtInputDialogRaw.QInputDialog_textEchoMode(selfAdr);
+    result := VAL(ret, EchoMode);
+    RETURN result;
+  END QInputDialog_textEchoMode;
+
+PROCEDURE QInputDialog_setComboBoxEditable
+  (self: QInputDialog; editable: BOOLEAN; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtInputDialogRaw.QInputDialog_setComboBoxEditable(selfAdr, editable);
+  END QInputDialog_setComboBoxEditable;
+
+PROCEDURE QInputDialog_isComboBoxEditable (self: QInputDialog; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtInputDialogRaw.QInputDialog_isComboBoxEditable(selfAdr);
+  END QInputDialog_isComboBoxEditable;
+
+PROCEDURE QInputDialog_setComboBoxItems
+  (self: QInputDialog; items: QStringList; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(items.cxxObj, ADDRESS);
+  BEGIN
+    QtInputDialogRaw.QInputDialog_setComboBoxItems(selfAdr, arg2tmp);
+  END QInputDialog_setComboBoxItems;
+
+PROCEDURE QInputDialog_comboBoxItems (self: QInputDialog; ): QStringList =
+  VAR
+    ret    : ADDRESS;
+    result : QStringList;
+    selfAdr: ADDRESS     := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtInputDialogRaw.QInputDialog_comboBoxItems(selfAdr);
+
+    result := NEW(QStringList);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QInputDialog_comboBoxItems;
+
+PROCEDURE QInputDialog_setIntValue (self: QInputDialog; value: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtInputDialogRaw.QInputDialog_setIntValue(selfAdr, value);
+  END QInputDialog_setIntValue;
+
+PROCEDURE QInputDialog_intValue (self: QInputDialog; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtInputDialogRaw.QInputDialog_intValue(selfAdr);
+  END QInputDialog_intValue;
+
+PROCEDURE QInputDialog_setIntMinimum (self: QInputDialog; min: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtInputDialogRaw.QInputDialog_setIntMinimum(selfAdr, min);
+  END QInputDialog_setIntMinimum;
+
+PROCEDURE QInputDialog_intMinimum (self: QInputDialog; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtInputDialogRaw.QInputDialog_intMinimum(selfAdr);
+  END QInputDialog_intMinimum;
+
+PROCEDURE QInputDialog_setIntMaximum (self: QInputDialog; max: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtInputDialogRaw.QInputDialog_setIntMaximum(selfAdr, max);
+  END QInputDialog_setIntMaximum;
+
+PROCEDURE QInputDialog_intMaximum (self: QInputDialog; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtInputDialogRaw.QInputDialog_intMaximum(selfAdr);
+  END QInputDialog_intMaximum;
+
+PROCEDURE QInputDialog_setIntRange
+  (self: QInputDialog; min, max: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtInputDialogRaw.QInputDialog_setIntRange(selfAdr, min, max);
+  END QInputDialog_setIntRange;
+
+PROCEDURE QInputDialog_setIntStep (self: QInputDialog; step: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtInputDialogRaw.QInputDialog_setIntStep(selfAdr, step);
+  END QInputDialog_setIntStep;
+
+PROCEDURE QInputDialog_intStep (self: QInputDialog; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtInputDialogRaw.QInputDialog_intStep(selfAdr);
+  END QInputDialog_intStep;
+
+PROCEDURE QInputDialog_setDoubleValue
+  (self: QInputDialog; value: LONGREAL; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtInputDialogRaw.QInputDialog_setDoubleValue(selfAdr, value);
+  END QInputDialog_setDoubleValue;
+
+PROCEDURE QInputDialog_doubleValue (self: QInputDialog; ): LONGREAL =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtInputDialogRaw.QInputDialog_doubleValue(selfAdr);
+  END QInputDialog_doubleValue;
+
+PROCEDURE QInputDialog_setDoubleMinimum
+  (self: QInputDialog; min: LONGREAL; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtInputDialogRaw.QInputDialog_setDoubleMinimum(selfAdr, min);
+  END QInputDialog_setDoubleMinimum;
+
+PROCEDURE QInputDialog_doubleMinimum (self: QInputDialog; ): LONGREAL =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtInputDialogRaw.QInputDialog_doubleMinimum(selfAdr);
+  END QInputDialog_doubleMinimum;
+
+PROCEDURE QInputDialog_setDoubleMaximum
+  (self: QInputDialog; max: LONGREAL; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtInputDialogRaw.QInputDialog_setDoubleMaximum(selfAdr, max);
+  END QInputDialog_setDoubleMaximum;
+
+PROCEDURE QInputDialog_doubleMaximum (self: QInputDialog; ): LONGREAL =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtInputDialogRaw.QInputDialog_doubleMaximum(selfAdr);
+  END QInputDialog_doubleMaximum;
+
+PROCEDURE QInputDialog_setDoubleRange
+  (self: QInputDialog; min, max: LONGREAL; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtInputDialogRaw.QInputDialog_setDoubleRange(selfAdr, min, max);
+  END QInputDialog_setDoubleRange;
+
+PROCEDURE QInputDialog_setDoubleDecimals
+  (self: QInputDialog; decimals: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtInputDialogRaw.QInputDialog_setDoubleDecimals(selfAdr, decimals);
+  END QInputDialog_setDoubleDecimals;
+
+PROCEDURE QInputDialog_doubleDecimals (self: QInputDialog; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtInputDialogRaw.QInputDialog_doubleDecimals(selfAdr);
+  END QInputDialog_doubleDecimals;
+
+PROCEDURE QInputDialog_setOkButtonText (self: QInputDialog; text: TEXT; ) =
+  VAR
+    selfAdr  : ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    qstr_text          := NEW(QString).initQString(text);
+    arg2tmp            := LOOPHOLE(qstr_text.cxxObj, ADDRESS);
+  BEGIN
+    QtInputDialogRaw.QInputDialog_setOkButtonText(selfAdr, arg2tmp);
+  END QInputDialog_setOkButtonText;
+
+PROCEDURE QInputDialog_okButtonText (self: QInputDialog; ): TEXT =
+  VAR
+    ret    : ADDRESS;
+    qstr                := NEW(QString);
+    ba     : QByteArray;
+    result : TEXT;
+    selfAdr: ADDRESS    := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtInputDialogRaw.QInputDialog_okButtonText(selfAdr);
+
+    qstr.cxxObj := ret;
+    ba := qstr.toLocal8Bit();
+    result := ba.data();
+
+    RETURN result;
+  END QInputDialog_okButtonText;
+
+PROCEDURE QInputDialog_setCancelButtonText
+  (self: QInputDialog; text: TEXT; ) =
+  VAR
+    selfAdr  : ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    qstr_text          := NEW(QString).initQString(text);
+    arg2tmp            := LOOPHOLE(qstr_text.cxxObj, ADDRESS);
+  BEGIN
+    QtInputDialogRaw.QInputDialog_setCancelButtonText(selfAdr, arg2tmp);
+  END QInputDialog_setCancelButtonText;
+
+PROCEDURE QInputDialog_cancelButtonText (self: QInputDialog; ): TEXT =
+  VAR
+    ret    : ADDRESS;
+    qstr                := NEW(QString);
+    ba     : QByteArray;
+    result : TEXT;
+    selfAdr: ADDRESS    := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtInputDialogRaw.QInputDialog_cancelButtonText(selfAdr);
+
+    qstr.cxxObj := ret;
+    ba := qstr.toLocal8Bit();
+    result := ba.data();
+
+    RETURN result;
+  END QInputDialog_cancelButtonText;
+
+PROCEDURE QInputDialog_open0_0 (self: QInputDialog; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtInputDialogRaw.QInputDialog_open0_0(selfAdr);
+  END QInputDialog_open0_0;
+
+PROCEDURE QInputDialog_open1
+  (self: QInputDialog; receiver: QObject; member: TEXT; ) =
+  VAR
+    selfAdr: ADDRESS     := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp              := LOOPHOLE(receiver.cxxObj, ADDRESS);
+    arg3tmp: C.char_star;
+  BEGIN
+    arg3tmp := M3toC.CopyTtoS(member);
+    QtInputDialogRaw.QInputDialog_open1(selfAdr, arg2tmp, arg3tmp);
+
+
+  END QInputDialog_open1;
+
+PROCEDURE QInputDialog_minimumSizeHint (self: QInputDialog; ): QSize =
+  VAR
+    ret    : ADDRESS;
+    result : QSize;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtInputDialogRaw.QInputDialog_minimumSizeHint(selfAdr);
+
+    result := NEW(QSize);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QInputDialog_minimumSizeHint;
+
+PROCEDURE QInputDialog_sizeHint (self: QInputDialog; ): QSize =
+  VAR
+    ret    : ADDRESS;
+    result : QSize;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtInputDialogRaw.QInputDialog_sizeHint(selfAdr);
+
+    result := NEW(QSize);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QInputDialog_sizeHint;
+
+PROCEDURE QInputDialog_setVisible
+  (self: QInputDialog; visible: BOOLEAN; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtInputDialogRaw.QInputDialog_setVisible(selfAdr, visible);
+  END QInputDialog_setVisible;
+
+PROCEDURE GetText (    parent      : QWidget;
+                       title, label: TEXT;
+                       echo        : EchoMode;
+                       text        : TEXT;
+                   VAR ok          : BOOLEAN;
+                       flags       : WindowTypes; ): TEXT =
+  VAR
+    ret       : ADDRESS;
+    qstr                   := NEW(QString);
+    ba        : QByteArray;
+    result    : TEXT;
+    arg1tmp                := LOOPHOLE(parent.cxxObj, ADDRESS);
+    qstr_title             := NEW(QString).initQString(title);
+    arg2tmp                := LOOPHOLE(qstr_title.cxxObj, ADDRESS);
+    qstr_label             := NEW(QString).initQString(label);
+    arg3tmp                := LOOPHOLE(qstr_label.cxxObj, ADDRESS);
+    qstr_text              := NEW(QString).initQString(text);
+    arg5tmp                := LOOPHOLE(qstr_text.cxxObj, ADDRESS);
+  BEGIN
+    ret :=
+      QtInputDialogRaw.GetText(
+        arg1tmp, arg2tmp, arg3tmp, ORD(echo), arg5tmp, ok, ORD(flags));
+
+    qstr.cxxObj := ret;
+    ba := qstr.toLocal8Bit();
+    result := ba.data();
+
+    RETURN result;
+  END GetText;
+
+PROCEDURE GetText1 (    parent      : QWidget;
+                        title, label: TEXT;
+                        echo        : EchoMode;
+                        text        : TEXT;
+                    VAR ok          : BOOLEAN;  ): TEXT =
+  VAR
+    ret       : ADDRESS;
+    qstr                   := NEW(QString);
+    ba        : QByteArray;
+    result    : TEXT;
+    arg1tmp                := LOOPHOLE(parent.cxxObj, ADDRESS);
+    qstr_title             := NEW(QString).initQString(title);
+    arg2tmp                := LOOPHOLE(qstr_title.cxxObj, ADDRESS);
+    qstr_label             := NEW(QString).initQString(label);
+    arg3tmp                := LOOPHOLE(qstr_label.cxxObj, ADDRESS);
+    qstr_text              := NEW(QString).initQString(text);
+    arg5tmp                := LOOPHOLE(qstr_text.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtInputDialogRaw.GetText1(
+             arg1tmp, arg2tmp, arg3tmp, ORD(echo), arg5tmp, ok);
+
+    qstr.cxxObj := ret;
+    ba := qstr.toLocal8Bit();
+    result := ba.data();
+
+    RETURN result;
+  END GetText1;
+
+PROCEDURE GetText2
+  (parent: QWidget; title, label: TEXT; echo: EchoMode; text: TEXT; ):
+  TEXT =
+  VAR
+    ret       : ADDRESS;
+    qstr                   := NEW(QString);
+    ba        : QByteArray;
+    result    : TEXT;
+    arg1tmp                := LOOPHOLE(parent.cxxObj, ADDRESS);
+    qstr_title             := NEW(QString).initQString(title);
+    arg2tmp                := LOOPHOLE(qstr_title.cxxObj, ADDRESS);
+    qstr_label             := NEW(QString).initQString(label);
+    arg3tmp                := LOOPHOLE(qstr_label.cxxObj, ADDRESS);
+    qstr_text              := NEW(QString).initQString(text);
+    arg5tmp                := LOOPHOLE(qstr_text.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtInputDialogRaw.GetText2(
+             arg1tmp, arg2tmp, arg3tmp, ORD(echo), arg5tmp);
+
+    qstr.cxxObj := ret;
+    ba := qstr.toLocal8Bit();
+    result := ba.data();
+
+    RETURN result;
+  END GetText2;
+
+PROCEDURE GetText3 (parent: QWidget; title, label: TEXT; echo: EchoMode; ):
+  TEXT =
+  VAR
+    ret       : ADDRESS;
+    qstr                   := NEW(QString);
+    ba        : QByteArray;
+    result    : TEXT;
+    arg1tmp                := LOOPHOLE(parent.cxxObj, ADDRESS);
+    qstr_title             := NEW(QString).initQString(title);
+    arg2tmp                := LOOPHOLE(qstr_title.cxxObj, ADDRESS);
+    qstr_label             := NEW(QString).initQString(label);
+    arg3tmp                := LOOPHOLE(qstr_label.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtInputDialogRaw.GetText3(arg1tmp, arg2tmp, arg3tmp, ORD(echo));
+
+    qstr.cxxObj := ret;
+    ba := qstr.toLocal8Bit();
+    result := ba.data();
+
+    RETURN result;
+  END GetText3;
+
+PROCEDURE GetText4 (parent: QWidget; title, label: TEXT; ): TEXT =
+  VAR
+    ret       : ADDRESS;
+    qstr                   := NEW(QString);
+    ba        : QByteArray;
+    result    : TEXT;
+    arg1tmp                := LOOPHOLE(parent.cxxObj, ADDRESS);
+    qstr_title             := NEW(QString).initQString(title);
+    arg2tmp                := LOOPHOLE(qstr_title.cxxObj, ADDRESS);
+    qstr_label             := NEW(QString).initQString(label);
+    arg3tmp                := LOOPHOLE(qstr_label.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtInputDialogRaw.GetText4(arg1tmp, arg2tmp, arg3tmp);
+
+    qstr.cxxObj := ret;
+    ba := qstr.toLocal8Bit();
+    result := ba.data();
+
+    RETURN result;
+  END GetText4;
+
+PROCEDURE GetInt (    parent                         : QWidget;
+                      title, label                   : TEXT;
+                      value, minValue, maxValue, step: INTEGER;
+                  VAR ok                             : BOOLEAN;
+                      flags                          : WindowTypes; ):
+  INTEGER =
+  VAR
+    arg1tmp    := LOOPHOLE(parent.cxxObj, ADDRESS);
+    qstr_title := NEW(QString).initQString(title);
+    arg2tmp    := LOOPHOLE(qstr_title.cxxObj, ADDRESS);
+    qstr_label := NEW(QString).initQString(label);
+    arg3tmp    := LOOPHOLE(qstr_label.cxxObj, ADDRESS);
+  BEGIN
+    RETURN
+      QtInputDialogRaw.GetInt(arg1tmp, arg2tmp, arg3tmp, value, minValue,
+                              maxValue, step, ok, ORD(flags));
+  END GetInt;
+
+PROCEDURE GetInt1 (    parent                         : QWidget;
+                       title, label                   : TEXT;
+                       value, minValue, maxValue, step: INTEGER;
+                   VAR ok                             : BOOLEAN; ):
+  INTEGER =
+  VAR
+    arg1tmp    := LOOPHOLE(parent.cxxObj, ADDRESS);
+    qstr_title := NEW(QString).initQString(title);
+    arg2tmp    := LOOPHOLE(qstr_title.cxxObj, ADDRESS);
+    qstr_label := NEW(QString).initQString(label);
+    arg3tmp    := LOOPHOLE(qstr_label.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtInputDialogRaw.GetInt1(arg1tmp, arg2tmp, arg3tmp, value,
+                                    minValue, maxValue, step, ok);
+  END GetInt1;
+
+PROCEDURE GetInt2 (parent                         : QWidget;
+                   title, label                   : TEXT;
+                   value, minValue, maxValue, step: INTEGER; ): INTEGER =
+  VAR
+    arg1tmp    := LOOPHOLE(parent.cxxObj, ADDRESS);
+    qstr_title := NEW(QString).initQString(title);
+    arg2tmp    := LOOPHOLE(qstr_title.cxxObj, ADDRESS);
+    qstr_label := NEW(QString).initQString(label);
+    arg3tmp    := LOOPHOLE(qstr_label.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtInputDialogRaw.GetInt2(
+             arg1tmp, arg2tmp, arg3tmp, value, minValue, maxValue, step);
+  END GetInt2;
+
+PROCEDURE GetInt3 (parent                   : QWidget;
+                   title, label             : TEXT;
+                   value, minValue, maxValue: INTEGER; ): INTEGER =
+  VAR
+    arg1tmp    := LOOPHOLE(parent.cxxObj, ADDRESS);
+    qstr_title := NEW(QString).initQString(title);
+    arg2tmp    := LOOPHOLE(qstr_title.cxxObj, ADDRESS);
+    qstr_label := NEW(QString).initQString(label);
+    arg3tmp    := LOOPHOLE(qstr_label.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtInputDialogRaw.GetInt3(
+             arg1tmp, arg2tmp, arg3tmp, value, minValue, maxValue);
+  END GetInt3;
+
+PROCEDURE GetInt4
+  (parent: QWidget; title, label: TEXT; value, minValue: INTEGER; ):
+  INTEGER =
+  VAR
+    arg1tmp    := LOOPHOLE(parent.cxxObj, ADDRESS);
+    qstr_title := NEW(QString).initQString(title);
+    arg2tmp    := LOOPHOLE(qstr_title.cxxObj, ADDRESS);
+    qstr_label := NEW(QString).initQString(label);
+    arg3tmp    := LOOPHOLE(qstr_label.cxxObj, ADDRESS);
+  BEGIN
+    RETURN
+      QtInputDialogRaw.GetInt4(arg1tmp, arg2tmp, arg3tmp, value, minValue);
+  END GetInt4;
+
+PROCEDURE GetInt5 (parent: QWidget; title, label: TEXT; value: INTEGER; ):
+  INTEGER =
+  VAR
+    arg1tmp    := LOOPHOLE(parent.cxxObj, ADDRESS);
+    qstr_title := NEW(QString).initQString(title);
+    arg2tmp    := LOOPHOLE(qstr_title.cxxObj, ADDRESS);
+    qstr_label := NEW(QString).initQString(label);
+    arg3tmp    := LOOPHOLE(qstr_label.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtInputDialogRaw.GetInt5(arg1tmp, arg2tmp, arg3tmp, value);
+  END GetInt5;
+
+PROCEDURE GetInt6 (parent: QWidget; title, label: TEXT; ): INTEGER =
+  VAR
+    arg1tmp    := LOOPHOLE(parent.cxxObj, ADDRESS);
+    qstr_title := NEW(QString).initQString(title);
+    arg2tmp    := LOOPHOLE(qstr_title.cxxObj, ADDRESS);
+    qstr_label := NEW(QString).initQString(label);
+    arg3tmp    := LOOPHOLE(qstr_label.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtInputDialogRaw.GetInt6(arg1tmp, arg2tmp, arg3tmp);
+  END GetInt6;
+
+PROCEDURE GetDouble (    parent                   : QWidget;
+                         title, label             : TEXT;
+                         value, minValue, maxValue: LONGREAL;
+                         decimals                 : INTEGER;
+                     VAR ok                       : BOOLEAN;
+                         flags                    : WindowTypes; ):
+  LONGREAL =
+  VAR
+    arg1tmp    := LOOPHOLE(parent.cxxObj, ADDRESS);
+    qstr_title := NEW(QString).initQString(title);
+    arg2tmp    := LOOPHOLE(qstr_title.cxxObj, ADDRESS);
+    qstr_label := NEW(QString).initQString(label);
+    arg3tmp    := LOOPHOLE(qstr_label.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtInputDialogRaw.GetDouble(
+             arg1tmp, arg2tmp, arg3tmp, value, minValue, maxValue,
+             decimals, ok, ORD(flags));
+  END GetDouble;
+
+PROCEDURE GetDouble1 (    parent                   : QWidget;
+                          title, label             : TEXT;
+                          value, minValue, maxValue: LONGREAL;
+                          decimals                 : INTEGER;
+                      VAR ok                       : BOOLEAN;  ):
+  LONGREAL =
+  VAR
+    arg1tmp    := LOOPHOLE(parent.cxxObj, ADDRESS);
+    qstr_title := NEW(QString).initQString(title);
+    arg2tmp    := LOOPHOLE(qstr_title.cxxObj, ADDRESS);
+    qstr_label := NEW(QString).initQString(label);
+    arg3tmp    := LOOPHOLE(qstr_label.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtInputDialogRaw.GetDouble1(arg1tmp, arg2tmp, arg3tmp, value,
+                                       minValue, maxValue, decimals, ok);
+  END GetDouble1;
+
+PROCEDURE GetDouble2 (parent                   : QWidget;
+                      title, label             : TEXT;
+                      value, minValue, maxValue: LONGREAL;
+                      decimals                 : INTEGER;  ): LONGREAL =
+  VAR
+    arg1tmp    := LOOPHOLE(parent.cxxObj, ADDRESS);
+    qstr_title := NEW(QString).initQString(title);
+    arg2tmp    := LOOPHOLE(qstr_title.cxxObj, ADDRESS);
+    qstr_label := NEW(QString).initQString(label);
+    arg3tmp    := LOOPHOLE(qstr_label.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtInputDialogRaw.GetDouble2(arg1tmp, arg2tmp, arg3tmp, value,
+                                       minValue, maxValue, decimals);
+  END GetDouble2;
+
+PROCEDURE GetDouble3 (parent                   : QWidget;
+                      title, label             : TEXT;
+                      value, minValue, maxValue: LONGREAL; ): LONGREAL =
+  VAR
+    arg1tmp    := LOOPHOLE(parent.cxxObj, ADDRESS);
+    qstr_title := NEW(QString).initQString(title);
+    arg2tmp    := LOOPHOLE(qstr_title.cxxObj, ADDRESS);
+    qstr_label := NEW(QString).initQString(label);
+    arg3tmp    := LOOPHOLE(qstr_label.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtInputDialogRaw.GetDouble3(
+             arg1tmp, arg2tmp, arg3tmp, value, minValue, maxValue);
+  END GetDouble3;
+
+PROCEDURE GetDouble4
+  (parent: QWidget; title, label: TEXT; value, minValue: LONGREAL; ):
+  LONGREAL =
+  VAR
+    arg1tmp    := LOOPHOLE(parent.cxxObj, ADDRESS);
+    qstr_title := NEW(QString).initQString(title);
+    arg2tmp    := LOOPHOLE(qstr_title.cxxObj, ADDRESS);
+    qstr_label := NEW(QString).initQString(label);
+    arg3tmp    := LOOPHOLE(qstr_label.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtInputDialogRaw.GetDouble4(
+             arg1tmp, arg2tmp, arg3tmp, value, minValue);
+  END GetDouble4;
+
+PROCEDURE GetDouble5
+  (parent: QWidget; title, label: TEXT; value: LONGREAL; ): LONGREAL =
+  VAR
+    arg1tmp    := LOOPHOLE(parent.cxxObj, ADDRESS);
+    qstr_title := NEW(QString).initQString(title);
+    arg2tmp    := LOOPHOLE(qstr_title.cxxObj, ADDRESS);
+    qstr_label := NEW(QString).initQString(label);
+    arg3tmp    := LOOPHOLE(qstr_label.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtInputDialogRaw.GetDouble5(arg1tmp, arg2tmp, arg3tmp, value);
+  END GetDouble5;
+
+PROCEDURE GetDouble6 (parent: QWidget; title, label: TEXT; ): LONGREAL =
+  VAR
+    arg1tmp    := LOOPHOLE(parent.cxxObj, ADDRESS);
+    qstr_title := NEW(QString).initQString(title);
+    arg2tmp    := LOOPHOLE(qstr_title.cxxObj, ADDRESS);
+    qstr_label := NEW(QString).initQString(label);
+    arg3tmp    := LOOPHOLE(qstr_label.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtInputDialogRaw.GetDouble6(arg1tmp, arg2tmp, arg3tmp);
+  END GetDouble6;
+
+PROCEDURE GetItem (    parent      : QWidget;
+                       title, label: TEXT;
+                       items       : QStringList;
+                       current     : INTEGER;
+                       editable    : BOOLEAN;
+                   VAR ok          : BOOLEAN;
+                       flags       : WindowTypes; ): TEXT =
+  VAR
+    ret       : ADDRESS;
+    qstr                   := NEW(QString);
+    ba        : QByteArray;
+    result    : TEXT;
+    arg1tmp                := LOOPHOLE(parent.cxxObj, ADDRESS);
+    qstr_title             := NEW(QString).initQString(title);
+    arg2tmp                := LOOPHOLE(qstr_title.cxxObj, ADDRESS);
+    qstr_label             := NEW(QString).initQString(label);
+    arg3tmp                := LOOPHOLE(qstr_label.cxxObj, ADDRESS);
+    arg4tmp                := LOOPHOLE(items.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtInputDialogRaw.GetItem(arg1tmp, arg2tmp, arg3tmp, arg4tmp,
+                                    current, editable, ok, ORD(flags));
+
+    qstr.cxxObj := ret;
+    ba := qstr.toLocal8Bit();
+    result := ba.data();
+
+    RETURN result;
+  END GetItem;
+
+PROCEDURE GetItem1 (    parent      : QWidget;
+                        title, label: TEXT;
+                        items       : QStringList;
+                        current     : INTEGER;
+                        editable    : BOOLEAN;
+                    VAR ok          : BOOLEAN;     ): TEXT =
+  VAR
+    ret       : ADDRESS;
+    qstr                   := NEW(QString);
+    ba        : QByteArray;
+    result    : TEXT;
+    arg1tmp                := LOOPHOLE(parent.cxxObj, ADDRESS);
+    qstr_title             := NEW(QString).initQString(title);
+    arg2tmp                := LOOPHOLE(qstr_title.cxxObj, ADDRESS);
+    qstr_label             := NEW(QString).initQString(label);
+    arg3tmp                := LOOPHOLE(qstr_label.cxxObj, ADDRESS);
+    arg4tmp                := LOOPHOLE(items.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtInputDialogRaw.GetItem1(
+             arg1tmp, arg2tmp, arg3tmp, arg4tmp, current, editable, ok);
+
+    qstr.cxxObj := ret;
+    ba := qstr.toLocal8Bit();
+    result := ba.data();
+
+    RETURN result;
+  END GetItem1;
+
+PROCEDURE GetItem2 (parent      : QWidget;
+                    title, label: TEXT;
+                    items       : QStringList;
+                    current     : INTEGER;
+                    editable    : BOOLEAN;     ): TEXT =
+  VAR
+    ret       : ADDRESS;
+    qstr                   := NEW(QString);
+    ba        : QByteArray;
+    result    : TEXT;
+    arg1tmp                := LOOPHOLE(parent.cxxObj, ADDRESS);
+    qstr_title             := NEW(QString).initQString(title);
+    arg2tmp                := LOOPHOLE(qstr_title.cxxObj, ADDRESS);
+    qstr_label             := NEW(QString).initQString(label);
+    arg3tmp                := LOOPHOLE(qstr_label.cxxObj, ADDRESS);
+    arg4tmp                := LOOPHOLE(items.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtInputDialogRaw.GetItem2(
+             arg1tmp, arg2tmp, arg3tmp, arg4tmp, current, editable);
+
+    qstr.cxxObj := ret;
+    ba := qstr.toLocal8Bit();
+    result := ba.data();
+
+    RETURN result;
+  END GetItem2;
+
+PROCEDURE GetItem3 (parent      : QWidget;
+                    title, label: TEXT;
+                    items       : QStringList;
+                    current     : INTEGER;     ): TEXT =
+  VAR
+    ret       : ADDRESS;
+    qstr                   := NEW(QString);
+    ba        : QByteArray;
+    result    : TEXT;
+    arg1tmp                := LOOPHOLE(parent.cxxObj, ADDRESS);
+    qstr_title             := NEW(QString).initQString(title);
+    arg2tmp                := LOOPHOLE(qstr_title.cxxObj, ADDRESS);
+    qstr_label             := NEW(QString).initQString(label);
+    arg3tmp                := LOOPHOLE(qstr_label.cxxObj, ADDRESS);
+    arg4tmp                := LOOPHOLE(items.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtInputDialogRaw.GetItem3(
+             arg1tmp, arg2tmp, arg3tmp, arg4tmp, current);
+
+    qstr.cxxObj := ret;
+    ba := qstr.toLocal8Bit();
+    result := ba.data();
+
+    RETURN result;
+  END GetItem3;
+
+PROCEDURE GetItem4
+  (parent: QWidget; title, label: TEXT; items: QStringList; ): TEXT =
+  VAR
+    ret       : ADDRESS;
+    qstr                   := NEW(QString);
+    ba        : QByteArray;
+    result    : TEXT;
+    arg1tmp                := LOOPHOLE(parent.cxxObj, ADDRESS);
+    qstr_title             := NEW(QString).initQString(title);
+    arg2tmp                := LOOPHOLE(qstr_title.cxxObj, ADDRESS);
+    qstr_label             := NEW(QString).initQString(label);
+    arg3tmp                := LOOPHOLE(qstr_label.cxxObj, ADDRESS);
+    arg4tmp                := LOOPHOLE(items.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtInputDialogRaw.GetItem4(arg1tmp, arg2tmp, arg3tmp, arg4tmp);
+
+    qstr.cxxObj := ret;
+    ba := qstr.toLocal8Bit();
+    result := ba.data();
+
+    RETURN result;
+  END GetItem4;
+
+PROCEDURE GetInteger (    parent                         : QWidget;
+                          title, label                   : TEXT;
+                          value, minValue, maxValue, step: INTEGER;
+                      VAR ok                             : BOOLEAN;
+                          flags                          : WindowTypes; ):
+  INTEGER =
+  VAR
+    arg1tmp    := LOOPHOLE(parent.cxxObj, ADDRESS);
+    qstr_title := NEW(QString).initQString(title);
+    arg2tmp    := LOOPHOLE(qstr_title.cxxObj, ADDRESS);
+    qstr_label := NEW(QString).initQString(label);
+    arg3tmp    := LOOPHOLE(qstr_label.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtInputDialogRaw.GetInteger(
+             arg1tmp, arg2tmp, arg3tmp, value, minValue, maxValue, step,
+             ok, ORD(flags));
+  END GetInteger;
+
+PROCEDURE GetInteger1 (    parent                         : QWidget;
+                           title, label                   : TEXT;
+                           value, minValue, maxValue, step: INTEGER;
+                       VAR ok                             : BOOLEAN; ):
+  INTEGER =
+  VAR
+    arg1tmp    := LOOPHOLE(parent.cxxObj, ADDRESS);
+    qstr_title := NEW(QString).initQString(title);
+    arg2tmp    := LOOPHOLE(qstr_title.cxxObj, ADDRESS);
+    qstr_label := NEW(QString).initQString(label);
+    arg3tmp    := LOOPHOLE(qstr_label.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtInputDialogRaw.GetInteger1(arg1tmp, arg2tmp, arg3tmp, value,
+                                        minValue, maxValue, step, ok);
+  END GetInteger1;
+
+PROCEDURE GetInteger2 (parent                         : QWidget;
+                       title, label                   : TEXT;
+                       value, minValue, maxValue, step: INTEGER; ):
+  INTEGER =
+  VAR
+    arg1tmp    := LOOPHOLE(parent.cxxObj, ADDRESS);
+    qstr_title := NEW(QString).initQString(title);
+    arg2tmp    := LOOPHOLE(qstr_title.cxxObj, ADDRESS);
+    qstr_label := NEW(QString).initQString(label);
+    arg3tmp    := LOOPHOLE(qstr_label.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtInputDialogRaw.GetInteger2(
+             arg1tmp, arg2tmp, arg3tmp, value, minValue, maxValue, step);
+  END GetInteger2;
+
+PROCEDURE GetInteger3 (parent                   : QWidget;
+                       title, label             : TEXT;
+                       value, minValue, maxValue: INTEGER; ): INTEGER =
+  VAR
+    arg1tmp    := LOOPHOLE(parent.cxxObj, ADDRESS);
+    qstr_title := NEW(QString).initQString(title);
+    arg2tmp    := LOOPHOLE(qstr_title.cxxObj, ADDRESS);
+    qstr_label := NEW(QString).initQString(label);
+    arg3tmp    := LOOPHOLE(qstr_label.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtInputDialogRaw.GetInteger3(
+             arg1tmp, arg2tmp, arg3tmp, value, minValue, maxValue);
+  END GetInteger3;
+
+PROCEDURE GetInteger4
+  (parent: QWidget; title, label: TEXT; value, minValue: INTEGER; ):
+  INTEGER =
+  VAR
+    arg1tmp    := LOOPHOLE(parent.cxxObj, ADDRESS);
+    qstr_title := NEW(QString).initQString(title);
+    arg2tmp    := LOOPHOLE(qstr_title.cxxObj, ADDRESS);
+    qstr_label := NEW(QString).initQString(label);
+    arg3tmp    := LOOPHOLE(qstr_label.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtInputDialogRaw.GetInteger4(
+             arg1tmp, arg2tmp, arg3tmp, value, minValue);
+  END GetInteger4;
+
+PROCEDURE GetInteger5
+  (parent: QWidget; title, label: TEXT; value: INTEGER; ): INTEGER =
+  VAR
+    arg1tmp    := LOOPHOLE(parent.cxxObj, ADDRESS);
+    qstr_title := NEW(QString).initQString(title);
+    arg2tmp    := LOOPHOLE(qstr_title.cxxObj, ADDRESS);
+    qstr_label := NEW(QString).initQString(label);
+    arg3tmp    := LOOPHOLE(qstr_label.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtInputDialogRaw.GetInteger5(arg1tmp, arg2tmp, arg3tmp, value);
+  END GetInteger5;
+
+PROCEDURE GetInteger6 (parent: QWidget; title, label: TEXT; ): INTEGER =
+  VAR
+    arg1tmp    := LOOPHOLE(parent.cxxObj, ADDRESS);
+    qstr_title := NEW(QString).initQString(title);
+    arg2tmp    := LOOPHOLE(qstr_title.cxxObj, ADDRESS);
+    qstr_label := NEW(QString).initQString(label);
+    arg3tmp    := LOOPHOLE(qstr_label.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtInputDialogRaw.GetInteger6(arg1tmp, arg2tmp, arg3tmp);
+  END GetInteger6;
+
+PROCEDURE QInputDialog_done (self: QInputDialog; result: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtInputDialogRaw.QInputDialog_done(selfAdr, result);
+  END QInputDialog_done;
+
+PROCEDURE Cleanup_QInputDialog
+  (<* UNUSED *> READONLY self: WeakRef.T; ref: REFANY) =
+  VAR obj: QInputDialog := ref;
+  BEGIN
+    Delete_QInputDialog(obj);
+  END Cleanup_QInputDialog;
+
+PROCEDURE Destroy_QInputDialog (self: QInputDialog) =
+  BEGIN
+    EVAL WeakRef.FromRef(self, Cleanup_QInputDialog);
+  END Destroy_QInputDialog;
 
 REVEAL
-QInputDialog =
-QInputDialogPublic BRANDED OBJECT
-OVERRIDES
-init_0 := New_QInputDialog0;
-init_1 := New_QInputDialog1;
-init_2 := New_QInputDialog2;
-setInputMode := QInputDialog_setInputMode;
-inputMode := QInputDialog_inputMode;
-setLabelText := QInputDialog_setLabelText;
-labelText := QInputDialog_labelText;
-setOption := QInputDialog_setOption;
-setOption1 := QInputDialog_setOption1;
-testOption := QInputDialog_testOption;
-setOptions := QInputDialog_setOptions;
-options := QInputDialog_options;
-setTextValue := QInputDialog_setTextValue;
-textValue := QInputDialog_textValue;
-setTextEchoMode := QInputDialog_setTextEchoMode;
-textEchoMode := QInputDialog_textEchoMode;
-setComboBoxEditable := QInputDialog_setComboBoxEditable;
-isComboBoxEditable := QInputDialog_isComboBoxEditable;
-setComboBoxItems := QInputDialog_setComboBoxItems;
-comboBoxItems := QInputDialog_comboBoxItems;
-setIntValue := QInputDialog_setIntValue;
-intValue := QInputDialog_intValue;
-setIntMinimum := QInputDialog_setIntMinimum;
-intMinimum := QInputDialog_intMinimum;
-setIntMaximum := QInputDialog_setIntMaximum;
-intMaximum := QInputDialog_intMaximum;
-setIntRange := QInputDialog_setIntRange;
-setIntStep := QInputDialog_setIntStep;
-intStep := QInputDialog_intStep;
-setDoubleValue := QInputDialog_setDoubleValue;
-doubleValue := QInputDialog_doubleValue;
-setDoubleMinimum := QInputDialog_setDoubleMinimum;
-doubleMinimum := QInputDialog_doubleMinimum;
-setDoubleMaximum := QInputDialog_setDoubleMaximum;
-doubleMaximum := QInputDialog_doubleMaximum;
-setDoubleRange := QInputDialog_setDoubleRange;
-setDoubleDecimals := QInputDialog_setDoubleDecimals;
-doubleDecimals := QInputDialog_doubleDecimals;
-setOkButtonText := QInputDialog_setOkButtonText;
-okButtonText := QInputDialog_okButtonText;
-setCancelButtonText := QInputDialog_setCancelButtonText;
-cancelButtonText := QInputDialog_cancelButtonText;
-open0_0 := QInputDialog_open0_0;
-open1 := QInputDialog_open1;
-minimumSizeHint := QInputDialog_minimumSizeHint;
-sizeHint := QInputDialog_sizeHint;
-setVisible := QInputDialog_setVisible;
-done := QInputDialog_done;
-destroyCxx := Destroy_QInputDialog;
-END;
+  QInputDialog = QInputDialogPublic BRANDED OBJECT
+                 OVERRIDES
+                   init_0              := New_QInputDialog0;
+                   init_1              := New_QInputDialog1;
+                   init_2              := New_QInputDialog2;
+                   setInputMode        := QInputDialog_setInputMode;
+                   inputMode           := QInputDialog_inputMode;
+                   setLabelText        := QInputDialog_setLabelText;
+                   labelText           := QInputDialog_labelText;
+                   setOption           := QInputDialog_setOption;
+                   setOption1          := QInputDialog_setOption1;
+                   testOption          := QInputDialog_testOption;
+                   setOptions          := QInputDialog_setOptions;
+                   options             := QInputDialog_options;
+                   setTextValue        := QInputDialog_setTextValue;
+                   textValue           := QInputDialog_textValue;
+                   setTextEchoMode     := QInputDialog_setTextEchoMode;
+                   textEchoMode        := QInputDialog_textEchoMode;
+                   setComboBoxEditable := QInputDialog_setComboBoxEditable;
+                   isComboBoxEditable  := QInputDialog_isComboBoxEditable;
+                   setComboBoxItems    := QInputDialog_setComboBoxItems;
+                   comboBoxItems       := QInputDialog_comboBoxItems;
+                   setIntValue         := QInputDialog_setIntValue;
+                   intValue            := QInputDialog_intValue;
+                   setIntMinimum       := QInputDialog_setIntMinimum;
+                   intMinimum          := QInputDialog_intMinimum;
+                   setIntMaximum       := QInputDialog_setIntMaximum;
+                   intMaximum          := QInputDialog_intMaximum;
+                   setIntRange         := QInputDialog_setIntRange;
+                   setIntStep          := QInputDialog_setIntStep;
+                   intStep             := QInputDialog_intStep;
+                   setDoubleValue      := QInputDialog_setDoubleValue;
+                   doubleValue         := QInputDialog_doubleValue;
+                   setDoubleMinimum    := QInputDialog_setDoubleMinimum;
+                   doubleMinimum       := QInputDialog_doubleMinimum;
+                   setDoubleMaximum    := QInputDialog_setDoubleMaximum;
+                   doubleMaximum       := QInputDialog_doubleMaximum;
+                   setDoubleRange      := QInputDialog_setDoubleRange;
+                   setDoubleDecimals   := QInputDialog_setDoubleDecimals;
+                   doubleDecimals      := QInputDialog_doubleDecimals;
+                   setOkButtonText     := QInputDialog_setOkButtonText;
+                   okButtonText        := QInputDialog_okButtonText;
+                   setCancelButtonText := QInputDialog_setCancelButtonText;
+                   cancelButtonText    := QInputDialog_cancelButtonText;
+                   open0_0             := QInputDialog_open0_0;
+                   open1               := QInputDialog_open1;
+                   minimumSizeHint     := QInputDialog_minimumSizeHint;
+                   sizeHint            := QInputDialog_sizeHint;
+                   setVisible          := QInputDialog_setVisible;
+                   done                := QInputDialog_done;
+                   destroyCxx          := Destroy_QInputDialog;
+                 END;
 
 
 BEGIN

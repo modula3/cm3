@@ -15,39 +15,30 @@ IMPORT Ctypes AS C;
 
 
 <* EXTERNAL New_QFontComboBox0 *>
-PROCEDURE New_QFontComboBox0 ( parent: ADDRESS;
-): QFontComboBox;
+PROCEDURE New_QFontComboBox0 (parent: ADDRESS; ): QFontComboBox;
 
 <* EXTERNAL New_QFontComboBox1 *>
 PROCEDURE New_QFontComboBox1 (): QFontComboBox;
 
 <* EXTERNAL Delete_QFontComboBox *>
-PROCEDURE Delete_QFontComboBox ( self: QFontComboBox;
-);
+PROCEDURE Delete_QFontComboBox (self: QFontComboBox; );
 
 <* EXTERNAL QFontComboBox_setFontFilters *>
-PROCEDURE QFontComboBox_setFontFilters ( self: QFontComboBox;
-filters: C.int;
-);
+PROCEDURE QFontComboBox_setFontFilters
+  (self: QFontComboBox; filters: C.int; );
 
 <* EXTERNAL QFontComboBox_fontFilters *>
-PROCEDURE QFontComboBox_fontFilters ( self: QFontComboBox;
-): C.int;
+PROCEDURE QFontComboBox_fontFilters (self: QFontComboBox; ): C.int;
 
 <* EXTERNAL QFontComboBox_currentFont *>
-PROCEDURE QFontComboBox_currentFont ( self: QFontComboBox;
-): ADDRESS;
+PROCEDURE QFontComboBox_currentFont (self: QFontComboBox; ): ADDRESS;
 
 <* EXTERNAL QFontComboBox_sizeHint *>
-PROCEDURE QFontComboBox_sizeHint ( self: QFontComboBox;
-): ADDRESS;
+PROCEDURE QFontComboBox_sizeHint (self: QFontComboBox; ): ADDRESS;
 
 <* EXTERNAL QFontComboBox_setCurrentFont *>
-PROCEDURE QFontComboBox_setCurrentFont ( self: QFontComboBox;
- f: ADDRESS;
-);
+PROCEDURE QFontComboBox_setCurrentFont (self: QFontComboBox; f: ADDRESS; );
 
-TYPE
-QFontComboBox = ADDRESS;
+TYPE QFontComboBox = ADDRESS;
 
 END QtFontComboBoxRaw.

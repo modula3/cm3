@@ -18,228 +18,198 @@ FROM QtRect IMPORT QRect;
 
 IMPORT WeakRef;
 
-PROCEDURE New_QFrame0 (self:QFrame; parent: QWidget;
-f: WindowTypes;
-): QFrame =
-VAR
-result : ADDRESS;
-arg1tmp :=  LOOPHOLE(parent.cxxObj,ADDRESS);
-BEGIN
-result := QtFrameRaw.New_QFrame0(arg1tmp, ORD(f));
+PROCEDURE New_QFrame0 (self: QFrame; parent: QWidget; f: WindowTypes; ):
+  QFrame =
+  VAR
+    result : ADDRESS;
+    arg1tmp          := LOOPHOLE(parent.cxxObj, ADDRESS);
+  BEGIN
+    result := QtFrameRaw.New_QFrame0(arg1tmp, ORD(f));
 
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QFrame);
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QFrame);
 
-RETURN self;
-END New_QFrame0;
+    RETURN self;
+  END New_QFrame0;
 
-PROCEDURE New_QFrame1 (self:QFrame; parent: QWidget;
-): QFrame =
-VAR
-result : ADDRESS;
-arg1tmp :=  LOOPHOLE(parent.cxxObj,ADDRESS);
-BEGIN
-result := QtFrameRaw.New_QFrame1(arg1tmp);
+PROCEDURE New_QFrame1 (self: QFrame; parent: QWidget; ): QFrame =
+  VAR
+    result : ADDRESS;
+    arg1tmp          := LOOPHOLE(parent.cxxObj, ADDRESS);
+  BEGIN
+    result := QtFrameRaw.New_QFrame1(arg1tmp);
 
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QFrame);
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QFrame);
 
-RETURN self;
-END New_QFrame1;
+    RETURN self;
+  END New_QFrame1;
 
-PROCEDURE New_QFrame2 (self:QFrame;): QFrame =
-VAR
-result : ADDRESS;
-BEGIN
-result := QtFrameRaw.New_QFrame2();
+PROCEDURE New_QFrame2 (self: QFrame; ): QFrame =
+  VAR result: ADDRESS;
+  BEGIN
+    result := QtFrameRaw.New_QFrame2();
 
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QFrame);
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QFrame);
 
-RETURN self;
-END New_QFrame2;
+    RETURN self;
+  END New_QFrame2;
 
-PROCEDURE Delete_QFrame ( self: QFrame;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtFrameRaw.Delete_QFrame(selfAdr);
-END Delete_QFrame;
+PROCEDURE Delete_QFrame (self: QFrame; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtFrameRaw.Delete_QFrame(selfAdr);
+  END Delete_QFrame;
 
-PROCEDURE QFrame_frameStyle ( self: QFrame;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtFrameRaw.QFrame_frameStyle(selfAdr);
-END QFrame_frameStyle;
+PROCEDURE QFrame_frameStyle (self: QFrame; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtFrameRaw.QFrame_frameStyle(selfAdr);
+  END QFrame_frameStyle;
 
-PROCEDURE QFrame_setFrameStyle ( self: QFrame;
-arg2: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtFrameRaw.QFrame_setFrameStyle(selfAdr, arg2);
-END QFrame_setFrameStyle;
+PROCEDURE QFrame_setFrameStyle (self: QFrame; arg2: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtFrameRaw.QFrame_setFrameStyle(selfAdr, arg2);
+  END QFrame_setFrameStyle;
 
-PROCEDURE QFrame_frameWidth ( self: QFrame;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtFrameRaw.QFrame_frameWidth(selfAdr);
-END QFrame_frameWidth;
+PROCEDURE QFrame_frameWidth (self: QFrame; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtFrameRaw.QFrame_frameWidth(selfAdr);
+  END QFrame_frameWidth;
 
-PROCEDURE QFrame_sizeHint ( self: QFrame;
-): QSize =
-VAR
-ret:ADDRESS; result : QSize;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtFrameRaw.QFrame_sizeHint(selfAdr);
+PROCEDURE QFrame_sizeHint (self: QFrame; ): QSize =
+  VAR
+    ret    : ADDRESS;
+    result : QSize;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtFrameRaw.QFrame_sizeHint(selfAdr);
 
-  result := NEW(QSize);
-  result.cxxObj := ret;
-  result.destroyCxx();
+    result := NEW(QSize);
+    result.cxxObj := ret;
+    result.destroyCxx();
 
-RETURN result;
-END QFrame_sizeHint;
+    RETURN result;
+  END QFrame_sizeHint;
 
-PROCEDURE QFrame_frameShape ( self: QFrame;
-): Shape =
-VAR
-ret:INTEGER; result : Shape;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtFrameRaw.QFrame_frameShape(selfAdr);
-result := VAL(ret,Shape);  
-RETURN result;
-END QFrame_frameShape;
+PROCEDURE QFrame_frameShape (self: QFrame; ): Shape =
+  VAR
+    ret    : INTEGER;
+    result : Shape;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtFrameRaw.QFrame_frameShape(selfAdr);
+    result := VAL(ret, Shape);
+    RETURN result;
+  END QFrame_frameShape;
 
-PROCEDURE QFrame_setFrameShape ( self: QFrame;
-arg2: Shape;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtFrameRaw.QFrame_setFrameShape(selfAdr, ORD(arg2));
-END QFrame_setFrameShape;
+PROCEDURE QFrame_setFrameShape (self: QFrame; arg2: Shape; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtFrameRaw.QFrame_setFrameShape(selfAdr, ORD(arg2));
+  END QFrame_setFrameShape;
 
-PROCEDURE QFrame_frameShadow ( self: QFrame;
-): Shadow =
-VAR
-ret:INTEGER; result : Shadow;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtFrameRaw.QFrame_frameShadow(selfAdr);
-result := VAL(ret,Shadow);  
-RETURN result;
-END QFrame_frameShadow;
+PROCEDURE QFrame_frameShadow (self: QFrame; ): Shadow =
+  VAR
+    ret    : INTEGER;
+    result : Shadow;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtFrameRaw.QFrame_frameShadow(selfAdr);
+    result := VAL(ret, Shadow);
+    RETURN result;
+  END QFrame_frameShadow;
 
-PROCEDURE QFrame_setFrameShadow ( self: QFrame;
-arg2: Shadow;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtFrameRaw.QFrame_setFrameShadow(selfAdr, ORD(arg2));
-END QFrame_setFrameShadow;
+PROCEDURE QFrame_setFrameShadow (self: QFrame; arg2: Shadow; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtFrameRaw.QFrame_setFrameShadow(selfAdr, ORD(arg2));
+  END QFrame_setFrameShadow;
 
-PROCEDURE QFrame_lineWidth ( self: QFrame;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtFrameRaw.QFrame_lineWidth(selfAdr);
-END QFrame_lineWidth;
+PROCEDURE QFrame_lineWidth (self: QFrame; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtFrameRaw.QFrame_lineWidth(selfAdr);
+  END QFrame_lineWidth;
 
-PROCEDURE QFrame_setLineWidth ( self: QFrame;
-arg2: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtFrameRaw.QFrame_setLineWidth(selfAdr, arg2);
-END QFrame_setLineWidth;
+PROCEDURE QFrame_setLineWidth (self: QFrame; arg2: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtFrameRaw.QFrame_setLineWidth(selfAdr, arg2);
+  END QFrame_setLineWidth;
 
-PROCEDURE QFrame_midLineWidth ( self: QFrame;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtFrameRaw.QFrame_midLineWidth(selfAdr);
-END QFrame_midLineWidth;
+PROCEDURE QFrame_midLineWidth (self: QFrame; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtFrameRaw.QFrame_midLineWidth(selfAdr);
+  END QFrame_midLineWidth;
 
-PROCEDURE QFrame_setMidLineWidth ( self: QFrame;
-arg2: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtFrameRaw.QFrame_setMidLineWidth(selfAdr, arg2);
-END QFrame_setMidLineWidth;
+PROCEDURE QFrame_setMidLineWidth (self: QFrame; arg2: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtFrameRaw.QFrame_setMidLineWidth(selfAdr, arg2);
+  END QFrame_setMidLineWidth;
 
-PROCEDURE QFrame_frameRect ( self: QFrame;
-): QRect =
-VAR
-ret:ADDRESS; result : QRect;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtFrameRaw.QFrame_frameRect(selfAdr);
+PROCEDURE QFrame_frameRect (self: QFrame; ): QRect =
+  VAR
+    ret    : ADDRESS;
+    result : QRect;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtFrameRaw.QFrame_frameRect(selfAdr);
 
-  result := NEW(QRect);
-  result.cxxObj := ret;
-  result.destroyCxx();
+    result := NEW(QRect);
+    result.cxxObj := ret;
+    result.destroyCxx();
 
-RETURN result;
-END QFrame_frameRect;
+    RETURN result;
+  END QFrame_frameRect;
 
-PROCEDURE QFrame_setFrameRect ( self: QFrame;
- arg2: QRect;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(arg2.cxxObj,ADDRESS);
-BEGIN
-QtFrameRaw.QFrame_setFrameRect(selfAdr, arg2tmp);
-END QFrame_setFrameRect;
+PROCEDURE QFrame_setFrameRect (self: QFrame; arg2: QRect; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(arg2.cxxObj, ADDRESS);
+  BEGIN
+    QtFrameRaw.QFrame_setFrameRect(selfAdr, arg2tmp);
+  END QFrame_setFrameRect;
 
-PROCEDURE Cleanup_QFrame(<*UNUSED*>READONLY self: WeakRef.T; ref: REFANY) =
-VAR obj : QFrame := ref;
-BEGIN
-  Delete_QFrame(obj);
- END Cleanup_QFrame;
+PROCEDURE Cleanup_QFrame
+  (<* UNUSED *> READONLY self: WeakRef.T; ref: REFANY) =
+  VAR obj: QFrame := ref;
+  BEGIN
+    Delete_QFrame(obj);
+  END Cleanup_QFrame;
 
-PROCEDURE Destroy_QFrame(self : QFrame) =
-BEGIN
-  EVAL WeakRef.FromRef(self,Cleanup_QFrame);
-END Destroy_QFrame;
+PROCEDURE Destroy_QFrame (self: QFrame) =
+  BEGIN
+    EVAL WeakRef.FromRef(self, Cleanup_QFrame);
+  END Destroy_QFrame;
 
 REVEAL
-QFrame =
-QFramePublic BRANDED OBJECT
-OVERRIDES
-init_0 := New_QFrame0;
-init_1 := New_QFrame1;
-init_2 := New_QFrame2;
-frameStyle := QFrame_frameStyle;
-setFrameStyle := QFrame_setFrameStyle;
-frameWidth := QFrame_frameWidth;
-sizeHint := QFrame_sizeHint;
-frameShape := QFrame_frameShape;
-setFrameShape := QFrame_setFrameShape;
-frameShadow := QFrame_frameShadow;
-setFrameShadow := QFrame_setFrameShadow;
-lineWidth := QFrame_lineWidth;
-setLineWidth := QFrame_setLineWidth;
-midLineWidth := QFrame_midLineWidth;
-setMidLineWidth := QFrame_setMidLineWidth;
-frameRect := QFrame_frameRect;
-setFrameRect := QFrame_setFrameRect;
-destroyCxx := Destroy_QFrame;
-END;
+  QFrame = QFramePublic BRANDED OBJECT
+           OVERRIDES
+             init_0          := New_QFrame0;
+             init_1          := New_QFrame1;
+             init_2          := New_QFrame2;
+             frameStyle      := QFrame_frameStyle;
+             setFrameStyle   := QFrame_setFrameStyle;
+             frameWidth      := QFrame_frameWidth;
+             sizeHint        := QFrame_sizeHint;
+             frameShape      := QFrame_frameShape;
+             setFrameShape   := QFrame_setFrameShape;
+             frameShadow     := QFrame_frameShadow;
+             setFrameShadow  := QFrame_setFrameShadow;
+             lineWidth       := QFrame_lineWidth;
+             setLineWidth    := QFrame_setLineWidth;
+             midLineWidth    := QFrame_midLineWidth;
+             setMidLineWidth := QFrame_setMidLineWidth;
+             frameRect       := QFrame_frameRect;
+             setFrameRect    := QFrame_setFrameRect;
+             destroyCxx      := Destroy_QFrame;
+           END;
 
 
 BEGIN

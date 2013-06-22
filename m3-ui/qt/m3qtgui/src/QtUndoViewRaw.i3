@@ -14,69 +14,50 @@ INTERFACE QtUndoViewRaw;
 
 
 <* EXTERNAL New_QUndoView0 *>
-PROCEDURE New_QUndoView0 ( parent: ADDRESS;
-): QUndoView;
+PROCEDURE New_QUndoView0 (parent: ADDRESS; ): QUndoView;
 
 <* EXTERNAL New_QUndoView1 *>
 PROCEDURE New_QUndoView1 (): QUndoView;
 
 <* EXTERNAL New_QUndoView2 *>
-PROCEDURE New_QUndoView2 ( stack, parent: ADDRESS;
-): QUndoView;
+PROCEDURE New_QUndoView2 (stack, parent: ADDRESS; ): QUndoView;
 
 <* EXTERNAL New_QUndoView3 *>
-PROCEDURE New_QUndoView3 ( stack: ADDRESS;
-): QUndoView;
+PROCEDURE New_QUndoView3 (stack: ADDRESS; ): QUndoView;
 
 <* EXTERNAL New_QUndoView4 *>
-PROCEDURE New_QUndoView4 ( group, parent: ADDRESS;
-): QUndoView;
+PROCEDURE New_QUndoView4 (group, parent: ADDRESS; ): QUndoView;
 
 <* EXTERNAL New_QUndoView5 *>
-PROCEDURE New_QUndoView5 ( group: ADDRESS;
-): QUndoView;
+PROCEDURE New_QUndoView5 (group: ADDRESS; ): QUndoView;
 
 <* EXTERNAL Delete_QUndoView *>
-PROCEDURE Delete_QUndoView ( self: QUndoView;
-);
+PROCEDURE Delete_QUndoView (self: QUndoView; );
 
 <* EXTERNAL QUndoView_stack *>
-PROCEDURE QUndoView_stack ( self: QUndoView;
-): ADDRESS;
+PROCEDURE QUndoView_stack (self: QUndoView; ): ADDRESS;
 
 <* EXTERNAL QUndoView_group *>
-PROCEDURE QUndoView_group ( self: QUndoView;
-): ADDRESS;
+PROCEDURE QUndoView_group (self: QUndoView; ): ADDRESS;
 
 <* EXTERNAL QUndoView_setEmptyLabel *>
-PROCEDURE QUndoView_setEmptyLabel ( self: QUndoView;
- label: ADDRESS;
-);
+PROCEDURE QUndoView_setEmptyLabel (self: QUndoView; label: ADDRESS; );
 
 <* EXTERNAL QUndoView_emptyLabel *>
-PROCEDURE QUndoView_emptyLabel ( self: QUndoView;
-): ADDRESS;
+PROCEDURE QUndoView_emptyLabel (self: QUndoView; ): ADDRESS;
 
 <* EXTERNAL QUndoView_setCleanIcon *>
-PROCEDURE QUndoView_setCleanIcon ( self: QUndoView;
- icon: ADDRESS;
-);
+PROCEDURE QUndoView_setCleanIcon (self: QUndoView; icon: ADDRESS; );
 
 <* EXTERNAL QUndoView_cleanIcon *>
-PROCEDURE QUndoView_cleanIcon ( self: QUndoView;
-): ADDRESS;
+PROCEDURE QUndoView_cleanIcon (self: QUndoView; ): ADDRESS;
 
 <* EXTERNAL QUndoView_setStack *>
-PROCEDURE QUndoView_setStack ( self: QUndoView;
- stack: ADDRESS;
-);
+PROCEDURE QUndoView_setStack (self: QUndoView; stack: ADDRESS; );
 
 <* EXTERNAL QUndoView_setGroup *>
-PROCEDURE QUndoView_setGroup ( self: QUndoView;
- group: ADDRESS;
-);
+PROCEDURE QUndoView_setGroup (self: QUndoView; group: ADDRESS; );
 
-TYPE
-QUndoView = ADDRESS;
+TYPE QUndoView = ADDRESS;
 
 END QtUndoViewRaw.

@@ -14,204 +14,154 @@ IMPORT Ctypes AS C;
 
 
 
-<* EXTERNAL *> VAR QLAYOUTSIZE_MAX: C.int;
+<* EXTERNAL *>
+VAR
+  QLAYOUTSIZE_MAX: C.int;
 
 <* EXTERNAL Delete_QLayoutItem *>
-PROCEDURE Delete_QLayoutItem ( self: QLayoutItem;
-);
+PROCEDURE Delete_QLayoutItem (self: QLayoutItem; );
 
 <* EXTERNAL QLayoutItem_hasHeightForWidth *>
-PROCEDURE QLayoutItem_hasHeightForWidth ( self: QLayoutItem;
-): BOOLEAN;
+PROCEDURE QLayoutItem_hasHeightForWidth (self: QLayoutItem; ): BOOLEAN;
 
 <* EXTERNAL QLayoutItem_heightForWidth *>
-PROCEDURE QLayoutItem_heightForWidth ( self: QLayoutItem;
-arg2: C.int;
-): C.int;
+PROCEDURE QLayoutItem_heightForWidth (self: QLayoutItem; arg2: C.int; ):
+  C.int;
 
 <* EXTERNAL QLayoutItem_minimumHeightForWidth *>
-PROCEDURE QLayoutItem_minimumHeightForWidth ( self: QLayoutItem;
-arg2: C.int;
-): C.int;
+PROCEDURE QLayoutItem_minimumHeightForWidth
+  (self: QLayoutItem; arg2: C.int; ): C.int;
 
 <* EXTERNAL QLayoutItem_invalidate *>
-PROCEDURE QLayoutItem_invalidate ( self: QLayoutItem;
-);
+PROCEDURE QLayoutItem_invalidate (self: QLayoutItem; );
 
 <* EXTERNAL QLayoutItem_widget *>
-PROCEDURE QLayoutItem_widget ( self: QLayoutItem;
-): ADDRESS;
+PROCEDURE QLayoutItem_widget (self: QLayoutItem; ): ADDRESS;
 
 <* EXTERNAL QLayoutItem_layout *>
-PROCEDURE QLayoutItem_layout ( self: QLayoutItem;
-): ADDRESS;
+PROCEDURE QLayoutItem_layout (self: QLayoutItem; ): ADDRESS;
 
 <* EXTERNAL QLayoutItem_spacerItem *>
-PROCEDURE QLayoutItem_spacerItem ( self: QLayoutItem;
-): QSpacerItem;
+PROCEDURE QLayoutItem_spacerItem (self: QLayoutItem; ): QSpacerItem;
 
 <* EXTERNAL QLayoutItem_alignment *>
-PROCEDURE QLayoutItem_alignment ( self: QLayoutItem;
-): C.int;
+PROCEDURE QLayoutItem_alignment (self: QLayoutItem; ): C.int;
 
 <* EXTERNAL QLayoutItem_setAlignment *>
-PROCEDURE QLayoutItem_setAlignment ( self: QLayoutItem;
-a: C.int;
-);
+PROCEDURE QLayoutItem_setAlignment (self: QLayoutItem; a: C.int; );
 
 <* EXTERNAL QLayoutItem_controlTypes *>
-PROCEDURE QLayoutItem_controlTypes ( self: QLayoutItem;
-): C.int;
+PROCEDURE QLayoutItem_controlTypes (self: QLayoutItem; ): C.int;
 
-TYPE
-QLayoutItem <: ADDRESS;
+TYPE QLayoutItem <: ADDRESS;
 
 <* EXTERNAL New_QSpacerItem0 *>
-PROCEDURE New_QSpacerItem0 (w, h, hData, vData: C.int;
-): QSpacerItem;
+PROCEDURE New_QSpacerItem0 (w, h, hData, vData: C.int; ): QSpacerItem;
 
 <* EXTERNAL New_QSpacerItem1 *>
-PROCEDURE New_QSpacerItem1 (w, h, hData: C.int;
-): QSpacerItem;
+PROCEDURE New_QSpacerItem1 (w, h, hData: C.int; ): QSpacerItem;
 
 <* EXTERNAL New_QSpacerItem2 *>
-PROCEDURE New_QSpacerItem2 (w, h: C.int;
-): QSpacerItem;
+PROCEDURE New_QSpacerItem2 (w, h: C.int; ): QSpacerItem;
 
 <* EXTERNAL QSpacerItem_changeSize *>
-PROCEDURE QSpacerItem_changeSize ( self: QSpacerItem;
-w, h, hData, vData: C.int;
-);
+PROCEDURE QSpacerItem_changeSize
+  (self: QSpacerItem; w, h, hData, vData: C.int; );
 
 <* EXTERNAL QSpacerItem_changeSize1 *>
-PROCEDURE QSpacerItem_changeSize1 ( self: QSpacerItem;
-w, h, hData: C.int;
-);
+PROCEDURE QSpacerItem_changeSize1
+  (self: QSpacerItem; w, h, hData: C.int; );
 
 <* EXTERNAL QSpacerItem_changeSize2 *>
-PROCEDURE QSpacerItem_changeSize2 ( self: QSpacerItem;
-w, h: C.int;
-);
+PROCEDURE QSpacerItem_changeSize2 (self: QSpacerItem; w, h: C.int; );
 
 <* EXTERNAL QSpacerItem_sizeHint *>
-PROCEDURE QSpacerItem_sizeHint ( self: QSpacerItem;
-): ADDRESS;
+PROCEDURE QSpacerItem_sizeHint (self: QSpacerItem; ): ADDRESS;
 
 <* EXTERNAL QSpacerItem_minimumSize *>
-PROCEDURE QSpacerItem_minimumSize ( self: QSpacerItem;
-): ADDRESS;
+PROCEDURE QSpacerItem_minimumSize (self: QSpacerItem; ): ADDRESS;
 
 <* EXTERNAL QSpacerItem_maximumSize *>
-PROCEDURE QSpacerItem_maximumSize ( self: QSpacerItem;
-): ADDRESS;
+PROCEDURE QSpacerItem_maximumSize (self: QSpacerItem; ): ADDRESS;
 
 <* EXTERNAL QSpacerItem_expandingDirections *>
-PROCEDURE QSpacerItem_expandingDirections ( self: QSpacerItem;
-): C.int;
+PROCEDURE QSpacerItem_expandingDirections (self: QSpacerItem; ): C.int;
 
 <* EXTERNAL QSpacerItem_isEmpty *>
-PROCEDURE QSpacerItem_isEmpty ( self: QSpacerItem;
-): BOOLEAN;
+PROCEDURE QSpacerItem_isEmpty (self: QSpacerItem; ): BOOLEAN;
 
 <* EXTERNAL QSpacerItem_setGeometry *>
-PROCEDURE QSpacerItem_setGeometry ( self: QSpacerItem;
- arg2: ADDRESS;
-);
+PROCEDURE QSpacerItem_setGeometry (self: QSpacerItem; arg2: ADDRESS; );
 
 <* EXTERNAL QSpacerItem_geometry *>
-PROCEDURE QSpacerItem_geometry ( self: QSpacerItem;
-): ADDRESS;
+PROCEDURE QSpacerItem_geometry (self: QSpacerItem; ): ADDRESS;
 
 <* EXTERNAL QSpacerItem_spacerItem *>
-PROCEDURE QSpacerItem_spacerItem ( self: QSpacerItem;
-): QSpacerItem;
+PROCEDURE QSpacerItem_spacerItem (self: QSpacerItem; ): QSpacerItem;
 
 <* EXTERNAL Delete_QSpacerItem *>
-PROCEDURE Delete_QSpacerItem ( self: QSpacerItem;
-);
+PROCEDURE Delete_QSpacerItem (self: QSpacerItem; );
 
-TYPE
-QSpacerItem = ADDRESS;
+TYPE QSpacerItem = ADDRESS;
 
 <* EXTERNAL New_QWidgetItem0 *>
-PROCEDURE New_QWidgetItem0 ( w: ADDRESS;
-): QWidgetItem;
+PROCEDURE New_QWidgetItem0 (w: ADDRESS; ): QWidgetItem;
 
 <* EXTERNAL QWidgetItem_sizeHint *>
-PROCEDURE QWidgetItem_sizeHint ( self: QWidgetItem;
-): ADDRESS;
+PROCEDURE QWidgetItem_sizeHint (self: QWidgetItem; ): ADDRESS;
 
 <* EXTERNAL QWidgetItem_minimumSize *>
-PROCEDURE QWidgetItem_minimumSize ( self: QWidgetItem;
-): ADDRESS;
+PROCEDURE QWidgetItem_minimumSize (self: QWidgetItem; ): ADDRESS;
 
 <* EXTERNAL QWidgetItem_maximumSize *>
-PROCEDURE QWidgetItem_maximumSize ( self: QWidgetItem;
-): ADDRESS;
+PROCEDURE QWidgetItem_maximumSize (self: QWidgetItem; ): ADDRESS;
 
 <* EXTERNAL QWidgetItem_expandingDirections *>
-PROCEDURE QWidgetItem_expandingDirections ( self: QWidgetItem;
-): C.int;
+PROCEDURE QWidgetItem_expandingDirections (self: QWidgetItem; ): C.int;
 
 <* EXTERNAL QWidgetItem_isEmpty *>
-PROCEDURE QWidgetItem_isEmpty ( self: QWidgetItem;
-): BOOLEAN;
+PROCEDURE QWidgetItem_isEmpty (self: QWidgetItem; ): BOOLEAN;
 
 <* EXTERNAL QWidgetItem_setGeometry *>
-PROCEDURE QWidgetItem_setGeometry ( self: QWidgetItem;
- arg2: ADDRESS;
-);
+PROCEDURE QWidgetItem_setGeometry (self: QWidgetItem; arg2: ADDRESS; );
 
 <* EXTERNAL QWidgetItem_geometry *>
-PROCEDURE QWidgetItem_geometry ( self: QWidgetItem;
-): ADDRESS;
+PROCEDURE QWidgetItem_geometry (self: QWidgetItem; ): ADDRESS;
 
 <* EXTERNAL QWidgetItem_widget *>
-PROCEDURE QWidgetItem_widget ( self: QWidgetItem;
-): ADDRESS;
+PROCEDURE QWidgetItem_widget (self: QWidgetItem; ): ADDRESS;
 
 <* EXTERNAL QWidgetItem_hasHeightForWidth *>
-PROCEDURE QWidgetItem_hasHeightForWidth ( self: QWidgetItem;
-): BOOLEAN;
+PROCEDURE QWidgetItem_hasHeightForWidth (self: QWidgetItem; ): BOOLEAN;
 
 <* EXTERNAL QWidgetItem_heightForWidth *>
-PROCEDURE QWidgetItem_heightForWidth ( self: QWidgetItem;
-arg2: C.int;
-): C.int;
+PROCEDURE QWidgetItem_heightForWidth (self: QWidgetItem; arg2: C.int; ):
+  C.int;
 
 <* EXTERNAL Delete_QWidgetItem *>
-PROCEDURE Delete_QWidgetItem ( self: QWidgetItem;
-);
+PROCEDURE Delete_QWidgetItem (self: QWidgetItem; );
 
-TYPE
-QWidgetItem = ADDRESS;
+TYPE QWidgetItem = ADDRESS;
 
 <* EXTERNAL New_QWidgetItemV20 *>
-PROCEDURE New_QWidgetItemV20 ( widget: ADDRESS;
-): QWidgetItemV2;
+PROCEDURE New_QWidgetItemV20 (widget: ADDRESS; ): QWidgetItemV2;
 
 <* EXTERNAL Delete_QWidgetItemV2 *>
-PROCEDURE Delete_QWidgetItemV2 ( self: QWidgetItemV2;
-);
+PROCEDURE Delete_QWidgetItemV2 (self: QWidgetItemV2; );
 
 <* EXTERNAL QWidgetItemV2_sizeHint *>
-PROCEDURE QWidgetItemV2_sizeHint ( self: QWidgetItemV2;
-): ADDRESS;
+PROCEDURE QWidgetItemV2_sizeHint (self: QWidgetItemV2; ): ADDRESS;
 
 <* EXTERNAL QWidgetItemV2_minimumSize *>
-PROCEDURE QWidgetItemV2_minimumSize ( self: QWidgetItemV2;
-): ADDRESS;
+PROCEDURE QWidgetItemV2_minimumSize (self: QWidgetItemV2; ): ADDRESS;
 
 <* EXTERNAL QWidgetItemV2_maximumSize *>
-PROCEDURE QWidgetItemV2_maximumSize ( self: QWidgetItemV2;
-): ADDRESS;
+PROCEDURE QWidgetItemV2_maximumSize (self: QWidgetItemV2; ): ADDRESS;
 
 <* EXTERNAL QWidgetItemV2_heightForWidth *>
-PROCEDURE QWidgetItemV2_heightForWidth ( self: QWidgetItemV2;
-width: C.int;
-): C.int;
+PROCEDURE QWidgetItemV2_heightForWidth
+  (self: QWidgetItemV2; width: C.int; ): C.int;
 
-TYPE
-QWidgetItemV2 = ADDRESS;
+TYPE QWidgetItemV2 = ADDRESS;
 
 END QtLayoutItemRaw.

@@ -9,104 +9,84 @@
 INTERFACE QtLayoutItem;
 
 FROM QtSize IMPORT QSize;
-FROM QtSizePolicy IMPORT Policy,ControlTypes;
+FROM QtSizePolicy IMPORT Policy, ControlTypes;
 FROM QtWidget IMPORT QWidget;
 FROM QtRect IMPORT QRect;
-FROM QtNamespace IMPORT AlignmentFlag,Orientations;
+FROM QtNamespace IMPORT AlignmentFlag, Orientations;
+
+
+TYPE T = QLayoutItem;
 
 
 TYPE
-  T = QLayoutItem;
+  QLayoutItem <: QLayoutItemPublic;
+  QLayoutItemPublic =
+    BRANDED OBJECT
+      cxxObj: ADDRESS;
+    METHODS
+      hasHeightForWidth     (): BOOLEAN; (* virtual *)
+      heightForWidth        (arg1: INTEGER; ): INTEGER; (* virtual *)
+      minimumHeightForWidth (arg1: INTEGER; ): INTEGER; (* virtual *)
+      invalidate            ();  (* virtual *)
+      widget                (): QWidget; (* virtual *)
+      layout                (): REFANY; (* virtual *)
+      spacerItem            (): QSpacerItem; (* virtual *)
+      alignment             (): AlignmentFlag;
+      setAlignment          (a: AlignmentFlag; );
+      controlTypes          (): ControlTypes;
+      destroyCxx            ();
+    END;
 
+  QSpacerItem <: QSpacerItemPublic;
+  QSpacerItemPublic =
+    QLayoutItem BRANDED OBJECT
+    METHODS
+      init_0      (w, h: INTEGER; hData, vData: Policy; ): QSpacerItem;
+      init_1      (w, h: INTEGER; hData: Policy; ): QSpacerItem;
+      init_2      (w, h: INTEGER; ): QSpacerItem;
+      changeSize  (w, h: INTEGER; hData, vData: Policy; );
+      changeSize1 (w, h: INTEGER; hData: Policy; );
+      changeSize2 (w, h: INTEGER; );
+      sizeHint    (): QSize;     (* virtual *)
+      minimumSize (): QSize;     (* virtual *)
+      maximumSize (): QSize;     (* virtual *)
+      expandingDirections (): Orientations; (* virtual *)
+      isEmpty             (): BOOLEAN; (* virtual *)
+      setGeometry         (arg1: QRect; ); (* virtual *)
+      geometry            (): QRect; (* virtual *)
+      spacerItem          (): QSpacerItem; (* virtual *)
+      destroyCxx          ();
+    END;
 
-TYPE
-QLayoutItem <: QLayoutItemPublic;
-QLayoutItemPublic =
- BRANDED OBJECT
-cxxObj:ADDRESS;
-METHODS
-hasHeightForWidth(): BOOLEAN;  (*  virtual *)
-heightForWidth(arg1: INTEGER;
-): INTEGER;  (*  virtual *)
-minimumHeightForWidth(arg1: INTEGER;
-): INTEGER;  (*  virtual *)
-invalidate();  (*  virtual *)
-widget(): QWidget;  (*  virtual *)
-layout(): REFANY;  (*  virtual *)
-spacerItem(): QSpacerItem;  (*  virtual *)
-alignment(): AlignmentFlag;
-setAlignment(a: AlignmentFlag;
-);
-controlTypes(): ControlTypes;
-destroyCxx();
-END;
+  QWidgetItem <: QWidgetItemPublic;
+  QWidgetItemPublic =
+    QLayoutItem BRANDED OBJECT
+    METHODS
+      init_0              (w: QWidget; ): QWidgetItem;
+      sizeHint            (): QSize; (* virtual *)
+      minimumSize         (): QSize; (* virtual *)
+      maximumSize         (): QSize; (* virtual *)
+      expandingDirections (): Orientations; (* virtual *)
+      isEmpty             (): BOOLEAN; (* virtual *)
+      setGeometry         (arg1: QRect; ); (* virtual *)
+      geometry            (): QRect; (* virtual *)
+      widget              (): QWidget; (* virtual *)
+      hasHeightForWidth   (): BOOLEAN; (* virtual *)
+      heightForWidth      (arg1: INTEGER; ): INTEGER; (* virtual *)
+      destroyCxx          ();
+    END;
 
-QSpacerItem <: QSpacerItemPublic;
-QSpacerItemPublic =
-QLayoutItem BRANDED OBJECT
-METHODS
-init_0 (w, h: INTEGER;
-hData, vData: Policy;
-) : QSpacerItem;
-init_1 (w, h: INTEGER;
-hData: Policy;
-) : QSpacerItem;
-init_2 (w, h: INTEGER;
-) : QSpacerItem;
-changeSize(w, h: INTEGER;
-hData, vData: Policy;
-);
-changeSize1(w, h: INTEGER;
-hData: Policy;
-);
-changeSize2(w, h: INTEGER;
-);
-sizeHint(): QSize;  (*  virtual *)
-minimumSize(): QSize;  (*  virtual *)
-maximumSize(): QSize;  (*  virtual *)
-expandingDirections(): Orientations;  (*  virtual *)
-isEmpty(): BOOLEAN;  (*  virtual *)
-setGeometry( arg1: QRect;
-);  (*  virtual *)
-geometry(): QRect;  (*  virtual *)
-spacerItem(): QSpacerItem;  (*  virtual *)
-destroyCxx();
-END;
-
-QWidgetItem <: QWidgetItemPublic;
-QWidgetItemPublic =
-QLayoutItem BRANDED OBJECT
-METHODS
-init_0 ( w: QWidget;
-) : QWidgetItem;
-sizeHint(): QSize;  (*  virtual *)
-minimumSize(): QSize;  (*  virtual *)
-maximumSize(): QSize;  (*  virtual *)
-expandingDirections(): Orientations;  (*  virtual *)
-isEmpty(): BOOLEAN;  (*  virtual *)
-setGeometry( arg1: QRect;
-);  (*  virtual *)
-geometry(): QRect;  (*  virtual *)
-widget(): QWidget;  (*  virtual *)
-hasHeightForWidth(): BOOLEAN;  (*  virtual *)
-heightForWidth(arg1: INTEGER;
-): INTEGER;  (*  virtual *)
-destroyCxx();
-END;
-
-QWidgetItemV2 <: QWidgetItemV2Public;
-QWidgetItemV2Public =
-QWidgetItem BRANDED OBJECT
-METHODS
-init_0 ( widget: QWidget;
-) : QWidgetItemV2;
-sizeHint(): QSize;  (*  virtual *)
-minimumSize(): QSize;  (*  virtual *)
-maximumSize(): QSize;  (*  virtual *)
-heightForWidth(width: INTEGER;
-): INTEGER;  (*  virtual *)
-destroyCxx();
-END;
+  QWidgetItemV2 <: QWidgetItemV2Public;
+  QWidgetItemV2Public =
+    QWidgetItem BRANDED OBJECT
+    METHODS
+      init_0         (widget: QWidget; ): QWidgetItemV2;
+      sizeHint       (): QSize;  (* virtual *)
+      minimumSize    (): QSize;  (* virtual *)
+      maximumSize    (): QSize;  (* virtual *)
+      heightForWidth (width: INTEGER; ): INTEGER; (* virtual *)
+      destroyCxx     ();
+    END;
 
 
 END QtLayoutItem.

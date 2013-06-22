@@ -15,52 +15,38 @@ IMPORT Ctypes AS C;
 
 
 <* EXTERNAL New_QSlider0 *>
-PROCEDURE New_QSlider0 ( parent: ADDRESS;
-): QSlider;
+PROCEDURE New_QSlider0 (parent: ADDRESS; ): QSlider;
 
 <* EXTERNAL New_QSlider1 *>
 PROCEDURE New_QSlider1 (): QSlider;
 
 <* EXTERNAL New_QSlider2 *>
-PROCEDURE New_QSlider2 (orientation: C.int;
- parent: ADDRESS;
-): QSlider;
+PROCEDURE New_QSlider2 (orientation: C.int; parent: ADDRESS; ): QSlider;
 
 <* EXTERNAL New_QSlider3 *>
-PROCEDURE New_QSlider3 (orientation: C.int;
-): QSlider;
+PROCEDURE New_QSlider3 (orientation: C.int; ): QSlider;
 
 <* EXTERNAL Delete_QSlider *>
-PROCEDURE Delete_QSlider ( self: QSlider;
-);
+PROCEDURE Delete_QSlider (self: QSlider; );
 
 <* EXTERNAL QSlider_sizeHint *>
-PROCEDURE QSlider_sizeHint ( self: QSlider;
-): ADDRESS;
+PROCEDURE QSlider_sizeHint (self: QSlider; ): ADDRESS;
 
 <* EXTERNAL QSlider_minimumSizeHint *>
-PROCEDURE QSlider_minimumSizeHint ( self: QSlider;
-): ADDRESS;
+PROCEDURE QSlider_minimumSizeHint (self: QSlider; ): ADDRESS;
 
 <* EXTERNAL QSlider_setTickPosition *>
-PROCEDURE QSlider_setTickPosition ( self: QSlider;
-position: C.int;
-);
+PROCEDURE QSlider_setTickPosition (self: QSlider; position: C.int; );
 
 <* EXTERNAL QSlider_tickPosition *>
-PROCEDURE QSlider_tickPosition ( self: QSlider;
-): C.int;
+PROCEDURE QSlider_tickPosition (self: QSlider; ): C.int;
 
 <* EXTERNAL QSlider_setTickInterval *>
-PROCEDURE QSlider_setTickInterval ( self: QSlider;
-ti: C.int;
-);
+PROCEDURE QSlider_setTickInterval (self: QSlider; ti: C.int; );
 
 <* EXTERNAL QSlider_tickInterval *>
-PROCEDURE QSlider_tickInterval ( self: QSlider;
-): C.int;
+PROCEDURE QSlider_tickInterval (self: QSlider; ): C.int;
 
-TYPE
-QSlider = ADDRESS;
+TYPE QSlider = ADDRESS;
 
 END QtSliderRaw.

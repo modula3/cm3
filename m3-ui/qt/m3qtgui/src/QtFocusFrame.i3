@@ -11,23 +11,19 @@ INTERFACE QtFocusFrame;
 FROM QtWidget IMPORT QWidget;
 
 
-TYPE
-  T = QFocusFrame;
+TYPE T = QFocusFrame;
 
 
 TYPE
-QFocusFrame <: QFocusFramePublic;
-QFocusFramePublic =
-QWidget BRANDED OBJECT
-METHODS
-init_0 ( parent: QWidget;
-) : QFocusFrame;
-init_1 () : QFocusFrame;
-setWidget( widget: QWidget;
-);
-widget(): QWidget;
-destroyCxx();
-END;
+  QFocusFrame <: QFocusFramePublic;
+  QFocusFramePublic = QWidget BRANDED OBJECT
+                      METHODS
+                        init_0     (parent: QWidget; ): QFocusFrame;
+                        init_1     (): QFocusFrame;
+                        setWidget  (widget: QWidget; );
+                        widget     (): QWidget;
+                        destroyCxx ();
+                      END;
 
 
 END QtFocusFrame.

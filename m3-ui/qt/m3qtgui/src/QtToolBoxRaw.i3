@@ -15,125 +15,85 @@ IMPORT Ctypes AS C;
 
 
 <* EXTERNAL New_QToolBox0 *>
-PROCEDURE New_QToolBox0 ( parent: ADDRESS;
-f: C.int;
-): QToolBox;
+PROCEDURE New_QToolBox0 (parent: ADDRESS; f: C.int; ): QToolBox;
 
 <* EXTERNAL New_QToolBox1 *>
-PROCEDURE New_QToolBox1 ( parent: ADDRESS;
-): QToolBox;
+PROCEDURE New_QToolBox1 (parent: ADDRESS; ): QToolBox;
 
 <* EXTERNAL New_QToolBox2 *>
 PROCEDURE New_QToolBox2 (): QToolBox;
 
 <* EXTERNAL Delete_QToolBox *>
-PROCEDURE Delete_QToolBox ( self: QToolBox;
-);
+PROCEDURE Delete_QToolBox (self: QToolBox; );
 
 <* EXTERNAL QToolBox_addItem *>
-PROCEDURE QToolBox_addItem ( self: QToolBox;
- widget, text: ADDRESS;
-): C.int;
+PROCEDURE QToolBox_addItem (self: QToolBox; widget, text: ADDRESS; ):
+  C.int;
 
 <* EXTERNAL QToolBox_addItem1 *>
-PROCEDURE QToolBox_addItem1 ( self: QToolBox;
- widget, icon, text: ADDRESS;
-): C.int;
+PROCEDURE QToolBox_addItem1
+  (self: QToolBox; widget, icon, text: ADDRESS; ): C.int;
 
 <* EXTERNAL QToolBox_insertItem *>
-PROCEDURE QToolBox_insertItem ( self: QToolBox;
-index: C.int;
- widget, text: ADDRESS;
-): C.int;
+PROCEDURE QToolBox_insertItem
+  (self: QToolBox; index: C.int; widget, text: ADDRESS; ): C.int;
 
 <* EXTERNAL QToolBox_insertItem1 *>
-PROCEDURE QToolBox_insertItem1 ( self: QToolBox;
-index: C.int;
- widget, icon, text: ADDRESS;
-): C.int;
+PROCEDURE QToolBox_insertItem1
+  (self: QToolBox; index: C.int; widget, icon, text: ADDRESS; ): C.int;
 
 <* EXTERNAL QToolBox_removeItem *>
-PROCEDURE QToolBox_removeItem ( self: QToolBox;
-index: C.int;
-);
+PROCEDURE QToolBox_removeItem (self: QToolBox; index: C.int; );
 
 <* EXTERNAL QToolBox_setItemEnabled *>
-PROCEDURE QToolBox_setItemEnabled ( self: QToolBox;
-index: C.int;
-enabled: BOOLEAN;
-);
+PROCEDURE QToolBox_setItemEnabled
+  (self: QToolBox; index: C.int; enabled: BOOLEAN; );
 
 <* EXTERNAL QToolBox_isItemEnabled *>
-PROCEDURE QToolBox_isItemEnabled ( self: QToolBox;
-index: C.int;
-): BOOLEAN;
+PROCEDURE QToolBox_isItemEnabled (self: QToolBox; index: C.int; ): BOOLEAN;
 
 <* EXTERNAL QToolBox_setItemText *>
-PROCEDURE QToolBox_setItemText ( self: QToolBox;
-index: C.int;
- text: ADDRESS;
-);
+PROCEDURE QToolBox_setItemText
+  (self: QToolBox; index: C.int; text: ADDRESS; );
 
 <* EXTERNAL QToolBox_itemText *>
-PROCEDURE QToolBox_itemText ( self: QToolBox;
-index: C.int;
-): ADDRESS;
+PROCEDURE QToolBox_itemText (self: QToolBox; index: C.int; ): ADDRESS;
 
 <* EXTERNAL QToolBox_setItemIcon *>
-PROCEDURE QToolBox_setItemIcon ( self: QToolBox;
-index: C.int;
- icon: ADDRESS;
-);
+PROCEDURE QToolBox_setItemIcon
+  (self: QToolBox; index: C.int; icon: ADDRESS; );
 
 <* EXTERNAL QToolBox_itemIcon *>
-PROCEDURE QToolBox_itemIcon ( self: QToolBox;
-index: C.int;
-): ADDRESS;
+PROCEDURE QToolBox_itemIcon (self: QToolBox; index: C.int; ): ADDRESS;
 
 <* EXTERNAL QToolBox_setItemToolTip *>
-PROCEDURE QToolBox_setItemToolTip ( self: QToolBox;
-index: C.int;
- toolTip: ADDRESS;
-);
+PROCEDURE QToolBox_setItemToolTip
+  (self: QToolBox; index: C.int; toolTip: ADDRESS; );
 
 <* EXTERNAL QToolBox_itemToolTip *>
-PROCEDURE QToolBox_itemToolTip ( self: QToolBox;
-index: C.int;
-): ADDRESS;
+PROCEDURE QToolBox_itemToolTip (self: QToolBox; index: C.int; ): ADDRESS;
 
 <* EXTERNAL QToolBox_currentIndex *>
-PROCEDURE QToolBox_currentIndex ( self: QToolBox;
-): C.int;
+PROCEDURE QToolBox_currentIndex (self: QToolBox; ): C.int;
 
 <* EXTERNAL QToolBox_currentWidget *>
-PROCEDURE QToolBox_currentWidget ( self: QToolBox;
-): ADDRESS;
+PROCEDURE QToolBox_currentWidget (self: QToolBox; ): ADDRESS;
 
 <* EXTERNAL QToolBox_widget *>
-PROCEDURE QToolBox_widget ( self: QToolBox;
-index: C.int;
-): ADDRESS;
+PROCEDURE QToolBox_widget (self: QToolBox; index: C.int; ): ADDRESS;
 
 <* EXTERNAL QToolBox_indexOf *>
-PROCEDURE QToolBox_indexOf ( self: QToolBox;
- widget: ADDRESS;
-): C.int;
+PROCEDURE QToolBox_indexOf (self: QToolBox; widget: ADDRESS; ): C.int;
 
 <* EXTERNAL QToolBox_count *>
-PROCEDURE QToolBox_count ( self: QToolBox;
-): C.int;
+PROCEDURE QToolBox_count (self: QToolBox; ): C.int;
 
 <* EXTERNAL QToolBox_setCurrentIndex *>
-PROCEDURE QToolBox_setCurrentIndex ( self: QToolBox;
-index: C.int;
-);
+PROCEDURE QToolBox_setCurrentIndex (self: QToolBox; index: C.int; );
 
 <* EXTERNAL QToolBox_setCurrentWidget *>
-PROCEDURE QToolBox_setCurrentWidget ( self: QToolBox;
- widget: ADDRESS;
-);
+PROCEDURE QToolBox_setCurrentWidget (self: QToolBox; widget: ADDRESS; );
 
-TYPE
-QToolBox = ADDRESS;
+TYPE QToolBox = ADDRESS;
 
 END QtToolBoxRaw.

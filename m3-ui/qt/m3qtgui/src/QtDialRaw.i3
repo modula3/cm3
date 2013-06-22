@@ -15,56 +15,41 @@ IMPORT Ctypes AS C;
 
 
 <* EXTERNAL New_QDial0 *>
-PROCEDURE New_QDial0 ( parent: ADDRESS;
-): QDial;
+PROCEDURE New_QDial0 (parent: ADDRESS; ): QDial;
 
 <* EXTERNAL New_QDial1 *>
 PROCEDURE New_QDial1 (): QDial;
 
 <* EXTERNAL Delete_QDial *>
-PROCEDURE Delete_QDial ( self: QDial;
-);
+PROCEDURE Delete_QDial (self: QDial; );
 
 <* EXTERNAL QDial_wrapping *>
-PROCEDURE QDial_wrapping ( self: QDial;
-): BOOLEAN;
+PROCEDURE QDial_wrapping (self: QDial; ): BOOLEAN;
 
 <* EXTERNAL QDial_notchSize *>
-PROCEDURE QDial_notchSize ( self: QDial;
-): C.int;
+PROCEDURE QDial_notchSize (self: QDial; ): C.int;
 
 <* EXTERNAL QDial_setNotchTarget *>
-PROCEDURE QDial_setNotchTarget ( self: QDial;
-target: C.double;
-);
+PROCEDURE QDial_setNotchTarget (self: QDial; target: C.double; );
 
 <* EXTERNAL QDial_notchTarget *>
-PROCEDURE QDial_notchTarget ( self: QDial;
-): C.double;
+PROCEDURE QDial_notchTarget (self: QDial; ): C.double;
 
 <* EXTERNAL QDial_notchesVisible *>
-PROCEDURE QDial_notchesVisible ( self: QDial;
-): BOOLEAN;
+PROCEDURE QDial_notchesVisible (self: QDial; ): BOOLEAN;
 
 <* EXTERNAL QDial_sizeHint *>
-PROCEDURE QDial_sizeHint ( self: QDial;
-): ADDRESS;
+PROCEDURE QDial_sizeHint (self: QDial; ): ADDRESS;
 
 <* EXTERNAL QDial_minimumSizeHint *>
-PROCEDURE QDial_minimumSizeHint ( self: QDial;
-): ADDRESS;
+PROCEDURE QDial_minimumSizeHint (self: QDial; ): ADDRESS;
 
 <* EXTERNAL QDial_setNotchesVisible *>
-PROCEDURE QDial_setNotchesVisible ( self: QDial;
-visible: BOOLEAN;
-);
+PROCEDURE QDial_setNotchesVisible (self: QDial; visible: BOOLEAN; );
 
 <* EXTERNAL QDial_setWrapping *>
-PROCEDURE QDial_setWrapping ( self: QDial;
-on: BOOLEAN;
-);
+PROCEDURE QDial_setWrapping (self: QDial; on: BOOLEAN; );
 
-TYPE
-QDial = ADDRESS;
+TYPE QDial = ADDRESS;
 
 END QtDialRaw.

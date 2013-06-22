@@ -13,80 +13,61 @@ FROM QtWidget IMPORT QWidget;
 FROM QtNamespace IMPORT AlignmentFlag;
 
 
-TYPE
-  T = QAbstractSpinBox;
+TYPE T = QAbstractSpinBox;
 
 
 
-CONST (* Enum StepEnabledFlag *)
-  StepNone = 0;
-  StepUpEnabled = 1;
+CONST                            (* Enum StepEnabledFlag *)
+  StepNone        = 0;
+  StepUpEnabled   = 1;
   StepDownEnabled = 2;
 
-TYPE (* Enum StepEnabledFlag *)
-  StepEnabledFlag = [0..2];
+TYPE                             (* Enum StepEnabledFlag *)
+  StepEnabledFlag = [0 .. 2];
 
-TYPE (* Enum ButtonSymbols *)
-  ButtonSymbols = {
- UpDownArrows,
- PlusMinus,
- NoButtons};
+TYPE                             (* Enum ButtonSymbols *)
+  ButtonSymbols = {UpDownArrows, PlusMinus, NoButtons};
 
-TYPE (* Enum CorrectionMode *)
-  CorrectionMode = {
- CorrectToPreviousValue,
- CorrectToNearestValue};
+TYPE                             (* Enum CorrectionMode *)
+  CorrectionMode = {CorrectToPreviousValue, CorrectToNearestValue};
 
 TYPE
-QAbstractSpinBox <: QAbstractSpinBoxPublic;
-QAbstractSpinBoxPublic =
-QWidget BRANDED OBJECT
-METHODS
-init_0 ( parent: QWidget;
-) : QAbstractSpinBox;
-init_1 () : QAbstractSpinBox;
-buttonSymbols(): ButtonSymbols;
-setButtonSymbols(bs: ButtonSymbols;
-);
-setCorrectionMode(cm: CorrectionMode;
-);
-correctionMode(): CorrectionMode;
-hasAcceptableInput(): BOOLEAN;
-text(): TEXT;
-specialValueText(): TEXT;
-setSpecialValueText( txt: TEXT;
-);
-wrapping(): BOOLEAN;
-setWrapping(w: BOOLEAN;
-);
-setReadOnly(r: BOOLEAN;
-);
-isReadOnly(): BOOLEAN;
-setKeyboardTracking(kt: BOOLEAN;
-);
-keyboardTracking(): BOOLEAN;
-setAlignment(flag: AlignmentFlag;
-);
-alignment(): AlignmentFlag;
-setFrame(arg1: BOOLEAN;
-);
-hasFrame(): BOOLEAN;
-setAccelerated(on: BOOLEAN;
-);
-isAccelerated(): BOOLEAN;
-sizeHint(): QSize;  (*  virtual *)
-minimumSizeHint(): QSize;  (*  virtual *)
-interpretText();
-fixup( input: TEXT;
-);  (*  virtual *)
-stepBy(steps: INTEGER;
-);  (*  virtual *)
-stepUp();
-stepDown();
-selectAll();
-clear();  (*  virtual *)
-destroyCxx();
-END;
+  QAbstractSpinBox <: QAbstractSpinBoxPublic;
+  QAbstractSpinBoxPublic = QWidget BRANDED OBJECT
+                           METHODS
+                             init_0 (parent: QWidget; ): QAbstractSpinBox;
+                             init_1 (): QAbstractSpinBox;
+                             buttonSymbols       (): ButtonSymbols;
+                             setButtonSymbols    (bs: ButtonSymbols; );
+                             setCorrectionMode   (cm: CorrectionMode; );
+                             correctionMode      (): CorrectionMode;
+                             hasAcceptableInput  (): BOOLEAN;
+                             text                (): TEXT;
+                             specialValueText    (): TEXT;
+                             setSpecialValueText (txt: TEXT; );
+                             wrapping            (): BOOLEAN;
+                             setWrapping         (w: BOOLEAN; );
+                             setReadOnly         (r: BOOLEAN; );
+                             isReadOnly          (): BOOLEAN;
+                             setKeyboardTracking (kt: BOOLEAN; );
+                             keyboardTracking    (): BOOLEAN;
+                             setAlignment        (flag: AlignmentFlag; );
+                             alignment           (): AlignmentFlag;
+                             setFrame            (arg1: BOOLEAN; );
+                             hasFrame            (): BOOLEAN;
+                             setAccelerated      (on: BOOLEAN; );
+                             isAccelerated       (): BOOLEAN;
+                             sizeHint            (): QSize; (* virtual *)
+                             minimumSizeHint     (): QSize; (* virtual *)
+                             interpretText       ();
+                             fixup      (input: TEXT; ); (* virtual *)
+                             stepBy     (steps: INTEGER; ); (* virtual *)
+                             stepUp     ();
+                             stepDown   ();
+                             selectAll  ();
+                             clear      (); (* virtual *)
+                             destroyCxx ();
+                           END;
 
 
 END QtAbstractSpinBox.

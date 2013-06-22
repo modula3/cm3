@@ -11,7 +11,6 @@ MODULE QtKeySequenceRaw;
 
 
 
-REVEAL
-QKeySequence = UNTRACED BRANDED REF RECORD (*Dummy*) END;
+REVEAL QKeySequence = UNTRACED BRANDED REF RECORD (*Dummy*) END;
 BEGIN
 END QtKeySequenceRaw.

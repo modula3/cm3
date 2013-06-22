@@ -19,74 +19,53 @@ FROM QtNamespace IMPORT WindowTypes;
 
 FROM QtDialog IMPORT QDialog;
 
-TYPE
-  T = QProgressDialog;
+TYPE T = QProgressDialog;
 
 
 TYPE
-QProgressDialog <: QProgressDialogPublic;
-QProgressDialogPublic =
-QDialog BRANDED OBJECT
-METHODS
-init_0 ( parent: QWidget;
-flags: WindowTypes;
-) : QProgressDialog;
-init_1 ( parent: QWidget;
-) : QProgressDialog;
-init_2 () : QProgressDialog;
-init_3 ( labelText, cancelButtonText: TEXT;
-minimum, maximum: INTEGER;
- parent: QWidget;
-flags: WindowTypes;
-) : QProgressDialog;
-init_4 ( labelText, cancelButtonText: TEXT;
-minimum, maximum: INTEGER;
- parent: QWidget;
-) : QProgressDialog;
-init_5 ( labelText, cancelButtonText: TEXT;
-minimum, maximum: INTEGER;
-) : QProgressDialog;
-setLabel( label: QLabel;
-);
-setCancelButton( button: QPushButton;
-);
-setBar( bar: QProgressBar;
-);
-wasCanceled(): BOOLEAN;
-minimum(): INTEGER;
-maximum(): INTEGER;
-value(): INTEGER;
-sizeHint(): QSize;  (*  virtual *)
-labelText(): TEXT;
-minimumDuration(): INTEGER;
-setAutoReset(reset: BOOLEAN;
-);
-autoReset(): BOOLEAN;
-setAutoClose(close: BOOLEAN;
-);
-autoClose(): BOOLEAN;
-open0_0();
-open1( receiver: QObject;
- member: TEXT;
-);
-cancel();
-reset();
-setMaximum(maximum: INTEGER;
-);
-setMinimum(minimum: INTEGER;
-);
-setRange(minimum, maximum: INTEGER;
-);
-setValue(progress: INTEGER;
-);
-setLabelText( text: TEXT;
-);
-setCancelButtonText( text: TEXT;
-);
-setMinimumDuration(ms: INTEGER;
-);
-destroyCxx();
-END;
+  QProgressDialog <: QProgressDialogPublic;
+  QProgressDialogPublic =
+    QDialog BRANDED OBJECT
+    METHODS
+      init_0 (parent: QWidget; flags: WindowTypes; ): QProgressDialog;
+      init_1 (parent: QWidget; ): QProgressDialog;
+      init_2 (): QProgressDialog;
+      init_3 (labelText, cancelButtonText: TEXT;
+              minimum, maximum           : INTEGER;
+              parent                     : QWidget;
+              flags                      : WindowTypes; ): QProgressDialog;
+      init_4 (labelText, cancelButtonText: TEXT;
+              minimum, maximum           : INTEGER;
+              parent                     : QWidget; ): QProgressDialog;
+      init_5 (labelText, cancelButtonText: TEXT; minimum, maximum: INTEGER; ):
+              QProgressDialog;
+      setLabel            (label: QLabel; );
+      setCancelButton     (button: QPushButton; );
+      setBar              (bar: QProgressBar; );
+      wasCanceled         (): BOOLEAN;
+      minimum             (): INTEGER;
+      maximum             (): INTEGER;
+      value               (): INTEGER;
+      sizeHint            (): QSize; (* virtual *)
+      labelText           (): TEXT;
+      minimumDuration     (): INTEGER;
+      setAutoReset        (reset: BOOLEAN; );
+      autoReset           (): BOOLEAN;
+      setAutoClose        (close: BOOLEAN; );
+      autoClose           (): BOOLEAN;
+      open0_0             ();
+      open1               (receiver: QObject; member: TEXT; );
+      cancel              ();
+      reset               ();
+      setMaximum          (maximum: INTEGER; );
+      setMinimum          (minimum: INTEGER; );
+      setRange            (minimum, maximum: INTEGER; );
+      setValue            (progress: INTEGER; );
+      setLabelText        (text: TEXT; );
+      setCancelButtonText (text: TEXT; );
+      setMinimumDuration  (ms: INTEGER; );
+      destroyCxx          ();
+    END;
 
 
 END QtProgressDialog.

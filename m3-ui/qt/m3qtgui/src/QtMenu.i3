@@ -18,100 +18,64 @@ FROM QtPoint IMPORT QPoint;
 FROM QtRect IMPORT QRect;
 
 
-TYPE
-  T = QMenu;
+TYPE T = QMenu;
 
 
 TYPE
-QMenu <: QMenuPublic;
-QMenuPublic =
-QWidget BRANDED OBJECT
-METHODS
-init_0 ( parent: QWidget;
-) : QMenu;
-init_1 () : QMenu;
-init_2 ( title: TEXT;
- parent: QWidget;
-) : QMenu;
-init_3 ( title: TEXT;
-) : QMenu;
-addAction0_0( action: QAction;
-);
-addAction1( text: TEXT;
-): QAction;
-addAction2( icon: QIcon;
- text: TEXT;
-): QAction;
-addAction3( text: TEXT;
- receiver: QObject;
- member: TEXT;
- shortcut: QKeySequence;
-): QAction;
-addAction4( text: TEXT;
- receiver: QObject;
- member: TEXT;
-): QAction;
-addAction5( icon: QIcon;
- text: TEXT;
- receiver: QObject;
- member: TEXT;
- shortcut: QKeySequence;
-): QAction;
-addAction6( icon: QIcon;
- text: TEXT;
- receiver: QObject;
- member: TEXT;
-): QAction;
-addMenu( menu: QMenu;
-): QAction;
-addMenu1( title: TEXT;
-): QMenu;
-addMenu2( icon: QIcon;
- title: TEXT;
-): QMenu;
-addSeparator(): QAction;
-insertMenu( before: QAction;
- menu: QMenu;
-): QAction;
-insertSeparator( before: QAction;
-): QAction;
-isEmpty(): BOOLEAN;
-clear();
-setTearOffEnabled(arg1: BOOLEAN;
-);
-isTearOffEnabled(): BOOLEAN;
-isTearOffMenuVisible(): BOOLEAN;
-hideTearOffMenu();
-setDefaultAction( arg1: QAction;
-);
-defaultAction(): QAction;
-setActiveAction( act: QAction;
-);
-activeAction(): QAction;
-popup( pos: QPoint;
- at: QAction;
-);
-popup1( pos: QPoint;
-);
-sizeHint(): QSize;  (*  virtual *)
-actionGeometry( arg1: QAction;
-): QRect;
-actionAt( arg1: QPoint;
-): QAction;
-menuAction(): QAction;
-title(): TEXT;
-setTitle( title: TEXT;
-);
-icon(): QIcon;
-setIcon( icon: QIcon;
-);
-setNoReplayFor( widget: QWidget;
-);
-separatorsCollapsible(): BOOLEAN;
-setSeparatorsCollapsible(collapse: BOOLEAN;
-);
-destroyCxx();
-END;
+  QMenu <: QMenuPublic;
+  QMenuPublic =
+    QWidget BRANDED OBJECT
+    METHODS
+      init_0       (parent: QWidget; ): QMenu;
+      init_1       (): QMenu;
+      init_2       (title: TEXT; parent: QWidget; ): QMenu;
+      init_3       (title: TEXT; ): QMenu;
+      addAction0_0 (action: QAction; );
+      addAction1   (text: TEXT; ): QAction;
+      addAction2   (icon: QIcon; text: TEXT; ): QAction;
+      addAction3 (text    : TEXT;
+                  receiver: QObject;
+                  member  : TEXT;
+                  shortcut: QKeySequence; ): QAction;
+      addAction4 (text: TEXT; receiver: QObject; member: TEXT; ): QAction;
+      addAction5 (icon    : QIcon;
+                  text    : TEXT;
+                  receiver: QObject;
+                  member  : TEXT;
+                  shortcut: QKeySequence; ): QAction;
+      addAction6 (icon: QIcon; text: TEXT; receiver: QObject; member: TEXT; ):
+                  QAction;
+      addMenu                  (menu: QMenu; ): QAction;
+      addMenu1                 (title: TEXT; ): QMenu;
+      addMenu2                 (icon: QIcon; title: TEXT; ): QMenu;
+      addSeparator             (): QAction;
+      insertMenu               (before: QAction; menu: QMenu; ): QAction;
+      insertSeparator          (before: QAction; ): QAction;
+      isEmpty                  (): BOOLEAN;
+      clear                    ();
+      setTearOffEnabled        (arg1: BOOLEAN; );
+      isTearOffEnabled         (): BOOLEAN;
+      isTearOffMenuVisible     (): BOOLEAN;
+      hideTearOffMenu          ();
+      setDefaultAction         (arg1: QAction; );
+      defaultAction            (): QAction;
+      setActiveAction          (act: QAction; );
+      activeAction             (): QAction;
+      popup                    (pos: QPoint; at: QAction; );
+      popup1                   (pos: QPoint; );
+      sizeHint                 (): QSize; (* virtual *)
+      actionGeometry           (arg1: QAction; ): QRect;
+      actionAt                 (arg1: QPoint; ): QAction;
+      menuAction               (): QAction;
+      title                    (): TEXT;
+      setTitle                 (title: TEXT; );
+      icon                     (): QIcon;
+      setIcon                  (icon: QIcon; );
+      setNoReplayFor           (widget: QWidget; );
+      separatorsCollapsible    (): BOOLEAN;
+      setSeparatorsCollapsible (collapse: BOOLEAN; );
+      destroyCxx               ();
+    END;
 
 
 END QtMenu.

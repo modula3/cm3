@@ -10,623 +10,584 @@ UNSAFE MODULE QtPolygon;
 
 
 IMPORT QtPolygonRaw;
-FROM QtPoint IMPORT QPoint,QPointF;
-FROM QtRect IMPORT QRect,QRectF;
+FROM QtPoint IMPORT QPoint, QPointF;
+FROM QtRect IMPORT QRect, QRectF;
 FROM QtNamespace IMPORT FillRule;
 
 
 IMPORT WeakRef;
 IMPORT Ctypes AS C;
 
-PROCEDURE New_QPolygon0 (self:QPolygon;): QPolygon =
-VAR
-result : ADDRESS;
-BEGIN
-result := QtPolygonRaw.New_QPolygon0();
+PROCEDURE New_QPolygon0 (self: QPolygon; ): QPolygon =
+  VAR result: ADDRESS;
+  BEGIN
+    result := QtPolygonRaw.New_QPolygon0();
 
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QPolygon);
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QPolygon);
 
-RETURN self;
-END New_QPolygon0;
+    RETURN self;
+  END New_QPolygon0;
 
-PROCEDURE Delete_QPolygon ( self: QPolygon;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtPolygonRaw.Delete_QPolygon(selfAdr);
-END Delete_QPolygon;
+PROCEDURE Delete_QPolygon (self: QPolygon; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtPolygonRaw.Delete_QPolygon(selfAdr);
+  END Delete_QPolygon;
 
-PROCEDURE New_QPolygon1 (self:QPolygon;size: INTEGER;
-): QPolygon =
-VAR
-result : ADDRESS;
-BEGIN
-result := QtPolygonRaw.New_QPolygon1(size);
+PROCEDURE New_QPolygon1 (self: QPolygon; size: INTEGER; ): QPolygon =
+  VAR result: ADDRESS;
+  BEGIN
+    result := QtPolygonRaw.New_QPolygon1(size);
 
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QPolygon);
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QPolygon);
 
-RETURN self;
-END New_QPolygon1;
+    RETURN self;
+  END New_QPolygon1;
 
-PROCEDURE New_QPolygon2 (self:QPolygon; a: QPolygon;
-): QPolygon =
-VAR
-result : ADDRESS;
-arg1tmp :=  LOOPHOLE(a.cxxObj,ADDRESS);
-BEGIN
-result := QtPolygonRaw.New_QPolygon2(arg1tmp);
+PROCEDURE New_QPolygon2 (self: QPolygon; a: QPolygon; ): QPolygon =
+  VAR
+    result : ADDRESS;
+    arg1tmp          := LOOPHOLE(a.cxxObj, ADDRESS);
+  BEGIN
+    result := QtPolygonRaw.New_QPolygon2(arg1tmp);
 
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QPolygon);
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QPolygon);
 
-RETURN self;
-END New_QPolygon2;
+    RETURN self;
+  END New_QPolygon2;
 
-PROCEDURE New_QPolygon3 (self:QPolygon; r: QRect;
-closed: BOOLEAN;
-): QPolygon =
-VAR
-result : ADDRESS;
-arg1tmp :=  LOOPHOLE(r.cxxObj,ADDRESS);
-BEGIN
-result := QtPolygonRaw.New_QPolygon3(arg1tmp, closed);
+PROCEDURE New_QPolygon3 (self: QPolygon; r: QRect; closed: BOOLEAN; ):
+  QPolygon =
+  VAR
+    result : ADDRESS;
+    arg1tmp          := LOOPHOLE(r.cxxObj, ADDRESS);
+  BEGIN
+    result := QtPolygonRaw.New_QPolygon3(arg1tmp, closed);
 
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QPolygon);
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QPolygon);
 
-RETURN self;
-END New_QPolygon3;
+    RETURN self;
+  END New_QPolygon3;
 
-PROCEDURE New_QPolygon4 (self:QPolygon; r: QRect;
-): QPolygon =
-VAR
-result : ADDRESS;
-arg1tmp :=  LOOPHOLE(r.cxxObj,ADDRESS);
-BEGIN
-result := QtPolygonRaw.New_QPolygon4(arg1tmp);
+PROCEDURE New_QPolygon4 (self: QPolygon; r: QRect; ): QPolygon =
+  VAR
+    result : ADDRESS;
+    arg1tmp          := LOOPHOLE(r.cxxObj, ADDRESS);
+  BEGIN
+    result := QtPolygonRaw.New_QPolygon4(arg1tmp);
 
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QPolygon);
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QPolygon);
 
-RETURN self;
-END New_QPolygon4;
+    RETURN self;
+  END New_QPolygon4;
 
-PROCEDURE New_QPolygon5 (self:QPolygon;nPoints: INTEGER;
-VAR points: INTEGER;
-): QPolygon =
-VAR
-result : ADDRESS;
-arg2tmp: C.int;
-BEGIN
-arg2tmp := points;
-result := QtPolygonRaw.New_QPolygon5(nPoints, arg2tmp);
+PROCEDURE New_QPolygon5
+  (self: QPolygon; nPoints: INTEGER; VAR points: INTEGER; ): QPolygon =
+  VAR
+    result : ADDRESS;
+    arg2tmp: C.int;
+  BEGIN
+    arg2tmp := points;
+    result := QtPolygonRaw.New_QPolygon5(nPoints, arg2tmp);
 
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QPolygon);
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QPolygon);
 
-points := arg2tmp;
-RETURN self;
-END New_QPolygon5;
+    points := arg2tmp;
+    RETURN self;
+  END New_QPolygon5;
 
-PROCEDURE QPolygon_translate ( self: QPolygon;
-dx, dy: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtPolygonRaw.QPolygon_translate(selfAdr, dx, dy);
-END QPolygon_translate;
+PROCEDURE QPolygon_translate (self: QPolygon; dx, dy: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtPolygonRaw.QPolygon_translate(selfAdr, dx, dy);
+  END QPolygon_translate;
 
-PROCEDURE QPolygon_translate1 ( self: QPolygon;
- offset: QPoint;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(offset.cxxObj,ADDRESS);
-BEGIN
-QtPolygonRaw.QPolygon_translate1(selfAdr, arg2tmp);
-END QPolygon_translate1;
+PROCEDURE QPolygon_translate1 (self: QPolygon; offset: QPoint; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(offset.cxxObj, ADDRESS);
+  BEGIN
+    QtPolygonRaw.QPolygon_translate1(selfAdr, arg2tmp);
+  END QPolygon_translate1;
 
-PROCEDURE QPolygon_translated ( self: QPolygon;
-dx, dy: INTEGER;
-): QPolygon =
-VAR
-ret:ADDRESS; result : QPolygon;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtPolygonRaw.QPolygon_translated(selfAdr, dx, dy);
+PROCEDURE QPolygon_translated (self: QPolygon; dx, dy: INTEGER; ):
+  QPolygon =
+  VAR
+    ret    : ADDRESS;
+    result : QPolygon;
+    selfAdr: ADDRESS  := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtPolygonRaw.QPolygon_translated(selfAdr, dx, dy);
 
-IF ISTYPE(result,QPolygon) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QPolygon);
-ELSE
-  result := NEW(QPolygon);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
+    IF ISTYPE(result, QPolygon) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QPolygon);
+    ELSE
+      result := NEW(QPolygon);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
 
-RETURN result;
-END QPolygon_translated;
+    RETURN result;
+  END QPolygon_translated;
 
-PROCEDURE QPolygon_translated1 ( self: QPolygon;
- offset: QPoint;
-): QPolygon =
-VAR
-ret:ADDRESS; result : QPolygon;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(offset.cxxObj,ADDRESS);
-BEGIN
-ret := QtPolygonRaw.QPolygon_translated1(selfAdr, arg2tmp);
+PROCEDURE QPolygon_translated1 (self: QPolygon; offset: QPoint; ):
+  QPolygon =
+  VAR
+    ret    : ADDRESS;
+    result : QPolygon;
+    selfAdr: ADDRESS  := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp           := LOOPHOLE(offset.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtPolygonRaw.QPolygon_translated1(selfAdr, arg2tmp);
 
-IF ISTYPE(result,QPolygon) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QPolygon);
-ELSE
-  result := NEW(QPolygon);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
+    IF ISTYPE(result, QPolygon) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QPolygon);
+    ELSE
+      result := NEW(QPolygon);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
 
-RETURN result;
-END QPolygon_translated1;
+    RETURN result;
+  END QPolygon_translated1;
 
-PROCEDURE QPolygon_boundingRect ( self: QPolygon;
-): QRect =
-VAR
-ret:ADDRESS; result : QRect;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtPolygonRaw.QPolygon_boundingRect(selfAdr);
+PROCEDURE QPolygon_boundingRect (self: QPolygon; ): QRect =
+  VAR
+    ret    : ADDRESS;
+    result : QRect;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtPolygonRaw.QPolygon_boundingRect(selfAdr);
 
-  result := NEW(QRect);
-  result.cxxObj := ret;
-  result.destroyCxx();
+    result := NEW(QRect);
+    result.cxxObj := ret;
+    result.destroyCxx();
 
-RETURN result;
-END QPolygon_boundingRect;
+    RETURN result;
+  END QPolygon_boundingRect;
 
-PROCEDURE QPolygon_point ( self: QPolygon;
-i: INTEGER;
-VAR x, y: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg3tmp: C.int;
-arg4tmp: C.int;
-BEGIN
-arg3tmp := x;
-arg4tmp := y;
-QtPolygonRaw.QPolygon_point(selfAdr, i, arg3tmp, arg4tmp);
-x := arg3tmp;
-y := arg4tmp;
-END QPolygon_point;
+PROCEDURE QPolygon_point
+  (self: QPolygon; i: INTEGER; VAR x, y: INTEGER; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg3tmp: C.int;
+    arg4tmp: C.int;
+  BEGIN
+    arg3tmp := x;
+    arg4tmp := y;
+    QtPolygonRaw.QPolygon_point(selfAdr, i, arg3tmp, arg4tmp);
+    x := arg3tmp;
+    y := arg4tmp;
+  END QPolygon_point;
 
-PROCEDURE QPolygon_point1 ( self: QPolygon;
-i: INTEGER;
-): QPoint =
-VAR
-ret:ADDRESS; result : QPoint;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtPolygonRaw.QPolygon_point1(selfAdr, i);
+PROCEDURE QPolygon_point1 (self: QPolygon; i: INTEGER; ): QPoint =
+  VAR
+    ret    : ADDRESS;
+    result : QPoint;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtPolygonRaw.QPolygon_point1(selfAdr, i);
 
-  result := NEW(QPoint);
-  result.cxxObj := ret;
-  result.destroyCxx();
+    result := NEW(QPoint);
+    result.cxxObj := ret;
+    result.destroyCxx();
 
-RETURN result;
-END QPolygon_point1;
+    RETURN result;
+  END QPolygon_point1;
 
-PROCEDURE QPolygon_setPoint ( self: QPolygon;
-index, x, y: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtPolygonRaw.QPolygon_setPoint(selfAdr, index, x, y);
-END QPolygon_setPoint;
+PROCEDURE QPolygon_setPoint (self: QPolygon; index, x, y: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtPolygonRaw.QPolygon_setPoint(selfAdr, index, x, y);
+  END QPolygon_setPoint;
 
-PROCEDURE QPolygon_setPoint1 ( self: QPolygon;
-index: INTEGER;
- p: QPoint;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg3tmp :=  LOOPHOLE(p.cxxObj,ADDRESS);
-BEGIN
-QtPolygonRaw.QPolygon_setPoint1(selfAdr, index, arg3tmp);
-END QPolygon_setPoint1;
+PROCEDURE QPolygon_setPoint1
+  (self: QPolygon; index: INTEGER; p: QPoint; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg3tmp          := LOOPHOLE(p.cxxObj, ADDRESS);
+  BEGIN
+    QtPolygonRaw.QPolygon_setPoint1(selfAdr, index, arg3tmp);
+  END QPolygon_setPoint1;
 
-PROCEDURE QPolygon_containsPoint ( self: QPolygon;
- pt: QPoint;
-fillRule: FillRule;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(pt.cxxObj,ADDRESS);
-BEGIN
-RETURN QtPolygonRaw.QPolygon_containsPoint(selfAdr, arg2tmp, ORD(fillRule));
-END QPolygon_containsPoint;
+PROCEDURE QPolygon_containsPoint
+  (self: QPolygon; pt: QPoint; fillRule: FillRule; ): BOOLEAN =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(pt.cxxObj, ADDRESS);
+  BEGIN
+    RETURN
+      QtPolygonRaw.QPolygon_containsPoint(selfAdr, arg2tmp, ORD(fillRule));
+  END QPolygon_containsPoint;
 
-PROCEDURE QPolygon_united ( self, r: QPolygon;
-): QPolygon =
-VAR
-ret:ADDRESS; result : QPolygon;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(r.cxxObj,ADDRESS);
-BEGIN
-ret := QtPolygonRaw.QPolygon_united(selfAdr, arg2tmp);
+PROCEDURE QPolygon_united (self, r: QPolygon; ): QPolygon =
+  VAR
+    ret    : ADDRESS;
+    result : QPolygon;
+    selfAdr: ADDRESS  := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp           := LOOPHOLE(r.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtPolygonRaw.QPolygon_united(selfAdr, arg2tmp);
 
-IF ISTYPE(result,QPolygon) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QPolygon);
-ELSE
-  result := NEW(QPolygon);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
+    IF ISTYPE(result, QPolygon) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QPolygon);
+    ELSE
+      result := NEW(QPolygon);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
 
-RETURN result;
-END QPolygon_united;
+    RETURN result;
+  END QPolygon_united;
 
-PROCEDURE QPolygon_intersected ( self, r: QPolygon;
-): QPolygon =
-VAR
-ret:ADDRESS; result : QPolygon;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(r.cxxObj,ADDRESS);
-BEGIN
-ret := QtPolygonRaw.QPolygon_intersected(selfAdr, arg2tmp);
+PROCEDURE QPolygon_intersected (self, r: QPolygon; ): QPolygon =
+  VAR
+    ret    : ADDRESS;
+    result : QPolygon;
+    selfAdr: ADDRESS  := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp           := LOOPHOLE(r.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtPolygonRaw.QPolygon_intersected(selfAdr, arg2tmp);
 
-IF ISTYPE(result,QPolygon) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QPolygon);
-ELSE
-  result := NEW(QPolygon);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
+    IF ISTYPE(result, QPolygon) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QPolygon);
+    ELSE
+      result := NEW(QPolygon);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
 
-RETURN result;
-END QPolygon_intersected;
+    RETURN result;
+  END QPolygon_intersected;
 
-PROCEDURE QPolygon_subtracted ( self, r: QPolygon;
-): QPolygon =
-VAR
-ret:ADDRESS; result : QPolygon;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(r.cxxObj,ADDRESS);
-BEGIN
-ret := QtPolygonRaw.QPolygon_subtracted(selfAdr, arg2tmp);
+PROCEDURE QPolygon_subtracted (self, r: QPolygon; ): QPolygon =
+  VAR
+    ret    : ADDRESS;
+    result : QPolygon;
+    selfAdr: ADDRESS  := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp           := LOOPHOLE(r.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtPolygonRaw.QPolygon_subtracted(selfAdr, arg2tmp);
 
-IF ISTYPE(result,QPolygon) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QPolygon);
-ELSE
-  result := NEW(QPolygon);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
+    IF ISTYPE(result, QPolygon) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QPolygon);
+    ELSE
+      result := NEW(QPolygon);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
 
-RETURN result;
-END QPolygon_subtracted;
+    RETURN result;
+  END QPolygon_subtracted;
 
-PROCEDURE Cleanup_QPolygon(<*UNUSED*>READONLY self: WeakRef.T; ref: REFANY) =
-VAR obj : QPolygon := ref;
-BEGIN
-  Delete_QPolygon(obj);
- END Cleanup_QPolygon;
+PROCEDURE Cleanup_QPolygon
+  (<* UNUSED *> READONLY self: WeakRef.T; ref: REFANY) =
+  VAR obj: QPolygon := ref;
+  BEGIN
+    Delete_QPolygon(obj);
+  END Cleanup_QPolygon;
 
-PROCEDURE Destroy_QPolygon(self : QPolygon) =
-BEGIN
-  EVAL WeakRef.FromRef(self,Cleanup_QPolygon);
-END Destroy_QPolygon;
+PROCEDURE Destroy_QPolygon (self: QPolygon) =
+  BEGIN
+    EVAL WeakRef.FromRef(self, Cleanup_QPolygon);
+  END Destroy_QPolygon;
 
 REVEAL
-QPolygon =
-QPolygonPublic BRANDED OBJECT
-OVERRIDES
-init_0 := New_QPolygon0;
-init_1 := New_QPolygon1;
-init_2 := New_QPolygon2;
-init_3 := New_QPolygon3;
-init_4 := New_QPolygon4;
-init_5 := New_QPolygon5;
-translate := QPolygon_translate;
-translate1 := QPolygon_translate1;
-translated := QPolygon_translated;
-translated1 := QPolygon_translated1;
-boundingRect := QPolygon_boundingRect;
-point := QPolygon_point;
-point1 := QPolygon_point1;
-setPoint := QPolygon_setPoint;
-setPoint1 := QPolygon_setPoint1;
-containsPoint := QPolygon_containsPoint;
-united := QPolygon_united;
-intersected := QPolygon_intersected;
-subtracted := QPolygon_subtracted;
-destroyCxx := Destroy_QPolygon;
-END;
+  QPolygon = QPolygonPublic BRANDED OBJECT
+             OVERRIDES
+               init_0        := New_QPolygon0;
+               init_1        := New_QPolygon1;
+               init_2        := New_QPolygon2;
+               init_3        := New_QPolygon3;
+               init_4        := New_QPolygon4;
+               init_5        := New_QPolygon5;
+               translate     := QPolygon_translate;
+               translate1    := QPolygon_translate1;
+               translated    := QPolygon_translated;
+               translated1   := QPolygon_translated1;
+               boundingRect  := QPolygon_boundingRect;
+               point         := QPolygon_point;
+               point1        := QPolygon_point1;
+               setPoint      := QPolygon_setPoint;
+               setPoint1     := QPolygon_setPoint1;
+               containsPoint := QPolygon_containsPoint;
+               united        := QPolygon_united;
+               intersected   := QPolygon_intersected;
+               subtracted    := QPolygon_subtracted;
+               destroyCxx    := Destroy_QPolygon;
+             END;
 
-PROCEDURE New_QPolygonF0 (self:QPolygonF;): QPolygonF =
-VAR
-result : ADDRESS;
-BEGIN
-result := QtPolygonRaw.New_QPolygonF0();
+PROCEDURE New_QPolygonF0 (self: QPolygonF; ): QPolygonF =
+  VAR result: ADDRESS;
+  BEGIN
+    result := QtPolygonRaw.New_QPolygonF0();
 
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QPolygonF);
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QPolygonF);
 
-RETURN self;
-END New_QPolygonF0;
+    RETURN self;
+  END New_QPolygonF0;
 
-PROCEDURE Delete_QPolygonF ( self: QPolygonF;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtPolygonRaw.Delete_QPolygonF(selfAdr);
-END Delete_QPolygonF;
+PROCEDURE Delete_QPolygonF (self: QPolygonF; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtPolygonRaw.Delete_QPolygonF(selfAdr);
+  END Delete_QPolygonF;
 
-PROCEDURE New_QPolygonF1 (self:QPolygonF;size: INTEGER;
-): QPolygonF =
-VAR
-result : ADDRESS;
-BEGIN
-result := QtPolygonRaw.New_QPolygonF1(size);
+PROCEDURE New_QPolygonF1 (self: QPolygonF; size: INTEGER; ): QPolygonF =
+  VAR result: ADDRESS;
+  BEGIN
+    result := QtPolygonRaw.New_QPolygonF1(size);
 
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QPolygonF);
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QPolygonF);
 
-RETURN self;
-END New_QPolygonF1;
+    RETURN self;
+  END New_QPolygonF1;
 
-PROCEDURE New_QPolygonF2 (self:QPolygonF; a: QPolygonF;
-): QPolygonF =
-VAR
-result : ADDRESS;
-arg1tmp :=  LOOPHOLE(a.cxxObj,ADDRESS);
-BEGIN
-result := QtPolygonRaw.New_QPolygonF2(arg1tmp);
+PROCEDURE New_QPolygonF2 (self: QPolygonF; a: QPolygonF; ): QPolygonF =
+  VAR
+    result : ADDRESS;
+    arg1tmp          := LOOPHOLE(a.cxxObj, ADDRESS);
+  BEGIN
+    result := QtPolygonRaw.New_QPolygonF2(arg1tmp);
 
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QPolygonF);
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QPolygonF);
 
-RETURN self;
-END New_QPolygonF2;
+    RETURN self;
+  END New_QPolygonF2;
 
-PROCEDURE New_QPolygonF3 (self:QPolygonF; r: QRectF;
-): QPolygonF =
-VAR
-result : ADDRESS;
-arg1tmp :=  LOOPHOLE(r.cxxObj,ADDRESS);
-BEGIN
-result := QtPolygonRaw.New_QPolygonF3(arg1tmp);
+PROCEDURE New_QPolygonF3 (self: QPolygonF; r: QRectF; ): QPolygonF =
+  VAR
+    result : ADDRESS;
+    arg1tmp          := LOOPHOLE(r.cxxObj, ADDRESS);
+  BEGIN
+    result := QtPolygonRaw.New_QPolygonF3(arg1tmp);
 
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QPolygonF);
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QPolygonF);
 
-RETURN self;
-END New_QPolygonF3;
+    RETURN self;
+  END New_QPolygonF3;
 
-PROCEDURE New_QPolygonF4 (self:QPolygonF; a: QPolygon;
-): QPolygonF =
-VAR
-result : ADDRESS;
-arg1tmp :=  LOOPHOLE(a.cxxObj,ADDRESS);
-BEGIN
-result := QtPolygonRaw.New_QPolygonF4(arg1tmp);
+PROCEDURE New_QPolygonF4 (self: QPolygonF; a: QPolygon; ): QPolygonF =
+  VAR
+    result : ADDRESS;
+    arg1tmp          := LOOPHOLE(a.cxxObj, ADDRESS);
+  BEGIN
+    result := QtPolygonRaw.New_QPolygonF4(arg1tmp);
 
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QPolygonF);
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QPolygonF);
 
-RETURN self;
-END New_QPolygonF4;
+    RETURN self;
+  END New_QPolygonF4;
 
-PROCEDURE QPolygonF_translate ( self: QPolygonF;
-dx, dy: LONGREAL;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtPolygonRaw.QPolygonF_translate(selfAdr, dx, dy);
-END QPolygonF_translate;
+PROCEDURE QPolygonF_translate (self: QPolygonF; dx, dy: LONGREAL; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtPolygonRaw.QPolygonF_translate(selfAdr, dx, dy);
+  END QPolygonF_translate;
 
-PROCEDURE QPolygonF_translate1 ( self: QPolygonF;
- offset: QPointF;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(offset.cxxObj,ADDRESS);
-BEGIN
-QtPolygonRaw.QPolygonF_translate1(selfAdr, arg2tmp);
-END QPolygonF_translate1;
+PROCEDURE QPolygonF_translate1 (self: QPolygonF; offset: QPointF; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(offset.cxxObj, ADDRESS);
+  BEGIN
+    QtPolygonRaw.QPolygonF_translate1(selfAdr, arg2tmp);
+  END QPolygonF_translate1;
 
-PROCEDURE QPolygonF_translated ( self: QPolygonF;
-dx, dy: LONGREAL;
-): QPolygonF =
-VAR
-ret:ADDRESS; result : QPolygonF;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtPolygonRaw.QPolygonF_translated(selfAdr, dx, dy);
+PROCEDURE QPolygonF_translated (self: QPolygonF; dx, dy: LONGREAL; ):
+  QPolygonF =
+  VAR
+    ret    : ADDRESS;
+    result : QPolygonF;
+    selfAdr: ADDRESS   := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtPolygonRaw.QPolygonF_translated(selfAdr, dx, dy);
 
-IF ISTYPE(result,QPolygonF) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QPolygonF);
-ELSE
-  result := NEW(QPolygonF);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
+    IF ISTYPE(result, QPolygonF) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QPolygonF);
+    ELSE
+      result := NEW(QPolygonF);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
 
-RETURN result;
-END QPolygonF_translated;
+    RETURN result;
+  END QPolygonF_translated;
 
-PROCEDURE QPolygonF_translated1 ( self: QPolygonF;
- offset: QPointF;
-): QPolygonF =
-VAR
-ret:ADDRESS; result : QPolygonF;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(offset.cxxObj,ADDRESS);
-BEGIN
-ret := QtPolygonRaw.QPolygonF_translated1(selfAdr, arg2tmp);
+PROCEDURE QPolygonF_translated1 (self: QPolygonF; offset: QPointF; ):
+  QPolygonF =
+  VAR
+    ret    : ADDRESS;
+    result : QPolygonF;
+    selfAdr: ADDRESS   := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp            := LOOPHOLE(offset.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtPolygonRaw.QPolygonF_translated1(selfAdr, arg2tmp);
 
-IF ISTYPE(result,QPolygonF) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QPolygonF);
-ELSE
-  result := NEW(QPolygonF);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
+    IF ISTYPE(result, QPolygonF) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QPolygonF);
+    ELSE
+      result := NEW(QPolygonF);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
 
-RETURN result;
-END QPolygonF_translated1;
+    RETURN result;
+  END QPolygonF_translated1;
 
-PROCEDURE QPolygonF_toPolygon ( self: QPolygonF;
-): QPolygon =
-VAR
-ret:ADDRESS; result : QPolygon;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtPolygonRaw.QPolygonF_toPolygon(selfAdr);
+PROCEDURE QPolygonF_toPolygon (self: QPolygonF; ): QPolygon =
+  VAR
+    ret    : ADDRESS;
+    result : QPolygon;
+    selfAdr: ADDRESS  := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtPolygonRaw.QPolygonF_toPolygon(selfAdr);
 
-IF ISTYPE(result,QPolygon) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QPolygon);
-ELSE
-  result := NEW(QPolygon);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
+    IF ISTYPE(result, QPolygon) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QPolygon);
+    ELSE
+      result := NEW(QPolygon);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
 
-RETURN result;
-END QPolygonF_toPolygon;
+    RETURN result;
+  END QPolygonF_toPolygon;
 
-PROCEDURE QPolygonF_isClosed ( self: QPolygonF;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtPolygonRaw.QPolygonF_isClosed(selfAdr);
-END QPolygonF_isClosed;
+PROCEDURE QPolygonF_isClosed (self: QPolygonF; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtPolygonRaw.QPolygonF_isClosed(selfAdr);
+  END QPolygonF_isClosed;
 
-PROCEDURE QPolygonF_boundingRect ( self: QPolygonF;
-): QRectF =
-VAR
-ret:ADDRESS; result : QRectF;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtPolygonRaw.QPolygonF_boundingRect(selfAdr);
+PROCEDURE QPolygonF_boundingRect (self: QPolygonF; ): QRectF =
+  VAR
+    ret    : ADDRESS;
+    result : QRectF;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtPolygonRaw.QPolygonF_boundingRect(selfAdr);
 
-  result := NEW(QRectF);
-  result.cxxObj := ret;
-  result.destroyCxx();
+    result := NEW(QRectF);
+    result.cxxObj := ret;
+    result.destroyCxx();
 
-RETURN result;
-END QPolygonF_boundingRect;
+    RETURN result;
+  END QPolygonF_boundingRect;
 
-PROCEDURE QPolygonF_containsPoint ( self: QPolygonF;
- pt: QPointF;
-fillRule: FillRule;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(pt.cxxObj,ADDRESS);
-BEGIN
-RETURN QtPolygonRaw.QPolygonF_containsPoint(selfAdr, arg2tmp, ORD(fillRule));
-END QPolygonF_containsPoint;
+PROCEDURE QPolygonF_containsPoint
+  (self: QPolygonF; pt: QPointF; fillRule: FillRule; ): BOOLEAN =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(pt.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtPolygonRaw.QPolygonF_containsPoint(
+             selfAdr, arg2tmp, ORD(fillRule));
+  END QPolygonF_containsPoint;
 
-PROCEDURE QPolygonF_united ( self, r: QPolygonF;
-): QPolygonF =
-VAR
-ret:ADDRESS; result : QPolygonF;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(r.cxxObj,ADDRESS);
-BEGIN
-ret := QtPolygonRaw.QPolygonF_united(selfAdr, arg2tmp);
+PROCEDURE QPolygonF_united (self, r: QPolygonF; ): QPolygonF =
+  VAR
+    ret    : ADDRESS;
+    result : QPolygonF;
+    selfAdr: ADDRESS   := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp            := LOOPHOLE(r.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtPolygonRaw.QPolygonF_united(selfAdr, arg2tmp);
 
-IF ISTYPE(result,QPolygonF) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QPolygonF);
-ELSE
-  result := NEW(QPolygonF);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
+    IF ISTYPE(result, QPolygonF) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QPolygonF);
+    ELSE
+      result := NEW(QPolygonF);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
 
-RETURN result;
-END QPolygonF_united;
+    RETURN result;
+  END QPolygonF_united;
 
-PROCEDURE QPolygonF_intersected ( self, r: QPolygonF;
-): QPolygonF =
-VAR
-ret:ADDRESS; result : QPolygonF;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(r.cxxObj,ADDRESS);
-BEGIN
-ret := QtPolygonRaw.QPolygonF_intersected(selfAdr, arg2tmp);
+PROCEDURE QPolygonF_intersected (self, r: QPolygonF; ): QPolygonF =
+  VAR
+    ret    : ADDRESS;
+    result : QPolygonF;
+    selfAdr: ADDRESS   := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp            := LOOPHOLE(r.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtPolygonRaw.QPolygonF_intersected(selfAdr, arg2tmp);
 
-IF ISTYPE(result,QPolygonF) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QPolygonF);
-ELSE
-  result := NEW(QPolygonF);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
+    IF ISTYPE(result, QPolygonF) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QPolygonF);
+    ELSE
+      result := NEW(QPolygonF);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
 
-RETURN result;
-END QPolygonF_intersected;
+    RETURN result;
+  END QPolygonF_intersected;
 
-PROCEDURE QPolygonF_subtracted ( self, r: QPolygonF;
-): QPolygonF =
-VAR
-ret:ADDRESS; result : QPolygonF;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(r.cxxObj,ADDRESS);
-BEGIN
-ret := QtPolygonRaw.QPolygonF_subtracted(selfAdr, arg2tmp);
+PROCEDURE QPolygonF_subtracted (self, r: QPolygonF; ): QPolygonF =
+  VAR
+    ret    : ADDRESS;
+    result : QPolygonF;
+    selfAdr: ADDRESS   := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp            := LOOPHOLE(r.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtPolygonRaw.QPolygonF_subtracted(selfAdr, arg2tmp);
 
-IF ISTYPE(result,QPolygonF) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,QPolygonF);
-ELSE
-  result := NEW(QPolygonF);
-  result.cxxObj := ret;
-  result.destroyCxx();
-END;
+    IF ISTYPE(result, QPolygonF) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QPolygonF);
+    ELSE
+      result := NEW(QPolygonF);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
 
-RETURN result;
-END QPolygonF_subtracted;
+    RETURN result;
+  END QPolygonF_subtracted;
 
-PROCEDURE Cleanup_QPolygonF(<*UNUSED*>READONLY self: WeakRef.T; ref: REFANY) =
-VAR obj : QPolygonF := ref;
-BEGIN
-  Delete_QPolygonF(obj);
- END Cleanup_QPolygonF;
+PROCEDURE Cleanup_QPolygonF
+  (<* UNUSED *> READONLY self: WeakRef.T; ref: REFANY) =
+  VAR obj: QPolygonF := ref;
+  BEGIN
+    Delete_QPolygonF(obj);
+  END Cleanup_QPolygonF;
 
-PROCEDURE Destroy_QPolygonF(self : QPolygonF) =
-BEGIN
-  EVAL WeakRef.FromRef(self,Cleanup_QPolygonF);
-END Destroy_QPolygonF;
+PROCEDURE Destroy_QPolygonF (self: QPolygonF) =
+  BEGIN
+    EVAL WeakRef.FromRef(self, Cleanup_QPolygonF);
+  END Destroy_QPolygonF;
 
 REVEAL
-QPolygonF =
-QPolygonFPublic BRANDED OBJECT
-OVERRIDES
-init_0 := New_QPolygonF0;
-init_1 := New_QPolygonF1;
-init_2 := New_QPolygonF2;
-init_3 := New_QPolygonF3;
-init_4 := New_QPolygonF4;
-translate := QPolygonF_translate;
-translate1 := QPolygonF_translate1;
-translated := QPolygonF_translated;
-translated1 := QPolygonF_translated1;
-toPolygon := QPolygonF_toPolygon;
-isClosed := QPolygonF_isClosed;
-boundingRect := QPolygonF_boundingRect;
-containsPoint := QPolygonF_containsPoint;
-united := QPolygonF_united;
-intersected := QPolygonF_intersected;
-subtracted := QPolygonF_subtracted;
-destroyCxx := Destroy_QPolygonF;
-END;
+  QPolygonF = QPolygonFPublic BRANDED OBJECT
+              OVERRIDES
+                init_0        := New_QPolygonF0;
+                init_1        := New_QPolygonF1;
+                init_2        := New_QPolygonF2;
+                init_3        := New_QPolygonF3;
+                init_4        := New_QPolygonF4;
+                translate     := QPolygonF_translate;
+                translate1    := QPolygonF_translate1;
+                translated    := QPolygonF_translated;
+                translated1   := QPolygonF_translated1;
+                toPolygon     := QPolygonF_toPolygon;
+                isClosed      := QPolygonF_isClosed;
+                boundingRect  := QPolygonF_boundingRect;
+                containsPoint := QPolygonF_containsPoint;
+                united        := QPolygonF_united;
+                intersected   := QPolygonF_intersected;
+                subtracted    := QPolygonF_subtracted;
+                destroyCxx    := Destroy_QPolygonF;
+              END;
 
 
 BEGIN

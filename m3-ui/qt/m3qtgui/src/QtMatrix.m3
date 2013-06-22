@@ -9,568 +9,519 @@
 UNSAFE MODULE QtMatrix;
 
 
-FROM QtPolygon IMPORT QPolygon,QPolygonF;
+FROM QtPolygon IMPORT QPolygon, QPolygonF;
 IMPORT QtMatrixRaw;
-FROM QtLine IMPORT QLine,QLineF;
-FROM QtPoint IMPORT QPoint,QPointF;
+FROM QtLine IMPORT QLine, QLineF;
+FROM QtPoint IMPORT QPoint, QPointF;
 FROM QtRegion IMPORT QRegion;
 FROM QtNamespace IMPORT Initialization;
-FROM QtRect IMPORT QRect,QRectF;
+FROM QtRect IMPORT QRect, QRectF;
 
 
 IMPORT WeakRef;
 IMPORT Ctypes AS C;
 
-PROCEDURE New_QMatrix0 (self:QMatrix;arg1: Initialization;
-): QMatrix =
-VAR
-result : ADDRESS;
-BEGIN
-result := QtMatrixRaw.New_QMatrix0(ORD(arg1));
-
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QMatrix);
-
-RETURN self;
-END New_QMatrix0;
-
-PROCEDURE New_QMatrix1 (self:QMatrix;): QMatrix =
-VAR
-result : ADDRESS;
-BEGIN
-result := QtMatrixRaw.New_QMatrix1();
-
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QMatrix);
-
-RETURN self;
-END New_QMatrix1;
-
-PROCEDURE New_QMatrix2 (self:QMatrix;m11, m12, m21, m22, dx, dy: LONGREAL;
-): QMatrix =
-VAR
-result : ADDRESS;
-BEGIN
-result := QtMatrixRaw.New_QMatrix2(m11, m12, m21, m22, dx, dy);
-
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QMatrix);
-
-RETURN self;
-END New_QMatrix2;
-
-PROCEDURE New_QMatrix3 (self:QMatrix; matrix: QMatrix;
-): QMatrix =
-VAR
-result : ADDRESS;
-arg1tmp :=  LOOPHOLE(matrix.cxxObj,ADDRESS);
-BEGIN
-result := QtMatrixRaw.New_QMatrix3(arg1tmp);
-
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QMatrix);
-
-RETURN self;
-END New_QMatrix3;
-
-PROCEDURE QMatrix_setMatrix ( self: QMatrix;
-m11, m12, m21, m22, dx, dy: LONGREAL;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtMatrixRaw.QMatrix_setMatrix(selfAdr, m11, m12, m21, m22, dx, dy);
-END QMatrix_setMatrix;
-
-PROCEDURE QMatrix_m11 ( self: QMatrix;
-): LONGREAL =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtMatrixRaw.QMatrix_m11(selfAdr);
-END QMatrix_m11;
-
-PROCEDURE QMatrix_m12 ( self: QMatrix;
-): LONGREAL =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtMatrixRaw.QMatrix_m12(selfAdr);
-END QMatrix_m12;
-
-PROCEDURE QMatrix_m21 ( self: QMatrix;
-): LONGREAL =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtMatrixRaw.QMatrix_m21(selfAdr);
-END QMatrix_m21;
-
-PROCEDURE QMatrix_m22 ( self: QMatrix;
-): LONGREAL =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtMatrixRaw.QMatrix_m22(selfAdr);
-END QMatrix_m22;
-
-PROCEDURE QMatrix_dx ( self: QMatrix;
-): LONGREAL =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtMatrixRaw.QMatrix_dx(selfAdr);
-END QMatrix_dx;
-
-PROCEDURE QMatrix_dy ( self: QMatrix;
-): LONGREAL =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtMatrixRaw.QMatrix_dy(selfAdr);
-END QMatrix_dy;
-
-PROCEDURE QMatrix_map ( self: QMatrix;
-x, y: INTEGER;
-VAR tx, ty: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg4tmp: C.int;
-arg5tmp: C.int;
-BEGIN
-arg4tmp := tx;
-arg5tmp := ty;
-QtMatrixRaw.QMatrix_map(selfAdr, x, y, arg4tmp, arg5tmp);
-tx := arg4tmp;
-ty := arg5tmp;
-END QMatrix_map;
-
-PROCEDURE QMatrix_map1 ( self: QMatrix;
-x, y: LONGREAL;
-VAR tx, ty: LONGREAL;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg4tmp: C.double;
-arg5tmp: C.double;
-BEGIN
-arg4tmp := tx;
-arg5tmp := ty;
-QtMatrixRaw.QMatrix_map1(selfAdr, x, y, arg4tmp, arg5tmp);
-tx := arg4tmp;
-ty := arg5tmp;
-END QMatrix_map1;
-
-PROCEDURE QMatrix_mapRect ( self: QMatrix;
- arg2: QRect;
-): QRect =
-VAR
-ret:ADDRESS; result : QRect;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(arg2.cxxObj,ADDRESS);
-BEGIN
-ret := QtMatrixRaw.QMatrix_mapRect(selfAdr, arg2tmp);
-
-  result := NEW(QRect);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QMatrix_mapRect;
-
-PROCEDURE QMatrix_mapRect1 ( self: QMatrix;
- arg2: QRectF;
-): QRectF =
-VAR
-ret:ADDRESS; result : QRectF;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(arg2.cxxObj,ADDRESS);
-BEGIN
-ret := QtMatrixRaw.QMatrix_mapRect1(selfAdr, arg2tmp);
-
-  result := NEW(QRectF);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QMatrix_mapRect1;
-
-PROCEDURE QMatrix_map2 ( self: QMatrix;
- p: QPoint;
-): QPoint =
-VAR
-ret:ADDRESS; result : QPoint;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(p.cxxObj,ADDRESS);
-BEGIN
-ret := QtMatrixRaw.QMatrix_map2(selfAdr, arg2tmp);
-
-  result := NEW(QPoint);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QMatrix_map2;
-
-PROCEDURE QMatrix_map3 ( self: QMatrix;
- p: QPointF;
-): QPointF =
-VAR
-ret:ADDRESS; result : QPointF;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(p.cxxObj,ADDRESS);
-BEGIN
-ret := QtMatrixRaw.QMatrix_map3(selfAdr, arg2tmp);
-
-  result := NEW(QPointF);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QMatrix_map3;
-
-PROCEDURE QMatrix_map4 ( self: QMatrix;
- l: QLine;
-): QLine =
-VAR
-ret:ADDRESS; result : QLine;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(l.cxxObj,ADDRESS);
-BEGIN
-ret := QtMatrixRaw.QMatrix_map4(selfAdr, arg2tmp);
-
-  result := NEW(QLine);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QMatrix_map4;
-
-PROCEDURE QMatrix_map5 ( self: QMatrix;
- l: QLineF;
-): QLineF =
-VAR
-ret:ADDRESS; result : QLineF;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(l.cxxObj,ADDRESS);
-BEGIN
-ret := QtMatrixRaw.QMatrix_map5(selfAdr, arg2tmp);
-
-  result := NEW(QLineF);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QMatrix_map5;
-
-PROCEDURE QMatrix_map6 ( self: QMatrix;
- a: QPolygonF;
-): QPolygonF =
-VAR
-ret:ADDRESS; result : QPolygonF;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(a.cxxObj,ADDRESS);
-BEGIN
-ret := QtMatrixRaw.QMatrix_map6(selfAdr, arg2tmp);
-
-  result := NEW(QPolygonF);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QMatrix_map6;
-
-PROCEDURE QMatrix_map7 ( self: QMatrix;
- a: QPolygon;
-): QPolygon =
-VAR
-ret:ADDRESS; result : QPolygon;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(a.cxxObj,ADDRESS);
-BEGIN
-ret := QtMatrixRaw.QMatrix_map7(selfAdr, arg2tmp);
-
-  result := NEW(QPolygon);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QMatrix_map7;
-
-PROCEDURE QMatrix_map8 ( self: QMatrix;
- r: QRegion;
-): QRegion =
-VAR
-ret:ADDRESS; result : QRegion;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(r.cxxObj,ADDRESS);
-BEGIN
-ret := QtMatrixRaw.QMatrix_map8(selfAdr, arg2tmp);
-
-  result := NEW(QRegion);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QMatrix_map8;
-
-PROCEDURE QMatrix_mapToPolygon ( self: QMatrix;
- r: QRect;
-): QPolygon =
-VAR
-ret:ADDRESS; result : QPolygon;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(r.cxxObj,ADDRESS);
-BEGIN
-ret := QtMatrixRaw.QMatrix_mapToPolygon(selfAdr, arg2tmp);
-
-  result := NEW(QPolygon);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QMatrix_mapToPolygon;
-
-PROCEDURE QMatrix_reset ( self: QMatrix;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtMatrixRaw.QMatrix_reset(selfAdr);
-END QMatrix_reset;
-
-PROCEDURE QMatrix_isIdentity ( self: QMatrix;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtMatrixRaw.QMatrix_isIdentity(selfAdr);
-END QMatrix_isIdentity;
-
-PROCEDURE QMatrix_translate ( self: QMatrix;
-dx, dy: LONGREAL;
-): QMatrix =
-VAR
-ret:ADDRESS; result : QMatrix;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtMatrixRaw.QMatrix_translate(selfAdr, dx, dy);
-
-  result := NEW(QMatrix);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QMatrix_translate;
-
-PROCEDURE QMatrix_scale ( self: QMatrix;
-sx, sy: LONGREAL;
-): QMatrix =
-VAR
-ret:ADDRESS; result : QMatrix;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtMatrixRaw.QMatrix_scale(selfAdr, sx, sy);
-
-  result := NEW(QMatrix);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QMatrix_scale;
-
-PROCEDURE QMatrix_shear ( self: QMatrix;
-sh, sv: LONGREAL;
-): QMatrix =
-VAR
-ret:ADDRESS; result : QMatrix;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtMatrixRaw.QMatrix_shear(selfAdr, sh, sv);
-
-  result := NEW(QMatrix);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QMatrix_shear;
-
-PROCEDURE QMatrix_rotate ( self: QMatrix;
-a: LONGREAL;
-): QMatrix =
-VAR
-ret:ADDRESS; result : QMatrix;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtMatrixRaw.QMatrix_rotate(selfAdr, a);
-
-  result := NEW(QMatrix);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QMatrix_rotate;
-
-PROCEDURE QMatrix_isInvertible ( self: QMatrix;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtMatrixRaw.QMatrix_isInvertible(selfAdr);
-END QMatrix_isInvertible;
-
-PROCEDURE QMatrix_determinant ( self: QMatrix;
-): LONGREAL =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtMatrixRaw.QMatrix_determinant(selfAdr);
-END QMatrix_determinant;
-
-PROCEDURE QMatrix_inverted ( self: QMatrix;
-VAR invertible: BOOLEAN;
-): QMatrix =
-VAR
-ret:ADDRESS; result : QMatrix;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtMatrixRaw.QMatrix_inverted(selfAdr, invertible);
-
-  result := NEW(QMatrix);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QMatrix_inverted;
-
-PROCEDURE QMatrix_inverted1 ( self: QMatrix;
-): QMatrix =
-VAR
-ret:ADDRESS; result : QMatrix;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtMatrixRaw.QMatrix_inverted1(selfAdr);
-
-  result := NEW(QMatrix);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QMatrix_inverted1;
-
-PROCEDURE QMatrix_Op_Equals ( self, arg2: QMatrix;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(arg2.cxxObj,ADDRESS);
-BEGIN
-RETURN QtMatrixRaw.QMatrix_Op_Equals(selfAdr, arg2tmp);
-END QMatrix_Op_Equals;
-
-PROCEDURE QMatrix_Op_NotEquals ( self, arg2: QMatrix;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(arg2.cxxObj,ADDRESS);
-BEGIN
-RETURN QtMatrixRaw.QMatrix_Op_NotEquals(selfAdr, arg2tmp);
-END QMatrix_Op_NotEquals;
-
-PROCEDURE QMatrix_Op_TimesEquals ( self, arg2: QMatrix;
-): QMatrix =
-VAR
-ret:ADDRESS; result : QMatrix;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(arg2.cxxObj,ADDRESS);
-BEGIN
-ret := QtMatrixRaw.QMatrix_Op_TimesEquals(selfAdr, arg2tmp);
-
-  result := NEW(QMatrix);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QMatrix_Op_TimesEquals;
-
-PROCEDURE QMatrix_Op_Assign ( self, arg2: QMatrix;
-): QMatrix =
-VAR
-ret:ADDRESS; result : QMatrix;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(arg2.cxxObj,ADDRESS);
-BEGIN
-ret := QtMatrixRaw.QMatrix_Op_Assign(selfAdr, arg2tmp);
-
-  result := NEW(QMatrix);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QMatrix_Op_Assign;
-
-PROCEDURE Delete_QMatrix ( self: QMatrix;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtMatrixRaw.Delete_QMatrix(selfAdr);
-END Delete_QMatrix;
-
-PROCEDURE Cleanup_QMatrix(<*UNUSED*>READONLY self: WeakRef.T; ref: REFANY) =
-VAR obj : QMatrix := ref;
-BEGIN
-  Delete_QMatrix(obj);
- END Cleanup_QMatrix;
-
-PROCEDURE Destroy_QMatrix(self : QMatrix) =
-BEGIN
-  EVAL WeakRef.FromRef(self,Cleanup_QMatrix);
-END Destroy_QMatrix;
+PROCEDURE New_QMatrix0 (self: QMatrix; arg1: Initialization; ): QMatrix =
+  VAR result: ADDRESS;
+  BEGIN
+    result := QtMatrixRaw.New_QMatrix0(ORD(arg1));
+
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QMatrix);
+
+    RETURN self;
+  END New_QMatrix0;
+
+PROCEDURE New_QMatrix1 (self: QMatrix; ): QMatrix =
+  VAR result: ADDRESS;
+  BEGIN
+    result := QtMatrixRaw.New_QMatrix1();
+
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QMatrix);
+
+    RETURN self;
+  END New_QMatrix1;
+
+PROCEDURE New_QMatrix2
+  (self: QMatrix; m11, m12, m21, m22, dx, dy: LONGREAL; ): QMatrix =
+  VAR result: ADDRESS;
+  BEGIN
+    result := QtMatrixRaw.New_QMatrix2(m11, m12, m21, m22, dx, dy);
+
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QMatrix);
+
+    RETURN self;
+  END New_QMatrix2;
+
+PROCEDURE New_QMatrix3 (self: QMatrix; matrix: QMatrix; ): QMatrix =
+  VAR
+    result : ADDRESS;
+    arg1tmp          := LOOPHOLE(matrix.cxxObj, ADDRESS);
+  BEGIN
+    result := QtMatrixRaw.New_QMatrix3(arg1tmp);
+
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QMatrix);
+
+    RETURN self;
+  END New_QMatrix3;
+
+PROCEDURE QMatrix_setMatrix
+  (self: QMatrix; m11, m12, m21, m22, dx, dy: LONGREAL; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtMatrixRaw.QMatrix_setMatrix(selfAdr, m11, m12, m21, m22, dx, dy);
+  END QMatrix_setMatrix;
+
+PROCEDURE QMatrix_m11 (self: QMatrix; ): LONGREAL =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtMatrixRaw.QMatrix_m11(selfAdr);
+  END QMatrix_m11;
+
+PROCEDURE QMatrix_m12 (self: QMatrix; ): LONGREAL =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtMatrixRaw.QMatrix_m12(selfAdr);
+  END QMatrix_m12;
+
+PROCEDURE QMatrix_m21 (self: QMatrix; ): LONGREAL =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtMatrixRaw.QMatrix_m21(selfAdr);
+  END QMatrix_m21;
+
+PROCEDURE QMatrix_m22 (self: QMatrix; ): LONGREAL =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtMatrixRaw.QMatrix_m22(selfAdr);
+  END QMatrix_m22;
+
+PROCEDURE QMatrix_dx (self: QMatrix; ): LONGREAL =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtMatrixRaw.QMatrix_dx(selfAdr);
+  END QMatrix_dx;
+
+PROCEDURE QMatrix_dy (self: QMatrix; ): LONGREAL =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtMatrixRaw.QMatrix_dy(selfAdr);
+  END QMatrix_dy;
+
+PROCEDURE QMatrix_map
+  (self: QMatrix; x, y: INTEGER; VAR tx, ty: INTEGER; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg4tmp: C.int;
+    arg5tmp: C.int;
+  BEGIN
+    arg4tmp := tx;
+    arg5tmp := ty;
+    QtMatrixRaw.QMatrix_map(selfAdr, x, y, arg4tmp, arg5tmp);
+    tx := arg4tmp;
+    ty := arg5tmp;
+  END QMatrix_map;
+
+PROCEDURE QMatrix_map1
+  (self: QMatrix; x, y: LONGREAL; VAR tx, ty: LONGREAL; ) =
+  VAR
+    selfAdr: ADDRESS  := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg4tmp: C.double;
+    arg5tmp: C.double;
+  BEGIN
+    arg4tmp := tx;
+    arg5tmp := ty;
+    QtMatrixRaw.QMatrix_map1(selfAdr, x, y, arg4tmp, arg5tmp);
+    tx := arg4tmp;
+    ty := arg5tmp;
+  END QMatrix_map1;
+
+PROCEDURE QMatrix_mapRect (self: QMatrix; arg2: QRect; ): QRect =
+  VAR
+    ret    : ADDRESS;
+    result : QRect;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(arg2.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtMatrixRaw.QMatrix_mapRect(selfAdr, arg2tmp);
+
+    result := NEW(QRect);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QMatrix_mapRect;
+
+PROCEDURE QMatrix_mapRect1 (self: QMatrix; arg2: QRectF; ): QRectF =
+  VAR
+    ret    : ADDRESS;
+    result : QRectF;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(arg2.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtMatrixRaw.QMatrix_mapRect1(selfAdr, arg2tmp);
+
+    result := NEW(QRectF);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QMatrix_mapRect1;
+
+PROCEDURE QMatrix_map2 (self: QMatrix; p: QPoint; ): QPoint =
+  VAR
+    ret    : ADDRESS;
+    result : QPoint;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(p.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtMatrixRaw.QMatrix_map2(selfAdr, arg2tmp);
+
+    result := NEW(QPoint);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QMatrix_map2;
+
+PROCEDURE QMatrix_map3 (self: QMatrix; p: QPointF; ): QPointF =
+  VAR
+    ret    : ADDRESS;
+    result : QPointF;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(p.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtMatrixRaw.QMatrix_map3(selfAdr, arg2tmp);
+
+    result := NEW(QPointF);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QMatrix_map3;
+
+PROCEDURE QMatrix_map4 (self: QMatrix; l: QLine; ): QLine =
+  VAR
+    ret    : ADDRESS;
+    result : QLine;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(l.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtMatrixRaw.QMatrix_map4(selfAdr, arg2tmp);
+
+    result := NEW(QLine);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QMatrix_map4;
+
+PROCEDURE QMatrix_map5 (self: QMatrix; l: QLineF; ): QLineF =
+  VAR
+    ret    : ADDRESS;
+    result : QLineF;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(l.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtMatrixRaw.QMatrix_map5(selfAdr, arg2tmp);
+
+    result := NEW(QLineF);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QMatrix_map5;
+
+PROCEDURE QMatrix_map6 (self: QMatrix; a: QPolygonF; ): QPolygonF =
+  VAR
+    ret    : ADDRESS;
+    result : QPolygonF;
+    selfAdr: ADDRESS   := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp            := LOOPHOLE(a.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtMatrixRaw.QMatrix_map6(selfAdr, arg2tmp);
+
+    result := NEW(QPolygonF);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QMatrix_map6;
+
+PROCEDURE QMatrix_map7 (self: QMatrix; a: QPolygon; ): QPolygon =
+  VAR
+    ret    : ADDRESS;
+    result : QPolygon;
+    selfAdr: ADDRESS  := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp           := LOOPHOLE(a.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtMatrixRaw.QMatrix_map7(selfAdr, arg2tmp);
+
+    result := NEW(QPolygon);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QMatrix_map7;
+
+PROCEDURE QMatrix_map8 (self: QMatrix; r: QRegion; ): QRegion =
+  VAR
+    ret    : ADDRESS;
+    result : QRegion;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(r.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtMatrixRaw.QMatrix_map8(selfAdr, arg2tmp);
+
+    result := NEW(QRegion);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QMatrix_map8;
+
+PROCEDURE QMatrix_mapToPolygon (self: QMatrix; r: QRect; ): QPolygon =
+  VAR
+    ret    : ADDRESS;
+    result : QPolygon;
+    selfAdr: ADDRESS  := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp           := LOOPHOLE(r.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtMatrixRaw.QMatrix_mapToPolygon(selfAdr, arg2tmp);
+
+    result := NEW(QPolygon);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QMatrix_mapToPolygon;
+
+PROCEDURE QMatrix_reset (self: QMatrix; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtMatrixRaw.QMatrix_reset(selfAdr);
+  END QMatrix_reset;
+
+PROCEDURE QMatrix_isIdentity (self: QMatrix; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtMatrixRaw.QMatrix_isIdentity(selfAdr);
+  END QMatrix_isIdentity;
+
+PROCEDURE QMatrix_translate (self: QMatrix; dx, dy: LONGREAL; ): QMatrix =
+  VAR
+    ret    : ADDRESS;
+    result : QMatrix;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtMatrixRaw.QMatrix_translate(selfAdr, dx, dy);
+
+    result := NEW(QMatrix);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QMatrix_translate;
+
+PROCEDURE QMatrix_scale (self: QMatrix; sx, sy: LONGREAL; ): QMatrix =
+  VAR
+    ret    : ADDRESS;
+    result : QMatrix;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtMatrixRaw.QMatrix_scale(selfAdr, sx, sy);
+
+    result := NEW(QMatrix);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QMatrix_scale;
+
+PROCEDURE QMatrix_shear (self: QMatrix; sh, sv: LONGREAL; ): QMatrix =
+  VAR
+    ret    : ADDRESS;
+    result : QMatrix;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtMatrixRaw.QMatrix_shear(selfAdr, sh, sv);
+
+    result := NEW(QMatrix);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QMatrix_shear;
+
+PROCEDURE QMatrix_rotate (self: QMatrix; a: LONGREAL; ): QMatrix =
+  VAR
+    ret    : ADDRESS;
+    result : QMatrix;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtMatrixRaw.QMatrix_rotate(selfAdr, a);
+
+    result := NEW(QMatrix);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QMatrix_rotate;
+
+PROCEDURE QMatrix_isInvertible (self: QMatrix; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtMatrixRaw.QMatrix_isInvertible(selfAdr);
+  END QMatrix_isInvertible;
+
+PROCEDURE QMatrix_determinant (self: QMatrix; ): LONGREAL =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtMatrixRaw.QMatrix_determinant(selfAdr);
+  END QMatrix_determinant;
+
+PROCEDURE QMatrix_inverted (self: QMatrix; VAR invertible: BOOLEAN; ):
+  QMatrix =
+  VAR
+    ret    : ADDRESS;
+    result : QMatrix;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtMatrixRaw.QMatrix_inverted(selfAdr, invertible);
+
+    result := NEW(QMatrix);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QMatrix_inverted;
+
+PROCEDURE QMatrix_inverted1 (self: QMatrix; ): QMatrix =
+  VAR
+    ret    : ADDRESS;
+    result : QMatrix;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtMatrixRaw.QMatrix_inverted1(selfAdr);
+
+    result := NEW(QMatrix);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QMatrix_inverted1;
+
+PROCEDURE QMatrix_Op_Equals (self, arg2: QMatrix; ): BOOLEAN =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(arg2.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtMatrixRaw.QMatrix_Op_Equals(selfAdr, arg2tmp);
+  END QMatrix_Op_Equals;
+
+PROCEDURE QMatrix_Op_NotEquals (self, arg2: QMatrix; ): BOOLEAN =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(arg2.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtMatrixRaw.QMatrix_Op_NotEquals(selfAdr, arg2tmp);
+  END QMatrix_Op_NotEquals;
+
+PROCEDURE QMatrix_Op_TimesEquals (self, arg2: QMatrix; ): QMatrix =
+  VAR
+    ret    : ADDRESS;
+    result : QMatrix;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(arg2.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtMatrixRaw.QMatrix_Op_TimesEquals(selfAdr, arg2tmp);
+
+    result := NEW(QMatrix);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QMatrix_Op_TimesEquals;
+
+PROCEDURE QMatrix_Op_Assign (self, arg2: QMatrix; ): QMatrix =
+  VAR
+    ret    : ADDRESS;
+    result : QMatrix;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(arg2.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtMatrixRaw.QMatrix_Op_Assign(selfAdr, arg2tmp);
+
+    result := NEW(QMatrix);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QMatrix_Op_Assign;
+
+PROCEDURE Delete_QMatrix (self: QMatrix; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtMatrixRaw.Delete_QMatrix(selfAdr);
+  END Delete_QMatrix;
+
+PROCEDURE Cleanup_QMatrix
+  (<* UNUSED *> READONLY self: WeakRef.T; ref: REFANY) =
+  VAR obj: QMatrix := ref;
+  BEGIN
+    Delete_QMatrix(obj);
+  END Cleanup_QMatrix;
+
+PROCEDURE Destroy_QMatrix (self: QMatrix) =
+  BEGIN
+    EVAL WeakRef.FromRef(self, Cleanup_QMatrix);
+  END Destroy_QMatrix;
 
 REVEAL
-QMatrix =
-QMatrixPublic BRANDED OBJECT
-OVERRIDES
-init_0 := New_QMatrix0;
-init_1 := New_QMatrix1;
-init_2 := New_QMatrix2;
-init_3 := New_QMatrix3;
-setMatrix := QMatrix_setMatrix;
-m11 := QMatrix_m11;
-m12 := QMatrix_m12;
-m21 := QMatrix_m21;
-m22 := QMatrix_m22;
-dx := QMatrix_dx;
-dy := QMatrix_dy;
-map := QMatrix_map;
-map1 := QMatrix_map1;
-mapRect := QMatrix_mapRect;
-mapRect1 := QMatrix_mapRect1;
-map2 := QMatrix_map2;
-map3 := QMatrix_map3;
-map4 := QMatrix_map4;
-map5 := QMatrix_map5;
-map6 := QMatrix_map6;
-map7 := QMatrix_map7;
-map8 := QMatrix_map8;
-mapToPolygon := QMatrix_mapToPolygon;
-reset := QMatrix_reset;
-isIdentity := QMatrix_isIdentity;
-translate := QMatrix_translate;
-scale := QMatrix_scale;
-shear := QMatrix_shear;
-rotate := QMatrix_rotate;
-isInvertible := QMatrix_isInvertible;
-determinant := QMatrix_determinant;
-inverted := QMatrix_inverted;
-inverted1 := QMatrix_inverted1;
-Op_Equals := QMatrix_Op_Equals;
-Op_NotEquals := QMatrix_Op_NotEquals;
-Op_TimesEquals := QMatrix_Op_TimesEquals;
-Op_Assign := QMatrix_Op_Assign;
-destroyCxx := Destroy_QMatrix;
-END;
+  QMatrix = QMatrixPublic BRANDED OBJECT
+            OVERRIDES
+              init_0         := New_QMatrix0;
+              init_1         := New_QMatrix1;
+              init_2         := New_QMatrix2;
+              init_3         := New_QMatrix3;
+              setMatrix      := QMatrix_setMatrix;
+              m11            := QMatrix_m11;
+              m12            := QMatrix_m12;
+              m21            := QMatrix_m21;
+              m22            := QMatrix_m22;
+              dx             := QMatrix_dx;
+              dy             := QMatrix_dy;
+              map            := QMatrix_map;
+              map1           := QMatrix_map1;
+              mapRect        := QMatrix_mapRect;
+              mapRect1       := QMatrix_mapRect1;
+              map2           := QMatrix_map2;
+              map3           := QMatrix_map3;
+              map4           := QMatrix_map4;
+              map5           := QMatrix_map5;
+              map6           := QMatrix_map6;
+              map7           := QMatrix_map7;
+              map8           := QMatrix_map8;
+              mapToPolygon   := QMatrix_mapToPolygon;
+              reset          := QMatrix_reset;
+              isIdentity     := QMatrix_isIdentity;
+              translate      := QMatrix_translate;
+              scale          := QMatrix_scale;
+              shear          := QMatrix_shear;
+              rotate         := QMatrix_rotate;
+              isInvertible   := QMatrix_isInvertible;
+              determinant    := QMatrix_determinant;
+              inverted       := QMatrix_inverted;
+              inverted1      := QMatrix_inverted1;
+              Op_Equals      := QMatrix_Op_Equals;
+              Op_NotEquals   := QMatrix_Op_NotEquals;
+              Op_TimesEquals := QMatrix_Op_TimesEquals;
+              Op_Assign      := QMatrix_Op_Assign;
+              destroyCxx     := Destroy_QMatrix;
+            END;
 
 
 BEGIN

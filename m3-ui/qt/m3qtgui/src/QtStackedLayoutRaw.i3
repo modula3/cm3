@@ -18,97 +18,74 @@ IMPORT Ctypes AS C;
 PROCEDURE New_QStackedLayout0 (): QStackedLayout;
 
 <* EXTERNAL New_QStackedLayout1 *>
-PROCEDURE New_QStackedLayout1 ( parent: ADDRESS;
-): QStackedLayout;
+PROCEDURE New_QStackedLayout1 (parent: ADDRESS; ): QStackedLayout;
 
 <* EXTERNAL New_QStackedLayout2 *>
-PROCEDURE New_QStackedLayout2 ( parentLayout: ADDRESS;
-): QStackedLayout;
+PROCEDURE New_QStackedLayout2 (parentLayout: ADDRESS; ): QStackedLayout;
 
 <* EXTERNAL Delete_QStackedLayout *>
-PROCEDURE Delete_QStackedLayout ( self: QStackedLayout;
-);
+PROCEDURE Delete_QStackedLayout (self: QStackedLayout; );
 
 <* EXTERNAL QStackedLayout_addWidget *>
-PROCEDURE QStackedLayout_addWidget ( self: QStackedLayout;
- w: ADDRESS;
-): C.int;
+PROCEDURE QStackedLayout_addWidget (self: QStackedLayout; w: ADDRESS; ):
+  C.int;
 
 <* EXTERNAL QStackedLayout_insertWidget *>
-PROCEDURE QStackedLayout_insertWidget ( self: QStackedLayout;
-index: C.int;
- w: ADDRESS;
-): C.int;
+PROCEDURE QStackedLayout_insertWidget
+  (self: QStackedLayout; index: C.int; w: ADDRESS; ): C.int;
 
 <* EXTERNAL QStackedLayout_currentWidget *>
-PROCEDURE QStackedLayout_currentWidget ( self: QStackedLayout;
-): ADDRESS;
+PROCEDURE QStackedLayout_currentWidget (self: QStackedLayout; ): ADDRESS;
 
 <* EXTERNAL QStackedLayout_currentIndex *>
-PROCEDURE QStackedLayout_currentIndex ( self: QStackedLayout;
-): C.int;
+PROCEDURE QStackedLayout_currentIndex (self: QStackedLayout; ): C.int;
 
 <* EXTERNAL QStackedLayout_widget0_0 *>
-PROCEDURE QStackedLayout_widget0_0 ( self: QStackedLayout;
-): ADDRESS;
+PROCEDURE QStackedLayout_widget0_0 (self: QStackedLayout; ): ADDRESS;
 
 <* EXTERNAL QStackedLayout_widget1 *>
-PROCEDURE QStackedLayout_widget1 ( self: QStackedLayout;
-arg2: C.int;
-): ADDRESS;
+PROCEDURE QStackedLayout_widget1 (self: QStackedLayout; arg2: C.int; ):
+  ADDRESS;
 
 <* EXTERNAL QStackedLayout_count *>
-PROCEDURE QStackedLayout_count ( self: QStackedLayout;
-): C.int;
+PROCEDURE QStackedLayout_count (self: QStackedLayout; ): C.int;
 
 <* EXTERNAL QStackedLayout_stackingMode *>
-PROCEDURE QStackedLayout_stackingMode ( self: QStackedLayout;
-): C.int;
+PROCEDURE QStackedLayout_stackingMode (self: QStackedLayout; ): C.int;
 
 <* EXTERNAL QStackedLayout_setStackingMode *>
-PROCEDURE QStackedLayout_setStackingMode ( self: QStackedLayout;
-stackingMode: C.int;
-);
+PROCEDURE QStackedLayout_setStackingMode
+  (self: QStackedLayout; stackingMode: C.int; );
 
 <* EXTERNAL QStackedLayout_addItem *>
-PROCEDURE QStackedLayout_addItem ( self: QStackedLayout;
- item: ADDRESS;
-);
+PROCEDURE QStackedLayout_addItem (self: QStackedLayout; item: ADDRESS; );
 
 <* EXTERNAL QStackedLayout_sizeHint *>
-PROCEDURE QStackedLayout_sizeHint ( self: QStackedLayout;
-): ADDRESS;
+PROCEDURE QStackedLayout_sizeHint (self: QStackedLayout; ): ADDRESS;
 
 <* EXTERNAL QStackedLayout_minimumSize *>
-PROCEDURE QStackedLayout_minimumSize ( self: QStackedLayout;
-): ADDRESS;
+PROCEDURE QStackedLayout_minimumSize (self: QStackedLayout; ): ADDRESS;
 
 <* EXTERNAL QStackedLayout_itemAt *>
-PROCEDURE QStackedLayout_itemAt ( self: QStackedLayout;
-arg2: C.int;
-): ADDRESS;
+PROCEDURE QStackedLayout_itemAt (self: QStackedLayout; arg2: C.int; ):
+  ADDRESS;
 
 <* EXTERNAL QStackedLayout_takeAt *>
-PROCEDURE QStackedLayout_takeAt ( self: QStackedLayout;
-arg2: C.int;
-): ADDRESS;
+PROCEDURE QStackedLayout_takeAt (self: QStackedLayout; arg2: C.int; ):
+  ADDRESS;
 
 <* EXTERNAL QStackedLayout_setGeometry *>
-PROCEDURE QStackedLayout_setGeometry ( self: QStackedLayout;
- rect: ADDRESS;
-);
+PROCEDURE QStackedLayout_setGeometry
+  (self: QStackedLayout; rect: ADDRESS; );
 
 <* EXTERNAL QStackedLayout_setCurrentIndex *>
-PROCEDURE QStackedLayout_setCurrentIndex ( self: QStackedLayout;
-index: C.int;
-);
+PROCEDURE QStackedLayout_setCurrentIndex
+  (self: QStackedLayout; index: C.int; );
 
 <* EXTERNAL QStackedLayout_setCurrentWidget *>
-PROCEDURE QStackedLayout_setCurrentWidget ( self: QStackedLayout;
- w: ADDRESS;
-);
+PROCEDURE QStackedLayout_setCurrentWidget
+  (self: QStackedLayout; w: ADDRESS; );
 
-TYPE
-QStackedLayout = ADDRESS;
+TYPE QStackedLayout = ADDRESS;
 
 END QtStackedLayoutRaw.

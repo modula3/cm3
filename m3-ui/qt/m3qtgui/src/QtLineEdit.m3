@@ -10,7 +10,7 @@ UNSAFE MODULE QtLineEdit;
 
 
 FROM QtSize IMPORT QSize;
-FROM QGuiStubs IMPORT QValidator,QCompleter;
+FROM QGuiStubs IMPORT QValidator, QCompleter;
 FROM QtMargins IMPORT QMargins;
 IMPORT QtLineEditRaw;
 FROM QtWidget IMPORT QWidget;
@@ -24,762 +24,648 @@ IMPORT WeakRef;
 IMPORT Ctypes AS C;
 FROM QtByteArray IMPORT QByteArray;
 
-PROCEDURE New_QLineEdit0 (self:QLineEdit; parent: QWidget;
-): QLineEdit =
-VAR
-result : ADDRESS;
-arg1tmp :=  LOOPHOLE(parent.cxxObj,ADDRESS);
-BEGIN
-result := QtLineEditRaw.New_QLineEdit0(arg1tmp);
-
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QLineEdit);
-
-RETURN self;
-END New_QLineEdit0;
-
-PROCEDURE New_QLineEdit1 (self:QLineEdit;): QLineEdit =
-VAR
-result : ADDRESS;
-BEGIN
-result := QtLineEditRaw.New_QLineEdit1();
-
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QLineEdit);
-
-RETURN self;
-END New_QLineEdit1;
-
-PROCEDURE New_QLineEdit2 (self:QLineEdit; arg1: TEXT;
- parent: QWidget;
-): QLineEdit =
-VAR
-result : ADDRESS;
-qstr_arg1 := NEW(QString).initQString(arg1);
-arg1tmp :=  LOOPHOLE(qstr_arg1.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(parent.cxxObj,ADDRESS);
-BEGIN
-result := QtLineEditRaw.New_QLineEdit2(arg1tmp, arg2tmp);
-
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QLineEdit);
-
-RETURN self;
-END New_QLineEdit2;
-
-PROCEDURE New_QLineEdit3 (self:QLineEdit; arg1: TEXT;
-): QLineEdit =
-VAR
-result : ADDRESS;
-qstr_arg1 := NEW(QString).initQString(arg1);
-arg1tmp :=  LOOPHOLE(qstr_arg1.cxxObj,ADDRESS);
-BEGIN
-result := QtLineEditRaw.New_QLineEdit3(arg1tmp);
-
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QLineEdit);
-
-RETURN self;
-END New_QLineEdit3;
-
-PROCEDURE Delete_QLineEdit ( self: QLineEdit;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtLineEditRaw.Delete_QLineEdit(selfAdr);
-END Delete_QLineEdit;
-
-PROCEDURE QLineEdit_text ( self: QLineEdit;
-): TEXT =
-VAR
-ret : ADDRESS;
-qstr := NEW(QString);
-ba : QByteArray;
-result : TEXT;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtLineEditRaw.QLineEdit_text(selfAdr);
-
-  qstr.cxxObj := ret;
-  ba := qstr.toLocal8Bit();
-  result := ba.data();
-
-RETURN result;
-END QLineEdit_text;
-
-PROCEDURE QLineEdit_displayText ( self: QLineEdit;
-): TEXT =
-VAR
-ret : ADDRESS;
-qstr := NEW(QString);
-ba : QByteArray;
-result : TEXT;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtLineEditRaw.QLineEdit_displayText(selfAdr);
-
-  qstr.cxxObj := ret;
-  ba := qstr.toLocal8Bit();
-  result := ba.data();
-
-RETURN result;
-END QLineEdit_displayText;
-
-PROCEDURE QLineEdit_maxLength ( self: QLineEdit;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtLineEditRaw.QLineEdit_maxLength(selfAdr);
-END QLineEdit_maxLength;
-
-PROCEDURE QLineEdit_setMaxLength ( self: QLineEdit;
-arg2: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtLineEditRaw.QLineEdit_setMaxLength(selfAdr, arg2);
-END QLineEdit_setMaxLength;
-
-PROCEDURE QLineEdit_setFrame ( self: QLineEdit;
-arg2: BOOLEAN;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtLineEditRaw.QLineEdit_setFrame(selfAdr, arg2);
-END QLineEdit_setFrame;
-
-PROCEDURE QLineEdit_hasFrame ( self: QLineEdit;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtLineEditRaw.QLineEdit_hasFrame(selfAdr);
-END QLineEdit_hasFrame;
-
-PROCEDURE QLineEdit_echoMode ( self: QLineEdit;
-): EchoMode =
-VAR
-ret:INTEGER; result : EchoMode;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtLineEditRaw.QLineEdit_echoMode(selfAdr);
-result := VAL(ret,EchoMode);  
-RETURN result;
-END QLineEdit_echoMode;
-
-PROCEDURE QLineEdit_setEchoMode ( self: QLineEdit;
-arg2: EchoMode;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtLineEditRaw.QLineEdit_setEchoMode(selfAdr, ORD(arg2));
-END QLineEdit_setEchoMode;
-
-PROCEDURE QLineEdit_isReadOnly ( self: QLineEdit;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtLineEditRaw.QLineEdit_isReadOnly(selfAdr);
-END QLineEdit_isReadOnly;
-
-PROCEDURE QLineEdit_setReadOnly ( self: QLineEdit;
-arg2: BOOLEAN;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtLineEditRaw.QLineEdit_setReadOnly(selfAdr, arg2);
-END QLineEdit_setReadOnly;
-
-PROCEDURE QLineEdit_setValidator ( self: QLineEdit;
- arg2: QValidator;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(arg2.cxxObj,ADDRESS);
-BEGIN
-QtLineEditRaw.QLineEdit_setValidator(selfAdr, arg2tmp);
-END QLineEdit_setValidator;
-
-PROCEDURE QLineEdit_validator ( self: QLineEdit;
-): QValidator =
-VAR
-ret:ADDRESS; result : QValidator;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtLineEditRaw.QLineEdit_validator(selfAdr);
-
-  result := NEW(QValidator);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QLineEdit_validator;
-
-PROCEDURE QLineEdit_setCompleter ( self: QLineEdit;
- completer: QCompleter;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(completer.cxxObj,ADDRESS);
-BEGIN
-QtLineEditRaw.QLineEdit_setCompleter(selfAdr, arg2tmp);
-END QLineEdit_setCompleter;
-
-PROCEDURE QLineEdit_completer ( self: QLineEdit;
-): QCompleter =
-VAR
-ret:ADDRESS; result : QCompleter;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtLineEditRaw.QLineEdit_completer(selfAdr);
-
-  result := NEW(QCompleter);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QLineEdit_completer;
-
-PROCEDURE QLineEdit_sizeHint ( self: QLineEdit;
-): QSize =
-VAR
-ret:ADDRESS; result : QSize;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtLineEditRaw.QLineEdit_sizeHint(selfAdr);
-
-  result := NEW(QSize);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QLineEdit_sizeHint;
-
-PROCEDURE QLineEdit_minimumSizeHint ( self: QLineEdit;
-): QSize =
-VAR
-ret:ADDRESS; result : QSize;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtLineEditRaw.QLineEdit_minimumSizeHint(selfAdr);
-
-  result := NEW(QSize);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QLineEdit_minimumSizeHint;
-
-PROCEDURE QLineEdit_cursorPosition ( self: QLineEdit;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtLineEditRaw.QLineEdit_cursorPosition(selfAdr);
-END QLineEdit_cursorPosition;
-
-PROCEDURE QLineEdit_setCursorPosition ( self: QLineEdit;
-arg2: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtLineEditRaw.QLineEdit_setCursorPosition(selfAdr, arg2);
-END QLineEdit_setCursorPosition;
-
-PROCEDURE QLineEdit_cursorPositionAt ( self: QLineEdit;
- pos: QPoint;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(pos.cxxObj,ADDRESS);
-BEGIN
-RETURN QtLineEditRaw.QLineEdit_cursorPositionAt(selfAdr, arg2tmp);
-END QLineEdit_cursorPositionAt;
-
-PROCEDURE QLineEdit_setAlignment ( self: QLineEdit;
-flag: AlignmentFlag;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtLineEditRaw.QLineEdit_setAlignment(selfAdr, ORD(flag));
-END QLineEdit_setAlignment;
-
-PROCEDURE QLineEdit_alignment ( self: QLineEdit;
-): AlignmentFlag =
-VAR
-ret:INTEGER; result : AlignmentFlag;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtLineEditRaw.QLineEdit_alignment(selfAdr);
-result := VAL(ret,AlignmentFlag);  
-RETURN result;
-END QLineEdit_alignment;
-
-PROCEDURE QLineEdit_cursorForward ( self: QLineEdit;
-mark: BOOLEAN;
-steps: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtLineEditRaw.QLineEdit_cursorForward(selfAdr, mark, steps);
-END QLineEdit_cursorForward;
-
-PROCEDURE QLineEdit_cursorForward1 ( self: QLineEdit;
-mark: BOOLEAN;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtLineEditRaw.QLineEdit_cursorForward1(selfAdr, mark);
-END QLineEdit_cursorForward1;
-
-PROCEDURE QLineEdit_cursorBackward ( self: QLineEdit;
-mark: BOOLEAN;
-steps: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtLineEditRaw.QLineEdit_cursorBackward(selfAdr, mark, steps);
-END QLineEdit_cursorBackward;
-
-PROCEDURE QLineEdit_cursorBackward1 ( self: QLineEdit;
-mark: BOOLEAN;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtLineEditRaw.QLineEdit_cursorBackward1(selfAdr, mark);
-END QLineEdit_cursorBackward1;
-
-PROCEDURE QLineEdit_cursorWordForward ( self: QLineEdit;
-mark: BOOLEAN;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtLineEditRaw.QLineEdit_cursorWordForward(selfAdr, mark);
-END QLineEdit_cursorWordForward;
-
-PROCEDURE QLineEdit_cursorWordBackward ( self: QLineEdit;
-mark: BOOLEAN;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtLineEditRaw.QLineEdit_cursorWordBackward(selfAdr, mark);
-END QLineEdit_cursorWordBackward;
-
-PROCEDURE QLineEdit_backspace ( self: QLineEdit;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtLineEditRaw.QLineEdit_backspace(selfAdr);
-END QLineEdit_backspace;
-
-PROCEDURE QLineEdit_del ( self: QLineEdit;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtLineEditRaw.QLineEdit_del(selfAdr);
-END QLineEdit_del;
-
-PROCEDURE QLineEdit_home ( self: QLineEdit;
-mark: BOOLEAN;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtLineEditRaw.QLineEdit_home(selfAdr, mark);
-END QLineEdit_home;
-
-PROCEDURE QLineEdit_end ( self: QLineEdit;
-mark: BOOLEAN;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtLineEditRaw.QLineEdit_end(selfAdr, mark);
-END QLineEdit_end;
-
-PROCEDURE QLineEdit_isModified ( self: QLineEdit;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtLineEditRaw.QLineEdit_isModified(selfAdr);
-END QLineEdit_isModified;
-
-PROCEDURE QLineEdit_setModified ( self: QLineEdit;
-arg2: BOOLEAN;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtLineEditRaw.QLineEdit_setModified(selfAdr, arg2);
-END QLineEdit_setModified;
-
-PROCEDURE QLineEdit_setSelection ( self: QLineEdit;
-arg2, arg3: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtLineEditRaw.QLineEdit_setSelection(selfAdr, arg2, arg3);
-END QLineEdit_setSelection;
-
-PROCEDURE QLineEdit_hasSelectedText ( self: QLineEdit;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtLineEditRaw.QLineEdit_hasSelectedText(selfAdr);
-END QLineEdit_hasSelectedText;
-
-PROCEDURE QLineEdit_selectedText ( self: QLineEdit;
-): TEXT =
-VAR
-ret : ADDRESS;
-qstr := NEW(QString);
-ba : QByteArray;
-result : TEXT;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtLineEditRaw.QLineEdit_selectedText(selfAdr);
-
-  qstr.cxxObj := ret;
-  ba := qstr.toLocal8Bit();
-  result := ba.data();
-
-RETURN result;
-END QLineEdit_selectedText;
-
-PROCEDURE QLineEdit_selectionStart ( self: QLineEdit;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtLineEditRaw.QLineEdit_selectionStart(selfAdr);
-END QLineEdit_selectionStart;
-
-PROCEDURE QLineEdit_isUndoAvailable ( self: QLineEdit;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtLineEditRaw.QLineEdit_isUndoAvailable(selfAdr);
-END QLineEdit_isUndoAvailable;
-
-PROCEDURE QLineEdit_isRedoAvailable ( self: QLineEdit;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtLineEditRaw.QLineEdit_isRedoAvailable(selfAdr);
-END QLineEdit_isRedoAvailable;
-
-PROCEDURE QLineEdit_setDragEnabled ( self: QLineEdit;
-b: BOOLEAN;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtLineEditRaw.QLineEdit_setDragEnabled(selfAdr, b);
-END QLineEdit_setDragEnabled;
-
-PROCEDURE QLineEdit_dragEnabled ( self: QLineEdit;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtLineEditRaw.QLineEdit_dragEnabled(selfAdr);
-END QLineEdit_dragEnabled;
-
-PROCEDURE QLineEdit_inputMask ( self: QLineEdit;
-): TEXT =
-VAR
-ret : ADDRESS;
-qstr := NEW(QString);
-ba : QByteArray;
-result : TEXT;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtLineEditRaw.QLineEdit_inputMask(selfAdr);
-
-  qstr.cxxObj := ret;
-  ba := qstr.toLocal8Bit();
-  result := ba.data();
-
-RETURN result;
-END QLineEdit_inputMask;
-
-PROCEDURE QLineEdit_setInputMask ( self: QLineEdit;
- inputMask: TEXT;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-qstr_inputMask := NEW(QString).initQString(inputMask);
-arg2tmp :=  LOOPHOLE(qstr_inputMask.cxxObj,ADDRESS);
-BEGIN
-QtLineEditRaw.QLineEdit_setInputMask(selfAdr, arg2tmp);
-END QLineEdit_setInputMask;
-
-PROCEDURE QLineEdit_hasAcceptableInput ( self: QLineEdit;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtLineEditRaw.QLineEdit_hasAcceptableInput(selfAdr);
-END QLineEdit_hasAcceptableInput;
-
-PROCEDURE QLineEdit_setTextMargins ( self: QLineEdit;
-left, top, right, bottom: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtLineEditRaw.QLineEdit_setTextMargins(selfAdr, left, top, right, bottom);
-END QLineEdit_setTextMargins;
-
-PROCEDURE QLineEdit_setTextMargins1 ( self: QLineEdit;
- margins: QMargins;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp :=  LOOPHOLE(margins.cxxObj,ADDRESS);
-BEGIN
-QtLineEditRaw.QLineEdit_setTextMargins1(selfAdr, arg2tmp);
-END QLineEdit_setTextMargins1;
-
-PROCEDURE QLineEdit_getTextMargins ( self: QLineEdit;
-VAR left, top, right, bottom: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-arg2tmp: C.int;
-arg3tmp: C.int;
-arg4tmp: C.int;
-arg5tmp: C.int;
-BEGIN
-arg2tmp := left;
-arg3tmp := top;
-arg4tmp := right;
-arg5tmp := bottom;
-QtLineEditRaw.QLineEdit_getTextMargins(selfAdr, arg2tmp, arg3tmp, arg4tmp, arg5tmp);
-left := arg2tmp;
-top := arg3tmp;
-right := arg4tmp;
-bottom := arg5tmp;
-END QLineEdit_getTextMargins;
-
-PROCEDURE QLineEdit_textMargins ( self: QLineEdit;
-): QMargins =
-VAR
-ret:ADDRESS; result : QMargins;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtLineEditRaw.QLineEdit_textMargins(selfAdr);
-
-  result := NEW(QMargins);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QLineEdit_textMargins;
-
-PROCEDURE QLineEdit_setText ( self: QLineEdit;
- arg2: TEXT;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-qstr_arg2 := NEW(QString).initQString(arg2);
-arg2tmp :=  LOOPHOLE(qstr_arg2.cxxObj,ADDRESS);
-BEGIN
-QtLineEditRaw.QLineEdit_setText(selfAdr, arg2tmp);
-END QLineEdit_setText;
-
-PROCEDURE QLineEdit_clear ( self: QLineEdit;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtLineEditRaw.QLineEdit_clear(selfAdr);
-END QLineEdit_clear;
-
-PROCEDURE QLineEdit_selectAll ( self: QLineEdit;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtLineEditRaw.QLineEdit_selectAll(selfAdr);
-END QLineEdit_selectAll;
-
-PROCEDURE QLineEdit_undo ( self: QLineEdit;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtLineEditRaw.QLineEdit_undo(selfAdr);
-END QLineEdit_undo;
-
-PROCEDURE QLineEdit_redo ( self: QLineEdit;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtLineEditRaw.QLineEdit_redo(selfAdr);
-END QLineEdit_redo;
-
-PROCEDURE QLineEdit_cut ( self: QLineEdit;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtLineEditRaw.QLineEdit_cut(selfAdr);
-END QLineEdit_cut;
-
-PROCEDURE QLineEdit_copy ( self: QLineEdit;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtLineEditRaw.QLineEdit_copy(selfAdr);
-END QLineEdit_copy;
-
-PROCEDURE QLineEdit_paste ( self: QLineEdit;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtLineEditRaw.QLineEdit_paste(selfAdr);
-END QLineEdit_paste;
-
-PROCEDURE QLineEdit_deselect ( self: QLineEdit;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtLineEditRaw.QLineEdit_deselect(selfAdr);
-END QLineEdit_deselect;
-
-PROCEDURE QLineEdit_insert ( self: QLineEdit;
- arg2: TEXT;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-qstr_arg2 := NEW(QString).initQString(arg2);
-arg2tmp :=  LOOPHOLE(qstr_arg2.cxxObj,ADDRESS);
-BEGIN
-QtLineEditRaw.QLineEdit_insert(selfAdr, arg2tmp);
-END QLineEdit_insert;
-
-PROCEDURE QLineEdit_createStandardContextMenu ( self: QLineEdit;
-): QMenu =
-VAR
-ret:ADDRESS; result : QMenu;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtLineEditRaw.QLineEdit_createStandardContextMenu(selfAdr);
-
-  result := NEW(QMenu);
-  result.cxxObj := ret;
-  result.destroyCxx();
-
-RETURN result;
-END QLineEdit_createStandardContextMenu;
-
-PROCEDURE Cleanup_QLineEdit(<*UNUSED*>READONLY self: WeakRef.T; ref: REFANY) =
-VAR obj : QLineEdit := ref;
-BEGIN
-  Delete_QLineEdit(obj);
- END Cleanup_QLineEdit;
-
-PROCEDURE Destroy_QLineEdit(self : QLineEdit) =
-BEGIN
-  EVAL WeakRef.FromRef(self,Cleanup_QLineEdit);
-END Destroy_QLineEdit;
+PROCEDURE New_QLineEdit0 (self: QLineEdit; parent: QWidget; ): QLineEdit =
+  VAR
+    result : ADDRESS;
+    arg1tmp          := LOOPHOLE(parent.cxxObj, ADDRESS);
+  BEGIN
+    result := QtLineEditRaw.New_QLineEdit0(arg1tmp);
+
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QLineEdit);
+
+    RETURN self;
+  END New_QLineEdit0;
+
+PROCEDURE New_QLineEdit1 (self: QLineEdit; ): QLineEdit =
+  VAR result: ADDRESS;
+  BEGIN
+    result := QtLineEditRaw.New_QLineEdit1();
+
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QLineEdit);
+
+    RETURN self;
+  END New_QLineEdit1;
+
+PROCEDURE New_QLineEdit2 (self: QLineEdit; arg1: TEXT; parent: QWidget; ):
+  QLineEdit =
+  VAR
+    result   : ADDRESS;
+    qstr_arg1          := NEW(QString).initQString(arg1);
+    arg1tmp            := LOOPHOLE(qstr_arg1.cxxObj, ADDRESS);
+    arg2tmp            := LOOPHOLE(parent.cxxObj, ADDRESS);
+  BEGIN
+    result := QtLineEditRaw.New_QLineEdit2(arg1tmp, arg2tmp);
+
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QLineEdit);
+
+    RETURN self;
+  END New_QLineEdit2;
+
+PROCEDURE New_QLineEdit3 (self: QLineEdit; arg1: TEXT; ): QLineEdit =
+  VAR
+    result   : ADDRESS;
+    qstr_arg1          := NEW(QString).initQString(arg1);
+    arg1tmp            := LOOPHOLE(qstr_arg1.cxxObj, ADDRESS);
+  BEGIN
+    result := QtLineEditRaw.New_QLineEdit3(arg1tmp);
+
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QLineEdit);
+
+    RETURN self;
+  END New_QLineEdit3;
+
+PROCEDURE Delete_QLineEdit (self: QLineEdit; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtLineEditRaw.Delete_QLineEdit(selfAdr);
+  END Delete_QLineEdit;
+
+PROCEDURE QLineEdit_text (self: QLineEdit; ): TEXT =
+  VAR
+    ret    : ADDRESS;
+    qstr                := NEW(QString);
+    ba     : QByteArray;
+    result : TEXT;
+    selfAdr: ADDRESS    := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtLineEditRaw.QLineEdit_text(selfAdr);
+
+    qstr.cxxObj := ret;
+    ba := qstr.toLocal8Bit();
+    result := ba.data();
+
+    RETURN result;
+  END QLineEdit_text;
+
+PROCEDURE QLineEdit_displayText (self: QLineEdit; ): TEXT =
+  VAR
+    ret    : ADDRESS;
+    qstr                := NEW(QString);
+    ba     : QByteArray;
+    result : TEXT;
+    selfAdr: ADDRESS    := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtLineEditRaw.QLineEdit_displayText(selfAdr);
+
+    qstr.cxxObj := ret;
+    ba := qstr.toLocal8Bit();
+    result := ba.data();
+
+    RETURN result;
+  END QLineEdit_displayText;
+
+PROCEDURE QLineEdit_maxLength (self: QLineEdit; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtLineEditRaw.QLineEdit_maxLength(selfAdr);
+  END QLineEdit_maxLength;
+
+PROCEDURE QLineEdit_setMaxLength (self: QLineEdit; arg2: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtLineEditRaw.QLineEdit_setMaxLength(selfAdr, arg2);
+  END QLineEdit_setMaxLength;
+
+PROCEDURE QLineEdit_setFrame (self: QLineEdit; arg2: BOOLEAN; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtLineEditRaw.QLineEdit_setFrame(selfAdr, arg2);
+  END QLineEdit_setFrame;
+
+PROCEDURE QLineEdit_hasFrame (self: QLineEdit; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtLineEditRaw.QLineEdit_hasFrame(selfAdr);
+  END QLineEdit_hasFrame;
+
+PROCEDURE QLineEdit_echoMode (self: QLineEdit; ): EchoMode =
+  VAR
+    ret    : INTEGER;
+    result : EchoMode;
+    selfAdr: ADDRESS  := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtLineEditRaw.QLineEdit_echoMode(selfAdr);
+    result := VAL(ret, EchoMode);
+    RETURN result;
+  END QLineEdit_echoMode;
+
+PROCEDURE QLineEdit_setEchoMode (self: QLineEdit; arg2: EchoMode; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtLineEditRaw.QLineEdit_setEchoMode(selfAdr, ORD(arg2));
+  END QLineEdit_setEchoMode;
+
+PROCEDURE QLineEdit_isReadOnly (self: QLineEdit; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtLineEditRaw.QLineEdit_isReadOnly(selfAdr);
+  END QLineEdit_isReadOnly;
+
+PROCEDURE QLineEdit_setReadOnly (self: QLineEdit; arg2: BOOLEAN; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtLineEditRaw.QLineEdit_setReadOnly(selfAdr, arg2);
+  END QLineEdit_setReadOnly;
+
+PROCEDURE QLineEdit_setValidator (self: QLineEdit; arg2: QValidator; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(arg2.cxxObj, ADDRESS);
+  BEGIN
+    QtLineEditRaw.QLineEdit_setValidator(selfAdr, arg2tmp);
+  END QLineEdit_setValidator;
+
+PROCEDURE QLineEdit_validator (self: QLineEdit; ): QValidator =
+  VAR
+    ret    : ADDRESS;
+    result : QValidator;
+    selfAdr: ADDRESS    := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtLineEditRaw.QLineEdit_validator(selfAdr);
+
+    result := NEW(QValidator);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QLineEdit_validator;
+
+PROCEDURE QLineEdit_setCompleter
+  (self: QLineEdit; completer: QCompleter; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(completer.cxxObj, ADDRESS);
+  BEGIN
+    QtLineEditRaw.QLineEdit_setCompleter(selfAdr, arg2tmp);
+  END QLineEdit_setCompleter;
+
+PROCEDURE QLineEdit_completer (self: QLineEdit; ): QCompleter =
+  VAR
+    ret    : ADDRESS;
+    result : QCompleter;
+    selfAdr: ADDRESS    := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtLineEditRaw.QLineEdit_completer(selfAdr);
+
+    result := NEW(QCompleter);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QLineEdit_completer;
+
+PROCEDURE QLineEdit_sizeHint (self: QLineEdit; ): QSize =
+  VAR
+    ret    : ADDRESS;
+    result : QSize;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtLineEditRaw.QLineEdit_sizeHint(selfAdr);
+
+    result := NEW(QSize);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QLineEdit_sizeHint;
+
+PROCEDURE QLineEdit_minimumSizeHint (self: QLineEdit; ): QSize =
+  VAR
+    ret    : ADDRESS;
+    result : QSize;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtLineEditRaw.QLineEdit_minimumSizeHint(selfAdr);
+
+    result := NEW(QSize);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QLineEdit_minimumSizeHint;
+
+PROCEDURE QLineEdit_cursorPosition (self: QLineEdit; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtLineEditRaw.QLineEdit_cursorPosition(selfAdr);
+  END QLineEdit_cursorPosition;
+
+PROCEDURE QLineEdit_setCursorPosition (self: QLineEdit; arg2: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtLineEditRaw.QLineEdit_setCursorPosition(selfAdr, arg2);
+  END QLineEdit_setCursorPosition;
+
+PROCEDURE QLineEdit_cursorPositionAt (self: QLineEdit; pos: QPoint; ):
+  INTEGER =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(pos.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtLineEditRaw.QLineEdit_cursorPositionAt(selfAdr, arg2tmp);
+  END QLineEdit_cursorPositionAt;
+
+PROCEDURE QLineEdit_setAlignment (self: QLineEdit; flag: AlignmentFlag; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtLineEditRaw.QLineEdit_setAlignment(selfAdr, ORD(flag));
+  END QLineEdit_setAlignment;
+
+PROCEDURE QLineEdit_alignment (self: QLineEdit; ): AlignmentFlag =
+  VAR
+    ret    : INTEGER;
+    result : AlignmentFlag;
+    selfAdr: ADDRESS       := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtLineEditRaw.QLineEdit_alignment(selfAdr);
+    result := VAL(ret, AlignmentFlag);
+    RETURN result;
+  END QLineEdit_alignment;
+
+PROCEDURE QLineEdit_cursorForward
+  (self: QLineEdit; mark: BOOLEAN; steps: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtLineEditRaw.QLineEdit_cursorForward(selfAdr, mark, steps);
+  END QLineEdit_cursorForward;
+
+PROCEDURE QLineEdit_cursorForward1 (self: QLineEdit; mark: BOOLEAN; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtLineEditRaw.QLineEdit_cursorForward1(selfAdr, mark);
+  END QLineEdit_cursorForward1;
+
+PROCEDURE QLineEdit_cursorBackward
+  (self: QLineEdit; mark: BOOLEAN; steps: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtLineEditRaw.QLineEdit_cursorBackward(selfAdr, mark, steps);
+  END QLineEdit_cursorBackward;
+
+PROCEDURE QLineEdit_cursorBackward1 (self: QLineEdit; mark: BOOLEAN; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtLineEditRaw.QLineEdit_cursorBackward1(selfAdr, mark);
+  END QLineEdit_cursorBackward1;
+
+PROCEDURE QLineEdit_cursorWordForward (self: QLineEdit; mark: BOOLEAN; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtLineEditRaw.QLineEdit_cursorWordForward(selfAdr, mark);
+  END QLineEdit_cursorWordForward;
+
+PROCEDURE QLineEdit_cursorWordBackward (self: QLineEdit; mark: BOOLEAN; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtLineEditRaw.QLineEdit_cursorWordBackward(selfAdr, mark);
+  END QLineEdit_cursorWordBackward;
+
+PROCEDURE QLineEdit_backspace (self: QLineEdit; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtLineEditRaw.QLineEdit_backspace(selfAdr);
+  END QLineEdit_backspace;
+
+PROCEDURE QLineEdit_del (self: QLineEdit; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtLineEditRaw.QLineEdit_del(selfAdr);
+  END QLineEdit_del;
+
+PROCEDURE QLineEdit_home (self: QLineEdit; mark: BOOLEAN; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtLineEditRaw.QLineEdit_home(selfAdr, mark);
+  END QLineEdit_home;
+
+PROCEDURE QLineEdit_end (self: QLineEdit; mark: BOOLEAN; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtLineEditRaw.QLineEdit_end(selfAdr, mark);
+  END QLineEdit_end;
+
+PROCEDURE QLineEdit_isModified (self: QLineEdit; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtLineEditRaw.QLineEdit_isModified(selfAdr);
+  END QLineEdit_isModified;
+
+PROCEDURE QLineEdit_setModified (self: QLineEdit; arg2: BOOLEAN; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtLineEditRaw.QLineEdit_setModified(selfAdr, arg2);
+  END QLineEdit_setModified;
+
+PROCEDURE QLineEdit_setSelection (self: QLineEdit; arg2, arg3: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtLineEditRaw.QLineEdit_setSelection(selfAdr, arg2, arg3);
+  END QLineEdit_setSelection;
+
+PROCEDURE QLineEdit_hasSelectedText (self: QLineEdit; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtLineEditRaw.QLineEdit_hasSelectedText(selfAdr);
+  END QLineEdit_hasSelectedText;
+
+PROCEDURE QLineEdit_selectedText (self: QLineEdit; ): TEXT =
+  VAR
+    ret    : ADDRESS;
+    qstr                := NEW(QString);
+    ba     : QByteArray;
+    result : TEXT;
+    selfAdr: ADDRESS    := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtLineEditRaw.QLineEdit_selectedText(selfAdr);
+
+    qstr.cxxObj := ret;
+    ba := qstr.toLocal8Bit();
+    result := ba.data();
+
+    RETURN result;
+  END QLineEdit_selectedText;
+
+PROCEDURE QLineEdit_selectionStart (self: QLineEdit; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtLineEditRaw.QLineEdit_selectionStart(selfAdr);
+  END QLineEdit_selectionStart;
+
+PROCEDURE QLineEdit_isUndoAvailable (self: QLineEdit; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtLineEditRaw.QLineEdit_isUndoAvailable(selfAdr);
+  END QLineEdit_isUndoAvailable;
+
+PROCEDURE QLineEdit_isRedoAvailable (self: QLineEdit; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtLineEditRaw.QLineEdit_isRedoAvailable(selfAdr);
+  END QLineEdit_isRedoAvailable;
+
+PROCEDURE QLineEdit_setDragEnabled (self: QLineEdit; b: BOOLEAN; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtLineEditRaw.QLineEdit_setDragEnabled(selfAdr, b);
+  END QLineEdit_setDragEnabled;
+
+PROCEDURE QLineEdit_dragEnabled (self: QLineEdit; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtLineEditRaw.QLineEdit_dragEnabled(selfAdr);
+  END QLineEdit_dragEnabled;
+
+PROCEDURE QLineEdit_inputMask (self: QLineEdit; ): TEXT =
+  VAR
+    ret    : ADDRESS;
+    qstr                := NEW(QString);
+    ba     : QByteArray;
+    result : TEXT;
+    selfAdr: ADDRESS    := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtLineEditRaw.QLineEdit_inputMask(selfAdr);
+
+    qstr.cxxObj := ret;
+    ba := qstr.toLocal8Bit();
+    result := ba.data();
+
+    RETURN result;
+  END QLineEdit_inputMask;
+
+PROCEDURE QLineEdit_setInputMask (self: QLineEdit; inputMask: TEXT; ) =
+  VAR
+    selfAdr       : ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    qstr_inputMask          := NEW(QString).initQString(inputMask);
+    arg2tmp                 := LOOPHOLE(qstr_inputMask.cxxObj, ADDRESS);
+  BEGIN
+    QtLineEditRaw.QLineEdit_setInputMask(selfAdr, arg2tmp);
+  END QLineEdit_setInputMask;
+
+PROCEDURE QLineEdit_hasAcceptableInput (self: QLineEdit; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtLineEditRaw.QLineEdit_hasAcceptableInput(selfAdr);
+  END QLineEdit_hasAcceptableInput;
+
+PROCEDURE QLineEdit_setTextMargins
+  (self: QLineEdit; left, top, right, bottom: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtLineEditRaw.QLineEdit_setTextMargins(
+      selfAdr, left, top, right, bottom);
+  END QLineEdit_setTextMargins;
+
+PROCEDURE QLineEdit_setTextMargins1
+  (self: QLineEdit; margins: QMargins; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(margins.cxxObj, ADDRESS);
+  BEGIN
+    QtLineEditRaw.QLineEdit_setTextMargins1(selfAdr, arg2tmp);
+  END QLineEdit_setTextMargins1;
+
+PROCEDURE QLineEdit_getTextMargins
+  (self: QLineEdit; VAR left, top, right, bottom: INTEGER; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp: C.int;
+    arg3tmp: C.int;
+    arg4tmp: C.int;
+    arg5tmp: C.int;
+  BEGIN
+    arg2tmp := left;
+    arg3tmp := top;
+    arg4tmp := right;
+    arg5tmp := bottom;
+    QtLineEditRaw.QLineEdit_getTextMargins(
+      selfAdr, arg2tmp, arg3tmp, arg4tmp, arg5tmp);
+    left := arg2tmp;
+    top := arg3tmp;
+    right := arg4tmp;
+    bottom := arg5tmp;
+  END QLineEdit_getTextMargins;
+
+PROCEDURE QLineEdit_textMargins (self: QLineEdit; ): QMargins =
+  VAR
+    ret    : ADDRESS;
+    result : QMargins;
+    selfAdr: ADDRESS  := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtLineEditRaw.QLineEdit_textMargins(selfAdr);
+
+    result := NEW(QMargins);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QLineEdit_textMargins;
+
+PROCEDURE QLineEdit_setText (self: QLineEdit; arg2: TEXT; ) =
+  VAR
+    selfAdr  : ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    qstr_arg2          := NEW(QString).initQString(arg2);
+    arg2tmp            := LOOPHOLE(qstr_arg2.cxxObj, ADDRESS);
+  BEGIN
+    QtLineEditRaw.QLineEdit_setText(selfAdr, arg2tmp);
+  END QLineEdit_setText;
+
+PROCEDURE QLineEdit_clear (self: QLineEdit; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtLineEditRaw.QLineEdit_clear(selfAdr);
+  END QLineEdit_clear;
+
+PROCEDURE QLineEdit_selectAll (self: QLineEdit; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtLineEditRaw.QLineEdit_selectAll(selfAdr);
+  END QLineEdit_selectAll;
+
+PROCEDURE QLineEdit_undo (self: QLineEdit; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtLineEditRaw.QLineEdit_undo(selfAdr);
+  END QLineEdit_undo;
+
+PROCEDURE QLineEdit_redo (self: QLineEdit; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtLineEditRaw.QLineEdit_redo(selfAdr);
+  END QLineEdit_redo;
+
+PROCEDURE QLineEdit_cut (self: QLineEdit; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtLineEditRaw.QLineEdit_cut(selfAdr);
+  END QLineEdit_cut;
+
+PROCEDURE QLineEdit_copy (self: QLineEdit; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtLineEditRaw.QLineEdit_copy(selfAdr);
+  END QLineEdit_copy;
+
+PROCEDURE QLineEdit_paste (self: QLineEdit; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtLineEditRaw.QLineEdit_paste(selfAdr);
+  END QLineEdit_paste;
+
+PROCEDURE QLineEdit_deselect (self: QLineEdit; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtLineEditRaw.QLineEdit_deselect(selfAdr);
+  END QLineEdit_deselect;
+
+PROCEDURE QLineEdit_insert (self: QLineEdit; arg2: TEXT; ) =
+  VAR
+    selfAdr  : ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    qstr_arg2          := NEW(QString).initQString(arg2);
+    arg2tmp            := LOOPHOLE(qstr_arg2.cxxObj, ADDRESS);
+  BEGIN
+    QtLineEditRaw.QLineEdit_insert(selfAdr, arg2tmp);
+  END QLineEdit_insert;
+
+PROCEDURE QLineEdit_createStandardContextMenu (self: QLineEdit; ): QMenu =
+  VAR
+    ret    : ADDRESS;
+    result : QMenu;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtLineEditRaw.QLineEdit_createStandardContextMenu(selfAdr);
+
+    result := NEW(QMenu);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QLineEdit_createStandardContextMenu;
+
+PROCEDURE Cleanup_QLineEdit
+  (<* UNUSED *> READONLY self: WeakRef.T; ref: REFANY) =
+  VAR obj: QLineEdit := ref;
+  BEGIN
+    Delete_QLineEdit(obj);
+  END Cleanup_QLineEdit;
+
+PROCEDURE Destroy_QLineEdit (self: QLineEdit) =
+  BEGIN
+    EVAL WeakRef.FromRef(self, Cleanup_QLineEdit);
+  END Destroy_QLineEdit;
 
 REVEAL
-QLineEdit =
-QLineEditPublic BRANDED OBJECT
-OVERRIDES
-init_0 := New_QLineEdit0;
-init_1 := New_QLineEdit1;
-init_2 := New_QLineEdit2;
-init_3 := New_QLineEdit3;
-text := QLineEdit_text;
-displayText := QLineEdit_displayText;
-maxLength := QLineEdit_maxLength;
-setMaxLength := QLineEdit_setMaxLength;
-setFrame := QLineEdit_setFrame;
-hasFrame := QLineEdit_hasFrame;
-echoMode := QLineEdit_echoMode;
-setEchoMode := QLineEdit_setEchoMode;
-isReadOnly := QLineEdit_isReadOnly;
-setReadOnly := QLineEdit_setReadOnly;
-setValidator := QLineEdit_setValidator;
-validator := QLineEdit_validator;
-setCompleter := QLineEdit_setCompleter;
-completer := QLineEdit_completer;
-sizeHint := QLineEdit_sizeHint;
-minimumSizeHint := QLineEdit_minimumSizeHint;
-cursorPosition := QLineEdit_cursorPosition;
-setCursorPosition := QLineEdit_setCursorPosition;
-cursorPositionAt := QLineEdit_cursorPositionAt;
-setAlignment := QLineEdit_setAlignment;
-alignment := QLineEdit_alignment;
-cursorForward := QLineEdit_cursorForward;
-cursorForward1 := QLineEdit_cursorForward1;
-cursorBackward := QLineEdit_cursorBackward;
-cursorBackward1 := QLineEdit_cursorBackward1;
-cursorWordForward := QLineEdit_cursorWordForward;
-cursorWordBackward := QLineEdit_cursorWordBackward;
-backspace := QLineEdit_backspace;
-del := QLineEdit_del;
-home := QLineEdit_home;
-end := QLineEdit_end;
-isModified := QLineEdit_isModified;
-setModified := QLineEdit_setModified;
-setSelection := QLineEdit_setSelection;
-hasSelectedText := QLineEdit_hasSelectedText;
-selectedText := QLineEdit_selectedText;
-selectionStart := QLineEdit_selectionStart;
-isUndoAvailable := QLineEdit_isUndoAvailable;
-isRedoAvailable := QLineEdit_isRedoAvailable;
-setDragEnabled := QLineEdit_setDragEnabled;
-dragEnabled := QLineEdit_dragEnabled;
-inputMask := QLineEdit_inputMask;
-setInputMask := QLineEdit_setInputMask;
-hasAcceptableInput := QLineEdit_hasAcceptableInput;
-setTextMargins := QLineEdit_setTextMargins;
-setTextMargins1 := QLineEdit_setTextMargins1;
-getTextMargins := QLineEdit_getTextMargins;
-textMargins := QLineEdit_textMargins;
-setText := QLineEdit_setText;
-clear := QLineEdit_clear;
-selectAll := QLineEdit_selectAll;
-undo := QLineEdit_undo;
-redo := QLineEdit_redo;
-cut := QLineEdit_cut;
-copy := QLineEdit_copy;
-paste := QLineEdit_paste;
-deselect := QLineEdit_deselect;
-insert := QLineEdit_insert;
-createStandardContextMenu := QLineEdit_createStandardContextMenu;
-destroyCxx := Destroy_QLineEdit;
-END;
+  QLineEdit =
+    QLineEditPublic BRANDED OBJECT
+    OVERRIDES
+      init_0                    := New_QLineEdit0;
+      init_1                    := New_QLineEdit1;
+      init_2                    := New_QLineEdit2;
+      init_3                    := New_QLineEdit3;
+      text                      := QLineEdit_text;
+      displayText               := QLineEdit_displayText;
+      maxLength                 := QLineEdit_maxLength;
+      setMaxLength              := QLineEdit_setMaxLength;
+      setFrame                  := QLineEdit_setFrame;
+      hasFrame                  := QLineEdit_hasFrame;
+      echoMode                  := QLineEdit_echoMode;
+      setEchoMode               := QLineEdit_setEchoMode;
+      isReadOnly                := QLineEdit_isReadOnly;
+      setReadOnly               := QLineEdit_setReadOnly;
+      setValidator              := QLineEdit_setValidator;
+      validator                 := QLineEdit_validator;
+      setCompleter              := QLineEdit_setCompleter;
+      completer                 := QLineEdit_completer;
+      sizeHint                  := QLineEdit_sizeHint;
+      minimumSizeHint           := QLineEdit_minimumSizeHint;
+      cursorPosition            := QLineEdit_cursorPosition;
+      setCursorPosition         := QLineEdit_setCursorPosition;
+      cursorPositionAt          := QLineEdit_cursorPositionAt;
+      setAlignment              := QLineEdit_setAlignment;
+      alignment                 := QLineEdit_alignment;
+      cursorForward             := QLineEdit_cursorForward;
+      cursorForward1            := QLineEdit_cursorForward1;
+      cursorBackward            := QLineEdit_cursorBackward;
+      cursorBackward1           := QLineEdit_cursorBackward1;
+      cursorWordForward         := QLineEdit_cursorWordForward;
+      cursorWordBackward        := QLineEdit_cursorWordBackward;
+      backspace                 := QLineEdit_backspace;
+      del                       := QLineEdit_del;
+      home                      := QLineEdit_home;
+      end                       := QLineEdit_end;
+      isModified                := QLineEdit_isModified;
+      setModified               := QLineEdit_setModified;
+      setSelection              := QLineEdit_setSelection;
+      hasSelectedText           := QLineEdit_hasSelectedText;
+      selectedText              := QLineEdit_selectedText;
+      selectionStart            := QLineEdit_selectionStart;
+      isUndoAvailable           := QLineEdit_isUndoAvailable;
+      isRedoAvailable           := QLineEdit_isRedoAvailable;
+      setDragEnabled            := QLineEdit_setDragEnabled;
+      dragEnabled               := QLineEdit_dragEnabled;
+      inputMask                 := QLineEdit_inputMask;
+      setInputMask              := QLineEdit_setInputMask;
+      hasAcceptableInput        := QLineEdit_hasAcceptableInput;
+      setTextMargins            := QLineEdit_setTextMargins;
+      setTextMargins1           := QLineEdit_setTextMargins1;
+      getTextMargins            := QLineEdit_getTextMargins;
+      textMargins               := QLineEdit_textMargins;
+      setText                   := QLineEdit_setText;
+      clear                     := QLineEdit_clear;
+      selectAll                 := QLineEdit_selectAll;
+      undo                      := QLineEdit_undo;
+      redo                      := QLineEdit_redo;
+      cut                       := QLineEdit_cut;
+      copy                      := QLineEdit_copy;
+      paste                     := QLineEdit_paste;
+      deselect                  := QLineEdit_deselect;
+      insert                    := QLineEdit_insert;
+      createStandardContextMenu := QLineEdit_createStandardContextMenu;
+      destroyCxx                := Destroy_QLineEdit;
+    END;
 
 
 BEGIN

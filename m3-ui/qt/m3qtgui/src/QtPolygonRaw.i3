@@ -18,178 +18,120 @@ IMPORT Ctypes AS C;
 PROCEDURE New_QPolygon0 (): QPolygon;
 
 <* EXTERNAL Delete_QPolygon *>
-PROCEDURE Delete_QPolygon ( self: QPolygon;
-);
+PROCEDURE Delete_QPolygon (self: QPolygon; );
 
 <* EXTERNAL New_QPolygon1 *>
-PROCEDURE New_QPolygon1 (size: C.int;
-): QPolygon;
+PROCEDURE New_QPolygon1 (size: C.int; ): QPolygon;
 
 <* EXTERNAL New_QPolygon2 *>
-PROCEDURE New_QPolygon2 ( a: ADDRESS;
-): QPolygon;
+PROCEDURE New_QPolygon2 (a: ADDRESS; ): QPolygon;
 
 <* EXTERNAL New_QPolygon3 *>
-PROCEDURE New_QPolygon3 ( r: ADDRESS;
-closed: BOOLEAN;
-): QPolygon;
+PROCEDURE New_QPolygon3 (r: ADDRESS; closed: BOOLEAN; ): QPolygon;
 
 <* EXTERNAL New_QPolygon4 *>
-PROCEDURE New_QPolygon4 ( r: ADDRESS;
-): QPolygon;
+PROCEDURE New_QPolygon4 (r: ADDRESS; ): QPolygon;
 
 <* EXTERNAL New_QPolygon5 *>
-PROCEDURE New_QPolygon5 (nPoints: C.int;
- points: C.int;
-): QPolygon;
+PROCEDURE New_QPolygon5 (nPoints: C.int; points: C.int; ): QPolygon;
 
 <* EXTERNAL QPolygon_translate *>
-PROCEDURE QPolygon_translate ( self: QPolygon;
-dx, dy: C.int;
-);
+PROCEDURE QPolygon_translate (self: QPolygon; dx, dy: C.int; );
 
 <* EXTERNAL QPolygon_translate1 *>
-PROCEDURE QPolygon_translate1 ( self: QPolygon;
- offset: ADDRESS;
-);
+PROCEDURE QPolygon_translate1 (self: QPolygon; offset: ADDRESS; );
 
 <* EXTERNAL QPolygon_translated *>
-PROCEDURE QPolygon_translated ( self: QPolygon;
-dx, dy: C.int;
-): ADDRESS;
+PROCEDURE QPolygon_translated (self: QPolygon; dx, dy: C.int; ): ADDRESS;
 
 <* EXTERNAL QPolygon_translated1 *>
-PROCEDURE QPolygon_translated1 ( self: QPolygon;
- offset: ADDRESS;
-): ADDRESS;
+PROCEDURE QPolygon_translated1 (self: QPolygon; offset: ADDRESS; ):
+  ADDRESS;
 
 <* EXTERNAL QPolygon_boundingRect *>
-PROCEDURE QPolygon_boundingRect ( self: QPolygon;
-): ADDRESS;
+PROCEDURE QPolygon_boundingRect (self: QPolygon; ): ADDRESS;
 
 <* EXTERNAL QPolygon_point *>
-PROCEDURE QPolygon_point ( self: QPolygon;
-i: C.int;
- x, y: C.int;
-);
+PROCEDURE QPolygon_point (self: QPolygon; i: C.int; x, y: C.int; );
 
 <* EXTERNAL QPolygon_point1 *>
-PROCEDURE QPolygon_point1 ( self: QPolygon;
-i: C.int;
-): ADDRESS;
+PROCEDURE QPolygon_point1 (self: QPolygon; i: C.int; ): ADDRESS;
 
 <* EXTERNAL QPolygon_setPoint *>
-PROCEDURE QPolygon_setPoint ( self: QPolygon;
-index, x, y: C.int;
-);
+PROCEDURE QPolygon_setPoint (self: QPolygon; index, x, y: C.int; );
 
 <* EXTERNAL QPolygon_setPoint1 *>
-PROCEDURE QPolygon_setPoint1 ( self: QPolygon;
-index: C.int;
- p: ADDRESS;
-);
+PROCEDURE QPolygon_setPoint1 (self: QPolygon; index: C.int; p: ADDRESS; );
 
 <* EXTERNAL QPolygon_containsPoint *>
-PROCEDURE QPolygon_containsPoint ( self: QPolygon;
- pt: ADDRESS;
-fillRule: C.int;
-): BOOLEAN;
+PROCEDURE QPolygon_containsPoint
+  (self: QPolygon; pt: ADDRESS; fillRule: C.int; ): BOOLEAN;
 
 <* EXTERNAL QPolygon_united *>
-PROCEDURE QPolygon_united ( self: QPolygon;
- r: ADDRESS;
-): ADDRESS;
+PROCEDURE QPolygon_united (self: QPolygon; r: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL QPolygon_intersected *>
-PROCEDURE QPolygon_intersected ( self: QPolygon;
- r: ADDRESS;
-): ADDRESS;
+PROCEDURE QPolygon_intersected (self: QPolygon; r: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL QPolygon_subtracted *>
-PROCEDURE QPolygon_subtracted ( self: QPolygon;
- r: ADDRESS;
-): ADDRESS;
+PROCEDURE QPolygon_subtracted (self: QPolygon; r: ADDRESS; ): ADDRESS;
 
-TYPE
-QPolygon <: ADDRESS;
+TYPE QPolygon <: ADDRESS;
 
 <* EXTERNAL New_QPolygonF0 *>
 PROCEDURE New_QPolygonF0 (): QPolygonF;
 
 <* EXTERNAL Delete_QPolygonF *>
-PROCEDURE Delete_QPolygonF ( self: QPolygonF;
-);
+PROCEDURE Delete_QPolygonF (self: QPolygonF; );
 
 <* EXTERNAL New_QPolygonF1 *>
-PROCEDURE New_QPolygonF1 (size: C.int;
-): QPolygonF;
+PROCEDURE New_QPolygonF1 (size: C.int; ): QPolygonF;
 
 <* EXTERNAL New_QPolygonF2 *>
-PROCEDURE New_QPolygonF2 ( a: ADDRESS;
-): QPolygonF;
+PROCEDURE New_QPolygonF2 (a: ADDRESS; ): QPolygonF;
 
 <* EXTERNAL New_QPolygonF3 *>
-PROCEDURE New_QPolygonF3 ( r: ADDRESS;
-): QPolygonF;
+PROCEDURE New_QPolygonF3 (r: ADDRESS; ): QPolygonF;
 
 <* EXTERNAL New_QPolygonF4 *>
-PROCEDURE New_QPolygonF4 ( a: ADDRESS;
-): QPolygonF;
+PROCEDURE New_QPolygonF4 (a: ADDRESS; ): QPolygonF;
 
 <* EXTERNAL QPolygonF_translate *>
-PROCEDURE QPolygonF_translate ( self: QPolygonF;
-dx, dy: C.double;
-);
+PROCEDURE QPolygonF_translate (self: QPolygonF; dx, dy: C.double; );
 
 <* EXTERNAL QPolygonF_translate1 *>
-PROCEDURE QPolygonF_translate1 ( self: QPolygonF;
- offset: ADDRESS;
-);
+PROCEDURE QPolygonF_translate1 (self: QPolygonF; offset: ADDRESS; );
 
 <* EXTERNAL QPolygonF_translated *>
-PROCEDURE QPolygonF_translated ( self: QPolygonF;
-dx, dy: C.double;
-): ADDRESS;
+PROCEDURE QPolygonF_translated (self: QPolygonF; dx, dy: C.double; ):
+  ADDRESS;
 
 <* EXTERNAL QPolygonF_translated1 *>
-PROCEDURE QPolygonF_translated1 ( self: QPolygonF;
- offset: ADDRESS;
-): ADDRESS;
+PROCEDURE QPolygonF_translated1 (self: QPolygonF; offset: ADDRESS; ):
+  ADDRESS;
 
 <* EXTERNAL QPolygonF_toPolygon *>
-PROCEDURE QPolygonF_toPolygon ( self: QPolygonF;
-): ADDRESS;
+PROCEDURE QPolygonF_toPolygon (self: QPolygonF; ): ADDRESS;
 
 <* EXTERNAL QPolygonF_isClosed *>
-PROCEDURE QPolygonF_isClosed ( self: QPolygonF;
-): BOOLEAN;
+PROCEDURE QPolygonF_isClosed (self: QPolygonF; ): BOOLEAN;
 
 <* EXTERNAL QPolygonF_boundingRect *>
-PROCEDURE QPolygonF_boundingRect ( self: QPolygonF;
-): ADDRESS;
+PROCEDURE QPolygonF_boundingRect (self: QPolygonF; ): ADDRESS;
 
 <* EXTERNAL QPolygonF_containsPoint *>
-PROCEDURE QPolygonF_containsPoint ( self: QPolygonF;
- pt: ADDRESS;
-fillRule: C.int;
-): BOOLEAN;
+PROCEDURE QPolygonF_containsPoint
+  (self: QPolygonF; pt: ADDRESS; fillRule: C.int; ): BOOLEAN;
 
 <* EXTERNAL QPolygonF_united *>
-PROCEDURE QPolygonF_united ( self: QPolygonF;
- r: ADDRESS;
-): ADDRESS;
+PROCEDURE QPolygonF_united (self: QPolygonF; r: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL QPolygonF_intersected *>
-PROCEDURE QPolygonF_intersected ( self: QPolygonF;
- r: ADDRESS;
-): ADDRESS;
+PROCEDURE QPolygonF_intersected (self: QPolygonF; r: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL QPolygonF_subtracted *>
-PROCEDURE QPolygonF_subtracted ( self: QPolygonF;
- r: ADDRESS;
-): ADDRESS;
+PROCEDURE QPolygonF_subtracted (self: QPolygonF; r: ADDRESS; ): ADDRESS;
 
-TYPE
-QPolygonF <: ADDRESS;
+TYPE QPolygonF <: ADDRESS;
 
 END QtPolygonRaw.

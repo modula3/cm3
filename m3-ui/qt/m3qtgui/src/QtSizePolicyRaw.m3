@@ -11,7 +11,6 @@ MODULE QtSizePolicyRaw;
 
 
 
-REVEAL
-QSizePolicy = UNTRACED BRANDED REF RECORD (*Dummy*) END;
+REVEAL QSizePolicy = UNTRACED BRANDED REF RECORD (*Dummy*) END;
 BEGIN
 END QtSizePolicyRaw.

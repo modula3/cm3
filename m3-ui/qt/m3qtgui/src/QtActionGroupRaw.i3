@@ -14,70 +14,50 @@ INTERFACE QtActionGroupRaw;
 
 
 <* EXTERNAL New_QActionGroup0 *>
-PROCEDURE New_QActionGroup0 ( parent: ADDRESS;
-): QActionGroup;
+PROCEDURE New_QActionGroup0 (parent: ADDRESS; ): QActionGroup;
 
 <* EXTERNAL Delete_QActionGroup *>
-PROCEDURE Delete_QActionGroup ( self: QActionGroup;
-);
+PROCEDURE Delete_QActionGroup (self: QActionGroup; );
 
 <* EXTERNAL QActionGroup_addAction *>
-PROCEDURE QActionGroup_addAction ( self: QActionGroup;
- a: ADDRESS;
-): ADDRESS;
+PROCEDURE QActionGroup_addAction (self: QActionGroup; a: ADDRESS; ):
+  ADDRESS;
 
 <* EXTERNAL QActionGroup_addAction1 *>
-PROCEDURE QActionGroup_addAction1 ( self: QActionGroup;
- text: ADDRESS;
-): ADDRESS;
+PROCEDURE QActionGroup_addAction1 (self: QActionGroup; text: ADDRESS; ):
+  ADDRESS;
 
 <* EXTERNAL QActionGroup_addAction2 *>
-PROCEDURE QActionGroup_addAction2 ( self: QActionGroup;
- icon, text: ADDRESS;
-): ADDRESS;
+PROCEDURE QActionGroup_addAction2
+  (self: QActionGroup; icon, text: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL QActionGroup_removeAction *>
-PROCEDURE QActionGroup_removeAction ( self: QActionGroup;
- a: ADDRESS;
-);
+PROCEDURE QActionGroup_removeAction (self: QActionGroup; a: ADDRESS; );
 
 <* EXTERNAL QActionGroup_checkedAction *>
-PROCEDURE QActionGroup_checkedAction ( self: QActionGroup;
-): ADDRESS;
+PROCEDURE QActionGroup_checkedAction (self: QActionGroup; ): ADDRESS;
 
 <* EXTERNAL QActionGroup_isExclusive *>
-PROCEDURE QActionGroup_isExclusive ( self: QActionGroup;
-): BOOLEAN;
+PROCEDURE QActionGroup_isExclusive (self: QActionGroup; ): BOOLEAN;
 
 <* EXTERNAL QActionGroup_isEnabled *>
-PROCEDURE QActionGroup_isEnabled ( self: QActionGroup;
-): BOOLEAN;
+PROCEDURE QActionGroup_isEnabled (self: QActionGroup; ): BOOLEAN;
 
 <* EXTERNAL QActionGroup_isVisible *>
-PROCEDURE QActionGroup_isVisible ( self: QActionGroup;
-): BOOLEAN;
+PROCEDURE QActionGroup_isVisible (self: QActionGroup; ): BOOLEAN;
 
 <* EXTERNAL QActionGroup_setEnabled *>
-PROCEDURE QActionGroup_setEnabled ( self: QActionGroup;
-arg2: BOOLEAN;
-);
+PROCEDURE QActionGroup_setEnabled (self: QActionGroup; arg2: BOOLEAN; );
 
 <* EXTERNAL QActionGroup_setDisabled *>
-PROCEDURE QActionGroup_setDisabled ( self: QActionGroup;
-b: BOOLEAN;
-);
+PROCEDURE QActionGroup_setDisabled (self: QActionGroup; b: BOOLEAN; );
 
 <* EXTERNAL QActionGroup_setVisible *>
-PROCEDURE QActionGroup_setVisible ( self: QActionGroup;
-arg2: BOOLEAN;
-);
+PROCEDURE QActionGroup_setVisible (self: QActionGroup; arg2: BOOLEAN; );
 
 <* EXTERNAL QActionGroup_setExclusive *>
-PROCEDURE QActionGroup_setExclusive ( self: QActionGroup;
-arg2: BOOLEAN;
-);
+PROCEDURE QActionGroup_setExclusive (self: QActionGroup; arg2: BOOLEAN; );
 
-TYPE
-QActionGroup = ADDRESS;
+TYPE QActionGroup = ADDRESS;
 
 END QtActionGroupRaw.

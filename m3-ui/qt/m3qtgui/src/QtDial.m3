@@ -16,157 +16,136 @@ FROM QtWidget IMPORT QWidget;
 
 IMPORT WeakRef;
 
-PROCEDURE New_QDial0 (self:QDial; parent: QWidget;
-): QDial =
-VAR
-result : ADDRESS;
-arg1tmp :=  LOOPHOLE(parent.cxxObj,ADDRESS);
-BEGIN
-result := QtDialRaw.New_QDial0(arg1tmp);
+PROCEDURE New_QDial0 (self: QDial; parent: QWidget; ): QDial =
+  VAR
+    result : ADDRESS;
+    arg1tmp          := LOOPHOLE(parent.cxxObj, ADDRESS);
+  BEGIN
+    result := QtDialRaw.New_QDial0(arg1tmp);
 
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QDial);
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QDial);
 
-RETURN self;
-END New_QDial0;
+    RETURN self;
+  END New_QDial0;
 
-PROCEDURE New_QDial1 (self:QDial;): QDial =
-VAR
-result : ADDRESS;
-BEGIN
-result := QtDialRaw.New_QDial1();
+PROCEDURE New_QDial1 (self: QDial; ): QDial =
+  VAR result: ADDRESS;
+  BEGIN
+    result := QtDialRaw.New_QDial1();
 
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QDial);
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QDial);
 
-RETURN self;
-END New_QDial1;
+    RETURN self;
+  END New_QDial1;
 
-PROCEDURE Delete_QDial ( self: QDial;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtDialRaw.Delete_QDial(selfAdr);
-END Delete_QDial;
+PROCEDURE Delete_QDial (self: QDial; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtDialRaw.Delete_QDial(selfAdr);
+  END Delete_QDial;
 
-PROCEDURE QDial_wrapping ( self: QDial;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtDialRaw.QDial_wrapping(selfAdr);
-END QDial_wrapping;
+PROCEDURE QDial_wrapping (self: QDial; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtDialRaw.QDial_wrapping(selfAdr);
+  END QDial_wrapping;
 
-PROCEDURE QDial_notchSize ( self: QDial;
-): INTEGER =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtDialRaw.QDial_notchSize(selfAdr);
-END QDial_notchSize;
+PROCEDURE QDial_notchSize (self: QDial; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtDialRaw.QDial_notchSize(selfAdr);
+  END QDial_notchSize;
 
-PROCEDURE QDial_setNotchTarget ( self: QDial;
-target: LONGREAL;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtDialRaw.QDial_setNotchTarget(selfAdr, target);
-END QDial_setNotchTarget;
+PROCEDURE QDial_setNotchTarget (self: QDial; target: LONGREAL; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtDialRaw.QDial_setNotchTarget(selfAdr, target);
+  END QDial_setNotchTarget;
 
-PROCEDURE QDial_notchTarget ( self: QDial;
-): LONGREAL =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtDialRaw.QDial_notchTarget(selfAdr);
-END QDial_notchTarget;
+PROCEDURE QDial_notchTarget (self: QDial; ): LONGREAL =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtDialRaw.QDial_notchTarget(selfAdr);
+  END QDial_notchTarget;
 
-PROCEDURE QDial_notchesVisible ( self: QDial;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtDialRaw.QDial_notchesVisible(selfAdr);
-END QDial_notchesVisible;
+PROCEDURE QDial_notchesVisible (self: QDial; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtDialRaw.QDial_notchesVisible(selfAdr);
+  END QDial_notchesVisible;
 
-PROCEDURE QDial_sizeHint ( self: QDial;
-): QSize =
-VAR
-ret:ADDRESS; result : QSize;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtDialRaw.QDial_sizeHint(selfAdr);
+PROCEDURE QDial_sizeHint (self: QDial; ): QSize =
+  VAR
+    ret    : ADDRESS;
+    result : QSize;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtDialRaw.QDial_sizeHint(selfAdr);
 
-  result := NEW(QSize);
-  result.cxxObj := ret;
-  result.destroyCxx();
+    result := NEW(QSize);
+    result.cxxObj := ret;
+    result.destroyCxx();
 
-RETURN result;
-END QDial_sizeHint;
+    RETURN result;
+  END QDial_sizeHint;
 
-PROCEDURE QDial_minimumSizeHint ( self: QDial;
-): QSize =
-VAR
-ret:ADDRESS; result : QSize;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtDialRaw.QDial_minimumSizeHint(selfAdr);
+PROCEDURE QDial_minimumSizeHint (self: QDial; ): QSize =
+  VAR
+    ret    : ADDRESS;
+    result : QSize;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtDialRaw.QDial_minimumSizeHint(selfAdr);
 
-  result := NEW(QSize);
-  result.cxxObj := ret;
-  result.destroyCxx();
+    result := NEW(QSize);
+    result.cxxObj := ret;
+    result.destroyCxx();
 
-RETURN result;
-END QDial_minimumSizeHint;
+    RETURN result;
+  END QDial_minimumSizeHint;
 
-PROCEDURE QDial_setNotchesVisible ( self: QDial;
-visible: BOOLEAN;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtDialRaw.QDial_setNotchesVisible(selfAdr, visible);
-END QDial_setNotchesVisible;
+PROCEDURE QDial_setNotchesVisible (self: QDial; visible: BOOLEAN; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtDialRaw.QDial_setNotchesVisible(selfAdr, visible);
+  END QDial_setNotchesVisible;
 
-PROCEDURE QDial_setWrapping ( self: QDial;
-on: BOOLEAN;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtDialRaw.QDial_setWrapping(selfAdr, on);
-END QDial_setWrapping;
+PROCEDURE QDial_setWrapping (self: QDial; on: BOOLEAN; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtDialRaw.QDial_setWrapping(selfAdr, on);
+  END QDial_setWrapping;
 
-PROCEDURE Cleanup_QDial(<*UNUSED*>READONLY self: WeakRef.T; ref: REFANY) =
-VAR obj : QDial := ref;
-BEGIN
-  Delete_QDial(obj);
- END Cleanup_QDial;
+PROCEDURE Cleanup_QDial
+  (<* UNUSED *> READONLY self: WeakRef.T; ref: REFANY) =
+  VAR obj: QDial := ref;
+  BEGIN
+    Delete_QDial(obj);
+  END Cleanup_QDial;
 
-PROCEDURE Destroy_QDial(self : QDial) =
-BEGIN
-  EVAL WeakRef.FromRef(self,Cleanup_QDial);
-END Destroy_QDial;
+PROCEDURE Destroy_QDial (self: QDial) =
+  BEGIN
+    EVAL WeakRef.FromRef(self, Cleanup_QDial);
+  END Destroy_QDial;
 
 REVEAL
-QDial =
-QDialPublic BRANDED OBJECT
-OVERRIDES
-init_0 := New_QDial0;
-init_1 := New_QDial1;
-wrapping := QDial_wrapping;
-notchSize := QDial_notchSize;
-setNotchTarget := QDial_setNotchTarget;
-notchTarget := QDial_notchTarget;
-notchesVisible := QDial_notchesVisible;
-sizeHint := QDial_sizeHint;
-minimumSizeHint := QDial_minimumSizeHint;
-setNotchesVisible := QDial_setNotchesVisible;
-setWrapping := QDial_setWrapping;
-destroyCxx := Destroy_QDial;
-END;
+  QDial = QDialPublic BRANDED OBJECT
+          OVERRIDES
+            init_0            := New_QDial0;
+            init_1            := New_QDial1;
+            wrapping          := QDial_wrapping;
+            notchSize         := QDial_notchSize;
+            setNotchTarget    := QDial_setNotchTarget;
+            notchTarget       := QDial_notchTarget;
+            notchesVisible    := QDial_notchesVisible;
+            sizeHint          := QDial_sizeHint;
+            minimumSizeHint   := QDial_minimumSizeHint;
+            setNotchesVisible := QDial_setNotchesVisible;
+            setWrapping       := QDial_setWrapping;
+            destroyCxx        := Destroy_QDial;
+          END;
 
 
 BEGIN

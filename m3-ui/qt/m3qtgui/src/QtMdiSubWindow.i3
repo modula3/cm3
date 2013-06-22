@@ -14,59 +14,47 @@ FROM QtMenu IMPORT QMenu;
 FROM QtNamespace IMPORT WindowTypes;
 
 
-TYPE
-  T = QMdiSubWindow;
+TYPE T = QMdiSubWindow;
 
 
-CONST (* Enum SubWindowOption *)
+CONST                            (* Enum SubWindowOption *)
   AllowOutsideAreaHorizontally = 1;
-  AllowOutsideAreaVertically = 2;
-  RubberBandResize = 4;
-  RubberBandMove = 8;
+  AllowOutsideAreaVertically   = 2;
+  RubberBandResize             = 4;
+  RubberBandMove               = 8;
 
-TYPE (* Enum SubWindowOption *)
-  SubWindowOption = [1..8];
+TYPE                             (* Enum SubWindowOption *)
+  SubWindowOption = [1 .. 8];
 
 TYPE
-QMdiSubWindow <: QMdiSubWindowPublic;
-QMdiSubWindowPublic =
-QWidget BRANDED OBJECT
-METHODS
-init_0 ( parent: QWidget;
-flags: WindowTypes;
-) : QMdiSubWindow;
-init_1 ( parent: QWidget;
-) : QMdiSubWindow;
-init_2 () : QMdiSubWindow;
-sizeHint(): QSize;  (*  virtual *)
-minimumSizeHint(): QSize;  (*  virtual *)
-setWidget( widget: QWidget;
-);
-widget(): QWidget;
-maximizedButtonsWidget(): QWidget;
-maximizedSystemMenuIconWidget(): QWidget;
-isShaded(): BOOLEAN;
-setOption(option: SubWindowOption;
-on: BOOLEAN;
-);
-setOption1(option: SubWindowOption;
-);
-testOption(arg1: SubWindowOption;
-): BOOLEAN;
-setKeyboardSingleStep(step: INTEGER;
-);
-keyboardSingleStep(): INTEGER;
-setKeyboardPageStep(step: INTEGER;
-);
-keyboardPageStep(): INTEGER;
-setSystemMenu( systemMenu: QMenu;
-);
-systemMenu(): QMenu;
-mdiArea(): REFANY;
-showSystemMenu();
-showShaded();
-destroyCxx();
-END;
+  QMdiSubWindow <: QMdiSubWindowPublic;
+  QMdiSubWindowPublic =
+    QWidget BRANDED OBJECT
+    METHODS
+      init_0   (parent: QWidget; flags: WindowTypes; ): QMdiSubWindow;
+      init_1   (parent: QWidget; ): QMdiSubWindow;
+      init_2   (): QMdiSubWindow;
+      sizeHint (): QSize;        (* virtual *)
+      minimumSizeHint               (): QSize; (* virtual *)
+      setWidget                     (widget: QWidget; );
+      widget                        (): QWidget;
+      maximizedButtonsWidget        (): QWidget;
+      maximizedSystemMenuIconWidget (): QWidget;
+      isShaded                      (): BOOLEAN;
+      setOption             (option: SubWindowOption; on: BOOLEAN; );
+      setOption1            (option: SubWindowOption; );
+      testOption            (arg1: SubWindowOption; ): BOOLEAN;
+      setKeyboardSingleStep (step: INTEGER; );
+      keyboardSingleStep    (): INTEGER;
+      setKeyboardPageStep   (step: INTEGER; );
+      keyboardPageStep      (): INTEGER;
+      setSystemMenu         (systemMenu: QMenu; );
+      systemMenu            (): QMenu;
+      mdiArea               (): REFANY;
+      showSystemMenu        ();
+      showShaded            ();
+      destroyCxx            ();
+    END;
 
 
 END QtMdiSubWindow.

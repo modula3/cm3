@@ -19,378 +19,344 @@ FROM QtNamespace IMPORT AlignmentFlag;
 
 IMPORT WeakRef;
 
-PROCEDURE New_QAbstractSpinBox0 (self:QAbstractSpinBox; parent: QWidget;
-): QAbstractSpinBox =
-VAR
-result : ADDRESS;
-arg1tmp :=  LOOPHOLE(parent.cxxObj,ADDRESS);
-BEGIN
-result := QtAbstractSpinBoxRaw.New_QAbstractSpinBox0(arg1tmp);
+PROCEDURE New_QAbstractSpinBox0
+  (self: QAbstractSpinBox; parent: QWidget; ): QAbstractSpinBox =
+  VAR
+    result : ADDRESS;
+    arg1tmp          := LOOPHOLE(parent.cxxObj, ADDRESS);
+  BEGIN
+    result := QtAbstractSpinBoxRaw.New_QAbstractSpinBox0(arg1tmp);
 
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QAbstractSpinBox);
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QAbstractSpinBox);
 
-RETURN self;
-END New_QAbstractSpinBox0;
+    RETURN self;
+  END New_QAbstractSpinBox0;
 
-PROCEDURE New_QAbstractSpinBox1 (self:QAbstractSpinBox;): QAbstractSpinBox =
-VAR
-result : ADDRESS;
-BEGIN
-result := QtAbstractSpinBoxRaw.New_QAbstractSpinBox1();
+PROCEDURE New_QAbstractSpinBox1 (self: QAbstractSpinBox; ):
+  QAbstractSpinBox =
+  VAR result: ADDRESS;
+  BEGIN
+    result := QtAbstractSpinBoxRaw.New_QAbstractSpinBox1();
 
-  self.cxxObj := result;
-  EVAL WeakRef.FromRef(self,Cleanup_QAbstractSpinBox);
+    self.cxxObj := result;
+    EVAL WeakRef.FromRef(self, Cleanup_QAbstractSpinBox);
 
-RETURN self;
-END New_QAbstractSpinBox1;
+    RETURN self;
+  END New_QAbstractSpinBox1;
 
-PROCEDURE Delete_QAbstractSpinBox ( self: QAbstractSpinBox;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtAbstractSpinBoxRaw.Delete_QAbstractSpinBox(selfAdr);
-END Delete_QAbstractSpinBox;
+PROCEDURE Delete_QAbstractSpinBox (self: QAbstractSpinBox; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtAbstractSpinBoxRaw.Delete_QAbstractSpinBox(selfAdr);
+  END Delete_QAbstractSpinBox;
 
-PROCEDURE QAbstractSpinBox_buttonSymbols ( self: QAbstractSpinBox;
-): ButtonSymbols =
-VAR
-ret:INTEGER; result : ButtonSymbols;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtAbstractSpinBoxRaw.QAbstractSpinBox_buttonSymbols(selfAdr);
-result := VAL(ret,ButtonSymbols);  
-RETURN result;
-END QAbstractSpinBox_buttonSymbols;
+PROCEDURE QAbstractSpinBox_buttonSymbols (self: QAbstractSpinBox; ):
+  ButtonSymbols =
+  VAR
+    ret    : INTEGER;
+    result : ButtonSymbols;
+    selfAdr: ADDRESS       := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtAbstractSpinBoxRaw.QAbstractSpinBox_buttonSymbols(selfAdr);
+    result := VAL(ret, ButtonSymbols);
+    RETURN result;
+  END QAbstractSpinBox_buttonSymbols;
 
-PROCEDURE QAbstractSpinBox_setButtonSymbols ( self: QAbstractSpinBox;
-bs: ButtonSymbols;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtAbstractSpinBoxRaw.QAbstractSpinBox_setButtonSymbols(selfAdr, ORD(bs));
-END QAbstractSpinBox_setButtonSymbols;
+PROCEDURE QAbstractSpinBox_setButtonSymbols
+  (self: QAbstractSpinBox; bs: ButtonSymbols; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtAbstractSpinBoxRaw.QAbstractSpinBox_setButtonSymbols(
+      selfAdr, ORD(bs));
+  END QAbstractSpinBox_setButtonSymbols;
 
-PROCEDURE QAbstractSpinBox_setCorrectionMode ( self: QAbstractSpinBox;
-cm: CorrectionMode;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtAbstractSpinBoxRaw.QAbstractSpinBox_setCorrectionMode(selfAdr, ORD(cm));
-END QAbstractSpinBox_setCorrectionMode;
+PROCEDURE QAbstractSpinBox_setCorrectionMode
+  (self: QAbstractSpinBox; cm: CorrectionMode; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtAbstractSpinBoxRaw.QAbstractSpinBox_setCorrectionMode(
+      selfAdr, ORD(cm));
+  END QAbstractSpinBox_setCorrectionMode;
 
-PROCEDURE QAbstractSpinBox_correctionMode ( self: QAbstractSpinBox;
-): CorrectionMode =
-VAR
-ret:INTEGER; result : CorrectionMode;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtAbstractSpinBoxRaw.QAbstractSpinBox_correctionMode(selfAdr);
-result := VAL(ret,CorrectionMode);  
-RETURN result;
-END QAbstractSpinBox_correctionMode;
+PROCEDURE QAbstractSpinBox_correctionMode (self: QAbstractSpinBox; ):
+  CorrectionMode =
+  VAR
+    ret    : INTEGER;
+    result : CorrectionMode;
+    selfAdr: ADDRESS        := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtAbstractSpinBoxRaw.QAbstractSpinBox_correctionMode(selfAdr);
+    result := VAL(ret, CorrectionMode);
+    RETURN result;
+  END QAbstractSpinBox_correctionMode;
 
-PROCEDURE QAbstractSpinBox_hasAcceptableInput ( self: QAbstractSpinBox;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtAbstractSpinBoxRaw.QAbstractSpinBox_hasAcceptableInput(selfAdr);
-END QAbstractSpinBox_hasAcceptableInput;
+PROCEDURE QAbstractSpinBox_hasAcceptableInput (self: QAbstractSpinBox; ):
+  BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN
+      QtAbstractSpinBoxRaw.QAbstractSpinBox_hasAcceptableInput(selfAdr);
+  END QAbstractSpinBox_hasAcceptableInput;
 
-PROCEDURE QAbstractSpinBox_text ( self: QAbstractSpinBox;
-): TEXT =
-VAR
-ret : ADDRESS;
-qstr := NEW(QString);
-ba : QByteArray;
-result : TEXT;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtAbstractSpinBoxRaw.QAbstractSpinBox_text(selfAdr);
+PROCEDURE QAbstractSpinBox_text (self: QAbstractSpinBox; ): TEXT =
+  VAR
+    ret    : ADDRESS;
+    qstr                := NEW(QString);
+    ba     : QByteArray;
+    result : TEXT;
+    selfAdr: ADDRESS    := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtAbstractSpinBoxRaw.QAbstractSpinBox_text(selfAdr);
 
-  qstr.cxxObj := ret;
-  ba := qstr.toLocal8Bit();
-  result := ba.data();
+    qstr.cxxObj := ret;
+    ba := qstr.toLocal8Bit();
+    result := ba.data();
 
-RETURN result;
-END QAbstractSpinBox_text;
+    RETURN result;
+  END QAbstractSpinBox_text;
 
-PROCEDURE QAbstractSpinBox_specialValueText ( self: QAbstractSpinBox;
-): TEXT =
-VAR
-ret : ADDRESS;
-qstr := NEW(QString);
-ba : QByteArray;
-result : TEXT;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtAbstractSpinBoxRaw.QAbstractSpinBox_specialValueText(selfAdr);
+PROCEDURE QAbstractSpinBox_specialValueText (self: QAbstractSpinBox; ):
+  TEXT =
+  VAR
+    ret    : ADDRESS;
+    qstr                := NEW(QString);
+    ba     : QByteArray;
+    result : TEXT;
+    selfAdr: ADDRESS    := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtAbstractSpinBoxRaw.QAbstractSpinBox_specialValueText(selfAdr);
 
-  qstr.cxxObj := ret;
-  ba := qstr.toLocal8Bit();
-  result := ba.data();
+    qstr.cxxObj := ret;
+    ba := qstr.toLocal8Bit();
+    result := ba.data();
 
-RETURN result;
-END QAbstractSpinBox_specialValueText;
+    RETURN result;
+  END QAbstractSpinBox_specialValueText;
 
-PROCEDURE QAbstractSpinBox_setSpecialValueText ( self: QAbstractSpinBox;
- txt: TEXT;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-qstr_txt := NEW(QString).initQString(txt);
-arg2tmp :=  LOOPHOLE(qstr_txt.cxxObj,ADDRESS);
-BEGIN
-QtAbstractSpinBoxRaw.QAbstractSpinBox_setSpecialValueText(selfAdr, arg2tmp);
-END QAbstractSpinBox_setSpecialValueText;
+PROCEDURE QAbstractSpinBox_setSpecialValueText
+  (self: QAbstractSpinBox; txt: TEXT; ) =
+  VAR
+    selfAdr : ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    qstr_txt          := NEW(QString).initQString(txt);
+    arg2tmp           := LOOPHOLE(qstr_txt.cxxObj, ADDRESS);
+  BEGIN
+    QtAbstractSpinBoxRaw.QAbstractSpinBox_setSpecialValueText(
+      selfAdr, arg2tmp);
+  END QAbstractSpinBox_setSpecialValueText;
 
-PROCEDURE QAbstractSpinBox_wrapping ( self: QAbstractSpinBox;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtAbstractSpinBoxRaw.QAbstractSpinBox_wrapping(selfAdr);
-END QAbstractSpinBox_wrapping;
+PROCEDURE QAbstractSpinBox_wrapping (self: QAbstractSpinBox; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtAbstractSpinBoxRaw.QAbstractSpinBox_wrapping(selfAdr);
+  END QAbstractSpinBox_wrapping;
 
-PROCEDURE QAbstractSpinBox_setWrapping ( self: QAbstractSpinBox;
-w: BOOLEAN;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtAbstractSpinBoxRaw.QAbstractSpinBox_setWrapping(selfAdr, w);
-END QAbstractSpinBox_setWrapping;
+PROCEDURE QAbstractSpinBox_setWrapping
+  (self: QAbstractSpinBox; w: BOOLEAN; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtAbstractSpinBoxRaw.QAbstractSpinBox_setWrapping(selfAdr, w);
+  END QAbstractSpinBox_setWrapping;
 
-PROCEDURE QAbstractSpinBox_setReadOnly ( self: QAbstractSpinBox;
-r: BOOLEAN;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtAbstractSpinBoxRaw.QAbstractSpinBox_setReadOnly(selfAdr, r);
-END QAbstractSpinBox_setReadOnly;
+PROCEDURE QAbstractSpinBox_setReadOnly
+  (self: QAbstractSpinBox; r: BOOLEAN; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtAbstractSpinBoxRaw.QAbstractSpinBox_setReadOnly(selfAdr, r);
+  END QAbstractSpinBox_setReadOnly;
 
-PROCEDURE QAbstractSpinBox_isReadOnly ( self: QAbstractSpinBox;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtAbstractSpinBoxRaw.QAbstractSpinBox_isReadOnly(selfAdr);
-END QAbstractSpinBox_isReadOnly;
+PROCEDURE QAbstractSpinBox_isReadOnly (self: QAbstractSpinBox; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtAbstractSpinBoxRaw.QAbstractSpinBox_isReadOnly(selfAdr);
+  END QAbstractSpinBox_isReadOnly;
 
-PROCEDURE QAbstractSpinBox_setKeyboardTracking ( self: QAbstractSpinBox;
-kt: BOOLEAN;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtAbstractSpinBoxRaw.QAbstractSpinBox_setKeyboardTracking(selfAdr, kt);
-END QAbstractSpinBox_setKeyboardTracking;
+PROCEDURE QAbstractSpinBox_setKeyboardTracking
+  (self: QAbstractSpinBox; kt: BOOLEAN; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtAbstractSpinBoxRaw.QAbstractSpinBox_setKeyboardTracking(selfAdr, kt);
+  END QAbstractSpinBox_setKeyboardTracking;
 
-PROCEDURE QAbstractSpinBox_keyboardTracking ( self: QAbstractSpinBox;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtAbstractSpinBoxRaw.QAbstractSpinBox_keyboardTracking(selfAdr);
-END QAbstractSpinBox_keyboardTracking;
+PROCEDURE QAbstractSpinBox_keyboardTracking (self: QAbstractSpinBox; ):
+  BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtAbstractSpinBoxRaw.QAbstractSpinBox_keyboardTracking(selfAdr);
+  END QAbstractSpinBox_keyboardTracking;
 
-PROCEDURE QAbstractSpinBox_setAlignment ( self: QAbstractSpinBox;
-flag: AlignmentFlag;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtAbstractSpinBoxRaw.QAbstractSpinBox_setAlignment(selfAdr, ORD(flag));
-END QAbstractSpinBox_setAlignment;
+PROCEDURE QAbstractSpinBox_setAlignment
+  (self: QAbstractSpinBox; flag: AlignmentFlag; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtAbstractSpinBoxRaw.QAbstractSpinBox_setAlignment(selfAdr, ORD(flag));
+  END QAbstractSpinBox_setAlignment;
 
-PROCEDURE QAbstractSpinBox_alignment ( self: QAbstractSpinBox;
-): AlignmentFlag =
-VAR
-ret:INTEGER; result : AlignmentFlag;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtAbstractSpinBoxRaw.QAbstractSpinBox_alignment(selfAdr);
-result := VAL(ret,AlignmentFlag);  
-RETURN result;
-END QAbstractSpinBox_alignment;
+PROCEDURE QAbstractSpinBox_alignment (self: QAbstractSpinBox; ):
+  AlignmentFlag =
+  VAR
+    ret    : INTEGER;
+    result : AlignmentFlag;
+    selfAdr: ADDRESS       := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtAbstractSpinBoxRaw.QAbstractSpinBox_alignment(selfAdr);
+    result := VAL(ret, AlignmentFlag);
+    RETURN result;
+  END QAbstractSpinBox_alignment;
 
-PROCEDURE QAbstractSpinBox_setFrame ( self: QAbstractSpinBox;
-arg2: BOOLEAN;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtAbstractSpinBoxRaw.QAbstractSpinBox_setFrame(selfAdr, arg2);
-END QAbstractSpinBox_setFrame;
+PROCEDURE QAbstractSpinBox_setFrame
+  (self: QAbstractSpinBox; arg2: BOOLEAN; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtAbstractSpinBoxRaw.QAbstractSpinBox_setFrame(selfAdr, arg2);
+  END QAbstractSpinBox_setFrame;
 
-PROCEDURE QAbstractSpinBox_hasFrame ( self: QAbstractSpinBox;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtAbstractSpinBoxRaw.QAbstractSpinBox_hasFrame(selfAdr);
-END QAbstractSpinBox_hasFrame;
+PROCEDURE QAbstractSpinBox_hasFrame (self: QAbstractSpinBox; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtAbstractSpinBoxRaw.QAbstractSpinBox_hasFrame(selfAdr);
+  END QAbstractSpinBox_hasFrame;
 
-PROCEDURE QAbstractSpinBox_setAccelerated ( self: QAbstractSpinBox;
-on: BOOLEAN;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtAbstractSpinBoxRaw.QAbstractSpinBox_setAccelerated(selfAdr, on);
-END QAbstractSpinBox_setAccelerated;
+PROCEDURE QAbstractSpinBox_setAccelerated
+  (self: QAbstractSpinBox; on: BOOLEAN; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtAbstractSpinBoxRaw.QAbstractSpinBox_setAccelerated(selfAdr, on);
+  END QAbstractSpinBox_setAccelerated;
 
-PROCEDURE QAbstractSpinBox_isAccelerated ( self: QAbstractSpinBox;
-): BOOLEAN =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-RETURN QtAbstractSpinBoxRaw.QAbstractSpinBox_isAccelerated(selfAdr);
-END QAbstractSpinBox_isAccelerated;
+PROCEDURE QAbstractSpinBox_isAccelerated (self: QAbstractSpinBox; ):
+  BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtAbstractSpinBoxRaw.QAbstractSpinBox_isAccelerated(selfAdr);
+  END QAbstractSpinBox_isAccelerated;
 
-PROCEDURE QAbstractSpinBox_sizeHint ( self: QAbstractSpinBox;
-): QSize =
-VAR
-ret:ADDRESS; result : QSize;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtAbstractSpinBoxRaw.QAbstractSpinBox_sizeHint(selfAdr);
+PROCEDURE QAbstractSpinBox_sizeHint (self: QAbstractSpinBox; ): QSize =
+  VAR
+    ret    : ADDRESS;
+    result : QSize;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtAbstractSpinBoxRaw.QAbstractSpinBox_sizeHint(selfAdr);
 
-  result := NEW(QSize);
-  result.cxxObj := ret;
-  result.destroyCxx();
+    result := NEW(QSize);
+    result.cxxObj := ret;
+    result.destroyCxx();
 
-RETURN result;
-END QAbstractSpinBox_sizeHint;
+    RETURN result;
+  END QAbstractSpinBox_sizeHint;
 
-PROCEDURE QAbstractSpinBox_minimumSizeHint ( self: QAbstractSpinBox;
-): QSize =
-VAR
-ret:ADDRESS; result : QSize;
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-ret := QtAbstractSpinBoxRaw.QAbstractSpinBox_minimumSizeHint(selfAdr);
+PROCEDURE QAbstractSpinBox_minimumSizeHint (self: QAbstractSpinBox; ):
+  QSize =
+  VAR
+    ret    : ADDRESS;
+    result : QSize;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtAbstractSpinBoxRaw.QAbstractSpinBox_minimumSizeHint(selfAdr);
 
-  result := NEW(QSize);
-  result.cxxObj := ret;
-  result.destroyCxx();
+    result := NEW(QSize);
+    result.cxxObj := ret;
+    result.destroyCxx();
 
-RETURN result;
-END QAbstractSpinBox_minimumSizeHint;
+    RETURN result;
+  END QAbstractSpinBox_minimumSizeHint;
 
-PROCEDURE QAbstractSpinBox_interpretText ( self: QAbstractSpinBox;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtAbstractSpinBoxRaw.QAbstractSpinBox_interpretText(selfAdr);
-END QAbstractSpinBox_interpretText;
+PROCEDURE QAbstractSpinBox_interpretText (self: QAbstractSpinBox; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtAbstractSpinBoxRaw.QAbstractSpinBox_interpretText(selfAdr);
+  END QAbstractSpinBox_interpretText;
 
-PROCEDURE QAbstractSpinBox_fixup ( self: QAbstractSpinBox;
- input: TEXT;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-qstr_input := NEW(QString).initQString(input);
-arg2tmp :=  LOOPHOLE(qstr_input.cxxObj,ADDRESS);
-BEGIN
-QtAbstractSpinBoxRaw.QAbstractSpinBox_fixup(selfAdr, arg2tmp);
-END QAbstractSpinBox_fixup;
+PROCEDURE QAbstractSpinBox_fixup (self: QAbstractSpinBox; input: TEXT; ) =
+  VAR
+    selfAdr   : ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    qstr_input          := NEW(QString).initQString(input);
+    arg2tmp             := LOOPHOLE(qstr_input.cxxObj, ADDRESS);
+  BEGIN
+    QtAbstractSpinBoxRaw.QAbstractSpinBox_fixup(selfAdr, arg2tmp);
+  END QAbstractSpinBox_fixup;
 
-PROCEDURE QAbstractSpinBox_stepBy ( self: QAbstractSpinBox;
-steps: INTEGER;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtAbstractSpinBoxRaw.QAbstractSpinBox_stepBy(selfAdr, steps);
-END QAbstractSpinBox_stepBy;
+PROCEDURE QAbstractSpinBox_stepBy
+  (self: QAbstractSpinBox; steps: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtAbstractSpinBoxRaw.QAbstractSpinBox_stepBy(selfAdr, steps);
+  END QAbstractSpinBox_stepBy;
 
-PROCEDURE QAbstractSpinBox_stepUp ( self: QAbstractSpinBox;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtAbstractSpinBoxRaw.QAbstractSpinBox_stepUp(selfAdr);
-END QAbstractSpinBox_stepUp;
+PROCEDURE QAbstractSpinBox_stepUp (self: QAbstractSpinBox; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtAbstractSpinBoxRaw.QAbstractSpinBox_stepUp(selfAdr);
+  END QAbstractSpinBox_stepUp;
 
-PROCEDURE QAbstractSpinBox_stepDown ( self: QAbstractSpinBox;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtAbstractSpinBoxRaw.QAbstractSpinBox_stepDown(selfAdr);
-END QAbstractSpinBox_stepDown;
+PROCEDURE QAbstractSpinBox_stepDown (self: QAbstractSpinBox; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtAbstractSpinBoxRaw.QAbstractSpinBox_stepDown(selfAdr);
+  END QAbstractSpinBox_stepDown;
 
-PROCEDURE QAbstractSpinBox_selectAll ( self: QAbstractSpinBox;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtAbstractSpinBoxRaw.QAbstractSpinBox_selectAll(selfAdr);
-END QAbstractSpinBox_selectAll;
+PROCEDURE QAbstractSpinBox_selectAll (self: QAbstractSpinBox; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtAbstractSpinBoxRaw.QAbstractSpinBox_selectAll(selfAdr);
+  END QAbstractSpinBox_selectAll;
 
-PROCEDURE QAbstractSpinBox_clear ( self: QAbstractSpinBox;
-) =
-VAR
-selfAdr: ADDRESS := LOOPHOLE(self.cxxObj,ADDRESS);
-BEGIN
-QtAbstractSpinBoxRaw.QAbstractSpinBox_clear(selfAdr);
-END QAbstractSpinBox_clear;
+PROCEDURE QAbstractSpinBox_clear (self: QAbstractSpinBox; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtAbstractSpinBoxRaw.QAbstractSpinBox_clear(selfAdr);
+  END QAbstractSpinBox_clear;
 
-PROCEDURE Cleanup_QAbstractSpinBox(<*UNUSED*>READONLY self: WeakRef.T; ref: REFANY) =
-VAR obj : QAbstractSpinBox := ref;
-BEGIN
-  Delete_QAbstractSpinBox(obj);
- END Cleanup_QAbstractSpinBox;
+PROCEDURE Cleanup_QAbstractSpinBox
+  (<* UNUSED *> READONLY self: WeakRef.T; ref: REFANY) =
+  VAR obj: QAbstractSpinBox := ref;
+  BEGIN
+    Delete_QAbstractSpinBox(obj);
+  END Cleanup_QAbstractSpinBox;
 
-PROCEDURE Destroy_QAbstractSpinBox(self : QAbstractSpinBox) =
-BEGIN
-  EVAL WeakRef.FromRef(self,Cleanup_QAbstractSpinBox);
-END Destroy_QAbstractSpinBox;
+PROCEDURE Destroy_QAbstractSpinBox (self: QAbstractSpinBox) =
+  BEGIN
+    EVAL WeakRef.FromRef(self, Cleanup_QAbstractSpinBox);
+  END Destroy_QAbstractSpinBox;
 
 REVEAL
-QAbstractSpinBox =
-QAbstractSpinBoxPublic BRANDED OBJECT
-OVERRIDES
-init_0 := New_QAbstractSpinBox0;
-init_1 := New_QAbstractSpinBox1;
-buttonSymbols := QAbstractSpinBox_buttonSymbols;
-setButtonSymbols := QAbstractSpinBox_setButtonSymbols;
-setCorrectionMode := QAbstractSpinBox_setCorrectionMode;
-correctionMode := QAbstractSpinBox_correctionMode;
-hasAcceptableInput := QAbstractSpinBox_hasAcceptableInput;
-text := QAbstractSpinBox_text;
-specialValueText := QAbstractSpinBox_specialValueText;
-setSpecialValueText := QAbstractSpinBox_setSpecialValueText;
-wrapping := QAbstractSpinBox_wrapping;
-setWrapping := QAbstractSpinBox_setWrapping;
-setReadOnly := QAbstractSpinBox_setReadOnly;
-isReadOnly := QAbstractSpinBox_isReadOnly;
-setKeyboardTracking := QAbstractSpinBox_setKeyboardTracking;
-keyboardTracking := QAbstractSpinBox_keyboardTracking;
-setAlignment := QAbstractSpinBox_setAlignment;
-alignment := QAbstractSpinBox_alignment;
-setFrame := QAbstractSpinBox_setFrame;
-hasFrame := QAbstractSpinBox_hasFrame;
-setAccelerated := QAbstractSpinBox_setAccelerated;
-isAccelerated := QAbstractSpinBox_isAccelerated;
-sizeHint := QAbstractSpinBox_sizeHint;
-minimumSizeHint := QAbstractSpinBox_minimumSizeHint;
-interpretText := QAbstractSpinBox_interpretText;
-fixup := QAbstractSpinBox_fixup;
-stepBy := QAbstractSpinBox_stepBy;
-stepUp := QAbstractSpinBox_stepUp;
-stepDown := QAbstractSpinBox_stepDown;
-selectAll := QAbstractSpinBox_selectAll;
-clear := QAbstractSpinBox_clear;
-destroyCxx := Destroy_QAbstractSpinBox;
-END;
+  QAbstractSpinBox =
+    QAbstractSpinBoxPublic BRANDED OBJECT
+    OVERRIDES
+      init_0              := New_QAbstractSpinBox0;
+      init_1              := New_QAbstractSpinBox1;
+      buttonSymbols       := QAbstractSpinBox_buttonSymbols;
+      setButtonSymbols    := QAbstractSpinBox_setButtonSymbols;
+      setCorrectionMode   := QAbstractSpinBox_setCorrectionMode;
+      correctionMode      := QAbstractSpinBox_correctionMode;
+      hasAcceptableInput  := QAbstractSpinBox_hasAcceptableInput;
+      text                := QAbstractSpinBox_text;
+      specialValueText    := QAbstractSpinBox_specialValueText;
+      setSpecialValueText := QAbstractSpinBox_setSpecialValueText;
+      wrapping            := QAbstractSpinBox_wrapping;
+      setWrapping         := QAbstractSpinBox_setWrapping;
+      setReadOnly         := QAbstractSpinBox_setReadOnly;
+      isReadOnly          := QAbstractSpinBox_isReadOnly;
+      setKeyboardTracking := QAbstractSpinBox_setKeyboardTracking;
+      keyboardTracking    := QAbstractSpinBox_keyboardTracking;
+      setAlignment        := QAbstractSpinBox_setAlignment;
+      alignment           := QAbstractSpinBox_alignment;
+      setFrame            := QAbstractSpinBox_setFrame;
+      hasFrame            := QAbstractSpinBox_hasFrame;
+      setAccelerated      := QAbstractSpinBox_setAccelerated;
+      isAccelerated       := QAbstractSpinBox_isAccelerated;
+      sizeHint            := QAbstractSpinBox_sizeHint;
+      minimumSizeHint     := QAbstractSpinBox_minimumSizeHint;
+      interpretText       := QAbstractSpinBox_interpretText;
+      fixup               := QAbstractSpinBox_fixup;
+      stepBy              := QAbstractSpinBox_stepBy;
+      stepUp              := QAbstractSpinBox_stepUp;
+      stepDown            := QAbstractSpinBox_stepDown;
+      selectAll           := QAbstractSpinBox_selectAll;
+      clear               := QAbstractSpinBox_clear;
+      destroyCxx          := Destroy_QAbstractSpinBox;
+    END;
 
 
 BEGIN

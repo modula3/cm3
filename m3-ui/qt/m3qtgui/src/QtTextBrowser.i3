@@ -14,42 +14,34 @@ FROM QtWidget IMPORT QWidget;
 
 FROM QtTextEdit IMPORT QTextEdit;
 
-TYPE
-  T = QTextBrowser;
+TYPE T = QTextBrowser;
 
 
 TYPE
-QTextBrowser <: QTextBrowserPublic;
-QTextBrowserPublic =
-QTextEdit BRANDED OBJECT
-METHODS
-init_0 ( parent: QWidget;
-) : QTextBrowser;
-init_1 () : QTextBrowser;
-source(): QUrl;
-isBackwardAvailable(): BOOLEAN;
-isForwardAvailable(): BOOLEAN;
-clearHistory();
-historyTitle(arg1: INTEGER;
-): TEXT;
-historyUrl(arg1: INTEGER;
-): QUrl;
-backwardHistoryCount(): INTEGER;
-forwardHistoryCount(): INTEGER;
-openExternalLinks(): BOOLEAN;
-setOpenExternalLinks(open: BOOLEAN;
-);
-openLinks(): BOOLEAN;
-setOpenLinks(open: BOOLEAN;
-);
-setSource( name: QUrl;
-);  (*  virtual *)
-backward();  (*  virtual *)
-forward();  (*  virtual *)
-home();  (*  virtual *)
-reload();  (*  virtual *)
-destroyCxx();
-END;
+  QTextBrowser <: QTextBrowserPublic;
+  QTextBrowserPublic = QTextEdit BRANDED OBJECT
+                       METHODS
+                         init_0 (parent: QWidget; ): QTextBrowser;
+                         init_1 (): QTextBrowser;
+                         source (): QUrl;
+                         isBackwardAvailable  (): BOOLEAN;
+                         isForwardAvailable   (): BOOLEAN;
+                         clearHistory         ();
+                         historyTitle         (arg1: INTEGER; ): TEXT;
+                         historyUrl           (arg1: INTEGER; ): QUrl;
+                         backwardHistoryCount (): INTEGER;
+                         forwardHistoryCount  (): INTEGER;
+                         openExternalLinks    (): BOOLEAN;
+                         setOpenExternalLinks (open: BOOLEAN; );
+                         openLinks            (): BOOLEAN;
+                         setOpenLinks         (open: BOOLEAN; );
+                         setSource            (name: QUrl; ); (* virtual *)
+                         backward             (); (* virtual *)
+                         forward              (); (* virtual *)
+                         home                 (); (* virtual *)
+                         reload               (); (* virtual *)
+                         destroyCxx           ();
+                       END;
 
 
 END QtTextBrowser.
