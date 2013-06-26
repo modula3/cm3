@@ -724,7 +724,7 @@
         <literal>LOOPHOLE</literal>, <literal>VAL</literal>, etc.
         Only named types work, either builtin or declared in a 
         <literal>TYPE</literal> declaration.
-        &m3gdb; does not recognize &m3; type constructors. 
+        &m3gdb; does not recognize &m3; type expressions. 
       </para> 
 
       <para>
@@ -813,7 +813,7 @@
 
       <para>
         &m3gdb; always treats a heap object as having its 
-        <emphasis>allocated </emphasis>type, not the static 
+        <emphasis>allocated</emphasis> type, not the static 
         type of the expression used to refer to it.  
         This allows you to select fields, etc. of the actual object. 
       </para> 
@@ -1256,7 +1256,7 @@
 
     <para>
       This document was originally written in October of 
-      2008 by Rodney M. Bates, rodney.bates@wichita.edu.
+      2008 by Rodney M. Bates, now at rodney.m.bates@acm.org
     </para> 
   </sect1>
 
