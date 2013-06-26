@@ -491,7 +491,19 @@ PROCEDURE GetToken () =
 
       END; (*case*)
     END; (*loop*)
-  END GetToken;
+  END GetToken; 
+
+PROCEDURE HexDigitValue ( ch : CHAR ) : INTEGER =  
+  BEGIN 
+    IF ORD ( '0' ) <= ORD ( ch ) AND ORD ( ch ) <= ORD ( '9' ) 
+    THEN RETURN ORD ( ch ) - ORD ( '0' ) 
+    ELSIF ORD ( 'A' ) <= ORD ( ch ) AND ORD ( ch ) <= ORD ( 'F' ) 
+    THEN RETURN ORD ( ch ) - ORD ( 'A' ) + 10  
+    ELSIF ORD ( 'a' ) <= ORD ( ch ) AND ORD ( ch ) <= ORD ( 'f' ) 
+    THEN RETURN ORD ( ch ) - ORD ( 'a' ) + 10  
+    ELSE RETURN FIRST ( INTEGER ) (* Shouldn't happen. *) 
+    END; 
+  END HexDigitValue; 
 
 PROCEDURE ScanNumber () =
   VAR
@@ -520,6 +532,10 @@ PROCEDURE ScanNumber () =
       LOOP
         GetCh ();
         IF NOT (HexDigits[ch]) THEN EXIT END;
+        IF HexDigitValue (ch) >= base 
+        THEN
+          Error.Msg ("digit in based literal with value not less than base.");
+        END; 
         buf [len] := ch;  INC (len);
       END;
       IF (ch = 'l') OR (ch = 'L') THEN
