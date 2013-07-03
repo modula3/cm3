@@ -6197,6 +6197,11 @@ m3_parse_file (int)
   ops_t ops;
   ops.reserve (0x10000);
 
+  /* This has to be done here, because gcc does not pass -gstabs or -gstabs+ to
+     LANG_HOOK_HANDLE_OPTION.  In any case, gstabs and gstabs+ are the only
+     debug formats parse.c can produce anyway. */ 
+  if (!TARGET_MACHO) m3gdb = true;
+
   /* Setup indentation. */
 
   m3_indent_op[M3CG_IMPORT_PROCEDURE] = 2;
@@ -6315,6 +6320,9 @@ m3_handle_option (size_t code, PCSTR /*arg*/, int /*value*/)
 
     case OPT_gstabs:
     case OPT_gstabs_:
+      /* This never happens.  gcc doesn't pass these options to 
+         m3_handle_options.  It is done instead near the top of 
+         m3_parse_file. */  
       if (!TARGET_MACHO)
         m3gdb = true;
       break;
