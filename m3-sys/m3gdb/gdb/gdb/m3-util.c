@@ -1088,29 +1088,50 @@ m3_ascertain_compiler_kind ( void )
           }
 
         sym = m3_lookup_symbol_all_static
-                ( "m3main", "MM__m3main", VAR_DOMAIN, NULL);
-        /* ^This symbol appears in _m3main.o, of CM3-compiled code only. */
-        if ( sym != NULL )
-           { m3_compiler_kind_value = m3_ck_cm3;
-             return;
-           }
-        sym = m3_lookup_symbol_all_static
                 ( "m3_link_info", "m3_link_info", VAR_DOMAIN, NULL);
-            /* ^This symbol appears in _m3main.o, of PM3-compiled code only. */
+            /* ^This symbol appears in _m3main.o, of PM3-compiled code only, 
+                either code generator. */
         if ( sym != NULL )
            { m3_compiler_kind_value = m3_ck_pm3;
              return;
            }
-        minsym = lookup_minimal_symbol ( "MM__m3main", NULL, NULL);
-        if ( minsym != NULL )
+
+        sym = m3_lookup_symbol_all_static
+                ( "m3main", "MM__m3main", VAR_DOMAIN, NULL);
+        /* ^This symbol appears in _m3main.o, of earlier CM3-compiled 
+            code only. */
+        if ( sym != NULL )
            { m3_compiler_kind_value = m3_ck_cm3;
              return;
            }
+
+        sym = m3_lookup_symbol_all_static
+                ( "INTEGER", "INTEGER", VAR_DOMAIN, NULL);
+            /* ^This symbol appears in _m3main.o, of later CM3-compiled
+                code, gcc backend. */
+        if ( sym != NULL )
+           { m3_compiler_kind_value = m3_ck_cm3;
+             return;
+           }
+
         minsym = lookup_minimal_symbol ( "m3_link_info", NULL, NULL);
         if ( minsym != NULL )
            { m3_compiler_kind_value = m3_ck_pm3;
              return;
            }
+
+        minsym = lookup_minimal_symbol ( "MM__m3main", NULL, NULL);
+        if ( minsym != NULL )
+           { m3_compiler_kind_value = m3_ck_cm3;
+             return;
+           }
+
+        minsym = lookup_minimal_symbol ( "INTEGER", NULL, NULL);
+        if ( minsym != NULL )
+           { m3_compiler_kind_value = m3_ck_cm3;
+             return;
+           }
+
         m3_compiler_kind_value = m3_ck_not_m3;
       }
   } /* m3_ascertain_compiler_kind */
