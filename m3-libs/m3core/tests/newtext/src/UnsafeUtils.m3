@@ -24,7 +24,7 @@ UNSAFE MODULE UnsafeUtils
 ; PROCEDURE RefSize ( TC : TypeCodeTyp ) : INTEGER 
   (* Does not include method table 
      (which evey subtype of {UNTRACED} ROOT has)
-     Nor shape (which every heap-allocated open array has.
+     Nor shape (which every heap-allocated open array has).
   *)  
 
   = BEGIN 

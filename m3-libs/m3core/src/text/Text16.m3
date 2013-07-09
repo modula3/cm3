@@ -42,7 +42,7 @@ PROCEDURE T16GetInfo (t: T;  VAR info: TextClass.Info) =
 
 PROCEDURE T16GetWideChar (t: T;  i: CARDINAL): WIDECHAR =
   BEGIN
-    IF i = LAST (t.contents^) THEN (* force a subscript fault *) INC (i) END;
+    IF i >= LAST (t.contents^) THEN (* force a subscript fault *) INC (i) END;
     RETURN t.contents[i];
   END T16GetWideChar;
 

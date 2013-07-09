@@ -46,7 +46,8 @@ PROCEDURE GetDataSize (r: REFANY): CARDINAL =
             BEGIN
               IF (len >= 0)
                 THEN INC (len); (* null CHAR *)
-                ELSE len := 2 (*null WIDECHAR*) - len - len;
+                ELSE len := ( - len + 1 (*null WIDECHAR*) ) 
+                            * BYTESIZE ( WIDECHAR ) ; 
               END;
               RETURN ADR (txt.buf[len]) - ADR (txt.cnt)
             END;

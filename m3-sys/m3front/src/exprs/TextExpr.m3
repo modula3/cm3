@@ -14,7 +14,7 @@ IMPORT Target, Module, M3RT, M3WString, RunTyme, Procedure;
 TYPE
   P = Expr.T OBJECT
         value8  : M3String.T;
-        value16 : M3WString.T;
+        value32 : M3WString.T;
       OVERRIDES
         typeOf       := ExprRep.NoType;
         check        := ExprRep.NoCheck;
@@ -61,28 +61,28 @@ PROCEDURE New8 (value: M3String.T): Expr.T =
   BEGIN
     ExprRep.Init (p);
     p.value8  := value;
-    p.value16 := NIL;
+    p.value32 := NIL;
     p.type    := Textt.T;
     p.checked := TRUE;
     RETURN p;
   END New8;
 
-PROCEDURE New16 (value: M3WString.T): Expr.T =
+PROCEDURE New32 (value: M3WString.T): Expr.T =
   VAR p := NEW (P);
   BEGIN
     ExprRep.Init (p);
     p.value8  := NIL;
-    p.value16 := value;
+    p.value32 := value;
     p.type    := Textt.T;
     p.checked := TRUE;
     RETURN p;
-  END New16;
+  END New32;
 
 PROCEDURE EqCheck (a: P;  e: Expr.T;  <*UNUSED*> x: M3.EqAssumption): BOOLEAN =
   BEGIN
     TYPECASE e OF
     | NULL => RETURN FALSE;
-    | P(b) => RETURN (a.value8 = b.value8) AND (a.value16 = b.value16);
+    | P(b) => RETURN (a.value8 = b.value8) AND (a.value32 = b.value32);
     ELSE      RETURN FALSE;
     END;
   END EqCheck;
@@ -111,13 +111,13 @@ PROCEDURE SetUID (p: P): INTEGER =
         M3String.SetUID (p.value8, uid);
       END;
     ELSE
-      width := Target.Int16.size;
-      len   := M3WString.Length (p.value16);
+      width := Target.Word32.size;
+      len   := M3WString.Length (p.value32);
       cnt   := - len;
-      uid   := M3WString.GetUID (p.value16);
+      uid   := M3WString.GetUID (p.value32);
       IF (uid < 0) THEN
         uid := nextID;  INC (nextID);
-        M3WString.SetUID (p.value16, uid);
+        M3WString.SetUID (p.value32, uid);
       END;
     END;
 
@@ -144,7 +144,7 @@ PROCEDURE SetUID (p: P): INTEGER =
     CG.Init_intt (x+Length_offset, Target.Integer.size, cnt, is_const := TRUE);
     IF (p.value8 # NIL)
       THEN M3String.Init_chars (x+Chars_offset, p.value8, TRUE);
-      ELSE M3WString.Init_chars (x+Chars_offset, p.value16, TRUE);
+      ELSE M3WString.Init_chars (x+Chars_offset, p.value32, TRUE);
     END;
 
     RETURN uid;
@@ -196,36 +196,36 @@ PROCEDURE Split8 (e: Expr.T;  VAR value: M3String.T): BOOLEAN =
     END;
   END Split8;
 
-PROCEDURE Split16 (e: Expr.T;  VAR value: M3WString.T): BOOLEAN =
+PROCEDURE Split32 (e: Expr.T;  VAR value: M3WString.T): BOOLEAN =
   BEGIN
     TYPECASE e OF
     | NULL => RETURN FALSE;
-    | P(p) => value := p.value16;  RETURN (p.value16 # NIL);
+    | P(p) => value := p.value32;  RETURN (p.value32 # NIL);
     ELSE      RETURN FALSE;
     END;
-  END Split16;
+  END Split32;
 
 PROCEDURE Cat (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN =
   VAR sa, sb: M3String.T;  wa, wb: M3WString.T;
   BEGIN
     TYPECASE a OF
     | NULL => RETURN FALSE;
-    | P(p) => sa := p.value8;  wa := p.value16;
+    | P(p) => sa := p.value8;  wa := p.value32;
     ELSE      RETURN FALSE;
     END;
     TYPECASE b OF
     | NULL => RETURN FALSE;
-    | P(p) => sb := p.value8;  wb := p.value16;
+    | P(p) => sb := p.value8;  wb := p.value32;
     ELSE      RETURN FALSE;
     END;
     IF (sa # NIL) AND (sb # NIL) THEN
       c := New8 (M3String.Concat (sa, sb));
     ELSIF (wa # NIL) AND (wb # NIL) THEN
-      c := New16 (M3WString.Concat (wa, wb));
+      c := New32 (M3WString.Concat (wa, wb));
     ELSIF (sa # NIL) THEN  (* wb # NIL *)
-      c := New16 (M3WString.Concat (M3WString.Add (M3String.ToText (sa)), wb));
+      c := New32 (M3WString.Concat (M3WString.Add (M3String.ToText (sa)), wb));
     ELSE (*wa # NIL  AND  sb # NIL*)
-      c := New16 (M3WString.Concat (wa, M3WString.Add (M3String.ToText (sb))));
+      c := New32 (M3WString.Concat (wa, M3WString.Add (M3String.ToText (sb))));
     END;
     RETURN TRUE;
   END Cat;
@@ -245,9 +245,12 @@ PROCEDURE GenFPLiteral (p: P;  buf: M3Buf.T) =
       M3Buf.PutChar (buf, '>');
     ELSE
       M3Buf.PutText (buf, "TEXT16<");
-      M3Buf.PutInt  (buf, M3WString.Length (p.value16));
+      (* ^Even though the characters of a literal now occupy 32 bits, let's keep
+         this string "TEXT16<", to avoid altering fingerprints and undermining
+         pickles written earlier. *) 
+      M3Buf.PutInt  (buf, M3WString.Length (p.value32));
       M3Buf.PutChar (buf, ',');
-      M3WString.PutLiteral (buf, p.value16);
+      M3WString.PutLiteral (buf, p.value32);
       M3Buf.PutChar (buf, '>');
     END;
   END GenFPLiteral;

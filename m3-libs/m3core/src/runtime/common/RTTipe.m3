@@ -9,7 +9,7 @@ UNSAFE MODULE RTTipe;
 
 IMPORT RT0, RTType, RTTypeSRC, RTPacking, Word;
 
-TYPE (* This list must be kept in sync with TipeDesc.m3.Op, in m3front. *)
+TYPE (* This list must be kept in sync with TipeDesc.i3.Op, in m3front. *)
   Op = {
   (* opcode         -- op  --- operands ------------------- *)
      Address,       (* 00                                   *)
@@ -35,7 +35,7 @@ TYPE (* This list must be kept in sync with TipeDesc.m3.Op, in m3front. *)
      Set,           (* 14, #elements: INT                   *)
      Subrange,      (* 15, min, max: INT                    *)
      UntracedRef,   (* 16, self id: UID                     *)
-  (* Widechar is denoted as Enum, with #elements = 2^16.    *)
+  (* Widechar is denoted as Enum, with #elements = NUMBER(WIDECHAR) *)
      OldN,          (* 17, node #: INT                      *)
      Old0           (* 18                                   *)
   };(* Old1, Old2, ... Old(255-ORD(Old0)) *)

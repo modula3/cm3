@@ -654,7 +654,7 @@ static const struct { UINT32 type_id; tree* t; } builtin_uids[] = {
   { UID_XREEL, &t_xreel },
   { UID_BOOLEAN, &t_word_8 },
   { UID_CHAR, &t_word_8 },
-  { UID_WIDECHAR, &t_word_16 },
+  { UID_WIDECHAR, &t_word_32 },
   { UID_MUTEX, &t_addr },
   { UID_TEXT, &t_addr },
   { UID_UNTRACED_ROOT, &t_addr },

@@ -21,7 +21,11 @@ To do so, use the procedure documented by the package, typically `autoreconf'.])
 
 # libtool.m4 - Configure libtool for the host system. -*-Autoconf-*-
 
+<<<<<<< aclocal.m4
+# serial 52 Debian 1.5.26-1ubuntu1 AC_PROG_LIBTOOL
+=======
 # serial 52 AC_PROG_LIBTOOL
+>>>>>>> 1.2
 
 
 # AC_PROVIDE_IFELSE(MACRO-NAME, IF-PROVIDED, IF-NOT-PROVIDED)
@@ -5165,6 +5169,9 @@ AC_MSG_CHECKING([for $compiler option to produce PIC])
 	    _LT_AC_TAGVAR(lt_prog_compiler_pic, $1)='-KPIC'
 	    _LT_AC_TAGVAR(lt_prog_compiler_static, $1)='-static'
 	    ;;
+<<<<<<< aclocal.m4
+	  pgCC* | pgcpp*)
+=======
 	  icpc*)
 	    # Intel C++, used to be incompatible with GCC.
 	    # ICC 10 doesn't accept -KPIC any more.
@@ -5173,6 +5180,7 @@ AC_MSG_CHECKING([for $compiler option to produce PIC])
 	    _LT_AC_TAGVAR(lt_prog_compiler_static, $1)='-static'
 	    ;;
 	  pgCC* | pgcpp*)
+>>>>>>> 1.2
 	    # Portland Group C++ compiler.
 	    _LT_AC_TAGVAR(lt_prog_compiler_wl, $1)='-Wl,'
 	    _LT_AC_TAGVAR(lt_prog_compiler_pic, $1)='-fpic'

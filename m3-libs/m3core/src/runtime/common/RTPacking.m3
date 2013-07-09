@@ -55,6 +55,7 @@ PROCEDURE Local (): T =
       local.float         := FloatKind.IEEE;
       IF NOT FloatMode.IEEE THEN local.float := FloatKind.VAX; END;
       local.lazy_align    := IsLazy();
+      local.widechar_size := SizeOf (ADRSIZE (WIDECHAR));
       init_done := TRUE;
     END;
     RETURN local;
@@ -75,6 +76,7 @@ PROCEDURE SizeOf (n: INTEGER): CARDINAL =
 PROCEDURE Encode (READONLY t: T): INTEGER =
   VAR n := 0;
   BEGIN
+    n := Word.Or (Word.Shift (n, 2), BitSize (t.widechar_size));
     n := Word.Or (Word.Shift (n, 1), ORD (t.lazy_align));
     n := Word.Or (Word.Shift (n, 2), BitSize (t.long_size));
     n := Word.Or (Word.Shift (n, 2), BitSize (t.word_size));
@@ -94,7 +96,12 @@ PROCEDURE Decode (i: INTEGER): T =
     t.max_align     := Bits[Word.And (i, 3)];    i := Word.Shift (i, -2);
     t.word_size     := Bits[Word.And (i, 3)];    i := Word.Shift (i, -2);
     t.long_size     := Bits[Word.And (i, 3)];    i := Word.Shift (i, -2);
-    t.lazy_align  := VAL (Word.And (i, 1), BOOLEAN); i := Word.Shift (i, -1);
+    t.lazy_align    := VAL (Word.And (i, 1), BOOLEAN); i := Word.Shift (i, -1);
+    t.widechar_size := Bits[Word.And (i, 3)];    i := Word.Shift (i, -2);
+    IF t.widechar_size = 0 
+    THEN (* Was written by older RTPacking, without a widechar_size. *)
+      t.widechar_size := 16 
+    END; 
     <*ASSERT i = 0*>
     RETURN t;
   END Decode;

@@ -462,13 +462,12 @@ scan_octal ( char *input, LONGEST *val,  BOOL wide )
 
     return input;
   } /* scan_octal */
-
 static void
-bad_hex ( BOOL wide )
+bad_hex ( int bytes /*1..3*/ )
 
-  { error (_("Hex %scharacter escape sequence must exactly have %d digits"),
-            ( wide ? "wide " : "" ),
-            ( wide ? 4 : 2 )
+  { error (_("%scharacter escape sequence must exactly have %d digits"),
+            ( bytes == 3 ? "Unicode " : "Hex " ),
+            ( bytes * 2 )
           ); /* NORETURN */
   } /* bad_hex */
 
@@ -485,21 +484,28 @@ hex_digit ( char ch, int *digit )
   } /* hex_digit */
 
 static char *
-scan_hex ( char *input, LONGEST *val, BOOL wide )
+scan_hex ( char *input, LONGEST *val, int bytes /*1..3*/ )
 
   { int digit;
     *val = 0;
 
-    if (!hex_digit (*input, &digit)) { bad_hex(wide);  return input; }
+    if (!hex_digit (*input, &digit)) { bad_hex(bytes);  return input; }
     *val = digit;  input++;
-    if (!hex_digit (*input, &digit)) { bad_hex(wide);  return input; }
+    if (!hex_digit (*input, &digit)) { bad_hex(bytes);  return input; }
     *val = 16 * (*val) + digit;  input++;
 
-    if (!wide) { return input; }
+    if (bytes==1) { return input; }
 
-    if (!hex_digit (*input, &digit)) { bad_hex(wide);  return input; }
+    if (!hex_digit (*input, &digit)) { bad_hex(bytes);  return input; }
     *val = 16 * (*val) + digit;  input++;
-    if (!hex_digit (*input, &digit)) { bad_hex(wide);  return input; }
+    if (!hex_digit (*input, &digit)) { bad_hex(bytes);  return input; }
+    *val = 16 * (*val) + digit;  input++;
+
+    if (bytes==2) { return input; }
+
+    if (!hex_digit (*input, &digit)) { bad_hex(bytes);  return input; }
+    *val = 16 * (*val) + digit;  input++;
+    if (!hex_digit (*input, &digit)) { bad_hex(bytes);  return input; }
     *val = 16 * (*val) + digit;  input++;
 
     return input;
@@ -535,9 +541,17 @@ scan_char ( char *input, struct m3_token *tok, BOOL wide )
     else if (*input == '\'') { tok->intval = '\'';  input++; }
     else if (*input == '"')  { tok->intval = '"';   input++; }
     else if (*input == 'x' || *input == 'X')  {
-      input = scan_hex (++input, &tok->intval, wide);
+      input = scan_hex (++input, &tok->intval, (wide ? 2 : 1) );
+    } else if (*input == 'U')  {
+      input = scan_hex (++input, &tok->intval, 3);
+      if (tok->intval > (wide ? m3_widechar_LAST : 0xFF) ) 
+        error
+          (_("Out-of-range Unicode escape in character literal") ); /* NORETURN */
     } else if (('0' <= *input) && (*input <= '7')) {
       input = scan_octal (input, &tok->intval, wide);
+      if (tok->intval > (wide ? m3_widechar_LAST : 0xFF) )
+        error
+          (_("Out-of-range octal escape in character literal") ); /* NORETURN */
     } else {
       error (_("Unknown escape sequence in character literal") ); /* NORETURN */
       return input;
@@ -603,11 +617,21 @@ scan_text (input, tok)
       else if (*input == '"')  { *next++ = '"';   input++; }
       else if (*input == 'x' || *input == 'X') {
         LONGEST hexval;
-        input = scan_hex (++input, &hexval, FALSE);
+        input = scan_hex (++input, &hexval, 1);
+        *next++ = hexval;
+      } else if (*input == 'U') {
+        LONGEST hexval;
+        input = scan_hex (++input, &hexval, 3);
+        if (hexval > 0xFF) 
+          error
+            (_("Out-of-range Unicode escape in text literal") ); /* NORETURN */
         *next++ = hexval;
       } else if (('0' <= *input) && (*input <= '7')) {
         LONGEST octval;
         input = scan_octal (input, &octval, FALSE);
+        if (octval > 0xFF) 
+          error
+            (_("Out-of-range octal escape in text literal") ); /* NORETURN */
         *next++ = octval;
       } else {
         error (_("Unknown escape sequence in text literal") ); /* NORETURN */
@@ -669,7 +693,7 @@ scan_widetext ( char *input, struct m3_token *tok )
         else if (*input == '\\') { len++;  input++; }
         else if (*input == '\'') { len++;  input++; }
         else if (*input == '"')  { len++;  input++; }
-        else if (*input == 'x' || *input == 'X')  {
+        else if (*input == 'x' || *input == 'X'|| *input == 'U')  {
           len++;  input++; /* The hex digits all count as one widechar. */
         } else if (('0' <= *input) && (*input <= '7')) {
           len++;  input++; /* The octal digits all count as one widechar. */
@@ -714,12 +738,19 @@ scan_widetext ( char *input, struct m3_token *tok )
         else if (*input == '"')  { wchar_value = '"';   input++; }
         else if (*input == 'x' || *input == 'X') {
           LONGEST hexval;
-          input = scan_hex (++input, &hexval, TRUE );
-          wchar_value = hexval & 0xffff;
+          input = scan_hex (++input, &hexval, 2 );
+          wchar_value = hexval; 
+        } else if (*input == 'U') {
+          LONGEST hexval;
+          input = scan_hex (++input, &hexval, 3);
+          if (hexval > m3_widechar_LAST) 
+            error
+              (_("Out-of-range Unicode escape in wide text literal") ); /* NORETURN */
+          wchar_value = hexval; 
         } else if (('0' <= *input) && (*input <= '7')) {
           LONGEST octval;
           input = scan_octal (input, &octval, TRUE );
-          wchar_value = octval & 0xffff;
+          wchar_value = octval; 
         } else {
           error
             (_("Unknown escape sequence in wide text literal") ); /* NORETURN */
@@ -733,8 +764,8 @@ scan_widetext ( char *input, struct m3_token *tok )
         /* vanilla character */
         wchar_value = *input++;
       }
-      store_unsigned_integer ( out, TARGET_M3_WIDECHAR_BYTE, wchar_value );
-      out += 2;
+      store_unsigned_integer ( out, m3_widechar_byte, wchar_value );
+      out += m3_widechar_byte;
     }
 
     /* finish the string */

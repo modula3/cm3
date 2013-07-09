@@ -9,12 +9,13 @@ IMPORT M3Buf;
 
 TYPE
   T <: REFANY;
-  Char = [0..16_ffff];
+  Char = BITS 32 FOR [0..16_10ffff];
+  Buf       = ARRAY OF Char;
 
 PROCEDURE Add (x: TEXT): T;
 (* Returns a string equal to 'x' *)
 
-PROCEDURE FromStr (READONLY buf: ARRAY OF Char;  length: INTEGER := 99999): T;
+PROCEDURE FromStr (READONLY buf: Buf;  length: INTEGER := 99999): T;
 (* Returns a string equal to buf[0 .. MIN(HIGH(buf), length-1)]. *)
 
 PROCEDURE Concat (a, b: T): T;
