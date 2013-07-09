@@ -3,15 +3,14 @@
 
 MODULE M3WString;
 
-IMPORT M3Buf, Text, Word, CG;
+IMPORT M3Buf, Text, Word, CG, WCharr, Type;
 
 CONST
   NO_UID = -1;
 
 TYPE
-  Buf       = ARRAY OF Char;
   HashTable = REF ARRAY OF T;
-  WText_T   = REF ARRAY OF Char;
+  WText_T   = REF Buf; 
 
 REVEAL
   T = BRANDED REF RECORD
@@ -116,20 +115,37 @@ PROCEDURE PutLiteral (wr: M3Buf.T;  t: T) =
     M3Buf.PutChar (wr, '"');
   END PutLiteral;
 
+  VAR CompiledWCBitsize := 32;
+  (* ^BITSIZE of WIDECHAR, as it is being compiled. *) 
+(* TODO: ^Get this from a consistent place.  Right now, WCharr has an upper
+         bound for to-be-compiled WIDECHAR, from which CG size is derived.
+         But M3WString gets initialized earlier than the builtin types do,
+         so that info will not be available here.  See M3Front.m3, which calls
+         M3WString.Initialize early, and (M3Front).Initialize later, when 
+         about to parse, which sets in motion initialization of builtin
+         types.
+*) 
+
 PROCEDURE Init_chars (offset: INTEGER;  t: T;  is_const: BOOLEAN) =
-  CONST SZ = 16;
-  BEGIN
+  BEGIN 
     IF (t = NIL) THEN
       (* done *)
-    ELSIF (t.body # NIL) THEN
-      FOR i := 0 TO t.length-1 DO
-        CG.Init_intt (offset, SZ, t.body[i], is_const);
-        INC (offset, SZ);
-      END;
     ELSE
-      Init_chars (offset, t.prefix, is_const);
-      Init_chars (offset + t.prefix.length * SZ, t.suffix, is_const);
-    END;
+      IF Type.CGType(WCharr.T, in_memory:=TRUE) = CG.Type.Word32 THEN 
+         CompiledWCBitsize := 32
+      ELSE CompiledWCBitsize := 16
+      END; 
+      IF (t.body # NIL) THEN
+        FOR i := 0 TO t.length-1 DO
+          CG.Init_intt (offset, CompiledWCBitsize, t.body[i], is_const);
+          INC (offset, CompiledWCBitsize);
+        END;
+      ELSE
+        Init_chars (offset, t.prefix, is_const);
+        Init_chars (offset + t.prefix.length * CompiledWCBitsize, 
+                    t.suffix, is_const);
+      END;
+    END; 
   END Init_chars;
 
 PROCEDURE Length (t: T): INTEGER =
@@ -273,7 +289,7 @@ PROCEDURE LiteralLength (t: T): INTEGER =
     ELSIF (t.body # NIL) THEN
       VAR len := 0;  lit: CharBuf;  BEGIN
         FOR i := 0 TO t.length-1 DO
-          INC (len, CharLiteral (t.body[i], lit));
+          INC (len, CharLiteral (t.body[i], (*OUT, Unused*) lit));
         END;
         RETURN len;
       END;
@@ -289,7 +305,7 @@ PROCEDURE Flatten (t: T;  VAR buf: ARRAY OF CHAR;  start: INTEGER) =
     ELSIF (t.body # NIL) THEN
       VAR x: INTEGER;  lit: CharBuf;  BEGIN
         FOR i := 0 TO t.length-1 DO
-          x := CharLiteral (t.body[i], lit);
+          x := CharLiteral (t.body[i], (*OUT*) lit);
           FOR j := 0 TO x-1 DO  buf[start] := lit[j];  INC (start);  END;
         END;
       END;
@@ -318,24 +334,26 @@ PROCEDURE PutChars (wr: M3Buf.T;  t: T) =
 PROCEDURE EmitChar (wr: M3Buf.T;  c: Char) =
   VAR lit: CharBuf;
   BEGIN
-    FOR i := 0 TO CharLiteral (c, lit) - 1 DO
+    FOR i := 0 TO CharLiteral (c, (*OUT*) lit) - 1 DO
       M3Buf.PutChar (wr, lit[i]);
     END;
   END EmitChar;
 
 TYPE
-  CharBuf = ARRAY [0..5] OF CHAR;
+  CharBuf = ARRAY [0..7] OF CHAR;
 
-PROCEDURE CharLiteral (ch: Char;  VAR(*OUT*) lit: ARRAY [0..5] OF CHAR): [1..6] =
+PROCEDURE CharLiteral (ch: Char;  VAR(*OUT*) lit: CharBuf): [1..8] =
   BEGIN
-    IF (ch < ORD (' ')) OR (ORD ('~') < ch) THEN
+    IF ch > 16_FFFF THEN 
       lit[0] := '\\';  
-      lit[1] := 'x';   
-      lit[2] := Digits [Word.Extract (ch, 24, 8)];
-      lit[3] := Digits [Word.Extract (ch, 16, 8)];
-      lit[4] := Digits [Word.Extract (ch,  8, 8)];
-      lit[5] := Digits [Word.Extract (ch,  0, 8)];
-      RETURN 6;
+      lit[1] := 'U';   
+      lit[2] := Digits [Word.Extract (ch, 20, 1)];
+      lit[3] := Digits [Word.Extract (ch, 16, 4)];
+      lit[3] := Digits [Word.Extract (ch, 12, 4)];
+      lit[5] := Digits [Word.Extract (ch,  8, 4)];
+      lit[6] := Digits [Word.Extract (ch,  4, 4)];
+      lit[7] := Digits [Word.Extract (ch,  0, 4)];
+      RETURN 8;
     ELSIF (ch = ORD ('\n')) THEN  lit[0] := '\\';  lit[1] := 'n';   RETURN 2;
     ELSIF (ch = ORD ('\t')) THEN  lit[0] := '\\';  lit[1] := 't';   RETURN 2;
     ELSIF (ch = ORD ('\r')) THEN  lit[0] := '\\';  lit[1] := 'r';   RETURN 2;
@@ -343,7 +361,15 @@ PROCEDURE CharLiteral (ch: Char;  VAR(*OUT*) lit: ARRAY [0..5] OF CHAR): [1..6] 
     ELSIF (ch = ORD ('\\')) THEN  lit[0] := '\\';  lit[1] := '\\';  RETURN 2;
     ELSIF (ch = ORD ('\'')) THEN  lit[0] := '\\';  lit[1] := '\'';  RETURN 2;
     ELSIF (ch = ORD ('\"')) THEN  lit[0] := '\\';  lit[1] := '\"';  RETURN 2;
-    ELSE                          lit[0] := VAL (ch, CHAR);         RETURN 1;
+    ELSIF (ch < ORD (' ')) OR (ORD ('~') < ch) THEN
+      lit[0] := '\\';  
+      lit[1] := 'x';   
+      lit[2] := Digits [Word.Extract (ch, 12, 4)];
+      lit[3] := Digits [Word.Extract (ch,  8, 4)];
+      lit[4] := Digits [Word.Extract (ch,  4, 4)];
+      lit[5] := Digits [Word.Extract (ch,  0, 4)];
+      RETURN 6;
+    ELSE lit[0] := VAL (ch, CHAR); RETURN 1;
     END;
   END CharLiteral;
 

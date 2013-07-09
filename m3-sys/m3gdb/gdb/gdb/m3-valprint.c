@@ -264,6 +264,7 @@ init_m3_text_info (void)
        be used in preference to these defaults, and that will be far
        more robust.
     */
+/* TODO: Make the defaults 32/64-bit adapted from, e.g. m3_integer_bit. */ 
     if ( ! text_info_is_initialized )
       { if ( m3_compiler_kind ( ) == m3_ck_cm3 )
           { if ( ! Text . tc_addr && ! Text . uid )
@@ -532,11 +533,11 @@ m3_check_TextLiteral_buf (
           { TYPE_M3_SUBRANGE_MAX
               ( library_type_m3_TextLiteral_buf_widechar_index )
               = - string_length;
-            byte_length = ( - string_length + 1 ) * TARGET_M3_WIDECHAR_BYTE;
+            byte_length = ( - string_length + 1 ) * m3_widechar_byte;
             TYPE_LENGTH ( library_type_m3_TextLiteral_buf_widechar )
               = byte_length;
             TYPE_M3_SIZE ( library_type_m3_TextLiteral_buf_widechar )
-              = ( - string_length + 1 ) * TARGET_M3_WIDECHAR_BIT;
+              = ( - string_length + 1 ) * m3_widechar_bit;
             if ( bitsize != NULL )
               { * bitsize = byte_length * TARGET_CHAR_BIT; }
             if ( bitpos != NULL ) { * bitpos = TextLiteral_buf . bitpos; }
@@ -637,15 +638,15 @@ m3_print_widechars (
     int i;
 
     /* Copy the wide characters into gdb's process space. */
-    wstr = ( gdb_byte * )  alloca ( len * TARGET_M3_WIDECHAR_BYTE);
+    wstr = ( gdb_byte * )  alloca ( len * m3_widechar_byte);
     read_memory
-      ( ref + start * TARGET_M3_WIDECHAR_BYTE,
-        wstr, len * TARGET_M3_WIDECHAR_BYTE
+      ( ref + start * m3_widechar_byte,
+        wstr, len * m3_widechar_byte
       );
-    byte_length = 2 * len;
-    for (i = 0; i < byte_length; i+=2)
+    byte_length = m3_widechar_byte * len;
+    for (i = 0; i < byte_length; i+=m3_widechar_byte)
       { m3_emit_widechar
-         ( m3_extract_ord ( & wstr [ i ], 0, TARGET_M3_WIDECHAR_BIT, FALSE),
+         ( m3_extract_ord ( & wstr [ i ], 0, m3_widechar_bit, FALSE),
            stream,
            '"'
          );
@@ -794,7 +795,7 @@ m3_print_cm3_text (
           = m3_text_field_length
               ( ref, &Text16Short, &Text16Short_len, FALSE) - start;
         if ( string_length
-             > Text16Short_contents . bitsize / TARGET_M3_WIDECHAR_BIT - start
+             > Text16Short_contents . bitsize / m3_widechar_bit - start
            )
           { return - 2; }
         chars = m3_text_field_addr ( ref, &Text16Short, &Text16Short_contents );
@@ -1205,10 +1206,10 @@ m3_val_print2 (
         LONGEST i;
 
         fputs_filtered ("W\"", stream );
-        for ( i = 0; i < length; i += 2 )
+        for ( i = 0; i < length; i += m3_widechar_byte )
           { m3_emit_widechar
               ( m3_extract_ord
-                  ( & valaddr [ i ], 0, TARGET_M3_WIDECHAR_BIT, FALSE),
+                  ( & valaddr [ i ], 0, m3_widechar_bit, FALSE),
                 stream,
                 '"'
               );
@@ -1524,7 +1525,7 @@ m3_val_print2 (
 
     case TYPE_CODE_M3_WIDECHAR :
       m3_print_widechar_lit
-       ( (int)m3_extract_ord (valaddr, bitpos, TARGET_M3_WIDECHAR_BIT , FALSE),
+       ( (int)m3_extract_ord (valaddr, bitpos, bitsize , FALSE),
          stream
        );
       break;

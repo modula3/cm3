@@ -62,8 +62,17 @@ extern const char * m3_static_link_copy_field_name;
 extern void
 m3_check_target ( char * dir_name, char * file_name );
 
+/* Called from dbxread.c when starting a new object file. */
+void
+m3_start_stabs ( char * filename );  
+
+/* Called from dbxread.c when done reading a new object file. */
+void
+m3_end_stabs ( void ); 
+
 /* Use the string from the N_OPT stabs entry to maybe set
-   processing_pm3_compilation and procedures_have_extra_block. */
+   processing_pm3_compilation, procedures_have_extra_block, 
+   and widechar_occupies_32_bits. */
 extern void
 m3_check_compiler ( char * name );
 

@@ -660,6 +660,7 @@ PROCEDURE ScanNumber () =
 
 PROCEDURE ScanChar (wide: BOOLEAN) =
   CONST Tok = ARRAY BOOLEAN OF TK { TK.tCHARCONST, TK.tWCHARCONST };
+  CONST Bytes = ARRAY BOOLEAN OF [1..3] {1, 2 };
   VAR val := 0;
   BEGIN
     cur.token := Tok[wide];
@@ -682,8 +683,10 @@ PROCEDURE ScanChar (wide: BOOLEAN) =
       ELSIF (ch = '\'') THEN  val := ORD ('\'');   GetCh ();
       ELSIF (ch = '\"') THEN  val := ORD ('\"');   GetCh ();
       ELSIF (ch = 'x')
-         OR (ch = 'X')  THEN  GetCh ();  val := GetHexChar (wide);
+         OR (ch = 'X')  THEN  GetCh ();  val := GetHexChar (bytes:=Bytes[wide]);
       ELSIF (OctalDigits[ch]) THEN  val := GetOctalChar (wide);
+      ELSIF wide AND ch = 'U' 
+      THEN GetCh ();  val := GetHexChar (bytes:=3); 
       ELSE  Error.Msg ("unknown escape sequence in character literal");
       END;
     ELSIF (ch = EOFChar) THEN
@@ -739,7 +742,8 @@ PROCEDURE ScanText () =
         ELSIF (ch = '\'') THEN Stuff ('\'');  GetCh ();
         ELSIF (ch = '\"') THEN Stuff ('\"');  GetCh ();
         ELSIF (ch = 'x')
-           OR (ch = 'X') THEN GetCh ();  Stuff (VAL (GetHexChar (FALSE), CHAR));
+           OR (ch = 'X') 
+        THEN GetCh ();  Stuff (VAL (GetHexChar (bytes:=1), CHAR));
         ELSIF (OctalDigits[ch]) THEN Stuff (VAL (GetOctalChar (FALSE), CHAR));
         ELSE  Error.Msg ("unknown escape sequence in text literal");
         END;
@@ -765,7 +769,7 @@ PROCEDURE ScanWideText () =
     wbuf: ARRAY [0..127] OF M3WString.Char;
   PROCEDURE Stuff (c: INTEGER) =
     BEGIN
-      c := Word.And (c, 16_ffff);
+      c := Word.And (c, 16_1fffff);
       IF (i = NUMBER (wbuf)) THEN
         IF (res = NIL)
           THEN res := M3WString.FromStr (wbuf);
@@ -795,8 +799,10 @@ PROCEDURE ScanWideText () =
         ELSIF (ch = '\'') THEN Stuff (ORD ('\''));  GetCh ();
         ELSIF (ch = '\"') THEN Stuff (ORD ('\"'));  GetCh ();
         ELSIF (ch = 'x')
-           OR (ch = 'X') THEN GetCh ();  Stuff (GetHexChar (wide := TRUE));
+           OR (ch = 'X') THEN GetCh ();  Stuff (GetHexChar (bytes:=2));
         ELSIF (OctalDigits[ch]) THEN Stuff (GetOctalChar (wide := TRUE));
+        ELSIF ch = 'U' 
+        THEN GetCh ();  Stuff (GetHexChar (bytes:=3)); 
         ELSE  Error.Msg ("unknown escape sequence in wide text literal");
         END;
       ELSIF (ch = EOFChar) THEN
@@ -823,6 +829,15 @@ PROCEDURE GetOctalChar (wide: BOOLEAN): INTEGER =
       IF NOT GetOctalDigit (wide, value) THEN RETURN value; END;
       IF NOT GetOctalDigit (wide, value) THEN RETURN value; END;
       IF NOT GetOctalDigit (wide, value) THEN RETURN value; END;
+      IF value > 16_FFFF THEN 
+        Error.Msg ("Octal escaped WIDECHAR value out of range");
+        value := 0; 
+      END; 
+    ELSE 
+      IF value > 16_FF THEN 
+        Error.Msg ("Octal escaped CHAR value out of range");
+        value := 0; 
+      END; 
     END;
     RETURN value;
   END GetOctalChar;
@@ -842,26 +857,37 @@ PROCEDURE GetOctalDigit (wide: BOOLEAN;  VAR value: INTEGER): BOOLEAN =
     END;
   END GetOctalDigit;
 
-PROCEDURE GetHexChar (wide: BOOLEAN): INTEGER =
+PROCEDURE GetHexChar (bytes: [1..3]): INTEGER =
   VAR value: INTEGER := 0;
   BEGIN
-    IF NOT GetHexDigit (wide, value) THEN RETURN value; END;
-    IF NOT GetHexDigit (wide, value) THEN RETURN value; END;
-    IF wide THEN
-      IF NOT GetHexDigit (wide, value) THEN RETURN value; END;
-      IF NOT GetHexDigit (wide, value) THEN RETURN value; END;
+    IF NOT GetHexDigit (bytes, value) THEN RETURN value; END;
+    IF NOT GetHexDigit (bytes, value) THEN RETURN value; END;
+    IF bytes > 1 
+    THEN 
+      IF NOT GetHexDigit (bytes, value) THEN RETURN value; END;
+      IF NOT GetHexDigit (bytes, value) THEN RETURN value; END;
+      IF bytes = 3  
+      THEN 
+        IF NOT GetHexDigit (bytes, value) THEN RETURN value; END;
+        IF NOT GetHexDigit (bytes, value) THEN RETURN value; END;
+        IF value > 16_10FFFF THEN 
+          Error.Msg ("Unicode escaped character value out of range");
+          value := 0; 
+        END; 
+      END;
     END;
     RETURN value;
   END GetHexChar;
 
-PROCEDURE GetHexDigit (wide: BOOLEAN;  VAR value: INTEGER): BOOLEAN =
-  CONST Bad = ARRAY BOOLEAN OF TEXT {
+PROCEDURE GetHexDigit (bytes: [1..3];  VAR value: INTEGER): BOOLEAN =
+  CONST Bad = ARRAY [1..3]OF TEXT {
      "hex character constant must have 2 digits",
-     "wide hex character constant must have 4 digits" };
+     "wide hex character constant must have 4 digits",
+     "Unicode character constant must have 6 digits" };
   VAR x: INTEGER;
   BEGIN
     IF  NOT (HexDigits[ch]) THEN
-      Error.Msg (Bad[wide]);  RETURN FALSE;
+      Error.Msg (Bad[bytes]);  RETURN FALSE;
     ELSIF ('0' <= ch) AND (ch <= '9') THEN
       x := ORD (ch) - ORD ('0');
     ELSIF ('a' <= ch) AND (ch <= 'f') THEN

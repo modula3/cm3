@@ -31,10 +31,6 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
 #define M3_MAX_SYMBOLLEN 350
 
-/* FIXME: define TARGET_M3_WIDECHAR_BYTE properly. */
-#define TARGET_M3_WIDECHAR_BYTE ( 2 )
-#define TARGET_M3_WIDECHAR_BIT ( TARGET_CHAR_BIT * TARGET_M3_WIDECHAR_BYTE)
-
 extern int rt0_tc_selfID_size;
 extern int rt0_tc_selfID_offset;
 extern int rt0_tc_dataSize_size;
@@ -583,6 +579,9 @@ extern enum m3_target_typ m3_current_target;
 
 extern int m3_target_integer_bit;
 extern int m3_target_longint_bit;
+extern int m3_widechar_bit; /* Depends on compiler version, not target. */
+extern int m3_widechar_byte; 
+extern LONGEST m3_widechar_LAST; 
 
 extern void
 m3_set_derived_target_info ( void );

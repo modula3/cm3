@@ -163,6 +163,11 @@ along with GCC; see the file COPYING3.  If not see
 static const char * procedures_have_extra_block_string 
   = "procedures_have_extra_block."; 
 
+/* Keep this string consistent with that of the same name in m3gdb, 
+   m3-lang.c. */ 
+static const char * m3_widechar_bitsize_32_string 
+  = "m3_widechar_bitsize_32."; 
+
 enum typestatus {TYPE_UNSEEN, TYPE_XREF, TYPE_DEFINED};
 
 /* Structure recording information about a C data type.
@@ -1089,6 +1094,10 @@ dbxout_init (const char *input_file_name)
   /* Emit an N_OPT stab to indicate that procedures have an extra block. 
      Needed by m3gdb.  rodney.m.bates@acm.org. */
   dbxout_begin_simple_stabs (procedures_have_extra_block_string, N_OPT);
+  dbxout_stab_value_zero ();
+
+  /* Emit an N_OPT stab to indicate that widechar occupies 32 bits. */
+  dbxout_begin_simple_stabs (m3_widechar_bitsize_32_string, N_OPT);
   dbxout_stab_value_zero ();
 
   base_input_file = lastfile = input_file_name;

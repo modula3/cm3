@@ -101,6 +101,15 @@ BOOL processing_pm3_compilation = FALSE;
 */
 BOOL procedures_have_extra_block = FALSE;
 
+char * stabs_file_name = NULL; 
+BOOL m3_widechar_bit_initialized = FALSE;
+BOOL m3_widechar_bit_initialized_for_file = FALSE;
+/* TODO: ^Reinitialize these when we start over. */ 
+/* Keep the value of this string consistent with that of the same name in
+   gcc, dbxout.c. */
+static const char * m3_widechar_bitsize_32_string 
+  = "m3_widechar_bitsize_32."; 
+
 static const char * SRC_compiler_string = "SRC-Modula3_compiled.";
 
 /* Keep the value of this string consistent with that of the same name in
@@ -121,10 +130,12 @@ m3_check_target ( char * dir_name, char * file_name )
       { return; }
     if ( dir_name == NULL || file_name == NULL )
       { return; }
-    if ( strcmp ( file_name, "m3main.mc" ) != 0   /* PM3 and friends. */
-         && strcmp ( file_name, "_m3main.mc" ) != 0 /* CM3. */
+    if ( strcmp ( file_name, "m3main.mc" ) != 0   /* PM3 and friends, internal backend. */
+         && strcmp ( file_name, "_m3main.mc" ) != 0 /* PM3-gcc, CM3-gcc earlier. */
+         && strcmp ( file_name, "_m3main.c" ) != 0 /* Later CM3. */
        )
       { return; }
+
     len = strlen ( dir_name );
     if ( len < 3 ) /* We need at least slashes at each end and 1 target char. */
       { return; }
@@ -149,15 +160,58 @@ m3_check_target ( char * dir_name, char * file_name )
     * endp = saved_slash;
   } /* m3_check_target */
 
+/* Called from dbxread.c when starting a new object file. */
+void
+m3_start_stabs ( char * filename ) 
+
+  { stabs_file_name = filename; 
+    /* ^How long is this safe from deallocation? */
+    m3_widechar_bit_initialized_for_file = FALSE; 
+  } /* m3_start_stabs */ 
+
+/* Called from dbxread.c when done reading a new object file. */
+void
+m3_end_stabs ( void ) 
+
+  { if ( ! m3_widechar_bit_initialized_for_file ) 
+      { /* This object file lacks an N_OPT for this property => says it's 16. */ 
+        if ( m3_widechar_bit_initialized && (m3_widechar_bit == 32) ) 
+          { warning ("Conflicting WIDECHAR sizees." ); } 
+        else 
+          { m3_widechar_bit = 16; 
+            m3_widechar_byte = 2; 
+            m3_widechar_LAST = 0xFFFF; 
+            TYPE_M3_SIZE (builtin_type_m3_widechar) = m3_widechar_bit; 
+            TYPE_LENGTH (builtin_type_m3_widechar) = 2;
+          } 
+      } 
+    m3_widechar_bit_initialized = TRUE; 
+  } /* m3_end_stabs */ 
+
 /* Use the string from the N_OPT stabs entry to maybe set
-   processing_pm3_compilation and procedures_have_extra_block. */
+   processing_pm3_compilation, procedures_have_extra_block, 
+   and m3_widechar_bit. */
 void
 m3_check_compiler ( char * name )
 
   { if ( strcmp ( name, SRC_compiler_string ) == 0 )
       { processing_pm3_compilation = TRUE; }
+
     if ( strcmp ( name, procedures_have_extra_block_string ) == 0 )
       { procedures_have_extra_block = TRUE; }
+
+    if ( strcmp ( name, m3_widechar_bitsize_32_string ) == 0 )
+      { if ( m3_widechar_bit_initialized && (m3_widechar_bit == 16) ) 
+          { warning ("Conflicting WIDECHAR sizees." ); } 
+        else 
+         { m3_widechar_bit = 32; 
+           m3_widechar_byte = 4; 
+           m3_widechar_LAST = 0x10FFFF; 
+           TYPE_M3_SIZE (builtin_type_m3_widechar) = m3_widechar_bit; 
+           TYPE_LENGTH (builtin_type_m3_widechar) = 4;
+           m3_widechar_bit_initialized_for_file = TRUE; 
+         }
+      } 
   } /* m3_check_compiler */
 
 /* CHECK: If m3_create_fundamental_type were called before m3_current_target
@@ -2234,12 +2288,15 @@ static void
 m3_observer_solib_symbols_loaded ( struct so_list * so )
 
   { enum m3_thread_kind_typ l_thread_kind;
+    struct symbol * widechar_t_sym; 
+    struct symbol * widechar_type; 
 
     if ( strstr ( so->so_name, "libm3core.so" ) != NULL )
       { /* Now the symbols for libm3core are loaded.  We still can't call
            things in the RTS, because RT initialization has not been done.
            But we can lookup symbols and examine or change global variables.
         */
+
         m3_libm3core_so_is_loaded = TRUE;
         m3_constant_init_done = FALSE;
         m3_disable_vm_gc ( );
@@ -2399,6 +2456,7 @@ _initialize_m3_language (void)
     init_type (TYPE_CODE_M3_WIDECHAR, (2*TARGET_CHAR_BIT) / HOST_CHAR_BIT, 0,
                "WIDECHAR", (struct objfile *) NULL);
   TYPE_M3_SIZE (builtin_type_m3_widechar) = 2*TARGET_CHAR_BIT;
+  /* ^These sizes may change when we read debug info giving size of WIDECHAR. */ 
 
   builtin_type_m3_real =
     init_type (TYPE_CODE_M3_REAL, TARGET_FLOAT_BIT / TARGET_CHAR_BIT, 0,
@@ -2475,7 +2533,7 @@ _initialize_m3_language (void)
                (struct objfile *) NULL);
   TYPE_M3_SIZE (builtin_type_m3_array_of_widechar)
     = TYPE_LENGTH (builtin_type_m3_array_of_widechar)
-      * TARGET_M3_WIDECHAR_BIT;
+      * TARGET_CHAR_BIT; /* This is for the dope, not the elements. */ 
   TYPE_TARGET_TYPE (builtin_type_m3_array_of_widechar )
     = builtin_type_m3_widechar;
 
@@ -2758,7 +2816,7 @@ m3_push_m3gdb_string (
     CORE_ADDR * sp,
     const gdb_byte * data,
     LONGEST byte_length,
-    LONGEST width, /* Should be 1 or 2. */
+    LONGEST width, /* Should be 1, 2, or 4. */
     struct type * open_array_type
   )
 
@@ -2858,7 +2916,7 @@ m3_push_aux_param_data ( int nargs, struct value **args, CORE_ADDR * sp )
                     ( sp,
                       value_contents_all ( actual_value ),
                       TYPE_LENGTH ( actual_type ),
-                      /* width = */ 2,
+                      /* width = */ m3_widechar_bit,
                       builtin_type_m3_array_of_widechar
                     );
               break;

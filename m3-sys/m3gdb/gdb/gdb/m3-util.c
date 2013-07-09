@@ -212,7 +212,7 @@ m3_emit_char (
      int quoter
    )
 { c &= 0xFF; /* Avoid sign bit follies */
-  if ( PRINT_LITERAL_FORM ( c ) )
+  if (0x20 <= c && c <= 0x7E) /* Literally displayable Ascii. */
     { if (c == '\\' || c == quoter)
         { fputs_filtered ("\\", stream); }
       fprintf_filtered (stream, "%c", c);
@@ -221,9 +221,6 @@ m3_emit_char (
     { switch (c)
         { case '\n':
             fputs_filtered ("\\n", stream);
-            break;
-          case '\b':
-            fputs_filtered ("\\b", stream);
             break;
           case '\t':
             fputs_filtered ("\\t", stream);
@@ -234,8 +231,16 @@ m3_emit_char (
           case '\r':
             fputs_filtered ("\\r", stream);
             break;
+          /* Escaping the opposite quoter in Modula-3 is allowed but
+             not required.  Let's go ahead and escape them. */ 
+          case '\'':
+            fputs_filtered ("\\\'", stream);
+            break;
+          case '\"':
+            fputs_filtered ("\\\"", stream);
+            break;
           default:
-            fprintf_filtered (stream, "\\%.3o", (unsigned int) c);
+            fprintf_filtered (stream, "\\x%.2X", (unsigned int) c);
             break;
         }
     }
@@ -245,34 +250,36 @@ void
 m3_emit_widechar (
     int c, struct ui_file *stream, int quoter )
 
-  { c &= 0xFFFF; /* Avoid sign bit follies */
-    if ((c <= 0xFF) && PRINT_LITERAL_FORM (c))
-      { if (c == '\\' || c == quoter)
-         { fputs_filtered ("\\", stream); }
+  { c &= 0x7FFFFFFF; /* Avoid sign bit follies */
+    if (c == quoter) /* Closing quote */
+      { fputs_filtered ("\\", stream); 
         fprintf_filtered (stream, "%c", c);
       }
-    else
-      { switch (c)
-          { case '\n':
-              fputs_filtered ("\\n", stream);
-              break;
-            case '\b':
-              fputs_filtered ("\\b", stream);
-              break;
-            case '\t':
-              fputs_filtered ("\\t", stream);
-              break;
-            case '\f':
-              fputs_filtered ("\\f", stream);
-              break;
-            case '\r':
-              fputs_filtered ("\\r", stream);
-              break;
-            default:
-              fprintf_filtered (stream, "\\x%.4X", (unsigned int) c);
-              break;
-          }
-      }
+    else if (c == '\n')
+      { fputs_filtered ("\\n", stream); }
+    else if (c == '\t')
+      { fputs_filtered ("\\t", stream); }
+    else if (c == '\f')
+      { fputs_filtered ("\\f", stream); }
+    else if (c == '\r')
+      { fputs_filtered ("\\r", stream); }
+    else if (c == '\\')
+      { fputs_filtered ("\\\\", stream); }
+
+    /* Escaping the opposite quoter in Modula-3 is allowed but
+       not required.  Let's go ahead and escape them. */ 
+    else if (c == '\'')
+      { fputs_filtered ("\\\'", stream); }
+    else if (c == '\"')
+      { fputs_filtered ("\\\"", stream); }
+
+    else if (0x20 <= c && c <= 0x7E) /* Literally displayable Ascii. */ 
+      { fprintf_filtered (stream, "%c", c); } 
+    else if (c <= 0xFFFF) 
+      { fprintf_filtered (stream, "\\x%.4X", (unsigned int) c); } 
+    else  
+      { fprintf_filtered (stream, "\\U%.6X", (unsigned int) c); } 
+
   } /* m3_emit_widechar */
 
 void
@@ -547,7 +554,7 @@ m3_lookup_symbol_one_global (
     return sym;
   } /* m3_lookup_symbol_one_global */
 
-/* Lookup a symbol in the all static blocks.  */
+/* Lookup a symbol in all the static blocks.  */
 struct symbol *
 m3_lookup_symbol_all_static (
     const char *name,
@@ -1088,29 +1095,50 @@ m3_ascertain_compiler_kind ( void )
           }
 
         sym = m3_lookup_symbol_all_static
-                ( "m3main", "MM__m3main", VAR_DOMAIN, NULL);
-        /* ^This symbol appears in _m3main.o, of CM3-compiled code only. */
-        if ( sym != NULL )
-           { m3_compiler_kind_value = m3_ck_cm3;
-             return;
-           }
-        sym = m3_lookup_symbol_all_static
                 ( "m3_link_info", "m3_link_info", VAR_DOMAIN, NULL);
-            /* ^This symbol appears in _m3main.o, of PM3-compiled code only. */
+            /* ^This symbol appears in _m3main.o, of PM3-compiled code only, 
+                either code generator. */
         if ( sym != NULL )
            { m3_compiler_kind_value = m3_ck_pm3;
              return;
            }
-        minsym = lookup_minimal_symbol ( "MM__m3main", NULL, NULL);
-        if ( minsym != NULL )
+
+        sym = m3_lookup_symbol_all_static
+                ( "m3main", "MM__m3main", VAR_DOMAIN, NULL);
+        /* ^This symbol appears in _m3main.o, of earlier CM3-compiled 
+            code only. */
+        if ( sym != NULL )
            { m3_compiler_kind_value = m3_ck_cm3;
              return;
            }
+
+        sym = m3_lookup_symbol_all_static
+                ( "INTEGER", "INTEGER", VAR_DOMAIN, NULL);
+            /* ^This symbol appears in _m3main.o, of later CM3-compiled
+                code, gcc backend. */
+        if ( sym != NULL )
+           { m3_compiler_kind_value = m3_ck_cm3;
+             return;
+           }
+
         minsym = lookup_minimal_symbol ( "m3_link_info", NULL, NULL);
         if ( minsym != NULL )
            { m3_compiler_kind_value = m3_ck_pm3;
              return;
            }
+
+        minsym = lookup_minimal_symbol ( "MM__m3main", NULL, NULL);
+        if ( minsym != NULL )
+           { m3_compiler_kind_value = m3_ck_cm3;
+             return;
+           }
+
+        minsym = lookup_minimal_symbol ( "INTEGER", NULL, NULL);
+        if ( minsym != NULL )
+           { m3_compiler_kind_value = m3_ck_cm3;
+             return;
+           }
+
         m3_compiler_kind_value = m3_ck_not_m3;
       }
   } /* m3_ascertain_compiler_kind */
@@ -1800,7 +1828,7 @@ m3_ordinal_bounds (
           break;
         case TYPE_CODE_M3_WIDECHAR:
           lower = 0;
-          upper = 0xffff;
+          upper = m3_widechar_LAST; 
           break;
         case TYPE_CODE_M3_INTEGER:
           /* assumes a 2's complement machine... */
@@ -2966,13 +2994,17 @@ m3_evaluate_string ( char * string )
 
 enum m3_target_typ m3_current_target = TARGET_UNKNOWN;
 
-int m3_target_integer_bit = 32;
+int m3_target_integer_bit = 32; /* Default. May change. */ 
 /* DANGER, WILL ROBINSON!!!: You cannot use TARGET_INT_BIT (from existing
    gdb code) for the size of Modula-3 INTEGER.  TARGET_INT_BIT is the size
    of a C int, which can be 32, even on a 64-bit machine!!!
 */ 
 
-int m3_target_longint_bit = 64;
+int m3_target_longint_bit = 64; /* Default. May change. */
+
+int m3_widechar_bit = 16; /* Default. May change. */ 
+int m3_widechar_byte = 2; /* Default. May change. */ 
+LONGEST m3_widechar_LAST = 0xFFFF; /* Default. May change. */ 
 
 /* After m3_current_target has been set or changed, this sets variables
    that can be derived from it. */

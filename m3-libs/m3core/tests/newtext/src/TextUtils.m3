@@ -34,7 +34,7 @@ UNSAFE MODULE TextUtils
       | TextLiteral . T ( TL ) 
       => IF TL . cnt >= 0 
          THEN 
-           IF TL . cnt > TextLiteral . MaxBytes - 2 
+           IF TL . cnt > TextLiteral . MaxBytes - BYTESIZE ( WIDECHAR )
            THEN
              RAISE BadInvariant 
                ( "TextLiteral,8, cnt = " & Fmt . Int ( TL . cnt  ) 
@@ -48,14 +48,14 @@ UNSAFE MODULE TextUtils
                ) 
            END (* IF *) 
          ELSE
-           IF - TL . cnt * 2 > TextLiteral . MaxBytes - 2 
+           IF - TL . cnt * BYTESIZE ( WIDECHAR )
+              > TextLiteral . MaxBytes - BYTESIZE ( WIDECHAR )
            THEN
              RAISE BadInvariant 
                ( "TextLiteral,16, cnt = " & Fmt . Int ( TL . cnt  ) 
                  & ", too large."  
                ) 
-           ELSIF TL . buf [ - TL . cnt * 2 ] # 0  
-              OR TL . buf [ - TL . cnt * 2 ] # 0  
+           ELSIF TL . buf [ - TL . cnt * BYTESIZE ( WIDECHAR )] # 0  
            THEN
              RAISE BadInvariant 
                ( "TextLiteral,16, cnt = " & Fmt . Int ( TL . cnt  ) 
