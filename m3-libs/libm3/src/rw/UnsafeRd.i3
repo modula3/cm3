@@ -22,7 +22,8 @@ in order to satisfy the constraint that the revealed supertypes of an
 opaque type be totally ordered.  *)
 
 INTERFACE UnsafeRd;
-IMPORT Rd, Thread; 
+IMPORT Rd; 
+IMPORT Thread; 
 FROM Thread IMPORT Alerted;
 FROM Rd IMPORT Failure, EndOfFile;
 
@@ -46,8 +47,8 @@ PROCEDURE FastGetWideSub(rd: Rd.T; VAR (*OUT*) str: ARRAY OF WIDECHAR): CARDINAL
 PROCEDURE FastEOF(rd: Rd.T): BOOLEAN RAISES {Failure, Alerted};
 (* Like Rd.EOF, but rd must be locked. *)
 
-PROCEDURE FastUnGetChar(rd: Rd.T) RAISES {};
-(* Like Rd.UnGetChar, but rd must be locked. *)
+PROCEDURE FastUnGetCharMulti(rd: Rd.T): BOOLEAN (* Succeeded. *);
+(* Like Rd.UnGetCharMulti, but rd must be locked. *)
 
 PROCEDURE FastClose (rd: Rd.T) RAISES {Failure, Alerted};
 
