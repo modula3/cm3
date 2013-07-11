@@ -16,10 +16,10 @@ INTERFACE PklAction;
 CONST Brand = "Tipe Conversion Action 1.0";
 
 TYPE 
-  T = OBJECT kind: Kind; length: INTEGER END;
+  T = OBJECT kind: PAKind; length: INTEGER END;
 
 TYPE
-  Kind = {
+  PAKind = {
      (* For moving data between same size, same endian *)
      Copy,                          (* Straight copy. *)
 

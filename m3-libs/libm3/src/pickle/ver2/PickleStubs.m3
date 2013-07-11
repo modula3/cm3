@@ -16,7 +16,7 @@ UNSAFE MODULE PickleStubs;
    
 IMPORT Pickle2 AS Pickle, PickleRd, RTPacking, RTType;
 FROM PickleRd IMPORT myPacking;
-FROM ConvertPacking IMPORT Kind;
+FROM ConvertPacking IMPORT CPKind;
 FROM Swap IMPORT Int32, Int64On32, Int64On64;
 
 IMPORT Rd, Wr, Text, TextClass, Text8, Text16, Thread;
@@ -75,9 +75,9 @@ PROCEDURE InWideChars(reader: Pickle.Reader; VAR arr: ARRAY OF WIDECHAR)
       INC(p, ADRSIZE(p^));  DEC(cnt, NUMBER(p^));
     END;
     CASE reader.wordConvKind OF
-    | Kind.Copy, Kind.Copy32to64, Kind.Copy64to32 =>
+    | CPKind.Copy, CPKind.Copy32to64, CPKind.Copy64to32 =>
         (* ok *)
-    | Kind.Swap, Kind.Swap32to64, Kind.Swap64to32 =>
+    | CPKind.Swap, CPKind.Swap32to64, CPKind.Swap64to32 =>
         (* we need to byte swap *)
         FOR i := 0 TO LAST(arr) DO
           WITH z = arr[i] DO  z := VAL (Swap.Swap2U (ORD (z)), WIDECHAR);  END;
@@ -132,14 +132,14 @@ PROCEDURE InInteger(reader: Pickle.Reader;
   VAR i: INTEGER;
   BEGIN
     CASE reader.wordConvKind OF
-    | Kind.Copy, Kind.Swap =>
+    | CPKind.Copy, CPKind.Swap =>
       VAR c := LOOPHOLE(ADR(i), 
                         UNTRACED REF ARRAY [1..BYTESIZE(INTEGER)] OF CHAR);
       BEGIN
         IF reader.rd.getSub(c^) # NUMBER(c^) THEN
           RaiseUnmarshalFailure();
         END;
-        IF reader.wordConvKind = Kind.Swap THEN
+        IF reader.wordConvKind = CPKind.Swap THEN
           CASE myPacking.word_size OF
           | 32 => i := Swap.Swap4(i);
           | 64 => 
@@ -155,20 +155,20 @@ PROCEDURE InInteger(reader: Pickle.Reader;
         END;
       END;
 
-    | Kind.Copy32to64, Kind.Swap32to64 =>
+    | CPKind.Copy32to64, CPKind.Swap32to64 =>
       VAR i32: Int32;
           c32 := LOOPHOLE(ADR(i32), UNTRACED REF ARRAY [1..4] OF CHAR);
       BEGIN
 	IF reader.rd.getSub(c32^) # NUMBER(c32^) THEN
 	  RaiseUnmarshalFailure();
 	END;
-	IF reader.wordConvKind = Kind.Swap32to64 THEN
+	IF reader.wordConvKind = CPKind.Swap32to64 THEN
 	  i32 := Swap.Swap4(i32);
 	END;
 	i := i32;
       END;
 
-    | Kind.Copy64to32, Kind.Swap64to32 =>
+    | CPKind.Copy64to32, CPKind.Swap64to32 =>
       VAR i64: Int64On32;
           c64 := LOOPHOLE(ADR(i64), UNTRACED REF ARRAY [1..8] OF CHAR);
       BEGIN
@@ -188,7 +188,7 @@ PROCEDURE InInteger(reader: Pickle.Reader;
 	END;
   
 	(* Now, swap it if need be. *)
-	IF reader.wordConvKind = Kind.Swap64to32 THEN
+	IF reader.wordConvKind = CPKind.Swap64to32 THEN
 	  i := Swap.Swap4(i);
 	END;
       END;
@@ -205,14 +205,14 @@ PROCEDURE InLongint(reader: Pickle.Reader;
   VAR i: LONGINT;
   BEGIN
     CASE reader.longConvKind OF
-    | Kind.Copy, Kind.Swap =>
+    | CPKind.Copy, CPKind.Swap =>
       VAR c := LOOPHOLE(ADR(i), 
                         UNTRACED REF ARRAY [1..BYTESIZE(LONGINT)] OF CHAR);
       BEGIN
         IF reader.rd.getSub(c^) # NUMBER(c^) THEN
           RaiseUnmarshalFailure();
         END;
-        IF reader.longConvKind = Kind.Swap THEN
+        IF reader.longConvKind = CPKind.Swap THEN
           CASE myPacking.long_size OF
           | 32 => i := VAL(Swap.Swap4(VAL(i, INTEGER)), LONGINT);
           | 64 => 
@@ -228,20 +228,20 @@ PROCEDURE InLongint(reader: Pickle.Reader;
         END;
       END;
 
-    | Kind.Copy32to64, Kind.Swap32to64 =>
+    | CPKind.Copy32to64, CPKind.Swap32to64 =>
       VAR i32: Int32;
           c32 := LOOPHOLE(ADR(i32), UNTRACED REF ARRAY [1..4] OF CHAR);
       BEGIN
 	IF reader.rd.getSub(c32^) # NUMBER(c32^) THEN
 	  RaiseUnmarshalFailure();
 	END;
-	IF reader.longConvKind = Kind.Swap32to64 THEN
+	IF reader.longConvKind = CPKind.Swap32to64 THEN
 	  i32 := Swap.Swap4(i32);
 	END;
 	i := VAL(i32, LONGINT);
       END;
 
-    | Kind.Copy64to32, Kind.Swap64to32 =>
+    | CPKind.Copy64to32, CPKind.Swap64to32 =>
       VAR i64: Int64On32;
           c64 := LOOPHOLE(ADR(i64), UNTRACED REF ARRAY [1..8] OF CHAR);
       BEGIN
@@ -261,7 +261,7 @@ PROCEDURE InLongint(reader: Pickle.Reader;
 	END;
   
 	(* Now, swap it if need be. *)
-	IF reader.longConvKind = Kind.Swap64to32 THEN
+	IF reader.longConvKind = CPKind.Swap64to32 THEN
 	  i := VAL(Swap.Swap4(VAL(i, INTEGER)), LONGINT);
 	END;
       END;
@@ -282,9 +282,9 @@ PROCEDURE InInt32(reader: Pickle.Reader;
       RaiseUnmarshalFailure();
     END;
     CASE reader.wordConvKind OF
-    | Kind.Swap, Kind.Swap64to32, Kind.Swap32to64 =>
+    | CPKind.Swap, CPKind.Swap64to32, CPKind.Swap32to64 =>
       i32 := Swap.Swap4(i32);
-    | Kind.Copy, Kind.Copy64to32, Kind.Copy32to64 =>
+    | CPKind.Copy, CPKind.Copy64to32, CPKind.Copy32to64 =>
     END;
     IF i32 < min OR i32 > max THEN RaiseUnmarshalFailure(); END;
     RETURN i32;
