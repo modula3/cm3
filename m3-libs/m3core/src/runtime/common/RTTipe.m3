@@ -385,7 +385,7 @@ PROCEDURE FixSizes (t: T;  READONLY p: Packing) =
     | Kind.Enum =>
         VAR enum: Enum := t; BEGIN
           IF    (enum.n_elts <= 256)         THEN t.size := 8;
-          ELSIF (enum.n_elts <= 65535)       THEN t.size := 16;
+          ELSIF (enum.n_elts <= 65536)       THEN t.size := 16;
           ELSIF (enum.n_elts <= 16_7fffffff) THEN t.size := 32;
           ELSE                                    t.size := 64;
           END;
