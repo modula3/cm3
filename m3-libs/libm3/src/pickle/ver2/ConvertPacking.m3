@@ -44,10 +44,10 @@ REVEAL T = Public BRANDED "ConvertPacking 1.0" OBJECT
       buildOne(fromTipe: RTTipe.T; toTipe: RTTipe.T) RAISES {Error} := 
           BuildOne; 
 
-      addCopy(length: INTEGER) := AddCopy;
-      addCopy32to64(length: INTEGER; signed: BOOLEAN) := AddCopy32to64;
+      addCopy(bitCt: INTEGER) := AddCopy;
+      addCopy32to64(bitCt: INTEGER; signed: BOOLEAN) := AddCopy32to64;
       (* ^PRE: length MOD 32 = 0 *) 
-      addCopy64to32(length: INTEGER; signed: BOOLEAN) := AddCopy64to32;
+      addCopy64to32(bitCt: INTEGER; signed: BOOLEAN) := AddCopy64to32;
       (* ^PRE: length MOD 64 = 0 *) 
       addCopy16to32(fromBitCt: INTEGER) := AddCopy16to32;
       (* ^PRE: fromBitCt MOD 16 = 0 *) 
@@ -58,26 +58,26 @@ REVEAL T = Public BRANDED "ConvertPacking 1.0" OBJECT
       addCopyWC21to16(toBitCt: INTEGER) := AddCopyWC21to16;
       (* ^PRE: ToBitCt MOD 16 = 0 *) 
 
-      addPackedSwapFirstField(fieldsize: INTEGER) :=
+      addPackedSwapFirstField(fieldBitSize: INTEGER) :=
           AddPackedSwapFirstField;
-      addPackedSwapNextField(fieldsize: INTEGER; offset: INTEGER) :=
+      addPackedSwapNextField(fieldBitSize: INTEGER; offset: INTEGER) :=
           AddPackedSwapNextField;
-      addPackedSwapArray(length, numElts, fieldsize, wordsize:
+      addPackedSwapArray(bitCt, numElts, fieldBitSize, packingWordBitSize:
           INTEGER) := AddPackedSwapArray; 
 
-      addSkipFrom(length: INTEGER) := AddSkipFrom;
-      addSkipTo(length: INTEGER) := AddSkipTo;
-      addSkipOrCopy(length: INTEGER) := AddSkipOrCopy;
+      addSkipFrom(bitCt: INTEGER) := AddSkipFrom;
+      addSkipTo(bitCt: INTEGER) := AddSkipTo;
+      addSkipOrCopy(bitCt: INTEGER) := AddSkipOrCopy;
       addSkip(fromDiff, toDiff: INTEGER) := AddSkip;
-      addSwap16(length: INTEGER) := AddSwap16;
+      addSwap16(bitCt: INTEGER) := AddSwap16;
       (* ^PRE: length MOD 16 = 0 *) 
-      addSwap32(length: INTEGER) := AddSwap32;
+      addSwap32(bitCt: INTEGER) := AddSwap32;
       (* ^PRE: length MOD 32 = 0 *) 
-      addSwap64(length: INTEGER) := AddSwap64;
+      addSwap64(bitCt: INTEGER) := AddSwap64;
       (* ^PRE: length MOD 64 = 0 *) 
-      addSwap32to64(length: INTEGER; signed: BOOLEAN) := AddSwap32to64;
+      addSwap32to64(bitCt: INTEGER; signed: BOOLEAN) := AddSwap32to64;
       (* ^PRE: length MOD 32 = 0 *) 
-      addSwap64to32(length: INTEGER; signed: BOOLEAN) := AddSwap64to32;
+      addSwap64to32(bitCt: INTEGER; signed: BOOLEAN) := AddSwap64to32;
       (* ^PRE: length MOD 64 = 0 *) 
       addSwap16to32(fromBitCt: INTEGER) := AddSwap16to32;
       (* ^PRE: fromBitCt MOD 16 = 0 *) 
@@ -758,35 +758,35 @@ PROCEDURE GetHiKind(prog: PklActionSeq.T; kind: PklAction.PAKind;
     RETURN FALSE;
   END GetHiKind;
 
-PROCEDURE AddCopy(self: T; length: INTEGER) =
+PROCEDURE AddCopy(self: T; bitCt: INTEGER) =
   VAR elem: PklAction.T;
   BEGIN
-    INC(self.fromOffset, length);
-    INC(self.toOffset, length);
+    INC(self.fromOffset, bitCt);
+    INC(self.toOffset, bitCt);
     IF GetHiKind(self.prog, PklAction.PAKind.Copy, elem) THEN
-      INC(elem.unitCt, length DIV 8);
+      INC(elem.unitCt, bitCt DIV 8);
       RETURN;
     END;
     self.prog.addhi(NEW(PklAction.T, kind := PklAction.PAKind.Copy, 
-                        unitCt := length DIV 8));
+                        unitCt := bitCt DIV 8));
   END AddCopy;
 
-PROCEDURE AddPackedSwapFirstField(self: T; fieldsize: INTEGER) =
+PROCEDURE AddPackedSwapFirstField(self: T; fieldBitSize: INTEGER) =
   BEGIN
     (* We'll copy the minimum number of whole bytes. *)
-    WITH length = RoundUp(fieldsize, 8) DO
+    WITH length = RoundUp(fieldBitSize, 8) DO
       INC(self.fromOffset, length);
       INC(self.toOffset, length);
       WITH elem = NEW(PklAction.SwapPacked, kind := PklAction.PAKind.SwapPacked, 
                       unitCt := 1, size := length DIV 8,
                       field := NEW(REF ARRAY OF CARDINAL, 1)) DO
-        elem.field[0] := fieldsize;
+        elem.field[0] := fieldBitSize;
         self.prog.addhi(elem);
       END;
     END;
   END AddPackedSwapFirstField;
 
-PROCEDURE AddPackedSwapNextField(self: T; fieldsize: INTEGER; 
+PROCEDURE AddPackedSwapNextField(self: T; fieldBitSize: INTEGER; 
                                  offset: INTEGER) =
   VAR elem: PklAction.T;
       total: CARDINAL;
@@ -804,7 +804,7 @@ PROCEDURE AddPackedSwapNextField(self: T; fieldsize: INTEGER;
            check the bits line up in the current byte. *)
         <* ASSERT (total MOD 8) = (offset MOD 8) *>
 
-        INC(total, fieldsize);
+        INC(total, fieldBitSize);
 
         (* The max total size of a packed set of fields is the word
            size!  This is guaranteed because a packed field cannot
@@ -830,30 +830,34 @@ PROCEDURE AddPackedSwapNextField(self: T; fieldsize: INTEGER;
           SUBARRAY(new_field^, 0, NUMBER(nelem.field^)) := nelem.field^;
           nelem.field := new_field;
         END;
-        nelem.field[LAST(nelem.field^)] := fieldsize;
+        nelem.field[LAST(nelem.field^)] := fieldBitSize;
       END;
     END;
   END AddPackedSwapNextField;
 
-PROCEDURE AddPackedSwapArray(self: T; length(*Entire array in bits.*): INTEGER;
-                             numElts: INTEGER; fieldsize: INTEGER;
-                             wordsize: INTEGER) =
-  (* wordsize is bytess in the word we are converting within.  It will always 
-     fit within a Word.T on the machine executing this code. *)  
-  VAR fieldsPerWord := wordsize DIV fieldsize; 
+PROCEDURE AddPackedSwapArray(self: T; bitCt(*Entire array in bits.*): INTEGER;
+                             numElts: INTEGER; fieldBitSize: INTEGER;
+                             packingWordBitSize: INTEGER) =
+  (* packingWordBitSize is bits in the word we are converting within.  It will 
+     always fit within a Word.T on the machine executing this code. *)  
+  VAR fieldsPerWord := packingWordBitSize DIV fieldBitSize; 
   BEGIN
     (* We will build a packing for at most "fieldsPerWord" fields.  Packed
        arrays must not have elements that span word boundaries, so if 
-       "numElts > fieldsPerWord" then "fieldsPerWord * fieldsize = wordsize" *)
-    <* ASSERT (numElts <= fieldsPerWord) OR (fieldsPerWord * fieldsize = wordsize) *>
+       "numElts > fieldsPerWord" then 
+       "fieldsPerWord * fieldBitSize = packingWordBitSize"
+    *)
+    <* ASSERT (numElts <= fieldsPerWord) 
+              OR (fieldsPerWord * fieldBitSize = packingWordBitSize) 
+    *>
 
-    INC(self.fromOffset, length);
-    INC(self.toOffset, length);
+    INC(self.fromOffset, bitCt);
+    INC(self.toOffset, bitCt);
 
     WITH fullWordCt   = numElts DIV fieldsPerWord,
-         bytesPerWord = wordsize DIV 8,
+         bytesPerWord = packingWordBitSize DIV 8,
          extraEltCt   = numElts MOD fieldsPerWord,   
-         extraBytes    = RoundUp(length MOD wordsize, 8) DIV 8 DO
+         extraBytes    = RoundUp(bitCt MOD packingWordBitSize, 8) DIV 8 DO
 
       (* First, we add a program action element to handle the bulk of the array
          element swapping when the array spans more than one word.
@@ -865,7 +869,7 @@ PROCEDURE AddPackedSwapArray(self: T; length(*Entire array in bits.*): INTEGER;
                          unitCt := fullWordCt, size := bytesPerWord, 
                          field := NEW(REF ARRAY OF CARDINAL, fieldsPerWord)) DO
           FOR i := FIRST(nelem.field^) TO LAST(nelem.field^) DO
-            nelem.field[i] := fieldsize;
+            nelem.field[i] := fieldBitSize;
           END;
           self.prog.addhi(nelem);
         END;
@@ -880,7 +884,7 @@ PROCEDURE AddPackedSwapArray(self: T; length(*Entire array in bits.*): INTEGER;
                          unitCt := 1, size := extraBytes,
                          field := NEW(REF ARRAY OF CARDINAL, extraEltCt)) DO
           FOR i := FIRST(nelem.field^) TO LAST(nelem.field^) DO
-            nelem.field[i] := fieldsize;
+            nelem.field[i] := fieldBitSize;
           END;
           self.prog.addhi(nelem);
         END;
@@ -888,41 +892,41 @@ PROCEDURE AddPackedSwapArray(self: T; length(*Entire array in bits.*): INTEGER;
     END;
   END AddPackedSwapArray; 
 
-PROCEDURE AddCopy32to64(self: T; length: INTEGER; signed: BOOLEAN) =
-(* PRE: length MOD 32 = 0 *) 
+PROCEDURE AddCopy32to64(self: T; bitCt: INTEGER; signed: BOOLEAN) =
+(* PRE: bitCt MOD 32 = 0 *) 
   VAR elem: PklAction.T;
   BEGIN
-    INC(self.fromOffset, length);
-    INC(self.toOffset, length*2);
+    INC(self.fromOffset, bitCt);
+    INC(self.toOffset, bitCt*2);
     IF GetHiKind(self.prog, PklAction.PAKind.Copy32to64, elem) THEN
       WITH nelem = NARROW(elem, PklAction.Copy32to64) DO
         IF nelem.signed = signed THEN
-          INC(elem.unitCt, length DIV 32);
+          INC(elem.unitCt, bitCt DIV 32);
           RETURN;
         END;
       END;
     END;
     self.prog.addhi(NEW(PklAction.Copy32to64, kind := PklAction.PAKind.Copy32to64, 
-                        unitCt := length DIV 32, signed := signed));
+                        unitCt := bitCt DIV 32, signed := signed));
   END AddCopy32to64;
 
-PROCEDURE AddCopy64to32(self: T; length: INTEGER; signed: BOOLEAN) =
-(* PRE: length MOD 64 = 0 *) 
+PROCEDURE AddCopy64to32(self: T; bitCt: INTEGER; signed: BOOLEAN) =
+(* PRE: bitCt MOD 64 = 0 *) 
   VAR elem: PklAction.T;
   BEGIN
-    INC(self.fromOffset, length);
-    <* ASSERT length MOD 2 = 0 *>
-    INC(self.toOffset, length DIV 2);
+    INC(self.fromOffset, bitCt);
+    <* ASSERT bitCt MOD 2 = 0 *>
+    INC(self.toOffset, bitCt DIV 2);
     IF GetHiKind(self.prog, PklAction.PAKind.Copy64to32, elem) THEN
       WITH nelem = NARROW(elem, PklAction.Copy64to32) DO
         IF nelem.signed = signed THEN
-          INC(elem.unitCt, length DIV 64);
+          INC(elem.unitCt, bitCt DIV 64);
           RETURN;
         END;
       END;
     END;
     self.prog.addhi(NEW(PklAction.Copy64to32, kind := PklAction.PAKind.Copy64to32,
-                        unitCt := length DIV 64, signed := signed));
+                        unitCt := bitCt DIV 64, signed := signed));
   END AddCopy64to32;
 
 PROCEDURE AddCopy16to32(self: T; fromBitCt: INTEGER) =
@@ -991,44 +995,44 @@ PROCEDURE AddCopyWC21to16(self: T; toBitCt: INTEGER) =
                         unitCt := toBitCt DIV 16));
   END AddCopyWC21to16;
 
-PROCEDURE AddSkipFrom(self: T; length: INTEGER) =
+PROCEDURE AddSkipFrom(self: T; bitCt: INTEGER) =
   VAR elem: PklAction.T;
   BEGIN
-    INC(self.fromOffset, length);
+    INC(self.fromOffset, bitCt);
     IF GetHiKind(self.prog, PklAction.PAKind.SkipFrom, elem) THEN
-      INC(elem.unitCt, length DIV 8);
+      INC(elem.unitCt, bitCt DIV 8);
       RETURN;
     END;
     self.prog.addhi(NEW(PklAction.T, kind := PklAction.PAKind.SkipFrom, 
-                        unitCt := length DIV 8));
+                        unitCt := bitCt DIV 8));
   END AddSkipFrom;
 
-PROCEDURE AddSkipTo(self: T; length: INTEGER) =
+PROCEDURE AddSkipTo(self: T; bitCt: INTEGER) =
   VAR elem: PklAction.T;
   BEGIN
-    INC(self.toOffset, length);
+    INC(self.toOffset, bitCt);
     IF GetHiKind(self.prog, PklAction.PAKind.SkipTo, elem) THEN
-      INC(elem.unitCt, length DIV 8);
+      INC(elem.unitCt, bitCt DIV 8);
       RETURN;
     END;
     self.prog.addhi(NEW(PklAction.T, kind := PklAction.PAKind.SkipTo, 
-                        unitCt := length DIV 8));
+                        unitCt := bitCt DIV 8));
   END AddSkipTo;
 
-PROCEDURE AddSkipOrCopy(self: T; length: INTEGER) =
+PROCEDURE AddSkipOrCopy(self: T; bitCt: INTEGER) =
   VAR elem: PklAction.T;
   BEGIN
-    INC(self.fromOffset, length);
-    INC(self.toOffset, length);
+    INC(self.fromOffset, bitCt);
+    INC(self.toOffset, bitCt);
     IF GetHiKind(self.prog, PklAction.PAKind.Copy, elem) THEN
-      INC(elem.unitCt, length DIV 8);
+      INC(elem.unitCt, bitCt DIV 8);
       RETURN;
     ELSIF GetHiKind(self.prog, PklAction.PAKind.Skip, elem) THEN
-      INC(elem.unitCt, length DIV 8);
+      INC(elem.unitCt, bitCt DIV 8);
       RETURN;
     END;
     self.prog.addhi(NEW(PklAction.T, kind := PklAction.PAKind.Skip, 
-                        unitCt := length DIV 8));
+                        unitCt := bitCt DIV 8));
   END AddSkipOrCopy;
 
 PROCEDURE AddSkip(self: T; fromDiff, toDiff: INTEGER) =
@@ -1054,83 +1058,83 @@ PROCEDURE AddSkip(self: T; fromDiff, toDiff: INTEGER) =
     END;
   END AddSkip;
 
-PROCEDURE AddSwap16(self: T; length: INTEGER) =
-(* PRE: length MOD 16 = 0 *) 
+PROCEDURE AddSwap16(self: T; bitCt: INTEGER) =
+(* PRE: bitCt MOD 16 = 0 *) 
   VAR elem: PklAction.T;
   BEGIN
-    INC(self.fromOffset, length);
-    INC(self.toOffset, length);
+    INC(self.fromOffset, bitCt);
+    INC(self.toOffset, bitCt);
     IF GetHiKind(self.prog, PklAction.PAKind.Swap16, elem) THEN
-      INC(elem.unitCt, length DIV 16);
+      INC(elem.unitCt, bitCt DIV 16);
       RETURN;
     END;
     self.prog.addhi(NEW(PklAction.T, kind := PklAction.PAKind.Swap16, 
-                        unitCt := length DIV 16));
+                        unitCt := bitCt DIV 16));
   END AddSwap16;
 
-PROCEDURE AddSwap32(self: T; length: INTEGER) =
-(* PRE: length MOD 32 = 0 *) 
+PROCEDURE AddSwap32(self: T; bitCt: INTEGER) =
+(* PRE: bitCt MOD 32 = 0 *) 
   VAR elem: PklAction.T;
   BEGIN
-    INC(self.fromOffset, length);
-    INC(self.toOffset, length);
+    INC(self.fromOffset, bitCt);
+    INC(self.toOffset, bitCt);
     IF GetHiKind(self.prog, PklAction.PAKind.Swap32, elem) THEN
-      INC(elem.unitCt, length DIV 32);
+      INC(elem.unitCt, bitCt DIV 32);
       RETURN;
     END;
     self.prog.addhi(NEW(PklAction.T, kind := PklAction.PAKind.Swap32, 
-                        unitCt := length DIV 32));
+                        unitCt := bitCt DIV 32));
   END AddSwap32;
 
-PROCEDURE AddSwap64(self: T; length: INTEGER) =
-(* PRE: length MOD 64 = 0 *) 
+PROCEDURE AddSwap64(self: T; bitCt: INTEGER) =
+(* PRE: bitCt MOD 64 = 0 *) 
   VAR elem: PklAction.T;
   BEGIN
-    INC(self.fromOffset, length);
-    INC(self.toOffset, length);
+    INC(self.fromOffset, bitCt);
+    INC(self.toOffset, bitCt);
     IF GetHiKind(self.prog, PklAction.PAKind.Swap64, elem) THEN
-      INC(elem.unitCt, length DIV 64);
+      INC(elem.unitCt, bitCt DIV 64);
       RETURN;
     END;
     self.prog.addhi(NEW(PklAction.T, kind := PklAction.PAKind.Swap64, 
-                        unitCt := length DIV 64));
+                        unitCt := bitCt DIV 64));
   END AddSwap64;
 
-PROCEDURE AddSwap32to64(self: T; length: INTEGER; signed: BOOLEAN) =
-(* PRE: length MOD 32 = 0 *) 
+PROCEDURE AddSwap32to64(self: T; bitCt: INTEGER; signed: BOOLEAN) =
+(* PRE: bitCt MOD 32 = 0 *) 
   VAR elem: PklAction.T;
   BEGIN
-    INC(self.fromOffset, length);
-    INC(self.toOffset, length*2);
+    INC(self.fromOffset, bitCt);
+    INC(self.toOffset, bitCt*2);
     IF GetHiKind(self.prog, PklAction.PAKind.Swap32to64, elem) THEN
       WITH nelem = NARROW(elem, PklAction.Copy32to64) DO
         IF nelem.signed = signed THEN
-          INC(elem.unitCt, length DIV 32);
+          INC(elem.unitCt, bitCt DIV 32);
           RETURN;
         END;
       END;
     END;
     self.prog.addhi(NEW(PklAction.Copy32to64, kind := PklAction.PAKind.Swap32to64, 
-                        unitCt := length DIV 32, signed := signed));
+                        unitCt := bitCt DIV 32, signed := signed));
   END AddSwap32to64;
 
-PROCEDURE AddSwap64to32(self: T; length: INTEGER; signed: BOOLEAN) =
-(* PRE: length MOD 64 = 0 *) 
+PROCEDURE AddSwap64to32(self: T; bitCt: INTEGER; signed: BOOLEAN) =
+(* PRE: bitCt MOD 64 = 0 *) 
   VAR elem: PklAction.T;
   BEGIN
-    INC(self.fromOffset, length);
-    <* ASSERT length MOD 64 = 0 *>
-    INC(self.toOffset, length DIV 2);
+    INC(self.fromOffset, bitCt);
+    <* ASSERT bitCt MOD 64 = 0 *>
+    INC(self.toOffset, bitCt DIV 2);
     IF GetHiKind(self.prog, PklAction.PAKind.Swap64to32, elem) THEN
       WITH nelem = NARROW(elem, PklAction.Copy32to64) DO
         IF nelem.signed = signed THEN
-          INC(elem.unitCt, length DIV 64);
+          INC(elem.unitCt, bitCt DIV 64);
           RETURN;
         END;
       END;
     END;
     self.prog.addhi(NEW(PklAction.T, kind := PklAction.PAKind.Swap64to32, 
-                        unitCt := length DIV 64));
+                        unitCt := bitCt DIV 64));
   END AddSwap64to32;
 
 PROCEDURE AddSwap16to32(self: T; fromBitCt: INTEGER) =
