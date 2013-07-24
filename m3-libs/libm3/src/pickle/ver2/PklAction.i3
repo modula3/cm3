@@ -26,7 +26,7 @@ CONST Brand = "Tipe Conversion Action 1.0";
 *) 
 
 TYPE 
-  T = OBJECT kind: PAKind; length: INTEGER END;
+  T = OBJECT kind: PAKind; unitCt: INTEGER END;
 
 TYPE
   PAKind = {
@@ -44,12 +44,12 @@ TYPE
         and store in memory, which must be properly aligned for the action.
      *) 
      (* For moving data between same size, same endian *)
-     Copy,                          (* Straight copy of length bytes. *)
+     Copy,                          (* Straight copy of unitCt bytes. *)
 
      (* Skipping bytes on input, output or both *)
-     SkipFrom,                      (* Skip length input bytes. *)
-     SkipTo,                        (* Skip length output bytes. *)
-     Skip,                          (* Skip length bytes of both *)
+     SkipFrom,                      (* Skip unitCt input bytes. *)
+     SkipTo,                        (* Skip unitCt output bytes. *)
+     Skip,                          (* Skip unitCt bytes of both *)
 
      (* For moving packed data between different endian machines.
         Only need one, since a set of packed fields being converted
@@ -58,32 +58,32 @@ TYPE
      SwapPacked,                    (* Copy and swap around the fields *)
 
      (* For moving data between same size, different endian *)
-     Swap16,                        (* Copy length 16 bit words, swapping. *)
-     Swap32,                        (* Copy length 32 bit words, swapping. *)
-     Swap64,                        (* Copy length 64 bit words, swapping. *)
+     Swap16,                        (* Copy unitCt 16 bit words, swapping. *)
+     Swap32,                        (* Copy unitCt 32 bit words, swapping. *)
+     Swap64,                        (* Copy unitCt 64 bit words, swapping. *)
 
      (* For moving data between different size, same endian *)
-     Copy32to64,                    (* Copy length 32 bit words to 64
+     Copy32to64,                    (* Copy unitCt 32 bit words to 64
                                        bit words. *)
-     Copy64to32,                    (* Copy length 64 bit words to 32
+     Copy64to32,                    (* Copy unitCt 64 bit words to 32
                                        bit words. *)
-     Copy16to32,                    (* Copy length 16 bit words to 32
+     Copy16to32,                    (* Copy unitCt 16 bit words to 32
                                        bit words. *)
-     Copy32to16,                    (* Copy length 32 bit words to 16
+     Copy32to16,                    (* Copy unitCt 32 bit words to 16
                                        bit words. *)
-     CopyWC21to32,                  (* Copy length WC21-encoded characters to 
+     CopyWC21to32,                  (* Copy unitCt WC21-encoded characters to 
                                        32-bit words. *) 
-     CopyWC21to16,                  (* Copy length WC21-encoded characters to 
+     CopyWC21to16,                  (* Copy unitCt WC21-encoded characters to 
                                        16-bit words. *) 
 
      (* For moving data between different size, different endian *)
-     Swap32to64,		    (* Swap length 32 bit words to 64
+     Swap32to64,		    (* Swap unitCt 32 bit words to 64
                                        bit words, swapping. *)
-     Swap64to32,		    (* Swap length 64 bit words to 32
+     Swap64to32,		    (* Swap unitCt 64 bit words to 32
                                        bit words, swapping. *)
-     Swap16to32,                    (* Swap length 16 bit words to 32
+     Swap16to32,                    (* Swap unitCt 16 bit words to 32
                                        bit words. *)
-     Swap32to16,                    (* Swap length 32 bit words to 16
+     Swap32to16,                    (* Swap unitCt 32 bit words to 16
                                        bit words. *)
 
      ReadRef,

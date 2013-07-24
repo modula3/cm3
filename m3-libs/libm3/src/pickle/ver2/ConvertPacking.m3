@@ -257,7 +257,7 @@ PROCEDURE Convert(self: T; dest: ADDRESS; v: ReadVisitor;
     FOR n := 1 TO number DO 
       FOR i := 0 TO self.prog.size() - 1 DO
         WITH elem = self.prog.get(i), 
-             length = elem.length * repetition DO
+             length = elem.unitCt * repetition DO
           CASE elem.kind OF
           | PklAction.PAKind.Copy => 
             ReadData(v, dest, length);
@@ -575,7 +575,7 @@ PROCEDURE Write(self: T; src: ADDRESS; v: WriteVisitor;
     FOR n := 1 TO number DO
       FOR i := 0 TO self.prog.size() - 1 DO (* All program steps. *) 
         WITH elem = self.prog.get(i),
-             length = elem.length * repetition DO 
+             length = elem.unitCt * repetition DO 
              (*  Repeat each step "repetition" times. *)
           CASE elem.kind OF
           | PklAction.PAKind.Copy =>
@@ -666,77 +666,77 @@ PROCEDURE AppendProg(self: T; other: T) RAISES {Error} =
       WITH elem = other.prog.get(i) DO
         CASE elem.kind OF
         | PklAction.PAKind.Copy => 
-          nelem := NEW(PklAction.T, kind := elem.kind, length := elem.length);
-          INC(self.fromOffset, elem.length*8);
-          INC(self.toOffset, elem.length*8);
+          nelem := NEW(PklAction.T, kind := elem.kind, unitCt := elem.unitCt);
+          INC(self.fromOffset, elem.unitCt*8);
+          INC(self.toOffset, elem.unitCt*8);
         | PklAction.PAKind.SwapPacked => 
           WITH t = NARROW(elem, PklAction.SwapPacked),
                nt = NEW(PklAction.SwapPacked, 
-                        kind := t.kind, length := t.length, size := t.size,
+                        kind := t.kind, unitCt := t.unitCt, size := t.size,
                         field := NEW(REF ARRAY OF CARDINAL, 
                                      NUMBER(t.field^))) DO
             FOR i := FIRST(nt.field^) TO LAST(nt.field^) DO
               nt.field[i] := t.field[i];
             END;
             nelem := nt;
-            INC(self.fromOffset, elem.length*8*t.size);
-            INC(self.toOffset, elem.length*8*t.size);
+            INC(self.fromOffset, elem.unitCt*8*t.size);
+            INC(self.toOffset, elem.unitCt*8*t.size);
           END;
         | PklAction.PAKind.SkipFrom =>
-          nelem := NEW(PklAction.T, kind := elem.kind, length := elem.length);
-          INC(self.fromOffset, elem.length*8);
+          nelem := NEW(PklAction.T, kind := elem.kind, unitCt := elem.unitCt);
+          INC(self.fromOffset, elem.unitCt*8);
         | PklAction.PAKind.SkipTo =>
-          nelem := NEW(PklAction.T, kind := elem.kind, length := elem.length);
-          INC(self.toOffset, elem.length*8);
+          nelem := NEW(PklAction.T, kind := elem.kind, unitCt := elem.unitCt);
+          INC(self.toOffset, elem.unitCt*8);
         | PklAction.PAKind.Skip =>
-          nelem := NEW(PklAction.T, kind := elem.kind, length := elem.length);
-          INC(self.fromOffset, elem.length*8);
-          INC(self.toOffset, elem.length*8);
+          nelem := NEW(PklAction.T, kind := elem.kind, unitCt := elem.unitCt);
+          INC(self.fromOffset, elem.unitCt*8);
+          INC(self.toOffset, elem.unitCt*8);
         | PklAction.PAKind.Swap16 =>
-          nelem := NEW(PklAction.T, kind := elem.kind, length := elem.length);
-          INC(self.fromOffset, elem.length*16);
-          INC(self.toOffset, elem.length*16);
+          nelem := NEW(PklAction.T, kind := elem.kind, unitCt := elem.unitCt);
+          INC(self.fromOffset, elem.unitCt*16);
+          INC(self.toOffset, elem.unitCt*16);
         | PklAction.PAKind.Swap32, PklAction.PAKind.CopyWC21to32 =>
-          nelem := NEW(PklAction.T, kind := elem.kind, length := elem.length);
-          INC(self.fromOffset, elem.length*32);
-          INC(self.toOffset, elem.length*32);
+          nelem := NEW(PklAction.T, kind := elem.kind, unitCt := elem.unitCt);
+          INC(self.fromOffset, elem.unitCt*32);
+          INC(self.toOffset, elem.unitCt*32);
         | PklAction.PAKind.CopyWC21to16 =>
-          nelem := NEW(PklAction.T, kind := elem.kind, length := elem.length);
-          INC(self.fromOffset, elem.length*32);
-          INC(self.toOffset, elem.length*16);
+          nelem := NEW(PklAction.T, kind := elem.kind, unitCt := elem.unitCt);
+          INC(self.fromOffset, elem.unitCt*32);
+          INC(self.toOffset, elem.unitCt*16);
         | PklAction.PAKind.Swap64 =>
-          nelem := NEW(PklAction.T, kind := elem.kind, length := elem.length);
-          INC(self.fromOffset, elem.length*64);
-          INC(self.toOffset, elem.length*64);
+          nelem := NEW(PklAction.T, kind := elem.kind, unitCt := elem.unitCt);
+          INC(self.fromOffset, elem.unitCt*64);
+          INC(self.toOffset, elem.unitCt*64);
         | PklAction.PAKind.Copy32to64, PklAction.PAKind.Swap32to64 =>
           WITH t = NARROW(elem, PklAction.Copy32to64) DO
             nelem := NEW(PklAction.Copy32to64, kind := t.kind, 
-                         length := t.length, signed := t.signed);
+                         unitCt := t.unitCt, signed := t.signed);
           END;
-          INC(self.fromOffset, elem.length*32);
-          INC(self.toOffset, elem.length*64);
+          INC(self.fromOffset, elem.unitCt*32);
+          INC(self.toOffset, elem.unitCt*64);
         | PklAction.PAKind.Copy64to32, PklAction.PAKind.Swap64to32 =>
           WITH t = NARROW(elem, PklAction.Copy32to64) DO
             nelem := NEW(PklAction.Copy64to32, kind := t.kind, 
-                         length := t.length, signed := t.signed);
+                         unitCt := t.unitCt, signed := t.signed);
           END;
-          INC(self.fromOffset, elem.length*64);
-          INC(self.toOffset, elem.length*32);
+          INC(self.fromOffset, elem.unitCt*64);
+          INC(self.toOffset, elem.unitCt*32);
         | PklAction.PAKind.Copy16to32, PklAction.PAKind.Swap16to32 =>
-          nelem := NEW(PklAction.T, kind := elem.kind, length := elem.length);
-          INC(self.fromOffset, elem.length*16);
-          INC(self.toOffset, elem.length*32);
+          nelem := NEW(PklAction.T, kind := elem.kind, unitCt := elem.unitCt);
+          INC(self.fromOffset, elem.unitCt*16);
+          INC(self.toOffset, elem.unitCt*32);
         | PklAction.PAKind.Copy32to16, PklAction.PAKind.Swap32to16 =>
-          nelem := NEW(PklAction.T, kind := elem.kind, length := elem.length);
-          INC(self.fromOffset, elem.length*32);
-          INC(self.toOffset, elem.length*16);
+          nelem := NEW(PklAction.T, kind := elem.kind, unitCt := elem.unitCt);
+          INC(self.fromOffset, elem.unitCt*32);
+          INC(self.toOffset, elem.unitCt*16);
         | PklAction.PAKind.ReadRef =>
           WITH t = NARROW(elem, PklAction.Ref) DO
-            nelem := NEW(PklAction.Ref, kind := t.kind, length := t.length,
+            nelem := NEW(PklAction.Ref, kind := t.kind, unitCt := t.unitCt,
                          refType := t.refType);
           END;
-          INC(self.fromOffset, elem.length*self.from.word_size);
-          INC(self.toOffset, elem.length*self.to.word_size);
+          INC(self.fromOffset, elem.unitCt*self.from.word_size);
+          INC(self.toOffset, elem.unitCt*self.to.word_size);
         | PklAction.PAKind.Done =>
           RETURN;
         END;
@@ -764,11 +764,11 @@ PROCEDURE AddCopy(self: T; length: INTEGER) =
     INC(self.fromOffset, length);
     INC(self.toOffset, length);
     IF GetHiKind(self.prog, PklAction.PAKind.Copy, elem) THEN
-      INC(elem.length, length DIV 8);
+      INC(elem.unitCt, length DIV 8);
       RETURN;
     END;
     self.prog.addhi(NEW(PklAction.T, kind := PklAction.PAKind.Copy, 
-                        length := length DIV 8));
+                        unitCt := length DIV 8));
   END AddCopy;
 
 PROCEDURE AddPackedSwapFirstField(self: T; fieldsize: INTEGER) =
@@ -778,7 +778,7 @@ PROCEDURE AddPackedSwapFirstField(self: T; fieldsize: INTEGER) =
       INC(self.fromOffset, length);
       INC(self.toOffset, length);
       WITH elem = NEW(PklAction.SwapPacked, kind := PklAction.PAKind.SwapPacked, 
-                      length := 1, size := length DIV 8,
+                      unitCt := 1, size := length DIV 8,
                       field := NEW(REF ARRAY OF CARDINAL, 1)) DO
         elem.field[0] := fieldsize;
         self.prog.addhi(elem);
@@ -862,7 +862,7 @@ PROCEDURE AddPackedSwapArray(self: T; length(*Entire array in bits.*): INTEGER;
       IF fullWordCt > 0 THEN
         WITH nelem = NEW(PklAction.SwapPacked, 
                          kind := PklAction.PAKind.SwapPacked, 
-                         length := fullWordCt, size := bytesPerWord, 
+                         unitCt := fullWordCt, size := bytesPerWord, 
                          field := NEW(REF ARRAY OF CARDINAL, fieldsPerWord)) DO
           FOR i := FIRST(nelem.field^) TO LAST(nelem.field^) DO
             nelem.field[i] := fieldsize;
@@ -877,7 +877,7 @@ PROCEDURE AddPackedSwapArray(self: T; length(*Entire array in bits.*): INTEGER;
       IF extraBytes > 0 THEN
         WITH nelem = NEW(PklAction.SwapPacked, 
                          kind := PklAction.PAKind.SwapPacked, 
-                         length := 1, size := extraBytes,
+                         unitCt := 1, size := extraBytes,
                          field := NEW(REF ARRAY OF CARDINAL, extraEltCt)) DO
           FOR i := FIRST(nelem.field^) TO LAST(nelem.field^) DO
             nelem.field[i] := fieldsize;
@@ -897,13 +897,13 @@ PROCEDURE AddCopy32to64(self: T; length: INTEGER; signed: BOOLEAN) =
     IF GetHiKind(self.prog, PklAction.PAKind.Copy32to64, elem) THEN
       WITH nelem = NARROW(elem, PklAction.Copy32to64) DO
         IF nelem.signed = signed THEN
-          INC(elem.length, length DIV 32);
+          INC(elem.unitCt, length DIV 32);
           RETURN;
         END;
       END;
     END;
     self.prog.addhi(NEW(PklAction.Copy32to64, kind := PklAction.PAKind.Copy32to64, 
-                        length := length DIV 32, signed := signed));
+                        unitCt := length DIV 32, signed := signed));
   END AddCopy32to64;
 
 PROCEDURE AddCopy64to32(self: T; length: INTEGER; signed: BOOLEAN) =
@@ -916,13 +916,13 @@ PROCEDURE AddCopy64to32(self: T; length: INTEGER; signed: BOOLEAN) =
     IF GetHiKind(self.prog, PklAction.PAKind.Copy64to32, elem) THEN
       WITH nelem = NARROW(elem, PklAction.Copy64to32) DO
         IF nelem.signed = signed THEN
-          INC(elem.length, length DIV 64);
+          INC(elem.unitCt, length DIV 64);
           RETURN;
         END;
       END;
     END;
     self.prog.addhi(NEW(PklAction.Copy64to32, kind := PklAction.PAKind.Copy64to32,
-                        length := length DIV 64, signed := signed));
+                        unitCt := length DIV 64, signed := signed));
   END AddCopy64to32;
 
 PROCEDURE AddCopy16to32(self: T; fromBitCt: INTEGER) =
@@ -932,12 +932,12 @@ PROCEDURE AddCopy16to32(self: T; fromBitCt: INTEGER) =
     INC(self.fromOffset, fromBitCt);
     INC(self.toOffset, fromBitCt*2);
     IF GetHiKind(self.prog, PklAction.PAKind.Copy16to32, elem) THEN
-      INC(elem.length, fromBitCt DIV 16);
+      INC(elem.unitCt, fromBitCt DIV 16);
       RETURN;
     END;
     self.prog.addhi(NEW(PklAction.T,
                         kind := PklAction.PAKind.Copy16to32, 
-                        length := fromBitCt DIV 16));
+                        unitCt := fromBitCt DIV 16));
   END AddCopy16to32;
 
 PROCEDURE AddCopy32to16(self: T; fromBitCt: INTEGER) =
@@ -947,12 +947,12 @@ PROCEDURE AddCopy32to16(self: T; fromBitCt: INTEGER) =
     INC(self.fromOffset, fromBitCt);
     INC(self.toOffset, fromBitCt DIV 2);
     IF GetHiKind(self.prog, PklAction.PAKind.Copy32to16, elem) THEN
-      INC(elem.length, fromBitCt DIV 32);
+      INC(elem.unitCt, fromBitCt DIV 32);
       RETURN;
     END;
     self.prog.addhi(NEW(PklAction.T,
                         kind := PklAction.PAKind.Copy32to16, 
-                        length := fromBitCt DIV 32));
+                        unitCt := fromBitCt DIV 32));
   END AddCopy32to16;
 
 PROCEDURE AddCopyWC21to32(self: T; toBitCt: INTEGER) =
@@ -965,12 +965,12 @@ PROCEDURE AddCopyWC21to32(self: T; toBitCt: INTEGER) =
        If the pickle uses WC21, the from-system had to have 32-bit WIDECHAR. *)
     INC(self.toOffset, toBitCt);
     IF GetHiKind(self.prog, PklAction.PAKind.CopyWC21to32, elem) THEN
-      INC(elem.length, toBitCt DIV 32);
+      INC(elem.unitCt, toBitCt DIV 32);
       RETURN;
     END;
     self.prog.addhi(NEW(PklAction.T,
                         kind := PklAction.PAKind.CopyWC21to32, 
-                        length := toBitCt DIV 32));
+                        unitCt := toBitCt DIV 32));
   END AddCopyWC21to32;
 
 PROCEDURE AddCopyWC21to16(self: T; toBitCt: INTEGER) =
@@ -983,12 +983,12 @@ PROCEDURE AddCopyWC21to16(self: T; toBitCt: INTEGER) =
        If the pickle uses WC21, the from-system had to have 32-bit WIDECHAR. *)
     INC(self.toOffset, toBitCt);
     IF GetHiKind(self.prog, PklAction.PAKind.CopyWC21to16, elem) THEN
-      INC(elem.length, toBitCt DIV 16);
+      INC(elem.unitCt, toBitCt DIV 16);
       RETURN;
     END;
     self.prog.addhi(NEW(PklAction.T,
                         kind := PklAction.PAKind.CopyWC21to16, 
-                        length := toBitCt DIV 16));
+                        unitCt := toBitCt DIV 16));
   END AddCopyWC21to16;
 
 PROCEDURE AddSkipFrom(self: T; length: INTEGER) =
@@ -996,11 +996,11 @@ PROCEDURE AddSkipFrom(self: T; length: INTEGER) =
   BEGIN
     INC(self.fromOffset, length);
     IF GetHiKind(self.prog, PklAction.PAKind.SkipFrom, elem) THEN
-      INC(elem.length, length DIV 8);
+      INC(elem.unitCt, length DIV 8);
       RETURN;
     END;
     self.prog.addhi(NEW(PklAction.T, kind := PklAction.PAKind.SkipFrom, 
-                        length := length DIV 8));
+                        unitCt := length DIV 8));
   END AddSkipFrom;
 
 PROCEDURE AddSkipTo(self: T; length: INTEGER) =
@@ -1008,11 +1008,11 @@ PROCEDURE AddSkipTo(self: T; length: INTEGER) =
   BEGIN
     INC(self.toOffset, length);
     IF GetHiKind(self.prog, PklAction.PAKind.SkipTo, elem) THEN
-      INC(elem.length, length DIV 8);
+      INC(elem.unitCt, length DIV 8);
       RETURN;
     END;
     self.prog.addhi(NEW(PklAction.T, kind := PklAction.PAKind.SkipTo, 
-                        length := length DIV 8));
+                        unitCt := length DIV 8));
   END AddSkipTo;
 
 PROCEDURE AddSkipOrCopy(self: T; length: INTEGER) =
@@ -1021,14 +1021,14 @@ PROCEDURE AddSkipOrCopy(self: T; length: INTEGER) =
     INC(self.fromOffset, length);
     INC(self.toOffset, length);
     IF GetHiKind(self.prog, PklAction.PAKind.Copy, elem) THEN
-      INC(elem.length, length DIV 8);
+      INC(elem.unitCt, length DIV 8);
       RETURN;
     ELSIF GetHiKind(self.prog, PklAction.PAKind.Skip, elem) THEN
-      INC(elem.length, length DIV 8);
+      INC(elem.unitCt, length DIV 8);
       RETURN;
     END;
     self.prog.addhi(NEW(PklAction.T, kind := PklAction.PAKind.Skip, 
-                        length := length DIV 8));
+                        unitCt := length DIV 8));
   END AddSkipOrCopy;
 
 PROCEDURE AddSkip(self: T; fromDiff, toDiff: INTEGER) =
@@ -1061,11 +1061,11 @@ PROCEDURE AddSwap16(self: T; length: INTEGER) =
     INC(self.fromOffset, length);
     INC(self.toOffset, length);
     IF GetHiKind(self.prog, PklAction.PAKind.Swap16, elem) THEN
-      INC(elem.length, length DIV 16);
+      INC(elem.unitCt, length DIV 16);
       RETURN;
     END;
     self.prog.addhi(NEW(PklAction.T, kind := PklAction.PAKind.Swap16, 
-                        length := length DIV 16));
+                        unitCt := length DIV 16));
   END AddSwap16;
 
 PROCEDURE AddSwap32(self: T; length: INTEGER) =
@@ -1075,11 +1075,11 @@ PROCEDURE AddSwap32(self: T; length: INTEGER) =
     INC(self.fromOffset, length);
     INC(self.toOffset, length);
     IF GetHiKind(self.prog, PklAction.PAKind.Swap32, elem) THEN
-      INC(elem.length, length DIV 32);
+      INC(elem.unitCt, length DIV 32);
       RETURN;
     END;
     self.prog.addhi(NEW(PklAction.T, kind := PklAction.PAKind.Swap32, 
-                        length := length DIV 32));
+                        unitCt := length DIV 32));
   END AddSwap32;
 
 PROCEDURE AddSwap64(self: T; length: INTEGER) =
@@ -1089,11 +1089,11 @@ PROCEDURE AddSwap64(self: T; length: INTEGER) =
     INC(self.fromOffset, length);
     INC(self.toOffset, length);
     IF GetHiKind(self.prog, PklAction.PAKind.Swap64, elem) THEN
-      INC(elem.length, length DIV 64);
+      INC(elem.unitCt, length DIV 64);
       RETURN;
     END;
     self.prog.addhi(NEW(PklAction.T, kind := PklAction.PAKind.Swap64, 
-                        length := length DIV 64));
+                        unitCt := length DIV 64));
   END AddSwap64;
 
 PROCEDURE AddSwap32to64(self: T; length: INTEGER; signed: BOOLEAN) =
@@ -1105,13 +1105,13 @@ PROCEDURE AddSwap32to64(self: T; length: INTEGER; signed: BOOLEAN) =
     IF GetHiKind(self.prog, PklAction.PAKind.Swap32to64, elem) THEN
       WITH nelem = NARROW(elem, PklAction.Copy32to64) DO
         IF nelem.signed = signed THEN
-          INC(elem.length, length DIV 32);
+          INC(elem.unitCt, length DIV 32);
           RETURN;
         END;
       END;
     END;
     self.prog.addhi(NEW(PklAction.Copy32to64, kind := PklAction.PAKind.Swap32to64, 
-                        length := length DIV 32, signed := signed));
+                        unitCt := length DIV 32, signed := signed));
   END AddSwap32to64;
 
 PROCEDURE AddSwap64to32(self: T; length: INTEGER; signed: BOOLEAN) =
@@ -1124,13 +1124,13 @@ PROCEDURE AddSwap64to32(self: T; length: INTEGER; signed: BOOLEAN) =
     IF GetHiKind(self.prog, PklAction.PAKind.Swap64to32, elem) THEN
       WITH nelem = NARROW(elem, PklAction.Copy32to64) DO
         IF nelem.signed = signed THEN
-          INC(elem.length, length DIV 64);
+          INC(elem.unitCt, length DIV 64);
           RETURN;
         END;
       END;
     END;
     self.prog.addhi(NEW(PklAction.T, kind := PklAction.PAKind.Swap64to32, 
-                        length := length DIV 64));
+                        unitCt := length DIV 64));
   END AddSwap64to32;
 
 PROCEDURE AddSwap16to32(self: T; fromBitCt: INTEGER) =
@@ -1140,11 +1140,11 @@ PROCEDURE AddSwap16to32(self: T; fromBitCt: INTEGER) =
     INC(self.fromOffset, fromBitCt);
     INC(self.toOffset, fromBitCt*2);
     IF GetHiKind(self.prog, PklAction.PAKind.Swap16to32, elem) THEN
-      INC(elem.length, fromBitCt DIV 16);
+      INC(elem.unitCt, fromBitCt DIV 16);
       RETURN;
     END;
     self.prog.addhi(NEW(PklAction.T, kind := PklAction.PAKind.Swap16to32, 
-                        length := fromBitCt DIV 16));
+                        unitCt := fromBitCt DIV 16));
   END AddSwap16to32;
 
 PROCEDURE AddSwap32to16(self: T; fromBitCt: INTEGER) =
@@ -1154,12 +1154,12 @@ PROCEDURE AddSwap32to16(self: T; fromBitCt: INTEGER) =
     INC(self.fromOffset, fromBitCt);
     INC(self.toOffset, fromBitCt DIV 2);
     IF GetHiKind(self.prog, PklAction.PAKind.Swap32to16, elem) THEN
-      INC(elem.length, fromBitCt DIV 32);
+      INC(elem.unitCt, fromBitCt DIV 32);
       RETURN;
     END;
     self.prog.addhi(NEW(PklAction.T,
                         kind := PklAction.PAKind.Swap32to16, 
-                        length := fromBitCt DIV 32));
+                        unitCt := fromBitCt DIV 32));
   END AddSwap32to16;
 
 PROCEDURE AddRef(self: T; type: RefType) =
@@ -1170,13 +1170,13 @@ PROCEDURE AddRef(self: T; type: RefType) =
     IF GetHiKind(self.prog, PklAction.PAKind.ReadRef, elem) THEN
       WITH nelem = NARROW(elem, PklAction.Ref) DO
         IF nelem.refType = type THEN
-          INC(elem.length);
+          INC(elem.unitCt);
           RETURN;
         END;
       END;
     END;
     self.prog.addhi(NEW(PklAction.Ref, kind := PklAction.PAKind.ReadRef, 
-                        length := 1, refType := type));
+                        unitCt := 1, refType := type));
   END AddRef;
 
 PROCEDURE AddDone(self: T) =
@@ -2066,45 +2066,45 @@ PROCEDURE PrintProgram(self: T) =
       WITH elem = self.prog.get(i) DO
         CASE elem.kind OF
         | PklAction.PAKind.Copy => 
-          IO.Put(" Copy " & Fmt.Int(elem.length) & " byte(s).\n");
-          INC(fromByteCt, elem.length);
-          INC(toByteCt, elem.length);
+          IO.Put(" Copy " & Fmt.Int(elem.unitCt) & " byte(s).\n");
+          INC(fromByteCt, elem.unitCt);
+          INC(toByteCt, elem.unitCt);
         | PklAction.PAKind.SwapPacked => 
           WITH nelem = NARROW(elem, PklAction.SwapPacked) DO
-            IO.Put(" Copy and swap " & Fmt.Int(elem.length) & 
+            IO.Put(" Copy and swap " & Fmt.Int(elem.unitCt) & 
               " unit(s) of " & Fmt.Int(nelem.size) & 
               " byte(s) with packed bitfields: ");
             FOR i := FIRST(nelem.field^) TO LAST(nelem.field^) DO
               IO.Put(Fmt.Int(nelem.field[i]) & " ");
             END;
             IO.Put("\n");
-            INC(fromByteCt, elem.length*nelem.size);
-            INC(toByteCt, elem.length*nelem.size);
+            INC(fromByteCt, elem.unitCt*nelem.size);
+            INC(toByteCt, elem.unitCt*nelem.size);
           END;
         | PklAction.PAKind.SkipFrom =>
-          IO.Put(" Skip " & Fmt.Int(elem.length) & " src byte(s).\n");
-          INC(fromByteCt, elem.length);
+          IO.Put(" Skip " & Fmt.Int(elem.unitCt) & " src byte(s).\n");
+          INC(fromByteCt, elem.unitCt);
         | PklAction.PAKind.SkipTo =>
-          IO.Put(" Skip " & Fmt.Int(elem.length) & " dst byte(s).\n");
-          INC(toByteCt, elem.length);
+          IO.Put(" Skip " & Fmt.Int(elem.unitCt) & " dst byte(s).\n");
+          INC(toByteCt, elem.unitCt);
         | PklAction.PAKind.Skip =>
-          IO.Put(" Skip " & Fmt.Int(elem.length) & " src and dst byte(s).\n");
-          INC(fromByteCt, elem.length);
-          INC(toByteCt, elem.length);
+          IO.Put(" Skip " & Fmt.Int(elem.unitCt) & " src and dst byte(s).\n");
+          INC(fromByteCt, elem.unitCt);
+          INC(toByteCt, elem.unitCt);
         | PklAction.PAKind.Swap16 =>
-          IO.Put(" Swap " & Fmt.Int(elem.length) & " 16-bit word(s).\n");
-          INC(fromByteCt, elem.length*2);
-          INC(toByteCt, elem.length*2);
+          IO.Put(" Swap " & Fmt.Int(elem.unitCt) & " 16-bit word(s).\n");
+          INC(fromByteCt, elem.unitCt*2);
+          INC(toByteCt, elem.unitCt*2);
         | PklAction.PAKind.Swap32 =>
-          IO.Put(" Swap " & Fmt.Int(elem.length) & " 32-bit word(s).\n");
-          INC(fromByteCt, elem.length*4);
-          INC(toByteCt, elem.length*4);
+          IO.Put(" Swap " & Fmt.Int(elem.unitCt) & " 32-bit word(s).\n");
+          INC(fromByteCt, elem.unitCt*4);
+          INC(toByteCt, elem.unitCt*4);
         | PklAction.PAKind.Swap64 =>
-          IO.Put(" Swap " & Fmt.Int(elem.length) & " 64-bit word(s).\n");
-          INC(fromByteCt, elem.length*8);
-          INC(toByteCt, elem.length*8);
+          IO.Put(" Swap " & Fmt.Int(elem.unitCt) & " 64-bit word(s).\n");
+          INC(fromByteCt, elem.unitCt*8);
+          INC(toByteCt, elem.unitCt*8);
         | PklAction.PAKind.Copy32to64 =>
-          IO.Put(" Copy " & Fmt.Int(elem.length) & " 32 to 64-bit ");
+          IO.Put(" Copy " & Fmt.Int(elem.unitCt) & " 32 to 64-bit ");
           WITH nelem = NARROW(elem, PklAction.Copy32to64) DO
             IF nelem.signed THEN
               IO.Put("signed ");
@@ -2113,10 +2113,10 @@ PROCEDURE PrintProgram(self: T) =
             END;
           END;
           IO.Put("word(s).\n");
-          INC(fromByteCt, elem.length*4);
-          INC(toByteCt, elem.length*8);
+          INC(fromByteCt, elem.unitCt*4);
+          INC(toByteCt, elem.unitCt*8);
         | PklAction.PAKind.Copy64to32 =>
-          IO.Put(" Copy " & Fmt.Int(elem.length) & " 64 to 32-bit ");
+          IO.Put(" Copy " & Fmt.Int(elem.unitCt) & " 64 to 32-bit ");
           WITH nelem = NARROW(elem, PklAction.Copy32to64) DO
             IF nelem.signed THEN
               IO.Put("signed ");
@@ -2125,40 +2125,40 @@ PROCEDURE PrintProgram(self: T) =
             END;
           END;
           IO.Put("word(s).\n");
-          INC(fromByteCt, elem.length*8);
-          INC(toByteCt, elem.length*4);
+          INC(fromByteCt, elem.unitCt*8);
+          INC(toByteCt, elem.unitCt*4);
         | PklAction.PAKind.Copy16to32 =>
-          IO.Put(" Copy " & Fmt.Int(elem.length) & " 16 to 32-bit ");
+          IO.Put(" Copy " & Fmt.Int(elem.unitCt) & " 16 to 32-bit ");
           IO.Put("word(s).\n");
-          INC(fromByteCt, elem.length*2);
-          INC(toByteCt, elem.length*4);
+          INC(fromByteCt, elem.unitCt*2);
+          INC(toByteCt, elem.unitCt*4);
         | PklAction.PAKind.Swap16to32 =>
-          IO.Put(" Swap " & Fmt.Int(elem.length) & " 16 to 32-bit ");
+          IO.Put(" Swap " & Fmt.Int(elem.unitCt) & " 16 to 32-bit ");
           IO.Put("word(s).\n");
-          INC(fromByteCt, elem.length*2);
-          INC(toByteCt, elem.length*4);
+          INC(fromByteCt, elem.unitCt*2);
+          INC(toByteCt, elem.unitCt*4);
         | PklAction.PAKind.Copy32to16 =>
-          IO.Put(" Copy " & Fmt.Int(elem.length) & " 32 to 16-bit ");
+          IO.Put(" Copy " & Fmt.Int(elem.unitCt) & " 32 to 16-bit ");
           IO.Put("word(s).\n");
-          INC(fromByteCt, elem.length*4);
-          INC(toByteCt, elem.length*2);
+          INC(fromByteCt, elem.unitCt*4);
+          INC(toByteCt, elem.unitCt*2);
         | PklAction.PAKind.Swap32to16 =>
-          IO.Put(" Swap " & Fmt.Int(elem.length) & " 32 to 16-bit ");
+          IO.Put(" Swap " & Fmt.Int(elem.unitCt) & " 32 to 16-bit ");
           IO.Put("word(s).\n");
-          INC(fromByteCt, elem.length*4);
-          INC(toByteCt, elem.length*2);
+          INC(fromByteCt, elem.unitCt*4);
+          INC(toByteCt, elem.unitCt*2);
         | PklAction.PAKind.CopyWC21to32 =>
-          IO.Put(" Copy " & Fmt.Int(elem.length) & " WC21 to 32-bit ");
+          IO.Put(" Copy " & Fmt.Int(elem.unitCt) & " WC21 to 32-bit ");
           IO.Put("word(s).\n");
-          INC(fromByteCt, elem.length*4);
-          INC(toByteCt, elem.length*4);
+          INC(fromByteCt, elem.unitCt*4);
+          INC(toByteCt, elem.unitCt*4);
         | PklAction.PAKind.CopyWC21to16 =>
-          IO.Put(" Copy " & Fmt.Int(elem.length) & " WC21 to 16-bit ");
+          IO.Put(" Copy " & Fmt.Int(elem.unitCt) & " WC21 to 16-bit ");
           IO.Put("word(s).\n");
-          INC(fromByteCt, elem.length*4);
-          INC(toByteCt, elem.length*2);
+          INC(fromByteCt, elem.unitCt*4);
+          INC(toByteCt, elem.unitCt*2);
         | PklAction.PAKind.Swap32to64 =>
-          IO.Put(" Copy and Swap " & Fmt.Int(elem.length) & " 32 to 64-bit ");
+          IO.Put(" Copy and Swap " & Fmt.Int(elem.unitCt) & " 32 to 64-bit ");
           WITH nelem = NARROW(elem, PklAction.Copy32to64) DO
             IF nelem.signed THEN
               IO.Put("signed ");
@@ -2167,10 +2167,10 @@ PROCEDURE PrintProgram(self: T) =
             END;
           END;
           IO.Put("word(s).\n");
-          INC(fromByteCt, elem.length*4);
-          INC(toByteCt, elem.length*8);
+          INC(fromByteCt, elem.unitCt*4);
+          INC(toByteCt, elem.unitCt*8);
         | PklAction.PAKind.Swap64to32 =>
-          IO.Put(" Copy and Swap " & Fmt.Int(elem.length) & " 64 to 32-bit "); 
+          IO.Put(" Copy and Swap " & Fmt.Int(elem.unitCt) & " 64 to 32-bit "); 
           WITH nelem = NARROW(elem, PklAction.Copy32to64) DO
             IF nelem.signed THEN
               IO.Put("signed ");
@@ -2179,10 +2179,10 @@ PROCEDURE PrintProgram(self: T) =
             END;
           END;
           IO.Put("word(s).\n");
-          INC(fromByteCt, elem.length*8);
-          INC(toByteCt, elem.length*4);
+          INC(fromByteCt, elem.unitCt*8);
+          INC(toByteCt, elem.unitCt*4);
         | PklAction.PAKind.ReadRef =>
-          IO.Put(" Read " & Fmt.Int(elem.length));
+          IO.Put(" Read " & Fmt.Int(elem.unitCt));
           WITH nelem = NARROW(elem, PklAction.Ref) DO
             CASE nelem.refType OF
             | PklAction.RefType.Ref => IO.Put(" traced");
@@ -2191,8 +2191,8 @@ PROCEDURE PrintProgram(self: T) =
             END;
           END;
           IO.Put(" references(s).\n");
-          INC(fromByteCt, elem.length*(self.from.word_size DIV 8));
-          INC(toByteCt, elem.length*(self.to.word_size DIV 8));
+          INC(fromByteCt, elem.unitCt*(self.from.word_size DIV 8));
+          INC(toByteCt, elem.unitCt*(self.to.word_size DIV 8));
         | PklAction.PAKind.Done =>
           IO.Put("Copied " & Fmt.Int(fromByteCt) & " bytes to " &
             Fmt.Int(toByteCt) & "\n");
