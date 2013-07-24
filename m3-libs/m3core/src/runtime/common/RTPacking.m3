@@ -98,11 +98,12 @@ PROCEDURE Decode (i: INTEGER): T =
     t.long_size     := Bits[Word.And (i, 3)];    i := Word.Shift (i, -2);
     t.lazy_align    := VAL (Word.And (i, 1), BOOLEAN); i := Word.Shift (i, -1);
     t.widechar_size := Bits[Word.And (i, 3)];    i := Word.Shift (i, -2);
-    IF t.widechar_size = 0 
+    IF t.widechar_size = 8 
     THEN (* Was written by older RTPacking, without a widechar_size. *)
       t.widechar_size := 16 
     END; 
-    <*ASSERT i = 0*>
+    (* Ignore any remaing bits, in case we get a value from a later version
+       that has additional properties. *) 
     RETURN t;
   END Decode;
 

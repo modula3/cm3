@@ -15,18 +15,41 @@ INTERFACE PklAction;
 
 CONST Brand = "Tipe Conversion Action 1.0";
 
+(* These are the instuctions for a specialized program that is built once for
+   the fields/elements of a heap object type and interpreted possibly many 
+   times, once for each instance of the type that is read or written.  
+   Two different interpreters for reading (ConvertPacking.Convert) and
+   writing (ConvertPacking.Write) use these same program types but move data
+   in opposite directions (memory<=>stream).  Reading and writing of a 
+   single type can use the same program, if the RTPacking is the same.  
+   Otherwise, they use different programs.  Write programs do no conversions. 
+*) 
+
 TYPE 
   T = OBJECT kind: PAKind; length: INTEGER END;
 
 TYPE
   PAKind = {
+     (* When used in an action program executed by the Write interpreter, only
+        Copy, Skip, ReadRef, CopyWC21to32, Copy16to32, and CopyWC21to16 are legal.  
+        All fetch from memory, which must be properly aligned for the action, 
+        and write to a stream, with no alignment restrictions.  
+        CopyWC21to32, CopyWC21to16, and ReadRef are named as for a read
+        conversion, but the sense is reversed by the Write interpreter.
+        This allows a single program to be interpreted by either interpreter, 
+        whenever the from- and to- RTpacking are the same.    
+
+        When used in an action program executed by the Convert interpreter,
+        all are legal.  All read from a stream, with no alignment restrictions,
+        and store in memory, which must be properly aligned for the action.
+     *) 
      (* For moving data between same size, same endian *)
-     Copy,                          (* Straight copy. *)
+     Copy,                          (* Straight copy of length bytes. *)
 
      (* Skipping bytes on input, output or both *)
-     SkipFrom,                      (* Skip input bytes. *)
-     SkipTo,                        (* Skip output bytes. *)
-     Skip,                          (* Skip both *)
+     SkipFrom,                      (* Skip length input bytes. *)
+     SkipTo,                        (* Skip length output bytes. *)
+     Skip,                          (* Skip length bytes of both *)
 
      (* For moving packed data between different endian machines.
         Only need one, since a set of packed fields being converted
@@ -35,32 +58,46 @@ TYPE
      SwapPacked,                    (* Copy and swap around the fields *)
 
      (* For moving data between same size, different endian *)
-     Swap16,                        (* Copy N 16 bit words, swapping. *)
-     Swap32,                        (* Copy N 32 bit words, swapping. *)
-     Swap64,                        (* Copy N 64 bit words, swapping. *)
+     Swap16,                        (* Copy length 16 bit words, swapping. *)
+     Swap32,                        (* Copy length 32 bit words, swapping. *)
+     Swap64,                        (* Copy length 64 bit words, swapping. *)
 
      (* For moving data between different size, same endian *)
-     Copy32to64,                    (* Copy N 32 bit words to 64
+     Copy32to64,                    (* Copy length 32 bit words to 64
                                        bit words. *)
-     Copy64to32,                    (* Copy N 64 bit words to 32
+     Copy64to32,                    (* Copy length 64 bit words to 32
                                        bit words. *)
+     Copy16to32,                    (* Copy length 16 bit words to 32
+                                       bit words. *)
+     Copy32to16,                    (* Copy length 32 bit words to 16
+                                       bit words. *)
+     CopyWC21to32,                  (* Copy length WC21-encoded characters to 
+                                       32-bit words. *) 
+     CopyWC21to16,                  (* Copy length WC21-encoded characters to 
+                                       16-bit words. *) 
 
      (* For moving data between different size, different endian *)
-     Swap32to64,		    (* Copy N 32 bit words to 64
+     Swap32to64,		    (* Swap length 32 bit words to 64
                                        bit words, swapping. *)
-     Swap64to32,		    (* Copy N 64 bit words to 32
+     Swap64to32,		    (* Swap length 64 bit words to 32
                                        bit words, swapping. *)
+     Swap16to32,                    (* Swap length 16 bit words to 32
+                                       bit words. *)
+     Swap32to16,                    (* Swap length 32 bit words to 16
+                                       bit words. *)
+
      ReadRef,
      Done
   };
 
 
-  Copy32to64 = T OBJECT signed: BOOLEAN END;
-  Copy64to32 = T OBJECT signed: BOOLEAN END;
+  Copy32to64 = T OBJECT signed: BOOLEAN END; (* Also used for swap. *) 
+  Copy64to32 = T OBJECT signed: BOOLEAN END; (* Also used for swap. *)
+(* TODO: ^These can be merged. *) 
 
   SwapPacked = T OBJECT 
-    size  : CARDINAL;
-    field : REF ARRAY OF CARDINAL;
+    size  : CARDINAL; (* Size of word to pack into, in bytes. *) 
+    field : REF ARRAY OF CARDINAL; (* Sizes of fields in bits. *) 
   END;
 
   Ref = T OBJECT refType: RefType; END;

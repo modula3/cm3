@@ -14,7 +14,12 @@ IMPORT RTHooks, TextClass;
 CONST
  (* DIV BITSIZE should not be here! *)
  (* MaxBytes = LAST (INTEGER) DIV BITSIZE (Byte) - 7 - 8 * ORD(BITSIZE(INTEGER) = 64); *)
- MaxBytes = 16_7FFFFFFF DIV BITSIZE (Byte) - 7 - 8 * ORD(BITSIZE(INTEGER) = 64);
+ MaxBytes = 16_7FFFFFFF DIV BITSIZE (Byte) - 7; 
+    (* - 8 * ORD(BITSIZE(INTEGER) = 64) *) 
+    (* Do not adjust this for INTEGER size.  It makes T have different 
+       fingerprints on 32- and 64-bit machines, which undermines pickling/
+       unpickling of these values.    
+    *) 
 
 TYPE
   T = RTHooks.TextLiteral;

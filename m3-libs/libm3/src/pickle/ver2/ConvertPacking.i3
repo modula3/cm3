@@ -53,25 +53,26 @@ TYPE
     printProgram();
   END;
 
-(* "convert()" will uses the visitor "v" to fill in the data area
-   pointed to be "dest".  "dest" should point to the beginning of the
+(* "convertRead()" will use the visitor "v" to fill in the data area
+   pointed to by "dest".  "dest" should point to the beginning of the
    data address of a traced reference type with typecode "typecode".
    If "typecode" is an Open Array type, then the resulting converter
    will be set up to convert one instance of the open array element.
-   Furthermore, "init" and "getDim" will return the number of
-   dimensions and element packing of the open array.  It is up to the
+   Furthermore, "init" and "getDim" will return the number of open
+   dimensions and element packing (bit size of an element, including
+   any alignment packing) of the open array.  It is up to the
    caller to call "convert" the appropriate number of times with the
-   correct address each time.
+   correct dest address each time.
 
-   "convert" will call "v.readData" each time it needs some data from
+   "convertRead" will call "v.readData" each time it needs some data from
    the conversion source, "v.skipData" to skip a number of data bytes
    from the source and "v.readRef" to obtain a reference.  It returns
    the next address after the block of data filled in by the
    conversion. 
 
-   "write" will write out a reference in the analogous manner to
-   "convert", without doing any conversions.  It assumes the local
-   data format is the "local" packing passed to "init".
+   "write" will write out the contents of the object pointed to by src,
+   in the analogous manner to "convertRead", without doing any conversions.  
+   It assumes the local data format is the "local" packing passed to "init".
 
 *)
 
@@ -83,6 +84,10 @@ TYPE ReadVisitor <: RVPublic;
         {Rd.EndOfFile, Rd.Failure, Thread.Alerted};
        readRef(type: RefType): REFANY RAISES
         {Error, Rd.EndOfFile, Rd.Failure, Thread.Alerted};
+       readChar(): CHAR  
+        RAISES { Rd.EndOfFile, Rd.Failure, Thread.Alerted };
+       readWC21(): UInt32
+        RAISES {Rd.EndOfFile, Rd.Failure, Thread.Alerted}; 
      END;
 
 (* When "v.readData" is called, the array "data" should be filled in with
@@ -98,6 +103,10 @@ TYPE WriteVisitor <: WVPublic;
         {Wr.Failure, Thread.Alerted};
        writeRef(type: RefType; ref: REFANY) RAISES
         {Error, Wr.Failure, Thread.Alerted};
+       writeChar(value: CHAR)  
+        RAISES { Wr.Failure, Thread.Alerted };
+       writeWC21(intVal: UInt32) 
+        RAISES { Wr.Failure, Thread.Alerted };
      END;
 
 (* When "v.writeData" is called, the array "data" should be writen
@@ -121,12 +130,41 @@ PROCEDURE New(typecode: INTEGER; from: RTPacking.T; local: RTPacking.T;
 
 (* These are the data conversions we currently support. *)
 TYPE
-  CPKind = {Copy, Swap, Copy32to64, Copy64to32, Swap32to64, Swap64to32};
+  CPKind = {Copy, Swap, Copy32to64, Copy64to32, Swap32to64, Swap64to32,
+            Copy16to32, Copy32to16, Swap16to32, Swap32to16
+           };
 
 PROCEDURE GetWordKind(from: RTPacking.T; local: RTPacking.T): CPKind;
 (* The result is good for all ordinal types except LONGINT. *) 
 
 PROCEDURE GetLongintKind(from: RTPacking.T; local: RTPacking.T): CPKind;
 (* The result is good only for LONGINT. *) 
+
+PROCEDURE GetWidecharKind(from: RTPacking.T; local: RTPacking.T): CPKind;
+(* The result is good only for WIDECHAR. *) 
+
+TYPE UInt32 = BITS 32 FOR [0 .. 16_7FFFFFFF];
+
+(* WC21 is a variable-length encoding of widechar values, used only in
+   pickles.  The standare Unicode encodings explicitly disallow surrogate
+   code points as unencoded values.  Programs may have a legitimate need to
+   store and/or manipulate surrogate values in memory, and these should be
+   picklable too.  WC21 supports the entire code point range, which requires
+   21 bits.
+
+   The first byte has 7 (least significant) data bits and one bit (msb of the 
+   byte) that, if set, indicates another byte follows.  If present, the second 
+   byte is just like the first and supplies the next more significant 7 data 
+   bits.  If it calls for a third byte, that contains the 7 most significant 
+   data bits.  The bytes are always in least- to most-significant order in the 
+   pickle, regardless of endianness of writing or reading machine.  
+*) 
+
+PROCEDURE WriteWC21(wr: Wr.T; intVal: UInt32)
+  RAISES {Wr.Failure, Thread.Alerted}; 
+
+PROCEDURE ReadWC21(rd: Rd.T): UInt32 
+RAISES{Rd.EndOfFile, Rd.Failure, Thread.Alerted}; 
+(* Read one WIDECHAR value in WC21 encoding and return in a 32-bit int. *) 
 
 END ConvertPacking. 
