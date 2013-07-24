@@ -73,7 +73,7 @@
    vary from program to program.  Therefore, you should
    use explicit brands in types that will be pickled.
 
-   SRC/PM3/EXM3 Incompatibility notes:
+   SRC/PM3/EZM3 Incompatibility notes:
 
    1. Pickles written by programs compiled by SRC, PM3, or EZM3 are
       not generally readable by CM3-compiled programs because of 

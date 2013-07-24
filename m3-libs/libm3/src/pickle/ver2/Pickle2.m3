@@ -12,7 +12,9 @@ UNSAFE MODULE Pickle2 EXPORTS Pickle2, PickleRd;
 
 IMPORT Rd, RT0, RTAllocator, RTCollector, RTHeap, RTHeapRep, RTType, RTTypeFP,
        RTTypeMap, Thread, Word, Wr, Fingerprint, RTPacking,
-       ConvertPacking, PklTipeMap, Swap, PickleRd, BuiltinSpecials2, Fmt;
+       ConvertPacking, PklTipeMap, Swap, PickleRd, PickleWr, BuiltinSpecials2, 
+       Fmt;
+FROM ConvertPacking IMPORT UInt32;
 
 (* *)
 (* Syntax of a pickle, and constants pertaining thereto *)
@@ -98,7 +100,7 @@ TYPE
        RTTypes.TypeCode *)
 
 REVEAL
-  Writer = WriterPublic BRANDED "Pickle.Writer 2.0" OBJECT
+  Writer = PickleWr.Private BRANDED "Pickle.Writer 2.0" OBJECT
       level := 0;
       refCount: INTEGER;         (* count of refs written in this pickle *)
       firstUsed: INTEGER;        (* index in "refs" of first used entry *)
@@ -165,6 +167,8 @@ TYPE TipeReadVisitor = ConvertPacking.ReadVisitor OBJECT
       readData := TipeReadData;
       skipData := TipeSkipReadData;
       readRef := TipeReadRef;
+      readChar := TipeReadChar;
+      readWC21 := TipeReadWC21;  
     END;
 
 TYPE TipeWriteVisitor = ConvertPacking.WriteVisitor OBJECT 
@@ -173,6 +177,8 @@ TYPE TipeWriteVisitor = ConvertPacking.WriteVisitor OBJECT
       writeData := TipeWriteData;
       skipData := TipeSkipWriteData;
       writeRef := TipeWriteRef;
+      writeChar := TipeWriteChar; 
+      writeWC21 := TipeWriteWC21; 
     END;
 (* <--- BLAIR*)
 
@@ -317,6 +323,10 @@ PROCEDURE WriteRef(writer: Writer; r: REFANY)
       IF writer.visitor = NIL THEN
         writer.visitor := NEW (WriteVisitor, writer := writer);
       END;
+      writer.packing := RTPacking.Local();
+      writer.widecharConvKind 
+        := ConvertPacking.GetWidecharKind(writer.packing, writer.packing);
+
       (* BLAIR ---> *)
       IF writer.tipeVisitor = NIL THEN
         writer.tipeVisitor := NEW (TipeWriteVisitor, writer := writer);
@@ -614,6 +624,8 @@ PROCEDURE StartRead (reader: Reader)
         := ConvertPacking.GetWordKind(reader.packing, myPacking);
       reader.longConvKind 
         := ConvertPacking.GetLongintKind(reader.packing, myPacking);
+      reader.widecharConvKind 
+        := ConvertPacking.GetWidecharKind(reader.packing, myPacking);
       IF reader.packing.float # myPacking.float THEN
         RAISE Error("Can't read pickle (REAL rep)")
       END;
@@ -969,6 +981,34 @@ PROCEDURE TipeReadRef(v: TipeReadVisitor;
   END TipeReadRef; 
 (* <--- BLAIR *)
 
+PROCEDURE TipeReadChar(v: TipeReadVisitor): CHAR 
+  RAISES {Rd.EndOfFile, Rd.Failure, Thread.Alerted} = 
+
+  BEGIN 
+    RETURN Rd.GetChar(v.reader.rd); 
+  END TipeReadChar; 
+
+PROCEDURE TipeReadWC21(v: TipeReadVisitor): UInt32 
+  RAISES {Rd.EndOfFile, Rd.Failure, Thread.Alerted} = 
+
+  BEGIN 
+    RETURN ConvertPacking.ReadWC21(v.reader.rd); 
+  END TipeReadWC21; 
+
+PROCEDURE TipeWriteChar(v: TipeWriteVisitor; value: CHAR)
+  RAISES {Wr.Failure, Thread.Alerted} = 
+
+  BEGIN 
+    Wr.PutChar(v.writer.wr, value); 
+  END TipeWriteChar; 
+
+PROCEDURE TipeWriteWC21(v: TipeWriteVisitor; value: UInt32)
+  RAISES {Wr.Failure, Thread.Alerted} = 
+
+  BEGIN 
+    ConvertPacking.WriteWC21(v.writer.wr, value); 
+  END TipeWriteWC21; 
+
 PROCEDURE RootSpecialRead(<*UNUSED*> sp: Special;
                           reader: Reader; id: RefID): REFANY
     RAISES { Error, Rd.EndOfFile, Rd.Failure, Thread.Alerted } =
@@ -989,7 +1029,7 @@ PROCEDURE RootSpecialRead(<*UNUSED*> sp: Special;
         r := RTAllocator.NewTraced(ac);
       END;
     EXCEPT RTAllocator.OutOfMemory =>
-      RAISE Error("Can't red pickle (out of memory)")
+      RAISE Error("Can't read pickle (out of memory)")
     END;
     reader.noteRef(r, id);
 

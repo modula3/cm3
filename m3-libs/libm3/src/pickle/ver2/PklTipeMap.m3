@@ -56,7 +56,7 @@ PROCEDURE Read (v: ConvertPacking.ReadVisitor; r: REFANY; tc: TypeCode;
         WITH nextAddr = converter.convertRead(addr, v, size) DO
           <* ASSERT addr + toEltPack * size = nextAddr *>
         END;
-      ELSE
+      ELSE (* Not open array. *) 
 (*
     	WITH nextAddr = converter.convertRead(addr, v) DO
 *)

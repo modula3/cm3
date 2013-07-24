@@ -11,22 +11,19 @@
  *
  *)
 
-UNSAFE INTERFACE PickleRd;
+UNSAFE INTERFACE PickleWr;
 
 IMPORT RTPacking, Pickle2 AS Pickle, ConvertPacking;
 
 REVEAL
-  Pickle.Reader <: Private;
+  Pickle.Writer <: Private;
 
 TYPE
-  Private = Pickle.ReaderPublic OBJECT
+  Private = Pickle.WriterPublic OBJECT
       packing: RTPacking.T;
-      packingCode: INTEGER;
-      wordConvKind: ConvertPacking.CPKind;
-      longConvKind: ConvertPacking.CPKind;
       widecharConvKind: ConvertPacking.CPKind;
+    (* WIDECHAR is the only type we will do any write conversion on, 
+       specifically, 32-bit to WC21, if writing on a 32-bit WIDECHAR system. *) 
     END;
 
-VAR myPacking: RTPacking.T;       (* our local packing. *)
-
-END PickleRd.
+END PickleWr.

@@ -12,6 +12,7 @@ UNSAFE MODULE UnsafeUniCodec
 ; FROM Thread IMPORT Alerted 
 ; FROM UnsafeRd IMPORT FastGetChar , FastUnGetCharMulti , FastEOF 
 ; FROM UnsafeWr IMPORT FastPutChar 
+; IMPORT UniEncoding 
 ; FROM UniEncoding IMPORT Encoding 
 ; FROM UniCodec IMPORT IsBE , Range 
 ; FROM UniCodec IMPORT Widechar  
@@ -54,10 +55,6 @@ UNSAFE MODULE UnsafeUniCodec
    WIDECHARs in a Word.T, regardless of the host endianness. *) 
 ; CONST ArrWchWt0 = ( WideCharsPerWt - 1 ) * ORD ( IsBE ) 
 
-(* Unicode replacement code point, for ill-formed encoded values. *) 
-; CONST ReplacementWt = 16_FFFD (* As a Word.T. *) 
-; CONST ReplacementWch = VAL ( ReplacementWt , Widechar ) (* As a WIDECHAR. *)  
-
 ; PROCEDURE FastEncode ( Enc : Encoding ; Sink : Wr . T ; Wch : Widechar ) 
   RAISES { Alerted , Wr . Failure , Range } 
   (* Raise Range if Wch is not valid for Enc. 
@@ -93,7 +90,7 @@ UNSAFE MODULE UnsafeUniCodec
   (* A NOOP.  Placeholder for Encoding.Null. *) 
 
   = BEGIN (* FastDecNull *) 
-      RETURN ReplacementWch
+      RETURN UniEncoding . ReplacementWch
     END FastDecNull
 
 ; PROCEDURE FastEncInternal ( Sink : Wr . T ; Wch : Widechar ) 
@@ -112,7 +109,7 @@ UNSAFE MODULE UnsafeUniCodec
   *) 
 
   = BEGIN (* FastDecInternal *) 
-      RETURN ReplacementWch
+      RETURN UniEncoding . ReplacementWch
     END FastDecInternal
 
 ; PROCEDURE FastEncISO8859_1 ( Sink : Wr . T ; Wch : Widechar ) 
@@ -215,12 +212,12 @@ UNSAFE MODULE UnsafeUniCodec
       B0 := ORD ( FastGetChar ( Source ) ) 
     ; IF FastEOF ( Source ) 
       THEN 
-        RETURN ReplacementWch (* For B0. *)
+        RETURN UniEncoding . ReplacementWch (* For B0. *)
       ELSE 
         B1 := ORD ( FastGetChar ( Source ) ) 
       ; ResultWt := Or ( LeftShift ( B1 , 8 ) , B0 )
       ; IF And ( 16_F800 , ResultWt ) = 16_D800 
-        THEN RETURN ReplacementWch (* For surrogate code. *)
+        THEN RETURN UniEncoding . ReplacementWch (* For surrogate code. *)
         ELSE RETURN LOOPHOLE ( ResultWt , ArrWchWt ) [ ArrWchWt0 ] 
         END (* IF *) 
       END (* IF *) 
@@ -257,12 +254,12 @@ UNSAFE MODULE UnsafeUniCodec
       B0 := ORD ( FastGetChar ( Source ) ) 
     ; IF FastEOF ( Source ) 
       THEN 
-        RETURN ReplacementWch (* For B0. *)
+        RETURN UniEncoding . ReplacementWch (* For B0. *)
       ELSE 
         B1 := ORD ( FastGetChar ( Source ) ) 
       ; ResultWt := Or ( LeftShift ( B0 , 8 ) , B1 )
       ; IF And ( 16_F800 , ResultWt ) = 16_D800 
-        THEN RETURN ReplacementWch (* For surrogate code. *)
+        THEN RETURN UniEncoding . ReplacementWch (* For surrogate code. *)
         ELSE RETURN LOOPHOLE ( ResultWt , ArrWchWt ) [ ArrWchWt0 ] 
         END (* IF *) 
       END (* IF *) 
@@ -341,14 +338,14 @@ UNSAFE MODULE UnsafeUniCodec
         V0 := And ( 16_1F , B0 ) (* Data bits of B0. *)
       ; IF LT ( V0 , 2 ) (* Ill-formed data bits in byte 0. *) 
            OR FastEOF ( Source ) 
-        THEN RETURN ReplacementWch (* For B0 *)
+        THEN RETURN UniEncoding . ReplacementWch (* For B0 *)
         ELSE 
           B1 := ORD ( FastGetChar ( Source ) )
         ; IF And ( 16_C0 , B1 ) # 16_80 
           THEN (* Ill-formed tag bits in byte 1. *) 
             EVAL FastUnGetCharMulti ( Source ) (* B1. *) 
             (* ^ B1 is a legal B0 of a following code point. *) 
-          ; RETURN ReplacementWch (* For B0 *)
+          ; RETURN UniEncoding . ReplacementWch (* For B0 *)
           ELSE 
             ResultWt := Or ( LeftShift ( V0 , 6 ) , And ( 16_3F , B1 ) ) 
           ; RETURN LOOPHOLE ( ResultWt , ArrWchWt ) [ ArrWchWt0 ] 
@@ -360,14 +357,14 @@ UNSAFE MODULE UnsafeUniCodec
       ELSIF And ( 16_F0 , B0 ) = 16_E0 
       THEN (* Tag for 3-byte code. *) 
         IF FastEOF ( Source ) 
-        THEN RETURN ReplacementWch (* For B0 *) 
+        THEN RETURN UniEncoding . ReplacementWch (* For B0 *) 
         ELSE 
           B1 := ORD ( FastGetChar ( Source ) )
         ; IF And ( 16_C0 , B1 ) # 16_80 
           THEN (* Ill-formed tag bits in byte 1. *) 
             EVAL FastUnGetCharMulti ( Source ) (* B1. *)  
             (* ^ B1 is a legal B0 of a following code point. *) 
-          ; RETURN ReplacementWch (* For B0 *)
+          ; RETURN UniEncoding . ReplacementWch (* For B0 *)
           ELSE 
             V0 := And ( 16_F , B0 ) (* Data bits of B0. *)
           ; IF V0 = 0 AND And ( 16_20 , B1 ) # 16_20 
@@ -375,17 +372,17 @@ UNSAFE MODULE UnsafeUniCodec
             THEN (* Ill-formed data bits in byte 1. *)  
               (* B1 can not be a legal B0 of a following code point. *) 
 (* CHECK: Should we consume B2 if it is tagged as an additional byte? *) 
-              RETURN ReplacementWch (* For B0, B1 *)
+              RETURN UniEncoding . ReplacementWch (* For B0, B1 *)
             ELSE 
               IF FastEOF ( Source ) 
-              THEN RETURN ReplacementWch (* For B0, B1 *)
+              THEN RETURN UniEncoding . ReplacementWch (* For B0, B1 *)
               ELSE 
                 B2 := ORD ( FastGetChar ( Source ) )
               ; IF And ( 16_C0 , B2 ) # 16_80 
                 THEN (* Ill-formed tag bits in byte 2. *) 
                   EVAL FastUnGetCharMulti ( Source ) (* B2. *)  
                   (* ^ B2 is a legal B0 of a following code point. *) 
-                ; RETURN ReplacementWch (* For B0, B1 *) 
+                ; RETURN UniEncoding . ReplacementWch (* For B0, B1 *) 
                 ELSE (* Well-formed 3-byte code. *)  
                   ResultWt 
                    := Or ( Or ( LeftShift ( V0 , 12 ) 
@@ -405,14 +402,14 @@ UNSAFE MODULE UnsafeUniCodec
       ELSIF And ( 16_F8 , B0 ) = 16_F0 
       THEN (* Tag for 4-byte code. *) 
         IF FastEOF ( Source ) 
-        THEN RETURN ReplacementWch (* For B0 *)
+        THEN RETURN UniEncoding . ReplacementWch (* For B0 *)
         ELSE 
           B1 := ORD ( FastGetChar ( Source ) )
         ; IF And ( 16_C0 , B1 ) # 16_80 
           THEN (* Ill-formed tag bits in byte 1. *) 
             EVAL FastUnGetCharMulti ( Source ) (* B1. *) 
             (* ^ B1 is a legal B0 of a following code point. *) 
-          ; RETURN ReplacementWch (* For B0 *)
+          ; RETURN UniEncoding . ReplacementWch (* For B0 *)
           ELSE 
             V0 := And ( 16_7 , B0 ) (* Data bits of B0. *)  
           ; V1 := And ( 16_3F , B1 ) (* Data bits of B1. *) 
@@ -421,25 +418,25 @@ UNSAFE MODULE UnsafeUniCodec
             THEN (* Ill-formed data bits in byte 1. *)  
               (* B1 can not be a legal B0 of a following code point. *) 
 (* CHECK: Should we consume B2 & B3 if they are tagged as additional bytes? *) 
-              RETURN ReplacementWch (* For B0, B1 *)
+              RETURN UniEncoding . ReplacementWch (* For B0, B1 *)
             ELSIF FastEOF ( Source ) 
-            THEN RETURN ReplacementWch (* For B0, B1 *)
+            THEN RETURN UniEncoding . ReplacementWch (* For B0, B1 *)
             ELSE 
               B2 := ORD ( FastGetChar ( Source ) )
             ; IF And ( 16_C0 , B2 ) # 16_80 
               THEN (* Ill-formed tag bits in byte 2. *) 
                 EVAL FastUnGetCharMulti ( Source ) (* B2 *)   
                 (* ^ B2 is a legal B0 of a following code point. *) 
-              ; RETURN ReplacementWch (* For B0, B1 *)
+              ; RETURN UniEncoding . ReplacementWch (* For B0, B1 *)
               ELSIF FastEOF ( Source ) 
-              THEN RETURN ReplacementWch (* For B0, B1, B2 *)
+              THEN RETURN UniEncoding . ReplacementWch (* For B0, B1, B2 *)
               ELSE 
                 B3 := ORD ( FastGetChar ( Source ) )
               ; IF And ( 16_C0 , B3 ) # 16_80 
                 THEN (* Ill-formed tag bits in byte 3. *) 
                   EVAL FastUnGetCharMulti ( Source ) (* B3 *)  
                   (* ^ B3 is a legal B0 of a following code point. *) 
-                ; RETURN ReplacementWch (* For B0, B1, B2 *) 
+                ; RETURN UniEncoding . ReplacementWch (* For B0, B1, B2 *) 
                 ELSE (* Well-formed 4-byte code. *) 
                   ResultWt 
                     := Or ( Or ( LeftShift ( V0 , 18 ) 
@@ -508,7 +505,7 @@ UNSAFE MODULE UnsafeUniCodec
       B0 := ORD ( FastGetChar ( Source ) ) 
     ; IF FastEOF ( Source ) 
       THEN (* Only half a code unit. *)  
-        RETURN ReplacementWch (* For B0 *)
+        RETURN UniEncoding . ReplacementWch (* For B0 *)
       ELSE 
         B1 := ORD ( FastGetChar ( Source ) ) 
       END (* IF *) 
@@ -519,11 +516,11 @@ UNSAFE MODULE UnsafeUniCodec
       ELSE (* Surrogate. *) 
         IF And ( 16_04 , B1 ) = 16_04
         THEN (* Ill-formed: Code point starts with 2nd surrogate. *) 
-          RETURN ReplacementWch (* For B0, B1 *)
+          RETURN UniEncoding . ReplacementWch (* For B0, B1 *)
         ELSE (* Code point begins with 1st surrogate. *) 
           IF FastEOF ( Source ) 
           THEN (* No 2nd surrogate. *) 
-            RETURN ReplacementWch (* For B0, B1 *)
+            RETURN UniEncoding . ReplacementWch (* For B0, B1 *)
           ELSE 
             B2 := ORD ( FastGetChar ( Source ) ) 
           ; IF FastEOF ( Source ) 
@@ -531,7 +528,7 @@ UNSAFE MODULE UnsafeUniCodec
               EVAL FastUnGetCharMulti ( Source ) (* B2. *) 
               (* ^This is uncertain. If client switched to a different
                  encoding, could it would want this byte? *)  
-            ; RETURN ReplacementWch (* For B0, B1 *)
+            ; RETURN UniEncoding . ReplacementWch (* For B0, B1 *)
             ELSE 
               B3 := ORD ( FastGetChar ( Source ) ) 
             ; IF And ( 16_FC , B3 ) # 16_DC 
@@ -546,7 +543,7 @@ UNSAFE MODULE UnsafeUniCodec
               *)
                 EVAL FastUnGetCharMulti ( Source ) (* B3 *) 
               ; EVAL FastUnGetCharMulti ( Source ) (* B2 *) 
-              ; RETURN ReplacementWch (* For B0, B1 *)
+              ; RETURN UniEncoding . ReplacementWch (* For B0, B1 *)
               ELSE (* 2nd surrogate. *) 
                 ResultWt 
                   := Or ( Plus ( Or ( LeftShift ( And ( 16_3 , B1 ) , 18 ) 
@@ -616,7 +613,7 @@ UNSAFE MODULE UnsafeUniCodec
       B0 := ORD ( FastGetChar ( Source ) ) 
     ; IF FastEOF ( Source ) 
       THEN (* Only half a code unit. *)  
-        RETURN ReplacementWch (* For B0 *)
+        RETURN UniEncoding . ReplacementWch (* For B0 *)
       ELSE 
         B1 := ORD ( FastGetChar ( Source ) ) 
       ; IF And ( 16_F8 , B0 ) # 16_D8 
@@ -626,25 +623,25 @@ UNSAFE MODULE UnsafeUniCodec
         ELSE (* Surrogate. *) 
           IF And ( 16_04 , B0 ) = 16_04  
           THEN (* Ill-formed: Code point starts with 2nd surrogate. *) 
-            RETURN ReplacementWch  (* For B0, B1 *)
+            RETURN UniEncoding . ReplacementWch  (* For B0, B1 *)
           ELSE (* Code point begins with 1st surrogate. *) 
             IF FastEOF ( Source ) 
             THEN (* No 2nd surrogate. *) 
-              RETURN ReplacementWch (* For B0, B1 *)
+              RETURN UniEncoding . ReplacementWch (* For B0, B1 *)
             ELSE 
               B2 := ORD ( FastGetChar ( Source ) ) 
             ; IF And ( 16_FC , B2 ) # 16_DC 
               THEN (* Ill-formed.  Not a 2nd surrogate. *) 
               (* B2 begins a following well-formed initial UTF16 code unit. *)
                 EVAL FastUnGetCharMulti ( Source ) (* B2. *) 
-              ; RETURN ReplacementWch (* For B0, B1 *)
+              ; RETURN UniEncoding . ReplacementWch (* For B0, B1 *)
               ELSE (* 2nd surrogate. *) 
                 IF FastEOF ( Source ) 
                 THEN (* Only one byte of following 2nd surrogate. *)  
                   EVAL FastUnGetCharMulti ( Source ) (* B2. *) 
                   (* ^This is uncertain. If client switched to a different
                      encoding, could it would want this byte? *)  
-                ; RETURN ReplacementWch (* For B0, B1 *)
+                ; RETURN UniEncoding . ReplacementWch (* For B0, B1 *)
                 ELSE 
                   B3 := ORD ( FastGetChar ( Source ) ) 
                 ; ResultWt 
@@ -698,15 +695,15 @@ UNSAFE MODULE UnsafeUniCodec
   ; BEGIN (* FastDecUTF32LE *) 
       B0 := ORD ( FastGetChar ( Source ) ) 
     ; IF FastEOF ( Source ) 
-      THEN RETURN ReplacementWch (* For B0 *)
+      THEN RETURN UniEncoding . ReplacementWch (* For B0 *)
       ELSE 
         B1 := ORD ( FastGetChar ( Source ) ) 
       ; IF FastEOF ( Source ) 
-        THEN RETURN ReplacementWch (* For B0, B1 *) 
+        THEN RETURN UniEncoding . ReplacementWch (* For B0, B1 *) 
         ELSE 
           B2 := ORD ( FastGetChar ( Source ) ) 
         ; IF FastEOF ( Source ) 
-          THEN RETURN ReplacementWch (* For B0, B1, B2 *)
+          THEN RETURN UniEncoding . ReplacementWch (* For B0, B1, B2 *)
           ELSE 
             B3 := ORD ( FastGetChar ( Source ) ) 
           ; ResultWt 
@@ -715,7 +712,7 @@ UNSAFE MODULE UnsafeUniCodec
                     ) 
           ; IF GT ( ResultWt , 16_10FFFF ) (* Too large. *) 
                OR And ( 16_FFF800 , ResultWt ) = 16_D800 (* Surrogate. *) 
-            THEN RETURN ReplacementWch (* For B0, B1, B2, B3 *)
+            THEN RETURN UniEncoding . ReplacementWch (* For B0, B1, B2, B3 *)
             ELSE RETURN LOOPHOLE ( ResultWt , ArrWchWt ) [ ArrWchWt0 ] 
             END (* IF *) 
           END (* IF *) 
@@ -755,15 +752,15 @@ UNSAFE MODULE UnsafeUniCodec
   ; BEGIN (* FastDecUTF32BE *) 
       B0 := ORD ( FastGetChar ( Source ) ) 
     ; IF FastEOF ( Source ) 
-      THEN RETURN ReplacementWch (* For B0 *) 
+      THEN RETURN UniEncoding . ReplacementWch (* For B0 *) 
       ELSE 
         B1 := ORD ( FastGetChar ( Source ) ) 
       ; IF FastEOF ( Source ) 
-        THEN RETURN ReplacementWch (* For B0, B1 *)
+        THEN RETURN UniEncoding . ReplacementWch (* For B0, B1 *)
         ELSE 
           B2 := ORD ( FastGetChar ( Source ) ) 
         ; IF FastEOF ( Source ) 
-          THEN RETURN ReplacementWch (* For B0, B1, B2 *)
+          THEN RETURN UniEncoding . ReplacementWch (* For B0, B1, B2 *)
           ELSE 
             B3 := ORD ( FastGetChar ( Source ) ) 
           ; ResultWt 
@@ -772,7 +769,7 @@ UNSAFE MODULE UnsafeUniCodec
                     ) 
           ; IF GT ( ResultWt , 16_10FFFF ) (* Too large. *) 
                OR And ( 16_FFF800 , ResultWt ) = 16_D800 (* Surrogate. *) 
-            THEN RETURN ReplacementWch (* For B0, B1, B2, B3 *) 
+            THEN RETURN UniEncoding . ReplacementWch (* For B0, B1, B2, B3 *) 
             ELSE RETURN LOOPHOLE ( ResultWt , ArrWchWt ) [ ArrWchWt0 ] 
             END (* IF *) 
           END (* IF *) 

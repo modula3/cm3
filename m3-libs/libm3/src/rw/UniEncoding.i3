@@ -36,5 +36,9 @@ INTERFACE UniEncoding
 ; CONST EndianAmbiguous 
     = EncodingSet { Encoding . UCS2 , Encoding . UTF16 , Encoding . UTF32 } 
 
+(* Unicode replacement code point, for ill-formed encoded values. *) 
+; CONST ReplacementWt = 16_FFFD (* As a Word.T. *) 
+; CONST ReplacementWch = VAL ( ReplacementWt , WIDECHAR ) (* As a WIDECHAR. *)  
+
 ; END UniEncoding 
 . 
