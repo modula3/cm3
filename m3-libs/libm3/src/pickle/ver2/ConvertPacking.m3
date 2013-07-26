@@ -46,9 +46,9 @@ REVEAL T = Public BRANDED "ConvertPacking 1.0" OBJECT
 
       addCopy(bitCt: INTEGER) := AddCopy;
       addCopy32to64(bitCt: INTEGER; signed: BOOLEAN) := AddCopy32to64;
-      (* ^PRE: length MOD 32 = 0 *) 
+      (* ^PRE: bitCt MOD 32 = 0 *) 
       addCopy64to32(bitCt: INTEGER; signed: BOOLEAN) := AddCopy64to32;
-      (* ^PRE: length MOD 64 = 0 *) 
+      (* ^PRE: bitCt MOD 64 = 0 *) 
       addCopy16to32(fromBitCt: INTEGER) := AddCopy16to32;
       (* ^PRE: fromBitCt MOD 16 = 0 *) 
       addCopy32to16(fromBitCt: INTEGER) := AddCopy32to16;
@@ -70,15 +70,15 @@ REVEAL T = Public BRANDED "ConvertPacking 1.0" OBJECT
       addSkipOrCopy(bitCt: INTEGER) := AddSkipOrCopy;
       addSkip(fromDiff, toDiff: INTEGER) := AddSkip;
       addSwap16(bitCt: INTEGER) := AddSwap16;
-      (* ^PRE: length MOD 16 = 0 *) 
+      (* ^PRE: bitCt MOD 16 = 0 *) 
       addSwap32(bitCt: INTEGER) := AddSwap32;
-      (* ^PRE: length MOD 32 = 0 *) 
+      (* ^PRE: bitCt MOD 32 = 0 *) 
       addSwap64(bitCt: INTEGER) := AddSwap64;
-      (* ^PRE: length MOD 64 = 0 *) 
+      (* ^PRE: bitCt MOD 64 = 0 *) 
       addSwap32to64(bitCt: INTEGER; signed: BOOLEAN) := AddSwap32to64;
-      (* ^PRE: length MOD 32 = 0 *) 
+      (* ^PRE: bitCt MOD 32 = 0 *) 
       addSwap64to32(bitCt: INTEGER; signed: BOOLEAN) := AddSwap64to32;
-      (* ^PRE: length MOD 64 = 0 *) 
+      (* ^PRE: bitCt MOD 64 = 0 *) 
       addSwap16to32(fromBitCt: INTEGER) := AddSwap16to32;
       (* ^PRE: fromBitCt MOD 16 = 0 *) 
       addSwap32to16(fromBitCt: INTEGER) := AddSwap32to16;
@@ -241,30 +241,35 @@ RAISES{Rd.EndOfFile, Rd.Failure, Thread.Alerted} =
     RETURN intVal 
   END ReadWC21; 
 
-PROCEDURE Convert(self: T; dest: ADDRESS; v: ReadVisitor; 
-                  number: INTEGER := 1): ADDRESS RAISES 
-          {Error, Rd.EndOfFile, Rd.Failure, Thread.Alerted} =
+PROCEDURE Convert
+   (self: T; dest: ADDRESS; v: ReadVisitor; 
+    progRepCt: INTEGER := 1 (* Repeat the program this many times. *) )
+    : ADDRESS 
+     RAISES {Error, Rd.EndOfFile, Rd.Failure, Thread.Alerted} =
   VAR t: ARRAY [0..7] OF CHAR;
-      repetition: INTEGER := 1; 
+      insnRepCt: INTEGER := 1; (* Repeat each instruction this many times. *) 
 
   BEGIN
     IF self.prog.size() = 2 THEN
       (* We have a one step program (the step plus the DONE step), so
          lets just do it in one shot. *)
-      repetition := number;
-      number := 1;
+      insnRepCt := progRepCt;
+      progRepCt := 1;
     END;
-    FOR n := 1 TO number DO 
+    (* Execute the program "progRepCt" times. *) 
+    FOR n := 1 TO progRepCt DO 
       FOR i := 0 TO self.prog.size() - 1 DO
         WITH elem = self.prog.get(i), 
-             length = elem.unitCt * repetition DO
+             insnUnitCt = elem.unitCt * insnRepCt DO
+             (*  Repeat each instruction "insnRepCt" times. *)
           CASE elem.kind OF
           | PklAction.PAKind.Copy => 
-            ReadData(v, dest, length);
-            INC(dest, length);
+            ReadData(v, dest, insnUnitCt);
+            INC(dest, insnUnitCt);
           | PklAction.PAKind.SwapPacked => 
             WITH nelem = NARROW(elem, PklAction.SwapPacked) DO
-              FOR i := 1 TO length (* length words of byte size nelem.size *) DO
+              FOR i := 1 TO insnUnitCt DO 
+                  (* insnUnitCt chunks of nelem.size bytes each *)
                 VAR from: Word.T := 0;
                     to: Word.T := 0;
                     bit: INTEGER := 0; 
@@ -329,31 +334,31 @@ PROCEDURE Convert(self: T; dest: ADDRESS; v: ReadVisitor;
               END;
             END;
           | PklAction.PAKind.SkipFrom =>
-            v.skipData(length);
+            v.skipData(insnUnitCt);
           | PklAction.PAKind.SkipTo =>
-            INC(dest, length);
+            INC(dest, insnUnitCt);
           | PklAction.PAKind.Skip =>
-            v.skipData(length);
-            INC(dest, length);
+            v.skipData(insnUnitCt);
+            INC(dest, insnUnitCt);
           | PklAction.PAKind.Swap16 =>
-            ReadData(v, dest, length*2);
-            FOR i := 1 TO length DO
+            ReadData(v, dest, insnUnitCt*2);
+            FOR i := 1 TO insnUnitCt DO
               WITH int16 = LOOPHOLE(dest, UNTRACED REF Swap.Int16) DO
                 int16^ := Swap.Swap2(int16^);
               END;
               INC(dest, 2);
             END;
           | PklAction.PAKind.Swap32 =>
-            ReadData(v, dest, length*4);
-            FOR i := 1 TO length DO
+            ReadData(v, dest, insnUnitCt*4);
+            FOR i := 1 TO insnUnitCt DO
               WITH int32 = LOOPHOLE(dest, UNTRACED REF Int32Rec)^.v DO
                 int32 := Swap.Swap4(int32);
               END;
               INC(dest, 4);
             END;
           | PklAction.PAKind.Swap64 =>
-            ReadData(v, dest, length*8);
-            FOR i := 1 TO length DO
+            ReadData(v, dest, insnUnitCt*8);
+            FOR i := 1 TO insnUnitCt DO
               WITH int64 = LOOPHOLE(dest, UNTRACED REF Swap.Int64On32) DO
                 int64^ := Swap.Swap8(int64^);
               END;
@@ -361,7 +366,7 @@ PROCEDURE Convert(self: T; dest: ADDRESS; v: ReadVisitor;
             END;
           | PklAction.PAKind.Copy32to64, PklAction.PAKind.Swap32to64 =>
             WITH nelem = NARROW(elem, PklAction.Copy32to64) DO
-              FOR i := 1 TO length DO
+              FOR i := 1 TO insnUnitCt DO
                 v.readData(SUBARRAY(t, 0, 4));
                 WITH int32 = LOOPHOLE(ADR(t[0]), UNTRACED REF Int32Rec)^.v,
                      int64 = LOOPHOLE(dest, UNTRACED REF Swap.Int64On32) DO
@@ -392,7 +397,7 @@ PROCEDURE Convert(self: T; dest: ADDRESS; v: ReadVisitor;
             END;
           | PklAction.PAKind.Copy64to32, PklAction.PAKind.Swap64to32 =>
             WITH nelem = NARROW(elem, PklAction.Copy64to32) DO
-              FOR i := 1 TO length DO
+              FOR i := 1 TO insnUnitCt DO
                 v.readData(t);
                 WITH int64 = LOOPHOLE(ADR(t[0]), UNTRACED REF Swap.Int64On32)^,
                      int32 = LOOPHOLE(dest, UNTRACED REF Int32Rec)^.v DO
@@ -420,7 +425,7 @@ PROCEDURE Convert(self: T; dest: ADDRESS; v: ReadVisitor;
             END;
 
           | PklAction.PAKind.Copy16to32, PklAction.PAKind.Swap16to32 =>
-              FOR i := 1 TO length DO
+              FOR i := 1 TO insnUnitCt DO
                 v.readData(SUBARRAY(t, 0, 2));
                 WITH int16p = LOOPHOLE(ADR(t[0]), UNTRACED REF Swap.UInt16),
                      int32onU16p = LOOPHOLE(dest, UNTRACED REF Int32onU16) DO
@@ -445,7 +450,7 @@ PROCEDURE Convert(self: T; dest: ADDRESS; v: ReadVisitor;
 
           | PklAction.PAKind.Copy32to16, PklAction.PAKind.Swap32to16 =>
           (* Can this ever happen? *) 
-              FOR i := 1 TO length DO
+              FOR i := 1 TO insnUnitCt DO
                 v.readData(SUBARRAY(t, 0, 4));
                 WITH int32onU16p = LOOPHOLE(ADR(t[0]), UNTRACED REF Int32onU16),
                      u16 = LOOPHOLE(dest, UNTRACED REF U16Rec)^.v DO
@@ -475,7 +480,7 @@ PROCEDURE Convert(self: T; dest: ADDRESS; v: ReadVisitor;
           | PklAction.PAKind.CopyWC21to32 => 
               VAR intVal: UInt32; 
               BEGIN 
-                FOR i := 1 TO length (*32-bit words*) DO
+                FOR i := 1 TO insnUnitCt (*32-bit words*) DO
                   intVal := v.readWC21(); 
                   IF intVal > 16_10FFFF THEN 
                     RAISE Error("Unicode WIDECHAR out of range.");
@@ -490,7 +495,7 @@ PROCEDURE Convert(self: T; dest: ADDRESS; v: ReadVisitor;
           | PklAction.PAKind.CopyWC21to16 => 
               VAR intVal: UInt32; 
               BEGIN 
-                FOR i := 1 TO length (*16-bit words*) DO
+                FOR i := 1 TO insnUnitCt (*16-bit words*) DO
                   intVal := v.readWC21(); 
                   IF intVal > 16_FFFF THEN 
                     RAISE Error("16-bit WIDECHAR out of range.");
@@ -504,7 +509,7 @@ PROCEDURE Convert(self: T; dest: ADDRESS; v: ReadVisitor;
 
           | PklAction.PAKind.ReadRef =>
             WITH nelem = NARROW(elem, PklAction.Ref) DO
-              FOR i := 1 TO length DO
+              FOR i := 1 TO insnUnitCt DO
                 WITH ref = LOOPHOLE(dest, UNTRACED REF REFANY) DO
                   ref^ := v.readRef(nelem.refType);
                 END;
@@ -554,44 +559,46 @@ PROCEDURE WriteWC21(wr: Wr.T; intVal: UInt32)
     END; 
   END WriteWC21; 
 
-PROCEDURE Write(self: T; src: ADDRESS; v: WriteVisitor; 
-                number: INTEGER := 1): ADDRESS RAISES 
-          {Error, Wr.Failure, Thread.Alerted} =
-  VAR repetition: INTEGER := 1;
+PROCEDURE Write
+   (self: T; src: ADDRESS; v: WriteVisitor; 
+    progRepCt: INTEGER := 1 (* Repeat the program this many times. *) )
+   : ADDRESS 
+     RAISES {Error, Wr.Failure, Thread.Alerted} =
+  VAR insnRepCt: INTEGER := 1; (* Repeat each instruction this many times. *) 
 
   BEGIN
     IF self.writer # NIL THEN 
       (* There is a different program for writing.  Use it instead. *) 
-      RETURN self.writer.write(src, v, number);
+      RETURN self.writer.write(src, v, progRepCt);
     END;
 
     IF self.prog.size() = 2 THEN
       (* We have a one step program (the step plus the DONE step), so
          lets just do it in one shot. *)
-      repetition := number;
-      number := 1;
+      insnRepCt := progRepCt;
+      progRepCt := 1;
     END;
-    (* Execute the program "number" times. *) 
-    FOR n := 1 TO number DO
+    (* Execute the program "progRepCt" times. *) 
+    FOR n := 1 TO progRepCt DO
       FOR i := 0 TO self.prog.size() - 1 DO (* All program steps. *) 
         WITH elem = self.prog.get(i),
-             length = elem.unitCt * repetition DO 
-             (*  Repeat each step "repetition" times. *)
+             insnUnitCt = elem.unitCt * insnRepCt DO 
+             (*  Repeat each instruction "insnRepCt" times. *)
           CASE elem.kind OF
           | PklAction.PAKind.Copy =>
-            WriteData (v, src, length);
-            INC(src, length); 
+            WriteData (v, src, insnUnitCt);
+            INC(src, insnUnitCt); 
 
           | PklAction.PAKind.Skip =>
-            v.skipData(length);
-            INC(src, length);
+            v.skipData(insnUnitCt);
+            INC(src, insnUnitCt);
 
           | PklAction.PAKind.ReadRef =>
             (* The name "ReadRef" is meant for when the program is executed 
                by the read/convert interpreter.  Here, we do the reverse, i.e., 
                write a Ref. *) 
             WITH nelem = NARROW(elem, PklAction.Ref) DO
-              FOR i := 1 TO length DO
+              FOR i := 1 TO insnUnitCt DO
                 WITH ref = LOOPHOLE(src, UNTRACED REF REFANY) DO
                   v.writeRef(nelem.refType, ref^);
                 END;
@@ -610,7 +617,7 @@ PROCEDURE Write(self: T; src: ADDRESS; v: WriteVisitor;
                we are writing, on a 32-bit WIDECHAR system, so we write each
                32-bit field in WC21. *)  
 (* TODO: If self.write16bitWidechar, we want to really copy 32 to 16 here. *) 
-              FOR i := 1 TO length (*32-bit words*) DO
+              FOR i := 1 TO insnUnitCt (*32-bit words*) DO
                 WITH uint32p = LOOPHOLE(src, UNTRACED REF UInt32) DO
                   v.writeWC21(uint32p^)
                 END; 
@@ -621,9 +628,9 @@ PROCEDURE Write(self: T; src: ADDRESS; v: WriteVisitor;
             (* The name "CopyWC21to16" is meant for when the program is executed
                by the read/convert interpreter.  Here, if this happens at all,
                we are writing, on a 16-bit WIDECHAR system, so we just copy 
-               16-16. "length" in this instruction is number of WIDECHARs. *)  
-            WriteData (v, src, length*2);
-            INC(src, length*2); 
+               16-16. "insnUnitCt" in this instruction is number of WIDECHARs. *)  
+            WriteData (v, src, insnUnitCt*2);
+            INC(src, insnUnitCt*2); 
 
           | PklAction.PAKind.Done =>
           | PklAction.PAKind.SwapPacked => 
@@ -774,11 +781,11 @@ PROCEDURE AddCopy(self: T; bitCt: INTEGER) =
 PROCEDURE AddPackedSwapFirstField(self: T; fieldBitSize: INTEGER) =
   BEGIN
     (* We'll copy the minimum number of whole bytes. *)
-    WITH length = RoundUp(fieldBitSize, 8) DO
-      INC(self.fromOffset, length);
-      INC(self.toOffset, length);
+    WITH insnUnitCt = RoundUp(fieldBitSize, 8) DO
+      INC(self.fromOffset, insnUnitCt);
+      INC(self.toOffset, insnUnitCt);
       WITH elem = NEW(PklAction.SwapPacked, kind := PklAction.PAKind.SwapPacked, 
-                      unitCt := 1, size := length DIV 8,
+                      unitCt := 1, size := insnUnitCt DIV 8,
                       field := NEW(REF ARRAY OF CARDINAL, 1)) DO
         elem.field[0] := fieldBitSize;
         self.prog.addhi(elem);
