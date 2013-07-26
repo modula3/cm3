@@ -45,9 +45,9 @@ TYPE
          VAR (*OUT*) nDim, fromEltPack, toEltPack: INTEGER): T RAISES {Error};
     getDim(VAR (*OUT*) nDim, fromEltPack, toEltPack: INTEGER);
     convertRead(dest: ADDRESS; v: ReadVisitor; 
-                number: INTEGER): ADDRESS RAISES 
+                progRepCt: INTEGER): ADDRESS RAISES 
         {Error, Rd.EndOfFile, Rd.Failure, Thread.Alerted};
-    write(src: ADDRESS; v: WriteVisitor; number: INTEGER): ADDRESS RAISES 
+    write(src: ADDRESS; v: WriteVisitor; progRepCt: INTEGER): ADDRESS RAISES 
         {Error, Wr.Failure, Thread.Alerted};
     print();
     printProgram();
