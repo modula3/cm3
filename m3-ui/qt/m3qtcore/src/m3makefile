@@ -1,20 +1,6 @@
-%regenerate any symlinks
+%The m3makefile for the QtCore library
 
-if not fs_exists( "../src/qinclude" )
-  ret = try_exec("ln -s ../../common/qinclude ../src/qinclude ")
-end
-if not fs_exists( "../src/common.i" )
-  ret = try_exec("ln -s ../../common/common.i ../src/common.i ")
-end
-if not fs_exists( "../src/m3qt.i" )
-  ret = try_exec("ln -s ../../common/m3qt.i ../src/m3qt.i ")
-end
-if not fs_exists( "../src/cmaps.i" )
-  ret = try_exec("ln -s ../../common/cmaps.i ../src/cmaps.i ")
-end
-
-
-include("qinclude")
+include("../../common/qinclude")
 
 import("libm3")
 
@@ -24,30 +10,32 @@ import_obj("dynamicqobject")
 %Core stubs
 interface("QCoreStubs")
 
-
-%QCore1 branch has m3makefile
+%m3qtcore branch (perm) has m3makefile
 
 qtbuild("QtNamespace")
+%the sligslots interface
+qtbuild("QtDynamic")
+
+%core1 branch
+
 qtbuild("QtByteArray")
 qtbuild("QtString")
 qtbuild("QtList")
 qtbuild("QtStringList")
 
-%QCore2 branch
+%core2 branch
 
 qtbuild("QtEvent")
 qtbuild("QtObject")
-%the sligslots interface
-qtbuild("QtDynamic")
 
-%QCore3 branch
+%core3 branch
 
 qtbuild("QtPoint")
 qtbuild("QtLine")
 qtbuild("QtSize")
 qtbuild("QtRect")
 
-%QCore4 branch
+%core4 branch
 
 qtbuild("QtDateTime")
 qtbuild("QtMargins")

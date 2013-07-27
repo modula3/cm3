@@ -30,7 +30,9 @@ TYPE
                    ry              (): UNTRACED REF INTEGER;
                    PlusEqual       (p: QPoint; ): QPoint;
                    MinusEqual      (p: QPoint; ): QPoint;
-                   MultiplyEqual   (c: LONGREAL; ): QPoint;
+                   MultiplyEqual   (c: REAL; ): QPoint;
+                   MultiplyEqual1  (c: LONGREAL; ): QPoint;
+                   MultiplyEqual2  (c: INTEGER; ): QPoint;
                    DivideEqual     (c: LONGREAL; ): QPoint;
                    destroyCxx      ();
                  END;

@@ -1097,6 +1097,12 @@ PROCEDURE QDateTime_timeSpec (self: QDateTime; ): TimeSpec =
     RETURN result;
   END QDateTime_timeSpec;
 
+PROCEDURE QDateTime_toMSecsSinceEpoch (self: QDateTime; ): CARDINAL =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtDateTimeRaw.QDateTime_toMSecsSinceEpoch(selfAdr);
+  END QDateTime_toMSecsSinceEpoch;
+
 PROCEDURE QDateTime_toTime_t (self: QDateTime; ): CARDINAL =
   VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
   BEGIN
@@ -1124,6 +1130,13 @@ PROCEDURE QDateTime_setTimeSpec (self: QDateTime; spec: TimeSpec; ) =
   BEGIN
     QtDateTimeRaw.QDateTime_setTimeSpec(selfAdr, ORD(spec));
   END QDateTime_setTimeSpec;
+
+PROCEDURE QDateTime_setMSecsSinceEpoch
+  (self: QDateTime; msecs: CARDINAL; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtDateTimeRaw.QDateTime_setMSecsSinceEpoch(selfAdr, msecs);
+  END QDateTime_setMSecsSinceEpoch;
 
 PROCEDURE QDateTime_setTime_t
   (self: QDateTime; secsSince1Jan1970UTC: CARDINAL; ) =
@@ -1325,6 +1338,14 @@ PROCEDURE QDateTime_secsTo (self, arg2: QDateTime; ): INTEGER =
     RETURN QtDateTimeRaw.QDateTime_secsTo(selfAdr, arg2tmp);
   END QDateTime_secsTo;
 
+PROCEDURE QDateTime_msecsTo (self, arg2: QDateTime; ): CARDINAL =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(arg2.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtDateTimeRaw.QDateTime_msecsTo(selfAdr, arg2tmp);
+  END QDateTime_msecsTo;
+
 PROCEDURE QDateTime_Equals (self, other: QDateTime; ): BOOLEAN =
   VAR
     selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
@@ -1399,6 +1420,20 @@ PROCEDURE CurrentDateTime (): QDateTime =
     RETURN result;
   END CurrentDateTime;
 
+PROCEDURE CurrentDateTimeUtc (): QDateTime =
+  VAR
+    ret   : ADDRESS;
+    result: QDateTime;
+  BEGIN
+    ret := QtDateTimeRaw.CurrentDateTimeUtc();
+
+    result := NEW(QDateTime);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END CurrentDateTimeUtc;
+
 PROCEDURE FromString (s: TEXT; f: DateFormat; ): QDateTime =
   VAR
     ret    : ADDRESS;
@@ -1463,6 +1498,25 @@ PROCEDURE FromTime_t (secsSince1Jan1970UTC: CARDINAL; ): QDateTime =
     RETURN result;
   END FromTime_t;
 
+PROCEDURE FromMSecsSinceEpoch (msecs: CARDINAL; ): QDateTime =
+  VAR
+    ret   : ADDRESS;
+    result: QDateTime;
+  BEGIN
+    ret := QtDateTimeRaw.FromMSecsSinceEpoch(msecs);
+
+    result := NEW(QDateTime);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END FromMSecsSinceEpoch;
+
+PROCEDURE CurrentMSecsSinceEpoch (): CARDINAL =
+  BEGIN
+    RETURN QtDateTimeRaw.CurrentMSecsSinceEpoch();
+  END CurrentMSecsSinceEpoch;
+
 PROCEDURE Cleanup_QDateTime
   (<* UNUSED *> READONLY self: WeakRef.T; ref: REFANY) =
   VAR obj: QDateTime := ref;
@@ -1478,44 +1532,47 @@ PROCEDURE Destroy_QDateTime (self: QDateTime) =
 REVEAL
   QDateTime = QDateTimePublic BRANDED OBJECT
               OVERRIDES
-                init_0            := New_QDateTime0;
-                init_1            := New_QDateTime1;
-                init_2            := New_QDateTime2;
-                init_3            := New_QDateTime3;
-                init_4            := New_QDateTime4;
-                Assign            := QDateTime_Assign;
-                isNull            := QDateTime_isNull;
-                isValid           := QDateTime_isValid;
-                date              := QDateTime_date;
-                time              := QDateTime_time;
-                timeSpec          := QDateTime_timeSpec;
-                toTime_t          := QDateTime_toTime_t;
-                setDate           := QDateTime_setDate;
-                setTime           := QDateTime_setTime;
-                setTimeSpec       := QDateTime_setTimeSpec;
-                setTime_t         := QDateTime_setTime_t;
-                toString          := QDateTime_toString;
-                toString1         := QDateTime_toString1;
-                toString2         := QDateTime_toString2;
-                addDays           := QDateTime_addDays;
-                addMonths         := QDateTime_addMonths;
-                addYears          := QDateTime_addYears;
-                addSecs           := QDateTime_addSecs;
-                addMSecs          := QDateTime_addMSecs;
-                toTimeSpec        := QDateTime_toTimeSpec;
-                toLocalTime       := QDateTime_toLocalTime;
-                toUTC             := QDateTime_toUTC;
-                daysTo            := QDateTime_daysTo;
-                secsTo            := QDateTime_secsTo;
-                Equals            := QDateTime_Equals;
-                NotEquals         := QDateTime_NotEquals;
-                LessThan          := QDateTime_LessThan;
-                LessThanEquals    := QDateTime_LessThanEquals;
-                GreaterThan       := QDateTime_GreaterThan;
-                GreaterThanEquals := QDateTime_GreaterThanEquals;
-                setUtcOffset      := QDateTime_setUtcOffset;
-                utcOffset         := QDateTime_utcOffset;
-                destroyCxx        := Destroy_QDateTime;
+                init_0             := New_QDateTime0;
+                init_1             := New_QDateTime1;
+                init_2             := New_QDateTime2;
+                init_3             := New_QDateTime3;
+                init_4             := New_QDateTime4;
+                Assign             := QDateTime_Assign;
+                isNull             := QDateTime_isNull;
+                isValid            := QDateTime_isValid;
+                date               := QDateTime_date;
+                time               := QDateTime_time;
+                timeSpec           := QDateTime_timeSpec;
+                toMSecsSinceEpoch  := QDateTime_toMSecsSinceEpoch;
+                toTime_t           := QDateTime_toTime_t;
+                setDate            := QDateTime_setDate;
+                setTime            := QDateTime_setTime;
+                setTimeSpec        := QDateTime_setTimeSpec;
+                setMSecsSinceEpoch := QDateTime_setMSecsSinceEpoch;
+                setTime_t          := QDateTime_setTime_t;
+                toString           := QDateTime_toString;
+                toString1          := QDateTime_toString1;
+                toString2          := QDateTime_toString2;
+                addDays            := QDateTime_addDays;
+                addMonths          := QDateTime_addMonths;
+                addYears           := QDateTime_addYears;
+                addSecs            := QDateTime_addSecs;
+                addMSecs           := QDateTime_addMSecs;
+                toTimeSpec         := QDateTime_toTimeSpec;
+                toLocalTime        := QDateTime_toLocalTime;
+                toUTC              := QDateTime_toUTC;
+                daysTo             := QDateTime_daysTo;
+                secsTo             := QDateTime_secsTo;
+                msecsTo            := QDateTime_msecsTo;
+                Equals             := QDateTime_Equals;
+                NotEquals          := QDateTime_NotEquals;
+                LessThan           := QDateTime_LessThan;
+                LessThanEquals     := QDateTime_LessThanEquals;
+                GreaterThan        := QDateTime_GreaterThan;
+                GreaterThanEquals  := QDateTime_GreaterThanEquals;
+                setUtcOffset       := QDateTime_setUtcOffset;
+                utcOffset          := QDateTime_utcOffset;
+                destroyCxx         := Destroy_QDateTime;
               END;
 
 

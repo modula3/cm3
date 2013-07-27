@@ -21,17 +21,19 @@ TYPE
     BRANDED OBJECT
       cxxObj: ADDRESS;
     METHODS
-      init_0      (): QString;
-      initQString (ch: TEXT; ): QString;
-      init_1      (a: QByteArray; ): QString;
-      init_2      (size: INTEGER; arg2: Initialization; ): QString;
-      size        (): INTEGER;
-      count       (): INTEGER;
-      length      (): INTEGER;
-      count1      (s: TEXT; ): INTEGER;
-      toUtf8      (): QByteArray;
-      toLocal8Bit (): QByteArray;
-      destroyCxx  ();
+      init_0       (): QString;
+      initQString  (ch: TEXT; ): QString;
+      init_1       (a: QByteArray; ): QString;
+      init_2       (size: INTEGER; arg2: Initialization; ): QString;
+      swap         (other: TEXT; );
+      size         (): INTEGER;
+      count        (): INTEGER;
+      length       (): INTEGER;
+      isSharedWith (other: TEXT; ): BOOLEAN;
+      count1       (s: TEXT; ): INTEGER;
+      toUtf8       (): QByteArray;
+      toLocal8Bit  (): QByteArray;
+      destroyCxx   ();
     END;
 
 

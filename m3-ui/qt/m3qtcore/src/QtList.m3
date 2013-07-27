@@ -93,6 +93,13 @@ PROCEDURE QStringListBase_at (self: QStringListBase; i: INTEGER; ): TEXT =
     RETURN result;
   END QStringListBase_at;
 
+PROCEDURE QStringListBase_reserve
+  (self: QStringListBase; size: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtListRaw.QStringListBase_reserve(selfAdr, size);
+  END QStringListBase_reserve;
+
 PROCEDURE QStringListBase_append (self: QStringListBase; t: TEXT; ) =
   VAR
     selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
@@ -215,12 +222,6 @@ PROCEDURE QStringListBase_move
   BEGIN
     QtListRaw.QStringListBase_move(selfAdr, from, to);
   END QStringListBase_move;
-
-PROCEDURE QStringListBase_swap (self: QStringListBase; i, j: INTEGER; ) =
-  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
-  BEGIN
-    QtListRaw.QStringListBase_swap(selfAdr, i, j);
-  END QStringListBase_swap;
 
 PROCEDURE QStringListBase_indexOf
   (self: QStringListBase; t: TEXT; from: INTEGER; ): INTEGER =
@@ -550,6 +551,7 @@ REVEAL
                       isEmpty         := QStringListBase_isEmpty;
                       clear           := QStringListBase_clear;
                       at              := QStringListBase_at;
+                      reserve         := QStringListBase_reserve;
                       append          := QStringListBase_append;
                       prepend         := QStringListBase_prepend;
                       insert          := QStringListBase_insert;
@@ -561,7 +563,6 @@ REVEAL
                       takeFirst       := QStringListBase_takeFirst;
                       takeLast        := QStringListBase_takeLast;
                       move            := QStringListBase_move;
-                      swap            := QStringListBase_swap;
                       indexOf         := QStringListBase_indexOf;
                       indexOf1        := QStringListBase_indexOf1;
                       lastIndexOf     := QStringListBase_lastIndexOf;

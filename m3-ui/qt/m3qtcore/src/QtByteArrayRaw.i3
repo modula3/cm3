@@ -73,6 +73,10 @@ PROCEDURE QByteArray_detach (self: QByteArray; );
 <* EXTERNAL QByteArray_isDetached *>
 PROCEDURE QByteArray_isDetached (self: QByteArray; ): BOOLEAN;
 
+<* EXTERNAL QByteArray_isSharedWith *>
+PROCEDURE QByteArray_isSharedWith (self: QByteArray; other: ADDRESS; ):
+  BOOLEAN;
+
 <* EXTERNAL QByteArray_clear *>
 PROCEDURE QByteArray_clear (self: QByteArray; );
 
@@ -255,6 +259,10 @@ PROCEDURE QByteArray_toPercentEncoding2
 
 <* EXTERNAL QByteArray_toPercentEncoding3 *>
 PROCEDURE QByteArray_toPercentEncoding3 (self: QByteArray; ): ADDRESS;
+
+<* EXTERNAL QByteArray_setRawData *>
+PROCEDURE QByteArray_setRawData
+  (self: QByteArray; a: C.char_star; n: C.unsigned_int; ): ADDRESS;
 
 <* EXTERNAL FromRawData *>
 PROCEDURE FromRawData (arg1: C.char_star; size: C.int; ): ADDRESS;

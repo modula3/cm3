@@ -28,6 +28,7 @@ TYPE
       isEmpty         (): BOOLEAN;
       clear           ();
       at              (i: INTEGER; ): TEXT;
+      reserve         (size: INTEGER; );
       append          (t: TEXT; );
       prepend         (t: TEXT; );
       insert          (i: INTEGER; t: TEXT; );
@@ -39,7 +40,6 @@ TYPE
       takeFirst       (): TEXT;
       takeLast        (): TEXT;
       move            (from, to: INTEGER; );
-      swap            (i, j: INTEGER; );
       indexOf         (t: TEXT; from: INTEGER; ): INTEGER;
       indexOf1        (t: TEXT; ): INTEGER;
       lastIndexOf     (t: TEXT; from: INTEGER; ): INTEGER;
