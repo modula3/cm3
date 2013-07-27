@@ -295,6 +295,9 @@ PROCEDURE QDateTime_time (self: QDateTime; ): ADDRESS;
 <* EXTERNAL QDateTime_timeSpec *>
 PROCEDURE QDateTime_timeSpec (self: QDateTime; ): C.int;
 
+<* EXTERNAL QDateTime_toMSecsSinceEpoch *>
+PROCEDURE QDateTime_toMSecsSinceEpoch (self: QDateTime; ): C.unsigned_long;
+
 <* EXTERNAL QDateTime_toTime_t *>
 PROCEDURE QDateTime_toTime_t (self: QDateTime; ): C.unsigned_int;
 
@@ -306,6 +309,10 @@ PROCEDURE QDateTime_setTime (self: QDateTime; time: ADDRESS; );
 
 <* EXTERNAL QDateTime_setTimeSpec *>
 PROCEDURE QDateTime_setTimeSpec (self: QDateTime; spec: C.int; );
+
+<* EXTERNAL QDateTime_setMSecsSinceEpoch *>
+PROCEDURE QDateTime_setMSecsSinceEpoch
+  (self: QDateTime; msecs: C.unsigned_long; );
 
 <* EXTERNAL QDateTime_setTime_t *>
 PROCEDURE QDateTime_setTime_t
@@ -352,6 +359,10 @@ PROCEDURE QDateTime_daysTo (self: QDateTime; arg2: ADDRESS; ): C.int;
 <* EXTERNAL QDateTime_secsTo *>
 PROCEDURE QDateTime_secsTo (self: QDateTime; arg2: ADDRESS; ): C.int;
 
+<* EXTERNAL QDateTime_msecsTo *>
+PROCEDURE QDateTime_msecsTo (self: QDateTime; arg2: ADDRESS; ):
+  C.unsigned_long;
+
 <* EXTERNAL QDateTime_Equals *>
 PROCEDURE QDateTime_Equals (self: QDateTime; other: ADDRESS; ): BOOLEAN;
 
@@ -382,6 +393,9 @@ PROCEDURE QDateTime_utcOffset (self: QDateTime; ): C.int;
 <* EXTERNAL CurrentDateTime *>
 PROCEDURE CurrentDateTime (): ADDRESS;
 
+<* EXTERNAL CurrentDateTimeUtc *>
+PROCEDURE CurrentDateTimeUtc (): ADDRESS;
+
 <* EXTERNAL FromString *>
 PROCEDURE FromString (s: ADDRESS; f: C.int; ): ADDRESS;
 
@@ -393,6 +407,12 @@ PROCEDURE FromString2 (s, format: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL FromTime_t *>
 PROCEDURE FromTime_t (secsSince1Jan1970UTC: C.unsigned_int; ): ADDRESS;
+
+<* EXTERNAL FromMSecsSinceEpoch *>
+PROCEDURE FromMSecsSinceEpoch (msecs: C.unsigned_long; ): ADDRESS;
+
+<* EXTERNAL CurrentMSecsSinceEpoch *>
+PROCEDURE CurrentMSecsSinceEpoch (): C.unsigned_long;
 
 TYPE QDateTime <: ADDRESS;
 

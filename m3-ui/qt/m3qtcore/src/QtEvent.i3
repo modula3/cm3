@@ -160,7 +160,6 @@ CONST                            (* Enum Type *)
   UngrabMouse                      = 187;
   GrabKeyboard                     = 188;
   UngrabKeyboard                   = 189;
-  CocoaRequestModal                = 190;
   MacGLClearDrawable               = 191;
   StateMachineSignal               = 192;
   StateMachineWrapped              = 193;

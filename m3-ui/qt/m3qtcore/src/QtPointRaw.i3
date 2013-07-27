@@ -49,7 +49,13 @@ PROCEDURE QPoint_PlusEqual (self: QPoint; p: ADDRESS; ): ADDRESS;
 PROCEDURE QPoint_MinusEqual (self: QPoint; p: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL QPoint_MultiplyEqual *>
-PROCEDURE QPoint_MultiplyEqual (self: QPoint; c: C.double; ): ADDRESS;
+PROCEDURE QPoint_MultiplyEqual (self: QPoint; c: C.float; ): ADDRESS;
+
+<* EXTERNAL QPoint_MultiplyEqual1 *>
+PROCEDURE QPoint_MultiplyEqual1 (self: QPoint; c: C.double; ): ADDRESS;
+
+<* EXTERNAL QPoint_MultiplyEqual2 *>
+PROCEDURE QPoint_MultiplyEqual2 (self: QPoint; c: C.int; ): ADDRESS;
 
 <* EXTERNAL QPoint_DivideEqual *>
 PROCEDURE QPoint_DivideEqual (self: QPoint; c: C.double; ): ADDRESS;

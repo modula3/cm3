@@ -59,34 +59,6 @@ PROCEDURE QObject_installEventFilter (self, arg2: ADDRESS; );
 <* EXTERNAL QObject_removeEventFilter *>
 PROCEDURE QObject_removeEventFilter (self, arg2: ADDRESS; );
 
-<* EXTERNAL Connect *>
-PROCEDURE Connect (sender  : ADDRESS;
-                   signal  : C.char_star;
-                   receiver: ADDRESS;
-                   member  : C.char_star;
-                   arg5    : C.int;       ): BOOLEAN;
-
-<* EXTERNAL QObject_connect1 *>
-PROCEDURE QObject_connect1
-  (self, sender: ADDRESS; signal, member: C.char_star; type: C.int; ):
-  BOOLEAN;
-
-<* EXTERNAL Disconnect *>
-PROCEDURE Disconnect (sender  : ADDRESS;
-                      signal  : C.char_star;
-                      receiver: ADDRESS;
-                      member  : C.char_star; ): BOOLEAN;
-
-<* EXTERNAL QObject_disconnect1 *>
-PROCEDURE QObject_disconnect1 (self    : ADDRESS;
-                               signal  : C.char_star;
-                               receiver: ADDRESS;
-                               member  : C.char_star; ): BOOLEAN;
-
-<* EXTERNAL QObject_disconnect2 *>
-PROCEDURE QObject_disconnect2
-  (self, receiver: ADDRESS; member: C.char_star; ): BOOLEAN;
-
 <* EXTERNAL QObject_dumpObjectTree *>
 PROCEDURE QObject_dumpObjectTree (self: ADDRESS; );
 

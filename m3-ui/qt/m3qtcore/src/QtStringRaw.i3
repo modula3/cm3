@@ -18,6 +18,9 @@ PROCEDURE New_QString0 (): QString;
 <* EXTERNAL Delete_QString *>
 PROCEDURE Delete_QString (self: QString; );
 
+<* EXTERNAL QString_swap *>
+PROCEDURE QString_swap (self: QString; other: ADDRESS; );
+
 <* EXTERNAL QString_size *>
 PROCEDURE QString_size (self: QString; ): C.int;
 
@@ -26,6 +29,9 @@ PROCEDURE QString_count (self: QString; ): C.int;
 
 <* EXTERNAL QString_length *>
 PROCEDURE QString_length (self: QString; ): C.int;
+
+<* EXTERNAL QString_isSharedWith *>
+PROCEDURE QString_isSharedWith (self: QString; other: ADDRESS; ): BOOLEAN;
 
 <* EXTERNAL QString_count1 *>
 PROCEDURE QString_count1 (self: QString; s: ADDRESS; ): C.int;

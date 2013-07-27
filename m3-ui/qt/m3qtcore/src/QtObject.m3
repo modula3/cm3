@@ -13,7 +13,6 @@ FROM QtEvent IMPORT QEvent;
 IMPORT M3toC;
 IMPORT QtObjectRaw;
 IMPORT Ctypes AS C;
-FROM QtNamespace IMPORT ConnectionType;
 
 
 IMPORT WeakRef;
@@ -149,106 +148,6 @@ PROCEDURE QObject_removeEventFilter (self, arg2: QObject; ) =
     QtObjectRaw.QObject_removeEventFilter(arg1tmp, arg2tmp);
   END QObject_removeEventFilter;
 
-PROCEDURE Connect (sender  : QObject;
-                   signal  : TEXT;
-                   receiver: QObject;
-                   member  : TEXT;
-                   arg5    : ConnectionType; ): BOOLEAN =
-  VAR
-    arg1tmp              := LOOPHOLE(sender.cxxObj, ADDRESS);
-    arg2tmp: C.char_star;
-    arg3tmp              := LOOPHOLE(receiver.cxxObj, ADDRESS);
-    arg4tmp: C.char_star;
-    result : BOOLEAN;
-  BEGIN
-    arg2tmp := M3toC.CopyTtoS(signal);
-    arg4tmp := M3toC.CopyTtoS(member);
-    result :=
-      QtObjectRaw.Connect(arg1tmp, arg2tmp, arg3tmp, arg4tmp, ORD(arg5));
-
-
-
-
-    RETURN result;
-  END Connect;
-
-PROCEDURE QObject_connect1
-  (self, sender: QObject; signal, member: TEXT; type: ConnectionType; ):
-  BOOLEAN =
-  VAR
-    arg1tmp              := LOOPHOLE(self.cxxObj, ADDRESS);
-    arg2tmp              := LOOPHOLE(sender.cxxObj, ADDRESS);
-    arg3tmp: C.char_star;
-    arg4tmp: C.char_star;
-    result : BOOLEAN;
-  BEGIN
-    arg3tmp := M3toC.CopyTtoS(signal);
-    arg4tmp := M3toC.CopyTtoS(member);
-    result := QtObjectRaw.QObject_connect1(
-                arg1tmp, arg2tmp, arg3tmp, arg4tmp, ORD(type));
-
-
-
-
-    RETURN result;
-  END QObject_connect1;
-
-PROCEDURE Disconnect
-  (sender: QObject; signal: TEXT; receiver: QObject; member: TEXT; ):
-  BOOLEAN =
-  VAR
-    arg1tmp              := LOOPHOLE(sender.cxxObj, ADDRESS);
-    arg2tmp: C.char_star;
-    arg3tmp              := LOOPHOLE(receiver.cxxObj, ADDRESS);
-    arg4tmp: C.char_star;
-    result : BOOLEAN;
-  BEGIN
-    arg2tmp := M3toC.CopyTtoS(signal);
-    arg4tmp := M3toC.CopyTtoS(member);
-    result := QtObjectRaw.Disconnect(arg1tmp, arg2tmp, arg3tmp, arg4tmp);
-
-
-
-
-    RETURN result;
-  END Disconnect;
-
-PROCEDURE QObject_disconnect1
-  (self: QObject; signal: TEXT; receiver: QObject; member: TEXT; ):
-  BOOLEAN =
-  VAR
-    arg1tmp              := LOOPHOLE(self.cxxObj, ADDRESS);
-    arg2tmp: C.char_star;
-    arg3tmp              := LOOPHOLE(receiver.cxxObj, ADDRESS);
-    arg4tmp: C.char_star;
-    result : BOOLEAN;
-  BEGIN
-    arg2tmp := M3toC.CopyTtoS(signal);
-    arg4tmp := M3toC.CopyTtoS(member);
-    result :=
-      QtObjectRaw.QObject_disconnect1(arg1tmp, arg2tmp, arg3tmp, arg4tmp);
-
-
-
-
-    RETURN result;
-  END QObject_disconnect1;
-
-PROCEDURE QObject_disconnect2 (self, receiver: QObject; member: TEXT; ):
-  BOOLEAN =
-  VAR
-    arg1tmp              := LOOPHOLE(self.cxxObj, ADDRESS);
-    arg2tmp              := LOOPHOLE(receiver.cxxObj, ADDRESS);
-    arg3tmp: C.char_star;
-    result : BOOLEAN;
-  BEGIN
-    arg3tmp := M3toC.CopyTtoS(member);
-    result := QtObjectRaw.QObject_disconnect2(arg1tmp, arg2tmp, arg3tmp);
-
-
-    RETURN result;
-  END QObject_disconnect2;
-
 PROCEDURE QObject_dumpObjectTree (self: QObject; ) =
   VAR arg1tmp := LOOPHOLE(self.cxxObj, ADDRESS);
   BEGIN
@@ -328,9 +227,6 @@ REVEAL
               setParent          := QObject_setParent;
               installEventFilter := QObject_installEventFilter;
               removeEventFilter  := QObject_removeEventFilter;
-              connect1           := QObject_connect1;
-              disconnect1        := QObject_disconnect1;
-              disconnect2        := QObject_disconnect2;
               dumpObjectTree     := QObject_dumpObjectTree;
               dumpObjectInfo     := QObject_dumpObjectInfo;
               parent             := QObject_parent;

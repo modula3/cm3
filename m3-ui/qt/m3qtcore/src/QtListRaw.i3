@@ -45,6 +45,9 @@ PROCEDURE QStringListBase_clear (self: QStringListBase; );
 <* EXTERNAL QStringListBase_at *>
 PROCEDURE QStringListBase_at (self: QStringListBase; i: C.int; ): ADDRESS;
 
+<* EXTERNAL QStringListBase_reserve *>
+PROCEDURE QStringListBase_reserve (self: QStringListBase; size: C.int; );
+
 <* EXTERNAL QStringListBase_append *>
 PROCEDURE QStringListBase_append (self: QStringListBase; t: ADDRESS; );
 
@@ -82,9 +85,6 @@ PROCEDURE QStringListBase_takeLast (self: QStringListBase; ): ADDRESS;
 
 <* EXTERNAL QStringListBase_move *>
 PROCEDURE QStringListBase_move (self: QStringListBase; from, to: C.int; );
-
-<* EXTERNAL QStringListBase_swap *>
-PROCEDURE QStringListBase_swap (self: QStringListBase; i, j: C.int; );
 
 <* EXTERNAL QStringListBase_indexOf *>
 PROCEDURE QStringListBase_indexOf

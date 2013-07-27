@@ -9,20 +9,9 @@
 INTERFACE QtObject;
 
 FROM QtEvent IMPORT QEvent;
-FROM QtNamespace IMPORT ConnectionType;
 
 
 TYPE T = QObject;
-
-PROCEDURE Connect (sender  : QObject;
-                   signal  : TEXT;
-                   receiver: QObject;
-                   member  : TEXT;
-                   arg5    : ConnectionType; ): BOOLEAN;
-
-PROCEDURE Disconnect
-  (sender: QObject; signal: TEXT; receiver: QObject; member: TEXT; ):
-  BOOLEAN;
 
 PROCEDURE RegisterUserData (): CARDINAL;
 
@@ -47,18 +36,12 @@ TYPE
       setParent          (arg1: QObject; );
       installEventFilter (arg1: QObject; );
       removeEventFilter  (arg1: QObject; );
-      connect1 (sender        : QObject;
-                signal, member: TEXT;
-                type          : ConnectionType; ): BOOLEAN;
-      disconnect1 (signal: TEXT; receiver: QObject; member: TEXT; ):
-                   BOOLEAN;
-      disconnect2    (receiver: QObject; member: TEXT; ): BOOLEAN;
-      dumpObjectTree ();
-      dumpObjectInfo ();
-      parent         (): QObject;
-      inherits       (classname: TEXT; ): BOOLEAN;
-      deleteLater    ();
-      destroyCxx     ();
+      dumpObjectTree     ();
+      dumpObjectInfo     ();
+      parent             (): QObject;
+      inherits           (classname: TEXT; ): BOOLEAN;
+      deleteLater        ();
+      destroyCxx         ();
     END;
 
 

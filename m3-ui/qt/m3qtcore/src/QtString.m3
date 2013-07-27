@@ -35,6 +35,15 @@ PROCEDURE Delete_QString (self: QString; ) =
     QtStringRaw.Delete_QString(selfAdr);
   END Delete_QString;
 
+PROCEDURE QString_swap (self: QString; other: TEXT; ) =
+  VAR
+    selfAdr   : ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    qstr_other          := NEW(QString).initQString(other);
+    arg2tmp             := LOOPHOLE(qstr_other.cxxObj, ADDRESS);
+  BEGIN
+    QtStringRaw.QString_swap(selfAdr, arg2tmp);
+  END QString_swap;
+
 PROCEDURE QString_size (self: QString; ): INTEGER =
   VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
   BEGIN
@@ -52,6 +61,15 @@ PROCEDURE QString_length (self: QString; ): INTEGER =
   BEGIN
     RETURN QtStringRaw.QString_length(selfAdr);
   END QString_length;
+
+PROCEDURE QString_isSharedWith (self: QString; other: TEXT; ): BOOLEAN =
+  VAR
+    selfAdr   : ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    qstr_other          := NEW(QString).initQString(other);
+    arg2tmp             := LOOPHOLE(qstr_other.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtStringRaw.QString_isSharedWith(selfAdr, arg2tmp);
+  END QString_isSharedWith;
 
 PROCEDURE QString_count1 (self: QString; s: TEXT; ): INTEGER =
   VAR
@@ -156,17 +174,19 @@ PROCEDURE Destroy_QString (self: QString) =
 REVEAL
   QString = QStringPublic BRANDED OBJECT
             OVERRIDES
-              init_0      := New_QString0;
-              size        := QString_size;
-              count       := QString_count;
-              length      := QString_length;
-              count1      := QString_count1;
-              toUtf8      := QString_toUtf8;
-              toLocal8Bit := QString_toLocal8Bit;
-              initQString := New_initQString;
-              init_1      := New_QString1;
-              init_2      := New_QString2;
-              destroyCxx  := Destroy_QString;
+              init_0       := New_QString0;
+              swap         := QString_swap;
+              size         := QString_size;
+              count        := QString_count;
+              length       := QString_length;
+              isSharedWith := QString_isSharedWith;
+              count1       := QString_count1;
+              toUtf8       := QString_toUtf8;
+              toLocal8Bit  := QString_toLocal8Bit;
+              initQString  := New_initQString;
+              init_1       := New_QString1;
+              init_2       := New_QString2;
+              destroyCxx   := Destroy_QString;
             END;
 
 
