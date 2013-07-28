@@ -29,6 +29,9 @@ PROCEDURE New_QCheckBox3 (text: ADDRESS; ): QCheckBox;
 <* EXTERNAL QCheckBox_sizeHint *>
 PROCEDURE QCheckBox_sizeHint (self: QCheckBox; ): ADDRESS;
 
+<* EXTERNAL QCheckBox_minimumSizeHint *>
+PROCEDURE QCheckBox_minimumSizeHint (self: QCheckBox; ): ADDRESS;
+
 <* EXTERNAL QCheckBox_setTristate *>
 PROCEDURE QCheckBox_setTristate (self: QCheckBox; y: BOOLEAN; );
 

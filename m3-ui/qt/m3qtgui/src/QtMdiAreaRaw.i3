@@ -80,6 +80,18 @@ PROCEDURE QMdiArea_documentMode (self: QMdiArea; ): BOOLEAN;
 <* EXTERNAL QMdiArea_setDocumentMode *>
 PROCEDURE QMdiArea_setDocumentMode (self: QMdiArea; enabled: BOOLEAN; );
 
+<* EXTERNAL QMdiArea_setTabsClosable *>
+PROCEDURE QMdiArea_setTabsClosable (self: QMdiArea; closable: BOOLEAN; );
+
+<* EXTERNAL QMdiArea_tabsClosable *>
+PROCEDURE QMdiArea_tabsClosable (self: QMdiArea; ): BOOLEAN;
+
+<* EXTERNAL QMdiArea_setTabsMovable *>
+PROCEDURE QMdiArea_setTabsMovable (self: QMdiArea; movable: BOOLEAN; );
+
+<* EXTERNAL QMdiArea_tabsMovable *>
+PROCEDURE QMdiArea_tabsMovable (self: QMdiArea; ): BOOLEAN;
+
 <* EXTERNAL QMdiArea_setTabShape *>
 PROCEDURE QMdiArea_setTabShape (self: QMdiArea; shape: C.int; );
 

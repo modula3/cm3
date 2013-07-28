@@ -38,8 +38,10 @@ TYPE
                          orientation     (): Orientation;
                          setInvertedAppearance (invert: BOOLEAN; );
                          invertedAppearance    (): BOOLEAN;
+                         invertedAppearance1   (): BOOLEAN;
                          setTextDirection (textDirection: Direction; );
                          textDirection    (): Direction;
+                         textDirection1   (): Direction;
                          setFormat        (format: TEXT; );
                          format           (): TEXT;
                          reset            ();

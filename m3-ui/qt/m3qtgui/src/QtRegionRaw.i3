@@ -44,6 +44,9 @@ PROCEDURE New_QRegion8 (READONLY bitmap: REFANY; ): QRegion;
 <* EXTERNAL Delete_QRegion *>
 PROCEDURE Delete_QRegion (self: QRegion; );
 
+<* EXTERNAL QRegion_swap *>
+PROCEDURE QRegion_swap (self: QRegion; other: ADDRESS; );
+
 <* EXTERNAL QRegion_isEmpty *>
 PROCEDURE QRegion_isEmpty (self: QRegion; ): BOOLEAN;
 

@@ -9,9 +9,10 @@
 UNSAFE MODULE QtAbstractItemDelegate;
 
 
+FROM QtFontMetrics IMPORT QFontMetrics;
 FROM QtAbstractItemModel IMPORT QModelIndex, QAbstractItemModel;
 FROM QtEvent IMPORT QEvent;
-FROM QGuiStubs IMPORT QFontMetrics, QStyleOptionViewItem, QHelpEvent;
+FROM QGuiStubs IMPORT QStyleOptionViewItem, QHelpEvent;
 FROM QtWidget IMPORT QWidget;
 IMPORT QtAbstractItemDelegateRaw;
 FROM QtNamespace IMPORT TextElideMode;

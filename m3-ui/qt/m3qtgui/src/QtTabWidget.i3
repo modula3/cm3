@@ -63,6 +63,7 @@ TYPE
       setTabShape          (s: TabShape; );
       sizeHint             (): QSize; (* virtual *)
       minimumSizeHint      (): QSize; (* virtual *)
+      heightForWidth       (width: INTEGER; ): INTEGER; (* virtual *)
       setCornerWidget      (w: QWidget; corner: Corner; );
       setCornerWidget1     (w: QWidget; );
       cornerWidget         (corner: Corner; ): QWidget;

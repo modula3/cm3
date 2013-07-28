@@ -11,11 +11,12 @@ UNSAFE MODULE QtTextEdit;
 
 FROM QtFont IMPORT QFont;
 FROM QGuiStubs IMPORT WrapMode, FindFlags, MoveOperation, MoveMode,
-                      QTextDocument, QTextCursor, QTextCharFormat;
+                      QTextDocument, QTextCursor;
 FROM QtColor IMPORT QColor;
 IMPORT QtTextEditRaw;
 FROM QtWidget IMPORT QWidget;
 FROM QtString IMPORT QString;
+FROM QtTextFormat IMPORT QTextCharFormat;
 FROM QtMenu IMPORT QMenu;
 FROM QtPoint IMPORT QPoint;
 FROM QtNamespace IMPORT AlignmentFlag, TextInteractionFlags;
@@ -23,7 +24,6 @@ FROM QtRect IMPORT QRect;
 
 
 IMPORT WeakRef;
-
 FROM QtByteArray IMPORT QByteArray;
 
 PROCEDURE New_QTextEdit0 (self: QTextEdit; parent: QWidget; ): QTextEdit =

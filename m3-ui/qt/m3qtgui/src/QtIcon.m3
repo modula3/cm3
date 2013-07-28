@@ -105,6 +105,14 @@ PROCEDURE Delete_QIcon (self: QIcon; ) =
     QtIconRaw.Delete_QIcon(selfAdr);
   END Delete_QIcon;
 
+PROCEDURE QIcon_swap (self, other: QIcon; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(other.cxxObj, ADDRESS);
+  BEGIN
+    QtIconRaw.QIcon_swap(selfAdr, arg2tmp);
+  END QIcon_swap;
+
 PROCEDURE QIcon_pixmap
   (self: QIcon; size: QSize; mode: Mode; state: State; ): QPixmap =
   VAR
@@ -298,6 +306,23 @@ PROCEDURE QIcon_actualSize2 (self: QIcon; size: QSize; ): QSize =
 
     RETURN result;
   END QIcon_actualSize2;
+
+PROCEDURE QIcon_name (self: QIcon; ): TEXT =
+  VAR
+    ret    : ADDRESS;
+    qstr                := NEW(QString);
+    ba     : QByteArray;
+    result : TEXT;
+    selfAdr: ADDRESS    := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtIconRaw.QIcon_name(selfAdr);
+
+    qstr.cxxObj := ret;
+    ba := qstr.toLocal8Bit();
+    result := ba.data();
+
+    RETURN result;
+  END QIcon_name;
 
 PROCEDURE QIcon_paint (self     : QIcon;
                        painter  : QPainter;
@@ -599,6 +624,7 @@ REVEAL
             init_3       := New_QIcon3;
             init_4       := New_QIcon4;
             init_5       := New_QIcon5;
+            swap         := QIcon_swap;
             pixmap       := QIcon_pixmap;
             pixmap1      := QIcon_pixmap1;
             pixmap2      := QIcon_pixmap2;
@@ -611,6 +637,7 @@ REVEAL
             actualSize   := QIcon_actualSize;
             actualSize1  := QIcon_actualSize1;
             actualSize2  := QIcon_actualSize2;
+            name         := QIcon_name;
             paint        := QIcon_paint;
             paint1       := QIcon_paint1;
             paint2       := QIcon_paint2;

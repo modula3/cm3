@@ -320,6 +320,29 @@ PROCEDURE QWizard_pixmap (self: QWizard; which: WizardPixmap; ): QPixmap =
     RETURN result;
   END QWizard_pixmap;
 
+PROCEDURE QWizard_setSideWidget (self: QWizard; widget: QWidget; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(widget.cxxObj, ADDRESS);
+  BEGIN
+    QtWizardRaw.QWizard_setSideWidget(selfAdr, arg2tmp);
+  END QWizard_setSideWidget;
+
+PROCEDURE QWizard_sideWidget (self: QWizard; ): QWidget =
+  VAR
+    ret    : ADDRESS;
+    result : QWidget;
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtWizardRaw.QWizard_sideWidget(selfAdr);
+
+    result := NEW(QWidget);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END QWizard_sideWidget;
+
 PROCEDURE QWizard_setDefaultProperty
   (self: QWizard; className, property, changedSignal: TEXT; ) =
   VAR
@@ -426,6 +449,8 @@ REVEAL
               subTitleFormat      := QWizard_subTitleFormat;
               setPixmap           := QWizard_setPixmap;
               pixmap              := QWizard_pixmap;
+              setSideWidget       := QWizard_setSideWidget;
+              sideWidget          := QWizard_sideWidget;
               setDefaultProperty  := QWizard_setDefaultProperty;
               setVisible          := QWizard_setVisible;
               sizeHint            := QWizard_sizeHint;

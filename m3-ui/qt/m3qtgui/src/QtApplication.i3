@@ -8,14 +8,16 @@
 
 INTERFACE QtApplication;
 
+FROM QtFontMetrics IMPORT QFontMetrics;
 FROM QtIcon IMPORT QIcon;
 FROM QtSize IMPORT QSize;
 FROM QtFont IMPORT QFont;
 FROM QtStyle IMPORT QStyle;
-FROM QGuiStubs IMPORT QFontMetrics, QCursor, QInputContext;
 FROM QtPalette IMPORT QPalette;
+FROM QtCursor IMPORT QCursor;
 FROM QtWidget IMPORT QWidget;
 FROM QtPoint IMPORT QPoint;
+FROM QtInputContext IMPORT QInputContext;
 FROM QtNamespace IMPORT MouseButtonFlags, UIEffect, KeyboardModifierFlags,
                         LayoutDirection;
 
@@ -79,6 +81,8 @@ PROCEDURE FontMetrics (): QFontMetrics;
 
 PROCEDURE SetWindowIcon (icon: QIcon; );
 
+PROCEDURE WindowIcon (): QIcon;
+
 PROCEDURE ActivePopupWidget (): QWidget;
 
 PROCEDURE ActiveModalWidget (): QWidget;
@@ -106,6 +110,8 @@ PROCEDURE Alert (widget: QWidget; duration: INTEGER; );
 PROCEDURE Alert1 (widget: QWidget; );
 
 PROCEDURE KeyboardModifiers (): KeyboardModifierFlags;
+
+PROCEDURE QueryKeyboardModifiers (): KeyboardModifierFlags;
 
 PROCEDURE MouseButtons (): MouseButtonFlags;
 

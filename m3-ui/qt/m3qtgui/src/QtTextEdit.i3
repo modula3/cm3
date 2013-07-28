@@ -10,9 +10,10 @@ INTERFACE QtTextEdit;
 
 FROM QtFont IMPORT QFont;
 FROM QGuiStubs IMPORT WrapMode, FindFlags, MoveOperation, MoveMode,
-                      QTextDocument, QTextCursor, QTextCharFormat;
+                      QTextDocument, QTextCursor;
 FROM QtColor IMPORT QColor;
 FROM QtWidget IMPORT QWidget;
+FROM QtTextFormat IMPORT QTextCharFormat;
 FROM QtMenu IMPORT QMenu;
 FROM QtPoint IMPORT QPoint;
 FROM QtNamespace IMPORT AlignmentFlag, TextInteractionFlags;

@@ -9,11 +9,12 @@
 UNSAFE MODULE QtStyle;
 
 
+FROM QtFontMetrics IMPORT QFontMetrics;
 FROM QtIcon IMPORT QIcon;
 FROM QtSize IMPORT QSize;
 IMPORT QtStyleRaw;
 FROM QtPixmap IMPORT QPixmap;
-FROM QGuiStubs IMPORT QFontMetrics, QStyleOption, QPainter;
+FROM QGuiStubs IMPORT QStyleOption, QPainter;
 FROM QtPalette IMPORT ColorRole, QPalette;
 FROM QtSizePolicy IMPORT ControlType, ControlTypes;
 FROM QtPoint IMPORT QPoint;

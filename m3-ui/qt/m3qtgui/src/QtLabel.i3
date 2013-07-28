@@ -58,6 +58,10 @@ TYPE
       setOpenExternalLinks    (open: BOOLEAN; );
       setTextInteractionFlags (flags: TextInteractionFlags; );
       textInteractionFlags    (): TextInteractionFlags;
+      setSelection            (arg1, arg2: INTEGER; );
+      hasSelectedText         (): BOOLEAN;
+      selectedText            (): TEXT;
+      selectionStart          (): INTEGER;
       setText                 (arg1: TEXT; );
       setPixmap               (arg1: QPixmap; );
       setPicture              (arg1: QPicture; );

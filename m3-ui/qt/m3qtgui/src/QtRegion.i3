@@ -34,6 +34,7 @@ TYPE
                     init_6 (pa: QPolygon; ): QRegion;
                     init_7 (region: QRegion; ): QRegion;
                     init_8 (bitmap: REFANY; ): QRegion;
+                    swap   (other: QRegion; );
                     isEmpty      (): BOOLEAN;
                     contains     (p: QPoint; ): BOOLEAN;
                     contains1    (r: QRect; ): BOOLEAN;

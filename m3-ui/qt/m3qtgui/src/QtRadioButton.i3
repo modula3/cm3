@@ -21,12 +21,13 @@ TYPE
   QRadioButtonPublic =
     QAbstractButton BRANDED OBJECT
     METHODS
-      init_0     (parent: QWidget; ): QRadioButton;
-      init_1     (): QRadioButton;
-      init_2     (text: TEXT; parent: QWidget; ): QRadioButton;
-      init_3     (text: TEXT; ): QRadioButton;
-      sizeHint   (): QSize;      (* virtual *)
-      destroyCxx ();
+      init_0          (parent: QWidget; ): QRadioButton;
+      init_1          (): QRadioButton;
+      init_2          (text: TEXT; parent: QWidget; ): QRadioButton;
+      init_3          (text: TEXT; ): QRadioButton;
+      sizeHint        (): QSize; (* virtual *)
+      minimumSizeHint (): QSize; (* virtual *)
+      destroyCxx      ();
     END;
 
 

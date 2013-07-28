@@ -46,6 +46,7 @@ TYPE
       intersect   (other: QItemSelectionRange; ): QItemSelectionRange;
       intersected (other: QItemSelectionRange; ): QItemSelectionRange;
       isValid     (): BOOLEAN;
+      isEmpty     (): BOOLEAN;
       indexes     (): QModelIndexList;
       destroyCxx  ();
     END;

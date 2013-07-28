@@ -164,6 +164,13 @@ PROCEDURE QProgressBar_invertedAppearance (self: QProgressBar; ): BOOLEAN =
     RETURN QtProgressBarRaw.QProgressBar_invertedAppearance(selfAdr);
   END QProgressBar_invertedAppearance;
 
+PROCEDURE QProgressBar_invertedAppearance1 (self: QProgressBar; ):
+  BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtProgressBarRaw.QProgressBar_invertedAppearance1(selfAdr);
+  END QProgressBar_invertedAppearance1;
+
 PROCEDURE QProgressBar_setTextDirection
   (self: QProgressBar; textDirection: Direction; ) =
   VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
@@ -182,6 +189,17 @@ PROCEDURE QProgressBar_textDirection (self: QProgressBar; ): Direction =
     result := VAL(ret, Direction);
     RETURN result;
   END QProgressBar_textDirection;
+
+PROCEDURE QProgressBar_textDirection1 (self: QProgressBar; ): Direction =
+  VAR
+    ret    : INTEGER;
+    result : Direction;
+    selfAdr: ADDRESS   := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtProgressBarRaw.QProgressBar_textDirection1(selfAdr);
+    result := VAL(ret, Direction);
+    RETURN result;
+  END QProgressBar_textDirection1;
 
 PROCEDURE QProgressBar_setFormat (self: QProgressBar; format: TEXT; ) =
   VAR
@@ -286,8 +304,10 @@ REVEAL
       orientation           := QProgressBar_orientation;
       setInvertedAppearance := QProgressBar_setInvertedAppearance;
       invertedAppearance    := QProgressBar_invertedAppearance;
+      invertedAppearance1   := QProgressBar_invertedAppearance1;
       setTextDirection      := QProgressBar_setTextDirection;
       textDirection         := QProgressBar_textDirection;
+      textDirection1        := QProgressBar_textDirection1;
       setFormat             := QProgressBar_setFormat;
       format                := QProgressBar_format;
       reset                 := QProgressBar_reset;

@@ -56,6 +56,8 @@ PROCEDURE FromHslF (h, s, l, a: LONGREAL; ): QColor;
 
 PROCEDURE FromHslF1 (h, s, l: LONGREAL; ): QColor;
 
+PROCEDURE IsValidColor (name: TEXT; ): BOOLEAN;
+
 
 TYPE
   QColor <: QColorPublic;

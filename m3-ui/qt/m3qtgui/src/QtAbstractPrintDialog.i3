@@ -20,7 +20,7 @@ TYPE
 
 
 TYPE                             (* Enum PrintRange *)
-  PrintRange = {AllPages, Selection, PageRange};
+  PrintRange = {AllPages, Selection, PageRange, CurrentPage};
 
 CONST                            (* Enum PrintDialogOption *)
   None               = 0;
@@ -30,9 +30,10 @@ CONST                            (* Enum PrintDialogOption *)
   PrintShowPageSize  = 8;
   PrintCollateCopies = 16;
   DontUseSheet       = 32;
+  PrintCurrentPage   = 64;
 
 TYPE                             (* Enum PrintDialogOption *)
-  PrintDialogOption = [0 .. 32];
+  PrintDialogOption = [0 .. 64];
 
 TYPE
   QAbstractPrintDialog <: QAbstractPrintDialogPublic;

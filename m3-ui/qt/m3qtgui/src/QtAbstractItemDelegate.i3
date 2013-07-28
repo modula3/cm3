@@ -8,9 +8,10 @@
 
 INTERFACE QtAbstractItemDelegate;
 
+FROM QtFontMetrics IMPORT QFontMetrics;
 FROM QtAbstractItemModel IMPORT QModelIndex, QAbstractItemModel;
 FROM QtEvent IMPORT QEvent;
-FROM QGuiStubs IMPORT QFontMetrics, QStyleOptionViewItem, QHelpEvent;
+FROM QGuiStubs IMPORT QStyleOptionViewItem, QHelpEvent;
 FROM QtWidget IMPORT QWidget;
 FROM QtNamespace IMPORT TextElideMode;
 FROM QtAbstractItemView IMPORT QAbstractItemView;

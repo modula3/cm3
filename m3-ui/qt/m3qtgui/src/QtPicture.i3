@@ -8,8 +8,9 @@
 
 INTERFACE QtPicture;
 
+FROM QtPaintEngine IMPORT QPaintEngine;
 FROM QtByteArray IMPORT QByteArray;
-FROM QGuiStubs IMPORT QPainter, QPaintEngine, QIODevice;
+FROM QGuiStubs IMPORT QPainter, QIODevice;
 FROM QtRect IMPORT QRect;
 
 
@@ -42,6 +43,7 @@ TYPE
                      save3   (fileName: TEXT; ): BOOLEAN;
                      boundingRect    (): QRect;
                      setBoundingRect (r: QRect; );
+                     swap            (other: QPicture; );
                      detach          ();
                      isDetached      (): BOOLEAN;
                      paintEngine     (): QPaintEngine; (* virtual *)

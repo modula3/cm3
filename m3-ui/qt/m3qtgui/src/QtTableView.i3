@@ -32,6 +32,7 @@ TYPE
       setModel     (model: QAbstractItemModel; ); (* virtual *)
       setRootIndex (index: QModelIndex; ); (* virtual *)
       setSelectionModel (selectionModel: QItemSelectionModel; ); (* virtual *)
+      doItemsLayout          (); (* virtual *)
       horizontalHeader       (): QHeaderView;
       verticalHeader         (): QHeaderView;
       setHorizontalHeader    (header: QHeaderView; );

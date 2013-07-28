@@ -111,6 +111,9 @@ PROCEDURE FontMetrics (): ADDRESS;
 <* EXTERNAL SetWindowIcon *>
 PROCEDURE SetWindowIcon (icon: ADDRESS; );
 
+<* EXTERNAL WindowIcon *>
+PROCEDURE WindowIcon (): ADDRESS;
+
 <* EXTERNAL ActivePopupWidget *>
 PROCEDURE ActivePopupWidget (): ADDRESS;
 
@@ -152,6 +155,9 @@ PROCEDURE Alert1 (widget: ADDRESS; );
 
 <* EXTERNAL KeyboardModifiers *>
 PROCEDURE KeyboardModifiers (): C.int;
+
+<* EXTERNAL QueryKeyboardModifiers *>
+PROCEDURE QueryKeyboardModifiers (): C.int;
 
 <* EXTERNAL MouseButtons *>
 PROCEDURE MouseButtons (): C.int;

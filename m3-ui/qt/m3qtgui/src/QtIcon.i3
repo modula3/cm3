@@ -52,6 +52,7 @@ TYPE
       init_3      (fileName: TEXT; ): QIcon;
       init_4      (engine: QIconEngine; ): QIcon;
       init_5      (engine: QIconEngineV2; ): QIcon;
+      swap        (other: QIcon; );
       pixmap      (size: QSize; mode: Mode; state: State; ): QPixmap;
       pixmap1     (size: QSize; mode: Mode; ): QPixmap;
       pixmap2     (size: QSize; ): QPixmap;
@@ -64,6 +65,7 @@ TYPE
       actualSize  (size: QSize; mode: Mode; state: State; ): QSize;
       actualSize1 (size: QSize; mode: Mode; ): QSize;
       actualSize2 (size: QSize; ): QSize;
+      name        (): TEXT;
       paint (painter  : QPainter;
              rect     : QRect;
              alignment: AlignmentFlag;

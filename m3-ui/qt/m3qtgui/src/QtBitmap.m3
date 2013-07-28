@@ -109,6 +109,14 @@ PROCEDURE Delete_QBitmap (self: QBitmap; ) =
     QtBitmapRaw.Delete_QBitmap(selfAdr);
   END Delete_QBitmap;
 
+PROCEDURE QBitmap_swap (self, other: QBitmap; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(other.cxxObj, ADDRESS);
+  BEGIN
+    QtBitmapRaw.QBitmap_swap(selfAdr, arg2tmp);
+  END QBitmap_swap;
+
 PROCEDURE QBitmap_clear (self: QBitmap; ) =
   VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
   BEGIN
@@ -146,15 +154,14 @@ PROCEDURE FromBitmapImage1 (image: QImage; ): QBitmap =
     RETURN result;
   END FromBitmapImage1;
 
-PROCEDURE FromData
-  (size: QSize; bits: UNTRACED REF CHAR; monoFormat: Format; ): QBitmap =
+PROCEDURE FromData (size: QSize; bits: ADDRESS; monoFormat: Format; ):
+  QBitmap =
   VAR
     ret    : ADDRESS;
     result : QBitmap;
     arg1tmp          := LOOPHOLE(size.cxxObj, ADDRESS);
-    arg2tmp          := LOOPHOLE(bits, ADDRESS);
   BEGIN
-    ret := QtBitmapRaw.FromData(arg1tmp, arg2tmp, ORD(monoFormat));
+    ret := QtBitmapRaw.FromData(arg1tmp, bits, ORD(monoFormat));
 
     result := NEW(QBitmap);
     result.cxxObj := ret;
@@ -163,14 +170,13 @@ PROCEDURE FromData
     RETURN result;
   END FromData;
 
-PROCEDURE FromData1 (size: QSize; bits: UNTRACED REF CHAR; ): QBitmap =
+PROCEDURE FromData1 (size: QSize; bits: ADDRESS; ): QBitmap =
   VAR
     ret    : ADDRESS;
     result : QBitmap;
     arg1tmp          := LOOPHOLE(size.cxxObj, ADDRESS);
-    arg2tmp          := LOOPHOLE(bits, ADDRESS);
   BEGIN
-    ret := QtBitmapRaw.FromData1(arg1tmp, arg2tmp);
+    ret := QtBitmapRaw.FromData1(arg1tmp, bits);
 
     result := NEW(QBitmap);
     result.cxxObj := ret;
@@ -241,6 +247,7 @@ REVEAL
               init_3       := New_QBitmap3;
               init_4       := New_QBitmap4;
               init_5       := New_QBitmap5;
+              swap         := QBitmap_swap;
               clear        := QBitmap_clear;
               transformed  := QBitmap_transformed;
               transformed1 := QBitmap_transformed1;

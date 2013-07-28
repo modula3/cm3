@@ -16,20 +16,23 @@ FROM QtNamespace IMPORT WindowTypes, GestureFlags, WindowStates,
                         FocusReason;
 FROM QtFont IMPORT QFont;
 FROM QtBitmap IMPORT QBitmap;
-FROM QGuiStubs IMPORT QFontMetrics, QLocale, QFontInfo, QPaintEngine,
-                      QGraphicsEffect, QWindowSurface, QCursor,
-                      QGraphicsProxyWidget, QInputContext;
-FROM QtByteArray IMPORT QByteArray;
+FROM QGuiStubs IMPORT QLocale, QGraphicsEffect, QWindowSurface,
+                      QGraphicsProxyWidget;
+FROM QtPaintEngine IMPORT QPaintEngine;
 FROM QtSize IMPORT QSize;
+FROM QtByteArray IMPORT QByteArray;
 FROM QtSizePolicy IMPORT Policy, QSizePolicy;
 FROM QtMargins IMPORT QMargins;
 FROM QtRect IMPORT QRect;
+FROM QtCursor IMPORT QCursor;
 FROM QtIcon IMPORT QIcon;
 FROM QtPalette IMPORT ColorRole, QPalette;
 FROM QtStyle IMPORT QStyle;
 FROM QtKeySequence IMPORT QKeySequence;
 FROM QtRegion IMPORT QRegion;
 FROM QtAction IMPORT QAction;
+FROM QtFontInfo IMPORT QFontInfo;
+FROM QtFontMetrics IMPORT QFontMetrics;
 
 
 FROM QtObject IMPORT QObject;
@@ -285,8 +288,8 @@ TYPE
       testAttribute          (arg1: WidgetAttribute; ): BOOLEAN;
       paintEngine            (): QPaintEngine; (* virtual *)
       ensurePolished         ();
-      inputContext           (): QInputContext;
-      setInputContext        (arg1: QInputContext; );
+      inputContext           (): REFANY;
+      setInputContext        (arg1: REFANY; );
       isAncestorOf           (child: QWidget; ): BOOLEAN;
       autoFillBackground     (): BOOLEAN;
       setAutoFillBackground  (enabled: BOOLEAN; );

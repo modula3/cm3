@@ -35,6 +35,9 @@ PROCEDURE New_QIcon5 (engine: ADDRESS; ): QIcon;
 <* EXTERNAL Delete_QIcon *>
 PROCEDURE Delete_QIcon (self: QIcon; );
 
+<* EXTERNAL QIcon_swap *>
+PROCEDURE QIcon_swap (self: QIcon; other: ADDRESS; );
+
 <* EXTERNAL QIcon_pixmap *>
 PROCEDURE QIcon_pixmap (self: QIcon; size: ADDRESS; mode, state: C.int; ):
   ADDRESS;
@@ -75,6 +78,9 @@ PROCEDURE QIcon_actualSize1 (self: QIcon; size: ADDRESS; mode: C.int; ):
 
 <* EXTERNAL QIcon_actualSize2 *>
 PROCEDURE QIcon_actualSize2 (self: QIcon; size: ADDRESS; ): ADDRESS;
+
+<* EXTERNAL QIcon_name *>
+PROCEDURE QIcon_name (self: QIcon; ): ADDRESS;
 
 <* EXTERNAL QIcon_paint *>
 PROCEDURE QIcon_paint

@@ -174,7 +174,7 @@ PROCEDURE QPalette_resolve (self: QPalette; arg2: ADDRESS; ): ADDRESS;
 PROCEDURE QPalette_resolve1 (self: QPalette; ): C.unsigned_int;
 
 <* EXTERNAL QPalette_resolve2 *>
-PROCEDURE QPalette_resolve2 (self: QPalette; mask: CARDINAL; );
+PROCEDURE QPalette_resolve2 (self: QPalette; mask: C.unsigned_int; );
 
 TYPE QPalette <: ADDRESS;
 

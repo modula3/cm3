@@ -56,6 +56,9 @@ PROCEDURE Delete_QBrush (self: QBrush; );
 <* EXTERNAL QBrush_Op_Brush_Assign *>
 PROCEDURE QBrush_Op_Brush_Assign (self: QBrush; brush: ADDRESS; ): ADDRESS;
 
+<* EXTERNAL QBrush_swap *>
+PROCEDURE QBrush_swap (self: QBrush; other: ADDRESS; );
+
 <* EXTERNAL QBrush_style *>
 PROCEDURE QBrush_style (self: QBrush; ): C.int;
 
@@ -221,6 +224,16 @@ PROCEDURE New_QRadialGradient3 (center: ADDRESS; radius: C.double; ):
 PROCEDURE New_QRadialGradient4 (cx, cy, radius: C.double; ):
   QRadialGradient;
 
+<* EXTERNAL New_QRadialGradient5 *>
+PROCEDURE New_QRadialGradient5 (center      : ADDRESS;
+                                centerRadius: C.double;
+                                focalPoint  : ADDRESS;
+                                focalRadius : C.double; ): QRadialGradient;
+
+<* EXTERNAL New_QRadialGradient6 *>
+PROCEDURE New_QRadialGradient6
+  (cx, cy, centerRadius, fx, fy, focalRadius: C.double; ): QRadialGradient;
+
 <* EXTERNAL QRadialGradient_center *>
 PROCEDURE QRadialGradient_center (self: QRadialGradient; ): ADDRESS;
 
@@ -248,6 +261,20 @@ PROCEDURE QRadialGradient_radius (self: QRadialGradient; ): C.double;
 
 <* EXTERNAL QRadialGradient_setRadius *>
 PROCEDURE QRadialGradient_setRadius
+  (self: QRadialGradient; radius: C.double; );
+
+<* EXTERNAL QRadialGradient_centerRadius *>
+PROCEDURE QRadialGradient_centerRadius (self: QRadialGradient; ): C.double;
+
+<* EXTERNAL QRadialGradient_setCenterRadius *>
+PROCEDURE QRadialGradient_setCenterRadius
+  (self: QRadialGradient; radius: C.double; );
+
+<* EXTERNAL QRadialGradient_focalRadius *>
+PROCEDURE QRadialGradient_focalRadius (self: QRadialGradient; ): C.double;
+
+<* EXTERNAL QRadialGradient_setFocalRadius *>
+PROCEDURE QRadialGradient_setFocalRadius
   (self: QRadialGradient; radius: C.double; );
 
 <* EXTERNAL Delete_QRadialGradient *>

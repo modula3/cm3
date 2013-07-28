@@ -77,6 +77,9 @@ PROCEDURE QItemSelectionRange_intersected (self, other: ADDRESS; ):
 <* EXTERNAL QItemSelectionRange_isValid *>
 PROCEDURE QItemSelectionRange_isValid (self: ADDRESS; ): BOOLEAN;
 
+<* EXTERNAL QItemSelectionRange_isEmpty *>
+PROCEDURE QItemSelectionRange_isEmpty (self: ADDRESS; ): BOOLEAN;
+
 <* EXTERNAL QItemSelectionRange_indexes *>
 PROCEDURE QItemSelectionRange_indexes (self: ADDRESS; ): ADDRESS;
 

@@ -28,6 +28,9 @@ PROCEDURE New_QRadioButton3 (text: ADDRESS; ): QRadioButton;
 <* EXTERNAL QRadioButton_sizeHint *>
 PROCEDURE QRadioButton_sizeHint (self: QRadioButton; ): ADDRESS;
 
+<* EXTERNAL QRadioButton_minimumSizeHint *>
+PROCEDURE QRadioButton_minimumSizeHint (self: QRadioButton; ): ADDRESS;
+
 <* EXTERNAL Delete_QRadioButton *>
 PROCEDURE Delete_QRadioButton (self: QRadioButton; );
 

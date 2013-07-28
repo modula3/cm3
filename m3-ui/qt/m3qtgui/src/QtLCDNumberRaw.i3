@@ -21,11 +21,11 @@ PROCEDURE New_QLCDNumber0 (parent: ADDRESS; ): QLCDNumber;
 PROCEDURE New_QLCDNumber1 (): QLCDNumber;
 
 <* EXTERNAL New_QLCDNumber2 *>
-PROCEDURE New_QLCDNumber2 (numDigits: CARDINAL; parent: ADDRESS; ):
+PROCEDURE New_QLCDNumber2 (numDigits: C.unsigned_int; parent: ADDRESS; ):
   QLCDNumber;
 
 <* EXTERNAL New_QLCDNumber3 *>
-PROCEDURE New_QLCDNumber3 (numDigits: CARDINAL; ): QLCDNumber;
+PROCEDURE New_QLCDNumber3 (numDigits: C.unsigned_int; ): QLCDNumber;
 
 <* EXTERNAL Delete_QLCDNumber *>
 PROCEDURE Delete_QLCDNumber (self: QLCDNumber; );

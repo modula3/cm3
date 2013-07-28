@@ -113,6 +113,12 @@ PROCEDURE QWizard_setPixmap
 <* EXTERNAL QWizard_pixmap *>
 PROCEDURE QWizard_pixmap (self: QWizard; which: C.int; ): ADDRESS;
 
+<* EXTERNAL QWizard_setSideWidget *>
+PROCEDURE QWizard_setSideWidget (self: QWizard; widget: ADDRESS; );
+
+<* EXTERNAL QWizard_sideWidget *>
+PROCEDURE QWizard_sideWidget (self: QWizard; ): ADDRESS;
+
 <* EXTERNAL QWizard_setDefaultProperty *>
 PROCEDURE QWizard_setDefaultProperty
   (self: QWizard; className, property, changedSignal: C.char_star; );

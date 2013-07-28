@@ -40,7 +40,7 @@ PROCEDURE QPicture_data (self: QPicture; ): C.char_star;
 
 <* EXTERNAL QPicture_setData *>
 PROCEDURE QPicture_setData
-  (self: QPicture; data: C.char_star; size: CARDINAL; );
+  (self: QPicture; data: C.char_star; size: C.unsigned_int; );
 
 <* EXTERNAL QPicture_play *>
 PROCEDURE QPicture_play (self: QPicture; p: ADDRESS; ): BOOLEAN;
@@ -78,6 +78,9 @@ PROCEDURE QPicture_boundingRect (self: QPicture; ): ADDRESS;
 
 <* EXTERNAL QPicture_setBoundingRect *>
 PROCEDURE QPicture_setBoundingRect (self: QPicture; r: ADDRESS; );
+
+<* EXTERNAL QPicture_swap *>
+PROCEDURE QPicture_swap (self: QPicture; other: ADDRESS; );
 
 <* EXTERNAL QPicture_detach *>
 PROCEDURE QPicture_detach (self: QPicture; );

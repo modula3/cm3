@@ -150,6 +150,32 @@ PROCEDURE QFont_setFamily (self: QFont; arg2: TEXT; ) =
     QtFontRaw.QFont_setFamily(selfAdr, arg2tmp);
   END QFont_setFamily;
 
+PROCEDURE QFont_styleName (self: QFont; ): TEXT =
+  VAR
+    ret    : ADDRESS;
+    qstr                := NEW(QString);
+    ba     : QByteArray;
+    result : TEXT;
+    selfAdr: ADDRESS    := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtFontRaw.QFont_styleName(selfAdr);
+
+    qstr.cxxObj := ret;
+    ba := qstr.toLocal8Bit();
+    result := ba.data();
+
+    RETURN result;
+  END QFont_styleName;
+
+PROCEDURE QFont_setStyleName (self: QFont; arg2: TEXT; ) =
+  VAR
+    selfAdr  : ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    qstr_arg2          := NEW(QString).initQString(arg2);
+    arg2tmp            := LOOPHOLE(qstr_arg2.cxxObj, ADDRESS);
+  BEGIN
+    QtFontRaw.QFont_setStyleName(selfAdr, arg2tmp);
+  END QFont_setStyleName;
+
 PROCEDURE QFont_pointSize (self: QFont; ): INTEGER =
   VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
   BEGIN
@@ -405,6 +431,24 @@ PROCEDURE QFont_capitalization (self: QFont; ): Capitalization =
     RETURN result;
   END QFont_capitalization;
 
+PROCEDURE QFont_setHintingPreference
+  (self: QFont; hintingPreference: HintingPreference; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtFontRaw.QFont_setHintingPreference(selfAdr, ORD(hintingPreference));
+  END QFont_setHintingPreference;
+
+PROCEDURE QFont_hintingPreference (self: QFont; ): HintingPreference =
+  VAR
+    ret    : INTEGER;
+    result : HintingPreference;
+    selfAdr: ADDRESS           := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtFontRaw.QFont_hintingPreference(selfAdr);
+    result := VAL(ret, HintingPreference);
+    RETURN result;
+  END QFont_hintingPreference;
+
 PROCEDURE QFont_rawMode (self: QFont; ): BOOLEAN =
   VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
   BEGIN
@@ -562,6 +606,36 @@ PROCEDURE Substitute (arg1: TEXT; ): TEXT =
     RETURN result;
   END Substitute;
 
+PROCEDURE Substitutes (arg1: TEXT; ): QStringList =
+  VAR
+    ret      : ADDRESS;
+    result   : QStringList;
+    qstr_arg1              := NEW(QString).initQString(arg1);
+    arg1tmp                := LOOPHOLE(qstr_arg1.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtFontRaw.Substitutes(arg1tmp);
+
+    result := NEW(QStringList);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END Substitutes;
+
+PROCEDURE Substitutions (): QStringList =
+  VAR
+    ret   : ADDRESS;
+    result: QStringList;
+  BEGIN
+    ret := QtFontRaw.Substitutions();
+
+    result := NEW(QStringList);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END Substitutions;
+
 PROCEDURE InsertSubstitution (arg1, arg2: TEXT; ) =
   VAR
     qstr_arg1 := NEW(QString).initQString(arg1);
@@ -698,73 +772,77 @@ PROCEDURE Destroy_QFont (self: QFont) =
 REVEAL
   QFont = QFontPublic BRANDED OBJECT
           OVERRIDES
-            init_0            := New_QFont0;
-            init_1            := New_QFont1;
-            init_2            := New_QFont2;
-            init_3            := New_QFont3;
-            init_4            := New_QFont4;
-            init_5            := New_QFont5;
-            init_6            := New_QFont6;
-            family            := QFont_family;
-            setFamily         := QFont_setFamily;
-            pointSize         := QFont_pointSize;
-            setPointSize      := QFont_setPointSize;
-            pointSizeF        := QFont_pointSizeF;
-            setPointSizeF     := QFont_setPointSizeF;
-            pixelSize         := QFont_pixelSize;
-            setPixelSize      := QFont_setPixelSize;
-            weight            := QFont_weight;
-            setWeight         := QFont_setWeight;
-            bold              := QFont_bold;
-            setBold           := QFont_setBold;
-            setStyle          := QFont_setStyle;
-            style             := QFont_style;
-            italic            := QFont_italic;
-            setItalic         := QFont_setItalic;
-            underline         := QFont_underline;
-            setUnderline      := QFont_setUnderline;
-            overline          := QFont_overline;
-            setOverline       := QFont_setOverline;
-            strikeOut         := QFont_strikeOut;
-            setStrikeOut      := QFont_setStrikeOut;
-            fixedPitch        := QFont_fixedPitch;
-            setFixedPitch     := QFont_setFixedPitch;
-            kerning           := QFont_kerning;
-            setKerning        := QFont_setKerning;
-            styleHint         := QFont_styleHint;
-            styleStrategy     := QFont_styleStrategy;
-            setStyleHint      := QFont_setStyleHint;
-            setStyleHint1     := QFont_setStyleHint1;
-            setStyleStrategy  := QFont_setStyleStrategy;
-            stretch           := QFont_stretch;
-            setStretch        := QFont_setStretch;
-            letterSpacing     := QFont_letterSpacing;
-            letterSpacingType := QFont_letterSpacingType;
-            setLetterSpacing  := QFont_setLetterSpacing;
-            wordSpacing       := QFont_wordSpacing;
-            setWordSpacing    := QFont_setWordSpacing;
-            setCapitalization := QFont_setCapitalization;
-            capitalization    := QFont_capitalization;
-            rawMode           := QFont_rawMode;
-            setRawMode        := QFont_setRawMode;
-            exactMatch        := QFont_exactMatch;
-            Op_Assign         := QFont_Op_Assign;
-            Op_Equals         := QFont_Op_Equals;
-            Op_NotEquals      := QFont_Op_NotEquals;
-            Op_LessThan       := QFont_Op_LessThan;
-            isCopyOf          := QFont_isCopyOf;
-            setRawName        := QFont_setRawName;
-            rawName           := QFont_rawName;
-            key               := QFont_key;
-            toString          := QFont_toString;
-            fromString        := QFont_fromString;
-            defaultFamily     := QFont_defaultFamily;
-            lastResortFamily  := QFont_lastResortFamily;
-            lastResortFont    := QFont_lastResortFont;
-            resolve           := QFont_resolve;
-            resolve1          := QFont_resolve1;
-            resolve2          := QFont_resolve2;
-            destroyCxx        := Destroy_QFont;
+            init_0               := New_QFont0;
+            init_1               := New_QFont1;
+            init_2               := New_QFont2;
+            init_3               := New_QFont3;
+            init_4               := New_QFont4;
+            init_5               := New_QFont5;
+            init_6               := New_QFont6;
+            family               := QFont_family;
+            setFamily            := QFont_setFamily;
+            styleName            := QFont_styleName;
+            setStyleName         := QFont_setStyleName;
+            pointSize            := QFont_pointSize;
+            setPointSize         := QFont_setPointSize;
+            pointSizeF           := QFont_pointSizeF;
+            setPointSizeF        := QFont_setPointSizeF;
+            pixelSize            := QFont_pixelSize;
+            setPixelSize         := QFont_setPixelSize;
+            weight               := QFont_weight;
+            setWeight            := QFont_setWeight;
+            bold                 := QFont_bold;
+            setBold              := QFont_setBold;
+            setStyle             := QFont_setStyle;
+            style                := QFont_style;
+            italic               := QFont_italic;
+            setItalic            := QFont_setItalic;
+            underline            := QFont_underline;
+            setUnderline         := QFont_setUnderline;
+            overline             := QFont_overline;
+            setOverline          := QFont_setOverline;
+            strikeOut            := QFont_strikeOut;
+            setStrikeOut         := QFont_setStrikeOut;
+            fixedPitch           := QFont_fixedPitch;
+            setFixedPitch        := QFont_setFixedPitch;
+            kerning              := QFont_kerning;
+            setKerning           := QFont_setKerning;
+            styleHint            := QFont_styleHint;
+            styleStrategy        := QFont_styleStrategy;
+            setStyleHint         := QFont_setStyleHint;
+            setStyleHint1        := QFont_setStyleHint1;
+            setStyleStrategy     := QFont_setStyleStrategy;
+            stretch              := QFont_stretch;
+            setStretch           := QFont_setStretch;
+            letterSpacing        := QFont_letterSpacing;
+            letterSpacingType    := QFont_letterSpacingType;
+            setLetterSpacing     := QFont_setLetterSpacing;
+            wordSpacing          := QFont_wordSpacing;
+            setWordSpacing       := QFont_setWordSpacing;
+            setCapitalization    := QFont_setCapitalization;
+            capitalization       := QFont_capitalization;
+            setHintingPreference := QFont_setHintingPreference;
+            hintingPreference    := QFont_hintingPreference;
+            rawMode              := QFont_rawMode;
+            setRawMode           := QFont_setRawMode;
+            exactMatch           := QFont_exactMatch;
+            Op_Assign            := QFont_Op_Assign;
+            Op_Equals            := QFont_Op_Equals;
+            Op_NotEquals         := QFont_Op_NotEquals;
+            Op_LessThan          := QFont_Op_LessThan;
+            isCopyOf             := QFont_isCopyOf;
+            setRawName           := QFont_setRawName;
+            rawName              := QFont_rawName;
+            key                  := QFont_key;
+            toString             := QFont_toString;
+            fromString           := QFont_fromString;
+            defaultFamily        := QFont_defaultFamily;
+            lastResortFamily     := QFont_lastResortFamily;
+            lastResortFont       := QFont_lastResortFont;
+            resolve              := QFont_resolve;
+            resolve1             := QFont_resolve1;
+            resolve2             := QFont_resolve2;
+            destroyCxx           := Destroy_QFont;
           END;
 
 

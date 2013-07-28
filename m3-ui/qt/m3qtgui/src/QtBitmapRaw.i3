@@ -35,6 +35,9 @@ PROCEDURE New_QBitmap5 (fileName: ADDRESS; ): QBitmap;
 <* EXTERNAL Delete_QBitmap *>
 PROCEDURE Delete_QBitmap (self: QBitmap; );
 
+<* EXTERNAL QBitmap_swap *>
+PROCEDURE QBitmap_swap (self: QBitmap; other: ADDRESS; );
+
 <* EXTERNAL QBitmap_clear *>
 PROCEDURE QBitmap_clear (self: QBitmap; );
 

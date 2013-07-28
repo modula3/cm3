@@ -389,6 +389,9 @@ PROCEDURE QColor_Op_Equals (self: QColor; c: ADDRESS; ): BOOLEAN;
 <* EXTERNAL QColor_Op_NotEquals *>
 PROCEDURE QColor_Op_NotEquals (self: QColor; c: ADDRESS; ): BOOLEAN;
 
+<* EXTERNAL IsValidColor *>
+PROCEDURE IsValidColor (name: ADDRESS; ): BOOLEAN;
+
 <* EXTERNAL Delete_QColor *>
 PROCEDURE Delete_QColor (self: QColor; );
 
