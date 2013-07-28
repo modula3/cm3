@@ -9,24 +9,26 @@
 UNSAFE MODULE QtApplication;
 
 
-FROM QtIcon IMPORT QIcon;
-FROM QtSize IMPORT QSize;
-FROM QtFont IMPORT QFont;
-FROM QtStyle IMPORT QStyle;
-FROM QGuiStubs IMPORT QFontMetrics, QCursor, QInputContext;
-FROM QtPalette IMPORT QPalette;
-IMPORT M3toC;
-FROM QtString IMPORT QString;
-IMPORT Ctypes AS C;
-FROM QtWidget IMPORT QWidget;
-IMPORT QtApplicationRaw;
 FROM QtPoint IMPORT QPoint;
+FROM QtInputContext IMPORT QInputContext;
 FROM QtNamespace IMPORT MouseButtonFlags, UIEffect, KeyboardModifierFlags,
                         LayoutDirection;
+FROM QtFont IMPORT QFont;
+IMPORT QtApplicationRaw;
+FROM QtSize IMPORT QSize;
+FROM QtCursor IMPORT QCursor;
+FROM QtIcon IMPORT QIcon;
+FROM QtPalette IMPORT QPalette;
+FROM QtStyle IMPORT QStyle;
+FROM QtWidget IMPORT QWidget;
+IMPORT M3toC;
+IMPORT Ctypes AS C;
+FROM QtFontMetrics IMPORT QFontMetrics;
 
 
 IMPORT WeakRef;
 FROM QtByteArray IMPORT QByteArray;
+FROM QtString IMPORT QString;
 
 VAR
   m3argc: C.int;
@@ -406,6 +408,20 @@ PROCEDURE SetWindowIcon (icon: QIcon; ) =
     QtApplicationRaw.SetWindowIcon(arg1tmp);
   END SetWindowIcon;
 
+PROCEDURE WindowIcon (): QIcon =
+  VAR
+    ret   : ADDRESS;
+    result: QIcon;
+  BEGIN
+    ret := QtApplicationRaw.WindowIcon();
+
+    result := NEW(QIcon);
+    result.cxxObj := ret;
+    result.destroyCxx();
+
+    RETURN result;
+  END WindowIcon;
+
 PROCEDURE ActivePopupWidget (): QWidget =
   VAR
     ret   : ADDRESS;
@@ -557,6 +573,16 @@ PROCEDURE KeyboardModifiers (): KeyboardModifierFlags =
     result := VAL(ret, KeyboardModifierFlags);
     RETURN result;
   END KeyboardModifiers;
+
+PROCEDURE QueryKeyboardModifiers (): KeyboardModifierFlags =
+  VAR
+    ret   : INTEGER;
+    result: KeyboardModifierFlags;
+  BEGIN
+    ret := QtApplicationRaw.QueryKeyboardModifiers();
+    result := VAL(ret, KeyboardModifierFlags);
+    RETURN result;
+  END QueryKeyboardModifiers;
 
 PROCEDURE MouseButtons (): MouseButtonFlags =
   VAR

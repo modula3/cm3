@@ -33,6 +33,9 @@ PROCEDURE QTableView_setRootIndex (self: QTableView; index: ADDRESS; );
 PROCEDURE QTableView_setSelectionModel
   (self: QTableView; selectionModel: ADDRESS; );
 
+<* EXTERNAL QTableView_doItemsLayout *>
+PROCEDURE QTableView_doItemsLayout (self: QTableView; );
+
 <* EXTERNAL QTableView_horizontalHeader *>
 PROCEDURE QTableView_horizontalHeader (self: QTableView; ): ADDRESS;
 

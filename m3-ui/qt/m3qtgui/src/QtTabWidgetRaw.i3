@@ -126,6 +126,10 @@ PROCEDURE QTabWidget_sizeHint (self: QTabWidget; ): ADDRESS;
 <* EXTERNAL QTabWidget_minimumSizeHint *>
 PROCEDURE QTabWidget_minimumSizeHint (self: QTabWidget; ): ADDRESS;
 
+<* EXTERNAL QTabWidget_heightForWidth *>
+PROCEDURE QTabWidget_heightForWidth (self: QTabWidget; width: C.int; ):
+  C.int;
+
 <* EXTERNAL QTabWidget_setCornerWidget *>
 PROCEDURE QTabWidget_setCornerWidget
   (self: QTabWidget; w: ADDRESS; corner: C.int; );

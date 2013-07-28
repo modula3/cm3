@@ -10,8 +10,8 @@ INTERFACE QtCalendarWidget;
 
 FROM QtSize IMPORT QSize;
 FROM QtDateTime IMPORT QDate;
-FROM QGuiStubs IMPORT QTextCharFormat;
 FROM QtWidget IMPORT QWidget;
+FROM QtTextFormat IMPORT QTextCharFormat;
 FROM QtNamespace IMPORT DayOfWeek;
 
 

@@ -130,6 +130,18 @@ PROCEDURE QSizePolicy_hasHeightForWidth (self: QSizePolicy; ): BOOLEAN =
     RETURN QtSizePolicyRaw.QSizePolicy_hasHeightForWidth(selfAdr);
   END QSizePolicy_hasHeightForWidth;
 
+PROCEDURE QSizePolicy_setWidthForHeight (self: QSizePolicy; b: BOOLEAN; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtSizePolicyRaw.QSizePolicy_setWidthForHeight(selfAdr, b);
+  END QSizePolicy_setWidthForHeight;
+
+PROCEDURE QSizePolicy_hasWidthForHeight (self: QSizePolicy; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtSizePolicyRaw.QSizePolicy_hasWidthForHeight(selfAdr);
+  END QSizePolicy_hasWidthForHeight;
+
 PROCEDURE QSizePolicy_horizontalStretch (self: QSizePolicy; ): INTEGER =
   VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
   BEGIN
@@ -147,14 +159,15 @@ PROCEDURE QSizePolicy_setHorizontalStretch
   VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
   BEGIN
     QtSizePolicyRaw.QSizePolicy_setHorizontalStretch(
-      selfAdr, stretchFactor);
+      selfAdr, ORD(stretchFactor));
   END QSizePolicy_setHorizontalStretch;
 
 PROCEDURE QSizePolicy_setVerticalStretch
   (self: QSizePolicy; stretchFactor: CHAR; ) =
   VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
   BEGIN
-    QtSizePolicyRaw.QSizePolicy_setVerticalStretch(selfAdr, stretchFactor);
+    QtSizePolicyRaw.QSizePolicy_setVerticalStretch(
+      selfAdr, ORD(stretchFactor));
   END QSizePolicy_setVerticalStretch;
 
 PROCEDURE QSizePolicy_transpose (self: QSizePolicy; ) =
@@ -196,6 +209,8 @@ REVEAL
                   expandingDirections  := QSizePolicy_expandingDirections;
                   setHeightForWidth    := QSizePolicy_setHeightForWidth;
                   hasHeightForWidth    := QSizePolicy_hasHeightForWidth;
+                  setWidthForHeight    := QSizePolicy_setWidthForHeight;
+                  hasWidthForHeight    := QSizePolicy_hasWidthForHeight;
                   horizontalStretch    := QSizePolicy_horizontalStretch;
                   verticalStretch      := QSizePolicy_verticalStretch;
                   setHorizontalStretch := QSizePolicy_setHorizontalStretch;

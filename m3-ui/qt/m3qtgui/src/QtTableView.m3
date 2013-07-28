@@ -79,6 +79,12 @@ PROCEDURE QTableView_setSelectionModel
     QtTableViewRaw.QTableView_setSelectionModel(selfAdr, arg2tmp);
   END QTableView_setSelectionModel;
 
+PROCEDURE QTableView_doItemsLayout (self: QTableView; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtTableViewRaw.QTableView_doItemsLayout(selfAdr);
+  END QTableView_doItemsLayout;
+
 PROCEDURE QTableView_horizontalHeader (self: QTableView; ): QHeaderView =
   VAR
     ret    : ADDRESS;
@@ -435,6 +441,7 @@ REVEAL
       setModel                := QTableView_setModel;
       setRootIndex            := QTableView_setRootIndex;
       setSelectionModel       := QTableView_setSelectionModel;
+      doItemsLayout           := QTableView_doItemsLayout;
       horizontalHeader        := QTableView_horizontalHeader;
       verticalHeader          := QTableView_verticalHeader;
       setHorizontalHeader     := QTableView_setHorizontalHeader;

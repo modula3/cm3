@@ -60,6 +60,10 @@ TYPE
       viewMode                  (): ViewMode;
       documentMode              (): BOOLEAN;
       setDocumentMode           (enabled: BOOLEAN; );
+      setTabsClosable           (closable: BOOLEAN; );
+      tabsClosable              (): BOOLEAN;
+      setTabsMovable            (movable: BOOLEAN; );
+      tabsMovable               (): BOOLEAN;
       setTabShape               (shape: TabShape; );
       tabShape                  (): TabShape;
       setTabPosition            (position: TabPosition; );

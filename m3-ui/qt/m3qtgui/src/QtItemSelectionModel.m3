@@ -255,6 +255,13 @@ PROCEDURE QItemSelectionRange_isValid (self: QItemSelectionRange; ):
     RETURN QtItemSelectionModelRaw.QItemSelectionRange_isValid(arg1tmp);
   END QItemSelectionRange_isValid;
 
+PROCEDURE QItemSelectionRange_isEmpty (self: QItemSelectionRange; ):
+  BOOLEAN =
+  VAR arg1tmp := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtItemSelectionModelRaw.QItemSelectionRange_isEmpty(arg1tmp);
+  END QItemSelectionRange_isEmpty;
+
 PROCEDURE QItemSelectionRange_indexes (self: QItemSelectionRange; ):
   QModelIndexList =
   VAR
@@ -312,6 +319,7 @@ REVEAL
                           intersect   := QItemSelectionRange_intersect;
                           intersected := QItemSelectionRange_intersected;
                           isValid     := QItemSelectionRange_isValid;
+                          isEmpty     := QItemSelectionRange_isEmpty;
                           indexes     := QItemSelectionRange_indexes;
                           destroyCxx  := Destroy_QItemSelectionRange;
                         END;

@@ -39,6 +39,7 @@ TYPE
                    init_10 (brush: QBrush; ): QBrush;
                    init_11 (gradient: QGradient; ): QBrush;
                    Op_Brush_Assign    (brush: QBrush; ): QBrush;
+                   swap               (other: QBrush; );
                    style              (): BrushStyle;
                    setStyle           (arg1: BrushStyle; );
                    matrix             (): QMatrix;
@@ -119,18 +120,28 @@ TYPE
       init_0 (): QRadialGradient;
       init_1 (center: QPointF; radius: LONGREAL; focalPoint: QPointF; ):
               QRadialGradient;
-      init_2        (cx, cy, radius, fx, fy: LONGREAL; ): QRadialGradient;
-      init_3        (center: QPointF; radius: LONGREAL; ): QRadialGradient;
-      init_4        (cx, cy, radius: LONGREAL; ): QRadialGradient;
-      center        (): QPointF;
-      setCenter     (center: QPointF; );
-      setCenter1    (x, y: LONGREAL; );
-      focalPoint    (): QPointF;
-      setFocalPoint (focalPoint: QPointF; );
-      setFocalPoint1 (x, y: LONGREAL; );
-      radius         (): LONGREAL;
-      setRadius      (radius: LONGREAL; );
-      destroyCxx     ();
+      init_2 (cx, cy, radius, fx, fy: LONGREAL; ): QRadialGradient;
+      init_3 (center: QPointF; radius: LONGREAL; ): QRadialGradient;
+      init_4 (cx, cy, radius: LONGREAL; ): QRadialGradient;
+      init_5 (center      : QPointF;
+              centerRadius: LONGREAL;
+              focalPoint  : QPointF;
+              focalRadius : LONGREAL; ): QRadialGradient;
+      init_6 (cx, cy, centerRadius, fx, fy, focalRadius: LONGREAL; ):
+              QRadialGradient;
+      center          (): QPointF;
+      setCenter       (center: QPointF; );
+      setCenter1      (x, y: LONGREAL; );
+      focalPoint      (): QPointF;
+      setFocalPoint   (focalPoint: QPointF; );
+      setFocalPoint1  (x, y: LONGREAL; );
+      radius          (): LONGREAL;
+      setRadius       (radius: LONGREAL; );
+      centerRadius    (): LONGREAL;
+      setCenterRadius (radius: LONGREAL; );
+      focalRadius     (): LONGREAL;
+      setFocalRadius  (radius: LONGREAL; );
+      destroyCxx      ();
     END;
 
   QConicalGradient <: QConicalGradientPublic;

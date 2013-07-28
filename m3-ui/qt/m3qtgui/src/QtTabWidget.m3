@@ -373,6 +373,13 @@ PROCEDURE QTabWidget_minimumSizeHint (self: QTabWidget; ): QSize =
     RETURN result;
   END QTabWidget_minimumSizeHint;
 
+PROCEDURE QTabWidget_heightForWidth (self: QTabWidget; width: INTEGER; ):
+  INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtTabWidgetRaw.QTabWidget_heightForWidth(selfAdr, width);
+  END QTabWidget_heightForWidth;
+
 PROCEDURE QTabWidget_setCornerWidget
   (self: QTabWidget; w: QWidget; corner: Corner; ) =
   VAR
@@ -556,6 +563,7 @@ REVEAL
                  setTabShape          := QTabWidget_setTabShape;
                  sizeHint             := QTabWidget_sizeHint;
                  minimumSizeHint      := QTabWidget_minimumSizeHint;
+                 heightForWidth       := QTabWidget_heightForWidth;
                  setCornerWidget      := QTabWidget_setCornerWidget;
                  setCornerWidget1     := QTabWidget_setCornerWidget1;
                  cornerWidget         := QTabWidget_cornerWidget;

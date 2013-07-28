@@ -76,6 +76,8 @@ TYPE
       expandingDirections  (): Orientations;
       setHeightForWidth    (b: BOOLEAN; );
       hasHeightForWidth    (): BOOLEAN;
+      setWidthForHeight    (b: BOOLEAN; );
+      hasWidthForHeight    (): BOOLEAN;
       horizontalStretch    (): INTEGER;
       verticalStretch      (): INTEGER;
       setHorizontalStretch (stretchFactor: CHAR; );

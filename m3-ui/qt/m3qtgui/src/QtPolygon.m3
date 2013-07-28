@@ -10,13 +10,13 @@ UNSAFE MODULE QtPolygon;
 
 
 IMPORT QtPolygonRaw;
+IMPORT Ctypes AS C;
 FROM QtPoint IMPORT QPoint, QPointF;
 FROM QtRect IMPORT QRect, QRectF;
 FROM QtNamespace IMPORT FillRule;
 
 
 IMPORT WeakRef;
-IMPORT Ctypes AS C;
 
 PROCEDURE New_QPolygon0 (self: QPolygon; ): QPolygon =
   VAR result: ADDRESS;
@@ -86,21 +86,27 @@ PROCEDURE New_QPolygon4 (self: QPolygon; r: QRect; ): QPolygon =
     RETURN self;
   END New_QPolygon4;
 
-PROCEDURE New_QPolygon5
-  (self: QPolygon; nPoints: INTEGER; VAR points: INTEGER; ): QPolygon =
-  VAR
-    result : ADDRESS;
-    arg2tmp: C.int;
+PROCEDURE New_QPolygon5 (self   : QPolygon;
+                         nPoints: INTEGER;
+                         points : UNTRACED REF ARRAY OF C.int; ):
+  QPolygon =
+  VAR result: ADDRESS;
   BEGIN
-    arg2tmp := points;
-    result := QtPolygonRaw.New_QPolygon5(nPoints, arg2tmp);
+    result := QtPolygonRaw.New_QPolygon5(nPoints, ADR(points[0]));
 
     self.cxxObj := result;
     EVAL WeakRef.FromRef(self, Cleanup_QPolygon);
 
-    points := arg2tmp;
     RETURN self;
   END New_QPolygon5;
+
+PROCEDURE QPolygon_swap (self, other: QPolygon; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(other.cxxObj, ADDRESS);
+  BEGIN
+    QtPolygonRaw.QPolygon_swap(selfAdr, arg2tmp);
+  END QPolygon_swap;
 
 PROCEDURE QPolygon_translate (self: QPolygon; dx, dy: INTEGER; ) =
   VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
@@ -216,6 +222,45 @@ PROCEDURE QPolygon_setPoint1
     QtPolygonRaw.QPolygon_setPoint1(selfAdr, index, arg3tmp);
   END QPolygon_setPoint1;
 
+PROCEDURE QPolygon_setPoints (self   : QPolygon;
+                              nPoints: INTEGER;
+                              points : UNTRACED REF ARRAY OF C.int; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtPolygonRaw.QPolygon_setPoints(selfAdr, nPoints, ADR(points[0]));
+  END QPolygon_setPoints;
+
+PROCEDURE QPolygon_putPoints
+  (self          : QPolygon;
+   index, nPoints: INTEGER;
+   points        : UNTRACED REF ARRAY OF C.int; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtPolygonRaw.QPolygon_putPoints(
+      selfAdr, index, nPoints, ADR(points[0]));
+  END QPolygon_putPoints;
+
+PROCEDURE QPolygon_putPoints1 (self          : QPolygon;
+                               index, nPoints: INTEGER;
+                               from          : QPolygon;
+                               fromIndex     : INTEGER;  ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg4tmp          := LOOPHOLE(from.cxxObj, ADDRESS);
+  BEGIN
+    QtPolygonRaw.QPolygon_putPoints1(
+      selfAdr, index, nPoints, arg4tmp, fromIndex);
+  END QPolygon_putPoints1;
+
+PROCEDURE QPolygon_putPoints2
+  (self: QPolygon; index, nPoints: INTEGER; from: QPolygon; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg4tmp          := LOOPHOLE(from.cxxObj, ADDRESS);
+  BEGIN
+    QtPolygonRaw.QPolygon_putPoints2(selfAdr, index, nPoints, arg4tmp);
+  END QPolygon_putPoints2;
+
 PROCEDURE QPolygon_containsPoint
   (self: QPolygon; pt: QPoint; fillRule: FillRule; ): BOOLEAN =
   VAR
@@ -307,6 +352,7 @@ REVEAL
                init_3        := New_QPolygon3;
                init_4        := New_QPolygon4;
                init_5        := New_QPolygon5;
+               swap          := QPolygon_swap;
                translate     := QPolygon_translate;
                translate1    := QPolygon_translate1;
                translated    := QPolygon_translated;
@@ -316,6 +362,10 @@ REVEAL
                point1        := QPolygon_point1;
                setPoint      := QPolygon_setPoint;
                setPoint1     := QPolygon_setPoint1;
+               setPoints     := QPolygon_setPoints;
+               putPoints     := QPolygon_putPoints;
+               putPoints1    := QPolygon_putPoints1;
+               putPoints2    := QPolygon_putPoints2;
                containsPoint := QPolygon_containsPoint;
                united        := QPolygon_united;
                intersected   := QPolygon_intersected;
@@ -389,6 +439,14 @@ PROCEDURE New_QPolygonF4 (self: QPolygonF; a: QPolygon; ): QPolygonF =
 
     RETURN self;
   END New_QPolygonF4;
+
+PROCEDURE QPolygonF_swap (self, other: QPolygonF; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(other.cxxObj, ADDRESS);
+  BEGIN
+    QtPolygonRaw.QPolygonF_swap(selfAdr, arg2tmp);
+  END QPolygonF_swap;
 
 PROCEDURE QPolygonF_translate (self: QPolygonF; dx, dy: LONGREAL; ) =
   VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
@@ -575,6 +633,7 @@ REVEAL
                 init_2        := New_QPolygonF2;
                 init_3        := New_QPolygonF3;
                 init_4        := New_QPolygonF4;
+                swap          := QPolygonF_swap;
                 translate     := QPolygonF_translate;
                 translate1    := QPolygonF_translate1;
                 translated    := QPolygonF_translated;

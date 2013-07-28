@@ -26,25 +26,38 @@ CONST                            (* Enum StyleHint *)
   Decorative = 3;
   System     = 4;
   AnyStyle   = 5;
+  Cursive    = 6;
+  Monospace  = 7;
+  Fantasy    = 8;
 
 TYPE                             (* Enum StyleHint *)
-  StyleHint = [0 .. 5];
+  StyleHint = [0 .. 8];
 
 CONST                            (* Enum StyleStrategy *)
-  PreferDefault    = 1;
-  PreferBitmap     = 2;
-  PreferDevice     = 4;
-  PreferOutline    = 8;
-  ForceOutline     = 16;
-  PreferMatch      = 32;
-  PreferQuality    = 64;
-  PreferAntialias  = 128;
-  NoAntialias      = 256;
-  OpenGLCompatible = 512;
-  NoFontMerging    = 32768;
+  PreferDefault       = 1;
+  PreferBitmap        = 2;
+  PreferDevice        = 4;
+  PreferOutline       = 8;
+  ForceOutline        = 16;
+  PreferMatch         = 32;
+  PreferQuality       = 64;
+  PreferAntialias     = 128;
+  NoAntialias         = 256;
+  OpenGLCompatible    = 512;
+  ForceIntegerMetrics = 1024;
+  NoFontMerging       = 32768;
 
 TYPE                             (* Enum StyleStrategy *)
   StyleStrategy = [1 .. 32768];
+
+CONST                            (* Enum HintingPreference *)
+  PreferDefaultHinting  = 0;
+  PreferNoHinting       = 1;
+  PreferVerticalHinting = 2;
+  PreferFullHinting     = 3;
+
+TYPE                             (* Enum HintingPreference *)
+  HintingPreference = [0 .. 3];
 
 CONST                            (* Enum Weight *)
   Light    = 25;
@@ -81,26 +94,32 @@ TYPE                             (* Enum SpacingType *)
   SpacingType = {PercentageSpacing, AbsoluteSpacing};
 
 CONST                            (* Enum ResolveProperties *)
-  FamilyResolved         = 1;
-  SizeResolved           = 2;
-  StyleHintResolved      = 4;
-  StyleStrategyResolved  = 8;
-  WeightResolved         = 16;
-  StyleResolved          = 32;
-  UnderlineResolved      = 64;
-  OverlineResolved       = 128;
-  StrikeOutResolved      = 256;
-  FixedPitchResolved     = 512;
-  StretchResolved        = 1024;
-  KerningResolved        = 2048;
-  CapitalizationResolved = 4096;
-  LetterSpacingResolved  = 8192;
-  WordSpacingResolved    = 16384;
-  AllPropertiesResolved  = 32767;
+  FamilyResolved            = 1;
+  SizeResolved              = 2;
+  StyleHintResolved         = 4;
+  StyleStrategyResolved     = 8;
+  WeightResolved            = 16;
+  StyleResolved             = 32;
+  UnderlineResolved         = 64;
+  OverlineResolved          = 128;
+  StrikeOutResolved         = 256;
+  FixedPitchResolved        = 512;
+  StretchResolved           = 1024;
+  KerningResolved           = 2048;
+  CapitalizationResolved    = 4096;
+  LetterSpacingResolved     = 8192;
+  WordSpacingResolved       = 16384;
+  HintingPreferenceResolved = 32768;
+  StyleNameResolved         = 65536;
+  AllPropertiesResolved     = 131071;
 
 TYPE                             (* Enum ResolveProperties *)
-  ResolveProperties = [1 .. 32767];
+  ResolveProperties = [1 .. 131071];
 PROCEDURE Substitute (arg1: TEXT; ): TEXT;
+
+PROCEDURE Substitutes (arg1: TEXT; ): QStringList;
+
+PROCEDURE Substitutions (): QStringList;
 
 PROCEDURE InsertSubstitution (arg1, arg2: TEXT; );
 
@@ -131,6 +150,8 @@ TYPE
       init_6           (arg1: QFont; ): QFont;
       family           (): TEXT;
       setFamily        (arg1: TEXT; );
+      styleName        (): TEXT;
+      setStyleName     (arg1: TEXT; );
       pointSize        (): INTEGER;
       setPointSize     (arg1: INTEGER; );
       pointSizeF       (): LONGREAL;
@@ -163,32 +184,34 @@ TYPE
       stretch          (): INTEGER;
       setStretch       (arg1: INTEGER; );
       letterSpacing    (): LONGREAL;
-      letterSpacingType (): SpacingType;
-      setLetterSpacing  (type: SpacingType; spacing: LONGREAL; );
-      wordSpacing       (): LONGREAL;
-      setWordSpacing    (spacing: LONGREAL; );
-      setCapitalization (arg1: Capitalization; );
-      capitalization    (): Capitalization;
-      rawMode           (): BOOLEAN;
-      setRawMode        (arg1: BOOLEAN; );
-      exactMatch        (): BOOLEAN;
-      Op_Assign         (arg1: QFont; ): QFont;
-      Op_Equals         (arg1: QFont; ): BOOLEAN;
-      Op_NotEquals      (arg1: QFont; ): BOOLEAN;
-      Op_LessThan       (arg1: QFont; ): BOOLEAN;
-      isCopyOf          (arg1: QFont; ): BOOLEAN;
-      setRawName        (arg1: TEXT; );
-      rawName           (): TEXT;
-      key               (): TEXT;
-      toString          (): TEXT;
-      fromString        (arg1: TEXT; ): BOOLEAN;
-      defaultFamily     (): TEXT;
-      lastResortFamily  (): TEXT;
-      lastResortFont    (): TEXT;
-      resolve           (arg1: QFont; ): QFont;
-      resolve1          (): CARDINAL;
-      resolve2          (mask: CARDINAL; );
-      destroyCxx        ();
+      letterSpacingType    (): SpacingType;
+      setLetterSpacing     (type: SpacingType; spacing: LONGREAL; );
+      wordSpacing          (): LONGREAL;
+      setWordSpacing       (spacing: LONGREAL; );
+      setCapitalization    (arg1: Capitalization; );
+      capitalization       (): Capitalization;
+      setHintingPreference (hintingPreference: HintingPreference; );
+      hintingPreference    (): HintingPreference;
+      rawMode              (): BOOLEAN;
+      setRawMode           (arg1: BOOLEAN; );
+      exactMatch           (): BOOLEAN;
+      Op_Assign            (arg1: QFont; ): QFont;
+      Op_Equals            (arg1: QFont; ): BOOLEAN;
+      Op_NotEquals         (arg1: QFont; ): BOOLEAN;
+      Op_LessThan          (arg1: QFont; ): BOOLEAN;
+      isCopyOf             (arg1: QFont; ): BOOLEAN;
+      setRawName           (arg1: TEXT; );
+      rawName              (): TEXT;
+      key                  (): TEXT;
+      toString             (): TEXT;
+      fromString           (arg1: TEXT; ): BOOLEAN;
+      defaultFamily        (): TEXT;
+      lastResortFamily     (): TEXT;
+      lastResortFont       (): TEXT;
+      resolve              (arg1: QFont; ): QFont;
+      resolve1             (): CARDINAL;
+      resolve2             (mask: CARDINAL; );
+      destroyCxx           ();
     END;
 
 

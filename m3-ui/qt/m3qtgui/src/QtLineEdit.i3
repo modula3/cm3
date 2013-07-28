@@ -15,7 +15,7 @@ FROM QtMargins IMPORT QMargins;
 FROM QtWidget IMPORT QWidget;
 FROM QtMenu IMPORT QMenu;
 FROM QtPoint IMPORT QPoint;
-FROM QtNamespace IMPORT AlignmentFlag;
+FROM QtNamespace IMPORT AlignmentFlag, CursorMoveStyle;
 
 
 TYPE T = QLineEdit;
@@ -35,6 +35,8 @@ TYPE
       init_3                    (arg1: TEXT; ): QLineEdit;
       text                      (): TEXT;
       displayText               (): TEXT;
+      placeholderText           (): TEXT;
+      setPlaceholderText        (arg1: TEXT; );
       maxLength                 (): INTEGER;
       setMaxLength              (arg1: INTEGER; );
       setFrame                  (arg1: BOOLEAN; );
@@ -74,6 +76,8 @@ TYPE
       isRedoAvailable           (): BOOLEAN;
       setDragEnabled            (b: BOOLEAN; );
       dragEnabled               (): BOOLEAN;
+      setCursorMoveStyle        (style: CursorMoveStyle; );
+      cursorMoveStyle           (): CursorMoveStyle;
       inputMask                 (): TEXT;
       setInputMask              (inputMask: TEXT; );
       hasAcceptableInput        (): BOOLEAN;

@@ -110,6 +110,18 @@ PROCEDURE QLabel_setTextInteractionFlags (self: QLabel; flags: C.int; );
 <* EXTERNAL QLabel_textInteractionFlags *>
 PROCEDURE QLabel_textInteractionFlags (self: QLabel; ): C.int;
 
+<* EXTERNAL QLabel_setSelection *>
+PROCEDURE QLabel_setSelection (self: QLabel; arg2, arg3: C.int; );
+
+<* EXTERNAL QLabel_hasSelectedText *>
+PROCEDURE QLabel_hasSelectedText (self: QLabel; ): BOOLEAN;
+
+<* EXTERNAL QLabel_selectedText *>
+PROCEDURE QLabel_selectedText (self: QLabel; ): ADDRESS;
+
+<* EXTERNAL QLabel_selectionStart *>
+PROCEDURE QLabel_selectionStart (self: QLabel; ): C.int;
+
 <* EXTERNAL QLabel_setText *>
 PROCEDURE QLabel_setText (self: QLabel; arg2: ADDRESS; );
 

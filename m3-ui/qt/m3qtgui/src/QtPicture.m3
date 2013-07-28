@@ -9,9 +9,10 @@
 UNSAFE MODULE QtPicture;
 
 
+FROM QtPaintEngine IMPORT QPaintEngine;
 FROM QtByteArray IMPORT QByteArray;
 IMPORT M3toC;
-FROM QGuiStubs IMPORT QPainter, QPaintEngine, QIODevice;
+FROM QGuiStubs IMPORT QPainter, QIODevice;
 IMPORT QtPictureRaw;
 IMPORT Ctypes AS C;
 FROM QtRect IMPORT QRect;
@@ -228,6 +229,14 @@ PROCEDURE QPicture_setBoundingRect (self: QPicture; r: QRect; ) =
     QtPictureRaw.QPicture_setBoundingRect(selfAdr, arg2tmp);
   END QPicture_setBoundingRect;
 
+PROCEDURE QPicture_swap (self, other: QPicture; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(other.cxxObj, ADDRESS);
+  BEGIN
+    QtPictureRaw.QPicture_swap(selfAdr, arg2tmp);
+  END QPicture_swap;
+
 PROCEDURE QPicture_detach (self: QPicture; ) =
   VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
   BEGIN
@@ -306,6 +315,7 @@ REVEAL
                save3           := QPicture_save3;
                boundingRect    := QPicture_boundingRect;
                setBoundingRect := QPicture_setBoundingRect;
+               swap            := QPicture_swap;
                detach          := QPicture_detach;
                isDetached      := QPicture_isDetached;
                paintEngine     := QPicture_paintEngine;

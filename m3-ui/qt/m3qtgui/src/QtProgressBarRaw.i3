@@ -62,12 +62,18 @@ PROCEDURE QProgressBar_setInvertedAppearance
 <* EXTERNAL QProgressBar_invertedAppearance *>
 PROCEDURE QProgressBar_invertedAppearance (self: QProgressBar; ): BOOLEAN;
 
+<* EXTERNAL QProgressBar_invertedAppearance1 *>
+PROCEDURE QProgressBar_invertedAppearance1 (self: QProgressBar; ): BOOLEAN;
+
 <* EXTERNAL QProgressBar_setTextDirection *>
 PROCEDURE QProgressBar_setTextDirection
   (self: QProgressBar; textDirection: C.int; );
 
 <* EXTERNAL QProgressBar_textDirection *>
 PROCEDURE QProgressBar_textDirection (self: QProgressBar; ): C.int;
+
+<* EXTERNAL QProgressBar_textDirection1 *>
+PROCEDURE QProgressBar_textDirection1 (self: QProgressBar; ): C.int;
 
 <* EXTERNAL QProgressBar_setFormat *>
 PROCEDURE QProgressBar_setFormat (self: QProgressBar; format: ADDRESS; );

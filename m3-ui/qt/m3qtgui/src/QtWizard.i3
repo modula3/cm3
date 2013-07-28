@@ -104,6 +104,8 @@ TYPE
       subTitleFormat      (): TextFormat;
       setPixmap           (which: WizardPixmap; pixmap: QPixmap; );
       pixmap              (which: WizardPixmap; ): QPixmap;
+      setSideWidget       (widget: QWidget; );
+      sideWidget          (): QWidget;
       setDefaultProperty  (className, property, changedSignal: TEXT; );
       setVisible          (visible: BOOLEAN; ); (* virtual *)
       sizeHint            (): QSize; (* virtual *)

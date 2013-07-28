@@ -35,6 +35,12 @@ PROCEDURE QLineEdit_text (self: QLineEdit; ): ADDRESS;
 <* EXTERNAL QLineEdit_displayText *>
 PROCEDURE QLineEdit_displayText (self: QLineEdit; ): ADDRESS;
 
+<* EXTERNAL QLineEdit_placeholderText *>
+PROCEDURE QLineEdit_placeholderText (self: QLineEdit; ): ADDRESS;
+
+<* EXTERNAL QLineEdit_setPlaceholderText *>
+PROCEDURE QLineEdit_setPlaceholderText (self: QLineEdit; arg2: ADDRESS; );
+
 <* EXTERNAL QLineEdit_maxLength *>
 PROCEDURE QLineEdit_maxLength (self: QLineEdit; ): C.int;
 
@@ -154,6 +160,12 @@ PROCEDURE QLineEdit_setDragEnabled (self: QLineEdit; b: BOOLEAN; );
 
 <* EXTERNAL QLineEdit_dragEnabled *>
 PROCEDURE QLineEdit_dragEnabled (self: QLineEdit; ): BOOLEAN;
+
+<* EXTERNAL QLineEdit_setCursorMoveStyle *>
+PROCEDURE QLineEdit_setCursorMoveStyle (self: QLineEdit; style: C.int; );
+
+<* EXTERNAL QLineEdit_cursorMoveStyle *>
+PROCEDURE QLineEdit_cursorMoveStyle (self: QLineEdit; ): C.int;
 
 <* EXTERNAL QLineEdit_inputMask *>
 PROCEDURE QLineEdit_inputMask (self: QLineEdit; ): ADDRESS;

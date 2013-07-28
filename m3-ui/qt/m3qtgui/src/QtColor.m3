@@ -1344,6 +1344,14 @@ PROCEDURE QColor_Op_NotEquals (self, c: QColor; ): BOOLEAN =
     RETURN QtColorRaw.QColor_Op_NotEquals(selfAdr, arg2tmp);
   END QColor_Op_NotEquals;
 
+PROCEDURE IsValidColor (name: TEXT; ): BOOLEAN =
+  VAR
+    qstr_name := NEW(QString).initQString(name);
+    arg1tmp   := LOOPHOLE(qstr_name.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtColorRaw.IsValidColor(arg1tmp);
+  END IsValidColor;
+
 PROCEDURE Delete_QColor (self: QColor; ) =
   VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
   BEGIN

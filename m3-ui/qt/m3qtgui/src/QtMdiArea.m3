@@ -243,6 +243,30 @@ PROCEDURE QMdiArea_setDocumentMode (self: QMdiArea; enabled: BOOLEAN; ) =
     QtMdiAreaRaw.QMdiArea_setDocumentMode(selfAdr, enabled);
   END QMdiArea_setDocumentMode;
 
+PROCEDURE QMdiArea_setTabsClosable (self: QMdiArea; closable: BOOLEAN; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtMdiAreaRaw.QMdiArea_setTabsClosable(selfAdr, closable);
+  END QMdiArea_setTabsClosable;
+
+PROCEDURE QMdiArea_tabsClosable (self: QMdiArea; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtMdiAreaRaw.QMdiArea_tabsClosable(selfAdr);
+  END QMdiArea_tabsClosable;
+
+PROCEDURE QMdiArea_setTabsMovable (self: QMdiArea; movable: BOOLEAN; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtMdiAreaRaw.QMdiArea_setTabsMovable(selfAdr, movable);
+  END QMdiArea_setTabsMovable;
+
+PROCEDURE QMdiArea_tabsMovable (self: QMdiArea; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtMdiAreaRaw.QMdiArea_tabsMovable(selfAdr);
+  END QMdiArea_tabsMovable;
+
 PROCEDURE QMdiArea_setTabShape (self: QMdiArea; shape: TabShape; ) =
   VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
   BEGIN
@@ -359,6 +383,10 @@ REVEAL
       viewMode                  := QMdiArea_viewMode;
       documentMode              := QMdiArea_documentMode;
       setDocumentMode           := QMdiArea_setDocumentMode;
+      setTabsClosable           := QMdiArea_setTabsClosable;
+      tabsClosable              := QMdiArea_tabsClosable;
+      setTabsMovable            := QMdiArea_setTabsMovable;
+      tabsMovable               := QMdiArea_tabsMovable;
       setTabShape               := QMdiArea_setTabShape;
       tabShape                  := QMdiArea_tabShape;
       setTabPosition            := QMdiArea_setTabPosition;

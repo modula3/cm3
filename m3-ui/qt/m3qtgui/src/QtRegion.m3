@@ -136,6 +136,14 @@ PROCEDURE Delete_QRegion (self: QRegion; ) =
     QtRegionRaw.Delete_QRegion(selfAdr);
   END Delete_QRegion;
 
+PROCEDURE QRegion_swap (self, other: QRegion; ) =
+  VAR
+    selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp          := LOOPHOLE(other.cxxObj, ADDRESS);
+  BEGIN
+    QtRegionRaw.QRegion_swap(selfAdr, arg2tmp);
+  END QRegion_swap;
+
 PROCEDURE QRegion_isEmpty (self: QRegion; ): BOOLEAN =
   VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
   BEGIN
@@ -520,6 +528,7 @@ REVEAL
               init_6       := New_QRegion6;
               init_7       := New_QRegion7;
               init_8       := New_QRegion8;
+              swap         := QRegion_swap;
               isEmpty      := QRegion_isEmpty;
               contains     := QRegion_contains;
               contains1    := QRegion_contains1;

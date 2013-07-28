@@ -24,22 +24,20 @@ PROCEDURE New_QImage1 (size: ADDRESS; format: C.int; ): QImage;
 PROCEDURE New_QImage2 (width, height, format: C.int; ): QImage;
 
 <* EXTERNAL New_QImage3 *>
-PROCEDURE New_QImage3
-  (data: UNTRACED REF CHAR; width, height, format: C.int; ): QImage;
+PROCEDURE New_QImage3 (data: ADDRESS; width, height, format: C.int; ):
+  QImage;
 
 <* EXTERNAL New_QImage4 *>
-PROCEDURE New_QImage4
-  (data: UNTRACED REF CHAR; width, height, format: C.int; ): QImage;
+PROCEDURE New_QImage4 (data: ADDRESS; width, height, format: C.int; ):
+  QImage;
 
 <* EXTERNAL New_QImage5 *>
 PROCEDURE New_QImage5
-  (data: UNTRACED REF CHAR; width, height, bytesPerLine, format: C.int; ):
-  QImage;
+  (data: ADDRESS; width, height, bytesPerLine, format: C.int; ): QImage;
 
 <* EXTERNAL New_QImage6 *>
 PROCEDURE New_QImage6
-  (data: UNTRACED REF CHAR; width, height, bytesPerLine, format: C.int; ):
-  QImage;
+  (data: ADDRESS; width, height, bytesPerLine, format: C.int; ): QImage;
 
 <* EXTERNAL New_QImage7 *>
 PROCEDURE New_QImage7 (fileName: ADDRESS; format: C.char_star; ): QImage;
@@ -58,6 +56,9 @@ PROCEDURE New_QImage11 (arg1: ADDRESS; ): QImage;
 
 <* EXTERNAL Delete_QImage *>
 PROCEDURE Delete_QImage (self: QImage; );
+
+<* EXTERNAL QImage_swap *>
+PROCEDURE QImage_swap (self: QImage; other: ADDRESS; );
 
 <* EXTERNAL QImage_isNull *>
 PROCEDURE QImage_isNull (self: QImage; ): BOOLEAN;
@@ -108,6 +109,9 @@ PROCEDURE QImage_depth (self: QImage; ): C.int;
 <* EXTERNAL QImage_colorCount *>
 PROCEDURE QImage_colorCount (self: QImage; ): C.int;
 
+<* EXTERNAL QImage_bitPlaneCount *>
+PROCEDURE QImage_bitPlaneCount (self: QImage; ): C.int;
+
 <* EXTERNAL QImage_color *>
 PROCEDURE QImage_color (self: QImage; i: C.int; ): C.unsigned_int;
 
@@ -124,21 +128,25 @@ PROCEDURE QImage_allGray (self: QImage; ): BOOLEAN;
 PROCEDURE QImage_isGrayscale (self: QImage; ): BOOLEAN;
 
 <* EXTERNAL QImage_bits *>
-PROCEDURE QImage_bits (self: QImage; ): UNTRACED REF C.unsigned_char;
+PROCEDURE QImage_bits (self: QImage; ): ADDRESS;
 
 <* EXTERNAL QImage_bits1 *>
-PROCEDURE QImage_bits1 (self: QImage; ): UNTRACED REF C.unsigned_char;
+PROCEDURE QImage_bits1 (self: QImage; ): ADDRESS;
+
+<* EXTERNAL QImage_constBits *>
+PROCEDURE QImage_constBits (self: QImage; ): ADDRESS;
 
 <* EXTERNAL QImage_byteCount *>
 PROCEDURE QImage_byteCount (self: QImage; ): C.int;
 
 <* EXTERNAL QImage_scanLine *>
-PROCEDURE QImage_scanLine (self: QImage; arg2: C.int; ):
-  UNTRACED REF C.unsigned_char;
+PROCEDURE QImage_scanLine (self: QImage; arg2: C.int; ): ADDRESS;
 
 <* EXTERNAL QImage_scanLine1 *>
-PROCEDURE QImage_scanLine1 (self: QImage; arg2: C.int; ):
-  UNTRACED REF C.unsigned_char;
+PROCEDURE QImage_scanLine1 (self: QImage; arg2: C.int; ): ADDRESS;
+
+<* EXTERNAL QImage_constScanLine *>
+PROCEDURE QImage_constScanLine (self: QImage; arg2: C.int; ): ADDRESS;
 
 <* EXTERNAL QImage_bytesPerLine *>
 PROCEDURE QImage_bytesPerLine (self: QImage; ): C.int;
@@ -163,14 +171,20 @@ PROCEDURE QImage_pixel1 (self: QImage; pt: ADDRESS; ): C.unsigned_int;
 
 <* EXTERNAL QImage_setPixel *>
 PROCEDURE QImage_setPixel
-  (self: QImage; x, y: C.int; index_or_rgb: CARDINAL; );
+  (self: QImage; x, y: C.int; index_or_rgb: C.unsigned_int; );
 
 <* EXTERNAL QImage_setPixel1 *>
 PROCEDURE QImage_setPixel1
-  (self: QImage; pt: ADDRESS; index_or_rgb: CARDINAL; );
+  (self: QImage; pt: ADDRESS; index_or_rgb: C.unsigned_int; );
 
 <* EXTERNAL QImage_fill *>
-PROCEDURE QImage_fill (self: QImage; pixel: CARDINAL; );
+PROCEDURE QImage_fill (self: QImage; pixel: C.unsigned_int; );
+
+<* EXTERNAL QImage_fill1 *>
+PROCEDURE QImage_fill1 (self: QImage; color: ADDRESS; );
+
+<* EXTERNAL QImage_fill2 *>
+PROCEDURE QImage_fill2 (self: QImage; color: C.int; );
 
 <* EXTERNAL QImage_hasAlphaChannel *>
 PROCEDURE QImage_hasAlphaChannel (self: QImage; ): BOOLEAN;
@@ -288,14 +302,12 @@ PROCEDURE QImage_load1
 PROCEDURE QImage_load2 (self: QImage; fileName: ADDRESS; ): BOOLEAN;
 
 <* EXTERNAL QImage_loadFromData *>
-PROCEDURE QImage_loadFromData (self  : QImage;
-                               buf   : UNTRACED REF CHAR;
-                               len   : C.int;
-                               format: C.char_star;       ): BOOLEAN;
+PROCEDURE QImage_loadFromData
+  (self: QImage; buf: ADDRESS; len: C.int; format: C.char_star; ): BOOLEAN;
 
 <* EXTERNAL QImage_loadFromData1 *>
-PROCEDURE QImage_loadFromData1
-  (self: QImage; buf: UNTRACED REF CHAR; len: C.int; ): BOOLEAN;
+PROCEDURE QImage_loadFromData1 (self: QImage; buf: ADDRESS; len: C.int; ):
+  BOOLEAN;
 
 <* EXTERNAL QImage_loadFromData2 *>
 PROCEDURE QImage_loadFromData2
@@ -330,11 +342,10 @@ PROCEDURE QImage_save5 (self: QImage; device: ADDRESS; ): BOOLEAN;
 
 <* EXTERNAL Image_FromData *>
 PROCEDURE Image_FromData
-  (data: UNTRACED REF CHAR; size: C.int; format: C.char_star; ): ADDRESS;
+  (data: ADDRESS; size: C.int; format: C.char_star; ): ADDRESS;
 
 <* EXTERNAL Image_FromData1 *>
-PROCEDURE Image_FromData1 (data: UNTRACED REF CHAR; size: C.int; ):
-  ADDRESS;
+PROCEDURE Image_FromData1 (data: ADDRESS; size: C.int; ): ADDRESS;
 
 <* EXTERNAL Image_FromData2 *>
 PROCEDURE Image_FromData2 (data: ADDRESS; format: C.char_star; ): ADDRESS;

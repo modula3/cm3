@@ -347,6 +347,41 @@ PROCEDURE QLabel_textInteractionFlags (self: QLabel; ):
     RETURN result;
   END QLabel_textInteractionFlags;
 
+PROCEDURE QLabel_setSelection (self: QLabel; arg2, arg3: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtLabelRaw.QLabel_setSelection(selfAdr, arg2, arg3);
+  END QLabel_setSelection;
+
+PROCEDURE QLabel_hasSelectedText (self: QLabel; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtLabelRaw.QLabel_hasSelectedText(selfAdr);
+  END QLabel_hasSelectedText;
+
+PROCEDURE QLabel_selectedText (self: QLabel; ): TEXT =
+  VAR
+    ret    : ADDRESS;
+    qstr                := NEW(QString);
+    ba     : QByteArray;
+    result : TEXT;
+    selfAdr: ADDRESS    := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtLabelRaw.QLabel_selectedText(selfAdr);
+
+    qstr.cxxObj := ret;
+    ba := qstr.toLocal8Bit();
+    result := ba.data();
+
+    RETURN result;
+  END QLabel_selectedText;
+
+PROCEDURE QLabel_selectionStart (self: QLabel; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtLabelRaw.QLabel_selectionStart(selfAdr);
+  END QLabel_selectionStart;
+
 PROCEDURE QLabel_setText (self: QLabel; arg2: TEXT; ) =
   VAR
     selfAdr  : ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
@@ -444,6 +479,10 @@ REVEAL
              setOpenExternalLinks    := QLabel_setOpenExternalLinks;
              setTextInteractionFlags := QLabel_setTextInteractionFlags;
              textInteractionFlags    := QLabel_textInteractionFlags;
+             setSelection            := QLabel_setSelection;
+             hasSelectedText         := QLabel_hasSelectedText;
+             selectedText            := QLabel_selectedText;
+             selectionStart          := QLabel_selectionStart;
              setText                 := QLabel_setText;
              setPixmap               := QLabel_setPixmap;
              setPicture              := QLabel_setPicture;
