@@ -10,6 +10,7 @@ PROCEDURE Initialize () =
   BEGIN
     elts := Scope.PushNew (FALSE, M3ID.Add ("WIDECHAR"));
     T := EnumType.New (16_110000, elts);
+(* Widechar Tipe. *) 
     Scope.PopNew ();
     Scope.TypeCheck (elts, cs);
     Tipe.Define ("WIDECHAR", T, TRUE);
