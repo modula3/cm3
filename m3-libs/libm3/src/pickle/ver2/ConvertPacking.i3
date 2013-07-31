@@ -146,7 +146,7 @@ PROCEDURE GetWidecharKind(from: RTPacking.T; local: RTPacking.T): CPKind;
 TYPE UInt32 = BITS 32 FOR [0 .. 16_7FFFFFFF];
 
 (* WC21 is a variable-length encoding of widechar values, used only in
-   pickles.  The standare Unicode encodings explicitly disallow surrogate
+   pickles.  The standard Unicode encodings explicitly disallow surrogate
    code points as unencoded values.  Programs may have a legitimate need to
    store and/or manipulate surrogate values in memory, and these should be
    picklable too.  WC21 supports the entire code point range, which requires

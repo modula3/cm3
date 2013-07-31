@@ -72,18 +72,21 @@ PROCEDURE InWideChars(reader: Pickle.Reader; VAR arr: ARRAY OF WIDECHAR)
     IF reader.packing.widechar_size = 32 THEN 
        (* Size 32 in the writing system => WC21 in the pickle. *) 
       CASE reader.widecharConvKind OF 
-      | CPKind.Copy, CPKind.Swap => 
+      | CPKind.Copy, CPKind.Swap => (* 32 on both systems. *) 
         FOR RI := 0 TO LAST(arr) DO
           IntVal := ConvertPacking.ReadWC21(reader.rd);
+          IF IntVal > 16_10FFFF THEN 
+            RaiseError("Malformed pickle: WIDECHAR out of range."); 
+          END;
           arr[RI] := VAL(IntVal, WIDECHAR);  
         END; 
       | CPKind.Copy32to16 , CPKind.Swap32to16 =>
-      ELSE <* ASSERT FALSE *> 
         FOR RI := 0 TO LAST(arr) DO
           IntVal := ConvertPacking.ReadWC21(reader.rd);
-          IF IntVal > 16_FFFF THEN IntVal := UniEncoding.ReplacementWt; END; 
+          IF IntVal > 16_FFFF THEN IntVal := UniEncoding.ReplacementWt; END;
           arr[RI] := VAL(IntVal, WIDECHAR);  
         END; 
+      ELSE <* ASSERT FALSE *> 
       END 
     ELSE (* size 16 in the pickle. *) 
       CASE reader.widecharConvKind OF 
