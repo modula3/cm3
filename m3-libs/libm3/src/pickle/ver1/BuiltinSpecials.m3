@@ -29,7 +29,9 @@ PROCEDURE Register () =
 PROCEDURE TextPklWrite (<*UNUSED*> sp: Special;  r: REFANY;  pwr: Writer)
   RAISES {Error, Wr.Failure, Thread.Alerted} =
   TYPE CPtr  = UNTRACED REF ARRAY [0..TextLiteral.MaxBytes] OF CHAR;
-  TYPE WCPtr = UNTRACED REF ARRAY [0..TextLiteral.MaxBytes DIV 2] OF WIDECHAR;
+  TYPE WCPtr = UNTRACED REF ARRAY 
+                 [0..TextLiteral.MaxBytes DIV BYTESIZE(WIDECHAR)] 
+               OF WIDECHAR;
   VAR txt := LOOPHOLE (r, TEXT);  cp: CPtr;  wcp: WCPtr;  info: TextClass.Info;
   BEGIN
     TYPECASE (txt) OF
