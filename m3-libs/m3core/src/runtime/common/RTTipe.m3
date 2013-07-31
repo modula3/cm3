@@ -36,6 +36,7 @@ TYPE (* This list must be kept in sync with TipeDesc.i3.Op, in m3front. *)
      Subrange,      (* 15, min, max: INT                    *)
      UntracedRef,   (* 16, self id: UID                     *)
   (* Widechar is denoted as Enum, with #elements = NUMBER(WIDECHAR) *)
+(* Widechar Tipe. *) 
      OldN,          (* 17, node #: INT                      *)
      Old0           (* 18                                   *)
   };(* Old1, Old2, ... Old(255-ORD(Old0)) *)
@@ -126,6 +127,7 @@ PROCEDURE ReadOp (VAR s: State): T =
     | ORD (Op.Proc)     => t := NEW (Builtin, kind := Kind.Proc);
     | ORD (Op.Real)     => t := NEW (Builtin, kind := Kind.Real);
     | ORD (Op.Refany)   => t := NEW (Builtin, kind := Kind.Refany);
+(* Widechar Tipe. *) 
 
     | ORD (Op.Array) =>
         VAR arr := NEW (Array, kind := Kind.Array, n_elts := GetInt (s.ptr));
@@ -390,15 +392,16 @@ PROCEDURE FixSizes (t: T;  READONLY p: Packing) =
         VAR enum: Enum := t; BEGIN
           IF enum.n_elts = 16_10000 OR enum.n_elts = 16_110000
           (* Until we get a new kind that is uniquely WIDECHAR, this is the
-             only way to identify WIDECHAR.  Fortunately, a programmer-defined
-             enumeration with exactly this many elements would be pretty
-             unlikely. *) 
+             only way to identify WIDECHAR.  See RTTipe.m3.Op.  
+             Fortunately, a programmer-defined enumeration with exactly 
+             this many elements would be pretty unlikely. *) 
           THEN 
             t.size := p.widechar_size;
             IF p.widechar_size = 16 THEN enum.n_elts := 16_10000;  
             ELSIF p.widechar_size = 32 THEN enum.n_elts := 16_110000;
             ELSE <* ASSERT FALSE *>
             END;   
+(* Widechar Tipe. *) 
           ELSIF (enum.n_elts <= 256)         THEN t.size := 8;
           ELSIF (enum.n_elts <= 65536)       THEN t.size := 16;
           ELSIF (enum.n_elts <= 16_7fffffff) THEN t.size := 32;
@@ -601,6 +604,7 @@ PROCEDURE IsAlignedOK (t: T;  offset: INTEGER;  READONLY p: Packing): BOOLEAN =
       Kind.Subrange,
       Kind.Boolean,
       Kind.Char =>
+(* Widechar Tipe. *) 
         (* ok as long as they can be loaded from a single word *)
         VAR z0 : INTEGER;  BEGIN
           IF p.lazy_align 

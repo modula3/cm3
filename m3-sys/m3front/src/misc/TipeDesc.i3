@@ -61,10 +61,11 @@ TYPE (* This must be kept in sync with type RTTipe.m3.Op, in runtime. *)
      Set,           (* 14, #elements: INT                   *)
      Subrange,      (* 15, min, max: INT                    *)
      UntracedRef,   (* 16, self id: UID                     *)
-  (* Widechar is denoted as Enum, with #elements = 16_110000   
+  (* Widechar is denoted as Enum, with #elements = 16_10000 or 16_110000   
      This could be fixed by a coordinated change, here, in 
      Enumtype.m3, and RTTipe.m3, but would invalidate 
      compiled code.                                         *)
+(* Widechar Tipe. *) 
      OldN,          (* 17, node #: INT                      *)
      Old0           (* 18                                   *)
   };(* Old1, Old2, ... Old(255-ORD(Old0)) *)

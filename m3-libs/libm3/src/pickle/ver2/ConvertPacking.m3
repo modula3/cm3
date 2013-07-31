@@ -215,7 +215,8 @@ PROCEDURE IsWidechar (Type: RTTipe.T): BOOLEAN =
          has changed if the CPKind calls for WIDECHAR to do that.  Otherwise,  
          the consequence would be that the enumeration would be pickled in WC21.
          So, find a surer criterion than this.  RTTipe doesn't 
-         appear to have sufficient information ccurrently. *) 
+         appear to have sufficient information currently. *) 
+(* Widechar Tipe. *) 
       END;
     ELSE RETURN FALSE; 
     END; 
@@ -1574,6 +1575,7 @@ PROCEDURE BuildWidechar(self: T; fromTipe: RTTipe.T; toTipe: RTTipe.T)
     | CPKind.Copy16to32 =>
       IF fromTipe.size = toTipe.size THEN 
         (* It's an Enum with the right value count, but not really WIDECHAR. *)
+(* Widechar Tipe. *) 
         self.addCopy(fromTipe.size);
       ELSE
         <* ASSERT fromTipe.size = 16 *> 
@@ -1583,6 +1585,7 @@ PROCEDURE BuildWidechar(self: T; fromTipe: RTTipe.T; toTipe: RTTipe.T)
     | CPKind.Swap16to32 =>
       IF fromTipe.size = toTipe.size THEN 
         (* It's an Enum with the right value count, but not really WIDECHAR. *)
+(* Widechar Tipe. *) 
         CASE fromTipe.size OF 
         | 16 => self.addSwap16(16); 
         | 32 => self.addSwap32(32);
@@ -1596,6 +1599,7 @@ PROCEDURE BuildWidechar(self: T; fromTipe: RTTipe.T; toTipe: RTTipe.T)
     | CPKind.Copy32to16 =>
       IF fromTipe.size = toTipe.size THEN 
         (* It's an Enum with the right value count, but not really WIDECHAR. *)
+(* Widechar Tipe. *) 
         self.addCopy(fromTipe.size);
       ELSE
         <* ASSERT fromTipe.size = 32 *> 
@@ -1605,6 +1609,7 @@ PROCEDURE BuildWidechar(self: T; fromTipe: RTTipe.T; toTipe: RTTipe.T)
     | CPKind.Swap32to16 =>
       IF fromTipe.size = toTipe.size THEN 
         (* It's an Enum with the right value count, but not really WIDECHAR. *)
+(* Widechar Tipe. *) 
         CASE fromTipe.size OF 
         | 16 => self.addSwap16(16); 
         | 32 => self.addSwap32(32);
@@ -1662,6 +1667,7 @@ PROCEDURE BuildOne(self: T; fromTipe: RTTipe.T;
           <* ASSERT IsWidechar(toTipe) *> 
           (* ^But it could have different element count. *) 
           BuildWidechar (self, fromTipe, toTipe);  
+(* Widechar Tipe. *) 
         ELSE 
           BuildOrdinal(self, fromTipe, toTipe, self.wordKind, signed:=FALSE);  
         END; 
@@ -1934,6 +1940,7 @@ PROCEDURE KindToText(kind: RTTipe.Kind) =
     | RTTipe.Kind.Cardinal => IO.Put( "Cardinal");
     | RTTipe.Kind.Char => IO.Put( "Char");
     | RTTipe.Kind.Enum => IO.Put( "Enum");
+(* Widechar Tipe. *) 
     | RTTipe.Kind.Extended => IO.Put( "Extended");
     | RTTipe.Kind.Integer => IO.Put( "Integer");
     | RTTipe.Kind.Longcard => IO.Put( "Longcard");
@@ -2013,6 +2020,7 @@ PROCEDURE TipeToText(tipe: RTTipe.T; pre: TEXT; packing: RTPacking.T) =
       TipeToText(a.element, pre & "  ", packing);
     | RTTipe.Enum(e) =>
       IO.Put(" of " & Fmt.Int(e.n_elts) & " elements");
+(* Widechar Tipe. *) 
     | RTTipe.Object(o) =>
       IO.Put(":\n" & pre & "  Super Type = ");
       IF o.super # NIL THEN
