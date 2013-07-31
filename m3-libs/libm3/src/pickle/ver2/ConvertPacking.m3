@@ -11,7 +11,7 @@
 UNSAFE MODULE ConvertPacking;
 
 IMPORT RTTipe, RTPacking, PklAction, PklActionSeq, Thread, Wr, Rd, Swap, Word,
-       IO, Fmt, PackingTbl, PackingTypeCode;
+       IO, Fmt, PackingTbl, PackingTypeCode, UniEncoding;
 FROM Word IMPORT And, Or, LeftShift, RightShift; 
 
 VAR packingCache: PackingTbl.T := NEW(PackingTbl.Default).init();
@@ -460,13 +460,13 @@ PROCEDURE Convert
 
                   IF self.from.little_endian THEN
                     u16 := int32onU16p^.a;
-                    IF int32onU16p^.b # 0 THEN
-                      RAISE Error("WIDECHAR value exceeds 16 bits.");
+                    IF int32onU16p^.b # 0 THEN 
+                      u16 := UniEncoding . ReplacementWt; 
                     END;
                   ELSE
                     u16 := int32onU16p^.b;
                     IF int32onU16p^.a # 0 THEN
-                      RAISE Error("WIDECHAR value exceeds 16 bits.");
+                      u16 := UniEncoding . ReplacementWt; 
                     END;
                   END;
 
@@ -484,7 +484,7 @@ PROCEDURE Convert
                 FOR i := 1 TO insnUnitCt (*32-bit words*) DO
                   intVal := v.readWC21(); 
                   IF intVal > 16_10FFFF THEN 
-                    RAISE Error("Unicode WIDECHAR out of range.");
+                    RAISE Error("Malformed pickle: WIDECHAR out of range.");
                   END; 
                   WITH int32p = LOOPHOLE(dest, UNTRACED REF UInt32) DO
                     int32p^ := intVal; 
@@ -499,7 +499,7 @@ PROCEDURE Convert
                 FOR i := 1 TO insnUnitCt (*16-bit words*) DO
                   intVal := v.readWC21(); 
                   IF intVal > 16_FFFF THEN 
-                    RAISE Error("16-bit WIDECHAR out of range.");
+                    intVal := UniEncoding . ReplacementWt  
                   END; 
                   WITH uint16p = LOOPHOLE(dest, UNTRACED REF Swap.UInt16) DO
                     uint16p^ := intVal; 
