@@ -179,6 +179,7 @@ TYPE TipeWriteVisitor = ConvertPacking.WriteVisitor OBJECT
       writeRef := TipeWriteRef;
       writeChar := TipeWriteChar; 
       writeWC21 := TipeWriteWC21; 
+      getWriter := TipeGetWriter; 
     END;
 (* <--- BLAIR*)
 
@@ -240,10 +241,10 @@ PROCEDURE FPImage(READONLY fp: Fingerprint.T): TEXT =
 (* Top-level sugar: Write and Read *)
 (* *)
 
-PROCEDURE Write(wr: Wr.T; r: REFANY)
+PROCEDURE Write(wr: Wr.T; r: REFANY; write16BitWidechar := FALSE)
         RAISES { Error, Wr.Failure, Thread.Alerted } =
   BEGIN
-    NEW (Writer, wr := wr).write(r);
+    NEW (Writer, wr := wr, write16BitWidechar := write16BitWidechar).write(r);
   END Write;
 
 PROCEDURE Read(rd: Rd.T): REFANY
@@ -353,6 +354,7 @@ PROCEDURE WriteRef(writer: Writer; r: REFANY)
       FOR i := 1 TO writer.tcCount DO writer.tcToPkl[writer.pklToTC[i]] := 0 END;
       writer.tcCount := 0;
       writer.collisions := 0;
+      StorePackingInHeader (v2_header,writer.write16BitWidechar); 
       Wr.PutString(writer.wr, v2_header);
       RTCollector.DisableMotion();
       INC(writer.level);
@@ -1009,6 +1011,11 @@ PROCEDURE TipeWriteWC21(v: TipeWriteVisitor; value: UInt32)
     ConvertPacking.WriteWC21(v.writer.wr, value); 
   END TipeWriteWC21; 
 
+PROCEDURE TipeGetWriter(v: TipeWriteVisitor):Writer = 
+  BEGIN 
+    RETURN v.writer; 
+  END TipeGetWriter; 
+
 PROCEDURE RootSpecialRead(<*UNUSED*> sp: Special;
                           reader: Reader; id: RefID): REFANY
     RAISES { Error, Rd.EndOfFile, Rd.Failure, Thread.Alerted } =
@@ -1083,13 +1090,19 @@ PROCEDURE GetPacking (header: Header): INTEGER =
              0, 32);
   END GetPacking;
 
-PROCEDURE PutPacking (VAR header: Header; packing: INTEGER) =
+PROCEDURE StorePackingInHeader 
+  (VAR header: Header; write16BitWidechar: BOOLEAN) =
+  VAR Packing: RTPacking.T;
+  VAR PackingCode: INTEGER; 
   BEGIN
-    header[HC.p0] := VAL(Word.Extract(packing, 0, 8), CHAR);
-    header[HC.p1] := VAL(Word.Extract(packing, 8, 8), CHAR);
-    header[HC.p2] := VAL(Word.Extract(packing, 16, 8), CHAR);
-    header[HC.p3] := VAL(Word.Extract(packing, 24, 8), CHAR);
-  END PutPacking;
+    Packing := RTPacking.Local();
+    IF write16BitWidechar THEN Packing.widechar_size := 16; END;
+    PackingCode := RTPacking.Encode(Packing);
+    header[HC.p0] := VAL(Word.Extract(PackingCode, 0, 8), CHAR);
+    header[HC.p1] := VAL(Word.Extract(PackingCode, 8, 8), CHAR);
+    header[HC.p2] := VAL(Word.Extract(PackingCode, 16, 8), CHAR);
+    header[HC.p3] := VAL(Word.Extract(PackingCode, 24, 8), CHAR);
+  END StorePackingInHeader;
 
 PROCEDURE InitHeader() =
     VAR test: BITS 16 FOR [0..32767];
@@ -1118,7 +1131,6 @@ PROCEDURE InitHeader() =
     
     myPacking := RTPacking.Local();
     myPackingCode := RTPacking.Encode(myPacking);
-    PutPacking(v2_header, myPackingCode);
     (* <--- BLAIR *)
     myTrailer[HT.t1] := Trailer1;
     myTrailer[HT.t2] := Trailer2;
