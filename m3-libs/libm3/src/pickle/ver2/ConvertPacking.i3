@@ -88,6 +88,11 @@ TYPE ReadVisitor <: RVPublic;
         RAISES { Rd.EndOfFile, Rd.Failure, Thread.Alerted };
        readWC21(): UInt32
         RAISES {Rd.EndOfFile, Rd.Failure, Thread.Alerted}; 
+     (* TMIH: Too much information hiding.  readWC21 is a do-nothing
+        wrapper whose only justification is to get around overly 
+        zealous information hiding that prevents ConvertPacking from
+        getting at the "reader" field of ReadVisitor.  It would take a lot
+        of rework to remove the hiding. *) 
      END;
 
 (* When "v.readData" is called, the array "data" should be filled in with
@@ -107,6 +112,11 @@ TYPE WriteVisitor <: WVPublic;
         RAISES { Wr.Failure, Thread.Alerted };
        writeWC21(intVal: UInt32) 
         RAISES { Wr.Failure, Thread.Alerted };
+     (* TMIH: Too much information hiding.  writeWC21 is a do-nothing
+        wrapper whose only justification is to get around overly 
+        zealous information hiding that prevents ConvertPacking from
+        getting at the "writer" field of WriteVisitor.  It would take a lot
+        of rework to remove the hiding. *) 
      END;
 
 (* When "v.writeData" is called, the array "data" should be writen
