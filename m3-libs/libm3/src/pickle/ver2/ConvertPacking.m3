@@ -42,7 +42,7 @@ REVEAL T = Public BRANDED "ConvertPacking 1.0" OBJECT
                    size: INTEGER): Word.T := ExtractSwap;
 
       buildOne(fromTipe: RTTipe.T; toTipe: RTTipe.T) RAISES {Error} := 
-          BuildOne; 
+        BuildOne; 
 
       addCopy(bitCt: INTEGER) := AddCopy;
       addCopy32to64(bitCt: INTEGER; signed: BOOLEAN) := AddCopy32to64;
