@@ -33,10 +33,7 @@ REVEAL T = Public BRANDED "ConvertPacking 1.0" OBJECT
       from: RTPacking.T;
       to: RTPacking.T;
       nDim, fromEltPack, toEltPack: INTEGER := 0;
-      write16bitWidechar: BOOLEAN := FALSE; 
-      (* ^Write a backward-compatible pickle, readable by a program compiled 
-          with 16-bit WIDECHAR.  An alternate way. Not implemented yet. *)
-      writer: T;
+      writeConv: T;
     METHODS
       extractSwap (x: Word.T; i, n: CARDINAL; 
                    size: INTEGER): Word.T := ExtractSwap;
@@ -199,6 +196,8 @@ TYPE U16Rec = BITS 16 FOR RECORD v : Swap.UInt16 END;
 VAR U16RecVar : U16Rec; 
 <*UNUSED*>
 VAR CheckU16 : [ 0 .. 0 ] := ADR(U16RecVar) - ADR(U16RecVar.v);
+
+TYPE U16OnCharArr = ARRAY [0..1] OF CHAR; 
 
 TYPE Int32onU16 = RECORD a, b: Swap.UInt16 END; 
 
@@ -560,7 +559,7 @@ PROCEDURE WriteWC21(wr: Wr.T; intVal: UInt32)
     END; 
   END WriteWC21; 
 
-PROCEDURE Write
+PROCEDURE Write 
    (self: T; src: ADDRESS; v: WriteVisitor; 
     progRepCt: INTEGER := 1 (* Repeat the program this many times. *) )
    : ADDRESS 
@@ -568,9 +567,9 @@ PROCEDURE Write
   VAR insnRepCt: INTEGER := 1; (* Repeat each instruction this many times. *) 
 
   BEGIN
-    IF self.writer # NIL THEN 
+    IF self.writeConv # NIL THEN 
       (* There is a different program for writing.  Use it instead. *) 
-      RETURN self.writer.write(src, v, progRepCt);
+      RETURN self.writeConv.write(src, v, progRepCt);
     END;
 
     IF self.prog.size() = 2 THEN
@@ -608,28 +607,47 @@ PROCEDURE Write
             END;
 
           | PklAction.PAKind.CopyWC21to32,
-            (* The name "CopyWC21to32" is meant for when the program is executed
-               by the read/convert interpreter.  Here, we are writing, on a 
-               32-bit WIDECHAR system, so we do the reverse, i.e., write each 
-               32-bit field in WC21. *) 
             PklAction.PAKind.Copy16to32 =>
-            (* The name "Copy16to32 is meant for when the program is executed
-               by the readConvert interpreter.  Here, if this happens at all, 
-               we are writing, on a 32-bit WIDECHAR system, so we write each
-               32-bit field in WC21. *)  
-(* TODO: If self.write16bitWidechar, we want to really copy 32 to 16 here. *) 
-              FOR i := 1 TO insnUnitCt (*32-bit words*) DO
-                WITH uint32p = LOOPHOLE(src, UNTRACED REF UInt32) DO
-                  v.writeWC21(uint32p^)
-                END; 
-                INC(src, 4);  
+            (* The names "CopyWC21to32" and "Copy16to32" are meant for when 
+               the program is executed by the read/convert interpreter.  Here, 
+               the to-system, which we are executing/writing on, is a 32-bit 
+               WIDECHAR system. The other system is irrelevant to writing.  
+               So we write each 32-bit field in WC21, or maybe 16-bits, if 
+               forced. *) 
+              VAR outValR: U16Rec;
+              VAR writer := v.getWriter(); 
+              BEGIN 
+                IF writer.write16BitWidechar THEN 
+                  WITH u16arr = LOOPHOLE(outValR.v, U16OnCharArr) DO 
+                    FOR i := 1 TO insnUnitCt (*32-bit words*) DO
+                      WITH uint32p = LOOPHOLE(src, UNTRACED REF UInt32) DO
+                        IF Word.GT(uint32p^, 16_FFFF) THEN
+                          outValR.v := UniEncoding.ReplacementWt;
+                        ELSE outValR.v := uint32p^; 
+                        END;
+                        Wr.PutChar(writer.wr, u16arr[0]);
+                        Wr.PutChar(writer.wr, u16arr[1]);
+                      END; 
+                      INC(src, 4);  
+                    END; 
+                  END; 
+                ELSE 
+                  FOR i := 1 TO insnUnitCt (*32-bit words*) DO
+                    WITH uint32p = LOOPHOLE(src, UNTRACED REF UInt32) DO
+                      v.writeWC21(uint32p^)
+                      (* WC21 codec will avoid endianness worries. *) 
+                    END; 
+                    INC(src, 4);  
+                  END; 
+                END;
               END; 
 
           | PklAction.PAKind.CopyWC21to16 =>
             (* The name "CopyWC21to16" is meant for when the program is executed
                by the read/convert interpreter.  Here, if this happens at all,
-               we are writing, on a 16-bit WIDECHAR system, so we just copy 
-               16-16. "insnUnitCt" in this instruction is number of WIDECHARs. *)  
+               the to-system, which we are executing/writing on, is a 16-bit 
+               WIDECHAR system, so we just copy 16-16.  Here, "insnUnitCt" is 
+               number of WIDECHARs. *)  
             WriteData (v, src, insnUnitCt*2);
             INC(src, insnUnitCt*2); 
 
@@ -1353,11 +1371,11 @@ PROCEDURE Init(self: T; typecode: INTEGER; from: RTPacking.T;
     IF self.from # self.to THEN
       VAR wnDim, wfromEltPack, wtoEltPack: INTEGER;
       BEGIN
-        self.writer := New(typecode, to, to, wnDim, 
+        self.writeConv := New(typecode, to, to, wnDim, 
                            wfromEltPack, wtoEltPack);
       END;
     ELSE
-      self.writer := NIL;
+      self.writeConv := NIL;
     END;
 
     EVAL packingCache.put(key, self);
@@ -1556,7 +1574,7 @@ PROCEDURE BuildWidechar(self: T; fromTipe: RTTipe.T; toTipe: RTTipe.T)
       CASE fromTipe.size OF
       | 16 => self.addCopy(fromTipe.size);
       | 32 => self.addCopyWC21to32(toTipe.size);
-              (* The Write interpreter will actually do 32toWC21 for this. *)  
+        (* The Write interpreter will just write 32 in its own way for this. *)
       ELSE
         RAISE Error("Should not get here: 5");
       END; 
@@ -1565,8 +1583,7 @@ PROCEDURE BuildWidechar(self: T; fromTipe: RTTipe.T; toTipe: RTTipe.T)
       CASE fromTipe.size OF
       | 16 => self.addSwap16(16);
       | 32 => self.addCopyWC21to32(toTipe.size); 
-              (* The Write interpreter will actually do 32toWC21 for this. *)  
-              (* WC21 codec will avoid endianness worries. *) 
+        (* The Write interpreter will just write 32 in its own way for this. *)
       ELSE
         RAISE Error("Should not get here: 6");
       END;
@@ -1581,6 +1598,7 @@ PROCEDURE BuildWidechar(self: T; fromTipe: RTTipe.T; toTipe: RTTipe.T)
         <* ASSERT fromTipe.size = 16 *> 
         <* ASSERT toTipe.size = 32 *> 
         self.addCopy16to32(16);
+        (* The Write interpreter will just write 32 in its own way for this. *)
       END; 
     | CPKind.Swap16to32 =>
       IF fromTipe.size = toTipe.size THEN 
@@ -1605,6 +1623,7 @@ PROCEDURE BuildWidechar(self: T; fromTipe: RTTipe.T; toTipe: RTTipe.T)
         <* ASSERT fromTipe.size = 32 *> 
         <* ASSERT toTipe.size = 16 *> 
         self.addCopyWC21to16(16); 
+        (* The write interpreter will just write 16 in its own way for this. *)
       END; 
     | CPKind.Swap32to16 =>
       IF fromTipe.size = toTipe.size THEN 
@@ -1619,6 +1638,7 @@ PROCEDURE BuildWidechar(self: T; fromTipe: RTTipe.T; toTipe: RTTipe.T)
         <* ASSERT fromTipe.size = 32 *> 
         <* ASSERT toTipe.size = 16 *> 
         self.addCopyWC21to16(16); 
+        (* The write interpreter will just write 16 in its own way for this. *)
       END; 
     ELSE <* ASSERT FALSE *> 
     END;

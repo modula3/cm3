@@ -31,7 +31,7 @@
 
 UNSAFE INTERFACE ConvertPacking;
 
-IMPORT RTPacking, PklAction, Thread, Rd, Wr;
+IMPORT Pickle2, RTPacking, PklAction, Thread, Rd, Wr;
 
 EXCEPTION Error(TEXT);
 
@@ -100,7 +100,7 @@ TYPE ReadVisitor <: RVPublic;
    "length" data bytes in the conversion source should be skipped
    over. *)
 
-TYPE WriteVisitor <: WVPublic;
+TYPE WriteVisitor (* ABSTRACT *) <: WVPublic;
      WVPublic = OBJECT METHODS 
        writeData(VAR data: ARRAY OF CHAR) RAISES
         {Wr.Failure, Thread.Alerted};
@@ -116,7 +116,8 @@ TYPE WriteVisitor <: WVPublic;
         wrapper whose only justification is to get around overly 
         zealous information hiding that prevents ConvertPacking from
         getting at the "writer" field of WriteVisitor.  It would take a lot
-        of rework to remove the hiding. *) 
+        of rework to remove the hiding. *)
+       getWriter():Pickle2.Writer; (* TMIH *)  
      END;
 
 (* When "v.writeData" is called, the array "data" should be writen
