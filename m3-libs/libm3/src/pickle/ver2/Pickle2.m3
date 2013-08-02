@@ -1165,6 +1165,16 @@ CONST REFANY_uid = 16_1c1c45e6;
 CONST pm3_REFANY_Fp = FPA {16_65,16_72,16_24,16_80,16_79,16_6e,16_61,16_66};
 CONST cm3_REFANY_Fp = FPA {16_66,16_61,16_6e,16_79,16_80,16_24,16_72,16_65};
 
+CONST TextLitT_uid = 16_7BBBFBCA;
+CONST bad_TextLitT_Fp = FPA {16_d9,16_56,16_04,16_eb,16_a7,16_ec,16_d8,16_02};
+  (* TextLiteral.T once had a pseudo-buffer size that adapted to the maximum
+     for the word size.  This gave the above fingerprint on 64-bit machines
+     the the below one on 32.  Eventually, they will all be as below, but
+     this translation will allow reading old pickles written on a 64-bit
+     machine, as long as no object/array has a field/element whose statically
+     declared type is TextLiteral.T.  *) 
+CONST good_TextLitT_Fp = FPA {16_e3,16_d3,16_a1,16_62,16_29,16_28,16_1a,16_19};
+
 TYPE TE = 
   RECORD 
     uid : INTEGER;
@@ -1174,7 +1184,7 @@ TYPE TE =
 
 TYPE FP = Fingerprint.T; 
 
-TYPE pm3_cm3_table_T = ARRAY [ 0 .. 4 ] OF TE; 
+TYPE pm3_cm3_table_T = ARRAY [ 0 .. 6 ] OF TE; 
 
 CONST pm3_cm3_table = pm3_cm3_table_T 
         { TE { uid := NULL_uid, 
@@ -1191,7 +1201,13 @@ CONST pm3_cm3_table = pm3_cm3_table_T
                cm3_fp := FP { byte := cm3_ADDRESS_Fp } }, 
           TE { uid := REFANY_uid, 
                pm3_fp := FP { byte := pm3_REFANY_Fp }, 
-               cm3_fp := FP { byte := cm3_REFANY_Fp } }
+               cm3_fp := FP { byte := cm3_REFANY_Fp } },
+          TE { uid := TextLitT_uid, 
+               pm3_fp := FP { byte := bad_TextLitT_Fp }, 
+               cm3_fp := FP { byte := good_TextLitT_Fp } },
+          TE { uid := TextLitT_uid, 
+               pm3_fp := FP { byte := good_TextLitT_Fp }, 
+               cm3_fp := FP { byte := bad_TextLitT_Fp } }
         }; 
 
 PROCEDURE ReadPm3FP (READONLY fp: Fingerprint.T): TypeCode =
