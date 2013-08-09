@@ -259,6 +259,14 @@ PROCEDURE UnGetChar(rd: T) RAISES {} =
        original behaviour. *) 
   END UnGetChar;
 
+PROCEDURE FastUnGetChar(rd: T) RAISES {} =
+(* Like Rd.FastUnGetChar, but rd must be locked. *)
+  BEGIN
+    EVAL FastUnGetCharMulti (rd) 
+    (* Just silently fail if can't do it.  This duplicates
+       original behaviour. *) 
+  END FastUnGetChar;
+
 PROCEDURE UnGetCharMulti(rd: T): BOOLEAN (* Succeeded. *) =
   BEGIN
     LOCK rd DO RETURN FastUnGetCharMulti (rd) END;
