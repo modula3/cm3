@@ -86,13 +86,7 @@ TYPE ReadVisitor <: RVPublic;
         {Error, Rd.EndOfFile, Rd.Failure, Thread.Alerted};
        readChar(): CHAR  
         RAISES { Rd.EndOfFile, Rd.Failure, Thread.Alerted };
-       readWC21(): UInt32
-        RAISES {Rd.EndOfFile, Rd.Failure, Thread.Alerted}; 
-     (* TMIH: Too much information hiding.  readWC21 is a do-nothing
-        wrapper whose only justification is to get around overly 
-        zealous information hiding that prevents ConvertPacking from
-        getting at the "reader" field of ReadVisitor.  It would take a lot
-        of rework to remove the hiding. *) 
+       getReader():Pickle2.Reader; (* TMIH *)  
      END;
 
 (* When "v.readData" is called, the array "data" should be filled in with
@@ -110,13 +104,6 @@ TYPE WriteVisitor (* ABSTRACT *) <: WVPublic;
         {Error, Wr.Failure, Thread.Alerted};
        writeChar(value: CHAR)  
         RAISES { Wr.Failure, Thread.Alerted };
-       writeWC21(intVal: UInt32) 
-        RAISES { Wr.Failure, Thread.Alerted };
-     (* TMIH: Too much information hiding.  writeWC21 is a do-nothing
-        wrapper whose only justification is to get around overly 
-        zealous information hiding that prevents ConvertPacking from
-        getting at the "writer" field of WriteVisitor.  It would take a lot
-        of rework to remove the hiding. *)
        getWriter():Pickle2.Writer; (* TMIH *)  
      END;
 
