@@ -14,7 +14,6 @@ IMPORT Rd, RT0, RTAllocator, RTCollector, RTHeap, RTHeapRep, RTType, RTTypeFP,
        RTTypeMap, Thread, Word, Wr, Fingerprint, RTPacking,
        ConvertPacking, PklTipeMap, Swap, PickleRd, PickleWr, BuiltinSpecials2, 
        Fmt;
-FROM ConvertPacking IMPORT UInt32;
 
 (* *)
 (* Syntax of a pickle, and constants pertaining thereto *)
@@ -168,7 +167,7 @@ TYPE TipeReadVisitor = ConvertPacking.ReadVisitor OBJECT
       skipData := TipeSkipReadData;
       readRef := TipeReadRef;
       readChar := TipeReadChar;
-      readWC21 := TipeReadWC21;  
+      getReader := TipeGetReader; 
     END;
 
 TYPE TipeWriteVisitor = ConvertPacking.WriteVisitor OBJECT 
@@ -178,7 +177,6 @@ TYPE TipeWriteVisitor = ConvertPacking.WriteVisitor OBJECT
       skipData := TipeSkipWriteData;
       writeRef := TipeWriteRef;
       writeChar := TipeWriteChar; 
-      writeWC21 := TipeWriteWC21; 
       getWriter := TipeGetWriter; 
     END;
 (* <--- BLAIR*)
@@ -503,7 +501,7 @@ PROCEDURE ReadFP(reader: Reader): TypeCode
     END;
     tc := RTTypeFP.FromFingerprint(fp);
     IF tc = RTType.NoSuchType THEN
-      tc := ReadPm3FP (fp); 
+      tc := TranslateFP (fp); 
     END; 
     IF tc = RTType.NoSuchType THEN
       RAISE Error(
@@ -990,12 +988,10 @@ PROCEDURE TipeReadChar(v: TipeReadVisitor): CHAR
     RETURN Rd.GetChar(v.reader.rd); 
   END TipeReadChar; 
 
-PROCEDURE TipeReadWC21(v: TipeReadVisitor): UInt32 
-  RAISES {Rd.EndOfFile, Rd.Failure, Thread.Alerted} = 
-
+PROCEDURE TipeGetReader(v: TipeReadVisitor):Reader = 
   BEGIN 
-    RETURN ConvertPacking.ReadWC21(v.reader.rd); 
-  END TipeReadWC21; 
+    RETURN v.reader; 
+  END TipeGetReader; 
 
 PROCEDURE TipeWriteChar(v: TipeWriteVisitor; value: CHAR)
   RAISES {Wr.Failure, Thread.Alerted} = 
@@ -1003,13 +999,6 @@ PROCEDURE TipeWriteChar(v: TipeWriteVisitor; value: CHAR)
   BEGIN 
     Wr.PutChar(v.writer.wr, value); 
   END TipeWriteChar; 
-
-PROCEDURE TipeWriteWC21(v: TipeWriteVisitor; value: UInt32)
-  RAISES {Wr.Failure, Thread.Alerted} = 
-
-  BEGIN 
-    ConvertPacking.WriteWC21(v.writer.wr, value); 
-  END TipeWriteWC21; 
 
 PROCEDURE TipeGetWriter(v: TipeWriteVisitor):Writer = 
   BEGIN 
@@ -1169,56 +1158,60 @@ CONST TextLitT_uid = 16_7BBBFBCA;
 CONST bad_TextLitT_Fp = FPA {16_d9,16_56,16_04,16_eb,16_a7,16_ec,16_d8,16_02};
   (* TextLiteral.T once had a pseudo-buffer size that adapted to the maximum
      for the word size.  This gave the above fingerprint on 64-bit machines
-     the the below one on 32.  Eventually, they will all be as below, but
+     and the the below one on 32.  Eventually, they will all be as below, but
      this translation will allow reading old pickles written on a 64-bit
      machine, as long as no object/array has a field/element whose statically
-     declared type is TextLiteral.T.  *) 
+     declared type is TextLiteral.T. *) 
 CONST good_TextLitT_Fp = FPA {16_e3,16_d3,16_a1,16_62,16_29,16_28,16_1a,16_19};
 
 TYPE TE = 
   RECORD 
     uid : INTEGER;
-    pm3_fp : Fingerprint.T; 
-    cm3_fp : Fingerprint.T; 
+    from_fp : Fingerprint.T; 
+    to_fp : Fingerprint.T; 
   END; 
 
 TYPE FP = Fingerprint.T; 
 
-TYPE pm3_cm3_table_T = ARRAY [ 0 .. 6 ] OF TE; 
+TYPE FPTable_T = ARRAY [ 0 .. 6 ] OF TE; 
 
-CONST pm3_cm3_table = pm3_cm3_table_T 
+CONST FPTable = FPTable_T 
         { TE { uid := NULL_uid, 
-               pm3_fp := FP { byte := pm3_NULL_Fp }, 
-               cm3_fp := FP { byte := cm3_NULL_Fp } }, 
+               from_fp := FP { byte := pm3_NULL_Fp }, 
+               to_fp := FP { byte := cm3_NULL_Fp } }, 
           TE { uid := ROOT_uid, 
-               pm3_fp := FP { byte := pm3_ROOT_Fp }, 
-               cm3_fp := FP { byte := cm3_ROOT_Fp } }, 
+               from_fp := FP { byte := pm3_ROOT_Fp }, 
+               to_fp := FP { byte := cm3_ROOT_Fp } }, 
           TE { uid := UNTRACED_ROOT_uid, 
-               pm3_fp := FP { byte := pm3_UNTRACED_ROOT_Fp }, 
-               cm3_fp := FP { byte := cm3_UNTRACED_ROOT_Fp } }, 
+               from_fp := FP { byte := pm3_UNTRACED_ROOT_Fp }, 
+               to_fp := FP { byte := cm3_UNTRACED_ROOT_Fp } }, 
           TE { uid := ADDRESS_uid, 
-               pm3_fp := FP { byte := pm3_ADDRESS_Fp }, 
-               cm3_fp := FP { byte := cm3_ADDRESS_Fp } }, 
+               from_fp := FP { byte := pm3_ADDRESS_Fp }, 
+               to_fp := FP { byte := cm3_ADDRESS_Fp } }, 
           TE { uid := REFANY_uid, 
-               pm3_fp := FP { byte := pm3_REFANY_Fp }, 
-               cm3_fp := FP { byte := cm3_REFANY_Fp } },
+               from_fp := FP { byte := pm3_REFANY_Fp }, 
+               to_fp := FP { byte := cm3_REFANY_Fp } },
           TE { uid := TextLitT_uid, 
-               pm3_fp := FP { byte := bad_TextLitT_Fp }, 
-               cm3_fp := FP { byte := good_TextLitT_Fp } },
+               from_fp := FP { byte := bad_TextLitT_Fp }, 
+               to_fp := FP { byte := good_TextLitT_Fp } },
           TE { uid := TextLitT_uid, 
-               pm3_fp := FP { byte := good_TextLitT_Fp }, 
-               cm3_fp := FP { byte := bad_TextLitT_Fp } }
+               from_fp := FP { byte := good_TextLitT_Fp }, 
+               to_fp := FP { byte := bad_TextLitT_Fp } }
         }; 
 
-PROCEDURE ReadPm3FP (READONLY fp: Fingerprint.T): TypeCode =
+PROCEDURE TranslateFP (READONLY fp: Fingerprint.T): TypeCode =
+(* Apply some hard-coded translations to a fingerprint.  These account
+   for some changes in specific fingerprints that are known to be different 
+   in certain compiler/library variants that could have compiled the 
+   different programs writing and reading the pickle. *) 
   VAR i: INTEGER; tc: TypeCode; t: RT0.TypeDefn;
   BEGIN
     i := 0; 
     LOOP 
-      IF i > LAST (pm3_cm3_table) THEN RETURN RTType.NoSuchType; END;
-      WITH te = pm3_cm3_table[i] DO 
-        IF fp.byte = te.pm3_fp.byte THEN
-          tc := RTTypeFP.FromFingerprint(te.cm3_fp);
+      IF i > LAST (FPTable) THEN RETURN RTType.NoSuchType; END;
+      WITH te = FPTable[i] DO 
+        IF fp.byte = te.from_fp.byte THEN
+          tc := RTTypeFP.FromFingerprint(te.to_fp);
           IF tc # RTType.NoSuchType THEN
             t := RTType.Get(tc);
             IF t^.selfID = te.uid THEN RETURN tc; END; 
@@ -1227,7 +1220,7 @@ PROCEDURE ReadPm3FP (READONLY fp: Fingerprint.T): TypeCode =
       END; 
       INC (i);  
     END; 
-  END ReadPm3FP; 
+  END TranslateFP; 
 
 BEGIN
 

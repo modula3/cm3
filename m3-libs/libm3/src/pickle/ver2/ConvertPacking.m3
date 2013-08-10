@@ -481,7 +481,7 @@ PROCEDURE Convert
               VAR intVal: UInt32; 
               BEGIN 
                 FOR i := 1 TO insnUnitCt (*32-bit words*) DO
-                  intVal := v.readWC21(); 
+                  intVal := ReadWC21(v.getReader().rd); 
                   IF intVal > 16_10FFFF THEN 
                     RAISE Error("Malformed pickle: WIDECHAR out of range.");
                   END; 
@@ -496,7 +496,7 @@ PROCEDURE Convert
               VAR intVal: UInt32; 
               BEGIN 
                 FOR i := 1 TO insnUnitCt (*16-bit words*) DO
-                  intVal := v.readWC21(); 
+                  intVal := ReadWC21(v.getReader().rd); 
                   IF intVal > 16_FFFF THEN 
                     intVal := UniEncoding . ReplacementWt  
                   END; 
@@ -634,7 +634,7 @@ PROCEDURE Write
                 ELSE 
                   FOR i := 1 TO insnUnitCt (*32-bit words*) DO
                     WITH uint32p = LOOPHOLE(src, UNTRACED REF UInt32) DO
-                      v.writeWC21(uint32p^)
+                      WriteWC21(v.getWriter().wr,uint32p^)
                       (* WC21 codec will avoid endianness worries. *) 
                     END; 
                     INC(src, 4);  
