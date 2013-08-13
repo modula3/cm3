@@ -10,7 +10,8 @@
 
 UNSAFE MODULE ConvertPacking;
 
-IMPORT RTTipe, RTPacking, PklAction, PklActionSeq, Thread, Wr, Rd, Swap, Word,
+IMPORT RTTipe, RTPacking, PklAction, PklActionSeq, PickleStubs, 
+       Thread, Wr, Rd, Swap, Word,
        IO, Fmt, PackingTbl, PackingTypeCode, UniEncoding;
 FROM Word IMPORT And, Or, LeftShift, RightShift; 
 
@@ -481,7 +482,7 @@ PROCEDURE Convert
               VAR intVal: UInt32; 
               BEGIN 
                 FOR i := 1 TO insnUnitCt (*32-bit words*) DO
-                  intVal := ReadWC21(v.getReader().rd); 
+                  intVal := PickleStubs.InWC21(v.getReader().rd); 
                   IF intVal > 16_10FFFF THEN 
                     RAISE Error("Malformed pickle: WIDECHAR out of range.");
                   END; 
@@ -496,7 +497,7 @@ PROCEDURE Convert
               VAR intVal: UInt32; 
               BEGIN 
                 FOR i := 1 TO insnUnitCt (*16-bit words*) DO
-                  intVal := ReadWC21(v.getReader().rd); 
+                  intVal := PickleStubs.InWC21(v.getReader().rd); 
                   IF intVal > 16_FFFF THEN 
                     intVal := UniEncoding . ReplacementWt  
                   END; 
@@ -634,7 +635,8 @@ PROCEDURE Write
                 ELSE 
                   FOR i := 1 TO insnUnitCt (*32-bit words*) DO
                     WITH uint32p = LOOPHOLE(src, UNTRACED REF UInt32) DO
-                      WriteWC21(v.getWriter().wr,uint32p^)
+                      PickleStubs.OutWC21
+                        (v.getWriter().wr,VAL(uint32p^,WIDECHAR))
                       (* WC21 codec will avoid endianness worries. *) 
                     END; 
                     INC(src, 4);  
