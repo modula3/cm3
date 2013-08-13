@@ -125,7 +125,7 @@ PROCEDURE InWideChars(reader: Pickle.Reader; VAR arr: ARRAY OF WIDECHAR)
             END;
             arr[RI] := VAL(IntVal, WIDECHAR);  
           END; 
-        | CPKind.Copy32to16 , CPKind.Swap32to16 =>
+        | CPKind.Copy32to16 , CPKind.Swap32to16 => (* Remote 32, local 16. *) 
           FOR RI := 0 TO LAST(arr) DO
             IntVal := InWC21(reader.rd);
             IF IntVal > 16_FFFF THEN IntVal := UniEncoding.ReplacementWt; END;
@@ -135,7 +135,7 @@ PROCEDURE InWideChars(reader: Pickle.Reader; VAR arr: ARRAY OF WIDECHAR)
         END 
       ELSE (* size 16 in the pickle. *) 
         CASE reader.widecharConvKind OF 
-        | CPKind.Copy => (* 16 on both systems. *)
+        | CPKind.Copy => (* 16 on both systems, same endian. *)
           INC(cnt, cnt);  (* == # of 8-bit bytes *)
           p := LOOPHOLE(ADR(arr[0]), CharPtr);
           WHILE (cnt > 0) DO
@@ -145,7 +145,7 @@ PROCEDURE InWideChars(reader: Pickle.Reader; VAR arr: ARRAY OF WIDECHAR)
             END;
             INC(p, ADRSIZE(p^));  DEC(cnt, NUMBER(p^));
           END;
-        | CPKind.Copy16to32 =>
+        | CPKind.Copy16to32 => (* Remote 16, local 32, same endian. *) 
           WITH u16arr = LOOPHOLE(u16Al.u16, ARRAY [0..1] OF CHAR) DO
             FOR RI := 0 TO LAST(arr) DO
               u16arr[0] := Rd.GetChar(reader.rd);
@@ -153,7 +153,7 @@ PROCEDURE InWideChars(reader: Pickle.Reader; VAR arr: ARRAY OF WIDECHAR)
               arr[RI] := VAL(u16Al.u16, WIDECHAR);  
             END; 
           END; 
-        | CPKind.Swap, CPKind.Swap16to32 =>
+        | CPKind.Swap, CPKind.Swap16to32 => (* Remote 16, opposite endian. *) 
           WITH u16arr = LOOPHOLE(u16Al.u16, ARRAY [0..1] OF CHAR) DO
             FOR RI := 0 TO LAST(arr) DO
               u16arr[1] := Rd.GetChar(reader.rd);
