@@ -12,6 +12,8 @@ IMPORT NetObj, NetObjRep, NetObjRT, Pickle, Pickle2, Protocol, Transport,
        TransportUtils, Voucher, WireRep;
 IMPORT Atom, AtomList, Rd, RTType, Wr, Text, TextClass, Text8, Text16,
        Thread, RdClass, WrClass, UnsafeRd, UnsafeWr, FloatMode, Swap;
+IMPORT PickleStubs, UniEncoding;
+FROM Word IMPORT And, Or, LeftShift; 
 
 FROM Protocol IMPORT MsgHeader, CallHeader, Op;
 
@@ -23,6 +25,9 @@ REVEAL WrClass.Private <: MUTEX;
 (* Since clients of "Conn" must avoid accessing them concurrently,
    we operate on the embedded streams without locking them.
 *)
+
+TYPE U16Aligned = RECORD forceAlign: INTEGER; u16: BITS 16 FOR [0..16_FFFF] END;
+TYPE UInt32 = BITS 32 FOR [0 .. 16_7FFFFFFF];
 
 TYPE ObjectStack = RECORD
     pos: CARDINAL := 0;
@@ -246,7 +251,8 @@ PROCEDURE StartResult(c: Conn) =
 PROCEDURE InChars(c: Conn; rep: DataRep; VAR arr: ARRAY OF CHAR)
     RAISES {NetObj.Error, Rd.Failure, Thread.Alerted} =
   BEGIN
-    IF rep.charSet # NativeRep.charSet THEN
+    IF NUMBER(arr) <= 0 THEN RETURN; END;
+    IF CharSetField(rep.charSet) # CharSetField(NativeRep.charSet) THEN 
       RaiseError(NetObj.UnsupportedDataRep);
     END;
     IF c.rd.getSub(arr) # NUMBER(arr) THEN
@@ -257,23 +263,66 @@ PROCEDURE InChars(c: Conn; rep: DataRep; VAR arr: ARRAY OF CHAR)
 PROCEDURE InWideChars(c: Conn; rep: DataRep; VAR arr: ARRAY OF WIDECHAR)
     RAISES {NetObj.Error, Rd.Failure, Thread.Alerted} =
   VAR cnt: INTEGER := NUMBER(arr);  p: CharPtr;  n: INTEGER;
+  VAR IntVal: UInt32; 
+  VAR u16Al: U16Aligned; 
   BEGIN
     IF cnt <= 0 THEN RETURN; END;
-    INC(cnt, cnt);  (* == # of 8-bit characters *)
-    p := LOOPHOLE(ADR(arr[0]), CharPtr);
-    WHILE (cnt > 0) DO
-      n := MIN(cnt, NUMBER(p^));
-      IF c.rd.getSub(SUBARRAY(p^, 0, n)) # n THEN
-        RaiseUnmarshalFailure();
-      END;
-      INC(p, ADRSIZE(p^));  DEC(cnt, NUMBER(p^));
+    IF CharSetField(rep.charSet) # CharSetField(NativeRep.charSet) THEN 
+      RaiseError(NetObj.UnsupportedDataRep);
     END;
-    IF NOT NativeEndian(rep) THEN
-      (* we need to byte swap *)
-      FOR i := 0 TO LAST(arr) DO
-        WITH z = arr[i] DO  z := VAL (Swap.Swap2U (ORD (z)), WIDECHAR);  END;
-      END;
-    END;
+    TRY 
+      IF WideChar32(rep.charSet) THEN 
+         (* Size 32 in the writing system => WC21 in the pickle. *) 
+        IF WideChar32(NativeRep.charSet) THEN (* 32 on both systems. *) 
+          FOR RI := 0 TO LAST(arr) DO
+            IntVal := PickleStubs.InWC21(c.rd);
+            IF IntVal > 16_10FFFF THEN 
+              RaiseError
+                (Atom.FromText("Malformed pickle: WIDECHAR out of range.")); 
+            END;
+            arr[RI] := VAL(IntVal, WIDECHAR);  
+          END; 
+        ELSE (* Remote 32, local 16. *) 
+          FOR RI := 0 TO LAST(arr) DO
+            IntVal := PickleStubs.InWC21(c.rd);
+            IF IntVal > 16_FFFF THEN IntVal := UniEncoding.ReplacementWt; END;
+            arr[RI] := VAL(IntVal, WIDECHAR);  
+          END; 
+        END 
+      ELSE (* size 16 in the pickle. *) 
+        IF NativeEndian(rep) THEN (* Same endian. *) 
+          IF NOT WideChar32(NativeRep.charSet) THEN 
+             (* 16 on both systems, same endian. *)
+            INC(cnt, cnt);  (* == # of 8-bit bytes *)
+            p := LOOPHOLE(ADR(arr[0]), CharPtr);
+            WHILE (cnt > 0) DO
+              n := MIN(cnt, NUMBER(p^));
+              IF c.rd.getSub(SUBARRAY(p^, 0, n)) # n THEN
+                RaiseUnmarshalFailure();
+              END;
+              INC(p, ADRSIZE(p^));  DEC(cnt, NUMBER(p^));
+            END;
+          ELSE (* Remote 16, local 32, same endian. *) 
+            WITH u16arr = LOOPHOLE(u16Al.u16, ARRAY [0..1] OF CHAR) DO
+              FOR RI := 0 TO LAST(arr) DO
+                u16arr[0] := Rd.GetChar(c.rd);
+                u16arr[1] := Rd.GetChar(c.rd);
+                arr[RI] := VAL(u16Al.u16, WIDECHAR);  
+              END; 
+            END; 
+          END; 
+        ELSE (* Remote 16, opposite endian. *) 
+          WITH u16arr = LOOPHOLE(u16Al.u16, ARRAY [0..1] OF CHAR) DO
+            FOR RI := 0 TO LAST(arr) DO
+              u16arr[1] := Rd.GetChar(c.rd);
+              u16arr[0] := Rd.GetChar(c.rd);
+              arr[RI] := VAL(u16Al.u16, WIDECHAR);  
+            END; 
+          END; 
+        END; 
+      END; 
+    EXCEPT Rd.EndOfFile => RaiseUnmarshalFailure();
+    END; 
   END InWideChars;
 
 PROCEDURE OutChars(c: Conn; READONLY arr: ARRAY OF CHAR)
@@ -287,12 +336,18 @@ PROCEDURE OutWideChars(c: Conn; READONLY arr: ARRAY OF WIDECHAR)
   VAR cnt: INTEGER := NUMBER (arr);  p: CharPtr;
   BEGIN
     IF cnt <= 0 THEN RETURN; END;
-    INC(cnt, cnt);  (* == # of 8-bit characters *)
-    p := LOOPHOLE(ADR(arr[0]), CharPtr);
-    WHILE (cnt > 0) DO
-      c.wr.putString(SUBARRAY(p^, 0, MIN (cnt, NUMBER(p^))));
-      INC(p, ADRSIZE(p^)); DEC(cnt, NUMBER(p^));
-    END;
+    IF BITSIZE(WIDECHAR) = 16 THEN 
+      INC(cnt, cnt);  (* == # of 8-bit bytes *)
+      p := LOOPHOLE(ADR(arr[0]), CharPtr);
+      WHILE (cnt > 0) DO
+        c.wr.putString(SUBARRAY(p^, 0, MIN (cnt, NUMBER(p^))));
+        INC(p, ADRSIZE(p^)); DEC(cnt, NUMBER(p^));
+      END;
+    ELSE (* Writing on 32-bit WIDECHAR system. *) 
+      FOR RI := 0 TO cnt-1 DO
+        PickleStubs.OutWC21(c.wr, arr[RI]); 
+      END; 
+    END; 
   END OutWideChars;
 
 PROCEDURE InBytes(c: Conn; VAR arr: ARRAY OF Byte8)
@@ -1289,10 +1344,37 @@ PROCEDURE ChooseFloatFmt(): Byte8 =
     END;
   END ChooseFloatFmt;
 
+CONST CharSet = 0; 
+CONST WideWIDECHAR = ORD(LAST(WIDECHAR)) > 16_FFFF; 
+
+PROCEDURE ChooseCharSet(): Byte8 = 
+(* Pack the original charSet (which has only a single value 0)
+   and the WIDECHAR size into this byte.  Remote machines that
+   don't do this will have zeros here, which correctly means
+   16-bits.  They will unnecessarily choke on reading CHAR (yes, CHAR,
+   not WIDECHAR) from a machine with 32-bit WIDECHAR, with message 
+   (UnsupportedDataRep). If they read a WIDECHAR, they will get lost 
+   in the pickle and probably soon after suffer some kind of messy pickle 
+   error. *)  
+  BEGIN 
+    RETURN Or(And(CharSet, 16_7F), And(LeftShift(ORD(WideWIDECHAR),7),16_80));
+  END ChooseCharSet; 
+
+PROCEDURE WideChar32(charSet: Byte8):BOOLEAN = 
+  (* Widechars are 32-bits. *) 
+  BEGIN 
+    RETURN And(charSet, 16_80) # 0;
+  END WideChar32; 
+
+PROCEDURE CharSetField(charSet: Byte8): Byte8 = 
+  BEGIN 
+    RETURN And(charSet, 16_7F);
+  END CharSetField; 
+
 BEGIN
   NativeRep := DataRep{private := 0,
                        intFmt := ChooseIntFmt(),
-                       charSet := 0,
+                       charSet := ChooseCharSet(),
                        floatFmt := ChooseFloatFmt()};
   UnmarshalFailure := Atom.FromText("NetObj.UnmarshalFailure");
 
