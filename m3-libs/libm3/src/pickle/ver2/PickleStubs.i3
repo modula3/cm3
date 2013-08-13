@@ -18,6 +18,8 @@ FROM Swap IMPORT Int32;
 
 TYPE
   Byte8 = BITS 8 FOR [0..255];
+  UInt32 = BITS 32 FOR [0 .. 16_7FFFFFFF];
+
 
 (* Programmers of Picklers may use these routines to read and write
    specific pieces of data in a portable fashion.
@@ -44,6 +46,25 @@ PROCEDURE InRef (reader: Pickle.Reader; tc := -1): REFANY
 PROCEDURE OutChars (writer: Pickle.Writer; READONLY chars: ARRAY OF CHAR)
   RAISES {Wr.Failure, Thread.Alerted};
 (* Marshal a char array in native format. *)
+
+(* WC21 is a variable-length encoding of widechar values, used only in
+   pickles and net objects.  The standard Unicode encodings explicitly disallow
+   surrogate code points as unencoded values.  Programs may have a legitimate 
+   need to store and/or manipulate surrogate values in memory, and these should
+   be picklable too.  WC21 supports the entire code point range, which requires
+   21 bits.
+
+   The first byte has 7 (least significant) data bits and one bit (msb of the 
+   byte) that, if set, indicates another byte follows.  If present, the second 
+   byte is just like the first and supplies the next more significant 7 data 
+   bits.  If it calls for a third byte, that contains the 7 most significant 
+   data bits.  The bytes are always in least- to most-significant order in the 
+   pickle, regardless of endianness of writing or reading machine.  
+*) 
+
+PROCEDURE OutWC21(wr: Wr.T; Wch: WIDECHAR)
+  RAISES {Wr.Failure, Thread.Alerted};
+(* Marshal one wide char in surrogate-tolerant WC21 incoding. *) 
 
 PROCEDURE OutWideChars(writer: Pickle.Writer; READONLY arr: ARRAY OF WIDECHAR)
     RAISES {Wr.Failure, Thread.Alerted};
@@ -100,6 +121,11 @@ PROCEDURE OutLongcard (writer: Pickle.Writer; card: LONGCARD)
 PROCEDURE InChars (reader: Pickle.Reader; VAR chars: ARRAY OF CHAR)
   RAISES {Pickle.Error, Rd.Failure, Thread.Alerted};
 (* Unmarshal a char array of length "NUMBER(chars)". *)
+
+PROCEDURE InWC21(rd: Rd.T): UInt32 
+RAISES{Rd.EndOfFile, Rd.Failure, Thread.Alerted}; 
+(* Unmarshal one WIDECHAR value in WC21 encoding and return in a 32-bit int,
+   where caller can range check. *) 
 
 PROCEDURE InWideChars(reader: Pickle.Reader; VAR chars: ARRAY OF WIDECHAR)
     RAISES {Pickle.Error, Rd.Failure, Thread.Alerted};

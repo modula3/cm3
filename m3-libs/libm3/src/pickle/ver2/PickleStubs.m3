@@ -17,11 +17,12 @@ UNSAFE MODULE PickleStubs;
 IMPORT Pickle2 AS Pickle, PickleRd, PickleWr, RTPacking, RTType;
 IMPORT ConvertPacking, UniEncoding; 
 FROM PickleRd IMPORT myPacking;
-FROM ConvertPacking IMPORT CPKind, UInt32;
+FROM ConvertPacking IMPORT CPKind;
 FROM Swap IMPORT Int32, Int64On32, Int64On64;
 
 IMPORT Rd, Wr, Text, TextClass, Text8, Text16, Thread;
 IMPORT RdClass, WrClass, UnsafeRd, UnsafeWr, Swap; 
+FROM Word IMPORT And, Or, LeftShift, RightShift; 
 
 REVEAL RdClass.Private <: MUTEX;
 REVEAL WrClass.Private <: MUTEX;
@@ -29,6 +30,7 @@ REVEAL WrClass.Private <: MUTEX;
 TYPE
   CharPtr  = UNTRACED REF ARRAY [0..65535] OF CHAR;
   WCharPtr = UNTRACED REF ARRAY [0..65535] OF WIDECHAR;
+  UInt8 = BITS 8 FOR [0 .. 16_FF];
   U16Aligned = RECORD forceAlign: INTEGER; u16: BITS 16 FOR [0..16_FFFF] END;
 
 (*---------marshalling/unmarshalling routines-----------*)
@@ -62,6 +64,48 @@ PROCEDURE InChars(reader: Pickle.Reader; VAR arr: ARRAY OF CHAR)
     END;
   END InChars;
 
+(* WC21 is a variable-length encoding of widechar values, used only in
+   pickles and net objects.  The standard Unicode encodings explicitly disallow
+   surrogate code points as unencoded values.  Programs may have a legitimate 
+   need to store and/or manipulate surrogate values in memory, and these should
+   be picklable too.  WC21 supports the entire code point range, which requires
+   21 bits.
+
+   The first byte has 7 (least significant) data bits and one bit (msb of the 
+   byte) that, if set, indicates another byte follows.  If present, the second 
+   byte is just like the first and supplies the next more significant 7 data 
+   bits.  If it calls for a third byte, that contains the 7 most significant 
+   data bits.  The bytes are always in least- to most-significant order in the 
+   pickle, regardless of endianness of writing or reading machine.
+
+   Note that this can encode values beyond the Unicode code point range.
+   When writing, we prevent this by accepting a parameter of type WIDECHAR.
+   When reading, we return an integer and let the caller apply a range
+   check, which could be only 16_FFFF, when compiled with WIDECHAR of this
+   size.      
+*) 
+
+PROCEDURE InWC21(rd: Rd.T): UInt32 
+RAISES{Rd.EndOfFile, Rd.Failure, Thread.Alerted} = 
+(* Unmarshal one WIDECHAR value in WC21 encoding and return in a 32-bit int,
+   where caller can range check. *) 
+
+  VAR B0, B1, B2: UInt8; 
+  VAR intVal: INTEGER; 
+  BEGIN 
+    B0 := ORD(Rd.GetChar(rd)); 
+    intVal := And(B0, 16_7F);
+    IF And(B0, 16_80) # 0 THEN (* A second byte follows. *) 
+      B1 := ORD(Rd.GetChar(rd)); 
+      intVal := Or(intVal, LeftShift (And (B1, 16_7F), 7));
+      IF And(B1, 16_80) # 0 THEN (* A third byte follows. *) 
+        B2 := ORD(Rd.GetChar(rd)); 
+        intVal := Or(intVal, LeftShift (And(B2, 16_7F), 14));
+      END;  
+    END;  
+    RETURN intVal 
+  END InWC21; 
+
 PROCEDURE InWideChars(reader: Pickle.Reader; VAR arr: ARRAY OF WIDECHAR)
     RAISES {Pickle.Error, Rd.Failure, Thread.Alerted} =
   VAR cnt: INTEGER := NUMBER(arr);  p: CharPtr;  n: INTEGER;
@@ -75,7 +119,7 @@ PROCEDURE InWideChars(reader: Pickle.Reader; VAR arr: ARRAY OF WIDECHAR)
         CASE reader.widecharConvKind OF 
         | CPKind.Copy, CPKind.Swap => (* 32 on both systems. *) 
           FOR RI := 0 TO LAST(arr) DO
-            IntVal := ConvertPacking.ReadWC21(reader.rd);
+            IntVal := InWC21(reader.rd);
             IF IntVal > 16_10FFFF THEN 
               RaiseError("Malformed pickle: WIDECHAR out of range."); 
             END;
@@ -83,7 +127,7 @@ PROCEDURE InWideChars(reader: Pickle.Reader; VAR arr: ARRAY OF WIDECHAR)
           END; 
         | CPKind.Copy32to16 , CPKind.Swap32to16 =>
           FOR RI := 0 TO LAST(arr) DO
-            IntVal := ConvertPacking.ReadWC21(reader.rd);
+            IntVal := InWC21(reader.rd);
             IF IntVal > 16_FFFF THEN IntVal := UniEncoding.ReplacementWt; END;
             arr[RI] := VAL(IntVal, WIDECHAR);  
           END; 
@@ -130,6 +174,31 @@ PROCEDURE OutChars(writer: Pickle.Writer; READONLY arr: ARRAY OF CHAR)
     writer.wr.putString(arr);
   END OutChars;
 
+PROCEDURE OutWC21(wr: Wr.T; wc: WIDECHAR)
+  RAISES {Wr.Failure, Thread.Alerted} =
+(* Marshal one wide char in surrogate-tolerant WC21 incoding. *) 
+
+  VAR intVal, B0, B1, B2: UInt32;
+  BEGIN  
+    intVal := ORD(wc); 
+    B0 := And(intVal, 16_7F);
+    IF And(intVal, 16_FFFFFF80) = 0 THEN (* No 2nd byte is needed. *)
+      Wr.PutChar(wr, VAL(B0, CHAR));
+    ELSE 
+      B0 := Or (B0, 16_80); 
+      Wr.PutChar(wr, VAL(B0, CHAR));
+      B1 := RightShift(And(intVal, 16_3F80), 7); 
+      IF And(intVal, 16_FFFFC000) = 0 THEN (* No 3rd byte is needed. *)
+        Wr.PutChar(wr, VAL(B1, CHAR));
+      ELSE 
+        B1 := Or (B1, 16_80); 
+        Wr.PutChar(wr, VAL(B1, CHAR));
+        B2 := RightShift(And(intVal, 16_1FC000), 14);  
+        Wr.PutChar(wr, VAL(B2, CHAR));
+      END; 
+    END; 
+  END OutWC21; 
+
 PROCEDURE OutWideChars(writer: Pickle.Writer; READONLY arr: ARRAY OF WIDECHAR)
     RAISES {Wr.Failure, Thread.Alerted} =
   VAR cnt: INTEGER := NUMBER (arr);  p: CharPtr;
@@ -144,7 +213,7 @@ PROCEDURE OutWideChars(writer: Pickle.Writer; READONLY arr: ARRAY OF WIDECHAR)
       END;
     ELSE (* Writing on 32-bit WIDECHAR system. *) 
       FOR RI := 0 TO cnt-1 DO
-        ConvertPacking.WriteWC21(writer.wr, ORD(arr[RI])); 
+        OutWC21(writer.wr, arr[RI]); 
       END; 
     END; 
   END OutWideChars;
