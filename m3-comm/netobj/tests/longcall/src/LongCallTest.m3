@@ -13,12 +13,13 @@ CONST
 
 (* invocation:
 
-   longcall <no args> longcall hostname
+   longcall <no args> 
+   longcall hostname
 
    The former is a server.  A call to the server waits for a long time,
    then catches an alert and prints a message when it does so.
 
-   The former is a client.  At each client <CR>, it invokes the server long
+   The latter is a client.  At each client <CR>, it invokes the server long
    call method, and then alerts the waiting thread. *)
 
 (* server side code *)
