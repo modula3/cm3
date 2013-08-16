@@ -6,7 +6,7 @@
 % Last modified on Mon Mar 21 16:27:09 PST 1994 by wobber
 %      modified on Mon Dec 20 14:14:37 PST 1993 by kalsow
 
-if AT_SRC m3_option("-O") end
+if defined("AT_SRC") if AT_SRC m3_option("-O") end end 
 
 import("libm3")
 import("netobj")
