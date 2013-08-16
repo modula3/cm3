@@ -15,6 +15,7 @@ CONST TestObjName = "LucaTestObj";
 
      test <no args>
      test hostname pathname
+        pathname is to a test file containing text, to be read. 
 
         First form runs the server side of test program.
         Second form runs client side.
