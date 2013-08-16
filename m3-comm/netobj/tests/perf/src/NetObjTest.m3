@@ -33,7 +33,7 @@ CONST TestObjName = "TestObj";
         The "rd" option runs only the stream reader test.
         The "wr" option runs only the stream writer test.
         The "sp" option runs only the small pickle test.
-        The "lpr" option runs only the large pickle test.
+        The "bp" option runs only the large pickle test.
 *)
 
 (* server side code *)
