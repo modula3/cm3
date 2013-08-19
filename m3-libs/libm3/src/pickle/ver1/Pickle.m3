@@ -149,6 +149,10 @@ TYPE (* for binary I/O loopholes *)
   CharFP    = ARRAY [0..BYTESIZE(Fingerprint.T)-1] OF CHAR;
   ToChars   = UNTRACED REF ARRAY [0..100000000] OF CHAR; (* for misc. data *)
 
+CONST Int32Hi = 16_7FFFFFFF;
+CONST Int32Lo = -Int32Hi-1; 
+TYPE Int32Rec = RECORD i: BITS 32 FOR [Int32Lo..Int32Hi] END; 
+
 TYPE
   HC = { h1, h2, v, c, e, i, r }; (* the chars in a pickle header *)
   HT = { t1, t2 };                (* the chars in a pickle trailer *)
@@ -376,8 +380,10 @@ PROCEDURE WriteType(writer: Writer; tc: INTEGER)
 
 PROCEDURE WriteInt(writer: Writer; i: INTEGER)
         RAISES { Wr.Failure, Thread.Alerted } =
+    VAR i32r: Int32Rec; 
   BEGIN
-    Wr.PutString(writer.wr, LOOPHOLE(ADR(i), UNTRACED REF CharInt32)^);
+    i32r.i := i; 
+    Wr.PutString(writer.wr, LOOPHOLE(ADR(i32r.i), UNTRACED REF CharInt32)^);
   END WriteInt;
 
 (* *)
@@ -394,12 +400,14 @@ PROCEDURE ExtendReaderTypes(reader: Reader) =
 
 PROCEDURE GetBinaryInt(rd: Rd.T): INTEGER
         RAISES { Rd.EndOfFile, Rd.Failure, Thread.Alerted } =
+    VAR i32r: Int32Rec; 
     VAR i: INTEGER := 0;
   BEGIN
-    IF Rd.GetSub(rd,
-      LOOPHOLE (ADR(i), UNTRACED REF CharInt32)^) # BYTESIZE(CharInt32) THEN
+    IF Rd.GetSub(rd, LOOPHOLE (ADR(i32r.i), UNTRACED REF CharInt32)^) 
+       # BYTESIZE(i32r.i) THEN
         RAISE Rd.EndOfFile
     END;
+    i := i32r.i; 
     RETURN i;
   END GetBinaryInt;
 
