@@ -7,7 +7,8 @@
    with "sp.sc = TYPECODE (List.T)" will be passed to
    "Pickle.RegisterSpecial" during initialization.  This special pickles
    references "r" with "TYPECODE (r) = TYPECODE (List.T)" iteratively rather
-   than recursively, and is thus useful for long lists in small stacks. *)
+   than recursively, and is thus useful for long lists in small stacks. 
+   Both Pickle and Pickle2 get such specials. *)
 
 INTERFACE ListPkl;
 
