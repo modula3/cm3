@@ -316,7 +316,7 @@ UNSAFE MODULE PickleTestWideChar EXPORTS Main
 ; CONST FVal = 42782
 ; CONST GVal = - 26677
 ; CONST HVal = 16_0f4dc379
-; CONST IVal = VAL ( 16_FFFE , WIDECHAR ) 
+; CONST IVal = VAL ( 16_10FFFF , WIDECHAR ) 
 ; CONST JVal = IVal 
 
 ; PROCEDURE InitT ( ) : RefT 
@@ -363,7 +363,7 @@ UNSAFE MODULE PickleTestWideChar EXPORTS Main
 ; TYPE TPA = ARRAY [ 0 .. WcPerInt - 1 ] OF BITS BitsPerPackedWC FOR WIDECHAR 
 ; TYPE RefTPA = REF TPA 
 
-; CONST PWVal = VAL ( 16_FFF8 , WIDECHAR ) 
+; CONST PWVal = VAL ( 16_10FFF8 , WIDECHAR ) 
 
 ; PROCEDURE InitTPA ( ) : RefTPA 
 
@@ -404,7 +404,7 @@ UNSAFE MODULE PickleTestWideChar EXPORTS Main
 ; TYPE TAA = ARRAY [ 0 .. WcPACt- 1 ] OF BITS BitsPerPackedWC2 FOR WIDECHAR 
 ; TYPE RefTAA = REF TAA 
 
-; CONST WAVal = VAL ( 16_FF80 , WIDECHAR ) 
+; CONST WAVal = VAL ( 16_10FF80 , WIDECHAR ) 
 
 ; PROCEDURE InitTAA ( ) : RefTAA 
 
@@ -444,7 +444,7 @@ UNSAFE MODULE PickleTestWideChar EXPORTS Main
 ; TYPE TA = ARRAY [ 0 .. WcCt- 1 ] OF WIDECHAR 
 ; TYPE RefTA = REF TA 
 
-; CONST WVal = VAL ( 16_FF00 , WIDECHAR ) 
+; CONST WVal = VAL ( 16_10FF00 , WIDECHAR ) 
 
 ; PROCEDURE InitTA ( ) : RefTA 
 
@@ -484,7 +484,7 @@ UNSAFE MODULE PickleTestWideChar EXPORTS Main
 ; TYPE TOA = ARRAY OF WIDECHAR 
 ; TYPE RefToA = REF TOA 
 
-; CONST WOAVal = VAL ( 16_FF40 , WIDECHAR ) 
+; CONST WOAVal = VAL ( 16_10FF40 , WIDECHAR ) 
 
 ; PROCEDURE InitTOA ( ) : RefToA 
 
@@ -525,9 +525,9 @@ UNSAFE MODULE PickleTestWideChar EXPORTS Main
     END
 ; TYPE RefToTexts = REF Texts 
 
-; CONST Lit1 = W"0\xFFFF\xFFFD" 
+(* ; CONST Lit1 = W"0\xFFFF\xFFFD" *)  
   (* ^Use this one when ORD(LAST(WIDECHAR)) = 16_FFFF *) 
-(* ; CONST Lit1 = W"0\xFFFF\U10FFFF" *)  
+; CONST Lit1 = W"0\xFFFF\U10FFFF"   
   (* ^Use this one when ORD(LAST(WIDECHAR)) = 16_10FFFF *) 
 ; VAR VLit1Unpatched : TEXT := Lit1 
 ; CONST Lit2 = "ABCDE" 
@@ -649,7 +649,7 @@ UNSAFE MODULE PickleTestWideChar EXPORTS Main
         LRarrC := ArrayOfChar ( Right ) 
       ; LRight := Text . FromChars ( LRarrC ^ ) 
       END (* IF *) 
-    (* ; TextClass . Flatten := FALSE *)  
+    ; TextClass . Flatten := FALSE   
     ; LResult := TextCat . New ( LLeft , LRight ) 
     ; RETURN LResult 
     END MakeTextCat 
@@ -822,7 +822,7 @@ UNSAFE MODULE PickleTestWideChar EXPORTS Main
       ; IF DoWriteT 
         THEN 
           R := InitT ( ) 
-        ; Pickle . Write ( WrT , R (*, Bit16*) ) 
+        ; Pickle . Write ( WrT , R , Bit16 ) 
         ; Wr . PutText ( LogWrT , "Wrote record." )  
         ; Wr . PutText ( LogWrT , Wr . EOL )  
         ; Wr . Flush ( LogWrT ) 
@@ -830,7 +830,7 @@ UNSAFE MODULE PickleTestWideChar EXPORTS Main
       ; IF DoWriteTPA 
         THEN 
           VTPA := InitTPA ( ) 
-        ; Pickle . Write ( WrT , VTPA (*, Bit16*) ) 
+        ; Pickle . Write ( WrT , VTPA , Bit16 ) 
         ; Wr . PutText ( LogWrT , "Wrote packed array (21) of WIDECHAR." )  
         ; Wr . PutText ( LogWrT , Wr . EOL )  
         ; Wr . Flush ( LogWrT ) 
@@ -838,7 +838,7 @@ UNSAFE MODULE PickleTestWideChar EXPORTS Main
       ; IF DoWriteTAA 
         THEN 
           VTAA := InitTAA ( ) 
-        ; Pickle . Write ( WrT , VTAA (*, Bit16*) ) 
+        ; Pickle . Write ( WrT , VTAA , Bit16 ) 
         ; Wr . PutText ( LogWrT , "Wrote packed array (32) of WIDECHAR." )  
         ; Wr . PutText ( LogWrT , Wr . EOL )  
         ; Wr . Flush ( LogWrT ) 
@@ -846,7 +846,7 @@ UNSAFE MODULE PickleTestWideChar EXPORTS Main
       ; IF DoWriteTA 
         THEN 
           VTA := InitTA ( ) 
-        ; Pickle . Write ( WrT , VTA (*, Bit16*) ) 
+        ; Pickle . Write ( WrT , VTA , Bit16 ) 
         ; Wr . PutText ( LogWrT , "Wrote unpacked array of WIDECHAR." )  
         ; Wr . PutText ( LogWrT , Wr . EOL )  
         ; Wr . Flush ( LogWrT ) 
@@ -854,7 +854,7 @@ UNSAFE MODULE PickleTestWideChar EXPORTS Main
       ; IF DoWriteTOA 
         THEN 
           VTOA := InitTOA ( ) 
-        ; Pickle . Write ( WrT , VTOA (*, Bit16*) ) 
+        ; Pickle . Write ( WrT , VTOA , Bit16 ) 
         ; Wr . PutText ( LogWrT , "Wrote open array of WIDECHAR." )  
         ; Wr . PutText ( LogWrT , Wr . EOL )  
         ; Wr . Flush ( LogWrT ) 
@@ -862,18 +862,18 @@ UNSAFE MODULE PickleTestWideChar EXPORTS Main
       ; IF DoWriteRecTexts  
         THEN 
           VTexts := InitTexts ( ) 
-        ; Pickle . Write ( WrT , VTexts (*, Bit16*) ) 
+        ; Pickle . Write ( WrT , VTexts , Bit16 ) 
         ; Wr . PutText ( LogWrT , "Wrote record of Texts." )  
         ; Wr . PutText ( LogWrT , Wr . EOL )  
         ; Wr . Flush ( LogWrT ) 
         END (* IF *) 
       ; IF DoWriteTopTexts  
         THEN 
-          Pickle . Write ( WrT , MakeText16Short ( Lit3 ) (*, Bit16*) )
-        ; Pickle . Write ( WrT , MakeText16 ( Lit4 ) (*, Bit16*) )
-        ; Pickle . Write ( WrT , MakeText8Short ( Lit5 ) (*, Bit16*) )
-        ; Pickle . Write ( WrT , MakeText8 ( Lit6 ) (*, Bit16*) )
-        ; Pickle . Write ( WrT , MakeTextCat ( Lit7a , Lit7b ) (*, Bit16*) )
+          Pickle . Write ( WrT , MakeText16Short ( Lit3 ) , Bit16 )
+        ; Pickle . Write ( WrT , MakeText16 ( Lit4 ) , Bit16 )
+        ; Pickle . Write ( WrT , MakeText8Short ( Lit5 ) , Bit16 )
+        ; Pickle . Write ( WrT , MakeText8 ( Lit6 ) , Bit16 )
+        ; Pickle . Write ( WrT , MakeTextCat ( Lit7a , Lit7b ) , Bit16 )
         ; Wr . PutText ( LogWrT , "Wrote top level Texts." )  
         ; Wr . PutText ( LogWrT , Wr . EOL )  
         ; Wr . Flush ( LogWrT ) 
