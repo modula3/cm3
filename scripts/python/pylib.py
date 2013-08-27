@@ -40,7 +40,10 @@ def IsInterix():
 
 env_OS = getenv("OS")
 
+DevNull = "/dev/null"
+
 if env_OS == "Windows_NT" and not IsInterix():
+    DevNull = "nul:"
     def uname():
         PROCESSOR_ARCHITECTURE = getenv("PROCESSOR_ARCHITECTURE")
         return (env_OS, "", PROCESSOR_ARCHITECTURE, "", PROCESSOR_ARCHITECTURE)
@@ -572,7 +575,7 @@ GCC_BACKEND = True
 #
 
 Host = None
-for a in os.popen(CM3 + " -version 2>/dev/null"):
+for a in os.popen(CM3 + " -version 2>" + DevNull):
   if StringContains(a, "host:" ):
     Host = a.replace("\r", "").replace("\n", "").replace(" ", "").replace("host:", "")
     break
@@ -2136,7 +2139,9 @@ def SetupEnvironment():
 
         _SetupEnvironmentVariableAny(
             "PATH",
-            ["mspdb100.dll", "mspdb80.dll", "mspdb71.dll", "mspdb70.dll",
+            ["mspdbsrv.exe", "mspdbst.dll", "mspdbcore.dll",
+             "mspdb110.dll", "mspdb100.dll", "mspdb90.dll",
+             "mspdb80.dll", "mspdb71.dll", "mspdb70.dll",
              "mspdb60.dll", "mspdb50.dll", "mspdb41.dll", "mspdb40.dll",
              "dbi.dll"],
             MspdbDir)
