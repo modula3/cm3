@@ -794,6 +794,9 @@ PROCEDURE IsKeeper (sym: TEXT): BOOLEAN =
       (* a type initialization or setup routine *)
       RETURN FALSE;
     END;
+    IF len = 4 AND Match (sym, 0, "_xmm") THEN (* floating point constants *)
+      RETURN FALSE;
+    END;
     RETURN TRUE;
   END IsKeeper;
 
