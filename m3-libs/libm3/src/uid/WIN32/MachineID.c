@@ -10,11 +10,13 @@
 #include <winsock2.h>
 #include <iphlpapi.h>
 #include <stdlib.h>
-#pragma comment(lib, "iphlpapi.lib")
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/* older cm3 config files do not link with iphlpapi.lib so use LoadLibrary/GetProcAddress */
+typedef DWORD (__stdcall * GetIfTable_t)(PMIB_IFTABLE pIfTable, PULONG pdwSize, BOOL bOrder);
 
 int/*BOOL*/
 __cdecl
@@ -26,12 +28,25 @@ MachineIDC__CanGet(unsigned char* id)
     MIB_IFTABLE* Table = { 0 };
     DWORD i = { 0 };
     DWORD NumEntries = { 0 };
+    static GetIfTable_t s_getIfTable;
+    GetIfTable_t getIfTable = s_getIfTable;
 
     ZeroMemory(id, 6);
+    
+    if (getIfTable == NULL)
+    {
+        HMODULE hmodule = LoadLibraryW(L"iphlpapi.dll");
+        if (hmodule == NULL)
+            goto Exit;
+        getIfTable = (GetIfTable_t)GetProcAddress(hmodule, "GetIfTable");
+        if (getIfTable == NULL)
+            goto Exit;
+        s_getIfTable = getIfTable;
+    }
 
     /* Call until it fits, typically twice. */
     Size = 0;
-    while ((Error = GetIfTable(Table, &Size, FALSE)) == ERROR_INSUFFICIENT_BUFFER)
+    while ((Error = getIfTable(Table, &Size, FALSE)) == ERROR_INSUFFICIENT_BUFFER)
     {
         free(Table);
         Table = (MIB_IFTABLE*)malloc(Size);
