@@ -2,7 +2,7 @@ MODULE M3C;
 
 IMPORT RefSeq, TextSeq, Wr, Text, IntRefTbl, SortedIntRefTbl, TIntN, IntIntTbl;
 IMPORT M3CG, M3CG_Ops, Target, TFloat, TargetMap, IntArraySort, Process;
-IMPORT M3ID, TInt, TWord, ASCII, Thread, Stdio, Word;
+IMPORT M3ID, TInt, TWord, ASCII, Thread, Stdio, Word, TextUtils;
 FROM TargetMap IMPORT CG_Bytes;
 FROM M3CG IMPORT Name, ByteOffset, CallingConvention;
 FROM M3CG IMPORT BitSize, ByteSize, Alignment, Frequency;
@@ -292,7 +292,8 @@ PROCEDURE UInt64ToHex(a: UINT64): TEXT = BEGIN RETURN UInt64ToText(a, 16); END U
 (*PROCEDURE Int64ToDec(a: INT64): TEXT = BEGIN RETURN Int64ToText(a, 10); END Int64ToDec;*)
 (*PROCEDURE Int32ToDec(a: INT32): TEXT = BEGIN RETURN Int64ToText(VAL(a, INT64), 10); END Int32ToDec;*)
 PROCEDURE UInt32ToHex(a: UINT32): TEXT = BEGIN RETURN UInt64ToText(VAL(a, UINT64), 16); END UInt32ToHex;
-PROCEDURE IntToHex(a: INTEGER): TEXT = BEGIN RETURN Int64ToText(VAL(a, INT64), 16); END IntToHex;
+PROCEDURE  IntToHex(a: INTEGER): TEXT = BEGIN RETURN  Int64ToText(VAL(a, INT64), 16); END  IntToHex;
+PROCEDURE UIntToHex(a: INTEGER): TEXT = BEGIN RETURN UInt64ToText(VAL(a, INT64), 16); END UIntToHex;
 PROCEDURE IntToDec(a: INTEGER): TEXT = BEGIN RETURN Int64ToText(VAL(a, INT64), 10); END IntToDec;
 
 <*UNUSED*>CONST Int32ToHex = UInt32ToHex;
@@ -752,6 +753,11 @@ PROCEDURE pointer_define(type: Pointer_t; self: T) =
 (* Does branding make a difference? *)
 VAR x := self;
 BEGIN
+    (* We have recursive types TYPE FOO = UNTRACED REF FOO. Typos actually. *)
+    IF type.points_to_typeid = type.points_to_typeid THEN
+      print(x, "/*self pointer_define*/typedef void* " & type.text & ";\n");
+      RETURN;
+    END;
     type.points_to_type.ForwardDeclare(self);
     type.points_to_type.Define(self);
     print(x, "/*pointer_define*/typedef " & type.points_to_type.text & " * " & type.text & ";\n");
@@ -798,6 +804,10 @@ END ResolveType;
 
 PROCEDURE pointer_canBeDefined(type: Pointer_t; self: T): BOOLEAN =
 BEGIN
+    (* We have recursive types TYPE FOO = UNTRACED REF FOO. Typos actually. *)
+    IF type.points_to_typeid = type.points_to_typeid THEN
+      RETURN TRUE;
+    END;
     RETURN ResolveType(self, type.points_to_typeid, type.points_to_type)
         AND (type.points_to_type.IsForwardDeclared() OR type.points_to_type.IsDefined() (*OR type.points_to_type.CanBeDefined(self)*));
 END pointer_canBeDefined;
@@ -2232,6 +2242,7 @@ PROCEDURE set_source_file(self: T; file: TEXT) =
 (* Sets the current source file name. Subsequent statements
    and expressions are associated with this source location. *)
 BEGIN
+    file := TextUtils.SubstChar(file, '\\', '/');
     IF DebugVerbose(self) THEN
         self.comment("set_source_file file:", file);
     ELSE
@@ -2268,7 +2279,7 @@ END declare_typename;
 
 PROCEDURE TypeIDToText(x: M3CG.TypeUID): TEXT =
 BEGIN
-    RETURN "T" & IntToHex(Word.And(16_FFFFFFFF, x));
+    RETURN "T" & UIntToHex(Word.And(16_FFFFFFFF, x));
 END TypeIDToText;
 
 PROCEDURE declare_array(self: DeclareTypes_t; typeid, index_typeid, element_typeid: TypeUID; bit_size: BitSize) =
