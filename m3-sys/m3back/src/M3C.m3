@@ -3521,7 +3521,11 @@ END HelperFunctions_min;
 
 PROCEDURE HelperFunctions_cvt_int(self: HelperFunctions_t; <*UNUSED*>rtype: RType; <*UNUSED*>itype: IType; op: ConvertOp) =
 CONST text = ARRAY ConvertOp OF TEXT{
-    "INT64 __cdecl llroundl(long double);\nstatic INT64 __stdcall m3_round(EXTENDED f) { return (INT64)llroundl(f); }",
+    "#ifdef _WIN64 /* temporary workaround */\n"
+    & "static INT64 __stdcall m3_round(EXTENDED f) { return (INT64)f; }\n"
+    & "#else\n"
+    & "INT64 __cdecl llroundl(long double);\nstatic INT64 __stdcall m3_round(EXTENDED f) { return (INT64)llroundl(f); }\n"
+    & "#endif",
     "static INT64 __stdcall m3_trunc(EXTENDED f) { return (INT64)f; }",
     "double __cdecl floor(double);\nstatic INT64 __stdcall m3_floor(EXTENDED f) { return floor(f); } /* math.h */",
     "double __cdecl ceil(double);\nstatic INT64 __stdcall m3_ceil(EXTENDED f) { return ceil(f); } /* math.h */"
