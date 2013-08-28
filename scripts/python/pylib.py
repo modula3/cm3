@@ -1067,12 +1067,18 @@ def Boot():
         # gcc platforms
         CCompiler = {
             "SOLgnu" : "/usr/sfw/bin/gcc",
+            "AMD64_NT"      : "cl.exe",
             }.get(Config) or "gcc"
 
         CCompilerFlags = {
             "I386_INTERIX"  : "-g ", # gcc -fPIC generates incorrect code on Interix
             "SOLgnu"        : "-g ", # -fPIC?
+            "AMD64_NT"      : "-nologo -Zi -MD ",
             }.get(Config) or "-g -fPIC "
+
+        CCompilerOut = {
+            "AMD64_NT"      : "-Fo",
+            }.get(Config) or "-o "
 
     CCompilerFlags = CCompilerFlags + ({
         "AMD64_LINUX"     : " -m64 ",
@@ -1092,7 +1098,7 @@ def Boot():
         "SPARC64_LINUX"   : " -m64 -mno-app-regs ",
         }.get(Config) or " ")
 
-    if Config.endswith("_NT") or Config == "NT386":
+    if (not c) and (Config.endswith("_NT") or Config == "NT386"):
         obj = "obj"
     else:
         obj = "o"
@@ -1120,6 +1126,10 @@ def Boot():
         Link = Link + " -lrt -lm "
     elif StringTagged(Target, "INTERIX"):
         Link = Link + " -lm " # -pthread?
+    elif StringTagged(Target, "NT"):
+        if c:
+            Link = "link.exe /out:cm3.exe *.o "
+        Link = Link + " user32.lib kernel32.lib wsock32.lib comctl32.lib gdi32.lib advapi32.lib netapi32.lib iphlpapi.lib "
     # not all of these tested esp. Cygwin, NetBSD
     elif StringContainsI(Target, "FreeBSD") \
          or StringContainsI(Target, "NetBSD") \
@@ -1191,6 +1201,10 @@ def Boot():
         "ALPHA64_VMS"   : "alpha64-dec-vms-",
         }.get(Target) or ""
 
+    DeleteCommand = "rm -rf"
+    if StringTagged(Target, "NT"):
+        DeleteCommand = "del /f"
+
     if not vms:
         CCompiler = GnuPlatformPrefix + CCompiler
     if (not vms) or AssembleOnHost:
@@ -1227,7 +1241,7 @@ def Boot():
 
     Makefile.write("all: cm3\n\n"
                    + "clean:\n"
-                   + "\trm -rf *.io *.mo *.o *.obj\n\n")
+                   + "\t" + DeleteCommand + " *.io *.mo *.o *.obj\n\n")
 
     for a in [UpdateSource, Make]:
         a.write("#!/bin/sh\n\n"
@@ -1238,9 +1252,9 @@ def Boot():
         a.write("# edit up here\n\n"
                 + "CC=" + CCompiler + "\n"
                 + "CFLAGS=" + CCompilerFlags + "\n")
+        a.write("Compile=" + Compile + "\n")
         if not c:
-            a.write("Compile=" + Compile + "\n"
-                    + "Assemble=" + Assembler + " " + AssemblerFlags + "\n")
+            a.write("Assemble=" + Assembler + " " + AssemblerFlags + "\n")
         a.write("Link=" + Link + "\n"
                 + "\n# no more editing should be needed\n\n")
 
@@ -1288,12 +1302,13 @@ def Boot():
                     VmsMake.write("$ " + Assembler + " " + a + "\n")                    
             VmsLink.write(Object + "/SELECTIVE_SEARCH\n")
 
-    if not c:
+    if c or not((StringTagged(Config, "NT") or Config == "NT386")):
         Makefile.write(".c.o:\n"
-                       + "\t$(Compile) -o $@ $<\n\n"
+                       + "\t$(Compile) " + CCompilerOut + "$@ $<\n\n"
                        + ".c.obj:\n"
-                       + "\t$(Compile) -o $@ $<\n\n"
-                       + ".is.io:\n"
+                       + "\t$(Compile) " + CCompilerOut + "$@ $<\n\n")
+        if not c:
+            Makefile.write(".is.io:\n"
                        + "\t$(Assemble) -o $@ $<\n\n"
                        + ".s.o:\n"
                        + "\t$(Assemble) -o $@ $<\n\n"
@@ -1319,7 +1334,10 @@ def Boot():
     VmsMake.write("$ link /executable=cm3.exe vmslink/options\n")
 
     for a in [Make, Makefile]:
-        a.write("$(Link) -o cm3\n")
+        if StringTagged(Target, "NT"):
+            a.write("$(Link) -out:cm3.exe\n")
+        else:
+            a.write("$(Link) -o cm3\n")
         
     if False:
         for a in [
@@ -1412,12 +1430,12 @@ def Boot():
     # write entirely new custom makefile for NT
     # We always have object files so just compile and link in one fell swoop.
 
-    if StringTagged(Config, "NT") or Config == "NT386":
+    if (not c) and (StringTagged(Config, "NT") or Config == "NT386"):
         DeleteFile("updatesource.sh")
         DeleteFile("make.sh")
         Makefile = open(os.path.join(BootDir, "Makefile"), "wb")
         Makefile.write("cm3.exe: *.io *.mo *.c\r\n"
-        + " cl -Zi -MD *.c -link *.mo *.io -out:cm3.exe user32.lib kernel32.lib wsock32.lib comctl32.lib gdi32.lib advapi32.lib netapi32.lib\r\n")
+        + " cl -Zi -MD *.c -link *.mo *.io -out:cm3.exe user32.lib kernel32.lib wsock32.lib comctl32.lib gdi32.lib advapi32.lib netapi32.lib iphlpapi.lib\r\n")
         Makefile.close()
 
     if vms or StringTagged(Config, "NT") or Config == "NT386":
