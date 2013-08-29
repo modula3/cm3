@@ -739,7 +739,8 @@ PROCEDURE XPause(self: Activation; n: LONGREAL; alertable: BOOLEAN) RAISES {Aler
       thisTime: LONGREAL;
       wait: DWORD;
       alerted := FALSE;
-  CONST Limit = FLOAT(LAST(CARDINAL), LONGREAL) / 1000.0D0 - 1.0D0;
+  CONST LAST_CARDINAL32 = 16_7FFFFFFF;
+        Limit = FLOAT(LAST_CARDINAL32, LONGREAL) / 1000.0D0 - 1.0D0;
   BEGIN
 
     IF DEBUG THEN ThreadDebug.XPause(self, n, alertable); END;
