@@ -65,7 +65,7 @@ CONST
   NOMIRRORBITMAP = 16_80000000; (* Do not Mirror the bitmap in this call *)
   CAPTUREBLT = 16_40000000; (* Include layered windows *)
 
-  GDI_ERROR: INT32 = 16_FFFFFFFF;
+  GDI_ERROR: INT32 = -1;
 
 (* Region Flags *)
   ERROR         = 0;
