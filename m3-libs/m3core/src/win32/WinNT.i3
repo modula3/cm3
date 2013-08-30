@@ -396,7 +396,7 @@ TYPE
     BaseAddress      : PVOID;
     AllocationBase   : PVOID;
     AllocationProtect: UINT32;
-    RegionSize       : UINT32;
+    RegionSize       : SIZE_T;
     State            : UINT32;
     Protect          : UINT32;
     Type             : UINT32;
