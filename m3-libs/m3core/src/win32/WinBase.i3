@@ -1606,10 +1606,10 @@ PROCEDURE GetFileType (hFile: HANDLE): UINT32;
 PROCEDURE GetFileSize (hFile: HANDLE; lpFileSizeHigh: PUINT32): UINT32;
 
 <*EXTERNAL GetStdHandle:WINAPI*>
-PROCEDURE GetStdHandle (nStdHandle: UINT32): HANDLE;
+PROCEDURE GetStdHandle (nStdHandle: INT32): HANDLE;
 
 <*EXTERNAL SetStdHandle:WINAPI*>
-PROCEDURE SetStdHandle (nStdHandle: UINT32; hHandle: HANDLE): BOOL;
+PROCEDURE SetStdHandle (nStdHandle: INT32; hHandle: HANDLE): BOOL;
 
 <*EXTERNAL WriteFile:WINAPI*>
 PROCEDURE WriteFile (hFile                 : HANDLE;
