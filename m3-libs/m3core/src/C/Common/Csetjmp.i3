@@ -10,6 +10,6 @@ FROM Ctypes IMPORT int;
    This variant of longjmp never restores the signal mask.
 *)
 <*EXTERNAL "Csetjmp__Jumpbuf_size" *> VAR Jumpbuf_size: INTEGER;
-<*EXTERNAL "_longjmp" *> PROCEDURE ulongjmp (env: ADDRESS; val: int);
+<*EXTERNAL "Csetjmp__ulongjmp" *> PROCEDURE ulongjmp (env: ADDRESS; val: int);
 
 END Csetjmp.
