@@ -291,7 +291,7 @@ PROCEDURE CaptureState (frame: CG.Var;  handler: CG.Label) =
     IF Alloca_jmpbuf THEN
       CG.Load_addr (frame, M3RT.EF1_jmpbuf);
     ELSE
-      CG.Load_addr_of (frame, M3RT.EF1_jmpbuf, 64);
+      CG.Load_addr_of (frame, M3RT.EF1_jmpbuf, 128);
     END;
     CG.Pop_param (CG.Type.Addr);
     CG.Call_direct (setjmp, Target.Integer.cg_type);
