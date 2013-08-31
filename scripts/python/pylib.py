@@ -1088,12 +1088,12 @@ def Boot():
         CCompilerFlags = "/pointer_size=64 "
     elif solaris or solsun:
         CCompiler = "/usr/bin/cc"
-        CCompilerFlags = "-g -mt -xldscope=symbolic "
+        CCompilerFlags = " -g -mt -xldscope=symbolic "
         CCompiler = "./c_compiler"
         CopyFile("./c_compiler", BootDir)
     elif osf:
         CCompiler = "/usr/bin/cc"
-        CCompilerFlags = "-g -pthread"
+        CCompilerFlags = " -g -pthread "
     else:
         # gcc platforms
         CCompiler = {
@@ -1102,10 +1102,11 @@ def Boot():
             }.get(Config) or "gcc"
 
         CCompilerFlags = {
-            "I386_INTERIX"  : "-g ", # gcc -fPIC generates incorrect code on Interix
-            "SOLgnu"        : "-g ", # -fPIC?
-            "AMD64_NT"      : "-nologo -Zi -MD ",
-            }.get(Config) or "-g -fPIC "
+            "I386_INTERIX"  : " -g ", # gcc -fPIC generates incorrect code on Interix
+            "SOLgnu"        : " -g ", # -fPIC?
+            #"AMD64_NT"      : " -Zi -MD ",
+            "AMD64_NT"      : " -Zi ", # hack some problem with exception handling and alignment otherwise
+            }.get(Config) or " -g -fPIC "
 
         CCompilerOut = {
             "AMD64_NT"      : "-Fo./",
@@ -1152,7 +1153,10 @@ def Boot():
         Link = Link + " -lm " # -pthread?
     elif nt:
         if c:
-            Link = "link.exe /out:cm3.exe *." + obj + " "
+            Link = "link.exe /pdb:cm3.pdb /out:cm3.exe *." + obj + " "
+            # be sure to get a .pdb out
+            #open("empty.c", "w")
+            #Link = CCompiler + CCompilerFlags + "empty.c /" + Link
         Link = Link + " user32.lib kernel32.lib wsock32.lib comctl32.lib gdi32.lib advapi32.lib netapi32.lib iphlpapi.lib "
     # not all of these tested esp. Cygwin, NetBSD
     elif freebsd or netbsd or openbsd or cygwin or linux:
@@ -1242,6 +1246,10 @@ def Boot():
     #
     # This would probably be a good use of XSL (xml style sheets)
     #
+    
+    NL = ["\n", "\r\n"][nt]
+    NL2 = NL + NL
+    EXE = ["", ".exe"][nt]
     Make = open(os.path.join(BootDir, "make.sh"), "wb")
     VmsMake  = open(os.path.join(BootDir, "vmsmake.com"), "wb")
     VmsLink  = open(os.path.join(BootDir, "vmslink.opt"), "wb")
@@ -1250,22 +1258,22 @@ def Boot():
     Objects = { }
 
     for a in [Makefile]:
-        a.write("# edit up here\n\n"
-                + "CC=" + CCompiler + "\n"
-                + "CFLAGS=" + CCompilerFlags + "\n")
-        a.write("Compile=" + Compile + "\n")
+        a.write("# edit up here" + NL2
+                + "CC=" + CCompiler + NL
+                + "CFLAGS=" + CCompilerFlags + NL)
+        a.write("Compile=" + Compile + NL)
         if not c:
-            a.write("Assemble=" + Assembler + " " + AssemblerFlags + "\n")
-        a.write("Link=" + Link + "\n"
-                + "\n# no more editing should be needed\n\n")
+            a.write("Assemble=" + Assembler + " " + AssemblerFlags + NL)
+        a.write("Link=" + Link + NL
+                + NL + "# no more editing should be needed" + NL2)
 
     if True: #not c:
-        Makefile.write(".SUFFIXES:\n"
-                       + ".SUFFIXES: .c .is .ms .s .o .obj .io .mo\n\n")
+        Makefile.write(".SUFFIXES:" + NL
+                       + ".SUFFIXES: .c .is .ms .s .o .obj .io .mo" + NL2)
 
-    Makefile.write("all: cm3\n\n"
-                   + "clean:\n"
-                   + "\t" + DeleteCommand + " *.io *.mo *.o *.obj\n\n")
+    Makefile.write("all: cm3" + EXE + NL2
+                   + "clean:" + NL
+                   + "\t" + DeleteCommand + " *.io *.mo *.o *.obj" + NL2)
 
     for a in [UpdateSource, Make]:
         a.write("#!/bin/sh\n\n"
@@ -1321,24 +1329,24 @@ def Boot():
 
     if c or not nt:
         for o in ["o", "obj"]:
-            Makefile.write(".c." + o + colon +"\n" + "\t$(Compile) " + CCompilerOut + " $<\n\n")
+            Makefile.write(".c." + o + colon + NL + "\t$(Compile) " + CCompilerOut + " $<" + NL2)
         if not c:
             for source_obj in [["is", "io"], ["s", "o"], ["ms", "mo"]]:
                 source = source_obj[0]
                 obj = source_obj[1]
-                Makefile.write("." + source + "." + obj + ":\n" + "\t$(Assemble) -o $@ $<\n\n")
+                Makefile.write("." + source + "." + obj + ":" + NL + "\t$(Assemble) -o $@ $<" + NL2)
 
-    Makefile.write("cm3:")
+    Makefile.write("cm3" + EXE + ":")
     Objects = Objects.keys()
     Objects.sort()
     k = 4
     for a in Objects:
         k = k + 1 + len(a)
         if k > 76: # line wrap
-            Makefile.write(" \\\n")
+            Makefile.write(" \\" + NL)
             k = 1 + len(a)
         Makefile.write(" " + a)
-    Makefile.write("\n\t")
+    Makefile.write(NL + "\t")
  
     VmsMake.write("$ set file/attr=(rfm=var,rat=none) *.o\n")
     VmsMake.write("$ set file/attr=(rfm=var,rat=none) *.obj\n")
@@ -1347,10 +1355,9 @@ def Boot():
     VmsMake.write("$ link /executable=cm3.exe vmslink/options\n")
 
     for a in [Make, Makefile]:
-        if nt:
-            a.write("$(Link) -out:cm3.exe\n")
-        else:
-            a.write("$(Link) -o cm3\n")
+        a.write(["$(Link) -o cm3", "$(Link) -out:cm3.exe"][nt])
+    Make.write("\n")
+    Makefile.write(NL)
         
     if False:
         for a in [
