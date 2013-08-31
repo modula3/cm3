@@ -1077,7 +1077,7 @@ def Boot():
     elif alpha64vms:
         CCompiler = "cc"
         CCompilerFlags = "/pointer_size=64 "
-    elif solaris or solsun
+    elif solaris or solsun:
         CCompiler = "/usr/bin/cc"
         CCompilerFlags = "-g -mt -xldscope=symbolic "
         CCompiler = "./c_compiler"
@@ -1135,11 +1135,11 @@ def Boot():
         pass
     elif solaris or sol:
         Link = Link  +  " -lpthread -lrt -lm -lnsl -lsocket -lc "
-    elif hpux
+    elif hpux:
         Link = Link + " -lrt -lm -lpthread "
     elif osf:
         Link = Link + " -lrt -lm "
-    elif interix
+    elif interix:
         Link = Link + " -lm " # -pthread?
     elif nt:
         if c:
