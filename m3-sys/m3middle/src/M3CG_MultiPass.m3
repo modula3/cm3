@@ -230,6 +230,8 @@ PROCEDURE Replay(
     cg: M3CG.T;
     VAR index: INTEGER;
     data: REF ARRAY OF op_t := NIL;
+    start := 0;
+    end := LAST(INTEGER); (* one past end *)
     ) =
 VAR context: Replay_t := NIL;
 BEGIN
@@ -242,7 +244,9 @@ BEGIN
     IF data = NIL THEN
         data := self.data;
     END;
-    FOR i := FIRST(data^) TO LAST(data^) DO
+    start := MAX(start, FIRST(data^));
+    end := MIN(end, LAST(data^));
+    FOR i := start TO end DO
         <* ASSERT data[i] # NIL *>
         index := i;
         data[i].replay(context, cg);

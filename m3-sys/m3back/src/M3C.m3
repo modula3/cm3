@@ -48,6 +48,7 @@ T = M3CG_DoNothing.T BRANDED "M3C.T" OBJECT
 
         imported_procs: RefSeq.T := NIL; (*TODO*) (* Proc_t *)
         declared_procs: RefSeq.T := NIL; (*TODO*) (* Proc_t *)
+        procs_pending_output: RefSeq.T := NIL; (*TODO*) (* Proc_t *)
         typeidToType: IntRefTbl.T := NIL;
         pendingTypes: RefSeq.T := NIL; (* Type_t *)
         declareTypes: DeclareTypes_t := NIL;
@@ -1262,7 +1263,7 @@ CONST UID_PROC5 = 16_509E4C68; (* PROCEDURE (x: INTEGER;  n: [0..31]): INTEGER *
 VAR UID_PROC6 := IntegerToTypeid(16_DC1B3625); (* PROCEDURE (x: INTEGER;  n: [0..63]): INTEGER *)
 VAR UID_PROC7 := IntegerToTypeid(16_EE17DF2C); (* PROCEDURE (x: INTEGER;  i, n: CARDINAL): INTEGER *)
 VAR UID_PROC8 := IntegerToTypeid(16_B740EFD0); (* PROCEDURE (x, y: INTEGER;  i, n: CARDINAL): INTEGER *)
-<*NOWARN*>CONST UID_NULL = 16_48EC756E; (* NULL *)
+CONST UID_NULL = 16_48EC756E; (* NULL *) (* Occurs in elego/graphicutils/src/RsrcFilter.m3 *)
 
 TYPE ExprType = {
     Invalid,
@@ -1608,6 +1609,10 @@ END;
 
 TYPE Proc_t = M3CG.Proc OBJECT
     name: Name := 0;
+    pending_output := FALSE;
+    output := FALSE;
+    op_start := 0; (* M3CG_MultiPass.Replay range *)
+    op_end := 0;   (* M3CG_MultiPass.Replay range *)
     parameter_count := 0; (* FUTURE: remove this (same as NUMBER(params^)) *)
     parameter_count_without_static_link := 0; (* FUTURE: remove this (same as NUMBER(params^) - ORD(add_static_link)) *)
     return_type: CGType;
@@ -1615,7 +1620,6 @@ TYPE Proc_t = M3CG.Proc OBJECT
     callingConvention: CallingConvention;
     exported := FALSE;
     imported := FALSE;
-    used := 0;
     parent: Proc_t := NIL;
     params: REF ARRAY OF Var_t(*Param_t*);
     locals: RefSeq.T := NIL; (* Var_t *)
@@ -2087,6 +2091,7 @@ BEGIN
     self.proc_being_called := self.dummy_proc;  (* avoid null derefs for indirect calls *)
     self.imported_procs := NEW(RefSeq.T).init();
     self.declared_procs := NEW(RefSeq.T).init();
+    self.procs_pending_output := NEW(RefSeq.T).init();
 
     RETURN self.multipass;
 END New;
@@ -2111,23 +2116,37 @@ BEGIN
 
     (* self.declareTypes.declare_subrange(UID_RANGE_0_31, UID_INTEGER, TInt.Zero, IntToTarget(self, 31), Target.Integer.size); *)
     (* self.declareTypes.declare_subrange(UID_RANGE_0_63, UID_INTEGER, TInt.Zero, IntToTarget(self, 63), Target.Integer.size); *)
-
-    self.Type_Init(NEW(Type_t, cgtype := Target.Address.cg_type, typeid := UID_MUTEX, text := "MUTEX"), typedef := TRUE);
-    self.Type_Init(NEW(Type_t, cgtype := Target.Address.cg_type, typeid := UID_TEXT, text := "TEXT"), typedef := TRUE);
-    self.Type_Init(NEW(Type_t, cgtype := Target.Address.cg_type, typeid := UID_ROOT, text := "ROOT"), typedef := TRUE);
-    self.Type_Init(NEW(Type_t, cgtype := Target.Address.cg_type, typeid := UID_UNTRACED_ROOT, text := "UNTRACED_ROOT"), typedef := TRUE);
-    self.Type_Init(NEW(Type_t, cgtype := Target.Address.cg_type, typeid := UID_REFANY, text := "REFANY"), typedef := TRUE);
-    self.Type_Init(NEW(Type_t, cgtype := Target.Address.cg_type, typeid := UID_ADDR, text := Text_address), typedef := TRUE);
-    self.Type_Init(NEW(Type_t, cgtype := Target.Address.cg_type, typeid := UID_PROC1, text := "PROC1"), typedef := TRUE);
-    self.Type_Init(NEW(Type_t, cgtype := Target.Address.cg_type, typeid := UID_PROC2, text := "PROC2"), typedef := TRUE);
-    self.Type_Init(NEW(Type_t, cgtype := Target.Address.cg_type, typeid := UID_PROC3, text := "PROC3"), typedef := TRUE);
-    self.Type_Init(NEW(Type_t, cgtype := Target.Address.cg_type, typeid := UID_PROC4, text := "PROC4"), typedef := TRUE);
-    self.Type_Init(NEW(Type_t, cgtype := Target.Address.cg_type, typeid := UID_PROC5, text := "PROC5"), typedef := TRUE);
-    self.Type_Init(NEW(Type_t, cgtype := Target.Address.cg_type, typeid := UID_PROC6, text := "PROC6"), typedef := TRUE);
-    self.Type_Init(NEW(Type_t, cgtype := Target.Address.cg_type, typeid := UID_PROC7, text := "PROC7"), typedef := TRUE);
-    self.Type_Init(NEW(Type_t, cgtype := Target.Address.cg_type, typeid := UID_PROC8, text := "PROC8"), typedef := TRUE);
-
-    (* self.Type_Init(NEW(Type_t, bit_size := 0, typeid := UID_NULL)); *)
+    
+    TYPE AddressType_t = RECORD
+        typeid: TypeUID := 0;
+        text: TEXT := NIL;
+    END;    
+    VAR addressTypes := ARRAY [0..14] OF AddressType_t {
+        AddressType_t {UID_MUTEX, "MUTEX"},
+        AddressType_t {UID_TEXT, "TEXT"},
+        AddressType_t {UID_ROOT, "ROOT"},
+        AddressType_t {UID_UNTRACED_ROOT, "UNTRACED_ROOT"},
+        AddressType_t {UID_REFANY, "REFANY"},
+        AddressType_t {UID_ADDR, Text_address},
+        AddressType_t {UID_PROC1, "PROC1"},
+        AddressType_t {UID_PROC2, "PROC2"},
+        AddressType_t {UID_PROC3, "PROC3"},
+        AddressType_t {UID_PROC4, "PROC4"},
+        AddressType_t {UID_PROC5, "PROC5"},
+        AddressType_t {UID_PROC6, "PROC6"},
+        AddressType_t {UID_PROC7, "PROC7"},
+        AddressType_t {UID_PROC8, "PROC8"},
+        AddressType_t {UID_NULL, "M3_NULL_T"}
+    };
+    BEGIN
+        FOR i := FIRST(addressTypes) TO LAST(addressTypes) DO
+            WITH a = addressTypes[i] DO
+                IF a.typeid # 0 THEN
+                    self.Type_Init(NEW(Type_t, cgtype := Target.Address.cg_type, typeid := a.typeid, text := a.text), typedef := TRUE);
+                END;
+            END;
+        END;
+    END;
 END DeclareBuiltinTypes;
 
 (*------------------------------------------------ READONLY configuration ---*)
@@ -3035,6 +3054,7 @@ OVERRIDES
 END;
 
 TYPE MarkUsed_t = M3CG_DoNothing.T BRANDED "M3C.MarkUsed_t" OBJECT
+    self: T;
     labels: REF ARRAY OF Label := NIL;
     index := 0;
     labels_min := LAST(Label);
@@ -3059,9 +3079,9 @@ OVERRIDES
     store := MarkUsed_store;
 
     (* procedures *)
+    init_proc := MarkUsed_init_proc;
     start_call_direct := MarkUsed_start_call_direct;
     load_procedure := MarkUsed_load_procedure;
-    init_proc := MarkUsed_init_proc;
 END;
 
 PROCEDURE MarkUsed_label(self: MarkUsed_t; label: Label) =
@@ -3128,7 +3148,7 @@ CONST VarProcOps = ARRAY OF Op{
         Op.init_proc
     };
 VAR x := self.self;
-    pass := NEW(MarkUsed_t);
+    pass := NEW(MarkUsed_t, self := x);
     count_pass := NEW(CountUsedLabels_t);
     index := 0;
 BEGIN
@@ -4247,7 +4267,10 @@ BEGIN
     IF type_text = NIL THEN
         IF NOT ResolveType(self, typeid, type) THEN
             IF typeid # -1 AND typeid # 0 THEN
-                Err(self, "declare_param: unknown typeid:" & TypeIDToText(typeid) & " type:" & cgtypeToText[cgtype] & "\n");
+                Err(self, "declare_param:"
+                    & " unknown typeid:" & TypeIDToText(typeid)
+                    & " type:" & cgtypeToText[cgtype]
+                    & " name:" & NameT(name) & "\n");
             ELSE
                 (* RTIO.PutText("warning: declare_param: unknown typeid:" & TypeIDToText(typeid) & " type:" & cgtypeToText[cgtype] & "\n");
                 RTIO.Flush(); *)
@@ -4478,15 +4501,21 @@ BEGIN
     initializer_addhi(self, "(ADDRESS)&" & NameT(proc.name));
 END init_proc;
 
-PROCEDURE MarkUsed_proc(p: M3CG.Proc) =
+PROCEDURE MarkUsed_proc(self: T; p: M3CG.Proc) =
+VAR proc: Proc_t;
 BEGIN
-    INC(NARROW(p, Proc_t).used);
+    <* ASSERT p # NIL *>
+    <* ASSERT self.procs_pending_output # NIL *>
+    proc := NARROW(p, Proc_t);
+    IF proc.pending_output OR proc.output THEN RETURN END;
+    proc.pending_output := TRUE;
+    self.procs_pending_output.addhi(proc);
 END MarkUsed_proc;
 
-PROCEDURE MarkUsed_init_proc(<*UNUSED*>self: MarkUsed_t;
-    <*UNUSED*>offset: ByteOffset; p: M3CG.Proc) =
+PROCEDURE MarkUsed_init_proc(self: MarkUsed_t; <*UNUSED*>offset: ByteOffset;
+    p: M3CG.Proc) =
 BEGIN
-    MarkUsed_proc(p);
+    MarkUsed_proc(self.self, p);
 END MarkUsed_init_proc;
 
 PROCEDURE Segments_init_proc(self: Segments_t; offset: ByteOffset; p: M3CG.Proc) =
@@ -6093,13 +6122,13 @@ BEGIN
     self.static_link := NIL;
     <* ASSERT self.params.size() = 0 *>
     <* ASSERT NOT self.in_proc_call *>
-    self.in_proc_call := TRUE;
+    self.in_proc_call := TRUE; (* call cannot be nested *)
 END start_call_helper;
 
-PROCEDURE MarkUsed_start_call_direct(<*UNUSED*>self: MarkUsed_t;
+PROCEDURE MarkUsed_start_call_direct(self: MarkUsed_t;
     p: M3CG.Proc; <*UNUSED*>level: INTEGER; <*UNUSED*>type: CGType) =
 BEGIN
-    MarkUsed_proc(p);
+    MarkUsed_proc(self.self, p);
 END MarkUsed_start_call_direct;
 
 PROCEDURE start_call_direct(self: T; p: M3CG.Proc; <*UNUSED*>level: INTEGER; <*UNUSED*>type: CGType) =
@@ -6218,7 +6247,7 @@ BEGIN
         comma := ",\n ";
     END;
     self.proc_being_called := self.dummy_proc;
-    self.in_proc_call := FALSE;
+    self.in_proc_call := FALSE; (* call cannot be nested *)
     proc := proc & ")";
     IF type = CGType.Void THEN
         print(self, proc & ";\n");
@@ -6295,9 +6324,9 @@ END call_indirect;
 
 (*------------------------------------------- procedure and closure types ---*)
 
-PROCEDURE MarkUsed_load_procedure(<*UNUSED*>self: MarkUsed_t; p: M3CG.Proc) =
+PROCEDURE MarkUsed_load_procedure(self: MarkUsed_t; p: M3CG.Proc) =
 BEGIN
-    MarkUsed_proc(p);
+    MarkUsed_proc(self.self, p);
 END MarkUsed_load_procedure;
 
 PROCEDURE load_procedure(self: T; p: M3CG.Proc) =
