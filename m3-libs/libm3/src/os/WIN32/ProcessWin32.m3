@@ -232,7 +232,7 @@ VAR
   stdout_g := GetFileHandle(WinBase.STD_OUTPUT_HANDLE, FileWin32.Write);
   stderr_g := GetFileHandle(WinBase.STD_ERROR_HANDLE,  FileWin32.Write);
 
-PROCEDURE GetFileHandle(hd: WinDef.DWORD; ds: FileWin32.DirectionSet): File.T =
+PROCEDURE GetFileHandle(hd: WinDef.INT32; ds: FileWin32.DirectionSet): File.T =
   VAR h := WinBase.GetStdHandle(hd);
   BEGIN
     IF (h # NIL)
