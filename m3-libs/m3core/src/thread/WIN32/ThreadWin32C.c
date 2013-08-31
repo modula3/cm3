@@ -33,6 +33,7 @@
 #include <setjmp.h>
 #include <stddef.h>
 #include <string.h>
+#include <stdio.h>
 
 #define M3_FIELD_SIZE(type, field) (sizeof((type*)0)->field)
 
@@ -68,7 +69,8 @@ void* __cdecl ThreadWin32__StackPointerFromContext(CONTEXT* context)
 
 PCONTEXT __cdecl ThreadWin32__NewContext(void)
 {
-    /* 0x300 to workaround bug -- GetThreadContext fails when using pageheap */
+    /* 0x300 to workaround Windows 7 pre-SP1 bug
+       GetThreadContext fails when using pageheap due to buffer overrun */
     typedef union {
         CONTEXT a;
         unsigned char b[0x300];
@@ -205,7 +207,24 @@ ThreadWin32__ClonedHeaderCheck(
 }
 
 #if 0
+void
+__cdecl
+xThreadWin32__GetStackBounds(
+    PBYTE* start,
+    PBYTE* end
+    )
+{
+    MEMORY_BASIC_INFORMATION info = { 0 };
+    VirtualQuery(&info, &info, sizeof(info));
+    *start = (PBYTE)info.AllocationBase;
+    *end = (PBYTE)info.BaseAddress + info.RegionSize;
+    fprintf(stderr, "ThreadWin32__GetStackBounds start:%p end:%p size:%u\n",
+        *start, *end, (UINT)(*end - *start));
+    exit(1);
+}
+#endif
 
+#if 0
 void __cdecl ThreadWin32__Cleanup(void)
 {
     DeleteCriticalSection(&ThreadWin32__activeLock);
