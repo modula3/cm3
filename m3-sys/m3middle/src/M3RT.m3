@@ -57,7 +57,7 @@ PROCEDURE Init () =
     (* Except, ExceptElse, and Finally  frames *)
     EF1_handles    := EF_SIZE;             (* : ADDRESS *)
     EF1_info       := EF1_handles + AP;    (* : RTException.Activation *)
-    EF1_jmpbuf     := RoundUp (EF1_info + EA_SIZE, 64); (* : jmp_buf *)
+    EF1_jmpbuf     := RoundUp (EF1_info + EA_SIZE, 128); (* : jmp_buf *)
     EF1_SIZE       := EF1_jmpbuf + Target.Jumpbuf_size;
 
     (* FinallyProc frames *)
