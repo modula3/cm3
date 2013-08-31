@@ -7,7 +7,7 @@
 
 INTERFACE ThreadContext;
 
-FROM WinDef IMPORT BYTE, DWORD;
+FROM WinDef IMPORT BYTE, DWORD, SIZE_T;
 FROM Word IMPORT Or;
 
 CONST SIZE_OF_80387_REGISTERS = 80;
@@ -71,7 +71,7 @@ TYPE
     Ecx: DWORD;
     Eax: DWORD;
 
-    Ebp:    DWORD;
+    Ebp:    SIZE_T; (* temporary Win64 hack *)
     Eip:    DWORD;
     SegCs:  DWORD;
     EFlags: DWORD;
