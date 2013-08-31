@@ -7,7 +7,7 @@
 
 INTERFACE BasicCtypes;
 
-IMPORT Word, Long;
+IMPORT Long;
 
 TYPE
   (* the four signed integer types *)
