@@ -343,11 +343,10 @@ typedef float REAL;
 typedef double LONGREAL;
 typedef double EXTENDED;
 #if defined(__cplusplus) || __STDC__
-typedef void* PVOID;
+typedef void* ADDRESS;
 #else
-typedef char* PVOID;
+typedef char* ADDRESS;
 #endif
-typedef PVOID ADDRESS;
 typedef ADDRESS TEXT;
 typedef ADDRESS MUTEX;
 
