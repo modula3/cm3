@@ -118,8 +118,8 @@ def GetPathExtension(a):
 def RemovePathExtension(a):
     return a[:a.rfind(".")]
 
-def GetObjectName(a):
-    return GetPathBaseName(a) + "." + {"c" : "o", "s" : "o", "ms" : "mo", "is" : "io"}[GetPathExtension(a)]
+def _GetObjectName(a, obj):
+    return GetPathBaseName(a) + "." + {"c" : obj, "s" : obj, "ms" : "mo", "is" : "io"}[GetPathExtension(a)]
 
 def GetPathBaseName(a):
     a = GetLastPathElement(a)
@@ -1300,7 +1300,7 @@ def Boot():
                 CopyFile(fullpath, BootDir)
             if ext_h or ext_io or ext_mo:
                 continue
-            Object = GetObjectName(a)
+            Object = _GetObjectName(a, obj)
             if Objects.get(Object):
                 continue
             Objects[Object] = 1
