@@ -241,6 +241,7 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  Jumpbuf_size := 18 * Address.size;
 
     | Systems.AMD64_NT =>
+                 (* 256 bytes with 16 byte alignment *)
                  Jumpbuf_size := 32 * Int64.size;
                  Setjmp := "setjmp";
 
