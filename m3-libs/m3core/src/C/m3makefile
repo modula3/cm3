@@ -19,7 +19,7 @@ end
 %end
 
 if equal(OS_TYPE, "WIN32")
-  if equal(WORD_SIZE, 64)
+  if equal(WORD_SIZE, "64BITS")
     include_dir("WIN64")
   else
     include_dir("32BITS")
