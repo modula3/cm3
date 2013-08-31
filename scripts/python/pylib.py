@@ -342,7 +342,11 @@ def _GetAllTargets():
 
     # legacy naming
 
-    Targets = [ "NT386", "LINUXLIBC6", "SOLsun", "SOLgnu", "FreeBSD4" ]
+    Targets = { }
+    for target in [ "NT386", "LINUXLIBC6", "SOLsun", "SOLgnu", "FreeBSD4" ]:
+        Targets[target] = target
+        Targets[target.lower()] = target
+        Targets[target.upper()] = target
 
     # systematic naming
 
@@ -351,7 +355,10 @@ def _GetAllTargets():
         for os in ["AIX",  "CE", "CYGWIN", "DARWIN",  "FREEBSD", "HPUX", "INTERIX", "IRIX",
                    "LINUX", "MINGW", "NETBSD", "NT", "OPENBSD", "OSF", "SOLARIS", "VMS"]:
                    # "BEOS", "MSDOS" (DJGPP), "OS2" (EMX), "PLAN9"
-            Targets += [proc + "_" + os]
+            target = proc + "_" + os
+            Targets[target] = target
+            Targets[target.lower()] = target
+            Targets[target.upper()] = target
 
     return Targets
 
@@ -589,9 +596,11 @@ for a in os.popen(CM3 + " -version 2>" + DevNull):
 #
 
 Target = None
-for a in _GetAllTargets():
-    if a in sys.argv:
-        Target = _MapTarget(a)
+_AllTargets = _GetAllTargets()
+for a in sys.argv:
+    Target = _MapTarget(_AllTargets.get(a.lower()))
+    if Target:
+        break
 Target = Target or getenv("CM3_TARGET") or Host
 
 #-----------------------------------------------------------------------------
@@ -1636,10 +1645,9 @@ GenericCommand:
     ListOnly = False
     KeepGoing = False
     NoAction = False
-    AllTargets = _GetAllTargets()
     for arg in args:
         if ((arg == "")
-            or (arg in AllTargets)
+            or (arg.lower() in _AllTargets)
             or (arg in _PossiblePylibFlags)
             ):
             continue
