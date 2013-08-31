@@ -89,8 +89,8 @@ def StringContains(a, b):
 def StringContainsI(a, b):
     return a.lower().find(b.lower()) != -1
 
-def StringTagged(a, b):
-    return a.startswith(b + "_") or a.endswith("_" + b) or StringContains(a, "_" + b + "_")
+def Tagged(a, b):
+    return a.startswith(b + "_") or a.endswith("_" + b) or StringContains(a, "_" + b + "_") or a == b
 
 #print("RemoveTrailingSlash(a\\/):" + RemoveTrailingSlash("a\\/"))
 #print("RemoveTrailingSlash(a/\\):" + RemoveTrailingSlash("a/\\"))
@@ -1043,24 +1043,46 @@ def Boot():
     # TBD: put it only in one place.
     # The older bootstraping method does get that right.
 
-    vms = StringTagged(Config, "VMS")
+    vms = StringContainsI(Target, "VMS")
+    nt = Config.startswith("NT") or Config.endswith("NT") or Tagged(Config, "NT")
+    darwin = StringContainsI(Target, "DARWIN")
+    mingw = StringContainsI(Target, "MINGW")
+    solaris = StringContainsI(Target, "SOLARIS")
+    sol = Target.startswith("SOL")
+    hpux = StringContainsI(Target, "HPUX")
+    osf = StringContainsI(Target, "OSF")
+    interix = StringContainsI(Target, "INTERIX")
+    alpha32 = StringContainsI(Target, "ALPHA32")
+    alpha64 = StringContainsI(Target, "ALPHA64")
+    alpha32vms = vms and alpha32
+    alpha64vms = vms and alpha64
+    solsun = Config == "SOLsun"
+    freebsd = StringContainsI(Target, "FreeBSD")
+    netbsd = StringContainsI(Target, "NetBSD")
+    openbsd = StringContainsI(Target, "OpenBSD")
+    cygwin = StringContainsI(Target, "Cygwin")
+    linux = StringContainsI(Target, "Linux")
+    alpha = StringContainsI(Target, "ALPHA")
+    thirtytwo = StringContainsI(Target, "32")
+    sixtyfour = StringContainsI(Target, "64")
+    bsd = StringContainsI(Target, "BSD")
 
     # pick the compiler
     
     c = "c" in sys.argv
 
-    if Config == "ALPHA32_VMS":
+    if alpha32vms:
         CCompiler = "cc"
         CCompilerFlags = " "
-    elif Config == "ALPHA64_VMS":
+    elif alpha64vms:
         CCompiler = "cc"
         CCompilerFlags = "/pointer_size=64 "
-    elif StringTagged(Config, "SOLARIS") or Config == "SOLsun":
+    elif solaris or solsun
         CCompiler = "/usr/bin/cc"
         CCompilerFlags = "-g -mt -xldscope=symbolic "
         CCompiler = "./c_compiler"
         CopyFile("./c_compiler", BootDir)
-    elif Config == "ALPHA_OSF":
+    elif osf:
         CCompiler = "/usr/bin/cc"
         CCompilerFlags = "-g -pthread"
     else:
@@ -1077,8 +1099,8 @@ def Boot():
             }.get(Config) or "-g -fPIC "
 
         CCompilerOut = {
-            "AMD64_NT"      : "-Fo",
-            }.get(Config) or "-o "
+            "AMD64_NT"      : "-Fo./",
+            }.get(Config) or "-o $@"
 
     CCompilerFlags = CCompilerFlags + ({
         "AMD64_LINUX"     : " -m64 ",
@@ -1098,15 +1120,8 @@ def Boot():
         "SPARC64_LINUX"   : " -m64 -mno-app-regs ",
         }.get(Config) or " ")
 
-    if (not c) and (Config.endswith("_NT") or Config == "NT386"):
-        obj = "obj"
-    else:
-        obj = "o"
-
-    if c:
-        Link = "$(CC) $(CFLAGS) *." + obj + " "
-    else:
-        Link = "$(CC) $(CFLAGS) *.mo *.io *." + obj + " "
+    obj = ["o", "obj"][nt]
+    Link = "$(CC) $(CFLAGS) *." + obj + [" *.mo *.io ", " "][c]
 
     # link flags
     
@@ -1114,37 +1129,31 @@ def Boot():
     # http://www.openldap.org/lists/openldap-bugs/200006/msg00070.html
     # http://www.gnu.org/software/autoconf-archive/ax_pthread.html#ax_pthread
 
-    if StringTagged(Target, "DARWIN"):
+    if darwin:
         pass
-    elif StringTagged(Target, "MINGW"):
+    elif mingw:
         pass
-    elif StringTagged(Target, "SOLARIS") or Target.startswith("SOL"):
+    elif solaris or sol:
         Link = Link  +  " -lpthread -lrt -lm -lnsl -lsocket -lc "
-    elif StringTagged(Target, "HPUX"):
+    elif hpux
         Link = Link + " -lrt -lm -lpthread "
-    elif Config == "ALPHA_OSF":
+    elif osf:
         Link = Link + " -lrt -lm "
-    elif StringTagged(Target, "INTERIX"):
+    elif interix
         Link = Link + " -lm " # -pthread?
-    elif StringTagged(Target, "NT"):
+    elif nt:
         if c:
-            Link = "link.exe /out:cm3.exe *.o "
+            Link = "link.exe /out:cm3.exe *." + obj + " "
         Link = Link + " user32.lib kernel32.lib wsock32.lib comctl32.lib gdi32.lib advapi32.lib netapi32.lib iphlpapi.lib "
     # not all of these tested esp. Cygwin, NetBSD
-    elif StringContainsI(Target, "FreeBSD") \
-         or StringContainsI(Target, "NetBSD") \
-         or StringContainsI(Target, "OpenBSD") \
-         or StringContainsI(Target, "Cygwin") \
-         or StringContainsI(Target, "Linux"):
+    elif freebsd or netbsd or openbsd or cygwin or linux:
         Link = Link  +  " -lm -pthread "
     else:
         Link = Link + " -lm -lpthread "
     
     # add -c to compiler but not link (i.e. not CCompilerFlags)
 
-    Compile = "$(CC) $(CFLAGS) "
-    if not vms:
-        Compile = Compile + " -c "
+    Compile = "$(CC) $(CFLAGS) " + [" -c ", ""][vms]
 
     AssembleOnTarget = not vms
     AssembleOnHost = not AssembleOnTarget
@@ -1157,11 +1166,11 @@ def Boot():
     elif Target == "AMD64_SOLARIS":
         # see http://gcc.gnu.org/ml/gcc/2010-05/msg00155.html
         Assembler = "/usr/ccs/bin/as"
-    elif StringTagged(Target, "SOLARIS") or Target.startswith("SOL"):
+    elif solaris or sol:
         # see http://gcc.gnu.org/ml/gcc/2010-05/msg00155.html
         Assembler = "./assembler"
         CopyFile("./assembler", BootDir)
-    elif StringTagged(Target, "OSF"):
+    elif osf:
         Assembler = "/usr/bin/as"
     else:
         Assembler = "as"
@@ -1171,10 +1180,8 @@ def Boot():
     AssemblerFlags = " "
 
     if not Target in ["PPC32_OPENBSD", "PPC_LINUX", "ARMEL_LINUX", "ALPHA_LINUX", "ALPHA_OPENBSD"]:
-        # "Tag" not right for LINUX due to LINUXLIBC6
-        # "Tag" not right for BSD or 64 either.
-        if Target.find("LINUX") != -1 or Target.find("BSD") != -1:
-            if Target.find("64") != -1 or (StringTagged(Target, "ALPHA") and not StringTagged(Target, "ALPHA32")):
+        if linux or bsd:
+            if sixtyfour or (alpha and not alpha32):
                 AssemblerFlags = AssemblerFlags + " --64"
             else:
                 AssemblerFlags = AssemblerFlags + " --32"
@@ -1201,9 +1208,7 @@ def Boot():
         "ALPHA64_VMS"   : "alpha64-dec-vms-",
         }.get(Target) or ""
 
-    DeleteCommand = "rm -rf"
-    if StringTagged(Target, "NT"):
-        DeleteCommand = "del /f"
+    DeleteCommand = ["rm -rf", "del /f"][nt]
 
     if not vms:
         CCompiler = GnuPlatformPrefix + CCompiler
@@ -1235,7 +1240,17 @@ def Boot():
     UpdateSource = open(os.path.join(BootDir, "updatesource.sh"), "wb")
     Objects = { }
 
-    if not c:
+    for a in [Makefile]:
+        a.write("# edit up here\n\n"
+                + "CC=" + CCompiler + "\n"
+                + "CFLAGS=" + CCompilerFlags + "\n")
+        a.write("Compile=" + Compile + "\n")
+        if not c:
+            a.write("Assemble=" + Assembler + " " + AssemblerFlags + "\n")
+        a.write("Link=" + Link + "\n"
+                + "\n# no more editing should be needed\n\n")
+
+    if True: #not c:
         Makefile.write(".SUFFIXES:\n"
                        + ".SUFFIXES: .c .is .ms .s .o .obj .io .mo\n\n")
 
@@ -1247,16 +1262,6 @@ def Boot():
         a.write("#!/bin/sh\n\n"
                 + "set -e\n"
                 + "set -x\n\n")
-
-    for a in [Makefile]:
-        a.write("# edit up here\n\n"
-                + "CC=" + CCompiler + "\n"
-                + "CFLAGS=" + CCompilerFlags + "\n")
-        a.write("Compile=" + Compile + "\n")
-        if not c:
-            a.write("Assemble=" + Assembler + " " + AssemblerFlags + "\n")
-        a.write("Link=" + Link + "\n"
-                + "\n# no more editing should be needed\n\n")
 
     for a in [Make]:
         a.write("# edit up here\n\n"
@@ -1301,19 +1306,18 @@ def Boot():
                 else:
                     VmsMake.write("$ " + Assembler + " " + a + "\n")                    
             VmsLink.write(Object + "/SELECTIVE_SEARCH\n")
+            
+    # double colon batches and is much faster
+    colon = [":", "::"][nt]
 
-    if c or not((StringTagged(Config, "NT") or Config == "NT386")):
-        Makefile.write(".c.o:\n"
-                       + "\t$(Compile) " + CCompilerOut + "$@ $<\n\n"
-                       + ".c.obj:\n"
-                       + "\t$(Compile) " + CCompilerOut + "$@ $<\n\n")
+    if c or not nt:
+        for o in ["o", "obj"]:
+            Makefile.write(".c." + o + colon +"\n" + "\t$(Compile) " + CCompilerOut + " $<\n\n")
         if not c:
-            Makefile.write(".is.io:\n"
-                       + "\t$(Assemble) -o $@ $<\n\n"
-                       + ".s.o:\n"
-                       + "\t$(Assemble) -o $@ $<\n\n"
-                       + ".ms.mo:\n"
-                       + "\t$(Assemble) -o $@ $<\n\n")
+            for source_obj in [["is", "io"], ["s", "o"], ["ms", "mo"]]:
+                source = source_obj[0]
+                obj = source_obj[1]
+                Makefile.write("." + source + "." + obj + ":\n" + "\t$(Assemble) -o $@ $<\n\n")
 
     Makefile.write("cm3:")
     Objects = Objects.keys()
@@ -1334,7 +1338,7 @@ def Boot():
     VmsMake.write("$ link /executable=cm3.exe vmslink/options\n")
 
     for a in [Make, Makefile]:
-        if StringTagged(Target, "NT"):
+        if nt:
             a.write("$(Link) -out:cm3.exe\n")
         else:
             a.write("$(Link) -o cm3\n")
@@ -1430,15 +1434,16 @@ def Boot():
     # write entirely new custom makefile for NT
     # We always have object files so just compile and link in one fell swoop.
 
-    if (not c) and (StringTagged(Config, "NT") or Config == "NT386"):
+    if nt:
         DeleteFile("updatesource.sh")
         DeleteFile("make.sh")
-        Makefile = open(os.path.join(BootDir, "Makefile"), "wb")
-        Makefile.write("cm3.exe: *.io *.mo *.c\r\n"
-        + " cl -Zi -MD *.c -link *.mo *.io -out:cm3.exe user32.lib kernel32.lib wsock32.lib comctl32.lib gdi32.lib advapi32.lib netapi32.lib iphlpapi.lib\r\n")
-        Makefile.close()
+        if not c:
+            Makefile = open(os.path.join(BootDir, "Makefile"), "wb")
+            Makefile.write("cm3.exe: *.io *.mo *.c\r\n"
+            + " cl -Zi -MD *.c -link *.mo *.io -out:cm3.exe user32.lib kernel32.lib wsock32.lib comctl32.lib gdi32.lib advapi32.lib netapi32.lib iphlpapi.lib\r\n")
+            Makefile.close()
 
-    if vms or StringTagged(Config, "NT") or Config == "NT386":
+    if vms or nt:
         _MakeZip(BootDir[2:])
     else:
         _MakeTGZ(BootDir[2:])
