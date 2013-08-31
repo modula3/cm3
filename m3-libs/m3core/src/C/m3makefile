@@ -19,7 +19,11 @@ end
 %end
 
 if equal(OS_TYPE, "WIN32")
-  include_dir("32BITS") % long is 32bits even on 64bit Windows
+  if equal(WORD_SIZE, 64)
+    include_dir("WIN64")
+  else
+    include_dir("32BITS")
+  end
 else
   include_dir(WORD_SIZE)
 end
