@@ -1098,7 +1098,7 @@ def Boot():
         # gcc platforms
         CCompiler = {
             "SOLgnu" : "/usr/sfw/bin/gcc",
-            "AMD64_NT"      : "cl.exe",
+            "AMD64_NT"      : "cl",
             }.get(Config) or "gcc"
 
         CCompilerFlags = {
@@ -1153,7 +1153,7 @@ def Boot():
         Link = Link + " -lm " # -pthread?
     elif nt:
         if c:
-            Link = "link.exe /pdb:cm3.pdb /out:cm3.exe *." + obj + " "
+            Link = "link /debug /pdb:$(@R).pdb *." + obj + " "
             # be sure to get a .pdb out
             #open("empty.c", "w")
             #Link = CCompiler + CCompilerFlags + "empty.c /" + Link
@@ -1353,11 +1353,11 @@ def Boot():
     VmsMake.write("$ set file/attr=(rfm=var,rat=none) *.mo\n")
     VmsMake.write("$ set file/attr=(rfm=var,rat=none) *.io\n")
     VmsMake.write("$ link /executable=cm3.exe vmslink/options\n")
+    
+    LinkOut = [" -o ", " -out:"][nt]
 
     for a in [Make, Makefile]:
-        a.write(["$(Link) -o cm3", "$(Link) -out:cm3.exe"][nt])
-    Make.write("\n")
-    Makefile.write(NL)
+        a.write("$(Link) " + LinkOut + "$@" + NL)
         
     if False:
         for a in [
@@ -1455,8 +1455,8 @@ def Boot():
         DeleteFile("make.sh")
         if not c:
             Makefile = open(os.path.join(BootDir, "Makefile"), "wb")
-            Makefile.write("cm3.exe: *.io *.mo *.c\r\n"
-            + " cl -Zi -MD *.c -link *.mo *.io -out:cm3.exe user32.lib kernel32.lib wsock32.lib comctl32.lib gdi32.lib advapi32.lib netapi32.lib iphlpapi.lib\r\n")
+            Makefile.write("cm3" + EXE + ": *.io *.mo *.c\r\n"
+            + " cl -Zi -MD *.c -link *.mo *.io -out:$@ user32.lib kernel32.lib wsock32.lib comctl32.lib gdi32.lib advapi32.lib netapi32.lib iphlpapi.lib\r\n")
             Makefile.close()
 
     if vms or nt:
