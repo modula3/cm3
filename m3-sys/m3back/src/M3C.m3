@@ -613,14 +613,14 @@ METHODS
     forwardDeclare(self: T) := type_forwardDeclare; (* useful for structs *)
     define(self: T);
     canBeDefined(self: T): BOOLEAN := type_canBeDefined_false;
-    isOrdinal(): BOOLEAN := type_isType_false;
-    isInteger(): BOOLEAN := type_isType_false;
-    isFloat(): BOOLEAN := type_isType_false;
+    (* not used isOrdinal(): BOOLEAN := type_isType_false; *)
+    (* not used isInteger(): BOOLEAN := type_isType_false; *)
+    (* not used isFloat(): BOOLEAN := type_isType_false; *)
     isRecord(): BOOLEAN := type_isType_false;
     isArray(): BOOLEAN := type_isType_false;
-    isEnum(): BOOLEAN := type_isType_false;
-    isSubrange(): BOOLEAN := type_isType_false;
-    isPointer(): BOOLEAN := type_isType_false;
+    (* not used isEnum(): BOOLEAN := type_isType_false; *)
+    (* not used isSubrange(): BOOLEAN := type_isType_false; *)
+    (* not used isPointer(): BOOLEAN := type_isType_false; *)
     isPacked(): BOOLEAN := type_isType_false;
     toPacked(): Packed_t := type_toPacked_nil;
     (* getMinimumBitSize(): INTEGER FUTURE Target.Int := type_getMinimumBitSize; *)
@@ -747,7 +747,7 @@ TYPE Pointer_t = Type_t OBJECT
 OVERRIDES
     define := pointer_define;
     canBeDefined := pointer_canBeDefined;
-    isPointer := type_isType_true;
+    (* not used isPointer := type_isType_true; *)
 END;
 
 PROCEDURE pointer_define(type: Pointer_t; self: T) =
@@ -772,6 +772,16 @@ OVERRIDES
     canBeDefined := packed_canBeDefined;
     isPacked := type_isType_true;
     toPacked := packed_toPacked;
+(* not used
+    isOrdinal := packed_isOrdinal;
+    isInteger := packed_isInteger;
+    isFloat := packed_isFloat; *)
+    isRecord := packed_isRecord;
+    isArray := packed_isArray;
+(* not used
+    isEnum := packed_isEnum;
+    isSubrange := packed_isSubrange;
+    isPointer := packed_isPointer; *)
 END;
 
 PROCEDURE packed_toPacked(type: Packed_t): Packed_t =
@@ -791,6 +801,16 @@ BEGIN
     RETURN ResolveType(self, type.base_typeid, type.base_type)
         AND (type.base_type.IsDefined() (*OR type.base_type.CanBeDefined(self)*));
 END packed_canBeDefined;
+
+PROCEDURE packed_isArray(type: Packed_t): BOOLEAN =
+BEGIN
+    RETURN type.base_type.isArray();
+END packed_isArray;
+
+PROCEDURE packed_isRecord(type: Packed_t): BOOLEAN =
+BEGIN
+    RETURN type.base_type.isRecord();
+END packed_isRecord;
 
 PROCEDURE ResolveType(self: T; typeid: INTEGER; VAR type: Type_t): BOOLEAN =
 BEGIN
@@ -818,20 +838,20 @@ END pointer_canBeDefined;
 TYPE Ordinal_t = Type_CanBeDefinedTrue_t OBJECT
 OVERRIDES
     define := type_typedef;
-    isOrdinal := type_isType_true;
+    (* not used isOrdinal := type_isType_true; *)
 END;
 
 TYPE Integer_t = Ordinal_t OBJECT
 OVERRIDES
     define := type_typedef;
-    isInteger := type_isType_true;
+    (* not used isInteger := type_isType_true; *)
     canBeDefined := type_canBeDefined_true;
 END;
 
 TYPE Float_t = Type_CanBeDefinedTrue_t OBJECT
 OVERRIDES
     define := type_typedef;
-    isFloat := type_isType_true;
+    (* not used isFloat := type_isType_true; *)
     canBeDefined := type_canBeDefined_true;
 END;
 
@@ -992,7 +1012,7 @@ TYPE Subrange_t = Ordinal_t OBJECT
 OVERRIDES
     define := subrange_define;
     canBeDefined := subrange_canBeDefined;
-    isSubrange := type_isType_true;
+    (* not used isSubrange := type_isType_true; *)
     (* getMinimumBitSize := subrange_getMinimumBitSize; *)
 END;
 
@@ -1049,7 +1069,7 @@ TYPE Enum_t  = Subrange_t OBJECT
     names: REF ARRAY OF Name := NIL;
 OVERRIDES
     define := enum_define;
-    isEnum := type_isType_true;
+    (* not used isEnum := type_isType_true; *)
     canBeDefined := type_canBeDefined_true;
 END;
 
