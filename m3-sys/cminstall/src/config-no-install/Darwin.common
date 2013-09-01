@@ -60,11 +60,18 @@ proc configure_c_compiler() is
   %
 
   %SYSTEM_CC = "gcc -gstabs+ -fPIC"
-  SYSTEM_CC = "gcc -g -fPIC"
-  %SYSTEM_CC = "g++ -g -fPIC"
-  %SYSTEM_CC = "gcc -g -fPIC -Wall -Werror -Wno-return-type"
-  SYSTEM_CC_ASM = "gcc -fPIC"
-  %SYSTEM_CC_ASM = "g++ -fPIC"
+  %SYSTEM_CC = "gcc -g -fPIC"
+  SYSTEM_CC = "g++ -g -fPIC"
+  SYSTEM_CC = SYSTEM_CC & " -Wall"
+  SYSTEM_CC = SYSTEM_CC & " -Werror"
+  SYSTEM_CC = SYSTEM_CC & " -Wno-return-type"
+  SYSTEM_CC = SYSTEM_CC & " -Wno-missing-braces"
+  %SYSTEM_CC = SYSTEM_CC & " -Wextra"
+  %SYSTEM_CC = SYSTEM_CC & " -Wno-missing-field-initializers"
+  %SYSTEM_CC = SYSTEM_CC & " -Wno-unused-parameter"
+  % Usocket.c:31: warning: comparison of unsigned expression < 0 is always false
+  SYSTEM_CC_ASM = "g++ -fPIC"
+  %SYSTEM_CC_ASM = "gcc -fPIC"
   local m = " -m" & {"32BITS":"32","64BITS":"64"}{WORD_SIZE}
   local arch = " -arch " & DarwinArch
   if not equal(try_exec("@" & SYSTEM_CC & m & " -c -x c /dev/null -o /dev/null 2>&1 | fgrep \"cc1: error: invalid option \\\`32'\" >/dev/null"), 0)
