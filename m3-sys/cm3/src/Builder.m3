@@ -1271,8 +1271,8 @@ PROCEDURE FulfilRP(rp : RemovePromise) : QPromise.ExitCode =
 PROCEDURE PushOneM3 (s: State;  u: M3Unit.T): BOOLEAN =
   TYPE Mode_t = M3BackendMode_t;
   VAR
-    delC: BOOLEAN;
-    delS: BOOLEAN;
+    delC := FALSE;
+    delS := FALSE;
     tmpC: TEXT := NIL;
     tmpS: TEXT := NIL;
     m3out: TEXT := NIL;
@@ -1286,7 +1286,7 @@ PROCEDURE PushOneM3 (s: State;  u: M3Unit.T): BOOLEAN =
     C := mode = Mode_t.C;
     delay := s.delayBackend;
   BEGIN
-    <* ASSERT mode # Mode_t.ExternalObject *>     (* nonexistant, untested *)
+    (* ASSERT mode # Mode_t.ExternalObject *)     (* mostly nonexistant, untested, but for m3cgcat *)
     <* ASSERT mode # Mode_t.IntegratedAssembly *> (* nonexistant, untested *)
 
 (* The idea here is to push along the representation in one of a few sequences.
