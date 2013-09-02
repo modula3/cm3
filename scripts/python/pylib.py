@@ -1153,7 +1153,8 @@ def Boot():
         Link = Link + " -lm " # -pthread?
     elif nt:
         if c:
-            Link = "link /debug /pdb:$(@R).pdb *." + obj + " "
+            #Link = "link /debug /pdb:$(@R).pdb *." + obj + " "
+            Link = "link /debug /pdb:$(@R).pdb $** "
             # be sure to get a .pdb out
             #open("empty.c", "w")
             #Link = CCompiler + CCompilerFlags + "empty.c /" + Link
@@ -1214,6 +1215,11 @@ def Boot():
         "SPARC64_LINUX"     : " -Qy -s -KPIC -Av9a -64 -no-undeclared-regs -relax ",
         }.get(Target) or ""))
 
+    is_main_table =  { }
+    for a in ["Main.m3"]:
+        for c in ["c", "cpp"]:
+            is_main_table[a + "." + c] = True
+
     GnuPlatformPrefix = {
         "ARM_DARWIN"    : "arm-apple-darwin8-",
         "ARMEL_LINUX"   : "arm-linux-gnueabi-",
@@ -1238,7 +1244,7 @@ def Boot():
 
     P = FilterPackages([ "m3cc", "import-libs", "m3core", "libm3", "sysutils",
           "m3middle", "m3quake", "m3objfile", "m3linker", "m3back",
-          "m3front", "cm3" ])
+          "m3front", "cm3", "mklib" ])
 
     #DoPackage(["", "realclean"] + P) or sys.exit(1)
     DoPackage(["", "buildlocal"] + P) or sys.exit(1)
@@ -1256,6 +1262,7 @@ def Boot():
     Makefile = open(os.path.join(BootDir, "Makefile"), "wb")
     UpdateSource = open(os.path.join(BootDir, "updatesource.sh"), "wb")
     Objects = { }
+    ObjectsExceptMain = { }
 
     for a in [Makefile]:
         a.write("# edit up here" + NL2
@@ -1271,8 +1278,14 @@ def Boot():
         Makefile.write(".SUFFIXES:" + NL
                        + ".SUFFIXES: .c .is .ms .s .o .obj .io .mo" + NL2)
 
-    Makefile.write("all: cm3" + EXE + NL2
-                   + "clean:" + NL
+    main_packages = ["cm3", "mklib"]
+    
+    Makefile.write("all: ")    
+    for pkg in main_packages:
+        Makefile.write(pkg + EXE + " ")
+    Makefile.write(NL2)
+
+    Makefile.write("clean:" + NL
                    + "\t" + DeleteCommand + " *.io *.mo *.o *.obj" + NL2)
 
     for a in [UpdateSource, Make]:
@@ -1303,15 +1316,22 @@ def Boot():
             ext_mo = a.endswith(".mo")
             if not (ext_c or ext_cpp or ext_h or ext_s or ext_ms or ext_is or ext_io or ext_mo):
                 continue
+            leaf = GetLastPathElement(a)
+            dest = os.path.join(BootDir, leaf)
+            is_main = (ext_c or ext_cpp) and is_main_table.get(leaf, False)
+            if is_main:
+                dest = os.path.join(BootDir, q + "_" + leaf)
             fullpath = os.path.join(Root, dir, Config, a)
             if ext_h or ext_c or not vms or AssembleOnTarget or ext_io or ext_mo:
-                CopyFile(fullpath, BootDir)
+                CopyFile(fullpath, dest)
             if ext_h or ext_io or ext_mo:
                 continue
             Object = _GetObjectName(a, obj)
             if Objects.get(Object):
                 continue
             Objects[Object] = 1
+            if not is_main:
+                ObjectsExceptMain[Object] = 1
             if ext_c:
                 VmsMake.write("$ " + Compile + " " + a + "\n")
             else:
@@ -1328,35 +1348,47 @@ def Boot():
     colon = [":", "::"][nt]
 
     if c or not nt:
-        for o in ["o", "obj"]:
-            Makefile.write(".c." + o + colon + NL + "\t$(Compile) " + CCompilerOut + " $<" + NL2)
+        # write inference rules: .c => .o, .c => .obj, .cpp => .o, .cpp => .obj
+        for c in ["c", "cpp"]:
+            for o in ["o", "obj"]:
+                Makefile.write("." + c + "." + o + colon + NL + "\t$(Compile) " + CCompilerOut + " $<" + NL2)
+            
+        # write inference rules: .is => .io, .s => .o, .ms => .mo
         if not c:
             for source_obj in [["is", "io"], ["s", "o"], ["ms", "mo"]]:
                 source = source_obj[0]
                 obj = source_obj[1]
                 Makefile.write("." + source + "." + obj + ":" + NL + "\t$(Assemble) -o $@ $<" + NL2)
 
-    Makefile.write("cm3" + EXE + ":")
-    Objects = Objects.keys()
+    Makefile.write("OBJECTS=")
+    Objects = ObjectsExceptMain.keys()
     Objects.sort()
-    k = 4
+    k = 8
     for a in Objects:
         k = k + 1 + len(a)
         if k > 76: # line wrap
             Makefile.write(" \\" + NL)
             k = 1 + len(a)
         Makefile.write(" " + a)
-    Makefile.write(NL + "\t")
+
+    Makefile.write(NL2)
  
+    LinkOut = [" -o ", " -out:"][nt]
+
+    for pkg in main_packages:
+        Makefile.write(pkg + EXE + ":")
+        Makefile.write(" " + pkg + "_Main.m3." + obj)
+        Makefile.write(" " + "$(OBJECTS)")
+        Makefile.write(NL + "\t")
+        Makefile.write("$(Link) " + LinkOut + "$@" + NL)
+
     VmsMake.write("$ set file/attr=(rfm=var,rat=none) *.o\n")
     VmsMake.write("$ set file/attr=(rfm=var,rat=none) *.obj\n")
     VmsMake.write("$ set file/attr=(rfm=var,rat=none) *.mo\n")
     VmsMake.write("$ set file/attr=(rfm=var,rat=none) *.io\n")
     VmsMake.write("$ link /executable=cm3.exe vmslink/options\n")
     
-    LinkOut = [" -o ", " -out:"][nt]
-
-    for a in [Make, Makefile]:
+    for a in [Make]:
         a.write("$(Link) " + LinkOut + "$@" + NL)
         
     if False:
@@ -1446,6 +1478,7 @@ def Boot():
 
     for a in [UpdateSource, Make, Makefile, VmsMake, VmsLink]:
         a.close()
+    Make.close()
         
     # write entirely new custom makefile for NT
     # We always have object files so just compile and link in one fell swoop.
