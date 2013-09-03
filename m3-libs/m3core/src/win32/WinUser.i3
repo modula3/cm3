@@ -2011,17 +2011,17 @@ PROCEDURE GetClassInfoW (hInstance  : HINSTANCE;
                            lpWndClass : LPWNDCLASSW): BOOL;
 CONST GetClassInfo = GetClassInfoA;
 
-CONST CW_USEDEFAULT = 16_80000000;
+CONST CW_USEDEFAULT = FIRST(INT32); (* 16_80000000 *)
 
 (* Special value for CreateWindow, et al. *)
 VAR                             (* CONST *)
   HWND_DESKTOP: HWND;
 
 <*EXTERNAL CreateWindowExA:WINAPI*>
-PROCEDURE CreateWindowExA (dwExStyle   : UINT32;
+PROCEDURE CreateWindowExA (dwExStyle   : INT32;
                              lpClassName : PCSTR;
                              lpWindowName: PCSTR;
-                             dwStyle     : UINT32;
+                             dwStyle     : INT32;
                              X           : INT32;
                              Y           : INT32;
                              nWidth      : INT32;
@@ -2032,10 +2032,10 @@ PROCEDURE CreateWindowExA (dwExStyle   : UINT32;
                              lpParam     : PVOID     ): HWND;
 
 <*EXTERNAL CreateWindowExW:WINAPI*>
-PROCEDURE CreateWindowExW (dwExStyle   : UINT32;
+PROCEDURE CreateWindowExW (dwExStyle   : INT32;
                              lpClassName : PCWSTR;
                              lpWindowName: PCWSTR;
-                             dwStyle     : UINT32;
+                             dwStyle     : INT32;
                              X           : INT32;
                              Y           : INT32;
                              nWidth      : INT32;
@@ -2048,7 +2048,7 @@ CONST CreateWindowEx = CreateWindowExA;
 
 PROCEDURE CreateWindowA (lpClassName : PCSTR;
                          lpWindowName: PCSTR;
-                         dwStyle     : UINT32;
+                         dwStyle     : INT32;
                          x           : INT32;
                          y           : INT32;
                          nWidth      : INT32;
@@ -2060,7 +2060,7 @@ PROCEDURE CreateWindowA (lpClassName : PCSTR;
 
 PROCEDURE CreateWindowW (lpClassName : PCWSTR;
                          lpWindowName: PCWSTR;
-                         dwStyle     : UINT32;
+                         dwStyle     : INT32;
                          x           : INT32;
                          y           : INT32;
                          nWidth      : INT32;
