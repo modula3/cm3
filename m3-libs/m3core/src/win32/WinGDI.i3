@@ -695,12 +695,12 @@ TYPE
 
   (* Logical Brush (or Pattern) *)
   PLOGBRUSH = UNTRACED REF LOGBRUSH;
-  NPLOGBRUSH = UNTRACED REF LOGBRUSH;
-  LPLOGBRUSH = UNTRACED REF LOGBRUSH;
+  NPLOGBRUSH = UNTRACED REF LOGBRUSH; (* remove this? *)
+  LPLOGBRUSH = UNTRACED REF LOGBRUSH; (* remove this? *)
   LOGBRUSH = RECORD
     lbStyle: UINT32;
     lbColor: COLORREF;
-    lbHatch: INT32;
+    lbHatch: SIZE_T;
   END;
 
   PATTERN = LOGBRUSH;
@@ -726,7 +726,7 @@ TYPE
     elpWidth     : UINT32;
     elpBrushStyle: UINT32;
     elpColor     : COLORREF;
-    elpHatch     : INT32;
+    elpHatch     : SIZE_T;
     elpNumEntries: UINT32;
     elpStyleEntry: ARRAY [0 .. 1 - 1] OF UINT32;
   END;
