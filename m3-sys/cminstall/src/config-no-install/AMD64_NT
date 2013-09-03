@@ -4,4 +4,7 @@ readonly WORD_SIZE = "64BITS"       % { "32BITS" or "64BITS" }
 
 M3_BACKEND_MODE = "C"
 
+% temporary workaround, some problem with our exception handling
+USE_MSVCRT = FALSE
+
 include("NT.common")
