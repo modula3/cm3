@@ -818,7 +818,7 @@ PROCEDURE TrestleID (<*UNUSED*> self: T;  <*UNUSED*> v: VBT.T): TEXT =
   END TrestleID;
 
 PROCEDURE WindowID (<*UNUSED*> self: T;  v: VBT.T): TEXT =
-  VAR num := LOOPHOLE (WindowHandle (v), Ctypes.int);
+  VAR num := LOOPHOLE (WindowHandle (v), INTEGER);
   BEGIN
     RETURN Fmt.Unsigned (num, base := 16);
   END WindowID;
@@ -2045,7 +2045,7 @@ PROCEDURE TimerTick (hwnd: WinDef.HWND) =
     IF trsl.mouseFocus = NIL THEN
       status := WinUser.GetCursorPos (ADR (screenPos));
       <* ASSERT status # False *>
-      lParam := LOOPHOLE (WinDef.POINTS {screenPos.x, screenPos.y}, WinDef.LPARAM);
+      lParam := LOOPHOLE (WinDef.POINTS {screenPos.x, screenPos.y}, WinDef.UINT32);
       DeliverMousePos (hwnd, lParam, 0);
     END;
   END TimerTick;
