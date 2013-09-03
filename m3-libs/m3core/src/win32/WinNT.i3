@@ -1955,6 +1955,8 @@ CONST
   IMAGE_FILE_MACHINE_R3000 = 16_162; (* MIPS little-endian, 0540
                                         big-endian *)
   IMAGE_FILE_MACHINE_R4000 = 16_166; (* MIPS little-endian *)
+  IMAGE_FILE_MACHINE_IA64 = 16_200;    (* Intel Itanium *)
+  IMAGE_FILE_MACHINE_AMD64 = 16_8664;  (* AMD64 *)
 
 (* Directory format. *)
 
