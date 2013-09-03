@@ -1964,6 +1964,8 @@ def _CopyCompiler(From, To):
 #-----------------------------------------------------------------------------
 
 def ShipBack():
+    if  Target == "NT386" or Target.endswith("_NT"):
+        return True
     return _CopyCompiler(os.path.join(Root, "m3-sys", "m3cc", Config),
                          os.path.join(InstallRoot, "bin"))
 
