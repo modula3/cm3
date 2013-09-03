@@ -8,15 +8,16 @@ UNSAFE MODULE Main;
 IMPORT Process, IO, Rd, Wr, FileRd, FileWr, Thread, OSError, TextRefTbl;
 IMPORT Convert, CoffTime, File, FS, Text, Word, TextWr, TextSeq;
 IMPORT Fmt, Time, IntArraySort, RegularFile, Params, Pathname;
-IMPORT ASCII, BasicCtypes, WinNT;
+IMPORT ASCII, BasicCtypes, WinNT, TextLiteral;
 
 TYPE
   UINT8 = BasicCtypes.unsigned_char;
   UINT32 = BasicCtypes.unsigned_int;
 
 CONST
-  MaxKeeper    = 10000;            (* max file size we'll hold in memory *)
-  MaxTotalKeep = 100 * MaxKeeper;  (* max total file space we'll hold in memory *)
+  (* TODO keep everything in memory *)
+  MaxKeeper    = TextLiteral.MaxBytes;  (* max file size we'll hold in memory *)
+  MaxTotalKeep = MaxKeeper;             (* max total file space we'll hold in memory *)
   ArchiveMagic = "!<arch>\n";
   EndHeader    = "`\n";
   PadChar      = '\n';
@@ -633,7 +634,7 @@ PROCEDURE CopyFile (f: FileDesc)
     rd  := OpenRd (f.name);
     sz  : CARDINAL := 0;
     len : CARDINAL;
-    buf : ARRAY [0..2047] OF CHAR;
+    buf : ARRAY [0..1024 * 8 - 1] OF CHAR;
   BEGIN
     TRY
       LOOP
