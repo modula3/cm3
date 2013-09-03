@@ -44,7 +44,8 @@ void m3_quash_darwin_libtool_warning_that_libgcc_has_no_symbols(void)
 
 #endif
 
-#ifndef __GNUC__
+/* Win32: useful, see above */
+#if !(defined(__GNUC__) || defined(_WIN64) || defined(__LP64__))
 
 #if defined(_MSC_VER) || defined(__DECC) || defined(__DECCXX)
 typedef __int64 INT64;
