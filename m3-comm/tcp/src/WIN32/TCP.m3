@@ -64,7 +64,7 @@ PROCEDURE NewConnector (ep: IP.Endpoint): Connector RAISES {IP.Error} =
   VAR
     res   := NEW(Connector, ep := ep);
     name  : SockAddrIn;
-    True  := 1;
+    True: Ctypes.int := 1;
     err   : INTEGER;
   BEGIN
     res.sock := NewSocket();
