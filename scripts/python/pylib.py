@@ -2028,8 +2028,9 @@ def GetVisualCPlusPlusVersion():
         return "90"
     if a.find("16.00") != -1:
         return "100"
+    if a.find("17.00") != -1:
+        return "110"
     FatalError("unable to detect Visual C++ version, maybe cl is not in %PATH%?")
-
 
 def IsCygwinHostTarget(): # confused
     return Host.endswith("_CYGWIN") or (Host == "NT386" and GCC_BACKEND and TargetOS == "POSIX")
