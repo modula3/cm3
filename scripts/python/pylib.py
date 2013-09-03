@@ -364,9 +364,10 @@ def _GetAllTargets():
 
 #-----------------------------------------------------------------------------
 
+_CBackend = "c" in sys.argv
 _PossibleCm3Flags = ["boot", "keep", "override", "commands", "verbose", "why"]
 _SkipGccFlags = ["nogcc", "skipgcc", "omitgcc"]
-_PossiblePylibFlags = ["noclean", "nocleangcc"] + _SkipGccFlags + _PossibleCm3Flags
+_PossiblePylibFlags = ["noclean", "nocleangcc", "c"] + _SkipGccFlags + _PossibleCm3Flags
 
 CM3_FLAGS = ""
 for a in _PossibleCm3Flags:
@@ -574,7 +575,7 @@ Q = "" # TBD
 # GCC_BACKEND is almost always true.
 #
 
-GCC_BACKEND = True
+GCC_BACKEND = not _CBackend
 
 #-----------------------------------------------------------------------------
 #
@@ -1131,7 +1132,7 @@ def Boot():
         }.get(Config) or " ")
 
     obj = ["o", "obj"][nt]
-    Link = "$(CC) $(CFLAGS) *." + obj + [" *.mo *.io ", " "][c]
+    Link = "$(CC) $(CFLAGS) *." + obj + [" *.mo *.io ", " "][_CBackend]
 
     # link flags
     
@@ -1152,7 +1153,7 @@ def Boot():
     elif interix:
         Link = Link + " -lm " # -pthread?
     elif nt:
-        if c:
+        if _CBackend:
             #Link = "link /debug /pdb:$(@R).pdb *." + obj + " "
             Link = "link /debug /pdb:$(@R).pdb $** "
             # be sure to get a .pdb out
@@ -1269,12 +1270,12 @@ def Boot():
                 + "CC=" + CCompiler + NL
                 + "CFLAGS=" + CCompilerFlags + NL)
         a.write("Compile=" + Compile + NL)
-        if not c:
+        if not _CBackend:
             a.write("Assemble=" + Assembler + " " + AssemblerFlags + NL)
         a.write("Link=" + Link + NL
                 + NL + "# no more editing should be needed" + NL2)
 
-    if True: #not c:
+    if True: #not _CBackend:
         Makefile.write(".SUFFIXES:" + NL
                        + ".SUFFIXES: .c .is .ms .s .o .obj .io .mo" + NL2)
 
@@ -1298,7 +1299,7 @@ def Boot():
                 + "CC=${CC:-" + CCompiler + "}\n"
                 + "CFLAGS=${CFLAGS:-" + CCompilerFlags + "}\n"
                 + "Compile=" + Compile + "\n")
-        if not c:
+        if not _CBackend:
             a.write("Assemble=" + Assembler + " " + AssemblerFlags + "\n")
         a.write("Link=" + Link + "\n"
                 + "\n# no more editing should be needed\n\n")
@@ -1347,14 +1348,14 @@ def Boot():
     # double colon batches and is much faster
     colon = [":", "::"][nt]
 
-    if c or not nt:
+    if _CBackend or not nt:
         # write inference rules: .c => .o, .c => .obj, .cpp => .o, .cpp => .obj
         for c in ["c", "cpp"]:
             for o in ["o", "obj"]:
                 Makefile.write("." + c + "." + o + colon + NL + "\t$(Compile) " + CCompilerOut + " $<" + NL2)
             
         # write inference rules: .is => .io, .s => .o, .ms => .mo
-        if not c:
+        if not _CBackend:
             for source_obj in [["is", "io"], ["s", "o"], ["ms", "mo"]]:
                 source = source_obj[0]
                 obj = source_obj[1]
@@ -1486,7 +1487,7 @@ def Boot():
     if nt:
         DeleteFile("updatesource.sh")
         DeleteFile("make.sh")
-        if not c:
+        if not _CBackend:
             Makefile = open(os.path.join(BootDir, "Makefile"), "wb")
             Makefile.write("cm3" + EXE + ": *.io *.mo *.c\r\n"
             + " cl -Zi -MD *.c -link *.mo *.io -out:$@ user32.lib kernel32.lib wsock32.lib comctl32.lib gdi32.lib advapi32.lib netapi32.lib iphlpapi.lib\r\n")
@@ -1964,7 +1965,7 @@ def _CopyCompiler(From, To):
 #-----------------------------------------------------------------------------
 
 def ShipBack():
-    if  Target == "NT386" or Target.endswith("_NT"):
+    if  not GCC_BACKEND:
         return True
     return _CopyCompiler(os.path.join(Root, "m3-sys", "m3cc", Config),
                          os.path.join(InstallRoot, "bin"))
