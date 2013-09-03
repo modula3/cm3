@@ -358,7 +358,7 @@ PROCEDURE PushStroke (hdc  : WinDef.HDC;
         ELSE (* The pixmap is not solid, and we are running Windows NT *)
 
           logbrush.lbStyle := WinGDI.BS_PATTERN;
-          logbrush.lbHatch := LOOPHOLE (pst.pmtable[pm].hbmp, WinDef.LONG);
+          logbrush.lbHatch := LOOPHOLE (pst.pmtable[pm].hbmp, INTEGER);
           (*
            * From the documentation, it is not clear how to select the
            * background and foreground colors for the bitmap.  An experiment
