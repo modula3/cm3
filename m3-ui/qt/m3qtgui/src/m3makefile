@@ -213,6 +213,7 @@ qtbuild("QtInputContext")
 qtbuild("QtFontMetrics")
 qtbuild("QtFontInfo")
 qtbuild("QtPaintEngine")
+qtbuild("QtPainter")
 
 %----------------------------------
 
