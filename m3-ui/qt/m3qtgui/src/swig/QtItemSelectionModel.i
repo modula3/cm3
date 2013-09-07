@@ -29,6 +29,7 @@ IMPORT WeakRef;
 
 %ignore operator ==;
 %ignore operator !=;
+%ignore operator <;
 
 //Local Enums
 EnumMaps(QItemSelectionModel, SelectionFlag, ErrMode)
