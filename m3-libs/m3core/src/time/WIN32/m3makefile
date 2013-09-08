@@ -6,14 +6,9 @@
 %      modified on Tue Jun 15 21:53:44 PDT 1993 by harrison
 %      modified on Tue May  4 10:16:00 PDT 1993 by mjordan
 
-if equal (OS_TYPE, "POSIX")
+% Cygwin could use some of this
 
 Module ("TimeWin32")
-
-else
-
 implementation ("Time")
-Module ("TimeWin32")
 implementation ("DateWin32")
-
-end
+c_source ("TimeWin32")

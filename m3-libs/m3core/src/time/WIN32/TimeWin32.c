@@ -15,27 +15,25 @@
 extern "C" {
 #endif
 
-FILETIME
+void
 __cdecl
-TimeWin32__ToFileTime(double t)
+TimeWin32__ToFileTime(double t, FILETIME * ft)
 {
-    FILETIME ft;
     LARGE_INTEGER li;
 
     li.QuadPart = (__int64)(t * 1.0e7);
-    ft.dwLowDateTime = li.LowPart;
-    ft.dwHighDateTime = li.HighPart;
-    return ft;
+    ft->dwLowDateTime = li.LowPart;
+    ft->dwHighDateTime = li.HighPart;
 }
 
 double
 __cdecl
-TimeWin32__FromFileTime(FILETIME ft)
+TimeWin32__FromFileTime(const FILETIME * ft)
 {
     LARGE_INTEGER li;
 
-    li.LowPart = ft.dwLowDateTime;
-    li.HighPart = ft.dwHighDateTime;
+    li.LowPart = ft->dwLowDateTime;
+    li.HighPart = ft->dwHighDateTime;
     return ((double)li.QuadPart) / 1.0e7;
 }
 

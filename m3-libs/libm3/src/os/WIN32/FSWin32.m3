@@ -442,8 +442,9 @@ PROCEDURE BuildStatus (READONLY ffd  : WinBase.WIN32_FIND_DATA;
 
 PROCEDURE SetModificationTime(p: Pathname.T; READONLY t: Time.T)
   RAISES {OSError.E} =
-  VAR h: File.T; lastWrite := TimeWin32.ToFileTime(t);
+  VAR h: File.T; lastWrite: WinBase.FILETIME;
   BEGIN
+    TimeWin32.ToFileTime(t, lastWrite);
     h := OpenFileReadonly(p);
     TRY
       IF WinBase.SetFileTime(
