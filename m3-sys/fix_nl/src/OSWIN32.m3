@@ -29,7 +29,7 @@ PROCEDURE Close (f: File.T;  modTime: LONGREAL; <*UNUSED*> path: TEXT)
 PROCEDURE SetModifiedTime (f: File.T;  time: LONGREAL) RAISES {OSError.E} =
   VAR modTime: WinBase.FILETIME;
   BEGIN
-    modTime := TimeWin32.ToFileTime (time);
+    TimeWin32.ToFileTime (time, modTime);
     IF WinBase.SetFileTime (f.handle, NIL, NIL, ADR (modTime)) = 0 THEN
       OSErrorWin32.Raise ();
     END;
