@@ -10,6 +10,7 @@
 #include <winsock2.h>
 #include <iphlpapi.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -30,6 +31,7 @@ MachineIDC__CanGet(unsigned char* id)
     DWORD NumEntries = { 0 };
     static GetIfTable_t s_getIfTable;
     GetIfTable_t getIfTable = s_getIfTable;
+    UINT pass;
 
     ZeroMemory(id, 6);
     
@@ -46,10 +48,10 @@ MachineIDC__CanGet(unsigned char* id)
 
     /* Call until it fits, typically twice. */
     Size = 0;
-    while ((Error = getIfTable(Table, &Size, FALSE)) == ERROR_INSUFFICIENT_BUFFER)
+    while ((Error = getIfTable(Table, &Size, TRUE)) == ERROR_INSUFFICIENT_BUFFER)
     {
         free(Table);
-        Table = (MIB_IFTABLE*)malloc(Size);
+        Table = (MIB_IFTABLE*)calloc(1, Size);
         if (Table == NULL)
         {
             Error = ERROR_NOT_ENOUGH_MEMORY;
@@ -60,12 +62,39 @@ MachineIDC__CanGet(unsigned char* id)
         goto Exit;
 
     NumEntries = Table->dwNumEntries;
+#if 0
+    printf("Table->dwNumEntries %d\n", NumEntries);
     for (i = 0; (!Success) && (i < NumEntries); ++i)
     {
         MIB_IFROW* Row = &Table->table[i];
-        if (Row->dwType != IF_TYPE_ETHERNET_CSMACD || Row->dwPhysAddrLen != 6)
-            continue;
-        memcpy(id, Row->bPhysAddr, 6);
+        unsigned char * phys = Row->bPhysAddr;
+        size_t len = Row->dwPhysAddrLen;
+        if (len == 6)
+        {
+            printf("%02X%02X%02X%02X%02X%02X\n",
+                   phys[0], phys[1], phys[2], phys[3], phys[4], phys[5]);
+        }
+     }
+#endif
+ 
+    for (pass = 0; pass <= 1; ++pass)
+    {
+        for (i = 0; (!Success) && (i < NumEntries); ++i)
+        {
+            MIB_IFROW* Row = &Table->table[i];
+            unsigned char * phys = Row->bPhysAddr;
+            size_t len = Row->dwPhysAddrLen;
+            if ((Row->dwType != IF_TYPE_ETHERNET_CSMACD || len != 6)
+                || (pass == 0 && len == 6 && memcmp(&phys[3], "RAS", 3) == 0))
+            {
+#if 0
+                printf("skipping %X/%02X%02X%02X%02X%02X%02X\n", len,
+                       phys[0], phys[1], phys[2], phys[3], phys[4], phys[5]);
+#endif
+                continue;
+            }
+            memcpy(id, phys, 6);
+        }
         Success = TRUE;
     }
 Exit:
@@ -77,9 +106,7 @@ Exit:
 } /* extern "C" */
 #endif
 
-#if 0 /* test code */
-
-#include <stdio.h>
+#if 1 /* test code */
 
 int main()
 {
@@ -87,7 +114,9 @@ int main()
     BOOL i = { 0 };
     
     i = MachineIDC__CanGet(id);
-    printf("%d %02X-%02X-%02X-%02X-%02X-%02X\n", i, id[0], id[1], id[2], id[3], id[4], id[5]);
+    printf("%d %02X-%02X-%02X-%02X-%02X-%02X %c%c%c%c%c%c\n", i,
+           id[0], id[1], id[2], id[3], id[4], id[5],
+           id[0], id[1], id[2], id[3], id[4], id[5]);
     system("getmac");
 
     return 0;
