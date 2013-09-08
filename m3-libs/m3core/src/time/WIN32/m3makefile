@@ -8,7 +8,7 @@
 
 % Cygwin could use some of this
 
-Module ("TimeWin32")
+Interface ("TimeWin32")
 implementation ("Time")
 implementation ("DateWin32")
 c_source ("TimeWin32")
