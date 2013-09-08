@@ -1,9 +1,11 @@
 INTERFACE M3CC;
 IMPORT Cstdint, Long;
 
-TYPE  INT32 = Cstdint.int32_t;
+(*TYPE  INT32 = Cstdint.int32_t; requires newer m3core *)
+TYPE INT32 = Ctypes.int;        (* not true for nonexistant 16bit targets but ok *)
 TYPE  INT64 = LONGINT;
-TYPE UINT32 = Cstdint.uint32_t;
+(*TYPE UINT32 = Cstdint.uint32_t; requires newer m3core *)
+TYPE UINT32 = Ctypes.unsigned;  (* not true for nonexistant 16bit targets but ok *)
 TYPE UINT64 = Long.T;
 TYPE Base_t = [2..36];
 
