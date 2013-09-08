@@ -1,5 +1,5 @@
 INTERFACE M3CC;
-IMPORT Cstdint, Long;
+IMPORT (*Cstdint, *)Long;       (* Cstdint requires newer m3core *)
 
 (*TYPE  INT32 = Cstdint.int32_t; requires newer m3core *)
 TYPE INT32 = Ctypes.int;        (* not true for nonexistant 16bit targets but ok *)
