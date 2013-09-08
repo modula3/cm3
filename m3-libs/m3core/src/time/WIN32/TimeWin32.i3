@@ -9,13 +9,14 @@ IMPORT Time, WinBase;
 
 (* Conversions between a "Time.T" and a "WinBase.FILETIME". *)
 
-(* READONLY is to avoid passing struct by value *)
 PROCEDURE FromFileTime(READONLY ft: WinBase.FILETIME): Time.T;
 
 <*EXTERNAL TimeWin32__ToFileTime*>
+(* VAR is to avoid passing struct by value *)
 PROCEDURE ToFileTime(n: Time.T; (*OUT*)VAR ft: WinBase.FILETIME);
 
 <*EXTERNAL TimeWin32__FromFileTime*>
+(* READONLY is to avoid passing struct by value *)
 PROCEDURE FromFileTime(READONLY ft: WinBase.FILETIME): Time.T;
 
 END TimeWin32.
