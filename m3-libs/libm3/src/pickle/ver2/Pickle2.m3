@@ -1155,14 +1155,28 @@ CONST pm3_REFANY_Fp = FPA {16_65,16_72,16_24,16_80,16_79,16_6e,16_61,16_66};
 CONST cm3_REFANY_Fp = FPA {16_66,16_61,16_6e,16_79,16_80,16_24,16_72,16_65};
 
 CONST TextLitT_uid = 16_7BBBFBCA;
-CONST bad_TextLitT_Fp = FPA {16_d9,16_56,16_04,16_eb,16_a7,16_ec,16_d8,16_02};
+CONST big_TextLiteral_T_FP = FPA {16_d9,16_56,16_04,16_eb,16_a7,16_ec,16_d8,16_02};
   (* TextLiteral.T once had a pseudo-buffer size that adapted to the maximum
      for the word size.  This gave the above fingerprint on 64-bit machines
-     and the the below one on 32.  Eventually, they will all be as below, but
-     this translation will allow reading old pickles written on a 64-bit
-     machine, as long as no object/array has a field/element whose statically
-     declared type is TextLiteral.T. *) 
-CONST good_TextLitT_Fp = FPA {16_e3,16_d3,16_a1,16_62,16_29,16_28,16_1a,16_19};
+     and head_TextLiteral_T_FP below on 32. *) 
+
+CONST rel_TextLiteral_T_FP  = FPA {16_81,16_ef,16_ba,16_63,16_f6,16_28,16_44,16_12};
+CONST rel_Text16Short_T_FP  = FPA {16_94,16_7b,16_13,16_f5,16_86,16_85,16_66,16_18};
+CONST rel_Text16_T_FP       = FPA {16_44,16_c5,16_c9,16_96,16_b5,16_ae,16_07,16_1f};
+CONST rel_Text8Short_T_FP   = FPA {16_58,16_3a,16_2c,16_e6,16_b8,16_85,16_57,16_03};
+CONST rel_Text8_T_FP        = FPA {16_f5,16_e5,16_72,16_53,16_ca,16_0d,16_a6,16_1a};
+CONST rel_Text8CString_T_FP = FPA {16_9c,16_d4,16_11,16_a4,16_b2,16_c4,16_3a,16_19};
+CONST rel_TextCat_T_FP      = FPA {16_fd,16_0d,16_c0,16_56,16_27,16_8f,16_fd,16_1f};
+CONST rel_TextSub_TT_FP     = FPA {16_58,16_22,16_76,16_f6,16_97,16_78,16_57,16_14};
+
+CONST head_TextLiteral_T_FP  = FPA {16_e3,16_d3,16_a1,16_62,16_29,16_28,16_1a,16_19};
+CONST head_Text16Short_T_FP  = FPA {16_bf,16_2b,16_31,16_99,16_99,16_4f,16_3d,16_10};
+CONST head_Text16_T_FP       = FPA {16_27,16_0f,16_1b,16_a7,16_c8,16_ed,16_03,16_01};
+CONST head_Text8Short_T_FP   = FPA {16_18,16_f4,16_5c,16_e2,16_b4,16_67,16_fe,16_1e};
+CONST head_Text8_T_FP        = FPA {16_f4,16_ef,16_0e,16_99,16_2f,16_0a,16_7e,16_04};
+CONST head_Text8CString_T_FP = FPA {16_fd,16_ef,16_0d,16_d8,16_f6,16_c9,16_70,16_13};
+CONST head_TextCat_T_FP      = FPA {16_46,16_cd,16_0f,16_ea,16_dd,16_ca,16_a9,16_15};
+CONST head_TextSub_TT_FP     = FPA {16_ed,16_c7,16_84,16_3d,16_37,16_e9,16_44,16_07};
 
 TYPE TE = 
   RECORD 
@@ -1173,7 +1187,7 @@ TYPE TE =
 
 TYPE FP = Fingerprint.T; 
 
-TYPE FPTable_T = ARRAY [ 0 .. 6 ] OF TE; 
+TYPE FPTable_T = ARRAY [ 0 .. 13 ] OF TE; 
 
 CONST FPTable = FPTable_T 
         { TE { uid := NULL_uid, 
@@ -1191,12 +1205,17 @@ CONST FPTable = FPTable_T
           TE { uid := REFANY_uid, 
                from_fp := FP { byte := pm3_REFANY_Fp }, 
                to_fp := FP { byte := cm3_REFANY_Fp } },
-          TE { uid := TextLitT_uid, 
-               from_fp := FP { byte := bad_TextLitT_Fp }, 
-               to_fp := FP { byte := good_TextLitT_Fp } },
-          TE { uid := TextLitT_uid, 
-               from_fp := FP { byte := good_TextLitT_Fp }, 
-               to_fp := FP { byte := bad_TextLitT_Fp } }
+          (* In the fingerprint changes from PM3 to CM3, the UIDs did not change.
+             In case of the Text.T subtypes, they did, so we just let them be. *)    
+          TE { 0 , FP { rel_TextLiteral_T_FP } , FP { head_TextLiteral_T_FP } }, 
+          TE { 0 , FP { big_TextLiteral_T_FP } , FP { head_TextLiteral_T_FP } }, 
+          TE { 0 , FP { rel_Text16Short_T_FP } , FP { head_Text16Short_T_FP } }, 
+          TE { 0 , FP { rel_Text16_T_FP } , FP { head_Text16_T_FP } },      
+          TE { 0 , FP { rel_Text8Short_T_FP } , FP { head_Text8Short_T_FP } },  
+          TE { 0 , FP { rel_Text8_T_FP } , FP { head_Text8_T_FP } },       
+          TE { 0 , FP { rel_Text8CString_T_FP } , FP { head_Text8CString_T_FP } },
+          TE { 0 , FP { rel_TextCat_T_FP } , FP { head_TextCat_T_FP } },     
+          TE { 0 , FP { rel_TextSub_TT_FP } , FP { head_TextSub_TT_FP } }    
         }; 
 
 PROCEDURE TranslateFP (READONLY fp: Fingerprint.T): TypeCode =
@@ -1214,7 +1233,7 @@ PROCEDURE TranslateFP (READONLY fp: Fingerprint.T): TypeCode =
           tc := RTTypeFP.FromFingerprint(te.to_fp);
           IF tc # RTType.NoSuchType THEN
             t := RTType.Get(tc);
-            IF t^.selfID = te.uid THEN RETURN tc; END; 
+            IF te.uid=0 OR t^.selfID = te.uid THEN RETURN tc; END; 
           END; 
         END; 
       END; 
