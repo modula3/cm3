@@ -1439,7 +1439,7 @@ PROCEDURE Load_indirect (t: Type;  o: Offset;  s: Size) =
           END;
         ELSE
           (* unaligned, partial load with variable offset *)
-          IF (best_align > x.align) THEN Err ("unaligned base variable"); END;
+          IF (best_align < x.align) THEN Err ("unaligned base variable"); END;
 
           a := MIN (base_align, TargetMap.CG_Size[t]);
           IF (best_size < a) THEN
@@ -1705,7 +1705,7 @@ PROCEDURE Store_indirect (t: Type;  o: Offset;  s: Size) =
           Free (tmp);
         ELSE
           (* unaligned, partial store with variable offset *)
-          IF (best_align > x.align) THEN
+          IF (best_align < x.align) THEN
             Err ("unaligned base variable in store");
           END;
 
@@ -2849,7 +2849,7 @@ PROCEDURE ScanTypes (READONLY x: ARRAY [0..3] OF Target.Int_type;
       WITH z = x[i] DO
         IF (s <= z.size) AND (z.size < best_s)
           AND (z.align <= best_a)
-          AND (a MOD z.align = 0)
+          AND (z.align MOD a = 0)
           AND (s + (o MOD z.align) <= z.size) THEN
           (* remember this type *)
           best_t := z.cg_type;
