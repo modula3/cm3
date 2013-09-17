@@ -15,12 +15,14 @@ INTERFACE UnsafeUniRd
 ; PROCEDURE FastEOF ( Stream : UniRd . T ) : BOOLEAN 
   RAISES { Failure , Alerted } 
   (* TRUE iff Stream is at end-of-file. *) 
+  (* PRE: Stream and Stream.Source are locked. *) 
 
 ; PROCEDURE FastCharsReady ( Stream : UniRd . T ) : CARDINAL 
   RAISES { Failure } 
   (* A number of characters that can be read without indefinite waiting.
      The EOF counts as one "character" here.  This number may very pessimistic. 
   *) 
+  (* PRE: Stream is locked, but not Stream.Source. *) 
 
 ; PROCEDURE FastUnGetWideChar ( Stream : UniRd . T ; Wch : Widechar ) 
   (* Push Wch onto the front of Stream, where the next attempt to decode a
@@ -34,6 +36,7 @@ INTERFACE UnsafeUniRd
   (* Decode, consume, and return a character from Source(Stream), 
      using Enc(Stream) 
   *) 
+  (* PRE: Stream and Stream.Source are locked. *) 
 
 ; CONST (* PROCEDURE *) FastGetChar = FastGetWideChar 
   (* With return by value and CHAR<:WIDECHAR, only one procedure is needed. *) 
@@ -45,7 +48,9 @@ INTERFACE UnsafeUniRd
   (* Decode and consume characters from Source(Stream), using Enc(Stream), 
      storing them into ArrWch, until Source(Stream) is at end-of-file, or ArrWch
      is filled.  Return the actual number of decoded characters stored 
-     into ArrWch. *)  
+     into ArrWch. 
+  *)  
+  (* PRE: Stream and Stream.Source are locked. *) 
 
 ; PROCEDURE FastGetSub 
     ( Stream : UniRd . T ; VAR (*OUT*) ArrCh : ARRAY OF CHAR ) : CARDINAL
@@ -58,6 +63,7 @@ INTERFACE UnsafeUniRd
      previous characters stored.  Otherwise, return the actual number of 
      decoded characters stored into ArrCh. 
   *)  
+  (* PRE: Stream and Stream.Source are locked. *) 
 
 ; PROCEDURE FastGetWideSubLine 
     ( Stream : UniRd . T ; VAR (*OUT*) ArrWch : ARRAY OF Widechar ) 
@@ -68,28 +74,35 @@ INTERFACE UnsafeUniRd
      is filled, or a decoded substring equal to Wr.EOL has been read.  Return 
      the actual number of decoded characters stored into ArrWch. 
   *)  
+  (* PRE: Stream and Stream.Source are locked. *) 
 
 ; PROCEDURE FastGetSubLine 
     ( Stream : UniRd . T ; VAR (*OUT*) ArrCh : ARRAY OF CHAR ) 
   : CARDINAL
   RAISES { Range , Failure , Alerted } 
+  (* PRE: Stream and Stream.Source are locked. *) 
 
 ; PROCEDURE FastGetText ( Stream : UniRd . T ; Len : CARDINAL ) : TEXT 
   RAISES { Failure , Alerted }
+  (* PRE: Stream and Stream.Source are locked. *) 
 
 ; CONST (* PROCEDURE *) FastGetWideText = FastGetText 
   (* Wide/narrow is hidden inside TEXT.  Either procedure does the same. *) 
 
 ; PROCEDURE FastGetLine ( Stream : UniRd . T ) : TEXT 
   RAISES { EndOfFile , Failure , Alerted }
+  (* PRE: Stream and Stream.Source are locked. *) 
 
 ; PROCEDURE FastIndex ( Stream : UniRd . T ) : Word . T  
   (* Number of characters that have been read from Stream.  
      May overflow by wrapping. *) 
+  (* PRE: Stream is locked, but Stream.Source need not be. *) 
 
 ; PROCEDURE FastAvgBytesPerChar ( Stream : UniRd . T ) : CARDINAL 
   (* Average number of encoded bytes per character, of what has been read. 
-     Zero if nothing read. *) 
+     Zero if nothing read. 
+  *) 
+  (* PRE: Stream is locked, but not Stream.Source. *) 
 
 ; END UnsafeUniRd 
 . 
