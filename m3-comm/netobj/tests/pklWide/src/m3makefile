@@ -1,0 +1,21 @@
+% Copyright (C) 1993, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+%
+% Makefile for netobj test program
+% Last modified on Tue Mar  1 16:52:55 PST 1994 by wobber
+%      modified on Mon Dec 20 14:14:37 PST 1993 by kalsow
+
+import("netobj")
+import("tcp")
+import("libm3")
+
+interface("Test")
+implementation("PickleTestWide")
+netobjv2("Test","T")
+
+build_standalone()
+
+program("testwide")
+
+
