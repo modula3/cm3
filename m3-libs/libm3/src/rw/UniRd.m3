@@ -96,6 +96,7 @@ MODULE UniRd
      remainder of Stream.  Discard any previously ungotten but not-refetched
      WIDECHAR. 
   *) 
+  (* WARNING! Currently unimplemented.  A NOOP *) 
   
   = BEGIN
       LOCK Stream 

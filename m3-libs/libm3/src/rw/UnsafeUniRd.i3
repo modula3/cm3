@@ -30,7 +30,8 @@ INTERFACE UnsafeUniRd
      remainder of Stream.  Discard any previously ungotten but not-refetched
      WIDECHAR. 
   *) 
-  
+  (* WARNING! Currently unimplemented.  A NOOP *) 
+
 ; PROCEDURE FastGetWideChar ( Stream : UniRd . T ) : Widechar  
   RAISES { EndOfFile , Failure , Alerted } 
   (* Decode, consume, and return a character from Source(Stream), 
