@@ -395,38 +395,49 @@ PROCEDURE InInteger(c: Conn;
     RAISES {NetObj.Error, Rd.Failure, Thread.Alerted} =
   VAR i: INTEGER;
   BEGIN
-    IF rep.intFmt = NativeRep.intFmt THEN
+    IF rep.intFmt = NativeRep.intFmt THEN (* Identical representations. *) 
       i := LOOPHOLE(AlignRd(c.rd, BYTESIZE(INTEGER)), UNTRACED REF INTEGER)^;
       INC(c.rd.cur, BYTESIZE(INTEGER));
     ELSE
       CASE rep.intFmt OF
       | IntFmt32Little, IntFmt32Big =>
           VAR ii: Int32 :=
-             LOOPHOLE(AlignRd(c.rd, BYTESIZE(Int32)), UNTRACED REF Int32)^;              BEGIN
+             LOOPHOLE(AlignRd(c.rd, BYTESIZE(Int32)), UNTRACED REF Int32)^;
+          BEGIN
             INC(c.rd.cur, BYTESIZE(Int32));
             IF NOT NativeEndian(rep) THEN ii := Swap.Swap4(ii); END;
-            i := ii;
+            i := ii; (* Which may sign-extend, if native 64. *) 
           END;
-      | IntFmt64Little =>
-          (* this can only be 64 -> 32 bit conversion *)
-          (* no 64 -> 64 bit byte swap at this point in time *)
-          VAR
-            ip := LOOPHOLE(AlignRd(c.rd, BYTESIZE(Int64)), UNTRACED REF Int64);
-          BEGIN
-            INC(c.rd.cur, BYTESIZE(Int64));
-            IF NativeEndian(rep) THEN
-              i := ip[0];
-            ELSE
-              i := Swap.Swap4(ip[0]);
+      | IntFmt64Little, IntFmt64Big =>
+          CASE NativeRep.intFmt OF 
+          | IntFmt64Little, IntFmt64Big => (* 64->64, swapped. *) 
+            VAR ii: INTEGER; 
+            BEGIN 
+              ii := LOOPHOLE
+                     (AlignRd(c.rd, BYTESIZE(INTEGER)), UNTRACED REF INTEGER)^; 
+              INC(c.rd.cur, BYTESIZE(INTEGER));
+              i := Swap.SwapInt(ii); 
+            END; 
+          | IntFmt32Little, IntFmt32Big => (* 64->32. *)   
+            VAR
+              ip := LOOPHOLE(AlignRd
+                      (c.rd, BYTESIZE(Int64)), UNTRACED REF Int64);
+            BEGIN
+              INC(c.rd.cur, BYTESIZE(Int64));
+              IF NativeEndian(rep) THEN
+                i := ip^[0];
+              ELSE
+                i := Swap.Swap4(ip^[0]);
+              END;
+              (* Don't need to swap ip[1] to do this check, since -1 and
+                 0 are the same regardless *)
+              IF (i < 0 AND ip[1] # -1) OR (i >= 0 AND ip[1] # 0) THEN
+                RaiseError(NetObj.UnsupportedDataRep);
+              END;
             END;
-            (* Don't need to swap ip[1] to do this check, since -1 and
-               0 are the same regardless *)
-            IF (i < 0 AND ip[1] # -1) OR (i >= 0 AND ip[1] # 0) THEN
-              RaiseError(NetObj.UnsupportedDataRep);
-            END;
-          END;
-      ELSE
-          RaiseError(NetObj.UnsupportedDataRep);
+          ELSE RaiseError(NetObj.UnsupportedDataRep);  
+          END; 
+      ELSE RaiseError(NetObj.UnsupportedDataRep);
       END;
     END;
     IF i < min OR i > max THEN RaiseUnmarshalFailure(); END;
