@@ -873,9 +873,6 @@ PROCEDURE InTexts(c: Conn; rep: DataRep): REF ARRAY OF TEXT
   VAR rt: REF ARRAY OF TEXT;
   BEGIN
     n := InInt32(c, rep, 0);
-    IF n = 0 THEN
-      RETURN NIL;
-    END;
     rt := NEW(REF ARRAY OF TEXT, n);
     IF n > 0 THEN
       FOR i := 0 TO n-1 DO rt[i] := InText(c, rep); END;
