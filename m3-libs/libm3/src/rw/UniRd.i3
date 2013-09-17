@@ -66,6 +66,7 @@ INTERFACE UniRd
      remainder of Stream.  Discard any previously ungotten but not-refetched
      WIDECHAR. 
   *) 
+  (* WARNING! Currently unimplemented.  A NOOP *) 
 (* TODO: UnGetWideChar is not yet implemented. *) 
   
 ; PROCEDURE GetWideSub ( Stream : T ; VAR (*OUT*) ArrWch : ARRAY OF Widechar ) 

@@ -94,6 +94,7 @@ MODULE UnsafeUniRd
      WIDECHAR. 
   *) 
   (* PRE: Stream and Stream.Source are locked. *) 
+  (* WARNING! Currently unimplemented.  A NOOP *) 
 
   = BEGIN 
 (* IMPLEMENTME: *) 
