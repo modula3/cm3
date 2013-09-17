@@ -45,6 +45,7 @@ MODULE UnsafeUniRd
 ; PROCEDURE FastEOF ( Stream : UniRd . T ) : BOOLEAN 
   RAISES { Failure , Alerted } 
   (* TRUE iff Stream is at end-of-file. *) 
+  (* PRE: Stream and Stream.Source are locked. *) 
 
   = BEGIN 
       RETURN 
@@ -58,6 +59,7 @@ MODULE UnsafeUniRd
   (* A number of characters that can be read without indefinite waiting.
      The EOF counts as one "character" here.  This number may very pessimistic. 
   *) 
+  (* PRE: Stream is locked, but not Stream.Source. *) 
 
   = VAR LSourceBytesReady , LCharsReady , LPostponedCt : CARDINAL 
 
@@ -65,7 +67,9 @@ MODULE UnsafeUniRd
       IF Stream . MaxBytesPerChar = 0 
       THEN RETURN 0 
       ELSE 
-(* FIXME: We need an already-locked CharsReady. *) 
+(* TODO: An already-locked CharsReady (UnsafeRd.FastCharsReady) would allow
+         this to be called with Stream.Source already locked, which would
+         make for a more consistent interface in UnsafeUniRd.i3. *) 
         LSourceBytesReady := Rd . CharsReady ( Stream . Source ) 
       ; LCharsReady 
           := ( LSourceBytesReady - 1 (* For EOF *) ) 
@@ -89,6 +93,7 @@ MODULE UnsafeUniRd
      remainder of Stream.  Discard any previously ungotten but not-refetched
      WIDECHAR. 
   *) 
+  (* PRE: Stream and Stream.Source are locked. *) 
 
   = BEGIN 
 (* IMPLEMENTME: *) 
@@ -100,6 +105,7 @@ MODULE UnsafeUniRd
   (* Decode, consume, and return a character from Source(Stream), 
      using Enc(Stream) 
   *) 
+  (* PRE: Stream and Stream.Source are locked. *) 
   
   = VAR LWch : Widechar 
 
@@ -136,7 +142,9 @@ MODULE UnsafeUniRd
   (* Decode and consume characters from Source(Stream), using Enc(Stream), 
      storing them into ArrWch, until Source(Stream) is at end-of-file, or ArrWch
      is filled.  Return the actual number of decoded characters stored 
-     into ArrWch. *)  
+     into ArrWch. 
+  *)
+  (* PRE: Stream and Stream.Source are locked. *) 
 
   = VAR LI : CARDINAL 
   ; VAR LLast : INTEGER 
@@ -207,6 +215,7 @@ MODULE UnsafeUniRd
      previous characters stored.  Otherwise, return the actual number of 
      decoded characters stored into ArrCh. 
   *)  
+  (* PRE: Stream and Stream.Source are locked. *) 
 
   = VAR LI : CARDINAL 
   ; VAR LLast : INTEGER 
@@ -301,6 +310,7 @@ MODULE UnsafeUniRd
      by ArrWch not full, not EOF, and no new-line character at the end.   
       
   *)  
+  (* PRE: Stream and Stream.Source are locked. *) 
 
   = VAR LI : CARDINAL 
   ; VAR LLast : INTEGER 
@@ -438,8 +448,8 @@ MODULE UnsafeUniRd
      but only the CR will fit in ArrCh, do not store either character and 
      return with one unused space in ArrCh.  The client can distinguish this
      by ArrCh not full, not EOF, and no new-line character at the end.   
-      
   *)  
+  (* PRE: Stream and Stream.Source are locked. *) 
 
   = VAR LI : CARDINAL 
   ; VAR LLast : INTEGER 
@@ -582,6 +592,7 @@ MODULE UnsafeUniRd
      storing them into the result TEXT, until Source(Stream) is at end-of-file,
      or the length of the result is Len.  
   *) 
+  (* PRE: Stream and Stream.Source are locked. *) 
 
   = CONST ChunkSize = 512
   ; VAR LChunk : ARRAY [ 0 .. ChunkSize - 1 ] OF Widechar 
@@ -698,6 +709,7 @@ MODULE UnsafeUniRd
      or a new-line sequence has been consumed and stored.  A new-line sequence 
      is one of CR, LF, CR&LF, NEL, VT, FF, LS, or PS (See Unicode 5.8).  
   *) 
+  (* PRE: Stream and Stream.Source are locked. *) 
 
   = CONST ChunkSize = 512 
   ; VAR LChunk : ARRAY [ 0 .. ChunkSize - 1 ] OF Widechar 
@@ -814,6 +826,7 @@ MODULE UnsafeUniRd
 ; PROCEDURE FastIndex ( Stream : UniRd . T ) : Word . T  
   (* Number of characters that have been read from Stream.  
      May overflow by wrapping. *) 
+  (* PRE: Stream is locked, but Stream.Source need not be. *) 
 
   = BEGIN 
       RETURN Stream . Index 
@@ -823,15 +836,18 @@ MODULE UnsafeUniRd
 ; PROCEDURE FastAvgBytesPerChar ( Stream : UniRd . T ) : CARDINAL 
   (* Average number of encoded bytes per character, of what has been read. 
      Zero if nothing read. *) 
+  (* PRE: Stream is locked, but not Stream.Source. *) 
 
   = VAR LByteIndex : CARDINAL 
   ; VAR LCharIndex : Word . T
 (* REVIEW? What to do about overflows in these values? *)  
 
   ; BEGIN 
-      LByteIndex := 0 (* UnsafeRd . Index ( Stream . Source ) *) 
+      LByteIndex := Rd . Index ( Stream . Source ) 
+(* TODO: An already-locked Index (UnsafeRd.FastIndex) would allow
+         this to be called with Stream.Source already locked, which would
+         make for a more consistent interface in UnsafeUniRd.i3. *) 
     ; LCharIndex := Stream . Index 
-(* FIXME: How do we get Index of an Rd.T, while already locked? *) 
     ; IF LCharIndex = 0 
       THEN RETURN 0 
       ELSE RETURN LByteIndex DIV LCharIndex 

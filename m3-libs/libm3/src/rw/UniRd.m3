@@ -69,7 +69,9 @@ MODULE UniRd
 
   = BEGIN 
       LOCK Stream 
-      DO RETURN UnsafeUniRd . FastEOF ( Stream )  
+      DO LOCK Stream . Source 
+        DO RETURN UnsafeUniRd . FastEOF ( Stream )  
+        END (* LOCK *) 
       END (* LOCK *) 
     END EOF 
 
