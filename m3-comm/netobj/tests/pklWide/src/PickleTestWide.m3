@@ -26,9 +26,68 @@ CONST SampleText1 = "this is a test";
 CONST SampleText2 = "this is another";
 CONST SampleText3 = "this is yet another";
 
-CONST SampleTextWide1 = W"this is a widechar test \xFFFE\xFFFF";
-CONST SampleTextWide2 = W"this is another widechar test \xFFFF\xFFFC";
-CONST SampleTextWide3 = W"this is yet another widechar test \xFFF0\xFFF8";
+CONST SampleTextWide1 = W"this is a widechar test \xFF00\xFF0F\xFFFE\xFFFF";
+CONST SampleTextWide2 = W"this is another widechar test \xFF01\xFFFF\xFFFC";
+CONST SampleTextWide3 = W"this is yet another widechar test \xFF0E\xFFF0\xFFF8";
+
+PROCEDURE MapWch (Wch: WIDECHAR): WIDECHAR = 
+
+  CONST Lo = 16_FF00;
+  CONST Hi = 16_FF0F;
+  VAR ResultI: INTEGER; 
+  VAR Result: WIDECHAR; 
+  BEGIN 
+    IF Lo <= ORD(Wch) AND ORD(Wch) <= Hi
+    THEN (* In the range we map. *)  
+      IF LAST(WIDECHAR) = W'\XFFFF' 
+      THEN (* Replace by the Unicode substitution char. *) 
+        Result := W'\XFFFD';
+      ELSE (* Shift up to the top of Unicode range. *) 
+        ResultI := ORD(Wch) - Hi + 16_10FFFF; 
+        Result := VAL (ResultI, WIDECHAR) 
+      END; 
+    ELSE Result := Wch;
+    END;
+    RETURN Result;
+  END MapWch; 
+
+PROCEDURE MapText ( Txt : TEXT ) : TEXT = 
+
+  TYPE StrTyp = REF ARRAY OF WIDECHAR; 
+  VAR Len : CARDINAL; 
+  VAR Str : StrTyp;  
+  VAR Result : TEXT;
+
+  BEGIN 
+    IF LAST ( WIDECHAR ) = W'\XFFFF' 
+    THEN RETURN Txt 
+    ELSIF Txt = NIL 
+    THEN RETURN Txt 
+    ELSE 
+      Len := Text . Length (Txt); 
+      Str := NEW (StrTyp, Len); 
+      FOR RI := 0 TO Len - 1 DO
+        Str ^[RI] := MapWch (Text . GetWideChar (Txt, RI));
+      END;  
+      Result := Text.FromWideChars(Str^);
+      RETURN Result; 
+    END; 
+  END MapText; 
+
+PROCEDURE RecdTextEqual(Got: TEXT; Exp: TEXT): BOOLEAN = 
+
+  VAR AltExp: TEXT;
+  BEGIN
+    IF Text.Equal(Got, Exp) 
+    THEN RETURN TRUE;
+    ELSE 
+      AltExp := MapText(Exp);
+      IF Text.Equal(Got, AltExp) 
+      THEN RETURN TRUE;
+      ELSE RETURN FALSE;
+      END;
+    END; 
+  END RecdTextEqual;  
 
 (* object types for test *)
 
@@ -69,13 +128,13 @@ TYPE
 
 PROCEDURE NewTextWide(<*UNUSED*> t: TestElem): REFANY =
   BEGIN
-    RETURN NEW(TextRef, t := SampleTextWide1)
+    RETURN NEW(TextRef, t := MapText(SampleTextWide1))
   END NewTextWide;
 
 PROCEDURE TextWideEqual(<*UNUSED*> t: TestElem; r: REFANY) : BOOLEAN =
   VAR tt: TextRef := r;
   BEGIN
-    RETURN Text.Equal(tt.t, SampleTextWide1);
+    RETURN RecdTextEqual(tt.t, SampleTextWide1);
   END TextWideEqual;
 
 
@@ -107,14 +166,16 @@ TYPE
 
 PROCEDURE NewTwoTextWide(<*UNUSED*> t: TestElem): REFANY =
   BEGIN
-    RETURN NEW(TwoTextRef, t1 := SampleTextWide1, t2 := SampleTextWide2);
+    RETURN NEW(TwoTextRef, 
+               t1 := MapText(SampleTextWide1), t2 := MapText(SampleTextWide2)
+              );
   END NewTwoTextWide;
 
 PROCEDURE TwoTextWideEqual(<*UNUSED*> t: TestElem; r: REFANY) : BOOLEAN =
   VAR tt: TwoTextRef := r;
   BEGIN
-    RETURN Text.Equal(tt.t1, SampleTextWide1) 
-           AND Text.Equal(tt.t2, SampleTextWide2);
+    RETURN RecdTextEqual(tt.t1, SampleTextWide1) 
+           AND RecdTextEqual(tt.t2, SampleTextWide2);
   END TwoTextWideEqual;
 
 
@@ -206,9 +267,9 @@ TYPE
 PROCEDURE NewTextWideArray(<*UNUSED*> t: TestElem): REFANY =
   VAR arg := NEW(REF ARRAY OF TEXT, 3);
   BEGIN
-    arg^[0] := SampleTextWide1;
-    arg^[1] := SampleTextWide2;
-    arg^[2] := SampleTextWide3;
+    arg^[0] := MapText(SampleTextWide1);
+    arg^[1] := MapText(SampleTextWide2);
+    arg^[2] := MapText(SampleTextWide3);
     RETURN arg;
   END NewTextWideArray;
 
@@ -216,9 +277,9 @@ PROCEDURE TextArrayWideEqual(<*UNUSED*> t: TestElem; r: REFANY) : BOOLEAN =
   VAR res: REF ARRAY OF TEXT := r;
   BEGIN
     RETURN NUMBER(res^) = 3 AND
-              Text.Equal(res^[0], SampleTextWide1) AND
-              Text.Equal(res^[1], SampleTextWide2) AND
-              Text.Equal(res^[2], SampleTextWide3);
+              RecdTextEqual(res^[0], SampleTextWide1) AND
+              RecdTextEqual(res^[1], SampleTextWide2) AND
+              RecdTextEqual(res^[2], SampleTextWide3);
   END TextArrayWideEqual;
 
 (* Array of TEXT containing no WIDECHARs in a record. *) 
@@ -261,9 +322,9 @@ TYPE
 PROCEDURE NewTextWideArrayInRec(<*UNUSED*> t: TestElem): REFANY =
   VAR arg := NEW(TextArrayRef, a := NEW(REF ARRAY OF TEXT, 3));
   BEGIN
-    arg.a[0] := SampleTextWide1;
-    arg.a[1] := SampleTextWide2;
-    arg.a[2] := SampleTextWide3;
+    arg.a[0] := MapText(SampleTextWide1);
+    arg.a[1] := MapText(SampleTextWide2);
+    arg.a[2] := MapText(SampleTextWide3);
     RETURN arg;
   END NewTextWideArrayInRec;
 
@@ -271,9 +332,9 @@ PROCEDURE TextArrayWideInRecEqual(<*UNUSED*> t: TestElem; r: REFANY) : BOOLEAN =
   VAR res: TextArrayRef := r;
   BEGIN
     RETURN NUMBER(res.a^) = 3 AND
-              Text.Equal(res.a[0], SampleTextWide1) AND
-              Text.Equal(res.a[1], SampleTextWide2) AND
-              Text.Equal(res.a[2], SampleTextWide3);
+              RecdTextEqual(res.a[0], SampleTextWide1) AND
+              RecdTextEqual(res.a[1], SampleTextWide2) AND
+              RecdTextEqual(res.a[2], SampleTextWide3);
   END TextArrayWideInRecEqual;
 
 
