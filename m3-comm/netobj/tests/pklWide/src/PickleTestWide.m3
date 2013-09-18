@@ -39,9 +39,9 @@ PROCEDURE MapWch (Wch: WIDECHAR): WIDECHAR =
   BEGIN 
     IF Lo <= ORD(Wch) AND ORD(Wch) <= Hi
     THEN (* In the range we map. *)  
-      IF LAST(WIDECHAR) = W'\XFFFF' 
+      IF LAST(WIDECHAR) = W'\xFFFF' 
       THEN (* Replace by the Unicode substitution char. *) 
-        Result := W'\XFFFD';
+        Result := W'\xFFFD';
       ELSE (* Shift up to the top of Unicode range. *) 
         ResultI := ORD(Wch) - Hi + 16_10FFFF; 
         Result := VAL (ResultI, WIDECHAR) 
@@ -59,7 +59,7 @@ PROCEDURE MapText ( Txt : TEXT ) : TEXT =
   VAR Result : TEXT;
 
   BEGIN 
-    IF LAST ( WIDECHAR ) = W'\XFFFF' 
+    IF LAST ( WIDECHAR ) = W'\xFFFF' 
     THEN RETURN Txt 
     ELSIF Txt = NIL 
     THEN RETURN Txt 
