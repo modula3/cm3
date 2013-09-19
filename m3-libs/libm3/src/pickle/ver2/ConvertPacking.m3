@@ -801,11 +801,12 @@ PROCEDURE AddCopy(self: T; bitCt: INTEGER) =
 
 PROCEDURE AddPackedSwapFirstField(self: T; fieldBitSize: INTEGER) =
   BEGIN
-    (* We'll copy the minimum number of whole bytes. *)
+    (* We'll swap within a unit of the minimum number of whole bytes needed
+       to hold the field. *)
     WITH insnUnitCt = RoundUp(fieldBitSize, 8) DO
       INC(self.fromOffset, insnUnitCt);
       INC(self.toOffset, insnUnitCt);
-      WITH elem = NEW(PklAction.SwapPacked, kind := PklAction.PAKind.SwapPacked, 
+      WITH elem = NEW(PklAction.SwapPacked, kind := PklAction.PAKind.SwapPacked,
                       unitCt := 1, size := insnUnitCt DIV 8,
                       field := NEW(REF ARRAY OF CARDINAL, 1)) DO
         elem.field[0] := fieldBitSize;
@@ -817,39 +818,39 @@ PROCEDURE AddPackedSwapFirstField(self: T; fieldBitSize: INTEGER) =
 PROCEDURE AddPackedSwapNextField(self: T; fieldBitSize: INTEGER; 
                                  offset: INTEGER) =
   VAR elem: PklAction.T;
-      total: CARDINAL;
+      totalBits: CARDINAL;
   BEGIN
     WITH ret = GetHiKind(self.prog, PklAction.PAKind.SwapPacked, elem) DO
       (* The last entry _must_ be one of these. *)
       <* ASSERT ret *>
       WITH nelem = NARROW(elem, PklAction.SwapPacked) DO
-        total := 0;
+        totalBits := 0;
         FOR i := FIRST(nelem.field^) TO LAST(nelem.field^) DO
-          INC(total, nelem.field[i]);
+          INC(totalBits, nelem.field[i]);
         END;
         (* They should be packed, so our offset should equal the 
-           total thus far.  We can't check it, but we can at least
+           total bits thus far.  We can't check it, but we can at least
            check the bits line up in the current byte. *)
-        <* ASSERT (total MOD 8) = (offset MOD 8) *>
+        <* ASSERT (totalBits MOD 8) = (offset MOD 8) *>
 
-        INC(total, fieldBitSize);
+        INC(totalBits, fieldBitSize);
 
-        (* The max total size of a packed set of fields is the word
+        (* The max total bit size of a packed set of fields is the word
            size!  This is guaranteed because a packed field cannot
            span a word boundary, and we only call this function when a
-           packed field starts within a byte.  If a packed field
+           packed field starts properly within a byte.  If a packed field
            starts on a byte boundary, we start a new set of packed
-           fields. *)
-        <* ASSERT total <= self.from.word_size *>
+           fields using AddPackedSwapFirstField. *)
+        <* ASSERT totalBits <= self.from.word_size *>
 
         (* Make sure the size in nelem is correct, and make sure fromOffset 
            and toOffset are updated to include any new bytes *)
-        total := RoundUp(total, 8);
-        WITH bytes = (total DIV 8) - nelem.size DO
-          IF bytes > 0 THEN
-            INC(self.fromOffset, bytes*8);
-            INC(self.toOffset, bytes*8);
-            INC(nelem.size, bytes);
+        totalBits := RoundUp(totalBits, 8);
+        WITH AddlBytes = (totalBits DIV 8) - nelem.size DO
+          IF AddlBytes > 0 THEN
+            INC(self.fromOffset, AddlBytes*8);
+            INC(self.toOffset, AddlBytes*8);
+            INC(nelem.size, AddlBytes);
           END;
         END;
 
@@ -1734,8 +1735,8 @@ PROCEDURE BuildOne(self: T; fromTipe: RTTipe.T;
       <* ASSERT fromTipe.size = toTipe.size *> 
       CASE self.wordKind OF
       | CPKind.Copy, CPKind.Copy32to64, CPKind.Copy64to32 =>
-        WITH bytesNeeded = RoundUp(p.size, 8) DO
-          self.addCopy(bytesNeeded);
+        WITH bitsNeeded = RoundUp(p.size, 8) DO
+          self.addCopy(bitsNeeded);
         END;
       | CPKind.Swap, CPKind.Swap32to64, CPKind.Swap64to32 =>
         self.addPackedSwapFirstField(p.size);
@@ -1856,7 +1857,7 @@ PROCEDURE BuildFields(self: T;
                       fromField: RTTipe.Field; fromSize: INTEGER;
                       toField: RTTipe.Field; toSize: INTEGER) 
     RAISES {Error} =
- VAR fromOffset := self.fromOffset;
+  VAR fromOffset := self.fromOffset;
      toOffset := self.toOffset;
   BEGIN
     WHILE fromField # NIL DO
