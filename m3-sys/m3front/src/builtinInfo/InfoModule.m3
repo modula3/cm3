@@ -10,9 +10,13 @@ IMPORT InfoThisFile, InfoThisPath, InfoThisLine, InfoThisException;
 CONST
   Platform_names = Target.SystemNames;
   OS_names = Target.OSNames;
+  Endian_names = Target.EndianNames; 
 
 PROCEDURE Initialize () =
-  VAR zz: Scope.T;  os_type, platform_type: Type.T;  enum: Value.T;  nm: TEXT;
+  VAR zz: Scope.T;  
+      os_type, endian, platform_type: Type.T;  
+      enum: Value.T;  
+      nm: TEXT;
   BEGIN
 
     M := Module.NewDefn ("Compiler", TRUE, NIL);
@@ -25,6 +29,9 @@ PROCEDURE Initialize () =
 
     os_type := EnumType.Build (OS_names);
     Tipe.Define ("OS", os_type, FALSE);
+
+    endian := EnumType.Build (Endian_names);
+    Tipe.Define ("ENDIAN", endian, FALSE);
 
     platform_type := EnumType.Build (Platform_names);
     Tipe.Define ("Platform", platform_type, FALSE);
@@ -42,6 +49,13 @@ PROCEDURE Initialize () =
       <*ASSERT FALSE*>
     END;
     Constant.Declare ("ThisPlatform", Value.ToExpr (enum), FALSE);
+
+    IF Target.Little_endian THEN nm := "LITTLE" ELSE nm := "BIG" END; 
+    IF NOT EnumType.LookUp (endian, M3ID.Add (nm), enum) THEN
+      Error.Txt (nm, "Unknown Compiler.ENDIAN value");
+      <*ASSERT FALSE*>
+    END;
+    Constant.Declare ("ThisEndian", Value.ToExpr (enum), FALSE);
 
     InfoThisFile.Initialize ();
     InfoThisPath.Initialize ();
