@@ -5,7 +5,7 @@
 
 INTERFACE UniCodec 
 
-; IMPORT Endian 
+; IMPORT Compiler 
 ; IMPORT Rd 
 ; FROM Rd IMPORT EndOfFile  
 ; FROM Thread IMPORT Alerted 
@@ -15,12 +15,12 @@ INTERFACE UniCodec
 
 ; EXCEPTION Range 
 
-; TYPE Widechar = WIDECHAR (* For testing when WIDECHAR isn't wide enough. *)  
+; TYPE Widechar = WIDECHAR 
 (* ; TYPE Widechar = [ 0 .. 16_10FFFF ] *) 
   (* Temporary, for testing.  When WIDECHAR becomes a character type over
      this range, and with BYTESIZE = 4, we can replace this by WIDECHAR. *)  
 
-; CONST IsBE = Endian . Value = Endian . T . Big 
+; CONST IsBE = Compiler . ThisEndian = Compiler . ENDIAN . BIG  
 
 ; TYPE EncProc 
     = PROCEDURE ( Sink : Wr . T ; Wch : Widechar ) 
