@@ -11,7 +11,7 @@ FROM TextStats IMPORT Op;
    an object of type TEXT=Text.T, there would be infinite mutual recursion
    between GetChar and GetWideChar, and between GetChars and GetWideChars.
    This relys on TEXT being abstract, i.e. never allocated, only subtyped,
-   and on the fact that every non-abstract subtype of Text.T's overrides
+   and on the fact that every non-abstract subtype of Text.T overrides
    at least one of each pair above with something that does not call the
    other. *) 
 
@@ -24,6 +24,7 @@ PROCEDURE GetChar (t: TEXT;  i: CARDINAL): CHAR =
     Wide := t.get_wide_char (i);
     TextStats.NoteFinished (Op.get_wide_char); 
     Result := VAL (Word.And (ORD (Wide), 16_ff), CHAR);
+(*4*)
     TextStats.NoteFinished (Op.GetChar); 
     RETURN Result; 
   END GetChar;
@@ -55,6 +56,7 @@ PROCEDURE GetChars (t: TEXT;  VAR a: ARRAY OF CHAR;  start: CARDINAL) =
       FOR i := FIRST (buf) TO LAST (buf) DO
         IF (cnt = 0) THEN RETURN END;
         a[next] := VAL (Word.And (ORD (buf[i]), 16_ff), CHAR);
+(*4*)
         INC (next);  DEC (cnt);
      (* IF i < LAST(buf) THEN TextStats.NoteIter (Op.get_chars) END *) 
       END;
