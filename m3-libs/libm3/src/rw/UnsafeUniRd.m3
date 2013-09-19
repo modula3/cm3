@@ -691,7 +691,7 @@ MODULE UnsafeUniRd
          (* ELSE loop *) 
             END (* IF *) 
           END (* LOOP *) 
-        EXCEPT (* Rd.EOF or Stream.DecWideChar. *) 
+        EXCEPT (* From Rd.EOF or Stream.DecWideChar. *) 
         Failure ( Arg ) 
         => INC ( Stream . Index , LI ) 
         ; RAISE Failure ( Arg ) 

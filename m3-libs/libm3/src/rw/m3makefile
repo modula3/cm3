@@ -40,8 +40,6 @@ Interface("MsgWr")
 
 Module("UniEncoding")
 
-Interface("Endian")
-
 Module("UniCodec")
 Module("UnsafeUniCodec")
 

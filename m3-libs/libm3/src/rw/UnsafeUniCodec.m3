@@ -5,7 +5,7 @@
 
 UNSAFE MODULE UnsafeUniCodec 
 
-; IMPORT Endian 
+; IMPORT Compiler
 ; IMPORT Rd 
 ; FROM Rd IMPORT EndOfFile  
 ; IMPORT RdClass 
@@ -25,7 +25,7 @@ UNSAFE MODULE UnsafeUniCodec
 ; REVEAL WrClass . Private <: MUTEX 
 ; REVEAL RdClass . Private <: MUTEX 
 
-; CONST IsLE = Endian . Value = Endian . T . Little 
+; CONST IsLE = Compiler . ThisEndian = Compiler . ENDIAN . LITTLE  
 ; CONST IsLEPlusMinus = 2 * ORD ( IsLE ) - 1 (* +1 if LE, -1 if BE. *) 
 
 ; TYPE ArrChWch = ARRAY [ 0 .. 3 ] OF CHAR 
