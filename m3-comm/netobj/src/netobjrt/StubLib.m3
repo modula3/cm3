@@ -12,13 +12,15 @@ IMPORT NetObj, NetObjRep, NetObjRT, Pickle, Pickle2, Protocol, Transport,
        TransportUtils, Voucher, WireRep;
 IMPORT Atom, AtomList, Rd, RTType, Wr, Text, TextClass, Text8, Text16,
        Thread, RdClass, WrClass, UnsafeRd, UnsafeWr, FloatMode, Swap;
-IMPORT PickleStubs, UniEncoding;
+IMPORT PickleStubs;
 FROM Word IMPORT And, Or, LeftShift; 
 
 FROM Protocol IMPORT MsgHeader, CallHeader, Op;
 
 REVEAL RdClass.Private <: MUTEX;
 REVEAL WrClass.Private <: MUTEX;
+
+CONST ReplacementWt = 16_FFFD; 
 
 (* most if not all of the following could be inline in stub code *)
 
@@ -285,7 +287,7 @@ PROCEDURE InWideChars(c: Conn; rep: DataRep; VAR arr: ARRAY OF WIDECHAR)
         ELSE (* Remote 32, local 16. *) 
           FOR RI := 0 TO LAST(arr) DO
             IntVal := PickleStubs.InWC21(c.rd);
-            IF IntVal > 16_FFFF THEN IntVal := UniEncoding.ReplacementWt; END;
+            IF IntVal > 16_FFFF THEN IntVal := ReplacementWt; END;
             arr[RI] := VAL(IntVal, WIDECHAR);  
           END; 
         END 
