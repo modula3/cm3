@@ -714,6 +714,20 @@ end
 
 %------------------------------------------------------------------------------
 
+%readonly proc JoinPath(a, b) is
+%    if a and b return a & SL & b end
+%    if b return b end
+%    if a return a end
+%end
+
+%readonly proc FileInDirOrParent(a) is
+% a is foo/i386/bar
+% chose it or foo/bar, whichever exists
+    %local leaf = GetLastPathElement(a)
+    %local other = JoinPath(RemoveLastPathElement(RemoveLastPathElement(a)), leaf)
+    %return ChoseFile([a, other])
+%end
+
 UseHand = LIB_INSTALL & SL & "hand" & Obj
 if not FileExists (UseHand)
   % for bootstrapping
