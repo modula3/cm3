@@ -1,4 +1,4 @@
-MODULE LibDepReleast EXPORTS LibDep 
+MODULE LibDepRelease EXPORTS LibDep 
 
 (* Things that need different source code, depending on the version of 
    m3core and libm3.  Version for newer libraries that are are at least
