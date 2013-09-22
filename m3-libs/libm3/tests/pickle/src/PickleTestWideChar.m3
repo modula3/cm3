@@ -709,7 +709,7 @@ UNSAFE MODULE PickleTestWideChar EXPORTS Main
         LRarrC := ArrayOfChar ( Right ) 
       ; LRight := Text . FromChars ( LRarrC ^ ) 
       END (* IF *) 
-    ; TextClass . Flatten := FALSE   
+    ; LibDep . SetTextClassDotFlatten ( FALSE )    
     ; LResult := TextCat . New ( LLeft , LRight ) 
     ; RETURN LResult 
     END MakeTextCat 
