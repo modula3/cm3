@@ -170,46 +170,41 @@ CRITICAL_SECTION ThreadWin32__heapLock;
 CRITICAL_SECTION ThreadWin32__perfLock;
 CRITICAL_SECTION ThreadWin32__initLock;
 
-/* widen to USHORT, etc. if needed */
+EXTERN_CONST DWORD ThreadWin32__TLS_OUT_OF_INDEXES = TLS_OUT_OF_INDEXES;
+EXTERN_CONST DWORD ThreadWin32__WAIT_OBJECT_0 = WAIT_OBJECT_0;
+EXTERN_CONST DWORD ThreadWin32__WAIT_TIMEOUT = WAIT_TIMEOUT;
+EXTERN_CONST DWORD ThreadWin32__CREATE_SUSPENDED = CREATE_SUSPENDED;
+EXTERN_CONST DWORD ThreadWin32__DUPLICATE_SAME_ACCESS = DUPLICATE_SAME_ACCESS;
+EXTERN_CONST DWORD ThreadWin32__INFINITE = INFINITE;
 
-typedef struct _ClonedHeaderCheckField_t {
-    UCHAR offset;
-    UCHAR size;
-} ClonedHeaderCheckField_t;
-
-typedef struct _ClonedHeaderCheck_t {
-    UINT TlsOutOfIndexs;
-    UCHAR sizeof_CRITICAL_SECTION;
-    UCHAR sizeof_MEMORY_BASIC_INFORMATION;
-    ClonedHeaderCheckField_t MEMORY_BASIC_INFORMATION_AllocationBase;
-    ClonedHeaderCheckField_t MEMORY_BASIC_INFORMATION_BaseAddress;
-    ClonedHeaderCheckField_t MEMORY_BASIC_INFORMATION_RegionSize;
-} ClonedHeaderCheck_t;
-
-#define FIELD_INFO(t, f) { offsetof(t, f), M3_FIELD_SIZE(t, f) }
-
-const static ClonedHeaderCheck_t clonedHeaderCheck = {
-    TLS_OUT_OF_INDEXES,
-    sizeof(CRITICAL_SECTION),
-    sizeof(MEMORY_BASIC_INFORMATION),
-    FIELD_INFO(MEMORY_BASIC_INFORMATION, AllocationBase),
-    FIELD_INFO(MEMORY_BASIC_INFORMATION, BaseAddress),
-    FIELD_INFO(MEMORY_BASIC_INFORMATION, RegionSize),
-};
-void
+PCRITICAL_SECTION
 __cdecl
-ThreadWin32__ClonedHeaderCheck(
-    const ClonedHeaderCheck_t* a,
-    size_t aSize)
+ThreadWin32__NewCriticalSection(void)
 {
-    assert(sizeof(*a) == aSize);
-    assert(memcmp(a, &clonedHeaderCheck, sizeof(*a)) == 0);
+    PCRITICAL_SECTION p = (PCRITICAL_SECTION)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*p));
+    if (p)
+        InitializeCriticalSection(p);
+    return p;
 }
 
-#if 0
 void
 __cdecl
-xThreadWin32__GetStackBounds(
+ThreadWin32__DelCriticalSection(
+    PCRITICAL_SECTION * a
+    )
+{
+    PCRITICAL_SECTION b;
+    if (!a) return;
+    b = *a;
+    *a = 0;
+    if (!b) return;
+    DeleteCriticalSection(b);
+    HeapFree(GetProcessHeap(), 0, b);
+}
+
+void
+__cdecl
+ThreadWin32__GetStackBounds(
     PBYTE* start,
     PBYTE* end
     )
@@ -218,11 +213,7 @@ xThreadWin32__GetStackBounds(
     VirtualQuery(&info, &info, sizeof(info));
     *start = (PBYTE)info.AllocationBase;
     *end = (PBYTE)info.BaseAddress + info.RegionSize;
-    fprintf(stderr, "ThreadWin32__GetStackBounds start:%p end:%p size:%u\n",
-        *start, *end, (UINT)(*end - *start));
-    exit(1);
 }
-#endif
 
 #if 0
 void __cdecl ThreadWin32__Cleanup(void)

@@ -12,14 +12,13 @@ IMPORT RTError, WinGDI, RTParams, FloatMode, RuntimeError;
 IMPORT MutexRep, RTHeapRep, RTCollectorSRC, RTIO, WinBase;
 IMPORT ThreadEvent, RTPerfTool, RTProcess, ThreadDebug;
 FROM Compiler IMPORT ThisFile, ThisLine;
-FROM WinNT IMPORT DUPLICATE_SAME_ACCESS, DWORD, HANDLE, UINT8, LONG,
-    MEMORY_BASIC_INFORMATION, PMEMORY_BASIC_INFORMATION, SIZE_T;
-FROM WinBase IMPORT CloseHandle, CREATE_SUSPENDED, CreateEvent, CreateThread,
+FROM WinNT IMPORT DWORD, HANDLE, SIZE_T;
+FROM WinBase IMPORT CloseHandle, CreateEvent, CreateThread,
     DuplicateHandle, EnterCriticalSection, GetCurrentProcess, GetCurrentThread,
-    GetCurrentThreadId, GetLastError, GetThreadContext, INFINITE,
+    GetCurrentThreadId, GetLastError, GetThreadContext,
     LeaveCriticalSection, PCRITICAL_SECTION, ResetEvent, ResumeThread, SetEvent,
-    Sleep, SuspendThread, TLS_OUT_OF_INDEXES, TlsAlloc, TlsGetValue, TlsSetValue,
-    VirtualQuery, WAIT_OBJECT_0, WAIT_TIMEOUT, WaitForMultipleObjects, WaitForSingleObject;
+    Sleep, SuspendThread, TlsAlloc, TlsGetValue, TlsSetValue,
+    WaitForMultipleObjects, WaitForSingleObject;
 FROM ThreadContext IMPORT PCONTEXT;
 
 (*----------------------------------------- Exceptions, types and globals ---*)
@@ -108,24 +107,6 @@ PROCEDURE CleanMutex (r: REFANY) =
   BEGIN
     DelCriticalSection(m.lock);
   END CleanMutex;
-
-PROCEDURE NewCriticalSection(): PCRITICAL_SECTION =
-  VAR a := NEW(PCRITICAL_SECTION);
-  BEGIN
-    IF a # NIL THEN
-      WinBase.InitializeCriticalSection(a);
-    END;
-    RETURN a;
-  END NewCriticalSection;
-
-PROCEDURE DelCriticalSection(VAR a:PCRITICAL_SECTION) =
-  BEGIN
-    IF a # NIL THEN
-      WinBase.DeleteCriticalSection(a);
-      DISPOSE(a);
-      a := NIL;
-    END
-  END DelCriticalSection;
 
 PROCEDURE DelHandle(VAR a: HANDLE; line: INTEGER) =
   BEGIN
@@ -454,7 +435,7 @@ PROCEDURE TestAlert(): BOOLEAN =
 (*------------------------------------------------------------------ Self ---*)
 
 VAR (* LL = slotLock *)
-  n_slotted: LONG := 0;
+  n_slotted := 0;
   next_slot := 1;
   slots     : REF ARRAY OF T;  (* NOTE: we don't use slots[0]. *)
 
@@ -1032,38 +1013,6 @@ PROCEDURE PerfRunning () =
 
 (*-------------------------------------------------------- Initialization ---*)
 
-PROCEDURE GetStackBounds(VAR start: ADDRESS; VAR end: ADDRESS) =
-  VAR info: MEMORY_BASIC_INFORMATION;
-      a := VirtualQuery(ADR(info), ADR(info), BYTESIZE(info));
-
-      (* how far down has the stack been used so far *)
-      used: UNTRACED REF UINT8 := info.BaseAddress;
-
-      (* how far down the stack can grow *)
-      available := info.AllocationBase;
-
-      b: UINT8;
-  BEGIN
-    <* ASSERT a >= BYTESIZE(info) *>
-    <* ASSERT available # NIL *>
-    <* ASSERT used # NIL *>
-    <* ASSERT info.RegionSize # 0 *>
-    <* ASSERT ADR(info) > available *>
-    <* ASSERT ADR(info) >= used *>
-    <* ASSERT ADR(info) < (used + info.RegionSize) *>
-
-    (* verify it is readable
-     * NOTE: Do not verify *available -- stack pages must be touched in order.
-     *)
-    b := used^;
-    b := LOOPHOLE(used + info.RegionSize - 1, UNTRACED REF UINT8)^;
-
-    start := available;
-    end := used + info.RegionSize;
-  END GetStackBounds;
-
-VAR threadIndex: DWORD := TLS_OUT_OF_INDEXES; (* read-only;  TLS (Thread Local Storage) index *)
-
 PROCEDURE SetActivation(act: Activation) =
   (* LL = 0 *)
   VAR success := (threadIndex # TLS_OUT_OF_INDEXES);
@@ -1091,14 +1040,6 @@ PROCEDURE Init() =
  *)
   VAR self: T;
       me := NEW(Activation);
-      basicInfo := LOOPHOLE(NIL, PMEMORY_BASIC_INFORMATION);
-      clonedHeaderCheck := ClonedHeaderCheck_t{
-        MEMORY_BASIC_INFORMATION_BaseAddress := ClonedHeaderCheckField_t{ADR(basicInfo.BaseAddress) - basicInfo,
-                                                                         BYTESIZE(basicInfo.BaseAddress)},
-        MEMORY_BASIC_INFORMATION_AllocationBase := ClonedHeaderCheckField_t{ADR(basicInfo.AllocationBase) - basicInfo,
-                                                                            BYTESIZE(basicInfo.AllocationBase)},
-        MEMORY_BASIC_INFORMATION_RegionSize := ClonedHeaderCheckField_t{ADR(basicInfo.RegionSize) - basicInfo,
-                                                                        BYTESIZE(basicInfo.RegionSize)}};
   BEGIN
     WinBase.InitializeCriticalSection(ADR(activeLock));
     WinBase.InitializeCriticalSection(ADR(heapLock));
@@ -1124,8 +1065,6 @@ PROCEDURE Init() =
     IF me.handle = NIL THEN
       Choke(ThisLine());
     END;
-
-    ClonedHeaderCheck(ADR(clonedHeaderCheck), BYTESIZE(clonedHeaderCheck));
 
     self := CreateT(me);
 
