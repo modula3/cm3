@@ -3,7 +3,7 @@ IMPORT Ctypes, Long; (* favor Ctypes over Cstdint to work with older m3core *)
 
 TYPE INT32 = Ctypes.int;
 TYPE  INT64 = LONGINT;
-TYPE UINT32 = Ctypes.unsigned;
+TYPE UINT32 = Ctypes.unsigned_int;
 TYPE UINT64 = Long.T;
 TYPE Base_t = [2..36];
 
