@@ -4,6 +4,12 @@ IMPORT RTIO;
 TYPE P1 = PROCEDURE();
 TYPE R1 = RECORD a := 999; END;
 
+PROCEDURE A(a: INTEGER) =
+BEGIN
+    RTIO.PutInt(a);
+    RTIO.PutText("\n");
+END A;
+
 PROCEDURE F2(p: P1) =
 BEGIN
     p();
@@ -30,28 +36,42 @@ VAR
     local_record_uplevel:R1;
 PROCEDURE F1() =
     BEGIN
-        INC(param_integer_uplevel, readonly_param_integer_uplevel);
-        INC(var_param_integer_uplevel, readonly_param_integer_uplevel);
-        INC(param_record_uplevel.a, readonly_param_record_uplevel.a);
-        INC(var_param_record_uplevel.a, readonly_param_record_uplevel.a);
-        INC(local_integer_uplevel, 1);
-        INC(local_record_uplevel.a, 2);
+        INC(param_integer_uplevel, 100 + readonly_param_integer_uplevel);
+        INC(var_param_integer_uplevel, 200 + readonly_param_integer_uplevel);
+        INC(param_record_uplevel.a, 300 + readonly_param_record_uplevel.a);
+        INC(var_param_record_uplevel.a, 400 + readonly_param_record_uplevel.a);
+        INC(local_integer_uplevel, 600);
+        INC(local_record_uplevel.a, 700);
     END F1;
 BEGIN
-    INC(param_integer_uplevel, readonly_param_integer_uplevel);
-    INC(var_param_integer_uplevel, readonly_param_integer_uplevel);
-    INC(param_record_uplevel.a, readonly_param_record_uplevel.a);
-    INC(var_param_record_uplevel.a, readonly_param_record_uplevel.a);
-    INC(local_integer_uplevel, 1);
-    INC(local_record_uplevel.a, 2);
-    INC(param_integer, readonly_param_integer);
-    INC(var_param_integer, readonly_param_integer);
-    INC(param_record.a, readonly_param_record.a);
-    INC(var_param_record.a, readonly_param_record.a);
-    INC(local_integer, 1);
-    INC(local_record.a, 2);
+    INC(param_integer_uplevel, 1 + readonly_param_integer_uplevel);
+    INC(var_param_integer_uplevel, 2 + readonly_param_integer_uplevel);
+    INC(param_record_uplevel.a, 3 + readonly_param_record_uplevel.a);
+    INC(var_param_record_uplevel.a, 4 + readonly_param_record_uplevel.a);
+    INC(local_integer_uplevel, 5);
+    INC(local_record_uplevel.a, 6);
+    INC(param_integer, 7 + readonly_param_integer);
+    INC(var_param_integer, 8 + readonly_param_integer);
+    INC(param_record.a, 9 + readonly_param_record.a);
+    INC(var_param_record.a, 10 + readonly_param_record.a);
+    INC(local_integer, 11);
+    INC(local_record.a, 12);
     F1();
     F2(F1);
+    
+    A(param_integer);
+    A(param_integer_uplevel);
+    A(var_param_integer);
+    A(var_param_integer_uplevel);
+    A(readonly_param_integer);
+    A(readonly_param_integer_uplevel);
+    A(param_record.a);
+    A(param_record_uplevel.a);
+    A(var_param_record.a);
+    A(var_param_record_uplevel.a);
+    A(readonly_param_record.a);
+    A(readonly_param_record_uplevel.a);
+
     IF FALSE THEN RETURN R1{} END;
     IF FALSE THEN RETURN param_record END;
     IF FALSE THEN RETURN param_record_uplevel END;
@@ -92,5 +112,19 @@ BEGIN
         xreadonly_param_record,
         xreadonly_param_record_uplevel
         );
+
+    RTIO.PutText("\n");
+    A(xparam_integer);
+    A(xparam_integer_uplevel);
+    A(xvar_param_integer);
+    A(xvar_param_integer_uplevel);
+    A(xreadonly_param_integer);
+    A(xreadonly_param_integer_uplevel);
+    A(xparam_record.a);
+    A(xparam_record_uplevel.a);
+    A(xvar_param_record.a);
+    A(xvar_param_record_uplevel.a);
+    A(xreadonly_param_record.a);
+    A(xreadonly_param_record_uplevel.a);
     RTIO.Flush();
 END Main.
