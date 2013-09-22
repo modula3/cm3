@@ -119,6 +119,50 @@ end
 
 %------------------------------------------------------------------------------
 
+readonly proc JoinPath(a, b) is
+    a = subst_chars(a, "/", SL)
+    b = subst_chars(b, "\\", SL)
+    if a and b return a & SL & b end
+    if b return b end
+    if a return a end
+end
+
+%------------------------------------------------------------------------------
+
+readonly proc ChoseFile(a) is
+% given a list of files, return the first that exists
+    foreach c in a        
+        if FileExists(c)
+            return c
+        end
+    end
+    return ""
+end
+
+%------------------------------------------------------------------------------
+
+readonly proc GetLastPathElement(path) is
+    local cur = ""
+    foreach elt in split(path, SL)
+        cur = elt
+    end
+    return cur
+end
+
+%------------------------------------------------------------------------------
+
+readonly proc RemoveLastPathElement(path) is
+    local cur = ""
+    local prev = ""
+    foreach elt in split(path, SL)
+        prev = cur
+        cur = JoinPath(prev, elt)
+    end
+    return prev
+end
+
+%------------------------------------------------------------------------------
+
 proc InternalPlatformEquivalent(a, b) is
   if equal(a, b)
     return TRUE
@@ -464,6 +508,8 @@ if not defined ("M3_BACKEND_MODE")
     %  "C"  -- use C backend, and then compile with compile_c()
 end
 
+M3_FRONT_FLAGS = [ ]
+
 % --- internal configuration options passed directly to the Modula-3 front-end
 if equal(M3_BACKEND_MODE, "0") or equal(M3_BACKEND_MODE, "1")
         or equal(M3_BACKEND_MODE, "IntegratedObject")
@@ -471,9 +517,9 @@ if equal(M3_BACKEND_MODE, "0") or equal(M3_BACKEND_MODE, "1")
         or equal(M3_BACKEND_MODE, "IntegratedC")
         or equal(M3_BACKEND_MODE, "C")
         or USE_C_BACKEND_VIA_M3CGCAT
+    % M3_FRONT_FLAGS += ["-unfold_nested_procs"]
+    % M3_FRONT_FLAGS += ["-check_procs" ]
     M3_FRONT_FLAGS = ["-unfold_nested_procs", "-check_procs" ]
-else
-    M3_FRONT_FLAGS = [ ]
 end
 
 M3_OPTIONS = [ ]
