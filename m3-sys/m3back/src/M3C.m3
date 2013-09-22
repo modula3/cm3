@@ -1801,7 +1801,7 @@ CONST Prefix = ARRAY OF TEXT {
 (*"typedef UINT16 WIDECHAR;",*) (* DeclareBuiltinTypes *)
 "typedef int INT32;",
 "typedef unsigned int UINT32;",
-"#if defined(_MSC_VER) || defined(__DECC) || defined(__int64)",
+"#if defined(_MSC_VER) || defined(__DECC) || defined(__DECCXX) || defined(__int64)",
 "typedef __int64 INT64;",
 "typedef unsigned __int64 UINT64;",
 "#define  INT64_(x) x##I64",
