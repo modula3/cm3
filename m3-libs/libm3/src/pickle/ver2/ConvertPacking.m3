@@ -12,7 +12,7 @@ UNSAFE MODULE ConvertPacking;
 
 IMPORT RTTipe, RTPacking, PklAction, PklActionSeq, PickleStubs, 
        Thread, Wr, Rd, Swap, Word,
-       IO, Fmt, PackingTbl, PackingTypeCode, UniEncoding;
+       IO, Fmt, PackingTbl, PackingTypeCode;
 FROM Word IMPORT And, Or, LeftShift, RightShift; 
 
 VAR packingCache: PackingTbl.T := NEW(PackingTbl.Default).init();
@@ -461,12 +461,12 @@ PROCEDURE Convert
                   IF self.from.little_endian THEN
                     u16 := int32onU16p^.a;
                     IF int32onU16p^.b # 0 THEN 
-                      u16 := UniEncoding . ReplacementWt; 
+                      u16 := PickleStubs . ReplacementWt; 
                     END;
                   ELSE
                     u16 := int32onU16p^.b;
                     IF int32onU16p^.a # 0 THEN
-                      u16 := UniEncoding . ReplacementWt; 
+                      u16 := PickleStubs . ReplacementWt; 
                     END;
                   END;
 
@@ -499,7 +499,7 @@ PROCEDURE Convert
                 FOR i := 1 TO insnUnitCt (*16-bit words*) DO
                   intVal := PickleStubs.InWC21(v.getReader().rd); 
                   IF intVal > 16_FFFF THEN 
-                    intVal := UniEncoding . ReplacementWt  
+                    intVal := PickleStubs . ReplacementWt  
                   END; 
                   WITH uint16p = LOOPHOLE(dest, UNTRACED REF Swap.UInt16) DO
                     uint16p^ := intVal; 
@@ -623,7 +623,7 @@ PROCEDURE Write
                     FOR i := 1 TO insnUnitCt (*32-bit words*) DO
                       WITH uint32p = LOOPHOLE(src, UNTRACED REF UInt32) DO
                         IF Word.GT(uint32p^, 16_FFFF) THEN
-                          outValR.v := UniEncoding.ReplacementWt;
+                          outValR.v := PickleStubs . ReplacementWt;
                         ELSE outValR.v := uint32p^; 
                         END;
                         Wr.PutChar(writer.wr, u16arr[0]);

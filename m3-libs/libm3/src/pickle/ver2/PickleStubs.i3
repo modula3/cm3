@@ -16,6 +16,8 @@ INTERFACE PickleStubs;
 IMPORT Rd, Wr, Thread, Pickle2 AS Pickle;
 FROM Swap IMPORT Int32;
 
+CONST ReplacementWt = 16_FFFD; (* As a Word.T. *) 
+
 TYPE
   Byte8 = BITS 8 FOR [0..255];
   UInt32 = BITS 32 FOR [0 .. 16_7FFFFFFF];
