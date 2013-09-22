@@ -63,9 +63,6 @@ PROCEDURE DeleteContext(a: ADDRESS);
 <*EXTERNAL ThreadWin32__GetStackBounds*>
 PROCEDURE GetStackBounds(VAR start: ADDRESS; VAR end: ADDRESS);
 
-<*EXTERNAL ThreadWin32__ClonedHeaderCheck*>
-PROCEDURE ClonedHeaderCheck(a: PClonedHeaderCheck_t; b: INTEGER);
-
 <*EXTERNAL ThreadWin32__NewCriticalSection*>
 PROCEDURE NewCriticalSection(): PCRITICAL_SECTION;
 
