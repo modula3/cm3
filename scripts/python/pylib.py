@@ -1154,8 +1154,8 @@ def Boot():
         Link = Link + " -lm " # -pthread?
     elif nt:
         if _CBackend:
-            #Link = "link /debug /pdb:$(@R).pdb *." + obj + " "
-            Link = "link /debug /pdb:$(@R).pdb $** "
+            #Link = "link /incremental:no /debug /pdb:$(@R).pdb *." + obj + " "
+            Link = "link /incremental:no /debug /pdb:$(@R).pdb $** "
             # be sure to get a .pdb out
             #open("empty.c", "w")
             #Link = CCompiler + CCompilerFlags + "empty.c /" + Link
