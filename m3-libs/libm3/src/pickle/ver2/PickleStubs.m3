@@ -15,7 +15,7 @@ UNSAFE MODULE PickleStubs;
    (* unsafe because of marshalling code *)
    
 IMPORT Pickle2 AS Pickle, PickleRd, PickleWr, RTPacking, RTType;
-IMPORT ConvertPacking, UniEncoding; 
+IMPORT ConvertPacking; 
 FROM PickleRd IMPORT myPacking;
 FROM ConvertPacking IMPORT CPKind;
 FROM Swap IMPORT Int32, Int64On32, Int64On64;
@@ -128,7 +128,7 @@ PROCEDURE InWideChars(reader: Pickle.Reader; VAR arr: ARRAY OF WIDECHAR)
         | CPKind.Copy32to16 , CPKind.Swap32to16 => (* Remote 32, local 16. *) 
           FOR RI := 0 TO LAST(arr) DO
             IntVal := InWC21(reader.rd);
-            IF IntVal > 16_FFFF THEN IntVal := UniEncoding.ReplacementWt; END;
+            IF IntVal > 16_FFFF THEN IntVal := ReplacementWt; END;
             arr[RI] := VAL(IntVal, WIDECHAR);  
           END; 
         ELSE <* ASSERT FALSE *> 
