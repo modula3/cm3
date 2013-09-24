@@ -1303,7 +1303,7 @@ PROCEDURE Load (v: Var;  o: Offset;  s: Size;  a: Alignment;  t: Type) =
     ELSE
       (* unaligned non-integer value *)
       Err ("unaligned load  type="& Fmt.Int (ORD (t))
-          & "  s/o/a=" & Fmt.Int (s) & "/" & Fmt.Int (o) & "/" & Fmt.Int (a));
+          & "  size/offset/align=" & Fmt.Int (s) & "/" & Fmt.Int (o) & "/" & Fmt.Int (a));
       SimpleLoad (v, o, t);
       Force ();  (* to connect the error message to the bad code *)
     END;
@@ -1556,7 +1556,7 @@ PROCEDURE Store (v: Var;  o: Offset;  s: Size;  a: Alignment;  t: Type) =
     ELSE
       (* unaligned non-integer value *)
       Err ("unaligned store  type="& Fmt.Int (ORD (t))
-            & "  s/o/a=" & Fmt.Int (s) & "/" & Fmt.Int (o) & "/" & Fmt.Int(a));
+            & "  size/offset/align=" & Fmt.Int (s) & "/" & Fmt.Int (o) & "/" & Fmt.Int(a));
       cg.store (v, ToBytes (o), Target.Integer.cg_type, t);
     END;
     SPop (1, "Store");
@@ -2833,7 +2833,7 @@ PROCEDURE FindIntType (t: Type;  s: Size;  o: Offset;  a: Alignment): MType =
     IF (best_t = Type.Void) THEN
       best_t := t;
       Err ("unable to find integer type?  type=" & Target.TypeNames[t]
-            & "  s/o/a=" & Fmt.Int (s) & "/" & Fmt.Int (o) & "/" & Fmt.Int (a));
+            & "  size/offset/align=" & Fmt.Int (s) & "/" & Fmt.Int (o) & "/" & Fmt.Int (a));
     END;
     RETURN best_t;
   END FindIntType;
