@@ -21,6 +21,7 @@ CONST
   ArchiveMagic = "!<arch>\n";
   EndHeader    = "`\n";
   PadChar      = '\n';
+  IMAGE_FILE_MACHINE_AMD64 = 16_8664;  (* AMD64 *) (* from m3core *)
   
 (* File header format. *)
 
@@ -84,7 +85,7 @@ BEGIN
     Machine := machine;
     IF machine = WinNT.IMAGE_FILE_MACHINE_I386 THEN
         trimUnderscore := TRUE;
-    ELSIF machine = WinNT.IMAGE_FILE_MACHINE_AMD64 THEN
+    ELSIF machine = IMAGE_FILE_MACHINE_AMD64 THEN
         trimUnderscore := FALSE;
     ELSE
         RETURN FALSE;
