@@ -1,5 +1,10 @@
 UNSAFE MODULE PklFpMap 
 
+(* A table of foreign fingerprints of selected types that pickle code needs to 
+   recognize, in order to read pickles written by programs compiled and linked
+   with different Modula-3 implementations. 
+*) 
+
 ; IMPORT Fingerprint 
 ; IMPORT FpIntTbl 
 ; IMPORT RTType 
@@ -17,6 +22,10 @@ UNSAFE MODULE PklFpMap
 
 ; TYPE FPA = ARRAY [ 0 .. 7 ] OF BITS 8 FOR [ 0 .. 255 ] 
 ; TYPE FPT = Fingerprint . T 
+
+(* Some constants here are unused, but are present because it was a lot of work
+   to find their values, and they could become needed in the future.
+*) 
 
 ; CONST 
   (* Fingerprints that differ between pm3 and cm3. *) 
@@ -192,21 +201,6 @@ UNSAFE MODULE PklFpMap
     ; InitType ( TYPECODE ( TextCat . T ) , TextCat_FPs )  
     ; InitType ( TYPECODE ( TextSub . TT ) , TextSub_FPs )  
     END Init 
-
-; PROCEDURE Info ( ) 
-
-  = VAR ATc : INTEGER 
-  ; VAR URTc : INTEGER 
-
-  ; VAR URFp := cm3_UNTRACED_ROOT_FP 
-  ; VAR AFp := cm3_ADDRESS_FP 
-  ; VAR X : INTEGER 
-
-  ; BEGIN 
-      ATc := RTTypeFP . FromFingerprint ( AFp ) 
-    ; URTc := RTTypeFP . FromFingerprint ( URFp ) 
-    ; X := 19 
-    END Info 
 
 (* EXPORTED: *) 
 ; PROCEDURE FromFingerprint ( READONLY Fp : Fingerprint . T ) : RTType . Typecode 
