@@ -2,6 +2,8 @@
 % All rights reserved.
 % See the file COPYRIGHT for a full description.
 
+module ("PklFpMap" ) 
+table ( "FpInt", "Fingerprint", "Integer" ) 
 module ("PklTipeMap")
 module ("ConvertPacking")
 interface ("PklAction")
