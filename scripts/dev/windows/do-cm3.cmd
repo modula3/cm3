@@ -20,6 +20,7 @@ REM v1.21, 09/12/2010, R.Coleburn, add Windows7 OS detection.
 REM v1.22, 05/13/2012, R.Coleburn, improved error detection when invoking cm3.
 rem v1.30, 02/06/2013, R.Coleburn, Improve OS detection.  Add error exit codes.  
 rem                                Fix bug of not setting _cm3_CM3Failure=TRUE on fatal error for relay in environment to other cooperating CMD files.
+rem v1.31, 09/22/2013, R.Coleburn, Fix bug of not reseting error condition for retry of operation.
 rem ---------------------------------------------------------------------------
 rem EXIT CODES:
 rem ----------
@@ -60,7 +61,7 @@ goto :EOF
 REM Identify this script.
 echo.
 echo ====== ----------------------------------
-echo do-cm3, v1.30, 02/06/2013, Randy Coleburn
+echo do-cm3, v1.31, 09/22/2013, Randy Coleburn
 echo ====== ----------------------------------
 echo.
 
@@ -256,14 +257,14 @@ if not "%_z_PkgInfo%"=="" if exist "%_z_PkgInfo%" goto FindSourceTree
 
 rem ---next, see if located in parent of current directory
 pushd ..
-if exist ".\PkgInfo.txt" call :FN_FullPath .\PkgInfo.txt _z_PkgInfo
+   if exist ".\PkgInfo.txt" call :FN_FullPath .\PkgInfo.txt _z_PkgInfo
 popd
 if not "%_z_PkgInfo%"=="" if exist "%_z_PkgInfo%" goto FindSourceTree
 
 rem ---next, see if located in grandparent of current directory
 pushd ..
-cd ..
-if exist ".\PkgInfo.txt" call :FN_FullPath .\PkgInfo.txt _z_PkgInfo
+   cd ..
+   if exist ".\PkgInfo.txt" call :FN_FullPath .\PkgInfo.txt _z_PkgInfo
 popd
 if not "%_z_PkgInfo%"=="" if exist "%_z_PkgInfo%" goto FindSourceTree
 
@@ -293,8 +294,8 @@ set _z_PkgTree=
 rem --- first try parent of %_z_PkgInfo%
 call :FN_DriveAndPathOnly %_z_PkgInfo% _z_PkgTree
 pushd %_z_PkgTree%
-cd ..
-set _z_PkgTree=%CD%\
+   cd ..
+   set _z_PkgTree=%CD%\
 popd
 if exist "%_z_PkgTree%m3-sys\cm3\src" goto Prepare
 
@@ -304,14 +305,14 @@ if exist "%_z_PkgTree%m3-sys\cm3\src" goto Prepare
 
 rem --- next try parent of current directory
 pushd ..
-set _z_PkgTree=%CD%\
+   set _z_PkgTree=%CD%\
 popd
 if exist "%_z_PkgTree%m3-sys\cm3\src" goto Prepare
 
 rem --- next try grandparent of current directory
 pushd ..
-cd ..
-set _z_PkgTree=%CD%\
+   cd ..
+   set _z_PkgTree=%CD%\
 popd
 if exist "%_z_PkgTree%m3-sys\cm3\src" goto Prepare
 
@@ -345,11 +346,13 @@ echo Packages to be processed:
 echo ------------------------
 if not defined _z_TempFile goto EOL_Prepare
 if exist %_z_TempFile% type %_z_TempFile%
+
 :EOL_Prepare
 if defined _z_Skip echo But, skipping packages: %_z_Skip%
 echo ---END-of-List---
 echo.
 if /I "%_z_NoPause%"=="TRUE" goto DoIt
+
 :AskContinue
 set /P _z_Answ=Do you want to continue (y=yes, n=no) ? 
 if /I "%_z_Answ%"=="Y" goto DoIt
@@ -483,14 +486,15 @@ rem ---make sure we can find this package in the source tree
 set _z_PkgPath=
 pushd %_z_PkgTree%
 
-rem ------first try the package itself as a relative path
-if exist "%_z_Package%\src" set _z_PkgPath=%_z_Package%
+   rem ------first try the package itself as a relative path
+   if exist "%_z_Package%\src" set _z_PkgPath=%_z_Package%
 
-rem ------if that doesn't work, look in the various m3-* folders
-if "%_z_PkgPath%"=="" for /f %%i in ('dir /b m3-* caltech*') do if exist "%%i\%_z_Package%\src" set _z_PkgPath=%%i\%_z_Package%
+   rem ------if that doesn't work, look in the various m3-* folders
+   if "%_z_PkgPath%"=="" for /f %%i in ('dir /b m3-* caltech*') do if exist "%%i\%_z_Package%\src" set _z_PkgPath=%%i\%_z_Package%
+
+popd
 
 rem ------if we found it, great, otherwise report we are skipping it
-popd
 if not "%_z_PkgPath%"=="" goto foundPkg
 echo WARNING:  Unable to locate package "%_z_Package%" in "%_z_PkgTree%"
 echo           (this package will be skipped)
@@ -537,7 +541,7 @@ goto :EOF
 :OkToProcess
 echo --- processing package "%1" ---
 pushd %_z_PkgTree%%1
-for %%z in (%_z_CM3Args%) do call :FN_DoCM3 %%z %1
+   for %%z in (%_z_CM3Args%) do call :FN_DoCM3 %%z %1
 popd
 goto :EOF
 
@@ -549,6 +553,7 @@ REM Invoke CM3
 REM %1=CM3 mode (e.g. -build, -ship, -find, -depend, -clean, -realclean)
 REM %2=package
 if /I "%_z_CM3Failure%"=="STOP" goto :EOF
+
 :Retry
 set _z_Fail=TRUE
 (cm3 %1) && (set _z_Fail=)
@@ -565,7 +570,7 @@ if /I "%_z_NoPause%"=="TRUE" goto :EOF
 :AskRetry
 set /P _z_Answ=Do you want to retry the failed operation (y=yes, n=no) ? 
 echo.
-if /I "%_z_Answ%"=="Y" goto Retry
+if /I "%_z_Answ%"=="Y" (set _z_CM3Failure=) & (set _z_ExitCode=0) & goto Retry
 if /I "%_z_Answ%"=="N" goto AskStop
 goto AskRetry
 
@@ -605,6 +610,7 @@ goto U2
 :-----
 set _z_ExitCode=2
 echo =====   -----------------------------------------------------------------------
+
 :U2
 echo.
 echo -----  ------------------------------------------------------------------------
