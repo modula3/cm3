@@ -21,6 +21,7 @@ REM v1.22, 05/13/2012, R.Coleburn, improved error detection when invoking cm3.
 rem v1.30, 02/06/2013, R.Coleburn, Improve OS detection.  Add error exit codes.  
 rem                                Fix bug of not setting _cm3_CM3Failure=TRUE on fatal error for relay in environment to other cooperating CMD files.
 rem v1.31, 09/22/2013, R.Coleburn, Fix bug of not reseting error condition for retry of operation.
+rem v1.32, 09/29/2013, R.Coleburn, Fix bug with improper checking of -showTags options.
 rem ---------------------------------------------------------------------------
 rem EXIT CODES:
 rem ----------
@@ -61,7 +62,7 @@ goto :EOF
 REM Identify this script.
 echo.
 echo ====== ----------------------------------
-echo do-cm3, v1.31, 09/22/2013, Randy Coleburn
+echo do-cm3, v1.32, 09/29/2013, Randy Coleburn
 echo ====== ----------------------------------
 echo.
 
@@ -195,7 +196,7 @@ if "%_z_Group%"=="" for %%a in (gui juno m3devtool m3gdb m3gnudevtool math obliq
 if /I "%_z_Group%"=="%1" goto NextArg
 
 rem check to see if %1 is a cm3 compiler mode argument
-if /I "%_z_CM3Args%"=="SHOWTAGS" echo ERROR:  Parameter "%1" not valid with "ShowTags". & goto Usage
+if /I "%_z_CM3Args%"=="-SHOWTAGS" echo ERROR:  Parameter "%1" not valid with "-ShowTags". & goto Usage
 set _z_Arg=
 for %%a in (find depend realclean clean build ship buildship) do if /I %%a==%1 set _z_Arg=-%%a
 for %%a in (-find -depend -realclean -clean -build -ship -buildship) do if /I %%a==%1 set _z_Arg=%%a
@@ -219,7 +220,7 @@ goto NextArg
 
 :ArgEnd
 rem no more parameters, so make sure we've got the minimum required
-if /I not "%_z_CM3Args%"=="SHOWTAGS" if "%_z_Group%"=="" echo ERROR:  Must specify a package group, e.g., min, core, std, all, etc. & goto Usage
+if /I not "%_z_CM3Args%"=="-SHOWTAGS" if "%_z_Group%"=="" echo ERROR:  Must specify a package group, e.g., min, core, std, all, etc. & goto Usage
 if "%_z_CM3Args%"=="" set _z_CM3Args=-build
 
 
@@ -337,7 +338,7 @@ if defined _z_Skip echo SkipList = %_z_Skip%
 if /I "%_z_NoPause%"=="TRUE" echo "NoPause" Option in Effect.
 if /I "%_z_Verbose%"=="TRUE" echo "Verbose" Option in Effect.
 echo.
-if /I "%_z_CM3Args%"=="SHOWTAGS" goto ShowTags
+if /I "%_z_CM3Args%"=="-SHOWTAGS" goto ShowTags
 echo Searching for packages in group "%_z_Group%" ...
 echo ... one moment please ....
 FOR /F "tokens=1* delims= " %%i in (%_z_PkgInfo%) do call :FN_CheckPkg %%i %%j
@@ -625,9 +626,9 @@ echo             If a group-tag is given, also list the packages in that group.
 echo             No cm3 action is taken.
 echo.
 echo group-tag = must specify only one package group, e.g., min, core, std, all.
-echo             (use showTags to discover list of all groups)
+echo             (use -showTags to discover list of all groups)
 echo.
-echo   cm3args = zero or more arguments to the cm3 builder, e.g., clean, build, ship
+echo   cm3args = zero or more arguments to the cm3 builder, e.g., -clean, -build, -ship
 echo             Multiple arguments are possible.  They will be performed in the
 echo             order given.  If no argument is given, "-build" is assumed.
 echo             "-buildship" is shorthand for "-build" followed by "-ship".
