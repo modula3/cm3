@@ -12,6 +12,7 @@ REM v1.5, 01/15/2010, R.Coleburn, add extra checks at end of each stage to ensur
 REM v1.6, 03/11/2010, R.Coleburn, add feature to search PATH env var when trying to locate root of cm3 installation
 REM v1.7, 11/28/2010, R.Coleburn, add "-skip m3cc" to all build stages because this package isn't used on Windows
 rem v1.8, 02/06/2013, R.Coleburn, Add error exit codes.  Fix bug of attempting cm3.exe install after build error.
+rem v1.9, 09/08/2013, R.Coleburn, Don't skip mklib during phase 1.
 rem ---------------------------------------------------------------------------
 rem EXIT CODES:
 rem ----------
@@ -89,7 +90,7 @@ rem no more parameters, so make sure we've got the minimum required
 REM Identify this script.
 echo.
 echo =============== ---------------------------------
-echo  RCC_upgradeCM3, v1.7, 11/28/2010, Randy Coleburn
+echo  RCC_upgradeCM3, v1.9, 09/08/2013, Randy Coleburn
 echo =============== ---------------------------------
 echo.
 if /I "%_z_NoPause%"=="TRUE" echo "NoPause" Option in Effect.
@@ -248,10 +249,10 @@ echo ---------------------------------------------------------------------------
 :SkipCFGlist
 echo.
 echo ========================================================================
-echo STAGE-1:  BUILDING "front", EXCEPT FOR "m3core", "libm3", "m3cc", and "mklib"
+echo STAGE-1:  BUILDING "front", EXCEPT FOR "m3core", "libm3", and "m3cc"
 echo ========================================================================
 echo.
-call %_cm3_DO% front -skip m3core -skip libm3 -skip mklib -skip m3cc -realclean -clean -build -ship %_z_ctrlArgs%
+call %_cm3_DO% front -skip m3core -skip libm3 -skip m3cc -realclean -clean -build -ship %_z_ctrlArgs%
 @echo off
 call :FN_FinishStage
 if "%_cm3_CM3Failure%"=="TRUE" goto END
@@ -375,6 +376,7 @@ goto U2
 :-----
 set _cm3_ExitCode=2
 echo =====   -----------------------------------------------------------------------
+
 :U2
 echo.
 echo -----  ------------------------------------------------------------------------
