@@ -15,9 +15,16 @@ IMPORT M3CG_MultiPass, M3CG_DoNothing, M3CG_Binary, RTIO;
 FROM M3CC IMPORT INT32, INT64, UINT32, UINT64, Base_t, UInt64ToText;
 CONST NameT = M3ID.ToText;
 
-VAR AvoidGccTypeRangeWarnings := TRUE; (* comparison is always false due to limited range of data type *)
-VAR PassStructsByValue := FALSE; (* TODO change this *)
-VAR ReturnStructsByValue := FALSE; (* TODO change this *)
+(* 
+Something like:
+int F(unsigned i) { return i < 0; }
+gets a warning with gcc.
+You can quash it with -Wno-type-limits in newer versions
+but not older. We know 4.2 does not have the flag and 4.3 does.
+*)
+(* VAR AvoidGccTypeRangeWarnings := FALSE; comparison is always false due to limited range of data type *)
+VAR PassStructsByValue := FALSE;    (* TODO change this *)
+VAR ReturnStructsByValue := FALSE;  (* TODO change this *)
 VAR CaseDefaultAssertFalse := FALSE;
 
 (* Taken together, these help debugging, as you get more lines in the
@@ -1773,6 +1780,52 @@ CONST Prefix = ARRAY OF TEXT {
 (*"#pragma error_messages(off, E_INIT_DOES_NOT_FIT)",*)
 "#pragma error_messages(off, E_STATEMENT_NOT_REACHED)",
 "#endif",
+"#define GCC_VERSION (__GNUC__ * 100 + __GNUC_MINOR__)",
+"#if (GCC_VERSION > 0 && GCC_VERSION < 430)",
+(*"#define AVOID_GCC_TYPE_LIMIT_WARNING 1",*)
+(*"#define M3_OP2(fun, op, a, b) fun(a, b)",*)
+(*"#define M3_IF_TRUE(fun, a) fun(a,0)",*)
+(*"#define M3_IF_FALSE(fun, a) fun(a,0)",*)
+(* This is a workaround to prevent warnings from older gcc. *)
+"#define m3_eq_T(T) static WORD_T __stdcall m3_eq_##T(T x, T y){return x==y;}\n" &
+"#define m3_ne_T(T) static WORD_T __stdcall m3_ne_##T(T x, T y){return x!=y;}",
+"#define m3_gt_T(T) static WORD_T __stdcall m3_gt_##T(T x, T y){return x>y;}",
+"#define m3_ge_T(T) static WORD_T __stdcall m3_ge_##T(T x, T y){return x>=y;}",
+"#define m3_lt_T(T) static WORD_T __stdcall m3_lt_##T(T x, T y){return x<y;}",
+"#define m3_le_T(T) static WORD_T __stdcall m3_le_##T(T x, T y){return x<=y;}",
+"#define m3_eq(T, x, y) m3_eq_##T(x, y)\n" &
+"#define m3_ne(T, x, y) m3_ne_##T(x, y)",
+"#define m3_gt(T, x, y) m3_gt_##T(x, y)",
+"#define m3_ge(T, x, y) m3_ge_##T(x, y)",
+"#define m3_lt(T, x, y) m3_lt_##T(x, y)",
+"#define m3_le(T, x, y) m3_le_##T(x, y)",
+"#define m3_check_range_T(T) static int __stdcall m3_check_range_##T(T value, T low, T high){return value<low||high<value;}",
+"#define m3_check_range(T, value, low, high) m3_check_range_##T(value, low, high)",
+"#define m3_xor_T(T) static int __stdcall m3_xor_##T(T x, T y){return x ^ y;}",
+"#define m3_xor(T, x, y) m3_xor_##T(x, y)",
+"#else",
+(*"#define AVOID_GCC_TYPE_LIMIT_WARNING 0",*)
+(*"#define M3_OP2(fun, op, a, b) a op b",*)
+(*"#define M3_IF_TRUE(fun, a) a",*)
+(*"#define M3_IF_FALSE(fun, a) !a",*)
+
+"#define m3_eq_T(T) /* nothing */",
+"#define m3_ne_T(T) /* nothing */",
+"#define m3_gt_T(T) /* nothing */",
+"#define m3_ge_T(T) /* nothing */",
+"#define m3_lt_T(T) /* nothing */",
+"#define m3_le_T(T) /* nothing */",
+"#define m3_eq(T, x, y) (((T)(x)) == ((T)(y)))",
+"#define m3_ne(T, x, y) (((T)(x)) != ((T)(y)))",
+"#define m3_gt(T, x, y) (((T)(x)) > ((T)(y)))",
+"#define m3_ge(T, x, y) (((T)(x)) >= ((T)(y)))",
+"#define m3_lt(T, x, y) (((T)(x)) < ((T)(y)))",
+"#define m3_le(T, x, y) (((T)(x)) <= ((T)(y)))",
+"#define m3_check_range_T(T) /* nothing */",
+"#define m3_check_range(T, value, low, high) (((T)(value)) < ((T)(low)) || ((T)(high)) < ((T)(value)))",
+"#define m3_xor_T(T) /* nothing */",
+"#define m3_xor(T, x, y) (((T)(x)) ^ ((T)(y)))",
+"#endif",
 "#ifdef _MSC_VER",
 "#define _CRT_SECURE_NO_DEPRECATE",
 "#define _CRT_NONSTDC_NO_DEPRECATE",
@@ -3424,8 +3477,10 @@ BEGIN
         print(x, "\n");
     END;
     FOR i := FIRST(text) TO LAST(text) DO
-        print(x, text[i]);
-        print(x, "\n");
+        IF text[i] # NIL THEN
+            print(x, text[i]);
+            print(x, "\n");
+        END;
     END;
 END HelperFunctions_print_array;
 
@@ -3453,7 +3508,7 @@ BEGIN
     END;
 END HelperFunctions_helper_with_type_and_array;
 
-PROCEDURE HelperFunctions_helper_with_type(self: HelperFunctions_t; op: TEXT; type: CGType; VAR types: SET OF CGType; first: TEXT) =
+PROCEDURE HelperFunctions_helper_with_type(self: HelperFunctions_t; op: TEXT; type: CGType; VAR types: SET OF CGType; first: TEXT := NIL) =
 BEGIN
     HelperFunctions_helper_with_type_and_array(self, op, type, types, ARRAY OF TEXT{first});
 END HelperFunctions_helper_with_type;
@@ -3663,23 +3718,16 @@ END HelperFunctions_pop;
 
 PROCEDURE HelperFunctions_check_range(self: HelperFunctions_t; type: IType; <*UNUSED*>READONLY low, high: Target.Int; <*UNUSED*>code: RuntimeError) =
 (* Ideally the helper would call report_fault but I do not think we have the name yet.
- * This is a helper function to avoid a warning from gcc about the range check
- * being redundant.
- *)
-CONST text = "#define m3_check_range_T(T) static int __stdcall m3_check_range_##T(T value, T low, T high){return value<low||high<value;}";
+   This is a workaround to prevent warnings from older gcc.
+*)
 BEGIN
-    HelperFunctions_helper_with_type(self, "check_range", type, self.data.check_range, text);
+    HelperFunctions_helper_with_type(self, "check_range", type, self.data.check_range);
 END HelperFunctions_check_range;
 
 PROCEDURE HelperFunctions_xor(self: HelperFunctions_t; type: IType) =
-(* Ideally this is not a helper function. This is a workaround to prevent warnings from gcc.
- * We could limit it to certain versions of gcc. *)
-CONST text = "#define m3_xor_T(T) static int __stdcall m3_xor_##T(T x, T y){return x ^ y;}";
+(* This is a workaround to prevent warnings from older gcc. *)
 BEGIN
-    IF NOT AvoidGccTypeRangeWarnings THEN
-        RETURN;
-    END;
-    HelperFunctions_helper_with_type(self, "xor", type, self.data.xor, text);
+    HelperFunctions_helper_with_type(self, "xor", type, self.data.xor);
 END HelperFunctions_xor;
 
 PROCEDURE HelperFunctions_if_true(self: HelperFunctions_t; itype: IType; <*UNUSED*>label: Label; <*UNUSED*>frequency: Frequency) =
@@ -3698,20 +3746,9 @@ PROCEDURE HelperFunctions_internal_compare(
     self: HelperFunctions_t;
     type: Type;
     op: CompareOp) =
-(* Ideally this is not a helper function. This is a workaround to prevent warnings from gcc.
- * We could limit it to certain versions of gcc. And do better with constants esp. 0. *)
-CONST text = ARRAY CompareOp OF TEXT {
-    "#define m3_eq_T(T) static WORD_T __stdcall m3_eq_##T(T x, T y){return x==y;}",
-    "#define m3_ne_T(T) static WORD_T __stdcall m3_ne_##T(T x, T y){return x!=y;}",
-    "#define m3_gt_T(T) static WORD_T __stdcall m3_gt_##T(T x, T y){return x>y;}",
-    "#define m3_ge_T(T) static WORD_T __stdcall m3_ge_##T(T x, T y){return x>=y;}",
-    "#define m3_lt_T(T) static WORD_T __stdcall m3_lt_##T(T x, T y){return x<y;}",
-    "#define m3_le_T(T) static WORD_T __stdcall m3_le_##T(T x, T y){return x<=y;}" };
+(* This is a workaround to prevent warnings from older gcc. *)
 BEGIN
-    IF NOT AvoidGccTypeRangeWarnings THEN
-        RETURN;
-    END;
-    HelperFunctions_helper_with_type(self, CompareOpName[op], type, self.data.compare[op], text[op]);
+    HelperFunctions_helper_with_type(self, CompareOpName[op], type, self.data.compare[op]);
 END HelperFunctions_internal_compare;
 
 PROCEDURE HelperFunctions_compare(
@@ -3957,6 +3994,9 @@ VAR size := 0;
     x := self.self;
     index := 0;
 BEGIN
+
+    (* RETURN; *) (* TODO *)
+
     (* count up how many ops we are going to walk *)
 
     FOR i := FIRST(Ops) TO LAST(Ops) DO
@@ -4298,7 +4338,7 @@ BEGIN
         END;
         IF type # NIL THEN
             type_text := type.text & " /* strong_type1 */ ";
-            IF  cgtype = CGType.Addr
+            IF  cgtype = CGType.Addr AND NOT PassStructsByValue
                     AND (type.isRecord() OR type.isArray()) THEN (* TODO remove this *)
                 type_text := type_text & " * " & " /* strong_type3 */ ";
             END;
@@ -5079,8 +5119,12 @@ PROCEDURE if_true_or_false(self: T; itype: IType; label: Label; frequency: Frequ
 *)
 VAR s0 := cast(get(self, 0), itype);
 BEGIN
-    self.comment("if_true_or_false");
-    IF AvoidGccTypeRangeWarnings THEN
+    IF DebugVerbose(self) THEN
+        self.comment("if_true_or_false " & BoolToText[value] & " type:" & cgtypeToText[itype]);
+    ELSE
+        self.comment("if_true_or_false");
+    END;
+    IF TRUE (* AvoidGccTypeRangeWarnings  *) THEN
         load_host_integer(self, itype, 0);
         self.if_compare(itype, ARRAY BOOLEAN OF CompareOp{CompareOp.EQ, CompareOp.NE}[value], label, frequency);
     ELSE
@@ -5094,13 +5138,15 @@ PROCEDURE if_compare(self: T; ztype: ZType; op: CompareOp; label: Label; <*UNUSE
 VAR s0 := cast(get(self, 0), ztype);
     s1 := cast(get(self, 1), ztype);
 BEGIN
-    self.comment("if_compare");
-    pop(self, 2);
-    IF AvoidGccTypeRangeWarnings THEN
-        print(self, "if(m3_" & CompareOpName[op] & "_" & cgtypeToText[ztype] & "(\n " & s1.CText() & ",\n " & s0.CText() & "))goto L" & LabelToText(label) & ";\n");
+    IF DebugVerbose(self) THEN
+        self.comment("if_compare " & "op:" & CompareOpName[op] & " type:" & cgtypeToText[ztype]);
     ELSE
-        print(self, "if(" & s1.CText() & CompareOpC[op] & s0.CText() & ")goto L" & LabelToText(label) & ";\n");
+        self.comment("if_compare");
     END;
+    pop(self, 2);
+    print(self, "if(m3_" & CompareOpName[op] & "_" & cgtypeToText[ztype]
+        & "(\n " & s1.CText() & ",\n " & s0.CText()
+        & "))goto L" & LabelToText(label) & ";\n");
 END if_compare;
 
 PROCEDURE case_jump(self: T; itype: IType; READONLY labels: ARRAY OF Label) =
@@ -5534,14 +5580,18 @@ VAR s0 := get(self, 0);
     cast1 := "";
     cast2 := "";
 BEGIN
-    self.comment("compare");
+    IF DebugVerbose(self) THEN
+        self.comment("compare " & "op:" & CompareOpName[op] & " type:" & cgtypeToText[ztype]);
+    ELSE
+        self.comment("compare");
+    END;
     pop(self, 2);
     IF ztype = CGType.Addr THEN
         cast1 := "((ADDRESS)";
         cast2 := ")";
     END;
-    IF AvoidGccTypeRangeWarnings THEN
-        push(self, itype, cast(CTextToExpr("m3_" & CompareOpName[op] & "_" & cgtypeToText[ztype] & "(\n " & cast1 & s1.CText() & cast2 & ",\n " & cast1 & s0.CText() & cast2 & ")"), itype));
+    IF TRUE (* AvoidGccTypeRangeWarnings *) THEN
+        push(self, itype, cast(CTextToExpr("m3_" & CompareOpName[op] & "(" & cgtypeToText[ztype] & ",\n " & cast1 & s1.CText() & cast2 & ",\n " & cast1 & s0.CText() & cast2 & ")"), itype));
     ELSE
         push(self, itype, cast(CTextToExpr(s1.CText() & CompareOpC[op] & s0.CText()), itype));
     END;
@@ -5775,13 +5825,13 @@ PROCEDURE xor(self: T; type: IType) =
 VAR s0 := cast(get(self, 0), type);
     s1 := cast(get(self, 1), type);
 BEGIN
-    self.comment("xor");
-    IF AvoidGccTypeRangeWarnings THEN
-        pop(self, 2);
-        push(self, type, CTextToExpr("m3_xor_" & cgtypeToText[type] & "(\n " & s1.CText() & ",\n " & s0.CText() & ")"));
+    IF DebugVerbose(self) THEN
+        self.comment("xor type:" & cgtypeToText[type]);
     ELSE
-        op2(self, type, "xor", "^");
+        self.comment("xor");
     END;
+    pop(self, 2);
+    push(self, type, CTextToExpr("m3_xor(" & cgtypeToText[type] & ",\n " & s1.CText() & ",\n " & s0.CText() & ")"));
 END xor;
 
 PROCEDURE shift_left_or_right(self: T; type: IType; name, op: TEXT) =
@@ -6054,7 +6104,7 @@ BEGIN
     self.comment("check_range");
     self.store(t, 0, type, type);
     self.load(t, 0, type, type);
-    print(self, "if(m3_check_range_" & cgtypeToText[type] & "(\n " & get(self).CText() & ",\n " & low_expr.CText() & ",\n " & high_expr.CText() & "))");
+    print(self, "if(m3_check_range(" & cgtypeToText[type] & ",\n" & get(self).CText() & ",\n " & low_expr.CText() & ",\n " & high_expr.CText() & "))");
     reportfault(self, code);
 END check_range;
 
