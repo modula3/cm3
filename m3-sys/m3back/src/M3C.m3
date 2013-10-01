@@ -1780,7 +1780,7 @@ CONST Prefix = ARRAY OF TEXT {
 (*"#pragma error_messages(off, E_INIT_DOES_NOT_FIT)",*)
 "#pragma error_messages(off, E_STATEMENT_NOT_REACHED)",
 "#endif",
-"#if __GNUC__",
+"#ifdef __GNUC__",
 "#define GCC_VERSION (__GNUC__ * 100 + __GNUC_MINOR__)",
 "#else",
 "#define GCC_VERSION 0",
