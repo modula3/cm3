@@ -2402,7 +2402,7 @@ def GetStage():
 def FormInstallRoot(PackageSetName):
     AltConfig = {"NT386":"x86"}.get(Config, Config)
     a = os.path.join(GetStage(), "cm3-" + PackageSetName + "-" + AltConfig + "-" + CM3VERSION)
-    if Config == "NT386" or Config == "I386_NT" or Config == "AMD64_NT":
+    if Config == "NT386" or Config.endswith("_NT")
         a = a + "-VC" + GetVisualCPlusPlusVersion()
     else:
         b = os.popen("uname -sr").read()
