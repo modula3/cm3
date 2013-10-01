@@ -5148,8 +5148,8 @@ BEGIN
         self.comment("if_compare");
     END;
     pop(self, 2);
-    print(self, "if(m3_" & CompareOpName[op] & "_" & cgtypeToText[ztype]
-        & "(\n " & s1.CText() & ",\n " & s0.CText()
+    print(self, "if(m3_" & CompareOpName[op] & "(" & cgtypeToText[ztype]
+        & ",\n " & s1.CText() & ",\n " & s0.CText()
         & "))goto L" & LabelToText(label) & ";\n");
 END if_compare;
 
