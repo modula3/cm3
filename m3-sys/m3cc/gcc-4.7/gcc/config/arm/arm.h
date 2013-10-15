@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Definitions of target machine for GNU compiler, for ARM.
    Copyright (C) 1991, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000,
    2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
@@ -1951,9 +1953,6 @@ extern int making_const_table;
 /* Handle pragmas for compatibility with Intel's compilers.  */
 /* Also abuse this to register additional C specific EABI attributes.  */
 #define REGISTER_TARGET_PRAGMAS() do {					\
-  c_register_pragma (0, "long_calls", arm_pr_long_calls);		\
-  c_register_pragma (0, "no_long_calls", arm_pr_no_long_calls);		\
-  c_register_pragma (0, "long_calls_off", arm_pr_long_calls_off);	\
   arm_lang_object_attributes_init(); \
 } while (0)
 

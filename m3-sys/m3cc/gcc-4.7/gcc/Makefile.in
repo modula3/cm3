@@ -812,7 +812,7 @@ INSN_ATTR_H = insn-attr.h insn-attr-common.h $(INSN_ADDR_H)
 INSN_ADDR_H = $(srcdir)/insn-addr.h vecprim.h
 C_COMMON_H = c-family/c-common.h c-family/c-common.def \
 	$(SPLAY_TREE_H) $(CPPLIB_H) $(GGC_H) $(DIAGNOSTIC_CORE_H)
-C_PRAGMA_H = c-family/c-pragma.h $(CPPLIB_H)
+C_PRAGMA_H = $(CPPLIB_H)
 C_TREE_H = c-tree.h $(C_COMMON_H) $(DIAGNOSTIC_H)
 SYSTEM_H = system.h hwint.h $(srcdir)/../include/libiberty.h \
 	$(srcdir)/../include/safe-ctype.h $(srcdir)/../include/filenames.h
