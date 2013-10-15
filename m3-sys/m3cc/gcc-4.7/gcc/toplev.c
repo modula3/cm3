@@ -985,14 +985,6 @@ realloc_for_line_map (void *ptr, size_t len)
   return GGC_RESIZEVAR (void, ptr, len);
 }
 
-/* A helper function: used as the allocator function for
-   identifier_to_locale.  */
-static void *
-alloc_for_identifier_to_locale (size_t len)
-{
-  return ggc_alloc_atomic (len);
-}
-
 /* Output stack usage information.  */
 void
 output_stack_usage (void)
