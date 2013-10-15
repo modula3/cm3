@@ -827,8 +827,8 @@ setup_left_conflict_sizes_p (ira_allocno_t a)
   for (k = 0; k < nobj; k++)
     {
       ira_object_t obj = ALLOCNO_OBJECT (a, k);
-      ira_object_t conflict_obj;
-      ira_object_conflict_iterator oci;
+      ira_object_t conflict_obj = { 0 };
+      ira_object_conflict_iterator oci = { 0 };
       
       FOR_EACH_OBJECT_CONFLICT (obj, conflict_obj, oci)
 	{
@@ -1056,8 +1056,8 @@ setup_profitable_hard_regs (void)
       for (k = 0; k < nobj; k++)
 	{
 	  ira_object_t obj = ALLOCNO_OBJECT (a, k);
-	  ira_object_t conflict_obj;
-	  ira_object_conflict_iterator oci;
+	  ira_object_t conflict_obj = { 0 };
+	  ira_object_conflict_iterator oci = { 0 };
 
 	  FOR_EACH_OBJECT_CONFLICT (obj, conflict_obj, oci)
 	    {
@@ -1570,9 +1570,9 @@ assign_hard_reg (ira_allocno_t a, bool retry_p)
   curr_allocno_process++;
   for (word = 0; word < nwords; word++)
     {
-      ira_object_t conflict_obj;
+      ira_object_t conflict_obj = { 0 };
       ira_object_t obj = ALLOCNO_OBJECT (a, word);
-      ira_object_conflict_iterator oci;
+      ira_object_conflict_iterator oci = { 0 };
       
       /* Take preferences of conflicting allocnos into account.  */
       FOR_EACH_OBJECT_CONFLICT (obj, conflict_obj, oci)
@@ -1931,8 +1931,8 @@ push_allocno_to_stack (ira_allocno_t a)
   for (i = 0; i < n; i++)
     {
       ira_object_t obj = ALLOCNO_OBJECT (a, i);
-      ira_object_t conflict_obj;
-      ira_object_conflict_iterator oci;
+      ira_object_t conflict_obj = { 0 };
+      ira_object_conflict_iterator oci = { 0 };
       
       FOR_EACH_OBJECT_CONFLICT (obj, conflict_obj, oci)
 	{
@@ -2396,9 +2396,9 @@ improve_allocation (void)
 	 improvement.  */
       for (word = 0; word < nwords; word++)
 	{
-	  ira_object_t conflict_obj;
+	  ira_object_t conflict_obj = { 0 };
 	  ira_object_t obj = ALLOCNO_OBJECT (a, word);
-	  ira_object_conflict_iterator oci;
+	  ira_object_conflict_iterator oci = { 0 };
       
 	  FOR_EACH_OBJECT_CONFLICT (obj, conflict_obj, oci)
 	    {
@@ -2465,9 +2465,9 @@ improve_allocation (void)
 	 of A when we assign the best chosen hard register to it.  */
       for (word = 0; word < nwords; word++)
 	{
-	  ira_object_t conflict_obj;
+	  ira_object_t conflict_obj = { 0 };
 	  ira_object_t obj = ALLOCNO_OBJECT (a, word);
-	  ira_object_conflict_iterator oci;
+	  ira_object_conflict_iterator oci = { 0 };
       
 	  FOR_EACH_OBJECT_CONFLICT (obj, conflict_obj, oci)
 	    {
@@ -3126,8 +3126,8 @@ ira_reassign_conflict_allocnos (int start_regno)
       for (i = 0; i < n; i++)
 	{
 	  ira_object_t obj = ALLOCNO_OBJECT (a, i);
-	  ira_object_t conflict_obj;
-	  ira_object_conflict_iterator oci;
+	  ira_object_t conflict_obj = { 0 };
+	  ira_object_conflict_iterator oci = { 0 };
 
 	  FOR_EACH_OBJECT_CONFLICT (obj, conflict_obj, oci)
 	    {
@@ -3999,9 +3999,9 @@ ira_reassign_pseudos (int *spilled_pseudo_regs, int num,
       nr = ALLOCNO_NUM_OBJECTS (a);
       for (j = 0; j < nr; j++)
 	{
-	  ira_object_t conflict_obj;
+	  ira_object_t conflict_obj = { 0 };
 	  ira_object_t obj = ALLOCNO_OBJECT (a, j);
-	  ira_object_conflict_iterator oci;
+	  ira_object_conflict_iterator oci = { 0 };
 
 	  FOR_EACH_OBJECT_CONFLICT (obj, conflict_obj, oci)
 	    {
