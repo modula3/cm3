@@ -207,7 +207,7 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  Jumpbuf_size              := 12 * Address.size;
 
     | Systems.ARMEL_LINUX =>
-                 Jumpbuf_size := 32 * Int64.size;
+                 Jumpbuf_size := 64 * Int64.size; (* 392 bytes = 49 * Int64.size on Raspberry Pi *)
 
     |  Systems.PA32_HPUX =>
                  (* 200 bytes with 8 byte alignment *)
