@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Output routines for GCC for ARM.
    Copyright (C) 1991, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001,
    2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
@@ -45,7 +47,6 @@
 #include "cgraph.h"
 #include "ggc.h"
 #include "except.h"
-#include "c-family/c-pragma.h"	/* ??? */
 #include "integrate.h"
 #include "tm_p.h"
 #include "target.h"
@@ -131,7 +132,6 @@ static tree arm_handle_notshared_attribute (tree *, tree, tree, int, bool *);
 static void arm_output_function_epilogue (FILE *, HOST_WIDE_INT);
 static void arm_output_function_prologue (FILE *, HOST_WIDE_INT);
 static int arm_comp_type_attributes (const_tree, const_tree);
-static void arm_set_default_type_attributes (tree);
 static int arm_adjust_cost (rtx, rtx, rtx, int);
 static int optimal_immediate_sequence (enum rtx_code code,
 				       unsigned HOST_WIDE_INT val,
@@ -361,9 +361,6 @@ static const struct attribute_spec arm_attribute_table[] =
 
 #undef  TARGET_COMP_TYPE_ATTRIBUTES
 #define TARGET_COMP_TYPE_ATTRIBUTES arm_comp_type_attributes
-
-#undef  TARGET_SET_DEFAULT_TYPE_ATTRIBUTES
-#define TARGET_SET_DEFAULT_TYPE_ATTRIBUTES arm_set_default_type_attributes
 
 #undef  TARGET_SCHED_ADJUST_COST
 #define TARGET_SCHED_ADJUST_COST arm_adjust_cost
@@ -4936,34 +4933,6 @@ arm_pass_by_reference (cumulative_args_t cum ATTRIBUTE_UNUSED,
   return type && TREE_CODE (TYPE_SIZE (type)) != INTEGER_CST;
 }
 
-/* Encode the current state of the #pragma [no_]long_calls.  */
-typedef enum
-{
-  OFF,		/* No #pragma [no_]long_calls is in effect.  */
-  LONG,		/* #pragma long_calls is in effect.  */
-  SHORT		/* #pragma no_long_calls is in effect.  */
-} arm_pragma_enum;
-
-static arm_pragma_enum arm_pragma_long_calls = OFF;
-
-void
-arm_pr_long_calls (struct cpp_reader * pfile ATTRIBUTE_UNUSED)
-{
-  arm_pragma_long_calls = LONG;
-}
-
-void
-arm_pr_no_long_calls (struct cpp_reader * pfile ATTRIBUTE_UNUSED)
-{
-  arm_pragma_long_calls = SHORT;
-}
-
-void
-arm_pr_long_calls_off (struct cpp_reader * pfile ATTRIBUTE_UNUSED)
-{
-  arm_pragma_long_calls = OFF;
-}
-
 /* Handle an attribute requiring a FUNCTION_DECL;
    arguments as in struct attribute_spec.handler.  */
 static tree
@@ -5121,32 +5090,6 @@ arm_comp_type_attributes (const_tree type1, const_tree type2)
     return 0;
 
   return 1;
-}
-
-/*  Assigns default attributes to newly defined type.  This is used to
-    set short_call/long_call attributes for function types of
-    functions defined inside corresponding #pragma scopes.  */
-static void
-arm_set_default_type_attributes (tree type)
-{
-  /* Add __attribute__ ((long_call)) to all functions, when
-     inside #pragma long_calls or __attribute__ ((short_call)),
-     when inside #pragma no_long_calls.  */
-  if (TREE_CODE (type) == FUNCTION_TYPE || TREE_CODE (type) == METHOD_TYPE)
-    {
-      tree type_attr_list, attr_name;
-      type_attr_list = TYPE_ATTRIBUTES (type);
-
-      if (arm_pragma_long_calls == LONG)
- 	attr_name = get_identifier ("long_call");
-      else if (arm_pragma_long_calls == SHORT)
- 	attr_name = get_identifier ("short_call");
-      else
- 	return;
-
-      type_attr_list = tree_cons (attr_name, NULL_TREE, type_attr_list);
-      TYPE_ATTRIBUTES (type) = type_attr_list;
-    }
 }
 
 /* Return true if DECL is known to be linked into section SECTION.  */
