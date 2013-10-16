@@ -2725,7 +2725,7 @@ dataflow_set_union (dataflow_set *dst, dataflow_set *src)
    debug exprs may be left with this flag set if no user variable
    requires them to be evaluated.  */
 
-static inline void
+static void
 set_dv_changed (decl_or_value dv, bool newv)
 {
   switch (dv_onepart_p (dv))
