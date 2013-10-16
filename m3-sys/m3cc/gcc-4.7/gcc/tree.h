@@ -5854,11 +5854,6 @@ extern void copy_ref_info (tree, tree);
 /* In tree-vrp.c */
 extern bool ssa_name_nonnegative_p (const_tree);
 
-/* In tree-object-size.c.  */
-extern void init_object_sizes (void);
-extern void fini_object_sizes (void);
-extern unsigned HOST_WIDE_INT compute_builtin_object_size (tree, int);
-
 /* In expr.c.  */
 extern unsigned HOST_WIDE_INT highest_pow2_factor (const_tree);
 extern tree build_personality_function (const char *);
