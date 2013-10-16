@@ -2350,13 +2350,6 @@ is_ctrl_altering_stmt (gimple t)
 	if (flags & ECF_NORETURN)
 	  return true;
 
-	/* TM ending statements have backedges out of the transaction.
-	   Return true so we split the basic block containing them.
-	   Note that the TM_BUILTIN test is merely an optimization.  */
-	if ((flags & ECF_TM_BUILTIN)
-	    && is_tm_ending_fndecl (gimple_call_fndecl (t)))
-	  return true;
-
 	/* BUILT_IN_RETURN call is same as return statement.  */
 	if (gimple_call_builtin_p (t, BUILT_IN_RETURN))
 	  return true;
