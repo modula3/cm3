@@ -15,6 +15,14 @@ M3 v4.2
 /* numbers. Use "m3 -C -nostd -X0@-builtins@ Foo.m3" to generate a Foo.mc    */
 /* and Foo.mx that contain the new magic values.                             */
 
+/* Most m3linker files are produced by m3linker.  But RTBuiltin.mx is        */
+/* independently created as a source file.  However, it does not contain     */
+/* anything that depends on the range of WIDECHAR.  So newer versions of     */
+/* m3linker will accept it with either linker magic string, to obviate       */
+/* editing it in RTBuiltin.mx.  This simplifies bootstrapping.  Compiling    */
+/* with either sized WIDECHAR will accept either magic string in             */
+/* RTBuiltin.mx. See m3-sys/m3linker/src/MxIn.m3, ReadMagic and IsRTBuiltin. */ 
+
 N0 M3_BUILTIN
 N1 TEXT
 N2 MUTEX
