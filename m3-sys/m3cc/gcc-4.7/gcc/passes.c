@@ -1240,7 +1240,6 @@ init_optimization_passes (void)
       NEXT_PASS (pass_feedback_split_functions);
     }
   NEXT_PASS (pass_ipa_increase_alignment);
-  NEXT_PASS (pass_ipa_tm);
   *p = NULL;
 
   p = &all_regular_ipa_passes;
