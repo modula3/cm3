@@ -7,7 +7,7 @@
 
 MODULE MxIn;
 
-IMPORT Text, File, Wr, Fmt, Word, Thread, Atom, AtomList;
+IMPORT Text, File, Wr, Stdio, Fmt, Word, Thread, Atom, AtomList;
 IMPORT Mx, MxRep, M3ID, M3FP, M3File, MxVS, OSError;
 <*FATAL Wr.Failure, Thread.Alerted*>
 
@@ -103,23 +103,135 @@ PROCEDURE ReadLinkFile (VAR s: State)
   END ReadLinkFile;
 
 PROCEDURE ReadMagic (VAR s: State)
-  RAISES {OSError.E, SyntaxError} =
-  BEGIN
-    FOR i := 0 TO Text.Length (Mx.LinkerMagic) - 1 DO
-      Match (s, Text.GetChar (Mx.LinkerMagic, i));
-    END;
-    Match (s, '\n');
-  END ReadMagic;
+  RAISES {SyntaxError} =
+  
+  VAR MagicArr : ARRAY [0..Mx.LinkerMagicLen] OF CHAR; 
+  VAR MagicText : TEXT; 
+  VAR i: CARDINAL; 
+  VAR ch: CHAR; 
 
-PROCEDURE Match (VAR s: State;  ch: CHAR)
-  RAISES {OSError.E, SyntaxError} =
-  VAR c2 := GetC (s);
-  BEGIN
-    IF (ch # c2) THEN
-      Error (s, "bad linkfile (unrecognized header)");
-      RAISE SyntaxError;
+  PROCEDURE PackageName (READONLY s: State): TEXT =  
+
+    BEGIN
+      IF s.cur_file.name = NIL 
+      THEN RETURN ""
+      ELSE RETURN s.cur_file.name
+      END; 
+    END PackageName; 
+
+  PROCEDURE IsRTBuiltin (READONLY s: State): BOOLEAN = 
+  (* Most m3linker files are produced by m3linker.  But RTBuiltin.mx is
+     independently created as a source file.  However, it does not contain
+     anything that depends on the range of WIDECHAR.  So newer versions of
+     m3linker will accept it with either linker magic string, to obviate 
+     editing it in RTBuiltin.mx.  This simplifies bootstrapping.  Compiling 
+     with either sized WIDECHAR will accept either magic string in 
+     RTBuiltin.mx.
+  *) 
+    CONST RTBuiltinString = "RTBuiltin.mx";
+    CONST RTBuiltinLen = 12; (* Must be Text.Length(RTBuiltinString). *) 
+    VAR ActualLen: CARDINAL;
+
+    BEGIN
+      IF s.cur_file = NIL OR s.cur_file.name = NIL THEN RETURN FALSE; END;
+      ActualLen := Text.Length(s.cur_file.name); 
+      IF ActualLen < RTBuiltinLen THEN RETURN FALSE END;
+      IF Text.Equal 
+           (Text.Sub(s.cur_file.name, ActualLen-RTBuiltinLen), RTBuiltinString) 
+      THEN RETURN TRUE;
+      ELSE RETURN FALSE;
+      END; 
+    END IsRTBuiltin; 
+
+  BEGIN (* ReadMagic *) 
+    i := 0;
+    LOOP
+      TRY 
+        ch := GetC (s);
+        IF ch = '\n' 
+        THEN EXIT;
+        ELSIF i > Mx.LinkerMagicLen 
+        THEN 
+          Error (s, "bad linkfile (excessive length header)", PackageName (s));
+          RAISE SyntaxError; 
+        ELSE 
+          MagicArr[i] := ch;
+          INC (i); 
+        END;  
+      EXCEPT OSError.E
+      => Error (s, "bad linkfile (incomplete/missing header)", PackageName (s));
+         RAISE SyntaxError; 
+      END; 
     END;
-  END Match;
+    MagicText := Text.FromChars(SUBARRAY(MagicArr,0,i));
+
+    IF Mx.UnicodeWideChar
+    THEN
+      IF Text.Equal(MagicText, Mx.LinkerMagicWCUni)
+      THEN (* All is Ok. *)
+      ELSIF Text.Equal (MagicText, Mx.LinkerMagicWC16)
+      THEN (* WIDECHAR size mismatch. *)  
+        IF IsRTBuiltin (s) 
+        THEN (* This is Ok too.  It happens when bootstrapping. *) 
+        ELSE 
+          IF s.cur_file.name = NIL 
+          THEN 
+            Wr.PutText 
+              (Stdio.stderr, 
+               "Recompiling with Unicode WIDECHAR, previously 16-bit WIDECHAR."
+              ); 
+            Wr.PutText (Stdio.stderr, Wr.EOL);
+            Wr.Flush (Stdio.stderr);
+            RAISE SyntaxError; 
+          ELSE
+            Wr.PutText 
+              (Stdio.stderr, 
+               "Compiling with Unicode WIDECHAR, but linking to 16-bit WIDECHAR: "
+              ); 
+            Wr.PutText (Stdio.stderr, PackageName (s));
+            Wr.PutText (Stdio.stderr, Wr.EOL);
+            Wr.Flush (Stdio.stderr);
+            RAISE SyntaxError; 
+          END; 
+        END; 
+      ELSE
+        Error (s, "bad linkfile (unrecognized header)", PackageName (s));
+        RAISE SyntaxError; 
+      END; 
+    ELSE (* Compiling with 16-bit WIDECHAR. *)  
+      IF Text.Equal(MagicText, Mx.LinkerMagicWC16)
+      THEN (* All is Ok. *)
+      ELSIF Text.Equal (MagicText, Mx.LinkerMagicWCUni)
+      THEN (* WIDECHAR size mismatch. *)  
+        IF IsRTBuiltin (s) 
+        THEN (* This is Ok too.  It happens when reverse bootstrapping. *) 
+        ELSE 
+          IF s.cur_file.name = NIL 
+          THEN 
+            Wr.PutText 
+              (Stdio.stderr, 
+               "Recompiling with 16-bit WIDECHAR, previously Unicode WIDECHAR."
+              ); 
+            Wr.PutText (Stdio.stderr, Wr.EOL);
+            Wr.Flush (Stdio.stderr);
+            RAISE SyntaxError; 
+          ELSE
+            Wr.PutText 
+              (Stdio.stderr, 
+               "Compiling with 16-bit WIDECHAR, but linking to Unicode WIDECHAR: "
+              );
+            Wr.PutText (Stdio.stderr, PackageName (s));
+            Wr.PutText (Stdio.stderr, Wr.EOL);
+            Wr.Flush (Stdio.stderr);
+            RAISE SyntaxError; 
+          END; 
+        END; 
+      ELSE
+        Error (s, "bad linkfile (unrecognized header)", PackageName (s));
+        RAISE SyntaxError; 
+      END; 
+    END; 
+  END ReadMagic;
 
 PROCEDURE EndBuffer (VAR s: State): BOOLEAN
   RAISES {OSError.E} =
@@ -639,6 +751,7 @@ PROCEDURE Error (VAR s: State;  a, b, c, d: Text.T := NIL) =
     IF (c # NIL) THEN Wr.PutText (s.errors, c); END;
     IF (d # NIL) THEN Wr.PutText (s.errors, d); END;
     Wr.PutText (s.errors, Wr.EOL);
+    Wr.Flush (s.errors); 
   END Error;
 
 PROCEDURE CharName (c: CHAR): Text.T =
