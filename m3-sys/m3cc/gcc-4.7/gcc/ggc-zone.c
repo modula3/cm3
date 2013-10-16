@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* "Bag-of-pages" zone garbage collector for the GNU compiler.
    Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2007, 2008,
    2010 Free Software Foundation, Inc.
@@ -224,8 +226,6 @@ typedef struct page_entry
   /* Does this page contain small objects, or one large object?  */
   bool large_p;
 
-  /* Is this page part of the loaded PCH?  */
-  bool pch_p;
 } page_entry;
 
 /* Additional data needed for small pages.  */
@@ -929,7 +929,6 @@ alloc_large_page (size_t size, struct alloc_zone *zone)
   entry->next = NULL;
   entry->common.page = page + sizeof (struct large_page_entry);
   entry->common.large_p = true;
-  entry->common.pch_p = false;
   entry->common.zone = zone;
 #ifdef GATHER_STATISTICS
   entry->common.survived = 0;
@@ -1442,10 +1441,6 @@ ggc_free (void *p)
       /* Release the memory associated with this object.  */
       free_large_page (large_page);
     }
-  else if (page->pch_p)
-    /* Don't do anything.  We won't allocate a new object from the
-       PCH zone so there's no point in releasing anything.  */
-    ;
   else
     {
       size_t size = ggc_get_size (p);
@@ -1474,16 +1469,7 @@ gt_ggc_m_S (const void *p)
   if (! entry)
     return;
 
-  if (entry->pch_p)
-    {
-      size_t alloc_word, alloc_bit, t;
-      t = ((const char *) p - pch_zone.page) / BYTES_PER_ALLOC_BIT;
-      alloc_word = t / (8 * sizeof (alloc_type));
-      alloc_bit = t % (8 * sizeof (alloc_type));
-      offset = zone_find_object_offset (pch_zone.alloc_bits, alloc_word,
-					alloc_bit);
-    }
-  else if (entry->large_p)
+  if (entry->large_p)
     {
       struct large_page_entry *le = (struct large_page_entry *) entry;
       offset = ((const char *) p) - entry->page;
@@ -1529,18 +1515,7 @@ ggc_set_mark (const void *p)
 
   page = zone_get_object_page (p);
 
-  if (page->pch_p)
-    {
-      size_t mark_word, mark_bit, offset;
-      offset = (ptr - pch_zone.page) / BYTES_PER_MARK_BIT;
-      mark_word = offset / (8 * sizeof (mark_type));
-      mark_bit = offset % (8 * sizeof (mark_type));
-
-      if (pch_zone.mark_bits[mark_word] & (1 << mark_bit))
-	return 1;
-      pch_zone.mark_bits[mark_word] |= (1 << mark_bit);
-    }
-  else if (page->large_p)
+  if (page->large_p)
     {
       struct large_page_entry *large_page
 	= (struct large_page_entry *) page;
@@ -1579,16 +1554,6 @@ ggc_marked_p (const void *p)
 
   page = zone_get_object_page (p);
 
-  if (page->pch_p)
-    {
-      size_t mark_word, mark_bit, offset;
-      offset = (ptr - pch_zone.page) / BYTES_PER_MARK_BIT;
-      mark_word = offset / (8 * sizeof (mark_type));
-      mark_bit = offset % (8 * sizeof (mark_type));
-
-      return (pch_zone.mark_bits[mark_word] & (1 << mark_bit)) != 0;
-    }
-
   if (page->large_p)
     {
       struct large_page_entry *large_page
@@ -1615,17 +1580,6 @@ ggc_get_size (const void *p)
   const char *ptr = (const char *) p;
 
   page = zone_get_object_page (p);
-
-  if (page->pch_p)
-    {
-      size_t alloc_word, alloc_bit, offset, max_size;
-      offset = (ptr - pch_zone.page) / BYTES_PER_ALLOC_BIT + 1;
-      alloc_word = offset / (8 * sizeof (alloc_type));
-      alloc_bit = offset % (8 * sizeof (alloc_type));
-      max_size = pch_zone.bytes - (ptr - pch_zone.page);
-      return zone_object_size_1 (pch_zone.alloc_bits, alloc_word, alloc_bit,
-				 max_size);
-    }
 
   if (page->large_p)
     return ((struct large_page_entry *)page)->bytes;
@@ -2258,268 +2212,4 @@ ggc_print_statistics (void)
              all_allocated_under128);
   }
 #endif
-}
-
-/* Precompiled header support.  */
-
-/* For precompiled headers, we sort objects based on their type.  We
-   also sort various objects into their own buckets; currently this
-   covers strings and IDENTIFIER_NODE trees.  The choices of how
-   to sort buckets have not yet been tuned.  */
-
-#define NUM_PCH_BUCKETS		(gt_types_enum_last + 3)
-
-#define OTHER_BUCKET		(gt_types_enum_last + 0)
-#define IDENTIFIER_BUCKET	(gt_types_enum_last + 1)
-#define STRING_BUCKET		(gt_types_enum_last + 2)
-
-struct ggc_pch_ondisk
-{
-  size_t total;
-  size_t type_totals[NUM_PCH_BUCKETS];
-};
-
-struct ggc_pch_data
-{
-  struct ggc_pch_ondisk d;
-  size_t base;
-  size_t orig_base;
-  size_t alloc_size;
-  alloc_type *alloc_bits;
-  size_t type_bases[NUM_PCH_BUCKETS];
-  size_t start_offset;
-};
-
-/* Initialize the PCH data structure.  */
-
-struct ggc_pch_data *
-init_ggc_pch (void)
-{
-  return XCNEW (struct ggc_pch_data);
-}
-
-/* Return which of the page-aligned buckets the object at X, with type
-   TYPE, should be sorted into in the PCH.  Strings will have
-   IS_STRING set and TYPE will be gt_types_enum_last.  Other objects
-   of unknown type will also have TYPE equal to gt_types_enum_last.  */
-
-static int
-pch_bucket (void *x, enum gt_types_enum type,
-	    bool is_string)
-{
-  /* Sort identifiers into their own bucket, to improve locality
-     when searching the identifier hash table.  */
-  if (type == gt_ggc_e_14lang_tree_node
-      && TREE_CODE ((tree) x) == IDENTIFIER_NODE)
-    return IDENTIFIER_BUCKET;
-  else if (type == gt_types_enum_last)
-    {
-      if (is_string)
-	return STRING_BUCKET;
-      return OTHER_BUCKET;
-    }
-  return type;
-}
-
-/* Add the size of object X to the size of the PCH data.  */
-
-void
-ggc_pch_count_object (struct ggc_pch_data *d, void *x ATTRIBUTE_UNUSED,
-		      size_t size, bool is_string, enum gt_types_enum type)
-{
-  /* NOTE: Right now we don't need to align up the size of any objects.
-     Strings can be unaligned, and everything else is allocated to a
-     MAX_ALIGNMENT boundary already.  */
-
-  d->d.type_totals[pch_bucket (x, type, is_string)] += size;
-}
-
-/* Return the total size of the PCH data.  */
-
-size_t
-ggc_pch_total_size (struct ggc_pch_data *d)
-{
-  int i;
-  size_t alloc_size, total_size;
-
-  total_size = 0;
-  for (i = 0; i < NUM_PCH_BUCKETS; i++)
-    {
-      d->d.type_totals[i] = ROUND_UP (d->d.type_totals[i], GGC_PAGE_SIZE);
-      total_size += d->d.type_totals[i];
-    }
-  d->d.total = total_size;
-
-  /* Include the size of the allocation bitmap.  */
-  alloc_size = CEIL (d->d.total, BYTES_PER_ALLOC_BIT * 8);
-  alloc_size = ROUND_UP (alloc_size, MAX_ALIGNMENT);
-  d->alloc_size = alloc_size;
-
-  return d->d.total + alloc_size;
-}
-
-/* Set the base address for the objects in the PCH file.  */
-
-void
-ggc_pch_this_base (struct ggc_pch_data *d, void *base_)
-{
-  int i;
-  size_t base = (size_t) base_;
-
-  d->base = d->orig_base = base;
-  for (i = 0; i < NUM_PCH_BUCKETS; i++)
-    {
-      d->type_bases[i] = base;
-      base += d->d.type_totals[i];
-    }
-
-  if (d->alloc_bits == NULL)
-    d->alloc_bits = XCNEWVAR (alloc_type, d->alloc_size);
-}
-
-/* Allocate a place for object X of size SIZE in the PCH file.  */
-
-char *
-ggc_pch_alloc_object (struct ggc_pch_data *d, void *x,
-		      size_t size, bool is_string,
-		      enum gt_types_enum type)
-{
-  size_t alloc_word, alloc_bit;
-  char *result;
-  int bucket = pch_bucket (x, type, is_string);
-
-  /* Record the start of the object in the allocation bitmap.  We
-     can't assert that the allocation bit is previously clear, because
-     strings may violate the invariant that they are at least
-     BYTES_PER_ALLOC_BIT long.  This is harmless - ggc_get_size
-     should not be called for strings.  */
-  alloc_word = ((d->type_bases[bucket] - d->orig_base)
-		/ (8 * sizeof (alloc_type) * BYTES_PER_ALLOC_BIT));
-  alloc_bit = ((d->type_bases[bucket] - d->orig_base)
-	       / BYTES_PER_ALLOC_BIT) % (8 * sizeof (alloc_type));
-  d->alloc_bits[alloc_word] |= 1L << alloc_bit;
-
-  /* Place the object at the current pointer for this bucket.  */
-  result = (char *) d->type_bases[bucket];
-  d->type_bases[bucket] += size;
-  return result;
-}
-
-/* Prepare to write out the PCH data to file F.  */
-
-void
-ggc_pch_prepare_write (struct ggc_pch_data *d,
-		       FILE *f)
-{
-  /* We seek around a lot while writing.  Record where the end
-     of the padding in the PCH file is, so that we can
-     locate each object's offset.  */
-  d->start_offset = ftell (f);
-}
-
-/* Write out object X of SIZE to file F.  */
-
-void
-ggc_pch_write_object (struct ggc_pch_data *d,
-		      FILE *f, void *x, void *newx,
-		      size_t size, bool is_string ATTRIBUTE_UNUSED)
-{
-  if (fseek (f, (size_t) newx - d->orig_base + d->start_offset, SEEK_SET) != 0)
-    fatal_error ("can%'t seek PCH file: %m");
-
-  if (fwrite (x, size, 1, f) != 1)
-    fatal_error ("can%'t write PCH file: %m");
-}
-
-void
-ggc_pch_finish (struct ggc_pch_data *d, FILE *f)
-{
-  /* Write out the allocation bitmap.  */
-  if (fseek (f, d->start_offset + d->d.total, SEEK_SET) != 0)
-    fatal_error ("can%'t seek PCH file: %m");
-
-  if (fwrite (d->alloc_bits, d->alloc_size, 1, f) != 1)
-    fatal_error ("can%'t write PCH file: %m");
-
-  /* Done with the PCH, so write out our footer.  */
-  if (fwrite (&d->d, sizeof (d->d), 1, f) != 1)
-    fatal_error ("can%'t write PCH file: %m");
-
-  free (d->alloc_bits);
-  free (d);
-}
-
-/* The PCH file from F has been mapped at ADDR.  Read in any
-   additional data from the file and set up the GC state.  */
-
-void
-ggc_pch_read (FILE *f, void *addr)
-{
-  struct ggc_pch_ondisk d;
-  size_t alloc_size;
-  struct alloc_zone *zone;
-  struct page_entry *pch_page;
-  char *p;
-
-  if (fread (&d, sizeof (d), 1, f) != 1)
-    fatal_error ("can%'t read PCH file: %m");
-
-  alloc_size = CEIL (d.total, BYTES_PER_ALLOC_BIT * 8);
-  alloc_size = ROUND_UP (alloc_size, MAX_ALIGNMENT);
-
-  pch_zone.bytes = d.total;
-  pch_zone.alloc_bits = (alloc_type *) ((char *) addr + pch_zone.bytes);
-  pch_zone.page = (char *) addr;
-  pch_zone.end = (char *) pch_zone.alloc_bits;
-
-  /* We've just read in a PCH file.  So, every object that used to be
-     allocated is now free.  */
-#ifdef GATHER_STATISTICS
-  zone_allocate_marks ();
-  ggc_prune_overhead_list ();
-  zone_free_marks ();
-#endif
-
-  for (zone = G.zones; zone; zone = zone->next_zone)
-    {
-      struct small_page_entry *page, *next_page;
-      struct large_page_entry *large_page, *next_large_page;
-
-      zone->allocated = 0;
-
-      /* Clear the zone's free chunk list.  */
-      memset (zone->free_chunks, 0, sizeof (zone->free_chunks));
-      zone->high_free_bin = 0;
-      zone->cached_free = NULL;
-      zone->cached_free_size = 0;
-
-      /* Move all the small pages onto the free list.  */
-      for (page = zone->pages; page != NULL; page = next_page)
-	{
-	  next_page = page->next;
-	  memset (page->alloc_bits, 0,
-		  G.small_page_overhead - PAGE_OVERHEAD);
-	  free_small_page (page);
-	}
-
-      /* Discard all the large pages.  */
-      for (large_page = zone->large_pages; large_page != NULL;
-	   large_page = next_large_page)
-	{
-	  next_large_page = large_page->next;
-	  free_large_page (large_page);
-	}
-
-      zone->pages = NULL;
-      zone->large_pages = NULL;
-    }
-
-  /* Allocate the dummy page entry for the PCH, and set all pages
-     mapped into the PCH to reference it.  */
-  pch_page = XCNEW (struct page_entry);
-  pch_page->page = pch_zone.page;
-  pch_page->pch_p = true;
-
-  for (p = pch_zone.page; p < pch_zone.end; p += GGC_PAGE_SIZE)
-    set_page_table_entry (p, pch_page);
 }

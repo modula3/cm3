@@ -16662,35 +16662,6 @@ mips_shift_truncation_mask (enum machine_mode mode)
   return GET_MODE_BITSIZE (mode) - 1;
 }
 
-/* Implement TARGET_PREPARE_PCH_SAVE.  */
-
-static void
-mips_prepare_pch_save (void)
-{
-  /* We are called in a context where the current MIPS16 vs. non-MIPS16
-     setting should be irrelevant.  The question then is: which setting
-     makes most sense at load time?
-
-     The PCH is loaded before the first token is read.  We should never
-     have switched into MIPS16 mode by that point, and thus should not
-     have populated mips16_globals.  Nor can we load the entire contents
-     of mips16_globals from the PCH file, because mips16_globals contains
-     a combination of GGC and non-GGC data.
-
-     There is therefore no point in trying save the GGC part of
-     mips16_globals to the PCH file, or to preserve MIPS16ness across
-     the PCH save and load.  The loading compiler would not have access
-     to the non-GGC parts of mips16_globals (either from the PCH file,
-     or from a copy that the loading compiler generated itself) and would
-     have to call target_reinit anyway.
-
-     It therefore seems best to switch back to non-MIPS16 mode at
-     save time, and to ensure that mips16_globals remains null after
-     a PCH load.  */
-  mips_set_mips16_mode (false);
-  mips16_globals = 0;
-}
-
 /* Generate or test for an insn that supports a constant permutation.  */
 
 #define MAX_VECT_LEN 8
@@ -17571,9 +17542,6 @@ mips_expand_vec_minmax (rtx target, rtx op0, rtx op1,
 
 #undef TARGET_SHIFT_TRUNCATION_MASK
 #define TARGET_SHIFT_TRUNCATION_MASK mips_shift_truncation_mask
-
-#undef TARGET_PREPARE_PCH_SAVE
-#define TARGET_PREPARE_PCH_SAVE mips_prepare_pch_save
 
 #undef TARGET_VECTORIZE_VEC_PERM_CONST_OK
 #define TARGET_VECTORIZE_VEC_PERM_CONST_OK mips_vectorize_vec_perm_const_ok

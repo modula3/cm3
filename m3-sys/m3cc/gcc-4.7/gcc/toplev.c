@@ -67,7 +67,6 @@ along with GCC; see the file COPYING3.  If not see
 #include "langhooks.h"
 #include "cfglayout.h"
 #include "cfgloop.h"
-#include "hosthooks.h"
 #include "cgraph.h"
 #include "opts.h"
 #include "opts-diagnostic.h"
@@ -1143,9 +1142,6 @@ general_init (const char *argv0)
 #ifdef SIGFPE
   signal (SIGFPE, crash_signal);
 #endif
-
-  /* Other host-specific signal setup.  */
-  (*host_hooks.extra_signals)();
 
   /* Initialize the garbage-collector, string pools and tree type hash
      table.  */
