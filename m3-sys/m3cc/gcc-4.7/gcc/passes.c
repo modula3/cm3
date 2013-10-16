@@ -1296,7 +1296,6 @@ init_optimization_passes (void)
       NEXT_PASS (pass_tail_recursion);
       NEXT_PASS (pass_ch);
       NEXT_PASS (pass_stdarg);
-      NEXT_PASS (pass_lower_complex);
       NEXT_PASS (pass_sra);
       NEXT_PASS (pass_rename_ssa_copies);
       /* The dom pass will also resolve all __builtin_constant_p calls
@@ -1402,7 +1401,6 @@ init_optimization_passes (void)
       NEXT_PASS (pass_tm_memopt);
       NEXT_PASS (pass_tm_edges);
     }
-  NEXT_PASS (pass_lower_complex_O0);
   NEXT_PASS (pass_cleanup_eh);
   NEXT_PASS (pass_lower_resx);
   NEXT_PASS (pass_nrv);

@@ -404,8 +404,6 @@ extern struct gimple_opt_pass pass_pre;
 extern unsigned int tail_merge_optimize (unsigned int);
 extern struct gimple_opt_pass pass_profile;
 extern struct gimple_opt_pass pass_strip_predict_hints;
-extern struct gimple_opt_pass pass_lower_complex_O0;
-extern struct gimple_opt_pass pass_lower_complex;
 extern struct gimple_opt_pass pass_lower_vector;
 extern struct gimple_opt_pass pass_lower_vector_ssa;
 extern struct gimple_opt_pass pass_lower_omp;
