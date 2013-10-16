@@ -16901,7 +16901,7 @@ mips_expand_vec_perm_const_1 (struct expand_vec_perm_d *d)
 bool
 mips_expand_vec_perm_const (rtx operands[4])
 {
-  struct expand_vec_perm_d d;
+  struct expand_vec_perm_d d = { 0 };
   int i, nelt, which;
   unsigned char orig_perm[MAX_VECT_LEN];
   rtx sel;
@@ -16977,7 +16977,7 @@ static bool
 mips_vectorize_vec_perm_const_ok (enum machine_mode vmode,
 				  const unsigned char *sel)
 {
-  struct expand_vec_perm_d d;
+  struct expand_vec_perm_d d = { 0 };
   unsigned int i, nelt, which;
   bool ret;
 
@@ -17224,11 +17224,11 @@ mips_expand_vec_reduc (rtx target, rtx in, rtx (*gen)(rtx, rtx, rtx))
 {
   enum machine_mode vmode = GET_MODE (in);
   unsigned char perm2[2];
-  rtx last, next, fold, x;
+  rtx next, x;
   bool ok;
 
-  last = in;
-  fold = gen_reg_rtx (vmode);
+  rtx last = in;
+  rtx fold = gen_reg_rtx (vmode);
   switch (vmode)
     {
     case V2SFmode:
