@@ -774,7 +774,6 @@ BASIC_BLOCK_H = basic-block.h $(PREDICT_H) $(VEC_H) $(FUNCTION_H) cfghooks.h
 GIMPLE_H = gimple.h gimple.def gsstruct.def pointer-set.h $(VEC_H) \
 	vecir.h $(GGC_H) $(BASIC_BLOCK_H) $(TARGET_H) tree-ssa-operands.h \
 	tree-ssa-alias.h $(INTERNAL_FN_H)
-TRANS_MEM_H = trans-mem.h
 GCOV_IO_H = gcov-io.h gcov-iov.h auto-host.h
 COVERAGE_H = coverage.h $(GCOV_IO_H)
 DEMANGLE_H = $(srcdir)/../include/demangle.h
@@ -1147,7 +1146,6 @@ OBJS = \
 	mode-switching.o \
 	modulo-sched.o \
 	omega.o \
-	omp-low.o \
 	optabs.o \
 	options-save.o \
 	opts-global.o \
@@ -1200,7 +1198,6 @@ OBJS = \
 	timevar.o \
 	toplev.o \
 	tracer.o \
-	trans-mem.o \
 	tree-affine.o \
 	tree-call-cdce.o \
 	tree-cfg.o \
@@ -1268,7 +1265,6 @@ OBJS = \
 	tree-ssa-uninit.o \
 	tree-ssa.o \
 	tree-ssanames.o \
-	tree-stdarg.o \
 	tree-tailcall.o \
 	tree-vect-generic.o \
 	tree-vect-patterns.o \
@@ -1793,12 +1789,6 @@ gtype-desc.o: gtype-desc.c $(CONFIG_H) $(SYSTEM_H) coretypes.h $(TM_H) \
 	$(CFGLOOP_H) $(TARGET_H) $(IPA_PROP_H) $(LTO_STREAMER_H) \
 	target-globals.h
 
-trans-mem.o : trans-mem.c $(CONFIG_H) $(SYSTEM_H) coretypes.h \
-	$(TREE_H) $(GIMPLE_H) $(TREE_FLOW_H) $(TREE_PASS_H) $(TREE_INLINE_H) \
-	$(DIAGNOSTIC_CORE_H) $(DEMANGLE_H) output.h $(TRANS_MEM_H) \
-	$(PARAMS_H) $(TARGET_H) langhooks.h \
-	tree-pretty-print.h gimple-pretty-print.h
-
 ggc-common.o: ggc-common.c $(CONFIG_H) $(SYSTEM_H) coretypes.h		\
 	$(GGC_H) $(HASHTAB_H) $(DIAGNOSTIC_CORE_H) $(PARAMS_H) hosthooks.h	\
 	$(HOSTHOOKS_DEF_H) $(VEC_H) $(PLUGIN_H) $(GGC_INTERNAL_H) $(TIMEVAR_H)
@@ -2140,11 +2130,6 @@ gimple-low.o : gimple-low.c $(CONFIG_H) $(SYSTEM_H) $(TREE_H) \
    $(LANGHOOKS_DEF_H) $(TREE_FLOW_H) $(TIMEVAR_H) $(TM_H) coretypes.h \
    $(EXCEPT_H) $(FLAGS_H) $(RTL_H) $(FUNCTION_H) $(EXPR_H) $(TREE_PASS_H) \
    $(HASHTAB_H) $(DIAGNOSTIC_CORE_H) tree-iterator.h
-omp-low.o : omp-low.c $(CONFIG_H) $(SYSTEM_H) coretypes.h $(TM_H) $(TREE_H) \
-   $(RTL_H) $(GIMPLE_H) $(TREE_INLINE_H) langhooks.h $(DIAGNOSTIC_CORE_H) \
-   $(TREE_FLOW_H) $(TIMEVAR_H) $(FLAGS_H) $(EXPR_H) $(DIAGNOSTIC_CORE_H) \
-   $(TREE_PASS_H) $(GGC_H) $(EXCEPT_H) $(SPLAY_TREE_H) $(OPTABS_H) \
-   $(CFGLOOP_H) tree-iterator.h gt-omp-low.h
 tree-browser.o : tree-browser.c tree-browser.def $(CONFIG_H) $(SYSTEM_H) \
    coretypes.h $(TREE_H) tree-pretty-print.h
 omega.o : omega.c omega.h $(CONFIG_H) $(SYSTEM_H) coretypes.h $(TREE_H) \
@@ -2200,9 +2185,6 @@ tree-loop-distribution.o: tree-loop-distribution.c $(CONFIG_H) $(SYSTEM_H) \
 tree-parloops.o: tree-parloops.c $(CONFIG_H) $(SYSTEM_H) coretypes.h \
    $(TREE_FLOW_H) $(CFGLOOP_H) $(TREE_DATA_REF_H) gimple-pretty-print.h \
    $(TREE_PASS_H) langhooks.h gt-tree-parloops.h $(TREE_VECTORIZER_H)
-tree-stdarg.o: tree-stdarg.c $(CONFIG_H) $(SYSTEM_H) coretypes.h $(TM_H) \
-   $(TREE_H) $(FUNCTION_H) $(DIAGNOSTIC_H) $(TREE_FLOW_H) $(TREE_PASS_H) \
-   tree-stdarg.h $(TARGET_H) langhooks.h gimple-pretty-print.h
 internal-fn.o : internal-fn.c $(CONFIG_H) $(SYSTEM_H) coretypes.h \
    $(INTERNAL_FN_H) $(TREE_H) $(EXPR_H) $(OPTABS_H) $(GIMPLE_H)
 gimple.o : gimple.c $(CONFIG_H) $(SYSTEM_H) coretypes.h $(TREE_H) \
@@ -2212,7 +2194,6 @@ gimple.o : gimple.c $(CONFIG_H) $(SYSTEM_H) coretypes.h $(TREE_H) \
 gimple-pretty-print.o : gimple-pretty-print.c $(CONFIG_H) $(SYSTEM_H) \
    $(TREE_H) $(DIAGNOSTIC_H) $(HASHTAB_H) $(TREE_FLOW_H) \
    $(TM_H) coretypes.h $(TREE_PASS_H) $(GIMPLE_H) value-prof.h \
-   $(TRANS_MEM_H) \
    tree-pretty-print.h gimple-pretty-print.h
 tree-pretty-print.o : tree-pretty-print.c $(CONFIG_H) $(SYSTEM_H) \
    $(TREE_H) $(DIAGNOSTIC_H) $(HASHTAB_H) $(TREE_FLOW_H) \
@@ -3193,13 +3174,11 @@ GTFILES = $(CPP_ID_DATA_H) $(srcdir)/input.h $(srcdir)/coretypes.h \
   $(srcdir)/tree-profile.c $(srcdir)/tree-nested.c \
   $(srcdir)/varpool.c \
   $(srcdir)/tree-parloops.c \
-  $(srcdir)/omp-low.c \
   $(srcdir)/targhooks.c $(out_file) $(srcdir)/passes.c $(srcdir)/cgraphunit.c \
   $(srcdir)/tree-ssa-propagate.c \
   $(srcdir)/tree-phinodes.c \
   $(srcdir)/tree-ssa-alias.h \
   $(srcdir)/ipa-prop.h \
-  $(srcdir)/trans-mem.c \
   $(srcdir)/target-globals.h \
   $(srcdir)/ipa-inline.h \
   @all_gtfiles@
