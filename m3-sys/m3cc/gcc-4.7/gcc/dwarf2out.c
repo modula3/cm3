@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Output Dwarf2 format symbol table information from GCC.
    Copyright (C) 1992, 1993, 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002,
    2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
@@ -3168,9 +3170,6 @@ static GTY(()) bool have_location_lists;
 
 /* Unique label counter.  */
 static GTY(()) unsigned int loclabel_num;
-
-/* Unique label counter for point-of-call tables.  */
-static GTY(()) unsigned int poc_label_num;
 
 /* Record whether the function being analyzed contains inlined functions.  */
 static int current_function_has_inlines;
