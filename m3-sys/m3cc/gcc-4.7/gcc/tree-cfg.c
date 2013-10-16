@@ -694,9 +694,6 @@ make_edges (void)
 	}
     }
 
-  if (root_omp_region)
-    free_omp_regions ();
-
   /* Fold COND_EXPR_COND of each COND_EXPR.  */
   fold_cond_expr_cond ();
 }

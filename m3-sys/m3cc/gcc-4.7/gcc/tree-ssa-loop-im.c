@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Loop invariant motion.
    Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2010
    Free Software Foundation, Inc.
@@ -2407,9 +2409,6 @@ tree_ssa_lim_initialize (void)
   sbitmap_free (contains_call);
 
   lim_aux_data_map = pointer_map_create ();
-
-  if (flag_tm)
-    compute_transaction_bits ();
 }
 
 /* Cleans up after the invariant motion pass.  */
