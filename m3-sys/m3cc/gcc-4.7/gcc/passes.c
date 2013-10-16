@@ -62,7 +62,6 @@ along with GCC; see the file COPYING3.  If not see
 #include "langhooks.h"
 #include "cfglayout.h"
 #include "cfgloop.h"
-#include "hosthooks.h"
 #include "cgraph.h"
 #include "opts.h"
 #include "coverage.h"

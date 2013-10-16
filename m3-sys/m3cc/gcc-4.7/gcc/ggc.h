@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Garbage collection for the GNU compiler.
 
    Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2007,
@@ -51,14 +53,6 @@ typedef void (*gt_note_pointers) (void *, void *, gt_pointer_operator,
 typedef void (*gt_handle_reorder) (void *, void *, gt_pointer_operator,
 				   void *);
 
-/* Used by the gt_pch_n_* routines.  Register an object in the hash table.  */
-extern int gt_pch_note_object (void *, void *, gt_note_pointers,
-			       enum gt_types_enum);
-
-/* Used by the gt_pch_n_* routines.  Register that an object has a reorder
-   function.  */
-extern void gt_pch_note_reorder (void *, void *, gt_handle_reorder);
-
 /* Mark the object in the first parameter and anything it points to.  */
 typedef void (*gt_pointer_walker) (void *);
 
@@ -75,8 +69,6 @@ struct ggc_root_tab {
 /* Pointers to arrays of ggc_root_tab, terminated by NULL.  */
 extern const struct ggc_root_tab * const gt_ggc_rtab[];
 extern const struct ggc_root_tab * const gt_ggc_deletable_rtab[];
-extern const struct ggc_root_tab * const gt_pch_cache_rtab[];
-extern const struct ggc_root_tab * const gt_pch_scalar_rtab[];
 
 /* Structure for hash table cache marking.  */
 struct htab;
@@ -117,7 +109,6 @@ extern int ggc_set_mark	(const void *);
 extern int ggc_marked_p	(const void *);
 
 /* PCH and GGC handling for strings, mostly trivial.  */
-extern void gt_pch_n_S (const void *);
 extern void gt_ggc_m_S (const void *);
 
 /* End of GTY machinery API.  */
@@ -135,10 +126,6 @@ extern void init_ggc (void);
    object, and the identifier hash table is treated as a weak
    hash.  */
 extern bool ggc_protect_identifiers;
-
-/* Write out all GCed objects to F.  */
-extern void gt_pch_save (FILE *f);
-
 
 /* Allocation.  */
 
@@ -242,9 +229,6 @@ extern void ggc_register_root_tab (const struct ggc_root_tab *);
 /* Register an additional cache table.  This can be useful for some
    plugins.  Does nothing if the passed pointer is NULL. */
 extern void ggc_register_cache_tab (const struct ggc_cache_tab *);
-
-/* Read objects previously saved with gt_pch_save from F.  */
-extern void gt_pch_restore (FILE *f);
 
 /* Statistics.  */
 
