@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Decompose multiword subregs.
    Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012
    Free Software Foundation, Inc.
@@ -206,7 +208,7 @@ propagate_pseudo_copies (void)
   do
     {
       bitmap_iterator iter;
-      unsigned int i;
+      unsigned int i = { 0 };
 
       bitmap_clear (propagate);
 
@@ -363,11 +365,11 @@ find_decomposable_subregs (rtx *px, void *data)
 static void
 decompose_register (unsigned int regno)
 {
-  rtx reg;
-  unsigned int words, i;
+  unsigned int words;
+  unsigned int i = { 0 };
   rtvec v;
 
-  reg = regno_reg_rtx[regno];
+  rtx reg = regno_reg_rtx[regno];
 
   regno_reg_rtx[regno] = NULL_RTX;
 
@@ -819,7 +821,7 @@ resolve_simple_move (rtx set, rtx insn)
     }
   else
     {
-      unsigned int i;
+      unsigned int i = { 0 };
 
       if (REG_P (dest) && !HARD_REGISTER_NUM_P (REGNO (dest)))
 	emit_clobber (dest);
@@ -867,12 +869,12 @@ resolve_simple_move (rtx set, rtx insn)
 static bool
 resolve_clobber (rtx pat, rtx insn)
 {
-  rtx reg;
   enum machine_mode orig_mode;
-  unsigned int words, i;
-  int ret;
+  unsigned int words = { 0 };
+  unsigned int i = { 0 };
+  int ret = { 0 };
 
-  reg = XEXP (pat, 0);
+  rtx reg = XEXP (pat, 0);
   if (!resolve_reg_p (reg) && !resolve_subreg_p (reg))
     return false;
 
@@ -1093,7 +1095,7 @@ decompose_multiword_subregs (void)
      pass in the normal case, since it should be faster than scanning
      all the insns.  */
   {
-    unsigned int i;
+    unsigned int i = { 0 };
 
     for (i = FIRST_PSEUDO_REGISTER; i < max; ++i)
       {
@@ -1123,13 +1125,14 @@ decompose_multiword_subregs (void)
 
   FOR_EACH_BB (bb)
     {
-      rtx insn;
+      rtx insn = { 0 };
 
       FOR_BB_INSNS (bb, insn)
 	{
-	  rtx set;
+	  rtx set = { 0 };
 	  enum classify_move_insn cmi;
-	  int i, n;
+	  int i = { 0 };
+	  int n = { 0 };
 
 	  if (!INSN_P (insn)
 	      || GET_CODE (PATTERN (insn)) == CLOBBER
@@ -1180,11 +1183,11 @@ decompose_multiword_subregs (void)
   bitmap_and_compl_into (decomposable_context, non_decomposable_context);
   if (!bitmap_empty_p (decomposable_context))
     {
-      sbitmap sub_blocks;
-      unsigned int i;
-      sbitmap_iterator sbi;
-      bitmap_iterator iter;
-      unsigned int regno;
+      sbitmap sub_blocks = { 0 };
+      unsigned int i = { 0 };
+      sbitmap_iterator sbi = { 0 };
+      bitmap_iterator iter = { 0 };
+      unsigned int regno = { 0 };
 
       propagate_pseudo_copies ();
 
@@ -1214,13 +1217,12 @@ decompose_multiword_subregs (void)
 		resolve_debug (insn);
 	      else
 		{
-		  rtx set;
-		  int i;
+		  int i = { 0 };
 
 		  recog_memoized (insn);
 		  extract_insn (insn);
 
-		  set = simple_move (insn);
+		  rtx set = simple_move (insn);
 		  if (set)
 		    {
 		      rtx orig_insn = insn;
@@ -1323,8 +1325,8 @@ decompose_multiword_subregs (void)
     }
 
   {
-    unsigned int i;
-    bitmap b;
+    unsigned int i = { 0 };
+    bitmap b = { 0 };
 
     FOR_EACH_VEC_ELT (bitmap, reg_copy_graph, i, b)
       if (b)
