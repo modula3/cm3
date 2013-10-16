@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Instruction scheduling pass.   Log dumping infrastructure.
    Copyright (C) 2006, 2007, 2008, 2010 Free Software Foundation, Inc.
 
@@ -227,10 +229,8 @@ debug_vinsn (vinsn_t vi)
 void
 dump_expr_1 (expr_t expr, int flags)
 {
-  int all;
-
   /* flags == -1 also means dumping all.  */
-  all = flags & 1;
+  int all = flags & 1;
   if (all)
     flags |= DUMP_EXPR_ALL;
 
@@ -308,9 +308,7 @@ debug_expr (expr_t expr)
 void
 dump_insn_1 (insn_t i, int flags)
 {
-  int all;
-
-  all = flags & 1;
+  int all = flags & 1;
   if (all)
     flags |= DUMP_INSN_ALL;
 
@@ -366,8 +364,8 @@ debug_insn (insn_t insn)
 void
 dump_av_set (av_set_t av)
 {
-  av_set_iterator i;
-  expr_t expr;
+  av_set_iterator i = { 0 };
+  expr_t expr = { 0 };
 
   if (!sched_dump_to_dot_p)
     sel_print ("{");
@@ -396,8 +394,8 @@ dump_lv_set (regset lv)
     sel_print ("nil");
   else
     {
-      unsigned i;
-      reg_set_iterator rsi;
+      unsigned i = { 0 };
+      reg_set_iterator rsi = { 0 };
       int count = 0;
 
       EXECUTE_IF_SET_IN_REG_SET (lv, 0, i, rsi)
@@ -463,8 +461,8 @@ dump_flist (flist_t l)
 void
 dump_insn_vector (rtx_vec_t succs)
 {
-  int i;
-  rtx succ;
+  int i = { 0 };
+  rtx succ = { 0 };
 
   FOR_EACH_VEC_ELT (rtx, succs, i, succ)
     if (succ)
@@ -477,7 +475,7 @@ dump_insn_vector (rtx_vec_t succs)
 static void
 print_hard_reg_set (FILE *file, const char *prefix, HARD_REG_SET set)
 {
-  int i;
+  int i = { 0 };
 
   fprintf (file, "%s{ ", prefix);
   for (i = 0; i < FIRST_PSEUDO_REGISTER; i++)
@@ -620,8 +618,8 @@ sel_dump_cfg_insn (insn_t insn, int flags)
 static void
 sel_dump_cfg_edge (FILE *f, edge e)
 {
-  int w;
-  const char *color;
+  int w = { 0 };
+  const char *color = { 0 };
 
   if (e->flags & EDGE_FALLTHRU)
     {
@@ -650,8 +648,8 @@ sel_dump_cfg_edge (FILE *f, edge e)
 static bool
 has_preds_in_current_region_p (basic_block bb)
 {
-  edge e;
-  edge_iterator ei;
+  edge e = { 0 };
+  edge_iterator ei = { 0 };
 
   gcc_assert (!in_current_region_p (bb));
 
@@ -666,7 +664,7 @@ has_preds_in_current_region_p (basic_block bb)
 static void
 sel_dump_cfg_2 (FILE *f, int flags)
 {
-  basic_block bb;
+  basic_block bb = { 0 };
 
   sched_dump_to_dot_p = true;
   switch_dump (f);
@@ -682,15 +680,15 @@ sel_dump_cfg_2 (FILE *f, int flags)
     {
       insn_t insn = BB_HEAD (bb);
       insn_t next_tail = NEXT_INSN (BB_END (bb));
-      edge e;
-      edge_iterator ei;
+      edge e = { 0 };
+      edge_iterator ei = { 0 };
       bool in_region_p = ((flags & SEL_DUMP_CFG_CURRENT_REGION)
 			  && in_current_region_p (bb));
       bool full_p = (!(flags & SEL_DUMP_CFG_CURRENT_REGION)
 		     || in_region_p);
       bool some_p = full_p || has_preds_in_current_region_p (bb);
-      const char *color;
-      const char *style;
+      const char *color = { 0 };
+      const char *style = { 0 };
 
       if (!some_p)
 	continue;
@@ -711,13 +709,13 @@ sel_dump_cfg_2 (FILE *f, int flags)
 	    {
 	      bool first_p = true;
 	      insn_t tail = BB_END (bb);
-	      insn_t cur_insn;
+	      insn_t cur_insn = { 0 };
 
 	      cur_insn = bb_note (bb);
 
 	      do
 		{
-		  fence_t fence;
+		  fence_t fence = { 0 };
 
 		  cur_insn = NEXT_INSN (cur_insn);
 		  fence = flist_lookup (fences, cur_insn);
@@ -828,9 +826,9 @@ sel_dump_cfg_2 (FILE *f, int flags)
 static void
 sel_dump_cfg_1 (const char *tag, int flags)
 {
-  char *buf;
-  int i;
-  FILE *f;
+  char *buf = { 0 };
+  int i = { 0 };
+  FILE *f = { 0 };
 
   ++sel_dump_cfg_fileno;
 
@@ -953,8 +951,9 @@ sel_debug_cfg (void)
 DEBUG_FUNCTION rtx
 debug_mem_addr_value (rtx x)
 {
-  rtx t, addr;
-  enum machine_mode address_mode;
+  rtx t = { 0 };
+  rtx addr = { 0 };
+  enum machine_mode address_mode = (enum machine_mode)0;
 
   gcc_assert (MEM_P (x));
   address_mode = targetm.addr_space.address_mode (MEM_ADDR_SPACE (x));
