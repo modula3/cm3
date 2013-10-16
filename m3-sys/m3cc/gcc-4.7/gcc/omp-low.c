@@ -65,5 +65,3 @@ copy_var_decl (tree var, tree name, tree type)
 
   return copy;
 }
-
-#include "gt-omp-low.h"
