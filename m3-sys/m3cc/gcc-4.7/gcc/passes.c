@@ -1318,7 +1318,7 @@ init_optimization_passes (void)
       NEXT_PASS (pass_dce);
       NEXT_PASS (pass_forwprop);
       NEXT_PASS (pass_phiopt);
-      NEXT_PASS (pass_object_sizes);
+      /*NEXT_PASS (pass_object_sizes); Modula-3 */
       NEXT_PASS (pass_strlen);
       NEXT_PASS (pass_ccp);
       NEXT_PASS (pass_copy_prop);
