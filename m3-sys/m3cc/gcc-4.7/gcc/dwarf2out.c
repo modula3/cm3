@@ -13411,7 +13411,7 @@ loc_list_for_address_of_addr_expr_of_indirect_ref (tree loc, bool toplev)
 static dw_loc_list_ref
 loc_list_from_tree (tree loc, int want_address)
 {
-  dw_loc_descr_ref ret = NULL, ret1 = NULL;
+  dw_loc_descr_ref ret = NULL;
   dw_loc_list_ref list_ret = NULL, list_ret1 = NULL;
   int have_address = 0;
   enum dwarf_location_atom op;
