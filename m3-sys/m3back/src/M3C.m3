@@ -4525,6 +4525,14 @@ END end_init_helper;
 
 PROCEDURE init_helper(self: T; offset: ByteOffset; type: CGType) =
 BEGIN
+(*
+    IF DebugVerbose(self) THEN
+      self.comment("init_helper offset:" & IntToDec(offset) & " type:"
+        & cgtypeToText[type]);
+    ELSE
+      self.comment("init_helper");
+    END;
+*)
     init_to_offset(self, offset);
     IF offset = 0 OR self.init_type # type OR offset # self.current_offset THEN
         end_init_helper(self);
@@ -4542,7 +4550,12 @@ PROCEDURE init_int(
     READONLY value: Target.Int;
     type: CGType) =
 BEGIN
-    self.comment("init_int");
+    IF DebugVerbose(self) THEN
+      self.comment("init_int offset:" & IntToDec(offset)
+        & " value:" & TInt.ToText(value) & " type:" & cgtypeToText[type]);
+    ELSE
+      self.comment("init_int");
+    END;
     init_helper(self, offset, type);
     (* TIntLiteral includes suffixes like T, ULL, UI64, etc. *)
     initializer_addhi(self, TIntLiteral(type, value));
@@ -4560,7 +4573,11 @@ END Segments_init_int;
 PROCEDURE init_proc(self: T; offset: ByteOffset; p: M3CG.Proc) =
 VAR proc := NARROW(p, Proc_t);
 BEGIN
-    self.comment("init_proc");
+    IF DebugVerbose(self) THEN
+      self.comment("init_proc offset:" & IntToDec(offset));
+    ELSE
+      self.comment("init_proc");
+    END;
     init_helper(self, offset, CGType.Addr); (* FUTURE: better typing *)
     initializer_addhi(self, "(ADDRESS)&" & NameT(proc.name));
 END init_proc;
@@ -4603,7 +4620,11 @@ PROCEDURE init_var(self: T; offset: ByteOffset; v: M3CG.Var; bias: ByteOffset) =
 VAR var := NARROW(v, Var_t);
     bias_text := "";
 BEGIN
-    self.comment("init_var");
+    IF DebugVerbose(self) THEN
+      self.comment("init_var offset:" & IntToDec(offset));
+    ELSE
+      self.comment("init_var");
+    END;
     init_helper(self, offset, CGType.Addr); (* FUTURE: better typing *)
     IF bias # 0 THEN
         bias_text := IntToDec(bias) & "+";
@@ -4635,7 +4656,12 @@ PROCEDURE init_chars(self: T; offset: ByteOffset; value: TEXT) =
 VAR length := Text.Length(value);
     ch: CHAR;
 BEGIN
-    self.comment("init_chars");
+    IF DebugVerbose(self) THEN
+      self.comment("init_chars offset:" & IntToDec(offset) &
+        " length:" & IntToDec(length));
+    ELSE
+      self.comment("init_chars");
+    END;
     IF length = 0 THEN
         RETURN;
     END;
@@ -4750,11 +4776,16 @@ BEGIN
     RETURN Text.FromChars(SUBARRAY(cBuf, 0, j));
 END FloatLiteral;
 
-PROCEDURE init_float(
-    self: T; offset: ByteOffset; READONLY float: Target.Float) =
+PROCEDURE init_float(self: T; offset: ByteOffset; READONLY float: Target.Float) =
+VAR cg_type := TargetMap.Float_types[TFloat.Prec(float)].cg_type;
 BEGIN
-    self.comment("init_float");
-    init_helper(self, offset, TargetMap.Float_types[TFloat.Prec(float)].cg_type);
+    IF DebugVerbose(self) THEN
+      self.comment("init_float offset:" & IntToDec(offset) & " type:"
+        & cgtypeToText[cg_type]);
+    ELSE
+      self.comment("init_float");
+    END;
+    init_helper(self, offset, cg_type);
     initializer_addhi(self, FloatLiteral(float));
 END init_float;
 
