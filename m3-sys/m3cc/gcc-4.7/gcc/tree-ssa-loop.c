@@ -527,44 +527,6 @@ struct gimple_opt_pass pass_complete_unrolli =
  }
 };
 
-/* Parallelization.  */
-
-static bool
-gate_tree_parallelize_loops (void)
-{
-  return flag_tree_parallelize_loops > 1;
-}
-
-static unsigned
-tree_parallelize_loops (void)
-{
-  if (number_of_loops () <= 1)
-    return 0;
-
-  if (parallelize_loops ())
-    return TODO_cleanup_cfg | TODO_rebuild_alias;
-  return 0;
-}
-
-struct gimple_opt_pass pass_parallelize_loops =
-{
- {
-  GIMPLE_PASS,
-  "parloops",				/* name */
-  gate_tree_parallelize_loops,		/* gate */
-  tree_parallelize_loops,      		/* execute */
-  NULL,					/* sub */
-  NULL,					/* next */
-  0,					/* static_pass_number */
-  TV_TREE_PARALLELIZE_LOOPS,  		/* tv_id */
-  PROP_cfg | PROP_ssa,			/* properties_required */
-  0,					/* properties_provided */
-  0,					/* properties_destroyed */
-  0,					/* todo_flags_start */
-  0             			/* todo_flags_finish */
- }
-};
-
 /* Prefetching.  */
 
 static unsigned int
