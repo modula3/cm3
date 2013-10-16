@@ -1785,7 +1785,7 @@ CONST Prefix = ARRAY OF TEXT {
 "#else",
 "#define GCC_VERSION 0",
 "#endif",
-"#if (GCC_VERSION > 0 && GCC_VERSION < 430)",
+"#if (GCC_VERSION > 0 && GCC_VERSION < 403)",
 (*"#define AVOID_GCC_TYPE_LIMIT_WARNING 1",*)
 (*"#define M3_OP2(fun, op, a, b) fun(a, b)",*)
 (*"#define M3_IF_TRUE(fun, a) fun(a,0)",*)
