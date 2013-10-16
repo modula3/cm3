@@ -13472,69 +13472,7 @@ loc_list_from_tree (tree loc, int want_address)
       break;
 
     case VAR_DECL:
-      if (DECL_THREAD_LOCAL_P (loc))
-	{
-	  rtx rtl;
-	  enum dwarf_location_atom first_op;
-	  enum dwarf_location_atom second_op;
-	  bool dtprel = false;
-
-	  if (targetm.have_tls)
-	    {
-	      /* If this is not defined, we have no way to emit the
-		 data.  */
-	      if (!targetm.asm_out.output_dwarf_dtprel)
-		return 0;
-
-	       /* The way DW_OP_GNU_push_tls_address is specified, we
-	     	  can only look up addresses of objects in the current
-	     	  module.  We used DW_OP_addr as first op, but that's
-		  wrong, because DW_OP_addr is relocated by the debug
-		  info consumer, while DW_OP_GNU_push_tls_address
-		  operand shouldn't be.  */
-	      if (DECL_EXTERNAL (loc) && !targetm.binds_local_p (loc))
-		return 0;
-	      first_op = DWARF2_ADDR_SIZE == 4 ? DW_OP_const4u : DW_OP_const8u;
-	      dtprel = true;
-	      second_op = DW_OP_GNU_push_tls_address;
-	    }
-	  else
-	    {
-	      if (!targetm.emutls.debug_form_tls_address
-		  || !(dwarf_version >= 3 || !dwarf_strict))
-		return 0;
-	      /* We stuffed the control variable into the DECL_VALUE_EXPR
-		 to signal (via DECL_HAS_VALUE_EXPR_P) that the decl should
-		 no longer appear in gimple code.  We used the control
-		 variable in specific so that we could pick it up here.  */
-	      loc = DECL_VALUE_EXPR (loc);
-	      first_op = DW_OP_addr;
-	      second_op = DW_OP_form_tls_address;
-	    }
-
-	  rtl = rtl_for_decl_location (loc);
-	  if (rtl == NULL_RTX)
-	    return 0;
-
-	  if (!MEM_P (rtl))
-	    return 0;
-	  rtl = XEXP (rtl, 0);
-	  if (! CONSTANT_P (rtl))
-	    return 0;
-
-	  ret = new_loc_descr (first_op, 0, 0);
-	  ret->dw_loc_oprnd1.val_class = dw_val_class_addr;
-	  ret->dw_loc_oprnd1.v.val_addr = rtl;
-	  ret->dtprel = dtprel;
-
-	  ret1 = new_loc_descr (second_op, 0, 0);
-	  add_loc_descr (&ret, ret1);
-
-	  have_address = 1;
-	  break;
-	}
       /* FALLTHRU */
-
     case PARM_DECL:
     case RESULT_DECL:
       if (DECL_HAS_VALUE_EXPR_P (loc))
