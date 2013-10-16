@@ -171,6 +171,8 @@ the state irrelevant).
 The remainder of the interface is similar to the corresponding part 
 of the WrClass interface: *)
 
+PROCEDURE Init(rd: Rd.T); 
+(* Class-independent initialize rd, including private fields revealed herein. *)
 
 PROCEDURE Lock(rd: Rd.T) RAISES {};
 (* The reader rd must be unlocked; lock it and make its state valid. *)

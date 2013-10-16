@@ -26,6 +26,26 @@ REVEAL
    "rd.lo = rd.cur = rd.hi".  Therefore the check that "rd" is ready need
    not inspect "rd.closed" on the fast path. *)
 
+PROCEDURE Init(rd: T) = 
+(* Class-independent initialize rd, including private fields revealed herein. *)
+
+  BEGIN
+    rd.buff := NIL;
+    rd.Ungetbuff := NIL;
+    rd.Waitingbuff := NIL;
+    rd.st := 0;
+    rd.Ungetst := 0;
+    rd.Waitingst := 0; 
+    rd.cur := 0;
+    rd.lo := 0; 
+    rd.hi := 0; 
+    rd.Ungetlo := 0; 
+    rd.Ungethi := 0; 
+    rd.Waitinglo := 0; 
+    rd.Waitinghi := 0; 
+    rd.closed := TRUE;   
+  END Init; 
+
 PROCEDURE NextBuff(rd: T): BOOLEAN (* End of file. *) 
   RAISES {Failure, Alerted} =
   (* rd is locked, not closed, and rd.cur=rd.hi. *) 
@@ -35,8 +55,9 @@ PROCEDURE NextBuff(rd: T): BOOLEAN (* End of file. *)
   *) 
   VAR LByteCt, LByteCtUnget, LUngetSize : CARDINAL;
   BEGIN  
-    IF rd.Ungetbuff # NIL (* There is an unget buffer *) 
-       AND rd.Ungetbuff = rd.buff (* We are now off its right end. *) 
+    IF rd.Ungetbuff # NIL (* There is an unget buffer, *) 
+       AND rd.Ungetbuff = rd.buff (* and it is current, which implies we are 
+                                     now off its right end. *) 
     THEN (* Make the waiting buffer current.  *) 
       rd.buff := rd.Waitingbuff;
       rd.st := rd.Waitingst;
@@ -46,7 +67,8 @@ PROCEDURE NextBuff(rd: T): BOOLEAN (* End of file. *)
       (* The unget buffer will remain unchanged, in case UngetChar requires
          us to back up into it again. *) 
       RETURN FALSE; 
-    ELSE (* Maybe save some chars in the unget buffer. *)
+    ELSE (* We are not in the unget buffer.  Need to seek, but first, maybe 
+            save some chars in the unget buffer. *)
       IF rd.buff # NIL 
       THEN (* There are some chars to save. *) 
         IF rd.hi - rd.lo >= UnGetCapacity 
@@ -63,10 +85,20 @@ PROCEDURE NextBuff(rd: T): BOOLEAN (* End of file. *)
           rd.Ungetst := 0; 
           rd.Ungetbuff^ 
            := SUBARRAY(rd.buff^, rd.Ungetlo - rd.lo + rd.st, LUngetSize);
-        ELSIF rd.Ungetbuff = NIL OR rd.Ungetlo >= rd.Ungethi  
-        THEN (* Current buffer is short, unallocated or empty unget buffer. *) 
+        (* Hereafter, buff has fewer chars than UnGetCapacity. *) 
+        ELSIF rd.Ungetbuff = NIL 
+        THEN 
           rd.Ungetbuff := NEW (REF ARRAY OF CHAR, UnGetCapacity);
           LUngetSize := UnGetCapacity; 
+          LByteCt := rd.hi - rd.lo; 
+          rd.Ungetst := LUngetSize - LByteCt;
+          rd.Ungetlo := rd.lo;
+          rd.Ungethi := rd.hi;
+          SUBARRAY(rd.Ungetbuff^, rd.Ungetst, LByteCt) 
+            := SUBARRAY(rd.buff^, rd.st, LByteCt);
+        ELSIF rd.Ungetlo >= rd.Ungethi  
+        THEN (* Allocated but empty unget buffer. *) 
+          LUngetSize := NUMBER(rd.Ungetbuff^); 
           LByteCt := rd.hi - rd.lo; 
           rd.Ungetst := LUngetSize - LByteCt;
           rd.Ungetlo := rd.lo;
@@ -275,13 +307,13 @@ PROCEDURE UnGetCharMulti(rd: T): BOOLEAN (* Succeeded. *) =
 PROCEDURE FastUnGetCharMulti(rd: T): BOOLEAN (* Succeeded. *) =
   BEGIN
     IF rd.closed THEN Die() END;
-    IF rd.cur > rd.lo THEN     
+    IF rd.cur > rd.lo THEN (* Can do this within buff. *)     
       DEC(rd.cur);
       RETURN TRUE 
     ELSIF rd.Ungetbuff # NIL (* We have an unget buffer *) 
           AND rd.Ungetbuff # rd.buff (* It is not the current buffer. *) 
           AND rd.Ungethi > rd.Ungetlo (* It is not empty. *) 
-    THEN (* make the current one waiting, *) 
+    THEN (* make the current buff waiting, *) 
       rd.Waitingbuff := rd.buff;
       rd.Waitingst := rd.st;
       rd.Waitinglo := rd.lo;
@@ -335,7 +367,8 @@ PROCEDURE Seek(rd: T; n: CARDINAL)
       IF rd.closed OR NOT rd.seekable THEN Die() END;
       IF n < rd.lo OR n > rd.hi THEN
         EVAL rd.seek(n, FALSE);
-        rd.Ungetbuff := NIL;
+        rd.Ungetlo := 0; (* Empty the unget buffer, but keep it around. *) 
+        rd.Ungethi := 0;
         rd.Waitingbuff := NIL; (* Redundant? *) 
       ELSE
         rd.cur := n;

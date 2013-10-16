@@ -815,7 +815,7 @@ PROCEDURE AddPackedSwapFirstField(self: T; fieldBitSize: INTEGER) =
     END;
   END AddPackedSwapFirstField;
 
-PROCEDURE AddPackedSwapNextField(self: T; fieldBitSize: INTEGER; 
+ PROCEDURE AddPackedSwapNextField(self: T; fieldBitSize: INTEGER; 
                                  offset: INTEGER) =
   VAR elem: PklAction.T;
       totalBits: CARDINAL;
