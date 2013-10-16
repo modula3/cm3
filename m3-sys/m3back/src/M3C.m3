@@ -66,7 +66,7 @@ T = M3CG_DoNothing.T BRANDED "M3C.T" OBJECT
         Err    : ErrorHandler := DefaultErrorHandler;
         anonymousCounter := -1;
         c      : Wr.T := NIL;
-        debug := 2;
+        debug := 0; (* or 0, 1, 2, 3, 4 *)
         stack  : RefSeq.T := NIL;
         params : TextSeq.T := NIL;
         op_index := 0;
@@ -6476,7 +6476,7 @@ PROCEDURE comment(self: T; a, b, c, d: TEXT := NIL) =
 VAR length := 0;
 BEGIN
     IF self.debug < 1 THEN
-        (*RETURN;*)
+        RETURN;
     END;
     comment_1(a, length);
     comment_1(b, length);
