@@ -2108,27 +2108,6 @@ execute_pass_list (struct opt_pass *pass)
   while (pass);
 }
 
-/* Write out summaries for all the nodes in the callgraph.  */
-
-void
-ipa_write_summaries (void)
-{ }
-
-/* Write all the optimization summaries for the cgraph nodes in SET.  If SET is
-   NULL, write out all summaries of all nodes. */
-
-void
-ipa_write_optimization_summaries (cgraph_node_set set, varpool_node_set vset)
-{ }
-
-void
-ipa_read_summaries (void)
-{ }
-
-void
-ipa_read_optimization_summaries (void)
-{ }
-
 /* Same as execute_pass_list but assume that subpasses of IPA passes
    are local passes.  */
 void
