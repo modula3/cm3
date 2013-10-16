@@ -1,5 +1,5 @@
 
-(* Coding an decoding for the unicode encoding schemes, as well as 
+(* Coding and decoding for the unicode encoding schemes, as well as 
    a some others.
 *) 
 
