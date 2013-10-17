@@ -253,7 +253,6 @@ case ${target} in
  | mips-sgi-irix6.5			\
  | mips*-*-openbsd*			\
  | score-*				\
- | *-*-solaris2.8*			\
  )
     if test "x$enable_obsolete" != xyes; then
       echo "*** Configuration ${target} is obsolete." >&2
