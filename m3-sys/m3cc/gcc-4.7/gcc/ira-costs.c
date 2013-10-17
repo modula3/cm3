@@ -332,8 +332,6 @@ finish_regno_cost_classes (void)
   htab_delete (cost_classes_htab);
 }
 
-
-
 /* Compute the cost of loading X into (if TO_P is TRUE) or from (if
    TO_P is FALSE) a register of class RCLASS in mode MODE.  X must not
    be a pseudo register.  */
@@ -1505,8 +1503,8 @@ find_costs_and_classes (FILE *dump_file)
   if (!resize_reg_info () && allocno_p
       && pseudo_classes_defined_p && flag_expensive_optimizations)
     {
-      ira_allocno_t a;
-      ira_allocno_iterator ai;
+      ira_allocno_t a = { 0 };
+      ira_allocno_iterator ai = { 0 };
 
       pref = pref_buffer;
       max_cost_classes_num = 1;
