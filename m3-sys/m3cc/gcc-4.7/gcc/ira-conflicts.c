@@ -612,13 +612,17 @@ static ira_object_t *collected_conflict_objects;
 static void
 build_object_conflicts (ira_object_t obj)
 {
-  int i, px, parent_num;
-  ira_allocno_t parent_a, another_parent_a;
-  ira_object_t parent_obj;
+  int i = { 0 };
+  int px = { 0 };
+  int parent_num = { 0 };
+  ira_allocno_t parent_a = { 0 };
+  ira_allocno_t another_parent_a = { 0 };
+  ira_object_t parent_obj = { 0 };
   ira_allocno_t a = OBJECT_ALLOCNO (obj);
-  IRA_INT_TYPE *object_conflicts;
-  minmax_set_iterator asi;
-  int parent_min, parent_max ATTRIBUTE_UNUSED;
+  IRA_INT_TYPE *object_conflicts = { 0 };
+  minmax_set_iterator asi = { 0 };
+  int parent_min = { 0 };
+  int parent_max = { 0 };
 
   object_conflicts = conflicts[OBJECT_CONFLICT_ID (obj)];
   px = 0;
@@ -826,8 +830,8 @@ print_allocno_conflicts (FILE * file, bool reg_p, ira_allocno_t a)
 static void
 print_conflicts (FILE *file, bool reg_p)
 {
-  ira_allocno_t a;
-  ira_allocno_iterator ai;
+  ira_allocno_t a = { 0 };
+  ira_allocno_iterator ai = { 0 };
 
   FOR_EACH_ALLOCNO (a, ai)
     print_allocno_conflicts (file, reg_p, a);
@@ -841,17 +845,14 @@ ira_debug_conflicts (bool reg_p)
   print_conflicts (stderr, reg_p);
 }
 
-
-
 /* Entry function which builds allocno conflicts and allocno copies
    and accumulate some allocno info on upper level regions.  */
 void
 ira_build_conflicts (void)
 {
-  enum reg_class base;
-  ira_allocno_t a;
-  ira_allocno_iterator ai;
-  HARD_REG_SET temp_hard_reg_set;
+  ira_allocno_t a = { 0 };
+  ira_allocno_iterator ai = { 0 };
+  HARD_REG_SET temp_hard_reg_set = { 0 };
 
   if (ira_conflicts_p)
     {
@@ -878,7 +879,7 @@ ira_build_conflicts (void)
 	  ira_free (conflicts);
 	}
     }
-  base = base_reg_class (VOIDmode, ADDR_SPACE_GENERIC, ADDRESS, SCRATCH);
+  enum reg_class base = base_reg_class (VOIDmode, ADDR_SPACE_GENERIC, ADDRESS, SCRATCH);
   if (! targetm.class_likely_spilled_p (base))
     CLEAR_HARD_REG_SET (temp_hard_reg_set);
   else
