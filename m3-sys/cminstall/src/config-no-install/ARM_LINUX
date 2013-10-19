@@ -1,0 +1,2 @@
+readonly TARGET = "ARM_LINUX" % code generation target
+include("ARMEL_LINUX")
