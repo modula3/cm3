@@ -1223,8 +1223,8 @@ def Boot():
 
     GnuPlatformPrefix = {
         "ARM_DARWIN"    : "arm-apple-darwin8-",
-        % "ARMEL_LINUX"   : "arm-linux-gnueabihf-",
-        % "ARM_LINUX"   : "arm-linux-gnueabihf-",
+        # "ARMEL_LINUX"   : "arm-linux-gnueabihf-",
+        # "ARM_LINUX"   : "arm-linux-gnueabihf-",
         "ALPHA32_VMS"   : "alpha-dec-vms-",
         "ALPHA64_VMS"   : "alpha64-dec-vms-",
         }.get(Target) or ""
