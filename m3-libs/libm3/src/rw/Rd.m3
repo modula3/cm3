@@ -46,6 +46,37 @@ PROCEDURE Init(rd: T) =
     rd.closed := TRUE;   
   END Init; 
 
+<* UNUSED *> PROCEDURE Check(rd: T): BOOLEAN (* It's OK. *) = 
+  (* Check some invariants on rd. *) 
+
+  BEGIN 
+    IF rd.closed 
+    THEN 
+    (* V4. *) 
+      IF rd.buff # NIL 
+      THEN RETURN FALSE END;
+      IF rd.lo # 0 
+      THEN RETURN FALSE END;
+      IF rd.hi # 0 
+      THEN RETURN FALSE END; 
+    ELSE 
+       IF rd.Ungetbuff # NIL 
+         AND rd.Ungetbuff # rd.buff
+         AND rd.Ungetlo < rd.Ungethi
+         AND rd.Ungethi # rd.lo
+      THEN RETURN FALSE
+      END; 
+    (* V2. *) 
+      IF rd.cur < rd.lo 
+      THEN RETURN FALSE END; 
+      IF rd.cur > rd.hi 
+      THEN RETURN FALSE END; 
+    (* V3. *) 
+      IF rd.intermittent AND rd.seekable THEN RETURN FALSE END;
+    END; 
+    RETURN TRUE
+  END Check; 
+
 PROCEDURE NextBuff(rd: T): BOOLEAN (* End of file. *) 
   RAISES {Failure, Alerted} =
   (* rd is locked, not closed, and rd.cur=rd.hi. *) 
@@ -53,8 +84,12 @@ PROCEDURE NextBuff(rd: T): BOOLEAN (* End of file. *)
      Otherwise, save characters as needed in the unget buffer, then use
      seek to get the next regular buffer.
   *) 
-  VAR LByteCt, LByteCtUnget, LUngetSize : CARDINAL;
+  VAR LByteCt, LByteCtUnget: CARDINAL;
+  VAR LResult: BOOLEAN; 
+  VAR LUngetbuff: ARRAY [0..UnGetCapacity-1] OF CHAR;
+  VAR LUngetlo, LUngethi, LUngetst: CARDINAL; 
   BEGIN  
+    (*<* ASSERT Check(rd) *>*)  
     IF rd.Ungetbuff # NIL (* There is an unget buffer, *) 
        AND rd.Ungetbuff = rd.buff (* and it is current, which implies we are 
                                      now off its right end. *) 
@@ -66,69 +101,69 @@ PROCEDURE NextBuff(rd: T): BOOLEAN (* End of file. *)
       rd.Waitingbuff := NIL; (* Defensive. *) 
       (* The unget buffer will remain unchanged, in case UngetChar requires
          us to back up into it again. *) 
+      (*<* ASSERT Check(rd) *>*)  
       RETURN FALSE; 
-    ELSE (* We are not in the unget buffer.  Need to seek, but first, maybe 
-            save some chars in the unget buffer. *)
+    ELSE (* We are not in the unget buffer.  Need to seek, but first, save some chars 
+            to go in the new unget buffer.  We have to save then before seeking, but
+            won't know until after, whether to alter the real unget buffer and its
+            subscripts.  So do the saving in locals for now. *)
       IF rd.buff # NIL 
       THEN (* There are some chars to save. *) 
         IF rd.hi - rd.lo >= UnGetCapacity 
         THEN (* Current buffer contains at least UnGetCapacity chars.  Save the 
-                last UnGetCapacity of them in the Unget buffer, creating it if
-                necessary. *)  
-          IF rd.Ungetbuff = NIL THEN 
-            rd.Ungetbuff := NEW (REF ARRAY OF CHAR, UnGetCapacity);
-            LUngetSize := UnGetCapacity; 
-          ELSE LUngetSize := NUMBER (rd.Ungetbuff^) 
-          END; 
-          rd.Ungethi := rd.hi; 
-          rd.Ungetlo := rd.hi - LUngetSize; 
-          rd.Ungetst := 0; 
-          rd.Ungetbuff^ 
-           := SUBARRAY(rd.buff^, rd.Ungetlo - rd.lo + rd.st, LUngetSize);
+                last UnGetCapacity of them in locals. *)  
+          LUngethi := rd.hi; 
+          LUngetlo := rd.hi - UnGetCapacity; 
+          LUngetst := 0; 
+          LUngetbuff 
+           := SUBARRAY(rd.buff^, LUngetlo - rd.lo + rd.st, UnGetCapacity);
         (* Hereafter, buff has fewer chars than UnGetCapacity. *) 
-        ELSIF rd.Ungetbuff = NIL 
-        THEN 
-          rd.Ungetbuff := NEW (REF ARRAY OF CHAR, UnGetCapacity);
-          LUngetSize := UnGetCapacity; 
+        ELSIF rd.Ungetbuff = NIL OR rd.Ungetlo >= rd.Ungethi  
+        THEN (* Unallocated or empty unget buffer. *) 
           LByteCt := rd.hi - rd.lo; 
-          rd.Ungetst := LUngetSize - LByteCt;
-          rd.Ungetlo := rd.lo;
-          rd.Ungethi := rd.hi;
-          SUBARRAY(rd.Ungetbuff^, rd.Ungetst, LByteCt) 
-            := SUBARRAY(rd.buff^, rd.st, LByteCt);
-        ELSIF rd.Ungetlo >= rd.Ungethi  
-        THEN (* Allocated but empty unget buffer. *) 
-          LUngetSize := NUMBER(rd.Ungetbuff^); 
-          LByteCt := rd.hi - rd.lo; 
-          rd.Ungetst := LUngetSize - LByteCt;
-          rd.Ungetlo := rd.lo;
-          rd.Ungethi := rd.hi;
-          SUBARRAY(rd.Ungetbuff^, rd.Ungetst, LByteCt) 
-            := SUBARRAY(rd.buff^, rd.st, LByteCt);
-        ELSE (* Put chars into the unget buffer from both its current contents
+          LUngetst := UnGetCapacity - LByteCt;
+          LUngetlo := rd.lo;
+          LUngethi := rd.hi;
+          SUBARRAY(LUngetbuff, LUngetst, LByteCt) := SUBARRAY(rd.buff^, rd.st, LByteCt);
+        ELSE (* Save chars for the unget buffer from both its current contents
                 (shifted left) and the current buffer. *) 
-          LUngetSize := NUMBER (rd.Ungetbuff^); 
           LByteCt := rd.hi - rd.lo; 
           LByteCtUnget := rd.Ungethi - rd.Ungetlo; 
-          IF LByteCt + LByteCtUnget > LUngetSize 
+          IF LByteCt + LByteCtUnget > UnGetCapacity 
           THEN (* Push some bytes off the left of the unget buffer. *) 
-            LByteCtUnget := LUngetSize - LByteCt;
-            rd.Ungetst := 0; 
-            rd.Ungetlo := rd.hi - LUngetSize; 
+            LByteCtUnget := UnGetCapacity - LByteCt;
+            LUngetst := 0; 
+            LUngetlo := rd.hi - UnGetCapacity; 
           ELSE 
-            rd.Ungetst := LUngetSize - LByteCt - LByteCtUnget;
-            rd.Ungetlo := rd.hi - LByteCt - LByteCtUnget;
+            LUngetst := UnGetCapacity - LByteCt - LByteCtUnget;
+            LUngetlo := rd.hi - LByteCt - LByteCtUnget;
           END; 
-          rd.Ungethi := rd.hi; 
-          SUBARRAY ( rd.Ungetbuff^, rd.Ungetst, LByteCtUnget) 
+          LUngethi := rd.hi; 
+          SUBARRAY ( LUngetbuff, LUngetst, LByteCtUnget) 
             := SUBARRAY 
-                 (rd.Ungetbuff^, LUngetSize - LByteCtUnget, LByteCtUnget);
-          SUBARRAY ( rd.Ungetbuff^, LUngetSize - LByteCt, LByteCt) 
+                 (rd.Ungetbuff^, UnGetCapacity - LByteCtUnget, LByteCtUnget);
+          SUBARRAY ( LUngetbuff, UnGetCapacity - LByteCt, LByteCt) 
             := SUBARRAY (rd.buff^, rd.st, LByteCt);
         END
       END; 
-      (* Finally get the next buffer from class implementation: *)  
-      RETURN rd.seek(rd.cur, FALSE) = SeekResult.Eof; 
+      (* Try to get the next buffer from class implementation: *)  
+      LResult := rd.seek(rd.cur, FALSE) = SeekResult.Eof; 
+      (* seek methods vary in what they do with buff and EOF.  E.g., FileRd advances
+         to a new but empty buffer (lo=hi=cur=len), but TextRd leaves lo=0, preserving
+         the text for subsequent seek back inside it.  We want to update the Unget
+         buffer only if seek advanced lo. *) 
+      IF rd.lo = LUngethi 
+      THEN (* Update the unget buffer. *) 
+        IF rd.Ungetbuff = NIL 
+        THEN rd.Ungetbuff := NEW (REF ARRAY OF CHAR, UnGetCapacity);
+        END; 
+        rd.Ungetst := LUngetst; 
+        rd.Ungetlo := LUngetlo; 
+        rd.Ungethi := LUngethi; 
+        rd.Ungetbuff^ := LUngetbuff; 
+      END; 
+      (*<* ASSERT Check(rd) *>*)  
+      RETURN LResult; 
     END 
   END NextBuff; 
 
@@ -364,6 +399,7 @@ PROCEDURE Seek(rd: T; n: CARDINAL)
   RAISES {Failure, Alerted} =
   BEGIN
     LOCK rd DO
+      (*<* ASSERT Check(rd) *>*)  
       IF rd.closed OR NOT rd.seekable THEN Die() END;
       IF n < rd.lo OR n > rd.hi THEN
         EVAL rd.seek(n, FALSE);
@@ -372,7 +408,8 @@ PROCEDURE Seek(rd: T; n: CARDINAL)
         rd.Waitingbuff := NIL; (* Redundant? *) 
       ELSE
         rd.cur := n;
-      END
+      END;
+      (*<* ASSERT Check(rd) *>*) 
     END
   END Seek;
 
@@ -392,7 +429,9 @@ PROCEDURE FastClose(rd: T)
         rd.closed := TRUE;
         rd.cur := rd.hi;
         rd.lo := rd.hi;
-        rd.buff := NIL
+        rd.buff := NIL;
+        rd.Ungetlo := 0; 
+        rd.Ungethi := 0; 
       END
     END
   END FastClose;
