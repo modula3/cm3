@@ -86,7 +86,10 @@ readonly m3cc_config = {
   "LINUXLIBC6"   : "-with-gnu-as -with-gnu-ld",
   "ARM_LINUX"    : "-with-gnu-as -with-gnu-ld -with-float=soft "
                    & "-enable-target-optspace -enable-threads -enable-shared",
-
+  "ARMEL_LINUX"  : "-with-gnu-as -with-gnu-ld "
+                   & "-with-arch=armv6 -with-fpu=vfp -with-float=hard "
+                   & "-enable-target-optspace -enable-threads -enable-shared",
+ 
   %
   % AIX usually requires native as and ld -- cross builds are not possible.
   % Not all of this is relevant to m3cg?, but user can build gcc/cc1 here.
