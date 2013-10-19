@@ -1194,7 +1194,7 @@ def Boot():
 
     AssemblerFlags = " "
 
-    if not Target in ["PPC32_OPENBSD", "PPC_LINUX", "ARMEL_LINUX", "ALPHA_LINUX", "ALPHA_OPENBSD"]:
+    if not Target in ["PPC32_OPENBSD", "PPC_LINUX", "ARM_LINUX", "ARMEL_LINUX", "ALPHA_LINUX", "ALPHA_OPENBSD"]:
         if linux or bsd:
             if sixtyfour or (alpha and not alpha32):
                 AssemblerFlags = AssemblerFlags + " --64"
@@ -1223,7 +1223,8 @@ def Boot():
 
     GnuPlatformPrefix = {
         "ARM_DARWIN"    : "arm-apple-darwin8-",
-        "ARMEL_LINUX"   : "arm-linux-gnueabi-",
+        % "ARMEL_LINUX"   : "arm-linux-gnueabihf-",
+        % "ARM_LINUX"   : "arm-linux-gnueabihf-",
         "ALPHA32_VMS"   : "alpha-dec-vms-",
         "ALPHA64_VMS"   : "alpha64-dec-vms-",
         }.get(Target) or ""
