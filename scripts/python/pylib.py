@@ -639,6 +639,10 @@ if Target.startswith("NT386"):
         GCC_BACKEND = False
 
     Config = Target
+
+    # From the front ends point of view, NT386, NT386GNU, NT386MINGNU
+    # can be the same thing -- little endian, 32bit, same jmpbuf size.
+    # The "Config" -- how to compile/link, etc. is different.
     Target = "NT386"
 
 if Target.endswith("_NT"):
@@ -653,6 +657,7 @@ if Host.endswith("_NT") or Host == "NT386":
 
 #-----------------------------------------------------------------------------
 
+_BuildDir = ("%(Config)s%(_BuildDirC)s" % vars())
 M3GDB = (M3GDB or CM3_GDB)
 Scripts = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PKGSDB = os.path.join(Scripts, "PKGS")
@@ -765,7 +770,6 @@ if _Program != "make-msi.py":
 
 # other commands
 
-    _BuildDir = ("%(Config)s%(_BuildDirC)s" % vars())
     if os.name == "nt":
         RealClean = RealClean or "if exist %(_BuildDir)s rmdir /q/s %(_BuildDir)s"
     else:
@@ -1970,13 +1974,13 @@ def _CopyCompiler(From, To):
 def ShipBack():
     if  not GCC_BACKEND:
         return True
-    return _CopyCompiler(os.path.join(Root, "m3-sys", "m3cc", Config),
+    return _CopyCompiler(os.path.join(Root, "m3-sys", "m3cc", _BuildDir),
                          os.path.join(InstallRoot, "bin"))
 
 #-----------------------------------------------------------------------------
 
 def ShipFront():
-    return _CopyCompiler(os.path.join(Root, "m3-sys", "cm3", Config),
+    return _CopyCompiler(os.path.join(Root, "m3-sys", "cm3", _BuildDir),
                          os.path.join(InstallRoot, "bin"))
 
 #-----------------------------------------------------------------------------
