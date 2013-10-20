@@ -22,6 +22,14 @@ end
 
 %-------------------------------------------------------------------
 
+if equal(M3_BACKEND_MODE, "IntegratedC")
+        or equal(M3_BACKEND_MODE, "C")
+        or USE_C_BACKEND_VIA_M3CGCAT
+    readonly BUILD_DIR_C = "c"
+else
+    readonly BUILD_DIR_C = ""
+end
+
 if not defined("PROFILING_P")
     if M3_PROFILING
         readonly PROFILING_P = "p"
@@ -31,7 +39,7 @@ if not defined("PROFILING_P")
 end
 
 if not defined("BUILD_DIR")
-    readonly BUILD_DIR    = TARGET & PROFILING_P % directory for results
+    readonly BUILD_DIR    = TARGET & PROFILING_P & BUILD_DIR_C % directory for results
 end
 
 %------------------------------------------------------------------------------

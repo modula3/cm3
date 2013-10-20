@@ -365,6 +365,7 @@ def _GetAllTargets():
 #-----------------------------------------------------------------------------
 
 _CBackend = "c" in sys.argv
+_BuildDirC = ["", "c"][_CBackend]
 _PossibleCm3Flags = ["boot", "keep", "override", "commands", "verbose", "why"]
 _SkipGccFlags = ["nogcc", "skipgcc", "omitgcc"]
 _PossiblePylibFlags = ["noclean", "nocleangcc", "c"] + _SkipGccFlags + _PossibleCm3Flags
@@ -764,10 +765,11 @@ if _Program != "make-msi.py":
 
 # other commands
 
+    _BuildDir = ("%(Config)s%(_BuildDirC)s" % vars())
     if os.name == "nt":
-        RealClean = RealClean or "if exist %(Config)s rmdir /q/s %(Config)s"
+        RealClean = RealClean or "if exist %(_BuildDir)s rmdir /q/s %(_BuildDir)s"
     else:
-        RealClean = RealClean or "rm -rf %(Config)s"
+        RealClean = RealClean or "rm -rf %(_BuildDir)s"
 
     RealClean = (RealClean % vars())
 
