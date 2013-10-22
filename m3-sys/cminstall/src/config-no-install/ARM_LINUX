@@ -1,2 +1,2 @@
 readonly TARGET = "ARM_LINUX" % code generation target
-include("ARMEL_LINUX")
+include("ARM_LINUX.common")
