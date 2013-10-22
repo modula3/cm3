@@ -6,7 +6,6 @@ SYSTEM_ASM = "as" % Assembler
 % SYSTEM_CC = GNU_PLATFORM & "-" & SYSTEM_ASM
 
 m3back_m32 = "" % -m32 not allowed
-m3back_flags = " -march=armv6 -mfloat-abi=hard -mfpu=vfp "
 
 include("ARM.common")
 include("Linux.common")
