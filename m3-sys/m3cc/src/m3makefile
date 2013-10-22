@@ -84,11 +84,10 @@ readonly m3cc_config = {
   "SPARC32_SOLARIS" : "-enable-obsolete", % for Solaris 5.8
   "SPARC64_SOLARIS" : "-enable-obsolete", % for Solaris 5.8
   "LINUXLIBC6"   : "-with-gnu-as -with-gnu-ld",
-  "ARM_LINUX"    : "-with-gnu-as -with-gnu-ld -with-float=soft "
-                   & "-enable-target-optspace -enable-threads -enable-shared",
-  "ARMEL_LINUX"  : "-with-gnu-as -with-gnu-ld "
-                   & "-with-arch=armv6 -with-fpu=vfp -with-float=hard "
-                   & "-enable-target-optspace -enable-threads -enable-shared",
+  "ARM_LINUX"    : "-with-gnu-as -with-gnu-ld -with-arch=armv6 -with-fpu=vfp -with-float=hard ",
+                   % & "-enable-target-optspace -enable-threads -enable-shared",
+  "ARMEL_LINUX"  : "-with-gnu-as -with-gnu-ld -with-arch=armv6 -with-fpu=vfp -with-float=hard ",
+                   % & "-enable-target-optspace -enable-threads -enable-shared",
  
   %
   % AIX usually requires native as and ld -- cross builds are not possible.
