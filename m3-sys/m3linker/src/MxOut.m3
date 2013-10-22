@@ -38,7 +38,10 @@ PROCEDURE WriteUnits (units: Mx.UnitList;  output: Wr.T) =
 
     M3Buf.AttachDrain (s.buf, s.wr);
 
-    MxIO.PutTxt (s.buf,  Mx.LinkerMagic, Wr.EOL);
+    IF Mx.UnicodeWideChar 
+    THEN MxIO.PutTxt (s.buf,  Mx.LinkerMagicWCUni, Wr.EOL);
+    ELSE MxIO.PutTxt (s.buf,  Mx.LinkerMagicWC16, Wr.EOL);
+    END; 
     WHILE (units # NIL) DO
       WriteUnit (s, units.unit);
       units := units.next;
