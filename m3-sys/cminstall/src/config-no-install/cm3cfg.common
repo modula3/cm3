@@ -22,6 +22,32 @@ end
 
 %-------------------------------------------------------------------
 
+if USE_C_BACKEND_VIA_M3CGCAT
+M3_BACKEND_MODE = "ExternalObject"
+
+proc m3_backend(source, object, optimize, debug) is
+    ret_code = try_exec("@m3cgcat", "-in-binary:" & source, "-out-c:" & source & ".c")
+    if not equal(ret_code, 0)
+        return ret_code
+    end
+    return compile_c(source & ".c", object, [ ], FALSE, TRUE)
+end
+end
+
+%------------------------------------------------------------------------------
+
+if not defined ("M3_BACKEND_MODE")
+    M3_BACKEND_MODE = "3"
+    % -- defines how the frontend, backend, and assembler interact
+    %  "0"  -- don't call m3_backend, M3CG produces object code
+    %  "1"  -- don't call m3_backend, M3CG produces assembly code
+    %  "2"  -- call m3_backend, it produces object code
+    %  "3"  -- call m3_backend, it produces assembly code
+    %  "C"  -- use C backend, and then compile with compile_c()
+end
+
+%------------------------------------------------------------------------------
+
 if equal(M3_BACKEND_MODE, "IntegratedC")
         or equal(M3_BACKEND_MODE, "C")
         or USE_C_BACKEND_VIA_M3CGCAT
@@ -29,6 +55,8 @@ if equal(M3_BACKEND_MODE, "IntegratedC")
 else
     readonly BUILD_DIR_C = ""
 end
+
+%------------------------------------------------------------------------------
 
 if not defined("PROFILING_P")
     if M3_PROFILING
@@ -491,30 +519,6 @@ X11_WITH_SHARED_MEM = TRUE
 % Note, most of these options can be set from the command line. Otherwise,
 % they can be set "permanently" here in the config file or in as needed
 % in user's m3makefiles.
-
-if USE_C_BACKEND_VIA_M3CGCAT
-
-M3_BACKEND_MODE = "ExternalObject"
-
-proc m3_backend(source, object, optimize, debug) is
-    ret_code = try_exec("@m3cgcat", "-in-binary:" & source, "-out-c:" & source & ".c")
-    if not equal(ret_code, 0)
-        return ret_code
-    end
-    return compile_c(source & ".c", object, [ ], FALSE, TRUE)
-end
-
-end
-
-if not defined ("M3_BACKEND_MODE")
-    M3_BACKEND_MODE = "3"
-    % -- defines how the frontend, backend, and assembler interact
-    %  "0"  -- don't call m3_backend, M3CG produces object code
-    %  "1"  -- don't call m3_backend, M3CG produces assembly code
-    %  "2"  -- call m3_backend, it produces object code
-    %  "3"  -- call m3_backend, it produces assembly code
-    %  "C"  -- use C backend, and then compile with compile_c()
-end
 
 M3_FRONT_FLAGS = [ ]
 
