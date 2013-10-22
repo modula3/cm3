@@ -9,9 +9,9 @@ PossibleExecutables = [
     "/opt/studio/SOS12/SUNWspro/bin/cc",
     "/opt/studio/SOS11/SUNWspro/bin/cc",
     "/opt/SUNWspro/bin/cc",
-    "/opt/csw/gcc4/bin/gcc",
-    "/usr/sfw/bin/gcc",
-    "/opt/csw/gcc4/bin/gcc",
+    #"/opt/csw/gcc4/bin/gcc",
+    #"/usr/sfw/bin/gcc",
+    #"/opt/csw/gcc4/bin/gcc",
     ]
 
 for Executable in PossibleExecutables:
