@@ -1086,6 +1086,8 @@ def Boot():
     # pick the compiler
     
     c = "c" in sys.argv
+    
+    CCompilerOut = ""
 
     if alpha32vms:
         CCompiler = "cc"
@@ -1102,7 +1104,7 @@ def Boot():
         CCompiler = "/usr/bin/cc"
         CCompilerFlags = " -g -pthread "
     else:
-        # gcc platforms
+        # gcc and other platforms
         CCompiler = {
             "SOLgnu" : "/usr/sfw/bin/gcc",
             "AMD64_NT"      : "cl",
