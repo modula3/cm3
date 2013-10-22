@@ -80,7 +80,7 @@ vbtkit gui
 cmvbt gui
 jvideo gui
 videovbt gui
-m3-www/web webdev
+m3-www/web gui webdev
 m3-www/proxy webdev
 formsvbtpixmaps gui
 formsvbt gui
