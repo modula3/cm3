@@ -1,0 +1,5 @@
+import("libm3")
+import_lib("dl","/usr/lib")
+
+Module("DL")
+Library("m3dl")
