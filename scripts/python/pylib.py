@@ -1254,7 +1254,9 @@ def Boot():
 
     P = FilterPackages([ "m3cc", "import-libs", "m3core", "libm3", "sysutils",
           "m3middle", "m3quake", "m3objfile", "m3linker", "m3back",
-          "m3front", "cm3", "mklib" ])
+          "m3front", "cm3" ])
+    if nt:
+        P += [ "mklib" ]
 
     #DoPackage(["", "realclean"] + P) or sys.exit(1)
     DoPackage(["", "buildlocal"] + P) or sys.exit(1)
@@ -1288,8 +1290,10 @@ def Boot():
         Makefile.write(".SUFFIXES:" + NL
                        + ".SUFFIXES: .c .is .ms .s .o .obj .io .mo" + NL2)
 
-    main_packages = ["cm3", "mklib"]
-    
+    main_packages = ["cm3"]
+    if nt:
+        main_packages = ["cm3", "mklib"]
+
     Makefile.write("all: ")    
     for pkg in main_packages:
         Makefile.write(pkg + EXE + " ")
@@ -1387,7 +1391,9 @@ def Boot():
 
     for pkg in main_packages:
         Makefile.write(pkg + EXE + ":")
-        Makefile.write(" " + pkg + "_Main.m3." + obj)
+        main = pkg + "_Main.m3." + obj
+        if main in ObjectsExceptMain:
+            Makefile.write(" " + main)
         Makefile.write(" " + "$(OBJECTS)")
         Makefile.write(NL + "\t")
         Makefile.write("$(Link) " + LinkOut + "$@" + NL)
