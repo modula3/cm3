@@ -278,17 +278,6 @@ gimple_pop_condition (gimple_seq *pre_p)
     }
 }
 
-/* A stable comparison routine for use with splay trees and DECLs.  */
-
-static int
-splay_tree_compare_decl_uid (splay_tree_key xa, splay_tree_key xb)
-{
-  tree a = (tree) xa;
-  tree b = (tree) xb;
-
-  return DECL_UID (a) - DECL_UID (b);
-}
-
 /* Both gimplify the statement T and append it to *SEQ_P.  This function
    behaves exactly as gimplify_stmt, but you don't have to pass T as a
    reference.  */
@@ -297,26 +286,6 @@ void
 gimplify_and_add (tree t, gimple_seq *seq_p)
 {
   gimplify_stmt (&t, seq_p);
-}
-
-/* Gimplify statement T into sequence *SEQ_P, and return the first
-   tuple in the sequence of generated tuples for this statement.
-   Return NULL if gimplifying T produced no tuples.  */
-
-static gimple
-gimplify_and_return_first (tree t, gimple_seq *seq_p)
-{
-  gimple_stmt_iterator last = gsi_last (*seq_p);
-
-  gimplify_and_add (t, seq_p);
-
-  if (!gsi_end_p (last))
-    {
-      gsi_next (&last);
-      return gsi_stmt (last);
-    }
-  else
-    return gimple_seq_first_stmt (*seq_p);
 }
 
 /* Strip off a legitimate source ending from the input string NAME of
