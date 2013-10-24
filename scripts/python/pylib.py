@@ -1254,9 +1254,11 @@ def Boot():
 
     P = FilterPackages([ "m3cc", "import-libs", "m3core", "libm3", "sysutils",
           "m3middle", "m3quake", "m3objfile", "m3linker", "m3back",
-          "m3front", "cm3" ])
+          "m3front" ])
+    main_packages = ["cm3"]
     if nt:
-        P += [ "mklib" ]
+        main_packages += ["mklib"]
+    P += main_packages
 
     #DoPackage(["", "realclean"] + P) or sys.exit(1)
     DoPackage(["", "buildlocal"] + P) or sys.exit(1)
@@ -1289,10 +1291,6 @@ def Boot():
     if True: #not _CBackend:
         Makefile.write(".SUFFIXES:" + NL
                        + ".SUFFIXES: .c .is .ms .s .o .obj .io .mo" + NL2)
-
-    main_packages = ["cm3"]
-    if nt:
-        main_packages = ["cm3", "mklib"]
 
     Makefile.write("all: ")    
     for pkg in main_packages:
