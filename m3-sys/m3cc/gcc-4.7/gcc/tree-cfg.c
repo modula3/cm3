@@ -511,8 +511,7 @@ fold_cond_expr_cond (void)
 static void
 make_edges (void)
 {
-  basic_block bb;
-  struct omp_region *cur_region = NULL;
+  basic_block bb = { 0 };
 
   /* Create an edge from entry to the first block with executable
      statements in it.  */
