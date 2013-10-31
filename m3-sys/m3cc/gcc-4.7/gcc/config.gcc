@@ -242,16 +242,13 @@ case ${target} in
    arm*-*-*eabi*			\
  )
      ;;
-   alpha*-dec-osf5.1*			\
- | arm*-*-ecos-elf			\
+   arm*-*-ecos-elf			\
  | arm*-*-elf				\
  | arm*-*-freebsd*			\
  | arm*-*-linux*			\
  | arm*-*-rtems*			\
  | arm*-*-uclinux*			\
  | arm*-wince-pe*			\
- | mips-sgi-irix6.5			\
- | mips*-*-openbsd*			\
  | score-*				\
  )
     if test "x$enable_obsolete" != xyes; then
