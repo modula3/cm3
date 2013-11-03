@@ -862,15 +862,14 @@ ira_build_conflicts (void)
   ira_allocno_t a = { 0 };
   ira_allocno_iterator ai = { 0 };
   HARD_REG_SET temp_hard_reg_set = { 0 };
+  ira_object_t obj = { 0 };
+  ira_object_iterator oi = { 0 };
 
   if (ira_conflicts_p)
     {
       ira_conflicts_p = build_conflict_bit_table ();
       if (ira_conflicts_p)
 	{
-	  ira_object_t obj;
-	  ira_object_iterator oi;
-
 	  build_conflicts ();
 	  ira_traverse_loop_tree (true, ira_loop_tree_root, NULL, add_copies);
 	  /* We need finished conflict table for the subsequent call.  */
@@ -899,13 +898,14 @@ ira_build_conflicts (void)
     }
   FOR_EACH_ALLOCNO (a, ai)
     {
-      int i, n = ALLOCNO_NUM_OBJECTS (a);
+      int i;
+      int n = ALLOCNO_NUM_OBJECTS (a);
 
       for (i = 0; i < n; i++)
 	{
 	  ira_object_t obj = ALLOCNO_OBJECT (a, i);
 	  reg_attrs *attrs = REG_ATTRS (regno_reg_rtx [ALLOCNO_REGNO (a)]);
-	  tree decl;
+	  tree decl = { 0 };
 
 	  if ((! flag_caller_saves && ALLOCNO_CALLS_CROSSED_NUM (a) != 0)
 	      /* For debugging purposes don't put user defined variables in
