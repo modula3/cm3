@@ -507,7 +507,7 @@ add_insn_allocno_copies (rtx insn)
   rtx dup = { 0 };
   const char *str = { 0 };
   bool commut_p = { 0 };
-  bool ound_p[MAX_RECOG_OPERANDS];
+  bool bound_p[MAX_RECOG_OPERANDS];
   int i = { 0 };
   int j = { 0 };
   int n = { 0 };
