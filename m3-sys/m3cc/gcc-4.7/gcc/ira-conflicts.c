@@ -394,15 +394,16 @@ static bool
 process_regs_for_copy (rtx reg1, rtx reg2, bool constraint_p,
 		       rtx insn, int freq)
 {
-  int allocno_preferenced_hard_regno, cost, index, offset1, offset2;
-  bool only_regs_p;
-  ira_allocno_t a;
-  reg_class_t rclass, aclass;
-  enum machine_mode mode;
-  ira_copy_t cp;
+  int allocno_preferenced_hard_regno = { 0 };
+  int cost = { 0 };
+  int index = { 0 };
+  int offset1 = { 0 };
+  int offset2 = { 0 };
+  ira_allocno_t a = { 0 };
+  ira_copy_t cp = { 0 };
 
   gcc_assert (REG_SUBREG_P (reg1) && REG_SUBREG_P (reg2));
-  only_regs_p = REG_P (reg1) && REG_P (reg2);
+  bool only_regs_p = REG_P (reg1) && REG_P (reg2);
   reg1 = go_through_subreg (reg1, &offset1);
   reg2 = go_through_subreg (reg2, &offset2);
   /* Set up hard regno preferenced by allocno.  If allocno gets the
@@ -439,9 +440,9 @@ process_regs_for_copy (rtx reg1, rtx reg2, bool constraint_p,
 		  0, FIRST_PSEUDO_REGISTER - 1))
     /* Can not be tied.  */
     return false;
-  rclass = REGNO_REG_CLASS (allocno_preferenced_hard_regno);
-  mode = ALLOCNO_MODE (a);
-  aclass = ALLOCNO_CLASS (a);
+  reg_class_t rclass = REGNO_REG_CLASS (allocno_preferenced_hard_regno);
+  enum machine_mode mode = ALLOCNO_MODE (a);
+  reg_class_t aclass = ALLOCNO_CLASS (a);
   if (only_regs_p && insn != NULL_RTX
       && reg_class_size[rclass] <= ira_reg_class_max_nregs [rclass][mode])
     /* It is already taken into account in ira-costs.c.  */
@@ -480,12 +481,11 @@ static void
 process_reg_shuffles (rtx reg, int op_num, int freq, bool *bound_p)
 {
   int i;
-  rtx another_reg;
 
   gcc_assert (REG_SUBREG_P (reg));
   for (i = 0; i < recog_data.n_operands; i++)
     {
-      another_reg = recog_data.operand[i];
+      rtx another_reg = recog_data.operand[i];
 
       if (!REG_SUBREG_P (another_reg) || op_num == i
 	  || recog_data.operand_type[i] != OP_OUT
@@ -502,12 +502,17 @@ process_reg_shuffles (rtx reg, int op_num, int freq, bool *bound_p)
 static void
 add_insn_allocno_copies (rtx insn)
 {
-  rtx set, operand, dup;
-  const char *str;
-  bool commut_p, bound_p[MAX_RECOG_OPERANDS];
-  int i, j, n, freq;
+  rtx set = { 0 };
+  rtx operand = { 0 };
+  rtx dup = { 0 };
+  const char *str = { 0 };
+  bool commut_p = { 0 };
+  bool ound_p[MAX_RECOG_OPERANDS];
+  int i = { 0 };
+  int j = { 0 };
+  int n = { 0 };
 
-  freq = REG_FREQ_FROM_BB (BLOCK_FOR_INSN (insn));
+  int freq = REG_FREQ_FROM_BB (BLOCK_FOR_INSN (insn));
   if (freq == 0)
     freq = 1;
   if ((set = single_set (insn)) != NULL_RTX
@@ -570,10 +575,9 @@ add_insn_allocno_copies (rtx insn)
 static void
 add_copies (ira_loop_tree_node_t loop_tree_node)
 {
-  basic_block bb;
-  rtx insn;
+  rtx insn = { 0 };
 
-  bb = loop_tree_node->bb;
+  basic_block bb = loop_tree_node->bb;
   if (bb == NULL)
     return;
   FOR_BB_INSNS (bb, insn)
@@ -586,9 +590,12 @@ add_copies (ira_loop_tree_node_t loop_tree_node)
 static void
 propagate_copies (void)
 {
-  ira_copy_t cp;
-  ira_copy_iterator ci;
-  ira_allocno_t a1, a2, parent_a1, parent_a2;
+  ira_copy_t cp = { 0 };
+  ira_copy_iterator ci = { 0 };
+  ira_allocno_t a1 = { 0 };
+  ira_allocno_t a2 = { 0 };
+  ira_allocno_t parent_a1 = { 0 };
+  ira_allocno_t parent_a2 = { 0 };
 
   FOR_EACH_COPY (cp, ci)
     {
