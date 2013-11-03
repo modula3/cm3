@@ -97,18 +97,19 @@ record_object_conflict (ira_object_t obj1, ira_object_t obj2)
 static bool
 build_conflict_bit_table (void)
 {
-  int i;
-  unsigned int j;
-  enum reg_class aclass;
-  int object_set_words, allocated_words_num, conflict_bit_vec_words_num;
-  live_range_t r;
-  ira_allocno_t allocno;
-  ira_allocno_iterator ai;
-  sparseset objects_live;
-  ira_object_t obj;
-  ira_allocno_object_iterator aoi;
+  int i = { 0 };
+  unsigned int j = { 0 };
+  enum reg_class aclass = (enum reg_class)0;
+  int object_set_words = { 0 };
+  int conflict_bit_vec_words_num = { 0 };
+  live_range_t r = { 0 };
+  ira_allocno_t allocno = { 0 };
+  ira_allocno_iterator ai = { 0 };
+  sparseset objects_live = { 0 };
+  ira_object_t obj = { 0 };
+  ira_allocno_object_iterator aoi = { 0 };
 
-  allocated_words_num = 0;
+  int allocated_words_num = 0;
   FOR_EACH_ALLOCNO (allocno, ai)
     FOR_EACH_ALLOCNO_OBJECT (allocno, obj, aoi)
       {
@@ -215,8 +216,9 @@ allocnos_conflict_for_copy_p (ira_allocno_t a1, ira_allocno_t a2)
 static bool
 commutative_constraint_p (const char *str)
 {
-  int curr_alt, c;
-  bool ignore_p;
+  int curr_alt = { 0 };
+  int c = { 0 };
+  bool ignore_p = { 0 };
 
   for (ignore_p = false, curr_alt = 0;;)
     {
@@ -250,15 +252,17 @@ commutative_constraint_p (const char *str)
 static int
 get_dup_num (int op_num, bool use_commut_op_p)
 {
-  int curr_alt, c, original, dup;
-  bool ignore_p, commut_op_used_p;
-  const char *str;
-  rtx op;
-
   if (op_num < 0 || recog_data.n_alternatives == 0)
     return -1;
-  op = recog_data.operand[op_num];
-  commut_op_used_p = true;
+
+  int curr_alt = { 0 };
+  int c = { 0 };
+  int original = { 0 };
+  int dup = { 0 };
+  bool ignore_p = { 0 };
+
+  rtx op = recog_data.operand[op_num];
+  bool commut_op_used_p = true;
   if (use_commut_op_p)
     {
       if (commutative_constraint_p (recog_data.constraints[op_num]))
@@ -269,7 +273,7 @@ get_dup_num (int op_num, bool use_commut_op_p)
       else
 	commut_op_used_p = false;
     }
-  str = recog_data.constraints[op_num];
+  const char *str = recog_data.constraints[op_num];
   for (ignore_p = false, original = -1, curr_alt = 0;;)
     {
       c = *str;
@@ -364,13 +368,11 @@ get_dup_num (int op_num, bool use_commut_op_p)
 static rtx
 go_through_subreg (rtx x, int *offset)
 {
-  rtx reg;
-
   *offset = 0;
   if (REG_P (x))
     return x;
   ira_assert (GET_CODE (x) == SUBREG);
-  reg = SUBREG_REG (x);
+  rtx reg = SUBREG_REG (x);
   ira_assert (REG_P (reg));
   if (REGNO (reg) < FIRST_PSEUDO_REGISTER)
     *offset = subreg_regno_offset (REGNO (reg), GET_MODE (reg),
