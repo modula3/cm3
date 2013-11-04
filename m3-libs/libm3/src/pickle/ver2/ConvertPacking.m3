@@ -15,6 +15,8 @@ IMPORT RTTipe, RTPacking, PklAction, PklActionSeq, PickleStubs,
        IO, Fmt, PackingTbl, PackingTypeCode;
 FROM Word IMPORT And, Or, LeftShift, RightShift; 
 
+CONST WordBitsize = BITSIZE(Word.T); 
+
 VAR packingCache: PackingTbl.T := NEW(PackingTbl.Default).init();
 
 REVEAL ReadVisitor = RVPublic BRANDED "Packing Read Visitor 1.0" OBJECT END;
@@ -56,12 +58,18 @@ REVEAL T = Public BRANDED "ConvertPacking 1.0" OBJECT
       addCopyWC21to16(toBitCt: INTEGER) := AddCopyWC21to16;
       (* ^PRE: ToBitCt MOD 16 = 0 *) 
 
-      addPackedSwapFirstField(fieldBitSize: INTEGER) :=
-          AddPackedSwapFirstField;
-      addPackedSwapNextField(fieldBitSize: INTEGER; offset: INTEGER) :=
-          AddPackedSwapNextField;
-      addPackedSwapArray(bitCt, numElts, fieldBitSize, packingWordBitSize:
-          INTEGER) := AddPackedSwapArray; 
+      addPackedFirstField
+        (fieldBitSize: INTEGER; 
+         shortenWidechar: BOOLEAN; paKind:PklAction.PAKind) 
+        := AddPackedFirstField;
+      addPackedNextField
+        (fieldBitSize: INTEGER; offset: INTEGER; 
+          shortenWidechar: BOOLEAN; paKind:PklAction.PAKind) 
+        := AddPackedNextField;
+      addPackedArray
+        (bitCt, numElts, fieldBitSize, packingWordBitSize: INTEGER;
+         shortenWidechar: BOOLEAN; paKind:PklAction.PAKind) 
+        := AddPackedArray; 
 
       addSkipFrom(bitCt: INTEGER) := AddSkipFrom;
       addSkipTo(bitCt: INTEGER) := AddSkipTo;
@@ -106,64 +114,153 @@ CONST SignExt32 = ARRAY [0..1] OF Swap.Int32 {0, -1};
 TYPE
   UInt8 = BITS 8 FOR [0 .. 16_FF];
 
-(* Based on Word.Extract, but extracts from a word of size bytes with
-   the opposite endian to this machine.  Also, treats the starting bit number i
-   as the lowest numbered bit in the endian-bit-ordering of the from machine.
-   Thus, i is the msb# if written on a big-endian machine, otherwise, lsb#. 
+(* Similar to Word.Extract, extract a field of n bits, starting with bit
+   number i, and return it right-justified in a word.  Differences are:
+   1) Treat the bytes of x as if they were in little-endian order, i.e., byte
+      0 is the least significant, regardless of the endianness of the 
+      executing machine. 
+   2) Extract only from the size least-significant bytes of x, which implies
+      a checked runtime error if n+i >= 8*size.
+   Like Word.Extract, interpret i as the number of the least-significant bit,
+   in little-endian (i.e., right-to-left) bit ordering, within the size bytes.
+*) 
 
-   Take n bits from x, with bit i as the lowest bit, and return them
-   as the least significant n bits of a word whose other bits are 0. A checked
-   runtime error if n + i > Word.Size.  Treat bytes of x numbered >= size, in 
+PROCEDURE ExtractSwapLE (x: Word.T; i, n: CARDINAL; size: INTEGER): Word.T =
+
+  VAR fromBytes := LOOPHOLE(x, ARRAY [0..BYTESIZE(Word.T)-1] OF UInt8);
+      to: Word.T := 0;
+      resBitNo: INTEGER := 0; (* In little-endian numbering. *) 
+      fromByteNo: INTEGER; (* In little-endian numbering. *) 
+      loBitNoInByte: CARDINAL; (* Low numbered, in little-endian numbering. *) 
+      value: Word.T; 
+
+  BEGIN
+    IF n = 0 THEN RETURN 0; END; 
+    loBitNoInByte := i MOD 8;
+    fromByteNo := i DIV 8;
+    resBitNo := 0; 
+    (* Handle byte fragments of field least to most significant. *) 
+    LOOP
+      <* ASSERT fromByteNo < size *> 
+      WITH len = MIN(n, 8 - loBitNoInByte) DO
+        (* Word.Extract and Word.Insert always use LE bit numbering. *) 
+        value := Word.Extract(fromBytes[fromByteNo], loBitNoInByte, len); 
+        to := Word.Insert (to, value, resBitNo, len);
+        DEC(n, len);
+        IF n = 0 THEN RETURN to; END;
+        INC(resBitNo, len);
+        loBitNoInByte := 0;
+        INC(fromByteNo); 
+      END(*WITH*);
+    END(*LOOP*);
+  END ExtractSwapLE;
+
+(* Similar to Word.Extract, extract a field of n bits, starting with bit
+   number i, and return it right-justified in a word.  Differences are:
+   1) Treat the bytes of x as if they were in big-endian order, i.e., byte
+      0 is the most significant, regardless of the endianness of the 
+      executing machine. 
+   2) Extract only from the size mostt-significant bytes of x, which implies
+      a checked runtime error if n+i >= 8*size.
+   Unlike Word.Extract, interpret i as the number of the most-significant bit,
+   in big-endian (i.e., left-to-right) bit ordering, within the size bytes.
+*) 
+
+PROCEDURE ExtractSwapBE (x: Word.T; i, n: CARDINAL; size: INTEGER): Word.T =
+
+  VAR fromBytes := LOOPHOLE(x, ARRAY [0..BYTESIZE(Word.T)-1] OF UInt8);
+      to: Word.T := 0;
+      resBitNo: INTEGER := 0; (* Low numbered, in big-endian numbering. *) 
+      fromByteNo: INTEGER; (* In little-endian numbering. *) 
+      loBitNoInByte: CARDINAL; (* Low numbered, in big-endian numbering. *) 
+      value: Word.T; 
+
+  BEGIN
+    IF n = 0 THEN RETURN 0; END; 
+    loBitNoInByte := i MOD 8;
+    fromByteNo := i DIV 8; 
+    resBitNo := n;
+    (* Handle byte fragments of field most to least significant. *) 
+    LOOP
+      <* ASSERT fromByteNo < size *> 
+      WITH len = MIN(n, 8 - loBitNoInByte) DO
+        DEC(resBitNo, len);
+        (* Word.Extract and Word.Insert always use LE bit numbering. *) 
+        value := Word.Extract (fromBytes[fromByteNo], 8-loBitNoInByte-len, len);
+        to := Word.Insert (to, value, resBitNo, len);
+        DEC(n, len);
+        IF n = 0 THEN RETURN to; END;
+        loBitNoInByte := 0;
+        INC(fromByteNo); 
+      END(*WITH*);
+    END(*LOOP*);
+  END ExtractSwapBE;
+
+(* Based on Word.Extract, but extracts from the size lowest numbered bytes of x
+   (as numbered on the from-endian sending machine), which has the 
+   opposite endian to this machine.  Also, treats the starting bit number i
+   as the lowest numbered bit in the (opposite) endian-bit-ordering of the 
+   from machine.  Thus, i is the msb# if written on a big-endian machine, 
+   otherwise, it's the lsb#. 
+
+   Take n bits from x, with bit i as the lowest numbered bit, and return them
+   as the least significant n bits of a Word.T whose other bits are 0. A checked
+   runtime error if n + i > WordBitsize.  Treat bytes of x numbered >= size, in 
    executing-endian numbering as containing zeros. *) 
 PROCEDURE ExtractSwap (self: T; x: Word.T; i, n: CARDINAL; 
                        size: INTEGER): Word.T =
-  VAR xb := LOOPHOLE(x, ARRAY [0..BYTESIZE(Word.T)-1] OF UInt8);
+
+  VAR fromBytes := LOOPHOLE(x, ARRAY [0..BYTESIZE(Word.T)-1] OF UInt8);
       to: Word.T := 0;
-      bit: INTEGER := 0; (* Bit# in "to", in from-endian. *) 
+      bit: INTEGER := 0; (* Bit# within "to", in from-endian. *) 
       loBitNoInByte: CARDINAL;
+
   BEGIN
-    (* March through the bytes from the input word backward, since
-       that gives us the bytes in forward order from the other
-       endian. Start with the byte containing the first part of the
-       field to be extracted. *)
-(*
-    WITH last = size - 1 - (i DIV 8) DO
+    IF n > 0 THEN 
       loBitNoInByte := i MOD 8;
+      IF self.from.little_endian THEN
+        FOR b := i DIV 8 TO size-1 DO
+(* TODO: Assuming valid i and n, this FOR loop can just be a LOOP. *) 
+          (* If we want some data from this *)
+          WITH len = MIN(n, 8 - loBitNoInByte) DO
+            (* Get the appropriate part of the byte *)
 
-      FOR b := last TO FIRST(xb) BY -1 DO
-*)
-    WITH first = i DIV 8 DO
-      i := i MOD 8;
+              to := Word.Insert
+                      (to, Word.Extract(fromBytes[b], loBitNoInByte, len), bit, len);
+              INC(bit, len);
+            (* set loBitNoInByte to 0 after the first pass. *)
+            loBitNoInByte := 0;
 
-      IF NOT self.from.little_endian THEN
-        bit := n;
-      END;
-
-      FOR b := first TO size-1 DO
-        (* If we want some data from this *)
-        WITH len = MIN(n, 8 - loBitNoInByte) DO
-          (* Get the appropriate part of the byte *)
-          IF self.from.little_endian THEN
-            to := Word.Insert
-                    (to, Word.Extract(xb[b], loBitNoInByte, len), bit, len);
-            INC(bit, len);
-          ELSE
-            DEC(bit, len);
-            to 
-              := Word.Insert
-                  (to, Word.Extract(xb[b], 8-loBitNoInByte-len, len), bit, len);
-          END;
-          (* set loBitNoInByte to 0 after the first pass. *)
-          loBitNoInByte := 0;
-
-          (* keep track of how much we have left to get *)
-          DEC(n, len);
-          IF n = 0 THEN
-            RETURN to;
+            (* keep track of how much we have left to get *)
+            DEC(n, len);
+            IF n = 0 THEN
+              RETURN to;
+            END;
           END;
         END;
-      END;
-    END;
+      ELSE (* From machine was big-endian. *) 
+        bit := n;
+        FOR b := i DIV 8 TO size-1 DO
+(* TODO: Assuming valid i and n, this FOR loop can just be a LOOP. *) 
+          (* If we want some data from this *)
+          WITH len = MIN(n, 8 - loBitNoInByte) DO
+            (* Get the appropriate part of the byte *)
+              DEC(bit, len);
+              to 
+                := Word.Insert
+                    (to, Word.Extract(fromBytes[b], 8-loBitNoInByte-len, len), bit, len);
+            (* set loBitNoInByte to 0 after the first pass. *)
+            loBitNoInByte := 0;
+
+            (* keep track of how much we have left to get *)
+            DEC(n, len);
+            IF n = 0 THEN
+              RETURN to;
+            END;
+          END;
+        END;
+      END; 
+    END; 
     RETURN to;
   END ExtractSwap;
 
@@ -198,15 +295,16 @@ VAR U16RecVar : U16Rec;
 <*UNUSED*>
 VAR CheckU16 : [ 0 .. 0 ] := ADR(U16RecVar) - ADR(U16RecVar.v);
 
-TYPE U16OnCharArr = ARRAY [0..1] OF CHAR; 
+TYPE CharArrOverU16 = ARRAY [0..1] OF CHAR;
+TYPE CharArrOverWord = ARRAY [0..BYTESIZE(Word.T)-1] OF CHAR;  
 
 TYPE Int32onU16 = RECORD a, b: Swap.UInt16 END; 
 
 PROCEDURE IsWidechar (Type: RTTipe.T): BOOLEAN =
   BEGIN 
     IF Type = NIL THEN RETURN FALSE; END; 
-    IF Type.kind = RTTipe.Kind.Enum 
-    THEN 
+    CASE Type.kind 
+    OF RTTipe.Kind.Enum => 
       WITH WEnum = NARROW(Type, RTTipe.Enum) DO 
         RETURN WEnum.n_elts = 16_10000 OR WEnum.n_elts = 16_110000 
 (* FIXME: It would be quite difficult for a programmer to define an enumeration
@@ -218,6 +316,10 @@ PROCEDURE IsWidechar (Type: RTTipe.T): BOOLEAN =
          appear to have sufficient information currently. *) 
 (* Widechar Tipe. *) 
       END;
+    | RTTipe.Kind.Packed =>
+      WITH WPacked = NARROW(Type, RTTipe.Packed) DO 
+        RETURN IsWidechar (WPacked.base); 
+      END; 
     ELSE RETURN FALSE; 
     END; 
   END IsWidechar; 
@@ -249,6 +351,7 @@ PROCEDURE Convert
      RAISES {Error, Rd.EndOfFile, Rd.Failure, Thread.Alerted} =
   VAR t: ARRAY [0..7] OF CHAR;
       insnRepCt: INTEGER := 1; (* Repeat each instruction this many times. *) 
+      extract: Word.T;
 
   BEGIN
     IF self.prog.size() = 2 THEN
@@ -267,73 +370,281 @@ PROCEDURE Convert
           | PklAction.PAKind.Copy => 
             ReadData(v, dest, insnUnitCt);
             INC(dest, insnUnitCt);
-          | PklAction.PAKind.SwapPacked => 
-            WITH nelem = NARROW(elem, PklAction.SwapPacked) DO
-              FOR i := 1 TO insnUnitCt DO 
+
+          | PklAction.PAKind.CopyPackedLE => 
+            (* Copy the packed fields of a contiguous sequence of fields, with 
+               possibly a trailing pad field, that begins and ends on byte 
+               boundaries.  Possibly narrow WIDECHAR fields. *)
+            (* Was written and reading on little-endian. *) 
+            WITH nelem = NARROW(elem, PklAction.Packed) DO
+
+              VAR from: Word.T := 0;
+                  to: Word.T := 0;
+                  lsBitNoLE: INTEGER := 0; (* lsb# of field, little-endian. *)
+                  fieldBitCt: INTEGER; 
+                  fromBytesPtr 
+                    := LOOPHOLE(ADR(from), UNTRACED REF CharArrOverWord);
+              BEGIN
+                FOR i := 1 TO insnUnitCt DO 
                   (* insnUnitCt chunks of nelem.size bytes each *)
-                VAR from: Word.T := 0;
-                    to: Word.T := 0;
-                    bit: INTEGER := 0; 
-                    (* ^lo numbered bit in bit packing numbering. *) 
-                    wb := LOOPHOLE(ADR(from), UNTRACED REF 
-                                   ARRAY [0..BYTESIZE(Word.T)-1] OF CHAR);
-                BEGIN
-                  v.readData(SUBARRAY(wb^, 0, nelem.size));
-(* CHECK: Won't this fail if reading on a big-endian machine? *) 
-                  
-                  (** IO.Put("Extracting from: " &
-                    Fmt.Pad(Fmt.Unsigned(from, 2), nelem.size * 8, '0') & "\n"); **)
+                  v.readData(SUBARRAY(fromBytesPtr^, 0, nelem.size));
 
-                  IF self.from.little_endian THEN
-                    FOR j := FIRST(nelem.field^) TO LAST(nelem.field^) DO
-                      WITH extract = self.extractSwap(from, bit, 
-                                                      nelem.field[j], 
-                                                      nelem.size) DO
-                        (* ^extractSwap uses from-endian bit numbering = LE. *) 
-                        (** IO.Put(" Extracted field: " &
-                          Fmt.Pad(Fmt.Unsigned(extract, 2),
-                                  nelem.field[j], '0') & "\n"); **)
+                  (** IO.Put
+                        ( "CopyPacked, LE, extracting from: 2_" 
+                           & Fmt.Pad(Fmt.Unsigned(from, 2), nelem.size*8, '0')
+                           & "\n"); **)
 
-                        to := Word.Insert(to, extract,
-                                          Word.Size-bit-nelem.field[j], 
-                                          nelem.field[j]);
-                        (* ^Word.Insert always uses LE bit numbering, which
-                           we converted "bit" to. *) 
 
-                        (** IO.Put(" Into field: " &
-                          Fmt.Pad(Fmt.Unsigned(to, 2), Word.Size, '0') & "\n"); **)
+                  lsBitNoLE := 0; 
+                  FOR j := FIRST(nelem.field^) TO LAST(nelem.field^) DO
+                    fieldBitCt := nelem.field^[j]; 
+                    extract := Word.Extract (from, lsBitNoLE, fieldBitCt); 
 
-                        INC(bit, nelem.field[j]);
-                      END;
-                    END;
-                  ELSE (* The from-system was big-endian. *) 
-                    FOR j := FIRST(nelem.field^) TO LAST(nelem.field^) DO
-                      WITH extract = self.extractSwap(from, bit, 
-                                                      nelem.field[j], 
-                                                      nelem.size) DO
-                        (* ^extractSwap uses from-endian bit numbering = BE. *) 
-                        (** IO.Put(" Extracted field: " &
-                          Fmt.Pad(Fmt.Unsigned(extract, 2),
-                                  nelem.field[j], '0') & "\n"); **)
+                    (** IO.Put
+                          ( " Extracted field: 2_" 
+                            & Fmt.Pad
+                                (Fmt.Unsigned(extract, 2), fieldBitCt, '0') 
+                            & "\n"); **)
 
-                        to := Word.Insert(to, extract,
-                                          bit, nelem.field[j]);
-                        (* ^Word.Insert always uses LE bit numbering. *) 
+                    IF j IN nelem.widecharFieldSet THEN
+                      IF extract > 16_FFFF THEN 
+                         extract := PickleStubs . ReplacementWt  
+                     (** IO.Put 
+                           ( "WIDECHAR narrowed to: 2_" 
+                            & Fmt.Pad
+                                (Fmt.Unsigned(extract, 2), fieldBitCt, '0') 
+                            & "\n"); **)
+                      END; 
+                    END; 
 
-                        (** IO.Put(" Into field: " &
-                          Fmt.Pad(Fmt.Unsigned(to, 2), nelem.size * 8, '0') & "\n"); **)
+                    to := Word.Insert (to, extract, lsBitNoLE, fieldBitCt);
 
-                        INC(bit, nelem.field[j]);
-                      END;
-                    END;
-                  END;
-                  (* Copy the bytes *)
+                    (** IO.Put
+                          ( " Into result word: 2_" 
+                            & Fmt.Pad(Fmt.Unsigned(to, 2), nelem.size*8, '0') 
+                            & "\n"); **)
+
+                    INC(lsBitNoLE, fieldBitCt);
+                  END (*FOR fields.*) ;
+                  (* Copy the bytes to destination. *)
                   SUBARRAY(LOOPHOLE(dest, BufPtr)^, 0, nelem.size) :=
                     SUBARRAY(LOOPHOLE(ADR(to), BufPtr)^, 0, nelem.size);
-                END;
-                INC(dest, nelem.size);
-              END;
-            END;
+                  INC(dest, nelem.size);
+                END(*FOR*);
+              END (*Block*);
+            END (*WITH*);
+
+          | PklAction.PAKind.CopyPackedBE => 
+            (* Copy the packed fields of a contiguous sequence of fields, with 
+               possibly a trailing pad field, that begins and ends on byte 
+               boundaries.  Possible narrow WIDECHAR fields. *)
+            (* Was written and reading on big-endian. *) 
+            WITH nelem = NARROW(elem, PklAction.Packed) DO
+
+              VAR from: Word.T := 0;
+                  to: Word.T := 0;
+                  msBitNoBE: INTEGER := 0; (* msb# of field, big-endian. *) 
+                  lsBitNoLE: INTEGER := 0; (* lsb# of field, little-endian. *)
+                  fieldBitCt: INTEGER; 
+                  fromBytesPtr 
+                    := LOOPHOLE(ADR(from), UNTRACED REF CharArrOverWord);
+              BEGIN
+                FOR i := 1 TO insnUnitCt DO 
+                  (* insnUnitCt chunks of nelem.size bytes each *)
+                  v.readData(SUBARRAY(fromBytesPtr^, 0, nelem.size));
+
+                  (** IO.Put
+                        ( "CopyPacked, BE, extracting from: 2_" 
+                          & Fmt.Pad
+                              (Fmt.Unsigned
+                                 (Word.Rightshift
+                                    (from, WordBitsize-nelem.size*8), 
+                               2), 
+                               nelem.size*8, '0') 
+                          & "\n"); **)
+
+                  msBitNoBE := 0; 
+                  FOR j := FIRST(nelem.field^) TO LAST(nelem.field^) DO
+                    fieldBitCt := nelem.field^[j]; 
+                    lsBitNoLE := WordBitsize-msBitNoBE-fieldBitCt;
+                    extract := Word.Extract (from, lsBitNoLE, fieldBitCt); 
+
+                    (** IO.Put
+                         (" Extracted field: 2_" 
+                          & Fmt.Pad(Fmt.Unsigned(extract, 2), fieldBitCt, '0')
+                          & "\n"); **)
+
+                    IF j IN nelem.widecharFieldSet THEN
+                      IF extract > 16_FFFF THEN 
+                         extract := PickleStubs . ReplacementWt  
+                     (** IO.Put 
+                           ( "WIDECHAR narrowed to: 2_" 
+                            & Fmt.Pad
+                                (Fmt.Unsigned(extract, 2), fieldBitCt, '0') 
+                            & "\n"); **)
+                      END; 
+                    END; 
+                    to := Word.Insert (to, extract, lsBitNoLE, fieldBitCt);
+
+                    (** IO.Put
+                          ( " Into result word: 2_" &
+                            & Fmt.Pad(Fmt.Unsigned(to, 2), nelem.size*8, '0')
+                            & "\n"); **)
+
+                    INC(msBitNoBE, fieldBitCt);
+                  END (*FOR fields.*);
+                  (* Copy the bytes to destination. *)
+                  SUBARRAY(LOOPHOLE(dest, BufPtr)^, 0, nelem.size) :=
+                    SUBARRAY(LOOPHOLE(ADR(to), BufPtr)^, 0, nelem.size);
+                  INC(dest, nelem.size);
+                END(*FOR*);
+              END(*Block*);
+            END (*WITH*);
+
+          | PklAction.PAKind.SwapPackedLEtoBE => 
+            (* Copy the packed fields of a contiguous sequence of fields, with 
+               possibly a trailing pad field, that begins and ends on byte 
+               boundaries.  Possible narrow WIDECHAR fields. *)
+            (* Was written on little-endian; executing on big-endian. *) 
+            WITH nelem = NARROW(elem, PklAction.Packed) DO
+
+              VAR from: Word.T := 0;
+                  to: Word.T := 0;
+                  bitNo: INTEGER := 0; (* of packed field. *) 
+                  fieldBitCt: INTEGER; 
+                  fromBytesPtr 
+                    := LOOPHOLE(ADR(from), UNTRACED REF CharArrOverWord);
+              BEGIN
+                FOR i := 1 TO insnUnitCt DO 
+                  (* insnUnitCt chunks of nelem.size bytes each *)
+                  v.readData(SUBARRAY(fromBytesPtr^, 0, nelem.size));
+
+                  (** IO.Put
+                        ( "SwapPacked, from LE, extracting from: 2_" 
+                           & Fmt.Pad
+                               (Fmt.Unsigned
+                                  (Word.Rightshift
+                                     (from, WordBitsize-nelem.size*8), 
+                                2), 
+                                nelem.size*8, '0')
+                           & "\n"); **)
+
+                  bitNo := 0; 
+                  FOR j := FIRST(nelem.field^) TO LAST(nelem.field^) DO
+                    fieldBitCt := nelem.field^[j]; 
+                    extract 
+                      := ExtractSwapLE (from, bitNo, fieldBitCt, nelem.size); 
+                         (* ^bitNo is LE lsb, on writing system and to
+                              ExtractSwapLE. *) 
+
+                    (** IO.Put
+                          ( " Extracted field: 2_" 
+                            & Fmt.Pad
+                                (Fmt.Unsigned(extract, 2), fieldBitCt, '0') 
+                            & "\n"); **)
+
+                    IF j IN nelem.widecharFieldSet THEN
+                      IF extract > 16_FFFF THEN 
+                         extract := PickleStubs . ReplacementWt  
+                     (** IO.Put 
+                           ( "WIDECHAR narrowed to: 2_" 
+                            & Fmt.Pad
+                                (Fmt.Unsigned(extract, 2), fieldBitCt, '0') 
+                            & "\n"); **)
+                      END; 
+                    END; 
+
+                    to := Word.Insert 
+                            (to, extract, WordBitsize-bitNo-fieldBitCt, 
+                            (* bitNo means BE, msb on the to- system, but 
+                               Insert takes a LE, lsb, so we convert it. *) 
+                             fieldBitCt);
+
+                    (** IO.Put
+                          ( " Into result word: 2_" 
+                            & Fmt.Pad
+                                (Fmt.Unsigned
+                                   (Word.Rightshift
+                                      (to, WordBitsize-nelem.size*8), 
+                                 2), 
+                                 nelem.size*8, '0')
+                            & "\n"); **)
+
+                    INC(bitNo, fieldBitCt);
+                  END (*FOR fields.*) ;
+                  (* Copy the bytes to destination. *)
+                  SUBARRAY(LOOPHOLE(dest, BufPtr)^, 0, nelem.size) :=
+                    SUBARRAY(LOOPHOLE(ADR(to), BufPtr)^, 0, nelem.size);
+                  INC(dest, nelem.size);
+                END(*FOR*);
+              END (*Block*);
+            END (*WITH*);
+
+          | PklAction.PAKind.SwapPackedBEtoLE => 
+            (* Copy the packed fields of a contiguous sequence of fields, with 
+               possibly a trailing pad field, that begins and ends on byte 
+               boundaries.  Possibly narrow WIDECHAR fields. *)
+            (* Was written on big-endian; executing on little-endian. *) 
+            WITH nelem = NARROW(elem, PklAction.Packed) DO
+
+              VAR from: Word.T := 0;
+                  to: Word.T := 0;
+                  bitNo: INTEGER := 0; (* of packed field. *)  
+                  fieldBitCt: INTEGER; 
+                  fromBytesPtr 
+                    := LOOPHOLE(ADR(from), UNTRACED REF CharArrOverWord);
+              BEGIN
+                FOR i := 1 TO insnUnitCt DO 
+                  (* insnUnitCt chunks of nelem.size bytes each *)
+                  v.readData(SUBARRAY(fromBytesPtr^, 0, nelem.size));
+
+                  (** IO.Put
+                        ( "SwapPacked, from BE, extracting from: 2_" 
+                          & Fmt.Pad
+                              (Fmt.Unsigned (from, 2), nelem.size*8, '0') 
+                          & "\n"); **)
+
+                  bitNo := 0; 
+                  FOR j := FIRST(nelem.field^) TO LAST(nelem.field^) DO
+                    fieldBitCt := nelem.field^[j]; 
+                    extract 
+                      := ExtractSwapBE ( from, bitNo, fieldBitCt, nelem.size);
+                         (* ^bitNo is BE msb, on writing system and to
+                              ExtractSwapBE. *) 
+
+                    (** IO.Put(" Extracted field: 2_" 
+                               & Fmt.Pad(Fmt.Unsigned(extract, 2),
+                               fieldBitCt, '0') & "\n"); **)
+
+                    IF j IN nelem.widecharFieldSet THEN
+                      IF extract > 16_FFFF THEN 
+                         extract := PickleStubs . ReplacementWt  
+                     (** IO.Put 
+                           ( "WIDECHAR narrowed to: 2_" 
+                            & Fmt.Pad
+                                (Fmt.Unsigned(extract, 2), fieldBitCt, '0') 
+                            & "\n"); **)
+                      END; 
+                    END; 
+                    to := Word.Insert (to, extract, bitNo, fieldBitCt);
+                          (* bitNo means LE, lsb on this system, and as
+                             taken by Insert. *) 
+
+                    (** IO.Put
+                          ( " Into result word: 2_" &
+                            & Fmt.Pad(Fmt.Unsigned(to, 2), nelem.size*8, '0')
+                            & "\n"); **)
+
+                    INC(bitNo, fieldBitCt);
+                  END (*FOR fields.*);
+                  (* Copy the bytes to destination. *)
+                  SUBARRAY(LOOPHOLE(dest, BufPtr)^, 0, nelem.size) :=
+                    SUBARRAY(LOOPHOLE(ADR(to), BufPtr)^, 0, nelem.size);
+                  INC(dest, nelem.size);
+                END(*FOR*);
+              END(*Block*);
+            END (*WITH*);
+
           | PklAction.PAKind.SkipFrom =>
             v.skipData(insnUnitCt);
           | PklAction.PAKind.SkipTo =>
@@ -619,7 +930,7 @@ PROCEDURE Write
               VAR writer := v.getWriter(); 
               BEGIN 
                 IF writer.write16BitWidechar THEN 
-                  WITH u16arr = LOOPHOLE(outValR.v, U16OnCharArr) DO 
+                  WITH u16arr = LOOPHOLE(outValR.v, CharArrOverU16) DO 
                     FOR i := 1 TO insnUnitCt (*32-bit words*) DO
                       WITH uint32p = LOOPHOLE(src, UNTRACED REF UInt32) DO
                         IF Word.GT(uint32p^, 16_FFFF) THEN
@@ -654,8 +965,16 @@ PROCEDURE Write
             INC(src, insnUnitCt*2); 
 
           | PklAction.PAKind.Done =>
-          | PklAction.PAKind.SwapPacked => 
-            RAISE Error("PklAction.PAKind.SwapPacked called during write?");
+          | PklAction.PAKind.SwapPackedLEtoBE => 
+            RAISE 
+              Error("PklAction.PAKind.SwapPackedLEtoBE called during write?");
+          | PklAction.PAKind.SwapPackedBEtoLE => 
+            RAISE 
+              Error("PklAction.PAKind.SwapPackedBEtoLE called during write?");
+          | PklAction.PAKind.CopyPackedLE => 
+            RAISE Error("PklAction.PAKind.CopyPackedLE called during write?");
+          | PklAction.PAKind.CopyPackedBE => 
+            RAISE Error("PklAction.PAKind.CopyPackedBE called during write?");
           | PklAction.PAKind.SkipFrom =>
             RAISE Error("PklAction.PAKind.SkipFrom called during write?");
           | PklAction.PAKind.SkipTo =>
@@ -697,12 +1016,15 @@ PROCEDURE AppendProg(self: T; other: T) RAISES {Error} =
           nelem := NEW(PklAction.T, kind := elem.kind, unitCt := elem.unitCt);
           INC(self.fromOffset, elem.unitCt*8);
           INC(self.toOffset, elem.unitCt*8);
-        | PklAction.PAKind.SwapPacked => 
-          WITH t = NARROW(elem, PklAction.SwapPacked),
-               nt = NEW(PklAction.SwapPacked, 
+        | PklAction.PAKind.SwapPackedLEtoBE, PklAction.PAKind.SwapPackedBEtoLE, 
+          PklAction.PAKind.CopyPackedLE, PklAction.PAKind.CopyPackedBE=> 
+          WITH t = NARROW(elem, PklAction.Packed),
+               nt = NEW(PklAction.Packed, 
                         kind := t.kind, unitCt := t.unitCt, size := t.size,
                         field := NEW(REF ARRAY OF CARDINAL, 
-                                     NUMBER(t.field^))) DO
+                                     NUMBER(t.field^)),
+                        widecharFieldSet:= t.widecharFieldSet
+                       ) DO
             FOR i := FIRST(nt.field^) TO LAST(nt.field^) DO
               nt.field[i] := t.field[i];
             END;
@@ -786,6 +1108,24 @@ PROCEDURE GetHiKind(prog: PklActionSeq.T; kind: PklAction.PAKind;
     RETURN FALSE;
   END GetHiKind;
 
+PROCEDURE PackedPAKind (fromLE: BOOLEAN; DoSwap: BOOLEAN): PklAction.PAKind = 
+
+  VAR Result: PklAction.PAKind; 
+  BEGIN 
+    IF DoSwap THEN
+      IF fromLE
+      THEN Result := PklAction.PAKind.SwapPackedLEtoBE;
+      ELSE Result := PklAction.PAKind.SwapPackedBEtoLE;
+      END; 
+    ELSE 
+      IF fromLE
+      THEN Result := PklAction.PAKind.CopyPackedLE;
+      ELSE Result := PklAction.PAKind.CopyPackedBE;
+      END; 
+    END; 
+    RETURN Result; 
+  END PackedPAKind; 
+
 PROCEDURE AddCopy(self: T; bitCt: INTEGER) =
   VAR elem: PklAction.T;
   BEGIN
@@ -799,31 +1139,42 @@ PROCEDURE AddCopy(self: T; bitCt: INTEGER) =
                         unitCt := bitCt DIV 8));
   END AddCopy;
 
-PROCEDURE AddPackedSwapFirstField(self: T; fieldBitSize: INTEGER) =
+PROCEDURE AddPackedFirstField(self: T; fieldBitSize: INTEGER; 
+                                  shortenWidechar: BOOLEAN;
+                                  paKind:PklAction.PAKind) =
+  (* We are starting on a byte boundary, i.e.: 
+     PRE: self.fromOffset MOD 8 = 0.  
+     PRE: self.toOffset MOD 8 = 0. *) 
   BEGIN
     (* We'll swap within a unit of the minimum number of whole bytes needed
        to hold the field. *)
-    WITH insnUnitCt = RoundUp(fieldBitSize, 8) DO
-      INC(self.fromOffset, insnUnitCt);
-      INC(self.toOffset, insnUnitCt);
-      WITH elem = NEW(PklAction.SwapPacked, kind := PklAction.PAKind.SwapPacked,
-                      unitCt := 1, size := insnUnitCt DIV 8,
+    WITH wholeByteBitCt = RoundUp(fieldBitSize, 8) DO
+      INC(self.fromOffset, wholeByteBitCt);
+      INC(self.toOffset, wholeByteBitCt);
+      WITH elem = NEW(PklAction.Packed, kind := paKind,
+                      unitCt := 1, 
+                      size := wholeByteBitCt DIV 8, (* Instruction unit is bytes. *) 
                       field := NEW(REF ARRAY OF CARDINAL, 1)) DO
+        IF shortenWidechar THEN
+          elem.widecharFieldSet 
+            := elem.widecharFieldSet + PklAction.FieldNoSet {0};  
+        END; 
         elem.field[0] := fieldBitSize;
         self.prog.addhi(elem);
       END;
     END;
-  END AddPackedSwapFirstField;
+  END AddPackedFirstField;
 
- PROCEDURE AddPackedSwapNextField(self: T; fieldBitSize: INTEGER; 
-                                 offset: INTEGER) =
+ PROCEDURE AddPackedNextField
+   (self: T; fieldBitSize: INTEGER; 
+    offset: INTEGER; shortenWidechar: BOOLEAN; paKind:PklAction.PAKind) =
   VAR elem: PklAction.T;
       totalBits: CARDINAL;
   BEGIN
-    WITH ret = GetHiKind(self.prog, PklAction.PAKind.SwapPacked, elem) DO
-      (* The last entry _must_ be one of these. *)
+    WITH ret = GetHiKind(self.prog, paKind, elem) DO
+      (* The last entry must have paKind. *)
       <* ASSERT ret *>
-      WITH nelem = NARROW(elem, PklAction.SwapPacked) DO
+      WITH nelem = NARROW(elem, PklAction.Packed) DO
         totalBits := 0;
         FOR i := FIRST(nelem.field^) TO LAST(nelem.field^) DO
           INC(totalBits, nelem.field[i]);
@@ -835,17 +1186,17 @@ PROCEDURE AddPackedSwapFirstField(self: T; fieldBitSize: INTEGER) =
 
         INC(totalBits, fieldBitSize);
 
+        (* Make sure the size in nelem is correct, and make sure fromOffset 
+           and toOffset are updated to include any new bytes *)
+        totalBits := RoundUp(totalBits, 8);
         (* The max total bit size of a packed set of fields is the word
            size!  This is guaranteed because a packed field cannot
            span a word boundary, and we only call this function when a
            packed field starts properly within a byte.  If a packed field
            starts on a byte boundary, we start a new set of packed
-           fields using AddPackedSwapFirstField. *)
+           fields using AddPackedFirstField. *)
         <* ASSERT totalBits <= self.from.word_size *>
 
-        (* Make sure the size in nelem is correct, and make sure fromOffset 
-           and toOffset are updated to include any new bytes *)
-        totalBits := RoundUp(totalBits, 8);
         WITH AddlBytes = (totalBits DIV 8) - nelem.size DO
           IF AddlBytes > 0 THEN
             INC(self.fromOffset, AddlBytes*8);
@@ -853,6 +1204,11 @@ PROCEDURE AddPackedSwapFirstField(self: T; fieldBitSize: INTEGER) =
             INC(nelem.size, AddlBytes);
           END;
         END;
+        IF shortenWidechar THEN
+          nelem.widecharFieldSet 
+            := nelem.widecharFieldSet 
+               + PklAction.FieldNoSet {NUMBER(nelem.field^)};  
+        END; 
 
         WITH new_field = NEW(REF ARRAY OF CARDINAL, 
                              NUMBER(nelem.field^) + 1) DO
@@ -862,14 +1218,15 @@ PROCEDURE AddPackedSwapFirstField(self: T; fieldBitSize: INTEGER) =
         nelem.field[LAST(nelem.field^)] := fieldBitSize;
       END;
     END;
-  END AddPackedSwapNextField;
+  END AddPackedNextField;
 
-PROCEDURE AddPackedSwapArray(self: T; bitCt(*Entire array in bits.*): INTEGER;
-                             numElts: INTEGER; fieldBitSize: INTEGER;
-                             packingWordBitSize: INTEGER) =
-  (* packingWordBitSize is bits in the word we are converting within.  It will 
+PROCEDURE AddPackedArray
+  (self: T; bitCt(*Entire array in bits.*): INTEGER;
+   numElts: INTEGER; fieldBitSize: INTEGER; packingWordBitSize: INTEGER;
+   shortenWidechar: BOOLEAN; paKind:PklAction.PAKind) =
+  (* packingWordBitSize is bits in the "word" we are converting within.  It will
      always fit within a Word.T on the machine executing this code. *)  
-  VAR fieldsPerWord := packingWordBitSize DIV fieldBitSize; 
+  VAR fieldsPerWord := packingWordBitSize DIV fieldBitSize;
   BEGIN
     (* We will build a packing for at most "fieldsPerWord" fields.  Packed
        arrays must not have elements that span word boundaries, so if 
@@ -893,13 +1250,19 @@ PROCEDURE AddPackedSwapArray(self: T; bitCt(*Entire array in bits.*): INTEGER;
          It takes care of the first fullWordCt*fieldsPerWord elements, 
          which occupy exactly the first fullWordCt words. *)
       IF fullWordCt > 0 THEN
-        WITH nelem = NEW(PklAction.SwapPacked, 
-                         kind := PklAction.PAKind.SwapPacked, 
-                         unitCt := fullWordCt, size := bytesPerWord, 
+        WITH nelem = NEW(PklAction.Packed, 
+                         kind := paKind,
+                         unitCt := fullWordCt, 
+                         size := bytesPerWord, 
                          field := NEW(REF ARRAY OF CARDINAL, fieldsPerWord)) DO
           FOR i := FIRST(nelem.field^) TO LAST(nelem.field^) DO
             nelem.field[i] := fieldBitSize;
           END;
+          IF shortenWidechar THEN
+            nelem.widecharFieldSet 
+              := PklAction.FieldNoSet {0..fieldsPerWord-1};  
+          ELSE nelem.widecharFieldSet := PklAction.FieldNoSet{ }; 
+          END; 
           self.prog.addhi(nelem);
         END;
       END;
@@ -908,18 +1271,24 @@ PROCEDURE AddPackedSwapArray(self: T; bitCt(*Entire array in bits.*): INTEGER;
          full words, add one more program action element to the end which 
          handles the extra fields.  *)
       IF extraBytes > 0 THEN
-        WITH nelem = NEW(PklAction.SwapPacked, 
-                         kind := PklAction.PAKind.SwapPacked, 
-                         unitCt := 1, size := extraBytes,
+        WITH nelem = NEW(PklAction.Packed, 
+                         kind := paKind, 
+                         unitCt := 1, 
+                         size := extraBytes,
                          field := NEW(REF ARRAY OF CARDINAL, extraEltCt)) DO
           FOR i := FIRST(nelem.field^) TO LAST(nelem.field^) DO
             nelem.field[i] := fieldBitSize;
           END;
+          IF shortenWidechar THEN
+            nelem.widecharFieldSet 
+              := PklAction.FieldNoSet {0..fieldsPerWord-1};  
+          ELSE nelem.widecharFieldSet := PklAction.FieldNoSet{ }; 
+          END; 
           self.prog.addhi(nelem);
         END;
       END;
     END;
-  END AddPackedSwapArray; 
+  END AddPackedArray; 
 
 PROCEDURE AddCopy32to64(self: T; bitCt: INTEGER; signed: BOOLEAN) =
 (* PRE: bitCt MOD 32 = 0 *) 
@@ -1728,7 +2097,7 @@ PROCEDURE BuildOne(self: T; fromTipe: RTTipe.T;
       END;
 
     | RTTipe.Packed(p) => 
-      (* We should get here only if we have a packed array element,
+      (* We should get here only if the packed value is an array element,
          since packed fields are handled in BuildFields.
          We can ignore the parent type and just create a single entry
          packedswap or a byte copy. *)
@@ -1739,7 +2108,11 @@ PROCEDURE BuildOne(self: T; fromTipe: RTTipe.T;
           self.addCopy(bitsNeeded);
         END;
       | CPKind.Swap, CPKind.Swap32to64, CPKind.Swap64to32 =>
-        self.addPackedSwapFirstField(p.size);
+        self.addPackedFirstField
+          (p.size, 
+           IsWidechar(p) AND self.widecharKind = CPKind.Swap32to16,
+           paKind := PackedPAKind (self.from.little_endian, TRUE) 
+          );
       ELSE <* ASSERT FALSE *> 
       END;
 
@@ -1751,24 +2124,49 @@ PROCEDURE BuildOne(self: T; fromTipe: RTTipe.T;
                just copy this on any machine! *)
             self.addCopy(a.size);
           ELSE 
-            (* On same endian machines, we can just copy these bytes. *)
+            
             CASE self.wordKind OF
-            | CPKind.Copy, CPKind.Copy32to64, CPKind.Copy64to32 =>
-              self.addCopy(a.size);
+            | CPKind.Copy =>
+              IF IsWidechar(a.element) AND self.widecharKind=CPKind.Copy32to16
+              THEN 
+                self.addPackedArray
+                  (a.size, a.n_elts, a.element.size, self.from.word_size,
+                   TRUE, PackedPAKind(self.from.little_endian, FALSE));
+              ELSE (* Same endian machines and not WIDECHAR elements,
+                      => we can just copy these bytes. *)
+                self.addCopy(a.size);
+              END; 
+            | CPKind.Copy32to64, CPKind.Copy64to32 =>
+              IF IsWidechar(a.element) AND self.widecharKind=CPKind.Copy32to16
+              THEN 
+                self.addPackedArray
+                  (a.size, a.n_elts, a.element.size,
+                   32, (* Since at least one of the machines is 32-bit, and the
+                          packed type is the same, the repacking will always 
+                          work in 32-bit units. *) 
+                   TRUE, PackedPAKind(self.from.little_endian, FALSE));
+              ELSE (* Same endian machines and not WIDECHAR elements,
+                      => we can just copy these bytes. *)
+                self.addCopy(a.size);
+              END; 
             | CPKind.Swap =>
-              self.addPackedSwapArray(a.size, a.n_elts, a.element.size, 
-                                      self.from.word_size);
+              self.addPackedArray
+                (a.size, a.n_elts, a.element.size, self.from.word_size,
+                 IsWidechar(a.element) AND self.widecharKind=CPKind.Swap32to16,
+                 PackedPAKind(self.from.little_endian,TRUE));
             | CPKind.Swap32to64, CPKind.Swap64to32 =>
               (* Must pack properly into the smaller 32 bit words *)
-              self.addPackedSwapArray(a.size, a.n_elts, a.element.size,
-                   32 (* Since at least one of the machines is 32-bit, and the
-                         packed type is the same, the repacking will always 
-                         work in 32-bit units. *) 
-                 );
+              self.addPackedArray
+                (a.size, a.n_elts, a.element.size,
+                 32, (* Since at least one of the machines is 32-bit, and the
+                        packed type is the same, the repacking will always 
+                        work in 32-bit units. *) 
+                 IsWidechar(a.element) AND self.widecharKind=CPKind.Swap32to16,
+                 PackedPAKind(self.from.little_endian,TRUE));
             ELSE <* ASSERT FALSE *> 
             END;
           END; 
-        ELSE (* Not packed. *) 
+        ELSE (* Array element is not packed. *) 
           (* Since array elements must fit in totally
              contiguous memory, we don't need to check the offsets
              when we return from buildOne *)
@@ -1853,12 +2251,57 @@ PROCEDURE BuildOne(self: T; fromTipe: RTTipe.T;
     END;
   END BuildOne;
 
+PROCEDURE PrescanPackedFields 
+   ( self:T; 
+     startField: RTTipe.Field;
+     startOffset: INTEGER; 
+   )
+  : BOOLEAN = 
+  (* PRE: startField is packed. 
+     TRUE if startField or any following field prior to the first that begins 
+     on a byte boundary needs WIDECHAR shortening. *) 
+
+  VAR
+    LField: RTTipe.Field; 
+    LOffset: INTEGER; 
+
+  BEGIN 
+    IF self.widecharKind = CPKind.Swap32to16 
+    THEN (* Probably won't get here in this case, but if it happens, we need 
+            to extract regardless. *)
+      RETURN TRUE
+    ELSIF self.widecharKind = CPKind.Copy32to16 
+    THEN (* See of there are any WIDECHAR fields in the group. *)  
+      LField := startField; 
+      LOOP
+        TYPECASE LField.type OF
+        | NULL => (* Shouldn't happen. *)
+        | RTTipe.Packed(p) => 
+          IF IsWidechar(p) 
+          THEN RETURN TRUE; 
+          END;
+        ELSE (* Shouldn't happen. *)
+        END; 
+        LField := LField.next;
+        IF LField = NIL 
+        THEN RETURN FALSE; 
+        END; 
+        LOffset := startOffset + LField.offset;  
+        IF LOffset MOD 8 = 0 THEN RETURN FALSE; END; 
+      END; 
+    ELSE RETURN FALSE;
+    END; 
+  END PrescanPackedFields;  
+
 PROCEDURE BuildFields(self: T; 
                       fromField: RTTipe.Field; fromSize: INTEGER;
                       toField: RTTipe.Field; toSize: INTEGER) 
     RAISES {Error} =
+
   VAR fromOffset := self.fromOffset;
      toOffset := self.toOffset;
+     LMustExtract : BOOLEAN := FALSE; 
+
   BEGIN
     WHILE fromField # NIL DO
       <* ASSERT fromField.type.kind = toField.type.kind *>
@@ -1869,26 +2312,43 @@ PROCEDURE BuildFields(self: T;
         <* ASSERT fromDiff > -8 *>
         <* ASSERT toDiff > -8 *>
         IF fromDiff < 0 THEN
-          (* A data difference < 0 is ok if this field is packed *)
+          (* A data difference < 0 is ok if this field is packed. This happens
+             when the previous field was packed (which advances [to|from]Offset
+             to the next byte boundary) and this field is packed too (otherwise,
+             its starting offset would lie at this byte boundary. *)
           <* ASSERT fromField.type.kind = RTTipe.Kind.Packed *>
           <* ASSERT toField.type.kind = RTTipe.Kind.Packed *>
           CASE self.wordKind OF
           | CPKind.Copy, CPKind.Copy32to64, CPKind.Copy64to32 =>
             (* If this field overflows the current packed byte, copy
                the next ones as required. *)
-            WITH spaceNeeded = fromField.type.size + fromDiff DO
-              IF spaceNeeded > 0 THEN
-                WITH bytesNeeded = RoundUp(spaceNeeded, 8) DO
-                  self.addCopy(bytesNeeded);
+            IF LMustExtract THEN 
+              self.addPackedNextField
+                (fromField.type.size, 
+                 fromField.offset,
+                 IsWidechar(fromField.type) 
+                   AND self.widecharKind = CPKind.Copy32to16,
+                 paKind := PackedPAKind(self.from.little_endian,FALSE)); 
+            ELSE (* Continue copying whole bytes to the next byte boundary. *)
+              WITH bitsNeeded = fromField.type.size + fromDiff DO
+                IF bitsNeeded > 0 THEN
+                  WITH bytesNeeded = RoundUp(bitsNeeded, 8) DO
+                       (* Which may copy extra bits, up to the next byte boundary. *) 
+                    self.addCopy(bytesNeeded);
+                  END;
                 END;
               END;
             END;
           | CPKind.Swap, CPKind.Swap32to64, CPKind.Swap64to32 =>
-            self.addPackedSwapNextField(fromField.type.size,
-                                        fromField.offset);
+            self.addPackedNextField
+              (fromField.type.size,
+               fromField.offset,
+               IsWidechar(fromField.type)
+                 AND self.widecharKind = CPKind.Swap32to16,
+               paKind := PackedPAKind (self.from.little_endian, TRUE)); 
           ELSE <* ASSERT FALSE *> 
           END;
-        ELSE
+        ELSE (* We are already on a byte boundary. *) 
           (* If we need to add a skip, do it *)
           self.addSkip(fromDiff, toDiff);
 
@@ -1900,12 +2360,27 @@ PROCEDURE BuildFields(self: T;
             <* ASSERT toField.type.kind = RTTipe.Kind.Packed *>
             CASE self.wordKind OF
             | CPKind.Copy, CPKind.Copy32to64, CPKind.Copy64to32 =>
-              WITH bytesNeeded = RoundUp(fromField.type.size, 8) DO
-                self.addCopy(bytesNeeded);
+              LMustExtract := PrescanPackedFields(self, fromField, fromOffset);
+              IF LMustExtract THEN 
+                self.addPackedFirstField
+                  (fromField.type.size, 
+                   IsWidechar(fromField.type) 
+                     AND self.widecharKind = CPKind.Copy32to16,
+                   paKind := PackedPAKind(self.from.little_endian,FALSE)); 
+              ELSE (* Can copy whole bytes to the next byte boundary. *) 
+                WITH bytesNeeded = RoundUp(fromField.type.size, 8) DO
+                  (* Enough to get the entire packed field and up to the
+                     next byte boundary. *) 
+                  self.addCopy(bytesNeeded);
+                END;
               END;
             | CPKind.Swap, CPKind.Swap32to64, CPKind.Swap64to32 =>
               <* ASSERT fromField.offset MOD 8 = 0 *>
-              self.addPackedSwapFirstField(fromField.type.size);
+              self.addPackedFirstField
+                (fromField.type.size, 
+                 IsWidechar(fromField.type) 
+                   AND self.widecharKind = CPKind.Swap32to16,
+                 paKind := PackedPAKind (self.from.little_endian, TRUE)); 
             ELSE <* ASSERT FALSE *> 
             END;
           ELSIF fromField.type.kind = RTTipe.Kind.Object THEN
@@ -1922,7 +2397,7 @@ PROCEDURE BuildFields(self: T;
       toField := toField.next;
     END;
 
-    (* Now that it's done, check if there is any space after the last
+    (* Now that the fields are done, check if there is any space after the last
        field that needs to be accounted for. *)
     WITH fromDiff = fromOffset + fromSize - self.fromOffset,
          toDiff = toOffset + toSize - self.toOffset DO
@@ -2099,9 +2574,27 @@ PROCEDURE Print(self: T) =
     self.printProgram();
   END Print;
 
+PROCEDURE PackedOperation 
+  (kind: [PklAction.PAKind.SwapPackedLEtoBE..PklAction.PAKind.CopyPackedBE])
+  : TEXT = 
+
+  BEGIN 
+    CASE kind OF 
+    | PklAction.PAKind.SwapPackedLEtoBE => 
+      RETURN "swap packed, little- to big-endian ";
+    | PklAction.PAKind.SwapPackedBEtoLE => 
+      RETURN "swap packed, big- to little-endian ";
+    | PklAction.PAKind.CopyPackedLE => 
+      RETURN "copy packed, little-endian ";
+    | PklAction.PAKind.CopyPackedBE => 
+      RETURN "copy packed, big-endian ";
+    END; 
+  END PackedOperation;
+
 PROCEDURE PrintProgram(self: T) =
   VAR fromByteCt := 0;
       toByteCt := 0;
+      DoPrintFootnote: BOOLEAN; 
   BEGIN    
     IO.Put("\nDoing it in " & Fmt.Int(self.prog.size()) & " step(s):\n");
     FOR i := 0 TO self.prog.size() - 1 DO
@@ -2111,17 +2604,31 @@ PROCEDURE PrintProgram(self: T) =
           IO.Put(" Copy " & Fmt.Int(elem.unitCt) & " byte(s).\n");
           INC(fromByteCt, elem.unitCt);
           INC(toByteCt, elem.unitCt);
-        | PklAction.PAKind.SwapPacked => 
-          WITH nelem = NARROW(elem, PklAction.SwapPacked) DO
-            IO.Put(" Copy and swap " & Fmt.Int(elem.unitCt) & 
+        | PklAction.PAKind.SwapPackedLEtoBE, PklAction.PAKind.SwapPackedBEtoLE, 
+          PklAction.PAKind.CopyPackedLE, PklAction.PAKind.CopyPackedBE => 
+          WITH nelem = NARROW(elem, PklAction.Packed) DO
+            IO.Put(PackedOperation(elem.kind)); 
+            IO.Put(Fmt.Int(elem.unitCt) & 
               " unit(s) of " & Fmt.Int(nelem.size) & 
               " byte(s) with packed bitfields: ");
+            DoPrintFootnote := FALSE; 
             FOR i := FIRST(nelem.field^) TO LAST(nelem.field^) DO
-              IO.Put(Fmt.Int(nelem.field[i]) & " ");
+              IO.Put(Fmt.Int(nelem.field[i]));
+              IF i IN nelem.widecharFieldSet 
+              THEN
+                IO.Put("* ");
+                DoPrintFootnote := TRUE; 
+              ELSE
+                IO.Put(" ");
+              END; 
             END;
             IO.Put("\n");
+            IF DoPrintFootnote THEN
+              IO.Put("( * Shorten this WIDECHAR packed field.)"); 
+            END; 
             INC(fromByteCt, elem.unitCt*nelem.size);
             INC(toByteCt, elem.unitCt*nelem.size);
+(* TODO: Print widecharFieldSet. *) 
           END;
         | PklAction.PAKind.SkipFrom =>
           IO.Put(" Skip " & Fmt.Int(elem.unitCt) & " src byte(s).\n");
