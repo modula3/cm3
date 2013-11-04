@@ -73,7 +73,7 @@
    vary from program to program.  Therefore, you should
    use explicit brands in types that will be pickled.
 
-   SRC/PM3/EXM3 Incompatibility notes:
+   SRC/PM3/EZM3 Incompatibility notes:
 
    1. Pickles written by programs compiled by SRC, PM3, or EZM3 are
       not generally readable by CM3-compiled programs because of 
@@ -94,7 +94,7 @@ IMPORT Rd, Thread, Wr;
 
 EXCEPTION Error(TEXT);
 
-PROCEDURE Write(wr: Wr.T; ref: REFANY)
+PROCEDURE Write(wr: Wr.T; ref: REFANY; write16BitWidechar := FALSE)
     RAISES {Error, Wr.Failure, Thread.Alerted};
 (* Trace the data structure reachable via traced references 
    from "ref", convert it into a pickle, and write the pickle to 
@@ -134,6 +134,9 @@ TYPE
   Writer <: WriterPublic;
   WriterPublic = OBJECT
       wr: Wr.T;
+      write16BitWidechar: BOOLEAN := FALSE; 
+      (* ^Write a backward-compatible pickle, readable by a program compiled 
+          with 16-bit WIDECHAR.  An alternate way. Not implemented yet. *)
     METHODS
       write(r: REFANY) RAISES
         {Error, Wr.Failure, Thread.Alerted};
@@ -186,10 +189,10 @@ TYPE
    A "Pickle.Writer" may be serially re-used to pickle multiple
    objects.
 
-   The call "Pickle.Write(wr, ref)" is equivalent to (but more 
+   The call "Pickle.Write(wr, ref, w16)" is equivalent to (but more 
    efficient than) the following:
    
-| NEW(Pickle.Writer, wr := wr).write(ref)
+| NEW(Pickle.Writer, wr := wr, write16BitWidechar := w16).write(ref)
 
    A "Pickle.Reader" is an object whose "read" method reads
    pickles from the reader stored in its "rd" data field.  
