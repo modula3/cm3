@@ -3,14 +3,10 @@
 
 INTERFACE Makefile;
 
-IMPORT TextTextTbl;
+IMPORT TextTextTbl, Wr, Thread;
 
-PROCEDURE ScanCommandLine1 ();
-(* Pre-scan the command line arguments for -help/-version.
-*)
-
-PROCEDURE ScanCommandLine2 () : TextTextTbl.T;
-(* Pre-scan the command line arguments to determine the major mode
+PROCEDURE ScanCommandLine () : TextTextTbl.T RAISES {Wr.Failure, Thread.Alerted};
+(* Scan the command line arguments to determine the major mode
    we're operating in, and print any requested help or version information.
    Return a set of pre-defined values for the quake evaluation.
 *)
@@ -21,4 +17,3 @@ PROCEDURE Build (src_dir: TEXT): TEXT;
    and the contents of the source directory. *)
 
 END Makefile.
-

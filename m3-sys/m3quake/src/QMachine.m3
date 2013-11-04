@@ -357,12 +357,18 @@ PROCEDURE Eval (t: T)
 
       | Op.Assign =>
           bind := LookUp (t, arg);
+          Pop (t, val);
           IF (bind = NIL) THEN
             bind := DefineGlobal (t, arg, readonly := FALSE);
           ELSIF bind.readonly THEN
-            Err (t, "cannot assign to readonly variable: " & t.map.id2txt(arg));
+            IF Equal (bind.value, val) THEN
+              (* silently allow assigning an equivalent value to a readonly variable
+                 as it already has; the old value is kept *)
+              val := bind.value;
+            ELSE
+              Err (t, "cannot assign to readonly variable: " & t.map.id2txt(arg));
+            END;
           END;
-          Pop (t, val);
           bind.value := val;
 
       | Op.AssignTable =>
@@ -1357,12 +1363,9 @@ PROCEDURE DoEmpty (t: T;  n_args: INTEGER) RAISES {Error} =
     PushBool (t, empty);
   END DoEmpty;
 
-PROCEDURE DoEqual (t: T;  n_args: INTEGER) RAISES {Error} =
-  VAR v1, v2: QValue.T;  eq := FALSE;
+PROCEDURE Equal (VAR v1, v2: QValue.T): BOOLEAN =
+  VAR eq := FALSE;
   BEGIN
-    <*ASSERT n_args = 2 *>
-    Pop (t, v1);
-    Pop (t, v2);
     IF (v1.kind = v2.kind) THEN
       CASE v1.kind OF
       | QK.Var     => eq := (v1.int = v2.int) AND (v1.ref = v2.ref);
@@ -1380,7 +1383,16 @@ PROCEDURE DoEqual (t: T;  n_args: INTEGER) RAISES {Error} =
       | QK.Proc    => eq := (v1.ref = v2.ref);
       END;
     END;
-    PushBool (t, eq);
+    RETURN eq;
+  END Equal;
+
+PROCEDURE DoEqual (t: T;  n_args: INTEGER) RAISES {Error} =
+  VAR v1, v2: QValue.T;
+  BEGIN
+    <*ASSERT n_args = 2 *>
+    Pop (t, v1);
+    Pop (t, v2);
+    PushBool (t, Equal(v1, v2));
   END DoEqual;
 
 PROCEDURE DoError (t: T;  n_args: INTEGER) RAISES {Error} =
