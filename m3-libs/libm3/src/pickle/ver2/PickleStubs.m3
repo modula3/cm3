@@ -14,13 +14,15 @@
 UNSAFE MODULE PickleStubs;
    (* unsafe because of marshalling code *)
    
-IMPORT Pickle2 AS Pickle, PickleRd, RTPacking, RTType;
+IMPORT Pickle2 AS Pickle, PickleRd, PickleWr, RTPacking, RTType;
+IMPORT ConvertPacking; 
 FROM PickleRd IMPORT myPacking;
-FROM ConvertPacking IMPORT Kind;
+FROM ConvertPacking IMPORT CPKind;
 FROM Swap IMPORT Int32, Int64On32, Int64On64;
 
 IMPORT Rd, Wr, Text, TextClass, Text8, Text16, Thread;
 IMPORT RdClass, WrClass, UnsafeRd, UnsafeWr, Swap; 
+FROM Word IMPORT And, Or, LeftShift, RightShift; 
 
 REVEAL RdClass.Private <: MUTEX;
 REVEAL WrClass.Private <: MUTEX;
@@ -28,6 +30,8 @@ REVEAL WrClass.Private <: MUTEX;
 TYPE
   CharPtr  = UNTRACED REF ARRAY [0..65535] OF CHAR;
   WCharPtr = UNTRACED REF ARRAY [0..65535] OF WIDECHAR;
+  UInt8 = BITS 8 FOR [0 .. 16_FF];
+  U16Aligned = RECORD forceAlign: INTEGER; u16: BITS 16 FOR [0..16_FFFF] END;
 
 (*---------marshalling/unmarshalling routines-----------*)
 
@@ -60,29 +64,108 @@ PROCEDURE InChars(reader: Pickle.Reader; VAR arr: ARRAY OF CHAR)
     END;
   END InChars;
 
+(* WC21 is a variable-length encoding of widechar values, used only in
+   pickles and net objects.  The standard Unicode encodings explicitly disallow
+   surrogate code points as unencoded values.  Programs may have a legitimate 
+   need to store and/or manipulate surrogate values in memory, and these should
+   be picklable too.  WC21 supports the entire code point range, which requires
+   21 bits.
+
+   The first byte has 7 (least significant) data bits and one bit (msb of the 
+   byte) that, if set, indicates another byte follows.  If present, the second 
+   byte is just like the first and supplies the next more significant 7 data 
+   bits.  If it calls for a third byte, that contains the 7 most significant 
+   data bits.  The bytes are always in least- to most-significant order in the 
+   pickle, regardless of endianness of writing or reading machine.
+
+   Note that this can encode values beyond the Unicode code point range.
+   When writing, we prevent this by accepting a parameter of type WIDECHAR.
+   When reading, we return an integer and let the caller apply a range
+   check, which could be only 16_FFFF, when compiled with WIDECHAR of this
+   size.      
+*) 
+
+PROCEDURE InWC21(rd: Rd.T): UInt32 
+RAISES{Rd.EndOfFile, Rd.Failure, Thread.Alerted} = 
+(* Unmarshal one WIDECHAR value in WC21 encoding and return in a 32-bit int,
+   where caller can range check. *) 
+
+  VAR B0, B1, B2: UInt8; 
+  VAR intVal: INTEGER; 
+  BEGIN 
+    B0 := ORD(Rd.GetChar(rd)); 
+    intVal := And(B0, 16_7F);
+    IF And(B0, 16_80) # 0 THEN (* A second byte follows. *) 
+      B1 := ORD(Rd.GetChar(rd)); 
+      intVal := Or(intVal, LeftShift (And (B1, 16_7F), 7));
+      IF And(B1, 16_80) # 0 THEN (* A third byte follows. *) 
+        B2 := ORD(Rd.GetChar(rd)); 
+        intVal := Or(intVal, LeftShift (And(B2, 16_7F), 14));
+      END;  
+    END;  
+    RETURN intVal 
+  END InWC21; 
+
 PROCEDURE InWideChars(reader: Pickle.Reader; VAR arr: ARRAY OF WIDECHAR)
     RAISES {Pickle.Error, Rd.Failure, Thread.Alerted} =
   VAR cnt: INTEGER := NUMBER(arr);  p: CharPtr;  n: INTEGER;
+  VAR IntVal: UInt32; 
+  VAR u16Al: U16Aligned; 
   BEGIN
     IF cnt <= 0 THEN RETURN; END;
-    INC(cnt, cnt);  (* == # of 8-bit characters *)
-    p := LOOPHOLE(ADR(arr[0]), CharPtr);
-    WHILE (cnt > 0) DO
-      n := MIN(cnt, NUMBER(p^));
-      IF reader.rd.getSub(SUBARRAY(p^, 0, n)) # n THEN
-        RaiseUnmarshalFailure();
-      END;
-      INC(p, ADRSIZE(p^));  DEC(cnt, NUMBER(p^));
-    END;
-    CASE reader.wordConvKind OF
-    | Kind.Copy, Kind.Copy32to64, Kind.Copy64to32 =>
-        (* ok *)
-    | Kind.Swap, Kind.Swap32to64, Kind.Swap64to32 =>
-        (* we need to byte swap *)
-        FOR i := 0 TO LAST(arr) DO
-          WITH z = arr[i] DO  z := VAL (Swap.Swap2U (ORD (z)), WIDECHAR);  END;
-        END;
-    END;
+    TRY 
+      IF reader.packing.widechar_size = 32 THEN 
+         (* Size 32 in the writing system => WC21 in the pickle. *) 
+        CASE reader.widecharConvKind OF 
+        | CPKind.Copy, CPKind.Swap => (* 32 on both systems. *) 
+          FOR RI := 0 TO LAST(arr) DO
+            IntVal := InWC21(reader.rd);
+            IF IntVal > 16_10FFFF THEN 
+              RaiseError("Malformed pickle: WIDECHAR out of range."); 
+            END;
+            arr[RI] := VAL(IntVal, WIDECHAR);  
+          END; 
+        | CPKind.Copy32to16 , CPKind.Swap32to16 => (* Remote 32, local 16. *) 
+          FOR RI := 0 TO LAST(arr) DO
+            IntVal := InWC21(reader.rd);
+            IF IntVal > 16_FFFF THEN IntVal := ReplacementWt; END;
+            arr[RI] := VAL(IntVal, WIDECHAR);  
+          END; 
+        ELSE <* ASSERT FALSE *> 
+        END 
+      ELSE (* size 16 in the pickle. *) 
+        CASE reader.widecharConvKind OF 
+        | CPKind.Copy => (* 16 on both systems, same endian. *)
+          INC(cnt, cnt);  (* == # of 8-bit bytes *)
+          p := LOOPHOLE(ADR(arr[0]), CharPtr);
+          WHILE (cnt > 0) DO
+            n := MIN(cnt, NUMBER(p^));
+            IF reader.rd.getSub(SUBARRAY(p^, 0, n)) # n THEN
+              RaiseUnmarshalFailure();
+            END;
+            INC(p, ADRSIZE(p^));  DEC(cnt, NUMBER(p^));
+          END;
+        | CPKind.Copy16to32 => (* Remote 16, local 32, same endian. *) 
+          WITH u16arr = LOOPHOLE(u16Al.u16, ARRAY [0..1] OF CHAR) DO
+            FOR RI := 0 TO LAST(arr) DO
+              u16arr[0] := Rd.GetChar(reader.rd);
+              u16arr[1] := Rd.GetChar(reader.rd);
+              arr[RI] := VAL(u16Al.u16, WIDECHAR);  
+            END; 
+          END; 
+        | CPKind.Swap, CPKind.Swap16to32 => (* Remote 16, opposite endian. *) 
+          WITH u16arr = LOOPHOLE(u16Al.u16, ARRAY [0..1] OF CHAR) DO
+            FOR RI := 0 TO LAST(arr) DO
+              u16arr[1] := Rd.GetChar(reader.rd);
+              u16arr[0] := Rd.GetChar(reader.rd);
+              arr[RI] := VAL(u16Al.u16, WIDECHAR);  
+            END; 
+          END; 
+        ELSE <* ASSERT FALSE *> 
+        END 
+      END; 
+    EXCEPT Rd.EndOfFile => RaiseUnmarshalFailure();
+    END; 
   END InWideChars;
 
 PROCEDURE OutChars(writer: Pickle.Writer; READONLY arr: ARRAY OF CHAR)
@@ -91,17 +174,48 @@ PROCEDURE OutChars(writer: Pickle.Writer; READONLY arr: ARRAY OF CHAR)
     writer.wr.putString(arr);
   END OutChars;
 
+PROCEDURE OutWC21(wr: Wr.T; wc: WIDECHAR)
+  RAISES {Wr.Failure, Thread.Alerted} =
+(* Marshal one wide char in surrogate-tolerant WC21 incoding. *) 
+
+  VAR intVal, B0, B1, B2: UInt32;
+  BEGIN  
+    intVal := ORD(wc); 
+    B0 := And(intVal, 16_7F);
+    IF And(intVal, 16_FFFFFF80) = 0 THEN (* No 2nd byte is needed. *)
+      Wr.PutChar(wr, VAL(B0, CHAR));
+    ELSE 
+      B0 := Or (B0, 16_80); 
+      Wr.PutChar(wr, VAL(B0, CHAR));
+      B1 := RightShift(And(intVal, 16_3F80), 7); 
+      IF And(intVal, 16_FFFFC000) = 0 THEN (* No 3rd byte is needed. *)
+        Wr.PutChar(wr, VAL(B1, CHAR));
+      ELSE 
+        B1 := Or (B1, 16_80); 
+        Wr.PutChar(wr, VAL(B1, CHAR));
+        B2 := RightShift(And(intVal, 16_1FC000), 14);  
+        Wr.PutChar(wr, VAL(B2, CHAR));
+      END; 
+    END; 
+  END OutWC21; 
+
 PROCEDURE OutWideChars(writer: Pickle.Writer; READONLY arr: ARRAY OF WIDECHAR)
     RAISES {Wr.Failure, Thread.Alerted} =
   VAR cnt: INTEGER := NUMBER (arr);  p: CharPtr;
   BEGIN
     IF cnt <= 0 THEN RETURN; END;
-    INC(cnt, cnt);  (* == # of 8-bit characters *)
-    p := LOOPHOLE(ADR(arr[0]), CharPtr);
-    WHILE (cnt > 0) DO
-      writer.wr.putString(SUBARRAY(p^, 0, MIN (cnt, NUMBER(p^))));
-      INC(p, ADRSIZE(p^)); DEC(cnt, NUMBER(p^));
-    END;
+    IF writer.packing.widechar_size = 16 THEN 
+      INC(cnt, cnt);  (* == # of 8-bit bytes *)
+      p := LOOPHOLE(ADR(arr[0]), CharPtr);
+      WHILE (cnt > 0) DO
+        writer.wr.putString(SUBARRAY(p^, 0, MIN (cnt, NUMBER(p^))));
+        INC(p, ADRSIZE(p^)); DEC(cnt, NUMBER(p^));
+      END;
+    ELSE (* Writing on 32-bit WIDECHAR system. *) 
+      FOR RI := 0 TO cnt-1 DO
+        OutWC21(writer.wr, arr[RI]); 
+      END; 
+    END; 
   END OutWideChars;
 
 PROCEDURE InBytes(reader: Pickle.Reader; VAR arr: ARRAY OF Byte8)
@@ -132,14 +246,14 @@ PROCEDURE InInteger(reader: Pickle.Reader;
   VAR i: INTEGER;
   BEGIN
     CASE reader.wordConvKind OF
-    | Kind.Copy, Kind.Swap =>
+    | CPKind.Copy, CPKind.Swap =>
       VAR c := LOOPHOLE(ADR(i), 
                         UNTRACED REF ARRAY [1..BYTESIZE(INTEGER)] OF CHAR);
       BEGIN
         IF reader.rd.getSub(c^) # NUMBER(c^) THEN
           RaiseUnmarshalFailure();
         END;
-        IF reader.wordConvKind = Kind.Swap THEN
+        IF reader.wordConvKind = CPKind.Swap THEN
           CASE myPacking.word_size OF
           | 32 => i := Swap.Swap4(i);
           | 64 => 
@@ -155,20 +269,20 @@ PROCEDURE InInteger(reader: Pickle.Reader;
         END;
       END;
 
-    | Kind.Copy32to64, Kind.Swap32to64 =>
+    | CPKind.Copy32to64, CPKind.Swap32to64 =>
       VAR i32: Int32;
           c32 := LOOPHOLE(ADR(i32), UNTRACED REF ARRAY [1..4] OF CHAR);
       BEGIN
 	IF reader.rd.getSub(c32^) # NUMBER(c32^) THEN
 	  RaiseUnmarshalFailure();
 	END;
-	IF reader.wordConvKind = Kind.Swap32to64 THEN
+	IF reader.wordConvKind = CPKind.Swap32to64 THEN
 	  i32 := Swap.Swap4(i32);
 	END;
 	i := i32;
       END;
 
-    | Kind.Copy64to32, Kind.Swap64to32 =>
+    | CPKind.Copy64to32, CPKind.Swap64to32 =>
       VAR i64: Int64On32;
           c64 := LOOPHOLE(ADR(i64), UNTRACED REF ARRAY [1..8] OF CHAR);
       BEGIN
@@ -188,10 +302,11 @@ PROCEDURE InInteger(reader: Pickle.Reader;
 	END;
   
 	(* Now, swap it if need be. *)
-	IF reader.wordConvKind = Kind.Swap64to32 THEN
+	IF reader.wordConvKind = CPKind.Swap64to32 THEN
 	  i := Swap.Swap4(i);
 	END;
       END;
+    ELSE <* ASSERT FALSE *>
     END;
 
     IF i < min OR i > max THEN RaiseUnmarshalFailure(); END;
@@ -205,14 +320,14 @@ PROCEDURE InLongint(reader: Pickle.Reader;
   VAR i: LONGINT;
   BEGIN
     CASE reader.longConvKind OF
-    | Kind.Copy, Kind.Swap =>
+    | CPKind.Copy, CPKind.Swap =>
       VAR c := LOOPHOLE(ADR(i), 
                         UNTRACED REF ARRAY [1..BYTESIZE(LONGINT)] OF CHAR);
       BEGIN
         IF reader.rd.getSub(c^) # NUMBER(c^) THEN
           RaiseUnmarshalFailure();
         END;
-        IF reader.longConvKind = Kind.Swap THEN
+        IF reader.longConvKind = CPKind.Swap THEN
           CASE myPacking.long_size OF
           | 32 => i := VAL(Swap.Swap4(VAL(i, INTEGER)), LONGINT);
           | 64 => 
@@ -228,20 +343,20 @@ PROCEDURE InLongint(reader: Pickle.Reader;
         END;
       END;
 
-    | Kind.Copy32to64, Kind.Swap32to64 =>
+    | CPKind.Copy32to64, CPKind.Swap32to64 =>
       VAR i32: Int32;
           c32 := LOOPHOLE(ADR(i32), UNTRACED REF ARRAY [1..4] OF CHAR);
       BEGIN
 	IF reader.rd.getSub(c32^) # NUMBER(c32^) THEN
 	  RaiseUnmarshalFailure();
 	END;
-	IF reader.longConvKind = Kind.Swap32to64 THEN
+	IF reader.longConvKind = CPKind.Swap32to64 THEN
 	  i32 := Swap.Swap4(i32);
 	END;
 	i := VAL(i32, LONGINT);
       END;
 
-    | Kind.Copy64to32, Kind.Swap64to32 =>
+    | CPKind.Copy64to32, CPKind.Swap64to32 =>
       VAR i64: Int64On32;
           c64 := LOOPHOLE(ADR(i64), UNTRACED REF ARRAY [1..8] OF CHAR);
       BEGIN
@@ -261,10 +376,11 @@ PROCEDURE InLongint(reader: Pickle.Reader;
 	END;
   
 	(* Now, swap it if need be. *)
-	IF reader.longConvKind = Kind.Swap64to32 THEN
+	IF reader.longConvKind = CPKind.Swap64to32 THEN
 	  i := VAL(Swap.Swap4(VAL(i, INTEGER)), LONGINT);
 	END;
       END;
+    ELSE <* ASSERT FALSE *>
     END;
 
     IF i < min OR i > max THEN RaiseUnmarshalFailure(); END;
@@ -282,9 +398,10 @@ PROCEDURE InInt32(reader: Pickle.Reader;
       RaiseUnmarshalFailure();
     END;
     CASE reader.wordConvKind OF
-    | Kind.Swap, Kind.Swap64to32, Kind.Swap32to64 =>
+    | CPKind.Swap, CPKind.Swap64to32, CPKind.Swap32to64 =>
       i32 := Swap.Swap4(i32);
-    | Kind.Copy, Kind.Copy64to32, Kind.Copy32to64 =>
+    | CPKind.Copy, CPKind.Copy64to32, CPKind.Copy32to64 =>
+    ELSE <* ASSERT FALSE *>
     END;
     IF i32 < min OR i32 > max THEN RaiseUnmarshalFailure(); END;
     RETURN i32;

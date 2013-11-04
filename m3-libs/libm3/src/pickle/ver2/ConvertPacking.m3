@@ -10,8 +10,12 @@
 
 UNSAFE MODULE ConvertPacking;
 
-IMPORT RTTipe, RTPacking, PklAction, PklActionSeq, Thread, Wr, Rd, Swap, Word,
+IMPORT RTTipe, RTPacking, PklAction, PklActionSeq, PickleStubs, 
+       Thread, Wr, Rd, Swap, Word,
        IO, Fmt, PackingTbl, PackingTypeCode;
+FROM Word IMPORT And, Or, LeftShift, RightShift; 
+
+CONST WordBitsize = BITSIZE(Word.T); 
 
 VAR packingCache: PackingTbl.T := NEW(PackingTbl.Default).init();
 
@@ -20,8 +24,9 @@ REVEAL WriteVisitor = WVPublic BRANDED "Packing Write Visitor 1.0" OBJECT END;
 
 REVEAL T = Public BRANDED "ConvertPacking 1.0" OBJECT
       prog: PklActionSeq.T;
-      wordKind: Kind;
-      longKind: Kind;
+      wordKind: CPKind;
+      longKind: CPKind;
+      widecharKind: CPKind;
       fromOffset: INTEGER := 0;
       toOffset: INTEGER := 0;
       fromSize: INTEGER := 0;
@@ -31,42 +36,59 @@ REVEAL T = Public BRANDED "ConvertPacking 1.0" OBJECT
       from: RTPacking.T;
       to: RTPacking.T;
       nDim, fromEltPack, toEltPack: INTEGER := 0;
-
-      writer: T;
+      writeConv: T;
     METHODS
       extractSwap (x: Word.T; i, n: CARDINAL; 
                    size: INTEGER): Word.T := ExtractSwap;
 
       buildOne(fromTipe: RTTipe.T; toTipe: RTTipe.T) RAISES {Error} := 
-          BuildOne; 
+        BuildOne; 
 
-      addCopy(length: INTEGER) := AddCopy;
-      addCopy32to64(length: INTEGER; signed: BOOLEAN) := AddCopy32to64;
-      (* ^PRE: length MOD 32 = 0 *) 
-      addCopy64to32(length: INTEGER; signed: BOOLEAN) := AddCopy64to32;
-      (* ^PRE: length MOD 64 = 0 *) 
+      addCopy(bitCt: INTEGER) := AddCopy;
+      addCopy32to64(bitCt: INTEGER; signed: BOOLEAN) := AddCopy32to64;
+      (* ^PRE: bitCt MOD 32 = 0 *) 
+      addCopy64to32(bitCt: INTEGER; signed: BOOLEAN) := AddCopy64to32;
+      (* ^PRE: bitCt MOD 64 = 0 *) 
+      addCopy16to32(fromBitCt: INTEGER) := AddCopy16to32;
+      (* ^PRE: fromBitCt MOD 16 = 0 *) 
+      addCopy32to16(fromBitCt: INTEGER) := AddCopy32to16;
+      (* ^PRE: fromBitCt MOD 32 = 0 *) 
+      addCopyWC21to32(toBitCt: INTEGER) := AddCopyWC21to32;
+      (* ^PRE: ToBitCt MOD 32 = 0 *) 
+      addCopyWC21to16(toBitCt: INTEGER) := AddCopyWC21to16;
+      (* ^PRE: ToBitCt MOD 16 = 0 *) 
 
-      addPackedSwapFirstField(fieldsize: INTEGER) :=
-          AddPackedSwapFirstField;
-      addPackedSwapNextField(fieldsize: INTEGER; offset: INTEGER) :=
-          AddPackedSwapNextField;
-      addPackedSwapArray(length, numElts, fieldsize, wordsize:
-          INTEGER) := AddPackedSwapArray; 
+      addPackedFirstField
+        (fieldBitSize: INTEGER; 
+         shortenWidechar: BOOLEAN; paKind:PklAction.PAKind) 
+        := AddPackedFirstField;
+      addPackedNextField
+        (fieldBitSize: INTEGER; offset: INTEGER; 
+          shortenWidechar: BOOLEAN; paKind:PklAction.PAKind) 
+        := AddPackedNextField;
+      addPackedArray
+        (bitCt, numElts, fieldBitSize, packingWordBitSize: INTEGER;
+         shortenWidechar: BOOLEAN; paKind:PklAction.PAKind) 
+        := AddPackedArray; 
 
-      addSkipFrom(length: INTEGER) := AddSkipFrom;
-      addSkipTo(length: INTEGER) := AddSkipTo;
-      addSkipOrCopy(length: INTEGER) := AddSkipOrCopy;
+      addSkipFrom(bitCt: INTEGER) := AddSkipFrom;
+      addSkipTo(bitCt: INTEGER) := AddSkipTo;
+      addSkipOrCopy(bitCt: INTEGER) := AddSkipOrCopy;
       addSkip(fromDiff, toDiff: INTEGER) := AddSkip;
-      addSwap16(length: INTEGER) := AddSwap16;
-      (* ^PRE: length MOD 16 = 0 *) 
-      addSwap32(length: INTEGER) := AddSwap32;
-      (* ^PRE: length MOD 32 = 0 *) 
-      addSwap64(length: INTEGER) := AddSwap64;
-      (* ^PRE: length MOD 64 = 0 *) 
-      addSwap32to64(length: INTEGER; signed: BOOLEAN) := AddSwap32to64;
-      (* ^PRE: length MOD 32 = 0 *) 
-      addSwap64to32(length: INTEGER; signed: BOOLEAN) := AddSwap64to32;
-      (* ^PRE: length MOD 64 = 0 *) 
+      addSwap16(bitCt: INTEGER) := AddSwap16;
+      (* ^PRE: bitCt MOD 16 = 0 *) 
+      addSwap32(bitCt: INTEGER) := AddSwap32;
+      (* ^PRE: bitCt MOD 32 = 0 *) 
+      addSwap64(bitCt: INTEGER) := AddSwap64;
+      (* ^PRE: bitCt MOD 64 = 0 *) 
+      addSwap32to64(bitCt: INTEGER; signed: BOOLEAN) := AddSwap32to64;
+      (* ^PRE: bitCt MOD 32 = 0 *) 
+      addSwap64to32(bitCt: INTEGER; signed: BOOLEAN) := AddSwap64to32;
+      (* ^PRE: bitCt MOD 64 = 0 *) 
+      addSwap16to32(fromBitCt: INTEGER) := AddSwap16to32;
+      (* ^PRE: fromBitCt MOD 16 = 0 *) 
+      addSwap32to16(fromBitCt: INTEGER) := AddSwap32to16;
+      (* ^PRE: fromBitCt MOD 32 = 0 *) 
       addRef(type: RefType) := AddRef;
       addDone() := AddDone;
 
@@ -90,58 +112,155 @@ REVEAL T = Public BRANDED "ConvertPacking 1.0" OBJECT
 CONST SignExt32 = ARRAY [0..1] OF Swap.Int32 {0, -1};
 
 TYPE
-  Int8 = BITS 8 FOR [-16_80 .. 16_7F];
+  UInt8 = BITS 8 FOR [0 .. 16_FF];
 
-(* Based on Word.Extract, but extracts from a word of size bytes with
-   the opposite endian to this machine.
-   Take n bits from x, with bit i as the least significant bit, and return them
-   as the least significant n bits of a word whose other bits are 0. A checked
-   runtime error if n + i > Word.Size. *)
+(* Similar to Word.Extract, extract a field of n bits, starting with bit
+   number i, and return it right-justified in a word.  Differences are:
+   1) Treat the bytes of x as if they were in little-endian order, i.e., byte
+      0 is the least significant, regardless of the endianness of the 
+      executing machine. 
+   2) Extract only from the size least-significant bytes of x, which implies
+      a checked runtime error if n+i >= 8*size.
+   Like Word.Extract, interpret i as the number of the least-significant bit,
+   in little-endian (i.e., right-to-left) bit ordering, within the size bytes.
+*) 
+
+PROCEDURE ExtractSwapLE (x: Word.T; i, n: CARDINAL; size: INTEGER): Word.T =
+
+  VAR fromBytes := LOOPHOLE(x, ARRAY [0..BYTESIZE(Word.T)-1] OF UInt8);
+      to: Word.T := 0;
+      resBitNo: INTEGER := 0; (* In little-endian numbering. *) 
+      fromByteNo: INTEGER; (* In little-endian numbering. *) 
+      loBitNoInByte: CARDINAL; (* Low numbered, in little-endian numbering. *) 
+      value: Word.T; 
+
+  BEGIN
+    IF n = 0 THEN RETURN 0; END; 
+    loBitNoInByte := i MOD 8;
+    fromByteNo := i DIV 8;
+    resBitNo := 0; 
+    (* Handle byte fragments of field least to most significant. *) 
+    LOOP
+      <* ASSERT fromByteNo < size *> 
+      WITH len = MIN(n, 8 - loBitNoInByte) DO
+        (* Word.Extract and Word.Insert always use LE bit numbering. *) 
+        value := Word.Extract(fromBytes[fromByteNo], loBitNoInByte, len); 
+        to := Word.Insert (to, value, resBitNo, len);
+        DEC(n, len);
+        IF n = 0 THEN RETURN to; END;
+        INC(resBitNo, len);
+        loBitNoInByte := 0;
+        INC(fromByteNo); 
+      END(*WITH*);
+    END(*LOOP*);
+  END ExtractSwapLE;
+
+(* Similar to Word.Extract, extract a field of n bits, starting with bit
+   number i, and return it right-justified in a word.  Differences are:
+   1) Treat the bytes of x as if they were in big-endian order, i.e., byte
+      0 is the most significant, regardless of the endianness of the 
+      executing machine. 
+   2) Extract only from the size mostt-significant bytes of x, which implies
+      a checked runtime error if n+i >= 8*size.
+   Unlike Word.Extract, interpret i as the number of the most-significant bit,
+   in big-endian (i.e., left-to-right) bit ordering, within the size bytes.
+*) 
+
+PROCEDURE ExtractSwapBE (x: Word.T; i, n: CARDINAL; size: INTEGER): Word.T =
+
+  VAR fromBytes := LOOPHOLE(x, ARRAY [0..BYTESIZE(Word.T)-1] OF UInt8);
+      to: Word.T := 0;
+      resBitNo: INTEGER := 0; (* Low numbered, in big-endian numbering. *) 
+      fromByteNo: INTEGER; (* In little-endian numbering. *) 
+      loBitNoInByte: CARDINAL; (* Low numbered, in big-endian numbering. *) 
+      value: Word.T; 
+
+  BEGIN
+    IF n = 0 THEN RETURN 0; END; 
+    loBitNoInByte := i MOD 8;
+    fromByteNo := i DIV 8; 
+    resBitNo := n;
+    (* Handle byte fragments of field most to least significant. *) 
+    LOOP
+      <* ASSERT fromByteNo < size *> 
+      WITH len = MIN(n, 8 - loBitNoInByte) DO
+        DEC(resBitNo, len);
+        (* Word.Extract and Word.Insert always use LE bit numbering. *) 
+        value := Word.Extract (fromBytes[fromByteNo], 8-loBitNoInByte-len, len);
+        to := Word.Insert (to, value, resBitNo, len);
+        DEC(n, len);
+        IF n = 0 THEN RETURN to; END;
+        loBitNoInByte := 0;
+        INC(fromByteNo); 
+      END(*WITH*);
+    END(*LOOP*);
+  END ExtractSwapBE;
+
+(* Based on Word.Extract, but extracts from the size lowest numbered bytes of x
+   (as numbered on the from-endian sending machine), which has the 
+   opposite endian to this machine.  Also, treats the starting bit number i
+   as the lowest numbered bit in the (opposite) endian-bit-ordering of the 
+   from machine.  Thus, i is the msb# if written on a big-endian machine, 
+   otherwise, it's the lsb#. 
+
+   Take n bits from x, with bit i as the lowest numbered bit, and return them
+   as the least significant n bits of a Word.T whose other bits are 0. A checked
+   runtime error if n + i > WordBitsize.  Treat bytes of x numbered >= size, in 
+   executing-endian numbering as containing zeros. *) 
 PROCEDURE ExtractSwap (self: T; x: Word.T; i, n: CARDINAL; 
                        size: INTEGER): Word.T =
-  VAR xb := LOOPHOLE(x, ARRAY [0..BYTESIZE(Word.T)-1] OF Int8);
+
+  VAR fromBytes := LOOPHOLE(x, ARRAY [0..BYTESIZE(Word.T)-1] OF UInt8);
       to: Word.T := 0;
-      bit: INTEGER := 0;
+      bit: INTEGER := 0; (* Bit# within "to", in from-endian. *) 
+      loBitNoInByte: CARDINAL;
+
   BEGIN
-    (* March through the bytes from the input word backward, since
-       that gives us the bytes in forward order from the other
-       endian. Start with the byte containing the first part of the
-       field to be extracted. *)
-(*
-    WITH last = size - 1 - (i DIV 8) DO
-      i := i MOD 8;
+    IF n > 0 THEN 
+      loBitNoInByte := i MOD 8;
+      IF self.from.little_endian THEN
+        FOR b := i DIV 8 TO size-1 DO
+(* TODO: Assuming valid i and n, this FOR loop can just be a LOOP. *) 
+          (* If we want some data from this *)
+          WITH len = MIN(n, 8 - loBitNoInByte) DO
+            (* Get the appropriate part of the byte *)
 
-      FOR b := last TO FIRST(xb) BY -1 DO
-*)
-    WITH first = i DIV 8 DO
-      i := i MOD 8;
+              to := Word.Insert
+                      (to, Word.Extract(fromBytes[b], loBitNoInByte, len), bit, len);
+              INC(bit, len);
+            (* set loBitNoInByte to 0 after the first pass. *)
+            loBitNoInByte := 0;
 
-      IF NOT self.from.little_endian THEN
-        bit := n;
-      END;
-
-      FOR b := first TO size-1 DO
-        (* If we want some data from this *)
-        WITH len = MIN(n, 8 - i) DO
-          (* Get the appropriate part of the byte *)
-          IF self.from.little_endian THEN
-            to := Word.Insert(to, Word.Extract(xb[b], i, len), bit, len);
-            INC(bit, len);
-          ELSE
-            DEC(bit, len);
-            to := Word.Insert(to, Word.Extract(xb[b], 8-i-len, len), bit, len);
-          END;
-          (* set i to 0 after the first pass. *)
-          i := 0;
-
-          (* keep track of how much we have left to get *)
-          DEC(n, len);
-          IF n = 0 THEN
-            RETURN to;
+            (* keep track of how much we have left to get *)
+            DEC(n, len);
+            IF n = 0 THEN
+              RETURN to;
+            END;
           END;
         END;
-      END;
-    END;
+      ELSE (* From machine was big-endian. *) 
+        bit := n;
+        FOR b := i DIV 8 TO size-1 DO
+(* TODO: Assuming valid i and n, this FOR loop can just be a LOOP. *) 
+          (* If we want some data from this *)
+          WITH len = MIN(n, 8 - loBitNoInByte) DO
+            (* Get the appropriate part of the byte *)
+              DEC(bit, len);
+              to 
+                := Word.Insert
+                    (to, Word.Extract(fromBytes[b], 8-loBitNoInByte-len, len), bit, len);
+            (* set loBitNoInByte to 0 after the first pass. *)
+            loBitNoInByte := 0;
+
+            (* keep track of how much we have left to get *)
+            DEC(n, len);
+            IF n = 0 THEN
+              RETURN to;
+            END;
+          END;
+        END;
+      END; 
+    END; 
     RETURN to;
   END ExtractSwap;
 
@@ -170,120 +289,396 @@ VAR Int32RecVar : Int32Rec;
 <*UNUSED*>
 VAR CheckInt32 : [ 0 .. 0 ] := ADR(Int32RecVar) - ADR(Int32RecVar.v);
 
-PROCEDURE Convert(self: T; dest: ADDRESS; v: ReadVisitor; 
-                  number: INTEGER := 1): ADDRESS RAISES 
-          {Error, Rd.EndOfFile, Rd.Failure, Thread.Alerted} =
+TYPE U16Rec = BITS 16 FOR RECORD v : Swap.UInt16 END; 
+     (* Similarly to Int32Rec. *) 
+VAR U16RecVar : U16Rec; 
+<*UNUSED*>
+VAR CheckU16 : [ 0 .. 0 ] := ADR(U16RecVar) - ADR(U16RecVar.v);
+
+TYPE CharArrOverU16 = ARRAY [0..1] OF CHAR;
+TYPE CharArrOverWord = ARRAY [0..BYTESIZE(Word.T)-1] OF CHAR;  
+
+TYPE Int32onU16 = RECORD a, b: Swap.UInt16 END; 
+
+PROCEDURE IsWidechar (Type: RTTipe.T): BOOLEAN =
+  BEGIN 
+    IF Type = NIL THEN RETURN FALSE; END; 
+    CASE Type.kind 
+    OF RTTipe.Kind.Enum => 
+      WITH WEnum = NARROW(Type, RTTipe.Enum) DO 
+        RETURN WEnum.n_elts = 16_10000 OR WEnum.n_elts = 16_110000 
+(* FIXME: It would be quite difficult for a programmer to define an enumeration
+         type with either of these numbers of elements, thus spoofing WIDECHAR
+         here.  In case she did, BuildWidechar further checks that the size 
+         has changed if the CPKind calls for WIDECHAR to do that.  Otherwise,  
+         the consequence would be that the enumeration would be pickled in WC21.
+         So, find a surer criterion than this.  RTTipe doesn't 
+         appear to have sufficient information currently. *) 
+(* Widechar Tipe. *) 
+      END;
+    | RTTipe.Kind.Packed =>
+      WITH WPacked = NARROW(Type, RTTipe.Packed) DO 
+        RETURN IsWidechar (WPacked.base); 
+      END; 
+    ELSE RETURN FALSE; 
+    END; 
+  END IsWidechar; 
+
+PROCEDURE ReadWC21(rd: Rd.T): UInt32 
+RAISES{Rd.EndOfFile, Rd.Failure, Thread.Alerted} = 
+(* Read one WIDECHAR value in WC21 encoding and return in a 32-bit int. *) 
+
+  VAR B0, B1, B2: UInt8; 
+  VAR intVal: INTEGER; 
+  BEGIN 
+    B0 := ORD(Rd.GetChar(rd)); 
+    intVal := And(B0, 16_7F);
+    IF And(B0, 16_80) # 0 THEN (* A second byte follows. *) 
+      B1 := ORD(Rd.GetChar(rd)); 
+      intVal := Or(intVal, LeftShift (And (B1, 16_7F), 7));
+      IF And(B1, 16_80) # 0 THEN (* A third byte follows. *) 
+        B2 := ORD(Rd.GetChar(rd)); 
+        intVal := Or(intVal, LeftShift (And(B2, 16_7F), 14));
+      END;  
+    END;  
+    RETURN intVal 
+  END ReadWC21; 
+
+PROCEDURE Convert
+   (self: T; dest: ADDRESS; v: ReadVisitor; 
+    progRepCt: INTEGER := 1 (* Repeat the program this many times. *) )
+    : ADDRESS 
+     RAISES {Error, Rd.EndOfFile, Rd.Failure, Thread.Alerted} =
   VAR t: ARRAY [0..7] OF CHAR;
-      repetition: INTEGER := 1; 
+      insnRepCt: INTEGER := 1; (* Repeat each instruction this many times. *) 
+      extract: Word.T;
 
   BEGIN
     IF self.prog.size() = 2 THEN
       (* We have a one step program (the step plus the DONE step), so
          lets just do it in one shot. *)
-      repetition := number;
-      number := 1;
+      insnRepCt := progRepCt;
+      progRepCt := 1;
     END;
-    FOR n := 1 TO number DO
+    (* Execute the program "progRepCt" times. *) 
+    FOR n := 1 TO progRepCt DO 
       FOR i := 0 TO self.prog.size() - 1 DO
         WITH elem = self.prog.get(i), 
-             length = elem.length * repetition DO
+             insnUnitCt = elem.unitCt * insnRepCt DO
+             (*  Repeat each instruction "insnRepCt" times. *)
           CASE elem.kind OF
-          | PklAction.Kind.Copy => 
-            ReadData(v, dest, length);
-            INC(dest, length);
-          | PklAction.Kind.SwapPacked => 
-            WITH nelem = NARROW(elem, PklAction.SwapPacked) DO
-              FOR i := 1 TO length DO
-                VAR from: Word.T := 0;
-                    to: Word.T := 0;
-                    bit: INTEGER := 0;
-                    wb := LOOPHOLE(ADR(from), UNTRACED REF 
-                                   ARRAY [0..BYTESIZE(Word.T)-1] OF CHAR);
-                BEGIN
-                  v.readData(SUBARRAY(wb^, 0, nelem.size));
-                  
-                  (** IO.Put("Extracting from: " &
-                    Fmt.Pad(Fmt.Unsigned(from, 2), nelem.size * 8, '0') & "\n"); **)
+          | PklAction.PAKind.Copy => 
+            ReadData(v, dest, insnUnitCt);
+            INC(dest, insnUnitCt);
 
-                  IF self.from.little_endian THEN
-                    FOR j := FIRST(nelem.field^) TO LAST(nelem.field^) DO
-                      WITH extract = self.extractSwap(from, bit, 
-                                                      nelem.field[j], 
-                                                      nelem.size) DO
-                        (** IO.Put(" Extracted field: " &
-                          Fmt.Pad(Fmt.Unsigned(extract, 2),
-                                  nelem.field[j], '0') & "\n"); **)
+          | PklAction.PAKind.CopyPackedLE => 
+            (* Copy the packed fields of a contiguous sequence of fields, with 
+               possibly a trailing pad field, that begins and ends on byte 
+               boundaries.  Possibly narrow WIDECHAR fields. *)
+            (* Was written and reading on little-endian. *) 
+            WITH nelem = NARROW(elem, PklAction.Packed) DO
 
-                        to := Word.Insert(to, extract,
-                                          Word.Size-bit-nelem.field[j], 
-                                          nelem.field[j]);
+              VAR from: Word.T := 0;
+                  to: Word.T := 0;
+                  lsBitNoLE: INTEGER := 0; (* lsb# of field, little-endian. *)
+                  fieldBitCt: INTEGER; 
+                  fromBytesPtr 
+                    := LOOPHOLE(ADR(from), UNTRACED REF CharArrOverWord);
+              BEGIN
+                FOR i := 1 TO insnUnitCt DO 
+                  (* insnUnitCt chunks of nelem.size bytes each *)
+                  v.readData(SUBARRAY(fromBytesPtr^, 0, nelem.size));
 
-                        (** IO.Put(" Into field: " &
-                          Fmt.Pad(Fmt.Unsigned(to, 2), Word.Size, '0') & "\n"); **)
+                  (** IO.Put
+                        ( "CopyPacked, LE, extracting from: 2_" 
+                           & Fmt.Pad(Fmt.Unsigned(from, 2), nelem.size*8, '0')
+                           & "\n"); **)
 
-                        INC(bit, nelem.field[j]);
-                      END;
-                    END;
-                  ELSE
-                    FOR j := FIRST(nelem.field^) TO LAST(nelem.field^) DO
-                      WITH extract = self.extractSwap(from, bit, 
-                                                      nelem.field[j], 
-                                                      nelem.size) DO
-                        (** IO.Put(" Extracted field: " &
-                          Fmt.Pad(Fmt.Unsigned(extract, 2),
-                                  nelem.field[j], '0') & "\n"); **)
 
-                        to := Word.Insert(to, extract,
-                                          bit, nelem.field[j]);
+                  lsBitNoLE := 0; 
+                  FOR j := FIRST(nelem.field^) TO LAST(nelem.field^) DO
+                    fieldBitCt := nelem.field^[j]; 
+                    extract := Word.Extract (from, lsBitNoLE, fieldBitCt); 
 
-                        (** IO.Put(" Into field: " &
-                          Fmt.Pad(Fmt.Unsigned(to, 2), nelem.size * 8, '0') & "\n"); **)
+                    (** IO.Put
+                          ( " Extracted field: 2_" 
+                            & Fmt.Pad
+                                (Fmt.Unsigned(extract, 2), fieldBitCt, '0') 
+                            & "\n"); **)
 
-                        INC(bit, nelem.field[j]);
-                      END;
-                    END;
-                  END;
-                  (* Copy the bytes *)
+                    IF j IN nelem.widecharFieldSet THEN
+                      IF extract > 16_FFFF THEN 
+                         extract := PickleStubs . ReplacementWt  
+                     (** IO.Put 
+                           ( "WIDECHAR narrowed to: 2_" 
+                            & Fmt.Pad
+                                (Fmt.Unsigned(extract, 2), fieldBitCt, '0') 
+                            & "\n"); **)
+                      END; 
+                    END; 
+
+                    to := Word.Insert (to, extract, lsBitNoLE, fieldBitCt);
+
+                    (** IO.Put
+                          ( " Into result word: 2_" 
+                            & Fmt.Pad(Fmt.Unsigned(to, 2), nelem.size*8, '0') 
+                            & "\n"); **)
+
+                    INC(lsBitNoLE, fieldBitCt);
+                  END (*FOR fields.*) ;
+                  (* Copy the bytes to destination. *)
                   SUBARRAY(LOOPHOLE(dest, BufPtr)^, 0, nelem.size) :=
                     SUBARRAY(LOOPHOLE(ADR(to), BufPtr)^, 0, nelem.size);
-                END;
-                INC(dest, nelem.size);
-              END;
-            END;
-          | PklAction.Kind.SkipFrom =>
-            v.skipData(length);
-          | PklAction.Kind.SkipTo =>
-            INC(dest, length);
-          | PklAction.Kind.Skip =>
-            v.skipData(length);
-            INC(dest, length);
-          | PklAction.Kind.Swap16 =>
-            ReadData(v, dest, length*2);
-            FOR i := 1 TO length DO
+                  INC(dest, nelem.size);
+                END(*FOR*);
+              END (*Block*);
+            END (*WITH*);
+
+          | PklAction.PAKind.CopyPackedBE => 
+            (* Copy the packed fields of a contiguous sequence of fields, with 
+               possibly a trailing pad field, that begins and ends on byte 
+               boundaries.  Possible narrow WIDECHAR fields. *)
+            (* Was written and reading on big-endian. *) 
+            WITH nelem = NARROW(elem, PklAction.Packed) DO
+
+              VAR from: Word.T := 0;
+                  to: Word.T := 0;
+                  msBitNoBE: INTEGER := 0; (* msb# of field, big-endian. *) 
+                  lsBitNoLE: INTEGER := 0; (* lsb# of field, little-endian. *)
+                  fieldBitCt: INTEGER; 
+                  fromBytesPtr 
+                    := LOOPHOLE(ADR(from), UNTRACED REF CharArrOverWord);
+              BEGIN
+                FOR i := 1 TO insnUnitCt DO 
+                  (* insnUnitCt chunks of nelem.size bytes each *)
+                  v.readData(SUBARRAY(fromBytesPtr^, 0, nelem.size));
+
+                  (** IO.Put
+                        ( "CopyPacked, BE, extracting from: 2_" 
+                          & Fmt.Pad
+                              (Fmt.Unsigned
+                                 (Word.Rightshift
+                                    (from, WordBitsize-nelem.size*8), 
+                               2), 
+                               nelem.size*8, '0') 
+                          & "\n"); **)
+
+                  msBitNoBE := 0; 
+                  FOR j := FIRST(nelem.field^) TO LAST(nelem.field^) DO
+                    fieldBitCt := nelem.field^[j]; 
+                    lsBitNoLE := WordBitsize-msBitNoBE-fieldBitCt;
+                    extract := Word.Extract (from, lsBitNoLE, fieldBitCt); 
+
+                    (** IO.Put
+                         (" Extracted field: 2_" 
+                          & Fmt.Pad(Fmt.Unsigned(extract, 2), fieldBitCt, '0')
+                          & "\n"); **)
+
+                    IF j IN nelem.widecharFieldSet THEN
+                      IF extract > 16_FFFF THEN 
+                         extract := PickleStubs . ReplacementWt  
+                     (** IO.Put 
+                           ( "WIDECHAR narrowed to: 2_" 
+                            & Fmt.Pad
+                                (Fmt.Unsigned(extract, 2), fieldBitCt, '0') 
+                            & "\n"); **)
+                      END; 
+                    END; 
+                    to := Word.Insert (to, extract, lsBitNoLE, fieldBitCt);
+
+                    (** IO.Put
+                          ( " Into result word: 2_" &
+                            & Fmt.Pad(Fmt.Unsigned(to, 2), nelem.size*8, '0')
+                            & "\n"); **)
+
+                    INC(msBitNoBE, fieldBitCt);
+                  END (*FOR fields.*);
+                  (* Copy the bytes to destination. *)
+                  SUBARRAY(LOOPHOLE(dest, BufPtr)^, 0, nelem.size) :=
+                    SUBARRAY(LOOPHOLE(ADR(to), BufPtr)^, 0, nelem.size);
+                  INC(dest, nelem.size);
+                END(*FOR*);
+              END(*Block*);
+            END (*WITH*);
+
+          | PklAction.PAKind.SwapPackedLEtoBE => 
+            (* Copy the packed fields of a contiguous sequence of fields, with 
+               possibly a trailing pad field, that begins and ends on byte 
+               boundaries.  Possible narrow WIDECHAR fields. *)
+            (* Was written on little-endian; executing on big-endian. *) 
+            WITH nelem = NARROW(elem, PklAction.Packed) DO
+
+              VAR from: Word.T := 0;
+                  to: Word.T := 0;
+                  bitNo: INTEGER := 0; (* of packed field. *) 
+                  fieldBitCt: INTEGER; 
+                  fromBytesPtr 
+                    := LOOPHOLE(ADR(from), UNTRACED REF CharArrOverWord);
+              BEGIN
+                FOR i := 1 TO insnUnitCt DO 
+                  (* insnUnitCt chunks of nelem.size bytes each *)
+                  v.readData(SUBARRAY(fromBytesPtr^, 0, nelem.size));
+
+                  (** IO.Put
+                        ( "SwapPacked, from LE, extracting from: 2_" 
+                           & Fmt.Pad
+                               (Fmt.Unsigned
+                                  (Word.Rightshift
+                                     (from, WordBitsize-nelem.size*8), 
+                                2), 
+                                nelem.size*8, '0')
+                           & "\n"); **)
+
+                  bitNo := 0; 
+                  FOR j := FIRST(nelem.field^) TO LAST(nelem.field^) DO
+                    fieldBitCt := nelem.field^[j]; 
+                    extract 
+                      := ExtractSwapLE (from, bitNo, fieldBitCt, nelem.size); 
+                         (* ^bitNo is LE lsb, on writing system and to
+                              ExtractSwapLE. *) 
+
+                    (** IO.Put
+                          ( " Extracted field: 2_" 
+                            & Fmt.Pad
+                                (Fmt.Unsigned(extract, 2), fieldBitCt, '0') 
+                            & "\n"); **)
+
+                    IF j IN nelem.widecharFieldSet THEN
+                      IF extract > 16_FFFF THEN 
+                         extract := PickleStubs . ReplacementWt  
+                     (** IO.Put 
+                           ( "WIDECHAR narrowed to: 2_" 
+                            & Fmt.Pad
+                                (Fmt.Unsigned(extract, 2), fieldBitCt, '0') 
+                            & "\n"); **)
+                      END; 
+                    END; 
+
+                    to := Word.Insert 
+                            (to, extract, WordBitsize-bitNo-fieldBitCt, 
+                            (* bitNo means BE, msb on the to- system, but 
+                               Insert takes a LE, lsb, so we convert it. *) 
+                             fieldBitCt);
+
+                    (** IO.Put
+                          ( " Into result word: 2_" 
+                            & Fmt.Pad
+                                (Fmt.Unsigned
+                                   (Word.Rightshift
+                                      (to, WordBitsize-nelem.size*8), 
+                                 2), 
+                                 nelem.size*8, '0')
+                            & "\n"); **)
+
+                    INC(bitNo, fieldBitCt);
+                  END (*FOR fields.*) ;
+                  (* Copy the bytes to destination. *)
+                  SUBARRAY(LOOPHOLE(dest, BufPtr)^, 0, nelem.size) :=
+                    SUBARRAY(LOOPHOLE(ADR(to), BufPtr)^, 0, nelem.size);
+                  INC(dest, nelem.size);
+                END(*FOR*);
+              END (*Block*);
+            END (*WITH*);
+
+          | PklAction.PAKind.SwapPackedBEtoLE => 
+            (* Copy the packed fields of a contiguous sequence of fields, with 
+               possibly a trailing pad field, that begins and ends on byte 
+               boundaries.  Possibly narrow WIDECHAR fields. *)
+            (* Was written on big-endian; executing on little-endian. *) 
+            WITH nelem = NARROW(elem, PklAction.Packed) DO
+
+              VAR from: Word.T := 0;
+                  to: Word.T := 0;
+                  bitNo: INTEGER := 0; (* of packed field. *)  
+                  fieldBitCt: INTEGER; 
+                  fromBytesPtr 
+                    := LOOPHOLE(ADR(from), UNTRACED REF CharArrOverWord);
+              BEGIN
+                FOR i := 1 TO insnUnitCt DO 
+                  (* insnUnitCt chunks of nelem.size bytes each *)
+                  v.readData(SUBARRAY(fromBytesPtr^, 0, nelem.size));
+
+                  (** IO.Put
+                        ( "SwapPacked, from BE, extracting from: 2_" 
+                          & Fmt.Pad
+                              (Fmt.Unsigned (from, 2), nelem.size*8, '0') 
+                          & "\n"); **)
+
+                  bitNo := 0; 
+                  FOR j := FIRST(nelem.field^) TO LAST(nelem.field^) DO
+                    fieldBitCt := nelem.field^[j]; 
+                    extract 
+                      := ExtractSwapBE ( from, bitNo, fieldBitCt, nelem.size);
+                         (* ^bitNo is BE msb, on writing system and to
+                              ExtractSwapBE. *) 
+
+                    (** IO.Put(" Extracted field: 2_" 
+                               & Fmt.Pad(Fmt.Unsigned(extract, 2),
+                               fieldBitCt, '0') & "\n"); **)
+
+                    IF j IN nelem.widecharFieldSet THEN
+                      IF extract > 16_FFFF THEN 
+                         extract := PickleStubs . ReplacementWt  
+                     (** IO.Put 
+                           ( "WIDECHAR narrowed to: 2_" 
+                            & Fmt.Pad
+                                (Fmt.Unsigned(extract, 2), fieldBitCt, '0') 
+                            & "\n"); **)
+                      END; 
+                    END; 
+                    to := Word.Insert (to, extract, bitNo, fieldBitCt);
+                          (* bitNo means LE, lsb on this system, and as
+                             taken by Insert. *) 
+
+                    (** IO.Put
+                          ( " Into result word: 2_" &
+                            & Fmt.Pad(Fmt.Unsigned(to, 2), nelem.size*8, '0')
+                            & "\n"); **)
+
+                    INC(bitNo, fieldBitCt);
+                  END (*FOR fields.*);
+                  (* Copy the bytes to destination. *)
+                  SUBARRAY(LOOPHOLE(dest, BufPtr)^, 0, nelem.size) :=
+                    SUBARRAY(LOOPHOLE(ADR(to), BufPtr)^, 0, nelem.size);
+                  INC(dest, nelem.size);
+                END(*FOR*);
+              END(*Block*);
+            END (*WITH*);
+
+          | PklAction.PAKind.SkipFrom =>
+            v.skipData(insnUnitCt);
+          | PklAction.PAKind.SkipTo =>
+            INC(dest, insnUnitCt);
+          | PklAction.PAKind.Skip =>
+            v.skipData(insnUnitCt);
+            INC(dest, insnUnitCt);
+          | PklAction.PAKind.Swap16 =>
+            ReadData(v, dest, insnUnitCt*2);
+            FOR i := 1 TO insnUnitCt DO
               WITH int16 = LOOPHOLE(dest, UNTRACED REF Swap.Int16) DO
                 int16^ := Swap.Swap2(int16^);
               END;
               INC(dest, 2);
             END;
-          | PklAction.Kind.Swap32 =>
-            ReadData(v, dest, length*4);
-            FOR i := 1 TO length DO
+          | PklAction.PAKind.Swap32 =>
+            ReadData(v, dest, insnUnitCt*4);
+            FOR i := 1 TO insnUnitCt DO
               WITH int32 = LOOPHOLE(dest, UNTRACED REF Int32Rec)^.v DO
                 int32 := Swap.Swap4(int32);
               END;
               INC(dest, 4);
             END;
-          | PklAction.Kind.Swap64 =>
-            ReadData(v, dest, length*8);
-            FOR i := 1 TO length DO
+          | PklAction.PAKind.Swap64 =>
+            ReadData(v, dest, insnUnitCt*8);
+            FOR i := 1 TO insnUnitCt DO
               WITH int64 = LOOPHOLE(dest, UNTRACED REF Swap.Int64On32) DO
                 int64^ := Swap.Swap8(int64^);
               END;
               INC(dest, 8);
             END;
-          | PklAction.Kind.Copy32to64, PklAction.Kind.Swap32to64 =>
+          | PklAction.PAKind.Copy32to64, PklAction.PAKind.Swap32to64 =>
             WITH nelem = NARROW(elem, PklAction.Copy32to64) DO
-              FOR i := 1 TO length DO
+              FOR i := 1 TO insnUnitCt DO
                 v.readData(SUBARRAY(t, 0, 4));
                 WITH int32 = LOOPHOLE(ADR(t[0]), UNTRACED REF Int32Rec)^.v,
                      int64 = LOOPHOLE(dest, UNTRACED REF Swap.Int64On32) DO
@@ -305,16 +700,16 @@ PROCEDURE Convert(self: T; dest: ADDRESS; v: ReadVisitor;
                     END;
                   END;
                   (* Now, swap it if need be. *)
-                  IF elem.kind = PklAction.Kind.Swap32to64 THEN
+                  IF elem.kind = PklAction.PAKind.Swap32to64 THEN
                     int64^ := Swap.Swap8(int64^);
                   END;
                 END;
                 INC(dest, 8);
               END;
             END;
-          | PklAction.Kind.Copy64to32, PklAction.Kind.Swap64to32 =>
+          | PklAction.PAKind.Copy64to32, PklAction.PAKind.Swap64to32 =>
             WITH nelem = NARROW(elem, PklAction.Copy64to32) DO
-              FOR i := 1 TO length DO
+              FOR i := 1 TO insnUnitCt DO
                 v.readData(t);
                 WITH int64 = LOOPHOLE(ADR(t[0]), UNTRACED REF Swap.Int64On32)^,
                      int32 = LOOPHOLE(dest, UNTRACED REF Int32Rec)^.v DO
@@ -333,23 +728,107 @@ PROCEDURE Convert(self: T; dest: ADDRESS; v: ReadVisitor;
                   END;
 
                   (* Now, swap it if need be. *)
-                  IF elem.kind = PklAction.Kind.Swap64to32 THEN
+                  IF elem.kind = PklAction.PAKind.Swap64to32 THEN
                     int32 := Swap.Swap4(int32);
                   END;
                 END;
                 INC(dest, 4);
               END;
             END;
-          | PklAction.Kind.ReadRef =>
+
+          | PklAction.PAKind.Copy16to32, PklAction.PAKind.Swap16to32 =>
+              FOR i := 1 TO insnUnitCt DO
+                v.readData(SUBARRAY(t, 0, 2));
+                WITH int16p = LOOPHOLE(ADR(t[0]), UNTRACED REF Swap.UInt16),
+                     int32onU16p = LOOPHOLE(dest, UNTRACED REF Int32onU16) DO
+                  (* First, put it in a 32 bit word appropriate to the 
+                     sending machine. *)
+                  IF self.from.little_endian THEN
+                    int32onU16p^.a := int16p^;
+                    int32onU16p^.b := 0;
+                  ELSE
+                    int32onU16p^.b := int16p^;
+                    int32onU16p^.a := 0;
+                  END;
+                  (* Now, swap it if need be. *)
+                  IF elem.kind = PklAction.PAKind.Swap16to32 THEN
+                    WITH int32p = LOOPHOLE(dest, UNTRACED REF Swap.Int32) DO
+                      int32p^ := Swap.Swap4(int32p^);
+                    END; 
+                  END;
+                END;
+                INC(dest, 4);
+              END;
+
+          | PklAction.PAKind.Copy32to16, PklAction.PAKind.Swap32to16 =>
+          (* Can this ever happen? *) 
+              FOR i := 1 TO insnUnitCt DO
+                v.readData(SUBARRAY(t, 0, 4));
+                WITH int32onU16p = LOOPHOLE(ADR(t[0]), UNTRACED REF Int32onU16),
+                     u16 = LOOPHOLE(dest, UNTRACED REF U16Rec)^.v DO
+                  (* First, get the lower 16 bits as perceived on the the 
+                     sending machine. *)
+
+                  IF self.from.little_endian THEN
+                    u16 := int32onU16p^.a;
+                    IF int32onU16p^.b # 0 THEN 
+                      u16 := PickleStubs . ReplacementWt; 
+                    END;
+                  ELSE
+                    u16 := int32onU16p^.b;
+                    IF int32onU16p^.a # 0 THEN
+                      u16 := PickleStubs . ReplacementWt; 
+                    END;
+                  END;
+
+                  (* Now, swap it if need be. *)
+                  IF elem.kind = PklAction.PAKind.Swap32to16 THEN
+                    u16 := Swap.Swap4(u16);
+                  END;
+                END;
+                INC(dest, 2);
+              END;
+
+          | PklAction.PAKind.CopyWC21to32 => 
+              VAR intVal: UInt32; 
+              BEGIN 
+                FOR i := 1 TO insnUnitCt (*32-bit words*) DO
+                  intVal := PickleStubs.InWC21(v.getReader().rd); 
+                  IF intVal > 16_10FFFF THEN 
+                    RAISE Error("Malformed pickle: WIDECHAR out of range.");
+                  END; 
+                  WITH int32p = LOOPHOLE(dest, UNTRACED REF UInt32) DO
+                    int32p^ := intVal; 
+                  END;
+                  INC(dest,4) 
+                END; 
+              END; 
+
+          | PklAction.PAKind.CopyWC21to16 => 
+              VAR intVal: UInt32; 
+              BEGIN 
+                FOR i := 1 TO insnUnitCt (*16-bit words*) DO
+                  intVal := PickleStubs.InWC21(v.getReader().rd); 
+                  IF intVal > 16_FFFF THEN 
+                    intVal := PickleStubs . ReplacementWt  
+                  END; 
+                  WITH uint16p = LOOPHOLE(dest, UNTRACED REF Swap.UInt16) DO
+                    uint16p^ := intVal; 
+                  END;
+                  INC(dest,2) 
+                END; 
+              END; 
+
+          | PklAction.PAKind.ReadRef =>
             WITH nelem = NARROW(elem, PklAction.Ref) DO
-              FOR i := 1 TO length DO
+              FOR i := 1 TO insnUnitCt DO
                 WITH ref = LOOPHOLE(dest, UNTRACED REF REFANY) DO
                   ref^ := v.readRef(nelem.refType);
                 END;
                 INC(dest, self.to.word_size DIV 8);
               END;
             END;
-          | PklAction.Kind.Done =>
+          | PklAction.PAKind.Done =>
           END;
         END;
       END;
@@ -368,39 +847,70 @@ PROCEDURE WriteData(v: WriteVisitor;  src: ADDRESS;  len: INTEGER)
       v.writeData(SUBARRAY(LOOPHOLE(src, BufPtr)^, 0, len));
     END;
   END WriteData;
- 
-PROCEDURE Write(self: T; src: ADDRESS; v: WriteVisitor; 
-                number: INTEGER := 1): ADDRESS RAISES 
-          {Error, Wr.Failure, Thread.Alerted} =
-  VAR repetition: INTEGER := 1;
+
+PROCEDURE WriteWC21(wr: Wr.T; intVal: UInt32)
+  RAISES {Wr.Failure, Thread.Alerted} =
+
+  VAR B0, B1, B2: UInt32;
+  BEGIN  
+    B0 := And(intVal, 16_7F);
+    IF And(intVal, 16_FFFFFF80) = 0 THEN (* No 2nd byte is needed. *)
+      Wr.PutChar(wr, VAL(B0, CHAR));
+    ELSE 
+      B0 := Or (B0, 16_80); 
+      Wr.PutChar(wr, VAL(B0, CHAR));
+      B1 := RightShift(And(intVal, 16_3F80), 7); 
+      IF And(intVal, 16_FFFFC000) = 0 THEN (* No 3rd byte is needed. *)
+        Wr.PutChar(wr, VAL(B1, CHAR));
+      ELSE 
+        B1 := Or (B1, 16_80); 
+        Wr.PutChar(wr, VAL(B1, CHAR));
+        B2 := RightShift(And(intVal, 16_1FC000), 14);  
+        Wr.PutChar(wr, VAL(B2, CHAR));
+      END; 
+    END; 
+  END WriteWC21; 
+
+PROCEDURE Write 
+   (self: T; src: ADDRESS; v: WriteVisitor; 
+    progRepCt: INTEGER := 1 (* Repeat the program this many times. *) )
+   : ADDRESS 
+     RAISES {Error, Wr.Failure, Thread.Alerted} =
+  VAR insnRepCt: INTEGER := 1; (* Repeat each instruction this many times. *) 
 
   BEGIN
-    IF self.writer # NIL THEN
-      RETURN self.writer.write(src, v, number);
+    IF self.writeConv # NIL THEN 
+      (* There is a different program for writing.  Use it instead. *) 
+      RETURN self.writeConv.write(src, v, progRepCt);
     END;
 
     IF self.prog.size() = 2 THEN
       (* We have a one step program (the step plus the DONE step), so
          lets just do it in one shot. *)
-      repetition := number;
-      number := 1;
+      insnRepCt := progRepCt;
+      progRepCt := 1;
     END;
-    FOR n := 1 TO number DO
-      FOR i := 0 TO self.prog.size() - 1 DO
+    (* Execute the program "progRepCt" times. *) 
+    FOR n := 1 TO progRepCt DO
+      FOR i := 0 TO self.prog.size() - 1 DO (* All program steps. *) 
         WITH elem = self.prog.get(i),
-             length = elem.length * repetition DO
+             insnUnitCt = elem.unitCt * insnRepCt DO 
+             (*  Repeat each instruction "insnRepCt" times. *)
           CASE elem.kind OF
-          | PklAction.Kind.Copy =>
-            WriteData (v, src, length);
-            INC(src, length); 
+          | PklAction.PAKind.Copy =>
+            WriteData (v, src, insnUnitCt);
+            INC(src, insnUnitCt); 
 
-          | PklAction.Kind.Skip =>
-            v.skipData(length);
-            INC(src, length);
+          | PklAction.PAKind.Skip =>
+            v.skipData(insnUnitCt);
+            INC(src, insnUnitCt);
 
-          | PklAction.Kind.ReadRef =>
+          | PklAction.PAKind.ReadRef =>
+            (* The name "ReadRef" is meant for when the program is executed 
+               by the read/convert interpreter.  Here, we do the reverse, i.e., 
+               write a Ref. *) 
             WITH nelem = NARROW(elem, PklAction.Ref) DO
-              FOR i := 1 TO length DO
+              FOR i := 1 TO insnUnitCt DO
                 WITH ref = LOOPHOLE(src, UNTRACED REF REFANY) DO
                   v.writeRef(nelem.refType, ref^);
                 END;
@@ -408,28 +918,87 @@ PROCEDURE Write(self: T; src: ADDRESS; v: WriteVisitor;
               END;
             END;
 
-          | PklAction.Kind.Done =>
-          | PklAction.Kind.SwapPacked => 
-            RAISE Error("PklAction.Kind.SwapPacked called during write?");
-          | PklAction.Kind.SkipFrom =>
-            RAISE Error("PklAction.Kind.SkipFrom called during write?");
-          | PklAction.Kind.SkipTo =>
-            RAISE Error("PklAction.Kind.SkipTo called during write?");
-          | PklAction.Kind.Swap16 =>
-            RAISE Error("PklAction.Kind.Swap16 called during write?");
-          | PklAction.Kind.Swap32 =>
-            RAISE Error("PklAction.Kind.Swap32 called during write?");
-          | PklAction.Kind.Swap64 =>
-            RAISE Error("PklAction.Kind.Swap64 called during write?");
-          | PklAction.Kind.Copy32to64 =>
-            RAISE Error("PklAction.Kind.Copy32to64 called during write?");
-          | PklAction.Kind.Swap32to64 =>
-            RAISE Error("PklAction.Kind.Swap32to64 called during write?");
-          | PklAction.Kind.Copy64to32 =>
-            RAISE Error("PklAction.Kind.Copy64to32 called during write?");
-          | PklAction.Kind.Swap64to32 =>
-            RAISE Error("PklAction.Kind.Swap64to32 called during write?");
+          | PklAction.PAKind.CopyWC21to32,
+            PklAction.PAKind.Copy16to32 =>
+            (* The names "CopyWC21to32" and "Copy16to32" are meant for when 
+               the program is executed by the read/convert interpreter.  Here, 
+               the to-system, which we are executing/writing on, is a 32-bit 
+               WIDECHAR system. The other system is irrelevant to writing.  
+               So we write each 32-bit field in WC21, or maybe 16-bits, if 
+               forced. *) 
+              VAR outValR: U16Rec;
+              VAR writer := v.getWriter(); 
+              BEGIN 
+                IF writer.write16BitWidechar THEN 
+                  WITH u16arr = LOOPHOLE(outValR.v, CharArrOverU16) DO 
+                    FOR i := 1 TO insnUnitCt (*32-bit words*) DO
+                      WITH uint32p = LOOPHOLE(src, UNTRACED REF UInt32) DO
+                        IF Word.GT(uint32p^, 16_FFFF) THEN
+                          outValR.v := PickleStubs . ReplacementWt;
+                        ELSE outValR.v := uint32p^; 
+                        END;
+                        Wr.PutChar(writer.wr, u16arr[0]);
+                        Wr.PutChar(writer.wr, u16arr[1]);
+                      END; 
+                      INC(src, 4);  
+                    END; 
+                  END; 
+                ELSE 
+                  FOR i := 1 TO insnUnitCt (*32-bit words*) DO
+                    WITH uint32p = LOOPHOLE(src, UNTRACED REF UInt32) DO
+                      PickleStubs.OutWC21
+                        (v.getWriter().wr,VAL(uint32p^,WIDECHAR))
+                      (* WC21 codec will avoid endianness worries. *) 
+                    END; 
+                    INC(src, 4);  
+                  END; 
+                END;
+              END; 
 
+          | PklAction.PAKind.CopyWC21to16 =>
+            (* The name "CopyWC21to16" is meant for when the program is executed
+               by the read/convert interpreter.  Here, if this happens at all,
+               the to-system, which we are executing/writing on, is a 16-bit 
+               WIDECHAR system, so we just copy 16-16.  Here, "insnUnitCt" is 
+               number of WIDECHARs. *)  
+            WriteData (v, src, insnUnitCt*2);
+            INC(src, insnUnitCt*2); 
+
+          | PklAction.PAKind.Done =>
+          | PklAction.PAKind.SwapPackedLEtoBE => 
+            RAISE 
+              Error("PklAction.PAKind.SwapPackedLEtoBE called during write?");
+          | PklAction.PAKind.SwapPackedBEtoLE => 
+            RAISE 
+              Error("PklAction.PAKind.SwapPackedBEtoLE called during write?");
+          | PklAction.PAKind.CopyPackedLE => 
+            RAISE Error("PklAction.PAKind.CopyPackedLE called during write?");
+          | PklAction.PAKind.CopyPackedBE => 
+            RAISE Error("PklAction.PAKind.CopyPackedBE called during write?");
+          | PklAction.PAKind.SkipFrom =>
+            RAISE Error("PklAction.PAKind.SkipFrom called during write?");
+          | PklAction.PAKind.SkipTo =>
+            RAISE Error("PklAction.PAKind.SkipTo called during write?");
+          | PklAction.PAKind.Swap16 =>
+            RAISE Error("PklAction.PAKind.Swap16 called during write?");
+          | PklAction.PAKind.Swap32 =>
+            RAISE Error("PklAction.PAKind.Swap32 called during write?");
+          | PklAction.PAKind.Swap64 =>
+            RAISE Error("PklAction.PAKind.Swap64 called during write?");
+          | PklAction.PAKind.Copy32to64 =>
+            RAISE Error("PklAction.PAKind.Copy32to64 called during write?");
+          | PklAction.PAKind.Swap32to64 =>
+            RAISE Error("PklAction.PAKind.Swap32to64 called during write?");
+          | PklAction.PAKind.Copy64to32 =>
+            RAISE Error("PklAction.PAKind.Copy64to32 called during write?");
+          | PklAction.PAKind.Swap64to32 =>
+            RAISE Error("PklAction.PAKind.Swap64to32 called during write?");
+          | PklAction.PAKind.Copy32to16 =>
+            RAISE Error("PklAction.PAKind.Copy32to16 called during write?");
+          | PklAction.PAKind.Swap32to16 =>
+            RAISE Error("PklAction.PAKind.Swap32to16 called during write?");
+          | PklAction.PAKind.Swap16to32 =>
+            RAISE Error("PklAction.PAKind.Swap16to32 called during write?");
           END;
         END;
       END;
@@ -443,67 +1012,82 @@ PROCEDURE AppendProg(self: T; other: T) RAISES {Error} =
     FOR i := 0 TO other.prog.size() - 1 DO
       WITH elem = other.prog.get(i) DO
         CASE elem.kind OF
-        | PklAction.Kind.Copy => 
-          nelem := NEW(PklAction.T, kind := elem.kind, length := elem.length);
-          INC(self.fromOffset, elem.length*8);
-          INC(self.toOffset, elem.length*8);
-        | PklAction.Kind.SwapPacked => 
-          WITH t = NARROW(elem, PklAction.SwapPacked),
-               nt = NEW(PklAction.SwapPacked, 
-                        kind := t.kind, length := t.length, size := t.size,
+        | PklAction.PAKind.Copy => 
+          nelem := NEW(PklAction.T, kind := elem.kind, unitCt := elem.unitCt);
+          INC(self.fromOffset, elem.unitCt*8);
+          INC(self.toOffset, elem.unitCt*8);
+        | PklAction.PAKind.SwapPackedLEtoBE, PklAction.PAKind.SwapPackedBEtoLE, 
+          PklAction.PAKind.CopyPackedLE, PklAction.PAKind.CopyPackedBE=> 
+          WITH t = NARROW(elem, PklAction.Packed),
+               nt = NEW(PklAction.Packed, 
+                        kind := t.kind, unitCt := t.unitCt, size := t.size,
                         field := NEW(REF ARRAY OF CARDINAL, 
-                                     NUMBER(t.field^))) DO
+                                     NUMBER(t.field^)),
+                        widecharFieldSet:= t.widecharFieldSet
+                       ) DO
             FOR i := FIRST(nt.field^) TO LAST(nt.field^) DO
               nt.field[i] := t.field[i];
             END;
             nelem := nt;
-            INC(self.fromOffset, elem.length*8*t.size);
-            INC(self.toOffset, elem.length*8*t.size);
+            INC(self.fromOffset, elem.unitCt*8*t.size);
+            INC(self.toOffset, elem.unitCt*8*t.size);
           END;
-        | PklAction.Kind.SkipFrom =>
-          nelem := NEW(PklAction.T, kind := elem.kind, length := elem.length);
-          INC(self.fromOffset, elem.length*8);
-        | PklAction.Kind.SkipTo =>
-          nelem := NEW(PklAction.T, kind := elem.kind, length := elem.length);
-          INC(self.toOffset, elem.length*8);
-        | PklAction.Kind.Skip =>
-          nelem := NEW(PklAction.T, kind := elem.kind, length := elem.length);
-          INC(self.fromOffset, elem.length*8);
-          INC(self.toOffset, elem.length*8);
-        | PklAction.Kind.Swap16 =>
-          nelem := NEW(PklAction.T, kind := elem.kind, length := elem.length);
-          INC(self.fromOffset, elem.length*16);
-          INC(self.toOffset, elem.length*16);
-        | PklAction.Kind.Swap32 =>
-          nelem := NEW(PklAction.T, kind := elem.kind, length := elem.length);
-          INC(self.fromOffset, elem.length*32);
-          INC(self.toOffset, elem.length*32);
-        | PklAction.Kind.Swap64 =>
-          nelem := NEW(PklAction.T, kind := elem.kind, length := elem.length);
-          INC(self.fromOffset, elem.length*64);
-          INC(self.toOffset, elem.length*64);
-        | PklAction.Kind.Copy32to64, PklAction.Kind.Swap32to64 =>
+        | PklAction.PAKind.SkipFrom =>
+          nelem := NEW(PklAction.T, kind := elem.kind, unitCt := elem.unitCt);
+          INC(self.fromOffset, elem.unitCt*8);
+        | PklAction.PAKind.SkipTo =>
+          nelem := NEW(PklAction.T, kind := elem.kind, unitCt := elem.unitCt);
+          INC(self.toOffset, elem.unitCt*8);
+        | PklAction.PAKind.Skip =>
+          nelem := NEW(PklAction.T, kind := elem.kind, unitCt := elem.unitCt);
+          INC(self.fromOffset, elem.unitCt*8);
+          INC(self.toOffset, elem.unitCt*8);
+        | PklAction.PAKind.Swap16 =>
+          nelem := NEW(PklAction.T, kind := elem.kind, unitCt := elem.unitCt);
+          INC(self.fromOffset, elem.unitCt*16);
+          INC(self.toOffset, elem.unitCt*16);
+        | PklAction.PAKind.Swap32, PklAction.PAKind.CopyWC21to32 =>
+          nelem := NEW(PklAction.T, kind := elem.kind, unitCt := elem.unitCt);
+          INC(self.fromOffset, elem.unitCt*32);
+          INC(self.toOffset, elem.unitCt*32);
+        | PklAction.PAKind.CopyWC21to16 =>
+          nelem := NEW(PklAction.T, kind := elem.kind, unitCt := elem.unitCt);
+          INC(self.fromOffset, elem.unitCt*32);
+          INC(self.toOffset, elem.unitCt*16);
+        | PklAction.PAKind.Swap64 =>
+          nelem := NEW(PklAction.T, kind := elem.kind, unitCt := elem.unitCt);
+          INC(self.fromOffset, elem.unitCt*64);
+          INC(self.toOffset, elem.unitCt*64);
+        | PklAction.PAKind.Copy32to64, PklAction.PAKind.Swap32to64 =>
           WITH t = NARROW(elem, PklAction.Copy32to64) DO
             nelem := NEW(PklAction.Copy32to64, kind := t.kind, 
-                         length := t.length, signed := t.signed);
+                         unitCt := t.unitCt, signed := t.signed);
           END;
-          INC(self.fromOffset, elem.length*32);
-          INC(self.toOffset, elem.length*64);
-        | PklAction.Kind.Copy64to32, PklAction.Kind.Swap64to32 =>
+          INC(self.fromOffset, elem.unitCt*32);
+          INC(self.toOffset, elem.unitCt*64);
+        | PklAction.PAKind.Copy64to32, PklAction.PAKind.Swap64to32 =>
           WITH t = NARROW(elem, PklAction.Copy32to64) DO
             nelem := NEW(PklAction.Copy64to32, kind := t.kind, 
-                         length := t.length, signed := t.signed);
+                         unitCt := t.unitCt, signed := t.signed);
           END;
-          INC(self.fromOffset, elem.length*64);
-          INC(self.toOffset, elem.length*32);
-        | PklAction.Kind.ReadRef =>
+          INC(self.fromOffset, elem.unitCt*64);
+          INC(self.toOffset, elem.unitCt*32);
+        | PklAction.PAKind.Copy16to32, PklAction.PAKind.Swap16to32 =>
+          nelem := NEW(PklAction.T, kind := elem.kind, unitCt := elem.unitCt);
+          INC(self.fromOffset, elem.unitCt*16);
+          INC(self.toOffset, elem.unitCt*32);
+        | PklAction.PAKind.Copy32to16, PklAction.PAKind.Swap32to16 =>
+          nelem := NEW(PklAction.T, kind := elem.kind, unitCt := elem.unitCt);
+          INC(self.fromOffset, elem.unitCt*32);
+          INC(self.toOffset, elem.unitCt*16);
+        | PklAction.PAKind.ReadRef =>
           WITH t = NARROW(elem, PklAction.Ref) DO
-            nelem := NEW(PklAction.Ref, kind := t.kind, length := t.length,
+            nelem := NEW(PklAction.Ref, kind := t.kind, unitCt := t.unitCt,
                          refType := t.refType);
           END;
-          INC(self.fromOffset, elem.length*self.from.word_size);
-          INC(self.toOffset, elem.length*self.to.word_size);
-        | PklAction.Kind.Done =>
+          INC(self.fromOffset, elem.unitCt*self.from.word_size);
+          INC(self.toOffset, elem.unitCt*self.to.word_size);
+        | PklAction.PAKind.Done =>
           RETURN;
         END;
         self.prog.addhi(nelem);
@@ -512,7 +1096,7 @@ PROCEDURE AppendProg(self: T; other: T) RAISES {Error} =
     RAISE Error("Invalid conversion program.");
   END AppendProg;
  
-PROCEDURE GetHiKind(prog: PklActionSeq.T; kind: PklAction.Kind;
+PROCEDURE GetHiKind(prog: PklActionSeq.T; kind: PklAction.PAKind;
                     VAR elem: PklAction.T) : BOOLEAN =
   BEGIN
     IF prog.size() > 0 THEN
@@ -524,210 +1108,329 @@ PROCEDURE GetHiKind(prog: PklActionSeq.T; kind: PklAction.Kind;
     RETURN FALSE;
   END GetHiKind;
 
-PROCEDURE AddCopy(self: T; length: INTEGER) =
+PROCEDURE PackedPAKind (fromLE: BOOLEAN; DoSwap: BOOLEAN): PklAction.PAKind = 
+
+  VAR Result: PklAction.PAKind; 
+  BEGIN 
+    IF DoSwap THEN
+      IF fromLE
+      THEN Result := PklAction.PAKind.SwapPackedLEtoBE;
+      ELSE Result := PklAction.PAKind.SwapPackedBEtoLE;
+      END; 
+    ELSE 
+      IF fromLE
+      THEN Result := PklAction.PAKind.CopyPackedLE;
+      ELSE Result := PklAction.PAKind.CopyPackedBE;
+      END; 
+    END; 
+    RETURN Result; 
+  END PackedPAKind; 
+
+PROCEDURE AddCopy(self: T; bitCt: INTEGER) =
   VAR elem: PklAction.T;
   BEGIN
-    INC(self.fromOffset, length);
-    INC(self.toOffset, length);
-    IF GetHiKind(self.prog, PklAction.Kind.Copy, elem) THEN
-      INC(elem.length, length DIV 8);
+    INC(self.fromOffset, bitCt);
+    INC(self.toOffset, bitCt);
+    IF GetHiKind(self.prog, PklAction.PAKind.Copy, elem) THEN
+      INC(elem.unitCt, bitCt DIV 8);
       RETURN;
     END;
-    self.prog.addhi(NEW(PklAction.T, kind := PklAction.Kind.Copy, 
-                        length := length DIV 8));
+    self.prog.addhi(NEW(PklAction.T, kind := PklAction.PAKind.Copy, 
+                        unitCt := bitCt DIV 8));
   END AddCopy;
 
-PROCEDURE AddPackedSwapFirstField(self: T; fieldsize: INTEGER) =
+PROCEDURE AddPackedFirstField(self: T; fieldBitSize: INTEGER; 
+                                  shortenWidechar: BOOLEAN;
+                                  paKind:PklAction.PAKind) =
+  (* We are starting on a byte boundary, i.e.: 
+     PRE: self.fromOffset MOD 8 = 0.  
+     PRE: self.toOffset MOD 8 = 0. *) 
   BEGIN
-    (* We'll copy the minimum number of whole bytes. *)
-    WITH length = RoundUp(fieldsize, 8) DO
-      INC(self.fromOffset, length);
-      INC(self.toOffset, length);
-      WITH elem = NEW(PklAction.SwapPacked, kind := PklAction.Kind.SwapPacked, 
-                      length := 1, size := length DIV 8,
+    (* We'll swap within a unit of the minimum number of whole bytes needed
+       to hold the field. *)
+    WITH wholeByteBitCt = RoundUp(fieldBitSize, 8) DO
+      INC(self.fromOffset, wholeByteBitCt);
+      INC(self.toOffset, wholeByteBitCt);
+      WITH elem = NEW(PklAction.Packed, kind := paKind,
+                      unitCt := 1, 
+                      size := wholeByteBitCt DIV 8, (* Instruction unit is bytes. *) 
                       field := NEW(REF ARRAY OF CARDINAL, 1)) DO
-        elem.field[0] := fieldsize;
+        IF shortenWidechar THEN
+          elem.widecharFieldSet 
+            := elem.widecharFieldSet + PklAction.FieldNoSet {0};  
+        END; 
+        elem.field[0] := fieldBitSize;
         self.prog.addhi(elem);
       END;
     END;
-  END AddPackedSwapFirstField;
+  END AddPackedFirstField;
 
-PROCEDURE AddPackedSwapNextField(self: T; fieldsize: INTEGER; 
-                                 offset: INTEGER) =
+ PROCEDURE AddPackedNextField
+   (self: T; fieldBitSize: INTEGER; 
+    offset: INTEGER; shortenWidechar: BOOLEAN; paKind:PklAction.PAKind) =
   VAR elem: PklAction.T;
-      total: CARDINAL;
+      totalBits: CARDINAL;
   BEGIN
-    WITH ret = GetHiKind(self.prog, PklAction.Kind.SwapPacked, elem) DO
-      (* The last entry _must_ be one of these. *)
+    WITH ret = GetHiKind(self.prog, paKind, elem) DO
+      (* The last entry must have paKind. *)
       <* ASSERT ret *>
-      WITH nelem = NARROW(elem, PklAction.SwapPacked) DO
-        total := 0;
+      WITH nelem = NARROW(elem, PklAction.Packed) DO
+        totalBits := 0;
         FOR i := FIRST(nelem.field^) TO LAST(nelem.field^) DO
-          INC(total, nelem.field[i]);
+          INC(totalBits, nelem.field[i]);
         END;
         (* They should be packed, so our offset should equal the 
-           total thus far.  We can't check it, but we can at least
+           total bits thus far.  We can't check it, but we can at least
            check the bits line up in the current byte. *)
-        <* ASSERT (total MOD 8) = (offset MOD 8) *>
+        <* ASSERT (totalBits MOD 8) = (offset MOD 8) *>
 
-        INC(total, fieldsize);
+        INC(totalBits, fieldBitSize);
 
-        (* The max total size of a packed set of fields is the word
+        (* Make sure the size in nelem is correct, and make sure fromOffset 
+           and toOffset are updated to include any new bytes *)
+        totalBits := RoundUp(totalBits, 8);
+        (* The max total bit size of a packed set of fields is the word
            size!  This is guaranteed because a packed field cannot
            span a word boundary, and we only call this function when a
-           packed field starts within a byte.  If a packed field
+           packed field starts properly within a byte.  If a packed field
            starts on a byte boundary, we start a new set of packed
-           fields. *)
-        <* ASSERT total <= self.from.word_size *>
+           fields using AddPackedFirstField. *)
+        <* ASSERT totalBits <= self.from.word_size *>
 
-        (* Make sure the size in nelem is correct, and make sure the
-           the fromOffset and toOffsets are updated to include any new
-           bytes *)
-        total := RoundUp(total, 8);
-        WITH bytes = (total DIV 8) - nelem.size DO
-          IF bytes > 0 THEN
-            INC(self.fromOffset, bytes*8);
-            INC(self.toOffset, bytes*8);
-            INC(nelem.size, bytes);
+        WITH AddlBytes = (totalBits DIV 8) - nelem.size DO
+          IF AddlBytes > 0 THEN
+            INC(self.fromOffset, AddlBytes*8);
+            INC(self.toOffset, AddlBytes*8);
+            INC(nelem.size, AddlBytes);
           END;
         END;
+        IF shortenWidechar THEN
+          nelem.widecharFieldSet 
+            := nelem.widecharFieldSet 
+               + PklAction.FieldNoSet {NUMBER(nelem.field^)};  
+        END; 
 
         WITH new_field = NEW(REF ARRAY OF CARDINAL, 
                              NUMBER(nelem.field^) + 1) DO
           SUBARRAY(new_field^, 0, NUMBER(nelem.field^)) := nelem.field^;
           nelem.field := new_field;
         END;
-        nelem.field[LAST(nelem.field^)] := fieldsize;
+        nelem.field[LAST(nelem.field^)] := fieldBitSize;
       END;
     END;
-  END AddPackedSwapNextField;
+  END AddPackedNextField;
 
-PROCEDURE AddPackedSwapArray(self: T; length: INTEGER; 
-                             numElts: INTEGER; fieldsize: INTEGER;
-                             wordsize: INTEGER) =
-  VAR count := wordsize DIV fieldsize;
+PROCEDURE AddPackedArray
+  (self: T; bitCt(*Entire array in bits.*): INTEGER;
+   numElts: INTEGER; fieldBitSize: INTEGER; packingWordBitSize: INTEGER;
+   shortenWidechar: BOOLEAN; paKind:PklAction.PAKind) =
+  (* packingWordBitSize is bits in the "word" we are converting within.  It will
+     always fit within a Word.T on the machine executing this code. *)  
+  VAR fieldsPerWord := packingWordBitSize DIV fieldBitSize;
   BEGIN
-    (* We will build a packing for at most "count" fields.  Packed
-       arrays must not have elements that span word boundaries, so 
-       if "numElts > count" then "count * fieldsize = wordsize" *)
-    <* ASSERT (numElts <= count) OR (count * fieldsize = wordsize) *>
+    (* We will build a packing for at most "fieldsPerWord" fields.  Packed
+       arrays must not have elements that span word boundaries, so if 
+       "numElts > fieldsPerWord" then 
+       "fieldsPerWord * fieldBitSize = packingWordBitSize"
+    *)
+    <* ASSERT (numElts <= fieldsPerWord) 
+              OR (fieldsPerWord * fieldBitSize = packingWordBitSize) 
+    *>
 
-    INC(self.fromOffset, length);
-    INC(self.toOffset, length);
+    INC(self.fromOffset, bitCt);
+    INC(self.toOffset, bitCt);
 
-    WITH len       = numElts DIV count,
-         size      = wordsize DIV 8,
-         extraCnt  = numElts MOD count,   
-         extraSize = (length MOD wordsize) DIV 8 DO
+    WITH fullWordCt   = numElts DIV fieldsPerWord,
+         bytesPerWord = packingWordBitSize DIV 8,
+         extraEltCt   = numElts MOD fieldsPerWord,   
+         extraBytes    = RoundUp(bitCt MOD packingWordBitSize, 8) DIV 8 DO
 
-      (* First, we add an element to handle the bulk of the array
+      (* First, we add a program action element to handle the bulk of the array
          element swapping when the array spans more than one word.
-         It takes care of the first len*count elements which occupy
-         the first len words. *)
-      IF len > 0 THEN
-        WITH nelem = NEW(PklAction.SwapPacked, 
-                         kind := PklAction.Kind.SwapPacked, 
-                         length := len, size := size, 
-                         field := NEW(REF ARRAY OF CARDINAL, count)) DO
+         It takes care of the first fullWordCt*fieldsPerWord elements, 
+         which occupy exactly the first fullWordCt words. *)
+      IF fullWordCt > 0 THEN
+        WITH nelem = NEW(PklAction.Packed, 
+                         kind := paKind,
+                         unitCt := fullWordCt, 
+                         size := bytesPerWord, 
+                         field := NEW(REF ARRAY OF CARDINAL, fieldsPerWord)) DO
           FOR i := FIRST(nelem.field^) TO LAST(nelem.field^) DO
-            nelem.field[i] := fieldsize;
+            nelem.field[i] := fieldBitSize;
           END;
+          IF shortenWidechar THEN
+            nelem.widecharFieldSet 
+              := PklAction.FieldNoSet {0..fieldsPerWord-1};  
+          ELSE nelem.widecharFieldSet := PklAction.FieldNoSet{ }; 
+          END; 
           self.prog.addhi(nelem);
         END;
       END;
 
       (* Next, if the number of array elements does not fit exactly in
-         full words, add one more element to the end which handles the
-         extra fields.  *)
-      IF extraSize > 0 THEN
-        WITH nelem = NEW(PklAction.SwapPacked, 
-                         kind := PklAction.Kind.SwapPacked, 
-                         length := 1, size := extraSize,
-                         field := NEW(REF ARRAY OF CARDINAL, extraCnt)) DO
+         full words, add one more program action element to the end which 
+         handles the extra fields.  *)
+      IF extraBytes > 0 THEN
+        WITH nelem = NEW(PklAction.Packed, 
+                         kind := paKind, 
+                         unitCt := 1, 
+                         size := extraBytes,
+                         field := NEW(REF ARRAY OF CARDINAL, extraEltCt)) DO
           FOR i := FIRST(nelem.field^) TO LAST(nelem.field^) DO
-            nelem.field[i] := fieldsize;
+            nelem.field[i] := fieldBitSize;
           END;
+          IF shortenWidechar THEN
+            nelem.widecharFieldSet 
+              := PklAction.FieldNoSet {0..fieldsPerWord-1};  
+          ELSE nelem.widecharFieldSet := PklAction.FieldNoSet{ }; 
+          END; 
           self.prog.addhi(nelem);
         END;
       END;
     END;
-  END AddPackedSwapArray; 
+  END AddPackedArray; 
 
-PROCEDURE AddCopy32to64(self: T; length: INTEGER; signed: BOOLEAN) =
-(* PRE: length MOD 32 = 0 *) 
+PROCEDURE AddCopy32to64(self: T; bitCt: INTEGER; signed: BOOLEAN) =
+(* PRE: bitCt MOD 32 = 0 *) 
   VAR elem: PklAction.T;
   BEGIN
-    INC(self.fromOffset, length);
-    INC(self.toOffset, length*2);
-    IF GetHiKind(self.prog, PklAction.Kind.Copy32to64, elem) THEN
+    INC(self.fromOffset, bitCt);
+    INC(self.toOffset, bitCt*2);
+    IF GetHiKind(self.prog, PklAction.PAKind.Copy32to64, elem) THEN
       WITH nelem = NARROW(elem, PklAction.Copy32to64) DO
         IF nelem.signed = signed THEN
-          INC(elem.length, length DIV 32);
+          INC(elem.unitCt, bitCt DIV 32);
           RETURN;
         END;
       END;
     END;
-    self.prog.addhi(NEW(PklAction.Copy32to64, kind := PklAction.Kind.Copy32to64, 
-                        length := length DIV 32, signed := signed));
+    self.prog.addhi(NEW(PklAction.Copy32to64, kind := PklAction.PAKind.Copy32to64, 
+                        unitCt := bitCt DIV 32, signed := signed));
   END AddCopy32to64;
 
-PROCEDURE AddCopy64to32(self: T; length: INTEGER; signed: BOOLEAN) =
-(* PRE: length MOD 64 = 0 *) 
+PROCEDURE AddCopy64to32(self: T; bitCt: INTEGER; signed: BOOLEAN) =
+(* PRE: bitCt MOD 64 = 0 *) 
   VAR elem: PklAction.T;
   BEGIN
-    INC(self.fromOffset, length);
-    <* ASSERT length MOD 2 = 0 *>
-    INC(self.toOffset, length DIV 2);
-    IF GetHiKind(self.prog, PklAction.Kind.Copy64to32, elem) THEN
+    INC(self.fromOffset, bitCt);
+    <* ASSERT bitCt MOD 2 = 0 *>
+    INC(self.toOffset, bitCt DIV 2);
+    IF GetHiKind(self.prog, PklAction.PAKind.Copy64to32, elem) THEN
       WITH nelem = NARROW(elem, PklAction.Copy64to32) DO
         IF nelem.signed = signed THEN
-          INC(elem.length, length DIV 64);
+          INC(elem.unitCt, bitCt DIV 64);
           RETURN;
         END;
       END;
     END;
-    self.prog.addhi(NEW(PklAction.Copy64to32, kind := PklAction.Kind.Copy64to32,
-                        length := length DIV 64, signed := signed));
+    self.prog.addhi(NEW(PklAction.Copy64to32, kind := PklAction.PAKind.Copy64to32,
+                        unitCt := bitCt DIV 64, signed := signed));
   END AddCopy64to32;
 
-PROCEDURE AddSkipFrom(self: T; length: INTEGER) =
+PROCEDURE AddCopy16to32(self: T; fromBitCt: INTEGER) =
+(* PRE: fromBitCt MOD 16 = 0 *) 
   VAR elem: PklAction.T;
   BEGIN
-    INC(self.fromOffset, length);
-    IF GetHiKind(self.prog, PklAction.Kind.SkipFrom, elem) THEN
-      INC(elem.length, length DIV 8);
+    INC(self.fromOffset, fromBitCt);
+    INC(self.toOffset, fromBitCt*2);
+    IF GetHiKind(self.prog, PklAction.PAKind.Copy16to32, elem) THEN
+      INC(elem.unitCt, fromBitCt DIV 16);
       RETURN;
     END;
-    self.prog.addhi(NEW(PklAction.T, kind := PklAction.Kind.SkipFrom, 
-                        length := length DIV 8));
+    self.prog.addhi(NEW(PklAction.T,
+                        kind := PklAction.PAKind.Copy16to32, 
+                        unitCt := fromBitCt DIV 16));
+  END AddCopy16to32;
+
+PROCEDURE AddCopy32to16(self: T; fromBitCt: INTEGER) =
+(* PRE: fromBitCt MOD 32 = 0 *) 
+  VAR elem: PklAction.T;
+  BEGIN
+    INC(self.fromOffset, fromBitCt);
+    INC(self.toOffset, fromBitCt DIV 2);
+    IF GetHiKind(self.prog, PklAction.PAKind.Copy32to16, elem) THEN
+      INC(elem.unitCt, fromBitCt DIV 32);
+      RETURN;
+    END;
+    self.prog.addhi(NEW(PklAction.T,
+                        kind := PklAction.PAKind.Copy32to16, 
+                        unitCt := fromBitCt DIV 32));
+  END AddCopy32to16;
+
+PROCEDURE AddCopyWC21to32(self: T; toBitCt: INTEGER) =
+(* PRE: toBitCt MOD 32 = 0 *) 
+  VAR elem: PklAction.T;
+  BEGIN
+    INC(self.fromOffset, toBitCt);
+    (* Although this will read a variable amount from the stream when reading,
+       fromOffset is duplicating the _in memory_ layout of the from-system. 
+       If the pickle uses WC21, the from-system had to have 32-bit WIDECHAR. *)
+    INC(self.toOffset, toBitCt);
+    IF GetHiKind(self.prog, PklAction.PAKind.CopyWC21to32, elem) THEN
+      INC(elem.unitCt, toBitCt DIV 32);
+      RETURN;
+    END;
+    self.prog.addhi(NEW(PklAction.T,
+                        kind := PklAction.PAKind.CopyWC21to32, 
+                        unitCt := toBitCt DIV 32));
+  END AddCopyWC21to32;
+
+PROCEDURE AddCopyWC21to16(self: T; toBitCt: INTEGER) =
+(* PRE: toBitCt MOD 16 = 0 *) 
+  VAR elem: PklAction.T;
+  BEGIN
+    INC(self.fromOffset, toBitCt*2);
+    (* Although this will read a variable amount from the stream when reading,
+       fromOffset is duplicating the _in memory_ layout of the from-system. 
+       If the pickle uses WC21, the from-system had to have 32-bit WIDECHAR. *)
+    INC(self.toOffset, toBitCt);
+    IF GetHiKind(self.prog, PklAction.PAKind.CopyWC21to16, elem) THEN
+      INC(elem.unitCt, toBitCt DIV 16);
+      RETURN;
+    END;
+    self.prog.addhi(NEW(PklAction.T,
+                        kind := PklAction.PAKind.CopyWC21to16, 
+                        unitCt := toBitCt DIV 16));
+  END AddCopyWC21to16;
+
+PROCEDURE AddSkipFrom(self: T; bitCt: INTEGER) =
+  VAR elem: PklAction.T;
+  BEGIN
+    INC(self.fromOffset, bitCt);
+    IF GetHiKind(self.prog, PklAction.PAKind.SkipFrom, elem) THEN
+      INC(elem.unitCt, bitCt DIV 8);
+      RETURN;
+    END;
+    self.prog.addhi(NEW(PklAction.T, kind := PklAction.PAKind.SkipFrom, 
+                        unitCt := bitCt DIV 8));
   END AddSkipFrom;
 
-PROCEDURE AddSkipTo(self: T; length: INTEGER) =
+PROCEDURE AddSkipTo(self: T; bitCt: INTEGER) =
   VAR elem: PklAction.T;
   BEGIN
-    INC(self.toOffset, length);
-    IF GetHiKind(self.prog, PklAction.Kind.SkipTo, elem) THEN
-      INC(elem.length, length DIV 8);
+    INC(self.toOffset, bitCt);
+    IF GetHiKind(self.prog, PklAction.PAKind.SkipTo, elem) THEN
+      INC(elem.unitCt, bitCt DIV 8);
       RETURN;
     END;
-    self.prog.addhi(NEW(PklAction.T, kind := PklAction.Kind.SkipTo, 
-                        length := length DIV 8));
+    self.prog.addhi(NEW(PklAction.T, kind := PklAction.PAKind.SkipTo, 
+                        unitCt := bitCt DIV 8));
   END AddSkipTo;
 
-PROCEDURE AddSkipOrCopy(self: T; length: INTEGER) =
+PROCEDURE AddSkipOrCopy(self: T; bitCt: INTEGER) =
   VAR elem: PklAction.T;
   BEGIN
-    INC(self.fromOffset, length);
-    INC(self.toOffset, length);
-    IF GetHiKind(self.prog, PklAction.Kind.Copy, elem) THEN
-      INC(elem.length, length DIV 8);
+    INC(self.fromOffset, bitCt);
+    INC(self.toOffset, bitCt);
+    IF GetHiKind(self.prog, PklAction.PAKind.Copy, elem) THEN
+      INC(elem.unitCt, bitCt DIV 8);
       RETURN;
-    ELSIF GetHiKind(self.prog, PklAction.Kind.Skip, elem) THEN
-      INC(elem.length, length DIV 8);
+    ELSIF GetHiKind(self.prog, PklAction.PAKind.Skip, elem) THEN
+      INC(elem.unitCt, bitCt DIV 8);
       RETURN;
     END;
-    self.prog.addhi(NEW(PklAction.T, kind := PklAction.Kind.Skip, 
-                        length := length DIV 8));
+    self.prog.addhi(NEW(PklAction.T, kind := PklAction.PAKind.Skip, 
+                        unitCt := bitCt DIV 8));
   END AddSkipOrCopy;
 
 PROCEDURE AddSkip(self: T; fromDiff, toDiff: INTEGER) =
@@ -753,105 +1456,134 @@ PROCEDURE AddSkip(self: T; fromDiff, toDiff: INTEGER) =
     END;
   END AddSkip;
 
-PROCEDURE AddSwap16(self: T; length: INTEGER) =
-(* PRE: length MOD 16 = 0 *) 
+PROCEDURE AddSwap16(self: T; bitCt: INTEGER) =
+(* PRE: bitCt MOD 16 = 0 *) 
   VAR elem: PklAction.T;
   BEGIN
-    INC(self.fromOffset, length);
-    INC(self.toOffset, length);
-    IF GetHiKind(self.prog, PklAction.Kind.Swap16, elem) THEN
-      INC(elem.length, length DIV 16);
+    INC(self.fromOffset, bitCt);
+    INC(self.toOffset, bitCt);
+    IF GetHiKind(self.prog, PklAction.PAKind.Swap16, elem) THEN
+      INC(elem.unitCt, bitCt DIV 16);
       RETURN;
     END;
-    self.prog.addhi(NEW(PklAction.T, kind := PklAction.Kind.Swap16, 
-                        length := length DIV 16));
+    self.prog.addhi(NEW(PklAction.T, kind := PklAction.PAKind.Swap16, 
+                        unitCt := bitCt DIV 16));
   END AddSwap16;
 
-PROCEDURE AddSwap32(self: T; length: INTEGER) =
-(* PRE: length MOD 32 = 0 *) 
+PROCEDURE AddSwap32(self: T; bitCt: INTEGER) =
+(* PRE: bitCt MOD 32 = 0 *) 
   VAR elem: PklAction.T;
   BEGIN
-    INC(self.fromOffset, length);
-    INC(self.toOffset, length);
-    IF GetHiKind(self.prog, PklAction.Kind.Swap32, elem) THEN
-      INC(elem.length, length DIV 32);
+    INC(self.fromOffset, bitCt);
+    INC(self.toOffset, bitCt);
+    IF GetHiKind(self.prog, PklAction.PAKind.Swap32, elem) THEN
+      INC(elem.unitCt, bitCt DIV 32);
       RETURN;
     END;
-    self.prog.addhi(NEW(PklAction.T, kind := PklAction.Kind.Swap32, 
-                        length := length DIV 32));
+    self.prog.addhi(NEW(PklAction.T, kind := PklAction.PAKind.Swap32, 
+                        unitCt := bitCt DIV 32));
   END AddSwap32;
 
-PROCEDURE AddSwap64(self: T; length: INTEGER) =
-(* PRE: length MOD 64 = 0 *) 
+PROCEDURE AddSwap64(self: T; bitCt: INTEGER) =
+(* PRE: bitCt MOD 64 = 0 *) 
   VAR elem: PklAction.T;
   BEGIN
-    INC(self.fromOffset, length);
-    INC(self.toOffset, length);
-    IF GetHiKind(self.prog, PklAction.Kind.Swap64, elem) THEN
-      INC(elem.length, length DIV 64);
+    INC(self.fromOffset, bitCt);
+    INC(self.toOffset, bitCt);
+    IF GetHiKind(self.prog, PklAction.PAKind.Swap64, elem) THEN
+      INC(elem.unitCt, bitCt DIV 64);
       RETURN;
     END;
-    self.prog.addhi(NEW(PklAction.T, kind := PklAction.Kind.Swap64, 
-                        length := length DIV 64));
+    self.prog.addhi(NEW(PklAction.T, kind := PklAction.PAKind.Swap64, 
+                        unitCt := bitCt DIV 64));
   END AddSwap64;
 
-PROCEDURE AddSwap32to64(self: T; length: INTEGER; signed: BOOLEAN) =
-(* PRE: length MOD 32 = 0 *) 
+PROCEDURE AddSwap32to64(self: T; bitCt: INTEGER; signed: BOOLEAN) =
+(* PRE: bitCt MOD 32 = 0 *) 
   VAR elem: PklAction.T;
   BEGIN
-    INC(self.fromOffset, length);
-    INC(self.toOffset, length*2);
-    IF GetHiKind(self.prog, PklAction.Kind.Swap32to64, elem) THEN
+    INC(self.fromOffset, bitCt);
+    INC(self.toOffset, bitCt*2);
+    IF GetHiKind(self.prog, PklAction.PAKind.Swap32to64, elem) THEN
       WITH nelem = NARROW(elem, PklAction.Copy32to64) DO
         IF nelem.signed = signed THEN
-          INC(elem.length, length DIV 32);
+          INC(elem.unitCt, bitCt DIV 32);
           RETURN;
         END;
       END;
     END;
-    self.prog.addhi(NEW(PklAction.Copy32to64, kind := PklAction.Kind.Swap32to64, 
-                        length := length DIV 32, signed := signed));
+    self.prog.addhi(NEW(PklAction.Copy32to64, kind := PklAction.PAKind.Swap32to64, 
+                        unitCt := bitCt DIV 32, signed := signed));
   END AddSwap32to64;
 
-PROCEDURE AddSwap64to32(self: T; length: INTEGER; signed: BOOLEAN) =
-(* PRE: length MOD 64 = 0 *) 
+PROCEDURE AddSwap64to32(self: T; bitCt: INTEGER; signed: BOOLEAN) =
+(* PRE: bitCt MOD 64 = 0 *) 
   VAR elem: PklAction.T;
   BEGIN
-    INC(self.fromOffset, length);
-    <* ASSERT length MOD 64 = 0 *>
-    INC(self.toOffset, length DIV 2);
-    IF GetHiKind(self.prog, PklAction.Kind.Swap64to32, elem) THEN
+    INC(self.fromOffset, bitCt);
+    <* ASSERT bitCt MOD 64 = 0 *>
+    INC(self.toOffset, bitCt DIV 2);
+    IF GetHiKind(self.prog, PklAction.PAKind.Swap64to32, elem) THEN
       WITH nelem = NARROW(elem, PklAction.Copy32to64) DO
         IF nelem.signed = signed THEN
-          INC(elem.length, length DIV 64);
+          INC(elem.unitCt, bitCt DIV 64);
           RETURN;
         END;
       END;
     END;
-    self.prog.addhi(NEW(PklAction.T, kind := PklAction.Kind.Swap64to32, 
-                        length := length DIV 64));
+    self.prog.addhi(NEW(PklAction.T, kind := PklAction.PAKind.Swap64to32, 
+                        unitCt := bitCt DIV 64));
   END AddSwap64to32;
+
+PROCEDURE AddSwap16to32(self: T; fromBitCt: INTEGER) =
+(* PRE: fromBitCt MOD 16 = 0 *) 
+  VAR elem: PklAction.T;
+  BEGIN
+    INC(self.fromOffset, fromBitCt);
+    INC(self.toOffset, fromBitCt*2);
+    IF GetHiKind(self.prog, PklAction.PAKind.Swap16to32, elem) THEN
+      INC(elem.unitCt, fromBitCt DIV 16);
+      RETURN;
+    END;
+    self.prog.addhi(NEW(PklAction.T, kind := PklAction.PAKind.Swap16to32, 
+                        unitCt := fromBitCt DIV 16));
+  END AddSwap16to32;
+
+PROCEDURE AddSwap32to16(self: T; fromBitCt: INTEGER) =
+(* PRE: fromBitCt MOD 32 = 0 *) 
+  VAR elem: PklAction.T;
+  BEGIN
+    INC(self.fromOffset, fromBitCt);
+    INC(self.toOffset, fromBitCt DIV 2);
+    IF GetHiKind(self.prog, PklAction.PAKind.Swap32to16, elem) THEN
+      INC(elem.unitCt, fromBitCt DIV 32);
+      RETURN;
+    END;
+    self.prog.addhi(NEW(PklAction.T,
+                        kind := PklAction.PAKind.Swap32to16, 
+                        unitCt := fromBitCt DIV 32));
+  END AddSwap32to16;
 
 PROCEDURE AddRef(self: T; type: RefType) =
   VAR elem: PklAction.T;
   BEGIN
     INC(self.fromOffset, self.from.word_size);
     INC(self.toOffset, self.to.word_size);
-    IF GetHiKind(self.prog, PklAction.Kind.ReadRef, elem) THEN
+    IF GetHiKind(self.prog, PklAction.PAKind.ReadRef, elem) THEN
       WITH nelem = NARROW(elem, PklAction.Ref) DO
         IF nelem.refType = type THEN
-          INC(elem.length);
+          INC(elem.unitCt);
           RETURN;
         END;
       END;
     END;
-    self.prog.addhi(NEW(PklAction.Ref, kind := PklAction.Kind.ReadRef, 
-                        length := 1, refType := type));
+    self.prog.addhi(NEW(PklAction.Ref, kind := PklAction.PAKind.ReadRef, 
+                        unitCt := 1, refType := type));
   END AddRef;
 
 PROCEDURE AddDone(self: T) =
   BEGIN
-    self.prog.addhi(NEW(PklAction.T, kind := PklAction.Kind.Done));
+    self.prog.addhi(NEW(PklAction.T, kind := PklAction.PAKind.Done));
   END AddDone;
 
 PROCEDURE New(typecode: INTEGER; from: RTPacking.T; to: RTPacking.T; 
@@ -895,7 +1627,7 @@ PROCEDURE Init(self: T; typecode: INTEGER; from: RTPacking.T;
                                tc := typecode};
       ref : REFANY; 
   BEGIN
-    (* If we've already building this converter, return it.  We've
+    (* If we've already built this converter, return it.  We've
        still wasted a NEW() to get here, but better than recomputing
        everything! *)
     IF packingCache.get(key, ref) THEN
@@ -924,7 +1656,8 @@ PROCEDURE Init(self: T; typecode: INTEGER; from: RTPacking.T;
     | RTTipe.OpenArray(oa) =>
       WITH oa2 = NARROW(self.toTipe, RTTipe.OpenArray) DO
         self.nDim := oa.n_dimensions;
-        self.fromEltPack := oa.elt_pack;
+        self.fromEltPack := oa.elt_pack; 
+        (* ^Element size in bits, including alignment padding. *) 
         self.toEltPack := oa2.elt_pack;
         self.fromTipe := oa.element;
         self.toTipe := oa2.element;
@@ -953,13 +1686,14 @@ PROCEDURE Init(self: T; typecode: INTEGER; from: RTPacking.T;
 
     self.wordKind := GetWordKind(from, to);
     self.longKind := GetLongintKind(from, to);
+    self.widecharKind := GetWidecharKind(from, to);
 
     (* Build the tipe conversion for the top level  *)
     self.buildOne(self.fromTipe, self.toTipe);
 
     (* Figure out the allocated size. *)
     IF self.nDim > 0 THEN
-      (* Open arrays will actually store the data for their elemnent
+      (* Open arrays will actually store the data for their element
          here, so we don't adjust that. *)
       self.fromSize := self.fromTipe.size;
       self.toSize := self.toTipe.size;
@@ -1009,11 +1743,11 @@ PROCEDURE Init(self: T; typecode: INTEGER; from: RTPacking.T;
     IF self.from # self.to THEN
       VAR wnDim, wfromEltPack, wtoEltPack: INTEGER;
       BEGIN
-        self.writer := New(typecode, to, to, wnDim, 
+        self.writeConv := New(typecode, to, to, wnDim, 
                            wfromEltPack, wtoEltPack);
       END;
     ELSE
-      self.writer := NIL;
+      self.writeConv := NIL;
     END;
 
     EVAL packingCache.put(key, self);
@@ -1026,57 +1760,84 @@ PROCEDURE Init(self: T; typecode: INTEGER; from: RTPacking.T;
     RETURN self;
   END Init;
 
-PROCEDURE GetWordKind(from: RTPacking.T; to: RTPacking.T): Kind =
+PROCEDURE GetWordKind(from: RTPacking.T; to: RTPacking.T): CPKind =
 (* The result is good for all ordinal types except LONGINT. *) 
   BEGIN
     IF from.word_size = to.word_size THEN
       IF from.little_endian = to.little_endian THEN
-        RETURN Kind.Copy;
+        RETURN CPKind.Copy;
       ELSE
-        RETURN Kind.Swap;
+        RETURN CPKind.Swap;
       END;
     ELSE
       IF from.little_endian = to.little_endian THEN
         IF from.word_size = 32 THEN
-          RETURN Kind.Copy32to64;
+          RETURN CPKind.Copy32to64;
         ELSE
-          RETURN Kind.Copy64to32;
+          RETURN CPKind.Copy64to32;
         END;
       ELSE
         IF from.word_size = 32 THEN
-          RETURN Kind.Swap32to64;
+          RETURN CPKind.Swap32to64;
         ELSE
-          RETURN Kind.Swap64to32;
+          RETURN CPKind.Swap64to32;
         END;
       END;
     END;
   END GetWordKind;
 
-PROCEDURE GetLongintKind(from: RTPacking.T; to: RTPacking.T): Kind =
+PROCEDURE GetLongintKind(from: RTPacking.T; to: RTPacking.T): CPKind =
 (* The result is good only for LONGINT. *) 
   BEGIN
     IF from.long_size = to.long_size THEN
       IF from.little_endian = to.little_endian THEN
-        RETURN Kind.Copy;
+        RETURN CPKind.Copy;
       ELSE
-        RETURN Kind.Swap;
+        RETURN CPKind.Swap;
       END;
     ELSE
       IF from.little_endian = to.little_endian THEN
         IF from.long_size = 32 THEN
-          RETURN Kind.Copy32to64;
+          RETURN CPKind.Copy32to64;
         ELSE
-          RETURN Kind.Copy64to32;
+          RETURN CPKind.Copy64to32;
         END;
       ELSE
         IF from.long_size = 32 THEN
-          RETURN Kind.Swap32to64;
+          RETURN CPKind.Swap32to64;
         ELSE
-          RETURN Kind.Swap64to32;
+          RETURN CPKind.Swap64to32;
         END;
       END;
     END;
   END GetLongintKind;
+
+PROCEDURE GetWidecharKind(from: RTPacking.T; to: RTPacking.T): CPKind =
+(* The result is good only for WIDECHAR. *) 
+  BEGIN
+    IF from.widechar_size = to.widechar_size THEN
+      IF from.little_endian = to.little_endian THEN
+        RETURN CPKind.Copy;
+      ELSE
+        RETURN CPKind.Swap;
+      END;
+    ELSE (* WIDECHAR sizes differ. *) 
+      IF from.little_endian = to.little_endian THEN
+        IF from.widechar_size = 16 THEN
+          RETURN CPKind.Copy16to32;
+        ELSE 
+          <* ASSERT from.widechar_size = 32 *> 
+          RETURN CPKind.Copy32to16;
+        END;
+      ELSE
+        IF from.widechar_size = 16 THEN
+          RETURN CPKind.Swap16to32;
+        ELSE
+          RETURN CPKind.Swap32to16;
+        END;
+      END;
+    END;
+  END GetWidecharKind;
 
 PROCEDURE BuildSuper(self: T; typecode: INTEGER; 
                      VAR fromSize, fromAlign, toSize, toAlign: INTEGER)
@@ -1115,14 +1876,14 @@ PROCEDURE BuildSuper(self: T; typecode: INTEGER;
   END BuildSuper; 
 
 PROCEDURE BuildOrdinal(self: T; fromTipe: RTTipe.T; 
-                       toTipe: RTTipe.T; convKind: Kind; signed: BOOLEAN) 
+                       toTipe: RTTipe.T; convKind: CPKind; signed: BOOLEAN) 
           RAISES {Error} =
   BEGIN   
     CASE convKind OF
-    | Kind.Copy =>
+    | CPKind.Copy =>
       <* ASSERT fromTipe.size = toTipe.size *>
       self.addCopy(fromTipe.size);
-    | Kind.Swap =>
+    | CPKind.Swap =>
       <* ASSERT fromTipe.size = toTipe.size *>
       CASE fromTipe.size OF
       | 8 => self.addCopy(8);
@@ -1132,7 +1893,7 @@ PROCEDURE BuildOrdinal(self: T; fromTipe: RTTipe.T;
       ELSE
         RAISE Error("Should not get here: 2");
       END;
-    | Kind.Copy32to64 =>
+    | CPKind.Copy32to64 =>
       IF fromTipe.size = toTipe.size THEN
         self.addCopy(fromTipe.size);
       ELSE
@@ -1140,7 +1901,7 @@ PROCEDURE BuildOrdinal(self: T; fromTipe: RTTipe.T;
 	<* ASSERT toTipe.size = 64 *> 
         self.addCopy32to64(32, signed);
       END;
-    | Kind.Copy64to32 =>
+    | CPKind.Copy64to32 =>
       IF fromTipe.size = toTipe.size THEN
         self.addCopy(fromTipe.size);
       ELSE
@@ -1148,7 +1909,7 @@ PROCEDURE BuildOrdinal(self: T; fromTipe: RTTipe.T;
 	<* ASSERT toTipe.size = 32 *> 
         self.addCopy64to32(64, signed);
       END;
-    | Kind.Swap32to64 =>
+    | CPKind.Swap32to64 =>
       CASE fromTipe.size OF
       | 8 => <* ASSERT toTipe.size = 8 *> self.addCopy(8);
       | 16 => <* ASSERT toTipe.size = 16 *> self.addSwap16(16);
@@ -1163,7 +1924,7 @@ PROCEDURE BuildOrdinal(self: T; fromTipe: RTTipe.T;
       ELSE
         RAISE Error("Should not get here: 3");
       END;
-    | Kind.Swap64to32 =>
+    | CPKind.Swap64to32 =>
       CASE fromTipe.size OF
       | 8 => <* ASSERT toTipe.size = 8 *> self.addCopy(8);
       | 16 => <* ASSERT toTipe.size = 16 *> self.addSwap16(16);
@@ -1172,8 +1933,88 @@ PROCEDURE BuildOrdinal(self: T; fromTipe: RTTipe.T;
       ELSE
         RAISE Error("Should not get here: 4");
       END;
+    ELSE <* ASSERT FALSE *> 
     END;
   END BuildOrdinal; 
+
+PROCEDURE BuildWidechar(self: T; fromTipe: RTTipe.T; toTipe: RTTipe.T) 
+          RAISES {Error} =
+  BEGIN   
+    CASE self.widecharKind OF
+    | CPKind.Copy =>
+      <* ASSERT fromTipe.size = toTipe.size *> 
+      CASE fromTipe.size OF
+      | 16 => self.addCopy(fromTipe.size);
+      | 32 => self.addCopyWC21to32(toTipe.size);
+        (* The Write interpreter will just write 32 in its own way for this. *)
+      ELSE
+        RAISE Error("Should not get here: 5");
+      END; 
+    | CPKind.Swap =>
+      <* ASSERT fromTipe.size = toTipe.size *>
+      CASE fromTipe.size OF
+      | 16 => self.addSwap16(16);
+      | 32 => self.addCopyWC21to32(toTipe.size); 
+        (* The Write interpreter will just write 32 in its own way for this. *)
+      ELSE
+        RAISE Error("Should not get here: 6");
+      END;
+
+    (* Only the readConvert interpreter will get any of the following: *) 
+    | CPKind.Copy16to32 =>
+      IF fromTipe.size = toTipe.size THEN 
+        (* It's an Enum with the right value count, but not really WIDECHAR. *)
+(* Widechar Tipe. *) 
+        self.addCopy(fromTipe.size);
+      ELSE
+        <* ASSERT fromTipe.size = 16 *> 
+        <* ASSERT toTipe.size = 32 *> 
+        self.addCopy16to32(16);
+        (* The Write interpreter will just write 32 in its own way for this. *)
+      END; 
+    | CPKind.Swap16to32 =>
+      IF fromTipe.size = toTipe.size THEN 
+        (* It's an Enum with the right value count, but not really WIDECHAR. *)
+(* Widechar Tipe. *) 
+        CASE fromTipe.size OF 
+        | 16 => self.addSwap16(16); 
+        | 32 => self.addSwap32(32);
+        ELSE <* ASSERT FALSE *>
+        END; 
+      ELSE
+        <* ASSERT fromTipe.size = 16 *> 
+        <* ASSERT toTipe.size = 32 *> 
+        self.addSwap16to32(16);
+      END; 
+    | CPKind.Copy32to16 =>
+      IF fromTipe.size = toTipe.size THEN 
+        (* It's an Enum with the right value count, but not really WIDECHAR. *)
+(* Widechar Tipe. *) 
+        self.addCopy(fromTipe.size);
+      ELSE
+        <* ASSERT fromTipe.size = 32 *> 
+        <* ASSERT toTipe.size = 16 *> 
+        self.addCopyWC21to16(16); 
+        (* The write interpreter will just write 16 in its own way for this. *)
+      END; 
+    | CPKind.Swap32to16 =>
+      IF fromTipe.size = toTipe.size THEN 
+        (* It's an Enum with the right value count, but not really WIDECHAR. *)
+(* Widechar Tipe. *) 
+        CASE fromTipe.size OF 
+        | 16 => self.addSwap16(16); 
+        | 32 => self.addSwap32(32);
+        ELSE <* ASSERT FALSE *>
+        END; 
+      ELSE
+        <* ASSERT fromTipe.size = 32 *> 
+        <* ASSERT toTipe.size = 16 *> 
+        self.addCopyWC21to16(16); 
+        (* The write interpreter will just write 16 in its own way for this. *)
+      END; 
+    ELSE <* ASSERT FALSE *> 
+    END;
+  END BuildWidechar; 
 
 PROCEDURE BuildOne(self: T; fromTipe: RTTipe.T; 
                    toTipe: RTTipe.T) RAISES {Error} =
@@ -1200,19 +2041,29 @@ PROCEDURE BuildOne(self: T; fromTipe: RTTipe.T;
             and it is always represented as zero.
         *) 
         CASE self.wordKind OF
-	| Kind.Copy, Kind.Swap =>
+	| CPKind.Copy, CPKind.Swap =>
 	  <* ASSERT fromTipe.size = toTipe.size *>
 	  self.addCopy(fromTipe.size);
-	| Kind.Copy32to64, Kind.Swap32to64 =>
+	| CPKind.Copy32to64, CPKind.Swap32to64 =>
 	  <* ASSERT fromTipe.size = 32 *> 
 	  <* ASSERT toTipe.size = 64 *> 
 	  self.addCopy32to64(32, signed := FALSE);
-	| Kind.Copy64to32, Kind.Swap64to32 =>
+	| CPKind.Copy64to32, CPKind.Swap64to32 =>
 	  <* ASSERT fromTipe.size = 64 *> 
 	  <* ASSERT toTipe.size = 32 *> 
 	  self.addCopy64to32(64, signed := FALSE);
+        ELSE <* ASSERT FALSE *> 
 	END;
-      | RTTipe.Kind.Boolean, RTTipe.Kind.Char, RTTipe.Kind.Enum, 
+      | RTTipe.Kind.Enum => 
+        IF IsWidechar(fromTipe) THEN 
+          <* ASSERT IsWidechar(toTipe) *> 
+          (* ^But it could have different element count. *) 
+          BuildWidechar (self, fromTipe, toTipe);  
+(* Widechar Tipe. *) 
+        ELSE 
+          BuildOrdinal(self, fromTipe, toTipe, self.wordKind, signed:=FALSE);  
+        END; 
+      | RTTipe.Kind.Boolean, RTTipe.Kind.Char, 
         RTTipe.Kind.Set, RTTipe.Kind.Subrange, RTTipe.Kind.Cardinal => 
         BuildOrdinal(self, fromTipe, toTipe, self.wordKind, signed:=FALSE);  
       | RTTipe.Kind.Integer =>  
@@ -1225,37 +2076,44 @@ PROCEDURE BuildOne(self: T; fromTipe: RTTipe.T;
         <* ASSERT toTipe.size = 64 *> 
         <* ASSERT fromTipe.size = 64 *> 
         CASE self.wordKind OF
-	| Kind.Copy, Kind.Copy32to64, Kind.Copy64to32 =>
+	| CPKind.Copy, CPKind.Copy32to64, CPKind.Copy64to32 =>
 	  self.addCopy(64);
-	| Kind.Swap, Kind.Swap32to64, Kind.Swap64to32 =>
+	| CPKind.Swap, CPKind.Swap32to64, CPKind.Swap64to32 =>
 	  self.addSwap64(64);
+        ELSE <* ASSERT FALSE *> 
 	END;
       | RTTipe.Kind.Real => 
         <* ASSERT toTipe.size = 32 *> 
         <* ASSERT fromTipe.size = 32 *> 
         CASE self.wordKind OF
-	| Kind.Copy, Kind.Copy32to64, Kind.Copy64to32 =>
+	| CPKind.Copy, CPKind.Copy32to64, CPKind.Copy64to32 =>
 	  self.addCopy(32);
-	| Kind.Swap, Kind.Swap32to64, Kind.Swap64to32 =>
+	| CPKind.Swap, CPKind.Swap32to64, CPKind.Swap64to32 =>
 	  self.addSwap32(32);
+        ELSE <* ASSERT FALSE *> 
 	END;
       ELSE
         RAISE Error("Builtin but not builtin.");
       END;
 
     | RTTipe.Packed(p) => 
-      (* We should only get here if we have a reference to a packed
-         element, since packed fields are handled in BuildFields.
+      (* We should get here only if the packed value is an array element,
+         since packed fields are handled in BuildFields.
          We can ignore the parent type and just create a single entry
          packedswap or a byte copy. *)
       <* ASSERT fromTipe.size = toTipe.size *> 
       CASE self.wordKind OF
-      | Kind.Copy, Kind.Copy32to64, Kind.Copy64to32 =>
-        WITH bytesNeeded = RoundUp(p.size, 8) DO
-          self.addCopy(bytesNeeded);
+      | CPKind.Copy, CPKind.Copy32to64, CPKind.Copy64to32 =>
+        WITH bitsNeeded = RoundUp(p.size, 8) DO
+          self.addCopy(bitsNeeded);
         END;
-      | Kind.Swap, Kind.Swap32to64, Kind.Swap64to32 =>
-        self.addPackedSwapFirstField(p.size);
+      | CPKind.Swap, CPKind.Swap32to64, CPKind.Swap64to32 =>
+        self.addPackedFirstField
+          (p.size, 
+           IsWidechar(p) AND self.widecharKind = CPKind.Swap32to16,
+           paKind := PackedPAKind (self.from.little_endian, TRUE) 
+          );
+      ELSE <* ASSERT FALSE *> 
       END;
 
     | RTTipe.Array(a) =>
@@ -1265,23 +2123,52 @@ PROCEDURE BuildOne(self: T; fromTipe: RTTipe.T;
             (* An array of packed elements that fit exactly in a byte.  We can
                just copy this on any machine! *)
             self.addCopy(a.size);
-          ELSE
-            (* On same endian machines, we can just copy these bytes. *)
+          ELSE 
+            
             CASE self.wordKind OF
-            | Kind.Copy, Kind.Copy32to64, Kind.Copy64to32 =>
-              self.addCopy(a.size);
-            | Kind.Swap =>
-              self.addPackedSwapArray(a.size, a.n_elts, a.element.size, 
-                                      self.from.word_size);
-            | Kind.Swap32to64, Kind.Swap64to32 =>
+            | CPKind.Copy =>
+              IF IsWidechar(a.element) AND self.widecharKind=CPKind.Copy32to16
+              THEN 
+                self.addPackedArray
+                  (a.size, a.n_elts, a.element.size, self.from.word_size,
+                   TRUE, PackedPAKind(self.from.little_endian, FALSE));
+              ELSE (* Same endian machines and not WIDECHAR elements,
+                      => we can just copy these bytes. *)
+                self.addCopy(a.size);
+              END; 
+            | CPKind.Copy32to64, CPKind.Copy64to32 =>
+              IF IsWidechar(a.element) AND self.widecharKind=CPKind.Copy32to16
+              THEN 
+                self.addPackedArray
+                  (a.size, a.n_elts, a.element.size,
+                   32, (* Since at least one of the machines is 32-bit, and the
+                          packed type is the same, the repacking will always 
+                          work in 32-bit units. *) 
+                   TRUE, PackedPAKind(self.from.little_endian, FALSE));
+              ELSE (* Same endian machines and not WIDECHAR elements,
+                      => we can just copy these bytes. *)
+                self.addCopy(a.size);
+              END; 
+            | CPKind.Swap =>
+              self.addPackedArray
+                (a.size, a.n_elts, a.element.size, self.from.word_size,
+                 IsWidechar(a.element) AND self.widecharKind=CPKind.Swap32to16,
+                 PackedPAKind(self.from.little_endian,TRUE));
+            | CPKind.Swap32to64, CPKind.Swap64to32 =>
               (* Must pack properly into the smaller 32 bit words *)
-              self.addPackedSwapArray(a.size, a.n_elts, a.element.size,
-                                      32);
+              self.addPackedArray
+                (a.size, a.n_elts, a.element.size,
+                 32, (* Since at least one of the machines is 32-bit, and the
+                        packed type is the same, the repacking will always 
+                        work in 32-bit units. *) 
+                 IsWidechar(a.element) AND self.widecharKind=CPKind.Swap32to16,
+                 PackedPAKind(self.from.little_endian,TRUE));
+            ELSE <* ASSERT FALSE *> 
             END;
-          END;
-        ELSE
+          END; 
+        ELSE (* Array element is not packed. *) 
           (* Since array elements must fit in totally
-             continguous memory, we don't need to check the offsets
+             contiguous memory, we don't need to check the offsets
              when we return from buildOne *)
           FOR i := 1 TO a.n_elts DO
             self.buildOne(a.element, a2.element);
@@ -1364,12 +2251,57 @@ PROCEDURE BuildOne(self: T; fromTipe: RTTipe.T;
     END;
   END BuildOne;
 
+PROCEDURE PrescanPackedFields 
+   ( self:T; 
+     startField: RTTipe.Field;
+     startOffset: INTEGER; 
+   )
+  : BOOLEAN = 
+  (* PRE: startField is packed. 
+     TRUE if startField or any following field prior to the first that begins 
+     on a byte boundary needs WIDECHAR shortening. *) 
+
+  VAR
+    LField: RTTipe.Field; 
+    LOffset: INTEGER; 
+
+  BEGIN 
+    IF self.widecharKind = CPKind.Swap32to16 
+    THEN (* Probably won't get here in this case, but if it happens, we need 
+            to extract regardless. *)
+      RETURN TRUE
+    ELSIF self.widecharKind = CPKind.Copy32to16 
+    THEN (* See of there are any WIDECHAR fields in the group. *)  
+      LField := startField; 
+      LOOP
+        TYPECASE LField.type OF
+        | NULL => (* Shouldn't happen. *)
+        | RTTipe.Packed(p) => 
+          IF IsWidechar(p) 
+          THEN RETURN TRUE; 
+          END;
+        ELSE (* Shouldn't happen. *)
+        END; 
+        LField := LField.next;
+        IF LField = NIL 
+        THEN RETURN FALSE; 
+        END; 
+        LOffset := startOffset + LField.offset;  
+        IF LOffset MOD 8 = 0 THEN RETURN FALSE; END; 
+      END; 
+    ELSE RETURN FALSE;
+    END; 
+  END PrescanPackedFields;  
+
 PROCEDURE BuildFields(self: T; 
                       fromField: RTTipe.Field; fromSize: INTEGER;
                       toField: RTTipe.Field; toSize: INTEGER) 
     RAISES {Error} =
- VAR fromOffset := self.fromOffset;
+
+  VAR fromOffset := self.fromOffset;
      toOffset := self.toOffset;
+     LMustExtract : BOOLEAN := FALSE; 
+
   BEGIN
     WHILE fromField # NIL DO
       <* ASSERT fromField.type.kind = toField.type.kind *>
@@ -1380,25 +2312,43 @@ PROCEDURE BuildFields(self: T;
         <* ASSERT fromDiff > -8 *>
         <* ASSERT toDiff > -8 *>
         IF fromDiff < 0 THEN
-          (* A data difference < 0 is ok if this field is packed *)
+          (* A data difference < 0 is ok if this field is packed. This happens
+             when the previous field was packed (which advances [to|from]Offset
+             to the next byte boundary) and this field is packed too (otherwise,
+             its starting offset would lie at this byte boundary. *)
           <* ASSERT fromField.type.kind = RTTipe.Kind.Packed *>
           <* ASSERT toField.type.kind = RTTipe.Kind.Packed *>
           CASE self.wordKind OF
-          | Kind.Copy, Kind.Copy32to64, Kind.Copy64to32 =>
+          | CPKind.Copy, CPKind.Copy32to64, CPKind.Copy64to32 =>
             (* If this field overflows the current packed byte, copy
                the next ones as required. *)
-            WITH spaceNeeded = fromField.type.size + fromDiff DO
-              IF spaceNeeded > 0 THEN
-                WITH bytesNeeded = RoundUp(spaceNeeded, 8) DO
-                  self.addCopy(bytesNeeded);
+            IF LMustExtract THEN 
+              self.addPackedNextField
+                (fromField.type.size, 
+                 fromField.offset,
+                 IsWidechar(fromField.type) 
+                   AND self.widecharKind = CPKind.Copy32to16,
+                 paKind := PackedPAKind(self.from.little_endian,FALSE)); 
+            ELSE (* Continue copying whole bytes to the next byte boundary. *)
+              WITH bitsNeeded = fromField.type.size + fromDiff DO
+                IF bitsNeeded > 0 THEN
+                  WITH bytesNeeded = RoundUp(bitsNeeded, 8) DO
+                       (* Which may copy extra bits, up to the next byte boundary. *) 
+                    self.addCopy(bytesNeeded);
+                  END;
                 END;
               END;
             END;
-          | Kind.Swap, Kind.Swap32to64, Kind.Swap64to32 =>
-            self.addPackedSwapNextField(fromField.type.size,
-                                        fromField.offset);
+          | CPKind.Swap, CPKind.Swap32to64, CPKind.Swap64to32 =>
+            self.addPackedNextField
+              (fromField.type.size,
+               fromField.offset,
+               IsWidechar(fromField.type)
+                 AND self.widecharKind = CPKind.Swap32to16,
+               paKind := PackedPAKind (self.from.little_endian, TRUE)); 
+          ELSE <* ASSERT FALSE *> 
           END;
-        ELSE
+        ELSE (* We are already on a byte boundary. *) 
           (* If we need to add a skip, do it *)
           self.addSkip(fromDiff, toDiff);
 
@@ -1409,13 +2359,29 @@ PROCEDURE BuildFields(self: T;
             <* ASSERT fromField.type.size = toField.type.size *>
             <* ASSERT toField.type.kind = RTTipe.Kind.Packed *>
             CASE self.wordKind OF
-            | Kind.Copy, Kind.Copy32to64, Kind.Copy64to32 =>
-              WITH bytesNeeded = RoundUp(fromField.type.size, 8) DO
-                self.addCopy(bytesNeeded);
+            | CPKind.Copy, CPKind.Copy32to64, CPKind.Copy64to32 =>
+              LMustExtract := PrescanPackedFields(self, fromField, fromOffset);
+              IF LMustExtract THEN 
+                self.addPackedFirstField
+                  (fromField.type.size, 
+                   IsWidechar(fromField.type) 
+                     AND self.widecharKind = CPKind.Copy32to16,
+                   paKind := PackedPAKind(self.from.little_endian,FALSE)); 
+              ELSE (* Can copy whole bytes to the next byte boundary. *) 
+                WITH bytesNeeded = RoundUp(fromField.type.size, 8) DO
+                  (* Enough to get the entire packed field and up to the
+                     next byte boundary. *) 
+                  self.addCopy(bytesNeeded);
+                END;
               END;
-            | Kind.Swap, Kind.Swap32to64, Kind.Swap64to32 =>
+            | CPKind.Swap, CPKind.Swap32to64, CPKind.Swap64to32 =>
               <* ASSERT fromField.offset MOD 8 = 0 *>
-              self.addPackedSwapFirstField(fromField.type.size);
+              self.addPackedFirstField
+                (fromField.type.size, 
+                 IsWidechar(fromField.type) 
+                   AND self.widecharKind = CPKind.Swap32to16,
+                 paKind := PackedPAKind (self.from.little_endian, TRUE)); 
+            ELSE <* ASSERT FALSE *> 
             END;
           ELSIF fromField.type.kind = RTTipe.Kind.Object THEN
             (* Treat objects, when in a field, as references.
@@ -1431,7 +2397,7 @@ PROCEDURE BuildFields(self: T;
       toField := toField.next;
     END;
 
-    (* Now that it's done, check if there is any space after the last
+    (* Now that the fields are done, check if there is any space after the last
        field that needs to be accounted for. *)
     WITH fromDiff = fromOffset + fromSize - self.fromOffset,
          toDiff = toOffset + toSize - self.toOffset DO
@@ -1448,6 +2414,8 @@ PROCEDURE BuildFields(self: T;
 PROCEDURE PrintPacking(packing: RTPacking.T) =
   BEGIN
     IO.Put(" word_size: " & Fmt.Unsigned(packing.word_size, 10) & "\n");
+    IO.Put(" long_size: " & Fmt.Unsigned(packing.long_size, 10) & "\n");
+    IO.Put(" widechar_size: " & Fmt.Unsigned(packing.widechar_size, 10) & "\n");
     IO.Put(" max_align: " & Fmt.Unsigned(packing.max_align, 10) & "\n");
     IO.Put(" struct_align: " & Fmt.Unsigned(packing.struct_align, 10) & "\n");
     CASE packing.float OF
@@ -1470,6 +2438,7 @@ PROCEDURE KindToText(kind: RTTipe.Kind) =
     | RTTipe.Kind.Cardinal => IO.Put( "Cardinal");
     | RTTipe.Kind.Char => IO.Put( "Char");
     | RTTipe.Kind.Enum => IO.Put( "Enum");
+(* Widechar Tipe. *) 
     | RTTipe.Kind.Extended => IO.Put( "Extended");
     | RTTipe.Kind.Integer => IO.Put( "Integer");
     | RTTipe.Kind.Longcard => IO.Put( "Longcard");
@@ -1549,6 +2518,7 @@ PROCEDURE TipeToText(tipe: RTTipe.T; pre: TEXT; packing: RTPacking.T) =
       TipeToText(a.element, pre & "  ", packing);
     | RTTipe.Enum(e) =>
       IO.Put(" of " & Fmt.Int(e.n_elts) & " elements");
+(* Widechar Tipe. *) 
     | RTTipe.Object(o) =>
       IO.Put(":\n" & pre & "  Super Type = ");
       IF o.super # NIL THEN
@@ -1604,54 +2574,86 @@ PROCEDURE Print(self: T) =
     self.printProgram();
   END Print;
 
+PROCEDURE PackedOperation 
+  (kind: [PklAction.PAKind.SwapPackedLEtoBE..PklAction.PAKind.CopyPackedBE])
+  : TEXT = 
+
+  BEGIN 
+    CASE kind OF 
+    | PklAction.PAKind.SwapPackedLEtoBE => 
+      RETURN "swap packed, little- to big-endian ";
+    | PklAction.PAKind.SwapPackedBEtoLE => 
+      RETURN "swap packed, big- to little-endian ";
+    | PklAction.PAKind.CopyPackedLE => 
+      RETURN "copy packed, little-endian ";
+    | PklAction.PAKind.CopyPackedBE => 
+      RETURN "copy packed, big-endian ";
+    END; 
+  END PackedOperation;
+
 PROCEDURE PrintProgram(self: T) =
-  VAR fromSize := 0;
-      toSize := 0;
+  VAR fromByteCt := 0;
+      toByteCt := 0;
+      DoPrintFootnote: BOOLEAN; 
   BEGIN    
     IO.Put("\nDoing it in " & Fmt.Int(self.prog.size()) & " step(s):\n");
     FOR i := 0 TO self.prog.size() - 1 DO
       WITH elem = self.prog.get(i) DO
         CASE elem.kind OF
-        | PklAction.Kind.Copy => 
-          IO.Put(" Copy " & Fmt.Int(elem.length) & " byte(s).\n");
-          INC(fromSize, elem.length);
-          INC(toSize, elem.length);
-        | PklAction.Kind.SwapPacked => 
-          WITH nelem = NARROW(elem, PklAction.SwapPacked) DO
-            IO.Put(" Copy and swap " & Fmt.Int(elem.length) & 
+        | PklAction.PAKind.Copy => 
+          IO.Put(" Copy " & Fmt.Int(elem.unitCt) & " byte(s).\n");
+          INC(fromByteCt, elem.unitCt);
+          INC(toByteCt, elem.unitCt);
+        | PklAction.PAKind.SwapPackedLEtoBE, PklAction.PAKind.SwapPackedBEtoLE, 
+          PklAction.PAKind.CopyPackedLE, PklAction.PAKind.CopyPackedBE => 
+          WITH nelem = NARROW(elem, PklAction.Packed) DO
+            IO.Put(PackedOperation(elem.kind)); 
+            IO.Put(Fmt.Int(elem.unitCt) & 
               " unit(s) of " & Fmt.Int(nelem.size) & 
               " byte(s) with packed bitfields: ");
+            DoPrintFootnote := FALSE; 
             FOR i := FIRST(nelem.field^) TO LAST(nelem.field^) DO
-              IO.Put(Fmt.Int(nelem.field[i]) & " ");
+              IO.Put(Fmt.Int(nelem.field[i]));
+              IF i IN nelem.widecharFieldSet 
+              THEN
+                IO.Put("* ");
+                DoPrintFootnote := TRUE; 
+              ELSE
+                IO.Put(" ");
+              END; 
             END;
+            IO.Put("\n");
+            IF DoPrintFootnote THEN
+              IO.Put("( * Shorten this WIDECHAR packed field.)"); 
+            END; 
+            INC(fromByteCt, elem.unitCt*nelem.size);
+            INC(toByteCt, elem.unitCt*nelem.size);
+(* TODO: Print widecharFieldSet. *) 
           END;
-          IO.Put("\n");
-          INC(fromSize, elem.length);
-          INC(toSize, elem.length);
-        | PklAction.Kind.SkipFrom =>
-          IO.Put(" Skip " & Fmt.Int(elem.length) & " src byte(s).\n");
-          INC(fromSize, elem.length);
-        | PklAction.Kind.SkipTo =>
-          IO.Put(" Skip " & Fmt.Int(elem.length) & " dst byte(s).\n");
-          INC(toSize, elem.length);
-        | PklAction.Kind.Skip =>
-          IO.Put(" Skip " & Fmt.Int(elem.length) & " src and dst byte(s).\n");
-          INC(fromSize, elem.length);
-          INC(toSize, elem.length);
-        | PklAction.Kind.Swap16 =>
-          IO.Put(" Swap " & Fmt.Int(elem.length) & " 16-bit word(s).\n");
-          INC(fromSize, elem.length*2);
-          INC(toSize, elem.length*2);
-        | PklAction.Kind.Swap32 =>
-          IO.Put(" Swap " & Fmt.Int(elem.length) & " 32-bit word(s).\n");
-          INC(fromSize, elem.length*4);
-          INC(toSize, elem.length*4);
-        | PklAction.Kind.Swap64 =>
-          IO.Put(" Swap " & Fmt.Int(elem.length) & " 64-bit word(s).\n");
-          INC(fromSize, elem.length*8);
-          INC(toSize, elem.length*8);
-        | PklAction.Kind.Copy32to64 =>
-          IO.Put(" Copy " & Fmt.Int(elem.length) & " 32 to 64-bit ");
+        | PklAction.PAKind.SkipFrom =>
+          IO.Put(" Skip " & Fmt.Int(elem.unitCt) & " src byte(s).\n");
+          INC(fromByteCt, elem.unitCt);
+        | PklAction.PAKind.SkipTo =>
+          IO.Put(" Skip " & Fmt.Int(elem.unitCt) & " dst byte(s).\n");
+          INC(toByteCt, elem.unitCt);
+        | PklAction.PAKind.Skip =>
+          IO.Put(" Skip " & Fmt.Int(elem.unitCt) & " src and dst byte(s).\n");
+          INC(fromByteCt, elem.unitCt);
+          INC(toByteCt, elem.unitCt);
+        | PklAction.PAKind.Swap16 =>
+          IO.Put(" Swap " & Fmt.Int(elem.unitCt) & " 16-bit word(s).\n");
+          INC(fromByteCt, elem.unitCt*2);
+          INC(toByteCt, elem.unitCt*2);
+        | PklAction.PAKind.Swap32 =>
+          IO.Put(" Swap " & Fmt.Int(elem.unitCt) & " 32-bit word(s).\n");
+          INC(fromByteCt, elem.unitCt*4);
+          INC(toByteCt, elem.unitCt*4);
+        | PklAction.PAKind.Swap64 =>
+          IO.Put(" Swap " & Fmt.Int(elem.unitCt) & " 64-bit word(s).\n");
+          INC(fromByteCt, elem.unitCt*8);
+          INC(toByteCt, elem.unitCt*8);
+        | PklAction.PAKind.Copy32to64 =>
+          IO.Put(" Copy " & Fmt.Int(elem.unitCt) & " 32 to 64-bit ");
           WITH nelem = NARROW(elem, PklAction.Copy32to64) DO
             IF nelem.signed THEN
               IO.Put("signed ");
@@ -1660,10 +2662,10 @@ PROCEDURE PrintProgram(self: T) =
             END;
           END;
           IO.Put("word(s).\n");
-          INC(fromSize, elem.length*4);
-          INC(toSize, elem.length*8);
-        | PklAction.Kind.Copy64to32 =>
-          IO.Put(" Copy " & Fmt.Int(elem.length) & " 64 to 32-bit ");
+          INC(fromByteCt, elem.unitCt*4);
+          INC(toByteCt, elem.unitCt*8);
+        | PklAction.PAKind.Copy64to32 =>
+          IO.Put(" Copy " & Fmt.Int(elem.unitCt) & " 64 to 32-bit ");
           WITH nelem = NARROW(elem, PklAction.Copy32to64) DO
             IF nelem.signed THEN
               IO.Put("signed ");
@@ -1672,10 +2674,40 @@ PROCEDURE PrintProgram(self: T) =
             END;
           END;
           IO.Put("word(s).\n");
-          INC(fromSize, elem.length*8);
-          INC(toSize, elem.length*4);
-        | PklAction.Kind.Swap32to64 =>
-          IO.Put(" Copy and Swap " & Fmt.Int(elem.length) & " 32 to 64-bit ");
+          INC(fromByteCt, elem.unitCt*8);
+          INC(toByteCt, elem.unitCt*4);
+        | PklAction.PAKind.Copy16to32 =>
+          IO.Put(" Copy " & Fmt.Int(elem.unitCt) & " 16 to 32-bit ");
+          IO.Put("word(s).\n");
+          INC(fromByteCt, elem.unitCt*2);
+          INC(toByteCt, elem.unitCt*4);
+        | PklAction.PAKind.Swap16to32 =>
+          IO.Put(" Swap " & Fmt.Int(elem.unitCt) & " 16 to 32-bit ");
+          IO.Put("word(s).\n");
+          INC(fromByteCt, elem.unitCt*2);
+          INC(toByteCt, elem.unitCt*4);
+        | PklAction.PAKind.Copy32to16 =>
+          IO.Put(" Copy " & Fmt.Int(elem.unitCt) & " 32 to 16-bit ");
+          IO.Put("word(s).\n");
+          INC(fromByteCt, elem.unitCt*4);
+          INC(toByteCt, elem.unitCt*2);
+        | PklAction.PAKind.Swap32to16 =>
+          IO.Put(" Swap " & Fmt.Int(elem.unitCt) & " 32 to 16-bit ");
+          IO.Put("word(s).\n");
+          INC(fromByteCt, elem.unitCt*4);
+          INC(toByteCt, elem.unitCt*2);
+        | PklAction.PAKind.CopyWC21to32 =>
+          IO.Put(" Copy " & Fmt.Int(elem.unitCt) & " WC21 to 32-bit ");
+          IO.Put("word(s).\n");
+          INC(fromByteCt, elem.unitCt*4);
+          INC(toByteCt, elem.unitCt*4);
+        | PklAction.PAKind.CopyWC21to16 =>
+          IO.Put(" Copy " & Fmt.Int(elem.unitCt) & " WC21 to 16-bit ");
+          IO.Put("word(s).\n");
+          INC(fromByteCt, elem.unitCt*4);
+          INC(toByteCt, elem.unitCt*2);
+        | PklAction.PAKind.Swap32to64 =>
+          IO.Put(" Copy and Swap " & Fmt.Int(elem.unitCt) & " 32 to 64-bit ");
           WITH nelem = NARROW(elem, PklAction.Copy32to64) DO
             IF nelem.signed THEN
               IO.Put("signed ");
@@ -1684,10 +2716,10 @@ PROCEDURE PrintProgram(self: T) =
             END;
           END;
           IO.Put("word(s).\n");
-          INC(fromSize, elem.length*4);
-          INC(toSize, elem.length*8);
-        | PklAction.Kind.Swap64to32 =>
-          IO.Put(" Copy and Swap " & Fmt.Int(elem.length) & " 64 to 32-bit "); 
+          INC(fromByteCt, elem.unitCt*4);
+          INC(toByteCt, elem.unitCt*8);
+        | PklAction.PAKind.Swap64to32 =>
+          IO.Put(" Copy and Swap " & Fmt.Int(elem.unitCt) & " 64 to 32-bit "); 
           WITH nelem = NARROW(elem, PklAction.Copy32to64) DO
             IF nelem.signed THEN
               IO.Put("signed ");
@@ -1696,10 +2728,10 @@ PROCEDURE PrintProgram(self: T) =
             END;
           END;
           IO.Put("word(s).\n");
-          INC(fromSize, elem.length*8);
-          INC(toSize, elem.length*4);
-        | PklAction.Kind.ReadRef =>
-          IO.Put(" Read " & Fmt.Int(elem.length));
+          INC(fromByteCt, elem.unitCt*8);
+          INC(toByteCt, elem.unitCt*4);
+        | PklAction.PAKind.ReadRef =>
+          IO.Put(" Read " & Fmt.Int(elem.unitCt));
           WITH nelem = NARROW(elem, PklAction.Ref) DO
             CASE nelem.refType OF
             | PklAction.RefType.Ref => IO.Put(" traced");
@@ -1708,11 +2740,11 @@ PROCEDURE PrintProgram(self: T) =
             END;
           END;
           IO.Put(" references(s).\n");
-          INC(fromSize, elem.length*(self.from.word_size DIV 8));
-          INC(toSize, elem.length*(self.to.word_size DIV 8));
-        | PklAction.Kind.Done =>
-          IO.Put("Copied " & Fmt.Int(fromSize) & " bytes to " &
-            Fmt.Int(toSize) & "\n");
+          INC(fromByteCt, elem.unitCt*(self.from.word_size DIV 8));
+          INC(toByteCt, elem.unitCt*(self.to.word_size DIV 8));
+        | PklAction.PAKind.Done =>
+          IO.Put("Copied " & Fmt.Int(fromByteCt) & " bytes to " &
+            Fmt.Int(toByteCt) & "\n");
         END;
       END;
     END;
