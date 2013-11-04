@@ -55,7 +55,14 @@ TYPE
         Only need one, since a set of packed fields being converted
         between different endian, different size must fit in the
         smaller word size (32 bits) *)
-     SwapPacked,                    (* Copy and swap around the fields *)
+     SwapPackedLEtoBE,              (* Copy and swap field order LE to BE. *)
+     SwapPackedBEtoLE,              (* Copy and swap field order BE to LE. *)
+     (* Usually, for packed fields on same endian, we can just use Copy on
+        whole bytes.  But if there is a packed WIDECHAR field and it needs to 
+        be narrowed to 16 bits, we need to go through the fields one at a time,
+        like SwapPacked*, but without swapping.  CopyPacked* does this. *) 
+     CopyPackedLE,                    (* Copy the fields, little-endian. *)
+     CopyPackedBE,                    (* Copy the fields, big endian. *)
 
      (* For moving data between same size, different endian *)
      Swap16,                        (* Copy unitCt 16 bit words, swapping. *)
@@ -90,14 +97,19 @@ TYPE
      Done
   };
 
-
   Copy32to64 = T OBJECT signed: BOOLEAN END; (* Also used for swap. *) 
   Copy64to32 = T OBJECT signed: BOOLEAN END; (* Also used for swap. *)
 (* TODO: ^These can be merged. *) 
 
-  SwapPacked = T OBJECT 
+  FieldNo = [0 .. BITSIZE(INTEGER) - 1]; 
+  (* ^There can't be more packed fields than this in a word, because a
+     packed field can't cross a word boundary. *)  
+  FieldNoSet = SET OF FieldNo; 
+
+  Packed = T OBJECT 
     size  : CARDINAL; (* Size of word to pack into, in bytes. *) 
     field : REF ARRAY OF CARDINAL; (* Sizes of fields in bits. *) 
+    widecharFieldSet := FieldNoSet {}; 
   END;
 
   Ref = T OBJECT refType: RefType; END;
