@@ -172,7 +172,7 @@ UNSAFE MODULE PickleTestWideChar EXPORTS Main
     ; WL ( "  -h, -? Display help text and exit." ) 
     ; WL ( "  -t Include a record with several WIDECHARs." ) 
     ; WL ( "  -T Include several top-level TEXTs." ) 
-    ; WL ( "  -y Include a fixed array of WIDECHARs." ) 
+    ; WL ( "  -y Include a fixed array of TEXTs." ) 
     ; WL ( "  -r Read a previously written file of pickles and verify its contents." ) 
     ; WL ( "  -v Display version and exit." ) 
     ; WL ( "  -w Write a file containing pickles. (done before any reading.)" ) 
@@ -306,7 +306,7 @@ UNSAFE MODULE PickleTestWideChar EXPORTS Main
       INC ( GWriteWas21Ct )  
     END NoteWriteWas21 
 
-; PROCEDURE WcIntsAsExpected ( Got , Exp : INTEGER ) : BOOLEAN 
+; PROCEDURE WcIntsAsExpected ( Got : INTEGER ; VAR Exp : INTEGER ) : BOOLEAN 
 
   = VAR LResult : BOOLEAN 
 
@@ -316,10 +316,12 @@ UNSAFE MODULE PickleTestWideChar EXPORTS Main
         IF Got = Exp - 16_100000
         THEN
           NoteWriteWas16 ( )  
+        ; Exp := Exp - 16_100000
         ; LResult := TRUE 
         ELSIF ORD ( LAST ( WIDECHAR ) ) = 16_FFFF 
         THEN (* We are reading on a 16-bit WIDECHAR system. *) 
-          IF Got = 16_FFFD (* Unicode substitution char. *) 
+          Exp := 16_FFFD 
+        ; IF Got = 16_FFFD (* Unicode substitution char. *) 
           THEN (* Hi value was substituted during read. *) 
             NoteWriteWas21 ( )  
           ; LResult := TRUE 
@@ -360,7 +362,7 @@ UNSAFE MODULE PickleTestWideChar EXPORTS Main
       ELSE 
         Wr . PutText ( LogWrT , ", EXPECTED: " )  
       ; PI ( Exp ) 
-      ; Wr . PutText ( LogWrT , " " )  
+      ; Wr . PutText ( LogWrT , "=" )  
       ; Wr . PutText ( LogWrT , Fmt . Int ( Exp ) )
       ; INC ( GFailureCt )  
       END (* IF *) 
@@ -1129,106 +1131,113 @@ UNSAFE MODULE PickleTestWideChar EXPORTS Main
       ; Wr . PutText ( LogWrT , Wr . EOL )  
       ; Wr . Flush ( LogWrT ) 
       ; RdT := IO . OpenRead ( FileName ) 
-      ; WHILE NOT Rd . EOF ( RdT ) 
-        DO 
-          TRY 
-            R := Pickle . Read ( RdT ) 
-          EXCEPT 
-          Pickle . Error ( EMsg ) 
-          => Wr . PutText ( LogWrT , "While reading, got Pickle.Error" )  
-          ; Wr . PutText ( LogWrT , Wr . EOL )  
-          ; Wr . PutText ( LogWrT , "  ( " )  
-          ; Wr . PutText ( LogWrT , EMsg )  
-          ; Wr . PutText ( LogWrT , " )" )  
-          ; Wr . PutText ( LogWrT , Wr . EOL )  
-          ; Wr . Flush ( LogWrT ) 
-          ; INC ( GFailureCt )  
-          ; INC ( GTestCt )  
-          ; RETURN 
-          | Rd . EndOfFile 
-          => Wr . PutText ( LogWrT , "While reading, got Rd.EndOfFile" )  
-          ; Wr . PutText ( LogWrT , Wr . EOL )  
-          ; Wr . Flush ( LogWrT ) 
-          ; INC ( GFailureCt )  
-          ; INC ( GTestCt )  
-          ; RETURN 
-          END (* EXCEPT *) 
-        ; TYPECASE ( R ) 
-          OF RefT ( TRefT ) 
-          => WrSep ( ) 
-          ; CheckT ( TRefT ) 
-          ; Wr . PutText ( LogWrT , "Done reading record." )  
-          ; Wr . PutText ( LogWrT , Wr . EOL )  
-          ; Wr . Flush ( LogWrT ) 
-
-          | RefTPA ( TRefTPA ) 
-          => WrSep ( ) 
-          ; CheckTPA ( TRefTPA )
-          ; Wr . PutText ( LogWrT , "Done reading packed array (21) of WIDECHAR." )  
-          ; Wr . PutText ( LogWrT , Wr . EOL )  
-          ; Wr . Flush ( LogWrT ) 
-
-          | RefTAA ( TRefTAA ) 
-          => WrSep ( ) 
-          ; CheckTAA ( TRefTAA )
-          ; Wr . PutText ( LogWrT , "Done reading packed array (32) of WIDECHAR." )  
-          ; Wr . PutText ( LogWrT , Wr . EOL )  
-          ; Wr . Flush ( LogWrT ) 
-
-          | RefTA ( TRefTA ) 
-          => WrSep ( ) 
-          ; CheckTA ( TRefTA )
-          ; Wr . PutText ( LogWrT , "Done reading unpacked array of WIDECHAR." )  
-          ; Wr . PutText ( LogWrT , Wr . EOL )  
-          ; Wr . Flush ( LogWrT ) 
-
-          | RefToA ( TRefToA ) 
-          => WrSep ( ) 
-          ; CheckTOA ( TRefToA )
-          ; Wr . PutText ( LogWrT , "Done reading open array of WIDECHAR." )  
-          ; Wr . PutText ( LogWrT , Wr . EOL )  
-          ; Wr . Flush ( LogWrT ) 
-
-          | RefToTexts ( TRefToTexts ) 
-          => WrSep ( ) 
-          ; CheckTexts ( TRefToTexts ) 
-          ; Wr . PutText ( LogWrT , "Done reading Texts." )  
-          ; Wr . PutText ( LogWrT , Wr . EOL )  
-          ; Wr . Flush ( LogWrT ) 
-   
-          | Text16Short . T => CheckTopText ( R , WcDep . VArray1 ) 
-          | Text16 . T => CheckTopText ( R , Lit4 ) 
-          | Text8Short . T => CheckTopText ( R , Lit5 ) 
-          | Text8 . T => CheckTopText ( R , Lit6 ) 
-          | TextCat . T => CheckTopText ( R , Lit7 ) 
-          
-          ELSE 
-            WrSep ( ) 
-          ; Wr . PutText ( LogWrT , "Done reading unknown type object. " )  
-          ; Wr . PutText ( LogWrT , Wr . EOL )  
-          ; Wr . Flush ( LogWrT ) 
-          END (* TYPECASE *)  
-        END (* WHILE *) 
-
-      ; INC ( GTestCt ) (* For write-size consistency check. *)  
-      ; IF GWriteWas16Ct > 0 AND GWriteWas21Ct > 0  
+      ; IF RdT = NIL 
         THEN 
-          WrSep ( ) 
-        ; Wr . PutText ( LogWrT , "Got a mixture of " )
-        ; Wr . PutText ( LogWrT , Fmt . Int ( GWriteWas16Ct ) )   
-        ; Wr . PutText ( LogWrT , "16-bit written and " )  
-        ; Wr . PutText ( LogWrT , Fmt . Int ( GWriteWas21Ct ) )   
-        ; Wr . PutText ( LogWrT , "21-bit written values for WIDECHARS." )  
+          Wr . PutText ( LogWrT , "Unable to open " & FileName )  
         ; Wr . PutText ( LogWrT , Wr . EOL )  
-        ; Wr . Flush ( LogWrT )
-        ; INC ( GFailureCt )  
-        END (* IF *) 
+        ; Wr . Flush ( LogWrT ) 
+        ELSE
+          WHILE NOT Rd . EOF ( RdT ) 
+          DO 
+            TRY 
+              R := Pickle . Read ( RdT ) 
+            EXCEPT 
+            Pickle . Error ( EMsg ) 
+            => Wr . PutText ( LogWrT , "While reading, got Pickle.Error" )  
+            ; Wr . PutText ( LogWrT , Wr . EOL )  
+            ; Wr . PutText ( LogWrT , "  ( " )  
+            ; Wr . PutText ( LogWrT , EMsg )  
+            ; Wr . PutText ( LogWrT , " )" )  
+            ; Wr . PutText ( LogWrT , Wr . EOL )  
+            ; Wr . Flush ( LogWrT ) 
+            ; INC ( GFailureCt )  
+            ; INC ( GTestCt )  
+            ; RETURN 
+            | Rd . EndOfFile 
+            => Wr . PutText ( LogWrT , "While reading, got Rd.EndOfFile" )  
+            ; Wr . PutText ( LogWrT , Wr . EOL )  
+            ; Wr . Flush ( LogWrT ) 
+            ; INC ( GFailureCt )  
+            ; INC ( GTestCt )  
+            ; RETURN 
+            END (* EXCEPT *) 
+          ; TYPECASE ( R ) 
+            OF RefT ( TRefT ) 
+            => WrSep ( ) 
+            ; CheckT ( TRefT ) 
+            ; Wr . PutText ( LogWrT , "Done reading record." )  
+            ; Wr . PutText ( LogWrT , Wr . EOL )  
+            ; Wr . Flush ( LogWrT ) 
 
-      ; Rd . Close ( RdT ) 
-      ; WrSep ( ) 
-      ; Wr . PutText ( LogWrT , "Done reading " & FileName )  
-      ; Wr . PutText ( LogWrT , Wr . EOL )  
-      ; Wr . Flush ( LogWrT ) 
+            | RefTPA ( TRefTPA ) 
+            => WrSep ( ) 
+            ; CheckTPA ( TRefTPA )
+            ; Wr . PutText ( LogWrT , "Done reading packed array (21) of WIDECHAR." )  
+            ; Wr . PutText ( LogWrT , Wr . EOL )  
+            ; Wr . Flush ( LogWrT ) 
+
+            | RefTAA ( TRefTAA ) 
+            => WrSep ( ) 
+            ; CheckTAA ( TRefTAA )
+            ; Wr . PutText ( LogWrT , "Done reading packed array (32) of WIDECHAR." )  
+            ; Wr . PutText ( LogWrT , Wr . EOL )  
+            ; Wr . Flush ( LogWrT ) 
+
+            | RefTA ( TRefTA ) 
+            => WrSep ( ) 
+            ; CheckTA ( TRefTA )
+            ; Wr . PutText ( LogWrT , "Done reading unpacked array of WIDECHAR." )  
+            ; Wr . PutText ( LogWrT , Wr . EOL )  
+            ; Wr . Flush ( LogWrT ) 
+
+            | RefToA ( TRefToA ) 
+            => WrSep ( ) 
+            ; CheckTOA ( TRefToA )
+            ; Wr . PutText ( LogWrT , "Done reading open array of WIDECHAR." )  
+            ; Wr . PutText ( LogWrT , Wr . EOL )  
+            ; Wr . Flush ( LogWrT ) 
+
+            | RefToTexts ( TRefToTexts ) 
+            => WrSep ( ) 
+            ; CheckTexts ( TRefToTexts ) 
+            ; Wr . PutText ( LogWrT , "Done reading Texts." )  
+            ; Wr . PutText ( LogWrT , Wr . EOL )  
+            ; Wr . Flush ( LogWrT ) 
+
+            | Text16Short . T => CheckTopText ( R , WcDep . VArray1 ) 
+            | Text16 . T => CheckTopText ( R , Lit4 ) 
+            | Text8Short . T => CheckTopText ( R , Lit5 ) 
+            | Text8 . T => CheckTopText ( R , Lit6 ) 
+            | TextCat . T => CheckTopText ( R , Lit7 ) 
+
+            ELSE 
+              WrSep ( ) 
+            ; Wr . PutText ( LogWrT , "Done reading unknown type object. " )  
+            ; Wr . PutText ( LogWrT , Wr . EOL )  
+            ; Wr . Flush ( LogWrT ) 
+            END (* TYPECASE *)  
+          END (* WHILE *) 
+
+        ; INC ( GTestCt ) (* For write-size consistency check. *)  
+        ; IF GWriteWas16Ct > 0 AND GWriteWas21Ct > 0  
+          THEN 
+            WrSep ( ) 
+          ; Wr . PutText ( LogWrT , "Got a mixture of " )
+          ; Wr . PutText ( LogWrT , Fmt . Int ( GWriteWas16Ct ) )   
+          ; Wr . PutText ( LogWrT , "16-bit written and " )  
+          ; Wr . PutText ( LogWrT , Fmt . Int ( GWriteWas21Ct ) )   
+          ; Wr . PutText ( LogWrT , "21-bit written values for WIDECHARS." )  
+          ; Wr . PutText ( LogWrT , Wr . EOL )  
+          ; Wr . Flush ( LogWrT )
+          ; INC ( GFailureCt )  
+          END (* IF *) 
+
+        ; Rd . Close ( RdT ) 
+        ; WrSep ( ) 
+        ; Wr . PutText ( LogWrT , "Done reading " & FileName )  
+        ; Wr . PutText ( LogWrT , Wr . EOL )  
+        ; Wr . Flush ( LogWrT ) 
+        END (* IF *) 
       END (* IF *) 
     END Read  
 
