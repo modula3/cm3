@@ -354,7 +354,7 @@ extern const struct arm_fpu_desc
 extern int arm_fpu_attr;
 
 #ifndef TARGET_DEFAULT_FLOAT_ABI
-#define TARGET_DEFAULT_FLOAT_ABI ARM_FLOAT_ABI_SOFT
+#define TARGET_DEFAULT_FLOAT_ABI ARM_FLOAT_ABI_HARD
 #endif
 
 #define LARGEST_EXPONENT_IS_NORMAL(bits) \
