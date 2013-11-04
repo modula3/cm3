@@ -15,16 +15,7 @@
 DefaultGccVersion = "47"
 
 readonly TargeDefaultGccVersion = {
-    "AMD64_OPENBSD" : "45",
-      "AMD64_LINUX" : "47",
-    "AMD64_FREEBSD" : "47",
        "ARM_DARWIN" : "42",
-     "AMD64_DARWIN" : "47",
-      "I386_DARWIN" : "47",
-     "I386_SOLARIS" : "47",
-    "AMD64_SOLARIS" : "47",
-  "SPARC32_SOLARIS" : "47",
-  "SPARC64_SOLARIS" : "47",
 }
 
 include("platforms.quake")
@@ -66,11 +57,6 @@ readonly m3cc_config = {
 %  building m3cg, does locate and test an assembler. Building on HP-UX will
 %  fail and say the GNU assembler is required, if it is not the one found.
 %
-  "MIPS64_OPENBSD" : "-enable-obsolete",
-  "MIPS64EL_OPENBSD" : "-enable-obsolete",
-  "MIPS32_IRIX"  : "-enable-obsolete",
-  "MIPS64_IRIX"  : "-enable-obsolete",
-  "ALPHA_OSF"    : "-enable-obsolete",
   "I386_LINUX"   : "-with-gnu-as -with-gnu-ld",
   "AMD64_LINUX"  : "-with-gnu-as -with-gnu-ld",
   "PPC_LINUX"    : "-with-gnu-as -with-gnu-ld",
@@ -78,11 +64,6 @@ readonly m3cc_config = {
   "PPC64_LINUX"  : "-with-gnu-as -with-gnu-ld",
   "SPARC32_LINUX": "-with-gnu-as -with-gnu-ld",
   "SPARC64_LINUX": "-with-gnu-as -with-gnu-ld",
-  "SOLsun"       : "-enable-obsolete",    % for Solaris 5.8
-  "SOLgnu"       : "-enable-obsolete",    % for Solaris 5.8
-  "I386_SOLARIS" : "-enable-obsolete",    % for Solaris 5.8
-  "SPARC32_SOLARIS" : "-enable-obsolete", % for Solaris 5.8
-  "SPARC64_SOLARIS" : "-enable-obsolete", % for Solaris 5.8
   "LINUXLIBC6"   : "-with-gnu-as -with-gnu-ld",
   "ARM_LINUX"    : "-with-gnu-as -with-gnu-ld -with-arch=armv6 -with-fpu=vfp -with-float=hard ",
                    % & "-enable-target-optspace -enable-threads -enable-shared",
