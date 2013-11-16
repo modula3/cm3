@@ -55,6 +55,7 @@ PROCEDURE Local (): T =
       local.float         := FloatKind.IEEE;
       IF NOT FloatMode.IEEE THEN local.float := FloatKind.VAX; END;
       local.lazy_align    := IsLazy();
+      local.widechar_size := SizeOf (ADRSIZE (WIDECHAR));
       init_done := TRUE;
     END;
     RETURN local;
@@ -74,7 +75,20 @@ PROCEDURE SizeOf (n: INTEGER): CARDINAL =
 
 PROCEDURE Encode (READONLY t: T): INTEGER =
   VAR n := 0;
+  VAR wc: INTEGER; 
   BEGIN
+    IF t.widechar_size = 32 
+    THEN wc := BitSize (32)
+    ELSE wc := BitSize (8)
+    END; 
+      (* Always BitSize (t.widechar_size) would be the consistent thing to use
+         here, but that will cause older versions that don't put WIDECHAR size
+         in a T to suffer an assert failure during Decode.  The only WIDECHAR 
+         sizes are 16 and 32, and Decode interprets 8 to really mean 16, 
+         so it will correctly decode values written by older Encode.  
+         So we also encode 16 in the old way too, so older Decode will not 
+         choke on Ts we write with 16-bit WIDECHAR. *) 
+    n := Word.Or (Word.Shift (n, 2), wc );
     n := Word.Or (Word.Shift (n, 1), ORD (t.lazy_align));
     n := Word.Or (Word.Shift (n, 2), BitSize (t.long_size));
     n := Word.Or (Word.Shift (n, 2), BitSize (t.word_size));
@@ -94,8 +108,14 @@ PROCEDURE Decode (i: INTEGER): T =
     t.max_align     := Bits[Word.And (i, 3)];    i := Word.Shift (i, -2);
     t.word_size     := Bits[Word.And (i, 3)];    i := Word.Shift (i, -2);
     t.long_size     := Bits[Word.And (i, 3)];    i := Word.Shift (i, -2);
-    t.lazy_align  := VAL (Word.And (i, 1), BOOLEAN); i := Word.Shift (i, -1);
-    <*ASSERT i = 0*>
+    t.lazy_align    := VAL (Word.And (i, 1), BOOLEAN); i := Word.Shift (i, -1);
+    t.widechar_size := Bits[Word.And (i, 3)];    i := Word.Shift (i, -2);
+    IF t.widechar_size = 8 
+    THEN (* Was written by older RTPacking, without a widechar_size. *)
+      t.widechar_size := 16 
+    END; 
+    (* Ignore any remaing bits, in case we get a value from a later version
+       that has additional properties. *) 
     RETURN t;
   END Decode;
 

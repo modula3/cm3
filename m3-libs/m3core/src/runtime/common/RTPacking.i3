@@ -27,7 +27,8 @@ TYPE
     struct_align  : CARDINAL;  (* 8, 16, 32, or 64 *)
     float         : FloatKind;
     little_endian : BOOLEAN;
-    lazy_align    : BOOLEAN
+    lazy_align    : BOOLEAN;
+    widechar_size : CARDINAL   (* 16 or 32 *) 
   END;
 
 TYPE
