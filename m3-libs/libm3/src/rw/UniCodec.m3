@@ -130,7 +130,7 @@ MODULE UniCodec
   (* Read and decode a code point from Source, using CM3WC encoding, and return
      it as a WIDECHAR.  This is just 2-byte fixed-size little endian, 
      the same as the original Cm3 GetWideChar.  ORD(<result>) will 
-     be <= 16_FFFF.  Just zero-extended an odd byte before EOF.  
+     be <= 16_FFFF.  Just zero-extend an odd byte before EOF.  
      No ill-formed cases exist. 
   *)  
 

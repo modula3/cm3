@@ -17,7 +17,7 @@ INTERFACE UniCodec
 
 ; TYPE Widechar = WIDECHAR 
 (* ; TYPE Widechar = [ 0 .. 16_10FFFF ] *) 
-  (* Temporary, for testing.  When WIDECHAR becomes a character type over
+  (* ^Temporary, for testing.  When WIDECHAR becomes a character type over
      this range, and with BYTESIZE = 4, we can replace this by WIDECHAR. *)  
 
 ; CONST IsBE = Compiler . ThisEndian = Compiler . ENDIAN . BIG  
@@ -168,7 +168,7 @@ INTERFACE UniCodec
   (* Read and decode a code point from Source, using CM3WC encoding, and return
      it as a WIDECHAR.  This is just 2-byte fixed-size little endian, 
      the same as the original Cm3 GetWideChar.  ORD(<result>) will 
-     be <= 16_FFFF.  Just zero-extended an odd byte before EOF.  
+     be <= 16_FFFF.  Just zero-extend an odd byte before EOF.  
      No ill-formed cases exist. 
   *)  
 

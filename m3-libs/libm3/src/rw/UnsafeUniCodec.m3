@@ -161,11 +161,11 @@ UNSAFE MODULE UnsafeUniCodec
   (* Read and decode a code point from Source, using CM3WC encoding, and return
      it as a WIDECHAR.  This is just 2-byte fixed-size little endian, 
      the same as the original Cm3 GetWideChar.  ORD(<result>) will 
-     be <= 16_FFFF.  Just zero-extended an odd byte before EOF.  
+     be <= 16_FFFF.  Just zero-extend an odd byte before EOF.  
      No ill-formed cases exist. 
   *)  
 
-  = VAR B0 , B1 : Word . T (* Byte coee units, in order read. *) 
+  = VAR B0 , B1 : Word . T (* Byte code units, in order read. *) 
   ; VAR ResultWt : Word . T 
 
   ; BEGIN (* FastDecCM3WC *) 
@@ -205,7 +205,7 @@ UNSAFE MODULE UnsafeUniCodec
      VAL(16_FFFD,WIDECHAR) 
   *)  
 
-  = VAR B0 , B1 : Word . T (* Byte coee units, in order read. *) 
+  = VAR B0 , B1 : Word . T (* Byte code units, in order read. *) 
   ; VAR ResultWt : Word . T 
 
   ; BEGIN (* FastDecUCS2LE *) 
@@ -247,7 +247,7 @@ UNSAFE MODULE UnsafeUniCodec
      VAL(16_FFFD,WIDECHAR) 
   *)  
 
-  = VAR B0 , B1 : Word . T (* Bytes, in order read. *) 
+  = VAR B0 , B1 : Word . T (* Byte values, in temporal order read. *) 
   ; VAR ResultWt : Word . T 
 
   ; BEGIN (* FastDecUCS2BE *) 
@@ -461,7 +461,8 @@ UNSAFE MODULE UnsafeUniCodec
      using UTF16LE encoding, and write to Sink.  
   *) 
 
-  = VAR B0 , B1 , B2 , B3 : Word . T (* Byte values, in order of emission. *) 
+  = VAR B0 , B1 , B2 , B3 : Word . T 
+        (* ^Byte values, in temporal order of emission. *)
     (* In western human-readable order: B1, B0, B3, B2 *) 
   ; VAR x : Word . T 
 
@@ -497,7 +498,7 @@ UNSAFE MODULE UnsafeUniCodec
      character", VAL(16_FFFD,WIDECHAR) 
   *)  
 
-  = VAR B0 , B1 , B2 , B3 : Word . T (* Bytes, in temporal order read. *) 
+  = VAR B0 , B1 , B2 , B3 : Word . T (* Byte values, in temporal order read. *) 
     (* In western human-readable order: B1, B0, B3, B2 *) 
   ; VAR ResultWt : Word . T 
 
@@ -569,7 +570,8 @@ UNSAFE MODULE UnsafeUniCodec
      using UTF16BE encoding, and write to Sink.  
   *) 
 
-  = VAR B0 , B1 , B2 , B3 : Word . T (* Byte values, in order of emission. *) 
+  = VAR B0 , B1 , B2 , B3 : Word . T 
+        (* ^Byte values, in temporal order of emission. *)
     (* In western human-readable order: B0, B1, B2, B3 *) 
   ; VAR x : Word . T 
 
@@ -605,7 +607,7 @@ UNSAFE MODULE UnsafeUniCodec
      character", VAL(16_FFFD,WIDECHAR) 
   *)  
 
-  = VAR B0 , B1 , B2 , B3 : Word . T (* Bytes, in temporal order read. *) 
+  = VAR B0 , B1 , B2 , B3 : Word . T (* Byte values, in temporal order read. *) 
     (* In western human-readable order: B0, B1, B2, B3 *) 
   ; VAR ResultWt : Word . T 
 
@@ -688,7 +690,7 @@ UNSAFE MODULE UnsafeUniCodec
      "replacement character", VAL(16_FFFD,WIDECHAR) 
   *)  
 
-  = VAR B0 , B1 , B2 , B3 : Word . T (* Bytes, in temporal order read. *) 
+  = VAR B0 , B1 , B2 , B3 : Word . T (* Byte values, in temporal order read. *) 
     (* In western human-readable order: B3, B2, B1, B0 *) 
   ; VAR ResultWt : Word . T 
 
@@ -745,7 +747,7 @@ UNSAFE MODULE UnsafeUniCodec
      "replacement character", VAL(16_FFFD,WIDECHAR) 
   *)  
 
-  = VAR B0 , B1 , B2 , B3 : Word . T (* Bytes, in temporal order read. *) 
+  = VAR B0 , B1 , B2 , B3 : Word . T (* Byte values, in temporal order read. *) 
     (* In western human-readable order: B0, B1, B2, B3 *) 
   ; VAR ResultWt : Word . T 
 
