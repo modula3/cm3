@@ -103,10 +103,10 @@ PROCEDURE NextBuff(rd: T): BOOLEAN (* End of file. *)
          us to back up into it again. *) 
       (*<* ASSERT Check(rd) *>*)  
       RETURN FALSE; 
-    ELSE (* We are not in the unget buffer.  Need to seek, but first, save some chars 
-            to go in the new unget buffer.  We have to save then before seeking, but
-            won't know until after, whether to alter the real unget buffer and its
-            subscripts.  So do the saving in locals for now. *)
+    ELSE (* We are not in the unget buffer.  Need to seek, but first, save some
+            chars to go in the new unget buffer.  We have to save then before 
+            seeking, but won't know until after, whether to alter the real unget
+            buffer and its subscripts.  So do the saving in locals for now. *)
       IF rd.buff # NIL 
       THEN (* There are some chars to save. *) 
         IF rd.hi - rd.lo >= UnGetCapacity 
@@ -116,7 +116,7 @@ PROCEDURE NextBuff(rd: T): BOOLEAN (* End of file. *)
           LUngetlo := rd.hi - UnGetCapacity; 
           LUngetst := 0; 
           LUngetbuff 
-           := SUBARRAY(rd.buff^, LUngetlo - rd.lo + rd.st, UnGetCapacity);
+            := SUBARRAY(rd.buff^, LUngetlo - rd.lo + rd.st, UnGetCapacity);
         (* Hereafter, buff has fewer chars than UnGetCapacity. *) 
         ELSIF rd.Ungetbuff = NIL OR rd.Ungetlo >= rd.Ungethi  
         THEN (* Unallocated or empty unget buffer. *) 
@@ -124,7 +124,8 @@ PROCEDURE NextBuff(rd: T): BOOLEAN (* End of file. *)
           LUngetst := UnGetCapacity - LByteCt;
           LUngetlo := rd.lo;
           LUngethi := rd.hi;
-          SUBARRAY(LUngetbuff, LUngetst, LByteCt) := SUBARRAY(rd.buff^, rd.st, LByteCt);
+          SUBARRAY(LUngetbuff, LUngetst, LByteCt) 
+            := SUBARRAY(rd.buff^, rd.st, LByteCt);
         ELSE (* Save chars for the unget buffer from both its current contents
                 (shifted left) and the current buffer. *) 
           LByteCt := rd.hi - rd.lo; 
@@ -148,10 +149,10 @@ PROCEDURE NextBuff(rd: T): BOOLEAN (* End of file. *)
       END; 
       (* Try to get the next buffer from class implementation: *)  
       LResult := rd.seek(rd.cur, FALSE) = SeekResult.Eof; 
-      (* seek methods vary in what they do with buff and EOF.  E.g., FileRd advances
-         to a new but empty buffer (lo=hi=cur=len), but TextRd leaves lo=0, preserving
-         the text for subsequent seek back inside it.  We want to update the Unget
-         buffer only if seek advanced lo. *) 
+      (* seek methods vary in what they do with buff and EOF.  E.g., FileRd 
+         advances to a new but empty buffer (lo=hi=cur=len), but TextRd leaves 
+         lo=0, preserving the text for subsequent seek back inside it.  We want
+         to update the Unget buffer only if seek advanced lo. *) 
       IF rd.lo = LUngethi 
       THEN (* Update the unget buffer. *) 
         IF rd.Ungetbuff = NIL 
