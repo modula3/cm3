@@ -14,8 +14,8 @@ INTERFACE UnsafeUniWr
   (* Encode Wch, using Enc(Stream), and write it to Sink(Stream) *) 
   
 ; CONST (* PROCEDURE *) FastPutChar = FastPutWideChar 
-  (* With Wch passed by value and CHAR<:WIDECHAR, only one procedure is 
-     needed. *) 
+  (* With Wch passed by value and CHAR assignable to WIDECHAR, only one 
+     procedure is needed. *) 
 
 ; PROCEDURE FastPutString 
     ( Stream : UniWr . T ; READONLY ArrCh : ARRAY OF CHAR ) 

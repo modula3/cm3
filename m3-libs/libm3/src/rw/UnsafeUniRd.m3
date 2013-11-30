@@ -211,7 +211,7 @@ MODULE UnsafeUniRd
   (* Decode and consume characters from Source(Stream), using Enc(Stream), 
      storing them into ArrCh, until Source(Stream) is at end-of-file, or ArrCh
      is filled, or a decoded character value is not in CHAR.  In the latter 
-     case, consume the problem character, but store nothing and raise
+     case, consume but do not store the problem character and raise
      Range(Wch,N), where Wch is the problem character and N is the number of 
      previous characters stored.  Otherwise, return the actual number of 
      decoded characters stored into ArrCh. 
@@ -705,6 +705,11 @@ MODULE UnsafeUniRd
 (* EXPORTED *) 
 ; PROCEDURE FastGetLine ( Stream : UniRd . T ) : TEXT 
   RAISES { EndOfFile , Failure , Alerted }
+  (* Like FastGetWideSubLine, but return the decoded string in a TEXT, with no
+     size limit.  Unlike Rd.GetLine, do include the end-of-line sequence,
+     if it exists in Stream, at the end of the returned TEXT.  You may need
+     this to know which EOL sequence it was.  
+  *) 
   (* Decode and consume characters from Source(Stream), using Enc(Stream), 
      storing them into the result TEXT, until Source(Stream) is at end-of-file,
      or a new-line sequence has been consumed and stored.  A new-line sequence 

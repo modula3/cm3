@@ -59,7 +59,7 @@ INTERFACE UnsafeUniRd
   (* Decode and consume characters from Source(Stream), using Enc(Stream), 
      storing them into ArrCh, until Source(Stream) is at end-of-file, or ArrCh
      is filled, or a decoded character value is not in CHAR.  In the latter 
-     case, consume the problem character, but store nothing and raise
+     case, consume but do not store the problem character and raise
      Range(Wch,N), where Wch is the problem character and N is the number of 
      previous characters stored.  Otherwise, return the actual number of 
      decoded characters stored into ArrCh. 
@@ -81,10 +81,19 @@ INTERFACE UnsafeUniRd
     ( Stream : UniRd . T ; VAR (*OUT*) ArrCh : ARRAY OF CHAR ) 
   : CARDINAL
   RAISES { Range , Failure , Alerted } 
+  (* Like FastGetWideSubLine, but return the characters in an ARRAY OF CHAR,
+     raising Range({Wch,Loc}) if an otherwise to-be-returned character 
+     is not in CHAR, where Wch is the out-of-range character,
+     and Loc is the number of characters stored.  
+  *) 
   (* PRE: Stream and Stream.Source are locked. *) 
 
 ; PROCEDURE FastGetText ( Stream : UniRd . T ; Len : CARDINAL ) : TEXT 
   RAISES { Failure , Alerted }
+  (* Decode and consume  characters from Source(Stream), using Enc(Stream), 
+     until Len characters have been decoded or Source(Stream) is at 
+     end-of-file.  Return the decoded characters as a TEXT. 
+  *) 
   (* PRE: Stream and Stream.Source are locked. *) 
 
 ; CONST (* PROCEDURE *) FastGetWideText = FastGetText 
@@ -92,6 +101,11 @@ INTERFACE UnsafeUniRd
 
 ; PROCEDURE FastGetLine ( Stream : UniRd . T ) : TEXT 
   RAISES { EndOfFile , Failure , Alerted }
+  (* Like FastGetWideSubLine, but return the decoded string in a TEXT, with no
+     size limit.  Unlike Rd.GetLine, do include the end-of-line sequence,
+     if it exists in Stream, at the end of the returned TEXT.  You may need
+     this to know which EOL sequence it was.  
+  *) 
   (* PRE: Stream and Stream.Source are locked. *) 
 
 ; PROCEDURE FastIndex ( Stream : UniRd . T ) : Word . T  
