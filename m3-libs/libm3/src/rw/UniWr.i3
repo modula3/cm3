@@ -9,7 +9,7 @@ INTERFACE UniWr
    Similarly, for non-wide, the value(s) are passed in CHAR, and one byte 
    for each is written to the stream. 
 
-   In UniRd, "Wide" has only meaning 1).  The encoding is taken from the Stream.
+   In UniWr, "Wide" has only meaning 1).  The encoding is taken from the Stream.
    Procedures that take characters in variables of type CHAR just treat them
    as low values. 
 *)  
@@ -40,8 +40,8 @@ INTERFACE UniWr
   (* Encode Wch, using Enc(Stream), and write it to Sink(Stream) *) 
   
 ; CONST (* PROCEDURE *) PutChar = PutWideChar 
-  (* With Wch passed by value and CHAR<:WIDECHAR, only one procedure is 
-     needed. *) 
+  (* With Wch passed by value and CHAR assignable to WIDECHAR, only one 
+     procedure is needed. *) 
 
 ; PROCEDURE PutString ( Stream : T ; READONLY ArrCh : ARRAY OF CHAR ) 
   RAISES { Failure , Alerted } 
