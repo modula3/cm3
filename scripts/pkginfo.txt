@@ -1,24 +1,25 @@
-import-libs base core front min gui comm caltech-parser
-m3cc core front m3gnudevtool
-m3core base core front min
-libm3 base core front min
+import-libs base core front unicode min gui comm caltech-parser
+m3cc core front unicode m3gnudevtool
+m3core base core front unicode min
+libm3 base core front unicode min
 windowsResources core
 parseparams base core
 patternmatching core
 sysutils core front
 unittest core
-m3middle base core front
-m3objfile core front
-m3linker core front
-m3back core front
+m3middle base core front unicode
+m3objfile core front unicode
+m3linker core front unicode
+m3back core front unicode
 m3cggen base core front
 m3staloneback tool
-m3front core front
-m3quake base core front
-cm3 core front
+m3front core front unicode
+m3quake base core front unicode
+cm3 core front unicode
 m3scanner base core
 m3tools base core
-m3cgcat base core front tool
+m3cgcat base core front unicode tool
+libunicode unicode
 m3gdb m3gnudevtool m3gdb
 m3bundle base core
 mklib base core front
