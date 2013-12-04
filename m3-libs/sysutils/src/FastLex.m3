@@ -19,7 +19,7 @@ PROCEDURE Scan (rd: Rd.T; READONLY cs: SET OF CHAR := Lex.NonBlanks): TEXT
     TRY
       LOOP
         c := UnsafeRd.FastGetChar(rd);
-        IF NOT (c IN cs) THEN EVAL UnsafeRd.FastUnGetCharMulti(rd); EXIT END;
+        IF NOT (c IN cs) THEN UnsafeRd.FastUnGetChar(rd); EXIT END;
         IF i = BufSize THEN
           IF res = NIL THEN
             res := Text.FromChars(buf);
@@ -48,7 +48,7 @@ PROCEDURE Skip(
     TRY
       LOOP
 	IF NOT (UnsafeRd.FastGetChar(rd) IN cs) THEN
-	  EVAL UnsafeRd.FastUnGetCharMulti(rd);
+	  UnsafeRd.FastUnGetChar(rd);
 	  RETURN
 	END
       END
