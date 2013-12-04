@@ -2849,7 +2849,8 @@ PROCEDURE ScanTypes (READONLY x: ARRAY [0..3] OF Target.Int_type;
       WITH z = x[i] DO
         IF (s <= z.size) AND (z.size < best_s)
           AND (z.align <= best_a)
-          AND (z.align MOD a = 0)
+          AND (a MOD z.align = 0) (* Original. *) 
+       (* AND (z.align MOD a = 0) (* Modified. *) *) 
           AND (s + (o MOD z.align) <= z.size) THEN
           (* remember this type *)
           best_t := z.cg_type;
