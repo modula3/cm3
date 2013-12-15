@@ -65,7 +65,7 @@ IMPORT Ctypes AS C;
 %apply  intvar* {int *year, int* month, int *day};
 
 //Local Enums
-//EnumMaps(QDate::MonthNameType, MonthNameType, ErrMode)
+
 EnumMaps(QDate, MonthNameType, ErrMode)
 
 %apply ClassIn {const QDate &};
