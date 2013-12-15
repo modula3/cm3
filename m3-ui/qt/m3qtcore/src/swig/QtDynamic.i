@@ -11,7 +11,7 @@
 
 %insert(m3rawintf) %{
 TYPE
-  CallbackProc = PROCEDURE(obj : ADDRESS; args : ADDRESS);
+  CallbackProc = PROCEDURE(obj : ROOT; args : ADDRESS);
 
 %}
 
@@ -20,7 +20,7 @@ TYPE
 
   T = DynamicQObject;
 
-  CallbackProc = PROCEDURE(obj : ADDRESS; args : ADDRESS);
+  CallbackProc = PROCEDURE(obj : ROOT; args : ADDRESS);
 
 PROCEDURE ConvertInt(args : ADDRESS; parmNo : INTEGER) : INTEGER;
 PROCEDURE ConvertObj(args : ADDRESS; parmNo : INTEGER) : ADDRESS;
@@ -63,8 +63,8 @@ END ConvertObj;
 
 %typemap("m3rawintype")   void **    %{REF ADDRESS%}
 %typemap("m3wrapintype")  void **    %{REF ADDRESS%}
-%typemap("m3rawintype")   void *     %{ADDRESS%}
-%typemap("m3wrapintype")  void *     %{ADDRESS%}
+%typemap("m3rawintype")   void *     %{ROOT%}
+%typemap("m3wrapintype")  void *     %{ROOT%}
 
 %apply ClassReturn {AbstractDynamicSlot *};
 %apply ClassIn    {DynamicQObject *parent};
