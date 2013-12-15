@@ -30,11 +30,65 @@ PROCEDURE QString_count (self: QString; ): C.int;
 <* EXTERNAL QString_length *>
 PROCEDURE QString_length (self: QString; ): C.int;
 
+<* EXTERNAL QString_isEmpty *>
+PROCEDURE QString_isEmpty (self: QString; ): BOOLEAN;
+
+<* EXTERNAL QString_resize *>
+PROCEDURE QString_resize (self: QString; size: C.int; );
+
+<* EXTERNAL QString_truncate *>
+PROCEDURE QString_truncate (self: QString; pos: C.int; );
+
+<* EXTERNAL QString_chop *>
+PROCEDURE QString_chop (self: QString; n: C.int; );
+
+<* EXTERNAL QString_capacity *>
+PROCEDURE QString_capacity (self: QString; ): C.int;
+
+<* EXTERNAL QString_reserve *>
+PROCEDURE QString_reserve (self: QString; size: C.int; );
+
+<* EXTERNAL QString_squeeze *>
+PROCEDURE QString_squeeze (self: QString; );
+
+<* EXTERNAL QString_detach *>
+PROCEDURE QString_detach (self: QString; );
+
+<* EXTERNAL QString_isDetached *>
+PROCEDURE QString_isDetached (self: QString; ): BOOLEAN;
+
 <* EXTERNAL QString_isSharedWith *>
 PROCEDURE QString_isSharedWith (self: QString; other: ADDRESS; ): BOOLEAN;
 
+<* EXTERNAL QString_clear *>
+PROCEDURE QString_clear (self: QString; );
+
 <* EXTERNAL QString_count1 *>
 PROCEDURE QString_count1 (self: QString; s: ADDRESS; ): C.int;
+
+<* EXTERNAL QString_left *>
+PROCEDURE QString_left (self: QString; n: C.int; ): ADDRESS;
+
+<* EXTERNAL QString_right *>
+PROCEDURE QString_right (self: QString; n: C.int; ): ADDRESS;
+
+<* EXTERNAL QString_toLower *>
+PROCEDURE QString_toLower (self: QString; ): ADDRESS;
+
+<* EXTERNAL QString_toUpper *>
+PROCEDURE QString_toUpper (self: QString; ): ADDRESS;
+
+<* EXTERNAL QString_toCaseFolded *>
+PROCEDURE QString_toCaseFolded (self: QString; ): ADDRESS;
+
+<* EXTERNAL QString_trimmed *>
+PROCEDURE QString_trimmed (self: QString; ): ADDRESS;
+
+<* EXTERNAL QString_simplified *>
+PROCEDURE QString_simplified (self: QString; ): ADDRESS;
+
+<* EXTERNAL QString_toLatin1 *>
+PROCEDURE QString_toLatin1 (self: QString; ): ADDRESS;
 
 <* EXTERNAL QString_toUtf8 *>
 PROCEDURE QString_toUtf8 (self: QString; ): ADDRESS;
@@ -42,11 +96,32 @@ PROCEDURE QString_toUtf8 (self: QString; ): ADDRESS;
 <* EXTERNAL QString_toLocal8Bit *>
 PROCEDURE QString_toLocal8Bit (self: QString; ): ADDRESS;
 
+<* EXTERNAL FromLatin1 *>
+PROCEDURE FromLatin1 (arg1: C.char_star; size: C.int; ): ADDRESS;
+
+<* EXTERNAL FromLatin11 *>
+PROCEDURE FromLatin11 (arg1: C.char_star; ): ADDRESS;
+
+<* EXTERNAL FromUtf8 *>
+PROCEDURE FromUtf8 (arg1: C.char_star; size: C.int; ): ADDRESS;
+
+<* EXTERNAL FromUtf81 *>
+PROCEDURE FromUtf81 (arg1: C.char_star; ): ADDRESS;
+
+<* EXTERNAL FromLocal8Bit *>
+PROCEDURE FromLocal8Bit (arg1: C.char_star; size: C.int; ): ADDRESS;
+
+<* EXTERNAL FromLocal8Bit1 *>
+PROCEDURE FromLocal8Bit1 (arg1: C.char_star; ): ADDRESS;
+
 <* EXTERNAL New_initQString *>
 PROCEDURE New_initQString (ch: C.char_star; ): QString;
 
 <* EXTERNAL New_QString1 *>
 PROCEDURE New_QString1 (a: ADDRESS; ): QString;
+
+<* EXTERNAL QString_isNull *>
+PROCEDURE QString_isNull (self: QString; ): BOOLEAN;
 
 <* EXTERNAL New_QString2 *>
 PROCEDURE New_QString2 (size, arg2: C.int; ): QString;

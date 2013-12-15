@@ -13,6 +13,18 @@ FROM QtEvent IMPORT QEvent;
 
 TYPE T = QObject;
 
+PROCEDURE Tr (sourceText, arg2: TEXT; arg3: INTEGER; ): TEXT;
+
+PROCEDURE Tr1 (sourceText, arg2: TEXT; ): TEXT;
+
+PROCEDURE Tr2 (sourceText: TEXT; ): TEXT;
+
+PROCEDURE TrUtf8 (sourceText, arg2: TEXT; arg3: INTEGER; ): TEXT;
+
+PROCEDURE TrUtf81 (sourceText, arg2: TEXT; ): TEXT;
+
+PROCEDURE TrUtf82 (sourceText: TEXT; ): TEXT;
+
 PROCEDURE RegisterUserData (): CARDINAL;
 
 

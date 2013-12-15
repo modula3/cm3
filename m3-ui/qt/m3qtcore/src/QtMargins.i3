@@ -10,7 +10,7 @@ INTERFACE QtMargins;
 
 
 
-
+TYPE T = QMargins;
 
 
 TYPE

@@ -126,6 +126,48 @@ PROCEDURE AbstractDynamicQObject_connectDynamicSignal
     RETURN result;
   END AbstractDynamicQObject_connectDynamicSignal;
 
+PROCEDURE AbstractDynamicQObject_disConnectDynamicSlot
+  (self: AbstractDynamicQObject; obj: QObject; signal, slot: TEXT; ):
+  BOOLEAN =
+  VAR
+    selfAdr: ADDRESS     := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp              := LOOPHOLE(obj.cxxObj, ADDRESS);
+    arg3tmp: C.char_star;
+    arg4tmp: C.char_star;
+    result : BOOLEAN;
+  BEGIN
+    arg3tmp := M3toC.CopyTtoS(signal);
+    arg4tmp := M3toC.CopyTtoS(slot);
+    result := QtDynamicRaw.AbstractDynamicQObject_disConnectDynamicSlot(
+                selfAdr, arg2tmp, arg3tmp, arg4tmp);
+
+
+
+
+    RETURN result;
+  END AbstractDynamicQObject_disConnectDynamicSlot;
+
+PROCEDURE AbstractDynamicQObject_disConnectDynamicSignal
+  (self: AbstractDynamicQObject; signal: TEXT; obj: QObject; slot: TEXT; ):
+  BOOLEAN =
+  VAR
+    selfAdr: ADDRESS     := LOOPHOLE(self.cxxObj, ADDRESS);
+    arg2tmp: C.char_star;
+    arg3tmp              := LOOPHOLE(obj.cxxObj, ADDRESS);
+    arg4tmp: C.char_star;
+    result : BOOLEAN;
+  BEGIN
+    arg2tmp := M3toC.CopyTtoS(signal);
+    arg4tmp := M3toC.CopyTtoS(slot);
+    result := QtDynamicRaw.AbstractDynamicQObject_disConnectDynamicSignal(
+                selfAdr, arg2tmp, arg3tmp, arg4tmp);
+
+
+
+
+    RETURN result;
+  END AbstractDynamicQObject_disConnectDynamicSignal;
+
 PROCEDURE Delete_AbstractDynamicQObject (self: AbstractDynamicQObject; ) =
   VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
   BEGIN
@@ -152,12 +194,13 @@ REVEAL
       emitDynamicSignal    := AbstractDynamicQObject_emitDynamicSignal;
       connectDynamicSlot   := AbstractDynamicQObject_connectDynamicSlot;
       connectDynamicSignal := AbstractDynamicQObject_connectDynamicSignal;
-      destroyCxx           := Destroy_AbstractDynamicQObject;
+      disConnectDynamicSlot := AbstractDynamicQObject_disConnectDynamicSlot;
+      disConnectDynamicSignal := AbstractDynamicQObject_disConnectDynamicSignal;
+      destroyCxx := Destroy_AbstractDynamicQObject;
     END;
 
 PROCEDURE New_DynamicQObject0
-  (self: DynamicQObject; fn: CallbackProc; obj: ADDRESS; ):
-  DynamicQObject =
+  (self: DynamicQObject; fn: CallbackProc; obj: ROOT; ): DynamicQObject =
   VAR result: ADDRESS;
   BEGIN
     result := QtDynamicRaw.New_DynamicQObject0(fn, obj);
@@ -215,7 +258,7 @@ REVEAL
                    END;
 
 PROCEDURE New_Slot0
-  (self: Slot; parent: DynamicQObject; fn: CallbackProc; obj: ADDRESS; ):
+  (self: Slot; parent: DynamicQObject; fn: CallbackProc; obj: ROOT; ):
   Slot =
   VAR
     result : ADDRESS;

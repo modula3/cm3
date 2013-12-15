@@ -67,6 +67,142 @@ PROCEDURE QObject_eventFilter (self, arg2: QObject; arg3: QEvent; ):
     RETURN QtObjectRaw.QObject_eventFilter(arg1tmp, arg2tmp, arg3tmp);
   END QObject_eventFilter;
 
+PROCEDURE Tr (sourceText, arg2: TEXT; arg3: INTEGER; ): TEXT =
+  VAR
+    ret    : ADDRESS;
+    qstr                 := NEW(QString);
+    ba     : QByteArray;
+    result : TEXT;
+    arg1tmp: C.char_star;
+    arg2tmp: C.char_star;
+  BEGIN
+    arg1tmp := M3toC.CopyTtoS(sourceText);
+    arg2tmp := M3toC.CopyTtoS(arg2);
+    ret := QtObjectRaw.Tr(arg1tmp, arg2tmp, arg3);
+
+    qstr.cxxObj := ret;
+    ba := qstr.toLocal8Bit();
+    result := ba.data();
+
+
+
+
+
+    RETURN result;
+  END Tr;
+
+PROCEDURE Tr1 (sourceText, arg2: TEXT; ): TEXT =
+  VAR
+    ret    : ADDRESS;
+    qstr                 := NEW(QString);
+    ba     : QByteArray;
+    result : TEXT;
+    arg1tmp: C.char_star;
+    arg2tmp: C.char_star;
+  BEGIN
+    arg1tmp := M3toC.CopyTtoS(sourceText);
+    arg2tmp := M3toC.CopyTtoS(arg2);
+    ret := QtObjectRaw.Tr1(arg1tmp, arg2tmp);
+
+    qstr.cxxObj := ret;
+    ba := qstr.toLocal8Bit();
+    result := ba.data();
+
+
+
+
+
+    RETURN result;
+  END Tr1;
+
+PROCEDURE Tr2 (sourceText: TEXT; ): TEXT =
+  VAR
+    ret    : ADDRESS;
+    qstr                 := NEW(QString);
+    ba     : QByteArray;
+    result : TEXT;
+    arg1tmp: C.char_star;
+  BEGIN
+    arg1tmp := M3toC.CopyTtoS(sourceText);
+    ret := QtObjectRaw.Tr2(arg1tmp);
+
+    qstr.cxxObj := ret;
+    ba := qstr.toLocal8Bit();
+    result := ba.data();
+
+
+
+    RETURN result;
+  END Tr2;
+
+PROCEDURE TrUtf8 (sourceText, arg2: TEXT; arg3: INTEGER; ): TEXT =
+  VAR
+    ret    : ADDRESS;
+    qstr                 := NEW(QString);
+    ba     : QByteArray;
+    result : TEXT;
+    arg1tmp: C.char_star;
+    arg2tmp: C.char_star;
+  BEGIN
+    arg1tmp := M3toC.CopyTtoS(sourceText);
+    arg2tmp := M3toC.CopyTtoS(arg2);
+    ret := QtObjectRaw.TrUtf8(arg1tmp, arg2tmp, arg3);
+
+    qstr.cxxObj := ret;
+    ba := qstr.toLocal8Bit();
+    result := ba.data();
+
+
+
+
+
+    RETURN result;
+  END TrUtf8;
+
+PROCEDURE TrUtf81 (sourceText, arg2: TEXT; ): TEXT =
+  VAR
+    ret    : ADDRESS;
+    qstr                 := NEW(QString);
+    ba     : QByteArray;
+    result : TEXT;
+    arg1tmp: C.char_star;
+    arg2tmp: C.char_star;
+  BEGIN
+    arg1tmp := M3toC.CopyTtoS(sourceText);
+    arg2tmp := M3toC.CopyTtoS(arg2);
+    ret := QtObjectRaw.TrUtf81(arg1tmp, arg2tmp);
+
+    qstr.cxxObj := ret;
+    ba := qstr.toLocal8Bit();
+    result := ba.data();
+
+
+
+
+
+    RETURN result;
+  END TrUtf81;
+
+PROCEDURE TrUtf82 (sourceText: TEXT; ): TEXT =
+  VAR
+    ret    : ADDRESS;
+    qstr                 := NEW(QString);
+    ba     : QByteArray;
+    result : TEXT;
+    arg1tmp: C.char_star;
+  BEGIN
+    arg1tmp := M3toC.CopyTtoS(sourceText);
+    ret := QtObjectRaw.TrUtf82(arg1tmp);
+
+    qstr.cxxObj := ret;
+    ba := qstr.toLocal8Bit();
+    result := ba.data();
+
+
+
+    RETURN result;
+  END TrUtf82;
+
 PROCEDURE QObject_objectName (self: QObject; ): TEXT =
   VAR
     ret    : ADDRESS;
