@@ -1510,6 +1510,36 @@ estimated_stack_frame_size (struct cgraph_node *node)
 
 /* Expand all variables used in the function.  */
 
+/* Is var a modula-3 function result variable? */ 
+static bool
+is_m3_func_result_var(tree var)
+{
+  tree name_node; 
+  const char * name; 
+  unsigned int len; 
+
+  if (var==NULL) return false;  
+  if (TREE_CODE(var) != VAR_DECL) return false;  
+  name_node = DECL_NAME(var); 
+  if (name_node==NULL) return false;  
+  name = IDENTIFIER_POINTER(name_node); 
+  if (name==NULL) return false;  
+  len = strlen (name); 
+  if (len != 17) return false;
+  if (name[0]  != 'M') return false; 
+  if (name[1]  != '3') return false; 
+  if (name[2]  != '_') return false; 
+  if (name[9]  != '_') return false; 
+  if (name[10] != '_') return false; 
+  if (name[11] != 'r') return false; 
+  if (name[12] != 'e') return false; 
+  if (name[13] != 's') return false; 
+  if (name[14] != 'u') return false; 
+  if (name[15] != 'l') return false; 
+  if (name[16] != 't') return false; 
+  return true; 
+}
+
 static void
 expand_used_vars (void)
 {
@@ -1558,7 +1588,10 @@ expand_used_vars (void)
       bool expand_now = false;
 
       /* Expanded above already.  */
-      if (is_gimple_reg (var))
+      if (is_gimple_reg (var) && !is_m3_func_result_var(var))
+        /* Keeping a Modula-3 function result variable used is needed in
+           order to cause emission of stabs for it, which enables m3gdb
+           to display results of m3gdb-called functions. */
 	{
 	  TREE_USED (var) = 0;
 	  goto next;
