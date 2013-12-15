@@ -21,7 +21,6 @@ class AbstractDynamicQObject: public QObject
 {
 public:
     AbstractDynamicQObject(QObject *parent = 0) : QObject(parent) {
-      printf("In AbstractDynamicQObject constructor parent %d\n",parent);
     }
 
     virtual int qt_metacall(QMetaObject::Call c, int id, void **arguments);
@@ -29,6 +28,9 @@ public:
     bool emitDynamicSignal(char *signal, void **arguments);
     bool connectDynamicSlot(QObject *obj, char *signal, char *slot);
     bool connectDynamicSignal(char *signal, QObject *obj, char *slot);
+
+    bool disConnectDynamicSlot(QObject *obj, char *signal, char *slot);
+    bool disConnectDynamicSignal(char *signal, QObject *obj, char *slot);
 
     virtual AbstractDynamicSlot *createSlot(char *slot) = 0;
 
