@@ -7,7 +7,6 @@
 
 %{
 #include <QtCore/qstring.h>
-//#include "qstring.h"
 %}
 
 
@@ -21,8 +20,6 @@ TYPE
   T = QString;
 %}
 
-//this works (constructor renaming) but change common first for bytearray before implement
-//also do we need initbyte as well??
 
 //constructor rename to special name for typemaps
 //it should be initQString see common.i
@@ -68,20 +65,20 @@ TYPE
 
 %ignore compare;
 
-%ignore isEmpty;
-%ignore resize;
+//%ignore isEmpty;
+//%ignore resize;
 %ignore fill;
-%ignore truncate;
-%ignore chop;
-%ignore capacity;
-%ignore reserve;
-%ignore squeeze;
+//%ignore truncate;
+//%ignore chop;
+//%ignore capacity;
+//%ignore reserve;
+//%ignore squeeze;
 %ignore unicode;
 %ignore data;
 %ignore constData;
-%ignore detach;
-%ignore isDetached;
-%ignore clear;
+//%ignore detach;
+//%ignore isDetached;
+//%ignore clear;
 
 %ignore number;
 %ignore toAscii;
@@ -89,9 +86,9 @@ TYPE
 %ignore utf16;
 %ignore setUtf16;
 //%ignore toUtf8;
-%ignore fromUtf8;
-%ignore toLatin1;
-%ignore fromLatin1;
+//%ignore fromUtf8;
+//%ignore toLatin1;
+//%ignore fromLatin1;
 //%ignore toLocal8Bit;
 %ignore toUcs4;
 %ignore toWCharArray;
@@ -110,8 +107,8 @@ TYPE
 %ignore end;
 %ignore mid;
 
-%ignore left;
-%ignore right;
+//%ignore left;
+//%ignore right;
 %ignore leftRef;
 %ignore rightRef;
 %ignore at;
@@ -121,14 +118,14 @@ TYPE
 %ignore leftJustified;
 %ignore rightJustified;
 %ignore trunc;
-%ignore toLower;
-%ignore toUpper;
-%ignore caseFolded;
-%ignore toCaseFolded;
-%ignore trimmed;
-%ignore simplified;
+//%ignore toLower;
+//%ignore toUpper;
+//%ignore caseFolded;
+//%ignore toCaseFolded;
+//%ignore trimmed;
+//%ignore simplified;
 %ignore insert;
-%ignore len;
+//%ignore len;
 %ignore append;
 %ignore prepend;
 %ignore remove;
@@ -158,11 +155,11 @@ TYPE
 %ignore push_front;
 %ignore toStdString;
 %ignore toStdWString;
-%ignore isNull;
+//%ignore isNull;
 %ignore isSimpleText;
 %ignore isRightToLeft;
 
-%ignore fromLocal8Bit;
+//%ignore fromLocal8Bit;
 %ignore fromUtf16;
 %ignore fromUcs4;
 %ignore fromRawData;
@@ -196,12 +193,6 @@ TYPE
 %apply SelfReturn {QByteArray};
 
 
-//NewString_1 is a copy constructor taking a QString which we change to TEXT
-//but the classin apply above does not get used but we need this typemap
-//no we dont the copy constr should allocate a NEW Qstring which it does now
-//can delete these comments at some stage
-//%typemap("m3wrapargvar") const QString &  %{$1tmp :=  LOOPHOLE($1_name,ADDRESS);%}
-
 //ctypes needed
 %typemap("ctype") QString     %{QString *%}
 %typemap("ctype") QByteArray  %{QByteArray *%}
@@ -210,4 +201,4 @@ TYPE
 
 
 %include <QtCore/qstring.h>
-//#include "qstring.h"
+
