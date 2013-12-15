@@ -29,6 +29,24 @@ PROCEDURE QObject_event (self, arg2: ADDRESS; ): BOOLEAN;
 <* EXTERNAL QObject_eventFilter *>
 PROCEDURE QObject_eventFilter (self, arg2, arg3: ADDRESS; ): BOOLEAN;
 
+<* EXTERNAL Tr *>
+PROCEDURE Tr (sourceText, arg2: C.char_star; arg3: C.int; ): ADDRESS;
+
+<* EXTERNAL Tr1 *>
+PROCEDURE Tr1 (sourceText, arg2: C.char_star; ): ADDRESS;
+
+<* EXTERNAL Tr2 *>
+PROCEDURE Tr2 (sourceText: C.char_star; ): ADDRESS;
+
+<* EXTERNAL TrUtf8 *>
+PROCEDURE TrUtf8 (sourceText, arg2: C.char_star; arg3: C.int; ): ADDRESS;
+
+<* EXTERNAL TrUtf81 *>
+PROCEDURE TrUtf81 (sourceText, arg2: C.char_star; ): ADDRESS;
+
+<* EXTERNAL TrUtf82 *>
+PROCEDURE TrUtf82 (sourceText: C.char_star; ): ADDRESS;
+
 <* EXTERNAL QObject_objectName *>
 PROCEDURE QObject_objectName (self: ADDRESS; ): ADDRESS;
 

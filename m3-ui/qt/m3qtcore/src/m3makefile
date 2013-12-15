@@ -15,6 +15,7 @@ interface("QCoreStubs")
 qtbuild("QtNamespace")
 %the sligslots interface
 qtbuild("QtDynamic")
+qtbuild("QtCoreApplication")
 
 %core1 branch
 
@@ -25,6 +26,7 @@ qtbuild("QtStringList")
 
 %core2 branch
 
+qtbuild("QtEventLoop")
 qtbuild("QtEvent")
 qtbuild("QtObject")
 
@@ -40,6 +42,8 @@ qtbuild("QtRect")
 qtbuild("QtDateTime")
 qtbuild("QtMargins")
 qtbuild("QtAbstractItemModel")
+%Needs QThread
+%qtbuild("QtTimer")
 %not working yet
 %qtbuild("QtObjectDefs")
 

@@ -14,6 +14,18 @@ FROM QtNamespace IMPORT Initialization;
 FROM QtByteArray IMPORT QByteArray;
 TYPE T = QString;
 
+PROCEDURE FromLatin1 (arg1: TEXT; size: INTEGER; ): TEXT;
+
+PROCEDURE FromLatin11 (arg1: TEXT; ): TEXT;
+
+PROCEDURE FromUtf8 (arg1: TEXT; size: INTEGER; ): TEXT;
+
+PROCEDURE FromUtf81 (arg1: TEXT; ): TEXT;
+
+PROCEDURE FromLocal8Bit (arg1: TEXT; size: INTEGER; ): TEXT;
+
+PROCEDURE FromLocal8Bit1 (arg1: TEXT; ): TEXT;
+
 
 TYPE
   QString <: QStringPublic;
@@ -29,10 +41,29 @@ TYPE
       size         (): INTEGER;
       count        (): INTEGER;
       length       (): INTEGER;
+      isEmpty      (): BOOLEAN;
+      resize       (size: INTEGER; );
+      truncate     (pos: INTEGER; );
+      chop         (n: INTEGER; );
+      capacity     (): INTEGER;
+      reserve      (size: INTEGER; );
+      squeeze      ();
+      detach       ();
+      isDetached   (): BOOLEAN;
       isSharedWith (other: TEXT; ): BOOLEAN;
+      clear        ();
       count1       (s: TEXT; ): INTEGER;
+      left         (n: INTEGER; ): TEXT;
+      right        (n: INTEGER; ): TEXT;
+      toLower      (): TEXT;
+      toUpper      (): TEXT;
+      toCaseFolded (): TEXT;
+      trimmed      (): TEXT;
+      simplified   (): TEXT;
+      toLatin1     (): QByteArray;
       toUtf8       (): QByteArray;
       toLocal8Bit  (): QByteArray;
+      isNull       (): BOOLEAN;
       destroyCxx   ();
     END;
 

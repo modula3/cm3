@@ -62,6 +62,60 @@ PROCEDURE QString_length (self: QString; ): INTEGER =
     RETURN QtStringRaw.QString_length(selfAdr);
   END QString_length;
 
+PROCEDURE QString_isEmpty (self: QString; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtStringRaw.QString_isEmpty(selfAdr);
+  END QString_isEmpty;
+
+PROCEDURE QString_resize (self: QString; size: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtStringRaw.QString_resize(selfAdr, size);
+  END QString_resize;
+
+PROCEDURE QString_truncate (self: QString; pos: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtStringRaw.QString_truncate(selfAdr, pos);
+  END QString_truncate;
+
+PROCEDURE QString_chop (self: QString; n: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtStringRaw.QString_chop(selfAdr, n);
+  END QString_chop;
+
+PROCEDURE QString_capacity (self: QString; ): INTEGER =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtStringRaw.QString_capacity(selfAdr);
+  END QString_capacity;
+
+PROCEDURE QString_reserve (self: QString; size: INTEGER; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtStringRaw.QString_reserve(selfAdr, size);
+  END QString_reserve;
+
+PROCEDURE QString_squeeze (self: QString; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtStringRaw.QString_squeeze(selfAdr);
+  END QString_squeeze;
+
+PROCEDURE QString_detach (self: QString; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtStringRaw.QString_detach(selfAdr);
+  END QString_detach;
+
+PROCEDURE QString_isDetached (self: QString; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtStringRaw.QString_isDetached(selfAdr);
+  END QString_isDetached;
+
 PROCEDURE QString_isSharedWith (self: QString; other: TEXT; ): BOOLEAN =
   VAR
     selfAdr   : ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
@@ -71,6 +125,12 @@ PROCEDURE QString_isSharedWith (self: QString; other: TEXT; ): BOOLEAN =
     RETURN QtStringRaw.QString_isSharedWith(selfAdr, arg2tmp);
   END QString_isSharedWith;
 
+PROCEDURE QString_clear (self: QString; ) =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    QtStringRaw.QString_clear(selfAdr);
+  END QString_clear;
+
 PROCEDURE QString_count1 (self: QString; s: TEXT; ): INTEGER =
   VAR
     selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
@@ -79,6 +139,144 @@ PROCEDURE QString_count1 (self: QString; s: TEXT; ): INTEGER =
   BEGIN
     RETURN QtStringRaw.QString_count1(selfAdr, arg2tmp);
   END QString_count1;
+
+PROCEDURE QString_left (self: QString; n: INTEGER; ): TEXT =
+  VAR
+    ret    : ADDRESS;
+    qstr                := NEW(QString);
+    ba     : QByteArray;
+    result : TEXT;
+    selfAdr: ADDRESS    := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtStringRaw.QString_left(selfAdr, n);
+
+    qstr.cxxObj := ret;
+    ba := qstr.toLocal8Bit();
+    result := ba.data();
+
+    RETURN result;
+  END QString_left;
+
+PROCEDURE QString_right (self: QString; n: INTEGER; ): TEXT =
+  VAR
+    ret    : ADDRESS;
+    qstr                := NEW(QString);
+    ba     : QByteArray;
+    result : TEXT;
+    selfAdr: ADDRESS    := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtStringRaw.QString_right(selfAdr, n);
+
+    qstr.cxxObj := ret;
+    ba := qstr.toLocal8Bit();
+    result := ba.data();
+
+    RETURN result;
+  END QString_right;
+
+PROCEDURE QString_toLower (self: QString; ): TEXT =
+  VAR
+    ret    : ADDRESS;
+    qstr                := NEW(QString);
+    ba     : QByteArray;
+    result : TEXT;
+    selfAdr: ADDRESS    := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtStringRaw.QString_toLower(selfAdr);
+
+    qstr.cxxObj := ret;
+    ba := qstr.toLocal8Bit();
+    result := ba.data();
+
+    RETURN result;
+  END QString_toLower;
+
+PROCEDURE QString_toUpper (self: QString; ): TEXT =
+  VAR
+    ret    : ADDRESS;
+    qstr                := NEW(QString);
+    ba     : QByteArray;
+    result : TEXT;
+    selfAdr: ADDRESS    := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtStringRaw.QString_toUpper(selfAdr);
+
+    qstr.cxxObj := ret;
+    ba := qstr.toLocal8Bit();
+    result := ba.data();
+
+    RETURN result;
+  END QString_toUpper;
+
+PROCEDURE QString_toCaseFolded (self: QString; ): TEXT =
+  VAR
+    ret    : ADDRESS;
+    qstr                := NEW(QString);
+    ba     : QByteArray;
+    result : TEXT;
+    selfAdr: ADDRESS    := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtStringRaw.QString_toCaseFolded(selfAdr);
+
+    qstr.cxxObj := ret;
+    ba := qstr.toLocal8Bit();
+    result := ba.data();
+
+    RETURN result;
+  END QString_toCaseFolded;
+
+PROCEDURE QString_trimmed (self: QString; ): TEXT =
+  VAR
+    ret    : ADDRESS;
+    qstr                := NEW(QString);
+    ba     : QByteArray;
+    result : TEXT;
+    selfAdr: ADDRESS    := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtStringRaw.QString_trimmed(selfAdr);
+
+    qstr.cxxObj := ret;
+    ba := qstr.toLocal8Bit();
+    result := ba.data();
+
+    RETURN result;
+  END QString_trimmed;
+
+PROCEDURE QString_simplified (self: QString; ): TEXT =
+  VAR
+    ret    : ADDRESS;
+    qstr                := NEW(QString);
+    ba     : QByteArray;
+    result : TEXT;
+    selfAdr: ADDRESS    := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtStringRaw.QString_simplified(selfAdr);
+
+    qstr.cxxObj := ret;
+    ba := qstr.toLocal8Bit();
+    result := ba.data();
+
+    RETURN result;
+  END QString_simplified;
+
+PROCEDURE QString_toLatin1 (self: QString; ): QByteArray =
+  VAR
+    ret    : ADDRESS;
+    result : QByteArray;
+    selfAdr: ADDRESS    := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    ret := QtStringRaw.QString_toLatin1(selfAdr);
+
+    IF ISTYPE(result, QByteArray) AND ret = selfAdr THEN
+      result := LOOPHOLE(self, QByteArray);
+    ELSE
+      result := NEW(QByteArray);
+      result.cxxObj := ret;
+      result.destroyCxx();
+    END;
+
+    RETURN result;
+  END QString_toLatin1;
 
 PROCEDURE QString_toUtf8 (self: QString; ): QByteArray =
   VAR
@@ -118,6 +316,126 @@ PROCEDURE QString_toLocal8Bit (self: QString; ): QByteArray =
     RETURN result;
   END QString_toLocal8Bit;
 
+PROCEDURE FromLatin1 (arg1: TEXT; size: INTEGER; ): TEXT =
+  VAR
+    ret    : ADDRESS;
+    qstr                 := NEW(QString);
+    ba     : QByteArray;
+    result : TEXT;
+    arg1tmp: C.char_star;
+  BEGIN
+    arg1tmp := M3toC.CopyTtoS(arg1);
+    ret := QtStringRaw.FromLatin1(arg1tmp, size);
+
+    qstr.cxxObj := ret;
+    ba := qstr.toLocal8Bit();
+    result := ba.data();
+
+
+
+    RETURN result;
+  END FromLatin1;
+
+PROCEDURE FromLatin11 (arg1: TEXT; ): TEXT =
+  VAR
+    ret    : ADDRESS;
+    qstr                 := NEW(QString);
+    ba     : QByteArray;
+    result : TEXT;
+    arg1tmp: C.char_star;
+  BEGIN
+    arg1tmp := M3toC.CopyTtoS(arg1);
+    ret := QtStringRaw.FromLatin11(arg1tmp);
+
+    qstr.cxxObj := ret;
+    ba := qstr.toLocal8Bit();
+    result := ba.data();
+
+
+
+    RETURN result;
+  END FromLatin11;
+
+PROCEDURE FromUtf8 (arg1: TEXT; size: INTEGER; ): TEXT =
+  VAR
+    ret    : ADDRESS;
+    qstr                 := NEW(QString);
+    ba     : QByteArray;
+    result : TEXT;
+    arg1tmp: C.char_star;
+  BEGIN
+    arg1tmp := M3toC.CopyTtoS(arg1);
+    ret := QtStringRaw.FromUtf8(arg1tmp, size);
+
+    qstr.cxxObj := ret;
+    ba := qstr.toLocal8Bit();
+    result := ba.data();
+
+
+
+    RETURN result;
+  END FromUtf8;
+
+PROCEDURE FromUtf81 (arg1: TEXT; ): TEXT =
+  VAR
+    ret    : ADDRESS;
+    qstr                 := NEW(QString);
+    ba     : QByteArray;
+    result : TEXT;
+    arg1tmp: C.char_star;
+  BEGIN
+    arg1tmp := M3toC.CopyTtoS(arg1);
+    ret := QtStringRaw.FromUtf81(arg1tmp);
+
+    qstr.cxxObj := ret;
+    ba := qstr.toLocal8Bit();
+    result := ba.data();
+
+
+
+    RETURN result;
+  END FromUtf81;
+
+PROCEDURE FromLocal8Bit (arg1: TEXT; size: INTEGER; ): TEXT =
+  VAR
+    ret    : ADDRESS;
+    qstr                 := NEW(QString);
+    ba     : QByteArray;
+    result : TEXT;
+    arg1tmp: C.char_star;
+  BEGIN
+    arg1tmp := M3toC.CopyTtoS(arg1);
+    ret := QtStringRaw.FromLocal8Bit(arg1tmp, size);
+
+    qstr.cxxObj := ret;
+    ba := qstr.toLocal8Bit();
+    result := ba.data();
+
+
+
+    RETURN result;
+  END FromLocal8Bit;
+
+PROCEDURE FromLocal8Bit1 (arg1: TEXT; ): TEXT =
+  VAR
+    ret    : ADDRESS;
+    qstr                 := NEW(QString);
+    ba     : QByteArray;
+    result : TEXT;
+    arg1tmp: C.char_star;
+  BEGIN
+    arg1tmp := M3toC.CopyTtoS(arg1);
+    ret := QtStringRaw.FromLocal8Bit1(arg1tmp);
+
+    qstr.cxxObj := ret;
+    ba := qstr.toLocal8Bit();
+    result := ba.data();
+
+
+
+    RETURN result;
+  END FromLocal8Bit1;
+
 PROCEDURE New_initQString (self: QString; ch: TEXT; ): QString =
   VAR
     result : ADDRESS;
@@ -146,6 +464,12 @@ PROCEDURE New_QString1 (self: QString; a: QByteArray; ): QString =
 
     RETURN self;
   END New_QString1;
+
+PROCEDURE QString_isNull (self: QString; ): BOOLEAN =
+  VAR selfAdr: ADDRESS := LOOPHOLE(self.cxxObj, ADDRESS);
+  BEGIN
+    RETURN QtStringRaw.QString_isNull(selfAdr);
+  END QString_isNull;
 
 PROCEDURE New_QString2
   (self: QString; size: INTEGER; arg2: Initialization; ): QString =
@@ -179,12 +503,31 @@ REVEAL
               size         := QString_size;
               count        := QString_count;
               length       := QString_length;
+              isEmpty      := QString_isEmpty;
+              resize       := QString_resize;
+              truncate     := QString_truncate;
+              chop         := QString_chop;
+              capacity     := QString_capacity;
+              reserve      := QString_reserve;
+              squeeze      := QString_squeeze;
+              detach       := QString_detach;
+              isDetached   := QString_isDetached;
               isSharedWith := QString_isSharedWith;
+              clear        := QString_clear;
               count1       := QString_count1;
+              left         := QString_left;
+              right        := QString_right;
+              toLower      := QString_toLower;
+              toUpper      := QString_toUpper;
+              toCaseFolded := QString_toCaseFolded;
+              trimmed      := QString_trimmed;
+              simplified   := QString_simplified;
+              toLatin1     := QString_toLatin1;
               toUtf8       := QString_toUtf8;
               toLocal8Bit  := QString_toLocal8Bit;
               initQString  := New_initQString;
               init_1       := New_QString1;
+              isNull       := QString_isNull;
               init_2       := New_QString2;
               destroyCxx   := Destroy_QString;
             END;

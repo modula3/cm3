@@ -217,6 +217,98 @@ SWIGEXPORT bool QObject_eventFilter(QObject * self, QObject * m3arg2, QEvent * m
 }
 
 
+SWIGEXPORT QString * Tr(char * sourceText, char * m3arg2, int m3arg3) {
+  char *arg1 = (char *) 0 ;
+  char *arg2 = (char *) 0 ;
+  int arg3 ;
+  QString * cresult ;
+  
+  {
+    arg1 = sourceText;
+  }
+  {
+    arg2 = m3arg2;
+  }
+  arg3 = (int)m3arg3; 
+  *(QString **)&cresult = new QString((const QString &)QObject::tr((char const *)arg1,(char const *)arg2,arg3));
+  return cresult;
+}
+
+
+SWIGEXPORT QString * Tr1(char * sourceText, char * m3arg2) {
+  char *arg1 = (char *) 0 ;
+  char *arg2 = (char *) 0 ;
+  QString * cresult ;
+  
+  {
+    arg1 = sourceText;
+  }
+  {
+    arg2 = m3arg2;
+  }
+  *(QString **)&cresult = new QString((const QString &)QObject::tr((char const *)arg1,(char const *)arg2));
+  return cresult;
+}
+
+
+SWIGEXPORT QString * Tr2(char * sourceText) {
+  char *arg1 = (char *) 0 ;
+  QString * cresult ;
+  
+  {
+    arg1 = sourceText;
+  }
+  *(QString **)&cresult = new QString((const QString &)QObject::tr((char const *)arg1));
+  return cresult;
+}
+
+
+SWIGEXPORT QString * TrUtf8(char * sourceText, char * m3arg2, int m3arg3) {
+  char *arg1 = (char *) 0 ;
+  char *arg2 = (char *) 0 ;
+  int arg3 ;
+  QString * cresult ;
+  
+  {
+    arg1 = sourceText;
+  }
+  {
+    arg2 = m3arg2;
+  }
+  arg3 = (int)m3arg3; 
+  *(QString **)&cresult = new QString((const QString &)QObject::trUtf8((char const *)arg1,(char const *)arg2,arg3));
+  return cresult;
+}
+
+
+SWIGEXPORT QString * TrUtf81(char * sourceText, char * m3arg2) {
+  char *arg1 = (char *) 0 ;
+  char *arg2 = (char *) 0 ;
+  QString * cresult ;
+  
+  {
+    arg1 = sourceText;
+  }
+  {
+    arg2 = m3arg2;
+  }
+  *(QString **)&cresult = new QString((const QString &)QObject::trUtf8((char const *)arg1,(char const *)arg2));
+  return cresult;
+}
+
+
+SWIGEXPORT QString * TrUtf82(char * sourceText) {
+  char *arg1 = (char *) 0 ;
+  QString * cresult ;
+  
+  {
+    arg1 = sourceText;
+  }
+  *(QString **)&cresult = new QString((const QString &)QObject::trUtf8((char const *)arg1));
+  return cresult;
+}
+
+
 SWIGEXPORT QString * QObject_objectName(QObject const * self) {
   QObject *arg1 = (QObject *) 0 ;
   QString * cresult ;

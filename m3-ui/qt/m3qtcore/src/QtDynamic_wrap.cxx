@@ -254,6 +254,50 @@ SWIGEXPORT bool AbstractDynamicQObject_connectDynamicSignal(AbstractDynamicQObje
 }
 
 
+SWIGEXPORT bool AbstractDynamicQObject_disConnectDynamicSlot(AbstractDynamicQObject * self, QObject * obj, char * signal, char * slot) {
+  AbstractDynamicQObject *arg1 = (AbstractDynamicQObject *) 0 ;
+  QObject *arg2 = (QObject *) 0 ;
+  char *arg3 = (char *) 0 ;
+  char *arg4 = (char *) 0 ;
+  bool result;
+  bool cresult ;
+  
+  arg1 = *(AbstractDynamicQObject **)&self; 
+  arg2 = *(QObject **)&obj; 
+  {
+    arg3 = signal;
+  }
+  {
+    arg4 = slot;
+  }
+  result = (bool)(arg1)->disConnectDynamicSlot(arg2,arg3,arg4);
+  cresult = result; 
+  return cresult;
+}
+
+
+SWIGEXPORT bool AbstractDynamicQObject_disConnectDynamicSignal(AbstractDynamicQObject * self, char * signal, QObject * obj, char * slot) {
+  AbstractDynamicQObject *arg1 = (AbstractDynamicQObject *) 0 ;
+  char *arg2 = (char *) 0 ;
+  QObject *arg3 = (QObject *) 0 ;
+  char *arg4 = (char *) 0 ;
+  bool result;
+  bool cresult ;
+  
+  arg1 = *(AbstractDynamicQObject **)&self; 
+  {
+    arg2 = signal;
+  }
+  arg3 = *(QObject **)&obj; 
+  {
+    arg4 = slot;
+  }
+  result = (bool)(arg1)->disConnectDynamicSignal(arg2,arg3,arg4);
+  cresult = result; 
+  return cresult;
+}
+
+
 SWIGEXPORT void Delete_AbstractDynamicQObject(AbstractDynamicQObject * self) {
   AbstractDynamicQObject *arg1 = (AbstractDynamicQObject *) 0 ;
   
