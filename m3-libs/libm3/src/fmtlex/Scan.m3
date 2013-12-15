@@ -10,7 +10,7 @@
 
 MODULE Scan;
 
-IMPORT Rd, Thread, FloatMode, Lex, Text, TextRd, Word;
+IMPORT Rd, Thread, FloatMode, Lex, Text, TextRd, Word, Long;
 <*FATAL Rd.Failure, Thread.Alerted*>
 
 PROCEDURE Skip (txt: TEXT;  len, start: INTEGER;  blanks: BOOLEAN): INTEGER =
@@ -63,6 +63,22 @@ PROCEDURE Unsigned(txt: TEXT; defaultBase: [2..16]): Word.T
     IF NOT Rd.EOF(rd) THEN RAISE Lex.Error END;
     RETURN res
   END Unsigned;
+
+PROCEDURE LongInt(txt: TEXT; defaultBase: [2..16]): LONGINT
+    RAISES {Lex.Error, FloatMode.Trap} =
+  VAR rd := ScanWord(txt); res := Lex.LongInt(rd, defaultBase);
+  BEGIN
+    IF NOT Rd.EOF(rd) THEN RAISE Lex.Error END;
+    RETURN res
+  END LongInt;
+
+PROCEDURE LongUnsigned(txt: TEXT; defaultBase: [2..16]): Long.T
+    RAISES {Lex.Error, FloatMode.Trap} =
+  VAR rd := ScanWord(txt); res := Lex.LongUnsigned(rd, defaultBase);
+  BEGIN
+    IF NOT Rd.EOF(rd) THEN RAISE Lex.Error END;
+    RETURN res
+  END LongUnsigned;
 
 PROCEDURE Real(txt: TEXT): REAL
   RAISES {Lex.Error, FloatMode.Trap} =
