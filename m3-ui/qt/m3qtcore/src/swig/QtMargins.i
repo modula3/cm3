@@ -7,13 +7,13 @@
 #include <QtCore/qmargins.h>
 %}
 
+%insert(m3wrapintf) %{
+TYPE
+  T = QMargins;
+%}
 
 %insert(m3wrapimpl) %{
 IMPORT WeakRef;
-%}
-
-%insert(m3wrapintf) %{
-
 %}
 
 %ignore operator==;
