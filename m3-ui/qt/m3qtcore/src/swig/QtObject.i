@@ -27,6 +27,9 @@ FROM QtString IMPORT QString;
 FROM QtByteArray IMPORT QByteArray;
 %}
 
+//Need to get the tr functions
+#define QT_NO_TRANSLATION
+
 //ignore these problem ones to do with templates i think
 
 %ignore qFindChild;
