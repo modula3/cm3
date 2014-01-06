@@ -60,12 +60,12 @@ PROCEDURE NoteFinished (o: Op) =
   VAR LStopTime : Time . T; 
   VAR LStopTick : Tick . T; 
   BEGIN
-    LStopTick := Tick . Now ( ); 
-    LStopTime := Time . Now ( );
     IF TextClass.Old THEN Ops := OldOps ELSE Ops := NewOps END; 
     IF Ops # NIL AND TextClass.CollectStats
     THEN WITH Opi = Ops ^ [o]
       DO
+        LStopTick := Tick . Now ( ); 
+        LStopTime := Time . Now ( );
         Opi.MaxRecurseCt := MAX (Opi.MaxRecurseCt, Opi.CurRecurseCt);
         Opi.MaxIterCt := MAX (Opi.MaxIterCt, Opi.CurIterCt);
         LElapsedSecsTick := Tick . ToSeconds ( LStopTick - GStartTick [ o ] ); 
@@ -647,7 +647,7 @@ PROCEDURE OpenArraySize
   END OpenArraySize; 
 
 (* WARNING: This can't be done at module initialization time.  Not enough
-            runtime initializztion has been done, and RTHeap.GetDataSize
+            runtime initialization has been done, and RTHeap.GetDataSize
             will segfault.
 *) 
 PROCEDURE InitInstrumentation ( ) =
