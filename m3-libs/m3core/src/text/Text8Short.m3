@@ -5,7 +5,7 @@ UNSAFE MODULE Text8Short;
 
 IMPORT TextClass;
 
-IMPORT TextStats;
+(*47 IMPORT TextStats; 74*)
 
 REVEAL
   T = Public BRANDED "Text8Short.T" OBJECT OVERRIDES
@@ -20,7 +20,7 @@ PROCEDURE New (READONLY a: ARRAY OF CHAR): T =
     t.len := NUMBER (a);
     IF (t.len > 0) THEN SUBARRAY (t.contents, 0, t.len) := a; END;
     t.contents[t.len] := '\000';
-    TextStats.NoteAllocText8Short(t);
+    (*47 TextStats.NoteAllocText8Short(t); 74*)
     RETURN t;
   END New;
 
