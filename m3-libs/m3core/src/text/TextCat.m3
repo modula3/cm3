@@ -6,8 +6,8 @@ UNSAFE MODULE TextCat EXPORTS RTHooks, TextCat;
 IMPORT TextClass;
 IMPORT Text8, Text8Short, Text16, Text16Short; 
 
-IMPORT TextStats;
-FROM TextStats IMPORT Op; 
+(*47 IMPORT TextStats; 74*)
+(*47 FROM TextStats IMPORT Op; 74*)
 
 REVEAL
   T = Public BRANDED "TextCat.T" OBJECT OVERRIDES
@@ -28,7 +28,7 @@ PROCEDURE Concat (t, u: TEXT): TEXT =
   VAR LInfo, RInfo: TextClass.Info;
   VAR Result: TEXT := NIL;
   BEGIN
-    TextStats.NoteGround (Op.Cat); 
+    (*47 TextStats.NoteGround (Op.Cat); 74*) 
     IF TextClass.Old 
     THEN Result := OldConcat (t, u); 
     ELSE (* The nonrecursive part of the new Concat: *)  
@@ -40,7 +40,7 @@ PROCEDURE Concat (t, u: TEXT): TEXT =
         Balance (t, LInfo, u, RInfo, ADR (Result), RebalanceFlat := FALSE);
       END (* IF *) 
     END (* IF *);
-    TextStats.NoteFinished (Op.Cat); 
+    (*47 TextStats.NoteFinished (Op.Cat); 74*) 
     RETURN Result 
   END Concat;
 
@@ -53,7 +53,7 @@ PROCEDURE OldConcat (t, u: TEXT): TEXT =
     Result := NEW (T, a := t, b := u,
                    a_len := ti.length, b_len := ui.length,
                    a_or_b_wide := ti.wide OR ui.wide);
-    TextStats.NoteAllocTextCat(Result); 
+    (*47 TextStats.NoteAllocTextCat(Result); 74*) 
     RETURN Result 
   END OldConcat;
 
@@ -92,7 +92,7 @@ PROCEDURE Balance
 
   VAR UnusedInfo: TextClass.Info;
   VAR Cat: T := NIL;
-  VAR RDepth: CARDINAL; 
+  (*47 VAR RDepth: CARDINAL; 74*) 
   VAR LLInfo, LRInfo, RLInfo, RRInfo: TextClass.Info; 
   VAR LLText, LRText, RLText, RRText: TEXT; 
   (* "[L|R]" in identifiers refer to left/right operand of Balance.
@@ -114,7 +114,7 @@ PROCEDURE Balance
         Cat.b_len := RInfo.length;
         Cat.a_or_b_wide := LInfo.wide OR RInfo.wide; 
         ResultRef ^ := Cat;
-        TextStats.NoteAllocTextCat (Cat); 
+        (*47 TextStats.NoteAllocTextCat (Cat); 74*) 
       ELSE
         ResultRef ^ := CatNode; 
       END; 
@@ -132,13 +132,13 @@ PROCEDURE Balance
         Cat.b_len := RInfo.length;
         Cat.a_or_b_wide := LInfo.wide OR RInfo.wide; 
         ResultRef ^ := Cat;
-        TextStats.NoteAllocTextCat (Cat); 
+        (*47 TextStats.NoteAllocTextCat (Cat); 74*) 
         (* Tail recursion elimination of: 
           Balance 
             (LLText, LLInfo, LRText, LRInfo, ADR(Cat.a), CatNode := LCat);
           RETURN 
         *)
-        TextStats.NoteIter (Op.Cat); 
+        (*47 TextStats.NoteIter (Op.Cat); 74*) 
         LText := LLText; LInfo := LLInfo;
         RText := LRText; RInfo := LRInfo;
         ResultRef := ADR (Cat.a);
@@ -148,7 +148,7 @@ PROCEDURE Balance
       ELSE (* Avoid risk of creating a copy of CatNode, at the cost of 
               doing the Balance recursively. 
            *) 
-        TextStats.NoteRecurse (Op.Cat); 
+        (*47 TextStats.NoteRecurse (Op.Cat); 74*) 
         Balance 
           (LLText, LLInfo, LRText, LRInfo, ADR(BalResult), CatNode := LCat);
         IF BalResult = LCat 
@@ -160,7 +160,7 @@ PROCEDURE Balance
           Cat.b_len := RInfo.length;
           Cat.a_or_b_wide := LInfo.wide OR RInfo.wide; 
           ResultRef ^ := Cat;
-          TextStats.NoteAllocTextCat (Cat); 
+          (*47 TextStats.NoteAllocTextCat (Cat); 74*) 
         END; 
         RETURN TRUE (* Cause Balance to return. *) 
       END; 
@@ -178,13 +178,13 @@ PROCEDURE Balance
         Cat.b_len := RInfo.length;
         Cat.a_or_b_wide := LInfo.wide OR RInfo.wide; 
         ResultRef ^ := Cat;
-        TextStats.NoteAllocTextCat (Cat); 
+        (*47 TextStats.NoteAllocTextCat (Cat); 74*) 
         (* Tail recursion elimination of: 
           Balance 
             (RLText, RLInfo, RRText, RRInfo, ADR(Cat.b), CatNode := RCat);
           RETURN 
         *)
-        TextStats.NoteIter (Op.Cat); 
+        (*47 TextStats.NoteIter (Op.Cat); 74*) 
         LText := RLText; LInfo := RLInfo;
         RText := RRText; RInfo := RRInfo;
         ResultRef := ADR (Cat.b);
@@ -194,7 +194,7 @@ PROCEDURE Balance
       ELSE (* Avoid risk of creating a copy of CatNode, at the cost of 
               doing the Balance recursively. 
            *) 
-        TextStats.NoteRecurse (Op.Cat); 
+        (*47 TextStats.NoteRecurse (Op.Cat); 74*) 
         Balance 
           (RLText, RLInfo, RRText, RRInfo, ADR(BalResult), CatNode := RCat);
         IF BalResult = RCat 
@@ -206,7 +206,7 @@ PROCEDURE Balance
           Cat.b_len := RInfo.length;
           Cat.a_or_b_wide := LInfo.wide OR RInfo.wide; 
           ResultRef ^ := Cat;
-          TextStats.NoteAllocTextCat (Cat); 
+          (*47 TextStats.NoteAllocTextCat (Cat); 74*) 
         END; 
         RETURN TRUE (* Cause Balance to return. *) 
       END; 
@@ -220,12 +220,12 @@ PROCEDURE Balance
       Cat.b_len := LRInfo.length + RInfo.length;
       Cat.a_or_b_wide := LInfo.wide OR RInfo.wide; 
       ResultRef ^ := Cat;
-      TextStats.NoteAllocTextCat (Cat); 
+      (*47 TextStats.NoteAllocTextCat (Cat); 74*) 
       (* Tail recursion elimination of: 
         Balance (LRText, LRInfo, RText, RInfo, ADR(Cat.b));
         RETURN 
       *)
-      TextStats.NoteIter (Op.Cat); 
+      (*47 TextStats.NoteIter (Op.Cat); 74*) 
       LText := LRText; LInfo := LRInfo;
       (* RText and RInfo are unchanged. *) 
       ResultRef := ADR (Cat.b);
@@ -242,12 +242,12 @@ PROCEDURE Balance
       Cat.b_len := RRInfo.length;
       Cat.a_or_b_wide := LInfo.wide OR RInfo.wide; 
       ResultRef ^ := Cat;
-      TextStats.NoteAllocTextCat (Cat); 
+      (*47 TextStats.NoteAllocTextCat (Cat); 74*) 
       (* Tail recursion elimination of: 
         Balance (LText, LInfo, RLText, RLInfo, ADR(Cat.a));
         RETURN 
       *)
-      TextStats.NoteIter (Op.Cat); 
+      (*47 TextStats.NoteIter (Op.Cat); 74*) 
       (* LText and LInfo are unchanged. *) 
       RText := RLText; RInfo := RLInfo;
       ResultRef := ADR (Cat.a);
@@ -289,13 +289,13 @@ PROCEDURE Balance
                 Cat.b_len := RRInfo.length;
                 Cat.a_or_b_wide := LInfo.wide OR RInfo.wide; 
                 ResultRef ^ := Cat;
-                TextStats.NoteAllocTextCat (Cat); 
+                (*47 TextStats.NoteAllocTextCat (Cat); 74*) 
                 (* Tail recursion elimination of: 
                   Balance 
                     (LLText, LLInfo, LRCatRLText, LRCatRLInfo, ADR(Cat.a));
                   RETURN
                 *)
-                TextStats.NoteIter (Op.Cat); 
+                (*47 TextStats.NoteIter (Op.Cat); 74*) 
                 LText := LLText; LInfo := LLInfo;
                 RText := LRCatRLText; RInfo := LRCatRLInfo;
                 ResultRef := ADR(Cat.a);
@@ -308,13 +308,13 @@ PROCEDURE Balance
                 Cat.b_len := LRInfo.length + RLInfo.length + RRInfo.length;
                 Cat.a_or_b_wide := LInfo.wide OR RInfo.wide; 
                 ResultRef ^ := Cat;
-                TextStats.NoteAllocTextCat (Cat); 
+                (*47 TextStats.NoteAllocTextCat (Cat); 74*) 
                 (* Tail recursion elimination of: 
                   Balance 
                     (LRCatRLText, LRCatRLInfo, RRText, RRInfo, ADR(Cat.b));
                   RETURN 
                 *)
-                TextStats.NoteIter (Op.Cat); 
+                (*47 TextStats.NoteIter (Op.Cat); 74*) 
                 LText := LRCatRLText; LInfo := LRCatRLInfo;
                 RText := RRText; RInfo := RRInfo;
                 ResultRef := ADR(Cat.b);
@@ -334,22 +334,22 @@ PROCEDURE Balance
                   Cat.b_len := RInfo.length;
                   Cat.a_or_b_wide := LInfo.wide OR RInfo.wide; 
                   ResultRef ^ := Cat;
-                  TextStats.NoteAllocTextCat (Cat); 
-                  TextStats.SaveRecurseDepth (Op.Cat, RDepth);
-                  TextStats.NoteRecurse (Op.Cat); 
+                  (*47 TextStats.NoteAllocTextCat (Cat); 74*) 
+                  (*47 TextStats.SaveRecurseDepth (Op.Cat, RDepth); 74*)
+                  (*47 TextStats.NoteRecurse (Op.Cat); 74*) 
                   IF LInfo.length < RInfo.length
                   THEN (* Recurse on as-short left side, iterate on right. *) 
                     Balance 
                       (LLText, LLInfo, LRText, LRInfo, ADR (Cat.a), 
                        CatNode := LCat);
-                    TextStats.RestoreRecurseDepth (Op.Cat, RDepth);
+                    (*47 TextStats.RestoreRecurseDepth (Op.Cat, RDepth); 74*)
                     (* Tail recursion elimination of: 
                       Balance 
                         (RLText, RLInfo, RRText, RRInfo, ADR (Cat.b), 
                          CatNode := RCat);
                       RETURN 
                     *)
-                    TextStats.NoteIter (Op.Cat); 
+                    (*47 TextStats.NoteIter (Op.Cat); 74*) 
                     LText := RLText; LInfo := RLInfo;
                     RText := RRText; RInfo := RRInfo;
                     ResultRef := ADR(Cat.b);
@@ -360,14 +360,14 @@ PROCEDURE Balance
                     Balance 
                       (RLText, RLInfo, RRText, RRInfo, ADR (Cat.b), 
                        CatNode := RCat);
-                    TextStats.RestoreRecurseDepth (Op.Cat, RDepth);
+                    (*47 TextStats.RestoreRecurseDepth (Op.Cat, RDepth); 74*)
                     (* Tail recursion elimination of: 
                       Balance 
                         (LLText, LLInfo, LRText, LRInfo, ADR (Cat.a), 
                          CatNode := LCat);
                       RETURN 
                     *)
-                    TextStats.NoteIter (Op.Cat); 
+                    (*47 TextStats.NoteIter (Op.Cat); 74*) 
                     LText := LLText; LInfo := LLInfo;
                     RText := LRText; RInfo := LRInfo;
                     ResultRef := ADR(Cat.a);
@@ -420,7 +420,7 @@ PROCEDURE Balance
               Cat.b_len := LRCatRInfo.length;
               Cat.a_or_b_wide := LLInfo.wide OR LRCatRInfo.wide; 
               ResultRef ^ := Cat;
-              TextStats.NoteAllocTextCat (Cat); 
+              (*47 TextStats.NoteAllocTextCat (Cat); 74*) 
               RETURN 
             ELSE (* Can't flatten LRText and RText. *) 
               IF NOT RebalanceFlat 
@@ -463,7 +463,7 @@ PROCEDURE Balance
               Cat.b_len := RRInfo.length;
               Cat.a_or_b_wide := LCatRLInfo.wide OR RRInfo.wide; 
               ResultRef ^ := Cat;
-              TextStats.NoteAllocTextCat (Cat); 
+              (*47 TextStats.NoteAllocTextCat (Cat); 74*) 
               RETURN 
             ELSE (* Can't flatten LText and RLText. *) 
               IF NOT RebalanceFlat
@@ -528,30 +528,30 @@ PROCEDURE Flat
       IF ResultInfo.length < Text16Short.MaxLength 
       THEN (* Flatten into a Text16Short.T. *) 
         ResultText16Short := NEW (Text16Short.T, len := ResultInfo.length);
-        TextStats.NoteGround (Op.get_wide_chars); 
+        (*47 TextStats.NoteGround (Op.get_wide_chars); 74*) 
         LText.get_wide_chars 
           (SUBARRAY (ResultText16Short.contents, 0, LInfo.length), 0); 
-        TextStats.NoteFinished (Op.get_wide_chars); 
-        TextStats.NoteGround (Op.get_wide_chars); 
+        (*47 TextStats.NoteFinished (Op.get_wide_chars); 74*) 
+        (*47 TextStats.NoteGround (Op.get_wide_chars); 74*) 
         RText.get_wide_chars 
           (SUBARRAY(ResultText16Short.contents, LInfo.length, RInfo.length), 0);
-        TextStats.NoteFinished (Op.get_wide_chars); 
+        (*47 TextStats.NoteFinished (Op.get_wide_chars); 74*) 
         ResultText16Short.contents[ResultInfo.length] := VAL(0, WIDECHAR);
         ResultInfo.start := ADR (ResultText16Short.contents[0]);
-        TextStats.NoteAllocText16Short(ResultText16Short); 
+        (*47 TextStats.NoteAllocText16Short(ResultText16Short); 74*) 
         RETURN ResultText16Short
       ELSIF ResultInfo.length < TextClass.MaxFlatWide 
       THEN (* Flatten into a Text16.T. *) 
         ResultText16 := Text16.Create(ResultInfo.length);
                         (* ^Which sets the terminating null character. *) 
-        TextStats.NoteGround (Op.get_wide_chars); 
+        (*47 TextStats.NoteGround (Op.get_wide_chars); 74*) 
         LText.get_wide_chars 
           (SUBARRAY (ResultText16.contents^, 0, LInfo.length), 0); 
-        TextStats.NoteFinished (Op.get_wide_chars); 
-        TextStats.NoteGround (Op.get_wide_chars); 
+        (*47 TextStats.NoteFinished (Op.get_wide_chars); 74*) 
+        (*47 TextStats.NoteGround (Op.get_wide_chars); 74*) 
         RText.get_wide_chars 
           (SUBARRAY (ResultText16.contents^, LInfo.length, RInfo.length), 0); 
-        TextStats.NoteFinished (Op.get_wide_chars); 
+        (*47 TextStats.NoteFinished (Op.get_wide_chars); 74*) 
         ResultInfo.start := ADR (ResultText16.contents^[0]);
         RETURN ResultText16
       ELSE RETURN NIL (* Don't flatten. *) 
@@ -560,29 +560,29 @@ PROCEDURE Flat
       IF ResultInfo.length < Text8Short.MaxLength 
       THEN (* Flatten into a Text8Short.T. *) 
         ResultText8Short := NEW (Text8Short.T, len := ResultInfo.length);
-        TextStats.NoteGround (Op.get_chars); 
+        (*47 TextStats.NoteGround (Op.get_chars); 74*) 
         LText.get_chars 
           (SUBARRAY (ResultText8Short.contents, 0, LInfo.length), 0); 
-        TextStats.NoteFinished (Op.get_chars); 
-        TextStats.NoteGround (Op.get_chars); 
+        (*47 TextStats.NoteFinished (Op.get_chars); 74*) 
+        (*47 TextStats.NoteGround (Op.get_chars); 74*) 
         RText.get_chars 
           (SUBARRAY(ResultText8Short.contents, LInfo.length, RInfo.length), 0);
-        TextStats.NoteFinished (Op.get_chars); 
+        (*47 TextStats.NoteFinished (Op.get_chars); 74*) 
         ResultText8Short.contents[ResultInfo.length] := '\000';
         ResultInfo.start := ADR (ResultText8Short.contents[0]);
-        TextStats.NoteAllocText8Short(ResultText8Short); 
+        (*47 TextStats.NoteAllocText8Short(ResultText8Short); 74*) 
         RETURN ResultText8Short
       ELSIF ResultInfo.length < TextClass.MaxFlat8 
       THEN (* Flatten into a Text8.T. *) 
         ResultText8 := Text8.Create(ResultInfo.length);
                        (* ^Which sets the terminating null character. *) 
-        TextStats.NoteGround (Op.get_chars); 
+        (*47 TextStats.NoteGround (Op.get_chars); 74*) 
         LText.get_chars (SUBARRAY (ResultText8.contents^, 0, LInfo.length), 0); 
-        TextStats.NoteFinished (Op.get_chars); 
-        TextStats.NoteGround (Op.get_chars); 
+        (*47 TextStats.NoteFinished (Op.get_chars); 74*) 
+        (*47 TextStats.NoteGround (Op.get_chars); 74*) 
         RText.get_chars 
           (SUBARRAY (ResultText8.contents^, LInfo.length, RInfo.length), 0); 
-        TextStats.NoteFinished (Op.get_chars); 
+        (*47 TextStats.NoteFinished (Op.get_chars); 74*) 
         ResultInfo.start := ADR (ResultText8.contents^[0]);
         RETURN ResultText8
       ELSE RETURN NIL (* Don't flatten. *) 
@@ -599,11 +599,11 @@ PROCEDURE NewMulti (READONLY x: ARRAY OF TEXT): TEXT =
 PROCEDURE MultiCat (READONLY x: ARRAY OF TEXT): TEXT =
   VAR result: TEXT;
   BEGIN
-    TextStats.NoteGround (Op.MultiCat); 
+    (*47 TextStats.NoteGround (Op.MultiCat); 74*) 
     IF TextClass.Old THEN result := OldMultiCat (x)
     ELSE result := NewMultiCat(x)
     END; 
-    TextStats.NoteFinished (Op.MultiCat); 
+    (*47 TextStats.NoteFinished (Op.MultiCat); 74*) 
     RETURN result;
   END MultiCat;
 
@@ -624,8 +624,8 @@ PROCEDURE OldMultiCat (READONLY x: ARRAY OF TEXT): TEXT =
                           b := result, b_len := r_info.length,
                           a_or_b_wide := r_info.wide);
         INC(r_info.length, xi_info.length);
-        TextStats.NoteAllocTextCat(result); 
-        TextStats.NoteIter (Op.MultiCat); 
+        (*47 TextStats.NoteAllocTextCat(result); 74*) 
+        (*47 TextStats.NoteIter (Op.MultiCat); 74*) 
       END; 
     END;
     RETURN result;
@@ -645,7 +645,7 @@ PROCEDURE NewMultiCat (READONLY x: ARRAY OF TEXT): TEXT =
     result := x[LAST(x)];
     FOR i := LAST(x) - 1 TO 0 BY -1 DO
       result := Concat (x[i], result);
-      TextStats.NoteIter (Op.MultiCat); 
+      (*47 TextStats.NoteIter (Op.MultiCat); 74*) 
     END;
     RETURN result;
   END NewMultiCat;
@@ -668,13 +668,13 @@ PROCEDURE CatGetChar (t: T; index: CARDINAL): CHAR =
 PROCEDURE CatOldGetChar (t: T;  index: CARDINAL): CHAR =
   BEGIN
     IF (index < t.a_len) THEN 
-      TextStats.NoteRecurse (Op.get_char); 
+      (*47 TextStats.NoteRecurse (Op.get_char); 74*) 
       RETURN t.a.get_char (index); 
     END;
     DEC (index, t.a_len);
 
     IF (index < t.b_len) THEN 
-      TextStats.NoteRecurse (Op.get_char); 
+      (*47 TextStats.NoteRecurse (Op.get_char); 74*) 
       RETURN t.b.get_char (index); 
     END;
     DEC (index, t.b_len);
@@ -701,12 +701,12 @@ PROCEDURE CatNewGetChar (Text: T;  index: CARDINAL): CHAR =
       IF ISTYPE (Child, T) 
       THEN (* Dispatch and Tail-recursion elimination of the code in the
               ELSE clause below. *) 
-        TextStats.NoteIter (Op.get_char); 
+        (*47 TextStats.NoteIter (Op.get_char); 74*) 
         Text := Child;
         (* index is already set. *) 
         (* And loop. *)  
       ELSE 
-        TextStats.NoteRecurse (Op.get_char); 
+        (*47 TextStats.NoteRecurse (Op.get_char); 74*) 
         RETURN Child.get_char (index); 
       END; 
     END; 
@@ -723,13 +723,13 @@ PROCEDURE CatGetWideChar (t: T; index: CARDINAL): WIDECHAR =
 PROCEDURE CatOldGetWideChar (t: T;  index: CARDINAL): WIDECHAR =
   BEGIN
     IF (index < t.a_len) THEN 
-      TextStats.NoteRecurse (Op.get_wide_char); 
+      (*47 TextStats.NoteRecurse (Op.get_wide_char); 74*) 
       RETURN t.a.get_wide_char (index); 
     END;
     DEC (index, t.a_len);
 
     IF (index < t.b_len) THEN 
-      TextStats.NoteRecurse (Op.get_wide_char); 
+      (*47 TextStats.NoteRecurse (Op.get_wide_char); 74*) 
       RETURN t.b.get_wide_char (index); 
     END;
     DEC (index, t.b_len);
@@ -756,12 +756,12 @@ PROCEDURE CatNewGetWideChar (Text: T;  index: CARDINAL): WIDECHAR =
       IF ISTYPE (Child, T) 
       THEN (* Dispatch and Tail-recursion elimination of the code in the
               ELSE clause below. *) 
-        TextStats.NoteIter (Op.get_wide_char); 
+        (*47 TextStats.NoteIter (Op.get_wide_char); 74*) 
         Text := Child;
         (* index is already set. *) 
         (* And loop. *)  
       ELSE 
-        TextStats.NoteRecurse (Op.get_wide_char); 
+        (*47 TextStats.NoteRecurse (Op.get_wide_char); 74*) 
         RETURN Child.get_wide_char (index); 
       END; 
     END; 
@@ -777,15 +777,15 @@ PROCEDURE CatGetChars (t: T;  VAR a: ARRAY OF CHAR;  start: CARDINAL) =
 
 PROCEDURE OldGetChars (t: T;  VAR a: ARRAY OF CHAR;  start: CARDINAL) =
   VAR u: TEXT;  a_offset, t_offset, u_offset: CARDINAL := 0;
-  VAR RDepth: CARDINAL; 
+  (*47 VAR RDepth: CARDINAL; 74*) 
   BEGIN
     u := t.a;
     IF (t_offset + t.a_len > start) THEN
       u_offset := MAX (start - t_offset, 0);
-      TextStats.SaveRecurseDepth (Op.get_chars, RDepth); 
-      TextStats.NoteRecurse (Op.get_chars); 
+      (*47 TextStats.SaveRecurseDepth (Op.get_chars, RDepth); 74*) 
+      (*47 TextStats.NoteRecurse (Op.get_chars); 74*) 
       u.get_chars (SUBARRAY (a, a_offset, NUMBER (a) - a_offset), u_offset);
-      TextStats.RestoreRecurseDepth (Op.get_chars, RDepth); 
+      (*47 TextStats.RestoreRecurseDepth (Op.get_chars, RDepth); 74*) 
       INC (a_offset, t.a_len - u_offset);
       IF (a_offset >= NUMBER (a)) THEN RETURN; END;
     END;
@@ -794,7 +794,7 @@ PROCEDURE OldGetChars (t: T;  VAR a: ARRAY OF CHAR;  start: CARDINAL) =
     u := t.b;
     IF (t_offset + t.b_len > start) THEN
       u_offset := MAX (start - t_offset, 0);
-      TextStats.NoteRecurse (Op.get_chars); 
+      (*47 TextStats.NoteRecurse (Op.get_chars); 74*) 
       u.get_chars (SUBARRAY (a, a_offset, NUMBER (a) - a_offset), u_offset);
       INC (a_offset, t.b_len - u_offset);
       IF (a_offset >= NUMBER (a)) THEN RETURN; END;
@@ -802,16 +802,16 @@ PROCEDURE OldGetChars (t: T;  VAR a: ARRAY OF CHAR;  start: CARDINAL) =
     INC (t_offset, t.b_len);
   END OldGetChars;
 
-PROCEDURE MiddleGetChars 
+<*UNUSED*> PROCEDURE MiddleGetChars 
   (t: T;  VAR Chars: ARRAY OF CHAR;  start: CARDINAL) =
   VAR Chars_offset, b_offset: CARDINAL;
-  VAR RDepth: CARDINAL; 
+  (*47 VAR RDepth: CARDINAL; 74*) 
   BEGIN 
     IF start < t.a_len  THEN
-      TextStats.SaveRecurseDepth (Op.get_chars, RDepth); 
-      TextStats.NoteRecurse (Op.get_chars); 
+      (*47 TextStats.SaveRecurseDepth (Op.get_chars, RDepth); 74*) 
+      (*47 TextStats.NoteRecurse (Op.get_chars); 74*) 
       t.a.get_chars (SUBARRAY (Chars, 0, NUMBER (Chars)), start);
-      TextStats.RestoreRecurseDepth (Op.get_chars, RDepth); 
+      (*47 TextStats.RestoreRecurseDepth (Op.get_chars, RDepth); 74*) 
       Chars_offset := t.a_len - start;
       IF Chars_offset >= NUMBER (Chars) THEN RETURN; END;
     ELSE Chars_offset := 0
@@ -819,7 +819,7 @@ PROCEDURE MiddleGetChars
 
     IF start < t.a_len + t.b_len THEN
       b_offset := MAX (start - t.a_len, 0);
-      TextStats.NoteRecurse (Op.get_chars); 
+      (*47 TextStats.NoteRecurse (Op.get_chars); 74*) 
       t.b.get_chars 
         ( SUBARRAY (Chars, Chars_offset, NUMBER (Chars) - Chars_offset), 
           b_offset
@@ -829,7 +829,7 @@ PROCEDURE MiddleGetChars
 
 PROCEDURE NewGetChars (t: T;  VAR Chars: ARRAY OF CHAR;  start: CARDINAL) =
   VAR a_charCt, b_charCt, a_start, b_start, Chars_start, Chars_charCt: CARDINAL;
-  VAR RDepth: CARDINAL; 
+  (*47 VAR RDepth: CARDINAL; 74*) 
   BEGIN 
     Chars_start := 0;
     Chars_charCt := NUMBER(Chars); 
@@ -846,13 +846,13 @@ PROCEDURE NewGetChars (t: T;  VAR Chars: ARRAY OF CHAR;  start: CARDINAL) =
           THEN 
             (* Dispatch and Tail-recursion elimination of the code in the
                ELSE clause below. *) 
-            TextStats.NoteIter (Op.get_chars); 
+            (*47 TextStats.NoteIter (Op.get_chars); 74*) 
             t := t.a;
             Chars_charCt := a_charCt;
             start := a_start
             (* And loop. *)  
           ELSE
-            TextStats.NoteRecurse (Op.get_chars); 
+            (*47 TextStats.NoteRecurse (Op.get_chars); 74*) 
             t.a.get_chars 
               (SUBARRAY (Chars, Chars_start, a_charCt), a_start); 
             EXIT  
@@ -861,24 +861,24 @@ PROCEDURE NewGetChars (t: T;  VAR Chars: ARRAY OF CHAR;  start: CARDINAL) =
       ELSE (* We have some chars from the b-side. *) 
         IF a_charCt > 0 
         THEN 
-          TextStats.SaveRecurseDepth (Op.get_chars, RDepth); 
-          TextStats.NoteRecurse (Op.get_chars); 
+          (*47 TextStats.SaveRecurseDepth (Op.get_chars, RDepth); 74*) 
+          (*47 TextStats.NoteRecurse (Op.get_chars); 74*) 
           t.a.get_chars 
             (SUBARRAY (Chars, Chars_start, a_charCt), a_start); 
-          TextStats.RestoreRecurseDepth (Op.get_chars, RDepth); 
+          (*47 TextStats.RestoreRecurseDepth (Op.get_chars, RDepth); 74*) 
         END (* IF *) 
       ; IF ISTYPE (t.b, T)
         THEN
           (* Dispatch and Tail-recursion elimination of the code in the
              ELSE clause below. *) 
-          TextStats.NoteIter (Op.get_chars); 
+          (*47 TextStats.NoteIter (Op.get_chars); 74*) 
           t := t.b;
           INC(Chars_start, a_charCt);
           Chars_charCt := b_charCt;
           start := b_start
           (* And loop. *)  
         ELSE 
-          TextStats.NoteRecurse (Op.get_chars); 
+          (*47 TextStats.NoteRecurse (Op.get_chars); 74*) 
           t.b.get_chars 
             (SUBARRAY (Chars, Chars_start + a_charCt, b_charCt), b_start); 
           EXIT
@@ -897,16 +897,16 @@ PROCEDURE CatGetWideChars (t: T;  VAR a: ARRAY OF WIDECHAR;  start: CARDINAL) =
 
 PROCEDURE OldGetWideChars (t: T;  VAR a: ARRAY OF WIDECHAR;  start: CARDINAL) =
   VAR u: TEXT;  a_offset, t_offset, u_offset: CARDINAL := 0;
-  VAR RDepth: CARDINAL; 
+  (*47 VAR RDepth: CARDINAL; 74*) 
   BEGIN
     u := t.a;
     IF (t_offset + t.a_len > start) THEN
       u_offset := MAX (start - t_offset, 0);
-      TextStats.SaveRecurseDepth (Op.get_wide_chars, RDepth); 
-      TextStats.NoteRecurse (Op.get_wide_chars); 
+      (*47 TextStats.SaveRecurseDepth (Op.get_wide_chars, RDepth); 74*) 
+      (*47 TextStats.NoteRecurse (Op.get_wide_chars); 74*) 
       u.get_wide_chars 
         (SUBARRAY (a, a_offset, NUMBER (a) - a_offset), u_offset);
-      TextStats.RestoreRecurseDepth (Op.get_wide_chars, RDepth); 
+      (*47 TextStats.RestoreRecurseDepth (Op.get_wide_chars, RDepth); 74*) 
       INC (a_offset, t.a_len - u_offset);
       IF (a_offset >= NUMBER (a)) THEN RETURN; END;
     END;
@@ -915,7 +915,7 @@ PROCEDURE OldGetWideChars (t: T;  VAR a: ARRAY OF WIDECHAR;  start: CARDINAL) =
     u := t.b;
     IF (t_offset + t.b_len > start) THEN
       u_offset := MAX (start - t_offset, 0);
-      TextStats.NoteRecurse (Op.get_wide_chars); 
+      (*47 TextStats.NoteRecurse (Op.get_wide_chars); 74*) 
       u.get_wide_chars 
         (SUBARRAY (a, a_offset, NUMBER (a) - a_offset), u_offset);
       INC (a_offset, t.b_len - u_offset);
@@ -927,7 +927,7 @@ PROCEDURE OldGetWideChars (t: T;  VAR a: ARRAY OF WIDECHAR;  start: CARDINAL) =
 PROCEDURE NewGetWideChars 
   (Text: T;  VAR Chars: ARRAY OF WIDECHAR;  start: CARDINAL) =
   VAR a_charCt, b_charCt, a_start, b_start, Chars_start, Chars_charCt: CARDINAL;
-  VAR RDepth: CARDINAL; 
+  (*47 VAR RDepth: CARDINAL; 74*) 
   BEGIN 
     Chars_start := 0;
     Chars_charCt := NUMBER(Chars); 
@@ -944,13 +944,13 @@ PROCEDURE NewGetWideChars
           THEN 
             (* Dispatch and Tail-recursion elimination of the code in the
                ELSE clause below. *) 
-            TextStats.NoteIter (Op.get_wide_chars); 
+            (*47 TextStats.NoteIter (Op.get_wide_chars); 74*) 
             Text := Text.a;
             Chars_charCt := a_charCt;
             start := a_start
             (* And loop. *)  
           ELSE
-            TextStats.NoteRecurse (Op.get_wide_chars); 
+            (*47 TextStats.NoteRecurse (Op.get_wide_chars); 74*) 
             Text.a.get_wide_chars 
               (SUBARRAY (Chars, Chars_start, a_charCt), a_start); 
             EXIT  
@@ -960,24 +960,24 @@ PROCEDURE NewGetWideChars
       ELSE (* We have some chars from the b-side. *)
         IF a_charCt > 0
         THEN
-          TextStats.SaveRecurseDepth (Op.get_wide_chars, RDepth); 
-          TextStats.NoteRecurse (Op.get_wide_chars); 
+          (*47 TextStats.SaveRecurseDepth (Op.get_wide_chars, RDepth); 74*) 
+          (*47 TextStats.NoteRecurse (Op.get_wide_chars); 74*) 
           Text.a.get_wide_chars 
             (SUBARRAY (Chars, Chars_start, a_charCt), a_start); 
-          TextStats.RestoreRecurseDepth (Op.get_wide_chars, RDepth); 
+          (*47 TextStats.RestoreRecurseDepth (Op.get_wide_chars, RDepth); 74*) 
         END (* IF *) 
       ; IF ISTYPE (Text.b, T)
         THEN
           (* Dispatch and Tail-recursion elimination of the code in the
              ELSE clause below. *) 
-          TextStats.NoteIter (Op.get_wide_chars); 
+          (*47 TextStats.NoteIter (Op.get_wide_chars); 74*) 
           Text := Text.b;
           INC(Chars_start, a_charCt);
           Chars_charCt := b_charCt;
           start := b_start
           (* And loop. *)  
         ELSE 
-          TextStats.NoteRecurse (Op.get_wide_chars); 
+          (*47 TextStats.NoteRecurse (Op.get_wide_chars); 74*) 
           Text.b.get_wide_chars 
             (SUBARRAY (Chars, Chars_start + a_charCt, b_charCt), b_start); 
           EXIT 
