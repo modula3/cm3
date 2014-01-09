@@ -24,6 +24,8 @@ UNSAFE MODULE TextUtils
       END (* TYPECASE *) 
     END Wide 
 
+; CONST BytesPerWC = BYTESIZE ( WIDECHAR ) 
+
 ; PROCEDURE VerifyText ( T : TEXT ) RAISES { BadInvariant } 
 
   = BEGIN 
@@ -48,14 +50,18 @@ UNSAFE MODULE TextUtils
                ) 
            END (* IF *) 
          ELSE
-           IF - TL . cnt * 2 > TextLiteral . MaxBytes - 2 
+           IF - TL . cnt * BytesPerWC > TextLiteral . MaxBytes - BytesPerWC 
            THEN
              RAISE BadInvariant 
                ( "TextLiteral,16, cnt = " & Fmt . Int ( TL . cnt  ) 
                  & ", too large."  
                ) 
-           ELSIF TL . buf [ - TL . cnt * 2 ] # 0  
-              OR TL . buf [ - TL . cnt * 2 ] # 0  
+           ELSIF TL . buf [ - TL . cnt * BytesPerWC ] # 0  
+              OR TL . buf [ - TL . cnt * BytesPerWC + 1 ] # 0  
+              OR BytesPerWC = 4 
+                 AND ( TL . buf [ - TL . cnt * BytesPerWC + 2 ] # 0
+                       OR TL . buf [ - TL . cnt * BytesPerWC + 3 ] # 0
+                     ) 
            THEN
              RAISE BadInvariant 
                ( "TextLiteral,16, cnt = " & Fmt . Int ( TL . cnt  ) 
