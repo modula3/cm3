@@ -1322,16 +1322,21 @@ MODULE Test EXPORTS Main
           )
     END DenseWide 
 
+; VAR GDisableCollection : BOOLEAN := TRUE 
+
 ; PROCEDURE StopCollection ( ) 
 
   = <* FATAL Thread . Alerted , Wr . Failure *> 
     BEGIN 
-      RTCollector . Disable ( ) 
-    ; Wr . PutText ( PWrT , Wr . EOL ) 
-    ; Wr . PutText 
-        ( PWrT , "Garbage collection disabled for better time measurement." ) 
-    ; Wr . PutText ( PWrT , Wr . EOL ) 
-    ; Wr . Flush ( PWrT ) 
+      IF GDisableCollection 
+      THEN 
+        RTCollector . Disable ( ) 
+      ; Wr . PutText ( PWrT , Wr . EOL ) 
+      ; Wr . PutText 
+          ( PWrT , "Garbage collection disabled for better time measurement." ) 
+      ; Wr . PutText ( PWrT , Wr . EOL ) 
+      ; Wr . Flush ( PWrT ) 
+      END (* IF *) 
     END StopCollection 
 
 ; VAR CollectTwice : BOOLEAN := TRUE  
@@ -1341,57 +1346,63 @@ MODULE Test EXPORTS Main
 
   = <* FATAL Thread . Alerted , Wr . Failure *> 
     BEGIN 
-      Wr . PutText ( PWrT , Wr . EOL ) 
-    ; Wr . PutText ( PWrT , "Garbage collection triggered ... " ) 
-    ; Wr . Flush ( PWrT ) 
-    ; RTCollector . Collect ( ) 
-    ; RTCollectorSRC . StartCollection ( ) 
-    ; RTCollectorSRC . FinishCollection ( ) 
-    ; Wr . PutText ( PWrT , "completed ... " ) 
-    ; IF CollectTwice 
+      IF GDisableCollection 
       THEN 
-        RTCollector . Collect ( ) 
+        Wr . PutText ( PWrT , Wr . EOL ) 
+      ; Wr . PutText ( PWrT , "Garbage collection triggered ... " ) 
+      ; Wr . Flush ( PWrT ) 
+      ; RTCollector . Collect ( ) 
       ; RTCollectorSRC . StartCollection ( ) 
       ; RTCollectorSRC . FinishCollection ( ) 
-      ; Wr . PutText ( PWrT , "twice ... " )
+      ; Wr . PutText ( PWrT , "completed ... " ) 
+      ; IF CollectTwice 
+        THEN 
+          RTCollector . Collect ( ) 
+        ; RTCollectorSRC . StartCollection ( ) 
+        ; RTCollectorSRC . FinishCollection ( ) 
+        ; Wr . PutText ( PWrT , "twice ... " )
+        END (* IF *) 
+      ; IF PauseForWeakRefs 
+        THEN 
+          Wr . PutText ( PWrT , "giving weak refs time ... " ) 
+        ; Thread . Pause ( 10.0D0 )  
+        END (* IF *) 
+      ; Wr . PutText ( PWrT , "done." ) 
+      ; Wr . PutText ( PWrT , Wr . EOL ) 
+      ; Wr . Flush ( PWrT ) 
       END (* IF *) 
-    ; IF PauseForWeakRefs 
-      THEN 
-        Wr . PutText ( PWrT , "giving weak refs time ... " ) 
-      ; Thread . Pause ( 10.0D0 )  
-      END (* IF *) 
-    ; Wr . PutText ( PWrT , "done." ) 
-    ; Wr . PutText ( PWrT , Wr . EOL ) 
-    ; Wr . Flush ( PWrT ) 
     END Collect 
 
 ; PROCEDURE ResumeCollection ( ) 
 
   = <* FATAL Thread . Alerted , Wr . Failure *> 
     BEGIN 
-      Wr . PutText ( PWrT , Wr . EOL ) 
-    ; Wr . PutText ( PWrT , "Garbage collection enabled and triggered ... " ) 
-    ; Wr . Flush ( PWrT ) 
-    ; RTCollector . Enable ( ) 
-    ; RTCollector . Collect ( ) 
-    ; RTCollectorSRC . StartCollection ( ) 
-    ; RTCollectorSRC . FinishCollection ( ) 
-    ; Wr . PutText ( PWrT , "completed ... " ) 
-    ; IF CollectTwice 
+      IF GDisableCollection 
       THEN 
-        RTCollector . Collect ( ) 
+        Wr . PutText ( PWrT , Wr . EOL ) 
+      ; Wr . PutText ( PWrT , "Garbage collection enabled and triggered ... " ) 
+      ; Wr . Flush ( PWrT ) 
+      ; RTCollector . Enable ( ) 
+      ; RTCollector . Collect ( ) 
       ; RTCollectorSRC . StartCollection ( ) 
       ; RTCollectorSRC . FinishCollection ( ) 
-      ; Wr . PutText ( PWrT , "twice ... " )
+      ; Wr . PutText ( PWrT , "completed ... " ) 
+      ; IF CollectTwice 
+        THEN 
+          RTCollector . Collect ( ) 
+        ; RTCollectorSRC . StartCollection ( ) 
+        ; RTCollectorSRC . FinishCollection ( ) 
+        ; Wr . PutText ( PWrT , "twice ... " )
+        END (* IF *) 
+      ; IF PauseForWeakRefs 
+        THEN 
+          Wr . PutText ( PWrT , "giving weak refs time ... " ) 
+        ; Thread . Pause ( 10.0D0 )  
+        END (* IF *) 
+      ; Wr . PutText ( PWrT , "done." ) 
+      ; Wr . PutText ( PWrT , Wr . EOL ) 
+      ; Wr . Flush ( PWrT ) 
       END (* IF *) 
-    ; IF PauseForWeakRefs 
-      THEN 
-        Wr . PutText ( PWrT , "giving weak refs time ... " ) 
-      ; Thread . Pause ( 10.0D0 )  
-      END (* IF *) 
-    ; Wr . PutText ( PWrT , "done." ) 
-    ; Wr . PutText ( PWrT , Wr . EOL ) 
-    ; Wr . Flush ( PWrT ) 
     END ResumeCollection 
 
 ; PROCEDURE FillBase ( N : CARDINAL )
