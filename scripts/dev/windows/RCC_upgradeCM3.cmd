@@ -13,6 +13,7 @@ REM v1.6, 03/11/2010, R.Coleburn, add feature to search PATH env var when trying
 REM v1.7, 11/28/2010, R.Coleburn, add "-skip m3cc" to all build stages because this package isn't used on Windows
 rem v1.8, 02/06/2013, R.Coleburn, Add error exit codes.  Fix bug of attempting cm3.exe install after build error.
 rem v1.9, 09/08/2013, R.Coleburn, Don't skip mklib during phase 1.
+rem v2.0, 01/13/2014, R.Coleburn, Adjust to conform to full pathnames for packages to be skipped.  Also skip caltech-parser test package.
 rem ---------------------------------------------------------------------------
 rem EXIT CODES:
 rem ----------
@@ -90,7 +91,7 @@ rem no more parameters, so make sure we've got the minimum required
 REM Identify this script.
 echo.
 echo =============== ---------------------------------
-echo  RCC_upgradeCM3, v1.9, 09/08/2013, Randy Coleburn
+echo  RCC_upgradeCM3, v2.0, 01/13/2014, Randy Coleburn
 echo =============== ---------------------------------
 echo.
 if /I "%_z_NoPause%"=="TRUE" echo "NoPause" Option in Effect.
@@ -252,7 +253,7 @@ echo ========================================================================
 echo STAGE-1:  BUILDING "front", EXCEPT FOR "m3core", "libm3", and "m3cc"
 echo ========================================================================
 echo.
-call %_cm3_DO% front -skip m3core -skip libm3 -skip m3cc -realclean -clean -build -ship %_z_ctrlArgs%
+call %_cm3_DO% front -skip "m3-libs\m3core" -skip "m3-libs\libm3" -skip "m3-sys\m3cc" -realclean -clean -build -ship %_z_ctrlArgs%
 @echo off
 call :FN_FinishStage
 if "%_cm3_CM3Failure%"=="TRUE" goto END
@@ -261,7 +262,7 @@ echo ========================================================================
 echo STAGE-2:  REPEATING BUILD, but this time ALL of "front", except "m3cc"
 echo ========================================================================
 echo.
-call %_cm3_DO% front -skip m3cc -realclean -clean -build -ship %_z_ctrlArgs%
+call %_cm3_DO% front -skip "m3-sys\m3cc" -realclean -clean -build -ship %_z_ctrlArgs%
 @echo off
 call :FN_FinishStage
 if "%_cm3_CM3Failure%"=="TRUE" goto END
@@ -270,7 +271,8 @@ echo ========================================================================
 echo STAGE-3:  BUILDING DISTRIBUTION "%_z_Stage3%", except "m3cc"
 echo ========================================================================
 echo.
-call %_cm3_DO% %_z_Stage3% -skip m3cc -realclean -clean -build -ship %_z_ctrlArgs%
+rem call %_cm3_DO% %_z_Stage3% -skip "m3-sys\m3cc" -realclean -clean -build -ship %_z_ctrlArgs%
+call %_cm3_DO% %_z_Stage3% -skip "m3-sys\m3cc" -skip "caltech-parser\parserlib\parserlib\test" -realclean -clean -build -ship %_z_ctrlArgs%
 @echo off
 call :FN_FinishStage
 if "%_cm3_CM3Failure%"=="TRUE" goto END
@@ -352,7 +354,7 @@ echo -----------------------------------
 echo --- HELP for RCC_upgradeCM3.CMD ---
 echo -----------------------------------
 echo.
-echo RCC_upgradeCM3.CMD is intended to replicate on Windows 2000/XP the 
+echo RCC_upgradeCM3.CMD is intended to replicate on Windows 2000/XP/7 the 
 echo functionality of the "upgrade.sh" script.  
 echo.
 echo As such, it invokes cm3 on a group of packages.  Packages and their group 
@@ -365,9 +367,9 @@ echo The package source tree is located relative to the PkgInfo.txt file (parent
 echo folder), or in the current directory, or in the parent or grandparent folder.
 echo.
 echo Note that the upgrade process requires 3 build stages:  
-echo    1. "front" group, minus packages "m3core", "libm3", and "mklib"
-echo    2. "front" group (this time the complete group)
-echo    3. a distribution (either min or all)
+echo    1. "front" group, minus packages "m3core", "libm3", and "m3cc"
+echo    2. "front" group, minus packages "m3cc"
+echo    3. a distribution (either min or all), minus packages "m3cc"
 goto U2
 
 

@@ -22,6 +22,7 @@ rem v1.30, 02/06/2013, R.Coleburn, Improve OS detection.  Add error exit codes.
 rem                                Fix bug of not setting _cm3_CM3Failure=TRUE on fatal error for relay in environment to other cooperating CMD files.
 rem v1.31, 09/22/2013, R.Coleburn, Fix bug of not reseting error condition for retry of operation.
 rem v1.32, 09/29/2013, R.Coleburn, Fix bug with improper checking of -showTags options.
+rem v1.33, 01/13/2014, R.Coleburn, Fix -skip directive to work off complete pathnames of packages, thereby preventing ambiguity if just using the package folder name
 rem ---------------------------------------------------------------------------
 rem EXIT CODES:
 rem ----------
@@ -62,7 +63,7 @@ goto :EOF
 REM Identify this script.
 echo.
 echo ====== ----------------------------------
-echo do-cm3, v1.32, 09/29/2013, Randy Coleburn
+echo do-cm3, v1.33, 01/13/2014, Randy Coleburn
 echo ====== ----------------------------------
 echo.
 
@@ -214,8 +215,8 @@ goto NextArg
 :Arg_Skip
 rem we've seen -SKIP, now get the package name to be skipped
 shift
-if "%1"=="" echo ERROR:  Missing package name after -SKIP argument. & goto Usage
-IF defined _z_Skip (set _z_Skip=%_z_Skip%; %1) ELSE (set _z_Skip=%1)
+if "%~1"=="" echo ERROR:  Missing package name after -SKIP argument. & goto Usage
+IF defined _z_Skip (set _z_Skip=%_z_Skip%; "%~1") ELSE (set _z_Skip="%~1")
 goto NextArg
 
 :ArgEnd
@@ -517,7 +518,7 @@ goto :EOF
 REM %1 is a package name; see if it is in the skip list: if no goto %2, if yes goto %3
 set _z_Answ=0
 if not defined _z_Skip goto %2
-for %%z in (%_z_Skip%) do if /I "%%z"=="%~nx1" set _z_Answ=1
+for %%z in (%_z_Skip%) do if /I %%z=="%~1" set _z_Answ=1
 IF "%_z_Answ%"=="0" ( goto %2 ) ELSE ( goto %3 )
 echo ERROR: Failure in FN_ChkSkip function.
 set _z_CM3Failure=STOP
@@ -641,7 +642,8 @@ echo   -p path = specify location of "PkgInfo.txt" file.
 echo             (if not specified, searchs in path=(".\"; "..\"; "..\..")
 echo.
 echo -skip pkgName = if pkgName is in the specified group-tag, skip this package.
-echo                 Multiple -skip argments may be given.
+echo                 Multiple -skip argments may be given.  Use complete path.
+echo                 e.g., -skip "m3-sys\m3cc"
 echo.
 
 
