@@ -352,7 +352,7 @@ PROCEDURE PutInt(c : INTEGER) =
       Wr.PutChar(Stdio.stdout,'-');
       c := -c;
     END;
-    IF c > 10 THEN
+    IF c >= 10 THEN
       PutInt(c DIV 10)
     END;
     Wr.PutChar(Stdio.stdout,VAL(c MOD 10 + ORD('0'),CHAR))
