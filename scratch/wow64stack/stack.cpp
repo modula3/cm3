@@ -47,13 +47,18 @@ int main()
       Sleep(1);
       continue;
     }
+    if (execpted == 0)
+    {
+      ResumeThread(thread);
+      continue;
+    }
     GetThreadContext(thread, &context);
     if (stacks.find(context.Stack) == stacks.end())
     {
       stacks.insert(stacks.end(), context.Stack);
       printf("%p %p\n", (void*)expected, (void*)context.Stack);
     }
-    assert(expected == 0 || (context.Stack && context.Stack < expected));
+    assert(context.Stack && context.Stack < expected);
     ResumeThread(thread);
   }
 }
