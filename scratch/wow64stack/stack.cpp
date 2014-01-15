@@ -15,27 +15,15 @@ void* __cdecl _AddressOfReturnAddress(void);
 #endif
 size_t expected;
 
-__declspec(noinline) void write(size_t value)
-{
-  //MemoryBarrier();
-  expected = value;
-  MemoryBarrier();
-}
-
-__declspec(noinline) size_t read()
-{
-  MemoryBarrier();
-  size_t value = expected;
-  //MemoryBarrier();
-  return value;
-}
-
 __declspec(noinline) void X(void *)
 {
-  write((size_t)_AddressOfReturnAddress());
+  MemoryBarrier();
+  expected = (size_t)_AddressOfReturnAddress();
   MemoryBarrier();
   Sleep(1);
-  write(0);
+  MemoryBarrier();
+  expected = 0;
+  MemoryBarrier();
 }
 
 __declspec(noinline) void F1(void) { X(_alloca(PAGE * 4)); }
@@ -65,28 +53,29 @@ int __cdecl main()
       Sleep(1);
       continue;
     }
-    if (read() == 0)
+    MemoryBarrier();
+    if (expected == 0)
     {
       ResumeThread(thread);
       continue;
     }
-    assert(read());
+    assert(expected);
     GetThreadContext(thread, &context);
-    assert(read());
+    assert(expected);
     bool print = false;
     if (stacks.find(context.Stack) == stacks.end())
     {
       stacks.insert(stacks.end(), context.Stack);
       print = true;
     }
-    print |= !(context.Stack && context.Stack < read());
+    print |= !(context.Stack && context.Stack < expected);
     if (print)
     {
-      printf("expected:%p stack:%p\n", (void*)read(), (void*)context.Stack);
+      printf("expected:%p stack:%p\n", (void*)expected, (void*)context.Stack);
       fflush(stdout);
     }
-    assert(read());
-    assert(context.Stack && context.Stack < read());
+    assert(expected);
+    assert(context.Stack && context.Stack < expected);
     ResumeThread(thread);
   }
 }
