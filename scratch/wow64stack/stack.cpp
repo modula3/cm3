@@ -53,10 +53,16 @@ int main()
       continue;
     }
     GetThreadContext(thread, &context);
+    bool print = false;
     if (stacks.find(context.Stack) == stacks.end())
     {
       stacks.insert(stacks.end(), context.Stack);
-      printf("%p %p\n", (void*)expected, (void*)context.Stack);
+      print = true;
+    }
+    print |= !(context.Stack && context.Stack < expected);
+    if (print)
+    {
+      printf("expected:%p stack:%p\n", (void*)expected, (void*)context.Stack);
       fflush(stdout);
     }
     assert(context.Stack && context.Stack < expected);
