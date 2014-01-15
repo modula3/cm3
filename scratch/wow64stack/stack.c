@@ -1,3 +1,6 @@
+#ifndef _M_IX86
+#error Only valid for x86
+#endif
 #include <assert.h>
 #include <stddef.h>
 #include <windows.h>
@@ -37,7 +40,7 @@ int main()
   {
     SuspendThread(thread);
     GetThreadContext(thread, &context);
-    assert(expected == 0 || context.Esp < expected);
+    assert(expected == 0 || (context.Esp && context.Esp < expected));
     ResumeThread(thread);
   }
 }
