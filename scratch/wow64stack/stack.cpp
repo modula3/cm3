@@ -55,6 +55,11 @@ int __cdecl main()
       continue;
     }
     GetThreadContext(thread, &context);
+    if (expected == 0) // huh?
+    {
+      ResumeThread(thread);
+      continue;
+    }
     bool print = false;
     if (stacks.find(context.Stack) == stacks.end())
     {
