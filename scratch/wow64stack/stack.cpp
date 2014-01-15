@@ -48,12 +48,12 @@ int main()
       continue;
     }
     GetThreadContext(thread, &context);
-    assert(expected == 0 || (context.Esp && context.Esp < expected));
     if (stacks.find(context.Esp) == stacks.end())
     {
       stacks.insert(stacks.end(), context.Esp);
       printf("%p %p\n", (void*)expected, (void*)context.Esp);
     }
+    assert(expected == 0 || (context.Esp && context.Esp < expected));
     ResumeThread(thread);
   }
 }
