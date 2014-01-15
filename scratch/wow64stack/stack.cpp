@@ -3,9 +3,9 @@
 #include <assert.h>
 #include <stddef.h>
 #include <windows.h>
-extern "C" {
+extern "C"
+{
 void* __cdecl _AddressOfReturnAddress(void);
-}
 #pragma optimize("", off)
 #define PAGE 4096
 #ifdef _M_IX86
@@ -15,15 +15,27 @@ void* __cdecl _AddressOfReturnAddress(void);
 #endif
 size_t expected;
 
+__declspec(noinline) void write(size_t value)
+{
+  //MemoryBarrier();
+  expected = value;
+  MemoryBarrier();
+}
+
+__declspec(noinline) size_t read()
+{
+  MemoryBarrier();
+  size_t value = expected;
+  //MemoryBarrier();
+  return value;
+}
+
 __declspec(noinline) void X(void *)
 {
-  MemoryBarrier(); // why?
-  expected = (size_t)_AddressOfReturnAddress();
+  write((size_t)_AddressOfReturnAddress());
   MemoryBarrier();
   Sleep(1);
-  MemoryBarrier(); // why?
-  expected = 0;
-  MemoryBarrier();
+  write(0);
 }
 
 __declspec(noinline) void F1(void) { X(_alloca(PAGE * 4)); }
@@ -53,30 +65,29 @@ int __cdecl main()
       Sleep(1);
       continue;
     }
-    MemoryBarrier();
-    if (expected == 0)
+    if (read() == 0)
     {
       ResumeThread(thread);
       continue;
     }
-    assert(expected);
+    assert(read());
     GetThreadContext(thread, &context);
-    //MemoryBarrier(); // why?
-    assert(expected);
+    assert(read());
     bool print = false;
     if (stacks.find(context.Stack) == stacks.end())
     {
       stacks.insert(stacks.end(), context.Stack);
       print = true;
     }
-    print |= !(context.Stack && context.Stack < expected);
+    print |= !(context.Stack && context.Stack < read());
     if (print)
     {
-      printf("expected:%p stack:%p\n", (void*)expected, (void*)context.Stack);
+      printf("expected:%p stack:%p\n", (void*)read(), (void*)context.Stack);
       fflush(stdout);
     }
-    assert(expected);
-    assert(context.Stack && context.Stack < expected);
+    assert(read());
+    assert(context.Stack && context.Stack < read());
     ResumeThread(thread);
   }
+}
 }
