@@ -1,7 +1,4 @@
 #undef NDEBUG
-#ifndef _M_IX86
-#error Only valid for x86
-#endif
 #include <set>
 #include <assert.h>
 #include <stddef.h>
@@ -10,6 +7,11 @@ void* _AddressOfReturnAddress(void);
 volatile size_t expected;
 #pragma optimize("", off)
 #define PAGE 4096
+#ifdef _M_IX86
+#define Stack Esp
+#else
+#define Stack Rsp
+#endif
 
 __declspec(noinline) void X(void *)
 {
@@ -46,12 +48,12 @@ int main()
       continue;
     }
     GetThreadContext(thread, &context);
-    if (stacks.find(context.Esp) == stacks.end())
+    if (stacks.find(context.Stack) == stacks.end())
     {
-      stacks.insert(stacks.end(), context.Esp);
-      printf("%p %p\n", (void*)expected, (void*)context.Esp);
+      stacks.insert(stacks.end(), context.Stack);
+      printf("%p %p\n", (void*)expected, (void*)context.Stack);
     }
-    assert(expected == 0 || (context.Esp && context.Esp < expected));
+    assert(expected == 0 || (context.Stack && context.Stack < expected));
     ResumeThread(thread);
   }
 }
