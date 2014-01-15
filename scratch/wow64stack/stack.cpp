@@ -15,11 +15,49 @@ void* __cdecl _AddressOfReturnAddress(void);
 #endif
 volatile size_t expected;
 
+#if 0
+
+__declspec(noinline) void write(size_t value)
+{
+#ifdef _WIN64
+  InterlockedExchange64((INT64*)&expected, (INT64)value);
+#else
+  InterlockedExchange((long*)&expected, (long)value);
+#endif
+}
+
+__declspec(noinline) size_t read()
+{
+#ifdef _WIN64
+  return (size_t)InterlockedExchange64((INT64*)&expected, (INT64)expected);
+#else
+  return (size_t)InterlockedExchange((long*)&expected, (long)expected);
+#endif
+}
+
+#else
+
+__declspec(noinline) void write(size_t value)
+{
+  //MemoryBarrier();
+  expected = value;
+  MemoryBarrier();
+}
+
+__declspec(noinline) size_t read()
+{
+  MemoryBarrier();
+  size_t value = expected;
+  //MemoryBarrier();
+  return value;
+}
+#endif
+
 __declspec(noinline) void X(void *)
 {
-  expected = (size_t)_AddressOfReturnAddress();
+  write((size_t)_AddressOfReturnAddress());
   Sleep(1);
-  expected = 0;
+  write(0);
 }
 
 __declspec(noinline) void F1(void) { X(_alloca(PAGE * 4)); }
@@ -49,29 +87,30 @@ int __cdecl main()
       Sleep(1);
       continue;
     }
-    if (expected == 0)
+    if (read() == 0)
     {
       ResumeThread(thread);
       continue;
     }
+    assert(read());
     GetThreadContext(thread, &context);
-    if (expected == 0) // huh?
-    {
-      ResumeThread(thread);
-      continue;
-    }
+    assert(read());
     bool print = false;
+    assert(read());
     if (stacks.find(context.Stack) == stacks.end())
     {
       stacks.insert(stacks.end(), context.Stack);
       print = true;
     }
+    assert(read());
     print |= !(context.Stack && context.Stack < expected);
+    assert(read());
     if (print)
     {
       printf("expected:%p stack:%p\n", (void*)expected, (void*)context.Stack);
       fflush(stdout);
     }
+    assert(read());
     assert(context.Stack && context.Stack < expected);
     ResumeThread(thread);
   }
