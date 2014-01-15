@@ -33,13 +33,11 @@ __declspec(noinline) unsigned long __stdcall Thread(PVOID parameter)
 
 int main()
 {
-  UINT64 volatile count = 0;
   HANDLE thread = CreateThread(0, 0, Thread, 0, 0, 0);
   CONTEXT context;
   ZeroMemory(&context, sizeof(context));
   context.ContextFlags = CONTEXT_CONTROL;
   std::set<size_t> stacks;
-  //while (count++ < 100000)
   while (1)
   {
     if (SuspendThread(thread) == (DWORD)-1)
