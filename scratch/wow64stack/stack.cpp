@@ -3,7 +3,9 @@
 #include <assert.h>
 #include <stddef.h>
 #include <windows.h>
-void* _AddressOfReturnAddress(void);
+extern "C" {
+void* __cdecl _AddressOfReturnAddress(void);
+}
 #pragma optimize("", off)
 #define PAGE 4096
 #ifdef _M_IX86
@@ -33,7 +35,7 @@ __declspec(noinline) unsigned long __stdcall Thread(PVOID parameter)
   return 0;
 }
 
-int main()
+int __cdecl main()
 {
   HANDLE thread = CreateThread(0, 0, Thread, 0, 0, 0);
   CONTEXT context;
