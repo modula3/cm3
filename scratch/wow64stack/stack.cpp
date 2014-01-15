@@ -4,7 +4,6 @@
 #include <stddef.h>
 #include <windows.h>
 void* _AddressOfReturnAddress(void);
-volatile size_t expected;
 #pragma optimize("", off)
 #define PAGE 4096
 #ifdef _M_IX86
@@ -12,6 +11,7 @@ volatile size_t expected;
 #else
 #define Stack Rsp
 #endif
+volatile size_t expected;
 
 __declspec(noinline) void X(void *)
 {
@@ -47,7 +47,7 @@ int main()
       Sleep(1);
       continue;
     }
-    if (execpted == 0)
+    if (expected == 0)
     {
       ResumeThread(thread);
       continue;
