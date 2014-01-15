@@ -57,6 +57,7 @@ int main()
     {
       stacks.insert(stacks.end(), context.Stack);
       printf("%p %p\n", (void*)expected, (void*)context.Stack);
+      fflush(stdout);
     }
     assert(context.Stack && context.Stack < expected);
     ResumeThread(thread);
