@@ -13,15 +13,15 @@ void* __cdecl _AddressOfReturnAddress(void);
 #else
 #define Stack Rsp
 #endif
-volatile size_t expected;
+size_t expected;
 
 __declspec(noinline) void X(void *)
 {
-  MemoryBarrier();
+  MemoryBarrier(); // why?
   expected = (size_t)_AddressOfReturnAddress();
   MemoryBarrier();
   Sleep(1);
-  MemoryBarrier();
+  MemoryBarrier(); // why?
   expected = 0;
   MemoryBarrier();
 }
@@ -61,17 +61,15 @@ int __cdecl main()
     }
     assert(expected);
     GetThreadContext(thread, &context);
+    //MemoryBarrier(); // why?
     assert(expected);
     bool print = false;
-    assert(expected);
     if (stacks.find(context.Stack) == stacks.end())
     {
       stacks.insert(stacks.end(), context.Stack);
       print = true;
     }
-    assert(expected);
     print |= !(context.Stack && context.Stack < expected);
-    assert(expected);
     if (print)
     {
       printf("expected:%p stack:%p\n", (void*)expected, (void*)context.Stack);
