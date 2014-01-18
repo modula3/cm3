@@ -9,7 +9,7 @@ TYPE
   Desc = RECORD name: TEXT;  op: Op;  END;
 
 CONST
-  Map = ARRAY [Op.begin_unit..Op.fetch_and_xor] OF Desc {
+  Map = ARRAY [Op.begin_unit..Op.widechar_size] OF Desc {
     Desc { "begin_unit", Op.begin_unit }, 
     Desc { "end_unit", Op.end_unit }, 
     Desc { "import_unit", Op.import_unit }, 
@@ -198,7 +198,8 @@ CONST
     Desc { "fetch_and_sub", Op.fetch_and_sub },
     Desc { "fetch_and_or", Op.fetch_and_or },
     Desc { "fetch_and_and", Op.fetch_and_and },
-    Desc { "fetch_and_xor", Op.fetch_and_xor }
+    Desc { "fetch_and_xor", Op.fetch_and_xor },
+    Desc { "widechar_size", Op.widechar_size }
   };
 
 PROCEDURE Out (a, b, c, d, e, f, g : TEXT := NIL) =
