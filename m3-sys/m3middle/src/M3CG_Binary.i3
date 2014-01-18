@@ -48,6 +48,7 @@ TYPE
     fetch_and_or,       (* file only; in-memory uses fetch_and_op *)
     fetch_and_and,      (* file only; in-memory uses fetch_and_op *)
     fetch_and_xor,      (* file only; in-memory uses fetch_and_op *)
+    widechar_size ,     (* file only; communicates byte size WIDECHAR *)
     set_error_handler,  (* in-memory only; contains a pointer, so silently skipped in files *)
     compare,            (* in-memory only; file converts to eq/ne/etc. *)
     cvt_int,            (* in-memory only; file converts to trunc/ceiling/etc. *)

@@ -37,7 +37,7 @@ TYPE
   END;
 
 CONST
-  CmdMap = ARRAY [Bop.begin_unit..Bop.fetch_and_xor] OF Cmd {
+  CmdMap = ARRAY [Bop.begin_unit..Bop.widechar_size] OF Cmd {
     Cmd {Bop.begin_unit, begin_unit},
     Cmd {Bop.end_unit, end_unit},
     Cmd {Bop.import_unit, import_unit},
@@ -197,7 +197,8 @@ CONST
     Cmd {Bop.fetch_and_sub,  fetch_and_sub},
     Cmd {Bop.fetch_and_or,   fetch_and_or},
     Cmd {Bop.fetch_and_and,  fetch_and_and},
-    Cmd {Bop.fetch_and_xor,  fetch_and_xor}
+    Cmd {Bop.fetch_and_xor,  fetch_and_xor},
+    Cmd {Bop.widechar_size, widechar_size}
   };
 
 PROCEDURE Inhale (rd: Rd.T;  cg: M3CG.T) =
@@ -680,6 +681,12 @@ PROCEDURE declare_exception (VAR s: State) =
   BEGIN
     s.cg.declare_exception (name, arg_type, raise_proc, base, offset);
   END declare_exception;
+
+PROCEDURE widechar_size (VAR s: State) =
+  VAR size := Scan_int (s);
+  BEGIN
+    s.cg.widechar_size (size);
+  END widechar_size;
 
 (*--------------------------------------------------------- runtime hooks ---*)
 

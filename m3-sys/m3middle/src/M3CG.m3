@@ -39,6 +39,7 @@ REVEAL
     declare_opaque := declare_opaque;
     reveal_opaque := reveal_opaque;
     declare_exception := declare_exception;
+    widechar_size := widechar_size; 
     set_runtime_proc := set_runtime_proc;
     import_global := import_global;
     declare_segment := declare_segment;
@@ -318,6 +319,11 @@ PROCEDURE declare_exception (xx: T;  n: Name;  arg_type: TypeUID;
   BEGIN
     xx.child.declare_exception (n, arg_type, raise_proc, base, offset);
   END declare_exception;
+
+PROCEDURE widechar_size (xx: T; size: INTEGER) = 
+  BEGIN
+    xx.child.widechar_size (size);
+  END widechar_size;
 
 (*--------------------------------------------------------- runtime hooks ---*)
 
