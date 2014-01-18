@@ -39,7 +39,7 @@ TYPE
   END;
 
 CONST
-  CmdMap = ARRAY [0..159] OF Cmd {
+  CmdMap = ARRAY [0..160] OF Cmd {
     Cmd {"begin_unit", begin_unit},
     Cmd {"end_unit", end_unit},
     Cmd {"import_unit", import_unit},
@@ -199,7 +199,8 @@ CONST
     Cmd {"fetch_and_sub",  fetch_and_sub},
     Cmd {"fetch_and_or",   fetch_and_or},
     Cmd {"fetch_and_and",  fetch_and_and},
-    Cmd {"fetch_and_xor",  fetch_and_xor}
+    Cmd {"fetch_and_xor",  fetch_and_xor},
+    Cmd {"widechar_size", widechar_size}
   };
 
 VAR
@@ -793,6 +794,12 @@ PROCEDURE declare_exception (VAR s: State) =
   BEGIN
     s.cg.declare_exception (name, arg_type, raise_proc, base, offset);
   END declare_exception;
+
+PROCEDURE widechar_size (VAR s: State) =
+  VAR size := Scan_int (s);
+  BEGIN
+    s.cg.widechar_size (size);
+  END widechar_size;
 
 (*--------------------------------------------------------- runtime hooks ---*)
 

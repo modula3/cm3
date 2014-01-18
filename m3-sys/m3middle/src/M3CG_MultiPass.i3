@@ -94,6 +94,7 @@ TYPE declare_method_t = op_t OBJECT name: Name; signature: typeid_t; OVERRIDES r
 TYPE declare_opaque_t = op_t OBJECT typeid, super_typeid: typeid_t; OVERRIDES replay := replay_declare_opaque END;
 TYPE reveal_opaque_t = op_t OBJECT lhs_typeid, rhs_typeid: typeid_t; OVERRIDES replay := replay_reveal_opaque END;
 TYPE declare_exception_t = op_t OBJECT name: Name; arg_typeid: typeid_t; raise_proc: BOOLEAN; base: INTEGER(*var_t*); offset: INTEGER; OVERRIDES replay := replay_declare_exception END;
+TYPE widechar_size_t = op_t OBJECT size: INTEGER; OVERRIDES replay := replay_widechar_size END;
 
 TYPE set_runtime_proc_t = op_t OBJECT name: Name; proc: INTEGER(*proc_t*); OVERRIDES replay := replay_set_runtime_proc END;
 TYPE bind_segment_t = op_t OBJECT segment: INTEGER(*var_t*); byte_size: ByteSize; alignment: Alignment; type: Type; exported, inited: BOOLEAN; OVERRIDES replay := replay_bind_segment END;
@@ -237,6 +238,7 @@ PROCEDURE replay_declare_method(self: declare_method_t; replay: Replay_t; cg: cg
 PROCEDURE replay_declare_opaque(self: declare_opaque_t; replay: Replay_t; cg: cg_t);
 PROCEDURE replay_reveal_opaque(self: reveal_opaque_t; replay: Replay_t; cg: cg_t);
 PROCEDURE replay_declare_exception(self: declare_exception_t; replay: Replay_t; cg: cg_t);
+PROCEDURE replay_widechar_size(self: widechar_size_t; replay: Replay_t; cg: cg_t);
 PROCEDURE replay_set_runtime_proc(self: set_runtime_proc_t; replay: Replay_t; cg: cg_t);
 PROCEDURE replay_bind_segment(self: bind_segment_t; replay: Replay_t; cg: cg_t);
 PROCEDURE replay_free_temp(self: free_temp_t; replay: Replay_t; cg: cg_t);
