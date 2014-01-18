@@ -500,3 +500,5 @@ M3CG (FETCH_AND_XOR,
       MTYPE (type1)
       MTYPE (type2)
       UNSIGNED_INTEGER (order))
+M3CG (WIDECHAR_SIZE,
+      UNSIGNED_INTEGER(bitsize))

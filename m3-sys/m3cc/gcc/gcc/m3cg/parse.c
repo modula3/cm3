@@ -70,6 +70,7 @@ extern "C" {
 #include "options.h"
 #include "debug.h"
 #include "convert.h"
+#include "dbxout.h"
 } /* extern "C" */
 #include "m3gty43.h"
 #include "m3-parse.h"
@@ -654,7 +655,9 @@ static const struct { UINT32 type_id; tree* t; } builtin_uids[] = {
   { UID_XREEL, &t_xreel },
   { UID_BOOLEAN, &t_word_8 },
   { UID_CHAR, &t_word_8 },
-  { UID_WIDECHAR, &t_word_32 },
+  { UID_WIDECHAR, &t_word_16 }, 
+      /* ^Default to 16, in case we compile output of an older cm3 front end, 
+         which produces no widechar_size operator. */
   { UID_MUTEX, &t_addr },
   { UID_TEXT, &t_addr },
   { UID_UNTRACED_ROOT, &t_addr },
@@ -6152,6 +6155,19 @@ incompatible:
   fatal_error ("incompatible type for argument to atomic op");
 }
 #endif
+
+M3CG_HANDLER (WIDECHAR_SIZE)
+{ if (bitsize == 16)
+    { set_typeid_to_tree (UID_WIDECHAR, t_word_16);
+      dbxout_emit_widechar_N_OPT (16); 
+    } 
+  else if (bitsize == 32)
+    { set_typeid_to_tree (UID_WIDECHAR, t_word_32);
+      dbxout_emit_widechar_N_OPT (32); 
+    } 
+  else
+    fatal_error ("WIDECHAR bitsize (%u) must be 16 or 32");
+}
 
 /*----------------------------------------------------------- M3CG parser ---*/
 
