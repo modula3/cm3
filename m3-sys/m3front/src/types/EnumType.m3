@@ -9,8 +9,8 @@
 MODULE EnumType;
 
 IMPORT M3, M3ID, CG, Type, TypeRep, Value, Scope, Scanner, Ident;
-IMPORT EnumElt, Token, Charr, Bool, M3Buf, Word, Error, TipeMap, TipeDesc;
-IMPORT Target, TInt, TWord, TargetMap, WCharr;
+IMPORT EnumElt, Token, Bool, M3Buf, Word, Error, TipeMap, TipeDesc;
+IMPORT Target, TInt, TWord, TargetMap, Charr, WCharr, SubrangeType;
 
 TYPE
   Rep = [FIRST (TargetMap.Word_types) .. LAST (TargetMap.Word_types)];
@@ -206,8 +206,19 @@ PROCEDURE EqualChk (a: P;  t: Type.T;  <*UNUSED*>x: Type.Assumption): BOOLEAN =
   END EqualChk;
 
 PROCEDURE Subtyper (a: P;  t: Type.T): BOOLEAN =
+  VAR tBase: Type.T;
+  VAR tMin, tMax, aMax, aMin: Target.Int; 
   BEGIN
-    RETURN Type.IsEqual (a, t, NIL);
+    IF Type.IsEqual (a, t, NIL) THEN RETURN TRUE END;
+    IF Type.IsEqual (a, Charr.T, NIL) THEN 
+      IF Type.IsEqual (t, WCharr.T, NIL) THEN RETURN TRUE END; 
+      tBase := Type.Base (t);
+      IF NOT Type.IsEqual  (tBase, WCharr.T, NIL) THEN RETURN FALSE END; 
+      IF NOT SubrangeType.Split (t, tMin, tMax) THEN RETURN FALSE END; 
+      IF NOT SubrangeType.Split (a, aMin, aMax) THEN RETURN FALSE END; 
+      RETURN TInt.LE (tMax, aMax); 
+    END;
+    RETURN FALSE; 
   END Subtyper;
 
 PROCEDURE MinSize (p: P): INTEGER =
