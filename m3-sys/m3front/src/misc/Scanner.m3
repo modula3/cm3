@@ -9,6 +9,7 @@ UNSAFE MODULE Scanner;
 IMPORT Text, Fmt, File, OSError, TextIntTbl, Word;
 IMPORT M3, M3ID, Error, M3String, M3WString, Token;
 IMPORT Target, TInt, TWord, TFloat, Host, M3Buf;
+IMPORT WCharr; 
 
 CONST
   MaxStack  = 40;
@@ -682,11 +683,15 @@ PROCEDURE ScanChar (wide: BOOLEAN) =
       ELSIF (ch = '\\') THEN  val := ORD ('\\');   GetCh ();
       ELSIF (ch = '\'') THEN  val := ORD ('\'');   GetCh ();
       ELSIF (ch = '\"') THEN  val := ORD ('\"');   GetCh ();
-      ELSIF (ch = 'x')
-         OR (ch = 'X')  THEN  GetCh ();  val := GetHexChar (bytes:=Bytes[wide]);
+      ELSIF (ch = 'x') OR (ch = 'X')  
+      THEN  
+        GetCh ();  
+        val := GetHexChar (bytes:=Bytes[wide]);
       ELSIF (OctalDigits[ch]) THEN  val := GetOctalChar (wide);
       ELSIF wide AND ch = 'U' 
-      THEN GetCh ();  val := GetHexChar (bytes:=3); 
+      THEN 
+        GetCh ();  
+        val := GetHexChar (bytes:=3); 
       ELSE  Error.Msg ("unknown escape sequence in character literal");
       END;
     ELSIF (ch = EOFChar) THEN
@@ -744,7 +749,8 @@ PROCEDURE ScanText () =
         ELSIF (ch = 'x')
            OR (ch = 'X') 
         THEN GetCh ();  Stuff (VAL (GetHexChar (bytes:=1), CHAR));
-        ELSIF (OctalDigits[ch]) THEN Stuff (VAL (GetOctalChar (FALSE), CHAR));
+        ELSIF (OctalDigits[ch]) 
+        THEN Stuff (VAL (GetOctalChar (wide:=FALSE), CHAR));
         ELSE  Error.Msg ("unknown escape sequence in text literal");
         END;
       ELSIF (ch = EOFChar) THEN
@@ -857,6 +863,10 @@ PROCEDURE GetOctalDigit (wide: BOOLEAN;  VAR value: INTEGER): BOOLEAN =
     END;
   END GetOctalDigit;
 
+(* CONST ReplacementWt = UniCodec.ReplacementWt; *) 
+(* We don't have UniCodec when compiling this with an earlier compiler. *) 
+CONST ReplacementWt = 16_FFFD;   
+
 PROCEDURE GetHexChar (bytes: [1..3]): INTEGER =
   VAR value: INTEGER := 0;
   BEGIN
@@ -868,13 +878,19 @@ PROCEDURE GetHexChar (bytes: [1..3]): INTEGER =
       IF NOT GetHexDigit (bytes, value) THEN RETURN value; END;
       IF bytes = 3  
       THEN 
+        (* Only get here for a Unicode escape, which is always 6 hex digits. *) 
         IF NOT GetHexDigit (bytes, value) THEN RETURN value; END;
         IF NOT GetHexDigit (bytes, value) THEN RETURN value; END;
         IF value > 16_10FFFF THEN 
-          Error.Msg ("Unicode escaped character value out of range");
+          Error.Msg ("Unicode escaped character outside of Unicode range");
           value := 0; 
+        ELSIF NOT WCharr.IsUnicode AND value > 16_FFFF 
+        THEN 
+          Error.Warn
+            (2, "Character outside WIDECHAR range, replaced by Unicode replacement character."); 
+          value := ReplacementWt; 
         END; 
-      END;
+      END; 
     END;
     RETURN value;
   END GetHexChar;

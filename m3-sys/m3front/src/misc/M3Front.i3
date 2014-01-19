@@ -61,6 +61,8 @@ END M3Front.
      -No_load_map   don't generate the load map comment in the output
      -IncGC         generate software read barrier for incremental GC
      -GenGC         generate software write barrier for generational GC
+     -widechar16    WIDECHAR has 16-bit range
+     -widecharuni   WIDECHAR has Unicode range
 *)
  
 

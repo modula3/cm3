@@ -3,7 +3,7 @@
 
 MODULE M3WString;
 
-IMPORT M3Buf, Text, Word, CG, WCharr, Type;
+IMPORT M3Buf, Text, Word, CG, WCharr;
 
 CONST
   NO_UID = -1;
@@ -115,34 +115,24 @@ PROCEDURE PutLiteral (wr: M3Buf.T;  t: T) =
     M3Buf.PutChar (wr, '"');
   END PutLiteral;
 
-  VAR CompiledWCBitsize := 32;
-  (* ^BITSIZE of WIDECHAR, as it is being compiled. *) 
-(* TODO: ^Get this from a consistent place.  Right now, WCharr has an upper
-         bound for to-be-compiled WIDECHAR, from which CG size is derived.
-         But M3WString gets initialized earlier than the builtin types do,
-         so that info will not be available here.  See M3Front.m3, which calls
-         M3WString.Initialize early, and (M3Front).Initialize later, when 
-         about to parse, which sets in motion initialization of builtin
-         types.
-*) 
-
 PROCEDURE Init_chars (offset: INTEGER;  t: T;  is_const: BOOLEAN) =
+  VAR TargetWCBitsize: INTEGER;
   BEGIN 
     IF (t = NIL) THEN
       (* done *)
     ELSE
-      IF Type.CGType(WCharr.T, in_memory:=TRUE) = CG.Type.Word32 THEN 
-         CompiledWCBitsize := 32
-      ELSE CompiledWCBitsize := 16
+      IF WCharr.IsUnicode
+      THEN TargetWCBitsize := 32
+      ELSE TargetWCBitsize := 16
       END; 
       IF (t.body # NIL) THEN
         FOR i := 0 TO t.length-1 DO
-          CG.Init_intt (offset, CompiledWCBitsize, t.body[i], is_const);
-          INC (offset, CompiledWCBitsize);
+          CG.Init_intt (offset, TargetWCBitsize, t.body[i], is_const);
+          INC (offset, TargetWCBitsize);
         END;
       ELSE
         Init_chars (offset, t.prefix, is_const);
-        Init_chars (offset + t.prefix.length * CompiledWCBitsize, 
+        Init_chars (offset + t.prefix.length * TargetWCBitsize, 
                     t.suffix, is_const);
       END;
     END; 
