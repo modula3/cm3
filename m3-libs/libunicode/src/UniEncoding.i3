@@ -1,5 +1,9 @@
 INTERFACE UniEncoding
 
+(* Various ways of encoding characters in sequential streams, including
+   the Uncode encoding schemes, and others.
+*) 
+
 ; TYPE Encoding 
     = { Null      (* Use for unknown or irrelevant. *) 
       , Internal  (* A pseudo-encoding for TEXT, which has its own hidden 
