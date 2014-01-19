@@ -1,4 +1,5 @@
 import("libm3")
+import("libunicode")
 %interface("Endian")
 %module("Uni")
 %module("UniCodec")
