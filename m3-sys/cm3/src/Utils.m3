@@ -9,6 +9,7 @@ UNSAFE MODULE Utils;
 IMPORT File, FileWr, Wr, Thread, Fmt, Process, TextIntTbl, M3toC;
 IMPORT Stdio, OSError, ETimer, FS, RegularFile, Time, Text;
 IMPORT Msg, Arg, M3Timers, CoffTime, M3File, Pathname;
+IMPORT WCharr, Mx, MxConfig; 
 FROM Ctypes IMPORT const_char_star, char_star, int;
 
 (*--------------------------------------------------------------- writers ---*)
@@ -302,6 +303,55 @@ PROCEDURE M3Time (t: Time.T): INTEGER =
   BEGIN
     RETURN ROUND (t - Epoch);
   END M3Time;
+
+(*-------------------------- initializing range of WIDECHAR -----------------*)
+
+VAR GWidechar16Seen, GWidecharUniSeen: BOOLEAN := FALSE; 
+
+PROCEDURE NoteWidechar16 () =
+  BEGIN 
+    GWidecharUniSeen := FALSE; 
+    GWidechar16Seen := TRUE; 
+  END NoteWidechar16; 
+
+PROCEDURE NoteWidecharUni () =
+  BEGIN 
+    GWidechar16Seen := FALSE; 
+    GWidecharUniSeen := TRUE; 
+  END NoteWidecharUni; 
+
+PROCEDURE InitWidechar () =
+
+  (* Because of the division of cm3 into packages, which cannot be
+     cyclically dependent, we have to do this a bit kludgily.  Here,
+     in package cm3, we initially have the necessary information.  It is
+     needed in m3front and m3linker, which can't refer to cm3 in any way.
+     So we push it down into global variables declared in m3front and m3linker, 
+     where they can access it.
+  *) 
+
+  VAR Unicode_WIDECHAR_opt: TEXT;
+  BEGIN
+    IF GWidechar16Seen THEN (* Command line -widechar16. *) 
+      WCharr.IsUnicode := FALSE; 
+      Mx.UnicodeWideChar := FALSE; 
+    ELSIF GWidecharUniSeen THEN (* Command line -widecharuni. *) 
+      WCharr.IsUnicode := TRUE;
+      Mx.UnicodeWideChar := TRUE; 
+    ELSE 
+      Unicode_WIDECHAR_opt := MxConfig.Get("Unicode_WIDECHAR");
+      (* ^Possibly set in cm3.cfg, or just about any other Quake code. *)  
+      IF Unicode_WIDECHAR_opt # NIL  
+         AND Text.Equal(Unicode_WIDECHAR_opt, "TRUE")
+      THEN 
+        WCharr.IsUnicode := TRUE;
+        Mx.UnicodeWideChar := TRUE; 
+      ELSE (* Default case: 16-bit WIDECHAR. *) 
+        WCharr.IsUnicode := FALSE; 
+        Mx.UnicodeWideChar := FALSE; 
+      END; 
+    END; 
+  END InitWidechar; 
 
 (*---------------------------------- process creation / command execution ---*)
 

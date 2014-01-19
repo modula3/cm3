@@ -327,6 +327,7 @@ PROCEDURE CompileUnits (main     : TEXT;
       Utils.NoteLocalFileTimes ();
     ETimer.Pop ();
     BuildSearchPaths (s);
+    Utils.InitWidechar (); 
     InhaleLinkInfo (s);
     BuildLibraryPool (s);
 

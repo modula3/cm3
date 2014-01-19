@@ -40,6 +40,10 @@ PROCEDURE ModificationTime (file: TEXT): INTEGER;
 PROCEDURE NoteModification (file: TEXT): INTEGER;
 PROCEDURE NoteNewFile      (file: TEXT);
 
+PROCEDURE NoteWidechar16 ();
+PROCEDURE NoteWidecharUni ();
+PROCEDURE InitWidechar (); 
+
 CONST NO_TIME = 0;
 
 PROCEDURE PrepArgs (program: TEXT;  args: Arg.List): REF ARRAY OF TEXT;

@@ -308,6 +308,8 @@ PROCEDURE ConvertOption (VAR s: State;  arg: TEXT;  arg_len: INTEGER)
                Out (wr, "M3_OPTIONS += \"-w2\"");  ok := TRUE;
              ELSIF Text.Equal (arg, "-w3") THEN
                Out (wr, "M3_OPTIONS += \"-w3\"");  ok := TRUE;
+             ELSIF Text.Equal (arg, "-widechar16") THEN ok := TRUE; 
+             ELSIF Text.Equal (arg, "-widecharuni") THEN ok := TRUE; 
              END;
 
     | 'x' => IF (arg_len = 2) THEN
@@ -558,6 +560,10 @@ PROCEDURE ScanCommandLine2 () : TextTextTbl.T =
         Msg.SetLevel (Msg.Level.Debug);
       ELSIF Text.Equal (arg, "-profile") THEN
         EVAL defs.put("M3_PROFILING", "TRUE");
+      ELSIF Text.Equal (arg, "-widechar16") THEN
+        Utils.NoteWidechar16 ();
+      ELSIF Text.Equal (arg, "-widecharuni") THEN
+        Utils.NoteWidecharUni ();
       ELSIF Text.Equal (arg, "-trace") THEN
         traceQuake := TRUE;
       ELSIF Text.Equal (arg, "-x") OR Text.Equal (arg, "-override") THEN
@@ -629,6 +635,8 @@ CONST
     "  -w0 .. -w3     limit compiler warning messages",
     "  -Z             generate coverage analysis code",
     "  -profile       generate profiling code",
+    "  -widechar16    give WIDECHAR a 16-bit range",
+    "  -widecharuni   give WIDECHAR the full Unicode range",
     "  -lazy          generate lazy module initialization code",
     "                 (main module and imports only) This is the default.",
     "  -linkall       generate module initialization code for all modules,",
