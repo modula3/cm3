@@ -17,8 +17,9 @@ INTERFACE UniCodec
 
 ; TYPE Widechar = WIDECHAR 
 (* ; TYPE Widechar = [ 0 .. 16_10FFFF ] *) 
-  (* ^Temporary, for testing.  When WIDECHAR becomes a character type over
-     this range, and with BYTESIZE = 4, we can replace this by WIDECHAR. *)  
+  (* ^Temporary, for testing.  When we have a compiler where 
+     WIDECHAR is a character type that covers this range, and with 
+     BYTESIZE = 4, we can replace this by WIDECHAR. *)  
 
 ; CONST IsBE = Compiler . ThisEndian = Compiler . ENDIAN . BIG  
 
@@ -29,8 +30,8 @@ INTERFACE UniCodec
 ; TYPE EncTblTyp = ARRAY Encoding OF EncProc 
 
 ; CONST EncTable
-    = ARRAY BOOLEAN (* Big endian. *) OF EncTblTyp 
-      { EncTblTyp (* Little endian. *)
+    = ARRAY BOOLEAN (* Is Big endian. *) OF EncTblTyp 
+      { EncTblTyp (* FALSE, means Little endian. *)
           { (* Null *)      EncNull     
           , (* Internal *)  EncInternal  
           , (* ISO8859_1 *) EncISO8859_1
@@ -47,7 +48,7 @@ INTERFACE UniCodec
           , (* UTF32BE *)   EncUTF32BE
           } 
 
-      , EncTblTyp (* Big endian. *)
+      , EncTblTyp (* TRUE, means Big endian. *)
           { (* Null *)      EncNull       
           , (* Internal *)  EncInternal  
           , (* ISO8859_1 *) EncISO8859_1
@@ -72,8 +73,8 @@ INTERFACE UniCodec
 ; TYPE DecTblTyp = ARRAY Encoding OF DecProc 
 
 ; CONST DecTable
-    = ARRAY BOOLEAN (* Big endian. *) OF DecTblTyp 
-      { DecTblTyp (* Little endian. *)
+    = ARRAY BOOLEAN (* Is Big endian. *) OF DecTblTyp 
+      { DecTblTyp (* FALSE, means Little endian. *)
           { (* Null *)      DecNull     
           , (* Internal *)  DecInternal  
           , (* ISO8859_1 *) DecISO8859_1
@@ -90,7 +91,7 @@ INTERFACE UniCodec
           , (* UTF32BE *)   DecUTF32BE
           } 
 
-      , DecTblTyp (* Big endian. *)
+      , DecTblTyp (* TRUE, means Big endian. *)
           { (* Null *)      DecNull       
           , (* Internal *)  DecInternal  
           , (* ISO8859_1 *) DecISO8859_1
