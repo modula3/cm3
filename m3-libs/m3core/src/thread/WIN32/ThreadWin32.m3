@@ -790,28 +790,6 @@ PROCEDURE IncDefaultStackSize(inc: CARDINAL)=
 
 VAR suspend_cnt: CARDINAL := 0; (* LL = activeLock *)
 
-PROCEDURE GetContextAndCheckStack(act: Activation): BOOLEAN =
-BEGIN
-  (* helper function used by SuspendOthers
-
-  If the stack pointer is not within bounds, then this might
-  be a Windows 95 bug; let the thread run longer and try again.
-  Our historical behavior here was wierd. If stackbase - stackpointer > 10000,
-  do some VirtualQuery calls to confirm readability. As well, historically,
-  we called GetThreadContext on the currently running thread, which
-  is documented as not working. As well, historically, GetThreadContext
-  was called later, in ProcessStacks. See versions prior to November 22 2009.
-  I really don't know if the stack ever comes back invalid, and I didn't
-  test on Windows 95, but this seems like a better cheaper way to attempt
-  to honor the historical goals. Note also that GetStackBounds should be
-  tested on Windows 95. *)
-
-  IF GetThreadContext(act.handle, act.context) = 0 THEN Choke(ThisLine()) END;
-  act.stackPointer := StackPointerFromContext(act.context);
-  RETURN (act.stackPointer >= act.stackStart AND act.stackPointer < act.stackEnd);
-
-END GetContextAndCheckStack;
-
 PROCEDURE SuspendOthers () =
   (* LL=0. Always bracketed with ResumeOthers which releases "activeLock". *)
   VAR me: Activation;
@@ -835,7 +813,13 @@ PROCEDURE SuspendOthers () =
           SetState(act, ActState.Stopping);
           IF act.stackStart # NIL AND act.stackEnd # NIL THEN
             IF SuspendThread(act.handle) = -1 THEN Choke(ThisLine()) END;
-            IF act.heapState.inCritical # 0 OR NOT GetContextAndCheckStack(act) THEN
+            (* NOTE: A thread is NOT fully suspended by SuspendThread.
+             * Calling GetThreadContext DOES ensure it is. This is NOT documented.
+             * It can be seen experimentally and matches what SSCLI does.
+             *)
+  	    IF GetThreadContext(act.handle, act.context) = 0 THEN Choke(ThisLine()) END;
+  	    act.stackPointer := StackPointerFromContext(act.context);
+            IF act.heapState.inCritical # 0 THEN
               IF ResumeThread(act.handle) = -1 THEN Choke(ThisLine()) END;
               retry := TRUE;
               SetState(act, ActState.Started);
