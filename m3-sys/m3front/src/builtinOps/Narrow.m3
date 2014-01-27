@@ -94,7 +94,7 @@ PROCEDURE EmitCore (tlhs, trhs: Type.T): CG.Val =
       CG.Boost_alignment (align);
     END;
 
-    (* test for the no-check cases... *)
+    (* CT test for the no-check cases... *)
     IF Type.IsSubtype (trhs, tlhs) THEN RETURN NIL; END;
     IF (NOT is_object) AND (NOT lhs_info.isTraced) THEN RETURN NIL; END;
 
@@ -102,7 +102,7 @@ PROCEDURE EmitCore (tlhs, trhs: Type.T): CG.Val =
     ref := CG.Pop ();
     ok := CG.Next_label ();
 
-    (* check for ref = NIL *)
+    (* RT check for ref = NIL *)
     CG.Push (ref);
     CG.Load_nil ();
     CG.If_compare (CG.Type.Addr, CG.Cmp.EQ, ok, CG.Maybe);
@@ -110,19 +110,23 @@ PROCEDURE EmitCore (tlhs, trhs: Type.T): CG.Val =
     IF NOT Type.IsEqual (tlhs, Null.T, NIL) THEN
       tagged := CG.Next_label ();
 
+      (* RT check for ref is tagged. *) 
       CG.Push (ref);
       CG.Loophole (CG.Type.Addr, Target.Word.cg_type);
       CG.Load_integer (Target.Word.cg_type, TInt.One);
       CG.And (Target.Word.cg_type);
       CG.If_true (tagged, CG.Maybe);
 
-      (* check for TYPECODE(ref) = TYPECODE(type) *)
+      (* RT check for TYPECODE(ref) = TYPECODE(type) *)
       CG.Push (ref);
       CG.Ref_to_info (M3RT.RH_typecode_offset, M3RT.RH_typecode_size);
       Type.LoadInfo (tlhs, M3RT.TC_typecode);
       CG.If_compare (Target.Integer.cg_type, CG.Cmp.EQ, ok, CG.Always);
 
-      IF is_object THEN
+      IF NOT RefType.Is (tlhs) THEN
+        (*Note: When T is unrevealed <: REFANY, both ObjectType(T) and 
+                RefType.Is(T) return FALSE.  We need to call the runtime in
+                in this case. *) 
         (* finally, call the runtime to figure it out... *)
         proc := RunTyme.LookUpProc (RunTyme.Hook.CheckIsType);
         Procedure.StartCall (proc);
