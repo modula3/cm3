@@ -1298,15 +1298,15 @@ PROCEDURE PushOneM3 (s: State;  u: M3Unit.T): BOOLEAN =
     "tmpC" is sometimes C (foo.m3.c, foo.i3.c), sometimes binary representation
     of m3cg for input to external backend ("foo.mc" or "foo.ic").
     Options include:
-      IntegrateObject        : m3 => o        boot or not (NT/x86)
-      IntegrateAssembly      : m3 => asm => o (no such backends)
-      boot IntegrateAssembly : m3 => asm      (no such backends)
-      ExternalAssembly       : m3 => mc => asm => o
-      boot ExternalAssembly  : m3 => mc => asm
-      ExternalObject         : m3 => mc => o (no such backends, but can with C + m3cgcat)
-      boot ExternalObject    : m3 => mc => o (no such backends, but can with C + m3cgcat, config file would not run assembler)
-      C                      : m3 => c => o
-      boot C                 : m3 => c
+      IntegratedObject        : m3 => o        boot or not (NT/x86)
+      IntegratedAssembly      : m3 => asm => o (no such backends)
+      boot IntegratedAssembly : m3 => asm      (no such backends)
+      ExternalAssembly        : m3 => mc => asm => o
+      boot ExternalAssembly   : m3 => mc => asm
+      ExternalObject          : m3 => mc => o (no such backends, but can with C + m3cgcat)
+      boot ExternalObject     : m3 => mc => o (no such backends, but can with C + m3cgcat, config file would not run assembler)
+      C                       : m3 => c => o
+      boot C                  : m3 => c
 *)
     u.link_info := NIL;
     ResetExports (s, u);
