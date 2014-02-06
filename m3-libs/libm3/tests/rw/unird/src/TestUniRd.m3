@@ -1,3 +1,4 @@
+(* Test program for UniRd. *) 
 MODULE TestUniRd EXPORTS Main 
 
 ; IMPORT FileRd
