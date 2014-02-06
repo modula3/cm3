@@ -1,4 +1,0 @@
-import("libm3")
-import("libunicode")
-implementation("TestUniCodec") 
-program("TestUniCodec")
