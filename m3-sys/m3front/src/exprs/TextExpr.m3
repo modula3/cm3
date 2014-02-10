@@ -10,6 +10,7 @@ MODULE TextExpr;
 
 IMPORT M3, CG, Expr, ExprRep, M3String, Textt, Type, M3Buf;
 IMPORT Target, Module, M3RT, M3WString, RunTyme, Procedure;
+IMPORT WCharr;
 
 TYPE
   P = Expr.T OBJECT
@@ -111,7 +112,10 @@ PROCEDURE SetUID (p: P): INTEGER =
         M3String.SetUID (p.value8, uid);
       END;
     ELSE
-      width := Target.Word32.size;
+      IF WCharr.IsUnicode
+      THEN width := Target.Word32.size
+      ELSE width := Target.Word16.size
+      END; 
       len   := M3WString.Length (p.value32);
       cnt   := - len;
       uid   := M3WString.GetUID (p.value32);
@@ -245,9 +249,9 @@ PROCEDURE GenFPLiteral (p: P;  buf: M3Buf.T) =
       M3Buf.PutChar (buf, '>');
     ELSE
       M3Buf.PutText (buf, "TEXT16<");
-      (* ^Even though the characters of a literal now occupy 32 bits, let's keep
-         this string "TEXT16<", to avoid altering fingerprints and undermining
-         pickles written earlier. *) 
+      (* ^Even though the characters of a literal now could occupy 32 bits, 
+         let's keep this string "TEXT16<", to avoid altering fingerprints and 
+         undermining pickles written earlier. *) 
       M3Buf.PutInt  (buf, M3WString.Length (p.value32));
       M3Buf.PutChar (buf, ',');
       M3WString.PutLiteral (buf, p.value32);
