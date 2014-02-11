@@ -172,7 +172,7 @@ VAR Text16Size : CARDINAL;
 VAR TextSubSize : CARDINAL; 
 VAR TextCatSize : CARDINAL; 
 
-PROCEDURE NoteAllocText8Short (o :Text8Short.T) = 
+PROCEDURE NoteAllocText8Short (o: Text8Short.T) = 
   VAR Objs: REF ObjsInfo; 
   BEGIN
     IF TextClass.Old 
@@ -227,7 +227,7 @@ PROCEDURE NoteCollectNewText8Short
     END (* IF *) 
   END NoteCollectNewText8Short;
 
-PROCEDURE NoteAllocText8 (o :Text8.T) = 
+PROCEDURE NoteAllocText8 (o: Text8.T) = 
   VAR Objs: REF ObjsInfo; 
   BEGIN
     IF TextClass.Old 
@@ -279,7 +279,7 @@ PROCEDURE NoteCollectNewText8
     END (* IF *) 
   END NoteCollectNewText8;
 
-PROCEDURE NoteAllocText8Chars (o :REF ARRAY OF CHAR) = 
+PROCEDURE NoteAllocText8Chars (o: REF ARRAY OF CHAR) = 
   VAR Objs: REF ObjsInfo; 
   VAR size: CARDINAL;
   BEGIN
@@ -340,7 +340,7 @@ PROCEDURE NoteCollectNewText8Chars
     END (* IF *) 
   END NoteCollectNewText8Chars;
 
-PROCEDURE NoteAllocText16Short (o :Text16Short.T) = 
+PROCEDURE NoteAllocText16Short (o: Text16Short.T) = 
   VAR Objs: REF ObjsInfo; 
   BEGIN
     IF TextClass.Old 
@@ -395,7 +395,7 @@ PROCEDURE NoteCollectNewText16Short
     END (* IF *) 
   END NoteCollectNewText16Short;
 
-PROCEDURE NoteAllocText16 (o :Text16.T) = 
+PROCEDURE NoteAllocText16 (o: Text16.T) = 
   VAR Objs: REF ObjsInfo; 
   BEGIN
     IF TextClass.Old 
@@ -447,7 +447,7 @@ PROCEDURE NoteCollectNewText16
     END (* IF *) 
   END NoteCollectNewText16;
 
-PROCEDURE NoteAllocText16Chars (o :REF ARRAY OF WIDECHAR) = 
+PROCEDURE NoteAllocText16Chars (o: REF ARRAY OF WIDECHAR) = 
   VAR Objs: REF ObjsInfo; 
   VAR size: CARDINAL;
   BEGIN
@@ -508,7 +508,7 @@ PROCEDURE NoteCollectNewText16Chars
     END (* IF *) 
   END NoteCollectNewText16Chars;
 
-PROCEDURE NoteAllocTextSub (o :TextSub.TT) = 
+PROCEDURE NoteAllocTextSub (o: TextSub.TT) = 
   VAR Objs: REF ObjsInfo; 
   BEGIN
     IF TextClass.Old 
@@ -560,7 +560,7 @@ PROCEDURE NoteCollectNewTextSub
     END (* IF *) 
   END NoteCollectNewTextSub;
 
-PROCEDURE NoteAllocTextCat (o :TextCat.T) = 
+PROCEDURE NoteAllocTextCat (o: TextCat.T) = 
   VAR Objs: REF ObjsInfo; 
   BEGIN
     IF TextClass.Old 
