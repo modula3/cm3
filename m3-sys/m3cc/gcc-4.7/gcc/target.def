@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Target hook definitions.
    Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
    2011, 2012
@@ -1810,40 +1812,6 @@ DEFHOOK
  tree, (tree valist, tree type, gimple_seq *pre_p, gimple_seq *post_p),
  std_gimplify_va_arg_expr)
 
-/* Validity-checking routines for PCH files, target-specific.
-   get_pch_validity returns a pointer to the data to be stored,
-   and stores the size in its argument.  pch_valid_p gets the same
-   information back and returns NULL if the PCH is valid,
-   or an error message if not.  */
-DEFHOOK
-(get_pch_validity,
- "",
- void *, (size_t *sz),
- default_get_pch_validity)
-
-DEFHOOK
-(pch_valid_p,
- "",
- const char *, (const void *data, size_t sz),
- default_pch_valid_p)
-
-DEFHOOK
-(prepare_pch_save,
- "Called before writing out a PCH file.  If the target has some\n\
-garbage-collected data that needs to be in a particular state on PCH loads,\n\
-it can use this hook to enforce that state.  Very few targets need\n\
-to do anything here.",
- void, (void),
- hook_void_void)
-
-/* If nonnull, this function checks whether a PCH file with the
-   given set of target flags can be used.  It returns NULL if so,
-   otherwise it returns an error message.  */
-DEFHOOK
-(check_pch_target_flags,
- "",
- const char *, (int pch_flags), NULL)
-
 /* True if the compiler should give an enum type only as many
    bytes as it takes to represent the range of possible values of
    that type.  */
@@ -2513,73 +2481,6 @@ DEFHOOK
  hook_tree_const_tree_null)
 
 HOOK_VECTOR_END (cxx)
-
-/* Functions and data for emulated TLS support.  */
-#undef HOOK_PREFIX
-#define HOOK_PREFIX "TARGET_EMUTLS_"
-HOOK_VECTOR (TARGET_EMUTLS, emutls)
-
-/* Name of the address and common functions.  */
-DEFHOOKPOD
-(get_address,
- "",
- const char *, "__builtin___emutls_get_address")
-
-DEFHOOKPOD
-(register_common,
- "",
- const char *, "__builtin___emutls_register_common")
-
-/* Prefixes for proxy variable and template.  */
-DEFHOOKPOD
-(var_section,
- "",
- const char *, NULL)
-
-DEFHOOKPOD
-(tmpl_section,
- "",
- const char *, NULL)
-
-/* Prefixes for proxy variable and template.  */
-DEFHOOKPOD
-(var_prefix,
- "",
- const char *, NULL)
-
-DEFHOOKPOD
-(tmpl_prefix,
- "",
- const char *, NULL)
-
-/* Function to generate field definitions of the proxy variable.  */
-DEFHOOK
-(var_fields,
- "",
- tree, (tree type, tree *name),
- default_emutls_var_fields)
-
-/* Function to initialize a proxy variable.  */
-DEFHOOK
-(var_init,
- "",
- tree, (tree var, tree decl, tree tmpl_addr),
- default_emutls_var_init)
-
-/* Whether we are allowed to alter the usual alignment of the
-   proxy variable.  */
-DEFHOOKPOD
-(var_align_fixed,
- "",
- bool, false)
-
-/* Whether we can emit debug information for TLS vars.  */
-DEFHOOKPOD
-(debug_form_tls_address,
- "",
- bool, false)
-
-HOOK_VECTOR_END (emutls)
 
 #undef HOOK_PREFIX
 #define HOOK_PREFIX "TARGET_OPTION_"

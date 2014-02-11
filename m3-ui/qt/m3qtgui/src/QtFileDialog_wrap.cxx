@@ -362,9 +362,9 @@ SWIGEXPORT void QFileDialog_selectNameFilter(QFileDialog * self, QString * filte
 }
 
 
-SWIGEXPORT QString *  QFileDialog_selectedNameFilter(QFileDialog const * self) {
+SWIGEXPORT QString * QFileDialog_selectedNameFilter(QFileDialog const * self) {
   QFileDialog *arg1 = (QFileDialog *) 0 ;
-  QString *  cresult ;
+  QString * cresult ;
   
   arg1 = *(QFileDialog **)&self; 
   *(QString **)&cresult = new QString((const QString &)((QFileDialog const *)arg1)->selectedNameFilter());
@@ -538,9 +538,9 @@ SWIGEXPORT void QFileDialog_setDefaultSuffix(QFileDialog * self, QString * suffi
 }
 
 
-SWIGEXPORT QString *  QFileDialog_defaultSuffix(QFileDialog const * self) {
+SWIGEXPORT QString * QFileDialog_defaultSuffix(QFileDialog const * self) {
   QFileDialog *arg1 = (QFileDialog *) 0 ;
-  QString *  cresult ;
+  QString * cresult ;
   
   arg1 = *(QFileDialog **)&self; 
   *(QString **)&cresult = new QString((const QString &)((QFileDialog const *)arg1)->defaultSuffix());
@@ -624,10 +624,10 @@ SWIGEXPORT void QFileDialog_setLabelText(QFileDialog * self, QFileDialog::Dialog
 }
 
 
-SWIGEXPORT QString *  QFileDialog_labelText(QFileDialog const * self, QFileDialog::DialogLabel label) {
+SWIGEXPORT QString * QFileDialog_labelText(QFileDialog const * self, QFileDialog::DialogLabel label) {
   QFileDialog *arg1 = (QFileDialog *) 0 ;
   QFileDialog::DialogLabel arg2 ;
-  QString *  cresult ;
+  QString * cresult ;
   
   arg1 = *(QFileDialog **)&self; 
   arg2 = (QFileDialog::DialogLabel)label; 
@@ -746,14 +746,14 @@ SWIGEXPORT void QFileDialog_setVisible(QFileDialog * self, bool visible) {
 }
 
 
-SWIGEXPORT QString *  GetOpenFileName(QWidget * parent, QString * caption, QString * dir, QString * filter, QString *  selectedFilter, Options options) {
+SWIGEXPORT QString * GetOpenFileName(QWidget * parent, QString * caption, QString * dir, QString * filter, QString * selectedFilter, Options options) {
   QWidget *arg1 = (QWidget *) 0 ;
   QString *arg2 = 0 ;
   QString *arg3 = 0 ;
   QString *arg4 = 0 ;
   QString *arg5 = (QString *) 0 ;
   Options arg6 ;
-  QString *  cresult ;
+  QString * cresult ;
   
   arg1 = *(QWidget **)&parent; 
   arg2 = *(QString **)&caption;
@@ -766,13 +766,13 @@ SWIGEXPORT QString *  GetOpenFileName(QWidget * parent, QString * caption, QStri
 }
 
 
-SWIGEXPORT QString *  GetOpenFileName1(QWidget * parent, QString * caption, QString * dir, QString * filter, QString *  selectedFilter) {
+SWIGEXPORT QString * GetOpenFileName1(QWidget * parent, QString * caption, QString * dir, QString * filter, QString * selectedFilter) {
   QWidget *arg1 = (QWidget *) 0 ;
   QString *arg2 = 0 ;
   QString *arg3 = 0 ;
   QString *arg4 = 0 ;
   QString *arg5 = (QString *) 0 ;
-  QString *  cresult ;
+  QString * cresult ;
   
   arg1 = *(QWidget **)&parent; 
   arg2 = *(QString **)&caption;
@@ -784,12 +784,12 @@ SWIGEXPORT QString *  GetOpenFileName1(QWidget * parent, QString * caption, QStr
 }
 
 
-SWIGEXPORT QString *  GetOpenFileName2(QWidget * parent, QString * caption, QString * dir, QString * filter) {
+SWIGEXPORT QString * GetOpenFileName2(QWidget * parent, QString * caption, QString * dir, QString * filter) {
   QWidget *arg1 = (QWidget *) 0 ;
   QString *arg2 = 0 ;
   QString *arg3 = 0 ;
   QString *arg4 = 0 ;
-  QString *  cresult ;
+  QString * cresult ;
   
   arg1 = *(QWidget **)&parent; 
   arg2 = *(QString **)&caption;
@@ -800,11 +800,11 @@ SWIGEXPORT QString *  GetOpenFileName2(QWidget * parent, QString * caption, QStr
 }
 
 
-SWIGEXPORT QString *  GetOpenFileName3(QWidget * parent, QString * caption, QString * dir) {
+SWIGEXPORT QString * GetOpenFileName3(QWidget * parent, QString * caption, QString * dir) {
   QWidget *arg1 = (QWidget *) 0 ;
   QString *arg2 = 0 ;
   QString *arg3 = 0 ;
-  QString *  cresult ;
+  QString * cresult ;
   
   arg1 = *(QWidget **)&parent; 
   arg2 = *(QString **)&caption;
@@ -814,10 +814,10 @@ SWIGEXPORT QString *  GetOpenFileName3(QWidget * parent, QString * caption, QStr
 }
 
 
-SWIGEXPORT QString *  GetOpenFileName4(QWidget * parent, QString * caption) {
+SWIGEXPORT QString * GetOpenFileName4(QWidget * parent, QString * caption) {
   QWidget *arg1 = (QWidget *) 0 ;
   QString *arg2 = 0 ;
-  QString *  cresult ;
+  QString * cresult ;
   
   arg1 = *(QWidget **)&parent; 
   arg2 = *(QString **)&caption;
@@ -826,9 +826,9 @@ SWIGEXPORT QString *  GetOpenFileName4(QWidget * parent, QString * caption) {
 }
 
 
-SWIGEXPORT QString *  GetOpenFileName5(QWidget * parent) {
+SWIGEXPORT QString * GetOpenFileName5(QWidget * parent) {
   QWidget *arg1 = (QWidget *) 0 ;
-  QString *  cresult ;
+  QString * cresult ;
   
   arg1 = *(QWidget **)&parent; 
   *(QString **)&cresult = new QString((const QString &)QFileDialog::getOpenFileName(arg1));
@@ -836,22 +836,22 @@ SWIGEXPORT QString *  GetOpenFileName5(QWidget * parent) {
 }
 
 
-SWIGEXPORT QString *  GetOpenFileName6() {
-  QString *  cresult ;
+SWIGEXPORT QString * GetOpenFileName6() {
+  QString * cresult ;
   
   *(QString **)&cresult = new QString((const QString &)QFileDialog::getOpenFileName());
   return cresult;
 }
 
 
-SWIGEXPORT QString *  GetSaveFileName(QWidget * parent, QString * caption, QString * dir, QString * filter, QString *  selectedFilter, Options options) {
+SWIGEXPORT QString * GetSaveFileName(QWidget * parent, QString * caption, QString * dir, QString * filter, QString * selectedFilter, Options options) {
   QWidget *arg1 = (QWidget *) 0 ;
   QString *arg2 = 0 ;
   QString *arg3 = 0 ;
   QString *arg4 = 0 ;
   QString *arg5 = (QString *) 0 ;
   Options arg6 ;
-  QString *  cresult ;
+  QString * cresult ;
   
   arg1 = *(QWidget **)&parent; 
   arg2 = *(QString **)&caption;
@@ -864,13 +864,13 @@ SWIGEXPORT QString *  GetSaveFileName(QWidget * parent, QString * caption, QStri
 }
 
 
-SWIGEXPORT QString *  GetSaveFileName1(QWidget * parent, QString * caption, QString * dir, QString * filter, QString *  selectedFilter) {
+SWIGEXPORT QString * GetSaveFileName1(QWidget * parent, QString * caption, QString * dir, QString * filter, QString * selectedFilter) {
   QWidget *arg1 = (QWidget *) 0 ;
   QString *arg2 = 0 ;
   QString *arg3 = 0 ;
   QString *arg4 = 0 ;
   QString *arg5 = (QString *) 0 ;
-  QString *  cresult ;
+  QString * cresult ;
   
   arg1 = *(QWidget **)&parent; 
   arg2 = *(QString **)&caption;
@@ -882,12 +882,12 @@ SWIGEXPORT QString *  GetSaveFileName1(QWidget * parent, QString * caption, QStr
 }
 
 
-SWIGEXPORT QString *  GetSaveFileName2(QWidget * parent, QString * caption, QString * dir, QString * filter) {
+SWIGEXPORT QString * GetSaveFileName2(QWidget * parent, QString * caption, QString * dir, QString * filter) {
   QWidget *arg1 = (QWidget *) 0 ;
   QString *arg2 = 0 ;
   QString *arg3 = 0 ;
   QString *arg4 = 0 ;
-  QString *  cresult ;
+  QString * cresult ;
   
   arg1 = *(QWidget **)&parent; 
   arg2 = *(QString **)&caption;
@@ -898,11 +898,11 @@ SWIGEXPORT QString *  GetSaveFileName2(QWidget * parent, QString * caption, QStr
 }
 
 
-SWIGEXPORT QString *  GetSaveFileName3(QWidget * parent, QString * caption, QString * dir) {
+SWIGEXPORT QString * GetSaveFileName3(QWidget * parent, QString * caption, QString * dir) {
   QWidget *arg1 = (QWidget *) 0 ;
   QString *arg2 = 0 ;
   QString *arg3 = 0 ;
-  QString *  cresult ;
+  QString * cresult ;
   
   arg1 = *(QWidget **)&parent; 
   arg2 = *(QString **)&caption;
@@ -912,10 +912,10 @@ SWIGEXPORT QString *  GetSaveFileName3(QWidget * parent, QString * caption, QStr
 }
 
 
-SWIGEXPORT QString *  GetSaveFileName4(QWidget * parent, QString * caption) {
+SWIGEXPORT QString * GetSaveFileName4(QWidget * parent, QString * caption) {
   QWidget *arg1 = (QWidget *) 0 ;
   QString *arg2 = 0 ;
-  QString *  cresult ;
+  QString * cresult ;
   
   arg1 = *(QWidget **)&parent; 
   arg2 = *(QString **)&caption;
@@ -924,9 +924,9 @@ SWIGEXPORT QString *  GetSaveFileName4(QWidget * parent, QString * caption) {
 }
 
 
-SWIGEXPORT QString *  GetSaveFileName5(QWidget * parent) {
+SWIGEXPORT QString * GetSaveFileName5(QWidget * parent) {
   QWidget *arg1 = (QWidget *) 0 ;
-  QString *  cresult ;
+  QString * cresult ;
   
   arg1 = *(QWidget **)&parent; 
   *(QString **)&cresult = new QString((const QString &)QFileDialog::getSaveFileName(arg1));
@@ -934,20 +934,20 @@ SWIGEXPORT QString *  GetSaveFileName5(QWidget * parent) {
 }
 
 
-SWIGEXPORT QString *  GetSaveFileName6() {
-  QString *  cresult ;
+SWIGEXPORT QString * GetSaveFileName6() {
+  QString * cresult ;
   
   *(QString **)&cresult = new QString((const QString &)QFileDialog::getSaveFileName());
   return cresult;
 }
 
 
-SWIGEXPORT QString *  GetExistingDirectory(QWidget * parent, QString * caption, QString * dir, Options options) {
+SWIGEXPORT QString * GetExistingDirectory(QWidget * parent, QString * caption, QString * dir, Options options) {
   QWidget *arg1 = (QWidget *) 0 ;
   QString *arg2 = 0 ;
   QString *arg3 = 0 ;
   Options arg4 ;
-  QString *  cresult ;
+  QString * cresult ;
   
   arg1 = *(QWidget **)&parent; 
   arg2 = *(QString **)&caption;
@@ -958,11 +958,11 @@ SWIGEXPORT QString *  GetExistingDirectory(QWidget * parent, QString * caption, 
 }
 
 
-SWIGEXPORT QString *  GetExistingDirectory1(QWidget * parent, QString * caption, QString * dir) {
+SWIGEXPORT QString * GetExistingDirectory1(QWidget * parent, QString * caption, QString * dir) {
   QWidget *arg1 = (QWidget *) 0 ;
   QString *arg2 = 0 ;
   QString *arg3 = 0 ;
-  QString *  cresult ;
+  QString * cresult ;
   
   arg1 = *(QWidget **)&parent; 
   arg2 = *(QString **)&caption;
@@ -972,10 +972,10 @@ SWIGEXPORT QString *  GetExistingDirectory1(QWidget * parent, QString * caption,
 }
 
 
-SWIGEXPORT QString *  GetExistingDirectory2(QWidget * parent, QString * caption) {
+SWIGEXPORT QString * GetExistingDirectory2(QWidget * parent, QString * caption) {
   QWidget *arg1 = (QWidget *) 0 ;
   QString *arg2 = 0 ;
-  QString *  cresult ;
+  QString * cresult ;
   
   arg1 = *(QWidget **)&parent; 
   arg2 = *(QString **)&caption;
@@ -984,9 +984,9 @@ SWIGEXPORT QString *  GetExistingDirectory2(QWidget * parent, QString * caption)
 }
 
 
-SWIGEXPORT QString *  GetExistingDirectory3(QWidget * parent) {
+SWIGEXPORT QString * GetExistingDirectory3(QWidget * parent) {
   QWidget *arg1 = (QWidget *) 0 ;
-  QString *  cresult ;
+  QString * cresult ;
   
   arg1 = *(QWidget **)&parent; 
   *(QString **)&cresult = new QString((const QString &)QFileDialog::getExistingDirectory(arg1));
@@ -994,15 +994,15 @@ SWIGEXPORT QString *  GetExistingDirectory3(QWidget * parent) {
 }
 
 
-SWIGEXPORT QString *  GetExistingDirectory4() {
-  QString *  cresult ;
+SWIGEXPORT QString * GetExistingDirectory4() {
+  QString * cresult ;
   
   *(QString **)&cresult = new QString((const QString &)QFileDialog::getExistingDirectory());
   return cresult;
 }
 
 
-SWIGEXPORT QStringList * GetOpenFileNames(QWidget * parent, QString * caption, QString * dir, QString * filter, QString *  selectedFilter, Options options) {
+SWIGEXPORT QStringList * GetOpenFileNames(QWidget * parent, QString * caption, QString * dir, QString * filter, QString * selectedFilter, Options options) {
   QWidget *arg1 = (QWidget *) 0 ;
   QString *arg2 = 0 ;
   QString *arg3 = 0 ;
@@ -1022,7 +1022,7 @@ SWIGEXPORT QStringList * GetOpenFileNames(QWidget * parent, QString * caption, Q
 }
 
 
-SWIGEXPORT QStringList * GetOpenFileNames1(QWidget * parent, QString * caption, QString * dir, QString * filter, QString *  selectedFilter) {
+SWIGEXPORT QStringList * GetOpenFileNames1(QWidget * parent, QString * caption, QString * dir, QString * filter, QString * selectedFilter) {
   QWidget *arg1 = (QWidget *) 0 ;
   QString *arg2 = 0 ;
   QString *arg3 = 0 ;

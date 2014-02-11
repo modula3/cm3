@@ -243,12 +243,12 @@ SWIGEXPORT bool QAbstractItemDelegate_editorEvent(QAbstractItemDelegate * self, 
 }
 
 
-SWIGEXPORT QString *  ElidedText(QFontMetrics * fontMetrics, int width, Qt::TextElideMode mode, QString * text) {
+SWIGEXPORT QString * ElidedText(QFontMetrics * fontMetrics, int width, Qt::TextElideMode mode, QString * text) {
   QFontMetrics *arg1 = 0 ;
   int arg2 ;
   Qt::TextElideMode arg3 ;
   QString *arg4 = 0 ;
-  QString *  cresult ;
+  QString * cresult ;
   
   arg1 = *(QFontMetrics **)&fontMetrics;
   arg2 = (int)width; 

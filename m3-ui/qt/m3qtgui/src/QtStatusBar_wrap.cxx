@@ -331,9 +331,9 @@ SWIGEXPORT bool QStatusBar_isSizeGripEnabled(QStatusBar const * self) {
 }
 
 
-SWIGEXPORT QString *  QStatusBar_currentMessage(QStatusBar const * self) {
+SWIGEXPORT QString * QStatusBar_currentMessage(QStatusBar const * self) {
   QStatusBar *arg1 = (QStatusBar *) 0 ;
-  QString *  cresult ;
+  QString * cresult ;
   
   arg1 = *(QStatusBar **)&self; 
   *(QString **)&cresult = new QString((const QString &)((QStatusBar const *)arg1)->currentMessage());

@@ -22,6 +22,42 @@ end
 
 %-------------------------------------------------------------------
 
+if USE_C_BACKEND_VIA_M3CGCAT
+M3_BACKEND_MODE = "ExternalObject"
+
+proc m3_backend(source, object, optimize, debug) is
+    ret_code = try_exec("@m3cgcat", "-in-binary:" & source, "-out-c:" & source & ".c")
+    if not equal(ret_code, 0)
+        return ret_code
+    end
+    return compile_c(source & ".c", object, [ ], FALSE, TRUE)
+end
+end
+
+%------------------------------------------------------------------------------
+
+if not defined ("M3_BACKEND_MODE")
+    M3_BACKEND_MODE = "3"
+    % -- defines how the frontend, backend, and assembler interact
+    %  "0"  -- don't call m3_backend, M3CG produces object code
+    %  "1"  -- don't call m3_backend, M3CG produces assembly code
+    %  "2"  -- call m3_backend, it produces object code
+    %  "3"  -- call m3_backend, it produces assembly code
+    %  "C"  -- use C backend, and then compile with compile_c()
+end
+
+%------------------------------------------------------------------------------
+
+if equal(M3_BACKEND_MODE, "IntegratedC")
+        or equal(M3_BACKEND_MODE, "C")
+        or USE_C_BACKEND_VIA_M3CGCAT
+    readonly BUILD_DIR_C = "c"
+else
+    readonly BUILD_DIR_C = ""
+end
+
+%------------------------------------------------------------------------------
+
 if not defined("PROFILING_P")
     if M3_PROFILING
         readonly PROFILING_P = "p"
@@ -31,7 +67,7 @@ if not defined("PROFILING_P")
 end
 
 if not defined("BUILD_DIR")
-    readonly BUILD_DIR    = TARGET & PROFILING_P % directory for results
+    readonly BUILD_DIR    = TARGET & PROFILING_P & BUILD_DIR_C % directory for results
 end
 
 %------------------------------------------------------------------------------
@@ -115,6 +151,50 @@ proc DeleteFiles(a) is
     foreach b in a
         DeleteFile(b)
     end
+end
+
+%------------------------------------------------------------------------------
+
+readonly proc JoinPath(a, b) is
+    a = subst_chars(a, "/", SL)
+    b = subst_chars(b, "\\", SL)
+    if a and b return a & SL & b end
+    if b return b end
+    if a return a end
+end
+
+%------------------------------------------------------------------------------
+
+readonly proc ChoseFile(a) is
+% given a list of files, return the first that exists
+    foreach c in a        
+        if FileExists(c)
+            return c
+        end
+    end
+    return ""
+end
+
+%------------------------------------------------------------------------------
+
+readonly proc GetLastPathElement(path) is
+    local cur = ""
+    foreach elt in split(path, SL)
+        cur = elt
+    end
+    return cur
+end
+
+%------------------------------------------------------------------------------
+
+readonly proc RemoveLastPathElement(path) is
+    local cur = ""
+    local prev = ""
+    foreach elt in split(path, SL)
+        prev = cur
+        cur = JoinPath(prev, elt)
+    end
+    return prev
 end
 
 %------------------------------------------------------------------------------
@@ -440,29 +520,7 @@ X11_WITH_SHARED_MEM = TRUE
 % they can be set "permanently" here in the config file or in as needed
 % in user's m3makefiles.
 
-if USE_C_BACKEND_VIA_M3CGCAT
-
-M3_BACKEND_MODE = "ExternalObject"
-
-proc m3_backend(source, object, optimize, debug) is
-    ret_code = try_exec("@m3cgcat", "-in-binary:" & source, "-out-c:" & source & ".c")
-    if not equal(ret_code, 0)
-        return ret_code
-    end
-    return compile_c(source & ".c", object, [ ], FALSE, TRUE)
-end
-
-end
-
-if not defined ("M3_BACKEND_MODE")
-    M3_BACKEND_MODE = "3"
-    % -- defines how the frontend, backend, and assembler interact
-    %  "0"  -- don't call m3_backend, M3CG produces object code
-    %  "1"  -- don't call m3_backend, M3CG produces assembly code
-    %  "2"  -- call m3_backend, it produces object code
-    %  "3"  -- call m3_backend, it produces assembly code
-    %  "C"  -- use C backend, and then compile with compile_c()
-end
+M3_FRONT_FLAGS = [ ]
 
 % --- internal configuration options passed directly to the Modula-3 front-end
 if equal(M3_BACKEND_MODE, "0") or equal(M3_BACKEND_MODE, "1")
@@ -471,9 +529,9 @@ if equal(M3_BACKEND_MODE, "0") or equal(M3_BACKEND_MODE, "1")
         or equal(M3_BACKEND_MODE, "IntegratedC")
         or equal(M3_BACKEND_MODE, "C")
         or USE_C_BACKEND_VIA_M3CGCAT
+    % M3_FRONT_FLAGS += ["-unfold_nested_procs"]
+    % M3_FRONT_FLAGS += ["-check_procs" ]
     M3_FRONT_FLAGS = ["-unfold_nested_procs", "-check_procs" ]
-else
-    M3_FRONT_FLAGS = [ ]
 end
 
 M3_OPTIONS = [ ]

@@ -1181,9 +1181,9 @@ SWIGEXPORT void QWidget_setStyleSheet(QWidget * self, QString * styleSheet) {
 }
 
 
-SWIGEXPORT QString *  QWidget_styleSheet(QWidget const * self) {
+SWIGEXPORT QString * QWidget_styleSheet(QWidget const * self) {
   QWidget *arg1 = (QWidget *) 0 ;
-  QString *  cresult ;
+  QString * cresult ;
   
   arg1 = *(QWidget **)&self; 
   *(QString **)&cresult = new QString((const QString &)((QWidget const *)arg1)->styleSheet());
@@ -1191,9 +1191,9 @@ SWIGEXPORT QString *  QWidget_styleSheet(QWidget const * self) {
 }
 
 
-SWIGEXPORT QString *  QWidget_windowTitle(QWidget const * self) {
+SWIGEXPORT QString * QWidget_windowTitle(QWidget const * self) {
   QWidget *arg1 = (QWidget *) 0 ;
-  QString *  cresult ;
+  QString * cresult ;
   
   arg1 = *(QWidget **)&self; 
   *(QString **)&cresult = new QString((const QString &)((QWidget const *)arg1)->windowTitle());
@@ -1221,9 +1221,9 @@ SWIGEXPORT void QWidget_setWindowIconText(QWidget * self, QString * m3arg2) {
 }
 
 
-SWIGEXPORT QString *  QWidget_windowIconText(QWidget const * self) {
+SWIGEXPORT QString * QWidget_windowIconText(QWidget const * self) {
   QWidget *arg1 = (QWidget *) 0 ;
-  QString *  cresult ;
+  QString * cresult ;
   
   arg1 = *(QWidget **)&self; 
   *(QString **)&cresult = new QString((const QString &)((QWidget const *)arg1)->windowIconText());
@@ -1241,9 +1241,9 @@ SWIGEXPORT void QWidget_setWindowRole(QWidget * self, QString * m3arg2) {
 }
 
 
-SWIGEXPORT QString *  QWidget_windowRole(QWidget const * self) {
+SWIGEXPORT QString * QWidget_windowRole(QWidget const * self) {
   QWidget *arg1 = (QWidget *) 0 ;
-  QString *  cresult ;
+  QString * cresult ;
   
   arg1 = *(QWidget **)&self; 
   *(QString **)&cresult = new QString((const QString &)((QWidget const *)arg1)->windowRole());
@@ -1261,9 +1261,9 @@ SWIGEXPORT void QWidget_setWindowFilePath(QWidget * self, QString * filePath) {
 }
 
 
-SWIGEXPORT QString *  QWidget_windowFilePath(QWidget const * self) {
+SWIGEXPORT QString * QWidget_windowFilePath(QWidget const * self) {
   QWidget *arg1 = (QWidget *) 0 ;
-  QString *  cresult ;
+  QString * cresult ;
   
   arg1 = *(QWidget **)&self; 
   *(QString **)&cresult = new QString((const QString &)((QWidget const *)arg1)->windowFilePath());
@@ -1315,9 +1315,9 @@ SWIGEXPORT void QWidget_setToolTip(QWidget * self, QString * m3arg2) {
 }
 
 
-SWIGEXPORT QString *  QWidget_toolTip(QWidget const * self) {
+SWIGEXPORT QString * QWidget_toolTip(QWidget const * self) {
   QWidget *arg1 = (QWidget *) 0 ;
-  QString *  cresult ;
+  QString * cresult ;
   
   arg1 = *(QWidget **)&self; 
   *(QString **)&cresult = new QString((const QString &)((QWidget const *)arg1)->toolTip());
@@ -1335,9 +1335,9 @@ SWIGEXPORT void QWidget_setStatusTip(QWidget * self, QString * m3arg2) {
 }
 
 
-SWIGEXPORT QString *  QWidget_statusTip(QWidget const * self) {
+SWIGEXPORT QString * QWidget_statusTip(QWidget const * self) {
   QWidget *arg1 = (QWidget *) 0 ;
-  QString *  cresult ;
+  QString * cresult ;
   
   arg1 = *(QWidget **)&self; 
   *(QString **)&cresult = new QString((const QString &)((QWidget const *)arg1)->statusTip());
@@ -1355,9 +1355,9 @@ SWIGEXPORT void QWidget_setWhatsThis(QWidget * self, QString * m3arg2) {
 }
 
 
-SWIGEXPORT QString *  QWidget_whatsThis(QWidget const * self) {
+SWIGEXPORT QString * QWidget_whatsThis(QWidget const * self) {
   QWidget *arg1 = (QWidget *) 0 ;
-  QString *  cresult ;
+  QString * cresult ;
   
   arg1 = *(QWidget **)&self; 
   *(QString **)&cresult = new QString((const QString &)((QWidget const *)arg1)->whatsThis());
@@ -1365,9 +1365,9 @@ SWIGEXPORT QString *  QWidget_whatsThis(QWidget const * self) {
 }
 
 
-SWIGEXPORT QString *  QWidget_accessibleName(QWidget const * self) {
+SWIGEXPORT QString * QWidget_accessibleName(QWidget const * self) {
   QWidget *arg1 = (QWidget *) 0 ;
-  QString *  cresult ;
+  QString * cresult ;
   
   arg1 = *(QWidget **)&self; 
   *(QString **)&cresult = new QString((const QString &)((QWidget const *)arg1)->accessibleName());
@@ -1385,9 +1385,9 @@ SWIGEXPORT void QWidget_setAccessibleName(QWidget * self, QString * name) {
 }
 
 
-SWIGEXPORT QString *  QWidget_accessibleDescription(QWidget const * self) {
+SWIGEXPORT QString * QWidget_accessibleDescription(QWidget const * self) {
   QWidget *arg1 = (QWidget *) 0 ;
-  QString *  cresult ;
+  QString * cresult ;
   
   arg1 = *(QWidget **)&self; 
   *(QString **)&cresult = new QString((const QString &)((QWidget const *)arg1)->accessibleDescription());

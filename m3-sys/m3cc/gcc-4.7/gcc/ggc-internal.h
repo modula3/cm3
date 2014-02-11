@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Garbage collection for the GNU compiler.  Internal definitions
    for ggc-*.c and stringpool.c.
 
@@ -34,60 +36,6 @@ extern void ggc_mark_stringpool	(void);
 
 /* Purge the entries in the string pool.  */
 extern void ggc_purge_stringpool (void);
-
-/* Save and restore the string pool entries for PCH.  */
-
-extern void gt_pch_save_stringpool (void);
-extern void gt_pch_fixup_stringpool (void);
-extern void gt_pch_restore_stringpool (void);
-
-/* PCH and GGC handling for strings, mostly trivial.  */
-extern void gt_pch_p_S (void *, void *, gt_pointer_operator, void *);
-
-/* PCH.  */
-
-struct ggc_pch_data;
-
-/* Return a new ggc_pch_data structure.  */
-extern struct ggc_pch_data *init_ggc_pch (void);
-
-/* The second parameter and third parameters give the address and size
-   of an object.  Update the ggc_pch_data structure with as much of
-   that information as is necessary. The bool argument should be true
-   if the object is a string.  */
-extern void ggc_pch_count_object (struct ggc_pch_data *, void *, size_t, bool,
-				  enum gt_types_enum);
-
-/* Return the total size of the data to be written to hold all
-   the objects previously passed to ggc_pch_count_object.  */
-extern size_t ggc_pch_total_size (struct ggc_pch_data *);
-
-/* The objects, when read, will most likely be at the address
-   in the second parameter.  */
-extern void ggc_pch_this_base (struct ggc_pch_data *, void *);
-
-/* Assuming that the objects really do end up at the address
-   passed to ggc_pch_this_base, return the address of this object.
-   The bool argument should be true if the object is a string.  */
-extern char *ggc_pch_alloc_object (struct ggc_pch_data *, void *, size_t, bool,
-				   enum gt_types_enum);
-
-/* Write out any initial information required.  */
-extern void ggc_pch_prepare_write (struct ggc_pch_data *, FILE *);
-
-/* Write out this object, including any padding.  The last argument should be
-   true if the object is a string.  */
-extern void ggc_pch_write_object (struct ggc_pch_data *, FILE *, void *,
-				  void *, size_t, bool);
-
-/* All objects have been written, write out any final information
-   required.  */
-extern void ggc_pch_finish (struct ggc_pch_data *, FILE *);
-
-/* A PCH file has just been read in at the address specified second
-   parameter.  Set up the GC implementation for the new objects.  */
-extern void ggc_pch_read (FILE *, void *);
-
 
 /* Allocation and collection.  */
 

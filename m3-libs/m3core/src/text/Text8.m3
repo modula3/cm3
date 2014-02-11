@@ -5,7 +5,7 @@ UNSAFE MODULE Text8;
 
 IMPORT TextClass, Text8Short;
 
-IMPORT TextStats;
+(*47 IMPORT TextStats; 74*)
 
 REVEAL
   T = Public BRANDED "Text8.T" OBJECT OVERRIDES
@@ -28,8 +28,8 @@ PROCEDURE Create (n: CARDINAL): T =
   BEGIN
     t.contents := NEW (REF ARRAY OF CHAR, n + 1);
     t.contents[n] := '\000';
-    TextStats.NoteAllocText8(t);
-    TextStats.NoteAllocText8Chars(t.contents);
+    (*47 TextStats.NoteAllocText8(t); 74*)
+    (*47 TextStats.NoteAllocText8Chars(t.contents); 74*)
     RETURN t;
   END Create;
 

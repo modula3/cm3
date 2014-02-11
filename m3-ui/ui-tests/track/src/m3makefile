@@ -6,10 +6,10 @@
 /*      modified on Thu May 20 12:12:41 PDT 1993 by msm                      */
 /*      modified on Fri Apr 30-ip5:08:06 PDT 1993 by mjordan                  */
 
-import(ui)
+import("ui")
 
-implementation(Track)
+implementation("Track")
 
-program(Track)
+program("Track")
 
 

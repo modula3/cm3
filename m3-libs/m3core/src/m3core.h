@@ -331,7 +331,7 @@ typedef unsigned long      UINT32;
 #else
 #error unable to find 32bit integer
 #endif
-#if defined(_MSC_VER) || defined(__DECC)
+#if defined(_MSC_VER) || defined(__DECC) || defined(__DECCXX) || defined(__int64)
 typedef   signed __int64    INT64;
 typedef unsigned __int64   UINT64;
 #else
@@ -343,11 +343,10 @@ typedef float REAL;
 typedef double LONGREAL;
 typedef double EXTENDED;
 #if defined(__cplusplus) || __STDC__
-typedef void* PVOID;
+typedef void* ADDRESS;
 #else
-typedef char* PVOID;
+typedef char* ADDRESS;
 #endif
-typedef PVOID ADDRESS;
 typedef ADDRESS TEXT;
 typedef ADDRESS MUTEX;
 

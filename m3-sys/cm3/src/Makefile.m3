@@ -5,8 +5,7 @@ MODULE Makefile;
 
 IMPORT FS, M3File, M3Timers, OSError, Params, Process, Text, Thread, Wr;
 IMPORT Arg, M3Build, M3Options, M3Path, Msg, Utils, TextSeq, TextTextTbl;
-IMPORT MxConfig;
-IMPORT Dirs, Version;
+IMPORT MxConfig, Dirs, Version;
 
 TYPE
   NK = M3Path.Kind;
@@ -344,7 +343,10 @@ PROCEDURE ProcessDefine (arg: TEXT;  wr: Wr.T)
     eq := Text.FindChar (arg, '=');
     IF (eq < 0) THEN
       (* -Dsymbol ==>  symbol = TRUE *)
-      Out (wr, Text.Sub (arg, 2), " = TRUE");
+      EVAL defs.put(Text.Sub (arg, 2), "TRUE");
+      IF wr # NIL THEN
+        Out (wr, Text.Sub (arg, 2), " = TRUE");
+      END;
       RETURN;
     END;
 
@@ -352,22 +354,42 @@ PROCEDURE ProcessDefine (arg: TEXT;  wr: Wr.T)
     val := Text.Sub (arg, eq+1);
     len := Text.Length (val);
 
+    EVAL defs.put(sym, val);
+    
+    (* CONSIDER: removing the rest of this function is reasonable.
+     The upside is, m3make.args won't get errors redefining readonly values.
+     The downside is that cm3 -keep leaves less evidence, in m3make.args.
+     Since we are leaving the writes in, we change Quake to allow redefining
+     readonly values, if they are set to the same thing they are already set to.
+     e.g.:
+       readonly foo = 1
+       foo = 2 % same error as usual
+       readonly foo = 1
+       foo = 1 % ok
+     *)
     IF (len = 0) THEN
       (* -Dsymbol=   ==> symbol = "" *)
-      Out (wr, sym, " = \"\"");
+      IF wr # NIL THEN
+        Out (wr, sym, " = \"\"");
+      END;
 
     ELSIF Text.GetChar (arg, 0) = '"'
       AND Text.GetChar (arg, len-1) = '"' THEN
       (* -Dsymbol="foo" ==> symbol = "foo" *)
-      Out (wr, sym, " = ", val);
+      IF wr # NIL THEN
+        Out (wr, sym, " = ", val);
+      END;
 
     ELSIF Text.Equal (val, "TRUE") OR Text.Equal (val, "FALSE") THEN
-      Out (wr, sym, " = ", val);
+      IF wr # NIL THEN
+        Out (wr, sym, " = ", val);
+      END;
 
     ELSE
       (* -Dsymbol=val  ==> symbol = "val" *)
-      Out (wr, sym, " = \"", val, "\"");
-
+      IF wr # NIL THEN
+        Out (wr, sym, " = \"", val, "\"");
+      END;
     END;
   END ProcessDefine;
 
@@ -514,9 +536,12 @@ PROCEDURE IncludeMakefile (VAR s: State;  makefile, dir: TEXT)
 
 (*----------------------------------------- pre-scan command line ---*)
 
-PROCEDURE ScanCommandLine1 () =
-  VAR arg: TEXT;
+PROCEDURE ScanCommandLine () : TextTextTbl.T RAISES {Wr.Failure, Thread.Alerted} =
+  VAR
+    use_overrides := FALSE;
+    got_mode := FALSE;  arg: TEXT;
   BEGIN
+
     FOR i := 1 TO Params.Count-1 DO
       arg := Params.Get (i);
       IF Text.Length(arg) > 1 AND Text.GetChar (arg, 1) = '-' THEN
@@ -528,13 +553,7 @@ PROCEDURE ScanCommandLine1 () =
       ELSIF Text.Equal (arg, "-version")   THEN  PrintVersion (TRUE);
       END;
     END;
-  END ScanCommandLine1;
 
-PROCEDURE ScanCommandLine2 () : TextTextTbl.T =
-  VAR
-    use_overrides := FALSE;
-    got_mode := FALSE;  arg: TEXT;
-  BEGIN
     FOR i := 1 TO Params.Count-1 DO
       arg := Params.Get (i);
       IF Text.Length(arg) > 1 AND Text.GetChar (arg, 1) = '-' THEN
@@ -569,12 +588,14 @@ PROCEDURE ScanCommandLine2 () : TextTextTbl.T =
         ELSE
           Msg.Error(NIL, "missing argument for -pretend");
         END;
+      ELSIF Text.GetChar(arg, 0) = '-' AND Text.GetChar(arg, 1) = 'D' THEN
+        ProcessDefine(arg, NIL);
       END;
     END;
     IF got_mode = FALSE THEN SetMode (got_mode, MM.Build); END;
     EVAL defs.put("M3_USE_OVERRIDES", ARRAY BOOLEAN OF TEXT {"", "TRUE"}[use_overrides]);
     RETURN defs;
-  END ScanCommandLine2;
+  END ScanCommandLine;
 
 PROCEDURE SetMode (VAR got_mode: BOOLEAN;  mode: MM) =
   BEGIN

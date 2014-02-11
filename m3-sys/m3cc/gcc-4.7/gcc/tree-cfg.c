@@ -511,8 +511,7 @@ fold_cond_expr_cond (void)
 static void
 make_edges (void)
 {
-  basic_block bb;
-  struct omp_region *cur_region = NULL;
+  basic_block bb = { 0 };
 
   /* Create an edge from entry to the first block with executable
      statements in it.  */
@@ -585,99 +584,6 @@ make_edges (void)
 	      fallthru = true;
 	      break;
 
-	    case GIMPLE_OMP_PARALLEL:
-	    case GIMPLE_OMP_TASK:
-	    case GIMPLE_OMP_FOR:
-	    case GIMPLE_OMP_SINGLE:
-	    case GIMPLE_OMP_MASTER:
-	    case GIMPLE_OMP_ORDERED:
-	    case GIMPLE_OMP_CRITICAL:
-	    case GIMPLE_OMP_SECTION:
-	      cur_region = new_omp_region (bb, code, cur_region);
-	      fallthru = true;
-	      break;
-
-	    case GIMPLE_OMP_SECTIONS:
-	      cur_region = new_omp_region (bb, code, cur_region);
-	      fallthru = true;
-	      break;
-
-	    case GIMPLE_OMP_SECTIONS_SWITCH:
-	      fallthru = false;
-	      break;
-
-            case GIMPLE_OMP_ATOMIC_LOAD:
-            case GIMPLE_OMP_ATOMIC_STORE:
-               fallthru = true;
-               break;
-
-	    case GIMPLE_OMP_RETURN:
-	      /* In the case of a GIMPLE_OMP_SECTION, the edge will go
-		 somewhere other than the next block.  This will be
-		 created later.  */
-	      cur_region->exit = bb;
-	      fallthru = cur_region->type != GIMPLE_OMP_SECTION;
-	      cur_region = cur_region->outer;
-	      break;
-
-	    case GIMPLE_OMP_CONTINUE:
-	      cur_region->cont = bb;
-	      switch (cur_region->type)
-		{
-		case GIMPLE_OMP_FOR:
-		  /* Mark all GIMPLE_OMP_FOR and GIMPLE_OMP_CONTINUE
-		     succs edges as abnormal to prevent splitting
-		     them.  */
-		  single_succ_edge (cur_region->entry)->flags |= EDGE_ABNORMAL;
-		  /* Make the loopback edge.  */
-		  make_edge (bb, single_succ (cur_region->entry),
-			     EDGE_ABNORMAL);
-
-		  /* Create an edge from GIMPLE_OMP_FOR to exit, which
-		     corresponds to the case that the body of the loop
-		     is not executed at all.  */
-		  make_edge (cur_region->entry, bb->next_bb, EDGE_ABNORMAL);
-		  make_edge (bb, bb->next_bb, EDGE_FALLTHRU | EDGE_ABNORMAL);
-		  fallthru = false;
-		  break;
-
-		case GIMPLE_OMP_SECTIONS:
-		  /* Wire up the edges into and out of the nested sections.  */
-		  {
-		    basic_block switch_bb = single_succ (cur_region->entry);
-
-		    struct omp_region *i;
-		    for (i = cur_region->inner; i ; i = i->next)
-		      {
-			gcc_assert (i->type == GIMPLE_OMP_SECTION);
-			make_edge (switch_bb, i->entry, 0);
-			make_edge (i->exit, bb, EDGE_FALLTHRU);
-		      }
-
-		    /* Make the loopback edge to the block with
-		       GIMPLE_OMP_SECTIONS_SWITCH.  */
-		    make_edge (bb, switch_bb, 0);
-
-		    /* Make the edge from the switch to exit.  */
-		    make_edge (switch_bb, bb->next_bb, 0);
-		    fallthru = false;
-		  }
-		  break;
-
-		default:
-		  gcc_unreachable ();
-		}
-	      break;
-
-	    case GIMPLE_TRANSACTION:
-	      {
-		tree abort_label = gimple_transaction_label (last);
-		if (abort_label)
-		  make_edge (bb, label_to_block (abort_label), 0);
-		fallthru = true;
-	      }
-	      break;
-
 	    default:
 	      gcc_assert (!stmt_ends_bb_p (last));
 	      fallthru = true;
@@ -693,9 +599,6 @@ make_edges (void)
             assign_discriminator (gimple_location (last), bb->next_bb);
 	}
     }
-
-  if (root_omp_region)
-    free_omp_regions ();
 
   /* Fold COND_EXPR_COND of each COND_EXPR.  */
   fold_cond_expr_cond ();
@@ -2351,13 +2254,6 @@ is_ctrl_altering_stmt (gimple t)
 
 	/* A call also alters control flow if it does not return.  */
 	if (flags & ECF_NORETURN)
-	  return true;
-
-	/* TM ending statements have backedges out of the transaction.
-	   Return true so we split the basic block containing them.
-	   Note that the TM_BUILTIN test is merely an optimization.  */
-	if ((flags & ECF_TM_BUILTIN)
-	    && is_tm_ending_fndecl (gimple_call_fndecl (t)))
 	  return true;
 
 	/* BUILT_IN_RETURN call is same as return statement.  */

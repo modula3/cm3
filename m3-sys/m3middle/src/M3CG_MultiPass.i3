@@ -34,6 +34,8 @@ METHODS
         cg: M3CG.T;
         VAR index: INTEGER;
         data: REF ARRAY OF op_t := NIL;
+        start := 0;
+        end := LAST(INTEGER); (* one past end *)
         );
     Init(): T;
 END;

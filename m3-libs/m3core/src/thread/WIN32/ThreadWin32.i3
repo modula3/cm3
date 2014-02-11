@@ -9,8 +9,8 @@ UNSAFE INTERFACE ThreadWin32;
 
 FROM ThreadF IMPORT State;
 FROM ThreadContext IMPORT PCONTEXT;
-FROM WinBase IMPORT CRITICAL_SECTION, TLS_OUT_OF_INDEXES;
-FROM WinNT IMPORT UCHAR, UINT32, MEMORY_BASIC_INFORMATION;
+FROM WinBase IMPORT PCRITICAL_SECTION, CRITICAL_SECTION;
+FROM WinNT IMPORT UINT32;
 
 (*---------------------------------------------------------------------------*)
 
@@ -60,23 +60,24 @@ PROCEDURE DeleteContext(a: ADDRESS);
 
 (*---------------------------------------------------------------------------*)
 
-TYPE ClonedHeaderCheckField_t = RECORD
-    offset: UCHAR;
-    size: UCHAR;
-END;
+<*EXTERNAL ThreadWin32__GetStackBounds*>
+PROCEDURE GetStackBounds(VAR start: ADDRESS; VAR end: ADDRESS);
 
-TYPE PClonedHeaderCheck_t = UNTRACED REF ClonedHeaderCheck_t;
-TYPE ClonedHeaderCheck_t = RECORD
-    TlsOutOfIndexes: UINT32 := TLS_OUT_OF_INDEXES;
-    sizeof_CRITICAL_SECTION: UCHAR := BYTESIZE(CRITICAL_SECTION);
-    sizeof_MEMORY_BASIC_INFORMATION: UCHAR := BYTESIZE(MEMORY_BASIC_INFORMATION);
-    MEMORY_BASIC_INFORMATION_AllocationBase: ClonedHeaderCheckField_t;
-    MEMORY_BASIC_INFORMATION_BaseAddress: ClonedHeaderCheckField_t;
-    MEMORY_BASIC_INFORMATION_RegionSize: ClonedHeaderCheckField_t;
-END;
+<*EXTERNAL ThreadWin32__NewCriticalSection*>
+PROCEDURE NewCriticalSection(): PCRITICAL_SECTION;
 
-<*EXTERNAL ThreadWin32__ClonedHeaderCheck*>
-PROCEDURE ClonedHeaderCheck(a: PClonedHeaderCheck_t; b: INTEGER);
+<*EXTERNAL ThreadWin32__DelCriticalSection*>
+PROCEDURE DelCriticalSection(VAR a:PCRITICAL_SECTION);
+
+(*CONST*)
+<*EXTERNAL ThreadWin32__TLS_OUT_OF_INDEXES*> VAR TLS_OUT_OF_INDEXES: UINT32;
+<*EXTERNAL ThreadWin32__WAIT_OBJECT_0*> VAR WAIT_OBJECT_0: UINT32;
+<*EXTERNAL ThreadWin32__WAIT_TIMEOUT*> VAR WAIT_TIMEOUT: UINT32;
+<*EXTERNAL ThreadWin32__CREATE_SUSPENDED*> VAR CREATE_SUSPENDED: UINT32;
+<*EXTERNAL ThreadWin32__DUPLICATE_SAME_ACCESS*> VAR DUPLICATE_SAME_ACCESS: UINT32;
+<*EXTERNAL ThreadWin32__INFINITE*> VAR INFINITE: UINT32;
+
+<*EXTERNAL ThreadWin32__threadIndex*> VAR threadIndex: UINT32;
 
 (*----------------------------------------------------- for SchedulerPosix --*)
 

@@ -37,11 +37,12 @@ cat > ${INDEX} << EOF
 
 EOF
 
+chmod -x *.msi *.zip *.gz
 # echo $TARGETS
 for t in ${TARGETS}; do
   echo "1$t" >> 1.txt
   if [ $t = NT386 ]; then
-    all=`ls -1t cm3*msi cm3*zip cm3-*${t}-* 2>/dev/null | sort`
+    all=`ls -1t cm3*msi cm3*zip cm3-*${t}-* 2>/dev/null | grep -v AMD64 | sort`
   else
     all=`ls -1t cm3-*${t}-* 2>/dev/null | sort`
   fi

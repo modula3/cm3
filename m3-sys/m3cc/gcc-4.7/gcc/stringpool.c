@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* String pool for GCC.
    Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -190,73 +192,4 @@ void
 ggc_purge_stringpool (void)
 {
   ht_purge (ident_hash, maybe_delete_ident, NULL);
-}
-
-/* Pointer-walking routine for strings (not very interesting, since
-   strings don't contain pointers).  */
-
-void
-gt_pch_p_S (void *obj ATTRIBUTE_UNUSED, void *x ATTRIBUTE_UNUSED,
-	    gt_pointer_operator op ATTRIBUTE_UNUSED,
-	    void *cookie ATTRIBUTE_UNUSED)
-{
-}
-
-/* PCH pointer-walking routine for strings.  */
-
-void
-gt_pch_n_S (const void *x)
-{
-  gt_pch_note_object (CONST_CAST (void *, x), CONST_CAST (void *, x),
-		      &gt_pch_p_S, gt_types_enum_last);
-}
-
-/* Handle saving and restoring the string pool for PCH.  */
-
-/* SPD is saved in the PCH file and holds the information needed
-   to restore the string pool.  */
-
-struct GTY(()) string_pool_data {
-  ht_identifier_ptr *
-    GTY((length ("%h.nslots"),
-	 nested_ptr (union tree_node, "%h ? GCC_IDENT_TO_HT_IDENT (%h) : NULL",
-		     "%h ? HT_IDENT_TO_GCC_IDENT (%h) : NULL")))
-    entries;
-  unsigned int nslots;
-  unsigned int nelements;
-};
-
-static GTY(()) struct string_pool_data * spd;
-
-/* Save the stringpool data in SPD.  */
-
-void
-gt_pch_save_stringpool (void)
-{
-  spd = ggc_alloc_string_pool_data ();
-  spd->nslots = ident_hash->nslots;
-  spd->nelements = ident_hash->nelements;
-  spd->entries = ggc_alloc_vec_ht_identifier_ptr (spd->nslots);
-  memcpy (spd->entries, ident_hash->entries,
-	  spd->nslots * sizeof (spd->entries[0]));
-}
-
-/* Return the stringpool to its state before gt_pch_save_stringpool
-   was called.  */
-
-void
-gt_pch_fixup_stringpool (void)
-{
-}
-
-/* A PCH file has been restored, which loaded SPD; fill the real hash table
-   from SPD.  */
-
-void
-gt_pch_restore_stringpool (void)
-{
-  ht_load (ident_hash, spd->entries, spd->nslots, spd->nelements, false);
-  spd = NULL;
-}
-
-#include "gt-stringpool.h"
+}

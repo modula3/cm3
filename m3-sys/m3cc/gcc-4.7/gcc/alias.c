@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Alias analysis for GNU C
    Copyright (C) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006,
    2007, 2008, 2009, 2010 Free Software Foundation, Inc.
@@ -960,7 +962,9 @@ record_component_aliases (tree type)
 /* Allocate an alias set for use in storing and reading from the varargs
    spill area.  */
 
+#if 0
 static GTY(()) alias_set_type varargs_set = -1;
+#endif
 
 alias_set_type
 get_varargs_alias_set (void)

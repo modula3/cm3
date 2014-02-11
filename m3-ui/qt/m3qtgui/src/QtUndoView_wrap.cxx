@@ -273,9 +273,9 @@ SWIGEXPORT void QUndoView_setEmptyLabel(QUndoView * self, QString * label) {
 }
 
 
-SWIGEXPORT QString *  QUndoView_emptyLabel(QUndoView const * self) {
+SWIGEXPORT QString * QUndoView_emptyLabel(QUndoView const * self) {
   QUndoView *arg1 = (QUndoView *) 0 ;
-  QString *  cresult ;
+  QString * cresult ;
   
   arg1 = *(QUndoView **)&self; 
   *(QString **)&cresult = new QString((const QString &)((QUndoView const *)arg1)->emptyLabel());

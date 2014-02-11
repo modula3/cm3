@@ -259,9 +259,9 @@ SWIGEXPORT void QAction_setText(QAction * self, QString * text) {
 }
 
 
-SWIGEXPORT QString *  QAction_text(QAction const * self) {
+SWIGEXPORT QString * QAction_text(QAction const * self) {
   QAction *arg1 = (QAction *) 0 ;
-  QString *  cresult ;
+  QString * cresult ;
   
   arg1 = *(QAction **)&self; 
   *(QString **)&cresult = new QString((const QString &)((QAction const *)arg1)->text());
@@ -279,9 +279,9 @@ SWIGEXPORT void QAction_setIconText(QAction * self, QString * text) {
 }
 
 
-SWIGEXPORT QString *  QAction_iconText(QAction const * self) {
+SWIGEXPORT QString * QAction_iconText(QAction const * self) {
   QAction *arg1 = (QAction *) 0 ;
-  QString *  cresult ;
+  QString * cresult ;
   
   arg1 = *(QAction **)&self; 
   *(QString **)&cresult = new QString((const QString &)((QAction const *)arg1)->iconText());
@@ -299,9 +299,9 @@ SWIGEXPORT void QAction_setToolTip(QAction * self, QString * tip) {
 }
 
 
-SWIGEXPORT QString *  QAction_toolTip(QAction const * self) {
+SWIGEXPORT QString * QAction_toolTip(QAction const * self) {
   QAction *arg1 = (QAction *) 0 ;
-  QString *  cresult ;
+  QString * cresult ;
   
   arg1 = *(QAction **)&self; 
   *(QString **)&cresult = new QString((const QString &)((QAction const *)arg1)->toolTip());
@@ -319,9 +319,9 @@ SWIGEXPORT void QAction_setStatusTip(QAction * self, QString * statusTip) {
 }
 
 
-SWIGEXPORT QString *  QAction_statusTip(QAction const * self) {
+SWIGEXPORT QString * QAction_statusTip(QAction const * self) {
   QAction *arg1 = (QAction *) 0 ;
-  QString *  cresult ;
+  QString * cresult ;
   
   arg1 = *(QAction **)&self; 
   *(QString **)&cresult = new QString((const QString &)((QAction const *)arg1)->statusTip());
@@ -339,9 +339,9 @@ SWIGEXPORT void QAction_setWhatsThis(QAction * self, QString * what) {
 }
 
 
-SWIGEXPORT QString *  QAction_whatsThis(QAction const * self) {
+SWIGEXPORT QString * QAction_whatsThis(QAction const * self) {
   QAction *arg1 = (QAction *) 0 ;
-  QString *  cresult ;
+  QString * cresult ;
   
   arg1 = *(QAction **)&self; 
   *(QString **)&cresult = new QString((const QString &)((QAction const *)arg1)->whatsThis());

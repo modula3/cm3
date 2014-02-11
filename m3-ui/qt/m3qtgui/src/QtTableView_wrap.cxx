@@ -217,6 +217,14 @@ SWIGEXPORT void QTableView_setSelectionModel(QTableView * self, QItemSelectionMo
 }
 
 
+SWIGEXPORT void QTableView_doItemsLayout(QTableView * self) {
+  QTableView *arg1 = (QTableView *) 0 ;
+  
+  arg1 = *(QTableView **)&self; 
+  (arg1)->doItemsLayout();
+}
+
+
 SWIGEXPORT QHeaderView * QTableView_horizontalHeader(QTableView const * self) {
   QTableView *arg1 = (QTableView *) 0 ;
   QHeaderView *result = 0 ;

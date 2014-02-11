@@ -8,6 +8,29 @@ Interface  ("WinBaseTypes")
 Module     ("WinDef")
 Module     ("WinNT")
 
+Interface  ("WinError")
+Interface  ("WinBase")
+Interface  ("WinCon")
+Interface  ("WinGDI") % part of the implementation is portable
+Module     ("WinIoctl")
+Interface  ("WinNetwk")
+Interface  ("WinNLS")
+Module     ("WinReg")
+Module     ("WinSock")
+Interface  ("WinUser") % part of the implementation is portable
+Module     ("WinVer")
+Module     ("NB30")
+Interface  ("CDErr")
+Interface  ("CommDlg")
+Interface  ("TlHelp32")
+
+% New interfaces added March 2003 by darkov
+Interface  ("WinMidi")
+Interface  ("WinCommCtrl")
+Interface  ("WinTabCon")
+Interface  ("WinListView")
+Interface  ("WinImageList")
+
 %
 % copied from cm3cfg.common
 % Would prefer to update config files at start of build,
@@ -27,29 +50,15 @@ proc IsTargetNT()      is return InternalCheckTargetOS("NT") end
 if IsTargetNT() or IsTargetCygwin()
 
 c_source   ("WinNTc")
-
-Interface  ("WinError")
-Interface  ("WinBase")
-Interface  ("WinCon")
-Module     ("WinGDI")
-Module     ("WinIoctl")
-Interface  ("WinNetwk")
-Interface  ("WinNLS")
-Module     ("WinReg")
-Module     ("WinSock")
-Module     ("WinUser")
+implementation ("WinGDI") % part of the implementation is portable
+implementation ("WinUser") % part of the implementation is portable
 c_source   ("WinUserC")
-Module     ("WinVer")
-Module     ("NB30")
-Interface  ("CDErr")
-Interface  ("CommDlg")
-Interface  ("TlHelp32")
 
 % New interfaces added March 2003 by darkov
-Interface  ("WinMidi")
-Interface  ("WinCommCtrl")
-Module     ("WinTabCon")
-Module     ("WinListView")
-Module     ("WinImageList")
+if equal(WORD_SIZE, "32BITS") % temporary hack
+  implementation ("WinTabCon")
+  implementation ("WinListView")
+end
+implementation ("WinImageList")
 
 end

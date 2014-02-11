@@ -12,8 +12,8 @@
 UNSAFE MODULE FSWin32 EXPORTS FS;
 
 IMPORT Ctypes, File, FileWin32, M3toC, OSError, OSErrorWin32, OSWin32,
-  Pathname, RegularFile, Text, Time, TimeWin32, WinBase, WinBaseTypes, WinDef,
-  WinError, WinNLS, WinNT, Word, Long;
+  Pathname, RegularFile, Text, Time, TimeWin32, WinBase, WinDef,
+  WinError, WinNT, Word, Long;
 
 CONST
   False: WinDef.BOOL = 0;
@@ -159,33 +159,15 @@ PROCEDURE OpenFile(
     (* I believe the only reason for passing a non-NIL "hTemplate" to
        "CreateFile" is to supply OS/2-style ``extended attributes''
        for the file being created.  PMcJ 7/3/93 *)
-    VAR
-      fname := M3toC.SharedTtoS(p);
-      dwNum := WinNLS.MultiByteToWideChar (WinNLS.CP_UTF8, 0, fname, -1, NIL, 0);
-      pwText: WinBaseTypes.PCWSTR; 
-    BEGIN
-      IF dwNum = 0 OR dwNum = Text.Length(p) THEN
-        handle := WinBase.CreateFile(
-                      lpFileName := fname,
-                      dwDesiredAccess := WinNT.GENERIC_READ + WinNT.GENERIC_WRITE,
-                      dwShareMode := WinNT.FILE_SHARE_READ + WinNT.FILE_SHARE_WRITE,
-                      lpSecurityAttributes := lpsa,
-                      dwCreationDisposition := createMode[create, truncate],
-                      dwFlagsAndAttributes := attrs,
-                      hTemplateFile := handleTemplate);
-      ELSE
-        pwText := LOOPHOLE(NEW(UNTRACED REF ARRAY OF CHAR, dwNum), WinBaseTypes.PCWSTR);
-        EVAL WinNLS.MultiByteToWideChar (WinNLS.CP_UTF8, 0, fname, -1, pwText, dwNum);
-        handle := WinBase.CreateFileW(
-                      lpFileName := pwText,
-                      dwDesiredAccess := WinNT.GENERIC_READ + WinNT.GENERIC_WRITE,
-                      dwShareMode := WinNT.FILE_SHARE_READ + WinNT.FILE_SHARE_WRITE,
-                      lpSecurityAttributes := lpsa,
-                      dwCreationDisposition := createMode[create, truncate],
-                      dwFlagsAndAttributes := attrs,
-                      hTemplateFile := handleTemplate);
-        DISPOSE(pwText);
-      END;
+    VAR fname := M3toC.SharedTtoS(p); BEGIN
+      handle := WinBase.CreateFile(
+        lpFileName := fname,
+        dwDesiredAccess := WinNT.GENERIC_READ + WinNT.GENERIC_WRITE,
+        dwShareMode := WinNT.FILE_SHARE_READ + WinNT.FILE_SHARE_WRITE,
+        lpSecurityAttributes := lpsa,
+        dwCreationDisposition := createMode[create, truncate],
+        dwFlagsAndAttributes := attrs,
+        hTemplateFile := handleTemplate);
       IF LOOPHOLE(handle, INTEGER) = WinBase.INVALID_HANDLE_VALUE THEN
         Fail(p, fname);
       END;
@@ -460,8 +442,9 @@ PROCEDURE BuildStatus (READONLY ffd  : WinBase.WIN32_FIND_DATA;
 
 PROCEDURE SetModificationTime(p: Pathname.T; READONLY t: Time.T)
   RAISES {OSError.E} =
-  VAR h: File.T; lastWrite := TimeWin32.ToFileTime(t);
+  VAR h: File.T; lastWrite: WinBase.FILETIME;
   BEGIN
+    TimeWin32.ToFileTime(t, lastWrite);
     h := OpenFileReadonly(p);
     TRY
       IF WinBase.SetFileTime(

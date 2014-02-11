@@ -22,7 +22,10 @@ PROCEDURE Contents (base: LinkSet): UnitList;
 (* The data structures processed by the linker are defined below:         *)
 
 CONST
-  LinkerMagic = "M3 v4.2";
+  LinkerMagicWC16 = "M3 v4.2";
+  LinkerMagicWCUni = "M3 v4.3";
+  LinkerMagicLen = 7; (* Enough for either magic string. *) 
+  UnicodeWideChar = FALSE; (* This must agree with the front end. *) 
 
 CONST
   BuiltinUnitName = "M3_BUILTIN";

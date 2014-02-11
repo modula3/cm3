@@ -1,19 +1,6 @@
-%regenerate any symlinks (unix specific)
+%This is the m3makefile for the QtGui library
 
-if not fs_exists( "../src/qinclude" )
-  ret = try_exec("ln -s ../../common/qinclude ../src/qinclude ")
-end
-if not fs_exists( "../src/common.i" )
-  ret = try_exec("ln -s ../../common/common.i ../src/common.i ")
-end
-if not fs_exists( "../src/m3qt.i" )
-  ret = try_exec("ln -s ../../common/m3qt.i ../src/m3qt.i ")
-end
-if not fs_exists( "../src/cmaps.i" )
-  ret = try_exec("ln -s ../../common/cmaps.i ../src/cmaps.i ")
-end
-
-include("qinclude")
+include("../../common/qinclude")
 
 import("libm3")
 import("m3qtcore")
@@ -24,9 +11,10 @@ module("QtRgb")
 
 %----------------------------------
 
-%QRgbColorFontBrush branch
+%color branch
 
 %%%% do not build not a swig module QtRgb
+
 qtbuild("QtColor")
 qtbuild("QtFont")
 qtbuild("QtBrush")
@@ -35,14 +23,14 @@ qtbuild("QtStyle")
 
 %----------------------------------
 
-%QMatrixTransform branch
+%matrix branch
 
 qtbuild("QtMatrix")
 qtbuild("QtTransform")
 
 %----------------------------------
 
-%QPictureMovie branch
+%picture branch
 
 qtbuild("QtPicture")
 qtbuild("QtPixmap")
@@ -50,17 +38,17 @@ qtbuild("QtMovie")
 
 %----------------------------------
 
-%QRegionBitmap branch
+%region branch
 
+qtbuild("QtRegion")
 qtbuild("QtPolygon")
 qtbuild("QtImage")
 qtbuild("QtBitmap")
-qtbuild("QtRegion")
 qtbuild("QtIcon")
 
 %----------------------------------
 
-%QAbstractButton branch
+%abstractbutton branch
 
 qtbuild("QtAbstractButton")
 qtbuild("QtCheckBox")
@@ -70,7 +58,7 @@ qtbuild("QtToolButton")
 
 %----------------------------------
 
-%QAbstractSlider branch
+%abstractslider branch
 
 qtbuild("QtAbstractSlider")
 qtbuild("QtDial")
@@ -79,7 +67,7 @@ qtbuild("QtSlider")
 
 %----------------------------------
 
-%QAbstractSpinBox branch
+%abstractspinbox branch
 
 qtbuild("QtAbstractSpinBox")
 %contains DateEdit and TimeEdit classes
@@ -89,7 +77,7 @@ qtbuild("QtSpinBox")
 
 %----------------------------------
 
-%QAbastractScrollArea branch
+%abstractscrollarea branch
 
 qtbuild("QtAbstractScrollArea")
 qtbuild("QtTextEdit")
@@ -100,7 +88,7 @@ qtbuild("QtScrollArea")
 
 %----------------------------------
 
-%QAbstractItemView branch
+%abstractitemview branch
 
 qtbuild("QtAbstractItemView")
 qtbuild("QtListView")
@@ -115,14 +103,14 @@ qtbuild("QtHeaderView")
 
 %----------------------------------
 
-%QItemSelection branch
+%itemselectionmodel branch
 
 qtbuild("QtItemSelectionModel")
 qtbuild("QtAbstractItemDelegate")
 
 %----------------------------------
 
-%QFrame branch
+%frame branch
 
 qtbuild("QtFrame")
 qtbuild("QtLabel")
@@ -133,14 +121,14 @@ qtbuild("QtLCDNumber")
 
 %----------------------------------
 
-%QComboBox branch
+%combobox branch
 
 qtbuild("QtComboBox")
 qtbuild("QtFontComboBox")
 
 %----------------------------------
 
-%QDialog branch
+%dialog branch
 
 qtbuild("QtDialog")
 qtbuild("QtColorDialog")
@@ -156,7 +144,7 @@ qtbuild("QtWizard")
 
 %----------------------------------
 
-%QWidget1 branch
+%widget1 branch 
 
 qtbuild("QtCalendarWidget")
 qtbuild("QtDesktopWidget")
@@ -165,7 +153,7 @@ qtbuild("QtDockWidget")
 
 %----------------------------------
 
-%QWidget2 branch
+%widget2 branch 
 
 qtbuild("QtLineEdit")
 qtbuild("QtFocusFrame")
@@ -173,7 +161,7 @@ qtbuild("QtGroupBox")
 
 %----------------------------------
 
-%QWidget3 branch
+%widget3 branch 
 
 qtbuild("QtMenu")
 qtbuild("QtMdiSubWindow")
@@ -186,7 +174,7 @@ qtbuild("QtKeySequence")
 
 %----------------------------------
 
-%QWidget4 branch
+%widget4 branch 
 
 qtbuild("QtSizeGrip")
 qtbuild("QtSplashScreen")
@@ -194,7 +182,7 @@ qtbuild("QtStatusBar")
 
 %----------------------------------
 
-%QWidget5 branch
+%widget5 branch 
 
 qtbuild("QtTabWidget")
 qtbuild("QtTabBar")
@@ -204,7 +192,7 @@ qtbuild("QtToolBar")
 
 %----------------------------------
 
-%QLayout branch
+%layout branch
 
 qtbuild("QtSizePolicy")
 qtbuild("QtLayoutItem")
@@ -216,7 +204,20 @@ qtbuild("QtFormLayout")
 
 %----------------------------------
 
-%m3gui branch
+%extras branch
+
+qtbuild("QtTextFormat")
+qtbuild("QtPen")
+qtbuild("QtCursor")
+qtbuild("QtInputContext")
+qtbuild("QtFontMetrics")
+qtbuild("QtFontInfo")
+qtbuild("QtPaintEngine")
+qtbuild("QtPainter")
+
+%----------------------------------
+
+%m3gui branch (perm)
 
 qtbuild("QtWidget")
 qtbuild("QtPaintDevice")

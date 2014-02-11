@@ -20,6 +20,9 @@ REM v1.21, 09/12/2010, R.Coleburn, add Windows7 OS detection.
 REM v1.22, 05/13/2012, R.Coleburn, improved error detection when invoking cm3.
 rem v1.30, 02/06/2013, R.Coleburn, Improve OS detection.  Add error exit codes.  
 rem                                Fix bug of not setting _cm3_CM3Failure=TRUE on fatal error for relay in environment to other cooperating CMD files.
+rem v1.31, 09/22/2013, R.Coleburn, Fix bug of not reseting error condition for retry of operation.
+rem v1.32, 09/29/2013, R.Coleburn, Fix bug with improper checking of -showTags options.
+rem v1.33, 01/13/2014, R.Coleburn, Fix -skip directive to work off complete pathnames of packages, thereby preventing ambiguity if just using the package folder name
 rem ---------------------------------------------------------------------------
 rem EXIT CODES:
 rem ----------
@@ -60,7 +63,7 @@ goto :EOF
 REM Identify this script.
 echo.
 echo ====== ----------------------------------
-echo do-cm3, v1.30, 02/06/2013, Randy Coleburn
+echo do-cm3, v1.33, 01/13/2014, Randy Coleburn
 echo ====== ----------------------------------
 echo.
 
@@ -194,7 +197,7 @@ if "%_z_Group%"=="" for %%a in (gui juno m3devtool m3gdb m3gnudevtool math obliq
 if /I "%_z_Group%"=="%1" goto NextArg
 
 rem check to see if %1 is a cm3 compiler mode argument
-if /I "%_z_CM3Args%"=="SHOWTAGS" echo ERROR:  Parameter "%1" not valid with "ShowTags". & goto Usage
+if /I "%_z_CM3Args%"=="-SHOWTAGS" echo ERROR:  Parameter "%1" not valid with "-ShowTags". & goto Usage
 set _z_Arg=
 for %%a in (find depend realclean clean build ship buildship) do if /I %%a==%1 set _z_Arg=-%%a
 for %%a in (-find -depend -realclean -clean -build -ship -buildship) do if /I %%a==%1 set _z_Arg=%%a
@@ -212,13 +215,13 @@ goto NextArg
 :Arg_Skip
 rem we've seen -SKIP, now get the package name to be skipped
 shift
-if "%1"=="" echo ERROR:  Missing package name after -SKIP argument. & goto Usage
-IF defined _z_Skip (set _z_Skip=%_z_Skip%; %1) ELSE (set _z_Skip=%1)
+if "%~1"=="" echo ERROR:  Missing package name after -SKIP argument. & goto Usage
+IF defined _z_Skip (set _z_Skip=%_z_Skip%; "%~1") ELSE (set _z_Skip="%~1")
 goto NextArg
 
 :ArgEnd
 rem no more parameters, so make sure we've got the minimum required
-if /I not "%_z_CM3Args%"=="SHOWTAGS" if "%_z_Group%"=="" echo ERROR:  Must specify a package group, e.g., min, core, std, all, etc. & goto Usage
+if /I not "%_z_CM3Args%"=="-SHOWTAGS" if "%_z_Group%"=="" echo ERROR:  Must specify a package group, e.g., min, core, std, all, etc. & goto Usage
 if "%_z_CM3Args%"=="" set _z_CM3Args=-build
 
 
@@ -256,14 +259,14 @@ if not "%_z_PkgInfo%"=="" if exist "%_z_PkgInfo%" goto FindSourceTree
 
 rem ---next, see if located in parent of current directory
 pushd ..
-if exist ".\PkgInfo.txt" call :FN_FullPath .\PkgInfo.txt _z_PkgInfo
+   if exist ".\PkgInfo.txt" call :FN_FullPath .\PkgInfo.txt _z_PkgInfo
 popd
 if not "%_z_PkgInfo%"=="" if exist "%_z_PkgInfo%" goto FindSourceTree
 
 rem ---next, see if located in grandparent of current directory
 pushd ..
-cd ..
-if exist ".\PkgInfo.txt" call :FN_FullPath .\PkgInfo.txt _z_PkgInfo
+   cd ..
+   if exist ".\PkgInfo.txt" call :FN_FullPath .\PkgInfo.txt _z_PkgInfo
 popd
 if not "%_z_PkgInfo%"=="" if exist "%_z_PkgInfo%" goto FindSourceTree
 
@@ -293,8 +296,8 @@ set _z_PkgTree=
 rem --- first try parent of %_z_PkgInfo%
 call :FN_DriveAndPathOnly %_z_PkgInfo% _z_PkgTree
 pushd %_z_PkgTree%
-cd ..
-set _z_PkgTree=%CD%\
+   cd ..
+   set _z_PkgTree=%CD%\
 popd
 if exist "%_z_PkgTree%m3-sys\cm3\src" goto Prepare
 
@@ -304,14 +307,14 @@ if exist "%_z_PkgTree%m3-sys\cm3\src" goto Prepare
 
 rem --- next try parent of current directory
 pushd ..
-set _z_PkgTree=%CD%\
+   set _z_PkgTree=%CD%\
 popd
 if exist "%_z_PkgTree%m3-sys\cm3\src" goto Prepare
 
 rem --- next try grandparent of current directory
 pushd ..
-cd ..
-set _z_PkgTree=%CD%\
+   cd ..
+   set _z_PkgTree=%CD%\
 popd
 if exist "%_z_PkgTree%m3-sys\cm3\src" goto Prepare
 
@@ -336,7 +339,7 @@ if defined _z_Skip echo SkipList = %_z_Skip%
 if /I "%_z_NoPause%"=="TRUE" echo "NoPause" Option in Effect.
 if /I "%_z_Verbose%"=="TRUE" echo "Verbose" Option in Effect.
 echo.
-if /I "%_z_CM3Args%"=="SHOWTAGS" goto ShowTags
+if /I "%_z_CM3Args%"=="-SHOWTAGS" goto ShowTags
 echo Searching for packages in group "%_z_Group%" ...
 echo ... one moment please ....
 FOR /F "tokens=1* delims= " %%i in (%_z_PkgInfo%) do call :FN_CheckPkg %%i %%j
@@ -345,11 +348,13 @@ echo Packages to be processed:
 echo ------------------------
 if not defined _z_TempFile goto EOL_Prepare
 if exist %_z_TempFile% type %_z_TempFile%
+
 :EOL_Prepare
 if defined _z_Skip echo But, skipping packages: %_z_Skip%
 echo ---END-of-List---
 echo.
 if /I "%_z_NoPause%"=="TRUE" goto DoIt
+
 :AskContinue
 set /P _z_Answ=Do you want to continue (y=yes, n=no) ? 
 if /I "%_z_Answ%"=="Y" goto DoIt
@@ -483,14 +488,15 @@ rem ---make sure we can find this package in the source tree
 set _z_PkgPath=
 pushd %_z_PkgTree%
 
-rem ------first try the package itself as a relative path
-if exist "%_z_Package%\src" set _z_PkgPath=%_z_Package%
+   rem ------first try the package itself as a relative path
+   if exist "%_z_Package%\src" set _z_PkgPath=%_z_Package%
 
-rem ------if that doesn't work, look in the various m3-* folders
-if "%_z_PkgPath%"=="" for /f %%i in ('dir /b m3-* caltech*') do if exist "%%i\%_z_Package%\src" set _z_PkgPath=%%i\%_z_Package%
+   rem ------if that doesn't work, look in the various m3-* folders
+   if "%_z_PkgPath%"=="" for /f %%i in ('dir /b m3-* caltech*') do if exist "%%i\%_z_Package%\src" set _z_PkgPath=%%i\%_z_Package%
+
+popd
 
 rem ------if we found it, great, otherwise report we are skipping it
-popd
 if not "%_z_PkgPath%"=="" goto foundPkg
 echo WARNING:  Unable to locate package "%_z_Package%" in "%_z_PkgTree%"
 echo           (this package will be skipped)
@@ -512,7 +518,7 @@ goto :EOF
 REM %1 is a package name; see if it is in the skip list: if no goto %2, if yes goto %3
 set _z_Answ=0
 if not defined _z_Skip goto %2
-for %%z in (%_z_Skip%) do if /I "%%z"=="%~nx1" set _z_Answ=1
+for %%z in (%_z_Skip%) do if /I %%z=="%~1" set _z_Answ=1
 IF "%_z_Answ%"=="0" ( goto %2 ) ELSE ( goto %3 )
 echo ERROR: Failure in FN_ChkSkip function.
 set _z_CM3Failure=STOP
@@ -537,7 +543,7 @@ goto :EOF
 :OkToProcess
 echo --- processing package "%1" ---
 pushd %_z_PkgTree%%1
-for %%z in (%_z_CM3Args%) do call :FN_DoCM3 %%z %1
+   for %%z in (%_z_CM3Args%) do call :FN_DoCM3 %%z %1
 popd
 goto :EOF
 
@@ -549,6 +555,7 @@ REM Invoke CM3
 REM %1=CM3 mode (e.g. -build, -ship, -find, -depend, -clean, -realclean)
 REM %2=package
 if /I "%_z_CM3Failure%"=="STOP" goto :EOF
+
 :Retry
 set _z_Fail=TRUE
 (cm3 %1) && (set _z_Fail=)
@@ -565,7 +572,7 @@ if /I "%_z_NoPause%"=="TRUE" goto :EOF
 :AskRetry
 set /P _z_Answ=Do you want to retry the failed operation (y=yes, n=no) ? 
 echo.
-if /I "%_z_Answ%"=="Y" goto Retry
+if /I "%_z_Answ%"=="Y" (set _z_CM3Failure=) & (set _z_ExitCode=0) & goto Retry
 if /I "%_z_Answ%"=="N" goto AskStop
 goto AskRetry
 
@@ -605,6 +612,7 @@ goto U2
 :-----
 set _z_ExitCode=2
 echo =====   -----------------------------------------------------------------------
+
 :U2
 echo.
 echo -----  ------------------------------------------------------------------------
@@ -619,9 +627,9 @@ echo             If a group-tag is given, also list the packages in that group.
 echo             No cm3 action is taken.
 echo.
 echo group-tag = must specify only one package group, e.g., min, core, std, all.
-echo             (use showTags to discover list of all groups)
+echo             (use -showTags to discover list of all groups)
 echo.
-echo   cm3args = zero or more arguments to the cm3 builder, e.g., clean, build, ship
+echo   cm3args = zero or more arguments to the cm3 builder, e.g., -clean, -build, -ship
 echo             Multiple arguments are possible.  They will be performed in the
 echo             order given.  If no argument is given, "-build" is assumed.
 echo             "-buildship" is shorthand for "-build" followed by "-ship".
@@ -634,7 +642,8 @@ echo   -p path = specify location of "PkgInfo.txt" file.
 echo             (if not specified, searchs in path=(".\"; "..\"; "..\..")
 echo.
 echo -skip pkgName = if pkgName is in the specified group-tag, skip this package.
-echo                 Multiple -skip argments may be given.
+echo                 Multiple -skip argments may be given.  Use complete path.
+echo                 e.g., -skip "m3-sys\m3cc"
 echo.
 
 

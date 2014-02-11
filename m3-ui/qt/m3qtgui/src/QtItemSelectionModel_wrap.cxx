@@ -402,6 +402,18 @@ SWIGEXPORT bool QItemSelectionRange_isValid(QItemSelectionRange const * self) {
 }
 
 
+SWIGEXPORT bool QItemSelectionRange_isEmpty(QItemSelectionRange const * self) {
+  QItemSelectionRange *arg1 = (QItemSelectionRange *) 0 ;
+  bool result;
+  bool cresult ;
+  
+  arg1 = *(QItemSelectionRange **)&self; 
+  result = (bool)((QItemSelectionRange const *)arg1)->isEmpty();
+  cresult = result; 
+  return cresult;
+}
+
+
 SWIGEXPORT QModelIndexList * QItemSelectionRange_indexes(QItemSelectionRange const * self) {
   QItemSelectionRange *arg1 = (QItemSelectionRange *) 0 ;
   QModelIndexList * cresult ;

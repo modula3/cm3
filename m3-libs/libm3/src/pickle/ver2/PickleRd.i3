@@ -22,8 +22,9 @@ TYPE
   Private = Pickle.ReaderPublic OBJECT
       packing: RTPacking.T;
       packingCode: INTEGER;
-      wordConvKind: ConvertPacking.Kind;
-      longConvKind: ConvertPacking.Kind;
+      wordConvKind: ConvertPacking.CPKind;
+      longConvKind: ConvertPacking.CPKind;
+      widecharConvKind: ConvertPacking.CPKind;
     END;
 
 VAR myPacking: RTPacking.T;       (* our local packing. *)

@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Configuration file for ARM GNU/Linux EABI targets.
    Copyright (C) 2004, 2005, 2006, 2007, 2009, 2010, 2011
    Free Software Foundation, Inc.
@@ -31,10 +33,8 @@
     }						\
   while (false)
 
-/* We default to a soft-float ABI so that binaries can run on all
-   target hardware.  */
-#undef  TARGET_DEFAULT_FLOAT_ABI
-#define TARGET_DEFAULT_FLOAT_ABI ARM_FLOAT_ABI_SOFT
+/* We only support hard-float until requested otherwise.  */
+#define TARGET_DEFAULT_FLOAT_ABI ARM_FLOAT_ABI_HARD
 
 /* We default to the "aapcs-linux" ABI so that enums are int-sized by
    default.  */

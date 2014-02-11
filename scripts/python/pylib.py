@@ -40,7 +40,10 @@ def IsInterix():
 
 env_OS = getenv("OS")
 
+DevNull = "/dev/null"
+
 if env_OS == "Windows_NT" and not IsInterix():
+    DevNull = "nul:"
     def uname():
         PROCESSOR_ARCHITECTURE = getenv("PROCESSOR_ARCHITECTURE")
         return (env_OS, "", PROCESSOR_ARCHITECTURE, "", PROCESSOR_ARCHITECTURE)
@@ -86,8 +89,8 @@ def StringContains(a, b):
 def StringContainsI(a, b):
     return a.lower().find(b.lower()) != -1
 
-def StringTagged(a, b):
-    return a.startswith(b + "_") or a.endswith("_" + b) or StringContains(a, "_" + b + "_")
+def Tagged(a, b):
+    return a.startswith(b + "_") or a.endswith("_" + b) or StringContains(a, "_" + b + "_") or a == b
 
 #print("RemoveTrailingSlash(a\\/):" + RemoveTrailingSlash("a\\/"))
 #print("RemoveTrailingSlash(a/\\):" + RemoveTrailingSlash("a/\\"))
@@ -115,8 +118,8 @@ def GetPathExtension(a):
 def RemovePathExtension(a):
     return a[:a.rfind(".")]
 
-def GetObjectName(a):
-    return GetPathBaseName(a) + "." + {"c" : "o", "s" : "o", "ms" : "mo", "is" : "io"}[GetPathExtension(a)]
+def _GetObjectName(a, obj):
+    return GetPathBaseName(a) + "." + {"c" : obj, "s" : obj, "ms" : "mo", "is" : "io"}[GetPathExtension(a)]
 
 def GetPathBaseName(a):
     a = GetLastPathElement(a)
@@ -339,7 +342,11 @@ def _GetAllTargets():
 
     # legacy naming
 
-    Targets = [ "NT386", "LINUXLIBC6", "SOLsun", "SOLgnu", "FreeBSD4" ]
+    Targets = { }
+    for target in [ "NT386", "LINUXLIBC6", "SOLsun", "SOLgnu", "FreeBSD4" ]:
+        Targets[target] = target
+        Targets[target.lower()] = target
+        Targets[target.upper()] = target
 
     # systematic naming
 
@@ -348,15 +355,20 @@ def _GetAllTargets():
         for os in ["AIX",  "CE", "CYGWIN", "DARWIN",  "FREEBSD", "HPUX", "INTERIX", "IRIX",
                    "LINUX", "MINGW", "NETBSD", "NT", "OPENBSD", "OSF", "SOLARIS", "VMS"]:
                    # "BEOS", "MSDOS" (DJGPP), "OS2" (EMX), "PLAN9"
-            Targets += [proc + "_" + os]
+            target = proc + "_" + os
+            Targets[target] = target
+            Targets[target.lower()] = target
+            Targets[target.upper()] = target
 
     return Targets
 
 #-----------------------------------------------------------------------------
 
+_CBackend = "c" in sys.argv
+_BuildDirC = ["", "c"][_CBackend]
 _PossibleCm3Flags = ["boot", "keep", "override", "commands", "verbose", "why"]
 _SkipGccFlags = ["nogcc", "skipgcc", "omitgcc"]
-_PossiblePylibFlags = ["noclean", "nocleangcc"] + _SkipGccFlags + _PossibleCm3Flags
+_PossiblePylibFlags = ["noclean", "nocleangcc", "c"] + _SkipGccFlags + _PossibleCm3Flags
 
 CM3_FLAGS = ""
 for a in _PossibleCm3Flags:
@@ -564,7 +576,7 @@ Q = "" # TBD
 # GCC_BACKEND is almost always true.
 #
 
-GCC_BACKEND = True
+GCC_BACKEND = not _CBackend
 
 #-----------------------------------------------------------------------------
 #
@@ -572,7 +584,7 @@ GCC_BACKEND = True
 #
 
 Host = None
-for a in os.popen(CM3 + " -version 2>/dev/null"):
+for a in os.popen(CM3 + " -version 2>" + DevNull):
   if StringContains(a, "host:" ):
     Host = a.replace("\r", "").replace("\n", "").replace(" ", "").replace("host:", "")
     break
@@ -586,9 +598,11 @@ for a in os.popen(CM3 + " -version 2>/dev/null"):
 #
 
 Target = None
-for a in _GetAllTargets():
-    if a in sys.argv:
-        Target = _MapTarget(a)
+_AllTargets = _GetAllTargets()
+for a in sys.argv:
+    Target = _MapTarget(_AllTargets.get(a.lower()))
+    if Target:
+        break
 Target = Target or getenv("CM3_TARGET") or Host
 
 #-----------------------------------------------------------------------------
@@ -625,6 +639,10 @@ if Target.startswith("NT386"):
         GCC_BACKEND = False
 
     Config = Target
+
+    # From the front ends point of view, NT386, NT386GNU, NT386MINGNU
+    # can be the same thing -- little endian, 32bit, same jmpbuf size.
+    # The "Config" -- how to compile/link, etc. is different.
     Target = "NT386"
 
 if Target.endswith("_NT"):
@@ -639,6 +657,7 @@ if Host.endswith("_NT") or Host == "NT386":
 
 #-----------------------------------------------------------------------------
 
+_BuildDir = ("%(Config)s%(_BuildDirC)s" % vars())
 M3GDB = (M3GDB or CM3_GDB)
 Scripts = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PKGSDB = os.path.join(Scripts, "PKGS")
@@ -752,9 +771,9 @@ if _Program != "make-msi.py":
 # other commands
 
     if os.name == "nt":
-        RealClean = RealClean or "if exist %(Config)s rmdir /q/s %(Config)s"
+        RealClean = RealClean or "if exist %(_BuildDir)s rmdir /q/s %(_BuildDir)s"
     else:
-        RealClean = RealClean or "rm -rf %(Config)s"
+        RealClean = RealClean or "rm -rf %(_BuildDir)s"
 
     RealClean = (RealClean % vars())
 
@@ -1040,36 +1059,67 @@ def Boot():
     # TBD: put it only in one place.
     # The older bootstraping method does get that right.
 
-    vms = StringTagged(Config, "VMS")
+    vms = StringContainsI(Target, "VMS")
+    nt = Config.startswith("NT") or Config.endswith("NT") or Tagged(Config, "NT")
+    darwin = StringContainsI(Target, "DARWIN")
+    mingw = StringContainsI(Target, "MINGW")
+    solaris = StringContainsI(Target, "SOLARIS")
+    sol = Target.startswith("SOL")
+    hpux = StringContainsI(Target, "HPUX")
+    osf = StringContainsI(Target, "OSF")
+    interix = StringContainsI(Target, "INTERIX")
+    alpha32 = StringContainsI(Target, "ALPHA32")
+    alpha64 = StringContainsI(Target, "ALPHA64")
+    alpha32vms = vms and alpha32
+    alpha64vms = vms and alpha64
+    solsun = Config == "SOLsun"
+    freebsd = StringContainsI(Target, "FreeBSD")
+    netbsd = StringContainsI(Target, "NetBSD")
+    openbsd = StringContainsI(Target, "OpenBSD")
+    cygwin = StringContainsI(Target, "Cygwin")
+    linux = StringContainsI(Target, "Linux")
+    alpha = StringContainsI(Target, "ALPHA")
+    thirtytwo = StringContainsI(Target, "32")
+    sixtyfour = StringContainsI(Target, "64")
+    bsd = StringContainsI(Target, "BSD")
 
     # pick the compiler
     
     c = "c" in sys.argv
+    
+    CCompilerOut = ""
 
-    if Config == "ALPHA32_VMS":
+    if alpha32vms:
         CCompiler = "cc"
         CCompilerFlags = " "
-    elif Config == "ALPHA64_VMS":
+    elif alpha64vms:
         CCompiler = "cc"
         CCompilerFlags = "/pointer_size=64 "
-    elif StringTagged(Config, "SOLARIS") or Config == "SOLsun":
+    elif solaris or solsun:
         CCompiler = "/usr/bin/cc"
-        CCompilerFlags = "-g -mt -xldscope=symbolic "
+        CCompilerFlags = " -g -mt -xldscope=symbolic "
         CCompiler = "./c_compiler"
         CopyFile("./c_compiler", BootDir)
-    elif Config == "ALPHA_OSF":
+    elif osf:
         CCompiler = "/usr/bin/cc"
-        CCompilerFlags = "-g -pthread"
+        CCompilerFlags = " -g -pthread "
     else:
-        # gcc platforms
+        # gcc and other platforms
         CCompiler = {
             "SOLgnu" : "/usr/sfw/bin/gcc",
+            "AMD64_NT"      : "cl",
             }.get(Config) or "gcc"
 
         CCompilerFlags = {
-            "I386_INTERIX"  : "-g ", # gcc -fPIC generates incorrect code on Interix
-            "SOLgnu"        : "-g ", # -fPIC?
-            }.get(Config) or "-g -fPIC "
+            "I386_INTERIX"  : " -g ", # gcc -fPIC generates incorrect code on Interix
+            "SOLgnu"        : " -g ", # -fPIC?
+            #"AMD64_NT"      : " -Zi -MD ",
+            "AMD64_NT"      : " -Zi ", # hack some problem with exception handling and alignment otherwise
+            }.get(Config) or " -g -fPIC "
+
+        CCompilerOut = {
+            "AMD64_NT"      : "-Fo./",
+            }.get(Config) or "-o $@"
 
     CCompilerFlags = CCompilerFlags + ({
         "AMD64_LINUX"     : " -m64 ",
@@ -1089,15 +1139,8 @@ def Boot():
         "SPARC64_LINUX"   : " -m64 -mno-app-regs ",
         }.get(Config) or " ")
 
-    if Config.endswith("_NT") or Config == "NT386":
-        obj = "obj"
-    else:
-        obj = "o"
-
-    if c:
-        Link = "$(CC) $(CFLAGS) *." + obj + " "
-    else:
-        Link = "$(CC) $(CFLAGS) *.mo *.io *." + obj + " "
+    obj = ["o", "obj"][nt]
+    Link = "$(CC) $(CFLAGS) *." + obj + [" *.mo *.io ", " "][_CBackend]
 
     # link flags
     
@@ -1105,33 +1148,35 @@ def Boot():
     # http://www.openldap.org/lists/openldap-bugs/200006/msg00070.html
     # http://www.gnu.org/software/autoconf-archive/ax_pthread.html#ax_pthread
 
-    if StringTagged(Target, "DARWIN"):
+    if darwin:
         pass
-    elif StringTagged(Target, "MINGW"):
+    elif mingw:
         pass
-    elif StringTagged(Target, "SOLARIS") or Target.startswith("SOL"):
+    elif solaris or sol:
         Link = Link  +  " -lpthread -lrt -lm -lnsl -lsocket -lc "
-    elif StringTagged(Target, "HPUX"):
+    elif hpux:
         Link = Link + " -lrt -lm -lpthread "
-    elif Config == "ALPHA_OSF":
+    elif osf:
         Link = Link + " -lrt -lm "
-    elif StringTagged(Target, "INTERIX"):
+    elif interix:
         Link = Link + " -lm " # -pthread?
+    elif nt:
+        if _CBackend:
+            #Link = "link /incremental:no /debug /pdb:$(@R).pdb *." + obj + " "
+            Link = "link /incremental:no /debug /pdb:$(@R).pdb $** "
+            # be sure to get a .pdb out
+            #open("empty.c", "w")
+            #Link = CCompiler + CCompilerFlags + "empty.c /" + Link
+        Link = Link + " user32.lib kernel32.lib wsock32.lib comctl32.lib gdi32.lib advapi32.lib netapi32.lib iphlpapi.lib "
     # not all of these tested esp. Cygwin, NetBSD
-    elif StringContainsI(Target, "FreeBSD") \
-         or StringContainsI(Target, "NetBSD") \
-         or StringContainsI(Target, "OpenBSD") \
-         or StringContainsI(Target, "Cygwin") \
-         or StringContainsI(Target, "Linux"):
+    elif freebsd or netbsd or openbsd or cygwin or linux:
         Link = Link  +  " -lm -pthread "
     else:
         Link = Link + " -lm -lpthread "
     
     # add -c to compiler but not link (i.e. not CCompilerFlags)
 
-    Compile = "$(CC) $(CFLAGS) "
-    if not vms:
-        Compile = Compile + " -c "
+    Compile = "$(CC) $(CFLAGS) " + [" -c ", ""][vms]
 
     AssembleOnTarget = not vms
     AssembleOnHost = not AssembleOnTarget
@@ -1144,11 +1189,11 @@ def Boot():
     elif Target == "AMD64_SOLARIS":
         # see http://gcc.gnu.org/ml/gcc/2010-05/msg00155.html
         Assembler = "/usr/ccs/bin/as"
-    elif StringTagged(Target, "SOLARIS") or Target.startswith("SOL"):
+    elif solaris or sol:
         # see http://gcc.gnu.org/ml/gcc/2010-05/msg00155.html
         Assembler = "./assembler"
         CopyFile("./assembler", BootDir)
-    elif StringTagged(Target, "OSF"):
+    elif osf:
         Assembler = "/usr/bin/as"
     else:
         Assembler = "as"
@@ -1157,11 +1202,9 @@ def Boot():
 
     AssemblerFlags = " "
 
-    if not Target in ["PPC32_OPENBSD", "PPC_LINUX", "ARMEL_LINUX", "ALPHA_LINUX", "ALPHA_OPENBSD"]:
-        # "Tag" not right for LINUX due to LINUXLIBC6
-        # "Tag" not right for BSD or 64 either.
-        if Target.find("LINUX") != -1 or Target.find("BSD") != -1:
-            if Target.find("64") != -1 or (StringTagged(Target, "ALPHA") and not StringTagged(Target, "ALPHA32")):
+    if not Target in ["PPC32_OPENBSD", "PPC_LINUX", "ARM_LINUX", "ARMEL_LINUX", "ALPHA_LINUX", "ALPHA_OPENBSD"]:
+        if linux or bsd:
+            if sixtyfour or (alpha and not alpha32):
                 AssemblerFlags = AssemblerFlags + " --64"
             else:
                 AssemblerFlags = AssemblerFlags + " --32"
@@ -1181,12 +1224,20 @@ def Boot():
         "SPARC64_LINUX"     : " -Qy -s -KPIC -Av9a -64 -no-undeclared-regs -relax ",
         }.get(Target) or ""))
 
+    is_main_table =  { }
+    for a in ["Main.m3"]:
+        for c in ["c", "cpp"]:
+            is_main_table[a + "." + c] = True
+
     GnuPlatformPrefix = {
         "ARM_DARWIN"    : "arm-apple-darwin8-",
-        "ARMEL_LINUX"   : "arm-linux-gnueabi-",
+        # "ARMEL_LINUX" : "arm-linux-gnueabihf-",
+        # "ARM_LINUX"   : "arm-linux-gnueabihf-",
         "ALPHA32_VMS"   : "alpha-dec-vms-",
         "ALPHA64_VMS"   : "alpha64-dec-vms-",
         }.get(Target) or ""
+
+    DeleteCommand = ["rm -rf", "del /f"][nt]
 
     if not vms:
         CCompiler = GnuPlatformPrefix + CCompiler
@@ -1203,7 +1254,11 @@ def Boot():
 
     P = FilterPackages([ "m3cc", "import-libs", "m3core", "libm3", "sysutils",
           "m3middle", "m3quake", "m3objfile", "m3linker", "m3back",
-          "m3front", "cm3" ])
+          "m3front" ])
+    main_packages = ["cm3"]
+    if nt:
+        main_packages += ["mklib"]
+    P += main_packages
 
     #DoPackage(["", "realclean"] + P) or sys.exit(1)
     DoPackage(["", "buildlocal"] + P) or sys.exit(1)
@@ -1211,42 +1266,51 @@ def Boot():
     #
     # This would probably be a good use of XSL (xml style sheets)
     #
+    
+    NL = ["\n", "\r\n"][nt]
+    NL2 = NL + NL
+    EXE = ["", ".exe"][nt]
     Make = open(os.path.join(BootDir, "make.sh"), "wb")
     VmsMake  = open(os.path.join(BootDir, "vmsmake.com"), "wb")
     VmsLink  = open(os.path.join(BootDir, "vmslink.opt"), "wb")
     Makefile = open(os.path.join(BootDir, "Makefile"), "wb")
     UpdateSource = open(os.path.join(BootDir, "updatesource.sh"), "wb")
     Objects = { }
+    ObjectsExceptMain = { }
 
-    if not c:
-        Makefile.write(".SUFFIXES:\n"
-                       + ".SUFFIXES: .c .is .ms .s .o .obj .io .mo\n\n")
+    for a in [Makefile]:
+        a.write("# edit up here" + NL2
+                + "CC=" + CCompiler + NL
+                + "CFLAGS=" + CCompilerFlags + NL)
+        a.write("Compile=" + Compile + NL)
+        if not _CBackend:
+            a.write("Assemble=" + Assembler + " " + AssemblerFlags + NL)
+        a.write("Link=" + Link + NL
+                + NL + "# no more editing should be needed" + NL2)
 
-    Makefile.write("all: cm3\n\n"
-                   + "clean:\n"
-                   + "\trm -rf *.io *.mo *.o *.obj\n\n")
+    if True: #not _CBackend:
+        Makefile.write(".SUFFIXES:" + NL
+                       + ".SUFFIXES: .c .is .ms .s .o .obj .io .mo" + NL2)
+
+    Makefile.write("all: ")    
+    for pkg in main_packages:
+        Makefile.write(pkg + EXE + " ")
+    Makefile.write(NL2)
+
+    Makefile.write("clean:" + NL
+                   + "\t" + DeleteCommand + " *.io *.mo *.o *.obj" + NL2)
 
     for a in [UpdateSource, Make]:
         a.write("#!/bin/sh\n\n"
                 + "set -e\n"
                 + "set -x\n\n")
 
-    for a in [Makefile]:
-        a.write("# edit up here\n\n"
-                + "CC=" + CCompiler + "\n"
-                + "CFLAGS=" + CCompilerFlags + "\n")
-        if not c:
-            a.write("Compile=" + Compile + "\n"
-                    + "Assemble=" + Assembler + " " + AssemblerFlags + "\n")
-        a.write("Link=" + Link + "\n"
-                + "\n# no more editing should be needed\n\n")
-
     for a in [Make]:
         a.write("# edit up here\n\n"
                 + "CC=${CC:-" + CCompiler + "}\n"
                 + "CFLAGS=${CFLAGS:-" + CCompilerFlags + "}\n"
                 + "Compile=" + Compile + "\n")
-        if not c:
+        if not _CBackend:
             a.write("Assemble=" + Assembler + " " + AssemblerFlags + "\n")
         a.write("Link=" + Link + "\n"
                 + "\n# no more editing should be needed\n\n")
@@ -1264,15 +1328,22 @@ def Boot():
             ext_mo = a.endswith(".mo")
             if not (ext_c or ext_cpp or ext_h or ext_s or ext_ms or ext_is or ext_io or ext_mo):
                 continue
+            leaf = GetLastPathElement(a)
+            dest = os.path.join(BootDir, leaf)
+            is_main = (ext_c or ext_cpp) and is_main_table.get(leaf, False)
+            if is_main:
+                dest = os.path.join(BootDir, q + "_" + leaf)
             fullpath = os.path.join(Root, dir, Config, a)
             if ext_h or ext_c or not vms or AssembleOnTarget or ext_io or ext_mo:
-                CopyFile(fullpath, BootDir)
+                CopyFile(fullpath, dest)
             if ext_h or ext_io or ext_mo:
                 continue
-            Object = GetObjectName(a)
+            Object = _GetObjectName(a, obj)
             if Objects.get(Object):
                 continue
             Objects[Object] = 1
+            if not is_main:
+                ObjectsExceptMain[Object] = 1
             if ext_c:
                 VmsMake.write("$ " + Compile + " " + a + "\n")
             else:
@@ -1284,39 +1355,55 @@ def Boot():
                 else:
                     VmsMake.write("$ " + Assembler + " " + a + "\n")                    
             VmsLink.write(Object + "/SELECTIVE_SEARCH\n")
+            
+    # double colon batches and is much faster
+    colon = [":", "::"][nt]
 
-    if not c:
-        Makefile.write(".c.o:\n"
-                       + "\t$(Compile) -o $@ $<\n\n"
-                       + ".c.obj:\n"
-                       + "\t$(Compile) -o $@ $<\n\n"
-                       + ".is.io:\n"
-                       + "\t$(Assemble) -o $@ $<\n\n"
-                       + ".s.o:\n"
-                       + "\t$(Assemble) -o $@ $<\n\n"
-                       + ".ms.mo:\n"
-                       + "\t$(Assemble) -o $@ $<\n\n")
+    if _CBackend or not nt:
+        # write inference rules: .c => .o, .c => .obj, .cpp => .o, .cpp => .obj
+        for c in ["c", "cpp"]:
+            for o in ["o", "obj"]:
+                Makefile.write("." + c + "." + o + colon + NL + "\t$(Compile) " + CCompilerOut + " $<" + NL2)
+            
+        # write inference rules: .is => .io, .s => .o, .ms => .mo
+        if not _CBackend:
+            for source_obj in [["is", "io"], ["s", "o"], ["ms", "mo"]]:
+                source = source_obj[0]
+                obj = source_obj[1]
+                Makefile.write("." + source + "." + obj + ":" + NL + "\t$(Assemble) -o $@ $<" + NL2)
 
-    Makefile.write("cm3:")
-    Objects = Objects.keys()
+    Makefile.write("OBJECTS=")
+    Objects = ObjectsExceptMain.keys()
     Objects.sort()
-    k = 4
+    k = 8
     for a in Objects:
         k = k + 1 + len(a)
         if k > 76: # line wrap
-            Makefile.write(" \\\n")
+            Makefile.write(" \\" + NL)
             k = 1 + len(a)
         Makefile.write(" " + a)
-    Makefile.write("\n\t")
+
+    Makefile.write(NL2)
  
+    LinkOut = [" -o ", " -out:"][nt]
+
+    for pkg in main_packages:
+        Makefile.write(pkg + EXE + ":")
+        main = pkg + "_Main.m3." + obj
+        if main in ObjectsExceptMain:
+            Makefile.write(" " + main)
+        Makefile.write(" " + "$(OBJECTS)")
+        Makefile.write(NL + "\t")
+        Makefile.write("$(Link) " + LinkOut + "$@" + NL)
+
     VmsMake.write("$ set file/attr=(rfm=var,rat=none) *.o\n")
     VmsMake.write("$ set file/attr=(rfm=var,rat=none) *.obj\n")
     VmsMake.write("$ set file/attr=(rfm=var,rat=none) *.mo\n")
     VmsMake.write("$ set file/attr=(rfm=var,rat=none) *.io\n")
     VmsMake.write("$ link /executable=cm3.exe vmslink/options\n")
-
-    for a in [Make, Makefile]:
-        a.write("$(Link) -o cm3\n")
+    
+    for a in [Make]:
+        a.write("$(Link) " + LinkOut + "$@" + NL)
         
     if False:
         for a in [
@@ -1405,19 +1492,21 @@ def Boot():
 
     for a in [UpdateSource, Make, Makefile, VmsMake, VmsLink]:
         a.close()
+    Make.close()
         
     # write entirely new custom makefile for NT
     # We always have object files so just compile and link in one fell swoop.
 
-    if StringTagged(Config, "NT") or Config == "NT386":
+    if nt:
         DeleteFile("updatesource.sh")
         DeleteFile("make.sh")
-        Makefile = open(os.path.join(BootDir, "Makefile"), "wb")
-        Makefile.write("cm3.exe: *.io *.mo *.c\r\n"
-        + " cl -Zi -MD *.c -link *.mo *.io -out:cm3.exe user32.lib kernel32.lib wsock32.lib comctl32.lib gdi32.lib advapi32.lib netapi32.lib\r\n")
-        Makefile.close()
+        if not _CBackend:
+            Makefile = open(os.path.join(BootDir, "Makefile"), "wb")
+            Makefile.write("cm3" + EXE + ": *.io *.mo *.c\r\n"
+            + " cl -Zi -MD *.c -link *.mo *.io -out:$@ user32.lib kernel32.lib wsock32.lib comctl32.lib gdi32.lib advapi32.lib netapi32.lib iphlpapi.lib\r\n")
+            Makefile.close()
 
-    if vms or StringTagged(Config, "NT") or Config == "NT386":
+    if vms or nt:
         _MakeZip(BootDir[2:])
     else:
         _MakeTGZ(BootDir[2:])
@@ -1610,10 +1699,9 @@ GenericCommand:
     ListOnly = False
     KeepGoing = False
     NoAction = False
-    AllTargets = _GetAllTargets()
     for arg in args:
         if ((arg == "")
-            or (arg in AllTargets)
+            or (arg.lower() in _AllTargets)
             or (arg in _PossiblePylibFlags)
             ):
             continue
@@ -1890,13 +1978,15 @@ def _CopyCompiler(From, To):
 #-----------------------------------------------------------------------------
 
 def ShipBack():
-    return _CopyCompiler(os.path.join(Root, "m3-sys", "m3cc", Config),
+    if  not GCC_BACKEND:
+        return True
+    return _CopyCompiler(os.path.join(Root, "m3-sys", "m3cc", _BuildDir),
                          os.path.join(InstallRoot, "bin"))
 
 #-----------------------------------------------------------------------------
 
 def ShipFront():
-    return _CopyCompiler(os.path.join(Root, "m3-sys", "cm3", Config),
+    return _CopyCompiler(os.path.join(Root, "m3-sys", "cm3", _BuildDir),
                          os.path.join(InstallRoot, "bin"))
 
 #-----------------------------------------------------------------------------
@@ -1954,8 +2044,9 @@ def GetVisualCPlusPlusVersion():
         return "90"
     if a.find("16.00") != -1:
         return "100"
+    if a.find("17.00") != -1:
+        return "110"
     FatalError("unable to detect Visual C++ version, maybe cl is not in %PATH%?")
-
 
 def IsCygwinHostTarget(): # confused
     return Host.endswith("_CYGWIN") or (Host == "NT386" and GCC_BACKEND and TargetOS == "POSIX")
@@ -2136,7 +2227,9 @@ def SetupEnvironment():
 
         _SetupEnvironmentVariableAny(
             "PATH",
-            ["mspdb100.dll", "mspdb80.dll", "mspdb71.dll", "mspdb70.dll",
+            ["mspdbsrv.exe", "mspdbst.dll", "mspdbcore.dll",
+             "mspdb110.dll", "mspdb100.dll", "mspdb90.dll",
+             "mspdb80.dll", "mspdb71.dll", "mspdb70.dll",
              "mspdb60.dll", "mspdb50.dll", "mspdb41.dll", "mspdb40.dll",
              "dbi.dll"],
             MspdbDir)
@@ -2322,7 +2415,7 @@ def GetStage():
 def FormInstallRoot(PackageSetName):
     AltConfig = {"NT386":"x86"}.get(Config, Config)
     a = os.path.join(GetStage(), "cm3-" + PackageSetName + "-" + AltConfig + "-" + CM3VERSION)
-    if Config == "NT386" or Config == "I386_NT":
+    if Config == "NT386" or Config.endswith("_NT"):
         a = a + "-VC" + GetVisualCPlusPlusVersion()
     else:
         b = os.popen("uname -sr").read()

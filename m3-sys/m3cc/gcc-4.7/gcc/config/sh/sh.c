@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Output routines for GCC for Renesas / SuperH SH.
    Copyright (C) 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002,
    2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
@@ -205,7 +207,6 @@ static bool sh_print_operand_punct_valid_p (unsigned char code);
 static bool sh_asm_output_addr_const_extra (FILE *file, rtx x);
 static void sh_output_function_epilogue (FILE *, HOST_WIDE_INT);
 static void sh_insert_attributes (tree, tree *);
-static const char *sh_check_pch_target_flags (int);
 static int sh_register_move_cost (enum machine_mode, reg_class_t, reg_class_t);
 static int sh_adjust_cost (rtx, rtx, rtx, int);
 static int sh_issue_rate (void);
@@ -533,9 +534,6 @@ static const struct attribute_spec sh_attribute_table[] =
 #define TARGET_SCALAR_MODE_SUPPORTED_P sh_scalar_mode_supported_p
 #undef TARGET_VECTOR_MODE_SUPPORTED_P
 #define TARGET_VECTOR_MODE_SUPPORTED_P sh_vector_mode_supported_p
-
-#undef TARGET_CHECK_PCH_TARGET_FLAGS
-#define TARGET_CHECK_PCH_TARGET_FLAGS sh_check_pch_target_flags
 
 #undef TARGET_DWARF_CALLING_CONVENTION
 #define TARGET_DWARF_CALLING_CONVENTION sh_dwarf_calling_convention
@@ -9143,22 +9141,6 @@ sh_cfun_resbank_handler_p (void)
               != NULL_TREE) && TARGET_SH2A);
 }
 
-/* Implement TARGET_CHECK_PCH_TARGET_FLAGS.  */
-
-static const char *
-sh_check_pch_target_flags (int old_flags)
-{
-  if ((old_flags ^ target_flags) & (MASK_SH1 | MASK_SH2 | MASK_SH3
-				    | MASK_SH_E | MASK_HARD_SH4
-				    | MASK_FPU_SINGLE | MASK_SH4))
-    return _("created and used with different architectures / ABIs");
-  if ((old_flags ^ target_flags) & MASK_HITACHI)
-    return _("created and used with different ABIs");
-  if ((old_flags ^ target_flags) & MASK_LITTLE_ENDIAN)
-    return _("created and used with different endianness");
-  return NULL;
-}
-
 /* Predicates used by the templates.  */
 
 /* Returns 1 if OP is MACL, MACH or PR.  The input must be a REG rtx.

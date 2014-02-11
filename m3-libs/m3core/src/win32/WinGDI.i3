@@ -24,7 +24,7 @@ FROM WinDef IMPORT INT16, BOOL, UINT16, UINT32, PUINT32, PVOID, HDC,
                    PINT32, HRGN, PPOINT, INT32, COLORREF, WFLOAT,
                    HGDIOBJ, HMETAFILE, HMODULE, HFONT, HPEN, HPALETTE, HGLOBAL,
                    RECTL, SIZEL, PFLOAT, PSIZE, HENHMETAFILE, HGLRC, WCHAR,
-                   PSTR, PWSTR, PCSTR, PCWSTR;
+                   PSTR, PWSTR, PCSTR, PCWSTR, SIZE_T;
 
 (* Binary raster ops *)
 CONST
@@ -65,7 +65,7 @@ CONST
   NOMIRRORBITMAP = 16_80000000; (* Do not Mirror the bitmap in this call *)
   CAPTUREBLT = 16_40000000; (* Include layered windows *)
 
-  GDI_ERROR: INT32 = 16_FFFFFFFF;
+  GDI_ERROR: INT32 = -1;
 
 (* Region Flags *)
   ERROR         = 0;
@@ -391,8 +391,8 @@ TYPE
   END;
 
   (* structures for defining DIBs *)
-  PBITMAPCOREHEADER = UNTRACED REF PBITMAPCOREHEADER;
-  LPBITMAPCOREHEADER = UNTRACED REF PBITMAPCOREHEADER;
+  PBITMAPCOREHEADER = UNTRACED REF BITMAPCOREHEADER;
+  LPBITMAPCOREHEADER = UNTRACED REF BITMAPCOREHEADER;
   BITMAPCOREHEADER = RECORD
     bcSize    : UINT32;  (* used to get to color table *)
     bcWidth   : UINT16;
@@ -695,12 +695,12 @@ TYPE
 
   (* Logical Brush (or Pattern) *)
   PLOGBRUSH = UNTRACED REF LOGBRUSH;
-  NPLOGBRUSH = UNTRACED REF LOGBRUSH;
-  LPLOGBRUSH = UNTRACED REF LOGBRUSH;
+  NPLOGBRUSH = UNTRACED REF LOGBRUSH; (* remove this? *)
+  LPLOGBRUSH = UNTRACED REF LOGBRUSH; (* remove this? *)
   LOGBRUSH = RECORD
     lbStyle: UINT32;
     lbColor: COLORREF;
-    lbHatch: INT32;
+    lbHatch: SIZE_T;
   END;
 
   PATTERN = LOGBRUSH;
@@ -726,7 +726,7 @@ TYPE
     elpWidth     : UINT32;
     elpBrushStyle: UINT32;
     elpColor     : COLORREF;
-    elpHatch     : INT32;
+    elpHatch     : SIZE_T;
     elpNumEntries: UINT32;
     elpStyleEntry: ARRAY [0 .. 1 - 1] OF UINT32;
   END;

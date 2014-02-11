@@ -121,9 +121,11 @@ m3_check_target ( char * dir_name, char * file_name )
       { return; }
     if ( dir_name == NULL || file_name == NULL )
       { return; }
-    if ( strcmp ( file_name, "m3main.mc" ) != 0   /* PM3 and friends. */
-         && strcmp ( file_name, "_m3main.mc" ) != 0 /* CM3. */
-       )
+    if ( strcmp ( file_name, "m3main.mc" ) != 0   /* PM3 and friends, internal backend. */
+         && strcmp ( file_name, "_m3main.mc" ) != 0 /* PM3-gcc, CM3-gcc earlier. */
+         && strcmp ( file_name, "_m3main.c" ) != 0 /* Later CM3. */
+         ) 
+
       { return; }
     len = strlen ( dir_name );
     if ( len < 3 ) /* We need at least slashes at each end and 1 target char. */

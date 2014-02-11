@@ -27,7 +27,7 @@ PROCEDURE Read (v: ConvertPacking.ReadVisitor; r: REFANY; tc: TypeCode;
 
 (* Read in "r" with type "tc" using "v".  The packing of the data in
    the file is defined by "v.from", the packing of the data in memory
-   in "v.to".  "shape" is the dimmensions of the reference, if it is
+   in "v.to".  "shape" is the number of dimensions of the reference, if it is
    an Open Array.  Otherwise, it is ignored.  Proper conversions are
    applied.  It is assumed that "r" has been properly allocated to
    handle the incoming data.  *)

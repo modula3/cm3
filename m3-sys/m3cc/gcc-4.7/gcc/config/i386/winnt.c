@@ -38,6 +38,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "ggc.h"
 #include "target.h"
 #include "except.h"
+#include "function.h"
 
 /* i386/PE specific attribute support.
 
@@ -170,10 +171,11 @@ gen_stdcall_or_fastcall_suffix (tree decl, tree id, bool fastcall)
 {
   HOST_WIDE_INT total = 0;
   const char *old_str = IDENTIFIER_POINTER (id != NULL_TREE ? id : DECL_NAME (decl));
-  char *new_str, *p;
+  char *new_str = { 0 };
+  char *p = { 0 };
   tree type = TREE_TYPE (DECL_ORIGIN (decl));
-  tree arg;
-  function_args_iterator args_iter;
+  tree arg = { 0 };
+  function_args_iterator args_iter = { 0 };
 
   gcc_assert (TREE_CODE (decl) == FUNCTION_DECL);  
 
@@ -187,7 +189,7 @@ gen_stdcall_or_fastcall_suffix (tree decl, tree id, bool fastcall)
 	 by convert_arguments in c-typeck.c or cp/typeck.c.  */
       FOREACH_FUNCTION_ARGS(type, arg, args_iter)
 	{
-	  HOST_WIDE_INT parm_size;
+	  HOST_WIDE_INT parm_size = { 0 };
 	  HOST_WIDE_INT parm_boundary_bytes = PARM_BOUNDARY / BITS_PER_UNIT;
 
 	  if (! COMPLETE_TYPE_P (arg))
@@ -285,8 +287,8 @@ i386_pe_mangle_assembler_name (const char *name ATTRIBUTE_UNUSED)
 void
 i386_pe_encode_section_info (tree decl, rtx rtl, int first)
 {
-  rtx symbol;
-  int flags;
+  rtx symbol = { 0 };
+  int flags = { 0 };
 
   /* Do this last, due to our frobbing of DECL_DLLIMPORT_P above.  */
   default_encode_section_info (decl, rtl, first);
@@ -305,7 +307,7 @@ i386_pe_encode_section_info (tree decl, rtx rtl, int first)
 	 Check and decorate the RTL name now.  */
       if  (strcmp (lang_hooks.name, "GNU Ada") == 0)
 	{
-	  tree new_id;
+	  tree new_id = { 0 };
 	  tree old_id = DECL_ASSEMBLER_NAME (decl);
 	  const char* asm_str = IDENTIFIER_POINTER (old_id);
 	  /* Do not change the identifier if a verbatim asmspec
@@ -392,11 +394,11 @@ i386_pe_strip_name_encoding_full (const char *str)
 void
 i386_pe_unique_section (tree decl, int reloc)
 {
-  int len;
-  const char *name, *prefix;
-  char *string;
+  int len = { 0 };
+  const char *prefix = { 0 };
+  char *string = { 0 };
 
-  name = IDENTIFIER_POINTER (DECL_ASSEMBLER_NAME (decl));
+  const char * name = IDENTIFIER_POINTER (DECL_ASSEMBLER_NAME (decl));
   name = i386_pe_strip_name_encoding_full (name);
 
   /* The object is put in, for example, section .text$foo.
@@ -438,9 +440,9 @@ i386_pe_unique_section (tree decl, int reloc)
 unsigned int
 i386_pe_section_type_flags (tree decl, const char *name, int reloc)
 {
-  static htab_t htab;
-  unsigned int flags;
-  unsigned int **slot;
+  static htab_t htab = { 0 };
+  unsigned int flags = { 0 };
+  unsigned int **slot = { 0 };
 
   /* The names we put in the hashtable will always be the unique
      versions given to us by the stringtable, so we can just use
@@ -484,7 +486,8 @@ void
 i386_pe_asm_named_section (const char *name, unsigned int flags, 
 			   tree decl)
 {
-  char flagchars[8], *f = flagchars;
+  char flagchars[8] = { 0 };
+  char *f = flagchars;
 
 #if defined (HAVE_GAS_SECTION_EXCLUDE) && HAVE_GAS_SECTION_EXCLUDE == 1
   if ((flags & SECTION_EXCLUDE) != 0)
@@ -540,7 +543,7 @@ i386_pe_asm_output_aligned_decl_common (FILE *stream, tree decl,
 					const char *name, HOST_WIDE_INT size,
 					HOST_WIDE_INT align ATTRIBUTE_UNUSED)
 {
-  HOST_WIDE_INT rounded;
+  HOST_WIDE_INT rounded = { 0 };
 
   /* Compute as in assemble_noswitch_variable, since we don't have
      support for aligned common on older binutils.  We must also
@@ -607,9 +610,7 @@ static GTY(()) struct extern_list *extern_head;
 void
 i386_pe_record_external_function (tree decl, const char *name)
 {
-  struct extern_list *p;
-
-  p = ggc_alloc_extern_list ();
+  struct extern_list *p = ggc_alloc_extern_list ();
   p->next = extern_head;
   p->decl = decl;
   p->name = name;
@@ -637,8 +638,8 @@ static GTY(()) struct export_list *export_head;
 void
 i386_pe_maybe_record_exported_symbol (tree decl, const char *name, int is_data)
 {
-  rtx symbol;
-  struct export_list *p;
+  rtx symbol = { 0 };
+  struct export_list *p = { 0 };
 
   if (!decl)
     return;
@@ -678,7 +679,7 @@ static const char *
 i386_find_on_wrapper_list (const char *target)
 {
   static char first_time = 1;
-  static htab_t wrappers;
+  static htab_t wrappers = { 0 };
 
   if (first_time)
     {
@@ -722,7 +723,7 @@ i386_find_on_wrapper_list (const char *target)
 void
 i386_pe_file_end (void)
 {
-  struct extern_list *p;
+  struct extern_list *p = { 0 };
 
   for (p = extern_head; p != NULL; p = p->next)
     {
@@ -782,7 +783,7 @@ struct seh_frame_state
 void
 i386_pe_seh_init (FILE *f)
 {
-  struct seh_frame_state *seh;
+  struct seh_frame_state *seh = { 0 };
 
   if (!TARGET_SEH)
     return;
@@ -808,7 +809,7 @@ i386_pe_seh_init (FILE *f)
 void
 i386_pe_seh_end_prologue (FILE *f)
 {
-  struct seh_frame_state *seh;
+  struct seh_frame_state *seh = { 0 };
 
   if (!TARGET_SEH)
     return;
@@ -873,7 +874,7 @@ seh_emit_save (FILE *f, struct seh_frame_state *seh,
 	       rtx reg, HOST_WIDE_INT cfa_offset)
 {
   unsigned int regno = REGNO (reg);
-  HOST_WIDE_INT offset;
+  HOST_WIDE_INT offset = { 0 };
 
   /* Negative save offsets are of course not supported, since that
      would be a store below the stack pointer and thus clobberable.  */
@@ -910,9 +911,10 @@ seh_emit_stackalloc (FILE *f, struct seh_frame_state *seh,
 static void
 seh_cfa_adjust_cfa (FILE *f, struct seh_frame_state *seh, rtx pat)
 {
-  rtx dest, src;
+  rtx dest = { 0 };
+  rtx src = { 0 };
   HOST_WIDE_INT reg_offset = 0;
-  unsigned int dest_regno;
+  unsigned int dest_regno = { 0 };
 
   dest = SET_DEST (pat);
   src = SET_SRC (pat);
@@ -947,8 +949,9 @@ seh_cfa_adjust_cfa (FILE *f, struct seh_frame_state *seh, rtx pat)
 static void
 seh_cfa_offset (FILE *f, struct seh_frame_state *seh, rtx pat)
 {
-  rtx dest, src;
-  HOST_WIDE_INT reg_offset;
+  rtx dest = { 0 };
+  rtx src = { 0 };
+  HOST_WIDE_INT reg_offset = { 0 };
 
   dest = SET_DEST (pat);
   src = SET_SRC (pat);
@@ -973,13 +976,15 @@ seh_cfa_offset (FILE *f, struct seh_frame_state *seh, rtx pat)
 static void
 seh_frame_related_expr (FILE *f, struct seh_frame_state *seh, rtx pat)
 {
-  rtx dest, src;
-  HOST_WIDE_INT addend;
+  rtx dest = { 0 };
+  rtx src = { 0 };
+  HOST_WIDE_INT addend = { 0 };
 
   /* See the full loop in dwarf2out_frame_debug_expr.  */
   if (GET_CODE (pat) == PARALLEL || GET_CODE (pat) == SEQUENCE)
     {
-      int i, n = XVECLEN (pat, 0), pass, npass;
+      int i = { 0 };
+      int n = XVECLEN (pat, 0), pass, npass;
 
       npass = (GET_CODE (pat) == PARALLEL ? 2 : 1);
       for (pass = 0; pass < npass; ++pass)
@@ -1062,7 +1067,8 @@ seh_frame_related_expr (FILE *f, struct seh_frame_state *seh, rtx pat)
 void
 i386_pe_seh_unwind_emit (FILE *asm_out_file, rtx insn)
 {
-  rtx note, pat;
+  rtx note = { 0 };
+  rtx pat = { 0 };
   bool handled_one = false;
   struct seh_frame_state *seh;
 

@@ -67,7 +67,6 @@ along with GCC; see the file COPYING3.  If not see
 #include "langhooks.h"
 #include "cfglayout.h"
 #include "cfgloop.h"
-#include "hosthooks.h"
 #include "cgraph.h"
 #include "opts.h"
 #include "opts-diagnostic.h"
@@ -985,14 +984,6 @@ realloc_for_line_map (void *ptr, size_t len)
   return GGC_RESIZEVAR (void, ptr, len);
 }
 
-/* A helper function: used as the allocator function for
-   identifier_to_locale.  */
-static void *
-alloc_for_identifier_to_locale (size_t len)
-{
-  return ggc_alloc_atomic (len);
-}
-
 /* Output stack usage information.  */
 void
 output_stack_usage (void)
@@ -1151,9 +1142,6 @@ general_init (const char *argv0)
 #ifdef SIGFPE
   signal (SIGFPE, crash_signal);
 #endif
-
-  /* Other host-specific signal setup.  */
-  (*host_hooks.extra_signals)();
 
   /* Initialize the garbage-collector, string pools and tree type hash
      table.  */

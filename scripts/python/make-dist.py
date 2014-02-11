@@ -13,7 +13,7 @@ def contains(s, t):
 # no hardcoded paths in runpath, just $ORIGIN
 os.environ["M3_PORTABLE_RUN_PATH"] = "1"
 target      = Target.lower()
-currentVC   = ["80", "90", "100"]
+currentVC   = ["80", "90", "100", "110"]
 nativeNT    = contains(target, "nt386") or target.endswith("_nt")
 currentNT   = nativeNT and (GetVisualCPlusPlusVersion() in currentVC)
 oldNT       = nativeNT and not currentNT

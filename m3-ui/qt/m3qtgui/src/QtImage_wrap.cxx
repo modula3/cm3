@@ -197,15 +197,15 @@ SWIGEXPORT QImage * New_QImage2(int width, int height, QImage::Format format) {
 }
 
 
-SWIGEXPORT QImage * New_QImage3(unsigned char * data, int width, int height, QImage::Format format) {
-  unsigned char *arg1 = (unsigned char *) 0 ;
+SWIGEXPORT QImage * New_QImage3(uchar * data, int width, int height, QImage::Format format) {
+  uchar *arg1 = (uchar *) 0 ;
   int arg2 ;
   int arg3 ;
   QImage::Format arg4 ;
   QImage *result = 0 ;
   QImage * cresult ;
   
-  arg1 = *(unsigned char **)&data; 
+  arg1 = *(uchar **)&data; 
   arg2 = (int)width; 
   arg3 = (int)height; 
   arg4 = (QImage::Format)format; 
@@ -215,26 +215,26 @@ SWIGEXPORT QImage * New_QImage3(unsigned char * data, int width, int height, QIm
 }
 
 
-SWIGEXPORT QImage * New_QImage4(unsigned char const * data, int width, int height, QImage::Format format) {
-  unsigned char *arg1 = (unsigned char *) 0 ;
+SWIGEXPORT QImage * New_QImage4(uchar const * data, int width, int height, QImage::Format format) {
+  uchar *arg1 = (uchar *) 0 ;
   int arg2 ;
   int arg3 ;
   QImage::Format arg4 ;
   QImage *result = 0 ;
   QImage * cresult ;
   
-  arg1 = *(unsigned char **)&data; 
+  arg1 = *(uchar **)&data; 
   arg2 = (int)width; 
   arg3 = (int)height; 
   arg4 = (QImage::Format)format; 
-  result = (QImage *)new QImage((unsigned char const *)arg1,arg2,arg3,arg4);
+  result = (QImage *)new QImage((uchar const *)arg1,arg2,arg3,arg4);
   *(QImage **)&cresult = result; 
   return cresult;
 }
 
 
-SWIGEXPORT QImage * New_QImage5(unsigned char * data, int width, int height, int bytesPerLine, QImage::Format format) {
-  unsigned char *arg1 = (unsigned char *) 0 ;
+SWIGEXPORT QImage * New_QImage5(uchar * data, int width, int height, int bytesPerLine, QImage::Format format) {
+  uchar *arg1 = (uchar *) 0 ;
   int arg2 ;
   int arg3 ;
   int arg4 ;
@@ -242,7 +242,7 @@ SWIGEXPORT QImage * New_QImage5(unsigned char * data, int width, int height, int
   QImage *result = 0 ;
   QImage * cresult ;
   
-  arg1 = *(unsigned char **)&data; 
+  arg1 = *(uchar **)&data; 
   arg2 = (int)width; 
   arg3 = (int)height; 
   arg4 = (int)bytesPerLine; 
@@ -253,8 +253,8 @@ SWIGEXPORT QImage * New_QImage5(unsigned char * data, int width, int height, int
 }
 
 
-SWIGEXPORT QImage * New_QImage6(unsigned char const * data, int width, int height, int bytesPerLine, QImage::Format format) {
-  unsigned char *arg1 = (unsigned char *) 0 ;
+SWIGEXPORT QImage * New_QImage6(uchar const * data, int width, int height, int bytesPerLine, QImage::Format format) {
+  uchar *arg1 = (uchar *) 0 ;
   int arg2 ;
   int arg3 ;
   int arg4 ;
@@ -262,12 +262,12 @@ SWIGEXPORT QImage * New_QImage6(unsigned char const * data, int width, int heigh
   QImage *result = 0 ;
   QImage * cresult ;
   
-  arg1 = *(unsigned char **)&data; 
+  arg1 = *(uchar **)&data; 
   arg2 = (int)width; 
   arg3 = (int)height; 
   arg4 = (int)bytesPerLine; 
   arg5 = (QImage::Format)format; 
-  result = (QImage *)new QImage((unsigned char const *)arg1,arg2,arg3,arg4,arg5);
+  result = (QImage *)new QImage((uchar const *)arg1,arg2,arg3,arg4,arg5);
   *(QImage **)&cresult = result; 
   return cresult;
 }
@@ -350,6 +350,24 @@ SWIGEXPORT void Delete_QImage(QImage * self) {
   
   arg1 = *(QImage **)&self; 
   delete arg1;
+}
+
+
+SWIGEXPORT void QImage_swap(QImage * self, QImage & other) {
+  QImage *arg1 = (QImage *) 0 ;
+  QImage *arg2 = 0 ;
+  
+  arg1 = *(QImage **)&self; 
+  arg2 = *(QImage **)&other;
+  /*
+  if(!arg2) {
+      //SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "QImage & reference is null");
+      //RETURN ;
+      return ;
+    }
+  */
+  
+  (arg1)->swap(*arg2);
 }
 
 
@@ -543,6 +561,18 @@ SWIGEXPORT int QImage_colorCount(QImage const * self) {
 }
 
 
+SWIGEXPORT int QImage_bitPlaneCount(QImage const * self) {
+  QImage *arg1 = (QImage *) 0 ;
+  int result;
+  int cresult ;
+  
+  arg1 = *(QImage **)&self; 
+  result = (int)((QImage const *)arg1)->bitPlaneCount();
+  cresult = result; 
+  return cresult;
+}
+
+
 SWIGEXPORT QRgb * QImage_color(QImage const * self, int i) {
   QImage *arg1 = (QImage *) 0 ;
   int arg2 ;
@@ -610,26 +640,38 @@ SWIGEXPORT bool QImage_isGrayscale(QImage const * self) {
 }
 
 
-SWIGEXPORT unsigned char * QImage_bits(QImage * self) {
+SWIGEXPORT uchar * QImage_bits(QImage * self) {
   QImage *arg1 = (QImage *) 0 ;
-  unsigned char *result = 0 ;
-  unsigned char * cresult ;
+  uchar *result = 0 ;
+  uchar * cresult ;
   
   arg1 = *(QImage **)&self; 
-  result = (unsigned char *)(arg1)->bits();
-  *(unsigned char **)&cresult = result; 
+  result = (uchar *)(arg1)->bits();
+  *(uchar **)&cresult = result; 
   return cresult;
 }
 
 
-SWIGEXPORT unsigned char const * QImage_bits1(QImage const * self) {
+SWIGEXPORT uchar const * QImage_bits1(QImage const * self) {
   QImage *arg1 = (QImage *) 0 ;
-  unsigned char *result = 0 ;
-  unsigned char const * cresult ;
+  uchar *result = 0 ;
+  uchar const * cresult ;
   
   arg1 = *(QImage **)&self; 
-  result = (unsigned char *)((QImage const *)arg1)->bits();
-  *(unsigned char **)&cresult = result; 
+  result = (uchar *)((QImage const *)arg1)->bits();
+  *(uchar **)&cresult = result; 
+  return cresult;
+}
+
+
+SWIGEXPORT uchar const * QImage_constBits(QImage const * self) {
+  QImage *arg1 = (QImage *) 0 ;
+  uchar *result = 0 ;
+  uchar const * cresult ;
+  
+  arg1 = *(QImage **)&self; 
+  result = (uchar *)((QImage const *)arg1)->constBits();
+  *(uchar **)&cresult = result; 
   return cresult;
 }
 
@@ -646,30 +688,44 @@ SWIGEXPORT int QImage_byteCount(QImage const * self) {
 }
 
 
-SWIGEXPORT unsigned char * QImage_scanLine(QImage * self, int m3arg2) {
+SWIGEXPORT uchar * QImage_scanLine(QImage * self, int m3arg2) {
   QImage *arg1 = (QImage *) 0 ;
   int arg2 ;
-  unsigned char *result = 0 ;
-  unsigned char * cresult ;
+  uchar *result = 0 ;
+  uchar * cresult ;
   
   arg1 = *(QImage **)&self; 
   arg2 = (int)m3arg2; 
-  result = (unsigned char *)(arg1)->scanLine(arg2);
-  *(unsigned char **)&cresult = result; 
+  result = (uchar *)(arg1)->scanLine(arg2);
+  *(uchar **)&cresult = result; 
   return cresult;
 }
 
 
-SWIGEXPORT unsigned char const * QImage_scanLine1(QImage const * self, int m3arg2) {
+SWIGEXPORT uchar const * QImage_scanLine1(QImage const * self, int m3arg2) {
   QImage *arg1 = (QImage *) 0 ;
   int arg2 ;
-  unsigned char *result = 0 ;
-  unsigned char const * cresult ;
+  uchar *result = 0 ;
+  uchar const * cresult ;
   
   arg1 = *(QImage **)&self; 
   arg2 = (int)m3arg2; 
-  result = (unsigned char *)((QImage const *)arg1)->scanLine(arg2);
-  *(unsigned char **)&cresult = result; 
+  result = (uchar *)((QImage const *)arg1)->scanLine(arg2);
+  *(uchar **)&cresult = result; 
+  return cresult;
+}
+
+
+SWIGEXPORT uchar const * QImage_constScanLine(QImage const * self, int m3arg2) {
+  QImage *arg1 = (QImage *) 0 ;
+  int arg2 ;
+  uchar *result = 0 ;
+  uchar const * cresult ;
+  
+  arg1 = *(QImage **)&self; 
+  arg2 = (int)m3arg2; 
+  result = (uchar *)((QImage const *)arg1)->constScanLine(arg2);
+  *(uchar **)&cresult = result; 
   return cresult;
 }
 
@@ -804,6 +860,26 @@ SWIGEXPORT void QImage_fill(QImage * self, unsigned int pixel) {
   
   arg1 = *(QImage **)&self; 
   arg2 = (unsigned int)pixel; 
+  (arg1)->fill(arg2);
+}
+
+
+SWIGEXPORT void QImage_fill1(QImage * self, QColor * color) {
+  QImage *arg1 = (QImage *) 0 ;
+  QColor *arg2 = 0 ;
+  
+  arg1 = *(QImage **)&self; 
+  arg2 = *(QColor **)&color;
+  (arg1)->fill((QColor const &)*arg2);
+}
+
+
+SWIGEXPORT void QImage_fill2(QImage * self, Qt::GlobalColor color) {
+  QImage *arg1 = (QImage *) 0 ;
+  Qt::GlobalColor arg2 ;
+  
+  arg1 = *(QImage **)&self; 
+  arg2 = (Qt::GlobalColor)color; 
   (arg1)->fill(arg2);
 }
 
@@ -1264,37 +1340,37 @@ SWIGEXPORT bool QImage_load2(QImage * self, QString * fileName) {
 }
 
 
-SWIGEXPORT bool QImage_loadFromData(QImage * self, unsigned char const * buf, int len, char * format) {
+SWIGEXPORT bool QImage_loadFromData(QImage * self, uchar const * buf, int len, char * format) {
   QImage *arg1 = (QImage *) 0 ;
-  unsigned char *arg2 = (unsigned char *) 0 ;
+  uchar *arg2 = (uchar *) 0 ;
   int arg3 ;
   char *arg4 = (char *) 0 ;
   bool result;
   bool cresult ;
   
   arg1 = *(QImage **)&self; 
-  arg2 = *(unsigned char **)&buf; 
+  arg2 = *(uchar **)&buf; 
   arg3 = (int)len; 
   {
     arg4 = format;
   }
-  result = (bool)(arg1)->loadFromData((unsigned char const *)arg2,arg3,(char const *)arg4);
+  result = (bool)(arg1)->loadFromData((uchar const *)arg2,arg3,(char const *)arg4);
   cresult = result; 
   return cresult;
 }
 
 
-SWIGEXPORT bool QImage_loadFromData1(QImage * self, unsigned char const * buf, int len) {
+SWIGEXPORT bool QImage_loadFromData1(QImage * self, uchar const * buf, int len) {
   QImage *arg1 = (QImage *) 0 ;
-  unsigned char *arg2 = (unsigned char *) 0 ;
+  uchar *arg2 = (uchar *) 0 ;
   int arg3 ;
   bool result;
   bool cresult ;
   
   arg1 = *(QImage **)&self; 
-  arg2 = *(unsigned char **)&buf; 
+  arg2 = *(uchar **)&buf; 
   arg3 = (int)len; 
-  result = (bool)(arg1)->loadFromData((unsigned char const *)arg2,arg3);
+  result = (bool)(arg1)->loadFromData((uchar const *)arg2,arg3);
   cresult = result; 
   return cresult;
 }
@@ -1436,30 +1512,30 @@ SWIGEXPORT bool QImage_save5(QImage const * self, QIODevice * device) {
 }
 
 
-SWIGEXPORT QImage * Image_FromData(unsigned char const * data, int size, char * format) {
-  unsigned char *arg1 = (unsigned char *) 0 ;
+SWIGEXPORT QImage * Image_FromData(uchar const * data, int size, char * format) {
+  uchar *arg1 = (uchar *) 0 ;
   int arg2 ;
   char *arg3 = (char *) 0 ;
   QImage * cresult ;
   
-  arg1 = *(unsigned char **)&data; 
+  arg1 = *(uchar **)&data; 
   arg2 = (int)size; 
   {
     arg3 = format;
   }
-  *(QImage **)&cresult = new QImage((const QImage &)QImage::fromData((unsigned char const *)arg1,arg2,(char const *)arg3));
+  *(QImage **)&cresult = new QImage((const QImage &)QImage::fromData((uchar const *)arg1,arg2,(char const *)arg3));
   return cresult;
 }
 
 
-SWIGEXPORT QImage * Image_FromData1(unsigned char const * data, int size) {
-  unsigned char *arg1 = (unsigned char *) 0 ;
+SWIGEXPORT QImage * Image_FromData1(uchar const * data, int size) {
+  uchar *arg1 = (uchar *) 0 ;
   int arg2 ;
   QImage * cresult ;
   
-  arg1 = *(unsigned char **)&data; 
+  arg1 = *(uchar **)&data; 
   arg2 = (int)size; 
-  *(QImage **)&cresult = new QImage((const QImage &)QImage::fromData((unsigned char const *)arg1,arg2));
+  *(QImage **)&cresult = new QImage((const QImage &)QImage::fromData((uchar const *)arg1,arg2));
   return cresult;
 }
 

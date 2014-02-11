@@ -391,9 +391,9 @@ SWIGEXPORT void QListWidgetItem_setFlags(QListWidgetItem * self, Qt::ItemFlags f
 }
 
 
-SWIGEXPORT QString *  QListWidgetItem_text(QListWidgetItem const * self) {
+SWIGEXPORT QString * QListWidgetItem_text(QListWidgetItem const * self) {
   QListWidgetItem *arg1 = (QListWidgetItem *) 0 ;
-  QString *  cresult ;
+  QString * cresult ;
   
   arg1 = *(QListWidgetItem **)&self; 
   *(QString **)&cresult = new QString((const QString &)((QListWidgetItem const *)arg1)->text());
@@ -431,9 +431,9 @@ SWIGEXPORT void QListWidgetItem_setIcon(QListWidgetItem * self, QIcon * icon) {
 }
 
 
-SWIGEXPORT QString *  QListWidgetItem_statusTip(QListWidgetItem const * self) {
+SWIGEXPORT QString * QListWidgetItem_statusTip(QListWidgetItem const * self) {
   QListWidgetItem *arg1 = (QListWidgetItem *) 0 ;
-  QString *  cresult ;
+  QString * cresult ;
   
   arg1 = *(QListWidgetItem **)&self; 
   *(QString **)&cresult = new QString((const QString &)((QListWidgetItem const *)arg1)->statusTip());
@@ -451,9 +451,9 @@ SWIGEXPORT void QListWidgetItem_setStatusTip(QListWidgetItem * self, QString * s
 }
 
 
-SWIGEXPORT QString *  QListWidgetItem_toolTip(QListWidgetItem const * self) {
+SWIGEXPORT QString * QListWidgetItem_toolTip(QListWidgetItem const * self) {
   QListWidgetItem *arg1 = (QListWidgetItem *) 0 ;
-  QString *  cresult ;
+  QString * cresult ;
   
   arg1 = *(QListWidgetItem **)&self; 
   *(QString **)&cresult = new QString((const QString &)((QListWidgetItem const *)arg1)->toolTip());
@@ -471,9 +471,9 @@ SWIGEXPORT void QListWidgetItem_setToolTip(QListWidgetItem * self, QString * too
 }
 
 
-SWIGEXPORT QString *  QListWidgetItem_whatsThis(QListWidgetItem const * self) {
+SWIGEXPORT QString * QListWidgetItem_whatsThis(QListWidgetItem const * self) {
   QListWidgetItem *arg1 = (QListWidgetItem *) 0 ;
-  QString *  cresult ;
+  QString * cresult ;
   
   arg1 = *(QListWidgetItem **)&self; 
   *(QString **)&cresult = new QString((const QString &)((QListWidgetItem const *)arg1)->whatsThis());

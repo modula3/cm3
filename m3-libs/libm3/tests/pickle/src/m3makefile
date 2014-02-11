@@ -1,0 +1,17 @@
+import("libm3")
+
+interface("LibDep")
+
+% Use the appropriate body of LibDep for the branch we are in.  
+%implementation("LibDepRelease") 
+implementation("LibDepHead") 
+%implementation("LibDepUni") 
+
+interface("WcDep")
+
+% Use WcDep21 IFF this is to be compiled with 21-bit-WIDECHAR. 
+implementation("WcDep16") 
+%implementation("WcDep21") 
+
+implementation("PickleTestWideChar")
+program("pickletestwidechar")

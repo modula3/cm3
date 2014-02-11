@@ -404,18 +404,10 @@ extern struct gimple_opt_pass pass_pre;
 extern unsigned int tail_merge_optimize (unsigned int);
 extern struct gimple_opt_pass pass_profile;
 extern struct gimple_opt_pass pass_strip_predict_hints;
-extern struct gimple_opt_pass pass_lower_complex_O0;
-extern struct gimple_opt_pass pass_lower_complex;
 extern struct gimple_opt_pass pass_lower_vector;
 extern struct gimple_opt_pass pass_lower_vector_ssa;
-extern struct gimple_opt_pass pass_lower_omp;
-extern struct gimple_opt_pass pass_diagnose_omp_blocks;
-extern struct gimple_opt_pass pass_expand_omp;
-extern struct gimple_opt_pass pass_expand_omp_ssa;
-extern struct gimple_opt_pass pass_object_sizes;
 extern struct gimple_opt_pass pass_strlen;
 extern struct gimple_opt_pass pass_fold_builtins;
-extern struct gimple_opt_pass pass_stdarg;
 extern struct gimple_opt_pass pass_early_warn_uninitialized;
 extern struct gimple_opt_pass pass_late_warn_uninitialized;
 extern struct gimple_opt_pass pass_cse_reciprocals;
@@ -446,17 +438,10 @@ extern struct gimple_opt_pass pass_build_cgraph_edges;
 extern struct gimple_opt_pass pass_local_pure_const;
 extern struct gimple_opt_pass pass_tracer;
 extern struct gimple_opt_pass pass_warn_unused_result;
-extern struct gimple_opt_pass pass_diagnose_tm_blocks;
-extern struct gimple_opt_pass pass_lower_tm;
-extern struct gimple_opt_pass pass_tm_init;
-extern struct gimple_opt_pass pass_tm_mark;
-extern struct gimple_opt_pass pass_tm_memopt;
-extern struct gimple_opt_pass pass_tm_edges;
 extern struct gimple_opt_pass pass_split_functions;
 extern struct gimple_opt_pass pass_feedback_split_functions;
 
 /* IPA Passes */
-extern struct simple_ipa_opt_pass pass_ipa_lower_emutls;
 extern struct simple_ipa_opt_pass pass_ipa_function_and_variable_visibility;
 extern struct simple_ipa_opt_pass pass_ipa_tree_profile;
 
@@ -474,7 +459,6 @@ extern struct ipa_opt_pass_d pass_ipa_pure_const;
 extern struct simple_ipa_opt_pass pass_ipa_pta;
 extern struct ipa_opt_pass_d pass_ipa_lto_wpa_fixup;
 extern struct ipa_opt_pass_d pass_ipa_lto_finish_out;
-extern struct simple_ipa_opt_pass pass_ipa_tm;
 extern struct ipa_opt_pass_d pass_ipa_profile;
 
 extern struct gimple_opt_pass pass_all_optimizations;
@@ -625,11 +609,6 @@ extern void pass_fini_dump_file (struct opt_pass *);
 extern const char *get_current_pass_name (void);
 extern void print_current_pass (FILE *);
 extern void debug_pass (void);
-extern void ipa_write_summaries (void);
-extern void ipa_write_optimization_summaries (struct cgraph_node_set_def *,
-					      struct varpool_node_set_def *);
-extern void ipa_read_summaries (void);
-extern void ipa_read_optimization_summaries (void);
 extern void register_one_dump_file (struct opt_pass *);
 extern bool function_called_by_processed_nodes_p (void);
 extern void register_pass (struct register_pass_info *);

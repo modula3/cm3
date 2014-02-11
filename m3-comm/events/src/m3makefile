@@ -2,6 +2,7 @@ import ("libm3")
 %import ("sequences")
 import ("listfuncs")
 import ("parseparams")
+import("netobj")
 
 List      ("EventConn","EventConn")
 ListFuncs ("EventConn","EventConn","EventConnList")

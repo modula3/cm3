@@ -229,10 +229,10 @@ SWIGEXPORT void QTextBrowser_clearHistory(QTextBrowser * self) {
 }
 
 
-SWIGEXPORT QString *  QTextBrowser_historyTitle(QTextBrowser const * self, int m3arg2) {
+SWIGEXPORT QString * QTextBrowser_historyTitle(QTextBrowser const * self, int m3arg2) {
   QTextBrowser *arg1 = (QTextBrowser *) 0 ;
   int arg2 ;
-  QString *  cresult ;
+  QString * cresult ;
   
   arg1 = *(QTextBrowser **)&self; 
   arg2 = (int)m3arg2; 

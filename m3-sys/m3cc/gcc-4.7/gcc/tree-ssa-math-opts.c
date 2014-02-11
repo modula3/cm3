@@ -648,34 +648,6 @@ struct gimple_opt_pass pass_cse_reciprocals =
  }
 };
 
-/* Build a gimple call statement that calls FN with argument ARG.
-   Set the lhs of the call statement to a fresh SSA name for
-   variable VAR.  If VAR is NULL, first allocate it.  Insert the
-   statement prior to GSI's current position, and return the fresh
-   SSA name.  */
-
-static tree
-build_and_insert_call (gimple_stmt_iterator *gsi, location_t loc,
-		       tree *var, tree fn, tree arg)
-{
-  gimple call_stmt;
-  tree ssa_target;
-
-  if (!*var)
-    {
-      *var = create_tmp_reg (TREE_TYPE (arg), "powroot");
-      add_referenced_var (*var);
-    }
-
-  call_stmt = gimple_build_call (fn, 1, arg);
-  ssa_target = make_ssa_name (*var, NULL);
-  gimple_set_lhs (call_stmt, ssa_target);
-  gimple_set_location (call_stmt, loc);
-  gsi_insert_before (gsi, call_stmt, GSI_SAME_STMT);
-
-  return ssa_target;
-}
-
 /* Build a gimple binary operation with the given CODE and arguments
    ARG0, ARG1, assigning the result to a new SSA name for variable
    TARGET.  Insert the statement prior to GSI's current position, and

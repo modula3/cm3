@@ -215,9 +215,9 @@ SWIGEXPORT int QProgressBar_value(QProgressBar const * self) {
 }
 
 
-SWIGEXPORT QString *  QProgressBar_text(QProgressBar const * self) {
+SWIGEXPORT QString * QProgressBar_text(QProgressBar const * self) {
   QProgressBar *arg1 = (QProgressBar *) 0 ;
-  QString *  cresult ;
+  QString * cresult ;
   
   arg1 = *(QProgressBar **)&self; 
   *(QString **)&cresult = new QString((const QString &)((QProgressBar const *)arg1)->text());
@@ -321,6 +321,18 @@ SWIGEXPORT bool QProgressBar_invertedAppearance(QProgressBar * self) {
 }
 
 
+SWIGEXPORT bool QProgressBar_invertedAppearance1(QProgressBar const * self) {
+  QProgressBar *arg1 = (QProgressBar *) 0 ;
+  bool result;
+  bool cresult ;
+  
+  arg1 = *(QProgressBar **)&self; 
+  result = (bool)((QProgressBar const *)arg1)->invertedAppearance();
+  cresult = result; 
+  return cresult;
+}
+
+
 SWIGEXPORT void QProgressBar_setTextDirection(QProgressBar * self, QProgressBar::Direction textDirection) {
   QProgressBar *arg1 = (QProgressBar *) 0 ;
   QProgressBar::Direction arg2 ;
@@ -343,6 +355,18 @@ SWIGEXPORT QProgressBar::Direction QProgressBar_textDirection(QProgressBar * sel
 }
 
 
+SWIGEXPORT QProgressBar::Direction QProgressBar_textDirection1(QProgressBar const * self) {
+  QProgressBar *arg1 = (QProgressBar *) 0 ;
+  QProgressBar::Direction result;
+  QProgressBar::Direction cresult ;
+  
+  arg1 = *(QProgressBar **)&self; 
+  result = (QProgressBar::Direction)((QProgressBar const *)arg1)->textDirection();
+  cresult = result; 
+  return cresult;
+}
+
+
 SWIGEXPORT void QProgressBar_setFormat(QProgressBar * self, QString * format) {
   QProgressBar *arg1 = (QProgressBar *) 0 ;
   QString *arg2 = 0 ;
@@ -353,9 +377,9 @@ SWIGEXPORT void QProgressBar_setFormat(QProgressBar * self, QString * format) {
 }
 
 
-SWIGEXPORT QString *  QProgressBar_format(QProgressBar const * self) {
+SWIGEXPORT QString * QProgressBar_format(QProgressBar const * self) {
   QProgressBar *arg1 = (QProgressBar *) 0 ;
-  QString *  cresult ;
+  QString * cresult ;
   
   arg1 = *(QProgressBar **)&self; 
   *(QString **)&cresult = new QString((const QString &)((QProgressBar const *)arg1)->format());

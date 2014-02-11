@@ -38,7 +38,7 @@ PROCEDURE PostAppMessageW (idThread: UINT32;
 
 PROCEDURE CreateWindowA (lpClassName : PCSTR;
                          lpWindowName: PCSTR;
-                         dwStyle     : UINT32;
+                         dwStyle     : INT32;
                          x           : INT32;
                          y           : INT32;
                          nWidth      : INT32;
@@ -55,7 +55,7 @@ PROCEDURE CreateWindowA (lpClassName : PCSTR;
 
 PROCEDURE CreateWindowW (lpClassName : PCWSTR;
                          lpWindowName: PCWSTR;
-                         dwStyle     : UINT32;
+                         dwStyle     : INT32;
                          x           : INT32;
                          y           : INT32;
                          nWidth      : INT32;

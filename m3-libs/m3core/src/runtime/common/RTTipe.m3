@@ -9,7 +9,7 @@ UNSAFE MODULE RTTipe;
 
 IMPORT RT0, RTType, RTTypeSRC, RTPacking, Word;
 
-TYPE (* This list must be kept in sync with TipeDesc.m3.Op, in m3front. *)
+TYPE (* This list must be kept in sync with TipeDesc.i3.Op, in m3front. *)
   Op = {
   (* opcode         -- op  --- operands ------------------- *)
      Address,       (* 00                                   *)
@@ -35,7 +35,8 @@ TYPE (* This list must be kept in sync with TipeDesc.m3.Op, in m3front. *)
      Set,           (* 14, #elements: INT                   *)
      Subrange,      (* 15, min, max: INT                    *)
      UntracedRef,   (* 16, self id: UID                     *)
-  (* Widechar is denoted as Enum, with #elements = 2^16.    *)
+  (* Widechar is denoted as Enum, with #elements = NUMBER(WIDECHAR) *)
+(* Widechar Tipe. *) 
      OldN,          (* 17, node #: INT                      *)
      Old0           (* 18                                   *)
   };(* Old1, Old2, ... Old(255-ORD(Old0)) *)
@@ -61,6 +62,7 @@ TYPE
     word_size     : INTEGER;
     word_align    : INTEGER;
     long_size     : INTEGER;
+    widechar_size     : INTEGER;
     lazy_align    : BOOLEAN
   (* FIXME: ^ Use this below. *) 
   END;
@@ -86,6 +88,9 @@ PROCEDURE Get
     p.max_align     := packing.max_align;
     p.struct_align  := packing.struct_align;
     p.word_size     := packing.word_size;
+    p.widechar_size := packing.widechar_size; 
+    (* We are already taking care of the compatability problem handled below 
+       for LONGINT when decoding RTPacking.T. *) 
     p.word_align    := MIN (p.word_size, p.max_align);
     p.lazy_align    := packing.lazy_align;
     IF packing.long_size = 8 
@@ -122,6 +127,7 @@ PROCEDURE ReadOp (VAR s: State): T =
     | ORD (Op.Proc)     => t := NEW (Builtin, kind := Kind.Proc);
     | ORD (Op.Real)     => t := NEW (Builtin, kind := Kind.Real);
     | ORD (Op.Refany)   => t := NEW (Builtin, kind := Kind.Refany);
+(* Widechar Tipe. *) 
 
     | ORD (Op.Array) =>
         VAR arr := NEW (Array, kind := Kind.Array, n_elts := GetInt (s.ptr));
@@ -384,9 +390,22 @@ PROCEDURE FixSizes (t: T;  READONLY p: Packing) =
 
     | Kind.Enum =>
         VAR enum: Enum := t; BEGIN
-          IF    (enum.n_elts <= 256)         THEN t.size := 8;
-          ELSIF (enum.n_elts <= 65535)       THEN t.size := 16;
+          IF enum.n_elts = 16_10000 OR enum.n_elts = 16_110000
+          (* Until we get a new kind that is uniquely WIDECHAR, this is the
+             only way to identify WIDECHAR.  See RTTipe.m3.Op.  
+             Fortunately, a programmer-defined enumeration with exactly 
+             this many elements would be pretty unlikely. *) 
+          THEN 
+            t.size := p.widechar_size;
+            IF p.widechar_size = 16 THEN enum.n_elts := 16_10000;  
+            ELSIF p.widechar_size = 32 THEN enum.n_elts := 16_110000;
+            ELSE <* ASSERT FALSE *>
+            END;   
+(* Widechar Tipe. *) 
+          ELSIF (enum.n_elts <= 256)         THEN t.size := 8;
+          ELSIF (enum.n_elts <= 65536)       THEN t.size := 16;
           ELSIF (enum.n_elts <= 16_7fffffff) THEN t.size := 32;
+          (* Which adapts to LAST(WIDECHAR). *) 
           ELSE                                    t.size := 64;
           END;
           t.align := MIN (t.size, p.max_align);
@@ -417,7 +436,8 @@ PROCEDURE FixSizes (t: T;  READONLY p: Packing) =
           THEN t.size := 16;
           ELSIF (p.word_size <= 32)                         
           THEN t.size := 32;
-          ELSIF (0 <= sub.min.Lo) AND (sub.max.Lo <= 16_ffffffff) 
+          ELSIF (0 <= sub.min.Lo) 
+                AND Word.LT(sub.max.Lo, 16_ffffffff) 
           THEN t.size := 32;
           ELSIF (-16_7fffffff-1 <= sub.min.Lo) AND (sub.max.Lo <= 16_7fffffff)
           THEN t.size := 32;
@@ -584,6 +604,7 @@ PROCEDURE IsAlignedOK (t: T;  offset: INTEGER;  READONLY p: Packing): BOOLEAN =
       Kind.Subrange,
       Kind.Boolean,
       Kind.Char =>
+(* Widechar Tipe. *) 
         (* ok as long as they can be loaded from a single word *)
         VAR z0 : INTEGER;  BEGIN
           IF p.lazy_align 

@@ -131,5 +131,8 @@ TYPE
   QStyleOption = QStubObject;
   QStyleOptionComplex = QStubObject;
   QStyleHintReturn = QStubObject;
+  QPen = QStubObject;
+  QMouseEvent = QStubObject;
+  QChar = QStubObject;
 
 END QGuiStubs.

@@ -8,80 +8,25 @@ UNSAFE MODULE Main;
 IMPORT Process, IO, Rd, Wr, FileRd, FileWr, Thread, OSError, TextRefTbl;
 IMPORT Convert, CoffTime, File, FS, Text, Word, TextWr, TextSeq;
 IMPORT Fmt, Time, IntArraySort, RegularFile, Params, Pathname;
-IMPORT ASCII, BasicCtypes;
+IMPORT ASCII, BasicCtypes, WinNT, TextLiteral;
 
 TYPE
   UINT8 = BasicCtypes.unsigned_char;
-  UINT16 = BasicCtypes.unsigned_short_int;
   UINT32 = BasicCtypes.unsigned_int;
-  INT16 = BasicCtypes.short_int;
 
 CONST
-  MaxKeeper    = 10000;            (* max file size we'll hold in memory *)
-  MaxTotalKeep = 100 * MaxKeeper;  (* max total file space we'll hold in memory *)
+  (* TODO keep everything in memory *)
+  MaxKeeper    = TextLiteral.MaxBytes;  (* max file size we'll hold in memory *)
+  MaxTotalKeep = MaxKeeper;             (* max total file space we'll hold in memory *)
   ArchiveMagic = "!<arch>\n";
   EndHeader    = "`\n";
   PadChar      = '\n';
-
-TYPE
-  PIMAGE_SYMBOL = (* UNALIGNED *) UNTRACED REF IMAGE_SYMBOL;
-  IMAGE_SYMBOL = RECORD
-    N: ARRAY [0 .. 7] OF UINT8;
-    Value              : UINT32;
-    SectionNumber      : INT16;
-    Type               : UINT16;
-    StorageClass       : UINT8;
-    NumberOfAuxSymbols : UINT8;
-  END;
-
-CONST
-    IMAGE_SIZEOF_SYMBOL = 18;
-
-(* Section values. *)
-(* Symbols have a section number of the section in which they are *)
-(* defined. Otherwise, section numbers have the following meanings: *)
-
-  IMAGE_SYM_UNDEFINED = 0; (* Symbol is undefined or is common. *)
+  IMAGE_FILE_MACHINE_AMD64 = 16_8664;  (* AMD64 *) (* from m3core *)
   
-(* Storage classes. *)
-
-  IMAGE_SYM_CLASS_EXTERNAL = 2;
-
 (* File header format. *)
 
 TYPE
-  PIMAGE_FILE_HEADER = UNTRACED REF IMAGE_FILE_HEADER;
-  IMAGE_FILE_HEADER = RECORD
-    Machine             : UINT16;
-    NumberOfSections    : UINT16;
-    TimeDateStamp       : UINT32;
-    PointerToSymbolTable: UINT32;
-    NumberOfSymbols     : UINT32;
-    SizeOfOptionalHeader: UINT16;
-    Characteristics     : UINT16;
-  END;
-
-CONST
-  IMAGE_FILE_DLL           = 16_2000;
-  IMAGE_FILE_RELOCS_STRIPPED = 16_0001;
-  IMAGE_FILE_EXECUTABLE_IMAGE = 16_0002;
-  IMAGE_FILE_16BIT_MACHINE  = 16_0040;
-  IMAGE_FILE_BYTES_REVERSED_LO = 16_0080;
-  IMAGE_FILE_BYTES_REVERSED_HI = 16_8000;
-  IMAGE_FILE_MACHINE_I386    = 16_14c;
-
-TYPE
-  IMAGE_ARCHIVE_MEMBER_HEADER = RECORD
-    Name     : ARRAY [0 .. 15] OF UINT8;
-    Date     : ARRAY [0 .. 11] OF UINT8;
-    UserID   : ARRAY [0 .. 5]  OF UINT8;
-    GroupID  : ARRAY [0 .. 5]  OF UINT8;
-    Mode     : ARRAY [0 .. 7]  OF UINT8;
-    Size     : ARRAY [0 .. 9]  OF UINT8;
-    EndHeader: ARRAY [0 .. 1]  OF UINT8;
-  END;
-
-  Header = IMAGE_ARCHIVE_MEMBER_HEADER;
+  Header = WinNT.IMAGE_ARCHIVE_MEMBER_HEADER;
 
   FileDesc = REF RECORD
     next     : FileDesc := NIL;
@@ -104,6 +49,8 @@ TYPE
   END;
 
 VAR
+  trimUnderscore := FALSE;
+  Machine := 0;
   lib_wr      : Wr.T       := NIL;
   lib_name    : TEXT       := NIL;
   lib_time    : Time.T     := 0.0d0;
@@ -121,6 +68,30 @@ VAR
   verbose := FALSE;
   cleanSymbols := TRUE;
   ignoreTexts : TextSeq.T := NIL;
+
+PROCEDURE IsFloatingPointConstant(sym: TEXT; len: INTEGER): BOOLEAN =
+BEGIN
+    RETURN (len = 4 AND Match (sym, 0, "_xmm"))
+        OR (len = 5 AND (Match (sym, 0, "_real") OR Match (sym, 0, "__xmm")))
+        OR (len = 6 AND Match (sym, 0, "__real"));
+END IsFloatingPointConstant;
+
+PROCEDURE HandleArchitecture(machine: INTEGER): BOOLEAN =
+BEGIN
+    IF Machine # 0 AND machine # Machine THEN
+        Die ("multiple architectures: ", Fmt.Int(Machine), ", ",
+             Fmt.Int(machine));
+    END;
+    Machine := machine;
+    IF machine = WinNT.IMAGE_FILE_MACHINE_I386 THEN
+        trimUnderscore := TRUE;
+    ELSIF machine = IMAGE_FILE_MACHINE_AMD64 THEN
+        trimUnderscore := FALSE;
+    ELSE
+        RETURN FALSE;
+    END;
+    RETURN TRUE;
+END HandleArchitecture;
 
 PROCEDURE DoIt () =
   BEGIN
@@ -321,33 +292,33 @@ PROCEDURE ScanFile (f: FileDesc) =
 (*----------------------------------------------- Windows Object Files ---*)
 
 CONST (* we don't handle this stuff! *)
-  BadObjFlags = IMAGE_FILE_RELOCS_STRIPPED
-              + IMAGE_FILE_EXECUTABLE_IMAGE
-              + IMAGE_FILE_16BIT_MACHINE
-              + IMAGE_FILE_BYTES_REVERSED_LO
-              + IMAGE_FILE_DLL
-              + IMAGE_FILE_BYTES_REVERSED_HI;
+  BadObjFlags = WinNT.IMAGE_FILE_RELOCS_STRIPPED
+              + WinNT.IMAGE_FILE_EXECUTABLE_IMAGE
+              + WinNT.IMAGE_FILE_16BIT_MACHINE
+              + WinNT.IMAGE_FILE_BYTES_REVERSED_LO
+              + WinNT.IMAGE_FILE_DLL
+              + WinNT.IMAGE_FILE_BYTES_REVERSED_HI;
 
 TYPE
   ObjFile = RECORD
     file      : FileDesc;
     base      : ADDRESS;
     limit     : ADDRESS;
-    hdr       : PIMAGE_FILE_HEADER;
-    symtab    : PIMAGE_SYMBOL;
+    hdr       : WinNT.PIMAGE_FILE_HEADER;
+    symtab    : WinNT.PIMAGE_SYMBOL;
     stringtab : ADDRESS;
   END;
 
 PROCEDURE ScanExports (f: FileDesc) =
-  VAR o: ObjFile;  sym: PIMAGE_SYMBOL;
+  VAR o: ObjFile;  sym: WinNT.PIMAGE_SYMBOL;
   BEGIN
     o.file  := f;
     o.base  := ADR (f.contents[0]);           (* pin the contents so the collector*)
     o.limit := o.base + ADRSIZE (f.contents^);(* doesn't start moving them around *)
     o.hdr   := o.base;
 
-    IF (o.hdr.Machine # IMAGE_FILE_MACHINE_I386) THEN
-      (* this isn't an x86 object file *)
+    IF HandleArchitecture(o.hdr.Machine) = FALSE THEN
+      Die ("not an object file \"", f.name, Wr.EOL);
       RETURN;
     END;
 
@@ -365,15 +336,15 @@ PROCEDURE ScanExports (f: FileDesc) =
     END;
 
     (* locate the string table *)
-    o.stringtab := o.symtab + o.hdr.NumberOfSymbols * IMAGE_SIZEOF_SYMBOL;
+    o.stringtab := o.symtab + o.hdr.NumberOfSymbols * WinNT.IMAGE_SIZEOF_SYMBOL;
     IF (o.symtab < o.base) OR (o.limit <= o.symtab) THEN
       Die ("cannot find string table in object file \"", f.name, "\".");
     END;
 
     sym := o.symtab;
     WHILE (sym < o.stringtab) DO
-      IF sym.StorageClass = IMAGE_SYM_CLASS_EXTERNAL THEN
-        IF sym.SectionNumber # IMAGE_SYM_UNDEFINED THEN
+      IF sym.StorageClass = WinNT.IMAGE_SYM_CLASS_EXTERNAL THEN
+        IF sym.SectionNumber # WinNT.IMAGE_SYM_UNDEFINED THEN
           V ("symbol section number: ", Fmt.Int(sym.SectionNumber));
           AddExport (GetSymbolName (o, sym), f);
         ELSIF sym.Value > 0 THEN
@@ -382,7 +353,7 @@ PROCEDURE ScanExports (f: FileDesc) =
           AddExport (GetSymbolName (o, sym), f);
         END;
       END;
-      sym := sym + IMAGE_SIZEOF_SYMBOL * (1 + sym.NumberOfAuxSymbols);
+      sym := sym + WinNT.IMAGE_SIZEOF_SYMBOL * (1 + sym.NumberOfAuxSymbols);
     END;
   END ScanExports;
 
@@ -416,7 +387,7 @@ PROCEDURE AddExport (sym: TEXT;  f: FileDesc) =
     END;
   END AddExport;
 
-PROCEDURE GetSymbolName (READONLY o: ObjFile;  sym: PIMAGE_SYMBOL): TEXT =
+PROCEDURE GetSymbolName (READONLY o: ObjFile;  sym: WinNT.PIMAGE_SYMBOL): TEXT =
   TYPE IntBytes = ARRAY [0..3] OF UINT8;
   VAR
     max_len, len: INTEGER;
@@ -664,7 +635,7 @@ PROCEDURE CopyFile (f: FileDesc)
     rd  := OpenRd (f.name);
     sz  : CARDINAL := 0;
     len : CARDINAL;
-    buf : ARRAY [0..2047] OF CHAR;
+    buf : ARRAY [0..1024 * 8 - 1] OF CHAR;
   BEGIN
     TRY
       LOOP
@@ -765,11 +736,10 @@ PROCEDURE WriteDef () =
 
 PROCEDURE CleanName (sym: TEXT): TEXT =
   VAR
-    start  := 0;
+    start  := ORD(trimUnderscore AND Text.GetChar (sym, 0) = '_');
     stop   := Text.Length (sym) + 1;
     at     := Text.FindChar (sym, '@');
   BEGIN
-    IF Text.GetChar (sym, 0) = '_' THEN   start := 1;   END;
     IF (at > 0) AND cleanSymbols THEN stop := at; END;
     RETURN Text.Sub (sym, start, stop - start);
   END CleanName;
@@ -794,7 +764,7 @@ PROCEDURE IsKeeper (sym: TEXT): BOOLEAN =
       (* a type initialization or setup routine *)
       RETURN FALSE;
     END;
-    RETURN TRUE;
+    RETURN NOT IsFloatingPointConstant(sym, len);
   END IsKeeper;
 
 PROCEDURE Match (txt: TEXT;  start: INTEGER;  key: TEXT): BOOLEAN =

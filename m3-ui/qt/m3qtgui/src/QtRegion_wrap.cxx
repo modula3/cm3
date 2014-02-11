@@ -289,6 +289,24 @@ SWIGEXPORT void Delete_QRegion(QRegion * self) {
 }
 
 
+SWIGEXPORT void QRegion_swap(QRegion * self, QRegion & other) {
+  QRegion *arg1 = (QRegion *) 0 ;
+  QRegion *arg2 = 0 ;
+  
+  arg1 = *(QRegion **)&self; 
+  arg2 = *(QRegion **)&other;
+  /*
+  if(!arg2) {
+      //SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "QRegion & reference is null");
+      //RETURN ;
+      return ;
+    }
+  */
+  
+  (arg1)->swap(*arg2);
+}
+
+
 SWIGEXPORT bool QRegion_isEmpty(QRegion const * self) {
   QRegion *arg1 = (QRegion *) 0 ;
   bool result;

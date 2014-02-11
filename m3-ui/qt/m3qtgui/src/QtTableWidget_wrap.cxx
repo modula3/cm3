@@ -465,9 +465,9 @@ SWIGEXPORT void QTableWidgetItem_setFlags(QTableWidgetItem * self, Qt::ItemFlags
 }
 
 
-SWIGEXPORT QString *  QTableWidgetItem_text(QTableWidgetItem const * self) {
+SWIGEXPORT QString * QTableWidgetItem_text(QTableWidgetItem const * self) {
   QTableWidgetItem *arg1 = (QTableWidgetItem *) 0 ;
-  QString *  cresult ;
+  QString * cresult ;
   
   arg1 = *(QTableWidgetItem **)&self; 
   *(QString **)&cresult = new QString((const QString &)((QTableWidgetItem const *)arg1)->text());
@@ -505,9 +505,9 @@ SWIGEXPORT void QTableWidgetItem_setIcon(QTableWidgetItem * self, QIcon * icon) 
 }
 
 
-SWIGEXPORT QString *  QTableWidgetItem_statusTip(QTableWidgetItem const * self) {
+SWIGEXPORT QString * QTableWidgetItem_statusTip(QTableWidgetItem const * self) {
   QTableWidgetItem *arg1 = (QTableWidgetItem *) 0 ;
-  QString *  cresult ;
+  QString * cresult ;
   
   arg1 = *(QTableWidgetItem **)&self; 
   *(QString **)&cresult = new QString((const QString &)((QTableWidgetItem const *)arg1)->statusTip());
@@ -525,9 +525,9 @@ SWIGEXPORT void QTableWidgetItem_setStatusTip(QTableWidgetItem * self, QString *
 }
 
 
-SWIGEXPORT QString *  QTableWidgetItem_toolTip(QTableWidgetItem const * self) {
+SWIGEXPORT QString * QTableWidgetItem_toolTip(QTableWidgetItem const * self) {
   QTableWidgetItem *arg1 = (QTableWidgetItem *) 0 ;
-  QString *  cresult ;
+  QString * cresult ;
   
   arg1 = *(QTableWidgetItem **)&self; 
   *(QString **)&cresult = new QString((const QString &)((QTableWidgetItem const *)arg1)->toolTip());
@@ -545,9 +545,9 @@ SWIGEXPORT void QTableWidgetItem_setToolTip(QTableWidgetItem * self, QString * t
 }
 
 
-SWIGEXPORT QString *  QTableWidgetItem_whatsThis(QTableWidgetItem const * self) {
+SWIGEXPORT QString * QTableWidgetItem_whatsThis(QTableWidgetItem const * self) {
   QTableWidgetItem *arg1 = (QTableWidgetItem *) 0 ;
-  QString *  cresult ;
+  QString * cresult ;
   
   arg1 = *(QTableWidgetItem **)&self; 
   *(QString **)&cresult = new QString((const QString &)((QTableWidgetItem const *)arg1)->whatsThis());

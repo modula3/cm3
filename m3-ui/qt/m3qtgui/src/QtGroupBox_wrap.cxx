@@ -213,9 +213,9 @@ SWIGEXPORT void Delete_QGroupBox(QGroupBox * self) {
 }
 
 
-SWIGEXPORT QString *  QGroupBox_title(QGroupBox const * self) {
+SWIGEXPORT QString * QGroupBox_title(QGroupBox const * self) {
   QGroupBox *arg1 = (QGroupBox *) 0 ;
-  QString *  cresult ;
+  QString * cresult ;
   
   arg1 = *(QGroupBox **)&self; 
   *(QString **)&cresult = new QString((const QString &)((QGroupBox const *)arg1)->title());

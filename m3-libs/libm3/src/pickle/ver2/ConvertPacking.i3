@@ -31,7 +31,7 @@
 
 UNSAFE INTERFACE ConvertPacking;
 
-IMPORT RTPacking, PklAction, Thread, Rd, Wr;
+IMPORT Pickle2, RTPacking, PklAction, Thread, Rd, Wr;
 
 EXCEPTION Error(TEXT);
 
@@ -45,33 +45,34 @@ TYPE
          VAR (*OUT*) nDim, fromEltPack, toEltPack: INTEGER): T RAISES {Error};
     getDim(VAR (*OUT*) nDim, fromEltPack, toEltPack: INTEGER);
     convertRead(dest: ADDRESS; v: ReadVisitor; 
-                number: INTEGER): ADDRESS RAISES 
+                progRepCt: INTEGER): ADDRESS RAISES 
         {Error, Rd.EndOfFile, Rd.Failure, Thread.Alerted};
-    write(src: ADDRESS; v: WriteVisitor; number: INTEGER): ADDRESS RAISES 
+    write(src: ADDRESS; v: WriteVisitor; progRepCt: INTEGER): ADDRESS RAISES 
         {Error, Wr.Failure, Thread.Alerted};
     print();
     printProgram();
   END;
 
-(* "convert()" will uses the visitor "v" to fill in the data area
-   pointed to be "dest".  "dest" should point to the beginning of the
+(* "convertRead()" will use the visitor "v" to fill in the data area
+   pointed to by "dest".  "dest" should point to the beginning of the
    data address of a traced reference type with typecode "typecode".
    If "typecode" is an Open Array type, then the resulting converter
    will be set up to convert one instance of the open array element.
-   Furthermore, "init" and "getDim" will return the number of
-   dimensions and element packing of the open array.  It is up to the
+   Furthermore, "init" and "getDim" will return the number of open
+   dimensions and element packing (bit size of an element, including
+   any alignment packing) of the open array.  It is up to the
    caller to call "convert" the appropriate number of times with the
-   correct address each time.
+   correct dest address each time.
 
-   "convert" will call "v.readData" each time it needs some data from
+   "convertRead" will call "v.readData" each time it needs some data from
    the conversion source, "v.skipData" to skip a number of data bytes
    from the source and "v.readRef" to obtain a reference.  It returns
    the next address after the block of data filled in by the
    conversion. 
 
-   "write" will write out a reference in the analogous manner to
-   "convert", without doing any conversions.  It assumes the local
-   data format is the "local" packing passed to "init".
+   "write" will write out the contents of the object pointed to by src,
+   in the analogous manner to "convertRead", without doing any conversions.  
+   It assumes the local data format is the "local" packing passed to "init".
 
 *)
 
@@ -83,6 +84,9 @@ TYPE ReadVisitor <: RVPublic;
         {Rd.EndOfFile, Rd.Failure, Thread.Alerted};
        readRef(type: RefType): REFANY RAISES
         {Error, Rd.EndOfFile, Rd.Failure, Thread.Alerted};
+       readChar(): CHAR  
+        RAISES { Rd.EndOfFile, Rd.Failure, Thread.Alerted };
+       getReader():Pickle2.Reader; (* TMIH *)  
      END;
 
 (* When "v.readData" is called, the array "data" should be filled in with
@@ -90,7 +94,7 @@ TYPE ReadVisitor <: RVPublic;
    "length" data bytes in the conversion source should be skipped
    over. *)
 
-TYPE WriteVisitor <: WVPublic;
+TYPE WriteVisitor (* ABSTRACT *) <: WVPublic;
      WVPublic = OBJECT METHODS 
        writeData(VAR data: ARRAY OF CHAR) RAISES
         {Wr.Failure, Thread.Alerted};
@@ -98,6 +102,9 @@ TYPE WriteVisitor <: WVPublic;
         {Wr.Failure, Thread.Alerted};
        writeRef(type: RefType; ref: REFANY) RAISES
         {Error, Wr.Failure, Thread.Alerted};
+       writeChar(value: CHAR)  
+        RAISES { Wr.Failure, Thread.Alerted };
+       getWriter():Pickle2.Writer; (* TMIH *)  
      END;
 
 (* When "v.writeData" is called, the array "data" should be writen
@@ -121,12 +128,28 @@ PROCEDURE New(typecode: INTEGER; from: RTPacking.T; local: RTPacking.T;
 
 (* These are the data conversions we currently support. *)
 TYPE
-  Kind = {Copy, Swap, Copy32to64, Copy64to32, Swap32to64, Swap64to32};
+  CPKind = {Copy, Swap, Copy32to64, Copy64to32, Swap32to64, Swap64to32,
+            Copy16to32, Copy32to16, Swap16to32, Swap32to16
+           };
 
-PROCEDURE GetWordKind(from: RTPacking.T; local: RTPacking.T): Kind;
+PROCEDURE GetWordKind(from: RTPacking.T; local: RTPacking.T): CPKind;
 (* The result is good for all ordinal types except LONGINT. *) 
 
-PROCEDURE GetLongintKind(from: RTPacking.T; local: RTPacking.T): Kind;
+PROCEDURE GetLongintKind(from: RTPacking.T; local: RTPacking.T): CPKind;
 (* The result is good only for LONGINT. *) 
 
-END ConvertPacking.
+PROCEDURE GetWidecharKind(from: RTPacking.T; local: RTPacking.T): CPKind;
+(* The result is good only for WIDECHAR. *) 
+
+TYPE UInt32 = BITS 32 FOR [0 .. 16_7FFFFFFF];
+
+(*
+PROCEDURE WriteWC21(wr: Wr.T; intVal: UInt32)
+  RAISES {Wr.Failure, Thread.Alerted}; 
+
+PROCEDURE ReadWC21(rd: Rd.T): UInt32 
+RAISES{Rd.EndOfFile, Rd.Failure, Thread.Alerted}; 
+(* Read one WIDECHAR value in WC21 encoding and return in a 32-bit int. *) 
+*) 
+
+END ConvertPacking. 

@@ -129,12 +129,19 @@ PROCEDURE GetAddress (ent: WinSock.struct_hostent_star): Address =
 
 PROCEDURE GetHostAddr(): Address =
   VAR hname: ARRAY [0..255] OF CHAR;
+      lochost := ARRAY [0..9] OF CHAR {'1', '2', '7', '.', '0', '.', '0',
+                '.', '1', '\000'};
+      ent: WinSock.struct_hostent_star;
   BEGIN
     LOCK mu DO
       IF WinSock.gethostname(ADR(hname[0]), BYTESIZE(hname)) # 0 THEN
         IPError.Die();
       END;
-      RETURN GetAddress(WinSock.gethostbyname(ADR(hname[0])));
+      ent := WinSock.gethostbyname(ADR(hname[0]));
+      IF ent = NIL THEN
+        ent := WinSock.gethostbyname(ADR(lochost[0])); 
+      END;
+      RETURN GetAddress(ent);
     END;
   END GetHostAddr;
 

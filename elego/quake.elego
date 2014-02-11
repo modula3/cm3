@@ -30,6 +30,8 @@ end
 
 % Generate the "Creation.i3/m3" interface and implementation file. 
 % It contains the creation date of the module.
+% This code confuses host and target.
+
 proc creation_date_module(name) is
   local filename = name & ".m3"
   local tempname = "." & filename
@@ -40,27 +42,28 @@ proc creation_date_module(name) is
     write("\"", datetime(), "\";", CR)
   end
   >> tempname in
-    if equal (OS_TYPE, "WIN32")
-      %write("  System := ")
-      write("  System := \"")
-    else
-      write("  System := \"")
-    end
+    write("  System := \"")
   end
-  if equal (OS_TYPE, "WIN32")
-    %cmd = "act_uname_string"
-    cmd = "c:\\cygwin\\bin\\bash -c 'echo `uname -msr`\\\"\\; >>'" & tempname
+  % Unix example:
+  %  uname -msr => Darwin 9.8.0 i386
+  % Windows example
+  %  ver => Microsoft Windows [Version 6.1.7601]
+  %  echo PROCESSOR_ARCHITECTURE => AMD64
+  if not equal ($PROCESSOR_ARCHITECTURE, "")
+    >> tempname in
+        % double cmd /c apparently needed by Quake
+        local a = q_exec_get("cmd.exe /c cmd.exe /c ver")[1]
+        a = del_chars(del_chars(a, "\n"), "\r")
+        write(a, " ", $PROCESSOR_ARCHITECTURE, "\";\n")
+    end
   else
     cmd = "echo `uname -msr`'\";'"
-  end
-  cmd = cmd & " >> " & tempname
-  if defined("PM3")
-    ret = exec(["/bin/sh", "-c", cmd])
-  else
-    %if equal (OS_TYPE, "WIN32")
-    %  cmd = "bash -c " & cmd
-    %end
-    exec("@" & cmd)
+    cmd = cmd & " >> " & tempname
+    if defined("PM3")
+      ret = exec(["/bin/sh", "-c", cmd])
+    else
+      exec("@" & cmd)
+    end
   end
   >> tempname in
     write("END Creation.", CR)

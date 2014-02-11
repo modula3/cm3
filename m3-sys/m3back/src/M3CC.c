@@ -28,6 +28,7 @@ TEXT
 __cdecl
 M3CC__UInt64ToText(UINT64 a, WORD_T base)
 {
+    base &= 0xFF;
     assert(base > 1 && base <= 36);
     if (a == 0)
         return M3toC__StoT("0");

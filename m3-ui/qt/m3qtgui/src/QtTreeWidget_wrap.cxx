@@ -573,10 +573,10 @@ SWIGEXPORT void QTreeWidgetItem_setFlags(QTreeWidgetItem * self, Qt::ItemFlags f
 }
 
 
-SWIGEXPORT QString *  QTreeWidgetItem_text(QTreeWidgetItem const * self, int column) {
+SWIGEXPORT QString * QTreeWidgetItem_text(QTreeWidgetItem const * self, int column) {
   QTreeWidgetItem *arg1 = (QTreeWidgetItem *) 0 ;
   int arg2 ;
-  QString *  cresult ;
+  QString * cresult ;
   
   arg1 = *(QTreeWidgetItem **)&self; 
   arg2 = (int)column; 
@@ -621,10 +621,10 @@ SWIGEXPORT void QTreeWidgetItem_setIcon(QTreeWidgetItem * self, int column, QIco
 }
 
 
-SWIGEXPORT QString *  QTreeWidgetItem_statusTip(QTreeWidgetItem const * self, int column) {
+SWIGEXPORT QString * QTreeWidgetItem_statusTip(QTreeWidgetItem const * self, int column) {
   QTreeWidgetItem *arg1 = (QTreeWidgetItem *) 0 ;
   int arg2 ;
-  QString *  cresult ;
+  QString * cresult ;
   
   arg1 = *(QTreeWidgetItem **)&self; 
   arg2 = (int)column; 
@@ -645,10 +645,10 @@ SWIGEXPORT void QTreeWidgetItem_setStatusTip(QTreeWidgetItem * self, int column,
 }
 
 
-SWIGEXPORT QString *  QTreeWidgetItem_toolTip(QTreeWidgetItem const * self, int column) {
+SWIGEXPORT QString * QTreeWidgetItem_toolTip(QTreeWidgetItem const * self, int column) {
   QTreeWidgetItem *arg1 = (QTreeWidgetItem *) 0 ;
   int arg2 ;
-  QString *  cresult ;
+  QString * cresult ;
   
   arg1 = *(QTreeWidgetItem **)&self; 
   arg2 = (int)column; 
@@ -669,10 +669,10 @@ SWIGEXPORT void QTreeWidgetItem_setToolTip(QTreeWidgetItem * self, int column, Q
 }
 
 
-SWIGEXPORT QString *  QTreeWidgetItem_whatsThis(QTreeWidgetItem const * self, int column) {
+SWIGEXPORT QString * QTreeWidgetItem_whatsThis(QTreeWidgetItem const * self, int column) {
   QTreeWidgetItem *arg1 = (QTreeWidgetItem *) 0 ;
   int arg2 ;
-  QString *  cresult ;
+  QString * cresult ;
   
   arg1 = *(QTreeWidgetItem **)&self; 
   arg2 = (int)column; 

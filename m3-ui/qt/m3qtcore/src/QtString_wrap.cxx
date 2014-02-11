@@ -175,6 +175,24 @@ SWIGEXPORT void Delete_QString(QString * self) {
 }
 
 
+SWIGEXPORT void QString_swap(QString * self, QString * other) {
+  QString *arg1 = (QString *) 0 ;
+  QString *arg2 = 0 ;
+  
+  arg1 = *(QString **)&self; 
+  arg2 = *(QString **)&other;
+  /*
+  if(!arg2) {
+      //SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "QString & reference is null");
+      //RETURN ;
+      return ;
+    }
+  */
+  
+  (arg1)->swap(*arg2);
+}
+
+
 SWIGEXPORT int QString_size(QString const * self) {
   QString *arg1 = (QString *) 0 ;
   int result;
@@ -211,6 +229,120 @@ SWIGEXPORT int QString_length(QString const * self) {
 }
 
 
+SWIGEXPORT bool QString_isEmpty(QString const * self) {
+  QString *arg1 = (QString *) 0 ;
+  bool result;
+  bool cresult ;
+  
+  arg1 = *(QString **)&self; 
+  result = (bool)((QString const *)arg1)->isEmpty();
+  cresult = result; 
+  return cresult;
+}
+
+
+SWIGEXPORT void QString_resize(QString * self, int size) {
+  QString *arg1 = (QString *) 0 ;
+  int arg2 ;
+  
+  arg1 = *(QString **)&self; 
+  arg2 = (int)size; 
+  (arg1)->resize(arg2);
+}
+
+
+SWIGEXPORT void QString_truncate(QString * self, int pos) {
+  QString *arg1 = (QString *) 0 ;
+  int arg2 ;
+  
+  arg1 = *(QString **)&self; 
+  arg2 = (int)pos; 
+  (arg1)->truncate(arg2);
+}
+
+
+SWIGEXPORT void QString_chop(QString * self, int n) {
+  QString *arg1 = (QString *) 0 ;
+  int arg2 ;
+  
+  arg1 = *(QString **)&self; 
+  arg2 = (int)n; 
+  (arg1)->chop(arg2);
+}
+
+
+SWIGEXPORT int QString_capacity(QString const * self) {
+  QString *arg1 = (QString *) 0 ;
+  int result;
+  int cresult ;
+  
+  arg1 = *(QString **)&self; 
+  result = (int)((QString const *)arg1)->capacity();
+  cresult = result; 
+  return cresult;
+}
+
+
+SWIGEXPORT void QString_reserve(QString * self, int size) {
+  QString *arg1 = (QString *) 0 ;
+  int arg2 ;
+  
+  arg1 = *(QString **)&self; 
+  arg2 = (int)size; 
+  (arg1)->reserve(arg2);
+}
+
+
+SWIGEXPORT void QString_squeeze(QString * self) {
+  QString *arg1 = (QString *) 0 ;
+  
+  arg1 = *(QString **)&self; 
+  (arg1)->squeeze();
+}
+
+
+SWIGEXPORT void QString_detach(QString * self) {
+  QString *arg1 = (QString *) 0 ;
+  
+  arg1 = *(QString **)&self; 
+  (arg1)->detach();
+}
+
+
+SWIGEXPORT bool QString_isDetached(QString const * self) {
+  QString *arg1 = (QString *) 0 ;
+  bool result;
+  bool cresult ;
+  
+  arg1 = *(QString **)&self; 
+  result = (bool)((QString const *)arg1)->isDetached();
+  cresult = result; 
+  return cresult;
+}
+
+
+SWIGEXPORT bool QString_isSharedWith(QString const * self, QString * other) {
+  QString *arg1 = (QString *) 0 ;
+  QString *arg2 = 0 ;
+  bool result;
+  bool cresult ;
+  
+  arg1 = *(QString **)&self; 
+  arg2 = *(QString **)&other;
+  result = (bool)((QString const *)arg1)->isSharedWith((QString const &)*arg2);
+  cresult = result; 
+  return cresult;
+}
+
+
+SWIGEXPORT void QString_clear(QString * self) {
+  QString *arg1 = (QString *) 0 ;
+  
+  arg1 = *(QString **)&self; 
+  (arg1)->clear();
+}
+
+
 SWIGEXPORT int QString_count1(QString const * self, QString * s) {
   QString *arg1 = (QString *) 0 ;
   QString *arg2 = 0 ;
@@ -221,6 +353,90 @@ SWIGEXPORT int QString_count1(QString const * self, QString * s) {
   arg2 = *(QString **)&s;
   result = (int)((QString const *)arg1)->count((QString const &)*arg2);
   cresult = result; 
+  return cresult;
+}
+
+
+SWIGEXPORT QString * QString_left(QString const * self, int n) {
+  QString *arg1 = (QString *) 0 ;
+  int arg2 ;
+  QString * cresult ;
+  
+  arg1 = *(QString **)&self; 
+  arg2 = (int)n; 
+  *(QString **)&cresult = new QString((const QString &)((QString const *)arg1)->left(arg2));
+  return cresult;
+}
+
+
+SWIGEXPORT QString * QString_right(QString const * self, int n) {
+  QString *arg1 = (QString *) 0 ;
+  int arg2 ;
+  QString * cresult ;
+  
+  arg1 = *(QString **)&self; 
+  arg2 = (int)n; 
+  *(QString **)&cresult = new QString((const QString &)((QString const *)arg1)->right(arg2));
+  return cresult;
+}
+
+
+SWIGEXPORT QString * QString_toLower(QString const * self) {
+  QString *arg1 = (QString *) 0 ;
+  QString * cresult ;
+  
+  arg1 = *(QString **)&self; 
+  *(QString **)&cresult = new QString((const QString &)((QString const *)arg1)->toLower());
+  return cresult;
+}
+
+
+SWIGEXPORT QString * QString_toUpper(QString const * self) {
+  QString *arg1 = (QString *) 0 ;
+  QString * cresult ;
+  
+  arg1 = *(QString **)&self; 
+  *(QString **)&cresult = new QString((const QString &)((QString const *)arg1)->toUpper());
+  return cresult;
+}
+
+
+SWIGEXPORT QString * QString_toCaseFolded(QString const * self) {
+  QString *arg1 = (QString *) 0 ;
+  QString * cresult ;
+  
+  arg1 = *(QString **)&self; 
+  *(QString **)&cresult = new QString((const QString &)((QString const *)arg1)->toCaseFolded());
+  return cresult;
+}
+
+
+SWIGEXPORT QString * QString_trimmed(QString const * self) {
+  QString *arg1 = (QString *) 0 ;
+  QString * cresult ;
+  
+  arg1 = *(QString **)&self; 
+  *(QString **)&cresult = new QString((const QString &)((QString const *)arg1)->trimmed());
+  return cresult;
+}
+
+
+SWIGEXPORT QString * QString_simplified(QString const * self) {
+  QString *arg1 = (QString *) 0 ;
+  QString * cresult ;
+  
+  arg1 = *(QString **)&self; 
+  *(QString **)&cresult = new QString((const QString &)((QString const *)arg1)->simplified());
+  return cresult;
+}
+
+
+SWIGEXPORT QByteArray * QString_toLatin1(QString const * self) {
+  QString *arg1 = (QString *) 0 ;
+  QByteArray * cresult ;
+  
+  arg1 = *(QString **)&self; 
+  *(QByteArray **)&cresult = new QByteArray((const QByteArray &)((QString const *)arg1)->toLatin1());
   return cresult;
 }
 
@@ -241,6 +457,84 @@ SWIGEXPORT QByteArray * QString_toLocal8Bit(QString const * self) {
   
   arg1 = *(QString **)&self; 
   *(QByteArray **)&cresult = new QByteArray((const QByteArray &)((QString const *)arg1)->toLocal8Bit());
+  return cresult;
+}
+
+
+SWIGEXPORT QString * FromLatin1(char * m3arg1, int size) {
+  char *arg1 = (char *) 0 ;
+  int arg2 ;
+  QString * cresult ;
+  
+  {
+    arg1 = m3arg1;
+  }
+  arg2 = (int)size; 
+  *(QString **)&cresult = new QString((const QString &)QString::fromLatin1((char const *)arg1,arg2));
+  return cresult;
+}
+
+
+SWIGEXPORT QString * FromLatin11(char * m3arg1) {
+  char *arg1 = (char *) 0 ;
+  QString * cresult ;
+  
+  {
+    arg1 = m3arg1;
+  }
+  *(QString **)&cresult = new QString((const QString &)QString::fromLatin1((char const *)arg1));
+  return cresult;
+}
+
+
+SWIGEXPORT QString * FromUtf8(char * m3arg1, int size) {
+  char *arg1 = (char *) 0 ;
+  int arg2 ;
+  QString * cresult ;
+  
+  {
+    arg1 = m3arg1;
+  }
+  arg2 = (int)size; 
+  *(QString **)&cresult = new QString((const QString &)QString::fromUtf8((char const *)arg1,arg2));
+  return cresult;
+}
+
+
+SWIGEXPORT QString * FromUtf81(char * m3arg1) {
+  char *arg1 = (char *) 0 ;
+  QString * cresult ;
+  
+  {
+    arg1 = m3arg1;
+  }
+  *(QString **)&cresult = new QString((const QString &)QString::fromUtf8((char const *)arg1));
+  return cresult;
+}
+
+
+SWIGEXPORT QString * FromLocal8Bit(char * m3arg1, int size) {
+  char *arg1 = (char *) 0 ;
+  int arg2 ;
+  QString * cresult ;
+  
+  {
+    arg1 = m3arg1;
+  }
+  arg2 = (int)size; 
+  *(QString **)&cresult = new QString((const QString &)QString::fromLocal8Bit((char const *)arg1,arg2));
+  return cresult;
+}
+
+
+SWIGEXPORT QString * FromLocal8Bit1(char * m3arg1) {
+  char *arg1 = (char *) 0 ;
+  QString * cresult ;
+  
+  {
+    arg1 = m3arg1;
+  }
+  *(QString **)&cresult = new QString((const QString &)QString::fromLocal8Bit((char const *)arg1));
   return cresult;
 }
 
@@ -267,6 +561,18 @@ SWIGEXPORT QString * New_QString1(QByteArray const & a) {
   arg1 = *(QByteArray **)&a;
   result = (QString *)new QString((QByteArray const &)*arg1);
   *(QString **)&cresult = result; 
+  return cresult;
+}
+
+
+SWIGEXPORT bool QString_isNull(QString const * self) {
+  QString *arg1 = (QString *) 0 ;
+  bool result;
+  bool cresult ;
+  
+  arg1 = *(QString **)&self; 
+  result = (bool)((QString const *)arg1)->isNull();
+  cresult = result; 
   return cresult;
 }
 

@@ -1139,10 +1139,10 @@ static GTY(()) bool mips16_flipper;
 static bool
 mflip_mips16_use_mips16_p (tree decl)
 {
-  struct mflip_mips16_entry *entry;
-  const char *name;
-  hashval_t hash;
-  void **slot;
+  struct mflip_mips16_entry *entry = { 0 };
+  const char *name = { 0 };
+  hashval_t hash = { 0 };
+  void **slot = { 0 };
 
   /* Use the opposite of the command-line setting for anonymous decls.  */
   if (!DECL_NAME (decl))
@@ -1372,10 +1372,9 @@ mips_build_shift (struct mips_integer_op *codes, HOST_WIDE_INT value)
 static unsigned int
 mips_build_lower (struct mips_integer_op *codes, unsigned HOST_WIDE_INT value)
 {
-  unsigned HOST_WIDE_INT high;
-  unsigned int i;
+  unsigned int i = { 0 };
 
-  high = value & ~(unsigned HOST_WIDE_INT) 0xffff;
+  unsigned HOST_WIDE_INT high = value & ~(unsigned HOST_WIDE_INT) 0xffff;
   if (!LUI_OPERAND (high) && (value & 0x18000) == 0x18000)
     {
       /* The constant is too complex to load with a simple LUI/ORI pair,
@@ -1460,9 +1459,7 @@ mips_legitimate_constant_p (enum machine_mode mode ATTRIBUTE_UNUSED, rtx x)
 static rtx
 mips16_stub_function (const char *name)
 {
-  rtx x;
-
-  x = gen_rtx_SYMBOL_REF (Pmode, ggc_strdup (name));
+  rtx x = gen_rtx_SYMBOL_REF (Pmode, ggc_strdup (name));
   SYMBOL_REF_FLAGS (x) |= (SYMBOL_FLAG_EXTERNAL | SYMBOL_FLAG_FUNCTION);
   return x;
 }
@@ -4137,15 +4134,12 @@ mips_split_doubleword_move (rtx dest, rtx src)
 const char *
 mips_output_move (rtx dest, rtx src)
 {
-  enum rtx_code dest_code, src_code;
-  enum machine_mode mode;
-  enum mips_symbol_type symbol_type;
-  bool dbl_p;
+  enum mips_symbol_type symbol_type = (enum mips_symbol_type)0;
 
-  dest_code = GET_CODE (dest);
-  src_code = GET_CODE (src);
-  mode = GET_MODE (dest);
-  dbl_p = (GET_MODE_SIZE (mode) == 8);
+  enum rtx_code dest_code = GET_CODE (dest);
+  enum rtx_code src_code = GET_CODE (src);
+  enum machine_mode mode = GET_MODE (dest);
+  bool dbl_p = (GET_MODE_SIZE (mode) == 8);
 
   if (dbl_p && mips_split_64bit_move_p (dest, src))
     return "#";
@@ -4918,7 +4912,7 @@ mips_function_arg (cumulative_args_t cum_v, enum machine_mode mode,
     {
       rtx real, imag;
       enum machine_mode inner;
-      unsigned int regno;
+      unsigned int regno = 0;
 
       inner = GET_MODE_INNER (mode);
       regno = FP_ARG_FIRST + info.reg_offset;
@@ -6304,10 +6298,8 @@ mips16_copy_fpr_return_value (void)
 static rtx
 mips16_build_call_stub (rtx retval, rtx *fn_ptr, rtx args_size, int fp_code)
 {
-  const char *fnname;
-  bool fp_ret_p;
   struct mips16_stub *l;
-  rtx insn, fn;
+  rtx insn;
 
   /* We don't need to do anything if we aren't in MIPS16 mode, or if
      we were invoked with the -msoft-float option.  */
@@ -6316,7 +6308,7 @@ mips16_build_call_stub (rtx retval, rtx *fn_ptr, rtx args_size, int fp_code)
 
   /* Figure out whether the value might come back in a floating-point
      register.  */
-  fp_ret_p = retval && mips_return_mode_in_fpr_p (GET_MODE (retval));
+  bool fp_ret_p = retval && mips_return_mode_in_fpr_p (GET_MODE (retval));
 
   /* We don't need to do anything if there were no floating-point
      arguments and the value will not be returned in a floating-point
@@ -6326,7 +6318,7 @@ mips16_build_call_stub (rtx retval, rtx *fn_ptr, rtx args_size, int fp_code)
 
   /* We don't need to do anything if this is a call to a special
      MIPS16 support function.  */
-  fn = *fn_ptr;
+  rtx fn = *fn_ptr;
   if (mips16_stub_function_p (fn))
     return NULL_RTX;
 
@@ -6400,7 +6392,7 @@ mips16_build_call_stub (rtx retval, rtx *fn_ptr, rtx args_size, int fp_code)
 
   /* We know the function we are going to call.  If we have already
      built a stub, we don't need to do anything further.  */
-  fnname = targetm.strip_name_encoding (XSTR (fn, 0));
+  const char *fnname = targetm.strip_name_encoding (XSTR (fn, 0));
   for (l = mips16_stubs; l != NULL; l = l->next)
     if (strcmp (l->name, fnname) == 0)
       break;
@@ -8675,9 +8667,12 @@ static bool
 mips16e_collect_argument_save_p (rtx dest, rtx src, rtx *reg_values,
 				 unsigned int *regno_ptr)
 {
-  unsigned int argno, regno;
-  HOST_WIDE_INT offset, required_offset;
-  rtx addr, base;
+  unsigned int argno = { 0 };
+  unsigned int regno = { 0 };
+  HOST_WIDE_INT offset = { 0 };
+  HOST_WIDE_INT required_offset = { 0 };
+  rtx addr = { 0 };
+  rtx base = { 0 };
 
   /* Check that this is a word-mode store.  */
   if (!MEM_P (dest) || !REG_P (src) || GET_MODE (dest) != word_mode)
@@ -8717,8 +8712,13 @@ static unsigned int
 mips16e_collect_argument_saves (void)
 {
   rtx reg_values[FIRST_PSEUDO_REGISTER];
-  rtx insn, next, set, dest, src;
-  unsigned int nargs, regno;
+  rtx insn = { 0 };
+  rtx next = { 0 };
+  rtx set = { 0 };
+  rtx dest = { 0 };
+  rtx src = { 0 };
+  unsigned int nargs = { 0 };
+  unsigned int regno = { 0 };
 
   push_topmost_sequence ();
   nargs = 0;
@@ -8805,10 +8805,13 @@ mips16e_build_save_restore (bool restore_p, unsigned int *mask_ptr,
 			    HOST_WIDE_INT *offset_ptr, unsigned int nargs,
 			    HOST_WIDE_INT size)
 {
-  rtx pattern, set;
-  HOST_WIDE_INT offset, top_offset;
-  unsigned int i, regno;
-  int n;
+  rtx pattern = { 0 };
+  rtx set = { 0 };
+  HOST_WIDE_INT offset = { 0 };
+  HOST_WIDE_INT top_offset = { 0 };
+  unsigned int i = { 0 };
+  unsigned int regno = { 0 };
+  int n = { 0 };
 
   gcc_assert (cfun->machine->frame.num_fp == 0);
 
@@ -9168,7 +9171,7 @@ mips_cfun_has_flexible_gp_ref_p (void)
 static unsigned int
 mips_global_pointer (void)
 {
-  unsigned int regno;
+  unsigned int regno = { 0 };
 
   /* $gp is always available unless we're using a GOT.  */
   if (!TARGET_USE_GOT)
@@ -9826,7 +9829,7 @@ mips_return_addr (int count, rtx frame ATTRIBUTE_UNUSED)
 void
 mips_set_return_address (rtx address, rtx scratch)
 {
-  rtx slot_address;
+  rtx slot_address = { 0 };
 
   gcc_assert (BITSET_P (cfun->machine->frame.mask, RETURN_ADDR_REGNUM));
   slot_address = mips_add_offset (scratch, stack_pointer_rtx,
@@ -9852,9 +9855,8 @@ static void
 mips_get_cprestore_base_and_offset (rtx *base, HOST_WIDE_INT *offset,
 				    bool load_p)
 {
-  const struct mips_frame_info *frame;
+  const struct mips_frame_info *frame = &cfun->machine->frame;
 
-  frame = &cfun->machine->frame;
   /* .cprestore always uses the stack pointer instead of the frame pointer.
      We have a free choice for direct stores for non-MIPS16 functions,
      and for MIPS16 functions whose cprestore slot is in range of the
@@ -9885,8 +9887,10 @@ mips_get_cprestore_base_and_offset (rtx *base, HOST_WIDE_INT *offset,
 bool
 mips_cprestore_address_p (rtx x, bool load_p)
 {
-  rtx given_base, required_base;
-  HOST_WIDE_INT given_offset, required_offset;
+  rtx given_base = { 0 };
+  rtx required_base = { 0 };
+  HOST_WIDE_INT given_offset = { 0 };
+  HOST_WIDE_INT required_offset = { 0 };
 
   mips_split_plus (x, &given_base, &given_offset);
   mips_get_cprestore_base_and_offset (&required_base, &required_offset, load_p);
@@ -9900,8 +9904,8 @@ mips_cprestore_address_p (rtx x, bool load_p)
 static rtx
 mips_cprestore_slot (rtx temp, bool load_p)
 {
-  rtx base;
-  HOST_WIDE_INT offset;
+  rtx base = { 0 };
+  HOST_WIDE_INT offset = { 0 };
 
   mips_get_cprestore_base_and_offset (&base, &offset, load_p);
   return gen_frame_mem (Pmode, mips_add_offset (temp, base, offset));
@@ -9965,9 +9969,7 @@ static void
 mips_save_restore_reg (enum machine_mode mode, int regno,
 		       HOST_WIDE_INT offset, mips_save_restore_fn fn)
 {
-  rtx mem;
-
-  mem = gen_frame_mem (mode, plus_constant (stack_pointer_rtx, offset));
+  rtx mem = gen_frame_mem (mode, plus_constant (stack_pointer_rtx, offset));
   fn (gen_rtx_REG (mode, regno), mem);
 }
 
@@ -9978,10 +9980,9 @@ mips_save_restore_reg (enum machine_mode mode, int regno,
 static void
 mips_for_each_saved_acc (HOST_WIDE_INT sp_offset, mips_save_restore_fn fn)
 {
-  HOST_WIDE_INT offset;
-  int regno;
+  int regno = { 0 };
 
-  offset = cfun->machine->frame.acc_sp_offset - sp_offset;
+  HOST_WIDE_INT offset = cfun->machine->frame.acc_sp_offset - sp_offset;
   if (BITSET_P (cfun->machine->frame.acc_mask, 0))
     {
       mips_save_restore_reg (word_mode, LO_REGNUM, offset, fn);
@@ -10007,15 +10008,13 @@ static void
 mips_for_each_saved_gpr_and_fpr (HOST_WIDE_INT sp_offset,
 				 mips_save_restore_fn fn)
 {
-  enum machine_mode fpr_mode;
-  HOST_WIDE_INT offset;
-  int regno;
+  int regno = { 0 };
 
   /* Save registers starting from high to low.  The debuggers prefer at least
      the return register be stored at func+4, and also it allows us not to
      need a nop in the epilogue if at least one register is reloaded in
      addition to return address.  */
-  offset = cfun->machine->frame.gp_sp_offset - sp_offset;
+  HOST_WIDE_INT offset = cfun->machine->frame.gp_sp_offset - sp_offset;
   for (regno = GP_REG_LAST; regno >= GP_REG_FIRST; regno--)
     if (BITSET_P (cfun->machine->frame.mask, regno - GP_REG_FIRST))
       {
@@ -10029,7 +10028,7 @@ mips_for_each_saved_gpr_and_fpr (HOST_WIDE_INT sp_offset,
   /* This loop must iterate over the same space as its companion in
      mips_compute_frame_info.  */
   offset = cfun->machine->frame.fp_sp_offset - sp_offset;
-  fpr_mode = (TARGET_SINGLE_FLOAT ? SFmode : DFmode);
+  enum machine_mode fpr_mode = (TARGET_SINGLE_FLOAT ? SFmode : DFmode);
   for (regno = FP_REG_LAST - MAX_FPRS_PER_FMT + 1;
        regno >= FP_REG_FIRST;
        regno -= MAX_FPRS_PER_FMT)
@@ -10062,8 +10061,8 @@ mips_direct_save_slot_move_p (unsigned int regno, rtx mem, bool load_p)
 void
 mips_emit_save_slot_move (rtx dest, rtx src, rtx temp)
 {
-  unsigned int regno;
-  rtx mem;
+  unsigned int regno = { 0 };
+  rtx mem = { 0 };
 
   if (REG_P (src))
     {
@@ -10364,10 +10363,10 @@ mips_kernel_reg_p (rtx *x, void *data ATTRIBUTE_UNUSED)
 void
 mips_expand_prologue (void)
 {
-  const struct mips_frame_info *frame;
-  HOST_WIDE_INT size;
-  unsigned int nargs;
-  rtx insn;
+  const struct mips_frame_info *frame = { 0 };
+  HOST_WIDE_INT size = { 0 };
+  unsigned int nargs = { 0 };
+  rtx insn = { 0 };
 
   if (cfun->machine->global_pointer != INVALID_REGNUM)
     {
@@ -10401,8 +10400,9 @@ mips_expand_prologue (void)
       step1 = MIN (size, MIPS_MAX_FIRST_STACK_STEP);
       if (GENERATE_MIPS16E_SAVE_RESTORE)
  	{
- 	  HOST_WIDE_INT offset;
- 	  unsigned int mask, regno;
+ 	  HOST_WIDE_INT offset = { 0 };
+ 	  unsigned int mask = { 0 };
+ 	  unsigned int regno = { 0 };
 
 	  /* Try to merge argument stores into the save instruction.  */
 	  nargs = mips16e_collect_argument_saves ();
@@ -10428,8 +10428,8 @@ mips_expand_prologue (void)
  	{
 	  if (cfun->machine->interrupt_handler_p)
 	    {
-	      HOST_WIDE_INT offset;
-	      rtx mem;
+	      HOST_WIDE_INT offset = { 0 };
+	      rtx mem = { 0 };
 
 	      /* If this interrupt is using a shadow register set, we need to
 		 get the stack pointer from the previous register set.  */
@@ -10561,9 +10561,7 @@ mips_expand_prologue (void)
   /* Set up the frame pointer, if we're using one.  */
   if (frame_pointer_needed)
     {
-      HOST_WIDE_INT offset;
-
-      offset = frame->hard_frame_pointer_offset;
+      HOST_WIDE_INT offset = frame->hard_frame_pointer_offset;
       if (offset == 0)
 	{
 	  insn = mips_emit_move (hard_frame_pointer_rtx, stack_pointer_rtx);
@@ -10593,8 +10591,11 @@ mips_expand_prologue (void)
   /* Initialize the $gp save slot.  */
   if (mips_cfun_has_cprestore_slot_p ())
     {
-      rtx base, mem, gp, temp;
-      HOST_WIDE_INT offset;
+      rtx base = { 0 };
+      rtx mem = { 0 };
+      rtx gp = { 0 };
+      rtx temp = { 0 };
+      HOST_WIDE_INT offset = { 0 };
 
       mips_get_cprestore_base_and_offset (&base, &offset, false);
       mem = gen_frame_mem (Pmode, plus_constant (base, offset));
@@ -10636,9 +10637,7 @@ mips_expand_prologue (void)
 static rtx
 mips_epilogue_emit_cfa_restores (void)
 {
-  rtx insn;
-
-  insn = get_last_insn ();
+  rtx insn = get_last_insn ();
   gcc_assert (insn && !REG_NOTES (insn));
   if (mips_epilogue.cfa_restores)
     {
@@ -10655,9 +10654,7 @@ mips_epilogue_emit_cfa_restores (void)
 static void
 mips_epilogue_set_cfa (rtx reg, HOST_WIDE_INT offset)
 {
-  rtx insn;
-
-  insn = mips_epilogue_emit_cfa_restores ();
+  rtx insn = mips_epilogue_emit_cfa_restores ();
   if (reg != mips_epilogue.cfa_reg || offset != mips_epilogue.cfa_offset)
     {
       RTX_FRAME_RELATED_P (insn) = 1;
@@ -10749,9 +10746,12 @@ mips_expand_before_return (void)
 void
 mips_expand_epilogue (bool sibcall_p)
 {
-  const struct mips_frame_info *frame;
-  HOST_WIDE_INT step1, step2;
-  rtx base, adjust, insn;
+  const struct mips_frame_info *frame = { 0 };
+  HOST_WIDE_INT step1 = { 0 };
+  HOST_WIDE_INT step2 = { 0 };
+  rtx base = { 0 };
+  rtx adjust = { 0 };
+  rtx insn = { 0 };
 
   if (!sibcall_p && mips_can_use_return_insn ())
     {
@@ -10812,9 +10812,10 @@ mips_expand_epilogue (bool sibcall_p)
   mips_epilogue.cfa_restore_sp_offset = step2;
   if (GENERATE_MIPS16E_SAVE_RESTORE && frame->mask != 0)
     {
-      unsigned int regno, mask;
-      HOST_WIDE_INT offset;
-      rtx restore;
+      unsigned int regno = { 0 };
+      unsigned int mask = { 0 };
+      HOST_WIDE_INT offset = { 0 };
+      rtx restore = { 0 };
 
       /* Generate the restore instruction.  */
       mask = frame->mask;
@@ -10843,8 +10844,8 @@ mips_expand_epilogue (bool sibcall_p)
 
       if (cfun->machine->interrupt_handler_p)
 	{
-	  HOST_WIDE_INT offset;
-	  rtx mem;
+	  HOST_WIDE_INT offset = { 0 };
+	  rtx mem = { 0 };
 
 	  offset = frame->cop0_sp_offset - (frame->total_size - step2);
 	  if (!cfun->machine->keep_interrupts_masked_p)
@@ -10914,7 +10915,7 @@ mips_expand_epilogue (bool sibcall_p)
 	}
       else
 	{
-	  rtx pat;
+	  rtx pat = { 0 };
 
 	  /* When generating MIPS16 code, the normal
 	     mips_for_each_saved_gpr_and_fpr path will restore the return
@@ -10987,8 +10988,8 @@ mips_can_use_return_insn (void)
 static bool
 mips_hard_regno_mode_ok_p (unsigned int regno, enum machine_mode mode)
 {
-  unsigned int size;
-  enum mode_class mclass;
+  unsigned int size = { 0 };
+  enum mode_class mclass = (enum mode_class)0;
 
   if (mode == CCV2mode)
     return (ISA_HAS_8CC
@@ -11106,10 +11107,9 @@ mips_hard_regno_nregs (int regno, enum machine_mode mode)
 int
 mips_class_max_nregs (enum reg_class rclass, enum machine_mode mode)
 {
-  int size;
-  HARD_REG_SET left;
+  HARD_REG_SET left = { 0 };
 
-  size = 0x8000;
+  int size = 0x8000;
   COPY_HARD_REG_SET (left, reg_class_contents[(int) rclass]);
   if (hard_reg_set_intersect_p (left, reg_class_contents[(int) ST_REGS]))
     {
@@ -11332,9 +11332,6 @@ static int
 mips_register_move_cost (enum machine_mode mode,
 			 reg_class_t from, reg_class_t to)
 {
-  reg_class_t dregs;
-  int cost1, cost2;
-
   from = mips_canonicalize_move_class (from);
   to = mips_canonicalize_move_class (to);
 
@@ -11350,17 +11347,17 @@ mips_register_move_cost (enum machine_mode mode,
     }
 
   /* Handle cases in which only one class deviates from the ideal.  */
-  dregs = TARGET_MIPS16 ? M16_REGS : GENERAL_REGS;
+  reg_class_t dregs = TARGET_MIPS16 ? M16_REGS : GENERAL_REGS;
   if (from == dregs)
     return mips_move_from_gpr_cost (mode, to);
   if (to == dregs)
     return mips_move_to_gpr_cost (mode, from);
 
   /* Handles cases that require a GPR temporary.  */
-  cost1 = mips_move_to_gpr_cost (mode, from);
+  int cost1 = mips_move_to_gpr_cost (mode, from);
   if (cost1 != 0)
     {
-      cost2 = mips_move_from_gpr_cost (mode, to);
+      int cost2 = mips_move_from_gpr_cost (mode, to);
       if (cost2 != 0)
 	return cost1 + cost2;
     }
@@ -11387,14 +11384,12 @@ enum reg_class
 mips_secondary_reload_class (enum reg_class rclass,
 			     enum machine_mode mode, rtx x, bool in_p)
 {
-  int regno;
-
   /* If X is a constant that cannot be loaded into $25, it must be loaded
      into some other GPR.  No other register class allows a direct move.  */
   if (mips_dangerous_for_la25_p (x))
     return reg_class_subset_p (rclass, LEA_REGS) ? NO_REGS : LEA_REGS;
 
-  regno = true_regnum (x);
+  int regno = true_regnum (x);
   if (TARGET_MIPS16)
     {
       /* In MIPS16 mode, every move must involve a member of M16_REGS.  */
@@ -11608,8 +11603,10 @@ mips_init_libfuncs (void)
 static void
 mips_process_load_label (rtx target)
 {
-  rtx base, gp, intop;
-  HOST_WIDE_INT offset;
+  rtx base = { 0 };
+  rtx gp = { 0 };
+  rtx intop = { 0 };
+  HOST_WIDE_INT offset = { 0 };
 
   mips_multi_start ();
   switch (mips_abi)
@@ -11751,12 +11748,9 @@ mips_output_conditional_branch (rtx insn, rtx *operands,
 				const char *branch_if_true,
 				const char *branch_if_false)
 {
-  unsigned int length;
-  rtx taken, not_taken;
-
   gcc_assert (LABEL_P (operands[0]));
 
-  length = get_attr_length (insn);
+  unsigned int length = get_attr_length (insn);
   if (length <= 8)
     {
       /* Just a simple conditional branch.  */
@@ -11767,8 +11761,8 @@ mips_output_conditional_branch (rtx insn, rtx *operands,
   /* Generate a reversed branch around a direct jump.  This fallback does
      not use branch-likely instructions.  */
   mips_branch_likely = false;
-  not_taken = gen_label_rtx ();
-  taken = operands[0];
+  rtx not_taken = gen_label_rtx ();
+  rtx taken = operands[0];
 
   /* Generate the reversed branch to NOT_TAKEN.  */
   operands[0] = not_taken;
@@ -11832,7 +11826,7 @@ mips_output_conditional_branch (rtx insn, rtx *operands,
 const char *
 mips_output_order_conditional_branch (rtx insn, rtx *operands, bool inverted_p)
 {
-  const char *branch[2];
+  const char *branch[2] = { 0 };
 
   /* Make BRANCH[1] branch to OPERANDS[0] when the condition is true.
      Make BRANCH[0] branch on the inverse condition.  */
@@ -16257,7 +16251,7 @@ mips_conditional_register_usage (void)
   /* $f20-$f23 are call-clobbered for n64.  */
   if (mips_abi == ABI_64)
     {
-      int regno;
+      int regno = { 0 };
       for (regno = FP_REG_FIRST + 20; regno < FP_REG_FIRST + 24; regno++)
 	call_really_used_regs[regno] = call_used_regs[regno] = 1;
     }
@@ -16265,7 +16259,7 @@ mips_conditional_register_usage (void)
      for n32.  */
   if (mips_abi == ABI_N32)
     {
-      int regno;
+      int regno = { 0 };
       for (regno = FP_REG_FIRST + 21; regno <= FP_REG_FIRST + 31; regno+=2)
 	call_really_used_regs[regno] = call_used_regs[regno] = 1;
     }
@@ -16273,7 +16267,7 @@ mips_conditional_register_usage (void)
      ordered for the current endianness.  */
   if (TARGET_LITTLE_ENDIAN)
     {
-      unsigned int regno;
+      unsigned int regno = { 0 };
 
       mips_swap_registers (MD_REG_FIRST);
       for (regno = DSP_ACC_REG_FIRST; regno <= DSP_ACC_REG_LAST; regno += 2)
@@ -16662,35 +16656,6 @@ mips_shift_truncation_mask (enum machine_mode mode)
   return GET_MODE_BITSIZE (mode) - 1;
 }
 
-/* Implement TARGET_PREPARE_PCH_SAVE.  */
-
-static void
-mips_prepare_pch_save (void)
-{
-  /* We are called in a context where the current MIPS16 vs. non-MIPS16
-     setting should be irrelevant.  The question then is: which setting
-     makes most sense at load time?
-
-     The PCH is loaded before the first token is read.  We should never
-     have switched into MIPS16 mode by that point, and thus should not
-     have populated mips16_globals.  Nor can we load the entire contents
-     of mips16_globals from the PCH file, because mips16_globals contains
-     a combination of GGC and non-GGC data.
-
-     There is therefore no point in trying save the GGC part of
-     mips16_globals to the PCH file, or to preserve MIPS16ness across
-     the PCH save and load.  The loading compiler would not have access
-     to the non-GGC parts of mips16_globals (either from the PCH file,
-     or from a copy that the loading compiler generated itself) and would
-     have to call target_reinit anyway.
-
-     It therefore seems best to switch back to non-MIPS16 mode at
-     save time, and to ensure that mips16_globals remains null after
-     a PCH load.  */
-  mips_set_mips16_mode (false);
-  mips16_globals = 0;
-}
-
 /* Generate or test for an insn that supports a constant permutation.  */
 
 #define MAX_VECT_LEN 8
@@ -16938,7 +16903,7 @@ mips_expand_vec_perm_const_1 (struct expand_vec_perm_d *d)
 bool
 mips_expand_vec_perm_const (rtx operands[4])
 {
-  struct expand_vec_perm_d d;
+  struct expand_vec_perm_d d = { 0 };
   int i, nelt, which;
   unsigned char orig_perm[MAX_VECT_LEN];
   rtx sel;
@@ -17014,7 +16979,7 @@ static bool
 mips_vectorize_vec_perm_const_ok (enum machine_mode vmode,
 				  const unsigned char *sel)
 {
-  struct expand_vec_perm_d d;
+  struct expand_vec_perm_d d = { 0 };
   unsigned int i, nelt, which;
   bool ret;
 
@@ -17261,11 +17226,11 @@ mips_expand_vec_reduc (rtx target, rtx in, rtx (*gen)(rtx, rtx, rtx))
 {
   enum machine_mode vmode = GET_MODE (in);
   unsigned char perm2[2];
-  rtx last, next, fold, x;
+  rtx next, x;
   bool ok;
 
-  last = in;
-  fold = gen_reg_rtx (vmode);
+  rtx last = in;
+  rtx fold = gen_reg_rtx (vmode);
   switch (vmode)
     {
     case V2SFmode:
@@ -17571,9 +17536,6 @@ mips_expand_vec_minmax (rtx target, rtx op0, rtx op1,
 
 #undef TARGET_SHIFT_TRUNCATION_MASK
 #define TARGET_SHIFT_TRUNCATION_MASK mips_shift_truncation_mask
-
-#undef TARGET_PREPARE_PCH_SAVE
-#define TARGET_PREPARE_PCH_SAVE mips_prepare_pch_save
 
 #undef TARGET_VECTORIZE_VEC_PERM_CONST_OK
 #define TARGET_VECTORIZE_VEC_PERM_CONST_OK mips_vectorize_vec_perm_const_ok
