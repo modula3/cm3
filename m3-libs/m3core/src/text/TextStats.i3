@@ -52,14 +52,14 @@ VAR OldObjs, NewObjs : REF ObjsInfo := NIL;
 PROCEDURE AllocObjs (VAR Objs: REF ObjsInfo); 
 PROCEDURE InitObjs (VAR i: ObjsInfo);
 
-PROCEDURE NoteAllocText8Short (o :Text8Short.T); 
-PROCEDURE NoteAllocText8 (o :Text8.T); 
-PROCEDURE NoteAllocText8Chars (o :REF ARRAY OF CHAR); 
-PROCEDURE NoteAllocText16Short (o :Text16Short.T); 
-PROCEDURE NoteAllocText16 (o :Text16.T); 
-PROCEDURE NoteAllocText16Chars (o :REF ARRAY OF WIDECHAR); 
-PROCEDURE NoteAllocTextSub (o :TextSub.TT); 
-PROCEDURE NoteAllocTextCat (o :TextCat.T); 
+PROCEDURE NoteAllocText8Short (o: Text8Short.T); 
+PROCEDURE NoteAllocText8 (o: Text8.T); 
+PROCEDURE NoteAllocText8Chars (o: REF ARRAY OF CHAR); 
+PROCEDURE NoteAllocText16Short (o: Text16Short.T); 
+PROCEDURE NoteAllocText16 (o: Text16.T); 
+PROCEDURE NoteAllocText16Chars (o: REF ARRAY OF WIDECHAR); 
+PROCEDURE NoteAllocTextSub (o: TextSub.TT); 
+PROCEDURE NoteAllocTextCat (o: TextCat.T); 
 
 PROCEDURE InitInstrumentation ( ); 
 
