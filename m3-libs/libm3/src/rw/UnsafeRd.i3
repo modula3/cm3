@@ -56,6 +56,9 @@ PROCEDURE FastUnGetCharMulti(rd: Rd.T): BOOLEAN (* Succeeded. *);
 PROCEDURE FastCharsReady(rd: Rd.T): CARDINAL RAISES {Failure}; 
 (* Like Rd.CharsReady, but rd must be locked. *)
 
+PROCEDURE FastIndex(rd: Rd.T): CARDINAL; 
+(* Like Rd.Index, but rd must be locked. *)
+
 PROCEDURE FastClose (rd: Rd.T) RAISES {Failure, Alerted};
 
 END UnsafeRd.
