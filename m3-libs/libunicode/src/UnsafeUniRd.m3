@@ -59,7 +59,7 @@ MODULE UnsafeUniRd
   (* A number of characters that can be read without indefinite waiting.
      The EOF counts as one "character" here.  This number may very pessimistic. 
   *) 
-  (* PRE: Stream is locked, but not Stream.Source. *) 
+  (* PRE: Stream is locked, but Stream.Source is not. *) 
 
   = VAR LSourceBytesReady , LCharsReady , LPostponedCt : CARDINAL 
 
@@ -86,20 +86,6 @@ MODULE UnsafeUniRd
       END (* IF *) 
     END FastCharsReady 
 
-(* EXPORTED: *) 
-; PROCEDURE FastUnGetWideChar ( Stream : UniRd . T ; Wch : Widechar ) 
-  (* Push Wch onto the front of Stream, where the next attempt to decode a
-     character from Stream will fetch it, prior to decoding from the 
-     remainder of Stream.  Discard any previously ungotten but not-refetched
-     WIDECHAR. 
-  *) 
-  (* PRE: Stream and Stream.Source are locked. *) 
-  (* WARNING! Currently unimplemented.  A NOOP *) 
-
-  = BEGIN 
-(* IMPLEMENTME: *) 
-    END FastUnGetWideChar 
-  
 (* EXPORTED: *) 
 ; PROCEDURE FastGetWideChar ( Stream : UniRd . T ) : Widechar  
   RAISES { EndOfFile , Failure , Alerted } 
@@ -130,6 +116,21 @@ MODULE UnsafeUniRd
       END (* IF *) 
     END FastGetWideChar 
 
+(* EXPORTED: *) 
+; PROCEDURE FastUnGetWideChar ( Stream : UniRd . T ; Wch : Widechar ) 
+  (* Push Wch onto the front of Stream, where the next attempt to decode a
+     character from Stream will fetch it, prior to decoding from the 
+     remainder of Stream.  Discard any previously ungotten but not-refetched
+     WIDECHAR. 
+  *) 
+  (* PRE: Stream and Stream.Source are locked. *) 
+  (* WARNING! Currently unimplemented.  A NOOP *) 
+
+  = BEGIN 
+(* TODO: Implement this. *) 
+(* IMPLEMENTME: *) 
+    END FastUnGetWideChar 
+  
 (* TODO: Special-case for when the encoding allows to directly access the
          Rd buffer (ISO8859_1 & CHAR or CM3WC and WIDECHAR) and avoid looping
          through individual characters.  
@@ -300,17 +301,26 @@ MODULE UnsafeUniRd
   : CARDINAL
   RAISES { Failure , Alerted } 
   (* Decode and consume characters from Source(Stream), using Enc(Stream), 
-     storing them into ArrWch, until Source(Stream) is at end-of-file, a
-     new-line sequence has been stored, or ArrWch is filled.  
-     Return the actual number of decoded characters stored into ArrWch. 
+     storing them into ArrCh, until Source(Stream) is at end-of-file, or ArrCh
+     is filled, or an end-of-line sequence has been read and stored.  
+     Return the actual number of decoded characters stored into ArrWch.  
+     Include any end-of-line sequence in the returned count and store it in
+     ArrWch. 
 
-     A new-line sequence is one of CR, LF, CR&LF, NEL, VT, FF, LS, or PS
-     (See Unicode 5.8).  In the unusual case that there is a CR&LF sequence,
-     but only the CR will fit in ArrWch, do not store either character and 
-     return with one unused space in ArrWch.  The client can distinguish this
-     by ArrWch not full, not EOF, and no new-line character at the end.   
-      
-  *)  
+     Consistent with the Unicode standard, an end-of-line consists of any of:
+
+       LF =  W'\x000A' = W'\n'  
+       CR =  W'\x000D' = W'\r'  
+       CR immediately followed by LF 
+       FF =  W'\x000C' = W'\f'  
+       VT =  W'\x0009' = W'\t'  
+       NEL = W'\x0085'  
+       LS =  W'\x2028'  
+       PS =  W'\x2029'  
+
+     If only one character of a two-character end-of-line sequence would fit 
+     in ArrWch, leave both unstored and unconsumed. 
+  *) 
   (* PRE: Stream and Stream.Source are locked. *) 
 
   = VAR LI : CARDINAL 
@@ -439,17 +449,11 @@ MODULE UnsafeUniRd
     ( Stream : UniRd . T ; VAR (*OUT*) ArrCh : ARRAY OF CHAR ) 
   : CARDINAL
   RAISES { Range , Failure , Alerted } 
-  (* Decode and consume characters from Source(Stream), using Enc(Stream), 
-     storing them into ArrCh, until Source(Stream) is at end-of-file, a
-     new-line sequence has been stored, or ArrCh is filled.  
-     Return the actual number of decoded characters stored into ArrCh. 
-
-     A new-line sequence is one of CR, LF, CR&LF, NEL, VT, FF, LS, or PS
-     (See Unicode 5.8).  In the unusual case that there is a CR&LF sequence,
-     but only the CR will fit in ArrCh, do not store either character and 
-     return with one unused space in ArrCh.  The client can distinguish this
-     by ArrCh not full, not EOF, and no new-line character at the end.   
-  *)  
+  (* Like FastGetWideSubLine, but return the characters in an ARRAY OF CHAR,
+     raising Range({Wch,Loc}) if an otherwise to-be-returned character 
+     is not in CHAR, where Wch is the out-of-range character,
+     and Loc is the number of characters stored.  
+  *) 
   (* PRE: Stream and Stream.Source are locked. *) 
 
   = VAR LI : CARDINAL 
@@ -589,9 +593,9 @@ MODULE UnsafeUniRd
 (* EXPORTED *) 
 ; PROCEDURE FastGetText ( Stream : UniRd . T ; Len : CARDINAL ) : TEXT 
   RAISES { Failure , Alerted }
-  (* Decode and consume characters from Source(Stream), using Enc(Stream), 
-     storing them into the result TEXT, until Source(Stream) is at end-of-file,
-     or the length of the result is Len.  
+  (* Decode and consume  characters from Source(Stream), using Enc(Stream), 
+     until Len characters have been decoded or Source(Stream) is at 
+     end-of-file.  Return the decoded characters as a TEXT. 
   *) 
   (* PRE: Stream and Stream.Source are locked. *) 
 
@@ -710,11 +714,6 @@ MODULE UnsafeUniRd
      if it exists in Stream, at the end of the returned TEXT.  You may need
      this to know which EOL sequence it was.  
   *) 
-  (* Decode and consume characters from Source(Stream), using Enc(Stream), 
-     storing them into the result TEXT, until Source(Stream) is at end-of-file,
-     or a new-line sequence has been consumed and stored.  A new-line sequence 
-     is one of CR, LF, CR&LF, NEL, VT, FF, LS, or PS (See Unicode 5.8).  
-  *) 
   (* PRE: Stream and Stream.Source are locked. *) 
 
   = CONST ChunkSize = 512 
@@ -830,8 +829,8 @@ MODULE UnsafeUniRd
 
 (* EXPORTED: *) 
 ; PROCEDURE FastIndex ( Stream : UniRd . T ) : Word . T  
-  (* Number of characters that have been read from Stream.  
-     May overflow by wrapping. *) 
+  (* Number of Unicode characters that have been read from Stream.
+     (Not fixed-sized code units.)  May overflow by wrapping. *) 
   (* PRE: Stream is locked, but Stream.Source need not be. *) 
 
   = BEGIN 
