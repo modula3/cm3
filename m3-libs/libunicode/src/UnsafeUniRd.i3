@@ -137,6 +137,15 @@ INTERFACE UnsafeUniRd
   *) 
   (* PRE: Stream and Stream.Source are locked. *) 
 
+; PROCEDURE FastLength ( Stream : UniRd . T ) : INTEGER 
+  RAISES { Failure , Alerted }
+  (* Try to return the length of Stream, in Unicode characters (not code-units.)
+     If Stream is closed or intermittent, or there is otherwise insufficient
+     information, return -1.  If Stream has a fixed-size encoding, a 
+     nonnegative value will be exact.  Otherwise, it will be an estimate.
+  *)  
+  (* PRE: Stream and Stream.Source are locked. *) 
+
 ; END UnsafeUniRd 
 . 
 

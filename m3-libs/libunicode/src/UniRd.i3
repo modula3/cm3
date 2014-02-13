@@ -156,6 +156,19 @@ INTERFACE UniRd
   (* Average number of encoded bytes per character, of what has been read. 
      Zero if nothing read. *) 
 
+; PROCEDURE Length ( Stream : T ) : INTEGER RAISES { Failure , Alerted }
+  (* Try to return the length of Stream, in Unicode characters (not code-units.)
+     If Stream is closed or intermittent, or there is otherwise insufficient
+     information, return -1.  If Stream has a fixed-size encoding, a 
+     nonnegative value will be exact.  Otherwise, it will be an estimate.
+  *)  
+
+; PROCEDURE Intermittent( Stream : T ) : BOOLEAN RAISES {}
+; PROCEDURE Seekable( Stream : T ) : BOOLEAN RAISES {}
+; PROCEDURE Closed( Stream : T ) : BOOLEAN RAISES {}
+(* Convenience wrappers for Intermittent(Stream.Source), etc.  
+   respectively.  These can be applied to closed readers. *)
+
 ; END UniRd 
 . 
 

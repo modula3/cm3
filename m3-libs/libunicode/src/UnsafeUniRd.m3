@@ -5,7 +5,8 @@ MODULE UnsafeUniRd
 ; IMPORT Text 
 ; FROM Thread IMPORT Alerted 
 ; IMPORT UniCodec 
-; FROM UniCodec IMPORT Widechar  
+; FROM UniCodec IMPORT Widechar 
+; FROM UniEncoding IMPORT Encoding 
 ; IMPORT UniRd 
 ; FROM UniRd IMPORT Range 
 ; IMPORT UniRdClass 
@@ -855,6 +856,87 @@ MODULE UnsafeUniRd
       ELSE RETURN LByteIndex DIV LCharIndex 
       END (* IF *)  
     END FastAvgBytesPerChar 
+
+(* TODO: Get these constants from some meaningful real data. *) 
+
+; CONST MinBytesForAvg2 = 40 
+  (* ^Min bytes to consider the stream average meaningful, 2-byte code units. *)
+; CONST AvgBytesPerChar2 = 2.1
+  (* ^An average for streams in general, 2-byte code units.  *) 
+; CONST MinBytesForAvg1 = 40 
+; CONST AvgBytesPerChar1 = 1.2
+
+(* EXPORTED: *) 
+; PROCEDURE FastLength ( Stream : UniRd . T ) : INTEGER 
+  RAISES { Failure , Alerted }
+  (* Try to return the length of Stream, in Unicode characters (not code-units.)
+     If Stream is closed or intermittent, or there is otherwise insufficient
+     information, return -1.  If Stream has a fixed-size encoding, a 
+     nonnegative value will be exact.  Otherwise, it will be an estimate.
+  *)  
+  (* PRE: Stream and Stream.Source are locked. *) 
+
+  = VAR LByteLength : INTEGER 
+  ; VAR LByteIndex : CARDINAL 
+  ; VAR LBytesPerChar : REAL 
+
+  ; BEGIN 
+      IF UnsafeRd . FastClosed ( Stream . Source ) THEN RETURN - 1 END
+    ; IF UnsafeRd . FastIntermittent ( Stream . Source ) THEN RETURN - 1 END
+    ; LByteLength 
+        := UnsafeRd . FastLength ( Stream . Source ) - 1 (* The null byte. *)
+    ; CASE Stream . Enc 
+      OF Encoding . Null 
+      , Encoding . Internal
+        => RETURN - 1 
+
+      | Encoding . ISO8859_1
+        => RETURN UnsafeRd . FastLength ( Stream . Source )  
+
+      | Encoding . CM3WC 
+        => LByteLength 
+             := UnsafeRd . FastLength ( Stream . Source ) - 1 (* Null byte. *)
+        ; RETURN LByteLength * 2 + 1 (* Null character. *) 
+
+      |  Encoding . UTF32 
+      , Encoding . UTF32BE 
+      , Encoding . UTF32LE
+        => LByteLength 
+             := UnsafeRd . FastLength ( Stream . Source ) - 1 (* Null byte. *)
+        ; RETURN LByteLength * 4 + 1 (* Null character. *)
+
+      | Encoding . UTF8 
+        => LByteLength 
+             := UnsafeRd . FastLength ( Stream . Source ) - 1 (* Null byte. *)
+        ; IF LByteLength = 0 THEN RETURN 1 (* Null character. *) END (* IF *) 
+        ; LByteIndex := UnsafeRd . FastIndex ( Stream . Source ) 
+        ; IF LByteIndex < MinBytesForAvg1  
+          THEN LBytesPerChar := AvgBytesPerChar1  
+          ELSE LBytesPerChar := FLOAT ( FastAvgBytesPerChar ( Stream ) )  
+          END (* IF *)  
+        (* Fall thru the CASE. *) 
+
+      | Encoding . UCS2 
+      , Encoding . UCS2LE 
+      , Encoding . UCS2BE 
+      , Encoding . UTF16 
+      , Encoding . UTF16LE 
+      , Encoding . UTF16BE 
+        => LByteLength 
+             := UnsafeRd . FastLength ( Stream . Source ) - 1 (* Null byte. *)
+        ; IF LByteLength < 2 THEN RETURN 1 (* Null character. *) END (* IF *) 
+        ; LByteIndex := UnsafeRd . FastIndex ( Stream . Source ) 
+        ; IF LByteIndex < MinBytesForAvg2  
+          THEN LBytesPerChar := AvgBytesPerChar2  
+          ELSE LBytesPerChar := FLOAT ( FastAvgBytesPerChar ( Stream ) )  
+          END (* IF *)  
+        (* Fall thru the CASE. *) 
+      END (* CASE *) 
+    ; RETURN CEILING ( FLOAT ( LByteLength ) / LBytesPerChar , INTEGER )
+             + 1 (* Null character. *)  
+    END FastLength 
+
+(* Testing: *) 
 
 ; PROCEDURE TextFromWideChars ( READONLY ArrWch : ARRAY OF Widechar ) : TEXT 
   (* Simulate Text.FromWideChars.  Temporary, for testing, while 
