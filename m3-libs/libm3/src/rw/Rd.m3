@@ -384,11 +384,14 @@ PROCEDURE FastCharsReady(rd: T): CARDINAL
 
 PROCEDURE Index(rd: T): CARDINAL =
   BEGIN
-    LOCK rd DO
-      IF rd.closed THEN Die() END;
-      RETURN rd.cur
-    END
+    LOCK rd DO RETURN FastIndex (rd) END; 
   END Index;
+
+PROCEDURE FastIndex(rd: T): CARDINAL =
+  BEGIN
+    IF rd.closed THEN Die() END;
+    RETURN rd.cur
+  END FastIndex;
 
 PROCEDURE Length(rd: T): INTEGER
   RAISES {Failure, Alerted} =
