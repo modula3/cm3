@@ -293,7 +293,6 @@ PROCEDURE GetSubDefault (rd: T; VAR (*out*) str: ARRAY OF CHAR): CARDINAL
     RETURN i
   END GetSubDefault;
 
-
 (* EOF and FastEOF are identical except that EOF acquires and releases
    the reader lock while FastEOF assumes it is already held. *)
 
@@ -368,16 +367,20 @@ PROCEDURE FastUnGetCharMulti(rd: T): BOOLEAN (* Succeeded. *) =
 
 PROCEDURE CharsReady(rd: T): CARDINAL
   RAISES {Failure} =
+  BEGIN
+    LOCK rd DO RETURN FastCharsReady (rd) END;
+  END CharsReady;
+
+PROCEDURE FastCharsReady(rd: T): CARDINAL
+  RAISES {Failure} =
   <*FATAL Thread.Alerted*>
   BEGIN
-    LOCK rd DO
-      IF rd.cur = rd.hi THEN
-        IF rd.closed THEN Die() END;
-        IF NextBuff (rd) THEN RETURN 1 END
-      END;
-      RETURN rd.hi - rd.cur;
-    END
-  END CharsReady;
+    IF rd.cur = rd.hi THEN
+      IF rd.closed THEN Die() END;
+      IF NextBuff (rd) THEN RETURN 1 END
+    END;
+    RETURN rd.hi - rd.cur;
+  END FastCharsReady;
 
 PROCEDURE Index(rd: T): CARDINAL =
   BEGIN
