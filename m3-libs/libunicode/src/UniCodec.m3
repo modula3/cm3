@@ -365,7 +365,10 @@ MODULE UniCodec
       , Encoding . UTF32LE 
       , Encoding . UTF32BE 
       , Encoding . Internal 
-      => RETURN Bytes DIV 4 
+      => IF ORD ( LAST ( WIDECHAR ) ) = 16_FFFF 
+         THEN RETURN Bytes DIV 2 
+         ELSE RETURN Bytes DIV 4 
+         END (* IF *) 
       END (* CASE *) 
     END MinChars 
 
