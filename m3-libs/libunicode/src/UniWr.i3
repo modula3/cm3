@@ -1,7 +1,12 @@
 INTERFACE UniWr 
 
-(* Synchronized Writer for character stream with one of several encodings. *) 
-(* This is quite similar to Wr, but there is an essential difference.
+(* Synchronized Writer for character stream with one of several encodings. 
+   This runs as a filter, writing bytes to a Wr.T, named "Sink".  It
+   locks Sink during any individual operation of this interface.  It is
+   possible bypass a UniWr.T and directly operate on its Sink, but think 
+   about the synchronization consequences.  
+
+   This is quite similar to Wr, but there is an essential difference.
    In Wr, when a procedure has "Wide" in its name, it means both: 
      1) The character(s) are passed in variables of type WIDECHAR, and 
      2) The encoding in the stream consists of exactly two bytes, LSB first,
