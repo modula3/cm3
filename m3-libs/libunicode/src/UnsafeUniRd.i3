@@ -22,15 +22,7 @@ INTERFACE UnsafeUniRd
   (* A number of characters that can be read without indefinite waiting.
      The EOF counts as one "character" here.  This number may very pessimistic. 
   *) 
-  (* PRE: Stream is locked, but not Stream.Source. *) 
-
-; PROCEDURE FastUnGetWideChar ( Stream : UniRd . T ; Wch : Widechar ) 
-  (* Push Wch onto the front of Stream, where the next attempt to decode a
-     character from Stream will fetch it, prior to decoding from the 
-     remainder of Stream.  Discard any previously ungotten but not-refetched
-     WIDECHAR. 
-  *) 
-  (* WARNING! Currently unimplemented.  A NOOP *) 
+  (* PRE: Stream is locked, but Stream.Source is not. *) 
 
 ; PROCEDURE FastGetWideChar ( Stream : UniRd . T ) : Widechar  
   RAISES { EndOfFile , Failure , Alerted } 
@@ -40,7 +32,17 @@ INTERFACE UnsafeUniRd
   (* PRE: Stream and Stream.Source are locked. *) 
 
 ; CONST (* PROCEDURE *) FastGetChar = FastGetWideChar 
-  (* With return by value and CHAR<:WIDECHAR, only one procedure is needed. *) 
+  (* With return by value and CHAR assignable to WIDECHAR, only one procedure 
+     is needed. *) 
+
+; PROCEDURE FastUnGetWideChar ( Stream : UniRd . T ; Wch : Widechar ) 
+  (* Push Wch onto the front of Stream, where the next attempt to decode a
+     character from Stream will fetch it, prior to decoding from the 
+     remainder of Stream.  Discard any previously ungotten but not-refetched
+     WIDECHAR. 
+  *) 
+  (* PRE: Stream and Stream.Source are locked. *) 
+  (* WARNING! Currently unimplemented.  A NOOP *) 
 
 ; PROCEDURE FastGetWideSub 
     ( Stream : UniRd . T ; VAR (*OUT*) ArrWch : ARRAY OF Widechar ) 
@@ -71,10 +73,26 @@ INTERFACE UnsafeUniRd
   : CARDINAL
   RAISES { Failure , Alerted } 
   (* Decode and consume characters from Source(Stream), using Enc(Stream), 
-     storing them into ArrWch, until Source(Stream) is at end-of-file, or ArrWch
-     is filled, or a decoded substring equal to Wr.EOL has been read.  Return 
-     the actual number of decoded characters stored into ArrWch. 
-  *)  
+     storing them into ArrCh, until Source(Stream) is at end-of-file, or ArrCh
+     is filled, or an end-of-line sequence has been read and stored.  
+     Return the actual number of decoded characters stored into ArrWch.  
+     Include any end-of-line sequence in the returned count and store it in
+     ArrWch. 
+
+     Consistent with the Unicode standard, an end-of-line consists of any of:
+
+       LF =  W'\x000A' = W'\n'  
+       CR =  W'\x000D' = W'\r'  
+       CR immediately followed by LF 
+       FF =  W'\x000C' = W'\f'  
+       VT =  W'\x0009' = W'\t'  
+       NEL = W'\x0085'  
+       LS =  W'\x2028'  
+       PS =  W'\x2029'  
+
+     If only one character of a two-character end-of-line sequence would fit 
+     in ArrWch, leave both unstored and unconsumed. 
+  *) 
   (* PRE: Stream and Stream.Source are locked. *) 
 
 ; PROCEDURE FastGetSubLine 
@@ -109,15 +127,15 @@ INTERFACE UnsafeUniRd
   (* PRE: Stream and Stream.Source are locked. *) 
 
 ; PROCEDURE FastIndex ( Stream : UniRd . T ) : Word . T  
-  (* Number of characters that have been read from Stream.  
-     May overflow by wrapping. *) 
+  (* Number of Unicode characters that have been read from Stream.
+     (Not fixed-sized code units.)  May overflow by wrapping. *) 
   (* PRE: Stream is locked, but Stream.Source need not be. *) 
 
 ; PROCEDURE FastAvgBytesPerChar ( Stream : UniRd . T ) : CARDINAL 
   (* Average number of encoded bytes per character, of what has been read. 
      Zero if nothing read. 
   *) 
-  (* PRE: Stream is locked, but not Stream.Source. *) 
+  (* PRE: Stream is locked, but Stream.Source need not be. *) 
 
 ; END UnsafeUniRd 
 . 

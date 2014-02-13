@@ -59,8 +59,6 @@ INTERFACE UniRd
    (* With return by value and CHAR assignable to WIDECHAR, only one procedure 
       is needed. *) 
 
-(* Do we want to wrap EOF for a T? *) 
-
 ; PROCEDURE UnGetWideChar ( Stream : T ; Wch : Widechar ) 
   (* Push Wch onto the front of Stream, where the next attempt to decode a
      character from Stream will fetch it, prior to decoding from the 
@@ -142,8 +140,8 @@ INTERFACE UniRd
   *) 
 
 ; PROCEDURE Index ( Stream : T ) : Word . T  
-  (* Number of characters that have been read from Stream.  
-     May overflow by wrapping. *) 
+  (* Number of Unicode characters that have been read from Stream.
+     (Not fixed-sized code units.)  May overflow by wrapping. *) 
 
 ; PROCEDURE AvgBytesPerChar ( Stream : T ) : CARDINAL 
   (* Average number of encoded bytes per character, of what has been read. 
