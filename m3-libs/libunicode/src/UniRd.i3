@@ -1,7 +1,12 @@
 INTERFACE UniRd 
 
-(* Synchronized reader for character stream with one of several encodings. *)
-(* This is quite similar to Rd, but there is an essential difference.
+(* Synchronized reader for a stream with one of several character encodings. 
+   This runs as a filter, reading bytes from an Rd.T, named "Source".  It
+   locks Source during any individual operation of this interface.  It is
+   possible bypass a UniRd.T and directly operate on its Source, but think 
+   about the synchronization consequences.  
+  
+   This is quite similar to Rd, but there is an essential difference.
    In Rd, when a procedures has "Wide" in its name, it means both: 
      1) The character(s) read are returned in variables of type WIDECHAR, and 
      2) The encoding in the stream consists of exactly two bytes, LSB first,
@@ -11,7 +16,11 @@ INTERFACE UniRd
 
    In UniRd, "Wide" has only meaning 1).  The encoding is taken from the Stream.
    Procedures that return results in variables of type CHAR raise Range, if the 
-   decoded character from the stream is not in CHAR. 
+   decoded character from the stream is not in CHAR.
+
+   If compiled with ORD(LAST(WIDECHAR)) = 16_FFFF (i.e., 16-bit WIDECHAR), any
+   encoded value beyond this range is converted to the Unicode substitution
+   character W'\U00FFFD' and so returned.  
 *)  
 
 ; IMPORT Rd 
