@@ -838,14 +838,14 @@ MODULE UnsafeUniRd
 ; PROCEDURE FastAvgBytesPerChar ( Stream : UniRd . T ) : CARDINAL 
   (* Average number of encoded bytes per character, of what has been read. 
      Zero if nothing read. *) 
-  (* PRE: Stream is locked, but not Stream.Source. *) 
+  (* PRE: Stream and Stream.Source are locked. *) 
 
   = VAR LByteIndex : CARDINAL 
   ; VAR LCharIndex : Word . T
 (* REVIEW? What to do about overflows in these values? *)  
 
   ; BEGIN 
-      LByteIndex := Rd . Index ( Stream . Source ) 
+      LByteIndex := UnsafeRd . FastIndex ( Stream . Source ) 
 (* TODO: An already-locked Index (UnsafeRd.FastIndex) would allow
          this to be called with Stream.Source already locked, which would
          make for a more consistent interface in UnsafeUniRd.i3. *) 
