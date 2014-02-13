@@ -59,7 +59,20 @@ PROCEDURE FastCharsReady(rd: Rd.T): CARDINAL RAISES {Failure};
 PROCEDURE FastIndex(rd: Rd.T): CARDINAL; 
 (* Like Rd.Index, but rd must be locked. *)
 
-PROCEDURE FastClose (rd: Rd.T) RAISES {Failure, Alerted};
+PROCEDURE FastLength(rd: Rd.T): INTEGER RAISES {Failure, Alerted};
+(* Like Rd.Length, but rd must be locked. *)
+
+PROCEDURE FastIntermittent(rd: Rd.T): BOOLEAN RAISES {};
+(* Like Rd.Intermittent, but rd must be locked. *)
+
+PROCEDURE FastSeekable(rd: Rd.T): BOOLEAN RAISES {};
+(* Like Rd.Seekabke, but rd must be locked. *)
+
+PROCEDURE FastClosed(rd: Rd.T): BOOLEAN RAISES {};
+(* Like Rd.Closed, but rd must be locked. *)
+
+PROCEDURE FastClose(rd: Rd.T) RAISES {Failure, Alerted};
+(* Like Rd.Close, but rd must be locked. *)
 
 END UnsafeRd.
 

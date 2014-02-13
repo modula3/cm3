@@ -368,7 +368,13 @@ PROCEDURE FastUnGetCharMulti(rd: T): BOOLEAN (* Succeeded. *) =
 PROCEDURE CharsReady(rd: T): CARDINAL
   RAISES {Failure} =
   BEGIN
-    LOCK rd DO RETURN FastCharsReady (rd) END;
+    LOCK rd DO 
+      IF rd.cur = rd.hi THEN
+        IF rd.closed THEN Die() END;
+        IF NextBuff (rd) THEN RETURN 1 END
+      END;
+      RETURN rd.hi - rd.cur;
+    END;
   END CharsReady;
 
 PROCEDURE FastCharsReady(rd: T): CARDINAL
@@ -384,7 +390,10 @@ PROCEDURE FastCharsReady(rd: T): CARDINAL
 
 PROCEDURE Index(rd: T): CARDINAL =
   BEGIN
-    LOCK rd DO RETURN FastIndex (rd) END; 
+    LOCK rd DO 
+      IF rd.closed THEN Die() END;
+      RETURN rd.cur
+    END; 
   END Index;
 
 PROCEDURE FastIndex(rd: T): CARDINAL =
@@ -401,6 +410,13 @@ PROCEDURE Length(rd: T): INTEGER
       RETURN rd.length()
     END
   END Length;
+
+PROCEDURE FastLength(rd: T): INTEGER
+  RAISES {Failure, Alerted} =
+  BEGIN
+    IF rd.closed THEN Die() END;
+    RETURN rd.length()
+  END FastLength;
 
 PROCEDURE Seek(rd: T; n: CARDINAL)
   RAISES {Failure, Alerted} =
@@ -686,17 +702,36 @@ PROCEDURE GetWideLine (rd: T): TEXT
 PROCEDURE Intermittent (rd: T): BOOLEAN =
   BEGIN
     RETURN (rd.intermittent);
+(* CHECK: Can we really always get away with neither a Lock nor Atomic? *) 
   END Intermittent;
+
+PROCEDURE FastIntermittent(rd: T): BOOLEAN RAISES {} = 
+  BEGIN 
+    RETURN (rd.intermittent);
+  END FastIntermittent; 
 
 PROCEDURE Seekable (rd: T): BOOLEAN =
   BEGIN
     RETURN (rd.seekable);
+(* CHECK: Can we really always get away with neither a Lock nor Atomic? *) 
   END Seekable;
+
+PROCEDURE FastSeekable(rd: T): BOOLEAN RAISES {}= 
+  BEGIN 
+    RETURN (rd.seekable);
+(* CHECK: Can we really always get away with neither a Lock nor Atomic? *) 
+  END FastSeekable; 
 
 PROCEDURE Closed (rd: T): BOOLEAN =
   BEGIN
     RETURN (rd.closed);
+(* CHECK: Can we really always get away with neither a Lock nor Atomic? *) 
   END Closed;
+
+PROCEDURE FastClosed(rd: T): BOOLEAN RAISES {}= 
+  BEGIN 
+    RETURN (rd.closed);
+  END FastClosed; 
 
 PROCEDURE Lock (rd: T) =
   BEGIN
