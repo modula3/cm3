@@ -275,6 +275,40 @@ MODULE UniRd
       END (* LOCK *) 
     END AvgBytesPerChar 
 
+(* EXPORTED: *) 
+; PROCEDURE Length ( Stream : T ) : INTEGER RAISES { Failure , Alerted }
+  (* Try to return the length of Stream, in Unicode characters (not code-units.)
+     If Stream is closed or intermittent, or there is otherwise insufficient
+     information, return -1.  If Stream has a fixed-size encoding, a 
+     nonnegative value will be exact.  Otherwise, it will be an estimate.
+  *)  
+
+  = BEGIN 
+      LOCK Stream DO
+        LOCK Stream . Source DO 
+          RETURN UnsafeUniRd . FastLength ( Stream ) 
+        END (* LOCK *) 
+      END (* LOCK *) 
+    END Length 
+
+(* EXPORTED: *) 
+; PROCEDURE Intermittent( Stream : T ) : BOOLEAN RAISES { }
+
+  = BEGIN RETURN Rd . Intermittent ( Stream . Source ) 
+    END Intermittent
+
+(* EXPORTED: *) 
+; PROCEDURE Seekable( Stream : T ) : BOOLEAN RAISES { }
+
+  = BEGIN RETURN Rd . Seekable ( Stream . Source ) 
+    END Seekable
+
+(* EXPORTED: *) 
+; PROCEDURE Closed( Stream : T ) : BOOLEAN RAISES { }
+
+  = BEGIN RETURN Rd . Closed ( Stream . Source ) 
+    END Closed
+
 ; BEGIN (* UniRd *) 
   END UniRd 
 . 
