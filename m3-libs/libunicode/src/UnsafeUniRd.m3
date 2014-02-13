@@ -59,7 +59,7 @@ MODULE UnsafeUniRd
   (* A number of characters that can be read without indefinite waiting.
      The EOF counts as one "character" here.  This number may very pessimistic. 
   *) 
-  (* PRE: Stream is locked, but Stream.Source is not. *) 
+  (* PRE: Stream and Stream.Source are locked. *) 
 
   = VAR LSourceBytesReady , LCharsReady , LPostponedCt : CARDINAL 
 
@@ -67,10 +67,7 @@ MODULE UnsafeUniRd
       IF Stream . MaxBytesPerChar = 0 
       THEN RETURN 0 
       ELSE 
-(* TODO: An already-locked CharsReady (UnsafeRd.FastCharsReady) would allow
-         this to be called with Stream.Source already locked, which would
-         make for a more consistent interface in UnsafeUniRd.i3. *) 
-        LSourceBytesReady := Rd . CharsReady ( Stream . Source ) 
+        LSourceBytesReady := UnsafeRd . FastCharsReady ( Stream . Source )
       ; LCharsReady 
           := ( LSourceBytesReady - 1 (* For EOF *) ) 
              DIV Stream . MaxBytesPerChar 

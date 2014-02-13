@@ -22,7 +22,7 @@ INTERFACE UnsafeUniRd
   (* A number of characters that can be read without indefinite waiting.
      The EOF counts as one "character" here.  This number may very pessimistic. 
   *) 
-  (* PRE: Stream is locked, but Stream.Source is not. *) 
+  (* PRE: Stream and Stream.Source are locked. *) 
 
 ; PROCEDURE FastGetWideChar ( Stream : UniRd . T ) : Widechar  
   RAISES { EndOfFile , Failure , Alerted } 

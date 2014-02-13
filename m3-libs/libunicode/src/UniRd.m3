@@ -84,7 +84,9 @@ MODULE UniRd
 
   = BEGIN
       LOCK Stream 
-      DO RETURN UnsafeUniRd . FastCharsReady ( Stream )  
+      DO LOCK Stream . Source 
+        DO RETURN UnsafeUniRd . FastCharsReady ( Stream )  
+        END (* LOCK *) 
       END (* LOCK *) 
     END CharsReady  
 
