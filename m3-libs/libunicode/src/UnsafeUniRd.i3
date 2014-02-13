@@ -135,7 +135,7 @@ INTERFACE UnsafeUniRd
   (* Average number of encoded bytes per character, of what has been read. 
      Zero if nothing read. 
   *) 
-  (* PRE: Stream is locked, but Stream.Source need not be. *) 
+  (* PRE: Stream and Stream.Source are locked. *) 
 
 ; END UnsafeUniRd 
 . 
