@@ -883,8 +883,6 @@ MODULE UnsafeUniRd
   ; BEGIN 
       IF UnsafeRd . FastClosed ( Stream . Source ) THEN RETURN - 1 END
     ; IF UnsafeRd . FastIntermittent ( Stream . Source ) THEN RETURN - 1 END
-    ; LByteLength 
-        := UnsafeRd . FastLength ( Stream . Source ) - 1 (* The null byte. *)
     ; CASE Stream . Enc 
       OF Encoding . Null 
       , Encoding . Internal
@@ -894,16 +892,12 @@ MODULE UnsafeUniRd
         => RETURN UnsafeRd . FastLength ( Stream . Source )  
 
       | Encoding . CM3WC 
-        => LByteLength 
-             := UnsafeRd . FastLength ( Stream . Source ) - 1 (* Null byte. *)
-        ; RETURN LByteLength * 2 + 1 (* Null character. *) 
+        => RETURN UnsafeRd . FastLength ( Stream . Source ) DIV 2 
 
-      |  Encoding . UTF32 
+      | Encoding . UTF32 
       , Encoding . UTF32BE 
       , Encoding . UTF32LE
-        => LByteLength 
-             := UnsafeRd . FastLength ( Stream . Source ) - 1 (* Null byte. *)
-        ; RETURN LByteLength * 4 + 1 (* Null character. *)
+        => RETURN UnsafeRd . FastLength ( Stream . Source ) DIV 4 
 
       | Encoding . UTF8 
         => LByteLength 
@@ -914,7 +908,8 @@ MODULE UnsafeUniRd
           THEN LBytesPerChar := AvgBytesPerChar1  
           ELSE LBytesPerChar := FLOAT ( FastAvgBytesPerChar ( Stream ) )  
           END (* IF *)  
-        (* Fall thru the CASE. *) 
+        ; RETURN CEILING ( FLOAT ( LByteLength ) / LBytesPerChar , INTEGER )
+                 + 1 (* Null character. *)  
 
       | Encoding . UCS2 
       , Encoding . UCS2LE 
@@ -922,18 +917,14 @@ MODULE UnsafeUniRd
       , Encoding . UTF16 
       , Encoding . UTF16LE 
       , Encoding . UTF16BE 
-        => LByteLength 
-             := UnsafeRd . FastLength ( Stream . Source ) - 1 (* Null byte. *)
-        ; IF LByteLength < 2 THEN RETURN 1 (* Null character. *) END (* IF *) 
+        => LByteLength := UnsafeRd . FastLength ( Stream . Source ) 
         ; LByteIndex := UnsafeRd . FastIndex ( Stream . Source ) 
         ; IF LByteIndex < MinBytesForAvg2  
           THEN LBytesPerChar := AvgBytesPerChar2  
           ELSE LBytesPerChar := FLOAT ( FastAvgBytesPerChar ( Stream ) )  
           END (* IF *)  
-        (* Fall thru the CASE. *) 
+        ; RETURN CEILING ( FLOAT ( LByteLength ) / LBytesPerChar , INTEGER )
       END (* CASE *) 
-    ; RETURN CEILING ( FLOAT ( LByteLength ) / LBytesPerChar , INTEGER )
-             + 1 (* Null character. *)  
     END FastLength 
 
 (* Testing: *) 
