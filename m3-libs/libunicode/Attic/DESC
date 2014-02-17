@@ -1,6 +1,0 @@
-<p>
-Library for encoding, decoding, and handling Unicode characters.
-Some things here require a compiler with full Unicode range
-WIDECHAR to compile.  This is separated from libm3 to avoid 
-bootstrap barriers when building with older compilers.  
-</p>
