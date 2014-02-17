@@ -12,6 +12,7 @@ MODULE UniRd
 ; FROM UniEncoding IMPORT Encoding  
 ; IMPORT UniRdClass 
 ; IMPORT UnsafeUniCodec 
+; IMPORT UnsafeRd 
 ; IMPORT UnsafeUniRd 
 ; IMPORT Word 
 
@@ -249,6 +250,22 @@ MODULE UniRd
         END (* LOCK *) 
       END (* LOCK *) 
     END GetLine  
+
+(* EXPORTED: *) 
+; PROCEDURE Close ( Stream : T ) RAISES { Failure , Alerted }
+  (* Close Stream and its source. *) 
+ 
+  = BEGIN 
+      LOCK Stream 
+      DO LOCK Stream . Source 
+        DO 
+          UnsafeRd . FastClose ( Stream . Source )
+        (* We'll leave fields of Stream unchanged, for maybe debugging help.
+           Stream can't be used while Source is closed, and can't be reopened 
+           other than by UniRd.Init, which will reinitialize the fields. *) 
+        END (* LOCK *) 
+      END (* LOCK *) 
+    END Close 
 
 (* EXPORTED: *) 
 ; PROCEDURE Index ( Stream : T ) : Word . T  
