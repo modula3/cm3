@@ -108,7 +108,8 @@ MODULE UnsafeUniRd
         ; RETURN Stream . PostponedWCh
         END (* IF *) 
       ELSE (* Dispatch to appropriate encoding procedure. *) 
-        LWch := Stream . DecWideChar ( Stream . Source ) 
+        Stream . PrevSourceIndex := UnsafeRd . FastIndex ( Stream . Source ) 
+      ; LWch := Stream . DecWideChar ( Stream . Source ) 
       ; INC ( Stream . Index ) 
       ; RETURN LWch 
       END (* IF *) 
@@ -186,13 +187,14 @@ MODULE UnsafeUniRd
             INC ( Stream . Index , LI ) 
           ; RETURN LI 
           ELSE 
-            <* FATAL EndOfFile *> (* Can't happen. *) BEGIN 
+            Stream . PrevSourceIndex := UnsafeRd . FastIndex ( Stream . Source )
+          ; <* FATAL EndOfFile *> (* Can't happen. *) BEGIN 
               ArrWch [ LI ] := Stream . DecWideChar ( Stream . Source ) 
             END (* Block. *) 
           ; INC ( LI ) 
           END (* IF *) 
         END (* LOOP *) 
-      EXCEPT (* Rd.EOF or Stream.DecWideChar. *) 
+      EXCEPT (* From Rd.EOF or Stream.DecWideChar. *) 
       Failure ( Arg ) 
       => INC ( Stream . Index , LI ) 
       ; RAISE Failure ( Arg ) 
@@ -267,7 +269,8 @@ MODULE UnsafeUniRd
             INC ( Stream . Index , LI ) 
           ; RETURN LI 
           ELSE 
-            <* FATAL EndOfFile *> (* Can't happen. *) BEGIN 
+            Stream . PrevSourceIndex := UnsafeRd . FastIndex ( Stream . Source )
+          ; <* FATAL EndOfFile *> (* Can't happen. *) BEGIN 
               LWch := Stream . DecWideChar ( Stream . Source ) 
             END (* Block. *) 
           ; IF ORD ( LWch ) > ORD ( LAST ( CHAR ) ) 
@@ -283,7 +286,7 @@ MODULE UnsafeUniRd
             END (* IF *) 
           END (* IF *) 
         END (* LOOP *) 
-      EXCEPT (* Rd.EOF or Stream.DecWideChar. *) 
+      EXCEPT (* From Rd.EOF or Stream.DecWideChar. *) 
       Failure ( Arg ) 
       => INC ( Stream . Index , LI ) 
       ; RAISE Failure ( Arg ) 
@@ -356,7 +359,8 @@ MODULE UnsafeUniRd
           ELSIF UnsafeRd . FastEOF ( Stream . Source ) 
           THEN RETURN 0
           ELSE (* Can and must read a character. *) 
-            <* FATAL EndOfFile *> (* Can't happen. *) BEGIN 
+            Stream . PrevSourceIndex := UnsafeRd . FastIndex ( Stream . Source )
+          ; <* FATAL EndOfFile *> (* Can't happen. *) BEGIN 
               LWch1 := Stream . DecWideChar ( Stream . Source ) 
             END (* Block. *) 
           END (* IF *) 
@@ -385,7 +389,9 @@ MODULE UnsafeUniRd
               ; INC ( Stream . Index , LI ) 
               ; RETURN LI 
               ELSE (* Another char follows the CR. *) 
-                <* FATAL EndOfFile *> (* Can't happen. *) BEGIN 
+                Stream . PrevSourceIndex 
+                  := UnsafeRd . FastIndex ( Stream . Source )
+              ; <* FATAL EndOfFile *> (* Can't happen. *) BEGIN 
                   LWch2 := Stream . DecWideChar ( Stream . Source ) 
                 END (* Block. *) 
               ; IF ORD ( LWch2 ) = ORD ( LFWch ) 
@@ -424,14 +430,16 @@ MODULE UnsafeUniRd
                 INC ( Stream . Index , LI ) 
               ; RETURN LI 
               ELSE 
-                <* FATAL EndOfFile *> (* Can't happen. *) BEGIN 
+                Stream . PrevSourceIndex 
+                  := UnsafeRd . FastIndex ( Stream . Source )
+              ; <* FATAL EndOfFile *> (* Can't happen. *) BEGIN 
                   LWch1 := Stream . DecWideChar ( Stream . Source ) 
                 END (* Block. *) 
               (* And loop. *) 
               END (* IF *) 
             END (* IF *) 
           END (* LOOP *) 
-        EXCEPT (* Rd.EOF or Stream.DecWideChar. *) 
+        EXCEPT (* From Rd.EOF or Stream.DecWideChar. *) 
         Failure ( Arg ) 
         => INC ( Stream . Index , LI ) 
         ; RAISE Failure ( Arg ) 
@@ -489,7 +497,8 @@ MODULE UnsafeUniRd
           ELSIF UnsafeRd . FastEOF ( Stream . Source ) 
           THEN RETURN 0 
           ELSE
-            <* FATAL EndOfFile *> (* Can't happen. *) BEGIN 
+            Stream . PrevSourceIndex := UnsafeRd . FastIndex ( Stream . Source )
+          ; <* FATAL EndOfFile *> (* Can't happen. *) BEGIN 
               LWch1 := Stream . DecWideChar ( Stream . Source ) 
             END (* Block. *) 
           END (* IF *) 
@@ -522,7 +531,9 @@ MODULE UnsafeUniRd
               ; INC ( Stream . Index , LI ) 
               ; RETURN LI 
               ELSE (* Another char follows the CR. *) 
-                <* FATAL EndOfFile *> (* Can't happen. *) BEGIN 
+                Stream . PrevSourceIndex 
+                  := UnsafeRd . FastIndex ( Stream . Source )
+              ; <* FATAL EndOfFile *> (* Can't happen. *) BEGIN 
                   LWch2 := Stream . DecWideChar ( Stream . Source ) 
                 END (* Block. *) 
               ; IF ORD ( LWch2 ) = ORD ( LFWch ) 
@@ -569,7 +580,9 @@ MODULE UnsafeUniRd
                   INC ( Stream . Index , LI ) 
                 ; RETURN LI 
                 ELSE 
-                  <* FATAL EndOfFile *> (* Can't happen. *) BEGIN 
+                  Stream . PrevSourceIndex 
+                    := UnsafeRd . FastIndex ( Stream . Source )
+                ; <* FATAL EndOfFile *> (* Can't happen. *) BEGIN 
                     LWch1 := Stream . DecWideChar ( Stream . Source ) 
                   END (* Block. *) 
                 (* And loop. *) 
@@ -577,7 +590,7 @@ MODULE UnsafeUniRd
               END (* IF *) 
             END (* IF *) 
           END (* LOOP *) 
-        EXCEPT (* Rd.EOF or Stream.DecWideChar. *) 
+        EXCEPT (* From Rd.EOF or Stream.DecWideChar. *) 
         Failure ( Arg ) 
         => INC ( Stream . Index , LI ) 
         ; RAISE Failure ( Arg ) 
@@ -666,6 +679,7 @@ MODULE UnsafeUniRd
               END (* IF *) 
             ; LChunkI := 0 
             END (* IF *)  
+          ; Stream . PrevSourceIndex := UnsafeRd . FastIndex ( Stream . Source )
           ; <* FATAL EndOfFile *> (* Can't happen. *) BEGIN  
               LChunk [ LChunkI ] := Stream . DecWideChar ( Stream . Source ) 
             END (* Block. *) 
@@ -735,7 +749,8 @@ MODULE UnsafeUniRd
             LWch1:= Stream . PostponedWCh 
           END (* IF *) 
         ELSE (* Nothing was postponed.  Read a character. *)  
-          LWch1 := Stream . DecWideChar ( Stream . Source ) 
+          Stream . PrevSourceIndex := UnsafeRd . FastIndex ( Stream . Source )
+        ; LWch1 := Stream . DecWideChar ( Stream . Source ) 
           (* ^Which could raise EndOfFile. *) 
         END (* IF *) 
       ; LResult := NIL 
@@ -774,7 +789,9 @@ MODULE UnsafeUniRd
             THEN (* CR alone. *) 
               EXIT 
             ELSE (* Another char follows the CR. *) 
-              <* FATAL EndOfFile *> (* Can't happen. *) BEGIN 
+              Stream . PrevSourceIndex 
+                := UnsafeRd . FastIndex ( Stream . Source )
+            ; <* FATAL EndOfFile *> (* Can't happen. *) BEGIN 
                 LWch2 := Stream . DecWideChar ( Stream . Source ) 
 (* WARNING: exception is never raised: Rd.EndOfFile--why? *) 
               END (* Block. *) 
@@ -796,7 +813,9 @@ MODULE UnsafeUniRd
             THEN (* Line has ended at EOF without a new-line sequence. *) 
               EXIT 
             ELSE 
-              <* FATAL EndOfFile *> (* Can't happen. *) BEGIN 
+              Stream . PrevSourceIndex 
+                := UnsafeRd . FastIndex ( Stream . Source )
+            ; <* FATAL EndOfFile *> (* Can't happen. *) BEGIN 
                 LWch1 := Stream . DecWideChar ( Stream . Source ) 
 (* WARNING: exception is never raised: Rd.EndOfFile--why? *) 
               END (* Block. *) 
@@ -815,7 +834,7 @@ MODULE UnsafeUniRd
             LResult 
             & TextFromWideChars ( SUBARRAY ( LChunk , 0 , LChunkI ) )
         END (* IF *) 
-      EXCEPT (* Rd.EOF or Stream.DecWideChar. *) 
+      EXCEPT (* From Rd.EOF or Stream.DecWideChar. *) 
       Failure ( Arg ) 
       => INC ( Stream . Index , LI ) 
       ; RAISE Failure ( Arg ) 

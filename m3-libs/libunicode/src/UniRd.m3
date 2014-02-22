@@ -28,6 +28,7 @@ MODULE UniRd
         Stream . Source := Source 
       ; Stream . DecWideChar := UnsafeUniCodec . DecTable [ IsBE , Enc ] 
       ; Stream . Index := 0 
+      ; Stream . PrevSourceIndex := 0 (* Dead, defensive. *)  
       ; Stream . MaxBytesPerChar := UniCodec . MaxBytesPerChar ( Enc ) 
       ; Stream . Enc := Enc 
       ; Stream . HasPostponedWCh := FALSE  
