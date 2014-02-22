@@ -148,6 +148,9 @@ INTERFACE UniRd
      this to know which EOL sequence it was.  
   *) 
 
+; PROCEDURE Close ( Stream : T ) RAISES { Failure , Alerted }
+  (* Close Stream and its source. *) 
+
 ; PROCEDURE Index ( Stream : T ) : Word . T  
   (* Number of Unicode characters that have been read from Stream.
      (Not fixed-sized code units.)  May overflow by wrapping. *) 
