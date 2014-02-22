@@ -16,7 +16,19 @@ MODULE TestUniCodec EXPORTS Main
 ; IMPORT Wr 
 
 ; VAR GEnc := Encoding . ISO8859_1 
-; VAR GEncSet := SET OF Encoding { Encoding . ISO8859_1 .. LAST ( Encoding ) } 
+; VAR GEncSet 
+    := SET OF Encoding 
+         { Encoding . ISO8859_1 
+         , Encoding . CM3WC
+         , Encoding . UCS2LE
+         , Encoding . UCS2BE 
+         , Encoding . UTF8
+         , Encoding . UTF16LE
+         , Encoding . UTF16BE
+         , Encoding . UTF32LE
+         , Encoding . UTF32BE
+         } 
+
 ; VAR GWrite : BOOLEAN := FALSE 
 ; VAR GRead : BOOLEAN := FALSE 
 ; VAR GWrT : Wr . T 
@@ -71,7 +83,7 @@ MODULE TestUniCodec EXPORTS Main
 
 ; TYPE ProcOfWch = PROCEDURE ( Wch : Widechar ) RAISES ANY  
 
-; PROCEDURE ForAllLegalDo ( Enc : Encoding ; Callback : ProcOfWch ) 
+; PROCEDURE ForAllLegalCharsDo ( Enc : Encoding ; Callback : ProcOfWch ) 
   RAISES ANY  
 
   = BEGIN 
@@ -110,7 +122,7 @@ MODULE TestUniCodec EXPORTS Main
         DO Callback ( RWch ) 
         END (* FOR *) 
       END (* CASE *) 
-    END ForAllLegalDo 
+    END ForAllLegalCharsDo 
 
 ; PROCEDURE ExpectedCharCt ( Enc : Encoding ) : CARDINAL 
 
@@ -169,7 +181,7 @@ MODULE TestUniCodec EXPORTS Main
     ; GWrT := WaWrT 
     ; WaCharNo := 0 
     ; <* FATAL ANY *> 
-      BEGIN ForAllLegalDo ( Enc , WaWriteWch ) 
+      BEGIN ForAllLegalCharsDo ( Enc , WaWriteWch ) 
       END (* Block *) 
  (* ; Wr . PutText ( WaWrT , Wr . EOL ) *) 
     ; Wr . Close ( WaWrT ) 
@@ -249,7 +261,7 @@ MODULE TestUniCodec EXPORTS Main
     ; GRdT := RaRdT 
     ; RaCharNo := 0 
     ; TRY 
-        ForAllLegalDo ( Enc , RaReadWch ) 
+        ForAllLegalCharsDo ( Enc , RaReadWch ) 
       ; IF NOT Rd . EOF ( RaRdT ) 
         THEN 
           Msg ( "File " & LFileName & " Not emptied." )
