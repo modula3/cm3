@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Definitions of target machine for GNU compiler, for ARM.
    Copyright (C) 1991, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000,
    2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
@@ -267,7 +269,7 @@ extern void (*arm_lang_output_object_attributes_hook)(void);
 #define TARGET_UNIFIED_ASM TARGET_THUMB2
 
 /* Nonzero if this chip provides the DMB instruction.  */
-#define TARGET_HAVE_DMB		(arm_arch7)
+#define TARGET_HAVE_DMB		(arm_arch6m || arm_arch7)
 
 /* Nonzero if this chip implements a memory barrier via CP15.  */
 #define TARGET_HAVE_DMB_MCR	(arm_arch6 && ! TARGET_HAVE_DMB \
@@ -352,7 +354,7 @@ extern const struct arm_fpu_desc
 extern int arm_fpu_attr;
 
 #ifndef TARGET_DEFAULT_FLOAT_ABI
-#define TARGET_DEFAULT_FLOAT_ABI ARM_FLOAT_ABI_SOFT
+#define TARGET_DEFAULT_FLOAT_ABI ARM_FLOAT_ABI_HARD
 #endif
 
 #define LARGEST_EXPONENT_IS_NORMAL(bits) \
@@ -382,6 +384,9 @@ extern int arm_arch6;
 
 /* Nonzero if this chip supports the ARM Architecture 6k extensions.  */
 extern int arm_arch6k;
+
+/* Nonzero if instructions present in ARMv6-M can be used.  */
+extern int arm_arch6m;
 
 /* Nonzero if this chip supports the ARM Architecture 7 extensions.  */
 extern int arm_arch7;
@@ -1123,11 +1128,18 @@ enum reg_class
 /* FPA registers can't do subreg as all values are reformatted to internal
    precision.  In VFPv1, VFP registers could only be accessed in the mode
    they were set, so subregs would be invalid there too.  However, we don't
-   support VFPv1 at the moment, and the restriction was lifted in VFPv2.  */
+   support VFPv1 at the moment, and the restriction was lifted in VFPv2.
+   In big-endian mode, modes greater than word size (i.e. DFmode) are stored in
+   VFP registers in little-endian order.  We can't describe that accurately to
+   GCC, so avoid taking subregs of such values.  */
 #define CANNOT_CHANGE_MODE_CLASS(FROM, TO, CLASS)		\
-  (GET_MODE_SIZE (FROM) != GET_MODE_SIZE (TO)			\
-   ? reg_classes_intersect_p (FPA_REGS, (CLASS))		\
-   : 0)
+  (TARGET_VFP							\
+  ? TARGET_BIG_END						\
+    && (GET_MODE_SIZE (FROM) > UNITS_PER_WORD			\
+       || GET_MODE_SIZE (TO) > UNITS_PER_WORD)			\
+    && reg_classes_intersect_p (VFP_REGS, (CLASS))		\
+  : GET_MODE_SIZE (FROM) != GET_MODE_SIZE (TO)			\
+    && reg_classes_intersect_p (FPA_REGS, (CLASS)))
 
 /* The class value for index registers, and the one for base regs.  */
 #define INDEX_REG_CLASS  (TARGET_THUMB1 ? LO_REGS : GENERAL_REGS)
@@ -1951,9 +1963,6 @@ extern int making_const_table;
 /* Handle pragmas for compatibility with Intel's compilers.  */
 /* Also abuse this to register additional C specific EABI attributes.  */
 #define REGISTER_TARGET_PRAGMAS() do {					\
-  c_register_pragma (0, "long_calls", arm_pr_long_calls);		\
-  c_register_pragma (0, "no_long_calls", arm_pr_no_long_calls);		\
-  c_register_pragma (0, "long_calls_off", arm_pr_long_calls_off);	\
   arm_lang_object_attributes_init(); \
 } while (0)
 

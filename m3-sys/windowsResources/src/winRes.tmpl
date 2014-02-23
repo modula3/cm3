@@ -22,7 +22,7 @@ readonly proc WindowsResource (file) is
    if equal (OS_TYPE, "WIN32")
       if defined ("_all")
          if stale (res, src)
-            if equal (M3_BACKEND_MODE, "0")
+            if equal (M3_BACKEND_MODE, "0") or equal (M3_BACKEND_MODE, "C")
               exec ("rc -DWIN32 -i", path_of(""), "-fo", res, src)
             else
               exec ("windres -DWIN32 -I", path_of(""), "-o", res, "-i", src)

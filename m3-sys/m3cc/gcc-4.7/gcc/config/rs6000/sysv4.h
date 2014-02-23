@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Target definitions for GNU compiler for PowerPC running System V.4
    Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003,
    2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
@@ -402,6 +404,7 @@ do {									\
   asm_fprintf (FILE, "%L%s", PREFIX)
 
 /* Globalizing directive for a label.  */
+#undef GLOBAL_ASM_OP
 #define GLOBAL_ASM_OP "\t.globl "
 
 /* This says how to output assembler code to declare an

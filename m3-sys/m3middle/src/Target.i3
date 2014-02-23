@@ -37,7 +37,8 @@ TYPE
     AMD64_OPENBSD,
     AMD64_SOLARIS,
     ARM_DARWIN,
-    ARMEL_LINUX,
+    ARM_LINUX,    (* little endian, v6, hard float, vfp *)
+    ARMEL_LINUX,  (* same thing *)
     FreeBSD4,
     I386_CYGWIN,
     I386_DARWIN,
@@ -91,7 +92,8 @@ CONST
     "AMD64_OPENBSD",
     "AMD64_SOLARIS",
     "ARM_DARWIN",
-    "ARMEL_LINUX",
+    "ARM_LINUX",    (* little endian, v6, hard float, vfp *)
+    "ARMEL_LINUX",  (* same thing *)
     "FreeBSD4",
     "I386_CYGWIN",
     "I386_DARWIN",

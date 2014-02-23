@@ -2,7 +2,7 @@ MODULE M3C;
 
 IMPORT RefSeq, TextSeq, Wr, Text, IntRefTbl, SortedIntRefTbl, TIntN, IntIntTbl;
 IMPORT M3CG, M3CG_Ops, Target, TFloat, TargetMap, IntArraySort, Process;
-IMPORT M3ID, TInt, TWord, ASCII, Thread, Stdio, Word;
+IMPORT M3ID, TInt, TWord, ASCII, Thread, Stdio, Word, TextUtils;
 FROM TargetMap IMPORT CG_Bytes;
 FROM M3CG IMPORT Name, ByteOffset, CallingConvention;
 FROM M3CG IMPORT BitSize, ByteSize, Alignment, Frequency;
@@ -15,9 +15,16 @@ IMPORT M3CG_MultiPass, M3CG_DoNothing, M3CG_Binary, RTIO;
 FROM M3CC IMPORT INT32, INT64, UINT32, UINT64, Base_t, UInt64ToText;
 CONST NameT = M3ID.ToText;
 
-VAR AvoidGccTypeRangeWarnings := TRUE; (* comparison is always false due to limited range of data type *)
-VAR PassStructsByValue := FALSE; (* TODO change this *)
-VAR ReturnStructsByValue := FALSE; (* TODO change this *)
+(* 
+Something like:
+int F(unsigned i) { return i < 0; }
+gets a warning with gcc.
+You can quash it with -Wno-type-limits in newer versions
+but not older. We know 4.2 does not have the flag and 4.3 does.
+*)
+(* VAR AvoidGccTypeRangeWarnings := FALSE; comparison is always false due to limited range of data type *)
+VAR PassStructsByValue := FALSE;    (* TODO change this *)
+VAR ReturnStructsByValue := FALSE;  (* TODO change this *)
 VAR CaseDefaultAssertFalse := FALSE;
 
 (* Taken together, these help debugging, as you get more lines in the
@@ -48,6 +55,7 @@ T = M3CG_DoNothing.T BRANDED "M3C.T" OBJECT
 
         imported_procs: RefSeq.T := NIL; (*TODO*) (* Proc_t *)
         declared_procs: RefSeq.T := NIL; (*TODO*) (* Proc_t *)
+        procs_pending_output: RefSeq.T := NIL; (*TODO*) (* Proc_t *)
         typeidToType: IntRefTbl.T := NIL;
         pendingTypes: RefSeq.T := NIL; (* Type_t *)
         declareTypes: DeclareTypes_t := NIL;
@@ -58,7 +66,7 @@ T = M3CG_DoNothing.T BRANDED "M3C.T" OBJECT
         Err    : ErrorHandler := DefaultErrorHandler;
         anonymousCounter := -1;
         c      : Wr.T := NIL;
-        debug := 2;
+        debug := 0; (* or 0, 1, 2, 3, 4 *)
         stack  : RefSeq.T := NIL;
         params : TextSeq.T := NIL;
         op_index := 0;
@@ -292,7 +300,8 @@ PROCEDURE UInt64ToHex(a: UINT64): TEXT = BEGIN RETURN UInt64ToText(a, 16); END U
 (*PROCEDURE Int64ToDec(a: INT64): TEXT = BEGIN RETURN Int64ToText(a, 10); END Int64ToDec;*)
 (*PROCEDURE Int32ToDec(a: INT32): TEXT = BEGIN RETURN Int64ToText(VAL(a, INT64), 10); END Int32ToDec;*)
 PROCEDURE UInt32ToHex(a: UINT32): TEXT = BEGIN RETURN UInt64ToText(VAL(a, UINT64), 16); END UInt32ToHex;
-PROCEDURE IntToHex(a: INTEGER): TEXT = BEGIN RETURN Int64ToText(VAL(a, INT64), 16); END IntToHex;
+PROCEDURE  IntToHex(a: INTEGER): TEXT = BEGIN RETURN  Int64ToText(VAL(a, INT64), 16); END  IntToHex;
+PROCEDURE UIntToHex(a: INTEGER): TEXT = BEGIN RETURN UInt64ToText(VAL(a, INT64), 16); END UIntToHex;
 PROCEDURE IntToDec(a: INTEGER): TEXT = BEGIN RETURN Int64ToText(VAL(a, INT64), 10); END IntToDec;
 
 <*UNUSED*>CONST Int32ToHex = UInt32ToHex;
@@ -611,14 +620,14 @@ METHODS
     forwardDeclare(self: T) := type_forwardDeclare; (* useful for structs *)
     define(self: T);
     canBeDefined(self: T): BOOLEAN := type_canBeDefined_false;
-    isOrdinal(): BOOLEAN := type_isType_false;
-    isInteger(): BOOLEAN := type_isType_false;
-    isFloat(): BOOLEAN := type_isType_false;
+    (* not used isOrdinal(): BOOLEAN := type_isType_false; *)
+    (* not used isInteger(): BOOLEAN := type_isType_false; *)
+    (* not used isFloat(): BOOLEAN := type_isType_false; *)
     isRecord(): BOOLEAN := type_isType_false;
     isArray(): BOOLEAN := type_isType_false;
-    isEnum(): BOOLEAN := type_isType_false;
-    isSubrange(): BOOLEAN := type_isType_false;
-    isPointer(): BOOLEAN := type_isType_false;
+    (* not used isEnum(): BOOLEAN := type_isType_false; *)
+    (* not used isSubrange(): BOOLEAN := type_isType_false; *)
+    (* not used isPointer(): BOOLEAN := type_isType_false; *)
     isPacked(): BOOLEAN := type_isType_false;
     toPacked(): Packed_t := type_toPacked_nil;
     (* getMinimumBitSize(): INTEGER FUTURE Target.Int := type_getMinimumBitSize; *)
@@ -745,13 +754,18 @@ TYPE Pointer_t = Type_t OBJECT
 OVERRIDES
     define := pointer_define;
     canBeDefined := pointer_canBeDefined;
-    isPointer := type_isType_true;
+    (* not used isPointer := type_isType_true; *)
 END;
 
 PROCEDURE pointer_define(type: Pointer_t; self: T) =
 (* Does branding make a difference? *)
 VAR x := self;
 BEGIN
+    (* We have recursive types TYPE FOO = UNTRACED REF FOO. Typos actually. *)
+    IF type.points_to_typeid = type.points_to_typeid THEN
+      print(x, "/*self pointer_define*/typedef void* " & type.text & ";\n");
+      RETURN;
+    END;
     type.points_to_type.ForwardDeclare(self);
     type.points_to_type.Define(self);
     print(x, "/*pointer_define*/typedef " & type.points_to_type.text & " * " & type.text & ";\n");
@@ -765,6 +779,16 @@ OVERRIDES
     canBeDefined := packed_canBeDefined;
     isPacked := type_isType_true;
     toPacked := packed_toPacked;
+(* not used
+    isOrdinal := packed_isOrdinal;
+    isInteger := packed_isInteger;
+    isFloat := packed_isFloat; *)
+    isRecord := packed_isRecord;
+    isArray := packed_isArray;
+(* not used
+    isEnum := packed_isEnum;
+    isSubrange := packed_isSubrange;
+    isPointer := packed_isPointer; *)
 END;
 
 PROCEDURE packed_toPacked(type: Packed_t): Packed_t =
@@ -785,6 +809,16 @@ BEGIN
         AND (type.base_type.IsDefined() (*OR type.base_type.CanBeDefined(self)*));
 END packed_canBeDefined;
 
+PROCEDURE packed_isArray(type: Packed_t): BOOLEAN =
+BEGIN
+    RETURN type.base_type.isArray();
+END packed_isArray;
+
+PROCEDURE packed_isRecord(type: Packed_t): BOOLEAN =
+BEGIN
+    RETURN type.base_type.isRecord();
+END packed_isRecord;
+
 PROCEDURE ResolveType(self: T; typeid: INTEGER; VAR type: Type_t): BOOLEAN =
 BEGIN
     IF type # NIL THEN
@@ -798,6 +832,10 @@ END ResolveType;
 
 PROCEDURE pointer_canBeDefined(type: Pointer_t; self: T): BOOLEAN =
 BEGIN
+    (* We have recursive types TYPE FOO = UNTRACED REF FOO. Typos actually. *)
+    IF type.points_to_typeid = type.points_to_typeid THEN
+      RETURN TRUE;
+    END;
     RETURN ResolveType(self, type.points_to_typeid, type.points_to_type)
         AND (type.points_to_type.IsForwardDeclared() OR type.points_to_type.IsDefined() (*OR type.points_to_type.CanBeDefined(self)*));
 END pointer_canBeDefined;
@@ -807,20 +845,20 @@ END pointer_canBeDefined;
 TYPE Ordinal_t = Type_CanBeDefinedTrue_t OBJECT
 OVERRIDES
     define := type_typedef;
-    isOrdinal := type_isType_true;
+    (* not used isOrdinal := type_isType_true; *)
 END;
 
 TYPE Integer_t = Ordinal_t OBJECT
 OVERRIDES
     define := type_typedef;
-    isInteger := type_isType_true;
+    (* not used isInteger := type_isType_true; *)
     canBeDefined := type_canBeDefined_true;
 END;
 
 TYPE Float_t = Type_CanBeDefinedTrue_t OBJECT
 OVERRIDES
     define := type_typedef;
-    isFloat := type_isType_true;
+    (* not used isFloat := type_isType_true; *)
     canBeDefined := type_canBeDefined_true;
 END;
 
@@ -981,7 +1019,7 @@ TYPE Subrange_t = Ordinal_t OBJECT
 OVERRIDES
     define := subrange_define;
     canBeDefined := subrange_canBeDefined;
-    isSubrange := type_isType_true;
+    (* not used isSubrange := type_isType_true; *)
     (* getMinimumBitSize := subrange_getMinimumBitSize; *)
 END;
 
@@ -1038,7 +1076,7 @@ TYPE Enum_t  = Subrange_t OBJECT
     names: REF ARRAY OF Name := NIL;
 OVERRIDES
     define := enum_define;
-    isEnum := type_isType_true;
+    (* not used isEnum := type_isType_true; *)
     canBeDefined := type_canBeDefined_true;
 END;
 
@@ -1252,7 +1290,7 @@ CONST UID_PROC5 = 16_509E4C68; (* PROCEDURE (x: INTEGER;  n: [0..31]): INTEGER *
 VAR UID_PROC6 := IntegerToTypeid(16_DC1B3625); (* PROCEDURE (x: INTEGER;  n: [0..63]): INTEGER *)
 VAR UID_PROC7 := IntegerToTypeid(16_EE17DF2C); (* PROCEDURE (x: INTEGER;  i, n: CARDINAL): INTEGER *)
 VAR UID_PROC8 := IntegerToTypeid(16_B740EFD0); (* PROCEDURE (x, y: INTEGER;  i, n: CARDINAL): INTEGER *)
-<*NOWARN*>CONST UID_NULL = 16_48EC756E; (* NULL *)
+CONST UID_NULL = 16_48EC756E; (* NULL *) (* Occurs in elego/graphicutils/src/RsrcFilter.m3 *)
 
 TYPE ExprType = {
     Invalid,
@@ -1598,6 +1636,10 @@ END;
 
 TYPE Proc_t = M3CG.Proc OBJECT
     name: Name := 0;
+    pending_output := FALSE;
+    output := FALSE;
+    op_start := 0; (* M3CG_MultiPass.Replay range *)
+    op_end := 0;   (* M3CG_MultiPass.Replay range *)
     parameter_count := 0; (* FUTURE: remove this (same as NUMBER(params^)) *)
     parameter_count_without_static_link := 0; (* FUTURE: remove this (same as NUMBER(params^) - ORD(add_static_link)) *)
     return_type: CGType;
@@ -1605,7 +1647,6 @@ TYPE Proc_t = M3CG.Proc OBJECT
     callingConvention: CallingConvention;
     exported := FALSE;
     imported := FALSE;
-    used := 0;
     parent: Proc_t := NIL;
     params: REF ARRAY OF Var_t(*Param_t*);
     locals: RefSeq.T := NIL; (* Var_t *)
@@ -1739,6 +1780,56 @@ CONST Prefix = ARRAY OF TEXT {
 (*"#pragma error_messages(off, E_INIT_DOES_NOT_FIT)",*)
 "#pragma error_messages(off, E_STATEMENT_NOT_REACHED)",
 "#endif",
+"#ifdef __GNUC__",
+"#define GCC_VERSION (__GNUC__ * 100 + __GNUC_MINOR__)",
+"#else",
+"#define GCC_VERSION 0",
+"#endif",
+"#if (GCC_VERSION > 0 && GCC_VERSION < 403)",
+(*"#define AVOID_GCC_TYPE_LIMIT_WARNING 1",*)
+(*"#define M3_OP2(fun, op, a, b) fun(a, b)",*)
+(*"#define M3_IF_TRUE(fun, a) fun(a,0)",*)
+(*"#define M3_IF_FALSE(fun, a) fun(a,0)",*)
+(* This is a workaround to prevent warnings from older gcc. *)
+"#define m3_eq_T(T) static WORD_T __stdcall m3_eq_##T(T x, T y){return x==y;}\n" &
+"#define m3_ne_T(T) static WORD_T __stdcall m3_ne_##T(T x, T y){return x!=y;}",
+"#define m3_gt_T(T) static WORD_T __stdcall m3_gt_##T(T x, T y){return x>y;}",
+"#define m3_ge_T(T) static WORD_T __stdcall m3_ge_##T(T x, T y){return x>=y;}",
+"#define m3_lt_T(T) static WORD_T __stdcall m3_lt_##T(T x, T y){return x<y;}",
+"#define m3_le_T(T) static WORD_T __stdcall m3_le_##T(T x, T y){return x<=y;}",
+"#define m3_eq(T, x, y) m3_eq_##T(x, y)\n" &
+"#define m3_ne(T, x, y) m3_ne_##T(x, y)",
+"#define m3_gt(T, x, y) m3_gt_##T(x, y)",
+"#define m3_ge(T, x, y) m3_ge_##T(x, y)",
+"#define m3_lt(T, x, y) m3_lt_##T(x, y)",
+"#define m3_le(T, x, y) m3_le_##T(x, y)",
+"#define m3_check_range_T(T) static int __stdcall m3_check_range_##T(T value, T low, T high){return value<low||high<value;}",
+"#define m3_check_range(T, value, low, high) m3_check_range_##T(value, low, high)",
+"#define m3_xor_T(T) static int __stdcall m3_xor_##T(T x, T y){return x ^ y;}",
+"#define m3_xor(T, x, y) m3_xor_##T(x, y)",
+"#else",
+(*"#define AVOID_GCC_TYPE_LIMIT_WARNING 0",*)
+(*"#define M3_OP2(fun, op, a, b) a op b",*)
+(*"#define M3_IF_TRUE(fun, a) a",*)
+(*"#define M3_IF_FALSE(fun, a) !a",*)
+
+"#define m3_eq_T(T) /* nothing */",
+"#define m3_ne_T(T) /* nothing */",
+"#define m3_gt_T(T) /* nothing */",
+"#define m3_ge_T(T) /* nothing */",
+"#define m3_lt_T(T) /* nothing */",
+"#define m3_le_T(T) /* nothing */",
+"#define m3_eq(T, x, y) (((T)(x)) == ((T)(y)))",
+"#define m3_ne(T, x, y) (((T)(x)) != ((T)(y)))",
+"#define m3_gt(T, x, y) (((T)(x)) > ((T)(y)))",
+"#define m3_ge(T, x, y) (((T)(x)) >= ((T)(y)))",
+"#define m3_lt(T, x, y) (((T)(x)) < ((T)(y)))",
+"#define m3_le(T, x, y) (((T)(x)) <= ((T)(y)))",
+"#define m3_check_range_T(T) /* nothing */",
+"#define m3_check_range(T, value, low, high) (((T)(value)) < ((T)(low)) || ((T)(high)) < ((T)(value)))",
+"#define m3_xor_T(T) /* nothing */",
+"#define m3_xor(T, x, y) (((T)(x)) ^ ((T)(y)))",
+"#endif",
 "#ifdef _MSC_VER",
 "#define _CRT_SECURE_NO_DEPRECATE",
 "#define _CRT_NONSTDC_NO_DEPRECATE",
@@ -1767,7 +1858,7 @@ CONST Prefix = ARRAY OF TEXT {
 (*"typedef UINT16 WIDECHAR;",*) (* DeclareBuiltinTypes *)
 "typedef int INT32;",
 "typedef unsigned int UINT32;",
-"#if defined(_MSC_VER) || defined(__DECC) || defined(__int64)",
+"#if defined(_MSC_VER) || defined(__DECC) || defined(__DECCXX) || defined(__int64)",
 "typedef __int64 INT64;",
 "typedef unsigned __int64 UINT64;",
 "#define  INT64_(x) x##I64",
@@ -2077,6 +2168,7 @@ BEGIN
     self.proc_being_called := self.dummy_proc;  (* avoid null derefs for indirect calls *)
     self.imported_procs := NEW(RefSeq.T).init();
     self.declared_procs := NEW(RefSeq.T).init();
+    self.procs_pending_output := NEW(RefSeq.T).init();
 
     RETURN self.multipass;
 END New;
@@ -2119,23 +2211,37 @@ BEGIN
 
     (* self.declareTypes.declare_subrange(UID_RANGE_0_31, UID_INTEGER, TInt.Zero, IntToTarget(self, 31), Target.Integer.size); *)
     (* self.declareTypes.declare_subrange(UID_RANGE_0_63, UID_INTEGER, TInt.Zero, IntToTarget(self, 63), Target.Integer.size); *)
-
-    self.Type_Init(NEW(Type_t, cgtype := Target.Address.cg_type, typeid := UID_MUTEX, text := "MUTEX"), typedef := TRUE);
-    self.Type_Init(NEW(Type_t, cgtype := Target.Address.cg_type, typeid := UID_TEXT, text := "TEXT"), typedef := TRUE);
-    self.Type_Init(NEW(Type_t, cgtype := Target.Address.cg_type, typeid := UID_ROOT, text := "ROOT"), typedef := TRUE);
-    self.Type_Init(NEW(Type_t, cgtype := Target.Address.cg_type, typeid := UID_UNTRACED_ROOT, text := "UNTRACED_ROOT"), typedef := TRUE);
-    self.Type_Init(NEW(Type_t, cgtype := Target.Address.cg_type, typeid := UID_REFANY, text := "REFANY"), typedef := TRUE);
-    self.Type_Init(NEW(Type_t, cgtype := Target.Address.cg_type, typeid := UID_ADDR, text := Text_address), typedef := TRUE);
-    self.Type_Init(NEW(Type_t, cgtype := Target.Address.cg_type, typeid := UID_PROC1, text := "PROC1"), typedef := TRUE);
-    self.Type_Init(NEW(Type_t, cgtype := Target.Address.cg_type, typeid := UID_PROC2, text := "PROC2"), typedef := TRUE);
-    self.Type_Init(NEW(Type_t, cgtype := Target.Address.cg_type, typeid := UID_PROC3, text := "PROC3"), typedef := TRUE);
-    self.Type_Init(NEW(Type_t, cgtype := Target.Address.cg_type, typeid := UID_PROC4, text := "PROC4"), typedef := TRUE);
-    self.Type_Init(NEW(Type_t, cgtype := Target.Address.cg_type, typeid := UID_PROC5, text := "PROC5"), typedef := TRUE);
-    self.Type_Init(NEW(Type_t, cgtype := Target.Address.cg_type, typeid := UID_PROC6, text := "PROC6"), typedef := TRUE);
-    self.Type_Init(NEW(Type_t, cgtype := Target.Address.cg_type, typeid := UID_PROC7, text := "PROC7"), typedef := TRUE);
-    self.Type_Init(NEW(Type_t, cgtype := Target.Address.cg_type, typeid := UID_PROC8, text := "PROC8"), typedef := TRUE);
-
-    (* self.Type_Init(NEW(Type_t, bit_size := 0, typeid := UID_NULL)); *)
+    
+    TYPE AddressType_t = RECORD
+        typeid: TypeUID := 0;
+        text: TEXT := NIL;
+    END;    
+    VAR addressTypes := ARRAY [0..14] OF AddressType_t {
+        AddressType_t {UID_MUTEX, "MUTEX"},
+        AddressType_t {UID_TEXT, "TEXT"},
+        AddressType_t {UID_ROOT, "ROOT"},
+        AddressType_t {UID_UNTRACED_ROOT, "UNTRACED_ROOT"},
+        AddressType_t {UID_REFANY, "REFANY"},
+        AddressType_t {UID_ADDR, Text_address},
+        AddressType_t {UID_PROC1, "PROC1"},
+        AddressType_t {UID_PROC2, "PROC2"},
+        AddressType_t {UID_PROC3, "PROC3"},
+        AddressType_t {UID_PROC4, "PROC4"},
+        AddressType_t {UID_PROC5, "PROC5"},
+        AddressType_t {UID_PROC6, "PROC6"},
+        AddressType_t {UID_PROC7, "PROC7"},
+        AddressType_t {UID_PROC8, "PROC8"},
+        AddressType_t {UID_NULL, "M3_NULL_T"}
+    };
+    BEGIN
+        FOR i := FIRST(addressTypes) TO LAST(addressTypes) DO
+            WITH a = addressTypes[i] DO
+                IF a.typeid # 0 THEN
+                    self.Type_Init(NEW(Type_t, cgtype := Target.Address.cg_type, typeid := a.typeid, text := a.text), typedef := TRUE);
+                END;
+            END;
+        END;
+    END;
 END DeclareBuiltinTypes;
 
 (*------------------------------------------------ READONLY configuration ---*)
@@ -2250,6 +2356,7 @@ PROCEDURE set_source_file(self: T; file: TEXT) =
 (* Sets the current source file name. Subsequent statements
    and expressions are associated with this source location. *)
 BEGIN
+    file := TextUtils.SubstChar(file, '\\', '/');
     IF DebugVerbose(self) THEN
         self.comment("set_source_file file:", file);
     ELSE
@@ -2286,7 +2393,7 @@ END declare_typename;
 
 PROCEDURE TypeIDToText(x: M3CG.TypeUID): TEXT =
 BEGIN
-    RETURN "T" & IntToHex(Word.And(16_FFFFFFFF, x));
+    RETURN "T" & UIntToHex(Word.And(16_FFFFFFFF, x));
 END TypeIDToText;
 
 PROCEDURE declare_array(self: DeclareTypes_t; typeid, index_typeid, element_typeid: TypeUID; bit_size: BitSize) =
@@ -3042,6 +3149,7 @@ OVERRIDES
 END;
 
 TYPE MarkUsed_t = M3CG_DoNothing.T BRANDED "M3C.MarkUsed_t" OBJECT
+    self: T;
     labels: REF ARRAY OF Label := NIL;
     index := 0;
     labels_min := LAST(Label);
@@ -3066,9 +3174,9 @@ OVERRIDES
     store := MarkUsed_store;
 
     (* procedures *)
+    init_proc := MarkUsed_init_proc;
     start_call_direct := MarkUsed_start_call_direct;
     load_procedure := MarkUsed_load_procedure;
-    init_proc := MarkUsed_init_proc;
 END;
 
 PROCEDURE MarkUsed_label(self: MarkUsed_t; label: Label) =
@@ -3135,7 +3243,7 @@ CONST VarProcOps = ARRAY OF Op{
         Op.init_proc
     };
 VAR x := self.self;
-    pass := NEW(MarkUsed_t);
+    pass := NEW(MarkUsed_t, self := x);
     count_pass := NEW(CountUsedLabels_t);
     index := 0;
 BEGIN
@@ -3391,8 +3499,10 @@ BEGIN
         print(x, "\n");
     END;
     FOR i := FIRST(text) TO LAST(text) DO
-        print(x, text[i]);
-        print(x, "\n");
+        IF text[i] # NIL THEN
+            print(x, text[i]);
+            print(x, "\n");
+        END;
     END;
 END HelperFunctions_print_array;
 
@@ -3420,7 +3530,7 @@ BEGIN
     END;
 END HelperFunctions_helper_with_type_and_array;
 
-PROCEDURE HelperFunctions_helper_with_type(self: HelperFunctions_t; op: TEXT; type: CGType; VAR types: SET OF CGType; first: TEXT) =
+PROCEDURE HelperFunctions_helper_with_type(self: HelperFunctions_t; op: TEXT; type: CGType; VAR types: SET OF CGType; first: TEXT := NIL) =
 BEGIN
     HelperFunctions_helper_with_type_and_array(self, op, type, types, ARRAY OF TEXT{first});
 END HelperFunctions_helper_with_type;
@@ -3528,7 +3638,11 @@ END HelperFunctions_min;
 
 PROCEDURE HelperFunctions_cvt_int(self: HelperFunctions_t; <*UNUSED*>rtype: RType; <*UNUSED*>itype: IType; op: ConvertOp) =
 CONST text = ARRAY ConvertOp OF TEXT{
-    "INT64 __cdecl llroundl(long double);\nstatic INT64 __stdcall m3_round(EXTENDED f) { return (INT64)llroundl(f); }",
+    "#ifdef _WIN64 /* temporary workaround */\n"
+    & "static INT64 __stdcall m3_round(EXTENDED f) { return (INT64)f; }\n"
+    & "#else\n"
+    & "INT64 __cdecl llroundl(long double);\nstatic INT64 __stdcall m3_round(EXTENDED f) { return (INT64)llroundl(f); }\n"
+    & "#endif",
     "static INT64 __stdcall m3_trunc(EXTENDED f) { return (INT64)f; }",
     "double __cdecl floor(double);\nstatic INT64 __stdcall m3_floor(EXTENDED f) { return floor(f); } /* math.h */",
     "double __cdecl ceil(double);\nstatic INT64 __stdcall m3_ceil(EXTENDED f) { return ceil(f); } /* math.h */"
@@ -3626,23 +3740,16 @@ END HelperFunctions_pop;
 
 PROCEDURE HelperFunctions_check_range(self: HelperFunctions_t; type: IType; <*UNUSED*>READONLY low, high: Target.Int; <*UNUSED*>code: RuntimeError) =
 (* Ideally the helper would call report_fault but I do not think we have the name yet.
- * This is a helper function to avoid a warning from gcc about the range check
- * being redundant.
- *)
-CONST text = "#define m3_check_range_T(T) static int __stdcall m3_check_range_##T(T value, T low, T high){return value<low||high<value;}";
+   This is a workaround to prevent warnings from older gcc.
+*)
 BEGIN
-    HelperFunctions_helper_with_type(self, "check_range", type, self.data.check_range, text);
+    HelperFunctions_helper_with_type(self, "check_range", type, self.data.check_range);
 END HelperFunctions_check_range;
 
 PROCEDURE HelperFunctions_xor(self: HelperFunctions_t; type: IType) =
-(* Ideally this is not a helper function. This is a workaround to prevent warnings from gcc.
- * We could limit it to certain versions of gcc. *)
-CONST text = "#define m3_xor_T(T) static int __stdcall m3_xor_##T(T x, T y){return x ^ y;}";
+(* This is a workaround to prevent warnings from older gcc. *)
 BEGIN
-    IF NOT AvoidGccTypeRangeWarnings THEN
-        RETURN;
-    END;
-    HelperFunctions_helper_with_type(self, "xor", type, self.data.xor, text);
+    HelperFunctions_helper_with_type(self, "xor", type, self.data.xor);
 END HelperFunctions_xor;
 
 PROCEDURE HelperFunctions_if_true(self: HelperFunctions_t; itype: IType; <*UNUSED*>label: Label; <*UNUSED*>frequency: Frequency) =
@@ -3661,20 +3768,9 @@ PROCEDURE HelperFunctions_internal_compare(
     self: HelperFunctions_t;
     type: Type;
     op: CompareOp) =
-(* Ideally this is not a helper function. This is a workaround to prevent warnings from gcc.
- * We could limit it to certain versions of gcc. And do better with constants esp. 0. *)
-CONST text = ARRAY CompareOp OF TEXT {
-    "#define m3_eq_T(T) static WORD_T __stdcall m3_eq_##T(T x, T y){return x==y;}",
-    "#define m3_ne_T(T) static WORD_T __stdcall m3_ne_##T(T x, T y){return x!=y;}",
-    "#define m3_gt_T(T) static WORD_T __stdcall m3_gt_##T(T x, T y){return x>y;}",
-    "#define m3_ge_T(T) static WORD_T __stdcall m3_ge_##T(T x, T y){return x>=y;}",
-    "#define m3_lt_T(T) static WORD_T __stdcall m3_lt_##T(T x, T y){return x<y;}",
-    "#define m3_le_T(T) static WORD_T __stdcall m3_le_##T(T x, T y){return x<=y;}" };
+(* This is a workaround to prevent warnings from older gcc. *)
 BEGIN
-    IF NOT AvoidGccTypeRangeWarnings THEN
-        RETURN;
-    END;
-    HelperFunctions_helper_with_type(self, CompareOpName[op], type, self.data.compare[op], text[op]);
+    HelperFunctions_helper_with_type(self, CompareOpName[op], type, self.data.compare[op]);
 END HelperFunctions_internal_compare;
 
 PROCEDURE HelperFunctions_compare(
@@ -3920,6 +4016,9 @@ VAR size := 0;
     x := self.self;
     index := 0;
 BEGIN
+
+    (* RETURN; *) (* TODO *)
+
     (* count up how many ops we are going to walk *)
 
     FOR i := FIRST(Ops) TO LAST(Ops) DO
@@ -4250,7 +4349,10 @@ BEGIN
     IF type_text = NIL THEN
         IF NOT ResolveType(self, typeid, type) THEN
             IF typeid # -1 AND typeid # 0 THEN
-                Err(self, "declare_param: unknown typeid:" & TypeIDToText(typeid) & " type:" & cgtypeToText[cgtype] & "\n");
+                Err(self, "declare_param:"
+                    & " unknown typeid:" & TypeIDToText(typeid)
+                    & " type:" & cgtypeToText[cgtype]
+                    & " name:" & NameT(name) & "\n");
             ELSE
                 (* RTIO.PutText("warning: declare_param: unknown typeid:" & TypeIDToText(typeid) & " type:" & cgtypeToText[cgtype] & "\n");
                 RTIO.Flush(); *)
@@ -4258,7 +4360,7 @@ BEGIN
         END;
         IF type # NIL THEN
             type_text := type.text & " /* strong_type1 */ ";
-            IF  cgtype = CGType.Addr
+            IF  cgtype = CGType.Addr AND NOT PassStructsByValue
                     AND (type.isRecord() OR type.isArray()) THEN (* TODO remove this *)
                 type_text := type_text & " * " & " /* strong_type3 */ ";
             END;
@@ -4441,6 +4543,14 @@ END end_init_helper;
 
 PROCEDURE init_helper(self: T; offset: ByteOffset; type: CGType) =
 BEGIN
+(*
+    IF DebugVerbose(self) THEN
+      self.comment("init_helper offset:" & IntToDec(offset) & " type:"
+        & cgtypeToText[type]);
+    ELSE
+      self.comment("init_helper");
+    END;
+*)
     init_to_offset(self, offset);
     IF offset = 0 OR self.init_type # type OR offset # self.current_offset THEN
         end_init_helper(self);
@@ -4458,7 +4568,12 @@ PROCEDURE init_int(
     READONLY value: Target.Int;
     type: CGType) =
 BEGIN
-    self.comment("init_int");
+    IF DebugVerbose(self) THEN
+      self.comment("init_int offset:" & IntToDec(offset)
+        & " value:" & TInt.ToText(value) & " type:" & cgtypeToText[type]);
+    ELSE
+      self.comment("init_int");
+    END;
     init_helper(self, offset, type);
     (* TIntLiteral includes suffixes like T, ULL, UI64, etc. *)
     initializer_addhi(self, TIntLiteral(type, value));
@@ -4476,20 +4591,30 @@ END Segments_init_int;
 PROCEDURE init_proc(self: T; offset: ByteOffset; p: M3CG.Proc) =
 VAR proc := NARROW(p, Proc_t);
 BEGIN
-    self.comment("init_proc");
+    IF DebugVerbose(self) THEN
+      self.comment("init_proc offset:" & IntToDec(offset));
+    ELSE
+      self.comment("init_proc");
+    END;
     init_helper(self, offset, CGType.Addr); (* FUTURE: better typing *)
     initializer_addhi(self, "(ADDRESS)&" & NameT(proc.name));
 END init_proc;
 
-PROCEDURE MarkUsed_proc(p: M3CG.Proc) =
+PROCEDURE MarkUsed_proc(self: T; p: M3CG.Proc) =
+VAR proc: Proc_t;
 BEGIN
-    INC(NARROW(p, Proc_t).used);
+    <* ASSERT p # NIL *>
+    <* ASSERT self.procs_pending_output # NIL *>
+    proc := NARROW(p, Proc_t);
+    IF proc.pending_output OR proc.output THEN RETURN END;
+    proc.pending_output := TRUE;
+    self.procs_pending_output.addhi(proc);
 END MarkUsed_proc;
 
-PROCEDURE MarkUsed_init_proc(<*UNUSED*>self: MarkUsed_t;
-    <*UNUSED*>offset: ByteOffset; p: M3CG.Proc) =
+PROCEDURE MarkUsed_init_proc(self: MarkUsed_t; <*UNUSED*>offset: ByteOffset;
+    p: M3CG.Proc) =
 BEGIN
-    MarkUsed_proc(p);
+    MarkUsed_proc(self.self, p);
 END MarkUsed_init_proc;
 
 PROCEDURE Segments_init_proc(self: Segments_t; offset: ByteOffset; p: M3CG.Proc) =
@@ -4513,7 +4638,11 @@ PROCEDURE init_var(self: T; offset: ByteOffset; v: M3CG.Var; bias: ByteOffset) =
 VAR var := NARROW(v, Var_t);
     bias_text := "";
 BEGIN
-    self.comment("init_var");
+    IF DebugVerbose(self) THEN
+      self.comment("init_var offset:" & IntToDec(offset));
+    ELSE
+      self.comment("init_var");
+    END;
     init_helper(self, offset, CGType.Addr); (* FUTURE: better typing *)
     IF bias # 0 THEN
         bias_text := IntToDec(bias) & "+";
@@ -4545,7 +4674,12 @@ PROCEDURE init_chars(self: T; offset: ByteOffset; value: TEXT) =
 VAR length := Text.Length(value);
     ch: CHAR;
 BEGIN
-    self.comment("init_chars");
+    IF DebugVerbose(self) THEN
+      self.comment("init_chars offset:" & IntToDec(offset) &
+        " length:" & IntToDec(length));
+    ELSE
+      self.comment("init_chars");
+    END;
     IF length = 0 THEN
         RETURN;
     END;
@@ -4660,11 +4794,16 @@ BEGIN
     RETURN Text.FromChars(SUBARRAY(cBuf, 0, j));
 END FloatLiteral;
 
-PROCEDURE init_float(
-    self: T; offset: ByteOffset; READONLY float: Target.Float) =
+PROCEDURE init_float(self: T; offset: ByteOffset; READONLY float: Target.Float) =
+VAR cg_type := TargetMap.Float_types[TFloat.Prec(float)].cg_type;
 BEGIN
-    self.comment("init_float");
-    init_helper(self, offset, TargetMap.Float_types[TFloat.Prec(float)].cg_type);
+    IF DebugVerbose(self) THEN
+      self.comment("init_float offset:" & IntToDec(offset) & " type:"
+        & cgtypeToText[cg_type]);
+    ELSE
+      self.comment("init_float");
+    END;
+    init_helper(self, offset, cg_type);
     initializer_addhi(self, FloatLiteral(float));
 END init_float;
 
@@ -5033,8 +5172,12 @@ PROCEDURE if_true_or_false(self: T; itype: IType; label: Label; frequency: Frequ
 *)
 VAR s0 := cast(get(self, 0), itype);
 BEGIN
-    self.comment("if_true_or_false");
-    IF AvoidGccTypeRangeWarnings THEN
+    IF DebugVerbose(self) THEN
+        self.comment("if_true_or_false " & BoolToText[value] & " type:" & cgtypeToText[itype]);
+    ELSE
+        self.comment("if_true_or_false");
+    END;
+    IF TRUE (* AvoidGccTypeRangeWarnings  *) THEN
         load_host_integer(self, itype, 0);
         self.if_compare(itype, ARRAY BOOLEAN OF CompareOp{CompareOp.EQ, CompareOp.NE}[value], label, frequency);
     ELSE
@@ -5048,13 +5191,15 @@ PROCEDURE if_compare(self: T; ztype: ZType; op: CompareOp; label: Label; <*UNUSE
 VAR s0 := cast(get(self, 0), ztype);
     s1 := cast(get(self, 1), ztype);
 BEGIN
-    self.comment("if_compare");
-    pop(self, 2);
-    IF AvoidGccTypeRangeWarnings THEN
-        print(self, "if(m3_" & CompareOpName[op] & "_" & cgtypeToText[ztype] & "(\n " & s1.CText() & ",\n " & s0.CText() & "))goto L" & LabelToText(label) & ";\n");
+    IF DebugVerbose(self) THEN
+        self.comment("if_compare " & "op:" & CompareOpName[op] & " type:" & cgtypeToText[ztype]);
     ELSE
-        print(self, "if(" & s1.CText() & CompareOpC[op] & s0.CText() & ")goto L" & LabelToText(label) & ";\n");
+        self.comment("if_compare");
     END;
+    pop(self, 2);
+    print(self, "if(m3_" & CompareOpName[op] & "(" & cgtypeToText[ztype]
+        & ",\n " & s1.CText() & ",\n " & s0.CText()
+        & "))goto L" & LabelToText(label) & ";\n");
 END if_compare;
 
 PROCEDURE case_jump(self: T; itype: IType; READONLY labels: ARRAY OF Label) =
@@ -5488,14 +5633,18 @@ VAR s0 := get(self, 0);
     cast1 := "";
     cast2 := "";
 BEGIN
-    self.comment("compare");
+    IF DebugVerbose(self) THEN
+        self.comment("compare " & "op:" & CompareOpName[op] & " type:" & cgtypeToText[ztype]);
+    ELSE
+        self.comment("compare");
+    END;
     pop(self, 2);
     IF ztype = CGType.Addr THEN
         cast1 := "((ADDRESS)";
         cast2 := ")";
     END;
-    IF AvoidGccTypeRangeWarnings THEN
-        push(self, itype, cast(CTextToExpr("m3_" & CompareOpName[op] & "_" & cgtypeToText[ztype] & "(\n " & cast1 & s1.CText() & cast2 & ",\n " & cast1 & s0.CText() & cast2 & ")"), itype));
+    IF TRUE (* AvoidGccTypeRangeWarnings *) THEN
+        push(self, itype, cast(CTextToExpr("m3_" & CompareOpName[op] & "(" & cgtypeToText[ztype] & ",\n " & cast1 & s1.CText() & cast2 & ",\n " & cast1 & s0.CText() & cast2 & ")"), itype));
     ELSE
         push(self, itype, cast(CTextToExpr(s1.CText() & CompareOpC[op] & s0.CText()), itype));
     END;
@@ -5729,13 +5878,13 @@ PROCEDURE xor(self: T; type: IType) =
 VAR s0 := cast(get(self, 0), type);
     s1 := cast(get(self, 1), type);
 BEGIN
-    self.comment("xor");
-    IF AvoidGccTypeRangeWarnings THEN
-        pop(self, 2);
-        push(self, type, CTextToExpr("m3_xor_" & cgtypeToText[type] & "(\n " & s1.CText() & ",\n " & s0.CText() & ")"));
+    IF DebugVerbose(self) THEN
+        self.comment("xor type:" & cgtypeToText[type]);
     ELSE
-        op2(self, type, "xor", "^");
+        self.comment("xor");
     END;
+    pop(self, 2);
+    push(self, type, CTextToExpr("m3_xor(" & cgtypeToText[type] & ",\n " & s1.CText() & ",\n " & s0.CText() & ")"));
 END xor;
 
 PROCEDURE shift_left_or_right(self: T; type: IType; name, op: TEXT) =
@@ -6008,7 +6157,7 @@ BEGIN
     self.comment("check_range");
     self.store(t, 0, type, type);
     self.load(t, 0, type, type);
-    print(self, "if(m3_check_range_" & cgtypeToText[type] & "(\n " & get(self).CText() & ",\n " & low_expr.CText() & ",\n " & high_expr.CText() & "))");
+    print(self, "if(m3_check_range(" & cgtypeToText[type] & ",\n" & get(self).CText() & ",\n " & low_expr.CText() & ",\n " & high_expr.CText() & "))");
     reportfault(self, code);
 END check_range;
 
@@ -6096,13 +6245,13 @@ BEGIN
     self.static_link := NIL;
     <* ASSERT self.params.size() = 0 *>
     <* ASSERT NOT self.in_proc_call *>
-    self.in_proc_call := TRUE;
+    self.in_proc_call := TRUE; (* call cannot be nested *)
 END start_call_helper;
 
-PROCEDURE MarkUsed_start_call_direct(<*UNUSED*>self: MarkUsed_t;
+PROCEDURE MarkUsed_start_call_direct(self: MarkUsed_t;
     p: M3CG.Proc; <*UNUSED*>level: INTEGER; <*UNUSED*>type: CGType) =
 BEGIN
-    MarkUsed_proc(p);
+    MarkUsed_proc(self.self, p);
 END MarkUsed_start_call_direct;
 
 PROCEDURE start_call_direct(self: T; p: M3CG.Proc; <*UNUSED*>level: INTEGER; <*UNUSED*>type: CGType) =
@@ -6221,7 +6370,7 @@ BEGIN
         comma := ",\n ";
     END;
     self.proc_being_called := self.dummy_proc;
-    self.in_proc_call := FALSE;
+    self.in_proc_call := FALSE; (* call cannot be nested *)
     proc := proc & ")";
     IF type = CGType.Void THEN
         print(self, proc & ";\n");
@@ -6298,9 +6447,9 @@ END call_indirect;
 
 (*------------------------------------------- procedure and closure types ---*)
 
-PROCEDURE MarkUsed_load_procedure(<*UNUSED*>self: MarkUsed_t; p: M3CG.Proc) =
+PROCEDURE MarkUsed_load_procedure(self: MarkUsed_t; p: M3CG.Proc) =
 BEGIN
-    MarkUsed_proc(p);
+    MarkUsed_proc(self.self, p);
 END MarkUsed_load_procedure;
 
 PROCEDURE load_procedure(self: T; p: M3CG.Proc) =
@@ -6345,7 +6494,7 @@ PROCEDURE comment(self: T; a, b, c, d: TEXT := NIL) =
 VAR length := 0;
 BEGIN
     IF self.debug < 1 THEN
-        (*RETURN;*)
+        RETURN;
     END;
     comment_1(a, length);
     comment_1(b, length);

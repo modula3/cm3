@@ -7,20 +7,20 @@
 % This is the second stage in producing Windows import .libs.
 % Given Quake code snippets output by make-lib-1.cmd, produce
 % .c and .def files and compile and link them. The .c files just
-% contain empty functions with the right names and the Signatures --
+% contain empty functions with the right names and the signatures --
 % Signatures just being the right number of bytes of parameters, the
 % right types are not needed.
 %
 
 %
 % Historically CM3 (e.g. 5.2.6) was distributed with import libs that paralleled the Windows SDK import .libs,
-% such ask kernel32.lib, user32.lib.
+% such as kernel32.lib, user32.lib.
 % The CM3 files had some special code in them for garbage collection purposes.
 % The .libs only work in a small number situations -- such as particular linker versions.
 % The special code is no longer needed, due to garbage collector changes.
 % As well, SOME UNUSUAL toolset versions/configurations lack the import .libs.
 % GENERALLY you will get them with the "w32api" package (available in Cygwin), or non-Express Visual C++,
-% or the free (beer) Windows SDK download.
+% or the free (no cost) Windows SDK download.
 % Deleting the old CM3 import .libs is the important thing to achieve here, trivial.
 % As well, one can avoid linking to them.
 % Replacing the files is only rarely useful.
@@ -117,7 +117,7 @@ end
 %
 
 %
-% These don't actually have be numbers. Using letters nets us valid C identifiers.
+% These don't actually have to be numbers. Using letters nets us valid C identifiers.
 %
 local readonly Integers = [
 "A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S"

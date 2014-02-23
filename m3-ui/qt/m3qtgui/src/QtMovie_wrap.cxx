@@ -303,9 +303,9 @@ SWIGEXPORT void QMovie_setFileName(QMovie * self, QString * fileName) {
 }
 
 
-SWIGEXPORT QString *  QMovie_fileName(QMovie const * self) {
+SWIGEXPORT QString * QMovie_fileName(QMovie const * self) {
   QMovie *arg1 = (QMovie *) 0 ;
-  QString *  cresult ;
+  QString * cresult ;
   
   arg1 = *(QMovie **)&self; 
   *(QString **)&cresult = new QString((const QString &)((QMovie const *)arg1)->fileName());

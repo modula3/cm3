@@ -1308,7 +1308,7 @@ PROCEDURE Load (v: Var;  o: Offset;  s: Size;  a: Alignment;  t: Type) =
     ELSE
       (* unaligned non-integer value *)
       Err ("unaligned load  type="& Fmt.Int (ORD (t))
-          & "  s/o/a=" & Fmt.Int (s) & "/" & Fmt.Int (o) & "/" & Fmt.Int (a));
+          & "  size/offset/align=" & Fmt.Int (s) & "/" & Fmt.Int (o) & "/" & Fmt.Int (a));
       SimpleLoad (v, o, t);
       Force ();  (* to connect the error message to the bad code *)
     END;
@@ -1561,7 +1561,7 @@ PROCEDURE Store (v: Var;  o: Offset;  s: Size;  a: Alignment;  t: Type) =
     ELSE
       (* unaligned non-integer value *)
       Err ("unaligned store  type="& Fmt.Int (ORD (t))
-            & "  s/o/a=" & Fmt.Int (s) & "/" & Fmt.Int (o) & "/" & Fmt.Int(a));
+            & "  size/offset/align=" & Fmt.Int (s) & "/" & Fmt.Int (o) & "/" & Fmt.Int(a));
       cg.store (v, ToBytes (o), Target.Integer.cg_type, t);
     END;
     SPop (1, "Store");
@@ -2838,7 +2838,7 @@ PROCEDURE FindIntType (t: Type;  s: Size;  o: Offset;  a: Alignment): MType =
     IF (best_t = Type.Void) THEN
       best_t := t;
       Err ("unable to find integer type?  type=" & Target.TypeNames[t]
-            & "  s/o/a=" & Fmt.Int (s) & "/" & Fmt.Int (o) & "/" & Fmt.Int (a));
+            & "  size/offset/align=" & Fmt.Int (s) & "/" & Fmt.Int (o) & "/" & Fmt.Int (a));
     END;
     RETURN best_t;
   END FindIntType;
@@ -2854,10 +2854,10 @@ PROCEDURE ScanTypes (READONLY x: ARRAY [0..3] OF Target.Int_type;
       WITH z = x[i] DO
         IF (s <= z.size) AND (z.size < best_s)
           AND (z.align <= best_a)
-          AND (a MOD z.align = 0) 
+       (* AND (a MOD z.align = 0) *) 
        (* ^This is as in the original code.  It is wrong and causes some packed
           cases to crash the front end. *)  
-       (* AND (z.align MOD a = 0) *) 
+          AND (z.align MOD a = 0)  
        (* ^This is the modified version.  It fixes the packed cases mentioned
           and works fine on 64-bit targets.  Sadly, it also causes far more 
           frequent compiler crashes for 32-bit targets.  This is probably 

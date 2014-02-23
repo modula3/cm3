@@ -234,9 +234,9 @@ SWIGEXPORT void QInputDialog_setLabelText(QInputDialog * self, QString * text) {
 }
 
 
-SWIGEXPORT QString *  QInputDialog_labelText(QInputDialog const * self) {
+SWIGEXPORT QString * QInputDialog_labelText(QInputDialog const * self) {
   QInputDialog *arg1 = (QInputDialog *) 0 ;
-  QString *  cresult ;
+  QString * cresult ;
   
   arg1 = *(QInputDialog **)&self; 
   *(QString **)&cresult = new QString((const QString &)((QInputDialog const *)arg1)->labelText());
@@ -310,9 +310,9 @@ SWIGEXPORT void QInputDialog_setTextValue(QInputDialog * self, QString * text) {
 }
 
 
-SWIGEXPORT QString *  QInputDialog_textValue(QInputDialog const * self) {
+SWIGEXPORT QString * QInputDialog_textValue(QInputDialog const * self) {
   QInputDialog *arg1 = (QInputDialog *) 0 ;
-  QString *  cresult ;
+  QString * cresult ;
   
   arg1 = *(QInputDialog **)&self; 
   *(QString **)&cresult = new QString((const QString &)((QInputDialog const *)arg1)->textValue());
@@ -592,9 +592,9 @@ SWIGEXPORT void QInputDialog_setOkButtonText(QInputDialog * self, QString * text
 }
 
 
-SWIGEXPORT QString *  QInputDialog_okButtonText(QInputDialog const * self) {
+SWIGEXPORT QString * QInputDialog_okButtonText(QInputDialog const * self) {
   QInputDialog *arg1 = (QInputDialog *) 0 ;
-  QString *  cresult ;
+  QString * cresult ;
   
   arg1 = *(QInputDialog **)&self; 
   *(QString **)&cresult = new QString((const QString &)((QInputDialog const *)arg1)->okButtonText());
@@ -612,9 +612,9 @@ SWIGEXPORT void QInputDialog_setCancelButtonText(QInputDialog * self, QString * 
 }
 
 
-SWIGEXPORT QString *  QInputDialog_cancelButtonText(QInputDialog const * self) {
+SWIGEXPORT QString * QInputDialog_cancelButtonText(QInputDialog const * self) {
   QInputDialog *arg1 = (QInputDialog *) 0 ;
-  QString *  cresult ;
+  QString * cresult ;
   
   arg1 = *(QInputDialog **)&self; 
   *(QString **)&cresult = new QString((const QString &)((QInputDialog const *)arg1)->cancelButtonText());
@@ -674,7 +674,7 @@ SWIGEXPORT void QInputDialog_setVisible(QInputDialog * self, bool visible) {
 }
 
 
-SWIGEXPORT QString *  GetText(QWidget * parent, QString * title, QString * label, QLineEdit::EchoMode echo, QString * text, bool * ok, Qt::WindowFlags flags) {
+SWIGEXPORT QString * GetText(QWidget * parent, QString * title, QString * label, QLineEdit::EchoMode echo, QString * text, bool * ok, Qt::WindowFlags flags) {
   QWidget *arg1 = (QWidget *) 0 ;
   QString *arg2 = 0 ;
   QString *arg3 = 0 ;
@@ -682,7 +682,7 @@ SWIGEXPORT QString *  GetText(QWidget * parent, QString * title, QString * label
   QString *arg5 = 0 ;
   bool *arg6 = (bool *) 0 ;
   Qt::WindowFlags arg7 ;
-  QString *  cresult ;
+  QString * cresult ;
   
   arg1 = *(QWidget **)&parent; 
   arg2 = *(QString **)&title;
@@ -696,14 +696,14 @@ SWIGEXPORT QString *  GetText(QWidget * parent, QString * title, QString * label
 }
 
 
-SWIGEXPORT QString *  GetText1(QWidget * parent, QString * title, QString * label, QLineEdit::EchoMode echo, QString * text, bool * ok) {
+SWIGEXPORT QString * GetText1(QWidget * parent, QString * title, QString * label, QLineEdit::EchoMode echo, QString * text, bool * ok) {
   QWidget *arg1 = (QWidget *) 0 ;
   QString *arg2 = 0 ;
   QString *arg3 = 0 ;
   QLineEdit::EchoMode arg4 ;
   QString *arg5 = 0 ;
   bool *arg6 = (bool *) 0 ;
-  QString *  cresult ;
+  QString * cresult ;
   
   arg1 = *(QWidget **)&parent; 
   arg2 = *(QString **)&title;
@@ -716,13 +716,13 @@ SWIGEXPORT QString *  GetText1(QWidget * parent, QString * title, QString * labe
 }
 
 
-SWIGEXPORT QString *  GetText2(QWidget * parent, QString * title, QString * label, QLineEdit::EchoMode echo, QString * text) {
+SWIGEXPORT QString * GetText2(QWidget * parent, QString * title, QString * label, QLineEdit::EchoMode echo, QString * text) {
   QWidget *arg1 = (QWidget *) 0 ;
   QString *arg2 = 0 ;
   QString *arg3 = 0 ;
   QLineEdit::EchoMode arg4 ;
   QString *arg5 = 0 ;
-  QString *  cresult ;
+  QString * cresult ;
   
   arg1 = *(QWidget **)&parent; 
   arg2 = *(QString **)&title;
@@ -734,12 +734,12 @@ SWIGEXPORT QString *  GetText2(QWidget * parent, QString * title, QString * labe
 }
 
 
-SWIGEXPORT QString *  GetText3(QWidget * parent, QString * title, QString * label, QLineEdit::EchoMode echo) {
+SWIGEXPORT QString * GetText3(QWidget * parent, QString * title, QString * label, QLineEdit::EchoMode echo) {
   QWidget *arg1 = (QWidget *) 0 ;
   QString *arg2 = 0 ;
   QString *arg3 = 0 ;
   QLineEdit::EchoMode arg4 ;
-  QString *  cresult ;
+  QString * cresult ;
   
   arg1 = *(QWidget **)&parent; 
   arg2 = *(QString **)&title;
@@ -750,16 +750,166 @@ SWIGEXPORT QString *  GetText3(QWidget * parent, QString * title, QString * labe
 }
 
 
-SWIGEXPORT QString *  GetText4(QWidget * parent, QString * title, QString * label) {
+SWIGEXPORT QString * GetText4(QWidget * parent, QString * title, QString * label) {
   QWidget *arg1 = (QWidget *) 0 ;
   QString *arg2 = 0 ;
   QString *arg3 = 0 ;
-  QString *  cresult ;
+  QString * cresult ;
   
   arg1 = *(QWidget **)&parent; 
   arg2 = *(QString **)&title;
   arg3 = *(QString **)&label;
   *(QString **)&cresult = new QString((const QString &)QInputDialog::getText(arg1,(QString const &)*arg2,(QString const &)*arg3));
+  return cresult;
+}
+
+
+SWIGEXPORT QString * GetItem(QWidget * parent, QString * title, QString * label, QStringList * items, int current, bool editable, bool * ok, Qt::WindowFlags flags) {
+  QWidget *arg1 = (QWidget *) 0 ;
+  QString *arg2 = 0 ;
+  QString *arg3 = 0 ;
+  QStringList *arg4 = 0 ;
+  int arg5 ;
+  bool arg6 ;
+  bool *arg7 = (bool *) 0 ;
+  Qt::WindowFlags arg8 ;
+  QString * cresult ;
+  
+  arg1 = *(QWidget **)&parent; 
+  arg2 = *(QString **)&title;
+  arg3 = *(QString **)&label;
+  arg4 = *(QStringList **)&items;
+  arg5 = (int)current; 
+  arg6 = editable ? true : false; 
+  arg7 = *(bool **)&ok; 
+  arg8 = (Qt::WindowFlags)flags; 
+  *(QString **)&cresult = new QString((const QString &)QInputDialog::getItem(arg1,(QString const &)*arg2,(QString const &)*arg3,(QStringList const &)*arg4,arg5,arg6,arg7,arg8));
+  return cresult;
+}
+
+
+SWIGEXPORT QString * GetItem1(QWidget * parent, QString * title, QString * label, QStringList * items, int current, bool editable, bool * ok) {
+  QWidget *arg1 = (QWidget *) 0 ;
+  QString *arg2 = 0 ;
+  QString *arg3 = 0 ;
+  QStringList *arg4 = 0 ;
+  int arg5 ;
+  bool arg6 ;
+  bool *arg7 = (bool *) 0 ;
+  QString * cresult ;
+  
+  arg1 = *(QWidget **)&parent; 
+  arg2 = *(QString **)&title;
+  arg3 = *(QString **)&label;
+  arg4 = *(QStringList **)&items;
+  arg5 = (int)current; 
+  arg6 = editable ? true : false; 
+  arg7 = *(bool **)&ok; 
+  *(QString **)&cresult = new QString((const QString &)QInputDialog::getItem(arg1,(QString const &)*arg2,(QString const &)*arg3,(QStringList const &)*arg4,arg5,arg6,arg7));
+  return cresult;
+}
+
+
+SWIGEXPORT QString * GetItem2(QWidget * parent, QString * title, QString * label, QStringList * items, int current, bool editable) {
+  QWidget *arg1 = (QWidget *) 0 ;
+  QString *arg2 = 0 ;
+  QString *arg3 = 0 ;
+  QStringList *arg4 = 0 ;
+  int arg5 ;
+  bool arg6 ;
+  QString * cresult ;
+  
+  arg1 = *(QWidget **)&parent; 
+  arg2 = *(QString **)&title;
+  arg3 = *(QString **)&label;
+  arg4 = *(QStringList **)&items;
+  arg5 = (int)current; 
+  arg6 = editable ? true : false; 
+  *(QString **)&cresult = new QString((const QString &)QInputDialog::getItem(arg1,(QString const &)*arg2,(QString const &)*arg3,(QStringList const &)*arg4,arg5,arg6));
+  return cresult;
+}
+
+
+SWIGEXPORT QString * GetItem3(QWidget * parent, QString * title, QString * label, QStringList * items, int current) {
+  QWidget *arg1 = (QWidget *) 0 ;
+  QString *arg2 = 0 ;
+  QString *arg3 = 0 ;
+  QStringList *arg4 = 0 ;
+  int arg5 ;
+  QString * cresult ;
+  
+  arg1 = *(QWidget **)&parent; 
+  arg2 = *(QString **)&title;
+  arg3 = *(QString **)&label;
+  arg4 = *(QStringList **)&items;
+  arg5 = (int)current; 
+  *(QString **)&cresult = new QString((const QString &)QInputDialog::getItem(arg1,(QString const &)*arg2,(QString const &)*arg3,(QStringList const &)*arg4,arg5));
+  return cresult;
+}
+
+
+SWIGEXPORT QString * GetItem4(QWidget * parent, QString * title, QString * label, QStringList * items) {
+  QWidget *arg1 = (QWidget *) 0 ;
+  QString *arg2 = 0 ;
+  QString *arg3 = 0 ;
+  QStringList *arg4 = 0 ;
+  QString * cresult ;
+  
+  arg1 = *(QWidget **)&parent; 
+  arg2 = *(QString **)&title;
+  arg3 = *(QString **)&label;
+  arg4 = *(QStringList **)&items;
+  *(QString **)&cresult = new QString((const QString &)QInputDialog::getItem(arg1,(QString const &)*arg2,(QString const &)*arg3,(QStringList const &)*arg4));
+  return cresult;
+}
+
+
+SWIGEXPORT QString * GetText5(QWidget * parent, QString * title, QString * label, QLineEdit::EchoMode echo, QString * text, bool * ok, Qt::WindowFlags flags, Qt::InputMethodHints inputMethodHints) {
+  QWidget *arg1 = (QWidget *) 0 ;
+  QString *arg2 = 0 ;
+  QString *arg3 = 0 ;
+  QLineEdit::EchoMode arg4 ;
+  QString *arg5 = 0 ;
+  bool *arg6 = (bool *) 0 ;
+  Qt::WindowFlags arg7 ;
+  Qt::InputMethodHints arg8 ;
+  QString * cresult ;
+  
+  arg1 = *(QWidget **)&parent; 
+  arg2 = *(QString **)&title;
+  arg3 = *(QString **)&label;
+  arg4 = (QLineEdit::EchoMode)echo; 
+  arg5 = *(QString **)&text;
+  arg6 = *(bool **)&ok; 
+  arg7 = (Qt::WindowFlags)flags; 
+  arg8 = (Qt::InputMethodHints)inputMethodHints; 
+  *(QString **)&cresult = new QString((const QString &)QInputDialog::getText(arg1,(QString const &)*arg2,(QString const &)*arg3,arg4,(QString const &)*arg5,arg6,arg7,arg8));
+  return cresult;
+}
+
+
+SWIGEXPORT QString * GetItem5(QWidget * parent, QString * title, QString * label, QStringList * items, int current, bool editable, bool * ok, Qt::WindowFlags flags, Qt::InputMethodHints inputMethodHints) {
+  QWidget *arg1 = (QWidget *) 0 ;
+  QString *arg2 = 0 ;
+  QString *arg3 = 0 ;
+  QStringList *arg4 = 0 ;
+  int arg5 ;
+  bool arg6 ;
+  bool *arg7 = (bool *) 0 ;
+  Qt::WindowFlags arg8 ;
+  Qt::InputMethodHints arg9 ;
+  QString * cresult ;
+  
+  arg1 = *(QWidget **)&parent; 
+  arg2 = *(QString **)&title;
+  arg3 = *(QString **)&label;
+  arg4 = *(QStringList **)&items;
+  arg5 = (int)current; 
+  arg6 = editable ? true : false; 
+  arg7 = *(bool **)&ok; 
+  arg8 = (Qt::WindowFlags)flags; 
+  arg9 = (Qt::InputMethodHints)inputMethodHints; 
+  *(QString **)&cresult = new QString((const QString &)QInputDialog::getItem(arg1,(QString const &)*arg2,(QString const &)*arg3,(QStringList const &)*arg4,arg5,arg6,arg7,arg8,arg9));
   return cresult;
 }
 
@@ -1068,106 +1218,6 @@ SWIGEXPORT double GetDouble6(QWidget * parent, QString * title, QString * label)
   arg3 = *(QString **)&label;
   result = (double)QInputDialog::getDouble(arg1,(QString const &)*arg2,(QString const &)*arg3);
   cresult = result; 
-  return cresult;
-}
-
-
-SWIGEXPORT QString *  GetItem(QWidget * parent, QString * title, QString * label, QStringList * items, int current, bool editable, bool * ok, Qt::WindowFlags flags) {
-  QWidget *arg1 = (QWidget *) 0 ;
-  QString *arg2 = 0 ;
-  QString *arg3 = 0 ;
-  QStringList *arg4 = 0 ;
-  int arg5 ;
-  bool arg6 ;
-  bool *arg7 = (bool *) 0 ;
-  Qt::WindowFlags arg8 ;
-  QString *  cresult ;
-  
-  arg1 = *(QWidget **)&parent; 
-  arg2 = *(QString **)&title;
-  arg3 = *(QString **)&label;
-  arg4 = *(QStringList **)&items;
-  arg5 = (int)current; 
-  arg6 = editable ? true : false; 
-  arg7 = *(bool **)&ok; 
-  arg8 = (Qt::WindowFlags)flags; 
-  *(QString **)&cresult = new QString((const QString &)QInputDialog::getItem(arg1,(QString const &)*arg2,(QString const &)*arg3,(QStringList const &)*arg4,arg5,arg6,arg7,arg8));
-  return cresult;
-}
-
-
-SWIGEXPORT QString *  GetItem1(QWidget * parent, QString * title, QString * label, QStringList * items, int current, bool editable, bool * ok) {
-  QWidget *arg1 = (QWidget *) 0 ;
-  QString *arg2 = 0 ;
-  QString *arg3 = 0 ;
-  QStringList *arg4 = 0 ;
-  int arg5 ;
-  bool arg6 ;
-  bool *arg7 = (bool *) 0 ;
-  QString *  cresult ;
-  
-  arg1 = *(QWidget **)&parent; 
-  arg2 = *(QString **)&title;
-  arg3 = *(QString **)&label;
-  arg4 = *(QStringList **)&items;
-  arg5 = (int)current; 
-  arg6 = editable ? true : false; 
-  arg7 = *(bool **)&ok; 
-  *(QString **)&cresult = new QString((const QString &)QInputDialog::getItem(arg1,(QString const &)*arg2,(QString const &)*arg3,(QStringList const &)*arg4,arg5,arg6,arg7));
-  return cresult;
-}
-
-
-SWIGEXPORT QString *  GetItem2(QWidget * parent, QString * title, QString * label, QStringList * items, int current, bool editable) {
-  QWidget *arg1 = (QWidget *) 0 ;
-  QString *arg2 = 0 ;
-  QString *arg3 = 0 ;
-  QStringList *arg4 = 0 ;
-  int arg5 ;
-  bool arg6 ;
-  QString *  cresult ;
-  
-  arg1 = *(QWidget **)&parent; 
-  arg2 = *(QString **)&title;
-  arg3 = *(QString **)&label;
-  arg4 = *(QStringList **)&items;
-  arg5 = (int)current; 
-  arg6 = editable ? true : false; 
-  *(QString **)&cresult = new QString((const QString &)QInputDialog::getItem(arg1,(QString const &)*arg2,(QString const &)*arg3,(QStringList const &)*arg4,arg5,arg6));
-  return cresult;
-}
-
-
-SWIGEXPORT QString *  GetItem3(QWidget * parent, QString * title, QString * label, QStringList * items, int current) {
-  QWidget *arg1 = (QWidget *) 0 ;
-  QString *arg2 = 0 ;
-  QString *arg3 = 0 ;
-  QStringList *arg4 = 0 ;
-  int arg5 ;
-  QString *  cresult ;
-  
-  arg1 = *(QWidget **)&parent; 
-  arg2 = *(QString **)&title;
-  arg3 = *(QString **)&label;
-  arg4 = *(QStringList **)&items;
-  arg5 = (int)current; 
-  *(QString **)&cresult = new QString((const QString &)QInputDialog::getItem(arg1,(QString const &)*arg2,(QString const &)*arg3,(QStringList const &)*arg4,arg5));
-  return cresult;
-}
-
-
-SWIGEXPORT QString *  GetItem4(QWidget * parent, QString * title, QString * label, QStringList * items) {
-  QWidget *arg1 = (QWidget *) 0 ;
-  QString *arg2 = 0 ;
-  QString *arg3 = 0 ;
-  QStringList *arg4 = 0 ;
-  QString *  cresult ;
-  
-  arg1 = *(QWidget **)&parent; 
-  arg2 = *(QString **)&title;
-  arg3 = *(QString **)&label;
-  arg4 = *(QStringList **)&items;
-  *(QString **)&cresult = new QString((const QString &)QInputDialog::getItem(arg1,(QString const &)*arg2,(QString const &)*arg3,(QStringList const &)*arg4));
   return cresult;
 }
 

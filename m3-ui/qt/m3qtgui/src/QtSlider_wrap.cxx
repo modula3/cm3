@@ -277,6 +277,20 @@ SWIGEXPORT int QSlider_tickInterval(QSlider const * self) {
 }
 
 
+SWIGEXPORT bool QSlider_event(QSlider * self, QEvent * event) {
+  QSlider *arg1 = (QSlider *) 0 ;
+  QEvent *arg2 = (QEvent *) 0 ;
+  bool result;
+  bool cresult ;
+  
+  arg1 = *(QSlider **)&self; 
+  arg2 = *(QEvent **)&event; 
+  result = (bool)(arg1)->event(arg2);
+  cresult = result; 
+  return cresult;
+}
+
+
 SWIGEXPORT long Modula3_QSliderToQAbstractSlider(long objectRef) {
     long baseptr = 0;
     *(QAbstractSlider **)&baseptr = *(QSlider **)&objectRef;

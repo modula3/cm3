@@ -563,7 +563,7 @@ proc compile_c_ms(source, object, options, optimize, debug) is
     if defined("pos")
        Listing = Path_GetBase (source) & ".lst"
     end
-    local readonly Command = ["cl.exe", escape(subst_chars(args, "\\", "/")), "-c", escape(source)]
+    local readonly Command = ["cl.exe", escape(subst_chars(args, "\\", "/")), "-c", escape(source), "-Fo" & object]
     local ret = try_exec("@" & Command, ">", Listing)
     if not equal (ret, 0)
         write (Command & CR)
@@ -713,6 +713,20 @@ readonly proc EscapeList(List) is
 end
 
 %------------------------------------------------------------------------------
+
+%readonly proc JoinPath(a, b) is
+%    if a and b return a & SL & b end
+%    if b return b end
+%    if a return a end
+%end
+
+%readonly proc FileInDirOrParent(a) is
+% a is foo/i386/bar
+% chose it or foo/bar, whichever exists
+    %local leaf = GetLastPathElement(a)
+    %local other = JoinPath(RemoveLastPathElement(RemoveLastPathElement(a)), leaf)
+    %return ChoseFile([a, other])
+%end
 
 UseHand = LIB_INSTALL & SL & "hand" & Obj
 if not FileExists (UseHand)

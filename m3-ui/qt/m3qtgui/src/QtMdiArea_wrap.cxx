@@ -393,6 +393,50 @@ SWIGEXPORT void QMdiArea_setDocumentMode(QMdiArea * self, bool enabled) {
 }
 
 
+SWIGEXPORT void QMdiArea_setTabsClosable(QMdiArea * self, bool closable) {
+  QMdiArea *arg1 = (QMdiArea *) 0 ;
+  bool arg2 ;
+  
+  arg1 = *(QMdiArea **)&self; 
+  arg2 = closable ? true : false; 
+  (arg1)->setTabsClosable(arg2);
+}
+
+
+SWIGEXPORT bool QMdiArea_tabsClosable(QMdiArea const * self) {
+  QMdiArea *arg1 = (QMdiArea *) 0 ;
+  bool result;
+  bool cresult ;
+  
+  arg1 = *(QMdiArea **)&self; 
+  result = (bool)((QMdiArea const *)arg1)->tabsClosable();
+  cresult = result; 
+  return cresult;
+}
+
+
+SWIGEXPORT void QMdiArea_setTabsMovable(QMdiArea * self, bool movable) {
+  QMdiArea *arg1 = (QMdiArea *) 0 ;
+  bool arg2 ;
+  
+  arg1 = *(QMdiArea **)&self; 
+  arg2 = movable ? true : false; 
+  (arg1)->setTabsMovable(arg2);
+}
+
+
+SWIGEXPORT bool QMdiArea_tabsMovable(QMdiArea const * self) {
+  QMdiArea *arg1 = (QMdiArea *) 0 ;
+  bool result;
+  bool cresult ;
+  
+  arg1 = *(QMdiArea **)&self; 
+  result = (bool)((QMdiArea const *)arg1)->tabsMovable();
+  cresult = result; 
+  return cresult;
+}
+
+
 SWIGEXPORT void QMdiArea_setTabShape(QMdiArea * self, QTabWidget::TabShape shape) {
   QMdiArea *arg1 = (QMdiArea *) 0 ;
   QTabWidget::TabShape arg2 ;

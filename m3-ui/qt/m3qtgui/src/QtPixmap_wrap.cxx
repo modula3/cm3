@@ -167,19 +167,7 @@ SWIGEXPORT QPixmap * New_QPixmap0() {
 }
 
 
-SWIGEXPORT QPixmap * New_QPixmap1(QPixmapData * data) {
-  QPixmapData *arg1 = (QPixmapData *) 0 ;
-  QPixmap *result = 0 ;
-  QPixmap * cresult ;
-  
-  arg1 = *(QPixmapData **)&data; 
-  result = (QPixmap *)new QPixmap(arg1);
-  *(QPixmap **)&cresult = result; 
-  return cresult;
-}
-
-
-SWIGEXPORT QPixmap * New_QPixmap2(int w, int h) {
+SWIGEXPORT QPixmap * New_QPixmap1(int w, int h) {
   int arg1 ;
   int arg2 ;
   QPixmap *result = 0 ;
@@ -193,7 +181,7 @@ SWIGEXPORT QPixmap * New_QPixmap2(int w, int h) {
 }
 
 
-SWIGEXPORT QPixmap * New_QPixmap3(QSize * m3arg1) {
+SWIGEXPORT QPixmap * New_QPixmap2(QSize * m3arg1) {
   QSize *arg1 = 0 ;
   QPixmap *result = 0 ;
   QPixmap * cresult ;
@@ -205,7 +193,7 @@ SWIGEXPORT QPixmap * New_QPixmap3(QSize * m3arg1) {
 }
 
 
-SWIGEXPORT QPixmap * New_QPixmap4(QString * fileName, char * format, Qt::ImageConversionFlags flags) {
+SWIGEXPORT QPixmap * New_QPixmap3(QString * fileName, char * format, Qt::ImageConversionFlags flags) {
   QString *arg1 = 0 ;
   char *arg2 = (char *) 0 ;
   Qt::ImageConversionFlags arg3 ;
@@ -223,7 +211,7 @@ SWIGEXPORT QPixmap * New_QPixmap4(QString * fileName, char * format, Qt::ImageCo
 }
 
 
-SWIGEXPORT QPixmap * New_QPixmap5(QString * fileName, char * format) {
+SWIGEXPORT QPixmap * New_QPixmap4(QString * fileName, char * format) {
   QString *arg1 = 0 ;
   char *arg2 = (char *) 0 ;
   QPixmap *result = 0 ;
@@ -239,7 +227,7 @@ SWIGEXPORT QPixmap * New_QPixmap5(QString * fileName, char * format) {
 }
 
 
-SWIGEXPORT QPixmap * New_QPixmap6(QString * fileName) {
+SWIGEXPORT QPixmap * New_QPixmap5(QString * fileName) {
   QString *arg1 = 0 ;
   QPixmap *result = 0 ;
   QPixmap * cresult ;
@@ -251,7 +239,7 @@ SWIGEXPORT QPixmap * New_QPixmap6(QString * fileName) {
 }
 
 
-SWIGEXPORT QPixmap * New_QPixmap7(QPixmap const & m3arg1) {
+SWIGEXPORT QPixmap * New_QPixmap6(QPixmap const & m3arg1) {
   QPixmap *arg1 = 0 ;
   QPixmap *result = 0 ;
   QPixmap * cresult ;
@@ -268,6 +256,24 @@ SWIGEXPORT void Delete_QPixmap(QPixmap * self) {
   
   arg1 = *(QPixmap **)&self; 
   delete arg1;
+}
+
+
+SWIGEXPORT void QPixmap_swap(QPixmap * self, QPixmap & other) {
+  QPixmap *arg1 = (QPixmap *) 0 ;
+  QPixmap *arg2 = 0 ;
+  
+  arg1 = *(QPixmap **)&self; 
+  arg2 = *(QPixmap **)&other;
+  /*
+  if(!arg2) {
+      //SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "QPixmap & reference is null");
+      //RETURN ;
+      return ;
+    }
+  */
+  
+  (arg1)->swap(*arg2);
 }
 
 
@@ -412,26 +418,6 @@ SWIGEXPORT void QPixmap_setMask(QPixmap * self, QBitmap const & m3arg2) {
   arg1 = *(QPixmap **)&self; 
   arg2 = *(QBitmap **)&m3arg2;
   (arg1)->setMask((QBitmap const &)*arg2);
-}
-
-
-SWIGEXPORT QPixmap * QPixmap_alphaChannel(QPixmap const * self) {
-  QPixmap *arg1 = (QPixmap *) 0 ;
-  QPixmap * cresult ;
-  
-  arg1 = *(QPixmap **)&self; 
-  *(QPixmap **)&cresult = new QPixmap((const QPixmap &)((QPixmap const *)arg1)->alphaChannel());
-  return cresult;
-}
-
-
-SWIGEXPORT void QPixmap_setAlphaChannel(QPixmap * self, QPixmap const & m3arg2) {
-  QPixmap *arg1 = (QPixmap *) 0 ;
-  QPixmap *arg2 = 0 ;
-  
-  arg1 = *(QPixmap **)&self; 
-  arg2 = *(QPixmap **)&m3arg2;
-  (arg1)->setAlphaChannel((QPixmap const &)*arg2);
 }
 
 
@@ -917,9 +903,9 @@ SWIGEXPORT bool QPixmap_load2(QPixmap * self, QString * fileName) {
 }
 
 
-SWIGEXPORT bool QPixmap_loadFromData(QPixmap * self, unsigned char const * buf, unsigned int len, char * format, Qt::ImageConversionFlags flags) {
+SWIGEXPORT bool QPixmap_loadFromData(QPixmap * self, uchar const * buf, unsigned int len, char * format, Qt::ImageConversionFlags flags) {
   QPixmap *arg1 = (QPixmap *) 0 ;
-  unsigned char *arg2 = (unsigned char *) 0 ;
+  uchar *arg2 = (uchar *) 0 ;
   unsigned int arg3 ;
   char *arg4 = (char *) 0 ;
   Qt::ImageConversionFlags arg5 ;
@@ -927,49 +913,49 @@ SWIGEXPORT bool QPixmap_loadFromData(QPixmap * self, unsigned char const * buf, 
   bool cresult ;
   
   arg1 = *(QPixmap **)&self; 
-  arg2 = *(unsigned char **)&buf; 
+  arg2 = *(uchar **)&buf; 
   arg3 = (unsigned int)len; 
   {
     arg4 = format;
   }
   arg5 = (Qt::ImageConversionFlags)flags; 
-  result = (bool)(arg1)->loadFromData((unsigned char const *)arg2,arg3,(char const *)arg4,arg5);
+  result = (bool)(arg1)->loadFromData((uchar const *)arg2,arg3,(char const *)arg4,arg5);
   cresult = result; 
   return cresult;
 }
 
 
-SWIGEXPORT bool QPixmap_loadFromData1(QPixmap * self, unsigned char const * buf, unsigned int len, char * format) {
+SWIGEXPORT bool QPixmap_loadFromData1(QPixmap * self, uchar const * buf, unsigned int len, char * format) {
   QPixmap *arg1 = (QPixmap *) 0 ;
-  unsigned char *arg2 = (unsigned char *) 0 ;
+  uchar *arg2 = (uchar *) 0 ;
   unsigned int arg3 ;
   char *arg4 = (char *) 0 ;
   bool result;
   bool cresult ;
   
   arg1 = *(QPixmap **)&self; 
-  arg2 = *(unsigned char **)&buf; 
+  arg2 = *(uchar **)&buf; 
   arg3 = (unsigned int)len; 
   {
     arg4 = format;
   }
-  result = (bool)(arg1)->loadFromData((unsigned char const *)arg2,arg3,(char const *)arg4);
+  result = (bool)(arg1)->loadFromData((uchar const *)arg2,arg3,(char const *)arg4);
   cresult = result; 
   return cresult;
 }
 
 
-SWIGEXPORT bool QPixmap_loadFromData2(QPixmap * self, unsigned char const * buf, unsigned int len) {
+SWIGEXPORT bool QPixmap_loadFromData2(QPixmap * self, uchar const * buf, unsigned int len) {
   QPixmap *arg1 = (QPixmap *) 0 ;
-  unsigned char *arg2 = (unsigned char *) 0 ;
+  uchar *arg2 = (uchar *) 0 ;
   unsigned int arg3 ;
   bool result;
   bool cresult ;
   
   arg1 = *(QPixmap **)&self; 
-  arg2 = *(unsigned char **)&buf; 
+  arg2 = *(uchar **)&buf; 
   arg3 = (unsigned int)len; 
-  result = (bool)(arg1)->loadFromData((unsigned char const *)arg2,arg3);
+  result = (bool)(arg1)->loadFromData((uchar const *)arg2,arg3);
   cresult = result; 
   return cresult;
 }
@@ -1131,6 +1117,36 @@ SWIGEXPORT bool QPixmap_save5(QPixmap const * self, QIODevice * device) {
 }
 
 
+SWIGEXPORT bool QPixmap_convertFromImage(QPixmap * self, QImage * img, Qt::ImageConversionFlags flags) {
+  QPixmap *arg1 = (QPixmap *) 0 ;
+  QImage *arg2 = 0 ;
+  Qt::ImageConversionFlags arg3 ;
+  bool result;
+  bool cresult ;
+  
+  arg1 = *(QPixmap **)&self; 
+  arg2 = *(QImage **)&img;
+  arg3 = (Qt::ImageConversionFlags)flags; 
+  result = (bool)(arg1)->convertFromImage((QImage const &)*arg2,arg3);
+  cresult = result; 
+  return cresult;
+}
+
+
+SWIGEXPORT bool QPixmap_convertFromImage1(QPixmap * self, QImage * img) {
+  QPixmap *arg1 = (QPixmap *) 0 ;
+  QImage *arg2 = 0 ;
+  bool result;
+  bool cresult ;
+  
+  arg1 = *(QPixmap **)&self; 
+  arg2 = *(QImage **)&img;
+  result = (bool)(arg1)->convertFromImage((QImage const &)*arg2);
+  cresult = result; 
+  return cresult;
+}
+
+
 SWIGEXPORT QPixmap * QPixmap_copy(QPixmap const * self, int x, int y, int width, int height) {
   QPixmap *arg1 = (QPixmap *) 0 ;
   int arg2 ;
@@ -1243,18 +1259,6 @@ SWIGEXPORT void QPixmap_scroll3(QPixmap * self, int dx, int dy, QRect * rect) {
 }
 
 
-SWIGEXPORT int QPixmap_serialNumber(QPixmap const * self) {
-  QPixmap *arg1 = (QPixmap *) 0 ;
-  int result;
-  int cresult ;
-  
-  arg1 = *(QPixmap **)&self; 
-  result = (int)((QPixmap const *)arg1)->serialNumber();
-  cresult = result; 
-  return cresult;
-}
-
-
 SWIGEXPORT unsigned long QPixmap_cacheKey(QPixmap const * self) {
   QPixmap *arg1 = (QPixmap *) 0 ;
   unsigned long result;
@@ -1307,18 +1311,6 @@ SWIGEXPORT QPaintEngine * QPixmap_paintEngine(QPixmap const * self) {
   arg1 = *(QPixmap **)&self; 
   result = (QPaintEngine *)((QPixmap const *)arg1)->paintEngine();
   *(QPaintEngine **)&cresult = result; 
-  return cresult;
-}
-
-
-SWIGEXPORT QPixmapData * QPixmap_pixmapData(QPixmap const * self) {
-  QPixmap *arg1 = (QPixmap *) 0 ;
-  QPixmapData *result = 0 ;
-  QPixmapData * cresult ;
-  
-  arg1 = *(QPixmap **)&self; 
-  result = (QPixmapData *)((QPixmap const *)arg1)->pixmapData();
-  *(QPixmapData **)&cresult = result; 
   return cresult;
 }
 

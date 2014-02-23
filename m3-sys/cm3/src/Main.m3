@@ -5,6 +5,7 @@ MODULE Main;
 
 IMPORT M3Timers, Pathname, Process, Quake;
 IMPORT RTCollector, RTParams, RTutils, Thread, Wr;
+IMPORT TextTextTbl;
 
 IMPORT Builder, Dirs, M3Build, M3Options, Makefile, Msg, Utils, WebFile;
 IMPORT MxConfig(*, M3Config, CMKey, CMCurrent *);
@@ -17,7 +18,16 @@ VAR
   build_dir : TEXT          := NIL;
   mach      : Quake.Machine := NIL;
 
-PROCEDURE DoIt () =
+PROCEDURE DefineIfNotDefined (qmachine: Quake.Machine;
+                              symbol, value: TEXT) RAISES {Quake.Error} =
+BEGIN
+    IF Quake.LookUp (qmachine, symbol) = NIL THEN
+        Quake.Define (qmachine, symbol, value);
+    END;
+END DefineIfNotDefined;
+        
+PROCEDURE DoIt () RAISES {Wr.Failure} =
+VAR defs: TextTextTbl.T;
   BEGIN
     IF RTParams.IsPresent ("verbose") THEN
       Msg.SetLevel (Msg.Level.Verbose);
@@ -29,20 +39,14 @@ PROCEDURE DoIt () =
     END;
     Process.RegisterExitor (CleanUp);
 
-    Makefile.ScanCommandLine1 ();
-
-    config := MxConfig.FindFile ();
-    IF (config = NIL) THEN
-      Msg.FatalError (NIL, "unable to locate configuration file, \"",
-                      MxConfig.Filename, "\"");
-    END;
-
     mach := M3Build.NewMachine ();
     TRY
       TRY
+
+        defs := Makefile.ScanCommandLine ();
+    
         (* figure out what we're trying to do *)
         VAR
-          defs := Makefile.ScanCommandLine2 ();
           name, val: TEXT;
           iter := defs.iterate();
         BEGIN
@@ -51,19 +55,30 @@ PROCEDURE DoIt () =
           END;
         END;
 
+        config := MxConfig.FindFile ();
+        IF (config = NIL) THEN
+          Msg.FatalError (NIL, "unable to locate configuration file, \"",
+                          MxConfig.Filename, "\"");
+        END;
+    
         (* Default to a native build, so the config file can say less. *)
+        
+        (* DefineIfNotDefined: overridable from command line with -D *)
 
-        Quake.Define(mach, "TARGET", MxConfig.HOST);
-        Quake.Define(mach, "OS_TYPE", MxConfig.HOST_OS_TYPE);
-        (* Quake.Define(mach, "BACKEND_MODE", Version.BackendMode); *)
-        (* Quake.Define(mach, "C_COMPILER", Version.CCompiler); *)
-        (* Quake.Define(mach, "LINKER", Version.Linker); *)
-        (* Quake.Define(mach, "THREAD_LIBRARY", Version.ThreadLibrary); *)
-        (* Quake.Define(mach, "WINDOW_LIBRARY", Version.WindowLibrary); *)
-        Quake.Define(mach, "WORD_SIZE", MxConfig.HOST_WORD_SIZE);
+        DefineIfNotDefined (mach, "TARGET", MxConfig.HOST);
+        DefineIfNotDefined (mach, "OS_TYPE", MxConfig.HOST_OS_TYPE);
+        (* DefineIfNotDefined (mach, "BACKEND_MODE", Version.BackendMode); *)
+        (* DefineIfNotDefined (mach, "C_COMPILER", Version.CCompiler); *)
+        (* DefineIfNotDefined (mach, "LINKER", Version.Linker); *)
+        (* DefineIfNotDefined (mach, "THREAD_LIBRARY", Version.ThreadLibrary); *)
+        (* DefineIfNotDefined (mach, "WINDOW_LIBRARY", Version.WindowLibrary); *)
+        DefineIfNotDefined (mach, "WORD_SIZE", MxConfig.HOST_WORD_SIZE);
 
         (* Even if the config file overrides the defaults, such as to do
            a cross build, the host characteristics are still available. *)
+
+        (* Quake.Define vs. DefineIfNotDefined: These probably
+        don't make sense to ever override from command line. *)
 
         Quake.Define(mach, "HOST", MxConfig.HOST);
         Quake.Define(mach, "HOST_OS_TYPE", MxConfig.HOST_OS_TYPE);

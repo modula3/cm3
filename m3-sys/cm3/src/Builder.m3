@@ -101,6 +101,7 @@ TYPE
     magic         : IntRefTbl.T;        (* type name -> info *)
     ast_cache     : IntRefTbl.T;        (* interface name -> AST *)
     include_path  : Arg.List;           (* -I include path for C compiler *)
+    include_path_empty : Arg.List;      (* empty replacement for include_path *)
     pending_impls : M3Unit.TList;       (* deferred implementation modules *)
     main          : M3ID.T;             (* "Main" *)
     m3env         : Env;                (* the compiler's environment closure *)
@@ -260,6 +261,7 @@ PROCEDURE CompileUnits (main     : TEXT;
     s.magic         := NEW (IntRefTbl.Default).init (100);
     s.ast_cache     := NEW (IntRefTbl.Default).init (100);
     s.include_path  := Arg.NewList ();
+    s.include_path_empty := Arg.NewList ();
     s.pending_impls := NIL;
     s.main          := M3ID.Add ("Main");
     s.m3env         := NEW (Env);
@@ -1155,7 +1157,7 @@ PROCEDURE CompileS (s: State;  u: M3Unit.T) =
       PullForBootstrap (u);
       EVAL Utils.NoteModification (u.object);
     ELSIF (u.kind = UK.S) THEN
-      RunCC (s, UnitPath (u), u.object, u.debug, u.optimize);
+      RunCC (s, UnitPath (u), u.object, u.debug, u.optimize, s.include_path_empty);
       Utils.NoteNewFile (u.object);
     ELSE (* UK.IS or UK.MS *)
       EVAL RunAsm (s, UnitPath (u), u.object);
@@ -1180,7 +1182,7 @@ PROCEDURE CompileC (s: State;  u: M3Unit.T) =
     ELSIF (u.kind = UK.C) THEN
       IF boot
         THEN PullForBootstrap (u);
-        ELSE RunCC (s, UnitPath (u), u.object, u.debug, u.optimize);
+        ELSE RunCC (s, UnitPath (u), u.object, u.debug, u.optimize, s.include_path);
       END;
       Utils.NoteNewFile (u.object);
     ELSIF boot THEN
@@ -1272,8 +1274,8 @@ PROCEDURE FulfilRP(rp : RemovePromise) : QPromise.ExitCode =
 PROCEDURE PushOneM3 (s: State;  u: M3Unit.T): BOOLEAN =
   TYPE Mode_t = M3BackendMode_t;
   VAR
-    delC: BOOLEAN;
-    delS: BOOLEAN;
+    delC := FALSE;
+    delS := FALSE;
     tmpC: TEXT := NIL;
     tmpS: TEXT := NIL;
     m3out: TEXT := NIL;
@@ -1287,7 +1289,7 @@ PROCEDURE PushOneM3 (s: State;  u: M3Unit.T): BOOLEAN =
     C := mode = Mode_t.C;
     delay := s.delayBackend;
   BEGIN
-    <* ASSERT mode # Mode_t.ExternalObject *>     (* nonexistant, untested *)
+    (* ASSERT mode # Mode_t.ExternalObject *)     (* mostly nonexistant, untested, but for m3cgcat *)
     <* ASSERT mode # Mode_t.IntegratedAssembly *> (* nonexistant, untested *)
 
 (* The idea here is to push along the representation in one of a few sequences.
@@ -1367,7 +1369,7 @@ PROCEDURE PushOneM3 (s: State;  u: M3Unit.T): BOOLEAN =
           EVAL RunM3Back (s, tmpC, m3backOut, u.debug, u.optimize);
         END;
         IF NOT boot AND C THEN
-          RunCC (s, tmpC, u.object, TRUE, FALSE);
+          RunCC (s, tmpC, u.object, TRUE, FALSE, s.include_path_empty);
         END;
         IF NOT boot AND asm THEN
           EVAL RunAsm (s, tmpS, u.object);
@@ -2056,13 +2058,14 @@ PROCEDURE Pass0_GetImplementations (env: Env;  intf: M3ID.T): M3Compiler.ImplLis
 
 (*------------------------------------------------ compilations and links ---*)
 
-PROCEDURE RunCC (s: State;  source, object: TEXT;  debug, optimize: BOOLEAN) =
+PROCEDURE RunCC (s: State;  source, object: TEXT;  debug, optimize: BOOLEAN;
+                 include_path: Arg.List) =
   BEGIN
     ETimer.Push (M3Timers.pass_1);
     StartCall (s, s.c_compiler);
     PushText  (s, source);
     PushText  (s, object);
-    PushArray (s, s.include_path);
+    PushArray (s, include_path);
     PushBool  (s, optimize);
     PushBool  (s, debug);
     IF CallProc (s, s.c_compiler) THEN
@@ -2156,7 +2159,7 @@ PROCEDURE GenerateCMain (s: State;  Main_O: TEXT) =
         Utils.Remove (Main_XX);
       END;
       Msg.Debug ("compiling ", Main_C, " ...", Wr.EOL);
-      RunCC (s, Main_C, Main_O, debug := TRUE, optimize := FALSE);
+      RunCC (s, Main_C, Main_O, debug := TRUE, optimize := FALSE, include_path := s.include_path_empty);
       IF (s.compile_failed) THEN
         Msg.FatalError (NIL, "cc ", Main_C, " failed!!");
       END;

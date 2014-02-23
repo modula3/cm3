@@ -179,7 +179,21 @@ SWIGEXPORT QKeySequence * New_QKeySequence1(QString * key) {
 }
 
 
-SWIGEXPORT QKeySequence * New_QKeySequence2(int k1, int k2, int k3, int k4) {
+SWIGEXPORT QKeySequence * New_QKeySequence2(QString * key, QKeySequence::SequenceFormat format) {
+  QString *arg1 = 0 ;
+  QKeySequence::SequenceFormat arg2 ;
+  QKeySequence *result = 0 ;
+  QKeySequence * cresult ;
+  
+  arg1 = *(QString **)&key;
+  arg2 = (QKeySequence::SequenceFormat)format; 
+  result = (QKeySequence *)new QKeySequence((QString const &)*arg1,arg2);
+  *(QKeySequence **)&cresult = result; 
+  return cresult;
+}
+
+
+SWIGEXPORT QKeySequence * New_QKeySequence3(int k1, int k2, int k3, int k4) {
   int arg1 ;
   int arg2 ;
   int arg3 ;
@@ -197,7 +211,7 @@ SWIGEXPORT QKeySequence * New_QKeySequence2(int k1, int k2, int k3, int k4) {
 }
 
 
-SWIGEXPORT QKeySequence * New_QKeySequence3(int k1, int k2, int k3) {
+SWIGEXPORT QKeySequence * New_QKeySequence4(int k1, int k2, int k3) {
   int arg1 ;
   int arg2 ;
   int arg3 ;
@@ -213,7 +227,7 @@ SWIGEXPORT QKeySequence * New_QKeySequence3(int k1, int k2, int k3) {
 }
 
 
-SWIGEXPORT QKeySequence * New_QKeySequence4(int k1, int k2) {
+SWIGEXPORT QKeySequence * New_QKeySequence5(int k1, int k2) {
   int arg1 ;
   int arg2 ;
   QKeySequence *result = 0 ;
@@ -227,7 +241,7 @@ SWIGEXPORT QKeySequence * New_QKeySequence4(int k1, int k2) {
 }
 
 
-SWIGEXPORT QKeySequence * New_QKeySequence5(int k1) {
+SWIGEXPORT QKeySequence * New_QKeySequence6(int k1) {
   int arg1 ;
   QKeySequence *result = 0 ;
   QKeySequence * cresult ;
@@ -239,7 +253,7 @@ SWIGEXPORT QKeySequence * New_QKeySequence5(int k1) {
 }
 
 
-SWIGEXPORT QKeySequence * New_QKeySequence6(QKeySequence const & ks) {
+SWIGEXPORT QKeySequence * New_QKeySequence7(QKeySequence const & ks) {
   QKeySequence *arg1 = 0 ;
   QKeySequence *result = 0 ;
   QKeySequence * cresult ;
@@ -251,7 +265,7 @@ SWIGEXPORT QKeySequence * New_QKeySequence6(QKeySequence const & ks) {
 }
 
 
-SWIGEXPORT QKeySequence * New_QKeySequence7(QKeySequence::StandardKey key) {
+SWIGEXPORT QKeySequence * New_QKeySequence8(QKeySequence::StandardKey key) {
   QKeySequence::StandardKey arg1 ;
   QKeySequence *result = 0 ;
   QKeySequence * cresult ;
@@ -360,6 +374,24 @@ SWIGEXPORT QKeySequence * Mnemonic(QString * text) {
   arg1 = *(QString **)&text;
   *(QKeySequence **)&cresult = new QKeySequence((const QKeySequence &)QKeySequence::mnemonic((QString const &)*arg1));
   return cresult;
+}
+
+
+SWIGEXPORT void QKeySequence_swap(QKeySequence * self, QKeySequence & other) {
+  QKeySequence *arg1 = (QKeySequence *) 0 ;
+  QKeySequence *arg2 = 0 ;
+  
+  arg1 = *(QKeySequence **)&self; 
+  arg2 = *(QKeySequence **)&other;
+  /*
+  if(!arg2) {
+      //SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "QKeySequence & reference is null");
+      //RETURN ;
+      return ;
+    }
+  */
+  
+  (arg1)->swap(*arg2);
 }
 
 

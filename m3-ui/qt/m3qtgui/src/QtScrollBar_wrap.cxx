@@ -223,6 +223,20 @@ SWIGEXPORT QSize * QScrollBar_sizeHint(QScrollBar const * self) {
 }
 
 
+SWIGEXPORT bool QScrollBar_event(QScrollBar * self, QEvent * event) {
+  QScrollBar *arg1 = (QScrollBar *) 0 ;
+  QEvent *arg2 = (QEvent *) 0 ;
+  bool result;
+  bool cresult ;
+  
+  arg1 = *(QScrollBar **)&self; 
+  arg2 = *(QEvent **)&event; 
+  result = (bool)(arg1)->event(arg2);
+  cresult = result; 
+  return cresult;
+}
+
+
 SWIGEXPORT long Modula3_QScrollBarToQAbstractSlider(long objectRef) {
     long baseptr = 0;
     *(QAbstractSlider **)&baseptr = *(QScrollBar **)&objectRef;

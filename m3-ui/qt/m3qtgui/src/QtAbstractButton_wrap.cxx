@@ -175,9 +175,9 @@ SWIGEXPORT void QAbstractButton_setText(QAbstractButton * self, QString * text) 
 }
 
 
-SWIGEXPORT QString *  QAbstractButton_text(QAbstractButton const * self) {
+SWIGEXPORT QString * QAbstractButton_text(QAbstractButton const * self) {
   QAbstractButton *arg1 = (QAbstractButton *) 0 ;
-  QString *  cresult ;
+  QString * cresult ;
   
   arg1 = *(QAbstractButton **)&self; 
   *(QString **)&cresult = new QString((const QString &)((QAbstractButton const *)arg1)->text());

@@ -191,9 +191,9 @@ SWIGEXPORT int QSpinBox_value(QSpinBox const * self) {
 }
 
 
-SWIGEXPORT QString *  QSpinBox_prefix(QSpinBox const * self) {
+SWIGEXPORT QString * QSpinBox_prefix(QSpinBox const * self) {
   QSpinBox *arg1 = (QSpinBox *) 0 ;
-  QString *  cresult ;
+  QString * cresult ;
   
   arg1 = *(QSpinBox **)&self; 
   *(QString **)&cresult = new QString((const QString &)((QSpinBox const *)arg1)->prefix());
@@ -211,9 +211,9 @@ SWIGEXPORT void QSpinBox_setPrefix(QSpinBox * self, QString * prefix) {
 }
 
 
-SWIGEXPORT QString *  QSpinBox_suffix(QSpinBox const * self) {
+SWIGEXPORT QString * QSpinBox_suffix(QSpinBox const * self) {
   QSpinBox *arg1 = (QSpinBox *) 0 ;
-  QString *  cresult ;
+  QString * cresult ;
   
   arg1 = *(QSpinBox **)&self; 
   *(QString **)&cresult = new QString((const QString &)((QSpinBox const *)arg1)->suffix());
@@ -231,9 +231,9 @@ SWIGEXPORT void QSpinBox_setSuffix(QSpinBox * self, QString * suffix) {
 }
 
 
-SWIGEXPORT QString *  QSpinBox_cleanText(QSpinBox const * self) {
+SWIGEXPORT QString * QSpinBox_cleanText(QSpinBox const * self) {
   QSpinBox *arg1 = (QSpinBox *) 0 ;
-  QString *  cresult ;
+  QString * cresult ;
   
   arg1 = *(QSpinBox **)&self; 
   *(QString **)&cresult = new QString((const QString &)((QSpinBox const *)arg1)->cleanText());
@@ -371,9 +371,9 @@ SWIGEXPORT double QDoubleSpinBox_value(QDoubleSpinBox const * self) {
 }
 
 
-SWIGEXPORT QString *  QDoubleSpinBox_prefix(QDoubleSpinBox const * self) {
+SWIGEXPORT QString * QDoubleSpinBox_prefix(QDoubleSpinBox const * self) {
   QDoubleSpinBox *arg1 = (QDoubleSpinBox *) 0 ;
-  QString *  cresult ;
+  QString * cresult ;
   
   arg1 = *(QDoubleSpinBox **)&self; 
   *(QString **)&cresult = new QString((const QString &)((QDoubleSpinBox const *)arg1)->prefix());
@@ -391,9 +391,9 @@ SWIGEXPORT void QDoubleSpinBox_setPrefix(QDoubleSpinBox * self, QString * prefix
 }
 
 
-SWIGEXPORT QString *  QDoubleSpinBox_suffix(QDoubleSpinBox const * self) {
+SWIGEXPORT QString * QDoubleSpinBox_suffix(QDoubleSpinBox const * self) {
   QDoubleSpinBox *arg1 = (QDoubleSpinBox *) 0 ;
-  QString *  cresult ;
+  QString * cresult ;
   
   arg1 = *(QDoubleSpinBox **)&self; 
   *(QString **)&cresult = new QString((const QString &)((QDoubleSpinBox const *)arg1)->suffix());
@@ -411,9 +411,9 @@ SWIGEXPORT void QDoubleSpinBox_setSuffix(QDoubleSpinBox * self, QString * suffix
 }
 
 
-SWIGEXPORT QString *  QDoubleSpinBox_cleanText(QDoubleSpinBox const * self) {
+SWIGEXPORT QString * QDoubleSpinBox_cleanText(QDoubleSpinBox const * self) {
   QDoubleSpinBox *arg1 = (QDoubleSpinBox *) 0 ;
-  QString *  cresult ;
+  QString * cresult ;
   
   arg1 = *(QDoubleSpinBox **)&self; 
   *(QString **)&cresult = new QString((const QString &)((QDoubleSpinBox const *)arg1)->cleanText());
@@ -535,10 +535,10 @@ SWIGEXPORT double QDoubleSpinBox_valueFromText(QDoubleSpinBox const * self, QStr
 }
 
 
-SWIGEXPORT QString *  QDoubleSpinBox_textFromValue(QDoubleSpinBox const * self, double val) {
+SWIGEXPORT QString * QDoubleSpinBox_textFromValue(QDoubleSpinBox const * self, double val) {
   QDoubleSpinBox *arg1 = (QDoubleSpinBox *) 0 ;
   double arg2 ;
-  QString *  cresult ;
+  QString * cresult ;
   
   arg1 = *(QDoubleSpinBox **)&self; 
   arg2 = (double)val; 

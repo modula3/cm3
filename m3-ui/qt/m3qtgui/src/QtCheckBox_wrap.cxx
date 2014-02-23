@@ -215,6 +215,16 @@ SWIGEXPORT QSize * QCheckBox_sizeHint(QCheckBox const * self) {
 }
 
 
+SWIGEXPORT QSize * QCheckBox_minimumSizeHint(QCheckBox const * self) {
+  QCheckBox *arg1 = (QCheckBox *) 0 ;
+  QSize * cresult ;
+  
+  arg1 = *(QCheckBox **)&self; 
+  *(QSize **)&cresult = new QSize((const QSize &)((QCheckBox const *)arg1)->minimumSizeHint());
+  return cresult;
+}
+
+
 SWIGEXPORT void QCheckBox_setTristate(QCheckBox * self, bool y) {
   QCheckBox *arg1 = (QCheckBox *) 0 ;
   bool arg2 ;

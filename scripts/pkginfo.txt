@@ -13,8 +13,8 @@ m3linker core front unicode
 m3back core front unicode
 m3cggen base core front
 m3staloneback tool
-m3front core front unicode
 m3quake base core front unicode
+m3front core front unicode
 cm3 core front unicode
 m3scanner base core
 m3tools base core

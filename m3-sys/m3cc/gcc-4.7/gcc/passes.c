@@ -62,7 +62,6 @@ along with GCC; see the file COPYING3.  If not see
 #include "langhooks.h"
 #include "cfglayout.h"
 #include "cfgloop.h"
-#include "hosthooks.h"
 #include "cgraph.h"
 #include "opts.h"
 #include "coverage.h"
@@ -1177,11 +1176,7 @@ init_optimization_passes (void)
     by these passes.  */
   p = &all_lowering_passes;
   NEXT_PASS (pass_warn_unused_result);
-  NEXT_PASS (pass_diagnose_omp_blocks);
-  NEXT_PASS (pass_diagnose_tm_blocks);
-  NEXT_PASS (pass_lower_omp);
   NEXT_PASS (pass_lower_cf);
-  NEXT_PASS (pass_lower_tm);
   NEXT_PASS (pass_refactor_eh);
   NEXT_PASS (pass_lower_eh);
   NEXT_PASS (pass_build_cfg);
@@ -1198,7 +1193,6 @@ init_optimization_passes (void)
       struct opt_pass **p = &pass_early_local_passes.pass.sub;
       NEXT_PASS (pass_fixup_cfg);
       NEXT_PASS (pass_init_datastructures);
-      NEXT_PASS (pass_expand_omp);
 
       NEXT_PASS (pass_referenced_vars);
       NEXT_PASS (pass_build_ssa);
@@ -1245,8 +1239,6 @@ init_optimization_passes (void)
       NEXT_PASS (pass_feedback_split_functions);
     }
   NEXT_PASS (pass_ipa_increase_alignment);
-  NEXT_PASS (pass_ipa_tm);
-  NEXT_PASS (pass_ipa_lower_emutls);
   *p = NULL;
 
   p = &all_regular_ipa_passes;
@@ -1297,8 +1289,6 @@ init_optimization_passes (void)
       NEXT_PASS (pass_phiopt);
       NEXT_PASS (pass_tail_recursion);
       NEXT_PASS (pass_ch);
-      NEXT_PASS (pass_stdarg);
-      NEXT_PASS (pass_lower_complex);
       NEXT_PASS (pass_sra);
       NEXT_PASS (pass_rename_ssa_copies);
       /* The dom pass will also resolve all __builtin_constant_p calls
@@ -1318,7 +1308,7 @@ init_optimization_passes (void)
       NEXT_PASS (pass_dce);
       NEXT_PASS (pass_forwprop);
       NEXT_PASS (pass_phiopt);
-      NEXT_PASS (pass_object_sizes);
+      /*NEXT_PASS (pass_object_sizes); Modula-3 */
       NEXT_PASS (pass_strlen);
       NEXT_PASS (pass_ccp);
       NEXT_PASS (pass_copy_prop);
@@ -1358,7 +1348,6 @@ init_optimization_passes (void)
           NEXT_PASS (pass_predcom);
 	  NEXT_PASS (pass_complete_unroll);
 	  NEXT_PASS (pass_slp_vectorize);
-	  NEXT_PASS (pass_parallelize_loops);
 	  NEXT_PASS (pass_loop_prefetch);
 	  NEXT_PASS (pass_iv_optimize);
 	  NEXT_PASS (pass_lim);
@@ -1397,14 +1386,6 @@ init_optimization_passes (void)
       NEXT_PASS (pass_uncprop);
       NEXT_PASS (pass_local_pure_const);
     }
-  NEXT_PASS (pass_tm_init);
-    {
-      struct opt_pass **p = &pass_tm_init.pass.sub;
-      NEXT_PASS (pass_tm_mark);
-      NEXT_PASS (pass_tm_memopt);
-      NEXT_PASS (pass_tm_edges);
-    }
-  NEXT_PASS (pass_lower_complex_O0);
   NEXT_PASS (pass_cleanup_eh);
   NEXT_PASS (pass_lower_resx);
   NEXT_PASS (pass_nrv);
@@ -2126,27 +2107,6 @@ execute_pass_list (struct opt_pass *pass)
     }
   while (pass);
 }
-
-/* Write out summaries for all the nodes in the callgraph.  */
-
-void
-ipa_write_summaries (void)
-{ }
-
-/* Write all the optimization summaries for the cgraph nodes in SET.  If SET is
-   NULL, write out all summaries of all nodes. */
-
-void
-ipa_write_optimization_summaries (cgraph_node_set set, varpool_node_set vset)
-{ }
-
-void
-ipa_read_summaries (void)
-{ }
-
-void
-ipa_read_optimization_summaries (void)
-{ }
 
 /* Same as execute_pass_list but assume that subpasses of IPA passes
    are local passes.  */

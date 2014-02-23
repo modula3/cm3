@@ -321,10 +321,10 @@ SWIGEXPORT void QToolBox_setItemText(QToolBox * self, int index, QString * text)
 }
 
 
-SWIGEXPORT QString *  QToolBox_itemText(QToolBox const * self, int index) {
+SWIGEXPORT QString * QToolBox_itemText(QToolBox const * self, int index) {
   QToolBox *arg1 = (QToolBox *) 0 ;
   int arg2 ;
-  QString *  cresult ;
+  QString * cresult ;
   
   arg1 = *(QToolBox **)&self; 
   arg2 = (int)index; 
@@ -369,10 +369,10 @@ SWIGEXPORT void QToolBox_setItemToolTip(QToolBox * self, int index, QString * to
 }
 
 
-SWIGEXPORT QString *  QToolBox_itemToolTip(QToolBox const * self, int index) {
+SWIGEXPORT QString * QToolBox_itemToolTip(QToolBox const * self, int index) {
   QToolBox *arg1 = (QToolBox *) 0 ;
   int arg2 ;
-  QString *  cresult ;
+  QString * cresult ;
   
   arg1 = *(QToolBox **)&self; 
   arg2 = (int)index; 

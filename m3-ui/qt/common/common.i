@@ -7,7 +7,7 @@
 
 #define qreal double
 #define uint unsigned int
-#define uchar unsigned char
+//#define uchar unsigned char
 #define uint unsigned int
 #define ushort unsigned short
 #define ulong unsigned long
@@ -339,6 +339,7 @@ result : TEXT;%};
 %apply ClassReturn {const typeIN &};
 
 %typemap("m3wrapintype:import") const typeIN & %{importMod  $1_basetype%}
+%typemap("m3wrapintype:import")       typeIN   %{importMod  $1_basetype%}
 %typemap("m3wrapintype:import")       typeIN * %{importMod  $1_basetype%}
 %typemap("m3wrapretvar:import")       typeIN   %{importMod  $1_basetype%}
 %typemap("m3wrapretvar:import")       typeIN * %{importMod  $1_basetype%}

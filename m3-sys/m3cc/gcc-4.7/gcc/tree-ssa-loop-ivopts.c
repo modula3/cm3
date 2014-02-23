@@ -3518,12 +3518,11 @@ get_shiftadd_cost (tree expr, enum machine_mode mode, comp_cost cost0,
   tree multop = TREE_OPERAND (mult, 0);
   int m = exact_log2 (int_cst_value (cst));
   int maxm = MIN (BITS_PER_WORD, GET_MODE_BITSIZE (mode));
-  int sa_cost = { 0 };
 
   if (!(m >= 0 && m < maxm))
     return false;
 
-  sa_cost = (TREE_CODE (expr) != MINUS_EXPR
+  int sa_cost = (TREE_CODE (expr) != MINUS_EXPR
              ? shiftadd_cost[speed][mode][m]
              : (mult == op1
                 ? shiftsub1_cost[speed][mode][m]
@@ -3555,11 +3554,11 @@ force_expr_to_var_cost (tree expr, bool speed)
   if (!costs_initialized)
     {
       tree type = build_pointer_type (integer_type_node);
-      tree var, addr;
+      tree addr;
       rtx x;
       int i;
 
-      var = create_tmp_var_raw (integer_type_node, "test_var");
+      tree var = create_tmp_var_raw (integer_type_node, "test_var");
       TREE_STATIC (var) = 1;
       x = produce_memory_decl_rtl (var, NULL);
       SET_DECL_RTL (var, x);
@@ -3665,7 +3664,7 @@ force_expr_to_var_cost (tree expr, bool speed)
       if (TREE_CODE (expr) != NEGATE_EXPR)
         {
           tree mult = NULL_TREE;
-          comp_cost sa_cost;
+          comp_cost sa_cost = { 0 };
           if (TREE_CODE (op1) == MULT_EXPR)
             mult = op1;
           else if (TREE_CODE (op0) == MULT_EXPR)

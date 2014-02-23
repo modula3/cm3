@@ -395,6 +395,20 @@ SWIGEXPORT bool QByteArray_isDetached(QByteArray const * self) {
 }
 
 
+SWIGEXPORT bool QByteArray_isSharedWith(QByteArray const * self, QByteArray * other) {
+  QByteArray *arg1 = (QByteArray *) 0 ;
+  QByteArray *arg2 = 0 ;
+  bool result;
+  bool cresult ;
+  
+  arg1 = *(QByteArray **)&self; 
+  arg2 = *(QByteArray **)&other;
+  result = (bool)((QByteArray const *)arg1)->isSharedWith((QByteArray const &)*arg2);
+  cresult = result; 
+  return cresult;
+}
+
+
 SWIGEXPORT void QByteArray_clear(QByteArray * self) {
   QByteArray *arg1 = (QByteArray *) 0 ;
   
@@ -1107,6 +1121,24 @@ SWIGEXPORT QByteArray * QByteArray_toPercentEncoding3(QByteArray const * self) {
   
   arg1 = *(QByteArray **)&self; 
   *(QByteArray **)&cresult = new QByteArray((const QByteArray &)((QByteArray const *)arg1)->toPercentEncoding());
+  return cresult;
+}
+
+
+SWIGEXPORT QByteArray * QByteArray_setRawData(QByteArray * self, char * a, unsigned int n) {
+  QByteArray *arg1 = (QByteArray *) 0 ;
+  char *arg2 = (char *) 0 ;
+  unsigned int arg3 ;
+  QByteArray *result = 0 ;
+  QByteArray * cresult ;
+  
+  arg1 = *(QByteArray **)&self; 
+  {
+    arg2 = a;
+  }
+  arg3 = (unsigned int)n; 
+  result = (QByteArray *) &(arg1)->setRawData((char const *)arg2,arg3);
+  *(QByteArray **)&cresult = result; 
   return cresult;
 }
 

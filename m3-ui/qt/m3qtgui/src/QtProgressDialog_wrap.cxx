@@ -349,9 +349,9 @@ SWIGEXPORT QSize * QProgressDialog_sizeHint(QProgressDialog const * self) {
 }
 
 
-SWIGEXPORT QString *  QProgressDialog_labelText(QProgressDialog const * self) {
+SWIGEXPORT QString * QProgressDialog_labelText(QProgressDialog const * self) {
   QProgressDialog *arg1 = (QProgressDialog *) 0 ;
-  QString *  cresult ;
+  QString * cresult ;
   
   arg1 = *(QProgressDialog **)&self; 
   *(QString **)&cresult = new QString((const QString &)((QProgressDialog const *)arg1)->labelText());

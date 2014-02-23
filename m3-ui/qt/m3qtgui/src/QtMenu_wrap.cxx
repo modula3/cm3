@@ -603,9 +603,9 @@ SWIGEXPORT QAction * QMenu_menuAction(QMenu const * self) {
 }
 
 
-SWIGEXPORT QString *  QMenu_title(QMenu const * self) {
+SWIGEXPORT QString * QMenu_title(QMenu const * self) {
   QMenu *arg1 = (QMenu *) 0 ;
-  QString *  cresult ;
+  QString * cresult ;
   
   arg1 = *(QMenu **)&self; 
   *(QString **)&cresult = new QString((const QString &)((QMenu const *)arg1)->title());

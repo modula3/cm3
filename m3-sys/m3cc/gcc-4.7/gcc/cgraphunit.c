@@ -2075,9 +2075,6 @@ ipa_passes (void)
 	((struct ipa_opt_pass_d *) all_regular_ipa_passes);
     }
 
-  if (!in_lto_p)
-    ipa_write_summaries ();
-
   if (!flag_ltrans && (in_lto_p || !flag_lto || flag_fat_lto_objects))
     execute_ipa_pass_list (all_regular_ipa_passes);
   invoke_plugin_callbacks (PLUGIN_ALL_IPA_PASSES_END, NULL);

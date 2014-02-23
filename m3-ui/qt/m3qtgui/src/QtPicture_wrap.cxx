@@ -423,6 +423,24 @@ SWIGEXPORT void QPicture_setBoundingRect(QPicture * self, QRect * r) {
 }
 
 
+SWIGEXPORT void QPicture_swap(QPicture * self, QPicture & other) {
+  QPicture *arg1 = (QPicture *) 0 ;
+  QPicture *arg2 = 0 ;
+  
+  arg1 = *(QPicture **)&self; 
+  arg2 = *(QPicture **)&other;
+  /*
+  if(!arg2) {
+      //SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "QPicture & reference is null");
+      //RETURN ;
+      return ;
+    }
+  */
+  
+  (arg1)->swap(*arg2);
+}
+
+
 SWIGEXPORT void QPicture_detach(QPicture * self) {
   QPicture *arg1 = (QPicture *) 0 ;
   

@@ -1322,7 +1322,7 @@ MODULE Test EXPORTS Main
           )
     END DenseWide 
 
-; VAR GDisableCollection : BOOLEAN := TRUE 
+; VAR GDisableCollection : BOOLEAN := FALSE 
 
 ; PROCEDURE StopCollection ( ) 
 

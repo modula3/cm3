@@ -133,12 +133,12 @@ CONST
 (* Special value for NextMessageSize to indicate that there is no next *)
 (* message. *)
 
-  MAILSLOT_NO_MESSAGE: UINT32 = -1;
+  MAILSLOT_NO_MESSAGE: INT32 = -1;
 
 (* Special value for read timeout to indicate that mailslot reads should *)
 (* never timeout. *)
 
-  MAILSLOT_WAIT_FOREVER: UINT32 = -1;
+  MAILSLOT_WAIT_FOREVER: INT32 = -1;
 
 (* File structures *)
 
@@ -174,7 +174,7 @@ TYPE
 
   PFILETIME = UNTRACED REF FILETIME;
   LPFILETIME = PFILETIME; (* compat *)
-  FILETIME = RECORD
+  FILETIME = BITS 64 FOR RECORD
     dwLowDateTime : UINT32;
     dwHighDateTime: UINT32;
   END;
@@ -726,9 +726,9 @@ CONST
   FILE_TYPE_REMOTE  = 16_8000;
 
 
-  STD_INPUT_HANDLE : UINT32 = -10;
-  STD_OUTPUT_HANDLE: UINT32 = -11;
-  STD_ERROR_HANDLE : UINT32 = -12;
+  STD_INPUT_HANDLE : INT32 = -10;
+  STD_OUTPUT_HANDLE: INT32 = -11;
+  STD_ERROR_HANDLE : INT32 = -12;
 
   NOPARITY    = 0;
   ODDPARITY   = 1;
@@ -1606,10 +1606,10 @@ PROCEDURE GetFileType (hFile: HANDLE): UINT32;
 PROCEDURE GetFileSize (hFile: HANDLE; lpFileSizeHigh: PUINT32): UINT32;
 
 <*EXTERNAL GetStdHandle:WINAPI*>
-PROCEDURE GetStdHandle (nStdHandle: UINT32): HANDLE;
+PROCEDURE GetStdHandle (nStdHandle: INT32): HANDLE;
 
 <*EXTERNAL SetStdHandle:WINAPI*>
-PROCEDURE SetStdHandle (nStdHandle: UINT32; hHandle: HANDLE): BOOL;
+PROCEDURE SetStdHandle (nStdHandle: INT32; hHandle: HANDLE): BOOL;
 
 <*EXTERNAL WriteFile:WINAPI*>
 PROCEDURE WriteFile (hFile                 : HANDLE;

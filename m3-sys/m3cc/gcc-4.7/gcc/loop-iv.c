@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Rtl-level induction variable analysis.
    Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010
    Free Software Foundation, Inc.
@@ -1375,9 +1377,10 @@ simple_rhs_p (rtx rhs)
 static int
 replace_single_def_regs (rtx *reg, void *expr1)
 {
-  unsigned regno;
-  df_ref adef;
-  rtx set, src;
+  unsigned regno = { 0 };
+  df_ref adef = { 0 };
+  rtx set = { 0 };
+  rtx src = { 0 };
   rtx *expr = (rtx *)expr1;
 
   if (!REG_P (*reg))
@@ -1704,7 +1707,7 @@ canon_condition (rtx cond)
 void
 simplify_using_condition (rtx cond, rtx *expr, regset altered)
 {
-  rtx rev, reve, exp = *expr;
+  rtx exp = *expr;
 
   /* If some register gets altered later, we do not really speak about its
      value at the time of comparison.  */
@@ -1722,8 +1725,8 @@ simplify_using_condition (rtx cond, rtx *expr, regset altered)
   if (!COMPARISON_P (exp))
     return;
 
-  rev = reversed_condition (cond);
-  reve = reversed_condition (exp);
+  rtx rev = reversed_condition (cond);
+  rtx reve = reversed_condition (exp);
 
   cond = canon_condition (cond);
   exp = canon_condition (exp);
@@ -1821,11 +1824,14 @@ eliminate_implied_conditions (enum rtx_code op, rtx *head, rtx tail)
 static void
 simplify_using_initial_values (struct loop *loop, enum rtx_code op, rtx *expr)
 {
-  bool expression_valid;
-  rtx head, tail, insn, cond_list, last_valid_expr;
-  rtx neutral, aggr;
-  regset altered, this_altered;
-  edge e;
+  rtx head = { 0 };
+  rtx tail = { 0 };
+  rtx insn = { 0 };
+  rtx cond_list = { 0 };
+  rtx last_valid_expr = { 0 };
+  rtx neutral = { 0 };
+  rtx aggr = { 0 };
+  edge e = { 0 };
 
   if (!*expr)
     return;
@@ -1894,10 +1900,10 @@ simplify_using_initial_values (struct loop *loop, enum rtx_code op, rtx *expr)
   if (e->src == ENTRY_BLOCK_PTR)
     return;
 
-  altered = ALLOC_REG_SET (&reg_obstack);
-  this_altered = ALLOC_REG_SET (&reg_obstack);
+  regset altered = ALLOC_REG_SET (&reg_obstack);
+  regset this_altered = ALLOC_REG_SET (&reg_obstack);
 
-  expression_valid = true;
+  bool expression_valid = true;
   last_valid_expr = *expr;
   cond_list = NULL_RTX;
   while (1)
@@ -1931,7 +1937,8 @@ simplify_using_initial_values (struct loop *loop, enum rtx_code op, rtx *expr)
 
       FOR_BB_INSNS_REVERSE (e->src, insn)
 	{
-	  rtx src, dest;
+	  rtx src = { 0 };
+	  rtx dest = { 0 };
 	  rtx old = *expr;
 
 	  if (!INSN_P (insn))
@@ -2804,9 +2811,10 @@ fail:
 static void
 check_simple_exit (struct loop *loop, edge e, struct niter_desc *desc)
 {
-  basic_block exit_bb;
-  rtx condition, at;
-  edge ein;
+  basic_block exit_bb = { 0 };
+  rtx condition = { 0 };
+  rtx at = { 0 };
+  edge ein = { 0 };
 
   exit_bb = e->src;
   desc->simple_p = false;

@@ -292,8 +292,9 @@ FreeBSD not tested
 AIX probably works, not tested
 Solaris: failed to link on Solaris 2.9: http://hudson.modula3.com:8080/job/cm3-current-build-SOLsun-opencsw-current9s/166/console
 HP-UX? AIX?
+Linux/arm: /usr/bin/ld: /usr/local/cm3/pkg/m3core/ARMEL_LINUX/libm3core.a(ThreadPThreadC.o)(.stab+0x2e28): R_ARM_ABS32 used with TLS symbol activations
 */
-#if defined(__linux)
+#if 0 /* defined(__linux) && !defined(__arm__) */
 
 #define M3_COMPILER_THREAD_LOCAL
 

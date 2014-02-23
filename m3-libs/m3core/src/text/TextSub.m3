@@ -5,8 +5,8 @@ UNSAFE MODULE TextSub EXPORTS Text, TextSub;
 
 IMPORT TextCat, TextClass, Text8, Text8Short, Text16, Text16Short, TextLiteral;
 
-IMPORT TextStats;
-FROM TextStats IMPORT Op; 
+(*47 IMPORT TextStats; 74*)
+(*47 FROM TextStats IMPORT Op; 74*)
 
 REVEAL
   TT = Public BRANDED "TextSub.T" OBJECT OVERRIDES
@@ -28,25 +28,25 @@ PROCEDURE Sub (t: TEXT; start, length: CARDINAL): TEXT =
   VAR c: CHAR;
   VAR wc: WIDECHAR; 
   BEGIN
-    TextStats.NoteGround (Op.Sub); 
+    (*47 TextStats.NoteGround (Op.Sub); 74*) 
     t.get_info (info);
     new_len := MIN (info.length - start, length);
     IF (new_len <= 0)           THEN RETURN ""; END;
     IF (new_len = info.length)  THEN RETURN t;  END;
     IF (new_len = 1) THEN 
       IF info.wide THEN 
-        TextStats.NoteGround (Op.get_wide_char); 
+        (*47 TextStats.NoteGround (Op.get_wide_char); 74*) 
         wc := t.get_wide_char (start);
-        TextStats.NoteFinished (Op.get_wide_char); 
+        (*47 TextStats.NoteFinished (Op.get_wide_char); 74*) 
         IF ORD (wc) <= ORD (LAST (CHAR)) THEN 
           RETURN FromChar (VAL (ORD (wc), CHAR));
         ELSE 
           RETURN FromWideChar (wc);
         END; 
       ELSE 
-        TextStats.NoteGround (Op.get_char); 
+        (*47 TextStats.NoteGround (Op.get_char); 74*) 
         c := t.get_char (start); 
-        TextStats.NoteFinished (Op.get_char); 
+        (*47 TextStats.NoteFinished (Op.get_char); 74*) 
         RETURN FromChar (c); 
       END;
     END;
@@ -89,18 +89,18 @@ PROCEDURE Sub (t: TEXT; start, length: CARDINAL): TEXT =
               (* Flatten into a Text16Short. *) 
               VAR r := NEW (Text16Short.T); BEGIN
                 r.len := new_len;
-                TextStats.NoteGround (Op.get_wide_chars); 
+                (*47 TextStats.NoteGround (Op.get_wide_chars); 74*) 
                 t.get_wide_chars (SUBARRAY (r.contents, 0, new_len),  start);
-                TextStats.NoteFinished (Op.get_wide_chars); 
+                (*47 TextStats.NoteFinished (Op.get_wide_chars); 74*) 
                 r.contents[new_len] := VAL (0,WIDECHAR);
-                TextStats.NoteAllocText16Short(r);
+                (*47 TextStats.NoteAllocText16Short(r); 74*)
                 RETURN r;
               END (* Block *);
             ELSE (* Flatten into a Text16. *) 
               VAR r := Text16.Create (new_len); BEGIN
-                TextStats.NoteGround (Op.get_wide_chars); 
+                (*47 TextStats.NoteGround (Op.get_wide_chars); 74*) 
                 t.get_wide_chars (SUBARRAY (r.contents^, 0, new_len),  start);
-                TextStats.NoteFinished (Op.get_wide_chars); 
+                (*47 TextStats.NoteFinished (Op.get_wide_chars); 74*) 
                 RETURN r;
               END (* Block *);
             END;
@@ -109,18 +109,18 @@ PROCEDURE Sub (t: TEXT; start, length: CARDINAL): TEXT =
               (* Flatten into a Text8Short. *) 
               VAR r := NEW (Text8Short.T); BEGIN
                 r.len := new_len;
-                TextStats.NoteGround (Op.get_chars); 
+                (*47 TextStats.NoteGround (Op.get_chars); 74*) 
                 t.get_chars (SUBARRAY (r.contents, 0, new_len),  start);
-                TextStats.NoteFinished (Op.get_chars); 
+                (*47 TextStats.NoteFinished (Op.get_chars); 74*) 
                 r.contents[new_len] := '\000';
-                TextStats.NoteAllocText8Short(r);
+                (*47 TextStats.NoteAllocText8Short(r); 74*)
                 RETURN r;
               END (* Block *);
             ELSE (* Flatten into a Text8. *) 
               VAR r := Text8.Create (new_len); BEGIN
-                TextStats.NoteGround (Op.get_chars); 
+                (*47 TextStats.NoteGround (Op.get_chars); 74*) 
                 t.get_chars (SUBARRAY (r.contents^, 0, new_len),  start);
-                TextStats.NoteFinished (Op.get_chars); 
+                (*47 TextStats.NoteFinished (Op.get_chars); 74*) 
                 RETURN r;
               END (* Block *);
             END;
@@ -130,8 +130,8 @@ PROCEDURE Sub (t: TEXT; start, length: CARDINAL): TEXT =
     END;
    
     VAR r := NEW (TT, base := t, start := start, len := new_len); BEGIN 
-      TextStats.NoteAllocTextSub(r);
-      TextStats.NoteFinished (Op.Sub); 
+      (*47 TextStats.NoteAllocTextSub(r); 74*)
+      (*47 TextStats.NoteFinished (Op.Sub); 74*) 
       RETURN r;
     END (* Block *)
   END Sub;
@@ -150,25 +150,25 @@ PROCEDURE SubGetInfo (t: TT;  VAR info: TextClass.Info) =
 
 PROCEDURE SubGetChar (t: TT;  i: CARDINAL): CHAR =
   BEGIN
-    TextStats.NoteRecurse (Op.get_char); 
+    (*47 TextStats.NoteRecurse (Op.get_char); 74*) 
     RETURN t.base.get_char (i + t.start);
   END SubGetChar;
 
 PROCEDURE SubGetWideChar (t: TT;  i: CARDINAL): WIDECHAR =
   BEGIN
-    TextStats.NoteRecurse (Op.get_wide_char); 
+    (*47 TextStats.NoteRecurse (Op.get_wide_char); 74*) 
     RETURN t.base.get_wide_char (i + t.start);
   END SubGetWideChar;
 
 PROCEDURE SubGetChars (t: TT;  VAR a: ARRAY OF CHAR;  start: CARDINAL) =
   BEGIN
-    TextStats.NoteRecurse (Op.get_chars); 
+    (*47 TextStats.NoteRecurse (Op.get_chars); 74*) 
     t.base.get_chars (a, start + t.start);
   END SubGetChars;
 
 PROCEDURE SubGetWideChars (t: TT;  VAR a: ARRAY OF WIDECHAR;  start: CARDINAL) =
   BEGIN
-    TextStats.NoteRecurse (Op.get_wide_chars); 
+    (*47 TextStats.NoteRecurse (Op.get_wide_chars); 74*) 
     t.base.get_wide_chars (a, start + t.start);
   END SubGetWideChars;
 

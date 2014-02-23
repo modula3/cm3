@@ -286,14 +286,6 @@ can_inline_edge_p (struct cgraph_edge *e, bool report)
       e->inline_failed = CIF_EH_PERSONALITY;
       inlinable = false;
     }
-  /* TM pure functions should not be inlined into non-TM_pure
-     functions.  */
-  else if (is_tm_pure (callee->decl)
-	   && !is_tm_pure (e->caller->decl))
-    {
-      e->inline_failed = CIF_UNSPECIFIED;
-      inlinable = false;
-    }
   /* Don't inline if the callee can throw non-call exceptions but the
      caller cannot.
      FIXME: this is obviously wrong for LTO where STRUCT_FUNCTION is missing.

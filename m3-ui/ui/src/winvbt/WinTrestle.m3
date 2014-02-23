@@ -818,7 +818,7 @@ PROCEDURE TrestleID (<*UNUSED*> self: T;  <*UNUSED*> v: VBT.T): TEXT =
   END TrestleID;
 
 PROCEDURE WindowID (<*UNUSED*> self: T;  v: VBT.T): TEXT =
-  VAR num := LOOPHOLE (WindowHandle (v), Ctypes.int);
+  VAR num := LOOPHOLE (WindowHandle (v), INTEGER);
   BEGIN
     RETURN Fmt.Unsigned (num, base := 16);
   END WindowID;
@@ -2045,7 +2045,7 @@ PROCEDURE TimerTick (hwnd: WinDef.HWND) =
     IF trsl.mouseFocus = NIL THEN
       status := WinUser.GetCursorPos (ADR (screenPos));
       <* ASSERT status # False *>
-      lParam := LOOPHOLE (WinDef.POINTS {screenPos.x, screenPos.y}, WinDef.LPARAM);
+      lParam := LOOPHOLE (WinDef.POINTS {screenPos.x, screenPos.y}, WinDef.UINT32);
       DeliverMousePos (hwnd, lParam, 0);
     END;
   END TimerTick;
@@ -2069,6 +2069,7 @@ PROCEDURE RealizeClipboard (hwnd: WinDef.HWND) =
     lptstr: Ctypes.char_star;
     txtstr: Ctypes.char_star;
     txt   : TEXT;
+    len   : INTEGER;
   BEGIN
     LOCK VBT.mu DO
       TRY
@@ -2082,15 +2083,16 @@ PROCEDURE RealizeClipboard (hwnd: WinDef.HWND) =
          already owns the clipboard and therefore it's an error to
          reopen it.  --- So, I guess we won't... *)
 
+      len := Text.Length (txt) + 1;
       hglb := WinBase.GlobalAlloc (WinBase.GMEM_MOVEABLE+WinBase.GMEM_DDESHARE,
-                                         Text.Length (txt) + 1);
+                                   len);
       <* ASSERT hglb # NIL *>
 
       lptstr := WinBase.GlobalLock (hglb);
       <* ASSERT lptstr # NIL *>
 
       txtstr := M3toC.SharedTtoS (txt);
-      EVAL Cstring.strcpy (lptstr, txtstr);
+      EVAL Cstring.memcpy (lptstr, txtstr, len);
       M3toC.FreeSharedS (txt, txtstr);
 
       EVAL WinBase.GlobalUnlock(hglb);

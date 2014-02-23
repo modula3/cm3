@@ -217,6 +217,98 @@ SWIGEXPORT bool QObject_eventFilter(QObject * self, QObject * m3arg2, QEvent * m
 }
 
 
+SWIGEXPORT QString * Tr(char * sourceText, char * m3arg2, int m3arg3) {
+  char *arg1 = (char *) 0 ;
+  char *arg2 = (char *) 0 ;
+  int arg3 ;
+  QString * cresult ;
+  
+  {
+    arg1 = sourceText;
+  }
+  {
+    arg2 = m3arg2;
+  }
+  arg3 = (int)m3arg3; 
+  *(QString **)&cresult = new QString((const QString &)QObject::tr((char const *)arg1,(char const *)arg2,arg3));
+  return cresult;
+}
+
+
+SWIGEXPORT QString * Tr1(char * sourceText, char * m3arg2) {
+  char *arg1 = (char *) 0 ;
+  char *arg2 = (char *) 0 ;
+  QString * cresult ;
+  
+  {
+    arg1 = sourceText;
+  }
+  {
+    arg2 = m3arg2;
+  }
+  *(QString **)&cresult = new QString((const QString &)QObject::tr((char const *)arg1,(char const *)arg2));
+  return cresult;
+}
+
+
+SWIGEXPORT QString * Tr2(char * sourceText) {
+  char *arg1 = (char *) 0 ;
+  QString * cresult ;
+  
+  {
+    arg1 = sourceText;
+  }
+  *(QString **)&cresult = new QString((const QString &)QObject::tr((char const *)arg1));
+  return cresult;
+}
+
+
+SWIGEXPORT QString * TrUtf8(char * sourceText, char * m3arg2, int m3arg3) {
+  char *arg1 = (char *) 0 ;
+  char *arg2 = (char *) 0 ;
+  int arg3 ;
+  QString * cresult ;
+  
+  {
+    arg1 = sourceText;
+  }
+  {
+    arg2 = m3arg2;
+  }
+  arg3 = (int)m3arg3; 
+  *(QString **)&cresult = new QString((const QString &)QObject::trUtf8((char const *)arg1,(char const *)arg2,arg3));
+  return cresult;
+}
+
+
+SWIGEXPORT QString * TrUtf81(char * sourceText, char * m3arg2) {
+  char *arg1 = (char *) 0 ;
+  char *arg2 = (char *) 0 ;
+  QString * cresult ;
+  
+  {
+    arg1 = sourceText;
+  }
+  {
+    arg2 = m3arg2;
+  }
+  *(QString **)&cresult = new QString((const QString &)QObject::trUtf8((char const *)arg1,(char const *)arg2));
+  return cresult;
+}
+
+
+SWIGEXPORT QString * TrUtf82(char * sourceText) {
+  char *arg1 = (char *) 0 ;
+  QString * cresult ;
+  
+  {
+    arg1 = sourceText;
+  }
+  *(QString **)&cresult = new QString((const QString &)QObject::trUtf8((char const *)arg1));
+  return cresult;
+}
+
+
 SWIGEXPORT QString * QObject_objectName(QObject const * self) {
   QObject *arg1 = (QObject *) 0 ;
   QString * cresult ;
@@ -326,116 +418,6 @@ SWIGEXPORT void QObject_removeEventFilter(QObject * self, QObject * m3arg2) {
   arg1 = *(QObject **)&self; 
   arg2 = *(QObject **)&m3arg2; 
   (arg1)->removeEventFilter(arg2);
-}
-
-
-SWIGEXPORT bool Connect(QObject const * sender, char * signal, QObject const * receiver, char * member, Qt::ConnectionType m3arg5) {
-  QObject *arg1 = (QObject *) 0 ;
-  char *arg2 = (char *) 0 ;
-  QObject *arg3 = (QObject *) 0 ;
-  char *arg4 = (char *) 0 ;
-  Qt::ConnectionType arg5 = (Qt::ConnectionType) Qt::AutoConnection ;
-  bool result;
-  bool cresult ;
-  
-  arg1 = *(QObject **)&sender; 
-  {
-    arg2 = signal;
-  }
-  arg3 = *(QObject **)&receiver; 
-  {
-    arg4 = member;
-  }
-  arg5 = (Qt::ConnectionType)m3arg5; 
-  result = (bool)QObject::connect((QObject const *)arg1,(char const *)arg2,(QObject const *)arg3,(char const *)arg4,arg5);
-  cresult = result; 
-  return cresult;
-}
-
-
-SWIGEXPORT bool QObject_connect1(QObject const * self, QObject const * sender, char * signal, char * member, Qt::ConnectionType type) {
-  QObject *arg1 = (QObject *) 0 ;
-  QObject *arg2 = (QObject *) 0 ;
-  char *arg3 = (char *) 0 ;
-  char *arg4 = (char *) 0 ;
-  Qt::ConnectionType arg5 = (Qt::ConnectionType) Qt::AutoConnection ;
-  bool result;
-  bool cresult ;
-  
-  arg1 = *(QObject **)&self; 
-  arg2 = *(QObject **)&sender; 
-  {
-    arg3 = signal;
-  }
-  {
-    arg4 = member;
-  }
-  arg5 = (Qt::ConnectionType)type; 
-  result = (bool)((QObject const *)arg1)->connect((QObject const *)arg2,(char const *)arg3,(char const *)arg4,arg5);
-  cresult = result; 
-  return cresult;
-}
-
-
-SWIGEXPORT bool Disconnect(QObject const * sender, char * signal, QObject const * receiver, char * member) {
-  QObject *arg1 = (QObject *) 0 ;
-  char *arg2 = (char *) 0 ;
-  QObject *arg3 = (QObject *) 0 ;
-  char *arg4 = (char *) 0 ;
-  bool result;
-  bool cresult ;
-  
-  arg1 = *(QObject **)&sender; 
-  {
-    arg2 = signal;
-  }
-  arg3 = *(QObject **)&receiver; 
-  {
-    arg4 = member;
-  }
-  result = (bool)QObject::disconnect((QObject const *)arg1,(char const *)arg2,(QObject const *)arg3,(char const *)arg4);
-  cresult = result; 
-  return cresult;
-}
-
-
-SWIGEXPORT bool QObject_disconnect1(QObject * self, char * signal, QObject const * receiver, char * member) {
-  QObject *arg1 = (QObject *) 0 ;
-  char *arg2 = (char *) 0 ;
-  QObject *arg3 = (QObject *) 0 ;
-  char *arg4 = (char *) 0 ;
-  bool result;
-  bool cresult ;
-  
-  arg1 = *(QObject **)&self; 
-  {
-    arg2 = signal;
-  }
-  arg3 = *(QObject **)&receiver; 
-  {
-    arg4 = member;
-  }
-  result = (bool)(arg1)->disconnect((char const *)arg2,(QObject const *)arg3,(char const *)arg4);
-  cresult = result; 
-  return cresult;
-}
-
-
-SWIGEXPORT bool QObject_disconnect2(QObject * self, QObject const * receiver, char * member) {
-  QObject *arg1 = (QObject *) 0 ;
-  QObject *arg2 = (QObject *) 0 ;
-  char *arg3 = (char *) 0 ;
-  bool result;
-  bool cresult ;
-  
-  arg1 = *(QObject **)&self; 
-  arg2 = *(QObject **)&receiver; 
-  {
-    arg3 = member;
-  }
-  result = (bool)(arg1)->disconnect((QObject const *)arg2,(char const *)arg3);
-  cresult = result; 
-  return cresult;
 }
 
 

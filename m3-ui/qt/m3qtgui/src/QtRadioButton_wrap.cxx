@@ -215,6 +215,16 @@ SWIGEXPORT QSize * QRadioButton_sizeHint(QRadioButton const * self) {
 }
 
 
+SWIGEXPORT QSize * QRadioButton_minimumSizeHint(QRadioButton const * self) {
+  QRadioButton *arg1 = (QRadioButton *) 0 ;
+  QSize * cresult ;
+  
+  arg1 = *(QRadioButton **)&self; 
+  *(QSize **)&cresult = new QSize((const QSize &)((QRadioButton const *)arg1)->minimumSizeHint());
+  return cresult;
+}
+
+
 SWIGEXPORT void Delete_QRadioButton(QRadioButton * self) {
   QRadioButton *arg1 = (QRadioButton *) 0 ;
   

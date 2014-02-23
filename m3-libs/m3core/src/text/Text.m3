@@ -28,12 +28,12 @@ PROCEDURE Empty (t: T): BOOLEAN =
 PROCEDURE Equal (t, u: T): BOOLEAN =
   VAR Result : BOOLEAN; 
   BEGIN
-    TextStats.NoteGround (TextStats.Op.Equal); 
+    (*47 TextStats.NoteGround (TextStats.Op.Equal); 74*) 
     IF TextClass.Old 
     THEN Result := OldEqual (t, u);
     ELSE Result := NewEqual (t, u);
     END;
-    TextStats.NoteFinished (TextStats.Op.Equal); 
+    (*47 TextStats.NoteFinished (TextStats.Op.Equal); 74*) 
     RETURN Result
   END Equal;
 
@@ -65,26 +65,26 @@ PROCEDURE EqualBuf (t, u: TEXT;  len: CARDINAL): BOOLEAN =
   BEGIN
     j := len - NUMBER (buf_t);  (* last index that will fill a buffer *)
     WHILE (i <= j) DO
-      TextStats.NoteGround (TextStats.Op.get_wide_chars); 
+      (*47 TextStats.NoteGround (TextStats.Op.get_wide_chars); 74*) 
       t.get_wide_chars (buf_t, i);
-      TextStats.NoteFinished (TextStats.Op.get_wide_chars); 
-      TextStats.NoteGround (TextStats.Op.get_wide_chars); 
+      (*47 TextStats.NoteFinished (TextStats.Op.get_wide_chars); 74*) 
+      (*47 TextStats.NoteGround (TextStats.Op.get_wide_chars); 74*) 
       u.get_wide_chars (buf_u, i);
-      TextStats.NoteFinished (TextStats.Op.get_wide_chars); 
+      (*47 TextStats.NoteFinished (TextStats.Op.get_wide_chars); 74*) 
       IF (buf_t # buf_u) THEN RETURN FALSE; END;
       INC (i, NUMBER (buf_t));
-      TextStats.NoteIter (TextStats.Op.Equal); 
+      (*47 TextStats.NoteIter (TextStats.Op.Equal); 74*) 
     END;
 
     j := len - i;  (* # remaining characters *)
     IF (j <= 0) THEN RETURN TRUE; END;
 
-    TextStats.NoteGround (TextStats.Op.get_wide_chars); 
+    (*47 TextStats.NoteGround (TextStats.Op.get_wide_chars); 74*) 
     t.get_wide_chars (buf_t, i);
-    TextStats.NoteFinished (TextStats.Op.get_wide_chars); 
-    TextStats.NoteGround (TextStats.Op.get_wide_chars); 
+    (*47 TextStats.NoteFinished (TextStats.Op.get_wide_chars); 74*) 
+    (*47 TextStats.NoteGround (TextStats.Op.get_wide_chars); 74*) 
     u.get_wide_chars (buf_u, i);
-    TextStats.NoteFinished (TextStats.Op.get_wide_chars); 
+    (*47 TextStats.NoteFinished (TextStats.Op.get_wide_chars); 74*) 
     RETURN SUBARRAY (buf_t, 0, j) = SUBARRAY (buf_u, 0, j);
   END EqualBuf;
 
@@ -127,26 +127,26 @@ PROCEDURE EqualBuf8 (t, u: TEXT;  len: CARDINAL): BOOLEAN =
   BEGIN
     j := len - NUMBER (buf_t);  (* last index that will fill a buffer *)
     WHILE (i <= j) DO
-      TextStats.NoteGround (TextStats.Op.get_chars); 
+      (*47 TextStats.NoteGround (TextStats.Op.get_chars); 74*) 
       t.get_chars (buf_t, i);
-      TextStats.NoteFinished (TextStats.Op.get_chars); 
-      TextStats.NoteGround (TextStats.Op.get_chars); 
+      (*47 TextStats.NoteFinished (TextStats.Op.get_chars); 74*) 
+      (*47 TextStats.NoteGround (TextStats.Op.get_chars); 74*) 
       u.get_chars (buf_u, i);
-      TextStats.NoteFinished (TextStats.Op.get_chars); 
+      (*47 TextStats.NoteFinished (TextStats.Op.get_chars); 74*) 
       IF (buf_t # buf_u) THEN RETURN FALSE; END;
       INC (i, NUMBER (buf_t));
-      TextStats.NoteIter (TextStats.Op.Equal); 
+      (*47 TextStats.NoteIter (TextStats.Op.Equal); 74*) 
     END;
 
     j := len - i;  (* # remaining characters *)
     IF (j <= 0) THEN RETURN TRUE; END;
 
-    TextStats.NoteGround (TextStats.Op.get_chars); 
+    (*47 TextStats.NoteGround (TextStats.Op.get_chars); 74*) 
     t.get_chars (buf_t, i);
-    TextStats.NoteFinished (TextStats.Op.get_chars); 
-    TextStats.NoteGround (TextStats.Op.get_chars); 
+    (*47 TextStats.NoteFinished (TextStats.Op.get_chars); 74*) 
+    (*47 TextStats.NoteGround (TextStats.Op.get_chars); 74*) 
     u.get_chars (buf_u, i);
-    TextStats.NoteFinished (TextStats.Op.get_chars); 
+    (*47 TextStats.NoteFinished (TextStats.Op.get_chars); 74*) 
     RETURN SUBARRAY (buf_t, 0, j) = SUBARRAY (buf_u, 0, j);
   END EqualBuf8;
 
@@ -160,38 +160,38 @@ PROCEDURE EqualBufAny (t, u: TEXT;  len: CARDINAL): BOOLEAN =
   BEGIN
     j := len - NUMBER (buf_t);  (* last index that will fill a buffer *)
     WHILE (i <= j) DO
-      TextStats.NoteGround (TextStats.Op.get_wide_chars); 
+      (*47 TextStats.NoteGround (TextStats.Op.get_wide_chars); 74*) 
       t.get_wide_chars (buf_t, i);
-      TextStats.NoteFinished (TextStats.Op.get_wide_chars); 
-      TextStats.NoteGround (TextStats.Op.get_wide_chars); 
+      (*47 TextStats.NoteFinished (TextStats.Op.get_wide_chars); 74*) 
+      (*47 TextStats.NoteGround (TextStats.Op.get_wide_chars); 74*) 
       u.get_wide_chars (buf_u, i);
-      TextStats.NoteFinished (TextStats.Op.get_wide_chars); 
+      (*47 TextStats.NoteFinished (TextStats.Op.get_wide_chars); 74*) 
       IF (buf_t # buf_u) THEN RETURN FALSE; END;
       INC (i, NUMBER (buf_t));
-      TextStats.NoteIter (TextStats.Op.Equal); 
+      (*47 TextStats.NoteIter (TextStats.Op.Equal); 74*) 
     END;
 
     j := len - i;  (* # remaining characters *)
     IF (j <= 0) THEN RETURN TRUE; END;
 
-    TextStats.NoteGround (TextStats.Op.get_wide_chars); 
+    (*47 TextStats.NoteGround (TextStats.Op.get_wide_chars); 74*) 
     t.get_wide_chars (buf_t, i);
-    TextStats.NoteFinished (TextStats.Op.get_wide_chars); 
-    TextStats.NoteGround (TextStats.Op.get_wide_chars); 
+    (*47 TextStats.NoteFinished (TextStats.Op.get_wide_chars); 74*) 
+    (*47 TextStats.NoteGround (TextStats.Op.get_wide_chars); 74*) 
     u.get_wide_chars (buf_u, i);
-    TextStats.NoteFinished (TextStats.Op.get_wide_chars); 
+    (*47 TextStats.NoteFinished (TextStats.Op.get_wide_chars); 74*) 
     RETURN SUBARRAY (buf_t, 0, j) = SUBARRAY (buf_u, 0, j);
   END EqualBufAny;
 
 PROCEDURE Compare (t, u: T): [-1..1] =
   VAR Result : [-1..1]; 
   BEGIN
-    TextStats.NoteGround (TextStats.Op.Compare); 
+    (*47 TextStats.NoteGround (TextStats.Op.Compare); 74*) 
     IF TextClass.Old 
     THEN Result := OldCompare (t, u);
     ELSE Result := NewCompare (t, u);
     END;
-    TextStats.NoteFinished (TextStats.Op.Compare); 
+    (*47 TextStats.NoteFinished (TextStats.Op.Compare); 74*) 
     RETURN Result
   END Compare;
 
@@ -226,17 +226,17 @@ PROCEDURE CompareBuf (t, u: TEXT;  len_t, len_u: CARDINAL): [-1 .. 1] =
     buf_u   : ARRAY [0..63] OF WIDECHAR;
   BEGIN
     WHILE (i < min_len) DO
-      TextStats.NoteGround (TextStats.Op.get_wide_chars); 
+      (*47 TextStats.NoteGround (TextStats.Op.get_wide_chars); 74*) 
       t.get_wide_chars (buf_t, i);
-      TextStats.NoteFinished (TextStats.Op.get_wide_chars); 
-      TextStats.NoteGround (TextStats.Op.get_wide_chars); 
+      (*47 TextStats.NoteFinished (TextStats.Op.get_wide_chars); 74*) 
+      (*47 TextStats.NoteGround (TextStats.Op.get_wide_chars); 74*) 
       u.get_wide_chars (buf_u, i);
-      TextStats.NoteFinished (TextStats.Op.get_wide_chars); 
+      (*47 TextStats.NoteFinished (TextStats.Op.get_wide_chars); 74*) 
       cur_len := MIN (min_len - i, NUMBER (buf_t));
       j := String16.Compare (ADR (buf_t[0]), cur_len, ADR (buf_u[0]), cur_len);
       IF (j # 0) THEN RETURN j; END;
       INC (i, NUMBER (buf_t));
-      TextStats.NoteIter (TextStats.Op.Compare); 
+      (*47 TextStats.NoteIter (TextStats.Op.Compare); 74*) 
     END;
 
     IF (len_t = len_u) THEN RETURN 0; END;
@@ -285,17 +285,17 @@ PROCEDURE CompareBuf8 (t, u: TEXT;  len_t, len_u: CARDINAL): [-1 .. 1] =
     buf_u   : ARRAY [0..63] OF CHAR;
   BEGIN
     WHILE (i < min_len) DO
-      TextStats.NoteGround (TextStats.Op.get_chars); 
+      (*47 TextStats.NoteGround (TextStats.Op.get_chars); 74*) 
       t.get_chars (buf_t, i);
-      TextStats.NoteFinished (TextStats.Op.get_chars); 
-      TextStats.NoteGround (TextStats.Op.get_chars); 
+      (*47 TextStats.NoteFinished (TextStats.Op.get_chars); 74*) 
+      (*47 TextStats.NoteGround (TextStats.Op.get_chars); 74*) 
       u.get_chars (buf_u, i);
-      TextStats.NoteFinished (TextStats.Op.get_chars); 
+      (*47 TextStats.NoteFinished (TextStats.Op.get_chars); 74*) 
       cur_len := MIN (min_len - i, NUMBER (buf_t));
       j := String8.Compare (ADR (buf_t[0]), cur_len, ADR (buf_u[0]), cur_len);
       IF (j # 0) THEN RETURN j; END;
       INC (i, NUMBER (buf_t));
-      TextStats.NoteIter (TextStats.Op.Compare); 
+      (*47 TextStats.NoteIter (TextStats.Op.Compare); 74*) 
     END;
 
     IF (len_t = len_u) THEN RETURN 0; END;
@@ -313,17 +313,17 @@ PROCEDURE CompareBufAny (t, u: TEXT;  len_t, len_u: CARDINAL): [-1 .. 1] =
     buf_u   : ARRAY [0..63] OF WIDECHAR;
   BEGIN
     WHILE (i < min_len) DO
-      TextStats.NoteGround (TextStats.Op.get_wide_chars); 
+      (*47 TextStats.NoteGround (TextStats.Op.get_wide_chars); 74*) 
       t.get_wide_chars (buf_t, i);
-      TextStats.NoteFinished (TextStats.Op.get_wide_chars); 
-      TextStats.NoteGround (TextStats.Op.get_wide_chars); 
+      (*47 TextStats.NoteFinished (TextStats.Op.get_wide_chars); 74*) 
+      (*47 TextStats.NoteGround (TextStats.Op.get_wide_chars); 74*) 
       u.get_wide_chars (buf_u, i);
-      TextStats.NoteFinished (TextStats.Op.get_wide_chars); 
+      (*47 TextStats.NoteFinished (TextStats.Op.get_wide_chars); 74*) 
       cur_len := MIN (min_len - i, NUMBER (buf_t));
       j := String16.Compare (ADR (buf_t[0]), cur_len, ADR (buf_u[0]), cur_len);
       IF (j # 0) THEN RETURN j; END;
       INC (i, NUMBER (buf_t));
-      TextStats.NoteIter (TextStats.Op.Compare); 
+      (*47 TextStats.NoteIter (TextStats.Op.Compare); 74*) 
     END;
 
     IF (len_t = len_u) THEN RETURN 0; END;
@@ -338,12 +338,12 @@ PROCEDURE Cat (t, u: TEXT): TEXT =
 PROCEDURE Hash (t: T): Word.T =
   VAR Result : Word.T; 
   BEGIN
-    TextStats.NoteGround (TextStats.Op.Hash); 
+    (*47 TextStats.NoteGround (TextStats.Op.Hash); 74*) 
     IF TextClass.Old 
     THEN Result := OldHash (t);
     ELSE Result := NewHash (t);
     END;
-    TextStats.NoteFinished (TextStats.Op.Hash); 
+    (*47 TextStats.NoteFinished (TextStats.Op.Hash); 74*) 
     RETURN Result
   END Hash;
 
@@ -364,13 +364,13 @@ PROCEDURE HashBuf (t: T;  len: CARDINAL): Word.T =
     buf    : ARRAY [0..127] OF WIDECHAR;
   BEGIN
     WHILE start < len DO
-      TextStats.NoteGround (TextStats.Op.get_wide_chars); 
+      (*47 TextStats.NoteGround (TextStats.Op.get_wide_chars); 74*) 
       t.get_wide_chars (buf, start);
-      TextStats.NoteFinished (TextStats.Op.get_wide_chars); 
+      (*47 TextStats.NoteFinished (TextStats.Op.get_wide_chars); 74*) 
       result := String16.Hash (ADR (buf[0]),
                   MIN (len - start, NUMBER (buf)), result);
       INC (start, NUMBER (buf));
-      TextStats.NoteIter (TextStats.Op.Hash); 
+      (*47 TextStats.NoteIter (TextStats.Op.Hash); 74*) 
     END;
     RETURN result;
   END HashBuf;
@@ -400,13 +400,13 @@ PROCEDURE HashBuf8 (t: T;  len: CARDINAL): Word.T =
     buf    : ARRAY [0..127] OF CHAR;
   BEGIN
     WHILE start < len DO
-      TextStats.NoteGround (TextStats.Op.get_chars); 
+      (*47 TextStats.NoteGround (TextStats.Op.get_chars); 74*) 
       t.get_chars (buf, start);
-      TextStats.NoteFinished (TextStats.Op.get_chars); 
+      (*47 TextStats.NoteFinished (TextStats.Op.get_chars); 74*) 
       result := String8.Hash (ADR (buf[0]),
                   MIN (len - start, NUMBER (buf)), result);
       INC (start, NUMBER (buf));
-      TextStats.NoteIter (TextStats.Op.Hash); 
+      (*47 TextStats.NoteIter (TextStats.Op.Hash); 74*) 
     END;
     RETURN result;
   END HashBuf8;
@@ -419,13 +419,13 @@ PROCEDURE HashBufAny (t: T;  len: CARDINAL): Word.T =
     buf    : ARRAY [0..127] OF WIDECHAR;
   BEGIN
     WHILE start < len DO
-      TextStats.NoteGround (TextStats.Op.get_wide_chars); 
+      (*47 TextStats.NoteGround (TextStats.Op.get_wide_chars); 74*) 
       t.get_wide_chars (buf, start);
-      TextStats.NoteFinished (TextStats.Op.get_wide_chars); 
+      (*47 TextStats.NoteFinished (TextStats.Op.get_wide_chars); 74*) 
       result := String16.Hash (ADR (buf[0]),
                   MIN (len - start, NUMBER (buf)), result);
       INC (start, NUMBER (buf));
-      TextStats.NoteIter (TextStats.Op.Hash); 
+      (*47 TextStats.NoteIter (TextStats.Op.Hash); 74*) 
     END;
     RETURN result;
   END HashBufAny;
@@ -433,13 +433,13 @@ PROCEDURE HashBufAny (t: T;  len: CARDINAL): Word.T =
 PROCEDURE HasWideChars (t: T): BOOLEAN =
   VAR Result : BOOLEAN; 
   BEGIN
-    TextStats.NoteGround (TextStats.Op.HasWideChars); 
+    (*47 TextStats.NoteGround (TextStats.Op.HasWideChars); 74*) 
     IF TextClass.Old 
     THEN Result := NewHasWideChars (t);
 (* Since OldHasWideChars, though very efficient, is buggy, we don't use it. *) 
     ELSE Result := NewHasWideChars (t);
     END;
-    TextStats.NoteFinished (TextStats.Op.HasWideChars); 
+    (*47 TextStats.NoteFinished (TextStats.Op.HasWideChars); 74*) 
     RETURN Result
   END HasWideChars;
 
@@ -467,15 +467,15 @@ PROCEDURE HasWideCharsBuf16 (t: T;  len: CARDINAL): BOOLEAN =
     buf    : ARRAY [0..127] OF WIDECHAR;
   BEGIN
     WHILE start < len DO
-      TextStats.NoteGround (TextStats.Op.get_wide_chars); 
+      (*47 TextStats.NoteGround (TextStats.Op.get_wide_chars); 74*) 
       t.get_wide_chars (buf, start);
-      TextStats.NoteFinished (TextStats.Op.get_wide_chars); 
+      (*47 TextStats.NoteFinished (TextStats.Op.get_wide_chars); 74*) 
       IF String16.HasWideChars 
            (ADR (buf[0]), MIN (len - start, NUMBER (buf)))
       THEN RETURN TRUE; 
       ELSE 
         INC (start, NUMBER (buf));
-        TextStats.NoteIter (TextStats.Op.HasWideChars); 
+        (*47 TextStats.NoteIter (TextStats.Op.HasWideChars); 74*) 
       END; 
     END;
     RETURN FALSE;
@@ -484,41 +484,41 @@ PROCEDURE HasWideCharsBuf16 (t: T;  len: CARDINAL): BOOLEAN =
 PROCEDURE GetChar (t: T; i: CARDINAL): CHAR =
   VAR Result : CHAR;
   BEGIN
-    TextStats.NoteGround (TextStats.Op.GetChar); 
-    TextStats.NoteGround (TextStats.Op.get_char); 
+    (*47 TextStats.NoteGround (TextStats.Op.GetChar); 74*) 
+    (*47 TextStats.NoteGround (TextStats.Op.get_char); 74*) 
     Result := t.get_char (i);
-    TextStats.NoteFinished (TextStats.Op.get_char); 
-    TextStats.NoteFinished (TextStats.Op.GetChar); 
+    (*47 TextStats.NoteFinished (TextStats.Op.get_char); 74*) 
+    (*47 TextStats.NoteFinished (TextStats.Op.GetChar); 74*) 
     RETURN Result 
   END GetChar;
 
 PROCEDURE GetWideChar (t: T; i: CARDINAL): WIDECHAR =
   VAR Result : WIDECHAR;
   BEGIN
-    TextStats.NoteGround (TextStats.Op.GetWideChar); 
-    TextStats.NoteGround (TextStats.Op.get_wide_char); 
+    (*47 TextStats.NoteGround (TextStats.Op.GetWideChar); 74*) 
+    (*47 TextStats.NoteGround (TextStats.Op.get_wide_char); 74*) 
     Result := t.get_wide_char (i);
-    TextStats.NoteFinished (TextStats.Op.get_wide_char); 
-    TextStats.NoteFinished (TextStats.Op.GetWideChar); 
+    (*47 TextStats.NoteFinished (TextStats.Op.get_wide_char); 74*) 
+    (*47 TextStats.NoteFinished (TextStats.Op.GetWideChar); 74*) 
     RETURN Result 
   END GetWideChar;
 
 PROCEDURE SetChars (VAR a: ARRAY OF CHAR;  t: T;  start: CARDINAL) =
   BEGIN
-    TextStats.NoteGround (TextStats.Op.SetChars); 
-    TextStats.NoteGround (TextStats.Op.get_chars); 
+    (*47 TextStats.NoteGround (TextStats.Op.SetChars); 74*) 
+    (*47 TextStats.NoteGround (TextStats.Op.get_chars); 74*) 
     t.get_chars (a, start);
-    TextStats.NoteFinished (TextStats.Op.get_chars); 
-    TextStats.NoteFinished (TextStats.Op.SetChars); 
+    (*47 TextStats.NoteFinished (TextStats.Op.get_chars); 74*) 
+    (*47 TextStats.NoteFinished (TextStats.Op.SetChars); 74*) 
   END SetChars;
 
 PROCEDURE SetWideChars (VAR a: ARRAY OF WIDECHAR;  t: T;  start: CARDINAL) =
   BEGIN
-    TextStats.NoteGround (TextStats.Op.SetWideChars); 
-    TextStats.NoteGround (TextStats.Op.get_wide_chars); 
+    (*47 TextStats.NoteGround (TextStats.Op.SetWideChars); 74*) 
+    (*47 TextStats.NoteGround (TextStats.Op.get_wide_chars); 74*) 
     t.get_wide_chars (a, start);
-    TextStats.NoteFinished (TextStats.Op.get_wide_chars); 
-    TextStats.NoteFinished (TextStats.Op.SetWideChars); 
+    (*47 TextStats.NoteFinished (TextStats.Op.get_wide_chars); 74*) 
+    (*47 TextStats.NoteFinished (TextStats.Op.SetWideChars); 74*) 
   END SetWideChars;
 
 VAR fromCharCache := ARRAY CHAR OF T {NIL, ..}; (* 1-char texts *)
@@ -526,9 +526,9 @@ VAR fromCharCache := ARRAY CHAR OF T {NIL, ..}; (* 1-char texts *)
 PROCEDURE FromChar (c: CHAR): T =
   VAR Result: T; 
   BEGIN
-    TextStats.NoteGround (TextStats.Op.FromChar); 
+    (*47 TextStats.NoteGround (TextStats.Op.FromChar); 74*) 
     Result := FromCharInner (c);
-    TextStats.NoteFinished (TextStats.Op.FromChar); 
+    (*47 TextStats.NoteFinished (TextStats.Op.FromChar); 74*) 
     RETURN Result;
   END FromChar;
 
@@ -546,12 +546,12 @@ PROCEDURE FromWideChar (c: WIDECHAR): T =
   VAR buf: ARRAY [0..0] OF WIDECHAR;
   VAR Result: T; 
   BEGIN
-    TextStats.NoteGround (TextStats.Op.FromWideChar); 
+    (*47 TextStats.NoteGround (TextStats.Op.FromWideChar); 74*) 
     IF ORD (c) <= ORD (LAST (CHAR))
       THEN Result := FromCharInner (VAL (ORD (c), CHAR));
       ELSE buf[0] := c;  Result := Text16.New (buf);
     END;
-    TextStats.NoteFinished (TextStats.Op.FromWideChar); 
+    (*47 TextStats.NoteFinished (TextStats.Op.FromWideChar); 74*) 
     RETURN Result;
   END FromWideChar;
 
@@ -559,12 +559,12 @@ PROCEDURE FromChars (READONLY a: ARRAY OF CHAR): T =
   VAR n := NUMBER (a);
   VAR Result: T; 
   BEGIN
-    TextStats.NoteGround (TextStats.Op.FromChars); 
+    (*47 TextStats.NoteGround (TextStats.Op.FromChars); 74*) 
     IF n = 0 THEN Result := "" 
     ELSIF n = 1 THEN Result := FromCharInner (a [0])
     ELSE Result := Text8.New (a);
     END; 
-    TextStats.NoteFinished (TextStats.Op.FromChars); 
+    (*47 TextStats.NoteFinished (TextStats.Op.FromChars); 74*) 
     RETURN Result;
   END FromChars;
 
@@ -572,12 +572,12 @@ PROCEDURE FromWideChars (READONLY a: ARRAY OF WIDECHAR): T =
   VAR n := NUMBER (a);
   VAR Result: T; 
   BEGIN
-    TextStats.NoteGround (TextStats.Op.FromWideChars); 
+    (*47 TextStats.NoteGround (TextStats.Op.FromWideChars); 74*) 
     IF n = 0 THEN Result := ""
     ELSIF n = 1 THEN Result := FromWideChar (a [0])
     ELSE Result := Text16.New (a)
     END; 
-    TextStats.NoteFinished (TextStats.Op.FromWideChars); 
+    (*47 TextStats.NoteFinished (TextStats.Op.FromWideChars); 74*) 
     RETURN Result;
   END FromWideChars;
 
@@ -587,12 +587,12 @@ PROCEDURE FindChar (t: T;  c: CHAR;  start := 0): INTEGER =
   VAR Result : INTEGER; 
   BEGIN
     FindCharOp := TextStats.Op.FindChar;
-    TextStats.NoteGround (TextStats.Op.FindChar); 
+    (*47 TextStats.NoteGround (TextStats.Op.FindChar); 74*) 
     IF TextClass.Old
     THEN Result := OldFindChar (t, c, start); 
     ELSE Result := NewFindChar (t, c, start);
     END;
-    TextStats.NoteFinished (TextStats.Op.FindChar); 
+    (*47 TextStats.NoteFinished (TextStats.Op.FindChar); 74*) 
     RETURN Result
   END FindChar; 
 
@@ -600,12 +600,12 @@ PROCEDURE FindWideChar (t: T;  c: WIDECHAR;  start := 0): INTEGER =
   VAR Result : INTEGER; 
   BEGIN
     FindCharOp := TextStats.Op.FindWideChar;
-    TextStats.NoteGround (TextStats.Op.FindWideChar); 
+    (*47 TextStats.NoteGround (TextStats.Op.FindWideChar); 74*) 
     IF TextClass.Old
     THEN Result := OldFindWideChar (t, c, start); 
     ELSE Result := NewFindWideChar (t, c, start);
     END;
-    TextStats.NoteFinished (TextStats.Op.FindWideChar); 
+    (*47 TextStats.NoteFinished (TextStats.Op.FindWideChar); 74*) 
     RETURN Result
   END FindWideChar; 
 
@@ -658,13 +658,13 @@ PROCEDURE FindCharBuf (t: T;  c: WIDECHAR;
       IF (i >= len) THEN RETURN -1 END;
       IF (j >= NUMBER (buf)) THEN  
         j := 0;  
-        TextStats.NoteGround (TextStats.Op.get_wide_chars); 
+        (*47 TextStats.NoteGround (TextStats.Op.get_wide_chars); 74*) 
         t.get_wide_chars (buf, i);  
-        TextStats.NoteFinished (TextStats.Op.get_wide_chars); 
+        (*47 TextStats.NoteFinished (TextStats.Op.get_wide_chars); 74*) 
       END;
       IF (buf[j] = c) THEN RETURN i END;
       INC (i);  INC (j);
-      TextStats.NoteIter (FindCharOp); 
+      (*47 TextStats.NoteIter (FindCharOp); 74*) 
     END;
   END FindCharBuf;
 
@@ -746,13 +746,13 @@ PROCEDURE FindCharBuf8 (t: T;  c: CHAR;
       IF (i >= len) THEN RETURN -1 END;
       IF (j >= NUMBER (buf)) THEN  
         j := 0;  
-        TextStats.NoteGround (TextStats.Op.get_chars); 
+        (*47 TextStats.NoteGround (TextStats.Op.get_chars); 74*) 
         t.get_chars (buf, i);  
-        TextStats.NoteFinished (TextStats.Op.get_chars); 
+        (*47 TextStats.NoteFinished (TextStats.Op.get_chars); 74*) 
         END;
       IF (buf[j] = c) THEN RETURN i END;
       INC (i);  INC (j);
-      TextStats.NoteIter (FindCharOp); 
+      (*47 TextStats.NoteIter (FindCharOp); 74*) 
     END;
   END FindCharBuf8;
 
@@ -768,13 +768,13 @@ PROCEDURE FindCharBufAny (t: T;  c: WIDECHAR;
       IF (i >= len) THEN RETURN -1 END;
       IF (j >= NUMBER (buf)) THEN  
         j := 0;  
-        TextStats.NoteGround (TextStats.Op.get_wide_chars); 
+        (*47 TextStats.NoteGround (TextStats.Op.get_wide_chars); 74*) 
         t.get_wide_chars (buf, i);  
-        TextStats.NoteFinished (TextStats.Op.get_wide_chars); 
+        (*47 TextStats.NoteFinished (TextStats.Op.get_wide_chars); 74*) 
         END;
       IF (buf[j] = c) THEN RETURN i END;
       INC (i);  INC (j);
-      TextStats.NoteIter (FindCharOp); 
+      (*47 TextStats.NoteIter (FindCharOp); 74*) 
     END;
   END FindCharBufAny;
 
@@ -782,12 +782,12 @@ PROCEDURE FindCharR (t: T;  c: CHAR; start := LAST (INTEGER)): INTEGER =
   VAR Result : INTEGER; 
   BEGIN
     FindCharOp := TextStats.Op.FindCharR;
-    TextStats.NoteGround (TextStats.Op.FindCharR); 
+    (*47 TextStats.NoteGround (TextStats.Op.FindCharR); 74*) 
     IF TextClass.Old
     THEN Result := OldFindCharR (t, c, start); 
     ELSE Result := NewFindCharR (t, c, start);
     END;
-    TextStats.NoteFinished (TextStats.Op.FindCharR); 
+    (*47 TextStats.NoteFinished (TextStats.Op.FindCharR); 74*) 
     RETURN Result
   END FindCharR; 
 
@@ -796,12 +796,12 @@ PROCEDURE FindWideCharR
   VAR Result : INTEGER; 
   BEGIN
     FindCharOp := TextStats.Op.FindWideCharR;
-    TextStats.NoteGround (TextStats.Op.FindWideCharR); 
+    (*47 TextStats.NoteGround (TextStats.Op.FindWideCharR); 74*) 
     IF TextClass.Old
     THEN Result := OldFindWideCharR (t, c, start); 
     ELSE Result := NewFindWideCharR (t, c, start);
     END;
-    TextStats.NoteFinished (TextStats.Op.FindWideCharR); 
+    (*47 TextStats.NoteFinished (TextStats.Op.FindWideCharR); 74*) 
     RETURN Result
   END FindWideCharR; 
 
@@ -848,14 +848,14 @@ PROCEDURE FindCharRBuf (t: TEXT;  c: WIDECHAR;
     LOOP
       IF (i < 0) THEN RETURN -1 END;
       IF (j < 0) THEN
-        TextStats.NoteGround (TextStats.Op.get_wide_chars); 
+        (*47 TextStats.NoteGround (TextStats.Op.get_wide_chars); 74*) 
         t.get_wide_chars (buf, MAX (0, i - LAST (buf)));
-        TextStats.NoteFinished (TextStats.Op.get_wide_chars); 
+        (*47 TextStats.NoteFinished (TextStats.Op.get_wide_chars); 74*) 
         j := MIN (i, LAST (buf));
       END;
       IF (buf[j] = c) THEN RETURN i END;
       DEC (i);  DEC (j);
-      TextStats.NoteIter (FindCharOp); 
+      (*47 TextStats.NoteIter (FindCharOp); 74*) 
     END;
   END FindCharRBuf;
 
@@ -927,14 +927,14 @@ PROCEDURE FindCharRBuf8 (t: TEXT;  c: CHAR;
     LOOP
       IF (i < 0) THEN RETURN -1 END;
       IF (j < 0) THEN
-        TextStats.NoteGround (TextStats.Op.get_chars); 
+        (*47 TextStats.NoteGround (TextStats.Op.get_chars); 74*) 
         t.get_chars (buf, MAX (0, i - LAST (buf)));
-        TextStats.NoteFinished (TextStats.Op.get_chars); 
+        (*47 TextStats.NoteFinished (TextStats.Op.get_chars); 74*) 
         j := MIN (i, LAST (buf));
       END;
       IF (buf[j] = c) THEN RETURN i END;
       DEC (i);  DEC (j);
-      TextStats.NoteIter (FindCharOp); 
+      (*47 TextStats.NoteIter (FindCharOp); 74*) 
     END
   END FindCharRBuf8;
 
@@ -949,14 +949,14 @@ PROCEDURE FindCharRBufAny (t: TEXT;  c: WIDECHAR;
     LOOP
       IF (i < 0) THEN RETURN -1 END;
       IF (j < 0) THEN
-        TextStats.NoteGround (TextStats.Op.get_wide_chars); 
+        (*47 TextStats.NoteGround (TextStats.Op.get_wide_chars); 74*) 
         t.get_wide_chars (buf, MAX (0, i - LAST (buf)));
-        TextStats.NoteFinished (TextStats.Op.get_wide_chars); 
+        (*47 TextStats.NoteFinished (TextStats.Op.get_wide_chars); 74*) 
         j := MIN (i, LAST (buf));
       END;
       IF (buf[j] = c) THEN RETURN i END;
       DEC (i);  DEC (j);
-      TextStats.NoteIter (FindCharOp); 
+      (*47 TextStats.NoteIter (FindCharOp); 74*) 
     END;
   END FindCharRBufAny;
 

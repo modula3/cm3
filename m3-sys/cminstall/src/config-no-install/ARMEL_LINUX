@@ -1,10 +1,2 @@
 readonly TARGET = "ARMEL_LINUX" % code generation target
-readonly GNU_PLATFORM = "arm-linux-gnueabi" % "cpu-os" string for GNU
-
-SYSTEM_CC = "arm-linux-gnueabi-gcc -gstabs+ -fPIC" % C compiler
-SYSTEM_ASM = "arm-linux-gnueabi-as" % Assembler
-
-m3back_m32 = "" % -m32 not allowed
-
-include("ARM.common")
-include("Linux.common")
+include("ARM_LINUX.common")

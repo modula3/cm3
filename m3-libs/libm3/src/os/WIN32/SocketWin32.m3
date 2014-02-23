@@ -3,7 +3,7 @@
 
 UNSAFE MODULE SocketWin32 EXPORTS Socket;
 
-IMPORT Atom, AtomList, Ctypes, File, FileWin32;
+IMPORT Atom, AtomList, Ctypes, File, FileWin32, WinDef;
 IMPORT OSError, OSErrorWin32, Process, Thread;
 FROM WinSock IMPORT accept, AF_INET, bind, closesocket, connect, FIONREAD,
   gethostbyname, gethostname, getpeername, getsockname, htons,
@@ -56,7 +56,7 @@ PROCEDURE Create (reliable: BOOLEAN): T
     Map = ARRAY BOOLEAN OF INTEGER { SOCK_DGRAM, SOCK_STREAM };
   VAR
     t    := NEW (T, handle := NIL, ds := FileWin32.ReadWrite);
-    True : BOOL := 1;
+    True : WinDef.BOOL := 1;
   BEGIN
     IF NOT init_done THEN Init (); END;
     t.sock := socket (AF_INET, Map[reliable], 0);

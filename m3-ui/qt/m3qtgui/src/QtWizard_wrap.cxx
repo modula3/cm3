@@ -426,10 +426,10 @@ SWIGEXPORT void QWizard_setButtonText(QWizard * self, QWizard::WizardButton whic
 }
 
 
-SWIGEXPORT QString *  QWizard_buttonText(QWizard const * self, QWizard::WizardButton which) {
+SWIGEXPORT QString * QWizard_buttonText(QWizard const * self, QWizard::WizardButton which) {
   QWizard *arg1 = (QWizard *) 0 ;
   QWizard::WizardButton arg2 ;
-  QString *  cresult ;
+  QString * cresult ;
   
   arg1 = *(QWizard **)&self; 
   arg2 = (QWizard::WizardButton)which; 
@@ -532,6 +532,28 @@ SWIGEXPORT QPixmap * QWizard_pixmap(QWizard const * self, QWizard::WizardPixmap 
 }
 
 
+SWIGEXPORT void QWizard_setSideWidget(QWizard * self, QWidget * widget) {
+  QWizard *arg1 = (QWizard *) 0 ;
+  QWidget *arg2 = (QWidget *) 0 ;
+  
+  arg1 = *(QWizard **)&self; 
+  arg2 = *(QWidget **)&widget; 
+  (arg1)->setSideWidget(arg2);
+}
+
+
+SWIGEXPORT QWidget * QWizard_sideWidget(QWizard const * self) {
+  QWizard *arg1 = (QWizard *) 0 ;
+  QWidget *result = 0 ;
+  QWidget * cresult ;
+  
+  arg1 = *(QWizard **)&self; 
+  result = (QWidget *)((QWizard const *)arg1)->sideWidget();
+  *(QWidget **)&cresult = result; 
+  return cresult;
+}
+
+
 SWIGEXPORT void QWizard_setDefaultProperty(QWizard * self, char * className, char * property, char * changedSignal) {
   QWizard *arg1 = (QWizard *) 0 ;
   char *arg2 = (char *) 0 ;
@@ -628,9 +650,9 @@ SWIGEXPORT void QWizardPage_setTitle(QWizardPage * self, QString * title) {
 }
 
 
-SWIGEXPORT QString *  QWizardPage_title(QWizardPage const * self) {
+SWIGEXPORT QString * QWizardPage_title(QWizardPage const * self) {
   QWizardPage *arg1 = (QWizardPage *) 0 ;
-  QString *  cresult ;
+  QString * cresult ;
   
   arg1 = *(QWizardPage **)&self; 
   *(QString **)&cresult = new QString((const QString &)((QWizardPage const *)arg1)->title());
@@ -648,9 +670,9 @@ SWIGEXPORT void QWizardPage_setSubTitle(QWizardPage * self, QString * subTitle) 
 }
 
 
-SWIGEXPORT QString *  QWizardPage_subTitle(QWizardPage const * self) {
+SWIGEXPORT QString * QWizardPage_subTitle(QWizardPage const * self) {
   QWizardPage *arg1 = (QWizardPage *) 0 ;
-  QString *  cresult ;
+  QString * cresult ;
   
   arg1 = *(QWizardPage **)&self; 
   *(QString **)&cresult = new QString((const QString &)((QWizardPage const *)arg1)->subTitle());
@@ -738,10 +760,10 @@ SWIGEXPORT void QWizardPage_setButtonText(QWizardPage * self, QWizard::WizardBut
 }
 
 
-SWIGEXPORT QString *  QWizardPage_buttonText(QWizardPage const * self, QWizard::WizardButton which) {
+SWIGEXPORT QString * QWizardPage_buttonText(QWizardPage const * self, QWizard::WizardButton which) {
   QWizardPage *arg1 = (QWizardPage *) 0 ;
   QWizard::WizardButton arg2 ;
-  QString *  cresult ;
+  QString * cresult ;
   
   arg1 = *(QWizardPage **)&self; 
   arg2 = (QWizard::WizardButton)which; 

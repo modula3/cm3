@@ -259,6 +259,16 @@ SWIGEXPORT QString * QStringListBase_at(QList< QString > const * self, int i) {
 }
 
 
+SWIGEXPORT void QStringListBase_reserve(QList< QString > * self, int size) {
+  QList< QString > *arg1 = (QList< QString > *) 0 ;
+  int arg2 ;
+  
+  arg1 = *(QList< QString > **)&self; 
+  arg2 = (int)size; 
+  (arg1)->reserve(arg2);
+}
+
+
 SWIGEXPORT void QStringListBase_append(QList< QString > * self, QString * t) {
   QList< QString > *arg1 = (QList< QString > *) 0 ;
   QString *arg2 = 0 ;
@@ -382,18 +392,6 @@ SWIGEXPORT void QStringListBase_move(QList< QString > * self, int from, int to) 
   arg2 = (int)from; 
   arg3 = (int)to; 
   (arg1)->move(arg2,arg3);
-}
-
-
-SWIGEXPORT void QStringListBase_swap(QList< QString > * self, int i, int j) {
-  QList< QString > *arg1 = (QList< QString > *) 0 ;
-  int arg2 ;
-  int arg3 ;
-  
-  arg1 = *(QList< QString > **)&self; 
-  arg2 = (int)i; 
-  arg3 = (int)j; 
-  (arg1)->swap(arg2,arg3);
 }
 
 

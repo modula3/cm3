@@ -62,7 +62,7 @@ PROCEDURE FromTimeLocal(<*UNUSED*> z: TimeZone; t: Time.T): T =
       <*ASSERT t > 0.0D0*>
       firstDayOfEpoch := TRUE
     END;
-    ft := TimeWin32.ToFileTime(t);
+    TimeWin32.ToFileTime(t, ft);
     status := WinBase.FileTimeToSystemTime(ADR(ft), ADR(st));
     <*ASSERT status # 0*>
     tzrc := WinBase.GetTimeZoneInformation(ADR(tz));
@@ -134,7 +134,7 @@ PROCEDURE CopyTimeZoneName(
 PROCEDURE FromTimeUTC(<*UNUSED*> z: TimeZone; t: Time.T): T =
   VAR d: T; st: WinBase.SYSTEMTIME; ft: WinBase.FILETIME;  status: INTEGER;
   BEGIN
-    ft := TimeWin32.ToFileTime(t);
+    TimeWin32.ToFileTime(t, ft);
     status := WinBase.FileTimeToSystemTime(ADR(ft), ADR(st));
     <*ASSERT status # 0 *>
     d := FromSystemTime(st);

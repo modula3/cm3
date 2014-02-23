@@ -295,6 +295,28 @@ SWIGEXPORT bool QSizePolicy_hasHeightForWidth(QSizePolicy const * self) {
 }
 
 
+SWIGEXPORT void QSizePolicy_setWidthForHeight(QSizePolicy * self, bool b) {
+  QSizePolicy *arg1 = (QSizePolicy *) 0 ;
+  bool arg2 ;
+  
+  arg1 = *(QSizePolicy **)&self; 
+  arg2 = b ? true : false; 
+  (arg1)->setWidthForHeight(arg2);
+}
+
+
+SWIGEXPORT bool QSizePolicy_hasWidthForHeight(QSizePolicy const * self) {
+  QSizePolicy *arg1 = (QSizePolicy *) 0 ;
+  bool result;
+  bool cresult ;
+  
+  arg1 = *(QSizePolicy **)&self; 
+  result = (bool)((QSizePolicy const *)arg1)->hasWidthForHeight();
+  cresult = result; 
+  return cresult;
+}
+
+
 SWIGEXPORT int QSizePolicy_horizontalStretch(QSizePolicy const * self) {
   QSizePolicy *arg1 = (QSizePolicy *) 0 ;
   int result;
@@ -321,20 +343,20 @@ SWIGEXPORT int QSizePolicy_verticalStretch(QSizePolicy const * self) {
 
 SWIGEXPORT void QSizePolicy_setHorizontalStretch(QSizePolicy * self, unsigned short stretchFactor) {
   QSizePolicy *arg1 = (QSizePolicy *) 0 ;
-  unsigned char arg2 ;
+  uchar arg2 ;
   
   arg1 = *(QSizePolicy **)&self; 
-  arg2 = (unsigned char)stretchFactor; 
+  arg2 = (uchar)stretchFactor; 
   (arg1)->setHorizontalStretch(arg2);
 }
 
 
 SWIGEXPORT void QSizePolicy_setVerticalStretch(QSizePolicy * self, unsigned short stretchFactor) {
   QSizePolicy *arg1 = (QSizePolicy *) 0 ;
-  unsigned char arg2 ;
+  uchar arg2 ;
   
   arg1 = *(QSizePolicy **)&self; 
-  arg2 = (unsigned char)stretchFactor; 
+  arg2 = (uchar)stretchFactor; 
   (arg1)->setVerticalStretch(arg2);
 }
 

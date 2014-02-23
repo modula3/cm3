@@ -19,7 +19,9 @@ c_source ("CstdioC")
 Interface ("Csignal") % not used by all ports
 c_source("CsignalC")
 
-if     not FileExists(path() & "/../" & TARGET & "/Csetjmp.i3")
-    or not FileExists(path() & "/../" & TARGET & "/m3makefile")
+% none exist
+%if     not FileExists(path() & "/../" & TARGET & "/Csetjmp.i3")
+%    or not FileExists(path() & "/../" & TARGET & "/m3makefile")
   interface      ("Csetjmp")   
-end 
+  c_source ("CsetjmpC")
+%end 

@@ -1836,6 +1836,18 @@ SWIGEXPORT bool QColor_Op_NotEquals(QColor const * self, QColor * c) {
 }
 
 
+SWIGEXPORT bool IsValidColor(QString * name) {
+  QString *arg1 = 0 ;
+  bool result;
+  bool cresult ;
+  
+  arg1 = *(QString **)&name;
+  result = (bool)QColor::isValidColor((QString const &)*arg1);
+  cresult = result; 
+  return cresult;
+}
+
+
 SWIGEXPORT void Delete_QColor(QColor * self) {
   QColor *arg1 = (QColor *) 0 ;
   

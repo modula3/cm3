@@ -14,7 +14,7 @@
 
 INTERFACE Scan;
 
-IMPORT Word, Lex, FloatMode;
+IMPORT Word, Long, Lex, FloatMode;
 
 (* Each of these procedures parses a string of characters and converts
    it to a binary value.  Leading and trailing blanks (ie. characters
@@ -30,6 +30,10 @@ PROCEDURE Int(txt: TEXT; defaultBase: [2..16] := 10): INTEGER
   RAISES {Lex.Error, FloatMode.Trap};
 PROCEDURE Unsigned(txt: TEXT; defaultBase: [2..16] := 16): Word.T
   RAISES {Lex.Error, FloatMode.Trap};
+PROCEDURE LongInt(txt: TEXT; defaultBase: [2..16]): LONGINT
+    RAISES {Lex.Error, FloatMode.Trap};
+PROCEDURE LongUnsigned(txt: TEXT; defaultBase: [2..16]): Long.T
+    RAISES {Lex.Error, FloatMode.Trap};
 
 PROCEDURE Real(txt: TEXT): REAL
   RAISES {Lex.Error, FloatMode.Trap};

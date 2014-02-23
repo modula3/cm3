@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Default target hook functions.
    Copyright (C) 2003, 2004, 2005, 2007, 2008, 2009, 2010, 2011
    Free Software Foundation, Inc.
@@ -175,6 +177,3 @@ extern int default_jump_align_max_skip (rtx);
 extern section * default_function_section(tree decl, enum node_frequency freq,
 					  bool startup, bool exit);
 extern enum machine_mode default_get_reg_raw_mode(int);
-
-extern void *default_get_pch_validity (size_t *);
-extern const char *default_pch_valid_p (const void *, size_t);

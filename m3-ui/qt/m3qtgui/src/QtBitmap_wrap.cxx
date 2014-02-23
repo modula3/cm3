@@ -241,6 +241,24 @@ SWIGEXPORT void Delete_QBitmap(QBitmap * self) {
 }
 
 
+SWIGEXPORT void QBitmap_swap(QBitmap * self, QBitmap & other) {
+  QBitmap *arg1 = (QBitmap *) 0 ;
+  QBitmap *arg2 = 0 ;
+  
+  arg1 = *(QBitmap **)&self; 
+  arg2 = *(QBitmap **)&other;
+  /*
+  if(!arg2) {
+      //SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "QBitmap & reference is null");
+      //RETURN ;
+      return ;
+    }
+  */
+  
+  (arg1)->swap(*arg2);
+}
+
+
 SWIGEXPORT void QBitmap_clear(QBitmap * self) {
   QBitmap *arg1 = (QBitmap *) 0 ;
   
@@ -271,28 +289,28 @@ SWIGEXPORT QBitmap * FromBitmapImage1(QImage * image) {
 }
 
 
-SWIGEXPORT QBitmap * FromData(QSize * size, unsigned char const * bits, QImage::Format monoFormat) {
+SWIGEXPORT QBitmap * FromData(QSize * size, uchar const * bits, QImage::Format monoFormat) {
   QSize *arg1 = 0 ;
-  unsigned char *arg2 = (unsigned char *) 0 ;
+  uchar *arg2 = (uchar *) 0 ;
   QImage::Format arg3 ;
   QBitmap * cresult ;
   
   arg1 = *(QSize **)&size;
-  arg2 = *(unsigned char **)&bits; 
+  arg2 = *(uchar **)&bits; 
   arg3 = (QImage::Format)monoFormat; 
-  *(QBitmap **)&cresult = new QBitmap((const QBitmap &)QBitmap::fromData((QSize const &)*arg1,(unsigned char const *)arg2,arg3));
+  *(QBitmap **)&cresult = new QBitmap((const QBitmap &)QBitmap::fromData((QSize const &)*arg1,(uchar const *)arg2,arg3));
   return cresult;
 }
 
 
-SWIGEXPORT QBitmap * FromData1(QSize * size, unsigned char const * bits) {
+SWIGEXPORT QBitmap * FromData1(QSize * size, uchar const * bits) {
   QSize *arg1 = 0 ;
-  unsigned char *arg2 = (unsigned char *) 0 ;
+  uchar *arg2 = (uchar *) 0 ;
   QBitmap * cresult ;
   
   arg1 = *(QSize **)&size;
-  arg2 = *(unsigned char **)&bits; 
-  *(QBitmap **)&cresult = new QBitmap((const QBitmap &)QBitmap::fromData((QSize const &)*arg1,(unsigned char const *)arg2));
+  arg2 = *(uchar **)&bits; 
+  *(QBitmap **)&cresult = new QBitmap((const QBitmap &)QBitmap::fromData((QSize const &)*arg1,(uchar const *)arg2));
   return cresult;
 }
 

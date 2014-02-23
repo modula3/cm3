@@ -186,8 +186,14 @@ PROCEDURE Int (i: INTEGER): TEXT =
 
 (*--------------------------------------------------------- low level I/O ---*)
 
+PROCEDURE UnNil(a : TEXT) : TEXT =
+  BEGIN
+    IF a = NIL THEN RETURN "**NIL**" ELSE RETURN a END
+  END UnNil;
+
 PROCEDURE PutErr (u: U;  a, b, c: TEXT := NIL) =
   BEGIN
+    a := UnNil(a); b := UnNil(b); c := UnNil(c);
     u.note_error ("********* M3CG_Check ERROR *********** " & a & b & c);
     u.child.comment ("********* M3CG_Check ERROR *********** ", a, b, c);
     INC (u.n_errors);
