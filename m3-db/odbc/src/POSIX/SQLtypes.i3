@@ -4,7 +4,8 @@ INTERFACE SQLtypes;
 FROM Ctypes IMPORT unsigned_char, signed_char, long,
   unsigned_long, short, unsigned_short, void_star, double, float;
 FROM Cstdint IMPORT uint32_t, int32_t;
-FROM WinDef IMPORT HWND;
+(* FROM WinDef IMPORT HWND; Not available when compiling with the release
+                            compiler, on non-windows targets. *) 
 
 TYPE
   UCHAR    = unsigned_char;
@@ -27,6 +28,8 @@ TYPE
   HENV     = void_star;
   HDBC     = void_star;
   HSTMT    = void_star;
+
+  HWND     = ADDRESS; (* As it was in the release. *) 
 
   RETCODE  = short;
 
