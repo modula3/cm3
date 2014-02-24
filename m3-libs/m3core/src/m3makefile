@@ -26,7 +26,17 @@ if equal (TARGET, "OS2")
   include_dir ("OS2")
 end
 
-include_dir ("win32")
+if equal (OS_TYPE, "WIN32") or equal(TARGET, "NT386")
+   or ({"NT", "MINGW", "CYGWIN"} contains TARGET)
+% 2014-02-24 win32 contains hundreds of WINAPI, APIENTRY, and PASCAL calling 
+% conventions.  These all give compile errors on non-windows targets, when
+% building with the release compiler. 
+% When there is a released version of the now-head compiler, (which accepts
+% these for any target,) we could reinstate win32, though it still may not be
+% of any use on non-windows targets.  
+  include_dir ("win32")
+end
+
 include_dir ("unix")
 
 include_dir ("C")
