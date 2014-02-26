@@ -29,8 +29,7 @@ PROCEDURE Register () =
 PROCEDURE TextPklWrite (<*UNUSED*> sp: Special;  r: REFANY;  pwr: Writer)
   RAISES {Error, Wr.Failure, Thread.Alerted} =
   TYPE CPtr  = UNTRACED REF ARRAY [0..TextLiteral.MaxBytes] OF CHAR;
-  TYPE WCPtr = UNTRACED REF ARRAY [0..TextLiteral.MaxBytes DIV 2] OF WIDECHAR;
-  VAR txt := LOOPHOLE (r, TEXT);  cp: CPtr;  wcp: WCPtr;  info: TextClass.Info;
+  VAR txt := LOOPHOLE (r, TEXT);  cp: CPtr; info: TextClass.Info;
   BEGIN
     TYPECASE (txt) OF
     | TextLiteral.T  => (* ok *)
@@ -39,10 +38,11 @@ PROCEDURE TextPklWrite (<*UNUSED*> sp: Special;  r: REFANY;  pwr: Writer)
       RAISE Error ("cannot pickle subtypes of TextLiteral.T or Text8CString.T");
     END;
     txt.get_info (info);
-    IF info.wide THEN
+    IF info.wide THEN 
       pwr.writeInt (-info.length);
-      wcp := LOOPHOLE (info.start, WCPtr);
-      Wr.PutWideString (pwr.wr, SUBARRAY (wcp^, 0, info.length));
+      cp := LOOPHOLE (info.start, CPtr);
+      Wr.PutString 
+        (pwr.wr, SUBARRAY (cp^, 0, info.length*BYTESIZE(WIDECHAR)));
     ELSE
       pwr.writeInt (info.length);
       cp := LOOPHOLE (info.start, CPtr);
@@ -82,19 +82,26 @@ PROCEDURE Text8Read (prd: Reader;  len: INTEGER): TEXT
 
 PROCEDURE Text16Read (prd: Reader;  len: INTEGER): TEXT
   RAISES {Error, Rd.Failure, Thread.Alerted} =
+  TYPE CPtr  = UNTRACED REF ARRAY [0..TextLiteral.MaxBytes] OF CHAR;
   VAR
     xx  : INTEGER;
     txt : Text16.T;
+    cp: CPtr; 
+    byteLen : INTEGER; 
     buf : ARRAY [0..63] OF WIDECHAR;
   BEGIN
+    byteLen := len*BYTESIZE(WIDECHAR); 
     IF (len <= NUMBER (buf)) THEN
-      xx := Rd.GetWideSub (prd.rd, SUBARRAY (buf, 0, len));
-      IF xx # len THEN TooShort (); END;
+      cp := LOOPHOLE(ADR(buf), CPtr); 
+      xx := Rd.GetSub (prd.rd, SUBARRAY (cp^, 0, byteLen));
+      IF xx # byteLen THEN TooShort (); END;
       RETURN Text.FromWideChars (SUBARRAY (buf, 0, len));
     ELSE
-      txt := Text16.Create (len);
-      xx := Rd.GetWideSub (prd.rd, SUBARRAY (txt.contents^, 0, len));
-      IF xx # len THEN TooShort (); END;
+      txt := Text16.Create (len); 
+             (* ^Which will be for whatever size WIDECHARs we have. *)
+      cp := LOOPHOLE(txt.contents, CPtr); 
+      xx := Rd.GetSub (prd.rd, SUBARRAY (cp^, 0, byteLen));
+      IF xx # byteLen THEN TooShort (); END;
       RETURN txt;
     END;
   END Text16Read;

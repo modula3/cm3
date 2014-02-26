@@ -2889,6 +2889,7 @@ no enclosing block"));
 	      break;		/* Ignore repeated SOs */
 	    }
 	  end_symtab (valu, objfile, SECT_OFF_TEXT (objfile));
+	  m3_end_stabs ();
 	  end_stabs ();
 	}
 
@@ -2903,6 +2904,7 @@ no enclosing block"));
       start_stabs ();
       start_symtab (name, NULL, valu);
       record_debugformat ("stabs");
+      m3_start_stabs (name);
       break;
 
     case N_SOL:

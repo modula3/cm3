@@ -2176,6 +2176,8 @@ END New;
 (*---------------------------------------------------------------------------*)
 
 PROCEDURE DeclareBuiltinTypes(self: T) =
+VAR widechar_target_type: Target.CGType; 
+VAR widechar_last: INTEGER; 
 BEGIN
     self.Type_Init(NEW(Integer_t, cgtype := Target.Integer.cg_type, typeid := UID_INTEGER, text := "INTEGER"));
     self.Type_Init(NEW(Integer_t, cgtype := Target.Word.cg_type, typeid := UID_WORD, text := "WORD_T"));
@@ -2189,7 +2191,23 @@ BEGIN
 
     self.Type_Init(NEW(Enum_t, cgtype := Target.Word8.cg_type, typeid := UID_BOOLEAN, max := IntToTarget(self, 1), text := "BOOLEAN"), typedef := TRUE);
     self.Type_Init(NEW(Enum_t, cgtype := Target.Word8.cg_type, typeid := UID_CHAR, max := IntToTarget(self, 16_FF), text := "CHAR"), typedef := TRUE);
-    self.Type_Init(NEW(Enum_t, cgtype := Target.Word16.cg_type, typeid := UID_WIDECHAR, max := IntToTarget(self, 16_FFFF), text := "WIDECHAR"), typedef := TRUE);
+    widechar_target_type := Target.Word16.cg_type; 
+    widechar_last := 16_FFFF; (* The defaults. *) 
+    IF self.multipass.op_counts[M3CG_Binary.Op.widechar_size] > 0 THEN 
+      WITH op_widechar_size_list = self.multipass.op_data[M3CG_Binary.Op.widechar_size] DO
+        TYPECASE op_widechar_size_list[LAST(op_widechar_size_list^)] 
+        OF NULL => 
+        | M3CG_MultiPass.widechar_size_t (op_widechar_size) => 
+          IF op_widechar_size.size = 32 THEN 
+            widechar_target_type := Target.Word32.cg_type;
+            widechar_last := 16_10FFFF;
+          END; 
+        ELSE
+        END; 
+      END; 
+    END; 
+    self.Type_Init(NEW(Enum_t, cgtype := widechar_target_type, typeid := UID_WIDECHAR, max := IntToTarget(self, widechar_last)
+                  , text := "WIDECHAR"), typedef := TRUE);
 
     (* self.declareTypes.declare_subrange(UID_RANGE_0_31, UID_INTEGER, TInt.Zero, IntToTarget(self, 31), Target.Integer.size); *)
     (* self.declareTypes.declare_subrange(UID_RANGE_0_63, UID_INTEGER, TInt.Zero, IntToTarget(self, 63), Target.Integer.size); *)

@@ -219,6 +219,7 @@ REVEAL
         compare_exchange := compare_exchange;
         fence := fence;
         fetch_and_op := fetch_and_op;
+        widechar_size := widechar_size; 
       END;
 
 (*---------------------------------------------------------------------------*)
@@ -4613,6 +4614,13 @@ retry:
     END;
 
   END fetch_and_op;
+
+VAR GWidechar_bitsize : INTEGER; (* So far, not used. *) 
+
+PROCEDURE widechar_size (<*UNUSED*>u: U; bitsize: INTEGER) =
+  BEGIN
+    GWidechar_bitsize := bitsize
+  END widechar_size; 
 
 PROCEDURE Err(t: U; err: TEXT) =
   BEGIN

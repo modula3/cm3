@@ -103,6 +103,7 @@ OVERRIDES
     declare_temp := declare_temp;
     free_temp := free_temp;
     declare_exception := declare_exception;
+    widechar_size := widechar_size;
     begin_init := begin_init;
     end_init := end_init;
     init_int := init_int;
@@ -537,6 +538,11 @@ PROCEDURE declare_exception(self: T; name: Name; arg_typeid: TypeUID; raise_proc
 BEGIN
 self.Add(NEW(declare_exception_t, op := Op.declare_exception, name := name, arg_typeid := arg_typeid, raise_proc := raise_proc, base := NARROW(base, var_t).tag, offset := offset));
 END declare_exception;
+
+PROCEDURE widechar_size(self: T; size: INTEGER) =
+BEGIN
+self.Add(NEW(widechar_size_t, op := Op.widechar_size, size := size));
+END widechar_size;
 
 PROCEDURE set_runtime_proc(self: T; name: Name; proc: Proc) =
 BEGIN
@@ -1153,6 +1159,10 @@ BEGIN
     cg.declare_exception(self.name, self.arg_typeid, self.raise_proc,
                          replay.GetVar(self.base), self.offset);
 END replay_declare_exception;
+
+PROCEDURE replay_widechar_size(self: widechar_size_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = 
+BEGIN cg.widechar_size(self.size); 
+END replay_widechar_size;
 
 PROCEDURE replay_bind_segment(self: bind_segment_t; replay: Replay_t; cg: cg_t) =
 BEGIN

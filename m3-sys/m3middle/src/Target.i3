@@ -134,6 +134,7 @@ CONST
 
 CONST
   OSNames = ARRAY OF TEXT { "POSIX", "WIN32" };
+  EndianNames = ARRAY OF TEXT { "LITTLE", "BIG" }; 
 
 TYPE
   M3BackendMode_t =

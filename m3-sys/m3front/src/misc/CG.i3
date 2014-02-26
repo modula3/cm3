@@ -134,6 +134,9 @@ PROCEDURE Declare_exception (n: Name;  arg_type: TypeUID;  raise_proc: BOOLEAN;
    'base+offset+BYTESIZE(ADDRESS)' is a pointer to the procedure that
    packages the argument and calls the runtime to raise the exception. *)
 
+PROCEDURE Widechar_size (size: INTEGER);
+(* Informs that the WIDECHAR has BITSIZE size. *) 
+
 (*--------------------------------------------------------- runtime hooks ---*)
   
 PROCEDURE Set_runtime_proc (n: Name;  p: Proc);

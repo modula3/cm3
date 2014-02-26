@@ -23,8 +23,9 @@ PROCEDURE TextLitGetChar (t: T;  i: CARDINAL): CHAR =
       RETURN VAL (t.buf[i], CHAR);
     ELSE
       IF i >= -t.cnt THEN (* force a subscript fault *) i := MaxBytes;  END;
-      VAR p := LOOPHOLE (ADR (t.buf[i+i]), WCPtr); BEGIN
+      VAR p := LOOPHOLE (ADR (t.buf[i*BYTESIZE (WIDECHAR)]), WCPtr); BEGIN
         RETURN VAL (Word.And (ORD (p^), 16_ff), CHAR);
+(*4*)
       END;
     END;
   END TextLitGetChar;
@@ -36,7 +37,9 @@ PROCEDURE TextLitGetWideChar (t: T;  i: CARDINAL): WIDECHAR =
       RETURN VAL (t.buf[i], WIDECHAR);
     ELSE
       IF i >= -t.cnt THEN (* force a subscript fault *) i := MaxBytes;  END;
-      VAR p := LOOPHOLE (ADR (t.buf[i+i]), UNTRACED REF WIDECHAR); BEGIN
+      VAR p := LOOPHOLE (ADR (t.buf[i*BYTESIZE (WIDECHAR)]), 
+                         UNTRACED REF WIDECHAR); 
+      BEGIN
         RETURN p^;
       END;
     END;
@@ -54,11 +57,12 @@ PROCEDURE TextLitGetChars (t: T;  VAR a: ARRAY OF CHAR;  start: CARDINAL) =
       n := MIN (NUMBER (a), (-t.cnt) - start);
       IF (n > 0) THEN
         VAR
-          tp := LOOPHOLE (ADR (t.buf[start+start]), WCPtr);
+          tp := LOOPHOLE (ADR (t.buf[start*BYTESIZE (WIDECHAR)]), WCPtr);
           ap := LOOPHOLE (ADR (a[0]), CPtr);
         BEGIN
           WHILE (n > 0) DO
             ap^ := VAL (Word.And (ORD (tp^), 16_ff), CHAR);
+(*4*)
             INC (tp, ADRSIZE (tp^));  INC (ap, ADRSIZE (ap^));  DEC (n);
           END;
         END;
@@ -66,7 +70,8 @@ PROCEDURE TextLitGetChars (t: T;  VAR a: ARRAY OF CHAR;  start: CARDINAL) =
     END;
   END TextLitGetChars;
 
-PROCEDURE TextLitGetWideChars (t: T;  VAR a: ARRAY OF WIDECHAR;  start: CARDINAL) =
+PROCEDURE TextLitGetWideChars 
+  (t: T;  VAR a: ARRAY OF WIDECHAR;  start: CARDINAL) =
   VAR n: INTEGER;
   BEGIN
     IF (t.cnt >= 0) THEN
@@ -85,7 +90,8 @@ PROCEDURE TextLitGetWideChars (t: T;  VAR a: ARRAY OF WIDECHAR;  start: CARDINAL
     ELSE
       n := MIN (NUMBER (a), (-t.cnt) - start);
       IF (n > 0) THEN
-        RTMisc.Copy (ADR (t.buf[start+start]), ADR (a[0]), n * BYTESIZE (WIDECHAR));
+        RTMisc.Copy (ADR (t.buf[start*BYTESIZE (WIDECHAR)]), ADR (a[0]), 
+                     n * BYTESIZE (WIDECHAR));
       END;
     END;
   END TextLitGetWideChars;

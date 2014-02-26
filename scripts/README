@@ -29,6 +29,14 @@ You are probably most interested in one of the following:
 
  o Use do-pkg.sh to compile or clean one or more arbitrary packages.
 
+ o Use do-cm3-front.sh to build (and install) a build system, i.e., the 
+   compiler, its support libraries, and support utilities.
+
+ o Use do-cm3-unicode.sh to build (and install) what do-cm3-front builds,
+   plus the unicode encoding suport library libunicode.  This latter package
+   will build successfully only when the build compiler is configured for
+   full Unicode range WIDECHAR. 
+
  o Use do-cm3-core.sh to build (and install) a core cm3 system, i.e.
    the compiler with some useful base libraries.
 

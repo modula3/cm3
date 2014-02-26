@@ -75,6 +75,7 @@ TYPE
         declare_temp   := declare_temp;
         free_temp := free_temp;
         declare_exception := declare_exception;
+        widechar_size := widechar_size;
         begin_init := begin_init;
         end_init := end_init;
         init_int := init_int;
@@ -648,6 +649,13 @@ PROCEDURE declare_exception (u: U;  n: Name;  arg_type: TypeUID;
     Int   (u, offset);
     NL    (u);
   END declare_exception;
+
+PROCEDURE widechar_size (u: U;  size : INTEGER) =
+  BEGIN
+    Cmd (u, "widechar_size");
+    Int (u, size);
+    NL  (u);
+  END widechar_size;
 
 (*--------------------------------------------------------- runtime hooks ---*)
 

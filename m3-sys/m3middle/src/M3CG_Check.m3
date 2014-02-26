@@ -66,6 +66,7 @@ TYPE
         bind_segment := bind_segment;
         declare_temp   := declare_temp;
         free_temp := free_temp;
+        widechar_size := widechar_size;
         begin_init := begin_init;
         end_init := end_init;
         init_int := init_int;
@@ -435,6 +436,14 @@ PROCEDURE free_temp (self: U;  v: Var) =
 *)
     self.child.free_temp (v);
   END free_temp;
+
+PROCEDURE widechar_size (self:U; size: INTEGER) =
+  BEGIN 
+    IF size # 16 AND size #32 THEN
+      PutErr (self, "invalid widechar size"); 
+    END; 
+    self.child.widechar_size(size); 
+  END widechar_size; 
 
 (*---------------------------------------- static variable initialization ---*)
 

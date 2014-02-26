@@ -40,6 +40,7 @@ REVEAL T = Public BRANDED "FileRd.T" OBJECT
 
 PROCEDURE Init(rd: T; h: File.T): T RAISES {OSError.E} =
   BEGIN
+    RdClass.Init(rd); 
     rd.sourceH := h;
     IF (rd.buff = NIL) THEN
       rd.buff := NEW(CharBuffer, BufferSize);

@@ -11,6 +11,7 @@ MODULE SubrangeType;
 IMPORT M3, CG, Type, TypeRep, Int, LInt, Expr, Token, Card, M3Buf;
 IMPORT Error, IntegerExpr, EnumExpr, Word, TipeMap, TipeDesc;
 IMPORT Target, TInt, TWord, TargetMap, LCard;
+IMPORT Charr, WCharr; 
 FROM Scanner IMPORT Match;
 
 TYPE 
@@ -227,12 +228,26 @@ PROCEDURE EqualChk (a: P;  t: Type.T;  x: Type.Assumption): BOOLEAN =
 
 PROCEDURE Subtyper (a: P;  t: Type.T): BOOLEAN =
   VAR b: P;
+  VAR aBase, tBase: Type.T;
   BEGIN
     Seal (a);
-    IF NOT Type.IsEqual (Type.Base (a.baseType), Type.Base (t), NIL) THEN
-      RETURN FALSE
-     END;
-    IF (t.info.class # Type.Class.Subrange) THEN RETURN TRUE END;
+    aBase := Type.Base (a.baseType); 
+    tBase := Type.Base (t); 
+    IF Type.IsEqual (aBase, tBase, NIL) THEN
+      IF t.info.class # Type.Class.Subrange THEN RETURN TRUE END;
+      (* Bases are equal, both are subranges. *) 
+    ELSIF Type.IsEqual (aBase, Charr.T, NIL) THEN 
+      IF Type.IsEqual (t, WCharr.T, NIL) THEN RETURN TRUE;
+      ELSIF NOT Type.IsEqual (tBase, WCharr.T, NIL) THEN RETURN FALSE 
+      END; 
+      (* Lhs subrange of CHAR, Rhs subrange of WIDECHAR. *)  
+    ELSIF NOT Type.IsEqual (aBase, WCharr.T, NIL) 
+          OR NOT Type.IsEqual (tBase, Charr.T, NIL) THEN 
+      RETURN FALSE 
+    ELSIF Type.IsEqual(t, Charr.T, NIL) THEN
+      RETURN TInt.LE(a.max, TWord.Max8); 
+      (* Lhs subrange of WIDECHAR, Rhs subrange of CHAR. *)  
+    END; 
     IF TInt.LT (a.max, a.min) THEN (* a is empty *) RETURN TRUE END;
     b := t;
     RETURN TInt.LE (b.min, a.min) AND TInt.LE (a.max, b.max);

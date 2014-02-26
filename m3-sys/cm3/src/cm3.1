@@ -94,6 +94,12 @@ Generate coverage analysis code.
 .B "\-profile"
 Generate profiling code.
 .TP
+.B "\-widechar16"
+Give WIDECHAR 16-bit range.
+.TP
+.B "\-widecharuni"
+Give WIDECHAR full Unicode range.
+.TP
 .B "\-lazy"
 Generate lazy module initialization code.
 .TP
@@ -274,8 +280,8 @@ characters, if no unicode characters are used, then only ASCII ones
 will be used.
 .TP
 .B WIDECHAR
-In support of unicode characters this new builtin type is a 16-bit
-character, and may be used by TEXT.
+In support of unicode characters this new builtin type is a character
+with ORD(LAST(WIDECHAR)) = 16_10FFFF, and may be used by TEXT.
 
 .TP
 .B LONGINT

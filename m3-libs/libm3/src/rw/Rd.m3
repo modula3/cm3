@@ -23,8 +23,150 @@ REVEAL
    and releases the lock while FastGetChar assumes it is already held. *)
 
 (* It is invariant that for a closed reader "rd", "rd.buff = NIL" and
-   "rd.lo = rd.hi".  Therefore the check that "rd" is ready need
+   "rd.lo = rd.cur = rd.hi".  Therefore the check that "rd" is ready need
    not inspect "rd.closed" on the fast path. *)
+
+PROCEDURE Init(rd: T) = 
+(* Class-independent initialize rd, including private fields revealed herein. *)
+
+  BEGIN
+    rd.buff := NIL;
+    rd.Ungetbuff := NIL;
+    rd.Waitingbuff := NIL;
+    rd.st := 0;
+    rd.Ungetst := 0;
+    rd.Waitingst := 0; 
+    rd.cur := 0;
+    rd.lo := 0; 
+    rd.hi := 0; 
+    rd.Ungetlo := 0; 
+    rd.Ungethi := 0; 
+    rd.Waitinglo := 0; 
+    rd.Waitinghi := 0; 
+    rd.closed := TRUE;   
+  END Init; 
+
+<* UNUSED *> PROCEDURE Check(rd: T): BOOLEAN (* It's OK. *) = 
+  (* Check some invariants on rd. *) 
+
+  BEGIN 
+    IF rd.closed 
+    THEN 
+    (* V4. *) 
+      IF rd.buff # NIL 
+      THEN RETURN FALSE END;
+      IF rd.lo # 0 
+      THEN RETURN FALSE END;
+      IF rd.hi # 0 
+      THEN RETURN FALSE END; 
+    ELSE 
+       IF rd.Ungetbuff # NIL 
+         AND rd.Ungetbuff # rd.buff
+         AND rd.Ungetlo < rd.Ungethi
+         AND rd.Ungethi # rd.lo
+      THEN RETURN FALSE
+      END; 
+    (* V2. *) 
+      IF rd.cur < rd.lo 
+      THEN RETURN FALSE END; 
+      IF rd.cur > rd.hi 
+      THEN RETURN FALSE END; 
+    (* V3. *) 
+      IF rd.intermittent AND rd.seekable THEN RETURN FALSE END;
+    END; 
+    RETURN TRUE
+  END Check; 
+
+PROCEDURE NextBuff(rd: T): BOOLEAN (* End of file. *) 
+  RAISES {Failure, Alerted} =
+  (* rd is locked, not closed, and rd.cur=rd.hi. *) 
+  (* If we are now in the unget buffer, switch to the waiting buffer.
+     Otherwise, save characters as needed in the unget buffer, then use
+     seek to get the next regular buffer.
+  *) 
+  VAR LByteCt, LByteCtUnget: CARDINAL;
+  VAR LResult: BOOLEAN; 
+  VAR LUngetbuff: ARRAY [0..UnGetCapacity-1] OF CHAR;
+  VAR LUngetlo, LUngethi, LUngetst: CARDINAL; 
+  BEGIN  
+    (*<* ASSERT Check(rd) *>*)  
+    IF rd.Ungetbuff # NIL (* There is an unget buffer, *) 
+       AND rd.Ungetbuff = rd.buff (* and it is current, which implies we are 
+                                     now off its right end. *) 
+    THEN (* Make the waiting buffer current.  *) 
+      rd.buff := rd.Waitingbuff;
+      rd.st := rd.Waitingst;
+      rd.lo := rd.Waitinglo;
+      rd.hi := rd.Waitinghi;
+      rd.Waitingbuff := NIL; (* Defensive. *) 
+      (* The unget buffer will remain unchanged, in case UngetChar requires
+         us to back up into it again. *) 
+      (*<* ASSERT Check(rd) *>*)  
+      RETURN FALSE; 
+    ELSE (* We are not in the unget buffer.  Need to seek, but first, save some
+            chars to go in the new unget buffer.  We have to save then before 
+            seeking, but won't know until after, whether to alter the real unget
+            buffer and its subscripts.  So do the saving in locals for now. *)
+      IF rd.buff # NIL 
+      THEN (* There are some chars to save. *) 
+        IF rd.hi - rd.lo >= UnGetCapacity 
+        THEN (* Current buffer contains at least UnGetCapacity chars.  Save the 
+                last UnGetCapacity of them in locals. *)  
+          LUngethi := rd.hi; 
+          LUngetlo := rd.hi - UnGetCapacity; 
+          LUngetst := 0; 
+          LUngetbuff 
+            := SUBARRAY(rd.buff^, LUngetlo - rd.lo + rd.st, UnGetCapacity);
+        (* Hereafter, buff has fewer chars than UnGetCapacity. *) 
+        ELSIF rd.Ungetbuff = NIL OR rd.Ungetlo >= rd.Ungethi  
+        THEN (* Unallocated or empty unget buffer. *) 
+          LByteCt := rd.hi - rd.lo; 
+          LUngetst := UnGetCapacity - LByteCt;
+          LUngetlo := rd.lo;
+          LUngethi := rd.hi;
+          SUBARRAY(LUngetbuff, LUngetst, LByteCt) 
+            := SUBARRAY(rd.buff^, rd.st, LByteCt);
+        ELSE (* Save chars for the unget buffer from both its current contents
+                (shifted left) and the current buffer. *) 
+          LByteCt := rd.hi - rd.lo; 
+          LByteCtUnget := rd.Ungethi - rd.Ungetlo; 
+          IF LByteCt + LByteCtUnget > UnGetCapacity 
+          THEN (* Push some bytes off the left of the unget buffer. *) 
+            LByteCtUnget := UnGetCapacity - LByteCt;
+            LUngetst := 0; 
+            LUngetlo := rd.hi - UnGetCapacity; 
+          ELSE 
+            LUngetst := UnGetCapacity - LByteCt - LByteCtUnget;
+            LUngetlo := rd.hi - LByteCt - LByteCtUnget;
+          END; 
+          LUngethi := rd.hi; 
+          SUBARRAY ( LUngetbuff, LUngetst, LByteCtUnget) 
+            := SUBARRAY 
+                 (rd.Ungetbuff^, UnGetCapacity - LByteCtUnget, LByteCtUnget);
+          SUBARRAY ( LUngetbuff, UnGetCapacity - LByteCt, LByteCt) 
+            := SUBARRAY (rd.buff^, rd.st, LByteCt);
+        END
+      END; 
+      (* Try to get the next buffer from class implementation: *)  
+      LResult := rd.seek(rd.cur, FALSE) = SeekResult.Eof; 
+      (* seek methods vary in what they do with buff and EOF.  E.g., FileRd 
+         advances to a new but empty buffer (lo=hi=cur=len), but TextRd leaves 
+         lo=0, preserving the text for subsequent seek back inside it.  We want
+         to update the Unget buffer only if seek advanced lo. *) 
+      IF rd.lo = LUngethi 
+      THEN (* Update the unget buffer. *) 
+        IF rd.Ungetbuff = NIL 
+        THEN rd.Ungetbuff := NEW (REF ARRAY OF CHAR, UnGetCapacity);
+        END; 
+        rd.Ungetst := LUngetst; 
+        rd.Ungetlo := LUngetlo; 
+        rd.Ungethi := LUngethi; 
+        rd.Ungetbuff^ := LUngetbuff; 
+      END; 
+      (*<* ASSERT Check(rd) *>*)  
+      RETURN LResult; 
+    END 
+  END NextBuff; 
 
 <*INLINE*>
 PROCEDURE GetChar (rd: T): CHAR
@@ -40,21 +182,14 @@ PROCEDURE FastGetChar(rd: T): CHAR
   RAISES {EndOfFile, Failure, Alerted} =
   (* rd is locked *)
   VAR res: CHAR; BEGIN
-    IF rd.cur = rd.hi THEN DoSeek(rd) END;
+    IF rd.cur = rd.hi THEN 
+      IF rd.closed THEN Die() END;
+      IF NextBuff(rd) THEN RAISE EndOfFile END
+    END;
     res := rd.buff[rd.st + (rd.cur - rd.lo)];
     INC(rd.cur);
     RETURN res
   END FastGetChar;
-
-PROCEDURE DoSeek(rd: T)
-  RAISES {EndOfFile, Failure, Alerted} =
-  BEGIN
-    (* rd.cur = rd.hi here *)
-    IF rd.closed THEN Die() END;
-    IF rd.seek(rd.cur, FALSE) = SeekResult.Eof THEN
-      RAISE EndOfFile
-    END
-  END DoSeek;
 
 <*INLINE*>
 PROCEDURE GetWideChar (rd: T): WIDECHAR
@@ -79,14 +214,12 @@ PROCEDURE FastGetWideChar(rd: T): WIDECHAR
 <*INLINE*>
 PROCEDURE GetWC(rd: T;  VAR(*OUT*) ch: WIDECHAR): BOOLEAN
   RAISES {Failure, Alerted} =
-  (* rd is locked *)
+  (* rd is locked and not closed. *)
   VAR c1, c2: CHAR;
   BEGIN
 
     IF rd.cur = rd.hi THEN
-      IF rd.seek(rd.cur, FALSE) = SeekResult.Eof THEN
-        RETURN FALSE;
-      END;
+      IF NextBuff (rd) THEN RETURN FALSE; END;
     END;
     c1 := rd.buff[rd.st + (rd.cur - rd.lo)];
     INC(rd.cur);
@@ -94,7 +227,7 @@ PROCEDURE GetWC(rd: T;  VAR(*OUT*) ch: WIDECHAR): BOOLEAN
     IF rd.cur # rd.hi THEN
       c2 := rd.buff[rd.st + (rd.cur - rd.lo)];
       INC(rd.cur);
-    ELSIF rd.seek(rd.cur, FALSE) = SeekResult.Eof THEN
+    ELSIF NextBuff (rd) THEN 
       c2 := '\x00';
     ELSE
       c2 := rd.buff[rd.st + (rd.cur - rd.lo)];
@@ -141,12 +274,13 @@ PROCEDURE FastGetWideSub (rd: T; VAR (*out*) str: ARRAY OF WIDECHAR): CARDINAL
 
 PROCEDURE GetSubDefault (rd: T; VAR (*out*) str: ARRAY OF CHAR): CARDINAL
   RAISES {Failure, Alerted} =
+  (* rd is locked and not closed. *)
   VAR i := 0; BEGIN
     LOOP
       (* i chars have been read into str *)
       IF i = NUMBER(str) THEN EXIT END;
       IF rd.cur = rd.hi THEN
-        IF rd.seek(rd.cur, FALSE) = SeekResult.Eof THEN EXIT END
+        IF NextBuff (rd) THEN EXIT END
       END;
       (* rd.lo <= rd.cur < rd.hi *)
       VAR n := MIN(rd.hi - rd.cur, NUMBER(str) - i); BEGIN
@@ -158,7 +292,6 @@ PROCEDURE GetSubDefault (rd: T; VAR (*out*) str: ARRAY OF CHAR): CARDINAL
     END;
     RETURN i
   END GetSubDefault;
-
 
 (* EOF and FastEOF are identical except that EOF acquires and releases
    the reader lock while FastEOF assumes it is already held. *)
@@ -182,41 +315,92 @@ PROCEDURE FastEOF (rd: T): BOOLEAN
       RETURN FALSE
     ELSE
       IF rd.closed THEN Die() END;
-      RETURN rd.seek(rd.cur, FALSE) = SeekResult.Eof
+      RETURN NextBuff (rd) 
     END
   END FastEOF;
 
-PROCEDURE UnGetChar(rd: T) =
+PROCEDURE UnGetChar(rd: T) RAISES {} =
   BEGIN
-    LOCK rd DO FastUnGetChar (rd) END;
+    LOCK rd DO EVAL FastUnGetCharMulti (rd) END;
+    (* Just silently fail if can't do it.  This duplicates
+       original behaviour. *) 
   END UnGetChar;
 
-PROCEDURE FastUnGetChar(rd: T) =
+PROCEDURE FastUnGetChar(rd: T) RAISES {} =
+(* Like Rd.FastUnGetChar, but rd must be locked. *)
   BEGIN
-    IF rd.closed OR rd.cur = rd.lo THEN Die() END;
-    DEC(rd.cur)
+    EVAL FastUnGetCharMulti (rd) 
+    (* Just silently fail if can't do it.  This duplicates
+       original behaviour. *) 
   END FastUnGetChar;
+
+PROCEDURE UnGetCharMulti(rd: T): BOOLEAN (* Succeeded. *) =
+  BEGIN
+    LOCK rd DO RETURN FastUnGetCharMulti (rd) END;
+  END UnGetCharMulti;
+
+PROCEDURE FastUnGetCharMulti(rd: T): BOOLEAN (* Succeeded. *) =
+  BEGIN
+    IF rd.closed THEN Die() END;
+    IF rd.cur > rd.lo THEN (* Can do this within buff. *)     
+      DEC(rd.cur);
+      RETURN TRUE 
+    ELSIF rd.Ungetbuff # NIL (* We have an unget buffer *) 
+          AND rd.Ungetbuff # rd.buff (* It is not the current buffer. *) 
+          AND rd.Ungethi > rd.Ungetlo (* It is not empty. *) 
+    THEN (* make the current buff waiting, *) 
+      rd.Waitingbuff := rd.buff;
+      rd.Waitingst := rd.st;
+      rd.Waitinglo := rd.lo;
+      rd.Waitinghi := rd.hi;
+      (* and back up to the unget buffer. *) 
+      rd.buff := rd.Ungetbuff;
+      rd.st := rd.Ungetst;
+      rd.lo := rd.Ungetlo;
+      rd.hi := rd.Ungethi;
+      DEC(rd.cur); 
+      RETURN TRUE
+    ELSE (* We don't have a stored byte to unget. *) 
+      RETURN FALSE; 
+    END 
+  END FastUnGetCharMulti;
 
 PROCEDURE CharsReady(rd: T): CARDINAL
   RAISES {Failure} =
-  <*FATAL Thread.Alerted*>
   BEGIN
-    LOCK rd DO
+    LOCK rd DO 
       IF rd.cur = rd.hi THEN
         IF rd.closed THEN Die() END;
-        IF rd.seek(rd.cur, TRUE) = SeekResult.Eof THEN RETURN 1 END
+        IF NextBuff (rd) THEN RETURN 1 END
       END;
       RETURN rd.hi - rd.cur;
-    END
+    END;
   END CharsReady;
+
+PROCEDURE FastCharsReady(rd: T): CARDINAL
+  RAISES {Failure} =
+  <*FATAL Thread.Alerted*>
+  BEGIN
+    IF rd.cur = rd.hi THEN
+      IF rd.closed THEN Die() END;
+      IF NextBuff (rd) THEN RETURN 1 END
+    END;
+    RETURN rd.hi - rd.cur;
+  END FastCharsReady;
 
 PROCEDURE Index(rd: T): CARDINAL =
   BEGIN
-    LOCK rd DO
+    LOCK rd DO 
       IF rd.closed THEN Die() END;
       RETURN rd.cur
-    END
+    END; 
   END Index;
+
+PROCEDURE FastIndex(rd: T): CARDINAL =
+  BEGIN
+    IF rd.closed THEN Die() END;
+    RETURN rd.cur
+  END FastIndex;
 
 PROCEDURE Length(rd: T): INTEGER
   RAISES {Failure, Alerted} =
@@ -227,16 +411,28 @@ PROCEDURE Length(rd: T): INTEGER
     END
   END Length;
 
+PROCEDURE FastLength(rd: T): INTEGER
+  RAISES {Failure, Alerted} =
+  BEGIN
+    IF rd.closed THEN Die() END;
+    RETURN rd.length()
+  END FastLength;
+
 PROCEDURE Seek(rd: T; n: CARDINAL)
   RAISES {Failure, Alerted} =
   BEGIN
     LOCK rd DO
+      (*<* ASSERT Check(rd) *>*)  
       IF rd.closed OR NOT rd.seekable THEN Die() END;
       IF n < rd.lo OR n > rd.hi THEN
         EVAL rd.seek(n, FALSE);
+        rd.Ungetlo := 0; (* Empty the unget buffer, but keep it around. *) 
+        rd.Ungethi := 0;
+        rd.Waitingbuff := NIL; (* Redundant? *) 
       ELSE
         rd.cur := n;
-      END
+      END;
+      (*<* ASSERT Check(rd) *>*) 
     END
   END Seek;
 
@@ -256,7 +452,9 @@ PROCEDURE FastClose(rd: T)
         rd.closed := TRUE;
         rd.cur := rd.hi;
         rd.lo := rd.hi;
-        rd.buff := NIL
+        rd.buff := NIL;
+        rd.Ungetlo := 0; 
+        rd.Ungethi := 0; 
       END
     END
   END FastClose;
@@ -271,7 +469,7 @@ PROCEDURE GetSubLine (rd: T;  VAR(*out*) str: ARRAY OF CHAR): CARDINAL
         IF i = NUMBER (str) THEN  RETURN i  END;
         IF rd.cur = rd.hi THEN
           IF rd.closed THEN Die () END;
-          IF rd.seek (rd.cur, FALSE) = SeekResult.Eof THEN RETURN i END
+          IF NextBuff (rd) THEN RETURN i END
         END;
         (* rd is ready *)
         VAR
@@ -423,7 +621,7 @@ PROCEDURE GetLine (rd: T): TEXT
       LOOP (* INV: txt contains the partial result *)
         IF rd.cur = rd.hi THEN
           IF rd.closed THEN Die () END;
-          IF rd.seek (rd.cur, FALSE) = SeekResult.Eof THEN
+          IF NextBuff (rd) THEN 
             IF (Text.Length (txt) > 0) THEN RETURN txt END;
             RAISE EndOfFile;
           END;
@@ -504,17 +702,36 @@ PROCEDURE GetWideLine (rd: T): TEXT
 PROCEDURE Intermittent (rd: T): BOOLEAN =
   BEGIN
     RETURN (rd.intermittent);
+(* CHECK: Can we really always get away with neither a Lock nor Atomic? *) 
   END Intermittent;
+
+PROCEDURE FastIntermittent(rd: T): BOOLEAN RAISES {} = 
+  BEGIN 
+    RETURN (rd.intermittent);
+  END FastIntermittent; 
 
 PROCEDURE Seekable (rd: T): BOOLEAN =
   BEGIN
     RETURN (rd.seekable);
+(* CHECK: Can we really always get away with neither a Lock nor Atomic? *) 
   END Seekable;
+
+PROCEDURE FastSeekable(rd: T): BOOLEAN RAISES {}= 
+  BEGIN 
+    RETURN (rd.seekable);
+(* CHECK: Can we really always get away with neither a Lock nor Atomic? *) 
+  END FastSeekable; 
 
 PROCEDURE Closed (rd: T): BOOLEAN =
   BEGIN
     RETURN (rd.closed);
+(* CHECK: Can we really always get away with neither a Lock nor Atomic? *) 
   END Closed;
+
+PROCEDURE FastClosed(rd: T): BOOLEAN RAISES {}= 
+  BEGIN 
+    RETURN (rd.closed);
+  END FastClosed; 
 
 PROCEDURE Lock (rd: T) =
   BEGIN

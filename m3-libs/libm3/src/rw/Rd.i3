@@ -113,7 +113,8 @@ PROCEDURE GetChar(rd: T): CHAR
 
 PROCEDURE GetWideChar(rd: T): WIDECHAR
   RAISES {EndOfFile, Failure, Alerted};
-(* Return the next wide character from "rd".  Two 8-bit bytes are
+(* IF closed(rd) THEN `Cause checked runtime error` END;
+   Return the next wide character from "rd".  Two 8-bit bytes are
    read from "rd" and concatenated in little-endian order to
    form a 16-bit character.  That is, the first byte read will be the
    low-order 8 bits of the result and the second byte will be the
@@ -152,11 +153,20 @@ PROCEDURE UnGetChar(rd: T) RAISES {};
 | IF closed(rd) THEN `Cause checked runtime error` END;
 | IF cur(rd) > 0 THEN DEC(cur(rd)) END
 
-   except there is a special rule: "UnGetChar(rd)" is guaranteed to
+   except there is a special rule: "UngetChar(rd)" is guaranteed to
    work only if "GetChar(rd)" was the last operation on "rd".  Thus
-   "UnGetChar" cannot be called twice in a row, or after "Seek" or
+   "UngetChar" cannot be called twice in a row, or after "Seek" or
    "EOF". If this rule is violated, the implementation is allowed (but
    not required) to cause a checked runtime error. *)
+
+CONST UnGetCapacity = 8;  
+
+PROCEDURE UnGetCharMulti(rd: T): BOOLEAN (* Succeeded. *); 
+(* Like UnGetChar, but can accumulate at least MIN(UnGetCapacity,Index(rd))
+   ungotten and not reread characters.  UnGetCharMulti reserves the right 
+   to exceed this on some calls.  Result FALSE means you tried to
+   accumulate too many ungotten characters, and the operation did not happen.
+*) 
 
 PROCEDURE CharsReady(rd: T): CARDINAL RAISES {Failure};
 (* Return some number of characters that can be read without
