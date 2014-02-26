@@ -1,0 +1,104 @@
+Modula-3 support for full-range Unicode characters.  
+
+The language has these changes:
+
+ORD(LAST(WIDECHAR)) = 16_10FFFF, the entire code point range specified
+by the Unicode standard.
+
+Character and Text literals can have Unicode escapes of the form
+\Uhhhhhh, where h is a hexidecimal digit, in either case.  These are
+lexically valid in any literal, wide or not.  It is a static error if
+the code point value exceeds the range of CHAR or Unicode-sized
+WIDECHAR.  In a wide literal, and when the compiler is configured for
+16-bit WIDECHAR, values outside the 16-bit range are converted to the
+Unicode "replacement" character, VAL(16_FFFD,WIDECHAR), with a
+warning.
+
+The subtype and assignability rules are relaxed as if CHAR and
+WIDECHAR were the same base type.  This allows assignments between
+these and subranges thereof, as with subranges of a single base type.
+Runtime range checks are performed when necessary, in the same way.
+
+Implementation changes.
+
+BITSIZE(WIDECHAR) = 32. 
+
+Encoding, decoding, and streams.
+
+Package libunicode contains new procedures for handling encoding of
+various encodings of characters.  It will compile only by a compiler
+configured for Unicode-range WIDECHAR.  
+
+There are 9 different encodings possible, including the 5 defined in
+the Unicode standard, the two that older Modula-3 systems use, and two
+transitional UCS encodings.  See UniEncoding.i3 for their definitions.
+
+Interface UniCodec.i3 provides lower-level, single character encoding
+and decoding procedures for the various encodings.
+
+Interfaces UniWr.i3 and UniRd.i3 are for entire streams.  These act as
+filters on a preexisting stream.  They are connected at open time to a
+stream, then used as a stream substitute.  They are designed to be as
+close as reasonable to Wr.i3 and Rd.i3.  Many, though not all, calls
+on procedures in Wr and Rd can be straightforwardly replaced by
+same-named procedures in the new interfaces.
+
+The aforementioned interfaces do their own synchronization, and thus
+provide atomic operations.  The Unsafe* interfaces provide equivalent
+funcions, but do not synchronize, expecting their callers to do it, or
+ensure it is unnecessary.
+
+Consistency of WIDECHAR size.
+
+It would be chaotic if code compiled with different sizes of WIDECHAR
+were to exchange values thereof.  The compiler prevents such code from
+being linked together, without attempting to check whether WIDECHAR
+values are actually exchanged.  Within a package, it automatically
+recompiles the entire package, if it was previously compiled with a
+different size WIDECHAR.  When doing so, it displays a message to this
+effect.  Between different packages, this is not possible, so it just
+detects the difference, displays a message, and stops.  Older
+compilers will not complete successfully in either of these cases, but
+the message will not be informative:
+
+Configuring the size of WIDECHAR 
+
+By default, the compiler will make WIDECHAR 16-bit.  To change this,
+add the line Unicode_WIDECHAR="TRUE" to any Quake code that will be
+interpreted before compilation starts.  The easiest place is in
+cm3.cfg, in the bin directory where the compiler executable is
+installed, usually /usr/local/cm3/bin.  Assigning any other value to
+Unicode_WIDECHAR or leaving it undefined will revert to 16-bit
+WIDECHAR.
+
+Because of its insistence that all linked-together code have the same
+size WIDECHAR, when the compiler is reconfigured for a different size
+WIDECHAR, it is necessary to recompile all libraries used, starting
+with m3core, which every program implicitly uses.  The size can be
+overridden by command line options -widechar-uni or widechar-16.
+However, this is likely to be tedious because of the consistency
+requirement.
+
+Compatability of WIDECHARs in pickles.
+
+Programs with different WIDECHAR size can interchange pickles
+containing WIDECHARs in either direction, if both are linked to a
+post-Unicode libm3core, which understands both sizes of WIDECHAR.  A
+code point outside the 16-bit range, when read from a pickle into a
+program compiled with 16-bit WIDECHAR is converted to the Unicode
+"replacement" character, VAL(16_FFFD,WIDECHAR).
+
+Pickles containing WIDECHARs (they will be 16-bit) and written by
+pre-Unicode libm3core can be read by post-Unicode libm3core.  The
+reverse is not true.  A pre-Unicode libm3core reading a pickle that
+was written by a program compiled with Unicode-sized WIDECHAR will
+raise an exception, even if the pickle contains no actual WIDECHARs.
+
+Network object compatability. 
+
+The compatability rules for WIDECHARs transferred by network object
+calls are the same as for pickles.  But remember that network object
+calls involve two-way transfer of data, and thus will, in general,
+require the two-way compabability of post-Unicode libm3core and
+post-Unicode m3netobj to work.
+ 

@@ -1,0 +1,40 @@
+Bootstrapping CM3 with full-range Unicode support.
+
+The CM3 build system can be bootstrapped by the 5.8 release compiler or
+head compilers since.  With a working 'cm3' command, here is the procedure: 
+
+1. In your local cm3 distribution directory, 
+   'cvs update -d'
+   This will get the latest source files.
+
+2. './find-packages.sh'
+   This will locate new package libunicode.  
+
+3. In the cm3/scripts directory, 
+   './upgrade.sh'
+   This will build the latest compiler and its support, configured, by 
+   default for 16-bit WIDECHAR. 
+
+4. Edit file /usr/local/cm3/bin/cm3.cfg to add the line:
+   Unicode_WIDECHAR="TRUE"
+   after the INSTALL_ROOT = ... line.  
+   This will configure the compiler for full-range Unicode.
+
+5. Back in scripts, './do-cm3-front.sh buildship'
+   This will rebuild the compiler and its support for full-range Unicode.
+
+6. './install-cm3-compiler upgrade'
+   This will install the rebuilt compiler in the bin directory.
+
+7. Rebuild other package groups as you need, with
+   './do-cm3-<x>.sh buildship'
+   for <x> IN {base, core, gui, comm, caltech-parser, all}.
+
+libunicode will not build unless the compiler is configured for full-range 
+Unicode and it and its support rebuilt that way.
+
+A few packages entailed by do-cm3-all.sh will not build.  These problems are
+unrelated to Unicode support. 
+
+ 
+
