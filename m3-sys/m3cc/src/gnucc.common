@@ -140,5 +140,6 @@ if Native and (equal(nTARGET, "SPARC32_SOLARIS") or equal(TARGET, "SPARC64_SOLAR
         env = "PATH=\"" & gcc & ccs & "$PATH\" " & env
     end
 end
+%if not defined("GNU_CFLAGS") GNU_CFLAGS = "-g -O0"    end
 
 %------------------------------------------------------------------------------

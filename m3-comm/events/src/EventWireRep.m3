@@ -16,11 +16,39 @@
  * Update Count    : 7
  * 
  * $Source: /opt/cvs/cm3/m3-comm/events/src/EventWireRep.m3,v $
- * $Date: 2013-09-06 05:30:44 $
- * $Author: jkrell $
- * $Revision: 1.3 $
- * 
+ *
+ * $Date: 2014-02-26 23:16:56 $
+ * $Author: rodney $
+ * $Revision: 1.4 $
+ *
  * $Log: not supported by cvs2svn $
+ * Revision 1.2.10.1  2014-02-23 00:26:12  rodney
+ * All head changes merged into branch.  Rebuilds itself twice.
+ *
+ * Revision 1.3  2013-09-06 05:30:44  jkrell
+ * m3-comm/events is an out of date fork of m3-obliq/obliqrt
+ *
+ * m3-comm/events contains this code:
+ * Int32 := Time.Now();
+ *
+ * m3-obliq contains similar:
+ * Int32 := Time.Now() - Epoch;
+ * Posix.Epoch = 0
+ * Win32.Epoch = 1970
+ *
+ *
+ * m3-comm (i.e. starting mentor) fails on AMD64_NT because we are
+ * more than 2 billion seconds into the Win32 epoch (starting in 1601)
+ * I386_NT succeeds albeit bogosusly -- the whole float to integer
+ * conversion lacking any range chech..
+ *
+ *
+ * Port m3-obliq to m3-comm.
+ * This should fix AMD64_NT.
+ *
+ *
+ * All platforms will blow up here in 2038.
+ *
  * Revision 1.2  2001-12-02 00:20:38  wagner
  * add copyright notes, fix overrides for cm3, and make everything compile
  *

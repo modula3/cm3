@@ -536,15 +536,25 @@ PROCEDURE IsSubtype (a, b: T): BOOLEAN =
     RETURN a.isSubtype (b) OR OpaqueType.IsSubtype (a, b);
   END IsSubtype;
 
+PROCEDURE IsCharacterType (t: T): BOOLEAN =
+  BEGIN
+    RETURN IsEqual(t, Charr.T, NIL) OR IsEqual(t, WCharr.T, NIL); 
+  END IsCharacterType; 
+
 PROCEDURE IsAssignable (a, b: T): BOOLEAN =
   VAR i, e: T;  min_a, max_a, min_b, max_b, min, max: Target.Int;
+  VAR base_a, base_b: T; 
   BEGIN
     IF IsEqual (a, b, NIL) OR IsSubtype (b, a) THEN
       RETURN TRUE;
     ELSIF IsOrdinal (a) THEN
       (* ordinal types:  OK if there is a common supertype
          and they have at least one member in common. *)
-      IF IsEqual (Base(a), Base(b), NIL)
+      base_a := Base(a); 
+      base_b := Base(b); 
+      IF (IsEqual (base_a, base_b, NIL) 
+          OR (IsCharacterType (base_a) AND IsCharacterType(base_b))  
+         )
          AND GetBounds (a, min_a, max_a)
          AND GetBounds (b, min_b, max_b) THEN
         (* check for a non-empty intersection *)

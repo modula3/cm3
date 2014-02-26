@@ -1,0 +1,22 @@
+% Copyright (C) 2013, Rodney M. Bates 
+
+import ("m3core")
+import ("libm3")
+
+Module("UniEncoding")
+
+Module("UniCodec")
+Module("UnsafeUniCodec")
+
+Module("UniRd")
+Module("UnsafeUniRd")
+Interface("UniRdClass")
+
+Module("UniWr")
+Module("UnsafeUniWr")
+Interface("UniWrClass")
+
+Library ("unicode") 
+
+
+

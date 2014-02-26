@@ -81,8 +81,8 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
     END;
     p.kind := Classify (ta, tb);
     IF (p.kind = Kind.SimpleScalar) AND ((ta = Textt.T) OR (tb = Textt.T)) THEN
-      IF TextExpr.Split8 (p.a, str) OR TextExpr.Split16 (p.a, wstr)
-      OR TextExpr.Split8 (p.b, str) OR TextExpr.Split16 (p.b, wstr) THEN
+      IF TextExpr.Split8 (p.a, str) OR TextExpr.Split32 (p.a, wstr)
+      OR TextExpr.Split8 (p.b, str) OR TextExpr.Split32 (p.b, wstr) THEN
         Error.Warn (1,"comparing pointers, use Text.Equal to compare strings");
       END;
     END;

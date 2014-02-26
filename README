@@ -1,13 +1,121 @@
-This is the root of the Critical Mass Modula-3 Software Distribution.
-It may be freely distributed as open source according to the various
-copyrights under which different parts of the sources are placed.
-Please read the COPYRIGHT-* files found in this directory.
+This is an experimental replacement for various library code involving
+the type TEXT.
 
-To build everything, go to the scripts directory.
+Approach:
 
-The base system can be found in several packages in the collections
-m3-sys and m3-libs. All the rest is more or less optional. Complete
-documentation in HTML and other formats can be found in the doc
-sub-directory.
+I tried to see how much I could improve the performance of CM3 TEXT
+operations by changing the algorithms only, leaving the data
+structure, both declarations and invariants, unchanged.  This presents
+minimum disruption elsewhere.  Both the pickle code and existing
+pickle files will be unaffected, along with other things that use
+pickles.
+
+Changes:
+
+I eliminated as much recursion as possible, converting some instances
+of recursion to tail-recursions, and then converting all
+tail-recursion instances to iteration.  Recursion remains when:
+
+1) There is true nonlinear recursion.  This happens in only one place
+   in concatenation.  Here, I did the recursion on the shorter (and
+   thus hopefully shallower) side of the tree.
+
+2) Where necessary to avoid the chance of creating an identical copy
+   of a known, already existing TextCat.T node.
+
+3) The recursion needs to go through a method dispatch. 
+
+In concatenations, I "flattened" concatenation results that do not
+exceed a length cutoff.  By "flattening", I mean copying into a single
+node of type Text8.T, Text8Short.T, Text16, or Text16Short.T.  I
+experimentally tuned the length cutoff to 64 characters, for best
+compromise among speed and time and in various use cases.
+
+In concatenations, I did some heuristic rebalancing.  I used the
+relative lengths of strings as a crude approximation for the relative
+depths of trees.  Actual depths are not cached in the nodes, and
+computing them would have been O(n) for each concatenation operation.
+I postponed rebalancing flat strings into a tree, keeping them at the
+top, where they are available for further flattening, until there is
+no chance of this happening.
+
+Most of the existing operations were sometimes unnecessarily
+converting strings from CHAR to WIDECHAR arrays, involving
+character-at-a-time conversion.  This was a likely very common case,
+and I eliminated it when easily detectable.
+
+Bugs:
+
+I fixed (I hope!) a few bugs I discovered in the existing code.
+
+Find[Wide}CharR had an off-by-one bug in the where the search started.
+
+String[8|16].FindCharR was doing an address computation too early, in
+a local variable declaration, before a needed NIL check, making the
+check fail to work.
+
+HasWideChars was only computing whether the representation had the
+capability to hold wide characters, not whether any were actually
+there.  This was not a useful meaning for the result.
+
+TextCat.MultiCat (and NewMulti, which calls it) were not checking for
+NILs.  Assuming the result was ever used, these would eventually cause
+runtime errors, but not until it was more difficult to diagnose them.
+
+Testing:
+
+The modified code can be dynamically switched between the old and new
+algorithms.  It is also loaded with instrumentation.  All of this will
+slow it down, but the old/new comparisons should not have significant
+bias.  TextClass.i3 has some new stuff to allow clients to control
+the algorithms.  New interface TextStats collects a bunch of raw 
+instrumentation data.
+
+If people decide they like this package, I will produce a version with
+all this extra stuff stripped out.
+
+I wrote an elaborate test driver, both for bug-testing and for
+experimenting and gathering performance comparisons with the old code.
+It runs large numbers of randomly-generated test cases, typically
+50000 flat strings, 100000 string-producing operations, heavily biased
+to concatenations (substring is the only other one), and 100000 text
+querying operations, roughly equally distributed.  
+
+Concatenations can be built randomly from previous strings or
+"linearly", i.e., strictly left-to-right, or strictly right-to-left.
+The latter two cases are symmetrical, and once the symmetry bugs were
+gone, they give virtually identical performance.  In the linear
+construction cases, there are no substring operations done.
+
+The old and new algorithms can be run side-by-side on pairs of strings
+that have identical abstract values (but often different internal
+representations).  The results can be mechanically compared this way,
+for correctness testing.
+
+Performance summary:
+
+In a number of different situations, the new algorithms give
+improvements in total time spent in the operations, ranging from 17%
+to 60%, the latter for linear concatenations, which are much slower
+than random, using both the old and new algorithms.  
+
+Tree balance improves dramatically in the linear cases (the random
+case is well-balanced even by the old algorithms) and recursion depth
+decreases even more dramatically.
+
+The new algorithms allocate 27% (random) to 79% (linear) more heap
+memory, but a lot is garbage.  After collection, the new algorithms
+retain 20% more (random) to 2% less (linear).  Total space runs
+somewhat larger in the linear case, for both algorithms.  The old
+algorithms toss no garbage.  
+
+In the special case of linear concatentations with all leaf strings
+having length one, the new algorithms allocate over twice as much
+heap storage but retain 63% less.
+
+NOTE: in recent tests, attempts to force garbage collection to complete
+are apparently not working, giving sometimes high numbers for storage
+retention.   
+
 
 

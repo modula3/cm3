@@ -78,7 +78,7 @@ END M3Compiler.
 
      "note_comment" attaches a comment to the current unit.
 
-     "note_inteface_use" records the named interface as is either imported
+     "note_interface_use" records the named interface as is either imported
       or exported by the current unit.
 
      "note_generic_use" records the use of the specified generic unit.

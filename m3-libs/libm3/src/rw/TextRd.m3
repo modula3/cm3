@@ -23,6 +23,7 @@ REVEAL
 PROCEDURE Init (rd: T; t: TEXT): T =
   VAR len := Text.Length (t);
   BEGIN
+    RdClass.Init(rd); 
     IF (rd.buff = NIL) OR (len > NUMBER (rd.buff^)) THEN
       rd.buff := NEW(REF ARRAY OF CHAR, len);
     END;

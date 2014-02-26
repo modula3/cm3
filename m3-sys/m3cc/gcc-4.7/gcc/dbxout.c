@@ -163,6 +163,13 @@ along with GCC; see the file COPYING3.  If not see
 static const char * procedures_have_extra_block_string 
   = "procedures_have_extra_block."; 
 
+/* Keep these strings consistent with those of the same name in m3gdb, 
+   m3-lang.c. */ 
+static const char * m3_widechar_bitsize_16_string 
+  = "m3_widechar_bitsize_16."; 
+static const char * m3_widechar_bitsize_32_string 
+  = "m3_widechar_bitsize_32."; 
+
 enum typestatus {TYPE_UNSEEN, TYPE_XREF, TYPE_DEFINED};
 
 /* Structure recording information about a C data type.
@@ -1017,6 +1024,14 @@ is_fortran (void)
 
    return (lang == N_SO_FORTRAN) || (lang == N_SO_FORTRAN90);
 }
+
+void dbxout_emit_widechar_N_OPT (int bitsize) 
+{ if (bitsize == 32) 
+    dbxout_begin_simple_stabs (m3_widechar_bitsize_32_string, N_OPT);
+  else 
+    dbxout_begin_simple_stabs (m3_widechar_bitsize_16_string, N_OPT);
+  dbxout_stab_value_zero ();
+} 
 
 /* At the beginning of compilation, start writing the symbol table.
    Initialize `typevec' and output the standard data types of C.  */

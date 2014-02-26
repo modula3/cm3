@@ -16,14 +16,14 @@ TYPE
     Address, Array, Boolean, Cardinal, Char, Enum, Extended,
     Integer, Longcard, Longint, Longreal, Null, Object, OpenArray,
     Packed, Proc, Real, Record, Ref, Refany, Set, Subrange, UntracedRef };
-(* Widechar. *) 
+(* Widechar Tipe. *) 
 
 CONST
   BuiltinKinds = SET OF Kind {
     Kind.Address, Kind.Boolean, Kind.Cardinal, Kind.Char, Kind.Extended,
     Kind.Integer, Kind.Longcard, Kind.Longint, Kind.Longreal, Kind.Null,
     Kind.Proc, Kind.Real, Kind.Refany
-(* Widechar. *) 
+(* Widechar Tipe. *) 
   };
 
 TYPE 

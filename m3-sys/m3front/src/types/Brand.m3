@@ -12,7 +12,7 @@ REVEAL
     type  : Type.T      := NIL;
     expr  : Expr.T      := NIL;
     val8  : M3String.T  := NIL;
-    val16 : M3WString.T := NIL;
+    val32 : M3WString.T := NIL;
     next  : T           := NIL;
     error : BOOLEAN     := FALSE;
   END;
@@ -88,9 +88,9 @@ PROCEDURE Check (t: T;  holder: Type.T;
       xx := M3String.Hash (t.val8);
       hash := Word.Plus (Word.Times (hash, 37), xx);
       CheckDuplicate (t, xx);
-    ELSIF TextExpr.Split16 (e, t.val16) THEN
+    ELSIF TextExpr.Split32 (e, t.val32) THEN
       t.expr := e;
-      xx := M3WString.Hash (t.val16);
+      xx := M3WString.Hash (t.val32);
       hash := Word.Plus (Word.Times (hash, 37), xx);
       CheckDuplicate (t, xx);
     ELSE
@@ -111,7 +111,7 @@ PROCEDURE CheckDuplicate (t: T;  hash: INTEGER) =
       ELSIF (node = t) OR (node.type = t.type) THEN
         (* ok, this is a repeated check of an existing brand *)
         RETURN;
-      ELSIF (node.val8 = t.val8) AND (node.val16 = t.val16) THEN
+      ELSIF (node.val8 = t.val8) AND (node.val32 = t.val32) THEN
         IF (node.type.origin # t.type.origin) THEN
           (* error, duplicate brand *)
           DuplicateError (t);
@@ -146,13 +146,13 @@ PROCEDURE Compile (t: T): INTEGER =
                                  Target.Integer.align, TRUE, "brand");
       CG.Init_intt (offset, Target.Integer.size, n_bytes, TRUE);
       M3String.Init_chars (offset + Target.Integer.size, t.val8, TRUE);
-    ELSIF (t.val16 # NIL) THEN
-      len := Target.Int16.size * (M3WString.Length (t.val16) + 1);
-      n_bytes := (len - Target.Int16.size) DIV Target.Int8.size;
+    ELSIF (t.val32 # NIL) THEN
+      len := Target.Word32.size * (M3WString.Length (t.val32) + 1);
+      n_bytes := (len - Target.Word32.size) DIV Target.Int8.size;
       offset := Module.Allocate (Target.Integer.size + len,
                                  Target.Integer.align, TRUE, "brand");
       CG.Init_intt (offset, Target.Integer.size, n_bytes, TRUE);
-      M3WString.Init_chars (offset + Target.Integer.size, t.val16, TRUE);
+      M3WString.Init_chars (offset + Target.Integer.size, t.val32, TRUE);
     END;
     RETURN offset;
   END Compile;
@@ -166,11 +166,14 @@ PROCEDURE GenFPrint (t: T;  VAR x: M3.FPInfo) =
       M3Buf.PutInt  (x.buf, M3String.Length (t.val8));
       M3Buf.PutChar (x.buf, ' ');
       M3String.Put  (x.buf, t.val8);
-    ELSIF (t.val16 # NIL) THEN
+    ELSIF (t.val32 # NIL) THEN
       M3Buf.PutText (x.buf, "-BRAND16 ");
-      M3Buf.PutInt  (x.buf, M3WString.Length (t.val16));
+    (* Even though the characters of this brand now occupy 32 bits, let's keep
+       this string "-BRAND16", to avoid altering fingerprints and undermining
+       pickles written earlier. *) 
+      M3Buf.PutInt  (x.buf, M3WString.Length (t.val32));
       M3Buf.PutChar (x.buf, ' ');
-      M3WString.PutLiteral (x.buf, t.val16);
+      M3WString.PutLiteral (x.buf, t.val32);
     END;
   END GenFPrint;
 
@@ -178,9 +181,9 @@ PROCEDURE Equal (a, b: T): BOOLEAN =
   BEGIN
     IF    (a = NIL)       OR  (b = NIL)       THEN  RETURN (a = b);
     ELSIF (a.val8  # NIL) AND (b.val8 # NIL)  THEN  RETURN (a.val8 = b.val8);
-    ELSIF (a.val16 # NIL) AND (b.val16 # NIL) THEN  RETURN (a.val16 = b.val16);
-    ELSIF (a.val8  # NIL) AND (b.val16 # NIL) THEN  RETURN FALSE;
-    ELSIF (a.val16 # NIL) AND (b.val8 # NIL)  THEN  RETURN FALSE;
+    ELSIF (a.val32 # NIL) AND (b.val32 # NIL) THEN  RETURN (a.val32 = b.val32);
+    ELSIF (a.val8  # NIL) AND (b.val32 # NIL) THEN  RETURN FALSE;
+    ELSIF (a.val32 # NIL) AND (b.val8 # NIL)  THEN  RETURN FALSE;
     ELSE  RETURN Expr.IsEqual (a.expr, b.expr, NIL);
     END;
   END Equal;
@@ -190,7 +193,7 @@ PROCEDURE ToText (t: T): TEXT =
   BEGIN
     IF    (t = NIL)       THEN txt := NIL;
     ELSIF (t.val8  # NIL) THEN txt := M3String.ToText (t.val8);
-    ELSIF (t.val16 # NIL) THEN txt := M3WString.ToLiteral (t.val16);
+    ELSIF (t.val32 # NIL) THEN txt := M3WString.ToLiteral (t.val32);
     END;
     RETURN txt;
   END ToText;

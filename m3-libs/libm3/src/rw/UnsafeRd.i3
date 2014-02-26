@@ -22,7 +22,8 @@ in order to satisfy the constraint that the revealed supertypes of an
 opaque type be totally ordered.  *)
 
 INTERFACE UnsafeRd;
-IMPORT Rd, Thread; 
+IMPORT Rd; 
+IMPORT Thread; 
 FROM Thread IMPORT Alerted;
 FROM Rd IMPORT Failure, EndOfFile;
 
@@ -49,7 +50,29 @@ PROCEDURE FastEOF(rd: Rd.T): BOOLEAN RAISES {Failure, Alerted};
 PROCEDURE FastUnGetChar(rd: Rd.T) RAISES {};
 (* Like Rd.UnGetChar, but rd must be locked. *)
 
-PROCEDURE FastClose (rd: Rd.T) RAISES {Failure, Alerted};
+PROCEDURE FastUnGetCharMulti(rd: Rd.T): BOOLEAN (* Succeeded. *);
+(* Like Rd.UnGetCharMulti, but rd must be locked. *)
+
+PROCEDURE FastCharsReady(rd: Rd.T): CARDINAL RAISES {Failure}; 
+(* Like Rd.CharsReady, but rd must be locked. *)
+
+PROCEDURE FastIndex(rd: Rd.T): CARDINAL; 
+(* Like Rd.Index, but rd must be locked. *)
+
+PROCEDURE FastLength(rd: Rd.T): INTEGER RAISES {Failure, Alerted};
+(* Like Rd.Length, but rd must be locked. *)
+
+PROCEDURE FastIntermittent(rd: Rd.T): BOOLEAN RAISES {};
+(* Like Rd.Intermittent, but rd must be locked. *)
+
+PROCEDURE FastSeekable(rd: Rd.T): BOOLEAN RAISES {};
+(* Like Rd.Seekabke, but rd must be locked. *)
+
+PROCEDURE FastClosed(rd: Rd.T): BOOLEAN RAISES {};
+(* Like Rd.Closed, but rd must be locked. *)
+
+PROCEDURE FastClose(rd: Rd.T) RAISES {Failure, Alerted};
+(* Like Rd.Close, but rd must be locked. *)
 
 END UnsafeRd.
 

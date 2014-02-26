@@ -30,21 +30,30 @@ TYPE
 REVEAL
   Rd.T =
     Private BRANDED OBJECT
-      buff         : REF ARRAY OF CHAR;
-      st           : CARDINAL;           (* index into buff *)
-      lo, hi, cur  : CARDINAL            := 0; (* indexes into src(rd) *)
+      buff                 : REF ARRAY OF CHAR := NIL;
+      Ungetbuff            : REF ARRAY OF CHAR := NIL;
+      Waitingbuff          : REF ARRAY OF CHAR := NIL;
+      st                   : CARDINAL;              (* index into buff *)
+      Ungetst              : CARDINAL;              (* index into Ungetbuff *) 
+      Waitingst            : CARDINAL;              (* index into WaitingBuff *)
+      cur                  : CARDINAL         := 0; (* index into src(rd) *)
+      lo, hi               : CARDINAL         := 0; (* indexes into src(rd) *)
+      Ungetlo, Ungethi     : CARDINAL         := 0; (* indexes into src(rd) *)
+      Waitinglo, Waitinghi : CARDINAL         := 0; (* indexes into src(rd) *)
       closed: BOOLEAN := TRUE;   (* init method of the subtype should set
                                     this to FALSE *)
       seekable, intermittent: BOOLEAN;
     METHODS
       seek   (n: CARDINAL; dontBlock: BOOLEAN): SeekResult
                          RAISES {Failure, Alerted};
+      (* ^rd is locked and not closed. *)
       getSub (VAR a: ARRAY OF CHAR): CARDINAL
                          RAISES {Failure, Alerted} := GetSubDefault;
+      (* ^rd is locked and not closed. *)
       length (): INTEGER RAISES {Failure, Alerted} := LengthDefault;
+      (* ^rd is locked and not closed. *)
       close  () RAISES {Failure, Alerted}          := CloseDefault;
     END;
-
 
 (* Let rd be a reader, abstractly given by len(rd), src(rd), cur(rd),
 avail(rd), closed(rd), seekable(rd), and intermittent(rd).  The data
@@ -56,12 +65,13 @@ which is represented in some class-specific way.
 More precisely, we say that the state of the representation is valid
 if conditions V1 through V4 hold:
 
-V1. the characters of buff starting with st accurately reflect src. 
-    That is,  for all i in [rd.lo .. rd.hi-1],
+V1. the characters of buff in the range [st .. st+(hi-lo)] accurately 
+    reflect src.  That is,  for all i in [rd.lo .. rd.hi-1],
            
 	rd.buff[rd.st + i - rd.lo] = src(rd)[i]
 
-V2. the cur field is in or just past the end of the buffer, that is:
+V2. the cur field is in or just past the end of the occupied part of the 
+    buffer, that is:
 
         rd.lo <= rd.cur <= rd.hi
 
@@ -97,6 +107,22 @@ would be ready with rd.cur = n and if so, simply sets rd.cur to n.
 If not, it calls rd.seek supplying the position n as argument.
 As in the case of writers, the seek method can be called even for an
 unseekable reader in the special case of advancing to the next buffer.
+
+The fields with names beginning with "Unget" describe a buffer of characters 
+retained in case they need to be reused by UngetChar.  The fields with names 
+beginning with "Waiting" are a buffer once supplied by class-dependent code
+but temporarily suspended while characters originally saved in the unget 
+and then ungotten are being returned.  If NIL#Ungetbuff=buff, we are accessing
+previously ungotten characters from Ungetbuff^, and Waitingbuff is the buffer 
+most recently provided by seek.  Otherwise, buff is the buffer most recently
+provided by seek.  Either way, the fast path in class-independent code for 
+getting characters works the same, using buff, st, lo, and hi, as in the 
+earlier implementation, and ignoring the other buffer fields.  
+
+Similarly, (class-dependent) seek method bodies use only these same fields.  
+Only UngetChar and class-independent code surrounding seek method calls need
+be aware of the additional two buffer pointers and their subscripts.        
+
 There is a wrinkle to support the implementation of CharsReady.  If rd
 is ready, the class-independent code can handle the call to
 CharsReady(rd) without calling any methods (since there is at least
@@ -123,9 +149,9 @@ while if res = Eof, then rd.cur = len(rd); and finally if res = WouldBlock
 then dontBlock was TRUE and avail(rd) = cur(rd).
 
 The getSub method is used to implement Rd.GetSub and is
-called with the reader lock held.  Efficient implementations override
-this method to avoid unnecessary copying by reading directly
-from the reader source, bypassing the reader buffer.  The default
+called with the reader lock held and the reader not closed.  Efficient 
+implementations override this method to avoid unnecessary copying by reading 
+directly from the reader source, bypassing the reader buffer.  The default
 implementation is correct for any class, but always copies through
 the reader buffer.
 
@@ -145,6 +171,8 @@ the state irrelevant).
 The remainder of the interface is similar to the corresponding part 
 of the WrClass interface: *)
 
+PROCEDURE Init(rd: Rd.T); 
+(* Class-independent initialize rd, including private fields revealed herein. *)
 
 PROCEDURE Lock(rd: Rd.T) RAISES {};
 (* The reader rd must be unlocked; lock it and make its state valid. *)
@@ -155,6 +183,7 @@ private invariant of the reader implementation. *)
 
 PROCEDURE GetSubDefault(rd: Rd.T; VAR (*OUT*) str: ARRAY OF CHAR): CARDINAL
   RAISES {Failure, Alerted};
+  (* rd is locked and not closed. *)
 (* Implement "getSub" by copying from the buffer, calling the "seek"
    method as necessary.  Clients can override this in order to
    achieve greater efficiency; for example, by copying directly

@@ -38,6 +38,19 @@ Module("RdExtras")
 Interface("MsgRd")
 Interface("MsgWr")
 
+%Module("UniEncoding")
+
+%Module("UniCodec")
+%Module("UnsafeUniCodec")
+
+%Module("UniRd")
+%Module("UnsafeUniRd")
+%Interface("UniRdClass")
+
+%Module("UniWr")
+%Module("UnsafeUniWr")
+%Interface("UniWrClass")
+
 /* Module ("FilterRd") */
 /* Module ("SeekableRd") */
 

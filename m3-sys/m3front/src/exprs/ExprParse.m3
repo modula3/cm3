@@ -178,7 +178,7 @@ PROCEDURE E8 (types: BOOLEAN): Expr.T =
     | TK.tCHARCONST     => a := EnumExpr.New (Charr.T, cur.int);    GetToken ();
     | TK.tWCHARCONST    => a := EnumExpr.New (WCharr.T, cur.int);   GetToken ();
     | TK.tTEXTCONST     => a := TextExpr.New8 (cur.str);            GetToken ();
-    | TK.tWTEXTCONST    => a := TextExpr.New16 (cur.wstr);          GetToken ();
+    | TK.tWTEXTCONST    => a := TextExpr.New32 (cur.wstr);          GetToken ();
     | TK.tREALCONST     => a := ReelExpr.New (cur.float);           GetToken ();
     | TK.tLONGREALCONST => a := ReelExpr.New (cur.float);           GetToken ();
     | TK.tEXTENDEDCONST => a := ReelExpr.New (cur.float);           GetToken();

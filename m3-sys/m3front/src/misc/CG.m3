@@ -382,6 +382,11 @@ PROCEDURE Declare_exception (n: Name;  arg_type: TypeUID;
     cg.declare_exception (n, arg_type, raise_proc, base, ToBytes (offset));
   END Declare_exception;
 
+PROCEDURE Widechar_size (size: INTEGER) =
+  BEGIN
+    cg.widechar_size (size);
+  END Widechar_size;
+
 (*--------------------------------------------------------- RunTyme hooks ---*)
 
 PROCEDURE Set_runtime_proc (n: Name;  p: Proc) =
@@ -2849,7 +2854,16 @@ PROCEDURE ScanTypes (READONLY x: ARRAY [0..3] OF Target.Int_type;
       WITH z = x[i] DO
         IF (s <= z.size) AND (z.size < best_s)
           AND (z.align <= best_a)
-          AND (a MOD z.align = 0)
+          AND (a MOD z.align = 0)  
+       (* ^This is as in the original code.  It is wrong and causes some packed
+          cases to crash the front end. *)  
+       (* AND (z.align MOD a = 0) *) 
+       (* ^This is the modified version.  It fixes the packed cases mentioned
+          and works fine on 64-bit targets.  Sadly, it also causes far more 
+          frequent compiler crashes for 32-bit targets.  This is probably 
+          because callers of FindIntType, and thus ScanTypes, pass the largest 
+          integer type known to the compiler (64), rather than the largest 
+          in the target machine (32, for the failing cases.  *) 
           AND (s + (o MOD z.align) <= z.size) THEN
           (* remember this type *)
           best_t := z.cg_type;

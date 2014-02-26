@@ -10,12 +10,12 @@ INTERFACE TextExpr;
 IMPORT Expr, M3String, M3WString;
 
 PROCEDURE New8  (value: M3String.T): Expr.T;
-PROCEDURE New16 (value: M3WString.T): Expr.T;
+PROCEDURE New32 (value: M3WString.T): Expr.T;
 
 PROCEDURE Cat (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN;
 
 PROCEDURE Split8  (e: Expr.T;  VAR value: M3String.T): BOOLEAN;
-PROCEDURE Split16 (e: Expr.T;  VAR value: M3WString.T): BOOLEAN;
+PROCEDURE Split32 (e: Expr.T;  VAR value: M3WString.T): BOOLEAN;
 
 PROCEDURE Reset ();
 

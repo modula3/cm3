@@ -164,6 +164,7 @@ typedef enum {
   M3CG_FETCH_AND_OR,           /* 157 */
   M3CG_FETCH_AND_AND,          /* 158 */
   M3CG_FETCH_AND_XOR,          /* 159 */
+  M3CG_WIDECHAR_SIZE,          /* 160 */
   LAST_OPCODE } M3CG_opcode;
 
 static const char *M3CG_opnames[] = {
@@ -327,7 +328,9 @@ static const char *M3CG_opnames[] = {
   "fetch_and_or",           /* 157 */
   "fetch_and_and",          /* 158 */
   "fetch_and_xor",          /* 159 */
+  "widechar_size",          /* 160 */
   0 };
+
 
 #define M3CG_Int1        255
 #define M3CG_NInt1       254

@@ -50,6 +50,7 @@ OVERRIDES
     declare_temp := declare_temp;
     free_temp := free_temp;
     declare_exception := declare_exception;
+    widechar_size := widechar_size; 
     begin_init := begin_init;
     end_init := end_init;
     init_int := init_int;
@@ -191,6 +192,7 @@ END;
 <*NOWARN*>PROCEDURE declare_opaque(self: T; typeid, super_typeid: TypeUID) = BEGIN END declare_opaque;
 <*NOWARN*>PROCEDURE reveal_opaque(self: T; lhs_typeid, rhs_typeid: TypeUID) = BEGIN END reveal_opaque;
 <*NOWARN*>PROCEDURE declare_exception(self: T; name: Name; arg_typeid: TypeUID; raise_proc: BOOLEAN; base: Var; offset: INTEGER) = BEGIN END declare_exception;
+<*NOWARN*>PROCEDURE widechar_size(self: T; optimize: INTEGER) = BEGIN END widechar_size;
 <*NOWARN*>PROCEDURE set_runtime_proc(self: T; name: Name; proc: Proc) = BEGIN END set_runtime_proc;
 <*NOWARN*>PROCEDURE bind_segment(self: T; segment: Var; byte_size: ByteSize; alignment: Alignment; type: Type; exported, inited: BOOLEAN) = BEGIN END bind_segment;
 <*NOWARN*>PROCEDURE free_temp(self: T; var: Var) = BEGIN END free_temp;

@@ -8,7 +8,8 @@
    with "sp.sc = TYPECODE (Atom.T)" will be passed to
    "Pickle.RegisterSpecial" during initialization.  This special pickles
    references "r" with "TYPECODE (r) = TYPECODE (Atom.T)" by
-   passing the text obtained from Atom.Name(r).              *)
+   passing the text obtained from Atom.Name(r). 
+   Both Pickle and Pickle2 get such specials. *)
 
 INTERFACE AtomPkl;
 

@@ -1,0 +1,5 @@
+% m3makefile for test program TestUniRd, testing UniRd.
+import("libm3")
+import("libunicode")
+implementation("TestUniRd") 
+program("TestUniRd")
