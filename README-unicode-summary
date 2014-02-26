@@ -1,0 +1,57 @@
+CM3 now has low-level support of full-range Unicode characters in the
+type WIDECHAR.  The philosophy is:
+
+1. Use the streams (Rd, Wr) for encoding and decoding variable-length
+   encodings (e.g., UTF-8) of characters.  Rd and Wr have been
+   designed from the beginning for primarily sequential access, which
+   variable-length encodings get along with.
+
+2. Expand WIDECHAR to hold any character in the entire Unicode range,
+   in a fixed-size type.  This property carries into Arrays of
+   WIDECHAR and TEXTs.  These have been designed from the beginning to
+   support random access by character, not fragments thereof, and this
+   property is preserved.
+
+Of course, if you really want to, you can still put individual
+fragments of characters into either, and handle them that way.
+
+By default, the compiler is configured to keep WIDECHAR at 16 bits, as
+before.  If you keep it this way and do not do anything to utilize the
+full Unicode range, everything should work as before.  If not, it's a
+bug.
+
+If you configure for Unicode-sized WIDECHAR, but change no code, most
+things will still work the same.  WIDECHAR values in memory will
+occupy 32 bits.  As a result, record/object field layouts obviously
+can change, and the legality of packed layouts can also change.
+Low-level code that makes assumptions about memory sizes and layouts
+can break.  Most significantly, the procedures in Wr and Rd that
+transfer WIDECHAR values (e.g., Rd.GetWideChar) will transfer 32 bits
+to/from the stream, as well as in memory.
+
+If you want to utilize Unicode-sized WIDECHAR, there are some new
+things waiting for you.  The interfaces UniWr and UniRd, in package
+libunicode, are as similar as reasonable to Wr and Rd, but they perform
+encoding and decoding.  They act as filters on a Wr.T or Rd.T.  There
+are 9 different encodings possible, including the 5 defined in the
+Unicode standard, the two that older Modula-3 systems use, and two
+transitional UCS encodings.
+
+Character and Text literals have new escapes for the entire code point
+range.  The subtype and assignability rules are relaxed as if CHAR and
+WIDECHAR were the same base type.  Pickles and network objects have a
+reasonable degree of compatability between programs compiled with
+different WIDECHAR sizes.  
+
+Most library code adapts to different WIDECHAR sizes when compiled.
+Some functions adapt at runtime, including m3gdb.  Only the compiler
+needs to be configured.
+
+These changes provide no support for higher level Unicode functions.
+The only awareness of specific code points are of the null character,
+surrogate code points (relevant to the encodings), the end-of-line
+sequences defined in the Unicode standard, and the Unicode
+"replacement character", inserted in place of characters that are
+invalid in one way or another.
+
+   
