@@ -971,7 +971,7 @@ GENERIC MODULE OrdSets ( )
   ; VAR LBitword : BitwordTyp 
   ; VAR LSs : CARDINAL 
 
-  ; BEGIN
+  ; BEGIN (* BitsetRangeIsEmpty *)
       RSetLo := MIN ( RSetLo , BSetInfo . BitsetHi ) 
     ; RSetHi := MAX ( RSetHi , BSetInfo . BitsetLo ) 
     ; LIElemLo := MAX ( RSetLo , BSetInfo . BitsetLo ) 
@@ -1021,7 +1021,7 @@ GENERIC MODULE OrdSets ( )
   ; VAR LBitword : BitwordTyp 
   ; VAR LSs : CARDINAL 
 
-  ; BEGIN 
+  ; BEGIN (* BitsetRangeIsFull *) 
       RSetLo := MIN ( RSetLo , BSetInfo . BitsetHi ) 
     ; RSetHi := MAX ( RSetHi , BSetInfo . BitsetLo ) 
     ; LIElemLo := MAX ( RSetLo , BSetInfo . BitsetLo ) 
@@ -1115,7 +1115,7 @@ GENERIC MODULE OrdSets ( )
   ; VAR LBit0IElem : IElemTyp 
   ; VAR LBitword : BitwordTyp 
 
-  ; BEGIN 
+  ; BEGIN (* LeastPresentIElemOfBSetInRange *)
       IF RSetLo > RSetHi 
       THEN 
         RETURN IElemNull 
@@ -1177,7 +1177,7 @@ GENERIC MODULE OrdSets ( )
   ; VAR LBit0IElem : IElemTyp 
   ; VAR LBitword : BitwordTyp 
 
-  ; BEGIN 
+  ; BEGIN (* LeastAbsentIElemOfBSetInRange *)
       IF RSetLo > RSetHi 
       THEN 
         RETURN IElemNull 
@@ -1239,7 +1239,7 @@ GENERIC MODULE OrdSets ( )
   ; VAR LBit0IElem : IElemTyp 
   ; VAR LBitword : BitwordTyp 
 
-  ; BEGIN 
+  ; BEGIN (* GreatestPresentIElemOfBSetInRange *)
       IF RSetLo > RSetHi 
       THEN 
         RETURN IElemNull 
@@ -1301,7 +1301,7 @@ GENERIC MODULE OrdSets ( )
   ; VAR LBit0IElem : IElemTyp 
   ; VAR LBitword : BitwordTyp 
 
-  ; BEGIN 
+  ; BEGIN (* GreatestAbsentIElemOfBSetInRange *)
       IF RSetLo > RSetHi 
       THEN 
         RETURN IElemNull 
@@ -1451,7 +1451,7 @@ GENERIC MODULE OrdSets ( )
   ; VAR LResultSs : CARDINAL 
   ; VAR LBitsHash : HashTyp 
 
-  ; BEGIN 
+  ; BEGIN (* FromArray *)
     (* First pass: Ascertain bounds and cardinality. *) 
       LLo := IElemNull 
     ; LHi := IElemNull 
@@ -1539,7 +1539,7 @@ GENERIC MODULE OrdSets ( )
   ; VAR LBitsHash : HashTyp  
   ; VAR LBitword : BitwordTyp  
 
-  ; BEGIN 
+  ; BEGIN (* UnionUntouchingOrderedRanges *)
       LResultInfo . Bias := BitwordNoOfIElem ( RSet1Lo ) 
     ; LSet1HiArraySs := ArraySsOfIElem ( RSet1Hi , LResultInfo . Bias ) 
     ; LSet2LoArraySs := ArraySsOfIElem ( RSet2Lo , LResultInfo . Bias ) 
@@ -1620,7 +1620,7 @@ GENERIC MODULE OrdSets ( )
   ; VAR LHashIncr : HashTyp 
   ; VAR LHashIsComputable : BOOLEAN 
 
-  ; BEGIN 
+  ; BEGIN (* UnionOrderedDisjointBitwordsBitsetRange *)
     (* Result can be neither empty nor all ones and is guaranteed to have
        a 1-bit at each end. *) 
       LSetLoBitwordNo := BitwordNoOfIElem ( BSet1Info . BitsetLo ) 
@@ -1742,7 +1742,7 @@ GENERIC MODULE OrdSets ( )
   ; VAR LHashIncr : HashTyp 
   ; VAR LHashIsComputable : BOOLEAN 
 
-  ; BEGIN 
+  ; BEGIN (* UnionOrderedDisjointBitwordsRangeBitset *)
     (* Result can be neither empty nor all ones and is guaranteed to have a
        1-bit at each end. 
     *) 
@@ -1875,7 +1875,7 @@ GENERIC MODULE OrdSets ( )
   ; VAR LCanReuseBitwordArray : BOOLEAN 
   ; VAR LHashIncrIsComputable , LHashAbsIsComputable : BOOLEAN 
 
-  ; BEGIN 
+  ; BEGIN (* UnionBitsetRange *)
       IF RSetLo <= BSetInfo . BitsetLo 
          AND BSetInfo . BitsetHi <= RSetHi 
       THEN (* Range completely overlaps Bitset. *)  
@@ -2310,7 +2310,7 @@ GENERIC MODULE OrdSets ( )
   ; VAR LHash1 , LHash2 , LHashRemove , LHashIncr : HashTyp := 0  
   ; VAR LHashIsComputable : BOOLEAN 
 
-  ; BEGIN 
+  ; BEGIN (* UnionDisjointOrderedBitsets *)
       LBSet1LoBitwordNo := BitwordNoOfIElem ( BSet1Info . BitsetLo ) 
     ; LBSet1HiBitwordNo := BitwordNoOfIElem ( BSet1Info . BitsetHi ) 
     ; LBSet2LoBitwordNo := BitwordNoOfIElem ( BSet2Info . BitsetLo ) 
@@ -2469,7 +2469,7 @@ GENERIC MODULE OrdSets ( )
   ; VAR LHashIncr , LHashAbs , LHash1 : HashTyp := 0  
   ; VAR LHashIncrIsComputable , LHashAbsIsComputable : BOOLEAN 
 
-  ; BEGIN 
+  ; BEGIN (* UnionOverlappingOrderedHiBitsets *)
       LSet1LoBitwordNo := BitwordNoOfIElem ( BSet1Info . BitsetLo ) 
     ; LSet1HiBitwordNo := BitwordNoOfIElem ( BSet1Info . BitsetHi ) 
     ; LSet2LoBitwordNo := BitwordNoOfIElem ( BSet2Info . BitsetLo ) 
@@ -2946,7 +2946,7 @@ GENERIC MODULE OrdSets ( )
      PRE: RSet2Lo <= RSet2Hi
   *) 
 
-  = BEGIN 
+  = BEGIN (* IntersectionNonemptyRanges *)
       IF RSet1Lo <= RSet2Lo 
       THEN (* 1Lo <= 2Lo *) 
         IF RSet2Hi <= RSet1Hi 
@@ -3012,7 +3012,7 @@ GENERIC MODULE OrdSets ( )
   ; VAR LBit0IElem : IElemTyp 
   ; VAR LBitword : BitwordTyp 
 
-  ; BEGIN 
+  ; BEGIN (* LeastIntersectionIElemInRange *)
       LLoBitwordNo := BitwordNoOfIElem ( RSetLo ) 
     ; LHiBitwordNo := BitwordNoOfIElem ( RSetHi ) 
     ; LSet1Ss := ArraySsOfBitwordNo ( LLoBitwordNo , BSet1Info . Bias ) 
@@ -3086,7 +3086,7 @@ GENERIC MODULE OrdSets ( )
   ; VAR LBit0IElem : IElemTyp 
   ; VAR LBitword : BitwordTyp 
 
-  ; BEGIN 
+  ; BEGIN (* GreatestIntersectionIElemInRange *)
       LLoBitwordNo := BitwordNoOfIElem ( RSetLo ) 
     ; LHiBitwordNo := BitwordNoOfIElem ( RSetHi ) 
     ; LSet1Ss := ArraySsOfBitwordNo ( LHiBitwordNo , BSet1Info . Bias ) 
@@ -3164,7 +3164,7 @@ GENERIC MODULE OrdSets ( )
   ; VAR LHashAbsIsComputable : BOOLEAN := TRUE  
   ; VAR LBitwordsNewlyAllocated : BOOLEAN 
 
-  ; BEGIN 
+  ; BEGIN (* IntersectionRangeBitset *)
       IF RSetHi < BSetInfo . BitsetLo 
          OR BSetInfo . BitsetHi < RSetLo 
          OR RSetLo > RSetHi 
@@ -3350,7 +3350,7 @@ GENERIC MODULE OrdSets ( )
   ; VAR LHashAbs : HashTyp 
   ; VAR LResultHasA0Bit , LResultHasA1Bit : BOOLEAN 
 
-  ; BEGIN 
+  ; BEGIN (* IntersectionBitsets *)
       IF BSet1Info . BitsetHi < BSet2Info . BitsetLo 
          OR BSet2Info . BitsetHi < BSet1Info . BitsetLo 
       THEN (* No possible overlap, result is empty. *) 
@@ -3583,7 +3583,7 @@ GENERIC MODULE OrdSets ( )
         END (* IF *)
       END InnerProject
 
-  ; BEGIN (*  *) 
+  ; BEGIN (* Project *) 
       IF Min < FIRST ( ValidElemT ) OR LAST ( ValidElemT ) < Min   
       THEN (* Min is not valid.  Set it to minimum valid value. *) 
         Min := FIRST ( ValidElemT )   
@@ -3616,7 +3616,7 @@ GENERIC MODULE OrdSets ( )
      PRE: The sets' ranges are not identical.
   *) 
 
-  = BEGIN 
+  = BEGIN (* DifferenceNonemptyUnequalRanges *)
       IF RSetLHi < RSetRLo 
          OR RSetRHi < RSetLLo 
       THEN (* Disjoint *)
@@ -3673,7 +3673,7 @@ GENERIC MODULE OrdSets ( )
   ; VAR LResult : T
   ; VAR LResultIsRange : BOOLEAN 
 
-  ; BEGIN 
+  ; BEGIN (* DifferenceOverlappingRangeBitset *)
       LBSetRLoBitwordNo := BitwordNoOfIElem ( BSetRInfo . BitsetLo ) 
     ; LBSetRHiBitwordNo := BitwordNoOfIElem ( BSetRInfo . BitsetHi ) 
 
@@ -3938,7 +3938,7 @@ GENERIC MODULE OrdSets ( )
   ; VAR LResultCardIsComputable : BOOLEAN 
   ; VAR LHashIncrIsComputable , LHashAbsIsComputable : BOOLEAN 
    
-  ; BEGIN 
+  ; BEGIN (* DifferenceOverlappingBitsetRange *)
       LSetLLoBitwordNo := BitwordNoOfIElem ( BSetLInfo . BitsetLo ) 
     ; LSetLHiBitwordNo := BitwordNoOfIElem ( BSetLInfo . BitsetHi ) 
     ; IF BSetLInfo . BitsetHi > RSetRHi
@@ -4178,7 +4178,7 @@ GENERIC MODULE OrdSets ( )
   ; VAR LHashIncrIsComputable : BOOLEAN 
   ; VAR LAllResultBitsAreOnes : BOOLEAN 
 
-  ; BEGIN 
+  ; BEGIN (* DifferenceOverlappingBitsets *)
       LSetLLoBitwordNo := BitwordNoOfIElem ( BSetLInfo . BitsetLo ) 
     ; LSetLHiBitwordNo := BitwordNoOfIElem ( BSetLInfo . BitsetHi ) 
     ; LSetRLoBitwordNo := BitwordNoOfIElem ( BSetRInfo . BitsetLo ) 
@@ -4794,7 +4794,7 @@ GENERIC MODULE OrdSets ( )
   ; VAR LResultCardIsComputable : BOOLEAN 
   ; VAR LHashIncrIsComputable , LHashAbsIsComputable : BOOLEAN 
 
-  ; BEGIN 
+  ; BEGIN (* SymDiffOverlappingBitsetRange *)
     (* We can't possibly reuse either the Bitword array or a range set. *) 
 
       INC ( GSymDiffCt ) 
@@ -5209,7 +5209,7 @@ GENERIC MODULE OrdSets ( )
   ; VAR LResultCardIsComputable : BOOLEAN 
   ; VAR LHashIncrIsComputable , LHashAbsIsComputable : BOOLEAN 
 
-  ; BEGIN 
+  ; BEGIN (* SymDiffOverlappingBitsets *)
 (* TODO: Maybe. Perhaps try to reuse one or the other of the operand Bitword 
          arrays.  This is a fairly unlikely case.  To reuse the array for
          operand 1, operand 2 would have to have all zeros corresponding to
@@ -6104,7 +6104,7 @@ GENERIC MODULE OrdSets ( )
         END (* IF *)
       END InnerExtract
 
-  ; BEGIN (* Extract *)
+  ; BEGIN (* ExtractArbitraryMember *)
       <* FATAL ANY *> BEGIN 
         CallWithOneSet ( Set , InnerExtract )
       END (* Block *) 
@@ -6321,7 +6321,7 @@ GENERIC MODULE OrdSets ( )
   ; VAR LBitwordSub , LBitwordSuper : BitwordTyp 
   ; VAR LSetSubSs , LSetSuperSs , LSetSubFinalSs : CARDINAL 
 
-  ; BEGIN 
+  ; BEGIN (* IsSubsetBitsets *)
       IF BSetLInfo . BitsetLo < BSetRInfo . BitsetLo  
          OR BSetRInfo . BitsetHi < BSetLInfo . BitsetHi  
       THEN (* Not a subset. *) 
@@ -6642,7 +6642,7 @@ GENERIC MODULE OrdSets ( )
   ; VAR LBitword1 , LBitword2, LMask : BitwordTyp 
   ; VAR LSet1Ss , LSet2Ss : CARDINAL 
 
-  ; BEGIN 
+  ; BEGIN (* EqualBitsets *)
       LLoIElem := BSet1Info . BitsetLo 
     ; LHiIElem := BSet1Info . BitsetHi 
     ; IF LLoIElem # BSet2Info . BitsetLo OR LHiIElem # BSet2Info . BitsetHi  
@@ -6938,7 +6938,7 @@ GENERIC MODULE OrdSets ( )
   ; VAR LBitword1 , LBitword2 , LBitwordXor : BitwordTyp 
   ; VAR LDiffBitNo : BitNoTyp 
 
-  ; BEGIN 
+  ; BEGIN (* CompareBitsets *)
       LLoBitwordNo := BitwordNoOfIElem ( BSet1Info . BitsetLo ) 
     ; LHiBitwordNo1 := BitwordNoOfIElem ( BSet1Info . BitsetHi ) 
     ; LHiBitwordNo2 := BitwordNoOfIElem ( BSet2Info . BitsetHi ) 
@@ -7140,7 +7140,7 @@ GENERIC MODULE OrdSets ( )
   ; VAR LBitword : BitwordTyp 
   ; VAR LSs : CARDINAL 
 
-  ; BEGIN 
+  ; BEGIN (* BitwordsHash *)
       LBitsHash := 0 
     ; LLoBitwordNo := BitwordNoOfIElem ( BSetInfo . BitsetLo ) 
     ; LHiBitwordNo := BitwordNoOfIElem ( BSetInfo . BitsetHi ) 
@@ -7262,7 +7262,7 @@ GENERIC MODULE OrdSets ( )
     ; VAR Result : HashTyp 
     )
   (* Recover the bits portion of the hash code of BSet, removing the bounds'  
-     contribution.  TRUE if success, otherwise unrecoverable.  
+     contribution.  IsKnown will be TRUE if success, otherwise unrecoverable.  
   *) 
 
   = VAR LResult : HashTyp  
@@ -7401,7 +7401,7 @@ GENERIC MODULE OrdSets ( )
   = VAR LBitword := Bitword 
   ; VAR LBitNo : BitNoTyp
 
-  ; BEGIN 
+  ; BEGIN (* ForAllInBitwordDo *)
       WHILE LBitword # 0 
       DO
         LBitNo := Least1BitNoInBitword ( LBitword ) 
@@ -7525,7 +7525,7 @@ GENERIC MODULE OrdSets ( )
   ; LResultBSetHeap : BSetHeapIterator 
   ; LResultRSet : RSetIterator 
 
-  ; BEGIN 
+  ; BEGIN (* NewIterator *)
       DissectPseudoPointer 
         ( Set , (*VAR*) LBitword , (*VAR*) LLo , (*VAR*) LHi ) 
     ; IF LBitword # 0 
