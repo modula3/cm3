@@ -3980,6 +3980,7 @@ GENERIC MODULE OrdSets ( )
         ; RecoverBitsHash 
             ( BSetLInfo , (*VAR*) LHashIncrIsComputable , (*VAR*) LHashIncr )
         ; LHashAbs := 0 
+        ; LResultSs := 0 
         (* Copy the low full Bitwords of BSetL. *) 
         ; LBitwordCt := LRangeLoBitwordNo - LSetLLoBitwordNo  
         ; IF LBitwordCt > 0 
