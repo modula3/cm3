@@ -590,8 +590,10 @@ PROCEDURE GrayBetween (h, he: RefHeader; r: PromoteReason) =
       <* ASSERT Word.And (LOOPHOLE (h, INTEGER), 3) = 0 *>
       <* ASSERT NOT h.forwarded *>
       IF r # PromoteReason.OldImpure OR h.dirty THEN
-        h.dirty := FALSE;
-        h.gray := TRUE;
+        IF h^ # FillHeader1 AND h^ # FillHeaderN THEN
+          h.dirty := FALSE;
+          h.gray := TRUE;
+        END;
       END;
       INC(h, ADRSIZE(Header) + ReferentSize(h));
     END;
