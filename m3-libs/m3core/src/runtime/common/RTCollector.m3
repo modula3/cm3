@@ -1100,7 +1100,7 @@ PROCEDURE CleanBetween (h, he: RefHeader; clean: BOOLEAN) =
             <*ASSERT NOT hdr.dirty*>
             hdr.marka := FALSE;
             hdr.markb := FALSE;
-            h^ := hdr;
+            h^ := hdr;                   (* FIXME: perhaps omit store here?? *)
             RTHeapMap.WalkRef (h, mover);
             hdr.gray := FALSE;
           END;
