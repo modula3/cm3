@@ -586,17 +586,22 @@ PROCEDURE PromotePage (page: RefPage;  r: PromoteReason) =
 
 PROCEDURE GrayBetween (h, he: RefHeader; r: PromoteReason) =
   BEGIN
-    WHILE h < he DO
-      <* ASSERT Word.And (LOOPHOLE (h, INTEGER), 3) = 0 *>
-      <* ASSERT NOT h.forwarded *>
-      IF r # PromoteReason.OldImpure OR h.dirty THEN
-        IF h^ # FillHeader1 AND h^ # FillHeaderN THEN
-          h.dirty := FALSE;
-          h.gray := TRUE;
+    <* ASSERT h < he *>
+    <* ASSERT Word.And (LOOPHOLE (h, INTEGER), 3) = 0 *>
+    REPEAT
+      VAR hdr := h^;
+      BEGIN
+        <* ASSERT NOT hdr.forwarded *>
+        IF hdr # FillHeader1 AND hdr # FillHeaderN THEN
+          IF r # PromoteReason.OldImpure OR hdr.dirty THEN
+            hdr.dirty := FALSE;
+            hdr.gray := TRUE;
+            h^ := hdr;
+          END;
         END;
       END;
       INC(h, ADRSIZE(Header) + ReferentSize(h));
-    END;
+    UNTIL h >= he;
   END GrayBetween;
 
 PROCEDURE FlushThreadState (VAR thread: ThreadState) =
@@ -1084,19 +1089,27 @@ PROCEDURE CleanDesc (VAR d: Desc) =
 
 PROCEDURE CleanBetween (h, he: RefHeader; clean: BOOLEAN) =
   BEGIN
-    WHILE h < he DO
-      <* ASSERT Word.And (LOOPHOLE (h, INTEGER), 3) = 0 *>
-      <* ASSERT NOT h.forwarded *>
-      IF h.gray THEN
-        <*ASSERT NOT h.dirty*>
-        h.marka := FALSE;
-        h.markb := FALSE;
-        RTHeapMap.WalkRef (h, mover);
-        h.gray := FALSE;
+    <* ASSERT h < he *>
+    <* ASSERT Word.And (LOOPHOLE (h, INTEGER), 3) = 0 *>
+    REPEAT
+      VAR hdr := h^;
+      BEGIN
+        IF hdr # FillHeader1 AND hdr # FillHeaderN THEN
+          <* ASSERT NOT hdr.forwarded *>
+          IF hdr.gray THEN
+            <*ASSERT NOT hdr.dirty*>
+            hdr.marka := FALSE;
+            hdr.markb := FALSE;
+            h^ := hdr;
+            RTHeapMap.WalkRef (h, mover);
+            hdr.gray := FALSE;
+          END;
+          hdr.dirty := NOT clean;
+          h^ := hdr;
+        END;
       END;
-      h.dirty := NOT clean;
       INC(h, ADRSIZE(Header) + ReferentSize(h));
-    END;
+    UNTIL h >= he;
   END CleanBetween;
 
 (* We maintain a list in weakTable, starting at weakLive0, of weak refs and
