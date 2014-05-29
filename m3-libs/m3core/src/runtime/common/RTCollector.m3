@@ -590,7 +590,7 @@ PROCEDURE GrayBetween (h, he: RefHeader; r: PromoteReason) =
       <* ASSERT Word.And (LOOPHOLE (h, INTEGER), 3) = 0 *>
       <* ASSERT NOT h.forwarded *>
       IF h^ # FillHeader1 AND h^ # FillHeaderN THEN
-        IF r # PromoteReason.OldImpure OR hdr.dirty THEN
+        IF r # PromoteReason.OldImpure OR h.dirty THEN
           h.dirty := FALSE;
           h.gray := TRUE;
         END;
