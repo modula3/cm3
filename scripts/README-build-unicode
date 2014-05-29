@@ -7,7 +7,8 @@ head compilers since.  With a working 'cm3' command, here is the procedure:
    'cvs update -d'
    This will get the latest source files.
 
-2. './find-packages.sh'
+2. In the cm3/scripts directory, 
+   './find-packages.sh'
    This will locate new package libunicode.  
 
 3. In the cm3/scripts directory, 
