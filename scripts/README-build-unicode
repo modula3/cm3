@@ -27,9 +27,9 @@ head compilers since.  With a working 'cm3' command, here is the procedure:
 6. './install-cm3-compiler upgrade'
    This will install the rebuilt compiler in the bin directory.
 
-7. Rebuild other package groups as you need, with
+7. (Re)build other package groups as you need, with
    './do-cm3-<x>.sh buildship'
-   for <x> IN {base, core, gui, comm, caltech-parser, all}.
+   for <x> IN {base, core, unicode, gui, comm, caltech-parser, all}.
 
 libunicode will not build unless the compiler is configured for full-range 
 Unicode and it and its support rebuilt that way.
