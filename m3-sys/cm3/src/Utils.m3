@@ -342,7 +342,7 @@ PROCEDURE InitWidechar () =
       Unicode_WIDECHAR_opt := MxConfig.Get("Unicode_WIDECHAR");
       (* ^Possibly set in cm3.cfg, or just about any other Quake code. *)  
       IF Unicode_WIDECHAR_opt # NIL  
-         AND Text.Equal(Unicode_WIDECHAR_opt, "TRUE")
+         AND NOT Text.Equal(Unicode_WIDECHAR_opt, "")
       THEN 
         WCharr.IsUnicode := TRUE;
         Mx.UnicodeWideChar := TRUE; 
