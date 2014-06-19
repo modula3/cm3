@@ -40,7 +40,7 @@ transitional UCS encodings.
 Character and Text literals have new escapes for the entire code point
 range.  The subtype and assignability rules are relaxed as if CHAR and
 WIDECHAR were the same base type.  Pickles and network objects have a
-reasonable degree of compatability between programs compiled with
+reasonable degree of compatibility between programs compiled with
 different WIDECHAR sizes.  
 
 Most library code adapts to different WIDECHAR sizes when compiled.
