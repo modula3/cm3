@@ -1526,7 +1526,7 @@ PROCEDURE LLVMAddAlias(M: ModuleRef; Ty: TypeRef; Aliasee: ValueRef;
  *)
 
 (**
- * Remove a function from its containing module and deletes it.
+ * Remove a function from its containing module and delete it.
  *
  * @see llvm::Function::eraseFromParent()
  *)
@@ -1540,7 +1540,7 @@ PROCEDURE LLVMDeleteFunction(Fn: ValueRef);
 PROCEDURE LLVMGetIntrinsicID(Fn: ValueRef): unsigned;
 
 (**
- * Obtain the calling function of a function.
+ * Obtain the calling convention of a function.
  *
  * The returned value corresponds to the LLVMCallConv enumeration.
  *
