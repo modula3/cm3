@@ -1540,7 +1540,7 @@ GENERIC MODULE OrdSets ( )
   ; VAR LBitword : BitwordTyp  
 
   ; BEGIN (* UnionUntouchingOrderedRanges *)
-      LResultInfo . Bias := BitwordNoOfIElem ( RSet1Lo ) 
+      LResultInfo . Bias := BiasOfIElem ( RSet1Lo ) 
     ; LSet1HiArraySs := ArraySsOfIElem ( RSet1Hi , LResultInfo . Bias ) 
     ; LSet2LoArraySs := ArraySsOfIElem ( RSet2Lo , LResultInfo . Bias ) 
     ; LSet2HiArraySs := ArraySsOfIElem ( RSet2Hi , LResultInfo . Bias ) 
