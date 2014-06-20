@@ -868,9 +868,6 @@ MODULE UnsafeUniRd
 
   ; BEGIN 
       LByteIndex := UnsafeRd . FastIndex ( Stream . Source ) 
-(* TODO: An already-locked Index (UnsafeRd.FastIndex) would allow
-         this to be called with Stream.Source already locked, which would
-         make for a more consistent interface in UnsafeUniRd.i3. *) 
     ; LCharIndex := Stream . Index 
     ; IF LCharIndex = 0 
       THEN RETURN 0 
