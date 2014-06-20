@@ -197,7 +197,9 @@ PROCEDURE CheckConnect(fd: INTEGER; ep: IP.Endpoint) : BOOLEAN
         EVAL TCPHack.RefetchError(fd);
       ELSIF errno = Uerror.EBADF THEN
         (* we'll try the same for EBADF, which we've seen on Alpha *)
-        IF TCPHack.RefetchError(fd) THEN seenBadFBug := TRUE END;
+        IF TCPHack.RefetchError(fd) 
+        THEN seenBadFBug := TRUE 
+        END;
       END;
     END;
     WITH errno = Cerrno.GetErrno() DO
