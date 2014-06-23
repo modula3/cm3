@@ -1444,8 +1444,6 @@ PROCEDURE Load_indirect (t: Type;  o: Offset;  s: Size) =
           END;
         ELSE
           (* unaligned, partial load with variable offset *)
-          IF (best_align < x.align) THEN Err ("unaligned base variable"); END;
-
           a := MIN (base_align, TargetMap.CG_Size[t]);
           IF (best_size < a) THEN
             (* make sure we load the largest possible aligned value,
@@ -1456,6 +1454,9 @@ PROCEDURE Load_indirect (t: Type;  o: Offset;  s: Size) =
             best_size  := TargetMap.CG_Size [best_type];
             best_align := TargetMap.CG_Align [best_type];
             bit_offset := x.offset MOD best_align;
+          END;
+          IF (best_align < x.align) 
+          THEN Err ("unaligned base variable"); 
           END;
 
           (* hide the bit offset *)
@@ -1710,10 +1711,6 @@ PROCEDURE Store_indirect (t: Type;  o: Offset;  s: Size) =
           Free (tmp);
         ELSE
           (* unaligned, partial store with variable offset *)
-          IF (best_align < x.align) THEN
-            Err ("unaligned base variable in store");
-          END;
-
           a := MIN (base_align, TargetMap.CG_Size[t]);
           IF (best_size < a) THEN
             (* make sure we load and store the largest possible aligned value,
@@ -1724,6 +1721,9 @@ PROCEDURE Store_indirect (t: Type;  o: Offset;  s: Size) =
             best_size  := TargetMap.CG_Size [best_type];
             best_align := TargetMap.CG_Align [best_type];
             const_bits := x.offset MOD best_align;
+          END;
+          IF (best_align < x.align) THEN
+            Err ("unaligned base variable in store");
           END;
 
           (* hide the bit offset *)
@@ -2829,6 +2829,7 @@ PROCEDURE GCD (a, b: INTEGER): INTEGER =
   END GCD;
 
 PROCEDURE FindIntType (t: Type;  s: Size;  o: Offset;  a: Alignment): MType =
+(* NB: a is the _maximum_ alignment acceptable to the caller. *) 
   VAR best_t : Type;
   BEGIN
     IF Target.SignedType [t]
@@ -2855,15 +2856,6 @@ PROCEDURE ScanTypes (READONLY x: ARRAY [0..3] OF Target.Int_type;
         IF (s <= z.size) AND (z.size < best_s)
           AND (z.align <= best_a)
           AND (a MOD z.align = 0)  
-       (* ^This is as in the original code.  It is wrong and causes some packed
-          cases to crash the front end. *)  
-       (* AND (z.align MOD a = 0) *) 
-       (* ^This is the modified version.  It fixes the packed cases mentioned
-          and works fine on 64-bit targets.  Sadly, it also causes far more 
-          frequent compiler crashes for 32-bit targets.  This is probably 
-          because callers of FindIntType, and thus ScanTypes, pass the largest 
-          integer type known to the compiler (64), rather than the largest 
-          in the target machine (32, for the failing cases.  *) 
           AND (s + (o MOD z.align) <= z.size) THEN
           (* remember this type *)
           best_t := z.cg_type;
