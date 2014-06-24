@@ -378,13 +378,13 @@ readonly proc postcp() is
     % INSTALL_CM3_IN_BIN environment variable to "yes".
     if equal($INSTALL_CM3_IN_BIN, "yes")
       deriveds("", ["cm3cg", "cm3cg.exe"])
-      write ( "Forced ship of cm3cg.") 
+      write ( "Forced ship of cm3cg." & CR) 
       BindExport (AppendExeExtension ("cm3cg"))
       if DoMipsTfile
 	BindExport ("mips-tfile")
       end
     else 
-      write ( "Not shipping cm3cg.") 
+      write ( "Not shipping cm3cg." & CR) 
     end 
   end
 end
