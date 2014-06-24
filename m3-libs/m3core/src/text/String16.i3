@@ -1,7 +1,12 @@
 (* Copyright 1996-2000, Critical Mass, Inc.  All rights reserved. *)
 (* See file COPYRIGHT-CMASS for details. *)
 
-(* This interface defines operations on strings of 16-bit "WIDECHAR"s.
+(* NOTE on naming.  This source file was named when WIDECHAR was always 16-bits.
+   Today, it can be that, or 32 bits, with upper bound of 16_10FFFF, for full
+   Unicode range.  It's tedious to change many source file names in CVS, so
+   the "16" remains. *)  
+
+(* This interface defines operations on strings of "WIDECHAR"s.
    They are represented by address of the first character of
    the string and the string's length in characters. *)
 

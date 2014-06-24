@@ -1,6 +1,11 @@
 (* Copyright 1996-2000, Critical Mass, Inc.  All rights reserved. *)
 (* See file COPYRIGHT-CMASS for details. *)
 
+(* NOTE on naming.  This source file was named when WIDECHAR was always 16-bits.
+   Today, it can be that, or 32 bits, with upper bound of 16_10FFFF, for full
+   Unicode range.  It's tedious to change many source file names in CVS, so
+   the "16" remains. *)  
+
 UNSAFE MODULE Text16;
 
 IMPORT TextClass, Text16Short;
