@@ -175,7 +175,8 @@ PROCEDURE ReadMagic (VAR s: State)
         THEN (* This is Ok too.  It happens when bootstrapping. *) 
         ELSE 
           IF s.cur_file.name = NIL 
-          THEN 
+          THEN (* This is the link file for the package we are compiling. 
+                  We can handle the WIDECHAR size mismatch by recompiling. *) 
             Wr.PutText 
               (Stdio.stderr, 
                "Recompiling with Unicode WIDECHAR, previously 16-bit WIDECHAR."
@@ -183,14 +184,15 @@ PROCEDURE ReadMagic (VAR s: State)
             Wr.PutText (Stdio.stderr, Wr.EOL);
             Wr.Flush (Stdio.stderr);
             RAISE SyntaxError; 
-          ELSE
+          ELSE (* This is a link file of a package we are linking to. 
+                  We can't handle this.  User will have to recompile it. *) 
             Wr.PutText 
               (Stdio.stderr, 
                "Compiling with Unicode WIDECHAR, but linking to 16-bit WIDECHAR: "
               ); 
             Wr.PutText (Stdio.stderr, PackageName (s));
             Wr.PutText (Stdio.stderr, Wr.EOL);
-            Wr.Flush (Stdio.stderr);
+            Wr.Flush (Stdio.stderr); 
             RAISE SyntaxError; 
           END; 
         END; 
@@ -207,7 +209,8 @@ PROCEDURE ReadMagic (VAR s: State)
         THEN (* This is Ok too.  It happens when reverse bootstrapping. *) 
         ELSE 
           IF s.cur_file.name = NIL 
-          THEN 
+          THEN (* This is the link file for the package we are compiling. 
+                  We can handle the WIDECHAR size mismatch by recompiling. *) 
             Wr.PutText 
               (Stdio.stderr, 
                "Recompiling with 16-bit WIDECHAR, previously Unicode WIDECHAR."
@@ -215,7 +218,8 @@ PROCEDURE ReadMagic (VAR s: State)
             Wr.PutText (Stdio.stderr, Wr.EOL);
             Wr.Flush (Stdio.stderr);
             RAISE SyntaxError; 
-          ELSE
+          ELSE (* This is a link file of a package we are linking to. 
+                  We can't handle this.  User will have to recompile it. *)
             Wr.PutText 
               (Stdio.stderr, 
                "Compiling with 16-bit WIDECHAR, but linking to Unicode WIDECHAR: "
