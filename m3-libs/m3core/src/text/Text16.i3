@@ -3,6 +3,11 @@
 
 (* A "Text16.T" is a text containing only characters of type WIDECHAR. *)
 
+(* NOTE on naming.  This source file was named when WIDECHAR was always 16-bits.
+   Today, it can be that, or 32 bits, with upper bound of 16_10FFFF, for full
+   Unicode range.  It's tedious to change many source file names in CVS, so
+   the "16" remains. *)  
+
 INTERFACE Text16;
 
 TYPE
