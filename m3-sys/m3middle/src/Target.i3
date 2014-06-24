@@ -144,7 +144,7 @@ TYPE
     IntegratedAssembly, (* "1"  -- don't call m3_backend, M3CG produces assembly code *)
     ExternalObject,     (* "2"  -- call m3_backend, it produces object code *)
     ExternalAssembly,   (* "3"  -- call m3_backend, it produces assembly code *)
-    C                   (*      -- don't call m3_backend, call compile_c, M3CG produces C *)
+    C                   (* "4"  -- don't call m3_backend, call compile_c, M3CG produces C *)
   };
 
 CONST
