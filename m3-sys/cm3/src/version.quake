@@ -29,7 +29,7 @@
 % (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 % THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 %
-% $Id: version.quake,v 1.28 2010-04-13 11:22:13 jkrell Exp $
+% $Id: version.quake,v 1.29 2014-06-24 15:50:10 rodney Exp $
 
 
 %------------------------------------------------------------------------------
@@ -124,7 +124,8 @@ proc version_impl(name) is
             map({"0" : "IntegratedObject",
                  "1" : "IntegratedAssembly",
                  "2" : "ExternalObject",
-                 "3" : "ExternalAssembly"}, M3_BACKEND_MODE), "\";", CR)
+                 "3" : "ExternalAssembly",
+                 "4" : "C"}, M3_BACKEND_MODE), "\";", CR)
 
         local TargetNaming = ""
         if defined("TARGET_NAMING")
