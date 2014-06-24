@@ -165,9 +165,8 @@ PROCEDURE TypeCheck (s: Set) =
     (* bind the lhs qid's to types & map them into the hash table *)
     WHILE (s.idents # NIL) DO
       l := s.idents;
-      DoBind (l.ident);
       s.idents := l.next;
-      HashInsert (s, l);
+      IF DoBind (l.ident) THEN HashInsert (s, l) END; 
     END;
 
     (* type check the lhs and rhs *)
@@ -202,23 +201,24 @@ PROCEDURE TypeCheck (s: Set) =
     Scanner.offset := save;
   END TypeCheck;
 
-PROCEDURE DoBind (t: T) =
+PROCEDURE DoBind (t: T) : BOOLEAN (*Success*) =
   VAR obj: Value.T;
   BEGIN
-    IF (t.checked) THEN RETURN END;
+    IF (t.checked) THEN RETURN TRUE END;
     Scanner.offset := t.origin;
     obj := Scope.LookUpQID (t.env, t.qid);
     t.obj := obj;
     IF (obj = NIL) THEN
       Error.QID (t.qid, "undefined");
-      t.lhs := t.rhs;
+      RETURN FALSE;
     ELSIF (Value.ClassOf (obj) # Value.Class.Type) THEN
       Error.QID (t.qid, "is not a type");
-      t.lhs := t.rhs;
+      RETURN FALSE;
     ELSE
       t.lhs := Value.ToType (obj);
     END;
     t.lhs := Type.Strip (t.lhs);
+    RETURN TRUE; 
   END DoBind;
 
 PROCEDURE HashInsert (s: Set;  l: List) =
