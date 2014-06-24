@@ -250,6 +250,7 @@ PROCEDURE Parse (interfaceOnly : BOOLEAN := FALSE): T =
       IF (topLevel) THEN EVAL PushInterface (id); INC (parseDepth) END;
     END;
 
+    n := 0; (* In case we don't parse any export names. *)  
     IF (cur.token = TK.tEXPORTS) THEN
       IF (t.interface) THEN
         Error.Msg ("EXPORTS clause not allowed in an interface");
@@ -257,10 +258,7 @@ PROCEDURE Parse (interfaceOnly : BOOLEAN := FALSE): T =
       END;
       GetToken ();
       n := Ident.ParseList ();
-      FOR i := 0 TO n - 1 DO
-        External.NoteExport (t.externals, Ident.stack[Ident.top - n + i]);
-      END;
-      DEC (Ident.top, n);
+      (* Leave the export names on the Ident stack for now. *) 
     ELSIF (NOT t.interface) THEN
       External.NoteExport (t.externals, t.name);
     END;
@@ -274,6 +272,12 @@ PROCEDURE Parse (interfaceOnly : BOOLEAN := FALSE): T =
       t.genericBase := PushGeneric (t, genericReader);
     ELSE Fail ("missing \';\' or \'=\', assuming \';\'");
     END;
+
+    (* Now we know whether the generic was UNSAFE, so can process the exports. *) 
+    FOR i := 0 TO n - 1 DO
+      External.NoteExport (t.externals, Ident.stack[Ident.top - n + i]);
+    END;
+    DEC (Ident.top, n);
 
     (* parse the imports *)
     External.ParseImports (t.externals, t);
@@ -361,6 +365,12 @@ PROCEDURE PushGeneric (t: T;  VAR rd: File.T): M3ID.T =
     filename := old_filename & " => " & filename;
     Scanner.Push (filename, rd, is_main := Scanner.in_main);
     t.genericFile := filename;
+
+    (* Is the generic UNSAFE? *) 
+    IF cur.token = TK.tUNSAFE THEN
+      t.safe := FALSE; (* Then so is the instantiation. *) 
+      GetToken ();
+    END; 
 
     (* make sure we got what we wanted *)
     Match (TK.tGENERIC);
