@@ -10,7 +10,7 @@ MODULE Revelation;
 
 IMPORT M3, M3ID, Value, Type, Error, OpaqueType, Scope, Decl, Host;
 IMPORT ObjectType, RefType, Scanner, Token, Module, ValueRep, CG;
-IMPORT M3RT, Target;
+IMPORT M3RT, Target, Reff;
 FROM Scanner IMPORT GetToken, Fail, Match, MatchID, cur;
 
 TYPE
@@ -279,6 +279,8 @@ PROCEDURE DoCheck (t: T) =
     IF (t.equal) THEN
       xx := Type.Strip (t.rhs);
       IF (xx # t.rhs)
+        OR xx = Reff.T 
+           (* Reff.T is REFANY, and it is initialized with a brand field. *) 
         OR NOT (RefType.IsBranded (xx) OR ObjectType.IsBranded (xx)) THEN
         Error.QID (t.qid, "right-hand side must be a branded type expression");
         t.rhs := xx;
