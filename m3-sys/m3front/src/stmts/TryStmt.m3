@@ -99,6 +99,7 @@ PROCEDURE Parse (): Stmt.T =
 PROCEDURE ParseHandler (p: P) =
   TYPE TK = Token.T;
   VAR h: Handler;  e: Except;  id: M3ID.T;  trace: Tracer.T;
+  VAR u: BOOLEAN := FALSE; (* Exception argument Id has UNUSED pragma. *) 
   BEGIN
     h := NEW (Handler);
     h.next   := p.handles;  p.handles := h;
@@ -124,10 +125,15 @@ PROCEDURE ParseHandler (p: P) =
     END;
     IF (cur.token = TK.tLPAREN) THEN
       GetToken (); (* ( *)
+      IF cur.token = TK.tUNUSED THEN 
+        u := TRUE; 
+        GetToken (); (* UNUSED *) 
+        Match (TK.tENDPRAGMA);
+      END; 
       id := MatchID ();
       trace := Variable.ParseTrace ();
       Match (TK.tRPAREN);
-      h.var := Variable.New (id, FALSE);
+      h.var := Variable.New (id, u);
       h.scope := Scope.New1 (h.var);
       Variable.BindTrace (h.var, trace);
       Match (TK.tIMPLIES);
