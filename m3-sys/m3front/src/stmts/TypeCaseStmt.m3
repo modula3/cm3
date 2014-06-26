@@ -83,6 +83,7 @@ PROCEDURE Parse (): Stmt.T =
 PROCEDURE ParseCase (p: P) =
   TYPE TK = Token.T;
   VAR c: Case;  id: M3ID.T;  trace: Tracer.T;
+  VAR u: BOOLEAN := FALSE; (* TYPECASE-bound Id has UNUSED pragma. *) 
   BEGIN
     c := NEW (Case);
     c.origin := Scanner.offset;
@@ -103,9 +104,14 @@ PROCEDURE ParseCase (p: P) =
 
     IF (cur.token = TK.tLPAREN) THEN
       GetToken (); (* ( *)
+      IF cur.token = TK.tUNUSED THEN 
+        u := TRUE; 
+        GetToken (); (* UNUSED *) 
+        Match (TK.tENDPRAGMA);
+      END; 
       id := MatchID ();
       trace := Variable.ParseTrace ();
-      c.var := Variable.New (id, FALSE);
+      c.var := Variable.New (id, u);
       c.scope := Scope.New1 (c.var);
       Variable.BindTrace (c.var, trace);
       Variable.BindType (c.var, c.tags[0], indirect := FALSE,
