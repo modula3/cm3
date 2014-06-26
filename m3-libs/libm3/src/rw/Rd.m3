@@ -701,8 +701,9 @@ PROCEDURE GetWideLine (rd: T): TEXT
 
 PROCEDURE Intermittent (rd: T): BOOLEAN =
   BEGIN
-    RETURN (rd.intermittent);
-(* CHECK: Can we really always get away with neither a Lock nor Atomic? *) 
+    LOCK rd DO
+      RETURN (rd.intermittent);
+    END; 
   END Intermittent;
 
 PROCEDURE FastIntermittent(rd: T): BOOLEAN RAISES {} = 
@@ -712,20 +713,21 @@ PROCEDURE FastIntermittent(rd: T): BOOLEAN RAISES {} =
 
 PROCEDURE Seekable (rd: T): BOOLEAN =
   BEGIN
-    RETURN (rd.seekable);
-(* CHECK: Can we really always get away with neither a Lock nor Atomic? *) 
+    LOCK rd DO
+      RETURN (rd.seekable);
+    END;
   END Seekable;
 
 PROCEDURE FastSeekable(rd: T): BOOLEAN RAISES {}= 
   BEGIN 
     RETURN (rd.seekable);
-(* CHECK: Can we really always get away with neither a Lock nor Atomic? *) 
   END FastSeekable; 
 
 PROCEDURE Closed (rd: T): BOOLEAN =
   BEGIN
-    RETURN (rd.closed);
-(* CHECK: Can we really always get away with neither a Lock nor Atomic? *) 
+    LOCK rd DO
+      RETURN (rd.closed);
+    END;
   END Closed;
 
 PROCEDURE FastClosed(rd: T): BOOLEAN RAISES {}= 
