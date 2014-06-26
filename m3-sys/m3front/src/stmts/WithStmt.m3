@@ -38,12 +38,18 @@ PROCEDURE Parse (): Stmt.T =
 PROCEDURE ParseTail (): Stmt.T =
   TYPE TK = Token.T;
   VAR p: P;  id: M3ID.T;  trace: Tracer.T;
+  VAR u: BOOLEAN := FALSE; (* WITH-bound Id has UNUSED pragma. *) 
   BEGIN
     p := NEW (P);
     StmtRep.Init (p);
+    IF cur.token = TK.tUNUSED THEN 
+      u := TRUE; 
+      GetToken (); (* UNUSED *) 
+      Match (TK.tENDPRAGMA);
+    END; 
     id := MatchID ();
     trace := Variable.ParseTrace ();
-    p.var := Variable.New (id, FALSE);
+    p.var := Variable.New (id, u);
     Match (TK.tEQUAL);
     p.expr := Expr.Parse ();
     p.scope := Scope.New1 (p.var);
