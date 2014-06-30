@@ -198,7 +198,7 @@ GENERIC INTERFACE VarArray ( Subscript , Element , Ranges )
     ( Array : T ; Lo : SsTyp ; READONLY Elems : ARRAY OF ElemTyp ) 
   (* PRE: Array # NIL *) 
   RAISES { AllocationFailure } 
-  (* Let N=1+MIN(LAST(Elems),ORD(LAST(SsTyp))-ORD(Lo)).  
+  (* Let N=MIN(NUMBER(Elems),ORD(LAST(SsTyp))-ORD(Lo)+1). 
      Abstract view: 
        1) Expand touched(Array) to cover SUBARRAY(Array,Lo,N).
           N=0, which can happen when Elems is empty, does not touch Lo. 
