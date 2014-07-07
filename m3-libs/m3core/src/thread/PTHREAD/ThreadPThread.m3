@@ -23,6 +23,8 @@ CONST
 REVEAL
   Mutex = MutexRep.Public BRANDED "Mutex Pthread-1.0" OBJECT
     mutex: pthread_mutex_t := NIL;
+    holder: Activation := NIL;
+    waiters: Activation := NIL;
   OVERRIDES
     acquire := LockMutex;
     release := UnlockMutex;
@@ -113,22 +115,63 @@ PROCEDURE InitMutex (VAR m: pthread_mutex_t; root: REFANY;
   END InitMutex;
 
 PROCEDURE LockMutex (m: Mutex) =
+  VAR self := GetActivation();
   BEGIN
     IF m.mutex = NIL THEN InitMutex(m.mutex, m, CleanMutex) END;
-    IF perfOn THEN PerfChanged(State.locking) END;
-    WITH r = pthread_mutex_lock(m.mutex) DO
-      IF r # 0 THEN DieI(ThisLine(), r) END;
+    WITH r = pthread_mutex_lock(self.mutex) DO <*ASSERT r=0*> END;
+    <*ASSERT self.waitingOn = NIL*>
+    <*ASSERT self.nextWaiter = NIL*>
+    WITH r = pthread_mutex_lock(m.mutex) DO <*ASSERT r=0*> END;
+    IF m.holder = NIL THEN
+      m.holder := self;
+      WITH r = pthread_mutex_unlock(m.mutex) DO <*ASSERT r=0*> END;
+      WITH r = pthread_mutex_unlock(self.mutex) DO <*ASSERT r=0*> END;
+      IF perfOn THEN PerfRunning() END;
+      RETURN;
     END;
-    IF perfOn THEN PerfRunning() END;
+    IF perfOn THEN PerfChanged(State.locking) END;
+    self.waitingOn := m.mutex;
+    self.nextWaiter := m.waiters;
+    m.waiters := self;
+    IF m.holder = self THEN Die(ThisLine(), "impossible acquire") END;
+    WITH r = pthread_mutex_unlock(m.mutex) DO <*ASSERT r=0*> END;
+    REPEAT
+      WITH r = pthread_cond_wait(self.cond, self.mutex) DO <*ASSERT r=0*> END;
+    UNTIL self.waitingOn = NIL; (* m.holder = self *)
+    WITH r = pthread_mutex_unlock(self.mutex) DO <*ASSERT r=0*> END;
   END LockMutex;
 
 PROCEDURE UnlockMutex (m: Mutex) =
   (* LL = m *)
+  VAR
+    self := GetActivation();
+    t, prev: Activation;
   BEGIN
     IF m.mutex = NIL THEN InitMutex(m.mutex, m, CleanMutex) END;
-    WITH r = pthread_mutex_unlock(m.mutex) DO
-      IF r # 0 THEN DieI(ThisLine(), r) END;
+    WITH r = pthread_mutex_lock(m.mutex) DO <*ASSERT r=0*> END;
+    IF m.holder # self THEN Die(ThisLine(), "illegal release") END;
+    t := m.waiters;
+    IF t = NIL THEN
+      m.holder := NIL;
+      WITH r = pthread_mutex_unlock(m.mutex) DO <*ASSERT r=0*> END;
+      RETURN;
     END;
+    prev := NIL;
+    WHILE t.nextWaiter # NIL DO
+      prev := t;
+      t := t.nextWaiter;
+    END;
+    IF prev # NIL
+      THEN prev.nextWaiter := NIL;
+      ELSE m.waiters := NIL;
+    END;
+    m.holder := t;
+    WITH r = pthread_mutex_unlock(m.mutex) DO <*ASSERT r=0*> END;
+
+    WITH r = pthread_mutex_lock(t.mutex) DO <*ASSERT r=0*> END;
+    t.waitingOn := NIL;
+    WITH r = pthread_cond_signal(t.cond) DO <*ASSERT r=0*> END;
+    WITH r = pthread_mutex_unlock(t.mutex) DO <*ASSERT r=0*> END;
   END UnlockMutex;
 
 (*---------------------------------------- Condition variables and Alerts ---*)
@@ -1287,7 +1330,6 @@ PROCEDURE AtForkPrepare() =
     act := me;
     REPEAT
       PThreadLockMutex(act.mutex, ThisLine());
-      (*PThreadLockMutex(act.waitingOn, ThisLine());*)
       cond := slots[act.slot].join;
       IF cond # NIL THEN PThreadLockMutex(cond.mutex, ThisLine()) END;
       act := act.next;
@@ -1304,7 +1346,6 @@ PROCEDURE AtForkParent() =
     REPEAT
       cond := slots[act.slot].join;
       IF cond # NIL THEN PThreadUnlockMutex(cond.mutex, ThisLine()) END;
-      (*PThreadUnlockMutex(act.waitingOn, ThisLine());*)
       PThreadUnlockMutex(act.mutex, ThisLine());
       act := act.next;
     UNTIL act = me;
