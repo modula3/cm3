@@ -169,12 +169,10 @@ PROCEDURE UnlockMutex (m: Mutex) =
     END;
     m.holder := t;
     WITH r = pthread_mutex_unlock(m.mutex) DO <*ASSERT r=0*> END;
-
     WITH r = pthread_mutex_lock(t.mutex) DO <*ASSERT r=0*> END;
     t.waitingOn := NIL;
     WITH r = pthread_cond_signal(t.cond) DO <*ASSERT r=0*> END;
     WITH r = pthread_mutex_unlock(t.mutex) DO <*ASSERT r=0*> END;
-
     WITH r = pthread_mutex_unlock(self.mutex) DO <*ASSERT r=0*> END;
   END UnlockMutex;
 
