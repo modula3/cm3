@@ -148,12 +148,15 @@ PROCEDURE UnlockMutex (m: Mutex) =
     t, prev: Activation;
   BEGIN
     IF m.mutex = NIL THEN InitMutex(m.mutex, m, CleanMutex) END;
+    WITH r = pthread_mutex_lock(self.mutex) DO <*ASSERT r=0*> END;
+
     WITH r = pthread_mutex_lock(m.mutex) DO <*ASSERT r=0*> END;
     IF m.holder # self THEN Die(ThisLine(), "illegal release") END;
     t := m.waiters;
     IF t = NIL THEN
       m.holder := NIL;
       WITH r = pthread_mutex_unlock(m.mutex) DO <*ASSERT r=0*> END;
+      WITH r = pthread_mutex_unlock(self.mutex) DO <*ASSERT r=0*> END;
       RETURN;
     END;
     prev := NIL;
@@ -172,6 +175,8 @@ PROCEDURE UnlockMutex (m: Mutex) =
     t.waitingOn := NIL;
     WITH r = pthread_cond_signal(t.cond) DO <*ASSERT r=0*> END;
     WITH r = pthread_mutex_unlock(t.mutex) DO <*ASSERT r=0*> END;
+
+    WITH r = pthread_mutex_unlock(self.mutex) DO <*ASSERT r=0*> END;
   END UnlockMutex;
 
 (*---------------------------------------- Condition variables and Alerts ---*)
