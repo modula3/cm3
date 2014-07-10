@@ -342,6 +342,18 @@ PROCEDURE AddInfo (u: Mx.Unit;  VAR x: Mx.InfoList;  i: INTEGER) =
     INC (x.cnt);
   END AddInfo;
 
+PROCEDURE ReadWidecharSize (VAR s: State): BOOLEAN
+  RAISES {OSError.E} =
+  (* Z  --- WIDECHAR is Unicode sized. *)
+  (* z  --- WIDECHAR is 16-bit. *)
+  VAR Unicode: BOOLEAN; 
+  BEGIN
+    Unicode := s.cmd = 'Z';
+    GetEOL (s); 
+(* For now, silently ignore this information. *)  
+    RETURN FALSE;
+  END ReadWidecharSize;
+
 PROCEDURE ReadPort (VAR s: State): BOOLEAN
   RAISES {OSError.E} =
   (* Am  --- exports interface m *)
@@ -471,6 +483,19 @@ PROCEDURE ReadType (VAR s: State): BOOLEAN
     RETURN FALSE;
   END ReadType;
 
+PROCEDURE ReadTypeId (VAR s: State): BOOLEAN
+  RAISES {OSError.E} =
+  (* na b x     --- a.b is a name for type (UID) x.  *)
+  VAR UnitId, TypeId: Mx.Name; 
+  VAR type: Mx.TypeName;
+  BEGIN
+    UnitId := GetName (s, ' '); 
+    TypeId := GetName (s, ' '); 
+    type := GetTypeName (s, '\n');
+(* For now, silently ignore this information. *) 
+    RETURN FALSE;
+  END ReadTypeId; 
+
 PROCEDURE ReadObjectType (VAR s: State): BOOLEAN
   RAISES {OSError.E} =
   (* on t s ds da ms -- import object type from interface unit n    *)
@@ -508,11 +533,19 @@ PROCEDURE ReadObjectType (VAR s: State): BOOLEAN
 PROCEDURE ReadOpaqueType (VAR s: State): BOOLEAN
   RAISES {OSError.E} =
   (* Qt s     --- define opaque type 't' with supertype 's'. *)
+  (* qt s a b --- define opaque type 't' with supertype 's', named a.b. *)
+  VAR cmd := s.cmd;
   VAR opaque := NEW (Mx.OpaqueType);
-  VAR unit   := s.cur_unit;
+  VAR unit := s.cur_unit;
+  VAR UnitName, TypeName: M3ID.T;
   BEGIN
     opaque.type       := GetTypeName (s, ' ');
     opaque.super_type := GetTypeName (s, '\n');
+    IF cmd = 'q' THEN
+      UnitName := GetName (s, ' ');
+      TypeName := GetName (s, ' ');
+(* FOR now, silently discard UnitName and TypeName. *) 
+    END; 
 
     IF (unit = NIL) THEN
       Error (s, "opaque type defined while current unit not defined!");
@@ -584,6 +617,16 @@ PROCEDURE GetInteger (VAR s: State;  term: CHAR): INTEGER
     IF (ch # term) THEN Error (s, "expecting separator after integer") END;
     RETURN n;
   END GetInteger;
+
+PROCEDURE GetEOL (VAR s: State)
+  RAISES {OSError.E} =
+  VAR ch: CHAR;
+  BEGIN
+    ch := s.buf [s.buf_ptr];
+    INC (s.buf_ptr);
+    IF (ch = '\r') THEN ch := GetC (s); END;
+    IF (ch # '\n') THEN Error (s, "expecting end of line.") END;
+  END GetEOL;
 
 PROCEDURE GetTypeName (VAR s: State;  term: CHAR): Mx.TypeName
   RAISES {OSError.E} =
@@ -799,6 +842,10 @@ PROCEDURE Init () =
     CmdMap ['p'] := ReadObjectType;
     CmdMap ['O'] := ReadObjectType;
     CmdMap ['Q'] := ReadOpaqueType;
+    CmdMap ['q'] := ReadOpaqueType;
+    CmdMap ['n'] := ReadTypeId;
+    CmdMap ['Z'] := ReadWidecharSize;
+    CmdMap ['z'] := ReadWidecharSize;
     CmdMap ['/'] := SkipComment;
     CmdMap [' '] := SkipBlank;
     CmdMap ['\r'] := SkipBlank;
