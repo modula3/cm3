@@ -485,11 +485,10 @@ PROCEDURE ReadType (VAR s: State): BOOLEAN
 
 PROCEDURE ReadTypeId (VAR s: State): BOOLEAN
   RAISES {OSError.E} =
-  (* na b x     --- a.b is a name for type (UID) x.  *)
-  VAR UnitId, TypeId: Mx.Name; 
+  (* na x     --- a is a name for type (UID) x.  *)
+  VAR TypeId: Mx.Name; 
   VAR type: Mx.TypeName;
   BEGIN
-    UnitId := GetName (s, ' '); 
     TypeId := GetName (s, ' '); 
     type := GetTypeName (s, '\n');
 (* For now, silently ignore this information. *) 
@@ -533,18 +532,21 @@ PROCEDURE ReadObjectType (VAR s: State): BOOLEAN
 PROCEDURE ReadOpaqueType (VAR s: State): BOOLEAN
   RAISES {OSError.E} =
   (* Qt s     --- define opaque type 't' with supertype 's'. *)
-  (* qt s a b --- define opaque type 't' with supertype 's', named a.b. *)
+  (* qt s n   --- define opaque type 't' with supertype 's', named n. *)
   VAR cmd := s.cmd;
   VAR opaque := NEW (Mx.OpaqueType);
   VAR unit := s.cur_unit;
-  VAR UnitName, TypeName: M3ID.T;
+  VAR TypeName: Mx.Name;
   BEGIN
-    opaque.type       := GetTypeName (s, ' ');
-    opaque.super_type := GetTypeName (s, '\n');
     IF cmd = 'q' THEN
-      UnitName := GetName (s, ' ');
-      TypeName := GetName (s, ' ');
-(* FOR now, silently discard UnitName and TypeName. *) 
+      opaque.type       := GetTypeName (s, ' ');
+      opaque.super_type := GetTypeName (s, ' ');
+      TypeName := GetName (s, '\n');
+      opaque.TypeName := TypeName; 
+    ELSE (* 'Q' *)  
+      opaque.type       := GetTypeName (s, ' ');
+      opaque.super_type := GetTypeName (s, '\n');
+      opaque.TypeName := M3ID.NoID; 
     END; 
 
     IF (unit = NIL) THEN

@@ -103,9 +103,11 @@ PROCEDURE Check (p: P) =
 
 PROCEDURE Compiler (p: P) =
   VAR self := Type.GlobalUID (p);  super := Type.GlobalUID (p.super);
+  VAR typeId: M3ID.T; 
   BEGIN
     CG.Declare_opaque (self, super);
-    Host.env.note_opaque (self, super);
+    typeId := UID(p);  
+    Host.env.note_opaque (self, super, typeId);
   END Compiler;
 
 PROCEDURE EqualChk (<*UNUSED*> a: P;  <*UNUSED*> b: Type.T;

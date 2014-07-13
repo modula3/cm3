@@ -105,6 +105,7 @@ TYPE
     next       : OpaqueType;
     type       : TypeName;
     super_type : TypeName;
+    TypeName   : Name := M3ID.NoID;
   END;
 
 END Mx.

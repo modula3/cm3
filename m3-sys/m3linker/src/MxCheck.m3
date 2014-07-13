@@ -301,10 +301,19 @@ PROCEDURE CheckOpaques (VAR s: State) =
     o := s.all_opaques;
     WHILE (o # NIL) DO
       IF (o.reveal = NIL) THEN
-        Err (s, "opaque type never revealed: ", TName (s, o.type.type));
-        ErrNL (s);
-        Err (s, "  defined in ", MxRep.UnitName (o.t_unit));
-        ErrNL (s);
+        IF o.type.TypeName = M3ID.NoID THEN
+          Err (s, "opaque type never revealed: ", TName (s, o.type.type));
+          ErrNL (s);
+          Err (s, "  defined in ", MxRep.UnitName (o.t_unit));
+          ErrNL (s);
+        ELSE
+          Err (s, "opaque type ");
+          Err (s, NameToText(o.type.TypeName));
+          Err (s, " never revealed: ", TName (s, o.type.type));
+          ErrNL (s);
+          Err (s, "  defined in unit ", MxRep.UnitName (o.t_unit));
+          ErrNL (s);
+        END; 
       END;
       o := o.next;
     END;
@@ -318,6 +327,7 @@ PROCEDURE NoteOpaques (VAR s: State;  u: Mx.Unit) =
       z := MxMap.Get (s.opaques, o.type);
       IF (z # NIL) THEN
         IF z.type.super_type # o.super_type THEN
+        (* Front end should prevent this. *) 
           Err (s, "opaque type defined with different super-types: ",
                TName (s, z.type.type));
           ErrNL (s);
@@ -345,8 +355,10 @@ PROCEDURE IdentifyOpaques (VAR s: State;  u: Mx.Unit) =
         z := MxMap.Get (s.opaques, r.lhs);
         IF (z # NIL) THEN
           IF (z.reveal # NIL) THEN
-            Err (s, "multiple revelations for opaque type:  ",
-                     TName(s, z.type.type));                       ErrNL (s);
+            Err (s, "multiple revelations for opaque type ");
+            Err (s, NameToText(z.type.TypeName)); 
+            Err (s, " :  ", TName(s, z.type.type));                       
+            ErrNL (s);
             Err (s, "  defined in  ", MxRep.UnitName (z.t_unit));  ErrNL (s);
             Err (s, "  revealed in ", MxRep.UnitName (z.r_unit));  ErrNL (s);
             Err (s, "  and also in ", MxRep.UnitName (u));         ErrNL (s);
@@ -355,6 +367,7 @@ PROCEDURE IdentifyOpaques (VAR s: State;  u: Mx.Unit) =
             z.r_unit := u;
           END;
         ELSE
+        (* Front end should prevent this. *) 
           Err (s, "revelation without matching opaque type declaration:  ",
                    TName (s, r.lhs));  ErrNL (s);
           Err (s, "  revealed in ", MxRep.UnitName (u));  ErrNL (s);
@@ -390,6 +403,15 @@ PROCEDURE TName (<*UNUSED*> VAR s: State;  t: Mx.TypeName): TEXT =
   BEGIN
     RETURN "_t" & Fmt.Unsigned (Word.And (t, 16_ffffffff), 16);
   END TName;
+
+PROCEDURE NameToText (Id: Mx.Name): TEXT = 
+  VAR Txt: TEXT; 
+  BEGIN
+    Txt := M3ID.ToText(Id); 
+    IF Txt = NIL THEN RETURN "<unknown>";
+    ELSE RETURN Txt; 
+    END; 
+  END NameToText;
 
 PROCEDURE Err (VAR s: State;  a, b, c, d: TEXT := NIL) =
   VAR len: INTEGER;

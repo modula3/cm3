@@ -125,11 +125,21 @@ PROCEDURE WriteTypeInfo (VAR s: State;  u: Mx.Unit;
   END WriteTypeInfo;
 
 PROCEDURE WriteOpaques (VAR s: State;  o: Mx.OpaqueType) =
+  VAR name: INTEGER; 
   BEGIN
     WHILE (o # NIL) DO
-      MxIO.PutTxt (s.buf,  "Q");
-      MxIO.PutHex (s.buf,  o.type, " ");
-      MxIO.PutHex (s.buf,  o.super_type, Wr.EOL);
+      IF Mx.UnicodeWideChar AND o.TypeName # M3ID.NoID THEN 
+         (* ^Don't write "q" line unless writing >= v4.3 of mx file. *) 
+        name := WriteName(s, o.TypeName); 
+        MxIO.PutTxt (s.buf,  "q");
+        MxIO.PutHex (s.buf,  o.type, " ");
+        MxIO.PutHex (s.buf,  o.super_type, " ");
+        MxIO.PutInt (s.buf, name, Wr.EOL);
+      ELSE
+        MxIO.PutTxt (s.buf,  "Q");
+        MxIO.PutHex (s.buf,  o.type, " ");
+        MxIO.PutHex (s.buf,  o.super_type, Wr.EOL);
+      END; 
       o := o.next;
     END;
   END WriteOpaques;
