@@ -1874,10 +1874,12 @@ PROCEDURE Pass0_Comment (<*UNUSED*> env: Env;  t: TEXT) =
     Msg.Verbose (t);
   END Pass0_Comment;
 
-PROCEDURE Pass0_NoteOpaque (env: Env;  type, super_type: INTEGER) =
+PROCEDURE Pass0_NoteOpaque (env: Env;  type, super_type: INTEGER;
+                            Name: M3ID.T) =
   BEGIN
     env.unit.opaques := NEW (Mx.OpaqueType, type := type,
                              super_type := super_type,
+                             TypeName := Name,
                              next := env.unit.opaques);
   END Pass0_NoteOpaque;
 

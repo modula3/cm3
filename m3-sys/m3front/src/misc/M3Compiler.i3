@@ -39,7 +39,7 @@ TYPE
                         READONLY vs: Fingerprint.T;
                         imported, implemented: BOOLEAN);
 
-    note_opaque (type, super_type: TypeID);
+    note_opaque (type, super_type: TypeID; Name: M3ID.T);
 
     note_revelation (unit: M3ID.T;  interface: BOOLEAN;
                     lhs, rhs: TypeID;  full, imported: BOOLEAN);

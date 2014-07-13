@@ -43,17 +43,22 @@ PROCEDURE ReadUnits (input    : File.T;
      Xn x y   --- export REVEAL 'x' <: 'y' to unit n
      xn x y   --- import REVEAL 'x' <: 'y' from interface n
      Qt s     --- define opaque type 't' with supertype 's'.
+     qt s n   --- define opaque type 't' with supertype 's' and name n.
      tx       --- import type 'x'
      Tx       --- export type 'x'
      wt       --- wish to know the object type 't'.
+     na x     --- a is a name for type (UID) x. 
+                  (* ^Not emitted, silently ignored. *)
      on t s ds da ms -- import object type from interface unit n
      pn t s ds da ms -- import object type from module unit n
      Ot s ds da ms -- export object type 't' with supertype 's',
                   data size 'ds', data alignment 'da', and
                   method size 'ms' from unit #n
+     Z  --- WIDECHAR is Unicode sized. (* Not emitted, silently ignored. *)  
+     z  --- WIDECHAR is 16-bit.        (* Not emitted, silently ignored. *)
 
          ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz
-  USED:  *****   **  ***  * * * *       * * *     **** *  **
+  USED:  *****   **  *** ** * * * *     * * *    ***** *  ** *
 *)
 
 END MxIn.
