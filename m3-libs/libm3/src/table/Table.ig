@@ -136,6 +136,18 @@ END Table.
    "keyHash", providing "keyEqual" implements an equivalence relation
    and "keyHash" respects that relation.
 
+   Note that, because the Modula-3 garbage collector can move objects,
+   a table implemented as a Default (or any other hashed implementation) 
+   whose hash function depends on the bits in the pointer would not
+   work correctly.  To detect this otherwise exaspirating and subtle
+   bug when you instantiate Key with Refany, the procedure Refany.Hash
+   just causes a runtime error when called.  In this case, you will
+   have to override Default.keyHash with something that successfully
+   narrows the REFANY pointer it receives to point to a known referent,
+   and uses the referent's contents.  You can still have this problem 
+   if you write your own hash function that depends on the value of the 
+   pointer.
+
    For efficiency, tables and their iterators are not monitored, so a
    client accessing a table from multiple threads must ensure that if
    two operations are active concurrently, then neither of them has
