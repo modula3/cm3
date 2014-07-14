@@ -201,6 +201,7 @@ PROCEDURE GetSub(rd: T; VAR (*OUT*) str: ARRAY OF CHAR)
    filled. More precisely, this is equivalent to the following, in
    which "i" is a local variable: *)
 (*
+| IF closed(rd) THEN `Cause checked runtime error` END;
 | i := 0;
 | WHILE i # NUMBER(str) AND NOT EOF(rd) DO
 |   str[i] := GetChar(rd); INC(i)
@@ -214,6 +215,7 @@ PROCEDURE GetWideSub(rd: T; VAR (*OUT*) str: ARRAY OF WIDECHAR)
    filled. More precisely, this is equivalent to the following, in
    which "i" is a local variable: *)
 (*
+| IF closed(rd) THEN `Cause checked runtime error` END;
 | i := 0;
 | WHILE i # NUMBER(str) AND NOT EOF(rd) DO
 |   str[i] := GetWideChar(rd); INC(i)
@@ -227,6 +229,7 @@ PROCEDURE GetSubLine(rd: T; VAR (*OUT*) str: ARRAY OF CHAR)
    exhausted, or "str" is filled. More precisely, this is equivalent
    to the following, in which "i" is a local variable: *)
 (*
+| IF closed(rd) AND NUMBER(str) > 0 THEN `Cause checked runtime error` END;
 | i := 0;
 | WHILE
 |   i # NUMBER(str) AND
@@ -238,13 +241,13 @@ PROCEDURE GetSubLine(rd: T; VAR (*OUT*) str: ARRAY OF CHAR)
 | RETURN i
 *)
 
+(* Note that "GetLine" strips the terminating line break, while
+   "GetSubLine" does not. *)
+
 PROCEDURE GetWideSubLine(rd: T; VAR (*OUT*) str: ARRAY OF WIDECHAR)
   : CARDINAL RAISES {Failure, Alerted};
 (* Read from "rd" into "str" until a newline is read, "rd" is
    exhausted, or "str" is filled. *)
-
-(* Note that "GetLine" strips the terminating line break, while
-   "GetSubLine" does not. *)
 
 PROCEDURE GetText(rd: T; len: CARDINAL): TEXT
   RAISES {Failure, Alerted};
@@ -253,6 +256,7 @@ PROCEDURE GetText(rd: T; len: CARDINAL): TEXT
    equivalent to the following, in which "i" and "res" are local
    variables: *)
 (*
+| IF closed(rd) THEN `Cause checked runtime error` END;
 | res := ""; i := 0;
 | WHILE i # len AND NOT EOF(rd) DO
 |   res := res & Text.FromChar(GetChar(rd));
@@ -268,6 +272,7 @@ PROCEDURE GetWideText(rd: T; len: CARDINAL): TEXT
    equivalent to the following, in which "i" and "res" are local
    variables: *)
 (*
+| IF closed(rd) THEN `Cause checked runtime error` END;
 | res := ""; i := 0;
 | WHILE i # len AND NOT EOF(rd) DO
 |   res := res & Text.FromWideChar(GetChar(rd));
@@ -286,6 +291,7 @@ PROCEDURE GetLine(rd: T): TEXT
    equivalent to the following, in which "ch" and "res" are local
    variables: *)
 (*
+| IF closed(rd) THEN `Cause checked runtime error` END;
 | IF EOF(rd) THEN RAISE EndOfFile END;
 | res := ""; ch := '\000'; (* any char but newline *)
 | WHILE ch # '\n' AND NOT EOF(rd) DO
