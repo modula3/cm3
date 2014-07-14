@@ -30,7 +30,7 @@ TYPE
   END;
 
 PROCEDURE Build (src_dir: TEXT): TEXT =
-  CONST Makefile = "m3make.args";
+  CONST MakefileName = "m3make.args";
   VAR
     s: State;
     src_makefile := M3Path.New (src_dir, "m3makefile");
@@ -96,15 +96,15 @@ PROCEDURE Build (src_dir: TEXT): TEXT =
       Arg.Append (s.args, Params.Get (i));
     END;
 
-    Utils.WriteFile (Makefile, Emit, append := FALSE);
+    Utils.WriteFile (MakefileName, Emit, append := FALSE);
 
     IF s.found_work THEN
       IF NOT s.keep_files AND M3Options.major_mode # MM.RealClean THEN
-        Utils.NoteTempFile (Makefile); END;
-      RETURN Makefile;
+        Utils.NoteTempFile (MakefileName); END;
+      RETURN MakefileName;
     ELSE
       Msg.Out ("cm3: found nothing to build.", Wr.EOL);
-      IF NOT s.keep_files THEN Utils.Remove (Makefile); END;
+      IF NOT s.keep_files THEN Utils.Remove (MakefileName); END;
       RETURN NIL;
     END;
   END Build;
