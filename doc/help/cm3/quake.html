@@ -247,6 +247,11 @@ to bottom in the following list. </p>
     or          logical disjunction (<code>a or b</code>)
 </pre>
 
+<p>
+WARNING: The &quot;and&quot; and &quot;or&quot; operators are NOT short-circuit.
+I.e., they always evaluate both their operands. 
+</p>
+
 <p>A note on string catenation. Operands of <code>&amp;</code> are converted to strings
 whenever required and possible. Arrays and tables are converted to strings
 by catenating their elements (for tables, their keys) separated by a single
