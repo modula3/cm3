@@ -850,8 +850,8 @@ PROCEDURE GetOctalChar (wide: BOOLEAN): INTEGER =
 
 PROCEDURE GetOctalDigit (wide: BOOLEAN;  VAR value: INTEGER): BOOLEAN =
   CONST Bad = ARRAY BOOLEAN OF TEXT {
-     "octal character constant must have 3 digits",
-     "wide octal character constant must have 6 digits" };
+     "octal character escape must have 3 digits",
+     "wide octal character escape must have 6 digits" };
   BEGIN
     IF OctalDigits[ch] THEN
       value := value * 8 + ORD (ch) - ORD ('0');
@@ -897,9 +897,9 @@ PROCEDURE GetHexChar (bytes: [1..3]): INTEGER =
 
 PROCEDURE GetHexDigit (bytes: [1..3];  VAR value: INTEGER): BOOLEAN =
   CONST Bad = ARRAY [1..3]OF TEXT {
-     "hex character constant must have 2 digits",
-     "wide hex character constant must have 4 digits",
-     "Unicode character constant must have 6 digits" };
+     "hex character escape must have 2 digits",
+     "wide hex character escape must have 4 digits",
+     "Unicode character escape must have 6 digits" };
   VAR x: INTEGER;
   BEGIN
     IF  NOT (HexDigits[ch]) THEN
