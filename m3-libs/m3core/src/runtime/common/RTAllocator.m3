@@ -260,7 +260,7 @@ PROCEDURE GetUntracedObj (def: RT0.TypeDefn): UNTRACED ROOT =
       RTE.Raise(RTE.T.ValueOutOfRange);
     END;
     Scheduler.DisableSwitching();
-    res := Cstdlib.calloc(size);
+    res := Cstdlib.calloc(1, size);
     Scheduler.EnableSwitching();
     IF res = NIL THEN RETURN NIL END;
     res := res + hdrSize;
