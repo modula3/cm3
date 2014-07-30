@@ -3,7 +3,6 @@
 
 MODULE TextClass;
 
-IMPORT Word;
 (*47 IMPORT TextStats; 74*)  
 (*47 FROM TextStats IMPORT Op;  74*)
 
@@ -23,8 +22,8 @@ PROCEDURE GetChar (t: TEXT;  i: CARDINAL): CHAR =
     (*47 TextStats.NoteGround (Op.get_wide_char); 74*) 
     Wide := t.get_wide_char (i);
     (*47 TextStats.NoteFinished (Op.get_wide_char); 74*) 
-    Result := VAL (Word.And (ORD (Wide), 16_ff), CHAR);
-(*4*)
+  (* Result := VAL (Word.And (ORD (Wide), 16_ff), CHAR); (*CHOP*) *) 
+    Result := VAL (ORD (Wide), CHAR); (* Possible range error. *)
     (*47 TextStats.NoteFinished (Op.GetChar); 74*) 
     RETURN Result; 
   END GetChar;
@@ -55,8 +54,8 @@ PROCEDURE GetChars (t: TEXT;  VAR a: ARRAY OF CHAR;  start: CARDINAL) =
       (*47 TextStats.NoteFinished (Op.get_wide_chars); 74*) 
       FOR i := FIRST (buf) TO LAST (buf) DO
         IF (cnt = 0) THEN RETURN END;
-        a[next] := VAL (Word.And (ORD (buf[i]), 16_ff), CHAR);
-(*4*)
+      (*a[next] := VAL (Word.And (ORD (buf[i]), 16_ff), CHAR); (*CHOP*) *) 
+        a[next] := VAL (ORD (buf[i]), CHAR); (* Possible range error. *) 
         INC (next);  DEC (cnt);
      (* IF i < LAST(buf) THEN (*47 TextStats.NoteIter (Op.get_chars); 74*) END; *) 
       END;

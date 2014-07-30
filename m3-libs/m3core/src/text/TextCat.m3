@@ -955,7 +955,7 @@ PROCEDURE NewGetWideChars
               (SUBARRAY (Chars, Chars_start, a_charCt), a_start); 
             EXIT  
           END (* IF *)
-        ELSE EXIT (* Shouldn't happen, if a_len and b-len values are right. *)  
+        ELSE EXIT (* Shouldn't happen, if a_len and b_len values are right. *)  
         END (* IF *) 
       ELSE (* We have some chars from the b-side. *)
         IF a_charCt > 0

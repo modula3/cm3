@@ -38,17 +38,17 @@ TYPE
      it is only valid as long as it is kept on the stack. *)
 
 PROCEDURE GetChar (t: TEXT;  i: CARDINAL): CHAR;
-(* Returns "CHOP(t.get_wide_char (i))" *)
+(* Returns "t.get_wide_char (i)", which could suffer a range error. *)
 
 PROCEDURE GetWideChar (t: TEXT;  i: CARDINAL): WIDECHAR;
-(* Returns "EXTEND(t.get_char(i))" *)
+(* Returns "t.get_char(i)" *)
 
 PROCEDURE GetChars (t: TEXT;  VAR a: ARRAY OF CHAR;  start: CARDINAL);
-(* Returns the result of "CHOP"ing the characters returned by
-   "t.get_wide_chars (a, start)". *)
+(* Returns the result of assigning the characters returned by
+   "t.get_wide_chars (a, start)", which could suffer a range error. *)
 
 PROCEDURE GetWideChars (t: TEXT;  VAR a: ARRAY OF WIDECHAR;  start: CARDINAL);
-(* Returns the result of "EXTEND"ing the characters returned by
+(* Returns the result of assigning the characters returned by
    "t.get_chars (a, start)". *)
 
 
@@ -57,10 +57,4 @@ END TextClass.
 (* The Modula-3 language definition says that "TEXT" is predeclared and
    a subtype of "REFANY";  We pretend that "TYPE TEXT <: REFANY"
    is in the "Text" interface.
-
-   The function "CHOP" converts a "WIDECHAR" to a "CHAR" by
-   dropping the high-order eight bits of the character.
-
-   The function "EXTEND" converts a "CHAR" to a "WIDECHAR" by
-   zero-extending the character to a 16-bit value.
 *)
