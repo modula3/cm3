@@ -88,12 +88,7 @@ END Text.
    needed.  Hence, client code may deal exclusively with either "CHAR"s
    or "WIDECHAR"s, or it may handle both character types.
 
-   A "CHAR" is converted to a "WIDECHAR" by zero-extending its ordinal
-   value.  For example, if "c" is a "CHAR", "VAL (ORD (c), WIDECHAR)"
-   is the corresponding "WIDECHAR".
-
-   A "WIDECHAR" is converted to a "CHAR" by dropping the high-order
-   eight bits of the "WIDECHAR".  For example, if "c" is "WIDECHAR",
-   "VAL (Word.And (c, 16_ff), CHAR)" is the corresponding "CHAR"
-   value.
+   A value is converted between CHAR and WIDECHAR by simple assignment.
+   In the case of conversion to CHAR, this could suffer a range error,
+   if the value is not in CHAR.
 *)
