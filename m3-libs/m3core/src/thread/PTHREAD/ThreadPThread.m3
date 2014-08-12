@@ -119,8 +119,6 @@ PROCEDURE LockMutex (m: Mutex) =
   BEGIN
     IF m.mutex = NIL THEN InitMutex(m.mutex, m, CleanMutex) END;
     WITH r = pthread_mutex_lock(self.mutex) DO <*ASSERT r=0*> END;
-    <*ASSERT self.waitingOn = NIL*>
-    <*ASSERT self.nextWaiter = NIL*>
     WITH r = pthread_mutex_lock(m.mutex) DO <*ASSERT r=0*> END;
     IF m.holder = NIL THEN
       m.holder := self;
@@ -129,6 +127,8 @@ PROCEDURE LockMutex (m: Mutex) =
       IF perfOn THEN PerfRunning() END;
       RETURN;
     END;
+    <*ASSERT self.waitingOn = NIL*>
+    <*ASSERT self.nextWaiter = NIL*>
     IF perfOn THEN PerfChanged(State.locking) END;
     self.waitingOn := m.mutex;
     self.nextWaiter := m.waiters;
@@ -1316,24 +1316,19 @@ PROCEDURE PThreadUnlockMutex(mutex: pthread_mutex_t;  line: INTEGER) =
 PROCEDURE AtForkPrepare() =
   VAR me := GetActivation();
       act: Activation;
-      cond: Condition;
   BEGIN
-    Acquire(joinMu);
     PThreadLockMutex(slotsMu, ThisLine());
     PThreadLockMutex(perfMu, ThisLine());
     PThreadLockMutex(initMu, ThisLine()); (* InitMutex => RegisterFinalCleanup => LockHeap *)
-    LockHeap();
+    PThreadLockMutex(heapMu, ThisLine());
     PThreadLockMutex(activeMu, ThisLine()); (* LockHeap => SuspendOthers => activeMu *)
-    (* Walk activations and lock all threads, conditions.
-     * NOTE: We have initMu, activeMu, so slots
-     * won't change, conditions and mutexes
-     * won't be initialized on-demand.
+    (* Walk activations and lock all threads.
+     * NOTE: We have initMu, activeMu, so slots won't change, conditions and
+     * mutexes won't be initialized on-demand.
      *)
     act := me;
     REPEAT
       PThreadLockMutex(act.mutex, ThisLine());
-      cond := slots[act.slot].join;
-      IF cond # NIL THEN PThreadLockMutex(cond.mutex, ThisLine()) END;
       act := act.next;
     UNTIL act = me;
   END AtForkPrepare;
@@ -1352,11 +1347,10 @@ PROCEDURE AtForkParent() =
       act := act.next;
     UNTIL act = me;
     PThreadUnlockMutex(activeMu, ThisLine());
-    UnlockHeap();
+    PThreadUnlockMutex(heapMu, ThisLine());
     PThreadUnlockMutex(initMu, ThisLine());
     PThreadUnlockMutex(perfMu, ThisLine());
     PThreadUnlockMutex(slotsMu, ThisLine());
-    Release(joinMu);
   END AtForkParent;
 
 PROCEDURE AtForkChild() =
@@ -1376,26 +1370,32 @@ VAR
 PROCEDURE LockHeap () =
   VAR self := pthread_self();
   BEGIN
-    IF pthread_equal(holder, self) = 0 THEN
-      WITH r = pthread_mutex_lock(heapMu) DO <*ASSERT r=0*> END;
+    WITH r = pthread_mutex_lock(heapMu) DO <*ASSERT r=0*> END;
+    IF inCritical = 0 THEN
       holder := self;
+    ELSIF pthread_equal(holder, self) = 0 THEN
+      WITH r = pthread_cond_wait(heapCond, heapMu) DO <*ASSERT r=0*> END;
     END;
     INC(inCritical);
+    WITH r = pthread_mutex_unlock(heapMu) DO <*ASSERT r=0*> END;
   END LockHeap;
 
 PROCEDURE UnlockHeap () =
+  VAR self := pthread_self();
   BEGIN
-    <*ASSERT pthread_equal(holder, pthread_self()) # 0*>
+    WITH r = pthread_mutex_lock(heapMu) DO <*ASSERT r=0*> END;
+    <*ASSERT pthread_equal(holder, self) # 0*>
     DEC(inCritical);
     IF inCritical = 0 THEN
       holder := NIL;
-      WITH r = pthread_mutex_unlock(heapMu) DO <*ASSERT r=0*> END;
     END;
+    WITH r = pthread_mutex_unlock(heapMu) DO <*ASSERT r=0*> END;
   END UnlockHeap;
 
 PROCEDURE WaitHeap () =
   VAR self := pthread_self();
   BEGIN
+    WITH r = pthread_mutex_lock(heapMu) DO <*ASSERT r=0*> END;
     <*ASSERT pthread_equal(holder, self) # 0*>
     DEC(inCritical);
     <*ASSERT inCritical = 0*>
@@ -1403,6 +1403,7 @@ PROCEDURE WaitHeap () =
     holder := self;
     <*ASSERT inCritical = 0*>
     INC(inCritical);
+    WITH r = pthread_mutex_unlock(heapMu) DO <*ASSERT r=0*> END;
   END WaitHeap;
 
 PROCEDURE BroadcastHeap () =
