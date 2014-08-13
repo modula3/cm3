@@ -138,11 +138,11 @@ PROCEDURE LockMutex (m: Mutex) =
     REPEAT
       WITH r = pthread_cond_wait(self.cond, self.mutex) DO <*ASSERT r=0*> END;
     UNTIL self.waitingOn = NIL; (* m.holder = self *)
+    <*ASSERT self.nextWaiter = NIL*>
     WITH r = pthread_mutex_unlock(self.mutex) DO <*ASSERT r=0*> END;
   END LockMutex;
 
 PROCEDURE UnlockMutex (m: Mutex) =
-  (* LL = m *)
   VAR
     self := GetActivation();
     t, prev: Activation;
@@ -169,11 +169,12 @@ PROCEDURE UnlockMutex (m: Mutex) =
     END;
     m.holder := t;
     WITH r = pthread_mutex_unlock(m.mutex) DO <*ASSERT r=0*> END;
+    WITH r = pthread_mutex_unlock(self.mutex) DO <*ASSERT r=0*> END;
     WITH r = pthread_mutex_lock(t.mutex) DO <*ASSERT r=0*> END;
+    t.nextWaiter := NIL;
     t.waitingOn := NIL;
     WITH r = pthread_cond_signal(t.cond) DO <*ASSERT r=0*> END;
     WITH r = pthread_mutex_unlock(t.mutex) DO <*ASSERT r=0*> END;
-    WITH r = pthread_mutex_unlock(self.mutex) DO <*ASSERT r=0*> END;
   END UnlockMutex;
 
 (*---------------------------------------- Condition variables and Alerts ---*)
@@ -249,32 +250,48 @@ PROCEDURE Wait (m: Mutex; c: Condition) =
     XWait(self, m, c, alertable := FALSE);
   END Wait;
 
-PROCEDURE DequeueHead(c: Condition) =
-  (* LL = c *)
-  VAR t := c.waiters;
-  BEGIN
-    WITH r = pthread_mutex_lock(t.mutex) DO <*ASSERT r=0*> END;
-    c.waiters := t.nextWaiter;
-    t.nextWaiter := NIL;
-    t.waitingOn := NIL;
-    WITH r = pthread_cond_signal(t.cond) DO <*ASSERT r=0*> END;
-    WITH r = pthread_mutex_unlock(t.mutex) DO <*ASSERT r=0*> END;
-  END DequeueHead;
-
 PROCEDURE Signal (c: Condition) =
+  VAR
+    self := GetActivation();
+    t: Activation;
   BEGIN
     IF c.mutex = NIL THEN InitMutex(c.mutex, c, CleanCondition) END;
+    WITH r = pthread_mutex_lock(self.mutex) DO <*ASSERT r=0*> END;
     WITH r = pthread_mutex_lock(c.mutex) DO <*ASSERT r=0*> END;
-    IF c.waiters # NIL THEN DequeueHead(c) END;
+    t := c.waiters;
+    IF t # NIL THEN
+      c.waiters := t.nextWaiter;
+    END;
     WITH r = pthread_mutex_unlock(c.mutex) DO <*ASSERT r=0*> END;
+    WITH r = pthread_mutex_unlock(self.mutex) DO <*ASSERT r=0*> END;
+    IF t # NIL THEN
+      WITH r = pthread_mutex_lock(t.mutex) DO <*ASSERT r=0*> END;
+      t.nextWaiter := NIL;
+      t.waitingOn := NIL;
+      WITH r = pthread_cond_signal(t.cond) DO <*ASSERT r=0*> END;
+      WITH r = pthread_mutex_unlock(t.mutex) DO <*ASSERT r=0*> END;
+    END;
   END Signal;
 
 PROCEDURE Broadcast (c: Condition) =
+  VAR
+    self := GetActivation();
+    t: Activation;
   BEGIN
     IF c.mutex = NIL THEN InitMutex(c.mutex, c, CleanCondition) END;
+    WITH r = pthread_mutex_lock(self.mutex) DO <*ASSERT r=0*> END;
     WITH r = pthread_mutex_lock(c.mutex) DO <*ASSERT r=0*> END;
-    WHILE c.waiters # NIL DO DequeueHead(c) END;
+    t := c.waiters;
+    c.waiters := NIL;
     WITH r = pthread_mutex_unlock(c.mutex) DO <*ASSERT r=0*> END;
+    WITH r = pthread_mutex_unlock(self.mutex) DO <*ASSERT r=0*> END;
+    WHILE t # NIL DO
+      WITH r = pthread_mutex_lock(t.mutex) DO <*ASSERT r=0*> END;
+      t.nextWaiter := NIL;
+      t.waitingOn := NIL;
+      WITH r = pthread_cond_signal(t.cond) DO <*ASSERT r=0*> END;
+      WITH r = pthread_mutex_unlock(t.mutex) DO <*ASSERT r=0*> END;
+    END;
   END Broadcast;
 
 PROCEDURE Alert (thread: T) =
@@ -1320,7 +1337,7 @@ PROCEDURE AtForkPrepare() =
     PThreadLockMutex(slotsMu, ThisLine());
     PThreadLockMutex(perfMu, ThisLine());
     PThreadLockMutex(initMu, ThisLine()); (* InitMutex => RegisterFinalCleanup => LockHeap *)
-    PThreadLockMutex(heapMu, ThisLine());
+    LockHeap();
     PThreadLockMutex(activeMu, ThisLine()); (* LockHeap => SuspendOthers => activeMu *)
     (* Walk activations and lock all threads.
      * NOTE: We have initMu, activeMu, so slots won't change, conditions and
@@ -1347,7 +1364,7 @@ PROCEDURE AtForkParent() =
       act := act.next;
     UNTIL act = me;
     PThreadUnlockMutex(activeMu, ThisLine());
-    PThreadUnlockMutex(heapMu, ThisLine());
+    UnlockHeap();
     PThreadUnlockMutex(initMu, ThisLine());
     PThreadUnlockMutex(perfMu, ThisLine());
     PThreadUnlockMutex(slotsMu, ThisLine());
@@ -1370,32 +1387,26 @@ VAR
 PROCEDURE LockHeap () =
   VAR self := pthread_self();
   BEGIN
-    WITH r = pthread_mutex_lock(heapMu) DO <*ASSERT r=0*> END;
-    IF inCritical = 0 THEN
+    IF pthread_equal(holder, self) = 0 THEN
+      WITH r = pthread_mutex_lock(heapMu) DO <*ASSERT r=0*> END;
       holder := self;
-    ELSIF pthread_equal(holder, self) = 0 THEN
-      WITH r = pthread_cond_wait(heapCond, heapMu) DO <*ASSERT r=0*> END;
     END;
     INC(inCritical);
-    WITH r = pthread_mutex_unlock(heapMu) DO <*ASSERT r=0*> END;
   END LockHeap;
 
 PROCEDURE UnlockHeap () =
-  VAR self := pthread_self();
   BEGIN
-    WITH r = pthread_mutex_lock(heapMu) DO <*ASSERT r=0*> END;
-    <*ASSERT pthread_equal(holder, self) # 0*>
+    <*ASSERT pthread_equal(holder, pthread_self()) # 0*>
     DEC(inCritical);
     IF inCritical = 0 THEN
       holder := NIL;
+      WITH r = pthread_mutex_unlock(heapMu) DO <*ASSERT r=0*> END;
     END;
-    WITH r = pthread_mutex_unlock(heapMu) DO <*ASSERT r=0*> END;
   END UnlockHeap;
 
 PROCEDURE WaitHeap () =
   VAR self := pthread_self();
   BEGIN
-    WITH r = pthread_mutex_lock(heapMu) DO <*ASSERT r=0*> END;
     <*ASSERT pthread_equal(holder, self) # 0*>
     DEC(inCritical);
     <*ASSERT inCritical = 0*>
@@ -1403,7 +1414,6 @@ PROCEDURE WaitHeap () =
     holder := self;
     <*ASSERT inCritical = 0*>
     INC(inCritical);
-    WITH r = pthread_mutex_unlock(heapMu) DO <*ASSERT r=0*> END;
   END WaitHeap;
 
 PROCEDURE BroadcastHeap () =
