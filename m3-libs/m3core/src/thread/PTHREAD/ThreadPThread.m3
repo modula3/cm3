@@ -171,6 +171,7 @@ PROCEDURE UnlockMutex (m: Mutex) =
     WITH r = pthread_mutex_unlock(m.mutex) DO <*ASSERT r=0*> END;
     WITH r = pthread_mutex_unlock(self.mutex) DO <*ASSERT r=0*> END;
     WITH r = pthread_mutex_lock(t.mutex) DO <*ASSERT r=0*> END;
+    <*ASSERT t.waitingOn = m.mutex*>
     t.nextWaiter := NIL;
     t.waitingOn := NIL;
     WITH r = pthread_cond_signal(t.cond) DO <*ASSERT r=0*> END;
