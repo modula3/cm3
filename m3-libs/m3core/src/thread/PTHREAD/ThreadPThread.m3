@@ -191,6 +191,7 @@ PROCEDURE XWait (self: Activation; m: Mutex; c: Condition; alertable: BOOLEAN)
   (* LL = m *)
   VAR next, prev: Activation;
   BEGIN
+    IF perfOn THEN PerfChanged(State.waiting) END;
     IF c.mutex = NIL THEN InitMutex(c.mutex, c, CleanCondition) END;
     WITH r = pthread_mutex_lock(self.mutex) DO <*ASSERT r=0*> END;
     <*ASSERT self.waitingOn = NIL*>
@@ -206,7 +207,6 @@ PROCEDURE XWait (self: Activation; m: Mutex; c: Condition; alertable: BOOLEAN)
     m.release();
 
     WITH r = pthread_mutex_lock(self.mutex) DO <*ASSERT r=0*> END;
-    IF perfOn THEN PerfChanged(State.waiting) END;
     LOOP
       IF alertable AND self.alerted THEN
         self.alerted := FALSE;
@@ -227,14 +227,13 @@ PROCEDURE XWait (self: Activation; m: Mutex; c: Condition; alertable: BOOLEAN)
         WITH r = pthread_mutex_unlock(self.mutex) DO <*ASSERT r=0*> END;
         m.acquire();
         RAISE Alerted;
-      END;
-      WITH r = pthread_cond_wait(self.cond, self.mutex) DO <*ASSERT r=0*> END;
-      IF self.waitingOn = NIL THEN
+      ELSIF self.waitingOn = NIL THEN
         <*ASSERT self.nextWaiter = NIL*>
         WITH r = pthread_mutex_unlock(self.mutex) DO <*ASSERT r=0*> END;
         m.acquire();
         RETURN;
       END;
+      WITH r = pthread_cond_wait(self.cond, self.mutex) DO <*ASSERT r=0*> END;
     END;
   END XWait;
 
