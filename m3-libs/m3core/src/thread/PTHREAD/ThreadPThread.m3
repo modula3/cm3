@@ -201,8 +201,11 @@ PROCEDURE XWait (self: Activation; m: Mutex; c: Condition; alertable: BOOLEAN)
     self.nextWaiter := c.waiters;
     c.waiters := self;
     WITH r = pthread_mutex_unlock(c.mutex) DO <*ASSERT r=0*> END;
+    WITH r = pthread_mutex_unlock(self.mutex) DO <*ASSERT r=0*> END;
 
     m.release();
+
+    WITH r = pthread_mutex_lock(self.mutex) DO <*ASSERT r=0*> END;
     IF perfOn THEN PerfChanged(State.waiting) END;
     LOOP
       IF alertable AND self.alerted THEN
