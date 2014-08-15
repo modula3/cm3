@@ -1360,7 +1360,6 @@ PROCEDURE AtForkPrepare() =
 PROCEDURE AtForkParent() =
   VAR me := GetActivation();
       act: Activation;
-      cond: Condition;
   BEGIN
     (* Walk activations and unlock all threads, conditions. *)
     act := me;
