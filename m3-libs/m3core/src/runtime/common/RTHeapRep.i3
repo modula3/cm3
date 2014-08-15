@@ -116,8 +116,7 @@ TYPE
                                     it contains a single accessible object,
                                     so no garbage would be collected by
                                     copying the object *)
-          Frozen,                (* page contains frozen ref *)
-          };
+          Frozen};               (* page contains frozen ref *)
 (* The collector can be generational; the heap is divided into two
    generations. *)
 
