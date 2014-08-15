@@ -18,12 +18,6 @@
    in this form any more. GMD has been merged with "Fraunhofergesellschaft".   
 *) 
 
-(*
-   Revision 1.5  2013-02-17 23:20:25  jkrell
-   try to fix CVS keyword expansion, maybe just remove them entirely
-
-*)
-
 (* 
 
 * Revision 1.1  2012-07-16 16:29:16  rodney
