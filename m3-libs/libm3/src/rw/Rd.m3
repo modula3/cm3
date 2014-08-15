@@ -367,6 +367,7 @@ PROCEDURE FastUnGetCharMulti(rd: T): BOOLEAN (* Succeeded. *) =
 
 PROCEDURE CharsReady(rd: T): CARDINAL
   RAISES {Failure} =
+  <*FATAL Thread.Alerted*>
   BEGIN
     LOCK rd DO 
       IF rd.cur = rd.hi THEN
