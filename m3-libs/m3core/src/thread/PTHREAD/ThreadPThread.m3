@@ -117,6 +117,7 @@ PROCEDURE InitMutex (VAR m: pthread_mutex_t; root: REFANY;
 PROCEDURE LockMutex (m: Mutex) =
   VAR self := GetActivation();
   BEGIN
+    IF perfOn THEN PerfChanged(State.locking) END;
     IF m.mutex = NIL THEN InitMutex(m.mutex, m, CleanMutex) END;
     WITH r = pthread_mutex_lock(self.mutex) DO <*ASSERT r=0*> END;
     WITH r = pthread_mutex_lock(m.mutex) DO <*ASSERT r=0*> END;
@@ -129,7 +130,6 @@ PROCEDURE LockMutex (m: Mutex) =
     END;
     <*ASSERT self.waitingOn = NIL*>
     <*ASSERT self.nextWaiter = NIL*>
-    IF perfOn THEN PerfChanged(State.locking) END;
     self.waitingOn := m.mutex;
     self.nextWaiter := m.waiters;
     m.waiters := self;
@@ -138,8 +138,10 @@ PROCEDURE LockMutex (m: Mutex) =
     REPEAT
       WITH r = pthread_cond_wait(self.cond, self.mutex) DO <*ASSERT r=0*> END;
     UNTIL self.waitingOn = NIL; (* m.holder = self *)
+    <*ASSERT m.holder = self*>
     <*ASSERT self.nextWaiter = NIL*>
     WITH r = pthread_mutex_unlock(self.mutex) DO <*ASSERT r=0*> END;
+    IF perfOn THEN PerfRunning() END;
   END LockMutex;
 
 PROCEDURE UnlockMutex (m: Mutex) =
@@ -279,7 +281,7 @@ PROCEDURE Signal (c: Condition) =
 PROCEDURE Broadcast (c: Condition) =
   VAR
     self := GetActivation();
-    t: Activation;
+    t, next: Activation;
   BEGIN
     IF c.mutex = NIL THEN InitMutex(c.mutex, c, CleanCondition) END;
     WITH r = pthread_mutex_lock(self.mutex) DO <*ASSERT r=0*> END;
@@ -290,10 +292,12 @@ PROCEDURE Broadcast (c: Condition) =
     WITH r = pthread_mutex_unlock(self.mutex) DO <*ASSERT r=0*> END;
     WHILE t # NIL DO
       WITH r = pthread_mutex_lock(t.mutex) DO <*ASSERT r=0*> END;
+      next := t.nextWaiter;
       t.nextWaiter := NIL;
       t.waitingOn := NIL;
       WITH r = pthread_cond_signal(t.cond) DO <*ASSERT r=0*> END;
       WITH r = pthread_mutex_unlock(t.mutex) DO <*ASSERT r=0*> END;
+      t := next;
     END;
   END Broadcast;
 
