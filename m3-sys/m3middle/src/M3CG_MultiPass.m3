@@ -1,6 +1,6 @@
 MODULE M3CG_MultiPass;
 
-IMPORT M3CG, M3CG_Ops, RefSeq, Target, Fmt, RTIO;
+IMPORT M3CG, M3CG_Ops, RefSeq, Target;
 FROM M3CG IMPORT Type, MType, IType, RType, AType, ZType, Sign;
 FROM M3CG IMPORT Name, Var, Proc, Alignment, TypeUID, Label;
 FROM M3CG IMPORT Frequency, CallingConvention, CompareOp, ConvertOp, AtomicOp;
