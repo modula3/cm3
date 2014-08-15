@@ -1365,8 +1365,6 @@ PROCEDURE AtForkParent() =
     (* Walk activations and unlock all threads, conditions. *)
     act := me;
     REPEAT
-      cond := slots[act.slot].join;
-      IF cond # NIL THEN PThreadUnlockMutex(cond.mutex, ThisLine()) END;
       PThreadUnlockMutex(act.mutex, ThisLine());
       act := act.next;
     UNTIL act = me;
