@@ -103,7 +103,10 @@ TYPE Space = {Unallocated, Free, Previous, Current};
 
 TYPE
   Notes = SET OF Note;
-  Note = {OlderGeneration,       (* page promoted to current space because
+  Note = {Allocated,             (* page was allocated in current space *)
+          Copied,                (* page contains elements that were copied
+                                    from previous space *)
+          OlderGeneration,       (* page promoted to current space because
                                     it it contained the older generation
                                     from the previous space *)
           AmbiguousRoot,         (* page promoted to current space because
@@ -114,10 +117,7 @@ TYPE
                                     so no garbage would be collected by
                                     copying the object *)
           Frozen,                (* page contains frozen ref *)
-          Allocated,             (* page was allocated in current space *)
-          Copied};               (* page contains elements that were copied
-                                    from previous space *)
-
+          };
 (* The collector can be generational; the heap is divided into two
    generations. *)
 
@@ -204,8 +204,8 @@ PROCEDURE LongAlloc (size, alignment: CARDINAL;
 (* Objects in the traced heap are allocated from "pools". *)
 TYPE
   AllocPool = RECORD
-    note       : [Note.Allocated..Note.Copied];
-    pure       : BOOLEAN;
+    note       : [Note.Allocated..Note.Copied] := Note.Allocated;
+    pure       : BOOLEAN := FALSE;
     page       : RefPage := NIL; (* current allocation page of the pool *)
     next       : ADDRESS := NIL; (* address of next available byte *)
     limit      : ADDRESS := NIL; (* address of first unavailable byte *)
