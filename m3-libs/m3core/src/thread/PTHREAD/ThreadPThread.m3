@@ -853,11 +853,6 @@ PROCEDURE ProcessEachStack (p: PROCEDURE (start, limit: ADDRESS)) =
             SignalThread(act);
             INC(newlySent);
           END;
-          WITH r = sem_getvalue(acks) DO <*ASSERT r=0*> END;
-          IF newlySent < nLive - acks THEN
-            (* how did we manage to lose some? *)
-            nLive := acks + newlySent;
-          END;
           wait_nsecs := RETRY_INTERVAL;
         ELSE
           Nanosleep(WAIT_UNIT);
@@ -906,11 +901,6 @@ PROCEDURE ProcessEachStack (p: PROCEDURE (start, limit: ADDRESS)) =
           IF act.state # ActState.Started THEN
             SignalThread(act);
             INC(newlySent);
-          END;
-          WITH r = sem_getvalue(acks) DO <*ASSERT r=0*> END;
-          IF newlySent < nDead - acks THEN
-            (* how did we manage to lose some? *)
-            nDead := acks + newlySent;
           END;
           wait_nsecs := RETRY_INTERVAL;
         ELSE
@@ -1047,11 +1037,6 @@ PROCEDURE StopWorld () =
           END;
           act := act.next;
         END;
-        WITH r = sem_getvalue(acks) DO <*ASSERT r=0*> END;
-        IF newlySent < nLive - acks THEN
-          (* how did we manage to lose some? *)
-          nLive := acks + newlySent;
-        END;
         wait_nsecs := RETRY_INTERVAL;
       ELSE
         Nanosleep(WAIT_UNIT);
@@ -1128,11 +1113,6 @@ PROCEDURE StartWorld () =
             INC(newlySent);
           END;
           act := act.next;
-        END;
-        WITH r = sem_getvalue(acks) DO <*ASSERT r=0*> END;
-        IF newlySent < nDead - acks THEN
-          (* how did we manage to lose some? *)
-          nDead := acks + newlySent;
         END;
         wait_nsecs := RETRY_INTERVAL;
       ELSE
