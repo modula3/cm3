@@ -496,7 +496,7 @@ PROCEDURE ThreadBase (param: ADDRESS): ADDRESS =
       me.stackbase := NIL; (* disable GC scanning of my stack *)
       me.next.prev := me.prev;
       me.prev.next := me.next;
-      WITH r = pthread_detach_self() DO <*ASSERT r=0*> END;
+      WITH r = pthread_detach_self(me.handle) DO <*ASSERT r=0*> END;
     WITH r = pthread_mutex_unlock(activeMu) DO <*ASSERT r=0*> END;
     me.next := NIL;
     me.prev := NIL;
@@ -1365,22 +1365,23 @@ PROCEDURE AtForkChild() =
    and collector. *)
 
 VAR
-  holder: pthread_t;
+  holder: Activation;
   inCritical := 0;
 
 PROCEDURE LockHeap () =
-  VAR self := pthread_self();
+  VAR me := GetActivation();
   BEGIN
-    IF pthread_equal(holder, self) = 0 THEN
+    IF holder # me THEN
       WITH r = pthread_mutex_lock(heapMu) DO <*ASSERT r=0*> END;
-      holder := self;
+      holder := me;
     END;
     INC(inCritical);
   END LockHeap;
 
 PROCEDURE UnlockHeap () =
+  VAR me := GetActivation();
   BEGIN
-    <*ASSERT pthread_equal(holder, pthread_self()) # 0*>
+    <*ASSERT holder=me*>
     DEC(inCritical);
     IF inCritical = 0 THEN
       holder := NIL;
@@ -1389,13 +1390,13 @@ PROCEDURE UnlockHeap () =
   END UnlockHeap;
 
 PROCEDURE WaitHeap () =
-  VAR self := pthread_self();
+  VAR me := GetActivation();
   BEGIN
-    <*ASSERT pthread_equal(holder, self) # 0*>
+    <*ASSERT holder=me*>
     DEC(inCritical);
     <*ASSERT inCritical = 0*>
     WITH r = pthread_cond_wait(heapCond, heapMu) DO <*ASSERT r=0*> END;
-    holder := self;
+    holder := me;
     <*ASSERT inCritical = 0*>
     INC(inCritical);
   END WaitHeap;

@@ -58,7 +58,7 @@ PROCEDURE thread_create(stackSize: size_t;
                         start_routine: PROCEDURE(arg: ADDRESS): ADDRESS; arg: ADDRESS): int;
 
 <*EXTERNAL ThreadPThread__pthread_detach_self*>
-PROCEDURE pthread_detach_self(): int;
+PROCEDURE pthread_detach_self(t: pthread_t): int;
 
 <*EXTERNAL ThreadPThread__pthread_self*>
 PROCEDURE pthread_self(): pthread_t;

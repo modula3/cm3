@@ -388,7 +388,11 @@ typedef INTEGER m3_uid_t;
  That is, for example, do NOT convert int <=> pointer.
  */
 #define PTHREAD_TO_M3(x)   ((m3_pthread_t)(WORD_T)(x))
+#if defined(__APPLE__)
+#define PTHREAD_FROM_M3(x) ((mach_port_t)(WORD_T)(x))
+#else
 #define PTHREAD_FROM_M3(x) ((pthread_t)(WORD_T)(x))
+#endif
 
 #if defined(__APPLE__) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
 #define HAS_STAT_FLAGS
