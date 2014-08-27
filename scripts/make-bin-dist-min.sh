@@ -82,9 +82,11 @@ if [ "${GCC_BACKEND}" = yes ] ; then
   cp "${ROOT}/m3-sys/m3cc/${TARGET}/cm3cg${EXE}" "${INSTALLROOT}/bin" || exit 1
   strip_exe "${INSTALLROOT}/bin/cm3cg${EXE}"
 fi
-echo "installing ${INSTALLROOT}/bin/mklib${EXE}"
-cp "${ROOT}/m3-sys/mklib/${TARGET}/mklib${EXE}" "${INSTALLROOT}/bin" || exit 1
-strip_exe "${INSTALLROOT}/bin/mklib${EXE}"
+if [ "${TARGET}" = WIN32 ] ; then ## We must check for all Windows targets here. TODO, dd
+  echo "installing ${INSTALLROOT}/bin/mklib${EXE}"
+  cp "${ROOT}/m3-sys/mklib/${TARGET}/mklib${EXE}" "${INSTALLROOT}/bin" || exit 1
+  strip_exe "${INSTALLROOT}/bin/mklib${EXE}"
+fi
 
 #-----------------------------------------------------------------------------
 

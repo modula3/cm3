@@ -16,7 +16,7 @@ xxm3back_debug = "-g " % no m3gdb support
 
 if defined("HasCBackend")
   if HasCBackend()
-    M3_BACKEND_MODE = "C"
+    M3_BACKEND_MODE = "3"
   end
 end
 
