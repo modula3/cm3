@@ -22,6 +22,7 @@ FROM Swap IMPORT Int32, Int64On32, Int64On64;
 
 IMPORT Rd, Wr, Text, TextClass, Text8, Text16, Thread;
 IMPORT RdClass, WrClass, UnsafeRd, UnsafeWr, Swap; 
+IMPORT Word; 
 FROM Word IMPORT And, Or, LeftShift, RightShift; 
 
 REVEAL RdClass.Private <: MUTEX;
@@ -279,7 +280,7 @@ PROCEDURE InInteger(reader: Pickle.Reader;
 	IF reader.wordConvKind = CPKind.Swap32to64 THEN
 	  i32 := Swap.Swap4(i32);
 	END;
-	i := i32;
+	i := i32; (* Which sign-extends. *) 
       END;
 
     | CPKind.Copy64to32, CPKind.Swap64to32 =>
@@ -297,7 +298,7 @@ PROCEDURE InInteger(reader: Pickle.Reader;
             END; 
           ELSE 
              IF i64.b # 0 THEN 
-              RAISE Pickle.Error("Negative overflow shortening INTEGER.");
+              RAISE Pickle.Error("Positive overflow shortening INTEGER.");
             END; 
           END; 
 	ELSE (* All big endian. *) 
@@ -308,7 +309,7 @@ PROCEDURE InInteger(reader: Pickle.Reader;
             END; 
           ELSE 
              IF i64.a # 0 THEN 
-              RAISE Pickle.Error("Negative overflow shortening INTEGER.");
+              RAISE Pickle.Error("Positive overflow shortening INTEGER.");
             END; 
           END; 
 	END;
@@ -324,6 +325,84 @@ PROCEDURE InInteger(reader: Pickle.Reader;
     IF i < min OR i > max THEN RaiseUnmarshalFailure(); END;
     RETURN i;
   END InInteger;
+
+PROCEDURE InWord (reader: Pickle.Reader;
+                  min            := 0;
+                  max            := -1 ): INTEGER
+  RAISES {Pickle.Error, Rd.Failure, Thread.Alerted} =
+(* Unmarshal an unsigned Word.T, checking that its unsigned value is in 
+   "[min..max]".  In case the word size changes, use unsigned extension
+   or overflow check. *)
+
+  VAR i: INTEGER;
+  BEGIN
+    CASE reader.wordConvKind OF
+    | CPKind.Copy, CPKind.Swap =>
+      VAR c := LOOPHOLE(ADR(i), 
+                        UNTRACED REF ARRAY [1..BYTESIZE(INTEGER)] OF CHAR);
+      BEGIN
+        IF reader.rd.getSub(c^) # NUMBER(c^) THEN
+          RaiseUnmarshalFailure();
+        END;
+        IF reader.wordConvKind = CPKind.Swap THEN
+          CASE myPacking.word_size OF
+          | 32 => i := Swap.Swap4(i);
+          | 64 => 
+            VAR ii: Int64On64;
+            BEGIN
+              ii.v := i;
+              ii := LOOPHOLE(Swap.Swap8(LOOPHOLE(ii, Int64On32)), Int64On64);
+              i := ii.v;
+            END;
+          ELSE
+            RaiseUnsupportedDataRep();
+          END;
+        END;
+      END;
+
+    | CPKind.Copy32to64, CPKind.Swap32to64 =>
+      VAR i32: Int32;
+          c32 := LOOPHOLE(ADR(i32), UNTRACED REF ARRAY [1..4] OF CHAR);
+      BEGIN
+	IF reader.rd.getSub(c32^) # NUMBER(c32^) THEN
+	  RaiseUnmarshalFailure();
+	END;
+	IF reader.wordConvKind = CPKind.Swap32to64 THEN
+	  i32 := Swap.Swap4(i32);
+	END;
+	i := Word . And (i32, 16_FFFFFFFF); (* Zero-extend. *) 
+      END;
+
+    | CPKind.Copy64to32, CPKind.Swap64to32 =>
+      VAR i64: Int64On32;
+          c64 := LOOPHOLE(ADR(i64), UNTRACED REF ARRAY [1..8] OF CHAR);
+      BEGIN
+	IF reader.rd.getSub(c64^) # NUMBER(c64^) THEN
+	  RaiseUnmarshalFailure();
+	END;
+	IF reader.packing.little_endian THEN
+	  i := i64.a;
+	  IF i64.b # 0 THEN
+	    RAISE Pickle.Error("Overflow shortening Word.T.");
+	  END;
+	ELSE
+	  i := i64.b;
+	  IF i64.a # 0 THEN
+	    RAISE Pickle.Error("Overflow shortening Word.T.");
+	  END;
+	END;
+  
+	(* Now, swap it if need be. *)
+	IF reader.wordConvKind = CPKind.Swap64to32 THEN
+	  i := Swap.Swap4(i);
+	END;
+      END;
+    ELSE <* ASSERT FALSE *>
+    END;
+
+    IF Word.LT (i,min) OR Word.GT(i, max) THEN RaiseUnmarshalFailure(); END;
+    RETURN i;
+  END InWord;
 
 PROCEDURE InLongint(reader: Pickle.Reader; 
                     min := FIRST(LONGINT);
