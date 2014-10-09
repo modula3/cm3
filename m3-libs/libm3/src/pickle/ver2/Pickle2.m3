@@ -522,6 +522,17 @@ PROCEDURE TCFromIndex(reader: Reader; index: INTEGER): TypeCode
     RETURN reader.pklToTC[index]
   END TCFromIndex;
 
+PROCEDURE NewReadRefID (reader: Reader): RefID = 
+(* allocate and return a new object reference ID. *) 
+  VAR id: RefID;
+  BEGIN 
+    IF reader.refCount >= NUMBER(reader.refs^) THEN ExpandRefs (reader); END;
+    id := reader.refCount;
+    reader.refs[id] := nullReaderRef;
+    INC(reader.refCount);
+    RETURN id; 
+  END NewReadRefID; 
+
 PROCEDURE InvokeSpecial(reader: Reader; sc: TypeCode): REFANY
       RAISES { Error, Rd.EndOfFile, Rd.Failure, Thread.Alerted } =
   VAR sp: Special; r: REFANY; id: RefID;
@@ -530,10 +541,7 @@ PROCEDURE InvokeSpecial(reader: Reader; sc: TypeCode): REFANY
     IF sp.sc # sc THEN
       RAISE Error("Can't read pickle (Special not defined)")
     END;
-    IF reader.refCount >= NUMBER(reader.refs^) THEN ExpandRefs (reader); END;
-    id := reader.refCount;
-    reader.refs[id] := nullReaderRef;
-    INC(reader.refCount);
+    id := NewReadRefID (reader); 
     INC(reader.level);
       r := sp.read(reader, id);
     DEC(reader.level);
