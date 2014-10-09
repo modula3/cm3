@@ -291,14 +291,26 @@ PROCEDURE InInteger(reader: Pickle.Reader;
 	END;
 	IF reader.packing.little_endian THEN
 	  i := i64.a;
-	  IF i64.b # 0 AND i64.b # -1 THEN
-	    RAISE Pickle.Error("Data value too big.");
-	  END;
-	ELSE
+          IF i64.a < 0 THEN 
+            IF i64.b # -1 THEN 
+              RAISE Pickle.Error("Negative overflow shortening INTEGER.");
+            END; 
+          ELSE 
+             IF i64.b # 0 THEN 
+              RAISE Pickle.Error("Negative overflow shortening INTEGER.");
+            END; 
+          END; 
+	ELSE (* All big endian. *) 
 	  i := i64.b;
-	  IF i64.a # 0 AND i64.a # -1 THEN
-	    RAISE Pickle.Error("Data value too big.");
-	  END;
+          IF i64.b < 0 THEN 
+            IF i64.a # -1 THEN 
+              RAISE Pickle.Error("Negative overflow shortening INTEGER.");
+            END; 
+          ELSE 
+             IF i64.a # 0 THEN 
+              RAISE Pickle.Error("Negative overflow shortening INTEGER.");
+            END; 
+          END; 
 	END;
   
 	(* Now, swap it if need be. *)
