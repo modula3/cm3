@@ -184,7 +184,7 @@ PROCEDURE InCardinal (reader: Pickle.Reader; lim: CARDINAL := LAST(CARDINAL)):
 
 PROCEDURE InLongcard (reader: Pickle.Reader; lim: LONGCARD := LAST(LONGCARD)):
   LONGCARD RAISES {Pickle.Error, Rd.Failure, Thread.Alerted};
-(* Unmarshal a cardinal, checking that its value is in "[0..lim]". *)
+(* Unmarshal a long cardinal, checking that its value is in "[0..lim]". *)
 
 END PickleStubs.
 
