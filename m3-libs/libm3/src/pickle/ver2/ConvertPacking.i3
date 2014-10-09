@@ -29,7 +29,7 @@
 *)
 
 
-UNSAFE INTERFACE ConvertPacking;
+INTERFACE ConvertPacking;
 
 IMPORT Pickle2, RTPacking, PklAction, Thread, Rd, Wr;
 
