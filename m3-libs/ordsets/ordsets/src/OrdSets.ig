@@ -1,7 +1,7 @@
   
 (* -----------------------------------------------------------------------1- *)
 (* File OrdSets.ig  Modula-3 source code.                                    *)
-(* Copyright 2010 .. 2012, Rodney M. Bates.                                  *)
+(* Copyright 2010 .. 2014, Rodney M. Bates.                                  *)
 (* rbates@acm.org                                                            *)
 (* Licensed under the Gnu Public License, version 2 or later.                *)
 (* -----------------------------------------------------------------------2- *)
@@ -13,7 +13,7 @@ GENERIC INTERFACE OrdSets ( Element )
                      FIRST (INTEGER) <= ORD (FIRST (T)) 
                      AND ORD (LAST (T)) <= LAST (INTEGER).   
 
-     TYPE ValidElemT A nonempty, proper subrange of T. Elements of sets 
+     TYPE ValidElemT A nonempty, proper subrange of T.  Elements of sets 
                      provided by instantiations of OrdSets will have this type. 
 
      CONST NullElem  A constant of type T, that is not a member of ValidElemT.
@@ -53,7 +53,7 @@ GENERIC INTERFACE OrdSets ( Element )
    Pickles do not handle these.  Enable this with DoPseudoPointers, in 
    OrdSets.mg.  
 
-   Up through 2013-02-17, Pickles will not tolerate this misaligned
+   Up through 2013-02-17, Pickles will not tolerate these misaligned
    pointers.  Also, up through the same date, even without misaligned
    pointers, pickles will not correctly convert these sets between different
    word sizes.     
@@ -87,9 +87,9 @@ GENERIC INTERFACE OrdSets ( Element )
   (* Empty set. *) 
 
 ; PROCEDURE Singleton ( Elem : ElemT ) : T 
-(* Singleton set containing just Elem.  Empty set if 
-   Elem not in ValidElemT 
-*) 
+  (* Singleton set containing just Elem.  Empty set if 
+     Elem not in ValidElemT 
+  *) 
 
 ; PROCEDURE Range ( Lo , Hi : ElemT ) : T 
   (* Set containing all elements in the range [ Lo .. Hi ].  Empty set if
@@ -102,10 +102,10 @@ GENERIC INTERFACE OrdSets ( Element )
   *) 
 
 ; PROCEDURE Union ( Set1 : T ; Set2 : T ) : T
-(* Union of Set1 and Set2. *) 
+  (* Union of Set1 and Set2. *) 
 
 ; PROCEDURE Intersection ( Set1 : T ; Set2 : T ) : T 
-(* Intersection of Set1 and Set2. *) 
+  (* Intersection of Set1 and Set2. *) 
 
 ; PROCEDURE Project ( Set : T ; Min , Max : ElemT ) : T 
   (* Remove elements outside the range Min .. Max *)
@@ -147,7 +147,7 @@ GENERIC INTERFACE OrdSets ( Element )
 ; PROCEDURE Complement 
     ( Set : T ; UnivLo , UnivHi : ElemT := NullElem ) : T 
   (* Complement WRT a universe of [ UnivLo .. UnivHi ].
-     The universe is first widened if necessary to cover Minimun(Set)
+     The universe is first widened if necessary to cover Minimum(Set)
      ..Maximum(Set). 
      If Set is empty and exactly one of UnivLo,UnivHi is valid, Set is 
      complemented WRT Singleton(TheOneValidUnivBound).  Otherwise Empty()
@@ -155,10 +155,10 @@ GENERIC INTERFACE OrdSets ( Element )
 
      WARNING: This can create a *very* large heap object if the
               universe is large.  You probably want a universe having
-              dynamically computed bounds that are far less
-              extravagant than ValidElemT.  And if ValidElemT weren't
-              large, you would probably be using some other set
-              representation, such as Modula-3's builtin SET types.
+              dynamically computed bounds that are far less extravagant 
+              than ValidElemT.  And if ValidElemT weren't large, you 
+              would probably be using some other set representation, 
+              such as Modula-3's builtin SET types.
               There is no Complement operation WRT ValidElemT, to make 
               it harder to inadvertently construct huge objects.
   *)   
@@ -219,9 +219,10 @@ GENERIC INTERFACE OrdSets ( Element )
     ( Set : T 
     ; ElemImage : ElemImageFuncTyp 
     ; Prefix : TEXT := ""  
-      (* If a new line is inserted, the following line will begin with this. *)
-    ; LineLen : CARDINAL := 80
-      (* Lines with more than one element or range will not exceed this. *) 
+      (* ^If a new line is inserted, the next line will begin with Prefix. *)
+    ; MaxLine : CARDINAL := 80
+      (* Lines with more than one element or range will not be longer than
+         MaxLine characters. *) 
     ) 
   : TEXT  
   RAISES { Thread . Alerted , Wr . Failure } 
@@ -239,5 +240,4 @@ GENERIC INTERFACE OrdSets ( Element )
 
 ; END OrdSets 
 . 
-
 
