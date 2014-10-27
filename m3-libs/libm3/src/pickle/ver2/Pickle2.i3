@@ -216,6 +216,10 @@ TYPE
 
 PROCEDURE NewReadRefID (reader: Reader): RefID; 
 (* Allocate and return a new object index. *) 
+
+PROCEDURE RefOfRefID (reader: Reader; ID : RefID) : REFANY; 
+(* The reference indexed by ID *) 
+
 (* If "r" is a "Pickle.Reader", then "r.read()"
    reads a pickle from "r.rd", reconstructs a copy of 
    the pickled data structure, and returns it.  The bytes 

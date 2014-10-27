@@ -533,6 +533,12 @@ PROCEDURE NewReadRefID (reader: Reader): RefID =
     RETURN id; 
   END NewReadRefID; 
 
+PROCEDURE RefOfRefID (reader: Reader; ID : RefID) : REFANY = 
+(* The reference indexed by ID *) 
+  BEGIN 
+    RETURN reader.refs [ ID ]
+  END RefOfRefID; 
+
 PROCEDURE InvokeSpecial(reader: Reader; sc: TypeCode): REFANY
       RAISES { Error, Rd.EndOfFile, Rd.Failure, Thread.Alerted } =
   VAR sp: Special; r: REFANY; id: RefID;
