@@ -62,6 +62,20 @@ MODULE UniWr
     END Enc
 
 (* EXPORTED: *) 
+; PROCEDURE PutChar ( Stream : T ; Ch : CHAR ) 
+  RAISES { Failure , Alerted } 
+  (* Encode Ch, using Enc(Stream), and write it to Sink(Stream) *) 
+  
+  = BEGIN 
+      LOCK Stream 
+      DO LOCK Stream . Sink 
+        DO 
+          UnsafeUniWr . FastPutChar ( Stream , Ch ) 
+        END (* LOCK *) 
+      END (* LOCK *) 
+    END PutChar 
+
+(* EXPORTED: *) 
 ; PROCEDURE PutWideChar ( Stream : T ; Wch : Widechar ) 
   RAISES { Range , Failure , Alerted } 
   (* Encode Wch, using Enc(Stream), and write it to Sink(Stream) *) 

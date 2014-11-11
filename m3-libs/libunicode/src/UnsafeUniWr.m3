@@ -13,6 +13,17 @@ MODULE UnsafeUniWr
 ; FROM Wr IMPORT Failure 
 
 (* EXPORTED: *) 
+; PROCEDURE FastPutChar ( Stream : UniWr . T ; Ch : CHAR ) 
+  RAISES { Failure , Alerted } 
+  (* Encode Ch, using Enc(Stream), and write it to Sink(Stream) *) 
+  
+  = <* FATAL Range *> (* Can't happen. *)
+    BEGIN 
+      (* Dispatch to appropriate encoding procedure. *) 
+      Stream . EncWideChar ( Stream . Sink , Wch ) 
+    END FastPutWideChar 
+
+(* EXPORTED: *) 
 ; PROCEDURE FastPutWideChar ( Stream : UniWr . T ; Wch : Widechar ) 
   RAISES { Range , Failure , Alerted } 
   (* Encode Wch, using Enc(Stream), and write it to Sink(Stream) *) 
