@@ -28,7 +28,7 @@ __cdecl
 ThreadPThread__SuspendThread (m3_pthread_t mt)
 {
   kern_return_t status = { 0 };
-  mach_port_t mach_thread = pthread_mach_thread_np(PTHREAD_FROM_M3(mt));
+  mach_port_t mach_thread = PTHREAD_FROM_M3(mt);
   status = thread_suspend(mach_thread);
   if (status != KERN_SUCCESS)
   {
@@ -57,7 +57,7 @@ int
 __cdecl
 ThreadPThread__RestartThread (m3_pthread_t mt)
 {
-  mach_port_t mach_thread = pthread_mach_thread_np(PTHREAD_FROM_M3(mt));
+  mach_port_t mach_thread = PTHREAD_FROM_M3(mt);
   return thread_resume(mach_thread) == KERN_SUCCESS;
 }
 
@@ -113,7 +113,7 @@ ThreadPThread__ProcessStopped (m3_pthread_t mt, void *bottom, void *context,
   mach_msg_type_number_t thread_state_count = M3_THREAD_STATE_COUNT;
 
   if (!bottom) return;
-  status = thread_get_state(pthread_mach_thread_np(PTHREAD_FROM_M3(mt)),
+  status = thread_get_state(PTHREAD_FROM_M3(mt),
                             M3_THREAD_STATE, (thread_state_t)&state,
                             &thread_state_count);
   if (status != KERN_SUCCESS)

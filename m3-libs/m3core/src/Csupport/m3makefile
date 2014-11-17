@@ -6,8 +6,4 @@ include_dir ("Common")
 
 include_dir({ "LITTLE":"little-endian", "BIG":"big-endian"}{TARGET_ENDIAN})
 
-if FileExists (path() & "/" & TARGET & "/m3makefile")
-  include_dir (TARGET)
-end
-
 include_dir ("libgcc")

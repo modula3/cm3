@@ -9,6 +9,11 @@
 #define M3_DIRECT_SUSPEND
 #endif
 
+#if defined(__APPLE__)
+#include <mach/mach_port.h>
+#include <mach/mach_init.h>
+#endif
+
 #define M3MODULE ThreadPThread
 
 #if defined(__sparc) || defined(__ia64__)
@@ -472,8 +477,12 @@ ThreadPThread__pthread_cond_timedwait(pthread_cond_t* cond,
 
 int
 __cdecl
-ThreadPThread__pthread_detach_self(void)
+ThreadPThread__pthread_detach_self(m3_pthread_t t)
 {
+#if defined(__APPLE__)
+  mach_port_t a = PTHREAD_FROM_M3(t);
+  mach_port_deallocate(mach_task_self(), a);
+#endif
   return pthread_detach(pthread_self());
 }
 
@@ -481,22 +490,35 @@ m3_pthread_t
 __cdecl
 ThreadPThread__pthread_self(void)
 {
+#if defined(__APPLE__)
+  mach_port_t a = mach_thread_self();
+  return PTHREAD_TO_M3(a);
+#else
   pthread_t a = pthread_self();
   return PTHREAD_TO_M3(a);
+#endif
 }
 
 int
 __cdecl
 ThreadPThread__pthread_equal(m3_pthread_t t1, m3_pthread_t t2)
 {
+#if defined(__APPLE__)
+  abort();
+#else
   return pthread_equal(PTHREAD_FROM_M3(t1), PTHREAD_FROM_M3(t2));
+#endif
 }
 
 int
 __cdecl
 ThreadPThread__pthread_kill(m3_pthread_t thread, int sig)
 {
+#if defined(__APPLE__)
+  abort();
+#else
   return pthread_kill(PTHREAD_FROM_M3(thread), sig);
+#endif
 }
 
 int

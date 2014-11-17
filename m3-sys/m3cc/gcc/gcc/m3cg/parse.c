@@ -24,8 +24,8 @@
 
 #include <vector>
 #include <map>
-using namespace std;
-#define typedef_vector typedef vector /* hack for gengtype */
+// using namespace std;
+#define typedef_vector typedef std::vector /* hack for gengtype */
 #include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
@@ -2135,7 +2135,7 @@ m3_init_decl_processing (void)
 
 /* Variable arrays of trees. */
 
-static map<size_t, m3cg_BIND_SEGMENT_t*> bind_segments; /* wasteful but ok -- there's only ever about two */
+static std::map<size_t, m3cg_BIND_SEGMENT_t*> bind_segments; /* wasteful but ok -- there's only ever about two */
 static std::vector<tree> all_vars;
 static std::vector<tree> all_procs;
 static std::vector<tree> all_labels;
