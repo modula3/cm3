@@ -20,8 +20,8 @@ MODULE UnsafeUniWr
   = <* FATAL Range *> (* Can't happen. *)
     BEGIN 
       (* Dispatch to appropriate encoding procedure. *) 
-      Stream . EncWideChar ( Stream . Sink , Wch ) 
-    END FastPutWideChar 
+      Stream . EncWideChar ( Stream . Sink , Ch ) 
+    END FastPutChar 
 
 (* EXPORTED: *) 
 ; PROCEDURE FastPutWideChar ( Stream : UniWr . T ; Wch : Widechar ) 
@@ -126,10 +126,15 @@ MODULE UnsafeUniWr
         END (* FOR *) 
       END VisitWideString  
 
-  ; BEGIN (* PutText *) 
+  ; BEGIN (* FastPutText *) 
       (* Text . ForAllDo *) 
       TextForAllDo 
         ( String , VisitWideChar , VisitString , VisitWideString ) 
+
+(* TODO:  
+   We need a way to say <* FATAL ANY EXCEPT Range , Failure , Alerted *> 
+   to avoid extraneous warnings. 
+*) 
     END FastPutText  
 
 ; BEGIN (* UnsafeUniWr *) 
