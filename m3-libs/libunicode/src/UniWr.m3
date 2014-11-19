@@ -76,7 +76,7 @@ MODULE UniWr
     END PutChar 
 
 (* EXPORTED: *) 
-; PROCEDURE PutWideChar ( Stream : T ; Wch : Widechar ) 
+ ; PROCEDURE PutWideChar ( Stream : T ; Wch : Widechar ) 
   RAISES { Range , Failure , Alerted } 
   (* Encode Wch, using Enc(Stream), and write it to Sink(Stream) *) 
   
