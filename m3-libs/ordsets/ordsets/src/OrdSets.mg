@@ -38,7 +38,10 @@ GENERIC MODULE OrdSets ( )
 ; IMPORT BitNoTable 
 ; IMPORT UnsafeUtils 
 
-(* NOTE on compiler WARNING messages on 32-bit machines:  
+(* NOTE on compiler WARNING messages:
+    Expect a "warning: unreachable statement" message, as consequence of
+    code adapting to either 32-bit or 64-bit machines. 
+  
     Expect two "warning: value out of range" messages when compiling on 
     a 32-bit machine.  These are harmless because the cited code will not
     be executed. 
@@ -57,7 +60,7 @@ GENERIC MODULE OrdSets ( )
    pointers, pickles will not correctly convert these sets between different
    word sizes.     
 *)
-; CONST DoPseudoPointers = FALSE  
+; CONST DoPseudoPointers = TRUE   
 
 (* Thread safety: 
 
@@ -141,7 +144,7 @@ GENERIC MODULE OrdSets ( )
    INVARIANT: - The presence of element E is represented by bit BitNo ( E ), 
                 within BitwordArrayRef ^ [ ArraySsOfIElem ( E , Bias ) ]
               - The bits corresponding to BitsetLo and BitsetHi are ones.
-              - At least one 0-bit lies somewhere between. 
+              - At least one zero-bit lies somewhere between. 
               - BitwordArrayRef^ contains all necessary elements to hold
                 bit numbers in [BitsetLo..BitsetHi], subject to Bias.
               - BitwordArrayRef^ can have unnecessary words at either end. 
@@ -411,10 +414,10 @@ GENERIC MODULE OrdSets ( )
    from a pseudo-pointer or taken directly from a heap-allocated Bitset. 
 
    Additionally, some procedures have cases where they can reuse the 
-   heap object and/or the original set (possibly a pseudo-pointer).  Such
+   heap BitwordArray and/or the original set (possibly a pseudo-pointer).  Such
    procedures accept these as additional parameters, with the precondition
    that they correspond to the BitsetInfo and Bitword array parameters.  For 
-   the heap object, this has type BitsetTyp.  It can be NIL if no heap object
+   the BitwordArray, this has type BitsetTyp.  It can be NIL if no heap object
    is available.  It will not be a pseudo-pointer.  For the original set,
    this just has type T.  
 
@@ -655,30 +658,27 @@ GENERIC MODULE OrdSets ( )
 
   ; BEGIN 
       IF DoPseudoPointers (* Hopefully, a compiler will fold this. *) 
+         AND 0 <= BitsetInfo . BitsetLo 
+         AND BitsetInfo . BitsetHi <= PseudoBitsetMax 
       THEN 
-        IF 0 <= BitsetInfo . BitsetLo 
-           AND BitsetInfo . BitsetHi <= PseudoBitsetMax 
-        THEN 
-        (* Put BitwordArrayRef ^ [ - Bias ] into a Bitset pseudo pointer. *)
-          LResult 
-            := PseudoBitset 
-                 ( BitsetInfo , BitwordArrayRef ^ [ - BitsetInfo . Bias ] ) 
-        ; IF WasNewlyAllocated 
-          THEN (* This bitword array was newly allocated during the current set
-                  operation.  We are abandoning it as garbage, so uncount its
-                  statistics.
-               *) 
-            DEC ( GArrayCt ) 
-          ; DEC 
-              ( GArrayElemCt , VAL ( NUMBER ( BitwordArrayRef ^ ) , LONGINT ) )
-          END (* IF *) 
-        ; RETURN LResult 
+      (* Put BitwordArrayRef ^ [ - Bias ] into a Bitset pseudo pointer. *)
+        LResult 
+          := PseudoBitset 
+               ( BitsetInfo , BitwordArrayRef ^ [ - BitsetInfo . Bias ] ) 
+      ; IF WasNewlyAllocated 
+        THEN (* This bitword array was newly allocated during the current set
+                operation.  We are abandoning it, so uncount its statistics.
+             *) 
+          DEC ( GArrayCt ) 
+        ; DEC ( GArrayElemCt , VAL ( NUMBER ( BitwordArrayRef ^ ) , LONGINT ) )
         END (* IF *) 
+      ELSE 
+        LResultBitset := NewBitset ( ) 
+      ; LResultBitset . BitsetInfo := BitsetInfo 
+      ; LResultBitset . BitwordArrayRef := BitwordArrayRef 
+      ; LResult := LResultBitset 
       END (* IF *) 
-    ; LResultBitset := NewBitset ( ) 
-    ; LResultBitset . BitsetInfo := BitsetInfo 
-    ; LResultBitset . BitwordArrayRef := BitwordArrayRef 
-    ; RETURN LResultBitset 
+    ; RETURN LResult 
     END ConstructBitset 
 
 ; PROCEDURE ConstructRangeset 
@@ -797,8 +797,7 @@ GENERIC MODULE OrdSets ( )
         ; LBitword := Word . RightShift ( LBitword , 8 ) 
         END (* IF *) 
       ; INC ( LResult 
-            , BitNoTable . Least1BitNoInByte 
-                [ Word . And ( LBitword , 16_FF ) ] 
+            , BitNoTable . Least1BitNoInByte [ Word . And ( LBitword , 16_FF ) ]
             ) 
       ; RETURN LResult 
       END (* IF *) 
@@ -5301,7 +5300,8 @@ GENERIC MODULE OrdSets ( )
       ; IF LOverlapHiBitwordNo = LSet1HiBitwordNo 
         THEN 
           LHashRemove1 
-            := Word . Or ( LHashRemove1 , GTMaskOfIElem ( BSet1Info . BitsetHi ) )
+            := Word . Or 
+                 ( LHashRemove1 , GTMaskOfIElem ( BSet1Info . BitsetHi ) )
             (* ^Set BSet1 High garbage bits for hash removal. *) 
         ; LBitword1 
             := Word . And ( LBitword1 , LEMaskOfIElem ( BSet1Info . BitsetHi ) )
@@ -6149,12 +6149,12 @@ GENERIC MODULE OrdSets ( )
 
 (* Set cardinalities of Bitsets are computed eagerly, whenever this can be 
    done without visiting any Bitwords that would not otherwise be needed
-   (i.e., to compute the set value.)  They are cached in field Card.  Value
-   zero in this field means not known/not cached.  By invariant, a Bitset 
-   can not have cardinality less than two, so this value does not clash with
-   a real cardinality.  Uncached cardinalities are computed lazily on demand
-   and cached before being returned.  Cardinalities are declared of type
-   Word.T and are unsigned but full-range numbers.  This is enough value
+   (i.e., to compute the set value.)  They are cached in field Card.  Value 
+   CardUnknown (=0) in this field means not known/not cached.  By invariant, a 
+   Bitset can not have cardinality less than two, so this value does not clash
+   with a real cardinality.  Uncached cardinalities are computed lazily 
+   on demand and cached before being returned.  Cardinalities are declared of 
+   type Word.T and are unsigned but full-range numbers.  This is enough value
    range, considering there is a NullElem that is not a set member value.   
 *) 
 
@@ -7045,9 +7045,10 @@ GENERIC MODULE OrdSets ( )
      done without visiting more Bitwords than otherwise necessary
      (i.e., to compute the set value) and cached in the Hash field.
      The Hash function computes them on demand when not cached.  The
-     value HashZero in field Hash means not cached.  In case a real
-     hash code turns out to be zero, it will not ever be cached, just
-     recomputed on demand.
+     value HashZero in field Hash means not cached.  In case this
+     hash code computation yields zero, it will not ever be cached, 
+     and thus recomputed on demand.
+(* FIXME^ This is oversimplified. *) 
    - While this is no doubt not the greatest hash code possible, it
      allows hash codes to be computed incrementally from the
      operand(s)' cached hash codes in many cases where it could not
@@ -8249,10 +8250,10 @@ GENERIC MODULE OrdSets ( )
                    because the PickleStubs interface doesn't expose the
                    values of TEXT arguments to Pickle2.Error.  We are using
                    inside info, gleaned from reading PickleStubs.m3. *)    
-          THEN (* Hash overflowed (Implies64 to 32), just force recompute. *) 
+          THEN (* Hash overflowed (Implies 64 to 32), just force recompute. *) 
             LBitsetInfo . Hash := HashZero 
           ELSE 
-            RAISE Pickle2 . Error ( T ) 
+            RAISE Pickle2 . Error ( T ) (* Reraise same exception. *) 
           END (* IF *) 
         END (* EXCEPT *) 
       ; IF reader . packing . word_size = BITSIZE ( INTEGER ) 
@@ -8293,7 +8294,7 @@ GENERIC MODULE OrdSets ( )
 
       ; LCh := VAL ( PickleStubs . InByte ( reader ) , CHAR ) 
       ; CASE LCh 
-        OF '0' (* Shouldn't happen, but let's reproduce it. *) 
+        OF '0' (* Shouldn't happen, but let's reproduce what was pickled. *) 
           => LBitset := NewBitset ( )  
           ; LBitset . BitsetInfo := LBitsetInfo 
           ; LBitset . BitwordArrayRef := NIL 
@@ -8320,38 +8321,19 @@ GENERIC MODULE OrdSets ( )
           ; LRefID := Pickle2 . NewReadRefID ( reader ) 
           ; IF reader . packing . word_size = BITSIZE ( INTEGER ) 
             THEN (* Same word size. *) 
-              LBitset := NewBitset ( )  
-            ; LBitset . BitsetInfo := LBitsetInfo 
-            ; LBitwordArrayRef := ReadBitwordsSameSize ( special , reader ) 
-            ; LBitset . BitwordArrayRef := LBitwordArrayRef 
+              LBitwordArrayRef := ReadBitwordsSameSize ( special , reader ) 
             ELSIF reader . packing . word_size = 32 
             THEN (* 32 to 64 *) 
               LBitwordArrayRef 
                 := ReadBitwords32to64 ( special , reader , LBias )
-             (* It is possible we can make a Pseudo bitset on this machine.
-                Even if we do, we must read and keep the Bitword array, 
-                because a different bitset with different Lo and Hi could
-                also refer to it. *)  
-            ; IF DoPseudoPointers (* Hopefully, a compiler will fold this. *) 
-                 AND 0 <= LBitsetInfo . BitsetLo 
-                 AND LBitsetInfo . BitsetHi <= PseudoBitsetMax 
-              THEN 
-                LBitset 
-                  := PseudoBitset 
-                        ( LBitsetInfo 
-                        , LBitwordArrayRef ^ [ - LBitsetInfo . Bias ] 
-                        ) 
-              ELSE 
-                LBitset := NewBitset ( )  
-              ; LBitset . BitsetInfo := LBitsetInfo 
-              ; LBitset . BitwordArrayRef := LBitwordArrayRef 
-              END (* IF *) 
             ELSE (* 64 to 32 *) 
-              LBitset := NewBitset ( )  
-            ; LBitset . BitsetInfo := LBitsetInfo 
-            ; LBitwordArrayRef := ReadBitwords64to32 ( special , reader ) 
-            ; LBitset . BitwordArrayRef := LBitwordArrayRef 
+              LBitwordArrayRef := ReadBitwords64to32 ( special , reader ) 
             END (* IF *) 
+          (* It is possible we can make a Pseudo bitset on this machine.
+             Even if we do, we must read and keep the Bitword array, 
+             because a different bitset with different Lo and Hi could
+             also refer to it. *)  
+          ; LBitset := ConstructBitset ( LBitsetInfo , LBitwordArrayRef ) 
           ; reader . noteRef ( LBitwordArrayRef , LRefID ) 
 
         ELSE 
@@ -8374,35 +8356,45 @@ GENERIC MODULE OrdSets ( )
         ; LBitword0 := Word . RightShift ( LLSW , BitsPerPseudoFlag ) 
         ; LBitword0 
             := Word . Or 
-                 ( Word . LeftShift ( LMSW , BitsPer32BitPseudoBitword ) 
+                 ( Word . LeftShift 
+                     ( LMSW 
+                     , 64 - BitsPerPseudoFlag - BitsPer32BitPseudoBitword 
+                     ) 
                  , LBitword0 
                  ) 
-        ; LBitword1 := Word . RightShift ( LMSW , BitsPerPseudoFlag )
+        ; LBitword1 
+            := Word . RightShift ( LMSW , 32 - BitsPer32BitPseudoBitword )
         ; IF LBitword1 = 0   
           THEN (* The true-bits are all in LBitword0 *) 
             LLoBitno := Least1BitNoInBitword ( LBitword0 ) 
           ; LBitsetLo := LLoBitno 
           ; LBitword0 := Word . Or ( LBitword0 , LTMaskOfIElem ( LLoBitno ) )
+            (* ^Set lo garbage bits. *) 
           ; LHiBitno := Greatest1BitNoInBitword ( LBitword0 )
           ; LBitsetHi := LHiBitno 
           ; LBitword0 := Word . Or ( LBitword0 , GTMaskOfIElem ( LHiBitno ) )
+            (* ^Set hi garbage bits. *) 
           ; LBitword1 := 16_FFFFFFFF (* All garbage bits. *) 
           ELSIF LBitword0 = 0 
           THEN (* The true-bits are all in LBitword1 *)
             LLoBitno := Least1BitNoInBitword ( LBitword1 ) 
           ; LBitsetLo := LLoBitno + 32  
           ; LBitword1 := Word . Or ( LBitword1 , LTMaskOfIElem ( LLoBitno ) )
+            (* ^Set lo garbage bits. *) 
           ; LBitword0 := 16_FFFFFFFF (* All garbage bits. *) 
           ; LHiBitno := Greatest1BitNoInBitword ( LBitword1 )
           ; LBitsetHi := LHiBitno + 32 
           ; LBitword1 := Word . Or ( LBitword1 , GTMaskOfIElem ( LHiBitno ) )
+            (* ^Set hi garbage bits. *) 
           ELSE (* There are true-bits in both words. *) 
             LLoBitno := Least1BitNoInBitword ( LBitword0 ) 
           ; LBitsetLo := LLoBitno  
           ; LBitword0 := Word . Or ( LBitword0 , LTMaskOfIElem ( LLoBitno ) )
+            (* ^Set lo garbage bits. *) 
           ; LHiBitno := Greatest1BitNoInBitword ( LBitword1 )
           ; LBitsetHi := LHiBitno + 32 
           ; LBitword1 := Word . Or ( LBitword1 , GTMaskOfIElem ( LHiBitno ) )
+            (* ^Set hi garbage bits. *) 
           END (* IF *) 
         ; IF DoPseudoPointers AND LBitsetHi <= PseudoBitsetMax 
           THEN (* Can construct a 32-bit pseudo Bitset. *) 
@@ -8434,7 +8426,7 @@ GENERIC MODULE OrdSets ( )
         ; ConstructBitsetInfo ( LAsWord , (* VAR *) LBitsetInfo ) 
         ; LBitwordArrayRef := NewBitwordArray ( 1 ) 
         ; LBitwordArrayRef ^ [ 0 ] := LAsWord 
-        ; LBitset := PseudoBitset ( LBitsetInfo , LAsWord )
+        ; LBitset := ConstructBitset ( LBitsetInfo , LBitwordArrayRef )
         ; LResult := LBitset  
         END (* IF *) 
       ELSE  
