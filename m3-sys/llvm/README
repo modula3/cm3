@@ -1,0 +1,8 @@
+README file for directory m3-sys/llvm, in the cm3 repository.
+
+This directory contains a Modula-3 binding LLVM.i3, to the 
+llvm infrastructure.  It is a thin binding to the (not so thin) 
+C binding thereto, which is part of the llvm infrastructure. 
+
+
+
