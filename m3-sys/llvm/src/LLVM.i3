@@ -445,6 +445,20 @@ PROCEDURE LLVMDisposeModule(M: ModuleRef);
 PROCEDURE LLVMGetDataLayout(M: ModuleRef): const_char_star;
 
 (**
+ * Set identifier for a module.
+ *
+ * @see Module::setModuleIdentifier()
+ *)
+PROCEDURE LLVMSetModuleIdentifier(M: ModuleRef; ID: const_char_star);
+
+(**
+ * Obtain the module identifer for a module.
+ *
+ * @see Module::getModuleIdentifier()
+ *)
+PROCEDURE LLVMGetModuleIdentifier(M: ModuleRef): const_char_star;
+
+(**
  * Set the data layout for a module.
  *
  * @see Module::setDataLayout()
@@ -2697,7 +2711,10 @@ PROCEDURE LLVMDisposeTargetData(T: TargetDataRef);
 |*                                                                            *|
 \*===----------------------------------------------------------------------===*)
 
-TYPE TargetMachineRef = UNTRACED BRANDED "LLVMTargetMachine" REF Opaque;
+(** See include/llvm-c/TargetMachine.h **) 
+TYPE TargetMachineRef = UNTRACED BRANDED "LLVMTargetMachineRef" REF Opaque;
+
+(** See include/llvm-c/TargetMachine.h **) 
 TYPE TargetRef = UNTRACED BRANDED "LLVMTarget" REF Opaque;
 
 TYPE CodeGenOptLevel = {
@@ -2746,7 +2763,7 @@ PROCEDURE LLVMTargetHasJIT(T: TargetRef): Bool;
 (** Returns if the target has a TargetMachine associated *)
 PROCEDURE LLVMTargetHasTargetMachine(T: TargetRef): Bool;
 
-(** Returns if the target as an ASM backend (required for emitting output) *)
+(** Returns if the target has an ASM backend (required for emitting output) *)
 PROCEDURE LLVMTargetHasAsmBackend(T: TargetRef): Bool;
 
 (*===-- Target Machine ----------------------------------------------------===*)
@@ -2771,7 +2788,7 @@ PROCEDURE LLVMGetTargetMachineTriple(T: TargetMachineRef): char_star;
 (** Returns the cpu used creating this target machine. See
   llvm::TargetMachine::getCPU. The result needs to be disposed with
   LLVMDisposeMessage. *)
-PROCEDURE LLVMFetTargetMachineCPU(T: TargetMachineRef): char_star;
+PROCEDURE LLVMGetTargetMachineCPU(T: TargetMachineRef): char_star;
 
 (** Returns the feature string used creating this target machine. See
   llvm::TargetMachine::getFeatureString. The result needs to be disposed with
