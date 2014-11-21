@@ -1,5 +1,5 @@
 import-libs base core front unicode min gui comm caltech-parser
-m3cc core front unicode m3gnudevtool
+m3cc m3gnudevtool
 m3core base core front unicode min
 libm3 base core front unicode min
 windowsResources core

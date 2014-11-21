@@ -1,4 +1,4 @@
-#! /bin/csh -f
+#! /bin/bash -f
 #
 # Copyright (C) 1992, Digital Equipment Corporation 
 # All rights reserved.
@@ -7,7 +7,7 @@
 # Last modified on Thu Mar 24 15:52:14 PST 1994 by heydon
 #      modified on Fri Feb 25 13:52:13 PST 1994 by kalsow
 
-set arch = `/udir/heydon/libi/csh/m3arch`
+set arch = AMD64_LINUX
 set prog = FmtTest
 
 if (-e ../$arch/$prog) then
