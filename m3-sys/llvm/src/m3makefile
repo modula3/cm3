@@ -1,8 +1,6 @@
 import ("libm3")
 Interface ("LLVM") 
 
-%import_lib("LLVMCore","/usr/local/lib") 
-%import_lib("LLVMCore") 
 include_dir("llvmlibs")
 
 build_standalone ()
