@@ -362,6 +362,9 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
 
 PROCEDURE InitCallingConventions(backend_mode: M3BackendMode_t;
                                  target_has_calling_conventions: BOOLEAN) =
+  VAR integrated := backend_mode IN BackendIntegratedSet;
+  VAR llvm := backend_mode IN BackendLlvmSet;     
+
   PROCEDURE New(name: TEXT; id: [0..1]): CallingConvention =
     VAR cc := NEW(CallingConvention, name := name);
     BEGIN
@@ -375,18 +378,22 @@ PROCEDURE InitCallingConventions(backend_mode: M3BackendMode_t;
         cc.args_left_to_right := TRUE;
         cc.results_on_left    := TRUE;
         cc.standard_structs   := TRUE;
+      ELSIF llvm THEN 
+        cc.args_left_to_right := TRUE;
+        cc.results_on_left    := FALSE;
+        cc.standard_structs   := TRUE;
+(* CHECK: ^Are these right for llvm? They are same as gcc. *) 
       ELSIF integrated THEN
         cc.args_left_to_right := FALSE;
         cc.results_on_left    := TRUE;
         cc.standard_structs   := FALSE;
-      ELSE
+      ELSE (* gcc-derived back end. *) 
         cc.args_left_to_right := TRUE;
         cc.results_on_left    := FALSE;
         cc.standard_structs   := TRUE;
       END;
       RETURN cc;
     END New;
-  VAR integrated := BackendIntegrated[backend_mode];    
   BEGIN
     (* 0 is __cdecl, 1 is __stdcall. *)
     CCs := ARRAY OF CallingConvention{ New("C",          0),

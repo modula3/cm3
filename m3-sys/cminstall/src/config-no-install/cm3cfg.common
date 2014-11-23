@@ -462,6 +462,11 @@ proc GetM3Back() is
   return m3back
 end
 
+proc GetLLVMBack() is
+  return "llc" 
+% TODO: Expand on where to find llc. 
+end % GetLLVMBack 
+
 %-------------------------------------------------- default compile options ---
 % "set_config_options" is called before starting the compilation. It should
 % be used to provide system-wide default options.

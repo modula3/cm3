@@ -125,6 +125,42 @@ end
 
 end
 
+%--------------------------------------------------------- llvm backend ---
+% Optionally, "llvm_backend" is called to translate llvm bitcode to object code.
+
+% Some default options: 
+
+if not defined("llvmback_debug")
+  llvmback_debug = "-g"
+end
+
+if not defined("llvmback_optimize")
+  llvmback_optimize = "-O3"
+end
+
+if not defined("llvmback_pic")
+  llvmback_pic = "-relocation-model=pic"
+end
+
+if not defined("llvm_backend")
+
+  proc llvm_backend(source, outfile, optimize, debug, filetype) is
+      local args = [ "-disable-fp-elim"] 
+
+      if optimize
+          args += llvmback_optimize
+      end
+      if debug
+          args += llvmback_debug
+      end
+      args += llvmback_pic
+
+      local llvmback = GetLLVMBack()
+      return try_exec (llvmback, args, "-filetype=", filetype, source, "-o", outfile )
+  end % proc llvm_backend
+
+end % if not defined("llvm_backend")
+
 %--------------------------------------------------------------- C compiler ---
 % "compile_c" is called to compile C source files.  Note that this function
 % is only called if your program or library explicitly includes C source

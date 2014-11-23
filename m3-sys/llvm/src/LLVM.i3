@@ -456,6 +456,11 @@ PROCEDURE LLVMSetModuleIdentifier(M: ModuleRef; ID: const_char_star);
  *
  * @see Module::getModuleIdentifier()
  *)
+<*EXTERNAL "_Z22LLVMGetModuleIdentiferP16LLVMOpaqueModule"*>
+(* Declared in Core.h as LLVMGetModuleIdentifier, 
+   but in    Core.cpp as LLVMGetModuleIdentifer, resulting
+   in a mangled link name. 
+ *) 
 PROCEDURE LLVMGetModuleIdentifier(M: ModuleRef): const_char_star;
 
 (**

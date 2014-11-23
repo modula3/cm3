@@ -9,6 +9,8 @@
 % remove_m3_option ("-gui")
 % m3_option ("-times")
 
+%include_dir("llvmlibs")
+
 cp_if(".." & SL & ".." & SL & ".." & SL & "m3-libs" & SL & "m3core" & SL & "src" & SL & "unix" & SL & "Common" & SL & "UnixLink.c", ".")
 cp_if(".." & SL & ".." & SL & ".." & SL & "m3-libs" & SL & "m3core" & SL & "src" & SL & "unix" & SL & "Common" & SL & "m3unix.h", ".")
 cp_if(".." & SL & ".." & SL & ".." & SL & "m3-libs" & SL & "m3core" & SL & "src" & SL & "m3core.h", ".")
@@ -20,6 +22,7 @@ import ("m3middle")
 import ("m3linker")
 import ("m3front")
 import ("m3quake")
+import ("m3llvmgen")
 %import ("cmkey")
 
 include ("version.quake")
@@ -46,7 +49,7 @@ module ("Utils")
 module ("WebFile")
 implementation ("Main")
 
-build_standalone () %-- we don't want to depend on the shared libraries...
+%build_standalone () %-- we don't want to depend on the shared libraries...
 
 % Some platforms do not allow overwriting binaries that are currently
 % executed, hence the default is not to install the cm3 binary in place.
