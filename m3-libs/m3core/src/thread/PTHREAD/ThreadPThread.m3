@@ -1341,7 +1341,6 @@ PROCEDURE AtForkParent() =
   VAR me := GetActivation();
       act: Activation;
   BEGIN
-    (* Walk activations and unlock all threads, conditions. *)
     act := me;
     REPEAT
       PThreadUnlockMutex(act.mutex, ThisLine());
@@ -1355,9 +1354,22 @@ PROCEDURE AtForkParent() =
   END AtForkParent;
 
 PROCEDURE AtForkChild() =
+  VAR me := GetActivation();
+      act: Activation;
   BEGIN
-    AtForkParent();
-    InitWithStackBase(GetActivation().stackbase);
+    act := me;
+    LOOP
+      PThreadUnlockMutex(act.mutex, ThisLine());
+      act := act.next;
+      IF act = me THEN EXIT END;
+      slots [act.slot] := NIL;
+      act.slot := 0;
+    END;
+    PThreadUnlockMutex(activeMu, ThisLine());
+    UnlockHeap();
+    PThreadUnlockMutex(initMu, ThisLine());
+    PThreadUnlockMutex(perfMu, ThisLine());
+    PThreadUnlockMutex(slotsMu, ThisLine());
   END AtForkChild;
 
 (*------------------------------------------------------------- collector ---*)
@@ -1395,6 +1407,7 @@ PROCEDURE WaitHeap () =
     <*ASSERT holder=me*>
     DEC(inCritical);
     <*ASSERT inCritical = 0*>
+    holder := NIL;
     WITH r = pthread_cond_wait(heapCond, heapMu) DO <*ASSERT r=0*> END;
     holder := me;
     <*ASSERT inCritical = 0*>

@@ -201,7 +201,7 @@ TYPE
    
 TYPE
   Reader <: ReaderPublic;
-  RefID = INTEGER;
+  RefID = INTEGER; (* Compactly numbered index of an object. *) 
   ReaderPublic = OBJECT
       rd: Rd.T;
     METHODS
@@ -213,6 +213,12 @@ TYPE
         {Error, Rd.EndOfFile, Rd.Failure, Thread.Alerted};
       noteRef(ref: REFANY; id: RefID);
     END;
+
+PROCEDURE NewReadRefID (reader: Reader): RefID; 
+(* Allocate and return a new object index. *) 
+
+PROCEDURE RefOfRefID (reader: Reader; ID : RefID) : REFANY; 
+(* The reference indexed by ID *) 
 
 (* If "r" is a "Pickle.Reader", then "r.read()"
    reads a pickle from "r.rd", reconstructs a copy of 
@@ -257,6 +263,11 @@ TYPE
    It is a checked runtime error to call "r.noteRef" with a value other
    than the value that will be returned by the special's "read" method;
    it is OK to call "r.noteRef" multiple times with the same value.
+
+   If the read method of a special needs to read additional objects,
+   besides the one it is called for, it can get index values for 
+   them by calling NewReadRefID.  It must call r.noteRef for each
+   such object. 
 
    The call "r.readType" reads bytes from "r.rd" that represent
    a type, as written by the "writeType" method of a "Writer",

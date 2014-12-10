@@ -250,6 +250,9 @@ PROCEDURE F(fmt: TEXT; t1, t2, t3, t4, t5: TEXT := NIL)
    If "t1" to "t5" are all "NIL" and "fmt" contains no format
    specifiers, the result is "fmt".
 
+   A substring beginning with '%' that is not a valid and complete
+   specifier is just reproduced unchanged in the result. 
+
    Examples:
 | F("%s %s\n", "Hello", "World") `returns` "Hello World\n".
 | F("%s", Int(3))                `returns` "3"

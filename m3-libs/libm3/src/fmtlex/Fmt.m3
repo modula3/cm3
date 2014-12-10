@@ -356,34 +356,39 @@ PROCEDURE ReadSpec(READONLY fmt    : ARRAY OF CHAR;
     spec.padWidth := 0;
     spec.padChar  := ' ';
 
-    ch := fmt[cursor];  INC(cursor);
+    ch := fmt[cursor];  
     <*ASSERT ch = '%'*>
+    INC(cursor);
     IF (cursor >= len) THEN RETURN FALSE; END;
-    ch := fmt[cursor];  INC(cursor);
+    ch := fmt[cursor]; 
 
     (* Alignment *)
     IF ch = '-' THEN
       spec.padAlign := Align.Left;
+      INC(cursor);
       IF (cursor >= len) THEN RETURN FALSE; END;
-      ch := fmt[cursor]; INC(cursor);
+      ch := fmt[cursor];
     END;
 
     (* Pad character *)
     IF ch = '0' THEN
       spec.padChar := '0';
+      INC(cursor);
       IF (cursor >= len) THEN RETURN FALSE; END;
-      ch := fmt[cursor]; INC(cursor);
+      ch := fmt[cursor]; 
     END;
 
     (* Field width *)
     WHILE '0' <= ch AND ch <= '9' DO
       spec.padWidth := spec.padWidth * 10 + ORD(ch) - ORD('0');
+      INC(cursor);
       IF (cursor >= len) THEN RETURN FALSE; END;
-      ch := fmt[cursor]; INC(cursor);
+      ch := fmt[cursor]; 
     END;
 
     (* terminating 's' *)
     IF ch # 's' THEN RETURN FALSE; END;
+    INC(cursor);
 
     spec.length := cursor - spec.start;
     RETURN TRUE;
@@ -402,7 +407,6 @@ PROCEDURE ConstructResult(READONLY fmt    : ARRAY OF CHAR;
     arg: TEXT;
   BEGIN
     <*ASSERT NUMBER(texts) = NUMBER(specs)*>
-
     (* first, size and allocate the result *)
     len := NUMBER(fmt);
     FOR i := FIRST(specs) TO LAST(specs) DO

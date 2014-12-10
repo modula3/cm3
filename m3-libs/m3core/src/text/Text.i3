@@ -49,17 +49,21 @@ PROCEDURE Hash (t: T): Word.T;
 (* Return a hash function of the contents of "t". *)
 
 PROCEDURE HasWideChars (t: T): BOOLEAN;
-(* Returns "TRUE" if "t" contains any "WIDECHAR" characters. *)
+(* Returns "TRUE" if "t" contains any characters not in CHAR. *)
 
 PROCEDURE GetChar     (t: T; i: CARDINAL): CHAR;
+(* Return character "i" of "t".  It is a checked runtime error if 
+   "i >= Length(t)" or the character value is not in CHAR. *)
 PROCEDURE GetWideChar (t: T; i: CARDINAL): WIDECHAR;
-(* Return character "i" of "t".  It is a checked runtime error if "i
-   >= Length(t)". *)
+(* Return character "i" of "t".  It is a checked runtime error if 
+   "i >= Length(t)". *)
 
 PROCEDURE SetChars     (VAR a: ARRAY OF CHAR;     t: T;  start: CARDINAL := 0);
-PROCEDURE SetWideChars (VAR a: ARRAY OF WIDECHAR; t: T;  start: CARDINAL := 0);
 (* For each "i" from 0 to "MIN(LAST(a), Length(t)-start-1)",
    set "a[i]" to "GetChar(t, i + start)".  *)
+PROCEDURE SetWideChars (VAR a: ARRAY OF WIDECHAR; t: T;  start: CARDINAL := 0);
+(* For each "i" from 0 to "MIN(LAST(a), Length(t)-start-1)",
+   set "a[i]" to "GetWideChar(t, i + start)".  *)
 
 PROCEDURE FromChar     (ch: CHAR): T;
 PROCEDURE FromWideChar (ch: WIDECHAR): T;

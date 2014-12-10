@@ -8,8 +8,10 @@
 
 MODULE Test EXPORTS Main 
 
+; IMPORT FileWr 
 ; IMPORT Fmt
 ; IMPORT Params 
+; IMPORT Pickle2 
 ; IMPORT Random 
 ; IMPORT Stdio
 ; IMPORT Text 
@@ -91,6 +93,7 @@ MODULE Test EXPORTS Main
 ; VAR GDoSymDiff : BOOLEAN := FALSE 
 ; VAR GDoCompareOperands : BOOLEAN := FALSE 
 ; VAR GDoCompareResults : BOOLEAN := FALSE 
+; VAR GDoWritePickle : BOOLEAN := FALSE 
 ; VAR GDoDisplayHelp : BOOLEAN := FALSE 
 ; VAR GDoDisplayVersion : BOOLEAN := FALSE 
 
@@ -108,6 +111,7 @@ MODULE Test EXPORTS Main
     ; GDoSymDiff := FALSE 
     ; GDoCompareOperands := FALSE 
     ; GDoCompareResults := FALSE 
+    ; GDoWritePickle := FALSE 
     ; GDoDisplayHelp := FALSE 
     ; GDoDisplayVersion := FALSE 
 
@@ -123,6 +127,7 @@ MODULE Test EXPORTS Main
             OF 'a' 
             => GDoCompareTests := TRUE  
             ; GDoImageTests := TRUE 
+            ; GDoRandomTests := TRUE 
             ; GDoNew := TRUE  
             ; GDoCompareOperands := TRUE  
             ; GDoCompareResults := TRUE  
@@ -134,6 +139,8 @@ MODULE Test EXPORTS Main
             | 'i' => GDoImageTests := TRUE 
             | 'o' => GDoNew := TRUE  
             | 'p' => GDoCompareOperands := TRUE  
+            | 'P' => GDoWritePickle := TRUE 
+            ; GDoRandomTests := TRUE 
             | 'r' => GDoCompareResults := TRUE  
             | 's' => GDoOld := TRUE 
             | 'v' => GDoDisplayVersion := TRUE 
@@ -160,6 +167,8 @@ MODULE Test EXPORTS Main
     ; Wr . PutText ( PWrT , Wr . EOL ) 
     END WL 
 
+; VAR PickleFileName := "Sets.pkl" 
+
 ; PROCEDURE DisplayHelp ( ) 
 
   = <* FATAL Thread . Alerted , Wr . Failure *> 
@@ -174,6 +183,10 @@ MODULE Test EXPORTS Main
     ; WL ( "  -o Test the new OrdSets module (instantiated for INTEGER)." ) 
     ; WL ( "  -p Compare IntSet/OrdSet values of operands of operations." ) 
     ; WL ( "     (only if both -o and -s are specified." ) 
+    ; WL ( "  -P Write pickle of random sets to file \""
+           & PickleFileName 
+           & "\"." 
+         ) 
     ; WL ( "  -r Compare IntSet/OrdSet values of results of operations." ) 
     ; WL ( "     (only if both -o and -s are specified." ) 
     ; WL ( "  -s Test the old Sets module." ) 
@@ -1686,7 +1699,7 @@ MODULE Test EXPORTS Main
     ; IF GDoCompareResults 
       THEN 
         CompareInt ( Expected , LResult , "Compare" , 0 )
-(* FIXME: CompareInt really doesnt' display quite the right info. *) 
+(* FIXME: CompareInt really doesn't display quite the right info. *) 
       END (* IF *) 
     ; INC ( GCompareCt )
     ; INC ( GTotalCt )
@@ -1912,7 +1925,9 @@ MODULE Test EXPORTS Main
 
 ; PROCEDURE Work ( ) 
 
-  = <* FATAL Thread . Alerted , Wr . Failure *> 
+  = VAR LPklWr : Wr . T 
+
+  ; <* FATAL Thread . Alerted , Wr . Failure *> 
     BEGIN 
       WrT := Stdio . stdout 
     ; PWrT := Stdio . stderr 
@@ -1991,7 +2006,25 @@ MODULE Test EXPORTS Main
         ; Wr . Flush ( PWrT ) 
         ; Operations ( 500000 ) 
         ; Wr . PutText ( WrT , Wr . EOL ) 
-        ; INC ( GTotalCt , GOperationCt )
+        ; INC ( GTotalCt , GOperationCt ) 
+
+        ; IF GDoWritePickle 
+          THEN 
+            LPklWr := FileWr .  Open ( PickleFileName ) 
+          ; FOR RI := 0 TO GStoredSetCt - 1 
+            DO 
+              Pickle2 . Write ( LPklWr , GNewSets [ RI ] )
+            END (* FOR *) 
+          ; Wr . Flush ( LPklWr ) 
+          ; Wr . Close ( LPklWr ) 
+          ; Wr . PutText ( WrT , "Wrote pickle file \"" ) 
+          ; Wr . PutText ( WrT , PickleFileName ) 
+          ; Wr . PutText ( WrT , "\", containing " ) 
+          ; Wr . PutText ( WrT , Fmt . Int ( GStoredSetCt ) ) 
+          ; Wr . PutText ( WrT , " sets." ) 
+          ; Wr . PutText ( WrT , Wr . EOL ) 
+          ; Wr . Flush ( WrT ) 
+          END (* IF *) 
 
         ; IF WrT # PWrT 
           THEN 
