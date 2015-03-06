@@ -1,0 +1,24 @@
+import("libm3")
+import("m3middle")
+import("m3quake")
+
+if equal(OS_TYPE, "POSIX")
+  SYSTEM_LD = "g++ -gstabs+ -m64 -fPIC -mno-align-double"
+end
+
+/* unfortunately need these for llvm */
+import_lib("dl","/usr/lib")
+import_lib("ncurses","/usr/lib")
+
+/* minimum llvm libs - order seems to be important here */
+import_lib("LLVMSupport","/usr/local/lib")
+import_lib("LLVMCore","/usr/local/lib")
+import_lib("LLVMTarget","/usr/local/lib")
+import_lib("LLVMBitWriter","/usr/local/lib")
+
+interface("LLVM")
+module("M3CG_LLVM")
+
+implementation("Main")
+
+program("m3llvm")
