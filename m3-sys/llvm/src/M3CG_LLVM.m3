@@ -954,27 +954,27 @@ PROCEDURE set_runtime_proc (self: U;  n: Name;  p: Proc) =
 PROCEDURE declare_segment (self: U;  n: Name;  m3t: TypeUID; is_const: BOOLEAN): Var =
 VAR
   v : LvVar := NewVar(self,n,0,0,Type.Struct,is_const,m3t,TRUE,FALSE,VarType.Global);
-  glob : LLVM.ValueRef;
   segName : TEXT;
   BEGIN
  (* fixme *)
     IF is_const THEN
-      (* the name will be nil so create a const name *)
-      segName := "m3const";
+      (* the name will be nil so create a const name *)    
+      segName := "M_Const";
     ELSE
       segName := M3ID.ToText(n);
     END;
     
-    glob := LLVM.LLVMAddGlobal(modRef, IntPtrTy, LT(segName));
-    IF NOT is_const THEN
+    (* create an opaque struct type *)
+    v.lvType := LLVM.LLVMStructCreateNamed(globContext, LT(segName & "_struct"));
+    v.lv := LLVM.LLVMAddGlobal(modRef, v.lvType, LT(segName));
+    IF is_const THEN
+      LLVM.LLVMSetGlobalConstant(v.lv,TRUE);
+    ELSE
       (* save the global for abort procedure *)
-      faultVal := glob;
+      faultVal := v.lv;
     END;
-  
-    (* asign an llvm lv for the global so it can be referenced in code but
-    this global is not the real one which can only be generated after the end_init code of the segment where later we delete the global and recreate *)
-  
-    v.lv := glob;
+    (* this global is internal *)
+    LLVM.LLVMSetLinkage(v.lv,LLVM.Linkage.Internal);      
     RETURN v;
   END declare_segment;
 
@@ -988,7 +988,6 @@ VAR v : LvVar;
 <*NOWARN*> PROCEDURE declare_global (self: U;  n: Name;  s: ByteSize;  a: Alignment; t: Type;  m3t: TypeUID;  exported, inited: BOOLEAN): Var =
 VAR
   v : LvVar := NewVar(self,n,s,a,t,FALSE,m3t,TRUE,FALSE,VarType.Global);
-  glob : LLVM.ValueRef;
   globName : TEXT;
   BEGIN
  (* fixme *)
@@ -998,11 +997,10 @@ VAR
       globName := M3ID.ToText(v.name);
     END;   
   
-    glob := LLVM.LLVMAddGlobal(modRef, v.lvType, LT(globName));
+    v.lv := LLVM.LLVMAddGlobal(modRef, v.lvType, LT(globName));
     (* need to add exported and check external
       LLVM.LLVMSetLinkage(glob,LLVM.Linkage.External);
     *)
-    v.lv := glob;
     RETURN v;
   END declare_global;
 
@@ -1096,22 +1094,21 @@ PROCEDURE begin_init (self: U;  v: Var) =
     self.curVar := v;
   END begin_init;
   
-(* perhaps this needs a redesign. mostly it works and produces a data layout
-   like gcc. sometimes we get a crash just by adding a statement to the test code
-   the major problem is that it asserts using the release+asserts build when we
-   try to delete the old global, with a message that uses still active or something. The theory goes like this. 2 global segments are created at the beginning one const one data and contain all the globals. These are referenced in the code, loaded stored etc. but need a llvm value ref. Finally we hit a begin init and then a whole lot of initialisations. Once we have all that at end_init we can construct the proper type and global segment so delete the old one and recreate it. *)
+(* Now we have all the global vars we can construct the body of the segment
+   type and initialise the global. This could be cleaned up to generate the
+   filler with each init_xx call so that we dont need to regenerate the inits
+   here which would mean only looping through the inits once. *)
 PROCEDURE end_init (self: U;  v: Var) =
 VAR
-  structTy : LLVM.TypeRef;
   baseObj : BaseVar;
   int,numGlobs : INTEGER;
-  realStr,globName : TEXT;
+  realStr : TEXT;
   thisVar : LvVar;
   types : UNTRACED REF ARRAY OF LLVM.TypeRef;
   typesVal : UNTRACED REF LLVM.TypeRef := NIL;
   init : UNTRACED REF ARRAY OF LLVM.ValueRef;
   initVal : UNTRACED REF LLVM.ValueRef := NIL;
-  structVal,varVal,globVal : LLVM.ValueRef;
+  structVal,varVal : LLVM.ValueRef;
   proc : LvProc;
   var : LvVar;
   newInits : RefSeq.T;
@@ -1154,9 +1151,6 @@ VAR
       END;
       ofsTot := VAL(baseObj.offset,LONGINT);   
       fillLen := ofsTot - thisOfs;
-(*
-IO.Put("Ofstots: " & Fmt.LongInt(ofsTot) & " " & Fmt.LongInt(thisOfs) & " " & Fmt.LongInt(fillLen) & "\n");
-*)
 
       thisOfs := thisOfs + LLVM.LLVMStoreSizeOfType(targetData,baseObj.lvTy);
 
@@ -1170,9 +1164,10 @@ IO.Put("Ofstots: " & Fmt.LongInt(ofsTot) & " " & Fmt.LongInt(thisOfs) & " " & Fm
       PushRev(newInits,baseObj);        
     END;
   
-    (* update num globals *)
+    (* update numbe of globals *)
     numGlobs := newInits.size();
     
+    (* allocate the arrays for llvm *)
     types := NEW(UNTRACED REF ARRAY OF LLVM.TypeRef, numGlobs);
     init := NEW(UNTRACED REF ARRAY OF LLVM.ValueRef, numGlobs);
     typesVal := LOOPHOLE(ADR(types[0]), UNTRACED REF LLVM.TypeRef);
@@ -1184,44 +1179,9 @@ IO.Put("Ofstots: " & Fmt.LongInt(ofsTot) & " " & Fmt.LongInt(thisOfs) & " " & Fm
       types[i] := baseObj.lvTy;    
     END;
   
-    IF thisVar.name = M3ID.NoID THEN
-      globName := "M_Const";
-    ELSE
-      globName := M3ID.ToText(thisVar.name);
-    END;
-  
-    (* create the struct ie the type *)
-    structTy := LLVM.LLVMStructCreateNamed(globContext, LT(globName & "_struct"));
-    LLVM.LLVMStructSetBody(structTy, typesVal, numGlobs, FALSE);
+    (* fill in the body of our opaque global struct now we know the types *)
+    LLVM.LLVMStructSetBody(thisVar.lvType, typesVal, numGlobs, FALSE);
 
-    (* delete the temporary global *)
-    LLVM.LLVMDeleteGlobal(thisVar.lv);
-
-
-(* test uses 
-  VAR useRef : LLVM.UseRef;
-    lVal : LLVM.ValueRef;
-  BEGIN
-  useRef := LLVM.LLVMGetFirstUse(thisVar.lv);
-  (*
-  lVal := LLVM.LLVMGetUser(useRef);
-  *)
-    WHILE useRef # NIL DO
-    lVal := LLVM.LLVMGetUsedValue(useRef);
-    useRef := LLVM.LLVMGetNextUse(useRef);
-    END;
-  END;
-*)
-
-    (* add the correct struct type global *)
-    globVal := LLVM.LLVMAddGlobal(modRef, structTy, LT(globName));
-    (* this global is internal *)
-    LLVM.LLVMSetLinkage(globVal,LLVM.Linkage.Internal);  
-
-    IF thisVar.isConst THEN
-      LLVM.LLVMSetGlobalConstant(globVal,TRUE);
-    END;
-  
     (* calc the initialisers *)
     FOR i := 0 TO numGlobs  - 1 DO
       baseObj := Get(newInits,i);
@@ -1251,35 +1211,11 @@ IO.Put("Ofstots: " & Fmt.LongInt(ofsTot) & " " & Fmt.LongInt(thisOfs) & " " & Fm
     END;    
 
     (* save the initialisers *)
-    structVal := LLVM.LLVMConstNamedStruct(structTy, initVal, numGlobs);
+    structVal := LLVM.LLVMConstNamedStruct(thisVar.lvType, initVal, numGlobs);
 
-(* debug *)
-(*
-  LLVM.LLVMDumpValue(structVal);
-VAR
-  et,st : LLVM.TypeRef;
-  tmpLv,ival : LLVM.ValueRef;
-BEGIN
-(*  
-  LLVM.LLVMDumpValue(thisVar.lv);
-*)
-  st := LLVM.LLVMTypeOf(structVal);
-  et := LLVM.LLVMGetElementType(LLVM.LLVMTypeOf(thisVar.lv));
-IO.Put("structval type\n");
-  LLVM.LLVMDumpType(st);
-IO.Put("thisva type\n");
-  LLVM.LLVMDumpType(et);  
-END;
-*)
+    LLVM.LLVMSetInitializer(thisVar.lv, structVal);
+    LLVM.LLVMSetAlignment(thisVar.lv, thisVar.align);
 
-    LLVM.LLVMSetInitializer(globVal, structVal);
-    LLVM.LLVMSetAlignment(globVal, thisVar.align);
-(*
-  doesnt work types different
-  LLVM.LLVMReplaceAllUsesWith(thisVar.lv, globVal);
-  LLVM.LLVMDeleteGlobal(thisVar.lv);
-*)
-    thisVar.lv := globVal;
     thisVar.inits := newInits; (* keep a ref *)
     self.curVar := NIL;
   END end_init;
@@ -2334,27 +2270,35 @@ VAR
   s0 := Get(self.exprStack,0);
   s1 := Get(self.exprStack,1);
   opType : LLVM.TypeRef;
-  a,b,tmp,cmpVal : LLVM.ValueRef;
+  a,b,cmpVal,res : LLVM.ValueRef;
   genIf : IfThenObj;
-  res : LLVM.ValueRef;
   intType : BOOLEAN;  
+  opName : TEXT;
+  ipred : LLVM.IntPredicate;
+  rpred : LLVM.RealPredicate;
   BEGIN
     a := NARROW(s0,LvExpr).lVal;
     b := NARROW(s1,LvExpr).lVal;
     opType := LLvmType(t);
     intType := t < Type.Reel;
     
-    IF NOT doMin THEN 
-      tmp := a; a := b; b := tmp;
+    IF doMin THEN 
+      opName := "min";
+      ipred := LLVM.IntPredicate.SLT;
+      rpred := LLVM.RealPredicate.OLT 
+    ELSE
+      opName := "max";
+      ipred := LLVM.IntPredicate.SGT;
+      rpred := LLVM.RealPredicate.OGT
     END;
 
     IF intType THEN
-      cmpVal := LLVM.LLVMBuildICmp(builderIR,  LLVM.IntPredicate.SLT, a, b, LT("icmp"));
+      cmpVal := LLVM.LLVMBuildICmp(builderIR,  ipred , a, b, LT("icmp"));
     ELSE
-      cmpVal := LLVM.LLVMBuildFCmp(builderIR,  LLVM.RealPredicate.OLT, a,b, LT("fcmp"));      
+      cmpVal := LLVM.LLVMBuildFCmp(builderIR,  rpred , a, b, LT("fcmp"));      
     END;
     
-    genIf := NEW(IfThenObj,cmpVal := cmpVal,opName := "minmax", curProc := self.curProc);   
+    genIf := NEW(IfThenObj,cmpVal := cmpVal,opName := opName, curProc := self.curProc);   
     genIf.tmpLv := LLVM.LLVMBuildAlloca(builderIR, opType, LT("tmp"));   
  
     genIf.genInit();
@@ -2362,7 +2306,7 @@ VAR
     genIf.genThen();
     EVAL LLVM.LLVMBuildStore(builderIR, b, genIf.tmpLv);
     genIf.genExit();
-    res := LLVM.LLVMBuildLoad(builderIR, genIf.tmpLv, LT("minmax"));
+    res := LLVM.LLVMBuildLoad(builderIR, genIf.tmpLv, LT(opName));
 
     NARROW(s1,LvExpr).lVal := res;
     Pop(self.exprStack);  
@@ -2371,13 +2315,13 @@ VAR
 PROCEDURE max (self: U;  t: ZType) =
   (* s1.t := MAX (s1.t, s0.t); pop *)
   BEGIN
-    MinMax(self,t,TRUE);
+    MinMax(self,t,FALSE);
   END max;
 
 PROCEDURE min (self: U;  t: ZType) =
  (* s1.t := MIN (s1.t, s0.t); pop *)
   BEGIN
-    MinMax(self,t,FALSE);  
+    MinMax(self,t,TRUE);  
   END min;
 
 PROCEDURE FExt(t : RType) : TEXT =
@@ -2526,7 +2470,7 @@ VAR
     a := NARROW(s0,LvExpr).lVal;  
     destTy := LLvmType(u);
     lVal := DoCvtInt(a,op,t);
-    lVal := LLVM.LLVMBuildFPToSI(builderIR, lVal, destTy, LT("trunc"));   
+    lVal := LLVM.LLVMBuildFPToSI(builderIR, lVal, destTy, LT("cvt_toint"));   
     NARROW(s0,LvExpr).lVal := lVal;
   END cvt_int;
 
@@ -2549,15 +2493,31 @@ VAR
 
 <*NOWARN*> PROCEDURE div (self: U;  t: IType;  a, b: Sign) =
  (* s1.t := s1.t DIV s0.t;pop*)
+   VAR
+     s0 : REFANY;
+     res,one : LLVM.ValueRef;
   BEGIN
     (* check sign *)
     binop(self,t,BinOps.div);
+    (* if result is neg then subtract 1 to agree with m3 floor def for DIV *)
+    (* get the result from s0 and use code like docheck *)
+    IF a = Sign.Negative OR b = Sign.Negative THEN
+      s0 := Get(self.exprStack,0);
+      res := NARROW(s0,LvExpr).lVal;
+      one := LLVM.LLVMConstInt(LLvmType(t), VAL(1,LONGINT), TRUE);  
+      res := LLVM.LLVMBuildNSWSub(builderIR, res, one, LT("div_sub"));   
+      NARROW(s0,LvExpr).lVal := res;      
+    END;
+    IF a = Sign.Unknown OR b = Sign.Unknown THEN
+      (* todo build runtime check and sub*)
+    END;
   END div;
 
 <*NOWARN*> PROCEDURE mod (self: U;  t: IType;  a, b: Sign) =
  (* s1.t := s1.t MOD s0.t;pop*)
   BEGIN
     binop(self,t,BinOps.mod);
+    (* fixme for neg values see m3 def for mod *)
   END mod;
 
 (*------------------------------------------------------------------ sets ---*)
