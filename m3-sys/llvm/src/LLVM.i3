@@ -176,80 +176,80 @@ CONST
 
 TYPE Opcode = {
   (* Terminator Instructions *)
-  XXXXX0,  		(*  0 *)
-  Ret,			(*  1 *)
-  Br,			(*  2 *)
-  Switch,		(*  3 *)
-  IndirectBr,		(*  4 *)
-  Invoke,		(*  5 *)
-  XXXXX6,		(* removed 6 due to API changes *)
-  Unreachable,		(*  7 *)
+  XXXXX0,               (*  0 *)
+  Ret,                  (*  1 *)
+  Br,                   (*  2 *)
+  Switch,               (*  3 *)
+  IndirectBr,           (*  4 *)
+  Invoke,               (*  5 *)
+  XXXXX6,               (* removed 6 due to API changes *)
+  Unreachable,          (*  7 *)
 
   (* Standard Binary Operators *)
-  Add,			(*  8 *)
-  FAdd,			(*  9 *)
-  Sub,			(* 10 *)
-  FSub,			(* 11 *)
-  Mul,			(* 12 *)
-  FMul,			(* 13 *)
-  UDiv,			(* 14 *)
-  SDiv,			(* 15 *)
-  FDiv,			(* 16 *)
-  URem,			(* 17 *)
-  SRem,			(* 18 *)
-  FRem,			(* 19 *)
+  Add,                  (*  8 *)
+  FAdd,                 (*  9 *)
+  Sub,                  (* 10 *)
+  FSub,                 (* 11 *)
+  Mul,                  (* 12 *)
+  FMul,                 (* 13 *)
+  UDiv,                 (* 14 *)
+  SDiv,                 (* 15 *)
+  FDiv,                 (* 16 *)
+  URem,                 (* 17 *)
+  SRem,                 (* 18 *)
+  FRem,                 (* 19 *)
 
   (* Logical Operators *)
-  Shl,			(* 20 *)
-  LShr,			(* 21 *)
-  AShr,			(* 22 *)
-  And,			(* 23 *)
-  Or,			(* 24 *)
-  Xor,			(* 25 *)
+  Shl,                  (* 20 *)
+  LShr,                 (* 21 *)
+  AShr,                 (* 22 *)
+  And,                  (* 23 *)
+  Or,                   (* 24 *)
+  Xor,                  (* 25 *)
 
   (* Memory Operators *)
-  Alloca,		(* 26 *)
-  Load,			(* 27 *)
-  Store,		(* 28 *)
-  GetElementPtr,	(* 29 *)
+  Alloca,               (* 26 *)
+  Load,                 (* 27 *)
+  Store,                (* 28 *)
+  GetElementPtr,        (* 29 *)
 
   (* Cast Operators *)
-  Trunc,		(* 30 *)
-  ZExt,			(* 31 *)
-  SExt,			(* 32 *)
-  FPToUI,		(* 33 *)
-  FPToSI,		(* 34 *)
-  UIToFP,		(* 35 *)
-  SIToFP,		(* 36 *)
-  FPTrunc,		(* 37 *)
-  FPExt,		(* 38 *)
-  PtrToInt,		(* 39 *)
-  IntToPtr,		(* 40 *)
-  BitCast,		(* 41 *)
+  Trunc,                (* 30 *)
+  ZExt,                 (* 31 *)
+  SExt,                 (* 32 *)
+  FPToUI,               (* 33 *)
+  FPToSI,               (* 34 *)
+  UIToFP,               (* 35 *)
+  SIToFP,               (* 36 *)
+  FPTrunc,              (* 37 *)
+  FPExt,                (* 38 *)
+  PtrToInt,             (* 39 *)
+  IntToPtr,             (* 40 *)
+  BitCast,              (* 41 *)
 
   (* Other Operators *)
-  ICmp,			(* 42 *)
-  FCmp,			(* 43 *)
-  PHI,			(* 44 *)
-  Call,			(* 45 *)
-  Select,		(* 46 *)
-  UserOp1,		(* 47 *)
-  UserOp2,		(* 48 *)
-  VAArg,		(* 49 *)
-  ExtractElement,	(* 50 *)
-  InsertElement,	(* 51 *)
-  ShuffleVector,	(* 52 *)
-  ExtractValue,		(* 53 *)
-  InsertValue,		(* 54 *)
+  ICmp,                 (* 42 *)
+  FCmp,                 (* 43 *)
+  PHI,                  (* 44 *)
+  Call,                 (* 45 *)
+  Select,               (* 46 *)
+  UserOp1,              (* 47 *)
+  UserOp2,              (* 48 *)
+  VAArg,                (* 49 *)
+  ExtractElement,       (* 50 *)
+  InsertElement,        (* 51 *)
+  ShuffleVector,        (* 52 *)
+  ExtractValue,         (* 53 *)
+  InsertValue,          (* 54 *)
 
   (* Atomic operators *)
-  Fence,		(* 55 *)
-  AtomicCmpXchg,	(* 56 *)
-  AtomicRMW,		(* 57 *)
+  Fence,                (* 55 *)
+  AtomicCmpXchg,        (* 56 *)
+  AtomicRMW,            (* 57 *)
 
   (* Exception Handling Operators *)
-  Resume,		(* 58 *)
-  LandingPad		(* 59 *)
+  Resume,               (* 58 *)
+  LandingPad            (* 59 *)
 };
 
 TYPE TypeKind = {
@@ -295,6 +295,57 @@ TYPE Visibility = {
   Default,  (**< The GV is visible *)
   Hidden,   (**< The GV is hidden *)
   Protected (**< The GV is protected *)
+};
+
+TYPE AtomicOrdering = {
+  LLVMAtomicOrderingNotAtomic, (** 0 < A load or store which is not atomic *)
+  LLVMAtomicOrderingUnordered, (** 1 < Lowest level of atomicity, guarantees
+                                     somewhat sane results, lock free. *)
+
+  LLVMAtomicOrderingMonotonic, (** 2 < guarantees that if you take all the
+                                     operations affecting a specific address,
+                                     a consistent ordering exists *)
+  XXXXX3,  
+  LLVMAtomicOrderingAcquire, (** 4 < Acquire provides a barrier of the sort
+                                   necessary to acquire a lock to access other
+                                   memory with normal loads and stores. *)
+  LLVMAtomicOrderingRelease, (** 5 < Release is similar to Acquire, but with
+                                   a barrier of the sort necessary to release
+                                   a lock. *)
+  LLVMAtomicOrderingAcquireRelease, (** 6 < provides both an Acquire and a
+                                          Release barrier (for fences and
+                                          operations which both read and write
+                                           memory). *)
+  LLVMAtomicOrderingSequentiallyConsistent (** 7 < provides Acquire semantics
+                                                 for loads and Release
+                                                 semantics for stores.
+                                                 Additionally, it guarantees
+                                                 that a total ordering exists
+                                                 between all
+                                                 SequentiallyConsistent
+                                                 operations. *)
+};
+
+TYPE AtomicRMWBinOp = {
+    LLVMAtomicRMWBinOpXchg, (** < Set the new value and return the one old *)
+    LLVMAtomicRMWBinOpAdd, (** < Add a value and return the old one *)
+    LLVMAtomicRMWBinOpSub, (** < Subtract a value and return the old one *)
+    LLVMAtomicRMWBinOpAnd, (** < And a value and return the old one *)
+    LLVMAtomicRMWBinOpNand, (** < Not-And a value and return the old one *)
+    LLVMAtomicRMWBinOpOr, (** < OR a value and return the old one *)
+    LLVMAtomicRMWBinOpXor, (** < Xor a value and return the old one *)
+    LLVMAtomicRMWBinOpMax, (** < Sets the value if it's greater than the
+                             original using a signed comparison and return
+                             the old one *)
+    LLVMAtomicRMWBinOpMin, (** < Sets the value if it's Smaller than the
+                             original using a signed comparison and return
+                             the old one *)
+    LLVMAtomicRMWBinOpUMax, (** < Sets the value if it's greater than the
+                             original using an unsigned comparison and return
+                             the old one *)
+    LLVMAtomicRMWBinOpUMin (** < Sets the value if it's greater than the
+                             original using an unsigned comparison  and return
+                             the old one *)
 };
 
 CONST
@@ -626,6 +677,13 @@ PROCEDURE LLVMGetTypeKind(Ty: TypeRef): TypeKind;
  * @see llvm::Type::isSized()
  *)
 PROCEDURE LLVMTypeIsSized(Ty: TypeRef): Bool;
+
+(**
+ * Dump a representation of a type to stderr.
+ *
+ * @see llvm::Type::dump()
+ *)
+PROCEDURE LLVMDumpType(Val : TypeRef);
 
 (**
  * Obtain the context to which this type instance is associated.
@@ -1465,9 +1523,36 @@ PROCEDURE LLVMGetSection(Global: ValueRef): const_char_star;
 PROCEDURE LLVMSetSection(Global: ValueRef; Section: const_char_star);
 PROCEDURE LLVMGetVisibility(Global: ValueRef): Visibility;
 PROCEDURE LLVMSetVisibility(Global: ValueRef; Viz: Visibility);
-PROCEDURE LLVMGetAlignment(Global: ValueRef): unsigned;
-PROCEDURE LLVMSetAlignment(Global: ValueRef; Bytes: unsigned);
 
+(**
+ * @defgroup LLVMCCoreValueWithAlignment Values with alignment
+ *
+ * Functions in this group only apply to values with alignment, i.e.
+ * global variables, load and store instructions.
+ *)
+
+(**
+ * Obtain the preferred alignment of the value.
+ * @see llvm::AllocaInst::getAlignment()
+ * @see llvm::LoadInst::getAlignment()
+ * @see llvm::StoreInst::getAlignment()
+ * @see llvm::GlobalValue::getAlignment()
+ *)
+
+PROCEDURE LLVMGetAlignment(V : ValueRef) : unsigned;
+
+(**
+ * Set the preferred alignment of the value.
+ * @see llvm::AllocaInst::setAlignment()
+ * @see llvm::LoadInst::setAlignment()
+ * @see llvm::StoreInst::setAlignment()
+ * @see llvm::GlobalValue::setAlignment()
+ *)
+PROCEDURE LLVMSetAlignment(V: ValueRef; Bytes : unsigned);
+
+(**
+  * @}
+  *)
 (**
  * @defgroup LLVMCoreValueConstantGlobalVariable Global Variables
  *
@@ -1538,6 +1623,13 @@ PROCEDURE LLVMDeleteFunction(Fn: ValueRef);
  * @see llvm::Function::getIntrinsicID()
  *)
 PROCEDURE LLVMGetIntrinsicID(Fn: ValueRef): unsigned;
+
+(* Get the function decl for the intrinsic with id and the type sig Types *)
+
+PROCEDURE LLVMGetDeclaration(M: ModuleRef;
+                            id : unsigned;
+                            Types: UNTRACED REF TypeRef;
+                            Count: unsigned): ValueRef;
 
 (**
  * Obtain the calling convention of a function.
@@ -2309,8 +2401,6 @@ PROCEDURE LLVMBuildGlobalStringPtr(
     B: BuilderRef; Str, Name: const_char_star): ValueRef;
 PROCEDURE LLVMGetVolatile(MemoryAccessInst: ValueRef): Bool;
 PROCEDURE LLVMSetVolatile(MemoryAccessInst: ValueRef; IsVolatile: Bool);
-PROCEDURE LLVMGetAllocaAlignment(AllocaInst: ValueRef): unsigned;
-PROCEDURE LLVMSetAllocaAlignment(AllocaInst: ValueRef; Bytes: unsigned);
 
 (* Casts *)
 PROCEDURE LLVMBuildTrunc(
@@ -2411,7 +2501,16 @@ PROCEDURE LLVMBuildIsNotNull(
     B: BuilderRef; Val: ValueRef; Name: const_char_star): ValueRef;
 PROCEDURE LLVMBuildPtrDiff(
     B: BuilderRef; LHS, RGS: ValueRef; Name: const_char_star): ValueRef;
-
+PROCEDURE LLVMBuildFence(B: BuilderRef; ordering : AtomicOrdering; singleThread : Bool; Name : const_char_star): ValueRef;
+PROCEDURE LLVMBuildAtomicRMW(B : BuilderRef; op : AtomicRMWBinOp;
+                                PTR : ValueRef; Val : ValueRef;
+                                ordering : AtomicOrdering;
+                                singleThread : Bool) : ValueRef;
+PROCEDURE LLVMBuildAtomicCmpXchg(B : BuilderRef;
+                                PTR : ValueRef ; Cmp: ValueRef; New : ValueRef;
+                                successOrdering : AtomicOrdering;
+                                failureOrdering : AtomicOrdering;                                
+                                singleThread : Bool) : ValueRef;                                
 (**
  * @}
  *)

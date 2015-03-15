@@ -25,6 +25,9 @@ VAR
 
   row : REF ARRAY OF TEXT;
 
+(* todo - Add a procedure to create a database drop database and other 
+more advanced commands *)
+
 PROCEDURE Test1() =
 BEGIN
 (*  assumes have created a db test and a table Test with appropriate columns *)
