@@ -23,6 +23,12 @@ resource       ("Insertion.m3")
 resource       ("Insertion.pas")
 resource       ("InsertionVar.fv")
 
+if not defined("IsDarwin")
+  proc IsDarwin() is
+    return FALSE
+  end
+end
+
 if IsDarwin()
   /* audio assumes a MIDI device accessible through the EtherNet. */
   include_dir ("audio")
