@@ -2111,7 +2111,13 @@ def SetupEnvironment():
         #VCINSTALLDIR=D:\msdev\90\VC
         #VSINSTALLDIR=D:\msdev\90
 
-        VSCommonTools = os.environ.get("VS90COMNTOOLS")
+        VSCommonTools = ""
+        for a in os.environ:
+            if a.startswith("VS") and a.endswith("COMNTOOLS"):
+                candidateVer = int(a[2:-9])
+                if not VSCommonTools or candidateVer > VSVer:
+                    VSVer = candidateVer
+                    VSCommonTools = os.environ[a]
 
         if VSCommonTools and not VSInstallDir:
             VSInstallDir = RemoveLastPathElement(RemoveLastPathElement(VSCommonTools))
@@ -2184,7 +2190,11 @@ def SetupEnvironment():
         # expand this as they are released/discovered
         # ordering is from newest to oldest
 
-        PossibleSDKs = [os.path.join("Microsoft SDKs", "Windows", "v6.0A"), "Microsoft Platform SDK for Windows Server 2003 R2"]
+        PossibleSDKs = [os.path.join("Windows Kits", "8.0"),
+                        os.path.join("Microsoft SDKs", "Windows", "v7.0A"),
+                        os.path.join("Microsoft SDKs", "Windows", "v6.0A"),
+                        "Microsoft Platform SDK for Windows Server 2003 R2"
+                       ]
         SDKs = []
 
         for a in GetProgramFiles():
@@ -2194,6 +2204,7 @@ def SetupEnvironment():
                 #print("checking " + c)
                 if isdir(c) and not (c in SDKs):
                     SDKs.append(c)
+                    #print("SDKs.append(%s)" % c)
 
         # Make sure %INCLUDE% contains errno.h and windows.h.
         # This doesn't work correctly for Cygwin Python, ok.
@@ -2201,9 +2212,20 @@ def SetupEnvironment():
         if _CheckSetupEnvironmentVariableAll("INCLUDE", ["errno.h", "windows.h"], VCInc):
             for a in SDKs:
                 b = os.path.join(a, "include")
-                if isfile(os.path.join(b, "windows.h")):
-                    _SetupEnvironmentVariableAll("INCLUDE", ["errno.h", "windows.h"], VCInc + ";" + b, ";")
+                c = os.path.join(a, "include", "um")
+                d = os.path.join(a, "include", "shared")
+                e = os.path.join(a, "include", "winrt")
+                if (   isfile(os.path.join(b, "windows.h"))
+                        or isfile(os.path.join(c, "windows.h"))
+                        or isfile(os.path.join(d, "windows.h"))
+                        or isfile(os.path.join(e, "windows.h"))):
+                    _SetupEnvironmentVariableAll("INCLUDE", ["errno.h", "windows.h"], b + ";" + c + ";" + d + ";" + e + ";" + VCInc, ";")
                     break
+                else:
+                    pass # print("skipping %s" % a)
+
+        #print(os.environ["INCLUDE"])
+        #exit(1)
 
         # Make sure %LIB% contains kernel32.lib and libcmt.lib.
         # We carry our own kernel32.lib so we don't look in the SDKs.
@@ -2224,15 +2246,18 @@ def SetupEnvironment():
         _SetupEnvironmentVariableAll("PATH", ["cl", "link"], VCBin)
 
         # If none of mspdb*.dll are in PATH, add MpsdbDir to PATH, and check that one of them is in it.
+        # TODO generalize for any mspdb*dll.
 
-        _SetupEnvironmentVariableAny(
-            "PATH",
-            ["mspdbsrv.exe", "mspdbst.dll", "mspdbcore.dll",
-             "mspdb110.dll", "mspdb100.dll", "mspdb90.dll",
-             "mspdb80.dll", "mspdb71.dll", "mspdb70.dll",
-             "mspdb60.dll", "mspdb50.dll", "mspdb41.dll", "mspdb40.dll",
-             "dbi.dll"],
-            MspdbDir)
+        if True:
+            _SetupEnvironmentVariableAny(
+                "PATH",
+                ["mspdbsrv.exe", "mspdbst.dll", "mspdbcore.dll",
+                 "mspdb140.dll",
+                 "mspdb110.dll", "mspdb100.dll", "mspdb90.dll",
+                 "mspdb80.dll", "mspdb71.dll", "mspdb70.dll",
+                 "mspdb60.dll", "mspdb50.dll", "mspdb41.dll", "mspdb40.dll",
+                 "dbi.dll"],
+                MspdbDir)
 
         # Try to get mt.exe in %PATH% if it isn't already.
         # We only need this for certain toolsets.
