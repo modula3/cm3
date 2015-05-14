@@ -657,7 +657,7 @@ GENERIC MODULE OrdSets ( )
   ; VAR LResult : T 
 
   ; BEGIN 
-      IF DoPseudoPointers (* Hopefully, a compiler will fold this. *) 
+      IF DoPseudoPointers (* Hopefully, a compiler will fold this, if not. *) 
          AND 0 <= BitsetInfo . BitsetLo 
          AND BitsetInfo . BitsetHi <= PseudoBitsetMax 
       THEN 
@@ -1512,7 +1512,7 @@ GENERIC MODULE OrdSets ( )
       ; LResultInfo . BitsetLo := LLo 
       ; LResultInfo . BitsetHi := LHi 
       ; LResultInfo . Card := LCard 
-      ; LResultLoBitwordNo := BitwordNoOfIElem ( LLo )  
+      ; LResultLoBitwordNo := LResultInfo . Bias 
       ; LResultHiBitwordNo := BitwordNoOfIElem ( LHi )
       ; LResultBitwordArrayRef 
           := NewBitwordArray ( LResultHiBitwordNo - LResultLoBitwordNo + 1 ) 
@@ -7832,7 +7832,6 @@ GENERIC MODULE OrdSets ( )
 
 (* ================= Specials for [un]pickling ordsets. =====================*) 
 
-(* CHECK: Maybe just use existing root special? *) 
 ; PROCEDURE ReadBitwordsSameSize 
     ( <* UNUSED *> special : Pickle2 . Special ; reader : Pickle2 . Reader ) 
   : BitwordArrayRefTyp
@@ -7887,7 +7886,7 @@ GENERIC MODULE OrdSets ( )
         IF Compiler . ThisEndian = Compiler . ENDIAN . LITTLE 
         THEN (* Written little endian, reading little. *)  
           FOR RI := 0 TO LBitwordCt32 - 1 BY 2 
-          DO 
+          DO (* No byte rearrangement needed. *)  
             WITH WBytes 
                  = UnsafeUtils . PtrTo8CharArray ( LResult ^ [ RI ] ) ^
             DO PickleStubs . InChars ( reader , WBytes )
@@ -8002,7 +8001,8 @@ GENERIC MODULE OrdSets ( )
     ; IF reader . packing . little_endian 
       THEN 
         IF Compiler . ThisEndian = Compiler . ENDIAN . LITTLE 
-        THEN (* Written little endian, reading little. *)  
+        THEN (* Written little endian, reading little. *) 
+             (* No byte rearrangement needed. *) 
           LOOP 
             IF LSs >= LDoneSs 
             THEN EXIT 
@@ -8258,14 +8258,14 @@ GENERIC MODULE OrdSets ( )
         END (* EXCEPT *) 
       ; IF reader . packing . word_size = BITSIZE ( INTEGER ) 
         THEN (* Same word size. *) 
-          LBitset . BitsetInfo . Bias := LBias  
+          LBitsetInfo . Bias := LBias  
 
         ELSIF reader . packing . word_size = 32 
         THEN (* 32 to 64 *) 
           <* ASSERT BITSIZE ( INTEGER ) = 64 *> 
           LBitsetInfo . Bias := LBias DIV 2 
-          (* Later, ReadBitwords32to64 will take card of an odd LBias. *) 
-        ; LBitset . BitsetInfo . Hash := HashZero (* Force recompute. *) 
+          (* Later, ReadBitwords32to64 will take care of an odd LBias. *) 
+        ; LBitsetInfo . Hash := HashZero (* Force recompute. *) 
 
         ELSIF reader . packing . word_size = 64 
         THEN (* 64 to 32 *) 
@@ -8275,7 +8275,7 @@ GENERIC MODULE OrdSets ( )
             RAISE Pickle2 . Error ( "Overflow unpickling OrdSet Bias." ) 
           END (* IF *) 
         ; LBitsetInfo . Bias := LBias * 2 
-        ; LBitset . BitsetInfo . Hash := HashZero (* Force recompute. *) 
+        ; LBitsetInfo . Hash := HashZero (* Force recompute. *) 
         ELSE <* ASSERT FALSE *> 
         END (* IF *) 
       ; LBitsetInfo . BitsetLo 
@@ -8424,6 +8424,12 @@ GENERIC MODULE OrdSets ( )
             := Word . RightShift 
                  ( PickleStubs . InWord ( reader ) , BitsPerPseudoFlag )
         ; ConstructBitsetInfo ( LAsWord , (* VAR *) LBitsetInfo ) 
+        ; LAsWord 
+            := Word . Or ( LAsWord , LTMaskOfIElem ( LBitsetInfo . BitsetLo ) ) 
+        ; LAsWord 
+            := Word . Or ( LAsWord , GTMaskOfIElem ( LBitsetInfo . BitsetHi ) ) 
+        (* ^Set hi and lo garbage bits, in case ConstructBitSet doesn't 
+           construct a pseudo Bitset. *) 
         ; LBitwordArrayRef := NewBitwordArray ( 1 ) 
         ; LBitwordArrayRef ^ [ 0 ] := LAsWord 
         ; LBitset := ConstructBitset ( LBitsetInfo , LBitwordArrayRef )
