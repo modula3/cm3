@@ -2,6 +2,10 @@ MODULE Main;
 
 (* generate a C .h file that corresponds to M3CG_Binary.  *)
 
+(* NOTE: The CONST Map must match cm3/m3-sys/m3middle/src/M3CG_Binary.i3. 
+         If you change them see the notes in that file. 
+*) 
+
 IMPORT M3CG_Binary, Wr, Stdio, Text, ASCII, Fmt;
 
 TYPE
