@@ -191,6 +191,6 @@ elego/m3ovr elego
 elego/pkg_base elego
 elego/pkg_vc elego
 elego/pkgvm elego
-
+elego/prjbase elego
 elego/prjm elego
 m3sleep core
