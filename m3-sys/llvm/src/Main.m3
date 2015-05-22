@@ -4,12 +4,13 @@ IMPORT IO, Process, Stdio, Rd, Wr;
 IMPORT M3CG, M3CG_Rd, M3CG_Wr, M3CG_BinRd, M3CG_BinWr, MxConfig, Target;
 IMPORT M3CG_LLVM;
 
-(* 
+(*
   usage is problematic depending on program writing to file or stderr
   could be
   m3cgcat -binary < path/file.mc > somefile.mll
   m3llvm < somefile.mll > somefile.ll  with the bin reader 
-  or m3llvm < somefile.mll > somefile.ll with the ascii reader *)
+  or m3llvm < somefile.mll > somefile.ll with the ascii reader 
+*)
 
 PROCEDURE DoIt() =
 VAR 
@@ -20,10 +21,9 @@ VAR
     Init ();
 
     cg := M3CG_LLVM.New(wr_out);
-    (*
-    M3CG_BinRd.Inhale(rd_in, cg);
-    *)
-    (* for development it helps to read the source *)
+(*
+  M3CG_BinRd.Inhale(rd_in, cg);
+*)
     M3CG_Rd.Inhale(rd_in, cg);
 
     cg.dumpLLVMIR();
