@@ -101,7 +101,7 @@ OPENGL_FRAMEWORK = "/System/Library/Frameworks/OpenGL.framework"
 LIBGL_DYLIB = OPENGL_FRAMEWORK & "/Versions/A/Libraries/libGL.dylib"
 
 SYSTEM_LIBS = {
-  "LIBC"       : [ ],
+  "LIBC"       : [ "-lSystem" ],
   "LEX-YACC"   : [ "-ll" ],
   "FLEX-BISON" : [ "-lfl" ],
   "OPENGL"     : [ "-Wl,-dylib_file," & LIBGL_DYLIB & ":" & LIBGL_DYLIB,
@@ -210,7 +210,7 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
         % allow user to run install_name_tool with maximum flexibility
         "-headerpad_max_install_names",
 
-        "-lgcc",
+        %"-lgcc",
         "-o", lib_soxx,
         "-dead_strip",
         % "-dead_strip_dylibs", % requires 10.5
