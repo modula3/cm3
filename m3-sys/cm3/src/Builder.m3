@@ -3264,6 +3264,11 @@ PROCEDURE TempM3ccName (u: M3Unit.T): TEXT =
   END TempM3ccName;
 
 PROCEDURE TempLlvmName (u: M3Unit.T): TEXT =
+
+(* TODO: This is duplicated by code in LLGen.BitcodeFileNameTOfUnitText,
+         which must agree with it.  Instead, copy this value to there.
+         The call chain starts with the call on M3Front.Compile, in RunM3Front.
+*) 
   VAR ext := u.kind;
   BEGIN
     CASE ext OF
