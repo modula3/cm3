@@ -2999,7 +2999,7 @@ struct GTY(()) tree_decl_with_vis {
  /* Belong to VAR_DECL exclusively.  */
  unsigned defer_output : 1;
  unsigned hard_register : 1;
- unsigned thread_local : 1;
+ /*unsigned thread_local:1; not used and produces warning*/
  unsigned common_flag : 1;
  unsigned in_text_section : 1;
  unsigned dllimport_flag : 1;
