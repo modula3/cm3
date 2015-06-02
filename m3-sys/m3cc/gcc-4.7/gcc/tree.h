@@ -5858,21 +5858,6 @@ extern bool ssa_name_nonnegative_p (const_tree);
 extern unsigned HOST_WIDE_INT highest_pow2_factor (const_tree);
 extern tree build_personality_function (const char *);
 
-/* In trans-mem.c.  */
-extern tree build_tm_abort_call (location_t, bool);
-extern bool is_tm_safe (const_tree);
-extern bool is_tm_pure (const_tree);
-extern bool is_tm_may_cancel_outer (tree);
-extern bool is_tm_ending_fndecl (tree);
-extern void record_tm_replacement (tree, tree);
-extern void tm_malloc_replacement (tree);
-
-static inline bool
-is_tm_safe_or_pure (const_tree x)
-{
-  return is_tm_safe (x) || is_tm_pure (x);
-}
-
 /* In tree-inline.c.  */
 
 void init_inline_once (void);
