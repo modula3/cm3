@@ -61,7 +61,14 @@ FilterPackages([ "m3cc" ]) and DoPackage(argv_BuildShip, [ "m3cc" ])
 # Up to now, the compiler binaries have not been installed.
 # We do this now but keep backups of the old ones. (not yet)
 #
-ShipFront() or sys.exit(1)
+# Workarounds:
+#  cm3 does not ship itself because it might be in use,
+#    depending on operating system capabilities and workarounds.
+#    This is a long standing implementation limit.
+#  cm3cg does not ship itself in some versions. This is a bug.
+#
+#ShipFront() or sys.exit(1)
+ShipCompiler() or sys.exit(1)
 
 #
 # Now try the new compiler but building the core system (without
