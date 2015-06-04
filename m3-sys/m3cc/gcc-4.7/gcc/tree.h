@@ -3272,7 +3272,7 @@ struct GTY(()) tree_decl_with_vis {
  /* Belong to VAR_DECL exclusively.  */
  unsigned defer_output : 1;
  unsigned hard_register : 1;
- unsigned thread_local : 1;
+ /*unsigned thread_local:1; not used and produces warning*/
  unsigned common_flag : 1;
  unsigned in_text_section : 1;
  unsigned in_constant_pool : 1;
@@ -5857,21 +5857,6 @@ extern bool ssa_name_nonnegative_p (const_tree);
 /* In expr.c.  */
 extern unsigned HOST_WIDE_INT highest_pow2_factor (const_tree);
 extern tree build_personality_function (const char *);
-
-/* In trans-mem.c.  */
-extern tree build_tm_abort_call (location_t, bool);
-extern bool is_tm_safe (const_tree);
-extern bool is_tm_pure (const_tree);
-extern bool is_tm_may_cancel_outer (tree);
-extern bool is_tm_ending_fndecl (tree);
-extern void record_tm_replacement (tree, tree);
-extern void tm_malloc_replacement (tree);
-
-static inline bool
-is_tm_safe_or_pure (const_tree x)
-{
-  return is_tm_safe (x) || is_tm_pure (x);
-}
 
 /* In tree-inline.c.  */
 
