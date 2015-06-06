@@ -192,14 +192,21 @@ declare_local (n: Name;  s: ByteSize;  a: Alignment;  t: Type;
                f: Frequency): Var;
 (* declares a local variable.  Local variables must be declared in the
    procedure that contains them.  The lifetime of a local variable extends
-   from the beginning to end of the closest enclosing begin_block/end_block. *)
+   from the beginning to end of the closest enclosing begin_block/end_block. 
+   (Or, apparently, from examples, begin_procedure/end_procedure, for a
+   compiler-generated local temporary).
+   (Also occurs, for an M3-declared local, after declare_procedure,
+   interspersed with declare_params.)  
+*)
+
 
 declare_param (n: Name;  s: ByteSize;  a: Alignment;  t: Type;
                m3t: TypeUID;  in_memory, up_level: BOOLEAN;
                f: Frequency): Var;
-(* declares a formal parameter.  Formals are declared in their lexical
-   order immediately following the 'declare_procedure' or
-   'import_procedure' that contains them.  *)
+(* declares a formal parameter, belonging to the most recent declare_procedure
+   or import_procedure.  Formals are declared in their lexical
+   order, relative to each other, but many other things can be
+   interspersed. *)
 
 declare_temp (s: ByteSize;  a: Alignment;  t: Type;
               in_memory: BOOLEAN): Var;
@@ -217,7 +224,9 @@ free_temp (v: Var);
    calls must be bracketed by begin_init and end_init.  Within a begin/end
    pair, init_* calls must be made in ascending offset order.  Begin/end
    pairs may not be nested.  Any space in a global variable that's not
-   explicitly initialized is zeroed.  *)
+   explicitly initialized is zeroed.  The init_* operators below all 
+   implicitly initialize fields of the variable v given in the most 
+   recent begin_init. *)
 
 begin_init (v: Var);
 end_init (v: Var);
@@ -236,7 +245,8 @@ init_label (o: ByteOffset;  value: Label);
    of the label 'value'.  *)
 
 init_var (o: ByteOffset;  value: Var;  bias: ByteOffset);
-(* initializes the static variable at 'ADR(v)+o' with the address
+(* (init_address_of_var would have been a more meaningful name here.)
+   initializes the static variable at 'ADR(v)+o' with the address
    of 'value+bias'.  *)
 
 init_offset (o: ByteOffset;  var: Var);
