@@ -53,6 +53,7 @@
 #include "gdb_string.h"
 #include "gdb_assert.h"
 #include <sys/types.h>
+#include <stdio.h>
 
 /* A note on memory usage for this file.
    
@@ -1168,6 +1169,9 @@ dwarf2_locate_sections (bfd *ignore_abfd, asection *sectp, void *ignore_ptr)
 void
 dwarf2_build_psymtabs (struct objfile *objfile, int mainline)
 {
+
+  return; /* Temporary. */ 
+
   /* We definitely need the .debug_info and .debug_abbrev sections */
 
   dwarf2_per_objfile->info_buffer = dwarf2_read_section (objfile, dwarf_info_section);
@@ -1295,7 +1299,7 @@ partial_read_comp_unit_head (struct comp_unit_head *header, char *info_ptr,
 
   info_ptr = read_comp_unit_head (header, info_ptr, abfd);
 
-  if (header->version != 2)
+  if (header->version != 2 && header->version !=4)
     error (_("Dwarf Error: wrong version in compilation unit header "
 	   "(is %d, should be %d) [in module %s]"), header->version,
 	   2, bfd_get_filename (abfd));
@@ -2264,6 +2268,11 @@ skip_one_die (char *info_ptr, struct abbrev_info *abbrev,
 	  /* We need to continue parsing from here, so just go back to
 	     the top.  */
 	  goto skip_attribute;
+        /* These are in dwarf4, but gcc 4.8.1 emits them, even if -gdwarf2: */
+	case DW_FORM_sec_offset:
+          if (cu->header.offset_size == 4) { info_ptr += 4; }
+          else { info_ptr += 8; }
+          break; 
 
 	default:
 	  error (_("Dwarf Error: Cannot handle %s in DWARF reader [in module %s]"),
@@ -5738,6 +5747,17 @@ read_attribute_value (struct attribute *attr, unsigned form,
       info_ptr += bytes_read;
       info_ptr = read_attribute_value (attr, form, abfd, info_ptr, cu);
       break;
+    /* These are in dwarf4, but gcc 4.8.1 emits them, even if -gdwarf2: */
+    case DW_FORM_sec_offset: 
+      if (cu->header.offset_size == 4) 
+        { DW_UNSND (attr) = read_4_bytes (abfd, info_ptr);
+          info_ptr += 4;
+        }
+      else 
+        { DW_UNSND (attr) = read_8_bytes (abfd, info_ptr);
+          info_ptr += 8;
+        }
+      break;
     default:
       error (_("Dwarf Error: Cannot handle %s in DWARF reader [in module %s]"),
 	     dwarf_form_name (form),
@@ -7873,9 +7893,13 @@ dwarf_attr_name (unsigned attr)
 
 /* Convert a DWARF value form code into its string name.  */
 
+const int buffsize = 40; 
+char buff [40];
+
 static char *
 dwarf_form_name (unsigned form)
-{
+{ int len; 
+
   switch (form)
     {
     case DW_FORM_addr:
@@ -7920,8 +7944,18 @@ dwarf_form_name (unsigned form)
       return "DW_FORM_ref_udata";
     case DW_FORM_indirect:
       return "DW_FORM_indirect";
+    case DW_FORM_sec_offset:
+      return "DW_FORM_sec_offset";
+    case DW_FORM_exprloc:
+      return "DW_FORM_exprloc";
+    case DW_FORM_flag_present:
+      return "DW_FORM_flag_present";
+    case DW_FORM_ref_sig8:
+      return "DW_FORM_ref_sig8";
     default:
-      return "DW_FORM_<unknown>";
+      len = snprintf(&buff[0], buffsize, "DW_FORM_<unknown:%u>",form);
+      return &buff[0]; 
+/* ALERT ^ non-threadsafe: Global variable is returned. */
     }
 }
 
