@@ -189,6 +189,7 @@ PROCEDURE EqualChk (a: P;  t: Type.T;  <*UNUSED*>x: Type.Assumption): BOOLEAN =
   BEGIN
     IF (a.n_elts # b.n_elts) THEN RETURN FALSE END;
     IF (a.n_elts = 0) THEN RETURN TRUE END;
+    (* .scope = NIL IFF it's predefined, i.e., CHAR, WIDECHAR, or BOOLEAN. *) 
     IF (a.scope = NIL) OR (b.scope = NIL) THEN
       RETURN (a.scope = b.scope);
     END;
@@ -258,6 +259,10 @@ PROCEDURE GenDesc (p: P) =
   BEGIN
     IF Type.IsEqual (p, Charr.T, NIL) THEN
       EVAL TipeDesc.AddO (TipeDesc.Op.Char, p);
+(* Widechar Tipe. *) 
+ (* ELSIF Type.IsEqual (p, WCharr.T, NIL) THEN 
+      EVAL TipeDesc.AddO (TipeDesc.Op.Widechar, p);
+ *) 
     ELSIF Type.IsEqual (p, Bool.T, NIL) THEN
       EVAL TipeDesc.AddO (TipeDesc.Op.Boolean, p);
     ELSIF TipeDesc.AddO (TipeDesc.Op.Enum, p) THEN
