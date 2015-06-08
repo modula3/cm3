@@ -35,8 +35,8 @@ INTERFACE UnsafeUniRd
   (* With return by value and CHAR assignable to WIDECHAR, only one procedure 
      is needed. *) 
 
-; PROCEDURE FastUnGetWideChar ( Stream : UniRd . T ) : BOOLEAN (* Succeeded. *) 
-  (* Push back the last decoded character read from Stream, pushing it back
+; PROCEDURE FastUnGetCodePoint ( Stream : UniRd . T ) : BOOLEAN (* Succeeded. *)
+  (* Push back the last decoded code point read from Stream, pushing it back
      onto Stream.Source, in encoded form.  This is guaranteed to work only
      if the last operation on Stream was GetWideChar, GetChar, GetWideSub,
      or GetSub or an UnsafeUniRd.Fast* version thereof.  Result FALSE means 
@@ -109,7 +109,7 @@ INTERFACE UnsafeUniRd
 
 ; PROCEDURE FastGetText ( Stream : UniRd . T ; Len : CARDINAL ) : TEXT 
   RAISES { Failure , Alerted }
-  (* Decode and consume  characters from Source(Stream), using Enc(Stream), 
+  (* Decode and consume characters from Source(Stream), using Enc(Stream), 
      until Len characters have been decoded or Source(Stream) is at 
      end-of-file.  Return the decoded characters as a TEXT. 
   *) 
