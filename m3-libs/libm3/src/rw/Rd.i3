@@ -153,10 +153,10 @@ PROCEDURE UnGetChar(rd: T) RAISES {};
 | IF closed(rd) THEN `Cause checked runtime error` END;
 | IF cur(rd) > 0 THEN DEC(cur(rd)) END
 
-   except there is a special rule: "UngetChar(rd)" is guaranteed to
-   work only if "GetChar(rd)" was the last operation on "rd".  Thus
-   "UngetChar" cannot be called twice in a row, or after "Seek" or
-   "EOF". If this rule is violated, the implementation is allowed (but
+   except there is a special rule: "UngetChar(rd)" is guaranteed to work only
+   if "GetChar(rd)" or "EOF(rd)" was the last operation on "rd".  Thus
+   "UngetChar" cannot be called twice in a row, or after "Seek".
+   If this rule is violated, the implementation is allowed (but
    not required) to cause a checked runtime error. *)
 
 CONST UnGetCapacity = 8;  

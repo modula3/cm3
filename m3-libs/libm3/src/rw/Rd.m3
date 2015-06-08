@@ -104,7 +104,7 @@ PROCEDURE NextBuff(rd: T): BOOLEAN (* End of file. *)
       (*<* ASSERT Check(rd) *>*)  
       RETURN FALSE; 
     ELSE (* We are not in the unget buffer.  Need to seek, but first, save some
-            chars to go in the new unget buffer.  We have to save then before 
+            chars to go in the new unget buffer.  We have to save them before 
             seeking, but won't know until after, whether to alter the real unget
             buffer and its subscripts.  So do the saving in locals for now. *)
       IF rd.buff # NIL 
