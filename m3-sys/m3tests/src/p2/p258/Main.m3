@@ -9,7 +9,7 @@ PROCEDURE F31(start, count: INTEGER) =
 TYPE T = SET OF[0..31];
 VAR a := T{start..count - 1};
 BEGIN  
-   Dump.Dump(32, 0, 1, BITSIZE(T), BYTESIZE(T), ADR(a));
+   Dump.Dump(31, 0, 1, BITSIZE(T), BYTESIZE(T), ADR(a));
 END F31;
 
 PROCEDURE F32(start, count: INTEGER) =
