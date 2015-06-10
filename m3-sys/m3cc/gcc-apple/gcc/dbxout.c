@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Output dbx-format symbol table information from GNU compiler.
    Copyright (C) 1987, 1988, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
    1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006
@@ -162,6 +164,18 @@ Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
 #ifndef DBX_CONTIN_CHAR
 #define DBX_CONTIN_CHAR '\\'
 #endif
+
+/* Keep this string consistent with that of the same name in m3gdb, 
+   m3-lang.c. rodney.m.bates@acm.org. */ 
+static const char * procedures_have_extra_block_string 
+  = "procedures_have_extra_block."; 
+
+/* Keep these strings consistent with those of the same name in m3gdb, 
+   m3-lang.c. */ 
+static const char * m3_widechar_bitsize_16_string 
+  = "m3_widechar_bitsize_16."; 
+static const char * m3_widechar_bitsize_32_string 
+  = "m3_widechar_bitsize_32."; 
 
 /* APPLE LOCAL dbxout_type rewrite.  */
 enum typestatus {TYPE_UNSEEN, TYPE_XREF, TYPE_DEFINED, TYPE_QUEUED};
@@ -1084,6 +1098,14 @@ get_lang_number (void)
 
 }
 
+void dbxout_emit_widechar_N_OPT (int bitsize) 
+{ if (bitsize == 32) 
+    dbxout_begin_simple_stabs (m3_widechar_bitsize_32_string, N_OPT);
+  else 
+    dbxout_begin_simple_stabs (m3_widechar_bitsize_16_string, N_OPT);
+  dbxout_stab_value_zero ();
+} 
+
 /* At the beginning of compilation, start writing the symbol table.
    Initialize `typevec' and output the standard data types of C.  */
 
@@ -1175,6 +1197,11 @@ dbxout_init (const char *input_file_name)
   dbxout_begin_simple_stabs ("gcc2_compiled.", N_OPT);
   dbxout_stab_value_zero ();
 #endif
+
+  /* Emit an N_OPT stab to indicate that procedures have an extra block. 
+     Needed by m3gdb.  rodney.m.bates@acm.org. */
+  dbxout_begin_simple_stabs (procedures_have_extra_block_string, N_OPT);
+  dbxout_stab_value_zero ();
 
   base_input_file = lastfile = input_file_name;
 
