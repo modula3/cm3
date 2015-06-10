@@ -1,0 +1,32 @@
+Package llvmbindings.
+
+This Modula3 package contains Modula3 bindings to selected things in
+llvm that are needed to interface to llvm.
+
+A procedure binding generally requires code in three files:
+
+1) Modula3 code in a .i3 file, that contains a (usually) zero-thickness
+   Module3-to-C binding.  This is just a PROCEDURE signature in
+   Modula3 syntax, using types and parameteter modes equivalent to C
+   types for parameters and results.
+
+2) C code in a .h file, that contains a prototype for a plain C
+   function.  This will be #included by C++ code, but contains 'extern
+   "C"' so the C++ compiler will generate unmangled link names for its
+   functions.  
+
+3) C++ code in a .cpp file, that contains a wrapper function for
+   calling a C++ function inside of llvm.  This latter is usually a
+   member function of a class, and also often requires type
+   conversions to/from llvm's C++-but-not-C types, so the wrapper must
+   be in C++.
+
+This package supplies 1) for everything needed.  The llvm project
+supplies Core.h/Core.cpp, inside its source tree, which contain 2) and
+3) for a set of functions chosen by llvm's developers.  For others,
+this package supplies 2) and 3) itself.    
+
+The m3makefile will invoke make to do the C++ compilation.  It needs
+variables giving the locations of llvm's include files, llvm's compiled
+libraries, and other compiled libraries used by llvm. 
+

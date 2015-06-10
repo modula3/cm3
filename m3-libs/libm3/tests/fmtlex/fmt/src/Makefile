@@ -23,12 +23,14 @@
 
 PROG = FmtTest
 
+M3ARCH = AMD64_LINUX
+
 RES-FILES = \
   integer.txt.out zero.txt.out infinity.txt.out nan.txt.out\
   sci.txt.out fix.txt.out auto.txt.out round.txt.out alpha.txt.out
 
 all: $(RES-FILES)
-	@run-tests $(RES-FILES)
+	./run-tests $(RES-FILES)
 
 results:
 	rm -f $(RES-FILES)
@@ -39,4 +41,4 @@ update: $(RES-FILES)
 .SUFFIXES: .txt.in .txt.out
 
 .txt.in.txt.out:
-	../`/udir/heydon/libi/csh/m3arch`/$(PROG) $? > $@
+	../$(M3ARCH)/$(PROG) $? > $@

@@ -109,8 +109,8 @@ MODULE UniRd
     END GetWideChar 
 
 (* EXPORTED: *) 
-; PROCEDURE UnGetWideChar ( Stream : T ) : BOOLEAN (* Succeeded. *) 
-  (* Push back the last decoded character read from Stream, pushing it back
+; PROCEDURE UnGetCodePoint ( Stream : T ) : BOOLEAN (* Succeeded. *) 
+  (* Push back the last decoded code point read from Stream, pushing it back
      onto Stream.Source, in encoded form.  This is guaranteed to work only
      if the last operation on Stream was GetWideChar, GetChar, GetWideSub,
      or GetSub or an UnsafeUniRd.Fast* version thereof.  Result FALSE means 
@@ -121,10 +121,10 @@ MODULE UniRd
   = BEGIN
       LOCK Stream 
       DO LOCK Stream . Source 
-        DO RETURN UnsafeUniRd . FastUnGetWideChar ( Stream )  
+        DO RETURN UnsafeUniRd . FastUnGetCodePoint ( Stream )  
         END (* LOCK *) 
       END (* LOCK *) 
-    END UnGetWideChar 
+    END UnGetCodePoint
 
 (* EXPORTED: *) 
 ; PROCEDURE GetWideSub ( Stream : T ; VAR (*OUT*) ArrWch : ARRAY OF Widechar ) 

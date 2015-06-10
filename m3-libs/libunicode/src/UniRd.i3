@@ -68,15 +68,15 @@ INTERFACE UniRd
    (* With return by value and CHAR assignable to WIDECHAR, only one procedure 
       is needed. *) 
 
-; PROCEDURE UnGetWideChar ( Stream : T ) : BOOLEAN (* Succeeded. *) 
-  (* Push back the last decoded character read from Stream, pushing it back
+; PROCEDURE UnGetCodePoint ( Stream : T ) : BOOLEAN (* Succeeded. *) 
+  (* Push back the last decoded code point read from Stream, pushing it back
      onto Stream.Source, in encoded form.  This is guaranteed to work only
      if the last operation on Stream was GetWideChar, GetChar, GetWideSub,
      or GetSub or an UnsafeUniRd.Fast* version thereof.  Result FALSE means 
      the operation did not happen, because of a violation of this condition.
   *) 
   (* WARNING! Currently unimplemented.  A NOOP.  Always returns FALSE. *) 
-(* TODO: UnGetWideChar is not yet implemented. *) 
+(* TODO: UnGetCodePoint is not yet implemented. *) 
   
 ; PROCEDURE GetWideSub ( Stream : T ; VAR (*OUT*) ArrWch : ARRAY OF Widechar ) 
   : CARDINAL

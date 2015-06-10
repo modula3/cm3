@@ -116,8 +116,8 @@ MODULE UnsafeUniRd
     END FastGetWideChar 
 
 (* EXPORTED: *) 
-; PROCEDURE FastUnGetWideChar ( Stream : UniRd . T ) : BOOLEAN (* Succeeded. *) 
-  (* Push back the last decoded character read from Stream, pushing it back
+; PROCEDURE FastUnGetCodePoint ( Stream : UniRd . T ) : BOOLEAN (* Succeeded. *)
+  (* Push back the last decoded code point read from Stream, pushing it back
      onto Stream.Source, in encoded form.  This is guaranteed to work only
      if the last operation on Stream was GetWideChar, GetChar, GetWideSub,
      or GetSub or an UnsafeUniRd.Fast* version thereof.  Result FALSE means 
@@ -130,7 +130,7 @@ MODULE UnsafeUniRd
 (* TODO: Implement this. *) 
 (* IMPLEMENTME: *) 
       RETURN FALSE
-    END FastUnGetWideChar 
+    END FastUnGetCodePoint 
   
 (* TODO: Special-case for when the encoding allows to directly access the
          Rd buffer (ISO8859_1 & CHAR or CM3WC and WIDECHAR) and avoid looping
@@ -606,7 +606,7 @@ MODULE UnsafeUniRd
 (* EXPORTED *) 
 ; PROCEDURE FastGetText ( Stream : UniRd . T ; Len : CARDINAL ) : TEXT 
   RAISES { Failure , Alerted }
-  (* Decode and consume  characters from Source(Stream), using Enc(Stream), 
+  (* Decode and consume characters from Source(Stream), using Enc(Stream), 
      until Len characters have been decoded or Source(Stream) is at 
      end-of-file.  Return the decoded characters as a TEXT. 
   *) 

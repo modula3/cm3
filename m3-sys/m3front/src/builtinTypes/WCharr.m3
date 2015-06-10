@@ -16,6 +16,7 @@ PROCEDURE Initialize () =
     END; 
     T := EnumType.New (NUMBER_WIDECHAR, elts);
 (* Widechar Tipe. *) 
+(* This looks OK for new TipeDesc.Op.Widechar.  It's just like Charr. *) 
     Scope.PopNew ();
     Scope.TypeCheck (elts, cs);
     Tipe.Define ("WIDECHAR", T, TRUE);
