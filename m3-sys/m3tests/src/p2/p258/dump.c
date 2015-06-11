@@ -6,6 +6,11 @@
 extern "C" {
 #endif
 
+void Print1(void* text_literal, int decimal)
+{
+    printf("%s%d\n", (char*)text_literal + 2 * sizeof(void*), decimal);
+}
+
 void Dump(
     int type,
     int offset,
@@ -17,16 +22,16 @@ void Dump(
     int i;
     char newline[] = "\n\0";
     int inewline = 0;
-    
+
     // Do not dump all zeros.
     i = bytesize;
     while (i > 0 && address[i - 1] == 0) i -= 1;
     if (i == 0)
         return;
- 
+
     //assert(bytesize == 4 || bytesize == 8);
     //assert(bitsize == 32 || bitsize == 64);
-    printf("T%d offset:%d count:%d ",
+    printf("X:%d offset:%d count:%d ",
         (int)type, (int)offset, (int)count);
     // reduce some difference between little endian 32bit and 64bit
     while (bytesize > 0 && address[bytesize - 1] == 0) bytesize -= 1;
