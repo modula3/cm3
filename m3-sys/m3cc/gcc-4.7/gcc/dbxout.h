@@ -23,12 +23,6 @@ along with GCC; see the file COPYING3.  If not see
 #ifndef GCC_DBXOUT_H
 #define GCC_DBXOUT_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
 extern void dbxout_emit_widechar_N_OPT (int bitsize); 
 extern int dbxout_symbol (tree, int);
 extern void dbxout_parms (tree);
