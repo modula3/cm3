@@ -1713,6 +1713,8 @@ GenericCommand:
             elif arg == "-n":
                 NoAction = True
             else:
+                global ExtraArgs
+                ExtraArgs = [ ]
                 ExtraArgs += arg
         else:
             Action = ActionInfo.get(arg)
@@ -1977,16 +1979,27 @@ def _CopyCompiler(From, To):
 
 #-----------------------------------------------------------------------------
 
+def PickBuildDir(a):
+    if DirectoryExists(a):
+        return a
+    if a.endswith("c"):
+        a = a[:-1]
+        if DirectoryExists(a):
+            return a
+    elif DirectoryExists(a + "c"):
+        return a + "c"
+    FatalError("no BuildDir:" + a)
+
 def ShipBack():
     if  not GCC_BACKEND:
         return True
-    return _CopyCompiler(os.path.join(Root, "m3-sys", "m3cc", _BuildDir),
+    return _CopyCompiler(os.path.join(Root, "m3-sys", "m3cc", PickBuildDir(_BuildDir)),
                          os.path.join(InstallRoot, "bin"))
 
 #-----------------------------------------------------------------------------
 
 def ShipFront():
-    return _CopyCompiler(os.path.join(Root, "m3-sys", "cm3", _BuildDir),
+    return _CopyCompiler(os.path.join(Root, "m3-sys", "cm3", PickBuildDir(_BuildDir)),
                          os.path.join(InstallRoot, "bin"))
 
 #-----------------------------------------------------------------------------
