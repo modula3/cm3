@@ -1,17 +1,7 @@
+import ("libm3")
+import ("m3middle")
 
-if equal (OS_TYPE, "WIN32") or equal(TARGET, "NT386")
-   or ({"NT", "MINGW", "CYGWIN"} contains TARGET)
-% 1. mklib will not compile without things from m3core/src/win32,
-% 2. m3core/src/win32 will not compile on non-Windows targets, using the 
-%    release compiler.
-% 3. mklib is only used on windows targets anyway. 
-% So, omit mklib except for windows targets. 
+implementation ("Main")
 
-  import ("libm3")
-  import ("m3middle")
-
-  implementation ("Main")
-
-  build_standalone ()
-  Program ("mklib")
-end 
+build_standalone ()
+Program ("mklib")
