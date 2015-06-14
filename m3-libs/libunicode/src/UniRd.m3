@@ -32,7 +32,6 @@ MODULE UniRd
       ; Stream . MaxBytesPerChar := UniCodec . MaxBytesPerChar ( Enc ) 
       ; Stream . Enc := Enc
       ; Stream . UngetByteCt := 0  
-      ; Stream . HasPostponedWCh := FALSE  
       ; RETURN Stream  
       END (* LOCK *) 
     END Init 

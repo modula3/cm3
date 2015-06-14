@@ -18,10 +18,9 @@ MODULE UnsafeUniRd
 (* NOTE 1: Use the LOOPHOLE technique here to convert to a narrower type, 
            while avoiding compiler-generated range check already known by the 
            algorithm to be infallible. *) 
-(* NOTE 2: When CHAR<:WIDECHAR, and Widechar=WIDECHAR, remove unnecessary
-           ORD and VAL conversions. *) 
-(* NOTE 3: Here is a place postponement is done.  3a: of one character. 
-           3b: of two characters. *) 
+(* NOTE 2: When CHAR<:WIDECHAR, and Widechar=WIDECHAR, could remove unnecessary
+           ORD and VAL conversions.  (But maybe it is better to just leave
+           as-is. *) 
 
 ; CONST LFWch = VAL ( ORD ( W'\n' ) , Widechar ) 
 ; CONST LFCh = '\n' 
@@ -32,15 +31,7 @@ MODULE UnsafeUniRd
 ; CONST NELWch = VAL ( ORD ( W'\x0085' ) , Widechar ) 
 ; CONST LSWch = VAL ( ORD ( W'\x2028' ) , Widechar ) 
 ; CONST PSWch = VAL ( ORD ( W'\x2029' ) , Widechar ) 
-; CONST CRLFWch = VAL ( ORD (  W'\xF8FF' ) , Widechar )
-(* U+E000 .. U+F8FF are reserved by Unicode for internal uses, the upper end
-   for "Corporate-wide" private internal use, lower for application use.  
-   We use U+F8FF as a code point in UniRd.T.PostponedWCh to mean both 
-   CR and LF are postponed. *) 
 (*2*)   
-
-; CONST CRText = W"\r" 
-; CONST CRLFText = W"\r\n" 
 
 (* EXPORTED: *) 
 ; PROCEDURE FastEOF ( Stream : UniRd . T ) : BOOLEAN 
@@ -49,9 +40,7 @@ MODULE UnsafeUniRd
   (* PRE: Stream and Stream.Source are locked. *) 
 
   = BEGIN 
-      RETURN 
-        NOT Stream . HasPostponedWCh 
-        AND UnsafeRd . FastEOF ( Stream . Source )
+      RETURN UnsafeRd . FastEOF ( Stream . Source )
     END FastEOF 
 
 (* EXPORTED: *) 
@@ -72,14 +61,7 @@ MODULE UnsafeUniRd
       ; LCharsReady 
           := ( LSourceBytesReady - 1 (* For EOF *) ) 
              DIV Stream . MaxBytesPerChar 
-      ; IF Stream . HasPostponedWCh 
-        THEN 
-          IF Stream . PostponedWCh = CRLFWch 
-          THEN LPostponedCt := 2
-          ELSE LPostponedCt := 1
-          END (* IF *) 
-        ELSE LPostponedCt := 0 
-        END (* IF *) 
+      ; LPostponedCt := 0 
       ; RETURN LCharsReady + LPostponedCt + 1 (* For EOF *)  
       END (* IF *) 
     END FastCharsReady 
@@ -92,21 +74,11 @@ MODULE UnsafeUniRd
   *) 
   (* PRE: Stream and Stream.Source are locked. *) 
   
-  = VAR LWch : Widechar 
+  = VAR LWch : Widechar
 
   ; BEGIN 
-      IF Stream . HasPostponedWCh 
-      THEN 
-        IF Stream . PostponedWCh = CRLFWch 
-        THEN 
-          Stream . PostponedWCh := LFWch  
-        ; INC ( Stream . Index ) 
-        ; RETURN CRWch 
-        ELSE 
-          Stream . HasPostponedWCh := FALSE 
-        ; INC ( Stream . Index ) 
-        ; RETURN Stream . PostponedWCh
-        END (* IF *) 
+      IF UnsafeRd . FastEOF ( Stream . Source ) 
+      THEN RAISE Rd . EndOfFile 
       ELSE (* Dispatch to appropriate encoding procedure. *) 
         Stream . PrevSourceIndex := UnsafeRd . FastIndex ( Stream . Source ) 
       ; LWch := Stream . DecWideChar ( Stream . Source ) 
@@ -116,11 +88,11 @@ MODULE UnsafeUniRd
     END FastGetWideChar 
 
 (* EXPORTED: *) 
-; PROCEDURE FastUnGetCodePoint ( Stream : UniRd . T ) : BOOLEAN (* Succeeded. *)
+; PROCEDURE FastUnGetCodePoint ( Stream : UniRd . T ) : BOOLEAN (* Succeeded. *) 
   (* Push back the last decoded code point read from Stream, pushing it back
      onto Stream.Source, in encoded form.  This is guaranteed to work only
      if the last operation on Stream was GetWideChar, GetChar, GetWideSub,
-     or GetSub or an UnsafeUniRd.Fast* version thereof.  Result FALSE means 
+     or GetSub, or an UnsafeUniRd.Fast* version thereof.  Result FALSE means 
      the operation did not happen, because of a violation of this condition.
   *) 
   (* PRE: Stream and Stream.Source are locked. *) 
@@ -154,34 +126,6 @@ MODULE UnsafeUniRd
 
   ; BEGIN 
       LLast := LAST ( ArrWch ) 
-    ; IF Stream . HasPostponedWCh 
-      THEN 
-        IF LLast < 0 (* Empty ArrWch, no space for anything. *)  
-        THEN RETURN 0 
-        ELSE 
-          IF Stream . PostponedWCh = CRLFWch 
-          THEN (* CR & LF have been postponed. *)  
-            ArrWch [ 0 ] := CRWch 
-          ; LI := 1  
-          ; IF LLast > 0  
-            THEN (* The LF will fit too. *) 
-              ArrWch [ 1 ] := LFWch 
-            ; LI := 2  
-            ; Stream . HasPostponedWCh := FALSE 
-            (* And fall through for possibly more chars. *) 
-            ELSE (* Only the CR did fit. *)  
-              Stream . PostponedWCh := LFWch  
-            ; INC ( Stream . Index ) 
-            ; RETURN 1  
-            END (* IF *) 
-          ELSE (* Some other char was postponed. *)  
-            ArrWch [ 0 ] := Stream . PostponedWCh 
-          ; LI := 1  
-          ; Stream . HasPostponedWCh := FALSE 
-          (* And fall through for possibly more chars. *) 
-          END (* IF *) 
-        END (* IF *) 
-      END (* IF *) 
     ; TRY (* EXCEPT *) 
         LOOP 
           IF LI > LLast OR UnsafeRd . FastEOF ( Stream . Source ) 
@@ -227,43 +171,6 @@ MODULE UnsafeUniRd
 
   ; BEGIN    
       LLast := LAST ( ArrCh ) 
-    ; IF Stream . HasPostponedWCh 
-      THEN 
-        IF LLast < 0 (* Empty ArrCh, no space for anything. *)  
-        THEN RETURN 0 
-        ELSE 
-          IF Stream . PostponedWCh = CRLFWch 
-          THEN (* CR & LF have been postponed. *)  
-            ArrCh [ 0 ] := CRCh 
-          ; LI := 1  
-          ; IF LLast > 0  
-            THEN (* The LF will fit too. *) 
-              ArrCh [ 1 ] := LFCh 
-            ; LI := 2 
-            ; Stream . HasPostponedWCh := FALSE 
-            (* And fall through for possibly more chars. *) 
-            ELSE (* Only the CR did fit. *)  
-              Stream . PostponedWCh := LFWch  
-            ; INC ( Stream . Index ) 
-            ; RETURN 1  
-            END (* IF *) 
-          ELSE (* Some other char was postponed. *)  
-            Stream . HasPostponedWCh := FALSE 
-          ; IF ORD ( Stream . PostponedWCh ) > ORD ( LAST ( CHAR ) ) 
-(*2*) 
-            THEN 
-              INC ( Stream . Index ) 
-            ; RAISE Range ( UniRd . RangeInfo { Stream . PostponedWCh , 0 } )
-            ELSE 
-              ArrCh [ 0 ] := VAL ( ORD ( Stream . PostponedWCh ) , CHAR )
-(*1*) 
-(*2*) 
-            ; LI := 1  
-            (* And fall through for possibly more chars. *) 
-            END (* IF *) 
-          END (* IF *) 
-        END (* IF *) 
-      END (* IF *) 
     ; TRY (* EXCEPT *)
         LOOP 
           IF LI > LLast OR UnsafeRd . FastEOF ( Stream . Source ) 
@@ -298,6 +205,44 @@ MODULE UnsafeUniRd
       END (* EXCEPT *) 
     END FastGetSub 
 
+; PROCEDURE UnGetStreamChars ( Stream : UniRd . T ; BackToIndex : CARDINAL ) 
+
+  (* We could have up to two Unicode Code points, CR and LF.  If the encoding is
+     UTF-32, this would be 8 CHARS we will unget to Stream . Source, and the 
+     decoder will have ungotten zero.  For other encodings and these specific 
+     code points, the decoder might have ungotten at most one CHAR and we will 
+     unget at most 4.  So UnGetCharMulti maximum of 8 will be enough, if nobody 
+     else is sneaking around the side of our Stream to Stream.Source and 
+     ungetting that way. *) 
+
+  = VAR LCt : [ 1 .. 8 ]
+
+  ; BEGIN 
+      LCt := UnsafeRd . FastIndex ( Stream . Source ) - BackToIndex 
+    (* Let's do a hard-coded, fixed-size binary search for speed. *) 
+    ; IF LCt >= 5 
+      THEN 
+        <* ASSERT UnsafeRd . FastUnGetCharMulti ( Stream . Source ) *> 
+        <* ASSERT UnsafeRd . FastUnGetCharMulti ( Stream . Source ) *> 
+        <* ASSERT UnsafeRd . FastUnGetCharMulti ( Stream . Source ) *> 
+        <* ASSERT UnsafeRd . FastUnGetCharMulti ( Stream . Source ) *> 
+        DEC ( LCt , 4 ) 
+      END (* IF *) 
+    ; IF LCt >= 3 
+      THEN 
+        <* ASSERT UnsafeRd . FastUnGetCharMulti ( Stream . Source ) *> 
+        <* ASSERT UnsafeRd . FastUnGetCharMulti ( Stream . Source ) *> 
+        DEC ( LCt , 2 ) 
+      END (* IF *) 
+    ; IF LCt = 2 
+      THEN 
+        <* ASSERT UnsafeRd . FastUnGetCharMulti ( Stream . Source ) *> 
+        <* ASSERT UnsafeRd . FastUnGetCharMulti ( Stream . Source ) *> 
+      ELSE 
+        <* ASSERT UnsafeRd . FastUnGetCharMulti ( Stream . Source ) *> 
+      END (* IF *) 
+    END UnGetStreamChars 
+
 (* EXPORTED *) 
 ; PROCEDURE FastGetWideSubLine 
     ( Stream : UniRd . T ; VAR (*OUT*) ArrWch : ARRAY OF Widechar ) 
@@ -328,6 +273,7 @@ MODULE UnsafeUniRd
 
   = VAR LI : CARDINAL 
   ; VAR LLast : INTEGER 
+  ; VAR LPrevSourceIndex1 , LPrevSourceIndex2 : CARDINAL 
   ; VAR LWch1 , LWch2 : Widechar 
 
   ; BEGIN 
@@ -338,36 +284,17 @@ MODULE UnsafeUniRd
         LI := 0 
       ; TRY (* EXCEPT *) 
         (* ASSERT: There is space for one character at ArrWch[0]. *) 
-          IF Stream . HasPostponedWCh 
-          THEN (* Use previously postponed character(s). *) 
-            IF Stream . PostponedWCh = CRLFWch 
-            THEN (* CR & LF have been postponed. *) 
-              IF LLast <= 0  
-              THEN (* Insufficient space for 2 chars.  Continue the 
-                      postponement. *)
-                RETURN 0 
-              ELSE (* Space for CR & LF. *) 
-                ArrWch [ 0 ] := CRWch 
-              ; ArrWch [ 1 ] := LFWch 
-              ; Stream . HasPostponedWCh := FALSE 
-              ; INC ( Stream . Index , 2 ) 
-              ; RETURN 2 
-              END (* IF *) 
-            ELSE (* Single postponed char. *)  
-              LWch1 := Stream . PostponedWCh 
-            ; Stream . HasPostponedWCh := FALSE 
-            (* And fall through for possibly more chars. *) 
-            END (* IF *) 
-          ELSIF UnsafeRd . FastEOF ( Stream . Source ) 
+          IF UnsafeRd . FastEOF ( Stream . Source ) 
           THEN RETURN 0
           ELSE (* Can and must read a character. *) 
-            Stream . PrevSourceIndex := UnsafeRd . FastIndex ( Stream . Source )
+            LPrevSourceIndex1 := UnsafeRd . FastIndex ( Stream . Source )
           ; <* FATAL EndOfFile *> (* Can't happen. *) BEGIN 
               LWch1 := Stream . DecWideChar ( Stream . Source ) 
             END (* Block. *) 
           END (* IF *) 
         (* INVARIANT: LWch1 contains the next char to consider storing. 
-                      AND there is space for one character at ArrWch[LI]. *) 
+                      LPrevSourceIndex1 is its starting CHAR index in Stream.Source.
+                      There is space for one character at ArrWch[LI]. *) 
         ; LOOP 
             IF ORD ( LWch1 ) = ORD ( LFWch ) 
                OR ORD ( LWch1 ) = ORD ( NELWch ) 
@@ -377,7 +304,8 @@ MODULE UnsafeUniRd
                OR ORD ( LWch1 ) = ORD ( LSWch ) 
 (*2*)
             THEN (* Unambiguously single-char new-line.  Store and return. *)  
-              ArrWch [ LI ] := LWch1 
+              Stream . PrevSourceIndex := LPrevSourceIndex1 
+            ; ArrWch [ LI ] := LWch1 
             ; INC ( LI ) 
             ; INC ( Stream . Index , LI ) 
             ; RETURN LI 
@@ -386,12 +314,13 @@ MODULE UnsafeUniRd
             THEN (* CR.  Could be start of CRLF. *) 
               IF UnsafeRd . FastEOF ( Stream . Source ) 
               THEN (* CR alone.  Store and return. *) 
-                ArrWch [ LI ] := LWch1 
+                Stream . PrevSourceIndex := LPrevSourceIndex1 
+              ; ArrWch [ LI ] := LWch1 
               ; INC ( LI ) 
               ; INC ( Stream . Index , LI ) 
               ; RETURN LI 
-              ELSE (* Another char follows the CR. *) 
-                Stream . PrevSourceIndex 
+              ELSE (* Another code point follows the CR. *) 
+                LPrevSourceIndex2 
                   := UnsafeRd . FastIndex ( Stream . Source )
               ; <* FATAL EndOfFile *> (* Can't happen. *) BEGIN 
                   LWch2 := Stream . DecWideChar ( Stream . Source ) 
@@ -401,25 +330,24 @@ MODULE UnsafeUniRd
                 THEN (* CR and LF. *) 
                   IF LI < LLast 
                   THEN (* Room for both CR and LF. *)  
-                    ArrWch [ LI ] := LWch1 
+                    Stream . PrevSourceIndex := LPrevSourceIndex2 
+                    (* ^A subsequent UnGetWideChar will unget only the LF. *) 
+                  ; ArrWch [ LI ] := LWch1 
                   ; INC ( LI ) 
                   ; ArrWch [ LI ] := LWch2 
                   ; INC ( LI ) 
                   ; INC ( Stream . Index , LI ) 
                   ; RETURN LI 
-                  ELSE (* They won't both fit.  Postpone both. *)
-(*3b*) 
-                    Stream . PostponedWCh := CRLFWch 
-                  ; Stream . HasPostponedWCh := TRUE  
+                  ELSE (* They won't both fit.  Unget both. *)
+                    UnGetStreamChars ( Stream , LPrevSourceIndex1 ) 
                   ; INC ( Stream . Index , LI ) 
                   ; RETURN LI 
                   END (* IF *) 
-                ELSE (* CR & non_LF.  Store CR and postpone LWch2. *) 
-(*3a*) 
-                  ArrWch [ LI ] := LWch1 
+                ELSE (* CR & non_LF.  Store CR and unget LWch2. *) 
+                  Stream . PrevSourceIndex := LPrevSourceIndex1 
+                ; ArrWch [ LI ] := LWch1 
                 ; INC ( LI ) 
-                ; Stream . PostponedWCh := LWch2  
-                ; Stream . HasPostponedWCh := TRUE  
+                ; UnGetStreamChars ( Stream , LPrevSourceIndex2 ) 
                 ; INC ( Stream . Index , LI ) 
                 ; RETURN LI 
                 END (* IF *) 
@@ -428,11 +356,12 @@ MODULE UnsafeUniRd
               ArrWch [ LI ] := LWch1 
             ; INC ( LI ) 
             ; IF LI > LLast OR UnsafeRd . FastEOF ( Stream . Source ) 
-              THEN 
-                INC ( Stream . Index , LI ) 
+              THEN (* We are done W/O a new line. *)  
+                Stream . PrevSourceIndex := LPrevSourceIndex1 
+              ; INC ( Stream . Index , LI ) 
               ; RETURN LI 
-              ELSE 
-                Stream . PrevSourceIndex 
+              ELSE (* Time to read another code point. *) 
+                LPrevSourceIndex1 
                   := UnsafeRd . FastIndex ( Stream . Source )
               ; <* FATAL EndOfFile *> (* Can't happen. *) BEGIN 
                   LWch1 := Stream . DecWideChar ( Stream . Source ) 
@@ -445,7 +374,7 @@ MODULE UnsafeUniRd
         Failure ( Arg ) 
         => INC ( Stream . Index , LI ) 
         ; RAISE Failure ( Arg ) 
-        | Alerted 
+        | Alerted  
         => INC ( Stream . Index , LI ) 
         ; RAISE  Alerted 
         END (* EXCEPT *) 
@@ -467,6 +396,7 @@ MODULE UnsafeUniRd
   = VAR LI : CARDINAL 
   ; VAR LLast : INTEGER 
   ; VAR LWch1 , LWch2 : Widechar 
+  ; VAR LPrevSourceIndex1 , LPrevSourceIndex2 : CARDINAL 
 
   ; BEGIN 
       LLast := LAST ( ArrCh ) 
@@ -475,45 +405,27 @@ MODULE UnsafeUniRd
       ELSE 
         LI := 0 
       ; TRY (* EXCEPT *) 
-          IF Stream . HasPostponedWCh 
-          THEN (* Use previously postponed character(s). *) 
-            IF Stream . PostponedWCh = CRLFWch 
-            THEN (* CR & LF have been postponed. *) 
-              IF LI >= LLast 
-              THEN (* Insufficient space for 2 chars.  Continue the 
-                      postponement. *)
-                RETURN 0 
-              ELSE (* Space for CR & LF. *) 
-                ArrCh [ 0 ] := CRCh 
-              ; ArrCh [ 1 ] := LFCh 
-              ; LI := 2 
-              ; Stream . HasPostponedWCh := FALSE 
-              ; INC ( Stream . Index , 2 ) 
-              ; RETURN 2 
-              END (* IF *) 
-            ELSE (* Single postponed char. *)  
-              LWch1 := Stream . PostponedWCh 
-            ; Stream . HasPostponedWCh := FALSE 
-            (* And fall through for possibly more chars. *) 
-            END (* IF *) 
-          ELSIF UnsafeRd . FastEOF ( Stream . Source ) 
+          IF UnsafeRd . FastEOF ( Stream . Source ) 
           THEN RETURN 0 
-          ELSE
-            Stream . PrevSourceIndex := UnsafeRd . FastIndex ( Stream . Source )
+          ELSE (* Can and must read a character. *) 
+            LPrevSourceIndex1 := UnsafeRd . FastIndex ( Stream . Source )
           ; <* FATAL EndOfFile *> (* Can't happen. *) BEGIN 
               LWch1 := Stream . DecWideChar ( Stream . Source ) 
             END (* Block. *) 
           END (* IF *) 
-        (* INVARIANT: LWch1 contains the next char to consider storing. *) 
+        (* INVARIANT: LWch1 contains the next char to consider storing.
+                      LPrevSourceIndex1 is its starting CHAR index in Stream.Source.
+                      There is space for one character at ArrWch[LI]. *) 
         ; LOOP 
             IF ORD ( LWch1 ) = ORD ( LFWch ) 
-               OR ORD ( LWch1 ) = ORD ( NELWch ) 
-               OR ORD ( LWch1 ) = ORD ( VTWch ) 
                OR ORD ( LWch1 ) = ORD ( FFWch ) 
+               OR ORD ( LWch1 ) = ORD ( VTWch ) 
+               OR ORD ( LWch1 ) = ORD ( NELWch ) 
 (*2*)
             THEN (* Unambiguously single-char new-line and it's in CHAR.  
                     Store and return. *)  
-              ArrCh [ LI ] := VAL ( ORD ( LWch1 ) , CHAR ) 
+              Stream . PrevSourceIndex := LPrevSourceIndex1 
+            ; ArrCh [ LI ] := VAL ( ORD ( LWch1 ) , CHAR ) 
             ; INC ( LI ) 
             ; INC ( Stream . Index , LI ) 
             ; RETURN LI 
@@ -521,20 +433,21 @@ MODULE UnsafeUniRd
                   OR ORD ( LWch1 ) = ORD ( LSWch ) 
 (*2*)
             THEN (* Single-char new-line, but not in CHAR. *)  
+(* CHECK: Index, PrevSourceIndex *)
               INC ( Stream . Index , LI + 1 ) 
             ; RAISE Range ( UniRd . RangeInfo { LWch1 , LI } )
             ELSIF ORD ( LWch1 ) = ORD ( CRWch ) 
-(*2*)
+(*2*) 
             THEN (* CR.  Could be start of CRLF. *) 
               IF UnsafeRd . FastEOF ( Stream . Source ) 
               THEN (* CR alone.  Store and return. *) 
-                ArrCh [ LI ] := CRCh  
+                Stream . PrevSourceIndex := LPrevSourceIndex1 
+              ; ArrCh [ LI ] := CRCh  
               ; INC ( LI ) 
               ; INC ( Stream . Index , LI ) 
               ; RETURN LI 
-              ELSE (* Another char follows the CR. *) 
-                Stream . PrevSourceIndex 
-                  := UnsafeRd . FastIndex ( Stream . Source )
+              ELSE (* Another code point follows the CR. *) 
+                LPrevSourceIndex2 := UnsafeRd . FastIndex ( Stream . Source )
               ; <* FATAL EndOfFile *> (* Can't happen. *) BEGIN 
                   LWch2 := Stream . DecWideChar ( Stream . Source ) 
                 END (* Block. *) 
@@ -543,25 +456,24 @@ MODULE UnsafeUniRd
                 THEN (* CR and LF. *) 
                   IF LI < LLast 
                   THEN (* Room for both CR and LF. *)  
-                    ArrCh [ LI ] := CRCh 
+                    Stream . PrevSourceIndex := LPrevSourceIndex2 
+                    (* ^A subsequent UnGetWideChar will unget only the LF. *) 
+                  ; ArrCh [ LI ] := CRCh 
                   ; INC ( LI ) 
                   ; ArrCh [ LI ] := LFCh  
                   ; INC ( LI ) 
                   ; INC ( Stream . Index , LI ) 
                   ; RETURN LI 
-                  ELSE (* They won't both fit.  Postpone both. *)
-(*3b*)
-                    Stream . PostponedWCh := CRLFWch 
-                  ; Stream . HasPostponedWCh := TRUE  
+                  ELSE (* They won't both fit.  Unget both. *)
+                    UnGetStreamChars ( Stream , LPrevSourceIndex1 )  
                   ; INC ( Stream . Index , LI ) 
                   ; RETURN LI 
                   END (* IF *) 
-                ELSE (* CR & non_LF.  Store CR and postpone LWch2. *) 
-(*3a*)
-                  ArrCh [ LI ] := CRCh  
+                ELSE (* CR & non_LF.  Store CR and unget LWch2. *) 
+                  Stream . PrevSourceIndex := LPrevSourceIndex1 
+                ; ArrCh [ LI ] := CRCh  
                 ; INC ( LI ) 
-                ; Stream . PostponedWCh := LWch2  
-                ; Stream . HasPostponedWCh := TRUE  
+                ; UnGetStreamChars ( Stream , LPrevSourceIndex2 )  
                 ; INC ( Stream . Index , LI ) 
                 ; RETURN LI 
                 END (* IF *) 
@@ -578,12 +490,12 @@ MODULE UnsafeUniRd
 (*2*) 
               ; INC ( LI ) 
               ; IF LI > LLast OR UnsafeRd . FastEOF ( Stream . Source ) 
-                THEN 
-                  INC ( Stream . Index , LI ) 
+                THEN (* We are done W/O a new line. *)  
+                  Stream . PrevSourceIndex := LPrevSourceIndex1 
+                ; INC ( Stream . Index , LI ) 
                 ; RETURN LI 
-                ELSE 
-                  Stream . PrevSourceIndex 
-                    := UnsafeRd . FastIndex ( Stream . Source )
+                ELSE (* Time to read another code point. *) 
+                  LPrevSourceIndex1 := UnsafeRd . FastIndex ( Stream . Source )
                 ; <* FATAL EndOfFile *> (* Can't happen. *) BEGIN 
                     LWch1 := Stream . DecWideChar ( Stream . Source ) 
                   END (* Block. *) 
@@ -618,54 +530,15 @@ MODULE UnsafeUniRd
   ; VAR LResult : TEXT  
 
   ; BEGIN 
-      IF Len = 0  
+      IF Len = 0 
       THEN RETURN ""  
       ELSE 
-        IF Stream . HasPostponedWCh 
-        THEN 
-          IF Stream . PostponedWCh = CRLFWch 
-          THEN 
-            IF Len = 1 
-            THEN (* Space for the CR only. *) 
-              Stream . PostponedWCh := LFWch 
-            ; INC ( Stream . Index ) 
-            ; RETURN CRText 
-            ELSE (* Room for both. *) 
-              Stream . HasPostponedWCh := FALSE   
-            ; IF Len = 2 OR UnsafeRd . FastEOF ( Stream . Source ) 
-              THEN (* Postponed CR & LF only. *)  
-                INC ( Stream . Index , 2 ) 
-              ; RETURN CRLFText 
-              ELSE 
-                LChunk [ 0 ] := CRWch 
-              ; LChunk [ 1 ] := LFWch 
-              ; LI := 2  
-              ; LChunkI := 2  
-              (* And fall through to get more chars. *) 
-              END (* IF *) 
-            END (* IF *)           
-          ELSE (* Single postponed char. *) 
-            Stream . HasPostponedWCh := FALSE             
-            
-          ; IF Len = 1 OR UnsafeRd . FastEOF ( Stream . Source ) 
-            THEN (* Postponed char only. *)  
-              INC ( Stream . Index ) 
-            ; RETURN Text . FromWideChar ( Stream . PostponedWCh ) 
-            ELSE 
-              LChunk [ 0 ] := Stream . PostponedWCh 
-            ; LI := 1 
-            ; LChunkI := 1 
-            (* And fall through to get more chars.  *) 
-            END (* IF *) 
-          END (* IF *) 
-        ELSE (* Nothing postponed and waiting. *)  
-          IF UnsafeRd . FastEOF ( Stream . Source )
-          THEN RETURN "" 
-          ELSE 
-            LI := 0 
-          ; LChunkI := 0 
-          (* And fall through to get some chars.  *) 
-          END (* IF *) 
+        IF UnsafeRd . FastEOF ( Stream . Source )
+        THEN RETURN "" 
+        ELSE 
+          LI := 0 
+        ; LChunkI := 0 
+        (* And fall through to get some chars.  *) 
         END (* IF *) 
       ; LResult := NIL 
       ; TRY (* EXCEPT *)
@@ -691,10 +564,10 @@ MODULE UnsafeUniRd
             THEN (* We are done. *) 
               IF LChunkI > 0 
               THEN (* Flush partially filled chunk. *)
-                IF LResult = NIL (* Likely. *) 
+                INC ( Stream . Index , LI ) 
+              ; IF LResult = NIL (* Likely. *) 
                 THEN 
-                  INC ( Stream . Index , LI ) 
-                ; RETURN 
+                  RETURN 
                     Text. FromWideChars ( SUBARRAY ( LChunk , 0 , LChunkI ) )
                 ELSE 
                   INC ( Stream . Index , LI ) 
@@ -730,33 +603,23 @@ MODULE UnsafeUniRd
   *) 
   (* PRE: Stream and Stream.Source are locked. *) 
 
-  = CONST ChunkSize = 512 
-  ; VAR LChunk : ARRAY [ 0 .. ChunkSize - 1 ] OF Widechar 
+  = VAR LPrevSourceIndex : CARDINAL 
   ; VAR LI , LChunkI : CARDINAL 
   ; VAR LWch1 , LWch2 : Widechar 
   ; VAR LResult : TEXT  
+  ; CONST ChunkSize = 512 
+  ; VAR LChunk : ARRAY [ 0 .. ChunkSize - 1 ] OF Widechar 
 
   ; BEGIN 
       LI := 0 
     ; LChunkI := 0 
     ; TRY (* EXCEPT *) 
-        IF Stream . HasPostponedWCh 
-        THEN 
-          Stream . HasPostponedWCh := FALSE             
-        ; IF Stream . PostponedWCh = CRLFWch 
-          THEN 
-            INC ( Stream . Index , 2 ) 
-          ; RETURN CRLFText 
-          ELSE 
-            LWch1:= Stream . PostponedWCh 
-          END (* IF *) 
-        ELSE (* Nothing was postponed.  Read a character. *)  
-          Stream . PrevSourceIndex := UnsafeRd . FastIndex ( Stream . Source )
-        ; LWch1 := Stream . DecWideChar ( Stream . Source ) 
-          (* ^Which could raise EndOfFile. *) 
-        END (* IF *) 
+       Stream . PrevSourceIndex := UnsafeRd . FastIndex ( Stream . Source )
+     ; LWch1 := Stream . DecWideChar ( Stream . Source ) 
+       (* ^Which could raise EndOfFile. *) 
       ; LResult := NIL 
-      (* INVARIANT: LWch1 contains the next char to store. *) 
+      (* INVARIANT: LWch1 contains the next char to store. 
+                    Stream.PrevSourceIndex is its starting index. *) 
       ; LOOP (* Store LWch1. *)  
           IF LChunkI >= LAST ( LChunk ) 
              (* Allow 2 spaces for possible CR & LF. *)
@@ -775,6 +638,7 @@ MODULE UnsafeUniRd
         ; LChunk [ LChunkI ] := LWch1 
         ; INC ( LChunkI ) 
         ; INC ( LI ) 
+        (* Beyond here, LWch1 has been stored in the being-built result. *) 
         ; IF ORD ( LWch1 ) = ORD ( LFWch ) 
              OR ORD ( LWch1 ) = ORD ( NELWch ) 
              OR ORD ( LWch1 ) = ORD ( VTWch ) 
@@ -791,30 +655,28 @@ MODULE UnsafeUniRd
             THEN (* CR alone. *) 
               EXIT 
             ELSE (* Another char follows the CR. *) 
-              Stream . PrevSourceIndex 
-                := UnsafeRd . FastIndex ( Stream . Source )
+              LPrevSourceIndex := UnsafeRd . FastIndex ( Stream . Source )
             ; <* FATAL EndOfFile *> (* Can't happen. *) BEGIN 
                 LWch2 := Stream . DecWideChar ( Stream . Source ) 
 (* WARNING: exception is never raised: Rd.EndOfFile--why? *) 
               END (* Block. *) 
             ; IF ORD ( LWch2 ) = ORD ( LFWch )
               THEN (* CR & LF.  Store the LF. *) 
-                LChunk [ LChunkI ] := LWch2 (* There will be space. *)  
+                Stream . PrevSourceIndex := LPrevSourceIndex  
+              ; LChunk [ LChunkI ] := LWch2 (* There will be space. *)  
               ; INC ( LChunkI ) 
               ; INC ( LI ) 
               ; EXIT 
-              ELSE (* CR & non-LF.  Postpone the other char. *) 
-(*3a*)
-                Stream . PostponedWCh := LWch2 
-              ; Stream . HasPostponedWCh := TRUE 
+              ELSE (* CR & non-LF.  Unget the non-LF code point. *) 
+                UnGetStreamChars ( Stream , LPrevSourceIndex ) 
               ; EXIT 
               END (* IF *) 
             END (* IF *) 
-          ELSE (* It was not a new-line. *) 
+          ELSE (* It was not a new-line of any kind. *) 
             IF UnsafeRd . FastEOF ( Stream . Source ) 
             THEN (* Line has ended at EOF without a new-line sequence. *) 
               EXIT 
-            ELSE 
+            ELSE (* Get another code point. *)  
               Stream . PrevSourceIndex 
                 := UnsafeRd . FastIndex ( Stream . Source )
             ; <* FATAL EndOfFile *> (* Can't happen. *) BEGIN 
