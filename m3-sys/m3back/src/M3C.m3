@@ -1284,7 +1284,7 @@ CONST UID_ADDR = 16_08402063; (* ADDRESS *)
 (*VAR UID_RANGE_0_63 := 16_2FA3581D; [0..63] *)
 VAR UID_PROC1 := IntegerToTypeid(16_9C9DE465); (* PROCEDURE (x, y: INTEGER): INTEGER *)
 CONST UID_PROC2 = 16_20AD399F; (* PROCEDURE (x, y: INTEGER): BOOLEAN *)
-CONST UID_PROC3 = 16_3CE4D13B; (* PROCEDURE (x: INTEGER): INTEGER *)
+(*CONST UID_PROC3 = 16_3CE4D13B;*) (* PROCEDURE (x: INTEGER): INTEGER *)
 VAR UID_PROC4 :=  IntegerToTypeid(16_FA03E372); (* PROCEDURE (x, n: INTEGER): INTEGER *)
 CONST UID_PROC5 = 16_509E4C68; (* PROCEDURE (x: INTEGER;  n: [0..31]): INTEGER *)
 VAR UID_PROC6 := IntegerToTypeid(16_DC1B3625); (* PROCEDURE (x: INTEGER;  n: [0..63]): INTEGER *)
@@ -2216,7 +2216,7 @@ BEGIN
         typeid: TypeUID := 0;
         text: TEXT := NIL;
     END;    
-    VAR addressTypes := ARRAY [0..14] OF AddressType_t {
+    VAR addressTypes := ARRAY [0..13] OF AddressType_t {
         AddressType_t {UID_MUTEX, "MUTEX"},
         AddressType_t {UID_TEXT, "TEXT"},
         AddressType_t {UID_ROOT, "ROOT"},
@@ -2225,7 +2225,7 @@ BEGIN
         AddressType_t {UID_ADDR, Text_address},
         AddressType_t {UID_PROC1, "PROC1"},
         AddressType_t {UID_PROC2, "PROC2"},
-        AddressType_t {UID_PROC3, "PROC3"},
+        (*AddressType_t {UID_PROC3, "PROC3"},*)
         AddressType_t {UID_PROC4, "PROC4"},
         AddressType_t {UID_PROC5, "PROC5"},
         AddressType_t {UID_PROC6, "PROC6"},
@@ -5510,7 +5510,6 @@ VAR from_type     := from.cgtype;
     to_unsigned   := cgtypeIsUnsignedInt[to_type];
 BEGIN
     RETURN FALSE;
-
     <* ASSERT NOT (from_signed AND from_unsigned) *>
     <* ASSERT NOT (to_signed AND to_unsigned) *>
     <* ASSERT to_signed OR to_unsigned *>
@@ -5905,7 +5904,10 @@ END shift_left;
 PROCEDURE shift_right(self: T; type: IType) =
 (* s1.type := Word.Shift  (s1.type, -s0.type); pop *)
 BEGIN
-    <* ASSERT cgtypeIsUnsignedInt[type] *>
+    (* ASSERT cgtypeIsUnsignedInt[type]
+    shift is unsigned, casts are applied on input and output
+    int i; i << n; => (int) (((unsigned)i) << n)
+    *)
     shift_left_or_right(self, type, "shift_right", ">>");
 END shift_right;
 
