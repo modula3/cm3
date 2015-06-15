@@ -236,7 +236,7 @@ void
 __stdcall
 set_range(WORD_T b, WORD_T a, WORD_T* s)
 {
-  if (a >= b) {
+  if (a > b) {
       /* no bits to set */
   } else {
     WORD_T const a_word = a / SET_GRAIN;

@@ -375,6 +375,9 @@ for a in _PossibleCm3Flags:
     if a in sys.argv:
         CM3_FLAGS = CM3_FLAGS + " -" + a
 
+if _CBackend:
+    CM3_FLAGS = CM3_FLAGS + " -DM3_BACKEND_MODE=C"
+
 CM3 = ConvertPathForPython(getenv("CM3")) or "cm3"
 CM3 = SearchPath(CM3)
 
@@ -657,7 +660,7 @@ if Host.endswith("_NT") or Host == "NT386":
 
 #-----------------------------------------------------------------------------
 
-_BuildDir = ("%(Config)s%(_BuildDirC)s" % vars())
+BuildDir = ("%(Config)s%(_BuildDirC)s" % vars())
 M3GDB = (M3GDB or CM3_GDB)
 Scripts = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PKGSDB = os.path.join(Scripts, "PKGS")
@@ -771,9 +774,9 @@ if _Program != "make-msi.py":
 # other commands
 
     if os.name == "nt":
-        RealClean = RealClean or "if exist %(_BuildDir)s rmdir /q/s %(_BuildDir)s"
+        RealClean = RealClean or "if exist %(BuildDir)s rmdir /q/s %(BuildDir)s"
     else:
-        RealClean = RealClean or "rm -rf %(_BuildDir)s"
+        RealClean = RealClean or "rm -rf %(BuildDir)s"
 
     RealClean = (RealClean % vars())
 
@@ -1040,11 +1043,16 @@ def _SqueezeSpaces(a):
 
 def Boot():
 
+# TODO build a directory tree, one directory per package
+# TODO as a result, support building separate libraries and possibly shared libraries
+# TODO and out-of-tree builds
+# Maybe something autotools or cmake-laden
+
     global BuildLocal
     BuildLocal += " -boot -keep -DM3CC_TARGET=" + Config
 
     Version = CM3VERSION + "-" + time.strftime("%Y%m%d")
-    BootDir = "./cm3-boot-" + Target + "-" + Version
+    BootDir = "./cm3-boot-" + BuildDir + "-" + Version
 
     try:
         shutil.rmtree(BootDir)
@@ -1141,6 +1149,7 @@ def Boot():
 
     obj = ["o", "obj"][nt]
     Link = "$(CC) $(CFLAGS) *." + obj + [" *.mo *.io ", " "][_CBackend]
+    #Link = "$(CC) $(CFLAGS)"
 
     # link flags
     
@@ -1237,7 +1246,7 @@ def Boot():
         "ALPHA64_VMS"   : "alpha64-dec-vms-",
         }.get(Target) or ""
 
-    DeleteCommand = ["rm -rf", "del /f"][nt]
+    DeleteCommand = ["rm -f", "del /f"][nt]
 
     if not vms:
         CCompiler = GnuPlatformPrefix + CCompiler
@@ -1256,7 +1265,9 @@ def Boot():
           "m3middle", "m3quake", "m3objfile", "m3linker", "m3back",
           "m3front" ])
     main_packages = ["cm3"]
-    if nt:
+    #if nt:
+    #if True:
+    if not vms: # TODO
         main_packages += ["mklib"]
     P += main_packages
 
@@ -1277,6 +1288,7 @@ def Boot():
     UpdateSource = open(os.path.join(BootDir, "updatesource.sh"), "wb")
     Objects = { }
     ObjectsExceptMain = { }
+    main_ext = ""
 
     for a in [Makefile]:
         a.write("# edit up here" + NL2
@@ -1317,7 +1329,8 @@ def Boot():
 
     for q in P:
         dir = GetPackagePath(q)
-        for a in os.listdir(os.path.join(Root, dir, Config)):
+        for a in os.listdir(os.path.join(Root, dir, BuildDir)):
+            main_leaf = a
             ext_c = a.endswith(".c")
             ext_cpp = a.endswith(".cpp")
             ext_h = a.endswith(".h")
@@ -1329,11 +1342,13 @@ def Boot():
             if not (ext_c or ext_cpp or ext_h or ext_s or ext_ms or ext_is or ext_io or ext_mo):
                 continue
             leaf = GetLastPathElement(a)
-            dest = os.path.join(BootDir, leaf)
+            main_leaf = leaf
             is_main = (ext_c or ext_cpp) and is_main_table.get(leaf, False)
-            if is_main:
-                dest = os.path.join(BootDir, q + "_" + leaf)
-            fullpath = os.path.join(Root, dir, Config, a)
+            if is_main and not vms: # TODO vms cleanup
+                main_leaf = q + "_" + leaf
+                main_ext = GetPathExtension(a)
+            dest = os.path.join(BootDir, main_leaf)
+            fullpath = os.path.join(Root, dir, BuildDir, a)
             if ext_h or ext_c or not vms or AssembleOnTarget or ext_io or ext_mo:
                 CopyFile(fullpath, dest)
             if ext_h or ext_io or ext_mo:
@@ -1389,12 +1404,22 @@ def Boot():
 
     for pkg in main_packages:
         Makefile.write(pkg + EXE + ":")
-        main = pkg + "_Main.m3." + obj
-        if main in ObjectsExceptMain:
-            Makefile.write(" " + main)
-        Makefile.write(" " + "$(OBJECTS)")
-        Makefile.write(NL + "\t")
-        Makefile.write("$(Link) " + LinkOut + "$@" + NL)
+        main = pkg + "_Main.m3." + main_ext
+        Makefile.write(" " + "$(OBJECTS)" + NL)
+        
+        # Prevent wildcards leaking across from main_packages + control-c.
+        for delmain in main_packages:
+            Makefile.write("\t-" + DeleteCommand + " " + delmain + "_Main.m3." + obj + NL)
+            
+        # NOTE: We use *.o/*.obj to avoid command line length limits.
+        # TODO: Response files? gcc 4.2 supports them. Visual C++ all
+        # versions support them. TODO: Research xlc, Sun CC, etc.
+        # Or, use libraries (building them from small command lines).
+ 
+        Makefile.write("\t$(Link) " + main + LinkOut + "$@" + NL)
+        
+        # Prevent wildcards leaking across from main_packages.
+        Makefile.write("\t-" + DeleteCommand + " " + main + NL2)
 
     VmsMake.write("$ set file/attr=(rfm=var,rat=none) *.o\n")
     VmsMake.write("$ set file/attr=(rfm=var,rat=none) *.obj\n")
@@ -1402,6 +1427,7 @@ def Boot():
     VmsMake.write("$ set file/attr=(rfm=var,rat=none) *.io\n")
     VmsMake.write("$ link /executable=cm3.exe vmslink/options\n")
     
+    # TODO
     for a in [Make]:
         a.write("$(Link) " + LinkOut + "$@" + NL)
         
@@ -1713,6 +1739,8 @@ GenericCommand:
             elif arg == "-n":
                 NoAction = True
             else:
+                global ExtraArgs
+                ExtraArgs = [ ]
                 ExtraArgs += arg
         else:
             Action = ActionInfo.get(arg)
@@ -1812,6 +1840,8 @@ def DeleteFile(a):
     if isfile(a):
         os.chmod(ConvertPathForPython(a), 0700)
         os.remove(ConvertPathForPython(a))
+    if isfile(a):
+        FatalError("failed to delete " + a)
 
 def MoveFile(a, b):
     if os.name != "nt":
@@ -1977,16 +2007,28 @@ def _CopyCompiler(From, To):
 
 #-----------------------------------------------------------------------------
 
+def PickBuildDir(a):
+    #if DirectoryExists(a):
+    #    return a
+    #if a.endswith("c"):
+    #    a = a[:-1]
+    #    if DirectoryExists(a):
+    #        return a
+    #elif DirectoryExists(a + "c"):
+    #    return a + "c"
+    #FatalError("no BuildDir:" + a)
+    return a
+
 def ShipBack():
     if  not GCC_BACKEND:
         return True
-    return _CopyCompiler(os.path.join(Root, "m3-sys", "m3cc", _BuildDir),
+    return _CopyCompiler(os.path.join(Root, "m3-sys", "m3cc", PickBuildDir(BuildDir)),
                          os.path.join(InstallRoot, "bin"))
 
 #-----------------------------------------------------------------------------
 
 def ShipFront():
-    return _CopyCompiler(os.path.join(Root, "m3-sys", "cm3", _BuildDir),
+    return _CopyCompiler(os.path.join(Root, "m3-sys", "cm3", PickBuildDir(BuildDir)),
                          os.path.join(InstallRoot, "bin"))
 
 #-----------------------------------------------------------------------------
@@ -2685,7 +2727,7 @@ def MakeDebianPackage(input, prefix):
     os.chdir("./debian")
     architecture = DebianArchitecture.get(Target) or DebianArchitecture.get(Target[:Target.index("_")])
     control = (
-      "Package: cm3-" + Target + "-" + CM3VERSION + newline
+      "Package: cm3-" + BuildDir + "-" + CM3VERSION + newline
     + "Version: 1.0" + newline
     + "Maintainer: somebody@somewhere.com" + newline
     + "Architecture: " + architecture + newline

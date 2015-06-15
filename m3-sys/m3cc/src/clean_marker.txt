@@ -19,5 +19,6 @@ The contents of the file do not matter.
    - removal of gmp, zlib
    - switching more targets to 4.7
    - removal of LTO
+   - 32bit widechar option
 
 FF06-5358-4D7B-8B37-B8DFB97B2696

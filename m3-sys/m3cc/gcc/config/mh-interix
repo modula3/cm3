@@ -1,8 +1,0 @@
-CFLAGS_FOR_BUILD = -g -O2 -D_ALL_SOURCE
-CFLAGS = -g -O2 -D_ALL_SOURCE
-BOOT_CFLAGS = -g -O2 -D_ALL_SOURCE
-
-# We also need to override LIBGCC2_DEBUG_CFLAGS so libgcc2 will be
-# built without debugging information
-
-LIBGCC2_DEBUG_CFLAGS=

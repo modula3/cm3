@@ -23,7 +23,7 @@ SetupEnvironment()
 # delete lingering cm3cg in case old compiler/config uses it
 for a in ["cm3cg", "gcc/m3cgc1"]:
     for b in ["", ".exe"]:
-        DeleteFile(Root + "m3-sys/m3cc/" + Target + "/" + a + b)
+        DeleteFile(Root + "/m3-sys/m3cc/" + BuildDir + "/" + a + b)
 
 #
 # clean everything
@@ -52,7 +52,7 @@ DoPackage(argv_BuildShip, [ "import-libs", "m3bundle", "m3middle", "m3quake", "m
 # ... and continue with the backend, if needed
 #
 
-a = Root + "/m3-sys/m3cggen/" + Target + "/m3cggen > " + Root + "/m3-sys/m3cc/gcc/gcc/m3cg/m3cg.h"
+a = Root + "/m3-sys/m3cggen/" + BuildDir + "/m3cggen > " + Root + "/m3-sys/m3cc/gcc/gcc/m3cg/m3cg.h"
 print(a)
 # os.system(a)
 FilterPackages([ "m3cc" ]) and DoPackage(argv_BuildShip, [ "m3cc" ])

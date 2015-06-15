@@ -212,6 +212,13 @@ Packages = [ "import-libs",
              "cm3",
              "mklib" ]
 
+def Skipm3cc():
+    # Don't bother with cm3cg if using C backend.
+    if "c" in sys.argv and "m3cc" in Packages:
+        Packages.remove("m3cc")
+
+Skipm3cc()
+
 def CopyRecursive(From, To):
     CopyCommand = "xcopy /fiverdyh "
     ToParent = os.path.dirname(To)

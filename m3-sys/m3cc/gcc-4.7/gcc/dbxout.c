@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Output dbx-format symbol table information from GNU compiler.
    Copyright (C) 1987, 1988, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
    1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
@@ -1025,13 +1027,20 @@ is_fortran (void)
    return (lang == N_SO_FORTRAN) || (lang == N_SO_FORTRAN90);
 }
 
+#endif /* DBX_DEBUGGING_INFO || XCOFF_DEBUGGING_INFO */
+
 void dbxout_emit_widechar_N_OPT (int bitsize) 
-{ if (bitsize == 32) 
+{
+#if DBX_DEBUGGING_INFO || XCOFF_DEBUGGING_INFO
+  if (bitsize == 32) 
     dbxout_begin_simple_stabs (m3_widechar_bitsize_32_string, N_OPT);
   else 
     dbxout_begin_simple_stabs (m3_widechar_bitsize_16_string, N_OPT);
   dbxout_stab_value_zero ();
+#endif /* DBX_DEBUGGING_INFO || XCOFF_DEBUGGING_INFO */
 } 
+
+#if DBX_DEBUGGING_INFO || XCOFF_DEBUGGING_INFO
 
 /* At the beginning of compilation, start writing the symbol table.
    Initialize `typevec' and output the standard data types of C.  */
