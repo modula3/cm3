@@ -370,6 +370,11 @@ _PossibleCm3Flags = ["boot", "keep", "override", "commands", "verbose", "why"]
 _SkipGccFlags = ["nogcc", "skipgcc", "omitgcc"]
 _PossiblePylibFlags = ["noclean", "nocleangcc", "c"] + _SkipGccFlags + _PossibleCm3Flags
 
+skipgcc = False
+for a in _SkipGccFlags:
+    if a in sys.argv:
+        skipgcc = True
+
 CM3_FLAGS = ""
 for a in _PossibleCm3Flags:
     if a in sys.argv:
@@ -2052,7 +2057,7 @@ def ShipFront():
 #-----------------------------------------------------------------------------
 
 def ShipCompiler():
-    return ShipBack() and ShipFront()
+    return (skipgcc or ShipBack()) and ShipFront()
 
 #-----------------------------------------------------------------------------
 
