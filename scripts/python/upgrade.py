@@ -77,7 +77,7 @@ ShipCompiler() or sys.exit(1)
 os.environ["OMIT_GCC"] = "yes"
 _CleanupEnvironment();
 reload(pylib) # compiler host type may have changed and need to recompute stuff
-CopyConfigForDistribution(Root) or sys.exit(1)
+CopyConfigForDistribution(InstallRoot) or sys.exit(1)
 
 # once more
 
