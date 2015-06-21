@@ -9,7 +9,7 @@ typedef   signed short      INT16;
 typedef unsigned short     UINT16;
 typedef   signed int        INT32;
 typedef unsigned int       UINT32;
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(__DECC) || defined(__DECCXX) || defined(__int64)
 typedef   signed __int64  INT64;
 typedef unsigned __int64 UINT64;
 #else
