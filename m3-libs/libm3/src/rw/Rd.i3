@@ -159,13 +159,14 @@ PROCEDURE UnGetChar(rd: T) RAISES {};
    If this rule is violated, the implementation is allowed (but
    not required) to cause a checked runtime error. *)
 
-CONST UnGetCapacity = 8;  
+CONST UnGetCapacity = 8; 
+TYPE UnGetCount = [ 0 .. UnGetCapacity ]; 
 
-PROCEDURE UnGetCharMulti(rd: T): BOOLEAN (* Succeeded. *); 
-(* Like UnGetChar, but can accumulate at least MIN(UnGetCapacity,Index(rd))
-   ungotten and not reread characters.  UnGetCharMulti reserves the right 
-   to exceed this on some calls.  Result FALSE means you tried to
-   accumulate too many ungotten characters, and the operation did not happen.
+PROCEDURE UnGetCharMulti(rd: T; n: UnGetCount:= 1): CARDINAL (* Number actually ungotten.*);
+(* Like UnGetChar, but try to push back the last n characters.  Can accumulate at 
+   least MIN(UnGetCapacity,Index(rd)) ungotten and not reread characters.  
+   UnGetCharMulti reserves the right to exceed this on some calls.  Result may be less
+   than n, if this would be exceeded.  
 *) 
 
 PROCEDURE CharsReady(rd: T): CARDINAL RAISES {Failure};

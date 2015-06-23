@@ -102,7 +102,9 @@ PROCEDURE NextBuff(rd: T): BOOLEAN (* End of file. *)
       (* The unget buffer will remain unchanged, in case UngetChar requires
          us to back up into it again. *) 
       (*<* ASSERT Check(rd) *>*)  
-      RETURN FALSE; 
+      IF rd.cur < rd.hi THEN RETURN FALSE
+      ELSE RETURN NextBuff(rd)
+      END; 
     ELSE (* We are not in the unget buffer.  Need to seek, but first, save some
             chars to go in the new unget buffer.  We have to save them before 
             seeking, but won't know until after, whether to alter the real unget
@@ -149,7 +151,7 @@ PROCEDURE NextBuff(rd: T): BOOLEAN (* End of file. *)
       END; 
       (* Try to get the next buffer from class implementation: *)  
       LResult := rd.seek(rd.cur, FALSE) = SeekResult.Eof; 
-      (* seek methods vary in what they do with buff and EOF.  E.g., FileRd 
+      (* seek methods vary in what they do with buff at EOF.  E.g., FileRd 
          advances to a new but empty buffer (lo=hi=cur=len), but TextRd leaves 
          lo=0, preserving the text for subsequent seek back inside it.  We want
          to update the Unget buffer only if seek advanced lo. *) 
@@ -321,7 +323,7 @@ PROCEDURE FastEOF (rd: T): BOOLEAN
 
 PROCEDURE UnGetChar(rd: T) RAISES {} =
   BEGIN
-    LOCK rd DO EVAL FastUnGetCharMulti (rd) END;
+    LOCK rd DO EVAL FastUnGetCharMulti (rd, 1) END;
     (* Just silently fail if can't do it.  This duplicates
        original behaviour. *) 
   END UnGetChar;
@@ -329,39 +331,51 @@ PROCEDURE UnGetChar(rd: T) RAISES {} =
 PROCEDURE FastUnGetChar(rd: T) RAISES {} =
 (* Like Rd.FastUnGetChar, but rd must be locked. *)
   BEGIN
-    EVAL FastUnGetCharMulti (rd) 
+    EVAL FastUnGetCharMulti (rd, 1) 
     (* Just silently fail if can't do it.  This duplicates
        original behaviour. *) 
   END FastUnGetChar;
 
-PROCEDURE UnGetCharMulti(rd: T): BOOLEAN (* Succeeded. *) =
+PROCEDURE UnGetCharMulti(rd: T; n: UnGetCount:= 1): CARDINAL (* Number actually ungotten.*)=
   BEGIN
-    LOCK rd DO RETURN FastUnGetCharMulti (rd) END;
+    LOCK rd DO RETURN FastUnGetCharMulti (rd, n) END;
   END UnGetCharMulti;
 
-PROCEDURE FastUnGetCharMulti(rd: T): BOOLEAN (* Succeeded. *) =
+PROCEDURE FastUnGetCharMulti(rd: T; n: UnGetCount:= 1)
+  : CARDINAL (* Number actually ungotten.*) =
+  VAR result, avail: CARDINAL; 
   BEGIN
     IF rd.closed THEN Die() END;
-    IF rd.cur > rd.lo THEN (* Can do this within buff. *)     
-      DEC(rd.cur);
-      RETURN TRUE 
-    ELSIF rd.Ungetbuff # NIL (* We have an unget buffer *) 
-          AND rd.Ungetbuff # rd.buff (* It is not the current buffer. *) 
-          AND rd.Ungethi > rd.Ungetlo (* It is not empty. *) 
-    THEN (* make the current buff waiting, *) 
-      rd.Waitingbuff := rd.buff;
-      rd.Waitingst := rd.st;
-      rd.Waitinglo := rd.lo;
-      rd.Waitinghi := rd.hi;
-      (* and back up to the unget buffer. *) 
-      rd.buff := rd.Ungetbuff;
-      rd.st := rd.Ungetst;
-      rd.lo := rd.Ungetlo;
-      rd.hi := rd.Ungethi;
-      DEC(rd.cur); 
-      RETURN TRUE
-    ELSE (* We don't have a stored byte to unget. *) 
-      RETURN FALSE; 
+    IF rd.cur - n >= rd.lo THEN (* Can do this within buff. *)     
+      DEC(rd.cur, n);
+      RETURN n
+    ELSE (* First Unget what we can within rd.buff. *) 
+      result := rd.cur - rd.lo; 
+      rd.cur := rd.lo;  
+      DEC (n, result);
+      (* Now look for saved ungettable characters. *) 
+      IF rd.Ungetbuff # NIL (* We have an unget buffer *) 
+            AND rd.Ungetbuff # rd.buff (* It is not the current buffer. *) 
+            AND rd.Ungethi > rd.Ungetlo (* It is not empty. *) 
+      THEN (* Make the current buff waiting, *) 
+        rd.Waitingbuff := rd.buff;
+        rd.Waitingst := rd.st;
+        rd.Waitinglo := rd.lo;
+        rd.Waitinghi := rd.hi;
+        (* and back up to the unget buffer. *) 
+        rd.buff := rd.Ungetbuff;
+        rd.st := rd.Ungetst;
+        rd.lo := rd.Ungetlo;
+        rd.hi := rd.Ungethi;
+        (* Unget within the now-current unget buffer. *) 
+        avail := rd.hi - rd.lo;
+        n := MIN (n, avail); 
+        DEC (rd.cur, n);
+        INC (result, n); 
+        RETURN result
+      ELSE (* We have no more stored bytes to unget. *) 
+        RETURN result
+      END 
     END 
   END FastUnGetCharMulti;
 

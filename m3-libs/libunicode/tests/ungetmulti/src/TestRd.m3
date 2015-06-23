@@ -305,19 +305,32 @@ MODULE TestRd EXPORTS Main
     ; POne ( Wch8 )
     ; POne ( Wch9 )
     ; POne ( Wch10 )
+    (* Read them, then unget them one at a time. *) 
     ; FOR RI := 1 TO LCt 
       DO LCh := Rd . GetChar ( GRd ) 
       END (* FOR *) 
     ; FOR RI := 1 TO LCt 
       DO 
-        LSucceeded := Rd . UnGetCharMulti ( GRd ) 
+        LSucceeded := Rd . UnGetCharMulti ( GRd ) = 1 
       ; IF NOT LSucceeded 
         THEN 
-          WL ( "UnGetCharMulti failed." ) 
+          WL ( "UnGetCharMulti(1) failed." ) 
         END (* IF *) 
       ; INC ( Counts [ KindTyp . UnGetCharMulti , LSucceeded ] )  
       ; INC ( Counts [ KindTyp . Total , LSucceeded ] )  
       END (* FOR *) 
+    (* Read them again, then unget them all at once. *) 
+    ; FOR RI := 1 TO LCt 
+      DO LCh := Rd . GetChar ( GRd ) 
+      END (* FOR *) 
+    ; LSucceeded := Rd . UnGetCharMulti ( GRd , LCt ) = LCt 
+    ; IF NOT LSucceeded 
+      THEN 
+        WL ( "UnGetCharMulti(" & Fmt . Int ( LCt ) &  ") failed." ) 
+      END (* IF *) 
+    ; INC ( Counts [ KindTyp . UnGetCharMulti , LSucceeded ] )  
+    ; INC ( Counts [ KindTyp . Total , LSucceeded ] )  
+
     ; Wr . Flush ( Stdio . stdout ) 
     END PostponeChars 
 
@@ -400,20 +413,35 @@ MODULE TestRd EXPORTS Main
     ; POneWide ( Wch8 )
     ; POneWide ( Wch9 )
     ; POneWide ( Wch10 )
+
+    (* Read them, then unget them one at a time. *) 
     ; FOR RI := 1 TO LCt (* Widechars. *)  
       DO LWch := Rd . GetWideChar ( GRd ) 
       END (* FOR *) 
     ; FOR RI := 1 TO LCt * 2 (* CHARs *) 
       DO 
-        LSucceeded := Rd . UnGetCharMulti ( GRd ) 
+        LSucceeded := Rd . UnGetCharMulti ( GRd ) = 1  
       ; IF NOT LSucceeded 
         THEN 
-          WL ( "UnGetCharMulti failed." ) 
+          WL ( "UnGetCharMulti(1) failed." ) 
         END (* IF *) 
       ; INC ( Counts [ KindTyp . UnGetCharMulti , LSucceeded ] )  
       ; INC ( Counts [ KindTyp . Total , LSucceeded ] )  
       END (* FOR *) 
-    ; Wr . Flush ( Stdio . stdout ) 
+
+    (* Read them again, then unget them all at once. *) 
+    ; FOR RI := 1 TO LCt (* Widechars. *)  
+      DO LWch := Rd . GetWideChar ( GRd ) 
+      END (* FOR *) 
+    ; LSucceeded := Rd . UnGetCharMulti ( GRd , LCt * 2 ) = LCt * 2  
+    ; IF NOT LSucceeded 
+      THEN 
+        WL ( "UnGetCharMulti(" & Fmt . Int ( LCt * 2 ) & ") failed." ) 
+      END (* IF *) 
+    ; INC ( Counts [ KindTyp . UnGetCharMulti , LSucceeded ] )  
+    ; INC ( Counts [ KindTyp . Total , LSucceeded ] )  
+ 
+   ; Wr . Flush ( Stdio . stdout ) 
     END PostponeWChars 
 
 ; PROCEDURE MakeWCRLFPostponed ( ) 
@@ -1405,7 +1433,7 @@ MODULE TestRd EXPORTS Main
       LToUnGetCt := MIN ( Ct , MIN ( GIndex , Rd . UnGetCapacity ) )  
     ; FOR RI := 1 TO LToUnGetCt 
       DO
-        LUgSucceeded := Rd . UnGetCharMulti ( GRd ) 
+        LUgSucceeded := Rd . UnGetCharMulti ( GRd ) = 1 
       ; IF LUgSucceeded 
         THEN
           DEC ( GIndex ) 
@@ -1419,7 +1447,7 @@ MODULE TestRd EXPORTS Main
         END (* IF *) 
       END (* FOR *) 
     (* This should be one too many: *) 
-    ; LUgSucceeded := Rd . UnGetCharMulti ( GRd ) 
+    ; LUgSucceeded := Rd . UnGetCharMulti ( GRd ) = 1 
     ; IF LUgSucceeded 
       THEN 
         LCh := Rd . GetChar ( GRd )

@@ -19,18 +19,19 @@ MODULE UnsafeUniRd
            while avoiding compiler-generated range check already known by the 
            algorithm to be infallible. *) 
 (* NOTE 2: When CHAR<:WIDECHAR, and Widechar=WIDECHAR, could remove unnecessary
-           ORD and VAL conversions.  (But maybe it is better to just leave
-           as-is. *) 
+           ORD and VAL conversions.  
+           (But maybe it is better to just leave as-is, to provide long-term
+           bootstrapping capability. *) 
 
-; CONST LFWch = VAL ( ORD ( W'\n' ) , Widechar ) 
-; CONST LFCh = '\n' 
-; CONST CRWch = VAL ( ORD ( W'\r' ) , Widechar ) 
-; CONST CRCh = '\r' 
-; CONST FFWch = VAL ( ORD ( W'\f' ) , Widechar ) 
-; CONST VTWch = VAL ( ORD ( W'\t' ) , Widechar ) 
+; CONST LFWch  = VAL ( ORD ( W'\n' ) , Widechar ) 
+; CONST LFCh   = '\n' 
+; CONST CRWch  = VAL ( ORD ( W'\r' ) , Widechar ) 
+; CONST CRCh   = '\r' 
+; CONST FFWch  = VAL ( ORD ( W'\f' ) , Widechar ) 
+; CONST VTWch  = VAL ( ORD ( W'\t' ) , Widechar ) 
 ; CONST NELWch = VAL ( ORD ( W'\x0085' ) , Widechar ) 
-; CONST LSWch = VAL ( ORD ( W'\x2028' ) , Widechar ) 
-; CONST PSWch = VAL ( ORD ( W'\x2029' ) , Widechar ) 
+; CONST LSWch  = VAL ( ORD ( W'\x2028' ) , Widechar ) 
+; CONST PSWch  = VAL ( ORD ( W'\x2029' ) , Widechar ) 
 (*2*)   
 
 (* EXPORTED: *) 
@@ -51,7 +52,7 @@ MODULE UnsafeUniRd
   *) 
   (* PRE: Stream and Stream.Source are locked. *) 
 
-  = VAR LSourceBytesReady , LCharsReady , LPostponedCt : CARDINAL 
+  = VAR LSourceBytesReady , LCharsReady : CARDINAL 
 
   ; BEGIN 
       IF Stream . MaxBytesPerChar = 0 
@@ -61,8 +62,7 @@ MODULE UnsafeUniRd
       ; LCharsReady 
           := ( LSourceBytesReady - 1 (* For EOF *) ) 
              DIV Stream . MaxBytesPerChar 
-      ; LPostponedCt := 0 
-      ; RETURN LCharsReady + LPostponedCt + 1 (* For EOF *)  
+      ; RETURN LCharsReady + 1 (* For EOF *)  
       END (* IF *) 
     END FastCharsReady 
 
@@ -74,39 +74,61 @@ MODULE UnsafeUniRd
   *) 
   (* PRE: Stream and Stream.Source are locked. *) 
   
-  = VAR LWch : Widechar
+  = VAR LStartSourceIndex : CARDINAL
+  ; VAR LWch : Widechar
 
   ; BEGIN 
-      IF UnsafeRd . FastEOF ( Stream . Source ) 
-      THEN RAISE Rd . EndOfFile 
-      ELSE (* Dispatch to appropriate encoding procedure. *) 
-        Stream . PrevSourceIndex := UnsafeRd . FastIndex ( Stream . Source ) 
-      ; LWch := Stream . DecWideChar ( Stream . Source ) 
-      ; INC ( Stream . Index ) 
-      ; RETURN LWch 
-      END (* IF *) 
+      LStartSourceIndex := UnsafeRd . FastIndex ( Stream . Source )
+    ; LWch := Stream . DecWideChar ( Stream . Source ) 
+            (* ^Allow EndOfFile, Failure, or Alerted to propagate out. *) 
+    ; INC ( Stream . Index ) 
+    ; Stream . CurSourceIndex := UnsafeRd . FastIndex ( Stream . Source ) 
+    ; Stream . UnGetByteCt := Stream . CurSourceIndex - LStartSourceIndex 
+    ; RETURN LWch 
     END FastGetWideChar 
 
 (* EXPORTED: *) 
-; PROCEDURE FastUnGetCodePoint ( Stream : UniRd . T ) : BOOLEAN (* Succeeded. *) 
+; PROCEDURE FastUnGetCodePoint ( Stream : UniRd . T ) : BOOLEAN (* Succeeded. *)
   (* Push back the last decoded code point read from Stream, pushing it back
      onto Stream.Source, in encoded form.  This is guaranteed to work only
      if the last operation on Stream was GetWideChar, GetChar, GetWideSub,
      or GetSub, or an UnsafeUniRd.Fast* version thereof.  Result FALSE means 
-     the operation did not happen, because of a violation of this condition.
+     the operation did not happen, because of a violation of this condition,
+     or because somebody has bypassed Stream and directly [un]gotten chars
+     from Stream.Source.
   *) 
   (* PRE: Stream and Stream.Source are locked. *) 
-  (* WARNING! Currently unimplemented.  A NOOP.  Always returns FALSE. *) 
 
-  = BEGIN 
-(* TODO: Implement this. *) 
-(* IMPLEMENTME: *) 
-      RETURN FALSE
+  = VAR LCurrentIndex : Word . T 
+
+  ; BEGIN
+      IF Stream . UnGetByteCt = 0 
+      THEN (* Not a place from whence to unget. *) 
+        RETURN FALSE 
+      END (* IF *) 
+    ; LCurrentIndex := UnsafeRd . FastIndex ( Stream . Source ) 
+    ; IF Stream . CurSourceIndex # LCurrentIndex  
+      THEN (* We are not at the index point following the most recent 
+              code-point-consuming operation. *) 
+        RETURN FALSE 
+      END (* IF *) 
+    ; IF UnsafeRd . FastUnGetCharMulti 
+           ( Stream . Source , Stream . UnGetByteCt ) 
+         = Stream . UnGetByteCt 
+      THEN 
+        Stream . CurSourceIndex 
+          := Stream . CurSourceIndex - Stream . UnGetByteCt  
+      ; Stream . UnGetByteCt := 0 
+      ; DEC ( Stream . Index ) 
+      ; RETURN TRUE
+      ELSE (* Too many ungotten characters in Stream.Source. *) 
+        RETURN FALSE
+      END (* IF *) 
     END FastUnGetCodePoint 
   
 (* TODO: Special-case for when the encoding allows to directly access the
-         Rd buffer (ISO8859_1 & CHAR or CM3WC and WIDECHAR) and avoid looping
-         through individual characters.  
+         Rd buffer (e.g., ISO8859_1 & CHAR) and avoid looping through 
+         individual characters.  
 *)  
 
 (* EXPORTED: *) 
@@ -121,33 +143,50 @@ MODULE UnsafeUniRd
   *)
   (* PRE: Stream and Stream.Source are locked. *) 
 
-  = VAR LI : CARDINAL 
-  ; VAR LLast : INTEGER 
+  = VAR LI : CARDINAL := 0 
+  ; VAR LNumber : CARDINAL := NUMBER ( ArrWch ) 
+  ; VAR LStartSourceIndex : CARDINAL := UnsafeRd . FastIndex ( Stream . Source )
+  ; VAR LPreSourceIndex : CARDINAL 
 
   ; BEGIN 
-      LLast := LAST ( ArrWch ) 
-    ; TRY (* EXCEPT *) 
-        LOOP 
-          IF LI > LLast OR UnsafeRd . FastEOF ( Stream . Source ) 
-          THEN 
-            INC ( Stream . Index , LI ) 
-          ; RETURN LI 
+      IF LNumber <= 0 THEN RETURN 0 END (* IF *) 
+    ; IF UnsafeRd . FastEOF ( Stream . Source ) THEN RETURN 0 END (* IF *) 
+      (* ^Allow Failure or Alerted to propagate out. *) 
+    ; <* FATAL EndOfFile *> (* Can't happen. *) 
+      BEGIN 
+        ArrWch [ LI ] := Stream . DecWideChar ( Stream . Source ) 
+                      (* ^Allow Failure or Alerted to propagate out. *) 
+      END (* Block *) 
+    ; TRY (* FINALLY *)
+        LOOP
+          INC ( LI ) 
+          (* INVARIANTs: - 0 < LI = number of code points decoded and stored. 
+                         - LStartSourceIndex is 1st byte index of most recently
+                           stored code point.
+          *) 
+        ; IF LI >= LNumber 
+             OR UnsafeRd . FastEOF ( Stream . Source ) 
+                (* ^Could raise Failure or Alerted. *) 
+          THEN (* We are done. *) 
+            EXIT  
           ELSE 
-            Stream . PrevSourceIndex := UnsafeRd . FastIndex ( Stream . Source )
-          ; <* FATAL EndOfFile *> (* Can't happen. *) BEGIN 
+            LPreSourceIndex := UnsafeRd . FastIndex ( Stream . Source )
+          ; <* FATAL EndOfFile *> (* Can't happen. *) 
+            BEGIN 
               ArrWch [ LI ] := Stream . DecWideChar ( Stream . Source ) 
-            END (* Block. *) 
-          ; INC ( LI ) 
+                            (* ^Could raise Failure or Alerted. *) 
+            END (* Block *) 
+          ; LStartSourceIndex := LPreSourceIndex 
+          (* And loop. *) 
           END (* IF *) 
         END (* LOOP *) 
-      EXCEPT (* From Rd.EOF or Stream.DecWideChar. *) 
-      Failure ( Arg ) 
-      => INC ( Stream . Index , LI ) 
-      ; RAISE Failure ( Arg ) 
-      | Alerted 
-      => INC ( Stream . Index , LI ) 
-      ; RAISE  Alerted 
-      END (* EXCEPT *) 
+      FINALLY (* For exceptions or normal returns. *) 
+        INC ( Stream . Index , LI ) 
+      ; Stream . CurSourceIndex := UnsafeRd . FastIndex ( Stream . Source )
+      ; Stream . UnGetByteCt := Stream . CurSourceIndex - LStartSourceIndex 
+      END (* FINALLY *) 
+    (* Normal return: *) 
+    ; RETURN LI 
     END FastGetWideSub 
 
 (* EXPORTED: *) 
@@ -165,47 +204,67 @@ MODULE UnsafeUniRd
   *)  
   (* PRE: Stream and Stream.Source are locked. *) 
 
-  = VAR LI : CARDINAL 
-  ; VAR LLast : INTEGER 
+  = VAR LI : CARDINAL := 0 
+  ; VAR LNumber : CARDINAL := NUMBER ( ArrCh )  
+  ; VAR LStartSourceIndex : CARDINAL := UnsafeRd . FastIndex ( Stream . Source )
+  ; VAR LPreSourceIndex : CARDINAL 
   ; VAR LWch : Widechar 
 
   ; BEGIN    
-      LLast := LAST ( ArrCh ) 
-    ; TRY (* EXCEPT *)
-        LOOP 
-          IF LI > LLast OR UnsafeRd . FastEOF ( Stream . Source ) 
-          THEN 
-            INC ( Stream . Index , LI ) 
-          ; RETURN LI 
-          ELSE 
-            Stream . PrevSourceIndex := UnsafeRd . FastIndex ( Stream . Source )
-          ; <* FATAL EndOfFile *> (* Can't happen. *) BEGIN 
-              LWch := Stream . DecWideChar ( Stream . Source ) 
-            END (* Block. *) 
-          ; IF ORD ( LWch ) > ORD ( LAST ( CHAR ) ) 
+      IF LNumber <= 0 THEN RETURN 0 END (* IF *) 
+    ; IF UnsafeRd . FastEOF ( Stream . Source ) THEN RETURN 0 END (* IF *) 
+      (* ^Allow Failure or Alerted to propagate out. *) 
+    ; <* FATAL EndOfFile *> (* Can't happen. *) 
+      BEGIN 
+        LWch := Stream . DecWideChar ( Stream . Source ) 
+             (* ^Allow Failure or Alerted to propagate out. *) 
+      END (* Block *) 
+    ; TRY (* FINALLY *)
+        LOOP
+          (* INVARIANTs: - LI = number of code points stored. 
+                         - LI+1 = number of code points decoded. 
+                         - A code point has been decoded and is in LWch. 
+                         - LStartSourceIndex is its 1st encoded byte index.
+          *) 
+          IF ORD ( LWch ) > ORD ( LAST ( CHAR ) ) 
 (*2*) 
-            THEN 
-              INC ( Stream . Index , LI + 1 ) 
-            ; RAISE Range ( UniRd . RangeInfo { LWch , LI } )
-            ELSE 
-              ArrCh [ LI ] := VAL ( ORD ( LWch ) , CHAR ) 
+          THEN (* Out-of-range of CHAR. *)  
+            RAISE Range ( UniRd . RangeInfo { LWch , LI } )
+          ELSE 
+            ArrCh [ LI ] := VAL ( ORD ( LWch ) , CHAR ) 
 (*1*) 
 (*2*) 
-            ; INC ( LI ) 
+          ; INC ( LI ) 
+          (* INVARIANT: LI is the number of code points decoded and stored. *) 
+          ; IF LI >= LNumber 
+               OR UnsafeRd . FastEOF ( Stream . Source ) 
+               (* ^Could raise Failure or Alerted. *) 
+            THEN (* We are done. *) 
+              EXIT 
+            ELSE 
+              LPreSourceIndex := UnsafeRd . FastIndex ( Stream . Source )
+            ; <* FATAL EndOfFile *> (* Can't happen. *) 
+              BEGIN 
+                LWch := Stream . DecWideChar ( Stream . Source ) 
+                     (* ^Could raise Failure or Alerted. *) 
+              END (* Block *) 
+            ; LStartSourceIndex := LPreSourceIndex 
+            (* And loop. *) 
             END (* IF *) 
-          END (* IF *) 
+          END (* IF *)  
         END (* LOOP *) 
-      EXCEPT (* From Rd.EOF or Stream.DecWideChar. *) 
-      Failure ( Arg ) 
-      => INC ( Stream . Index , LI ) 
-      ; RAISE Failure ( Arg ) 
-      | Alerted 
-      => INC ( Stream . Index , LI ) 
-      ; RAISE  Alerted 
-      END (* EXCEPT *) 
+      FINALLY (* For exceptions or normal returns. *) 
+        INC ( Stream . Index , LI ) 
+      ; Stream . CurSourceIndex := UnsafeRd . FastIndex ( Stream . Source )
+      ; Stream . UnGetByteCt := Stream . CurSourceIndex - LStartSourceIndex 
+      END (* FINALLY *) 
+    (* Normal return: *) 
+    ; RETURN LI 
     END FastGetSub 
 
-; PROCEDURE UnGetStreamChars ( Stream : UniRd . T ; BackToIndex : CARDINAL ) 
+; <*INLINE*> 
+  PROCEDURE UnGetSourceBackTo ( Stream : UniRd . T ; BackToIndex : CARDINAL ) 
+    : BOOLEAN (* Success. *) 
 
   (* We could have up to two Unicode Code points, CR and LF.  If the encoding is
      UTF-32, this would be 8 CHARS we will unget to Stream . Source, and the 
@@ -216,32 +275,13 @@ MODULE UnsafeUniRd
      ungetting that way. *) 
 
   = VAR LCt : [ 1 .. 8 ]
+  ; VAR LActual : CARDINAL 
 
   ; BEGIN 
       LCt := UnsafeRd . FastIndex ( Stream . Source ) - BackToIndex 
-    (* Let's do a hard-coded, fixed-size binary search for speed. *) 
-    ; IF LCt >= 5 
-      THEN 
-        <* ASSERT UnsafeRd . FastUnGetCharMulti ( Stream . Source ) *> 
-        <* ASSERT UnsafeRd . FastUnGetCharMulti ( Stream . Source ) *> 
-        <* ASSERT UnsafeRd . FastUnGetCharMulti ( Stream . Source ) *> 
-        <* ASSERT UnsafeRd . FastUnGetCharMulti ( Stream . Source ) *> 
-        DEC ( LCt , 4 ) 
-      END (* IF *) 
-    ; IF LCt >= 3 
-      THEN 
-        <* ASSERT UnsafeRd . FastUnGetCharMulti ( Stream . Source ) *> 
-        <* ASSERT UnsafeRd . FastUnGetCharMulti ( Stream . Source ) *> 
-        DEC ( LCt , 2 ) 
-      END (* IF *) 
-    ; IF LCt = 2 
-      THEN 
-        <* ASSERT UnsafeRd . FastUnGetCharMulti ( Stream . Source ) *> 
-        <* ASSERT UnsafeRd . FastUnGetCharMulti ( Stream . Source ) *> 
-      ELSE 
-        <* ASSERT UnsafeRd . FastUnGetCharMulti ( Stream . Source ) *> 
-      END (* IF *) 
-    END UnGetStreamChars 
+    ; LActual := UnsafeRd . FastUnGetCharMulti ( Stream . Source , LCt ) 
+    ; RETURN LActual = LCt  
+    END UnGetSourceBackTo 
 
 (* EXPORTED *) 
 ; PROCEDURE FastGetWideSubLine 
@@ -249,11 +289,12 @@ MODULE UnsafeUniRd
   : CARDINAL
   RAISES { Failure , Alerted } 
   (* Decode and consume characters from Source(Stream), using Enc(Stream), 
-     storing them into ArrCh, until Source(Stream) is at end-of-file, or ArrCh
-     is filled, or an end-of-line sequence has been read and stored.  
+     storing them into ArrWch, until Source(Stream) is at end-of-file, or 
+     ArrWch is filled, or an end-of-line sequence has been read.  
      Return the actual number of decoded characters stored into ArrWch.  
      Include any end-of-line sequence in the returned count and store it in
-     ArrWch. 
+     ArrWch, except if only one character of a two-character end-of-line 
+     sequence would fit in ArrWch, leave both unstored and unconsumed. 
 
      Consistent with the Unicode standard, an end-of-line consists of any of:
 
@@ -266,119 +307,157 @@ MODULE UnsafeUniRd
        LS =  W'\x2028'  
        PS =  W'\x2029'  
 
-     If only one character of a two-character end-of-line sequence would fit 
-     in ArrWch, leave both unstored and unconsumed. 
   *) 
   (* PRE: Stream and Stream.Source are locked. *) 
 
-  = VAR LI : CARDINAL 
-  ; VAR LLast : INTEGER 
-  ; VAR LPrevSourceIndex1 , LPrevSourceIndex2 : CARDINAL 
+  = VAR LI : CARDINAL := 0  
+  ; VAR LNumber : CARDINAL := NUMBER ( ArrWch ) 
+  ; VAR LStartSourceIndex : CARDINAL := UnsafeRd . FastIndex ( Stream . Source )
+  ; VAR LPreSourceIndex0 , LPreSourceIndex1 , LPreSourceIndex2 : CARDINAL  
   ; VAR LWch1 , LWch2 : Widechar 
+  ; VAR LGotWch2 : BOOLEAN := FALSE 
 
   ; BEGIN 
-      LLast := LAST ( ArrWch ) 
-    ; IF LLast < 0 (* Empty ArrWch, no space for anything. *)  
-      THEN RETURN 0 
-      ELSE 
-        LI := 0 
-      ; TRY (* EXCEPT *) 
-        (* ASSERT: There is space for one character at ArrWch[0]. *) 
-          IF UnsafeRd . FastEOF ( Stream . Source ) 
-          THEN RETURN 0
-          ELSE (* Can and must read a character. *) 
-            LPrevSourceIndex1 := UnsafeRd . FastIndex ( Stream . Source )
-          ; <* FATAL EndOfFile *> (* Can't happen. *) BEGIN 
-              LWch1 := Stream . DecWideChar ( Stream . Source ) 
-            END (* Block. *) 
+      IF LNumber <= 0 THEN RETURN 0 END (* IF *) 
+    (* ASSERT: There is space for one character at ArrWch[0]. *) 
+    ; IF UnsafeRd . FastEOF ( Stream . Source ) THEN RETURN 0 END (* IF *) 
+      (* ^Allow Failure or Alerted to propagate out. *) 
+    ; LPreSourceIndex0 := LStartSourceIndex (* Dead. *) 
+    ; <* FATAL EndOfFile *> (* Can't happen. *) 
+      BEGIN 
+        LWch1 := Stream . DecWideChar ( Stream . Source ) 
+              (* ^Allow Failure or Alerted to propagate out. *) 
+      END (* Block. *) 
+    ; IF LNumber = 1 AND ORD ( LWch1 ) = ORD ( CRWch )
+(*2*)
+      THEN (* Handle this case specially, to avoid altering 
+              Stream . CurCurSourceIndex and Stream . UnGetByteCt, when no
+              net consumption occurs. *) 
+        LPreSourceIndex2 := UnsafeRd . FastIndex ( Stream . Source ) 
+      ; TRY 
+          IF NOT UnsafeRd . FastEOF ( Stream . Source ) 
+              (* ^Allow Failure or Alerted to propagate out. *) 
+          THEN 
+            <* FATAL EndOfFile *> (* Can't happen. *) 
+            BEGIN 
+              LWch2 := Stream . DecWideChar ( Stream . Source ) 
+                    (* ^Allow Failure or Alerted to propagate out. *) 
+            END (* Block. *)
+          ; LGotWch2 := TRUE 
           END (* IF *) 
-        (* INVARIANT: LWch1 contains the next char to consider storing. 
-                      LPrevSourceIndex1 is its starting CHAR index in Stream.Source.
-                      There is space for one character at ArrWch[LI]. *) 
-        ; LOOP 
-            IF ORD ( LWch1 ) = ORD ( LFWch ) 
-               OR ORD ( LWch1 ) = ORD ( NELWch ) 
-               OR ORD ( LWch1 ) = ORD ( VTWch ) 
-               OR ORD ( LWch1 ) = ORD ( FFWch ) 
-               OR ORD ( LWch1 ) = ORD ( PSWch ) 
-               OR ORD ( LWch1 ) = ORD ( LSWch ) 
+        FINALLY 
+          WITH W = UnGetSourceBackTo ( Stream , LPreSourceIndex2 )
+          DO <* ASSERT W *> 
+          END (* WITH *)
+        ; IF LGotWch2 AND ORD ( LWch2 ) = ORD ( LFWch )
 (*2*)
-            THEN (* Unambiguously single-char new-line.  Store and return. *)  
-              Stream . PrevSourceIndex := LPrevSourceIndex1 
-            ; ArrWch [ LI ] := LWch1 
-            ; INC ( LI ) 
-            ; INC ( Stream . Index , LI ) 
-            ; RETURN LI 
-            ELSIF ORD ( LWch1 ) = ORD ( CRWch ) 
+          THEN (* CR & LF, won't both fit. *) 
+            WITH W = UnGetSourceBackTo ( Stream , LStartSourceIndex )
+            DO <* ASSERT W *> 
+            END (* WITH *)
+          (* LI = 0.  Will RETURN with no net consumption and no changes to 
+             Stream . CurSourceIndex or Stream . UnGetByteCt. *) 
+          ELSE 
+            ArrWch [ 0 ] := CRWch 
+          ; LI := 1 
+          ; INC ( Stream . Index ) 
+          ; Stream . CurSourceIndex := UnsafeRd . FastIndex ( Stream . Source ) 
+          ; Stream . UnGetByteCt := Stream . CurSourceIndex - LStartSourceIndex
+          END (* IF *) 
+        END (* FINALLY *) 
+      ; RETURN LI 
+      END (* IF *) 
+    ; TRY (* FINALLY *) 
+        LOOP 
+      (* INVARIANTs: - LWch1 contains the next code point to consider storing. 
+                     - LStartSourceIndex is its 1st encoded byte index.
+                     - LPreSourceIndex0 is the 1st encoded byte index
+                       of the previous delivered code point, or 
+                       LStartSourceIndes if none.
+                     - There is space for a Widechar at ArrWch[LI]. *) 
+          IF ORD ( LWch1 ) = ORD ( LFWch ) 
+             OR ORD ( LWch1 ) = ORD ( NELWch ) 
+             OR ORD ( LWch1 ) = ORD ( VTWch ) 
+             OR ORD ( LWch1 ) = ORD ( FFWch ) 
+             OR ORD ( LWch1 ) = ORD ( PSWch ) 
+             OR ORD ( LWch1 ) = ORD ( LSWch ) 
 (*2*)
-            THEN (* CR.  Could be start of CRLF. *) 
-              IF UnsafeRd . FastEOF ( Stream . Source ) 
-              THEN (* CR alone.  Store and return. *) 
-                Stream . PrevSourceIndex := LPrevSourceIndex1 
-              ; ArrWch [ LI ] := LWch1 
-              ; INC ( LI ) 
-              ; INC ( Stream . Index , LI ) 
-              ; RETURN LI 
-              ELSE (* Another code point follows the CR. *) 
-                LPrevSourceIndex2 
-                  := UnsafeRd . FastIndex ( Stream . Source )
-              ; <* FATAL EndOfFile *> (* Can't happen. *) BEGIN 
-                  LWch2 := Stream . DecWideChar ( Stream . Source ) 
-                END (* Block. *) 
-              ; IF ORD ( LWch2 ) = ORD ( LFWch ) 
+          THEN (* Unambiguously single-char new-line.  Store and return. *)  
+            ArrWch [ LI ] := LWch1 
+          ; INC ( LI ) 
+          ; EXIT 
+          ELSIF ORD ( LWch1 ) = ORD ( CRWch ) 
 (*2*)
-                THEN (* CR and LF. *) 
-                  IF LI < LLast 
-                  THEN (* Room for both CR and LF. *)  
-                    Stream . PrevSourceIndex := LPrevSourceIndex2 
-                    (* ^A subsequent UnGetWideChar will unget only the LF. *) 
-                  ; ArrWch [ LI ] := LWch1 
-                  ; INC ( LI ) 
-                  ; ArrWch [ LI ] := LWch2 
-                  ; INC ( LI ) 
-                  ; INC ( Stream . Index , LI ) 
-                  ; RETURN LI 
-                  ELSE (* They won't both fit.  Unget both. *)
-                    UnGetStreamChars ( Stream , LPrevSourceIndex1 ) 
-                  ; INC ( Stream . Index , LI ) 
-                  ; RETURN LI 
-                  END (* IF *) 
-                ELSE (* CR & non_LF.  Store CR and unget LWch2. *) 
-                  Stream . PrevSourceIndex := LPrevSourceIndex1 
-                ; ArrWch [ LI ] := LWch1 
-                ; INC ( LI ) 
-                ; UnGetStreamChars ( Stream , LPrevSourceIndex2 ) 
-                ; INC ( Stream . Index , LI ) 
-                ; RETURN LI 
-                END (* IF *) 
-              END (* IF *) 
-            ELSE (* No kind of new-line at all. *) 
+          THEN (* CR.  Could be start of CRLF. *) 
+            IF UnsafeRd . FastEOF ( Stream . Source ) 
+            (* ^Which could raise Failure or Alerted. *) 
+            THEN (* CR alone at EOF.  Store and return. *) 
               ArrWch [ LI ] := LWch1 
             ; INC ( LI ) 
-            ; IF LI > LLast OR UnsafeRd . FastEOF ( Stream . Source ) 
-              THEN (* We are done W/O a new line. *)  
-                Stream . PrevSourceIndex := LPrevSourceIndex1 
-              ; INC ( Stream . Index , LI ) 
-              ; RETURN LI 
-              ELSE (* Time to read another code point. *) 
-                LPrevSourceIndex1 
-                  := UnsafeRd . FastIndex ( Stream . Source )
-              ; <* FATAL EndOfFile *> (* Can't happen. *) BEGIN 
-                  LWch1 := Stream . DecWideChar ( Stream . Source ) 
-                END (* Block. *) 
-              (* And loop. *) 
+            ; EXIT 
+            ELSE (* Another code point follows the CR. *) 
+              LPreSourceIndex2 := UnsafeRd . FastIndex ( Stream . Source )
+           (* ^Start of following code point, if we get one. *) 
+            ; <* FATAL EndOfFile *> (* Can't happen. *) 
+              BEGIN 
+                LWch2 := Stream . DecWideChar ( Stream . Source ) 
+                      (* ^Which could raise Failure or Alerted. *) 
+              END (* Block. *) 
+            ; IF ORD ( LWch2 ) = ORD ( LFWch ) 
+(*2*)
+              THEN (* CR and LF. *) 
+                IF LI + 1 < LNumber 
+                THEN (* Room for both CR and LF. Store them and return. *)  
+                  ArrWch [ LI ] := CRWch 
+                ; INC ( LI ) 
+                ; ArrWch [ LI ] := LFWch 
+                ; INC ( LI ) 
+                ; LStartSourceIndex := LPreSourceIndex2 
+              (* ^A subsequent UnGetWideChar will unget only the LF. *) 
+                ; EXIT 
+                ELSE (* They won't both fit.  Unget both and return. *)
+                  WITH W = UnGetSourceBackTo ( Stream , LStartSourceIndex ) 
+                  DO <* ASSERT W *> 
+                  END (* WITH *)
+                ; LStartSourceIndex := LPreSourceIndex0 
+                ; EXIT 
+                END (* IF *) 
+              ELSE (* CR & non-LF.  Store CR and unget LWch2. *) 
+                ArrWch [ LI ] := CRWch 
+              ; INC ( LI ) 
+              ; WITH W = UnGetSourceBackTo ( Stream , LPreSourceIndex2 ) 
+                DO <* ASSERT W *> 
+                END (* WITH *)
+              ; EXIT 
               END (* IF *) 
             END (* IF *) 
-          END (* LOOP *) 
-        EXCEPT (* From Rd.EOF or Stream.DecWideChar. *) 
-        Failure ( Arg ) 
-        => INC ( Stream . Index , LI ) 
-        ; RAISE Failure ( Arg ) 
-        | Alerted  
-        => INC ( Stream . Index , LI ) 
-        ; RAISE  Alerted 
-        END (* EXCEPT *) 
-      END (* IF *) 
+          ELSE (* No kind of new-line at all. *) 
+            ArrWch [ LI ] := LWch1 
+          ; INC ( LI ) 
+          ; IF LI >= LNumber 
+               OR UnsafeRd . FastEOF ( Stream . Source ) 
+               (* ^Could raise Failure or Alerted. *) 
+            THEN (* We are done W/O a new line. *)  
+              EXIT 
+            ELSE (* Time to read another code point. *) 
+              LPreSourceIndex0 := LPreSourceIndex1 
+            ; LPreSourceIndex1 := UnsafeRd . FastIndex ( Stream . Source )
+            ; <* FATAL EndOfFile *> (* Can't happen. *) 
+              BEGIN 
+                LWch1 := Stream . DecWideChar ( Stream . Source ) 
+                      (* ^Could raise Failure or Alerted. *) 
+              END (* Block. *) 
+            ; LStartSourceIndex := LPreSourceIndex1 
+            (* And loop. *) 
+            END (* IF *) 
+          END (* IF *) 
+        END (* LOOP *) 
+      FINALLY (* For exceptions or normal returns. *)
+        INC ( Stream . Index , LI ) 
+      ; Stream . CurSourceIndex := UnsafeRd . FastIndex ( Stream . Source )
+      ; Stream . UnGetByteCt := Stream . CurSourceIndex - LStartSourceIndex 
+      END (* FINALLY *) 
+    ; RETURN LI 
     END FastGetWideSubLine 
 
 (* EXPORTED *) 
@@ -386,133 +465,165 @@ MODULE UnsafeUniRd
     ( Stream : UniRd . T ; VAR (*OUT*) ArrCh : ARRAY OF CHAR ) 
   : CARDINAL
   RAISES { Range , Failure , Alerted } 
-  (* Like FastGetWideSubLine, but return the characters in an ARRAY OF CHAR,
-     raising Range({Wch,Loc}) if an otherwise to-be-returned character 
-     is not in CHAR, where Wch is the out-of-range character,
-     and Loc is the number of characters stored.  
+  (* Like FastGetWideSubLine, but return stored characters in an ARRAY OF CHAR.
+     If an otherwise to-be-returned character is not in CHAR, consume but do
+     not store it and raise Range(Wch,N), where Wch is the out-of-range 
+     character, and N is the number of characters stored.  
   *) 
   (* PRE: Stream and Stream.Source are locked. *) 
 
-  = VAR LI : CARDINAL 
-  ; VAR LLast : INTEGER 
+  = VAR LI : CARDINAL := 0  
+  ; VAR LNumber : CARDINAL := NUMBER ( ArrCh ) 
+  ; VAR LStartSourceIndex : CARDINAL := UnsafeRd . FastIndex ( Stream . Source )
+  ; VAR LPreSourceIndex0 , LPreSourceIndex1 , LPreSourceIndex2 : CARDINAL  
   ; VAR LWch1 , LWch2 : Widechar 
-  ; VAR LPrevSourceIndex1 , LPrevSourceIndex2 : CARDINAL 
+  ; VAR LGotWch2 : BOOLEAN := FALSE 
 
   ; BEGIN 
-      LLast := LAST ( ArrCh ) 
-    ; IF LLast < 0 (* Empty ArrCh, no space for anything. *)  
-      THEN RETURN 0 
-      ELSE 
-        LI := 0 
-      ; TRY (* EXCEPT *) 
-          IF UnsafeRd . FastEOF ( Stream . Source ) 
-          THEN RETURN 0 
-          ELSE (* Can and must read a character. *) 
-            LPrevSourceIndex1 := UnsafeRd . FastIndex ( Stream . Source )
-          ; <* FATAL EndOfFile *> (* Can't happen. *) BEGIN 
-              LWch1 := Stream . DecWideChar ( Stream . Source ) 
-            END (* Block. *) 
+      IF LNumber <= 0 THEN RETURN 0 END (* IF *) 
+    (* ASSERT: There is space for one CHAR at ArrCh[0]. *) 
+    ; IF UnsafeRd . FastEOF ( Stream . Source ) THEN RETURN 0 END (* IF *) 
+      (* ^Allow Failure or Alerted to propagate out. *) 
+    ; LPreSourceIndex0 := LStartSourceIndex (* Dead. *) 
+    ; <* FATAL EndOfFile *> (* Can't happen. *) 
+      BEGIN 
+        LWch1 := Stream . DecWideChar ( Stream . Source ) 
+              (* ^Allow Failure or Alerted to propagate out. *) 
+      END (* Block. *) 
+    ; IF LNumber = 1 AND ORD ( LWch1 ) = ORD ( CRWch )
+(*2*)
+      THEN (* Handle this case specially, to avoid altering 
+              Stream . CurCurSourceIndex and Stream . UnGetByteCt, when no
+              net consumption occurs. *) 
+        LPreSourceIndex2 := UnsafeRd . FastIndex ( Stream . Source ) 
+      ; TRY 
+          IF NOT UnsafeRd . FastEOF ( Stream . Source ) 
+              (* ^Allow Failure or Alerted to propagate out. *) 
+          THEN 
+            <* FATAL EndOfFile *> (* Can't happen. *) 
+            BEGIN 
+              LWch2 := Stream . DecWideChar ( Stream . Source ) 
+                    (* ^Allow Failure or Alerted to propagate out. *) 
+            END (* Block. *)
+          ; LGotWch2 := TRUE 
           END (* IF *) 
-        (* INVARIANT: LWch1 contains the next char to consider storing.
-                      LPrevSourceIndex1 is its starting CHAR index in Stream.Source.
-                      There is space for one character at ArrWch[LI]. *) 
-        ; LOOP 
-            IF ORD ( LWch1 ) = ORD ( LFWch ) 
-               OR ORD ( LWch1 ) = ORD ( FFWch ) 
-               OR ORD ( LWch1 ) = ORD ( VTWch ) 
-               OR ORD ( LWch1 ) = ORD ( NELWch ) 
+        FINALLY 
+          WITH W = UnGetSourceBackTo ( Stream , LPreSourceIndex2 )
+          DO <* ASSERT W *> 
+          END (* WITH *)
+        ; IF LGotWch2 AND ORD ( LWch2 ) = ORD ( LFWch )
 (*2*)
-            THEN (* Unambiguously single-char new-line and it's in CHAR.  
-                    Store and return. *)  
-              Stream . PrevSourceIndex := LPrevSourceIndex1 
-            ; ArrCh [ LI ] := VAL ( ORD ( LWch1 ) , CHAR ) 
+          THEN (* CR & LF, won't both fit. *) 
+            WITH W = UnGetSourceBackTo ( Stream , LStartSourceIndex )
+            DO <* ASSERT W *> 
+            END (* WITH *)
+          (* LI = 0.  Will RETURN with no net consumption and no changes to 
+             Stream . CurSourceIndex or Stream . UnGetByteCt. *) 
+          ELSE 
+            ArrCh [ 0 ] := CRCh 
+          ; LI := 1 
+          ; INC ( Stream . Index ) 
+          ; Stream . CurSourceIndex := UnsafeRd . FastIndex ( Stream . Source ) 
+          ; Stream . UnGetByteCt := Stream . CurSourceIndex - LStartSourceIndex
+          END (* IF *) 
+        END (* FINALLY *) 
+      ; RETURN LI 
+      END (* IF *) 
+    ; TRY (* FINALLY *) 
+        LOOP 
+      (* INVARIANTs: - LWch1 contains the next code point to consider storing. 
+                     - LStartSourceIndex is its 1st encoded byte index.
+                     - LPreSourceIndex0 is the 1st encoded byte index
+                       of the previous delivered code point, or 
+                       LStartSourceIndes if none.
+                     - There is space for a CHAR at ArrCh[LI]. *) 
+          IF ORD ( LWch1 ) > ORD ( LAST ( CHAR ) ) 
+          THEN 
+            RAISE Range ( UniRd . RangeInfo { LWch1 , LI } ) 
+          ELSIF ORD ( LWch1 ) = ORD ( LFWch ) 
+                OR ORD ( LWch1 ) = ORD ( NELWch ) 
+                OR ORD ( LWch1 ) = ORD ( VTWch ) 
+                OR ORD ( LWch1 ) = ORD ( FFWch ) 
+(*2*)
+          THEN (* Unambiguously single-char new-line.  Store and return. *)  
+            ArrCh [LI ] := VAL ( ORD ( LWch1 ) , CHAR ) 
+(*1*)
+          ; INC ( LI ) 
+          ; EXIT 
+          ELSIF ORD ( LWch1 ) = ORD ( CRWch ) 
+(*2*)
+          THEN (* CR.  Could be start of CRLF. *) 
+            IF UnsafeRd . FastEOF ( Stream . Source ) 
+            (* ^Which could raise Failure or Alerted. *) 
+            THEN (* CR alone at EOF.  Store and return. *) 
+              ArrCh [LI ] := VAL ( ORD ( LWch1 ) , CHAR ) 
+(*1*)
             ; INC ( LI ) 
-            ; INC ( Stream . Index , LI ) 
-            ; RETURN LI 
-            ELSIF ORD ( LWch1 ) = ORD ( PSWch ) 
-                  OR ORD ( LWch1 ) = ORD ( LSWch ) 
+            ; EXIT 
+            ELSE (* Another code point follows the CR. *) 
+              LPreSourceIndex2 := UnsafeRd . FastIndex ( Stream . Source )
+            ; <* FATAL EndOfFile *> (* Can't happen. *) 
+              BEGIN 
+                LWch2 := Stream . DecWideChar ( Stream . Source ) 
+                      (* ^Which could raise Failure or Alerted. *) 
+              END (* Block. *) 
+            ; IF ORD ( LWch2 ) = ORD ( LFWch ) 
 (*2*)
-            THEN (* Single-char new-line, but not in CHAR. *)  
-(* CHECK: Index, PrevSourceIndex *)
-              INC ( Stream . Index , LI + 1 ) 
-            ; RAISE Range ( UniRd . RangeInfo { LWch1 , LI } )
-            ELSIF ORD ( LWch1 ) = ORD ( CRWch ) 
-(*2*) 
-            THEN (* CR.  Could be start of CRLF. *) 
-              IF UnsafeRd . FastEOF ( Stream . Source ) 
-              THEN (* CR alone.  Store and return. *) 
-                Stream . PrevSourceIndex := LPrevSourceIndex1 
-              ; ArrCh [ LI ] := CRCh  
-              ; INC ( LI ) 
-              ; INC ( Stream . Index , LI ) 
-              ; RETURN LI 
-              ELSE (* Another code point follows the CR. *) 
-                LPrevSourceIndex2 := UnsafeRd . FastIndex ( Stream . Source )
-              ; <* FATAL EndOfFile *> (* Can't happen. *) BEGIN 
-                  LWch2 := Stream . DecWideChar ( Stream . Source ) 
-                END (* Block. *) 
-              ; IF ORD ( LWch2 ) = ORD ( LFWch ) 
-(*2*)
-                THEN (* CR and LF. *) 
-                  IF LI < LLast 
-                  THEN (* Room for both CR and LF. *)  
-                    Stream . PrevSourceIndex := LPrevSourceIndex2 
-                    (* ^A subsequent UnGetWideChar will unget only the LF. *) 
-                  ; ArrCh [ LI ] := CRCh 
-                  ; INC ( LI ) 
-                  ; ArrCh [ LI ] := LFCh  
-                  ; INC ( LI ) 
-                  ; INC ( Stream . Index , LI ) 
-                  ; RETURN LI 
-                  ELSE (* They won't both fit.  Unget both. *)
-                    UnGetStreamChars ( Stream , LPrevSourceIndex1 )  
-                  ; INC ( Stream . Index , LI ) 
-                  ; RETURN LI 
-                  END (* IF *) 
-                ELSE (* CR & non_LF.  Store CR and unget LWch2. *) 
-                  Stream . PrevSourceIndex := LPrevSourceIndex1 
-                ; ArrCh [ LI ] := CRCh  
+              THEN (* CR and LF. *) 
+                IF LI + 1 < LNumber 
+                THEN (* Room for both CR and LF. Store them and return. *)  
+                  ArrCh [LI ] := CRCh 
                 ; INC ( LI ) 
-                ; UnGetStreamChars ( Stream , LPrevSourceIndex2 )  
-                ; INC ( Stream . Index , LI ) 
-                ; RETURN LI 
+                ; ArrCh [ LI ] := LFCh  
+                ; INC ( LI ) 
+                ; LStartSourceIndex := LPreSourceIndex2 
+              (* ^A subsequent UnGetWideChar will unget only the LF. *) 
+                ; EXIT 
+                ELSE (* They won't both fit.  Unget both and return. *)
+                  WITH W = UnGetSourceBackTo ( Stream , LStartSourceIndex ) 
+                  DO <* ASSERT W *> 
+                  END (* WITH *)
+                ; LStartSourceIndex := LPreSourceIndex0 
+                ; EXIT 
                 END (* IF *) 
-              END (* IF *) 
-            ELSE (* No kind of new-line at all. *) 
-              IF ORD ( LWch1 ) > ORD ( LAST ( CHAR ) ) 
-(*2*) 
-              THEN 
-                INC ( Stream . Index , LI + 1 ) 
-              ; RAISE Range ( UniRd . RangeInfo { LWch1 , LI } )
-              ELSE 
-                ArrCh [ LI ] := VAL ( ORD ( LWch1 ) , CHAR ) 
-(*1*) 
-(*2*) 
+              ELSE (* CR & non-LF.  Store CR and unget LWch2. *) 
+                ArrCh [LI ] := CRCh
+(*1*)
               ; INC ( LI ) 
-              ; IF LI > LLast OR UnsafeRd . FastEOF ( Stream . Source ) 
-                THEN (* We are done W/O a new line. *)  
-                  Stream . PrevSourceIndex := LPrevSourceIndex1 
-                ; INC ( Stream . Index , LI ) 
-                ; RETURN LI 
-                ELSE (* Time to read another code point. *) 
-                  LPrevSourceIndex1 := UnsafeRd . FastIndex ( Stream . Source )
-                ; <* FATAL EndOfFile *> (* Can't happen. *) BEGIN 
-                    LWch1 := Stream . DecWideChar ( Stream . Source ) 
-                  END (* Block. *) 
-                (* And loop. *) 
-                END (* IF *) 
+              ; WITH W = UnGetSourceBackTo ( Stream , LPreSourceIndex2 ) 
+                DO <* ASSERT W *> 
+                END (* WITH *)
+              ; EXIT 
               END (* IF *) 
             END (* IF *) 
-          END (* LOOP *) 
-        EXCEPT (* From Rd.EOF or Stream.DecWideChar. *) 
-        Failure ( Arg ) 
-        => INC ( Stream . Index , LI ) 
-        ; RAISE Failure ( Arg ) 
-        | Alerted 
-        => INC ( Stream . Index , LI ) 
-        ; RAISE  Alerted 
-        END (* EXCEPT *) 
-      END (* IF *) 
+          ELSE (* No kind of new-line at all. *) 
+            ArrCh [LI ] := VAL ( ORD ( LWch1 ) , CHAR ) 
+(*1*)
+          ; INC ( LI ) 
+          ; IF LI >= LNumber 
+               OR UnsafeRd . FastEOF ( Stream . Source ) 
+               (* ^Could raise Failure or Alerted. *) 
+            THEN (* We are done W/O a new line. *)  
+              EXIT 
+            ELSE (* Time to read another code point. *) 
+              LPreSourceIndex0 := LStartSourceIndex 
+            ; LPreSourceIndex1 := UnsafeRd . FastIndex ( Stream . Source )
+            ; <* FATAL EndOfFile *> (* Can't happen. *) 
+              BEGIN 
+                LWch1 := Stream . DecWideChar ( Stream . Source ) 
+                      (* ^Could raise Failure or Alerted. *)  
+              END (* Block. *) 
+            ; LStartSourceIndex := LPreSourceIndex1 
+            (* And loop. *) 
+            END (* IF *) 
+          END (* IF *) 
+        END (* LOOP *) 
+      FINALLY (* For exceptions or normal returns. *)
+        INC ( Stream . Index , LI ) 
+      ; Stream . CurSourceIndex := UnsafeRd . FastIndex ( Stream . Source )
+      ; Stream . UnGetByteCt := Stream . CurSourceIndex - LStartSourceIndex 
+      END (* FINALLY *) 
+    ; RETURN LI 
     END FastGetSubLine 
 
 (* EXPORTED *) 
@@ -524,72 +635,82 @@ MODULE UnsafeUniRd
   *) 
   (* PRE: Stream and Stream.Source are locked. *) 
 
-  = CONST ChunkSize = 512
+  = VAR LI : CARDINAL := 0  
+  ; VAR LChunkI : CARDINAL := 0  
+  ; VAR LStartSourceIndex : CARDINAL := UnsafeRd . FastIndex ( Stream . Source )
+  ; VAR LPreSourceIndex : CARDINAL 
+  ; VAR LResult : TEXT := NIL 
+  ; VAR LWch : Widechar 
+  ; CONST ChunkSize = 256
   ; VAR LChunk : ARRAY [ 0 .. ChunkSize - 1 ] OF Widechar 
-  ; VAR LI , LChunkI : CARDINAL 
-  ; VAR LResult : TEXT  
 
   ; BEGIN 
-      IF Len = 0 
-      THEN RETURN ""  
-      ELSE 
-        IF UnsafeRd . FastEOF ( Stream . Source )
-        THEN RETURN "" 
-        ELSE 
-          LI := 0 
-        ; LChunkI := 0 
-        (* And fall through to get some chars.  *) 
-        END (* IF *) 
-      ; LResult := NIL 
-      ; TRY (* EXCEPT *)
-          LOOP 
-            (* INVARIANT: There is a character to read and length for it. *) 
-            IF LChunkI > LAST ( LChunk ) 
-            THEN (* Flush already-full chunk and start a new one. *)
-              IF LResult = NIL (* Likely. *) 
-              THEN 
-                LResult := Text . FromWideChars ( LChunk )
-              ELSE 
-                LResult := LResult & Text . FromWideChars ( LChunk )
-              END (* IF *) 
-            ; LChunkI := 0 
-            END (* IF *)  
-          ; Stream . PrevSourceIndex := UnsafeRd . FastIndex ( Stream . Source )
-          ; <* FATAL EndOfFile *> (* Can't happen. *) BEGIN  
-              LChunk [ LChunkI ] := Stream . DecWideChar ( Stream . Source ) 
-            END (* Block. *) 
-          ; INC ( LChunkI ) 
-          ; INC ( LI ) 
-          ; IF LI >= Len OR UnsafeRd . FastEOF ( Stream . Source ) 
-            THEN (* We are done. *) 
-              IF LChunkI > 0 
-              THEN (* Flush partially filled chunk. *)
-                INC ( Stream . Index , LI ) 
-              ; IF LResult = NIL (* Likely. *) 
-                THEN 
-                  RETURN 
-                    Text. FromWideChars ( SUBARRAY ( LChunk , 0 , LChunkI ) )
-                ELSE 
-                  INC ( Stream . Index , LI ) 
-                ; RETURN  
-                    LResult 
-                    & Text. FromWideChars ( SUBARRAY ( LChunk , 0 , LChunkI ) )
-                END (* IF *) 
-              ELSIF LResult = NIL 
-              THEN RETURN "" 
-              ELSE RETURN LResult 
-              END (* IF *) 
-         (* ELSE loop *) 
+      IF Len <= 0 THEN RETURN "" END (* IF *) 
+    ; IF UnsafeRd . FastEOF ( Stream . Source )
+      (* ^Allow Failure or Alerted to propagate out. *) 
+      THEN RETURN "" 
+      END (* IF *) 
+    ; <* FATAL EndOfFile *> (* Can't happen. *) 
+      BEGIN  
+        LWch := Stream . DecWideChar ( Stream . Source ) 
+             (* ^Allow Failure or Alerted to propagate out. *) 
+      END (* Block. *) 
+    ; TRY (* FINALLY *)
+        LOOP 
+          (* INVARIANTs: - LI = number of code points stored.
+                         - LI + 1 = # of code points decoded and consumed. 
+                         - The last decoded code point is in LWch. 
+                         - LStartSourceIndex is its 1st encoded byte index. *)
+          (* Make space to store the code point in LWch. *) 
+          IF LChunkI > LAST ( LChunk ) 
+          THEN (* Flush already-full chunk and start a new one. *)
+            IF LResult = NIL (* Likely. *) 
+            THEN 
+              LResult := TextFromWideChars ( LChunk )
+            ELSE 
+              LResult := LResult & TextFromWideChars ( LChunk )
             END (* IF *) 
-          END (* LOOP *) 
-        EXCEPT (* From Rd.EOF or Stream.DecWideChar. *) 
-        Failure ( Arg ) 
-        => INC ( Stream . Index , LI ) 
-        ; RAISE Failure ( Arg ) 
-        | Alerted 
-        => INC ( Stream . Index , LI ) 
-        ; RAISE  Alerted 
-        END (* EXCEPT *) 
+          ; LChunkI := 0 
+          END (* IF *)  
+        ; LChunk [ LChunkI ] := LWch 
+        ; INC ( LChunkI ) 
+        ; INC ( LI )
+        (* INVARIANT: LI is the number of code points decoded and stored. *)  
+        ; IF LI >= Len OR UnsafeRd . FastEOF ( Stream . Source ) 
+                       (* ^May raise Failure or Alerted. *) 
+          THEN (* We are done. *) 
+            EXIT 
+          ELSE 
+            LPreSourceIndex := UnsafeRd . FastIndex ( Stream . Source )
+          ; <* FATAL EndOfFile *> (* Can't happen. *) 
+            BEGIN  
+              LWch := Stream . DecWideChar ( Stream . Source ) 
+                            (* ^May raise Failure or Alerted. *) 
+            END (* Block. *) 
+          ; LStartSourceIndex := LPreSourceIndex 
+          (* And loop. *) 
+          END (* IF *) 
+        END (* LOOP *) 
+      FINALLY (* For exceptions or normal returns. *)  
+        INC ( Stream . Index , LI ) 
+      ; Stream . CurSourceIndex := UnsafeRd . FastIndex ( Stream . Source ) 
+      ; Stream . UnGetByteCt := Stream . CurSourceIndex - LStartSourceIndex 
+      END (* FINALLY *)
+    (* Normal return.  Flush partially filled chunk. *)
+    ; IF LChunkI > 0 
+      THEN (* Flush partially filled chunk. *)
+        IF LResult = NIL (* Likely. *) 
+        THEN 
+          RETURN 
+            Text. FromWideChars ( SUBARRAY ( LChunk , 0 , LChunkI ) )
+        ELSE 
+          RETURN  
+            LResult 
+            & Text. FromWideChars ( SUBARRAY ( LChunk , 0 , LChunkI ) )
+        END (* IF *) 
+      ELSIF LResult = NIL 
+      THEN RETURN "" 
+      ELSE RETURN LResult 
       END (* IF *) 
     END FastGetText
 
@@ -603,26 +724,25 @@ MODULE UnsafeUniRd
   *) 
   (* PRE: Stream and Stream.Source are locked. *) 
 
-  = VAR LPrevSourceIndex : CARDINAL 
-  ; VAR LI , LChunkI : CARDINAL 
+  = VAR LI : CARDINAL := 0  
+  ; VAR LChunkI : CARDINAL := 0  
+  ; VAR LStartSourceIndex : CARDINAL 
+  ; VAR LPreSourceIndex1 , LPreSourceIndex2 : CARDINAL 
   ; VAR LWch1 , LWch2 : Widechar 
-  ; VAR LResult : TEXT  
-  ; CONST ChunkSize = 512 
+  ; VAR LResult : TEXT := NIL 
+  ; CONST ChunkSize = 256 
   ; VAR LChunk : ARRAY [ 0 .. ChunkSize - 1 ] OF Widechar 
 
   ; BEGIN 
-      LI := 0 
-    ; LChunkI := 0 
-    ; TRY (* EXCEPT *) 
-       Stream . PrevSourceIndex := UnsafeRd . FastIndex ( Stream . Source )
-     ; LWch1 := Stream . DecWideChar ( Stream . Source ) 
-       (* ^Which could raise EndOfFile. *) 
-      ; LResult := NIL 
-      (* INVARIANT: LWch1 contains the next char to store. 
-                    Stream.PrevSourceIndex is its starting index. *) 
-      ; LOOP (* Store LWch1. *)  
+      LStartSourceIndex := UnsafeRd . FastIndex ( Stream . Source )
+    ; LWch1 := Stream . DecWideChar ( Stream . Source ) 
+            (* ^Which could raise EndOfFile, Failure, or Alerted. *) 
+    ; TRY (* FINALLY *) 
+        LOOP 
+        (* INVARIANTs: - LWch1 contains the next code point to be stored. 
+                       - LStartSourceIndex is its 1st encoded byte index. *) 
+        (* Ensure space for LWch1 and one more, for possibly CR & LF. *)   
           IF LChunkI >= LAST ( LChunk ) 
-             (* Allow 2 spaces for possible CR & LF. *)
           THEN (* Flush already-(almost)-full chunk and start a new one. *)
             IF LResult = NIL (* Likely. *) 
             THEN 
@@ -635,6 +755,7 @@ MODULE UnsafeUniRd
             END (* IF *) 
           ; LChunkI := 0 
           END (* IF *)
+        (* Store LWch1. *) 
         ; LChunk [ LChunkI ] := LWch1 
         ; INC ( LChunkI ) 
         ; INC ( LI ) 
@@ -652,60 +773,65 @@ MODULE UnsafeUniRd
 (*2*)
           THEN (* It was CR.  Could be start of CRLF. *) 
             IF UnsafeRd . FastEOF ( Stream . Source ) 
-            THEN (* CR alone. *) 
+            (* ^May raise Failure or Alerted. *) 
+            THEN (* CR alone at EOF. *) 
               EXIT 
             ELSE (* Another char follows the CR. *) 
-              LPrevSourceIndex := UnsafeRd . FastIndex ( Stream . Source )
-            ; <* FATAL EndOfFile *> (* Can't happen. *) BEGIN 
-                LWch2 := Stream . DecWideChar ( Stream . Source ) 
+              LPreSourceIndex2 := UnsafeRd . FastIndex ( Stream . Source )
+              (* ^Start of the following code point. *) 
+            ; <* FATAL EndOfFile *> (* Can't happen. *) 
 (* WARNING: exception is never raised: Rd.EndOfFile--why? *) 
+              BEGIN 
+                LWch2 := Stream . DecWideChar ( Stream . Source ) 
+                      (* ^May raise Failure or Alerted. *) 
               END (* Block. *) 
             ; IF ORD ( LWch2 ) = ORD ( LFWch )
               THEN (* CR & LF.  Store the LF. *) 
-                Stream . PrevSourceIndex := LPrevSourceIndex  
-              ; LChunk [ LChunkI ] := LWch2 (* There will be space. *)  
+                LChunk [ LChunkI ] := LFWch (* There will be space. *)  
               ; INC ( LChunkI ) 
               ; INC ( LI ) 
+              ; LStartSourceIndex := LPreSourceIndex2 
+                (* A subsequent UnGetWideChar will unget only the LF.*) 
               ; EXIT 
               ELSE (* CR & non-LF.  Unget the non-LF code point. *) 
-                UnGetStreamChars ( Stream , LPrevSourceIndex ) 
+                WITH W = UnGetSourceBackTo ( Stream , LPreSourceIndex2 ) 
+                DO <* ASSERT W *> 
+                END (* WITH *)
               ; EXIT 
               END (* IF *) 
             END (* IF *) 
           ELSE (* It was not a new-line of any kind. *) 
             IF UnsafeRd . FastEOF ( Stream . Source ) 
+            (* ^Could raise Failure or Alerted. *) 
             THEN (* Line has ended at EOF without a new-line sequence. *) 
               EXIT 
             ELSE (* Get another code point. *)  
-              Stream . PrevSourceIndex 
-                := UnsafeRd . FastIndex ( Stream . Source )
-            ; <* FATAL EndOfFile *> (* Can't happen. *) BEGIN 
-                LWch1 := Stream . DecWideChar ( Stream . Source ) 
+              LPreSourceIndex1 := UnsafeRd . FastIndex ( Stream . Source )
+            ; <* FATAL EndOfFile *> (* Can't happen. *) 
 (* WARNING: exception is never raised: Rd.EndOfFile--why? *) 
-              END (* Block. *) 
+              BEGIN 
+                LWch1 := Stream . DecWideChar ( Stream . Source ) 
+                      (* ^May raise Failure or Alerted. *) 
+              END (* Block. *)
+            ; LStartSourceIndex := LPreSourceIndex1  
             (* And loop. *) 
             END (* IF *) 
           END (* IF *) 
         END (* LOOP *) 
-        (* Flush partially filled chunk. *)
-      ; IF LResult = NIL (* Likely. *) 
-        THEN 
-          INC ( Stream . Index , LI ) 
-        ; RETURN TextFromWideChars ( SUBARRAY ( LChunk , 0 , LChunkI ) )
-        ELSE 
-          INC ( Stream . Index , LI ) 
-        ; RETURN  
-            LResult 
-            & TextFromWideChars ( SUBARRAY ( LChunk , 0 , LChunkI ) )
-        END (* IF *) 
-      EXCEPT (* From Rd.EOF or Stream.DecWideChar. *) 
-      Failure ( Arg ) 
-      => INC ( Stream . Index , LI ) 
-      ; RAISE Failure ( Arg ) 
-      | Alerted 
-      => INC ( Stream . Index , LI ) 
-      ; RAISE  Alerted 
-      END (* EXCEPT *) 
+      FINALLY (* For exceptions or normal returns. *)  
+        INC ( Stream . Index , LI ) 
+      ; Stream . CurSourceIndex := UnsafeRd . FastIndex ( Stream . Source ) 
+      ; Stream . UnGetByteCt := Stream . CurSourceIndex - LStartSourceIndex 
+      END (* FINALLY *)
+    (* Normal return.  Flush partially filled chunk. *)
+    ; IF LResult = NIL (* Likely. *) 
+      THEN 
+        RETURN TextFromWideChars ( SUBARRAY ( LChunk , 0 , LChunkI ) )
+      ELSE 
+        RETURN  
+          LResult 
+          & TextFromWideChars ( SUBARRAY ( LChunk , 0 , LChunkI ) )
+      END (* IF *) 
     END FastGetLine 
 
 (* EXPORTED: *) 
@@ -809,31 +935,34 @@ MODULE UnsafeUniRd
 
 (* Testing: *) 
 
-; PROCEDURE TextFromWideChars ( READONLY ArrWch : ARRAY OF Widechar ) : TEXT 
-  (* Simulate Text.FromWideChars.  Temporary, for testing, while 
-     Widechar # WIDECHAR. *) 
+; CONST TextFromWideChars = Text . FromWideChars 
+(* ; CONST TextFromWideChars = LocTextFromWideChars *) 
+
+; <*UNUSED*>
+  PROCEDURE LocTextFromWideChars ( READONLY ArrWch : ARRAY OF Widechar ) : TEXT 
+  (* Simulate Text.FromWideChars.  Temporary, while Widechar # WIDECHAR
+     and for debugging. *) 
 
   = VAR LLast : CARDINAL 
   ; VAR ArrWC : ARRAY [ 0 .. 1023 ] OF WIDECHAR 
-; VAR LWch : Widechar 
-; VAR LWC : WIDECHAR
-; VAR LOrd : INTEGER 
-; VAR LReval : WIDECHAR 
+  ; VAR LWch : Widechar 
+  ; VAR LWC : WIDECHAR
+  ; VAR LOrd : INTEGER 
+  ; VAR LReval : WIDECHAR 
 
   ; BEGIN 
       LLast := LAST ( ArrWch ) 
     ; FOR RI := 0 TO LLast  
       DO 
 
-  LWch := ArrWch [ RI ] 
-; LOrd := ORD ( LWch ) 
-; LWC := VAL ( LOrd , WIDECHAR ) 
-;
-        ArrWC [ RI ] := VAL ( ORD ( ArrWch [ RI ] ) , WIDECHAR )
-; LReval := ArrWC [ RI ] 
+        LWch := ArrWch [ RI ] 
+      ; LOrd := ORD ( LWch ) 
+      ; LWC := VAL ( LOrd , WIDECHAR ) 
+      ; ArrWC [ RI ] := VAL ( ORD ( ArrWch [ RI ] ) , WIDECHAR )
+      ; LReval := ArrWC [ RI ] 
       END (* FOR *) 
     ; RETURN Text . FromWideChars ( SUBARRAY ( ArrWC , 0 , LLast + 1 ) ) 
-    END TextFromWideChars 
+    END LocTextFromWideChars 
 
 ; BEGIN (* UnsafeUniRd *) 
   END UnsafeUniRd 
