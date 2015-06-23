@@ -237,7 +237,7 @@ PROCEDURE CaptureState (frame: CG.Var;  handler: CG.Label) =
       label_already_allocated: CG.Label;
   BEGIN
     (* int setjmp(void* ); *)
-    IF (setjmp = NIL) THEN
+    IF setjmp = NIL THEN
       setjmp := CG.Import_procedure (M3ID.Add (Target.Setjmp), 1,
                                      Target.Integer.cg_type,
                                      Target.DefaultCall, new);
@@ -253,17 +253,17 @@ PROCEDURE CaptureState (frame: CG.Var;  handler: CG.Label) =
       label_already_allocated := CG.Next_label ();
 
       (* void* _alloca(size_t); *)
-      IF (alloca = NIL) THEN
+      IF alloca = NIL THEN
         alloca := CG.Import_procedure (M3ID.Add ("m3_alloca"), 1, CG.Type.Addr,
                                        Target.DefaultCall, new);
-        IF (new) THEN
+        IF new THEN
           EVAL CG.Declare_param (M3ID.NoID, Target.Word.size, Target.Word.align,
                                  Target.Word.cg_type, 0, in_memory := FALSE,
                                  up_level := FALSE, f := CG.Never);
         END;
       END;
       (* extern /*const*/ size_t Csetjmp__Jumpbuf_size/* = sizeof(jmp_buf)*/; *)
-      IF (Jumpbuf_size = NIL) THEN
+      IF Jumpbuf_size = NIL THEN
         Jumpbuf_size := CG.Import_global (M3ID.Add ("Csetjmp__Jumpbuf_size"),
                                           Target.Word.size, Target.Word.align,
                                           Target.Word.cg_type, 0);
