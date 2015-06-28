@@ -4,9 +4,13 @@
 
 %readonly SYSTEM_CC = "/opt/local/bin/gcc-mp-4.7"
 %readonly SYSTEM_LIBTOOL = "/opt/local/bin/libtool"
-readonly SYSTEM_CC = "/usr/bin/gcc"
-readonly SYSTEM_LIBTOOL = "/usr/bin/libtool"
-readonly SYSTEM_ASM = "/usr/bin/as"
+
+% Darwin.common does a good job of determining these, esp. the assembler.
+% Older /usr/bin/as default to x86 and fail for amd64.
+%readonly SYSTEM_CC = "/usr/bin/gcc"
+%readonly SYSTEM_LIBTOOL = "/usr/bin/libtool"
+%readonly SYSTEM_ASM = "/usr/bin/as"
+%readonly SYSTEM_ASM = "/usr/bin/as -arch x86_64"
 
 readonly TARGET = "AMD64_DARWIN"
 readonly GNU_PLATFORM = "i686-darwin8" % "cpu-os" string for GNU

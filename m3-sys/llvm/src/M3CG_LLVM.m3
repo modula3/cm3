@@ -31,7 +31,6 @@ REVEAL
 
     procStack     : RefSeq.T := NIL;
     declStack     : RefSeq.T := NIL;
-    allocStack    : RefSeq.T := NIL; (* optimise to remove unused allocs -not working *)
     labelTable    : IntRefTbl.T := NIL;
     structTable   : IntRefTbl.T := NIL;
 
@@ -42,8 +41,13 @@ REVEAL
     blockLevel    := 0;
     widecharSize  := 16;
 
+    (* external set functions *)
+    setUnion, setIntersection, setDifference, setSymDifference,
+    setMember, setEq, setNe, setLe, setLt, setGe, setGt,
+    setRange, setSingleton : LLVM.ValueRef;
+
     (* debug stuff *)
-    genDebug      := FALSE ;
+    genDebug      := FALSE;
     curFile       := "";
     curLine       := 0;
     debFile       := "";
@@ -253,7 +257,7 @@ TYPE
 
   LvExpr = OBJECT
     lVal : LLVM.ValueRef;
-    type : Type;
+    type : Type;  (* check not really using this field *)
   END;
 
   LvStruct = OBJECT
@@ -299,20 +303,15 @@ TYPE
   (* objects for set label jmp and cmp *)
 
   BranchObj = OBJECT
-    branchLVal : LLVM.ValueRef; (* not sure we need this not referenced use eval *)
     branchBB : LLVM.BasicBlockRef; (* the bb where the branch resides ie this is the bb where we found the jmp *)
   END;
 
   LabelObj = OBJECT
     id : Label;
     labBB : LLVM.BasicBlockRef;  (* jmps goto this bb *)
-    branchLVal : LLVM.ValueRef; (* when a branch is created store its value here but see above comment for same item *)
-
+    elseBB : LLVM.BasicBlockRef; (* else bb for compares *)
     cmpInstr : LLVM.ValueRef; (* saved cmp instr used to move the bb *)
     branchList : RefSeq.T; (* list of branches to this label *)
-
-    elseBB : LLVM.BasicBlockRef; (* else bb for compares *)
-    condLv : LLVM.ValueRef;      (* condtion branch lv could use eval and del *)
   END;
 
   (* template object for common If-Then-Else construction *)
@@ -341,10 +340,10 @@ CONST
   UID_XREEL = 16_FFFFFFFF9EE024E3;
   UID_BOOLEAN = 16_1E59237D;
   UID_CHAR = 16_56E16863;
-  UID_WIDECHAR = 16_88F439FC;
+  UID_WIDECHAR = 16_FFFFFFFF88F439FC;
   UID_MUTEX = 16_1541F475;
   UID_TEXT = 16_50F86574;
-  UID_UNTRACED_ROOT = 16_898EA789;
+  UID_UNTRACED_ROOT = 16_FFFFFFFF898EA789;
   UID_ROOT = 16_FFFFFFFF9D8FB489;
   UID_REFANY = 16_1C1C45E6;
   UID_ADDR = 16_08402063;
@@ -481,24 +480,19 @@ VAR
    wordSize : LLVM.ValueRef; (* no of bits in word as llvm value *)
    byteSize : LLVM.ValueRef; (* no of bytes in word as llvm value *)
 
-   (* external set functions *)
-   setUnion : LLVM.ValueRef;
-   setIntersection : LLVM.ValueRef;
-   setDifference : LLVM.ValueRef;
-   setSymDifference : LLVM.ValueRef;
-   setMember : LLVM.ValueRef;
-   setEq : LLVM.ValueRef;
-   setNe : LLVM.ValueRef;
-   setLe : LLVM.ValueRef;
-   setLt : LLVM.ValueRef;
-   setGe : LLVM.ValueRef;
-   setGt : LLVM.ValueRef;
-   setRange : LLVM.ValueRef;
-   setSingleton : LLVM.ValueRef;
+   (* Keep EXTENDED type compatible with front end which is double. Later
+   we could change it to a 128 bit quad precision floating point *)
+   ExtendedType := LLVM.LLVMDoubleType();
+
+   (*
+   ExtendedType := LLVM.LLVMX86FP80Type();
+   *)
+(*
+   ExtendedType := LLVM.LLVMFP128Type();
+*)
 
    (* dummy filename for output - fixme and use redirection or pipes *)
    outFile := "./m3test.ll";
-
 
 (*---------------------------------------------------------------------------*)
 
@@ -534,7 +528,6 @@ PROCEDURE New (output: Wr.T): M3CG.T =
                 exprStack := NEW(RefSeq.T).init(),
                 callStack := NEW(RefSeq.T).init(),
                 procStack := NEW(RefSeq.T).init(),
-                allocStack := NEW(RefSeq.T).init(),
                 declStack := NEW(RefSeq.T).init());
   END New;
 
@@ -546,7 +539,11 @@ PROCEDURE NewVar (self: U; name : Name; size : ByteSize; align : Alignment; type
     IF varType = VarType.Global THEN
       v.inits := NEW(RefSeq.T).init();
     END;
-    SetLvType(self,v);
+    IF v.type = Type.Struct THEN
+      v.lvType := StructType(self,v.size);
+    ELSE
+      v.lvType := LLvmType(v.type);
+    END;
     RETURN v;
   END NewVar;
 
@@ -612,19 +609,7 @@ PROCEDURE WordTypes(t : MType) : BOOLEAN =
 
 PROCEDURE TypeSize(t : Type) : CARDINAL =
   BEGIN
-    (* returns size in bytes maybe use llvm func storesizeoftype after llvmtype*)
-    CASE t OF
-    | Type.Int8,Type.Word8   => RETURN 1;
-    | Type.Int16,Type.Word16  => RETURN 2;
-    | Type.Int32,Type.Word32  => RETURN 4;
-    | Type.Int64,Type.Word64  => RETURN 8;
-    | Type.Reel   => RETURN 4;
-    | Type.LReel  => RETURN 8;
-    | Type.XReel  => RETURN 10;
-    | Type.Addr   => RETURN ptrBytes; (* target dependant *)
-    | Type.Struct => RETURN 0; (* not used - could fix using size *)
-    | Type.Void  => RETURN 0;
-    END;
+    RETURN VAL(LLVM.LLVMStoreSizeOfType(targetData,LLvmType(t)),CARDINAL);
   END TypeSize;
 
 PROCEDURE LLvmType(t : Type) : LLVM.TypeRef =
@@ -636,43 +621,37 @@ PROCEDURE LLvmType(t : Type) : LLVM.TypeRef =
     | Type.Int64,Type.Word64  => RETURN LLVM.LLVMInt64Type();
     | Type.Reel   => RETURN LLVM.LLVMFloatType();
     | Type.LReel  => RETURN LLVM.LLVMDoubleType();
-    | Type.XReel  => RETURN LLVM.LLVMX86FP80Type();
+    | Type.XReel  => RETURN ExtendedType;
     | Type.Addr   => RETURN AdrTy;
-    | Type.Struct => RETURN AdrTy;  (* fixme use setlvtype *)
+    | Type.Struct => RETURN AdrTy;  (* never called *)
     | Type.Void  => RETURN LLVM.LLVMVoidType();
     END;
   END LLvmType;
 
-(* combine this proc with llvmtype *)
-PROCEDURE SetLvType(self : U; v : LvVar) =
+PROCEDURE StructType(self : U; size : ByteSize) : LLVM.TypeRef =
   CONST numElems = 1;
-  VAR
-    varTy,arrTy,structTy : LLVM.TypeRef;
+  VAR    
+    arrTy,structTy : LLVM.TypeRef;
     elemArr : TypeArrType;
     elemRef : TypeRefType;
     typeExists : BOOLEAN;
     structRef : REFANY;
   BEGIN
-    IF v.type # Type.Struct THEN
-      varTy := LLvmType(v.type);
+    typeExists := self.structTable.get(size,structRef);
+    IF typeExists THEN
+      structTy := NARROW(structRef,LvStruct).struct;
     ELSE
-      typeExists := self.structTable.get(v.size,structRef);
-      IF typeExists THEN
-        structTy := NARROW(structRef,LvStruct).struct;
-      ELSE
-        elemRef := NewTypeArr(elemArr,numElems);
-        arrTy := LLVM.LLVMArrayType(i8Type,v.size);
-        elemArr[0] := arrTy;
-        structTy := LLVM.LLVMStructCreateNamed(globContext, LT("struct"));
-        LLVM.LLVMStructSetBody(structTy, elemRef, numElems, FALSE);
-        (* save the type *)
-        structRef := NEW(LvStruct,struct := structTy);
-        EVAL self.structTable.put(v.size,structRef);
-      END;
-      varTy := structTy;
+      elemRef := NewTypeArr(elemArr,numElems);
+      arrTy := LLVM.LLVMArrayType(i8Type,size);
+      elemArr[0] := arrTy;
+      structTy := LLVM.LLVMStructCreateNamed(globContext, LT("struct"));
+      LLVM.LLVMStructSetBody(structTy, elemRef, numElems, FALSE);
+      (* save the type *)
+      structRef := NEW(LvStruct,struct := structTy);
+      EVAL self.structTable.put(size,structRef);
     END;
-    v.lvType := varTy;
-  END SetLvType;
+    RETURN structTy;    
+  END StructType;
 
 PROCEDURE Zero(t : LLVM.TypeRef) : LLVM.ValueRef =
   BEGIN
@@ -785,7 +764,7 @@ PROCEDURE DeclSet(name : TEXT; fn : LLVM.ValueRef; numParams : INTEGER; hasRetur
     RETURN proc;
   END DeclSet;
 
-PROCEDURE SizeStaticLink(self : U; proc : LvProc) : INTEGER =
+PROCEDURE SizeStaticLink(<*UNUSED*> self : U; proc : LvProc) : INTEGER =
   VAR
     tp : LvProc;
     linkSize : CARDINAL := 0;
@@ -878,13 +857,6 @@ PROCEDURE BuildFunc(self : U; p : Proc) =
     name := M3ID.ToText(proc.name);
     proc.lvProc := LLVM.LLVMAddFunction(modRef, LT(name), proc.procTy);
 
-    IF proc.exported THEN
-(* dont seem to need this
-    LLVM.LLVMSetLinkage(proc.lvProc,LLVM.Linkage.External);
-    (*LLVM.LLVMSetLinkage(proc.lvProc,LLVM.Linkage.AvailableExternally);*)
-*)
-    END;
-
     (* c funcs seem to have these attrs ?? *)
     LLVM.LLVMAddFunctionAttr(proc.lvProc, LLVM.NoUnwindAttribute);
     LLVM.LLVMAddFunctionAttr(proc.lvProc, LLVM.UWTable);
@@ -933,9 +905,9 @@ PROCEDURE BuildFunc(self : U; p : Proc) =
 
     EVAL LLVM.LLVMPrintModuleToFile(modRef, LT(outFile), msg);
   (* or to bitcode *)
-  (*
-  EVAL LLVM.LLVMWriteBitcodeToFile(modRef, LT(outFile));
-  *)
+  (*  
+    EVAL LLVM.LLVMWriteBitcodeToFile(modRef, LT(outFile & ".bc"));
+  *)  
 
   END DumpLLVMIR;
 
@@ -982,7 +954,6 @@ PROCEDURE next_label (self: U;  n: INTEGER := 1): Label =
     terminator : LLVM.ValueRef;
     curBB : LLVM.BasicBlockRef;
   BEGIN
-
 (*
     CheckIntrinsics();
 *)
@@ -1000,8 +971,8 @@ PROCEDURE next_label (self: U;  n: INTEGER := 1): Label =
   END;
 *)
 
-    (* could be a label after an exit_proc which created a bb or a loop with no exit, either way the bb must have a terminator so 
-    add an unreachable stmt *)
+    (* could be a label after an exit_proc which created a bb or a loop with no
+    exit, either way the bb must have a terminator so add an unreachable stmt *)
     iter := self.labelTable.iterate();
     WHILE iter.next(key, lab) DO
       label := NARROW(lab,LabelObj);
@@ -1245,7 +1216,7 @@ PROCEDURE set_runtime_proc (self: U;  n: Name;  p: Proc) =
     (* declare a runtime proc *)
     self.buildFunc(p);
     proc := NARROW(p,LvProc);
-    IF Text.Compare(M3ID.ToText(n),"ReportFault") = 0 THEN
+    IF Text.Equal(M3ID.ToText(n),"ReportFault") THEN
       (* save the fault proc *)
       self.abortFunc := proc.lvProc;
     END;
@@ -1343,15 +1314,31 @@ PROCEDURE VName(v : LvVar; debug := FALSE) : TEXT =
     RETURN name;
   END VName;
 
-PROCEDURE AllocVar(self : U; v : LvVar) =
+PROCEDURE AllocVar(<*UNUSED*>self : U; v : LvVar) =
   BEGIN
     v.lv := LLVM.LLVMBuildAlloca(builderIR, v.lvType, LT(VName(v)));
     LLVM.LLVMSetAlignment(v.lv,v.align);
-    (* add to stack of allocs for this proc. Optimisation so we can
-    remove those not referenced at the end *)
-    Push(self.allocStack, v);
   END AllocVar;
-
+  
+(* allocate temps and locals with noid in the entry bb *)
+PROCEDURE AllocTemp(self : U; v : LvVar) =
+  VAR
+    entryBB,curBB : LLVM.BasicBlockRef;
+    firstInstr : LLVM.ValueRef;
+  BEGIN  
+    curBB := LLVM.LLVMGetInsertBlock(builderIR);
+    entryBB := LLVM.LLVMGetEntryBasicBlock(self.curProc.lvProc);
+    IF entryBB = curBB THEN
+      self.allocVar(v);
+    ELSE
+      (* alloc the temp in the entry BB *)
+      firstInstr := LLVM.LLVMGetFirstInstruction(entryBB);
+      LLVM.LLVMPositionBuilderBefore(builderIR, firstInstr);
+      self.allocVar(v);
+      LLVM.LLVMPositionBuilderAtEnd(builderIR, curBB);
+    END;  
+  END AllocTemp;
+  
 <*NOWARN*> PROCEDURE declare_local (self: U;  n: Name;  s: ByteSize;  a: Alignment; t: Type;  m3t: TypeUID;  in_memory, up_level: BOOLEAN; f: Frequency): Var =
   VAR
 (*  in_memory is false for real locals and true for the temp locals for exceptions etc declared in body of procedure so guess the blocklevel test could be replaced with in_memory test below *)
@@ -1369,23 +1356,57 @@ PROCEDURE AllocVar(self : U; v : LvVar) =
         Push(proc.linkStack, v);
       END;
     ELSE
-      (* inside a local block or begin_procedure so allocate it now *)
-      self.allocVar(v);
+      (* inside a local block or begin_procedure so allocate it now,
+        but allocate it in the entry bb *)
+      AllocTemp(self,v);
+      (* could this local ever be up_level? *)
       v.inProc := self.curProc;
     END;
     RETURN v;
   END declare_local;
 
+PROCEDURE ImportedStructSize(self : U; m3t : TypeUID) : ByteSize =
+  VAR
+    typeObj : REFANY;
+    tidExists : BOOLEAN;
+    size : ByteSize := 0;
+    tc : CARDINAL;
+  BEGIN
+    IF m3t = 0 THEN RETURN size; END;
+    tidExists := self.debugTable.get(m3t,typeObj);
+    <*ASSERT tidExists *>
+    tc := TYPECODE(typeObj);
+    IF tc = TYPECODE(RecordDebug) OR tc = TYPECODE(ArrayDebug) THEN
+      size := VAL(NARROW(typeObj,BaseDebug).bitSize,INTEGER);
+    END;
+    RETURN size DIV 8;
+  END ImportedStructSize;
+
 <*NOWARN*> PROCEDURE declare_param (self: U;  n: Name;  s: ByteSize;  a: Alignment; t: Type;  m3t: TypeUID;  in_memory, up_level: BOOLEAN; f: Frequency): Var =
   VAR
-    v : LvVar := NewVar(self,n,s,a,t,FALSE,m3t,in_memory,up_level,FALSE,f,VarType.Param);
+    v : LvVar;
     proc : LvProc;
+    size : ByteSize;
   BEGIN
-    (* params declared after either declare_procedure or import_procedure
-       (which could be in a begin_procedure), either way the procDecl should be set from the previous import or declare *)
+    (* params declared after either declare_procedure or 
+    import_procedure (which could be in a begin_procedure), 
+    either way the procDecl should be set from the previous import or declare *)
 
     <*ASSERT self.declStack.size() = 1 *>
     proc := Get(self.declStack);
+    
+    IF proc.imported THEN
+      (* imported procs could have a value rec or array param classed as address
+         param but will gen a pop_struct later. Here we correct the param def
+         if it is a struct by searching the debug table for record or array *)
+      size := ImportedStructSize(self,m3t);
+      IF size > 0 THEN
+        s := size;
+        t := Type.Struct;
+      END;
+    END;
+    v := NewVar(self,n,s,a,t,FALSE,m3t,in_memory,up_level,FALSE,f,VarType.Param);
+    
     PushRev(proc.paramStack, v);
     v.inProc := proc;
     IF up_level THEN
@@ -1396,33 +1417,13 @@ PROCEDURE AllocVar(self : U; v : LvVar) =
 
 PROCEDURE declare_temp (self: U; s: ByteSize; a: Alignment; t: Type; in_memory: BOOLEAN): Var =
   VAR
-    v : LvVar := NewVar(self,M3ID.NoID,s,a,t,FALSE,0,in_memory,TRUE,FALSE,M3CG.Maybe,VarType.Temp);
-    entryBB,curBB : LLVM.BasicBlockRef;
-    firstInstr : LLVM.ValueRef;
+    v : LvVar := NewVar(self,M3ID.NoID,s,a,t,FALSE,0,in_memory,FALSE,FALSE,M3CG.Maybe,VarType.Temp);
   BEGIN
     (* temps are always declared inside a begin_procedure. However we
        allocate them in the entry BB to avoid dominate all uses problems *)
-    curBB := LLVM.LLVMGetInsertBlock(builderIR);
-    entryBB := LLVM.LLVMGetEntryBasicBlock(self.curProc.lvProc);
-
-    IF entryBB = curBB THEN
-      self.allocVar(v);
-    ELSE
-      (* alloc the temp in the entry BB *)
-      firstInstr := LLVM.LLVMGetFirstInstruction(entryBB);
-      LLVM.LLVMPositionBuilderBefore(builderIR, firstInstr);
-      self.allocVar(v);
-      LLVM.LLVMPositionBuilderAtEnd(builderIR, curBB);
-    END;
-
-    (* test - seems some code puts temps into the static link eg text
-    pointers from concat referred to in a finally clause. Problem is there
-    is no up_level flag so this puts all temps on the static link and have
-    changed the uplevel flag to true in v declare above which could be
-    very inefficient*)
+       
+    AllocTemp(self,v);
     v.inProc := self.curProc;
-    Push(self.curProc.linkStack, v);
-
     RETURN v;
   END declare_temp;
 
@@ -1488,7 +1489,8 @@ PROCEDURE end_init (self: U;  v: Var) =
          v.lvTy := AdrTy;
 (* implement offset here *)
       | TextVar(v) =>
-         v.lvVal := LLVM.LLVMConstString(LT(v.value),Text.Length(v.value),FALSE);
+         (* dont zero terminate the string *)
+         v.lvVal := LLVM.LLVMConstString(LT(v.value),Text.Length(v.value),TRUE);
          v.lvTy := LLVM.LLVMTypeOf(v.lvVal);
       | FloatVar(v) =>
          v.lvTy := LLvmType(v.prec);
@@ -1510,15 +1512,8 @@ PROCEDURE end_init (self: U;  v: Var) =
       PushRev(newInits,baseObj);
     END;
 
-(*
-IO.Put("this " & Fmt.Int(thisOfs) & " " & Fmt.Int(baseObj.offset) & "\n");
-*)
-(* if we dont add the final zero in to agree with the bind size the rtlinker
-crashes, also there is some mismatch with global longreal and external
-the sizes seem to be out between gcc and llvm which causes the
-segment sizes to mismatch and if you add a filler the s file can get it
-twice to compensate - check this
-*)
+    (* if we dont add the final zero in to agree with the bind size
+       the rtlinker crashes. *)
     IF thisOfs < thisVar.segLen THEN
       fillLen := thisVar.segLen - thisOfs;
       fillVar := NEW(FillerVar);
@@ -1544,9 +1539,7 @@ twice to compensate - check this
 
     segSize := VAL(LLVM.LLVMStoreSizeOfType(targetData,thisVar.lvType),INTEGER);
     <*ASSERT segSize = thisVar.segLen *>
-(*
-IO.Put("Store size of global " & Fmt.Int(segSize) & "\n");
-*)
+
     (* calc the initialisers *)
     FOR i := 0 TO numGlobs  - 1 DO
       baseObj := Get(newInits,i);
@@ -1614,6 +1607,7 @@ PROCEDURE init_proc (self: U;  o: ByteOffset;  value: Proc) =
   BEGIN
 (* ever generated ?? *)
 (* could use basicblockaddress ?? *)
+    <*ASSERT FALSE *>
   END init_label;
 
 PROCEDURE init_var (self: U;  o: ByteOffset;  value: Var;  bias: ByteOffset) =
@@ -1632,6 +1626,7 @@ PROCEDURE init_var (self: U;  o: ByteOffset;  value: Var;  bias: ByteOffset) =
    pointers returned at runtime in RTStack.Frames *)
   BEGIN
 (* ever generated ?? *)
+    <*ASSERT FALSE *>
   END init_offset;
 
 PROCEDURE init_chars (self: U;  o: ByteOffset;  value: TEXT) =
@@ -1776,16 +1771,14 @@ PROCEDURE begin_procedure (self: U;  p: Proc) =
    to NIL.  Implies an end_block.  *)
   VAR
     proc : LvProc;
-    v : LvVar;
     prevInstr : LLVM.ValueRef;
     opCode : LLVM.Opcode;
     curBB : LLVM.BasicBlockRef;
-    use : LLVM.UseRef;
-    numAllocs : CARDINAL;
   BEGIN
     proc := NARROW(p,LvProc);
     (* its possible a no return warning will generate an abort and no return
-    but llvm has mandatory return so if last instruction is not a return then add a dummy one, could possible add return to front end in this case *)
+    but llvm has mandatory return so if last instruction is not a return
+    then add a dummy one, could possible add return to front end in this case *)
     curBB := LLVM.LLVMGetInsertBlock(builderIR);
     prevInstr := LLVM.LLVMGetLastInstruction(curBB);
     IF prevInstr # NIL THEN
@@ -1799,21 +1792,6 @@ PROCEDURE begin_procedure (self: U;  p: Proc) =
       END;
     END;
 
-    (* check uses and remove allocs that have none *)
-(* temp disable. stuffs the static link allocs somehow. - check*)
-(*
-    IF self.allocStack.size() > 0 THEN
-      numAllocs := self.allocStack.size();
-      FOR i := 0 TO numAllocs - 1 DO
-        v := Get(self.allocStack);
-        use := LLVM.LLVMGetFirstUse(v.lv);
-        IF use = NIL THEN
-          LLVM.LLVMInstructionEraseFromParent(v.lv);
-        END;
-        Pop(self.allocStack);
-      END;
-    END;
-*)
     DEC(self.blockLevel);
 
     Pop(self.procStack);
@@ -1841,6 +1819,7 @@ PROCEDURE end_block (self: U) =
    anonymous blocks, or exception scopes surround this point. *)
   BEGIN
   (* not used *)
+    <*ASSERT FALSE *>
   END note_procedure_origin;
 
 (*------------------------------------------------------------ statements ---*)
@@ -1894,7 +1873,7 @@ END DumpExprStack;
     terminator := LLVM.LLVMGetBasicBlockTerminator(curBB);
     IF terminator = NIL THEN
       LLVM.LLVMPositionBuilderAtEnd(builderIR,curBB);
-      label.branchLVal := LLVM.LLVMBuildBr(builderIR,label.labBB);
+      EVAL LLVM.LLVMBuildBr(builderIR,label.labBB);
       LLVM.LLVMPositionBuilderAtEnd(builderIR,label.labBB);
     END;
 
@@ -1908,7 +1887,7 @@ END DumpExprStack;
         LLVM.LLVMInstructionEraseFromParent(terminator);
       END;
       LLVM.LLVMPositionBuilderAtEnd(builderIR,branch.branchBB);
-      branch.branchLVal := LLVM.LLVMBuildBr(builderIR,label.labBB);
+      EVAL LLVM.LLVMBuildBr(builderIR,label.labBB);
     END;
     LLVM.LLVMPositionBuilderAtEnd(builderIR,label.labBB);
   END set_label;
@@ -1939,7 +1918,7 @@ PROCEDURE jump (self: U; l: Label) =
     label.branchList.addlo(branch);
     IF label.labBB # NIL THEN
       (* must have seen the label at some point so insert the branch *)
-      branch.branchLVal := LLVM.LLVMBuildBr(builderIR,label.labBB);
+      EVAL LLVM.LLVMBuildBr(builderIR,label.labBB);
     END;
     (* else the branches will be fixed up in set_label *)
   END jump;
@@ -1955,7 +1934,7 @@ PROCEDURE BuildCmp(self: U; a,b : LLVM.ValueRef; t: ZType; op : CompareOp; l: La
 
     label.cmpInstr := cmpVal;
     label.elseBB := LLVM.LLVMAppendBasicBlock(self.curProc.lvProc, LT("else_" & Fmt.Int(l)));
-    label.condLv := LLVM.LLVMBuildCondBr(builderIR,cmpVal,label.labBB, label.elseBB);
+    EVAL LLVM.LLVMBuildCondBr(builderIR,cmpVal,label.labBB, label.elseBB);
     LLVM.LLVMPositionBuilderAtEnd(builderIR,label.elseBB);
   END BuildCmp;
 
@@ -2096,11 +2075,11 @@ PROCEDURE Gep(src,ofs : LLVM.ValueRef; const : BOOLEAN) : LLVM.ValueRef =
   BEGIN
     paramsRef := NewValueArr(paramsArr,numParams);
     paramsArr[0] := ofs;
-    (* inbounds ?? *)
+    (* inbounds is recommended *)
     IF NOT const THEN
-      gepVal := LLVM.LLVMBuildGEP(builderIR, src, paramsRef, 1, LT("gepIdx"));
+      gepVal := LLVM.LLVMBuildInBoundsGEP(builderIR, src, paramsRef, numParams, LT("gepIdx"));
     ELSE
-      gepVal := LLVM.LLVMConstGEP(src, paramsRef, 1);
+      gepVal := LLVM.LLVMConstInBoundsGEP(src, paramsRef, numParams);
     END;
     RETURN gepVal;
   END Gep;
@@ -2111,7 +2090,7 @@ PROCEDURE BuildGep(src : LLVM.ValueRef; o : ByteOffset) : LLVM.ValueRef =
   BEGIN
     ofs := LLVM.LLVMConstInt(LLVM.LLVMInt64Type(), VAL(o,LONGINT), TRUE);
     (* cast to i8* value if not already *)
-    int8Val := LLVM.LLVMBuildBitCast(builderIR, src, AdrTy, LT("gep_toi8"));
+    int8Val := LLVM.LLVMBuildBitCast(builderIR, src, AdrTy, LT("gep_toadr"));
     gepVal := Gep(int8Val,ofs,FALSE);
     RETURN gepVal;
   END BuildGep;
@@ -2126,10 +2105,7 @@ PROCEDURE BuildConstGep(src : LLVM.ValueRef; o : ByteOffset) : LLVM.ValueRef =
     RETURN gepVal;
   END BuildConstGep;
 
-(* load and particularly store need testing and a clean up or redesign.
-   had more grief with these 2 than any others. All that strong typing in llvm
-*)
-
+(* search the static links of all procs to find this var *)
 PROCEDURE SearchStaticLink(proc : LvProc; var : LvVar) : INTEGER =
   VAR
     tp : LvProc;
@@ -2159,9 +2135,12 @@ PROCEDURE FindLinkVar(self : U; var : LvVar) : LLVM.ValueRef =
   BEGIN
     idx := SearchStaticLink(self.curProc, var);
     <*ASSERT idx >= 0 *>
+    (* load the static link itself *)
     linkIdx := LLVM.LLVMBuildLoad(builderIR, self.curProc.linkAdrLv, LT("link_adr"));
+    (* calc the offset into the link and thats the address of the var *)
     lv := BuildGep(linkIdx,idx * ptrBytes);
     lv := LLVM.LLVMBuildBitCast(builderIR, lv, AdrAdrTy, LT("link_adradr"));
+    (* now load the var *)
     lv := LLVM.LLVMBuildLoad(builderIR, lv, LT("link_ofs"));
     RETURN lv;
   END FindLinkVar;
@@ -2180,6 +2159,9 @@ PROCEDURE LoadExtend(val : LLVM.ValueRef; t : MType; u : ZType) : LLVM.ValueRef 
     RETURN val;
   END LoadExtend;
 
+(* load and particularly store need testing and maybe a clean up or redesign.
+   had more grief with these 2 than any others. All that strong typing in llvm
+*)
 PROCEDURE load (self: U;  v: Var;  o: ByteOffset;  t: MType;  u: ZType) =
 (* push; s0.u := Mem [ ADR(v) + o ].t ; *)
   VAR
@@ -2216,19 +2198,6 @@ PROCEDURE load (self: U;  v: Var;  o: ByteOffset;  t: MType;  u: ZType) =
 
     Push(self.exprStack,NEW(LvExpr,lVal := destVal));
   END load;
-
-PROCEDURE GetBaseType(ty : LLVM.TypeRef) : LLVM.TypeRef =
-  VAR
-    tyKind : LLVM.TypeKind;
-  BEGIN
-    LOOP
-      tyKind := LLVM.LLVMGetTypeKind(ty);
-      IF tyKind # LLVM.TypeKind.Pointer THEN
-        RETURN ty;
-      END;
-      ty := LLVM.LLVMGetElementType(ty);
-    END;
-  END GetBaseType;
   
 PROCEDURE store (self: U;  v: Var;  o: ByteOffset;  t: ZType;  u: MType) =
 (* Mem [ ADR(v) + o ].u := s0.t; pop *)
@@ -2236,7 +2205,7 @@ PROCEDURE store (self: U;  v: Var;  o: ByteOffset;  t: ZType;  u: MType) =
     s0 := Get(self.exprStack);
     src : LvExpr;
     dest : LvVar;
-    srcTy,destTy,destPtrTy,destEltTy,srcBaseTy,destBaseTy : LLVM.TypeRef;
+    srcTy,destTy,destPtrTy,destEltTy : LLVM.TypeRef;
     srcVal,destVal,storeVal : LLVM.ValueRef;
   BEGIN
     src := NARROW(s0,LvExpr);
@@ -2247,6 +2216,17 @@ PROCEDURE store (self: U;  v: Var;  o: ByteOffset;  t: ZType;  u: MType) =
     srcTy := LLvmType(t);
     destTy := LLvmType(u);
     destPtrTy := LLVM.LLVMPointerType(destTy);
+
+   (* first attemp to fix temp allocate in try finally with concat 
+      and referenced in the finally block where it does not exist
+      here we allocate a new one in the finally scope *)
+
+    IF (dest.varType = VarType.Temp) THEN
+      IF (self.curProc # dest.inProc) THEN
+        AllocTemp(self,dest);
+        dest.inProc := self.curProc;
+      END;
+    END;
 
     IF TypeSize(u) # TypeSize(t) THEN
       IF TypeSize(u) < TypeSize(t) THEN
@@ -2271,13 +2251,9 @@ PROCEDURE store (self: U;  v: Var;  o: ByteOffset;  t: ZType;  u: MType) =
     END;
 
     IF dest.type = Type.Addr THEN
-      srcBaseTy := GetBaseType(LLVM.LLVMTypeOf(srcVal));
-      destBaseTy := GetBaseType(LLVM.LLVMTypeOf(destVal));
-      IF srcBaseTy # destBaseTy THEN
         (* remove the first pointer *)
         destEltTy := LLVM.LLVMGetElementType(LLVM.LLVMTypeOf(destVal));
         srcVal := LLVM.LLVMBuildBitCast(builderIR, srcVal, destEltTy, LT("store_ptr"));
-      END;
     ELSIF dest.type = Type.Struct THEN
       (* get pointer to u type bit cast dest to that then bitcast src to u type *)
       srcVal := LLVM.LLVMBuildBitCast(builderIR, srcVal, destTy, LT("store_srcptr"));
@@ -2397,8 +2373,10 @@ PROCEDURE load_integer (self: U;  t: IType;  READONLY i: Target.Int) =
 
 PROCEDURE ConvertFloat (f : Target.Float) : TEXT =
   VAR
+    Inf := "1.0E5000"; (* should be larger than even 128 bit float encoding *)
+    NegInf := "-1.0E5000";
     lastCh : INTEGER;
-    buf : ARRAY[0..30] OF CHAR;
+    buf : ARRAY[0..40] OF CHAR; (* check this could 32 hex chars for extended *)
     result : TEXT;
   BEGIN
     lastCh := TFloat.ToChars(f,buf);
@@ -2408,6 +2386,15 @@ PROCEDURE ConvertFloat (f : Target.Float) : TEXT =
       IF buf[i] = 'X' THEN buf[i] := 'E'; END;
     END;
     result := Text.FromChars(SUBARRAY(buf,0,lastCh));
+    (* if we get an infinity rely on llvm encoding the correct inf value *)
+    IF Text.Equal(result,"Infinity") THEN
+      result := Inf;
+    ELSIF Text.Equal(result,"-Infinity") THEN
+      result := NegInf;
+    END;
+    (* not sure if we can get nans - check
+       Text.Equal(realStr,"Nan") OR Text.Equal(realStr,"-Nan")
+    *)
     RETURN result;
   END ConvertFloat;
 
@@ -2545,11 +2532,6 @@ PROCEDURE CompareVal(a,b : LLVM.ValueRef; op : CompareOp; t : Type) : LLVM.Value
     ite := NEW(ITEObj,cmpVal := cmpVal,opName := "cmp", opType := IntPtrTy, curProc := self.curProc).init();
     EVAL ite.block(One(IntPtrTy),FALSE);
     res := ite.block(Zero(IntPtrTy),TRUE);
-
-    (* convert to IType - probably not needed with IntPtrTy 
-    destTy := LLvmType(u);
-    res := LLVM.LLVMBuildSExt(builderIR,res,destTy, LT("cmp_sext"));
-    *)
     
     NARROW(s1,LvExpr).lVal := res;
     Pop(self.exprStack);
@@ -2678,12 +2660,10 @@ PROCEDURE min (self: U;  t: ZType) =
   END min;
 
 PROCEDURE FExt(t : RType) : TEXT =
+  VAR ext : CARDINAL;
   BEGIN
-    CASE t OF
-    |  Type.Reel  => RETURN ".f32";
-    |  Type.LReel => RETURN ".f64";
-    |  Type.XReel => RETURN ".f80";
-    END;
+    ext := TypeSize(t) * 8;
+    RETURN ".f" & Fmt.Int(ext);
   END FExt;
 
 PROCEDURE IntrinsicRealTypes(t : RType) : UNTRACED REF LLVM.TypeRef =
@@ -2695,7 +2675,7 @@ PROCEDURE IntrinsicRealTypes(t : RType) : UNTRACED REF LLVM.TypeRef =
     CASE t OF
     |  Type.Reel  => typesArr[0] := LLVM.LLVMFloatType();
     |  Type.LReel => typesArr[0] := LLVM.LLVMDoubleType();
-    |  Type.XReel => typesArr[0] := LLVM.LLVMX86FP80Type();
+    |  Type.XReel => typesArr[0] := ExtendedType;
     END;
     RETURN typesRef;
   END IntrinsicRealTypes;
@@ -2983,25 +2963,25 @@ VAR
 PROCEDURE set_union (self: U;  s: ByteSize) =
   (* s2.B := s1.B + s0.B; pop(3) *)
   BEGIN
-    SetCommon(self,"set_union",setUnion,s);
+    SetCommon(self,"set_union",self.setUnion,s);
   END set_union;
 
 PROCEDURE set_difference (self: U;  s: ByteSize) =
   (* s2.B := s1.B - s0.B; pop(3) *)
   BEGIN
-    SetCommon(self,"set_difference",setDifference,s);
+    SetCommon(self,"set_difference",self.setDifference,s);
   END set_difference;
 
 PROCEDURE set_intersection (self: U;  s: ByteSize) =
   (* s2.B := s1.B * s0.B; pop(3) *)
   BEGIN
-   SetCommon(self,"set_intersection",setIntersection,s);
+   SetCommon(self,"set_intersection",self.setIntersection,s);
   END set_intersection;
 
 PROCEDURE set_sym_difference (self: U;  s: ByteSize) =
   (* s2.B := s1.B / s0.B; pop(3) *)
   BEGIN
-    SetCommon(self,"set_sym_difference",setSymDifference,s);
+    SetCommon(self,"set_sym_difference",self.setSymDifference,s);
   END set_sym_difference;
 
 <*NOWARN*> PROCEDURE set_member (self: U;  s: ByteSize;  t: IType) =
@@ -3014,8 +2994,8 @@ PROCEDURE set_sym_difference (self: U;  s: ByteSize) =
     s0 := NARROW(st0,LvExpr).lVal;
     s1 := NARROW(st1,LvExpr).lVal;
     s1 := LLVM.LLVMBuildBitCast(builderIR, s1, PtrTy, LT("set_toptr"));
-    setMember := DeclSet("set_member",setMember,2,TRUE);
-    res := SetCall(setMember,2,s0,s1);
+    self.setMember := DeclSet("set_member",self.setMember,2,TRUE);
+    res := SetCall(self.setMember,2,s0,s1);
     NARROW(st1,LvExpr).lVal := res;
     Pop(self.exprStack);
   END set_member;
@@ -3030,12 +3010,12 @@ PROCEDURE set_sym_difference (self: U;  s: ByteSize) =
   BEGIN
     size := LLVM.LLVMConstInt(IntPtrTy, VAL(s,LONGINT), TRUE);
     CASE op OF
-    | CompareOp.EQ => fn := setEq; name := "set_eq";
-    | CompareOp.NE => fn := setNe; name := "set_ne";
-    | CompareOp.GT => fn := setGt; name := "set_gt";
-    | CompareOp.GE => fn := setGe; name := "set_ge";
-    | CompareOp.LT => fn := setLt; name := "set_lt";
-    | CompareOp.LE => fn := setLe; name := "set_le";
+    | CompareOp.EQ => fn := self.setEq; name := "set_eq";
+    | CompareOp.NE => fn := self.setNe; name := "set_ne";
+    | CompareOp.GT => fn := self.setGt; name := "set_gt";
+    | CompareOp.GE => fn := self.setGe; name := "set_ge";
+    | CompareOp.LT => fn := self.setLt; name := "set_lt";
+    | CompareOp.LE => fn := self.setLe; name := "set_le";
     END;
     fn := DeclSet(name,fn,3,TRUE);
     GetSetStackVals(self,FALSE,s0,s1,s2);
@@ -3047,7 +3027,7 @@ PROCEDURE set_sym_difference (self: U;  s: ByteSize) =
 <*NOWARN*> PROCEDURE set_range (self: U;  s: ByteSize;  t: IType) =
 (* s2.A[s1.t..s0.t] := 1; pop(3) *)
   VAR
-    s0,s1,s2,res : LLVM.ValueRef;
+    s0,s1,s2 : LLVM.ValueRef;
     st0 := Get(self.exprStack,0);
     st1 := Get(self.exprStack,1);
     st2 := Get(self.exprStack,2);
@@ -3056,8 +3036,8 @@ PROCEDURE set_sym_difference (self: U;  s: ByteSize) =
     s1 := NARROW(st1,LvExpr).lVal;
     s2 := NARROW(st2,LvExpr).lVal;
     s2 := LLVM.LLVMBuildBitCast(builderIR, s2, PtrTy, LT("set_toptr"));
-    setRange := DeclSet("set_range",setRange,3,TRUE);
-    res := SetCall(setRange,3,s1,s0,s2);
+    self.setRange := DeclSet("set_range",self.setRange,3,TRUE,TRUE);
+    EVAL SetCall(self.setRange,3,s1,s0,s2);
     Pop(self.exprStack,3);
   END set_range;
 
@@ -3066,13 +3046,13 @@ PROCEDURE set_sym_difference (self: U;  s: ByteSize) =
   VAR
     st0 := Get(self.exprStack,0);
     st1 := Get(self.exprStack,1);
-    s0,s1,res : LLVM.ValueRef;
+    s0,s1 : LLVM.ValueRef;
   BEGIN
     s0 := NARROW(st0,LvExpr).lVal;
     s1 := NARROW(st1,LvExpr).lVal;
     s1 := LLVM.LLVMBuildBitCast(builderIR, s1, PtrTy, LT("set_toptr"));
-    setSingleton := DeclSet("set_singleton",setSingleton,2,FALSE);
-    res := SetCall(setSingleton,2,s0,s1);
+    self.setSingleton := DeclSet("set_singleton",self.setSingleton,2,FALSE);
+    EVAL SetCall(self.setSingleton,2,s0,s1);
     Pop(self.exprStack,2);
   END set_singleton;
 
@@ -3749,7 +3729,6 @@ PROCEDURE add_offset (self: U; i: INTEGER) =
   VAR
     proc : LvProc;
   BEGIN
-(* fixme *)
     proc := NARROW(p,LvProc);
     self.buildFunc(p);
     PopDecl(self);
@@ -3782,7 +3761,6 @@ PROCEDURE BuildStaticLink(self : U; proc : LvProc) : CARDINAL =
       END;
       tp := tp.parent;
     END;
-IO.Put("linksize " & Fmt.Int(linkSize) & "\n");
     RETURN linkSize;
   END BuildStaticLink;
 
@@ -3841,7 +3819,12 @@ IO.Put("linksize " & Fmt.Int(linkSize) & "\n");
 
     FOR i := 0 TO numParams - 1 DO
       arg := Get(self.callStack);
-      (* possibly add call attributes here *)
+      (* possibly add call attributes here like sext *)
+      IF arg.type = Type.Struct THEN
+      (*
+        LLVM.LLVMAddAttribute(arg.lVal,LLVM.ByValAttribute);
+        *)
+      END;
       paramsArr[i] := arg.lVal;
       Pop(self.callStack);
     END;
@@ -3974,20 +3957,38 @@ PROCEDURE pop_param (self: U;  t: MType) =
   VAR
     s0 := Get(self.exprStack,0);
     expr : LvExpr;
+    structTy : LLVM.TypeRef;
+    typeExists : BOOLEAN;
+    structRef : REFANY;
   BEGIN
     expr := NARROW(s0,LvExpr);
     expr.type := Type.Struct;
+
+(*  not really using expr.type anywhere. Was using it in call direct
+   to add attributes for structs but not anymore. should delete it.
+*)
+    (* This parm needs to agree with its declared type. All structs
+       should be in the struct table indexed by their size. 
+       Find the type and cast the parm to its correct type *)
+    typeExists := self.structTable.get(s,structRef);
+    <*ASSERT typeExists *>
+    structTy := NARROW(structRef,LvStruct).struct;
+    structTy := LLVM.LLVMPointerType(structTy);
+    (* this is the proper type for the call *)
+    expr.lVal := LLVM.LLVMBuildBitCast(builderIR, expr.lVal, structTy, LT("pop_tostructty"));
+    
     PushRev(self.callStack,s0);
     Pop(self.exprStack);
   END pop_struct;
 
 PROCEDURE pop_static_link (self: U) =
   (* pop s0.A for the current indirect procedure call's static link  *)
-  VAR
-    s0 := Get(self.exprStack,0);
   BEGIN
-(* fix me dont think we have ever tested this *)
-    PushRev(self.callStack,s0);
+(* A test case which has a procedure passed as a parm and then called induces
+  this procedure. Was pushing this link onto the call stack.
+  That put an extra parm in the call which was not needed and resulted in
+  instruction not dominating all uses, quite apart from sig being wrong.
+  May be other cases where it is useful but for now just pop the expr stack *)
     Pop(self.exprStack);
   END pop_static_link;
 
@@ -4004,7 +4005,6 @@ PROCEDURE load_procedure (self: U;  p: Proc) =
     srcVal := proc.lvProc;
     (* convert to address *)
     srcVal:= LLVM.LLVMBuildBitCast(builderIR, srcVal, AdrTy, LT("loadproc_toadr"));
-
     Push(self.exprStack,NEW(LvExpr,lVal := srcVal));
   END load_procedure;
 
@@ -4179,7 +4179,7 @@ PROCEDURE DebugInit(self: U) =
   CONST
    (* from Dwarf.h*)
     DW_LANG_Modula3 = 16_17;
-    DW_LANG_C99 = 16_0C;
+    (* del me DW_LANG_C99 = 16_0C; *)
     DWARF_VERSION = 4;
     DWARF_INFO_VERSION = 1;
     lang = DW_LANG_Modula3;
@@ -4189,6 +4189,7 @@ PROCEDURE DebugInit(self: U) =
     identMD : ARRAY[0..0] OF REFANY;
     ident := "cm3 version 5.8"; (* fixme get it from front end *)
   BEGIN
+    InitUids(self);
     IF NOT self.genDebug THEN RETURN; END;
 
     (* should be able to use "." as dir and pathname.last as filename *)
@@ -4229,8 +4230,6 @@ PROCEDURE DebugInit(self: U) =
                 0 (*RuntimeVersion*) );
 
     self.fileRef := LLVM.LLVMDIBuilderCreateFile(self.debugRef, LT(self.debFile), LT(self.debDir));
-
-    InitUids(self);
   END DebugInit;
 
 PROCEDURE InitUids(self : U) =
@@ -4243,7 +4242,8 @@ PROCEDURE InitUids(self : U) =
     EVAL self.debugTable.put(UID_LONGWORD,NEW(BaseDebug, bitSize := ptrBits, align := ptrBits, typeName := M3ID.Add("LONGWORD"), encoding := DW_ATE_unsigned));
     EVAL self.debugTable.put(UID_REEL,NEW(BaseDebug, bitSize := 32L, align := 32L, typeName := M3ID.Add("REAL"), encoding := DW_ATE_float));
     EVAL self.debugTable.put(UID_LREEL,NEW(BaseDebug, bitSize := 64L, align := 64L, typeName := M3ID.Add("LONGREAL"), encoding := DW_ATE_float));
-    EVAL self.debugTable.put(UID_XREEL,NEW(BaseDebug, bitSize := 80L, align := 80L, typeName := M3ID.Add("EXTENDED"), encoding := DW_ATE_float));
+    (* change this if ever upgrade to 128 bit floats *)
+    EVAL self.debugTable.put(UID_XREEL,NEW(BaseDebug, bitSize := 64L, align := 64L, typeName := M3ID.Add("EXTENDED"), encoding := DW_ATE_float));
     EVAL self.debugTable.put(UID_BOOLEAN,NEW(BaseDebug, bitSize := 8L, align := 8L,
     typeName := M3ID.Add("BOOLEAN"), encoding := DW_ATE_unsigned_char));
     EVAL self.debugTable.put(UID_CHAR,NEW(BaseDebug, bitSize := 8L, align := 8L, typeName := M3ID.Add("CHAR"), encoding := DW_ATE_unsigned_char));
@@ -4261,9 +4261,7 @@ PROCEDURE InitUids(self : U) =
     EVAL self.debugTable.put(UID_RANGE_0_63,NEW(BaseDebug, bitSize := 64L, align := 64L, typeName := M3ID.Add("RANGE_0_63"), encoding := DW_ATE_signed));
 
     EVAL self.debugTable.put(UID_NULL,NEW(BaseDebug, bitSize := ptrBits, align := ptrBits, typeName := M3ID.Add("NULL"), encoding := DW_ATE_address));
-(*
-  NO_UID ??
-*)
+    EVAL self.debugTable.put(NO_UID,NEW(BaseDebug, bitSize := 0L, align := 0L, typeName := M3ID.Add("NO_UID"), encoding := DW_ATE_address));
   END InitUids;
 
 PROCEDURE DebugFinalise(self : U) =
@@ -4714,7 +4712,7 @@ PROCEDURE DebugVar(self : U; v : LvVar; argNum : CARDINAL := 0) =
 
     name := VName(v,TRUE);
     (* Dont debug temps and the _result *)
-    IF v.name = M3ID.NoID OR Text.Compare(name,"_result") = 0 THEN RETURN; END;
+    IF v.name = M3ID.NoID OR Text.Equal(name,"_result") THEN RETURN; END;
 
     IF v.varType = VarType.Param THEN
       tag := DW_TAG_arg_variable;
@@ -4768,7 +4766,7 @@ PROCEDURE DebugGlobals(self : U; var : LvVar) =
     debugObj : REFANY;
     glob : RecordDebug;
     ty,gep,lVal,globAlias : LLVM.ValueRef;
-    tref,fltPtrTy : LLVM.TypeRef;
+    tref : LLVM.TypeRef;
   BEGIN
 (* not working at all - seems to create the correct metadata but gdb
 says its optimized out *)

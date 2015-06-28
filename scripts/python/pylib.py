@@ -12,6 +12,19 @@ import tempfile
 import shutil
 import time
 
+class Tee:
+    def __init__(self, a, b = None):
+        self.a = a
+        self.b = b
+
+    def write(self, c):
+        if self.a != None:
+            self.a.write(c)
+        if self.b != None and self.a != self.b:
+            self.b.write(c)
+
+sys.stdout = Tee(sys.stdout, open(sys.argv[0] + ".log", "a"))
+
 #-----------------------------------------------------------------------------
 # Several important variables are gotten from the environment or probed.
 # The probing is usually 100% correct.
@@ -370,6 +383,11 @@ _PossibleCm3Flags = ["boot", "keep", "override", "commands", "verbose", "why"]
 _SkipGccFlags = ["nogcc", "skipgcc", "omitgcc"]
 _PossiblePylibFlags = ["noclean", "nocleangcc", "c"] + _SkipGccFlags + _PossibleCm3Flags
 
+skipgcc = False
+for a in _SkipGccFlags:
+    if a in sys.argv:
+        skipgcc = True
+
 CM3_FLAGS = ""
 for a in _PossibleCm3Flags:
     if a in sys.argv:
@@ -660,7 +678,8 @@ if Host.endswith("_NT") or Host == "NT386":
 
 #-----------------------------------------------------------------------------
 
-BuildDir = ("%(Config)s%(_BuildDirC)s" % vars())
+#BuildDir = ("%(Config)s%(_BuildDirC)s" % vars())
+BuildDir = Config
 M3GDB = (M3GDB or CM3_GDB)
 Scripts = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PKGSDB = os.path.join(Scripts, "PKGS")
@@ -1054,14 +1073,8 @@ def Boot():
     Version = CM3VERSION + "-" + time.strftime("%Y%m%d")
     BootDir = "./cm3-boot-" + BuildDir + "-" + Version
 
-    try:
-        shutil.rmtree(BootDir)
-    except:
-        pass
-    try:
-        os.mkdir(BootDir)
-    except:
-        pass
+    RemoveDirectoryRecursive(BootDir)
+    CreateDirectory(BootDir)
 
     # This information is duplicated from the config files.
     # TBD: put it only in one place.
@@ -1093,7 +1106,7 @@ def Boot():
 
     # pick the compiler
     
-    c = "c" in sys.argv
+    CBackend = _CBackend
     
     CCompilerOut = ""
 
@@ -1148,7 +1161,7 @@ def Boot():
         }.get(Config) or " ")
 
     obj = ["o", "obj"][nt]
-    Link = "$(CC) $(CFLAGS) *." + obj + [" *.mo *.io ", " "][_CBackend]
+    Link = "$(CC) $(CFLAGS) *." + obj + [" *.mo *.io ", " "][CBackend]
     #Link = "$(CC) $(CFLAGS)"
 
     # link flags
@@ -1170,7 +1183,7 @@ def Boot():
     elif interix:
         Link = Link + " -lm " # -pthread?
     elif nt:
-        if _CBackend:
+        if CBackend:
             #Link = "link /incremental:no /debug /pdb:$(@R).pdb *." + obj + " "
             Link = "link /incremental:no /debug /pdb:$(@R).pdb $** "
             # be sure to get a .pdb out
@@ -1233,11 +1246,6 @@ def Boot():
         "SPARC64_LINUX"     : " -Qy -s -KPIC -Av9a -64 -no-undeclared-regs -relax ",
         }.get(Target) or ""))
 
-    is_main_table =  { }
-    for a in ["Main.m3"]:
-        for c in ["c", "cpp"]:
-            is_main_table[a + "." + c] = True
-
     GnuPlatformPrefix = {
         "ARM_DARWIN"    : "arm-apple-darwin8-",
         # "ARMEL_LINUX" : "arm-linux-gnueabihf-",
@@ -1246,6 +1254,7 @@ def Boot():
         "ALPHA64_VMS"   : "alpha64-dec-vms-",
         }.get(Target) or ""
 
+    DeleteRecursiveCommand = ["rm -rf", "rmdir /q/s"][nt]
     DeleteCommand = ["rm -f", "del /f"][nt]
 
     if not vms:
@@ -1288,19 +1297,26 @@ def Boot():
     UpdateSource = open(os.path.join(BootDir, "updatesource.sh"), "wb")
     Objects = { }
     ObjectsExceptMain = { }
-    main_ext = ""
+
+    for pkg in main_packages:
+        CreateDirectory(os.path.join(BootDir, pkg + ".d"))
 
     for a in [Makefile]:
         a.write("# edit up here" + NL2
                 + "CC=" + CCompiler + NL
                 + "CFLAGS=" + CCompilerFlags + NL)
         a.write("Compile=" + Compile + NL)
-        if not _CBackend:
+        if not CBackend:
             a.write("Assemble=" + Assembler + " " + AssemblerFlags + NL)
         a.write("Link=" + Link + NL
                 + NL + "# no more editing should be needed" + NL2)
+                
+    #Makefile.write("#AssembleOnTarget:" + str(AssembleOnTarget) + NL)
+    #Makefile.write("#CBackend:" + str(CBackend) + NL)
+    #Makefile.write("#BuildDir:" + BuildDir + NL)
+    #Makefile.write("#vms:" + str(vms) + NL)
 
-    if True: #not _CBackend:
+    if True: #not CBackend:
         Makefile.write(".SUFFIXES:" + NL
                        + ".SUFFIXES: .c .is .ms .s .o .obj .io .mo" + NL2)
 
@@ -1309,20 +1325,26 @@ def Boot():
         Makefile.write(pkg + EXE + " ")
     Makefile.write(NL2)
 
-    Makefile.write("clean:" + NL
-                   + "\t" + DeleteCommand + " *.io *.mo *.o *.obj" + NL2)
+    Makefile.write("clean:" + NL)
+    if AssembleOnTarget:
+        Makefile.write("\t-" +  DeleteCommand + " *o *.obj" + NL)
+        for pkg in main_packages:
+            Makefile.write("\t-" + DeleteCommand + " " + pkg + ".d/*o" + " " + pkg + ".d/*.obj" + NL)
+    for pkg in main_packages:
+        Makefile.write("\t-" + DeleteCommand + " " + pkg + " " + pkg + ".exe" + NL)
+    Makefile.write(NL)
 
-    for a in [UpdateSource, Make]:
+    for a in [UpdateSource, Make]: # unfinished
         a.write("#!/bin/sh\n\n"
                 + "set -e\n"
                 + "set -x\n\n")
 
-    for a in [Make]:
+    for a in [Make]: # unfinished
         a.write("# edit up here\n\n"
                 + "CC=${CC:-" + CCompiler + "}\n"
                 + "CFLAGS=${CFLAGS:-" + CCompilerFlags + "}\n"
                 + "Compile=" + Compile + "\n")
-        if not _CBackend:
+        if not CBackend:
             a.write("Assemble=" + Assembler + " " + AssemblerFlags + "\n")
         a.write("Link=" + Link + "\n"
                 + "\n# no more editing should be needed\n\n")
@@ -1331,26 +1353,22 @@ def Boot():
         dir = GetPackagePath(q)
         for a in os.listdir(os.path.join(Root, dir, BuildDir)):
             main_leaf = a
-            ext_c = a.endswith(".c")
-            ext_cpp = a.endswith(".cpp")
-            ext_h = a.endswith(".h")
-            ext_s = a.endswith(".s")
-            ext_ms = a.endswith(".ms")
-            ext_is = a.endswith(".is")
-            ext_io = a.endswith(".io")
-            ext_mo = a.endswith(".mo")
+            ext = GetPathExtension(a)
+            ext_c = (ext == "c")
+            ext_cpp = (ext == "cpp")
+            ext_h = (ext == "h")
+            ext_s = (ext == "s")
+            ext_ms = (ext == "ms")
+            ext_is = (ext == "is")
+            ext_io = (ext == "io")
+            ext_mo = (ext == "mo")
             if not (ext_c or ext_cpp or ext_h or ext_s or ext_ms or ext_is or ext_io or ext_mo):
                 continue
             leaf = GetLastPathElement(a)
-            main_leaf = leaf
-            is_main = (ext_c or ext_cpp) and is_main_table.get(leaf, False)
-            if is_main and not vms: # TODO vms cleanup
-                main_leaf = q + "_" + leaf
-                main_ext = GetPathExtension(a)
-            dest = os.path.join(BootDir, main_leaf)
+            is_main = (not vms) and leaf.startswith("Main.m") # TODO vms cleanup
             fullpath = os.path.join(Root, dir, BuildDir, a)
             if ext_h or ext_c or not vms or AssembleOnTarget or ext_io or ext_mo:
-                CopyFile(fullpath, dest)
+                CopyFile(fullpath, os.path.join(BootDir, [".", q + ".d"][is_main], main_leaf))
             if ext_h or ext_io or ext_mo:
                 continue
             Object = _GetObjectName(a, obj)
@@ -1374,14 +1392,14 @@ def Boot():
     # double colon batches and is much faster
     colon = [":", "::"][nt]
 
-    if _CBackend or not nt:
+    if CBackend or not nt:
         # write inference rules: .c => .o, .c => .obj, .cpp => .o, .cpp => .obj
         for c in ["c", "cpp"]:
             for o in ["o", "obj"]:
                 Makefile.write("." + c + "." + o + colon + NL + "\t$(Compile) " + CCompilerOut + " $<" + NL2)
             
         # write inference rules: .is => .io, .s => .o, .ms => .mo
-        if not _CBackend:
+        if not CBackend:
             for source_obj in [["is", "io"], ["s", "o"], ["ms", "mo"]]:
                 source = source_obj[0]
                 obj = source_obj[1]
@@ -1390,7 +1408,14 @@ def Boot():
     Makefile.write("OBJECTS=")
     Objects = ObjectsExceptMain.keys()
     Objects.sort()
-    k = 8
+    k = 8    
+    for a in Objects:
+        k = k + 1 + len(a)
+        if k > 76: # line wrap
+            Makefile.write(" \\" + NL)
+            k = 1 + len(a)
+        Makefile.write(" " + a)
+
     for a in Objects:
         k = k + 1 + len(a)
         if k > 76: # line wrap
@@ -1401,25 +1426,37 @@ def Boot():
     Makefile.write(NL2)
  
     LinkOut = [" -o ", " -out:"][nt]
+    
+    main_ext = ""
+    maino_ext = "o"
+    if CBackend:
+        main_ext = "m3.c"
+        maino_ext = "m3.c"
+    elif AssembleOnTarget:
+        main_ext = "s"
+    else:
+        main_ext = "mo"
+    #Makefile.write("#main_ext:" + main_ext + NL)
+
+    if main_ext == "s":
+        for pkg in main_packages:
+            Makefile.write(pkg + ".d/Main.o: " + pkg + ".d/Main.ms" + NL)
+            #Makefile.write("\t-mkdir $(@D)" + NL)
+            Makefile.write("\t$(Assemble) -o $@ " + pkg + ".d/Main.ms" + NL)
+            Makefile.write(NL)
 
     for pkg in main_packages:
         Makefile.write(pkg + EXE + ":")
-        main = pkg + "_Main.m3." + main_ext
-        Makefile.write(" " + "$(OBJECTS)" + NL)
-        
-        # Prevent wildcards leaking across from main_packages + control-c.
-        for delmain in main_packages:
-            Makefile.write("\t-" + DeleteCommand + " " + delmain + "_Main.m3." + obj + NL)
+        Makefile.write(" " + "$(OBJECTS) ")
+        Makefile.write(pkg + ".d/Main." + maino_ext)
+        Makefile.write(NL)
             
         # NOTE: We use *.o/*.obj to avoid command line length limits.
         # TODO: Response files? gcc 4.2 supports them. Visual C++ all
         # versions support them. TODO: Research xlc, Sun CC, etc.
         # Or, use libraries (building them from small command lines).
- 
-        Makefile.write("\t$(Link) " + main + LinkOut + "$@" + NL)
-        
-        # Prevent wildcards leaking across from main_packages.
-        Makefile.write("\t-" + DeleteCommand + " " + main + NL2)
+
+        Makefile.write("\t$(Link) " + pkg + ".d/Main." + maino_ext + LinkOut + "$@" + NL2)
 
     VmsMake.write("$ set file/attr=(rfm=var,rat=none) *.o\n")
     VmsMake.write("$ set file/attr=(rfm=var,rat=none) *.obj\n")
@@ -1526,7 +1563,7 @@ def Boot():
     if nt:
         DeleteFile("updatesource.sh")
         DeleteFile("make.sh")
-        if not _CBackend:
+        if not CBackend:
             Makefile = open(os.path.join(BootDir, "Makefile"), "wb")
             Makefile.write("cm3" + EXE + ": *.io *.mo *.c\r\n"
             + " cl -Zi -MD *.c -link *.mo *.io -out:$@ user32.lib kernel32.lib wsock32.lib comctl32.lib gdi32.lib advapi32.lib netapi32.lib iphlpapi.lib\r\n")
@@ -2034,7 +2071,7 @@ def ShipFront():
 #-----------------------------------------------------------------------------
 
 def ShipCompiler():
-    return ShipBack() and ShipFront()
+    return (skipgcc or ShipBack()) and ShipFront()
 
 #-----------------------------------------------------------------------------
 
