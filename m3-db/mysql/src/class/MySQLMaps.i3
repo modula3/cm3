@@ -29,16 +29,19 @@ TYPE
              decimals         : CARDINAL;
              charsetnr        : CARDINAL;
              type             : CARDINAL;
+             extension        : ADDRESS;
             END;
 
-  M3FieldRef   = REF M3Field;
+  M3FieldRef = REF M3Field;
   M3FieldArray = REF ARRAY OF M3FieldRef;
 
-
+(* Return a single field def. Called after FetchFieldDirect *)
 PROCEDURE Field(fieldRef : MySQL.FieldT) : M3FieldRef;
 
-PROCEDURE FieldList(res : MySQL.ResT) : M3FieldArray;
+(* Return the field list from the last query. This calls FetchFields *)
+PROCEDURE FieldList(res : MySQL.ResultT) : M3FieldArray;
 
+(* Dump a field to stdout *)
 PROCEDURE DumpField(m3field : M3FieldRef);
 
 END MySQLMaps.

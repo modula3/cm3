@@ -20,7 +20,6 @@
 %typemap(m3wrapfreearg) char *         %{FreeString($1_name,$1);%}
 
 //the char** typemaps
-/*
 %typemap(m3rawinmode)   char **        %{READONLY%}
 %typemap(m3wrapinmode)  char **        %{READONLY%}
 %typemap(m3rawintype)   char **        %{(*ARRAY OF*) C.char_star%}
@@ -29,37 +28,6 @@
 %typemap(m3wrapinconv)  char **        %{$1 := NewString($1_name[0]);%}
 %typemap(m3wrapargraw)  char **        %{$1%}
 %typemap(m3wrapfreearg) char **        %{FreeString($1_name[0],$1);%}
-*/
-//char ** for argv
-/*
-%typemap("m3rawinmode")   char **    %{%}
-%typemap("m3wrapinmode")  char **    %{READONLY%}
-%typemap("m3rawintype")   char **    %{ADDRESS%}
-%typemap("m3wrapintype")  char **    %{ARRAY OF TEXT%}
-%typemap("m3wrapargraw")  char **    %{ADR(m3argv[0])%}
-%typemap("m3wrapargvar")  char **    %{%}
-%typemap("m3wrapinconv")  char **
-%{m3argv := NEW(UNTRACED REF ARRAY OF C.char_star, m3argc + 1);
-FOR i := 0 TO m3argc  - 1 DO
-m3argv[i] := M3toC.CopyTtoS($1_name[i]);
-END;
-m3argv[m3argc] := NIL;%}
-*/
-
-%typemap("m3rawinmode")   char **    %{%}
-%typemap("m3wrapinmode")  char **    %{READONLY%}
-%typemap("m3rawintype")   char **    %{ADDRESS%}
-%typemap("m3wrapintype")  char **    %{ARRAY OF TEXT%}
-%typemap("m3wrapargvar")  char **    %{$1 := NEW(UNTRACED REF ARRAY OF C.char_star, argc + 1);%}
-%typemap("m3wrapinconv")  char **   %{
-
-FOR i := 0 TO argc  - 1 DO
-$1[i] := M3toC.CopyTtoS($1_name[i]);
-END;
-$1[argc] := NIL;%}
-
-%typemap("m3wrapargraw")  char **   %{ADR($1[0])%}
-
 
 //the void * typemaps
 %typemap("m3wrapintype")  const void * %{REFANY%}
@@ -108,18 +76,86 @@ result : BOOLEAN;%};
 %typemap("m3wrapretcheck")         int  %{IF result # 0 THEN RAISE ReturnE(result); END;%};
 %typemap("m3wrapretcheck:throws")  int %{ReturnE%}
 
+/* trying to remove the int return type from the safe interface and only
+have the exception proving difficult
+%typemap("m3wraprettype")  int     %{%}
+//%typemap("m3wrapretraw")  int     %{%}
+
+//%typemap("m3wrapretvar")   int     %{result : INTEGER;%}
+//%typemap("m3wrapretconv")  int     %{%};
+*/
+
+%insert(m3wrapintf) %{
+TYPE
+  T <: ADDRESS; (* connection handle *)
+
+  ResultT <: ADDRESS; (* result handle *)
+  StmtT <: ADDRESS; (* statement handle *)
+  RowOffsetT <: ADDRESS;
+  FieldT <: ADDRESS;
+  ParametersT <: ADDRESS;
+  BindT <: ADDRESS;
+  CharsT <: ADDRESS;
+  
+CONST
+  MAX_COLUMNS = 1000; (* Arbitrary limit to how many cols returned in a query *)
+
+EXCEPTION ConnE;
+EXCEPTION ResultE;
+EXCEPTION ReturnE(INTEGER);
+
+TYPE
+  RefLengthsT =  UNTRACED REF ARRAY [0..MAX_COLUMNS] OF INTEGER;
+%}
+
+
+/* This usage of zeroptr as null does not work
+VAR
+  zeroValue := 0;
+  zeroPtr   := LOOPHOLE (ADR (zeroValue), C.char_star);
+*/
+
+%insert(m3wrapimpl) %{
+TYPE
+  RefRow = UNTRACED REF ARRAY [0..MAX_COLUMNS] OF C.char_star;
+
+REVEAL
+  T = UNTRACED BRANDED REF MySQLRaw.OPAQUE;
+  ResultT = UNTRACED BRANDED REF MySQLRaw.MYSQL_RES_REC;
+  StmtT = UNTRACED BRANDED REF MySQLRaw.OPAQUE;
+  RowOffsetT = UNTRACED BRANDED REF MySQLRaw.OPAQUE;
+  FieldT = UNTRACED BRANDED REF MySQLRaw.MYSQL_FIELD_REC;
+  ParametersT = UNTRACED BRANDED REF MySQLRaw.OPAQUE;
+  BindT = UNTRACED BRANDED REF MySQLRaw.OPAQUE;
+  CharsT = UNTRACED BRANDED REF MySQLRaw.OPAQUE;
+
+VAR Null := LOOPHOLE(0,ADDRESS);
+
+
+PROCEDURE NewString(t : TEXT) : C.char_star =
+VAR res : C.char_star;
+BEGIN
+  IF t = NIL THEN res := Null; ELSE res := M3toC.SharedTtoS(t); END;
+  RETURN res;
+END NewString;
+
+PROCEDURE FreeString(t : TEXT; c : C.char_star) =
+BEGIN
+  IF t # NIL THEN M3toC.FreeSharedS(t,c); END;
+END FreeString;
+%}
+
+//enums
+%typemap("m3wrapintype")  enum mysql_enum_shutdown_level %{INTEGER%}
+%typemap("m3wrapintype")  enum enum_mysql_set_option %{INTEGER%}
+%typemap("m3wrapintype")  enum mysql_option %{INTEGER%}
+%typemap("m3wrapintype")  enum enum_stmt_attr_type %{INTEGER%}
 
 //MYSQL_FIELD_OFFSET  typemaps
 %typemap("m3rawrettype")  MYSQL_FIELD_OFFSET %{C.unsigned_int%}
 %typemap("m3wraprettype") MYSQL_FIELD_OFFSET %{CARDINAL%}
 %typemap("m3rawintype")   MYSQL_FIELD_OFFSET %{C.unsigned_int%}
 %typemap("m3wrapintype")  MYSQL_FIELD_OFFSET %{CARDINAL%}
-
-//MYSQL_ROW_OFFSET  typemaps
-%typemap("m3rawrettype")  MYSQL_ROW_OFFSET   %{RefMysqlRowsT%}
-%typemap("m3wraprettype") MYSQL_ROW_OFFSET   %{RefMysqlRowsT%}
-%typemap("m3rawintype")   MYSQL_ROW_OFFSET   %{RefMysqlRowsT%}
-%typemap("m3wrapintype")  MYSQL_ROW_OFFSET   %{RefMysqlRowsT%}
 
 //MYSQL_ROW typemaps need to return an array of texts
 %typemap("m3rawrettype")  MYSQL_ROW    %{C.char_star_star%}
@@ -144,263 +180,133 @@ END;%};
 
 %typemap("m3wrapretconv")  MYSQL_ROW   %{row%};
 
-
-
-%insert(m3wrapintf) %{
-TYPE
-  T <: ADDRESS;
-  RefMysqlRowsT = MySQLRaw.RefMysqlRowsT;
-
-CONST
-  MAX_COLUMNS = 1000; (* Arbitrary limit to how many cols returned in a query *)
-
-EXCEPTION ConnE;
-EXCEPTION ResultE;
-EXCEPTION ReturnE(INTEGER);
-
-TYPE
-  RefLengthsT =  UNTRACED REF ARRAY [0..MAX_COLUMNS] OF INTEGER;
-%}
-
-%insert(m3wrapimpl) %{
-TYPE
-  RefRow = UNTRACED REF ARRAY [0..MAX_COLUMNS] OF C.char_star;
-
-REVEAL
-  T = UNTRACED BRANDED REF MySQLRaw.MYSQL;
-
-VAR Null := LOOPHOLE(0,ADDRESS);
-(* This usage of zeroptr as null does not work
-VAR
-  zeroValue := 0;
-  zeroPtr   := LOOPHOLE (ADR (zeroValue), C.char_star);
-*)
-
-PROCEDURE NewString(t : TEXT) : C.char_star =
-VAR res : C.char_star;
-BEGIN
-  IF t = NIL THEN res := Null; ELSE res := M3toC.SharedTtoS(t); END;
-  RETURN res;
-END NewString;
-
-PROCEDURE FreeString(t : TEXT; c : C.char_star) =
-BEGIN
-  IF t # NIL THEN M3toC.FreeSharedS(t,c); END;
-END FreeString;
-%}
-
 //MYSQL typemaps
-%typemap("m3rawintype")    MYSQL *       %{RefMysqlT%}
+%typemap("m3rawintype")    MYSQL *       %{MYSQL%}
 %typemap("m3rawinmode")    MYSQL *       %{%}
 
 %typemap("m3wrapintype")   MYSQL *       %{T%}
 %typemap("m3wrapinmode")   MYSQL *       %{%}
 
-%typemap("m3rawrettype")   MYSQL *       %{RefMysqlT%}
+%typemap("m3rawrettype")   MYSQL *       %{MYSQL%}
 %typemap("m3wraprettype")  MYSQL *       %{T%}
 
-//MySQLRaw.RefMysqlT was ADDRESS which worked as well
 %typemap("m3wrapargraw")   MYSQL *       %{$1%}
-%typemap("m3wrapargvar")   MYSQL *       %{$1: MySQLRaw.RefMysqlT := LOOPHOLE($1_name,MySQLRaw.RefMysqlT);%}
+%typemap("m3wrapargvar")   MYSQL *       %{$1: MySQLRaw.MYSQL := LOOPHOLE($1_name,MySQLRaw.MYSQL);%}
 
-%typemap("m3wrapretvar")   MYSQL *       %{ret : MySQLRaw.RefMysqlT;
+%typemap("m3wrapretvar")   MYSQL *       %{ret : MySQLRaw.MYSQL;
 result : T;%};
 
 %typemap("m3wrapretraw")   MYSQL *       %{ret%};
 %typemap("m3wrapretconv")  MYSQL *       %{result%};
 %typemap("m3wrapretcheck") MYSQL *       %{result := LOOPHOLE(ret,T);
-IF result = NIL THEN
-  RAISE ConnE;
+IF result = NIL THEN 
+  RAISE ConnE; 
 END;%};
-
-//This adds the RAISES clause to the proc
 %typemap("m3wrapretcheck:throws")  MYSQL * %{ConnE%}
 
 
 
-
-%insert(m3wrapintf) %{
-TYPE
-  ResT <: ADDRESS;
-%}
-
-
-%insert(m3wrapimpl) %{REVEAL
-  ResT = UNTRACED BRANDED REF MySQLRaw.MYSQL_RES;
-%}
-
 //MYSQL_RES typemaps
-%typemap("m3rawintype")     MYSQL_RES *  %{RefMysqlResT%}
+%typemap("m3rawintype")     MYSQL_RES *  %{MYSQL_RES%}
 %typemap("m3rawinmode")     MYSQL_RES *  %{%}
 
-%typemap("m3rawrettype")    MYSQL_RES *  %{RefMysqlResT%}
-%typemap("m3wraprettype")   MYSQL_RES *  %{ResT%}
+%typemap("m3rawrettype")    MYSQL_RES *  %{MYSQL_RES%}
+%typemap("m3wraprettype")   MYSQL_RES *  %{ResultT%}
 
-%typemap("m3wrapretvar")    MYSQL_RES *  %{ret : MySQLRaw.RefMysqlResT;
-result : ResT;%};
+%typemap("m3wrapretvar")    MYSQL_RES *  %{ret : MySQLRaw.MYSQL_RES;
+result : ResultT;%};
 %typemap("m3wrapretraw")    MYSQL_RES *  %{ret%};
 %typemap("m3wrapretconv")   MYSQL_RES *  %{result%};
-%typemap("m3wrapretcheck")  MYSQL_RES *  %{result := LOOPHOLE(ret,ResT);
+%typemap("m3wrapretcheck")  MYSQL_RES *  %{result := LOOPHOLE(ret,ResultT);
 IF result = NIL THEN RAISE ResultE; END;%};
 
-%typemap("m3wrapintype")    MYSQL_RES *  %{ResT%}
+%typemap("m3wrapintype")    MYSQL_RES *  %{ResultT%}
 %typemap("m3wrapinmode")    MYSQL_RES *  %{%}
 
 %typemap("m3wrapargraw")    MYSQL_RES *  %{$1%}
-%typemap("m3wrapargvar")    MYSQL_RES *  %{$1: MySQLRaw.RefMysqlResT := LOOPHOLE($1_name,MySQLRaw.RefMysqlResT);%}
-
-//This adds the RAISES clause to the proc
+%typemap("m3wrapargvar")    MYSQL_RES *  %{$1: MySQLRaw.MYSQL_RES := LOOPHOLE($1_name,MySQLRaw.MYSQL_RES);%}
 %typemap("m3wrapretcheck:throws")  MYSQL_RES * %{ResultE%}
-//Need to import MySQLRaw
-%typemap("m3wrapintype:import")  MYSQL_RES *res %{MySQLRaw%}
+
+//NO Need to import MySQLRaw into safe interface
+//%typemap("m3wrapintype:import")  MYSQL_RES *res %{MySQLRaw%}
 
 
+//MYSQL_ROW_OFFSET typemaps
+%typemap("m3rawrettype")    MYSQL_ROW_OFFSET   %{MYSQL_ROW_OFFSET%}
+%typemap("m3wraprettype")   MYSQL_ROW_OFFSET   %{RowOffsetT%}
+%typemap("m3rawintype")     MYSQL_ROW_OFFSET   %{MYSQL_ROW_OFFSET%}
+%typemap("m3wrapintype")    MYSQL_ROW_OFFSET   %{RowOffsetT%}%typemap("m3wrapargvar")    MYSQL_ROW_OFFSET   %{$1: MySQLRaw.MYSQL_ROW_OFFSET := LOOPHOLE($1_name,MySQLRaw.MYSQL_ROW_OFFSET);%}
+%typemap("m3wrapargraw")    MYSQL_ROW_OFFSET   %{$1%}
 
-%insert(m3wrapintf) %{
-TYPE
-  FieldT <: ADDRESS;
-%}
+%typemap("m3wrapretvar")    MYSQL_ROW_OFFSET   %{ret : MySQLRaw.MYSQL_ROW_OFFSET;
+result : RowOffsetT;%};
+%typemap("m3wrapretraw")    MYSQL_ROW_OFFSET   %{ret%};
+%typemap("m3wrapretconv")   MYSQL_ROW_OFFSET   %{result%};
+%typemap("m3wrapretcheck")  MYSQL_ROW_OFFSET   %{result := LOOPHOLE(ret,RowOffsetT);%};
 
-%insert(m3wrapimpl) %{REVEAL
-  FieldT = UNTRACED BRANDED REF MySQLRaw.MYSQL_FIELD;
-%}
 
 //MYSQL_FIELD typemaps
-%typemap("m3rawrettype")   MYSQL_FIELD *  %{RefMysqlFieldT%}
+%typemap("m3rawrettype")   MYSQL_FIELD *  %{MYSQL_FIELD%}
 %typemap("m3wraprettype")  MYSQL_FIELD *  %{FieldT%}
 
-%typemap("m3wrapretvar")   MYSQL_FIELD *  %{ret : MySQLRaw.RefMysqlFieldT;
+%typemap("m3wrapretvar")   MYSQL_FIELD *  %{ret : MySQLRaw.MYSQL_FIELD;
 result : FieldT;%};
 %typemap("m3wrapretraw")   MYSQL_FIELD *  %{ret%};
 %typemap("m3wrapretconv")  MYSQL_FIELD *  %{result%};
 %typemap("m3wrapretcheck") MYSQL_FIELD *  %{result := LOOPHOLE(ret,FieldT);%};
 
-
-
-
-%insert(m3wrapintf) %{TYPE
-  ManagerT <: ADDRESS;
-%}
-
-%insert(m3wrapimpl) %{REVEAL
-  ManagerT = UNTRACED BRANDED REF MySQLRaw.MYSQL_MANAGER;
-%}
-
-//MYSQL_MANAGER typemaps
-%typemap("m3rawintype")    MYSQL_MANAGER *     %{RefMysqlManagerT%}
-%typemap("m3rawinmode")    MYSQL_MANAGER *     %{%}
-
-%typemap("m3wrapintype")   MYSQL_MANAGER *con  %{ManagerT%}
-%typemap("m3wrapinmode")   MYSQL_MANAGER *     %{%}
-
-%typemap("m3rawrettype")   MYSQL_MANAGER *     %{RefMysqlManagerT%}
-%typemap("m3wraprettype")  MYSQL_MANAGER *     %{ManagerT%}
-
-%typemap("m3wrapargraw")   MYSQL_MANAGER *con  %{$1%}
-%typemap("m3wrapargvar")   MYSQL_MANAGER *con  %{$1: MySQLRaw.RefMysqlManagerT := LOOPHOLE($1_name,MySQLRaw.RefMysqlManagerT);%}
-
-%typemap("m3wrapretvar")   MYSQL_MANAGER *     %{ret : MySQLRaw.RefMysqlManagerT;
-result : ManagerT;
-%};
-%typemap("m3wrapretraw")   MYSQL_MANAGER *     %{ret%};
-%typemap("m3wrapretconv")  MYSQL_MANAGER *     %{result%};
-%typemap("m3wrapretcheck") MYSQL_MANAGER *     %{result := LOOPHOLE(ret,ManagerT);
-IF result = NIL THEN
-  RAISE ConnE;
-END;%};
-
-%typemap("m3wrapretcheck:throws")  MYSQL_MANAGER * %{ConnE%}
-
-
-
-
-%insert(m3wrapintf) %{
-TYPE
-  ParametersT <: ADDRESS;
-%}
-
-%insert(m3wrapimpl) %{REVEAL
-  ParametersT = UNTRACED BRANDED REF MySQLRaw.MYSQL_PARAMETERS;
-%}
-
-%typemap("m3rawrettype")   MYSQL_PARAMETERS *  %{RefMysqlParametersT%}
+ 
+//MYSQL_PARAMETERS typemaps
+%typemap("m3rawrettype")   MYSQL_PARAMETERS *  %{MYSQL_PARAMETERS%}
 %typemap("m3wraprettype")  MYSQL_PARAMETERS *  %{ParametersT%}
 
-%typemap("m3wrapretvar")   MYSQL_PARAMETERS *  %{ret : MySQLRaw.RefMysqlParametersT;
+%typemap("m3wrapretvar")   MYSQL_PARAMETERS *  %{ret : MySQLRaw.MYSQL_PARAMETERS;
 result : ParametersT;%};
 %typemap("m3wrapretraw")   MYSQL_PARAMETERS *  %{ret%};
 %typemap("m3wrapretconv")  MYSQL_PARAMETERS *  %{result%};
 %typemap("m3wrapretcheck") MYSQL_PARAMETERS *  %{result := LOOPHOLE(ret,ParametersT);%};
 
 
-
-%insert(m3wrapintf) %{
-TYPE
-  StmtT <: ADDRESS;
-  BindT <: ADDRESS;
-%}
-
-%insert(m3wrapimpl) %{REVEAL
-  StmtT = UNTRACED BRANDED REF MySQLRaw.MYSQL_STMT;
-  BindT = UNTRACED BRANDED REF MySQLRaw.MYSQL_BIND;
-%}
-
 //MYSQL_STMT typemaps
-%typemap("m3rawintype")     MYSQL_STMT *  %{RefMysqlStmtT%}
+%typemap("m3rawintype")     MYSQL_STMT *  %{MYSQL_STMT%}
 %typemap("m3rawinmode")     MYSQL_STMT *  %{%}
 %typemap("m3wrapinmode")    MYSQL_STMT *  %{%}
 %typemap("m3wrapintype")    MYSQL_STMT *  %{StmtT%}
 
-%typemap("m3rawrettype")    MYSQL_STMT *  %{RefMysqlStmtT%}
+%typemap("m3rawrettype")    MYSQL_STMT *  %{MYSQL_STMT%}
 %typemap("m3wraprettype")   MYSQL_STMT *  %{StmtT%}
 
 %typemap("m3wrapargraw")    MYSQL_STMT *  %{$1%}
-%typemap("m3wrapargvar")    MYSQL_STMT *  %{$1: MySQLRaw.RefMysqlStmtT := LOOPHOLE($1_name,MySQLRaw.RefMysqlStmtT);%}
+%typemap("m3wrapargvar")    MYSQL_STMT *  %{$1: MySQLRaw.MYSQL_STMT := LOOPHOLE($1_name,MySQLRaw.MYSQL_STMT);%}
 
-%typemap("m3wrapretvar")    MYSQL_STMT *  %{ret : MySQLRaw.RefMysqlStmtT;
+%typemap("m3wrapretvar")    MYSQL_STMT *  %{ret : MySQLRaw.MYSQL_STMT;
 result : StmtT;%};
 %typemap("m3wrapretraw")    MYSQL_STMT *  %{ret%};
 %typemap("m3wrapretconv")   MYSQL_STMT *  %{result%};
 %typemap("m3wrapretcheck")  MYSQL_STMT *  %{result := LOOPHOLE(ret,StmtT);
 IF result = NIL THEN RAISE ResultE; END;%};
 
-//This adds the RAISES clause to the proc
+//This adds the RAISES clause 
 %typemap("m3wrapretcheck:throws")  MYSQL_STMT * %{ResultE%}
 
 //MYSQL_BIND typemaps
-%typemap("m3rawintype")     MYSQL_BIND *  %{RefMysqlBindT%}
+%typemap("m3rawintype")     MYSQL_BIND *  %{MYSQL_BIND%}
 %typemap("m3rawinmode")     MYSQL_BIND *  %{%}
 %typemap("m3wrapinmode")    MYSQL_BIND *  %{%}
 %typemap("m3wrapintype")    MYSQL_BIND *  %{BindT%}
 
 %typemap("m3wrapargraw")    MYSQL_BIND *  %{$1%}
-%typemap("m3wrapargvar")    MYSQL_BIND *  %{$1: MySQLRaw.RefMysqlBindT := LOOPHOLE($1_name,MySQLRaw.RefMysqlBindT);%}
-
-//the enum one
-%typemap("m3wrapintype")  enum enum_stmt_attr_type %{INTEGER%}
+%typemap("m3wrapargvar")    MYSQL_BIND *  %{$1: MySQLRaw.MYSQL_BIND := LOOPHOLE($1_name,MySQLRaw.MYSQL_BIND);%}
 
 
-
-
-%insert(m3wrapintf) %{
-TYPE
-  CharsT <: ADDRESS;
-%}
-
-%insert(m3wrapimpl) %{REVEAL
-  CharsT = UNTRACED BRANDED REF MySQLRaw.MYSQL_CHARSET_INFO;
-%}
-
-//MY_CHARSET_INFO typemaps
-%typemap("m3rawintype")     MY_CHARSET_INFO *  %{RefMysqlCharsT%}
+//MYSQL_CHARSET_INFO typemaps
+%typemap("m3rawintype")     MY_CHARSET_INFO *  %{MYSQL_CHARSET_INFO%}
 %typemap("m3wrapintype")    MY_CHARSET_INFO *  %{CharsT%}
 
 %typemap("m3rawinmode")     MY_CHARSET_INFO *  %{%}
 
 %typemap("m3wrapargraw")    MY_CHARSET_INFO *  %{$1%}
-%typemap("m3wrapargvar")    MY_CHARSET_INFO *  %{$1: MySQLRaw.RefMysqlCharsT := LOOPHOLE($1_name,MySQLRaw.RefMysqlCharsT);%}
-
-
+%typemap("m3wrapargvar")    MY_CHARSET_INFO *  %{$1: MySQLRaw.MYSQL_CHARSET_INFO := LOOPHOLE($1_name,MySQLRaw.MYSQL_CHARSET_INFO);%}
 
 
 //local infile typemaps
@@ -421,7 +327,7 @@ TYPE
 //%typemap(m3wrapinname)  int (*) (void **, const char *, void *) %{local_callback_0%}
 %typemap(m3wrapargvar)  int (*local_infile_init) (void **, const char *, void *) %{
 PROCEDURE P0(p1 : REF C.void_star; p2 : C.char_star; p3 : C.void_star) : C.int =
-VAR
+VAR 
   r1 : REF ADDRESS := p1;
   r2 := M3toC.CopyStoT(p2);
   r3 := p3;
@@ -435,7 +341,7 @@ END P0;
 %typemap(m3wrapargraw)  int (*local_infile_read) (void *, char *, unsigned int) %{<*NOWARN*>P1%}
 %typemap(m3wrapargvar)  int (*local_infile_read) (void *, char *, unsigned int) %{
 PROCEDURE P1(p1 : C.void_star; p2 : C.char_star; p3 : C.unsigned_int) : C.int =
-VAR
+VAR 
   r1 : ADDRESS := p1;
   r2 := M3toC.CopyStoT(p2);
   r3 := p3;
@@ -449,7 +355,7 @@ END P1;
 %typemap(m3wrapargraw)  int (*local_infile_error) (void *, char *, unsigned int) %{<*NOWARN*>P2%}
 %typemap(m3wrapargvar)  int (*local_infile_error) (void *, char *, unsigned int) %{
 PROCEDURE P2(p1 : C.void_star; p2 : C.char_star; p3 : C.unsigned_int) : C.int =
-VAR
+VAR 
   r1 : ADDRESS := p1;
   r2 := M3toC.CopyStoT(p2);
   r3 := p3;
@@ -462,18 +368,6 @@ VAR
 %typemap(m3rawintype)    void (*) (void *) %{EndRawCBT%}
 %typemap(m3wrapintype)   void (*) (void *) %{EndCBT%}
 
-//RPL typemaps
-%typemap("m3rawrettype")   enum mysql_rpl_type  %{mysql_rpl_type%}
-%typemap("m3wraprettype")  enum mysql_rpl_type  %{RplT%}
-
-%insert(m3wrapintf) %{
-TYPE
-  RplT = MySQLRaw.mysql_rpl_type;
-%}
-
-%typemap("m3wrapintype")  enum mysql_enum_shutdown_level %{INTEGER%}
-%typemap("m3wrapintype")  enum enum_mysql_set_option %{INTEGER%}
-%typemap("m3wrapintype")  enum mysql_option %{INTEGER%}
 
 //specialize these char * for the callback
 %typemap(m3wrapinmode)  char * (*extend_buffer) (void *, char *, unsigned long *) %{%}
@@ -484,7 +378,7 @@ TYPE
 
 %typemap(m3wrapargvar)  char * (*extend_buffer) (void *, char *, unsigned long *) %{
 PROCEDURE P0(p1 : C.void_star; p2 : C.char_star; p3 : REF C.unsigned_long) : C.char_star =
-VAR
+VAR 
   r1 : ADDRESS := p1;
   r2 := M3toC.CopyStoT(p2);
   r3 := LOOPHOLE(p3, REF LONGINT);

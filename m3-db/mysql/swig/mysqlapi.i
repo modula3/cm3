@@ -77,16 +77,6 @@ int		STDCALL mysql_real_query(MYSQL *mysql, const char *q,
 MYSQL_RES *     STDCALL mysql_store_result(MYSQL *mysql);
 MYSQL_RES *     STDCALL mysql_use_result(MYSQL *mysql);
 
-/* perform query on master */
-my_bool		STDCALL mysql_master_query(MYSQL *mysql, const char *q,
-					   unsigned long length);
-my_bool		STDCALL mysql_master_send_query(MYSQL *mysql, const char *q,
-						unsigned long length);
-/* perform query on slave */  
-my_bool		STDCALL mysql_slave_query(MYSQL *mysql, const char *q,
-					  unsigned long length);
-my_bool		STDCALL mysql_slave_send_query(MYSQL *mysql, const char *q,
-					       unsigned long length);
 void        STDCALL mysql_get_character_set_info(MYSQL *mysql,
                            MY_CHARSET_INFO *charset);
 
@@ -107,36 +97,6 @@ mysql_set_local_infile_handler(MYSQL *mysql,
 void
 mysql_set_local_infile_default(MYSQL *mysql);
 
-
-/*
-  enable/disable parsing of all queries to decide if they go on master or
-  slave
-*/
-void            STDCALL mysql_enable_rpl_parse(MYSQL* mysql);
-void            STDCALL mysql_disable_rpl_parse(MYSQL* mysql);
-/* get the value of the parse flag */  
-int             STDCALL mysql_rpl_parse_enabled(MYSQL* mysql);
-
-/*  enable/disable reads from master */
-void            STDCALL mysql_enable_reads_from_master(MYSQL* mysql);
-void            STDCALL mysql_disable_reads_from_master(MYSQL* mysql);
-/* get the value of the master read flag */  
-my_bool		STDCALL mysql_reads_from_master_enabled(MYSQL* mysql);
-
-enum mysql_rpl_type     STDCALL mysql_rpl_query_type(const char* q, int len);  
-
-/* discover the master and its slaves */  
-my_bool		STDCALL mysql_rpl_probe(MYSQL* mysql);
-
-/* set the master, close/free the old one, if it is not a pivot */
-int             STDCALL mysql_set_master(MYSQL* mysql, const char* host,
-					 unsigned int port,
-					 const char* user,
-					 const char* passwd);
-int             STDCALL mysql_add_slave(MYSQL* mysql, const char* host,
-					unsigned int port,
-					const char* user,
-					const char* passwd);
 
 int		STDCALL mysql_shutdown(MYSQL *mysql,
                                        enum mysql_enum_shutdown_level
@@ -181,31 +141,10 @@ unsigned long STDCALL mysql_real_escape_string(MYSQL *mysql,
 					       char *to,const char *from,
 					       unsigned long length);
 void		STDCALL mysql_debug(const char *debug);
-char *		STDCALL mysql_odbc_escape_string(MYSQL *mysql,
-						 char *to,
-						 unsigned long to_length,
-						 const char *from,
-						 unsigned long from_length,
-						 void *param,
-						 char *
-						 (*extend_buffer)
-						 (void *, char *to,
-						  unsigned long *length));
+ 
 void 		STDCALL myodbc_remove_escape(MYSQL *mysql,char *name);
 unsigned int	STDCALL mysql_thread_safe(void);
 my_bool		STDCALL mysql_embedded(void);
-MYSQL_MANAGER*  STDCALL mysql_manager_init(MYSQL_MANAGER* con);  
-MYSQL_MANAGER*  STDCALL mysql_manager_connect(MYSQL_MANAGER* con,
-					      const char* host,
-					      const char* user,
-					      const char* passwd,
-					      unsigned int port);
-void            STDCALL mysql_manager_close(MYSQL_MANAGER* con);
-int             STDCALL mysql_manager_command(MYSQL_MANAGER* con,
-						const char* cmd, int cmd_len);
-int             STDCALL mysql_manager_fetch_line(MYSQL_MANAGER* con,
-						  char* res_buf,
-						 int res_buf_size);
 my_bool         STDCALL mysql_read_query_result(MYSQL *mysql);
 
 MYSQL_STMT * STDCALL mysql_stmt_init(MYSQL *mysql);
