@@ -12,6 +12,19 @@ import tempfile
 import shutil
 import time
 
+class Tee:
+    def __init__(self, a, b = None):
+        self.a = a
+        self.b = b
+
+    def write(self, c):
+        if self.a != None:
+            self.a.write(c)
+        if self.b != None and self.a != self.b:
+            self.b.write(c)
+
+sys.stdout = Tee(sys.stdout, open(sys.argv[0] + ".log", "a"))
+
 #-----------------------------------------------------------------------------
 # Several important variables are gotten from the environment or probed.
 # The probing is usually 100% correct.
@@ -370,6 +383,11 @@ _PossibleCm3Flags = ["boot", "keep", "override", "commands", "verbose", "why"]
 _SkipGccFlags = ["nogcc", "skipgcc", "omitgcc"]
 _PossiblePylibFlags = ["noclean", "nocleangcc", "c"] + _SkipGccFlags + _PossibleCm3Flags
 
+skipgcc = False
+for a in _SkipGccFlags:
+    if a in sys.argv:
+        skipgcc = True
+
 CM3_FLAGS = ""
 for a in _PossibleCm3Flags:
     if a in sys.argv:
@@ -660,7 +678,8 @@ if Host.endswith("_NT") or Host == "NT386":
 
 #-----------------------------------------------------------------------------
 
-BuildDir = ("%(Config)s%(_BuildDirC)s" % vars())
+#BuildDir = ("%(Config)s%(_BuildDirC)s" % vars())
+BuildDir = Config
 M3GDB = (M3GDB or CM3_GDB)
 Scripts = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PKGSDB = os.path.join(Scripts, "PKGS")
@@ -2052,7 +2071,7 @@ def ShipFront():
 #-----------------------------------------------------------------------------
 
 def ShipCompiler():
-    return ShipBack() and ShipFront()
+    return (skipgcc or ShipBack()) and ShipFront()
 
 #-----------------------------------------------------------------------------
 

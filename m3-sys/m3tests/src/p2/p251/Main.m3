@@ -11,8 +11,10 @@ VAR top_of_stack:ADDRESS;
 
 PROCEDURE GetStack(): ADDRESS =
 VAR a:INTEGER;
+    b := ADR(a);
 BEGIN
-  RETURN ADR(a);
+  (* RETURN ADR(a); warning about returning the address of local *)
+  RETURN b;
 END GetStack;
 
 PROCEDURE GetStackHeight(): INTEGER =

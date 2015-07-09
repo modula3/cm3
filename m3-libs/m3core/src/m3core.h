@@ -339,6 +339,7 @@ typedef   signed long long  INT64;
 typedef unsigned long long UINT64;
 #endif
 
+typedef unsigned char BOOLEAN;
 typedef float REAL;
 typedef double LONGREAL;
 typedef double EXTENDED;

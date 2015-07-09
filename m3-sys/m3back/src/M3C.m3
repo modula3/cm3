@@ -524,7 +524,29 @@ Cstring.i3 declares strcpy and strcat incorrectly..on purpose.
 "strcpy", "strcat",
 
 (* more incorrect declarations *)
-"signgam", "cabs", "frexp", "modf"
+"signgam", "cabs", "frexp", "modf",
+
+(* symbols internal to the generated code *)
+"M3_HIGH_BITS",
+"M3_LOW_BITS",
+"m3_set_range",
+"m3_set_intersection",
+"m3_set_sym_difference",
+"m3_set_union",
+"WORD_T",
+"CARDINAL",
+"DOTDOTDOT",
+"STRUCT",
+"INT8", "UINT8", "INT16", "UINT16", "INT32", "UINT32", "INT64", "UINT64",
+"m3_eq", "m3_eq_T",
+"m3_ne", "m3_ne_T",
+"m3_gt", "m3_gt_T",
+"m3_ge", "m3_ge_T",
+"m3_lt", "m3_lt_T",
+"m3_le", "m3_le_T",
+"m3_xor", "m3_xor_T",
+"m3_check_range", "m3_check_range_T",
+"GCC_VERSION"
 };
 
 (*
@@ -1791,13 +1813,13 @@ CONST Prefix = ARRAY OF TEXT {
 (*"#define M3_IF_TRUE(fun, a) fun(a,0)",*)
 (*"#define M3_IF_FALSE(fun, a) fun(a,0)",*)
 (* This is a workaround to prevent warnings from older gcc. *)
-"#define m3_eq_T(T) static WORD_T __stdcall m3_eq_##T(T x, T y){return x==y;}\n" &
+"#define m3_eq_T(T) static WORD_T __stdcall m3_eq_##T(T x, T y){return x==y;}",
 "#define m3_ne_T(T) static WORD_T __stdcall m3_ne_##T(T x, T y){return x!=y;}",
 "#define m3_gt_T(T) static WORD_T __stdcall m3_gt_##T(T x, T y){return x>y;}",
 "#define m3_ge_T(T) static WORD_T __stdcall m3_ge_##T(T x, T y){return x>=y;}",
 "#define m3_lt_T(T) static WORD_T __stdcall m3_lt_##T(T x, T y){return x<y;}",
 "#define m3_le_T(T) static WORD_T __stdcall m3_le_##T(T x, T y){return x<=y;}",
-"#define m3_eq(T, x, y) m3_eq_##T(x, y)\n" &
+"#define m3_eq(T, x, y) m3_eq_##T(x, y)",
 "#define m3_ne(T, x, y) m3_ne_##T(x, y)",
 "#define m3_gt(T, x, y) m3_gt_##T(x, y)",
 "#define m3_ge(T, x, y) m3_ge_##T(x, y)",
@@ -1812,20 +1834,12 @@ CONST Prefix = ARRAY OF TEXT {
 (*"#define M3_OP2(fun, op, a, b) a op b",*)
 (*"#define M3_IF_TRUE(fun, a) a",*)
 (*"#define M3_IF_FALSE(fun, a) !a",*)
-
-"#define m3_eq_T(T) /* nothing */",
-"#define m3_ne_T(T) /* nothing */",
-"#define m3_gt_T(T) /* nothing */",
-"#define m3_ge_T(T) /* nothing */",
-"#define m3_lt_T(T) /* nothing */",
-"#define m3_le_T(T) /* nothing */",
 "#define m3_eq(T, x, y) (((T)(x)) == ((T)(y)))",
 "#define m3_ne(T, x, y) (((T)(x)) != ((T)(y)))",
 "#define m3_gt(T, x, y) (((T)(x)) > ((T)(y)))",
 "#define m3_ge(T, x, y) (((T)(x)) >= ((T)(y)))",
 "#define m3_lt(T, x, y) (((T)(x)) < ((T)(y)))",
 "#define m3_le(T, x, y) (((T)(x)) <= ((T)(y)))",
-"#define m3_check_range_T(T) /* nothing */",
 "#define m3_check_range(T, value, low, high) (((T)(value)) < ((T)(low)) || ((T)(high)) < ((T)(value)))",
 "#define m3_xor_T(T) /* nothing */",
 "#define m3_xor(T, x, y) (((T)(x)) ^ ((T)(y)))",
@@ -3390,8 +3404,9 @@ CONST setData = ARRAY OF T1{
         & "#define M3_LOW_BITS(a)  ((~(WORD_T)0) >> (SET_GRAIN - (a) - 1))\n"
         & "static void __stdcall m3_set_range(WORD_T b, WORD_T a, WORD_T* s)\n"
         & "{\n"
-        & "  if (a >= b)\n"
-        & "  {\n"
+        & "  if (a > b) {\n"
+        & "    /* no bits to set */\n"
+        & "  } else {\n"
         & "    WORD_T i = 0;\n"
         & "    WORD_T const a_word = a / SET_GRAIN;\n"
         & "    WORD_T const b_word = b / SET_GRAIN;\n"

@@ -26,7 +26,7 @@ if USE_C_BACKEND_VIA_M3CGCAT
 M3_BACKEND_MODE = "ExternalObject"
 
 proc m3_backend(source, object, optimize, debug) is
-    ret_code = try_exec("@m3cgcat", "-in-binary:" & source, "-out-c:" & source & ".c")
+    ret_code = try_exec("m3cgcat", "-in-binary:" & source, "-out-c:" & source & ".c")
     if not equal(ret_code, 0)
         return ret_code
     end
@@ -51,7 +51,8 @@ end
 if equal(M3_BACKEND_MODE, "IntegratedC")
         or equal(M3_BACKEND_MODE, "C")
         or USE_C_BACKEND_VIA_M3CGCAT
-    readonly BUILD_DIR_C = "c"
+    %readonly BUILD_DIR_C = "c"
+    readonly BUILD_DIR_C = ""
 else
     readonly BUILD_DIR_C = ""
 end
