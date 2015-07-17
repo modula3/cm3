@@ -72,11 +72,11 @@ INTERFACE UniRd
   (* Push back the last decoded code point read from Stream, pushing it back
      onto Stream.Source, in encoded form.  This is guaranteed to work only
      if the last operation on Stream was GetWideChar, GetChar, GetWideSub,
-     or GetSub or an UnsafeUniRd.Fast* version thereof.  Result FALSE means 
-     the operation did not happen, because of a violation of this condition.
+     or GetSub, or an UnsafeUniRd.Fast* version thereof.  Result FALSE means 
+     the operation did not happen, because of a violation of this condition,
+     or because somebody has bypassed Stream and directly [un]gotten chars
+     from Stream.Source.
   *) 
-  (* WARNING! Currently unimplemented.  A NOOP.  Always returns FALSE. *) 
-(* TODO: UnGetCodePoint is not yet implemented. *) 
   
 ; PROCEDURE GetWideSub ( Stream : T ; VAR (*OUT*) ArrWch : ARRAY OF Widechar ) 
   : CARDINAL
@@ -101,11 +101,12 @@ INTERFACE UniRd
   : CARDINAL
   RAISES { Failure , Alerted } 
   (* Decode and consume characters from Source(Stream), using Enc(Stream), 
-     storing them into ArrCh, until Source(Stream) is at end-of-file, or ArrCh
-     is filled, or an end-of-line sequence has been read and stored.  
+     storing them into ArrWch, until Source(Stream) is at end-of-file, or 
+     ArrWch is filled, or an end-of-line sequence has been read.  
      Return the actual number of decoded characters stored into ArrWch.  
      Include any end-of-line sequence in the returned count and store it in
-     ArrWch. 
+     ArrWch, except if only one character of a two-character end-of-line 
+     sequence would fit in ArrWch, leave both unstored and unconsumed. 
 
      Consistent with the Unicode standard, an end-of-line consists of any of:
 
@@ -125,10 +126,10 @@ INTERFACE UniRd
 ; PROCEDURE GetSubLine 
     ( Stream : T ; VAR (*OUT*) ArrCh : ARRAY OF CHAR ) : CARDINAL
   RAISES { Range , Failure , Alerted } 
-  (* Like GetWideSubLine, but return the characters in an ARRAY OF CHAR,
-     raising Range({Wch,Loc}) if an otherwise to-be-returned character 
-     is not in CHAR, where Wch is the out-of-range character,
-     and Loc is the number of characters stored.  
+  (* Like FastGetWideSubLine, but return stored characters in an ARRAY OF CHAR.
+     If an otherwise to-be-returned character is not in CHAR, consume but do
+     not store it and raise Range(Wch,N), where Wch is the out-of-range 
+     character, and N is the number of characters stored.  
   *) 
 
 ; PROCEDURE GetText ( Stream : T ; Len : CARDINAL ) : TEXT  
