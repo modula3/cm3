@@ -50,9 +50,6 @@ PROCEDURE FastEOF(rd: Rd.T): BOOLEAN RAISES {Failure, Alerted};
 PROCEDURE FastUnGetChar(rd: Rd.T) RAISES {};
 (* Like Rd.UnGetChar, but rd must be locked. *)
 
-PROCEDURE FastUnGetCharMulti(rd: Rd.T): BOOLEAN (* Succeeded. *);
-(* Like Rd.UnGetCharMulti, but rd must be locked. *)
-
 PROCEDURE FastCharsReady(rd: Rd.T): CARDINAL RAISES {Failure}; 
 (* Like Rd.CharsReady, but rd must be locked. *)
 
