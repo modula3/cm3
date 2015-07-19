@@ -1884,21 +1884,41 @@ CONST Prefix = ARRAY OF TEXT {
 "#define UINT64_(x) x##ULL",
 "#endif",
 
+(* size_t and ptrdiff_t are not actually used in the generated code;
+   m3front issues typedefs for WORD_T and INTEGER; we need this
+   just for the _alloca declaration *)
 "#if defined(_WIN64)",
 (*"typedef __int64 ptrdiff_t;",*)
 "typedef unsigned __int64 size_t;",
 "#elif defined(_WIN32)",
 (*"typedef int ptrdiff_t;",*)
 "typedef unsigned size_t;",
-"#elif defined(__APPLE__)",
-"typedef unsigned long size_t;",
+(*"#elif defined(__APPLE__)",*)
+(*"typedef unsigned long size_t;",*)
 (*"#ifdef __LP64__",*)
 (*"typedef long ptrdiff_t;",*)
 (*"#else",*)
 (*"typedef int ptrdiff_t;",*)
 (*"#endif",*)
-"#else",
-"#include <stddef.h>", (* try to remove this, it is slow -- need size_t, ptrdiff_t *)
+(*"#else",*)
+(*"#include <stddef.h>", *) (* try to remove this, it is slow -- need size_t, ptrdiff_t *)
+"#endif",
+
+"/* http://c.knowcoding.com/view/23699-portable-alloca.html */",
+"/* Find a good version of alloca. */",
+"#ifndef alloca",
+"# ifdef __GNUC__",
+"#  define alloca __builtin_alloca",
+"# else",
+"#  if defined(__DECC) || defined(__DECCXX)",
+"#   define alloca(x) __ALLOCA(x)",
+"#  else",
+"#   ifdef _MSC_VER",
+"#    void * __cdecl _alloca(size_t size);",
+"#    define alloca _alloca",
+"#   endif",
+"#  endif",
+"# endif",
 "#endif",
 
 "typedef float REAL;",
