@@ -1914,7 +1914,7 @@ CONST Prefix = ARRAY OF TEXT {
 "#   define alloca(x) __ALLOCA(x)",
 "#  else",
 "#   ifdef _MSC_VER",
-"#    void * __cdecl _alloca(size_t size);",
+"     void * __cdecl _alloca(size_t size);",
 "#    define alloca _alloca",
 "#   endif",
 "#  endif",
