@@ -763,8 +763,6 @@ MODULE TestUniRd EXPORTS Main
 ; PROCEDURE TestGetWideSubLine ( ) 
 
   = BEGIN 
-RETURN 
-; 
       OpenPipe ( GEnc ) 
 
     ; WriteChars ( WchA , WchB , WchMax16 ) 
