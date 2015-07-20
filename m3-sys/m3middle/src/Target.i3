@@ -311,6 +311,8 @@ TYPE
 
 VAR (*CONST*)
   DefaultCall: CallingConvention := NIL;
+CONST CDECL = 0;   (* use with ConventionFromID *)
+CONST STDCALL = 1; (* use with ConventionFromID *)
 
 PROCEDURE FindConvention (nm: TEXT): CallingConvention;
 (* Return the convention with name "nm".  Otherwise, return NIL. *)

@@ -1248,15 +1248,19 @@ PROCEDURE NewProc (u: U; n: Name; n_params: INTEGER;
     RETURN p;
   END NewProc;
 
-PROCEDURE import_procedure (u: U;  n: Name;  n_params: INTEGER;
-                            ret_type: Type;  cc: CallingConvention): Proc =
+PROCEDURE import_procedure_internal (u: U;  n: Name;  n_params: INTEGER;
+                                     ret_type: Type;  cc: CallingConvention;
+                                     rename: TEXT := NIL): Proc =
   VAR p := NewProc (u, n, n_params, ret_type, cc);
   BEGIN
     p.import := TRUE;
 
     u.n_params := n_params;
-
-    IF (n_params = 0 OR NOT p.stdcall) AND Text.Length(M3ID.ToText(n)) > 0 THEN
+    
+    IF rename # NIL THEN
+      p.name := M3ID.Add(rename);
+      p.symbol := u.obj.import_symbol(p.name);
+    ELSIF (n_params = 0 OR NOT p.stdcall) AND Text.Length(M3ID.ToText(n)) > 0 THEN
       p.name := mangle_procname(p.name, 0, p.stdcall);
       p.symbol := u.obj.import_symbol(p.name);
     END;
@@ -1274,7 +1278,13 @@ PROCEDURE import_procedure (u: U;  n: Name;  n_params: INTEGER;
     END;
 
     RETURN p;
-  END import_procedure;
+  END import_procedure_internal;
+
+PROCEDURE import_procedure (u: U;  n: Name;  n_params: INTEGER;
+                            ret_type: Type;  cc: CallingConvention): Proc =
+BEGIN
+  RETURN import_procedure_internal(u, n, n_params, ret_type, cc, NIL);
+END import_procedure;
 
 PROCEDURE declare_procedure (u: U;  n: Name;  n_params: INTEGER;
                              return_type: Type;  lev: INTEGER;
@@ -3222,7 +3232,8 @@ TYPE
     mul64,
     udiv64, umod64,
     div64, mod64,
-    rotate_left64, rotate_right64, rotate64
+    rotate_left64, rotate_right64, rotate64,
+    alloca
   };
 
 (* union .. sym_difference -> (n_bits, *c, *b, *a): Void
@@ -3236,49 +3247,54 @@ TYPE
     name     : TEXT;
     n_params : INTEGER; (* counted in 32bit words *)
     ret_type : Type;
-    lang     : TEXT;
+    lang     : INTEGER; (* Target.STDCALL or TARGET.CDECL *)
+    rename   : TEXT := NIL;
+    (* for a single parameter function, register for the parameter; i.e. eax for alloca *)
+    reg      := -1;
   END;
 
 CONST
   BuiltinDesc = ARRAY Builtin OF BP {
-    BP { "set_union",          4, Type.Void,  "__stdcall" },
-    BP { "set_difference",     4, Type.Void,  "__stdcall" },
-    BP { "set_intersection",   4, Type.Void,  "__stdcall" },
-    BP { "set_sym_difference", 4, Type.Void,  "__stdcall" },
-    BP { "set_range",          3, Type.Void,  "__stdcall" },
-    BP { "set_lt",             3, Type.Int32, "__stdcall" },
-    BP { "set_le",             3, Type.Int32, "__stdcall" },
-    BP { "set_gt",             3, Type.Int32, "__stdcall" },
-    BP { "set_ge",             3, Type.Int32, "__stdcall" },
-    BP { "memmove",            3, Type.Addr,  "C" },
-    BP { "memcpy",             3, Type.Addr,  "C" },
-    BP { "memset",             3, Type.Addr,  "C" },
-    BP { "memcmp",             3, Type.Int32, "C" },
+    BP { "set_union",          4, Type.Void,  Target.STDCALL },
+    BP { "set_difference",     4, Type.Void,  Target.STDCALL },
+    BP { "set_intersection",   4, Type.Void,  Target.STDCALL },
+    BP { "set_sym_difference", 4, Type.Void,  Target.STDCALL },
+    BP { "set_range",          3, Type.Void,  Target.STDCALL },
+    BP { "set_lt",             3, Type.Int32, Target.STDCALL },
+    BP { "set_le",             3, Type.Int32, Target.STDCALL },
+    BP { "set_gt",             3, Type.Int32, Target.STDCALL },
+    BP { "set_ge",             3, Type.Int32, Target.STDCALL },
+    BP { "memmove",            3, Type.Addr,  Target.CDECL },
+    BP { "memcpy",             3, Type.Addr,  Target.CDECL },
+    BP { "memset",             3, Type.Addr,  Target.CDECL },
+    BP { "memcmp",             3, Type.Int32, Target.CDECL },
 
     (* custom calling convention: parameters pushed, removed
      * by callee, but name is not __stdcall, call_64 pokes
      * the parameter size to 0
      *)
-    BP { "_allmul",          0, Type.Word64, "C" }, (* 64bit multiply; signed or unsigned *)
-    BP { "_aulldiv",         0, Type.Word64, "C" }, (* 64bit unsigned divide *)
-    BP { "_aullrem",         0, Type.Word64, "C" }, (* 64bit unsigned mod/remainder *)
+    BP { "_allmul",          0, Type.Word64, Target.CDECL }, (* 64bit multiply; signed or unsigned *)
+    BP { "_aulldiv",         0, Type.Word64, Target.CDECL }, (* 64bit unsigned divide *)
+    BP { "_aullrem",         0, Type.Word64, Target.CDECL }, (* 64bit unsigned mod/remainder *)
 
-    BP { "m3_div64",         4, Type.Int64,  "__stdcall" },
-    BP { "m3_mod64",         4, Type.Int64,  "__stdcall" },
-    BP { "m3_rotate_left64", 3, Type.Word64, "__stdcall" },
-    BP { "m3_rotate_right64",3, Type.Word64, "__stdcall" },
-    BP { "m3_rotate64",      3, Type.Word64, "__stdcall" }
+    BP { "m3_div64",         4, Type.Int64,  Target.STDCALL },
+    BP { "m3_mod64",         4, Type.Int64,  Target.STDCALL },
+    BP { "m3_rotate_left64", 3, Type.Word64, Target.STDCALL },
+    BP { "m3_rotate_right64",3, Type.Word64, Target.STDCALL },
+    BP { "m3_rotate64",      3, Type.Word64, Target.STDCALL },
+    
+    BP { "m3_alloca",        0, Type.Addr, Target.CDECL, "__chkstk", EAX }
   };
-
 
 PROCEDURE start_int_proc (u: U;  b: Builtin) =
   BEGIN
     WITH proc = u.builtins[b],
          desc = BuiltinDesc [b] DO
       IF proc = NIL THEN
-        proc := import_procedure (u, M3ID.Add (desc.name),
-                                  desc.n_params, desc.ret_type,
-                                  Target.FindConvention (desc.lang));
+        proc := import_procedure_internal (u, M3ID.Add (desc.name),
+                                           desc.n_params, desc.ret_type,
+                                           Target.ConventionFromID (desc.lang),
+                                           desc.rename);
         FOR i := 1 TO desc.n_params DO
           EVAL declare_param (u, M3ID.NoID, 4, 4, Type.Word32, 0, FALSE, FALSE, 100);
         END;

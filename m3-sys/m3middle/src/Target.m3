@@ -389,16 +389,18 @@ PROCEDURE InitCallingConventions(backend_mode: M3BackendMode_t;
   VAR integrated := BackendIntegrated[backend_mode];    
   BEGIN
     (* 0 is __cdecl, 1 is __stdcall. *)
-    CCs := ARRAY OF CallingConvention{ New("C",          0),
+    CCs := ARRAY OF CallingConvention{ New("__cdecl",    0), (* must be first *)
+                                       New("__stdcall",  1), (* must be second *)
+                                       New("C",          0),
                                        New("WINAPIV",    0),
-                                       New("__cdecl",    0),
                                        New("WINAPI",     1),
                                        New("CALLBACK",   1),
                                        New("APIENTRY",   1),
                                        New("APIPRIVATE", 1),
-                                       New("PASCAL",     1),
-                                       New("__stdcall",  1) };
+                                       New("PASCAL",     1) };
     DefaultCall := CCs[0];
+    (*cdecl := CCs[0];
+    stdcall := CCs[1];*)
   END InitCallingConventions;
 
 PROCEDURE CheckI (READONLY i: Int_type; max_align: INTEGER) =
@@ -426,13 +428,8 @@ PROCEDURE FindConvention (nm: TEXT): CallingConvention =
   END FindConvention;
 
 PROCEDURE ConventionFromID (id: INTEGER): CallingConvention =
-  VAR cc: CallingConvention;
   BEGIN
-    FOR i := 0 TO LAST (CCs) DO
-      cc := CCs[i];
-      IF (cc # NIL) AND (cc.m3cg_id = id) THEN RETURN cc; END;
-    END;
-    RETURN NIL;
+    RETURN CCs[id];
   END ConventionFromID;
 
 BEGIN
