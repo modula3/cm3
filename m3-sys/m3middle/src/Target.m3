@@ -399,8 +399,6 @@ PROCEDURE InitCallingConventions(backend_mode: M3BackendMode_t;
                                        New("APIPRIVATE", 1),
                                        New("PASCAL",     1) };
     DefaultCall := CCs[0];
-    (*cdecl := CCs[0];
-    stdcall := CCs[1];*)
   END InitCallingConventions;
 
 PROCEDURE CheckI (READONLY i: Int_type; max_align: INTEGER) =
