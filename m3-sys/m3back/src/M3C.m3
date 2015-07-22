@@ -1939,11 +1939,14 @@ CONST Prefix = ARRAY OF TEXT {
 "#define __stdcall /* nothing */",
 "#endif",
 
-"#define STRUCT(n) struct_##n##_t",                                             (* TODO prune if not used *)
-"#define STRUCT1(n) typedef struct { volatile UINT8 a[n]; } STRUCT(n);",        (* TODO prune if not used *)
-"#define STRUCT2(n) typedef struct { volatile UINT16 a[(n)/2]; } STRUCT(n);",   (* TODO prune if not used *)
-"#define STRUCT4(n) typedef struct { volatile UINT32 a[(n)/4]; } STRUCT(n);",   (* TODO prune if not used *)
-"#define STRUCT8(n) typedef struct { volatile UINT64 a[(n)/8]; } STRUCT(n);",   (* TODO prune if not used *)
+"#define STRUCT(n) struct_##n##_t", (* TODO prune if not used *)
+(* TODO struct1 and struct2 should not be needed.
+   struct4 and struct8 can go away when we make open arrays and jmpbufs
+   better typed, and then struct can go also *)
+"#define STRUCT1(n) typedef struct { volatile char a[n]; }     STRUCT(n);", (* TODO prune if not used *)
+"#define STRUCT2(n) typedef struct { volatile short a[n/2]; }  STRUCT(n);", (* TODO prune if not used *)
+"#define STRUCT4(n) typedef struct { volatile int a[n/4]; }    STRUCT(n);", (* TODO prune if not used *)
+"#define STRUCT8(n) typedef struct { volatile double a[n/8]; } STRUCT(n);", (* TODO prune if not used *)
 "#ifdef __cplusplus",
 "#define DOTDOTDOT ...",
 "#else",
