@@ -1884,21 +1884,26 @@ CONST Prefix = ARRAY OF TEXT {
 "#define UINT64_(x) x##ULL",
 "#endif",
 
+(* This chunk can/should be moved to HelperFunctions i.e. memcmp | memmove |
+   memcpy | memset | copy_n | zero | set_compare, esp. to reduce #include
+   <stddef.h>.
+   NOTE: While the vast majority of systems, except NT and VMS, have unsigned
+   long the same size as size_t, size_t could also be unsigned int on 32bit
+   systems or unsigned long long on 64bit systems, and the correct type
+   should be used, unless we have an intermediate function and cast.
+   NOTE: NT and likely VMS are the exception the previous -- 32bit long always.
+*)
 "#if defined(_WIN64)",
-(*"typedef __int64 ptrdiff_t;",*)
-"typedef unsigned __int64 size_t;",
+"typedef UINT64 size_t;",
 "#elif defined(_WIN32)",
-(*"typedef int ptrdiff_t;",*)
 "typedef unsigned size_t;",
-"#elif defined(__APPLE__)",
+"#elif defined(__SIZE_TYPE__)", (* gcc, clang *)
+"typedef __SIZE_TYPE__ size_t;",
+"#elif defined(__APPLE__) /*|| defined(_LP64) || defined(__LP64__)*/",
 "typedef unsigned long size_t;",
-(*"#ifdef __LP64__",*)
-(*"typedef long ptrdiff_t;",*)
-(*"#else",*)
-(*"typedef int ptrdiff_t;",*)
-(*"#endif",*)
 "#else",
-"#include <stddef.h>", (* try to remove this, it is slow -- need size_t, ptrdiff_t *)
+(*"typedef unsigned int size_t;",*)
+"#include <stddef.h>", (* try to remove this, it is slow -- need size_t *)
 "#endif",
 
 "/* http://c.knowcoding.com/view/23699-portable-alloca.html */",
@@ -1951,19 +1956,6 @@ CONST Prefix = ARRAY OF TEXT {
 "#else",
 "#define DOTDOTDOT",
 "#endif",
-
-(* WORD_T/INTEGER are always exactly the same size as a pointer.
- * VMS sometimes has 32bit size_t/ptrdiff_t but 64bit pointers. *)
-(*"#if __INITIAL_POINTER_SIZE == 64",*) (* handled in DeclareBuiltinTypes *)
-(*"typedef __int64 INTEGER;",*) (* handled in DeclareBuiltinTypes *)
-(*"typedef unsigned __int64 WORD_T;",*) (* handled in DeclareBuiltinTypes *)
-(*"#else",*) (* handled in DeclareBuiltinTypes *)
-(*"typedef ptrdiff_t INTEGER;",*) (* handled in DeclareBuiltinTypes *)
-(*"typedef size_t WORD_T;",*) (* handled in DeclareBuiltinTypes *)
-(*"#endif",*) (* handled in DeclareBuiltinTypes *)
-
-(*"typedef WORD_T* SET;",*) (* moved to HelperFunctions *)
-(*"#define SET_GRAIN (sizeof(WORD_T)*8)",*) (* moved to HelperFunctions *)
 
 ""};
 
