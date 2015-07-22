@@ -784,8 +784,12 @@ PROCEDURE pointer_define(type: Pointer_t; self: T) =
 VAR x := self;
 BEGIN
     (* We have recursive types TYPE FOO = UNTRACED REF FOO. Typos actually. *)
-    IF type.points_to_typeid = type.points_to_typeid THEN
+    IF type.points_to_typeid = type.typeid THEN
       print(x, "/*self pointer_define*/typedef void* " & type.text & ";\n");
+      RETURN;
+    END;
+    IF type.points_to_type = NIL THEN
+      print(x, "/*nil pointer_define*/typedef void* " & type.text & ";\n");
       RETURN;
     END;
     type.points_to_type.ForwardDeclare(self);
@@ -1189,8 +1193,8 @@ BEGIN
     IF element_type # NIL THEN
         element_type_text := element_type.text;
     END;
-    IF TRUE OR element_type_text = NIL THEN
-        element_type_text := "char";
+    IF element_type_text = NIL THEN
+        element_type_text := "char/*TODO*/";
     END;
     text := "/*openArray_define*/struct " & type.text & "{\n" & element_type_text;
     FOR i := 1 TO dimensions DO
@@ -1243,7 +1247,7 @@ BEGIN
 
     IF typedef THEN
         (* typedef INT32 T1234; and such
-           TODO don't do this, it makes the code less readoable. *)
+           TODO don't do this, it makes the code less readable. *)
         FOR i := FIRST(typedefs) TO LAST(typedefs) DO
             IF typedefs[i] # NIL AND typedefs[i] # Text_address THEN
                 print(self, "/*Type_Init*/typedef " & cgtypeToText[cgtype] & " " & typedefs[i] & ";\n");
@@ -1807,7 +1811,7 @@ CONST Prefix = ARRAY OF TEXT {
 "#else",
 "#define GCC_VERSION 0",
 "#endif",
-"#if (GCC_VERSION > 0 && GCC_VERSION < 403)",
+"#if GCC_VERSION > 0 && GCC_VERSION < 403",
 (*"#define AVOID_GCC_TYPE_LIMIT_WARNING 1",*)
 (*"#define M3_OP2(fun, op, a, b) fun(a, b)",*)
 (*"#define M3_IF_TRUE(fun, a) fun(a,0)",*)
@@ -1865,11 +1869,8 @@ CONST Prefix = ARRAY OF TEXT {
 "typedef char* STRUCT;",  (* TODO remove this when we finish strong typing *)
 "typedef signed char INT8;",
 "typedef unsigned char UINT8;",
-(*"typedef UINT8 CHAR;",*) (* DeclareBuiltinTypes *)
-(*"typedef UINT8 BOOLEAN;",*) (* DeclareBuiltinTypes *)
 "typedef short INT16;",
 "typedef unsigned short UINT16;",
-(*"typedef UINT16 WIDECHAR;",*) (* DeclareBuiltinTypes *)
 "typedef int INT32;",
 "typedef unsigned int UINT32;",
 "#if defined(_MSC_VER) || defined(__DECC) || defined(__DECCXX) || defined(__int64)",
@@ -1926,14 +1927,6 @@ CONST Prefix = ARRAY OF TEXT {
 "typedef float REAL;",
 "typedef double LONGREAL;",
 "typedef /*long*/ double EXTENDED;",
-
-(* handled in DeclareBuiltinTypes *)
-(*"#if defined(__cplusplus) || __STDC__",*)
-(*"typedef void* PVOID;",*)
-(*"#else",*)
-(*"typedef char* PVOID;",*)
-(*"#endif",*)
-(*"typedef PVOID TEXT,MUTEX,ROOT,REFANY,PROC1,PROC2,PROC3,PROC4,PROC5,PROC6,PROC7,PROC8;",*)
 
 "#ifdef __cplusplus",
 "extern \"C\" {",
@@ -2441,7 +2434,7 @@ BEGIN
 PROCEDURE declare_open_array(self: DeclareTypes_t; typeid, element_typeid: TypeUID; bit_size: BitSize) =
 VAR x := self.self;
 BEGIN
-    IF DebugVerbose(x) THEN
+    IF TRUE OR DebugVerbose(x) THEN
         x.comment("declare_open_array typeid:" & TypeIDToText(typeid)
             & " element_typeid:" & TypeIDToText(element_typeid)
             & " bit_size:" & IntToDec(bit_size));
@@ -2758,7 +2751,7 @@ END declare_subrange;
 PROCEDURE declare_pointer(self: DeclareTypes_t; typeid, target: TypeUID; brand: TEXT; traced: BOOLEAN) =
 VAR x := self.self;
 BEGIN
-    IF DebugVerbose(x) THEN
+    IF typeid = target OR DebugVerbose(x) THEN
         x.comment("declare_pointer typeid:" & TypeIDToText(typeid)
             & " target:" & TypeIDToText(target)
             & " brand:" & TextOrNIL(brand)
