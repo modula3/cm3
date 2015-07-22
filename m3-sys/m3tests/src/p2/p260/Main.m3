@@ -39,7 +39,7 @@ END F6_4;
 PROCEDURE F7() =
 VAR a := NEW(REF ARRAY OF INTEGER, 12);
 BEGIN
-    SUBARRAY(a^, 0, 4) := SUBARRAY(a^, 1, 5);
+    SUBARRAY(a^, 0, 4) := SUBARRAY(a^, 1, 4);
 END F7;
 
 PROCEDURE F1(): REF ARRAY OF INTEGER =
@@ -59,6 +59,6 @@ BEGIN
   F6_3v();
   F6_4();
   F6_4v();
-  (*F7(); bug *)
+  F7();
   EVAL F4(F1());
 END Main.
