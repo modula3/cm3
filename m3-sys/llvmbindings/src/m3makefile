@@ -1,5 +1,10 @@
 
 % File: m3-sys/llvmbindings/src/m3makefile
+
+% Copyright 2015, Rodney M. Bates.
+% rodney.m.bates@acm.org
+% Licensed under the Gnu Public License, version 2 or later.
+
 % This package contains Modula-3 bindings to the llvm infrastructure,
 % indirectly through C/C++ bindings.
 
@@ -13,29 +18,35 @@
 %   LLVM_LIB_DIR = "location.of.compiled.llvm.libraries"
 %   LIB_DIR = "location.of.other.libraries.needed.by.llvm"
 
-% Directory to find llvm source (at least its include subdirectory) in: 
+% Directory wherein to find llvm source (at least its include subdirectory):
 if not defined("LLVM_SOURCE_DIR") LLVM_SOURCE_DIR = "/home/rodney/proj/llvm/llvm-3.6.1/llvm-3.6.1.src" end 
 LLVM_INCLUDE_DIR = LLVM_SOURCE_DIR & "/include" 
+% Some include files come from here: 
+LLVM_BUILD_INCLUDE_DIR = LLVM_SOURCE_DIR & "/../build/include" 
 
 % Directory to find compiled llvm libraries in:
 %if not defined("LLVM_LIB_DIR") LLVM_LIB_DIR = "/usr/local/lib" end % Rodney, llvm 3.4.2
 if not defined("LLVM_LIB_DIR") LLVM_LIB_DIR = "/usr/local/llvm-3.6.1/lib" end % Rodney, llvm 3.6.1
 
-% Directory to find various system libraries in: 
-%if not defined("LIB_DIR") LIB_DIR = "/usr/lib" endm  % Peter McKinna 
+% Directory wherein to find various system libraries: 
+%if not defined("LIB_DIR") LIB_DIR = "/usr/lib" end  % Peter McKinna 
 if not defined("LIB_DIR") LIB_DIR = "/usr/lib/x86_64-linux-gnu" end % Rodney Bates
 
 % This m3makefile will invoke make to do the C++ compilation.  
 % If we get cm3 extended to have a cpp_source command, we might then let
 % it invoke the C++ compiler.  For now, we exec make to do it.  
 
-exec("make", "-f" , "../src/Makefile", "-k", "LLVM_INCLUDE_DIR=" & LLVM_INCLUDE_DIR, "BUILD_DIR=" & BUILD_DIR) 
+%TODO: When its -clean or -realclean, exec make for "clean", not "all".  
+
+exec("make", "-f" , "../src/Makefile", "-k", "LLVM_INCLUDE_DIR=" & LLVM_INCLUDE_DIR, "LLVM_BUILD_INCLUDE_DIR=" & LLVM_BUILD_INCLUDE_DIR, "BUILD_DIR=" & BUILD_DIR) 
 % ^ For now, until we get C++ files into m3 build system
 
 import ("m3core")
 Interface ("LLVM") 
-%Interface ("M3DIB") 
+Interface ("LLVMTypes") 
+Interface ("M3DIBuilder") 
 import_obj("M3Extras")
+import_obj("M3DIBuilder")
   % import_obj needs work!!  
   % import_obj(<name>) puts a symlink in ../BUILD_DIR/<name>.o, pointing to <name.o>, 
   % located relative to the src directory.  Later, it links the symlink into the package.  
@@ -44,7 +55,7 @@ import_obj("M3Extras")
   % But import_obj("../BUILD_DIR/<name>") just replaces it with a circular symlink. 
   % When this is fixed, the Makefile will have to be changed to put it in the right place. 
 
-% Commands for linking in needed llvm static libraries. 
+% Commands for linking-in needed llvm static libraries. 
 % NOTE: These are in this m3makefile for llvmbindings, because 
 %       it is the code in this package that needs them.
 %       However, the CM3 build system will not attempt to link

@@ -1,14 +1,21 @@
-Package llvmbindings.
+File cm3/m3-sys/llvmbindings/src/README
+README for package llvmbindings.
+
+(* Copyright 2015, Rodney M. Bates.                                          *)
+(* rodney.m.bates@acm.org                                                    *)
+(* Licensed under the Gnu Public License, version 2 or later.                *)
 
 This Modula3 package contains Modula3 bindings to selected things in
 llvm that are needed to interface to llvm.
 
-A procedure binding generally requires code in three files:
+Procedure bindings herein generally use code in three files:
 
 1) Modula3 code in a .i3 file, that contains a (usually) zero-thickness
-   Module3-to-C binding.  This is just a PROCEDURE signature in
+   Modula3-to-C binding.  This is just a PROCEDURE signature in
    Modula3 syntax, using types and parameteter modes equivalent to C
-   types for parameters and results.
+   types for parameters and results.  It, or the entire interface, has
+   an <*EXTERNAL*> pragma, so the implementation, compiled by other than
+   a Modula-3 compiler, can be linked-to. 
 
 2) C code in a .h file, that contains a prototype for a plain C
    function.  This will be #included by C++ code, but contains 'extern
@@ -21,10 +28,17 @@ A procedure binding generally requires code in three files:
    conversions to/from llvm's C++-but-not-C types, so the wrapper must
    be in C++.
 
-This package supplies 1) for everything needed.  The llvm project
+This package supplies 1) for everything provided.  The llvm project
 supplies Core.h/Core.cpp, inside its source tree, which contain 2) and
-3) for a set of functions chosen by llvm's developers.  For others,
-this package supplies 2) and 3) itself.    
+3) for a set of functions chosen by llvm's developers.  LLVM.i3 is the
+corresponding item 1). For others, this package supplies all three itself. 
+
+What is in which binding is a bit willy-nilly, but here is the intended
+principle:  LLVM.i3 is for whatever llvm's developers provided in Core.h/
+Core.cpp, plus a few extra things supported by M3Extras.h/M3Extras.cpp.  
+M3DIBuilder is for things found in llvm's DIBuilder. It contains a few 
+declarations that might logically have been in Core, but aren't and are
+needed by M3DIBuilder.       
 
 The m3makefile will invoke make to do the C++ compilation.  It needs
 variables giving the locations of llvm's include files, llvm's compiled
