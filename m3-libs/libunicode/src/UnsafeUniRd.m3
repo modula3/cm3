@@ -535,7 +535,7 @@ MODULE UnsafeUniRd
                      - LStartSourceIndex is its 1st encoded byte index.
                      - LPreSourceIndex0 is the 1st encoded byte index
                        of the previous delivered code point, or 
-                       LStartSourceIndes if none.
+                       LStartSourceIndex if none.
                      - There is space for a CHAR at ArrCh[LI]. *) 
           IF ORD ( LWch1 ) > ORD ( LAST ( CHAR ) ) 
           THEN 
