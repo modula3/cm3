@@ -18,8 +18,31 @@ TYPE
 CONST SlashText = ARRAY Compiler.OS OF TEXT{"/", "\\"}[Compiler.ThisOS];
 
 TYPE
-  Kind = { Unknown, I3, IC, IS, IO, M3, MC, MS, MO,
-           IG, MG, C, H, S, O, M3LIB, LIB, LIBX, PGM, PGMX, TMPL };
+  Kind = { Unknown, 
+           I3,     (* M3 source for an interface. *) 
+           IB,     (* llvm bitcode for an interface. *) 
+           IC,     (* Front end output for an interface. *) 
+           IS,     (* Assembly code for an interface. *) 
+           IO,     (* Object module for an interface*) 
+           M3,     (* M3 source for a module. *) 
+           MB,     (* llvm bitcode for a module. *) 
+           MC,     (* Front end output for a module. *) 
+           MS,     (* Assembly code for a module. *) 
+           MO,     (* Object module for a module. *)
+           IG,     (* M3 source for a generic interface. *) 
+           MG,     (* M3 source for a generic module. *) 
+           C,      (* C source file. *) 
+           H,      (* C header file. *) 
+           B,      (* llvm bitcode, not from M3 code. *) 
+           S,      (* Assembly code for non-M3 source. *) 
+           O,      (* Object module for non-M3 source. *) 
+           M3LIB,  (* Library for M3 code. *) 
+           LIB,    (* Library for non-M3 code. *) 
+           LIBX,   (* m3linker data for a M3 library. *) 
+           PGM,    (* Executable. *) 
+           PGMX,   (* m3linker data for a M3 program. *) 
+           TMPL    (* Quake template code. *) 
+           };
 
   OSKind = { Unix, GrumpyUnix, Win32 };
 

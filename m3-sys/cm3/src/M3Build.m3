@@ -1707,11 +1707,7 @@ PROCEDURE DoInstallSources (m: QMachine.T;  <*UNUSED*> n_args: INTEGER) =
   END DoInstallSources;
 
 PROCEDURE InstallSources (t: T) =
-  CONST
-    IsSource = ARRAY UK OF BOOLEAN {
-      FALSE, TRUE, FALSE, FALSE, FALSE, TRUE, FALSE, FALSE, FALSE,
-      TRUE, TRUE, TRUE, TRUE, TRUE, FALSE,
-      FALSE, FALSE, FALSE, FALSE, FALSE, TRUE };
+  CONST UKSourceSet = SET OF UK { UK.I3, UK.M3, UK.IG, UK.MG, UK.C, UK.H, UK.TMPL }; 
 
   VAR
     n_local := 0;
@@ -1754,7 +1750,7 @@ PROCEDURE InstallSources (t: T) =
     (* count the local sources *)
     u := t.units.head;
     WHILE (u # NIL) DO
-      IF NOT u.imported AND IsSource [u.kind] THEN
+      IF NOT u.imported AND u.kind IN UKSourceSet THEN
         INC (n_local);
       END;
       u := u.next;
@@ -1771,7 +1767,7 @@ PROCEDURE InstallSources (t: T) =
     n_local := 0;
     u := t.units.head;
     WHILE (u # NIL) DO
-      IF NOT u.imported AND IsSource [u.kind] THEN
+      IF NOT u.imported AND u.kind IN UKSourceSet THEN
         srcs [n_local] := u;
         map  [n_local] := n_local;
         INC (n_local);
@@ -2266,10 +2262,10 @@ PROCEDURE GenM3Exports (t: T;  header: TEXT)
   CONST HTag = ARRAY BOOLEAN OF TEXT { "", "hidden" };
   CONST KindTag = ARRAY UK OF TEXT {
      NIL,
-     "_map_add_interface", NIL, NIL, NIL,
-     "_map_add_module", NIL, NIL, NIL,
+     "_map_add_interface", NIL, NIL, NIL, NIL,
+     "_map_add_module", NIL, NIL, NIL, NIL, 
      "_map_add_generic_interface", "_map_add_generic_module",
-     "_map_add_c", "_map_add_h", "_map_add_s", NIL,
+     "_map_add_c", "_map_add_h", NIL, "_map_add_s", NIL,
      "_import_m3lib", "_import_otherlib", NIL, NIL, NIL, "template" } ;
 
   VAR fail_msg: TEXT := NIL;
@@ -2301,8 +2297,8 @@ PROCEDURE GenM3Exports (t: T;  header: TEXT)
         WHILE (u # NIL) DO
           IF (NOT u.imported) THEN
             CASE u.kind OF
-            | UK.Unknown, UK.IC, UK.IS, UK.MC, UK.MS, UK.PGM, UK.LIBX,
-              UK.PGMX, UK.IO, UK.MO, UK.O =>
+            | UK.Unknown, UK.IB, UK.IC, UK.IS, UK.MB, UK.MC, UK.MS, UK.PGM, UK.LIBX,
+              UK.PGMX, UK.IO, UK.MO, UK.O, UK.B =>
                 <*ASSERT KindTag[u.kind] = NIL *>
             | UK.I3, UK.M3, UK.IG, UK.MG, UK.C, UK.H, UK.S =>
                 <*ASSERT KindTag[u.kind] # NIL *>
@@ -2367,12 +2363,7 @@ PROCEDURE GenM3Exports (t: T;  header: TEXT)
 
 PROCEDURE DoGenTFile (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
   RAISES {} =
-  CONST
-    IsImportable = ARRAY UK OF BOOLEAN {
-      FALSE, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE,
-      TRUE, TRUE, FALSE, FALSE, FALSE, FALSE,
-      FALSE, FALSE, FALSE, FALSE, FALSE, FALSE };
-
+  CONST UKImportableSet = SET OF UK { UK.I3, UK.IG, UK.MG };
   VAR
     t := Self (m);
     n_visible := 0;
@@ -2409,7 +2400,7 @@ PROCEDURE DoGenTFile (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
     (* count the local sources *)
     u := t.units.head;
     WHILE (u # NIL) DO
-      IF IsImportable [u.kind] AND NOT (u.hidden AND u.imported) THEN
+      IF u.kind IN UKImportableSet AND NOT (u.hidden AND u.imported) THEN
         INC (n_visible);
       END;
       u := u.next;
@@ -2421,7 +2412,7 @@ PROCEDURE DoGenTFile (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
     n_visible := 0;
     u := t.units.head;
     WHILE (u # NIL) DO
-      IF IsImportable [u.kind] AND NOT (u.hidden AND u.imported) THEN
+      IF u.kind IN UKImportableSet AND NOT (u.hidden AND u.imported) THEN
         srcs [n_visible] := u;
         map  [n_visible] := n_visible;
         INC (n_visible);
