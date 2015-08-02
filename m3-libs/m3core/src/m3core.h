@@ -359,8 +359,8 @@ extern "C" {
  * VMS sometimes has 32bit size_t/ptrdiff_t but 64bit pointers.
  */
 #if defined(_WIN64) || __INITIAL_POINTER_SIZE == 64 || defined(__LP64__) || defined(_LP64)
-typedef __int64 INTEGER;
-typedef unsigned __int64 WORD_T;
+typedef INT64 INTEGER;
+typedef UINT64 WORD_T;
 #else
 typedef ptrdiff_t INTEGER;
 typedef size_t WORD_T;
