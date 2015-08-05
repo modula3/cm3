@@ -1144,7 +1144,11 @@ def Boot():
 
     CCompilerFlags = CCompilerFlags + ({
         "AMD64_LINUX"     : " -m64 ",
+        
+        % 10.5.8 gcc defaults to x86.
+        % 10.10.4 Yosemite defaults to amd64, so be explicit.
         "I386_DARWIN"     : " -arch i386 ",
+
         "AMD64_DARWIN"    : " -arch x86_64 ",
         "PPC64_DARWIN"    : " -arch ppc64 ",
         "ARM_DARWIN"      : " -march=armv6 -mcpu=arm1176jzf-s ",
