@@ -163,8 +163,15 @@ RTLinker__PrintModule(ModuleInfo_t* Module)
 {
     ImportInfo_t* Imports = { 0 };
 
+#if 0
+    /* This is fine with Mac OSX 10.5.8 but gcc/clang
+       in 10.10.4 Yosemite warns or errors. */
     if ((Module == NULL) /*|| (traceInit != Trace_C)*/)
         return;
+#else
+    if (Module == NULL /*|| (traceInit != Trace_C)*/)
+        return;
+#endif
     Imports = Module->Imports;
     while (Imports != NULL)
     {

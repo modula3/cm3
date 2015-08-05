@@ -12,7 +12,10 @@ if not defined("SL") SL = "/" end
 
 readonly TARGET_OS = "DARWIN"
 
-xxm3back_debug = "-g " % no m3gdb support
+% Darwin has no m3gdb support and -gstabs and -gstabs+ cause
+% assembler errors on Mac OSX 10.10.4 Yosemite.
+
+m3back_debug = "-g "
 
 if defined("HasCBackend")
   if HasCBackend()
@@ -61,7 +64,9 @@ proc configure_c_compiler() is
 
   %SYSTEM_CC = "gcc -gstabs+ -fPIC"
   %SYSTEM_CC = "gcc -g -fPIC"
-  SYSTEM_CC = "g++ -g -fPIC"
+% g++ 1.c used to compile successfully as C++, on MacOSX 10.5.8.
+% On MacOS X 10.10.4 Yosemite it errors. -xc++ fixes it.
+  SYSTEM_CC = "g++ -g -fPIC -xc++"
   SYSTEM_CC = SYSTEM_CC & " -Wall"
   SYSTEM_CC = SYSTEM_CC & " -Werror"
   SYSTEM_CC = SYSTEM_CC & " -Wno-return-type"
@@ -70,7 +75,7 @@ proc configure_c_compiler() is
   %SYSTEM_CC = SYSTEM_CC & " -Wno-missing-field-initializers"
   %SYSTEM_CC = SYSTEM_CC & " -Wno-unused-parameter"
   % Usocket.c:31: warning: comparison of unsigned expression < 0 is always false
-  SYSTEM_CC_ASM = "g++ -fPIC"
+  SYSTEM_CC_ASM = "g++ -fPIC -xc++"
   %SYSTEM_CC_ASM = "gcc -fPIC"
   local m = " -m" & {"32BITS":"32","64BITS":"64"}{WORD_SIZE}
   local arch = " -arch " & DarwinArch

@@ -6159,11 +6159,13 @@ incompatible:
 M3CG_HANDLER (WIDECHAR_SIZE)
 { if (bitsize == 16)
     { set_typeid_to_tree (UID_WIDECHAR, t_word_16);
-      dbxout_emit_widechar_N_OPT (16); 
+      if (m3gdb) /* Fails otherwise on Mac OSX 10.10.4 Yosemite, worked on 10.5.8. */
+        dbxout_emit_widechar_N_OPT (16); 
     } 
   else if (bitsize == 32)
     { set_typeid_to_tree (UID_WIDECHAR, t_word_32);
-      dbxout_emit_widechar_N_OPT (32); 
+      if (m3gdb) /* Fails otherwise on Mac OSX 10.10.4 Yosemite, worked on 10.5.8. */
+        dbxout_emit_widechar_N_OPT (32); 
     } 
   else
     fatal_error ("WIDECHAR bitsize (%u) must be 16 or 32");
