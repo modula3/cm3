@@ -1144,6 +1144,7 @@ def Boot():
 
     CCompilerFlags = CCompilerFlags + ({
         "AMD64_LINUX"     : " -m64 ",
+        "I386_DARWIN"     : " -arch i386 ",
         "AMD64_DARWIN"    : " -arch x86_64 ",
         "PPC64_DARWIN"    : " -arch ppc64 ",
         "ARM_DARWIN"      : " -march=armv6 -mcpu=arm1176jzf-s ",
