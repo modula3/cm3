@@ -14,8 +14,9 @@ readonly TARGET_OS = "DARWIN"
 
 % Darwin has no m3gdb support and -gstabs and -gstabs+ cause
 % assembler errors on Mac OSX 10.10.4 Yosemite.
+% Plain -g causes cm3cg to access violate attempting to generate Dwarf symbols.
 
-m3back_debug = "-g "
+m3back_debug = "-g1 "
 
 if defined("HasCBackend")
   if HasCBackend()
@@ -64,9 +65,7 @@ proc configure_c_compiler() is
 
   %SYSTEM_CC = "gcc -gstabs+ -fPIC"
   %SYSTEM_CC = "gcc -g -fPIC"
-% g++ 1.c used to compile successfully as C++, on MacOSX 10.5.8.
-% On MacOS X 10.10.4 Yosemite it errors. -xc++ fixes it.
-  SYSTEM_CC = "g++ -g -fPIC -xc++"
+  SYSTEM_CC = "g++ -g -fPIC"
   SYSTEM_CC = SYSTEM_CC & " -Wall"
   SYSTEM_CC = SYSTEM_CC & " -Werror"
   SYSTEM_CC = SYSTEM_CC & " -Wno-return-type"
@@ -75,7 +74,7 @@ proc configure_c_compiler() is
   %SYSTEM_CC = SYSTEM_CC & " -Wno-missing-field-initializers"
   %SYSTEM_CC = SYSTEM_CC & " -Wno-unused-parameter"
   % Usocket.c:31: warning: comparison of unsigned expression < 0 is always false
-  SYSTEM_CC_ASM = "g++ -fPIC -xc++"
+  SYSTEM_CC_ASM = "g++ -fPIC"
   %SYSTEM_CC_ASM = "gcc -fPIC"
   local m = " -m" & {"32BITS":"32","64BITS":"64"}{WORD_SIZE}
   local arch = " -arch " & DarwinArch
@@ -87,6 +86,11 @@ proc configure_c_compiler() is
     SYSTEM_CC = SYSTEM_CC & arch
     SYSTEM_CC_ASM = SYSTEM_CC_ASM & arch
   end
+% g++ 1.c used to compile successfully as C++, on MacOSX 10.5.8.
+% On MacOS X 10.10.4 Yosemite it errors. -x c++ fixes it.
+% But do not use that with linking, otherwise all the object files are interpreted as C++.
+  SYSTEM_CC_LD = SYSTEM_CC
+  SYSTEM_CC = SYSTEM_CC & " -x c++"
   %write("SYSTEM_CC is " & SYSTEM_CC)
 end
 
@@ -196,7 +200,7 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
     configure_c_compiler()
     % build the shared library
     ret_code = try_exec (
-        "@" & SYSTEM_CC, "-dynamiclib",
+        "@" & SYSTEM_CC_LD, "-dynamiclib",
         "-multiply_defined error",
         "-twolevel_namespace",
         "-compatibility_version", vmaj,
@@ -294,7 +298,7 @@ proc m3_link (prog, options, objects, imported_libs, shared) is
     "-headerpad_max_install_names" ]
   if M3_PROFILING args += "-pg" end
   configure_c_compiler()
-  return try_exec ("@" & SYSTEM_CC, args)
+  return try_exec ("@" & SYSTEM_CC_LD, args)
 end
 
 %-------------------------------------------------------------------
