@@ -11,8 +11,8 @@
 
 LinkLlvm = "" 
 if LinkLlvm
-  import ("m3llvmgen") %Modula-3 code that links to llvm infrastructure.
-                       %Should provide interface LLGen and all it entails. 
+  import ("m3llvmgen")     %Modula-3 code that links to llvm infrastructure.
+                           %Should provide an LLGen.  
 else
   include_dir("llvmdummy") %A dummy LLGen that does not link in any llvm stuff.
                            %(and doesn't do anything either.   

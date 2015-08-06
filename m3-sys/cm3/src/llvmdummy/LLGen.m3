@@ -10,16 +10,26 @@ MODULE LLGen
 ; IMPORT Target 
 ; IMPORT Wr 
 
-; REVEAL CodeGenTyp = M3CG . T BRANDED "LLVMDummyCodeGenerator" OBJECT END  
+; REVEAL CodeGenTyp 
+    = M3CG . T BRANDED "LLGenDummyCodeGen" OBJECT 
+        BackendMode : Target . M3BackendMode_t 
+      ; wr : Wr . T := NIL 
+      ; debug := FALSE 
+      END 
 
-; PROCEDURE New 
-    ( <*UNUSED*> logfile : Wr . T ; <*UNUSED*> BackendMode : Target . M3BackendMode_t ) 
+; PROCEDURE New ( logfile : Wr . T ; BackendMode : Target . M3BackendMode_t ) 
   : CodeGenTyp 
 
   = VAR CodeGen : CodeGenTyp 
  
   ; BEGIN 
       CodeGen := NEW ( CodeGenTyp ) 
+    ; CodeGen . BackendMode := BackendMode 
+    ; CodeGen . wr := logfile 
+    ; IF logfile # NIL 
+      THEN 
+        CodeGen . debug := TRUE 
+      END 
     ; RETURN CodeGen 
     END New 
 
