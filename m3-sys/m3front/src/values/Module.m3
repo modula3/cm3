@@ -12,7 +12,7 @@ IMPORT M3, M3ID, CG, Value, ValueRep, Scope, Stmt, Error, ESet,  External;
 IMPORT Variable, Type, Procedure, Ident, M3Buf, BlockStmt, Int;
 IMPORT Host, Token, Revelation, Coverage, Decl, Scanner, WebInfo;
 IMPORT ProcBody, Target, M3RT, Marker, File, Tracer, Wr;
-IMPORT WCharr; 
+IMPORT WCharr;
 
 FROM Scanner IMPORT GetToken, Fail, Match, MatchID, cur;
 
@@ -250,7 +250,7 @@ PROCEDURE Parse (interfaceOnly : BOOLEAN := FALSE): T =
       IF (topLevel) THEN EVAL PushInterface (id); INC (parseDepth) END;
     END;
 
-    n := 0; (* In case we don't parse any export names. *)  
+    n := 0; (* In case we don't parse any export names. *)
     IF (cur.token = TK.tEXPORTS) THEN
       IF (t.interface) THEN
         Error.Msg ("EXPORTS clause not allowed in an interface");
@@ -258,7 +258,7 @@ PROCEDURE Parse (interfaceOnly : BOOLEAN := FALSE): T =
       END;
       GetToken ();
       n := Ident.ParseList ();
-      (* Leave the export names on the Ident stack for now. *) 
+      (* Leave the export names on the Ident stack for now. *)
     ELSIF (NOT t.interface) THEN
       External.NoteExport (t.externals, t.name);
     END;
@@ -273,7 +273,7 @@ PROCEDURE Parse (interfaceOnly : BOOLEAN := FALSE): T =
     ELSE Fail ("missing \';\' or \'=\', assuming \';\'");
     END;
 
-    (* Now we know whether the generic was UNSAFE, so can process the exports. *) 
+    (* Now we know whether the generic was UNSAFE, so can process the exports. *)
     FOR i := 0 TO n - 1 DO
       External.NoteExport (t.externals, Ident.stack[Ident.top - n + i]);
     END;
@@ -353,7 +353,7 @@ PROCEDURE PushGeneric (t: T;  VAR rd: File.T): M3ID.T =
 
     (* parse the list of actuals *)
     nActuals := ParseGenericArgs ();
- 
+
     (* open the external file *)
     rd := Host.OpenUnit (genericName, t.interface, TRUE, filename);
     IF (rd = NIL) THEN
@@ -366,11 +366,11 @@ PROCEDURE PushGeneric (t: T;  VAR rd: File.T): M3ID.T =
     Scanner.Push (filename, rd, is_main := Scanner.in_main);
     t.genericFile := filename;
 
-    (* Is the generic UNSAFE? *) 
+    (* Is the generic UNSAFE? *)
     IF cur.token = TK.tUNSAFE THEN
-      t.safe := FALSE; (* Then so is the instantiation. *) 
+      t.safe := FALSE; (* Then so is the instantiation. *)
       GetToken ();
-    END; 
+    END;
 
     (* make sure we got what we wanted *)
     Match (TK.tGENERIC);
@@ -804,12 +804,12 @@ PROCEDURE IsExternal (): BOOLEAN =
     RETURN (curModule # NIL) AND (curModule.external);
   END IsExternal;
 
-PROCEDURE LazyAlignmentOn (): BOOLEAN = 
+PROCEDURE LazyAlignmentOn (): BOOLEAN =
   BEGIN
     RETURN curModule # NIL AND curModule.lazyAligned;
   END LazyAlignmentOn;
 
-PROCEDURE SetLazyAlignment (on: BOOLEAN) = 
+PROCEDURE SetLazyAlignment (on: BOOLEAN) =
   BEGIN
     IF curModule # NIL THEN
       curModule.lazyAligned := on;
@@ -838,10 +838,10 @@ PROCEDURE Compile (t: T) =
     zz := Scope.Push (t.localScope);
       WebInfo.Reset ();
       CG.Begin_unit ();
-      IF WCharr.IsUnicode   
+      IF WCharr.IsUnicode
       THEN CG.Widechar_size (32);
       ELSE CG.Widechar_size (16);
-      END; 
+      END;
       CG.Gen_location (t.origin);
       Host.env.note_unit (t.name, t.interface);
       DeclareGlobalData (t);
@@ -872,7 +872,7 @@ PROCEDURE CompileInterface (t: T) =
     (* declare the modules that I import & export *)
     (** EVAL GlobalData (t); **)
     CG.Export_unit (t.name);
-    Host.env.note_interface_use (t.name, imported := FALSE);      
+    Host.env.note_interface_use (t.name, imported := FALSE);
 
     IF (t.genericBase # M3ID.NoID) THEN
       Host.env.note_generic_use (t.genericBase);
