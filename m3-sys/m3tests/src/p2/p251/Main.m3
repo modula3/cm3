@@ -172,6 +172,70 @@ BEGIN
   TRY F6(); EXCEPT END;
 END Main;
 
+PROCEDURE Finally () =
+BEGIN
+  (* same thing but in FINALLY, and nested FINALLY *)
+  (* NOTE: This testing is haphazard as I don't
+     understand exception handling enough to aim for coverage. *)
+  TRY
+    top_of_stack := GetStack();
+    F0();
+  FINALLY
+    TRY F1(); EXCEPT ELSE Put("exception " & Int(Line())); NL(); END;
+    TRY F2(); EXCEPT ELSE Put("exception " & Int(Line())); NL(); END;
+    TRY F3(); EXCEPT ELSE Put("exception " & Int(Line())); NL(); END;
+    TRY F4(); EXCEPT END;
+    TRY F5(); EXCEPT END;
+    TRY F6(); EXCEPT END;
+  END;
+END Finally;
+
+PROCEDURE NestedFinally() =
+BEGIN
+  (* same thing but in FINALLY, and nested FINALLY *)
+  (* NOTE: This testing is haphazard as I don't
+     understand exception handling enough to aim for coverage. *)
+  TRY
+    top_of_stack := GetStack();
+    F0();
+
+  FINALLY
+    TRY TRY F1(); FINALLY F0(); END; EXCEPT ELSE Put("exception " & Int(Line())); NL(); END;
+    TRY TRY F1(); FINALLY F0(); END; EXCEPT ELSE Put("exception " & Int(Line())); NL(); END;
+    TRY TRY F1(); FINALLY F0(); END; EXCEPT ELSE Put("exception " & Int(Line())); NL(); END; TRY TRY F1(); FINALLY F0(); END; EXCEPT ELSE Put("exception " & Int(Line())); NL(); END;
+    
+    TRY
+      TRY
+        F2();
+      EXCEPT
+      ELSE
+        Put("exception " & Int(Line())); NL();
+      END;
+    FINALLY
+      F0();
+    END;    
+  END;
+
+  TRY top_of_stack := GetStack(); TRY F0();
+  FINALLY TRY F0(); FINALLY F0(); END; END; FINALLY TRY F0(); FINALLY F0(); END; END;
+ 
+END NestedFinally;
+
 BEGIN
   Main();
+
+  (* same thing but in Module main *)
+
+  top_of_stack := GetStack();
+  F0();
+  TRY F1(); EXCEPT ELSE Put("exception " & Int(Line())); NL(); END;
+  TRY F2(); EXCEPT ELSE Put("exception " & Int(Line())); NL(); END;
+  TRY F3(); EXCEPT ELSE Put("exception " & Int(Line())); NL(); END;
+  TRY F4(); EXCEPT END;
+  TRY F5(); EXCEPT END;
+  TRY F6(); EXCEPT END;
+  
+  Finally();
+  NestedFinally();
+
 END Main.
