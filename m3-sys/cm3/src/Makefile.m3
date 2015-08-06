@@ -397,13 +397,13 @@ PROCEDURE ProcessDefine (arg: TEXT;  wr: Wr.T)
 
 CONST
   SourceTag = ARRAY NK OF TEXT {
-    NIL,                                              (* unknown *)
-    "interface", NIL, NIL, "import_obj",              (* i3, ic, is, io *)
-    "implementation", NIL, NIL, "import_obj",         (* m3, mc, ms, mo *)
-    "generic_interface", "generic_implementation",    (* ig, mg *)
-    "c_source", "h_source", "s_source", "import_obj", (* c, h, s, o *)
-    "import_lib", "import_lib", NIL,                  (* m3lib, lib, m3x *)
-    NIL, NIL, NIL                                     (* pgm, mx, tmpl *)
+    NIL,                                                   (* unknown *)
+    "interface", NIL, NIL, NIL, "import_obj",              (* i3, ib, ic, is, io *)
+    "implementation", NIL, NIL, NIL, "import_obj",         (* m3, mb, mc, ms, mo *)
+    "generic_interface", "generic_implementation",         (* ig, mg *)
+    "c_source", "h_source", NIL, "s_source", "import_obj", (* c, h, b, s, o *)
+    "import_lib", "import_lib", NIL,                       (* m3lib, lib, m3x *)
+    NIL, NIL, NIL                                          (* pgm, mx, tmpl *)
   };
 
 PROCEDURE NoteSourceFile (VAR s: State;  dir, name: TEXT;  cmd_line: BOOLEAN)

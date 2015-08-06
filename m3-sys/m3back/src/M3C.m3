@@ -526,6 +526,9 @@ Cstring.i3 declares strcpy and strcat incorrectly..on purpose.
 (* more incorrect declarations *)
 "signgam", "cabs", "frexp", "modf",
 
+(* brk, sbrk deprecated on MacOS X 10.10.4, ok on 10.5.8. *)
+"brk", "sbrk",
+
 (* symbols internal to the generated code *)
 "M3_HIGH_BITS",
 "M3_LOW_BITS",
@@ -552,7 +555,8 @@ Cstring.i3 declares strcpy and strcat incorrectly..on purpose.
 (*
 CONST suppressImports = ARRAY OF TEXT{
 "strcpy", "strcat",
-"signgam", "cabs", "frexp", "modf"
+"signgam", "cabs", "frexp", "modf",
+"brk", "sbrk",
 };
 *)
 

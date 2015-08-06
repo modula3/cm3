@@ -66,6 +66,17 @@ TYPE
     dump();
   END;
 
+(* Stacking some per-procedure values for nested procedures: *) 
+TYPE 
+  ProcStackNodeRef = REF RECORD 
+    link : ProcStackNodeRef := NIL; 
+    free_temps  : TempWrapper := NIL;
+    busy_temps  : TempWrapper := NIL;
+    block_cnt   : INTEGER     := 0;
+  END;
+
+VAR ProcStackRoot : ProcStackNodeRef := NIL; 
+
 TYPE
   FloatNode   = Node OBJECT f: Target.Float OVERRIDES dump := DumpFloat END;
   CharsNode   = Node OBJECT t: TEXT  OVERRIDES dump := DumpChars END;
@@ -89,6 +100,8 @@ VAR
   in_init     : BOOLEAN     := FALSE;
   init_pc     : INTEGER     := 0;
   init_bits   : Target.Int  := TInt.Zero;
+  (* In free_temps and free_values, "free" means they are allocated at runtime, but not
+     currently in use. *) 
   free_temps  : TempWrapper := NIL;
   busy_temps  : TempWrapper := NIL;
   free_values : Val         := NIL;
@@ -166,6 +179,7 @@ PROCEDURE Next_label (n_labels := 1): Label =
 
 PROCEDURE Begin_unit (optimize: INTEGER := 0) =
   BEGIN
+    ProcStackRoot := NIL; 
     cg.begin_unit (optimize);
   END Begin_unit;
 
@@ -173,6 +187,7 @@ PROCEDURE End_unit () =
   BEGIN
     Free_all_values ();
     Free_all_temps ();
+    <*ASSERT ProcStackRoot = NIL*> 
     cg.end_unit ();
   END End_unit;
 
@@ -458,6 +473,8 @@ PROCEDURE Declare_param (n: Name;  s: Size;  a: Alignment;  t: Type;
 
 PROCEDURE Declare_temp (s: Size;  a: Alignment;  t: Type;
                           in_memory: BOOLEAN): Var =
+  (* If possible, get a temp off the free_temps list.  Otherwise, emit code to allocate
+     a temp and use it.  Either way, put the temp on the busy_temps list. *) 
   VAR w := free_temps;  last_w: TempWrapper := NIL;  tmp: Var;
   BEGIN
     LOOP
@@ -490,6 +507,7 @@ PROCEDURE Free_temp (<*UNUSED*> v: Var) =
   END Free_temp;
 
 PROCEDURE Free_temps () =
+  (* Move all temps from the busy_temps list to the free_temps list.  No deallocation. *) 
   VAR w := busy_temps;
   BEGIN
     SEmpty ("Free_temps");
@@ -528,7 +546,8 @@ PROCEDURE Free_one_temp (v: Var) =
   END Free_one_temp;
 *********)
 
-PROCEDURE Free_all_temps () =
+PROCEDURE Free_all_temps () = 
+  (* Emit code to deallocate all busy and free temps. *) 
   VAR w: TempWrapper;
   BEGIN
     Free_temps ();
@@ -541,7 +560,8 @@ PROCEDURE Free_all_temps () =
     free_temps := NIL;
   END Free_all_temps;
 
-PROCEDURE Free_block_temps (block: INTEGER) =
+PROCEDURE Free_block_temps (block: INTEGER) = 
+  (* Emit deallocate of all busy and free temps belonging to block. *) 
   VAR w, prev_w: TempWrapper;
   BEGIN
     Free_temps ();
@@ -555,6 +575,9 @@ PROCEDURE Free_block_temps (block: INTEGER) =
           ELSE  free_temps := w.next;
         END;
       END;
+(* This only works if all temps of block are on the front of the list.  
+   Either prev_w:=w here, or if the above is always true, stop the loop
+   when the first unequal block is encountered. *) 
       w := w.next;
     END;
   END Free_block_temps;
@@ -1181,14 +1204,32 @@ PROCEDURE Declare_procedure (n: Name;  n_params: INTEGER;  ret_type: Type;
   END Declare_procedure;
 
 PROCEDURE Begin_procedure (p: Proc) =
-  BEGIN
+  VAR N : ProcStackNodeRef := NEW(ProcStackNodeRef); 
+  BEGIN 
+    N.link := ProcStackRoot;
+    ProcStackRoot := N; 
+    N.free_temps := free_temps;  
+    N.busy_temps := busy_temps;  
+    N.block_cnt := block_cnt; 
+    free_temps     := NIL;
+    busy_temps    := NIL;
+    block_cnt      := 0;
     cg.begin_procedure (p);
   END Begin_procedure;
 
 PROCEDURE End_procedure (p: Proc) =
+  VAR N : ProcStackNodeRef := ProcStackRoot; 
   BEGIN
     Free_all_values ();
     Free_all_temps ();
+    <*ASSERT free_temps = NIL*>
+    <*ASSERT busy_temps = NIL*>
+    <*ASSERT block_cnt = 0*>
+    <*ASSERT N # NIL*>
+    free_temps := N.free_temps;  
+    busy_temps := N.busy_temps;  
+    block_cnt := N.block_cnt; 
+    ProcStackRoot := N.link; 
     cg.end_procedure (p);
   END End_procedure;
 

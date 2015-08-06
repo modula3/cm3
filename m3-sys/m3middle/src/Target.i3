@@ -140,11 +140,21 @@ TYPE
   M3BackendMode_t =
   {
     (* The primary modes are currently 0 and 3. *)
-    IntegratedObject,   (* "0"  -- don't call m3_backend, M3CG produces object code *)
-    IntegratedAssembly, (* "1"  -- don't call m3_backend, M3CG produces assembly code *)
+    IntegratedObject,   (* "0"  -- don't call m3_backend, 
+                                   M3CG produces object code *)
+    IntegratedAssembly, (* "1"  -- don't call m3_backend, 
+                                   M3CG produces assembly code, run asm. *)
     ExternalObject,     (* "2"  -- call m3_backend, it produces object code *)
-    ExternalAssembly,   (* "3"  -- call m3_backend, it produces assembly code *)
-    C                   (* "4"  -- don't call m3_backend, call compile_c, M3CG produces C *)
+    ExternalAssembly,   (* "3"  -- call m3_backend, it produces assembly code, run asm *)
+    C,                  (* "4"  -- don't call m3_backend, call compile_c, 
+                                   M3CG produces C *)
+    IntLlvmObj,         (* "5"  -- M3CG uses llvm to directly produce object code. *)    
+    IntLlvmAsm,         (* "6"  -- M3CG uses llvm to directly produce assembly code,
+                                   run asm. *)  
+    ExtLlvmObj,         (* "7"  -- M3CG produces llvm bitcode.  call compile_llvm. 
+                                   It produces object code. *) 
+    ExtLlvmAsm          (* "8"  -- M3CG produces llvm bitcode.  call compile_llvm. 
+                                   It produces assembly code, run asm. *) 
   };
 
 CONST
@@ -153,9 +163,61 @@ CONST
     "IntegratedAssembly",
     "ExternalObject",
     "ExternalAssembly",
-    "C" };
+    "C",
+    "IntLlvmObj", 
+    "IntLlvmAsm", 
+    "ExtLlvmObj", 
+    "ExtLlvmAsm" 
+   };
 
-  BackendIntegrated = ARRAY M3BackendMode_t OF BOOLEAN { TRUE, TRUE, FALSE, FALSE, TRUE };
+  TYPE MT = M3BackendMode_t; 
+
+  CONST BackendIntegratedSet = SET OF M3BackendMode_t 
+    { MT.IntegratedObject, MT.IntegratedAssembly, MT.IntLlvmObj, MT.IntLlvmAsm };
+    (* Modes where cm3 executable produces assembly or object code. *)
+(* Check: Do we want to consider C integrated? *) 
+
+  CONST BackendM3ccSet = SET OF M3BackendMode_t 
+    { MT.ExternalObject, MT.ExternalAssembly }; 
+    (* Modes using the external gcc-derived code generator m3cc. *)
+
+  CONST BackendLlvmSet = SET OF M3BackendMode_t 
+    { MT.ExtLlvmObj, MT.ExtLlvmAsm, MT.IntLlvmObj, MT.IntLlvmAsm }; 
+    (* Modes using the llvm infrastructure to generate assembly or object code. *)
+
+  CONST BackendCSet = SET OF M3BackendMode_t { MT.C }; 
+    (* Modes using the C-generating code generator plus a C compiler. *) 
+
+  CONST BackendAsmSet = SET OF M3BackendMode_t 
+    { MT.IntegratedAssembly, MT.ExternalAssembly, MT.ExtLlvmAsm, MT.IntLlvmAsm }; 
+    (* Modes that require the builder to run the assembler. *) 
+    (* NOTE: C may require separate assembly, but the C compiler does it. *)
+
+  CONST BackendLlvmAsmSet = SET OF M3BackendMode_t 
+    { MT.ExtLlvmAsm, MT.IntLlvmAsm }; 
+
+  CONST BackendSet = SET OF M3BackendMode_t 
+    {
+      MT.IntegratedObject,
+      MT.IntegratedAssembly,
+      MT.ExternalObject,
+      MT.ExternalAssembly,
+      MT.C,
+      MT.ExtLlvmObj,
+      MT.ExtLlvmAsm,
+      MT.IntLlvmObj,
+      MT.IntLlvmAsm
+    }; 
+  
+(* Provoke compile errors: *) 
+  BackendIntegratedXXX
+    = ARRAY M3BackendMode_t OF BOOLEAN 
+        { TRUE, TRUE, FALSE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE };
+
+  BackendUsesLlvmXXX 
+    = ARRAY M3BackendMode_t OF BOOLEAN 
+        { FALSE, FALSE, FALSE, FALSE, FALSE, TRUE, TRUE, TRUE, TRUE };
+
   (* BackendAssembly = ARRAY M3BackendMode_t OF BOOLEAN { FALSE, TRUE, FALSE, TRUE, FALSE };  *)
 
 (*-------------------------------------------------------- initialization ---*)

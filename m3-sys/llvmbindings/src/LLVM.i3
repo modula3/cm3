@@ -1,5 +1,6 @@
-<*EXTERNAL*> INTERFACE LLVM;
-
+(* File: LLVM.i3                                                              *|
+|* Modula 3 code.                                                             *|
+|* Derived from:                                                              *)
 (*===-- llvm-c/Core.h - Core Library C Interface ------------------*- C -*-===*\
 |*                                                                            *|
 |*                     The LLVM Compiler Infrastructure                       *|
@@ -13,6 +14,8 @@
 |* the LLVM intermediate representation.                                      *|
 |*                                                                            *|
 \*===----------------------------------------------------------------------===*)
+
+<*EXTERNAL*> INTERFACE LLVM;
 
 IMPORT Word;
 FROM Ctypes
@@ -100,6 +103,13 @@ TYPE TypeRef = UNTRACED BRANDED "LLVMOpaqueType" REF Opaque;
  * This models llvm::Value.
  *)
 TYPE ValueRef = UNTRACED BRANDED "LLVMOpaqueValue" REF Opaque;
+
+(**
+ * Represents a constant in LLVM IR.
+ *
+ * This models llvm::Constant.
+ *)
+TYPE ConstantRef = UNTRACED BRANDED "LLVMOpaqueConstant" REF Opaque;
 
 (**
  * Represents a basic block of instructions in LLVM IR.

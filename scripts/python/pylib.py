@@ -25,6 +25,9 @@ class Tee:
 
 sys.stdout = Tee(sys.stdout, open(sys.argv[0] + ".log", "a"))
 
+# Workaround regression in m3-sys/m3cc/src/m3makefile.
+os.environ["INSTALL_CM3_IN_BIN"] = "yes"
+
 #-----------------------------------------------------------------------------
 # Several important variables are gotten from the environment or probed.
 # The probing is usually 100% correct.
@@ -1144,9 +1147,9 @@ def Boot():
 
     CCompilerFlags = CCompilerFlags + ({
         "AMD64_LINUX"     : " -m64 ",
-        
-        % 10.5.8 gcc defaults to x86.
-        % 10.10.4 Yosemite defaults to amd64, so be explicit.
+
+        # 10.5.8 gcc defaults to x86.
+        # 10.10.4 Yosemite defaults to amd64, so be explicit.
         "I386_DARWIN"     : " -arch i386 ",
 
         "AMD64_DARWIN"    : " -arch x86_64 ",

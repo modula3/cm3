@@ -140,7 +140,8 @@ PROCEDURE ParseDecl (READONLY att: Decl.Attributes;
     ELSIF (cur.token = TK.tSEMI) THEN
       t.body := NEW (Body, self := t);
       ProcBody.Push (t.body);
-      (* try accepting the Modula-2 syntax *)
+      (* It's a syntax error, but try recovering from it by assuming 
+         it's Modula-2 syntax *)
       Error.ID (id, "expecting \'=\' before procedure body");
       GetToken (); (* ; *)
       t.syms  := Scope.PushNew (TRUE, id);

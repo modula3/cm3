@@ -1,0 +1,17 @@
+File m3-sys/cm3/src/llvmdummy/README. 
+
+Copyright (C) 2015 Rodney M. Bates 
+All rights reserved.
+See the file COPYRIGHT-RMB for a full description.
+
+This subdirectory has a dummy version of Modula-3 module LLGen.  
+Fully implemented, LLGen would provide an instance of M3CG.T
+that links in parts of the llvm infrastructure and uses them
+to emit some level of translation of cm3's intermediate code,
+possibly as little as just emitting llvm IR.  
+
+This dummy version has only noop procedures.  It it here so cm3
+can be built without requiring compiled llvm code, which is very
+large and very slow compiling.
+
+ 

@@ -112,7 +112,9 @@ M3WRAP2(int, symlink, const char*, const char*)
 M3WRAP1(int, fsync, int)
 M3WRAP0(int, getdtablesize)
 M3WRAP0(int, getpagesize)
+#if 0 /* deprecated, errors on MacOSX 10.10.4 Yosemite, worked on 10.5.8. */
 M3WRAP1(void*, sbrk, INTEGER)
+#endif
 M3WRAP3(int, execve, const char*, char**, char**)
 M3WRAP1(unsigned, sleep, unsigned)
 M3WRAP3(m3_off_t, lseek, int, m3_off_t, int)
