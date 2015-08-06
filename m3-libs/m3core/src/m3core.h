@@ -358,7 +358,9 @@ extern "C" {
 /* WORD_T/INTEGER are always exactly the same size as a pointer.
  * VMS sometimes has 32bit size_t/ptrdiff_t but 64bit pointers.
  */
-#if defined(_WIN64) || __INITIAL_POINTER_SIZE == 64 || defined(__LP64__) || defined(_LP64)
+/* commented out is correct, but so is the #else */
+/*#if defined(_WIN64) || __INITIAL_POINTER_SIZE == 64 || defined(__LP64__) || defined(_LP64)*/
+#if __INITIAL_POINTER_SIZE == 64
 typedef INT64 INTEGER;
 typedef UINT64 WORD_T;
 #else
