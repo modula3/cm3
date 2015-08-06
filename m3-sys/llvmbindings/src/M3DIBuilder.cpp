@@ -107,6 +107,13 @@ inline LLVMDIBuilderRef wrapDIBuilder(const llvm::DIBuilder *unwrapped) {
 const char NullChar = 0; 
 const char * NullCharPtr = & NullChar;  
 
+#if 0 
+// From DIBuilderBindings.cpp: 
+template <typename T> T unwrapDI(LLVMMetadataPtr v) {
+  return v ? T(unwrap<llvm::MDNode>(v)) : T();
+}
+#endif 
+
 inline llvm::StringRef unwrapStringRef(LLVMStringRef R) {
   if (R->Data == NULL) { return llvm::StringRef (NullCharPtr, 0); } 
   else { return llvm::StringRef (R->Data, R->Length); }
@@ -162,7 +169,7 @@ inline llvm::DITypeRef unwrapDITypeRef (LLVMDITypeRef LLVMDINode) {
 
 /// Constructor of a DIBuilder.  
 LLVMDIBuilderRef 
-DIBBuilderCreate(LLVMModuleRef Mod, bool AllowUnresolved) {
+DIBBuilderCreate(LLVMModuleRef Mod, LLVMBool AllowUnresolved) {
   return wrapDIBuilder
            (new llvm::DIBuilder(*llvm::unwrap(Mod), AllowUnresolved)); 
 }
@@ -206,18 +213,18 @@ LLVMDICompileUnit DIBcreateCompileUnit(LLVMDIBuilderRef Builder,
                                 LLVMStringRef File,
                                 LLVMStringRef Dir,  
                                 LLVMStringRef Producer,
-                                bool isOptimized,  
+                                LLVMBool isOptimized,  
                                 LLVMStringRef Flags,
                                 unsigned RV,
                                 LLVMStringRef SplitName,
                                 llvm::DIBuilder::DebugEmissionKind Kind,
-                                bool EmitDebugInfo) {
+                                LLVMBool EmitDebugInfo) {
   return wrap(unwrapBuilder(Builder)-> createCompileUnit(
                                 /*unsigned*/ Lang,  
                                 unwrapStringRef(File),
                                 unwrapStringRef(Dir),  
                                 unwrapStringRef(Producer),
-                                /*bool*/ isOptimized,  
+                                /*LLVMBool*/ isOptimized,  
                                 unwrapStringRef(Flags),
                                 /*unsigned*/ RV,
                                 unwrapStringRef(SplitName),
@@ -929,7 +936,7 @@ DIBcreateGlobalVariable
      LLVMDIFile File,
      unsigned LineNo,
      LLVMDITypeRef Ty,
-     bool isLocalToUnit,
+     LLVMBool isLocalToUnit,
      LLVMConstantRef Val,
      LLVMMDNodePtr Decl) {
   return wrap(unwrapBuilder(Builder)-> createGlobalVariable(
@@ -939,7 +946,7 @@ DIBcreateGlobalVariable
                                 unwrap(/*LLVMDIFile*/ File),
                                 /*unsigned*/ LineNo,
                                 unwrapDITypeRef(/*LLVMDITypeRef*/ Ty),
-                                /*bool*/ isLocalToUnit,
+                                /*LLVMBool*/ isLocalToUnit,
                                 unwrap(/*LLVMConstantRef*/ Val),
                                 unwrapMDNodePtr(Decl)));
 }
@@ -955,7 +962,7 @@ DIBcreateTempGlobalVariableFwdDecl
      LLVMDIFile File,
      unsigned LineNo,
      LLVMDITypeRef Ty,
-     bool isLocalToUnit,
+     LLVMBool isLocalToUnit,
      LLVMConstantRef Val,
      LLVMMDNodePtr Decl) {
   return wrap(unwrapBuilder(Builder)-> createGlobalVariable(
@@ -965,7 +972,7 @@ DIBcreateTempGlobalVariableFwdDecl
                                 unwrap(/*LLVMDIFile*/ File),
                                 /*unsigned*/ LineNo,
                                 unwrapDITypeRef(/*LLVMDITypeRef*/ Ty),
-                                /*bool*/ isLocalToUnit,
+                                /*LLVMBool*/ isLocalToUnit,
                                 unwrap(/*LLVMConstantRef*/ Val),
                                 unwrapMDNodePtr(Decl)));
 }
@@ -991,7 +998,7 @@ LLVMDIVariable DIBcreateLocalVariable(LLVMDIBuilderRef Builder,
                                 LLVMDIFile File,
                                 unsigned LineNo,
                                 LLVMDITypeRef Ty,
-                                bool AlwaysPreserve,
+                                LLVMBool AlwaysPreserve,
                                 unsigned Flags,
                                 unsigned ArgNo) {
   return wrap(unwrapBuilder(Builder)-> createLocalVariable(
@@ -1001,7 +1008,7 @@ LLVMDIVariable DIBcreateLocalVariable(LLVMDIBuilderRef Builder,
                                 unwrap(/*LLVMDIFile*/ File),
                                 /*unsigned*/ LineNo,
                                 unwrapDITypeRef(/*LLVMDITypeRef*/ Ty),
-                                /*bool*/ AlwaysPreserve,
+                                /*LLVMBool*/ AlwaysPreserve,
                                 /*unsigned*/ Flags,
                                 /*unsigned*/ ArgNo));
 }
@@ -1054,11 +1061,11 @@ LLVMDISubprogram DIBcreateFunction( LLVMDIBuilderRef Builder,
                                 LLVMDIFile File,
                                 unsigned LineNo,
                                 LLVMDICompositeType Ty,
-                                bool isLocalToUnit,
-                                bool isDefinition,
+                                LLVMBool isLocalToUnit,
+                                LLVMBool isDefinition,
                                 unsigned ScopeLine,
                                 unsigned Flags,
-                                bool isOptimized,
+                                LLVMBool isOptimized,
                                 LLVMValueRef Fn,
                                 LLVMMDNodePtr TParam,
                                 LLVMMDNodePtr Decl) {
@@ -1069,11 +1076,11 @@ LLVMDISubprogram DIBcreateFunction( LLVMDIBuilderRef Builder,
                                 unwrap(/*LLVMDIFile*/ File),
                                 /*unsigned*/ LineNo,
                                 unwrap(/*LLVMDICompositeType*/ Ty),
-                                /*bool*/ isLocalToUnit,
-                                /*bool*/ isDefinition,
+                                /*LLVMBool*/ isLocalToUnit,
+                                /*LLVMBool*/ isDefinition,
                                 /*unsigned*/ ScopeLine,
                                 /*unsigned*/ Flags,
-                                /*bool*/ isOptimized, 
+                                /*LLVMBool*/ isOptimized, 
                                 llvm::unwrap<llvm::Function>(Fn),
                                 unwrapMDNodePtr(TParam),
                                 unwrapMDNodePtr(Decl)));
@@ -1089,11 +1096,11 @@ LLVMDISubprogram DIBcreateTempFunctionFunctionFwdDecl( LLVMDIBuilderRef Builder,
                                 LLVMDIFile File,
                                 unsigned LineNo,
                                 LLVMDICompositeType Ty,
-                                bool isLocalToUnit,
-                                bool isDefinition,
+                                LLVMBool isLocalToUnit,
+                                LLVMBool isDefinition,
                                 unsigned ScopeLine,
                                 unsigned Flags,
-                                bool isOptimized,
+                                LLVMBool isOptimized,
                                 LLVMValueRef Fn,
                                 LLVMMDNodePtr TParam,
                                 LLVMMDNodePtr Decl) {
@@ -1104,11 +1111,11 @@ LLVMDISubprogram DIBcreateTempFunctionFunctionFwdDecl( LLVMDIBuilderRef Builder,
                                 unwrap(/*LLVMDIFile*/ File),
                                 /*unsigned*/ LineNo,
                                 unwrap(/*LLVMDICompositeType*/ Ty),
-                                /*bool*/ isLocalToUnit,
-                                /*bool*/ isDefinition,
+                                /*LLVMBool*/ isLocalToUnit,
+                                /*LLVMBool*/ isDefinition,
                                 /*unsigned*/ ScopeLine,
                                 /*unsigned*/ Flags,
-                                /*bool*/ isOptimized, 
+                                /*LLVMBool*/ isOptimized, 
                                 llvm::unwrap<llvm::Function>(Fn),
                                 unwrapMDNodePtr(TParam),
                                 unwrapMDNodePtr(Decl)));
@@ -1125,11 +1132,11 @@ LLVMDISubprogram DIBcreateFunctionFromScope(LLVMDIBuilderRef Builder,
                             LLVMDIFile File, 
                             unsigned LineNo,
                             LLVMDICompositeType Ty, 
-                            bool isLocalToUnit,
-                            bool isDefinition,
+                            LLVMBool isLocalToUnit,
+                            LLVMBool isDefinition,
                             unsigned ScopeLine,
                             unsigned Flags,
-                            bool isOptimized,
+                            LLVMBool isOptimized,
                             LLVMValueRef Fn,
                             LLVMMDNodePtr TParam,
                             LLVMMDNodePtr Decl) {
@@ -1140,11 +1147,11 @@ LLVMDISubprogram DIBcreateFunctionFromScope(LLVMDIBuilderRef Builder,
                             unwrap(/*LLVMDIFile*/ File), 
                             /*unsigned*/ LineNo,
                             unwrap(/*LLVMDICompositeType*/ Ty), 
-                            /*bool*/ isLocalToUnit,
-                            /*bool*/ isDefinition,
+                            /*LLVMBool*/ isLocalToUnit,
+                            /*LLVMBool*/ isDefinition,
                             /*unsigned*/ ScopeLine,
                             /*unsigned*/ Flags,
-                            /*bool*/ isOptimized,
+                            /*LLVMBool*/ isOptimized,
                             llvm::unwrap<llvm::Function>(Fn),
                             unwrapMDNodePtr(TParam),
                             unwrapMDNodePtr(Decl)));
@@ -1177,13 +1184,13 @@ LLVMDISubprogram DIBcreateMethod(   LLVMDIBuilderRef Builder,
                                 LLVMDIFile File,
                                 unsigned LineNo,
                                 LLVMDICompositeType Ty,
-                                bool isLocalToUnit,
-                                bool isDefinition,
+                                LLVMBool isLocalToUnit,
+                                LLVMBool isDefinition,
                                 unsigned Virtuality,
                                 unsigned VTableIndex,
                                 LLVMDIType VTableHolder,
                                 unsigned Flags,
-                                bool isOptimized,
+                                LLVMBool isOptimized,
                                 LLVMValueRef Fn,
                                 LLVMMDNodePtr TParam) {
   return wrap(unwrapBuilder(Builder)-> createMethod(
@@ -1193,13 +1200,13 @@ LLVMDISubprogram DIBcreateMethod(   LLVMDIBuilderRef Builder,
                                 unwrap(/*LLVMDIFile*/ File),
                                 /*unsigned*/ LineNo,
                                 unwrap(/*LLVMDICompositeType*/ Ty),
-                                /*bool*/ isLocalToUnit,
-                                /*bool*/ isDefinition,
+                                /*LLVMBool*/ isLocalToUnit,
+                                /*LLVMBool*/ isDefinition,
                                 /*unsigned*/ Virtuality,
                                 /*unsigned*/ VTableIndex,
                                 unwrap(/*LLVMDIType*/ VTableHolder),
                                 /*unsigned*/ Flags,
-                                /*bool*/ isOptimized,
+                                /*LLVMBool*/ isOptimized,
                                 llvm::unwrap<llvm::Function>(Fn),
                                 unwrapMDNodePtr(TParam)));
 }
@@ -1417,7 +1424,7 @@ LLVMValueRef /*Instruction*/ DIBinsertDbgValueIntrinsicBefore(LLVMDIBuilderRef B
 ///
 /// If this creates a self reference, it may orphan some unresolved cycles
 /// in the operands of \c T, so \a DIBuilder needs to track that.
-void LLVMReplaceVTableHolder(LLVMDIBuilderRef Builder,
+void DIBreplaceVTableHolder(LLVMDIBuilderRef Builder,
                          LLVMDICompositeType *T, 
                          LLVMDICompositeType VTableHolder) {
   // Replace pass-by-reference of T by copy-in-copy-out. 
@@ -1434,7 +1441,7 @@ void LLVMReplaceVTableHolder(LLVMDIBuilderRef Builder,
 /// If \c T is resolved, but the arrays aren't -- which can happen if \c T
 /// has a self-reference -- \a DIBuilder needs to track the array to
 /// resolve cycles.
-void LLVMReplaceArrays(LLVMDIBuilderRef Builder,
+void DIBreplaceArrays(LLVMDIBuilderRef Builder,
                    LLVMDICompositeType *T, 
                    LLVMDIArray Elements,
                    LLVMDIArray TParems) {
@@ -1446,6 +1453,26 @@ void LLVMReplaceArrays(LLVMDIBuilderRef Builder,
                                unwrap(/*LLVMDIARRAY*/ Elements), 
                                unwrap(/*LLVMDIARRAY*/ TParems)); 
   *T = wrap(LT);  
+} 
+
+// This apparently was in bindings/go/llvm/DIBuilderBindings.h of an earlier
+// llvm than 3.6.1  It is in DIBuilder because that is where the stuff needed
+// by its implementation is found.  
+//changed scope was *
+LLVMValueRef DIBgetDebugLoc(unsigned Line, 
+                            unsigned Col, 
+                            LLVMDIDescriptor Scope) {
+//  MDNode *S = unwrapDI<DIDescriptor>(*Scope);
+//  DebugLoc loc = DebugLoc::get(Line,Col,S);
+
+  llvm::DIDescriptor S = unwrap(/*LLVMDIDescriptor*/ Scope);
+  llvm::DebugLoc loc = llvm::DebugLoc::get(Line,Col,S);
+  llvm::LLVMContext &ctx = S->getContext();
+  llvm::MDNode *L = loc.getAsMDNode(ctx);
+  llvm::Value *V = llvm::MetadataAsValue::get(ctx,L);
+  return wrap(V);
 }
+
+//End M3DIBuilder.cpp 
 
 

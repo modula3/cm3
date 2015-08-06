@@ -17,11 +17,13 @@
 
 <*EXTERNAL*> INTERFACE LLVM;
 
-IMPORT Word;
+FROM Cstdint IMPORT uint8_t, uint64_t;
 FROM Ctypes
 IMPORT int, unsigned, char_star, const_char_star, char_star_star,
        unsigned_long_long, double, long_long;
-FROM Cstdint IMPORT uint8_t, uint64_t;
+IMPORT Word;
+
+FROM LLVMTypes IMPORT Bool, False, True; 
 
 (**
  * @defgroup LLVMC LLVM-C: C interface to LLVM
@@ -69,10 +71,6 @@ FROM Cstdint IMPORT uint8_t, uint64_t;
  * @{
  *)
 
-TYPE Bool = BOOLEAN;
-CONST False = FALSE;
-CONST True = TRUE;
-
 (* Opaque types. *)
 
 TYPE Opaque = RECORD END;
@@ -103,6 +101,20 @@ TYPE TypeRef = UNTRACED BRANDED "LLVMOpaqueType" REF Opaque;
  * This models llvm::Value.
  *)
 TYPE ValueRef = UNTRACED BRANDED "LLVMOpaqueValue" REF Opaque;
+
+(* Currently unused ---- : 
+(* From llvm/ADT/ArrayRef.h: *) 
+
+(* class ArrayRef<Value *> (NOTE: this is not a pointer). *) 
+; TYPE ArrayRefOfValueRef 
+    = RECORD 
+        Data : UNTRACED REF ValueRef (* 0th element, a la C/C++ *) 
+      ; Length : size_t
+      END 
+; CONST ArrayRefOfValueRefEmpty 
+    = ArrayRefOfValueRef { Data := NIL , Length := 0 }
+
+---- unused. *) 
 
 (**
  * Represents a constant in LLVM IR.

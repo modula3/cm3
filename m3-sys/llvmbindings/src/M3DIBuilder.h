@@ -23,6 +23,8 @@
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/IR/DIBuilder.h"
+#include "llvm-c/Support.h"
+
 //#include "llvm/IR/DebugInfo.h"
 //#include "llvm/IR/TrackingMDRef.h"
 //#include "llvm/IR/ValueHandle.h"
@@ -106,7 +108,7 @@ struct LLVMArrayRefOfint64_t { int64_t *Data; size_t Length; };
 
 /// Constructor of a DIBuilder.  
 LLVMDIBuilderRef 
-DIBBuilderCreate(LLVMModuleRef Mod, bool AllowUnresolved) ;
+DIBBuilderCreate(LLVMModuleRef Mod, LLVMBool AllowUnresolved) ;
 
 /// finalize - Construct any deferred debug info descriptors.
 void DIBfinalize(LLVMDIBuilderRef Builder) ;
@@ -146,12 +148,12 @@ LLVMDICompileUnit DIBcreateCompileUnit(LLVMDIBuilderRef Builder,
                                 LLVMStringRef File,
                                 LLVMStringRef Dir,  
                                 LLVMStringRef Producer,
-                                bool isOptimized,  
+                                LLVMBool isOptimized,  
                                 LLVMStringRef Flags,
                                 unsigned RV,
                                 LLVMStringRef SplitName,
                                 llvm::DIBuilder::DebugEmissionKind Kind,
-                                bool EmitDebugInfo) ;
+                                LLVMBool EmitDebugInfo) ;
 
 /// createFile - Create a file descriptor to hold debugging information
 /// for a file.
@@ -604,7 +606,7 @@ LLVMDIGlobalVariable DIBcreateGlobalVariable
                                 LLVMDIFile File,
                                 unsigned LineNo,
                                 LLVMDITypeRef Ty,
-                                bool isLocalToUnit,
+                                LLVMBool isLocalToUnit,
                                 LLVMConstantRef Val,
                                 LLVMMDNodePtr Decl) ;
 
@@ -618,7 +620,7 @@ LLVMDIGlobalVariable DIBcreateTempGlobalVariableFwdDecl
                                 LLVMDIFile File,
                                 unsigned LineNo,
                                 LLVMDITypeRef Ty,
-                                bool isLocalToUnit,
+                                LLVMBool isLocalToUnit,
                                 LLVMConstantRef Val,
                                 LLVMMDNodePtr Decl) ;
 
@@ -644,7 +646,7 @@ LLVMDIVariable DIBcreateLocalVariable(LLVMDIBuilderRef Builder,
                                 LLVMDIFile File,
                                 unsigned LineNo,
                                 LLVMDITypeRef Ty,
-                                bool AlwaysPreserve,
+                                LLVMBool AlwaysPreserve,
                                 unsigned Flags,
                                 unsigned ArgNo) ;
 
@@ -688,11 +690,11 @@ LLVMDISubprogram DIBcreateFunction( LLVMDIBuilderRef Builder,
                                 LLVMDIFile File,
                                 unsigned LineNo,
                                 LLVMDICompositeType Ty,
-                                bool isLocalToUnit,
-                                bool isDefinition,
+                                LLVMBool isLocalToUnit,
+                                LLVMBool isDefinition,
                                 unsigned ScopeLine,
                                 unsigned Flags,
-                                bool isOptimized,
+                                LLVMBool isOptimized,
                                 LLVMValueRef Fn,
                                 LLVMMDNodePtr TParam,
                                 LLVMMDNodePtr Decl) ;
@@ -706,11 +708,11 @@ LLVMDISubprogram DIBcreateTempFunctionFwdDecl( LLVMDIBuilderRef Builder,
                                 LLVMDIFile File,
                                 unsigned LineNo,
                                 LLVMDICompositeType Ty,
-                                bool isLocalToUnit,
-                                bool isDefinition,
+                                LLVMBool isLocalToUnit,
+                                LLVMBool isDefinition,
                                 unsigned ScopeLine,
                                 unsigned Flags,
-                                bool isOptimized,
+                                LLVMBool isOptimized,
                                 LLVMValueRef Fn,
                                 LLVMMDNodePtr TParam,
                                 LLVMMDNodePtr Decl) ;
@@ -725,11 +727,11 @@ LLVMDISubprogram DIBcreateFunctionFromScope(LLVMDIBuilderRef Builder,
                             LLVMDIFile File, 
                             unsigned LineNo,
                             LLVMDICompositeType Ty, 
-                            bool isLocalToUnit,
-                            bool isDefinition,
+                            LLVMBool isLocalToUnit,
+                            LLVMBool isDefinition,
                             unsigned ScopeLine,
                             unsigned Flags,
-                            bool isOptimized,
+                            LLVMBool isOptimized,
                             LLVMValueRef Fn,
                             LLVMMDNodePtr TParam,
                             LLVMMDNodePtr Decl) ;
@@ -760,13 +762,13 @@ LLVMDISubprogram DIBcreateMethod(LLVMDIBuilderRef Builder,
                                 LLVMDIFile File,
                                 unsigned LineNo,
                                 LLVMDICompositeType Ty,
-                                bool isLocalToUnit,
-                                bool isDefinition,
+                                LLVMBool isLocalToUnit,
+                                LLVMBool isDefinition,
                                 unsigned Virtuality,
                                 unsigned VTableIndex,
                                 LLVMDIType VTableHolder,
                                 unsigned Flags,
-                                bool isOptimized,
+                                LLVMBool isOptimized,
                                 LLVMValueRef Fn,
                                 LLVMMDNodePtr TParam) ;
 
@@ -909,7 +911,7 @@ LLVMValueRef /*Instruction*/ DIBinsertDbgValueIntrinsicBefore(LLVMDIBuilderRef B
 ///
 /// If this creates a self reference, it may orphan some unresolved cycles
 /// in the operands of \c T, so \a DIBuilder needs to track that.
-void LLVMReplaceVTableHolder(LLVMDIBuilderRef Builder,
+void DIBreplaceVTableHolder(LLVMDIBuilderRef Builder,
                          LLVMDICompositeType *T, 
                          LLVMDICompositeType VTableHolder);
 
@@ -918,14 +920,24 @@ void LLVMReplaceVTableHolder(LLVMDIBuilderRef Builder,
 /// If \c T is resolved, but the arrays aren't -- which can happen if \c T
 /// has a self-reference -- \a DIBuilder needs to track the array to
 /// resolve cycles.
-void LLVMReplaceArrays(LLVMDIBuilderRef Builder,
+void DIBreplaceArrays(LLVMDIBuilderRef Builder,
                    LLVMDICompositeType *T, 
                    LLVMDIArray Elements,
                    LLVMDIArray TParems);
 
+
+// This apparently was in bindings/go/llvm/DIBuilderBindings.h of an earlier
+// llvm than 3.6.1  It is in DIBuilder because that is where the stuff needed
+// by its implementation is found.  
+//changed scope was *
+LLVMValueRef DIBgetDebugLoc(unsigned Line, 
+                            unsigned Col, 
+                            LLVMDIDescriptor Scope);
 
 #ifdef __cplusplus
 }
 #endif /* !defined(__cplusplus) */
 
 #endif /* !defined(M3DIBUILDER_H) */
+
+//End M3DIBuilder.h 

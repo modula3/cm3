@@ -27,7 +27,7 @@
 
 ; IMPORT LLVMTypes 
 ; FROM LLVMTypes IMPORT int64_t , uint64_t , unsigned 
-; FROM LLVMTypes IMPORT bool , false  
+; FROM LLVMTypes IMPORT Bool , False , True   
 ; FROM LLVMTypes IMPORT StringRef , StringRefEmpty 
 (* All parameters of type StringRef are passed READONLY, which means the
    M3 compiler will pass them by reference.  This is necessary, because the
@@ -45,7 +45,7 @@
 ; TYPE DIBuilderRef = UNTRACED BRANDED "M3DIBOpaqueDIBuilder" REF Opaque
 
 ; PROCEDURE DIBBuilderCreate 
-    ( Module : LLVM . ModuleRef ; AllowUnresolved : BOOLEAN := TRUE ) 
+    ( Module : LLVM . ModuleRef ; AllowUnresolved : Bool := True ) 
   : DIBuilderRef
   (* Return a new, initialized builder. *) 
 
@@ -180,12 +180,12 @@
     ; READONLY File : StringRef
     ; READONLY Dir : StringRef
     ; READONLY Producer : StringRef
-    ; isOptimized : bool
+    ; isOptimized : Bool
     ; READONLY Flags : StringRef
     ; RV : unsigned
-    ; READONLY SplitName : StringRef
+    ; READONLY SplitName : StringRef := StringRefEmpty 
     ; Kind := DebugEmissionKindBase . FullDebug
-    ; EmitDebugInfo : BOOLEAN := TRUE 
+    ; EmitDebugInfo : Bool := True 
     )
   : LLVMDICompileUnit
 
@@ -704,7 +704,7 @@
     ; File : LLVMDIFile
     ; LineNo : unsigned
     ; Ty : LLVMDIType
-    ; isLocalToUnit : bool
+    ; isLocalToUnit : Bool
     ; Val : LLVM . ConstantRef 
     ; Decl : MDNodeRef 
     )
@@ -720,7 +720,7 @@
     ; File : LLVMDIFile
     ; LineNo : unsigned
     ; Ty : LLVMDIType
-    ; isLocalToUnit : bool
+    ; isLocalToUnit : Bool
     ; Val : LLVM . ConstantRef 
     ; Decl : MDNodeRef 
     )
@@ -749,7 +749,7 @@
     ; File : LLVMDIFile
     ; LineNo : unsigned
     ; Ty : LLVMDIType
-    ; AlwaysPreserve : bool := false
+    ; AlwaysPreserve : Bool := False
     ; Flags : unsigned := 0
     ; ArgNo : unsigned := 0
     )
@@ -801,11 +801,11 @@
     ; File : LLVMDIFile
     ; LineNo : unsigned
     ; Ty : LLVMDICompositeType
-    ; isLocalToUnit : bool
-    ; isDefinition : bool
+    ; isLocalToUnit : Bool
+    ; isDefinition : Bool
     ; ScopeLine : unsigned
     ; Flags : unsigned := 0
-    ; isOptimized : bool := false
+    ; isOptimized : Bool := False
     ; Fn : FunctionRef := NIL
     ; TParam : MDNodeRef := NIL
     ; Decl : MDNodeRef := NIL
@@ -822,11 +822,11 @@
     ; File : LLVMDIFile
     ; LineNo : unsigned
     ; Ty : LLVMDICompositeType
-    ; isLocalToUnit : bool
-    ; isDefinition : bool
+    ; isLocalToUnit : Bool
+    ; isDefinition : Bool
     ; ScopeLine : unsigned
     ; Flags : unsigned := 0
-    ; isOptimized : bool := false
+    ; isOptimized : Bool := False
     ; Fn : FunctionRef := NIL
     ; TParam : MDNodeRef := NIL
     ; Decl : MDNodeRef := NIL
@@ -843,11 +843,11 @@
     ; File : LLVMDIFile
     ; LineNo : unsigned
     ; Ty : LLVMDICompositeType
-    ; isLocalToUnit : bool
-    ; isDefinition : bool
+    ; isLocalToUnit : Bool
+    ; isDefinition : Bool
     ; ScopeLine : unsigned
     ; Flags : unsigned := 0
-    ; isOptimized : bool := false
+    ; isOptimized : Bool := False
     ; Fn : FunctionRef := NIL
     ; TParam : MDNodeRef := NIL
     ; Decl : MDNodeRef := NIL
@@ -881,13 +881,13 @@
     ; File : LLVMDIFile
     ; LineNo : unsigned
     ; Ty : LLVMDICompositeType
-    ; isLocalToUnit : bool
-    ; isDefinition : bool
+    ; isLocalToUnit : Bool
+    ; isDefinition : Bool
     ; Virtuality : unsigned := 0
     ; VTableIndex : unsigned := 0
     ; VTableHolder : LLVMDIType := LLVMDITypeEmpty
     ; Flags : unsigned := 0
-    ; isOptimized : bool := false
+    ; isOptimized : Bool := False
     ; Fn : FunctionRef := NIL
     ; TParam : MDNodeRef := NIL
     )
@@ -1060,7 +1060,7 @@
 (** *)
 (** If this creates a self reference, it may orphan some unresolved cycles *)
 (** in the operands of \c T, so \a DIBuilder needs to track that. *)
-; PROCEDURE LLVMReplaceVTableHolder
+; PROCEDURE DIBreplaceVTableHolder
     ( Builder : DIBuilderRef 
     ; READONLY T : LLVMDICompositeType 
     ; VTableHolder : LLVMDICompositeType 
@@ -1071,12 +1071,19 @@
 (** If \c T is resolved, but the arrays aren't -- which can happen if \c T *)
 (** has a self-reference -- \a DIBuilder needs to track the array to *)
 (** resolve cycles. *) 
-; PROCEDURE LLVMReplaceArrays
+; PROCEDURE DIBReplaceArrays
     ( Builder : DIBuilderRef 
     ; READONLY T : LLVMDICompositeType  
     ; Elements : DIArray 
     ; TParems : DIArray := DIArrayEmpty  
     ) 
+
+(* This apparently was in bindings/go/llvm/DIBuilderBindings.h of an earlier
+   llvm than 3.6.1.  It is in DIBuilder because that is where the stuff needed
+   by its implementation is found. *) 
+; PROCEDURE DIBgetDebugLoc
+    ( Line : unsigned ; Col : unsigned ; Scope : LLVMDIScope )
+  : LLVM . ValueRef 
 
 ; END M3DIBuilder
 .
