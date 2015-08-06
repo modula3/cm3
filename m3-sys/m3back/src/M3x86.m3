@@ -3283,7 +3283,7 @@ CONST
     BP { "m3_rotate_right64",3, Type.Word64, Target.STDCALL },
     BP { "m3_rotate64",      3, Type.Word64, Target.STDCALL },
     
-    BP { "m3_alloca",        0, Type.Addr, Target.CDECL, "__chkstk", EAX }
+    BP { "alloca",           0, Type.Addr, Target.CDECL, "__chkstk", EAX }
   };
 
 PROCEDURE start_int_proc (u: U;  b: Builtin) =
