@@ -94,6 +94,7 @@ proc configure_c_compiler() is
     SYSTEM_CC = SYSTEM_CC & arch
     SYSTEM_CC_ASM = SYSTEM_CC_ASM & arch
   end
+  SYSTEM_CC_LD = SYSTEM_CC
   SYSTEM_CC = SYSTEM_CC & " -x c++"
   %write("SYSTEM_CC is " & SYSTEM_CC)
 end
