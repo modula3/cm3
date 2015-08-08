@@ -57,7 +57,7 @@ module ("WebFile")
 
 implementation ("Main")
 
-%build_standalone () %-- we don't want to depend on the shared libraries...
+build_standalone () %-- we don't want to depend on the shared libraries...
 
 % Some platforms do not allow overwriting binaries that are currently
 % executed, hence the default is not to install the cm3 binary in place.
