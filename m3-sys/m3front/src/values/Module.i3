@@ -72,4 +72,15 @@ PROCEDURE Reset ();
 PROCEDURE MakeCurrent (t: T);
 (* refresh 't' and its imports for the current compilation *)
 
+(* Exception handling support, using setjmp/longjmp, without front/middle-end
+   knowing jmpbuf size -- use alloca at runtime getting size from
+   constant initialized in C; these functions are in Module
+   to accomodate hypothetical multi-threaded m3front,
+   i.e. instead of having globals initialized on-demand in Jmpbufs.
+   i.e. Module compilation still assumed single threadied, but
+   possibly multiple Modules compiled on separate threads. *)
+PROCEDURE GetAlloca (t: T) : CG.Proc;
+PROCEDURE GetJmpbufSize (t: T): CG.Var;
+PROCEDURE GetSetjmp (t: T) : CG.Proc;
+
 END Module.

@@ -466,9 +466,6 @@ VAR (*CONST*)
      will cause an address faults.  Hence, no explicit NIL checks are needed
      for dereferencing with offsets in this range. *)
 
-  (* Thread stacks *)
-  Jumpbuf_size     : CARDINAL; (* size of a "jmp_buf" *)
-
   (* floating point values *)
   All_floats_legal : BOOLEAN;
   (* If all bit patterns are "legal" floating point values (i.e. they can
