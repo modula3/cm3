@@ -64,8 +64,9 @@ PROCEDURE PopFrame (frame: CG.Var);
 PROCEDURE SetLock (acquire: BOOLEAN;  var: CG.Var;  offset: INTEGER);
 (* generate the call to acquire or release a mutex *)
 
-PROCEDURE CaptureState (frame: CG.Var;  handler: CG.Label);
-(* call 'setjmp' on 'frame's jmpbuf and branch to 'handler' on re-returns. *)
+PROCEDURE CaptureState (frame: CG.Var;  jmpbuf: CG.Var;  handler: CG.Label);
+(* frame.jmpbuf = jmpbuf
+   if (setjmp(jmpbuf)) goto handler *)
 
 PROCEDURE Reset ();
 
