@@ -15,7 +15,7 @@ INTERFACE LLGen
 ; PROCEDURE New 
     ( logfile : Wr . T ; BackendMode : Target . M3BackendMode_t ) 
   : CodeGenTyp  
-  (* A new, initialized code generator that uses llvm. 
+  (* A new, initialized code generator that does very little. 
      If logfile # NIL and # "", it writes a log on 'logfile'. 
   *) 
  

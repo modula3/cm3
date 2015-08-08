@@ -129,7 +129,9 @@ proc version_impl(name) is
                  "5" : "IntLlvmObj",
                  "6" : "IntLlvmAsm",
                  "7" : "ExtLlvmObj",
-                 "8" : "ExtLlvmAsm"}
+                 "8" : "ExtLlvmAsm",
+                 "9" : "StAloneLlvmObj",
+                 "10": "StAloneLlvmAsm"}
                , M3_BACKEND_MODE), "\";", CR)
 
         local TargetNaming = ""

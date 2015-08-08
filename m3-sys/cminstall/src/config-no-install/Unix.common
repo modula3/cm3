@@ -125,6 +125,20 @@ end
 
 end
 
+%--------------------------------------------------------- m3llvm ------------
+% Optionally, "m3llvm" is called to translate cm3 IR to llvm IR. 
+
+if not defined("m3llvm")
+
+  proc m3llvm(source, outfile, optimize, debug) is
+  % will we ever need optimize and/or debug? 
+
+      local m3llvm = "m3llvm"
+      return try_exec (m3llvm, "<", source, ">", outfile)
+  end % proc m3llvm
+
+end % if not defined("m3llvm")
+
 %--------------------------------------------------------- llvm backend ---
 % Optionally, "llvm_backend" is called to translate llvm bitcode to object code.
 

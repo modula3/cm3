@@ -62,6 +62,14 @@ proc configure_c_compiler() is
   % It is the default for Apple gcc and left
   % here in case user is using a self-built FSF gcc.
   %
+  % g++ 1.c used to compile successfully as C++, on MacOSX 10.5.8.
+  % On MacOS X 10.10.4 Yosemite it errors. -x c++ fixes it.
+  % But do not use that with linking, otherwise all the object files are interpreted as C++.
+  %
+  % Clang assembler gives warnings for -fPIC, which appears meaningless (review for arm/arm64).
+  %
+  % -gstabs+ does not work on Mac OSX.
+  %
 
   %SYSTEM_CC = "gcc -gstabs+ -fPIC"
   %SYSTEM_CC = "gcc -g -fPIC"
@@ -74,8 +82,8 @@ proc configure_c_compiler() is
   %SYSTEM_CC = SYSTEM_CC & " -Wno-missing-field-initializers"
   %SYSTEM_CC = SYSTEM_CC & " -Wno-unused-parameter"
   % Usocket.c:31: warning: comparison of unsigned expression < 0 is always false
-  SYSTEM_CC_ASM = "g++ -fPIC"
-  %SYSTEM_CC_ASM = "gcc -fPIC"
+  SYSTEM_CC_ASM = "g++"
+  %SYSTEM_CC_ASM = "gcc"
   local m = " -m" & {"32BITS":"32","64BITS":"64"}{WORD_SIZE}
   local arch = " -arch " & DarwinArch
   if not equal(try_exec("@" & SYSTEM_CC & m & " -c -x c /dev/null -o /dev/null 2>&1 | fgrep \"cc1: error: invalid option \\\`32'\" >/dev/null"), 0)
@@ -86,9 +94,6 @@ proc configure_c_compiler() is
     SYSTEM_CC = SYSTEM_CC & arch
     SYSTEM_CC_ASM = SYSTEM_CC_ASM & arch
   end
-% g++ 1.c used to compile successfully as C++, on MacOSX 10.5.8.
-% On MacOS X 10.10.4 Yosemite it errors. -x c++ fixes it.
-% But do not use that with linking, otherwise all the object files are interpreted as C++.
   SYSTEM_CC_LD = SYSTEM_CC
   SYSTEM_CC = SYSTEM_CC & " -x c++"
   %write("SYSTEM_CC is " & SYSTEM_CC)

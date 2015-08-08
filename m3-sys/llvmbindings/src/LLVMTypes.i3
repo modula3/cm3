@@ -15,16 +15,16 @@ INTERFACE LLVMTypes
 
 ; IMPORT Word 
 
-; FROM LLVM IMPORT ValueRef 
-
 (* These could come from almost anywhere. *) 
 (* TODO: Figure out where/how to get the right types for these: *) 
 ; TYPE size_t = INTEGER 
 ; TYPE int64_t = INTEGER 
 ; TYPE uint64_t = Word . T  
-; TYPE bool = [ 0 .. 1 ] 
-; CONST false = 0 
-; CONST true = 1 
+; TYPE Bool = BOOLEAN 
+(* NOTE: All the bindings to llvm assume a Modula3 BOOLEAN can be passed in
+         and out to a C/C++ int and work as expected. *) 
+; CONST False = FALSE 
+; CONST True = TRUE 
 ; TYPE unsigned = [ 0 .. 16_7FFFFFFF ] 
       
 ; TYPE Opaque = RECORD END (* This duplicates a decl in LLV. *) 
@@ -54,18 +54,6 @@ INTERFACE LLVMTypes
       END 
 
 ; CONST StringRefEmpty = StringRef { Data := NIL , Length := 0 }
-
-(* From llvm/ADT/ArrayRef.h: *) 
-
-(* class ArrayRef<Value *> (NOTE: this is not a pointer). *) 
-; TYPE ArrayRefOfValueRef 
-    = RECORD 
-        Data : UNTRACED REF ValueRef (* 0th element, a la C/C++ *) 
-      ; Length : size_t
-      END 
-
-; CONST ArrayRefOfValueRefEmpty 
-    = ArrayRefOfValueRef { Data := NIL , Length := 0 }
 
 ; TYPE MetadataRef = UNTRACED BRANDED "LLVMMetadata" REF (* LLVM . *) Opaque
 

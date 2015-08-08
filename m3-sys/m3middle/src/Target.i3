@@ -144,6 +144,7 @@ TYPE
                                    M3CG produces object code *)
     IntegratedAssembly, (* "1"  -- don't call m3_backend, 
                                    M3CG produces assembly code, run asm. *)
+    (* External modes emit cm3 IR to a file, then the gcc-derived backend. *) 
     ExternalObject,     (* "2"  -- call m3_backend, it produces object code *)
     ExternalAssembly,   (* "3"  -- call m3_backend, it produces assembly code, run asm *)
     C,                  (* "4"  -- don't call m3_backend, call compile_c, 
@@ -153,7 +154,13 @@ TYPE
                                    run asm. *)  
     ExtLlvmObj,         (* "7"  -- M3CG produces llvm bitcode.  call compile_llvm. 
                                    It produces object code. *) 
-    ExtLlvmAsm          (* "8"  -- M3CG produces llvm bitcode.  call compile_llvm. 
+    ExtLlvmAsm,         (* "8"  -- M3CG produces llvm bitcode.  call compile_llvm. 
+                                   It produces assembly code, run asm. *) 
+    (* StAloneLlvm modes emit cm3 IR to a file, then run a stand-alone executable to
+       translate it to llvm IR. *) 
+    StAloneLlvmObj,     (* "9"  -- call m3llvm, then call compile_llvm. 
+                                   It produces object code. *) 
+    StAloneLlvmAsm      (* "10" -- call m3llvm, then call compile_llvm. 
                                    It produces assembly code, run asm. *) 
   };
 
@@ -167,7 +174,9 @@ CONST
     "IntLlvmObj", 
     "IntLlvmAsm", 
     "ExtLlvmObj", 
-    "ExtLlvmAsm" 
+    "ExtLlvmAsm",
+    "StAloneLlvmObj",
+    "StAloneLlvmAsm" 
    };
 
   TYPE MT = M3BackendMode_t; 
@@ -182,19 +191,24 @@ CONST
     (* Modes using the external gcc-derived code generator m3cc. *)
 
   CONST BackendLlvmSet = SET OF M3BackendMode_t 
-    { MT.ExtLlvmObj, MT.ExtLlvmAsm, MT.IntLlvmObj, MT.IntLlvmAsm }; 
-    (* Modes using the llvm infrastructure to generate assembly or object code. *)
+    { MT.ExtLlvmObj, MT.ExtLlvmAsm, MT.IntLlvmObj, MT.IntLlvmAsm}; 
+    (* Modes linking to the llvm infrastructure to generate assembly or object code. *)
+
+  CONST BackendStAloneLlvmSet = SET OF M3BackendMode_t 
+    { MT.StAloneLlvmObj, MT.StAloneLlvmAsm }; 
+    (* Modes using standalone translator m3llvm, from cm3 IR to llvm IR. *)
 
   CONST BackendCSet = SET OF M3BackendMode_t { MT.C }; 
     (* Modes using the C-generating code generator plus a C compiler. *) 
 
   CONST BackendAsmSet = SET OF M3BackendMode_t 
-    { MT.IntegratedAssembly, MT.ExternalAssembly, MT.ExtLlvmAsm, MT.IntLlvmAsm }; 
+    { MT.IntegratedAssembly, MT.ExternalAssembly, MT.ExtLlvmAsm, MT.IntLlvmAsm,
+      MT.StAloneLlvmAsm }; 
     (* Modes that require the builder to run the assembler. *) 
     (* NOTE: C may require separate assembly, but the C compiler does it. *)
 
   CONST BackendLlvmAsmSet = SET OF M3BackendMode_t 
-    { MT.ExtLlvmAsm, MT.IntLlvmAsm }; 
+    { MT.ExtLlvmAsm, MT.IntLlvmAsm, MT.StAloneLlvmAsm }; 
 
   CONST BackendSet = SET OF M3BackendMode_t 
     {
@@ -206,23 +220,27 @@ CONST
       MT.ExtLlvmObj,
       MT.ExtLlvmAsm,
       MT.IntLlvmObj,
-      MT.IntLlvmAsm
+      MT.IntLlvmAsm,
+      MT.StAloneLlvmObj,
+      MT.StAloneLlvmAsm
     }; 
   
 (* Provoke compile errors: *) 
   BackendIntegratedXXX
     = ARRAY M3BackendMode_t OF BOOLEAN 
-        { TRUE, TRUE, FALSE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE };
+        { TRUE, TRUE, FALSE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE };
 
   BackendUsesLlvmXXX 
     = ARRAY M3BackendMode_t OF BOOLEAN 
-        { FALSE, FALSE, FALSE, FALSE, FALSE, TRUE, TRUE, TRUE, TRUE };
+        { FALSE, FALSE, FALSE, FALSE, FALSE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE };
 
   (* BackendAssembly = ARRAY M3BackendMode_t OF BOOLEAN { FALSE, TRUE, FALSE, TRUE, FALSE };  *)
 
 (*-------------------------------------------------------- initialization ---*)
 
-PROCEDURE Init (system: TEXT; osname := "POSIX"; backend_mode := M3BackendMode_t.ExternalAssembly): BOOLEAN;
+PROCEDURE Init 
+  (system: TEXT; osname := "POSIX"; backend_mode := M3BackendMode_t.ExternalAssembly)
+: BOOLEAN;
 (* Initialize the variables of this interface to reflect the architecture
    of "system".  Returns TRUE iff the "system" was known and the initialization
    was successful.  *)

@@ -67,3 +67,5 @@ void LLVMSetModuleIdentifier(LLVMModuleRef M, const char *Id);
 #endif /* defined(__cplusplus) */
 
 #endif /* defined(M3Extras_H) */
+
+// End M3Extras.h 

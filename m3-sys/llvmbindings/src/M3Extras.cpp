@@ -97,4 +97,4 @@ void LLVMSetModuleIdentifier(LLVMModuleRef M, const char *Id) {
   unwrap(M)->setModuleIdentifier(Id);
 }
 
-
+// End M3Extras.cpp
