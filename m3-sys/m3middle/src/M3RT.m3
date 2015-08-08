@@ -10,9 +10,9 @@ IMPORT Target;
 
 PROCEDURE Init () =
   VAR
-    IP := Target.Integer.pack; (* 32 or 64, same as Target.Address.pack *)
-    AP := Target.Address.pack; (* 32 or 64, same as Target.Integer.pack *)
-    CP := Target.Char.pack;    (* 8 *)
+    IP := Target.Integer.pack;
+    AP := Target.Address.pack;
+    CP := Target.Char.pack;
   BEGIN
     (* closure offsets *)
     CL_marker := 0;                (* : INTEGER *)
@@ -57,8 +57,8 @@ PROCEDURE Init () =
     (* Except, ExceptElse, and Finally  frames *)
     EF1_handles    := EF_SIZE;             (* : ADDRESS *)
     EF1_info       := EF1_handles + AP;    (* : RTException.Activation *)
-    EF1_jmpbuf     := EF1_info + EA_SIZE;  (* : jmp_buf *)
-    EF1_SIZE       := EF1_jmpbuf + AP;
+    EF1_jmpbuf     := RoundUp (EF1_info + EA_SIZE, 128); (* : jmp_buf *)
+    EF1_SIZE       := EF1_jmpbuf + Target.Jumpbuf_size;
 
     (* FinallyProc frames *)
     EF2_handler    := EF_SIZE;            (* : ADDRESS (PROC) *)
@@ -148,6 +148,11 @@ PROCEDURE Init () =
     MUTEX_acquire := 0 * AP;          (*: PROC() *)
     MUTEX_release := 1 * AP;          (*: PROC() *)
   END Init;
+
+PROCEDURE RoundUp (a, b: INTEGER): INTEGER =
+  BEGIN
+    RETURN (a + b - 1) DIV b * b;
+  END RoundUp;
 
 BEGIN
 END M3RT.

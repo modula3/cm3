@@ -12,7 +12,7 @@ MODULE Procedure;
 IMPORT M3, M3ID, CG, Value, ValueRep, Type, Scope, Error, Host;
 IMPORT ProcType, Stmt, BlockStmt, Marker, Coverage, M3RT;
 IMPORT CallExpr, Token, Variable, ProcExpr, Tracer;
-IMPORT Scanner, Decl, ESet, ProcBody, Target, Expr, Formal, Jmpbufs;
+IMPORT Scanner, Decl, ESet, ProcBody, Target, Expr, Formal;
 FROM Scanner IMPORT GetToken, Match, MatchID, cur;
 
 REVEAL
@@ -33,7 +33,6 @@ REVEAL
         cg_proc      : CG.Proc;
         next_cg_proc : T;
         end_origin   : INTEGER;
-        jmpbufs      : Jmpbufs.Proc;
       OVERRIDES
         typeCheck   := Check;
         set_globals := ValueRep.NoInit;
@@ -309,9 +308,7 @@ PROCEDURE CheckBody (p: T;  VAR cs: Value.CheckState) =
       INC (Type.recursionDepth);
         Scope.TypeCheck (p.syms, cs);
         Marker.PushProcedure (result, p.result, cconv);
-        p.jmpbufs := Jmpbufs.CheckProcPush (cs.jmpbufs, p.name);
           Stmt.TypeCheck (p.block, cs);
-        Jmpbufs.CheckProcPop (cs.jmpbufs, p.jmpbufs);
         Marker.Pop ();
         Scope.WarnUnused (p.syms);
       DEC (Type.recursionDepth);
@@ -578,7 +575,6 @@ PROCEDURE GenBody (p: T) =
         Scope.InitValues (p.syms);
         Scanner.offset := BlockStmt.BodyOffset (p.block);
         Coverage.CountProcedure (p);
-        Jmpbufs.CompileProcAllocateJmpbufs (p.jmpbufs);
         oc := Stmt.Compile (p.block);
         fallThru := (Stmt.Outcome.FallThrough IN oc);
       EndRaises (p, l, frame, fallThru);

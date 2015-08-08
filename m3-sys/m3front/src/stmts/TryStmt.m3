@@ -10,7 +10,7 @@ MODULE TryStmt;
 
 IMPORT M3, M3ID, CG, Variable, Scope, Exceptionz, Value, Error, Marker;
 IMPORT Type, Stmt, StmtRep, TryFinStmt, Token;
-IMPORT Scanner, ESet, Target, M3RT, Tracer, Jmpbufs;
+IMPORT Scanner, ESet, Target, M3RT, Tracer;
 FROM Scanner IMPORT Match, MatchID, GetToken, Fail, cur;
 
 TYPE
@@ -22,7 +22,6 @@ TYPE
         hasElse   : BOOLEAN;
         elseBody  : Stmt.T;
         handled   : ESet.T;
-        jmpbufs   : Jmpbufs.Try;
       OVERRIDES
         check       := Check;
         compile     := Compile;
@@ -163,7 +162,6 @@ PROCEDURE ReverseHandlers (p: P) =
 PROCEDURE Check (p: P;  VAR cs: Stmt.CheckState) =
   VAR h: Handler;  handled: ESet.T;
   BEGIN
-    Jmpbufs.CheckTry (cs.jmpbufs, p.jmpbufs);
     h := p.handles;
     WHILE (h # NIL) DO CheckLabels (h, p.scope, cs); h := h.next; END;
 
@@ -431,7 +429,7 @@ PROCEDURE Compile2 (p: P): Stmt.Outcomes =
     END;
 
     (* capture the machine state *)
-    Marker.CaptureState (frame, Jmpbufs.CompileTryGetJmpbuf (p.jmpbufs), l+1);
+    Marker.CaptureState (frame, l+1);
 
     (* compile the body *)
     oc := Stmt.Compile (p.body);

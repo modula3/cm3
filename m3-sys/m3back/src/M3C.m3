@@ -66,7 +66,7 @@ T = M3CG_DoNothing.T BRANDED "M3C.T" OBJECT
         Err    : ErrorHandler := DefaultErrorHandler;
         anonymousCounter := -1;
         c      : Wr.T := NIL;
-        debug := 1; (* 1-4 *)
+        debug := 0; (* or 0, 1, 2, 3, 4 *)
         stack  : RefSeq.T := NIL;
         params : TextSeq.T := NIL;
         op_index := 0;
@@ -80,10 +80,6 @@ T = M3CG_DoNothing.T BRANDED "M3C.T" OBJECT
         RTHooks_Raise_id: M3ID.T := 0;
         RTHooks_ReportFault_id: M3ID.T := 0;
         RTHooks_ReportFault_imported_or_declared := FALSE;
-        alloca_id : M3ID.T := 0;
-        setjmp_id : M3ID.T := 0;
-        u_setjmp_id : M3ID.T := 0;
-        longjmp_id : M3ID.T := 0;
 
         (* labels *)
         labels_min := FIRST(Label);
@@ -1687,7 +1683,6 @@ TYPE Proc_t = M3CG.Proc OBJECT
     uplevels := FALSE;
     is_exception_handler := FALSE;
     is_RTHooks_Raise := FALSE;
-    omit_prototype := FALSE;
     is_RTException_Raise := FALSE;
     no_return := FALSE;
     exit_proc_skipped := 0;
@@ -1761,45 +1756,23 @@ BEGIN
 END IsNameExceptionHandler;
 
 PROCEDURE Proc_Init(proc: Proc_t; self: T): Proc_t =
-VAR name := proc.name;
-    parameter_count := proc.parameter_count;
-    is_common := proc.parent = NIL
-                 AND (proc.exported = TRUE OR proc.imported = TRUE)
-                 AND proc.level = 0;
-    is_common_void := is_common AND proc.return_type = CGType.Void;
-    is_RTHooks_ReportFault := is_common_void
-                              AND name = self.RTHooks_ReportFault_id
-                              AND parameter_count = 2;
-    is_RTHooks_AssertFailed := is_common_void
-                               AND name = self.RTHooks_AssertFailed_id
-                               AND parameter_count = 3;
+VAR is_common := (proc.parent = NIL
+                  AND (proc.exported = TRUE OR proc.imported = TRUE)
+                  AND proc.level = 0
+                  AND proc.return_type = CGType.Void);
+    is_RTHooks_ReportFault := (is_common
+                               AND proc.name = self.RTHooks_ReportFault_id
+                               AND proc.parameter_count = 2);
+    is_RTHooks_AssertFailed := (is_common
+                                AND proc.name = self.RTHooks_AssertFailed_id
+                                AND proc.parameter_count = 3);
 BEGIN
-    (* Omit a few prototypes that the frontend might have slightly wrong,
-       e.g. alloca(unsigned int vs. unsigned long vs. unsigned long long)
-       vs. not a function.
-       e.g. setjmp(void* ) vs. setjmp(array)
-    *)
-    proc.omit_prototype := is_common
-                           AND parameter_count = 1 (* TODO 2 for longjmp *)
-                           AND (name = self.alloca_id
-                           (* TODO
-                           - add CGType.Jmpbuf
-                           - #include <setjmp.h> if there are any
-                             calls to setjmp/_setjmp/longjmp
-                             or instances of CGType.Jmpbuf
-                           - render CGType.Jmpbuf as "jmp_buf"
-                           - omit setjmp/_setjmp/longjmp prototypes
-                             OR name = self.setjmp_id
-                             OR name = self.u_setjmp_id
-                             OR name = self.longjmp_id
-                             *)
-                             );
-    proc.is_RTHooks_Raise := is_common_void
-                             AND name = self.RTHooks_Raise_id
-                             AND parameter_count = 4;
-    proc.is_RTException_Raise := is_common_void
-                                 AND name = self.RTException_Raise_id
-                                 AND parameter_count = 1;
+    proc.is_RTHooks_Raise := (is_common
+                              AND proc.name = self.RTHooks_Raise_id
+                              AND proc.parameter_count = 4);
+    proc.is_RTException_Raise := (is_common
+                                  AND proc.name = self.RTException_Raise_id
+                                  AND proc.parameter_count = 1);
     IF is_RTHooks_ReportFault THEN
         self.RTHooks_ReportFault_imported_or_declared := TRUE;
     END;
@@ -1808,10 +1781,9 @@ BEGIN
         no_return(self);
     END;
     proc.self := self;
-    proc.name := Proc_FixName(proc.self, name);
-    name := proc.name;
-    proc.is_exception_handler := proc.level > 0 AND parameter_count = 1 AND IsNameExceptionHandler(self, NameT(name));
-    proc.parameter_count_without_static_link := parameter_count;
+    proc.name := Proc_FixName(proc.self, proc.name);
+    proc.is_exception_handler := proc.level > 0 AND proc.parameter_count = 1 AND IsNameExceptionHandler(self, NameT(proc.name));
+    proc.parameter_count_without_static_link := proc.parameter_count;
     proc.add_static_link := proc.level > 0;
     INC(proc.parameter_count, ORD(proc.add_static_link));
     proc.locals := NEW(RefSeq.T).init();
@@ -1897,10 +1869,8 @@ CONST Prefix = ARRAY OF TEXT {
 "#pragma warning(disable:4255) /* () change to (void) */",
 "#pragma warning(disable:4668) /* #if of undefined symbol */",
 "#endif",
-(* TODO ideally these are char* for K&R or ideally absent when strong
-   typing and setjmp work done *)
-"typedef char* ADDRESS;",
-"typedef char* STRUCT;",
+"typedef char* ADDRESS;", (* TODO remove this when we finish strong typing *)
+"typedef char* STRUCT;",  (* TODO remove this when we finish strong typing *)
 "typedef signed char INT8;",
 "typedef unsigned char UINT8;",
 "typedef short INT16;",
@@ -1941,8 +1911,6 @@ CONST Prefix = ARRAY OF TEXT {
 "#include <stddef.h>", (* try to remove this, it is slow -- need size_t *)
 "#endif",
 
-(* "#include <setjmp.h>", TODO do not always #include *)
-
 "/* http://c.knowcoding.com/view/23699-portable-alloca.html */",
 "/* Find a good version of alloca. */",
 "#ifndef alloca",
@@ -1982,7 +1950,7 @@ CONST Prefix = ARRAY OF TEXT {
 "#define STRUCT1(n) typedef struct { volatile char a[n]; }     STRUCT(n);", (* TODO prune if not used *)
 "#define STRUCT2(n) typedef struct { volatile short a[n/2]; }  STRUCT(n);", (* TODO prune if not used *)
 "#define STRUCT4(n) typedef struct { volatile int a[n/4]; }    STRUCT(n);", (* TODO prune if not used *)
-"#define STRUCT8(n) typedef struct { volatile UINT64 a[n/8]; } STRUCT(n);", (* TODO prune if not used *)
+"#define STRUCT8(n) typedef struct { volatile double a[n/8]; } STRUCT(n);", (* TODO prune if not used *)
 "#ifdef __cplusplus",
 "#define DOTDOTDOT ...",
 "#else",
@@ -2321,10 +2289,6 @@ BEGIN
     self.comment("M3_TARGET = ", Target.System_name);
     self.comment("M3_WORDSIZE = ", IntToDec(Target.Word.size));
     self.static_link_id := M3ID.Add("_static_link");
-    self.alloca_id := M3ID.Add("alloca");
-    self.setjmp_id := M3ID.Add("setjmp");
-    self.u_setjmp_id := M3ID.Add("_setjmp"); (* "u" is for underscore *)
-    self.longjmp_id := M3ID.Add("longjmp");
     self.RTHooks_ReportFault_id := M3ID.Add("RTHooks__ReportFault");
     self.RTHooks_Raise_id := M3ID.Add("RTHooks__Raise");
     self.RTException_Raise_id := M3ID.Add("RTException__Raise");
@@ -3595,7 +3559,6 @@ BEGIN
     HelperFunctions_helper_with_type_and_array(self, op, type, types, ARRAY OF TEXT{first});
 END HelperFunctions_helper_with_type;
 
-(* TODO give up and #include <string.h>? *)
 PROCEDURE HelperFunctions_memset(self: HelperFunctions_t) =
 CONST text = "void* __cdecl memset(void*, int, size_t); /* string.h */";
 BEGIN
@@ -4311,9 +4274,6 @@ VAR params := proc.params;
     define_kr := NOT ansi AND kind = FunctionPrototype_t.Define;
     kr_part2 := "";
 BEGIN
-    IF proc.omit_prototype THEN
-      RETURN "";
-    END;
     IF NUMBER (params^) = 0 THEN
         text := text & "(void)";
     ELSIF NOT ansi AND NOT define_kr THEN

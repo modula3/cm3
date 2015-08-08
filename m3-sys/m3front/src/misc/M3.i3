@@ -11,7 +11,7 @@
 
 INTERFACE M3;
 
-IMPORT M3ID, M3Buf, Jmpbufs;
+IMPORT M3ID, M3Buf;
 
 TYPE
   Flag = BITS 1 FOR BOOLEAN;
@@ -41,15 +41,13 @@ TYPE (* the "global state" that is passed around during type checking *)
     raises_others : BOOLEAN;
     ok_to_raise   : ExSetList;
     no_error      : ExSetList;
-    jmpbufs       := Jmpbufs.CheckState { };
   END;
 
 CONST
   OuterCheckState = CheckState {
     raises_others := FALSE,
     ok_to_raise   := NIL,
-    no_error      := NIL,
-    jmpbufs       := Jmpbufs.CheckState { }
+    no_error      := NIL
   };
 
 (*-------------------------------------------------------- fingerprinting ---*)
