@@ -125,6 +125,8 @@ SYSTEM_LIBS = {
 }
 
 proc internal_configure_system_lib(name, known, args) is
+  % This does not make sense to me August 8 2015 jaykrell
+  % Do callers of configure_system_libs assume SYSTEM_CC is thereafter valid?
   configure_c_compiler() % why? http://modula3.elegosoft.com/cgi-bin/cvsweb.cgi/cm3/m3-sys/cminstall/src/config-no-install/Darwin.common.diff?r1=1.41;r2=1.42
   if SYSTEM_LIBS contains name
     return
@@ -133,15 +135,25 @@ proc internal_configure_system_lib(name, known, args) is
     SYSTEM_LIBS{name} = args
     return
   end
-  configure_c_compiler()
-  if equal(try_exec("echo 'main(){}' | " & SYSTEM_CC & " -x c - -o /dev/null 2>/dev/null", args), 0)
+  configure_c_compiler() % This should suffice? August 8 2015 jaykrell
+  if equal(try_exec("echo 'int main(){return 0;}' | " & SYSTEM_CC & " -x c - -o /dev/null 2>/dev/null", args), 0)
+    %write("SYSTEM_LIBS{" & name & "} = " & args, EOL)
     SYSTEM_LIBS{name} = args
   end
+  %error("2:" & name)
 end
 
 proc configure_system_libs() is
   internal_configure_system_lib("ODBC", not equal(TARGET, "PPC64_DARWIN"), ["-liodbc", "-liodbcinst"])
+    
+  % X11 is no longer provided by Apple.
+  % 10.5.8 Leopard had it; 10.10.4 Yosemite does not.
+  % OpenGL is similarly affected?
+  % see http://xquartz.macosforge.org.
+  
   internal_configure_system_lib("X11", not equal(TARGET, "PPC64_DARWIN"), ["-L/usr/X11R6/lib", "-lXaw", "-lXmu", "-lXext", "-lXt", "-lSM", "-lICE", "-lX11"])
+  
+  % Given the probing, why not enable these lines?
 
   % not present by default, but this is the default install location
   %internal_configure_system_lib("POSTGRES95", FALSE, ["-L/usr/local/pgsql/lib", "-lpq"])
