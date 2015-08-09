@@ -4,7 +4,7 @@ MODULE Jmpbufs;
 
 IMPORT CG, Module, Target, M3ID, Fmt, Error;
 
-PROCEDURE DebugPrint (t: TEXT) =
+PROCEDURE DebugPrint (<*UNUSED*>t: TEXT) =
 BEGIN
     (* Error.Warn (2, t); *)
 END DebugPrint;
