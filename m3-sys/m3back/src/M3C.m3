@@ -1870,7 +1870,7 @@ CONST Prefix = ARRAY OF TEXT {
 (*"#define M3_OP2(fun, op, a, b) a op b",*)
 (*"#define M3_IF_TRUE(fun, a) a",*)
 (*"#define M3_IF_FALSE(fun, a) !(a)",*)
-"/* ideally the few uuses are guarded by #if AVOID_GCC_TYPE_LIMIT_WARNING and remove the macros */",
+"/* ideally the few uses are guarded by #if AVOID_GCC_TYPE_LIMIT_WARNING and remove the macros */",
 "#define m3_eq_T(T) /* nothing */",
 "#define m3_ne_T(T) /* nothing */",
 "#define m3_gt_T(T) /* nothing */",
