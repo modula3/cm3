@@ -1079,6 +1079,9 @@ PROCEDURE CompileOne (s: State;  u: M3Unit.T) =
     ELSIF (NOT u.imported) THEN
       FlushPending (s);
       u.object := FinalNameForUnit (s, u);
+      IF IfDebug () THEN
+        DebugF ("CompileOne FinalNameForUnit(", u, "):" & u.object);
+      END;
       CASE u.kind OF
       | UK.I3, UK.M3       => CompileM3 (s, u);
       | UK.IB, UK.MB, UK.B => CompileLlc (s, u);
@@ -1411,15 +1414,54 @@ PROCEDURE FulfilNP(np : NotePromise) : QPromise.ExitCode =
 PROCEDURE FulfilRP(rp : RemovePromise) : QPromise.ExitCode = 
   BEGIN LOCK utilsMu DO Utils.Remove(rp.nam) END; RETURN 0 END FulfilRP;
 
+TYPE Temps_t = RECORD
+  count := 0;
+  names := ARRAY [0..2] OF TEXT { NIL, .. };
+END;
+
+PROCEDURE Temps_Add (VAR temps: Temps_t; s: State; name: TEXT) =
+BEGIN
+  IF name = NIL OR s.keep_files THEN RETURN END;
+  <* ASSERT temps.count < LAST(temps.names) *>
+  temps.names[temps.count] := name;
+  INC(temps.count);
+ 
+  IF s.delayBackend THEN
+    s.machine.promises.addhi(NEW(NotePromise, nam := name));
+  ELSE
+    Utils.NoteTempFile (name);
+  END;
+END Temps_Add;
+
+PROCEDURE Temps_Remove (VAR temps: Temps_t; s: State) =
+VAR count := temps.count;
+    name: TEXT;
+BEGIN
+  IF count = 0 THEN RETURN END;
+  FOR i := 0 TO count - 1 DO
+    name := temps.names[i];
+    IF s.delayBackend THEN
+      s.machine.promises.addhi(NEW(RemovePromise, nam := name));
+    ELSE
+      Utils.Remove (name);
+    END;
+  END;
+END Temps_Remove;
+
 PROCEDURE PushOneM3 (s: State;  u: M3Unit.T): BOOLEAN =
 (* PRE: u.kind IN {UK.I3, UK.M3} *) 
   TYPE Mode_t = M3BackendMode_t;
   VAR
-    removeName1: TEXT := NIL;
-    removeName2: TEXT := NIL;
-    removeName3: TEXT := NIL;
-    cm3OutName: TEXT := NIL;     (* Output file to be produced by cm3 executable. *) 
-    codeGenOutName: TEXT := NIL; (* Output file to be produced by code generator. *) 
+    temps := Temps_t { };
+
+    (* Output file to be produced by cm3 executable -- "integrated" codegen. *) 
+    cm3OutName: TEXT := NIL;
+
+    (* Output file to be produced by any "external" code generator,
+       but actually only LLVM-based ones in the current factoring
+       of this messy functionality. *) 
+    codeGenOutName: TEXT := NIL;
+
     cm3IRName: TEXT := NIL;
     llvmIRName: TEXT := NIL;
     CCodeName: TEXT := NIL;
@@ -1473,111 +1515,87 @@ PROCEDURE PushOneM3 (s: State;  u: M3Unit.T): BOOLEAN =
     | Mode_t.IntegratedObject => 
         cm3OutName := u.object; 
         (* boot has no effect on this mode. *)          
-    | Mode_t.IntegratedAssembly => 
+    | Mode_t.IntegratedAssembly => (* not used *)
         asmName := AsmNameForUnit (u); 
         cm3OutName := asmName;
-        IF NOT keep AND NOT boot THEN removeName1 := asmName; END;
-        IF NOT boot THEN 
-          DoRunAsm := TRUE; 
-        END; 
-    | Mode_t.ExternalObject => 
-        cm3IRName := Cm3IRNameForUnit (u);
-        cm3OutName := cm3IRName; 
-        IF NOT keep THEN removeName1 := cm3OutName; END;  
-        codeGenOutName := u.object; 
+        DoRunAsm := NOT boot; 
+    | Mode_t.ExternalObject =>
+        codeGenOutName := u.object; (* not used *)
         DoRunM3cc := TRUE; 
-        (* boot has no effect on this mode. *) 
+        (* boot has no effect on this mode. *)
     | Mode_t.ExternalAssembly => 
-        cm3IRName := Cm3IRNameForUnit (u);
-        cm3OutName := cm3IRName; 
-        IF NOT keep THEN removeName1 := cm3IRName; END;  
         asmName := AsmNameForUnit (u);
-        codeGenOutName := asmName; 
-        IF NOT keep AND NOT boot THEN removeName2 := asmName; END;
-        DoWriteAsm := TRUE; 
+        codeGenOutName := asmName; (* not used *) 
         DoRunM3cc := TRUE; 
-        IF NOT boot THEN 
-          DoRunAsm := TRUE; 
-        END; 
+        DoRunAsm := NOT boot; 
     | Mode_t.C => 
-        IF NOT boot THEN 
-          CCodeName := M3Unit.FileName (u) & ".c"; (* ?FUTURE: .cpp *)
-          IF NOT keep THEN removeName1 := CCodeName; END; 
-          DoRunC := TRUE; 
-          (* C compiler takes care of assembling. *) 
-        END; 
+        CCodeName := M3Unit.FileName (u) & ".c"; (* ?FUTURE: .cpp *)
+        cm3OutName := CCodeName;
+        DoRunC := NOT boot;
+        (* C compiler takes care of assembling. *) 
     | Mode_t.IntLlvmObj =>  
         cm3OutName := u.object; 
         (* boot has no effect on this mode. *) 
     | Mode_t.IntLlvmAsm =>  
         asmName := AsmNameForUnit (u);
         cm3OutName := asmName; 
-        IF NOT keep AND NOT boot THEN removeName1 := cm3OutName; END;  
-        IF NOT boot THEN 
-          DoRunAsm := TRUE; 
-        END; 
+        DoRunAsm := NOT boot; 
     | Mode_t.ExtLlvmObj =>  
         llvmIRName := LlvmIRNameForUnit (u);
         cm3OutName := llvmIRName; 
-        IF NOT keep THEN removeName1 := llvmIRName; END;  
         codeGenOutName := u.object; 
         DoRunLlc := TRUE; 
         (* boot has no effect on this mode. *) 
     | Mode_t.ExtLlvmAsm =>  
         llvmIRName := LlvmIRNameForUnit (u);
         cm3OutName := llvmIRName; 
-        IF NOT keep THEN removeName1 := llvmIRName; END;  
         codeGenOutName := AsmNameForUnit (u);
-        IF NOT keep AND NOT boot THEN removeName2 := codeGenOutName; END;
         DoWriteAsm := TRUE; 
         DoRunLlc := TRUE; 
-        IF NOT boot THEN 
-          asmName := codeGenOutName; 
-          DoRunAsm := TRUE; 
-        END; 
+        DoRunAsm := NOT boot; 
+        asmName := codeGenOutName; 
     | Mode_t.StAloneLlvmObj => 
-        cm3IRName := Cm3IRNameForUnit (u);
-        cm3OutName := cm3IRName; 
-        IF NOT keep THEN removeName1 := cm3OutName; END;  
         llvmIRName := LlvmIRNameForUnit (u);  
-        IF NOT keep THEN removeName2 := llvmIRName; END;  
         DoRunM3llvm := TRUE; 
         codeGenOutName := u.object; 
         DoRunLlc := TRUE; 
         (* boot has no effect on this mode. *) 
     | Mode_t.StAloneLlvmAsm => 
-        cm3IRName := Cm3IRNameForUnit (u);
-        cm3OutName := cm3IRName; 
-        IF NOT keep THEN removeName1 := cm3OutName; END;  
         llvmIRName := LlvmIRNameForUnit (u);  
-        IF NOT keep THEN removeName2 := llvmIRName; END;  
         DoRunM3llvm := TRUE; 
         codeGenOutName := AsmNameForUnit (u);  
-        IF NOT keep AND NOT boot THEN removeName3 := codeGenOutName; END;  
         DoWriteAsm := TRUE; 
         DoRunLlc := TRUE; 
-        IF NOT boot THEN 
-          asmName := codeGenOutName; 
-          DoRunAsm := TRUE; 
-        END; 
-        
-    END; 
+        DoRunAsm := NOT boot; 
+        asmName := codeGenOutName; 
+    END;
+    
+    (* External code generators always consume cm3IR. *)
+    IF codeGenOutName # NIL THEN
+      cm3IRName := Cm3IRNameForUnit (u);
+      cm3OutName := cm3IRName; 
+    END;
+    
+    (* IR is currently always temporary.
+       The generalization is -keep-x or -stop-at-x.
+       "Boot" is a builtin -stop-at-keep-c-or-assembly
+       where the rest of the tools are on the target instead
+       of the host, i.e. in the presence of native assembler/C compiler/linker
+       and the absence of cross assembler/C compiler/linker.
+    *)
+    Temps_Add (temps, s, cm3IRName);
+    Temps_Add (temps, s, llvmIRName);
 
-    IF s.delayBackend THEN
-       IF removeName1 # NIL THEN 
-          s.machine.promises.addhi(NEW(NotePromise, nam := removeName1)); END;
-       IF removeName2 # NIL THEN 
-          s.machine.promises.addhi(NEW(NotePromise, nam := removeName2)); END;
-       IF removeName3 # NIL THEN 
-          s.machine.promises.addhi(NEW(NotePromise, nam := removeName3)); END;
-    ELSE
-      IF removeName1 # NIL THEN Utils.NoteTempFile (removeName1) END;
-      IF removeName2 # NIL THEN Utils.NoteTempFile (removeName2) END;
-      IF removeName3 # NIL THEN Utils.NoteTempFile (removeName3) END;
+    (* C, assembly are always temporary except for "boot", per above. *)
+    IF NOT boot THEN
+      Temps_Add (temps, s, asmName);
+      Temps_Add (temps, s, CCodeName);
     END;
 
     IF NOT RunM3Front (s, u, cm3OutName) THEN
-      IF NOT keep THEN Utils.Remove (cm3OutName) END;
+      IF NOT keep THEN
+        Utils.Remove (cm3OutName);
+      END;
       Msg.FatalError (NIL, "failed compiling: ");
     ELSE
       IF s.delayBackend THEN (* parallel/delayed version of back-end code *)
@@ -1606,18 +1624,7 @@ PROCEDURE PushOneM3 (s: State;  u: M3Unit.T): BOOLEAN =
       END;
     END;
 
-    IF s.delayBackend THEN
-      IF removeName1 # NIL THEN 
-         s.machine.promises.addhi(NEW(RemovePromise, nam := removeName1)) END; 
-      IF removeName2 # NIL THEN 
-         s.machine.promises.addhi(NEW(RemovePromise, nam := removeName2)) END;
-      IF removeName3 # NIL THEN 
-         s.machine.promises.addhi(NEW(RemovePromise, nam := removeName3)) END;
-    ELSE
-      IF removeName1 # NIL THEN Utils.Remove (removeName1) END;
-      IF removeName2 # NIL THEN Utils.Remove (removeName2) END;
-      IF removeName3 # NIL THEN Utils.Remove (removeName3) END;
-    END;
+    Temps_Remove (temps, s);
 
     Utils.NoteNewFile (u.object);
 
@@ -1909,6 +1916,11 @@ PROCEDURE RunM3Front (s: State;  u: M3Unit.T;  object: TEXT)
 
     (* open the input file *)
     source.name := UnitPath (u);
+    
+    IF IfDebug () THEN
+      DoDebug ("RunM3Front source:" & NilText(source.name) & " object:" & NilText(object) & " ");
+    END; 
+ 
     input  := Utils.OpenReader (source.name, fatal := FALSE);
     ok := (input # NIL);
     IF NOT ok THEN
@@ -2290,9 +2302,17 @@ PROCEDURE Pass0_GetImplementations (env: Env;  intf: M3ID.T): M3Compiler.ImplLis
 
 (*------------------------------------------------ compilations and links ---*)
 
+PROCEDURE NilText(t: TEXT): TEXT = 
+BEGIN
+  IF t = NIL THEN t := "<NIL>" END;
+  RETURN t;
+END NilText;
+
 PROCEDURE RunCC (s: State;  source, object: TEXT;  debug, optimize: BOOLEAN;
                  include_path: Arg.List) =
   BEGIN
+    IF IfDebug () THEN DoDebug ("RunCC " & NilText(source) & " " & NilText(object)); END;
+
     ETimer.Push (M3Timers.pass_1);
     StartCall (s, s.c_compiler);
     PushText  (s, source);
@@ -3423,6 +3443,16 @@ PROCEDURE BadFile (msg: TEXT;  u: M3Unit.T) =
   BEGIN
     Msg.FatalError (NIL, msg, ": ", FName (u));
   END BadFile;
+
+PROCEDURE IfDebug (): BOOLEAN =
+  BEGIN
+    RETURN Msg.level >= Msg.Level.Debug;
+  END IfDebug;
+
+PROCEDURE DoDebug (msg: TEXT) =
+  BEGIN
+    IF IfDebug () AND msg # NIL THEN Msg.Debug (msg, Wr.EOL); END;
+  END DoDebug;
 
 PROCEDURE DebugF (msg0: TEXT;  u: M3Unit.T;  msg1: TEXT := NIL) =
   BEGIN
