@@ -706,6 +706,23 @@ machopic_indirect_data_reference (rtx orig, rtx reg)
 rtx
 machopic_indirect_call_target (rtx target)
 {
+/* BUG:
+   Branch islands are broken on 10.10.4.
+   The LLVM assembler, not debugged, sometimes gets confused
+   and the islands point to the wrong symbols, which is
+   catastrophic -- the wrong function gets called.
+   They are needed on <10.5.
+   Here we favor compatibility with 10.10.4, and break 10.4.
+   Ideally we fix the problem elsewhere.
+
+   gcc does not hit this problem because it does not use the LLVM assember.
+   LLVM does not hit the problem because it outputs all stubs before any
+   non-lazy pointers.
+see:
+ https://gcc.gnu.org/bugzilla/show_bug.cgi?id=67183 
+ https://llvm.org/bugs/show_bug.cgi?id=24428 */
+#if 1 /* Changing this to 0 is a workaround, but so is using a different assembler;
+        see the config file. */
   if (! darwin_emit_branch_islands)
     return target;
 
@@ -727,7 +744,7 @@ machopic_indirect_call_target (rtx target)
       MEM_READONLY_P (target) = 1;
       MEM_NOTRAP_P (target) = 1;
     }
-
+#endif
   return target;
 }
 

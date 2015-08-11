@@ -36,12 +36,13 @@ proc configure_assembler() is
   end
   SYSTEM_ASM = "/usr/libexec/gcc/darwin/" & DarwinArch & "/as"
   if not FileExists(SYSTEM_ASM)
-    if IsX86
-      configure_c_compiler ()
-      SYSTEM_ASM = SYSTEM_CC_ASM & " -c -x assembler"
-    else
-      SYSTEM_ASM = "as"
-    end
+  %  if IsX86
+  %    configure_c_compiler ()
+  %    SYSTEM_ASM = SYSTEM_CC_ASM & " -c -x assembler"
+  %  else
+  %    SYSTEM_ASM = "as"
+  %  end
+    SYSTEM_ASM = "as -arch " & DarwinArch & " -force_cpusubtype_ALL"
   end
   %SYSTEM_ASM = SYSTEM_CC_ASM & " -v -c -x assembler"
 end
