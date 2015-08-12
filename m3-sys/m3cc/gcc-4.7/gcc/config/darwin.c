@@ -924,14 +924,22 @@ machopic_legitimize_pic_address (rtx orig, enum machine_mode mode, rtx reg)
 }
 
 /* Output the stub or non-lazy pointer in *SLOT, if it has been used.
-   DATA is the FILE* for assembly output.  Called from
+   DATA is a machopic_output_indirection_t.  Called from
    htab_traverse.  */
 
-static int
-machopic_output_indirection (void **slot, void *data)
+typedef struct machopic_output_indirection_t
 {
+    FILE* asm_out_file;
+    unsigned which; /* stub or direct data or indirect data */
+} machopic_output_indirection_t;
+
+static int
+machopic_output_indirection (void **slot, void *void_data)
+{
+  machopic_output_indirection_t* data = (machopic_output_indirection_t*)void_data;
   machopic_indirection *p = *((machopic_indirection **) slot);
-  FILE *asm_out_file = (FILE *) data;
+  FILE * const asm_out_file = data->asm_out_file;
+  unsigned const which = data->which;
   rtx symbol;
   const char *sym_name;
   const char *ptr_name;
@@ -948,6 +956,9 @@ machopic_output_indirection (void **slot, void *data)
       char *sym;
       char *stub;
       tree id;
+
+      if (which != 0)
+          return 1;
 
       id = maybe_get_identifier (sym_name);
       if (id)
@@ -980,6 +991,9 @@ machopic_output_indirection (void **slot, void *data)
 	   && (machopic_symbol_defined_p (symbol)
 	       || SYMBOL_REF_LOCAL_P (symbol)))
     {
+      if (which != 1)
+          return  1;
+    
       switch_to_section (data_section);
       assemble_align (GET_MODE_ALIGNMENT (Pmode));
       assemble_label (asm_out_file, ptr_name);
@@ -990,6 +1004,9 @@ machopic_output_indirection (void **slot, void *data)
   else
     {
       rtx init = const0_rtx;
+
+      if (which != 2)
+          return 1;
 
       switch_to_section (darwin_sections[machopic_nl_symbol_ptr_section]);
 
@@ -1044,10 +1061,15 @@ machopic_output_indirection (void **slot, void *data)
 void
 machopic_finish (FILE *asm_out_file)
 {
-  if (machopic_indirections)
+  machopic_output_indirection_t data = { asm_out_file };
+
+  if (!machopic_indirections)
+    return;
+    
+  for (data.which = 0; data.which <= 2; ++data.which)
     htab_traverse_noresize (machopic_indirections,
 			    machopic_output_indirection,
-			    asm_out_file);
+			    &data);
 }
 
 int
