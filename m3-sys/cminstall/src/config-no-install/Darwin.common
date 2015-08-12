@@ -35,14 +35,24 @@ proc configure_assembler() is
     return
   end
   SYSTEM_ASM = "/usr/libexec/gcc/darwin/" & DarwinArch & "/as"
+  
+  % NOTE: Some versions of m3cg are incompatible with LLVM assembler that gcc -x assembler
+  % might run. Workaround is to run as instead of gcc -x assembler.
+  % See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=67183
+  % http://llvm.org/bugs/show_bug.cgi?id=24428
+  
+  % NOTE: Do all as versions accept -arch? It'd be nice, but I doubt it. i.e. old PowerPC
+  % Does cm3cg record an architecture in the .s for as to dispatch on? Ditto.
+
   if not FileExists(SYSTEM_ASM)
-  %  if IsX86
-  %    configure_c_compiler ()
-  %    SYSTEM_ASM = SYSTEM_CC_ASM & " -c -x assembler"
-  %  else
-  %    SYSTEM_ASM = "as"
-  %  end
-    SYSTEM_ASM = "as -arch " & DarwinArch & " -force_cpusubtype_ALL"
+    if IsX86
+      configure_c_compiler ()
+      SYSTEM_ASM = SYSTEM_CC_ASM & " -c -x assembler"
+    else
+      SYSTEM_ASM = "as"
+    end
+    %workaround and maybe faster:
+    %SYSTEM_ASM = "as -arch " & DarwinArch & " -force_cpusubtype_ALL"
   end
   %SYSTEM_ASM = SYSTEM_CC_ASM & " -v -c -x assembler"
 end
