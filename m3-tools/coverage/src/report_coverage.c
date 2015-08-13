@@ -8,14 +8,20 @@
 
 extern etext;
 extern edata;
+extern end;
 #ifdef __alpha
   extern __ldr_data;
   extern end;
 #endif
 
 #include <stdio.h>
+#include <unistd.h>
+#include <string.h>
 #include <sys/file.h>
 #include <fcntl.h>
+
+#include <setjmp.h>
+#include <signal.h>
 
 extern char * getenv ();
 
@@ -26,33 +32,144 @@ extern char * getenv ();
 char *marker2 = "Coverage 1.0";
 
 typedef union int_chars {
-  char s[4];
-  int i;
+  char s[8];
+  long i;
 } MarkerWord;
- 
 
-void exit (n)
-    int n;
-{
+sigset_t sigset;
+sigjmp_buf mark;
+long *saved;
+
+void catcher( int );
+void p( long start, long end, int dir );
+void recover( void );
+
+
+void exit (int n) {
     report_coverage ();
-    _cleanup ();
     _exit (n);
 }
 
-report_coverage ()
-{
-  int *l, *start;
+//Try and determine the bounds of the data segment between etext and edata
+
+int MapSeg(long p0, long p1, int dir) {
+
+    int result;
+
+    /*
+     * Block the SIGSEGV signals.  This set of
+     * signals will be saved as part of the environment
+     * by the sigsetjmp() function.
+     */
+     saved = 0;
+
+     sigemptyset( &sigset );
+     sigaddset( &sigset, SIGSEGV );
+     sigprocmask( SIG_SETMASK, &sigset, NULL );
+
+     if( sigsetjmp( mark, 1 ) != 0 ) {
+         recover();
+         result = 0;
+     }
+     else {
+
+         p(p0,p1,dir);
+         sigprocmask( SIG_SETMASK, NULL, &sigset );
+         result = -1;
+    }
+    return( result );
+}
+
+void p( long p0, long p1, int dir ) {
+
+    long ptmp;
+    long *wd;
+    long maybesegv;
+    char tmp;
+
+    struct sigaction sigact;
+    int error=0;
+
+    /* Send signal handler in case error condition is detected */
+
+    sigemptyset( &sigact.sa_mask );
+    sigact.sa_flags = 0;
+    sigact.sa_handler = catcher;
+    sigaction( SIGSEGV, &sigact, NULL );
+
+    sigdelset( &sigset, SIGSEGV );
+    sigprocmask( SIG_SETMASK, &sigset, NULL );
+
+
+    if (dir == 0) {
+      ptmp = p1;
+      for (wd = (long *)p0; wd < (long *)ptmp; wd++) {
+        p1 = (long)wd;
+        saved = wd;
+        maybesegv = *wd; //possibly generate fault
+      }
+    } else {
+      ptmp = p0;
+      for (wd = (long *)p1; wd > (long *)ptmp; wd--) {
+        p0 = (long)wd;
+        saved = wd;
+        maybesegv = *wd; //possibly generate fault
+      }
+    }
+}
+
+void recover( void ) {
+    sigprocmask( SIG_SETMASK, NULL, &sigset );
+}
+
+void catcher( int signo ) {
+    siglongjmp( mark, -1 );
+}
+
+void CheckSegment(int output_file, long begin, long end) {
+
+  char *c;
+  char *start;
+  int state;
+  long marker2_len = strlen (marker2);
+  long marker2_ilen = marker2_len / sizeof (long);
+
+  state = 0;
+
+  for (c = (char *) begin; c < (char *) end; c++) {
+
+    if ( (*c == '<') && (*(c+1) == '<') && (*(c+2) == '<') && (*(c+3) == '<') 
+         && (strncmp ((const char *)c+4, marker2, marker2_len) == 0)) {
+
+      //Found a start marker
+      c += marker2_len + 4;
+      state = 1;
+      start = c;
+    }
+
+    if ( (*c == '>') && (*(c+1) == '>') && (*(c+2) == '>') && (*(c+3) == '>') 
+      && (strncmp ((const char *)c-marker2_len, marker2, marker2_len) == 0)) {
+
+      //Found and end marker
+      if (state == 1) {
+        /* write the segment */
+        unsigned long segLen = (c - marker2_len) - start;
+
+        write (output_file, &segLen, sizeof (long));
+        write (output_file, start, segLen);
+      };
+      state = 0;
+      c++;
+    }
+  }
+}
+
+report_coverage () {
+
   char *output_file_name;
   int output_file;
-  unsigned long first_global, last_global;
-  int state;
-  MarkerWord mark1, mark3;
-  int marker2_len = strlen (marker2);
-  int marker2_ilen = marker2_len / sizeof (int);
-
-  /* build word-aligned markers. */
-  mark1.s[0] = '<';  mark1.s[1] = '<';  mark1.s[2] = '<';  mark1.s[3] = '<';
-  mark3.s[0] = '>';  mark3.s[1] = '>';  mark3.s[2] = '>';  mark3.s[3] = '>';
+  unsigned long first_global, last_global, end_global;
+  long s,e;
 
   /* open the output file */
   output_file_name = getenv ("COVERAGE_DATABASE");
@@ -72,40 +189,44 @@ report_coverage ()
   first_global = (long) &__ldr_data /* 0x140000000 */;
   last_global  = (long) &end;
 #else
-  first_global = (long) &etext; 
+  first_global = (long) &etext;
   last_global  = (long) &edata;
+  end_global   = (long) &end;
 #endif
 #endif
-  first_global /= sizeof (int);  first_global *= sizeof (int);
 
-  state = 0;  /* outside a segment */
+  //printf("etext %p edata %p end %p \n",first_global,last_global,end_global);
 
-  /* scan the global data segment */
-  for (l = (int*)first_global;  l < (int*)last_global;  l++) {
-    /* look for a header */
-    if ((*l == mark1.i)
-       && (strncmp (l+1, marker2, marker2_len) == 0)) {
-      /* we found the beginning of a segment */
-      l += marker2_ilen + 1;
-      state = 1;
-      start = l;
-    };
+/*
+//the segment from the end of the text to somewhere into the data segment
+  has tags but they are not the ones we want.
 
-    /* look for a trailer */
-    if ((*l == mark3.i)
-       && (strncmp (l-marker2_ilen, marker2, marker2_len) == 0)) {
-      /* we found the end of a segment */
-      if (state == 1) {
-        /* write the segment */
-	unsigned long i = (l - marker2_ilen) - start;
-	i *= sizeof (int);
-	write (output_file, &i, sizeof (long));
-	write (output_file, start, i);
-      };
-      state = 0;
-      l++;
-    };
-  }; /* for */
+  s = first_global;
+  e = last_global;
+  printf("range start %p end %p \n",s,e);
+  s /= sizeof (long);  s *= sizeof (long);
+  e /= sizeof (long);  e *= sizeof (long);
+  printf("range start %p end %p \n",s,e);
+
+  MapSeg(s,e,0);
+  if (saved != 0) e = (long)saved;
+  printf("range start %p end %p \n",s,e);
+
+  CheckSegment(output_file,s,e);
+*/
+
+  s = first_global;
+  e = last_global;
+
+  s /= sizeof (long);  s *= sizeof (long);
+  e /= sizeof (long);  e *= sizeof (long);
+  //printf("range start %p end %p \n",s,e);
+
+  MapSeg(s,e,1);
+  if (saved != 0) s = (long)saved + 8;
+  //printf("range start %p end %p \n",s,e);
+
+  CheckSegment(output_file,s,e);
 
   close (output_file);
 }
