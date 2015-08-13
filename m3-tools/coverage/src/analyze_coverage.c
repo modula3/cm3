@@ -10,9 +10,9 @@
 #include <sys/stat.h>
 #include <sys/file.h>
 #include <fcntl.h>
-#if defined (HP300)
 #include <string.h>
-#endif
+#include <malloc.h>
+#include <stdlib.h>
 #include <stdio.h>
 
 #define TRUE 1
@@ -26,7 +26,7 @@ long verbose_mode = FALSE;
 
 char text[100] = "";
 FILE *code;
-FILE* output_file = stdout;
+FILE* output_file;
 /*****
 long current_line, line, count, p, number;
 char c;
@@ -87,7 +87,7 @@ char *safe_malloc (size)
   char *p = (char *)malloc (size);
   if (p == NULL) {
     sprintf (error_message,
-             "Cannot malloc %d byte%s", size, (size==1?"":"s"));
+             "Cannot malloc %ld byte%s", size, (size==1?"":"s"));
     error (); }
   return (p);
 }
@@ -379,7 +379,7 @@ void show_procs (file_name)
     switch (p->count) {
       case 0:  fprintf (output_file, "   no calls"); break;
       case 1:  fprintf (output_file, "    1 call "); break; 
-      default: fprintf (output_file, "%5d calls",  p->count);   break; }
+      default: fprintf (output_file, "%5ld calls",  p->count);   break; }
     fprintf (output_file, " to %s\n", p->proc_name); }
   fprintf (output_file, "\n");
 }
@@ -430,7 +430,7 @@ void show_lines (source_file)
     else {
       if (c->data_points [data_line] >= 0) {
         fprintf (output_file, 
-                 "%6d  %s\n", c->data_points[data_line], line_buffer); }
+                 "%6ld  %s\n", c->data_points[data_line], line_buffer); }
       else {
         fprintf (output_file, "       %s\n", line_buffer); }
       data_line++; }}
@@ -559,6 +559,8 @@ main (argc, argv)
 {
   char *s;
 
+  output_file = stdout;
+
   program_name = basename (argv[0]);
   init_command (argc-1, argv+1);
 
@@ -624,8 +626,8 @@ main (argc, argv)
         FILE* f = fopen (*arg_v, "w"); 
         if (f == NULL) {
           sprintf (error_message,
-                   "cannot open % for output\n%s", *arg_v,
-                   "redirection ignored");
+                   "cannot open %s for output - %s", *arg_v,
+                   "redirection ignored\n");
           warning (); }
         else {
           if (output_file != stdout) {
