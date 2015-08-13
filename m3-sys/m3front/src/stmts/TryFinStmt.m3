@@ -10,6 +10,7 @@ MODULE TryFinStmt;
 
 IMPORT M3ID, CG, Token, Scanner, Stmt, StmtRep, Marker, Target, Type, Addr;
 IMPORT RunTyme, Procedure, ProcBody, M3RT, Scope, Fmt, Host, TryStmt, Module;
+IMPORT Jmpbufs;
 FROM Stmt IMPORT Outcome;
 
 TYPE
@@ -20,6 +21,7 @@ TYPE
         viaProc  : BOOLEAN;
         scope    : Scope.T;
         handler  : HandlerProc;
+        jmpbufs  : Jmpbufs.Try;
       OVERRIDES
         check       := Check;
         compile     := Compile;
@@ -30,6 +32,7 @@ TYPE
   HandlerProc = ProcBody.T OBJECT
     self: P;
     activation: CG.Var;
+    jmpbufs : Jmpbufs.Proc;
   OVERRIDES
     gen_decl := EmitDecl;
     gen_body := EmitBody;
@@ -66,6 +69,7 @@ PROCEDURE Parse (body: Stmt.T;  ): Stmt.T =
 PROCEDURE Check (p: P;  VAR cs: Stmt.CheckState) =
   VAR zz: Scope.T;  oc: Stmt.Outcomes;  name: INTEGER;
   BEGIN
+    Jmpbufs.CheckTry (cs.jmpbufs, p.jmpbufs);
     Marker.PushFinally (CG.No_label, CG.No_label, NIL);
     Stmt.TypeCheck (p.body, cs);
     Marker.Pop ();
@@ -89,8 +93,11 @@ PROCEDURE Check (p: P;  VAR cs: Stmt.CheckState) =
           next_uid := 0;
         END;
         zz := Scope.Push (p.scope);
+          p.handler.jmpbufs := Jmpbufs.CheckProcPush (cs.jmpbufs,
+                                                      M3ID.Add (p.handler.name));
           Scope.TypeCheck (p.scope, cs);
           Stmt.TypeCheck (p.finally, cs);
+          Jmpbufs.CheckProcPop (cs.jmpbufs, p.handler.jmpbufs);
         Scope.Pop (zz);
       END;
     END;
@@ -226,6 +233,7 @@ PROCEDURE Compile2 (p: P): Stmt.Outcomes =
     CG.Gen_location (p.forigin);
     IF (Host.inline_nested_procs) THEN
       CG.Begin_procedure (p.handler.cg_proc);
+      Jmpbufs.CompileProcAllocateJmpbufs (p.handler.jmpbufs);
       xc := Stmt.Compile (p.finally);
       CG.Exit_proc (CG.Type.Void);
       CG.End_procedure (p.handler.cg_proc);
@@ -272,6 +280,7 @@ PROCEDURE EmitBody (x: HandlerProc) =
       Scanner.offset := p.forigin;
       CG.Gen_location (p.forigin);
       CG.Begin_procedure (x.cg_proc);
+      Jmpbufs.CompileProcAllocateJmpbufs (x.jmpbufs);
       EVAL Stmt.Compile (p.finally);
       CG.Exit_proc (CG.Type.Void);
       CG.End_procedure (x.cg_proc);
@@ -302,7 +311,7 @@ PROCEDURE Compile3 (p: P): Stmt.Outcomes =
     l := CG.Next_label (3);
     CG.Set_label (l, barrier := TRUE);
     Marker.PushFrame (frame, M3RT.HandlerClass.Finally);
-    Marker.CaptureState (frame, l+1);
+    Marker.CaptureState (frame, Jmpbufs.CompileTryGetJmpbuf (p.jmpbufs), l+1);
 
     (* compile the body *)
     Marker.PushFinally (l, l+1, frame);

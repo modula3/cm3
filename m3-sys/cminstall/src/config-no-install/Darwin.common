@@ -35,6 +35,15 @@ proc configure_assembler() is
     return
   end
   SYSTEM_ASM = "/usr/libexec/gcc/darwin/" & DarwinArch & "/as"
+  
+  % NOTE: Some versions of m3cg are incompatible with LLVM assembler that gcc -x assembler
+  % might run. Workaround is to run as instead of gcc -x assembler.
+  % See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=67183
+  % http://llvm.org/bugs/show_bug.cgi?id=24428
+  
+  % NOTE: Do all as versions accept -arch? It'd be nice, but I doubt it. i.e. old PowerPC
+  % Does cm3cg record an architecture in the .s for as to dispatch on? Ditto.
+
   if not FileExists(SYSTEM_ASM)
     if IsX86
       configure_c_compiler ()
@@ -42,8 +51,23 @@ proc configure_assembler() is
     else
       SYSTEM_ASM = "as"
     end
+    %workaround and maybe faster:
+    %SYSTEM_ASM = "as -arch " & DarwinArch & " -force_cpusubtype_ALL"
   end
   %SYSTEM_ASM = SYSTEM_CC_ASM & " -v -c -x assembler"
+end
+
+% TODO remove duplication (with cm3cfg.common, included later)
+proc configure_c_compiler_common() is
+
+  % Add these flags if they do not indicate errors.
+
+  foreach a in [ "fno-reorder-blocks",
+                 "funwind-tables" ]
+    if not equal(try_exec("@" & SYSTEM_CC & " -" & a & " -c -x c /dev/null -o /dev/null 2>&1 | fgrep " & a & " >/dev/null"), 0)
+      SYSTEM_CC = SYSTEM_CC & " -" & a
+    end
+  end
 end
 
 proc configure_c_compiler() is
@@ -62,6 +86,14 @@ proc configure_c_compiler() is
   % It is the default for Apple gcc and left
   % here in case user is using a self-built FSF gcc.
   %
+  % g++ 1.c used to compile successfully as C++, on MacOSX 10.5.8.
+  % On MacOS X 10.10.4 Yosemite it errors. -x c++ fixes it.
+  % But do not use that with linking, otherwise all the object files are interpreted as C++.
+  %
+  % Clang assembler gives warnings for -fPIC, which appears meaningless (review for arm/arm64).
+  %
+  % -gstabs+ does not work on Mac OSX.
+  %
 
   %SYSTEM_CC = "gcc -gstabs+ -fPIC"
   %SYSTEM_CC = "gcc -g -fPIC"
@@ -74,8 +106,8 @@ proc configure_c_compiler() is
   %SYSTEM_CC = SYSTEM_CC & " -Wno-missing-field-initializers"
   %SYSTEM_CC = SYSTEM_CC & " -Wno-unused-parameter"
   % Usocket.c:31: warning: comparison of unsigned expression < 0 is always false
-  SYSTEM_CC_ASM = "g++ -fPIC"
-  %SYSTEM_CC_ASM = "gcc -fPIC"
+  SYSTEM_CC_ASM = "g++"
+  %SYSTEM_CC_ASM = "gcc"
   local m = " -m" & {"32BITS":"32","64BITS":"64"}{WORD_SIZE}
   local arch = " -arch " & DarwinArch
   if not equal(try_exec("@" & SYSTEM_CC & m & " -c -x c /dev/null -o /dev/null 2>&1 | fgrep \"cc1: error: invalid option \\\`32'\" >/dev/null"), 0)
@@ -86,11 +118,9 @@ proc configure_c_compiler() is
     SYSTEM_CC = SYSTEM_CC & arch
     SYSTEM_CC_ASM = SYSTEM_CC_ASM & arch
   end
-% g++ 1.c used to compile successfully as C++, on MacOSX 10.5.8.
-% On MacOS X 10.10.4 Yosemite it errors. -x c++ fixes it.
-% But do not use that with linking, otherwise all the object files are interpreted as C++.
   SYSTEM_CC_LD = SYSTEM_CC
   SYSTEM_CC = SYSTEM_CC & " -x c++"
+  configure_c_compiler_common()
   %write("SYSTEM_CC is " & SYSTEM_CC)
 end
 
@@ -120,6 +150,8 @@ SYSTEM_LIBS = {
 }
 
 proc internal_configure_system_lib(name, known, args) is
+  % This does not make sense to me August 8 2015 jaykrell
+  % Do callers of configure_system_libs assume SYSTEM_CC is thereafter valid?
   configure_c_compiler() % why? http://modula3.elegosoft.com/cgi-bin/cvsweb.cgi/cm3/m3-sys/cminstall/src/config-no-install/Darwin.common.diff?r1=1.41;r2=1.42
   if SYSTEM_LIBS contains name
     return
@@ -128,15 +160,25 @@ proc internal_configure_system_lib(name, known, args) is
     SYSTEM_LIBS{name} = args
     return
   end
-  configure_c_compiler()
-  if equal(try_exec("echo 'main(){}' | " & SYSTEM_CC & " -x c - -o /dev/null 2>/dev/null", args), 0)
+  configure_c_compiler() % This should suffice? August 8 2015 jaykrell
+  if equal(try_exec("echo 'int main(){return 0;}' | " & SYSTEM_CC & " -x c - -o /dev/null 2>/dev/null", args), 0)
+    %write("SYSTEM_LIBS{" & name & "} = " & args, EOL)
     SYSTEM_LIBS{name} = args
   end
+  %error("2:" & name)
 end
 
 proc configure_system_libs() is
   internal_configure_system_lib("ODBC", not equal(TARGET, "PPC64_DARWIN"), ["-liodbc", "-liodbcinst"])
+    
+  % X11 is no longer provided by Apple.
+  % 10.5.8 Leopard had it; 10.10.4 Yosemite does not.
+  % OpenGL is similarly affected?
+  % see http://xquartz.macosforge.org.
+  
   internal_configure_system_lib("X11", not equal(TARGET, "PPC64_DARWIN"), ["-L/usr/X11R6/lib", "-lXaw", "-lXmu", "-lXext", "-lXt", "-lSM", "-lICE", "-lX11"])
+  
+  % Given the probing, why not enable these lines?
 
   % not present by default, but this is the default install location
   %internal_configure_system_lib("POSTGRES95", FALSE, ["-L/usr/local/pgsql/lib", "-lpq"])
