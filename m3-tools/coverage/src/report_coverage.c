@@ -14,7 +14,6 @@ extern char edata;
 extern char end;
 #ifdef __alpha
   extern char __ldr_data;
-  extern char end;
 #endif
 
 #ifdef __cplusplus
@@ -36,17 +35,12 @@ extern char end;
 
 const char marker2[] = "Coverage 1.0";
 
-typedef union int_chars {
-  char s[8];
-  long i;
-} MarkerWord;
-
 sigset_t signals;
 sigjmp_buf mark;
-long *saved;
+long volatile *saved;
 
 void catcher( int );
-void p( long start, long end, int dir );
+void p( long start, long end, int direction );
 void recover( void );
 void report_coverage (void);
 
@@ -57,7 +51,7 @@ void exit (int n) {
 
 //Try and determine the bounds of the data segment between etext and edata
 
-int MapSeg(long p0, long p1, int dir) {
+int MapSeg(long p0, long p1, int direction) {
 
     int result;
 
@@ -78,18 +72,18 @@ int MapSeg(long p0, long p1, int dir) {
      }
      else {
 
-         p(p0,p1,dir);
+         p(p0,p1,direction);
          sigprocmask( SIG_SETMASK, NULL, &signals );
          result = -1;
     }
     return( result );
 }
 
-void p( long p0, long p1, int dir ) {
+void p( long p0, long p1, int direction ) {
 
     long ptmp;
-    long *wd;
-    long maybesegv;
+    long volatile *wd;
+    long volatile maybesegv;
 
     struct sigaction sigact;
 
@@ -104,16 +98,16 @@ void p( long p0, long p1, int dir ) {
     sigprocmask( SIG_SETMASK, &signals, NULL );
 
 
-    if (dir == 0) {
+    if (direction == 0) {
       ptmp = p1;
-      for (wd = (long *)p0; wd < (long *)ptmp; wd++) {
+      for (wd = (long volatile *)p0; wd < (long volatile *)ptmp; wd++) {
         p1 = (long)wd;
         saved = wd;
         maybesegv = *wd; //possibly generate fault
       }
     } else {
       ptmp = p0;
-      for (wd = (long *)p1; wd > (long *)ptmp; wd--) {
+      for (wd = (long volatile *)p1; wd > (long volatile *)ptmp; wd--) {
         p0 = (long)wd;
         saved = wd;
         maybesegv = *wd; //possibly generate fault
@@ -152,14 +146,14 @@ void CheckSegment(int output_file, long begin, long end) {
     if ( (*c == '>') && (*(c+1) == '>') && (*(c+2) == '>') && (*(c+3) == '>') 
       && (strncmp ((const char *)c-marker2_len, marker2, marker2_len) == 0)) {
 
-      //Found and end marker
+      //Found an end marker
       if (state == 1) {
         /* write the segment */
         unsigned long segLen = (c - marker2_len) - start;
 
         write (output_file, &segLen, sizeof (long));
         write (output_file, start, segLen);
-      };
+      }
       state = 0;
       c++;
     }
