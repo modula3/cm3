@@ -1596,7 +1596,7 @@ PROCEDURE PushOneM3 (s: State;  u: M3Unit.T): BOOLEAN =
       IF NOT keep THEN
         Utils.Remove (cm3OutName);
       END;
-      Msg.Error (NIL, "failed compiling: ");
+      Msg.Error (NIL, "failed compiling: ", UnitPath (u));
     ELSE
       IF s.delayBackend THEN (* parallel/delayed version of back-end code *)
         s.machine.record(TRUE);
