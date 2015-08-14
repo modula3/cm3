@@ -257,7 +257,7 @@ proc NeedOldGCAdjust() is
                         and equal(try_exec("@fgrep m3gcdefs " & PKG_USE & "/m3core/" & TARGET & "/.M3EXPORTS 2>/dev/null >/dev/null"), 0))
   end
   return xNeedOldGCAdjust
-end   
+end
  
 proc OldGCAdjust(imported_libs) is
   if NeedOldGCAdjust()
@@ -299,7 +299,6 @@ end
 if not defined("make_lib_delete_outputs")
 proc make_lib_delete_outputs(lib) is
     local suffix = make_lib_get_shared_suffix()
-    local ret_code = 0
     local lib_a   = format("lib%s.a", lib)
     local readonly lib0_file = lib_a & ".sa" % standalone
     local lib_so  = format("lib%s.%s", lib, suffix)
@@ -317,35 +316,42 @@ proc make_lib(lib, options, objects, imported_libs, shared) is
     imported_libs = OldGCAdjust(imported_libs)
     local suffix = make_lib_get_shared_suffix()
     local soname_flag = make_lib_get_soname_flag()
-    local ret_code = 0
     local lib_a   = format("lib%s.a", lib)
     local readonly lib0_file = lib_a & ".sa" % standalone
     local lib_so  = format("lib%s.%s", lib, suffix)
     local lib_sox = format("lib%s.%s.5", lib, suffix)
     local expfile = "lib" & lib & ".exp" % libfoo.exp
+    local ret_code = 0
 
     make_lib_delete_outputs(lib)
+    
+    %
+    % The historical way to build libraries on Unix is:
+    %  ar cru libfoo.a 1.o 2.o
+    %  or ar cr libfoo.a 1.o 2.o
+    %  ranlib libfoo.a
+    %
+    % On all current systems:
+    %  ar automatically does the ranlib operation
+    %
+    % And on systems, ranlib might not exist (Irix).
+    %
+    % Therefore, always run ar and ranlib, but ignore
+    % the result of ranlib.
+    %
+    % This is very close to what the highly portable gcc Makefiles do,
+    % except they omit the u flag.
+    %
 
     % first build the non-shared library in the usual ar/ranlib way
 
-    local S = ""
-    if defined("AR_AND_RANLIB_ARE_ONE")
-        S = "s"
-    end
-
-    ret_code = try_exec("@ar", "cru" & S, lib_a, objects)
+    ret_code = try_exec("@ar", "cru", lib_a, objects)
     if not equal(ret_code, 0)
         make_lib_delete_outputs(lib)
         return ret_code
     end
 
-    if not defined("AR_AND_RANLIB_ARE_ONE")
-        ret_code = try_exec("@ranlib", lib_a)
-        if not equal(ret_code, 0)
-            make_lib_delete_outputs(lib)
-            return ret_code
-        end
-    end
+    ret_code = try_exec("@ranlib", lib_a)
 
     if shared
 

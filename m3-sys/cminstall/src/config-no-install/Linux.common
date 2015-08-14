@@ -14,10 +14,5 @@ SYSTEM_LD = SYSTEM_CC
   & " -Wl,-rpath,\\$ORIGIN/../lib"
   & " -Wl,--warn-common"
 
-%
-% add s switch to ar and remove need for ranlib
-%
-readonly AR_AND_RANLIB_ARE_ONE = TRUE
-
 include("Unix.common")
 include("gnuld.common")

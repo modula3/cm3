@@ -2,10 +2,6 @@
 
 readonly TARGET_OS = "INTERIX"
 
-% add s switch to ar and remove need for ranlib
-
-readonly AR_AND_RANLIB_ARE_ONE = TRUE
-
 SYSTEM_CC = "gcc -g" % C compiler
 readonly SYSTEM_ASM = "as" % Assembler
 
