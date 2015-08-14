@@ -590,17 +590,6 @@ enum machopic_addr_class {
 
 #define TARGET_C99_FUNCTIONS 1
 
-#define WINT_TYPE "int"
-
-/* Every program on darwin links against libSystem which contains the pthread
-   routines, so there's no need to explicitly call out when doing threaded
-   work.  */
-
-#undef GOMP_SELF_SPECS
-#define GOMP_SELF_SPECS ""
-#undef GTM_SELF_SPECS
-#define GTM_SELF_SPECS ""
-
 /* Darwin disables section anchors by default.  
    They should be enabled per arch where support exists in that arch.  */
 #define TARGET_ASM_OUTPUT_ANCHOR NULL

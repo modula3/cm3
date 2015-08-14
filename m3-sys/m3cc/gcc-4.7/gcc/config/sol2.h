@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Operating system specific defines to be used when targeting GCC for any
    Solaris 2 system.
    Copyright 2002, 2003, 2004, 2007, 2008, 2009, 2010, 2011
@@ -22,161 +24,6 @@ along with GCC; see the file COPYING3.  If not see
 /* We are compiling for Solaris 2 now.  */
 #define TARGET_SOLARIS 1
 
-/* Solaris 2 (at least as of 2.5.1) uses a 32-bit wchar_t.  */
-#undef WCHAR_TYPE
-#define WCHAR_TYPE "long int"
-
-#undef WCHAR_TYPE_SIZE
-#define WCHAR_TYPE_SIZE BITS_PER_WORD
-
-/* Solaris 2 uses a wint_t different from the default. This is required
-   by the SCD 2.4.1, p. 6-83, Figure 6-66.  */
-#undef	WINT_TYPE
-#define	WINT_TYPE "long int"
-
-#undef	WINT_TYPE_SIZE
-#define	WINT_TYPE_SIZE BITS_PER_WORD
-
-#define SIG_ATOMIC_TYPE "int"
-
-/* ??? This definition of int8_t follows the system header but does
-   not conform to C99.  Likewise int_fast8_t, int_least8_t.  */
-#define INT8_TYPE "char"
-#define INT16_TYPE "short int"
-#define INT32_TYPE "int"
-#define INT64_TYPE (LONG_TYPE_SIZE == 64 ? "long int" : "long long int")
-#define UINT8_TYPE "unsigned char"
-#define UINT16_TYPE "short unsigned int"
-#define UINT32_TYPE "unsigned int"
-#define UINT64_TYPE (LONG_TYPE_SIZE == 64 ? "long unsigned int" : "long long unsigned int")
-
-#define INT_LEAST8_TYPE "char"
-#define INT_LEAST16_TYPE "short int"
-#define INT_LEAST32_TYPE "int"
-#define INT_LEAST64_TYPE (LONG_TYPE_SIZE == 64 ? "long int" : "long long int")
-#define UINT_LEAST8_TYPE "unsigned char"
-#define UINT_LEAST16_TYPE "short unsigned int"
-#define UINT_LEAST32_TYPE "unsigned int"
-#define UINT_LEAST64_TYPE (LONG_TYPE_SIZE == 64 ? "long unsigned int" : "long long unsigned int")
-
-#define INT_FAST8_TYPE "char"
-#define INT_FAST16_TYPE "int"
-#define INT_FAST32_TYPE "int"
-#define INT_FAST64_TYPE (LONG_TYPE_SIZE == 64 ? "long int" : "long long int")
-#define UINT_FAST8_TYPE "unsigned char"
-#define UINT_FAST16_TYPE "unsigned int"
-#define UINT_FAST32_TYPE "unsigned int"
-#define UINT_FAST64_TYPE (LONG_TYPE_SIZE == 64 ? "long unsigned int" : "long long unsigned int")
-
-#define INTPTR_TYPE (LONG_TYPE_SIZE == 64 ? "long int" : "int")
-#define UINTPTR_TYPE (LONG_TYPE_SIZE == 64 ? "long unsigned int" : "unsigned int")
-
-#undef CPP_SUBTARGET_SPEC
-#define CPP_SUBTARGET_SPEC "\
-%{pthreads|pthread:-D_REENTRANT -D_PTHREADS}"
-
-/* Names to predefine in the preprocessor for this target machine.  */
-#define TARGET_SUB_OS_CPP_BUILTINS()
-#define TARGET_OS_CPP_BUILTINS()			\
-    do {						\
-	builtin_define_std ("unix");			\
-	builtin_define_std ("sun");			\
-	builtin_define ("__svr4__");			\
-	builtin_define ("__SVR4");			\
-	builtin_assert ("system=unix");			\
-	builtin_assert ("system=svr4");			\
-	/* For C++ we need to add some additional macro	\
-	   definitions required by the C++ standard	\
-	   library.  */					\
-	if (c_dialect_cxx ())				\
-	  {						\
-	    builtin_define ("__STDC_VERSION__=199901L");\
-	    builtin_define ("_XOPEN_SOURCE=600");	\
-	    builtin_define ("_LARGEFILE_SOURCE=1");	\
-	    builtin_define ("_LARGEFILE64_SOURCE=1");	\
-	    builtin_define ("__EXTENSIONS__");		\
-	  }						\
-	TARGET_SUB_OS_CPP_BUILTINS();			\
-    } while (0)
-
-/* It's safe to pass -s always, even if -g is not used.  Those options are
-   handled by both Sun as and GNU as.  */
-#define ASM_SPEC_BASE \
-"%{v:-V} %{Qy:} %{!Qn:-Qy} %{Ym,*} -s %(asm_cpu)"
-
-#define ASM_PIC_SPEC " %{fpic|fpie|fPIC|fPIE:-K PIC}"
-
-#undef LIB_SPEC
-#define LIB_SPEC \
-  "%{!symbolic:\
-     %{pthreads|pthread:-lpthread} \
-     %{pthreads|pthread|fprofile-generate*:" LIB_TLS_SPEC "} \
-     %{p|pg:-ldl} -lc}"
-
-#ifndef CROSS_DIRECTORY_STRUCTURE
-#undef MD_EXEC_PREFIX
-#define MD_EXEC_PREFIX "/usr/ccs/bin/"
-
-#undef MD_STARTFILE_PREFIX
-#define MD_STARTFILE_PREFIX "/usr/ccs/lib/"
-#endif
-
-#undef STARTFILE_ARCH32_SPEC
-#define STARTFILE_ARCH32_SPEC "%{ansi:values-Xc.o%s} \
-			    %{!ansi:values-Xa.o%s}"
-
-#undef STARTFILE_ARCH_SPEC
-#define STARTFILE_ARCH_SPEC STARTFILE_ARCH32_SPEC
-
-/* We don't use the standard svr4 STARTFILE_SPEC because it's wrong for us.  */
-#undef STARTFILE_SPEC
-#define STARTFILE_SPEC "%{!shared: \
-			 %{!symbolic: \
-			  %{p:mcrt1.o%s} \
-                          %{!p: \
-	                    %{pg:gcrt1.o%s gmon.o%s} \
-                            %{!pg:crt1.o%s}}}} \
-			crti.o%s %(startfile_arch) \
-			crtbegin.o%s"
-
-#undef  ENDFILE_SPEC
-#define ENDFILE_SPEC \
-  "%{Ofast|ffast-math|funsafe-math-optimizations:crtfastmath.o%s} \
-   crtend.o%s crtn.o%s"
-
-#undef LINK_ARCH32_SPEC_BASE
-#define LINK_ARCH32_SPEC_BASE \
-  "%{G:-G} \
-   %{YP,*} \
-   %{R*} \
-   %{!YP,*:%{p|pg:-Y P,%R/usr/ccs/lib/libp:%R/usr/lib/libp:%R/usr/ccs/lib:%R/lib:%R/usr/lib} \
-	   %{!p:%{!pg:-Y P,%R/usr/ccs/lib:%R/lib:%R/usr/lib}}}"
-
-#undef LINK_ARCH32_SPEC
-#define LINK_ARCH32_SPEC LINK_ARCH32_SPEC_BASE
-
-#undef LINK_ARCH_SPEC
-#define LINK_ARCH_SPEC LINK_ARCH32_SPEC
-
-#ifndef USE_GLD
-/* With Sun ld, -rdynamic is a no-op.  */
-#define RDYNAMIC_SPEC ""
-#else
-/* GNU ld needs --export-dynamic to implement -rdynamic.  */
-#define RDYNAMIC_SPEC "--export-dynamic"
-#endif
-
-#undef  LINK_SPEC
-#define LINK_SPEC \
-  "%{h*} %{v:-V} \
-   %{!shared:%{!static:%{rdynamic: " RDYNAMIC_SPEC "}}} \
-   %{static:-dn -Bstatic} \
-   %{shared:-G -dy %{!mimpure-text:-z text}} \
-   %{symbolic:-Bsymbolic -G -dy -z text} \
-   %{pthreads|pthread|fprofile-generate*:" LIB_THREAD_LDFLAGS_SPEC "} \
-   %(link_arch) \
-   %{Qy:} %{!Qn:-Qy}"
-
 #ifdef USE_GLD
 /* Solaris 11 build 135+ implements dl_iterate_phdr.  GNU ld needs
    --eh-frame-hdr to create the required .eh_frame_hdr sections.  */
@@ -194,9 +41,6 @@ along with GCC; see the file COPYING3.  If not see
    produce the same format.  */
 #define NM_FLAGS "-png"
 
-/* The system headers under Solaris 2 are C++-aware since 2.0.  */
-#define NO_IMPLICIT_EXTERN_C
-
 #define STDC_0_IN_SYSTEM_HEADERS 1
 
 /* Support Solaris-specific format checking for cmn_err.  */

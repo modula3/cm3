@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Definitions for StrongARM running FreeBSD using the ELF format
    Copyright (C) 2001, 2004, 2007, 2010, 2011 Free Software Foundation, Inc.
    Contributed by David E. O'Brien <obrien@FreeBSD.org> and BSDi.
@@ -18,47 +20,7 @@
    along with GCC; see the file COPYING3.  If not see
    <http://www.gnu.org/licenses/>.  */
 
-
-#undef  SUBTARGET_EXTRA_SPECS
-#define SUBTARGET_EXTRA_SPECS \
-  { "fbsd_dynamic_linker", FBSD_DYNAMIC_LINKER }
-
-#undef  SUBTARGET_CPP_SPEC
-#define SUBTARGET_CPP_SPEC FBSD_CPP_SPEC
-
-#undef	LINK_SPEC
-#define LINK_SPEC "							\
-  %{p:%nconsider using '-pg' instead of '-p' with gprof(1)}		\
-  %{v:-V}								\
-  %{assert*} %{R*} %{rpath*} %{defsym*}					\
-  %{shared:-Bshareable %{h*} %{soname*}}				\
-  %{!shared:								\
-    %{!static:								\
-      %{rdynamic:-export-dynamic}					\
-      -dynamic-linker %(fbsd_dynamic_linker) }	\
-    %{static:-Bstatic}}							\
-  %{symbolic:-Bsymbolic}"
-
-
 /************************[  Target stuff  ]***********************************/
-
-/* Define the actual types of some ANSI-mandated types.  
-   Needs to agree with <machine/ansi.h>.  GCC defaults come from c-decl.c,
-   c-common.c, and config/<arch>/<arch>.h.  */
-
-/* arm.h gets this wrong for FreeBSD.  We use the GCC defaults instead.  */
-
-#undef  SIZE_TYPE
-#define SIZE_TYPE	"unsigned int"
-
-#undef  PTRDIFF_TYPE
-#define PTRDIFF_TYPE	"int"
-
-/* We use the GCC defaults here.  */
-#undef WCHAR_TYPE
-
-#undef  WCHAR_TYPE_SIZE
-#define WCHAR_TYPE_SIZE 32
 
 #undef  SUBTARGET_CPU_DEFAULT
 #define SUBTARGET_CPU_DEFAULT	TARGET_CPU_strongarm

@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Target-independent configuration for VxWorks and VxWorks AE.   
    Copyright (C) 2005, 2007, 2008 Free Software Foundation, Inc.
    Contributed by CodeSourcery, LLC.
@@ -18,30 +20,6 @@ You should have received a copy of the GNU General Public License
 along with GCC; see the file COPYING3.  If not see
 <http://www.gnu.org/licenses/>.  */
 
-/* VxWorks headers are C++-aware.  */
-#undef  NO_IMPLICIT_EXTERN_C
-#define NO_IMPLICIT_EXTERN_C
-
-/* Most of these will probably be overridden by subsequent headers.  We
-   undefine them here just in case, and define VXWORKS_ versions of each,
-   to be used in port-specific vxworks.h.  */
-#undef LIB_SPEC
-#undef LINK_SPEC
-#undef LIBGCC_SPEC
-#define LIBGCC_SPEC VXWORKS_LIBGCC_SPEC
-#undef STARTFILE_SPEC
-#undef ENDFILE_SPEC
-
-/* Most of these macros are overridden in "config/vxworks.h" or
-   "config/vxworksae.h" and are here merely for documentation
-   purposes.  */
-#define VXWORKS_ADDITIONAL_CPP_SPEC ""
-#define	VXWORKS_LIB_SPEC ""
-#define VXWORKS_LINK_SPEC ""
-#define VXWORKS_LIBGCC_SPEC ""
-#define	VXWORKS_STARTFILE_SPEC ""
-#define VXWORKS_ENDFILE_SPEC ""
-
 /* VxWorks cannot have dots in constructor labels, because it uses a
    mutant variation of collect2 that generates C code instead of
    assembly.  Thus each constructor label must be a legitimate C
@@ -50,16 +28,6 @@ along with GCC; see the file COPYING3.  If not see
 #define NO_DOT_IN_LABEL
 
 /* VxWorks uses wchar_t == unsigned short (UCS2) on all architectures.  */
-#undef WCHAR_TYPE
-#define WCHAR_TYPE "short unsigned int"
-#undef WCHAR_TYPE_SIZE
-#define WCHAR_TYPE_SIZE 16
-
-/* Likewise wint_t.  */
-#undef WINT_TYPE
-#define WINT_TYPE "short unsigned int"
-#undef WINT_TYPE_SIZE
-#define WINT_TYPE_SIZE 16
 
 /* Dwarf2 unwind info is not supported.  */
 #undef DWARF2_UNWIND_INFO

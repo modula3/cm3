@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Definitions of target machine for GCC, for bi-arch Solaris 2/x86.
    Copyright (C) 2004, 2006, 2007, 2008, 2009, 2010, 2011
    Free Software Foundation, Inc.
@@ -29,43 +31,9 @@ along with GCC; see the file COPYING3.  If not see
 #define SUBTARGET_OPTIMIZATION_OPTIONS				\
   { OPT_LEVELS_1_PLUS, OPT_momit_leaf_frame_pointer, NULL, 1 }
 
-/* GNU as understands --32 and --64, but the native Solaris
-   assembler requires -xarch=generic or -xarch=generic64 instead.  */
-#ifdef USE_GAS
-#define ASM_CPU32_DEFAULT_SPEC "--32"
-#define ASM_CPU64_DEFAULT_SPEC "--64"
-#else
-#define ASM_CPU32_DEFAULT_SPEC "-xarch=generic"
-#define ASM_CPU64_DEFAULT_SPEC "-xarch=generic64"
-#endif
-
-#undef ASM_CPU_SPEC
-#define ASM_CPU_SPEC "%(asm_cpu_default)"
-
-/* Don't let i386/x86-64.h override i386/sol2.h version.  Still cannot use
-   -K PIC with the Solaris 10+ assembler, it gives many warnings:
-	Absolute relocation is used for symbol "<symbol>"  */
-#undef ASM_SPEC
-#define ASM_SPEC ASM_SPEC_BASE
-
-/* We do not need to search a special directory for startup files.  */
-#undef MD_STARTFILE_PREFIX
-
 #define DEFAULT_ARCH32_P !TARGET_64BIT_DEFAULT
 
 #define ARCH64_SUBDIR "amd64"
-
-#ifdef USE_GLD
-/* Since binutils 2.21, GNU ld supports new *_sol2 emulations to strictly
-   follow the Solaris 2 ABI.  Prefer them if present.  */
-#ifdef HAVE_LD_SOL2_EMULATION
-#define ARCH32_EMULATION "elf_i386_sol2"
-#define ARCH64_EMULATION "elf_x86_64_sol2"
-#else
-#define ARCH32_EMULATION "elf_i386"
-#define ARCH64_EMULATION "elf_x86_64"
-#endif
-#endif
 
 #undef ASM_COMMENT_START
 #define ASM_COMMENT_START "/"

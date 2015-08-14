@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Definitions for Intel 386 running FreeBSD with ELF format
    Copyright (C) 1996, 2000, 2002, 2004, 2007, 2010, 2011
    Free Software Foundation, Inc.
@@ -44,65 +46,6 @@ along with GCC; see the file COPYING3.  If not see
 
 #undef  MCOUNT_NAME
 #define MCOUNT_NAME ".mcount"
-
-/* Make gcc agree with <machine/ansi.h>.  */
-
-#undef  SIZE_TYPE
-#define SIZE_TYPE	(TARGET_64BIT ? "long unsigned int" : "unsigned int")
- 
-#undef  PTRDIFF_TYPE
-#define PTRDIFF_TYPE	(TARGET_64BIT ? "long int" : "int")
-  
-#undef  WCHAR_TYPE_SIZE
-#define WCHAR_TYPE_SIZE	(TARGET_64BIT ? 32 : BITS_PER_WORD)
-
-#undef  SUBTARGET_EXTRA_SPECS	/* i386.h bogusly defines it.  */
-#define SUBTARGET_EXTRA_SPECS \
-  { "fbsd_dynamic_linker", FBSD_DYNAMIC_LINKER }
-    
-/* Provide a STARTFILE_SPEC appropriate for FreeBSD.  Here we add
-   the magical crtbegin.o file (see crtstuff.c) which provides part 
-	of the support for getting C++ file-scope static object constructed 
-	before entering `main'.  */
-   
-#undef	STARTFILE_SPEC
-#define STARTFILE_SPEC \
-  "%{!shared: \
-     %{pg:gcrt1.o%s} %{!pg:%{p:gcrt1.o%s} \
-		       %{!p:%{profile:gcrt1.o%s} \
-			 %{!profile:crt1.o%s}}}} \
-   crti.o%s %{!shared:crtbegin.o%s} %{shared:crtbeginS.o%s}"
-
-/* Provide a ENDFILE_SPEC appropriate for FreeBSD.  Here we tack on
-   the magical crtend.o file (see crtstuff.c) which provides part of 
-	the support for getting C++ file-scope static object constructed 
-	before entering `main', followed by a normal "finalizer" file, 
-	`crtn.o'.  */
-
-#undef	ENDFILE_SPEC
-#define ENDFILE_SPEC \
-  "%{!shared:crtend.o%s} %{shared:crtendS.o%s} crtn.o%s"
-
-/* Provide a LINK_SPEC appropriate for FreeBSD.  Here we provide support
-   for the special GCC options -static and -shared, which allow us to
-   link things in one of these three modes by applying the appropriate
-   combinations of options at link-time.
-
-   When the -shared link option is used a final link is not being
-   done.  */
-
-#undef	LINK_SPEC
-#define LINK_SPEC "\
-  %{p:%nconsider using '-pg' instead of '-p' with gprof(1)} \
-  %{v:-V} \
-  %{assert*} %{R*} %{rpath*} %{defsym*} \
-  %{shared:-Bshareable %{h*} %{soname*}} \
-    %{!shared: \
-      %{!static: \
-        %{rdynamic:-export-dynamic} \
-        -dynamic-linker %(fbsd_dynamic_linker) } \
-    %{static:-Bstatic}} \
-  %{symbolic:-Bsymbolic}"
 
 /* A C statement to output to the stdio stream FILE an assembler
    command to advance the location counter to a multiple of 1<<LOG
