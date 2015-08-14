@@ -5,13 +5,20 @@
 /* Last modified on Mon Jan  9 10:18:15 PST 1995 by kalsow     */
 /*      modified on Tue Oct 13 17:17:05 PDT 1992 by muller     */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-extern etext;
-extern edata;
-extern end;
+extern char etext;
+extern char edata;
+extern char end;
 #ifdef __alpha
-  extern __ldr_data;
-  extern end;
+  extern char __ldr_data;
+  extern char end;
+#endif
+
+#ifdef __cplusplus
+} /* extern "C" */
 #endif
 
 #include <stdio.h>
@@ -19,31 +26,29 @@ extern end;
 #include <string.h>
 #include <sys/file.h>
 #include <fcntl.h>
-
 #include <setjmp.h>
 #include <signal.h>
-
-extern char * getenv ();
+#include <stdlib.h>
 
 /* We do not include marker.h here; indeed, we do not want this piece
    of code to be covered !! For the same reason, the marker is broken
    into pieces. */
 
-char *marker2 = "Coverage 1.0";
+const char marker2[] = "Coverage 1.0";
 
 typedef union int_chars {
   char s[8];
   long i;
 } MarkerWord;
 
-sigset_t sigset;
+sigset_t signals;
 sigjmp_buf mark;
 long *saved;
 
 void catcher( int );
 void p( long start, long end, int dir );
 void recover( void );
-
+void report_coverage (void);
 
 void exit (int n) {
     report_coverage ();
@@ -63,9 +68,9 @@ int MapSeg(long p0, long p1, int dir) {
      */
      saved = 0;
 
-     sigemptyset( &sigset );
-     sigaddset( &sigset, SIGSEGV );
-     sigprocmask( SIG_SETMASK, &sigset, NULL );
+     sigemptyset( &signals );
+     sigaddset( &signals, SIGSEGV );
+     sigprocmask( SIG_SETMASK, &signals, NULL );
 
      if( sigsetjmp( mark, 1 ) != 0 ) {
          recover();
@@ -74,7 +79,7 @@ int MapSeg(long p0, long p1, int dir) {
      else {
 
          p(p0,p1,dir);
-         sigprocmask( SIG_SETMASK, NULL, &sigset );
+         sigprocmask( SIG_SETMASK, NULL, &signals );
          result = -1;
     }
     return( result );
@@ -85,10 +90,8 @@ void p( long p0, long p1, int dir ) {
     long ptmp;
     long *wd;
     long maybesegv;
-    char tmp;
 
     struct sigaction sigact;
-    int error=0;
 
     /* Send signal handler in case error condition is detected */
 
@@ -97,8 +100,8 @@ void p( long p0, long p1, int dir ) {
     sigact.sa_handler = catcher;
     sigaction( SIGSEGV, &sigact, NULL );
 
-    sigdelset( &sigset, SIGSEGV );
-    sigprocmask( SIG_SETMASK, &sigset, NULL );
+    sigdelset( &signals, SIGSEGV );
+    sigprocmask( SIG_SETMASK, &signals, NULL );
 
 
     if (dir == 0) {
@@ -119,7 +122,7 @@ void p( long p0, long p1, int dir ) {
 }
 
 void recover( void ) {
-    sigprocmask( SIG_SETMASK, NULL, &sigset );
+    sigprocmask( SIG_SETMASK, NULL, &signals );
 }
 
 void catcher( int signo ) {
@@ -131,8 +134,7 @@ void CheckSegment(int output_file, long begin, long end) {
   char *c;
   char *start;
   int state;
-  long marker2_len = strlen (marker2);
-  long marker2_ilen = marker2_len / sizeof (long);
+  long marker2_len = sizeof (marker2) - 1;
 
   state = 0;
 
@@ -164,9 +166,9 @@ void CheckSegment(int output_file, long begin, long end) {
   }
 }
 
-report_coverage () {
-
-  char *output_file_name;
+void report_coverage (void)
+{
+  const char *output_file_name;
   int output_file;
   unsigned long first_global, last_global, end_global;
   long s,e;
@@ -230,4 +232,3 @@ report_coverage () {
 
   close (output_file);
 }
-
