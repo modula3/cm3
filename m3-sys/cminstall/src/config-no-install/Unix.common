@@ -244,28 +244,6 @@ end
 
 end
 
-%------------------------------------------------------------------------------
-
-% workaround for old toolsets (e.g. LINUXLIBC6 release 5.4.0)
-
-xNeedOldGCAdjust = 2
-    
-proc NeedOldGCAdjust() is
-  if equal(xNeedOldGCAdjust, 2)
-    xNeedOldGCAdjust = ((not defined("install_symbolic_link"))
-                        and (equal(TARGET, "LINUXLIBC6") or equal(TARGET, "PPC_LINUX"))
-                        and equal(try_exec("@fgrep m3gcdefs " & PKG_USE & "/m3core/" & TARGET & "/.M3EXPORTS 2>/dev/null >/dev/null"), 0))
-  end
-  return xNeedOldGCAdjust
-end
- 
-proc OldGCAdjust(imported_libs) is
-  if NeedOldGCAdjust()
-    imported_libs += ["-Wl,--wrap,adjtime,--wrap,getdirentries,--wrap,readv,--wrap,utimes,--wrap,wait3", LIB_USE & "/libm3gcdefs.a"]
-  end
-  return imported_libs
-end
-
 %--------------------------------------------------------- library creation ---
 % "make_lib" is called to combine a collection of object modules into
 % a library.
@@ -313,7 +291,6 @@ if not defined("make_lib")
 
 proc make_lib(lib, options, objects, imported_libs, shared) is
     shared = AdjustShared(shared)
-    imported_libs = OldGCAdjust(imported_libs)
     local suffix = make_lib_get_shared_suffix()
     local soname_flag = make_lib_get_soname_flag()
     local lib_a   = format("lib%s.a", lib)
@@ -446,7 +423,7 @@ if not defined("m3_link")
 
 proc m3_link(prog, options, objects, imported_libs, shared) is
     shared = AdjustShared(shared)
-    imported_libs = OldGCAdjust(ConvertLibsToStandalone(imported_libs, shared))
+    imported_libs = ConvertLibsToStandalone(imported_libs, shared)
     local args = [ "-o", prog, options, objects, imported_libs ]
     if M3_PROFILING
         args += "-pg"
