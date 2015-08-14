@@ -26,13 +26,13 @@ SYSTEM_LIBS = {
     % with unbundled compiler but doesn't mention it for bundled.
     % Should be tried when system back online.
     %
-    "LIBC"      : ["-lrt", "-lm", "-lpthread"],
+    "LIBC"       : ["-lrt", "-lm", "-lpthread"],
     "LEX-YACC"   : ["-ll" ],
-    "FLEX-BISON" : [],
+    "FLEX-BISON" : [ ],
     "OPENGL"     : ["-L/opt/graphics/OpenGL/lib", "-lGLU", "-lGL", "-lXext"],
     "MOTIF"      : ["-lXm"],
     "X11"        : ["-lXext", "-lXt", "-lX11"],
-    "TCP"        : []
+    "TCP"        : [ ]
 }
 
 SYSTEM_LIBORDER = ["OPENGL", "MOTIF", "X11", "TCP", "LEX-YACC", "LIBC"]
