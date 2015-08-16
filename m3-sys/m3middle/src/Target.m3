@@ -187,11 +187,6 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
         Setjmp := "decc$setjmp";
     END;
 
-    IF System IN SET OF Systems{Systems.PA32_HPUX,
-                                Systems.PA64_HPUX} THEN
-        Structure_size_boundary := 16;
-    END;
-
     IF System IN SET OF Systems{Systems.AMD64_NT} THEN
          Setjmp := "setjmp";
     END;

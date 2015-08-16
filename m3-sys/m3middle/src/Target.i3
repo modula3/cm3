@@ -452,7 +452,10 @@ VAR (*CONST*)
      a bit-field to compute the alignment of the struct *)
 
   Structure_size_boundary: CARDINAL;
-  (* every structure size must be a multiple of this *)
+  (* every structure size must be a multiple of this
+   * This is 8 for all current targets, or could be 0.
+   * OpenBSD/m68k would have it be different, and sometimes but not
+   * always sh and arm. *)
 
   Allow_packed_byte_aligned: BOOLEAN;
   (* Allow the compiler to align scalar types on byte boundaries when packing.
