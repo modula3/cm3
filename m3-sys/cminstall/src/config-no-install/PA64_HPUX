@@ -2,7 +2,15 @@ readonly TARGET = "PA64_HPUX" % code generation target
 readonly GNU_PLATFORM = "hppa64-hpux" % "cpu-os" string for GNU
 
 m3back_m64 = "" % -m64 not allowed
-m3back_debug = "" % stabs not supported, plain -g crashes
+
+% Similar to Darwin:
+%   HP-UX has no m3gdb support.
+%   stabs is not supported.
+%   Plain -g crashes -- probably trying to create dwarf w/o sufficient IR.
+%   -g1 produces some extra information and assembles successfully.
+
+m3back_debug = "-g1 "
+
 %SYSTEM_CC = "cc +DD64" % C compiler
 SYSTEM_CC = "/usr/local/64/bin/gcc -g -fPIC" % C compiler
 readonly SYSTEM_ASM = "/usr/local/64/bin/gas" % Assembler
