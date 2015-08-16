@@ -7,5 +7,6 @@ set -ex
     -DSYSTEM_AS=$HOME/hppa64-hpux11/bin/hppa64-hpux11-as \
     -keep \
     -boot \
+    -commands \
     -x \
     $@
