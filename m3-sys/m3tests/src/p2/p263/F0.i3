@@ -1,0 +1,19 @@
+(* Test First_readable_addr. *)
+
+INTERFACE F0;
+
+TYPE T = RECORD
+ x0: CHAR;
+ x1: CHAR;
+ x2_4094: ARRAY [2..4094] OF CHAR;
+ x4095: CHAR; (* 4095 *)
+ x4096: CHAR; (* 4096 *)
+ x4097_4095x8: ARRAY [4097 .. 4095 * 8 - 1] OF CHAR;
+ x4095x8: CHAR;
+ x4095x8_x4096x8: ARRAY [4095 * 8 + 1 .. 4096 * 8 - 1] OF CHAR; 
+ x4096x8: CHAR;
+END;
+ 
+PROCEDURE F1(t: REF T): CHAR;
+
+END F0.

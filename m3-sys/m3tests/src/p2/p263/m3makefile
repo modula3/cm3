@@ -1,6 +1,13 @@
 % Test First_readable_addr; it looks off by a factor of 8.
 
 m3back_optimize = ""
+m3back_debug = ""
+module("F0")
+module("F1")
+module("F4095")
+module("F4096")
+module("F4095x8")
+module("F4096x8")
 implementation("Main")
 build_standalone()
 include ("../../Test.common")
