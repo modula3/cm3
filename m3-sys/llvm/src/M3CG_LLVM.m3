@@ -4441,7 +4441,7 @@ PROCEDURE DebugFunc(self : U; p : Proc) =
       END;
     END;
 
-    paramTypes := LLVM.LLVMDIBuilderGetOrCreateTypeArray(self.debugRef, paramsRef, numParams + 1);
+    paramTypes := LLVM.LLVMDIBuilderGetOrCreateArray(self.debugRef, paramsRef, numParams + 1);
     funcTy := LLVM.LLVMDIBuilderCreateSubroutineType(self.debugRef,self.fileRef, paramTypes);
     procName := M3ID.ToText(proc.name);
 
