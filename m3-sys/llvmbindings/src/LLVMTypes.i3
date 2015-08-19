@@ -13,6 +13,7 @@
 
 INTERFACE LLVMTypes 
 
+; IMPORT Ctypes 
 ; IMPORT Word 
 
 (* These could come from almost anywhere. *) 
@@ -27,7 +28,7 @@ INTERFACE LLVMTypes
 ; CONST True = TRUE 
 ; TYPE unsigned = [ 0 .. 16_7FFFFFFF ] 
       
-; TYPE Opaque = RECORD END (* This duplicates a decl in LLV. *) 
+; TYPE Opaque = RECORD END (* This duplicates a decl in LLVM. *) 
 
 ; TYPE MDNodeRef = UNTRACED BRANDED "M3DIBOpaqueMDNode" REF Opaque
 
@@ -49,7 +50,7 @@ INTERFACE LLVMTypes
 (* class StringRef (NOTE: this is not a pointer). *) 
 ; TYPE StringRef 
     = RECORD 
-        Data : UNTRACED BRANDED "LLVMTypesOpaqueREFCHAR" REF CHAR
+        Data : Ctypes.char_star
       ; Length : size_t
       END 
 

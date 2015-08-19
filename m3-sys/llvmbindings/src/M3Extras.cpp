@@ -88,13 +88,14 @@ unsigned GetM3IntrinsicId(M3Intrinsic id) {
   return 1;
 }
 
+#if 0 // These duplicate Core.cpp
 /*--.. Module identifier ...................................................--*/
 const char * LLVMGetModuleIdentifer(LLVMModuleRef M) {
   return unwrap(M)->getModuleIdentifier().c_str();
 }
-
 void LLVMSetModuleIdentifier(LLVMModuleRef M, const char *Id) {
   unwrap(M)->setModuleIdentifier(Id);
 }
+#endif 
 
 // End M3Extras.cpp

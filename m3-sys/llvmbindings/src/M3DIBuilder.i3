@@ -35,7 +35,7 @@
    the M3 backend (derived from gcc 4.7 or older) and gcc 4.8.1, and possibly, 
    llvm. *) 
 ; FROM LLVMTypes IMPORT ArrayRefOfMetadataRef , ArrayRefOfint64_t 
-; FROM LLVMTypes IMPORT MDNodeRef , FunctionRef , InstructionRef   
+; FROM LLVMTypes IMPORT MetadataRef , MDNodeRef , FunctionRef , InstructionRef   
 ; IMPORT LLVM 
 
 (* The DIBuilder itself.  In llvm C++ code, this is a class, with the 
@@ -56,51 +56,73 @@
 
 ; TYPE Opaque = RECORD END
 
-; TYPE LLVMDIBasicTypeRef
-    = UNTRACED BRANDED "M3DIBOpaqueDIBasicType" REF Opaque
-; TYPE LLVMDICompileUnitRef
-    = UNTRACED BRANDED "M3DIBOpaqueDICompileUnit" REF Opaque
-; TYPE LLVMDICompositeTypeRef
-    = UNTRACED BRANDED "M3DIBOpaqueDICompositeType" REF Opaque
-; TYPE LLVMDISubroutineTypeRef
-    = UNTRACED BRANDED "M3DIBOpaqueDISubroutineType" REF Opaque
-; TYPE LLVMDIDerivedTypeRef
-    = UNTRACED BRANDED "M3DIBOpaqueDIDerivedType" REF Opaque
+(* There is a large C++ subclass hierarchy rooted at DIDescriptor, whose
+   conterparts here are ordered and indented to reflect.  Every one is a 
+   class with a single data member, an MDNode*, with varying constraints 
+   on the metadata tree it is the root of, the containing class type 
+   reflecting this. 
+
+   It is hard to recover this hierarchy in a Modula-3 type hierarchy, while
+   working through a C intermediary binding.  It's maybe not feasible at all 
+   to recover C++ dynamic types that are proper subtypes of the statically 
+   declared result type of a function that returns it.  Also, since Modula-3's 
+   object types are always heap allocated, it would probably entail an
+   extra layer of heap-allocated wrappers around the C/C++ pointers.  
+  
+   Moreover, client code of this interface needs to be able to do 
+   narrowings (in both directions) among them.  
+
+   Here, they are all given distinct type names, so code can reflect what 
+   is known about them, but the types are all equal, thus punting on this 
+   issue.  The C++ code in the external C-to-C++ bindings this uses contains 
+   runtime checks that convert failed narrowings to nil pointers. *) 
+
 ; TYPE LLVMDIDescriptorRef
-    = UNTRACED BRANDED "M3DIBOpaqueDIDescriptor" REF Opaque
-; TYPE LLVMDIFileRef = UNTRACED BRANDED "M3DIBOpaqueDIFile" REF Opaque
-; TYPE LLVMDIEnumeratorRef
-    = UNTRACED BRANDED "M3DIBOpaqueDIEnumerator" REF Opaque
-; TYPE LLVMDITypeRef 
-    = UNTRACED BRANDED "M3DIBOpaqueDIType" REF Opaque
-; TYPE DIArrayRef 
-    = UNTRACED BRANDED "M3DIBOpaqueDIArray" REF Opaque
-; TYPE LLVMDIGlobalVariableRef
-    = UNTRACED BRANDED "M3DIBOpaqueDIGlobalVariable" REF Opaque
-; TYPE LLVMDIExpressionRef
-    = UNTRACED BRANDED "M3DIBOpaqueDIExpression" REF Opaque
-; TYPE LLVMDIImportedEntityRef
-    = UNTRACED BRANDED "M3DIBOpaqueDIImportedEntity" REF Opaque
-; TYPE LLVMDINameSpaceRef
-    = UNTRACED BRANDED "M3DIBOpaqueDINameSpace" REF Opaque
-; TYPE LLVMDIVariableRef 
-    = UNTRACED BRANDED "M3DIBOpaqueDIVariable" REF Opaque
-; TYPE LLVMDISubrangeRef 
-    = UNTRACED BRANDED "M3DIBOpaqueDISubrange" REF Opaque
-; TYPE LLVMDILexicalBlockFileRef
-    = UNTRACED BRANDED "M3DIBOpaqueDILexicalBlockFile" REF Opaque
-; TYPE LLVMDILexicalBlockRef
-    = UNTRACED BRANDED "M3DIBOpaqueDILexicalBlock" REF Opaque
-; TYPE LLVMDIScopeRef 
-    = UNTRACED BRANDED "M3DIBOpaqueDIScope" REF Opaque
-; TYPE LLVMDISubprogramRef
-    = UNTRACED BRANDED "M3DIBOpaqueDISubprogram" REF Opaque
-; TYPE LLVMDITemplateTypeParameterRef
-    = UNTRACED BRANDED "M3DIBOpaqueDITemplateTypeParameter" REF Opaque
-; TYPE LLVMDITemplateValueParameterRef
-    = UNTRACED BRANDED "M3DIBOpaqueDITemplateValueParameter" REF Opaque
-; TYPE LLVMDIObjCPropertyRef
-    = UNTRACED BRANDED "M3DIBOpaqueDIObjCProperty" REF Opaque
+       = (* "M3DIBOpaqueDIDescriptor"*) MetadataRef
+; TYPE   LLVMDISubrangeRef 
+         = (* "M3DIBOpaqueDISubrange"*) MetadataRef
+      (* DITypedArray -- not needed. *) 
+; TYPE   LLVMDIEnumeratorRef
+         = (* "M3DIBOpaqueDIEnumerator"*) MetadataRef
+; TYPE   LLVMDIScopeRef 
+         = (* "M3DIBOpaqueDIScope"*) MetadataRef
+; TYPE     LLVMDITypeRef 
+           = (* "M3DIBOpaqueDIType"*) MetadataRef
+; TYPE     LLVMDIFileRef        
+           = (* "M3DIBOpaqueDIFile"*) MetadataRef
+; TYPE     LLVMDICompileUnitRef
+           = (* "M3DIBOpaqueDICompileUnit"*) MetadataRef
+; TYPE     LLVMDISubprogramRef
+           = (* "M3DIBOpaqueDISubprogram"*) MetadataRef
+; TYPE     LLVMDILexicalBlockRef
+           = (* "M3DIBOpaqueDILexicalBlock"*) MetadataRef
+; TYPE     LLVMDILexicalBlockFileRef
+           = (* "M3DIBOpaqueDILexicalBlockFile"*) MetadataRef
+; TYPE     LLVMDINameSpaceRef
+           = (* "M3DIBOpaqueDINameSpace"*) MetadataRef
+; TYPE       LLVMDIBasicTypeRef
+             = (* "M3DIBOpaqueDIBasicType"*) MetadataRef
+; TYPE       LLVMDIDerivedTypeRef
+             = (* "M3DIBOpaqueDIDerivedType"*) MetadataRef
+; TYPE         LLVMDICompositeTypeRef
+               = (* "M3DIBOpaqueDICompositeType"*) MetadataRef
+; TYPE         LLVMDISubroutineTypeRef
+               = (* "M3DIBOpaqueDISubroutineType"*) MetadataRef
+; TYPE   LLVMDITemplateTypeParameterRef
+         = (* "M3DIBOpaqueDITemplateTypeParameter"*) MetadataRef
+; TYPE   LLVMDITemplateValueParameterRef
+         = (* "M3DIBOpaqueDITemplateValueParameter"*) MetadataRef
+; TYPE   LLVMDIGlobalVariableRef
+         = (* "M3DIBOpaqueDIGlobalVariable"*) MetadataRef
+; TYPE   LLVMDIVariableRef 
+         = (* "M3DIBOpaqueDIVariable"*) MetadataRef
+; TYPE   LLVMDIExpressionRef
+         = (* "M3DIBOpaqueDIExpression"*) MetadataRef
+      (* DILocation -- not needed. *)
+; TYPE   LLVMDIObjCPropertyRef
+         = (* "M3DIBOpaqueDIObjCProperty"*) MetadataRef
+; TYPE   LLVMDIImportedEntityRef
+         = (* "M3DIBOpaqueDIImportedEntity"*) MetadataRef
 
 (* NOTE: Each of these types named "DI*" (but not ending in "Ref"), in llvm 
          C++ code is a one-field class object whose one field is a pointer to 
@@ -109,33 +131,40 @@
          add a lot of methods, but no data members.  
 *) 
 
-; TYPE LLVMDIBasicType = RECORD MDNode : LLVMDIBasicTypeRef := NIL END 
-; TYPE LLVMDICompileUnit = RECORD MDNode : LLVMDICompileUnitRef := NIL END 
-; TYPE LLVMDICompositeType = RECORD MDNode : LLVMDICompositeTypeRef := NIL END 
-; TYPE LLVMDISubroutineType = RECORD MDNode : LLVMDISubroutineTypeRef := NIL END 
-; TYPE LLVMDIDerivedType = RECORD MDNode : LLVMDIDerivedTypeRef := NIL END 
 ; TYPE LLVMDIDescriptor = RECORD MDNode : LLVMDIDescriptorRef := NIL END 
-; TYPE LLVMDIFile = RECORD MDNode : LLVMDIFileRef := NIL END 
-; TYPE LLVMDIEnumerator = RECORD MDNode : LLVMDIEnumeratorRef := NIL END 
-; TYPE LLVMDIType = RECORD MDNode : LLVMDITypeRef := NIL END 
+; TYPE   LLVMDISubrange = RECORD MDNode : LLVMDISubrangeRef := NIL END 
+; TYPE   LLVMDIEnumerator = RECORD MDNode : LLVMDIEnumeratorRef := NIL END 
+; TYPE   LLVMDIScope = RECORD MDNode : LLVMDIScopeRef := NIL END 
+; TYPE     LLVMDIType = RECORD MDNode : LLVMDITypeRef := NIL END 
+; TYPE       LLVMDIBasicType = RECORD MDNode : LLVMDIBasicTypeRef := NIL END 
+; TYPE       LLVMDIDerivedType = RECORD MDNode : LLVMDIDerivedTypeRef := NIL END 
+; TYPE         LLVMDICompositeType = RECORD MDNode : LLVMDICompositeTypeRef := NIL END 
+; TYPE         LLVMDISubroutineType = RECORD MDNode : LLVMDISubroutineTypeRef := NIL END 
+; TYPE     LLVMDIFile = RECORD MDNode : LLVMDIFileRef := NIL END 
+; TYPE     LLVMDICompileUnit = RECORD MDNode : LLVMDICompileUnitRef := NIL END 
+; TYPE     LLVMDISubprogram = RECORD MDNode : LLVMDISubprogramRef := NIL END 
+; TYPE     LLVMDILexicalBlock = RECORD MDNode : LLVMDILexicalBlockRef := NIL END 
+; TYPE     LLVMDILexicalBlockFile = RECORD MDNode : LLVMDILexicalBlockFileRef := NIL END 
+; TYPE     LLVMDINameSpace = RECORD MDNode : LLVMDINameSpaceRef := NIL END 
+; TYPE   LLVMDITemplateTypeParameter = RECORD MDNode : LLVMDITemplateTypeParameterRef := NIL END 
+; TYPE   LLVMDITemplateValueParameter = RECORD MDNode : LLVMDITemplateValueParameterRef := NIL END 
+; TYPE   LLVMDIGlobalVariable = RECORD MDNode : LLVMDIGlobalVariableRef := NIL END
+; TYPE   LLVMDIVariable = RECORD MDNode : LLVMDIVariableRef := NIL END 
+; TYPE   LLVMDIExpression = RECORD MDNode : LLVMDIExpressionRef := NIL END 
+; TYPE   LLVMDIObjCProperty = RECORD MDNode : LLVMDIObjCPropertyRef := NIL END 
+; TYPE   LLVMDIImportedEntity = RECORD MDNode : LLVMDIImportedEntityRef := NIL END
+
+
+; CONST LLVMDIDescriptorEmpty = LLVMDIDescriptor { MDNode := NIL } 
 ; CONST LLVMDITypeEmpty = LLVMDIType { MDNode := NIL } 
+; CONST LLVMDIExpressionEmpty = LLVMDIExpression { MDNode := NIL } 
+
+
+(* Other types not involved in the DIDescriptor hierarchy: *)
+; TYPE DIArrayRef 
+    = UNTRACED BRANDED "M3DIBOpaqueDIArray" REF Opaque
 ; TYPE DIArray = RECORD MDNode : DIArrayRef := NIL END 
 ; CONST DIArrayEmpty = DIArray { MDNode := NIL } 
-; TYPE LLVMDIGlobalVariable = RECORD MDNode : LLVMDIGlobalVariableRef := NIL END
-; TYPE LLVMDIImportedEntity = RECORD MDNode : LLVMDIImportedEntityRef := NIL END
-; TYPE LLVMDINameSpace = RECORD MDNode : LLVMDINameSpaceRef := NIL END 
-; TYPE LLVMDIVariable = RECORD MDNode : LLVMDIVariableRef := NIL END 
-; TYPE LLVMDIExpression = RECORD MDNode : LLVMDIExpressionRef := NIL END 
-; TYPE LLVMDISubrange = RECORD MDNode : LLVMDISubrangeRef := NIL END 
-; TYPE LLVMDILexicalBlockFile = RECORD MDNode : LLVMDILexicalBlockFileRef := NIL END 
-; TYPE LLVMDILexicalBlock = RECORD MDNode : LLVMDILexicalBlockRef := NIL END 
-; TYPE LLVMDIScope = RECORD MDNode : LLVMDIScopeRef := NIL END 
-; TYPE LLVMDISubprogram = RECORD MDNode : LLVMDISubprogramRef := NIL END 
-; TYPE LLVMDITemplateTypeParameter 
-    = RECORD MDNode : LLVMDITemplateTypeParameterRef := NIL END 
-; TYPE LLVMDITemplateValueParameter 
-    = RECORD MDNode : LLVMDITemplateValueParameterRef := NIL END 
-; TYPE LLVMDIObjCProperty = RECORD MDNode : LLVMDIObjCPropertyRef := NIL END 
 
 ; TYPE ComplexAddrDom = { OpInvalid , OpPlus , OpDeref }
 ; TYPE ComplexAddrKind = [ ComplexAddrDom . OpPlus .. ComplexAddrDom . OpDeref ]
@@ -793,7 +822,7 @@
 (** @param TParam        Function template parameters.*)
 ; PROCEDURE DIBcreateFunction
          (* ^'Tho overloaded, not renamed, because its overload 
-            (DIBcreateFunctionFromScope is to be removed.*) 
+            (DIBcreateFunctionFromScope) is to be removed.*) 
     ( Builder : DIBuilderRef
     ; Scope : LLVMDIDescriptor
     ; READONLY Name : StringRef
