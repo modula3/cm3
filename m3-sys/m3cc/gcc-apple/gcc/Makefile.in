@@ -415,10 +415,6 @@ CROSS_SYSTEM_HEADER_DIR = @CROSS_SYSTEM_HEADER_DIR@
 # macro is also used in a double-quoted context.
 SYSTEM_HEADER_DIR = `echo @SYSTEM_HEADER_DIR@ | sed -e :a -e 's,[^/]*/\.\.\/,,' -e ta`
 
-# Control whether to run fixproto and fixincludes.
-STMP_FIXPROTO = @STMP_FIXPROTO@
-STMP_FIXINC = @STMP_FIXINC@
-
 # Test to see whether <limits.h> exists in the system header files.
 LIMITS_H_TEST = [ -f $(SYSTEM_HEADER_DIR)/limits.h ]
 
@@ -645,7 +641,7 @@ SFP_MACHINE =
 LIBCONVERT =
 
 # Control whether header files are installed.
-INSTALL_HEADERS=install-headers install-mkheaders
+INSTALL_HEADERS=install-headers
 
 # Control whether Info documentation is built and installed.
 BUILD_INFO = @BUILD_INFO@
@@ -1303,7 +1299,7 @@ all.cross: native gcc-cross$(exeext) cpp$(exeext) specs \
 start.encap: native xgcc$(exeext) cpp$(exeext) specs \
 	xlimits.h lang.start.encap @GENINSRC@ srcextra
 # These can't be made until after GCC can run.
-rest.encap: $(STMP_FIXPROTO) $(LIBGCC) $(EXTRA_PARTS) lang.rest.encap
+rest.encap: $(LIBGCC) $(EXTRA_PARTS) lang.rest.encap
 # This is what is made with the host's compiler
 # whether making a cross compiler or not.
 native: config.status auto-host.h build-@POSUB@ $(LANGUAGES) \
@@ -1491,7 +1487,7 @@ libgcc.mk: config.status Makefile mklibgcc $(LIB2ADD) $(LIB2ADD_ST) specs \
 	mv tmp-libgcc.mk libgcc.mk
 
 # All the things that might cause us to want to recompile bits of libgcc.
-LIBGCC_DEPS = $(GCC_PASSES) stmp-int-hdrs $(STMP_FIXPROTO) \
+LIBGCC_DEPS = $(GCC_PASSES) stmp-int-hdrs \
 	libgcc.mk $(srcdir)/libgcc2.c $(srcdir)/libgcov.c $(TCONFIG_H) \
 	$(MACHMODE_H) longlong.h gbl-ctors.h config.status $(srcdir)/libgcc2.h \
 	tsystem.h $(FPBIT) $(DPBIT) $(TPBIT) $(LIB2ADD) \
@@ -3233,36 +3229,10 @@ gcov-dump$(exeext): $(GCOV_DUMP_OBJS) $(LIBDEPS)
 # be rebuilt.
 
 # Build the include directory
-stmp-int-hdrs: $(STMP_FIXINC) $(USER_H) xlimits.h $(UNWIND_H)
-# Copy in the headers provided with gcc.
-# The sed command gets just the last file name component;
-# this is necessary because VPATH could add a dirname.
-# Using basename would be simpler, but some systems don't have it.
-# The touch command is here to workaround an AIX/Linux NFS bug.
-	-if [ -d include ] ; then true; else mkdir include; chmod a+rx include; fi
-	for file in .. $(USER_H); do \
-	  if [ X$$file != X.. ]; then \
-	    realfile=`echo $$file | sed -e 's|.*/\([^/]*\)$$|\1|'`; \
-	    $(STAMP) include/$$realfile; \
-	    rm -f include/$$realfile; \
-	    cp $$file include; \
-	    chmod a+r include/$$realfile; \
-	  fi; \
-	done
-	rm -f include/limits.h
-	cp xlimits.h include/limits.h
-	rm -f include/unwind.h
-	cp $(UNWIND_H) include/unwind.h
-	chmod a+r include/limits.h
-# Install the README
-	rm -f include/README
-	cp $(srcdir)/../fixincludes/README-fixinc include/README
-	chmod a+r include/README
-	$(STAMP) $@
+stmp-int-hdrs:
 
 .PHONY: install-gcc-tooldir
 install-gcc-tooldir:
-	$(mkinstalldirs) $(DESTDIR)$(gcc_tooldir)
 
 macro_list: s-macro_list; @true
 s-macro_list : $(GCC_PASSES) 
@@ -3290,38 +3260,7 @@ s-macro_list : $(GCC_PASSES)
 # Build fixed copies of system files.
 # Abort if no system headers available, unless building a crosscompiler.
 # FIXME: abort unless building --without-headers would be more accurate and less ugly
-stmp-fixinc: gsyslimits.h macro_list \
-  $(build_objdir)/fixincludes/fixincl \
-  $(build_objdir)/fixincludes/fixinc.sh
-	@if ! $(inhibit_libc) && test ! -d ${SYSTEM_HEADER_DIR}; then \
-	  echo The directory that should contain system headers does not exist: >&2 ; \
-	  echo "  ${SYSTEM_HEADER_DIR}" >&2 ; \
-	  tooldir_sysinc=`echo "${gcc_tooldir}/sys-include" | sed -e :a -e "s,[^/]*/\.\.\/,," -e ta`; \
-	  if test "x${SYSTEM_HEADER_DIR}" = "x$${tooldir_sysinc}"; \
-	  then sleep 1; else exit 1; fi; \
-	fi
-	rm -rf include; mkdir include
-	-chmod a+rx include
-	if [ -d ../prev-gcc ]; then \
-	  cd ../prev-gcc && \
-	  $(MAKE) real-$(INSTALL_HEADERS_DIR) DESTDIR=`pwd`/../gcc/ \
-	    libsubdir=. ; \
-	else \
-	  (TARGET_MACHINE='$(target)'; srcdir=`cd $(srcdir); ${PWD_COMMAND}`; \
-	    SHELL='$(SHELL)'; MACRO_LIST=`${PWD_COMMAND}`/macro_list ; \
-	    export TARGET_MACHINE srcdir SHELL MACRO_LIST && \
-	    cd $(build_objdir)/fixincludes && \
-	    $(SHELL) ./fixinc.sh ../../gcc/include \
-	      $(SYSTEM_HEADER_DIR) $(OTHER_FIXINCLUDES_DIRS) ); \
-	  rm -f include/syslimits.h; \
-	  if [ -f include/limits.h ]; then \
-	    mv include/limits.h include/syslimits.h; \
-	  else \
-	    cp $(srcdir)/gsyslimits.h include/syslimits.h; \
-	  fi; \
-	fi
-	chmod a+r include/syslimits.h
-	$(STAMP) stmp-fixinc
+stmp-fixinc:
 
 # Files related to the fixproto script.
 # gen-protos and fix-header are compiled with CC_FOR_BUILD, but they are only
@@ -3385,29 +3324,10 @@ fixhdr.ready: build/fix-header$(build_exeext)
 		$(STAMP) fixhdr.ready; \
 	fi
 
-# stmp-int-hdrs is to make sure fixincludes has already finished.
-# The if statement is so that we don't run fixproto a second time
-# if it has already been run on the files in `include'.
-stmp-fixproto: fixhdr.ready fixproto stmp-int-hdrs
-	if [ -f include/fixed ] ; then true; \
-	else \
-	  : This line works around a 'make' bug in BSDI 1.1.; \
-	  FIXPROTO_DEFINES="$(FIXPROTO_DEFINES)"; export FIXPROTO_DEFINES; \
-	  FIX_HEADER="build/fix-header$(build_exeext)"; export FIX_HEADER; \
-	  mkinstalldirs="$(mkinstalldirs)"; \
-	    export mkinstalldirs; \
-	  if [ -d "$(SYSTEM_HEADER_DIR)" ]; then \
-	    $(SHELL) ${srcdir}/fixproto include include $(SYSTEM_HEADER_DIR); \
-	    if [ $$? -eq 0 ] ; then true ; else exit 1 ; fi ; \
-	  else true; fi; \
-	  $(STAMP) include/fixed; \
-	fi
-	$(STAMP) stmp-fixproto
-
 # We can't run fixproto (it's being built for a different host), but we still
 # need to install it so that the user can run it when the compiler is
 # installed.
-stmp-install-fixproto: fixproto
+stmp-install-fixproto:
 	$(STAMP) $@
 #
 # Remake the info files.
@@ -3711,99 +3631,12 @@ maintainer-clean:
 # Entry points `install' and `uninstall'.
 # Also use `install-collect2' to install collect2 when the config files don't.
 
-# Copy the compiler files into directories where they will be run.
-# Install the driver last so that the window when things are
-# broken is small.
-install: install-common $(INSTALL_HEADERS) $(INSTALL_LIBGCC) \
-    install-cpp install-man install-info install-@POSUB@ \
-    install-driver
-
-# Handle cpp installation.
-install-cpp: installdirs cpp$(exeext)
-	-rm -f $(DESTDIR)$(bindir)/$(CPP_INSTALL_NAME)$(exeext)
-	-$(INSTALL_PROGRAM) -m 755 cpp$(exeext) $(DESTDIR)$(bindir)/$(CPP_INSTALL_NAME)$(exeext)
-	-if [ x$(cpp_install_dir) != x ]; then \
-	  rm -f $(DESTDIR)$(prefix)/$(cpp_install_dir)/$(CPP_INSTALL_NAME)$(exeext); \
-	  $(INSTALL_PROGRAM) -m 755 cpp$(exeext) $(DESTDIR)$(prefix)/$(cpp_install_dir)/$(CPP_INSTALL_NAME)$(exeext); \
-	else true; fi
-
-# Create the installation directories.
-# $(libdir)/gcc/include isn't currently searched by cpp.
+install:
+install-cpp:
 installdirs:
-	$(mkinstalldirs) $(DESTDIR)$(libsubdir)
-	$(mkinstalldirs) $(DESTDIR)$(libexecsubdir)
-	$(mkinstalldirs) $(DESTDIR)$(bindir)
-	$(mkinstalldirs) $(DESTDIR)$(includedir)
-	$(mkinstalldirs) $(DESTDIR)$(infodir)
-	$(mkinstalldirs) $(DESTDIR)$(slibdir)
-	$(mkinstalldirs) $(DESTDIR)$(man1dir)
-	$(mkinstalldirs) $(DESTDIR)$(man7dir)
 
-# Install the compiler executables built during cross compilation.
-install-common: native $(EXTRA_PARTS) lang.install-common installdirs
-	for file in $(COMPILERS); do \
-	  if [ -f $$file ] ; then \
-	    rm -f $(DESTDIR)$(libexecsubdir)/$$file; \
-	    $(INSTALL_PROGRAM) $$file $(DESTDIR)$(libexecsubdir)/$$file; \
-	  else true; \
-	  fi; \
-	done
-	for file in $(EXTRA_PASSES) $(EXTRA_PROGRAMS) $(COLLECT2) ..; do \
-	  if [ x"$$file" != x.. ]; then \
-	    rm -f $(DESTDIR)$(libexecsubdir)/$$file; \
-	    $(INSTALL_PROGRAM) $$file $(DESTDIR)$(libexecsubdir)/$$file; \
-	  else true; fi; \
-	done
-	for file in $(EXTRA_PARTS) ..; do \
-	  if [ x"$$file" != x.. ]; then \
-	    rm -f $(DESTDIR)$(libsubdir)/$$file; \
-	    $(INSTALL_DATA) $$file $(DESTDIR)$(libsubdir)/$$file; \
-	    chmod a-x $(DESTDIR)$(libsubdir)/$$file; \
-	  else true; fi; \
-	done
-# We no longer install the specs file because its presence makes the
-# driver slower, and because people who need it can recreate it by
-# using -dumpspecs.  We remove any old version because it would
-# otherwise override the specs built into the driver.
-	rm -f $(DESTDIR)$(libsubdir)/specs
-# Install protoize if it was compiled.
-	-if [ -f protoize$(exeext) ]; then \
-	  rm -f $(DESTDIR)$(bindir)/$(PROTOIZE_INSTALL_NAME)$(exeext); \
-	  $(INSTALL_PROGRAM) protoize$(exeext) $(DESTDIR)$(bindir)/$(PROTOIZE_INSTALL_NAME)$(exeext); \
-	  rm -f $(DESTDIR)$(bindir)/$(UNPROTOIZE_INSTALL_NAME)$(exeext); \
-	  $(INSTALL_PROGRAM) unprotoize$(exeext) $(DESTDIR)$(bindir)/$(UNPROTOIZE_INSTALL_NAME)$(exeext); \
-	  rm -f $(DESTDIR)$(libsubdir)/SYSCALLS.c.X; \
-	  $(INSTALL_DATA) SYSCALLS.c.X $(DESTDIR)$(libsubdir)/SYSCALLS.c.X; \
-	  chmod a-x $(DESTDIR)$(libsubdir)/SYSCALLS.c.X; \
-	fi
-# Install gcov if it was compiled.
-	-if [ -f gcov$(exeext) ]; \
-	then \
-	    rm -f $(DESTDIR)$(bindir)/$(GCOV_INSTALL_NAME)$(exeext); \
-	    $(INSTALL_PROGRAM) gcov$(exeext) $(DESTDIR)$(bindir)/$(GCOV_INSTALL_NAME)$(exeext); \
-	fi
-	$(INSTALL_SCRIPT) gccbug $(DESTDIR)$(bindir)/$(GCCBUG_INSTALL_NAME)
-
-# Install the driver program as $(target_noncanonical)-gcc,
-# $(target_noncanonical)-gcc-$(version)
-# and also as either gcc (if native) or $(gcc_tooldir)/bin/gcc.
-install-driver: installdirs xgcc$(exeext)
-	-rm -f $(DESTDIR)$(bindir)/$(GCC_INSTALL_NAME)$(exeext)
-	-$(INSTALL_PROGRAM) xgcc$(exeext) $(DESTDIR)$(bindir)/$(GCC_INSTALL_NAME)$(exeext)
-	-rm -f $(DESTDIR)$(bindir)/$(target_noncanonical)-gcc-$(version)$(exeext)
-	-( cd $(DESTDIR)$(bindir) && \
-	   $(LN) $(GCC_INSTALL_NAME)$(exeext) $(target_noncanonical)-gcc-$(version)$(exeext) )
-	-if [ -f gcc-cross$(exeext) ] ; then \
-	  if [ -d $(DESTDIR)$(gcc_tooldir)/bin/. ] ; then \
-	    rm -f $(DESTDIR)$(gcc_tooldir)/bin/gcc$(exeext); \
-	    $(INSTALL_PROGRAM) gcc-cross$(exeext) $(DESTDIR)$(gcc_tooldir)/bin/gcc$(exeext); \
-	  else true; fi; \
-	else \
-	  rm -f $(DESTDIR)$(bindir)/$(target_noncanonical)-gcc-tmp$(exeext); \
-	  ( cd $(DESTDIR)$(bindir) && \
-	    $(LN) $(GCC_INSTALL_NAME)$(exeext) $(target_noncanonical)-gcc-tmp$(exeext) && \
-	    mv -f $(target_noncanonical)-gcc-tmp$(exeext) $(GCC_TARGET_INSTALL_NAME)$(exeext) ); \
-	fi
+install-common:
+install-driver:
 
 # Install the info files.
 # $(INSTALL_DATA) might be a relative pathname, so we can't cd into srcdir
@@ -3928,7 +3761,7 @@ install-itoolsdirs: installdirs
 	$(mkinstalldirs) $(DESTDIR)$(itoolsdir)
 
 # Install the include directory using tar.
-install-headers-tar: stmp-int-hdrs $(STMP_FIXPROTO) install-include-dir
+install-headers-tar: install-include-dir
 # We use `pwd`/include instead of just include to problems with CDPATH
 # Unless a full pathname is provided, some shells would print the new CWD,
 # found in CDPATH, corrupting the output.  We could just redirect the
@@ -3940,14 +3773,10 @@ install-headers-tar: stmp-int-hdrs $(STMP_FIXPROTO) install-include-dir
 # So use `exit 0' to ignore its exit status.
 
 # Install the include directory using cpio.
-install-headers-cpio: stmp-int-hdrs $(STMP_FIXPROTO) install-include-dir
-# See discussion about the use of `pwd` above
-	cd `${PWD_COMMAND}`/include ; \
-	find . -print | cpio -pdum $(DESTDIR)$(libsubdir)/include
+install-headers-cpio: install-include-dir
 
 # Install the include directory using cp.
-install-headers-cp: stmp-int-hdrs $(STMP_FIXPROTO) install-include-dir
-	cp -p -r include $(DESTDIR)$(libsubdir)
+install-headers-cp: install-include-dir
 
 # Targets without dependencies, for use in prev-gcc during bootstrap.
 real-install-headers-tar:
@@ -3962,35 +3791,7 @@ real-install-headers-cp:
 	cp -p -r include $(DESTDIR)$(libsubdir)
 
 # Install supporting files for fixincludes to be run later.
-install-mkheaders: stmp-int-hdrs $(STMP_FIXPROTO) install-itoolsdirs \
-  macro_list xlimits.h
-	for file in $(USER_H); do \
-	  realfile=`echo $$file | sed -e 's|.*/\([^/]*\)$$|\1|'`; \
-	  $(INSTALL_DATA) $$file \
-	    $(DESTDIR)$(itoolsdatadir)/include/$$realfile ; \
-	done
-	$(INSTALL_DATA) xlimits.h $(DESTDIR)$(itoolsdatadir)/include/limits.h
-	$(INSTALL_DATA) $(UNWIND_H) $(DESTDIR)$(itoolsdatadir)/include/unwind.h
-	$(INSTALL_DATA) $(srcdir)/gsyslimits.h \
-	  $(DESTDIR)$(itoolsdatadir)/gsyslimits.h
-	$(INSTALL_DATA) macro_list $(DESTDIR)$(itoolsdatadir)/macro_list
-	if [ x$(STMP_FIXPROTO) != x ] ; then \
-	  $(INSTALL_SCRIPT) $(mkinstalldirs) \
-		$(DESTDIR)$(itoolsdir)/mkinstalldirs ; \
-	  $(INSTALL_SCRIPT) $(srcdir)/fixproto $(DESTDIR)$(itoolsdir)/fixproto ; \
-	  $(INSTALL_PROGRAM) build/fix-header$(build_exeext) \
-		$(DESTDIR)$(itoolsdir)/fix-header$(build_exeext) ; \
-	else :; fi
-	echo 'SYSTEM_HEADER_DIR="'"$(SYSTEM_HEADER_DIR)"'"' \
-		> $(DESTDIR)$(itoolsdatadir)/mkheaders.conf
-	echo 'OTHER_FIXINCLUDES_DIRS="$(OTHER_FIXINCLUDES_DIRS)"' \
-		>> $(DESTDIR)$(itoolsdatadir)/mkheaders.conf
-	echo 'FIXPROTO_DEFINES="$(FIXPROTO_DEFINES)"' \
-		>> $(DESTDIR)$(itoolsdatadir)/mkheaders.conf
-	echo 'STMP_FIXPROTO="$(STMP_FIXPROTO)"' \
-		>> $(DESTDIR)$(itoolsdatadir)/mkheaders.conf
-	echo 'STMP_FIXINC="$(STMP_FIXINC)"' \
-		>> $(DESTDIR)$(itoolsdatadir)/mkheaders.conf
+install-mkheaders: install-itoolsdirs \
 
 # Use this target to install the program `collect2' under the name `collect2'.
 install-collect2: collect2 installdirs
@@ -4797,19 +4598,6 @@ update-po: $(CATALOGS:.gmo=.pox)
 # for each language, in case they weren't built or included
 # with the distribution.
 install-po:
-	$(mkinstalldirs) $(DESTDIR)$(datadir)
-	cats="$(CATALOGS)"; for cat in $$cats; do \
-	  lang=`basename $$cat | sed 's/\.gmo$$//'`; \
-	  if [ -f $$cat ]; then :; \
-	  elif [ -f $(srcdir)/$$cat ]; then cat=$(srcdir)/$$cat; \
-	  else continue; \
-	  fi; \
-	  dir=$(localedir)/$$lang/LC_MESSAGES; \
-	  echo $(mkinstalldirs) $(DESTDIR)$$dir; \
-	  $(mkinstalldirs) $(DESTDIR)$$dir || exit 1; \
-	  echo $(INSTALL_DATA) $$cat $(DESTDIR)$$dir/gcc.mo; \
-	  $(INSTALL_DATA) $$cat $(DESTDIR)$$dir/gcc.mo; \
-	done
 
 # Rule for regenerating the message template (gcc.pot).
 # Instead of forcing everyone to edit POTFILES.in, which proved impractical,
