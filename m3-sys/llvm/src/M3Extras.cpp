@@ -1,34 +1,9 @@
-//
-// File M3Extras.cpp.
-// C++ wrappers for C binding to various things not provided elsewhere.
-//
-// Derived from various files in the following: 
-
-//
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
-//
-//===----------------------------------------------------------------------===//
-//
-
-#include "llvm/IR/Module.h"
+#include "M3Extras.h"
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/Intrinsics.h"
-#include "./M3Extras.h"
+#include "llvm/IR/Module.h"
 
-// Some of these could become necessary as this binding grows: 
-//#include "llvm/IR/Metadata.h" 
-//#include "llvm/IR/Value.h" 
-//#include "llvm/IR/Function.h" 
-//#include "llvm/IR/Instruction.h" 
-//#include "llvm/IR/BasicBlock.h" 
-//#include "llvm/ADT/ArrayRef.h"
-//#include "llvm/ADT/StringRef.h"
-//#include "llvm/DebugInfo.h"
-//#include "llvm/IR/DIBuilder.h"
-//#include "llvm-c/Core.h"
+//should include these in core.cpp
 
 using namespace llvm;
 
@@ -74,7 +49,6 @@ LLVMValueRef LLVMBuildAtomicCmpXchg(LLVMBuilderRef B,
 }
 
 // return the intrinsic id from the enum
-// As of 2015-05-25, unused in M3 code and has no M3 binding. 
 unsigned GetM3IntrinsicId(M3Intrinsic id) {
 
   if (id == m3memset) return Intrinsic::memset;
@@ -87,15 +61,3 @@ unsigned GetM3IntrinsicId(M3Intrinsic id) {
 
   return 1;
 }
-
-#if 0 // These duplicate Core.cpp
-/*--.. Module identifier ...................................................--*/
-const char * LLVMGetModuleIdentifer(LLVMModuleRef M) {
-  return unwrap(M)->getModuleIdentifier().c_str();
-}
-void LLVMSetModuleIdentifier(LLVMModuleRef M, const char *Id) {
-  unwrap(M)->setModuleIdentifier(Id);
-}
-#endif 
-
-// End M3Extras.cpp

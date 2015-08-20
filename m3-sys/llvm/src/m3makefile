@@ -1,3 +1,26 @@
+% Directory wherein to find llvm source (at least its include subdirectory):
+
+if not defined("LLVM_SOURCE_DIR") LLVM_SOURCE_DIR = "/home/rodney/proj/llvm/llvm-3.5/llvm-3.5.0.src" end % Rodney Bates
+LLVM_INCLUDE_DIR = LLVM_SOURCE_DIR & "/include" 
+% Some include files come from here: 
+LLVM_BUILD_INCLUDE_DIR = LLVM_SOURCE_DIR & "/../build/include" 
+
+% Directory to find compiled llvm libraries in:
+if not defined("LLVM_LIB_DIR") LLVM_LIB_DIR = "/usr/local/llvm-3.5.0/lib" end % Rodney Bates
+
+% Directory wherein to find various system libraries: 
+%if not defined("LIB_DIR") LIB_DIR = "/usr/lib" end  % Peter McKinna 
+if not defined("LIB_DIR") LIB_DIR = "/usr/lib/x86_64-linux-gnu" end % Rodney Bates
+
+% This m3makefile will invoke make to do the C++ compilation.  
+% If we get cm3 extended to have a cpp_source command, we might then let
+% it invoke the C++ compiler.  For now, we exec make to do it.  
+
+%TODO: When its -clean or -realclean, exec make for "clean", not "all".  
+
+exec("make", "-f" , "../src/Makefile", "-k", "LLVM_INCLUDE_DIR=" & LLVM_INCLUDE_DIR, "LLVM_BUILD_INCLUDE_DIR=" & LLVM_BUILD_INCLUDE_DIR, "BUILD_DIR=" & BUILD_DIR) 
+% ^ For now, until we get C++ files into m3 build system
+
 import("libm3")
 import("m3middle")
 import("m3quake")
@@ -11,14 +34,18 @@ import_lib("dl","/usr/lib")
 import_lib("ncurses","/usr/lib")
 
 /* minimum llvm libs - order seems to be important here */
-import_lib("LLVMSupport","/usr/local/lib")
-import_lib("LLVMCore","/usr/local/lib")
-import_lib("LLVMTarget","/usr/local/lib")
-import_lib("LLVMBitWriter","/usr/local/lib")
+import_lib("LLVMSupport","/usr/local/llvm/lib")
+import_lib("LLVMDebugInfo","/usr/local/llvm/lib")
+import_lib("LLVMTarget","/usr/local/llvm/lib")
+import_lib("LLVMBitWriter","/usr/local/llvm/lib")
+import_lib("LLVMCore","/usr/local/llvm/lib")
 
 interface("LLVM")
 module("M3CG_LLVM")
+import_obj("M3Extras")
+import_obj("DIBuilderBindings")
+
 
 implementation("Main")
 
-program("m3llvm")
+Program("m3llvm")
