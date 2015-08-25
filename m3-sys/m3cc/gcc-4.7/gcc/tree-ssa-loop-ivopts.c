@@ -3518,11 +3518,12 @@ get_shiftadd_cost (tree expr, enum machine_mode mode, comp_cost cost0,
   tree multop = TREE_OPERAND (mult, 0);
   int m = exact_log2 (int_cst_value (cst));
   int maxm = MIN (BITS_PER_WORD, GET_MODE_BITSIZE (mode));
+  int sa_cost;
 
   if (!(m >= 0 && m < maxm))
     return false;
 
-  int sa_cost = (TREE_CODE (expr) != MINUS_EXPR
+  sa_cost = (TREE_CODE (expr) != MINUS_EXPR
              ? shiftadd_cost[speed][mode][m]
              : (mult == op1
                 ? shiftsub1_cost[speed][mode][m]
