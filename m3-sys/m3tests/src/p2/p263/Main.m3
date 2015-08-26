@@ -5,6 +5,7 @@ MODULE Main;
 IMPORT F0, F1, F2, F4094, F4095, F4096, F4097;
 IMPORT F4096x8, F4096x8p1, F4096x8p2;
 IMPORT F4096x8m1, F4096x8m2;
+IMPORT RTParams;
 
 PROCEDURE F3() =
 BEGIN
@@ -28,4 +29,10 @@ END F3;
 
 BEGIN
  F3();
+ IF RTParams.IsPresent("checked") THEN
+    EVAL F4096x8p2.F1(NIL); (* large -- gets null checked *)
+ END;
+ IF RTParams.IsPresent("unchecked") THEN
+    EVAL F0.F1(NIL); (* small -- does not get null check *)
+ END;
 END Main.
