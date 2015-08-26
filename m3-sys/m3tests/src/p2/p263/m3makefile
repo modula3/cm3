@@ -5,10 +5,20 @@ m3back_debug = ""
 m3back_flags = ""
 module("F0")
 module("F1")
+module("F2")
+
+module("F4094")
 module("F4095")
 module("F4096")
-module("F4095x8")
+module("F4097")
+
+% x8 is times 8, m is minus, p is plus
+module("F4096x8m2")
+module("F4096x8m1")
 module("F4096x8")
+module("F4096x8p1")
+module("F4096x8p2")
+
 implementation("Main")
 build_standalone()
 include ("../../Test.common")

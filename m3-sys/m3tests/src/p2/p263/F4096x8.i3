@@ -1,6 +1,6 @@
 (* Test First_readable_addr. *)
 
-INTERFACE F4096x8;
+INTERFACE F4096x8; (* x8 is times 8 *)
 IMPORT F0;
 
 PROCEDURE F1(t: REF F0.T4096x8): CHAR;
