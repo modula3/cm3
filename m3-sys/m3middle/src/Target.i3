@@ -464,11 +464,42 @@ VAR (*CONST*)
      word boundaries. *)
 
   (* NIL checking *)
-  First_readable_addr: CARDINAL;
+  CONST First_readable_addr: CARDINAL = 4096 (* * Char.size *);
   (* Read or write references to addresses in the range [0..First_readable-1]
      will cause an address faults.  Hence, no explicit NIL checks are needed
-     for dereferencing with offsets in this range. *)
+     for dereferencing with offsets in this range.
 
+     m3front only checks the size of surrounding accessed type,
+     i.e. the field or array the element is within. This is overly conservative.
+
+     Historically this was off by 8. Historically we tried to use the more
+     target specific page size, like 8K on SPARC (and could be on Alpha
+     and IA64 also). But in the name of removing target-specificity, just 4K always.
+
+     Additional comments on the matter:
+       The effect of First_readable_addr is that (static?) array indices
+       (offsets) lower than it (and positive?) do not have a NULL check on the
+       array base.  Reading NULL + an offset less than First_readable_addr is
+       assumed to access violate the same as reading NULL. It is a nice
+       optimization.  Setting the value too low results in correct but
+       suboptimal code.  However just setting it to a small non-zero number
+       should provide most of the benefit.  Setting the value too high results
+       in missing NULL checks -- a loss of safety enforcement.  Typically
+       setting it to one hardware page is a good estimate, since if NULL is
+       not accessible, nor is any address on the same page. As well, setting
+       it to getpagesize, whatever the granularity of mmap/VirtualAlloc, often
+       larger than a hardware page, is another good guess.
+
+       Historically this value was off by a factor of 8.
+       Historically we used 8K for Sparc. Probably should for IA64 and Alpha.
+       But now we use 4K for all, which is ok.
+
+       As well, it is not about static array references currently.
+       It is about the size of the containing type, even if accessing
+       a small offset.
+    *)
+
+VAR (*CONST*)
   (* floating point values *)
   All_floats_legal : BOOLEAN;
   (* If all bit patterns are "legal" floating point values (i.e. they can

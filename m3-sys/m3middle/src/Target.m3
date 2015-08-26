@@ -41,11 +41,10 @@ PROCEDURE IsAMD64(): BOOLEAN =
     RETURN TextUtils.StartsWith(System_name, "AMD64_");
   END IsAMD64;
 
-PROCEDURE IsSPARC(): BOOLEAN =
+<*UNUSED*>PROCEDURE IsSPARC(): BOOLEAN =
+CONST startsWith = TextUtils.StartsWith;
   BEGIN
-    RETURN (TextUtils.StartsWith(System_name, "S")
-            AND (TextUtils.StartsWith(System_name, "SPARC")
-              OR TextUtils.StartsWith(System_name, "SOL")));
+    RETURN startsWith(System_name, "SPARC") OR startsWith(System_name, "SOL");
   END IsSPARC;
   
 PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): BOOLEAN =
@@ -120,21 +119,6 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
 
     Aligned_procedures := TRUE;
 
-    (* The effect of First_readable_addr is that (static?) array indices
-       (offsets) lower than it (and positive?) do not have a NULL check on the
-       array base.  Reading NULL + an offset less than First_readable_addr is
-       assumed to access violate the same as reading NULL. It is a nice
-       optimization.  Setting the value too low results in correct but
-       suboptimal code.  However just setting it to a small non-zero number
-       should provide most of the benefit.  Setting the value too high results
-       in missing NULL checks -- a loss of safety enforcement.  Typically
-       setting it to one hardware page is a good estimate, since if NULL is
-       not accessible, nor is any address on the same page. As well, setting
-       it to getpagesize, whatever the granularity of mmap/VirtualAlloc, often
-       larger than a hardware page, is another good guess.  *)
-
-    First_readable_addr := 4096 * Char.size;
-
     (* add the system-specific customization *)
 
     (* 64bit *)
@@ -169,12 +153,6 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
       Little_endian := FALSE;
     END;
 
-    (* SPARC: 8K pages *)
-
-    IF IsSPARC() THEN
-      First_readable_addr := 8192 * Char.size;
-    END;
-    
     (* x86 and AMD64 allow unaligned loads/stores *)
 
     IF IsX86() OR IsAMD64() THEN
