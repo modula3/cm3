@@ -4,8 +4,9 @@ import sys, os.path, os, shutil, pylib, uuid
 from os.path import isfile, isdir
 from pylib import *
 
-root = "/cm3"
+root = sys.argv[1] or "/cm3"
 temp = "cm3temp-" + str(uuid.uuid4()).upper()
+output = sys.argv[2] or "cm3boot"
 
 def CopyRecursive(From, To):
     CopyCommand = "xcopy /fiverdyh "
@@ -67,4 +68,4 @@ def Run(a):
     return (os.system(a) == 0)
     
 os.chdir(temp)
-Run("tar cfz ../cm3boot.tar.gz .")
+Run("tar cfz ../" + output + ".tar.gz .")
