@@ -2,6 +2,7 @@
 
 m3back_optimize = ""
 m3back_debug = ""
+m3back_flags = ""
 module("F0")
 module("F1")
 module("F4095")
