@@ -7,11 +7,12 @@ TYPE
 
   Public = M3CG.T OBJECT
   METHODS
-    dumpLLVMIR();
+    dumpLLVMIR(BitcodeFileName, AsmFileName: TEXT);
   END;
 
-(* returns a fresh, initialized code generator that writes its
-   calls to LLVM IR generator 'wr'. *)
+(* returns a fresh, initialized code generator that writes LLVM IR
+   as bitcode to 'wr_bin' and as LLVM assembly to 'wr_char'. 
+   Either may be NIL. *)
 PROCEDURE New (wr: Wr.T): M3CG.T;
 
 END M3CG_LLVM.
