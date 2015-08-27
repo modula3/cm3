@@ -26,6 +26,26 @@ Issues
 
   Lots of others.
 
+------------------------------------------------------------------------------
+
+Here is the help text for command-line options: 
+
+m3llvm: standalone converter from cm3 IR to llvm IR, version 0.1 
+Usage:m3llvm {-{option}} <inFileName>
+  If <inFileName> is absent, read from standard input.
+  Options are:
+  -a Treat input file as ascii cm3 IR.
+  -b Treat input file as binary cm3 IR (the default).
+  -d Enable debug output.
+  -h Display help text and terminate.
+  -v Display program version and terminate.
+  -o<bitcodeFileName> or -o <bitcodeFileName>
+     Write llvm bitcode to <bitcodeFileName>
+  -O<asmFileName> or -O <asmFileName>
+     Write llvm assembly code to <asmFileName>
+  Either or both bitcode and assembly output may be specified.
+  If neither is specified, write llvm assembly to 'm3test.ll'
+
 ------------------------------------------------------------------------------ 
 Build automation, added by Rodney Bates:
 

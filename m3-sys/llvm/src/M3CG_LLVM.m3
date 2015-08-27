@@ -915,10 +915,19 @@ PROCEDURE BuildFunc(self : U; p : Proc) =
     END;
   END BuildFunc;
 
-PROCEDURE DumpLLVMIR(<*UNUSED*> self : U) =
+PROCEDURE DumpLLVMIR(<*UNUSED*> self : U; BitcodeFileName, AsmFileName: TEXT) =
   VAR
-    msg : Ctypes.char_star_star;
+    msg : Ctypes.char_star_star := NIL;
   BEGIN
+    IF BitcodeFileName # NIL THEN
+      EVAL LLVM.LLVMWriteBitcodeToFile(modRef, LT(BitcodeFileName));
+    END (*IF*); 
+    IF AsmFileName # NIL THEN
+      EVAL LLVM.LLVMPrintModuleToFile(modRef, LT(AsmFileName), msg);
+    END (*IF*); 
+
+
+
 (* use this to stream to stderr when called from frontend
    which needs redirect but need all llvmdumpvalue calls removed
 *)
@@ -926,7 +935,9 @@ PROCEDURE DumpLLVMIR(<*UNUSED*> self : U) =
   LLVM.LLVMDumpModule(modRef);
 *)
 
+(*
     EVAL LLVM.LLVMPrintModuleToFile(modRef, LT(outFile), msg);
+*) 
   (* or to bitcode *)
   (*  
     EVAL LLVM.LLVMWriteBitcodeToFile(modRef, LT(outFile & ".bc"));
