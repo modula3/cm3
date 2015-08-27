@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* dbxout.h - Various declarations for functions found in dbxout.c
    Copyright (C) 1998, 1999, 2000, 2003, 2004, 2007
    Free Software Foundation, Inc.

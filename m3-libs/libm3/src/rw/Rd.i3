@@ -153,19 +153,20 @@ PROCEDURE UnGetChar(rd: T) RAISES {};
 | IF closed(rd) THEN `Cause checked runtime error` END;
 | IF cur(rd) > 0 THEN DEC(cur(rd)) END
 
-   except there is a special rule: "UngetChar(rd)" is guaranteed to
-   work only if "GetChar(rd)" was the last operation on "rd".  Thus
-   "UngetChar" cannot be called twice in a row, or after "Seek" or
-   "EOF". If this rule is violated, the implementation is allowed (but
+   except there is a special rule: "UngetChar(rd)" is guaranteed to work only
+   if "GetChar(rd)" or "EOF(rd)" was the last operation on "rd".  Thus
+   "UngetChar" cannot be called twice in a row, or after "Seek".
+   If this rule is violated, the implementation is allowed (but
    not required) to cause a checked runtime error. *)
 
-CONST UnGetCapacity = 8;  
+CONST UnGetCapacity = 8; 
+TYPE UnGetCount = [ 0 .. UnGetCapacity ]; 
 
-PROCEDURE UnGetCharMulti(rd: T): BOOLEAN (* Succeeded. *); 
-(* Like UnGetChar, but can accumulate at least MIN(UnGetCapacity,Index(rd))
-   ungotten and not reread characters.  UnGetCharMulti reserves the right 
-   to exceed this on some calls.  Result FALSE means you tried to
-   accumulate too many ungotten characters, and the operation did not happen.
+PROCEDURE UnGetCharMulti(rd: T; n: UnGetCount:= 1): CARDINAL (* Number actually ungotten.*);
+(* Like UnGetChar, but try to push back the last n characters.  Can accumulate at 
+   least MIN(UnGetCapacity,Index(rd)) ungotten and not reread characters.  
+   UnGetCharMulti reserves the right to exceed this on some calls.  Result may be less
+   than n, if this would be exceeded.  
 *) 
 
 PROCEDURE CharsReady(rd: T): CARDINAL RAISES {Failure};

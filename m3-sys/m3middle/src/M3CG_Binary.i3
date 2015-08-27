@@ -3,8 +3,27 @@
 
 INTERFACE M3CG_Binary;
 
+(* NOTE: If you alter this file substantively, do the following: 
+
+   1. Please update CONST Version, so front/back end mismatches will be
+      detected. 
+
+   2. Also make matching changes to cm3/m3-sys/m3cggen/src/Main.m3.
+
+   3. Recompile cm3, m3cggen and lots of packages they depend on, in order.
+      cm3/scripts/do-cm3-front.sh will do it.  
+
+   4. Run the executable m3cggen, copying its std output to 
+      cm3/m3-sys/m3cc/gcc/gcc/m3cg/m3cg.h.
+
+   5. Recompile m3cc.
+
+   This will create a compatible cm3/cm3cg pair.  
+*) 
+
 CONST
-  Version = 16_100;  (* version 1.00 *)
+  Version = 16_110;  (* version 1.10 *)
+  (* Please update Version if you change the codes in this file. *) 
 
 TYPE
   Op = {

@@ -63,9 +63,6 @@ PROCEDURE pthread_detach_self(t: pthread_t): int;
 <*EXTERNAL ThreadPThread__pthread_self*>
 PROCEDURE pthread_self(): pthread_t;
 
-<*EXTERNAL "ThreadPThread__pthread_equal"*>
-PROCEDURE pthread_equal(t1, t2: pthread_t): int;
-
 <*EXTERNAL "ThreadPThread__pthread_kill"*>
 PROCEDURE pthread_kill(t: pthread_t; sig: int): int;
 

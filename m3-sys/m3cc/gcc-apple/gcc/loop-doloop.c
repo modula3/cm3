@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Perform doloop optimizations
    Copyright (C) 2004, 2005, 2006 Free Software Foundation, Inc.
    Based on code by Michael P. Hayes (m.hayes@elec.canterbury.ac.nz)
@@ -637,5 +639,6 @@ doloop_optimize_loops (struct loops *loops)
   verify_loop_structure (loops);
 #endif
 }
+#else
+char quash_darwin_warning_about_no_symbols_gcc_loop_doloop;
 #endif /* HAVE_doloop_end */
-

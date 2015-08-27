@@ -12,7 +12,7 @@ IMPORT M3, M3ID, CG, Value, ValueRep, Scope, Stmt, Error, ESet,  External;
 IMPORT Variable, Type, Procedure, Ident, M3Buf, BlockStmt, Int;
 IMPORT Host, Token, Revelation, Coverage, Decl, Scanner, WebInfo;
 IMPORT ProcBody, Target, M3RT, Marker, File, Tracer, Wr;
-IMPORT WCharr; 
+IMPORT WCharr, Jmpbufs;
 
 FROM Scanner IMPORT GetToken, Fail, Match, MatchID, cur;
 
@@ -50,6 +50,10 @@ REVEAL
         value_info  : Value.T;
         lazyAligned : BOOLEAN;
         containsLazyAlignments: BOOLEAN;
+        jmpbuf_size  : CG.Var  := NIL;
+        alloca       : CG.Proc := NIL;
+        setjmp       : CG.Proc := NIL;
+        jmpbufs      : Jmpbufs.Proc;
       OVERRIDES
         typeCheck   := TypeCheckMethod;
         set_globals := ValueRep.NoInit;
@@ -108,6 +112,61 @@ PROCEDURE Reset () =
     parseDepth := 0;
     INC (compile_age);
   END Reset;
+
+PROCEDURE GetAlloca (t: T) : CG.Proc =
+VAR new := FALSE;
+BEGIN
+   (* alloca must be special cased by backends to mean
+     alloca, _alloca, chkstk, etc. *)
+  IF t.alloca = NIL THEN
+    t.alloca := CG.Import_procedure (M3ID.Add ("alloca"), 1, CG.Type.Addr,
+                                     Target.DefaultCall, new);
+    IF new THEN
+      EVAL CG.Declare_param (M3ID.NoID, Target.Word.size, Target.Word.align,
+                             Target.Word.cg_type, 0, in_memory := FALSE,
+                             up_level := FALSE, f := CG.Never);
+    END;
+  END;
+  RETURN t.alloca;
+END GetAlloca;
+
+
+PROCEDURE GetJmpbufSize (t: T): CG.Var =
+BEGIN
+  (* m3_jmpbuf_size is a "constant variable" initialized in
+     C via:
+        #include <setjmp.h>
+        extern const m3_jmpbuf_size = sizeof(jmp_buf);
+     As an optimization, and to avoid any matters involving dynamically
+     importing data on Win32, Uconstants is always statically linked.
+
+     This isolates the front/middle end from the target.
+  *)
+  IF t.jmpbuf_size = NIL THEN
+    t.jmpbuf_size := CG.Import_global (M3ID.Add ("m3_jmpbuf_size"),
+                                       Target.Word.size, Target.Word.align,
+                                       Target.Word.cg_type, 0);
+  END;
+  RETURN t.jmpbuf_size;
+END GetJmpbufSize;
+
+PROCEDURE GetSetjmp (t: T): CG.Proc =
+VAR new := FALSE;
+BEGIN
+  (* int setjmp(void* ); *)
+  IF t.setjmp = NIL THEN
+    t.setjmp := CG.Import_procedure (M3ID.Add (Target.Setjmp), 1,
+                                     Target.Integer.cg_type,
+                                     Target.DefaultCall, new);
+    IF new THEN
+      EVAL CG.Declare_param (M3ID.Add ("jmpbuf"), Target.Address.size,
+                             Target.Address.align, CG.Type.Addr, 0,
+                             in_memory := FALSE, up_level := FALSE,
+                             f := CG.Never);
+    END;
+  END;
+  RETURN t.setjmp;
+END GetSetjmp;
 
 PROCEDURE Create (name: M3ID.T): T =
   VAR t: T;
@@ -250,7 +309,7 @@ PROCEDURE Parse (interfaceOnly : BOOLEAN := FALSE): T =
       IF (topLevel) THEN EVAL PushInterface (id); INC (parseDepth) END;
     END;
 
-    n := 0; (* In case we don't parse any export names. *)  
+    n := 0; (* In case we don't parse any export names. *)
     IF (cur.token = TK.tEXPORTS) THEN
       IF (t.interface) THEN
         Error.Msg ("EXPORTS clause not allowed in an interface");
@@ -258,7 +317,7 @@ PROCEDURE Parse (interfaceOnly : BOOLEAN := FALSE): T =
       END;
       GetToken ();
       n := Ident.ParseList ();
-      (* Leave the export names on the Ident stack for now. *) 
+      (* Leave the export names on the Ident stack for now. *)
     ELSIF (NOT t.interface) THEN
       External.NoteExport (t.externals, t.name);
     END;
@@ -273,7 +332,7 @@ PROCEDURE Parse (interfaceOnly : BOOLEAN := FALSE): T =
     ELSE Fail ("missing \';\' or \'=\', assuming \';\'");
     END;
 
-    (* Now we know whether the generic was UNSAFE, so can process the exports. *) 
+    (* Now we know whether the generic was UNSAFE, so can process the exports. *)
     FOR i := 0 TO n - 1 DO
       External.NoteExport (t.externals, Ident.stack[Ident.top - n + i]);
     END;
@@ -353,7 +412,7 @@ PROCEDURE PushGeneric (t: T;  VAR rd: File.T): M3ID.T =
 
     (* parse the list of actuals *)
     nActuals := ParseGenericArgs ();
- 
+
     (* open the external file *)
     rd := Host.OpenUnit (genericName, t.interface, TRUE, filename);
     IF (rd = NIL) THEN
@@ -366,11 +425,11 @@ PROCEDURE PushGeneric (t: T;  VAR rd: File.T): M3ID.T =
     Scanner.Push (filename, rd, is_main := Scanner.in_main);
     t.genericFile := filename;
 
-    (* Is the generic UNSAFE? *) 
+    (* Is the generic UNSAFE? *)
     IF cur.token = TK.tUNSAFE THEN
-      t.safe := FALSE; (* Then so is the instantiation. *) 
+      t.safe := FALSE; (* Then so is the instantiation. *)
       GetToken ();
-    END; 
+    END;
 
     (* make sure we got what we wanted *)
     Match (TK.tGENERIC);
@@ -592,8 +651,10 @@ PROCEDURE TypeCheck (t: T;  main: BOOLEAN;  VAR cs: Value.CheckState) =
           Revelation.TypeCheck (t.revelations);
           Scope.TypeCheck (t.localScope, cs);
           IF (NOT t.interface) THEN
+            t.jmpbufs := Jmpbufs.CheckProcPush (cs.jmpbufs, 0);
             BlockStmt.CheckTrace (t.trace, cs);
             Stmt.TypeCheck (t.block, cs);
+            Jmpbufs.CheckProcPop (cs.jmpbufs, t.jmpbufs);
           END;
 
         ESet.Pop (cs, NIL, t.fails, stop := TRUE);
@@ -804,12 +865,12 @@ PROCEDURE IsExternal (): BOOLEAN =
     RETURN (curModule # NIL) AND (curModule.external);
   END IsExternal;
 
-PROCEDURE LazyAlignmentOn (): BOOLEAN = 
+PROCEDURE LazyAlignmentOn (): BOOLEAN =
   BEGIN
     RETURN curModule # NIL AND curModule.lazyAligned;
   END LazyAlignmentOn;
 
-PROCEDURE SetLazyAlignment (on: BOOLEAN) = 
+PROCEDURE SetLazyAlignment (on: BOOLEAN) =
   BEGIN
     IF curModule # NIL THEN
       curModule.lazyAligned := on;
@@ -838,10 +899,10 @@ PROCEDURE Compile (t: T) =
     zz := Scope.Push (t.localScope);
       WebInfo.Reset ();
       CG.Begin_unit ();
-      IF WCharr.IsUnicode   
+      IF WCharr.IsUnicode
       THEN CG.Widechar_size (32);
       ELSE CG.Widechar_size (16);
-      END; 
+      END;
       CG.Gen_location (t.origin);
       Host.env.note_unit (t.name, t.interface);
       DeclareGlobalData (t);
@@ -872,7 +933,7 @@ PROCEDURE CompileInterface (t: T) =
     (* declare the modules that I import & export *)
     (** EVAL GlobalData (t); **)
     CG.Export_unit (t.name);
-    Host.env.note_interface_use (t.name, imported := FALSE);      
+    Host.env.note_interface_use (t.name, imported := FALSE);
 
     IF (t.genericBase # M3ID.NoID) THEN
       Host.env.note_generic_use (t.genericBase);
@@ -1041,6 +1102,7 @@ PROCEDURE EmitBody (x: InitBody) =
 
     (* perform the main body *)
     Tracer.Push (t.trace);
+    Jmpbufs.CompileProcAllocateJmpbufs (t.jmpbufs);
     EVAL Stmt.Compile (t.block);
     Tracer.Pop (t.trace);
 

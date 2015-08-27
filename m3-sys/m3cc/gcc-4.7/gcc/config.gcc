@@ -1338,7 +1338,7 @@ i[34567]86-*-solaris2* | x86_64-*-solaris2.1[0-9]*)
 	with_tune_32=${with_tune_32:-generic}
 	case ${target} in
 	*-*-solaris2.1[0-9]*)
-		tm_file="${tm_file} i386/x86-64.h i386/sol2-bi.h sol2-bi.h"
+		tm_file="${tm_file} i386/x86-64.h i386/sol2-bi.h"
 		tm_defines="${tm_defines} TARGET_BI_ARCH=1"
 		tmake_file="$tmake_file i386/t-sol2-64"
 		need_64bit_isa=yes
@@ -2384,7 +2384,7 @@ sparc-*-netbsdelf*)
 	tmake_file="${tmake_file} sparc/t-sparc"
 	;;
 sparc*-*-solaris2*)
-	tm_file="sparc/biarch64.h ${tm_file} ${sol2_tm_file} sol2-bi.h sparc/tso.h"
+	tm_file="sparc/biarch64.h ${tm_file} ${sol2_tm_file} sparc/tso.h"
 	case ${target} in
 	    sparc64-*-* | sparcv9-*-*)
 		tm_file="sparc/default-64.h ${tm_file}"

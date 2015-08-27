@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Base configuration file for all FreeBSD targets.
    Copyright (C) 1999, 2000, 2001, 2007, 2008, 2009,
    2010, 2011, 2012 Free Software Foundation, Inc.
@@ -33,30 +35,6 @@ along with GCC; see the file COPYING3.  If not see
 #undef  TARGET_OS_CPP_BUILTINS
 #define TARGET_OS_CPP_BUILTINS() FBSD_TARGET_OS_CPP_BUILTINS()
 
-#undef  CPP_SPEC
-#define CPP_SPEC FBSD_CPP_SPEC
-
-#undef  STARTFILE_SPEC
-#define STARTFILE_SPEC FBSD_STARTFILE_SPEC
-
-#undef  ENDFILE_SPEC
-#define ENDFILE_SPEC FBSD_ENDFILE_SPEC
-
-#undef  LIB_SPEC
-#define LIB_SPEC FBSD_LIB_SPEC
-
-#if defined(HAVE_LD_EH_FRAME_HDR)
-#define LINK_EH_SPEC "%{!static:--eh-frame-hdr} "
-#endif
-
-#ifdef TARGET_LIBC_PROVIDES_SSP
-#define LINK_SSP_SPEC "%{fstack-protector|fstack-protector-all:-lssp_nonshared}"
-#endif
-
-/* Use --as-needed -lgcc_s for eh support.  */
-#ifdef HAVE_LD_AS_NEEDED
-#define USE_LD_AS_NEEDED 1
-#endif
 
 /************************[  Target stuff  ]***********************************/
 
@@ -67,16 +45,6 @@ along with GCC; see the file COPYING3.  If not see
 /* Don't assume anything about the header files.  */
 #undef  NO_IMPLICIT_EXTERN_C
 #define NO_IMPLICIT_EXTERN_C	1
-
-/* Follow FreeBSD's standard headers (<sys/_types.h> etc...).  */
-
-#undef  WCHAR_TYPE
-#define WCHAR_TYPE "int"
-
-#undef  WINT_TYPE
-#define WINT_TYPE "int"
-
-#define MATH_LIBRARY_PROFILE    "m_p"
 
 /* Code generation parameters.  */
 

@@ -8,7 +8,9 @@ readonly GNU_PLATFORM = "hppa-hpux" % "cpu-os" string for GNU
 %
 m3back_m32 = "-mpa-risc-2-0"
 SYSTEM_CC = "/usr/local/32/bin/gcc -fPIC -gstabs+ -mpa-risc-2-0" % C compiler
-readonly SYSTEM_ASM = "/usr/local/32/bin/gas" % Assembler
+if not defined("SYSTEM_ASM")
+  readonly SYSTEM_ASM = "/usr/local/32/bin/gas" % Assembler
+end
 
 include("HPPA.common")
 include("HPUX.common")

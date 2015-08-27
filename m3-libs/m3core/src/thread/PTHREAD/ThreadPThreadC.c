@@ -501,17 +501,6 @@ ThreadPThread__pthread_self(void)
 
 int
 __cdecl
-ThreadPThread__pthread_equal(m3_pthread_t t1, m3_pthread_t t2)
-{
-#if defined(__APPLE__)
-  abort();
-#else
-  return pthread_equal(PTHREAD_FROM_M3(t1), PTHREAD_FROM_M3(t2));
-#endif
-}
-
-int
-__cdecl
 ThreadPThread__pthread_kill(m3_pthread_t thread, int sig)
 {
 #if defined(__APPLE__)

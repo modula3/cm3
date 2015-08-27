@@ -1,0 +1,9 @@
+% Test shift_right with a signed integer in the IR.
+%  Specifically m3front/src/misc/cg/Setrange
+
+m3back_optimize = ""
+interface("Dump")
+implementation("Main")
+c_source("dump")
+build_standalone()
+include ("../../Test.common")

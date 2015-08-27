@@ -23,7 +23,7 @@ SetupEnvironment()
 # delete lingering cm3cg in case old compiler/config uses it
 for a in ["cm3cg", "gcc/m3cgc1"]:
     for b in ["", ".exe"]:
-        DeleteFile(Root + "m3-sys/m3cc/" + Target + "/" + a + b)
+        DeleteFile(Root + "/m3-sys/m3cc/" + BuildDir + "/" + a + b)
 
 #
 # clean everything
@@ -52,7 +52,7 @@ DoPackage(argv_BuildShip, [ "import-libs", "m3bundle", "m3middle", "m3quake", "m
 # ... and continue with the backend, if needed
 #
 
-a = Root + "/m3-sys/m3cggen/" + Target + "/m3cggen > " + Root + "/m3-sys/m3cc/gcc/gcc/m3cg/m3cg.h"
+a = Root + "/m3-sys/m3cggen/" + BuildDir + "/m3cggen > " + Root + "/m3-sys/m3cc/gcc/gcc/m3cg/m3cg.h"
 print(a)
 # os.system(a)
 FilterPackages([ "m3cc" ]) and DoPackage(argv_BuildShip, [ "m3cc" ])
@@ -61,7 +61,14 @@ FilterPackages([ "m3cc" ]) and DoPackage(argv_BuildShip, [ "m3cc" ])
 # Up to now, the compiler binaries have not been installed.
 # We do this now but keep backups of the old ones. (not yet)
 #
-ShipFront() or sys.exit(1)
+# Workarounds:
+#  cm3 does not ship itself because it might be in use,
+#    depending on operating system capabilities and workarounds.
+#    This is a long standing implementation limit.
+#  cm3cg does not ship itself in some versions. This is a bug.
+#
+#ShipFront() or sys.exit(1)
+ShipCompiler() or sys.exit(1)
 
 #
 # Now try the new compiler but building the core system (without
@@ -70,7 +77,7 @@ ShipFront() or sys.exit(1)
 os.environ["OMIT_GCC"] = "yes"
 _CleanupEnvironment();
 reload(pylib) # compiler host type may have changed and need to recompute stuff
-CopyConfigForDistribution(Root) or sys.exit(1)
+CopyConfigForDistribution(InstallRoot) or sys.exit(1)
 
 # once more
 

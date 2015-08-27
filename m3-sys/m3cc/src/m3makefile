@@ -14,6 +14,10 @@
 % available: 4.2 (apple), 4.3, 4.5, 4.6, 4.7.
 DefaultGccVersion = "47"
 
+% NOTE: gcc 4.3, 4.5, 4.6 have been deleted to save space.
+% 4.2 (apple) should be deleted too.
+% gmp can be deleted but has not been.
+
 readonly TargeDefaultGccVersion = {
        "ARM_DARWIN" : "42",
 }

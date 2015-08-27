@@ -28,11 +28,10 @@ MODULE UniRd
         Stream . Source := Source 
       ; Stream . DecWideChar := UnsafeUniCodec . DecTable [ IsBE , Enc ] 
       ; Stream . Index := 0 
-      ; Stream . PrevSourceIndex := 0 (* Dead, defensive. *)  
+      ; Stream . CurSourceIndex := 0 
+      ; Stream . UnGetByteCt := 0 
       ; Stream . MaxBytesPerChar := UniCodec . MaxBytesPerChar ( Enc ) 
       ; Stream . Enc := Enc
-      ; Stream . UngetByteCt := 0  
-      ; Stream . HasPostponedWCh := FALSE  
       ; RETURN Stream  
       END (* LOCK *) 
     END Init 
@@ -109,22 +108,23 @@ MODULE UniRd
     END GetWideChar 
 
 (* EXPORTED: *) 
-; PROCEDURE UnGetWideChar ( Stream : T ) : BOOLEAN (* Succeeded. *) 
-  (* Push back the last decoded character read from Stream, pushing it back
+; PROCEDURE UnGetCodePoint ( Stream : T ) : BOOLEAN (* Succeeded. *) 
+  (* Push back the last decoded code point read from Stream, pushing it back
      onto Stream.Source, in encoded form.  This is guaranteed to work only
-     if the last operation on Stream was GetWideChar, GetChar, GetWideSub,
-     or GetSub or an UnsafeUniRd.Fast* version thereof.  Result FALSE means 
-     the operation did not happen, because of a violation of this condition.
+     if the last operation on Stream was GetWideChar, GetWideSub,
+     or GetSub, or an UnsafeUniRd.Fast* version thereof.  Result FALSE means 
+     the operation did not happen, because of a violation of this condition,
+     or because somebody has bypassed Stream and directly [un]gotten chars
+     from Stream.Source.
   *) 
-  (* WARNING! Currently unimplemented.  A NOOP.  Always returns FALSE. *) 
   
   = BEGIN
       LOCK Stream 
       DO LOCK Stream . Source 
-        DO RETURN UnsafeUniRd . FastUnGetWideChar ( Stream )  
+        DO RETURN UnsafeUniRd . FastUnGetCodePoint ( Stream )  
         END (* LOCK *) 
       END (* LOCK *) 
-    END UnGetWideChar 
+    END UnGetCodePoint
 
 (* EXPORTED: *) 
 ; PROCEDURE GetWideSub ( Stream : T ; VAR (*OUT*) ArrWch : ARRAY OF Widechar ) 
@@ -170,11 +170,12 @@ MODULE UniRd
   : CARDINAL
   RAISES { Failure , Alerted } 
   (* Decode and consume characters from Source(Stream), using Enc(Stream), 
-     storing them into ArrCh, until Source(Stream) is at end-of-file, or ArrCh
-     is filled, or an end-of-line sequence has been read and stored.  
+     storing them into ArrWch, until Source(Stream) is at end-of-file, or 
+     ArrWch is filled, or an end-of-line sequence has been read.  
      Return the actual number of decoded characters stored into ArrWch.  
      Include any end-of-line sequence in the returned count and store it in
-     ArrWch. 
+     ArrWch, except if only one character of a two-character end-of-line 
+     sequence would fit in ArrWch, leave both unstored and unconsumed. 
 
      Consistent with the Unicode standard, an end-of-line consists of any of:
 
@@ -204,10 +205,10 @@ MODULE UniRd
 ; PROCEDURE GetSubLine 
     ( Stream : T ; VAR (*OUT*) ArrCh : ARRAY OF CHAR ) : CARDINAL
   RAISES { Range , Failure , Alerted } 
-  (* Like GetWideSubLine, but return the characters in an ARRAY OF CHAR,
-     raising Range({Wch,Loc}) if an otherwise to-be-returned character 
-     is not in CHAR, where Wch is the out-of-range character,
-     and Loc is the number of characters stored.  
+  (* Like FastGetWideSubLine, but return stored characters in an ARRAY OF CHAR.
+     If an otherwise to-be-returned character is not in CHAR, consume but do
+     not store it and raise Range(Wch,N), where Wch is the out-of-range 
+     character, and N is the number of characters stored.  
   *) 
 
   = BEGIN (* GetSubLine *) 

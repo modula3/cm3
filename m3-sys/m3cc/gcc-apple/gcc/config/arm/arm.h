@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Definitions of target machine for GNU compiler, for ARM.
    Copyright (C) 1991, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000,
    2001, 2002, 2003, 2004, 2005, 2006 Free Software Foundation, Inc.
@@ -841,10 +843,32 @@ extern int arm_structure_size_boundary;
 #define ARM_HARD_FRAME_POINTER_REGNUM    7
 #define THUMB_HARD_FRAME_POINTER_REGNUM	 7
 
+#if 0 /* Modula-3: modified */
 #define HARD_FRAME_POINTER_REGNUM		\
   (TARGET_ARM					\
    ? ARM_HARD_FRAME_POINTER_REGNUM		\
    : THUMB_HARD_FRAME_POINTER_REGNUM)
+#else
+/* Notice:
+gcc original: ARM_HARD_FRAME_POINTER_REGNUM
+and THUMB_HARD_FRAME_POINTER_REGNUM are different,
+Therefore the ternary operator is accomplishing something.
+
+gcc-apple: ARM_HARD_FRAME_POINTER_REGNUM
+and THUMB_HARD_FRAME_POINTER_REGNUM are the same,
+therefore the ternary operator is not needed.
+
+The use of the ternary operator makes HARD_FRAME_POINTER_REGNUM
+otherwise not constant, leading to a compilation
+error with clang in ELIMINABLE_REGS.
+
+gcc 4.7 has a different ELIMINABLE_REGS that avoids the problem.
+gcc later is C++ anyway and does not require a constant.
+gcc-apple compiled with gcc: gcc is probably lax and does not
+require the constant, but clang is strict and does.
+*/
+#define HARD_FRAME_POINTER_REGNUM	7
+#endif
 
 #define FP_REGNUM	                HARD_FRAME_POINTER_REGNUM
 

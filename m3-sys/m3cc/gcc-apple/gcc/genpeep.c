@@ -426,6 +426,8 @@ from the machine description file `md'.  */\n\n");
   printf ("rtx peep_operand[%d];\n", max_opno + 1);
   printf ("#endif\n");
 
+  printf ("char quash_warning_no_symbols_in_insn_peep_c;\n");
+
   fflush (stdout);
   return (ferror (stdout) != 0 ? FATAL_EXIT_CODE : SUCCESS_EXIT_CODE);
 }

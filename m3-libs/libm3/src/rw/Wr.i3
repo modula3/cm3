@@ -147,6 +147,9 @@ PROCEDURE PutText(wr: T; t: TEXT) RAISES {Failure, Alerted};
    with respect to other operations in the interface. (It would be
    wrong to write "PutChar" instead of "PutC", since "PutChar" always
    flushes if the writer is unbuffered.)
+
+   Note that if t has a character not in CHAR, the call on Text.GetChar
+   will suffer a checked runtime error. 
 *)
 
 PROCEDURE PutWideText(wr: T; t: TEXT) RAISES {Failure, Alerted};

@@ -7,9 +7,9 @@
 /* m3makefile for /proj/m3/pkg/fmtlex/tests/fmt/src */
 
 /* imported/included packages */
-import		(libm3)
+import		("libm3")
 
 /* modules for this application */
-implementation	(FmtTest)
+implementation	("FmtTest")
 build_standalone()
-program		(FmtTest)
+program		("FmtTest")

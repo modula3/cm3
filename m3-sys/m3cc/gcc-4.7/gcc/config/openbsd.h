@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Base configuration file for all OpenBSD targets.
    Copyright (C) 1999, 2000, 2004, 2005, 2007, 2009, 2010, 2011
    Free Software Foundation, Inc.
@@ -102,47 +104,6 @@ while (0)
       builtin_define ("__LP64__");		\
     }						\
   while (0)
-
-/* CPP_SPEC appropriate for OpenBSD. We deal with -posix and -pthread.
-   XXX the way threads are handled currently is not very satisfying,
-   since all code must be compiled with -pthread to work. 
-   This two-stage defines makes it easy to pick that for targets that
-   have subspecs.  */
-#ifdef CPP_CPU_SPEC
-#define OBSD_CPP_SPEC "%(cpp_cpu) %{posix:-D_POSIX_SOURCE} %{pthread:-D_POSIX_THREADS}"
-#else
-#define OBSD_CPP_SPEC "%{posix:-D_POSIX_SOURCE} %{pthread:-D_POSIX_THREADS}"
-#endif
-
-#undef LIB_SPEC
-#define LIB_SPEC OBSD_LIB_SPEC
-
-#ifndef OBSD_HAS_CORRECT_SPECS
-
-#undef CPP_SPEC
-#define CPP_SPEC OBSD_CPP_SPEC
-
-#ifdef OBSD_OLD_GAS
-/* ASM_SPEC appropriate for OpenBSD.  For some architectures, OpenBSD 
-   still uses a special flavor of gas that needs to be told when generating 
-   pic code.  */
-#undef ASM_SPEC
-#define ASM_SPEC "%{fpic|fpie:-k} %{fPIC|fPIE:-k -K}"
-#endif
-
-/* Since we use gas, stdin -> - is a good idea.  */
-#define AS_NEEDS_DASH_FOR_PIPED_INPUT
-
-#undef LIB_SPEC
-#define LIB_SPEC OBSD_LIB_SPEC
-
-#if defined(HAVE_LD_EH_FRAME_HDR)
-#define LINK_EH_SPEC "%{!static:--eh-frame-hdr} "
-#endif
-
-#undef LIB_SPEC
-#define LIB_SPEC OBSD_LIB_SPEC
-#endif
 
 #define TARGET_POSIX_IO
 

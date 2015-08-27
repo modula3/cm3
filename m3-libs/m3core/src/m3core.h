@@ -317,28 +317,29 @@ typedef unsigned char       UINT8;
 #error unable to find 8bit integer
 #endif
 #if USHRT_MAX == 0x0FFFFUL
-typedef   signed short      INT16;
+typedef          short      INT16;
 typedef unsigned short     UINT16;
 #else
 #error unable to find 16bit integer
 #endif
 #if UINT_MAX == 0x0FFFFFFFFUL
-typedef   signed int        INT32;
+typedef          int        INT32;
 typedef unsigned int       UINT32;
 #elif ULONG_MAX == 0x0FFFFFFFFUL
-typedef   signed long       INT32;
+typedef          long       INT32;
 typedef unsigned long      UINT32;
 #else
 #error unable to find 32bit integer
 #endif
 #if defined(_MSC_VER) || defined(__DECC) || defined(__DECCXX) || defined(__int64)
-typedef   signed __int64    INT64;
+typedef          __int64    INT64;
 typedef unsigned __int64   UINT64;
 #else
-typedef   signed long long  INT64;
+typedef          long long  INT64;
 typedef unsigned long long UINT64;
 #endif
 
+typedef unsigned char BOOLEAN;
 typedef float REAL;
 typedef double LONGREAL;
 typedef double EXTENDED;
@@ -357,9 +358,11 @@ extern "C" {
 /* WORD_T/INTEGER are always exactly the same size as a pointer.
  * VMS sometimes has 32bit size_t/ptrdiff_t but 64bit pointers.
  */
+/* commented out is correct, but so is the #else */
+/*#if defined(_WIN64) || __INITIAL_POINTER_SIZE == 64 || defined(__LP64__) || defined(_LP64)*/
 #if __INITIAL_POINTER_SIZE == 64
-typedef __int64 INTEGER;
-typedef unsigned __int64 WORD_T;
+typedef INT64 INTEGER;
+typedef UINT64 WORD_T;
 #else
 typedef ptrdiff_t INTEGER;
 typedef size_t WORD_T;

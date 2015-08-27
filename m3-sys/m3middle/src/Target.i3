@@ -140,11 +140,28 @@ TYPE
   M3BackendMode_t =
   {
     (* The primary modes are currently 0 and 3. *)
-    IntegratedObject,   (* "0"  -- don't call m3_backend, M3CG produces object code *)
-    IntegratedAssembly, (* "1"  -- don't call m3_backend, M3CG produces assembly code *)
+    IntegratedObject,   (* "0"  -- don't call m3_backend, 
+                                   M3CG produces object code *)
+    IntegratedAssembly, (* "1"  -- don't call m3_backend, 
+                                   M3CG produces assembly code, run asm. *)
+    (* External modes emit cm3 IR to a file, then the gcc-derived backend. *) 
     ExternalObject,     (* "2"  -- call m3_backend, it produces object code *)
-    ExternalAssembly,   (* "3"  -- call m3_backend, it produces assembly code *)
-    C                   (* "4"  -- don't call m3_backend, call compile_c, M3CG produces C *)
+    ExternalAssembly,   (* "3"  -- call m3_backend, it produces assembly code, run asm *)
+    C,                  (* "4"  -- don't call m3_backend, call compile_c, 
+                                   M3CG produces C *)
+    IntLlvmObj,         (* "5"  -- M3CG uses llvm to directly produce object code. *)    
+    IntLlvmAsm,         (* "6"  -- M3CG uses llvm to directly produce assembly code,
+                                   run asm. *)  
+    ExtLlvmObj,         (* "7"  -- M3CG produces llvm bitcode.  call compile_llvm. 
+                                   It produces object code. *) 
+    ExtLlvmAsm,         (* "8"  -- M3CG produces llvm bitcode.  call compile_llvm. 
+                                   It produces assembly code, run asm. *) 
+    (* StAloneLlvm modes emit cm3 IR to a file, then run a stand-alone executable to
+       translate it to llvm IR. *) 
+    StAloneLlvmObj,     (* "9"  -- call m3llvm, then call compile_llvm. 
+                                   It produces object code. *) 
+    StAloneLlvmAsm      (* "10" -- call m3llvm, then call compile_llvm. 
+                                   It produces assembly code, run asm. *) 
   };
 
 CONST
@@ -153,14 +170,77 @@ CONST
     "IntegratedAssembly",
     "ExternalObject",
     "ExternalAssembly",
-    "C" };
+    "C",
+    "IntLlvmObj", 
+    "IntLlvmAsm", 
+    "ExtLlvmObj", 
+    "ExtLlvmAsm",
+    "StAloneLlvmObj",
+    "StAloneLlvmAsm" 
+   };
 
-  BackendIntegrated = ARRAY M3BackendMode_t OF BOOLEAN { TRUE, TRUE, FALSE, FALSE, TRUE };
+  TYPE MT = M3BackendMode_t; 
+
+  CONST BackendIntegratedSet = SET OF M3BackendMode_t 
+    { MT.IntegratedObject, MT.IntegratedAssembly, MT.IntLlvmObj, MT.IntLlvmAsm };
+    (* Modes where cm3 executable produces assembly or object code. *)
+(* Check: Do we want to consider C integrated? *) 
+
+  CONST BackendM3ccSet = SET OF M3BackendMode_t 
+    { MT.ExternalObject, MT.ExternalAssembly }; 
+    (* Modes using the external gcc-derived code generator m3cc. *)
+
+  CONST BackendLlvmSet = SET OF M3BackendMode_t 
+    { MT.ExtLlvmObj, MT.ExtLlvmAsm, MT.IntLlvmObj, MT.IntLlvmAsm}; 
+    (* Modes linking to the llvm infrastructure to generate assembly or object code. *)
+
+  CONST BackendStAloneLlvmSet = SET OF M3BackendMode_t 
+    { MT.StAloneLlvmObj, MT.StAloneLlvmAsm }; 
+    (* Modes using standalone translator m3llvm, from cm3 IR to llvm IR. *)
+
+  CONST BackendCSet = SET OF M3BackendMode_t { MT.C }; 
+    (* Modes using the C-generating code generator plus a C compiler. *) 
+
+  CONST BackendAsmSet = SET OF M3BackendMode_t 
+    { MT.IntegratedAssembly, MT.ExternalAssembly, MT.ExtLlvmAsm, MT.IntLlvmAsm,
+      MT.StAloneLlvmAsm }; 
+    (* Modes that require the builder to run the assembler. *) 
+    (* NOTE: C may require separate assembly, but the C compiler does it. *)
+
+  CONST BackendLlvmAsmSet = SET OF M3BackendMode_t 
+    { MT.ExtLlvmAsm, MT.IntLlvmAsm, MT.StAloneLlvmAsm }; 
+
+  CONST BackendSet = SET OF M3BackendMode_t 
+    {
+      MT.IntegratedObject,
+      MT.IntegratedAssembly,
+      MT.ExternalObject,
+      MT.ExternalAssembly,
+      MT.C,
+      MT.ExtLlvmObj,
+      MT.ExtLlvmAsm,
+      MT.IntLlvmObj,
+      MT.IntLlvmAsm,
+      MT.StAloneLlvmObj,
+      MT.StAloneLlvmAsm
+    }; 
+  
+(* Provoke compile errors: *) 
+  BackendIntegratedXXX
+    = ARRAY M3BackendMode_t OF BOOLEAN 
+        { TRUE, TRUE, FALSE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE };
+
+  BackendUsesLlvmXXX 
+    = ARRAY M3BackendMode_t OF BOOLEAN 
+        { FALSE, FALSE, FALSE, FALSE, FALSE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE };
+
   (* BackendAssembly = ARRAY M3BackendMode_t OF BOOLEAN { FALSE, TRUE, FALSE, TRUE, FALSE };  *)
 
 (*-------------------------------------------------------- initialization ---*)
 
-PROCEDURE Init (system: TEXT; osname := "POSIX"; backend_mode := M3BackendMode_t.ExternalAssembly): BOOLEAN;
+PROCEDURE Init 
+  (system: TEXT; osname := "POSIX"; backend_mode := M3BackendMode_t.ExternalAssembly)
+: BOOLEAN;
 (* Initialize the variables of this interface to reflect the architecture
    of "system".  Returns TRUE iff the "system" was known and the initialization
    was successful.  *)
@@ -311,6 +391,8 @@ TYPE
 
 VAR (*CONST*)
   DefaultCall: CallingConvention := NIL;
+CONST CDECL = 0;   (* use with ConventionFromID *)
+CONST STDCALL = 1; (* use with ConventionFromID *)
 
 PROCEDURE FindConvention (nm: TEXT): CallingConvention;
 (* Return the convention with name "nm".  Otherwise, return NIL. *)
@@ -370,7 +452,10 @@ VAR (*CONST*)
      a bit-field to compute the alignment of the struct *)
 
   Structure_size_boundary: CARDINAL;
-  (* every structure size must be a multiple of this *)
+  (* every structure size must be a multiple of this
+   * This is 8 for all current targets, or could be 0.
+   * OpenBSD/m68k would have it be different, and sometimes but not
+   * always sh and arm. *)
 
   Allow_packed_byte_aligned: BOOLEAN;
   (* Allow the compiler to align scalar types on byte boundaries when packing.
@@ -379,14 +464,42 @@ VAR (*CONST*)
      word boundaries. *)
 
   (* NIL checking *)
-  First_readable_addr: CARDINAL;
+  CONST First_readable_addr: CARDINAL = 4096 (* * Char.size *);
   (* Read or write references to addresses in the range [0..First_readable-1]
      will cause an address faults.  Hence, no explicit NIL checks are needed
-     for dereferencing with offsets in this range. *)
+     for dereferencing with offsets in this range.
 
-  (* Thread stacks *)
-  Jumpbuf_size     : CARDINAL; (* size of a "jmp_buf" *)
+     m3front only checks the size of surrounding accessed type,
+     i.e. the field or array the element is within. This is overly conservative.
 
+     Historically this was off by 8. Historically we tried to use the more
+     target specific page size, like 8K on SPARC (and could be on Alpha
+     and IA64 also). But in the name of removing target-specificity, just 4K always.
+
+     Additional comments on the matter:
+       The effect of First_readable_addr is that (static?) array indices
+       (offsets) lower than it (and positive?) do not have a NULL check on the
+       array base.  Reading NULL + an offset less than First_readable_addr is
+       assumed to access violate the same as reading NULL. It is a nice
+       optimization.  Setting the value too low results in correct but
+       suboptimal code.  However just setting it to a small non-zero number
+       should provide most of the benefit.  Setting the value too high results
+       in missing NULL checks -- a loss of safety enforcement.  Typically
+       setting it to one hardware page is a good estimate, since if NULL is
+       not accessible, nor is any address on the same page. As well, setting
+       it to getpagesize, whatever the granularity of mmap/VirtualAlloc, often
+       larger than a hardware page, is another good guess.
+
+       Historically this value was off by a factor of 8.
+       Historically we used 8K for Sparc. Probably should for IA64 and Alpha.
+       But now we use 4K for all, which is ok.
+
+       As well, it is not about static array references currently.
+       It is about the size of the containing type, even if accessing
+       a small offset.
+    *)
+
+VAR (*CONST*)
   (* floating point values *)
   All_floats_legal : BOOLEAN;
   (* If all bit patterns are "legal" floating point values (i.e. they can

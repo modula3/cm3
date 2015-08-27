@@ -643,7 +643,7 @@ static GTY (()) tree t_int;
 #define t_void void_type_node
 static GTY (()) tree t_set;
 
-static tree m3_alloca;
+static tree alloca_tree;
 
 static const struct { UINT32 type_id; tree* t; } builtin_uids[] = {
   { UID_INTEGER, &t_int },
@@ -1914,7 +1914,7 @@ m3_init_decl_processing (void)
   bits_per_integer_tree = build_int_cst (t_word, BITS_PER_INTEGER);
   bytes_per_integer_tree = build_int_cst (t_word, BITS_PER_INTEGER / BITS_PER_UNIT);
   tree stdcall = get_identifier_with_length (CONSTANT_STRING_AND_LENGTH ("stdcall"));
-  m3_alloca = get_identifier_with_length (CONSTANT_STRING_AND_LENGTH ("m3_alloca"));
+  alloca_tree = get_identifier_with_length (CONSTANT_STRING_AND_LENGTH ("alloca"));
   stdcall_list = build_tree_list (stdcall, NULL);
   t_set = m3_build_pointer_type (t_word);
 
@@ -3076,7 +3076,7 @@ fix_name (PCSTR name, size_t length, UINT32 type_id)
   }
   else if (type_id == NO_UID)
   {
-    buf = (PSTR)alloca (sizet_add(length, 1));
+    buf = (PSTR)alloca (sizet_add (length, 1));
     buf[0] = 'M';
     memcpy (&buf[1], name, length);
     length += 1;
@@ -3153,7 +3153,7 @@ m3_pop_param (tree type)
 static tree
 m3_convert_function_to_builtin (tree p)
 {
-  if (DECL_NAME (p) == m3_alloca)
+  if (DECL_NAME (p) == alloca_tree)
     p = builtin_decl_explicit (BUILT_IN_ALLOCA);
   return p;
 }
@@ -6159,11 +6159,13 @@ incompatible:
 M3CG_HANDLER (WIDECHAR_SIZE)
 { if (bitsize == 16)
     { set_typeid_to_tree (UID_WIDECHAR, t_word_16);
-      dbxout_emit_widechar_N_OPT (16); 
+      if (m3gdb) /* Fails otherwise on Mac OSX 10.10.4 Yosemite, worked on 10.5.8. */
+        dbxout_emit_widechar_N_OPT (16); 
     } 
   else if (bitsize == 32)
     { set_typeid_to_tree (UID_WIDECHAR, t_word_32);
-      dbxout_emit_widechar_N_OPT (32); 
+      if (m3gdb) /* Fails otherwise on Mac OSX 10.10.4 Yosemite, worked on 10.5.8. */
+        dbxout_emit_widechar_N_OPT (32); 
     } 
   else
     fatal_error ("WIDECHAR bitsize (%u) must be 16 or 32");

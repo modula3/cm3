@@ -147,6 +147,14 @@ PROCEDURE InInteger (reader: Pickle.Reader;
   RAISES {Pickle.Error, Rd.Failure, Thread.Alerted};
 (* Unmarshal an integer, checking that its value is in "[min..max]". *)
 
+PROCEDURE InWord (reader: Pickle.Reader;
+                  min            := 0;
+                  max            := -1 ): INTEGER
+  RAISES {Pickle.Error, Rd.Failure, Thread.Alerted};
+(* Unmarshal an unsigned Word.T, checking that its unsigned value is in 
+   "[min..max]".  In case the word size changes, use unsigned extension
+   or overflow check. *)
+
 PROCEDURE InLongint (reader: Pickle.Reader;
                      min            := FIRST(LONGINT);
                      max            := LAST(LONGINT)   ): LONGINT
@@ -184,7 +192,7 @@ PROCEDURE InCardinal (reader: Pickle.Reader; lim: CARDINAL := LAST(CARDINAL)):
 
 PROCEDURE InLongcard (reader: Pickle.Reader; lim: LONGCARD := LAST(LONGCARD)):
   LONGCARD RAISES {Pickle.Error, Rd.Failure, Thread.Alerted};
-(* Unmarshal a cardinal, checking that its value is in "[0..lim]". *)
+(* Unmarshal a long cardinal, checking that its value is in "[0..lim]". *)
 
 END PickleStubs.
 

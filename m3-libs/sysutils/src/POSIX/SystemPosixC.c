@@ -39,6 +39,15 @@
 #endif
 #endif
 
+/* const is extern const in C, but static const in C++,
+ * but gcc gives a warning for the correct portable form "extern const"
+ */
+#if defined(__cplusplus) || !defined(__GNUC__)
+#define EXTERN_CONST extern const
+#else
+#define EXTERN_CONST const
+#endif
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -60,7 +69,7 @@ m3_pid_t System__waitpid(m3_pid_t pid, int* status, int options)
     return waitpid(pid, status, options);
 }
 
-#define X(x) const int System__##x = x;
+#define X(x) EXTERN_CONST int System__##x = x;
 
 X(EINVAL)
 X(ECHILD)

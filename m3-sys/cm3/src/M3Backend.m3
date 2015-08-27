@@ -7,9 +7,11 @@
 MODULE M3Backend;
 
 IMPORT Wr, Thread, M3C;
+IMPORT LLGen; (* Could be a dummy.  See the m3makefile. *) 
 IMPORT M3CG, Msg, Utils, NTObjFile, M3x86, M3ObjFile;
 IMPORT M3CG_BinWr;
-FROM Target IMPORT M3BackendMode_t, BackendIntegrated;
+IMPORT Target; 
+FROM Target IMPORT M3BackendMode_t;
 
 VAR
   obj_file : M3ObjFile.T := NIL;
@@ -23,7 +25,14 @@ PROCEDURE Open (target: Wr.T;  target_name: TEXT;  backend_mode: M3BackendMode_t
     IF backend_mode = M3BackendMode_t.C THEN
       RETURN M3C.New (target);
     END;
-    IF NOT BackendIntegrated[backend_mode] THEN
+    IF backend_mode IN Target.BackendLlvmSet THEN
+      IF (Msg.level >= Msg.Level.Verbose) THEN
+        log_name := target_name & "log";
+        log := Utils.OpenWriter (log_name, fatal := TRUE);
+      END;
+      RETURN LLGen.New (log,backend_mode);
+    END;
+    IF NOT backend_mode IN Target.BackendIntegratedSet THEN 
       RETURN M3CG_BinWr.New (target);
     END;
     <*ASSERT obj_file = NIL *>

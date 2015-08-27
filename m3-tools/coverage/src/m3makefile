@@ -4,6 +4,20 @@
 %
 % Last modified on Thu Feb 23 14:02:51 PST 1995 by kalsow
 
+%
+% This m3makefile is strange but reusing e.g. c_source() or program()
+% or library is problematic, as there is no Modula-3 in this directory at all.
+%
+% For example:
+%
+% c_source("report_coverage")
+% c_source("analyze_coverage")
+% LibdExport ("report_coverage.o")
+% build_standalone()
+% library("coverage")
+%
+% does not work.
+
 if defined ("_all")
   local src = path_of ("report_coverage.c")
   local obj = "report_coverage" & ".o"

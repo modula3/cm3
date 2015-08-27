@@ -22,33 +22,33 @@ TYPE
 
 CONST
   Suffix = ARRAY OSKind OF SMap {
-  (* Unix *)       SMap { "", ".i3", ".ic", ".is", ".io",
-                          ".m3", ".mc", ".ms", ".mo",
-                          ".ig", ".mg", ".c", ".h", ".s",
+  (* Unix *)       SMap { "", ".i3", ".ib", ".ic", ".is", ".io",
+                          ".m3", ".mb", ".mc", ".ms", ".mo",
+                          ".ig", ".mg", ".c", ".h", ".bc", ".s",
                           ".o", ".a", ".a", ".m3x", "", ".mx", ".tmpl" },
-  (* GrumpyUnix *) SMap { "", ".i3", ".ic", ".is", "_i.o",
-                          ".m3", ".mc", ".ms", "_m.o",
-                          ".ig", ".mg", ".c", ".h", ".s",
+  (* GrumpyUnix *) SMap { "", ".i3", ".ib", ".ic", ".is", "_i.o",
+                          ".m3", ".mb", ".mc", ".ms", "_m.o",
+                          ".ig", ".mg", ".c", ".h", ".bc", ".s",
                           ".o", ".a", ".a", ".m3x", "", ".mx", ".tmpl" },
-  (* Win32 *)      SMap { "", ".i3", ".ic", ".is", ".io",
-                          ".m3", ".mc", ".ms", ".mo",
-                          ".ig", ".mg", ".c", ".h", ".s",
+  (* Win32 *)      SMap { "", ".i3", ".ib", ".ic", ".is", ".io",
+                          ".m3", ".mb", ".mc", ".ms", ".mo",
+                          ".ig", ".mg", ".c", ".h", ".bc", ".s",
                           ".obj",".lib",".lib",".m3x",".exe",".mx",".tmpl" }
   };
 
   Prefix = ARRAY OSKind OF SMap {
-  (* Unix *)       SMap { "", "", "", "", "",
-                          "", "", "", "",
+  (* Unix *)       SMap { "", "", "", "", "", "", 
+                          "", "", "", "", "", 
+                          "", "", "", "", "", "",
+                          "", "lib", "lib", "lib", "", "", "" },
+  (* GrumpyUnix *) SMap { "", "", "", "", "", "",
                           "", "", "", "", "",
-                          "", "lib", "lib", "lib", "", "","" },
-  (* GrumpyUnix *) SMap { "", "", "", "", "",
-                          "", "", "", "",
+                          "", "", "", "", "", "",
+                          "", "lib", "lib", "lib", "", "", "" },
+  (* Win32 *)      SMap { "", "", "", "", "", "",
                           "", "", "", "", "",
-                          "", "lib", "lib", "lib", "", "","" },
-  (* Win32 *)      SMap { "", "", "", "", "",
-                          "", "", "", "",
-                          "", "", "", "", "",
-                          "", "", "", "","", "","" }
+                          "", "", "", "", "", "",
+                          "", "", "", "", "", "","" }
   };
 
   Default_pgm = ARRAY OSKind OF TEXT { "a.out", "a.out", "NONAME.EXE" };

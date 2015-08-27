@@ -35,15 +35,16 @@ INTERFACE UnsafeUniRd
   (* With return by value and CHAR assignable to WIDECHAR, only one procedure 
      is needed. *) 
 
-; PROCEDURE FastUnGetWideChar ( Stream : UniRd . T ) : BOOLEAN (* Succeeded. *) 
-  (* Push back the last decoded character read from Stream, pushing it back
+; PROCEDURE FastUnGetCodePoint ( Stream : UniRd . T ) : BOOLEAN (* Succeeded. *)
+  (* Push back the last decoded code point read from Stream, pushing it back
      onto Stream.Source, in encoded form.  This is guaranteed to work only
      if the last operation on Stream was GetWideChar, GetChar, GetWideSub,
-     or GetSub or an UnsafeUniRd.Fast* version thereof.  Result FALSE means 
-     the operation did not happen, because of a violation of this condition.
+     or GetSub, or an UnsafeUniRd.Fast* version thereof.  Result FALSE means 
+     the operation did not happen, because of a violation of this condition,
+     or because somebody has bypassed Stream and directly [un]gotten chars
+     from Stream.Source.
   *) 
   (* PRE: Stream and Stream.Source are locked. *) 
-  (* WARNING! Currently unimplemented.  A NOOP.  Always returns FALSE. *) 
 
 ; PROCEDURE FastGetWideSub 
     ( Stream : UniRd . T ; VAR (*OUT*) ArrWch : ARRAY OF Widechar ) 
@@ -74,11 +75,12 @@ INTERFACE UnsafeUniRd
   : CARDINAL
   RAISES { Failure , Alerted } 
   (* Decode and consume characters from Source(Stream), using Enc(Stream), 
-     storing them into ArrCh, until Source(Stream) is at end-of-file, or ArrCh
-     is filled, or an end-of-line sequence has been read and stored.  
+     storing them into ArrWch, until Source(Stream) is at end-of-file, or 
+     ArrWch is filled, or an end-of-line sequence has been read.  
      Return the actual number of decoded characters stored into ArrWch.  
      Include any end-of-line sequence in the returned count and store it in
-     ArrWch. 
+     ArrWch, except if only one character of a two-character end-of-line 
+     sequence would fit in ArrWch, leave both unstored and unconsumed. 
 
      Consistent with the Unicode standard, an end-of-line consists of any of:
 
@@ -100,16 +102,16 @@ INTERFACE UnsafeUniRd
     ( Stream : UniRd . T ; VAR (*OUT*) ArrCh : ARRAY OF CHAR ) 
   : CARDINAL
   RAISES { Range , Failure , Alerted } 
-  (* Like FastGetWideSubLine, but return the characters in an ARRAY OF CHAR,
-     raising Range({Wch,Loc}) if an otherwise to-be-returned character 
-     is not in CHAR, where Wch is the out-of-range character,
-     and Loc is the number of characters stored.  
+  (* Like FastGetWideSubLine, but return stored characters in an ARRAY OF CHAR.
+     If an otherwise to-be-returned character is not in CHAR, consume but do
+     not store it and raise Range(Wch,N), where Wch is the out-of-range 
+     character, and N is the number of characters stored.  
   *) 
   (* PRE: Stream and Stream.Source are locked. *) 
 
 ; PROCEDURE FastGetText ( Stream : UniRd . T ; Len : CARDINAL ) : TEXT 
   RAISES { Failure , Alerted }
-  (* Decode and consume  characters from Source(Stream), using Enc(Stream), 
+  (* Decode and consume characters from Source(Stream), using Enc(Stream), 
      until Len characters have been decoded or Source(Stream) is at 
      end-of-file.  Return the decoded characters as a TEXT. 
   *) 

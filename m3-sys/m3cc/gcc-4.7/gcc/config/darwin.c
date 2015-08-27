@@ -101,92 +101,6 @@ section * darwin_sections[NUM_DARWIN_SECTIONS];
 /* True if we're setting __attribute__ ((ms_struct)).  */
 int darwin_ms_struct = false;
 
-/* A get_unnamed_section callback used to switch to an ObjC section.
-   DIRECTIVE is as for output_section_asm_op.  */
-
-static void
-output_objc_section_asm_op (const void *directive)
-{
-  static bool been_here = false;
-
-  /* The NeXT ObjC Runtime requires these sections to be present and in 
-     order in the object.  The code below implements this by emitting 
-     a section header for each ObjC section the first time that an ObjC
-     section is requested.  */
-  if (! been_here)
-    {
-      section *saved_in_section = in_section;
-      static const enum darwin_section_enum tomark[] =
-	{
-	  /* written, cold -> hot */
-	  objc_cat_cls_meth_section,
-	  objc_cat_inst_meth_section,
-	  objc_string_object_section,
-	  objc_constant_string_object_section,
-	  objc_selector_refs_section,
-	  objc_selector_fixup_section,
-	  objc_cls_refs_section,
-	  objc_class_section,
-	  objc_meta_class_section,
-	  /* shared, hot -> cold */
-	  objc_cls_meth_section,
-	  objc_inst_meth_section,
-	  objc_protocol_section,
-	  objc_class_names_section,
-	  objc_meth_var_types_section,
-	  objc_meth_var_names_section,
-	  objc_category_section,
-	  objc_class_vars_section,
-	  objc_instance_vars_section,
-	  objc_module_info_section,
-	  objc_symbols_section,
-	};
-      /* ABI=1 */
-      static const enum darwin_section_enum tomarkv1[] =
-	{
-	  objc1_protocol_ext_section,
-	  objc1_class_ext_section,
-	  objc1_prop_list_section
-	} ;
-      /* ABI=2 */
-      static const enum darwin_section_enum tomarkv2[] =
-	{
-	  objc2_message_refs_section,
-	  objc2_classdefs_section,
-	  objc2_metadata_section,
-	  objc2_classrefs_section,
-	  objc2_classlist_section,
-	  objc2_categorylist_section,
-	  objc2_selector_refs_section,
-	  objc2_nonlazy_class_section,
-	  objc2_nonlazy_category_section,
-	  objc2_protocollist_section,
-	  objc2_protocolrefs_section,
-	  objc2_super_classrefs_section,
-	  objc2_image_info_section,
-	  objc2_constant_string_object_section
-	} ;
-      size_t i;
-
-      been_here = true;
-      if (flag_objc_abi < 2)
-	{
-	  for (i = 0; i < ARRAY_SIZE (tomark); i++)
-	    switch_to_section (darwin_sections[tomark[i]]);
-	  if (flag_objc_abi == 1)
-	    for (i = 0; i < ARRAY_SIZE (tomarkv1); i++)
-	      switch_to_section (darwin_sections[tomarkv1[i]]);
-	}
-      else
-	for (i = 0; i < ARRAY_SIZE (tomarkv2); i++)
-	  switch_to_section (darwin_sections[tomarkv2[i]]);
-      /* Make sure we don't get varasm.c out of sync with us.  */
-      switch_to_section (saved_in_section);
-    }
-  output_section_asm_op (directive);
-}
-
-
 /* Private flag applied to disable section-anchors in a particular section.  */
 #define SECTION_NO_ANCHOR SECTION_MACH_DEP
 
@@ -198,9 +112,7 @@ darwin_init_sections (void)
 {
 #define DEF_SECTION(NAME, FLAGS, DIRECTIVE, OBJC)		\
   darwin_sections[NAME] =					\
-    get_unnamed_section (FLAGS, (OBJC				\
-				 ? output_objc_section_asm_op	\
-				 : output_section_asm_op),	\
+    get_unnamed_section (FLAGS, output_section_asm_op,	\
 			 "\t" DIRECTIVE);
 #include "config/darwin-sections.def"
 #undef DEF_SECTION
@@ -706,6 +618,23 @@ machopic_indirect_data_reference (rtx orig, rtx reg)
 rtx
 machopic_indirect_call_target (rtx target)
 {
+/* BUG:
+   Branch islands are broken on 10.10.4.
+   The LLVM assembler, not debugged, sometimes gets confused
+   and the islands point to the wrong symbols, which is
+   catastrophic -- the wrong function gets called.
+   They are needed on <10.5.
+   Here we favor compatibility with 10.10.4, and break 10.4.
+   Ideally we fix the problem elsewhere.
+
+   gcc does not hit this problem because it does not use the LLVM assember.
+   LLVM does not hit the problem because it outputs all stubs before any
+   non-lazy pointers.
+see:
+ https://gcc.gnu.org/bugzilla/show_bug.cgi?id=67183 
+ https://llvm.org/bugs/show_bug.cgi?id=24428 */
+#if 1 /* Changing this to 0 is a workaround, but so is using a different assembler;
+        see the config file. */
   if (! darwin_emit_branch_islands)
     return target;
 
@@ -727,7 +656,7 @@ machopic_indirect_call_target (rtx target)
       MEM_READONLY_P (target) = 1;
       MEM_NOTRAP_P (target) = 1;
     }
-
+#endif
   return target;
 }
 
@@ -995,14 +924,22 @@ machopic_legitimize_pic_address (rtx orig, enum machine_mode mode, rtx reg)
 }
 
 /* Output the stub or non-lazy pointer in *SLOT, if it has been used.
-   DATA is the FILE* for assembly output.  Called from
+   DATA is a machopic_output_indirection_t.  Called from
    htab_traverse.  */
 
-static int
-machopic_output_indirection (void **slot, void *data)
+typedef struct machopic_output_indirection_t
 {
+    FILE* asm_out_file;
+    unsigned which; /* stub or direct data or indirect data */
+} machopic_output_indirection_t;
+
+static int
+machopic_output_indirection (void **slot, void *void_data)
+{
+  machopic_output_indirection_t* data = (machopic_output_indirection_t*)void_data;
   machopic_indirection *p = *((machopic_indirection **) slot);
-  FILE *asm_out_file = (FILE *) data;
+  FILE * const asm_out_file = data->asm_out_file;
+  unsigned const which = data->which;
   rtx symbol;
   const char *sym_name;
   const char *ptr_name;
@@ -1019,6 +956,9 @@ machopic_output_indirection (void **slot, void *data)
       char *sym;
       char *stub;
       tree id;
+
+      if (which != 0)
+          return 1;
 
       id = maybe_get_identifier (sym_name);
       if (id)
@@ -1051,6 +991,9 @@ machopic_output_indirection (void **slot, void *data)
 	   && (machopic_symbol_defined_p (symbol)
 	       || SYMBOL_REF_LOCAL_P (symbol)))
     {
+      if (which != 1)
+          return  1;
+    
       switch_to_section (data_section);
       assemble_align (GET_MODE_ALIGNMENT (Pmode));
       assemble_label (asm_out_file, ptr_name);
@@ -1061,6 +1004,9 @@ machopic_output_indirection (void **slot, void *data)
   else
     {
       rtx init = const0_rtx;
+
+      if (which != 2)
+          return 1;
 
       switch_to_section (darwin_sections[machopic_nl_symbol_ptr_section]);
 
@@ -1115,10 +1061,15 @@ machopic_output_indirection (void **slot, void *data)
 void
 machopic_finish (FILE *asm_out_file)
 {
-  if (machopic_indirections)
+  machopic_output_indirection_t data = { asm_out_file };
+
+  if (!machopic_indirections)
+    return;
+    
+  for (data.which = 0; data.which <= 2; ++data.which)
     htab_traverse_noresize (machopic_indirections,
 			    machopic_output_indirection,
-			    asm_out_file);
+			    &data);
 }
 
 int
@@ -1270,177 +1221,6 @@ machopic_reloc_rw_mask (void)
   return MACHOPIC_INDIRECT ? 3 : 0;
 }
 
-/* We have to deal with ObjC/C++ metadata section placement in the common
-   code, since it will also be called from LTO.
-   
-   Return metadata attributes, if present (searching for ABI=2 first)
-   Return NULL_TREE if no such attributes are found.  */
-
-static tree
-is_objc_metadata (tree decl)
-{
-  if (DECL_P (decl) 
-      && (TREE_CODE (decl) == VAR_DECL || TREE_CODE (decl) == CONST_DECL)
-      && DECL_ATTRIBUTES (decl))
-    {
-      tree meta = lookup_attribute ("OBJC2META", DECL_ATTRIBUTES (decl));
-      if (meta)
-	return meta;
-      meta = lookup_attribute ("OBJC1META", DECL_ATTRIBUTES (decl));
-      if (meta)
-	return meta;
-    }
-  return NULL_TREE;
-}
-
-/* Return the section required for Objective C ABI 2 metadata.  */
-static section *
-darwin_objc2_section (tree decl ATTRIBUTE_UNUSED, tree meta, section * base)
-{
-  const char *p;
-  tree ident = TREE_VALUE (meta);
-  gcc_assert (TREE_CODE (ident) == IDENTIFIER_NODE);
-  p = IDENTIFIER_POINTER (ident);
-
-  /* If we are in LTO, then we don't know the state of flag_next_runtime
-     or flag_objc_abi when the code was generated.  We set these from the
-     meta-data - which is needed to deal with const string constructors.  */
-
-  flag_next_runtime = 1;
-  flag_objc_abi = 2;
-
-  if (base == data_section)
-    base = darwin_sections[objc2_metadata_section];
-
-  /* Most of the OBJC2 META-data end up in the base section, so check it
-     first.  */
-  if      (!strncmp (p, "V2_BASE", 7))
-    return base;
-  else if (!strncmp (p, "V2_STRG", 7))
-    return darwin_sections[cstring_section];
-
-  else if (!strncmp (p, "G2_META", 7) || !strncmp (p, "G2_CLAS", 7))
-    return darwin_sections[objc2_classdefs_section];
-  else if (!strncmp (p, "V2_MREF", 7))
-    return darwin_sections[objc2_message_refs_section];
-  else if (!strncmp (p, "V2_CLRF", 7))
-    return darwin_sections[objc2_classrefs_section];
-  else if (!strncmp (p, "V2_SURF", 7))
-    return darwin_sections[objc2_super_classrefs_section];
-  else if (!strncmp (p, "V2_NLCL", 7))
-    return darwin_sections[objc2_nonlazy_class_section];
-  else if (!strncmp (p, "V2_CLAB", 7))
-    return darwin_sections[objc2_classlist_section];
-  else if (!strncmp (p, "V2_SRFS", 7))
-    return darwin_sections[objc2_selector_refs_section];
-  else if (!strncmp (p, "V2_NLCA", 7))
-    return darwin_sections[objc2_nonlazy_category_section];
-  else if (!strncmp (p, "V2_CALA", 7))
-    return darwin_sections[objc2_categorylist_section];
-
-  else if (!strncmp (p, "V2_PLST", 7))
-    return darwin_sections[objc2_protocollist_section];
-  else if (!strncmp (p, "V2_PRFS", 7))
-    return darwin_sections[objc2_protocolrefs_section];
-
-  else if (!strncmp (p, "V2_INFO", 7))
-    return darwin_sections[objc2_image_info_section];
-
-  else if (!strncmp (p, "V2_EHTY", 7))
-    return darwin_sections[data_coal_section];
-
-  else if (!strncmp (p, "V2_CSTR", 7))
-    return darwin_sections[objc2_constant_string_object_section];
-
-  /* Not recognized, default.  */
-  return base;
-}
-
-/* Return the section required for Objective C ABI 0/1 metadata.  */
-static section *
-darwin_objc1_section (tree decl ATTRIBUTE_UNUSED, tree meta, section * base)
-{
-  const char *p;
-  tree ident = TREE_VALUE (meta);
-  gcc_assert (TREE_CODE (ident) == IDENTIFIER_NODE);
-  p = IDENTIFIER_POINTER (ident);
-
-  /* If we are in LTO, then we don't know the state of flag_next_runtime
-     or flag_objc_abi when the code was generated.  We set these from the
-     meta-data - which is needed to deal with const string constructors.  */
-  flag_next_runtime = 1;
-  if (!global_options_set.x_flag_objc_abi)
-    flag_objc_abi = 1;
-
-  /* String sections first, cos there are lots of strings.  */
-  if      (!strncmp (p, "V1_STRG", 7))
-    return darwin_sections[cstring_section];
-  else if (!strncmp (p, "V1_CLSN", 7))
-    return darwin_sections[objc_class_names_section];
-  else if (!strncmp (p, "V1_METN", 7))
-    return darwin_sections[objc_meth_var_names_section];
-  else if (!strncmp (p, "V1_METT", 7))
-    return darwin_sections[objc_meth_var_types_section];
-
-  else if (!strncmp (p, "V1_CLAS", 7))
-    return darwin_sections[objc_class_section];
-  else if (!strncmp (p, "V1_META", 7))
-    return darwin_sections[objc_meta_class_section];
-  else if (!strncmp (p, "V1_CATG", 7))
-    return darwin_sections[objc_category_section];
-  else if (!strncmp (p, "V1_PROT", 7))
-    return darwin_sections[objc_protocol_section];
-
-  else if (!strncmp (p, "V1_CLCV", 7))
-    return darwin_sections[objc_class_vars_section];
-  else if (!strncmp (p, "V1_CLIV", 7))
-    return darwin_sections[objc_instance_vars_section];
-
-  else if (!strncmp (p, "V1_CLCM", 7))
-    return darwin_sections[objc_cls_meth_section];
-  else if (!strncmp (p, "V1_CLIM", 7))
-    return darwin_sections[objc_inst_meth_section];
-  else if (!strncmp (p, "V1_CACM", 7))
-    return darwin_sections[objc_cat_cls_meth_section];
-  else if (!strncmp (p, "V1_CAIM", 7))
-    return darwin_sections[objc_cat_inst_meth_section];
-  else if (!strncmp (p, "V1_PNSM", 7))
-    return darwin_sections[objc_cat_inst_meth_section];
-  else if (!strncmp (p, "V1_PCLM", 7))
-    return darwin_sections[objc_cat_cls_meth_section];
-
-  else if (!strncmp (p, "V1_CLPR", 7))
-    return darwin_sections[objc_cat_cls_meth_section];
-  else if (!strncmp (p, "V1_CAPR", 7))
-    return darwin_sections[objc_category_section]; /* ??? CHECK me.  */
-
-  else if (!strncmp (p, "V1_PRFS", 7))
-    return darwin_sections[objc_cat_cls_meth_section];
-  else if (!strncmp (p, "V1_CLRF", 7))
-    return darwin_sections[objc_cls_refs_section];
-  else if (!strncmp (p, "V1_SRFS", 7))
-    return darwin_sections[objc_selector_refs_section];
-
-  else if (!strncmp (p, "V1_MODU", 7))
-    return darwin_sections[objc_module_info_section];
-  else if (!strncmp (p, "V1_SYMT", 7))
-    return darwin_sections[objc_symbols_section];
-  else if (!strncmp (p, "V1_INFO", 7))
-    return darwin_sections[objc_image_info_section];
-
-  else if (!strncmp (p, "V1_PLST", 7))
-    return darwin_sections[objc1_prop_list_section];
-  else if (!strncmp (p, "V1_PEXT", 7))
-    return darwin_sections[objc1_protocol_ext_section];
-  else if (!strncmp (p, "V1_CEXT", 7))
-    return darwin_sections[objc1_class_ext_section];
-
-  else if (!strncmp (p, "V2_CSTR", 7))
-    return darwin_sections[objc_constant_string_object_section];
-
-  return base;
-}
-
 section *
 machopic_select_section (tree decl,
 			 int reloc,
@@ -1539,131 +1319,6 @@ machopic_select_section (tree decl,
       gcc_unreachable ();
     }
 
-  /* Darwin weird special cases.  
-     a) OBJC Meta-data. */
-  if (DECL_P (decl) 
-      && (TREE_CODE (decl) == VAR_DECL 
-	  || TREE_CODE (decl) == CONST_DECL)
-      && DECL_ATTRIBUTES (decl))
-    {
-      tree meta = lookup_attribute ("OBJC2META", DECL_ATTRIBUTES (decl));
-      if (meta)
-	return darwin_objc2_section (decl, meta, base_section);
-      meta = lookup_attribute ("OBJC1META", DECL_ATTRIBUTES (decl));
-      if (meta)
-	return darwin_objc1_section (decl, meta, base_section);
-      meta = lookup_attribute ("OBJC1METG", DECL_ATTRIBUTES (decl));
-      if (meta)
-	return base_section; /* GNU runtime is happy with it all in one pot.  */
-    }
-
-  /* b) Constant string objects.  */
-  if (TREE_CODE (decl) == CONSTRUCTOR
-      && TREE_TYPE (decl)
-      && TREE_CODE (TREE_TYPE (decl)) == RECORD_TYPE
-      && TYPE_NAME (TREE_TYPE (decl)))
-    {
-      tree name = TYPE_NAME (TREE_TYPE (decl));
-      if (TREE_CODE (name) == TYPE_DECL)
-        name = DECL_NAME (name);
-
-      /* FIXME: This is unsatisfactory for LTO, since it relies on other
-	 metadata determining the source FE.  */
-      if (!strcmp (IDENTIFIER_POINTER (name), "__builtin_ObjCString"))
-	{
-	  if (flag_next_runtime)
-	    {
-	      if (flag_objc_abi == 2)
-		return darwin_sections[objc2_constant_string_object_section];
-	      else
-		return darwin_sections[objc_constant_string_object_section];
-	    }
-	  else
-	    return darwin_sections[objc_string_object_section];
-	}
-      else if (!strcmp (IDENTIFIER_POINTER (name), "__builtin_CFString"))
-	return darwin_sections[cfstring_constant_object_section];
-      else
-	return base_section;
-    }
-  /* c) legacy meta-data selection.  */
-  else if (TREE_CODE (decl) == VAR_DECL
-	   && DECL_NAME (decl)
-	   && TREE_CODE (DECL_NAME (decl)) == IDENTIFIER_NODE
-	   && IDENTIFIER_POINTER (DECL_NAME (decl))
-	   && flag_next_runtime
-	   && !strncmp (IDENTIFIER_POINTER (DECL_NAME (decl)), "_OBJC_", 6))
-    {
-      const char *name = IDENTIFIER_POINTER (DECL_NAME (decl));
-      static bool warned_objc_46 = false;
-      /* We shall assert that zero-sized objects are an error in ObjC 
-         meta-data.  */
-      gcc_assert (tree_low_cst (DECL_SIZE_UNIT (decl), 1) != 0);
-      
-      /* ??? This mechanism for determining the metadata section is
-	 broken when LTO is in use, since the frontend that generated
-	 the data is not identified.  We will keep the capability for
-	 the short term - in case any non-Objective-C programs are using
-	 it to place data in specified sections.  */
-      if (!warned_objc_46)
-	{
-	  location_t loc = DECL_SOURCE_LOCATION (decl);
-	  warning_at (loc, 0, "the use of _OBJC_-prefixed variable names"
-		      " to select meta-data sections is deprecated at 4.6"
-		      " and will be removed in 4.7");
-	  warned_objc_46 = true;
-	}
-      
-      if (!strncmp (name, "_OBJC_CLASS_METHODS_", 20))
-        return darwin_sections[objc_cls_meth_section];
-      else if (!strncmp (name, "_OBJC_INSTANCE_METHODS_", 23))
-        return darwin_sections[objc_inst_meth_section];
-      else if (!strncmp (name, "_OBJC_CATEGORY_CLASS_METHODS_", 29))
-        return darwin_sections[objc_cat_cls_meth_section];
-      else if (!strncmp (name, "_OBJC_CATEGORY_INSTANCE_METHODS_", 32))
-        return darwin_sections[objc_cat_inst_meth_section];
-      else if (!strncmp (name, "_OBJC_CLASS_VARIABLES_", 22))
-        return darwin_sections[objc_class_vars_section];
-      else if (!strncmp (name, "_OBJC_INSTANCE_VARIABLES_", 25))
-        return darwin_sections[objc_instance_vars_section];
-      else if (!strncmp (name, "_OBJC_CLASS_PROTOCOLS_", 22))
-        return darwin_sections[objc_cat_cls_meth_section];
-      else if (!strncmp (name, "_OBJC_CLASS_NAME_", 17))
-        return darwin_sections[objc_class_names_section];
-      else if (!strncmp (name, "_OBJC_METH_VAR_NAME_", 20))
-        return darwin_sections[objc_meth_var_names_section];
-      else if (!strncmp (name, "_OBJC_METH_VAR_TYPE_", 20))
-        return darwin_sections[objc_meth_var_types_section];
-      else if (!strncmp (name, "_OBJC_CLASS_REFERENCES", 22))
-        return darwin_sections[objc_cls_refs_section];
-      else if (!strncmp (name, "_OBJC_CLASS_", 12))
-        return darwin_sections[objc_class_section];
-      else if (!strncmp (name, "_OBJC_METACLASS_", 16))
-        return darwin_sections[objc_meta_class_section];
-      else if (!strncmp (name, "_OBJC_CATEGORY_", 15))
-        return darwin_sections[objc_category_section];
-      else if (!strncmp (name, "_OBJC_SELECTOR_REFERENCES", 25))
-        return darwin_sections[objc_selector_refs_section];
-      else if (!strncmp (name, "_OBJC_SELECTOR_FIXUP", 20))
-        return darwin_sections[objc_selector_fixup_section];
-      else if (!strncmp (name, "_OBJC_SYMBOLS", 13))
-        return darwin_sections[objc_symbols_section];
-      else if (!strncmp (name, "_OBJC_MODULES", 13))
-        return darwin_sections[objc_module_info_section];
-      else if (!strncmp (name, "_OBJC_IMAGE_INFO", 16))
-        return darwin_sections[objc_image_info_section];
-      else if (!strncmp (name, "_OBJC_PROTOCOL_INSTANCE_METHODS_", 32))
-        return darwin_sections[objc_cat_inst_meth_section];
-      else if (!strncmp (name, "_OBJC_PROTOCOL_CLASS_METHODS_", 29))
-        return darwin_sections[objc_cat_cls_meth_section];
-      else if (!strncmp (name, "_OBJC_PROTOCOL_REFS_", 20))
-        return darwin_sections[objc_cat_cls_meth_section];
-      else if (!strncmp (name, "_OBJC_PROTOCOL_", 15))
-        return darwin_sections[objc_protocol_section];
-      else
-        return base_section;
-    }
-
   return base_section;
 }
 
@@ -1729,7 +1384,6 @@ machopic_asm_out_destructor (rtx symbol, int priority ATTRIBUTE_UNUSED)
 void
 darwin_globalize_label (FILE *stream, const char *name)
 {
-  if (!!strncmp (name, "_OBJC_", 6))
     default_globalize_label (stream, name);
 }
 
@@ -1737,19 +1391,10 @@ darwin_globalize_label (FILE *stream, const char *name)
    anonymous file-scope static name.  It accommodates c++'s mangling of such 
    symbols (in this case the symbols will have form _ZL{d}*_OBJC_* d=digit).  */
    
-int 
+int
 darwin_label_is_anonymous_local_objc_name (const char *name)
 {
-  const unsigned char *p = (const unsigned char *) name;
-  if (*p != '_')
-    return 0;
-  if (p[1] == 'Z' && p[2] == 'L')
-  {
-    p += 3;
-    while (*p >= '0' && *p <= '9')
-      p++;
-  }
-  return (!strncmp ((const char *)p, "_OBJC_", 6));
+  return 0;
 }
 
 static void
@@ -2085,30 +1730,6 @@ darwin_emit_weak_or_comdat (FILE *fp, tree decl, const char *name,
     assemble_zeros (size);
 }
 
-/* Emit a chunk of data for ObjC meta-data that got placed in BSS erroneously.  */
-static void
-darwin_emit_objc_zeroed (FILE *fp, tree decl, const char *name,
-				  unsigned HOST_WIDE_INT size, 
-				  unsigned int align, tree meta)
-{
-  section *ocs = data_section;
-
-  if (TREE_PURPOSE (meta) == get_identifier("OBJC2META"))
-    ocs = darwin_objc2_section (decl, meta, ocs);
-  else
-    ocs = darwin_objc1_section (decl, meta, ocs);
-
-  switch_to_section (ocs);
-
-  /* We shall declare that zero-sized meta-data are not valid (yet).  */
-  gcc_assert (size);
-  fprintf (fp, "\t.align\t%d\n", floor_log2 (align / BITS_PER_UNIT));
-
-  /* ... and we let it deal with outputting one byte of zero for them too.  */ 
-  darwin_asm_declare_object_name (fp, name, decl);
-  assemble_zeros (size);
-}
-
 /* This routine emits 'local' storage:
 
    When Section Anchors are off this routine emits .zerofill commands in 
@@ -2256,14 +1877,6 @@ fprintf (fp, "# albss: %s (%lld,%d) ro %d cst %d stat %d com %d"
 	pub, weak, one, (unsigned long)DECL_INITIAL (decl)); 
 #endif
 
-  /* ObjC metadata can get put in BSS because varasm.c decides it's BSS 
-     before the target has a chance to comment.  */
-  if ((meta = is_objc_metadata (decl)))
-    {
-      darwin_emit_objc_zeroed (fp, decl, name, size, DECL_ALIGN (decl), meta);
-      return;
-    }
-
   /* Check that any initializer is valid.  */
   gcc_assert ((DECL_INITIAL (decl) == NULL) 
 	       || (DECL_INITIAL (decl) == error_mark_node) 
@@ -2384,14 +1997,6 @@ fprintf (fp, "# adcom: %s (%lld,%d) ro %d cst %d stat %d com %d pub %d"
 	TREE_PUBLIC (decl), weak, one, (unsigned long)DECL_INITIAL (decl)); 
 #endif
 
-  /* ObjC metadata can get put in BSS because varasm.c decides it's BSS 
-     before the target has a chance to comment.  */
-  if ((meta = is_objc_metadata (decl)))
-    {
-      darwin_emit_objc_zeroed (fp, decl, name, size, DECL_ALIGN (decl), meta);
-      return;
-    }
-
   /* We shouldn't be messing with this if the decl has a section name.  */
   gcc_assert (DECL_SECTION_NAME (decl) == NULL);
 
@@ -2453,14 +2058,6 @@ fprintf (fp, "# adloc: %s (%lld,%d) ro %d cst %d stat %d one %d pub %d"
 	TREE_CONSTANT (decl), TREE_STATIC (decl), one, TREE_PUBLIC (decl),
 	weak , (unsigned long)DECL_INITIAL (decl)); 
 #endif
-
-  /* ObjC metadata can get put in BSS because varasm.c decides it's BSS 
-     before the target has a chance to comment.  */
-  if ((meta = is_objc_metadata (decl)))
-    {
-      darwin_emit_objc_zeroed (fp, decl, name, size, DECL_ALIGN (decl), meta);
-      return;
-    }
 
   /* We shouldn't be messing with this if the decl has a section name.  */
   gcc_assert (DECL_SECTION_NAME (decl) == NULL);
@@ -2746,28 +2343,6 @@ darwin_override_options (void)
      set sensible defaults for LTO as well, since the section selection stuff
      should check for correctness re. the ABI.  TODO: check and provide the
      flags (runtime & ABI) from the lto wrapper).  */
-
-  /* Unless set, force ABI=2 for NeXT and m64, 0 otherwise.  */
-  if (!global_options_set.x_flag_objc_abi)
-    global_options.x_flag_objc_abi
-	= (!flag_next_runtime)
-		? 0
-		: (TARGET_64BIT ? 2
-				: (generating_for_darwin_version >= 9) ? 1
-								       : 0);
-
-  /* Objective-C family ABI 2 is only valid for next/m64 at present.  */
-  if (global_options_set.x_flag_objc_abi && flag_next_runtime)
-    {
-      if (TARGET_64BIT && global_options.x_flag_objc_abi < 2)
-	error_at (UNKNOWN_LOCATION, "%<-fobjc-abi-version%> >= 2 must be"
-				    " used for %<-m64%> targets with"
-				    " %<-fnext-runtime%>");
-      if (!TARGET_64BIT && global_options.x_flag_objc_abi >= 2)
-	error_at (UNKNOWN_LOCATION, "%<-fobjc-abi-version%> >= 2 is not"
-				    " supported on %<-m32%> targets with"
-				    " %<-fnext-runtime%>");
-    }
 
   /* Don't emit DWARF3/4 unless specifically selected.  This is a 
      workaround for tool bugs.  */

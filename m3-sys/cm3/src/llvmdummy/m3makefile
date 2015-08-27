@@ -1,0 +1,12 @@
+% File m3-sys/cm3/src/llvmdummy/m3makefile. 
+
+% Copyright (C) 2015 Rodney M. Bates 
+% All rights reserved.
+% See the file COPYRIGHT-RMB for a full description.
+
+% A dummy, do-nothing LLGen module, to allow cm3 to be built without
+% requiring that any llvm code be linked in.  
+
+module("LLGen") 
+
+

@@ -9,6 +9,16 @@
 % remove_m3_option ("-gui")
 % m3_option ("-times")
 
+LinkLlvm = "" 
+if LinkLlvm
+  import ("m3llvmgen")     %Modula-3 code that links to llvm infrastructure.
+                           %Should provide an LLGen.  
+else
+  include_dir("llvmdummy") %A dummy LLGen that does not link in any llvm stuff.
+                           %(and doesn't do anything either.   
+end  
+
+
 cp_if(".." & SL & ".." & SL & ".." & SL & "m3-libs" & SL & "m3core" & SL & "src" & SL & "unix" & SL & "Common" & SL & "UnixLink.c", ".")
 cp_if(".." & SL & ".." & SL & ".." & SL & "m3-libs" & SL & "m3core" & SL & "src" & SL & "unix" & SL & "Common" & SL & "m3unix.h", ".")
 cp_if(".." & SL & ".." & SL & ".." & SL & "m3-libs" & SL & "m3core" & SL & "src" & SL & "m3core.h", ".")
@@ -44,6 +54,7 @@ module ("Makefile")
 module ("Msg")
 module ("Utils")
 module ("WebFile")
+
 implementation ("Main")
 
 build_standalone () %-- we don't want to depend on the shared libraries...

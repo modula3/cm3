@@ -10,10 +10,10 @@
 #include <sys/stat.h>
 #include <sys/file.h>
 #include <fcntl.h>
-#if defined (HP300)
 #include <string.h>
-#endif
+#include <stdlib.h>
 #include <stdio.h>
+#include <unistd.h>
 
 #define TRUE 1
 #define FALSE 0
@@ -21,12 +21,11 @@
 FILE *command_file_stack[100];
 long nb_command_files = 0;
 
-extern char * getenv ();
 long verbose_mode = FALSE;
 
 char text[100] = "";
 FILE *code;
-FILE* output_file = stdout;
+FILE* output_file;
 /*****
 long current_line, line, count, p, number;
 char c;
@@ -36,64 +35,56 @@ char name [100];
 char error_message[1000];
 
 
-typedef struct proc {
+typedef struct _proc {
   char *proc_name;
   long  count;
-  struct proc *next;
+  struct _proc *next;
 } proc_struct, *proc;
 
-typedef struct collection {
+typedef struct _collection {
   char *file_name;
   long time_stamp;
   long first_line;
   long data_size;
   long *data_points;
-  struct proc *my_procs;
+  proc  my_procs;
   long nb_procs;
-  struct collection *next;
+  struct _collection *next;
 } collection_struct, *collection;
 
 
 collection collections = NULL;
 
-char * coverage_file = NULL; 
-char * source_file = NULL;
-char * merge_file = NULL;
 char * program_name = NULL;
-char * source_path = NULL;
+const char * source_path = NULL;
 
 long database_loaded = FALSE;
-
-extern char* strtok ();
-extern char* strrchr ();
 
 char *search_components [500] = {NULL};
 long nb_components = 0;
 
-void warning ()
+void warning (void)
 {
   fprintf (stderr, "%s: %s\n", program_name, error_message);
 }
 
-void error ()
+void error (void)
 {
   warning ();
   exit (1);
 }
 
-char *safe_malloc (size)
-    long size;
+char *safe_malloc (size_t size)
 {
   char *p = (char *)malloc (size);
   if (p == NULL) {
     sprintf (error_message,
-             "Cannot malloc %d byte%s", size, (size==1?"":"s"));
+             "Cannot malloc %ld byte%s", size, (size==1?"":"s"));
     error (); }
   return (p);
 }
 
-void augment_source_path (path)
-  char* path;
+void augment_source_path (const char * path)
 {
   char *n = safe_malloc (strlen (path) + 1);
   strcpy (n, path);
@@ -106,9 +97,7 @@ void augment_source_path (path)
 }
 
 
-FILE* locate_and_open (file_name, mode)
-    char* file_name;
-    char* mode;
+FILE* locate_and_open (const char* file_name, const char* mode)
 {
   FILE* f = NULL;
   long i = 0;
@@ -124,8 +113,7 @@ FILE* locate_and_open (file_name, mode)
   return (f);
 }
 
-collection find_collection (name)
-    char *name;
+collection find_collection (const char* name)
 {
   collection c;
 
@@ -136,9 +124,7 @@ collection find_collection (name)
   return (c);
 }
   
-proc find_proc (name, procs)
-    char *name;
-    proc procs;
+proc find_proc (const char* name, proc procs)
 {
   while (procs != NULL && strcmp (name, procs->proc_name) != 0) {
     procs = procs->next; }
@@ -147,8 +133,7 @@ proc find_proc (name, procs)
 }
 
 
-void read_string_tail (file, len)
-long file, len;
+void read_string_tail (long file, long len)
 {
   long x, i = len + sizeof (long) - 1;
   i /= sizeof (long); 
@@ -158,8 +143,7 @@ long file, len;
 }
 
                 
-void read_coverage_data (data_file) 
-    char *data_file;
+void read_coverage_data (const char* data_file) 
 {
   long time_stamp;
   long name_length;
@@ -267,7 +251,6 @@ void read_coverage_data (data_file)
         p->count += proc_count; 
         free (proc_name); }
       else {
-        char * sn;
         p = (proc) safe_malloc (sizeof (proc_struct));
         p->proc_name = proc_name;
         p->next = c->my_procs;
@@ -281,9 +264,9 @@ void read_coverage_data (data_file)
     fprintf (stderr, "... done\n"); }
 }
 
-void ensure_that_database_is_loaded () 
+void ensure_that_database_is_loaded (void)
 {
-  char* coverage_file;
+  const char* coverage_file;
 
   if (! database_loaded) {
     if (verbose_mode) {
@@ -295,8 +278,7 @@ void ensure_that_database_is_loaded ()
 }
 
 
-void write_string_tail (file, len)
-long file, len;
+void write_string_tail (long file, long len)
 {
   long x = 0, i = len + sizeof (long) - 1;
   i /= sizeof (long); 
@@ -306,13 +288,11 @@ long file, len;
 }
 
 
-void write_coverage_data (data_file)
-    char *data_file;
+void write_coverage_data (const char* data_file)
 {
   long f = open (data_file, O_WRONLY | O_CREAT | O_TRUNC, 0644);
   collection c;
   proc p;
-  long *l;
 
   if (verbose_mode) {
     fprintf (stderr, "writing the database to %s ...\n", data_file);
@@ -361,8 +341,7 @@ void write_coverage_data (data_file)
     fprintf (stderr, "... done\n"); }
 }
 
-void show_procs (file_name) 
-    char *file_name;
+void show_procs (const char* file_name) 
 {
   collection c = find_collection (file_name);
   proc p;
@@ -379,14 +358,12 @@ void show_procs (file_name)
     switch (p->count) {
       case 0:  fprintf (output_file, "   no calls"); break;
       case 1:  fprintf (output_file, "    1 call "); break; 
-      default: fprintf (output_file, "%5d calls",  p->count);   break; }
+      default: fprintf (output_file, "%5ld calls",  p->count);   break; }
     fprintf (output_file, " to %s\n", p->proc_name); }
   fprintf (output_file, "\n");
 }
 
-long read_line (f, buff)
-    FILE *f;
-    char *buff;
+long read_line (FILE* f, char* buff)
 {
   long p = 0;
   char c;
@@ -398,12 +375,10 @@ long read_line (f, buff)
   buff [p] = '\0';
   return ((c != EOF) || (p != 0));
 }
-       
-void show_lines (source_file)
-    char *source_file;
+
+void show_lines (char* source_file)
 {
   FILE *code;
-  char *complete_file_name;
   long source_line, data_line;
   char line_buffer [500];
   collection c;
@@ -430,7 +405,7 @@ void show_lines (source_file)
     else {
       if (c->data_points [data_line] >= 0) {
         fprintf (output_file, 
-                 "%6d  %s\n", c->data_points[data_line], line_buffer); }
+                 "%6ld  %s\n", c->data_points[data_line], line_buffer); }
       else {
         fprintf (output_file, "       %s\n", line_buffer); }
       data_line++; }}
@@ -439,9 +414,7 @@ void show_lines (source_file)
   fclose (code);
 }
 
-      
-char* basename (n)
-    char* n;
+char* basename (char* n)
 {
   char* b = strrchr (n, '/');
   if (b == NULL) {
@@ -460,19 +433,19 @@ typedef enum {
 #include "analyze_coverage.h"
   DUMMY,
   UNKNOWN } command_list;
+
 command_list command;
 
 enum { FROM_ARGS, FROM_FILE } command_source = FROM_ARGS;
 
-init_command (c, v)
-    long c; char **v;
+void init_command (long c, char **v)
 {
   command_source = FROM_ARGS;
   argc = c;
   argv = v;
 }
 
-void get_command () 
+void get_command (void) 
 {
   enum { NONE, ONE, LIST } some_args;
 
@@ -551,13 +524,9 @@ void get_command ()
          arg_c++); }
 }
 
-
-
-main (argc, argv)
-    long argc;
-    char ** argv;
+int main (int argc, char** argv)
 {
-  char *s;
+  output_file = stdout;
 
   program_name = basename (argv[0]);
   init_command (argc-1, argv+1);
@@ -570,7 +539,7 @@ main (argc, argv)
 
   while (TRUE) {
    get_command ();
-   switch (command) {
+   switch ((int)command) {
       case QUIT: {
         exit (0);
         break; }
@@ -624,8 +593,8 @@ main (argc, argv)
         FILE* f = fopen (*arg_v, "w"); 
         if (f == NULL) {
           sprintf (error_message,
-                   "cannot open % for output\n%s", *arg_v,
-                   "redirection ignored");
+                   "cannot open %s for output - %s", *arg_v,
+                   "redirection ignored\n");
           warning (); }
         else {
           if (output_file != stdout) {

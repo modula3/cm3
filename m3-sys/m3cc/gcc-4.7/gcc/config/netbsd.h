@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Base configuration file for all NetBSD targets.
    Copyright (C) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
    2007, 2009, 2010, 2011 Free Software Foundation, Inc.
@@ -17,23 +19,6 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with GCC; see the file COPYING3.  If not see
 <http://www.gnu.org/licenses/>.  */
-
-/* TARGET_OS_CPP_BUILTINS() common to all NetBSD targets.  */
-#define NETBSD_OS_CPP_BUILTINS_COMMON()		\
-  do						\
-    {						\
-      builtin_define ("__NetBSD__");		\
-      builtin_define ("__unix__");		\
-      builtin_assert ("system=bsd");		\
-      builtin_assert ("system=unix");		\
-      builtin_assert ("system=NetBSD");		\
-    }						\
-  while (0)
-
-/* CPP_SPEC parts common to all NetBSD targets.  */
-#define NETBSD_CPP_SPEC				\
-  "%{posix:-D_POSIX_SOURCE} \
-   %{pthread:-D_REENTRANT -D_PTHREADS}"
 
 /* NETBSD_NATIVE is defined when gcc is integrated into the NetBSD
    source tree so it can be configured appropriately without using
@@ -85,58 +70,6 @@ along with GCC; see the file COPYING3.  If not see
    FIXME: Could eliminate the duplication here if we were allowed to
    use string concatenation.  */
 
-#ifdef NETBSD_ENABLE_PTHREADS
-#define NETBSD_LIB_SPEC		\
-  "%{pthread:			\
-     %{!p:			\
-       %{!pg:-lpthread}}	\
-     %{p:-lpthread_p}		\
-     %{pg:-lpthread_p}}		\
-   %{posix:			\
-     %{!p:			\
-       %{!pg:-lposix}}		\
-     %{p:-lposix_p}		\
-     %{pg:-lposix_p}}		\
-   %{!shared:			\
-     %{!symbolic:		\
-       %{!p:			\
-	 %{!pg:-lc}}		\
-       %{p:-lc_p}		\
-       %{pg:-lc_p}}}"
-#else
-#define NETBSD_LIB_SPEC		\
-  "%{posix:			\
-     %{!p:			\
-       %{!pg:-lposix}}		\
-     %{p:-lposix_p}		\
-     %{pg:-lposix_p}}		\
-   %{!shared:			\
-     %{!symbolic:		\
-       %{!p:			\
-	 %{!pg:-lc}}		\
-       %{p:-lc_p}		\
-       %{pg:-lc_p}}}"
-#endif
-
-#undef LIB_SPEC
-#define LIB_SPEC NETBSD_LIB_SPEC
-
-/* Provide a LIBGCC_SPEC appropriate for NetBSD.  We also want to exclude
-   libgcc with -symbolic.  */
-
-#ifdef NETBSD_NATIVE
-#define NETBSD_LIBGCC_SPEC	\
-  "%{!symbolic:			\
-     %{!shared:			\
-       %{!p:			\
-	 %{!pg: -lgcc}}}	\
-     %{shared: -lgcc_pic}	\
-     %{p: -lgcc_p}		\
-     %{pg: -lgcc_p}}"
-#else
-#define NETBSD_LIBGCC_SPEC "%{!shared:%{!symbolic: -lgcc}}"
-#endif
-
 #undef LIBGCC_SPEC
 #define LIBGCC_SPEC NETBSD_LIBGCC_SPEC
 
@@ -161,15 +94,3 @@ along with GCC; see the file COPYING3.  If not see
 /* Don't assume anything about the header files.  */
 #undef  NO_IMPLICIT_EXTERN_C
 #define NO_IMPLICIT_EXTERN_C    1
-
-/* Define some types that are the same on all NetBSD platforms,
-   making them agree with <machine/ansi.h>.  */
-
-#undef WCHAR_TYPE
-#define WCHAR_TYPE "int"
-
-#undef WCHAR_TYPE_SIZE
-#define WCHAR_TYPE_SIZE 32
-
-#undef WINT_TYPE
-#define WINT_TYPE "int"

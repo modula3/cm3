@@ -125,7 +125,14 @@ proc version_impl(name) is
                  "1" : "IntegratedAssembly",
                  "2" : "ExternalObject",
                  "3" : "ExternalAssembly",
-                 "4" : "C"}, M3_BACKEND_MODE), "\";", CR)
+                 "4" : "C",
+                 "5" : "IntLlvmObj",
+                 "6" : "IntLlvmAsm",
+                 "7" : "ExtLlvmObj",
+                 "8" : "ExtLlvmAsm",
+                 "9" : "StAloneLlvmObj",
+                 "10": "StAloneLlvmAsm"}
+               , M3_BACKEND_MODE), "\";", CR)
 
         local TargetNaming = ""
         if defined("TARGET_NAMING")

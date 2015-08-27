@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Common VxWorks target definitions for GNU compiler.
    Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2007, 2010
    Free Software Foundation, Inc.
@@ -24,66 +26,6 @@ along with GCC; see the file COPYING3.  If not see
 #undef TARGET_VXWORKS
 #define TARGET_VXWORKS 1
 
-/* In kernel mode, VxWorks provides all the libraries itself, as well as
-   the functionality of startup files, etc.  In RTP mode, it behaves more
-   like a traditional Unix, with more external files.  Most of our specs
-   must be aware of the difference.  */
-
-/* We look for the VxWorks header files using the environment
-   variables that are set in VxWorks to indicate the location of the
-   system header files.  We use -idirafter so that the GCC's own
-   header-file directories (containing <stddef.h>, etc.) come before
-   the VxWorks system header directories.  */
-
-/* Since we provide a default -isystem, expand -isystem on the command
-   line early.  */
-#undef VXWORKS_ADDITIONAL_CPP_SPEC
-#define VXWORKS_ADDITIONAL_CPP_SPEC		\
- "%{!nostdinc:					\
-    %{isystem*} -idirafter			\
-    %{mrtp: %:getenv(WIND_USR /h)		\
-      ;:    %:getenv(WIND_BASE /target/h)}}"
-
-/* The references to __init and __fini will be satisfied by
-   libc_internal.a.  */
-#undef VXWORKS_LIB_SPEC
-#define	VXWORKS_LIB_SPEC						\
-"%{mrtp:%{shared:-u " USER_LABEL_PREFIX "__init -u " USER_LABEL_PREFIX "__fini} \
-	%{!shared:%{non-static:-u " USER_LABEL_PREFIX "_STI__6__rtld -ldl} \
-		  --start-group -lc -lgcc -lc_internal -lnet -ldsi	\
-		  --end-group}}"
-
-/* The no-op spec for "-shared" below is present because otherwise GCC
-   will treat it as an unrecognized option.  */
-#undef VXWORKS_LINK_SPEC
-#define VXWORKS_LINK_SPEC				\
-"%{!mrtp:-r}						\
- %{!shared:						\
-   %{mrtp:-q %{h*}					\
-          %{R*} %{!T*: %(link_start) }			\
-          %(link_target) %(link_os)}}			\
- %{v:-v}						\
- %{shared:-shared}					\
- %{Bstatic:-Bstatic}					\
- %{Bdynamic:-Bdynamic}					\
- %{!Xbind-lazy:-z now}					\
- %{Xbind-now:%{Xbind-lazy:				\
-   %e-Xbind-now and -Xbind-lazy are incompatible}}	\
- %{mrtp:%{!shared:%{!non-static:-static}		\
- 		  %{non-static:--force-dynamic --export-dynamic}}}"
-
-/* For VxWorks, the system provides libc_internal.a.  This is a superset
-   of libgcc.a; we want to use it.  Make sure not to dynamically export
-   any of its symbols, though.  Always look for libgcc.a first so that
-   we get the latest versions of the GNU intrinsics during our builds.  */
-#undef VXWORKS_LIBGCC_SPEC
-#define VXWORKS_LIBGCC_SPEC \
-  "-lgcc %{mrtp:--exclude-libs=libc_internal,libgcc -lc_internal}"
-
-#undef VXWORKS_STARTFILE_SPEC
-#define	VXWORKS_STARTFILE_SPEC "%{mrtp:%{!shared:-l:crt0.o}}"
-#define VXWORKS_ENDFILE_SPEC ""
-
 /* Do VxWorks-specific parts of TARGET_OPTION_OVERRIDE.  */
 #undef VXWORKS_OVERRIDE_OPTIONS
 #define VXWORKS_OVERRIDE_OPTIONS vxworks_override_options ()
@@ -108,12 +50,6 @@ extern void vxworks_asm_out_destructor (rtx symbol, int priority);
 #define VXWORKS_GOTT_BASE "__GOTT_BASE__"
 #undef VXWORKS_GOTT_INDEX
 #define VXWORKS_GOTT_INDEX "__GOTT_INDEX__"
-
-#undef PTRDIFF_TYPE
-#define PTRDIFF_TYPE "int"
-
-#undef SIZE_TYPE
-#define SIZE_TYPE "unsigned int"
 
 /* Both kernels and RTPs have the facilities required by this macro.  */
 #define TARGET_POSIX_IO

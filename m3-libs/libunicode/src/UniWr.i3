@@ -40,14 +40,14 @@ INTERFACE UniWr
 ; PROCEDURE Enc ( Stream : T ) : Encoding 
   (* The encoding used by Stream. *) 
 
+; PROCEDURE PutChar ( Stream : T ; Ch : CHAR ) 
+  RAISES { Failure , Alerted } 
+  (* Encode Ch, using Enc(Stream), and write it to Sink(Stream) *) 
+  
 ; PROCEDURE PutWideChar ( Stream : T ; Wch : Widechar ) 
   RAISES { Range , Failure , Alerted } 
   (* Encode Wch, using Enc(Stream), and write it to Sink(Stream) *) 
   
-; CONST (* PROCEDURE *) PutChar = PutWideChar 
-  (* With Wch passed by value and CHAR assignable to WIDECHAR, only one 
-     procedure is needed. *) 
-
 ; PROCEDURE PutString ( Stream : T ; READONLY ArrCh : ARRAY OF CHAR ) 
   RAISES { Failure , Alerted } 
   (* Encode each character of ArrCh, using Enc(Stream), and write it to 

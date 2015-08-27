@@ -41,11 +41,10 @@ PROCEDURE IsAMD64(): BOOLEAN =
     RETURN TextUtils.StartsWith(System_name, "AMD64_");
   END IsAMD64;
 
-PROCEDURE IsSPARC(): BOOLEAN =
+<*UNUSED*>PROCEDURE IsSPARC(): BOOLEAN =
+CONST startsWith = TextUtils.StartsWith;
   BEGIN
-    RETURN (TextUtils.StartsWith(System_name, "S")
-            AND (TextUtils.StartsWith(System_name, "SPARC")
-              OR TextUtils.StartsWith(System_name, "SOL")));
+    RETURN startsWith(System_name, "SPARC") OR startsWith(System_name, "SOL");
   END IsSPARC;
   
 PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): BOOLEAN =
@@ -120,21 +119,6 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
 
     Aligned_procedures := TRUE;
 
-    (* The effect of First_readable_addr is that (static?) array indices
-       (offsets) lower than it (and positive?) do not have a NULL check on the
-       array base.  Reading NULL + an offset less than First_readable_addr is
-       assumed to access violate the same as reading NULL. It is a nice
-       optimization.  Setting the value too low results in correct but
-       suboptimal code.  However just setting it to a small non-zero number
-       should provide most of the benefit.  Setting the value too high results
-       in missing NULL checks -- a loss of safety enforcement.  Typically
-       setting it to one hardware page is a good estimate, since if NULL is
-       not accessible, nor is any address on the same page. As well, setting
-       it to getpagesize, whatever the granularity of mmap/VirtualAlloc, often
-       larger than a hardware page, is another good guess.  *)
-
-    First_readable_addr := 4096 * Char.size;
-
     (* add the system-specific customization *)
 
     (* 64bit *)
@@ -169,12 +153,6 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
       Little_endian := FALSE;
     END;
 
-    (* SPARC: 8K pages *)
-
-    IF IsSPARC() THEN
-      First_readable_addr := 8192 * Char.size;
-    END;
-    
     (* x86 and AMD64 allow unaligned loads/stores *)
 
     IF IsX86() OR IsAMD64() THEN
@@ -187,138 +165,8 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
         Setjmp := "decc$setjmp";
     END;
 
-    IF System IN SET OF Systems{Systems.PA32_HPUX,
-                                Systems.PA64_HPUX} THEN
-        Structure_size_boundary := 16;
-    END;
-
-    CASE System OF
-    
-    |  Systems.ALPHA_LINUX => Jumpbuf_size := 34 * Address.size;
-    |  Systems.ALPHA_OPENBSD => Jumpbuf_size := 81 * Address.size;
-    |  Systems.ALPHA_OSF => Jumpbuf_size := 84 * Address.size;
-
-    |  Systems.I386_FREEBSD, Systems.FreeBSD4 =>
-                 Jumpbuf_size              := 11 * Address.size;
-
-    |  Systems.AMD64_NETBSD,
-       Systems.AMD64_OPENBSD,
-       Systems.AMD64_FREEBSD =>
-                 Jumpbuf_size              := 12 * Address.size;
-
-    | Systems.ARM_LINUX,
-      Systems.ARMEL_LINUX =>
-                 Jumpbuf_size := 64 * Int64.size; (* 392 bytes = 49 * Int64.size on Raspberry Pi *)
-
-    |  Systems.PA32_HPUX =>
-                 (* 200 bytes with 8 byte alignment *)
-                 Jumpbuf_size              := 50 * Address.size;
-
-    |  Systems.PA64_HPUX =>
-                 (* 640 bytes with 16 byte alignment *)
-                 Jumpbuf_size              := 80 * Address.size;
-
-    |  Systems.MIPS64_OPENBSD,
-       Systems.MIPS64EL_OPENBSD =>
-                 Jumpbuf_size              := 16_53 * Address.size;
-
-    | Systems.I386_INTERIX =>
-
-                (* Visual C++'s 16 plus 2 ints: is sigmask saved, its value. *)
-
-                Jumpbuf_size := 18 * Address.size;
-
-    | Systems.NT386, Systems.I386_NT, Systems.I386_CYGWIN, Systems.I386_MINGW =>
-
-                 (* Cygwin: 13, Visual C++: 16, Interix: 18.
-                    Use 18 for interop.
-                    Cygwin's setjmp.h is wrong by a factor of 4.
-                    Cygwin provides setjmp and _setjmp that resolve the same.
-                    Visual C++ provides only _setjmp.
-                    Visual C++ also has _setjmp3 that the compiler generates
-                    a call to. In fact _setjmp appears to only use 8 ints
-                    and _setjmp3 appears to use more. Consider using _setjmp3.
-                 *)
-                 Jumpbuf_size := 18 * Address.size;
-
-    | Systems.AMD64_NT =>
-                 (* 256 bytes with 16 byte alignment *)
-                 Jumpbuf_size := 32 * Int64.size;
-                 Setjmp := "setjmp";
-
-    | Systems.IA64_FREEBSD, Systems.IA64_HPUX,
-      Systems.IA64_LINUX, Systems.IA64_NETBSD, Systems.IA64_NT,
-      Systems.IA64_OPENBSD, Systems.IA64_VMS =>
-                 (* random guess: 1K *)
-                 Jumpbuf_size     := 128 * Address.size;
-
-    | Systems.SPARC32_SOLARIS, Systems.SOLgnu, Systems.SOLsun =>
-                 (* 76 bytes with 4 byte alignment *)
-                 Jumpbuf_size     := 19 * Address.size;
-
-    | Systems.SPARC32_LINUX =>
-                 Jumpbuf_size              := 16_90 * Char.size;
-
-    | Systems.SPARC64_OPENBSD =>
-                 Jumpbuf_size := 14 * Address.size;
-
-    | Systems.SPARC64_LINUX =>
-                 Jumpbuf_size := 16_280 * Char.size;
-
-    | Systems.SPARC64_SOLARIS =>
-                 (* 96 bytes with 8 byte alignment *)
-                 Jumpbuf_size     := 12 * Address.size;
-
-    |  Systems.I386_SOLARIS =>
-                 (* 40 bytes with 4 byte alignment *)
-                 Jumpbuf_size := 10 * Address.size;
-
-    |  Systems.AMD64_SOLARIS =>
-                 (* 64 bytes with 8 byte alignment *)
-                 Jumpbuf_size := 8 * Address.size;
-
-    |  Systems.I386_LINUX, Systems.LINUXLIBC6 =>
-                 Jumpbuf_size              := 39 * Address.size;
-
-    |  Systems.AMD64_LINUX =>
-                 Jumpbuf_size              := 25 * Address.size;
-
-    |  Systems.I386_DARWIN =>
-                 Jumpbuf_size              := 18 * Address.size;
-
-     | Systems.AMD64_DARWIN =>
-                 Jumpbuf_size              := ((9 * 2) + 3 + 16) * Int32.size;
-
-    |  Systems.ARM_DARWIN =>
-                 Jumpbuf_size              := 28 * Address.size;
-
-    |  Systems.PPC_DARWIN =>
-                 Jumpbuf_size  := 768 * Word8.size;
-
-    | Systems.PPC64_DARWIN =>
-                 Jumpbuf_size  := 872 * Word8.size;
-
-    |  Systems.PPC_LINUX => 
-                 Jumpbuf_size              := 74 * Int64.size;
-                 (* ideal alignment is 16 bytes, but 4 is ok *)
-
-    |  Systems.PPC32_OPENBSD => 
-                 Jumpbuf_size              := 100 * Address.size;
-
-    | Systems.I386_NETBSD =>
-                 Jumpbuf_size              := 14 * Address.size; (* 13? *)
-                 
-    | Systems.ALPHA32_VMS,
-      Systems.ALPHA64_VMS =>
-                 Jumpbuf_size              := 68 * Word64.size;
-
-(*  | Systems.I386_MSDOS =>
-                 Jumpbuf_size              := 172 * Char.size; TBD *)
-
-    | Systems.I386_OPENBSD =>
-                 Jumpbuf_size              := 10 * Address.size;
-
-    ELSE RETURN FALSE;
+    IF System IN SET OF Systems{Systems.AMD64_NT} THEN
+         Setjmp := "setjmp";
     END;
 
     InitCallingConventions (backend_mode,
@@ -362,6 +210,9 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
 
 PROCEDURE InitCallingConventions(backend_mode: M3BackendMode_t;
                                  target_has_calling_conventions: BOOLEAN) =
+  VAR integrated := backend_mode IN BackendIntegratedSet;
+  VAR llvm := backend_mode IN BackendLlvmSet;     
+
   PROCEDURE New(name: TEXT; id: [0..1]): CallingConvention =
     VAR cc := NEW(CallingConvention, name := name);
     BEGIN
@@ -375,18 +226,22 @@ PROCEDURE InitCallingConventions(backend_mode: M3BackendMode_t;
         cc.args_left_to_right := TRUE;
         cc.results_on_left    := TRUE;
         cc.standard_structs   := TRUE;
+      ELSIF llvm THEN 
+        cc.args_left_to_right := TRUE;
+        cc.results_on_left    := FALSE;
+        cc.standard_structs   := TRUE;
+(* CHECK: ^Are these right for llvm? They are same as gcc. *) 
       ELSIF integrated THEN
         cc.args_left_to_right := FALSE;
         cc.results_on_left    := TRUE;
         cc.standard_structs   := FALSE;
-      ELSE
+      ELSE (* gcc-derived back end. *) 
         cc.args_left_to_right := TRUE;
         cc.results_on_left    := FALSE;
         cc.standard_structs   := TRUE;
       END;
       RETURN cc;
     END New;
-  VAR integrated := BackendIntegrated[backend_mode];    
   BEGIN
     (* 0 is __cdecl, 1 is __stdcall. *)
     CCs := ARRAY OF CallingConvention{ New("C",          0),
@@ -398,6 +253,17 @@ PROCEDURE InitCallingConventions(backend_mode: M3BackendMode_t;
                                        New("APIPRIVATE", 1),
                                        New("PASCAL",     1),
                                        New("__stdcall",  1) };
+    (* 0 is __cdecl, 1 is __stdcall. *)
+    CCs := ARRAY OF CallingConvention{ New("__cdecl",    0), (* must be first *)
+                                       New("__stdcall",  1), (* must be second *)
+                                       New("C",          0),
+                                       New("WINAPIV",    0),
+                                       New("WINAPI",     1),
+                                       New("CALLBACK",   1),
+                                       New("APIENTRY",   1),
+                                       New("APIPRIVATE", 1),
+                                       New("PASCAL",     1) };
+
     DefaultCall := CCs[0];
   END InitCallingConventions;
 
@@ -426,13 +292,8 @@ PROCEDURE FindConvention (nm: TEXT): CallingConvention =
   END FindConvention;
 
 PROCEDURE ConventionFromID (id: INTEGER): CallingConvention =
-  VAR cc: CallingConvention;
   BEGIN
-    FOR i := 0 TO LAST (CCs) DO
-      cc := CCs[i];
-      IF (cc # NIL) AND (cc.m3cg_id = id) THEN RETURN cc; END;
-    END;
-    RETURN NIL;
+    RETURN CCs[id];
   END ConventionFromID;
 
 BEGIN

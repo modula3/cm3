@@ -1,0 +1,7 @@
+% Test the correctness of Structure_size_boundary = 16 for PA32_HPUX, PA64_HPUX.
+% I think it is wrong.
+
+m3back_optimize = ""
+implementation("Main")
+build_standalone()
+include ("../../Test.common")

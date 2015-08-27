@@ -1,0 +1,14 @@
+As of 2015-7-18, the output of this test was:
+
+Tests of           Succeeded    Failed
+GetWideChar                8         0
+GetWideSub                18         0
+GetSub                    19         0
+GetWideSubLine            20         0
+GetSubLine                20         0
+GetText                   17         0
+GetLine                   23         0
+UnGetCodePoint           236         0
+Total                    361         0
+All tests passed.
+

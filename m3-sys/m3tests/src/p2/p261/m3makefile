@@ -1,0 +1,8 @@
+% Test if errors in one module stop compilation of others.
+
+m3back_optimize = ""
+module("A")
+module("B")
+implementation("Main")
+build_standalone()
+include ("../../Test.common")

@@ -1,5 +1,4 @@
 import-libs base core front unicode min gui comm caltech-parser
-m3cc core front unicode m3gnudevtool
 m3core base core front unicode min
 libm3 base core front unicode min
 windowsResources core
@@ -15,7 +14,6 @@ m3cggen base core front
 m3staloneback tool
 m3quake base core front unicode
 m3front core front unicode
-cm3 core front unicode
 m3scanner base core
 m3tools base core
 m3cgcat base core front unicode tool
@@ -191,6 +189,9 @@ elego/m3ovr elego
 elego/pkg_base elego
 elego/pkg_vc elego
 elego/pkgvm elego
-
+elego/prjbase elego
 elego/prjm elego
 m3sleep core
+
+cm3 core front unicode
+m3cc core front unicode m3gnudevtool

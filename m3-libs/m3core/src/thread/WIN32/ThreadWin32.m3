@@ -128,8 +128,8 @@ PROCEDURE InitMutex (mutex: Mutex) =
     EnterCriticalSection(ADR(initLock));
     IF mutex.lock # NIL THEN
       (* Someone else won the race. *)
-      DelCriticalSection(lock);
       LeaveCriticalSection(ADR(initLock));
+      DelCriticalSection(lock);
       RETURN;
     END;
     (* We won the race. *)

@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Definitions for PowerPC running FreeBSD using the ELF format
    Copyright (C) 2001, 2003, 2007, 2009, 2010, 2011
    Free Software Foundation, Inc.
@@ -21,44 +23,11 @@
 
 /* Override the defaults, which exist to force the proper definition.  */
 
-#undef	CPP_OS_DEFAULT_SPEC
-#define CPP_OS_DEFAULT_SPEC "%(cpp_os_freebsd)"
-
-#undef	STARTFILE_DEFAULT_SPEC
-#define STARTFILE_DEFAULT_SPEC "%(startfile_freebsd)"
-
-#undef	ENDFILE_DEFAULT_SPEC
-#define ENDFILE_DEFAULT_SPEC "%(endfile_freebsd)"
-
-#undef	LIB_DEFAULT_SPEC
-#define LIB_DEFAULT_SPEC "%(lib_freebsd)"
-
-#undef	LINK_START_DEFAULT_SPEC
-#define LINK_START_DEFAULT_SPEC "%(link_start_freebsd)"
-
-#undef	LINK_OS_DEFAULT_SPEC
-#define	LINK_OS_DEFAULT_SPEC "%(link_os_freebsd)"
-
-/* XXX: This is wrong for many platforms in sysv4.h.
-   We should work on getting that definition fixed.  */
-#undef  LINK_SHLIB_SPEC
-#define LINK_SHLIB_SPEC "%{shared:-shared} %{!shared: %{static:-static}}"
-
-
 /************************[  Target stuff  ]***********************************/
 
 /* Define the actual types of some ANSI-mandated types.  
    Needs to agree with <machine/ansi.h>.  GCC defaults come from c-decl.c,
    c-common.c, and config/<arch>/<arch>.h.  */
-
-#undef  SIZE_TYPE
-#define SIZE_TYPE "unsigned int"
-
-/* rs6000.h gets this wrong for FreeBSD.  We use the GCC defaults instead.  */
-#undef WCHAR_TYPE
-
-#undef  WCHAR_TYPE_SIZE
-#define WCHAR_TYPE_SIZE 32
 
 /* Override rs6000.h definition.  */
 #undef  ASM_APP_ON

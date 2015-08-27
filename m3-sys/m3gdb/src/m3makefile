@@ -76,9 +76,9 @@ M3GDB_MAKE = M3GDB_MAKE & " " & env
 
 if not FileExists ("Makefile")
   if defined("M3GDB_HOST")
-    m3gdb_Run([M3GDB_CONFIG, "../gdb/configure", M3GDB_HOST])
+    m3gdb_Run([M3GDB_CONFIG, "../gdb/configure --disable-werror", M3GDB_HOST])
   else
-    m3gdb_Run([M3GDB_CONFIG, "../gdb/configure"])
+    m3gdb_Run([M3GDB_CONFIG, "../gdb/configure --disable-werror"])
   end
 end
 

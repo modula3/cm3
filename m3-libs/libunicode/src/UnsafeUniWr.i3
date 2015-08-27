@@ -9,14 +9,14 @@ INTERFACE UnsafeUniWr
 ; IMPORT Wr 
 ; FROM Wr IMPORT Failure 
 
+; PROCEDURE FastPutChar ( Stream : UniWr . T ; Ch : CHAR ) 
+  RAISES { Failure , Alerted } 
+  (* Encode Ch, using Enc(Stream), and write it to Sink(Stream) *) 
+  
 ; PROCEDURE FastPutWideChar ( Stream : UniWr . T ; Wch : Widechar ) 
   RAISES { Range , Failure , Alerted } 
   (* Encode Wch, using Enc(Stream), and write it to Sink(Stream) *) 
   
-; CONST (* PROCEDURE *) FastPutChar = FastPutWideChar 
-  (* With Wch passed by value and CHAR assignable to WIDECHAR, only one 
-     procedure is needed. *) 
-
 ; PROCEDURE FastPutString 
     ( Stream : UniWr . T ; READONLY ArrCh : ARRAY OF CHAR ) 
   RAISES { Failure , Alerted } 

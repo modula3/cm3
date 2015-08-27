@@ -66,7 +66,7 @@ T = M3CG_DoNothing.T BRANDED "M3C.T" OBJECT
         Err    : ErrorHandler := DefaultErrorHandler;
         anonymousCounter := -1;
         c      : Wr.T := NIL;
-        debug := 0; (* or 0, 1, 2, 3, 4 *)
+        debug := 1; (* 1-4 *)
         stack  : RefSeq.T := NIL;
         params : TextSeq.T := NIL;
         op_index := 0;
@@ -80,6 +80,10 @@ T = M3CG_DoNothing.T BRANDED "M3C.T" OBJECT
         RTHooks_Raise_id: M3ID.T := 0;
         RTHooks_ReportFault_id: M3ID.T := 0;
         RTHooks_ReportFault_imported_or_declared := FALSE;
+        alloca_id : M3ID.T := 0;
+        setjmp_id : M3ID.T := 0;
+        u_setjmp_id : M3ID.T := 0;
+        longjmp_id : M3ID.T := 0;
 
         (* labels *)
         labels_min := FIRST(Label);
@@ -524,13 +528,39 @@ Cstring.i3 declares strcpy and strcat incorrectly..on purpose.
 "strcpy", "strcat",
 
 (* more incorrect declarations *)
-"signgam", "cabs", "frexp", "modf"
+"signgam", "cabs", "frexp", "modf",
+
+(* brk, sbrk deprecated on MacOS X 10.10.4, ok on 10.5.8. *)
+"brk", "sbrk",
+
+(* symbols internal to the generated code *)
+"M3_HIGH_BITS",
+"M3_LOW_BITS",
+"m3_set_range",
+"m3_set_intersection",
+"m3_set_sym_difference",
+"m3_set_union",
+"WORD_T",
+"CARDINAL",
+"DOTDOTDOT",
+"STRUCT",
+"INT8", "UINT8", "INT16", "UINT16", "INT32", "UINT32", "INT64", "UINT64",
+"m3_eq", "m3_eq_T",
+"m3_ne", "m3_ne_T",
+"m3_gt", "m3_gt_T",
+"m3_ge", "m3_ge_T",
+"m3_lt", "m3_lt_T",
+"m3_le", "m3_le_T",
+"m3_xor", "m3_xor_T",
+"m3_check_range", "m3_check_range_T",
+"GCC_VERSION"
 };
 
 (*
 CONST suppressImports = ARRAY OF TEXT{
 "strcpy", "strcat",
-"signgam", "cabs", "frexp", "modf"
+"signgam", "cabs", "frexp", "modf",
+"brk", "sbrk",
 };
 *)
 
@@ -762,8 +792,12 @@ PROCEDURE pointer_define(type: Pointer_t; self: T) =
 VAR x := self;
 BEGIN
     (* We have recursive types TYPE FOO = UNTRACED REF FOO. Typos actually. *)
-    IF type.points_to_typeid = type.points_to_typeid THEN
+    IF type.points_to_typeid = type.typeid THEN
       print(x, "/*self pointer_define*/typedef void* " & type.text & ";\n");
+      RETURN;
+    END;
+    IF type.points_to_type = NIL THEN
+      print(x, "/*nil pointer_define*/typedef void* " & type.text & ";\n");
       RETURN;
     END;
     type.points_to_type.ForwardDeclare(self);
@@ -1167,8 +1201,8 @@ BEGIN
     IF element_type # NIL THEN
         element_type_text := element_type.text;
     END;
-    IF TRUE OR element_type_text = NIL THEN
-        element_type_text := "char";
+    IF element_type_text = NIL THEN
+        element_type_text := "char/*TODO*/";
     END;
     text := "/*openArray_define*/struct " & type.text & "{\n" & element_type_text;
     FOR i := 1 TO dimensions DO
@@ -1221,7 +1255,7 @@ BEGIN
 
     IF typedef THEN
         (* typedef INT32 T1234; and such
-           TODO don't do this, it makes the code less readoable. *)
+           TODO don't do this, it makes the code less readable. *)
         FOR i := FIRST(typedefs) TO LAST(typedefs) DO
             IF typedefs[i] # NIL AND typedefs[i] # Text_address THEN
                 print(self, "/*Type_Init*/typedef " & cgtypeToText[cgtype] & " " & typedefs[i] & ";\n");
@@ -1284,7 +1318,7 @@ CONST UID_ADDR = 16_08402063; (* ADDRESS *)
 (*VAR UID_RANGE_0_63 := 16_2FA3581D; [0..63] *)
 VAR UID_PROC1 := IntegerToTypeid(16_9C9DE465); (* PROCEDURE (x, y: INTEGER): INTEGER *)
 CONST UID_PROC2 = 16_20AD399F; (* PROCEDURE (x, y: INTEGER): BOOLEAN *)
-CONST UID_PROC3 = 16_3CE4D13B; (* PROCEDURE (x: INTEGER): INTEGER *)
+(*CONST UID_PROC3 = 16_3CE4D13B;*) (* PROCEDURE (x: INTEGER): INTEGER *)
 VAR UID_PROC4 :=  IntegerToTypeid(16_FA03E372); (* PROCEDURE (x, n: INTEGER): INTEGER *)
 CONST UID_PROC5 = 16_509E4C68; (* PROCEDURE (x: INTEGER;  n: [0..31]): INTEGER *)
 VAR UID_PROC6 := IntegerToTypeid(16_DC1B3625); (* PROCEDURE (x: INTEGER;  n: [0..63]): INTEGER *)
@@ -1653,6 +1687,7 @@ TYPE Proc_t = M3CG.Proc OBJECT
     uplevels := FALSE;
     is_exception_handler := FALSE;
     is_RTHooks_Raise := FALSE;
+    omit_prototype := FALSE;
     is_RTException_Raise := FALSE;
     no_return := FALSE;
     exit_proc_skipped := 0;
@@ -1726,23 +1761,45 @@ BEGIN
 END IsNameExceptionHandler;
 
 PROCEDURE Proc_Init(proc: Proc_t; self: T): Proc_t =
-VAR is_common := (proc.parent = NIL
-                  AND (proc.exported = TRUE OR proc.imported = TRUE)
-                  AND proc.level = 0
-                  AND proc.return_type = CGType.Void);
-    is_RTHooks_ReportFault := (is_common
-                               AND proc.name = self.RTHooks_ReportFault_id
-                               AND proc.parameter_count = 2);
-    is_RTHooks_AssertFailed := (is_common
-                                AND proc.name = self.RTHooks_AssertFailed_id
-                                AND proc.parameter_count = 3);
+VAR name := proc.name;
+    parameter_count := proc.parameter_count;
+    is_common := proc.parent = NIL
+                 AND (proc.exported = TRUE OR proc.imported = TRUE)
+                 AND proc.level = 0;
+    is_common_void := is_common AND proc.return_type = CGType.Void;
+    is_RTHooks_ReportFault := is_common_void
+                              AND name = self.RTHooks_ReportFault_id
+                              AND parameter_count = 2;
+    is_RTHooks_AssertFailed := is_common_void
+                               AND name = self.RTHooks_AssertFailed_id
+                               AND parameter_count = 3;
 BEGIN
-    proc.is_RTHooks_Raise := (is_common
-                              AND proc.name = self.RTHooks_Raise_id
-                              AND proc.parameter_count = 4);
-    proc.is_RTException_Raise := (is_common
-                                  AND proc.name = self.RTException_Raise_id
-                                  AND proc.parameter_count = 1);
+    (* Omit a few prototypes that the frontend might have slightly wrong,
+       e.g. alloca(unsigned int vs. unsigned long vs. unsigned long long)
+       vs. not a function.
+       e.g. setjmp(void* ) vs. setjmp(array)
+    *)
+    proc.omit_prototype := is_common
+                           AND parameter_count = 1 (* TODO 2 for longjmp *)
+                           AND (name = self.alloca_id
+                           (* TODO
+                           - add CGType.Jmpbuf
+                           - #include <setjmp.h> if there are any
+                             calls to setjmp/_setjmp/longjmp
+                             or instances of CGType.Jmpbuf
+                           - render CGType.Jmpbuf as "jmp_buf"
+                           - omit setjmp/_setjmp/longjmp prototypes
+                             OR name = self.setjmp_id
+                             OR name = self.u_setjmp_id
+                             OR name = self.longjmp_id
+                             *)
+                             );
+    proc.is_RTHooks_Raise := is_common_void
+                             AND name = self.RTHooks_Raise_id
+                             AND parameter_count = 4;
+    proc.is_RTException_Raise := is_common_void
+                                 AND name = self.RTException_Raise_id
+                                 AND parameter_count = 1;
     IF is_RTHooks_ReportFault THEN
         self.RTHooks_ReportFault_imported_or_declared := TRUE;
     END;
@@ -1751,9 +1808,10 @@ BEGIN
         no_return(self);
     END;
     proc.self := self;
-    proc.name := Proc_FixName(proc.self, proc.name);
-    proc.is_exception_handler := proc.level > 0 AND proc.parameter_count = 1 AND IsNameExceptionHandler(self, NameT(proc.name));
-    proc.parameter_count_without_static_link := proc.parameter_count;
+    proc.name := Proc_FixName(proc.self, name);
+    name := proc.name;
+    proc.is_exception_handler := proc.level > 0 AND parameter_count = 1 AND IsNameExceptionHandler(self, NameT(name));
+    proc.parameter_count_without_static_link := parameter_count;
     proc.add_static_link := proc.level > 0;
     INC(proc.parameter_count, ORD(proc.add_static_link));
     proc.locals := NEW(RefSeq.T).init();
@@ -1785,19 +1843,19 @@ CONST Prefix = ARRAY OF TEXT {
 "#else",
 "#define GCC_VERSION 0",
 "#endif",
-"#if (GCC_VERSION > 0 && GCC_VERSION < 403)",
+"#if GCC_VERSION > 0 && GCC_VERSION < 403",
 (*"#define AVOID_GCC_TYPE_LIMIT_WARNING 1",*)
 (*"#define M3_OP2(fun, op, a, b) fun(a, b)",*)
 (*"#define M3_IF_TRUE(fun, a) fun(a,0)",*)
 (*"#define M3_IF_FALSE(fun, a) fun(a,0)",*)
-(* This is a workaround to prevent warnings from older gcc. *)
-"#define m3_eq_T(T) static WORD_T __stdcall m3_eq_##T(T x, T y){return x==y;}\n" &
+"/* This is a workaround to prevent warnings from older gcc. */",
+"#define m3_eq_T(T) static WORD_T __stdcall m3_eq_##T(T x, T y){return x==y;}",
 "#define m3_ne_T(T) static WORD_T __stdcall m3_ne_##T(T x, T y){return x!=y;}",
 "#define m3_gt_T(T) static WORD_T __stdcall m3_gt_##T(T x, T y){return x>y;}",
 "#define m3_ge_T(T) static WORD_T __stdcall m3_ge_##T(T x, T y){return x>=y;}",
 "#define m3_lt_T(T) static WORD_T __stdcall m3_lt_##T(T x, T y){return x<y;}",
 "#define m3_le_T(T) static WORD_T __stdcall m3_le_##T(T x, T y){return x<=y;}",
-"#define m3_eq(T, x, y) m3_eq_##T(x, y)\n" &
+"#define m3_eq(T, x, y) m3_eq_##T(x, y)",
 "#define m3_ne(T, x, y) m3_ne_##T(x, y)",
 "#define m3_gt(T, x, y) m3_gt_##T(x, y)",
 "#define m3_ge(T, x, y) m3_ge_##T(x, y)",
@@ -1811,8 +1869,8 @@ CONST Prefix = ARRAY OF TEXT {
 (*"#define AVOID_GCC_TYPE_LIMIT_WARNING 0",*)
 (*"#define M3_OP2(fun, op, a, b) a op b",*)
 (*"#define M3_IF_TRUE(fun, a) a",*)
-(*"#define M3_IF_FALSE(fun, a) !a",*)
-
+(*"#define M3_IF_FALSE(fun, a) !(a)",*)
+"/* ideally the few uses are guarded by #if AVOID_GCC_TYPE_LIMIT_WARNING and remove the macros */",
 "#define m3_eq_T(T) /* nothing */",
 "#define m3_ne_T(T) /* nothing */",
 "#define m3_gt_T(T) /* nothing */",
@@ -1847,15 +1905,14 @@ CONST Prefix = ARRAY OF TEXT {
 "#pragma warning(disable:4255) /* () change to (void) */",
 "#pragma warning(disable:4668) /* #if of undefined symbol */",
 "#endif",
-"typedef char* ADDRESS;", (* TODO remove this when we finish strong typing *)
-"typedef char* STRUCT;",  (* TODO remove this when we finish strong typing *)
+(* TODO ideally these are char* for K&R or ideally absent when strong
+   typing and setjmp work done *)
+"typedef char* ADDRESS;",
+"typedef char* STRUCT;",
 "typedef signed char INT8;",
 "typedef unsigned char UINT8;",
-(*"typedef UINT8 CHAR;",*) (* DeclareBuiltinTypes *)
-(*"typedef UINT8 BOOLEAN;",*) (* DeclareBuiltinTypes *)
 "typedef short INT16;",
 "typedef unsigned short UINT16;",
-(*"typedef UINT16 WIDECHAR;",*) (* DeclareBuiltinTypes *)
 "typedef int INT32;",
 "typedef unsigned int UINT32;",
 "#if defined(_MSC_VER) || defined(__DECC) || defined(__DECCXX) || defined(__int64)",
@@ -1870,34 +1927,50 @@ CONST Prefix = ARRAY OF TEXT {
 "#define UINT64_(x) x##ULL",
 "#endif",
 
+(* This chunk can/should be moved to HelperFunctions i.e. memcmp | memmove |
+   memcpy | memset | copy_n | zero | set_compare, esp. to reduce #include
+   <stddef.h>.
+   NOTE: While the vast majority of systems, except NT and VMS, have unsigned
+   long the same size as size_t, size_t could also be unsigned int on 32bit
+   systems or unsigned long long on 64bit systems, and the correct type
+   should be used, unless we have an intermediate function and cast.
+   NOTE: NT and likely VMS are the exception the previous -- 32bit long always.
+*)
 "#if defined(_WIN64)",
-(*"typedef __int64 ptrdiff_t;",*)
-"typedef unsigned __int64 size_t;",
+"typedef UINT64 size_t;",
 "#elif defined(_WIN32)",
-(*"typedef int ptrdiff_t;",*)
 "typedef unsigned size_t;",
-"#elif defined(__APPLE__)",
+"#elif defined(__SIZE_TYPE__)", (* gcc, clang *)
+"typedef __SIZE_TYPE__ size_t;",
+"#elif defined(__APPLE__) /*|| defined(_LP64) || defined(__LP64__)*/",
 "typedef unsigned long size_t;",
-(*"#ifdef __LP64__",*)
-(*"typedef long ptrdiff_t;",*)
-(*"#else",*)
-(*"typedef int ptrdiff_t;",*)
-(*"#endif",*)
 "#else",
-"#include <stddef.h>", (* try to remove this, it is slow -- need size_t, ptrdiff_t *)
+(*"typedef unsigned int size_t;",*)
+"#include <stddef.h>", (* try to remove this, it is slow -- need size_t *)
+"#endif",
+
+(* "#include <setjmp.h>", TODO do not always #include *)
+
+"/* http://c.knowcoding.com/view/23699-portable-alloca.html */",
+"/* Find a good version of alloca. */",
+"#ifndef alloca",
+"# ifdef __GNUC__",
+"#  define alloca __builtin_alloca",
+"# else",
+"#  if defined(__DECC) || defined(__DECCXX)",
+"#   define alloca(x) __ALLOCA(x)",
+"#  else",
+"#   ifdef _MSC_VER",
+"     void * __cdecl _alloca(size_t size);",
+"#    define alloca _alloca",
+"#   endif",
+"#  endif",
+"# endif",
 "#endif",
 
 "typedef float REAL;",
 "typedef double LONGREAL;",
 "typedef /*long*/ double EXTENDED;",
-
-(* handled in DeclareBuiltinTypes *)
-(*"#if defined(__cplusplus) || __STDC__",*)
-(*"typedef void* PVOID;",*)
-(*"#else",*)
-(*"typedef char* PVOID;",*)
-(*"#endif",*)
-(*"typedef PVOID TEXT,MUTEX,ROOT,REFANY,PROC1,PROC2,PROC3,PROC4,PROC5,PROC6,PROC7,PROC8;",*)
 
 "#ifdef __cplusplus",
 "extern \"C\" {",
@@ -1910,29 +1983,19 @@ CONST Prefix = ARRAY OF TEXT {
 "#define __stdcall /* nothing */",
 "#endif",
 
-"#define STRUCT(n) struct_##n##_t",                                             (* TODO prune if not used *)
-"#define STRUCT1(n) typedef struct { volatile UINT8 a[n]; } STRUCT(n);",        (* TODO prune if not used *)
-"#define STRUCT2(n) typedef struct { volatile UINT16 a[(n)/2]; } STRUCT(n);",   (* TODO prune if not used *)
-"#define STRUCT4(n) typedef struct { volatile UINT32 a[(n)/4]; } STRUCT(n);",   (* TODO prune if not used *)
-"#define STRUCT8(n) typedef struct { volatile UINT64 a[(n)/8]; } STRUCT(n);",   (* TODO prune if not used *)
+"#define STRUCT(n) struct_##n##_t", (* TODO prune if not used *)
+(* TODO struct1 and struct2 should not be needed.
+   struct4 and struct8 can go away when we make open arrays and jmpbufs
+   better typed, and then struct can go also *)
+"#define STRUCT1(n) typedef struct { volatile char a[n]; }     STRUCT(n);", (* TODO prune if not used *)
+"#define STRUCT2(n) typedef struct { volatile short a[n/2]; }  STRUCT(n);", (* TODO prune if not used *)
+"#define STRUCT4(n) typedef struct { volatile int a[n/4]; }    STRUCT(n);", (* TODO prune if not used *)
+"#define STRUCT8(n) typedef struct { volatile UINT64 a[n/8]; } STRUCT(n);", (* TODO prune if not used *)
 "#ifdef __cplusplus",
 "#define DOTDOTDOT ...",
 "#else",
 "#define DOTDOTDOT",
 "#endif",
-
-(* WORD_T/INTEGER are always exactly the same size as a pointer.
- * VMS sometimes has 32bit size_t/ptrdiff_t but 64bit pointers. *)
-(*"#if __INITIAL_POINTER_SIZE == 64",*) (* handled in DeclareBuiltinTypes *)
-(*"typedef __int64 INTEGER;",*) (* handled in DeclareBuiltinTypes *)
-(*"typedef unsigned __int64 WORD_T;",*) (* handled in DeclareBuiltinTypes *)
-(*"#else",*) (* handled in DeclareBuiltinTypes *)
-(*"typedef ptrdiff_t INTEGER;",*) (* handled in DeclareBuiltinTypes *)
-(*"typedef size_t WORD_T;",*) (* handled in DeclareBuiltinTypes *)
-(*"#endif",*) (* handled in DeclareBuiltinTypes *)
-
-(*"typedef WORD_T* SET;",*) (* moved to HelperFunctions *)
-(*"#define SET_GRAIN (sizeof(WORD_T)*8)",*) (* moved to HelperFunctions *)
 
 ""};
 
@@ -2216,7 +2279,7 @@ BEGIN
         typeid: TypeUID := 0;
         text: TEXT := NIL;
     END;    
-    VAR addressTypes := ARRAY [0..14] OF AddressType_t {
+    VAR addressTypes := ARRAY [0..13] OF AddressType_t {
         AddressType_t {UID_MUTEX, "MUTEX"},
         AddressType_t {UID_TEXT, "TEXT"},
         AddressType_t {UID_ROOT, "ROOT"},
@@ -2225,7 +2288,7 @@ BEGIN
         AddressType_t {UID_ADDR, Text_address},
         AddressType_t {UID_PROC1, "PROC1"},
         AddressType_t {UID_PROC2, "PROC2"},
-        AddressType_t {UID_PROC3, "PROC3"},
+        (*AddressType_t {UID_PROC3, "PROC3"},*)
         AddressType_t {UID_PROC4, "PROC4"},
         AddressType_t {UID_PROC5, "PROC5"},
         AddressType_t {UID_PROC6, "PROC6"},
@@ -2266,6 +2329,10 @@ BEGIN
     self.comment("M3_TARGET = ", Target.System_name);
     self.comment("M3_WORDSIZE = ", IntToDec(Target.Word.size));
     self.static_link_id := M3ID.Add("_static_link");
+    self.alloca_id := M3ID.Add("alloca");
+    self.setjmp_id := M3ID.Add("setjmp");
+    self.u_setjmp_id := M3ID.Add("_setjmp"); (* "u" is for underscore *)
+    self.longjmp_id := M3ID.Add("longjmp");
     self.RTHooks_ReportFault_id := M3ID.Add("RTHooks__ReportFault");
     self.RTHooks_Raise_id := M3ID.Add("RTHooks__Raise");
     self.RTException_Raise_id := M3ID.Add("RTException__Raise");
@@ -2418,7 +2485,7 @@ BEGIN
 PROCEDURE declare_open_array(self: DeclareTypes_t; typeid, element_typeid: TypeUID; bit_size: BitSize) =
 VAR x := self.self;
 BEGIN
-    IF DebugVerbose(x) THEN
+    IF TRUE OR DebugVerbose(x) THEN
         x.comment("declare_open_array typeid:" & TypeIDToText(typeid)
             & " element_typeid:" & TypeIDToText(element_typeid)
             & " bit_size:" & IntToDec(bit_size));
@@ -2735,7 +2802,7 @@ END declare_subrange;
 PROCEDURE declare_pointer(self: DeclareTypes_t; typeid, target: TypeUID; brand: TEXT; traced: BOOLEAN) =
 VAR x := self.self;
 BEGIN
-    IF DebugVerbose(x) THEN
+    IF typeid = target OR DebugVerbose(x) THEN
         x.comment("declare_pointer typeid:" & TypeIDToText(typeid)
             & " target:" & TypeIDToText(target)
             & " brand:" & TextOrNIL(brand)
@@ -3390,8 +3457,9 @@ CONST setData = ARRAY OF T1{
         & "#define M3_LOW_BITS(a)  ((~(WORD_T)0) >> (SET_GRAIN - (a) - 1))\n"
         & "static void __stdcall m3_set_range(WORD_T b, WORD_T a, WORD_T* s)\n"
         & "{\n"
-        & "  if (a >= b)\n"
-        & "  {\n"
+        & "  if (a > b) {\n"
+        & "    /* no bits to set */\n"
+        & "  } else {\n"
         & "    WORD_T i = 0;\n"
         & "    WORD_T const a_word = a / SET_GRAIN;\n"
         & "    WORD_T const b_word = b / SET_GRAIN;\n"
@@ -3535,6 +3603,7 @@ BEGIN
     HelperFunctions_helper_with_type_and_array(self, op, type, types, ARRAY OF TEXT{first});
 END HelperFunctions_helper_with_type;
 
+(* TODO give up and #include <string.h>? *)
 PROCEDURE HelperFunctions_memset(self: HelperFunctions_t) =
 CONST text = "void* __cdecl memset(void*, int, size_t); /* string.h */";
 BEGIN
@@ -4250,6 +4319,9 @@ VAR params := proc.params;
     define_kr := NOT ansi AND kind = FunctionPrototype_t.Define;
     kr_part2 := "";
 BEGIN
+    IF proc.omit_prototype THEN
+      RETURN "";
+    END;
     IF NUMBER (params^) = 0 THEN
         text := text & "(void)";
     ELSIF NOT ansi AND NOT define_kr THEN
@@ -5510,7 +5582,6 @@ VAR from_type     := from.cgtype;
     to_unsigned   := cgtypeIsUnsignedInt[to_type];
 BEGIN
     RETURN FALSE;
-
     <* ASSERT NOT (from_signed AND from_unsigned) *>
     <* ASSERT NOT (to_signed AND to_unsigned) *>
     <* ASSERT to_signed OR to_unsigned *>
@@ -5905,7 +5976,10 @@ END shift_left;
 PROCEDURE shift_right(self: T; type: IType) =
 (* s1.type := Word.Shift  (s1.type, -s0.type); pop *)
 BEGIN
-    <* ASSERT cgtypeIsUnsignedInt[type] *>
+    (* ASSERT cgtypeIsUnsignedInt[type]
+    shift is unsigned, casts are applied on input and output
+    int i; i << n; => (int) (((unsigned)i) << n)
+    *)
     shift_left_or_right(self, type, "shift_right", ">>");
 END shift_right;
 

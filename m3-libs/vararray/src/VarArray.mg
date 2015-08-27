@@ -891,10 +891,10 @@ GENERIC MODULE VarArray ( Ranges )
      Abstract view: 
        1) Touch [Lo..Hi]. 
        2) Call back Callback, passing Lo and SUBARRAY(Array,Lo,N)
+       The range is given in the style of SUBARRAY.   
      Concrete view: Expand allocation if needed to cover [Lo..Hi]. 
      Performance: If allocation occurs, O(NUMBER((new)touched(Array)))
        Otherwise, O(1).
-     The range is given in the style of SUBARRAY.   
   *) 
 
   = VAR LLoI : INTEGER 
@@ -1007,11 +1007,11 @@ GENERIC MODULE VarArray ( Ranges )
        Like a FOR statement, if By=0, this will loop forever.  
        Unlike a FOR statement, this will work right up against the lower 
        and upper bounds of SsTyp, both as starting and ending subscript.   
-     Concrete view: Expand allocation if needed to cover R. 
+       The range is given in the style of a FOR-loop.   
+     Concrete view: (Make no change of allocation.) 
+     Performance: O(NUMBER(R)). 
        More efficient than a client-written loop making repeated
        calls on other single-element-accessing procedures in this interface.
-     Performance: O(NUMBER(R)). 
-     The range is given in the style of a FOR-loop.   
   *)  
 
   = VAR LLoI , LHiI : INTEGER 
@@ -1072,11 +1072,11 @@ GENERIC MODULE VarArray ( Ranges )
        Like a FOR statement, if By = 0, this will loop forever.  
        Unlike a FOR statement, this will work right up against the lower 
        and upper bounds of SsTyp, both as starting and ending subscript.   
+       The range is given in the style of a FOR-loop.   
      Concrete view: Expand allocation if needed to cover R. 
        More efficient than a client-written loop making repeated
        calls on other single-element-accessing procedures in this interface.
      Performance: O(NUMBER(R)). 
-     The range is given in the style of a FOR-loop.   
   *)  
 
   = VAR LFromI , LToI : INTEGER 

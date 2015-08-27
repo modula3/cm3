@@ -26,7 +26,7 @@ if USE_C_BACKEND_VIA_M3CGCAT
 M3_BACKEND_MODE = "ExternalObject"
 
 proc m3_backend(source, object, optimize, debug) is
-    ret_code = try_exec("@m3cgcat", "-in-binary:" & source, "-out-c:" & source & ".c")
+    ret_code = try_exec("m3cgcat", "-in-binary:" & source, "-out-c:" & source & ".c")
     if not equal(ret_code, 0)
         return ret_code
     end
@@ -51,7 +51,8 @@ end
 if equal(M3_BACKEND_MODE, "IntegratedC")
         or equal(M3_BACKEND_MODE, "C")
         or USE_C_BACKEND_VIA_M3CGCAT
-    readonly BUILD_DIR_C = "c"
+    %readonly BUILD_DIR_C = "c"
+    readonly BUILD_DIR_C = ""
 else
     readonly BUILD_DIR_C = ""
 end
@@ -620,6 +621,20 @@ end
 
 if not defined("configure_assembler")
   proc configure_assembler() is
+  end
+end
+
+% TODO remove duplication (with Darwin.common, uses this earlier)
+
+proc configure_c_compiler_common() is
+
+  % Add these flags if they do not indicate errors.
+
+  foreach a in [ "fno-reorder-blocks",
+                 "funwind-tables" ]
+    if not equal(try_exec("@" & SYSTEM_CC & " -" & a & " -c -x c /dev/null -o /dev/null 2>&1 | fgrep " & a & " >/dev/null"), 0)
+        SYSTEM_CC = SYSTEM_CC & " -" & a
+    end
   end
 end
 

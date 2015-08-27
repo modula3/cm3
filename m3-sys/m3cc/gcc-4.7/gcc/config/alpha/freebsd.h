@@ -1,3 +1,5 @@
+/* Modula-3: modified */
+
 /* Definitions for DEC Alpha/AXP running FreeBSD using the ELF format
    Copyright (C) 2000, 2002, 2004, 2005, 2007, 2010, 2011
    Free Software Foundation, Inc.
@@ -20,39 +22,7 @@ along with GCC; see the file COPYING3.  If not see
 <http://www.gnu.org/licenses/>.  */
 
 
-#undef  EXTRA_SPECS
-#define EXTRA_SPECS \
-  { "fbsd_dynamic_linker", FBSD_DYNAMIC_LINKER }
-
-/* Provide a CPP_SPEC appropriate for FreeBSD/alpha -- dealing with
-   the GCC option `-posix'.  */
-
-#undef  CPP_SPEC
-#define CPP_SPEC "%{posix:-D_POSIX_SOURCE}"
-
-#define LINK_SPEC "%{G*} %{relax:-relax}				\
-  %{p:%nconsider using '-pg' instead of '-p' with gprof(1)}		\
-  %{assert*} %{R*} %{rpath*} %{defsym*}					\
-  %{shared:-Bshareable %{h*} %{soname*}}				\
-  %{!shared:								\
-    %{!static:								\
-      %{rdynamic:-export-dynamic}					\
-      -dynamic-linker %(fbsd_dynamic_linker) }	\
-    %{static:-Bstatic}}							\
-  %{symbolic:-Bsymbolic}"
-
-
 /************************[  Target stuff  ]***********************************/
-
-/* Define the actual types of some ANSI-mandated types.  
-   Needs to agree with <machine/ansi.h>.  GCC defaults come from c-decl.c,
-   c-common.c, and config/<arch>/<arch>.h.  */
-
-/* alpha.h gets this wrong for FreeBSD.  We use the GCC defaults instead.  */
-#undef WCHAR_TYPE
-
-#undef  WCHAR_TYPE_SIZE
-#define WCHAR_TYPE_SIZE	32
 
 #define TARGET_ELF	1
 

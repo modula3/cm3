@@ -12,14 +12,36 @@ UNSAFE INTERFACE TextLiteral;
 IMPORT RTHooks, TextClass;
 
 CONST
- (* DIV BITSIZE should not be here! *)
- (* MaxBytes = LAST (INTEGER) DIV BITSIZE (Byte) - 7 - 8 * ORD(BITSIZE(INTEGER) = 64); *)
- MaxBytes = 16_7FFFFFFF DIV BITSIZE (Byte) - 7; 
-    (* - 8 * ORD(BITSIZE(INTEGER) = 64) *) 
-    (* Do not adjust this for INTEGER size.  It makes T have different 
-       fingerprints on 32- and 64-bit machines, which undermines pickling/
-       unpickling of these values.    
-    *) 
+(* We desire no limit here:
+    MaxBytes = LAST (INTEGER);
+
+   But cm3 measures sizes in bits, and the size must fit in an INTEGER:
+    MaxBytes = LAST(INTEGER) DIV BITSIZE(Byte).
+
+   And the overall type size, in bits, must fit in an INTEGER:
+     MaxBytes = LAST(INTEGER) DIV BITSIZE(Byte) - something
+
+   And we want the 32bit host to be able to target 64bit, so
+    sizes must fit in 32bits for now:
+     MaxBytes = LAST(32bit integer) DIV BITSIZE(Byte) - 7 - 8 * ORD(BITSIZE(INTEGER) = 64)
+     or 2 * BYTESIZE(INTEGER) possibly - 1
+
+   And we want the type to be more similar for 32bit/64bit pickle interchange:
+   Really?
+     MaxBytes = LAST(32bit integer) DIV BITSIZE(Byte) - 15
+     
+    Or we desire a syntax to not state a maximum at all.
+    The code is unsafe either way.
+
+ NOTE: This is the maximum size of a literal, not of a TEXT.
+ TODO: frontend should use LONGINT or TInt, and possibly usually measure in
+ bytes. Pickles should better tolerate 32bit/64bit differences.
+    MaxBytes = LAST (INTEGER) - BYTESIZE (INTEGER) * 2;
+
+    If the value is too larger, we get:
+    ../src/text/TextLiteral.i3", line 46: CM3 restriction: record or object type is too large
+*)
+    MaxBytes = 16_7FFFFFFF DIV BITSIZE (Byte) - 15; (* 268,435,440 almost 256MB *)
 
 TYPE
   T = RTHooks.TextLiteral;
@@ -42,4 +64,3 @@ TYPE
   Byte = [0..255];
 
 END TextLiteral.
-

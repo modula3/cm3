@@ -36,7 +36,7 @@ TYPE (* Except, ExceptElse, Finally *)
     class     : INTEGER;    (* ORD(ScopeKind) *)
     handles   : ExceptionList;    (* NIL-terminated list of exceptions handled *)
     info      : RT0.RaiseActivation;   (* current exception being dispatched *)
-    jmpbuf    : ARRAY [0..16_FFFF] OF LONGREAL; (* gigantic, size is not used *)
+    jmpbuf    : ADDRESS; (* allocated with alloca *)
   END;
 
 TYPE (* FinallyProc *)
@@ -172,7 +172,8 @@ PROCEDURE InvokeHandler (f: Frame;  READONLY a: RT0.RaiseActivation) RAISES ANY 
     END;
     RTThread.SetCurrentHandlers (f.next); (* cut to the new handler *)
     p.info := a;                         (* copy the exception to the new frame *)
-    Csetjmp.ulongjmp (ADR(p.jmpbuf), 1); (* and jump... *)
+    <* ASSERT p.jmpbuf # NIL *>
+    Csetjmp.ulongjmp (p.jmpbuf, 1);      (* and jump... *)
     RAISE OUCH;
   END InvokeHandler;
 

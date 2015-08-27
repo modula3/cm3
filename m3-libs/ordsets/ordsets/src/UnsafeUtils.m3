@@ -11,6 +11,7 @@ UNSAFE MODULE UnsafeUtils
 (* From m3core: *) 
 ; IMPORT RTHeapRep 
 ; IMPORT RTType 
+; IMPORT Word 
  
 (* VISIBLE: *) 
 ; PROCEDURE IntOfRefany ( Ref : REFANY ) : INTEGER 
@@ -32,6 +33,14 @@ UNSAFE MODULE UnsafeUtils
   = BEGIN (* RefanyOfInt *) 
       RETURN LOOPHOLE ( I , NULL ) 
     END NULLOfInt   
+
+(* VISIBLE: *) 
+; PROCEDURE PtrTo8CharArray ( W : Word . T ) 
+  : UNTRACED REF ARRAY [ 0 .. 7 ] OF CHAR 
+
+  = BEGIN 
+      RETURN ( LOOPHOLE ( ADR ( W ) , UNTRACED REF ARRAY [ 0 .. 7 ] OF CHAR ) )
+    END PtrTo8CharArray 
 
 (* VISIBLE: *) 
 ; PROCEDURE ObjectSize ( TC : TypeCodeTyp ) : INTEGER 

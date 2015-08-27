@@ -30,7 +30,7 @@ GENERIC INTERFACE VarArray ( Subscript , Element , Ranges )
    and copying.  At any one time, there is only one allocated array in the 
    implementation.  A client has some control over allocation parameters.   
 
-   All operations that accept a T as parameter require it to be non-NIL
+   All operations that accept a T as parameter require it to be a non-NIL
    value that was obtained as a result from a previous operation herein.
    
    All operations that mutate a T do so in place, i.e., if there are any
@@ -256,10 +256,10 @@ GENERIC INTERFACE VarArray ( Subscript , Element , Ranges )
      Abstract view: 
        1) Touch [Lo..Hi]. 
        2) Call back Callback, passing Lo and SUBARRAY(Array,Lo,N)
+       The range is given in the style of SUBARRAY.   
      Concrete view: Expand allocation if needed to cover [Lo..Hi]. 
      Performance: If allocation occurs, O(NUMBER((new)touched(Array)))
        Otherwise, O(1).
-     The range is given in the style of SUBARRAY.   
   *) 
 
 ; PROCEDURE ForAllTouchedInRange
@@ -280,11 +280,11 @@ GENERIC INTERFACE VarArray ( Subscript , Element , Ranges )
        Like a FOR statement, if By=0, this will loop forever.  
        Unlike a FOR statement, this will work right up against the lower 
        and upper bounds of SsTyp, both as starting and ending subscript.   
-     Concrete view: Expand allocation if needed to cover R. 
+       The range is given in the style of a FOR-loop.   
+     Concrete view: (Make no change of allocation.) 
+     Performance: O(NUMBER(R)). 
        More efficient than a client-written loop making repeated
        calls on other single-element-accessing procedures in this interface.
-     Performance: O(NUMBER(R)). 
-     The range is given in the style of a FOR-loop.   
   *)  
 
 ; PROCEDURE ForAllInRange
@@ -305,11 +305,11 @@ GENERIC INTERFACE VarArray ( Subscript , Element , Ranges )
        Like a FOR statement, if By=0, this will loop forever.  
        Unlike a FOR statement, this will work right up against the lower 
        and upper bounds of SsTyp, both as starting and ending subscript.   
+       The range is given in the style of a FOR-loop.   
      Concrete view: Expand allocation if needed to cover R. 
        More efficient than a client-written loop making repeated
        calls on other single-element-accessing procedures in this interface.
      Performance: O(NUMBER(R)). 
-     The range is given in the style of a FOR-loop.   
   *)  
 
 ; PROCEDURE Project ( Array : T ; Range : RangeTyp ) 
