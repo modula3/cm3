@@ -1289,8 +1289,8 @@ PROCEDURE CompileM3llvm (s: State; u: M3Unit.T) =
       | Mode_t.StAloneLlvmAsm =>
           tmpS := AsmNameForUnit (u);
           IF NOT keep THEN Utils.NoteTempFile (tmpS) END;
-          IF  RunM3Llvm (s, UnitPath (u), tmpS, u.debug, u.optimize)
-              AND RunAsm (s, tmpS, u.object) THEN
+          IF RunM3Llvm (s, UnitPath (u), tmpS, u.debug, u.optimize)
+             AND RunAsm (s, tmpS, u.object) THEN
           END;
           IF NOT keep THEN Utils.Remove (tmpS) END;
           Utils.NoteNewFile (u.object);
@@ -1422,7 +1422,7 @@ END;
 PROCEDURE Temps_Add (VAR temps: Temps_t; s: State; name: TEXT) =
 BEGIN
   IF name = NIL OR s.keep_files THEN RETURN END;
-  <* ASSERT temps.count < LAST(temps.names) *>
+  <* ASSERT temps.count <= LAST(temps.names) *>
   temps.names[temps.count] := name;
   INC(temps.count);
  
@@ -1452,6 +1452,7 @@ PROCEDURE PushOneM3 (s: State;  u: M3Unit.T): BOOLEAN =
 (* PRE: u.kind IN {UK.I3, UK.M3} *) 
   TYPE Mode_t = M3BackendMode_t;
   VAR
+    Success : BOOLEAN := TRUE; (* Until otherwise. *) 
     temps := Temps_t { };
 
     (* Output file to be produced by cm3 executable -- "integrated" codegen. *) 
@@ -1520,12 +1521,12 @@ PROCEDURE PushOneM3 (s: State;  u: M3Unit.T): BOOLEAN =
         cm3OutName := asmName;
         DoRunAsm := NOT boot; 
     | Mode_t.ExternalObject =>
-        codeGenOutName := u.object; (* not used *)
+        codeGenOutName := u.object; 
         DoRunM3cc := TRUE; 
         (* boot has no effect on this mode. *)
     | Mode_t.ExternalAssembly => 
         asmName := AsmNameForUnit (u);
-        codeGenOutName := asmName; (* not used *) 
+        codeGenOutName := asmName; 
         DoRunM3cc := TRUE; 
         DoRunAsm := NOT boot; 
     | Mode_t.C => 
@@ -1592,28 +1593,29 @@ PROCEDURE PushOneM3 (s: State;  u: M3Unit.T): BOOLEAN =
       Temps_Add (temps, s, CCodeName);
     END;
 
-    IF NOT RunM3Front (s, u, cm3OutName) THEN
-      IF NOT keep THEN
-        Utils.Remove (cm3OutName);
-      END;
-      Msg.Error (NIL, "failed compiling: ", UnitPath (u));
-    ELSE
+    EVAL RunM3Front (s, u, cm3OutName);
+    IF s.compile_failed THEN 
+      Msg.Error (NIL, "m3front failed compiling: ", UnitPath (u));
+    ELSE (* Front succeeded. *) 
       IF s.delayBackend THEN (* parallel/delayed version of back-end code *)
         s.machine.record(TRUE);
       END;
       TRY
-        IF DoRunM3cc THEN
-          EVAL RunM3Back (s, cm3IRName, asmName, u.debug, u.optimize);
-        ELSIF DoRunM3llvm THEN
+        IF NOT s.compile_failed AND DoRunM3cc THEN
+          EVAL RunM3Back (s, cm3IRName, codeGenOutName, u.debug, u.optimize);
+        END; 
+        IF NOT s.compile_failed AND DoRunM3llvm THEN
           EVAL RunM3Llvm (s, cm3IRName, llvmIRName, u.debug, u.optimize);
         END; 
-        IF DoRunLlc THEN
+        IF NOT s.compile_failed  AND DoRunLlc THEN
           EVAL RunLlcBack 
-                 (s, llvmIRName, codeGenOutName, u.debug, u.optimize, Asm := DoWriteAsm);
-        ELSIF DoRunC THEN 
+                 (s, llvmIRName, codeGenOutName, u.debug, u.optimize, 
+                  Asm := DoWriteAsm);
+        END; 
+        IF NOT s.compile_failed AND DoRunC THEN 
           RunCC (s, CCodeName, u.object, TRUE, FALSE, s.include_path_empty);
         END;
-        IF DoRunAsm THEN 
+        IF NOT s.compile_failed AND DoRunAsm THEN 
           EVAL RunAsm (s, asmName, u.object);
         END;
       FINALLY
@@ -1965,7 +1967,7 @@ PROCEDURE RunM3Front (s: State;  u: M3Unit.T;  object: TEXT)
 
     IF NOT ok THEN
       s.compile_failed := TRUE;
-      IF (NOT s.keep_files) THEN Utils.Remove (object); END;
+      IF NOT s.keep_files THEN Utils.Remove (object); END;
     END;
 
     ETimer.Pop ();
@@ -2323,13 +2325,13 @@ PROCEDURE RunCC (s: State;  source, object: TEXT;  debug, optimize: BOOLEAN;
     IF CallProc (s, s.c_compiler) THEN
       s.compile_failed := TRUE;
       Msg.Error (NIL, "C compiler failed compiling: ", source);
-      Utils.Remove (object);
+      IF NOT s.keep_files THEN Utils.Remove (object); END; 
     END;
     ETimer.Pop ();
   END RunCC;
 
 PROCEDURE RunM3Back (s: State;  source, object: TEXT;
-                     debug, optimize: BOOLEAN): BOOLEAN =
+                     debug, optimize: BOOLEAN): BOOLEAN (* Success. *) =
   VAR failed: BOOLEAN;
   BEGIN
     ETimer.Push (M3Timers.pass_6);
@@ -2342,14 +2344,14 @@ PROCEDURE RunM3Back (s: State;  source, object: TEXT;
     IF failed THEN
       s.compile_failed := TRUE;
       Msg.Error (NIL, "m3cc (aka cm3cg) failed compiling: ", source);
-      Utils.Remove (object);
+      IF NOT s.keep_files THEN Utils.Remove (object); END;
     END;
     ETimer.Pop ();
     RETURN NOT failed;
   END RunM3Back;
 
 PROCEDURE RunM3Llvm (s: State;  source, object: TEXT;
-                     debug, optimize: BOOLEAN): BOOLEAN =
+                     debug, optimize: BOOLEAN): BOOLEAN (* Success. *) =
   VAR failed: BOOLEAN;
   BEGIN
     ETimer.Push (M3Timers.pass_6);
@@ -2362,14 +2364,15 @@ PROCEDURE RunM3Llvm (s: State;  source, object: TEXT;
     IF failed THEN
       s.compile_failed := TRUE;
       Msg.Error (NIL, "m3llvm failed compiling: ", source);
-      Utils.Remove (object);
+      IF NOT s.keep_files THEN Utils.Remove (object); END;
     END;
     ETimer.Pop ();
     RETURN NOT failed;
   END RunM3Llvm;
 
-PROCEDURE RunLlcBack (s: State;  source, object: TEXT;
-                     debug, optimize: BOOLEAN; Asm: BOOLEAN): BOOLEAN =
+PROCEDURE RunLlcBack 
+  (s: State;  source, object: TEXT; debug, optimize: BOOLEAN; Asm: BOOLEAN)
+: BOOLEAN (* Success. *) =
   VAR failed: BOOLEAN;
   VAR filetype: TEXT; 
   BEGIN
@@ -2387,13 +2390,13 @@ PROCEDURE RunLlcBack (s: State;  source, object: TEXT;
     IF failed THEN
       s.compile_failed := TRUE;
       Msg.Error (NIL, "llvm compiler (llc) failed compiling: ", source);
-      Utils.Remove (object);
+      IF NOT s.keep_files THEN Utils.Remove (object); END;
     END;
     ETimer.Pop ();
     RETURN NOT failed;
   END RunLlcBack; 
 
-PROCEDURE RunAsm (s: State;  source, object: TEXT): BOOLEAN =
+PROCEDURE RunAsm (s: State;  source, object: TEXT): BOOLEAN (* Success. *) =
   VAR failed: BOOLEAN;
   BEGIN
     ETimer.Push (M3Timers.pass_7);
@@ -2404,7 +2407,7 @@ PROCEDURE RunAsm (s: State;  source, object: TEXT): BOOLEAN =
     IF failed THEN
       s.compile_failed := TRUE;
       Msg.Error (NIL, "assembler failed assembling: ", source);
-      Utils.Remove (object);
+      IF NOT s.keep_files THEN Utils.Remove (object); END; 
     END;
     ETimer.Pop ();
     RETURN NOT failed;
