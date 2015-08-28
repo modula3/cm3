@@ -133,8 +133,15 @@ if not defined("m3llvm")
   proc m3llvm(source, outfile, optimize, debug) is
   % will we ever need optimize and/or debug? 
 
-      local m3llvm = "m3llvm"
-      return try_exec (m3llvm, "<", source, ">", outfile)
+      local m3llvmname = "m3llvm"
+
+      local args = [ "-b" ] 
+
+      if debug
+          args += "-d" 
+      end
+
+      return try_exec (m3llvmname, args, "-o", outfile, source )
   end % proc m3llvm
 
 end % if not defined("m3llvm")
