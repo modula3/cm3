@@ -558,7 +558,7 @@ index_address (t: IType;  size: INTEGER);
       cg.start_call_direct (proc, level, t);
 
       for each actual parameter i
-          <generate value for parameter i>
+          <generate value for parameter i> (No nested calls occur herein.) 
           cg.pop_param ();  -or-  cg.pop_struct();
 
       cg.call_direct (proc, t);
@@ -568,7 +568,7 @@ index_address (t: IType;  size: INTEGER);
       cg.start_call_indirect (t);
 
       for each actual parameter i
-          <generate value for parameter i>
+          <generate value for parameter i> (No nested calls occur herein.)
           cg.pop_param ();  -or-  cg.pop_struct();
 
       If the target is a nested procedure,
@@ -582,12 +582,14 @@ index_address (t: IType;  size: INTEGER);
 start_call_direct (p: Proc;  lev: INTEGER;  t: Type);
 (* begin a procedure call to procedure 'p' at static level 'lev' that
    will return a value of type 't'. *)
+(* No nested call sequence appears between start_call_direct and call_direct. *)
 
 call_direct (p: Proc;  t: Type);
 (* call the procedure 'p'.  It returns a value of type t. *)
 
 start_call_indirect (t: Type;  cc: CallingConvention);
 (* begin an indirect procedure call that will return a value of type 't'. *)
+(* No nested call sequence appears between start_call_indirect and call_indirect. *)
 
 call_indirect (t: Type;  cc: CallingConvention);
 (* call the procedure whose address is in s0.A and pop s0.  The
