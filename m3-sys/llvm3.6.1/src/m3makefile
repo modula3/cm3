@@ -1,0 +1,10 @@
+import("libm3")
+import("m3middle")
+import("m3quake")
+import("llvmbindings")
+
+module("M3CG_LLVM")
+
+implementation("Main")
+
+Program("m3llvm")
