@@ -1,8 +1,8 @@
 
-This is a translator of modula3 intermediat to llvm code. To use it
+This is a translator of modula3 intermediate to llvm code. To use it
 you need llvm installed. You can install from a package or build from
 source. Probably best if you build from source since there are a
-couple of additions to the llvm that have been done which havent made
+couple of additions to the llvm that have been done which have not made
 it back to llvm people. These are mainly to do with atomics and
 intrinsics. I will provide these changes to interested developers as
 requested.
@@ -13,7 +13,7 @@ there is a type error in your generated code there is not much info
 where that error occurred. Running llc on the output is much more
 helpful.
 
-The translator produces runnable code on AMD_64 under linux no other
+The translator produces runnable code on AMD64 under Linux no other
 platforms have been tested.
 
 This should be added as another backend to the m3 tool
