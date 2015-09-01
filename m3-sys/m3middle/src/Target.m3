@@ -123,7 +123,7 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
 
     (* 64bit *)
 
-    IF TextUtils.StartsWith(system, "ALPHA_")
+    IF TextUtils.StartsWith(system, "ALPHA_")       (* But not ALPHA32_. *)
         OR TextUtils.Contains(system, "64") THEN
       Init64();
     END;
@@ -132,7 +132,7 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
 
     IF TextUtils.StartsWith(system, "SPARC64")
         OR TextUtils.StartsWith(system, "ARMEL")
-        OR TextUtils.StartsWith(system, "ALPHA_")
+        OR TextUtils.StartsWith(system, "ALPHA_")   (* But not ALPHA32_. *)
         OR TextUtils.StartsWith(system, "ALPHA64")
         OR TextUtils.StartsWith(system, "PA")
         OR TextUtils.StartsWith(system, "HPPA")
