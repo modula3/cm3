@@ -20,7 +20,9 @@ m3back_debug = "-g1 "
 
 if defined("HasCBackend")
   if HasCBackend()
-    M3_BACKEND_MODE = "3"
+    if not defined ("M3_BACKEND_MODE")
+      M3_BACKEND_MODE = "3" % This should really be C.
+    end
   end
 end
 
