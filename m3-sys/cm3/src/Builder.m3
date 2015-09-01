@@ -1452,7 +1452,6 @@ PROCEDURE PushOneM3 (s: State;  u: M3Unit.T): BOOLEAN =
 (* PRE: u.kind IN {UK.I3, UK.M3} *) 
   TYPE Mode_t = M3BackendMode_t;
   VAR
-    Success : BOOLEAN := TRUE; (* Until otherwise. *) 
     temps := Temps_t { };
 
     (* Output file to be produced by cm3 executable -- "integrated" codegen. *) 
@@ -1469,7 +1468,6 @@ PROCEDURE PushOneM3 (s: State;  u: M3Unit.T): BOOLEAN =
     asmName: TEXT := NIL;
     mode := s.m3backend_mode;
     boot := s.bootstrap_mode;
-    keep := s.keep_files;
     need_merge := FALSE;
     DoRunM3cc : BOOLEAN := FALSE; 
     DoRunM3llvm : BOOLEAN := FALSE; 
