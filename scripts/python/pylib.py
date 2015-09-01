@@ -1333,11 +1333,14 @@ def Boot():
         Makefile.write(pkg + EXE + " ")
     Makefile.write(NL2)
 
+    obj_suffixes = ["o", "mo", "io", "obj"]
+
     Makefile.write("clean:" + NL)
     if AssembleOnTarget:
-        Makefile.write("\t-" +  DeleteCommand + " *o *.obj" + NL)
+        for o in obj_suffixes:
+            Makefile.write("\t-" +  DeleteCommand + " *." + o + NL)
         for pkg in main_packages:
-            Makefile.write("\t-" + DeleteCommand + " " + pkg + ".d/*o" + " " + pkg + ".d/*.obj" + NL)
+            Makefile.write("\t-" + DeleteCommand + " " + pkg + ".d/*." + o+ NL)
     for pkg in main_packages:
         Makefile.write("\t-" + DeleteCommand + " " + pkg + " " + pkg + ".exe" + NL)
     Makefile.write(NL)
@@ -1466,10 +1469,8 @@ def Boot():
 
         Makefile.write("\t$(Link) " + pkg + ".d/Main." + maino_ext + LinkOut + "$@" + NL2)
 
-    VmsMake.write("$ set file/attr=(rfm=var,rat=none) *.o\n")
-    VmsMake.write("$ set file/attr=(rfm=var,rat=none) *.obj\n")
-    VmsMake.write("$ set file/attr=(rfm=var,rat=none) *.mo\n")
-    VmsMake.write("$ set file/attr=(rfm=var,rat=none) *.io\n")
+    for o in obj_suffixes:
+        VmsMake.write("$ set file/attr=(rfm=var,rat=none) *." + o + "\n")
     VmsMake.write("$ link /executable=cm3.exe vmslink/options\n")
     
     # TODO
