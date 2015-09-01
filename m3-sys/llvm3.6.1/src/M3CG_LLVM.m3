@@ -1048,11 +1048,7 @@ PROCEDURE set_source_file (self: U;  file: TEXT) =
   BEGIN
     self.curFile := file;
     moduleID := LT(file);
-    (* RMB: We may not get a set_source_file at all, so must create the LLVM
-       module elsewhere.  declare_segment( ... NOT isConst ... ) is a place
-       to do it.   
     modRef := LLVM.LLVMModuleCreateWithNameInContext(moduleID,globContext);
-    *) 
     LLVM.LLVMSetDataLayout(modRef,LT(dataRep));
     LLVM.LLVMSetTarget(modRef,LT(targetTriple));
 
