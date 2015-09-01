@@ -3313,10 +3313,10 @@ PROCEDURE FinalNameForUnit (s: State;  u: M3Unit.T): TEXT =
       CASE ext OF
       | UK.I3, UK.IC, UK.IB        =>  ext :=  UK.IS;
       | UK.M3, UK.MC, UK.MB        =>  ext :=  UK.MS;
-      | UK.B, UK.C                 =>  ext :=  UK.MS;
+      | UK.B                       =>  ext :=  UK.MS;
       | UK.IS, UK.IO, 
         UK.MS, UK.MO, 
-        UK.H, UK.S, UK.O           => RETURN M3Unit.FileName (u);
+        UK.H, UK.S, UK.O, UK.C     => RETURN M3Unit.FileName (u);
       ELSE RETURN NIL;
       END;
 
