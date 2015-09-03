@@ -48,6 +48,8 @@ REVEAL
     widecharSize  := 16;
     optLevel      := 0; (* optimize level - not used yet *)
 
+    allocaName    : Name; (* "alloca", for detecting library call on it. *) 
+
     (* external set functions *)
     setUnion, setIntersection, setDifference, setSymDifference,
     setMember, setEq, setNe, setLe, setLt, setGe, setGt,
@@ -578,7 +580,8 @@ PROCEDURE New (output: Wr.T): M3CG.T =
                 callStack := NEW(RefSeq.T).init(),
                 procStack := NEW(RefSeq.T).init(),
                 declStack := NEW(RefSeq.T).init(),
-                debugLexStack := NEW(RefSeq.T).init());
+                debugLexStack := NEW(RefSeq.T).init(),
+                allocaName := M3ID.Add("alloca"));
   END New;
 
 PROCEDURE NewVar (self: U; name : Name; size : ByteSize; align : Alignment; type : Type; isConst : BOOLEAN; m3t : TypeUID; in_memory : BOOLEAN; up_level : BOOLEAN; exported : BOOLEAN; inited : BOOLEAN; frequency : Frequency; varType : VarType): Var =
@@ -3866,7 +3869,8 @@ PROCEDURE index_address (self: U; <*UNUSED*> t: IType; size: INTEGER) =
 (*------------------------------------------------------- procedure calls ---*)
 
 
-PROCEDURE start_call_direct (self: U;  p: Proc; <*UNUSED*> lev: INTEGER; <*UNUSED*> t: Type) =
+PROCEDURE start_call_direct 
+  (self: U;  p: Proc; <*UNUSED*> lev: INTEGER; <*UNUSED*> t: Type) =
   (* begin a procedure call to procedure 'p' at static level 'lev' that
      will return a value of type 't'. *)
   VAR
@@ -3907,6 +3911,13 @@ PROCEDURE BuildStaticLink(self : U; proc : LvProc) : CARDINAL =
     RETURN linkSize;
   END BuildStaticLink;
 
+PROCEDURE Is_alloca (self: U; p: LvProc) : BOOLEAN =
+  (* p describes library function alloca. *) 
+  BEGIN 
+    RETURN p.name = self . allocaName
+           AND p.numParams = 1;  
+  END Is_alloca; 
+
 PROCEDURE call_direct (self: U; p: Proc; <*UNUSED*> t: Type) =
   (* call the procedure 'p'.  It returns a value of type t. *)
   VAR
@@ -3933,6 +3944,16 @@ PROCEDURE call_direct (self: U; p: Proc; <*UNUSED*> t: Type) =
 (* this isnt always the case when there are nested procs and or try finally
     <*ASSERT stackParams = procParams *>
 *)
+    IF Is_alloca (self, proc) THEN 
+      arg := Get(self.callStack);
+      Pop(self.callStack);
+      lVal := LLVM.LLVMBuildArrayAlloca
+                (builderIR, i8Type, arg.lVal, LT("m3_jmpbuf_size"));
+      (* As of 2015-09-03, the only way a library call on alloca appears
+         in the input is front-end-generated for a jmpbuf. *) 
+      Push(self.exprStack,NEW(LvExpr,lVal := lVal));
+      RETURN; 
+    END; 
     IF proc.lev > 0 THEN
       (* its possible the staticSize is zero in the case of no locals
          so the trampty is nil in which case we dont need a static link at all *)
