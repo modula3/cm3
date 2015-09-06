@@ -26,7 +26,10 @@ VAR GInIsBinary : BOOLEAN := TRUE;
 VAR GStdOutIsBinary : BOOLEAN := TRUE;
 VAR GDoDisplayHelp : BOOLEAN := FALSE;
 VAR GDoDisplayVersion : BOOLEAN := FALSE;
-VAR GDebug : BOOLEAN := FALSE; 
+VAR GDebugM3llvm : BOOLEAN := FALSE;
+    (* ^m3llvm emits internal info about its own execution. *)  
+VAR GGenDebug : BOOLEAN := FALSE; 
+    (* ^m3llvm generates debugging info about the code being compiled. *)   
 
 PROCEDURE GetParams ( ) = 
   VAR LParamNo : CARDINAL;
@@ -77,7 +80,8 @@ PROCEDURE GetParams ( ) =
     GStdOutIsBinary := TRUE;
     GDoDisplayHelp := FALSE;
     GDoDisplayVersion := FALSE;
-    GDebug := FALSE;
+    GDebugM3llvm := FALSE;
+    GGenDebug := FALSE;
 
     IF Params.Count > 0 THEN
       GExecutableName := Params.Get ( 0 ); 
@@ -101,7 +105,8 @@ PROCEDURE GetParams ( ) =
             OF
               'a' => GInIsBinary := FALSE;
             | 'b' => GInIsBinary := TRUE;
-            | 'd' => GDebug := TRUE;
+            | 'd' => GDebugM3llvm := TRUE;
+            | 'g' => GGenDebug := TRUE;
             | 'o' => ParamWFileName (TRUE, GBinOutFileName);
                      EXIT;
             | 'O' => ParamWFileName (FALSE, GCharOutFileName);
@@ -156,7 +161,10 @@ PROCEDURE DisplayHelp ( ) =
     IO.Put ("  -b Treat input file as binary cm3 IR (the default)."); 
     IO.Put (Wr.EOL); 
 
-    IO.Put ("  -d Enable debug output."); 
+    IO.Put ("  -d Enable output for debugging m3llvm."); 
+    IO.Put (Wr.EOL); 
+
+    IO.Put ("  -g Emit debug info in the translated code."); 
     IO.Put (Wr.EOL); 
 
     IO.Put ("  -h Display help text and terminate."); 
@@ -204,6 +212,7 @@ PROCEDURE DoIt() =
 VAR 
   rd_in : Rd.T := NIL;
   wr_out : Wr.T := NIL; (* Not currently being used. *) 
+  LM3llvmDebugLev : M3CG_LLVM.m3llvmDebugLevTyp; 
   cg : M3CG_LLVM.U;
   BEGIN
     Init ();
@@ -227,7 +236,14 @@ VAR
       GBinOutFileName := DefaultBinOutFileName;
     END (*IF*);
 
-    cg := M3CG_LLVM.New(wr_out);
+    IF GDebugM3llvm THEN LM3llvmDebugLev := 3;
+    ELSE LM3llvmDebugLev := 0;
+    END; 
+
+(*  Temporary, for comparing compiler tests with m3cc and m3llvm: *) 
+    LM3llvmDebugLev := 0;
+
+    cg := M3CG_LLVM.New(wr_out, LM3llvmDebugLev, GGenDebug);
 
     IF GInIsBinary THEN
       M3CG_BinRd.Inhale(rd_in, cg);

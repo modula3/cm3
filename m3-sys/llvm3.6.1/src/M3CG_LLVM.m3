@@ -55,7 +55,10 @@ REVEAL
     setMember, setEq, setNe, setLe, setLt, setGe, setGt,
     setRange, setSingleton : LLVM.ValueRef;
 
-    (* debug stuff *)
+    (* Debugging m3llvm: *) 
+    m3llvmDebugLev : m3llvmDebugLevTyp;
+
+    (* Generating debug output in the code being compiled. *)
     genDebug      := FALSE;
     curFile       := "";
     curLine       := 0;
@@ -568,7 +571,9 @@ PROCEDURE NewArrayRefOfMetadataRef
     ArrRef . Length := ElemCt;    
   END NewArrayRefOfMetadataRef; 
 
-PROCEDURE New (output: Wr.T): M3CG.T =
+PROCEDURE New 
+  (output: Wr.T; m3llvmDebugLev: m3llvmDebugLevTyp; genDebug: BOOLEAN)
+: M3CG.T =
   VAR mbuf := M3Buf.New ();
   BEGIN
     M3Buf.AttachDrain (mbuf, output);
@@ -580,6 +585,8 @@ PROCEDURE New (output: Wr.T): M3CG.T =
                 callStack := NEW(RefSeq.T).init(),
                 procStack := NEW(RefSeq.T).init(),
                 declStack := NEW(RefSeq.T).init(),
+                m3llvmDebugLev := m3llvmDebugLev,
+                genDebug := genDebug, 
                 debugLexStack := NEW(RefSeq.T).init(),
                 allocaName := M3ID.Add("alloca"));
   END New;
@@ -989,7 +996,7 @@ PROCEDURE DumpLLVMIR(<*UNUSED*> self : U; BitcodeFileName, AsmFileName: TEXT) =
     BEGIN
       passRef := LLVM.LLVMCreatePassManager();
       modified := LLVM.LLVMRunPassManager(passRef,modRef);
-      IF modified THEN
+      IF modified AND m3llvmDebugLev > 0 THEN
         IO.Put("pass modified\n");
       END;
     END;
@@ -1089,13 +1096,12 @@ PROCEDURE set_source_file (self: U;  file: TEXT) =
 PROCEDURE set_source_line (self: U; line: INTEGER) =
   BEGIN
     self.curLine := line;
-(* debug *)
-    IO.Put("LINE ------------------------ " & Fmt.Int(line) & "------------\n");
-(*debug
-    IF self.curProc # NIL THEN
+    IF self.m3llvmDebugLev > 0 THEN 
+      IO.Put("LINE ------------------------ " & Fmt.Int(line) & "------------\n");
+    END; 
+    IF self.curProc # NIL AND self.m3llvmDebugLev > 0 THEN
       IO.Put("the cur proc " & M3ID.ToText(self.curProc.name) & "\n");
     END;
-*)
     (* set the debugloc for this line *)
     DebugLine(self);
   END set_source_line;
@@ -1974,22 +1980,22 @@ PROCEDURE end_block (self: U) =
     The stack must contain exactly one value prior to a conditional
     or indexed jump.
 *)
-(*
+
 VAR
   tmpVal : LLVM.ValueRef;
-*)
+
 BEGIN
-(*
-  IO.Put("Expr stack from " & from & " size ");
-  IO.PutInt(self.exprStack.size());
-  IO.Put("\n");
-  (* if from = jump stacksize could be 0 or 1 *)
-  FOR i := 0 TO self.exprStack.size() -1 DO
-    tmpVal :=  NARROW(self.exprStack.get(i),LvExpr).lVal;
-    LLVM.LLVMDumpValue(tmpVal);
-  END;
-  IO.Put("\nEnd stack dump\n");
-*)
+  IF self.m3llvmDebugLev > 0 THEN
+    IO.Put("Expr stack from " & from & " size ");
+    IO.PutInt(self.exprStack.size());
+    IO.Put("\n");
+    (* if from = jump stacksize could be 0 or 1 *)
+    FOR i := 0 TO self.exprStack.size() -1 DO
+      tmpVal :=  NARROW(self.exprStack.get(i),LvExpr).lVal;
+      LLVM.LLVMDumpValue(tmpVal);
+    END;
+    IO.Put("\nEnd stack dump\n");
+  END; 
 END DumpExprStack;
 
 PROCEDURE set_label (self: U;  l: Label;  barrier: BOOLEAN) =
@@ -4188,7 +4194,7 @@ PROCEDURE load_static_link (self: U;  p: Proc) =
 
 (*----------------------------------------------------------------- misc. ---*)
 
-PROCEDURE comment (<*UNUSED*> self: U;  a, b, c, d: TEXT := NIL) =
+PROCEDURE comment (self: U;  a, b, c, d: TEXT := NIL) =
 (* annotate the output with a&b&c&d as a comment.  Note that any of a,b,c or d
    may be NIL. *)
   VAR s : TEXT := "";
@@ -4197,8 +4203,10 @@ PROCEDURE comment (<*UNUSED*> self: U;  a, b, c, d: TEXT := NIL) =
     IF b # NIL THEN s := s & b; END;
     IF c # NIL THEN s := s & c; END;
     IF d # NIL THEN s := s & d; END;
-    (* debug *)
-    IO.Put("Comment -- " & s &  "\n");
+(* FIXME: Somehow get the comment into llvm IR. *)     
+    IF self.m3llvmDebugLev > 0 THEN 
+      IO.Put("Comment -- " & s &  "\n");
+    END; 
   END comment;
 
 (*--------------------------------------------------------------- atomics ---*)
@@ -4581,7 +4589,9 @@ PROCEDURE DebugSubrangeLookup(self : U; tUid : TypeUID) : SubrangeDebug =
 PROCEDURE DebugSubrange(self : U; s : SubrangeDebug) : M3DIB.LLVMDISubrange =
   VAR Result : M3DIB.LLVMDISubrange; 
   BEGIN
-IO.Put("subrange debug\n");
+    IF self.m3llvmDebugLev > 0 THEN
+      IO.Put("subrange debug\n");
+    END; 
 
     Result 
       := M3DIB.DIBgetOrCreateSubrange
@@ -4600,7 +4610,9 @@ PROCEDURE DebugArray(self : U; a : ArrayDebug) : M3DIB.LLVMDICompositeType =
     paramsDIArr : M3DIB.DIArray;
     Result : M3DIB.LLVMDICompositeType; 
   BEGIN
-IO.Put("array debug\n");
+    IF self.m3llvmDebugLev > 0 THEN
+      IO.Put("array debug\n");
+    END; 
 
     eltVal := DebugLookup(self,a.elt);
     subrange := DebugSubrangeLookup(self,a.index);
@@ -4627,7 +4639,9 @@ PROCEDURE DebugOpenArray(self : U; a : OpenArrayDebug) : M3DIB.LLVMDICompositeTy
     paramsMetadata : LLVMTypes.ArrayRefOfMetadataRef; 
     paramsDIArr : M3DIB.DIArray;
   BEGIN
-IO.Put("openarray debug\n");
+    IF self.m3llvmDebugLev > 0 THEN
+      IO.Put("openarray debug\n");
+    END; 
 
     eltVal := DebugLookup(self,a.elt);
     (* open arrays dont have a range so just fake it for now 0 - last(val)
@@ -4651,7 +4665,9 @@ PROCEDURE DebugSet(self : U; s : SetDebug) : M3DIB.LLVMDICompositeType =
     paramsDIArr : M3DIB.DIArray;
 
   BEGIN
-IO.Put("set debug\n");
+    IF self.m3llvmDebugLev > 0 THEN
+      IO.Put("set debug\n");
+    END; 
 
     eltVal := M3DIB.DIBcreateBasicType(self.debugRef,LTD("basic_type" ), VAL(1L,int64_t), VAL(8L,int64_t), DW_ATE_unsigned_char);
 
@@ -4736,7 +4752,9 @@ END DebugPacked;
 PROCEDURE DebugOpaque(self : U; o : OpaqueDebug) : M3DIB.LLVMDIType =
   BEGIN
   (* fixme *)
-IO.Put("opaque debug\n");
+    IF self.m3llvmDebugLev > 0 THEN
+      IO.Put("opaque debug\n");
+    END; 
     RETURN M3DIB.LLVMDIDescriptorEmpty;
 END DebugOpaque;
 
@@ -4939,7 +4957,9 @@ PROCEDURE DebugObject(self : U; o : ObjectDebug) : M3DIB.LLVMDIDerivedType =
     debugObj : REFANY;
     baseObj : BaseDebug;
   BEGIN
-IO.Put("object debug\n");
+    IF self.m3llvmDebugLev > 0 THEN
+      IO.Put("object debug\n");
+    END; 
 
     tidExists := self.debugTable.get(o.superType,debugObj);
     baseObj := NARROW(debugObj,BaseDebug);
@@ -5086,7 +5106,9 @@ PROCEDURE DebugRecord(self : U; r : RecordDebug) : M3DIB.LLVMDICompositeType =
     paramsMetadata : LLVMTypes.ArrayRefOfMetadataRef; 
     paramsDIArr : M3DIB.DIArray;
   BEGIN
-IO.Put("record debug\n");
+    IF self.m3llvmDebugLev > 0 THEN
+      IO.Put("record debug\n");
+    END; 
 
     NewArrayRefOfMetadataRef(r.numFields, paramsArr, paramsMetadata);
     FOR i := 0 TO r.numFields - 1 DO
@@ -5148,9 +5170,10 @@ PROCEDURE DebugLookup(self : U; tUid : TypeUID) : M3DIB.LLVMDIDescriptor =
     LDIDescr : M3DIB.LLVMDIDescriptor; 
     (* lVal : LLVM.ValueRef; *) 
   BEGIN
-  (* debug
-    IO.Put("tid>>"); IO.PutInt(tUid); IO.Put(" "); IO.Put("<< ");
-  *)
+    IF self.m3llvmDebugLev > 0 THEN
+      IO.Put("tid>>"); IO.PutInt(tUid); IO.Put(" "); IO.Put("<< ");
+    END; 
+
     (* exceptions have 0 tUid *)
     IF tUid = 0 THEN RETURN M3DIB.LLVMDIDescriptorEmpty; END;
 

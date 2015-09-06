@@ -133,13 +133,15 @@ if not defined("m3llvm")
   proc m3llvm(source, outfile, optimize, debug) is
   % will we ever need optimize and/or debug? 
 
-      local m3llvmname = "m3llvm"
+      local m3llvmname = "@m3llvm"
 
       local args = [ "-b" ] 
 
       if debug
-          args += "-d" 
+        %args += "-g" 
       end
+
+      %args += "-d" %While m3llvm is under development.  
 
       return try_exec (m3llvmname, args, "-o", outfile, source )
   end % proc m3llvm
@@ -180,7 +182,7 @@ if not defined("llvm_backend")
       end
       args += llvmback_pic
 
-      local llvmback = "llc"
+      local llvmback = "@llc"
       return try_exec (llvmback, args, source, "-o", outfile )
   end % proc llvm_backend
 

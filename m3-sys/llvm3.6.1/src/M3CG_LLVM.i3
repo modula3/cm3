@@ -10,9 +10,13 @@ TYPE
     dumpLLVMIR(BitcodeFileName, AsmFileName: TEXT);
   END;
 
+TYPE m3llvmDebugLevTyp = [ 0 .. 5 ]; (* Just leave some space here. *) 
+
 (* returns a fresh, initialized code generator that writes LLVM IR
    as bitcode to 'wr_bin' and as LLVM assembly to 'wr_char'. 
    Either may be NIL. *)
-PROCEDURE New (wr: Wr.T): M3CG.T;
+PROCEDURE New 
+  (output: Wr.T; m3llvmDebugLev: m3llvmDebugLevTyp; genDebug: BOOLEAN)
+: M3CG.T; 
 
 END M3CG_LLVM.
