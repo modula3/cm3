@@ -96,7 +96,7 @@ end
 
 if equal (C_COMPILER, "GNU")
     if not defined("SYSTEM_CC")
-        SYSTEM_CC = "/usr/sfw/bin/gcc -gstabs+ -fPIC -pthreads -m" & WordSize
+        SYSTEM_CC = "/usr/sfw/bin/g++ -gstabs+ -fPIC -pthreads -m" & WordSize
     end
 end
 

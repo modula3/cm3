@@ -1,7 +1,7 @@
 readonly TARGET = "PPC32_OPENBSD"
 readonly GNU_PLATFORM = "powerpc-openbsd" % "cpu-os" string for GNU
 
-SYSTEM_CC = "gcc -gstabs+ -fPIC"
+SYSTEM_CC = "g++ -gstabs+ -fPIC"
 readonly SYSTEM_ASM = "as"
 
 m3back_pic = "-fpic" % -fPIC does not work, though it ought to

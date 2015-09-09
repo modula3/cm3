@@ -597,7 +597,7 @@ proc compile_c_gnu(source, object, options, optimize, debug) is
     if M3_PROFILING
         args += "-pg"
     end
-    return try_exec("@gcc", "-gstabs+", escape(subst_chars(args, "\\", "/")), "-c", subst_chars(source, "\\", "/"), "-o", object)
+    return try_exec("@g++", "-gstabs+", escape(subst_chars(args, "\\", "/")), "-c", subst_chars(source, "\\", "/"), "-o", object)
 end
 
 proc compile_c(source, object, options, optimize, debug) is
@@ -796,7 +796,7 @@ proc make_dll_gnu(options, objects, imported_libs, lib_file, def_file, dll_file,
     end
 
     return try_exec(
-            "@gcc",
+            "@g++",
             "-gstabs+",
             %"-v",
             "-shared", % must be visible to compiler
@@ -1143,7 +1143,7 @@ proc m3_link_gnu(prog, options, objects, imported_libs, shared, pgm_file, listin
     % end
 
     return try_exec(
-            "@gcc",
+            "@g++",
             "-gstabs+",
             %"-v",
             "-Wl,"

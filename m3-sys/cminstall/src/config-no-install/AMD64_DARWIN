@@ -7,7 +7,7 @@
 
 % Darwin.common does a good job of determining these, esp. the assembler.
 % Older /usr/bin/as default to x86 and fail for amd64.
-%readonly SYSTEM_CC = "/usr/bin/gcc"
+%readonly SYSTEM_CC = "/usr/bin/g++"
 %readonly SYSTEM_LIBTOOL = "/usr/bin/libtool"
 %readonly SYSTEM_ASM = "/usr/bin/as"
 %readonly SYSTEM_ASM = "/usr/bin/as -arch x86_64"

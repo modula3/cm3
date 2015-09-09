@@ -1,7 +1,7 @@
 readonly TARGET = "ALPHA_LINUX" % code generation target
 readonly GNU_PLATFORM = "alpha-linux" % "cpu-os" string for GNU
 
-SYSTEM_CC = "gcc -gstabs+ -fPIC" % C compiler
+SYSTEM_CC = "g++ -gstabs+ -fPIC" % C compiler
 readonly SYSTEM_ASM = "as" % Assembler
 
 include("Alpha64.common")

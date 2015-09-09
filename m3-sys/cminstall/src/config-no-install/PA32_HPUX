@@ -7,7 +7,7 @@ readonly GNU_PLATFORM = "hppa-hpux" % "cpu-os" string for GNU
 % -mpa-risc-2-0 substitutes for -m32?
 %
 m3back_m32 = "-mpa-risc-2-0"
-SYSTEM_CC = "/usr/local/32/bin/gcc -fPIC -gstabs+ -mpa-risc-2-0" % C compiler
+SYSTEM_CC = "/usr/local/32/bin/g++ -fPIC -gstabs+ -mpa-risc-2-0" % C compiler
 if not defined("SYSTEM_ASM")
   readonly SYSTEM_ASM = "/usr/local/32/bin/gas" % Assembler
 end

@@ -6,6 +6,6 @@ readonly WORD_SIZE = "64BITS"   % { "32BITS" or "64BITS" }
 m3back_m64 = "-mabi=64" % instead of -m64, which isn't allowed
 m3back_debug = "" % doesn't work?
 m3back_unwind_table = "" % doesn't work
-SYSTEM_CC = "gcc -g -mabi=64 -fPIC"
+SYSTEM_CC = "g++ -g -mabi=64 -fPIC"
 readonly SYSTEM_ASM = "as"
 include("OpenBSD.common")

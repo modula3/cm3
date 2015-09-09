@@ -2,7 +2,7 @@
 
 readonly TARGET_OS = "INTERIX"
 
-SYSTEM_CC = "gcc -g" % C compiler
+SYSTEM_CC = "g++ -g" % C compiler
 readonly SYSTEM_ASM = "as" % Assembler
 
 GNU_MAKE = "gmake"

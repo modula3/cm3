@@ -1,7 +1,7 @@
 readonly TARGET = "SPARC64_LINUX"
 readonly GNU_PLATFORM = "sparc64-linux" % "cpu-os" string for GNU
 
-SYSTEM_CC = "gcc -m64 -fPIC -mno-app-regs -gstabs+" % C compiler
+SYSTEM_CC = "g++ -m64 -fPIC -mno-app-regs -gstabs+" % C compiler
 SYSTEM_ASM = "as -Qy -s -KPIC -Av9a -64 -no-undeclared-regs -relax" % Assembler
 
 include("SPARC64.common")

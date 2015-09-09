@@ -14,7 +14,7 @@ m3back_m32 = "" % -m32 not valid
 
 readonly SYSTEM_ASM = iPhoneBin & "as -arch armv6"
 readonly SYSTEM_LIBTOOL = iPhoneBin & "libtool"
-SYSTEM_CC = iPhonePrefix & "gcc -fPIC -march=armv6 -mcpu=arm1176jzf-s"
+SYSTEM_CC = iPhonePrefix & "g++ -fPIC -march=armv6 -mcpu=arm1176jzf-s"
 
 m3back_flags = "-march=armv6 -mcpu=arm1176jzf-s -fverbose-asm"
 

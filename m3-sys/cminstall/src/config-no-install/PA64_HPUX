@@ -12,7 +12,7 @@ m3back_m64 = "" % -m64 not allowed
 m3back_debug = "-g1 "
 
 %SYSTEM_CC = "cc +DD64" % C compiler
-SYSTEM_CC = "/usr/local/64/bin/gcc -g -fPIC" % C compiler
+SYSTEM_CC = "/usr/local/64/bin/g++ -g -fPIC" % C compiler
 if not defined("SYSTEM_ASM")
   readonly SYSTEM_ASM = "/usr/local/64/bin/gas" % Assembler
 end

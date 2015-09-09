@@ -1,7 +1,7 @@
 readonly TARGET = "IA64_LINUX" % code generation target
 readonly GNU_PLATFORM = "ia64-linux" % "cpu-os" string for GNU
 
-SYSTEM_CC = "gcc -g -fPIC" % C compiler
+SYSTEM_CC = "g++ -g -fPIC" % C compiler
 readonly SYSTEM_ASM = "as --64" % Assembler
 m3back_debug = "" % stabs not supported, plain -g crashes
 

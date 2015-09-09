@@ -502,7 +502,7 @@ end
 % To use the GNU defaults for CC and CFLAGS, specify "*".
 %
 
-% GNU_CC     = "gcc"
+% GNU_CC     = "g++"
 % GNU_CFLAGS = "-g"
 
 % The most common values here are make and gmake.

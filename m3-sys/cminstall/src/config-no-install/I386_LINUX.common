@@ -1,6 +1,6 @@
 readonly GNU_PLATFORM = "i686-linux" % "cpu-os" string for GNU
 
-SYSTEM_CC = "@gcc -gstabs+ -m32 -fPIC" % C compiler
+SYSTEM_CC = "@g++ -gstabs+ -m32 -fPIC" % C compiler
 readonly SYSTEM_ASM = "@as --32" % Assembler
 
 include("I386.common")

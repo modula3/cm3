@@ -1,7 +1,7 @@
 readonly TARGET = "I386_NETBSD"
 readonly GNU_PLATFORM = "i686-netbsd" % "cpu-os" string for GNU
 
-SYSTEM_CC = "gcc -gstabs+ -m32 -fPIC"
+SYSTEM_CC = "g++ -gstabs+ -m32 -fPIC"
 SYSTEM_LD = SYSTEM_CC & " -Wl,-z,now"
 readonly SYSTEM_ASM = "as -32"
 

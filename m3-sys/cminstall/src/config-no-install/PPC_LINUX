@@ -1,7 +1,7 @@
 readonly TARGET = "PPC_LINUX"     % code generation target
 readonly GNU_PLATFORM = "powerpc-linuxelf" % "cpu-os" string for GNU
 
-SYSTEM_CC = "@gcc -gstabs+ -m32 -fPIC" % C compiler
+SYSTEM_CC = "@g++ -gstabs+ -m32 -fPIC" % C compiler
 readonly SYSTEM_ASM = "@as" % Assembler
 
 % PIE debugging requires gdb 7.1 or newer, even for C
