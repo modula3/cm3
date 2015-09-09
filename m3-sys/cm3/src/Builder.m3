@@ -184,6 +184,19 @@ PROCEDURE SetupNamingConventionsInternal (VAR s : State; mach : Quake.Machine) =
 
   END SetupNamingConventionsInternal;
 
+PROCEDURE FormatErrorAvailableEnumValues(
+    min, max: INTEGER; READONLY map: ARRAY OF TEXT): TEXT =
+VAR result := "\navailable values: ";
+BEGIN
+    FOR i := min TO max DO
+      IF i # min THEN
+        result := Text.Cat(result, ", ");
+      END;
+    result := Text.Cat(result, map[i]);
+    END;
+    RETURN result;
+END FormatErrorAvailableEnumValues;
+
 PROCEDURE ConvertStringToEnum(s: State; name : TEXT; binding: QValue.Binding;
                               min, max: INTEGER; READONLY map: ARRAY OF TEXT):
   INTEGER =
@@ -193,13 +206,15 @@ PROCEDURE ConvertStringToEnum(s: State; name : TEXT; binding: QValue.Binding;
   BEGIN
 
     IF Text.Length (value) = 0 THEN
-        Msg.FatalError (NIL, "unrecognized " & name & ": ", "(empty)");
+        Msg.FatalError (NIL, "unrecognized " & name & ": ", "(empty)",
+          FormatErrorAvailableEnumValues(min, max, map));
     END;
 
     TRY
       i := QVal.ToInt (s.machine, binding.value);
       IF (i < min) OR (i > max) THEN
-        Msg.FatalError (NIL, "unrecognized " & name & ": ", value);
+        Msg.FatalError (NIL, "unrecognized " & name & ": ", value,
+          FormatErrorAvailableEnumValues(min, max, map));
       END;
       RETURN i;
     EXCEPT Quake.Error =>
@@ -211,7 +226,8 @@ PROCEDURE ConvertStringToEnum(s: State; name : TEXT; binding: QValue.Binding;
       END;
     END;
 
-    Msg.FatalError (NIL, "unrecognized " & name & ": ", value);
+    Msg.FatalError (NIL, "unrecognized " & name & ": ", value,
+      FormatErrorAvailableEnumValues(min, max, map));
     RETURN -1;
 
   END ConvertStringToEnum;
