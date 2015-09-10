@@ -530,6 +530,20 @@ if equal(M3_BACKEND_MODE, "0") or equal(M3_BACKEND_MODE, "1")
         or equal(M3_BACKEND_MODE, "IntegratedC")
         or equal(M3_BACKEND_MODE, "C")
         or USE_C_BACKEND_VIA_M3CGCAT
+     % Llvm itself requires unnested functions, so do it for all llvm modes. 
+     % TODO: Surely Quake provides a more efficient way to do this. 
+        or equal(M3_BACKEND_MODE, "IntLlvmObj") 
+        or equal(M3_BACKEND_MODE, "IntLlvmAsm") 
+        or equal(M3_BACKEND_MODE, "ExtLlvmObj") 
+        or equal(M3_BACKEND_MODE, "ExtLlvmAsm")
+        or equal(M3_BACKEND_MODE, "StAloneLlvmObj")
+        or equal(M3_BACKEND_MODE, "StAloneLlvmAsm") 
+        or equal(M3_BACKEND_MODE, "5") 
+        or equal(M3_BACKEND_MODE, "6") 
+        or equal(M3_BACKEND_MODE, "7") 
+        or equal(M3_BACKEND_MODE, "8") 
+        or equal(M3_BACKEND_MODE, "9") 
+        or equal(M3_BACKEND_MODE, "10") 
     % M3_FRONT_FLAGS += ["-unfold_nested_procs"]
     % M3_FRONT_FLAGS += ["-check_procs" ]
     M3_FRONT_FLAGS = ["-unfold_nested_procs", "-check_procs" ]
