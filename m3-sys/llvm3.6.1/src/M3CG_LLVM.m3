@@ -889,7 +889,9 @@ PROCEDURE BuildFunc(self : U; p : Proc) =
         (* check if this is a try-finally parm or other internal static link *)
         IF NOT LinkExists(proc) THEN
           (* create the static link param var and push onto the param stack *)
-          v := NewVar(self,M3ID.Add("_link"),ptrBytes,ptrBytes,Type.Addr,FALSE,UID_ADDR,TRUE,FALSE,FALSE,FALSE,M3CG.Maybe,VarType.Param);
+          v := NewVar(self,M3ID.Add("_link"),ptrBytes,ptrBytes,Type.Addr,
+                      FALSE,UID_ADDR,TRUE,FALSE,FALSE,FALSE,M3CG.Maybe,
+                      VarType.Param);
           PushRev(proc.paramStack, v);
           INC(proc.numParams);
         END;
@@ -1474,40 +1476,55 @@ PROCEDURE AtEntry(self : U) : LLVM.BasicBlockRef =
     RETURN curBB;
   END AtEntry;
 
-(* allocate temps and locals with noid in the entry bb *)
+(* PRE: We are inside a procedure body, possibly deeply. *) 
+(* Allocate a temp or locals in the entry BB of the procedure. 
+   It could be M3-coded and have a name. *)
 PROCEDURE AllocTemp(self : U; v : LvVar) =
   VAR
     curBB : LLVM.BasicBlockRef;
   BEGIN
-    DebugClearLoc(self); (* suspend debugging of temp allocs *)
+    IF v.name = M3ID.NoID THEN 
+      DebugClearLoc(self); (* suspend debugging of temp allocs *)
+    END; 
     curBB := AtEntry(self);
     (* alloc the temp in the entry BB *)
     self.allocVar(v);
     LLVM.LLVMPositionBuilderAtEnd(builderIR, curBB);
-    DebugLine(self); (* resume debugging *)
+    IF v.name = M3ID.NoID THEN 
+      DebugLine(self); (* resume debugging *)
+    END; 
   END AllocTemp;
 
 PROCEDURE declare_local (self: U;  n: Name;  s: ByteSize;  a: Alignment; t: Type;  m3t: TypeUID;  in_memory, up_level: BOOLEAN; f: Frequency): Var =
   VAR
-    v : LvVar := NewVar(self,n,s,a,t,FALSE,m3t,in_memory,up_level,FALSE,FALSE,f,VarType.Local);
+    v : LvVar := NewVar(self,n,s,a,t,FALSE,m3t,in_memory,up_level,FALSE,FALSE,
+                        f,VarType.Local);
     proc : LvProc;
   BEGIN
-    (* locals are declared after declare_procedure or within a begin_procedure which are anonymous or inside begin_block. Since begin_procedure implies a begin_block, checking for blockLevel > 0 is sufficient to allocate now *)
-    IF self.blockLevel = 0 THEN
+    (* Locals are declared after declare_procedure or within a begin_procedure 
+       end_procedure pair. Since begin_procedure implies a begin_block, 
+       checking for blockLevel > 0 is sufficient to allocate now. *)
+    IF self.blockLevel = 0 THEN (* We are in a signature. *) 
+    (* NOTE: If n is "_result", we are in the signature of a function procedure
+             with a scalar result, and this is a compiler-generated local to 
+             hold the result. *) 
       <*ASSERT self.declStack.size() = 1 *>
-      (* get the current procs local stack *)
-      proc := Get(self.declStack);
-      PushRev(proc.localStack, v);
+      proc := Get(self.declStack); (* Get the current proc. *)
+      PushRev(proc.localStack, v); 
+      (* ^The local will be allocated later, in the proc body. *) 
       v.inProc := proc;
       IF up_level THEN
         Push(proc.linkStack, v);
       END;
-    ELSE
+    ELSE (* We are in a procedure body. *)
       (* inside a local block or begin_procedure so allocate it now,
         but allocate it in the entry bb *)
-      self.allocTemp(v);
-      (* could this local ever be up_level? *)
+      self.allocTemp(v); (* Which puts it among locals of containing proc. *) 
       v.inProc := self.curProc;
+      (* Could be up-level if M3 decl is in an inner block. *) 
+      IF up_level THEN
+        Push(self.curProc.linkStack, v);
+      END;
       DebugVar(self, v);
     END;
     RETURN v;
@@ -1536,8 +1553,14 @@ PROCEDURE declare_param (self: U;  n: Name;  s: ByteSize;  a: Alignment; t: Type
     proc : LvProc;
     size : ByteSize;
   BEGIN
-    (* params declared after either declare_procedure or import_procedure (which could be in a begin_procedure), either way the procDecl should be set from the previous import or declare *)
+    (* This appears after either import_procedure (which could be inside a 
+       procedure body, i.e., between begin_procedure and end_procedure) 
+       or a declare_procedure.  Either way the procDecl should 
+       be set from the previous import or declare *)
 
+    (* NOTE: If n is "_result", we are in the signature of a function procedure
+             with a nonscalar result, and this is a compiler-generated VAR
+             parameter used to return the result. *) 
     <*ASSERT self.declStack.size() = 1 *>
     proc := Get(self.declStack);
     
@@ -1551,7 +1574,8 @@ PROCEDURE declare_param (self: U;  n: Name;  s: ByteSize;  a: Alignment; t: Type
         t := Type.Struct;
       END;
     END;
-    v := NewVar(self,n,s,a,t,FALSE,m3t,in_memory,up_level,FALSE,FALSE,f,VarType.Param);
+    v := NewVar(self,n,s,a,t,FALSE,m3t,in_memory,up_level,FALSE,FALSE,f,
+                VarType.Param);
     
     PushRev(proc.paramStack, v);
     v.inProc := proc;
@@ -1858,9 +1882,9 @@ PROCEDURE begin_procedure (self: U;  p: Proc) =
     self.curProc := p;
     proc := NARROW(p,LvProc);
 
-    (* top of stack is current proc *)
     proc.saveBB := LLVM.LLVMGetInsertBlock(builderIR);
     Push(self.procStack,proc);
+    (* top of procStack is current proc *)
 
     (* create the function *)
     self.buildFunc(p);
@@ -1968,7 +1992,6 @@ PROCEDURE end_block (self: U) =
    anonymous blocks, or exception scopes surround this point. *)
   BEGIN
   (* not used *)
-    <*ASSERT FALSE *>
   END note_procedure_origin;
 
 (*------------------------------------------------------------ statements ---*)
