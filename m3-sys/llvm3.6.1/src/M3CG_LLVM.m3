@@ -268,9 +268,13 @@ TYPE
     linkStack   : RefSeq.T := NIL;
     imported : BOOLEAN := FALSE; (* if this is an import *)
     defined : BOOLEAN := FALSE; (* set when we build the declaration for real *)
-    trampTy : LLVM.TypeRef := NIL; (* array of addresses for static link *)
+    displayLty : LLVM.TypeRef := NIL; 
+      (* ^llvm type for a display, an array of addresses to all up-level- 
+         referenced variables in proper ancestors of this proc.  Caller creates
+         it and passes its address to this proc in staticLinkFormalLv. *)
     staticLv : LLVM.ValueRef := NIL; (* i8* type for the static link parm *)
-    linkAdrLv : LLVM.ValueRef := NIL; (* i8* type for the static link adr *)
+    staticLinkFormalLv : LLVM.ValueRef := NIL; (* Will have AdrTy. *)
+    (* ^The formal parameter that is the static link passed in. *) 
   END;
 
   LvExpr = OBJECT
@@ -836,6 +840,8 @@ PROCEDURE DeclSet(name : TEXT; fn : LLVM.ValueRef; numParams : INTEGER; hasRetur
   END DeclSet;
 
 PROCEDURE StaticLinkSize(proc : LvProc) : INTEGER =
+(* Totla number of locals and formals of static proper ancestors of 'proc' that
+   are up-level referenced from somewhere. *)   
   VAR
     tp : LvProc;
     linkSize : CARDINAL := 0;
@@ -851,10 +857,12 @@ PROCEDURE StaticLinkSize(proc : LvProc) : INTEGER =
   END StaticLinkSize;
 
 PROCEDURE LinkExists(proc : LvProc) : BOOLEAN =
+(* check if this is a front-end generated procc with a front-end-generated 
+   static link.  Making a pretty big assumption here.  The criterion is proc 
+   has exactly one formal and it is nameless.  Also, we only call this if 
+   proc is nested. *)
 VAR arg : REFANY; param : LvVar;
 BEGIN
-  (* check if this is compiler generated func with a static link.
-     Making a pretty big assumption here *)
   IF proc.paramStack.size() = 1 THEN
     arg := Get(proc.paramStack);
     param := NARROW(arg,LvVar);
@@ -882,19 +890,21 @@ PROCEDURE BuildFunc(self : U; p : Proc) =
     IF proc.defined THEN RETURN; END;
 
     IF proc.lev > 0 THEN
-      (* get the size of the trampoline area for the static link *)
+      (* Get the size of the display area the incoming static link will 
+         point to. *)
       linkSize := StaticLinkSize(proc);
-      IF linkSize > 0 THEN
-        proc.trampTy := LLVM.LLVMArrayType(AdrTy,linkSize);
-        (* check if this is a try-finally parm or other internal static link *)
-        IF NOT LinkExists(proc) THEN
-          (* create the static link param var and push onto the param stack *)
-          v := NewVar(self,M3ID.Add("_link"),ptrBytes,ptrBytes,Type.Addr,
-                      FALSE,UID_ADDR,TRUE,FALSE,FALSE,FALSE,M3CG.Maybe,
-                      VarType.Param);
-          PushRev(proc.paramStack, v);
-          INC(proc.numParams);
-        END;
+      IF linkSize > 0 THEN (* We need an llvm type for the display area. *) 
+        proc.displayLty := LLVM.LLVMArrayType(AdrTy,linkSize);
+      END;
+      (* check if this is not a try-finally parm or other internal static link *)
+      IF NOT LinkExists(proc) THEN
+        (* create the incoming static link param var and push onto the 
+           param stack *)
+        v := NewVar(self,M3ID.Add("_link"),ptrBytes,ptrBytes,Type.Addr,
+                    FALSE,UID_ADDR,TRUE,FALSE,FALSE,FALSE,M3CG.Maybe,
+                    VarType.Param);
+        PushRev(proc.paramStack, v);
+        INC(proc.numParams);
       END;
     END;
 
@@ -915,6 +925,7 @@ PROCEDURE BuildFunc(self : U; p : Proc) =
         param := NARROW(arg,LvVar);
         IF param.type = Type.Struct THEN
           param.lvType := LLVM.LLVMPointerType(param.lvType);
+(* REVIEW: This seems oversimplified. *) 
         END;
         paramsArr[i] := param.lvType;
       END;
@@ -936,7 +947,7 @@ PROCEDURE BuildFunc(self : U; p : Proc) =
 
     <*ASSERT LLVM.LLVMCountParams(proc.lvProc) = numParams *>
 
-    (* add names attributes and alignment *)
+    (* add names, attributes, and alignment *)
     lVal := LLVM.LLVMGetFirstParam(proc.lvProc);
     FOR i := 0 TO numParams - 1 DO
       arg := Get(proc.paramStack,i);
@@ -1896,7 +1907,8 @@ PROCEDURE begin_procedure (self: U;  p: Proc) =
     DebugClearLoc(self);
 
     (* create the entry basic block *)
-    bbRef := LLVM.LLVMAppendBasicBlockInContext(globContext, self.curProc.lvProc,  LT("entry"));
+    bbRef := LLVM.LLVMAppendBasicBlockInContext
+               (globContext, self.curProc.lvProc,  LT("entry"));
     LLVM.LLVMPositionBuilderAtEnd(builderIR,bbRef);
 
     (* allocate the params if not a struct *)
@@ -1909,7 +1921,7 @@ PROCEDURE begin_procedure (self: U;  p: Proc) =
         self.allocVar(param);
         (* static link support - save the lv for this proc *)
         IF Text.Equal("_link", M3ID.ToText(param.name)) THEN
-          self.curProc.linkAdrLv := param.lv;
+          self.curProc.staticLinkFormalLv := param.lv;
         END;
        (* do the stores for the parameters *)
         storeVal := LLVM.LLVMBuildStore(builderIR, lVal, param.lv);
@@ -2273,6 +2285,9 @@ PROCEDURE BuildConstGep(src : LLVM.ValueRef; o : ByteOffset) : LLVM.ValueRef =
 
 (* search the static links of all procs to find this var *)
 PROCEDURE SearchStaticLink(proc : LvProc; var : LvVar) : INTEGER =
+(* Return the index of 'var' in a display for 'proc', by searching
+   all up-level referenceable variables of proper static ancestors 
+   of 'proc'. *)   
   VAR
     tp : LvProc;
     v : LvVar;
@@ -2295,19 +2310,23 @@ PROCEDURE SearchStaticLink(proc : LvProc; var : LvVar) : INTEGER =
   END SearchStaticLink;
 
 PROCEDURE FindLinkVar(self : U; var : LvVar) : LLVM.ValueRef =
+(* Generate an llvm variable that contains the address of a variable
+   that is up-level referenced from the current procedure. *) 
   VAR
     linkIdx,lv : LLVM.ValueRef;
     idx : INTEGER := -1;
   BEGIN
     idx := SearchStaticLink(self.curProc, var);
-    <*ASSERT idx >= 0 *>
-    (* load the static link itself *)
-    linkIdx := LLVM.LLVMBuildLoad(builderIR, self.curProc.linkAdrLv, LT("link_adr"));
-    (* calc the offset into the link and thats the address of the var *)
+    <*ASSERT idx >= 0 *> 
+      (* 'var' is up-level referenceable from 'self.curProc'. *)
+    (* load the incoming static link pointer of the current procedure. *)
+    linkIdx := LLVM.LLVMBuildLoad
+                 (builderIR, self.curProc.staticLinkFormalLv, LT("static_link"));
+    (* Calc the offset into the incoming display, and that's the address of the var. *)
     lv := BuildGep(linkIdx,idx * ptrBytes);
-    lv := LLVM.LLVMBuildBitCast(builderIR, lv, AdrAdrTy, LT("link_adradr"));
+    lv := LLVM.LLVMBuildBitCast(builderIR, lv, AdrAdrTy, LT("display_adradr"));
     (* now load the var *)
-    lv := LLVM.LLVMBuildLoad(builderIR, lv, LT("link_ofs"));
+    lv := LLVM.LLVMBuildLoad(builderIR, lv, LT("up_level_var_addr"));
     RETURN lv;
   END FindLinkVar;
 
@@ -3910,14 +3929,16 @@ PROCEDURE start_call_direct
     PopDecl(self);
   END start_call_direct;
 
-PROCEDURE BuildStaticLink(self : U; proc : LvProc) : CARDINAL =
+PROCEDURE BuildDisplay(self : U; proc : LvProc) : CARDINAL =
+(* Generate code (at a call site, in self.curProc) which will construct 
+   the display area for a call to 'proc'. *)  
   VAR
     tp : LvProc;
     v : LvVar;
     varLv,storeLv : LLVM.ValueRef;
     linkSize,index : CARDINAL := 0;
   BEGIN
-    tp := proc.parent;
+    tp := proc.parent; (* Go through callee's proper static ancestors. *) 
     WHILE tp # NIL DO
       IF tp.linkStack # NIL THEN (*importeds are nil *)
         FOR i := 0 TO tp.linkStack.size() - 1 DO
@@ -3938,10 +3959,10 @@ PROCEDURE BuildStaticLink(self : U; proc : LvProc) : CARDINAL =
       tp := tp.parent;
     END;
     RETURN linkSize;
-  END BuildStaticLink;
+  END BuildDisplay;
 
 PROCEDURE Is_alloca (self: U; p: LvProc) : BOOLEAN =
-  (* p describes library function alloca. *) 
+  (* 'p' describes library function 'alloca'. *) 
   BEGIN 
     RETURN p.name = self . allocaName
            AND p.numParams = 1;  
@@ -3951,7 +3972,7 @@ PROCEDURE call_direct (self: U; p: Proc; <*UNUSED*> t: Type) =
   (* call the procedure 'p'.  It returns a value of type t. *)
   VAR
     proc : LvProc;
-    fn,lVal,trampLv : LLVM.ValueRef;
+    fn,lVal,displayLv,staticLinkActual : LLVM.ValueRef;
     curBB : LLVM.BasicBlockRef;
     paramsArr : ValueArrType;
     paramsRef : ValueRefType;
@@ -3974,40 +3995,55 @@ PROCEDURE call_direct (self: U; p: Proc; <*UNUSED*> t: Type) =
     <*ASSERT stackParams = procParams *>
 *)
     IF Is_alloca (self, proc) THEN 
+      (* This is encoded as a call on library function 'alloca'.  Convert to 
+         an llvm 'alloca' instruction. *)  
+      (* As of 2015-09-03, the only way a library call on 'alloca' appears
+         in the input is front-end-generated for a jmpbuf. *) 
       arg := Get(self.callStack);
       Pop(self.callStack);
       lVal := LLVM.LLVMBuildArrayAlloca
                 (builderIR, i8Type, arg.lVal, LT("m3_jmpbuf_size"));
-      (* As of 2015-09-03, the only way a library call on alloca appears
-         in the input is front-end-generated for a jmpbuf. *) 
       Push(self.exprStack,NEW(LvExpr,lVal := lVal));
       RETURN; 
     END; 
-    IF proc.lev > 0 THEN
-      (* its possible the staticSize is zero in the case of no locals
-         so the trampty is nil in which case we dont need a static link at all *)
-      IF proc.trampTy # NIL THEN
-        (* build the alloc for the static link in the entry bb *)
-        IF proc.staticLv = NIL THEN
-          curBB := AtEntry(self);
-          trampLv := LLVM.LLVMBuildAlloca(builderIR, proc.trampTy, LT("_link"));
-          proc.staticLv := LLVM.LLVMBuildBitCast(builderIR, trampLv, AdrTy, LT("_link_adr"));
+    IF proc.lev > 0 THEN (* Calling a nested procedure. *) 
+      linkCount := 1; (* Always pass a SL actual to a nested procedure. *)
+      (* It's possible the staticSize is zero in the case of no locals, so the
+         displayLty is NIL, in which case we dont need a static link at all. *)
+      IF proc.displayLty # NIL THEN (* Callee gets an incoming static link. *) 
+        (* If not already done, alloca space for the display in caller's entry 
+           BB and create an alias addres of llvm type AdrTy. *)
+        IF proc.staticLv = NIL THEN (* Not already done. *) 
+          curBB := AtEntry(self); (* Set builderIR to entry BB of caller. *) 
+          displayLv := LLVM.LLVMBuildAlloca(builderIR, proc.displayLty, LT("_outgoing_display"));
+          proc.staticLv
+            := LLVM.LLVMBuildBitCast
+                 (builderIR, displayLv, AdrTy, LT("_static_link_actual"));
+(* ??? This LLVM.ValueRef is local to the caller, but we store it as a field
+       of our 'LvProc' for the callee???  *) 
           LLVM.LLVMPositionBuilderAtEnd(builderIR, curBB);
+          (* ^Back to the call site, in the caller. *) 
         END;
-        linkSize := BuildStaticLink(self,proc);
-        IF linkSize > 0 THEN
-          linkCount := 1; (* to correct the array size below *)
-        END;
-      ELSE
-       (* if stackparms is 0 and procparms is 1 its a try-finally link
-          so push an undef onto the call stack *)
-        IF procParams = 1 THEN
+        staticLinkActual := proc.staticLv; 
+        linkSize := BuildDisplay(self,proc);
+(* ??? Uses proc.staticLv to address/fill in the display area, which is local
+       to the caller.  If there was a previous call to this callee, but from
+       a different caller, it will try to use the area in the earlier caller.
+       This may be illegal llvm, or produce bad code. *) 
+      ELSE (* Display given to callee will be empty. *)
+       (* if stackparms is 0 and procparms is 1 its a try-finally compiler-
+          generated procedure, with a compiler-created SL parameter, but
+          this call does not supply it, so push an undef onto the call stack *)
+        IF stackParams = 0 AND procParams = 1 THEN
           lVal := LLVM.LLVMGetUndef(AdrTy);
           PushRev(self.callStack, NEW(LvExpr,lVal := lVal));
+          stackParams := 1; (* Dead, for consistency. *) 
           numParams := procParams;
+        ELSE (* Display is empty, but we still need to pass a SL actual. *)
+          staticLinkActual := LLVM.LLVMConstPointerNull(AdrTy); 
         END;
-      END;
-    END;
+      END; (* Callee gets a nonempty/empty display. *) 
+    END; (* Callee is nested. *)
 
     (* create the param types from the callstack *)
     paramsCnt := numParams + linkCount;
@@ -4027,7 +4063,7 @@ PROCEDURE call_direct (self: U; p: Proc; <*UNUSED*> t: Type) =
     <*ASSERT self.callStack.size() = 0 *>
 
     IF linkCount > 0 THEN
-      paramsArr[paramsCnt - 1] := proc.staticLv;
+      paramsArr[paramsCnt - 1] := staticLinkActual; 
     END;
     
     IF proc.returnType # Type.Void THEN
