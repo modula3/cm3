@@ -1192,7 +1192,7 @@ PROCEDURE CompileS (s: State; u: M3Unit.T) =
       PullForBootstrap (u);
       EVAL Utils.NoteModification (u.object);
     ELSIF (u.kind = UK.S) THEN
-      RunCC (s, UnitPath (u), u.object, u.debug, u.optimize, s.include_path_empty);
+      EVAL RunCC (s, UnitPath (u), u.object, u.debug, u.optimize, s.include_path_empty);
       Utils.NoteNewFile (u.object);
     ELSE (* UK.IS or UK.MS *)
       EVAL RunAsm (s, UnitPath (u), u.object);
@@ -1217,7 +1217,8 @@ PROCEDURE CompileC (s: State; u: M3Unit.T) =
    instead of: 
         Utils.NoteNewFile (u.object);
 *) 
-      ELSE RunCC (s, UnitPath (u), u.object, u.debug, u.optimize, s.include_path);
+      ELSE
+        EVAL RunCC (s, UnitPath (u), u.object, u.debug, u.optimize, s.include_path);
         Utils.NoteNewFile (u.object);
       END; 
     END;
@@ -1491,6 +1492,7 @@ PROCEDURE PushOneM3 (s: State;  u: M3Unit.T): BOOLEAN =
     DoWriteAsm : BOOLEAN := FALSE; (* Pass asm option to code generator. *)  
     DoRunAsm := mode IN Target.BackendAsmSet; 
     DoRunC : BOOLEAN := FALSE; 
+    ok := FALSE;
   BEGIN
     (* ASSERT mode # Mode_t.ExternalObject *)     (* mostly nonexistant, untested, but for m3cgcat *)
     <* ASSERT mode # Mode_t.IntegratedAssembly *> (* nonexistant, untested *)
@@ -1607,30 +1609,30 @@ PROCEDURE PushOneM3 (s: State;  u: M3Unit.T): BOOLEAN =
       Temps_Add (temps, s, CCodeName);
     END;
 
-    EVAL RunM3Front (s, u, cm3OutName);
-    IF s.compile_failed THEN 
+    ok := RunM3Front (s, u, cm3OutName);
+    IF NOT ok THEN 
       Msg.Error (NIL, "m3front failed compiling: ", UnitPath (u));
     ELSE (* Front succeeded. *) 
       IF s.delayBackend THEN (* parallel/delayed version of back-end code *)
         s.machine.record(TRUE);
       END;
       TRY
-        IF NOT s.compile_failed AND DoRunM3cc THEN
-          EVAL RunM3Back (s, cm3IRName, codeGenOutName, u.debug, u.optimize);
+        IF ok AND DoRunM3cc THEN
+          ok := RunM3Back (s, cm3IRName, codeGenOutName, u.debug, u.optimize);
         END; 
-        IF NOT s.compile_failed AND DoRunM3llvm THEN
-          EVAL RunM3Llvm (s, cm3IRName, llvmIRName, u.debug, u.optimize);
+        IF ok AND DoRunM3llvm THEN
+          ok := RunM3Llvm (s, cm3IRName, llvmIRName, u.debug, u.optimize);
         END; 
-        IF NOT s.compile_failed  AND DoRunLlc THEN
-          EVAL RunLlcBack 
+        IF ok AND DoRunLlc THEN
+          ok := RunLlcBack 
                  (s, llvmIRName, codeGenOutName, u.debug, u.optimize, 
                   Asm := DoWriteAsm);
         END; 
-        IF NOT s.compile_failed AND DoRunC THEN 
-          RunCC (s, CCodeName, u.object, TRUE, FALSE, s.include_path_empty);
+        IF ok AND DoRunC THEN 
+          ok := RunCC (s, CCodeName, u.object, TRUE, FALSE, s.include_path_empty);
         END;
-        IF NOT s.compile_failed AND DoRunAsm THEN 
-          EVAL RunAsm (s, asmName, u.object);
+        IF ok AND DoRunAsm THEN 
+          ok := RunAsm (s, asmName, u.object);
         END;
       FINALLY
         IF s.delayBackend THEN
@@ -2325,7 +2327,8 @@ BEGIN
 END NilText;
 
 PROCEDURE RunCC (s: State;  source, object: TEXT;  debug, optimize: BOOLEAN;
-                 include_path: Arg.List) =
+                 include_path: Arg.List): BOOLEAN (* Success. *) =
+  VAR failed: BOOLEAN;
   BEGIN
     IF IfDebug () THEN DoDebug ("RunCC " & NilText(source) & " " & NilText(object)); END;
 
@@ -2336,12 +2339,14 @@ PROCEDURE RunCC (s: State;  source, object: TEXT;  debug, optimize: BOOLEAN;
     PushArray (s, include_path);
     PushBool  (s, optimize);
     PushBool  (s, debug);
-    IF CallProc (s, s.c_compiler) THEN
+    failed := CallProc (s, s.c_compiler);
+    IF failed THEN
       s.compile_failed := TRUE;
       Msg.Error (NIL, "C compiler failed compiling: ", source);
       IF NOT s.keep_files THEN Utils.Remove (object); END; 
     END;
     ETimer.Pop ();
+    RETURN NOT failed;
   END RunCC;
 
 PROCEDURE RunM3Back (s: State;  source, object: TEXT;
@@ -2473,7 +2478,7 @@ PROCEDURE GenerateCMain (s: State;  Main_O: TEXT) =
         Utils.Remove (Main_XX);
       END;
       Msg.Debug ("compiling ", Main_C, " ...", Wr.EOL);
-      RunCC (s, Main_C, Main_O, debug := TRUE, optimize := FALSE, include_path := s.include_path_empty);
+      EVAL RunCC (s, Main_C, Main_O, debug := TRUE, optimize := FALSE, include_path := s.include_path_empty);
       IF (s.compile_failed) THEN
         Msg.FatalError (NIL, "cc ", Main_C, " failed!!");
       END;
