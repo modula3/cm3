@@ -39,7 +39,7 @@ end
 
 if not defined ("LLVM_SOURCE_DIR")
     LLVM_SOURCE_DIR = PickDir("LLVM_SOURCE_DIR", [
-        "/src/llvm-3.5.2.src",    % Jay Krell
+        "/src/llvm-3.6.1.src",    % Jay Krell
         "/home/rodney/proj/llvm/llvm-3.6.1/llvm-3.6.1.src", % Rodney Bates
         ])
 end
