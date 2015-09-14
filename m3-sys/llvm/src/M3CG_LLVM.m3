@@ -3458,21 +3458,15 @@ PROCEDURE insert (self: U; <*UNUSED*> t: IType) =
     s1 := Get(self.exprStack,1);
     s2 := Get(self.exprStack,2);
     s3 := Get(self.exprStack,3);
-    value,target,offset,mask,ones,res,count,wordsize,width : LLVM.ValueRef;
+    value,target,offset,mask,ones,res,count : LLVM.ValueRef;
   BEGIN
     value := NARROW(s2,LvExpr).lVal;
     offset := NARROW(s1,LvExpr).lVal;
     count := NARROW(s0,LvExpr).lVal;
     target := NARROW(s3,LvExpr).lVal;
-
-    (* here we produce a type with count bits a hack of sorts *)
     ones := LLVM.LLVMConstAllOnes(IntPtrTy);
-    wordsize := LLVM.LLVMConstInt(IntPtrTy, ptrBits, TRUE);
-    width := LLVM.LLVMBuildSub(builderIR, wordsize, count, LT("width"));
-
-    ones := LLVM.LLVMBuildShl(builderIR, ones, width, LT("allones"));
-    mask := LLVM.LLVMBuildLShr(builderIR, ones, width, LT("masklshr"));
-
+    ones := LLVM.LLVMBuildShl(builderIR, ones, count, LT("allones"));
+    mask := LLVM.LLVMBuildNot(builderIR, ones, LT("masknot"));
     res := DoInsert(value,target,mask,offset);
     NARROW(s3,LvExpr).lVal := res;
     Pop(self.exprStack,3);
@@ -3487,14 +3481,17 @@ PROCEDURE insert_n (self: U; <*UNUSED*> t: IType;  n: CARDINAL) =
     value,target,offset,mask,ones,res : LLVM.ValueRef;
     maskTy : LLVM.TypeRef;
   BEGIN
-    value := NARROW(s1,LvExpr).lVal;
-    offset := NARROW(s0,LvExpr).lVal;
-    target := NARROW(s2,LvExpr).lVal;
-    maskTy := LLVM.LLVMIntType(n);
-    ones := LLVM.LLVMConstAllOnes(maskTy);
-    mask := LLVM.LLVMConstZExt(ones, IntPtrTy);
-    res := DoInsert(value,target,mask,offset);
-    NARROW(s2,LvExpr).lVal := res;
+    IF n > 0 THEN
+      value := NARROW(s1,LvExpr).lVal;
+      offset := NARROW(s0,LvExpr).lVal;
+      target := NARROW(s2,LvExpr).lVal;
+      maskTy := LLVM.LLVMIntType(n);
+      ones := LLVM.LLVMConstAllOnes(maskTy);
+      mask := LLVM.LLVMConstZExt(ones, IntPtrTy);
+      res := DoInsert(value,target,mask,offset);
+      NARROW(s2,LvExpr).lVal := res;
+    END;
+    (* else n = 0 is a noop *)
     Pop(self.exprStack,2);
   END insert_n;
 
@@ -3506,14 +3503,17 @@ PROCEDURE insert_mn (self: U; <*UNUSED*> t: IType;  m, n: CARDINAL) =
     value,target,offset,mask,ones,res : LLVM.ValueRef;
     maskTy : LLVM.TypeRef;
   BEGIN
-    value := NARROW(s0,LvExpr).lVal;
-    target := NARROW(s1,LvExpr).lVal;
-    offset := LLVM.LLVMConstInt(IntPtrTy, VAL(m,LONGINT), TRUE);
-    maskTy := LLVM.LLVMIntType(n);
-    ones := LLVM.LLVMConstAllOnes(maskTy);
-    mask := LLVM.LLVMConstZExt(ones, IntPtrTy);
-    res := DoInsert(value,target,mask,offset);
-    NARROW(s1,LvExpr).lVal := res;
+    IF n > 0 THEN
+      value := NARROW(s0,LvExpr).lVal;
+      target := NARROW(s1,LvExpr).lVal;
+      offset := LLVM.LLVMConstInt(IntPtrTy, VAL(m,LONGINT), TRUE);
+      maskTy := LLVM.LLVMIntType(n);
+      ones := LLVM.LLVMConstAllOnes(maskTy);
+      mask := LLVM.LLVMConstZExt(ones, IntPtrTy);
+      res := DoInsert(value,target,mask,offset);
+      NARROW(s1,LvExpr).lVal := res;
+    END;
+    (* else n = 0 is a noop *)
     Pop(self.exprStack);
   END insert_mn;
 
