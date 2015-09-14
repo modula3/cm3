@@ -40,7 +40,7 @@ end
 if not defined ("LLVM_SOURCE_DIR")
     LLVM_SOURCE_DIR = PickDir("LLVM_SOURCE_DIR", [
         "/src/llvm-3.5.2.src",    % Jay Krell
-        "/home/rodney/proj/llvm/llvm-3.5/llvm-3.5.0.src", % Rodney Bates
+        "/home/rodney/proj/llvm/llvm-3.6.1/llvm-3.6.1.src", % Rodney Bates
         ])
 end
 
@@ -55,7 +55,7 @@ end
 
 if not defined("LLVM_LIB_DIR")
     LLVM_LIB_DIR = PickDir("LLVM_LIB_DIR", [
-        "/usr/local/llvm-3.5.0/lib", % Rodney Bates
+        "/usr/local/llvm-3.6.1/lib", % Rodney Bates
         {"AMD64_DARWIN" : "/Users/jay/llvm-3.6.1/lib", % Jay Krell
          "I386_DARWIN"  : "/Users/jay/llvm-3.6.1-x86/lib", % Jay Krell
         }{TARGET},
