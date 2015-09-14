@@ -32,7 +32,7 @@ PROCEDURE BuildPgm (prog: TEXT;  READONLY units: M3Unit.Set;
       THEN BuildBootProgram (s);
       ELSE BuildProgram (s, shared);
     END;
-    IF s.compile_failed # 0 THEN M3Options.exit_code := 1; END;
+    IF s.compile_failed THEN M3Options.exit_code := 1; END;
   END BuildPgm;
 
 PROCEDURE BuildLib (lib: TEXT;  READONLY units: M3Unit.Set;
@@ -43,14 +43,14 @@ PROCEDURE BuildLib (lib: TEXT;  READONLY units: M3Unit.Set;
       THEN BuildBootLibrary (s);
       ELSE BuildLibrary (s, shared);
     END;
-    IF s.compile_failed # 0 THEN M3Options.exit_code := 1; END;
+    IF s.compile_failed THEN M3Options.exit_code := 1; END;
   END BuildLib;
 
 PROCEDURE JustCompile (READONLY units: M3Unit.Set;
                        sys_libs: Arg.List;  m: Quake.Machine) =
   VAR s := CompileUnits ("noname", units, sys_libs, UK.PGMX, m);
   BEGIN
-    IF s.compile_failed # 0 THEN M3Options.exit_code := 1; END;
+    IF s.compile_failed THEN M3Options.exit_code := 1; END;
   END JustCompile;
 
 PROCEDURE BuildCPgm (prog: TEXT;  READONLY units: M3Unit.Set;
@@ -58,7 +58,7 @@ PROCEDURE BuildCPgm (prog: TEXT;  READONLY units: M3Unit.Set;
   VAR s := CompileUnits (prog, units, sys_libs, UK.PGMX, m);
   BEGIN
     BuildCProgram (s, shared);
-    IF s.compile_failed # 0 THEN M3Options.exit_code := 1; END;
+    IF s.compile_failed THEN M3Options.exit_code := 1; END;
   END BuildCPgm;
 
 VAR current_state: State := NIL;
@@ -120,7 +120,7 @@ TYPE
     linker        : ConfigProc;         (* link programs *)
     skip_linker   : ConfigProc;         (* don't link programs *)
     keep_files    : BOOLEAN;            (* don't delete temporary files *)
-    compile_failed := 0;                (* how many failures? *)
+    compile_failed: BOOLEAN;            (* did anything fail? *)
     new_link_info : BOOLEAN;            (* did we generate any new version stamps?*)
     bootstrap_mode: BOOLEAN;            (* stop compiling at assembly code *)
     compile_once  : BOOLEAN;            (* don't recompile for better code *)
@@ -323,7 +323,7 @@ PROCEDURE CompileUnits (main     : TEXT;
     s.linker      := GetConfigProc (s, "m3_link", 5);
     s.skip_linker := GetConfigProc (s, "skip_link", 2);
 
-    s.compile_failed := 0;
+    s.compile_failed := FALSE;
     s.new_link_info  := FALSE;
     s.keep_files     := GetConfigBool (s, "M3_KEEP_FILES");
     s.bootstrap_mode := GetConfigBool (s, "M3_BOOTSTRAP");
@@ -662,13 +662,13 @@ PROCEDURE AddExportHook (s: State;  intf_name: M3ID.T;  impl: M3Unit.T) =
   BEGIN
     intf := M3Unit.Get (s.units, intf_name, UK.I3);
     IF (intf = NIL) THEN
-      INC(s.compile_failed);
+      s.compile_failed := TRUE;
       Msg.Error (NIL, "missing interface: ", M3ID.ToText (intf_name), ".i3");
     ELSIF (intf.name = s.main) THEN
       (* Ignore "EXPORTS Main".  The linker is responsible for finding and
          explicitly initializing modules that claim to be the main program.  *)
     ELSIF (intf.imported # impl.imported) AND (intf.name # s.main) THEN
-      INC(s.compile_failed);
+      s.compile_failed := TRUE;
       BadExport (intf, impl);
     ELSE
       intf.exporters := NEW (M3Unit.Exporter,
@@ -788,13 +788,13 @@ PROCEDURE NoteExporter (s: State;  intf_name: M3ID.T;  impl: M3Unit.T) =
     IF (impl = NIL) OR (impl.kind # UK.M3) THEN RETURN; END;
     intf := M3Unit.Get (s.units, intf_name, UK.I3);
     IF (intf = NIL) THEN
-      INC(s.compile_failed);
+      s.compile_failed := TRUE;
       Msg.Error (NIL, "missing interface: ", M3ID.ToText (intf_name), ".i3");
     ELSIF (intf.name = s.main) THEN
       (* Ignore "EXPORTS Main".  The linker is responsible for finding and
          explicitly initializing modules that claim to be the main program.  *)
     ELSIF (intf.imported # impl.imported) AND (intf.name # s.main) THEN
-      INC(s.compile_failed);
+      s.compile_failed := TRUE;
       BadExport (intf, impl);
     ELSE
       ex := intf.exporters;
@@ -1084,7 +1084,6 @@ PROCEDURE CompileEverything (s: State;  schedule: SourceList) =
   END CompileEverything;
 
 PROCEDURE CompileOne (s: State;  u: M3Unit.T) =
-(* TODO This should return BOOLEAN success. *)
   BEGIN
     IF (u.compiling) THEN RETURN; END;
     u.compiling := TRUE;
@@ -1193,7 +1192,7 @@ PROCEDURE CompileS (s: State; u: M3Unit.T) =
       PullForBootstrap (u);
       EVAL Utils.NoteModification (u.object);
     ELSIF (u.kind = UK.S) THEN
-      EVAL RunCC (s, UnitPath (u), u.object, u.debug, u.optimize, s.include_path_empty);
+      RunCC (s, UnitPath (u), u.object, u.debug, u.optimize, s.include_path_empty);
       Utils.NoteNewFile (u.object);
     ELSE (* UK.IS or UK.MS *)
       EVAL RunAsm (s, UnitPath (u), u.object);
@@ -1218,8 +1217,7 @@ PROCEDURE CompileC (s: State; u: M3Unit.T) =
    instead of: 
         Utils.NoteNewFile (u.object);
 *) 
-      ELSE
-        EVAL RunCC (s, UnitPath (u), u.object, u.debug, u.optimize, s.include_path);
+      ELSE RunCC (s, UnitPath (u), u.object, u.debug, u.optimize, s.include_path);
         Utils.NoteNewFile (u.object);
       END; 
     END;
@@ -1493,7 +1491,6 @@ PROCEDURE PushOneM3 (s: State;  u: M3Unit.T): BOOLEAN =
     DoWriteAsm : BOOLEAN := FALSE; (* Pass asm option to code generator. *)  
     DoRunAsm := mode IN Target.BackendAsmSet; 
     DoRunC : BOOLEAN := FALSE; 
-    ok: BOOLEAN;
   BEGIN
     (* ASSERT mode # Mode_t.ExternalObject *)     (* mostly nonexistant, untested, but for m3cgcat *)
     <* ASSERT mode # Mode_t.IntegratedAssembly *> (* nonexistant, untested *)
@@ -1610,30 +1607,30 @@ PROCEDURE PushOneM3 (s: State;  u: M3Unit.T): BOOLEAN =
       Temps_Add (temps, s, CCodeName);
     END;
 
-    ok := RunM3Front (s, u, cm3OutName);
-    IF NOT ok THEN 
+    EVAL RunM3Front (s, u, cm3OutName);
+    IF s.compile_failed THEN 
       Msg.Error (NIL, "m3front failed compiling: ", UnitPath (u));
     ELSE (* Front succeeded. *) 
       IF s.delayBackend THEN (* parallel/delayed version of back-end code *)
         s.machine.record(TRUE);
       END;
       TRY
-        IF ok AND DoRunM3cc THEN
-          ok := RunM3Back (s, cm3IRName, codeGenOutName, u.debug, u.optimize);
+        IF NOT s.compile_failed AND DoRunM3cc THEN
+          EVAL RunM3Back (s, cm3IRName, codeGenOutName, u.debug, u.optimize);
         END; 
-        IF ok AND DoRunM3llvm THEN
-          ok := RunM3Llvm (s, cm3IRName, llvmIRName, u.debug, u.optimize);
+        IF NOT s.compile_failed AND DoRunM3llvm THEN
+          EVAL RunM3Llvm (s, cm3IRName, llvmIRName, u.debug, u.optimize);
         END; 
-        IF ok AND DoRunLlc THEN
-          ok := RunLlcBack 
+        IF NOT s.compile_failed  AND DoRunLlc THEN
+          EVAL RunLlcBack 
                  (s, llvmIRName, codeGenOutName, u.debug, u.optimize, 
                   Asm := DoWriteAsm);
         END; 
-        IF ok AND DoRunC THEN 
-          ok := RunCC (s, CCodeName, u.object, TRUE, FALSE, s.include_path_empty);
+        IF NOT s.compile_failed AND DoRunC THEN 
+          RunCC (s, CCodeName, u.object, TRUE, FALSE, s.include_path_empty);
         END;
-        IF ok AND DoRunAsm THEN 
-          ok := RunAsm (s, asmName, u.object);
+        IF NOT s.compile_failed AND DoRunAsm THEN 
+          EVAL RunAsm (s, asmName, u.object);
         END;
       FINALLY
         IF s.delayBackend THEN
@@ -1983,7 +1980,7 @@ PROCEDURE RunM3Front (s: State;  u: M3Unit.T;  object: TEXT)
     ResetEnv (s, NIL, NIL, NIL);
 
     IF NOT ok THEN
-      INC(s.compile_failed);
+      s.compile_failed := TRUE;
       IF NOT s.keep_files THEN Utils.Remove (object); END;
     END;
 
@@ -2310,7 +2307,7 @@ PROCEDURE Pass0_GetImplementations (env: Env;  intf: M3ID.T): M3Compiler.ImplLis
   BEGIN
     IF (env.source_unit = NIL) THEN RETURN NIL; END;
     IF (env.source_unit.kind # UK.I3) OR (env.source_unit.name # intf) THEN
-      INC(env.globals.compile_failed);
+      env.globals.compile_failed := TRUE;
       Msg.Error (NIL, "!!! UNEXPECTED GetImplementations(",
                  M3ID.ToText (intf), ")  unit = ",
                  M3Unit.FileName (env.source_unit));
@@ -2328,8 +2325,7 @@ BEGIN
 END NilText;
 
 PROCEDURE RunCC (s: State;  source, object: TEXT;  debug, optimize: BOOLEAN;
-                 include_path: Arg.List): BOOLEAN (* Success. *) =
-  VAR failed: BOOLEAN;
+                 include_path: Arg.List) =
   BEGIN
     IF IfDebug () THEN DoDebug ("RunCC " & NilText(source) & " " & NilText(object)); END;
 
@@ -2340,14 +2336,12 @@ PROCEDURE RunCC (s: State;  source, object: TEXT;  debug, optimize: BOOLEAN;
     PushArray (s, include_path);
     PushBool  (s, optimize);
     PushBool  (s, debug);
-    failed := CallProc (s, s.c_compiler);
-    IF failed THEN
-      INC(s.compile_failed);
+    IF CallProc (s, s.c_compiler) THEN
+      s.compile_failed := TRUE;
       Msg.Error (NIL, "C compiler failed compiling: ", source);
       IF NOT s.keep_files THEN Utils.Remove (object); END; 
     END;
     ETimer.Pop ();
-    RETURN NOT failed;
   END RunCC;
 
 PROCEDURE RunM3Back (s: State;  source, object: TEXT;
@@ -2362,7 +2356,7 @@ PROCEDURE RunM3Back (s: State;  source, object: TEXT;
     PushBool (s, debug);
     failed := CallProc (s, s.m3backend);
     IF failed THEN
-      INC(s.compile_failed);
+      s.compile_failed := TRUE;
       Msg.Error (NIL, "m3cc (aka cm3cg) failed compiling: ", source);
       IF NOT s.keep_files THEN Utils.Remove (object); END;
     END;
@@ -2382,7 +2376,7 @@ PROCEDURE RunM3Llvm (s: State;  source, object: TEXT;
     PushBool (s, debug);
     failed := CallProc (s, s.m3llvm);
     IF failed THEN
-      INC(s.compile_failed);
+      s.compile_failed := TRUE;
       Msg.Error (NIL, "m3llvm failed compiling: ", source);
       IF NOT s.keep_files THEN Utils.Remove (object); END;
     END;
@@ -2408,7 +2402,7 @@ PROCEDURE RunLlcBack
     PushText (s, filetype); 
     failed := CallProc (s, s.llvmbackend);
     IF failed THEN
-      INC(s.compile_failed);
+      s.compile_failed := TRUE;
       Msg.Error (NIL, "llvm compiler (llc) failed compiling: ", source);
       IF NOT s.keep_files THEN Utils.Remove (object); END;
     END;
@@ -2425,7 +2419,7 @@ PROCEDURE RunAsm (s: State;  source, object: TEXT): BOOLEAN (* Success. *) =
     PushText (s, object);
     failed := CallProc (s, s.assembler);
     IF failed THEN
-      INC(s.compile_failed);
+      s.compile_failed := TRUE;
       Msg.Error (NIL, "assembler failed assembling: ", source);
       IF NOT s.keep_files THEN Utils.Remove (object); END; 
     END;
@@ -2479,8 +2473,8 @@ PROCEDURE GenerateCMain (s: State;  Main_O: TEXT) =
         Utils.Remove (Main_XX);
       END;
       Msg.Debug ("compiling ", Main_C, " ...", Wr.EOL);
-      EVAL RunCC (s, Main_C, Main_O, debug := TRUE, optimize := FALSE, include_path := s.include_path_empty);
-      IF s.compile_failed # 0 THEN
+      RunCC (s, Main_C, Main_O, debug := TRUE, optimize := FALSE, include_path := s.include_path_empty);
+      IF (s.compile_failed) THEN
         Msg.FatalError (NIL, "cc ", Main_C, " failed!!");
       END;
       Utils.NoteNewFile (Main_O);
@@ -2501,7 +2495,7 @@ PROCEDURE BuildCProgram (s: State;  shared: BOOLEAN) =
   BEGIN
     IF (s.bootstrap_mode) THEN RETURN; END;
 
-    IF s.compile_failed # 0 THEN
+    IF (s.compile_failed) THEN
       DontLink (s, name.base, shared);
       Msg.Explain ("compilation failed => not building program \"",pgm_file,"\"");
       RETURN;
@@ -2541,7 +2535,7 @@ PROCEDURE BuildCProgram (s: State;  shared: BOOLEAN) =
       PushArray (s, import_libs);
       PushBool  (s, shared);
       IF CallProc (s, s.linker) THEN
-        INC(s.compile_failed);
+        s.compile_failed := TRUE;
         Msg.Error (NIL, "linker failed linking: ", name.base);
       END;
     ETimer.Pop ();
@@ -2561,7 +2555,7 @@ PROCEDURE BuildProgram (s: State;  shared: BOOLEAN) =
   BEGIN
     <*ASSERT NOT s.bootstrap_mode *>
 
-    IF s.compile_failed # 0 THEN
+    IF (s.compile_failed) THEN
       DontLink (s, name.base, shared);
       Msg.Explain ("compilation failed => not building program \"",pgm_file,"\"");
       IF s.has_loader THEN Utils.Remove (Desc_file); END;
@@ -2620,7 +2614,7 @@ PROCEDURE BuildProgram (s: State;  shared: BOOLEAN) =
       PushArray (s, import_libs);
       PushBool  (s, shared);
       IF CallProc (s, s.linker) THEN
-        INC(s.compile_failed);
+        s.compile_failed := TRUE;
         Msg.Error (NIL, "linker failed linking: ", name.base);
       END;
     ETimer.Pop ();
@@ -2874,7 +2868,7 @@ PROCEDURE BuildBootProgram (s: State) =
   BEGIN
     <*ASSERT s.bootstrap_mode *>
 
-    IF s.compile_failed # 0 THEN
+    IF (s.compile_failed) THEN
       Msg.Explain ("compilation failed => not building program \"",
                    s.result_name,"\"");
       Utils.Remove (makefile);
@@ -2952,7 +2946,7 @@ PROCEDURE BuildLibrary (s: State;  shared: BOOLEAN) =
   BEGIN
     <*ASSERT NOT s.bootstrap_mode *>
 
-    IF s.compile_failed # 0 THEN
+    IF (s.compile_failed) THEN
       DontBuildLibrary (s, name.base, shared);
       Msg.Explain ("compilation failed => not building library \"",
                    lib_file, "\"");
@@ -2996,7 +2990,7 @@ PROCEDURE BuildLibrary (s: State;  shared: BOOLEAN) =
       PushArray (s, import_libs);
       PushBool  (s, shared);
       IF CallProc (s, s.librarian) THEN
-        INC(s.compile_failed);
+        s.compile_failed := TRUE;
         Msg.Error (NIL, "librarian failed building: ", name.base);
       END;
     ETimer.Pop ();
@@ -3026,7 +3020,7 @@ PROCEDURE BuildBootLibrary (s: State) =
   BEGIN
     <*ASSERT s.bootstrap_mode *>
 
-    IF s.compile_failed # 0 THEN
+    IF (s.compile_failed) THEN
       Msg.Explain ("compilation failed => not building library \"",
                    s.result_name,"\"");
       Utils.Remove (makefile);

@@ -179,7 +179,6 @@ PROCEDURE Remove (file: TEXT) =
   END Remove;
 
 PROCEDURE Copy (old, new: TEXT) =
-(* TODO This should return BOOLEAN and error should not be fatal. *)
   BEGIN
     Msg.Commands ("copy ", old, " -> ", new);
     TRY
