@@ -500,7 +500,7 @@ TYPE
   END;
 
 VAR
-  modRef : LLVM.ModuleRef;
+  modRef : LLVM.ModuleRef := NIL;
   builderIR : LLVM.BuilderRef;
   globContext : LLVM.ContextRef;
   moduleID : Ctypes.const_char_star;
@@ -1057,13 +1057,14 @@ PROCEDURE end_unit (self: U) =
 
 PROCEDURE set_source_file (self: U;  file: TEXT) =
   BEGIN
-    self.curFile := file;
-    moduleID := LT(file);
-    modRef := LLVM.LLVMModuleCreateWithNameInContext(moduleID,globContext);
-    LLVM.LLVMSetDataLayout(modRef,LT(dataRep));
-    LLVM.LLVMSetTarget(modRef,LT(targetTriple));
-
-    DebugInit(self);
+    IF modRef = NIL THEN  
+      self.curFile := file;
+      moduleID := LT(file);
+      modRef := LLVM.LLVMModuleCreateWithNameInContext(moduleID,globContext);
+      LLVM.LLVMSetDataLayout(modRef,LT(dataRep));
+      LLVM.LLVMSetTarget(modRef,LT(targetTriple));
+      DebugInit(self);
+    END;
   END set_source_file;
 
 PROCEDURE set_source_line (self: U; line: INTEGER) =
