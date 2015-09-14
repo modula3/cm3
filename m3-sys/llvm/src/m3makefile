@@ -1,12 +1,50 @@
 % Directory wherein to find llvm source (at least its include subdirectory):
 
-if not defined("LLVM_SOURCE_DIR") LLVM_SOURCE_DIR = "/home/rodney/proj/llvm/llvm-3.5/llvm-3.5.0.src" end % Rodney Bates
-LLVM_INCLUDE_DIR = LLVM_SOURCE_DIR & "/include" 
+proc FileExists (a) is
+    return not stale (a, a)
+end
+
+proc PickDir (name, a) is
+    local all = ""
+    foreach b in a
+        %write ("checking ", a, CR)
+        if FileExists (b)
+            write (name, "=", b, CR)
+            return b
+        end
+        all = all & "\n   " & b
+    end
+    error (name & " not defined and nothing found among:" & all)
+end
+
+if not defined ("LLVM_SOURCE_DIR")
+    LLVM_SOURCE_DIR = PickDir("LLVM_SOURCE_DIR", [
+        "/src/llvm-3.5.2.src",    % Jay Krell
+        "/home/rodney/proj/llvm/llvm-3.5/llvm-3.5.0.src", % Rodney Bates
+        ])
+end
+
 % Some include files come from here: 
-LLVM_BUILD_INCLUDE_DIR = LLVM_SOURCE_DIR & "/../build/include" 
+
+if not defined("LLVM_BUILD_INCLUDE_DIR")
+    LLVM_BUILD_INCLUDE_DIR = PickDir("LLVM_BUILD_INCLUDE_DIR", [
+        "/obj/llvm-3.5.2/include", % Jay Krell
+        LLVM_SOURCE_DIR & "/../build/include",
+        ])
+end
+
+LLVM_INCLUDE_DIR = LLVM_SOURCE_DIR & "/include"
 
 % Directory to find compiled llvm libraries in:
-if not defined("LLVM_LIB_DIR") LLVM_LIB_DIR = "/usr/local/llvm-3.5.0/lib" end % Rodney Bates
+
+if not defined("LLVM_LIB_DIR")
+    LLVM_LIB_DIR = PickDir("LLVM_LIB_DIR", [
+        "/usr/local/llvm-3.5.0/lib", % Rodney Bates
+        {"AMD64_DARWIN" : "/Users/jay/llvm-3.5.2/lib", % Jay Krell
+         "I386_DARWIN"  : "/Users/jay/llvm-3.5.2-x86/lib", % Jay Krell
+        }{TARGET},
+        ])
+end
 
 % Directory wherein to find various system libraries: 
 %if not defined("LIB_DIR") LIB_DIR = "/usr/lib" end  % Peter McKinna 
@@ -34,11 +72,15 @@ import_lib("dl","/usr/lib")
 import_lib("ncurses","/usr/lib")
 
 /* minimum llvm libs - order seems to be important here */
-import_lib("LLVMSupport","/usr/local/llvm/lib")
-import_lib("LLVMDebugInfo","/usr/local/llvm/lib")
-import_lib("LLVMTarget","/usr/local/llvm/lib")
-import_lib("LLVMBitWriter","/usr/local/llvm/lib")
-import_lib("LLVMCore","/usr/local/llvm/lib")
+
+foreach a in ["LLVMSupport",
+              "LLVMDebugInfo",
+              "LLVMTarget",
+              "LLVMBitWriter",
+              "LLVMCore",
+              ]
+    import_lib(a, LLVM_LIB_DIR)
+end
 
 interface("LLVM")
 module("M3CG_LLVM")
