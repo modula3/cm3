@@ -266,7 +266,6 @@ TYPE
 
   LvExpr = OBJECT
     lVal : LLVM.ValueRef;
-    type : Type;  (* check not really using this field *)
   END;
 
   LvStruct = OBJECT
@@ -3948,11 +3947,6 @@ PROCEDURE call_direct (self: U; p: Proc; <*UNUSED*> t: Type) =
     FOR i := 0 TO numParams - 1 DO
       arg := Get(self.callStack);
       (* possibly add call attributes here like sext *)
-      IF arg.type = Type.Struct THEN
-      (*
-        LLVM.LLVMAddAttribute(arg.lVal,LLVM.ByValAttribute);
-        *)
-      END;
       paramsArr[i] := arg.lVal;
       Pop(self.callStack);
     END;
@@ -4073,7 +4067,6 @@ PROCEDURE pop_param (self: U;  t: MType) =
       END;
     END;
 
-    expr.type := t;
     PushRev(self.callStack,s0);
     Pop(self.exprStack);
   END pop_param;
@@ -4090,11 +4083,7 @@ PROCEDURE pop_struct (self: U; <*UNUSED*> t: TypeUID; s: ByteSize; <*UNUSED*>  a
     structRef : REFANY;
   BEGIN
     expr := NARROW(s0,LvExpr);
-    expr.type := Type.Struct;
-
-(*  not really using expr.type anywhere. Was using it in call direct
-   to add attributes for structs but not anymore. should delete it.
-*)
+ 
     (* This parm needs to agree with its declared type. All structs
        should be in the struct table indexed by their size. 
        Find the type and cast the parm to its correct type *)
