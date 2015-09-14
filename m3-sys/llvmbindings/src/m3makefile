@@ -18,15 +18,51 @@
 %   LLVM_LIB_DIR = "location.of.compiled.llvm.libraries"
 %   LIB_DIR = "location.of.other.libraries.needed.by.llvm"
 
-% Directory wherein to find llvm source (at least its include subdirectory):
-if not defined("LLVM_SOURCE_DIR") LLVM_SOURCE_DIR = "/home/rodney/proj/llvm/llvm-3.6.1/llvm-3.6.1.src" end 
-LLVM_INCLUDE_DIR = LLVM_SOURCE_DIR & "/include" 
-% Some include files come from here: 
-LLVM_BUILD_INCLUDE_DIR = LLVM_SOURCE_DIR & "/../build/include" 
+proc FileExists (a) is
+    return not stale (a, a)
+end
 
-% Directory to find compiled llvm libraries in:
-%if not defined("LLVM_LIB_DIR") LLVM_LIB_DIR = "/usr/local/llvm-3.4.2lib" end % Rodney, llvm 3.4.2
-if not defined("LLVM_LIB_DIR") LLVM_LIB_DIR = "/usr/local/llvm-3.6.1/lib" end % Rodney, llvm 3.6.1
+proc PickDir (name, a) is
+    local all = ""
+    foreach b in a
+        %write ("checking ", a, CR)
+        if FileExists (b)
+            write (name, "=", b, CR)
+            return b
+        end
+        all = all & "\n   " & b
+    end
+    error (name & " not defined and nothing found among:" & all)
+end
+
+% Directory wherein to find llvm source (at least its include subdirectory):
+
+if not defined ("LLVM_SOURCE_DIR")
+    LLVM_SOURCE_DIR = PickDir("LLVM_SOURCE_DIR", [
+        "/src/llvm-3.5.2.src",    % Jay Krell
+        "/home/rodney/proj/llvm/llvm-3.5/llvm-3.5.0.src", % Rodney Bates
+        ])
+end
+
+% Some include files come from here: 
+
+if not defined("LLVM_BUILD_INCLUDE_DIR")
+    LLVM_BUILD_INCLUDE_DIR = PickDir("LLVM_BUILD_INCLUDE_DIR", [
+        "/obj/llvm-3.6.1/include", % Jay Krell
+        LLVM_SOURCE_DIR & "/../build/include",
+        ])
+end
+
+if not defined("LLVM_LIB_DIR")
+    LLVM_LIB_DIR = PickDir("LLVM_LIB_DIR", [
+        "/usr/local/llvm-3.5.0/lib", % Rodney Bates
+        {"AMD64_DARWIN" : "/Users/jay/llvm-3.6.1/lib", % Jay Krell
+         "I386_DARWIN"  : "/Users/jay/llvm-3.6.1-x86/lib", % Jay Krell
+        }{TARGET},
+        ])
+end
+
+LLVM_INCLUDE_DIR = LLVM_SOURCE_DIR & "/include" 
 
 % Directory wherein to find various system libraries: 
 %if not defined("LIB_DIR") LIB_DIR = "/usr/lib" end  % Peter McKinna 
