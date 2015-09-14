@@ -1493,7 +1493,7 @@ PROCEDURE ImportedStructSize(self : U; m3t : TypeUID) : ByteSize =
     tidExists := self.debugTable.get(m3t,typeObj);
     <*ASSERT tidExists *>
     tc := TYPECODE(typeObj);
-    IF tc = TYPECODE(RecordDebug) OR tc = TYPECODE(ArrayDebug) THEN
+    IF tc = TYPECODE(RecordDebug) OR tc = TYPECODE(ArrayDebug) OR tc = TYPECODE(SetDebug) THEN
       size := VAL(NARROW(typeObj,BaseDebug).bitSize,INTEGER);
     END;
     RETURN size DIV 8;
