@@ -21,6 +21,8 @@ IMPORT Wr, IntRefTbl, RefSeq;
 IMPORT Ctypes, M3toC;
 IMPORT Text,Fmt,Pathname;
 IMPORT IO; (* debug this module *)
+IMPORT Word;
+TYPE INT32 = Ctypes.int; 
 
 REVEAL
 
@@ -279,7 +281,6 @@ TYPE
 
   LvExpr = OBJECT
     lVal : LLVM.ValueRef;
-    type : Type;  (* check not really using this field *)
   END;
 
   LvStruct = OBJECT
@@ -351,27 +352,44 @@ TYPE
     block(storeVal : LLVM.ValueRef; endBB : BOOLEAN) : LLVM.ValueRef := ITEBlock;
   END;
 
+PROCEDURE SignExtend(a, b: INTEGER): INTEGER =
+BEGIN
+    b := Word.LeftShift(-1, b - 1);
+    IF Word.And(a, b) # 0 THEN
+        a := Word.Or(a, b);
+    END;
+    RETURN a;
+END SignExtend;
+
+PROCEDURE SignExtend32(a: INTEGER): INT32 =
+BEGIN
+    RETURN SignExtend(a, 32);
+END SignExtend32;
+
+CONST IntegerToTypeid = SignExtend32;
+
   (* debug uids for basic types *)
-CONST
-  NO_UID = 16_FFFFFFFF;
-  UID_INTEGER = 16_195C2A74;
-  UID_LONGINT = 16_05562176;
-  UID_WORD = 16_FFFFFFFF97E237E2;
-  UID_LONGWORD = 16_FFFFFFFF9CED36E7;
-  UID_REEL = 16_48E16572;
-  UID_LREEL = 16_FFFFFFFF94FE32F6;
-  UID_XREEL = 16_FFFFFFFF9EE024E3;
-  UID_BOOLEAN = 16_1E59237D;
-  UID_CHAR = 16_56E16863;
-  UID_WIDECHAR = 16_FFFFFFFF88F439FC;
-  UID_MUTEX = 16_1541F475;
-  UID_TEXT = 16_50F86574;
-  UID_UNTRACED_ROOT = 16_FFFFFFFF898EA789;
-  UID_ROOT = 16_FFFFFFFF9D8FB489;
-  UID_REFANY = 16_1C1C45E6;
-  UID_ADDR = 16_08402063;
-  UID_RANGE_0_31 = 16_2DA6581D;
-  UID_RANGE_0_63 = 16_2FA3581D;
+CONST NO_UID = 16_FFFFFFFF;
+
+VAR UID_INTEGER := IntegerToTypeid(16_195C2A74);
+CONST UID_LONGINT = 16_05562176;
+VAR UID_WORD := IntegerToTypeid(16_97E237E2); (* CARDINAL *)
+VAR UID_LONGWORD := IntegerToTypeid(16_9CED36E7); (* LONGCARD *)
+CONST UID_REEL = 16_48E16572; (* REAL *)
+VAR UID_LREEL := IntegerToTypeid(16_94FE32F6); (* LONGREAL *)
+VAR UID_XREEL := IntegerToTypeid(16_9EE024E3); (* EXTENDED *)
+CONST UID_BOOLEAN = 16_1E59237D; (* BOOLEAN [0..1] *)
+CONST UID_CHAR = 16_56E16863; (* CHAR [0..255] *)
+VAR UID_WIDECHAR := IntegerToTypeid(16_88F439FC);
+CONST UID_MUTEX = 16_1541F475; (* MUTEX *)
+CONST UID_TEXT = 16_50F86574; (* TEXT *)
+VAR UID_UNTRACED_ROOT := IntegerToTypeid(16_898EA789); (* UNTRACED ROOT *)
+VAR UID_ROOT := IntegerToTypeid(16_9D8FB489); (* ROOT *)
+CONST UID_REFANY = 16_1C1C45E6; (* REFANY *)
+CONST UID_ADDR = 16_08402063; (* ADDRESS *)
+CONST UID_RANGE_0_31 = 16_2DA6581D; (* [0..31] *)
+CONST UID_RANGE_0_63 = 16_2FA3581D; (* [0..63] *)
+
 (* not used
   UID_PROC1 = 16_9C9DE465;
   UID_PROC2 = 16_20AD399F;
@@ -381,8 +399,8 @@ CONST
   UID_PROC6 = 16_DC1B3625;
   UID_PROC7 = 16_EE17DF2C;
   UID_PROC8 = 16_B740EFD0;
-*)
-  UID_NULL = 16_48EC756E;
+*) 
+CONST UID_NULL = 16_48EC756E; (* NULL *) (* Occurs in elego/graphicutils/src/RsrcFilter.m3 *)
 
   (* debug encoding - see dwarf.h *)
   DW_ATE_boolean = 16_2;
@@ -498,7 +516,7 @@ TYPE
   END;
 
 VAR
-  modRef : LLVM.ModuleRef;
+  modRef : LLVM.ModuleRef := NIL;
   builderIR : LLVM.BuilderRef;
   globContext : LLVM.ContextRef;
   moduleID : Ctypes.char_star;
@@ -1096,13 +1114,14 @@ PROCEDURE end_unit (self: U) =
 
 PROCEDURE set_source_file (self: U;  file: TEXT) =
   BEGIN
-    self.curFile := file;
-    moduleID := LT(file);
-    modRef := LLVM.LLVMModuleCreateWithNameInContext(moduleID,globContext);
-    LLVM.LLVMSetDataLayout(modRef,LT(dataRep));
-    LLVM.LLVMSetTarget(modRef,LT(targetTriple));
-
-    DebugInit(self);
+    IF modRef = NIL THEN  
+      self.curFile := file;
+      moduleID := LT(file);
+      modRef := LLVM.LLVMModuleCreateWithNameInContext(moduleID,globContext);
+      LLVM.LLVMSetDataLayout(modRef,LT(dataRep));
+      LLVM.LLVMSetTarget(modRef,LT(targetTriple));
+      DebugInit(self);
+    END;
   END set_source_file;
 
 PROCEDURE set_source_line (self: U; line: INTEGER) =
@@ -1551,7 +1570,7 @@ PROCEDURE ImportedStructSize(self : U; m3t : TypeUID) : ByteSize =
     tidExists := self.debugTable.get(m3t,typeObj);
     <*ASSERT tidExists *>
     tc := TYPECODE(typeObj);
-    IF tc = TYPECODE(RecordDebug) OR tc = TYPECODE(ArrayDebug) THEN
+    IF tc = TYPECODE(RecordDebug) OR tc = TYPECODE(ArrayDebug) OR tc = TYPECODE(SetDebug) THEN
       size := VAL(NARROW(typeObj,BaseDebug).bitSize,INTEGER);
     END;
     RETURN size DIV 8;
@@ -2437,7 +2456,11 @@ PROCEDURE store (self: U;  v: Var;  o: ByteOffset;  t: ZType;  u: MType) =
     IF dest.type = Type.Addr THEN
       (* remove the first pointer *)
       destEltTy := LLVM.LLVMGetElementType(LLVM.LLVMTypeOf(destVal));
-      srcVal := LLVM.LLVMBuildBitCast(builderIR, srcVal, destEltTy, LT("store_ptr"));
+      IF u = Type.Addr THEN      
+        srcVal := LLVM.LLVMBuildBitCast(builderIR, srcVal, destEltTy, LT("store_ptr"));
+      ELSE
+        srcVal := LLVM.LLVMBuildIntToPtr(builderIR, srcVal, destEltTy, LT("store_ptr"));      
+      END;
     ELSIF dest.type = Type.Struct THEN
       (* get pointer to u type bit cast dest to that then bitcast src to u type *)
       srcVal := LLVM.LLVMBuildBitCast(builderIR, srcVal, destTy, LT("store_srcptr"));
@@ -3532,21 +3555,15 @@ PROCEDURE insert (self: U; <*UNUSED*> t: IType) =
     s1 := Get(self.exprStack,1);
     s2 := Get(self.exprStack,2);
     s3 := Get(self.exprStack,3);
-    value,target,offset,mask,ones,res,count,wordsize,width : LLVM.ValueRef;
+    value,target,offset,mask,ones,res,count : LLVM.ValueRef;
   BEGIN
     value := NARROW(s2,LvExpr).lVal;
     offset := NARROW(s1,LvExpr).lVal;
     count := NARROW(s0,LvExpr).lVal;
     target := NARROW(s3,LvExpr).lVal;
-
-    (* here we produce a type with count bits a hack of sorts *)
     ones := LLVM.LLVMConstAllOnes(IntPtrTy);
-    wordsize := LLVM.LLVMConstInt(IntPtrTy, ptrBits, TRUE);
-    width := LLVM.LLVMBuildSub(builderIR, wordsize, count, LT("width"));
-
-    ones := LLVM.LLVMBuildShl(builderIR, ones, width, LT("allones"));
-    mask := LLVM.LLVMBuildLShr(builderIR, ones, width, LT("masklshr"));
-
+    ones := LLVM.LLVMBuildShl(builderIR, ones, count, LT("allones"));
+    mask := LLVM.LLVMBuildNot(builderIR, ones, LT("masknot"));
     res := DoInsert(value,target,mask,offset);
     NARROW(s3,LvExpr).lVal := res;
     Pop(self.exprStack,3);
@@ -3561,14 +3578,17 @@ PROCEDURE insert_n (self: U; <*UNUSED*> t: IType;  n: CARDINAL) =
     value,target,offset,mask,ones,res : LLVM.ValueRef;
     maskTy : LLVM.TypeRef;
   BEGIN
-    value := NARROW(s1,LvExpr).lVal;
-    offset := NARROW(s0,LvExpr).lVal;
-    target := NARROW(s2,LvExpr).lVal;
-    maskTy := LLVM.LLVMIntType(n);
-    ones := LLVM.LLVMConstAllOnes(maskTy);
-    mask := LLVM.LLVMConstZExt(ones, IntPtrTy);
-    res := DoInsert(value,target,mask,offset);
-    NARROW(s2,LvExpr).lVal := res;
+    IF n > 0 THEN
+      value := NARROW(s1,LvExpr).lVal;
+      offset := NARROW(s0,LvExpr).lVal;
+      target := NARROW(s2,LvExpr).lVal;
+      maskTy := LLVM.LLVMIntType(n);
+      ones := LLVM.LLVMConstAllOnes(maskTy);
+      mask := LLVM.LLVMConstZExt(ones, IntPtrTy);
+      res := DoInsert(value,target,mask,offset);
+      NARROW(s2,LvExpr).lVal := res;
+    END;
+    (* else n = 0 is a noop *)
     Pop(self.exprStack,2);
   END insert_n;
 
@@ -3580,14 +3600,17 @@ PROCEDURE insert_mn (self: U; <*UNUSED*> t: IType;  m, n: CARDINAL) =
     value,target,offset,mask,ones,res : LLVM.ValueRef;
     maskTy : LLVM.TypeRef;
   BEGIN
-    value := NARROW(s0,LvExpr).lVal;
-    target := NARROW(s1,LvExpr).lVal;
-    offset := LLVM.LLVMConstInt(IntPtrTy, VAL(m,LONGINT), TRUE);
-    maskTy := LLVM.LLVMIntType(n);
-    ones := LLVM.LLVMConstAllOnes(maskTy);
-    mask := LLVM.LLVMConstZExt(ones, IntPtrTy);
-    res := DoInsert(value,target,mask,offset);
-    NARROW(s1,LvExpr).lVal := res;
+    IF n > 0 THEN
+      value := NARROW(s0,LvExpr).lVal;
+      target := NARROW(s1,LvExpr).lVal;
+      offset := LLVM.LLVMConstInt(IntPtrTy, VAL(m,LONGINT), TRUE);
+      maskTy := LLVM.LLVMIntType(n);
+      ones := LLVM.LLVMConstAllOnes(maskTy);
+      mask := LLVM.LLVMConstZExt(ones, IntPtrTy);
+      res := DoInsert(value,target,mask,offset);
+      NARROW(s1,LvExpr).lVal := res;
+    END;
+    (* else n = 0 is a noop *)
     Pop(self.exprStack);
   END insert_mn;
 
@@ -4055,11 +4078,6 @@ PROCEDURE call_direct (self: U; p: Proc; <*UNUSED*> t: Type) =
     FOR i := 0 TO numParams - 1 DO
       arg := Get(self.callStack);
       (* possibly add call attributes here like sext *)
-      IF arg.type = Type.Struct THEN
-      (*
-        LLVM.LLVMAddAttribute(arg.lVal,LLVM.ByValAttribute);
-        *)
-      END;
       paramsArr[i] := arg.lVal;
       Pop(self.callStack);
     END;
@@ -4180,7 +4198,6 @@ PROCEDURE pop_param (self: U;  t: MType) =
       END;
     END;
 
-    expr.type := t;
     PushRev(self.callStack,s0);
     Pop(self.exprStack);
   END pop_param;
@@ -4197,11 +4214,7 @@ PROCEDURE pop_struct (self: U; <*UNUSED*> t: TypeUID; s: ByteSize; <*UNUSED*>  a
     structRef : REFANY;
   BEGIN
     expr := NARROW(s0,LvExpr);
-    expr.type := Type.Struct;
-
-(*  not really using expr.type anywhere. Was using it in call direct
-   to add attributes for structs but not anymore. should delete it.
-*)
+ 
     (* This parm needs to agree with its declared type. All structs
        should be in the struct table indexed by their size. 
        Find the type and cast the parm to its correct type *)
