@@ -2364,7 +2364,11 @@ PROCEDURE store (self: U;  v: Var;  o: ByteOffset;  t: ZType;  u: MType) =
     IF dest.type = Type.Addr THEN
       (* remove the first pointer *)
       destEltTy := LLVM.LLVMGetElementType(LLVM.LLVMTypeOf(destVal));
-      srcVal := LLVM.LLVMBuildBitCast(builderIR, srcVal, destEltTy, LT("store_ptr"));
+      IF u = Type.Addr THEN      
+        srcVal := LLVM.LLVMBuildBitCast(builderIR, srcVal, destEltTy, LT("store_ptr"));
+      ELSE
+        srcVal := LLVM.LLVMBuildIntToPtr(builderIR, srcVal, destEltTy, LT("store_ptr"));      
+      END;
     ELSIF dest.type = Type.Struct THEN
       (* get pointer to u type bit cast dest to that then bitcast src to u type *)
       srcVal := LLVM.LLVMBuildBitCast(builderIR, srcVal, destTy, LT("store_srcptr"));
