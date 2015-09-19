@@ -78,7 +78,7 @@ REVEAL
     debugObj      : ROOT;
 METHODS
     allocVar(v : LvVar) := AllocVar;
-    allocTemp(v : LvVar) := AllocTemp;
+    allocVarInEntryBlock(v : LvVar) := AllocVarInEntryBlock;
     buildFunc(p : Proc) := BuildFunc;
     getLabel(l : Label; name : TEXT) : LabelObj := GetLabel;
     ifCommon(t: IType; l: Label; f: Frequency; op : CompareOp) := IfCommon;
@@ -237,20 +237,23 @@ TYPE
     name : Name;
     size : ByteSize;
     type : Type;
-    isConst : BOOLEAN;
     align : Alignment;
     varType : VarType;
     m3t : TypeUID;
     segLen : INTEGER;
-    in_memory : BOOLEAN;
-    up_level : BOOLEAN;
-    exported : BOOLEAN;
-    inited : BOOLEAN := FALSE;
     frequency : Frequency;
     inProc : LvProc;  (* for static link *)
     lvType : LLVM.TypeRef;
     lv : LLVM.ValueRef;  (* llvm var definition *)
+    locDisplayIndex : INTEGER := -1;
+    (* ^Relative to this proc only, index within a display.  Nonnegative 
+       only if labelled by front end as up_level. *)  
     inits : RefSeq.T;
+    isConst : BOOLEAN;
+    in_memory : BOOLEAN;
+    up_level : BOOLEAN; (* Maintained but not used. *) 
+    exported : BOOLEAN;
+    inited : BOOLEAN := FALSE;
   END;
 
   LvProc = Proc OBJECT
@@ -264,19 +267,40 @@ TYPE
     lvProc : LLVM.ValueRef;  (* llvm procedure definition *)
     procTy : LLVM.TypeRef;
     parent : LvProc := NIL;
+    entryBB : LLVM.BasicBlockRef; 
+    (* ^For params, vars, temps, display and its construction. *) 
+    secondBB : LLVM.BasicBlockRef; 
+    (* ^For other M3-coded stuff.  There are two separate basic blocks
+       here, because we need to be able to intersperse adding things at the
+       ends of each.  This seems easier than shuffling insertion points in
+       one BB.  secondBB is the unconditional successor of entryBB. *)
+    (* NOTE: It is hard to tell from the header files, but apparently, there
+             is only one insertion point globally, not one per BB. *) 
     saveBB : LLVM.BasicBlockRef; (* for nested procs save the bb *)
     localStack  : RefSeq.T := NIL;
     paramStack  : RefSeq.T := NIL;
-    linkStack   : RefSeq.T := NIL;
+    uplevelRefdStack  : RefSeq.T := NIL;
+    cumLocalsParamsCt : CARDINAL := 0;
+      (* ^Sum of counts of params and locals for this proc 
+          and all its static ancestors. *) 
+    cumUplevelRefdCt : CARDINAL := 0; 
+      (* ^Sum of counts of up-level referenced params and locals for this proc 
+          and all its static ancestors. *)
+    staticLinkFormal : LvVar := NIL; 
+    (* Added by this program, if necessary. *) 
     imported : BOOLEAN := FALSE; (* if this is an import *)
     defined : BOOLEAN := FALSE; (* set when we build the declaration for real *)
     displayLty : LLVM.TypeRef := NIL; 
       (* ^llvm type for a display, an array of addresses to all up-level- 
-         referenced variables in proper ancestors of this proc.  Caller creates
-         it and passes its address to this proc in staticLinkFormalLv. *)
-    staticLv : LLVM.ValueRef := NIL; (* i8* type for the static link parm *)
-    staticLinkFormalLv : LLVM.ValueRef := NIL; (* Will have AdrTy. *)
-    (* ^The formal parameter that is the static link passed in. *) 
+         referenced variables in this proc and its static ancestors.  If it 
+         calls a procedure nested one deeper than itself and that wants a
+         display, this proc will create it in a local of this type (only once)
+         and pass its address as an added static link parameter to the callee. *)
+    outgoingDisplayLv : LLVM.ValueRef := NIL; (* displayLty* *) 
+    (* ^Do we really even need to keep this in the LvProc? *) 
+    outgoingDisplayI8StarLv : LLVM.ValueRef := NIL; (* i8* *) 
+    (* ^The display this proc will pass to one-level more deeply nested procs.*)
+    needsDisplay : BOOLEAN := FALSE; 
   END;
 
   LvExpr = OBJECT
@@ -858,19 +882,30 @@ PROCEDURE DeclSet(name : TEXT; fn : LLVM.ValueRef; numParams : INTEGER; hasRetur
   END DeclSet;
 
 PROCEDURE DisplaySize(proc : LvProc) : INTEGER =
-(* Totla number of locals and formals of static proper ancestors of 'proc' that
+(* Total number of locals and formals of 'proc' and its static ancestors that
    are up-level referenced from somewhere. *)   
   VAR
     tp : LvProc;
-    linkSize : CARDINAL := 0;
+    linkSize, linkSize2 : CARDINAL := 0;
   BEGIN
-    tp := proc.parent;
+    IF proc.uplevelRefdStack = NIL THEN
+      linkSize := 0; 
+    ELSE 
+      linkSize := proc.uplevelRefdStack.size()
+    END; 
+    IF proc.lev > 0 THEN
+      INC ( linkSize, proc.parent.cumUplevelRefdCt);
+    END; 
+    (* Brute-force compute it the old way and assert equal. *) 
+    linkSize2 := 0; 
+    tp := proc;
     WHILE tp # NIL DO
-      IF tp.linkStack # NIL THEN (*importeds are nil *)
-        INC(linkSize,tp.linkStack.size());
+      IF tp.uplevelRefdStack # NIL THEN (*importeds are nil *)
+        INC(linkSize2,tp.uplevelRefdStack.size());
       END;
       tp := tp.parent;
     END;
+    <* ASSERT linkSize2 = linkSize *> 
     RETURN linkSize;
   END DisplaySize;
 
@@ -894,36 +929,33 @@ END LinkExists;
 (* Declare this procedure and all its locals and parameters. *)
 PROCEDURE BuildFunc(self : U; p : Proc) =
   VAR
-    param,v : LvVar;
+    param : LvVar;
     proc : LvProc;
     retTy : LLVM.TypeRef;
     paramsArr : TypeArrType;
     paramsRef : TypeRefType;
     lVal : LLVM.ValueRef;
-    numParams,linkSize : CARDINAL := 0;
-    name : TEXT;
+    numParams : CARDINAL := 0;
+    textName : TEXT;
+    name : Name;
     arg : REFANY;
   BEGIN
     proc := NARROW(p,LvProc);
     IF proc.defined THEN RETURN; END;
 
-    IF proc.lev > 0 THEN
-      (* Get the size of the display area the incoming static link will 
-         point to. *)
-      linkSize := DisplaySize(proc);
-      IF linkSize > 0 THEN (* We need an llvm type for the display area. *) 
-        proc.displayLty := LLVM.LLVMArrayType(AdrTy,linkSize);
-      END;
-      (* check if this is not a try-finally parm or other internal static link *)
-      IF NOT LinkExists(proc) THEN
-        (* create the incoming static link param var and push onto the 
-           param stack *)
-        v := NewVar(self,M3ID.Add("_link"),ptrBytes,ptrBytes,Type.Addr,
-                    FALSE,UID_ADDR,TRUE,FALSE,FALSE,FALSE,M3CG.Maybe,
-                    VarType.Param);
-        PushRev(proc.paramStack, v);
-        INC(proc.numParams);
-      END;
+    IF proc.lev > 0 (* 'proc' is nested. *)
+       (* For debugger's sake, a nested proc always has a static link. *) 
+       AND NOT LinkExists(proc) 
+             (* Front end did not already provide a static link formal. *)
+    THEN (* Create a static link formal. *) 
+      textName := M3ID.ToText(proc.name) & "__SL_formal";
+      name := M3ID.Add(textName); 
+      proc.staticLinkFormal 
+        := NewVar (self,name,ptrBytes,ptrBytes,
+                  Type.Addr, FALSE,UID_ADDR,TRUE,FALSE,FALSE,FALSE,M3CG.Maybe,
+                  VarType.Param ); 
+      Push(proc.paramStack, proc.staticLinkFormal); (* Make it first formal. *) 
+      INC(proc.numParams);
     END;
 
     numParams := proc.numParams;
@@ -955,8 +987,8 @@ PROCEDURE BuildFunc(self : U; p : Proc) =
     proc.procTy := LLVM.LLVMFunctionType(retTy, paramsRef, numParams, FALSE);
 
     (* create the function *)
-    name := M3ID.ToText(proc.name);
-    proc.lvProc := LLVM.LLVMAddFunction(modRef, LT(name), proc.procTy);
+    textName := M3ID.ToText(proc.name);
+    proc.lvProc := LLVM.LLVMAddFunction(modRef, LT(textName), proc.procTy);
 
     (* c funcs seem to have these attrs ?? *)
     LLVM.LLVMAddFunctionAttr(proc.lvProc, LLVM.NoUnwindAttribute);
@@ -970,16 +1002,16 @@ PROCEDURE BuildFunc(self : U; p : Proc) =
       arg := Get(proc.paramStack,i);
       param := NARROW(arg,LvVar);
       IF param.name = M3ID.NoID THEN
-        name := "_link";
+        textName := "_link";
         (* the only place the parm is noid seems to be the generated internal
         procs for try-finally and maybe for runtime linker and the purpose of this
         parm is the static link. Set the name so we can check in begin_procedure *)
-        param.name := M3ID.Add(name);
+        param.name := M3ID.Add(textName);
       ELSE
-        name := M3ID.ToText(param.name);
+        textName := M3ID.ToText(param.name);
       END;
       (* set a name for the param - doesnt work for externals *)
-      LLVM.LLVMSetValueName(lVal, LT(name));
+      LLVM.LLVMSetValueName(lVal, LT(textName));
 
       (* this sets the byval attribute by which the caller makes a copy *)
       IF param.type = Type.Struct THEN
@@ -995,11 +1027,12 @@ PROCEDURE DumpLLVMIR(<*UNUSED*> self : U; BitcodeFileName, AsmFileName: TEXT) =
   VAR
     msg : Ctypes.char_star_star := NIL;
   BEGIN
-    IF BitcodeFileName # NIL THEN
-      EVAL LLVM.LLVMWriteBitcodeToFile(modRef, LT(BitcodeFileName));
-    END (*IF*); 
+    (* Write Assembly format 1st, in case of obscure failures during write. *) 
     IF AsmFileName # NIL THEN
       EVAL LLVM.LLVMPrintModuleToFile(modRef, LT(AsmFileName), msg);
+    END (*IF*); 
+    IF BitcodeFileName # NIL THEN
+      EVAL LLVM.LLVMWriteBitcodeToFile(modRef, LT(BitcodeFileName));
     END (*IF*); 
 
 
@@ -1484,54 +1517,48 @@ PROCEDURE VName(v : LvVar; debug := FALSE) : TEXT =
     RETURN name;
   END VName;
 
+(* Generate llvm code to allocate v in the current basic block. *) 
 PROCEDURE AllocVar(<*UNUSED*>self : U; v : LvVar) =
   BEGIN
     v.lv := LLVM.LLVMBuildAlloca(builderIR, v.lvType, LT(VName(v)));
     LLVM.LLVMSetAlignment(v.lv,v.align);
   END AllocVar;
   
-(* change the builder to the entry bb and return the current bb *)
-PROCEDURE AtEntry(self : U) : LLVM.BasicBlockRef =
-  VAR
-    entryBB,curBB : LLVM.BasicBlockRef;
-    firstInstr : LLVM.ValueRef;
-  BEGIN
-    curBB := LLVM.LLVMGetInsertBlock(builderIR);
-    entryBB := LLVM.LLVMGetEntryBasicBlock(self.curProc.lvProc);
-    firstInstr := LLVM.LLVMGetFirstInstruction(entryBB);
-    IF firstInstr # NIL THEN
-      LLVM.LLVMPositionBuilderBefore(builderIR, firstInstr);
-    END;
-    RETURN curBB;
-  END AtEntry;
-
-(* PRE: We are inside a procedure body, possibly deeply. *) 
-(* Allocate a temp or locals in the entry BB of the procedure. 
-   It could be M3-coded and have a name. *)
-PROCEDURE AllocTemp(self : U; v : LvVar) =
+(* PRE: We are inside a procedure body, possibly deeply inside nested blocks. *)
+(* Allocate a temp or local in the entry BB of the procedure. 
+   It could be M3-coded and have a name, or be a true temp. *)
+PROCEDURE AllocVarInEntryBlock(self : U; v : LvVar) =
   VAR
     curBB : LLVM.BasicBlockRef;
   BEGIN
     IF v.name = M3ID.NoID THEN 
       DebugClearLoc(self); (* suspend debugging of temp allocs *)
     END; 
-    curBB := AtEntry(self);
+
+    (* Position at end of entry BB. *)
+    curBB := LLVM.LLVMGetInsertBlock(builderIR);
+    LLVM.LLVMPositionBuilderAtEnd(builderIR, self.curProc.entryBB);
+
     (* alloc the temp in the entry BB *)
     self.allocVar(v);
+
+    (* Back to regular insertion point. *) 
     LLVM.LLVMPositionBuilderAtEnd(builderIR, curBB);
     IF v.name = M3ID.NoID THEN 
       DebugLine(self); (* resume debugging *)
     END; 
-  END AllocTemp;
+  END AllocVarInEntryBlock;
 
-PROCEDURE declare_local (self: U;  n: Name;  s: ByteSize;  a: Alignment; t: Type;  m3t: TypeUID;  in_memory, up_level: BOOLEAN; f: Frequency): Var =
+PROCEDURE declare_local 
+  (self: U;  n: Name;  s: ByteSize;  a: Alignment; t: Type;  m3t: TypeUID; 
+    in_memory, up_level: BOOLEAN; f: Frequency): Var =
   VAR
     v : LvVar := NewVar(self,n,s,a,t,FALSE,m3t,in_memory,up_level,FALSE,FALSE,
                         f,VarType.Local);
     proc : LvProc;
   BEGIN
     (* Locals are declared after declare_procedure or within a begin_procedure 
-       end_procedure pair. Since begin_procedure implies a begin_block, 
+       end_procedure pair.  Since begin_procedure implies a begin_block, 
        checking for blockLevel > 0 is sufficient to allocate now. *)
     IF self.blockLevel = 0 THEN (* We are in a signature. *) 
     (* NOTE: If n is "_result", we are in the signature of a function procedure
@@ -1539,20 +1566,22 @@ PROCEDURE declare_local (self: U;  n: Name;  s: ByteSize;  a: Alignment; t: Type
              hold the result. *) 
       <*ASSERT self.declStack.size() = 1 *>
       proc := Get(self.declStack); (* Get the current proc. *)
-      PushRev(proc.localStack, v); 
+      PushRev(proc.localStack, v); (* Left-to-right. *)  
       (* ^The local will be allocated later, in the proc body. *) 
       v.inProc := proc;
       IF up_level THEN
-        Push(proc.linkStack, v);
+        v.locDisplayIndex := proc.uplevelRefdStack.size(); 
+        PushRev(proc.uplevelRefdStack, v);
       END;
     ELSE (* We are in a procedure body. *)
-      (* inside a local block or begin_procedure so allocate it now,
-        but allocate it in the entry bb *)
-      self.allocTemp(v); (* Which puts it among locals of containing proc. *) 
+      (* We are inside a local block of a procedure body.  Allocate it in the
+         entry BB, to flatten it into the procedure. *) 
+      self.allocVarInEntryBlock(v); (* Which puts it among locals of containing proc. *) 
       v.inProc := self.curProc;
       (* Could be up-level if M3 decl is in an inner block. *) 
       IF up_level THEN
-        Push(self.curProc.linkStack, v);
+        v.locDisplayIndex := self.curProc.uplevelRefdStack.size(); 
+        PushRev(self.curProc.uplevelRefdStack, v);
       END;
       DebugVar(self, v);
     END;
@@ -1582,9 +1611,9 @@ PROCEDURE declare_param (self: U;  n: Name;  s: ByteSize;  a: Alignment; t: Type
     proc : LvProc;
     size : ByteSize;
   BEGIN
-    (* This appears after either import_procedure (which could be inside a 
-       procedure body, i.e., between begin_procedure and end_procedure) 
-       or a declare_procedure.  Either way the procDecl should 
+    (* This appears after either import_procedure (which could be inside the 
+       body of a different procedure, i.e., between begin_procedure and 
+       end_procedure) or declare_procedure.  Either way the procDecl should 
        be set from the previous import or declare *)
 
     (* NOTE: If n is "_result", we are in the signature of a function procedure
@@ -1606,10 +1635,11 @@ PROCEDURE declare_param (self: U;  n: Name;  s: ByteSize;  a: Alignment; t: Type
     v := NewVar(self,n,s,a,t,FALSE,m3t,in_memory,up_level,FALSE,FALSE,f,
                 VarType.Param);
     
-    PushRev(proc.paramStack, v);
+    PushRev(proc.paramStack, v); (* Left-to-right. *) 
     v.inProc := proc;
     IF up_level THEN
-      Push(proc.linkStack, v);
+      v.locDisplayIndex := proc.uplevelRefdStack.size(); 
+      PushRev(proc.uplevelRefdStack, v); (* Left-to-right. *)
     END;
     RETURN v;
   END declare_param;
@@ -1620,7 +1650,7 @@ PROCEDURE declare_temp (self: U; s: ByteSize; a: Alignment; t: Type; in_memory: 
   BEGIN
     (* temps are always declared inside a begin_procedure. However we
        allocate them in the entry BB to avoid dominate all uses problems *)  
-    self.allocTemp(v);
+    self.allocVarInEntryBlock(v);
     v.inProc := self.curProc;
     RETURN v;
   END declare_temp;
@@ -1860,7 +1890,8 @@ PROCEDURE import_procedure (self: U;  n: Name;  n_params: INTEGER; return_type: 
     retTy : LLVM.TypeRef;
   BEGIN
     p.imported := TRUE;
-    (* dont need local stack since its imported but need a paramstack *)
+    (* Don't need local stack or an up-level since its imported, but need a 
+       paramstack. *)
     p.paramStack := NEW(RefSeq.T).init();
 
     PopDecl(self);
@@ -1888,7 +1919,7 @@ PROCEDURE declare_procedure (self: U;  n: Name;  n_params: INTEGER;
     p.imported := FALSE;
     p.localStack := NEW(RefSeq.T).init();
     p.paramStack := NEW(RefSeq.T).init();
-    p.linkStack := NEW(RefSeq.T).init();
+    p.uplevelRefdStack := NEW(RefSeq.T).init();
     PushDecl(self,p);
     RETURN p;
   END declare_procedure;
@@ -1901,15 +1932,14 @@ PROCEDURE begin_procedure (self: U;  p: Proc) =
   VAR
     local,param : LvVar;
     proc : LvProc;
-    bbRef : LLVM.BasicBlockRef;
     storeVal,lVal : LLVM.ValueRef;
     numParams,numLocals : CARDINAL;
-    name : TEXT;
+    textName : TEXT;  
     arg : REFANY;
   BEGIN
     (*  Declare this procedure and all its locals and parameters.*)
-    self.curProc := p;
     proc := NARROW(p,LvProc);
+    self.curProc := proc;
 
     proc.saveBB := LLVM.LLVMGetInsertBlock(builderIR);
     Push(self.procStack,proc);
@@ -1924,10 +1954,13 @@ PROCEDURE begin_procedure (self: U;  p: Proc) =
     (* set debug loc to nul here to run over prologue instructions *)
     DebugClearLoc(self);
 
-    (* create the entry basic block *)
-    bbRef := LLVM.LLVMAppendBasicBlockInContext
-               (globContext, self.curProc.lvProc,  LT("entry"));
-    LLVM.LLVMPositionBuilderAtEnd(builderIR,bbRef);
+    (* Create the entry and second basic blocks. *)
+    proc.entryBB := LLVM.LLVMAppendBasicBlockInContext
+                      (globContext, self.curProc.lvProc,  LT("entry"));
+    (* ^For specific stuff: alloca's, display build, etc. *) 
+    proc.secondBB := LLVM.LLVMAppendBasicBlockInContext
+                       (globContext, self.curProc.lvProc,  LT("second"));
+    LLVM.LLVMPositionBuilderAtEnd(builderIR,proc.entryBB);
 
     (* allocate the params if not a struct *)
     lVal := LLVM.LLVMGetFirstParam(self.curProc.lvProc);
@@ -1937,10 +1970,6 @@ PROCEDURE begin_procedure (self: U;  p: Proc) =
       param := NARROW(arg,LvVar);
       IF param.type # Type.Struct THEN
         self.allocVar(param);
-        (* static link support - save the lv for this proc *)
-        IF Text.Equal("_link", M3ID.ToText(param.name)) THEN
-          self.curProc.staticLinkFormalLv := param.lv;
-        END;
        (* do the stores for the parameters *)
         storeVal := LLVM.LLVMBuildStore(builderIR, lVal, param.lv);
         LLVM.LLVMSetAlignment(storeVal,param.align);
@@ -1951,20 +1980,99 @@ PROCEDURE begin_procedure (self: U;  p: Proc) =
       lVal := LLVM.LLVMGetNextParam(lVal);
     END;
 
-    (* allocate the locals *)
+    (* Allocate locals that were declared after the declare_procedure. *)
     numLocals := proc.localStack.size();
     FOR i := 0 TO numLocals - 1 DO
       arg := Get(proc.localStack,i);
       local := NARROW(arg,LvVar);
-      name := M3ID.ToText(local.name);
+      textName := M3ID.ToText(local.name);
+(* CHECK ^What do we do with this?  allocVar takes it from local. *) 
       self.allocVar(local);
     END;
 
+    (* A temporary placeholder for display.  To be replaced at end_procedure. *)
+    textName := "_typed_outgoing_display";
+    proc.outgoingDisplayLv 
+      := LLVM.LLVMBuildAlloca(builderIR, AdrTy, LT("_temp_outgoing_display"));
+    proc.outgoingDisplayI8StarLv
+          := LLVM.LLVMBuildBitCast
+               (builderIR, proc.outgoingDisplayLv, AdrTy, 
+                LT("_temp_outgoing_display_as_I8Star"));
+    (* WARNING!! ^We will, in end_procedure, do a ReplaceAllUsesWith on this.
+                  It is essential that each instance of this is distinct and
+                  doesn't get thrown into a single pot with the others.  
+                  Otherwise, chaos will ensue.  The rules for what makes 
+                  this unique are hard to ferret out. *) 
+(* CHECK: ^Can we avoid this bitcast? *) 
+
+    LLVM.LLVMPositionBuilderAtEnd(builderIR,proc.secondBB);
+    (* ^This is where general stuff will be inserted. *) 
     self.begin_block();
 
    (* debug for locals and params here, need the stacks intact *)
     DebugLocalsParams(self,proc);
   END begin_procedure;
+
+PROCEDURE BuildDisplay(self : U) 
+  : CARDINAL (* Display element count. *) =
+(* Generate code (at a call site, in self.curProc) that will construct 
+   the display area for a call to a procedure immediately nested inside
+   self.curProc. *)  
+(* PRE: self.curProc.outgoingDisplayLv and self.curProc.outgoingDisplayI8StarLv
+        point to the place to build the display. *) 
+  VAR
+    v : LvVar;
+    varLv,storeLv : LLVM.ValueRef;
+    index : CARDINAL := 0;
+    textName : TEXT;  
+
+  PROCEDURE Recurse(ancestorProc: LvProc ) = 
+  (* Do the ancestors outside-in, so a display works to pass to a procedure
+     farther out than it was created for. *)
+    BEGIN
+      IF ancestorProc # NIL THEN
+        Recurse (ancestorProc.parent); 
+        IF ancestorProc.uplevelRefdStack # NIL THEN (* importeds are nil *)
+          FOR i := 0 TO ancestorProc.uplevelRefdStack.size() - 1 DO
+            v := Get(ancestorProc.uplevelRefdStack,i);
+            textName := M3ID.ToText (v.name); 
+            varLv := GetAddrOfUplevelVar(self,v);
+            storeLv 
+              := BuildGep (self.curProc.outgoingDisplayI8StarLv,
+                           index * ptrBytes, textName & "__DisplaySlotAddr");
+            storeLv 
+              := LLVM.LLVMBuildBitCast
+                   (builderIR,storeLv,AdrAdrTy,
+                    LT(textName & "__DisplaySlotAddr.addraddr"));
+            EVAL LLVM.LLVMBuildStore(builderIR,varLv,storeLv);
+            INC(index);
+          END;
+        END;
+      END;
+    END Recurse; 
+
+  BEGIN (*BuildDisplay*) 
+    Recurse(self.curProc.parent); 
+    (* ^Go through callee's proper static ancestors, outside inward. *) 
+    IF self.curProc.uplevelRefdStack # NIL THEN (* importeds are nil *)
+      FOR i := 0 TO self.curProc.uplevelRefdStack.size() - 1 DO
+        v := Get(self.curProc.uplevelRefdStack,i);
+        textName := M3ID.ToText (v.name); 
+        varLv := LLVM.LLVMBuildBitCast
+                   (builderIR,v.lv,AdrTy,LT(textName & ".addr"));
+        storeLv 
+          := BuildGep(self.curProc.outgoingDisplayI8StarLv,index * ptrBytes, 
+                      textName & "__DisplaySlotAddr");
+        storeLv 
+          := LLVM.LLVMBuildBitCast
+               (builderIR,storeLv,AdrAdrTy
+                ,LT(textName & "__DisplaySlotAddr.addraddr"));
+        EVAL LLVM.LLVMBuildStore(builderIR,varLv,storeLv);
+        INC(index);
+      END;
+    END; 
+    RETURN index;
+  END BuildDisplay;
 
 PROCEDURE end_procedure (self: U;  p: Proc) =
 (* marks the end of the code for procedure 'p'.  Sets "current procedure"
@@ -1974,11 +2082,64 @@ PROCEDURE end_procedure (self: U;  p: Proc) =
     prevInstr : LLVM.ValueRef;
     opCode : LLVM.Opcode;
     curBB : LLVM.BasicBlockRef;
+    tempDisplayLv : LLVM.ValueRef;
+    textName : TEXT;
+    linkSize : CARDINAL;   
   BEGIN
     proc := NARROW(p,LvProc);
+    <* ASSERT proc = self.curProc *> 
+
+    (* Compute cumulative counts for this procedure. *) 
+    proc.cumLocalsParamsCt := 0; 
+    IF proc.paramStack # NIL THEN 
+       INC ( proc.cumLocalsParamsCt, proc.paramStack.size()); 
+    END; 
+    IF proc.localStack # NIL THEN 
+      INC (proc.cumLocalsParamsCt, proc.localStack.size());
+    END; 
+    proc.cumUplevelRefdCt := 0; 
+    IF proc.uplevelRefdStack # NIL THEN 
+      INC (proc.cumUplevelRefdCt, proc.uplevelRefdStack.size());
+    END; 
+    IF proc.lev > 0 THEN
+      INC (proc.cumLocalsParamsCt, proc.parent.cumLocalsParamsCt); 
+      INC (proc.cumUplevelRefdCt, proc.parent.cumUplevelRefdCt); 
+    END; 
+
+    curBB := LLVM.LLVMGetInsertBlock(builderIR);
+    LLVM.LLVMPositionBuilderAtEnd(builderIR, proc.entryBB);
+
+    (* Final setup of this proc's display, which it can pass to any 
+       one-level more deeply nested procedure. *) 
+    IF proc.needsDisplay THEN 
+       (* ^proc contained a call on a deeper nested proc. *) 
+      IF proc.cumUplevelRefdCt > 0 THEN (* Display is nonempty. *) 
+        (* We need an llvm type for a local display area that this proc
+           can pass as static link to deeper-nested procedures. *) 
+        proc.displayLty := LLVM.LLVMArrayType(AdrTy,proc.cumUplevelRefdCt);
+        tempDisplayLv := proc.outgoingDisplayI8StarLv;
+        textName := M3ID.ToText(proc.name) & "__outgoing_display";
+        proc.outgoingDisplayLv 
+          := LLVM.LLVMBuildAlloca (builderIR, proc.displayLty, LT(textName));
+        proc.outgoingDisplayI8StarLv
+          := LLVM.LLVMBuildBitCast
+               (builderIR, proc.outgoingDisplayLv, AdrTy, 
+                LT(textName & "I8Star"));
+        linkSize := BuildDisplay(self);
+        LLVM.LLVMReplaceAllUsesWith
+          (tempDisplayLv, proc.outgoingDisplayI8StarLv); 
+      END; 
+    END;
+
+    (* Give entry BB a terminating  uncondtional branch to secondBB. *) 
+    EVAL LLVM.LLVMBuildBr(builderIR, proc.secondBB); 
+
+    LLVM.LLVMPositionBuilderAtEnd(builderIR, curBB);
+    (* ^Back to the regular code insertion site. *) 
+
     (* its possible a no return warning will generate an abort and no return
     but llvm has mandatory return so if last instruction is not a return
-    then add a dummy one, could possible add return to front end in this case *)
+    then add a dummy one, could possibly add return to front end in this case *)
     curBB := LLVM.LLVMGetInsertBlock(builderIR);
     prevInstr := LLVM.LLVMGetLastInstruction(curBB);
     IF prevInstr # NIL THEN
@@ -1995,13 +2156,14 @@ PROCEDURE end_procedure (self: U;  p: Proc) =
 
     Pop(self.procStack);
     IF self.procStack.size() > 0 THEN
-      LLVM.LLVMPositionBuilderAtEnd(builderIR,self.curProc.saveBB);
-      self.curProc := Get(self.procStack);
+      LLVM.LLVMPositionBuilderAtEnd(builderIR,proc.saveBB);
+      proc := Get(self.procStack);
     ELSE
-      self.curProc := NIL;
+      proc := NIL;
     END;
 
     self.end_block();
+
   END end_procedure;
 
 PROCEDURE begin_block (self: U) =
@@ -2262,7 +2424,8 @@ PROCEDURE exit_proc (self: U;  t: Type) =
 (*------------------------------------------------------------ load/store ---*)
 
 (* getelementptr functions *)
-PROCEDURE Gep(src,ofs : LLVM.ValueRef; const : BOOLEAN) : LLVM.ValueRef =
+PROCEDURE Gep(src,ofs : LLVM.ValueRef; const : BOOLEAN; textName : TEXT := "") 
+  : LLVM.ValueRef =
   CONST numParams = 1;
   VAR
     gepVal : LLVM.ValueRef;
@@ -2271,24 +2434,27 @@ PROCEDURE Gep(src,ofs : LLVM.ValueRef; const : BOOLEAN) : LLVM.ValueRef =
   BEGIN
     paramsRef := NewValueArr(paramsArr,numParams);
     paramsArr[0] := ofs;
-    (* inbounds is recommended *)
+    (* Front end will always have precluded out-of-bounds references, so 
+       we can assert inbounds to llvm. *)
     IF NOT const THEN
-      gepVal := LLVM.LLVMBuildInBoundsGEP(builderIR, src, paramsRef, numParams, LT("gepIdx"));
-    ELSE
+      gepVal := LLVM.LLVMBuildInBoundsGEP
+                  (builderIR, src, paramsRef, numParams, LT(textName));
+    ELSE (* Can't use textName here. *)
       gepVal := LLVM.LLVMConstInBoundsGEP(src, paramsRef, numParams);
     END;
     RETURN gepVal;
   END Gep;
 
-PROCEDURE BuildGep(src : LLVM.ValueRef; o : ByteOffset) : LLVM.ValueRef =
+PROCEDURE BuildGep(src : LLVM.ValueRef; o : ByteOffset; textName : TEXT := "") 
+  : LLVM.ValueRef =
   (* POST: Result has llvm type AdrTy. *) 
   VAR
     int8Val,gepVal,ofs : LLVM.ValueRef;
   BEGIN
     ofs := LLVM.LLVMConstInt(LLVM.LLVMInt64Type(), VAL(o,LONGINT), TRUE);
     (* cast to i8* value if not already *)
-    int8Val := LLVM.LLVMBuildBitCast(builderIR, src, AdrTy, LT("gep_toadr"));
-    gepVal := Gep(int8Val,ofs,FALSE);
+    int8Val := LLVM.LLVMBuildBitCast(builderIR, src, AdrTy, LT("_.gep_toAdr"));
+    gepVal := Gep(int8Val,ofs,FALSE,textName);
     RETURN gepVal;
   END BuildGep;
 
@@ -2302,11 +2468,14 @@ PROCEDURE BuildConstGep(src : LLVM.ValueRef; o : ByteOffset) : LLVM.ValueRef =
     RETURN gepVal;
   END BuildConstGep;
 
+(*
 (* search the static links of all procs to find this var *)
-PROCEDURE SearchStaticLink(proc : LvProc; var : LvVar) : INTEGER =
+PROCEDURE CumDisplayIndex(proc : LvProc; var : LvVar) : INTEGER =
 (* Return the index of 'var' in a display for 'proc', by searching
    all up-level referenceable variables of proper static ancestors 
    of 'proc'. *)   
+
+  BEGIN 
   VAR
     tp : LvProc;
     v : LvVar;
@@ -2314,9 +2483,9 @@ PROCEDURE SearchStaticLink(proc : LvProc; var : LvVar) : INTEGER =
   BEGIN
     tp := proc.parent;
     WHILE tp # NIL DO
-      IF tp.linkStack # NIL THEN (*importeds are nil *)
-        FOR i := 0 TO tp.linkStack.size() - 1 DO
-          v := Get(tp.linkStack,i);
+      IF tp.uplevelRefdStack # NIL THEN (*importeds are nil *)
+        FOR i := 0 TO tp.uplevelRefdStack.size() - 1 DO
+          v := Get(tp.uplevelRefdStack,i);
           IF v = var THEN
             RETURN(index);
           END;
@@ -2326,28 +2495,48 @@ PROCEDURE SearchStaticLink(proc : LvProc; var : LvVar) : INTEGER =
       tp := tp.parent;
     END;
     RETURN -1;
-  END SearchStaticLink;
+  END CumDisplayIndex;
+*)
 
-PROCEDURE FindLinkVar(self : U; var : LvVar) : LLVM.ValueRef =
-(* Generate an llvm ValueRef that contains the address of a variable
-   that is up-level referenced from the current procedure. *) 
+PROCEDURE GetAddrOfUplevelVar(self : U; var : LvVar) : LLVM.ValueRef =
+(* Generate an llvm ValueRef that contains the address of 'var'.
+   PRE: 'var' is being up-level referenced from within 'self.curProc', which 
+        implies 'self.curProc' is nested, and thus has a staticLinkFormal. *) 
   VAR
-    linkIdx,lv : LLVM.ValueRef;
+    linkIdx, lv : LLVM.ValueRef;
     idx : INTEGER := -1;
+    localToProc : LvProc; 
+    textName : TEXT; 
   BEGIN
-    idx := SearchStaticLink(self.curProc, var);
-    <*ASSERT idx >= 0 *> 
-      (* 'var' is up-level referenceable from 'self.curProc'. *)
-    (* load the incoming static link pointer of the current procedure. *)
-    linkIdx := LLVM.LLVMBuildLoad
-                 (builderIR, self.curProc.staticLinkFormalLv, LT("static_link"));
-    (* Calc the offset into the incoming display, and that's the address of the var. *)
-    lv := BuildGep(linkIdx,idx * ptrBytes);
-    lv := LLVM.LLVMBuildBitCast(builderIR, lv, AdrAdrTy, LT("display_adradr"));
-    (* now load the var *)
-    lv := LLVM.LLVMBuildLoad(builderIR, lv, LT("up_level_var_addr"));
+    <*ASSERT self.curProc.lev > 0 *> 
+    <*ASSERT var.locDisplayIndex >= 0 *> 
+    IF var.name = M3ID.NoID THEN 
+      textName := ""; 
+(* CHECK: Is this case really necessary?  If so, we need it lots of other places too. *) 
+    ELSE
+      textName := M3ID.ToText ( var.name ); 
+    END; 
+    localToProc := var.inProc; 
+    idx := localToProc.cumUplevelRefdCt + var.locDisplayIndex; 
+    IF localToProc.uplevelRefdStack # NIL THEN  
+      DEC (idx,localToProc.uplevelRefdStack.size()); 
+    END; 
+    (* ^Index into the display. *) 
+    (* Load the incoming static link pointer of the current procedure. *)
+    <*ASSERT self.curProc.staticLinkFormal.lv # NIL *>
+    linkIdx 
+      := LLVM.LLVMBuildLoad
+           (builderIR, self.curProc.staticLinkFormal.lv, 
+            LT("_static_link_formal"));
+    lv := BuildGep(linkIdx,idx * ptrBytes,textName & "__DisplaySlotAddr");
+    lv := LLVM.LLVMBuildBitCast
+            (builderIR, lv, AdrAdrTy, 
+             LT(textName & "__DisplaySlotAddr.addraddr"));
+    (* Now load the address of 'var' from the display. *)
+    lv := LLVM.LLVMBuildLoad
+            (builderIR, lv, LT(textName & ".addr"));
     RETURN lv;
-  END FindLinkVar;
+  END GetAddrOfUplevelVar;
 
 PROCEDURE LoadExtend(val : LLVM.ValueRef; t : MType; u : ZType) : LLVM.ValueRef =
   VAR destTy : LLVM.TypeRef;
@@ -2377,19 +2566,22 @@ PROCEDURE load (self: U;  v: Var;  o: ByteOffset;  t: MType;  u: ZType) =
     srcPtrTy := LLVM.LLVMPointerType(srcTy);
 
     (* check if a static link var to load *)
-    IF src.up_level THEN
-      (* if the var is not local to this proc then search all the static links *)
+    IF src.locDisplayIndex >= 0 THEN
+      (* If var is nonlocal to this proc then use the static link. *)
       IF src.inProc # self.curProc THEN
-        srcVal := FindLinkVar(self,src);
-        srcVal := LLVM.LLVMBuildBitCast(builderIR, srcVal, srcPtrTy, LT("link_cast"));
+        srcVal := GetAddrOfUplevelVar(self,src);
+        srcVal := LLVM.LLVMBuildBitCast
+                    (builderIR, srcVal, srcPtrTy, LT("_uplevel_ptr_true_type"));
       END;
     END;
 
     IF src.type = Type.Struct THEN
       IF o # 0 THEN
-        srcVal := BuildGep(srcVal,o);
+        srcVal := BuildGep(srcVal,o,"_struct_member");
       END;
-      srcVal := LLVM.LLVMBuildBitCast(builderIR, srcVal, srcPtrTy, LT("load_toptr"));
+      srcVal 
+        := LLVM.LLVMBuildBitCast
+            (builderIR, srcVal, srcPtrTy, LT("_struct_member_ptr_true_type"));
     END;
 
     destVal := LLVM.LLVMBuildLoad(builderIR, srcVal, VarName(v));
@@ -2426,7 +2618,7 @@ PROCEDURE store (self: U;  v: Var;  o: ByteOffset;  t: ZType;  u: MType) =
 
     IF (dest.varType = VarType.Temp) THEN
       IF (self.curProc # dest.inProc) THEN
-        self.allocTemp(dest);
+        self.allocVarInEntryBlock(dest);
         dest.inProc := self.curProc;
       END;
     END;
@@ -2442,9 +2634,9 @@ PROCEDURE store (self: U;  v: Var;  o: ByteOffset;  t: ZType;  u: MType) =
     END;
 
     (* check if static link var to store *)
-    IF dest.up_level THEN
+    IF dest.locDisplayIndex >= 0 THEN
       IF dest.inProc # self.curProc THEN
-        destVal := FindLinkVar(self,dest);
+        destVal := GetAddrOfUplevelVar(self,dest);
         destVal := LLVM.LLVMBuildBitCast(builderIR, destVal, destPtrTy, LT("link_cast"));
       END;
     END;
@@ -2483,9 +2675,9 @@ PROCEDURE load_address (self: U;  v: Var;  o: ByteOffset) =
     srcVal := srcVar.lv;
 
     (* check if a static link address to load *)
-    IF srcVar.up_level THEN
+    IF srcVar.locDisplayIndex >= 0 THEN
       IF srcVar.inProc # self.curProc THEN
-        srcVal := FindLinkVar(self,srcVar);
+        srcVal := GetAddrOfUplevelVar(self,srcVar);
       END;
     END;
 
@@ -3952,40 +4144,6 @@ PROCEDURE start_call_direct
     PopDecl(self);
   END start_call_direct;
 
-PROCEDURE BuildDisplay(self : U; proc : LvProc) : CARDINAL =
-(* Generate code (at a call site, in self.curProc) which will construct 
-   the display area for a call to 'proc'. *)  
-(* PRE: proc.staticLv points to the place to build the display. *) 
-  VAR
-    tp : LvProc;
-    v : LvVar;
-    varLv,storeLv : LLVM.ValueRef;
-    linkSize,index : CARDINAL := 0;
-  BEGIN
-    tp := proc.parent; (* Go through callee's proper static ancestors. *) 
-    WHILE tp # NIL DO
-      IF tp.linkStack # NIL THEN (*importeds are nil *)
-        FOR i := 0 TO tp.linkStack.size() - 1 DO
-          INC(linkSize);
-          v := Get(tp.linkStack,i);
-          IF v.inProc = self.curProc THEN
-            varLv := LLVM.LLVMBuildBitCast(builderIR,v.lv,AdrTy,LT("ToAdr"));
-          ELSE
-            (* So have to get the lv from the previous display passed in 
-               to the current caller. *)
-            varLv := FindLinkVar(self,v);
-          END;
-          storeLv := BuildGep(proc.staticLv,index * ptrBytes);
-          storeLv := LLVM.LLVMBuildBitCast(builderIR,storeLv,AdrAdrTy,LT("ToAdrAdr"));
-          EVAL LLVM.LLVMBuildStore(builderIR,varLv,storeLv);
-          INC(index);
-        END;
-      END;
-      tp := tp.parent;
-    END;
-    RETURN linkSize;
-  END BuildDisplay;
-
 PROCEDURE Is_alloca (self: U; p: LvProc) : BOOLEAN =
   (* 'p' describes library function 'alloca'. *) 
   BEGIN 
@@ -3996,32 +4154,26 @@ PROCEDURE Is_alloca (self: U; p: LvProc) : BOOLEAN =
 PROCEDURE call_direct (self: U; p: Proc; <*UNUSED*> t: Type) =
   (* call the procedure 'p'.  It returns a value of type t. *)
   VAR
-    proc : LvProc;
-    fn,lVal,displayLv,staticLinkActual : LLVM.ValueRef;
-    curBB : LLVM.BasicBlockRef;
+    calleeProc : LvProc;
+    fn, lVal, staticLinkActualLv : LLVM.ValueRef;
     paramsArr : ValueArrType;
     paramsRef : ValueRefType;
     arg : LvExpr;
     returnName : TEXT := "";
-    numParams,paramsCnt,stackParams,procParams,linkSize : INTEGER := 0;
-    linkCount : [0..1]  := 0;
+    passedParamsCt, codedActualsCt : INTEGER := 0;
+    staticLinkCount : [0..1]  := 0;
   BEGIN
     DumpExprStack(self,"call_direct");
 
     <*ASSERT self.callStack # NIL *>
-    proc := NARROW(p,LvProc);
-    fn := proc.lvProc;
+    calleeProc := NARROW(p,LvProc);
+    fn := calleeProc.lvProc;
     <*ASSERT fn # NIL *>
-    procParams := proc.numParams;
-    stackParams := self.callStack.size();
-    numParams := stackParams;
+    codedActualsCt := self.callStack.size();
 
-(* this isnt always the case when there are nested procs and or try finally
-    <*ASSERT stackParams = procParams *>
-*)
-    IF Is_alloca (self, proc) THEN 
-      (* This is encoded as a call on library function 'alloca'.  Convert to 
-         an llvm 'alloca' instruction. *)  
+    IF Is_alloca (self, calleeProc) THEN 
+      (* Front end encoded this as a call on library function 'alloca'.  
+         Convert to an llvm 'alloca' instruction. *)  
       (* As of 2015-09-03, the only way a library call on 'alloca' appears
          in the input is front-end-generated for a jmpbuf. *) 
       arg := Get(self.callStack);
@@ -4031,51 +4183,54 @@ PROCEDURE call_direct (self: U; p: Proc; <*UNUSED*> t: Type) =
       Push(self.exprStack,NEW(LvExpr,lVal := lVal));
       RETURN; 
     END; 
-    IF proc.lev > 0 THEN (* Calling a nested procedure. *) 
-      linkCount := 1; (* Always pass a SL actual to a nested procedure. *)
-      (* It's possible the staticSize is zero in the case of no locals, so the
-         displayLty is NIL, in which case the static link does not point
-         anywhere meaningful. *)
-      IF proc.displayLty # NIL THEN (* Callee gets a nontrivial incoming static link. *) 
-        (* If not already done, alloca space for the display in caller's entry 
-           BB and create an alias addres of llvm type AdrTy. *)
-        IF proc.staticLv = NIL THEN (* Not already done. *) 
-          curBB := AtEntry(self); (* Set builderIR to entry BB of caller. *) 
-          displayLv := LLVM.LLVMBuildAlloca(builderIR, proc.displayLty, LT("_outgoing_display"));
-          proc.staticLv
-            := LLVM.LLVMBuildBitCast
-                 (builderIR, displayLv, AdrTy, LT("_static_link_actual"));
-(* ??? This LLVM.ValueRef is local to the caller, but we store it as a field
-       of our 'LvProc' for the callee???  *) 
-          LLVM.LLVMPositionBuilderAtEnd(builderIR, curBB);
-          (* ^Back to the call site, in the caller. *) 
-        END;
-        staticLinkActual := proc.staticLv; 
-        linkSize := BuildDisplay(self,proc);
-(* ??? Uses proc.staticLv to address/fill in the display area, which is local
-       to the caller.  If there was a previous call to this callee, but from
-       a different caller, it will try to use the area in the earlier caller.
-       This may be illegal llvm, or produce bad code. *) 
-      ELSE (* Display given to callee will be empty. *)
-        IF stackParams = 0 AND procParams = 1 THEN
-          (* This is a try-finally compiler-generated procedure, with a 
-             compiler-created SL parameter, but this call does not supply 
-             it, so push an undef onto the call stack *)
-          lVal := LLVM.LLVMGetUndef(AdrTy);
-          PushRev(self.callStack, NEW(LvExpr,lVal := lVal));
-          stackParams := 1; (* Dead, for consistency. *) 
-          numParams := 1;
-        ELSE (* Display is empty, but we still need to pass a SL actual. *)
-          staticLinkActual := LLVM.LLVMConstPointerNull(AdrTy); 
-        END;
-      END; (* Callee gets a nonempty/empty display. *) 
+
+(* SEE ALSO: load_static_link. *) 
+    IF calleeProc.lev > 0 (* Callee is nested. *) 
+    THEN (* We pass a static link to callee. *) 
+      staticLinkCount := 1; (* Always pass a SL actual to a nested procedure. *)
+      IF calleeProc.lev = self.curProc.lev + 1 THEN 
+        (* Calling a nested procedure one level deeper than caller. *) 
+        IF FALSE AND 
+           codedActualsCt = 0 AND calleeProc.numParams = 1 THEN
+(* FIXME: ^We need a more reliable way to detect this case.  It is successfully
+           spoofed by p035, coco__8__foo__bar, after it had a SL formal
+           added to its empty coded list. *) 
+          (* This happens for a try-finally compiler-generated procedure, with 
+             a compiler-created SL formal parameter, but the call does not 
+             (always) supply a corresponding actual.  So push an undef onto the 
+             call stack. *)
+          staticLinkActualLv := LLVM.LLVMGetUndef(AdrTy);
+        ELSE
+          self.curProc.needsDisplay := TRUE; 
+          staticLinkActualLv := self.curProc.outgoingDisplayI8StarLv;
+          (* ^The code to build this will end up in the entry BB of the caller,
+             but we don't generate it until we get to its end_procedure, since
+             there could still be more locals of inner blocks flattened into
+             the caller's AR after this point. *)  
+        END; 
+      ELSE (* Nested callee is nested no deeper than caller, which is therefor
+              also nested.  For this direct call, the static parent of the 
+              callee will be a proper static ancestor of the caller, and a 
+              prefix of the display passed to the caller in its SL will contain 
+              what's needed by the callee.  The rest of it won't be used and is 
+              harmless.*)
+(* REVIEW: Is this really true? *) 
+        staticLinkActualLv 
+          := LLVM.LLVMBuildLoad
+               (builderIR, self.curProc.staticLinkFormal.lv, 
+                LT("_static_link_formal"));
+      END; (* Callee's nesting depth relative to caller's. *) 
     END; (* Callee is nested. *)
 
     (* create the param types from the callstack *)
-    paramsCnt := numParams + linkCount;
-    paramsRef := NewValueArr(paramsArr,paramsCnt);
+    passedParamsCt := codedActualsCt + staticLinkCount;
+    paramsRef := NewValueArr(paramsArr,passedParamsCt);
 
-    FOR i := 0 TO numParams - 1 DO
+    IF staticLinkCount > 0 THEN
+      paramsArr[0] := staticLinkActualLv; 
+    END;
+    
+    FOR i := staticLinkCount TO passedParamsCt - 1 DO
       arg := Get(self.callStack);
       (* possibly add call attributes here like sext *)
       paramsArr[i] := arg.lVal;
@@ -4083,24 +4238,22 @@ PROCEDURE call_direct (self: U; p: Proc; <*UNUSED*> t: Type) =
     END;
     <*ASSERT self.callStack.size() = 0 *>
 
-    IF linkCount > 0 THEN
-      paramsArr[paramsCnt - 1] := staticLinkActual; 
-    END;
-    
-    IF proc.returnType # Type.Void THEN
+    IF calleeProc.returnType # Type.Void THEN
       returnName := "result";
     END;
     (* else void returns need null string *)
 
-    lVal := LLVM.LLVMBuildCall(builderIR, fn, paramsRef, paramsCnt, LT(returnName));
+    lVal := LLVM.LLVMBuildCall
+              (builderIR, fn, paramsRef, passedParamsCt, LT(returnName));
 
-    IF proc.returnType # Type.Void THEN
+    IF calleeProc.returnType # Type.Void THEN
       (* push the return val onto stack *)
       Push(self.exprStack,NEW(LvExpr,lVal := lVal));
     END;
   END call_direct;
 
-<*NOWARN*> PROCEDURE start_call_indirect (self: U;  t: Type;  cc: CallingConvention) =
+<*NOWARN*> 
+PROCEDURE start_call_indirect (self: U;  t: Type;  cc: CallingConvention) =
   (* begin an indirect procedure call that will return a value of type 't'. *)
   BEGIN
   (* nothing to do *)
@@ -4122,6 +4275,7 @@ PROCEDURE FuncType(retType : Type; paramStack : RefSeq.T) : LLVM.TypeRef =
       typesRef := NewTypeArr(typesArr,numParams);
       FOR i := 0 TO numParams - 1 DO
         param := Get(paramStack,i);
+(* CHECK: ^Looks like contents of paramStack are all LvVar.  Narrow failure? *) 
         typesArr[i] := LLVM.LLVMTypeOf(param.lVal);
       END;
     END;
@@ -4148,6 +4302,8 @@ PROCEDURE call_indirect (self: U;  t: Type; <*UNUSED*> cc: CallingConvention) =
     proc := expr.lVal;
     (* get the function sig from the callstack *)
     funcTy := FuncType(t,self.callStack);
+
+(* FIXME: Take care of calling through a closure and passing SL. *) 
 
     numParams := self.callStack.size();
     IF numParams > 0 THEN
@@ -4262,21 +4418,26 @@ PROCEDURE load_static_link (self: U;  p: Proc) =
     proc : LvProc;
     link : LLVM.ValueRef;
   BEGIN
+(* SEE ALSO: call_direct. *) 
     proc := NARROW(p,LvProc);
-    link := proc.staticLv;
-(* FIXME: We need to duplicate (factor out) code in call_direct to compute
-          the static link and build what it points to.  Even then, we really
-          need comparison of this static link to actually compare the display
-          contents it points to, for procedure equality.  Is the cm3 IR for
-          procedure comparisons even adequate, using the display mechanism? *)
-(* For now, avoid m3llvm crashes as follows: *) 
-    IF link = NIL THEN
+    IF proc.lev = 0 THEN 
       link := LLVM.LLVMConstPointerNull(AdrTy);
-    ELSE
-(* Redundant? 
-      link := LLVM.LLVMBuildBitCast
-                (builderIR, link, AdrTy, LT("load_static_link"));
-*) 
+    ELSIF self.curProc.lev + 1 = proc.lev THEN (* One level deeper. *) 
+      self.curProc.needsDisplay := TRUE; 
+      link := self.curProc.outgoingDisplayI8StarLv;
+      (* ^The code to build this will end up in the entry BB of the caller,
+         but we don't generate it until we get to its end_procedure, since
+         there could still be more locals of inner blocks flattened into
+         the caller's AR after this point. *)  
+    ELSE (* Nested callee is nested no deeper than caller, which is therefor
+            also nested.  For this direct call, the static parent of the 
+            callee will be a proper static ancestor of the caller, and a 
+            prefix of the display passed to the caller in its SL will contain 
+            what's needed by the callee.  The rest of it won't be used and is 
+            harmless.*)
+      link := LLVM.LLVMBuildLoad
+                (builderIR, self.curProc.staticLinkFormal.lv, 
+                 LT("_static_link_formal"));
     END; (*IF*) 
     Push(self.exprStack,NEW(LvExpr,lVal := link));
   END load_static_link;
@@ -4610,7 +4771,9 @@ PROCEDURE DebugFunc(self : U; p : Proc) =
         typeName := M3ID.ToText(param.name) & "_t";
         tSize := param.size * ptrBytes;
         tAlign := param.align * ptrBytes;
-        tyVal := M3DIB.DIBcreateBasicType(self.debugRef, LTD(typeName),             VAL(tSize,uint64_t), VAL(tAlign,uint64_t), 0);
+        tyVal := M3DIB.DIBcreateBasicType
+                   (self.debugRef, LTD(typeName),
+                    VAL(tSize,uint64_t), VAL(tAlign,uint64_t), 0);
         paramsArr[i+1] := tyVal.MDNode;
       END;
     END;
