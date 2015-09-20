@@ -109,15 +109,25 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
 
        Setting this to FALSE is safe, but results in slower code -- code that
        checks function pointers for alignment before checking for the -1, and
-       if they aren't aligned, doing a byte-wise read instead of an
-       integer-wise read.
+       if they aren't aligned, assumes they aren't a closure.
 
        We can probably do better here, such as ensuring the marker is 4 bytes
        instead of 8, if that works (for 64 bit platforms, that care about
        alignment, but with fixed sized aligned 32 bit instructions, which
-       probably describes some (e.g., MIPS64 and SPARC64) *)
+       probably describes some (e.g., MIPS64 and SPARC64)
 
-    Aligned_procedures := TRUE;
+       NOTE: The optimization here would be
+        TRUE for most 32bit targets, except ARM32 (due to Thumb)
+        TRUE for most 64bit targets, except AMD64
+        TRUE generates less code
+        Or shrink marker to 4 bytes always and TRUE always, except ARM32.
+        Or shrink marker to 4 bytes always and clear the lower bit or two of the
+        address and then read for the marker.
+
+       Target-variation is to be reduced and is not any target-specific optimization here.
+    *)
+
+    Aligned_procedures := FALSE; (* Use the safe default for all targets. *)
 
     (* add the system-specific customization *)
 
@@ -128,7 +138,7 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
       Init64();
     END;
 
-    (* ALPHA, SPARC64, HPPA, MIPS64: aligned_procedures *)
+    (* ALPHA, SPARC64, HPPA, MIPS64, ARM64, PPC64: aligned_procedures *)
 
     IF TextUtils.StartsWith(system, "SPARC64")
         OR TextUtils.StartsWith(system, "ARMEL")
@@ -136,8 +146,10 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
         OR TextUtils.StartsWith(system, "ALPHA64")
         OR TextUtils.StartsWith(system, "PA")
         OR TextUtils.StartsWith(system, "HPPA")
+        OR TextUtils.StartsWith(system, "ARM64")
+        OR TextUtils.StartsWith(system, "PPC64")
         OR TextUtils.StartsWith(system, "MIPS64") THEN
-      Aligned_procedures := FALSE;
+         (* Aligned_procedures := FALSE; *) (* Do not bother. Keep targets more the same. *)
     END;
 
     (* big endian *)
@@ -157,7 +169,7 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
 
     IF IsX86() OR IsAMD64() THEN
       Allow_packed_byte_aligned := TRUE;
-      Aligned_procedures := TRUE; (* Assume aligned => unaligned is ok. *)
+         (* Aligned_procedures := TRUE; *) (* Do not bother. Keep targets more the same. *) (* Assume aligned => unaligned is ok. *)
     END;
 
     IF System IN SET OF Systems{Systems.ALPHA32_VMS,
