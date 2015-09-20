@@ -4190,11 +4190,11 @@ PROCEDURE call_direct (self: U; p: Proc; <*UNUSED*> t: Type) =
       staticLinkCount := 1; (* Always pass a SL actual to a nested procedure. *)
       IF calleeProc.lev = self.curProc.lev + 1 THEN 
         (* Calling a nested procedure one level deeper than caller. *) 
-        IF FALSE AND 
-           codedActualsCt = 0 AND calleeProc.numParams = 1 THEN
+        IF codedActualsCt = 0 AND calleeProc.numParams = 1 
+           AND LinkExists(calleeProc) THEN
 (* FIXME: ^We need a more reliable way to detect this case.  It is successfully
            spoofed by p035, coco__8__foo__bar, after it had a SL formal
-           added to its empty coded list. *) 
+           added to its empty coded formals list. *) 
           (* This happens for a try-finally compiler-generated procedure, with 
              a compiler-created SL formal parameter, but the call does not 
              (always) supply a corresponding actual.  So push an undef onto the 
