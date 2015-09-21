@@ -168,8 +168,8 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
     (* x86 and AMD64 allow unaligned loads/stores *)
 
     IF IsX86() OR IsAMD64() THEN
-       (* Allow_packed_byte_aligned := TRUE; *) (* Do not bother. Keep targets more the same. *)
-       (* Aligned_procedures := TRUE; *) (* Do not bother. Keep targets more the same. *) (* Assume aligned => unaligned is ok. *)
+      Allow_packed_byte_aligned := TRUE;
+         (* Aligned_procedures := TRUE; *) (* Do not bother. Keep targets more the same. *) (* Assume aligned => unaligned is ok. *)
     END;
 
     IF System IN SET OF Systems{Systems.ALPHA32_VMS,
