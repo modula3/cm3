@@ -123,7 +123,7 @@ PROCEDURE Compile (p: P): Stmt.Outcomes =
 PROCEDURE Compile1 (p: P): Stmt.Outcomes =
   VAR
     oc, xc, o: Stmt.Outcomes;
-    l: CG.Label;
+    lab: CG.Label;
     info: CG.Var;
     proc: Procedure.T;
   BEGIN
@@ -135,13 +135,13 @@ PROCEDURE Compile1 (p: P): Stmt.Outcomes =
     CG.Store_addr (info, M3RT.EA_exception);
 
     (* compile the body *)
-    l := CG.Next_label (2);
-    CG.Set_label (l, barrier := TRUE);
-    Marker.PushFinally (l, l+1, info);
+    lab := CG.Next_label (2);
+    CG.Set_label (lab, barrier := TRUE);
+    Marker.PushFinally (lab, lab+1, info);
     Marker.SaveFrame ();
       oc := Stmt.Compile (p.body);
     Marker.Pop ();
-    CG.Set_label (l+1, barrier := TRUE);
+    CG.Set_label (lab+1, barrier := TRUE);
 
     (* set the "Compiler.ThisException()" globals *)
     TryStmt.PushHandler (info, 0, direct := TRUE);
@@ -154,34 +154,34 @@ PROCEDURE Compile1 (p: P): Stmt.Outcomes =
     (* generate the bizzare end-tests *)
 
     IF (Outcome.Returns IN oc) THEN
-      l := CG.Next_label ();
+      lab := CG.Next_label ();
       CG.Load_int (Target.Integer.cg_type, info, M3RT.EA_exception);
       CG.Load_intt (Marker.Return_exception);
-      CG.If_compare (Target.Integer.cg_type, CG.Cmp.NE, l, CG.Always);
+      CG.If_compare (Target.Integer.cg_type, CG.Cmp.NE, lab, CG.Always);
       Marker.EmitReturn (NIL, fromFinally := TRUE);
-      CG.Set_label (l);
+      CG.Set_label (lab);
     END;
 
     IF (Outcome.Exits IN oc) THEN
-      l := CG.Next_label ();
+      lab := CG.Next_label ();
       CG.Load_int (Target.Integer.cg_type, info, M3RT.EA_exception);
       CG.Load_intt (Marker.Exit_exception);
-      CG.If_compare (Target.Integer.cg_type, CG.Cmp.NE, l, CG.Always);
+      CG.If_compare (Target.Integer.cg_type, CG.Cmp.NE, lab, CG.Always);
       Marker.EmitExit ();
-      CG.Set_label (l);
+      CG.Set_label (lab);
     END;
 
     (* resume the exception *)
     proc := RunTyme.LookUpProc (RunTyme.Hook.ResumeRaiseEx);
-    l := CG.Next_label ();
+    lab := CG.Next_label ();
     CG.Load_addr (info, M3RT.EA_exception);
     CG.Load_nil ();
-    CG.If_compare (CG.Type.Addr, CG.Cmp.EQ, l, CG.Always);
+    CG.If_compare (CG.Type.Addr, CG.Cmp.EQ, lab, CG.Always);
     Procedure.StartCall (proc);
     CG.Load_addr_of (info, 0, Target.Address.align);
     CG.Pop_param (CG.Type.Addr);
     Procedure.EmitCall (proc);
-    CG.Set_label (l);
+    CG.Set_label (lab);
 
     (* restore the "Compiler.ThisException()" globals *)
     TryStmt.PopHandler ();
@@ -196,7 +196,7 @@ PROCEDURE Compile1 (p: P): Stmt.Outcomes =
 PROCEDURE Compile2 (p: P): Stmt.Outcomes =
   VAR
     oc, xc, o: Stmt.Outcomes;
-    l: CG.Label;
+    lab: CG.Label;
     frame: CG.Var;
   BEGIN
     <*ASSERT p.viaProc*>
@@ -211,10 +211,10 @@ PROCEDURE Compile2 (p: P): Stmt.Outcomes =
     CG.Store_addr (frame, M3RT.EF2_frame);
 
     (* compile the body *)
-    l := CG.Next_label (2);
-    CG.Set_label (l, barrier := TRUE);
+    lab := CG.Next_label (2);
+    CG.Set_label (lab, barrier := TRUE);
     Marker.PushFrame (frame, M3RT.HandlerClass.FinallyProc);
-    Marker.PushFinallyProc (l, l+1, frame, p.handler.cg_proc, p.handler.level);
+    Marker.PushFinallyProc (lab, lab+1, frame, p.handler.cg_proc, p.handler.level);
       oc := Stmt.Compile (p.body);
     Marker.Pop ();
     IF (Outcome.FallThrough IN oc) THEN
@@ -224,7 +224,7 @@ PROCEDURE Compile2 (p: P): Stmt.Outcomes =
          What value do we pass? *)
       CG.Call_direct (p.handler.cg_proc, CG.Type.Void);
     END;
-    CG.Set_label (l+1, barrier := TRUE);
+    CG.Set_label (lab+1, barrier := TRUE);
 
     (* set the "Compiler.ThisException()" globals *)
     TryStmt.PushHandler (p.handler.activation, 0, direct := FALSE);
@@ -294,7 +294,7 @@ PROCEDURE EmitBody (x: HandlerProc) =
 PROCEDURE Compile3 (p: P): Stmt.Outcomes =
   VAR
     oc, xc, o: Stmt.Outcomes;
-    l, xx: CG.Label;
+    lab, xx: CG.Label;
     frame: CG.Var;
     returnSeen, exitSeen: BOOLEAN;
     proc: Procedure.T;
@@ -308,19 +308,19 @@ PROCEDURE Compile3 (p: P): Stmt.Outcomes =
     CG.Load_nil ();
     CG.Store_addr (frame, M3RT.EF1_info + M3RT.EA_exception);
 
-    l := CG.Next_label (3);
-    CG.Set_label (l, barrier := TRUE);
+    lab := CG.Next_label (3);
+    CG.Set_label (lab, barrier := TRUE);
     Marker.PushFrame (frame, M3RT.HandlerClass.Finally);
-    Marker.CaptureState (frame, Jmpbufs.CompileTryGetJmpbuf (p.jmpbufs), l+1);
+    Marker.CaptureState (frame, Jmpbufs.CompileTryGetJmpbuf (p.jmpbufs), lab+1);
 
     (* compile the body *)
-    Marker.PushFinally (l, l+1, frame);
+    Marker.PushFinally (lab, lab+1, frame);
       oc := Stmt.Compile (p.body);
     Marker.PopFinally (returnSeen, exitSeen);
     IF (Outcome.FallThrough IN oc) THEN
       Marker.PopFrame (frame);
     END;
-    CG.Set_label (l+1, barrier := TRUE);
+    CG.Set_label (lab+1, barrier := TRUE);
 
     (* set the "Compiler.ThisException()" globals *)
     TryStmt.PushHandler (frame, M3RT.EF1_info, direct := TRUE);
@@ -336,7 +336,7 @@ PROCEDURE Compile3 (p: P): Stmt.Outcomes =
       (* exceptional outcome? *)
       CG.Load_addr (frame, M3RT.EF1_info + M3RT.EA_exception);
       CG.Load_nil ();
-      CG.If_compare (CG.Type.Addr, CG.Cmp.EQ, l+2, CG.Always);
+      CG.If_compare (CG.Type.Addr, CG.Cmp.EQ, lab+2, CG.Always);
 
       IF (exitSeen) THEN
         xx := CG.Next_label ();
@@ -365,7 +365,7 @@ PROCEDURE Compile3 (p: P): Stmt.Outcomes =
       CG.Pop_param (CG.Type.Addr);
       Procedure.EmitCall (proc);
 
-      CG.Set_label (l+2, barrier := TRUE);
+      CG.Set_label (lab+2, barrier := TRUE);
     END;
 
     (* restore the "Compiler.ThisException()" globals *)
