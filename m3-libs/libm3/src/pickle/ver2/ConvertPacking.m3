@@ -160,7 +160,7 @@ PROCEDURE ExtractSwapLE (x: Word.T; i, n: CARDINAL; size: INTEGER): Word.T =
    1) Treat the bytes of x as if they were in big-endian order, i.e., byte
       0 is the most significant, regardless of the endianness of the 
       executing machine. 
-   2) Extract only from the size mostt-significant bytes of x, which implies
+   2) Extract only from the size most-significant bytes of x, which implies
       a checked runtime error if n+i >= 8*size.
    Unlike Word.Extract, interpret i as the number of the most-significant bit,
    in big-endian (i.e., left-to-right) bit ordering, within the size bytes.
