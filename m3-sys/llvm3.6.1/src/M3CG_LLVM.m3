@@ -3368,7 +3368,8 @@ PROCEDURE SetCall(fn : LLVM.ValueRef; numParams : INTEGER; p1,p2,p3,p4 : LLVM.Va
     RETURN res;
   END SetCall;
 
-PROCEDURE SetCommon(self : U; name : TEXT; VAR fn : LLVM.ValueRef; s : ByteSize) =
+PROCEDURE SetBinopCommon
+  (self : U; name : TEXT; VAR fn : LLVM.ValueRef; s : ByteSize) =
 VAR
   s0,s1,s2,sizeVal : LLVM.ValueRef;
   BEGIN
@@ -3377,30 +3378,30 @@ VAR
     GetSetStackVals(self,TRUE,s0,s1,s2);
     EVAL SetCall(fn,4,sizeVal,s0,s1,s2);
     Pop(self.exprStack,3);
-  END SetCommon;
+  END SetBinopCommon;
 
 PROCEDURE set_union (self: U;  s: ByteSize) =
   (* s2.B := s1.B + s0.B; pop(3) *)
   BEGIN
-    SetCommon(self,"set_union",self.setUnion,s);
+    SetBinopCommon(self,"set_union",self.setUnion,s);
   END set_union;
 
 PROCEDURE set_difference (self: U;  s: ByteSize) =
   (* s2.B := s1.B - s0.B; pop(3) *)
   BEGIN
-    SetCommon(self,"set_difference",self.setDifference,s);
+    SetBinopCommon(self,"set_difference",self.setDifference,s);
   END set_difference;
 
 PROCEDURE set_intersection (self: U; s: ByteSize) =
   (* s2.B := s1.B * s0.B; pop(3) *)
   BEGIN
-   SetCommon(self,"set_intersection",self.setIntersection,s);
+   SetBinopCommon(self,"set_intersection",self.setIntersection,s);
   END set_intersection;
 
 PROCEDURE set_sym_difference (self: U; s: ByteSize) =
   (* s2.B := s1.B / s0.B; pop(3) *)
   BEGIN
-    SetCommon(self,"set_sym_difference",self.setSymDifference,s);
+    SetBinopCommon(self,"set_sym_difference",self.setSymDifference,s);
   END set_sym_difference;
 
 PROCEDURE set_member (self: U; <*UNUSED*> s: ByteSize; <*UNUSED*> t: IType) =
@@ -3419,28 +3420,40 @@ PROCEDURE set_member (self: U; <*UNUSED*> s: ByteSize; <*UNUSED*> t: IType) =
     Pop(self.exprStack);
   END set_member;
 
-PROCEDURE set_compare (self: U;  s: ByteSize;  op: CompareOp; <*UNUSED*> t: IType) =
-  (* s1.t := (s1.B op s0.B); pop *)
+PROCEDURE SetCompareCommon 
+  (self: U;  s: ByteSize; VAR fn : LLVM.ValueRef; name: TEXT) =
+  (* s1.t := (fn(s1.B, s0.B)); pop *)
   VAR
     s0,s1,s2,res : LLVM.ValueRef;
     st1 := Get(self.exprStack,1);
-    fn,size : LLVM.ValueRef;
-    name : TEXT;
+    size : LLVM.ValueRef;
   BEGIN
     size := LLVM.LLVMConstInt(IntPtrTy, VAL(s,LONGINT), TRUE);
-    CASE op OF
-    | CompareOp.EQ => fn := self.setEq; name := "set_eq";
-    | CompareOp.NE => fn := self.setNe; name := "set_ne";
-    | CompareOp.GT => fn := self.setGt; name := "set_gt";
-    | CompareOp.GE => fn := self.setGe; name := "set_ge";
-    | CompareOp.LT => fn := self.setLt; name := "set_lt";
-    | CompareOp.LE => fn := self.setLe; name := "set_le";
-    END;
     fn := DeclSet(name,fn,3,TRUE);
     GetSetStackVals(self,FALSE,s0,s1,s2);
     res := SetCall(fn,3,size,s0,s1);
     NARROW(st1,LvExpr).lVal := res;
     Pop(self.exprStack);
+  END SetCompareCommon;
+
+PROCEDURE set_compare 
+ (self: U;  s: ByteSize;  op: CompareOp; <*UNUSED*> t: IType) =
+  (* s1.t := (s1.B op s0.B); pop *)
+  BEGIN
+    CASE op OF
+    | CompareOp.EQ 
+    => SetCompareCommon(self, s, fn := self.setEq, name := "set_eq");
+    | CompareOp.NE 
+    => SetCompareCommon(self, s, fn := self.setNe, name := "set_ne");
+    | CompareOp.GT 
+    => SetCompareCommon(self, s, fn := self.setGt, name := "set_gt");
+    | CompareOp.GE 
+    => SetCompareCommon(self, s, fn := self.setGe, name := "set_ge");
+    | CompareOp.LT 
+    => SetCompareCommon(self, s, fn := self.setLt, name := "set_lt");
+    | CompareOp.LE 
+    => SetCompareCommon(self, s, fn := self.setLe, name := "set_le");
+    END;
   END set_compare;
 
 PROCEDURE set_range (self: U; <*UNUSED*> s: ByteSize; <*UNUSED*> t: IType) =
