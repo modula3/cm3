@@ -1576,7 +1576,8 @@ PROCEDURE declare_local
     ELSE (* We are in a procedure body. *)
       (* We are inside a local block of a procedure body.  Allocate it in the
          entry BB, to flatten it into the procedure. *) 
-      self.allocVarInEntryBlock(v); (* Which puts it among locals of containing proc. *) 
+      self.allocVarInEntryBlock(v); 
+        (* ^Which puts it among locals of containing proc. *) 
       v.inProc := self.curProc;
       (* Could be up-level if M3 decl is in an inner block. *) 
       IF up_level THEN
@@ -1599,7 +1600,11 @@ PROCEDURE ImportedStructSize(self : U; m3t : TypeUID) : ByteSize =
     tidExists := self.debugTable.get(m3t,typeObj);
     <*ASSERT tidExists *>
     tc := TYPECODE(typeObj);
-    IF tc = TYPECODE(RecordDebug) OR tc = TYPECODE(ArrayDebug) OR tc = TYPECODE(SetDebug) THEN
+    IF tc = TYPECODE(RecordDebug) OR tc = TYPECODE(ArrayDebug) THEN
+(* REVIEW: This once also had "OR tc = TYPECODE(SetDebug)", but that 
+           assert-failed on a SET OF a 7-member enumeration, in LLVMBuildCall, 
+           over a type mismatch.  Could there be some SET cases (e.g., medium
+           or large sets) where we need to do a type correction? *)  
       size := VAL(NARROW(typeObj,BaseDebug).bitSize,INTEGER);
     END;
     RETURN size DIV 8;
@@ -1623,9 +1628,11 @@ PROCEDURE declare_param (self: U;  n: Name;  s: ByteSize;  a: Alignment; t: Type
     proc := Get(self.declStack);
     
     IF proc.imported THEN
-      (* imported procs could have a value rec or array param classed as address
-         param but will gen a pop_struct later. Here we correct the param def
-         if it is a struct by searching the debug table for record or array *)
+      (* Imported procs could have a value rec or array param classed as address
+         param, but a call on it will use a pop_struct to pass the actual,   
+         whereupon LLVMBuildCall will assert-fail with type mismatch.   
+         Here we correct the param def if it is a struct by searching the 
+         debug table for record or array *)
       size := ImportedStructSize(self,m3t);
       IF size > 0 THEN
         s := size;
@@ -4159,7 +4166,7 @@ PROCEDURE call_direct (self: U; p: Proc; <*UNUSED*> t: Type) =
     paramsArr : ValueArrType;
     paramsRef : ValueRefType;
     arg : LvExpr;
-    returnName : TEXT := "";
+    returnName : TEXT := NIL;
     passedParamsCt, codedActualsCt : INTEGER := 0;
     staticLinkCount : [0..1]  := 0;
   BEGIN
