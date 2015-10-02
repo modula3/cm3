@@ -577,4 +577,238 @@ InitC(int *bottom)
 #endif
 }
 
+// real time thread support
+
+int
+__cdecl
+ThreadPThread__pthread_setschedparam(pthread_t t, 
+                                     int policy, 
+                                     const struct sched_param *param)
+{
+  return pthread_setschedparam(t,policy,param);
+}
+
+int
+__cdecl
+ThreadPThread__pthread_getschedparam(pthread_t t, 
+                                     int *policy, 
+                                     struct sched_param *param)
+{
+  return pthread_getschedparam(t,policy,param);
+}
+
+int
+__cdecl
+ThreadPThread__pthread_setschedprio(pthread_t t, 
+                                    int priority) 
+{
+  return pthread_setschedprio(t,priority);
+}
+   
+// mutex support 
+
+void *
+__cdecl
+ThreadPThread__pthread_mutex_rt(int protocol)
+{
+int ret;
+
+  //debug
+  //fprintf(stderr, "pthread_mutex_rt protocol:%d\n", protocol); 
+    
+  pthread_mutexattr_t attr;
+  pthread_mutex_t *mu;
+    
+  mu = (pthread_mutex_t *) calloc(1, sizeof(pthread_mutex_t));    
+
+  ret = pthread_mutexattr_init(&attr);
+  if (ret) fprintf(stderr, "ERROR: pthread_mutex_rt mutextattr_init:%d\n", ret); 
+
+  if (protocol >= 0) {
+    ret = pthread_mutexattr_setprotocol(&attr, protocol);      
+    if (ret) fprintf(stderr, "ERROR: pthread_mutex_rt setprotocol:%d\n", ret);
+  }
+    
+  ret = pthread_mutex_init(mu, &attr);
+  if (ret) fprintf(stderr, "ERROR: pthread_mutex_rt init:%d\n", ret); 
+
+  return mu;
+}
+
+// priority ceiling support
+
+int
+__cdecl
+ThreadPThread__pthread_mutex_getprioceiling(pthread_mutex_t *mutex, 
+                                            int *prioceiling) 
+{
+  return pthread_mutex_getprioceiling(mutex,prioceiling);
+}
+
+int
+__cdecl
+ThreadPThread__pthread_mutex_setprioceiling(pthread_mutex_t *mutex, 
+                                            int prioceiling,
+                                            int *oldCeiling) 
+{
+  return pthread_mutex_setprioceiling(mutex,prioceiling,oldCeiling);
+}
+
+// Affinity 
+/* affinity is non portable (with the np sufix) but lets see how they go */
+
+int
+__cdecl
+ThreadPThread__pthread_setaffinity_np(pthread_t t, 
+                                      int cpuSetSize,
+                                      cpu_set_t *cpuSet) 
+{
+  return pthread_setaffinity_np(t,cpuSetSize,cpuSet);
+}
+
+int
+__cdecl
+ThreadPThread__pthread_getaffinity_np(pthread_t t, 
+                                      int cpuSetSize,
+                                      cpu_set_t *cpuSet) 
+{
+  return pthread_getaffinity_np(t,cpuSetSize,cpuSet);
+}
+
+// set functions for affinity support
+
+cpu_set_t *
+__cdecl
+ThreadPThread__alloc_cpuset(int num_cpus, int *size)
+{
+  *size = CPU_ALLOC_SIZE(num_cpus);
+  return CPU_ALLOC(num_cpus);
+}
+
+void
+__cdecl
+ThreadPThread__free_cpuset(cpu_set_t *cpuset)
+{
+  CPU_FREE(cpuset);
+}
+
+void
+__cdecl
+ThreadPThread__zero_cpuset(int size, cpu_set_t *cpuset)
+{
+  CPU_ZERO_S(size, cpuset);
+}
+
+int
+__cdecl
+ThreadPThread__in_cpuset(int cpu, int size, cpu_set_t *cpuset)
+{
+  return CPU_ISSET_S(cpu, size, cpuset);
+}
+
+void
+__cdecl
+ThreadPThread__add_core_to_cpuset(int core_id, int size, cpu_set_t *cpuset)
+{
+   CPU_SET_S(core_id, size, cpuset); 
+}
+
+// max and min priority 
+
+int
+__cdecl
+ThreadPThread__max_priority(int policy)
+{
+  return sched_get_priority_max(policy);
+}
+
+int
+__cdecl
+ThreadPThread__min_priority(int policy)
+{
+  return sched_get_priority_min(policy);
+}
+
+// configured cores
+/* using get_nprocs_conf() from sys/sysinfo.h would have been nice 
+ * but its non portable. (as is get_nprocs() for online cores) */
+
+int
+__cdecl
+ThreadPThread__get_conf_cores()
+{
+  int numCPU;
+  
+//Linux, Solaris, & AIX and Mac OS X (for all OS releases >= 10.4, i.e., Tiger onwards)   
+  
+#if defined(__linux__) || defined(__sun) || defined(_AIX) || defined(__APPLE__)    
+  numCPU = sysconf(_SC_NPROCESSORS_CONF);
+  
+//FreeBSD, MacOS X, NetBSD, OpenBSD, etc.:
+#elif defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)  
+  int mib[4];
+  size_t len = sizeof(numCPU); 
+
+  /* set the mib for hw.ncpu */
+  mib[0] = CTL_HW;
+  mib[1] = HW_NCPU;
+
+  /* get the number of CPUs from the system */
+  sysctl(mib, 2, &numCPU, &len, NULL, 0);
+
+#else
+#error Unable to determine Number of Configured Cores.
+#endif
+
+  return numCPU;
+}
+
+// online cores 
+
+int
+__cdecl
+ThreadPThread__get_online_cores()
+{
+  int numCPU;
+  
+//Linux, Solaris, & AIX and Mac OS X (for all OS releases >= 10.4, i.e., Tiger onwards)   
+  
+#if defined(__linux__) || defined(__sun) || defined(_AIX) || defined(__APPLE__) 
+  numCPU = sysconf(_SC_NPROCESSORS_ONLN);
+
+//FreeBSD, MacOS X, NetBSD, OpenBSD, etc.:
+#elif defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)  
+  int mib[4];
+  size_t len = sizeof(numCPU); 
+
+  /* set the mib for hw.ncpu */
+  mib[0] = CTL_HW;
+  mib[1] = HW_AVAILCPU;  // alternatively, try HW_NCPU;
+
+  /* get the number of CPUs from the system */
+  sysctl(mib, 2, &numCPU, &len, NULL, 0);
+
+  if(numCPU < 1) {
+     mib[1] = HW_NCPU;
+     sysctl(mib, 2, &numCPU, &len, NULL, 0);
+
+     if(numCPU < 1) {
+          numCPU = 1;
+     }
+  }
+
+#elif defined(__hpux)
+  numCPU = mpctl(MPC_GETNUMSPUS_SYS, NULL, NULL);
+
+#elif defined(__INTERIX)
+  numCPU = sysconf(_SC_NPROC_ONLN);
+#else
+#error Unable to determine Number of Online Cores.
+#endif
+
+  return numCPU;
+}
+
+//end real time thread support
+
 M3_EXTERNC_END
