@@ -2950,11 +2950,11 @@ PROCEDURE cvt_float (self: U;  t: AType;  u: RType) =
 (* helper function for div and mod to add or subtract a value in case
    where one of the operands is negative.
    if mod # 0 then
-     if div < 0 then
+     if quotient < 0 then
         add fixup to div or mod
 *)
 
-PROCEDURE GenDivMod(self : U; t : IType; isDiv : BOOLEAN; divVal,modVal,fixVal : LLVM.ValueRef) : LLVM.ValueRef =
+PROCEDURE GenDivMod(self : U; t : IType; isDiv : BOOLEAN; numVal,denVal,divVal,modVal,fixVal : LLVM.ValueRef) : LLVM.ValueRef =
   VAR
     curBB,thenBB,elseBB,exitBB : LLVM.BasicBlockRef;
     cmpVal,storeVal,tmpLv,res : LLVM.ValueRef;
@@ -2963,29 +2963,32 @@ PROCEDURE GenDivMod(self : U; t : IType; isDiv : BOOLEAN; divVal,modVal,fixVal :
     opType := LLvmType(t);
     tmpLv := LLVM.LLVMBuildAlloca(builderIR, opType, LT("divmod_tmp"));
     IF isDiv THEN storeVal := divVal; ELSE storeVal := modVal; END;
-    EVAL LLVM.LLVMBuildStore(builderIR, storeVal, tmpLv);
+    res := LLVM.LLVMBuildStore(builderIR, storeVal, tmpLv);
 
     curBB := LLVM.LLVMGetInsertBlock(builderIR);
-    thenBB := LLVM.LLVMAppendBasicBlock(self.curProc.lvProc, LT("div_then"));
-    elseBB := LLVM.LLVMAppendBasicBlock(self.curProc.lvProc, LT("div_else"));
-    exitBB := LLVM.LLVMAppendBasicBlock(self.curProc.lvProc, LT("div_end"));
+    thenBB := LLVM.LLVMAppendBasicBlock(self.curProc.lvProc, LT("divmod_then"));
+    elseBB := LLVM.LLVMAppendBasicBlock(self.curProc.lvProc, LT("divmod_else"));
+    exitBB := LLVM.LLVMAppendBasicBlock(self.curProc.lvProc, LT("divmod_end"));
     LLVM.LLVMPositionBuilderAtEnd(builderIR,curBB);
     (* check if mod is zero *)
-    cmpVal := LLVM.LLVMBuildICmp(builderIR,  LLVM.IntPredicate.EQ, modVal, Zero(opType), LT("mod_cmp"));
+    cmpVal := LLVM.LLVMBuildICmp(builderIR,  LLVM.IntPredicate.EQ, modVal, Zero(opType), LT("divmod_cmp"));
 
     EVAL LLVM.LLVMBuildCondBr(builderIR,cmpVal,exitBB,thenBB);
     LLVM.LLVMPositionBuilderAtEnd(builderIR,thenBB);
-    (* check if div is < 0 *)
-    cmpVal := LLVM.LLVMBuildICmp(builderIR,  LLVM.IntPredicate.SGE, divVal, Zero(opType), LT("div_cmp"));
+    
+    (* check if quotient < 0 *)
+    res := LLVM.LLVMBuildXor(builderIR, numVal, denVal, LT("divmod_xor"));
+    cmpVal := LLVM.LLVMBuildICmp(builderIR,  LLVM.IntPredicate.SGE, res, Zero(opType), LT("divmod_cmp"));
 
     EVAL LLVM.LLVMBuildCondBr(builderIR,cmpVal,exitBB,elseBB);
     LLVM.LLVMPositionBuilderAtEnd(builderIR,elseBB);
     (* add fix to div or mod *)
     res := LLVM.LLVMBuildNSWAdd(builderIR, storeVal, fixVal, LT("divmod_add"));
+    res := LLVM.LLVMBuildStore(builderIR, res, tmpLv);
 
-    EVAL LLVM.LLVMBuildStore(builderIR, res, tmpLv);
     EVAL LLVM.LLVMBuildBr(builderIR,exitBB);
     LLVM.LLVMPositionBuilderAtEnd(builderIR,exitBB);
+    
     res := LLVM.LLVMBuildLoad(builderIR, tmpLv, LT("divmod_load"));
     RETURN res;
   END GenDivMod;
@@ -2993,18 +2996,18 @@ PROCEDURE GenDivMod(self : U; t : IType; isDiv : BOOLEAN; divVal,modVal,fixVal :
 PROCEDURE DivMod(self : U; t : IType; isDiv : BOOLEAN) : LLVM.ValueRef=
   VAR
     res,fixup : LLVM.ValueRef;
-    divRes,modRes,num,div : LLVM.ValueRef;
+    divRes,modRes,num,den : LLVM.ValueRef;
   BEGIN
     (* save numerator and denominator *)
-    div := NARROW(Get(self.exprStack,0),LvExpr).lVal;
     num := NARROW(Get(self.exprStack,1),LvExpr).lVal;
-    (* do a div to get the sign of the result *)
+    den := NARROW(Get(self.exprStack,0),LvExpr).lVal;
+    (* do a div first *)
     binop(self,t,BinOps.div);
     divRes := NARROW(Get(self.exprStack,0),LvExpr).lVal;
     (* restore stack for mod *)
     Pop(self.exprStack);
     Push(self.exprStack,NEW(LvExpr,lVal := num));
-    Push(self.exprStack,NEW(LvExpr,lVal := div));
+    Push(self.exprStack,NEW(LvExpr,lVal := den));
     (* do the mod *)
     binop(self,t,BinOps.mod);
     modRes := NARROW(Get(self.exprStack,0),LvExpr).lVal;
@@ -3013,32 +3016,42 @@ PROCEDURE DivMod(self : U; t : IType; isDiv : BOOLEAN) : LLVM.ValueRef=
       fixup := LLVM.LLVMConstInt(LLvmType(t), VAL(-1,LONGINT), TRUE);
     ELSE
       (* same for mod *)
-      fixup := div;
+      fixup := den;
     END;
-    res := GenDivMod(self, t, isDiv, divRes, modRes, fixup);
+    res := GenDivMod(self, t, isDiv, num, den, divRes, modRes, fixup);
     RETURN res;
   END DivMod;
 
-PROCEDURE div (self: U;  t: IType; <*UNUSED*> a, b: Sign) =
+PROCEDURE div (self: U;  t: IType; a, b: Sign) =
  (* s1.t := s1.t DIV s0.t;pop*)
   VAR
     s0 : REFANY;
     res : LLVM.ValueRef;
   BEGIN
-    res := DivMod(self,t,TRUE);
-    s0 := Get(self.exprStack,0);
-    NARROW(s0,LvExpr).lVal := res;
+    IF (a = Sign.Positive AND b = Sign.Positive) OR
+       (a = Sign.Negative AND b = Sign.Negative) THEN
+      binop(self,t,BinOps.div);
+    ELSE
+      res := DivMod(self,t,TRUE);
+      s0 := Get(self.exprStack,0);
+      NARROW(s0,LvExpr).lVal := res;
+    END;
   END div;
 
-PROCEDURE mod (self: U;  t: IType; <*UNUSED*> a, b: Sign) =
+PROCEDURE mod (self: U;  t: IType; a, b: Sign) =
  (* s1.t := s1.t MOD s0.t;pop*)
   VAR
     s0 : REFANY;
     res : LLVM.ValueRef;
   BEGIN
-    res := DivMod(self,t,FALSE);
-    s0 := Get(self.exprStack,0);
-    NARROW(s0,LvExpr).lVal := res;
+    IF (a = Sign.Positive AND b = Sign.Positive) OR
+       (a = Sign.Negative AND b = Sign.Negative) THEN
+      binop(self,t,BinOps.mod);
+    ELSE  
+      res := DivMod(self,t,FALSE);
+      s0 := Get(self.exprStack,0);
+      NARROW(s0,LvExpr).lVal := res;
+    END;
   END mod;
 
 (*------------------------------------------------------------------ sets ---*)
