@@ -3687,7 +3687,13 @@ PROCEDURE loophole (self: U;  from, two: ZType) =
     ELSIF two = Type.Addr THEN
       b := LLVM.LLVMBuildIntToPtr(builderIR, a, destTy, LT("loophole"));
     ELSE
-      b := LLVM.LLVMBuildBitCast(builderIR, a, destTy, LT("loophole"));
+      IF from >= Type.Reel THEN
+        b := LLVM.LLVMBuildFPToSI(builderIR, a, destTy, LT("loophole"));
+      ELSIF two >= Type.Reel THEN
+        b := LLVM.LLVMBuildSIToFP(builderIR, a, destTy, LT("loophole"));
+      ELSE    
+        b := LLVM.LLVMBuildBitCast(builderIR, a, destTy, LT("loophole"));
+      END;
     END;
     NARROW(s0,LvExpr).lVal := b;
   END loophole;
