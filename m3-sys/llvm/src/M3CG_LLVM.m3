@@ -2647,12 +2647,10 @@ PROCEDURE compare (self: U;  t: ZType;  <*UNUSED*> u: IType;  op: CompareOp) =
     s1 := Get(self.exprStack,1);
     s0 := Get(self.exprStack,0);
     a,b,cmpVal,res : LLVM.ValueRef;
-    opType : LLVM.TypeRef;
     ite : ITEObj;
   BEGIN
     a := NARROW(s1,LvExpr).lVal;
     b := NARROW(s0,LvExpr).lVal;
-    opType := LLvmType(t);
 
     cmpVal := CompareVal(a,b,op,t);
 
