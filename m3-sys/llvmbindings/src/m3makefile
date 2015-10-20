@@ -55,8 +55,8 @@ end
 
 if not defined("LLVM_LIB_DIR")
     LLVM_LIB_DIR = PickDir("LLVM_LIB_DIR", [
-        "/usr/local/llvm-3.6.1/lib", % Rodney Bates
-        {"AMD64_DARWIN" : "/Users/jay/llvm-3.6.1/lib", % Jay Krell
+        {"AMD64_LINUX"  : "/usr/local/llvm-3.6.1/lib", % Rodney Bates
+         "AMD64_DARWIN" : "/Users/jay/llvm-3.6.1/lib", % Jay Krell
          "I386_DARWIN"  : "/Users/jay/llvm-3.6.1-x86/lib", % Jay Krell
         }{TARGET},
         ])
