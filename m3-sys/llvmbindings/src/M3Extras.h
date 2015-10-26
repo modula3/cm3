@@ -22,6 +22,9 @@
 extern "C" {
 #endif
 
+/*
+ * Map of intrinsics that M3 uses to the C++ intrinsic id
+ */
 enum M3Intrinsic {
   m3memset,
   m3memcpy,
@@ -29,17 +32,23 @@ enum M3Intrinsic {
   m3round,
   m3floor,
   m3trunc,
-  m3ceil
+  m3ceil,
+  m3fabs,
+  m3minnum,
+  m3maxnum
 };
 
-// return the intrinsic id from the enum
-// As of 2015-05-25, unused in M3 code. 
+/*
+ * Get the C++ instrinsic id which we pass to LLVMGetDeclaration to get the
+ * intrinsic signature.
+ */
 unsigned GetM3IntrinsicId(M3Intrinsic id);
 
-//peter added
-LLVMValueRef LLVMGetDeclaration(LLVMModuleRef M, unsigned id, /*Intrinsic::ID id,*/ LLVMTypeRef *Types, unsigned Count);
+/*
+ * Return the function signature for the intrinsic id and the types parameters
+ */
+LLVMValueRef LLVMGetDeclaration(LLVMModuleRef M, unsigned id, LLVMTypeRef *Types, unsigned Count);
 
-//peter added
 LLVMValueRef LLVMBuildAtomicCmpXchg(LLVMBuilderRef B,
                                     LLVMValueRef PTR,
                                     LLVMValueRef Cmp,

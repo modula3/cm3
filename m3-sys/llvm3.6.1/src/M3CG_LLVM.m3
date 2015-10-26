@@ -811,21 +811,6 @@ PROCEDURE ITEBlock(self : ITEObj; storeVal : LLVM.ValueRef; endBB : BOOLEAN) : L
     RETURN res;
   END ITEBlock;
 
-PROCEDURE GetIntrinsicId(intrinsicName : TEXT) : INTEGER =
-VAR
-  id : INTEGER;
-  fn : LLVM.ValueRef;
-  procTy : LLVM.TypeRef;
-  BEGIN
-    (* this is a real hack. we should be able to access the c++ enum value
-       for the intrinsic id *)
-    procTy := LLVM.LLVMFunctionType(LLvmType(Type.Void), NIL, 0, FALSE);
-    fn := LLVM.LLVMAddFunction(modRef, LT(intrinsicName), procTy);
-    id := LLVM.LLVMGetIntrinsicID(fn);
-    LLVM.LLVMDeleteFunction(fn);
-    RETURN id;
-  END GetIntrinsicId;
-
 (* debug
 PROCEDURE CheckIntrinsics() =
 BEGIN
@@ -833,21 +818,34 @@ BEGIN
   EVAL MemCopyFn();
   EVAL MemSetFn();
 
-  EVAL RoundFn(Type.Reel);
-  EVAL RoundFn(Type.LReel);
-  EVAL RoundFn(Type.XReel);
+  EVAL RealIntrinsic(Type.Reel, LLVM.M3Intrinsic.m3round);
+  EVAL RealIntrinsic(Type.LReel, LLVM.M3Intrinsic.m3round);
+  EVAL RealIntrinsic(Type.XReel, LLVM.M3Intrinsic.m3round);
 
-  EVAL FloorFn(Type.Reel);
-  EVAL FloorFn(Type.LReel);
-  EVAL FloorFn(Type.XReel);
+  EVAL RealIntrinsic(Type.Reel, LLVM.M3Intrinsic.m3floor);
+  EVAL RealIntrinsic(Type.LReel, LLVM.M3Intrinsic.m3floor);
+  EVAL RealIntrinsic(Type.XReel, LLVM.M3Intrinsic.m3floor);
+  
+  EVAL RealIntrinsic(Type.Reel, LLVM.M3Intrinsic.m3trunc);
+  EVAL RealIntrinsic(Type.LReel, LLVM.M3Intrinsic.m3trunc);
+  EVAL RealIntrinsic(Type.XReel, LLVM.M3Intrinsic.m3trunc);
+  
+  EVAL RealIntrinsic(Type.Reel, LLVM.M3Intrinsic.m3ceil);
+  EVAL RealIntrinsic(Type.LReel, LLVM.M3Intrinsic.m3ceil);
+  EVAL RealIntrinsic(Type.XReel, LLVM.M3Intrinsic.m3ceil);
+  
+  EVAL RealIntrinsic(Type.Reel, LLVM.M3Intrinsic.m3fabs);
+  EVAL RealIntrinsic(Type.LReel, LLVM.M3Intrinsic.m3fabs);
+  EVAL RealIntrinsic(Type.XReel, LLVM.M3Intrinsic.m3fabs);
 
-  EVAL TruncFn(Type.Reel);
-  EVAL TruncFn(Type.LReel);
-  EVAL TruncFn(Type.XReel);
+  EVAL RealIntrinsic(Type.Reel, LLVM.M3Intrinsic.m3minnum);
+  EVAL RealIntrinsic(Type.LReel, LLVM.M3Intrinsic.m3minnum);
+  EVAL RealIntrinsic(Type.XReel, LLVM.M3Intrinsic.m3minnum);
 
-  EVAL CeilFn(Type.Reel);
-  EVAL CeilFn(Type.LReel);
-  EVAL CeilFn(Type.XReel);
+  EVAL RealIntrinsic(Type.Reel, LLVM.M3Intrinsic.m3maxnum);
+  EVAL RealIntrinsic(Type.LReel, LLVM.M3Intrinsic.m3maxnum);
+  EVAL RealIntrinsic(Type.XReel, LLVM.M3Intrinsic.m3maxnum);
+     
 END CheckIntrinsics;
 *)
 
@@ -2993,14 +2991,17 @@ PROCEDURE negate (self: U;  t: AType) =
     NARROW(s0,LvExpr).lVal := lVal;
   END negate;
 
-PROCEDURE abs (self: U;  t: AType) =
+PROCEDURE abs(self: U;  t: AType) =
+  (* s0.t := ABS (s0.t) *)
+  CONST numParams = 1;
   VAR
     s0 := Get(self.exprStack,0);
     opType : LLVM.TypeRef;
-    a,cmpVal,negRef : LLVM.ValueRef;
-    ite : ITEObj;
-    res : LLVM.ValueRef;
+    a,ashr,xor,shiftLen : LLVM.ValueRef;
+    res,fn : LLVM.ValueRef;
     intType : BOOLEAN;
+    paramsArr : ValueArrType;
+    paramsRef : ValueRefType;
   BEGIN
     IF WordTypes(t) THEN RETURN; END;
     a := NARROW(s0,LvExpr).lVal;
@@ -3008,58 +3009,55 @@ PROCEDURE abs (self: U;  t: AType) =
     intType := t < Type.Reel;
 
     IF intType THEN
-      cmpVal := LLVM.LLVMBuildICmp(builderIR,  LLVM.IntPredicate.SLT, a, Zero(opType), LT("abs_icmp"));
+      shiftLen := LLVM.LLVMConstInt(IntPtrTy, ptrBits - 1L, TRUE);
+      ashr := LLVM.LLVMBuildAShr(builderIR, a, shiftLen, LT("abs_ashr"));
+      xor := LLVM.LLVMBuildXor(builderIR, a, ashr, LT("abs_xor"));
+      res := LLVM.LLVMBuildNSWSub(builderIR, xor, ashr, LT("abs_sub"));
     ELSE
-      cmpVal := LLVM.LLVMBuildFCmp(builderIR,  LLVM.RealPredicate.OLT, a, Zero(opType), LT("abs_fcmp"));
+      paramsRef := NewValueArr(paramsArr,numParams);
+      paramsArr[0] := a;
+      fn := RealIntrinsic(t, LLVM.M3Intrinsic.m3fabs);
+      res := LLVM.LLVMBuildCall(builderIR, fn, paramsRef, numParams, LT("fabs"));
     END;
-
-    ite := NEW(ITEObj,cmpVal := cmpVal,opName := "abs", opType := opType, curProc := self.curProc).init();
-    IF intType THEN
-      negRef := LLVM.LLVMBuildNSWNeg(builderIR, a, LT("abs_ineg"));
-    ELSE
-      negRef := LLVM.LLVMBuildFNeg(builderIR, a, LT("abs_fneg"));
-    END;
-    EVAL ite.block(negRef,FALSE);
-    res := ite.block(a,TRUE);
     NARROW(s0,LvExpr).lVal := res;
   END abs;
-
+  
 PROCEDURE MinMax (self: U;  t: ZType; doMin : BOOLEAN) =
+  CONST numParams = 2;
   VAR
     s0 := Get(self.exprStack,0);
     s1 := Get(self.exprStack,1);
-    opType : LLVM.TypeRef;
-    a,b,cmpVal,res : LLVM.ValueRef;
-    ite : ITEObj;
+    a,b,res,fn : LLVM.ValueRef;
+    shiftLen,diff,ashr,xor,and,da,db : LLVM.ValueRef;
     intType : BOOLEAN;
-    opName : TEXT;
-    ipred : LLVM.IntPredicate;
-    rpred : LLVM.RealPredicate;
+    m3id : LLVM.M3Intrinsic;
+    paramsArr : ValueArrType;
+    paramsRef : ValueRefType;
   BEGIN
     a := NARROW(s0,LvExpr).lVal;
     b := NARROW(s1,LvExpr).lVal;
-    opType := LLvmType(t);
     intType := t < Type.Reel;
 
-    IF doMin THEN
-      opName := "min";
-      ipred := LLVM.IntPredicate.SLT;
-      rpred := LLVM.RealPredicate.OLT
-    ELSE
-      opName := "max";
-      ipred := LLVM.IntPredicate.SGT;
-      rpred := LLVM.RealPredicate.OGT
-    END;
-
     IF intType THEN
-      cmpVal := LLVM.LLVMBuildICmp(builderIR,  ipred , a, b, LT(opName & "_cmp"));
+      IF doMin THEN da := a; db := b; ELSE da := b; db := a; END;
+      shiftLen := LLVM.LLVMConstInt(IntPtrTy, ptrBits - 1L, TRUE);
+      diff := LLVM.LLVMBuildNSWSub(builderIR, a, b, LT("mm_sub"));
+      ashr := LLVM.LLVMBuildAShr(builderIR, diff, shiftLen, LT("mm_ashr"));
+      xor := LLVM.LLVMBuildXor(builderIR, da, db, LT("mm_xor"));
+      and := LLVM.LLVMBuildAnd(builderIR, xor, ashr, LT("mm_and"));
+      res := LLVM.LLVMBuildXor(builderIR, and, db, LT("mm_res"));
     ELSE
-      cmpVal := LLVM.LLVMBuildFCmp(builderIR,  rpred , a, b, LT(opName & "_cmp"));
-    END;
-
-    ite := NEW(ITEObj, cmpVal := cmpVal, opName := opName, opType := opType, curProc := self.curProc).init();
-    EVAL ite.block(a,FALSE);
-    res := ite.block(b,TRUE);
+      paramsRef := NewValueArr(paramsArr,numParams);
+      paramsArr[0] := a;
+      paramsArr[1] := b;
+      IF doMin THEN
+        m3id := LLVM.M3Intrinsic.m3minnum;
+      ELSE
+        m3id := LLVM.M3Intrinsic.m3maxnum;
+      END;
+      fn := RealIntrinsic(t, m3id);
+      res := LLVM.LLVMBuildCall(builderIR, fn, paramsRef, numParams, LT("fminmax"));
+    END;  
     NARROW(s1,LvExpr).lVal := res;
     Pop(self.exprStack);
   END MinMax;
@@ -3075,13 +3073,6 @@ PROCEDURE min (self: U;  t: ZType) =
   BEGIN
     MinMax(self,t,TRUE);
   END min;
-
-PROCEDURE FExt(t : RType) : TEXT =
-  VAR ext : CARDINAL;
-  BEGIN
-    ext := TypeSize(t) * 8;
-    RETURN ".f" & Fmt.Int(ext);
-  END FExt;
 
 PROCEDURE IntrinsicRealTypes(t : RType) : UNTRACED REF LLVM.TypeRef =
   VAR
@@ -3110,9 +3101,8 @@ PROCEDURE IntrinsicMemTypes(p1,p2,p3 : LLVM.TypeRef) : UNTRACED REF LLVM.TypeRef
   END IntrinsicMemTypes;
 
 PROCEDURE MemSetFn() : LLVM.ValueRef =
-  CONST iName = "llvm.memset.p0i8.i64";
   VAR
-    memsetId := GetIntrinsicId(iName);
+    memsetId := LLVM.GetM3IntrinsicId(LLVM.M3Intrinsic.m3memset);    
     (* 2 types for overloaded memset *)
     Types := IntrinsicMemTypes(AdrTy,IntPtrTy,NIL);
   BEGIN
@@ -3120,9 +3110,8 @@ PROCEDURE MemSetFn() : LLVM.ValueRef =
   END MemSetFn;
 
 PROCEDURE MemCopyFn() : LLVM.ValueRef =
-  CONST iName = "llvm.memcpy.p0i8.p0i8.i64";
   VAR
-    memcpyId := GetIntrinsicId(iName);
+    memcpyId := LLVM.GetM3IntrinsicId(LLVM.M3Intrinsic.m3memcpy);    
     (* 3 types for overloaded memcpy *)
     Types := IntrinsicMemTypes(AdrTy,AdrTy,IntPtrTy);
   BEGIN
@@ -3130,66 +3119,39 @@ PROCEDURE MemCopyFn() : LLVM.ValueRef =
   END MemCopyFn;
 
 PROCEDURE MemMoveFn() : LLVM.ValueRef =
-  CONST iName = "llvm.memmove.p0i8.p0i8.i64";
   VAR
-    memmovId := GetIntrinsicId(iName);
+    memmovId := LLVM.GetM3IntrinsicId(LLVM.M3Intrinsic.m3memmov);  
     (* 3 types for overloaded memmov *)
     Types := IntrinsicMemTypes(AdrTy,AdrTy,IntPtrTy);
   BEGIN
     RETURN LLVM.LLVMGetDeclaration(modRef,memmovId,Types,3);
   END MemMoveFn;
 
-PROCEDURE RoundFn(t : RType) : LLVM.ValueRef =
-  CONST iName = "llvm.round";
+PROCEDURE RealIntrinsic(t : RType; m3id : LLVM.M3Intrinsic) : LLVM.ValueRef =
   VAR
-    roundId := GetIntrinsicId(iName & FExt(t));
-    Types := IntrinsicRealTypes(t);
+    id := LLVM.GetM3IntrinsicId(m3id);
+    types := IntrinsicRealTypes(t);
   BEGIN
-    RETURN LLVM.LLVMGetDeclaration(modRef,roundId,Types,1);
-  END RoundFn;
-
-PROCEDURE TruncFn(t : RType) : LLVM.ValueRef =
-  CONST iName = "llvm.trunc";
-  VAR
-    truncId := GetIntrinsicId(iName & FExt(t));
-    Types := IntrinsicRealTypes(t);
-  BEGIN
-    RETURN LLVM.LLVMGetDeclaration(modRef,truncId,Types,1);
-  END TruncFn;
-
-PROCEDURE FloorFn(t : RType) : LLVM.ValueRef =
-  CONST iName = "llvm.floor";
-  VAR
-    floorId := GetIntrinsicId(iName & FExt(t));
-    Types := IntrinsicRealTypes(t);
-  BEGIN
-    RETURN LLVM.LLVMGetDeclaration(modRef,floorId,Types,1);
-  END FloorFn;
-
-PROCEDURE CeilFn(t : RType) : LLVM.ValueRef =
-  CONST iName = "llvm.ceil";
-  VAR
-    ceilId := GetIntrinsicId(iName & FExt(t));
-    Types := IntrinsicRealTypes(t);
-  BEGIN
-    RETURN LLVM.LLVMGetDeclaration(modRef,ceilId,Types,1);
-  END CeilFn;
-
+    RETURN LLVM.LLVMGetDeclaration(modRef,id,types,1);
+  END RealIntrinsic;
+  
 PROCEDURE DoCvtInt(var : LLVM.ValueRef; op : ConvertOp; t : RType) : LLVM.ValueRef =
   CONST numParams = 1;
   VAR
     res,fn : LLVM.ValueRef;
     paramsArr : ValueArrType;
     paramsRef : ValueRefType;
+    m3id : LLVM.M3Intrinsic;    
   BEGIN
     paramsRef := NewValueArr(paramsArr,numParams);
     paramsArr[0] := var;
     CASE op OF
-    | ConvertOp.Round => fn := RoundFn(t);
-    | ConvertOp.Trunc => fn := TruncFn(t);
-    | ConvertOp.Floor => fn := FloorFn(t);
-    | ConvertOp.Ceiling => fn := CeilFn(t);
-    END;
+    | ConvertOp.Round => m3id := LLVM.M3Intrinsic.m3round;
+    | ConvertOp.Trunc => m3id := LLVM.M3Intrinsic.m3trunc;
+    | ConvertOp.Floor => m3id := LLVM.M3Intrinsic.m3floor;
+    | ConvertOp.Ceiling => m3id := LLVM.M3Intrinsic.m3ceil;
+    END;    
+    fn := RealIntrinsic(t, m3id);
     res := LLVM.LLVMBuildCall(builderIR, fn, paramsRef, numParams, LT("cvtint"));
     RETURN res;
   END DoCvtInt;

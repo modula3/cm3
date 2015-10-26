@@ -33,7 +33,6 @@
 using namespace llvm;
 
 
-/* peter added getdeclaration */
 LLVMValueRef LLVMGetDeclaration(LLVMModuleRef M, unsigned id, LLVMTypeRef *Types, unsigned Count) {
   Intrinsic::ID intrinId = (Intrinsic::ID) id;
   ArrayRef<Type*> Tys(unwrap(Types), Count);
@@ -57,7 +56,7 @@ static AtomicOrdering mapFromLLVMOrdering(LLVMAtomicOrdering Ordering) {
   llvm_unreachable("Invalid LLVMAtomicOrdering value!");
 }
 
-//peter added
+
 LLVMValueRef LLVMBuildAtomicCmpXchg(LLVMBuilderRef B,
                                 LLVMValueRef PTR,
                                 LLVMValueRef Cmp,
@@ -72,9 +71,7 @@ LLVMValueRef LLVMBuildAtomicCmpXchg(LLVMBuilderRef B,
                                       mapFromLLVMOrdering(FailureOrdering),
                                       singleThread ? SingleThread : CrossThread));
 }
-
-// return the intrinsic id from the enum
-// As of 2015-05-25, unused in M3 code and has no M3 binding. 
+ 
 unsigned GetM3IntrinsicId(M3Intrinsic id) {
 
   if (id == m3memset) return Intrinsic::memset;
@@ -84,8 +81,11 @@ unsigned GetM3IntrinsicId(M3Intrinsic id) {
   if (id == m3floor) return Intrinsic::floor;
   if (id == m3trunc) return Intrinsic::trunc;
   if (id == m3ceil) return Intrinsic::ceil;
+  if (id == m3fabs) return Intrinsic::fabs;
+  if (id == m3minnum) return Intrinsic::minnum;
+  if (id == m3maxnum) return Intrinsic::maxnum;
 
-  return 1;
+  assert(false && " invalid m3 intrinsic id");
 }
 
 #if 0 // These duplicate Core.cpp

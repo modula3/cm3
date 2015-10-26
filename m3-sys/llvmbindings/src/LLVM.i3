@@ -1711,7 +1711,10 @@ TYPE M3Intrinsic = {
   m3round,
   m3floor,
   m3trunc,
-  m3ceil
+  m3ceil,
+  m3fabs,
+  m3minnum,
+  m3maxnum  
 };
 
 (* return the intrinsic id from the enumeration. *) 
