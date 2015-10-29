@@ -365,10 +365,10 @@ TYPE
   (* template object for common If-Then-Else construction *)
 
   ITEObj = OBJECT
-    curProc : LvProc;
+    curObj : U;
+    opType : Type;
+    tmpVar : LvVar;
     cmpVal : LLVM.ValueRef;
-    opType : LLVM.TypeRef;
-    tmpLv : LLVM.ValueRef;
     curBB,thenBB,elseBB,exitBB : LLVM.BasicBlockRef;
     opName : TEXT;
   METHODS
@@ -783,14 +783,20 @@ PROCEDURE LTD(t : TEXT) : StringRef =
     LResult . Data := M3toC.CopyTtoS(t);
     RETURN LResult;
   END LTD;
-
+  
 PROCEDURE ITEInit(self : ITEObj) : ITEObj =
+  VAR
+    size : CARDINAL;
   BEGIN
-    self.tmpLv := LLVM.LLVMBuildAlloca(builderIR, self.opType, LT("itetmp"));
-    self.curBB := LLVM.LLVMGetInsertBlock(builderIR);
-    self.thenBB := LLVM.LLVMAppendBasicBlock(self.curProc.lvProc, LT(self.opName & "_then"));
-    self.elseBB := LLVM.LLVMAppendBasicBlock(self.curProc.lvProc, LT(self.opName & "_else"));
-    self.exitBB := LLVM.LLVMAppendBasicBlock(self.curProc.lvProc, LT(self.opName & "_end"));
+    size := TypeSize(self.opType);
+    self.curBB := LLVM.LLVMGetInsertBlock(builderIR);    
+    self.tmpVar := self.curObj.declare_temp (size, size, self.opType, TRUE);
+
+    WITH cp = self.curObj.curProc.lvProc DO
+      self.thenBB := LLVM.LLVMAppendBasicBlock(cp, LT(self.opName & "_then"));
+      self.elseBB := LLVM.LLVMAppendBasicBlock(cp, LT(self.opName & "_else"));
+      self.exitBB := LLVM.LLVMAppendBasicBlock(cp, LT(self.opName & "_end"));
+    END;
     LLVM.LLVMPositionBuilderAtEnd(builderIR,self.curBB);
     EVAL LLVM.LLVMBuildCondBr(builderIR,self.cmpVal,self.thenBB,self.elseBB);
     LLVM.LLVMPositionBuilderAtEnd(builderIR,self.thenBB);
@@ -800,11 +806,11 @@ PROCEDURE ITEInit(self : ITEObj) : ITEObj =
 PROCEDURE ITEBlock(self : ITEObj; storeVal : LLVM.ValueRef; endBB : BOOLEAN) : LLVM.ValueRef =
   VAR res : LLVM.ValueRef := NIL;
   BEGIN
-    EVAL LLVM.LLVMBuildStore(builderIR, storeVal, self.tmpLv);
+    EVAL LLVM.LLVMBuildStore(builderIR, storeVal, self.tmpVar.lv);
     EVAL LLVM.LLVMBuildBr(builderIR,self.exitBB);
     IF endBB THEN
       LLVM.LLVMPositionBuilderAtEnd(builderIR,self.exitBB);
-      res := LLVM.LLVMBuildLoad(builderIR, self.tmpLv, LT(self.opName & "_load"));
+      res := LLVM.LLVMBuildLoad(builderIR, self.tmpVar.lv, LT(self.opName & "_load"));
     ELSE (* elseBB *)
       LLVM.LLVMPositionBuilderAtEnd(builderIR,self.elseBB);
     END;
@@ -1654,7 +1660,8 @@ PROCEDURE declare_temp (self: U; s: ByteSize; a: Alignment; t: Type; in_memory: 
     v : LvVar := NewVar(self,M3ID.NoID,s,a,t,FALSE,0,in_memory,FALSE,FALSE,FALSE,M3CG.Maybe,VarType.Temp);
   BEGIN
     (* temps are always declared inside a begin_procedure. However we
-       allocate them in the entry BB to avoid dominate all uses problems *)  
+       allocate them in the entry BB to avoid dominate all uses problems,
+       also temps declared inside loops could overflow stack. *)  
     self.allocVarInEntryBlock(v);
     v.inProc := self.curProc;
     RETURN v;
@@ -2931,25 +2938,27 @@ PROCEDURE CompareVal(a,b : LLVM.ValueRef; op : CompareOp; t : Type) : LLVM.Value
     RETURN cmpVal;
   END CompareVal;
 
-PROCEDURE compare (self: U;  t: ZType;  <*UNUSED*> u: IType;  op: CompareOp) =
+PROCEDURE compare (self: U;  t: ZType; u: IType;  op: CompareOp) =
  (* s1.u := (s1.t op s0.t); pop   *)
   VAR
     s1 := Get(self.exprStack,1);
     s0 := Get(self.exprStack,0);
     a,b,cmpVal,res : LLVM.ValueRef;
+    opType : LLVM.TypeRef;    
     ite : ITEObj;
   BEGIN
     a := NARROW(s1,LvExpr).lVal;
     b := NARROW(s0,LvExpr).lVal;
+    opType := LLvmType(u);
 
     cmpVal := CompareVal(a,b,op,t);
 
-    ite := NEW(ITEObj,cmpVal := cmpVal,opName := "cmp", opType := IntPtrTy, curProc := self.curProc).init();
-    EVAL ite.block(One(IntPtrTy),FALSE);
-    res := ite.block(Zero(IntPtrTy),TRUE);
+    ite := NEW(ITEObj, cmpVal := cmpVal, opName := "cmp", opType := u, curObj := self).init();
+    EVAL ite.block(One(opType),FALSE);
+    res := ite.block(Zero(opType),TRUE);
     
     NARROW(s1,LvExpr).lVal := res;
-    Pop(self.exprStack);
+    Pop(self.exprStack);    
   END compare;
 
 PROCEDURE add (self: U;  t: AType) =
@@ -3198,6 +3207,7 @@ PROCEDURE cvt_float (self: U;  t: AType;  u: RType) =
     END;
     NARROW(s0,LvExpr).lVal := lVal;
   END cvt_float;
+  
 (* helper function for div and mod to add or subtract a value in case
    where one of the operands is negative.
    if mod # 0 then
@@ -3208,15 +3218,19 @@ PROCEDURE cvt_float (self: U;  t: AType;  u: RType) =
 PROCEDURE GenDivMod(self : U; t : IType; isDiv : BOOLEAN; numVal,denVal,divVal,modVal,fixVal : LLVM.ValueRef) : LLVM.ValueRef =
   VAR
     curBB,thenBB,elseBB,exitBB : LLVM.BasicBlockRef;
-    cmpVal,storeVal,tmpLv,res : LLVM.ValueRef;
+    cmpVal,storeVal,res : LLVM.ValueRef;
     opType : LLVM.TypeRef;
+    tmpVar : LvVar;
+    size : CARDINAL;    
   BEGIN
     opType := LLvmType(t);
-    tmpLv := LLVM.LLVMBuildAlloca(builderIR, opType, LT("divmod_tmp"));
+    size := TypeSize(t);
     IF isDiv THEN storeVal := divVal; ELSE storeVal := modVal; END;
-    res := LLVM.LLVMBuildStore(builderIR, storeVal, tmpLv);
 
-    curBB := LLVM.LLVMGetInsertBlock(builderIR);
+    curBB := LLVM.LLVMGetInsertBlock(builderIR);    
+    tmpVar := self.declare_temp (size, size, t, TRUE);
+    res := LLVM.LLVMBuildStore(builderIR, storeVal, tmpVar.lv);
+
     thenBB := LLVM.LLVMAppendBasicBlock(self.curProc.lvProc, LT("divmod_then"));
     elseBB := LLVM.LLVMAppendBasicBlock(self.curProc.lvProc, LT("divmod_else"));
     exitBB := LLVM.LLVMAppendBasicBlock(self.curProc.lvProc, LT("divmod_end"));
@@ -3235,12 +3249,12 @@ PROCEDURE GenDivMod(self : U; t : IType; isDiv : BOOLEAN; numVal,denVal,divVal,m
     LLVM.LLVMPositionBuilderAtEnd(builderIR,elseBB);
     (* add fix to div or mod *)
     res := LLVM.LLVMBuildNSWAdd(builderIR, storeVal, fixVal, LT("divmod_add"));
-    res := LLVM.LLVMBuildStore(builderIR, res, tmpLv);
+    res := LLVM.LLVMBuildStore(builderIR, res, tmpVar.lv);
 
     EVAL LLVM.LLVMBuildBr(builderIR,exitBB);
     LLVM.LLVMPositionBuilderAtEnd(builderIR,exitBB);
     
-    res := LLVM.LLVMBuildLoad(builderIR, tmpLv, LT("divmod_load"));
+    res := LLVM.LLVMBuildLoad(builderIR, tmpVar.lv, LT("divmod_load"));
     RETURN res;
   END GenDivMod;
 
@@ -3502,7 +3516,7 @@ PROCEDURE shift (self: U; t: IType) =
     opType := LLvmType(t);
     cmpVal := LLVM.LLVMBuildICmp(builderIR,  LLVM.IntPredicate.SGE, shift, Zero(opType), LT("shift_cmp"));
 
-    ite := NEW(ITEObj, cmpVal := cmpVal, opName := "shift", opType := opType, curProc := self.curProc).init();
+    ite := NEW(ITEObj, cmpVal := cmpVal, opName := "shift", opType := t, curObj := self).init();
     res := LLVM.LLVMBuildShl(builderIR, a, shift, LT("shl"));
     EVAL ite.block(res,FALSE);
     (* make the shift positive  *)
@@ -3564,7 +3578,7 @@ PROCEDURE rotate (self: U;  t: IType) =
     opType := LLvmType(t);
     cmpVal := LLVM.LLVMBuildICmp(builderIR,  LLVM.IntPredicate.SGE, shift, Zero(opType), LT("rotate_cmp"));
 
-    ite := NEW(ITEObj, cmpVal := cmpVal, opName := "rotate", opType := opType, curProc := self.curProc).init();
+    ite := NEW(ITEObj, cmpVal := cmpVal, opName := "rotate", opType := t, curObj := self).init();
     res := DoRotate(a,shift,TRUE);
     EVAL ite.block(res,FALSE);
     (* make the shift positive  *)
@@ -3663,7 +3677,7 @@ PROCEDURE extract (self: U;  t: IType;  sign: BOOLEAN) =
     opType := LLvmType(t);
     cmpVal := LLVM.LLVMBuildICmp(builderIR,  LLVM.IntPredicate.EQ, count, Zero(opType), LT("extract_cmp"));
     (* if count zero return zero *)
-    ite := NEW(ITEObj, cmpVal := cmpVal, opName := "extract", opType := opType, curProc := self.curProc).init();
+    ite := NEW(ITEObj, cmpVal := cmpVal, opName := "extract", opType := t, curObj := self).init();
     res := Zero(opType);
     EVAL ite.block(res,FALSE);
     res := DoExtract(a,count,offset,sign);
