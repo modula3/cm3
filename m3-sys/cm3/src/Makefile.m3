@@ -316,6 +316,7 @@ PROCEDURE ConvertOption (VAR s: State;  arg: TEXT;  arg_len: INTEGER)
              END;
 
     | 'Z' => IF (arg_len = 2) THEN
+               Out (wr, "M3_OPTIONS += \"-Z\"");
                Out (wr, "M3_COVERAGE = TRUE");  ok := TRUE;
              END;
 

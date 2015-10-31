@@ -436,7 +436,7 @@ typedef enum {
 
 command_list command;
 
-enum { FROM_ARGS, FROM_FILE } command_source = FROM_ARGS;
+enum CommSrc { FROM_ARGS, FROM_FILE } command_source = FROM_ARGS;
 
 void init_command (long c, char **v)
 {
