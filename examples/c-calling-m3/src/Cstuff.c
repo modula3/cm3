@@ -1,13 +1,15 @@
 #include <stdio.h>
 
+#ifdef __cplusplus
+extern "C" {
+
 typedef  int (*PROC)();
 
-int add_one (p)
-  PROC p;
+int add_one (PROC p)
 {
   int i;
 
-  printf ("in add_one, p = 0x%x\n", p);
+  printf ("in add_one, p = %p\n", p);
 
   i = p ();
   printf ("   p() => %d\n", i);
@@ -21,10 +23,13 @@ int add_one_again ()
 {
   int i;
 
-  printf ("in add_one_again, m3_proc = 0x%x\n", m3_proc);
+  printf ("in add_one_again, m3_proc = %p\n", m3_proc);
 
   i = m3_proc ();
   printf ("   m3_proc () => %d\n", i);
   
   return i+1;
 }
+
+}
+#endif
