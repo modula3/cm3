@@ -1486,6 +1486,11 @@ PROCEDURE declare_global (self: U;  n: Name;  s: ByteSize;  a: Alignment; t: Typ
       globName := M3ID.ToText(v.name);
     END;
 
+    IF inited THEN
+      (* this global is more like a segment and can expect inits *)
+      v.segLen := s;
+      v.lvType := LLVM.LLVMStructCreateNamed(globContext, LT(globName & "_struct"));
+    END;    
     v.lv := LLVM.LLVMAddGlobal(modRef, v.lvType, LT(globName));
     LLVM.LLVMSetInitializer(v.lv, LLVM.LLVMConstNull(v.lvType));
     LLVM.LLVMSetAlignment(v.lv, v.align);
