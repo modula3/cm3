@@ -240,7 +240,6 @@ TYPE
     align : Alignment;
     varType : VarType;
     m3t : TypeUID;
-    segLen : INTEGER;
     frequency : Frequency;
     inProc : LvProc;  (* for static link *)
     lvType : LLVM.TypeRef;
@@ -1470,7 +1469,7 @@ PROCEDURE bind_segment (<*UNUSED*> self: U;  seg: Var;  s: ByteSize;  a: Alignme
   BEGIN
     v := NARROW(seg,LvVar);
     v.align := a;
-    v.segLen := s;
+    v.size := s;
     v.exported := exported; (* check this in end_init *)
     v.inited := inited; (* not used yet *)
   END bind_segment;
@@ -1488,7 +1487,6 @@ PROCEDURE declare_global (self: U;  n: Name;  s: ByteSize;  a: Alignment; t: Typ
 
     IF inited THEN
       (* this global is more like a segment and can expect inits *)
-      v.segLen := s;
       v.lvType := LLVM.LLVMStructCreateNamed(globContext, LT(globName & "_struct"));
     END;    
     v.lv := LLVM.LLVMAddGlobal(modRef, v.lvType, LT(globName));
@@ -1760,8 +1758,8 @@ PROCEDURE end_init (self: U;  v: Var) =
 
     (* if we dont add the final zero in to agree with the bind size
        the rtlinker crashes. *)
-    IF thisOfs < thisVar.segLen THEN
-      fillLen := thisVar.segLen - thisOfs;
+    IF thisOfs < thisVar.size THEN
+      fillLen := thisVar.size - thisOfs;
       fillVar := NEW(FillerVar);
       fillVar.lvTy := LLVM.LLVMArrayType(i8Type,fillLen);
       PushRev(newInits,fillVar);
@@ -1784,7 +1782,7 @@ PROCEDURE end_init (self: U;  v: Var) =
     LLVM.LLVMStructSetBody(thisVar.lvType, typesRef, numGlobs, FALSE);
 
     segSize := VAL(LLVM.LLVMStoreSizeOfType(targetData,thisVar.lvType),INTEGER);
-    <*ASSERT segSize = thisVar.segLen *>
+    <*ASSERT segSize = thisVar.size *>
 
     (* calc the initialisers *)
     FOR i := 0 TO numGlobs  - 1 DO
