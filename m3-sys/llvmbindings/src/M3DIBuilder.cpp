@@ -34,31 +34,21 @@
 // These are for DIBuilder types that are classes containing a single
 // data member of type DINode.  
 
-inline LLVMDITypeRef wrapDITypeRef(llvm::DITypeRef TR) {
-  llvm::Metadata *Val = TR; // Implied conversion 
-  LLVMDITypeRef Result;
-  Result.Val = reinterpret_cast<LLVMMetadataPtr>(Val);
-  return Result;
-}
-
-inline llvm::DITypeRef unwrapDITypeRef(LLVMDITypeRef wrapped) {
-  llvm::Metadata *Val = reinterpret_cast<llvm::Metadata*>(wrapped.Val);
-                   // ^Implied conversion. 
-  llvm::DITypeRef Result = llvm::DIType(reinterpret_cast<llvm::MDNode*>(Val));  
-                      // ^Implied conversion. 
-  return Result;
-}
+// This is confusing.  Following the convention established by Core.cpp, we use the
+// name "wrap" to mean converting from a C++ type to a suitable C type for passing
+// in and out of functions in the binding, and "unwrap" for the reverse conversion.
+// But "wrap", by this convention, entails removing the MDNode pointer from a class
+// instance, and "unwrap" entails putting the pointer back inside a class instance.  
 
 #define DEFINE_DI_MDNODE_CONVERSION_FUNCTIONS(Ty)\
-   inline Ty wrap(llvm::Ty DINode) {\
-    llvm::MDNode *DbgPtr = DINode;\
-    Ty Result;\
-    Result.DbgPtr = reinterpret_cast<LLVMMDNodePtr>(DbgPtr);\
-    return Result;\
+  inline Ty *wrap(llvm::Ty llvmNode) {\
+  return reinterpret_cast <Ty*>\
+          ((reinterpret_cast<struct CDebugInfo *>(&llvmNode))->DbgPtr); \
   }\
-  inline llvm::Ty unwrap(Ty LLVMDINode) {\
-    llvm::MDNode *DbgPtr = reinterpret_cast<llvm::MDNode*>(LLVMDINode.DbgPtr);\
-    return llvm::Ty(DbgPtr);\
+  inline llvm::Ty unwrap(Ty *CNode) {\
+    struct CDebugInfo Node;\
+    Node.DbgPtr = reinterpret_cast<OpaqueMetadata *>(CNode);\
+    return *(reinterpret_cast<llvm::Ty*>(&Node));\
   }
 
 DEFINE_DI_MDNODE_CONVERSION_FUNCTIONS(DIBasicType) 
@@ -84,6 +74,28 @@ DEFINE_DI_MDNODE_CONVERSION_FUNCTIONS(DISubprogram)
 DEFINE_DI_MDNODE_CONVERSION_FUNCTIONS(DITemplateTypeParameter)
 DEFINE_DI_MDNODE_CONVERSION_FUNCTIONS(DITemplateValueParameter)
 DEFINE_DI_MDNODE_CONVERSION_FUNCTIONS(DIObjCProperty)
+
+// wrap and unwrap functions for other types. 
+// These are for DIBuilder types that are classes containing a single
+// data member of type DINode.  
+
+// For our purposes, DITypeRef works just like, e.g., DIType, but it is 
+// a different C++ class, has a different field name (Val) for the MDNode
+// (which doesn't matter, since we access it only by casting to/from our 
+// own CDebugInfo), and different methods.  These functions preserve the 
+// non-overloaded names that were once necessary for other reasons, and 
+// are still a big improvement in maintainability. 
+
+inline DITypeRef *wrapDITypeRef(llvm::DITypeRef llvmNode) {
+  return reinterpret_cast <DITypeRef*>
+          ((reinterpret_cast<struct CDebugInfo *>(&llvmNode))->DbgPtr);
+  }
+
+inline llvm::DITypeRef unwrapDITypeRef(DITypeRef *CNode) {
+  struct CDebugInfo Node;
+  Node.DbgPtr = reinterpret_cast<OpaqueMetadata *>(CNode);
+  return *(reinterpret_cast<llvm::DITypeRef*>(&Node));
+}
 
 // [un]wrap functions missing from Core.h: 
 
@@ -138,26 +150,6 @@ inline llvm::ArrayRef<int64_t> unwrapAOfI64(LLVMArrayRefOfint64_t R){
 inline llvm::MDNode *unwrapMDNodePtr(LLVMMDNodePtr Node) {
   return reinterpret_cast<llvm::MDNode *>(Node); 
 }
-
-#if 0
-inline llvm::DITypeRef unwrapDITypeRef(LLVMDITypeRef Node) {
-  return reinterpret_cast<llvm::DITypeRef>(Node); 
-}
-#endif 
-
-#if 0
-inline LLVMDITypeRef wrapDITypeRef (llvm::DITypeRef Node) {
-  llvm::Metadata *Val = Node; // Implicitly converted. 
-  LLVMDITypeRef Result;  
-  Result.Val = reinterpret_cast<LLVMMetadataPtr>(Val);
-  return Result;
-}
-
-inline llvm::DITypeRef unwrapDITypeRef (LLVMDITypeRef LLVMDINode) {
-  llvm::Metadata *Val = reinterpret_cast<llvm::Metadata*>(LLVMDINode.Val);
-  return llvm::TypeRef(Val); 
-}
-#endif 
 
 //template<typename T> inline T *unwrap(LLVMValueRef P) { 
 //    return reinterpret_cast<T*>(unwrap(P));
@@ -274,6 +266,7 @@ LLVMDIBasicType DIBcreateBasicType(LLVMDIBuilderRef Builder,
                            uint64_t SizeInBits,
                            uint64_t AlignInBits,
                            unsigned Encoding) {
+
   return wrap(unwrapBuilder(Builder)-> createBasicType(
                            unwrapStringRef(Name),
                            /*uint64_t*/ SizeInBits,
@@ -901,9 +894,9 @@ LLVMDIBasicType DIBcreateUnspecifiedParameter(LLVMDIBuilderRef Builder) {
 
 /// getOrCreateArray - Get a DIArray, create one if required.
 LLVMDIArray DIBgetOrCreateArray(LLVMDIBuilderRef Builder, 
-                                LLVMArrayRefOfMetadataPtr Elements) {
+                                LLVMArrayRefOfMetadataPtr *Elements) {
   return wrap(unwrapBuilder(Builder)-> getOrCreateArray
-                (unwrapAOfM(/*LLVMArrayRefOfMetadataPtr*/ Elements)));
+                (unwrapAOfM(/*LLVMArrayRefOfMetadataPtr*/ *Elements)));
 }
 
 
@@ -1018,10 +1011,10 @@ LLVMDIVariable DIBcreateLocalVariable(LLVMDIBuilderRef Builder,
 /// variable which has a complex address expression for its address.
 /// @param Addr        An array of complex address operations.
 LLVMDIExpression DIBcreateExpression(LLVMDIBuilderRef Builder,
-                                LLVMArrayRefOfint64_t Addr) {
+                                LLVMArrayRefOfint64_t *Addr) {
   return wrap(unwrapBuilder(Builder)
          -> createExpression
-              (unwrapAOfI64(/*LLVMArrayRefOfint64_t*/ Addr)));
+              (unwrapAOfI64(/*LLVMArrayRefOfint64_t*/ *Addr)));
 }
 
 /// createPieceExpression - Create a descriptor to describe one part

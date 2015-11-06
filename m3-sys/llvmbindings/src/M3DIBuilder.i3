@@ -57,7 +57,7 @@
 ; TYPE Opaque = RECORD END
 
 (* There is a large C++ subclass hierarchy rooted at DIDescriptor, whose
-   conterparts here are ordered and indented to reflect.  Every one is a 
+   counterparts here are ordered and indented to reflect.  Every one is a 
    class with a single data member, an MDNode*, with varying constraints 
    on the metadata tree it is the root of, the containing class type 
    reflecting this. 
@@ -77,66 +77,73 @@
    issue.  The C++ code in the external C-to-C++ bindings this uses contains 
    runtime checks that convert failed narrowings to nil pointers. *) 
 
-; TYPE LLVMDIDescriptorRef
+; TYPE LLVMDIDescriptor
        = (* "M3DIBOpaqueDIDescriptor"*) MetadataRef
-; TYPE   LLVMDISubrangeRef 
+; TYPE   LLVMDIArray
+           = (* "M3DIBOpaqueDIArray"*) MetadataRef
+; TYPE   LLVMDITypeArray
+           = (* "M3DIBOpaqueDITypeArray"*) MetadataRef
+; TYPE   LLVMDISubrange
          = (* "M3DIBOpaqueDISubrange"*) MetadataRef
-      (* DITypedArray -- not needed. *) 
-; TYPE   LLVMDIEnumeratorRef
+; TYPE   LLVMDIEnumerator
          = (* "M3DIBOpaqueDIEnumerator"*) MetadataRef
-; TYPE   LLVMDIScopeRef 
+; TYPE   LLVMDIScope
          = (* "M3DIBOpaqueDIScope"*) MetadataRef
-; TYPE     LLVMDITypeRef 
+; TYPE     LLVMDIType
            = (* "M3DIBOpaqueDIType"*) MetadataRef
-; TYPE     LLVMDIFileRef        
+; TYPE     LLVMDIFile
            = (* "M3DIBOpaqueDIFile"*) MetadataRef
-; TYPE     LLVMDICompileUnitRef
+; TYPE     LLVMDICompileUnit
            = (* "M3DIBOpaqueDICompileUnit"*) MetadataRef
-; TYPE     LLVMDISubprogramRef
+; TYPE     LLVMDISubprogram
            = (* "M3DIBOpaqueDISubprogram"*) MetadataRef
-; TYPE     LLVMDILexicalBlockRef
+; TYPE     LLVMDILexicalBlock
            = (* "M3DIBOpaqueDILexicalBlock"*) MetadataRef
-; TYPE     LLVMDILexicalBlockFileRef
+; TYPE     LLVMDILexicalBlockFile
            = (* "M3DIBOpaqueDILexicalBlockFile"*) MetadataRef
-; TYPE     LLVMDINameSpaceRef
+; TYPE     LLVMDINameSpace
            = (* "M3DIBOpaqueDINameSpace"*) MetadataRef
-; TYPE       LLVMDIBasicTypeRef
+; TYPE       LLVMDIBasicType
              = (* "M3DIBOpaqueDIBasicType"*) MetadataRef
-; TYPE       LLVMDIDerivedTypeRef
+; TYPE       LLVMDIDerivedType
              = (* "M3DIBOpaqueDIDerivedType"*) MetadataRef
-; TYPE         LLVMDICompositeTypeRef
+; TYPE         LLVMDICompositeType
                = (* "M3DIBOpaqueDICompositeType"*) MetadataRef
-; TYPE         LLVMDISubroutineTypeRef
+; TYPE         LLVMDISubroutineType
                = (* "M3DIBOpaqueDISubroutineType"*) MetadataRef
-; TYPE   LLVMDITemplateTypeParameterRef
+; TYPE   LLVMDITemplateTypeParameter
          = (* "M3DIBOpaqueDITemplateTypeParameter"*) MetadataRef
-; TYPE   LLVMDITemplateValueParameterRef
+; TYPE   LLVMDITemplateValueParameter
          = (* "M3DIBOpaqueDITemplateValueParameter"*) MetadataRef
-; TYPE   LLVMDIGlobalVariableRef
+; TYPE   LLVMDIGlobalVariable
          = (* "M3DIBOpaqueDIGlobalVariable"*) MetadataRef
-; TYPE   LLVMDIVariableRef 
+; TYPE   LLVMDIVariable
          = (* "M3DIBOpaqueDIVariable"*) MetadataRef
-; TYPE   LLVMDIExpressionRef
+; TYPE   LLVMDIExpression
          = (* "M3DIBOpaqueDIExpression"*) MetadataRef
       (* DILocation -- not needed. *)
-; TYPE   LLVMDIObjCPropertyRef
+; TYPE   LLVMDIObjCProperty
          = (* "M3DIBOpaqueDIObjCProperty"*) MetadataRef
-; TYPE   LLVMDIImportedEntityRef
+; TYPE   LLVMDIImportedEntity
          = (* "M3DIBOpaqueDIImportedEntity"*) MetadataRef
 
-(* NOTE: Each of these types named "DI*" (but not ending in "Ref"), in llvm 
-         C++ code is a one-field class object whose one field is a pointer to 
-         a subclass of MDNode.  They are passed into and returned from the C++ 
-         functions by value, but they behave like pointers.  Their classes do 
-         add a lot of methods, but no data members.  
-*) 
+(* These correspond to instances of template class DIRef, and are not derived 
+   from DIDescriptor.  For our purposes, each behaves the same, i.e., we have
+   a pointer to a metadata node. *) 
 
+; TYPE     LLVMDITypeRef
+           = (* "M3DIBOpaqueDITypeRef"*) MetadataRef
+; TYPE     LLVMDIScopeRef
+           = (* "M3DIBOpaqueDIScopeRef"*) MetadataRef
+
+(* These are now obsolete. **
 ; TYPE LLVMDIDescriptor = RECORD MDNode : LLVMDIDescriptorRef := NIL END 
 ; TYPE   LLVMDISubrange = RECORD MDNode : LLVMDISubrangeRef := NIL END 
 ; TYPE   LLVMDIEnumerator = RECORD MDNode : LLVMDIEnumeratorRef := NIL END 
 ; TYPE   LLVMDIScope = RECORD MDNode : LLVMDIScopeRef := NIL END 
 ; TYPE     LLVMDIType = RECORD MDNode : LLVMDITypeRef := NIL END 
-; TYPE       LLVMDIBasicType = RECORD MDNode : LLVMDIBasicTypeRef := NIL END 
+; TYPE       LLVMDIBasicType = LLVMDIBasicTypeRef  
+(* ; TYPE       LLVMDIBasicType = RECORD MDNode : LLVMDIBasicTypeRef := NIL END *) 
 ; TYPE       LLVMDIDerivedType = RECORD MDNode : LLVMDIDerivedTypeRef := NIL END 
 ; TYPE         LLVMDICompositeType = RECORD MDNode : LLVMDICompositeTypeRef := NIL END 
 ; TYPE         LLVMDISubroutineType = RECORD MDNode : LLVMDISubroutineTypeRef := NIL END 
@@ -155,16 +162,12 @@
 ; TYPE   LLVMDIImportedEntity = RECORD MDNode : LLVMDIImportedEntityRef := NIL END
 
 
-; CONST LLVMDIDescriptorEmpty = LLVMDIDescriptor { MDNode := NIL } 
-; CONST LLVMDITypeEmpty = LLVMDIType { MDNode := NIL } 
-; CONST LLVMDIExpressionEmpty = LLVMDIExpression { MDNode := NIL } 
+** *) 
 
-
-(* Other types not involved in the DIDescriptor hierarchy: *)
-; TYPE DIArrayRef 
-    = UNTRACED BRANDED "M3DIBOpaqueDIArray" REF Opaque
-; TYPE DIArray = RECORD MDNode : DIArrayRef := NIL END 
-; CONST DIArrayEmpty = DIArray { MDNode := NIL } 
+; CONST LLVMDITypeEmpty : LLVMDIType = NIL  
+; CONST LLVMDIArrayEmpty : LLVMDIArray = NIL  
+; CONST LLVMDIDescriptorEmpty : LLVMDIDescriptor = NIL 
+; CONST LLVMDIExpressionEmpty : LLVMDIExpression = NIL  
 
 ; TYPE ComplexAddrDom = { OpInvalid , OpPlus , OpDeref }
 ; TYPE ComplexAddrKind = [ ComplexAddrDom . OpPlus .. ComplexAddrDom . OpDeref ]
@@ -449,7 +452,7 @@
     ; OffsetInBits : uint64_t
     ; Flags : unsigned
     ; DerivedFrom : LLVMDIType
-    ; Elements : DIArray
+    ; Elements : LLVMDIArray
     ; VTableHolder : LLVMDIType := LLVMDITypeEmpty
     ; TemplateParms : MDNodeRef := NIL 
     ; READONLY UniqueIdentifier : StringRef := StringRefEmpty
@@ -477,7 +480,7 @@
     ; AlignInBits : uint64_t
     ; Flags : unsigned
     ; DerivedFrom : LLVMDIType
-    ; Elements : DIArray
+    ; Elements : LLVMDIArray
     ; RunTimeLang : unsigned := 0
     ; VTableHolder : LLVMDIType := LLVMDITypeEmpty
     ; READONLY UniqueIdentifier : StringRef := StringRefEmpty
@@ -503,7 +506,7 @@
     ; SizeInBits : uint64_t
     ; AlignInBits : uint64_t
     ; Flags : unsigned
-    ; Elements : DIArray
+    ; Elements : LLVMDIArray
     ; RunTimeLang : unsigned := 0
     ; READONLY UniqueIdentifier : StringRef := StringRefEmpty
     )
@@ -582,7 +585,7 @@
     ; Scope : LLVMDIDescriptor
     ; READONLY Name : StringRef
     ; Ty : LLVMDIType
-    ; Val : DIArray
+    ; Val : LLVMDIArray
     ; File : MDNodeRef := NIL
     ; LineNo : unsigned := 0
     ; ColumnNo : unsigned := 0
@@ -599,7 +602,7 @@
     ; Size : uint64_t
     ; AlignInBits : uint64_t
     ; Ty : LLVMDIType
-    ; Subscripts : DIArray
+    ; Subscripts : LLVMDIArray
     )
   : LLVMDICompositeType
 
@@ -613,7 +616,7 @@
     ; Size : uint64_t
     ; AlignInBits : uint64_t
     ; Ty : LLVMDIType
-    ; Subscripts : DIArray
+    ; Subscripts : LLVMDIArray
     )
   : LLVMDICompositeType
 
@@ -636,7 +639,7 @@
     ; LineNumber : unsigned
     ; SizeInBits : uint64_t
     ; AlignInBits : uint64_t
-    ; Elements : DIArray
+    ; Elements : LLVMDIArray
     ; UnderlyingType : LLVMDIType
     ; READONLY UniqueIdentifier : StringRef := StringRefEmpty
     )
@@ -651,7 +654,7 @@
 ; PROCEDURE DIBcreateSubroutineType
     ( Builder : DIBuilderRef 
     ; File : LLVMDIFile 
-    ; ParameterTypes : DIArray 
+    ; ParameterTypes : LLVMDITypeArray 
     ; Flags : unsigned := 0 )
   : LLVMDISubroutineType
 
@@ -703,10 +706,23 @@
 (** for a subroutine type.*)
 ; PROCEDURE DIBcreateUnspecifiedParameter ( ) : LLVMDIBasicType
 
-(** getOrCreateArray - Get a DIArray, create one if required.*)
+(** getOrCreateArray - Get a LLVMDIArray, create one if required.*)
 ; PROCEDURE DIBgetOrCreateArray
-    ( Builder : DIBuilderRef ; Elements : ArrayRefOfMetadataRef )
-  : DIArray
+    ( Builder : DIBuilderRef 
+    ; READONLY Elements : ArrayRefOfMetadataRef 
+   (* ^ Pass struct by value; avoid ABI incompatabilities. *) 
+    )
+  : LLVMDIArray
+
+(** getOrCreateTypeArray - Get a DITypeArray, create one if required.*)
+(* NOTE: DIBuilder accepts parameters of this type, but appears not to
+         produce values of this type.  Will LLVMDIArray work? *) 
+; PROCEDURE DIBgetOrCreateTypeArray
+    ( Builder : DIBuilderRef 
+    ; READONLY Elements : ArrayRefOfMetadataRef 
+   (* ^ Pass struct by value; avoid ABI incompatabilities. *) 
+    )
+  : LLVMDITypeArray
 
 (** getOrCreateSubrange - Create a descriptor for a value range.  This*)
 (** implicitly uniques the values returned.*)
@@ -732,7 +748,7 @@
     ; READONLY LinkageName : StringRef
     ; File : LLVMDIFile
     ; LineNo : unsigned
-    ; Ty : LLVMDIType
+    ; Ty : LLVMDITypeRef
     ; isLocalToUnit : Bool
     ; Val : LLVM . ConstantRef 
     ; Decl : MDNodeRef 
@@ -748,7 +764,7 @@
     ; READONLY LinkageName : StringRef
     ; File : LLVMDIFile
     ; LineNo : unsigned
-    ; Ty : LLVMDIType
+    ; Ty : LLVMDITypeRef
     ; isLocalToUnit : Bool
     ; Val : LLVM . ConstantRef 
     ; Decl : MDNodeRef 
@@ -777,7 +793,7 @@
     ; READONLY Name : StringRef
     ; File : LLVMDIFile
     ; LineNo : unsigned
-    ; Ty : LLVMDIType
+    ; Ty : LLVMDITypeRef
     ; AlwaysPreserve : Bool := False
     ; Flags : unsigned := 0
     ; ArgNo : unsigned := 0
@@ -789,7 +805,8 @@
 (** @param Addr        An array of complex address operations.*)
 ; PROCEDURE DIBcreateExpression
     ( Builder : DIBuilderRef
-    ; ADDR : ArrayRefOfint64_t
+    ; READONLY Addr : ArrayRefOfint64_t
+   (* ^ Pass struct by value; avoid ABI incompatabilities. *) 
     )
   : LLVMDIExpression
 
@@ -824,7 +841,7 @@
          (* ^'Tho overloaded, not renamed, because its overload 
             (DIBcreateFunctionFromScope) is to be removed.*) 
     ( Builder : DIBuilderRef
-    ; Scope : LLVMDIDescriptor
+    ; Scope : LLVMDIScopeRef
     ; READONLY Name : StringRef
     ; READONLY LinkageName : StringRef
     ; File : LLVMDIFile
@@ -1103,8 +1120,8 @@
 ; PROCEDURE DIBReplaceArrays
     ( Builder : DIBuilderRef 
     ; READONLY T : LLVMDICompositeType  
-    ; Elements : DIArray 
-    ; TParems : DIArray := DIArrayEmpty  
+    ; Elements : LLVMDIArray 
+    ; TParems : LLVMDIArray := LLVMDIArrayEmpty  
     ) 
 
 (* This apparently was in bindings/go/llvm/DIBuilderBindings.h of an earlier

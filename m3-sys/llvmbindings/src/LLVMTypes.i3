@@ -56,7 +56,7 @@ INTERFACE LLVMTypes
 
 ; CONST StringRefEmpty = StringRef { Data := NIL , Length := 0 }
 
-; TYPE MetadataRef = UNTRACED BRANDED "LLVMMetadata" REF (* LLVM . *) Opaque
+; TYPE MetadataRef = UNTRACED BRANDED "LLVMMetadata" REF Opaque
 
 (* class ArrayRef<Metadata *> (NOTE: this is not a pointer). *) 
 ; TYPE ArrayRefOfMetadataRef 

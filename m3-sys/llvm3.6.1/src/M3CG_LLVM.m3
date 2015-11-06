@@ -4730,7 +4730,7 @@ PROCEDURE DebugLine(self : U) =
     blockRef : BlockDebug;
   BEGIN
     IF self.genDebug THEN
-      IF self.funcRef.MDNode # NIL THEN
+      IF self.funcRef # NIL THEN
         IF self.debugLexStack.size() > 0 THEN
           blockRef := Get(self.debugLexStack);
           scope := blockRef.value;
@@ -4757,7 +4757,7 @@ PROCEDURE DebugFunc(self : U; p : Proc) =
     funcTy : M3DIB.LLVMDISubroutineType;
     paramsArr : REF ARRAY OF MetadataRef; 
     paramsMetadata : LLVMTypes.ArrayRefOfMetadataRef; 
-    paramsDIArr : M3DIB.DIArray;
+    paramsDIArr : M3DIB.LLVMDIArray;
     tyVal : M3DIB.LLVMDIBasicType; 
     arg : REFANY;
     numParams,tSize,tAlign : CARDINAL;
@@ -4770,14 +4770,14 @@ PROCEDURE DebugFunc(self : U; p : Proc) =
     (* extra one since return type is first param *)
     NewArrayRefOfMetadataRef(numParams + 1, paramsArr, paramsMetadata);
     IF proc.returnType = Type.Void THEN
-      tyVal := M3DIB.LLVMDIDescriptorEmpty;
+      tyVal := LOOPHOLE(M3DIB.LLVMDIDescriptorEmpty,M3DIB.LLVMDIBasicType);
 (* CHECK       ^Or do we need some representation of void type? *) 
     ELSE
       tSize := TypeSize(proc.returnType) * ptrBytes;
       tAlign := tSize;
-      tyVal := M3DIB.DIBcreateBasicType(self.debugRef, LTD("return_t"),           VAL(tSize,uint64_t), VAL(tAlign,uint64_t), 0);
+      tyVal := M3DIB.DIBcreateBasicType(self.debugRef, LTD("return_t"), VAL(tSize,uint64_t), VAL(tAlign,uint64_t), 0);
     END;
-    paramsArr[0] := tyVal.MDNode;
+    paramsArr[0] := tyVal;
 
     IF numParams > 0 THEN
       FOR i := 0 TO numParams - 1 DO
@@ -4788,8 +4788,8 @@ PROCEDURE DebugFunc(self : U; p : Proc) =
         tAlign := param.align * ptrBytes;
         tyVal := M3DIB.DIBcreateBasicType
                    (self.debugRef, LTD(typeName),
-                    VAL(tSize,uint64_t), VAL(tAlign,uint64_t), 0);
-        paramsArr[i+1] := tyVal.MDNode;
+                    VAL(tSize,uint64_t), VAL(tAlign,uint64_t),  DW_ATE_address);
+        paramsArr[i+1] := tyVal;
       END;
     END;
 
@@ -4874,7 +4874,7 @@ PROCEDURE DebugArray(self : U; a : ArrayDebug) : M3DIB.LLVMDICompositeType =
     subrange : SubrangeDebug;
     paramsArr : REF ARRAY OF MetadataRef; 
     paramsMetadata : LLVMTypes.ArrayRefOfMetadataRef; 
-    paramsDIArr : M3DIB.DIArray;
+    paramsDIArr : M3DIB.LLVMDIArray;
     Result : M3DIB.LLVMDICompositeType; 
   BEGIN
     IF self.m3llvmDebugLev > 0 THEN
@@ -4889,7 +4889,7 @@ PROCEDURE DebugArray(self : U; a : ArrayDebug) : M3DIB.LLVMDICompositeType =
            (self.debugRef, VAL(subrange.min,int64_t), 
             VAL(subrange.max - subrange.min + 1L,int64_t));
     NewArrayRefOfMetadataRef(1, paramsArr, paramsMetadata);
-    paramsArr[0] := subsVal.MDNode;
+    paramsArr[0] := subsVal;
     paramsDIArr := M3DIB.DIBgetOrCreateArray(self.debugRef, paramsMetadata);
     Result 
       := M3DIB.DIBcreateArrayType
@@ -4904,7 +4904,7 @@ PROCEDURE DebugOpenArray(self : U; a : OpenArrayDebug) : M3DIB.LLVMDICompositeTy
 (*    subrange : SubrangeDebug;*)
     paramsArr : REF ARRAY OF MetadataRef; 
     paramsMetadata : LLVMTypes.ArrayRefOfMetadataRef; 
-    paramsDIArr : M3DIB.DIArray;
+    paramsDIArr : M3DIB.LLVMDIArray;
   BEGIN
     IF self.m3llvmDebugLev > 0 THEN
       IO.Put("openarray debug\n");
@@ -4917,7 +4917,7 @@ PROCEDURE DebugOpenArray(self : U; a : OpenArrayDebug) : M3DIB.LLVMDICompositeTy
     *)
     subsVal := M3DIB.DIBgetOrCreateSubrange(self.debugRef, VAL(0L,int64_t), VAL(100L,int64_t));
     NewArrayRefOfMetadataRef(1, paramsArr, paramsMetadata);
-    paramsArr[0] := subsVal.MDNode;
+    paramsArr[0] := subsVal;
     paramsDIArr := M3DIB.DIBgetOrCreateArray(self.debugRef, paramsMetadata);
     RETURN M3DIB.DIBcreateArrayType(self.debugRef, VAL(a.bitSize,uint64_t), VAL(a.align,uint64_t), eltVal, paramsDIArr);
   END DebugOpenArray;
@@ -4929,7 +4929,7 @@ PROCEDURE DebugSet(self : U; s : SetDebug) : M3DIB.LLVMDICompositeType =
     subrange : SubrangeDebug;
     paramsArr : REF ARRAY OF MetadataRef; 
     paramsMetadata : LLVMTypes.ArrayRefOfMetadataRef; 
-    paramsDIArr : M3DIB.DIArray;
+    paramsDIArr : M3DIB.LLVMDIArray;
 
   BEGIN
     IF self.m3llvmDebugLev > 0 THEN
@@ -4942,7 +4942,7 @@ PROCEDURE DebugSet(self : U; s : SetDebug) : M3DIB.LLVMDICompositeType =
     (*
     subsVal := DebugLookup(self,d.domain);
     NewArrayRefOfMetadataRef(1, paramsArr, paramsMetadata);
-    paramsArr[0] := subsVal.MDNode;
+    paramsArr[0] := subsVal;
     paramsDIArr := M3DIB.DIBgetOrCreateArray(self.debugRef, paramsMetadata);
     *)
     subrange := DebugSubrangeLookup(self,s.domain);
@@ -4954,14 +4954,14 @@ PROCEDURE DebugSet(self : U; s : SetDebug) : M3DIB.LLVMDICompositeType =
       (self.debugRef, VAL(subrange.min,int64_t), VAL(subrange.max - subrange.min + 1L,int64_t));
 
     NewArrayRefOfMetadataRef(1, paramsArr, paramsMetadata);
-    paramsArr[0] := subsVal.MDNode;
+    paramsArr[0] := subsVal;
     paramsDIArr := M3DIB.DIBgetOrCreateArray(self.debugRef, paramsMetadata);
 
     RETURN M3DIB.DIBcreateArrayType(
              self.debugRef, 
              VAL(s.bitSize,int64_t), 
              VAL(s.align,int64_t), 
-             eltVal, 
+             LOOPHOLE(eltVal,M3DIB.LLVMDIType), 
              paramsDIArr );
 
 (* attempt with set type - this creates the new metadata tag for sets
@@ -4986,12 +4986,12 @@ PROCEDURE DebugEnum(self : U; e : EnumDebug) : M3DIB.LLVMDICompositeType =
     eltVal : M3DIB.LLVMDIEnumerator; 
     paramsArr : REF ARRAY OF MetadataRef; 
     paramsMetadata : LLVMTypes.ArrayRefOfMetadataRef; 
-    paramsDIArr : M3DIB.DIArray;
+    paramsDIArr : M3DIB.LLVMDIArray;
   BEGIN
     NewArrayRefOfMetadataRef(e.numElts, paramsArr, paramsMetadata);
     FOR i := 0 TO e.numElts - 1 DO
       eltVal := M3DIB.DIBcreateEnumerator(self.debugRef,LTD(M3ID.ToText(e.elts[i])),i);
-      paramsArr[i] := eltVal.MDNode;
+      paramsArr[i] := eltVal;
     END;
     paramsDIArr := M3DIB.DIBgetOrCreateArray(self.debugRef, paramsMetadata);
 
@@ -5032,7 +5032,7 @@ PROCEDURE DebugProcType(self : U; p : ProcTypeDebug)
     LDISubprogTy : M3DIB.LLVMDISubroutineType; 
     paramsArr : REF ARRAY OF MetadataRef; 
     paramsMetadata : LLVMTypes.ArrayRefOfMetadataRef; 
-    paramsDIArr : M3DIB.DIArray;
+    paramsDIArr : M3DIB.LLVMDIArray;
 
 
   BEGIN
@@ -5044,12 +5044,12 @@ PROCEDURE DebugProcType(self : U; p : ProcTypeDebug)
     ELSE
       LDIDescr := DebugLookup(self,p.result);
     END;
-    paramsArr[0] := LDIDescr.MDNode;
+    paramsArr[0] := LDIDescr;
 
     IF p.numFormals > 0 THEN
       FOR i := 0 TO p.numFormals - 1 DO
         LDIDescr := DebugLookup(self,p.formals[i].tUid);
-        paramsArr[i+1] := LDIDescr.MDNode;
+        paramsArr[i+1] := LDIDescr;
       END;
     END;
 
@@ -5143,7 +5143,7 @@ PROCEDURE DebugObject(self : U; o : ObjectDebug) : LLVM.ValueRef =
                       VAL(0L,int64_t), (*BaseOffset,*)
                       0);
 
-      paramsArr[0] := inheritVal.MDNode;
+      paramsArr[0] := inheritVal;
         baseVal := DebugLookup(self,o.superType);
         <*ASSERT baseVal # NIL *>
         (* create an inherit using the base val and the fwd ref of the class val and make it the first param *)
@@ -5175,7 +5175,7 @@ PROCEDURE DebugObject(self : U; o : ObjectDebug) : LLVM.ValueRef =
                      VAL(o.fields[i].bitOffset + 64L,int64_t), (* for vtable ptr *)
                      0,
                      eltVal);
-      paramsArr[paramCount] := memberVal.MDNode;
+      paramsArr[paramCount] := memberVal;
       INC(paramCount);
     END;
     paramsDIArr := M3DIB.DIBgetOrCreateArray(self.debugRef, paramsMetadata);
@@ -5216,7 +5216,7 @@ PROCEDURE DebugObject(self : U; o : ObjectDebug) : M3DIB.LLVMDIDerivedType =
     inheritVal, memberVal : M3DIB.LLVMDIDerivedType; 
     paramsArr : REF ARRAY OF MetadataRef; 
     paramsMetadata : LLVMTypes.ArrayRefOfMetadataRef; 
-    paramsDIArr : M3DIB.DIArray;
+    paramsDIArr : M3DIB.LLVMDIArray;
 
     (* test finding the root obj *)
     paramCount : CARDINAL;
@@ -5262,7 +5262,7 @@ PROCEDURE DebugObject(self : U; o : ObjectDebug) : M3DIB.LLVMDIDerivedType =
                       0);
 
 
-      paramsArr[0] := inheritVal.MDNode;
+      paramsArr[0] := inheritVal;
       INC(paramCount);
     END;
 
@@ -5280,7 +5280,7 @@ PROCEDURE DebugObject(self : U; o : ObjectDebug) : M3DIB.LLVMDIDerivedType =
                      VAL(o.fields[i].bitOffset + 64L,int64_t), (* for vtable ptr *)
                      0,
                      eltVal);
-      paramsArr[paramCount] := memberVal.MDNode;
+      paramsArr[paramCount] := memberVal;
       INC(paramCount);
     END;
     paramsDIArr := M3DIB.DIBgetOrCreateArray(self.debugRef, paramsMetadata);
@@ -5326,7 +5326,7 @@ PROCEDURE DebugRecord(self : U; r : RecordDebug) : M3DIB.LLVMDICompositeType =
     memberVal : M3DIB.LLVMDIDerivedType; 
     paramsArr : REF ARRAY OF MetadataRef; 
     paramsMetadata : LLVMTypes.ArrayRefOfMetadataRef; 
-    paramsDIArr : M3DIB.DIArray;
+    paramsDIArr : M3DIB.LLVMDIArray;
   BEGIN
     NewArrayRefOfMetadataRef(r.numFields, paramsArr, paramsMetadata);
 
@@ -5349,7 +5349,7 @@ PROCEDURE DebugRecord(self : U; r : RecordDebug) : M3DIB.LLVMDICompositeType =
                      VAL(r.fields[i].align,int64_t),
                      VAL(r.fields[i].bitOffset,int64_t)),
 
-      paramsArr[i] := memberVal.MDNode;
+      paramsArr[i] := memberVal;
     END;
     paramsDIArr := M3DIB.DIBgetOrCreateArray(self.debugRef, paramsMetadata);
 
@@ -5371,7 +5371,7 @@ PROCEDURE DebugRecord(self : U; r : RecordDebug) : M3DIB.LLVMDICompositeType =
     memberDIType : M3DIB.LLVMDIDerivedType; 
     paramsArr : REF ARRAY OF MetadataRef; 
     paramsMetadata : LLVMTypes.ArrayRefOfMetadataRef; 
-    paramsDIArr : M3DIB.DIArray;
+    paramsDIArr : M3DIB.LLVMDIArray;
   BEGIN
     IF self.m3llvmDebugLev > 0 THEN
       IO.Put("record debug\n");
@@ -5392,7 +5392,7 @@ PROCEDURE DebugRecord(self : U; r : RecordDebug) : M3DIB.LLVMDICompositeType =
                      0,
                      fieldDIType);
 
-      paramsArr[i] := memberDIType.MDNode;
+      paramsArr[i] := memberDIType;
     END;
     paramsDIArr := M3DIB.DIBgetOrCreateArray(self.debugRef, paramsMetadata);
 
@@ -5466,13 +5466,16 @@ PROCEDURE DebugLookup(self : U; tUid : TypeUID) : M3DIB.LLVMDIDescriptor =
         | ProcTypeDebug(d) => LDIDescr := DebugProcType(self,d);
         | IndirectDebug(d) => LDIDescr := DebugLookup(self,d.target);
         | SubrangeDebug(d) => LDIDescr := DebugSubrange(self,d);
-        | BaseDebug(d) => LDIDescr := DebugBasic(self,d);
-         RETURN M3DIB.DIBcreateBasicType(
+        | BaseDebug(d) => LDIDescr := LOOPHOLE(DebugBasic(self,d),M3DIB.LLVMDIDescriptor);
+         RETURN LOOPHOLE 
+                ( M3DIB.DIBcreateBasicType(
                   self.debugRef,
                   LTD(M3ID.ToText(d.typeName)), 
                   VAL(d.bitSize,int64_t), 
                   VAL(d.align,int64_t), 
-                  d.encoding);
+                  d.encoding)
+                , M3DIB.LLVMDIDescriptor
+                );
         ELSE
           <*ASSERT FALSE*>
         END;
