@@ -49,38 +49,53 @@ typedef struct LLVMOpaqueConstant * LLVMConstantRef;
 /// probably have to be flattened into DIDescriptor to allow widening of 
 /// values returned from these functions, when passed back in to other 
 /// functions.   
-typedef struct OpaqueDIBuilder *LLVMDIBuilderRef;
-typedef struct OpaqueMDNode *LLVMMDNodePtr; 
-typedef struct OpaqueMetadata *LLVMMetadataPtr; 
+typedef struct OpaqueDIBuilder * LLVMDIBuilderRef;
+typedef struct OpaqueMDNode * LLVMMDNodePtr; 
+typedef struct OpaqueMetadata * LLVMMetadataPtr; 
 
-  ///typedef struct OpaqueTypeRef LLVMDITypeRef;
-typedef struct DITypeRef { LLVMMetadataPtr Val; } LLVMDITypeRef;
+typedef struct DITypeRef * LLVMDITypeRef;
 
-typedef struct DIBasicType { LLVMMDNodePtr DbgPtr; } LLVMDIBasicType;
-typedef struct DICompileUnit { LLVMMDNodePtr DbgPtr; } LLVMDICompileUnit;
-typedef struct DICompositeType { LLVMMDNodePtr DbgPtr; } LLVMDICompositeType;
-typedef struct DIDerivedType { LLVMMDNodePtr DbgPtr; } LLVMDIDerivedType;
-typedef struct DIDescriptor { LLVMMDNodePtr DbgPtr; } LLVMDIDescriptor;
-typedef struct DIFile { LLVMMDNodePtr DbgPtr; } LLVMDIFile;
-typedef struct DIEnumerator { LLVMMDNodePtr DbgPtr; } LLVMDIEnumerator;
-typedef struct DIType { LLVMMDNodePtr DbgPtr; } LLVMDIType;
-typedef struct DITypeArray { LLVMMDNodePtr DbgPtr; } LLVMDITypeArray;
-typedef struct DISubroutineType { LLVMMDNodePtr DbgPtr; } LLVMDISubroutineType;
-typedef struct DIArray { LLVMMDNodePtr DbgPtr; } LLVMDIArray;
-typedef struct DIGlobalVariable { LLVMMDNodePtr DbgPtr; } LLVMDIGlobalVariable;
-typedef struct DIExpression { LLVMMDNodePtr DbgPtr; } LLVMDIExpression;
-typedef struct DILocation { LLVMMDNodePtr DbgPtr; } LLVMDILocation;
-typedef struct DIImportedEntity { LLVMMDNodePtr DbgPtr; } LLVMDIImportedEntity;
-typedef struct DINameSpace { LLVMMDNodePtr DbgPtr; } LLVMDINameSpace;
-typedef struct DIVariable { LLVMMDNodePtr DbgPtr; } LLVMDIVariable;
-typedef struct DISubrange { LLVMMDNodePtr DbgPtr; } LLVMDISubrange;
-typedef struct DILexicalBlockFile { LLVMMDNodePtr DbgPtr; } LLVMDILexicalBlockFile;
-typedef struct DILexicalBlock { LLVMMDNodePtr DbgPtr; } LLVMDILexicalBlock;
-typedef struct DIScope { LLVMMDNodePtr DbgPtr; } LLVMDIScope;
-typedef struct DISubprogram { LLVMMDNodePtr DbgPtr; } LLVMDISubprogram;
-typedef struct DITemplateTypeParameter { LLVMMDNodePtr DbgPtr; } LLVMDITemplateTypeParameter;
-typedef struct DITemplateValueParameter { LLVMMDNodePtr DbgPtr; } LLVMDITemplateValueParameter;
-typedef struct DIObjCProperty { LLVMMDNodePtr DbgPtr; } LLVMDIObjCProperty;
+// We can't access the single data member MDNode of any subclass of 
+// llvm::DIDescriptor because it's protected, has no appropriate constructor, 
+// is not our friend, etc.  So we unsafely cast between it and structurally
+// identical struct CDebugInfo, with data member DbgPtr, in order to get
+// the MDNode in and out:   
+typedef struct CDebugInfo { OpaqueMetadata * DbgPtr; } * LLVMCDebugInfo;
+
+// These are all distinct opaque pointers, so we can have lots of overloaded
+// unwrap functions on them, so we can, with inexcusable laziness, avoid a massive 
+// and error-prone job of typing lots of distinctly-named unwrap functions.
+// Someday, fix this.
+
+// Also, these acttually hold the value of the MDNode pointer, because passing
+// a struct, even with only a single, pointer-sized data member suffers ABI 
+// mismatches between C and Modula-3 compilers.  We put the MDNode pointer inside
+// an llvm class and remove it, when unwrapping/wrapping.    
+typedef struct DIBasicType * LLVMDIBasicType;
+typedef struct DICompileUnit * LLVMDICompileUnit;
+typedef struct DICompositeType * LLVMDICompositeType;
+typedef struct DIDerivedType * LLVMDIDerivedType;
+typedef struct DIDescriptor * LLVMDIDescriptor;
+typedef struct DIFile * LLVMDIFile;
+typedef struct DIEnumerator * LLVMDIEnumerator;
+typedef struct DIType * LLVMDIType;
+typedef struct DITypeArray * LLVMDITypeArray;
+typedef struct DISubroutineType * LLVMDISubroutineType;
+typedef struct DIArray * LLVMDIArray;
+typedef struct DIGlobalVariable * LLVMDIGlobalVariable;
+typedef struct DIExpression * LLVMDIExpression;
+typedef struct DILocation * LLVMDILocation;
+typedef struct DIImportedEntity * LLVMDIImportedEntity;
+typedef struct DINameSpace * LLVMDINameSpace;
+typedef struct DIVariable * LLVMDIVariable;
+typedef struct DISubrange * LLVMDISubrange;
+typedef struct DILexicalBlockFile * LLVMDILexicalBlockFile;
+typedef struct DILexicalBlock * LLVMDILexicalBlock;
+typedef struct DIScope * LLVMDIScope;
+typedef struct DISubprogram * LLVMDISubprogram;
+typedef struct DITemplateTypeParameter * LLVMDITemplateTypeParameter;
+typedef struct DITemplateValueParameter * LLVMDITemplateValueParameter;
+typedef struct DIObjCProperty * LLVMDIObjCProperty;
 
 /* Other llvm types needed as parameters to functions prototyped here. */ 
 
@@ -578,7 +593,7 @@ LLVMDIBasicType DIBcreateUnspecifiedParameter(LLVMDIBuilderRef Builder) ;
 
 /// getOrCreateArray - Get a DIArray, create one if required.
 LLVMDIArray DIBgetOrCreateArray(LLVMDIBuilderRef Builder, 
-                                LLVMArrayRefOfMetadataPtr Elements) ;
+                                LLVMArrayRefOfMetadataPtr *Elements) ;
 
 /// getOrCreateSubrange - Create a descriptor for a value range.  This
 /// implicitly uniques the values returned.
@@ -654,7 +669,7 @@ LLVMDIVariable DIBcreateLocalVariable(LLVMDIBuilderRef Builder,
 /// variable which has a complex address expression for its address.
 /// @param Addr        An array of complex address operations.
 LLVMDIExpression DIBcreateExpression(LLVMDIBuilderRef Builder,
-                                     LLVMArrayRefOfint64_t Addr);
+                                     LLVMArrayRefOfint64_t *Addr);
 
 /// createPieceExpression - Create a descriptor to describe one part
 /// of aggregate variable that is fragmented across multiple Values.
