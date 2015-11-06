@@ -112,7 +112,7 @@ PROCEDURE GenerateTables () =
 
     (* allocate the variable *)
     tbl := CG.Declare_global (M3ID.NoID, size, Target.Address.align,
-                              CG.Type.Addr, 0, exported := FALSE, init := TRUE);
+                              CG.Type.Struct, 0, exported := FALSE, init := TRUE);
 
     (* initialize the coverage tables *)
     CG.Begin_init (tbl);
