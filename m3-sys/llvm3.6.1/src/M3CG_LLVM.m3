@@ -5516,9 +5516,6 @@ PROCEDURE DebugVar(self : U; v : LvVar; argNum : CARDINAL := 0) =
 
     tyVal := DebugLookup(self,v.m3t);
 
-    lvDebug := M3DIB.DIBcreateLocalVariable
-                 (self.debugRef, dwarfTag, self.funcRef, LTD(name), 
-                  self.fileRef, self.curLine, tyVal, FALSE, flags, argNum);
     debugObj := DebugIsObject(self,v.m3t);
     IF debugObj # NIL THEN
       tyVal := M3DIB.DIBcreatePointerType(
@@ -5537,8 +5534,6 @@ PROCEDURE DebugVar(self : U; v : LvVar; argNum : CARDINAL := 0) =
         tyVal, FALSE, flags, argNum);
 
     (* we need this since setinstdebuglocation has to have a current loc *)
-    loc := M3DIB.DIBgetDebugLoc(self.curLine, 0, self.funcRef);
-
     decl := M3DIB.DIBinsertDeclareAtEnd(
               self.debugRef, 
               v.lv,
@@ -5547,7 +5542,8 @@ PROCEDURE DebugVar(self : U; v : LvVar; argNum : CARDINAL := 0) =
               LLVM.LLVMGetInsertBlock(builderIR)
               );
 
-    LLVM.LLVMSetInstDebugLocation(builderIR, loc);
+    LLVM.LLVMSetInstDebugLocation
+      (builderIR, LOOPHOLE (decl, LLVM.ValueRef));
   END DebugVar;
 
 PROCEDURE DebugLocalsParams(self : U; proc : LvProc) =
