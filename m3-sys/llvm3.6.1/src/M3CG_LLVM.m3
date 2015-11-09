@@ -1437,6 +1437,7 @@ PROCEDURE declare_segment (self: U;  n: Name;  m3t: TypeUID; is_const: BOOLEAN):
     IF is_const THEN
       (* the name will be nil so create a const name *)
       segName := "M_Const";
+      v.name := M3ID.Add(segName); 
       (* keep the value for globals debugging *)
       self.segConst := v;
     ELSE
