@@ -281,10 +281,10 @@ TYPE
     uplevelRefdStack  : RefSeq.T := NIL;
     cumLocalsParamsCt : CARDINAL := 0;
       (* ^Sum of counts of params and locals for this proc 
-          and all its static ancestors. *) 
+          and all its static ancestors.  Computed at end of proc body. *) 
     cumUplevelRefdCt : CARDINAL := 0; 
       (* ^Sum of counts of up-level referenced params and locals for this proc 
-          and all its static ancestors. *)
+          and all its static ancestors.  Computed at end of proc body. *)
     staticLinkFormal : LvVar := NIL; 
     (* Added by this program, if necessary. *) 
     imported : BOOLEAN := FALSE; (* if this is an import *)
@@ -913,22 +913,22 @@ PROCEDURE DisplaySize(proc : LvProc) : INTEGER =
     RETURN linkSize;
   END DisplaySize;
 
-PROCEDURE LinkExists(proc : LvProc) : BOOLEAN =
-(* check if this is a front-end generated proc with a front-end-generated 
-   static link.  Making a pretty big assumption here.  The criterion is proc 
-   has exactly one formal and it is nameless.  Also, we only call this if 
-   proc is nested. *)
+PROCEDURE CGProvidedStaticLinkFormal(proc : LvProc) : LvVar =
+(* Return the front-end generated static link formal parameter of proc, 
+   if it has one, otherwise NIL.  
+   Making a pretty big assumption here.  The criterion is proc is nested
+   and has a first formal and it is nameless. *)
 VAR arg : REFANY; param : LvVar;
 BEGIN
-  IF proc.paramStack.size() = 1 THEN
+  IF proc.lev > 0 AND proc.paramStack.size() > 0 THEN
     arg := Get(proc.paramStack);
     param := NARROW(arg,LvVar);
     IF param.name = M3ID.NoID THEN
-      RETURN TRUE;
+      RETURN param;
     END;
   END;
-  RETURN FALSE;
-END LinkExists;
+  RETURN NIL;
+END CGProvidedStaticLinkFormal;
 
 (* Declare this procedure and all its locals and parameters. *)
 PROCEDURE BuildFunc(self : U; p : Proc) =
@@ -940,38 +940,44 @@ PROCEDURE BuildFunc(self : U; p : Proc) =
     paramsRef : TypeRefType;
     lVal : LLVM.ValueRef;
     numParams : CARDINAL := 0;
-    textName : TEXT;
+    procTextName, paramTextName : TEXT;
     name : Name;
     arg : REFANY;
   BEGIN
     proc := NARROW(p,LvProc);
     IF proc.defined THEN RETURN; END;
 
-    IF proc.lev > 0 (* 'proc' is nested. *)
-       (* For debugger's sake, a nested proc always has a static link. *) 
-       AND NOT LinkExists(proc) 
-             (* Front end did not already provide a static link formal. *)
-    THEN (* Create a static link formal. *) 
-      textName := M3ID.ToText(proc.name) & "__SL_formal";
-      name := M3ID.Add(textName); 
-      proc.staticLinkFormal 
-        := NewVar (self,name,ptrBytes,ptrBytes,
-                  Type.Addr, FALSE,UID_ADDR,TRUE,FALSE,FALSE,FALSE,M3CG.Maybe,
-                  VarType.Param ); 
-      Push(proc.paramStack, proc.staticLinkFormal); (* Make it first formal. *) 
-      INC(proc.numParams);
+    procTextName := M3ID.ToText(proc.name);
+    IF proc.lev > 0 THEN (* 'proc' is nested. *)
+      (* For debugger's sake, a nested proc always has a static link. *) 
+      param := CGProvidedStaticLinkFormal (proc); 
+      IF param # NIL 
+      THEN (* Give it a name and note its indentity. *)
+        paramTextName := procTextName & "__CG_StaticLinkFormal";
+        param.name := M3ID.Add(paramTextName);
+        proc.staticLinkFormal := param         
+      ELSE (* Create a static link formal. *) 
+        paramTextName := procTextName & "__m3llvm_StaticLinkFormal";
+        name := M3ID.Add(paramTextName); 
+        proc.staticLinkFormal 
+          := NewVar (self,name,ptrBytes,ptrBytes,
+                    Type.Addr, FALSE,UID_ADDR,TRUE,FALSE,FALSE,FALSE,M3CG.Maybe,
+                    VarType.Param ); 
+        Push(proc.paramStack, proc.staticLinkFormal); (* Make it first formal. *) 
+        INC(proc.numParams);
+      END; 
     END;
 
     numParams := proc.numParams;
 
     IF proc.imported THEN
-      (* delete the temp function and define the real one *)
+      (* delete the temp function before defining the real one *)
       LLVM.LLVMDeleteFunction(proc.lvProc);
     END;
     proc.defined := TRUE;
     <*ASSERT proc.paramStack.size() = numParams *>
 
-    (* create the param types from the param stack *)
+    (* create the llvm param types from the param stack *)
     paramsRef := NewTypeArr(paramsArr,numParams);
     FOR i := 0 TO numParams - 1 DO
       arg := Get(proc.paramStack,i);
@@ -991,8 +997,7 @@ PROCEDURE BuildFunc(self : U; p : Proc) =
     proc.procTy := LLVM.LLVMFunctionType(retTy, paramsRef, numParams, FALSE);
 
     (* create the function *)
-    textName := M3ID.ToText(proc.name);
-    proc.lvProc := LLVM.LLVMAddFunction(modRef, LT(textName), proc.procTy);
+    proc.lvProc := LLVM.LLVMAddFunction(modRef, LT(procTextName), proc.procTy);
 
     (* c funcs seem to have these attrs ?? *)
     LLVM.LLVMAddFunctionAttr(proc.lvProc, LLVM.NoUnwindAttribute);
@@ -1000,22 +1005,19 @@ PROCEDURE BuildFunc(self : U; p : Proc) =
 
     <*ASSERT LLVM.LLVMCountParams(proc.lvProc) = numParams *>
 
-    (* add names, attributes, and alignment *)
+    (* add names, attributes, and alignment to formals. *)
     lVal := LLVM.LLVMGetFirstParam(proc.lvProc);
     FOR i := 0 TO numParams - 1 DO
       arg := Get(proc.paramStack,i);
       param := NARROW(arg,LvVar);
-      IF param.name = M3ID.NoID THEN
-        textName := "_link";
-        (* the only place the parm is noid seems to be the generated internal
-        procs for try-finally and maybe for runtime linker and the purpose of this
-        parm is the static link. Set the name so we can check in begin_procedure *)
-        param.name := M3ID.Add(textName);
+      IF param.name = M3ID.NoID THEN (* Can this happen? *) 
+        paramTextName := procTextName & "__AnonFormal_" & Fmt.Int(i);
+        param.name := M3ID.Add(paramTextName);
       ELSE
-        textName := M3ID.ToText(param.name);
+        paramTextName := M3ID.ToText(param.name);
       END;
       (* set a name for the param - doesnt work for externals *)
-      LLVM.LLVMSetValueName(lVal, LT(textName));
+      LLVM.LLVMSetValueName(lVal, LT(paramTextName));
 
       (* this sets the byval attribute by which the caller makes a copy *)
       IF param.type = Type.Struct THEN
@@ -2518,7 +2520,10 @@ PROCEDURE CumDisplayIndex(proc : LvProc; var : LvVar) : INTEGER =
 PROCEDURE GetAddrOfUplevelVar(self : U; var : LvVar) : LLVM.ValueRef =
 (* Generate an llvm ValueRef that contains the address of 'var'.
    PRE: 'var' is being up-level referenced from within 'self.curProc', which 
-        implies 'self.curProc' is nested, and thus has a staticLinkFormal. *) 
+        implies 'self.curProc' is nested, and thus has a staticLinkFormal. 
+   PRE: The cumUplevelRefdCt and uplevelRefdStack fields of the proc containing 
+        the referenced variable are computed, which happens at the end of its
+        body. *) 
   VAR
     linkIdx, lv : LLVM.ValueRef;
     idx : INTEGER := -1;
@@ -4208,7 +4213,7 @@ PROCEDURE call_direct (self: U; p: Proc; <*UNUSED*> t: Type) =
       IF calleeProc.lev = self.curProc.lev + 1 THEN 
         (* Calling a nested procedure one level deeper than caller. *) 
         IF codedActualsCt = 0 AND calleeProc.numParams = 1 
-           AND LinkExists(calleeProc) THEN
+           AND calleeProc.staticLinkFormal # NIL THEN
 (* FIXME: ^We need a more reliable way to detect this case.  It is successfully
            spoofed by p035, coco__8__foo__bar, after it had a SL formal
            added to its empty coded formals list. *) 
