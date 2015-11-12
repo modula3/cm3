@@ -724,6 +724,7 @@ PROCEDURE LLvmType(t : Type) : LLVM.TypeRef =
     | Type.Int16,Type.Word16  => RETURN LLVM.LLVMInt16Type();
     | Type.Int32,Type.Word32  => RETURN LLVM.LLVMInt32Type();
     | Type.Int64,Type.Word64  => RETURN LLVM.LLVMInt64Type();
+(* CHECK: Doesn't llvm have unsigned 8,16,32,64 types?  Not in LLVM, at least. *) 
     | Type.Reel   => RETURN LLVM.LLVMFloatType();
     | Type.LReel  => RETURN LLVM.LLVMDoubleType();
     | Type.XReel  => RETURN ExtendedType;
@@ -3956,30 +3957,30 @@ PROCEDURE zero (self: U;  n: INTEGER; t: MType) =
 
 (*----------------------------------------------------------- conversions ---*)
 
+
 PROCEDURE loophole (self: U;  from, two: ZType) =
   (* s0.two := LOOPHOLE(s0.from, two) *)
   VAR
     s0 := Get(self.exprStack,0);
-    a,b : LLVM.ValueRef;
+    a,b,c : LLVM.ValueRef;
     destTy : LLVM.TypeRef;
   BEGIN
     a := NARROW(s0,LvExpr).lVal;
     destTy := LLvmType(two);
 
+    <* ASSERT from # two *>  
+(* This should work for any scalar, nonpointer type, which the front end
+   will have ensured has the same size as a pointer. *) 
     IF from = Type.Addr THEN
-      b := LLVM.LLVMBuildPtrToInt(builderIR, a, destTy, LT("loophole"));
-    ELSIF two = Type.Addr THEN
-      b := LLVM.LLVMBuildIntToPtr(builderIR, a, destTy, LT("loophole"));
-    ELSE
-      IF from >= Type.Reel THEN
-        b := LLVM.LLVMBuildFPToSI(builderIR, a, destTy, LT("loophole"));
-      ELSIF two >= Type.Reel THEN
-        b := LLVM.LLVMBuildSIToFP(builderIR, a, destTy, LT("loophole"));
-      ELSE    
-        b := LLVM.LLVMBuildBitCast(builderIR, a, destTy, LT("loophole"));
-      END;
-    END;
-    NARROW(s0,LvExpr).lVal := b;
+      b := LLVM.LLVMBuildPtrToInt(builderIR, a, IntPtrTy, LT("loophole-PtrToInt"));
+      c := LLVM.LLVMBuildBitCast(builderIR, b, destTy, LT("loophole"));
+    ELSIF two = Type.Addr THEN        
+      b := LLVM.LLVMBuildBitCast(builderIR, a, IntPtrTy, LT("loophole"));
+      c := LLVM.LLVMBuildIntToPtr(builderIR, b, destTy, LT("loophole-IntToPtr"));
+    ELSE 
+      c := LLVM.LLVMBuildBitCast(builderIR, a, destTy, LT("loophole"));
+    END;  
+    NARROW(s0,LvExpr).lVal := c;
   END loophole;
 
 (*------------------------------------------------ traps & runtime checks ---*)
