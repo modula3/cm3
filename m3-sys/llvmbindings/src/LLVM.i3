@@ -2611,7 +2611,9 @@ PROCEDURE LLVMBuildAtomicCmpXchg(B : BuilderRef;
                                 successOrdering : AtomicOrdering;
                                 failureOrdering : AtomicOrdering;                                
                                 singleThread : Bool) : ValueRef;
-(* ^Binding found in M3Extras.h and M3Extras.cpp. *) 
+(* ^Binding found in M3Extras.h and M3Extras.cpp. *)
+PROCEDURE LLVMSetAtomic(MemAccessInst : ValueRef; Ordering : AtomicOrdering);
+(* ^Binding found in M3Extras.h and M3Extras.cpp. *)
 
 (**
  * @}

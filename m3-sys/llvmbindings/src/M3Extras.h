@@ -57,6 +57,11 @@ LLVMValueRef LLVMBuildAtomicCmpXchg(LLVMBuilderRef B,
                                     LLVMAtomicOrdering FailureOrdering,
                                     LLVMBool singleThread);
 
+/*
+ * Set the atomic ordering attribute on a load or store instruction
+ */
+void LLVMSetAtomic(LLVMValueRef MemAccessInst, LLVMAtomicOrdering Ordering);
+
 /**
  * Obtain the module identifier for a module.
  *

@@ -32,7 +32,6 @@
 
 using namespace llvm;
 
-
 LLVMValueRef LLVMGetDeclaration(LLVMModuleRef M, unsigned id, LLVMTypeRef *Types, unsigned Count) {
   Intrinsic::ID intrinId = (Intrinsic::ID) id;
   ArrayRef<Type*> Tys(unwrap(Types), Count);
@@ -71,7 +70,15 @@ LLVMValueRef LLVMBuildAtomicCmpXchg(LLVMBuilderRef B,
                                       mapFromLLVMOrdering(FailureOrdering),
                                       singleThread ? SingleThread : CrossThread));
 }
- 
+
+void LLVMSetAtomic(LLVMValueRef MemAccessInst, LLVMAtomicOrdering Ordering) {
+  AtomicOrdering order = mapFromLLVMOrdering(Ordering);
+  Value *P = unwrap<Value>(MemAccessInst);
+  if (LoadInst *LI = dyn_cast<LoadInst>(P))
+    return LI->setAtomic(order);
+  return cast<StoreInst>(P)->setAtomic(order);
+}
+
 unsigned GetM3IntrinsicId(M3Intrinsic id) {
 
   if (id == m3memset) return Intrinsic::memset;
