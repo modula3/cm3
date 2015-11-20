@@ -1704,6 +1704,7 @@ PROCEDURE LLVMDeleteFunction(Fn: ValueRef);
  *)
 PROCEDURE LLVMGetIntrinsicID(Fn: ValueRef): unsigned;
 
+(* Keep this in sync with enum M3Intrinsic in M3Extras.h: *) 
 TYPE M3Intrinsic = {
   m3memset,
   m3memcpy,
