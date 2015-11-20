@@ -286,7 +286,15 @@ TYPE
       (* ^Sum of counts of up-level referenced params and locals for this proc 
           and all its static ancestors.  Computed at end of proc body. *)
     staticLinkFormal : LvVar := NIL; 
-    (* Added by this program, if necessary. *) 
+      (* ^For most procedures, CG emits neither a static link formal nor an
+          actual for it in a call.  We provide these, for a nested procedure.
+          For an internally-generated FINALLY procedure, CG emits an explicit 
+          formal for a static link, which we just use, but CG does not emit an 
+          actual parameter for in it a call, so we provide that too.  CG does, 
+          however, explicitly pass a SL value to the runtime, when pushing a 
+          FINALLY frame, and this SL will be passed by the runtime when it calls 
+          the FINALLY procedure.
+      *)     
     imported : BOOLEAN := FALSE; (* if this is an import *)
     defined : BOOLEAN := FALSE; (* set when we build the declaration for real *)
     displayLty : LLVM.TypeRef := NIL; 
@@ -636,9 +644,16 @@ PROCEDURE New
                 allocaName := M3ID.Add("alloca"));
   END New;
 
-PROCEDURE NewVar (self: U; name : Name; size : ByteSize; align : Alignment; type : Type; isConst : BOOLEAN; m3t : TypeUID; in_memory : BOOLEAN; up_level : BOOLEAN; exported : BOOLEAN; inited : BOOLEAN; frequency : Frequency; varType : VarType): Var =
+PROCEDURE NewVar 
+  (self: U; name : Name; size : ByteSize; align : Alignment; type : Type; 
+   isConst : BOOLEAN; m3t : TypeUID; in_memory : BOOLEAN; up_level : BOOLEAN; 
+   exported : BOOLEAN; inited : BOOLEAN; frequency : Frequency; varType : VarType)
+: Var =
   VAR
-    v := NEW (LvVar, tag := self.next_var, name := name, size := size, type := type, isConst := isConst, align := align, m3t := m3t, in_memory := in_memory, up_level := up_level, exported := exported, inited := inited, frequency := frequency, varType := varType);
+    v := NEW (LvVar, tag := self.next_var, name := name, size := size, type := type, 
+              isConst := isConst, align := align, m3t := m3t, in_memory := in_memory, 
+              up_level := up_level, exported := exported, inited := inited, 
+              frequency := frequency, varType := varType);
   BEGIN
     INC (self.next_var);
     IF varType = VarType.Global THEN
@@ -915,12 +930,13 @@ PROCEDURE DisplaySize(proc : LvProc) : INTEGER =
 
 PROCEDURE CGProvidedStaticLinkFormal(proc : LvProc) : LvVar =
 (* Return the front-end generated static link formal parameter of proc, 
-   if it has one, otherwise NIL.  
-   Making a pretty big assumption here.  The criterion is proc is nested
-   and has a first formal and it is nameless. *)
+   if it has one, otherwise NIL.  This happens only for an internally
+   generated FINALLY procedure, by CG.   
+   Making a pretty big assumption here.  The criterion is proc is nested,
+   has exactly one formal, and the formal is nameless. *)
 VAR arg : REFANY; param : LvVar;
 BEGIN
-  IF proc.lev > 0 AND proc.paramStack.size() > 0 THEN
+  IF proc.lev > 0 AND proc.paramStack.size() = 1 THEN
     arg := Get(proc.paramStack);
     param := NARROW(arg,LvVar);
     IF param.name = M3ID.NoID THEN
@@ -949,7 +965,7 @@ PROCEDURE BuildFunc(self : U; p : Proc) =
 
     procTextName := M3ID.ToText(proc.name);
     IF proc.lev > 0 THEN (* 'proc' is nested. *)
-      (* For debugger's sake, a nested proc always has a static link. *) 
+      (* For debugger's sake, always give a nested proc a static link. *) 
       param := CGProvidedStaticLinkFormal (proc); 
       IF param # NIL 
       THEN (* Give it a name and note its indentity. *)
@@ -3970,12 +3986,12 @@ PROCEDURE loophole (self: U;  from, two: ZType) =
     a,b,c : LLVM.ValueRef;
     destTy : LLVM.TypeRef;
   BEGIN
+    IF from = two THEN RETURN END;
     a := NARROW(s0,LvExpr).lVal;
     destTy := LLvmType(two);
 
-    <* ASSERT from # two *>  
-(* This should work for any scalar, nonpointer type, which the front end
-   will have ensured has the same size as a pointer. *) 
+(* An Int should be bitcastable to/from any same-sized, scalar, nonpointer type
+   which the front end will have ensured has the same size as a pointer. *) 
     IF from = Type.Addr THEN
       b := LLVM.LLVMBuildPtrToInt(builderIR, a, IntPtrTy, LT("loophole-PtrToInt"));
       c := LLVM.LLVMBuildBitCast(builderIR, b, destTy, LT("loophole"));
@@ -4207,29 +4223,19 @@ PROCEDURE call_direct (self: U; p: Proc; <*UNUSED*> t: Type) =
     END; 
 
 (* SEE ALSO: load_static_link. *) 
-    IF calleeProc.lev > 0 (* Callee is nested. *) 
+    IF calleeProc.staticLinkFormal # NIL 
     THEN (* We pass a static link to callee. *) 
-      staticLinkCount := 1; (* Always pass a SL actual to a nested procedure. *)
+      <* ASSERT calleeProc.lev > 0 *> (* Callee is nested. *)  
+      staticLinkCount := 1; 
+      (* ^Always pass an additional SL actual to a nested procedure. *)
       IF calleeProc.lev = self.curProc.lev + 1 THEN 
-        (* Calling a nested procedure one level deeper than caller. *) 
-        IF codedActualsCt = 0 AND calleeProc.numParams = 1 
-           AND calleeProc.staticLinkFormal # NIL THEN
-(* FIXME: ^We need a more reliable way to detect this case.  It is successfully
-           spoofed by p035, coco__8__foo__bar, after it had a SL formal
-           added to its empty coded formals list. *) 
-          (* This happens for a try-finally compiler-generated procedure, with 
-             a compiler-created SL formal parameter, but the call does not 
-             (always) supply a corresponding actual.  So push an undef onto the 
-             call stack. *)
-          staticLinkActualLv := LLVM.LLVMGetUndef(AdrTy);
-        ELSE
-          self.curProc.needsDisplay := TRUE; 
-          staticLinkActualLv := self.curProc.outgoingDisplayI8StarLv;
-          (* ^The code to build this will end up in the entry BB of the caller,
-             but we don't generate it until we get to its end_procedure, since
-             there could still be more locals of inner blocks flattened into
-             the caller's AR after this point. *)  
-        END; 
+      (* Calling a nested procedure one level deeper than caller. *) 
+        self.curProc.needsDisplay := TRUE; 
+        staticLinkActualLv := self.curProc.outgoingDisplayI8StarLv;
+        (* ^The code to build this will end up in the entry BB of the caller,
+           but we don't generate it until we get to its end_procedure, since
+           there could still be more locals of inner blocks flattened into
+           the caller's AR after this point. *)  
       ELSE (* Nested callee is nested no deeper than caller, which is therefor
               also nested.  For this direct call, the static parent of the 
               callee will be a proper static ancestor of the caller, and a 
