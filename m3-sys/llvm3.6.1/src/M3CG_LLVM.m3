@@ -3681,8 +3681,10 @@ PROCEDURE DoExtract(val,count,offset : LLVM.ValueRef; sign : BOOLEAN) : LLVM.Val
     t3 := LLVM.LLVMBuildShl(builderIR, val, t2, LT("eshl"));
     t4 := LLVM.LLVMBuildLShr(builderIR, t3, t1, LT("eshr"));
     IF sign THEN
-      t4 := LLVM.LLVMBuildSExt(builderIR, t4, IntPtrTy, LT("esext"));
-    END;
+      t4 := LLVM.LLVMBuildAShr(builderIR, t3, t1, LT("eshr"));
+    ELSE
+      t4 := LLVM.LLVMBuildLShr(builderIR, t3, t1, LT("eshr"));
+    END;    
     RETURN t4;
   END DoExtract;
 
