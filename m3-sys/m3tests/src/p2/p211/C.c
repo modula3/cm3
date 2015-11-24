@@ -8,6 +8,11 @@ transport.
 #include <string.h>
 #include <stdio.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 const double Doubles[] =  {  0.0,   -0.0,   1.0,   -1.0,   0.5,   -0.5,   1.5,   -1.5  };
 const float  Floats[]  =  {  0.0F,  -0.0F,  1.0F,  -1.0F,  0.5F,  -0.5F,  1.5F,  -1.5F };
 const char*  Strings[]  = { "0.0", "-0.0", "1.0", "-1.0", "0.5", "-0.5", "1.5", "-1.5", 0 };
@@ -95,7 +100,7 @@ void Check(unsigned Type, void* Float, void* Text)
             return;
         }
     }
-    printf("%s string not found %s\n", (Type ? "double" : "float", String));
+    printf("string not found %s\n", (Type ? "double" : "float", String));
     exit(EXIT_FAILURE);
 }
 
@@ -108,3 +113,8 @@ void CheckF(float Float, void* Text)
 {
     Check(0, &Float, Text);
 }
+
+#ifdef __cplusplus
+}
+#endif
+
