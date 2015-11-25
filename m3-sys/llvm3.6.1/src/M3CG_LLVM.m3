@@ -3795,22 +3795,23 @@ PROCEDURE insert (self: U; <*UNUSED*> t: IType) =
     Pop(self.exprStack,3);
   END insert;
 
-PROCEDURE insert_n (self: U; <*UNUSED*> t: IType;  n: CARDINAL) =
+PROCEDURE insert_n (self: U; t: IType; n: CARDINAL) =
   (* s2.t := Word.Insert (s2.t, s1.t, s0.t, n); pop(2) *)
   VAR
     s0 := Get(self.exprStack,0);
     s1 := Get(self.exprStack,1);
     s2 := Get(self.exprStack,2);
-    value,target,offset,mask,ones,res : LLVM.ValueRef;
-    maskTy : LLVM.TypeRef;
+    value,target,offset,mask,res : LLVM.ValueRef;
+    maskTy,intTy : LLVM.TypeRef;
   BEGIN
     IF n > 0 THEN
+      intTy := LLvmType(t);    
       value := NARROW(s1,LvExpr).lVal;
       offset := NARROW(s0,LvExpr).lVal;
       target := NARROW(s2,LvExpr).lVal;
       maskTy := LLVM.LLVMIntType(n);
-      ones := LLVM.LLVMConstAllOnes(maskTy);
-      mask := LLVM.LLVMConstZExt(ones, IntPtrTy);
+      mask := LLVM.LLVMConstAllOnes(maskTy);
+      mask := LLVM.LLVMConstZExtOrBitCast(mask, intTy);      
       res := DoInsert(value,target,mask,offset);
       NARROW(s2,LvExpr).lVal := res;
     END;
@@ -3818,21 +3819,22 @@ PROCEDURE insert_n (self: U; <*UNUSED*> t: IType;  n: CARDINAL) =
     Pop(self.exprStack,2);
   END insert_n;
 
-PROCEDURE insert_mn (self: U; <*UNUSED*> t: IType;  m, n: CARDINAL) =
+PROCEDURE insert_mn (self: U; t: IType; m,n : CARDINAL) =
   (* s1.t := Word.Insert (s1.t, s0.t, m, n); pop(1) *)
   VAR
     s0 := Get(self.exprStack,0);
     s1 := Get(self.exprStack,1);
-    value,target,offset,mask,ones,res : LLVM.ValueRef;
-    maskTy : LLVM.TypeRef;
+    value,target,offset,mask,res : LLVM.ValueRef;
+    maskTy,intTy : LLVM.TypeRef;
   BEGIN
     IF n > 0 THEN
+      intTy := LLvmType(t);    
       value := NARROW(s0,LvExpr).lVal;
       target := NARROW(s1,LvExpr).lVal;
       offset := LLVM.LLVMConstInt(IntPtrTy, VAL(m,LONGINT), TRUE);
       maskTy := LLVM.LLVMIntType(n);
-      ones := LLVM.LLVMConstAllOnes(maskTy);
-      mask := LLVM.LLVMConstZExt(ones, IntPtrTy);
+      mask := LLVM.LLVMConstAllOnes(maskTy);
+      mask := LLVM.LLVMConstZExtOrBitCast(mask, intTy);      
       res := DoInsert(value,target,mask,offset);
       NARROW(s1,LvExpr).lVal := res;
     END;
