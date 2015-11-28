@@ -3386,7 +3386,7 @@ VAR
   s0,s1,s2,sizeVal : LLVM.ValueRef;
   BEGIN
     fn := DeclSet(name,fn,4,FALSE);
-    sizeVal := LLVM.LLVMConstInt(IntPtrTy, VAL(s,LONGINT), TRUE);
+    sizeVal := LLVM.LLVMConstInt(IntPtrTy, VAL(s * 8,LONGINT), TRUE);
     GetSetStackVals(self,TRUE,s0,s1,s2);
     EVAL SetCall(fn,4,sizeVal,s0,s1,s2);
     Pop(self.exprStack,3);
@@ -3440,7 +3440,7 @@ PROCEDURE SetCompareCommon
     st1 := Get(self.exprStack,1);
     size : LLVM.ValueRef;
   BEGIN
-    size := LLVM.LLVMConstInt(IntPtrTy, VAL(s,LONGINT), TRUE);
+    size := LLVM.LLVMConstInt(IntPtrTy, VAL(s * 8,LONGINT), TRUE);
     fn := DeclSet(name,fn,3,TRUE);
     GetSetStackVals(self,FALSE,s0,s1,s2);
     res := SetCall(fn,3,size,s0,s1);
@@ -3481,7 +3481,7 @@ PROCEDURE set_range (self: U; <*UNUSED*> s: ByteSize; <*UNUSED*> t: IType) =
     s2 := NARROW(st2,LvExpr).lVal;
     s2 := LLVM.LLVMBuildBitCast(builderIR, s2, PtrTy, LT("set_toptr"));
     self.setRange := DeclSet("set_range",self.setRange,3,TRUE,TRUE);
-    EVAL SetCall(self.setRange,3,s1,s0,s2);
+    EVAL SetCall(self.setRange,3,s0,s1,s2);
     Pop(self.exprStack,3);
   END set_range;
 
