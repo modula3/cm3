@@ -376,7 +376,7 @@ TYPE
     opType : Type;
     tmpVar : LvVar;
     cmpVal : LLVM.ValueRef;
-    curBB,thenBB,elseBB,exitBB : LLVM.BasicBlockRef;
+    curBB,thenBB,elseBB,exitBB,beforeBB : LLVM.BasicBlockRef := NIL;
     opName : TEXT;
   METHODS
     init() : ITEObj := ITEInit;
@@ -808,10 +808,15 @@ PROCEDURE ITEInit(self : ITEObj) : ITEObj =
     self.tmpVar := self.curObj.declare_temp (size, size, self.opType, TRUE);
 
     WITH cp = self.curObj.curProc.lvProc DO
-      self.thenBB := LLVM.LLVMAppendBasicBlock(cp, LT(self.opName & "_then"));
-      self.elseBB := LLVM.LLVMAppendBasicBlock(cp, LT(self.opName & "_else"));
-      self.exitBB := LLVM.LLVMAppendBasicBlock(cp, LT(self.opName & "_end"));
-    END;
+      IF self.beforeBB = NIL THEN
+        self.exitBB := LLVM.LLVMAppendBasicBlock(cp, LT(self.opName & "_end"));
+      ELSE
+        (* nested if-then-else blocks *)
+        self.exitBB := LLVM.LLVMInsertBasicBlock(self.beforeBB, LT(self.opName & "_end"));
+      END;
+      self.elseBB := LLVM.LLVMInsertBasicBlock(self.exitBB, LT(self.opName & "_else"));
+      self.thenBB := LLVM.LLVMInsertBasicBlock(self.elseBB, LT(self.opName & "_then"));
+    END;  
     LLVM.LLVMPositionBuilderAtEnd(builderIR,self.curBB);
     EVAL LLVM.LLVMBuildCondBr(builderIR,self.cmpVal,self.thenBB,self.elseBB);
     LLVM.LLVMPositionBuilderAtEnd(builderIR,self.thenBB);
@@ -3026,14 +3031,23 @@ PROCEDURE negate (self: U;  t: AType) =
     NARROW(s0,LvExpr).lVal := lVal;
   END negate;
 
+PROCEDURE IntAbs(a : LLVM.ValueRef) : LLVM.ValueRef =
+  VAR shiftLen,ashr,xor,res : LLVM.ValueRef;
+  BEGIN
+    shiftLen := LLVM.LLVMConstInt(IntPtrTy, ptrBits - 1L, TRUE);
+    ashr := LLVM.LLVMBuildAShr(builderIR, a, shiftLen, LT("abs_ashr"));
+    xor := LLVM.LLVMBuildXor(builderIR, a, ashr, LT("abs_xor"));
+    res := LLVM.LLVMBuildNSWSub(builderIR, xor, ashr, LT("abs_sub"));
+    RETURN res;
+  END IntAbs;
+  
 PROCEDURE abs(self: U;  t: AType) =
   (* s0.t := ABS (s0.t) *)
   CONST numParams = 1;
   VAR
     s0 := Get(self.exprStack,0);
     opType : LLVM.TypeRef;
-    a,ashr,xor,shiftLen : LLVM.ValueRef;
-    res,fn : LLVM.ValueRef;
+    a,res,fn : LLVM.ValueRef;
     intType : BOOLEAN;
     paramsArr : ValueArrType;
     paramsRef : ValueRefType;
@@ -3044,10 +3058,7 @@ PROCEDURE abs(self: U;  t: AType) =
     intType := t < Type.Reel;
 
     IF intType THEN
-      shiftLen := LLVM.LLVMConstInt(IntPtrTy, ptrBits - 1L, TRUE);
-      ashr := LLVM.LLVMBuildAShr(builderIR, a, shiftLen, LT("abs_ashr"));
-      xor := LLVM.LLVMBuildXor(builderIR, a, ashr, LT("abs_xor"));
-      res := LLVM.LLVMBuildNSWSub(builderIR, xor, ashr, LT("abs_sub"));
+      res := IntAbs(a);
     ELSE
       paramsRef := NewValueArr(paramsArr,numParams);
       paramsArr[0] := a;
@@ -3527,28 +3538,52 @@ PROCEDURE xor (self: U; t: IType) =
   BEGIN
     binop(self,t,BinOps.xor);
   END xor;
-
+  
 PROCEDURE shift (self: U; t: IType) =
   (* s1.t := Word.Shift  (s1.t, s0.t); pop *)
   VAR
     s0 := Get(self.exprStack,0);
     s1 := Get(self.exprStack,1);
-    a,shift,cmpVal,res : LLVM.ValueRef;
+    a,shift,cmpVal,cmpVal2,res,res2,absShift,shiftLen : LLVM.ValueRef;
     opType : LLVM.TypeRef;
-    ite : ITEObj;
+    ite,ite2 : ITEObj;
+    shiftBits : LONGINT;
   BEGIN
     a := NARROW(s1,LvExpr).lVal;
     shift := NARROW(s0,LvExpr).lVal;
     opType := LLvmType(t);
-    cmpVal := LLVM.LLVMBuildICmp(builderIR,  LLVM.IntPredicate.SGE, shift, Zero(opType), LT("shift_cmp"));
+    (* avoid branches if shift is constant *)
+    IF LLVM.LLVMIsConstant(shift) THEN
+      shiftBits := LLVM.LLVMConstIntGetSExtValue(shift);
+      IF ABS(shiftBits) >= ptrBits THEN
+        res := Zero(opType);
+      ELSE
+        IF shiftBits >= 0L THEN
+          res := LLVM.LLVMBuildShl(builderIR, a, shift, LT("shl"));
+        ELSE
+          absShift := LLVM.LLVMConstInt(opType, -shiftBits, TRUE);
+          res := LLVM.LLVMBuildLShr(builderIR, a, absShift, LT("shr"));
+        END;
+      END;
+    ELSE
+      (* generate runtime check for range *)
+      absShift := IntAbs(shift);
+      shiftLen := LLVM.LLVMConstInt(IntPtrTy, ptrBits, TRUE);
+      (* check if shift out of range *)
+      cmpVal := LLVM.LLVMBuildICmp(builderIR,  LLVM.IntPredicate.SGE, absShift, shiftLen, LT("shift_abs_cmp"));
+      ite := NEW(ITEObj, cmpVal := cmpVal, opName := "shift_abs", opType := t, curObj := self).init();
 
-    ite := NEW(ITEObj, cmpVal := cmpVal, opName := "shift", opType := t, curObj := self).init();
-    res := LLVM.LLVMBuildShl(builderIR, a, shift, LT("shl"));
-    EVAL ite.block(res,FALSE);
-    (* make the shift positive  *)
-    shift := LLVM.LLVMBuildNSWNeg(builderIR, shift, LT("neg"));
-    res := LLVM.LLVMBuildLShr(builderIR, a, shift, LT("shr"));
-    res := ite.block(res,TRUE);
+      res := Zero(opType);
+      EVAL ite.block(res,FALSE);
+        (* nested ite to check which shift left or right *)
+        cmpVal2 := LLVM.LLVMBuildICmp(builderIR,  LLVM.IntPredicate.SGE, shift, Zero(opType), LT("shift_cmp"));
+        ite2 := NEW(ITEObj, cmpVal := cmpVal2, opName := "shift", opType := t, beforeBB := ite.exitBB, curObj := self).init();
+        res2 := LLVM.LLVMBuildShl(builderIR, a, absShift, LT("shl"));
+        EVAL ite2.block(res2,FALSE);
+        res2 := LLVM.LLVMBuildLShr(builderIR, a, absShift, LT("shr"));
+        res := ite2.block(res2,TRUE);
+      res := ite.block(res,TRUE);
+    END;
     NARROW(s1,LvExpr).lVal := res;
     Pop(self.exprStack);
   END shift;
@@ -3575,8 +3610,13 @@ return (value >> shift) | (value << (sizeof(value) * CHAR_BIT - shift));
 
 PROCEDURE DoRotate(value,shift : LLVM.ValueRef; rotLeft : BOOLEAN) : LLVM.ValueRef =
   VAR
-    t1,t2,t3,t4,wordSize : LLVM.ValueRef;
+    t1,t2,t3,t4,wordSize,maskSize : LLVM.ValueRef;
   BEGIN
+    (* avoid undefined behaviour by masking out rotates greater then
+     word length. This pattern is optimised to a single rotate instruction
+     on some architectures. *)
+    maskSize := LLVM.LLVMConstInt(IntPtrTy, ptrBits - 1L, TRUE);
+    shift := LLVM.LLVMBuildAnd(builderIR, maskSize, shift, LT("rmask"));
     wordSize := LLVM.LLVMConstInt(IntPtrTy, ptrBits, TRUE);
     t1 := LLVM.LLVMBuildNUWSub(builderIR, wordSize, shift, LT("rsub"));
     IF rotLeft THEN
@@ -3595,22 +3635,35 @@ PROCEDURE rotate (self: U;  t: IType) =
   VAR
     s0 := Get(self.exprStack,0);
     s1 := Get(self.exprStack,1);
-    a,shift,cmpVal,res : LLVM.ValueRef;
+    a,rot,cmpVal,res : LLVM.ValueRef;
     opType : LLVM.TypeRef;
     ite : ITEObj;
+    rotBits : LONGINT;
   BEGIN
     a := NARROW(s1,LvExpr).lVal;
-    shift := NARROW(s0,LvExpr).lVal;
+    rot := NARROW(s0,LvExpr).lVal;
     opType := LLvmType(t);
-    cmpVal := LLVM.LLVMBuildICmp(builderIR,  LLVM.IntPredicate.SGE, shift, Zero(opType), LT("rotate_cmp"));
+    (* avoid branches if rotate is constant *)
+    IF LLVM.LLVMIsConstant(rot) THEN
+      rotBits := LLVM.LLVMConstIntGetSExtValue(rot);
+      IF rotBits >= 0L THEN
+        res := DoRotate(a,rot,TRUE);
+      ELSE
+        rot := LLVM.LLVMConstInt(opType, -rotBits, TRUE);
+        res := DoRotate(a,rot,FALSE);
+      END;
+    ELSE
+      (* generate runtime check for rotate *)
+      cmpVal := LLVM.LLVMBuildICmp(builderIR,  LLVM.IntPredicate.SGE, rot, Zero(opType), LT("rotate_cmp"));
 
-    ite := NEW(ITEObj, cmpVal := cmpVal, opName := "rotate", opType := t, curObj := self).init();
-    res := DoRotate(a,shift,TRUE);
-    EVAL ite.block(res,FALSE);
-    (* make the shift positive  *)
-    shift := LLVM.LLVMBuildNSWNeg(builderIR, shift, LT("neg"));
-    res := DoRotate(a,shift,FALSE);
-    res := ite.block(res,TRUE);
+      ite := NEW(ITEObj, cmpVal := cmpVal, opName := "rotate", opType := t, curObj := self).init();
+      res := DoRotate(a,rot,TRUE);
+      EVAL ite.block(res,FALSE);
+      (* make the rotate positive  *)
+      rot := LLVM.LLVMBuildNSWNeg(builderIR, rot, LT("neg"));
+      res := DoRotate(a,rot,FALSE);
+      res := ite.block(res,TRUE);
+    END;
     NARROW(s1,LvExpr).lVal := res;
     Pop(self.exprStack);
   END rotate;
@@ -3620,11 +3673,11 @@ PROCEDURE rotate_left (self: U; <*UNUSED*> t: IType) =
   VAR
     s0 := Get(self.exprStack,0);
     s1 := Get(self.exprStack,1);
-    a,shift,res : LLVM.ValueRef;
+    a,rot,res : LLVM.ValueRef;
   BEGIN
     a := NARROW(s1,LvExpr).lVal;
-    shift := NARROW(s0,LvExpr).lVal;
-    res := DoRotate(a,shift,TRUE);
+    rot := NARROW(s0,LvExpr).lVal;
+    res := DoRotate(a,rot,TRUE);
     NARROW(s1,LvExpr).lVal := res;
     Pop(self.exprStack);
   END rotate_left;
@@ -3634,11 +3687,11 @@ PROCEDURE rotate_right (self: U; <*UNUSED*> t: IType) =
   VAR
     s0 := Get(self.exprStack,0);
     s1 := Get(self.exprStack,1);
-    a,shift,res : LLVM.ValueRef;
+    a,rot,res : LLVM.ValueRef;
   BEGIN
     a := NARROW(s1,LvExpr).lVal;
-    shift := NARROW(s0,LvExpr).lVal;
-    res := DoRotate(a,shift,FALSE);
+    rot := NARROW(s0,LvExpr).lVal;
+    res := DoRotate(a,rot,FALSE);
     NARROW(s1,LvExpr).lVal := res;
     Pop(self.exprStack);
   END rotate_right;
@@ -3679,7 +3732,6 @@ PROCEDURE DoExtract(val,count,offset : LLVM.ValueRef; sign : BOOLEAN) : LLVM.Val
     t1 := LLVM.LLVMBuildNSWSub(builderIR, wordSize, count, LT("elen"));
     t2 := LLVM.LLVMBuildNSWSub(builderIR, t1, offset, LT("edist"));
     t3 := LLVM.LLVMBuildShl(builderIR, val, t2, LT("eshl"));
-    t4 := LLVM.LLVMBuildLShr(builderIR, t3, t1, LT("eshr"));
     IF sign THEN
       t4 := LLVM.LLVMBuildAShr(builderIR, t3, t1, LT("eshr"));
     ELSE
