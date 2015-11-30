@@ -2,6 +2,10 @@
 
 UNSAFE MODULE M3CG_LLVM;
 
+(* NOTE: This module contains code that passes parameters of type
+         LONGINT to C/C++ code that declares them as unsigned long long,
+         across unchecked bindings.  Check that this is right. *) 
+
 IMPORT LLVMTypes; 
 FROM LLVMTypes IMPORT int64_t , uint64_t , unsigned;
 FROM LLVMTypes IMPORT Bool , False , True;   
@@ -23,6 +27,17 @@ IMPORT Text,Fmt,Pathname;
 IMPORT IO; (* debug this module *)
 IMPORT Word;
 TYPE INT32 = Ctypes.int; 
+
+TYPE callStateTyp 
+  = { outside,         (* Not in a call. *) 
+      insideDirect,    (* Inside a call_direct sequence. *) 
+      insideIndirect,  (* Inside a call_indirect sequence, but 
+                          before any pop_static_link. *) 
+      indirectAfterSL  (* Need I belabor this one? *) 
+    }; 
+CONST callStateSetIndirect 
+  = SET OF callStateTyp 
+      { callStateTyp.insideIndirect, callStateTyp.indirectAfterSL }; 
 
 REVEAL
 
@@ -52,7 +67,13 @@ REVEAL
 
     allocaName    : Name; (* "alloca", for detecting library call on it. *) 
 
-    (* external set functions *)
+    (* State for generating calls. *) 
+    callState     : callStateTyp; 
+    callResultType : Type; (* Meaningful when inside a call. *) 
+    indirCallCC    : CallingConvention; (* Meaningful when inside an indirect call. *)
+    staticLinkBB, junkBB: LLVM.BasicBlockRef; 
+
+   (* external set functions *)
     setUnion, setIntersection, setDifference, setSymDifference,
     setMember, setEq, setNe, setLe, setLt, setGe, setGt,
     setRange, setSingleton : LLVM.ValueRef;
@@ -80,7 +101,7 @@ METHODS
     allocVar(v : LvVar) := AllocVar;
     allocVarInEntryBlock(v : LvVar) := AllocVarInEntryBlock;
     buildFunc(p : Proc) := BuildFunc;
-    getLabel(l : Label; name : TEXT) : LabelObj := GetLabel;
+    getLabel(lab : Label; name : TEXT) : LabelObj := GetLabel;
     ifCommon(t: IType; l: Label; f: Frequency; op : CompareOp) := IfCommon;
 OVERRIDES
     next_label := next_label;
@@ -589,6 +610,8 @@ TYPE
   ValueRefType = UNTRACED REF LLVM.ValueRef;
   TypeArrType = UNTRACED REF ARRAY OF LLVM.TypeRef;
   TypeRefType = UNTRACED REF LLVM.TypeRef;
+  BBArrType = UNTRACED REF ARRAY OF LLVM.BasicBlockRef;
+  BBRefType = UNTRACED REF LLVM.BasicBlockRef;
 
 PROCEDURE NewValueArr(VAR paramsArr : ValueArrType; numParams : CARDINAL) : ValueRefType =
   BEGIN
@@ -603,6 +626,13 @@ PROCEDURE NewTypeArr(VAR paramsArr : TypeArrType; numParams : CARDINAL) : TypeRe
     paramsArr := NEW(TypeArrType, numParams);
     RETURN LOOPHOLE(ADR(paramsArr[0]), TypeRefType);
   END NewTypeArr;
+
+PROCEDURE NewBBArr(VAR BBsArr : BBArrType; numBBs : CARDINAL) : BBRefType =
+  BEGIN
+    IF numBBs = 0 THEN RETURN NIL; END;
+    BBsArr := NEW(BBArrType, numBBs);
+    RETURN LOOPHOLE(ADR(BBsArr[0]), BBRefType);
+  END NewBBArr;
 
 PROCEDURE NewArrayRefOfMetadataRef 
   ( ElemCt : CARDINAL; 
@@ -674,6 +704,11 @@ PROCEDURE NewProc (self: U; name : Name; numParams : INTEGER; returnType : Type;
     INC (self.next_proc);
     RETURN p;
   END NewProc;
+
+PROCEDURE MakeRefSeqEmpty (stack : RefSeq.T ) = 
+  BEGIN
+    FOR i := 1 TO stack.size () DO EVAL stack.remlo(); END;
+  END MakeRefSeqEmpty; 
 
 PROCEDURE Pop(stack : RefSeq.T; n: CARDINAL := 1) =
   BEGIN
@@ -2171,7 +2206,7 @@ PROCEDURE end_procedure (self: U;  p: Proc) =
       END; 
     END;
 
-    (* Give entry BB a terminating  uncondtional branch to secondBB. *) 
+    (* Give entry BB a terminating  unconditional branch to secondBB. *) 
     EVAL LLVM.LLVMBuildBr(builderIR, proc.secondBB); 
 
     LLVM.LLVMPositionBuilderAtEnd(builderIR, curBB);
@@ -2253,8 +2288,8 @@ BEGIN
   END; 
 END DumpExprStack;
 
-PROCEDURE set_label (self: U;  l: Label;  barrier: BOOLEAN) =
-(* define 'l' to be at the current pc, if 'barrier', 'l' bounds an exception
+PROCEDURE set_label (self: U;  lab: Label;  barrier: BOOLEAN) =
+(* define 'lab' to be at the current pc, if 'barrier', 'l' bounds an exception
    scope and no code is allowed to migrate past it. *)
   VAR
     curBB : LLVM.BasicBlockRef;
@@ -2265,7 +2300,7 @@ PROCEDURE set_label (self: U;  l: Label;  barrier: BOOLEAN) =
     DumpExprStack(self,"set_label");
 
     curBB := LLVM.LLVMGetInsertBlock(builderIR);
-    label := self.getLabel(l,"label_");
+    label := self.getLabel(lab,"label_");
     label.barrier := barrier;  (* not using barrier thus far *)
 
     IF label.cmpInstr # NIL THEN
@@ -2295,7 +2330,7 @@ PROCEDURE set_label (self: U;  l: Label;  barrier: BOOLEAN) =
     LLVM.LLVMPositionBuilderAtEnd(builderIR,label.labBB);
   END set_label;
 
-PROCEDURE jump (self: U; l: Label) =
+PROCEDURE jump (self: U; lab: Label) =
   VAR
     labRef : REFANY;
     label : LabelObj;
@@ -2303,11 +2338,11 @@ PROCEDURE jump (self: U; l: Label) =
   BEGIN
     DumpExprStack(self,"jump");
 
-    IF self.labelTable.get(l,labRef) THEN
+    IF self.labelTable.get(lab,labRef) THEN
       label := NARROW(labRef,LabelObj);
     ELSE
-      label := NEW(LabelObj, id := l, branchList := NEW(RefSeq.T).init());
-      EVAL self.labelTable.put(l,label);
+      label := NEW(LabelObj, id := lab, branchList := NEW(RefSeq.T).init());
+      EVAL self.labelTable.put(lab,label);
     END;
 
     branch := NEW(BranchObj);
@@ -2819,6 +2854,7 @@ PROCEDURE load_integer (self: U;  t: IType;  READONLY i: Target.Int) =
   BEGIN
     intTy := LLvmType(t);
     res := TInt.ToInt (i, int);
+(* FIXME: ^Cross compile problem here. *) 
     <*ASSERT res = TRUE *>
     lVal := LLVM.LLVMConstInt(intTy, VAL(int,LONGINT), TRUE);
     Push(self.exprStack,NEW(LvExpr,lVal := lVal));
@@ -4227,15 +4263,18 @@ PROCEDURE index_address (self: U; <*UNUSED*> t: IType; size: INTEGER) =
 
 
 PROCEDURE start_call_direct 
-  (self: U;  p: Proc; <*UNUSED*> lev: INTEGER; <*UNUSED*> t: Type) =
+  (self: U;  p: Proc; <*UNUSED*> lev: INTEGER; t: Type) =
   (* begin a procedure call to procedure 'p' at static level 'lev' that
      will return a value of type 't'. *)
   VAR
     proc : LvProc;
   BEGIN
+    <* ASSERT self.callState = callStateTyp.outside *>
+    self.callResultType := t; (* For completeness.  Won't be used. *) 
     proc := NARROW(p,LvProc);
     self.buildFunc(p);
     PopDecl(self);
+    self.callState := callStateTyp.insideDirect; 
   END start_call_direct;
 
 PROCEDURE Is_alloca (self: U; p: LvProc) : BOOLEAN =
@@ -4259,7 +4298,8 @@ PROCEDURE call_direct (self: U; p: Proc; <*UNUSED*> t: Type) =
   BEGIN
     DumpExprStack(self,"call_direct");
 
-    <*ASSERT self.callStack # NIL *>
+    <* ASSERT self.callState = callStateTyp.insideDirect *>
+    <* ASSERT self.callStack # NIL *>
     calleeProc := NARROW(p,LvProc);
     fn := calleeProc.lvProc;
     <*ASSERT fn # NIL *>
@@ -4275,6 +4315,7 @@ PROCEDURE call_direct (self: U; p: Proc; <*UNUSED*> t: Type) =
       lVal := LLVM.LLVMBuildArrayAlloca
                 (builderIR, i8Type, arg.lVal, LT("m3_jmpbuf_size"));
       Push(self.exprStack,NEW(LvExpr,lVal := lVal));
+      self.callState := callStateTyp.outside; 
       RETURN; 
     END; 
 
@@ -4292,9 +4333,9 @@ PROCEDURE call_direct (self: U; p: Proc; <*UNUSED*> t: Type) =
            but we don't generate it until we get to its end_procedure, since
            there could still be more locals of inner blocks flattened into
            the caller's AR after this point. *)  
-      ELSE (* Nested callee is nested no deeper than caller, which is therefor
-              also nested.  For this direct call, the static parent of the 
-              callee will be a proper static ancestor of the caller, and a 
+      ELSE (* Nested callee procedure is nested no deeper than caller, which 
+              is therefor also nested.  For this direct call, the static parent 
+              of the callee will be a proper static ancestor of the caller, and a 
               prefix of the display passed to the caller in its SL will contain 
               what's needed by the callee.  The rest of it won't be used and is 
               harmless.*)
@@ -4334,88 +4375,222 @@ PROCEDURE call_direct (self: U; p: Proc; <*UNUSED*> t: Type) =
       (* push the return val onto stack *)
       Push(self.exprStack,NEW(LvExpr,lVal := lVal));
     END;
+    self.callState := callStateTyp.outside; 
   END call_direct;
 
 <*NOWARN*> 
-PROCEDURE start_call_indirect (self: U;  t: Type;  cc: CallingConvention) =
+PROCEDURE start_call_indirect 
+  (self: U; t: Type; cc: CallingConvention) =
   (* begin an indirect procedure call that will return a value of type 't'. *)
   BEGIN
-  (* nothing to do *)
+    <* ASSERT self.callState = callStateTyp.outside *>
+    self.callResultType := t; 
+    self.indirCallCC := cc;
+    (* Basic blocks for separate top-level and nested call forms. *) 
+    self.callState := callStateTyp.insideIndirect; 
   END start_call_indirect;
 
-(* construct a procedure signature type for indirect calls *)
-PROCEDURE FuncType(retType : Type; paramStack : RefSeq.T) : LLVM.TypeRef =
+(* Construct a procedure signature type for use by an indirect call,
+   using the actual parameters on the call stack (here, paramStack). *)
+PROCEDURE IndirectFuncType
+   (retType : Type; paramStack : RefSeq.T) : LLVM.TypeRef =
   VAR
-    retTy,procTy : LLVM.TypeRef;
-    numParams : INTEGER;
+    retTy,funcTy : LLVM.TypeRef;
+    numFormals : INTEGER;
     param : LvExpr;
     typesArr : TypeArrType;
     typesRef : TypeRefType;
   BEGIN
     retTy := LLvmType(retType);
-    numParams := paramStack.size();
+    numFormals := paramStack.size(); 
 
-    IF numParams > 0 THEN
-      typesRef := NewTypeArr(typesArr,numParams);
-      FOR i := 0 TO numParams - 1 DO
-        param := Get(paramStack,i);
+    IF numFormals > 0 THEN
+      typesRef := NewTypeArr(typesArr,numFormals);
+      FOR paramNo := 0 TO numFormals - 1 DO
+        param := Get(paramStack, paramNo);
 (* CHECK: ^Looks like contents of paramStack are all LvVar.  Narrow failure? *) 
-        typesArr[i] := LLVM.LLVMTypeOf(param.lVal);
+        typesArr[paramNo] := LLVM.LLVMTypeOf(param.lVal);
       END;
     END;
-    procTy := LLVM.LLVMFunctionType(retTy, typesRef, numParams, FALSE);
-    RETURN procTy;
-  END FuncType;
+    funcTy := LLVM.LLVMFunctionType(retTy, typesRef, numFormals, FALSE);
+    RETURN funcTy;
+  END IndirectFuncType;
 
-PROCEDURE call_indirect (self: U;  t: Type; <*UNUSED*> cc: CallingConvention) =
-  (* call the procedure whose address is in s0.A and pop s0.  The
-     procedure returns a value of type t. *)
+PROCEDURE InnerCallIndirect 
+  (self: U; proc: LLVM.ValueRef; t: Type; <*UNUSED*> cc: CallingConvention) 
+  : LLVM.ValueRef =
+  (* Call the procedure whose llvm address is proc.  The
+     procedure returns a value of type t. 
+     Use the actual parameters on self.callStack (which will include a
+     static link, if appropriate. 
+     Do not pop the parameters. *)
   VAR
-    s0 := Get(self.exprStack);
-    expr,arg : LvExpr;
-    proc,callVal,resultVal : LLVM.ValueRef;
+    callVal : LLVM.ValueRef;
+    resultVal : LLVM.ValueRef;
     paramsArr : ValueArrType;
     paramsRef : ValueRefType;
-    funcTy,funcPtrTy : LLVM.TypeRef;
-    numParams : INTEGER;
+    param : LvExpr; 
+    funcTy, funcPtrTy : LLVM.TypeRef;
+    numFormals : INTEGER;
     returnName : TEXT := "";
   BEGIN
-    DumpExprStack(self,"call_indirect");
+    (* Build the function signature from the actual parameters. *)
+    funcTy := IndirectFuncType(t,self.callStack);
 
-    expr := NARROW(s0,LvExpr);
-    proc := expr.lVal;
-    (* get the function sig from the callstack *)
-    funcTy := FuncType(t,self.callStack);
-
-(* FIXME: Take care of calling through a closure and passing SL. *) 
-
-    numParams := self.callStack.size();
-    IF numParams > 0 THEN
-      paramsRef := NewValueArr(paramsArr,numParams);
-      FOR i := 0 TO numParams - 1 DO
-        arg := Get(self.callStack);
-        paramsArr[i] := arg.lVal;
-        Pop(self.callStack);
+    numFormals := self.callStack.size(); 
+    IF numFormals > 0 THEN
+      paramsRef := NewValueArr(paramsArr,numFormals);
+      FOR paramNo := 0 TO numFormals - 1 DO
+        param := NARROW(Get(self.callStack, paramNo), LvExpr);
+        paramsArr[paramNo] := param.lVal;
       END;
     END;
-    <*ASSERT self.callStack.size() = 0 *>
 
     IF t # Type.Void THEN
       returnName := "result";
     END;
 
-    (* need a pointer to function type for the call *)
+    (* Need a pointer to function type for the call. *)
     funcPtrTy := LLVM.LLVMPointerType(funcTy);
     callVal := LLVM.LLVMBuildBitCast(builderIR, proc, funcPtrTy, LT("call_ind"));
-    resultVal := LLVM.LLVMBuildCall(builderIR, callVal, paramsRef, numParams, LT(returnName));
+    resultVal := LLVM.LLVMBuildCall
+      (builderIR, callVal, paramsRef, numFormals, LT(returnName));
+    RETURN resultVal; 
 
-    (* discard the proc address *)
+  END InnerCallIndirect;
+
+PROCEDURE MatchSLFetch 
+  (<*UNUSED*>self: U; lastInst: LLVM.ValueRef; 
+   VAR loadCl, gep, cast1, loadSL, cast2 : LLVM.ValueRef ) 
+: BOOLEAN   =
+  (* See if the last instructions of the current BB match those we 
+     expect to see immediately before pop_static_link of an indirect
+     call, specifically, fetching the static link of a closure.  
+     Return FALSE if not, otherwise, set loadCl, cast2, gep, cast1,
+     and loadSL with these llvm instructions. *) 
+
+  VAR
+    curBB : LLVM.BasicBlockRef; 
+    BegOfBB : LLVM.ValueRef; 
+    loadClOp, gepOp, cast1Op, loadSLOp, cast2Op : LLVM.Opcode; 
+  BEGIN 
+    curBB := LLVM.LLVMGetInsertBlock (builderIR);  
+    IF curBB = NIL THEN RETURN FALSE; END;
+
+    cast2 := LLVM.LLVMGetLastInstruction(curBB); 
+    IF cast2 = NIL THEN RETURN FALSE; END; 
+    IF cast2 # lastInst THEN RETURN FALSE; END; 
+    cast2Op := LLVM.LLVMGetInstructionOpcode(cast2);
+    IF cast2Op # LLVM.Opcode.BitCast THEN RETURN FALSE; END; 
+
+    loadSL := LLVM.LLVMGetPreviousInstruction(cast2); 
+    IF loadSL = NIL THEN RETURN FALSE; END; 
+    loadSLOp := LLVM.LLVMGetInstructionOpcode(loadSL);
+    IF loadSLOp # LLVM.Opcode.Load THEN RETURN FALSE; END; 
+
+    cast1 := LLVM.LLVMGetPreviousInstruction(loadSL); 
+    IF cast1 = NIL THEN RETURN FALSE; END; 
+    cast1Op := LLVM.LLVMGetInstructionOpcode(cast1);
+    IF cast1Op # LLVM.Opcode.BitCast THEN RETURN FALSE; END; 
+
+    gep := LLVM.LLVMGetPreviousInstruction(cast1); 
+    IF gep = NIL THEN RETURN FALSE; END;  
+    gepOp := LLVM.LLVMGetInstructionOpcode(gep); 
+    IF gepOp # LLVM.Opcode.GetElementPtr THEN RETURN FALSE; END; 
+
+    loadCl := LLVM.LLVMGetPreviousInstruction(gep); 
+    IF loadCl = NIL THEN RETURN FALSE; END; 
+    loadClOp := LLVM.LLVMGetInstructionOpcode(loadCl);
+    IF loadClOp # LLVM.Opcode.Load THEN RETURN FALSE; END; 
+
+    BegOfBB := LLVM.LLVMGetPreviousInstruction(loadCl); 
+    RETURN BegOfBB = NIL; 
+
+  END MatchSLFetch; 
+
+PROCEDURE call_indirect (self: U;  t: Type; cc: CallingConvention) =
+  (* call the procedure whose address is in s0.A and pop s0.  The
+     procedure returns a value of type t. *)
+  VAR 
+    s0 := Get(self.exprStack,0);
+    procExpr : LvExpr; 
+    currentBB, mergeBB : LLVM.BasicBlockRef;
+    lastInst : LLVM.ValueRef;
+    loadCl, gep, cast1, loadSL, cast2 : LLVM.ValueRef;
+    gepCode, castCode, codeAddr : LLVM.ValueRef;
+    resultVal1, resultVal2, resultVal3, mergePhi : LLVM.ValueRef;
+    resultsArr: ValueArrType;
+    resultsRef: ValueRefType;
+    BBsArr: BBArrType;
+    BBsRef: BBRefType; 
+    matched : BOOLEAN; 
+  BEGIN
+    DumpExprStack(self,"call_indirect_top_level");
+    procExpr := NARROW(s0,LvExpr);
     Pop(self.exprStack);
+    CASE self.callState 
+    OF callStateTyp . indirectAfterSL
+    =>
+    (* For llvm, we need a different call statement, with different
+       signature and actual parameter list to call a nested procedure.  
+       Moreover, we need this call to be in the same BB as the passing
+       of the static link, which was handled in pop_static_link.  That
+       BB is kept in self.staticLinkBB, and we complete it here, now that
+       we have the result type and calling convention.  We also have to
+       merge with the no-static link call, generated below. *)   
+ 
+      currentBB := LLVM.LLVMGetInsertBlock (builderIR); (* Save. *) 
+      mergeBB := LLVM.LLVMAppendBasicBlock 
+        (self.curProc.lvProc,LT("indir_sl_merge"));
+      LLVM.LLVMPositionBuilderAtEnd (builderIR, self.staticLinkBB); 
+      lastInst := NARROW(Get(self.callStack),LvExpr).lVal; 
+      matched := MatchSLFetch 
+        (self, lastInst, loadCl, gep, cast1, loadSL, cast2);
+      <* ASSERT matched *> 
+      gepCode := BuildGep(loadCl,ptrBytes);
+(* REVIEW:                            ^intBytes? *) 
+      castCode := LLVM.LLVMBuildBitCast
+        (builderIR, gepCode, AdrAdrTy, LT("load_ind_toptr"));
+      codeAddr := LLVM.LLVMBuildLoad(builderIR, castCode, LT("load_ind"));
+      resultVal1 := InnerCallIndirect (self, codeAddr, t, cc);
+      EVAL LLVM.LLVMBuildBr(builderIR, mergeBB);
+      IF t # Type.Void THEN
+        resultsRef := NewValueArr (resultsArr, 2); 
+        resultsArr^[0] := resultVal1; 
+        BBsRef := NewBBArr ( BBsArr, 2);
+        BBsArr^[0] := self.staticLinkBB; 
+      END;
 
-    IF t # Type.Void THEN
-      (* push the return val onto stack*)
-      Push(self.exprStack,NEW(LvExpr,lVal := resultVal));
-    END;
+      LLVM.LLVMPositionBuilderAtEnd (builderIR, currentBB); 
+      Pop(self.callStack); (* Remove SL from actual parameter list. *) 
+        (* But leave the rest of the params on self.call_stack.
+           They will be needed in call_indirect. *) 
+      resultVal2 := InnerCallIndirect (self, procExpr.lVal, t, cc);
+      EVAL LLVM.LLVMBuildBr(builderIR, mergeBB); 
+      LLVM.LLVMPositionBuilderAtEnd (builderIR, mergeBB); 
+      IF t # Type.Void THEN
+        resultsArr^[1] := resultVal2; 
+        BBsArr^[1] := currentBB; 
+        mergePhi := LLVM.LLVMBuildPhi 
+          (builderIR, LLvmType(t), LT("indir_call_result"));  
+        LLVM.LLVMAddIncoming(mergePhi, resultsRef, BBsRef, 2); 
+        (* push the return val onto exprStack*)
+        Push(self.exprStack,NEW(LvExpr,lVal := mergePhi));
+      END;
+      
+    | callStateTyp . insideIndirect
+    => resultVal3 := InnerCallIndirect (self, procExpr.lVal, t, cc);
+      IF t # Type.Void THEN
+        (* push the return val onto exprStack*)
+        Push(self.exprStack,NEW(LvExpr,lVal := resultVal3));
+      END;
+    ELSE <* ASSERT FALSE *> (* Bad callState. *) 
+    END (*CASE*); 
+
+    MakeRefSeqEmpty(self.callStack); 
+    <*ASSERT self.callStack.size() = 0 *>
+
+    self.callState := callStateTyp.outside; 
   END call_indirect;
 
 PROCEDURE pop_param (self: U;  t: MType) =
@@ -4442,7 +4617,8 @@ PROCEDURE pop_param (self: U;  t: MType) =
     Pop(self.exprStack);
   END pop_param;
 
-PROCEDURE pop_struct (self: U; <*UNUSED*> t: TypeUID; s: ByteSize; <*UNUSED*>  a: Alignment) =
+PROCEDURE pop_struct 
+  (self: U; <*UNUSED*> t: TypeUID; s: ByteSize; <*UNUSED*>  a: Alignment) =
   (* pop s0.A, it's a pointer to a structure occupying 's' bytes that's
     'a' byte aligned; pass the structure by value as the "next" parameter
     in the current call. *)
@@ -4463,21 +4639,45 @@ PROCEDURE pop_struct (self: U; <*UNUSED*> t: TypeUID; s: ByteSize; <*UNUSED*>  a
     structTy := NARROW(structRef,LvStruct).struct;
     structTy := LLVM.LLVMPointerType(structTy);
     (* this is the proper type for the call *)
-    expr.lVal := LLVM.LLVMBuildBitCast(builderIR, expr.lVal, structTy, LT("pop_tostructty"));
+    expr.lVal := LLVM.LLVMBuildBitCast
+      (builderIR, expr.lVal, structTy, LT("pop_tostructty"));
     
     PushRev(self.callStack,s0);
     Pop(self.exprStack);
   END pop_struct;
 
 PROCEDURE pop_static_link (self: U) =
-  (* pop s0.A for the current indirect procedure call's static link  *)
+  (* pop s0.A and pass it as the current indirect procedure call's 
+     static link  *)
+(* CHECK: Or direct procedure call? *) 
+  VAR
+    s0 := Get(self.exprStack,0);
+    expr : LvExpr;
+    oldlVal: LLVM.ValueRef; 
   BEGIN
-(* A test case which has a procedure passed as a parm and then called induces
-  this procedure. Was pushing this link onto the call stack.
-  That put an extra parm in the call which was not needed and resulted in
-  instruction not dominating all uses, quite apart from sig being wrong.
-  May be other cases where it is useful but for now just pop the expr stack *)
-    Pop(self.exprStack);
+    <* ASSERT self.callState = callStateTyp . insideIndirect *> 
+    expr := NARROW(s0,LvExpr);
+    oldlVal := expr.lVal; 
+    expr.lVal := LLVM.LLVMBuildBitCast
+                   (builderIR, oldlVal, AdrAdrTy, LT("SL_toadradr"));
+    Push(self.callStack,s0); (* Make SL the leftmost actual. *) 
+
+    Pop(self.exprStack); 
+    WITH WFunc = self.curProc.lvProc DO
+      self.staticLinkBB := LLVM.LLVMGetInsertBlock(builderIR); 
+      (* ^Leave staticLinkBB incomplete, until we see the call_indirect. *) 
+      self.junkBB := LLVM.LLVMAppendBasicBlock(WFunc,LT("sl_junk")); 
+      LLVM.LLVMMoveBasicBlockAfter(self.junkBB, self.staticLinkBB); 
+      LLVM.LLVMPositionBuilderAtEnd(builderIR, self.junkBB); 
+      (* ^Any following CG code will patch the procedure variable to point 
+         directly to the called procedure's code, instead of to the closure. 
+         We can't use this code, so let it go into junkBB, which will have
+         no predecessor and thus be abandoned.  junkBB will be terminated
+         by an unconditional branch to the call_indirect, as normal result
+         of CG's closure-handling branch logic. *) 
+    END; 
+   self.callState := callStateTyp . indirectAfterSL; 
+
   END pop_static_link;
 
 (*------------------------------------------- procedure and closure types ---*)
@@ -4513,7 +4713,7 @@ PROCEDURE load_static_link (self: U;  p: Proc) =
          but we don't generate it until we get to its end_procedure, since
          there could still be more locals of inner blocks flattened into
          the caller's AR after this point. *)  
-    ELSE (* Nested callee is nested no deeper than caller, which is therefor
+    ELSE (* Nested callee is nested no deeper than caller, which is therefore
             also nested.  For this direct call, the static parent of the 
             callee will be a proper static ancestor of the caller, and a 
             prefix of the display passed to the caller in its SL will contain 
