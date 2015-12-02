@@ -1660,21 +1660,26 @@ PROCEDURE ImportedStructSize(self : U; m3t : TypeUID) : ByteSize =
   VAR
     typeObj : REFANY;
     tidExists : BOOLEAN;
-    size : ByteSize := 0;
+    size,baseSize : ByteSize := 0;
     tc : CARDINAL;
   BEGIN
     IF m3t = 0 THEN RETURN size; END;
     tidExists := self.debugTable.get(m3t,typeObj);
     <*ASSERT tidExists *>
     tc := TYPECODE(typeObj);
-    IF tc = TYPECODE(RecordDebug) OR tc = TYPECODE(ArrayDebug) THEN
+    baseSize := VAL(NARROW(typeObj,BaseDebug).bitSize,INTEGER) DIV 8;
+    IF tc = TYPECODE(RecordDebug) OR tc = TYPECODE(ArrayDebug) OR 
+      (tc = TYPECODE(SetDebug) AND baseSize > ptrBytes) THEN
+       size := baseSize;
 (* REVIEW: This once also had "OR tc = TYPECODE(SetDebug)", but that 
            assert-failed on a SET OF a 7-member enumeration, in LLVMBuildCall, 
            over a type mismatch.  Could there be some SET cases (e.g., medium
-           or large sets) where we need to do a type correction? *)  
-      size := VAL(NARROW(typeObj,BaseDebug).bitSize,INTEGER);
+           or large sets) where we need to do a type correction? *)
+(* Re Review: Imported value sets less than word size are passed via pop-param
+whereas larger sets behave like records and are structs. Added test case c142
+to check this. Perhaps the front end could supply the correct type. *)           
     END;
-    RETURN size DIV 8;
+    RETURN size;    
   END ImportedStructSize;
 
 PROCEDURE declare_param (self: U;  n: Name;  s: ByteSize;  a: Alignment; t: Type;  m3t: TypeUID;  in_memory, up_level: BOOLEAN; f: Frequency): Var =
