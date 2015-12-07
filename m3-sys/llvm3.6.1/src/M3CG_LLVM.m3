@@ -2620,17 +2620,23 @@ PROCEDURE GetAddrOfUplevelVar(self : U; var : LvVar) : LLVM.ValueRef =
             (builderIR, lv, LT(textName & ".addr"));
     RETURN lv;
   END GetAddrOfUplevelVar;
-
+  
+PROCEDURE Extend(val : LLVM.ValueRef; t : MType; destTy : LLVM.TypeRef) : LLVM.ValueRef =
+  BEGIN
+    IF WordTypes(t) THEN
+      val := LLVM.LLVMBuildZExt(builderIR,val,destTy, LT("zext"));
+    ELSE
+      val := LLVM.LLVMBuildSExt(builderIR,val,destTy, LT("sext"));
+    END;
+    RETURN val;
+  END Extend;
+  
 PROCEDURE LoadExtend(val : LLVM.ValueRef; t : MType; u : ZType) : LLVM.ValueRef =
   VAR destTy : LLVM.TypeRef;
   BEGIN
     destTy := LLvmType(u);
     IF TypeSize(t) < TypeSize(u) THEN
-      IF WordTypes(t) THEN
-        val := LLVM.LLVMBuildZExt(builderIR,val,destTy, LT("load_zext"));
-      ELSE
-        val := LLVM.LLVMBuildSExt(builderIR,val,destTy, LT("load_sext"));
-      END;
+      val := Extend(val,t,destTy);
     END;
     RETURN val;
   END LoadExtend;
@@ -4075,7 +4081,46 @@ PROCEDURE zero (self: U;  n: INTEGER; t: MType) =
 
 (*----------------------------------------------------------- conversions ---*)
 
-
+(* Handle loophole from Int.32 to REAL and vice versa on 64 bit architectures.
+   m3 IR generates 
+        load v1 0 Word.32 Int.64
+        loophole Word.64 Reel 
+        or
+        load v1 0 Reel Reel
+        loophole Reel Word.64
+  which seems to violate the definition of LOOPHOLE since the sizes are different
+  Not sure why the front end cannot generate a 32 bit load/store in these cases.
+*)
+PROCEDURE RealLoophole(from,two : ZType; a : LLVM.ValueRef; destTy : LLVM.TypeRef) : LLVM.ValueRef =
+(* PRE one or both from and two are Real types checked in caller *)
+  VAR
+    lVal,res : LLVM.ValueRef;
+    intTy : LLVM.TypeRef;
+    fromSize,twoSize : CARDINAL;
+  BEGIN
+    IF (from >= Type.Reel) AND (two >= Type.Reel) THEN
+      (* only applys to longreal and extended since their sizes are equal *)
+      lVal := a; (* noop *)
+    ELSE (* one is an int and one is real *)
+      fromSize := TypeSize(from);
+      twoSize := TypeSize(two);
+      IF fromSize = twoSize THEN
+        lVal := LLVM.LLVMBuildBitCast(builderIR, a, destTy, LT("loophole"));
+      ELSIF fromSize > twoSize THEN
+        <*ASSERT from < Type.Reel AND two >= Type.Reel*>
+        intTy := LLVM.LLVMIntType(twoSize * 8) ;
+        res := LLVM.LLVMBuildTrunc(builderIR, a, intTy, LT("loophole"));    
+        lVal := LLVM.LLVMBuildBitCast(builderIR, res, destTy, LT("loophole"));
+      ELSE
+        <*ASSERT from >= Type.Reel AND two < Type.Reel*>
+        intTy := LLVM.LLVMIntType(fromSize * 8) ;
+        res := LLVM.LLVMBuildBitCast(builderIR, a, intTy, LT("loophole"));
+        lVal := Extend(res,two,destTy);
+      END;
+    END;
+    RETURN lVal;
+  END RealLoophole;    
+  
 PROCEDURE loophole (self: U;  from, two: ZType) =
   (* s0.two := LOOPHOLE(s0.from, two) *)
   VAR
@@ -4095,6 +4140,8 @@ PROCEDURE loophole (self: U;  from, two: ZType) =
     ELSIF two = Type.Addr THEN        
       b := LLVM.LLVMBuildBitCast(builderIR, a, IntPtrTy, LT("loophole"));
       c := LLVM.LLVMBuildIntToPtr(builderIR, b, destTy, LT("loophole-IntToPtr"));
+    ELSIF from >= Type.Reel OR two >= Type.Reel THEN
+        c := RealLoophole(from,two,a,destTy);
     ELSE 
       c := LLVM.LLVMBuildBitCast(builderIR, a, destTy, LT("loophole"));
     END;  
