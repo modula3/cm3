@@ -79,6 +79,11 @@ void LLVMSetAtomic(LLVMValueRef MemAccessInst, LLVMAtomicOrdering Ordering) {
   return cast<StoreInst>(P)->setAtomic(order);
 }
 
+void GetLLVMVersion(int *major,int *minor) {
+  *major = LLVM_VERSION_MAJOR;
+  *minor = LLVM_VERSION_MINOR;
+}
+
 unsigned GetM3IntrinsicId(M3Intrinsic id) {
 
   if (id == m3memset) return Intrinsic::memset;

@@ -910,6 +910,29 @@ BEGIN
 END CheckIntrinsics;
 *)
 
+(* embed version info into generated llvm and hence assembly 
+   Need to rationalise the version stuff. Good to have the shipped version
+   of cm3 plus the llvm library version we are using. Then there is the
+   version of this file. 
+*)
+PROCEDURE EmbedVersion() =
+  VAR
+    mdNode : LLVM.ValueRef;
+    identMD : ARRAY[0..0] OF REFANY;
+    cm3Ver,llvmVer,ident : TEXT;
+    llmajor,llminor : Ctypes.int;
+  BEGIN
+    cm3Ver := "5.8";
+    LLVM.GetLLVMVersion(llmajor,llminor);
+    llvmVer := Fmt.Int(llmajor) & "." & Fmt.Int(llminor);
+    ident := "versions- cm3: " & cm3Ver & " llvm: " & llvmVer;
+    
+    identMD[0] := ident;
+    mdNode := GetMDNode(identMD);
+    LLVM.LLVMAddNamedMetadataOperand(modRef, LT("llvm.ident"), mdNode);
+  END EmbedVersion;
+
+
 (* declare an external set function *)
 PROCEDURE DeclSet(name : TEXT; fn : LLVM.ValueRef; numParams : INTEGER; hasReturn : BOOLEAN; setRange : BOOLEAN := FALSE) : LLVM.ValueRef =
   VAR
@@ -974,17 +997,17 @@ PROCEDURE CGProvidedStaticLinkFormal(proc : LvProc) : LvVar =
    generated FINALLY procedure, by CG.   
    Making a pretty big assumption here.  The criterion is proc is nested,
    has exactly one formal, and the formal is nameless. *)
-VAR arg : REFANY; param : LvVar;
-BEGIN
-  IF proc.lev > 0 AND proc.paramStack.size() = 1 THEN
-    arg := Get(proc.paramStack);
-    param := NARROW(arg,LvVar);
-    IF param.name = M3ID.NoID THEN
-      RETURN param;
+  VAR arg : REFANY; param : LvVar;
+  BEGIN
+    IF proc.lev > 0 AND proc.paramStack.size() = 1 THEN
+      arg := Get(proc.paramStack);
+      param := NARROW(arg,LvVar);
+      IF param.name = M3ID.NoID THEN
+        RETURN param;
+      END;
     END;
-  END;
-  RETURN NIL;
-END CGProvidedStaticLinkFormal;
+    RETURN NIL;
+  END CGProvidedStaticLinkFormal;
 
 (* Declare this procedure and all its locals and parameters. *)
 PROCEDURE BuildFunc(self : U; p : Proc) =
@@ -1215,6 +1238,7 @@ PROCEDURE set_source_file (self: U;  file: TEXT) =
       modRef := LLVM.LLVMModuleCreateWithNameInContext(moduleID,globContext);
       LLVM.LLVMSetDataLayout(modRef,LT(dataRep));
       LLVM.LLVMSetTarget(modRef,LT(targetTriple));
+      EmbedVersion();         
       DebugInit(self);
     END;
   END set_source_file;
@@ -2237,9 +2261,9 @@ PROCEDURE end_procedure (self: U;  p: Proc) =
     Pop(self.procStack);
     IF self.procStack.size() > 0 THEN
       LLVM.LLVMPositionBuilderAtEnd(builderIR,proc.saveBB);
-      proc := Get(self.procStack);
+      self.curProc := Get(self.procStack);
     ELSE
-      proc := NIL;
+      self.curProc := NIL;
     END;
 
     self.end_block();
@@ -4954,8 +4978,6 @@ PROCEDURE DebugInit(self: U) =
   VAR
     mdNode : LLVM.ValueRef;
     valsMD : ARRAY[0..2] OF REFANY;
-    identMD : ARRAY[0..0] OF REFANY;
-    ident := "cm3 version 5.8"; (* fixme get it from front end *)
   BEGIN
     InitUids(self);
     IF NOT self.genDebug THEN RETURN; END;
@@ -4980,10 +5002,6 @@ PROCEDURE DebugInit(self: U) =
     NARROW(valsMD[2],REF INTEGER)^ := DWARF_INFO_VERSION;
     mdNode := GetMDNode(valsMD);
     LLVM.LLVMAddNamedMetadataOperand(modRef, LT("llvm.module.flags"), mdNode);
-
-    identMD[0] := ident;
-    mdNode := GetMDNode(identMD);
-    LLVM.LLVMAddNamedMetadataOperand(modRef, LT("llvm.ident"), mdNode);
 
     self.debugRef := M3DIB.DIBBuilderCreate(modRef);
 

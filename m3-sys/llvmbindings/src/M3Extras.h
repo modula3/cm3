@@ -49,6 +49,11 @@ unsigned GetM3IntrinsicId(M3Intrinsic id);
  */
 LLVMValueRef LLVMGetDeclaration(LLVMModuleRef M, unsigned id, LLVMTypeRef *Types, unsigned Count);
 
+/*
+ * Get LLVM version info
+ */ 
+void GetLLVMVersion(int *major,int *minor);
+
 LLVMValueRef LLVMBuildAtomicCmpXchg(LLVMBuilderRef B,
                                     LLVMValueRef PTR,
                                     LLVMValueRef Cmp,

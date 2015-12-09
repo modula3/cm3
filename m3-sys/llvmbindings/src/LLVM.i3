@@ -1718,6 +1718,10 @@ TYPE M3Intrinsic = {
   m3maxnum  
 };
 
+(* return the LLVm version *)
+PROCEDURE GetLLVMVersion(VAR major,minor : int);
+(* ^Binding found in M3Extras.h and M3Extras.cpp. *) 
+
 (* return the intrinsic id from the enumeration. *) 
 PROCEDURE GetM3IntrinsicId(Id: M3Intrinsic) : unsigned;
 (* ^Binding found in M3Extras.h and M3Extras.cpp. *) 
