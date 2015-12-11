@@ -720,6 +720,11 @@ PROCEDURE Push(stack : RefSeq.T; value : REFANY) =
     stack.addlo(value);
   END Push;
 
+PROCEDURE PopRev(stack : RefSeq.T; n: CARDINAL := 1) =
+  BEGIN
+    FOR i := 1 TO n DO EVAL stack.remhi(); END;
+  END PopRev;
+
 PROCEDURE PushRev(stack : RefSeq.T; value : REFANY) =
   BEGIN
     stack.addhi(value);
@@ -4638,7 +4643,8 @@ PROCEDURE call_indirect (self: U;  t: Type; cc: CallingConvention) =
       END;
 
       LLVM.LLVMPositionBuilderAtEnd (builderIR, currentBB); 
-      Pop(self.callStack); (* Remove SL from actual parameter list. *) 
+      Pop(self.callStack); (* Remove SL from left of actual param list. *) 
+   (* PopRev(self.callStack); (* Remove SL from right of actual param list. *) *)
         (* But leave the rest of the params on self.call_stack.
            They will be needed in call_indirect. *) 
       resultVal2 := InnerCallIndirect (self, procExpr.lVal, t, cc);
@@ -4737,6 +4743,7 @@ PROCEDURE pop_static_link (self: U) =
     expr.lVal := LLVM.LLVMBuildBitCast
                    (builderIR, oldlVal, AdrAdrTy, LT("SL_toadradr"));
     Push(self.callStack,s0); (* Make SL the leftmost actual. *) 
+ (* PushRev(self.callStack,s0); (* Make SL the rightmost actual. *) *)
 
     Pop(self.exprStack); 
     WITH WFunc = self.curProc.lvProc DO
