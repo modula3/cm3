@@ -1791,7 +1791,6 @@ PROCEDURE end_init (self: U;  v: Var) =
   VAR
     baseObj : BaseVar;
     int,numGlobs,typeSize,thisOfs,fillLen,segSize : INTEGER;
-    realStr : TEXT;
     typesArr : TypeArrType;
     typesRef : TypeRefType;
     initsArr : ValueArrType;
@@ -1896,8 +1895,7 @@ PROCEDURE end_init (self: U;  v: Var) =
 (* implement offset here *)
       | TextVar(v) =>  EVAL v; (* aready done in construct type *)
       | FloatVar(v) =>
-          realStr := ConvertFloat(v.value);
-          v.lvVal := LLVM.LLVMConstRealOfString(v.lvTy, LT(realStr));
+          v.lvVal := ConvertFloat(v.prec, v.value);
       | FillerVar(v) =>
           v.lvVal := LLVM.LLVMConstNull(v.lvTy);
       ELSE
@@ -2900,43 +2898,25 @@ PROCEDURE load_integer (self: U;  t: IType;  READONLY i: Target.Int) =
     Push(self.exprStack,NEW(LvExpr,lVal := lVal));
   END load_integer;
 
-PROCEDURE ConvertFloat (f : Target.Float) : TEXT =
-  VAR
-    Inf := "1.0E5000"; (* should be larger than even 128 bit float encoding *)
-    NegInf := "-1.0E5000";
-    lastCh : INTEGER;
-    buf : ARRAY[0..40] OF CHAR; (* check this could 32 hex chars for extended *)
-    result : TEXT;
+PROCEDURE ConvertFloat(t : RType; f : Target.Float) : LLVM.ValueRef =
+  VAR 
+    result : LLVM.ValueRef;
+    realTy : LLVM.TypeRef;
   BEGIN
-    lastCh := TFloat.ToChars(f,buf);
-    buf[lastCh] := '\000';
-    (* llvm uses E as exponent char *)
-    FOR i := 0 TO lastCh - 1 DO
-      IF buf[i] = 'X' THEN buf[i] := 'E'; END;
+    realTy := LLvmType(t);  
+    IF t = Type.Reel OR t = Type.LReel THEN 
+      result := LLVM.LLVMConstReal(realTy,FLOAT(f.fraction,LONGREAL));
+    ELSE (*Type.XReel*)
+      result := LLVM.LLVMConstRealOfString(realTy, LT(Fmt.Extended(f.fraction)));    
     END;
-    result := Text.FromChars(SUBARRAY(buf,0,lastCh));
-    (* if we get an infinity rely on llvm encoding the correct inf value *)
-    IF Text.Equal(result,"Infinity") THEN
-      result := Inf;
-    ELSIF Text.Equal(result,"-Infinity") THEN
-      result := NegInf;
-    END;
-    (* not sure if we can get nans - check
-       Text.Equal(realStr,"Nan") OR Text.Equal(realStr,"-Nan")
-    *)
     RETURN result;
   END ConvertFloat;
 
 PROCEDURE load_float (self: U;  t: RType;  READONLY f: Target.Float) =
   (*push; s0.t := f *)
-  VAR
-    realTy : LLVM.TypeRef;
-    lVal : LLVM.ValueRef;
-    realStr : TEXT;
+  VAR lVal : LLVM.ValueRef;
   BEGIN
-    realTy := LLvmType(t);
-    realStr := ConvertFloat(f);
-    lVal := LLVM.LLVMConstRealOfString(realTy, LT(realStr));
+    lVal := ConvertFloat(t,f);    
     Push(self.exprStack,NEW(LvExpr,lVal := lVal));
   END load_float;
 
