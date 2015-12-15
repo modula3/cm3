@@ -145,7 +145,7 @@ PROCEDURE Class (x: T): IEEEClass =
       RETURN IEEEClass.Normal;
     ELSIF xx.significand = 0 THEN
       RETURN IEEEClass.Infinity;
-    ELSIF Word.And (16_00400000, xx.significand) = 0 THEN
+    ELSIF Word.And (16_00400000, xx.significand) # 0 THEN
       RETURN IEEEClass.QuietNaN;
     ELSE 
       RETURN IEEEClass.SignalingNaN;
