@@ -566,7 +566,7 @@ proc compile_c_ms(source, object, options, optimize, debug) is
     local readonly Command = ["cl.exe", escape(subst_chars(args, "\\", "/")), "-c", escape(source), "-Fo" & object]
     local ret = try_exec("@" & Command, ">", Listing)
 
-    if not equal(ret_code, 0) and equal(source, "_m3main.c")
+    if not equal(ret, 0) and equal(source, "_m3main.c")
         % for _m3main.c, try also as C instead of C++ for older cm3
         ret = try_exec("@" & Command, "-TC >", Listing)
     end
