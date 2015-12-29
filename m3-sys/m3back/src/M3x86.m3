@@ -57,6 +57,8 @@ REVEAL
           (whether it is the same temp, is a different matter; I don't know)
         *)
         call_param_size := ARRAY [0 .. 1] OF INTEGER { 0, 0 };
+
+        (* TODO in_proc_call should be a boolean and merely asserted. *)
         in_proc_call    : [0 .. 1] := 0;
         static_link     := ARRAY [0 .. 1] OF x86Var { NIL, NIL };
 
@@ -76,6 +78,11 @@ REVEAL
         source_file     : TEXT := NIL;
         reportlabel     : Label;
         usedfault       := FALSE;
+
+        (* Alloca is a special case in various places. *)
+        alloca_id       := M3ID.NoID;
+        chkstk_id       := M3ID.NoID;
+        calling_alloca  := FALSE;
       OVERRIDES
         NewVar := NewVar;
         next_label := next_label;
@@ -325,6 +332,13 @@ PROCEDURE begin_unit (u: U;  optimize : INTEGER) =
     FOR b := FIRST (u.builtins) TO LAST (u.builtins) DO
       u.builtins [b] := NIL;
     END;
+
+    (* alloca is the name the front end uses -- as a portable
+     * interface to all backends.
+     * __chkstack is the actual name.
+     *)
+    u.alloca_id := M3ID.Add("alloca");
+    u.chkstk_id := M3ID.Add("__chkstk");
 
     u.textsym := u.obj.define_symbol(M3ID.Add("TextSegment"), Seg.Text, 0);
     u.cg.set_textsym(u.textsym);
@@ -1248,21 +1262,36 @@ PROCEDURE NewProc (u: U; n: Name; n_params: INTEGER;
     RETURN p;
   END NewProc;
 
-PROCEDURE import_procedure_internal (u: U;  n: Name;  n_params: INTEGER;
-                                     ret_type: Type;  cc: CallingConvention;
-                                     rename: TEXT := NIL): Proc =
+(* This should be in m3middle, as it must agree with m3front,
+   and is potentially useful by other backends. Alternatively
+   attach a boolean/flags/enum to all procs (i.e. in import_procedure);
+   alternatively, RTHooks? *)
+PROCEDURE IsAlloca (u: U;  n: Name;  n_params: INTEGER;
+                    ret_type: Type;  cc: CallingConvention): BOOLEAN =
+BEGIN
+  RETURN n = u.alloca_id (* The main criteria is the name. *)
+    AND n_params = 1     (* Also check its signature. *)
+    AND ret_type = Type.Addr
+    AND cc.m3cg_id = Target.CDECL;
+END IsAlloca;
+
+PROCEDURE import_procedure (u: U;  n: Name;  n_params: INTEGER;
+                            ret_type: Type;  cc: CallingConvention): Proc =
   VAR p := NewProc (u, n, n_params, ret_type, cc);
   BEGIN
     p.import := TRUE;
 
     u.n_params := n_params;
-    
-    IF rename # NIL THEN
-      p.name := M3ID.Add(rename);
+
+    IF IsAlloca (u, n, n_params, ret_type, cc) THEN
+      p.is_alloca := TRUE;   (* Alloca is repeatedly a special case. Leave a mark for other code. *)
+      p.name := u.chkstk_id; (* Alloca is actually __chkstk. *)
       p.symbol := u.obj.import_symbol(p.name);
-    ELSIF (n_params = 0 OR NOT p.stdcall) AND Text.Length(M3ID.ToText(n)) > 0 THEN
-      p.name := mangle_procname(p.name, 0, p.stdcall);
-      p.symbol := u.obj.import_symbol(p.name);
+    ELSE
+      IF (n_params = 0 OR NOT p.stdcall) AND Text.Length(M3ID.ToText(n)) > 0 THEN
+        p.name := mangle_procname(p.name, 0, p.stdcall);
+        p.symbol := u.obj.import_symbol(p.name);
+      END;
     END;
 
     u.param_proc := p;
@@ -1278,13 +1307,7 @@ PROCEDURE import_procedure_internal (u: U;  n: Name;  n_params: INTEGER;
     END;
 
     RETURN p;
-  END import_procedure_internal;
-
-PROCEDURE import_procedure (u: U;  n: Name;  n_params: INTEGER;
-                            ret_type: Type;  cc: CallingConvention): Proc =
-BEGIN
-  RETURN import_procedure_internal(u, n, n_params, ret_type, cc, NIL);
-END import_procedure;
+  END import_procedure;
 
 PROCEDURE declare_procedure (u: U;  n: Name;  n_params: INTEGER;
                              return_type: Type;  lev: INTEGER;
@@ -3232,8 +3255,7 @@ TYPE
     mul64,
     udiv64, umod64,
     div64, mod64,
-    rotate_left64, rotate_right64, rotate64,
-    alloca
+    rotate_left64, rotate_right64, rotate64
   };
 
 (* union .. sym_difference -> (n_bits, *c, *b, *a): Void
@@ -3248,13 +3270,10 @@ TYPE
     n_params : INTEGER; (* counted in 32bit words *)
     ret_type : Type;
     lang     : INTEGER; (* Target.STDCALL or TARGET.CDECL *)
-    rename   : TEXT := NIL;
-    (* for a single parameter function, register for the parameter; i.e. eax for alloca *)
-    reg      := -1;
   END;
 
-CONST
-  BuiltinDesc = ARRAY Builtin OF BP {
+VAR
+  BuiltinDesc := ARRAY Builtin OF BP {
     BP { "set_union",          4, Type.Void,  Target.STDCALL },
     BP { "set_difference",     4, Type.Void,  Target.STDCALL },
     BP { "set_intersection",   4, Type.Void,  Target.STDCALL },
@@ -3281,9 +3300,7 @@ CONST
     BP { "m3_mod64",         4, Type.Int64,  Target.STDCALL },
     BP { "m3_rotate_left64", 3, Type.Word64, Target.STDCALL },
     BP { "m3_rotate_right64",3, Type.Word64, Target.STDCALL },
-    BP { "m3_rotate64",      3, Type.Word64, Target.STDCALL },
-    
-    BP { "alloca",           0, Type.Addr, Target.CDECL, "__chkstk", EAX }
+    BP { "m3_rotate64",      3, Type.Word64, Target.STDCALL }
   };
 
 PROCEDURE start_int_proc (u: U;  b: Builtin) =
@@ -3291,10 +3308,9 @@ PROCEDURE start_int_proc (u: U;  b: Builtin) =
     WITH proc = u.builtins[b],
          desc = BuiltinDesc [b] DO
       IF proc = NIL THEN
-        proc := import_procedure_internal (u, M3ID.Add (desc.name),
-                                           desc.n_params, desc.ret_type,
-                                           Target.ConventionFromID (desc.lang),
-                                           desc.rename);
+        proc := import_procedure (u, M3ID.Add (desc.name),
+                                  desc.n_params, desc.ret_type,
+                                  Target.ConventionFromID (desc.lang));
         FOR i := 1 TO desc.n_params DO
           EVAL declare_param (u, M3ID.NoID, 4, 4, Type.Word32, 0, FALSE, FALSE, 100);
         END;
@@ -3749,6 +3765,7 @@ PROCEDURE do_rotate_or_shift_64 (u: U; builtin: Builtin) =
 
 PROCEDURE start_call_direct (u: U;  p: Proc;  lev: INTEGER;  type: Type) =
   (* begin a procedure call to a procedure at static level 'lev'. *)
+  VAR proc := NARROW(p, x86Proc);
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("start_call_direct");
@@ -3758,11 +3775,13 @@ PROCEDURE start_call_direct (u: U;  p: Proc;  lev: INTEGER;  type: Type) =
       u.wr.NL    ();
     END;
 
-    (* ASSERT u.in_proc_call < 2 *) (* ? *)
+    <* ASSERT u.in_proc_call = 0 *> (* TODO cleanup *)
 
     u.static_link[u.in_proc_call] := NIL;
     u.call_param_size[u.in_proc_call] := 0;
     INC(u.in_proc_call);
+    <* ASSERT u.calling_alloca = FALSE *>
+    u.calling_alloca := proc.is_alloca;
   END start_call_direct;
 
 PROCEDURE start_call_indirect (u: U;  type: Type;  cc: CallingConvention) =
@@ -3775,11 +3794,13 @@ PROCEDURE start_call_indirect (u: U;  type: Type;  cc: CallingConvention) =
       u.wr.NL    ();
     END;
 
-    (* ASSERT u.in_proc_call < 2 *) (* ? *)
+    <* ASSERT u.in_proc_call = 0 *> (* TOO cleanup *)
 
     u.static_link[u.in_proc_call] := NIL;
     u.call_param_size[u.in_proc_call] := 0;
     INC(u.in_proc_call);
+    <* ASSERT u.calling_alloca = FALSE *>
+    u.calling_alloca := FALSE;
   END start_call_indirect;
 
 PROCEDURE pop_param (u: U;  type: MType) =
@@ -3815,6 +3836,7 @@ PROCEDURE load_stack_param (u: U; type: MType; depth: INTEGER) =
 
     WITH stack = u.vstack.pos(depth, "load_stack_param") DO
       IF Target.FloatType [type] THEN
+        <* ASSERT u.calling_alloca = FALSE *> (* Alloca returns a pointer *)
         <* ASSERT depth = 0 *>
         IF type = Type.Reel THEN
           u.cg.immOp(Op.oSUB, u.cg.reg[ESP], TIntN.Four);
@@ -3823,20 +3845,29 @@ PROCEDURE load_stack_param (u: U; type: MType; depth: INTEGER) =
         END;
         u.cg.f_storeind(u.cg.reg[ESP], 0, type);
       ELSE
-        u.vstack.find(stack, Force.anyregimm);
-        size := SplitOperand(u.vstack.op(stack), opA);
-        FOR i := size - 1 TO 0 BY -1 DO
-          u.cg.pushOp(opA[i]);
+        IF u.calling_alloca THEN (* Alloca takes its first and only parameter in eax. *)
+          <* ASSERT u.call_param_size[u.in_proc_call - 1] = 0 *>
+          u.vstack.find(stack, Force.regset, RegSet { EAX });
+        ELSE
+          u.vstack.find(stack, Force.anyregimm);
+          size := SplitOperand(u.vstack.op(stack), opA);
+          FOR i := size - 1 TO 0 BY -1 DO
+            u.cg.pushOp(opA[i]);
+          END;
         END;
       END;
     END;
 
-    <* ASSERT CG_Bytes[type] <= 4 OR CG_Bytes[type] = 8 *>
-    IF CG_Bytes[type] <= 4 THEN
-      INC(u.call_param_size[u.in_proc_call - 1], 4);
-    ELSE
-      INC(u.call_param_size[u.in_proc_call - 1], 8);
-    END
+    IF NOT u.calling_alloca THEN (* Alloca does not pass parameters on the stack (eax instead). *)
+
+      <* ASSERT CG_Bytes[type] <= 4 OR CG_Bytes[type] = 8 *>
+      IF CG_Bytes[type] <= 4 THEN
+        INC(u.call_param_size[u.in_proc_call - 1], 4);
+      ELSE
+        INC(u.call_param_size[u.in_proc_call - 1], 8);
+      END
+
+    END;
 
   END load_stack_param;
 
@@ -3854,6 +3885,8 @@ PROCEDURE pop_struct (u: U;  type: TypeUID;  s: ByteSize;  a: Alignment) =
       u.wr.Int   (a);
       u.wr.NL    ();
     END;
+
+    <* ASSERT u.calling_alloca = FALSE *>
 
     <* ASSERT u.in_proc_call > 0 *>
 
@@ -3917,6 +3950,8 @@ PROCEDURE pop_static_link (u: U) =
       u.wr.Cmd   ("pop_static_link");
       u.wr.NL    ();
     END;
+
+    <* ASSERT u.calling_alloca = FALSE *> (* Alloca does not take a static link. *)
 
     <* ASSERT u.in_proc_call > 0 *>
 
@@ -4066,6 +4101,15 @@ PROCEDURE call_direct (u: U; p: Proc;  type: Type) =
       type := Type.Addr;
     END;
 
+    IF u.calling_alloca THEN (* Alloca returns its value in esp. *)
+      (* Ideally:
+       *   u.vstack.pushnew(type, Force.regset, RegSet { ESP });
+       * but pushnew does not like that currently, so burn
+       * an instruction in an already slow path.
+       *)
+      u.cg.movOp(u.cg.reg[EAX], u.cg.reg[ESP]);
+    END;
+
     IF type # Type.Void THEN
       IF Target.FloatType [type] THEN
         u.vstack.pushnew(type, Force.any);
@@ -4078,6 +4122,7 @@ PROCEDURE call_direct (u: U; p: Proc;  type: Type) =
     END;
 
     DEC(u.in_proc_call);
+    u.calling_alloca := FALSE;
   END call_direct;
 
 PROCEDURE call_indirect (u: U; type: Type;  cc: CallingConvention) =
@@ -4092,6 +4137,7 @@ PROCEDURE call_indirect (u: U; type: Type;  cc: CallingConvention) =
       u.wr.NL    ();
     END;
 
+    <* ASSERT u.calling_alloca = FALSE *>
     <* ASSERT u.in_proc_call > 0 *>
 
     u.vstack.releaseall();

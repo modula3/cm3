@@ -76,6 +76,7 @@ TYPE
     bound := FALSE;
     usage: ProcList := NIL;
     fenceVar: x86Var := NIL;
+    is_alloca := FALSE;
   END;
 
 TYPE
