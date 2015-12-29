@@ -12,7 +12,7 @@ FROM M3CG IMPORT CompareOp, ConvertOp, RuntimeError, MemoryOrder, AtomicOp;
 FROM Target IMPORT CGType;
 FROM M3CG_Ops IMPORT ErrorHandler;
 IMPORT M3CG_MultiPass, M3CG_DoNothing, M3CG_Binary, RTIO;
-FROM M3CC IMPORT INT32, INT64, UINT32, UINT64, Base_t, UInt64ToText;
+FROM M3CC IMPORT IntToDec, IntToHex, UIntToHex, INT32;
 CONST NameT = M3ID.ToText;
 
 (* 
@@ -291,25 +291,6 @@ BEGIN
     END;
 END Reverse;
 
-PROCEDURE Int64ToText(a: INT64; base: Base_t): TEXT =
-BEGIN
-    IF a >= 0L THEN
-        RETURN UInt64ToText(a, base);
-    END;
-    RETURN "-" & UInt64ToText((-(a + 1L)) + 1L, base);
-END Int64ToText;
-
-(*PROCEDURE UInt64ToDec(a: UINT64): TEXT = BEGIN RETURN UInt64ToText(a, 10); END UInt64ToDec;*)
-PROCEDURE UInt64ToHex(a: UINT64): TEXT = BEGIN RETURN UInt64ToText(a, 16); END UInt64ToHex;
-(*PROCEDURE Int64ToDec(a: INT64): TEXT = BEGIN RETURN Int64ToText(a, 10); END Int64ToDec;*)
-(*PROCEDURE Int32ToDec(a: INT32): TEXT = BEGIN RETURN Int64ToText(VAL(a, INT64), 10); END Int32ToDec;*)
-PROCEDURE UInt32ToHex(a: UINT32): TEXT = BEGIN RETURN UInt64ToText(VAL(a, UINT64), 16); END UInt32ToHex;
-PROCEDURE  IntToHex(a: INTEGER): TEXT = BEGIN RETURN  Int64ToText(VAL(a, INT64), 16); END  IntToHex;
-PROCEDURE UIntToHex(a: INTEGER): TEXT = BEGIN RETURN UInt64ToText(VAL(a, INT64), 16); END UIntToHex;
-PROCEDURE IntToDec(a: INTEGER): TEXT = BEGIN RETURN Int64ToText(VAL(a, INT64), 10); END IntToDec;
-
-<*UNUSED*>CONST Int32ToHex = UInt32ToHex;
-<*UNUSED*>CONST Int64ToHex = UInt64ToHex;
 CONST LabelToText = IntToHex;
 CONST LabelToHex = IntToHex;
 

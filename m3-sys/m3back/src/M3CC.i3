@@ -1,12 +1,11 @@
 INTERFACE M3CC;
-IMPORT Ctypes, Long; (* favor Ctypes over Cstdint to work with older m3core *)
+IMPORT Ctypes; (* favor Ctypes over Cstdint to work with older m3core *)
 
 TYPE INT32 = Ctypes.int;
-TYPE  INT64 = LONGINT;
-TYPE UINT32 = Ctypes.unsigned_int;
-TYPE UINT64 = Long.T;
-TYPE Base_t = [2..36];
+(*TYPE UINT32 = Ctypes.unsigned_int;*)
 
-<*EXTERNAL M3CC__UInt64ToText*> PROCEDURE UInt64ToText(a: UINT64; base: Base_t): TEXT;
+<*EXTERNAL M3CC__IntToHex*>  PROCEDURE  IntToHex(a: INTEGER): TEXT;
+<*EXTERNAL M3CC__UIntToHex*> PROCEDURE UIntToHex(a: INTEGER): TEXT;
+<*EXTERNAL M3CC__IntToDec*>  PROCEDURE IntToDec(a: INTEGER): TEXT;
 
 END M3CC.
