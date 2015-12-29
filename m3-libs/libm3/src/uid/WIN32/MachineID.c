@@ -14,10 +14,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <windows.h>
-
-/* This header is prevalent, but we only need one line. */
-/*#include <winsock2.h>*/
 #define IF_TYPE_ETHERNET_CSMACD         6
+#define IF_TYPE_IEEE80211               71
 
 /* C:\WINDDK\3790\inc\wnet\iprtrmib.h #includes mprapi.h
    but there is no mprapi.h. Punt and duplicate header content.
@@ -55,7 +53,7 @@ typedef struct _MIB_IFROW
   DWORD    dwOutErrors;
   DWORD    dwOutQLen;
   DWORD    dwDescrLen;
-  BYTE    bDescr[MAXLEN_IFDESCR];
+  BYTE     bDescr[MAXLEN_IFDESCR];
 } MIB_IFROW, *PMIB_IFROW;
 
 #define ANY_SIZE 1
@@ -125,36 +123,38 @@ MachineIDC__CanGet(unsigned char* id)
     {
         MIB_IFROW* const Row = &Table->table[i];
         unsigned char * const phys = Row->bPhysAddr;
-        size_t const len = Row->dwPhysAddrLen;
-        if (len == 6)
-        {
-            printf("%02X%02X%02X%02X%02X%02X\n",
-                   phys[0], phys[1], phys[2], phys[3], phys[4], phys[5]);
-        }
+        printf("%X/%u/%02X%02X%02X%02X%02X%02X\n", Row->dwPhysAddrLen, Row->dwType,
+            phys[0], phys[1], phys[2], phys[3], phys[4], phys[5]);
      }
 #endif
- 
-    for (pass = 0; pass <= 1; ++pass)
+
+    for (pass = 0; pass <= 2; ++pass)
     {
-        for (i = 0; (!Success) && (i < NumEntries); ++i)
+        for (i = 0; i < NumEntries; ++i)
         {
             MIB_IFROW* const Row = &Table->table[i];
             unsigned char * const phys = Row->bPhysAddr;
             size_t const len = Row->dwPhysAddrLen;
-            if ((Row->dwType != IF_TYPE_ETHERNET_CSMACD || len != 6)
+           DWORD const type = Row->dwType;
 
-                /* On the first pass, at least, skip what does not seem correct. */
-                || (pass == 0 && len == 6 && memcmp(&phys[3], "RAS", 3) == 0))
-            {
-#if 0
-                printf("skipping %X/%02X%02X%02X%02X%02X%02X\n", len,
-                       phys[0], phys[1], phys[2], phys[3], phys[4], phys[5]);
-#endif
+           if (len != 6)
+               continue;
+
+           /* Be pickier on earlier passes. */
+
+            if (pass == 0 && type != IF_TYPE_ETHERNET_CSMACD)
                 continue;
-            }
+
+            if (pass != 0 && type != IF_TYPE_ETHERNET_CSMACD && type != IF_TYPE_IEEE80211)
+                continue;
+
+            if ((pass == 0 || pass == 1) && memcmp(&phys[3], "RAS", 3) == 0)
+                continue;
+
             memcpy(id, phys, 6);
+            Success = TRUE;
+            goto Exit;
         }
-        Success = TRUE;
     }
 Exit:
     free(Table);
