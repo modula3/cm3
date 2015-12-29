@@ -119,9 +119,9 @@ MachineIDC__CanGet(unsigned char* id)
     printf("Table->dwNumEntries %d\n", NumEntries);
     for (i = 0; (!Success) && (i < NumEntries); ++i)
     {
-        MIB_IFROW* Row = &Table->table[i];
-        unsigned char * phys = Row->bPhysAddr;
-        size_t len = Row->dwPhysAddrLen;
+        MIB_IFROW* const Row = &Table->table[i];
+        unsigned char * const phys = Row->bPhysAddr;
+        size_t const len = Row->dwPhysAddrLen;
         if (len == 6)
         {
             printf("%02X%02X%02X%02X%02X%02X\n",
