@@ -5,6 +5,10 @@
 /* Last modified on Mon Sep 20 11:46:17 PDT 1993 by kalsow     */
 /*      modified on Thu Jul 15 16:23:08 PDT 1993 by swart      */
 
+#pragma warning(disable:4820) /* padding inserted */
+#pragma warning(disable:4255) /* () change to (void) */
+#pragma warning(disable:4668) /* #if of undefined symbol */
+
 #include <string.h>
 #include <memory.h>
 #include <stdlib.h>
