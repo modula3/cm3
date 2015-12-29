@@ -134,9 +134,9 @@ MachineIDC__CanGet(unsigned char* id)
     {
         for (i = 0; (!Success) && (i < NumEntries); ++i)
         {
-            MIB_IFROW* Row = &Table->table[i];
-            unsigned char * phys = Row->bPhysAddr;
-            size_t len = Row->dwPhysAddrLen;
+            MIB_IFROW* const Row = &Table->table[i];
+            unsigned char * const phys = Row->bPhysAddr;
+            size_t const len = Row->dwPhysAddrLen;
             if ((Row->dwType != IF_TYPE_ETHERNET_CSMACD || len != 6)
 
                 /* On the first pass, at least, skip what does not seem correct. */
