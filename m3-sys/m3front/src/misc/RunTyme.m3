@@ -66,6 +66,7 @@ PROCEDURE LookUpProc (h: Hook): Procedure.T =
       p := LookUpNewProc (M3ID.Add (HookNames [h]));
       hook_procs [h] := p;
     END;
+    <*ASSERT p # NIL*>
     RETURN p;
   END LookUpProc;
 
