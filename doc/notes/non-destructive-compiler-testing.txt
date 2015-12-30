@@ -1,1 +1,43 @@
-ECHO is on.
+How to test a compiler w/o damaging working environment too much.
+
+
+Let's say I have a backup in \cm3-5.2.6 and I run out of \cm3,
+and my source tree is in \dev2\cm3.2.
+
+
+These directions are incomplete if using the gcc backend.
+
+ Something like: 
+
+
+  del /s /q \cm3\* > nul  
+  xcopy /fivery \cm3-5.2.6   
+  cd scripts\python  
+  .\make-dist-cfg.py   
+  .\do-cm3-all.py realclean  
+ 
+  rem build and ship all of the compiler, except m3core/libm3  
+ 
+  .\do-pkg.py m3linker m3objfile sysutils m3middle m3front cm3 m3back m3quake buildglobal  
+  cd ..\..\m3-libs\m3core  
+  rd /q/s NT386  
+
+  rem make config files for the unshipped compiler  
+
+  copy \cm3\bin\config \dev2\cm3.2\m3-sys\cm3\NT386 
+  copy \cm3\bin\config\NT386 \dev2\cm3.2\m3-sys\cm3\NT386\cm3.cfg 
+
+  rem compile unshipped m3core and libm3 with new unshipped compiler
+
+  \dev2\cm3.2\m3-sys\cm3\NT386\cm3 -x -DROOT=/dev2/cm3.2 
+  cd ..\libm3 
+  \dev2\cm3.2\m3-sys\cm3\NT386\cm3 -x -DROOT=/dev2/cm3.2 
+
+ and then test it out
+  cd ..\..\m3-sys\m3tests\src
+   \dev2\cm3.2\m3-sys\cm3\NT386\cm3 -x -DROOT=/dev2/cm3.2 
+  cd p2\p2something
+  \dev2\cm3.2\m3-sys\cm3\NT386\cm3 -x -DROOT=/dev2/cm3.2 
+  Try to run NT386\pgm.exe.
+  If it doesn't work, look at:
+   link /dump /disasm /all /symbols NT386\pgm.exe 
