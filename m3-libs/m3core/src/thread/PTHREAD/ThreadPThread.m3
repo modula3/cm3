@@ -3,7 +3,7 @@
 (* See the file COPYRIGHT-PURDUE for a full description.           *)
 
 UNSAFE MODULE ThreadPThread EXPORTS Thread, ThreadF, RTThread, Scheduler,
-SchedulerPosix, RTOS, RTHooks, ThreadPThread, SchedulerPThread;
+SchedulerPosix, RTOS, RTHooks, ThreadPThread;
 
 IMPORT Cerrno, FloatMode, MutexRep, RTCollectorSRC, RTError, RTHeapRep, RTIO,
        RTParams, RTPerfTool, RTProcess, ThreadEvent, Time,
@@ -108,18 +108,8 @@ PROCEDURE CleanMutex (r: REFANY) =
 
 PROCEDURE InitMutex (VAR m: pthread_mutex_t; root: REFANY;
                      Clean: PROCEDURE(root: REFANY)) =
-  VAR mutex : pthread_mutex_t;  
-  protocol : INTEGER := 0;  
+  VAR mutex := pthread_mutex_new();
   BEGIN
-    TYPECASE root OF
-    | MutexRT (mu) => protocol := ORD(mu.protocol);
-    ELSE (*skip*)
-    END;
-    IF protocol > 0 THEN
-      mutex := pthread_mutex_rt(protocol);
-    ELSE
-      mutex := pthread_mutex_new();      
-    END;    
     TRY
       WITH r = pthread_mutex_lock(initMu) DO <*ASSERT r=0*> END;
       (* Did someone else win the race? *)
@@ -1502,139 +1492,6 @@ PROCEDURE PopEFrame (frame: ADDRESS) =
   END PopEFrame;
 
 VAR DEBUG := RTParams.IsPresent("debugthreads");
-
-(* SchedulerPThread support *)
-
-PROCEDURE SetSchedParams(thread : T; policy : PolicyT; priority : PriorityT) RAISES {SchedE} =
-VAR  
-  param : sched_param_t;
-  ret : INTEGER;
-BEGIN
-  param.sched_priority := priority;
-  ret := pthread_setschedparam(thread.act.handle, ORD(policy), param);
-  IF ret # 0 THEN
-    RAISE SchedE(ret);
-  END;
-END SetSchedParams;
-
-PROCEDURE GetSchedParams(thread : T; VAR policy : PolicyT; VAR priority : PriorityT) RAISES{SchedE} =
-VAR
- apolicy,ret : int;
- param : sched_param_t; 
-BEGIN
-  ret := pthread_getschedparam(thread.act.handle, apolicy, param);
-  IF ret # 0 THEN
-    RAISE SchedE(ret);
-  END;  
-  policy := VAL(apolicy,PolicyT);
-  priority := param.sched_priority;  
-END GetSchedParams;
-
-PROCEDURE SetSchedPriority(thread : T; priority : PriorityT) RAISES {SchedE} =
-VAR ret : INTEGER;
-BEGIN
-  ret := pthread_setschedprio(thread.act.handle, priority);  
-  IF ret # 0 THEN
-    RAISE SchedE(ret);
-  END;  
-END SetSchedPriority;
-
-PROCEDURE SetPriorityCeiling(mu : Mutex; prioCeiling : PriorityT; VAR oldCeiling : PriorityT) RAISES {SchedE} =
-VAR
-  oldCeil : int;
-  ret : INTEGER;  
-BEGIN
-  IF mu.mutex = NIL THEN InitMutex(mu.mutex, mu, CleanMutex) END;
-  ret := pthread_mutex_setprioceiling(mu.mutex, prioCeiling, oldCeil);
-  IF ret # 0 THEN
-    RAISE SchedE(ret);
-  END;
-  oldCeiling := oldCeil;
-END SetPriorityCeiling;
-
-PROCEDURE GetPriorityCeiling(mu : Mutex) : PriorityT RAISES {SchedE} =
-VAR 
-  ret : INTEGER;  
-  prioC : int;
-  prioCeiling : PriorityT;  
-BEGIN
-  IF mu.mutex = NIL THEN InitMutex(mu.mutex, mu, CleanMutex) END;
-  ret := pthread_mutex_getprioceiling(mu.mutex, prioC);
-  IF ret # 0 THEN
-    RAISE SchedE(ret);
-  END;  
-  prioCeiling := prioC;
-  RETURN prioCeiling;
-END GetPriorityCeiling;
-
-PROCEDURE SetAffinity(thread : T; cpuSet : CpuSetT) RAISES {SchedE} =
-VAR
-  allocSize,ret : int;
-  cpus : cpu_set_t;
-  numCores : CARDINAL;
-BEGIN
-  numCores := GetConfiguredCores();
-  cpus := alloc_cpuset(numCores, allocSize);
-  zero_cpuset(allocSize, cpus);
-   
-  FOR i := 0 TO numCores - 1 DO
-    IF i IN cpuSet THEN
-      add_core_to_cpuset(i, allocSize, cpus);
-    END;
-  END;
-    
-  ret := pthread_setaffinity_np(thread.act.handle, allocSize, cpus);
-  IF ret # 0 THEN
-    RAISE SchedE(ret);
-  END;  
-  free_cpuset(cpus);
-END SetAffinity;
-
-PROCEDURE GetAffinity(thread : T) : CpuSetT RAISES{SchedE} =
-VAR
-  allocSize,ret : int;
-  cpus : cpu_set_t;
-  numCores : CARDINAL;
-  cpuSet : CpuSetT;  
-BEGIN
-  numCores := GetConfiguredCores();
-  cpus := alloc_cpuset(numCores, allocSize);
-  zero_cpuset(allocSize, cpus);
- 
-  ret := pthread_getaffinity_np(thread.act.handle, allocSize, cpus);
-  IF ret # 0 THEN
-    RAISE SchedE(ret);
-  END;
-  
-  cpuSet := CpuSetT{};  
-  FOR i := 0 TO numCores - 1 DO
-    IF in_cpuset(i,allocSize,cpus) > 0 THEN
-      cpuSet := cpuSet + CpuSetT{i};
-    END;
-  END;
-  free_cpuset(cpus);  
-  RETURN cpuSet;
-END GetAffinity;
-
-PROCEDURE GetSchedMaxPriority(policy : PolicyT) : PriorityT =
-BEGIN
-  RETURN max_priority(ORD(policy));
-END GetSchedMaxPriority;
-
-PROCEDURE GetSchedMinPriority(policy : PolicyT) : PriorityT =
-BEGIN
-  RETURN min_priority(ORD(policy));
-END GetSchedMinPriority;
-
-PROCEDURE GetConfiguredCores() : CARDINAL =
-BEGIN
-  RETURN get_conf_cores();
-END GetConfiguredCores;
-
-PROCEDURE GetOnlineCores() : CARDINAL =
-BEGIN
-  RETURN get_online_cores();
-END GetOnlineCores;
 
 BEGIN
 END ThreadPThread.
