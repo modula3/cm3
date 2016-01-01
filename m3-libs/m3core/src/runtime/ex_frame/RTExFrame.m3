@@ -14,6 +14,7 @@ IMPORT Thread, Csetjmp;
    See also m3middle/src/M3RT, which also describes these structures.
 *)
 
+(* RTExFrame.Alloca_jmpbuf and Target.Alloca_jmpbuf must match. *)
 CONST Alloca_jmpbuf = TRUE;
 
 TYPE

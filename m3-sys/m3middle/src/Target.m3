@@ -72,6 +72,8 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
     Structure_size_boundary   := 8;
     Little_endian             := TRUE;
     Setjmp                    := "_setjmp";
+
+    (* RTExFrame.Alloca_jmpbuf and Target.Alloca_jmpbuf must match. *)
     Alloca_jmpbuf             := TRUE;
 
     (* There is no portable stack walker, and therefore few systems have one.

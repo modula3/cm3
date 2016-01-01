@@ -446,7 +446,8 @@ CONST
 VAR (*CONST*)
 
   (* Is the jmpbuf for RTExFrame allocated with alloca,
-     or does the frontend know its size? *)
+     or does the frontend know its size?
+     RTExFrame.Alloca_jmpbuf and Target.Alloca_jmpbuf must match. *)
   Alloca_jmpbuf : BOOLEAN;
 
   (* If Alloca_jmpbuf = TRUE, then this is the size of a jmp_buf.
