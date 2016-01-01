@@ -231,10 +231,19 @@ PROCEDURE CallFinallyHandler (info: CG.Var;
 PROCEDURE CaptureState (frame: CG.Var;  jmpbuf: CG.Var;  handler: CG.Label) =
   VAR setjmp := Module.GetSetjmp (Module.Current ());
   BEGIN
-    CG.Load_addr (jmpbuf);
-    CG.Store_addr (frame, M3RT.EF1_jmpbuf);
+
+    IF Target.Alloca_jmpbuf THEN
+      CG.Load_addr (jmpbuf);
+      CG.Store_addr (frame, M3RT.EF1_jmpbuf);
+    END;
+
     CG.Start_call_direct (setjmp, 0, Target.Integer.cg_type);
-    CG.Load_addr (jmpbuf);
+
+    IF Target.Alloca_jmpbuf THEN
+      CG.Load_addr (jmpbuf);
+    ELSE
+      CG.Load_addr_of (frame, M3RT.EF1_jmpbuf, 128);
+    END;
     CG.Pop_param (CG.Type.Addr);
     CG.Call_direct (setjmp, Target.Integer.cg_type);
     CG.If_true (handler, CG.Never);

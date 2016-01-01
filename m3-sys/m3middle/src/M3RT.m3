@@ -58,7 +58,13 @@ PROCEDURE Init () =
     EF1_handles    := EF_SIZE;             (* : ADDRESS *)
     EF1_info       := EF1_handles + AP;    (* : RTException.Activation *)
     EF1_jmpbuf     := EF1_info + EA_SIZE;  (* : jmp_buf *)
-    EF1_SIZE       := EF1_jmpbuf + AP;
+    IF Target.Alloca_jmpbuf THEN
+      EF1_SIZE       := EF1_jmpbuf + AP;
+    ELSE
+      <* ASSERT Target.Jumpbuf_size > 0 *>
+      EF1_jmpbuf     := RoundUp (EF1_jmpbuf, 128); (* : jmp_buf *)
+      EF1_SIZE       := EF1_jmpbuf + Target.Jumpbuf_size;
+    END;
 
     (* FinallyProc frames *)
     EF2_handler    := EF_SIZE;            (* : ADDRESS (PROC) *)
@@ -148,6 +154,11 @@ PROCEDURE Init () =
     MUTEX_acquire := 0 * AP;          (*: PROC() *)
     MUTEX_release := 1 * AP;          (*: PROC() *)
   END Init;
+
+PROCEDURE RoundUp (a, b: INTEGER): INTEGER =
+  BEGIN
+    RETURN (a + b - 1) DIV b * b;
+  END RoundUp;
 
 BEGIN
 END M3RT.

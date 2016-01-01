@@ -444,6 +444,15 @@ CONST
   Byte = 8;  (* minimum addressable unit (in bits) *)
 
 VAR (*CONST*)
+
+  (* Is the jmpbuf for RTExFrame allocated with alloca,
+     or does the frontend know its size? *)
+  Alloca_jmpbuf : BOOLEAN;
+
+  (* If Alloca_jmpbuf = TRUE, then this is the size of a jmp_buf.
+     If Alloca_jmpbuf = FALSE, then this is not used. *)
+  Jumpbuf_size     : CARDINAL; (* size of a "jmp_buf" *)
+
   Little_endian : BOOLEAN;
   (* TRUE => byte[0] of an integer contains its least-significant bits *)
 
