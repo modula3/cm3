@@ -46,7 +46,7 @@ CONST startsWith = TextUtils.StartsWith;
   BEGIN
     RETURN startsWith(System_name, "SPARC") OR startsWith(System_name, "SOL");
   END IsSPARC;
-  
+
 PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): BOOLEAN =
   VAR sys := 0;  max_align := 64;
   BEGIN
@@ -223,7 +223,7 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
 PROCEDURE InitCallingConventions(backend_mode: M3BackendMode_t;
                                  target_has_calling_conventions: BOOLEAN) =
   VAR integrated := backend_mode IN BackendIntegratedSet;
-  VAR llvm := backend_mode IN BackendLlvmSet;     
+  VAR llvm := backend_mode IN BackendLlvmSet;
 
   PROCEDURE New(name: TEXT; id: [0..1]): CallingConvention =
     VAR cc := NEW(CallingConvention, name := name);
@@ -238,16 +238,16 @@ PROCEDURE InitCallingConventions(backend_mode: M3BackendMode_t;
         cc.args_left_to_right := TRUE;
         cc.results_on_left    := TRUE;
         cc.standard_structs   := TRUE;
-      ELSIF llvm THEN 
+      ELSIF llvm THEN
         cc.args_left_to_right := TRUE;
         cc.results_on_left    := FALSE;
         cc.standard_structs   := TRUE;
-(* CHECK: ^Are these right for llvm? They are same as gcc. *) 
+(* CHECK: ^Are these right for llvm? They are same as gcc. *)
       ELSIF integrated THEN
         cc.args_left_to_right := FALSE;
         cc.results_on_left    := TRUE;
         cc.standard_structs   := FALSE;
-      ELSE (* gcc-derived back end. *) 
+      ELSE (* gcc-derived back end. *)
         cc.args_left_to_right := TRUE;
         cc.results_on_left    := FALSE;
         cc.standard_structs   := TRUE;
