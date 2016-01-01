@@ -74,16 +74,16 @@ T = M3CG_DoNothing.T BRANDED "M3C.T" OBJECT
         unit_name := "L_";
         handler_name_prefixes := ARRAY [FIRST(HandlerNamePieces) .. LAST(HandlerNamePieces)] OF TEXT{NIL, ..};
         param_count := 0;
-        static_link_id: M3ID.T := 0;
-        RTException_Raise_id: M3ID.T := 0;
-        RTHooks_AssertFailed_id: M3ID.T := 0;
-        RTHooks_Raise_id: M3ID.T := 0;
-        RTHooks_ReportFault_id: M3ID.T := 0;
+        static_link_id := M3ID.NoID;
+        RTException_Raise_id := M3ID.NoID;
+        RTHooks_AssertFailed_id := M3ID.NoID;
+        RTHooks_Raise_id := M3ID.NoID;
+        RTHooks_ReportFault_id := M3ID.NoID;
         RTHooks_ReportFault_imported_or_declared := FALSE;
-        alloca_id : M3ID.T := 0;
-        setjmp_id : M3ID.T := 0;
-        u_setjmp_id : M3ID.T := 0;
-        longjmp_id : M3ID.T := 0;
+        alloca_id := M3ID.NoID;
+        setjmp_id := M3ID.NoID;
+        u_setjmp_id := M3ID.NoID;
+        longjmp_id := M3ID.NoID;
 
         (* labels *)
         labels_min := FIRST(Label);
