@@ -2114,6 +2114,8 @@ def GetProgramFiles():
 
 def GetVisualCPlusPlusVersion():
     a = os.popen("cl 2>&1 >nul").read().lower()
+    if a.find(" 19.00") != -1:
+        return "2015"
     if a.find("9.00") != -1:
         return "20"
     if a.find("10.00") != -1:
