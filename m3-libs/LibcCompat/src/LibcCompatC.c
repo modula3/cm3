@@ -1,4 +1,4 @@
-#if defined(_MSC_VER)
+#ifdef _MSC_VER
 
 #undef _DLL
 
@@ -14,7 +14,6 @@
 
 /* Provide __imp__printf, which msvcrt.lib users reference,
    but no longer exists anywhere. */
-
 __declspec(selectany) extern const int (__cdecl * _imp__printf)(const char*, ...) = &printf;
 
 #endif
