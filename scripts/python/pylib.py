@@ -609,7 +609,7 @@ GCC_BACKEND = not _CBackend
 
 Host = None
 for a in os.popen(CM3 + " -version 2>" + DevNull):
-    if StringContains(a, "Critical Mass Modula-3 version 5.2."):
+    if StringContains(a, "Critical Mass Modula-3 version 5.2.") or StringContains(a, "Critical Mass Modula-3 version d5.5."):
         if env_OS == "Windows_NT":
             Host = "NT386"
             break
@@ -1282,7 +1282,7 @@ def Boot():
     Assembler = _SqueezeSpaces(Assembler)
     AssemblerFlags = _SqueezeSpaces(AssemblerFlags)
 
-    P = FilterPackages([ "m3cc", "import-libs", "m3core", "libm3", "LibcCompat", "sysutils",
+    P = FilterPackages([ "m3cc", "import-libs", "m3core", "libm3", "sysutils",
           "m3middle", "m3quake", "m3objfile", "m3linker", "m3back",
           "m3front" ])
     main_packages = ["cm3"]

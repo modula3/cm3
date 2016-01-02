@@ -1,5 +1,4 @@
 import-libs base core front unicode min gui comm caltech-parser
-LibcCompat base core front unicode min gui comm caltech-parser tool math elego game obliq m3devtool devlib juno
 m3core base core front unicode min
 libm3 base core front unicode min
 windowsResources core

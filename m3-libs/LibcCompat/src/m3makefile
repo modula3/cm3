@@ -1,5 +1,0 @@
-import ("m3core")
-c_source ("LibcCompatC")
-module ("LibcCompat")
-build_standalone ()
-Library ("LibcCompat")
