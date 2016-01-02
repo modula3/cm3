@@ -1,8 +1,6 @@
-#!/bin/sh
+SetLocal
 
-set -e
-set -x
-
-./upgrade.py $*
-./do-cm3-all.py realclean skipgcc $*
-./do-cm3-all.py buildship $*
+pushd %~dp0
+.\upgrade.py %* || goto :eof
+.\do-cm3-all.py realclean skipgcc %* || goto :eof
+.\do-cm3-all.py buildship %* || goto :eof
