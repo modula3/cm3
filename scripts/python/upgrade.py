@@ -32,7 +32,7 @@ for a in ["cm3cg", "gcc/m3cgc1"]:
 if clean:
     DoPackage(
         argv_RealClean, [ "import-libs", "m3bundle", "m3middle", "m3quake", "m3objfile",
-                          "m3linker", "m3back", "m3front", "sysutils", "cm3",
+                          "m3linker", "m3back", "m3front", "LibcCompat", "sysutils", "cm3",
                           "m3cgcat", "m3cggen", "mklib", "m3core", "libm3",
         ]) or sys.exit(1)
 if cleangcc:
@@ -44,7 +44,7 @@ if cleangcc:
 # We start with the front end...
 #
 DoPackage(argv_BuildShip, [ "import-libs", "m3bundle", "m3middle", "m3quake", "m3objfile",
-                            "m3linker", "m3back", "m3front", "sysutils",
+                            "m3linker", "m3back", "m3front", "LibcCompat", "sysutils",
                             "cm3", "m3cggen", "mklib", "m3cgcat",
     ]) or sys.exit(1)
 
@@ -82,12 +82,12 @@ CopyConfigForDistribution(InstallRoot) or sys.exit(1)
 # once more
 
 DoPackage(argv_RealClean, [ "import-libs", "m3bundle", "m3middle", "m3quake", "m3objfile",
-                            "m3linker", "m3back", "m3front", "sysutils",
+                            "m3linker", "m3back", "m3front", "LibcCompat", "sysutils",
                             "cm3", "mklib", "m3core", "libm3"
     ]) or sys.exit(1)
 
 DoPackage(argv_BuildShip, [ "import-libs", "m3bundle", "m3middle", "m3quake", "m3objfile",
-                            "m3linker", "m3back", "m3front", "sysutils",
+                            "m3linker", "m3back", "m3front", "LibcCompat", "sysutils",
                             "cm3", "mklib", "m3core", "libm3"
     ]) or sys.exit(1)
 

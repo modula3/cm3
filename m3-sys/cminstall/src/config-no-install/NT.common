@@ -434,8 +434,16 @@ if equal(OS_TYPE, "WIN32")
 
     if USE_MSVCRT
         SYSTEM_LIBS{"LIBC"} += [LibIn("msvcrt")]
+        if equal ($CM3_VS2015_OR_NEWER, "1")
+            SYSTEM_LIBS{"LIBC"} += [LibIn("vcruntime")]
+            SYSTEM_LIBS{"LIBC"} += [LibIn("ucrt")]
+        end
     else
         SYSTEM_LIBS{"LIBC"} += [LibIn("libcmt")]
+        if equal ($CM3_VS2015_OR_NEWER, "1")
+            SYSTEM_LIBS{"LIBC"} += [LibIn("libvcruntime")]
+            SYSTEM_LIBS{"LIBC"} += [LibIn("libucrt")]
+        end
     end
 end
 

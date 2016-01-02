@@ -6,6 +6,7 @@
 %      modified on Thu Sep 10 09:16:47 PDT 1992 by mhb
 %      modified on Tue Feb 11 22:04:30 PST 1992 by gnelson
 
+import ("LibcCompat")
 import ("libm3")
 
 implementation ("m3bundle")

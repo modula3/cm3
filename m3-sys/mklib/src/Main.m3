@@ -821,6 +821,13 @@ PROCEDURE IsKeeper (sym: TEXT): BOOLEAN =
       (* a type initialization or setup routine *)
       RETURN FALSE;
     END;
+
+    (* Skip C++ symbols, from C runtime. *)
+
+    IF len > 1 AND Match(sym, 0, "?") THEN
+      RETURN FALSE;
+    END;
+
     RETURN NOT IsFloatingPointConstant(sym, len);
   END IsKeeper;
 

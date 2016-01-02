@@ -1282,7 +1282,7 @@ def Boot():
     Assembler = _SqueezeSpaces(Assembler)
     AssemblerFlags = _SqueezeSpaces(AssemblerFlags)
 
-    P = FilterPackages([ "m3cc", "import-libs", "m3core", "libm3", "sysutils",
+    P = FilterPackages([ "m3cc", "import-libs", "m3core", "libm3", "LibcCompat", "sysutils",
           "m3middle", "m3quake", "m3objfile", "m3linker", "m3back",
           "m3front" ])
     main_packages = ["cm3"]

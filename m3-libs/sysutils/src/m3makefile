@@ -36,6 +36,7 @@ end
 %no_shared_lib()
 
 %m3_option("-commands")
+import("LibcCompat")
 import("libm3")
 %if defined("CM3_VERSION")
 %  import("http")
