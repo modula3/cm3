@@ -907,7 +907,7 @@ def ShowUsage(args, Usage, P):
 #-----------------------------------------------------------------------------
 
 def MakePackageDB():
-    if not isfile(PKGSDB):
+    if not isfile(PKGSDB) or os.path.getmtime(PKGSDB) < os.path.getmtime(os.path.join(Scripts, "pkginfo.txt")):
         #
         # Look for all files src/m3makefile in the CM3 source
         # and write their relative paths from Root to PKGSDB.
