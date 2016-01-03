@@ -335,10 +335,15 @@ SYSTEM_LIBS_MS =
 {
     "LIBC" :
     [
-        LibIn("iphlpapi"),
+        % iphlpapi.lib is missing in older toolsets, e.g. Visual C++ 4.0,
+        % and our use of it now uses LoadLibrary / GetProcAddress because of this.
+        %LibIn("iphlpapi"),
         LibIn("rpcrt4"),
         LibIn("winspool"),
         LibIn("comctl32"),
+
+        % TODO ws2_32 is missing in Visual C++ 2.0 and 4.0, but present in 5.0.
+        % Either use WSOCK32, or use our own, or require it anyway.
         LibIn("ws2_32"),
         LibIn("comdlg32"),
         LibIn("netapi32"),
