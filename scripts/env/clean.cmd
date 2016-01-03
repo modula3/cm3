@@ -23,46 +23,59 @@ import sys
 
 newpath = ""
 
+def verbose(a):
+    #print(a)
+    pass
+
 for a in os.environ["PATH"].split(";"):
     #print(a)
     if os.path.isfile(os.path.join(a, "cl.exe")):
-        #print("echo skipping " + a)
+        verbose("echo 1 skipping " + a)
         continue
     if a.endswith("\\WINNT") and os.path.isfile(os.path.join(a, "..\\cl.exe")):
-        #print("echo skipping " + a)
+        verbose("echo 2 skipping " + a)
         continue
     if os.path.isfile(os.path.join(a, "link.exe")):
-        #print("echo skipping " + a)
+        verbose("echo 3 skipping " + a)
         continue
     if os.path.isfile(os.path.join(a, "c1.exe")):
-        #print("echo skipping " + a)
+        verbose("echo 4 skipping " + a)
         continue
     if os.path.isfile(os.path.join(a, "c2.exe")):
-        #print("echo skipping " + a)
+        verbose("echo 5 skipping " + a)
         continue
     if os.path.isfile(os.path.join(a, "c2.dll")):
-        #print("echo skipping " + a)
+        verbose("echo 6 skipping " + a)
         continue
     if os.path.isfile(os.path.join(a, "c1.dll")):
-        #print("echo skipping " + a)
+        verbose("echo 7 skipping " + a)
         continue
     if os.path.isfile(os.path.join(a, "c1xx.dll")):
-        #print("echo skipping " + a)
+        verbose("echo 8 skipping " + a)
         continue
     if os.path.isfile(os.path.join(a, "dbi.dll")):
-        #print("echo skipping " + a)
+        verbose("echo 9 skipping " + a)
         continue
     if os.path.isfile(os.path.join(a, "mspdb50.dll")):
-        #print("echo skipping " + a)
+        verbose("echo 10 skipping " + a)
         continue
     if os.path.isfile(os.path.join(a, "msdis100.dll")):
-        #print("echo skipping " + a)
+        verbose("echo 11 skipping " + a)
         continue
-    if a.find("\\Microsoft SDKs") != -1:
-        #print("echo skipping " + a)
+    if a.find("\\Microsoft SDKs\\") != -1:
+        verbose("echo 12 skipping " + a)
         continue
     if a.find("\\Microsoft Visual Studio") != -1:
-        #print("echo skipping " + a)
+        verbose("echo 13 skipping " + a)
+        continue
+    if a.find("\\HTML Help Workshop") != -1:
+        verbose("echo 14 skipping " + a)
+        continue
+    if a.find("\\Windows Kits\\") != -1:
+        verbose("echo 15 skipping " + a)
+        continue
+    if a.find("\\MSBuild\\") != -1:
+        verbose("echo 16 skipping " + a)
         continue
     if newpath == "":
         newpath = a
