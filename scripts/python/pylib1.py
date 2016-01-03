@@ -1,7 +1,20 @@
 #! /usr/bin/env python
 
+import os
+import sys
 import pylib
 from pylib import *
+
+def CleanupSep(s, sep):
+    single = sep
+    double = sep + sep
+    while StringContains(s, double):
+        s = s.replace(double, single)
+    while len(s) > 0 and s[0] == sep:
+        s = s[1:]
+    while len(s) > 0 and s[-1] == sep:
+        s = s[:-1]
+    return s
 
 class Sdk:
     def __init__(self):
@@ -9,14 +22,28 @@ class Sdk:
         self.lib = [ ]
         self.path = [ ]
 
-    def fromEnv():
-        if not os.environ.get("INCLUDE") and not os.environ.get("LIB"):
+    def fromEnv(self):
+        inc = os.environ.get("INCLUDE", "")
+        lib = os.environ.get("LIB", "")
+        if not inc and not lib:
             return None
         self = Sdk()
-        self.include = os.environ["INCLUDE"].split(";")
-        self.lib = os.environ["LIB"].split(";")
-        self.path = os.environ["PATH"].split(";")
+        self.include = inc.split(os.path.pathsep)
+        self.lib = lib.split(os.path.pathsep)
+        self.path = os.environ.get("PATH", "").split(os.path.pathsep)
         return self
+
+    def cleanup(self, s):
+        return CleanupSep(s, os.path.pathsep)
+
+    def toEnvInternal(self, values, name):
+        os.environ[name] = self.cleanup(str(os.path.pathsep).join(values + [os.environ.get(name, "")]))
+        pass
+
+    def toEnv(self):
+        self.toEnvInternal(self.path, "PATH")
+        self.toEnvInternal(self.include, "INCLUDE")
+        self.toEnvInternal(self.lib, "LIB")
 
     def check(self, path, file):
         for i in path:
@@ -209,6 +236,24 @@ if __name__ == "__main__":
     # run test code if module run directly
 
     FindWindowsSdkInternal(None)
+    sys.exit(5)
+
+    #for a in ["", ";", ";;", "a;;b", ";;a", "a;;", "a;;;;;b", "a;b", ";a;b;"]:
+    #    print("CleanupSep(%s):%s" % (a, CleanupSep(a, os.path.pathsep)))
+    #sys.exit(4)
+
+    #print("1")
+    #os.system("set")
+
+    #print("2")
+    #sdk = Sdk()
+    #sdk.lib = ["1","2"]
+    #sdk.include = ["3","4"]
+    #sdk.toEnv()
+    #os.system("set")
+    
+    sdk = Sdk().fromEnv()
+    print(str(sdk))
 
     sys.exit(1)
 
