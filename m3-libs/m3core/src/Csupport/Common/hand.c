@@ -266,30 +266,63 @@ set_singleton(WORD_T a, WORD_T* s)
 }
 
 #ifdef _WIN32
+/*
+https://www.cryptopp.com/docs/ref/misc_8h_source.html
+Portable rotate that reduces to single instruction.
+  https://gcc.gnu.org/bugzilla/show_bug.cgi?id=57157
+  https://software.intel.com/en-us/forums/topic/580884
+  https://llvm.org/bugs/show_bug.cgi?id=24226
 
+TODO test 1200 and 1300
+1100 and 1310 tested.
+*/
+#if _MSC_VER > 1100
 UINT64 _rotl64(UINT64 value, int shift);
 UINT64 _rotr64(UINT64 value, int shift);
 #pragma intrinsic(_rotl64)
 #pragma intrinsic(_rotr64)
+#endif
 
 UINT64
 __stdcall
-m3_rotate_left64(UINT64 a, int b) { return _rotl64(a, b); }
-
-UINT64
-__stdcall
-m3_rotate_right64(UINT64 a, int b) { return _rotr64(a, b); }
-
-UINT64
-__stdcall
-m3_rotate64(UINT64 a, int b)
+m3_rotate_left64(UINT64 value, int shift)
 {
-    b &= 63;
-    if (b > 0)
-        a = _rotl64(a, b);
-    else if (b < 0)
-        a = _rotr64(a, -b);
-    return a;
+#if _MSC_VER <= 1100
+    return (value << shift) | (value >> (-shift & 63));
+#else
+    return _rotl64(value, shift);
+#endif
+}
+
+UINT64
+__stdcall
+m3_rotate_right64(UINT64 value, int shift)
+{
+#if _MSC_VER <= 1100
+    return (value >> shift) | (value << (-shift & 63));
+#else
+    return _rotr64(value, shift);
+#endif
+}
+
+UINT64
+__stdcall
+m3_rotate64(UINT64 value, int shift)
+{
+    shift &= 63;
+    if (shift > 0)
+#if _MSC_VER <= 1100
+        value = m3_rotate_left64(value, shift);
+#else
+        value = _rotl64(value, shift);
+#endif
+    else if (value < 0)
+#if _MSC_VER <= 1100
+        value = m3_rotate_right64(value, -shift);
+#else
+        value = _rotr64(value, -shift);
+#endif
+    return value;
 }
 
 #endif /* WIN32 */
