@@ -14,7 +14,8 @@ set PATH=%PATH:\;=;%
 
 rem """
 
-# Remove any directory that contains any of: cl.exe, link.exe, c1.dll, c2.dll
+# Remove any directory that contains any of: cl.exe, link.exe, c1.dll, c2.dll.
+# Remove various other directories.
 # Merely always prepending does not work to quash later elements -- old cl.exe
 # seems to run new c2.dll.
 
@@ -28,11 +29,12 @@ def verbose(a):
     pass
 
 for a in os.environ["PATH"].split(";"):
-    #print(a)
+    b = a.lower()
+    verbose(a)
     if os.path.isfile(os.path.join(a, "cl.exe")):
         verbose("1 skipping " + a)
         continue
-    if a.endswith("\\WINNT") and os.path.isfile(os.path.join(a, "..\\cl.exe")):
+    if b.endswith("\\winnt") and os.path.isfile(os.path.join(a, "..\\cl.exe")):
         verbose("2 skipping " + a)
         continue
     if os.path.isfile(os.path.join(a, "link.exe")):
@@ -62,19 +64,19 @@ for a in os.environ["PATH"].split(";"):
     if os.path.isfile(os.path.join(a, "msdis100.dll")):
         verbose("11 skipping " + a)
         continue
-    if a.find("\\Microsoft SDKs\\") != -1:
+    if b.find("\\microsoft sdks\\") != -1:
         verbose("12 skipping " + a)
         continue
-    if a.find("\\Microsoft Visual Studio") != -1:
+    if b.find("\\microsoft visual studio") != -1:
         verbose("13 skipping " + a)
         continue
-    if a.find("\\HTML Help Workshop") != -1:
+    if b.find("\\html help workshop") != -1:
         verbose("14 skipping " + a)
         continue
-    if a.find("\\Windows Kits\\") != -1:
+    if b.find("\\windows kits\\") != -1:
         verbose("15 skipping " + a)
         continue
-    if a.find("\\MSBuild\\") != -1:
+    if b.find("\\msbuild\\") != -1:
         verbose("16 skipping " + a)
         continue
     if newpath == "":
