@@ -609,7 +609,9 @@ GCC_BACKEND = not _CBackend
 
 Host = None
 for a in os.popen(CM3 + " -version 2>" + DevNull):
-    if StringContains(a, "Critical Mass Modula-3 version 5.2.") or StringContains(a, "Critical Mass Modula-3 version d5.5."):
+    if (StringContains(a, "Critical Mass Modula-3 version 5.1.")
+     or StringContains(a, "Critical Mass Modula-3 version 5.2.")
+     or StringContains(a, "Critical Mass Modula-3 version d5.5.")):
         if env_OS == "Windows_NT":
             Host = "NT386"
             break
