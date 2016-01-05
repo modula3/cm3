@@ -5,6 +5,7 @@
 #ifndef INCLUDED_M3CORE_H
 #define INCLUDED_M3CORE_H
 
+#define _NO_CRT_STDIO_INLINE /* Do not accidentally export printf. */
 #ifdef _MSC_VER
 #define _CRT_SECURE_NO_DEPRECATE
 #define _CRT_NONSTDC_NO_DEPRECATE

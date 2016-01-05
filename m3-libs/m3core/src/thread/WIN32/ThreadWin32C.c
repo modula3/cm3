@@ -5,6 +5,8 @@
 /* Portions Copyright 1996-2000, Critical Mass, Inc.               */
 /* See file COPYRIGHT-CMASS for details.                           */
 
+#define _NO_CRT_STDIO_INLINE /* Do not accidentally export printf. */
+
 #if defined(_WIN32) && !defined(WIN32)
 #define WIN32
 #endif
@@ -33,7 +35,6 @@
 #include <setjmp.h>
 #include <stddef.h>
 #include <string.h>
-#include <stdio.h>
 
 #define M3_FIELD_SIZE(type, field) (sizeof((type*)0)->field)
 

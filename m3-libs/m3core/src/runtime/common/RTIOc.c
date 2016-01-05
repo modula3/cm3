@@ -1,3 +1,7 @@
+/* Do not accidentally export printf.
+   This will break p227/p228. */
+#ifndef _WIN32
+
 #include "m3core.h"
 
 #if !defined(_MSC_VER) && !defined(__cdecl)
@@ -94,4 +98,6 @@ void __cdecl RTIO__PutLongHex(uint64 i)
 
 #ifdef __cplusplus
 } /* extern C */
+#endif
+
 #endif

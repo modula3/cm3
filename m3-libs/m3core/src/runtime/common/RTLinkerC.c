@@ -22,6 +22,8 @@ void* __cdecl RTLinker__GetEnvironmentStrings (void* EnvFromMain)
 #endif
 }
 
+#ifndef _WIN32 /* Do not accidentally export printf. */
+
 #if 1 /* debugging code */
 
 /*
@@ -195,4 +197,6 @@ RTLinker__PrintModule(ModuleInfo_t* Module)
 
 #ifdef __cplusplus
 } /* extern "C" */
+#endif
+
 #endif
