@@ -7,6 +7,7 @@
 %      modified on Tue Feb 11 22:04:30 PST 1992 by gnelson
 
 import ("libm3")
+import ("sysutils")
 
 implementation ("m3bundle")
 
