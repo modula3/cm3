@@ -4,7 +4,7 @@
 @rem cderr.h is missing
 
 @call :F1 c:\winddk\3790 wxp i386
-rem @call :F3 c:\winddk\3790 wnet i386
+@call :F3 c:\winddk\3790 wnet i386
 @goto :eof
 
 :F1
