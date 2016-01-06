@@ -31,22 +31,7 @@
 #endif
 
 #include <windows.h>
-/* Strongly consider requiring a different bootstrap procedure and remove this workaround. */
-/* Newer Visual C++ has both _wassert and _assert. Older only have _assert.
-   Favor _assert so that we can bootstrap from newer to older. */
-#if _MSC_VER
-#undef assert
-#ifdef __cplusplus
-extern "C" {
-#endif
-void __cdecl _assert(void *, void *, unsigned);
-#ifdef __cplusplus
-} /* extern C */
-#endif
-#define assert(exp) ((void)((!!(exp)) || (_assert(#exp, __FILE__, __LINE__), 0)))
-#else /* _MSC_VER */
 #include <assert.h>
-#endif
 #include <setjmp.h>
 #include <stddef.h>
 #include <string.h>
