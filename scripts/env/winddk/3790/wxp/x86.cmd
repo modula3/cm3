@@ -15,5 +15,5 @@ set LIBPATH=
 @goto :eof
 
 :F3
-rem set INCLUDE=%INCLUDE%;%1\inc\%2
+set INCLUDE=%INCLUDE%;%1\inc\%2
 goto :eof
