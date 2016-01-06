@@ -802,6 +802,17 @@ PROCEDURE CleanName (sym: TEXT): TEXT =
   END CleanName;
 
 PROCEDURE IsKeeper (sym: TEXT): BOOLEAN =
+  (* Sort these by length for later optimization.
+     Every symbol must be duplicated -- with and without
+     a leading underscore. *)
+  CONST syms = ARRAY OF TEXT {
+    "printf",
+    "_printf",
+    "_ftol2_sse",
+    "_vfprintf_l",
+    "__ftol2_sse",
+    "__vfprintf_l"
+    };
   VAR len := Text.Length (sym);
   BEGIN
     IF (len > 7)
@@ -822,13 +833,28 @@ PROCEDURE IsKeeper (sym: TEXT): BOOLEAN =
       RETURN FALSE;
     END;
 
-    (* Skip C++ symbols, from C runtime. *)
+    (* Skip C++ symbols, from C runtime, and floating point constants. *)
 
     IF len > 1 AND Match(sym, 0, "?") THEN
       RETURN FALSE;
     END;
 
-    RETURN NOT IsFloatingPointConstant(sym, len);
+    IF IsFloatingPointConstant (sym, len) THEN
+      RETURN FALSE;
+     END;
+
+    IF len > Text.Length (syms[LAST(syms)]) THEN
+      RETURN TRUE;
+    END;
+
+    FOR i := FIRST(syms) TO LAST(syms) DO
+      IF Text.Equal (sym, syms[i]) THEN
+        RETURN FALSE;
+      END;
+    END;
+
+    RETURN TRUE;
+
   END IsKeeper;
 
 PROCEDURE Match (txt: TEXT;  start: INTEGER;  key: TEXT): BOOLEAN =
