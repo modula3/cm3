@@ -3341,12 +3341,12 @@ PROCEDURE FinalNameForUnit (s: State;  u: M3Unit.T): TEXT =
       ELSE RETURN NIL;
       END;
 
-    ELSIF Integrated THEN (* Only object is possible, boot is irrelevant. *) 
+    ELSIF Integrated THEN (* Integrated backend produces object files. *)
       CASE ext OF 
       | UK.I3, UK.IC, UK.IB, UK.IS => ext :=  UK.IO;
       | UK.M3, UK.MC, UK.MB, UK.MS => ext :=  UK.MO;
-      | UK.C, UK.S                 => ext :=  UK.O;
-      | UK.IO, UK.MO, UK.O         => RETURN M3Unit.FileName (u);
+      | UK.C, UK.S, UK.H,
+        UK.IO, UK.MO, UK.O         => RETURN M3Unit.FileName (u);
       ELSE RETURN NIL;
       END;
 
