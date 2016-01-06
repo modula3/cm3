@@ -1203,7 +1203,7 @@ def Boot():
             # be sure to get a .pdb out
             #open("empty.c", "w")
             #Link = CCompiler + CCompilerFlags + "empty.c /" + Link
-        Link = Link + " user32.lib kernel32.lib wsock32.lib comctl32.lib gdi32.lib advapi32.lib netapi32.lib iphlpapi.lib "
+        Link = Link + " user32.lib kernel32.lib wsock32.lib comctl32.lib gdi32.lib advapi32.lib netapi32.lib "
     # not all of these tested esp. Cygwin, NetBSD
     elif freebsd or netbsd or openbsd or cygwin or linux:
         Link = Link  +  " -lm -pthread "
@@ -1574,6 +1574,7 @@ def Boot():
         
     # write entirely new custom makefile for NT
     # We always have object files so just compile and link in one fell swoop.
+    # NOTE: This is quite crude/slow/inefficient. Needs work.
 
     if nt:
         DeleteFile("updatesource.sh")
@@ -1581,12 +1582,13 @@ def Boot():
         if not CBackend:
             Makefile = open(os.path.join(BootDir, "Makefile"), "wb")
             Makefile.write("all: cm3.exe mklib.exe\r\n\r\n")
+            Makefile.write("clean:\r\n del cm3.exe mklib.exe\r\n\r\n")
 
             Makefile.write("cm3.exe: *.io *.mo *.c cm3.d\\Main.mo\r\n"
-            + " cl -Zi -MD *.c -link *.mo *.io cm3.d\\Main.mo -out:$@ user32.lib kernel32.lib wsock32.lib comctl32.lib gdi32.lib advapi32.lib netapi32.lib iphlpapi.lib\r\n\r\n")
+            + " cl -Zi -MD *.c -link *.mo *.io cm3.d\\Main.mo -out:$@ user32.lib kernel32.lib wsock32.lib comctl32.lib gdi32.lib advapi32.lib netapi32.lib\r\n\r\n")
 
             Makefile.write("mklib.exe: *.io *.mo *.c mklib.d\\Main.mo\r\n"
-            + " cl -Zi -MD *.c -link *.mo *.io mklib.d\\Main.mo -out:$@ user32.lib kernel32.lib wsock32.lib comctl32.lib gdi32.lib advapi32.lib netapi32.lib iphlpapi.lib\r\n\r\n")
+            + " cl -Zi -MD *.c -link *.mo *.io mklib.d\\Main.mo -out:$@ user32.lib kernel32.lib wsock32.lib comctl32.lib gdi32.lib advapi32.lib netapi32.lib\r\n\r\n")
 
             Makefile.close()
 
