@@ -808,6 +808,8 @@ PROCEDURE IsKeeper (sym: TEXT): BOOLEAN =
   CONST syms = ARRAY OF TEXT {
     "printf",
     "_printf",
+    "_wassert",
+    "__wassert",
     "_ftol2_sse",
     "_vfprintf_l",
     "__ftol2_sse",

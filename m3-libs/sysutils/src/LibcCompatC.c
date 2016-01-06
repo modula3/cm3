@@ -111,6 +111,67 @@ int __cdecl _ftol2_sse(double b)
 
 #endif /* _MSC_VER <= 1310 */ /* TODO test 6 (1200), 7 (1300), 8 (1400), 9 (1500), 10 (1600), 11 (1700), 12 (1800) */
 
+#if _MSC_VER <= 1310 /* TODO find exact versions */
+
+/*
+Starting with 5.8.6 release and upgrading with Visual C++ 7.1.
+m3core.lib.sa(ThreadWin32C.obj) : error LNK2019: unresolved external symbol __wassert referenced in function _ThreadWin32__ProcessStopped
+*/
+
+#include <wchar.h>
+
+void
+__cdecl
+_wassert (
+    wchar_t const* w_Message,
+    wchar_t const* w_File,
+    unsigned       Line
+    )
+{
+	size_t len;
+	size_t i;
+    char* a_Message = "";
+    char* a_File = "";
+
+	if (w_Message && w_Message[0])
+	{
+		len = wcslen(w_Message) + 1;
+		a_Message = (char*)_alloca(len);
+		for (i = 0; i < len; ++i)
+			a_Message[i] = (char)w_Message[i];
+	}
+
+	if (w_File && w_File[0])
+	{
+		len = wcslen(w_File) + 1;
+		a_Message = (char*)_alloca(len);
+		for (i = 0; i < len; ++i)
+			a_File[i] = (char)w_File[i];
+	}
+
+	_assert(a_Message, a_File, Line);
+}
+
+#endif
+
+/*
+no workaround
+Consider moving TimeWin32 back to Modula-3, and rewriting strtod in Modula-3 also.
+Or improve and use the cross automation which avoids using the old libs.
+
+The calling conventions of the new float to integer functions cannot be implemented with the older compiler.
+/arch:IA32 would suppress their use.
+
+m3core.lib.sa(TimeWin32.obj) : error LNK2019: unresolved external symbol __dtol3 referenced in function _TimeWin32__ToFileTime
+m3core.lib.sa(TimeWin32.obj) : error LNK2019: unresolved external symbol __ltod3 referenced in function _TimeWin32__FromFileTime
+m3core.lib.sa(dtoa.obj) : error LNK2019: unresolved external symbol __imp____fpe_flt_rounds referenced in function _m3_strtod
+m3core.lib.sa(dtoa.obj) : error LNK2019: unresolved external symbol __dtoui3 referenced in function _m3_strtod
+
+
+This is particularly odd, as the symbol has been around for a long time.
+m3core.lib.sa(ThreadWin32C.obj) : error LNK2019: unresolved external symbol @__security_check_cookie@4 referenced in function _ThreadWin32__ProcessLive
+*/
+
 #if _MSC_VER < 1900 /* TODO find exact versions */
 
 /*
