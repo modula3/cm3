@@ -1570,7 +1570,6 @@ def Boot():
 
     for a in [UpdateSource, Make, Makefile, VmsMake, VmsLink]:
         a.close()
-    Make.close()
         
     # write entirely new custom makefile for NT
     # We always have object files so just compile and link in one fell swoop.
