@@ -116,7 +116,7 @@ PROCEDURE GetBounds (ce: CallExpr.T;  VAR min, max: Target.Int) =
   VAR min_bits, max_bits: Target.Int;  i: INTEGER;
   BEGIN
     Expr.GetBounds (ce.args[2], min_bits, max_bits);
-    IF TInt.ToInt (max_bits, i) AND i < Word_types[rep].size THEN
+    IF TInt.ToInt (max_bits, i) AND 0 <= i AND i < Word_types[rep].size THEN
       IF NOT TWord.Extract (TInt.MOne, 0, i, max) THEN
         EVAL Type.GetBounds (T, min, max);
       END;
