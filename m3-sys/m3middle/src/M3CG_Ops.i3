@@ -516,7 +516,16 @@ zero (n: INTEGER;  t: MType);
 (*----------------------------------------------------------- conversions ---*)
 
 loophole (from, two: ZType);
-(* s0.two := LOOPHOLE(s0.from, two) *)
+(* This used to say: "s0.two := LOOPHOLE(s0.from, two)" *)
+(* But CG requires and various backends provide more cases: 
+
+   s0.two := LH(s0.from, two),
+
+   where LH includes truncation, zero extension, or sign extension, 
+   as needed for size matching, in addition to LOOPHOLE. 
+   The exact semantics can only be inferred by extensive vetting of CG and
+   all the back ends, which will probably be ambiguous, calling for further
+   design decisions. *)
 
 (*------------------------------------------------ traps & runtime checks ---*)
 
