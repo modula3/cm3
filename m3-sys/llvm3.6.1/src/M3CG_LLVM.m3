@@ -20,7 +20,7 @@ FROM M3CG IMPORT CompareOp, ConvertOp, AtomicOp, RuntimeError;
 FROM M3CG IMPORT MemoryOrder;
 IMPORT M3ID, M3Buf, M3CG, M3CG_Ops;
 IMPORT M3DIBuilder AS M3DIB;
-IMPORT Target, TInt, TFloat;
+IMPORT Target, TargetMap, TInt, TFloat;
 IMPORT Wr, IntRefTbl, RefSeq;
 IMPORT Ctypes, M3toC;
 IMPORT Text,Fmt,Pathname;
@@ -4090,71 +4090,179 @@ PROCEDURE zero (self: U;  n: INTEGER; t: MType) =
 
 (*----------------------------------------------------------- conversions ---*)
 
-(* Handle loophole from Int.32 to REAL and vice versa on 64 bit architectures.
-   m3 IR generates 
-        load v1 0 Word.32 Int.64
-        loophole Word.64 Reel 
-        or
-        load v1 0 Reel Reel
-        loophole Reel Word.64
-  which seems to violate the definition of LOOPHOLE since the sizes are different
-  Not sure why the front end cannot generate a 32 bit load/store in these cases.
-*)
-PROCEDURE RealLoophole(from,two : ZType; a : LLVM.ValueRef; destTy : LLVM.TypeRef) : LLVM.ValueRef =
-(* PRE one or both from and two are Real types checked in caller *)
-  VAR
-    lVal,res : LLVM.ValueRef;
-    intTy : LLVM.TypeRef;
-    fromSize,twoSize : CARDINAL;
-  BEGIN
-    IF (from >= Type.Reel) AND (two >= Type.Reel) THEN
-      (* only applys to longreal and extended since their sizes are equal *)
-      lVal := a; (* noop *)
-    ELSE (* one is an int and one is real *)
-      fromSize := TypeSize(from);
-      twoSize := TypeSize(two);
-      IF fromSize = twoSize THEN
-        lVal := LLVM.LLVMBuildBitCast(builderIR, a, destTy, LT("loophole"));
-      ELSIF fromSize > twoSize THEN
-        <*ASSERT from < Type.Reel AND two >= Type.Reel*>
-        intTy := LLVM.LLVMIntType(twoSize * 8) ;
-        res := LLVM.LLVMBuildTrunc(builderIR, a, intTy, LT("loophole"));    
-        lVal := LLVM.LLVMBuildBitCast(builderIR, res, destTy, LT("loophole"));
-      ELSE
-        <*ASSERT from >= Type.Reel AND two < Type.Reel*>
-        intTy := LLVM.LLVMIntType(fromSize * 8) ;
-        res := LLVM.LLVMBuildBitCast(builderIR, a, intTy, LT("loophole"));
-        lVal := Extend(res,two,destTy);
-      END;
-    END;
-    RETURN lVal;
-  END RealLoophole;    
-  
-PROCEDURE loophole (self: U;  from, two: ZType) =
-  (* s0.two := LOOPHOLE(s0.from, two) *)
-  VAR
-    s0 := Get(self.exprStack,0);
-    a,b,c : LLVM.ValueRef;
-    destTy : LLVM.TypeRef;
-  BEGIN
-    IF from = two THEN RETURN END;
-    a := NARROW(s0,LvExpr).lVal;
-    destTy := LLvmType(two);
+(* The cm3 loophole IR operator was misdocumented as equivalent to Modula-3 
+   LOOPHOLE, but this is not so.  
 
-(* An Int should be bitcastable to/from any same-sized, scalar, nonpointer type
-   which the front end will have ensured has the same size as a pointer. *) 
-    IF from = Type.Addr THEN
-      b := LLVM.LLVMBuildPtrToInt(builderIR, a, IntPtrTy, LT("loophole-PtrToInt"));
-      c := LLVM.LLVMBuildBitCast(builderIR, b, destTy, LT("loophole"));
-    ELSIF two = Type.Addr THEN        
-      b := LLVM.LLVMBuildBitCast(builderIR, a, IntPtrTy, LT("loophole"));
-      c := LLVM.LLVMBuildIntToPtr(builderIR, b, destTy, LT("loophole-IntToPtr"));
-    ELSIF from >= Type.Reel OR two >= Type.Reel THEN
-        c := RealLoophole(from,two,a,destTy);
-    ELSE 
-      c := LLVM.LLVMBuildBitCast(builderIR, a, destTy, LT("loophole"));
-    END;  
-    NARROW(s0,LvExpr).lVal := c;
+   LOOPHOLE always requires equal sizes, but the front end emits loophole 
+   operators that call for various conversions involving different integer, 
+   address and real sizes and different signednesses.  
+
+   Inferring the complete specification of the loophole operator is difficult
+   and probably ambiguous, and involves extensive vetting of the front end and
+   all back ends.  This implementation supports a very liberal set of conversions.
+   Hopefully, they do what is right, at least for all the cases that can happen.
+
+   Any ZType can be converted to any other.  Shortening is always done by 
+   truncation of high bits.  Extending is by sign extension when the final
+   type is signed, or zero extension otherwise.  One exception is converting
+   32-bit integer type to a 64-bit real.  Here, the final type gives no clue 
+   whether to sign extend, so the decision is taken from the signedness of the 
+   initial type.  This probably can't happen, would be irrelevant if it could,
+   or just doesn't make much sense, but it's there for hopeful completeness.        
+
+   Meanwhile, llvm has several different operators for different cases.
+   bitcast requires identical sizes and either both types are pointers or 
+   neither is a pointer.  PtrToInt and IntToPtr must be used for any conversion
+   to/from a pointer, but will handle size changes with zero extend or truncate.
+   trunc, zext, and sext work only on nonequal sized integer types.  trunc
+   requires converting to a properly smaller size, and zext and sext require
+   converting to a properly larger size.    
+
+*) 
+
+PROCEDURE SignedType ( fromType: Type ) : Type = 
+  (* If fromType is an unsigned integer type, its same-sized signed counterpart.
+     Otherwise, identity.
+  *) 
+
+  (* One would expect this function already exists elsewhere in the front end,
+     but I can't find it. *) 
+
+  BEGIN 
+    CASE fromType OF
+    | Type.Word8 => RETURN Type.Int8; 
+    | Type.Word16 => RETURN Type.Int16; 
+    | Type.Word32 => RETURN Type.Int32; 
+    | Type.Word64 => RETURN Type.Int64; 
+    ELSE RETURN fromType; 
+    END; 
+  END SignedType; 
+
+PROCEDURE SameSizedWordType ( fromRType : RType) : IType = 
+  (* The Word<n> CG type with same size as real type fromRType. *) 
+  (* If we ever get a real type whose bit size does not match one of
+     IType, there could be pervasive problems, as CG expects to be
+     able to loophole between a real type and some IType or Addr.
+     e.g., storing the argument of an exception expects to put it
+     in an address, and does so by value if the argument type is
+     scalar (including real types.) *) 
+
+  VAR size: INTEGER; 
+  BEGIN 
+    size := TargetMap.CG_Size[fromRType]; 
+    IF size = 32 THEN RETURN Type.Word32;
+    ELSIF size = 64 THEN RETURN Type.Word64;
+    ELSE <*ASSERT FALSE*>
+    END; 
+  END SameSizedWordType; 
+
+PROCEDURE SizeNSignedness 
+  (val: LLVM.ValueRef; fromIType, toIType: IType) : LLVM.ValueRef = 
+  (* The Llvm type system does not distinguish signedness of integer types.
+     Only the llvm operators applied make this distinction.  So CG types with
+    the same size but different-signedness types require no Llvm operation. *) 
+
+  VAR 
+    destLlvmType : LLVM.TypeRef;
+  BEGIN 
+    CASE fromIType 
+    OF Type.Word32, Type.Int32 => 
+      CASE toIType 
+      OF Type.Word64 => (* Zero extend. *) 
+        destLlvmType := LLvmType(toIType);
+        RETURN LLVM.LLVMBuildZExt(builderIR,val,destLlvmType, LT("loophole-zext"));
+      | Type.Int64 => (* Sign extend. *) 
+        destLlvmType := LLvmType(toIType);
+        RETURN LLVM.LLVMBuildSExt(builderIR,val,destLlvmType, LT("loophole-sext"));
+      ELSE RETURN val; 
+      END; 
+    | Type.Word64, Type.Int64 =>
+      CASE toIType 
+      OF Type.Word32, Type.Int32 => (* truncate. *) 
+        destLlvmType := LLvmType(toIType);
+        RETURN LLVM.LLVMBuildTrunc(builderIR,val,destLlvmType, LT("loophole-trunc"));
+      ELSE RETURN val; 
+      END; 
+    END; 
+  END SizeNSignedness;
+
+PROCEDURE loophole (self: U;  fromCGType, toCGType: ZType) =
+  (* s0.toCGType := LOOPHOLE(s0.fromCGType, toCGType) *)
+  VAR
+    s0 : REFANY; 
+    s0AsExpr : LvExpr; 
+    fromIType, toIType : IType; 
+    initial, second, third, final : LLVM.ValueRef;
+    fromLlvmType, destLlvmType : LLVM.TypeRef;
+  BEGIN
+    IF fromCGType = toCGType THEN RETURN END; 
+
+    s0 := Get(self.exprStack,0);
+    s0AsExpr := NARROW(s0,LvExpr);
+    initial := s0AsExpr.lVal;
+    destLlvmType := LLvmType(toCGType);
+    IF fromCGType <= Type.Int64 THEN (* Word32, Int32, Word64, Int64 *) 
+      IF toCGType <= Type.Int64 THEN (* word/int->word/int *) 
+        final := SizeNSignedness (initial, fromCGType, toCGType); 
+      ELSIF toCGType <= Type.XReel THEN (* word/int->real *)
+        toIType := SameSizedWordType (toCGType); 
+        IF Target.SignedType[fromCGType] THEN
+          toIType := SignedType(toIType); 
+        END; 
+        second := SizeNSignedness (initial, fromCGType, toIType); 
+        final := LLVM.LLVMBuildBitCast
+                   (builderIR, second, destLlvmType, LT("loophole-word->real"));
+      ELSE (* word/int->addr *) 
+        final := LLVM.LLVMBuildIntToPtr
+                   (builderIR, initial, destLlvmType, LT("loophole-addr->word"));
+      END; 
+    ELSIF fromCGType <= Type.XReel THEN (* Reel, LReel, XReel *) 
+      IF toCGType <= Type.Int64 THEN (* real->word/int *)
+        fromIType := SameSizedWordType (fromCGType); 
+        second := LLVM.LLVMBuildBitCast
+                   (builderIR, initial, LLvmType(fromIType), 
+                    LT("loophole-real->word"));
+        final := SizeNSignedness (second, fromIType, toCGType); 
+      ELSIF toCGType <= Type.XReel THEN (* real->real *) 
+        fromLlvmType := LLvmType(fromCGType); 
+        IF fromLlvmType = destLlvmType THEN
+          final := initial; 
+        ELSE 
+          fromIType := SameSizedWordType (fromCGType); 
+          toIType := SameSizedWordType (toCGType); 
+          second := LLVM.LLVMBuildBitCast
+                     (builderIR, initial, LLvmType(fromIType), 
+                      LT("loophole-real->real1"));
+          third := SizeNSignedness (second, fromIType, toIType); 
+          final := LLVM.LLVMBuildBitCast
+                     (builderIR, third, destLlvmType, LT("loophole-real->real2"));
+        END; 
+      ELSE (* real->addr *) 
+        fromIType := SameSizedWordType (fromCGType); 
+        second := LLVM.LLVMBuildBitCast
+                   (builderIR, initial, LLvmType(fromIType), 
+                    LT("loophole-real->addr"));
+        final := LLVM.LLVMBuildIntToPtr
+                   (builderIR, second, destLlvmType, LT("loophole-IntToPtr"));
+      END; 
+    ELSE (* fromCGType = Type.Addr *) 
+      IF toCGType <= Type.Int64 THEN (* addr->word/int *) 
+        final := LLVM.LLVMBuildPtrToInt
+                   (builderIR, initial, destLlvmType, LT("loophole-addr->word"));
+      ELSIF toCGType <= Type.XReel THEN (* addr->real *) 
+        toIType := SameSizedWordType (toCGType); 
+        second := LLVM.LLVMBuildPtrToInt
+                   (builderIR, initial, LLvmType(toIType), 
+                    LT("loophole-addr->real"));
+        final := LLVM.LLVMBuildBitCast
+                   (builderIR, second, destLlvmType, LT("loophole-addr->real"));
+      ELSE (* addr->addr *)
+        (* This won't happen, but it is easier to handle it than assert false. *)  
+        final := initial; 
+      END; 
+    END; 
+
+    s0AsExpr.lVal := final;
   END loophole;
 
 (*------------------------------------------------ traps & runtime checks ---*)
