@@ -464,19 +464,25 @@ PROCEDURE GetBounds (t: T;  VAR min, max: Target.Int) =
 
 PROCEDURE SetGlobals (t: T) =
   VAR size, align: INTEGER;
+  VAR initType: M3.Type := NIL; 
   BEGIN
     (* Type.SetGlobals (t.tipe); *)
     (* IF (t.init # NIL) THEN Type.SetGlobals (Expr.TypeOf (t.init)) END; *)
     IF (t.offset # 0) OR (NOT t.global) OR (t.external) THEN RETURN END;
     EVAL Type.Check (t.tipe);
 
+    IF t.init # NIL THEN initType := Expr.TypeOf (t.init) END; 
+
     IF (t.indirect) THEN
       size  := Target.Address.size;
       align := Target.Address.align;
-    ELSIF OpenArrayType.Is (t.tipe) THEN
+    ELSIF FALSE AND OpenArrayType.Is (initType) THEN
+(* FIXME, maybe.  Can the variable be a formal with open array type, in 
+   addition to the initializer's having an open array type?  If so, we want 
+   to come here. *) 
       align := MAX (Target.Address.align, Target.Integer.align);
       size  := Target.Address.pack
-                  + OpenArrayType.OpenDepth(t.tipe) * Target.Integer.pack;
+               + OpenArrayType.OpenDepth(initType) * Target.Integer.pack;
     ELSE
       size  := t.size;
       align := t.align;
