@@ -25,7 +25,7 @@ BEGIN
   IO.PutChar(d[0]); IO.Put("\n"); 
 
   IO.PutChar(i[0]); IO.Put(", "); 
-  IO.PutChar(j[0]); IO.Put("/n"); 
+  IO.PutChar(j[0]); IO.Put("\n"); 
 
   IO.Put("OK\n");
 END Main.
