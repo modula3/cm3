@@ -1,4 +1,12 @@
-MODULE UniEncoding 
+(* Copyright (C) Rodney M. Bates 2016. *)
+(* rodney.m.bates@acm.org *) 
+(* Licensed under the MIT License. *) 
+
+MODULE UniEncoding
+
+(* Various ways of encoding characters in sequential streams, including
+   the Uncode encoding schemes, and others.
+*) 
 
 ; PROCEDURE EncImage ( Enc : Encoding ) : TEXT  
 

@@ -1,3 +1,7 @@
+(* Copyright (C) Rodney M. Bates 2016. *)
+(* rodney.m.bates@acm.org *) 
+(* Licensed under the MIT License. *) 
+
 INTERFACE UniRd 
 
 (* Synchronized reader for a stream with one of several character encodings. 

@@ -1,9 +1,12 @@
+(* Copyright (C) Rodney M. Bates 2016. *)
+(* rodney.m.bates@acm.org *) 
+(* Licensed under the MIT License. *) 
+
+INTERFACE UnsafeUniCodec 
 
 (* Coding and decoding for the unicode encoding schemes, as well as 
    a some others.
 *) 
-
-INTERFACE UnsafeUniCodec 
 
 ; IMPORT Rd 
 ; FROM Rd IMPORT EndOfFile  

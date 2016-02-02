@@ -1,3 +1,7 @@
+(* Copyright (C) Rodney M. Bates 2016. *)
+(* rodney.m.bates@acm.org *) 
+(* Licensed under the MIT License. *) 
+
 MODULE UniRd 
 
 (* Synchronized reader for character stream with one of several encodings. *) 

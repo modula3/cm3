@@ -1,9 +1,12 @@
+(* Copyright (C) Rodney M. Bates 2016. *)
+(* rodney.m.bates@acm.org *) 
+(* Licensed under the MIT License. *) 
+
+MODULE UniCodec 
 
 (* Coding and decoding for the unicode encoding schemes, as well as 
    a couple of others.
 *) 
-
-MODULE UniCodec 
 
 ; IMPORT Rd 
 ; FROM Rd IMPORT EndOfFile  
@@ -21,8 +24,9 @@ MODULE UniCodec
 (* Unicode replacement code point, for ill-formed encoded values. *) 
 ; CONST ReplacementWt = 16_FFFD (* As a Word.T. *) 
 ; CONST ReplacementWch = VAL ( ReplacementWt , Widechar ) (* As a WIDECHAR. *)  
-(* FIXME^ These are duplicated here and in UnsafeUniCodec.m3.  We really
-   need the bigger WIDECHAR to do this properly. *) 
+(* TODO^ These are duplicated here and in UnsafeUniCodec.m3.  We really
+   need the bigger WIDECHAR to do this properly.  Maybe leave as-is, to
+   preserve long-term bootstrapability. *) 
 
 ; PROCEDURE Encode ( Enc : Encoding ; Sink : Wr . T ; Wch : Widechar ) 
   RAISES { Alerted , Wr . Failure , Range } 

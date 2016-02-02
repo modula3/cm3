@@ -1,3 +1,7 @@
+(* Copyright (C) Rodney M. Bates 2016. *)
+(* rodney.m.bates@acm.org *) 
+(* Licensed under the MIT License. *) 
+
 MODULE UnsafeUniRd 
 
 (* Unsynchronized reader for character stream with one of several encodings. *) 
@@ -954,7 +958,6 @@ MODULE UnsafeUniRd
       LLast := LAST ( ArrWch ) 
     ; FOR RI := 0 TO LLast  
       DO 
-
         LWch := ArrWch [ RI ] 
       ; LOrd := ORD ( LWch ) 
       ; LWC := VAL ( LOrd , WIDECHAR ) 
