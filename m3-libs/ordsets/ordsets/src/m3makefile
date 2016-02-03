@@ -2,8 +2,8 @@
 % (* ----------------------------------------------------------------------1- *)
 % (* File m3makefile for test instantiation and running of OrdSets.[im]g.     *)
 % (* Copyright 2010 .. 2012, Rodney M. Bates.                                 *)
-% (* rbates@acm.org                                                           *)
-% (* Licensed under the Gnu Public License, version 2 or later.               *)
+% (* rodney.m.bates@acm.org                                                   *)
+% (* Licensed under the MIT license.                                          *)
 % (* ----------------------------------------------------------------------2- *)
 
 % option("internal_backend","")
@@ -19,12 +19,12 @@ module("UnsafeUtils")
   build_generic_impl("IntSets","OrdSets",[])
   % module("IntSets") 
 
-% For testing instantiation with non-integer.
+% For testing that instantiation with non-integer will compile. 
   interface("WidecharForOrdSets") 
   build_generic_intf("WidecharSets","OrdSets",["WidecharForOrdSets"],VISIBLE)
   build_generic_impl("WidecharSets","OrdSets",[])
   % module("WidecharSets")          
 
-module("Sets") % Old, naive sets module to compare results against.  
-implementation("Test")
+module("Sets") % Old, naive Sets module to compare results against.  
+implementation("Test") % Test program. 
 program("test") 

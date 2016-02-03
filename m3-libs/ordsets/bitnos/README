@@ -2,8 +2,8 @@
 (* -----------------------------------------------------------------------1- *)
 (* File README, in directory bitnos, for GenBitNoArrays.                     *)
 (* Copyright 2010 .. 2012, Rodney M. Bates.                                  *)
-(* rbates@acm.org                                                            *)
-(* Licensed under the Gnu Public License, version 2 or later.                *)
+(* rodney.m.bates@acm.org                                                    *)
+(* Licensed under the MIT License.                                           *) 
 (* -----------------------------------------------------------------------2- *)
 
 Program GenBitNoArrays mechanically generates source file

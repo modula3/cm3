@@ -2,8 +2,8 @@
 (* -----------------------------------------------------------------------1- *)
 (* File GenBitNoArrays.m3  Modula-3 source code.                             *)
 (* Copyright 2010 .. 2012, Rodney M. Bates.                                  *)
-(* rbates@acm.org                                                            *)
-(* Licensed under the Gnu Public License, version 2 or later.                *)
+(* rodney.m.bates@acm.org                                                    *)
+(* Licensed under the MIT License.                                           *) 
 (* -----------------------------------------------------------------------2- *)
 
 MODULE GenBitNoArrays EXPORTS Main 
@@ -170,10 +170,10 @@ MODULE GenBitNoArrays EXPORTS Main
         ( WrT , "(* Copyright 2010 .. 2012, Rodney M. Bates.                                  *)" )
     ; Wr . PutText ( WrT , Wr . EOL ) 
     ; Wr . PutText 
-        ( WrT , "(* rbates@acm.org                                                            *)" )
+        ( WrT , "(* rodney.m.bates@acm.org                                                    *)" )
     ; Wr . PutText ( WrT , Wr . EOL ) 
     ; Wr . PutText 
-        ( WrT , "(* Licensed under the Gnu Public License, version 2 or later.                *)" )
+        ( WrT , "(* Licensed under the MIT License.                                           *)" )
     ; Wr . PutText ( WrT , Wr . EOL ) 
     ; Wr . PutText 
         ( WrT , "(* -----------------------------------------------------------------------2- *)" )

@@ -2,8 +2,8 @@
 (* -----------------------------------------------------------------------1- *)
 (* File IntSets.i3  Modula-3 source code.                                    *)
 (* Copyright 2010 .. 2012, Rodney M. Bates.                                  *)
-(* rbates@acm.org                                                            *)
-(* Licensed under the Gnu Public License, version 2 or later.                *)
+(* rodney.m.bates@acm.org                                                    *)
+(* Licensed under the MIT License.                                           *) 
 (* -----------------------------------------------------------------------2- *)
 
 INTERFACE IntSets = OrdSets ( IntForOrdSets ) END IntSets . 
