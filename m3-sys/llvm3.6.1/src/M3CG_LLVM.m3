@@ -1267,10 +1267,10 @@ PROCEDURE declare_typename (self: U; t: TypeUID; n: Name) =
   VAR
     baseObj : BaseDebug;
     typeRef : REFANY;
-    tidExists : BOOLEAN;
+    tUidExists : BOOLEAN;
   BEGIN
-    tidExists := self.debugTable.get(t,typeRef);
-    IF tidExists THEN
+    tUidExists := self.debugTable.get(t,typeRef);
+    IF tUidExists THEN
       baseObj := NARROW(typeRef,BaseDebug);
       baseObj.typeName := n;
     ELSE
@@ -1688,13 +1688,13 @@ PROCEDURE declare_local
 PROCEDURE ImportedStructSize(self : U; m3t : TypeUID) : ByteSize =
   VAR
     typeObj : REFANY;
-    tidExists : BOOLEAN;
+    tUidExists : BOOLEAN;
     size,baseSize : ByteSize := 0;
     tc : CARDINAL;
   BEGIN
     IF m3t = 0 THEN RETURN size; END;
-    tidExists := self.debugTable.get(m3t,typeObj);
-    <*ASSERT tidExists *>
+    tUidExists := self.debugTable.get(m3t,typeObj);
+    <*ASSERT tUidExists *>
     tc := TYPECODE(typeObj);
     baseSize := VAL(NARROW(typeObj,BaseDebug).bitSize,INTEGER) DIV 8;
     IF tc = TYPECODE(RecordDebug) OR tc = TYPECODE(ArrayDebug) OR 
@@ -5150,6 +5150,13 @@ PROCEDURE InitUids(self : U) =
     EVAL self.debugTable.put(NO_UID,NEW(BaseDebug, bitSize := 0L, align := 0L, typeName := M3ID.Add("NO_UID"), encoding := DW_ATE_address));
   END InitUids;
 
+PROCEDURE EnsureDebugTypeName(debug: BaseDebug) =
+  BEGIN
+    IF debug.typeName = M3ID.NoID THEN
+      debug.typeName := M3ID.Add(M3CG.FormatUID(debug.tUid)); 
+    END; 
+  END EnsureDebugTypeName; 
+
 PROCEDURE DebugFinalise(self : U) =
   BEGIN
     IF self.genDebug THEN
@@ -5277,10 +5284,10 @@ PROCEDURE DebugPopBlock(self : U) =
 PROCEDURE DebugSubrangeLookup(self : U; tUid : TypeUID) : SubrangeDebug =
   VAR
     debugObj : REFANY;
-    tidExists : BOOLEAN;
+    tUidExists : BOOLEAN;
   BEGIN
-    tidExists := self.debugTable.get(tUid,debugObj);
-    IF tidExists THEN
+    tUidExists := self.debugTable.get(tUid,debugObj);
+    IF tUidExists THEN
       RETURN NARROW(debugObj,SubrangeDebug);
     ELSE
       RETURN NIL;
@@ -5406,6 +5413,7 @@ PROCEDURE DebugSet(self : U; s : SetDebug) : M3DIB.LLVMDICompositeType =
 (*
     eltVal := M3DIB.DIBcreateBasicType(self.debugRef,LTD("basic_type" ), 1L, 8L, DW_ATE_unsigned_char);
 
+    EnsureDebugTypeName(d); 
     lVal := M3DIB.DIBcreateSetType(
              self.debugRef,
              eltVal,
@@ -5429,6 +5437,7 @@ PROCEDURE DebugEnum(self : U; e : EnumDebug) : M3DIB.LLVMDICompositeType =
     END;
     paramsDIArr := M3DIB.DIBgetOrCreateArray(self.debugRef, paramsMetadata);
 
+    EnsureDebugTypeName(e); 
     RETURN M3DIB.DIBcreateEnumerationType(
                self.debugRef,
                self.funcRef,
@@ -5500,16 +5509,16 @@ PROCEDURE DebugProcType(self : U; p : ProcTypeDebug)
 PROCEDURE BaseSize(self : U; o : ObjectDebug) : LONGINT =
 VAR
   debugObj : REFANY;
-  tidExists : BOOLEAN;
+  tUidExists : BOOLEAN;
   tid : TypeUID;
   size : LONGINT := 0L;
 BEGIN
   tid := o.superType;
   REPEAT
-    tidExists := self.debugTable.get(tid,debugObj);
+    tUidExists := self.debugTable.get(tid,debugObj);
     (* all supertypes should be objects or opaques. If opaque then
        cant tell size and its supertype may not exist in this module*)
-    IF NOT tidExists THEN RETURN size; END;
+    IF NOT tUidExists THEN RETURN size; END;
 
     TYPECASE debugObj OF
     | ObjectDebug(d) => INC(size,d.bitSize); tid := d.superType;
@@ -5524,10 +5533,10 @@ END BaseSize;
 PROCEDURE DebugIsObject(self : U; tUid : TypeUID) : ObjectDebug =
   VAR
     debugObj : REFANY;
-    tidExists : BOOLEAN;
+    tUidExists : BOOLEAN;
   BEGIN
-    tidExists := self.debugTable.get(tUid,debugObj);
-    <*ASSERT tidExists*>
+    tUidExists := self.debugTable.get(tUid,debugObj);
+    <*ASSERT tUidExists*>
     IF ISTYPE(debugObj,ObjectDebug) THEN
       RETURN NARROW(debugObj,ObjectDebug);
     ELSE
@@ -5654,7 +5663,7 @@ PROCEDURE DebugObject(self : U; o : ObjectDebug) : M3DIB.LLVMDIDerivedType =
 
     (* test finding the root obj *)
     paramCount : CARDINAL;
-    tidExists,isSub : BOOLEAN;
+    tUidExists,isSub : BOOLEAN;
     debugObj : REFANY;
     baseObj : BaseDebug;
   BEGIN
@@ -5662,12 +5671,14 @@ PROCEDURE DebugObject(self : U; o : ObjectDebug) : M3DIB.LLVMDIDerivedType =
       IO.Put("object debug\n");
     END; 
 
-    tidExists := self.debugTable.get(o.superType,debugObj);
+    tUidExists := self.debugTable.get(o.superType,debugObj);
     baseObj := NARROW(debugObj,BaseDebug);
     paramCount := 0;
     isSub := FALSE;
     NewArrayRefOfMetadataRef(o.numFields+1, paramsArr, paramsMetadata);
 
+    EnsureDebugTypeName(o); 
+    EnsureDebugTypeName(baseObj); 
     IF NOT Text.Equal(M3ID.ToText(baseObj.typeName), "ROOT") THEN
       isSub := TRUE;
       derivedVal := DebugLookup(self,o.superType);
@@ -5830,6 +5841,7 @@ PROCEDURE DebugRecord(self : U; r : RecordDebug) : M3DIB.LLVMDICompositeType =
     END;
     paramsDIArr := M3DIB.DIBgetOrCreateArray(self.debugRef, paramsMetadata);
 
+    EnsureDebugTypeName(r); 
     RETURN M3DIB.DIBcreateStructType(
                self.debugRef,
                self.funcRef,
@@ -5848,6 +5860,7 @@ PROCEDURE DebugPointer(self : U; p : PointerDebug) : M3DIB.LLVMDIDerivedType =
     referentDIType : M3DIB.LLVMDIDescriptor;
   BEGIN
     referentDIType := DebugLookup(self,p.target);
+    EnsureDebugTypeName(p); 
     RETURN M3DIB.DIBcreatePointerType(
               self.debugRef,
                referentDIType,
@@ -5858,16 +5871,19 @@ PROCEDURE DebugPointer(self : U; p : PointerDebug) : M3DIB.LLVMDIDerivedType =
 
 PROCEDURE DebugBasic(self : U; b : BaseDebug) : M3DIB.LLVMDIBasicType =
   BEGIN
+    EnsureDebugTypeName(b); 
     RETURN M3DIB.DIBcreateBasicType
-      (self.debugRef,LTD(M3ID.ToText(b.typeName)), 
-       VAL(b.bitSize,uint64_t), VAL(b.align,uint64_t), 
+      (self.debugRef,
+       LTD(M3ID.ToText(b.typeName)), 
+       VAL(b.bitSize,uint64_t), 
+       VAL(b.align,uint64_t), 
        b.encoding);
   END DebugBasic;
 
 PROCEDURE DebugLookup(self : U; tUid : TypeUID) : M3DIB.LLVMDIDescriptor =
   VAR
     debugObj : REFANY;
-    tidExists : BOOLEAN;
+    tUidExists : BOOLEAN;
     LDIDescr : M3DIB.LLVMDIDescriptor; 
     (* lVal : LLVM.ValueRef; *) 
   BEGIN
@@ -5878,8 +5894,8 @@ PROCEDURE DebugLookup(self : U; tUid : TypeUID) : M3DIB.LLVMDIDescriptor =
     (* exceptions have 0 tUid *)
     IF tUid = 0 THEN RETURN M3DIB.LLVMDIDescriptorEmpty; END;
 
-    tidExists := self.debugTable.get(tUid,debugObj);
-    IF NOT tidExists THEN
+    tUidExists := self.debugTable.get(tUid,debugObj);
+    IF NOT tUidExists THEN
       <*ASSERT FALSE*>
     ELSE
       LDIDescr := NARROW(debugObj,BaseDebug).DIDescr;
@@ -5901,15 +5917,17 @@ PROCEDURE DebugLookup(self : U; tUid : TypeUID) : M3DIB.LLVMDIDescriptor =
         | IndirectDebug(d) => LDIDescr := DebugLookup(self,d.target);
         | SubrangeDebug(d) => LDIDescr := DebugSubrange(self,d);
         | BaseDebug(d) => LDIDescr := LOOPHOLE(DebugBasic(self,d),M3DIB.LLVMDIDescriptor);
-         RETURN LOOPHOLE 
-                ( M3DIB.DIBcreateBasicType(
-                  self.debugRef,
-                  LTD(M3ID.ToText(d.typeName)), 
-                  VAL(d.bitSize,int64_t), 
-                  VAL(d.align,int64_t), 
-                  d.encoding)
-                , M3DIB.LLVMDIDescriptor
-                );
+(* REVIEW: Huh? *) 
+          EnsureDebugTypeName(d); 
+          RETURN LOOPHOLE 
+                   ( M3DIB.DIBcreateBasicType
+                     ( self.debugRef,
+                       LTD(M3ID.ToText(d.typeName)), 
+                       VAL(d.bitSize,int64_t), 
+                       VAL(d.align,int64_t), 
+                       d.encoding),
+                     M3DIB.LLVMDIDescriptor
+                   );
         ELSE
           <*ASSERT FALSE*>
         END;
@@ -5952,6 +5970,7 @@ PROCEDURE DebugVar(self : U; v : LvVar; argNum : CARDINAL := 0) =
 
     debugObj := DebugIsObject(self,v.m3t);
     IF debugObj # NIL THEN
+      EnsureDebugTypeName(debugObj); 
       tyVal := M3DIB.DIBcreatePointerType(
                                   self.debugRef,
                                   tyVal,
