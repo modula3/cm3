@@ -138,7 +138,7 @@ if not defined("m3llvm")
       local args = [ "-b" ] 
 
       if debug
-        %args += "-g" 
+        args += "-g" 
       end
 
       %args += "-d" %While m3llvm is under development.  
