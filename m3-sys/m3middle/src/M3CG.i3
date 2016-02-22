@@ -101,6 +101,15 @@ TYPE
   TypeUID = (* BITS 32 FOR *) [-16_7fffffff-1 .. 16_7fffffff];
   (* a 32-bit unique id (fingerprint) for each type.  *)
   TypeUIDBits = BITS 32 FOR TypeUID;
+CONST NO_UID : TypeUID = -1;
+(* TODO: There are duplicate declarations of NO_UID in m3front/src/type/TypeRep.i3,
+         m3front/src/misc/M3String.m3, and m3front/src/misc/M3WString.m3. 
+         Also, m3cc/gcc*/gcc/m3cg/parse.c contain C declarations, and
+         cm3ide/src/nodes/Type.i3 contains a declaration with zero as value. 
+         Consistify and centralize this.
+*)  
+
+PROCEDURE FormatUID(tUID: TypeUID) : TEXT;
 
 TYPE
   Label = INTEGER;
