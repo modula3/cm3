@@ -349,6 +349,7 @@ PROCEDURE NoteWrites (p: T) =
 PROCEDURE Fold (p: T): Expr.T =
   BEGIN
     Resolve (p);
+    IF p.type = ErrType.T THEN RETURN NIL END; 
     IF (p.methods = NIL) THEN RETURN NIL END;
     RETURN p.methods.evaluator (p);
   END Fold;
@@ -358,7 +359,7 @@ PROCEDURE GetBounds (p: T;  VAR min, max: Target.Int) =
   BEGIN
     IF (e # NIL) AND (e # p) THEN
       Expr.GetBounds (e, min, max);
-    ELSIF (p.methods = NIL) THEN
+    ELSIF p.type = ErrType.T OR p.methods = NIL THEN
       ExprRep.NoBounds (p, min, max);
     ELSE
       p.methods.bounder (p, min, max);
