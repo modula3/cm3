@@ -74,8 +74,9 @@
 
    Here, they are all given distinct type names, so code can reflect what 
    is known about them, but the types are all equal, thus punting on this 
-   issue.  The C++ code in the external C-to-C++ bindings this uses contains 
-   runtime checks that convert failed narrowings to nil pointers. *) 
+   issue.  The C++ code in the external C-to-C++ bindings used by this
+   Modula-3 binding contains runtime checks that convert failed narrowings 
+   to nil pointers. *) 
 
 ; TYPE LLVMDIDescriptor
        = (* "M3DIBOpaqueDIDescriptor"*) MetadataRef
@@ -1130,6 +1131,16 @@
 ; PROCEDURE DIBgetDebugLoc
     ( Line : unsigned ; Col : unsigned ; Scope : LLVMDIScope )
   : LLVM . ValueRef 
+
+(* The following is found in Metadata.h.  It is here because
+   1) It uses types declared here, that would have to be ripped out
+      and moved to a M3Metadata interface, and
+   2) There is only one function bound here. 
+*) 
+
+(** Replace all uses of debug info referenced by this descriptor.*)
+; PROCEDURE replaceAllUsesWith 
+   ( Temp : LLVMDICompositeType ; Final : LLVMDIDescriptor ) 
 
 ; END M3DIBuilder
 .

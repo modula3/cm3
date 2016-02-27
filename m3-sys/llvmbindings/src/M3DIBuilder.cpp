@@ -27,7 +27,7 @@
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/IR/DebugInfo.h"
-#include "llvm/Support/CBindingWrapping.h" 
+//#include "llvm/Support/CBindingWrapping.h" 
 #include "llvm/IR/DIBuilder.h" // The C++ code this binds to.
 
 // wrap and unwrap functions for DI* types. 
@@ -39,6 +39,20 @@
 // in and out of functions in the binding, and "unwrap" for the reverse conversion.
 // But "wrap", by this convention, entails removing the MDNode pointer from a class
 // instance, and "unwrap" entails putting the pointer back inside a class instance.  
+
+// FIXME: We need to make a result-type-specific unwrap, similar to the 
+// template <typename T> unwrap<T> found in DEFINE_ISA_CONVERSION_FUNCTIONS 
+// in inclue/llvm/Support/CBindingWrapping.h, so we get proper runtime type
+// checking.  
+
+// FIXME: CHECK CAREFULLY!: 
+// The unwrap here is extremely suspicious.  It returns, by value, a struct
+// that is structurally equivalent in its data member content to what C++ code
+// expects (llvm::DIDescriptor).  But could it pass the above check?  There
+// must be runtime type info stored somewhere in the C++ class object for the 
+// test to even function.  CDebugInfo would not have this, or it would nto be right.
+// And do we really know that all the subclasses of llvm:DIDescriptor have lack any
+// additional data members and no virtual methods?     
 
 #define DEFINE_DI_MDNODE_CONVERSION_FUNCTIONS(Ty)\
   inline Ty *wrap(llvm::Ty llvmNode) {\
@@ -1465,6 +1479,16 @@ LLVMValueRef DIBgetDebugLoc(unsigned Line,
   llvm::Value *V = llvm::MetadataAsValue::get(ctx,L);
   return wrap(V);
 }
+
+/// From DebugInfo.h: 
+/// Replace all uses of debug info referenced by this descriptor.
+void replaceAllUsesWith(LLVMDICompositeType Temp, LLVMDIDescriptor Final) {
+  llvm::MDNode * FinalDbgPtr = reinterpret_cast<llvm::MDNode *>(Final); 
+  llvm::MDNodeFwdDecl * TempDbgPtr 
+    = reinterpret_cast<llvm::MDNodeFwdDecl *>(Temp); 
+  // TODO: Get a runtime check on the type of Temp. 
+  TempDbgPtr->replaceAllUsesWith(FinalDbgPtr);  
+} 
 
 //End M3DIBuilder.cpp 
 
