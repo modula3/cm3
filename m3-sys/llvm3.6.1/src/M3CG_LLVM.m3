@@ -6,26 +6,39 @@ UNSAFE MODULE M3CG_LLVM;
          LONGINT to C/C++ code that declares them as unsigned long long,
          across unchecked bindings.  Check that this is right. *) 
 
+IMPORT Ctypes;
+IMPORT Fmt;
+IMPORT IntRefTbl;
+IMPORT IO; (* debug this module *)
+IMPORT M3toC;
+IMPORT Pathname;
+IMPORT RefSeq;
+IMPORT Text;
+IMPORT Word;
+IMPORT Wr;
+
+IMPORT DwarfConst AS DC; 
+IMPORT LLVM;
 IMPORT LLVMTypes; 
 FROM LLVMTypes IMPORT int64_t , uint64_t , unsigned;
 FROM LLVMTypes IMPORT Bool , False , True;   
-FROM LLVMTypes 
-  IMPORT ArrayRefOfMetadataRef, MDNodeRef, MetadataRef, StringRef;
-IMPORT LLVM;
+FROM LLVMTypes IMPORT ArrayRefOfMetadataRef, MDNodeRef, MetadataRef, StringRef;
+IMPORT M3Buf;
+IMPORT M3CG;
 FROM M3CG IMPORT Name, ByteOffset, TypeUID, CallingConvention;
 FROM M3CG IMPORT BitSize, ByteSize, Alignment, Frequency;
 FROM M3CG IMPORT Var, Proc, Label, Sign, BitOffset;
 FROM M3CG IMPORT Type, ZType, AType, RType, IType, MType;
 FROM M3CG IMPORT CompareOp, ConvertOp, AtomicOp, RuntimeError;
 FROM M3CG IMPORT MemoryOrder;
-IMPORT M3ID, M3Buf, M3CG, M3CG_Ops;
+IMPORT M3CG_Ops;
 IMPORT M3DIBuilder AS M3DIB;
-IMPORT Target, TargetMap, TInt, TFloat;
-IMPORT Wr, IntRefTbl, RefSeq;
-IMPORT Ctypes, M3toC;
-IMPORT Text,Fmt,Pathname;
-IMPORT IO; (* debug this module *)
-IMPORT Word;
+IMPORT M3ID;
+IMPORT Target;
+IMPORT TargetMap;
+IMPORT TFloat;
+IMPORT TInt;
+
 TYPE INT32 = Ctypes.int; 
 
 TYPE callStateTyp 
@@ -453,23 +466,6 @@ CONST UID_NULL = 16_48EC756E; (* NULL *) (* Occurs in elego/graphicutils/src/Rsr
   UID_PROC7 = 16_EE17DF2C;
   UID_PROC8 = 16_B740EFD0;
 *) 
-
-(* Dwarf constants: - see dwarf.h *)
-(* TODO: Put these somewhere central. *) 
-
-CONST DW_ATE_boolean = 16_2;
-CONST DW_ATE_signed = 16_5;
-CONST DW_ATE_unsigned = 16_7;
-CONST DW_ATE_signed_char = 16_6;
-CONST DW_ATE_unsigned_char = 16_8;
-CONST DW_ATE_float = 16_4;
-CONST DW_ATE_address = 16_1;
-
-CONST DW_TAG_auto_variable = 16_100;
-CONST DW_TAG_arg_variable = 16_101;
-CONST DW_TAG_return_variable = 16_102; 
-CONST DW_TAG_class_type = 16_02; 
-CONST DW_TAG_structure_type = 16_13;
 
 (* debug objects *)
 TYPE
@@ -5120,37 +5116,37 @@ PROCEDURE InitUids(self : U) =
   BEGIN
     (* create the basic tUid entries - needs testing *)
 
-    EVAL self.debugTable.put(UID_INTEGER,NEW(BaseDebug, bitSize := ptrBits, align := ptrBits, typeName := M3ID.Add("INTEGER"), encoding := DW_ATE_signed));
-    EVAL self.debugTable.put(UID_LONGINT,NEW(BaseDebug, bitSize := ptrBits, align := ptrBits, typeName := M3ID.Add("LONGINT"), encoding := DW_ATE_signed));
-    EVAL self.debugTable.put(UID_WORD,NEW(BaseDebug, bitSize := ptrBits, align := ptrBits, typeName := M3ID.Add("WORD"), encoding := DW_ATE_unsigned));
-    EVAL self.debugTable.put(UID_LONGWORD,NEW(BaseDebug, bitSize := ptrBits, align := ptrBits, typeName := M3ID.Add("LONGWORD"), encoding := DW_ATE_unsigned));
-    EVAL self.debugTable.put(UID_REEL,NEW(BaseDebug, bitSize := 32L, align := 32L, typeName := M3ID.Add("REAL"), encoding := DW_ATE_float));
-    EVAL self.debugTable.put(UID_LREEL,NEW(BaseDebug, bitSize := 64L, align := 64L, typeName := M3ID.Add("LONGREAL"), encoding := DW_ATE_float));
+    EVAL self.debugTable.put(UID_INTEGER,NEW(BaseDebug, bitSize := ptrBits, align := ptrBits, typeName := M3ID.Add("INTEGER"), encoding := DC.DW_ATE_signed));
+    EVAL self.debugTable.put(UID_LONGINT,NEW(BaseDebug, bitSize := ptrBits, align := ptrBits, typeName := M3ID.Add("LONGINT"), encoding := DC.DW_ATE_signed));
+    EVAL self.debugTable.put(UID_WORD,NEW(BaseDebug, bitSize := ptrBits, align := ptrBits, typeName := M3ID.Add("WORD"), encoding := DC.DW_ATE_unsigned));
+    EVAL self.debugTable.put(UID_LONGWORD,NEW(BaseDebug, bitSize := ptrBits, align := ptrBits, typeName := M3ID.Add("LONGWORD"), encoding := DC.DW_ATE_unsigned));
+    EVAL self.debugTable.put(UID_REEL,NEW(BaseDebug, bitSize := 32L, align := 32L, typeName := M3ID.Add("REAL"), encoding := DC.DW_ATE_float));
+    EVAL self.debugTable.put(UID_LREEL,NEW(BaseDebug, bitSize := 64L, align := 64L, typeName := M3ID.Add("LONGREAL"), encoding := DC.DW_ATE_float));
     (* change this if ever upgrade to 128 bit floats or change to store sizeof type*)
-    EVAL self.debugTable.put(UID_XREEL,NEW(BaseDebug, bitSize := 64L, align := 64L, typeName := M3ID.Add("EXTENDED"), encoding := DW_ATE_float));
+    EVAL self.debugTable.put(UID_XREEL,NEW(BaseDebug, bitSize := 64L, align := 64L, typeName := M3ID.Add("EXTENDED"), encoding := DC.DW_ATE_float));
     EVAL self.debugTable.put(UID_BOOLEAN,NEW(BaseDebug, bitSize := 8L, align := 8L,
     (* check size and align *)
-    typeName := M3ID.Add("BOOLEAN"), encoding := DW_ATE_boolean));
-    EVAL self.debugTable.put(UID_CHAR,NEW(BaseDebug, bitSize := 8L, align := 8L, typeName := M3ID.Add("CHAR"), encoding := DW_ATE_unsigned_char));
-    EVAL self.debugTable.put(UID_WIDECHAR,NEW(BaseDebug, bitSize := 16L, align := 16L, typeName := M3ID.Add("WIDECHAR"), encoding := DW_ATE_signed_char));
+    typeName := M3ID.Add("BOOLEAN"), encoding := DC.DW_ATE_boolean));
+    EVAL self.debugTable.put(UID_CHAR,NEW(BaseDebug, bitSize := 8L, align := 8L, typeName := M3ID.Add("CHAR"), encoding := DC.DW_ATE_unsigned_char));
+    EVAL self.debugTable.put(UID_WIDECHAR,NEW(BaseDebug, bitSize := 16L, align := 16L, typeName := M3ID.Add("WIDECHAR"), encoding := DC.DW_ATE_signed_char));
 
 (* check this type and size*)
-    EVAL self.debugTable.put(UID_ROOT,NEW(ObjectDebug, bitSize := 0L(*ptrBits*), align := ptrBits, typeName := M3ID.Add("ROOT"), encoding := DW_ATE_address));
+    EVAL self.debugTable.put(UID_ROOT,NEW(ObjectDebug, bitSize := 0L(*ptrBits*), align := ptrBits, typeName := M3ID.Add("ROOT"), encoding := DC.DW_ATE_address));
 (* fix this type *)
-    EVAL self.debugTable.put(UID_UNTRACED_ROOT,NEW(ObjectDebug, bitSize := 0L(*ptrBits*), align := ptrBits, typeName := M3ID.Add("UNTRACED_ROOT"), encoding := DW_ATE_address));
-    EVAL self.debugTable.put(UID_ADDR,NEW(BaseDebug, bitSize := ptrBits, align := ptrBits, typeName := M3ID.Add("ADDR"), encoding := DW_ATE_address));
+    EVAL self.debugTable.put(UID_UNTRACED_ROOT,NEW(ObjectDebug, bitSize := 0L(*ptrBits*), align := ptrBits, typeName := M3ID.Add("UNTRACED_ROOT"), encoding := DC.DW_ATE_address));
+    EVAL self.debugTable.put(UID_ADDR,NEW(BaseDebug, bitSize := ptrBits, align := ptrBits, typeName := M3ID.Add("ADDR"), encoding := DC.DW_ATE_address));
 
-    EVAL self.debugTable.put(UID_TEXT,NEW(ObjectDebug, superType := UID_REFANY, bitSize := ptrBits, align := ptrBits, typeName := M3ID.Add("TEXT"), encoding := DW_ATE_address));
+    EVAL self.debugTable.put(UID_TEXT,NEW(ObjectDebug, superType := UID_REFANY, bitSize := ptrBits, align := ptrBits, typeName := M3ID.Add("TEXT"), encoding := DC.DW_ATE_address));
 (* check this type and size*)
-    EVAL self.debugTable.put(UID_REFANY,NEW(ObjectDebug, superType := UID_ROOT, bitSize := ptrBits, align := ptrBits, typeName := M3ID.Add("REFANY"), encoding := DW_ATE_address));
+    EVAL self.debugTable.put(UID_REFANY,NEW(ObjectDebug, superType := UID_ROOT, bitSize := ptrBits, align := ptrBits, typeName := M3ID.Add("REFANY"), encoding := DC.DW_ATE_address));
 (* check this type and size*)
-    EVAL self.debugTable.put(UID_MUTEX,NEW(ObjectDebug, superType := UID_ROOT, bitSize := ptrBits, align := ptrBits, typeName := M3ID.Add("MUTEX"), encoding := DW_ATE_address));
+    EVAL self.debugTable.put(UID_MUTEX,NEW(ObjectDebug, superType := UID_ROOT, bitSize := ptrBits, align := ptrBits, typeName := M3ID.Add("MUTEX"), encoding := DC.DW_ATE_address));
 
-    EVAL self.debugTable.put(UID_RANGE_0_31,NEW(BaseDebug, bitSize := 32L, align := 32L, typeName := M3ID.Add("RANGE_0_31"), encoding := DW_ATE_signed));
-    EVAL self.debugTable.put(UID_RANGE_0_63,NEW(BaseDebug, bitSize := 64L, align := 64L, typeName := M3ID.Add("RANGE_0_63"), encoding := DW_ATE_signed));
+    EVAL self.debugTable.put(UID_RANGE_0_31,NEW(BaseDebug, bitSize := 32L, align := 32L, typeName := M3ID.Add("RANGE_0_31"), encoding := DC.DW_ATE_signed));
+    EVAL self.debugTable.put(UID_RANGE_0_63,NEW(BaseDebug, bitSize := 64L, align := 64L, typeName := M3ID.Add("RANGE_0_63"), encoding := DC.DW_ATE_signed));
 
-    EVAL self.debugTable.put(UID_NULL,NEW(BaseDebug, bitSize := ptrBits, align := ptrBits, typeName := M3ID.Add("NULL"), encoding := DW_ATE_address));
-    EVAL self.debugTable.put(NO_UID,NEW(BaseDebug, bitSize := 0L, align := 0L, typeName := M3ID.Add("NO_UID"), encoding := DW_ATE_address));
+    EVAL self.debugTable.put(UID_NULL,NEW(BaseDebug, bitSize := ptrBits, align := ptrBits, typeName := M3ID.Add("NULL"), encoding := DC.DW_ATE_address));
+    EVAL self.debugTable.put(NO_UID,NEW(BaseDebug, bitSize := 0L, align := 0L, typeName := M3ID.Add("NO_UID"), encoding := DC.DW_ATE_address));
   END InitUids;
 
 PROCEDURE EnsureDebugTypeName(debug: BaseDebug) =
@@ -5232,7 +5228,7 @@ PROCEDURE DebugFunc(self : U; p : Proc) =
         tAlign := param.align * ptrBytes;
         tyVal := M3DIB.DIBcreateBasicType
                    (self.debugRef, LTD(typeName),
-                    VAL(tSize,uint64_t), VAL(tAlign,uint64_t),  DW_ATE_address);
+                    VAL(tSize,uint64_t), VAL(tAlign,uint64_t),  DC.DW_ATE_address);
         paramsArr[i+1] := tyVal;
       END;
     END;
@@ -5380,7 +5376,7 @@ PROCEDURE DebugSet(self : U; s : SetDebug) : M3DIB.LLVMDICompositeType =
       IO.Put("set debug\n");
     END; 
 
-    eltVal := M3DIB.DIBcreateBasicType(self.debugRef,LTD("basic_type" ), VAL(1L,uint64_t), VAL(8L,uint64_t), DW_ATE_unsigned_char);
+    eltVal := M3DIB.DIBcreateBasicType(self.debugRef,LTD("basic_type" ), VAL(1L,uint64_t), VAL(8L,uint64_t), DC.DW_ATE_unsigned_char);
 
     (*eltVal := DebugLookup(self,d.elt);*)
     (*
@@ -5414,7 +5410,7 @@ PROCEDURE DebugSet(self : U; s : SetDebug) : M3DIB.LLVMDICompositeType =
   Also you should be able to implement this with packed array of bits
   havent tried that yet. *)
 (*
-    eltVal := M3DIB.DIBcreateBasicType(self.debugRef,LTD("basic_type" ), 1L, 8L, DW_ATE_unsigned_char);
+    eltVal := M3DIB.DIBcreateBasicType(self.debugRef,LTD("basic_type" ), 1L, 8L, DC.DW_ATE_unsigned_char);
 
     EnsureDebugTypeName(d); 
     lVal := M3DIB.DIBcreateSetType(
@@ -5566,7 +5562,7 @@ PROCEDURE DebugObject(self : U; o : ObjectDebug) : LLVM.ValueRef =
     o.lVal := LLVM.LLVMDIBuilderCreateReplaceableForwardDecl(
       forwardRef := M3DIB.DIBcreateReplaceableForwardDecl(
                     self.debugRef,
-                    DW_TAG_class_type,
+                    DC.DW_TAG_class_type,
                     LTD("forward_class"),
                     NIL,
                     self.fileRef,
@@ -5694,7 +5690,7 @@ PROCEDURE DebugObject(self : U; o : ObjectDebug) : M3DIB.LLVMDIDerivedType =
     forwardClassDIT 
       := M3DIB.DIBcreateReplaceableForwardDecl
            (self.debugRef,
-            DW_TAG_class_type,
+            DC.DW_TAG_class_type,
             LTD(M3ID.ToText(o.typeName) & "__Forward"),
             self.funcRef,
             self.fileRef,
@@ -5792,7 +5788,7 @@ PROCEDURE DebugRecord(self : U; r : RecordDebug) : M3DIB.LLVMDICompositeType =
   BEGIN
     NewArrayRefOfMetadataRef(r.numFields, paramsArr, paramsMetadata);
 
-    fwdVal := LLVM.LLVMDIBuilderCreateReplaceableForwardDecl(self.debugRef, DW_TAG_structure_type, LT("forward_rec"), NIL, self.fileRef, self.curLine, 0, 0L, 0L, LT(M3ID.ToText(r.typeName)));
+    fwdVal := LLVM.LLVMDIBuilderCreateReplaceableForwardDecl(self.debugRef, DC.DW_TAG_structure_type, LT("forward_rec"), NIL, self.fileRef, self.curLine, 0, 0L, 0L, LT(M3ID.ToText(r.typeName)));
 
     IF r.typeName = 0 THEN
       ptrName := "root";
@@ -5848,7 +5844,7 @@ PROCEDURE DebugRecord(self : U; r : RecordDebug) : M3DIB.LLVMDICompositeType =
     forwardStructDIT 
       := M3DIB.DIBcreateReplaceableForwardDecl
            (self.debugRef,
-            DW_TAG_structure_type,
+            DC.DW_TAG_structure_type,
             LTD(M3ID.ToText(r.typeName) & "__Forward"),
             self.funcRef,
             self.fileRef,
@@ -5999,9 +5995,9 @@ PROCEDURE DebugVar(self : U; v : LvVar; argNum : CARDINAL := 0) =
     END;
 
     IF v.varType = VarType.Param THEN
-      dwarfTag := DW_TAG_arg_variable;
+      dwarfTag := DC.DW_TAG_arg_variable;
     ELSE
-      dwarfTag := DW_TAG_auto_variable;
+      dwarfTag := DC.DW_TAG_auto_variable;
     END;
 
     tyVal := DebugLookup(self,v.m3t);
