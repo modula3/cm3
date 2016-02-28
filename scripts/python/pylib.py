@@ -2184,6 +2184,16 @@ def SetupEnvironment():
 
     if IsNativeNTHostTarget():
 
+
+        # Inform NT.common to link to ucrt/vcruntime.
+
+        if not os.environ.get("CM3_VS2015_OR_NEWER"):
+            cver = GetVisualCPlusPlusVersion()
+            if len(cver) == 4:
+                os.environ["CM3_VS2015_OR_NEWER"] = "1"
+            else:
+                os.environ["CM3_VS2015_OR_NEWER"] = "0"
+
         VCBin = ""
         VCInc = ""
         VCLib = ""
