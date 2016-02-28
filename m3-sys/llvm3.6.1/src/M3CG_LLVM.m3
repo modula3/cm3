@@ -5377,7 +5377,7 @@ PROCEDURE DebugSet(self : U; s : SetDebug) : M3DIB.LLVMDICompositeType =
       IO.Put("set debug\n");
     END; 
 
-    eltVal := M3DIB.DIBcreateBasicType(self.debugRef,LTD("basic_type" ), VAL(1L,int64_t), VAL(8L,int64_t), DW_ATE_unsigned_char);
+    eltVal := M3DIB.DIBcreateBasicType(self.debugRef,LTD("basic_type" ), VAL(1L,uint64_t), VAL(8L,uint64_t), DW_ATE_unsigned_char);
 
     (*eltVal := DebugLookup(self,d.elt);*)
     (*
@@ -5400,8 +5400,8 @@ PROCEDURE DebugSet(self : U; s : SetDebug) : M3DIB.LLVMDICompositeType =
 
     RETURN M3DIB.DIBcreateArrayType(
              self.debugRef, 
-             VAL(s.bitSize,int64_t), 
-             VAL(s.align,int64_t), 
+             VAL(s.bitSize,uint64_t), 
+             VAL(s.align,uint64_t), 
              LOOPHOLE(eltVal,M3DIB.LLVMDIType), 
              paramsDIArr );
 
@@ -5444,8 +5444,8 @@ PROCEDURE DebugEnum(self : U; e : EnumDebug) : M3DIB.LLVMDICompositeType =
                LTD(M3ID.ToText(e.typeName)),
                self.fileRef,
                self.curLine,
-               VAL(e.bitSize,int64_t),
-               VAL(e.align,int64_t),
+               VAL(e.bitSize,uint64_t),
+               VAL(e.align,uint64_t),
                paramsDIArr,
                M3DIB.LLVMDIDescriptorEmpty);
    
@@ -5569,8 +5569,8 @@ PROCEDURE DebugObject(self : U; o : ObjectDebug) : LLVM.ValueRef =
                     self.fileRef,
                     self.curLine,
                     0,
-                    VAL(0L,int64_t),
-                    VAL(0L,int64_t),
+                    VAL(0L,uint64_t),
+                    VAL(0L,uint64_t),
                     LTD(M3ID.ToText(o.typeName)));
 
     IF NOT (o.superType = UID_ROOT OR
@@ -5583,7 +5583,7 @@ PROCEDURE DebugObject(self : U; o : ObjectDebug) : LLVM.ValueRef =
               inheritVal := M3DIB.DIBcreateInheritance(self.debugRef,
                       forwardRef, (* cVal, *)(* Ty;*)
                       derivedVal, (*BaseTy;*)
-                      VAL(0L,int64_t), (*BaseOffset,*)
+                      VAL(0L,uint64_t), (*BaseOffset,*)
                       0);
 
       paramsArr[0] := inheritVal;
@@ -5613,9 +5613,9 @@ PROCEDURE DebugObject(self : U; o : ObjectDebug) : LLVM.ValueRef =
                      LTD(M3ID.ToText(o.fields[i].name)),
                      self.fileRef,
                      self.curLine,
-                     VAL(o.fields[i].bitSize,int64_t),
-                     VAL(o.fields[i].align,int64_t),
-                     VAL(o.fields[i].bitOffset + 64L,int64_t), (* for vtable ptr *)
+                     VAL(o.fields[i].bitSize,uint64_t),
+                     VAL(o.fields[i].align,uint64_t),
+                     VAL(o.fields[i].bitOffset + 64L,uint64_t), (* for vtable ptr *)
                      0,
                      eltVal);
       paramsArr[paramCount] := memberVal;
@@ -5629,9 +5629,9 @@ PROCEDURE DebugObject(self : U; o : ObjectDebug) : LLVM.ValueRef =
               LTD(M3ID.ToText(o.typeName)),
               self.fileRef,
               self.curLine,
-              VAL(o.fieldSize + 64L,int64_t), (* for vtable ptr *)
-              VAL(o.align,int64_t),
-              VAL(0L,int64_t), (*ptrBits, (* offset *) *)
+              VAL(o.fieldSize + 64L,uint64_t), (* for vtable ptr *)
+              VAL(o.align,uint64_t),
+              VAL(0L,uint64_t), (*ptrBits, (* offset *) *)
               0,
               M3DIB.LLVMDIDescriptorEmpty, (*derivedVal,*)
               paramsDIArr,
@@ -5645,8 +5645,8 @@ PROCEDURE DebugObject(self : U; o : ObjectDebug) : LLVM.ValueRef =
 *) 
 
     RETURN M3DIB.DIBcreatePointerType(
-              VAL(ptrBits,int64_t),
-              VAL(ptrBits,int64_t),
+              VAL(ptrBits,uint64_t),
+              VAL(ptrBits,uint64_t),
               LTD(M3ID.ToText(o.typeName)));
   END DebugObject;
 *******************************************************8 merged *) 
@@ -5706,8 +5706,8 @@ PROCEDURE DebugObject(self : U; o : ObjectDebug) : M3DIB.LLVMDIDerivedType =
               self.fileRef,
               self.curLine,
               RuntimeLang :=0,
-              SizeInBits := VAL(0L,int64_t),
-              AlignInBits := VAL(0L,int64_t),
+              SizeInBits := VAL(0L,uint64_t),
+              AlignInBits := VAL(0L,uint64_t),
               UniqueIdentifier := uniqueId);
 
       (* Then create a DIBuilder inherit node connecting to the supertype
@@ -5717,7 +5717,7 @@ PROCEDURE DebugObject(self : U; o : ObjectDebug) : M3DIB.LLVMDIDerivedType =
              (self.debugRef,
               Ty := forwardClassDIT, 
               BaseTy := supertypeDIT,
-              BaseOffset := VAL(0L,int64_t),
+              BaseOffset := VAL(0L,uint64_t),
               Flags := 0);
       paramsArr[0] := inheritDIT;
     ELSE 
@@ -5734,11 +5734,11 @@ PROCEDURE DebugObject(self : U; o : ObjectDebug) : M3DIB.LLVMDIDerivedType =
               Name := LTD(M3ID.ToText(o.fields[i].name)),
               File := self.fileRef,
               LineNo := self.curLine,
-              SizeInBits := VAL(o.fields[i].bitSize,int64_t),
-              AlignInBits := VAL(o.fields[i].align,int64_t),
+              SizeInBits := VAL(o.fields[i].bitSize,uint64_t),
+              AlignInBits := VAL(o.fields[i].align,uint64_t),
               OffsetInBits 
                 := VAL(o.fields[i].bitOffset + 64L(*For typecell pointer *),
-                       int64_t), 
+                       uint64_t), 
               Flags := 0,
               Ty := fieldDIT);
       paramsArr[nextMemberNo] := memberDINode;
@@ -5755,9 +5755,9 @@ PROCEDURE DebugObject(self : U; o : ObjectDebug) : M3DIB.LLVMDIDerivedType =
              File := self.fileRef,
              LineNumber := self.curLine,
              SizeInBits 
-                := VAL(o.fieldSize + 64L(*For typecell pointer *),int64_t), 
-             AlignInBits := VAL(o.align,int64_t),
-             OffsetInBits := VAL(0L,int64_t), 
+                := VAL(o.fieldSize + 64L(*For typecell pointer *),uint64_t), 
+             AlignInBits := VAL(o.align,uint64_t),
+             OffsetInBits := VAL(0L,uint64_t), 
              Flags := 0,
              DerivedFrom := supertypeDIT,
              Elements := paramsDIArr,
@@ -5772,13 +5772,13 @@ PROCEDURE DebugObject(self : U; o : ObjectDebug) : M3DIB.LLVMDIDerivedType =
        := M3DIB.DIBcreatePointerType
             ( self.debugRef,
               PointeeTy := heapObjectDIT,
-              SizeInBits := VAL(ptrBits,int64_t),
-              AlignInBits := VAL(ptrBits,int64_t),
+              SizeInBits := VAL(ptrBits,uint64_t),
+              AlignInBits := VAL(ptrBits,uint64_t),
               Name := LTD(M3ID.ToText(o.typeName)));
     RETURN objectPtrDIT;
 
   END DebugObject;
-
+ 
 (* Merged *************************************************
 PROCEDURE DebugRecord(self : U; r : RecordDebug) : M3DIB.LLVMDICompositeType =
   CONST
@@ -5807,9 +5807,9 @@ PROCEDURE DebugRecord(self : U; r : RecordDebug) : M3DIB.LLVMDICompositeType =
       fieldDIT := DebugLookup(self,r.fields[i].tUid);
       memberDINode := M3DIB.DIBcreateMemberType(
                      LTD(M3ID.ToText(r.fields[i].name)),
-                     VAL(r.fields[i].bitSize,int64_t),
-                     VAL(r.fields[i].align,int64_t),
-                     VAL(r.fields[i].bitOffset,int64_t)),
+                     VAL(r.fields[i].bitSize,uint64_t),
+                     VAL(r.fields[i].align,uint64_t),
+                     VAL(r.fields[i].bitOffset,uint64_t)),
 
       paramsArr[i] := memberDINode;
     END;
@@ -5820,8 +5820,8 @@ PROCEDURE DebugRecord(self : U; r : RecordDebug) : M3DIB.LLVMDICompositeType =
     LLVM.LLVMReplaceAllUsesWith(fwdVal,recVal);
                LTD(M3ID.ToText(r.typeName)),
     RETURN recVal;
-               VAL(r.bitSize,int64_t),
-               VAL(r.align,int64_t),
+               VAL(r.bitSize,uint64_t),
+               VAL(r.align,uint64_t),
                M3DIB.LLVMDITypeEmpty,
                paramsDIArr);
   END DebugRecord;
@@ -5848,9 +5848,9 @@ PROCEDURE DebugRecord(self : U; r : RecordDebug) : M3DIB.LLVMDICompositeType =
                      LTD(M3ID.ToText(r.fields[i].name)),
                      self.fileRef,
                      self.curLine,
-                     VAL(r.fields[i].bitSize,int64_t),
-                     VAL(r.fields[i].align,int64_t),
-                     VAL(r.fields[i].bitOffset,int64_t),
+                     VAL(r.fields[i].bitSize,uint64_t),
+                     VAL(r.fields[i].align,uint64_t),
+                     VAL(r.fields[i].bitOffset,uint64_t),
                      0,
                      fieldDIType);
 
@@ -5865,8 +5865,8 @@ PROCEDURE DebugRecord(self : U; r : RecordDebug) : M3DIB.LLVMDICompositeType =
                LTD(M3ID.ToText(r.typeName)),
                self.fileRef,
                self.curLine,
-               VAL(r.bitSize,int64_t),
-               VAL(r.align,int64_t),
+               VAL(r.bitSize,uint64_t),
+               VAL(r.align,uint64_t),
                0,
                M3DIB.LLVMDITypeEmpty,
                paramsDIArr);
@@ -5881,8 +5881,8 @@ PROCEDURE DebugPointer(self : U; p : PointerDebug) : M3DIB.LLVMDIDerivedType =
     RETURN M3DIB.DIBcreatePointerType(
               self.debugRef,
                referentDIType,
-               VAL(p.bitSize,int64_t),
-               VAL(p.align,int64_t),
+               VAL(p.bitSize,uint64_t),
+               VAL(p.align,uint64_t),
                LTD(M3ID.ToText(p.typeName)));
   END DebugPointer;
 
@@ -5940,8 +5940,8 @@ PROCEDURE DebugLookup(self : U; tUid : TypeUID) : M3DIB.LLVMDIDescriptor =
                    ( M3DIB.DIBcreateBasicType
                      ( self.debugRef,
                        LTD(M3ID.ToText(d.typeName)), 
-                       VAL(d.bitSize,int64_t), 
-                       VAL(d.align,int64_t), 
+                       VAL(d.bitSize,uint64_t), 
+                       VAL(d.align,uint64_t), 
                        d.encoding),
                      M3DIB.LLVMDIDescriptor
                    );
