@@ -441,6 +441,7 @@ CONST UID_REFANY = 16_1C1C45E6; (* REFANY *)
 CONST UID_ADDR = 16_08402063; (* ADDRESS *)
 CONST UID_RANGE_0_31 = 16_2DA6581D; (* [0..31] *)
 CONST UID_RANGE_0_63 = 16_2FA3581D; (* [0..63] *)
+CONST UID_NULL = 16_48EC756E; (* NULL *) (* Occurs in elego/graphicutils/src/RsrcFilter.m3 *)
 
 (* not used
   UID_PROC1 = 16_9C9DE465;
@@ -452,23 +453,25 @@ CONST UID_RANGE_0_63 = 16_2FA3581D; (* [0..63] *)
   UID_PROC7 = 16_EE17DF2C;
   UID_PROC8 = 16_B740EFD0;
 *) 
-CONST UID_NULL = 16_48EC756E; (* NULL *) (* Occurs in elego/graphicutils/src/RsrcFilter.m3 *)
 
-  (* debug encoding - see dwarf.h *)
-  DW_ATE_boolean = 16_2;
-  DW_ATE_signed = 16_5;
-  DW_ATE_unsigned = 16_7;
-  DW_ATE_signed_char = 16_6;
-  DW_ATE_unsigned_char = 16_8;
-  DW_ATE_float = 16_4;
-  DW_ATE_address = 16_1;
+(* Dwarf constants: - see dwarf.h *)
+(* TODO: Put these somewhere central. *) 
 
-  (* debug var type *)
-  DW_TAG_auto_variable = 16_100;
-  DW_TAG_arg_variable = 16_101;
-(*  DW_TAG_return_variable = 16_102; not used *)
+CONST DW_ATE_boolean = 16_2;
+CONST DW_ATE_signed = 16_5;
+CONST DW_ATE_unsigned = 16_7;
+CONST DW_ATE_signed_char = 16_6;
+CONST DW_ATE_unsigned_char = 16_8;
+CONST DW_ATE_float = 16_4;
+CONST DW_ATE_address = 16_1;
 
-  (* debug objects *)
+CONST DW_TAG_auto_variable = 16_100;
+CONST DW_TAG_arg_variable = 16_101;
+CONST DW_TAG_return_variable = 16_102; 
+CONST DW_TAG_class_type = 16_02; 
+CONST DW_TAG_structure_type = 16_13;
+
+(* debug objects *)
 TYPE
 
   BaseDebug = OBJECT
@@ -5652,8 +5655,6 @@ PROCEDURE DebugObject(self : U; o : ObjectDebug) : LLVM.ValueRef =
 *******************************************************8 merged *) 
 (* 3.6.1 *) 
 
-CONST DW_TAG_class_type = 16_02; 
-(* TODO^ Put this somewhere central. *) 
 
 PROCEDURE DebugObject(self : U; o : ObjectDebug) : M3DIB.LLVMDIDerivedType =
   VAR
@@ -5688,6 +5689,21 @@ PROCEDURE DebugObject(self : U; o : ObjectDebug) : M3DIB.LLVMDIDerivedType =
 
     EnsureDebugTypeName(o); 
     EnsureDebugTypeName(baseObj); 
+
+    (* Build a forward DIType decl for the eventual class DIType. *)
+    forwardClassDIT 
+      := M3DIB.DIBcreateReplaceableForwardDecl
+           (self.debugRef,
+            DW_TAG_class_type,
+            LTD(M3ID.ToText(o.typeName) & "__Forward"),
+            self.funcRef,
+            self.fileRef,
+            self.curLine,
+            RuntimeLang :=0,
+            SizeInBits := VAL(0L,uint64_t),
+            AlignInBits := VAL(0L,uint64_t),
+            UniqueIdentifier := uniqueId);
+
     hasSupertype 
        := o.superType # NO_UID 
           AND o.superType # UID_ROOT 
@@ -5696,21 +5712,7 @@ PROCEDURE DebugObject(self : U; o : ObjectDebug) : M3DIB.LLVMDIDerivedType =
     THEN (* o has a nontrivial supertype. *) 
       supertypeDIT := DebugLookup(self,o.superType);
 
-    (* Build a forward DIType decl for the eventual class DIType. *)
-      forwardClassDIT 
-        := M3DIB.DIBcreateReplaceableForwardDecl
-             (self.debugRef,
-              DW_TAG_class_type,
-              LTD(M3ID.ToText(o.typeName) & "__Forward"),
-              self.funcRef,
-              self.fileRef,
-              self.curLine,
-              RuntimeLang :=0,
-              SizeInBits := VAL(0L,uint64_t),
-              AlignInBits := VAL(0L,uint64_t),
-              UniqueIdentifier := uniqueId);
-
-      (* Then create a DIBuilder inherit node connecting to the supertype
+      (* Create a DIBuilder inherit node connecting to the supertype
          and make it the first "param". *) 
       inheritDIT 
         := M3DIB.DIBcreateInheritance
@@ -5764,9 +5766,7 @@ PROCEDURE DebugObject(self : U; o : ObjectDebug) : M3DIB.LLVMDIDerivedType =
              VTableHolder := M3DIB.LLVMDITypeEmpty,
              TemplateParms := NIL,
              UniqueIdentifier := uniqueId);
-    IF hasSupertype THEN
-      M3DIB.replaceAllUsesWith(forwardClassDIT, heapObjectDIT); 
-    END; 
+    M3DIB.replaceAllUsesWith(forwardClassDIT, heapObjectDIT); 
 
     objectPtrDIT 
        := M3DIB.DIBcreatePointerType
@@ -5829,47 +5829,68 @@ PROCEDURE DebugRecord(self : U; r : RecordDebug) : M3DIB.LLVMDICompositeType =
 
 PROCEDURE DebugRecord(self : U; r : RecordDebug) : M3DIB.LLVMDICompositeType =
   VAR
-    fieldDIType : M3DIB.LLVMDIType; 
-    memberDIType : M3DIB.LLVMDIDerivedType; 
+    forwardStructDIT, structDIT : M3DIB.LLVMDICompositeType; 
+    fieldDIT : M3DIB.LLVMDIType; 
+    memberDIT : M3DIB.LLVMDIDerivedType; 
     paramsArr : REF ARRAY OF MetadataRef; 
     paramsMetadata : LLVMTypes.ArrayRefOfMetadataRef; 
     paramsDIArr : M3DIB.LLVMDIArray;
+    uniqueId : StringRef; 
   BEGIN
     IF self.m3llvmDebugLev > 0 THEN
       IO.Put("record debug\n");
     END; 
 
-    NewArrayRefOfMetadataRef(r.numFields, paramsArr, paramsMetadata);
+    uniqueId := LTD(M3CG.FormatUID(r.tUid));
+    NewArrayRefOfMetadataRef
+      (r.numFields, (*OUT*)paramsArr, (*OUT*)paramsMetadata);
+    EnsureDebugTypeName(r); 
+    forwardStructDIT 
+      := M3DIB.DIBcreateReplaceableForwardDecl
+           (self.debugRef,
+            DW_TAG_structure_type,
+            LTD(M3ID.ToText(r.typeName) & "__Forward"),
+            self.funcRef,
+            self.fileRef,
+            self.curLine,
+            RuntimeLang :=0,
+            SizeInBits := VAL(0L,uint64_t),
+            AlignInBits := VAL(0L,uint64_t),
+            UniqueIdentifier := uniqueId);
     FOR i := 0 TO r.numFields - 1 DO
-      fieldDIType := DebugLookup(self,r.fields[i].tUid);
-      memberDIType := M3DIB.DIBcreateMemberType(
+      fieldDIT := DebugLookup(self,r.fields[i].tUid);
+      memberDIT := M3DIB.DIBcreateMemberType(
                      self.debugRef,
-                     self.funcRef,
-                     LTD(M3ID.ToText(r.fields[i].name)),
-                     self.fileRef,
-                     self.curLine,
-                     VAL(r.fields[i].bitSize,uint64_t),
-                     VAL(r.fields[i].align,uint64_t),
-                     VAL(r.fields[i].bitOffset,uint64_t),
-                     0,
-                     fieldDIType);
+                     Scope := forwardStructDIT,
+                     Name := LTD(M3ID.ToText(r.fields[i].name)),
+                     File := self.fileRef,
+                     LineNo := self.curLine,
+                     SizeInBits := VAL(r.fields[i].bitSize,uint64_t),
+                     AlignInBits := VAL(r.fields[i].align,uint64_t),
+                     OffsetInBits := VAL(r.fields[i].bitOffset,uint64_t),
+                     Flags := 0,
+                     Ty := fieldDIT);
 
-      paramsArr[i] := memberDIType;
+      paramsArr[i] := memberDIT;
     END;
     paramsDIArr := M3DIB.DIBgetOrCreateArray(self.debugRef, paramsMetadata);
 
-    EnsureDebugTypeName(r); 
-    RETURN M3DIB.DIBcreateStructType(
-               self.debugRef,
-               self.funcRef,
-               LTD(M3ID.ToText(r.typeName)),
-               self.fileRef,
-               self.curLine,
-               VAL(r.bitSize,uint64_t),
-               VAL(r.align,uint64_t),
-               0,
-               M3DIB.LLVMDITypeEmpty,
-               paramsDIArr);
+    structDIT 
+      := M3DIB.DIBcreateStructType
+           ( self.debugRef,
+             Scope := self.funcRef,
+             Name := LTD(M3ID.ToText(r.typeName)),
+             File := self.fileRef,
+             LineNumber := self.curLine,
+             SizeInBits := VAL(r.bitSize,uint64_t),
+             AlignInBits := VAL(r.align,uint64_t),
+             Flags := 0,
+             DerivedFrom := M3DIB.LLVMDITypeEmpty,
+             Elements := paramsDIArr,
+             RunTimeLang := 0,
+             VTableHolder := M3DIB.LLVMDITypeEmpty,
+             UniqueIdentifier := uniqueId);
+    RETURN structDIT; 
   END DebugRecord;
 
 PROCEDURE DebugPointer(self : U; p : PointerDebug) : M3DIB.LLVMDIDerivedType =
