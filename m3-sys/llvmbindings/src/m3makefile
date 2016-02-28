@@ -81,6 +81,7 @@ import ("m3core")
 Interface ("LLVM") 
 Interface ("LLVMTypes") 
 Interface ("M3DIBuilder") 
+Interface ("DwarfConst") 
 import_obj("M3Extras")
 import_obj("M3DIBuilder")
   % import_obj needs work!!  
