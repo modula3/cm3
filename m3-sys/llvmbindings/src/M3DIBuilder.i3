@@ -92,6 +92,14 @@
          = (* "M3DIBOpaqueDIScope"*) MetadataRef
 ; TYPE     LLVMDIType
            = (* "M3DIBOpaqueDIType"*) MetadataRef
+; TYPE       LLVMDIBasicType
+             = (* "M3DIBOpaqueDIBasicType"*) MetadataRef
+; TYPE       LLVMDIDerivedType
+             = (* "M3DIBOpaqueDIDerivedType"*) MetadataRef
+; TYPE         LLVMDICompositeType
+               = (* "M3DIBOpaqueDICompositeType"*) MetadataRef
+; TYPE         LLVMDISubroutineType
+               = (* "M3DIBOpaqueDISubroutineType"*) MetadataRef
 ; TYPE     LLVMDIFile
            = (* "M3DIBOpaqueDIFile"*) MetadataRef
 ; TYPE     LLVMDICompileUnit
@@ -104,14 +112,6 @@
            = (* "M3DIBOpaqueDILexicalBlockFile"*) MetadataRef
 ; TYPE     LLVMDINameSpace
            = (* "M3DIBOpaqueDINameSpace"*) MetadataRef
-; TYPE       LLVMDIBasicType
-             = (* "M3DIBOpaqueDIBasicType"*) MetadataRef
-; TYPE       LLVMDIDerivedType
-             = (* "M3DIBOpaqueDIDerivedType"*) MetadataRef
-; TYPE         LLVMDICompositeType
-               = (* "M3DIBOpaqueDICompositeType"*) MetadataRef
-; TYPE         LLVMDISubroutineType
-               = (* "M3DIBOpaqueDISubroutineType"*) MetadataRef
 ; TYPE   LLVMDITemplateTypeParameter
          = (* "M3DIBOpaqueDITemplateTypeParameter"*) MetadataRef
 ; TYPE   LLVMDITemplateValueParameter
