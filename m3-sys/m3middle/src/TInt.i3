@@ -30,12 +30,16 @@ CONST
 
   Min8   = Int{16_80, 16_FF,..};
   Max8   = Int{16_7f, 16_00,..};
+  Max8U  = Int{16_FF, 16_00,..};
   Min16  = Int{16_00, 16_80, 16_FF,..};
   Max16  = Int{16_FF, 16_7f, 16_00,..};
+  Max16U = Int{16_FF, 16_FF, 16_00,..};
   Min32  = Int{16_00, 16_00, 16_00, 16_80, 16_FF,..};
   Max32  = Int{16_FF, 16_FF, 16_FF, 16_7f, 16_00,..};
+  Max32U = Int{16_FF, 16_FF, 16_FF, 16_FF, 16_00,..};
   Min64  = Int{16_00, 16_00, 16_00, 16_00, 16_00, 16_00, 16_00, 16_80, 16_FF};
-  Max64  = Int{16_FF, 16_FF, 16_FF, 16_FF, 16_FF, 16_FF, 16_FF, 16_7f, 0};
+  Max64  = Int{16_FF, 16_FF, 16_FF, 16_FF, 16_FF, 16_FF, 16_FF, 16_7f, 16_00};
+  Max64U = Int{16_FF, 16_FF, 16_FF, 16_FF, 16_FF, 16_FF, 16_FF, 16_FF, 16_00};
 
 PROCEDURE FromInt (x: INTEGER;  VAR i: Int): BOOLEAN;
 (* converts a host integer 'x' to a target integer 'i' *)
