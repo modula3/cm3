@@ -5431,17 +5431,36 @@ PROCEDURE DebugLookupOrdinalBounds(self : U; tUid : TypeUID; VAR min, count : TI
     END;
   END DebugLookupOrdinalBounds;
 
-PROCEDURE DebugSubrange(self : U; subrange : SubrangeDebug) : M3DIB.LLVMDISubrange =
-  VAR Result : M3DIB.LLVMDISubrange; 
+PROCEDURE DebugSubrange(self : U; subrange : SubrangeDebug) 
+: M3DIB.LLVMDISubrange =
+  VAR Result : M3DIB.LLVMDISubrange;
+      MLBase : BaseDebug;  
   BEGIN
     IF self.m3llvmDebugLev > 0 THEN
       IO.Put("subrange debug\n");
+    END; 
+
+    IF subrange.domain # NO_UID AND subrange.domain # subrange.tUid
+    THEN (* It has a non-self-referential base type. *) 
+      MLBase := DebugLookupML(self, subrange.domain);
+      TYPECASE MLBase 
+      OF NULL =>
+      | SubrangeDebug (baseSD) 
+        => subrange.domain := baseSD.domain; 
+           (* ^Shortcut thru' transitive subranges. *)   
+           subrange.encoding := MLBase.encoding; (* Now that it's available. *)
+      ELSE 
+        subrange.encoding := MLBase.encoding; (* Now that it's available. *)
+      END; 
+    ELSE MLBase := NIL;
     END; 
 
     Result 
       := M3DIB.DIBgetOrCreateSubrange
            (self.debugRef, 
             TIntToint64_t(subrange.min), TIntToint64_t(subrange.count));
+(* REVIEW: How does llvm handle subranges for different signedness? *) 
+(* FIXME: Someday, when llvm supports it, put MLBase into the subrange. *) 
     RETURN Result; 
   END DebugSubrange;
 
@@ -5460,7 +5479,7 @@ PROCEDURE DebugArray(self : U; a : ArrayDebug) : M3DIB.LLVMDICompositeType =
       IO.Put("array debug\n");
     END; 
 
-    eltVal := DebugLookup(self,a.elt);
+    eltVal := DebugLookupLL(self,a.elt);
     DebugLookupOrdinalBounds (self, a.index, (*OUT*)min, (*OUT*)count);  
     subsVal 
       := M3DIB.DIBgetOrCreateSubrange
@@ -5489,7 +5508,7 @@ PROCEDURE DebugOpenArray
       IO.Put("openarray debug\n");
     END; 
 
-    eltVal := DebugLookup(self,a.elt);
+    eltVal := DebugLookupLL(self,a.elt);
     (* open arrays dont have a range so just fake it for now 0 - last(val)
         fix this later
     subrange := DebugSubrangeLookup(self,a.index);
@@ -5519,9 +5538,9 @@ PROCEDURE DebugSet(self : U; s : SetDebug) : M3DIB.LLVMDICompositeType =
     eltVal := M3DIB.DIBcreateBasicType(self.debugRef,LTD("basic_type" ), VAL(1L,uint64_t), VAL(8L,uint64_t), DC.DW_ATE_unsigned_char);
 
 
-    (*eltVal := DebugLookup(self,d.elt);*)
+    (*eltVal := DebugLookupLL(self,d.elt);*)
     (*
-    subsVal := DebugLookup(self,d.domain);
+    subsVal := DebugLookupLL(self,d.domain);
     NewArrayRefOfMetadataRef(1, (*OUT*)paramsArr, (*OUT*)paramsMetadata);
     paramsArr[0] := subsVal;
     paramsDIArr := M3DIB.DIBgetOrCreateArray(self.debugRef, paramsMetadata);
@@ -5600,7 +5619,7 @@ PROCEDURE DebugEnum(self : U; e : EnumDebug) : M3DIB.LLVMDICompositeType =
 PROCEDURE DebugPacked(self : U; p : PackedDebug) : M3DIB.LLVMDIType =
   BEGIN
 (* FICME ? *) 
-    RETURN DebugLookup(self,p.base);
+    RETURN DebugLookupLL(self,p.base);
 END DebugPacked;
 
 PROCEDURE DebugOpaque(self : U; o : OpaqueDebug) : M3DIB.LLVMDIType =
@@ -5630,13 +5649,13 @@ PROCEDURE DebugProcType(self : U; p : ProcTypeDebug)
     IF p.result = 0 THEN
       LDIDescr := M3DIB.LLVMDIDescriptorEmpty;
     ELSE
-      LDIDescr := DebugLookup(self,p.result);
+      LDIDescr := DebugLookupLL(self,p.result);
     END;
     paramsArr[0] := LDIDescr;
 
     IF p.numFormals > 0 THEN
       FOR i := 0 TO p.numFormals - 1 DO
-        LDIDescr := DebugLookup(self,p.formals[i].tUid);
+        LDIDescr := DebugLookupLL(self,p.formals[i].tUid);
         paramsArr[i+1] := LDIDescr;
       END;
     END;
@@ -5746,7 +5765,7 @@ PROCEDURE DebugObject(self : U; o : ObjectDebug) : M3DIB.LLVMDIDerivedType =
           AND o.superType # UID_UNTRACED_ROOT;  
     IF hasSupertype 
     THEN (* o has a nontrivial supertype. *) 
-      supertypeDIT := DebugLookup(self,o.superType);
+      supertypeDIT := DebugLookupLL(self,o.superType);
 
       (* Create a DIBuilder inherit node connecting to the supertype
          and make it the first "param". *) 
@@ -5764,7 +5783,7 @@ PROCEDURE DebugObject(self : U; o : ObjectDebug) : M3DIB.LLVMDIDerivedType =
     nextMemberNo:= 1;
 
     FOR i := 0 TO o.numFields - 1 DO
-      fieldDIT := DebugLookup(self,o.fields[i].tUid);
+      fieldDIT := DebugLookupLL(self,o.fields[i].tUid);
       memberDINode 
         := M3DIB.DIBcreateMemberType
              (self.debugRef,
@@ -5846,7 +5865,7 @@ PROCEDURE DebugRecord(self : U; r : RecordDebug) : M3DIB.LLVMDICompositeType =
             AlignInBits := VAL(0L,uint64_t),
             UniqueIdentifier := uniqueId);
     FOR i := 0 TO r.numFields - 1 DO
-      fieldDIT := DebugLookup(self,r.fields[i].tUid);
+      fieldDIT := DebugLookupLL(self,r.fields[i].tUid);
       memberDIT := M3DIB.DIBcreateMemberType(
                      self.debugRef,
                      Scope := forwardStructDIT,
@@ -5885,7 +5904,7 @@ PROCEDURE DebugPointer(self : U; p : PointerDebug) : M3DIB.LLVMDIDerivedType =
   VAR
     referentDIType : M3DIB.LLVMDIDescriptor;
   BEGIN
-    referentDIType := DebugLookup(self,p.target);
+    referentDIType := DebugLookupLL(self,p.target);
     EnsureDebugTypeName(p); 
     RETURN M3DIB.DIBcreatePointerType(
               self.debugRef,
@@ -5906,9 +5925,10 @@ PROCEDURE DebugBasic(self : U; b : BaseDebug) : M3DIB.LLVMDIBasicType =
        b.encoding);
   END DebugBasic;
 
-PROCEDURE DebugLookup(self : U; tUid : TypeUID) : M3DIB.LLVMDIDescriptor =
+PROCEDURE DebugLookupML(self : U; tUid : TypeUID) : BaseDebug =
   VAR
     debugObj : REFANY;
+    baseObj : BaseDebug;
     tUidExists : BOOLEAN;
     LDIDescr : M3DIB.LLVMDIDescriptor; 
     (* lVal : LLVM.ValueRef; *) 
@@ -5918,50 +5938,46 @@ PROCEDURE DebugLookup(self : U; tUid : TypeUID) : M3DIB.LLVMDIDescriptor =
     END; 
 
     (* exceptions have 0 tUid *)
-    IF tUid = 0 THEN RETURN M3DIB.LLVMDIDescriptorEmpty; END;
+    IF tUid = 0 THEN RETURN NIL; END;
 
     tUidExists := self.debugTable.get(tUid, (*OUT*)debugObj);
-    IF NOT tUidExists THEN
-      <*ASSERT FALSE*>
-    ELSE
-      LDIDescr := NARROW(debugObj,BaseDebug).DIDescr;
+    <*ASSERT tUidExists*>
+    baseObj := NARROW(debugObj,BaseDebug);
+    LDIDescr := baseObj.DIDescr;
 
-      IF LDIDescr # M3DIB.LLVMDIDescriptorEmpty THEN
-        RETURN LDIDescr;
-      ELSE
-        TYPECASE debugObj OF
-        | ArrayDebug(d) => LDIDescr := DebugArray(self,d);
-        | OpenArrayDebug(d) => LDIDescr := DebugOpenArray(self,d);
-        | SetDebug(d) =>  LDIDescr := DebugSet(self,d);
-        | EnumDebug(d) => LDIDescr := DebugEnum(self,d);
-        | OpaqueDebug(d) => LDIDescr := DebugOpaque(self,d);
-        | PackedDebug(d) => LDIDescr := DebugPacked(self,d);
-        | ObjectDebug(d) => LDIDescr := DebugObject(self,d);
-        | RecordDebug(d) => LDIDescr := DebugRecord(self,d);
-        | PointerDebug(d) => LDIDescr := DebugPointer(self,d);
-        | ProcTypeDebug(d) => LDIDescr := DebugProcType(self,d);
-        | IndirectDebug(d) => LDIDescr := DebugLookup(self,d.target);
-        | SubrangeDebug(d) => LDIDescr := DebugSubrange(self,d);
-        | BaseDebug(d) => LDIDescr := LOOPHOLE(DebugBasic(self,d),M3DIB.LLVMDIDescriptor);
-(* REVIEW: Huh? *) 
-          EnsureDebugTypeName(d); 
-          RETURN LOOPHOLE 
-                   ( M3DIB.DIBcreateBasicType
-                     ( self.debugRef,
-                       LTD(M3ID.ToText(d.typeName)), 
-                       VAL(d.bitSize,uint64_t), 
-                       VAL(d.align,uint64_t), 
-                       d.encoding),
-                     M3DIB.LLVMDIDescriptor
-                   );
-        ELSE
-          <*ASSERT FALSE*>
-        END;
-        NARROW(debugObj,BaseDebug).DIDescr := LDIDescr;
-        RETURN LDIDescr;
+    IF LDIDescr # M3DIB.LLVMDIDescriptorEmpty 
+    THEN (* This ML node already has been completed. *) 
+      RETURN baseObj;
+    ELSE (* Complete this ML node's dependencies, then itself. *) 
+      TYPECASE baseObj OF
+      | ArrayDebug(d) => LDIDescr := DebugArray(self,d);
+      | OpenArrayDebug(d) => LDIDescr := DebugOpenArray(self,d);
+      | SetDebug(d) =>  LDIDescr := DebugSet(self,d);
+      | EnumDebug(d) => LDIDescr := DebugEnum(self,d);
+      | OpaqueDebug(d) => LDIDescr := DebugOpaque(self,d);
+      | PackedDebug(d) => LDIDescr := DebugPacked(self,d);
+      | ObjectDebug(d) => LDIDescr := DebugObject(self,d);
+      | RecordDebug(d) => LDIDescr := DebugRecord(self,d);
+      | PointerDebug(d) => LDIDescr := DebugPointer(self,d);
+      | ProcTypeDebug(d) => LDIDescr := DebugProcType(self,d);
+      | IndirectDebug(d) => LDIDescr := DebugLookupLL(self,d.target);
+      | SubrangeDebug(d) => LDIDescr := DebugSubrange(self,d);
+      | BaseDebug(d) => LDIDescr := DebugBasic(self,d); 
+      ELSE <*ASSERT FALSE*>
       END;
+      baseObj.DIDescr := LDIDescr;
+      RETURN baseObj;
     END;
-  END DebugLookup;
+  END DebugLookupML;
+
+PROCEDURE DebugLookupLL(self : U; tUid : TypeUID) : M3DIB.LLVMDIDescriptor =
+  VAR MLDebug : BaseDebug;
+  BEGIN
+    MLDebug := DebugLookupML(self, tUid); 
+    IF MLDebug = NIL THEN RETURN NIL;
+    ELSE RETURN MLDebug.DIDescr; 
+    END; 
+  END DebugLookupLL;
 
 (* debug for locals and parms *)
 PROCEDURE DebugVar(self : U; v : LvVar; argNum : CARDINAL := 0) =
@@ -5992,7 +6008,7 @@ PROCEDURE DebugVar(self : U; v : LvVar; argNum : CARDINAL := 0) =
       dwarfTag := DC.DW_TAG_auto_variable;
     END;
 
-    tyVal := DebugLookup(self,v.m3t);
+    tyVal := DebugLookupLL(self,v.m3t);
 
     debugObj := DebugIsObject(self,v.m3t);
     IF debugObj # NIL THEN
@@ -6101,7 +6117,7 @@ PROCEDURE DebugGlobals(self : U; var : LvVar) =
             END;
             (* else its a proper llvm global *)
 
-            globType := DebugLookup(self,globRec.fields[i].tUid);
+            globType := DebugLookupLL(self,globRec.fields[i].tUid);
             IF globType # M3DIB.LLVMDIDescriptorEmpty THEN
               EVAL M3DIB.DIBcreateGlobalVariable(
                       self.debugRef,
