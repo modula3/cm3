@@ -75,7 +75,7 @@ REVEAL
     next_proc     := 1;
     next_scope    := 1;
     blockLevel    := 0;
-    widecharSize  := 16;
+    widecharSize  := 16; (* May change to 32. *) 
     optLevel      := 0; (* optimize level - not used yet *)
 
     allocaName    : Name; (* "alloca", for detecting library call on it. *) 
@@ -438,8 +438,8 @@ CONST NO_UID = 16_FFFFFFFF;
 
 VAR UID_INTEGER := IntegerToTypeid(16_195C2A74);
 CONST UID_LONGINT = 16_05562176;
-VAR UID_WORD := IntegerToTypeid(16_97E237E2); (* CARDINAL *)
-VAR UID_LONGWORD := IntegerToTypeid(16_9CED36E7); (* LONGCARD *)
+VAR UID_CARDINAL := IntegerToTypeid(16_97E237E2); (* CARDINAL *)
+VAR UID_LONGCARD := IntegerToTypeid(16_9CED36E7); (* LONGCARD *)
 CONST UID_REEL = 16_48E16572; (* REAL *)
 VAR UID_LREEL := IntegerToTypeid(16_94FE32F6); (* LONGREAL *)
 VAR UID_XREEL := IntegerToTypeid(16_9EE024E3); (* EXTENDED *)
@@ -474,9 +474,8 @@ TYPE
     tUid : TypeUID;
     bitSize,align : LONGINT;
     typeName : Name;
-    encoding : CARDINAL;
-  (* lVal : LLVM.ValueRef := NIL; *) 
-    DIDescr : M3DIB.LLVMDIDescriptor 
+    encoding : unsigned;
+    DIDescr : M3DIB.LLVMDIDescriptor := NIL; 
   END;
 
   ArrayDebug = BaseDebug OBJECT
@@ -492,13 +491,13 @@ TYPE
   END;
 
   EnumDebug = BaseDebug OBJECT
-    numElts,index : CARDINAL;
+    numElts, index : CARDINAL;
     elts : REF ARRAY OF Name;
   END;
 
   SubrangeDebug = BaseDebug OBJECT
     domain : TypeUID;
-    min,max : LONGINT;
+    min, count : TInt.Int;
   END;
 
   FieldDebug = BaseDebug OBJECT
@@ -580,7 +579,12 @@ VAR
 
   (* const once read *)
    ptrBytes : INTEGER; (* target pointer size in bytes *)
-   ptrBits : LONGINT; (* target pointer size in bits *)
+   ptrBits : LONGINT;  (* target pointer size in bits *)
+   intBytes : INTEGER; (* target integer size in bytes *)
+   intBits : LONGINT;  (* target integer size in bits *)
+   widecharBytes : INTEGER; (* WIDECHAR size in bytes *)
+   widecharBits : LONGINT;  (* WIDECHAR size in bits *)
+
    IntPtrTy : LLVM.TypeRef; (* int type having same size as pointer *)
    PtrTy : LLVM.TypeRef; (*= LLVM.LLVMPointerType(IntPtrTy);*)
    AdrTy : LLVM.TypeRef; (* Pointer to i8 type *)
@@ -601,7 +605,18 @@ VAR
    (* dummy filename for output - fixme and use redirection or pipes *)
    DefaultOutFileName := "./m3test.ll";
 
-(*---------------------------------------------------------------------------*)
+(*--------------------------------------------------------------- Utility ---*)
+
+PROCEDURE TIntToint64_t(Val: TInt.Int) : int64_t = 
+  VAR IVal: INTEGER; 
+  BEGIN  
+    EVAL TInt.ToInt(Val, IVal);
+(* FIXME: This will not cross compile 32- to 64-bits. *) 
+(* We need a TInt.ToLongInt. *) 
+    RETURN VAL(IVal, int64_t); 
+  END TIntToint64_t; 
+
+(*-------------------------simplify all the untraced array allocs for llvm ---*)
 
 (* simplify all the untraced array allocs for llvm *)
 TYPE
@@ -1181,11 +1196,15 @@ PROCEDURE begin_unit (self: U;  optimize : INTEGER) =
 
     targetData := LLVM.LLVMCreateTargetData(LT(dataRep));
     ptrBytes := LLVM.LLVMPointerSize(targetData);
+    intBytes := ptrBytes; (* ASSUMPTION!! *) 
     IntPtrTy := LLVM.LLVMIntPtrType(targetData);
     PtrTy := LLVM.LLVMPointerType(IntPtrTy);
     AdrTy := LLVM.LLVMPointerType(LLVM.LLVMInt8Type());
     AdrAdrTy := LLVM.LLVMPointerType(AdrTy);
     ptrBits := LLVM.LLVMSizeOfTypeInBits(targetData, PtrTy);
+    intBits := LLVM.LLVMSizeOfTypeInBits(targetData, IntPtrTy);
+    widecharBytes := 2; (* May change. *)
+    widecharBits := 16L; (* May change. *) 
     wordSize := LLVM.LLVMConstInt(IntPtrTy, VAL(ptrBits,LONGINT), TRUE);
     byteSize := LLVM.LLVMConstInt(IntPtrTy, VAL(ptrBytes,LONGINT), TRUE);
   END begin_unit;
@@ -1372,15 +1391,25 @@ PROCEDURE declare_set (self: U; t,domain: TypeUID;  s: BitSize) =
     EVAL self.debugTable.put(t,setRef);
   END declare_set;
 
-PROCEDURE declare_subrange (self: U; t,domain: TypeUID;                            READONLY min, max: Target.Int; s: BitSize) =
+PROCEDURE declare_subrange 
+  (self: U; t,domain: TypeUID; READONLY min, max: Target.Int(*=Tint.Int*); s: BitSize) 
+= 
   VAR
-    subRef : SubrangeDebug;
-    minR,maxR : INTEGER;
+    LDebug : SubrangeDebug;
+    encoding: unsigned; 
+    nameText: TEXT := "";
   BEGIN
-    EVAL TInt.ToInt (min, minR);
-    EVAL TInt.ToInt (max, maxR);
-    subRef := NEW(SubrangeDebug, tUid := t, domain := domain, min := VAL(minR,LONGINT), max := VAL(maxR,LONGINT), bitSize := VAL(s,LONGINT), align := VAL(s,LONGINT));
-    EVAL self.debugTable.put(t,subRef);
+    encoding := DC.DW_ATE_signed;
+    (* domain could be a forward reference, so we can't necessarily compute 
+       encoding now.  Make an assumption, but fix it later, in SubrangeDebug,
+       when we can lookup domain. *) 
+(* TODO: Get something better for nameText. *) 
+    LDebug 
+      := BuildSubrangeDebug
+           (self, t, domain, min, max, 
+            bitSize := VAL(s,LONGINT), align := VAL(s,LONGINT), 
+            encoding := encoding, 
+            nameText := nameText); 
   END declare_subrange;
 
 PROCEDURE declare_pointer (self: U; t,target: TypeUID;  brand: TEXT; traced: BOOLEAN) =
@@ -1477,6 +1506,7 @@ PROCEDURE declare_opaque (self: U; t, super: TypeUID) =
 
 PROCEDURE widechar_size (self: U; size: INTEGER) =
   BEGIN
+    <* ASSERT size = 16 OR size = 32 *> 
     self.widecharSize := size;
   END widechar_size;
 
@@ -5063,12 +5093,8 @@ PROCEDURE fetch_and_op (self: U;  op: AtomicOp; <*UNUSED*> t: MType; <*UNUSED*> 
 
 PROCEDURE DebugInit(self: U) =
   CONST
-   (* from Dwarf.h*)
-    DW_LANG_Modula3 = 16_17;
-    (* del me DW_LANG_C99 = 16_0C; *)
-    DWARF_VERSION = 4;
+   (* from Dwarf.h?  Not the one in llvm-3.6.1! *)
     DWARF_INFO_VERSION = 1;
-    lang = DW_LANG_Modula3;
   VAR
     mdNode : LLVM.ValueRef;
     valsMD : ARRAY[0..2] OF REFANY;
@@ -5088,12 +5114,12 @@ PROCEDURE DebugInit(self: U) =
     NARROW(valsMD[0],REF INTEGER)^ := 2;
     valsMD[1] := "Dwarf Version";
     valsMD[2] := NEW(REF INTEGER);
-    NARROW(valsMD[2],REF INTEGER)^ := DWARF_VERSION;
+    NARROW(valsMD[2],REF INTEGER)^ := DC.DWARF_VERSION;
 
     mdNode := GetMDNode(valsMD);
     LLVM.LLVMAddNamedMetadataOperand(modRef, LT("llvm.module.flags"), mdNode);
     valsMD[1] := "Debug Info Version";
-    NARROW(valsMD[2],REF INTEGER)^ := DWARF_INFO_VERSION;
+    NARROW(valsMD[2],REF INTEGER)^ := (*DC.?*)DWARF_INFO_VERSION;
     mdNode := GetMDNode(valsMD);
     LLVM.LLVMAddNamedMetadataOperand(modRef, LT("llvm.module.flags"), mdNode);
 
@@ -5101,7 +5127,7 @@ PROCEDURE DebugInit(self: U) =
 
     self.cuRef := M3DIB.DIBcreateCompileUnit(
                 self.debugRef,
-                lang,
+                DC.DW_LANG_Modula3,
                 LTD(self.debFile),
                 LTD(self.debDir),
                 LTD("cm3"), (* Producer *)
@@ -5112,24 +5138,121 @@ PROCEDURE DebugInit(self: U) =
     self.fileRef := M3DIB.DIBcreateFile(self.debugRef, LTD(self.debFile), LTD(self.debDir));
   END DebugInit;
 
-PROCEDURE InitUids(self : U) =
+PROCEDURE BuildSubrangeDebug 
+  (self : U; UID, baseUID: TypeUID; 
+   min, max: TInt.Int; 
+   bitSize, align : LONGINT; 
+   encoding: unsigned; 
+   nameText: TEXT := NIL)
+: SubrangeDebug =
+  VAR LDebug : SubrangeDebug; 
+    temp, count: TInt.Int; 
   BEGIN
-    (* create the basic tUid entries - needs testing *)
+    IF TInt.LT(max,min) THEN
+      count := TInt.Zero;
+    ELSE  
+      EVAL TInt.Subtract(max, min, (*OUT*)temp); 
+      EVAL TInt.Add(temp, TInt.One, (*OUT*)count); 
+    END; 
 
-    EVAL self.debugTable.put(UID_INTEGER,NEW(BaseDebug, bitSize := ptrBits, align := ptrBits, typeName := M3ID.Add("INTEGER"), encoding := DC.DW_ATE_signed));
-    EVAL self.debugTable.put(UID_LONGINT,NEW(BaseDebug, bitSize := ptrBits, align := ptrBits, typeName := M3ID.Add("LONGINT"), encoding := DC.DW_ATE_signed));
-    EVAL self.debugTable.put(UID_WORD,NEW(BaseDebug, bitSize := ptrBits, align := ptrBits, typeName := M3ID.Add("WORD"), encoding := DC.DW_ATE_unsigned));
-    EVAL self.debugTable.put(UID_LONGWORD,NEW(BaseDebug, bitSize := ptrBits, align := ptrBits, typeName := M3ID.Add("LONGWORD"), encoding := DC.DW_ATE_unsigned));
+    LDebug 
+      := NEW (SubrangeDebug,
+              tUid := UID,
+              bitSize := bitSize,
+              align := align,
+              typeName := M3ID.Add (nameText),
+              encoding := encoding,
+              DIDescr := NIL,
+              domain := baseUID, (* Self-referential. *) 
+              min := min,
+              count := count);
+    EVAL self.debugTable.put(UID, LDebug); 
+    RETURN LDebug; 
+  END BuildSubrangeDebug;  
+
+PROCEDURE BuiltinOrdinalDebug
+  (self : U; UID: TypeUID; 
+   bitSize, align: LONGINT; 
+   nameText: TEXT; 
+   encoding: unsigned; 
+   min, max: TInt.Int)  
+: SubrangeDebug =
+  BEGIN
+    RETURN 
+      BuildSubrangeDebug
+        (self, 
+         UID, UID (*Self referential*), 
+         min, max, 
+         bitSize := bitSize, align := align,
+         encoding := encoding, 
+         nameText := nameText); 
+  END BuiltinOrdinalDebug; 
+
+(* Must call InitUids after the possible widechar_size operator has been
+   seen.  set_source_file operator is the earliest place that satisfies
+   the requirement. *) 
+PROCEDURE InitUids(self : U) =
+  VAR wordMin, wordMax, widecharMax: TInt.Int;
+    intBits, widecharBits: LONGINT; 
+  BEGIN
+  (* create the basic tUid entries - needs testing *)
+
+    (* Builtin ordinal types: *) 
+    IF ptrBytes = 4
+    THEN 
+      wordMin := TInt.Min32; wordMax := TInt.Max32; 
+      intBits := 32L;
+    ELSE 
+      wordMin := TInt.Min64; wordMax := TInt.Max64;
+      intBits := 64L;
+    END;
+    widecharBits := VAL(self.widecharSize,LONGINT); 
+    IF widecharBits = 16L 
+    THEN widecharMax := TInt.Max16U;
+    ELSE <* ASSERT widecharBits = 32L *> 
+         EVAL TInt.FromInt(16_10FFFF, (*OUT*)widecharMax);
+    END;  
+
+    EVAL BuiltinOrdinalDebug
+           (self, UID_INTEGER, bitSize := intBits, align := intBits, 
+            nameText := "INTEGER", encoding := DC.DW_ATE_signed,
+            min := wordMin, max := wordMax);
+    EVAL BuiltinOrdinalDebug
+           (self, UID_CARDINAL, bitSize := intBits, align := intBits, 
+            nameText := "CARDINAL", encoding := DC.DW_ATE_signed,
+            min := TInt.Zero, max := wordMax);
+    (* We don't want CARDINAL and LONGCARD to be unsigned.  They are 
+       nonnegative subranges of signed types, and when involved in
+       arithmetic, should use signed operations and intermediate 
+       results. *) 
+    EVAL BuiltinOrdinalDebug
+           (self, UID_LONGINT, bitSize := 64L, align := intBits, 
+            nameText := "LONGINT", encoding := DC.DW_ATE_signed,
+            min := TInt.Min64, max := TInt.Max64);
+    EVAL BuiltinOrdinalDebug
+           (self, UID_LONGCARD, bitSize := 64L, align := intBits, 
+            nameText := "LONGCARD", encoding := DC.DW_ATE_signed,
+            min := TInt.Zero, max := TInt.Max64);
+    EVAL BuiltinOrdinalDebug
+           (self, UID_BOOLEAN, bitSize := 8L, align := 8L, 
+            nameText := "BOOLEAN", encoding := DC.DW_ATE_boolean,
+            min := TInt.Zero, max := TInt.One);
+    EVAL BuiltinOrdinalDebug
+           (self, UID_CHAR, bitSize := 8L, align := 8L, 
+            nameText := "CHAR", encoding := DC.DW_ATE_unsigned_char,
+            min := TInt.Zero, max := TInt.Max8U);
+    EVAL BuiltinOrdinalDebug
+           (self, UID_WIDECHAR, bitSize := widecharBits, align := widecharBits, 
+            nameText := "WIDECHAR", encoding := DC.DW_ATE_unsigned,
+            min := TInt.Zero, max := widecharMax);
+
+    (* Real types: *) 
     EVAL self.debugTable.put(UID_REEL,NEW(BaseDebug, bitSize := 32L, align := 32L, typeName := M3ID.Add("REAL"), encoding := DC.DW_ATE_float));
     EVAL self.debugTable.put(UID_LREEL,NEW(BaseDebug, bitSize := 64L, align := 64L, typeName := M3ID.Add("LONGREAL"), encoding := DC.DW_ATE_float));
     (* change this if ever upgrade to 128 bit floats or change to store sizeof type*)
     EVAL self.debugTable.put(UID_XREEL,NEW(BaseDebug, bitSize := 64L, align := 64L, typeName := M3ID.Add("EXTENDED"), encoding := DC.DW_ATE_float));
-    EVAL self.debugTable.put(UID_BOOLEAN,NEW(BaseDebug, bitSize := 8L, align := 8L,
-    (* check size and align *)
-    typeName := M3ID.Add("BOOLEAN"), encoding := DC.DW_ATE_boolean));
-    EVAL self.debugTable.put(UID_CHAR,NEW(BaseDebug, bitSize := 8L, align := 8L, typeName := M3ID.Add("CHAR"), encoding := DC.DW_ATE_unsigned_char));
-    EVAL self.debugTable.put(UID_WIDECHAR,NEW(BaseDebug, bitSize := 16L, align := 16L, typeName := M3ID.Add("WIDECHAR"), encoding := DC.DW_ATE_signed_char));
 
+    (* Reference types: *) 
 (* check this type and size*)
     EVAL self.debugTable.put(UID_ROOT,NEW(ObjectDebug, bitSize := 0L(*ptrBits*), align := ptrBits, typeName := M3ID.Add("ROOT"), encoding := DC.DW_ATE_address));
 (* fix this type *)
@@ -5142,6 +5265,7 @@ PROCEDURE InitUids(self : U) =
 (* check this type and size*)
     EVAL self.debugTable.put(UID_MUTEX,NEW(ObjectDebug, superType := UID_ROOT, bitSize := ptrBits, align := ptrBits, typeName := M3ID.Add("MUTEX"), encoding := DC.DW_ATE_address));
 
+    (* Other: *) 
     EVAL self.debugTable.put(UID_RANGE_0_31,NEW(BaseDebug, bitSize := 32L, align := 32L, typeName := M3ID.Add("RANGE_0_31"), encoding := DC.DW_ATE_signed));
     EVAL self.debugTable.put(UID_RANGE_0_63,NEW(BaseDebug, bitSize := 64L, align := 64L, typeName := M3ID.Add("RANGE_0_63"), encoding := DC.DW_ATE_signed));
 
@@ -5293,7 +5417,29 @@ PROCEDURE DebugSubrangeLookup(self : U; tUid : TypeUID) : SubrangeDebug =
     END;
   END DebugSubrangeLookup;
 
-PROCEDURE DebugSubrange(self : U; s : SubrangeDebug) : M3DIB.LLVMDISubrange =
+PROCEDURE DebugLookupOrdinalBounds(self : U; tUid : TypeUID; VAR min, count : TInt.Int) = 
+  VAR
+    debugObj : REFANY;
+    tUidExists : BOOLEAN;
+  BEGIN
+    min := TInt.Zero; (* Default to an empty range. *) 
+    count := TInt.Zero; 
+    tUidExists := self.debugTable.get(tUid,debugObj);
+    IF tUidExists THEN
+      TYPECASE debugObj 
+      OF NULL => 
+      | SubrangeDebug (SD) 
+      => min := SD.min;
+         count := SD.count; 
+      | EnumDebug (ED)
+      => min := TInt.Zero;
+         EVAL TInt.FromInt(ED.numElts, (*OUT*)count);
+      ELSE 
+      END; 
+    END;
+  END DebugLookupOrdinalBounds;
+
+PROCEDURE DebugSubrange(self : U; subrange : SubrangeDebug) : M3DIB.LLVMDISubrange =
   VAR Result : M3DIB.LLVMDISubrange; 
   BEGIN
     IF self.m3llvmDebugLev > 0 THEN
@@ -5302,15 +5448,15 @@ PROCEDURE DebugSubrange(self : U; s : SubrangeDebug) : M3DIB.LLVMDISubrange =
 
     Result 
       := M3DIB.DIBgetOrCreateSubrange
-           (self.debugRef, VAL(s.min,int64_t), VAL(s.max - s.min + 1L,int64_t));
+           (self.debugRef, TIntToint64_t(subrange.min), TIntToint64_t(subrange.count));
     RETURN Result; 
   END DebugSubrange;
-
 
 PROCEDURE DebugArray(self : U; a : ArrayDebug) : M3DIB.LLVMDICompositeType =
   VAR
     eltVal : M3DIB.LLVMDIType; 
     subsVal : M3DIB.LLVMDISubrange; 
+    min, count : TInt.Int; 
     subrange : SubrangeDebug;
     paramsArr : REF ARRAY OF MetadataRef; 
     paramsMetadata : LLVMTypes.ArrayRefOfMetadataRef; 
@@ -5322,12 +5468,12 @@ PROCEDURE DebugArray(self : U; a : ArrayDebug) : M3DIB.LLVMDICompositeType =
     END; 
 
     eltVal := DebugLookup(self,a.elt);
-    subrange := DebugSubrangeLookup(self,a.index);
+ (* subrange := DebugSubrangeLookup(self,a.index); *) 
 (* FIXME: index could be a whole enum type. *) 
+    DebugLookupOrdinalBounds (self, a.index, (*OUT*)min, (*OUT*)count);  
     subsVal 
       := M3DIB.DIBgetOrCreateSubrange
-           (self.debugRef, VAL(subrange.min,int64_t), 
-            VAL(subrange.max - subrange.min + 1L,int64_t));
+           (self.debugRef, TIntToint64_t(min), TIntToint64_t(count));
     NewArrayRefOfMetadataRef(1, paramsArr, paramsMetadata);
     paramsArr[0] := subsVal;
     paramsDIArr := M3DIB.DIBgetOrCreateArray(self.debugRef, paramsMetadata);
@@ -5367,6 +5513,7 @@ PROCEDURE DebugSet(self : U; s : SetDebug) : M3DIB.LLVMDICompositeType =
     eltVal : M3DIB.LLVMDIBasicType; 
     subsVal : M3DIB.LLVMDISubrange; 
     subrange : SubrangeDebug;
+    min, count : TInt.Int; 
     paramsArr : REF ARRAY OF MetadataRef; 
     paramsMetadata : LLVMTypes.ArrayRefOfMetadataRef; 
     paramsDIArr : M3DIB.LLVMDIArray;
@@ -5378,6 +5525,7 @@ PROCEDURE DebugSet(self : U; s : SetDebug) : M3DIB.LLVMDICompositeType =
 
     eltVal := M3DIB.DIBcreateBasicType(self.debugRef,LTD("basic_type" ), VAL(1L,uint64_t), VAL(8L,uint64_t), DC.DW_ATE_unsigned_char);
 
+
     (*eltVal := DebugLookup(self,d.elt);*)
     (*
     subsVal := DebugLookup(self,d.domain);
@@ -5385,13 +5533,16 @@ PROCEDURE DebugSet(self : U; s : SetDebug) : M3DIB.LLVMDICompositeType =
     paramsArr[0] := subsVal;
     paramsDIArr := M3DIB.DIBgetOrCreateArray(self.debugRef, paramsMetadata);
     *)
-    subrange := DebugSubrangeLookup(self,s.domain);
+    (* subrange := DebugSubrangeLookup(self,s.domain); *) 
 (* FIXME: domain could be CHAR or BOOLEAN, not a subrange. *) 
     (*
     subsCount := VAL(subrange.max - subrange.min + 1L,INTEGER);
     *)
+
+
+    DebugLookupOrdinalBounds (self, s.domain, (*OUT*)min, (*OUT*)count);  
     subsVal := M3DIB.DIBgetOrCreateSubrange
-      (self.debugRef, VAL(subrange.min,int64_t), VAL(subrange.max - subrange.min + 1L,int64_t));
+      (self.debugRef, TIntToint64_t(min), TIntToint64_t(count));
 
     NewArrayRefOfMetadataRef(1, paramsArr, paramsMetadata);
     paramsArr[0] := subsVal;
