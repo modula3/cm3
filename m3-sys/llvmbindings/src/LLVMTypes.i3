@@ -78,6 +78,9 @@ INTERFACE LLVMTypes
 ; CONST ArrayRefOfint64_tEmpty 
     = ArrayRefOfint64_t { Data := NIL , Length := 0 }
 
+(* From Metadata.h *)
+; CONST DEBUG_METADATA_VERSION = 2
+
 ; END LLVMTypes 
 . 
 

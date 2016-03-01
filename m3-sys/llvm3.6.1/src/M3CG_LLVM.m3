@@ -5099,9 +5099,6 @@ PROCEDURE fetch_and_op (self: U;  op: AtomicOp; <*UNUSED*> t: MType; <*UNUSED*> 
 *)
 
 PROCEDURE DebugInit(self: U) =
-  CONST
-   (* from Dwarf.h?  Not the one in llvm-3.6.1! *)
-    DWARF_INFO_VERSION = 1;
   VAR
     mdNode : LLVM.ValueRef;
     valsMD : ARRAY[0..2] OF REFANY;
@@ -5126,7 +5123,7 @@ PROCEDURE DebugInit(self: U) =
     mdNode := GetMDNode(valsMD);
     LLVM.LLVMAddNamedMetadataOperand(modRef, LT("llvm.module.flags"), mdNode);
     valsMD[1] := "Debug Info Version";
-    NARROW(valsMD[2],REF INTEGER)^ := (*DC.?*)DWARF_INFO_VERSION;
+    NARROW(valsMD[2],REF INTEGER)^ := LLVMTypes.DEBUG_METADATA_VERSION;
     mdNode := GetMDNode(valsMD);
     LLVM.LLVMAddNamedMetadataOperand(modRef, LT("llvm.module.flags"), mdNode);
 
