@@ -348,7 +348,7 @@ PROCEDURE AddBigX (u: U;  READONLY i: Target.Int) =
   BEGIN
     z.negative := TargetInt.LT (n, TargetInt.Zero);
     IF (z.negative) THEN TWord.Subtract (TargetInt.Zero, i, n); END;
-    z.n_bytes := TargetInt.ToBytes (n, z.bytes);
+    z.n_bytes := TargetInt.ToUnsignedBytes (n, z.bytes);
     DumpInt (u, z);
   END AddBigX;
 

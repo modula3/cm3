@@ -155,7 +155,7 @@ PROCEDURE AddBigX (READONLY ii: Target.Int) =
     END;
 
     (* extract the bytes *)
-    n_bytes := TInt.ToBytes (i, x);
+    n_bytes := TInt.ToUnsignedBytes (i, x);
 
     (* stuff'm *)
     Stuff (key + n_bytes);
