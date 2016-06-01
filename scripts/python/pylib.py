@@ -384,7 +384,7 @@ _CBackend = "c" in sys.argv or "C" in sys.argv
 _BuildDirC = ["", "c"][_CBackend]
 _PossibleCm3Flags = ["boot", "keep", "override", "commands", "verbose", "why"]
 _SkipGccFlags = ["nogcc", "skipgcc", "omitgcc"]
-_PossiblePylibFlags = ["noclean", "nocleangcc", "c"] + _SkipGccFlags + _PossibleCm3Flags
+_PossiblePylibFlags = ["noclean", "nocleangcc", "c", "C"] + _SkipGccFlags + _PossibleCm3Flags
 
 skipgcc = False
 for a in _SkipGccFlags:
