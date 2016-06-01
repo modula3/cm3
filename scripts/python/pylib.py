@@ -687,8 +687,8 @@ if Host.endswith("_NT") or Host == "NT386":
 
 #-----------------------------------------------------------------------------
 
-#BuildDir = ("%(Config)s%(_BuildDirC)s" % vars())
-BuildDir = Config
+BuildDir = ("%(Config)s%(_BuildDirC)s" % vars())
+#BuildDir = Config
 M3GDB = (M3GDB or CM3_GDB)
 Scripts = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PKGSDB = os.path.join(Scripts, "PKGS")
