@@ -23,6 +23,12 @@ class Tee:
         if self.b != None and self.a != self.b:
             self.b.write(c)
 
+    def flush(self):
+        if self.a != None:
+            self.a.flush()
+        if self.b != None and self.a != self.b:
+            self.b.flush()
+
 sys.stdout = Tee(sys.stdout, open(sys.argv[0] + ".log", "a"))
 
 # Workaround regression in m3-sys/m3cc/src/m3makefile.
