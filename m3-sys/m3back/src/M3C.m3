@@ -4775,13 +4775,13 @@ VAR ok1 := TRUE;
 BEGIN
     CASE type OF
         | CGType.Int8   => ok1 := TInt.GE(i, TInt.Min8 );
-                              (*ok2 := TInt.LE(i, TInt.Max8);*)
+                         (*ok2 := TInt.LE(i, TInt.Max8);*)
         | CGType.Int16  => ok1 := TInt.GE(i, TInt.Min16);
-                              (*ok2 := TInt.LE(i, TInt.Max16);*)
+                         (*ok2 := TInt.LE(i, TInt.Max16);*)
         | CGType.Int32  => ok1 := TInt.GE(i, TInt.Min32);
-                              (*ok2 := TInt.LE(i, TInt.Max32);*)
+                         (*ok2 := TInt.LE(i, TInt.Max32);*)
         | CGType.Int64  => ok1 := TInt.GE(i, TInt.Min64);
-                              ok2 := TInt.LE(i, TInt.Max64);
+                           ok2 := TInt.LE(i, TInt.Max64);
         | CGType.Word8  => ok1 := TWord.LE(i, TWord.Max8);
         | CGType.Word16 => ok1 := TWord.LE(i, TWord.Max16);
         | CGType.Word32 => ok1 := TWord.LE(i, TWord.Max32);
