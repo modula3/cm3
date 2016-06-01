@@ -380,7 +380,7 @@ def _GetAllTargets():
 
 #-----------------------------------------------------------------------------
 
-_CBackend = "c" in sys.argv
+_CBackend = "c" in sys.argv or "C" in sys.argv
 _BuildDirC = ["", "c"][_CBackend]
 _PossibleCm3Flags = ["boot", "keep", "override", "commands", "verbose", "why"]
 _SkipGccFlags = ["nogcc", "skipgcc", "omitgcc"]
