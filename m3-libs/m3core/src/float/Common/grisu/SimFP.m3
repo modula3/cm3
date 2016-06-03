@@ -53,7 +53,6 @@ PROCEDURE Minus(self : GFP; val :GFP) : GFP =
   VAR result := NEW(GFP).init(self.f(), self.e());
   BEGIN
     <*ASSERT self.exp = val.exp *>
-    (*<*ASSERT self.sig >= val.sig *>*)
     <*ASSERT Long.GE(self.sig, val.sig) *>
     result.sig := self.sig - val.sig;
     RETURN result;

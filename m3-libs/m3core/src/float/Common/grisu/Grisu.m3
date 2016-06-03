@@ -299,7 +299,6 @@ PROCEDURE DigitGen(low,w,high : GFP;
     fractionals,rest,unit : Uint64;
   BEGIN
     <*ASSERT low.e() = w.e() AND w.e() = high.e() *>
-(*    <*ASSERT low.f() + 1L <= high.f() - 1L *>*)
     <*ASSERT Long.LE(low.f() + 1L, high.f() - 1L) *>
     <*ASSERT MinTargetExponent <= w.e() AND w.e() <= MaxTargetExponent *>
     

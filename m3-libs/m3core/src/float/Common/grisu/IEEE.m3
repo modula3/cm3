@@ -312,7 +312,6 @@ PROCEDURE GFPToUint64(<*UNUSED*>self : Double; gfp : GFP)  : Uint64 =
   BEGIN
     significand := gfp.f();
     exponent := gfp.e();
-(*    WHILE significand > dHiddenBit + dSignificandMask DO*)
     WHILE Long.GT(significand, dHiddenBit + dSignificandMask) DO
       significand := Long.RightShift(significand, 1); 
       INC(exponent);
