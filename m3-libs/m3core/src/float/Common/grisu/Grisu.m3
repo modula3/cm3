@@ -671,7 +671,7 @@ PROCEDURE FastDtoa(v : LONGREAL;
       result := Grisu3Counted(v, requestedDigits, buffer, length, decimalExp);
     END;
     IF result THEN
-      decimalPoint := length + decimalExp;
+      decimalPoint := length + decimalExp - 1;
     END;
     RETURN result;
   END FastDtoa;
