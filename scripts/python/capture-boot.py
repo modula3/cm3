@@ -2,7 +2,7 @@
 
 import sys, os.path, os, shutil, pylib, uuid
 from os.path import isfile, isdir
-from pylib import *
+from pylib import CopyFile, CreateDirectory
 
 root = sys.argv[1] or "/cm3"
 temp = "cm3temp-" + str(uuid.uuid4()).upper()
@@ -35,7 +35,9 @@ def copy(a):
 
     elif isfile(os.path.join(root, "bin", a + ".exe")):
         a = os.path.join("bin", a + ".exe")
-
+        
+    # Take only static libs -- foo.lib for Windows, libfoo.a for Posix,
+    # whichever exists.
     elif isfile(os.path.join(root, "lib", a + ".lib")):
         a = os.path.join("lib", a + ".lib")
 
@@ -56,11 +58,9 @@ copy("cm3cg")
 copy("libm3")
 copy("m3")
 copy("m3core")
-CopyRecursive(os.path.join(root, "bin", "config"),
-              os.path.join(temp, "bin", "config"))
-
-def TarGzip(PackageSetName):
-    MakeArchive(PackageSetName, "tar cfvz", "tar.gz")
+if isdir(os.path.join(root, "bin", "config")):
+    CopyRecursive(os.path.join(root, "bin", "config"),
+                  os.path.join(temp, "bin", "config"))
 
 def Run(a):
     print(a + " in " + os.getcwd())
