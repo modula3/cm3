@@ -74,7 +74,7 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
     Setjmp                    := "_setjmp";
 
     (* RTExFrame.Alloca_jmpbuf and Target.Alloca_jmpbuf must match. *)
-    Alloca_jmpbuf             := FALSE;
+    Alloca_jmpbuf             := TRUE;
 
     (* There is no portable stack walker, and therefore few systems have one.
        Having a stack walker theoretically speeds up everything nicely.  If

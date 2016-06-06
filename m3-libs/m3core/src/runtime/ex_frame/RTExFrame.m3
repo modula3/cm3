@@ -15,7 +15,7 @@ IMPORT Thread, Csetjmp;
 *)
 
 (* RTExFrame.Alloca_jmpbuf and Target.Alloca_jmpbuf must match. *)
-CONST Alloca_jmpbuf = FALSE;
+CONST Alloca_jmpbuf = TRUE;
 
 TYPE
   ScopeKind = { Except, ExceptElse,
