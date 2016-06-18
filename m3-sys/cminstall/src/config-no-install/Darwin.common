@@ -127,7 +127,7 @@ proc configure_c_compiler() is
 end
 
 if not defined("SYSTEM_LIBTOOL")
-    readonly SYSTEM_LIBTOOL = "libtool"
+    readonly SYSTEM_LIBTOOL = "/usr/bin/libtool"
 end
 
 %------------------------------------------------ external system libraries ---
