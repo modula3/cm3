@@ -1094,7 +1094,7 @@ PROCEDURE CompileOne (s: State;  u: M3Unit.T) =
       CompileM3X (s, u);
     ELSIF (NOT u.imported) THEN
       FlushPending (s);
-      u.object := FinalNameForUnit (s, u);
+      FinalNameForUnit (s, u);
       IF IfDebug () THEN
         DebugF ("CompileOne FinalNameForUnit(", u, "):" & u.object);
       END;
@@ -3057,80 +3057,40 @@ PROCEDURE GenLibDef (libname: TEXT) =
 
 PROCEDURE GenObjectList (s: State;  wr: Wr.T;  extra: TEXT)
   RAISES {Wr.Failure, Thread.Alerted} =
-  CONST MaxChunk = 30;
-  VAR cnt := 0;  u: M3Unit.T;  n_chunks := 0;  width := 0;  subunit := 0;
+  (* Historically this output:
+m3core_OBJ_0 = ...
+m3core_OBJ_1 = ...
+...
+m3core_OBJECTS = \
+   m3core_OBJ_0 m3core_OBJ_1 ...
+See around June 2016 for elimination of this.
+Which makes have relevant limits?
+  *)
+  VAR u: M3Unit.T := s.units.head;
+      width := 0;
 
   PROCEDURE Out (nm: TEXT) RAISES {Wr.Failure, Thread.Alerted} =
+    VAR len: INTEGER;
     BEGIN
-      IF (width > 65) THEN
-        Wr.PutText (wr, " \134");
-        Wr.PutText (wr, Wr.EOL);
-        Wr.PutText (wr, "  ");
-        width := 0;
+      IF nm = NIL THEN RETURN END;
+      len := Text.Length (nm) + 1;
+      INC (width, len);
+      IF width > 90 THEN
+        Wr.PutText (wr, " \\\n ");
+        width := len + 1;
       END;
       Wr.PutText (wr, " ");
       Wr.PutText (wr, nm);
-      INC (width, Text.Length (nm));
     END Out;
 
   BEGIN
-    (* see how many we got... *)
-    u := s.units.head;
-    WHILE (u # NIL) DO
-      IF (u.object # NIL) THEN INC (cnt); END;
+    Wr.PutText (wr, s.result_name & "_OBJECTS = \\\n ");
+    WHILE u # NIL DO
+      Out (u.boot_makefile_object);
       u := u.next;
     END;
-    IF (extra # NIL) THEN INC (cnt); END;
-
-    IF (cnt < MaxChunk) THEN
-      (* this is the easy case, there's just one list *)
-      Wr.PutText (wr, s.result_name & "_OBJECTS = \134");
-      Wr.PutText (wr, Wr.EOL);
-      Wr.PutText (wr, "  ");
-      u := s.units.head;
-      WHILE (u # NIL) DO
-        IF (u.object # NIL) THEN Out (u.object); END;
-        u := u.next;
-      END;
-      IF (extra # NIL) THEN Out (extra); END;
-      Wr.PutText (wr, Wr.EOL);
-      Wr.PutText (wr, Wr.EOL);
-      RETURN;
-    END;
-
-    (* too many items => we need to build sublists *)
-    n_chunks := (cnt + MaxChunk - 1) DIV MaxChunk;
-
-    u := s.units.head;
-    WHILE (u # NIL) DO
-      Wr.PutText (wr, Wr.EOL);
-      Wr.PutText (wr, s.result_name & "_OBJ_" & Fmt.Int (subunit) & " = \134");
-      Wr.PutText (wr, Wr.EOL);
-      Wr.PutText (wr, "  ");
-      width := 0; cnt := 0;
-      WHILE (cnt < MaxChunk) AND (u # NIL) DO
-        IF (u.object # NIL) THEN Out (u.object); INC (cnt); END;
-        u := u.next;
-      END;
-      Wr.PutText (wr, Wr.EOL);
-      Wr.PutText (wr, Wr.EOL);
-      INC (subunit);
-    END;
-    IF (extra # NIL) THEN Out (extra); END;
-    Wr.PutText (wr, Wr.EOL);
-    Wr.PutText (wr, Wr.EOL);
-
-    width := 0;
-    Wr.PutText (wr, Wr.EOL);
-    Wr.PutText (wr, s.result_name & "_OBJECTS = \134");
-    Wr.PutText (wr, Wr.EOL);
-    Wr.PutText (wr, "  ");
-    FOR i := 0 TO n_chunks-1 DO
-      Out (s.result_name & "_OBJ_" & Fmt.Int (i));
-    END;
-    Wr.PutText (wr, Wr.EOL);
-    Wr.PutText (wr, Wr.EOL);
-    Wr.PutText (wr, Wr.EOL);
+    Out (extra);
+    Wr.PutText (wr, "\n");
   END GenObjectList;
 
 (*--------------------------------------------------------- version stamps --*)
@@ -3299,11 +3259,10 @@ PROCEDURE AsmNameForUnit (u: M3Unit.T): TEXT =
     RETURN M3Path.Join (NIL, M3ID.ToText (u.name), ext);
   END AsmNameForUnit;
 
-PROCEDURE FinalNameForUnit (s: State;  u: M3Unit.T): TEXT =
+PROCEDURE FinalNameForUnitInternal (s: State; u: M3Unit.T; boot: BOOLEAN): TEXT =
 (* Name of final file to be produced. *) 
   VAR ext := u.kind;
       mode := s.m3backend_mode;
-      boot := s.bootstrap_mode;
       asm := mode IN Target.BackendAsmSet; 
       C := mode IN Target.BackendCSet;
       m3cc := mode IN Target.BackendM3ccSet; 
@@ -3374,6 +3333,19 @@ PROCEDURE FinalNameForUnit (s: State;  u: M3Unit.T): TEXT =
     END;
 
     RETURN M3Path.Join (NIL, M3ID.ToText (u.name), ext);
+  END FinalNameForUnitInternal;
+
+PROCEDURE FinalNameForUnit (s: State;  u: M3Unit.T) =
+(* Name of final file or files to be produced. *) 
+  VAR boot := s.bootstrap_mode; (* typically FALSE *)
+      object := FinalNameForUnitInternal (s, u, FALSE);
+  BEGIN
+    IF NOT boot THEN
+      u.object := object;
+      RETURN;
+    END;
+    u.boot_makefile_object := object;
+    u.object := FinalNameForUnitInternal (s, u, TRUE);
   END FinalNameForUnit;
 
 (*------------------------------------------------------------------ misc ---*)
