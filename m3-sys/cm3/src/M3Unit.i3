@@ -30,9 +30,9 @@ TYPE
      *)
     object       : TEXT    := NIL;
     
-    (* final_object is similar to object.
-     * When cm3 -boot is not given, final_object is not used.
-     * When cm3 -boot is used, final_object is what object
+    (* boot_makefile_object is similar to object.
+     * When cm3 -boot is not given, boot_makefile_object is not used.
+     * When cm3 -boot is used, boot_makefile_object is what object
      * would have been. That is, these are the files written
      * into the makefiles that cm3 -boot produces.
      *)
