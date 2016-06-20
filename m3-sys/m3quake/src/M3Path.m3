@@ -22,8 +22,8 @@ TYPE
 
 CONST
   Suffix = ARRAY OSKind OF SMap {
-  (* Unix *)       SMap { "", ".i3", ".ib", ".ic", ".is", ".io",
-                          ".m3", ".mb", ".mc", ".ms", ".mo",
+  (* Unix *)       SMap { "", ".i3", ".ib", ".ic", "_i.s", "_i.o",
+                          ".m3", ".mb", ".mc", "_m.s", "_m.o",
                           ".ig", ".mg", ".c", ".h", ".bc", ".s",
                           ".o", ".a", ".a", ".m3x", "", ".mx", ".tmpl" },
   (* GrumpyUnix *) SMap { "", ".i3", ".ib", ".ic", "_i.s", "_i.o",
