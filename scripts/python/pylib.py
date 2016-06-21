@@ -1784,8 +1784,8 @@ GenericCommand:
         sys.stdout.flush()
         sys.exit(1)
 
-    PackagesFromCommandLine = []
-    ActionCommands = []
+    PackagesFromCommandLine = [ ]
+    ActionCommands = [ ]
     Packages = None
     ListOnly = False
     KeepGoing = False
@@ -2115,7 +2115,7 @@ def CopyCompiler(From, To):
 def GetProgramFiles():
     # Look for Program Files.
     # This is expensive and callers are expected to cache it.
-    ProgramFiles = []
+    ProgramFiles = [ ]
     for d in ["PROGRAMFILES", "PROGRAMFILES(X86)", "PROGRAMW6432"]:
         e = os.environ.get(d)
         if e and (not (e in ProgramFiles)) and isdir(e):
@@ -2314,7 +2314,7 @@ def SetupEnvironment():
                         os.path.join("Microsoft SDKs", "Windows", "v6.0A"),
                         "Microsoft Platform SDK for Windows Server 2003 R2"
                        ]
-        SDKs = []
+        SDKs = [ ]
 
         for a in GetProgramFiles():
             #print("checking " + a)
@@ -2690,7 +2690,7 @@ def DiscoverHardLinks(r):
         for f in files:
             p = root + "/" + f
             if not os.path.islink(p):
-                result.setdefault(os.stat(p).st_ino, []).append(p)
+                result.setdefault(os.stat(p).st_ino, [ ]).append(p)
     return result
 
 def BreakHardLinks(links):
@@ -2931,7 +2931,7 @@ if __name__ == "__main__":
     print("PrintList4------------------------------")
 
     CommandLines = [
-        [],
+        [ ],
         ["build"],
         ["buildlocal"],
         ["buildglobal"],
