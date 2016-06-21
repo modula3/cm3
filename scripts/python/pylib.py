@@ -1253,9 +1253,11 @@ def Boot():
 
     AssemblerFlags = (AssemblerFlags + ({
         "ALPHA_OSF"         : " -nocpp ",
-        "AMD64_DARWIN"      : " -arch x86_64 ",
-        "PPC64_DARWIN"      : " -arch ppc64 ",
-        "ARM_DARWIN"        : " -arch armv6 ",
+        "I386_DARWIN"       : " -arch i386 -g ",
+        "AMD64_DARWIN"      : " -arch x86_64 -g ",
+        "PPC64_DARWIN"      : " -arch ppc64 -g ",
+        "PPC_DARWIN"        : " -arch ppc -g ",
+        "ARM_DARWIN"        : " -arch armv6 -g ",
         "I386_SOLARIS"      : " -Qy -s ",
         "AMD64_SOLARIS"     : " -Qy -s        -xarch=generic64 ",
         "SOLgnu"            : " -Qy -s -K PIC -xarch=v8plus ", # Sun assembler
