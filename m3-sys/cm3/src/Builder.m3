@@ -3057,40 +3057,80 @@ PROCEDURE GenLibDef (libname: TEXT) =
 
 PROCEDURE GenObjectList (s: State;  wr: Wr.T;  extra: TEXT)
   RAISES {Wr.Failure, Thread.Alerted} =
-  (* Historically this output:
-m3core_OBJ_0 = ...
-m3core_OBJ_1 = ...
-...
-m3core_OBJECTS = \
-   m3core_OBJ_0 m3core_OBJ_1 ...
-See around June 2016 for elimination of this.
-Which makes have relevant limits?
-  *)
-  VAR u: M3Unit.T := s.units.head;
-      width := 0;
+  CONST MaxChunk = 30;
+  VAR cnt := 0;  u: M3Unit.T;  n_chunks := 0;  width := 0;  subunit := 0;
 
   PROCEDURE Out (nm: TEXT) RAISES {Wr.Failure, Thread.Alerted} =
-    VAR len: INTEGER;
     BEGIN
-      IF nm = NIL THEN RETURN END;
-      len := Text.Length (nm) + 1;
-      INC (width, len);
-      IF width > 90 THEN
-        Wr.PutText (wr, " \\\n ");
-        width := len + 1;
+      IF (width > 65) THEN
+        Wr.PutText (wr, " \134");
+        Wr.PutText (wr, Wr.EOL);
+        Wr.PutText (wr, "  ");
+        width := 0;
       END;
       Wr.PutText (wr, " ");
       Wr.PutText (wr, nm);
+      INC (width, Text.Length (nm));
     END Out;
 
   BEGIN
-    Wr.PutText (wr, s.result_name & "_OBJECTS = \\\n ");
-    WHILE u # NIL DO
-      Out (u.boot_makefile_object);
+    (* see how many we got... *)
+    u := s.units.head;
+    WHILE (u # NIL) DO
+      IF (u.object # NIL) THEN INC (cnt); END;
       u := u.next;
     END;
-    Out (extra);
-    Wr.PutText (wr, "\n");
+    IF (extra # NIL) THEN INC (cnt); END;
+
+    IF (cnt < MaxChunk) THEN
+      (* this is the easy case, there's just one list *)
+      Wr.PutText (wr, s.result_name & "_OBJECTS = \134");
+      Wr.PutText (wr, Wr.EOL);
+      Wr.PutText (wr, "  ");
+      u := s.units.head;
+      WHILE (u # NIL) DO
+        IF (u.object # NIL) THEN Out (u.object); END;
+        u := u.next;
+      END;
+      IF (extra # NIL) THEN Out (extra); END;
+      Wr.PutText (wr, Wr.EOL);
+      Wr.PutText (wr, Wr.EOL);
+      RETURN;
+    END;
+
+    (* too many items => we need to build sublists *)
+    n_chunks := (cnt + MaxChunk - 1) DIV MaxChunk;
+
+    u := s.units.head;
+    WHILE (u # NIL) DO
+      Wr.PutText (wr, Wr.EOL);
+      Wr.PutText (wr, s.result_name & "_OBJ_" & Fmt.Int (subunit) & " = \134");
+      Wr.PutText (wr, Wr.EOL);
+      Wr.PutText (wr, "  ");
+      width := 0; cnt := 0;
+      WHILE (cnt < MaxChunk) AND (u # NIL) DO
+        IF (u.object # NIL) THEN Out (u.object); INC (cnt); END;
+        u := u.next;
+      END;
+      Wr.PutText (wr, Wr.EOL);
+      Wr.PutText (wr, Wr.EOL);
+      INC (subunit);
+    END;
+    IF (extra # NIL) THEN Out (extra); END;
+    Wr.PutText (wr, Wr.EOL);
+    Wr.PutText (wr, Wr.EOL);
+
+    width := 0;
+    Wr.PutText (wr, Wr.EOL);
+    Wr.PutText (wr, s.result_name & "_OBJECTS = \134");
+    Wr.PutText (wr, Wr.EOL);
+    Wr.PutText (wr, "  ");
+    FOR i := 0 TO n_chunks-1 DO
+      Out (s.result_name & "_OBJ_" & Fmt.Int (i));
+    END;
+    Wr.PutText (wr, Wr.EOL);
+    Wr.PutText (wr, Wr.EOL);
+    Wr.PutText (wr, Wr.EOL);
   END GenObjectList;
 
 (*--------------------------------------------------------- version stamps --*)
