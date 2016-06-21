@@ -1083,7 +1083,7 @@ def Boot():
 # Maybe something autotools or cmake-laden
 
     global BuildLocal
-    BuildLocal += " -boot -keep -DM3CC_TARGET=" + Config
+    BuildLocal += " -boot -no-m3ship-resolution -group-writable -keep -DM3CC_TARGET=" + Config
 
     Version = CM3VERSION + "-" + time.strftime("%Y%m%d")
     BootDir = "./cm3-boot-" + BuildDir + "-" + Version
