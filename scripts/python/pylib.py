@@ -1286,14 +1286,6 @@ def Boot():
     if (not vms) or AssembleOnHost:
         Assembler = GnuPlatformPrefix + Assembler
 
-    # squeeze runs of spaces and spaces at ends
-
-    Compile = _SqueezeSpaces(Compile)
-    CCompilerFlags = _SqueezeSpaces(CCompilerFlags)
-    Link = _SqueezeSpaces(Link)
-    Assembler = _SqueezeSpaces(Assembler)
-    AssemblerFlags = _SqueezeSpaces(AssemblerFlags)
-
     P = FilterPackages([ "m3cc", "import-libs", "m3core", "libm3", "sysutils",
           "m3middle", "m3quake", "m3objfile", "m3linker", "m3back",
           "m3front" ])
@@ -1322,7 +1314,14 @@ def Boot():
             if ext_io and not link_ext_io and not CBackend:
                 link_ext_io = True
                 Link += " *.io "
-    
+
+    # squeeze runs of spaces and spaces at ends
+    Compile = _SqueezeSpaces(Compile)
+    CCompilerFlags = _SqueezeSpaces(CCompilerFlags)
+    Link = _SqueezeSpaces(Link)
+    Assembler = _SqueezeSpaces(Assembler)
+    AssemblerFlags = _SqueezeSpaces(AssemblerFlags)
+
     NL = ["\n", "\r\n"][nt]
     NL2 = NL + NL
     EXE = ["", ".exe"][nt]
