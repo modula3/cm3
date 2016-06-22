@@ -1179,9 +1179,11 @@ def Boot():
         "SPARC32_LINUX"   : " -m32 -mcpu=v9 -mno-app-regs ",
         "SPARC64_LINUX"   : " -m64 -mno-app-regs ",
         }.get(Config) or " ")
+        
+    LinkExts = { }
 
     obj = ["o", "obj"][nt]
-    Link = "$(CC) $(CFLAGS) *." + obj + [" *.mo *.io ", " "][CBackend]
+    Link = "$(CC) $(CFLAGS) *." + obj + " "
     #Link = "$(CC) $(CFLAGS)"
 
     # link flags
@@ -1305,9 +1307,21 @@ def Boot():
     #DoPackage(["", "realclean"] + P) or sys.exit(1)
     DoPackage(["", "buildlocal"] + P) or sys.exit(1)
 
-    #
-    # This would probably be a good use of XSL (xml style sheets)
-    #
+    link_ext_mo = False
+    link_ext_io = False
+
+    for q in P:
+        dir = GetPackagePath(q)
+        for a in os.listdir(os.path.join(Root, dir, BuildDir)):
+            ext = GetPathExtension(a)
+            ext_io = (ext == "io")
+            ext_mo = (ext == "mo")
+            if ext_mo and not link_ext_mo and not CBackend:
+                link_ext_im = True
+                Link += " *.mo"
+            if ext_io and not link_ext_io and not CBackend:
+                link_ext_io = True
+                Link += " *.io "
     
     NL = ["\n", "\r\n"][nt]
     NL2 = NL + NL
@@ -1319,6 +1333,9 @@ def Boot():
     UpdateSource = open(os.path.join(BootDir, "updatesource.sh"), "wb")
     Objects = { }
     ObjectsExceptMain = { }
+    
+    # main_m.s or main.ms, depending on what we see
+    mainS = "" 
 
     for pkg in main_packages:
         CreateDirectory(os.path.join(BootDir, pkg + ".d"))
@@ -1390,7 +1407,9 @@ def Boot():
             if not (ext_c or ext_cpp or ext_h or ext_s or ext_ms or ext_is or ext_io or ext_mo):
                 continue
             leaf = GetLastPathElement(a)
-            is_main = (not vms) and leaf.startswith("Main.m") # TODO vms cleanup
+            if leaf.startswith("Main.m") or leaf.startswith("Main_m."):
+                mainS = leaf
+            is_main = (not vms) and (leaf.startswith("Main.m") or leaf.startswith("Main_m.")) # TODO vms cleanup
             fullpath = os.path.join(Root, dir, BuildDir, a)
             if ext_h or ext_c or not vms or AssembleOnTarget or ext_io or ext_mo:
                 CopyFile(fullpath, os.path.join(BootDir, [".", q + ".d"][is_main], main_leaf))
@@ -1452,22 +1471,14 @@ def Boot():
  
     LinkOut = [" -o ", " -out:"][nt]
     
-    main_ext = ""
     maino_ext = "o"
     if CBackend:
-        main_ext = "m3.c"
         maino_ext = "m3.c"
     elif AssembleOnTarget:
-        main_ext = "s"
-    else:
-        main_ext = "mo"
-    #Makefile.write("#main_ext:" + main_ext + NL)
-
-    if main_ext == "s":
         for pkg in main_packages:
-            Makefile.write(pkg + ".d/Main.o: " + pkg + ".d/Main.ms" + NL)
+            Makefile.write(pkg + ".d/Main.o: " + pkg + ".d/" + mainS + NL)
             #Makefile.write("\t-mkdir $(@D)" + NL)
-            Makefile.write("\t$(Assemble) -o $@ " + pkg + ".d/Main.ms" + NL)
+            Makefile.write("\t$(Assemble) -o $@ " + pkg + ".d/" + mainS + NL)
             Makefile.write(NL)
 
     for pkg in main_packages:
