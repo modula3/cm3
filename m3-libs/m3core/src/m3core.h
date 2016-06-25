@@ -109,12 +109,25 @@
 #define __MAKECONTEXT_V2_SOURCE
 #endif
 
-#ifdef __INTERIX
-/* Autoconf: AC_USE_SYSTEM_EXTENSIONS
- */
+/* Enable extensions on AIX 3, Interix.  */
 #ifndef _ALL_SOURCE
-#define _ALL_SOURCE
+# define _ALL_SOURCE 1
 #endif
+/* Enable GNU extensions on systems that have them.  */
+#ifndef _GNU_SOURCE
+# define _GNU_SOURCE 1
+#endif
+/* Enable threading extensions on Solaris.  */
+#ifndef _POSIX_PTHREAD_SEMANTICS
+# define _POSIX_PTHREAD_SEMANTICS 1
+#endif
+/* Enable extensions on HP NonStop.  */
+#ifndef _TANDEM_SOURCE
+# define _TANDEM_SOURCE 1
+#endif
+/* Enable general extensions on Solaris.  */
+#ifndef __EXTENSIONS__
+# define __EXTENSIONS__ 1
 #endif
 
 #ifndef _REENTRANT
