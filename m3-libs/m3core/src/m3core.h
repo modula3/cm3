@@ -139,27 +139,39 @@
 /* Enable support for files larger than 2GB.
  * Autoconf: AC_SYS_LARGEFILE?
  */
-#ifndef _LARGEFILE
+#undef _LARGEFILE
 #define _LARGEFILE
-#endif
+
 /* Enable 32bit gids and reveal setreuids. */
-#ifndef __USE_LONG_GID_T
+#undef __USE_LONG_GID_T
 #define __USE_LONG_GID_T 1
-#endif
+
 /* st_ino has three forms that all fit in the
  * same space; pick the one we want.
  */
-#ifndef __USE_INO64
+#undef __USE_INO64
 #define __USE_INO64 1
-#endif
-#endif
 
-#if defined(__arm__) && defined(__APPLE__)
+#endif /* vms */
+
+#ifdef __APPLE__
+
 /* Reveal the correct struct stat? */
-#ifndef _DARWIN_FEATURE_64_ONLY_BIT_INODE
-#define _DARWIN_FEATURE_64_ONLY_BIT_INODE
-#endif
-#endif
+/* AC_SYS_LARGEFILE */
+/* Enable large inode numbers on Mac OS X 10.5.  */
+#undef _DARWIN_FEATURE_64_ONLY_BIT_INODE
+#undef     _DARWIN_USE_64_BIT_INODE
+#undef      _DARWIN_NO_64_BIT_INODE
+#undef        __DARWIN_64_BIT_INO_T
+#undef   __DARWIN_ONLY_64_BIT_INO_T
+#undef _DARWIN_FEATURE_64_BIT_INODE
+#define _DARWIN_FEATURE_64_BIT_INODE 1
+#define _DARWIN_FEATURE_64_ONLY_BIT_INODE 1
+#define __DARWIN_ONLY_64_BIT_INO_T 1
+#define   _DARWIN_USE_64_BIT_INODE 1
+#define      __DARWIN_64_BIT_INO_T 1
+
+#endif /* apple */
 
 #if !defined(_MSC_VER) && !defined(__cdecl)
 #define __cdecl /* nothing */
