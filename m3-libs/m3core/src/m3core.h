@@ -109,6 +109,7 @@
 #define __MAKECONTEXT_V2_SOURCE
 #endif
 
+/* Autoconf: AC_USE_SYSTEM_EXTENSIONS */
 /* Enable extensions on AIX 3, Interix.  */
 #ifndef _ALL_SOURCE
 # define _ALL_SOURCE 1
