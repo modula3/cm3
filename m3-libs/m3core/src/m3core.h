@@ -109,26 +109,12 @@
 #define __MAKECONTEXT_V2_SOURCE
 #endif
 
-/* Autoconf: AC_USE_SYSTEM_EXTENSIONS */
-/* Enable extensions on AIX 3, Interix.  */
+#ifdef __INTERIX
+/* Autoconf: AC_USE_SYSTEM_EXTENSIONS
+ */
 #ifndef _ALL_SOURCE
-# define _ALL_SOURCE 1
+#define _ALL_SOURCE
 #endif
-/* Enable GNU extensions on systems that have them.  */
-#ifndef _GNU_SOURCE
-# define _GNU_SOURCE 1
-#endif
-/* Enable threading extensions on Solaris.  */
-#ifndef _POSIX_PTHREAD_SEMANTICS
-# define _POSIX_PTHREAD_SEMANTICS 1
-#endif
-/* Enable extensions on HP NonStop.  */
-#ifndef _TANDEM_SOURCE
-# define _TANDEM_SOURCE 1
-#endif
-/* Enable general extensions on Solaris.  */
-#ifndef __EXTENSIONS__
-# define __EXTENSIONS__ 1
 #endif
 
 #ifndef _REENTRANT
@@ -139,39 +125,27 @@
 /* Enable support for files larger than 2GB.
  * Autoconf: AC_SYS_LARGEFILE?
  */
-#undef _LARGEFILE
+#ifndef _LARGEFILE
 #define _LARGEFILE
-
+#endif
 /* Enable 32bit gids and reveal setreuids. */
-#undef __USE_LONG_GID_T
+#ifndef __USE_LONG_GID_T
 #define __USE_LONG_GID_T 1
-
+#endif
 /* st_ino has three forms that all fit in the
  * same space; pick the one we want.
  */
-#undef __USE_INO64
+#ifndef __USE_INO64
 #define __USE_INO64 1
+#endif
+#endif
 
-#endif /* vms */
-
-#ifdef __APPLE__
-
+#if defined(__arm__) && defined(__APPLE__)
 /* Reveal the correct struct stat? */
-/* AC_SYS_LARGEFILE */
-/* Enable large inode numbers on Mac OS X 10.5.  */
-#undef _DARWIN_FEATURE_64_ONLY_BIT_INODE
-#undef     _DARWIN_USE_64_BIT_INODE
-#undef      _DARWIN_NO_64_BIT_INODE
-#undef        __DARWIN_64_BIT_INO_T
-#undef   __DARWIN_ONLY_64_BIT_INO_T
-#undef _DARWIN_FEATURE_64_BIT_INODE
-#define _DARWIN_FEATURE_64_BIT_INODE 1
-#define _DARWIN_FEATURE_64_ONLY_BIT_INODE 1
-#define __DARWIN_ONLY_64_BIT_INO_T 1
-#define   _DARWIN_USE_64_BIT_INODE 1
-#define      __DARWIN_64_BIT_INO_T 1
-
-#endif /* apple */
+#ifndef _DARWIN_FEATURE_64_ONLY_BIT_INODE
+#define _DARWIN_FEATURE_64_ONLY_BIT_INODE
+#endif
+#endif
 
 #if !defined(_MSC_VER) && !defined(__cdecl)
 #define __cdecl /* nothing */
