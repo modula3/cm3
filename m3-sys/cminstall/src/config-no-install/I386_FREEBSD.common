@@ -15,14 +15,15 @@ proc configure_c_compiler() is
     return
   end
 
-  %
-  % older compiler doesn't like -m32
+  % older compiler doesn't like -m32 (pre-FreeBSD 7.0)
   %
   % gcc -c -m32 -x c /dev/null
   % cc1: Invalid option `32'
-  %
-  
+
   SYSTEM_CC = "g++ -gstabs+ -fPIC"
+  if defined("FREEBSD_LD_CC_APPEND")
+    SYSTEM_CC = SYSTEM_CC & FREEBSD_LD_CC_APPEND
+  end
   local SYSTEM_CC_m32 = SYSTEM_CC & " -m32"
   %if not equal(try_exec("@" & SYSTEM_CC_m32 & " -c -x c /dev/null -o /dev/null 2>&1 | fgrep \"cc1: Invalid option \\\`32'\" >/dev/null"), 0)
   if not IsTargetFreeBSD4()
