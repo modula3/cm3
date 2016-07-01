@@ -135,7 +135,7 @@ PROCEDURE ConvertOption (VAR s: State;  arg: TEXT;  arg_len: INTEGER)
   RAISES {Wr.Failure, Thread.Alerted} =
   VAR ok := FALSE;  wr := s.wr;
   BEGIN
-    IF Text.GetChar (arg, 1) = '-' THEN
+    IF arg_len > 1 AND Text.GetChar (arg, 1) = '-' THEN
       arg := Text.Sub (arg, 1);
     END;
     CASE Text.GetChar (arg, 1) OF
@@ -547,7 +547,7 @@ PROCEDURE ScanCommandLine () : TextTextTbl.T RAISES {Wr.Failure, Thread.Alerted}
 
     FOR i := 1 TO Params.Count-1 DO
       arg := Params.Get (i);
-      IF Text.Length(arg) > 1 AND Text.GetChar (arg, 1) = '-' THEN
+      IF Text.Length (arg) > 1 AND Text.GetChar (arg, 1) = '-' THEN
         arg := Text.Sub (arg, 1);
       END;
       IF    Text.Equal (arg, "-?")         THEN  PrintHelp ();
@@ -595,7 +595,7 @@ PROCEDURE ScanCommandLine () : TextTextTbl.T RAISES {Wr.Failure, Thread.Alerted}
         ELSE
           Msg.Error(NIL, "missing argument for -pretend");
         END;
-      ELSIF Text.GetChar(arg, 0) = '-' AND Text.GetChar(arg, 1) = 'D' THEN
+      ELSIF Text.Length(arg) > 1 AND Text.GetChar(arg, 0) = '-' AND Text.GetChar(arg, 1) = 'D' THEN
         ProcessDefine(arg, NIL);
       END;
     END;
