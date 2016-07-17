@@ -42,8 +42,8 @@ REVEAL
  
       lock: PCRITICAL_SECTION := NIL;
       waitEvent: HANDLE := NIL;
-      counter := 0; (* LL = condition.lock *)
-      tickets := 0; (* LL = condition.lock *)
+      counter := 0; (* LL = condition.lock *) (* = Schmidt's wait_generation_count_ *)
+      tickets := 0; (* LL = condition.lock *) (* = Schmidt's release_count_ *) 
       waiters := 0; (* LL = condition.lock *)
     END;
 
@@ -67,13 +67,16 @@ REVEAL
       context: PCONTEXT := NIL;         (* registers of suspended thread *)
       stackPointer: ADDRESS := NIL;     (* context->Esp etc. (processor dependent) *)
       waitEvent: HANDLE := NIL;         (* event for blocking during "Wait", "AlertWait", "AlertPause", etc. *)
-      alertEvent: HANDLE := NIL;        (* event for blocking during "Wait", "AlertWait", "AlertPause", etc. *)
-      state := ActState.Started;        (* LL = activeMu *)
+      (* ^waitEvent is created in CreateT and destroyed in CleanThread, but never otherwise used. 
+         NOTE: Condition has an identically-named and -typed field, which *is* used. *) 
+      alertEvent: HANDLE := NIL;        (* event for blocking for an alert. *)
+      state := ActState.Started;        (* LL = activeLock *)
       heapState: RTHeapRep.ThreadState; (* thread state *)
       floatState: FloatMode.ThreadState; (* thread state *)
     END;
 
 PROCEDURE SetState (act: Activation;  state: ActState) =
+  (* LL=activeLock. *)
   CONST text = ARRAY ActState OF TEXT
     { "Starting", "Started", "Stopping", "Stopped" };
   BEGIN
@@ -237,9 +240,9 @@ PROCEDURE XWait(m: Mutex; c: Condition; act: Activation;
    *)
   VAR (* The order of the handles is important.
        * - They affect computing if we are alerted.
-       * - If we are alerted and signaled, we take the signaled path
+       * - If we are alerted and M3-signaled, we take the signaled path
        *   in order to maintain the condition variable correctly.
-       *   If both events get signaled, WaitForMultipleObjects returns the smaller index.
+       *   If both events get Win32-signaled, WaitForMultipleObjects returns the smaller index.
        *)
       handles := ARRAY [0..1] OF HANDLE {NIL(*c.waitEvent*), act.alertEvent};
       count: INTEGER;
@@ -274,7 +277,7 @@ PROCEDURE XWait(m: Mutex; c: Condition; act: Activation;
       INC(c.waiters);
 
     LeaveCriticalSection(conditionLock);
-    m.release(); (* can this be moved to before taking conditionLock? *)
+    m.release();
 
     (* Loop until condition variable is signaled. The event object is
      * set whenever the condition variable is signaled, and tickets will
@@ -318,7 +321,7 @@ PROCEDURE XWait(m: Mutex; c: Condition; act: Activation;
 
     EnterCriticalSection(conditionLock);
       DEC(c.waiters);
-      IF waitDone THEN
+      IF waitDone THEN (* Not handling this as an alert. *) 
         DEC(c.tickets);
         lastWaiter := (c.tickets = 0);
       END;
@@ -711,7 +714,8 @@ PROCEDURE Pause(n: LONGREAL) =
 PROCEDURE AlertPause(n: LONGREAL) RAISES {Alerted} =
   VAR self := GetActivation();
   BEGIN
-    IF self = NIL THEN Die(ThisLine(), "AlertPause called from a non-Modula-3 thread") END;
+    IF self = NIL THEN 
+      Die(ThisLine(), "AlertPause called from a non-Modula-3 thread") END;
     XPause(self, n, alertable := TRUE);
   END AlertPause;
 
