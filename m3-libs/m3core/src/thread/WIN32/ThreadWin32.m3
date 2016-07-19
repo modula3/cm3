@@ -66,7 +66,6 @@ REVEAL
       suspendCount := 0;                (* LL = activeLock *)
       context: PCONTEXT := NIL;         (* registers of suspended thread *)
       stackPointer: ADDRESS := NIL;     (* context->Esp etc. (processor dependent) *)
-      waitEvent: HANDLE := NIL;         (* event for blocking during "Wait", "AlertWait", "AlertPause", etc. *)
       alertEvent: HANDLE := NIL;        (* event for blocking during "Wait", "AlertWait", "AlertPause", etc. *)
       state := ActState.Started;        (* LL = activeMu *)
       heapState: RTHeapRep.ThreadState; (* thread state *)
@@ -534,9 +533,8 @@ PROCEDURE CreateT (act: Activation): T =
       DISPOSE(act);
     END;
     t.act.context := NewContext();
-    t.act.waitEvent := CreateEvent(NIL, 0, 0, NIL);
     t.act.alertEvent := CreateEvent(NIL, 0, 0, NIL);
-    IF t.act.context = NIL OR t.act.waitEvent = NIL OR t.act.alertEvent = NIL THEN
+    IF t.act.context = NIL OR t.act.alertEvent = NIL THEN
       (* we could just let the registered cleanup run, but memory is tight *)
       CleanThread(t);
       RuntimeError.Raise(RuntimeError.T.SystemError);
@@ -551,7 +549,6 @@ PROCEDURE CleanThread(r: REFANY) =
     IF r # NIL THEN
       t := NARROW(r, T);
       DeleteContext(t.act.context);
-      DelHandle(t.act.waitEvent, ThisLine());
       DelHandle(t.act.alertEvent, ThisLine());
       DelHandle(t.act.handle, ThisLine());
       DISPOSE(t.act);
