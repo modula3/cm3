@@ -51,8 +51,8 @@ end
 if equal(M3_BACKEND_MODE, "IntegratedC")
         or equal(M3_BACKEND_MODE, "C")
         or USE_C_BACKEND_VIA_M3CGCAT
-    %readonly BUILD_DIR_C = "c"
-    readonly BUILD_DIR_C = ""
+    readonly BUILD_DIR_C = "c"
+    %readonly BUILD_DIR_C = ""
 else
     readonly BUILD_DIR_C = ""
 end

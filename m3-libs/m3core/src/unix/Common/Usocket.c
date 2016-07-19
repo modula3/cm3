@@ -23,11 +23,13 @@ Usocket__assert_plen_in(m3_socklen_t* plen)
 {
     if (!(LOSSLESS_SOCKLEN || plen == NULL || (*plen <= (1UL << 30))))
     {
+#ifndef _WIN32 /* Do not accidentally export printf. */
         printf("%u %u %x%08x\n",
                !!LOSSLESS_SOCKLEN,
                !!plen,
                (plen ? (unsigned)((*plen >> 31) >> 1) : 0),
                (plen ? (unsigned)*plen : 0));
+#endif
         assert(LOSSLESS_SOCKLEN || plen == NULL || (*plen <= (1UL << 30)));
     }
 }

@@ -1,5 +1,0 @@
-import("libm3")
-
-implementation("Main")
-
-program("test")

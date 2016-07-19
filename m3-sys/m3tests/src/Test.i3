@@ -5,7 +5,24 @@
 INTERFACE Test;
 
 IMPORT Text;
-IMPORT Cstdint;
+(* avoid Cstdint, for compatibility with older releases *)
+IMPORT Ctypes, Word;
+
+TYPE
+       int8_t = Ctypes.signed_char;
+      uint8_t = Ctypes.unsigned_char;
+      int16_t = Ctypes.short;
+     uint16_t = Ctypes.unsigned_short;
+      int32_t = Ctypes.int;
+     uint32_t = Ctypes.unsigned_int;
+(* change this for older releases
+      int64_t = INTEGER;
+     uint64_t = Word.T;
+*)
+      int64_t = Ctypes.long_long;
+     uint64_t = Ctypes.unsigned_long_long;
+     intptr_t = INTEGER;
+    uintptr_t = Word.T;
 
 VAR
   errors:   INTEGER := 0;
@@ -50,22 +67,22 @@ PROCEDURE done ();
  * Visual C++, or hand written assembly.
  *)
 
-<*EXTERNAL*>PROCEDURE  NegativeInt8():    Cstdint.int8_t;
-<*EXTERNAL*>PROCEDURE NegativeUInt8():   Cstdint.uint8_t;
-<*EXTERNAL*>PROCEDURE  NegativeInt16():  Cstdint.int16_t;
-<*EXTERNAL*>PROCEDURE NegativeUInt16(): Cstdint.uint16_t;
-<*EXTERNAL*>PROCEDURE  NegativeInt32():  Cstdint.int32_t;
-<*EXTERNAL*>PROCEDURE NegativeUInt32(): Cstdint.uint32_t;
-<*EXTERNAL*>PROCEDURE  NegativeInt64():  Cstdint.int64_t;
-<*EXTERNAL*>PROCEDURE NegativeUInt64(): Cstdint.uint64_t;
+<*EXTERNAL*>PROCEDURE  NegativeInt8():    int8_t;
+<*EXTERNAL*>PROCEDURE NegativeUInt8():   uint8_t;
+<*EXTERNAL*>PROCEDURE  NegativeInt16():  int16_t;
+<*EXTERNAL*>PROCEDURE NegativeUInt16(): uint16_t;
+<*EXTERNAL*>PROCEDURE  NegativeInt32():  int32_t;
+<*EXTERNAL*>PROCEDURE NegativeUInt32(): uint32_t;
+<*EXTERNAL*>PROCEDURE  NegativeInt64():  int64_t;
+<*EXTERNAL*>PROCEDURE NegativeUInt64(): uint64_t;
 
-<*EXTERNAL*>PROCEDURE  PositiveInt8():    Cstdint.int8_t;
-<*EXTERNAL*>PROCEDURE PositiveUInt8():   Cstdint.uint8_t;
-<*EXTERNAL*>PROCEDURE  PositiveInt16():  Cstdint.int16_t;
-<*EXTERNAL*>PROCEDURE PositiveUInt16(): Cstdint.uint16_t;
-<*EXTERNAL*>PROCEDURE  PositiveInt32():  Cstdint.int32_t;
-<*EXTERNAL*>PROCEDURE PositiveUInt32(): Cstdint.uint32_t;
-<*EXTERNAL*>PROCEDURE  PositiveInt64():  Cstdint.int64_t;
-<*EXTERNAL*>PROCEDURE PositiveUInt64(): Cstdint.uint64_t;
+<*EXTERNAL*>PROCEDURE  PositiveInt8():    int8_t;
+<*EXTERNAL*>PROCEDURE PositiveUInt8():   uint8_t;
+<*EXTERNAL*>PROCEDURE  PositiveInt16():  int16_t;
+<*EXTERNAL*>PROCEDURE PositiveUInt16(): uint16_t;
+<*EXTERNAL*>PROCEDURE  PositiveInt32():  int32_t;
+<*EXTERNAL*>PROCEDURE PositiveUInt32(): uint32_t;
+<*EXTERNAL*>PROCEDURE  PositiveInt64():  int64_t;
+<*EXTERNAL*>PROCEDURE PositiveUInt64(): uint64_t;
 
 END Test.

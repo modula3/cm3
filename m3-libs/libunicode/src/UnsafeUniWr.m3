@@ -1,3 +1,7 @@
+(* Copyright (C) Rodney M. Bates 2016. *)
+(* rodney.m.bates@acm.org *) 
+(* Licensed under the MIT License. *) 
+
 MODULE UnsafeUniWr 
 
 (* Writer for character stream with one of several encodings. *) 
@@ -11,6 +15,11 @@ MODULE UnsafeUniWr
 ; IMPORT UniWrClass 
 ; IMPORT Wr 
 ; FROM Wr IMPORT Failure 
+
+(* NOTE 2: When CHAR<:WIDECHAR, and Widechar=WIDECHAR, could remove unnecessary
+           ORD and VAL conversions.  
+           (But maybe it is better to just leave as-is, to provide long-term
+           bootstrapping capability. *) 
 
 (* EXPORTED: *) 
 ; PROCEDURE FastPutChar ( Stream : UniWr . T ; Ch : CHAR ) 
@@ -47,7 +56,7 @@ MODULE UnsafeUniWr
       DO Stream . EncWideChar 
            ( Stream . Sink 
            , (*Assignable:*) VAL ( ORD ( ArrCh [ RI ] ) , Widechar )  
-(* FIXME: When CHAR<:WIDECHAR, remove the VAL and ORD *) 
+(* 2 *) 
            ) 
       END (* FOR *) 
     END FastPutString 
@@ -88,7 +97,7 @@ MODULE UnsafeUniWr
   = BEGIN 
       FOR RI := 0 TO Text . Length ( t ) - 1 
       DO VisitWch ( VAL ( ORD ( Text . GetWideChar ( t , RI ) ) , Widechar ) ) 
-(* FIXME^ when CHAR<:WIDECHAR *) 
+(* 2 *) 
       END (* FOR *) 
     END TextForAllDo 
 
@@ -131,9 +140,8 @@ MODULE UnsafeUniWr
       TextForAllDo 
         ( String , VisitWideChar , VisitString , VisitWideString ) 
 
-(* TODO:  
-   We need a way to say <* FATAL ANY EXCEPT Range , Failure , Alerted *> 
-   to avoid extraneous warnings. 
+(* TODO: We need a way to say <* FATAL ANY EXCEPT Range , Failure , Alerted *> 
+         to avoid extraneous warnings. 
 *) 
     END FastPutText  
 

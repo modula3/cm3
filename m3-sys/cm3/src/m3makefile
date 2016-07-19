@@ -65,11 +65,11 @@ build_standalone () %-- we don't want to depend on the shared libraries...
 % used compiler. To install the binary, you can either use the
 % install-cm3-compiler script from the scripts/ directory or set the
 % INSTALL_CM3_IN_BIN environment variable to "yes".
-if equal($INSTALL_CM3_IN_BIN, "yes")
-Program ("cm3")
-else
+%if equal($INSTALL_CM3_IN_BIN, "yes")
+%Program ("cm3")
+%else
 program ("cm3")
-end
+%end
 
 %% install a fresh copy of the configuration file too...
 %cp_if (format ("..%ssrc%sconfig%s%s", SL, SL, SL, TARGET), "cm3.cfg")

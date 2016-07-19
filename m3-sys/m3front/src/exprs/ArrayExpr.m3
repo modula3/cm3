@@ -25,6 +25,7 @@ TYPE
 TYPE
   P = Expr.T BRANDED "ArrayExpr.P" OBJECT
         tipe      : Type.T;
+(* CLEANUP ^ tipe always duplicates field "type", inherited from Expr.T *) 
         args      : Expr.List;
         dots      : BOOLEAN;
         folded    : BOOLEAN;
@@ -159,16 +160,18 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
     IF (index # ErrType.T) THEN
       nn := Type.Number (index);
       IF NOT TInt.ToInt (nn, n) THEN
-        Error.Msg ("array has too many elements");
+        Error.Msg 
+          ("Compiler limit: array constructor type has too many elements.");
       END;
       IF (index # NIL) THEN
         IF n < NUMBER (p.args^) THEN
-          Error.Msg ("too many values specified");
+          Error.Msg ("too many values specified in fixed array constructor.");
         ELSIF n > NUMBER (p.args^) AND NOT p.dots THEN
-          Error.Msg ("not enough values specified");
+          Error.Msg ("not enough values specified in fixed array constructor.");
         END;
       ELSIF (p.dots) THEN
         Error.Warn (1, "\"..\" ignored in open array constructor");
+(* FIXME ^ The language seems to say this is illegal, not a warning. *) 
       END;
     END;
 
@@ -642,15 +645,21 @@ PROCEDURE GenFPLiteral (p: P;  buf: M3Buf.T) =
     M3Buf.PutChar (buf, '>');
   END GenFPLiteral;
 
-PROCEDURE PrepLiteral (p: P;  <*UNUSED*>type: Type.T;  is_const: BOOLEAN) =
+PROCEDURE PrepLiteral (p: P; type: Type.T; is_const: BOOLEAN) =
   VAR info: Type.Info;
   BEGIN
-    PrepElements (p, p.tipe, is_const);
-
     IF (p.kind = Kind.Fixed) OR (p.kind = Kind.EmptyOpen) THEN RETURN END;
 
     <*ASSERT (p.kind = Kind.FixedOpen) AND (p.solidType # NIL) *>
     (* else p.kind = Kind.Open => not a runtime constant! *)
+
+    type := Type.CheckInfo(type,info);
+    IF info.class = Type.Class.Array (*=>Fixed array*) THEN
+      (* GenLiteral will treat this as fixed array type.  No prep needed. *) 
+      RETURN
+    END; 
+
+    PrepElements (p, p.tipe, is_const);
 
     IF (p.offset = 0) THEN
       EVAL Type.CheckInfo (p.solidType, info);
@@ -707,16 +716,32 @@ PROCEDURE GenOpenLiteral (e: Expr.T;  offset: INTEGER;  depth: INTEGER;
     END;
   END GenOpenLiteral;
 
-PROCEDURE GenLiteral (p: P;  offset: INTEGER;  <*UNUSED*>type: Type.T;
+PROCEDURE GenLiteral (p: P;  offset: INTEGER; type: Type.T;
                       is_const: BOOLEAN) =
-  VAR index, element: Type.T;  last, n_elts, elt_size: INTEGER;  b: BOOLEAN;
+  VAR index, element: Type.T;  last, n_elts, elt_size: INTEGER;  
+      info: Type.Info; 
+      b: BOOLEAN;
+      LKind: Kind; 
   BEGIN
-    b := ArrayType.Split (p.tipe, index, element); <* ASSERT b *>
+    type := Type.CheckInfo(type,info);
+    IF p.kind = Kind.FixedOpen AND info.class = Type.Class.Array THEN
+      (* The array constructor has an open array type, but the variable to be 
+         initialized has a fixed array type.  Don't generate any open array
+         dope.  Instead, trick the code below into treating the array
+         constructor as if had the variable's fixed array type. *) 
+      LKind := Kind.Fixed; 
+      <*ASSERT p.solidType # NIL *>
+      p.solidType := Type.CheckInfo(p.solidType,info);
+      b := ArrayType.Split (p.solidType, index, element); <* ASSERT b *>
+    ELSE 
+      LKind := p.kind; 
+      b := ArrayType.Split (p.tipe, index, element); <* ASSERT b *>
+    END; 
 
     (* BUG!!  if p.tipe # type then we're generating an open literal
            for a fixed size expr or vice versa.... *)
 
-    CASE p.kind OF
+    CASE LKind OF
     | Kind.EmptyOpen =>
         GenOpenDim (p, OpenArrayType.OpenDepth (p.tipe),
                     offset + M3RT.OA_sizes, is_const);
@@ -763,6 +788,7 @@ PROCEDURE GenOpenDim (e: Expr.T;  depth: INTEGER;  offset: INTEGER;  is_const: B
                   THEN e := p.args[0];
                   ELSE e := NIL;
                 END;
+(* Hmm. The above IF stmt appears to be unnecessary, as e is unused hereafter. *)  
       ELSE      n_elts := 0;
       END;
       CG.Init_intt (offset, Target.Integer.size, n_elts, is_const);

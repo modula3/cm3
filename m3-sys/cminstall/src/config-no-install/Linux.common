@@ -16,3 +16,6 @@ SYSTEM_LD = SYSTEM_CC
 
 include("Unix.common")
 include("gnuld.common")
+
+%SYSTEM_LIBS{"ODBC"}        = [ "-lodbc" ]
+%SYSTEM_LIBS{"POSTGRES95"} = [ "-L/usr/local/pgsql/lib", "-lpq" ]

@@ -1,4 +1,8 @@
 % Copyright (C) 2013, Rodney M. Bates 
+% rodney.m.bates@acm.org 
+% Licensed under the MIT License. 
+
+% m3makefile for libunicode. 
 
 local Unicode = "TRUE" %May change. 
 

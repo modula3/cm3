@@ -1,3 +1,7 @@
+(* Copyright (C) Rodney M. Bates 2016. *)
+(* rodney.m.bates@acm.org *) 
+(* Licensed under the MIT License. *) 
+
 INTERFACE UniEncoding
 
 (* Various ways of encoding characters in sequential streams, including

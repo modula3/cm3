@@ -7,6 +7,7 @@
 
 MODULE M3CG EXPORTS M3CG, M3CG_Ops;
 
+IMPORT Text, Word; 
 IMPORT Target;
 
 REVEAL
@@ -153,6 +154,34 @@ REVEAL
     fence := fence;
     fetch_and_op := fetch_and_op;
   END;
+
+(*----------------------------------------------------------- UIDs ----------*)
+
+CONST UIDCharTbl 
+  = ARRAY [0..61] OF CHAR 
+    {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
+     'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 
+     'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 
+     'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 
+     '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};  
+
+PROCEDURE FormatUID(tUID: TypeUID) : TEXT = 
+  VAR resultChars : ARRAY [ 0 .. 5 ] OF CHAR; 
+    remainder: Word.T;
+  BEGIN 
+    IF tUID = NO_UID THEN
+      RETURN "zzzzzz" 
+    ELSE
+      remainder := Word.And(tUID,16_FFFFFFFF); 
+      (* ^In case this runs on a 64-bit machine. *) 
+      FOR RI := 5 TO 0 BY -1 DO
+        resultChars[RI] := UIDCharTbl [Word.Mod(remainder, 62)];
+        remainder := Word.Divide(remainder, 62);   
+      END; 
+    <*ASSERT remainder = 0*> 
+      RETURN Text.FromChars(resultChars); 
+    END; 
+  END FormatUID; 
 
 (*----------------------------------------------------------- ID counters ---*)
 

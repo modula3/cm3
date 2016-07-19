@@ -30,12 +30,16 @@ CONST
 
   Min8   = Int{16_80, 16_FF,..};
   Max8   = Int{16_7f, 16_00,..};
+  Max8U  = Int{16_FF, 16_00,..};
   Min16  = Int{16_00, 16_80, 16_FF,..};
   Max16  = Int{16_FF, 16_7f, 16_00,..};
+  Max16U = Int{16_FF, 16_FF, 16_00,..};
   Min32  = Int{16_00, 16_00, 16_00, 16_80, 16_FF,..};
   Max32  = Int{16_FF, 16_FF, 16_FF, 16_7f, 16_00,..};
+  Max32U = Int{16_FF, 16_FF, 16_FF, 16_FF, 16_00,..};
   Min64  = Int{16_00, 16_00, 16_00, 16_00, 16_00, 16_00, 16_00, 16_80, 16_FF};
-  Max64  = Int{16_FF, 16_FF, 16_FF, 16_FF, 16_FF, 16_FF, 16_FF, 16_7f, 0};
+  Max64  = Int{16_FF, 16_FF, 16_FF, 16_FF, 16_FF, 16_FF, 16_FF, 16_7f, 16_00};
+  Max64U = Int{16_FF, 16_FF, 16_FF, 16_FF, 16_FF, 16_FF, 16_FF, 16_FF, 16_00};
 
 PROCEDURE FromInt (x: INTEGER;  VAR i: Int): BOOLEAN;
 (* converts a host integer 'x' to a target integer 'i' *)
@@ -99,10 +103,13 @@ PROCEDURE ToChars (READONLY i: Int;  VAR buf: ARRAY OF CHAR): INTEGER;
 (* converts 'i' to a printable string in 'buf'.  Returns the
    number of characters in the string.  Returns -1 if 'buf' is too short. *)
 
-PROCEDURE ToBytes (READONLY i: Int;  VAR buf: ARRAY OF [0..255]): CARDINAL;
-(* converts 'i' to the shortest sequence of bytes in little-endian order
-   which when sign-extended equal 'i'.  Returns the number of
-   significant bytes in the result.  Returns 0 if 'buf' is too short. *)
+PROCEDURE ToUnsignedBytes 
+  (READONLY r: Int;  VAR buf: ARRAY OF [0..255]): CARDINAL;
+(* PRE: r is nonnegative and fits in buf. *) 
+(* converts 'r' to the shortest sequence of bytes which when zero-extended 
+   equal 'r', and stores them in little-endian order in buf.  This means 
+   the most significant bit in buf is not a sign bit, and could be 1.   
+   Returns the number of significant bytes of the result. *)
 
 PROCEDURE Extend (READONLY i: Int;  n: CARDINAL;  VAR r: Int): BOOLEAN;
 (* sign-extends from the low-order 'n' bytes of 'i'.

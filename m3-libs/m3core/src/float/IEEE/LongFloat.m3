@@ -13,7 +13,7 @@ UNSAFE MODULE LongFloat;
    that do not depend on the operating system. *)
 
 IMPORT LongRealRep AS Rep;
-IMPORT DragonT, FPU, Word, Ctypes, Convert;
+IMPORT DragonT, FPU, Word, Ctypes, Convert, Grisu;
 
 PROCEDURE Scalb (x: T; n: INTEGER): T =
   BEGIN
@@ -161,7 +161,7 @@ PROCEDURE Class (x: T): IEEEClass =
       RETURN IEEEClass.Normal;
     ELSIF xx.significand0 = 0 AND xx.significand1 = 0 THEN
       RETURN IEEEClass.Infinity;
-    ELSIF Word.And (16_00080000, xx.significand0) = 0 THEN
+    ELSIF Word.And (16_00080000, xx.significand0) # 0 THEN
       RETURN IEEEClass.QuietNaN;
     ELSE 
       RETURN IEEEClass.SignalingNaN;
@@ -218,6 +218,7 @@ PROCEDURE ToDecimal(x: T): DecimalApprox =
     res: DecimalApprox;
     exp, sig0, sig1: INTEGER;
     count: CARDINAL;
+    grisuMode := Grisu.FastDtoaMode.FAST_DTOA_SHORTEST;
   BEGIN
     res.class := Class (x);
     res.sign := Sign (x);
@@ -225,22 +226,26 @@ PROCEDURE ToDecimal(x: T): DecimalApprox =
     IF (res.class # IEEEClass.Denormal) AND (res.class # IEEEClass.Normal) THEN
       RETURN res;
     END;
+
+    IF NOT Grisu.FastDtoa(ABS(x), grisuMode, 0, res.digits, count, res.exp) THEN
+      (* fallback on Dragon *)
       
-    (* we have the lower 32 bits in significand1, the upper 20 bits in
-       significand0 and may be a bit to set at the top (if bits = 53) *)
+      (* we have the lower 32 bits in significand1, the upper 20 bits in
+         significand0 and may be a bit to set at the top (if bits = 53) *)
 
-    sig1 := Word.And (xx.significand1, 16_ffffffff);
-    sig0 := Word.And (xx.significand0, 16_fffff);
+      sig1 := Word.And (xx.significand1, 16_ffffffff);
+      sig0 := Word.And (xx.significand0, 16_fffff);
 
-    IF xx.exponent = 0 THEN
-      exp := -1021;
-    ELSE
-      exp  := xx.exponent - 1022;
-      sig0 := Word.Or (sig0, 16_100000);  (* add the implied 53rd bit *)
+      IF xx.exponent = 0 THEN
+        exp := -1021;
+      ELSE
+        exp  := xx.exponent - 1022;
+        sig0 := Word.Or (sig0, 16_100000);  (* add the implied 53rd bit *)
+      END;
+
+      DragonT.F (exp, sig0, sig1, 53, DragonT.CutoffMode.normal, 0, 
+                res.digits, count, res.exp);
     END;
-
-    DragonT.F (exp, sig0, sig1, 53, DragonT.CutoffMode.normal, 0, 
-                 res.digits, count, res.exp);
     res.len := count;
     res.errorSign := 0;
     RETURN res;

@@ -1,9 +1,9 @@
   
 (* -----------------------------------------------------------------------1- *)
 (* File UnsafeUtils.m3  Modula-3 source code.                                *)
-(* Copyright 2010 .. 2012, Rodney M. Bates.                                  *)
-(* rbates@acm.org                                                            *)
-(* Licensed under the Gnu Public License, version 2 or later.                *)
+(* Copyright 2010 .. 2016, Rodney M. Bates.                                  *)
+(* rodney.m.bates@acm.org                                                    *)
+(* Licensed under the MIT License.                                           *) 
 (* -----------------------------------------------------------------------2- *)
 
 UNSAFE MODULE UnsafeUtils 
@@ -35,7 +35,7 @@ UNSAFE MODULE UnsafeUtils
     END NULLOfInt   
 
 (* VISIBLE: *) 
-; PROCEDURE PtrTo8CharArray ( W : Word . T ) 
+; PROCEDURE PtrTo8CharArray ( VAR W : Word . T ) 
   : UNTRACED REF ARRAY [ 0 .. 7 ] OF CHAR 
 
   = BEGIN 

@@ -63,11 +63,11 @@ typedef struct DITypeRef * LLVMDITypeRef;
 typedef struct CDebugInfo { OpaqueMetadata * DbgPtr; } * LLVMCDebugInfo;
 
 // These are all distinct opaque pointers, so we can have lots of overloaded
-// unwrap functions on them, so we can, with inexcusable laziness, avoid a massive 
+// unwrap functions on them, so, with inexcusable laziness, we avoid a massive 
 // and error-prone job of typing lots of distinctly-named unwrap functions.
 // Someday, fix this.
 
-// Also, these acttually hold the value of the MDNode pointer, because passing
+// Also, these actually hold the value of the MDNode pointer, because passing
 // a struct, even with only a single, pointer-sized data member suffers ABI 
 // mismatches between C and Modula-3 compilers.  We put the MDNode pointer inside
 // an llvm class and remove it, when unwrapping/wrapping.    
@@ -948,6 +948,10 @@ void DIBreplaceArrays(LLVMDIBuilderRef Builder,
 LLVMValueRef DIBgetDebugLoc(unsigned Line, 
                             unsigned Col, 
                             LLVMDIDescriptor Scope);
+
+/// From DebugInfo.h: 
+/// Replace all uses of debug info referenced by this descriptor.
+void replaceAllUsesWith(LLVMDICompositeType Temp, LLVMDIDescriptor Final);
 
 #ifdef __cplusplus
 }

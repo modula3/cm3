@@ -5,6 +5,7 @@
 #ifndef INCLUDED_M3CORE_H
 #define INCLUDED_M3CORE_H
 
+#define _NO_CRT_STDIO_INLINE /* Do not accidentally export printf. */
 #ifdef _MSC_VER
 #define _CRT_SECURE_NO_DEPRECATE
 #define _CRT_NONSTDC_NO_DEPRECATE
@@ -28,9 +29,6 @@
 #else
 #define M3_HAS_VISIBILITY 0
 #endif
-
-#undef _GNU_SOURCE
-#define _GNU_SOURCE
 
 /* __DARWIN_UNIX03 defaults to 1 on older and newer headers,
  * but older headers still have context "ss" instead of "__ss"
@@ -108,19 +106,42 @@
 #define __MAKECONTEXT_V2_SOURCE
 #endif
 
-#ifdef __INTERIX
-/* Autoconf: AC_USE_SYSTEM_EXTENSIONS
- */
+/* Autoconf: AC_USE_SYSTEM_EXTENSIONS */
+/* Enable extensions on AIX 3, Interix.  */
 #ifndef _ALL_SOURCE
-#define _ALL_SOURCE
+#define _ALL_SOURCE 1
 #endif
+/* Enable GNU extensions on systems that have them.  */
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE 1
+#endif
+/* Enable threading extensions on Solaris.  */
+#ifndef _POSIX_PTHREAD_SEMANTICS
+#define _POSIX_PTHREAD_SEMANTICS 1
+#endif
+/* Enable extensions on HP NonStop.  */
+#ifndef _TANDEM_SOURCE
+#define _TANDEM_SOURCE 1
+#endif
+/* Enable general extensions on Solaris.  */
+#ifndef __EXTENSIONS__
+#define __EXTENSIONS__ 1
 #endif
 
 #ifndef _REENTRANT
 #define _REENTRANT
 #endif
 
-#ifdef __vms
+/* AC_SYS_LARGEFILE */
+#ifndef _LARGE_FILES
+#define _LARGE_FILES 1
+#endif
+
+#ifndef _FILE_OFFSET_BITS
+#define _FILE_OFFSET_BITS 64
+#endif
+
+/*#ifdef __vms*/
 /* Enable support for files larger than 2GB.
  * Autoconf: AC_SYS_LARGEFILE?
  */
@@ -137,7 +158,7 @@
 #ifndef __USE_INO64
 #define __USE_INO64 1
 #endif
-#endif
+/*#endif*/
 
 #if defined(__arm__) && defined(__APPLE__)
 /* Reveal the correct struct stat? */

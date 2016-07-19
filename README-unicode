@@ -27,7 +27,10 @@ Encoding, decoding, and streams.
 
 Package libunicode contains new procedures for handling encoding of
 various encodings of characters.  It will compile only by a compiler
-configured for Unicode-range WIDECHAR.  
+configured for Unicode-range WIDECHAR.  However, its m3makefile does
+not attempt to compile it unless Unicode_WIDECHAR (see below) is 
+non-empty, so build scripts work even with a compiler configured for
+16-bit WIDECHARs.  
 
 There are 9 different encodings possible, including the 5 defined in
 the Unicode standard, the two that older Modula-3 systems use, and two
@@ -64,12 +67,12 @@ the message will not be informative:
 Configuring the size of WIDECHAR 
 
 By default, the compiler will make WIDECHAR 16-bit.  To change this,
-add the line Unicode_WIDECHAR="TRUE" to any Quake code that will be
-interpreted before compilation starts.  The easiest place is in
-cm3.cfg, in the bin directory where the compiler executable is
-installed, usually /usr/local/cm3/bin.  Assigning any other value to
-Unicode_WIDECHAR or leaving it undefined will revert to 16-bit
-WIDECHAR.
+add the line Unicode_WIDECHAR="TRUE" (or any other non-empty text
+value) to any Quake code that will be interpreted before compilation
+starts.  The easiest place is in cm3.cfg, in the bin directory where
+the compiler executable is installed, usually /usr/local/cm3/bin.
+Assigning "" to Unicode_WIDECHAR or leaving it undefined will revert
+to 16-bit WIDECHAR.
 
 Because of its insistence that all linked-together code have the same
 size WIDECHAR, when the compiler is reconfigured for a different size

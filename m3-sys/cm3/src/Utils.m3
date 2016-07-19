@@ -332,6 +332,7 @@ PROCEDURE InitWidechar () =
 
   VAR Unicode_WIDECHAR_opt: TEXT;
   BEGIN
+    (* Command line options override everthing else: *) 
     IF GWidechar16Seen THEN (* Command line -widechar16. *) 
       WCharr.IsUnicode := FALSE; 
       Mx.UnicodeWideChar := FALSE; 
@@ -339,6 +340,7 @@ PROCEDURE InitWidechar () =
       WCharr.IsUnicode := TRUE;
       Mx.UnicodeWideChar := TRUE; 
     ELSE 
+      (* Next, look for the Quake configuration variable: *) 
       Unicode_WIDECHAR_opt := MxConfig.Get("Unicode_WIDECHAR");
       (* ^Possibly set in cm3.cfg, or just about any other Quake code. *)  
       IF Unicode_WIDECHAR_opt # NIL  
@@ -346,7 +348,8 @@ PROCEDURE InitWidechar () =
       THEN 
         WCharr.IsUnicode := TRUE;
         Mx.UnicodeWideChar := TRUE; 
-      ELSE (* Default case: 16-bit WIDECHAR. *) 
+      ELSE (* Hardcoded default of last resort: *) 
+        (* Default case: 16-bit WIDECHAR. *) 
         WCharr.IsUnicode := FALSE; 
         Mx.UnicodeWideChar := FALSE; 
       END; 

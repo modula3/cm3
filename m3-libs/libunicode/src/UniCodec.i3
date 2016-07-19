@@ -1,9 +1,12 @@
+(* Copyright (C) Rodney M. Bates 2016. *)
+(* rodney.m.bates@acm.org *) 
+(* Licensed under the MIT License. *) 
+
+INTERFACE UniCodec 
 
 (* Coding and decoding for the unicode encoding schemes, as well as 
    a some others.
 *) 
-
-INTERFACE UniCodec 
 
 ; IMPORT Compiler 
 ; IMPORT Rd 

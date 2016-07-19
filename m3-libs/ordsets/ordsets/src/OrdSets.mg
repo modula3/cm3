@@ -1,8 +1,8 @@
 (* -----------------------------------------------------------------------1- *)
 (* File OrdSets.mg  Modula-3 source code.                                    *)
-(* Copyright 2010 .. 2014, Rodney M. Bates.                                  *)
-(* rbates@acm.org                                                            *)
-(* Licensed under the Gnu Public License, version 2 or later.                *)
+(* Copyright 2010 .. 2016, Rodney M. Bates.                                  *)
+(* rodney.m.bates@acm.org                                                    *)
+(* Licensed under the MIT License.                                           *) 
 (* -----------------------------------------------------------------------2- *)
 
 GENERIC MODULE OrdSets ( ) 
@@ -55,12 +55,19 @@ GENERIC MODULE OrdSets ( )
    CM3 5.8 is sufficient.  SRC M3, PM3, EZM3, and earlier CM3 versions
    are not.  
 
-   Up through 2013-02-17, Pickles will not tolerate these misaligned
-   pointers.  Also, up through the same date, even without misaligned
-   pointers, pickles will not correctly convert these sets between different
-   word sizes.     
+   Also, although the pickle specials herein handle writing of sets
+   that are pseudo-pointers, the dispatching mechanism for specials
+   won't work on them.  
+
+   As of 2015-5-14, pickling values with these misaligned pointers will
+   work, and independently, unpickling will conditionally construct
+   misaligned pointers if the reading program handles them. 
+
+   As of 2015-5-14, pickling and unpickling sets will handle mixes of
+   word sizes (32 or 64) and of endianness correctly.   
+
 *)
-; CONST DoPseudoPointers = TRUE   
+; CONST DoPseudoPointers = FALSE   
 
 (* Thread safety: 
 

@@ -1,4 +1,10 @@
+(* Copyright (C) Rodney M. Bates 2016. *)
+(* rodney.m.bates@acm.org *) 
+(* Licensed under the MIT License. *) 
+
 INTERFACE UniRdClass 
+
+(* Importable Revelation for UniRd.T *)  
 
 ; IMPORT Rd  
 ; IMPORT UniCodec  

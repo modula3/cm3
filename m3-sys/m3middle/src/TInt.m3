@@ -370,25 +370,23 @@ PROCEDURE ToChars (READONLY r: Int;  VAR buf: ARRAY OF CHAR): INTEGER =
     RETURN j;
   END ToChars;
 
-PROCEDURE ToBytes (READONLY r: Int;  VAR buf: ARRAY OF [0..255]): CARDINAL =
-  VAR j := NUMBER(Int);
+PROCEDURE ToUnsignedBytes 
+  (READONLY r: Int;  VAR buf: ARRAY OF [0..255]): CARDINAL =
+(* PRE: r is nonnegative and fits in buf. *) 
+  VAR j : INTEGER := NUMBER(Int)-1;
   BEGIN
-    (* strip the sign extension *)
-    DEC (j);
-    IF (r[j] = 0) THEN
-      WHILE (j > 0) AND (r[j] = 0) AND (r[j-1] < 16_80) DO DEC (j); END;
-    ELSIF (r[j] = 16_ff) THEN
-      WHILE (j > 0) AND (r[j] = 16_ff) AND (r[j-1] >= 16_80) DO DEC (j); END;
-    END;
-    INC (j);
+    <* ASSERT r[j] = 0 *> (* r is nonnegative. *)  
 
-    IF j > NUMBER (buf) THEN RETURN 0 END;
+    (* skip most-significant zero bytes. *)
+    WHILE (j > 0) AND (r[j-1] = 0) DO DEC (j); END;
+
+    <* ASSERT j <= NUMBER (buf) *> (* Result fits in buf. *)
 
     (* unpack the bytes *)
     FOR i := 0 TO j-1 DO buf[i] := r[i] END;
 
     RETURN j;
-  END ToBytes;
+  END ToUnsignedBytes;
   
 PROCEDURE Extend (READONLY a: Int;  n: CARDINAL;  VAR r: Int): BOOLEAN =
   VAR result := TRUE;

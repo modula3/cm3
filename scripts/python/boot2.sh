@@ -1,12 +1,15 @@
 #!/bin/sh
 
-set -e
-set -x
+#set -e
+#set -x
 
-./make-dist-cfg.py
-./do-pkg.py m3cc buildship
-./do-cm3-all.py realclean skipgcc
-./do-pkg.py m3cc m3core libm3 buildship
-./upgrade.py skipgcc
-./do-cm3-all.py realclean skipgcc
-./do-cm3-all.py buildship
+#./make-dist-cfg.py $*
+#./do-pkg.py m3cc buildship $*
+#./do-cm3-all.py realclean skipgcc $*
+#./do-pkg.py m3cc m3core libm3 buildship $*
+#./upgrade.py skipgcc $*
+#./do-cm3-all.py realclean skipgcc $*
+#./do-cm3-all.py buildship $*
+
+echo ERROR: Use boot2.py instead of boot2.sh.
+exit 1

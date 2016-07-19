@@ -8,14 +8,13 @@
 %      modified on Tue Feb 11 15:07:32 PST 1992 by muller
 
 interface ("ThreadPThread")
-interface ("SchedulerPThread")
 %implementation ("ThreadPThread0") 
    %^Older, with O(1) LIFO Condition scheduling and O(n) FIFO Mutex scheduling. 
 implementation ("ThreadPThread")
    %^Newer, with O(1) FIFO scheduling for Conditions and Mutexes. 
 
 c_source ("ThreadPThreadC")
-if defined("TARGET_OS")
+if defined("TARGET_OS") and not defined("M3_BOOTSTRAP")
   if equal(TARGET_OS, "DARWIN")
     c_source ("ThreadApple")
   end

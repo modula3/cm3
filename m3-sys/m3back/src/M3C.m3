@@ -12,7 +12,7 @@ FROM M3CG IMPORT CompareOp, ConvertOp, RuntimeError, MemoryOrder, AtomicOp;
 FROM Target IMPORT CGType;
 FROM M3CG_Ops IMPORT ErrorHandler;
 IMPORT M3CG_MultiPass, M3CG_DoNothing, M3CG_Binary, RTIO;
-FROM M3CC IMPORT INT32, INT64, UINT32, UINT64, Base_t, UInt64ToText;
+FROM M3CC IMPORT IntToDec, IntToHex, UIntToHex, INT32;
 CONST NameT = M3ID.ToText;
 
 (* 
@@ -74,16 +74,16 @@ T = M3CG_DoNothing.T BRANDED "M3C.T" OBJECT
         unit_name := "L_";
         handler_name_prefixes := ARRAY [FIRST(HandlerNamePieces) .. LAST(HandlerNamePieces)] OF TEXT{NIL, ..};
         param_count := 0;
-        static_link_id: M3ID.T := 0;
-        RTException_Raise_id: M3ID.T := 0;
-        RTHooks_AssertFailed_id: M3ID.T := 0;
-        RTHooks_Raise_id: M3ID.T := 0;
-        RTHooks_ReportFault_id: M3ID.T := 0;
+        static_link_id := M3ID.NoID;
+        RTException_Raise_id := M3ID.NoID;
+        RTHooks_AssertFailed_id := M3ID.NoID;
+        RTHooks_Raise_id := M3ID.NoID;
+        RTHooks_ReportFault_id := M3ID.NoID;
         RTHooks_ReportFault_imported_or_declared := FALSE;
-        alloca_id : M3ID.T := 0;
-        setjmp_id : M3ID.T := 0;
-        u_setjmp_id : M3ID.T := 0;
-        longjmp_id : M3ID.T := 0;
+        alloca_id := M3ID.NoID;
+        setjmp_id := M3ID.NoID;
+        u_setjmp_id := M3ID.NoID;
+        longjmp_id := M3ID.NoID;
 
         (* labels *)
         labels_min := FIRST(Label);
@@ -291,25 +291,6 @@ BEGIN
     END;
 END Reverse;
 
-PROCEDURE Int64ToText(a: INT64; base: Base_t): TEXT =
-BEGIN
-    IF a >= 0L THEN
-        RETURN UInt64ToText(a, base);
-    END;
-    RETURN "-" & UInt64ToText((-(a + 1L)) + 1L, base);
-END Int64ToText;
-
-(*PROCEDURE UInt64ToDec(a: UINT64): TEXT = BEGIN RETURN UInt64ToText(a, 10); END UInt64ToDec;*)
-PROCEDURE UInt64ToHex(a: UINT64): TEXT = BEGIN RETURN UInt64ToText(a, 16); END UInt64ToHex;
-(*PROCEDURE Int64ToDec(a: INT64): TEXT = BEGIN RETURN Int64ToText(a, 10); END Int64ToDec;*)
-(*PROCEDURE Int32ToDec(a: INT32): TEXT = BEGIN RETURN Int64ToText(VAL(a, INT64), 10); END Int32ToDec;*)
-PROCEDURE UInt32ToHex(a: UINT32): TEXT = BEGIN RETURN UInt64ToText(VAL(a, UINT64), 16); END UInt32ToHex;
-PROCEDURE  IntToHex(a: INTEGER): TEXT = BEGIN RETURN  Int64ToText(VAL(a, INT64), 16); END  IntToHex;
-PROCEDURE UIntToHex(a: INTEGER): TEXT = BEGIN RETURN UInt64ToText(VAL(a, INT64), 16); END UIntToHex;
-PROCEDURE IntToDec(a: INTEGER): TEXT = BEGIN RETURN Int64ToText(VAL(a, INT64), 10); END IntToDec;
-
-<*UNUSED*>CONST Int32ToHex = UInt32ToHex;
-<*UNUSED*>CONST Int64ToHex = UInt64ToHex;
 CONST LabelToText = IntToHex;
 CONST LabelToHex = IntToHex;
 
@@ -4794,13 +4775,13 @@ VAR ok1 := TRUE;
 BEGIN
     CASE type OF
         | CGType.Int8   => ok1 := TInt.GE(i, TInt.Min8 );
-                              (*ok2 := TInt.LE(i, TInt.Max8);*)
+                         (*ok2 := TInt.LE(i, TInt.Max8);*)
         | CGType.Int16  => ok1 := TInt.GE(i, TInt.Min16);
-                              (*ok2 := TInt.LE(i, TInt.Max16);*)
+                         (*ok2 := TInt.LE(i, TInt.Max16);*)
         | CGType.Int32  => ok1 := TInt.GE(i, TInt.Min32);
-                              (*ok2 := TInt.LE(i, TInt.Max32);*)
+                         (*ok2 := TInt.LE(i, TInt.Max32);*)
         | CGType.Int64  => ok1 := TInt.GE(i, TInt.Min64);
-                              ok2 := TInt.LE(i, TInt.Max64);
+                           ok2 := TInt.LE(i, TInt.Max64);
         | CGType.Word8  => ok1 := TWord.LE(i, TWord.Max8);
         | CGType.Word16 => ok1 := TWord.LE(i, TWord.Max16);
         | CGType.Word32 => ok1 := TWord.LE(i, TWord.Max32);

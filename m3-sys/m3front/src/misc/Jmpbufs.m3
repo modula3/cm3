@@ -51,6 +51,9 @@ END CheckTry;
 PROCEDURE CompileTryGetJmpbuf (VAR try: Try): CG.Var =
 VAR try_index := try.try_index;
 BEGIN
+  IF NOT Target.Alloca_jmpbuf THEN
+    RETURN NIL;
+  END;
   DebugPrint("CompileTryGetJmpbuf " & IdToText(try.proc.name));
   IF try.proc = NIL THEN
     Error.Msg ("CompileTryGetJmpbuf try.proc = NIL");
@@ -83,6 +86,7 @@ VAR module: Module.T;
     size: CG.Var;
     try_count: INTEGER;
 BEGIN
+    IF NOT Target.Alloca_jmpbuf THEN RETURN; END;
     IF p = NIL THEN RETURN END;
     module := Module.Current ();
     alloca := Module.GetAlloca (module);

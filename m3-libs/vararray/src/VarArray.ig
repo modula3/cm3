@@ -4,7 +4,7 @@
 (* Modula-3 source code.                                                     *)
 (* Copyright 2013, Rodney M. Bates.                                          *)
 (* rodney.m.bates@acm.org                                                    *)
-(* Licensed under the Gnu Public License, version 2 or later.                *)
+(* Licensed under the MIT License.                                           *) 
 (* -----------------------------------------------------------------------2- *)
 
 GENERIC INTERFACE VarArray ( Subscript , Element , Ranges )

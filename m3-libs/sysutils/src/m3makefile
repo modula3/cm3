@@ -41,6 +41,7 @@ import("libm3")
 %  import("http")
 %end
 
+c_source("LibcCompatC")
 c_source("SystemC")
 module("EnvUtils")
 module("FingerprintFmt")
@@ -101,5 +102,16 @@ proc doPieces(tbl, key) is
 end
 
 doPieces(CompDepPieces, M3_VARIANT)
+
+% #include stdio.h in LibcCompat.c
+% introduces ?OptionsStorage when using
+% Visual C++ 2015, which requires mklib to
+% quash, but earlier in bootstrap uses
+% old preexisting mklib without that.
+% So link statically, skipping mklib.
+
+if not defined("install_symbolic_link")
+  %build_standalone ()
+end
 
 Library("sysutils")

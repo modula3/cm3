@@ -1,9 +1,12 @@
+(* Copyright (C) Rodney M. Bates 2016. *)
+(* rodney.m.bates@acm.org *) 
+(* Licensed under the MIT License. *) 
+
+UNSAFE MODULE UnsafeUniCodec 
 
 (* Coding and decoding for the unicode encoding schemes, as well as 
    a couple of others.
 *) 
-
-UNSAFE MODULE UnsafeUniCodec 
 
 ; IMPORT Compiler
 ; IMPORT Rd 

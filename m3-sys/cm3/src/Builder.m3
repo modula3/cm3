@@ -1094,7 +1094,7 @@ PROCEDURE CompileOne (s: State;  u: M3Unit.T) =
       CompileM3X (s, u);
     ELSIF (NOT u.imported) THEN
       FlushPending (s);
-      u.object := FinalNameForUnit (s, u);
+      FinalNameForUnit (s, u);
       IF IfDebug () THEN
         DebugF ("CompileOne FinalNameForUnit(", u, "):" & u.object);
       END;
@@ -3299,11 +3299,10 @@ PROCEDURE AsmNameForUnit (u: M3Unit.T): TEXT =
     RETURN M3Path.Join (NIL, M3ID.ToText (u.name), ext);
   END AsmNameForUnit;
 
-PROCEDURE FinalNameForUnit (s: State;  u: M3Unit.T): TEXT =
+PROCEDURE FinalNameForUnitInternal (s: State; u: M3Unit.T; boot: BOOLEAN): TEXT =
 (* Name of final file to be produced. *) 
   VAR ext := u.kind;
       mode := s.m3backend_mode;
-      boot := s.bootstrap_mode;
       asm := mode IN Target.BackendAsmSet; 
       C := mode IN Target.BackendCSet;
       m3cc := mode IN Target.BackendM3ccSet; 
@@ -3341,12 +3340,12 @@ PROCEDURE FinalNameForUnit (s: State;  u: M3Unit.T): TEXT =
       ELSE RETURN NIL;
       END;
 
-    ELSIF Integrated THEN (* Only object is possible, boot is irrelevant. *) 
+    ELSIF Integrated THEN (* Integrated backend produces object files. *)
       CASE ext OF 
       | UK.I3, UK.IC, UK.IB, UK.IS => ext :=  UK.IO;
       | UK.M3, UK.MC, UK.MB, UK.MS => ext :=  UK.MO;
-      | UK.C, UK.S                 => ext :=  UK.O;
-      | UK.IO, UK.MO, UK.O         => RETURN M3Unit.FileName (u);
+      | UK.C, UK.S, UK.H,
+        UK.IO, UK.MO, UK.O         => RETURN M3Unit.FileName (u);
       ELSE RETURN NIL;
       END;
 
@@ -3374,6 +3373,19 @@ PROCEDURE FinalNameForUnit (s: State;  u: M3Unit.T): TEXT =
     END;
 
     RETURN M3Path.Join (NIL, M3ID.ToText (u.name), ext);
+  END FinalNameForUnitInternal;
+
+PROCEDURE FinalNameForUnit (s: State;  u: M3Unit.T) =
+(* Name of final file or files to be produced. *) 
+  VAR boot := s.bootstrap_mode; (* typically FALSE *)
+      object := FinalNameForUnitInternal (s, u, FALSE);
+  BEGIN
+    IF NOT boot THEN
+      u.object := object;
+      RETURN;
+    END;
+    u.boot_makefile_object := object;
+    u.object := FinalNameForUnitInternal (s, u, TRUE);
   END FinalNameForUnit;
 
 (*------------------------------------------------------------------ misc ---*)

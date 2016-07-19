@@ -14,6 +14,9 @@ IMPORT Thread, Csetjmp;
    See also m3middle/src/M3RT, which also describes these structures.
 *)
 
+(* RTExFrame.Alloca_jmpbuf and Target.Alloca_jmpbuf must match. *)
+CONST Alloca_jmpbuf = TRUE;
+
 TYPE
   ScopeKind = { Except, ExceptElse,
                 Finally, FinallyProc,
@@ -172,8 +175,12 @@ PROCEDURE InvokeHandler (f: Frame;  READONLY a: RT0.RaiseActivation) RAISES ANY 
     END;
     RTThread.SetCurrentHandlers (f.next); (* cut to the new handler *)
     p.info := a;                         (* copy the exception to the new frame *)
-    <* ASSERT p.jmpbuf # NIL *>
-    Csetjmp.ulongjmp (p.jmpbuf, 1);      (* and jump... *)
+    IF Alloca_jmpbuf THEN
+      <* ASSERT p.jmpbuf # NIL *>
+      Csetjmp.ulongjmp (p.jmpbuf, 1);      (* and jump... *)
+    ELSE
+      Csetjmp.ulongjmp (ADR(p.jmpbuf), 1);  (* and jump... *)
+    END;
     RAISE OUCH;
   END InvokeHandler;
 

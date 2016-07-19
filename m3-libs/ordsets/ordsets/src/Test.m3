@@ -1,9 +1,9 @@
  
 (* -----------------------------------------------------------------------1- *)
 (* File Test.i3  Modula-3 source code.  for OrdSets.                         *)
-(* Copyright 2010 .. 2012, Rodney M. Bates.                                  *)
-(* rbates@acm.org                                                            *)
-(* Licensed under the Gnu Public License, version 2 or later.                *)
+(* Copyright 2010 .. 2016, Rodney M. Bates.                                  *)
+(* rodney.m.bates@acm.org                                                    *)
+(* Licensed under the MIT License.                                           *) 
 (* -----------------------------------------------------------------------2- *)
 
 MODULE Test EXPORTS Main 
@@ -175,7 +175,7 @@ MODULE Test EXPORTS Main
     BEGIN 
       WL ( "Usage: OrdSetsTest {-{option}}" ) 
     ; WL ( "  Options are: " ) 
-    ; WL ( "  -a Do all tests, -i, -o, -p, -r, -s, -y." ) 
+    ; WL ( "  -a Do all tests, -c, -d, -i, -o, -p, -r, -s, -y." ) 
     ; WL ( "  -c Run fixed tests on Compare." ) 
     ; WL ( "  -d Run many randomly generated tests." ) 
     ; WL ( "  -h Display help text and exit." ) 
@@ -185,7 +185,7 @@ MODULE Test EXPORTS Main
     ; WL ( "     (only if both -o and -s are specified." ) 
     ; WL ( "  -P Write pickle of random sets to file \""
            & PickleFileName 
-           & "\"." 
+           & "\"(implies -d)." 
          ) 
     ; WL ( "  -r Compare IntSet/OrdSet values of results of operations." ) 
     ; WL ( "     (only if both -o and -s are specified." ) 
@@ -1778,7 +1778,6 @@ MODULE Test EXPORTS Main
 
   ; BEGIN 
       LImage := IntSets . Image ( S , IntImage , Prefix , LineLen ) 
-    ; INC ( GImageCt ) 
     ; IF Text . Equal ( LImage , Expected ) 
       THEN 
         Wr . PutText ( PWrT , "Image as expected: \"" ) 
@@ -1798,6 +1797,8 @@ MODULE Test EXPORTS Main
       ; Wr . PutText ( PWrT , Wr . EOL ) 
       ; Wr . Flush ( PWrT ) 
       END (* IF *) 
+    ; INC ( GImageCt ) 
+    ; INC ( GTotalCt )
     END TestImage 
 
 ; TYPE AOI = ARRAY OF INTEGER 
@@ -2013,7 +2014,20 @@ MODULE Test EXPORTS Main
             LPklWr := FileWr .  Open ( PickleFileName ) 
           ; FOR RI := 0 TO GStoredSetCt - 1 
             DO 
-              Pickle2 . Write ( LPklWr , GNewSets [ RI ] )
+              TRY 
+                Pickle2 . Write ( LPklWr , GNewSets [ RI ] )
+              EXCEPT Pickle2 . Error ( Msg )  
+              => Wr . PutText ( WrT , "Exception Pickle2.Error(\"" ) 
+              ; Wr . PutText ( WrT , Msg ) 
+              ; Wr . PutText ( WrT , "\" raised while writing set number " ) 
+              ; Wr . PutText ( WrT , Fmt . Int ( RI ) ) 
+              ; Wr . PutText ( WrT , " to file \"" ) 
+              ; Wr . PutText ( WrT , PickleFileName ) 
+              ; Wr . PutText ( WrT , "\"" ) 
+              ; Wr . PutText ( WrT , Wr . EOL ) 
+              ; Wr . Flush ( WrT ) 
+              ; EXIT
+              END (* EXCEPT *) 
             END (* FOR *) 
           ; Wr . Flush ( LPklWr ) 
           ; Wr . Close ( LPklWr ) 
