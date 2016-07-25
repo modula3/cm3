@@ -1094,7 +1094,8 @@ if USE_DELAYLOAD
     % are larger than they should be. Reduce them via delayload.
     % This requires a Visual C++ 6.0 or newer linker.
     %
-        "-delayload:ws2_32.dll",
+        %"-delayload:ws2_32.dll",
+        "-delayload:wsock32.dll",
         "-delayload:advapi32.dll",
         "-delayload:gdi32.dll",
         "-delayload:netapi32.dll",
