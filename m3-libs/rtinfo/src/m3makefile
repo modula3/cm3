@@ -1,0 +1,10 @@
+import("libm3")
+import("m3quake")
+
+Module("DateOps")
+Module("Param")
+Module("TimeOps")
+Module("TextOps")
+Module("RTInfo")
+
+library("hm3rt")

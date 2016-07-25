@@ -23,6 +23,12 @@ class Tee:
         if self.b != None and self.a != self.b:
             self.b.write(c)
 
+    def flush(self):
+        if self.a != None:
+            self.a.flush()
+        if self.b != None and self.a != self.b:
+            self.b.flush()
+
 sys.stdout = Tee(sys.stdout, open(sys.argv[0] + ".log", "a"))
 
 # Workaround regression in m3-sys/m3cc/src/m3makefile.
@@ -380,11 +386,11 @@ def _GetAllTargets():
 
 #-----------------------------------------------------------------------------
 
-_CBackend = "c" in sys.argv
+_CBackend = "c" in sys.argv or "C" in sys.argv
 _BuildDirC = ["", "c"][_CBackend]
 _PossibleCm3Flags = ["boot", "keep", "override", "commands", "verbose", "why"]
 _SkipGccFlags = ["nogcc", "skipgcc", "omitgcc"]
-_PossiblePylibFlags = ["noclean", "nocleangcc", "c"] + _SkipGccFlags + _PossibleCm3Flags
+_PossiblePylibFlags = ["noclean", "nocleangcc", "c", "C"] + _SkipGccFlags + _PossibleCm3Flags
 
 skipgcc = False
 for a in _SkipGccFlags:
@@ -687,8 +693,8 @@ if Host.endswith("_NT") or Host == "NT386":
 
 #-----------------------------------------------------------------------------
 
-#BuildDir = ("%(Config)s%(_BuildDirC)s" % vars())
-BuildDir = Config
+BuildDir = ("%(Config)s%(_BuildDirC)s" % vars())
+#BuildDir = Config
 M3GDB = (M3GDB or CM3_GDB)
 Scripts = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PKGSDB = os.path.join(Scripts, "PKGS")
@@ -1077,7 +1083,7 @@ def Boot():
 # Maybe something autotools or cmake-laden
 
     global BuildLocal
-    BuildLocal += " -boot -keep -DM3CC_TARGET=" + Config
+    BuildLocal += " -boot -no-m3ship-resolution -group-writable -keep -DM3CC_TARGET=" + Config
 
     Version = CM3VERSION + "-" + time.strftime("%Y%m%d")
     BootDir = "./cm3-boot-" + BuildDir + "-" + Version
@@ -1173,9 +1179,11 @@ def Boot():
         "SPARC32_LINUX"   : " -m32 -mcpu=v9 -mno-app-regs ",
         "SPARC64_LINUX"   : " -m64 -mno-app-regs ",
         }.get(Config) or " ")
+        
+    LinkExts = { }
 
     obj = ["o", "obj"][nt]
-    Link = "$(CC) $(CFLAGS) *." + obj + [" *.mo *.io ", " "][CBackend]
+    Link = "$(CC) $(CFLAGS) *." + obj + " "
     #Link = "$(CC) $(CFLAGS)"
 
     # link flags
@@ -1247,9 +1255,11 @@ def Boot():
 
     AssemblerFlags = (AssemblerFlags + ({
         "ALPHA_OSF"         : " -nocpp ",
-        "AMD64_DARWIN"      : " -arch x86_64 ",
-        "PPC64_DARWIN"      : " -arch ppc64 ",
-        "ARM_DARWIN"        : " -arch armv6 ",
+        "I386_DARWIN"       : " -arch i386 -g ",
+        "AMD64_DARWIN"      : " -arch x86_64 -g ",
+        "PPC64_DARWIN"      : " -arch ppc64 -g ",
+        "PPC_DARWIN"        : " -arch ppc -g ",
+        "ARM_DARWIN"        : " -arch armv6 -g ",
         "I386_SOLARIS"      : " -Qy -s ",
         "AMD64_SOLARIS"     : " -Qy -s        -xarch=generic64 ",
         "SOLgnu"            : " -Qy -s -K PIC -xarch=v8plus ", # Sun assembler
@@ -1276,14 +1286,6 @@ def Boot():
     if (not vms) or AssembleOnHost:
         Assembler = GnuPlatformPrefix + Assembler
 
-    # squeeze runs of spaces and spaces at ends
-
-    Compile = _SqueezeSpaces(Compile)
-    CCompilerFlags = _SqueezeSpaces(CCompilerFlags)
-    Link = _SqueezeSpaces(Link)
-    Assembler = _SqueezeSpaces(Assembler)
-    AssemblerFlags = _SqueezeSpaces(AssemblerFlags)
-
     P = FilterPackages([ "m3cc", "import-libs", "m3core", "libm3", "sysutils",
           "m3middle", "m3quake", "m3objfile", "m3linker", "m3back",
           "m3front" ])
@@ -1297,10 +1299,29 @@ def Boot():
     #DoPackage(["", "realclean"] + P) or sys.exit(1)
     DoPackage(["", "buildlocal"] + P) or sys.exit(1)
 
-    #
-    # This would probably be a good use of XSL (xml style sheets)
-    #
-    
+    link_ext_mo = False
+    link_ext_io = False
+
+    for q in P:
+        dir = GetPackagePath(q)
+        for a in os.listdir(os.path.join(Root, dir, BuildDir)):
+            ext = GetPathExtension(a)
+            ext_io = (ext == "io")
+            ext_mo = (ext == "mo")
+            if ext_mo and not link_ext_mo and not CBackend:
+                link_ext_im = True
+                Link += " *.mo"
+            if ext_io and not link_ext_io and not CBackend:
+                link_ext_io = True
+                Link += " *.io "
+
+    # squeeze runs of spaces and spaces at ends
+    Compile = _SqueezeSpaces(Compile)
+    CCompilerFlags = _SqueezeSpaces(CCompilerFlags)
+    Link = _SqueezeSpaces(Link)
+    Assembler = _SqueezeSpaces(Assembler)
+    AssemblerFlags = _SqueezeSpaces(AssemblerFlags)
+
     NL = ["\n", "\r\n"][nt]
     NL2 = NL + NL
     EXE = ["", ".exe"][nt]
@@ -1311,6 +1332,9 @@ def Boot():
     UpdateSource = open(os.path.join(BootDir, "updatesource.sh"), "wb")
     Objects = { }
     ObjectsExceptMain = { }
+    
+    # main_m.s or main.ms, depending on what we see
+    mainS = "" 
 
     for pkg in main_packages:
         CreateDirectory(os.path.join(BootDir, pkg + ".d"))
@@ -1382,7 +1406,9 @@ def Boot():
             if not (ext_c or ext_cpp or ext_h or ext_s or ext_ms or ext_is or ext_io or ext_mo):
                 continue
             leaf = GetLastPathElement(a)
-            is_main = (not vms) and leaf.startswith("Main.m") # TODO vms cleanup
+            if leaf.startswith("Main.m") or leaf.startswith("Main_m."):
+                mainS = leaf
+            is_main = (not vms) and (leaf.startswith("Main.m") or leaf.startswith("Main_m.")) # TODO vms cleanup
             fullpath = os.path.join(Root, dir, BuildDir, a)
             if ext_h or ext_c or not vms or AssembleOnTarget or ext_io or ext_mo:
                 CopyFile(fullpath, os.path.join(BootDir, [".", q + ".d"][is_main], main_leaf))
@@ -1444,22 +1470,14 @@ def Boot():
  
     LinkOut = [" -o ", " -out:"][nt]
     
-    main_ext = ""
     maino_ext = "o"
     if CBackend:
-        main_ext = "m3.c"
         maino_ext = "m3.c"
     elif AssembleOnTarget:
-        main_ext = "s"
-    else:
-        main_ext = "mo"
-    #Makefile.write("#main_ext:" + main_ext + NL)
-
-    if main_ext == "s":
         for pkg in main_packages:
-            Makefile.write(pkg + ".d/Main.o: " + pkg + ".d/Main.ms" + NL)
+            Makefile.write(pkg + ".d/Main.o: " + pkg + ".d/" + mainS + NL)
             #Makefile.write("\t-mkdir $(@D)" + NL)
-            Makefile.write("\t$(Assemble) -o $@ " + pkg + ".d/Main.ms" + NL)
+            Makefile.write("\t$(Assemble) -o $@ " + pkg + ".d/" + mainS + NL)
             Makefile.write(NL)
 
     for pkg in main_packages:
@@ -1778,8 +1796,8 @@ GenericCommand:
         sys.stdout.flush()
         sys.exit(1)
 
-    PackagesFromCommandLine = []
-    ActionCommands = []
+    PackagesFromCommandLine = [ ]
+    ActionCommands = [ ]
     Packages = None
     ListOnly = False
     KeepGoing = False
@@ -2112,7 +2130,7 @@ def CopyCompiler(From, To):
 def GetProgramFiles():
     # Look for Program Files.
     # This is expensive and callers are expected to cache it.
-    ProgramFiles = []
+    ProgramFiles = [ ]
     for d in ["PROGRAMFILES", "PROGRAMFILES(X86)", "PROGRAMW6432"]:
         e = os.environ.get(d)
         if e and (not (e in ProgramFiles)) and isdir(e):
@@ -2311,7 +2329,7 @@ def SetupEnvironment():
                         os.path.join("Microsoft SDKs", "Windows", "v6.0A"),
                         "Microsoft Platform SDK for Windows Server 2003 R2"
                        ]
-        SDKs = []
+        SDKs = [ ]
 
         for a in GetProgramFiles():
             #print("checking " + a)
@@ -2687,7 +2705,7 @@ def DiscoverHardLinks(r):
         for f in files:
             p = root + "/" + f
             if not os.path.islink(p):
-                result.setdefault(os.stat(p).st_ino, []).append(p)
+                result.setdefault(os.stat(p).st_ino, [ ]).append(p)
     return result
 
 def BreakHardLinks(links):
@@ -2928,7 +2946,7 @@ if __name__ == "__main__":
     print("PrintList4------------------------------")
 
     CommandLines = [
-        [],
+        [ ],
         ["build"],
         ["buildlocal"],
         ["buildglobal"],

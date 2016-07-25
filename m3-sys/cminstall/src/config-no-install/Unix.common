@@ -40,17 +40,20 @@ SYSTEM_LIBS =
     "LIBC"       : [ "-lm", "-pthread" ],
     "LEX-YACC"   : [ "-ll" ],
     "FLEX-BISON" : [ "-lfl" ],
-    "POSTGRES95" : [ "-L/usr/local/pgsql/lib", "-lpq" ],
+% See Linux.common, FreeBSD.common, OpenBSD.common, NetBSD.common, etc.
+%   "POSTGRES95" : [ "-L/usr/local/pgsql/lib", "-lpq" ],
     "OPENGL"     : [ "-lGLU", "-lGL", "-lXext" ],
-    "ODBC"       : [ "-lodbc" ],
+% See Linux.common, FreeBSD.common, OpenBSD.common, NetBSD.common, etc.
+%   "ODBC"       : [ "-lodbc" ],
     "MOTIF"      : [ "-lXm" ],
     "TCP"        : [ ],
     "X11"        : [  "-L/usr/X11R6/lib", "-lXaw", "-lXmu", "-lXext", "-lXt", "-lSM", "-lICE", "-lX11" ]
 }
 
-if HasOdbc()
-  SYSTEM_LIBS{"ODBC"} = [ "-lodbc" ]
-end
+% See Linux.common, FreeBSD.common, OpenBSD.common, NetBSD.common, etc.
+%if HasOdbc()
+%  SYSTEM_LIBS{"ODBC"} = [ "-lodbc" ]
+%end
 
 end
 

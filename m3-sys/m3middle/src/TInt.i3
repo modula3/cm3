@@ -103,10 +103,13 @@ PROCEDURE ToChars (READONLY i: Int;  VAR buf: ARRAY OF CHAR): INTEGER;
 (* converts 'i' to a printable string in 'buf'.  Returns the
    number of characters in the string.  Returns -1 if 'buf' is too short. *)
 
-PROCEDURE ToBytes (READONLY i: Int;  VAR buf: ARRAY OF [0..255]): CARDINAL;
-(* converts 'i' to the shortest sequence of bytes in little-endian order
-   which when sign-extended equal 'i'.  Returns the number of
-   significant bytes in the result.  Returns 0 if 'buf' is too short. *)
+PROCEDURE ToUnsignedBytes 
+  (READONLY r: Int;  VAR buf: ARRAY OF [0..255]): CARDINAL;
+(* PRE: r is nonnegative and fits in buf. *) 
+(* converts 'r' to the shortest sequence of bytes which when zero-extended 
+   equal 'r', and stores them in little-endian order in buf.  This means 
+   the most significant bit in buf is not a sign bit, and could be 1.   
+   Returns the number of significant bytes of the result. *)
 
 PROCEDURE Extend (READONLY i: Int;  n: CARDINAL;  VAR r: Int): BOOLEAN;
 (* sign-extends from the low-order 'n' bytes of 'i'.

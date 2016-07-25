@@ -13,7 +13,7 @@ UNSAFE MODULE RealFloat;
    that do not depend on the operating system. *)
 
 IMPORT RealRep AS Rep;
-IMPORT DragonT, FPU, Word, Ctypes, Convert;
+IMPORT DragonT, FPU, Word, Ctypes, Convert, Grisu;
 
 PROCEDURE Scalb (x: T; n: INTEGER): T =
   BEGIN
@@ -197,6 +197,7 @@ PROCEDURE ToDecimal(x: T): DecimalApprox =
     res: DecimalApprox;
     exp, sig: INTEGER;
     count: CARDINAL;
+    grisuMode := Grisu.FastDtoaMode.FAST_DTOA_SHORTEST_SINGLE;     
   BEGIN
     res.class := Class (x);
     res.sign := Sign (x);
@@ -205,17 +206,21 @@ PROCEDURE ToDecimal(x: T): DecimalApprox =
       RETURN res;
     END;
 
-    sig := xx.significand;
+    IF NOT Grisu.FastDtoa(FLOAT(ABS(x),LONGREAL), grisuMode, 0, res.digits, count, res.exp) THEN
+      (* fallback on Dragon *)
 
-    IF xx.exponent = 0 THEN
-      exp := -125;
-    ELSE
-      exp := xx.exponent - 126;
-      sig := Word.Or (sig, 16_800000); (* add the implied 24th bit *)
+      sig := xx.significand;
+
+      IF xx.exponent = 0 THEN
+        exp := -125;
+      ELSE
+        exp := xx.exponent - 126;
+        sig := Word.Or (sig, 16_800000); (* add the implied 24th bit *)
+      END;
+
+      DragonT.F (exp, 0, sig, 24, DragonT.CutoffMode.normal, 0, 
+                 res.digits, count, res.exp);
     END;
-
-    DragonT.F (exp, 0, sig, 24, DragonT.CutoffMode.normal, 0, 
-               res.digits, count, res.exp);
     res.len := count;
     res.errorSign := 0;
     RETURN res;

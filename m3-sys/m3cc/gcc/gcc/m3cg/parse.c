@@ -2306,9 +2306,9 @@ trace_int (PCSTR name, INT64 val)
   if (!name || !option_trace_all)
     return;
   PCSTR colon = trace_name (&name);
-  static char hex[] = "x%s%s"WIDE_PRINT_HEX"("WIDE_PRINT_DEC")";
+  static char hex[] = "x%s%s" WIDE_PRINT_HEX "(" WIDE_PRINT_DEC ")";
   if (val >= -9 && val <= 9)
-    fprintf (stderr, " %s%s"WIDE_PRINT_DEC, name, colon, (WIDE)val);
+    fprintf (stderr, " %s%s" WIDE_PRINT_DEC, name, colon, (WIDE)val);
   else
     fprintf (stderr, trace_upper_hex (hex), name, colon, (WIDE)val, (WIDE)val);
 }
@@ -2985,7 +2985,7 @@ m3_gap (UINT64 next_offset)
     fprintf (stderr, "\n m3_gap: offset:0x%X size:0x%X\n",
              (UINT)current_record_offset, (UINT)size);
 
-  sprintf(name, "_m3gap_"WIDE_PRINT_DEC"_"WIDE_PRINT_DEC,
+  sprintf(name, "_m3gap_" WIDE_PRINT_DEC "_" WIDE_PRINT_DEC,
           (WIDE)current_record_offset, (WIDE)size);
 
   tree type = make_node (RECORD_TYPE);
@@ -3780,7 +3780,7 @@ M3CG_HANDLER (DECLARE_TYPENAME)
 
 M3CG_HANDLER (DECLARE_ARRAY)
 {
-  debug_tag ('A', my_id, "_"WIDE_PRINT_DEC, (WIDE)size);
+  debug_tag ('A', my_id, "_" WIDE_PRINT_DEC, (WIDE)size);
   debug_field_id (index_id);
   debug_field_id (elts_id);
   debug_struct ();
@@ -3832,7 +3832,7 @@ M3CG_HANDLER (DECLARE_OPEN_ARRAY)
     }
   }
 
-  debug_tag ('B', my_id, "_"WIDE_PRINT_DEC, (WIDE)size);
+  debug_tag ('B', my_id, "_" WIDE_PRINT_DEC, (WIDE)size);
   debug_field_id (elts_id);
   debug_struct ();
 }
@@ -3843,7 +3843,7 @@ M3CG_HANDLER (DECLARE_ENUM)
   gcc_assert (size == 8 || size == 16 || size == 32 || size == 64);
   gcc_assert (size <= BITS_PER_INTEGER || n_elts == 0);
 
-  debug_tag ('C', my_id, "_"WIDE_PRINT_DEC, (WIDE)size);
+  debug_tag ('C', my_id, "_" WIDE_PRINT_DEC, (WIDE)size);
   current_dbg_type_count1 = n_elts;
   current_dbg_type_count2 = n_elts;
 
@@ -3930,7 +3930,7 @@ M3CG_HANDLER (DECLARE_ENUM_ELT)
 M3CG_HANDLER (DECLARE_PACKED)
 {
   debug_field_id (target_id);
-  debug_tag ('D', my_id, "_"WIDE_PRINT_DEC, (WIDE)size);
+  debug_tag ('D', my_id, "_" WIDE_PRINT_DEC, (WIDE)size);
   debug_struct ();
 
 #if 1
@@ -3980,7 +3980,7 @@ m3_declare_record_common (void)
 
 M3CG_HANDLER (DECLARE_RECORD)
 {
-  debug_tag ('R', my_id, "_"WIDE_PRINT_DEC, (WIDE)size);
+  debug_tag ('R', my_id, "_" WIDE_PRINT_DEC, (WIDE)size);
   current_dbg_type_count1 = n_fields;
   current_dbg_type_count2 = 0;
 
@@ -4015,7 +4015,7 @@ M3CG_HANDLER (DECLARE_FIELD)
     t = t ? t : m3_build_type_id (T_struct, size, size, NO_UID);
   }
   debug_field_fmt (my_id,
-                   "_"WIDE_PRINT_DEC"_"WIDE_PRINT_DEC"_%.*s",
+                   "_" WIDE_PRINT_DEC"_" WIDE_PRINT_DEC "_%.*s",
                    (WIDE)offset,
                    (WIDE)size,
                    long_to_printf_length (name_length),
@@ -4033,7 +4033,7 @@ M3CG_HANDLER (DECLARE_SET)
     fprintf (stderr, " declare_set my_id:0x%X domain_id:0x%X size:0x%X",
              (UINT)my_id, (UINT)domain_id, (UINT)size);
 
-  debug_tag ('S', my_id, "_"WIDE_PRINT_DEC, (WIDE)size);
+  debug_tag ('S', my_id, "_" WIDE_PRINT_DEC, (WIDE)size);
   debug_field_id (domain_id);
   debug_struct ();
 
@@ -4137,7 +4137,7 @@ M3CG_HANDLER (DECLARE_INDIRECT)
 M3CG_HANDLER (DECLARE_PROCTYPE)
 {
   set_typeid_to_tree (my_id, t_addr);
-  debug_tag ('P', my_id, "_%d_%c"WIDE_PRINT_DEC, GET_MODE_BITSIZE (Pmode),
+  debug_tag ('P', my_id, "_%d_%c" WIDE_PRINT_DEC, GET_MODE_BITSIZE (Pmode),
              n_raises < 0 ? 'A' : 'L', (WIDE)MAX (n_raises, 0));
   current_dbg_type_count1 = n_formals;
   current_dbg_type_count2 = MAX (0, n_raises);
@@ -4177,7 +4177,7 @@ M3CG_HANDLER (DECLARE_OBJECT)
 {
   gcc_assert (brand_length >= -1);
 
-  debug_tag ('O', my_id, "_%d_"WIDE_PRINT_DEC"_%d_%d_%.*s",
+  debug_tag ('O', my_id, "_%d_" WIDE_PRINT_DEC "_%d_%d_%.*s",
              POINTER_SIZE, n_fields, traced, (brand ? 1:0),
              (brand ? brand_length : 0), (brand ? brand : ""));
   debug_field_id (super_id);

@@ -6,6 +6,8 @@
 %      modified on Thu Sep  2 15:08:45 PDT 1993 by mcjones
 %      modified on Fri May  7 14:59:36 PDT 1993 by muller
 
+include_dir("grisu")
+
 Interface ("FPU")
 
 Generic_interface ("Float")

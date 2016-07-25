@@ -4,5 +4,8 @@ readonly GNU_PLATFORM = "alpha-openbsd" % "cpu-os" string for GNU
 SYSTEM_CC = "g++ -gstabs+ -fPIC" % C compiler
 readonly SYSTEM_ASM = "as" % Assembler
 
+% Guessing similar to Darwin and HP-UX after default and -g failed.
+m3back_debug = "-g1 "
+
 include("Alpha64.common")
 include("OpenBSD.common")
