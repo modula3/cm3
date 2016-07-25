@@ -1917,7 +1917,10 @@ def RemoveDirectoryRecursive(a):
     else:
         print("rmdir /q/s " + a)
     if isdir(a):
-        shutil.rmtree(a)
+        try:
+            shutil.rmtree(a)
+        except:
+            pass
     return True
 
 def CreateDirectory(a):
