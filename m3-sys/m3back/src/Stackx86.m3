@@ -12,7 +12,7 @@ IMPORT M3CG, TargetMap, M3CG_Ops, M3x86Rep, Codex86, Wrx86;
 IMPORT TIntN, TWordN;
 IMPORT Target, Fmt;
 FROM Target IMPORT FloatType;
-FROM TargetMap IMPORT CG_Bytes, CG_Align_bytes;
+FROM TargetMap IMPORT CG_Bytes, CG_Align_bytes, CG_Size;
 
 FROM M3CG IMPORT Type, MType, ZType, IType, Sign, Label, ByteOffset;
 FROM M3CG_Ops IMPORT ErrorHandler;
@@ -22,6 +22,8 @@ FROM M3x86Rep IMPORT RegistersForByteOperations, RegSet, FlToInt, x86Var, x86Pro
 FROM M3x86Rep IMPORT TypeIsSigned, TypeIsUnsigned, EAX, ECX, EDX, EBX, UnsignedType, MaximumShift, MinimumShift, BitCountMask, IntType;
 
 FROM Codex86 IMPORT Op, FOp, Cond, revcond;
+
+IMPORT RTIO;
 
 REVEAL T = Public BRANDED "Stackx86.T" OBJECT
         cg            : Codex86.T := NIL;
@@ -2230,9 +2232,21 @@ PROCEDURE swap (t: T) =
 PROCEDURE doloophole (t: T; from, to: ZType) =
   VAR fromSize := GetTypeSize(from);
       toSize := GetTypeSize(to);
-      changeSize := (fromSize # toSize);
+      changeSize := fromSize # toSize;
       fromFloat := FloatType[from];
       toFloat := FloatType[to];
+
+  PROCEDURE assert(expr: TEXT; value: BOOLEAN): BOOLEAN =
+  BEGIN
+    IF value THEN RETURN TRUE END;
+    RTIO.PutText("from:"); RTIO.PutText(Target.TypeNames[from]);
+    RTIO.PutText(" to:"); RTIO.PutText(Target.TypeNames[to]);
+    RTIO.PutText(" ASSERT failed:");
+    RTIO.PutText(expr);
+    RTIO.Flush();
+    RETURN value;
+  END assert;
+
   BEGIN
       WITH stack0 = pos(t, 0, "doloophole"),
            stop0 = t.vstack[stack0] DO
@@ -2307,8 +2321,10 @@ PROCEDURE doloophole (t: T; from, to: ZType) =
           END;
 
         ELSIF fromFloat THEN
-          <* ASSERT NOT toFloat *>
-          <* ASSERT stop0.loc = OLoc.fstack *>
+          <* ASSERT assert("NOT toFloat", NOT toFloat) *>
+          <* ASSERT assert("stop0.loc = OLoc.fstack", stop0.loc = OLoc.fstack) *>
+          <* ASSERT assert("CG_Size[from] = CG_Size[to]", CG_Size[from] = CG_Size[to]) *>
+
           stop0.loc := OLoc.mem;
           stop0.mvar.var := t.parent.declare_temp(CG_Bytes[to],
                                                   CG_Align_bytes[to], to,
@@ -2322,6 +2338,8 @@ PROCEDURE doloophole (t: T; from, to: ZType) =
         ELSE
           <* ASSERT NOT fromFloat *>
           <* ASSERT toFloat *>
+          <* ASSERT assert("CG_Size[from] = CG_Size[to]", CG_Size[from] = CG_Size[to]) *>
+
           IF stop0.loc = OLoc.mem AND CG_Bytes[stop0.mvar.mvar_type] < 4 THEN
             find(t, stack0, Force.anyreg);
           END;
@@ -2333,8 +2351,8 @@ PROCEDURE doloophole (t: T; from, to: ZType) =
           find(t, stack0, Force.mem);
           **********************************************)
 
-          <* ASSERT to = Type.Reel *>
           stop0.mvar.mvar_type := to;
+
           t.cg.fstack_push(stop0.mvar, TRUE);
           IF stop0.mvar.var.stack_temp THEN
             t.parent.free_temp(stop0.mvar.var);
