@@ -459,25 +459,40 @@ PROCEDURE AssignSlot (t: T) =
       retry := TRUE;
   BEGIN
     EnterCriticalSection(ADR(slotLock));
+
       WHILE retry DO
         retry := FALSE;
 
         (* make sure we have room to register this guy *)
+
         IF slots = NIL THEN
+
+          (* Do allocation outside critical section. *)
+
           LeaveCriticalSection(ADR(slotLock));
-            slots := NEW (REF ARRAY OF T, 20);
+          new_slots := NEW (REF ARRAY OF T, 20);
+
+          (* Reenter critical section and double check that
+             another thread hasn't handled this in the mean time. *)
+
           EnterCriticalSection(ADR(slotLock));
+          IF slots = NIL THEN
+            slots := new_slots;
+            new_slots := NIL;
+          END;
         END;
+
         IF n_slotted >= LAST (slots^) THEN
           old_slots := slots;
           n := NUMBER (old_slots^);
           LeaveCriticalSection(ADR(slotLock));
-            new_slots := NEW (REF ARRAY OF T, n+n);
+            new_slots := NEW (REF ARRAY OF T, n + n);
           EnterCriticalSection(ADR(slotLock));
           IF old_slots = slots THEN
             (* we won any races that may have occurred. *)
             SUBARRAY (new_slots^, 0, n) := slots^;
             slots := new_slots;
+            new_slots := NIL;
           ELSIF n_slotted < LAST (slots^) THEN
             (* we lost a race while allocating a new slot table,
                and the new table has room for us. *)
@@ -489,6 +504,7 @@ PROCEDURE AssignSlot (t: T) =
       END;
      
       (* look for an empty slot *)
+      (* TODO There should be a free list to replace this linear search. *)
       WHILE (slots [next_slot] # NIL) DO
         INC (next_slot);
         IF next_slot >= NUMBER (slots^) THEN next_slot := 1; END;
@@ -504,6 +520,9 @@ PROCEDURE AssignSlot (t: T) =
 PROCEDURE FreeSlot (self: T) =
   (* LL = 0 *)
   BEGIN
+
+    (* TODO This should be placement on to a free list. *)
+
     EnterCriticalSection(ADR(slotLock));
       <* ASSERT self.act.slot > 0 *>
       <* ASSERT n_slotted > 0 *>
