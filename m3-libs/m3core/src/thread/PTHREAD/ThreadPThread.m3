@@ -408,15 +408,28 @@ PROCEDURE AssignSlot (t: T): INTEGER =
     WITH r = pthread_mutex_lock(slotsMu) DO <*ASSERT r=0*> END;
 
       (* make sure we have room to register this guy *)
+
       IF (slots = NIL) THEN
+
+        (* Do allocation outside critical section. *)
+
         WITH r = pthread_mutex_unlock(slotsMu) DO <*ASSERT r=0*> END;
-          slots := NEW (REF ARRAY OF T, 20);
+          new_slots := NEW (REF ARRAY OF T, 20);
+
+        (* Reenter critical section and double check that
+           another thread hasn't handled this in the mean time. *)
+
         WITH r = pthread_mutex_lock(slotsMu) DO <*ASSERT r=0*> END;
+        IF slots = NIL THEN
+          slots := new_slots;
+        END;
+        new_slots := NIL; (* help garbage collector *)
       END;
+
       IF (n_slotted >= LAST (slots^)) THEN
         n := NUMBER (slots^);
         WITH r = pthread_mutex_unlock(slotsMu) DO <*ASSERT r=0*> END;
-          new_slots := NEW (REF ARRAY OF T, n+n);
+          new_slots := NEW (REF ARRAY OF T, n + n);
         WITH r = pthread_mutex_lock(slotsMu) DO <*ASSERT r=0*> END;
         IF (n = NUMBER (slots^)) THEN
           (* we won any races that may have occurred. *)
