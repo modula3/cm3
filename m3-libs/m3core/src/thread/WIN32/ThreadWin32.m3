@@ -478,8 +478,8 @@ PROCEDURE AssignSlot (t: T) =
           EnterCriticalSection(ADR(slotLock));
           IF slots = NIL THEN
             slots := new_slots;
-            new_slots := NIL;
           END;
+          new_slots := NIL; (*  help garbage collector *)
         END;
 
         IF n_slotted >= LAST (slots^) THEN
@@ -492,7 +492,6 @@ PROCEDURE AssignSlot (t: T) =
             (* we won any races that may have occurred. *)
             SUBARRAY (new_slots^, 0, n) := slots^;
             slots := new_slots;
-            new_slots := NIL;
           ELSIF n_slotted < LAST (slots^) THEN
             (* we lost a race while allocating a new slot table,
                and the new table has room for us. *)
@@ -500,6 +499,7 @@ PROCEDURE AssignSlot (t: T) =
             (* ouch, the new table is full too!   Bail out and retry *)
             retry := TRUE;
           END;
+          new_slots := NIL; (*  help garbage collector *)
         END;
       END;
      
