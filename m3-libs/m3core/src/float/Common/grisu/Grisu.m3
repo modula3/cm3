@@ -7,7 +7,7 @@ IMPORT Word,Long;
 IMPORT IEEE;
 IMPORT CachedPowers AS CP;
 FROM SimFP IMPORT SignificandSize,Uint64,Uint32,GFP;
-IMPORT Compiler;
+IMPORT GrisuDisable;
 
 CONST
 
@@ -661,8 +661,8 @@ PROCEDURE FastDtoa(v : LONGREAL;
     d : IEEE.Double;
   BEGIN
 
-  (* temporarily disable for NT386 until problems investigated *)
-  IF Compiler.ThisPlatform = Compiler.Platform.NT386 THEN RETURN FALSE END;
+    (* temporarily disable for NT386 until problems investigated *)
+    IF GrisuDisable.Value THEN RETURN FALSE END;
 
     <*ASSERT v > 0.0D0, "Grisu input must be greater than 0.0D0"  *>
     
