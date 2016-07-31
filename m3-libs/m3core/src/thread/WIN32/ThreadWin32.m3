@@ -245,7 +245,6 @@ PROCEDURE XWait(m: Mutex; c: Condition; act: Activation;
       count: INTEGER;
       retry := FALSE;
       wait: DWORD;
-      conditionLock := c.lock;
       waitDone := FALSE;
       alerted := FALSE;
       lastWaiter := FALSE;
@@ -253,16 +252,15 @@ PROCEDURE XWait(m: Mutex; c: Condition; act: Activation;
 
     IF DEBUG THEN ThreadDebug.XWait(m, c, act); END;
 
-    IF conditionLock = NIL THEN
+    IF c.lock = NIL THEN
       InitCondition(c);
-      conditionLock := c.lock;
     END;
-    <* ASSERT conditionLock # NIL *>
+    <* ASSERT c.lock # NIL *>
     <* ASSERT c.waitEvent # NIL *>
     <* ASSERT act.alertEvent # NIL *>
 
     handles[0] := c.waitEvent;
-    EnterCriticalSection(conditionLock);
+    EnterCriticalSection(c.lock);
 
       (* Capture the value of the counter before we start waiting.
        * We will not stop waiting until the counter changes.
@@ -273,7 +271,7 @@ PROCEDURE XWait(m: Mutex; c: Condition; act: Activation;
       count := c.counter;
       INC(c.waiters);
 
-    LeaveCriticalSection(conditionLock);
+    LeaveCriticalSection(c.lock);
     m.release();
 
     (* Loop until condition variable is signaled. The event object is
@@ -304,9 +302,9 @@ PROCEDURE XWait(m: Mutex; c: Condition; act: Activation;
       IF perfOn THEN PerfRunning() END;
 
       alerted := (wait = (WAIT_OBJECT_0 + 1));
-      EnterCriticalSection(conditionLock);
+      EnterCriticalSection(c.lock);
         waitDone := (c.tickets # 0 AND c.counter # count);
-      LeaveCriticalSection(conditionLock);
+      LeaveCriticalSection(c.lock);
 
     END; (* WHILE *)
 
@@ -316,13 +314,13 @@ PROCEDURE XWait(m: Mutex; c: Condition; act: Activation;
 
     m.acquire();
 
-    EnterCriticalSection(conditionLock);
+    EnterCriticalSection(c.lock);
       DEC(c.waiters);
       IF waitDone THEN (* Not handling this as an alert. *) 
         DEC(c.tickets);
         lastWaiter := (c.tickets = 0);
       END;
-    LeaveCriticalSection(conditionLock);
+    LeaveCriticalSection(c.lock);
 
     IF alerted THEN
       RAISE Alerted;
@@ -358,18 +356,16 @@ PROCEDURE Wait (m: Mutex; c: Condition) =
   END Wait;
 
 PROCEDURE Signal (c: Condition) =
-  VAR conditionLock := c.lock;
   BEGIN
     IF DEBUG THEN ThreadDebug.Signal(c); END;
 
-    IF conditionLock = NIL THEN
+    IF c.lock = NIL THEN
       InitCondition(c);
-      conditionLock := c.lock;
     END;
-    <* ASSERT conditionLock # NIL *>
+    <* ASSERT c.lock # NIL *>
     <* ASSERT c.waitEvent # NIL *>
 
-    EnterCriticalSection(conditionLock);
+    EnterCriticalSection(c.lock);
 
       IF c.waiters > c.tickets THEN
         IF SetEvent(c.waitEvent) = 0 THEN Choke(ThisLine()) END;
@@ -377,23 +373,21 @@ PROCEDURE Signal (c: Condition) =
         INC(c.counter);
       END;
 
-    LeaveCriticalSection(conditionLock);
+    LeaveCriticalSection(c.lock);
 
   END Signal;
 
 PROCEDURE Broadcast (c: Condition) =
-  VAR conditionLock := c.lock;
   BEGIN
     IF DEBUG THEN ThreadDebug.Broadcast(c); END;
 
-    IF conditionLock = NIL THEN
+    IF c.lock = NIL THEN
       InitCondition(c);
-      conditionLock := c.lock;
     END;
-    <* ASSERT conditionLock # NIL *>
+    <* ASSERT c.lock # NIL *>
     <* ASSERT c.waitEvent # NIL *>
 
-    EnterCriticalSection(conditionLock);
+    EnterCriticalSection(c.lock);
 
       IF c.waiters > 0 THEN
         IF SetEvent(c.waitEvent) = 0 THEN Choke(ThisLine()) END;
@@ -401,7 +395,7 @@ PROCEDURE Broadcast (c: Condition) =
         INC(c.counter);
       END;
 
-    LeaveCriticalSection(conditionLock);
+    LeaveCriticalSection(c.lock);
 
   END Broadcast;
 
