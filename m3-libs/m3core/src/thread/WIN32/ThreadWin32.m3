@@ -204,7 +204,7 @@ PROCEDURE InitCondition (c: Condition) =
 PROCEDURE LockMutex (m: Mutex) =
   BEGIN
     IF perfOn THEN PerfChanged(State.locking) END;
-    IF m.lock = NIL THEN InitMutex(m) END;
+    IF NOT m.initialized THEN InitMutex(m) END;
     EnterCriticalSection(m.lock);
     IF m.held THEN Die(ThisLine(), "attempt to lock mutex already locked by self") END;
     m.held := TRUE;
@@ -268,7 +268,7 @@ PROCEDURE XWait(m: Mutex; c: Condition; act: Activation;
 
     IF DEBUG THEN ThreadDebug.XWait(m, c, act); END;
 
-    InitCondition(c);
+    IF NOT c.initialized THEN InitCondition(c) END;
 
     <* ASSERT act.alertEvent # NIL *>
 
@@ -372,7 +372,7 @@ PROCEDURE Signal (c: Condition) =
   BEGIN
     IF DEBUG THEN ThreadDebug.Signal(c); END;
 
-    InitCondition(c);
+    IF NOT c.initialized THEN InitCondition(c) END;
 
     EnterCriticalSection(c.lock);
 
@@ -390,7 +390,7 @@ PROCEDURE Broadcast (c: Condition) =
   BEGIN
     IF DEBUG THEN ThreadDebug.Broadcast(c); END;
 
-    InitCondition(c);
+    IF NOT c.initialized THEN InitCondition(c) END;
 
     <* ASSERT c.lock # NIL *>
     <* ASSERT c.waitEvent # NIL *>
