@@ -213,7 +213,7 @@ PROCEDURE XWait (self: Activation; m: Mutex; c: Condition; alertable: BOOLEAN)
     LOOP
       IF alertable AND self.alerted THEN
         self.alerted := FALSE;
-        IF self.waitingOn # NIL THEN 
+        IF self.waitingOn # NIL THEN
           <*ASSERT self.waitingOn = c.mutex*>
           WITH r = pthread_mutex_lock(c.mutex) DO <*ASSERT r=0*> END;
           next := c.waiters; prev := NIL;
@@ -228,9 +228,9 @@ PROCEDURE XWait (self: Activation; m: Mutex; c: Condition; alertable: BOOLEAN)
           WITH r = pthread_mutex_unlock(c.mutex) DO <*ASSERT r=0*> END;
           self.nextWaiter := NIL;
           self.waitingOn := NIL;
-        ELSE (* Both an Alert and a (Signal or Broadcast) have happened. *) 
+        ELSE (* Both an Alert and a (Signal or Broadcast) have happened. *)
           <*ASSERT self.nextWaiter = NIL*>
-        END; 
+        END;
         WITH r = pthread_mutex_unlock(self.mutex) DO <*ASSERT r=0*> END;
         m.acquire();
         RAISE Alerted;

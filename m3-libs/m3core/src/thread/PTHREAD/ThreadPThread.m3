@@ -43,14 +43,14 @@ REVEAL
     joined: BOOLEAN := FALSE;       (* Is anyone waiting yet? *)
   END;
 
-(* A theory, inferred from reading: 
+(* A theory, inferred from reading:
    There is a dynamic rule about what mutex protects waitingOn and nextWaiter
    fields of Activation.  An Activation can be on either zero or one wait
    list (rooted either in a Mutex or a Conditon, field waiters.)  When an
-   Activation is on a list, these fields are protected by the mutex field 
+   Activation is on a list, these fields are protected by the mutex field
    of the Mutex or Condition.  Otherwise, these fields are protected by
-   the mutex field of the containing Activation. 
-*) 
+   the mutex field of the containing Activation.
+*)
 
 TYPE
   ActState = { Starting, Started, Stopping, Stopped };
@@ -62,7 +62,7 @@ TYPE
     waitingOn: pthread_mutex_t := NIL;  (* LL = mutex; The CV's mutex *)
     nextWaiter: Activation := NIL;      (* LL = mutex; waiting thread queue *)
     (* ^Link field of linear circularly-linked list, whose origin pointer
-       points to its tail, which is most recently added, i.e., last out). *) 
+       points to its tail, which is most recently added, i.e., last out). *)
     next, prev: Activation := NIL;      (* LL = activeMu; global doubly-linked, circular list of all active threads *)
     handle: pthread_t := NIL;           (* LL = activeMu; thread handle *)
     stackbase: ADDRESS := NIL;          (* LL = activeMu; stack base for GC *)
@@ -127,7 +127,7 @@ PROCEDURE InitMutex (VAR m: pthread_mutex_t; root: REFANY;
 
 PROCEDURE LockMutex (m: Mutex) =
   VAR self := GetActivation();
-    tail: Activation; 
+    tail: Activation;
   BEGIN
     IF perfOn THEN PerfChanged(State.locking) END;
     IF m.mutex = NIL THEN InitMutex(m.mutex, m, CleanMutex) END;
@@ -146,12 +146,12 @@ PROCEDURE LockMutex (m: Mutex) =
     IF m.waiters = NIL THEN
       self.nextWaiter := self;
       m.waiters := self;
-    ELSE 
+    ELSE
       tail := m.waiters;
-      self.nextWaiter := tail.nextWaiter; 
+      self.nextWaiter := tail.nextWaiter;
       tail.nextWaiter := self;
-      m.waiters := self; 
-    END;     
+      m.waiters := self;
+    END;
     IF m.holder = self THEN Die(ThisLine(), "impossible acquire") END;
     WITH r = pthread_mutex_unlock(m.mutex) DO <*ASSERT r=0*> END;
     REPEAT
@@ -172,18 +172,18 @@ PROCEDURE UnlockMutex (m: Mutex) =
     WITH r = pthread_mutex_lock(self.mutex) DO <*ASSERT r=0*> END;
     WITH r = pthread_mutex_lock(m.mutex) DO <*ASSERT r=0*> END;
     IF m.holder # self THEN Die(ThisLine(), "illegal release") END;
-    t := m.waiters; (* Tail of queue. *) (* Was head of queue. *)  
-    IF t = NIL THEN (* Empty waiters queue. *) 
+    t := m.waiters; (* Tail of queue. *) (* Was head of queue. *)
+    IF t = NIL THEN (* Empty waiters queue. *)
       m.holder := NIL;
       WITH r = pthread_mutex_unlock(m.mutex) DO <*ASSERT r=0*> END;
       WITH r = pthread_mutex_unlock(self.mutex) DO <*ASSERT r=0*> END;
       RETURN;
     END;
     t := t.nextWaiter; (* Head (first out) of queue. *)
-    IF t = m.waiters THEN (* singleton queue, now going empty. *) 
+    IF t = m.waiters THEN (* singleton queue, now going empty. *)
       m.waiters := NIL;
     ELSE m.waiters.nextWaiter := t.nextWaiter;
-    END; 
+    END;
     m.holder := t;
     WITH r = pthread_mutex_unlock(m.mutex) DO <*ASSERT r=0*> END;
     WITH r = pthread_mutex_unlock(self.mutex) DO <*ASSERT r=0*> END;
@@ -220,12 +220,12 @@ PROCEDURE XWait (self: Activation; m: Mutex; c: Condition; alertable: BOOLEAN)
     IF c.waiters = NIL THEN
       self.nextWaiter := self;
       c.waiters := self;
-    ELSE 
+    ELSE
       tail := c.waiters;
-      self.nextWaiter := tail.nextWaiter; 
+      self.nextWaiter := tail.nextWaiter;
       tail.nextWaiter := self;
-      c.waiters := self; 
-    END;     
+      c.waiters := self;
+    END;
     WITH r = pthread_mutex_unlock(c.mutex) DO <*ASSERT r=0*> END;
     WITH r = pthread_mutex_unlock(self.mutex) DO <*ASSERT r=0*> END;
 
@@ -235,30 +235,30 @@ PROCEDURE XWait (self: Activation; m: Mutex; c: Condition; alertable: BOOLEAN)
     LOOP
       IF alertable AND self.alerted THEN
         self.alerted := FALSE;
-        IF self.waitingOn # NIL THEN 
+        IF self.waitingOn # NIL THEN
           <*ASSERT self.waitingOn = c.mutex*>
           WITH r = pthread_mutex_lock(c.mutex) DO <*ASSERT r=0*> END;
           (* When alerted, we have no choice but to search the condition's
-             waiters for this thread. *) 
-          prev := c.waiters; (* prev # NIL. *)  
-          next := prev.nextWaiter; 
+             waiters for this thread. *)
+          prev := c.waiters; (* prev # NIL. *)
+          next := prev.nextWaiter;
           IF next = prev THEN (* Singleton list.  Make it empty. *)
-            c.waiters := NIL; 
-          ELSE  
-            WHILE next # self DO 
+            c.waiters := NIL;
+          ELSE
+            WHILE next # self DO
               prev := next; next := next.nextWaiter;
             END;
-            prev.nextWaiter := self.nextWaiter; 
-            IF c.waiters = self THEN 
+            prev.nextWaiter := self.nextWaiter;
+            IF c.waiters = self THEN
                c.waiters := prev
-            END; 
-          END; 
+            END;
+          END;
           WITH r = pthread_mutex_unlock(c.mutex) DO <*ASSERT r=0*> END;
           self.nextWaiter := NIL;
           self.waitingOn := NIL;
-        ELSE (* Both an Alert and a (Signal or Broadcast) have happened. *) 
+        ELSE (* Both an Alert and a (Signal or Broadcast) have happened. *)
           <*ASSERT self.nextWaiter = NIL*>
-        END; 
+        END;
         WITH r = pthread_mutex_unlock(self.mutex) DO <*ASSERT r=0*> END;
         m.acquire();
         RAISE Alerted;
@@ -297,13 +297,13 @@ PROCEDURE Signal (c: Condition) =
     WITH r = pthread_mutex_lock(self.mutex) DO <*ASSERT r=0*> END;
     WITH r = pthread_mutex_lock(c.mutex) DO <*ASSERT r=0*> END;
     t := c.waiters;
-    IF t # NIL THEN (* There is a waiting thread to wake up. *) 
+    IF t # NIL THEN (* There is a waiting thread to wake up. *)
       t := t.nextWaiter; (* Head (first out) of queue. *)
-      IF t = c.waiters THEN (* singleton queue, now going empty. *) 
+      IF t = c.waiters THEN (* singleton queue, now going empty. *)
         c.waiters := NIL;
       ELSE c.waiters.nextWaiter := t.nextWaiter;
-      END; 
-    END; 
+      END;
+    END;
     WITH r = pthread_mutex_unlock(c.mutex) DO <*ASSERT r=0*> END;
     WITH r = pthread_mutex_unlock(self.mutex) DO <*ASSERT r=0*> END;
     IF t # NIL THEN
@@ -327,9 +327,9 @@ PROCEDURE Broadcast (c: Condition) =
     c.waiters := NIL;
     WITH r = pthread_mutex_unlock(c.mutex) DO <*ASSERT r=0*> END;
     WITH r = pthread_mutex_unlock(self.mutex) DO <*ASSERT r=0*> END;
-    IF start # NIL THEN 
-      t := start; 
-      REPEAT 
+    IF start # NIL THEN
+      t := start;
+      REPEAT
         WITH r = pthread_mutex_lock(t.mutex) DO <*ASSERT r=0*> END;
         next := t.nextWaiter;
         t.nextWaiter := NIL;
@@ -338,7 +338,7 @@ PROCEDURE Broadcast (c: Condition) =
         WITH r = pthread_mutex_unlock(t.mutex) DO <*ASSERT r=0*> END;
         t := next;
       UNTIL t = start;
-    END; 
+    END;
   END Broadcast;
 
 PROCEDURE Alert (thread: T) =

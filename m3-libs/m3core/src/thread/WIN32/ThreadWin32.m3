@@ -40,12 +40,12 @@ REVEAL
    * http://www.cs.wustl.edu/~schmidt/win32-cv-1.html
    *   "3.3. The Generation Count Solution"
    *)
- 
+
       lock: PCRITICAL_SECTION := NIL;
       waitEvent: HANDLE := NIL;
       initialized := FALSE;
       counter := 0; (* LL = condition.lock *) (* = Schmidt's wait_generation_count_ *)
-      tickets := 0; (* LL = condition.lock *) (* = Schmidt's release_count_ *) 
+      tickets := 0; (* LL = condition.lock *) (* = Schmidt's release_count_ *)
       waiters := 0; (* LL = condition.lock *)
     END;
 
@@ -87,13 +87,13 @@ PROCEDURE SetState (act: Activation;  state: ActState) =
       RTIO.PutText("\n");
       RTIO.Flush();
     END;
-  END SetState;    
+  END SetState;
 
 (*----------------------------------------------------------------- Mutex ---*)
 (* Note: {Unlock,Lock}Mutex are the routines called directly by
    the compiler.  Acquire and Release are the routines exported through
    the Thread interface *)
-         
+
 PROCEDURE Acquire (m: Mutex) =
   BEGIN
     m.acquire ();
@@ -150,7 +150,7 @@ PROCEDURE InitMutex (mutex: Mutex) =
       END;
     END;
 
-  END InitMutex;      
+  END InitMutex;
 
 PROCEDURE CleanCondition (r: REFANY) =
   VAR c := NARROW(r, Condition);
@@ -329,7 +329,7 @@ PROCEDURE XWait(m: Mutex; c: Condition; act: Activation;
 
     EnterCriticalSection(c.lock);
       DEC(c.waiters);
-      IF waitDone THEN (* Not handling this as an alert. *) 
+      IF waitDone THEN (* Not handling this as an alert. *)
         DEC(c.tickets);
         lastWaiter := (c.tickets = 0);
       END;
@@ -504,7 +504,7 @@ PROCEDURE AssignSlot (t: T) =
           new_slots := NIL; (*  help garbage collector *)
         END;
       END;
-     
+
       (* look for an empty slot *)
       (* TODO There should be a free list to replace this linear search. *)
       WHILE (slots [next_slot] # NIL) DO
@@ -661,7 +661,7 @@ PROCEDURE Fork(closure: Closure): T =
 
     (* determine the initial size of the stack for this thread *)
     TYPECASE closure OF
-    | SizedClosure (scl) => IF scl.stackSize # 0 THEN 
+    | SizedClosure (scl) => IF scl.stackSize # 0 THEN
                               stack_size := scl.stackSize * BYTESIZE(INTEGER);
                             END;
     ELSE (*skip*)
@@ -730,7 +730,7 @@ PROCEDURE Pause(n: LONGREAL) =
 PROCEDURE AlertPause(n: LONGREAL) RAISES {Alerted} =
   VAR self := GetActivation();
   BEGIN
-    IF self = NIL THEN 
+    IF self = NIL THEN
       Die(ThisLine(), "AlertPause called from a non-Modula-3 thread") END;
     XPause(self, n, alertable := TRUE);
   END AlertPause;
@@ -1114,7 +1114,7 @@ PROCEDURE LockHeap () =
 
 PROCEDURE UnlockHeap () =
   VAR sig := FALSE;
-  BEGIN   
+  BEGIN
     IF DEBUG THEN ThreadDebug.UnlockHeap(); END;
     DEC(HeapInCritical);
     IF HeapInCritical = 0 AND HeapDoSignal THEN

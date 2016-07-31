@@ -90,7 +90,7 @@ PROCEDURE AlertPause(n: LONGREAL) RAISES {Alerted};
 PROCEDURE GetDefaultStackSize(): CARDINAL;
 (* Return the current default stack size for new threads. *)
 
-PROCEDURE MinDefaultStackSize(min: CARDINAL); 
+PROCEDURE MinDefaultStackSize(min: CARDINAL);
 (* Change the default stack size for newly forked threads to the
    greater of "min" and the current default stack size. *)
 

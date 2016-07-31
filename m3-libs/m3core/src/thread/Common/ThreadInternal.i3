@@ -22,7 +22,7 @@ TYPE FDSet = SET OF [0 .. FDSetSize-1];
      FDS = REF ARRAY OF FDSet;
 
 <* EXTERNAL ThreadInternal__Select *>
-PROCEDURE Select(nfds: int; VAR read, write, except: FDSet; 
+PROCEDURE Select(nfds: int; VAR read, write, except: FDSet;
                  timeout: LONGREAL(*Time.T*)): int;
 (* Thin wrapper around select. *)
 
