@@ -42,6 +42,7 @@ REVEAL
  
       lock: PCRITICAL_SECTION := NIL;
       waitEvent: HANDLE := NIL;
+      initialized := FALSE;
       counter := 0; (* LL = condition.lock *) (* = Schmidt's wait_generation_count_ *)
       tickets := 0; (* LL = condition.lock *) (* = Schmidt's release_count_ *) 
       waiters := 0; (* LL = condition.lock *)
@@ -152,20 +153,28 @@ PROCEDURE CleanCondition (r: REFANY) =
 
 PROCEDURE InitCondition (c: Condition) =
   VAR
+    lock: PCRITICAL_SECTION;
+    event: HANDLE;
+
+  BEGIN
+
+    IF c.initialized THEN (* already initialized *)
+      RETURN;
+    END;
+
     lock := NewCriticalSection();
     event := CreateEvent(NIL, 1, 0, NIL);
-  BEGIN
-    IF lock = NIL OR event = NIL THEN
+
+    IF lock = NIL OR event = NIL OR c.initialized THEN
       DelCriticalSection(lock);
       DelHandle(event, ThisLine());
-      IF c.lock # NIL AND c.waitEvent # NIL THEN (* Someone else won the race. *)
+      IF c.initialized THEN (* Someone else won the race. *)
         RETURN;
       END;
       RuntimeError.Raise (RuntimeError.T.OutOfMemory);
     END;
     EnterCriticalSection(ADR(initLock));
-    IF c.lock # NIL THEN
-      (* Someone else won the race. *)
+    IF c.initialized THEN (* Someone else won the race. *)
       LeaveCriticalSection(ADR(initLock));
       DelCriticalSection(lock);
       DelHandle(event, ThisLine());
@@ -176,6 +185,7 @@ PROCEDURE InitCondition (c: Condition) =
       RTHeapRep.RegisterFinalCleanup (c, CleanCondition);
       c.lock := lock;
       c.waitEvent := event;
+      c.initialized := TRUE;
       lock := NIL;
       event := NIL;
     FINALLY
@@ -252,11 +262,8 @@ PROCEDURE XWait(m: Mutex; c: Condition; act: Activation;
 
     IF DEBUG THEN ThreadDebug.XWait(m, c, act); END;
 
-    IF c.lock = NIL THEN
-      InitCondition(c);
-    END;
-    <* ASSERT c.lock # NIL *>
-    <* ASSERT c.waitEvent # NIL *>
+    InitCondition(c);
+
     <* ASSERT act.alertEvent # NIL *>
 
     handles[0] := c.waitEvent;
@@ -359,11 +366,7 @@ PROCEDURE Signal (c: Condition) =
   BEGIN
     IF DEBUG THEN ThreadDebug.Signal(c); END;
 
-    IF c.lock = NIL THEN
-      InitCondition(c);
-    END;
-    <* ASSERT c.lock # NIL *>
-    <* ASSERT c.waitEvent # NIL *>
+    InitCondition(c);
 
     EnterCriticalSection(c.lock);
 
@@ -381,9 +384,8 @@ PROCEDURE Broadcast (c: Condition) =
   BEGIN
     IF DEBUG THEN ThreadDebug.Broadcast(c); END;
 
-    IF c.lock = NIL THEN
-      InitCondition(c);
-    END;
+    InitCondition(c);
+
     <* ASSERT c.lock # NIL *>
     <* ASSERT c.waitEvent # NIL *>
 
