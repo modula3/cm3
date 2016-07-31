@@ -659,6 +659,10 @@ PROCEDURE FastDtoa(v : LONGREAL;
     decimalExp : INTEGER := 0;
     d : IEEE.Double;
   BEGIN
+
+  (* temporarily disable for NT386 until problems investigated *)
+  IF Compiler.ThisPlatform = Compiler.Platform.NT386 THEN RETURN FALSE END;
+
     <*ASSERT v > 0.0D0, "Grisu input must be greater than 0.0D0"  *>
     
     d := NEW(IEEE.Double).init(v);
