@@ -29,6 +29,7 @@ REVEAL
   Mutex = MutexRep.Public BRANDED "MUTEX Win32-1.0" OBJECT
       lock: PCRITICAL_SECTION := NIL;
       held: BOOLEAN := FALSE; (* LL = mutex.lock *) (* Because critical sections are thread re-entrant *)
+      initialized := FALSE;
     OVERRIDES
       acquire := LockMutex;
       release := UnlockMutex;
@@ -118,30 +119,37 @@ PROCEDURE DelHandle(VAR a: HANDLE; line: INTEGER) =
   END DelHandle;
 
 PROCEDURE InitMutex (mutex: Mutex) =
-  VAR lock := NewCriticalSection();
+  VAR
+    lock: PCRITICAL_SECTION := NIL;
+    locked: PCRITICAL_SECTION := NIL;
+
   BEGIN
-    IF lock = NIL THEN
-      IF mutex.lock # NIL THEN (* Someone else won the race. *)
-        RETURN;
-      END;
-      RuntimeError.Raise (RuntimeError.T.OutOfMemory)
-    END;
-    EnterCriticalSection(ADR(initLock));
-    IF mutex.lock # NIL THEN
-      (* Someone else won the race. *)
-      LeaveCriticalSection(ADR(initLock));
-      DelCriticalSection(lock);
-      RETURN;
-    END;
-    (* We won the race. *)
+    IF mutex.initialized THEN RETURN END;
+
     TRY
+
+      lock := NewCriticalSection();
+      IF lock = NIL THEN RETURN; END;
+
+      EnterCriticalSection(ADR(initLock));
+      locked := ADR(initLock);
+
+      IF mutex.initialized THEN RETURN END;
+
+      (* We won the race. *)
       RTHeapRep.RegisterFinalCleanup (mutex, CleanMutex);
       mutex.lock := lock;
       lock := NIL;
+      mutex.initialized := TRUE;
+
     FINALLY
-      LeaveCriticalSection(ADR(initLock));
+      IF locked # NIL THEN LeaveCriticalSection(locked); END;
       DelCriticalSection(lock);
+      IF NOT mutex.initialized THEN (* Raise after leaving critical section. *)
+        RuntimeError.Raise (RuntimeError.T.OutOfMemory);
+      END;
     END;
+
   END InitMutex;      
 
 PROCEDURE CleanCondition (r: REFANY) =
@@ -153,46 +161,44 @@ PROCEDURE CleanCondition (r: REFANY) =
 
 PROCEDURE InitCondition (c: Condition) =
   VAR
-    lock: PCRITICAL_SECTION;
-    event: HANDLE;
+    lock: PCRITICAL_SECTION := NIL;
+    event: HANDLE := NIL;
+    locked: PCRITICAL_SECTION := NIL;
 
   BEGIN
 
-    IF c.initialized THEN (* already initialized *)
-      RETURN;
-    END;
+    IF c.initialized THEN RETURN END; (* already initialized *)
 
-    lock := NewCriticalSection();
-    event := CreateEvent(NIL, 1, 0, NIL);
-
-    IF lock = NIL OR event = NIL OR c.initialized THEN
-      DelCriticalSection(lock);
-      DelHandle(event, ThisLine());
-      IF c.initialized THEN (* Someone else won the race. *)
-        RETURN;
-      END;
-      RuntimeError.Raise (RuntimeError.T.OutOfMemory);
-    END;
-    EnterCriticalSection(ADR(initLock));
-    IF c.initialized THEN (* Someone else won the race. *)
-      LeaveCriticalSection(ADR(initLock));
-      DelCriticalSection(lock);
-      DelHandle(event, ThisLine());
-      RETURN;
-    END;
-    (* We won the race. *)
     TRY
+
+      lock := NewCriticalSection();
+      IF lock = NIL THEN RETURN; END;
+
+      event := CreateEvent(NIL, 1, 0, NIL);
+      IF event = NIL THEN RETURN; END;
+
+      EnterCriticalSection(ADR(initLock));
+      locked := ADR(initLock);
+
+      IF c.initialized THEN RETURN END; (* already initialized *)
+
+      (* We won the race. *)
       RTHeapRep.RegisterFinalCleanup (c, CleanCondition);
       c.lock := lock;
-      c.waitEvent := event;
-      c.initialized := TRUE;
       lock := NIL;
+      c.waitEvent := event;
       event := NIL;
+      c.initialized := TRUE;
+
     FINALLY
-      LeaveCriticalSection(ADR(initLock));
+      IF locked # NIL THEN LeaveCriticalSection(locked); END;
       DelCriticalSection(lock);
       DelHandle(event, ThisLine());
+      IF NOT c.initialized THEN (* Raise after leaving critical section. *)
+        RuntimeError.Raise (RuntimeError.T.OutOfMemory);
+      END;
     END;
+
   END InitCondition;
 
 PROCEDURE LockMutex (m: Mutex) =
