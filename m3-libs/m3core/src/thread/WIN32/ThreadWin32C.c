@@ -36,6 +36,22 @@
 #include <stddef.h>
 #include <string.h>
 
+#if 0
+//#include <stdio.h>
+#include <stdlib.h>
+#undef assert
+#define assert(expr) ((expr) || (ThreadWin32_AssertFailed(__FILE__, __LINE__, #expr), 0))
+void ThreadWin32_AssertFailed(const char* file, unsigned long line, const char* expr)
+{
+	char buffer[1024] = { 0 };
+	DWORD length = (DWORD)wsprintfA(buffer,  "assert failed:%s(%lu) %s\n", __FILE__, __LINE__, expr);
+	WriteFile(GetStdHandle(STD_ERROR_HANDLE), buffer, length, &length, 0);
+	OutputDebugStringA(buffer);
+	if (IsDebuggerPresent()) DebugBreak();
+	abort();
+}
+#endif
+
 #define M3_FIELD_SIZE(type, field) (sizeof((type*)0)->field)
 
 /* const is extern const in C, but static const in C++,
@@ -65,6 +81,8 @@ extern "C" {
 
 void* __cdecl ThreadWin32__StackPointerFromContext(CONTEXT* context)
 {
+  assert(context);
+  assert(context->STACK_REGISTER);
   return (void*)context->STACK_REGISTER;
 }
 
@@ -82,9 +100,11 @@ PCONTEXT __cdecl ThreadWin32__NewContext(void)
     return context;
 }
 
-void __cdecl ThreadWin32__DeleteContext(void* p)
+void __cdecl ThreadWin32__DeleteContext(void** p)
 {
-    HeapFree(GetProcessHeap(), 0, p);
+	void* q = *p;
+	*p = 0;
+    HeapFree(GetProcessHeap(), 0, q);
 }
 
 /*-------------------------------------------------------------------------*/
