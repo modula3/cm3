@@ -29,36 +29,26 @@ VAR default_stack: DWORD := 8192;
 REVEAL
 
   Mutex = MutexRep.Public BRANDED "ThreadWin32.Mutex.07302016" OBJECT
-  (* This is just like ThreadPThread but mutex vs. criticalSection. *)
     lock: PCRITICAL_SECTION := NIL;
     holder: Activation := NIL;
     waiters: Activation := NIL;
-    initialized := FALSE;
   OVERRIDES
     acquire := LockMutex;
     release := UnlockMutex;
   END;
 
   Condition = BRANDED "ThreadWin32.Condition.07302016" OBJECT
-  (* This is just like ThreadPThread but mutex vs. criticalSection. *)
     lock: PCRITICAL_SECTION := NIL;
     waiters: Activation := NIL;     (* LL = lock *)
-    initialized := FALSE;
   END;
 
-TYPE Event_t = RECORD
-      waitEvent: HANDLE := NIL;
-      initialized := FALSE;
-    END;
-
-  REVEAL
-    T = MUTEX BRANDED "Thread.T Win32-1.0" OBJECT
-      act: Activation := NIL;       (* LL = Self(); live (untraced) thread data *)
-      closure: Closure := NIL;      (* our work and its result *)
-      result: REFANY := NIL;        (* our work and its result *)
-      join: Condition;                (* wait here to join; NIL when done *)
-      joined: BOOLEAN := FALSE;       (* Is anyone waiting yet? *)
-    END;
+  T = MUTEX BRANDED "Thread.T Win32-1.0" OBJECT
+    act: Activation := NIL;         (* LL = Self(); live (untraced) thread data *)
+    closure: Closure := NIL;        (* our work and its result *)
+    result: REFANY := NIL;          (* our work and its result *)
+    join: Condition;                (* wait here to join; NIL when done *)
+    joined: BOOLEAN := FALSE;       (* Is anyone waiting yet? *)
+  END;
 
 (* A theory, inferred from reading:
    There is a dynamic rule about what mutex protects waitingOn and nextWaiter
@@ -68,14 +58,13 @@ TYPE Event_t = RECORD
    of the Mutex or Condition.  Otherwise, these fields are protected by
    the mutex field of the containing Activation.
 *)
-
 TYPE
   ActState = { Starting, Started, Stopping, Stopped };
   Activation = UNTRACED BRANDED REF RECORD
     frame: ADDRESS := NIL;              (* exception handling support; this field is accessed MANY times
                                          * so perhaps therefore should be first *)
     lock: PCRITICAL_SECTION := NIL;     (* write-once in CreateT *)
-    waitEvent: Event_t;                 (* similar to cond in pthread, a place to park while waiting *)
+    waitEvent: HANDLE := NIL;           (* similar to cond in pthread, a place to park while waiting *)
     alerted : BOOLEAN := FALSE;         (* LL = lock; the alert flag *)
     waitingOn: PCRITICAL_SECTION := NIL; (* LL = lock; The CV's lock *)
     nextWaiter: Activation := NIL;      (* LL = lock; waiting thread queue *)
@@ -183,11 +172,6 @@ PROCEDURE CleanCondition (r: REFANY) =
   BEGIN
     DelCriticalSection(c.lock);
   END CleanCondition;
-
-PROCEDURE Event_Clean (VAR c: Event_t) =
-BEGIN
-  DelHandle(c.waitEvent, ThisLine());
-END Event_Clean;
 
 PROCEDURE Event_Init (VAR c: Event_t) =
   VAR initLocked: PCRITICAL_SECTION := NIL;
@@ -471,15 +455,14 @@ PROCEDURE Wait (m: Mutex; c: Condition) =
     XWait(self, m, c, alertable := FALSE, timeout := INFINITE);
   END Wait;
 
-PROCEDURE Event_Signal (c: Event_t) =
+PROCEDURE Event_Signal (VAR e: HANDLE) =
   BEGIN
     (* IF DEBUG THEN ThreadDebug.Signal(c); END; *)
 
-    IF NOT c.initialized THEN Event_Init(c) END;
-    <* ASSERT c.initialized *>
-    <* ASSERT c.waitEvent # NIL *>
+    IF e = NIL THEN Event_Init(e) END;
+    <* ASSERT e # NIL *>
 
-    IF SetEvent(c.waitEvent) = 0 THEN Choke(ThisLine()) END;
+    IF SetEvent(e) = 0 THEN Choke(ThisLine()) END;
 
   END Event_Signal;
 
@@ -710,7 +693,7 @@ PROCEDURE CleanThread(r: REFANY) =
     IF r # NIL THEN
       t := NARROW(r, T);
       DeleteContext(t.act.context);
-      Event_Clean(t.act.waitEvent);
+      DelHandle(t.act.waitEvent, ThisLine());
       DelCriticalSection(t.act.lock);
       DISPOSE(t.act);
     END;
@@ -799,7 +782,7 @@ PROCEDURE NewActivation(): Activation =
 VAR act := NEW(Activation);
 BEGIN
   InitializeCriticalSection(act.lock);
-  act.waitEvent := NIL;
+  <*ASSERT act.waitEvent = NIL *>
   RETURN act;
 END NewActivation;
 
