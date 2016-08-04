@@ -1,5 +1,7 @@
 INTERFACE ThreadDebug;
 
+FROM WinNT IMPORT HANDLE, DWORD;
+
 <*EXTERNAL ThreadDebug__LockMutex*>
 PROCEDURE LockMutex (mutex: REFANY);
 
@@ -71,5 +73,11 @@ PROCEDURE WaitHeap();
 
 <*EXTERNAL ThreadDebug__BroadcastHeap*>
 PROCEDURE BroadcastHeap();
+
+<*EXTERNAL ThreadDebug__Event_Wait*>
+PROCEDURE Event_Wait(event: HANDLE; timeout: DWORD);
+
+<*EXTERNAL ThreadDebug__Event_Signal*>
+PROCEDURE Event_Signal(event: HANDLE);
 
 END ThreadDebug.
