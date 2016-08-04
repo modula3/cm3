@@ -4,6 +4,12 @@
 (*                                                                 *)
 (* Portions Copyright 1996-2000, Critical Mass, Inc.               *)
 (* See file COPYRIGHT-CMASS for details.                           *)
+(* Much of this file is based closely on ThreadPThread.m3.
+ * This file endeavors to work on fairly old versions of Windows.
+ * i.e. even prior to Windows Vista. i.e. it does not use
+ * Win32 SRWLOCK or Win32 CONDITION_VARIABLE.
+ *)
+
 
 UNSAFE MODULE ThreadWin32 EXPORTS
 Thread, ThreadF, Scheduler, RTThread, RTOS, RTHooks, ThreadWin32;
@@ -64,7 +70,7 @@ TYPE
     frame: ADDRESS := NIL;              (* exception handling support; this field is accessed MANY times
                                          * so perhaps therefore should be first *)
     lock: PCRITICAL_SECTION := NIL;     (* write-once in CreateT *)
-    waitEvent: HANDLE := NIL;           (* similar to cond in pthread, a place to park while waiting *)
+    event: HANDLE := NIL;               (* similar to cond in pthread, a place to park while waiting *)
     alerted : BOOLEAN := FALSE;         (* LL = lock; the alert flag *)
     waitingOn: PCRITICAL_SECTION := NIL; (* LL = lock; The CV's lock *)
     nextWaiter: Activation := NIL;      (* LL = lock; waiting thread queue *)
@@ -117,7 +123,7 @@ PROCEDURE Release (m: Mutex) =
 PROCEDURE CleanMutex (r: REFANY) =
   VAR m := NARROW(r, Mutex);
   BEGIN
-    DelCriticalSectin(m.lock);
+    DelCriticalSection(m.lock);
   END CleanMutex;
 
 PROCEDURE DelHandle(VAR a: HANDLE; line: INTEGER) =
@@ -173,41 +179,42 @@ PROCEDURE CleanCondition (r: REFANY) =
     DelCriticalSection(c.lock);
   END CleanCondition;
 
-PROCEDURE Event_Init (VAR c: Event_t) =
+PROCEDURE Event_Init (VAR e: HANDLE) =
+
+(* Initialize e if not already initialized.
+   Check repeatedly in case of races.
+   Raise exception for failure. *)
+
   VAR initLocked: PCRITICAL_SECTION := NIL;
       event: HANDLE := NIL;
 
   BEGIN
 
-    IF c.initialized THEN RETURN END;
+    IF e # NIL THEN RETURN END;
 
     TRY
-
       event := CreateEvent(NIL, 0, 0, NIL);
-      IF event = NIL THEN RETURN; END;
-      IF c.initialized THEN RETURN END;
+      IF event = NIL THEN RETURN; END; 
+
+      IF e # NIL THEN RETURN END;
 
       EnterCriticalSection(initLock);
       initLocked := initLock;
 
-      IF c.initialized THEN RETURN END;
-
-      (* We won the race. *)
-      c.waitEvent := event;
+      IF e # NIL THEN RETURN END;
+      e := event;
       event := NIL;
-      c.initialized := TRUE;
 
     FINALLY
       IF initLocked # NIL THEN LeaveCriticalSection(initLocked) END;
-      DelHandle(event, ThisLine());
-      IF NOT c.initialized THEN (* Raise after leaving critical section. *)
+      IF event # NIL THEN EVAL CloseHandle(event) END;
+      IF e = NIL THEN (* Raise after leaving critical section. *)
         RuntimeError.Raise (RuntimeError.T.OutOfMemory);
       END;
     END;
 
   END Event_Init;
 
-(* Based closely on ThreadPThread.m3 *)
 PROCEDURE LockMutex (m: Mutex) =
   VAR self := GetActivation();
     tail: Activation;
@@ -262,12 +269,13 @@ PROCEDURE LockMutex (m: Mutex) =
 
   END LockMutex;
 
-PROCEDURE UnlockMutex (m: Mutex) = (* Based closely on ThreadPThread.m3 *)
+PROCEDURE UnlockMutex (m: Mutex) =
   VAR
     self := GetActivation();
     t: Activation;
   BEGIN
-    <* ASSERT m.initialized *>
+    <* ASSERT m.lock # NIL *>
+    <* ASSERT self.lock # NIL *>
 
     EnterCriticalSection(self.lock);
     EnterCriticalSection(m.lock);
@@ -292,14 +300,15 @@ PROCEDURE UnlockMutex (m: Mutex) = (* Based closely on ThreadPThread.m3 *)
     LeaveCriticalSection(m.lock);
     LeaveCriticalSection(self.lock);
 
-    (* This lock is both the external lock for t.cond
-     * and protects its internals.
+    (* This lock is both the external
+     * lock paired with self.event (cond), and
+     * its internal lock.
      *)
     EnterCriticalSection(t.lock);
     <*ASSERT t.waitingOn = m.lock*>
     t.nextWaiter := NIL;
     t.waitingOn := NIL;
-    Event_Signal(t.waitEvent);
+    Event_Signal(t.event);
 
     LeaveCriticalSection(t.lock);
 
@@ -335,21 +344,20 @@ PROCEDURE Event_Wait(act: Activation; timeout: DWORD) =
   VAR wait: DWORD;
   BEGIN
 
-    (* IF DEBUG THEN ThreadDebug.Event_Wait(act, timeout := INFINITE); END; *)
+    IF DEBUG THEN ThreadDebug.Event_Wait(act.event, timeout) END;
 
-    IF act.waitEvent = NIL THEN Event_Init(act.waitEvent) END;
-    <* ASSERT act.waitEvent # NIL *>
+    IF act.event = NIL THEN Event_Init(act.event) END;
+    <* ASSERT act.event # NIL *>
 
     LeaveCriticalSection(act.lock);
 
-    wait := WaitForSingleObject(act.waitEvent, timeout);
+    wait := WaitForSingleObject(act.event, timeout);
     <* ASSERT wait = WAIT_OBJECT_0 OR wait = WAIT_TIMEOUT *>
 
     EnterCriticalSection(act.lock);
 
   END Event_Wait;
 
-(* Based closely on ThreadPThread.m3 *)
 PROCEDURE XWait (self: Activation; m: Mutex; c: Condition; alertable: BOOLEAN; timeout: DWORD)
   RAISES {Alerted} =
   (* LL = m *)
@@ -358,7 +366,7 @@ PROCEDURE XWait (self: Activation; m: Mutex; c: Condition; alertable: BOOLEAN; t
     IF perfOn THEN PerfChanged(State.waiting) END;
 
     IF c.lock = NIL THEN InitMutex(c.lock, c, CleanCondition) END;
-    IF self.waitEvent = NIL THEN Event_Init(self.waitEvent) END;
+    IF self.event = NIL THEN Event_Init(self.event) END;
 
     EnterCriticalSection(self.lock);
     <*ASSERT self.waitingOn = NIL*>
@@ -457,7 +465,7 @@ PROCEDURE Wait (m: Mutex; c: Condition) =
 
 PROCEDURE Event_Signal (VAR e: HANDLE) =
   BEGIN
-    (* IF DEBUG THEN ThreadDebug.Signal(c); END; *)
+    IF DEBUG THEN ThreadDebug.Event_Signal(e) END;
 
     IF e = NIL THEN Event_Init(e) END;
     <* ASSERT e # NIL *>
@@ -466,7 +474,6 @@ PROCEDURE Event_Signal (VAR e: HANDLE) =
 
   END Event_Signal;
 
-(* Based closely on ThreadPThread.m3 *)
 PROCEDURE Signal (c: Condition) =
   VAR self := GetActivation();
       t: Activation;
@@ -474,6 +481,7 @@ PROCEDURE Signal (c: Condition) =
     IF DEBUG THEN ThreadDebug.Signal(c); END;
 
     IF c.lock = NIL THEN InitMutex(c.lock, c, CleanCondition) END;
+    <* ASSERT self.lock # NIL *>
 
     EnterCriticalSection(self.lock);
     EnterCriticalSection(c.lock);
@@ -490,13 +498,14 @@ PROCEDURE Signal (c: Condition) =
     LeaveCriticalSection(c.lock);
     LeaveCriticalSection(self.lock);
 
-    IF t # NIL THEN
-      EnterCriticalSection(t.lock);
-      t.nextWaiter := NIL;
-      t.waitingOn := NIL;
-      Event_Signal(t.waitEvent);
-      LeaveCriticalSection(t.lock);
-    END;
+    IF t = NIL THEN RETURN END;
+
+    Event_Init(t.event);
+    EnterCriticalSection(t.lock);
+    t.nextWaiter := NIL;
+    t.waitingOn := NIL;
+    Event_Signal(t.event);
+    LeaveCriticalSection(t.lock);
 
   END Signal;
 
@@ -525,7 +534,7 @@ PROCEDURE Broadcast (c: Condition) =
         next := t.nextWaiter;
         t.nextWaiter := NIL;
         t.waitingOn := NIL;
-        Event_Signal(t.waitEvent);
+        Event_Signal(t.event);
         LeaveCriticalSection(t.lock);
         t := next;
       UNTIL t = start;
@@ -538,7 +547,7 @@ PROCEDURE Alert (thread: T) =
   BEGIN
     EnterCriticalSection(t.lock);
     t.alerted := TRUE;
-    Event_Signal(t.waitEvent);
+    Event_Signal(t.event);
     LeaveCriticalSection(t.lock);
   END Alert;
 
@@ -693,7 +702,7 @@ PROCEDURE CleanThread(r: REFANY) =
     IF r # NIL THEN
       t := NARROW(r, T);
       DeleteContext(t.act.context);
-      DelHandle(t.act.waitEvent, ThisLine());
+      DelHandle(t.act.event, ThisLine());
       DelCriticalSection(t.act.lock);
       DISPOSE(t.act);
     END;
@@ -782,7 +791,7 @@ PROCEDURE NewActivation(): Activation =
 VAR act := NEW(Activation);
 BEGIN
   InitializeCriticalSection(act.lock);
-  <*ASSERT act.waitEvent = NIL *>
+  <*ASSERT act.event = NIL *>
   RETURN act;
 END NewActivation;
 
