@@ -1391,14 +1391,16 @@ CONST
 TYPE
   PRTL_CRITICAL_SECTION_DEBUG = UNTRACED REF RTL_CRITICAL_SECTION_DEBUG;
   RTL_CRITICAL_SECTION_DEBUG = RECORD
+  (* This is opaque. *)
     Type                 : UINT16;
     CreatorBackTraceIndex: UINT16;
     CriticalSection      : UNTRACED REF RTL_CRITICAL_SECTION;
     ProcessLocksList     : LIST_ENTRY;
     EntryCount           : UINT32;
     ContentionCount      : UINT32;
-    Spare0               : UINT32;
-    Spare1               : UINT32;
+    Flags                : UINT32;
+    CreatorBackTraceIndexHigh: UINT16;
+    SpareWORD            : UINT16;
   END;
 
 CONST
@@ -1408,20 +1410,17 @@ CONST
 TYPE
   PRTL_CRITICAL_SECTION = UNTRACED REF RTL_CRITICAL_SECTION;
   RTL_CRITICAL_SECTION = RECORD
+  (* This is opaque. *)
     DebugInfo: PRTL_CRITICAL_SECTION_DEBUG;
-
     (*
-    (* *)
-    (*  The following three fields control entering and exiting the critical *)
-    (*  section for the resource *)
-    (* *)
-    *)
-
+     *  The following three fields control entering and exiting the critical
+     *  section for the resource
+     *)
     LockCount      : INT32;
     RecursionCount : INT32;
-    OwningThread   : HANDLE;  (* from the thread's ClientId->UniqueThread *)
+    OwningThread   : HANDLE;    (* from the thread's ClientId->UniqueThread *)
     LockSemaphore  : HANDLE;
-    SpinCount      : SIZE_T; (* force size on 64-bit systems when packed *)
+    SpinCount      : SIZE_T;    (* force size on 64-bit systems when packed *)
   END;
 
 CONST
