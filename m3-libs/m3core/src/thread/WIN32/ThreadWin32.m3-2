@@ -236,10 +236,13 @@ PROCEDURE UnlockMutex (m: Mutex) =
     self := GetActivation();
     t: Activation;
   BEGIN
+
+    IF NOT m.cs_inited THEN Die(ThisLine(), "illegal release (NOT m.cs_inited)") END;
+
     EnterCriticalSection(ADR(self.cs));
     EnterCriticalSection(ADR(m.cs));
 
-    IF m.holder # self THEN Die(ThisLine(), "illegal release") END;
+    IF m.holder # self THEN Die(ThisLine(), "illegal release (m.holder # self)") END;
 
     t := m.waiters; (* Tail of queue. *) (* Was head of queue. *)
     IF t = NIL THEN (* Empty waiters queue. *)
