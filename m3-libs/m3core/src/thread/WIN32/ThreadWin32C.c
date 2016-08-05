@@ -198,6 +198,15 @@ EXTERN_CONST DWORD ThreadWin32__CREATE_SUSPENDED = CREATE_SUSPENDED;
 EXTERN_CONST DWORD ThreadWin32__DUPLICATE_SAME_ACCESS = DUPLICATE_SAME_ACCESS;
 EXTERN_CONST DWORD ThreadWin32__INFINITE = INFINITE;
 
+#if 0
+
+/* Currently the size of CRITICAL_SECTION is exposed in Modula-3,
+ * and paired with a boolean for on-demand initialization.
+ * This is efficient. This could very well go back to a heap
+ * allocated pointer, i.e. if/when merging with the pthread code,
+ * that hides such platform specificity.
+ */
+
 PCRITICAL_SECTION
 __cdecl
 ThreadWin32__NewCriticalSection(void)
@@ -222,6 +231,8 @@ ThreadWin32__DelCriticalSection(
     DeleteCriticalSection(b);
     HeapFree(GetProcessHeap(), 0, b);
 }
+
+#endif
 
 void
 __cdecl
