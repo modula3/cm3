@@ -1,6 +1,10 @@
 INTERFACE ThreadDebug;
 
-FROM WinNT IMPORT HANDLE, DWORD;
+IMPORT Ctypes, Cstdint;
+
+TYPE
+  HANDLE = Ctypes.void_star;  (*** should be <: ADDRESS ***)
+  DWORD = Cstdint.uint32_t;
 
 <*EXTERNAL ThreadDebug__LockMutex*>
 PROCEDURE LockMutex (mutex: REFANY);
