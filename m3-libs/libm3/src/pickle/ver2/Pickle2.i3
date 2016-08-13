@@ -202,6 +202,9 @@ TYPE
 TYPE
   Reader <: ReaderPublic;
   RefID = INTEGER; (* Compactly numbered index of an object. *) 
+CONST RefIDNull = FIRST(INTEGER); 
+
+TYPE
   ReaderPublic = OBJECT
       rd: Rd.T;
     METHODS
@@ -403,6 +406,23 @@ PROCEDURE ReRegisterSpecial(sp: Special);
    will be saved in "sp.prev" and can be called by the "read" and
    "write" methods of "sp". *)
    
+PROCEDURE RegisterPseudoSpecial(sp: Special);
+(* Register "sp" as the special for pickling and unpickling 
+   pseudo-pointers, i.e., misaligned pointers. *)
+   
+(* After you call "RegisterPseudoSpecial(sp)", the special "sp" will be
+   called from a "Pickle.Writer"'s "write" method, or a "Pickle.Reader"'s 
+   "read" method, to pickle or unpickle pseudo-pointers.  If no special
+   is registered for pseudo-pointers, they will be [un]pickled as values
+   of Word.T, with size and endianness conversions.  It is a checked runtime 
+   error to register a pseudo-pointer special when one was already
+   previously registered. *)
+
+PROCEDURE ReRegisterPseudoSpecial(sp: Special);
+  (* Like RegisterPseudoSpecial, except it is allowed to register a new
+     special when one is already registered.  This will set the new special's 
+     "prev" field to the old special. *) 
+
 END Pickle2.
 
 (* \paragraph{Examples.}  For example, suppose you

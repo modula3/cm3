@@ -12,8 +12,8 @@ UNSAFE MODULE Pickle2 EXPORTS Pickle2, PickleRd;
 
 IMPORT Rd, RT0, RTAllocator, RTCollector, RTHeap, RTHeapRep, RTType, RTTypeFP,
        RTTypeMap, Thread, Word, Wr, Fingerprint, RTPacking, PklFpMap, 
-       ConvertPacking, PklTipeMap, Swap, PickleRd, PickleWr, BuiltinSpecials2, 
-       Fmt;
+       ConvertPacking, PklTipeMap, Swap, PickleRd, PickleWr, PickleStubs,
+       BuiltinSpecials2, Fmt;
 
 (* *)
 (* Syntax of a pickle, and constants pertaining thereto *)
@@ -40,8 +40,9 @@ IMPORT Rd, RT0, RTAllocator, RTCollector, RTHeap, RTHeapRep, RTType, RTTypeFP,
                  '1' 4-byte-integer     - pickle-relative index of "r" (0 based)
                  '2' 8-bytes              - COMPATIBILITY, old fingerprint
                  '3' scInt acInt Contents - COMPATIBILITY, old value
-                 - '4' is not used, but occurs in Trailer as blunder check.
+                 '4'                    - occurs only in Trailer as blunder check.
                  '5' sc Contents        - an actual value
+                 '6' integer            - a pseudo pointer
    FingerPrint:: bytes                  - 8 bytes, details t.b.d.
    sc::          LocalCode              - typecode of Special
                                           writing the value
@@ -377,6 +378,14 @@ PROCEDURE WriteRef(writer: Writer; r: REFANY)
       (* Normal case: level#0 *)
       IF r = NIL THEN
         Wr.PutChar(writer.wr, '0');
+      ELSIF Word.And (LOOPHOLE (r, INTEGER), 1) = 1 THEN (* Pseudopointer.*)
+        Wr.PutChar(writer.wr, '6'); (* Always tag it as pseudopointer. *) 
+        LOCK specialsMu DO sp := thePseudoSpecial; END;
+        IF sp = NIL THEN  (* Pickle it as a Word.T. *)
+          PickleStubs.OutInteger (writer, LOOPHOLE (r, INTEGER)); 
+        ELSE (* Pickle it using the special's write method. *) 
+          sp.write (r, writer); 
+        END; 
       ELSE
         (* check refTable *)
         (* The following loop includes the entire hash table
@@ -566,6 +575,7 @@ PROCEDURE ReadRef(reader: Reader): REFANY
       RAISES { Error, Rd.EndOfFile, Rd.Failure, Thread.Alerted } =
     VAR r: REFANY; (* the result *)
     VAR repCase: CHAR;
+    VAR sp: Special; 
   BEGIN
     IF reader.level = 0 THEN StartRead (reader); END;
 
@@ -596,6 +606,20 @@ PROCEDURE ReadRef(reader: Reader): REFANY
         r := InvokeSpecial(reader, TCFromIndex(reader, sc));
         reader.acPending := 0;
       END
+    ELSIF repCase = '6' THEN (* Was pickled as a pseudopointer. *) 
+      VAR pseudoInt : INTEGER; 
+      BEGIN
+        LOCK specialsMu DO sp := thePseudoSpecial; END;
+        IF sp = NIL THEN (* Unpickle it as a Word.T. *) 
+          pseudoInt := PickleStubs.InWord (reader);  
+                    (* ^Which will do unsigned integer size and
+                        endianness conversions. *) 
+          <*ASSERT Word.And (pseudoInt, 1) = 1 *>
+          r := LOOPHOLE(pseudoInt, NULL);
+        ELSE (* Unpickle it using the special's read method. *) 
+          r := sp.read(reader,RefIDNull);
+        END; 
+      END;
     ELSE
       RAISE Error("Malformed pickle (unknown switch)")
     END;
@@ -724,9 +748,10 @@ TYPE
     (* indexed by RTType.TypeCode, yields Special for nearest super-type *)
 
 VAR
-  specialsMu     := NEW(MUTEX);
-  specials       : SpecialTable;            (* LL >= specialsMu *)
-  theRootSpecial : Special;                 (* LL >= specialsMu *)
+  specialsMu       := NEW(MUTEX);
+  specials         : SpecialTable;            (* LL >= specialsMu *)
+  theRootSpecial   : Special;                 (* LL >= specialsMu *)
+  thePseudoSpecial : Special;                 (* LL >= specialsMu *)
 
 PROCEDURE GetSpecial (tc: TypeCode): Special =
   (* LL = 0 *)
@@ -823,6 +848,27 @@ PROCEDURE ReRegisterSpecial(sp: Special) =
       END;
     END;
   END ReRegisterSpecial;
+
+PROCEDURE RegisterPseudoSpecial(sp: Special) =
+  <* FATAL DuplicateSpecial *>
+  BEGIN
+    LOCK specialsMu DO
+      IF thePseudoSpecial = NIL THEN 
+         thePseudoSpecial := sp; 
+      ELSE RAISE DuplicateSpecial;
+      END;
+    END;
+  END RegisterPseudoSpecial;
+
+PROCEDURE ReRegisterPseudoSpecial(sp: Special) =
+  BEGIN
+    LOCK specialsMu DO
+      IF thePseudoSpecial # NIL THEN 
+        sp.prev := thePseudoSpecial;
+      END;
+      thePseudoSpecial := sp; 
+    END;
+  END ReRegisterPseudoSpecial;
 
 (* BLAIR ---> *)
 PROCEDURE VisitWrite(v: WriteVisitor; field: ADDRESS; kind: RTTypeMap.Kind)
