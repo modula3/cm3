@@ -43,15 +43,15 @@ GENERIC INTERFACE OrdSets ( Element )
    actual set member, plus some overhead, of course.
 
    If you compile with a later CM3 Modula-3 compiler and garbage
-   collector that tolerate misaligned "pseudo" pointers, i.e, with the
+   collector that tolerate misaligned _pseudopointers_, i.e, with the
    least significant bit set to one, you can set a boolean constant in
    the corresponding module OrdSets.mg.  This will cause it to utilize
    this Modula-3 implementation feature to store sufficiently small set 
    values entirely within the pointer word, avoiding the high space and 
    time overheads of heap allocation.  The CM3 5-8 compiler is sufficient.  
    SRC M3, PM3, EZM3, and earlier CM3 versions are not.  As of 2012-7-15,
-   Pickles do not handle these.  Enable this with DoPseudoPointers, in 
-   OrdSets.mg.  
+   Pickles do not handle these.  Enable this with DoPseudopointers, in 
+   OrdSets.ig.  
 
    Also, although the pickle specials herein handle writing of sets
    that are pseudo-pointers, the dispatching mechanism for specials
@@ -94,7 +94,7 @@ GENERIC INTERFACE OrdSets ( Element )
 
 ; PROCEDURE Singleton ( Elem : ElemT ) : T 
   (* Singleton set containing just Elem.  Empty set if 
-     Elem not in ValidElemT 
+     Elem is not in ValidElemT 
   *) 
 
 ; PROCEDURE Range ( Lo , Hi : ElemT ) : T 
@@ -121,7 +121,7 @@ GENERIC INTERFACE OrdSets ( Element )
 
 ; PROCEDURE SymDiff ( Set1 : T ; Set2 : T ) : T 
   (* Symmetric difference of Set1 and Set2. 
-     IsElement(SymDiff(S1,S2),E) iff IsElement(S1,E) # IsElement(S2,E) 
+     IsElement(SymDiff(S1,S2),E) IFF IsElement(S1,E) # IsElement(S2,E) 
   *) 
 
 ; PROCEDURE Include ( Set : T ; Elem : ElemT ) : T 
@@ -195,7 +195,7 @@ GENERIC INTERFACE OrdSets ( Element )
 ; TYPE HashTyp = Word . T 
 
 ; PROCEDURE Hash ( Set : T ) : HashTyp
-  (* Hash(S) = 0 iff Equal(S,Empty()) *)  
+  (* Hash(S) = 0 IFF Equal(S,Empty()) *)  
 
 ; PROCEDURE IsElement ( Elem : ElemT ; Set : T ) : BOOLEAN
 
@@ -238,6 +238,81 @@ GENERIC INTERFACE OrdSets ( Element )
      List ::= { EorR / ',' } (* Comma-separated list of zero or more EorR's *)  
      EorR := Elem | Elem '..' Elem
   *) 
+
+(* -------------------- Pseudopointers and Pickling ------------------------ *)
+
+(* Pseudopointers are a space-saving internal representation trick.
+   Since genuine pointer values are always aligned at least on an even
+   boundary, odd values can be used to put certain small set values
+   directly in a variable of type T, without the space and time
+   overhead or the fragmentation of heap allocation.  OrdSets can
+   use pseudopointers internally in this way to save space.  Its 
+   abstract behaviour is unchanged by their use.
+
+   OrdSets will not construct pseudopointers unless client code has
+   explicitly requested it to, by setting DoPseudopointers := TRUE.
+   OrdSets will always correctly interpret in-memory pseudopointers. 
+
+   Pickling and unpickling of set values that are not pseudopointers 
+   always correctly adjusts for differences in endianness and word size 
+   (32 or 64 bit) between the pickle-writing and the pickle-reading 
+   system.
+
+   The default mechanism of Pickles will treat any pseudopointers it
+   encounters as having type INTEGER.  This will work correctly only
+   if the word sizes are the same on the pickle-writing and the
+   pickle-reading system.  Otherwise, the values will be garbled
+   when unpickled.  
+
+   If client code requests, by calling RegisterPseudopointerPickleSpecial,
+   on both the pickling and unpickling systems, pickling and unpickling 
+   of pseudopointer sets will be handled correctly for all mixes of word 
+   size and endianness.  
+
+   If, on the writing system, client code further requests, by setting 
+   DoPicklePseudopointers := TRUE, in-memory pseudopointers will be written 
+   as pseudopointers in the pickle file too, thus saving space there.  
+   Otherwise, they will be converted to normal internal representation 
+   in the pickle file.  Either way, they will be correctly unpickled, if 
+   client code has called RegisterPseudopointerPickleSpecial on the 
+   pickle-reading system.  
+
+   THERE ARE PITFALLS HERE: 
+
+   1) The general pickle mechanism can only handle registration of a 
+      single special for all pseudopointers in the entire link closure.  
+
+   2) Not registering the OrdSets pseudopointer special, and reading 
+      and writing pickles on systems with different word sizes will 
+      garble any in-memory pseudopointers.  
+
+   3) Registering the OrdSets pseudopointer special on one of the 
+      pickle-reading and pickle-writing systems, but not the other, will 
+      garble any in-memory pseudopointers.  
+
+*) 
+
+; VAR DoPseudopointers := FALSE 
+  (* If set TRUE, set-producing operations and unpickling will construct 
+     pseudopointers in-memory, when their values allow.  Regardless, 
+     set-accessing operations will always correctly interpret in-memory 
+     pseudopointers.
+  *) 
+
+; PROCEDURE RegisterPseudopointerPickleSpecial ( ) 
+  (* Register a special to pickle and unpickle sets in pseudopointer form.  
+     NOTE: The Pickle mechanism can only handle one pseudopointer
+           special in the entire link closure of a main program, so
+           don't do this if some other abstraction registers its own. 
+
+     If so registered, pickle reading will always correctly read pseudopointers 
+     in pickles, but won't write in pseudopointer form unless, additionally, 
+     DoPicklePseudopointers = TRUE.
+  *) 
+  
+; VAR DoPicklePseudopointers := FALSE
+  (* If set TRUE, AND RegisterPseudopointerPickleSpecial has been called,
+     write set values to pickles in pseudopointer form, where possible. *)  
 
 ; EXCEPTION BadInvariant ( TEXT ) 
 

@@ -6,10 +6,11 @@
 (* Licensed under the MIT License.                                           *) 
 (* -----------------------------------------------------------------------2- *)
 
-MODULE Test EXPORTS Main 
-
+MODULE Test EXPORTS Main
+ 
 ; IMPORT FileWr 
 ; IMPORT Fmt
+; IMPORT OSError
 ; IMPORT Params 
 ; IMPORT Pickle2 
 ; IMPORT Random 
@@ -26,7 +27,11 @@ MODULE Test EXPORTS Main
 ; IMPORT WidecharSets 
   (* ^This is only to ensure a non-integer instantiation will compile. *) 
 
-; VAR WrT : Wr . T 
+; <* FATAL Thread . Alerted *>  
+  <* FATAL OSError . E *>  
+  <* FATAL Wr . Failure *>  
+
+  VAR WrT : Wr . T 
 ; VAR PWrT : Wr . T 
 
 ; CONST MaxSets = 500000 (* The maximum number retained at any one time. *) 
@@ -94,6 +99,9 @@ MODULE Test EXPORTS Main
 ; VAR GDoCompareOperands : BOOLEAN := FALSE 
 ; VAR GDoCompareResults : BOOLEAN := FALSE 
 ; VAR GDoWritePickle : BOOLEAN := FALSE 
+; VAR GDoGenPseudo : BOOLEAN := FALSE 
+; VAR GDoRegisterPseudo : BOOLEAN := FALSE 
+; VAR GDoWritePseudo : BOOLEAN := FALSE 
 ; VAR GDoDisplayHelp : BOOLEAN := FALSE 
 ; VAR GDoDisplayVersion : BOOLEAN := FALSE 
 
@@ -112,6 +120,9 @@ MODULE Test EXPORTS Main
     ; GDoCompareOperands := FALSE 
     ; GDoCompareResults := FALSE 
     ; GDoWritePickle := FALSE 
+    ; GDoGenPseudo := FALSE 
+    ; GDoRegisterPseudo := FALSE 
+    ; GDoWritePseudo := FALSE 
     ; GDoDisplayHelp := FALSE 
     ; GDoDisplayVersion := FALSE 
 
@@ -143,6 +154,9 @@ MODULE Test EXPORTS Main
             ; GDoRandomTests := TRUE 
             | 'r' => GDoCompareResults := TRUE  
             | 's' => GDoOld := TRUE 
+            | 't' => GDoGenPseudo := TRUE
+            | 'u' => GDoWritePseudo := TRUE
+            | 'U' => GDoRegisterPseudo := TRUE
             | 'v' => GDoDisplayVersion := TRUE 
             | 'y' => GDoSymDiff := TRUE 
             ELSE 
@@ -152,6 +166,9 @@ MODULE Test EXPORTS Main
             ; GDoDisplayHelp := TRUE 
             END 
           END (* FOR *) 
+        ; IF GDoWritePickle AND GDoGenPseudo 
+          THEN GDoRegisterPseudo := TRUE 
+          END
         ELSE
           WL ( "Invalid parameter: \"" & LParam & "\"" ) 
         ; GDoDisplayHelp := TRUE 
@@ -190,6 +207,10 @@ MODULE Test EXPORTS Main
     ; WL ( "  -r Compare IntSet/OrdSet values of results of operations." ) 
     ; WL ( "     (only if both -o and -s are specified." ) 
     ; WL ( "  -s Test the old Sets module." ) 
+    ; WL ( "  -t Construct pseudopointers in memory." ) 
+    ; WL ( "  -u Write in-memory pseudopointers as pseudopointers in pickles." )
+    ; WL ( "  -U Register pickle special for pseudopointers." ) 
+    ; WL ( "     (forced by -t and -P." ) 
     ; WL ( "  -v Display version and exit." ) 
     ; WL ( "  -y Test SymDiff operations, in selected modules." ) 
     ; Wr . Flush ( PWrT ) 
@@ -1331,7 +1352,7 @@ MODULE Test EXPORTS Main
     ; ShowExactProgress ( GOperationCt ) 
     ; Wr . PutText ( PWrT , Wr . EOL ) 
     ; Wr . Flush ( PWrT ) 
-    END Operations    
+    END Operations
 
 ; PROCEDURE DoIsEmpty ( ) 
 
@@ -1692,7 +1713,7 @@ MODULE Test EXPORTS Main
 ; PROCEDURE DoCompare 
     ( Left , Right : IntSets . T ; Expected : [ - 1 .. 1 ] ) 
 
-  = VAR LResult : [ - 1 .. 1 ] 
+  = VAR LResult : [ - 1 .. 1 ]
 
   ; BEGIN 
       LResult := IntSets . Compare ( Left , Right ) 
@@ -1707,11 +1728,14 @@ MODULE Test EXPORTS Main
 
 ; PROCEDURE CompareTests ( ) 
 
-  = <* FATAL Thread . Alerted , Wr . Failure *> 
+  = VAR LCompareFailureCt : INTEGER 
+
+  ; <* FATAL Thread . Alerted , Wr . Failure *> 
     BEGIN 
       IF GDoCompareTests 
       THEN 
-        Wr . PutText ( PWrT , "Tests on Compare." ) 
+        LCompareFailureCt := - GFailureCt 
+      ; Wr . PutText ( PWrT , "Running tests on Compare." ) 
       ; Wr . PutText ( PWrT , Wr . EOL ) 
       ; GCompareCt := 0 
 
@@ -1752,9 +1776,14 @@ MODULE Test EXPORTS Main
       ; DoCompare ( B ( 16 , 65 , 195 ) , B ( 16 , 66 , 135 ) , 1 ) 
 
       ; Wr . PutText ( PWrT , Wr . EOL ) 
+
+      ; INC ( LCompareFailureCt , GFailureCt ) 
       ; Wr . PutText ( PWrT , "Completed " ) 
       ; Wr . PutText ( PWrT , Fmt . Int ( GCompareCt ) ) 
-      ; Wr . PutText ( PWrT , " tests on Compare." ) 
+      ; Wr . PutText ( PWrT , " tests on Compare function, with " ) 
+      ; Wr . PutText ( PWrT , Fmt . Int ( LCompareFailureCt ) )  
+      ; Wr . PutText ( PWrT , " failures." ) 
+      ; Wr . PutText ( PWrT , Wr . EOL ) 
       ; Wr . PutText ( PWrT , Wr . EOL ) 
       ; Wr . Flush ( PWrT ) 
       END (* IF *) 
@@ -1811,7 +1840,7 @@ MODULE Test EXPORTS Main
   = VAR LImageFailureCt : INTEGER := 0 
 
   ; BEGIN 
-      Wr . PutText ( PWrT , "Tests on Image function" ) 
+      Wr . PutText ( PWrT , "Running tests on Image." ) 
     ; Wr . PutText ( PWrT , Wr . EOL ) 
     ; LImageFailureCt := - GFailureCt 
     ; TestImage 
@@ -1896,6 +1925,8 @@ MODULE Test EXPORTS Main
     ; Wr . PutText ( PWrT , Fmt . Int ( LImageFailureCt ) )  
     ; Wr . PutText ( PWrT , " failures." ) 
     ; Wr . PutText ( PWrT , Wr . EOL ) 
+    ; Wr . PutText ( PWrT , Wr . EOL ) 
+    ; Wr . Flush ( PWrT ) 
     END DoImages 
 
 ; PROCEDURE Predicates ( N : CARDINAL ) 
@@ -1946,7 +1977,12 @@ MODULE Test EXPORTS Main
         WL ( "No Tests specified." ) 
       ; Wr . Flush ( PWrT ) 
       ELSE 
-        IF GDoImageTests 
+        IF GDoGenPseudo THEN IntSets . DoPseudopointers := TRUE END 
+      ; IF GDoRegisterPseudo 
+        THEN IntSets . RegisterPseudopointerPickleSpecial ( ) 
+        END (* IF *) 
+      ; IF GDoWritePseudo THEN IntSets . DoPicklePseudopointers := TRUE END 
+      ; IF GDoImageTests 
         THEN 
           DoImages ( ) 
         END (* IF *) 
@@ -2011,7 +2047,9 @@ MODULE Test EXPORTS Main
 
         ; IF GDoWritePickle 
           THEN 
-            LPklWr := FileWr .  Open ( PickleFileName ) 
+            Wr . PutText ( WrT , "Writing pickle file ... " )
+          ; Wr . Flush ( WrT )  
+          ; LPklWr := FileWr .  Open ( PickleFileName ) 
           ; FOR RI := 0 TO GStoredSetCt - 1 
             DO 
               TRY 
