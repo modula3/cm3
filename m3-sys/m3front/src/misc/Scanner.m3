@@ -688,7 +688,7 @@ PROCEDURE ScanChar (wide: BOOLEAN) =
         GetCh ();  
         val := GetHexChar (bytes:=Bytes[wide]);
       ELSIF (OctalDigits[ch]) THEN  val := GetOctalChar (wide);
-      ELSIF wide AND ch = 'U' 
+      ELSIF wide AND (ch = 'u' OR ch = 'U') 
       THEN 
         GetCh ();  
         val := GetHexChar (bytes:=3); 
@@ -746,8 +746,7 @@ PROCEDURE ScanText () =
         ELSIF (ch = '\\') THEN Stuff ('\\');  GetCh ();
         ELSIF (ch = '\'') THEN Stuff ('\'');  GetCh ();
         ELSIF (ch = '\"') THEN Stuff ('\"');  GetCh ();
-        ELSIF (ch = 'x')
-           OR (ch = 'X') 
+        ELSIF ch = 'x' OR ch = 'X' 
         THEN GetCh ();  Stuff (VAL (GetHexChar (bytes:=1), CHAR));
         ELSIF (OctalDigits[ch]) 
         THEN Stuff (VAL (GetOctalChar (wide:=FALSE), CHAR));
@@ -807,7 +806,7 @@ PROCEDURE ScanWideText () =
         ELSIF (ch = 'x')
            OR (ch = 'X') THEN GetCh ();  Stuff (GetHexChar (bytes:=2));
         ELSIF (OctalDigits[ch]) THEN Stuff (GetOctalChar (wide := TRUE));
-        ELSIF ch = 'U' 
+        ELSIF ch = 'u' OR ch = 'U' 
         THEN GetCh ();  Stuff (GetHexChar (bytes:=3)); 
         ELSE  Error.Msg ("unknown escape sequence in wide text literal");
         END;
