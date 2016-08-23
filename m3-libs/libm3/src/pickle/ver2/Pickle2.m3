@@ -753,6 +753,15 @@ VAR
   theRootSpecial   : Special;                 (* LL >= specialsMu *)
   thePseudoSpecial : Special;                 (* LL >= specialsMu *)
 
+<* INLINE *>
+PROCEDURE GetSpecialLocked (tc: TypeCode): Special =
+  (* LL >= specialsMu *)
+  BEGIN
+    IF (specials = NIL) THEN InitSpecials (); END;
+    IF (tc >= NUMBER (specials^)) THEN ExpandSpecials (); END;
+    RETURN specials[tc];
+  END GetSpecialLocked;
+
 PROCEDURE GetSpecial (tc: TypeCode): Special =
   (* LL = 0 *)
   BEGIN
@@ -794,6 +803,7 @@ PROCEDURE ExpandSpecials() =
   END ExpandSpecials;
 
 PROCEDURE FindBestSpecial (tc: TypeCode): Special =
+  (* LL >= specialsMu *)
   VAR sp: Special;
   BEGIN
     LOOP
@@ -814,9 +824,9 @@ PROCEDURE RegisterSpecial(sp: Special) =
   <* FATAL DuplicateSpecial *>
   VAR xp: Special;
   BEGIN
-    xp := GetSpecial (sp.sc);
-    IF xp.sc = sp.sc THEN RAISE DuplicateSpecial; END;
     LOCK specialsMu DO
+      xp := GetSpecialLocked (sp.sc);
+      IF xp.sc = sp.sc THEN RAISE DuplicateSpecial; END;
       FOR i := 0 TO LAST(specials^) DO
         IF (i # RT0.NilTypecode) AND RTType.IsSubtype(i,sp.sc) THEN
           (* i is a sub-type of this special *)
@@ -833,8 +843,8 @@ PROCEDURE RegisterSpecial(sp: Special) =
 PROCEDURE ReRegisterSpecial(sp: Special) =
   VAR xp: Special;
   BEGIN
-    xp := GetSpecial (sp.sc);
     LOCK specialsMu DO
+      xp := GetSpecialLocked (sp.sc);
       IF xp.sc = sp.sc THEN sp.prev := xp; END;
       FOR i := 0 TO LAST(specials^) DO
         IF (i # RT0.NilTypecode) AND RTType.IsSubtype(i,sp.sc) THEN
