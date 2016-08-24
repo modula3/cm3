@@ -400,8 +400,8 @@ PROCEDURE RegisterSpecial(sp: Special);
 (* Register "sp" as the special for pickling and unpickling 
    objects having type code "sp.sc". *)
    
-(* After you call "RegisterSpecial(sp)", the special "sp" will be
-   called from a "Pickle.Writer"'s "write" method, or a
+(* After you call "RegisterSpecial(sp)", the methods of special "sp" 
+   will be called from a "Pickle.Writer"'s "write" method, or a
    "Pickle.Reader"'s "read" method, to pickle or unpickle objects
    whose type is "sp.sc", or whose type is a sub-type of "sp.sc"
    and has no closer registered special.  It is a checked runtime
