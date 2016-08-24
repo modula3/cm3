@@ -18,14 +18,13 @@
    reuse it in a program running later.
 
    Pickles preserve ordinal values (integers and enumerations)
-   exactly,  automatically performing any byte-swapping 
-   that may be required. An exception is raised if a pickled 
+   exactly,  automatically performing any byte-swapping that
+   may be required.  Pickle2.Read raises an exception if a pickled 
    ordinal value is too large to be represented in a program 
    reading the pickle.  
 
-   Pickles preserve floating point values as well as possible
-   considering that the two machines may have different
-   floating point representations.
+   Pickles preserve floating point values only if the two machines 
+   have the same floating point representations.
 
    Pickles do not preserve untraced references.  Any untraced
    references will turn into "NIL" if they are pickled,
@@ -80,8 +79,8 @@
       byte-order differences in the writing of fingerprints in pickles. 
       These differences are probably also endian-dependent. 
 
-   2. In CM3, for a type recorded in a pickle to be readable, the type
-      must be declared in the EXPORT/IMPORT closure of the main program.
+   2. In CM3, for a type recorded in a pickle to be readable, the type must
+      be declared in the EXPORT/IMPORT closure of the reading main program.
       This is more restrictive than in SRC/PM3/EZM3, where it is enough
       that the type be declared in an interface or module named in the
       m3makefile.  Thus, porting code that uses pickles from PM3 to CM3 
@@ -94,7 +93,14 @@ IMPORT Rd, Thread, Wr;
 
 EXCEPTION Error(TEXT);
 
-PROCEDURE Write(wr: Wr.T; ref: REFANY; write16BitWidechar := FALSE)
+PROCEDURE Write(wr: Wr.T; 
+                ref: REFANY; 
+                write16BitWidechar := FALSE
+                (* ^Write any WIDECHARs in the pickle in 16-bits, thus 
+                    backward-compatible and readable by a program compiled 
+                    with 16-bit WIDECHAR. 
+                    (NOT IMPLEMENTED as of 2016-08-24) *)
+               )
     RAISES {Error, Wr.Failure, Thread.Alerted};
 (* Trace the data structure reachable via traced references 
    from "ref", convert it into a pickle, and write the pickle to 
@@ -135,8 +141,10 @@ TYPE
   WriterPublic = OBJECT
       wr: Wr.T;
       write16BitWidechar: BOOLEAN := FALSE; 
-      (* ^Write a backward-compatible pickle, readable by a program compiled 
-          with 16-bit WIDECHAR.  An alternate way. Not implemented yet. *)
+      (* ^Write any WIDECHARs in the pickle in 16-bits, thus 
+          backward-compatible and readable by a program compiled 
+          with 16-bit WIDECHAR. 
+          (NOT IMPLEMENTED as of 2016-08-24) *)
     METHODS
       write(r: REFANY) RAISES
         {Error, Wr.Failure, Thread.Alerted};
@@ -174,7 +182,7 @@ TYPE
    the type "tc" in a program-independent fashion. These bytes
    are a fingerprint: fingerprints have the property that if
    two Modula-3 types are equivalent, then their fingerprints
-   are equal; and with extremely hight probability, if their
+   are equal; and with extremely high probability, if their
    fingerprints are equal then they are equivalent. Note that
    the implementation of this method optimizes so that if a type
    is written to a pickle many times, occurences after the first
@@ -184,7 +192,8 @@ TYPE
    the integer "i" in a platform-independent fashion. In
    particular, the "readInt" method of a subsequent "Pickle.Reader"
    can read the integer correctly, even if executed on a platform
-   with different byte order or integer size (if possible).
+   with different byte order or integer size, subject to value range
+   problems. 
 
    A "Pickle.Writer" may be serially re-used to pickle multiple
    objects.
@@ -224,9 +233,9 @@ PROCEDURE RefOfRefID (reader: Reader; ID : RefID) : REFANY;
 (* The reference indexed by ID *) 
 
 (* If "r" is a "Pickle.Reader", then "r.read()"
-   reads a pickle from "r.rd", reconstructs a copy of 
-   the pickled data structure, and returns it.  The bytes 
-   to be read start at "r.rd"'s current position; 
+   reads a pickle from "r.rd", reconstructs a copy of the
+   pickled data structure, and returns its reference.  The 
+   bytes to be read start at "r.rd"'s current position; 
    "r.rd" is left positioned after the last byte consumed.   
 
    The default method "r.read(r)" behaves as follows:
@@ -235,8 +244,8 @@ PROCEDURE RefOfRefID (reader: Reader; ID : RefID) : REFANY;
 \item If "r.rd" contains a representation of "NIL", consume those 
       bytes and return "NIL".
 
-\item Otherwise, if "r.rd" contains the index of a previously 
-      read value in this pickle, consume those bytes and return
+\item Otherwise, if "r.rd" contains the index of a previously read
+      reference value in this pickle, consume those bytes and return
       that value.
 
 \item Otherwise compute "sc = readType()", and proceed as follows.
@@ -284,7 +293,7 @@ PROCEDURE RefOfRefID (reader: Reader; ID : RefID) : REFANY;
    converts them into an integer, taking into consideration
    reperesentation differences such as byte order and integer
    length. It raises "Pickle.Error" if the integer cannot be represented
-   on this machine.
+   on the reading machine.
 
    A "Pickle.Reader" may be serially re-used to unpickle multiple
    objects.
@@ -301,7 +310,7 @@ PROCEDURE RefOfRefID (reader: Reader; ID : RefID) : REFANY;
    or "write" by using a sub-class of "Pickle.Reader" or
    "Pickle.Writer", and checking for that sub-class (using
    "TYPECASE") inside the special.  The implementation of this
-   interface registers a special for the type "REFANY"; this is
+   interface registers a special for the type "REFANY"; this
    special is the value of a call "NEW(Special)", i.e. its
    methods are the default methods of the type "Special".   There
    are three constraints on the methods of a special:
@@ -321,8 +330,8 @@ PROCEDURE RefOfRefID (reader: Reader; ID : RefID) : REFANY;
   checked runtime error or an invalid result from reading a
   pickle.
 
-  There are many ways to program a special.  For example, 
-  the "write" method could modify the value and then call 
+  There are many ways to program a special.  For example, the 
+  "write" method could modify the value in memory and then call 
   the root special.  Or the "write" method could create a related
   value and call "writer.write" or "Special.write". Or it
   could write some data fields individually and call
@@ -348,11 +357,12 @@ TYPE
    not "NIL" and its allocated type is a sub-type of "sc".
 
    The default "write" method calls
-   "writer.writeType(TYPECODE(ref))", then writes on "writer.wr" the
-   bytes of "ref"'s untraced data fields, then calls
-   "writer.write(x)" for each traced value "x" directly contained
-   in "ref".
-
+   "writer.writeType(TYPECODE(ref))", then writes, on "writer.wr", 
+   the fields of "ref", in order.  To write a traced reference 
+   field x, it calls "writer.write(x)".  To write an untraced or 
+   non-reference field, it writes the field's value directly on 
+   "writer.wr". 
+   
    The special's "read" method must return an appropriate value
    read from "rd". If the value might involve a reference to
    itself, the special must pass the value and "id" to "r.noteRef"
@@ -369,13 +379,14 @@ TYPE
    created, but a sub-type might be acceptable too.
 
    The default "read" method reads a typecode "tc" by calling
-   "reader.readType()", allocates a value whose type-code is "tc",
-   passes the allocated value to the reader's "noteRef" method,
-   reads the bytes of its untraced data fields from "reader.rd", 
-   then for each directly contained traced reference 
-   calls "reader.read()" and assigns the result into the 
-   appropriate field of the allocated value; finally it returns 
-   the value.
+   "reader.readType()", allocates a heap node whose type-code is "tc",
+   passes the allocated reference to the reader's "noteRef" method,
+   then reads, from "reader.rd", the fields' values, in order,
+   and assigns each to the appropriate field of the allocated node.  
+   To read a traced reference field, it calls "reader.read()" to get 
+   the value.  To read an untraced or non-reference field, it reads 
+   the value directly from "reader.rd".  Finally, it returns the
+   allocated reference.
    
    Note that the special's methods can use the "writeType" and
    "readType" methods of the "Writer" or "Reader" to record
@@ -401,7 +412,7 @@ PROCEDURE RegisterSpecial(sp: Special);
 
 PROCEDURE ReRegisterSpecial(sp: Special);
 (* ReRegister "sp" as the special for pickling and unpickling 
-   objects having type code "sp.sc".  Registering means that, unlike
+   objects having type code "sp.sc".  ReRegistering means that, unlike
    with RegisterSpecial, a special can already exist for "sp."  It
    will be saved in "sp.prev" and can be called by the "read" and
    "write" methods of "sp". *)
