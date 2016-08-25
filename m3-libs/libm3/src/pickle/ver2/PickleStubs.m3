@@ -177,7 +177,7 @@ PROCEDURE OutChars(writer: Pickle.Writer; READONLY arr: ARRAY OF CHAR)
 
 PROCEDURE OutWC21(wr: Wr.T; wc: WIDECHAR)
   RAISES {Wr.Failure, Thread.Alerted} =
-(* Marshal one wide char in surrogate-tolerant WC21 incoding. *) 
+(* Marshal one wide char in surrogate-tolerant WC21 encoding. *) 
 
   VAR intVal, B0, B1, B2: UInt32;
   BEGIN  

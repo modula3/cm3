@@ -1079,7 +1079,7 @@ PROCEDURE RootSpecialRead(<*UNUSED*> sp: Special;
                           reader: Reader; id: RefID): REFANY
     RAISES { Error, Rd.EndOfFile, Rd.Failure, Thread.Alerted } =
     VAR nDim: INTEGER;
-    VAR shape: ARRAY [0..10] OF INTEGER;
+    VAR shape: ARRAY [0..50] OF INTEGER;
     VAR limit: ADDRESS;
     VAR r: REFANY;
     VAR ac := reader.readType();
