@@ -758,7 +758,7 @@ PROCEDURE RootSpecialRead(<*UNUSED*> sp: Special;
         r := RTAllocator.NewTraced(ac);
       END;
     EXCEPT RTAllocator.OutOfMemory =>
-      RAISE Error("Can't red pickle (out of memory)")
+      RAISE Error("Can't read pickle (out of memory)")
     END;
     reader.noteRef(r, id);
     reader.nextAddr := RTHeap.GetDataAdr(r);
