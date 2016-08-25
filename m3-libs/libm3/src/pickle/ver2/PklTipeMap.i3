@@ -11,7 +11,7 @@
  * 
  *)
 
-UNSAFE INTERFACE PklTipeMap;
+INTERFACE PklTipeMap;
 
 IMPORT Rd, Wr, RTPacking, Thread, ConvertPacking;
 
