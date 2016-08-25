@@ -943,7 +943,7 @@ PROCEDURE RootSpecialWrite(<*UNUSED*> sp: Special;
                            r: REFANY; writer: Writer)
         RAISES { Error <*NOWARN*>, Wr.Failure, Thread.Alerted } =
     VAR nDim: INTEGER;
-    VAR shape: UNTRACED REF ARRAY [0..999] OF INTEGER;
+    VAR shape: RTHeapRep.UnsafeArrayShape; 
 (*    VAR limit: ADDRESS;
     VAR start: ADDRESS; *)
     VAR tmp: ARRAY [0..1] OF INTEGER;
@@ -1075,11 +1075,16 @@ PROCEDURE TipeGetWriter(v: TipeWriteVisitor):Writer =
     RETURN v.writer; 
   END TipeGetWriter; 
 
+CONST fixedShapeNumber = 10; 
+      (* ^Number of open array dimensions not needing heap allocated local. *) 
+
 PROCEDURE RootSpecialRead(<*UNUSED*> sp: Special;
                           reader: Reader; id: RefID): REFANY
     RAISES { Error, Rd.EndOfFile, Rd.Failure, Thread.Alerted } =
     VAR nDim: INTEGER;
-    VAR shape: ARRAY [0..50] OF INTEGER;
+    VAR fixedShape : ARRAY [ 0 .. fixedShapeNumber - 1 ] OF INTEGER;
+    VAR allocShapeRef : REF ARRAY OF INTEGER := NIL; 
+    VAR shape: RTHeapRep.UnsafeArrayShape := ADR(fixedShape); 
     VAR limit: ADDRESS;
     VAR r: REFANY;
     VAR ac := reader.readType();
@@ -1087,10 +1092,15 @@ PROCEDURE RootSpecialRead(<*UNUSED*> sp: Special;
     TRY
       nDim := RTType.GetNDimensions(ac);
       IF nDim > 0 THEN
-        FOR i := 0 TO nDim-1 DO
-          shape[i] := reader.readInt();
+        IF nDim > NUMBER(fixedShape)
+        THEN
+          allocShapeRef := NEW (REF ARRAY OF INTEGER, nDim);
+          shape := ADR(allocShapeRef^[0]); 
         END;
-        r := RTAllocator.NewTracedArray(ac, SUBARRAY(shape, 0, nDim));
+        FOR i := 0 TO nDim-1 DO
+          shape^[i] := reader.readInt();
+        END;
+        r := RTAllocator.NewTracedArray(ac, SUBARRAY(shape^, 0, nDim));
       ELSE
         r := RTAllocator.NewTraced(ac);
       END;
@@ -1116,12 +1126,13 @@ PROCEDURE RootSpecialRead(<*UNUSED*> sp: Special;
       (* Use the RTTipe functions to fill in the data. *)
       TRY
         PklTipeMap.Read(reader.tipeVisitor, r, ac, reader.packing, myPacking, 
-                     SUBARRAY(shape, 0, nDim)); 
+                     SUBARRAY(shape^, 0, nDim)); 
       EXCEPT
       | PklTipeMap.Error(t) => RAISE Error("PklTipeMap.Error: " & t);
       END;
     END;
 
+    allocShapeRef := NIL; 
     RETURN r;
   END RootSpecialRead;
 
