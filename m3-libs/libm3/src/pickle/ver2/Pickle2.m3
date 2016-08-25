@@ -548,7 +548,7 @@ PROCEDURE RefOfRefID (reader: Reader; ID : RefID) : REFANY =
     RETURN reader.refs [ ID ]
   END RefOfRefID; 
 
-PROCEDURE InvokeSpecial(reader: Reader; sc: TypeCode): REFANY
+PROCEDURE InvokeSpecialRead(reader: Reader; sc: TypeCode): REFANY
       RAISES { Error, Rd.EndOfFile, Rd.Failure, Thread.Alerted } =
   VAR sp: Special; r: REFANY; id: RefID;
   BEGIN
@@ -562,7 +562,7 @@ PROCEDURE InvokeSpecial(reader: Reader; sc: TypeCode): REFANY
     DEC(reader.level);
     reader.noteRef(r, id);
     RETURN r
-  END InvokeSpecial;
+  END InvokeSpecialRead;
 
 PROCEDURE ExpandRefs(reader: Reader) =
   VAR old := reader.refs;  n := NUMBER(old^);
@@ -597,13 +597,13 @@ PROCEDURE ReadRef(reader: Reader): REFANY
         r := reader.refs[refIndex];
       END;
     ELSIF repCase = '5' THEN
-      r := InvokeSpecial(reader, reader.readType());
+      r := InvokeSpecialRead(reader, reader.readType());
     ELSIF repCase = '3' THEN
       (* COMPATIBILITY: OlderVersion uses 3 sc ac contents *)
       VAR sc := GetBinaryInt(reader);
       BEGIN
         reader.acPending := GetBinaryInt(reader);
-        r := InvokeSpecial(reader, TCFromIndex(reader, sc));
+        r := InvokeSpecialRead(reader, TCFromIndex(reader, sc));
         reader.acPending := 0;
       END
     ELSIF repCase = '6' THEN (* Was pickled as a pseudopointer. *) 
