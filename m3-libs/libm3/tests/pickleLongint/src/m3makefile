@@ -1,0 +1,10 @@
+% (* ----------------------------------------------------------------------1- *)
+% (* File m3makefile for PickleTestLongint.                                   *)
+% (* Copyright 2010 .. 2016, Rodney M. Bates.                                 *)
+% (* rodney.m.bates@acm.org                                                   *)
+% (* Licensed under the MIT license.                                          *)
+% (* ----------------------------------------------------------------------2- *)
+
+import("libm3")
+implementation("PickleTestLongint")
+program("pickletestlongint")
