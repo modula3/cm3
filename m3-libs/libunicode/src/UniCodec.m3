@@ -55,23 +55,24 @@ MODULE UniCodec
       END (* LOCK *) 
     END Decode 
 
-; PROCEDURE EncNull ( Sink : Wr . T ; Wch : Widechar ) 
-  RAISES { Alerted , Wr . Failure , Range } 
+; PROCEDURE EncNull ( <* UNUSED *> Sink : Wr . T ; <* UNUSED *> Wch : Widechar ) 
+  RAISES { Alerted , Wr . Failure , Range } <* NOWARN *>
   (* A NOOP.  Placeholder for Encoding.Null. *) 
 
   = BEGIN (* Do nothing. *) 
     END EncNull
 
-; PROCEDURE DecNull ( Source : Rd . T ) : Widechar
-  RAISES { EndOfFile , Rd . Failure , Alerted } 
+; PROCEDURE DecNull ( <* UNUSED *> Source : Rd . T ) : Widechar
+  RAISES { EndOfFile , Rd . Failure , Alerted } <* NOWARN *>
   (* A NOOP.  Placeholder for Encoding.Null. *) 
 
   = BEGIN (* DecNull *) 
       RETURN ReplacementWch
     END DecNull
 
-; PROCEDURE EncInternal ( Sink : Wr . T ; Wch : Widechar ) 
-  RAISES { Alerted , Wr . Failure , Range } 
+; PROCEDURE EncInternal 
+    ( <* UNUSED *> Sink : Wr . T ; <* UNUSED *> Wch : Widechar ) 
+  RAISES { Alerted , Wr . Failure , Range } <* NOWARN *>
   (* A NOOP. Placeholder for Encoding.Internal, which is used for
      in-memory representations normally hidden by abstractions. 
   *) 
@@ -79,8 +80,9 @@ MODULE UniCodec
   = BEGIN 
     END EncInternal
 
-; PROCEDURE DecInternal ( Source : Rd . T ) : Widechar
-   RAISES { EndOfFile , Rd . Failure , Alerted } 
+(* EXPORTED *) 
+; PROCEDURE DecInternal ( <* UNUSED *> Source : Rd . T ) : Widechar
+  RAISES { EndOfFile , Rd . Failure , Alerted } <* NOWARN *>
   (* A NOOP. Placeholder for Encoding.Internal, which is used for
      in-memory representations normally hidden by abstractions. 
   *) 

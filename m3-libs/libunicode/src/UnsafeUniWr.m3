@@ -83,8 +83,8 @@ MODULE UnsafeUniWr
 ; PROCEDURE TextForAllDo 
     ( t : TEXT
     ; VisitWch : ProcOfWideChar 
-    ; VisitString : ProcOfString 
-    ; VisitWideString: ProcOfWideString
+    ; <* UNUSED *> VisitString : ProcOfString 
+    ; <* UNUSED *> VisitWideString: ProcOfWideString
     ) 
    RAISES ANY (* From the callbacks. *) 
 (* TEMPORARY: Eventually, put this in Text and make it avoid allocate and

@@ -140,7 +140,7 @@ INTERFACE UniCodec
   *) 
 
 ; PROCEDURE DecInternal ( Source : Rd . T ) : Widechar
-   RAISES { EndOfFile , Rd . Failure , Alerted } 
+  RAISES { EndOfFile , Rd . Failure , Alerted } 
   (* A NOOP. Placeholder for Encoding.Internal, which is used for
      in-memory representations normally hidden by abstractions. 
   *) 

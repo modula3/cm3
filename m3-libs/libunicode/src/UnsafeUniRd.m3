@@ -783,9 +783,7 @@ MODULE UnsafeUniRd
             ELSE (* Another char follows the CR. *) 
               LPreSourceIndex2 := UnsafeRd . FastIndex ( Stream . Source )
               (* ^Start of the following code point. *) 
-            ; <* FATAL EndOfFile *> (* Can't happen. *) 
-(* WARNING: exception is never raised: Rd.EndOfFile--why? *) 
-              BEGIN 
+            ; BEGIN 
                 LWch2 := Stream . DecWideChar ( Stream . Source ) 
                       (* ^May raise Failure or Alerted. *) 
               END (* Block. *) 
@@ -811,9 +809,7 @@ MODULE UnsafeUniRd
               EXIT 
             ELSE (* Get another code point. *)  
               LPreSourceIndex1 := UnsafeRd . FastIndex ( Stream . Source )
-            ; <* FATAL EndOfFile *> (* Can't happen. *) 
-(* WARNING: exception is never raised: Rd.EndOfFile--why? *) 
-              BEGIN 
+            ; BEGIN 
                 LWch1 := Stream . DecWideChar ( Stream . Source ) 
                       (* ^May raise Failure or Alerted. *) 
               END (* Block. *)
