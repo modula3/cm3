@@ -452,7 +452,7 @@ UNSAFE MODULE UnsafeUniCodec
                                ) 
                           ) 
                 ; RETURN <* NOWARN*>
-(* COMPILER BUG??? On this line, Cm3 says:
+(* COMPILER BUG?? ^On this line, CM3 says:
                    "warning: function may not return a value (FastDecUTF8)" *) 
                     LOOPHOLE ( ResultWt , ArrWchWt ) [ ArrWchWt0 ]  
                 END (* IF *) 
