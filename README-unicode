@@ -5,14 +5,13 @@ The language has these changes:
 ORD(LAST(WIDECHAR)) = 16_10FFFF, the entire code point range specified
 by the Unicode standard.
 
-Character and Text literals can have Unicode escapes of the form
-\Uhhhhhh, where each h is a hexadecimal digit, in either upper or
-lower case.  These are lexically valid in any literal, wide or not.
-It is a static error if the code point value exceeds the range of CHAR
-or Unicode-sized WIDECHAR.  In a wide literal, and when the compiler
-is configured for 16-bit WIDECHAR, values outside the 16-bit range are
-converted to the Unicode "replacement" character,
-VAL(16_FFFD,WIDECHAR), with a warning.
+Wide character and text literals can have Unicode escapes of the form
+\Uhhhhhh or \uhhhhhh, where each h is a hexadecimal digit, in either 
+upper or lower case.  It is a static error if the code point value 
+exceeds the range of Unicode-sized WIDECHAR.  When the compiler is
+configured for 16-bit WIDECHAR, values outside the 16-bit range are
+converted to the Unicode "replacement" character, VAL(16_FFFD,WIDECHAR), 
+with a warning.
 
 The subtype and assignability rules are relaxed as if CHAR and
 WIDECHAR were the same base type.  This allows assignments between
