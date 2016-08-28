@@ -136,11 +136,12 @@ MODULE UnsafeUniWr
       END VisitWideString  
 
   ; BEGIN (* FastPutText *) 
-      (* Text . ForAllDo *) 
-      TextForAllDo 
-        ( String , VisitWideChar , VisitString , VisitWideString ) 
+      (* Temporary TextForAllDo: *)  
+        (* String , VisitWideChar , VisitString , VisitWideString ) *)
+      (* Text . ForAllDo: *) 
+      Text . ForAllDo ( String , VisitString , VisitWideString ) 
 
-(* TODO: We need a way to say <* FATAL ANY EXCEPT Range , Failure , Alerted *> 
+(* TODO: We need a way to say <* FATAL ANY EXCEPT Range , Failure , Alerted *>
          to avoid extraneous warnings. 
 *) 
     END FastPutText  
