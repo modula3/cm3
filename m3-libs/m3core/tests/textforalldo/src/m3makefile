@@ -1,0 +1,11 @@
+% (* ----------------------------------------------------------------------1- *)
+% (* File m3makefile for TextForAllDo.m3.                                     *)
+% (* Copyright 2016, Rodney M. Bates.                                         *)
+% (* rodney.m.bates@acm.org                                                   *)
+% (* Licensed under the MIT license.                                          *)
+% (* ----------------------------------------------------------------------2- *)
+
+import("libm3")
+implementation("TextForAllDo")
+program("textforalldo")
+
