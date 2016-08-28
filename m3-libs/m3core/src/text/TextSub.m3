@@ -22,6 +22,7 @@ PROCEDURE New (t: TEXT; start, length: CARDINAL): TEXT =
     RETURN Sub (t, start, length);
   END New;
 
+(* EXPORTED *) 
 (* Text.Sub *)
 PROCEDURE Sub (t: TEXT; start, length: CARDINAL): TEXT =
   VAR info: TextClass.Info;  new_len: INTEGER;  root: TEXT;
