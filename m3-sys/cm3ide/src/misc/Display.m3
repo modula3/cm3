@@ -3,6 +3,7 @@ MODULE Display;
 IMPORT (*** Pathname, ***) Process, (*** Text, ***) Thread, Wr;
 IMPORT Quake, QMachine, QValue, QVal;
 IMPORT ConfigItem, Default, ErrLog, LineWr;
+IMPORT Fmt;
 
 CONST
   Browser = ConfigItem.Desc [ConfigItem.T.Start_browser].name;
@@ -51,6 +52,13 @@ PROCEDURE DoBrowse (cl: BrowseClosure): REFANY =
       cl.mach.call_proc (n_args := 1, isFunc := TRUE);
       cl.mach.pop (v);
       shutdown := QVal.ToBool (cl.mach, v);
+      IF ConfigItem.X [ConfigItem.T.Verbose_log].bool THEN
+        ErrLog.Msg (Browser, "() returned ", Fmt.Bool (shutdown));
+      END; 
+      IF shutdown THEN 
+        ErrLog.Msg 
+          ("CM3-IDE is shutting down because ", Browser, "() returned TRUE.");
+      END; 
       cl.mach.set_wr (sav_wr);
       EVAL cl.mach.exec_echo (sav_echo);
     EXCEPT
@@ -68,10 +76,7 @@ PROCEDURE DoBrowse (cl: BrowseClosure): REFANY =
     LineWr.Clear (wr);
 
     IF (shutdown) THEN
-      ErrLog.Msg ("CM3-IDE is shutting down because ", Browser, "() returned TRUE.");
       Process.Exit(0);
-    ELSE
-      ErrLog.Msg (Browser, "() returned FALSE.");
     END;
 
     RETURN NIL;
