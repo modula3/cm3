@@ -47,7 +47,7 @@ PROCEDURE Initialize () =
                                  CallExpr.IsNever, (* writable *)
                                  CallExpr.IsNever, (* designator *)
                                  CallExpr.NotWritable (* noteWriter *));
-    Procedure.Define ("ThisPath", Z, FALSE, t0);
+    Procedure.DefinePredefined ("ThisPath", Z, FALSE, t0);
     formals := ProcType.Formals (t0);
   END Initialize;
 

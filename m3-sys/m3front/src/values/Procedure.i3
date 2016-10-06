@@ -20,11 +20,12 @@ PROCEDURE HasBody     (t: T): BOOLEAN;
 PROCEDURE IsNested    (t: T): BOOLEAN;
 PROCEDURE StaticLevel (t: T): INTEGER;
 
-PROCEDURE Define (name      : TEXT;
+PROCEDURE DefinePredefined
+                 (name      : TEXT;
                   methods   : CallExpr.MethodList;
                   reserved  : BOOLEAN;
-                  signature : Type.T := NIL
-                  );
+                  signature : Type.T := NIL;
+                  assignable: BOOLEAN := FALSE);
 
 PROCEDURE CheckBody (t: T;  VAR cs: Value.CheckState);
 

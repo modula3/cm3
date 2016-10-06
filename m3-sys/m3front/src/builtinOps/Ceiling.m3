@@ -90,7 +90,7 @@ PROCEDURE Initialize () =
                                  CallExpr.IsNever, (* writable *)
                                  CallExpr.IsNever, (* designator *)
                                  CallExpr.NotWritable (* noteWriter *));
-    Procedure.Define ("CEILING", Z, TRUE);
+    Procedure.DefinePredefined ("CEILING", Z, TRUE);
   END Initialize;
 
 BEGIN

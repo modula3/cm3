@@ -97,7 +97,7 @@ PROCEDURE Initialize () =
                                  CallExpr.IsNever, (* writable *)
                                  CallExpr.IsNever, (* designator *)
                                  CallExpr.NotWritable (* noteWriter *));
-    Procedure.Define ("FetchOr", Z, FALSE, t0);
+    Procedure.DefinePredefined ("FetchOr", Z, FALSE, t0);
     formals := ProcType.Formals (t0);
   END Initialize;
 

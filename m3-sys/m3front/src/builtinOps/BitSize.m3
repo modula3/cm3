@@ -141,7 +141,7 @@ PROCEDURE Initialize () =
                                  CallExpr.IsNever, (* writable *)
                                  CallExpr.IsNever, (* designator *)
                                  CallExpr.NotWritable (* noteWriter *));
-    Procedure.Define ("BITSIZE", Z, TRUE);
+    Procedure.DefinePredefined ("BITSIZE", Z, TRUE);
   END Initialize;
 
 BEGIN

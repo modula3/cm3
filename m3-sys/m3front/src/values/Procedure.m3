@@ -26,10 +26,15 @@ REVEAL
         body         : Body;
         result       : Variable.T;
         builtin      : BOOLEAN;
+        (* ^A global, predefined, pseudo-procedure, e.g. NEW. *) 
         predefined   : BOOLEAN;
+        (* ^Either 'builtin' or a procedure in an interface known to the 
+           compiler, e.g. Word.Plus. *) 
         needs_raises : BOOLEAN;
         direct       : BOOLEAN;
         fails        : ESet.T;
+        assignable   : BOOLEAN;
+        (* ^Can be assigned to a variable and passed as a parameter. *) 
         cg_proc      : CG.Proc;
         next_cg_proc : T;
         end_origin   : INTEGER;
@@ -196,6 +201,7 @@ PROCEDURE Create (name: M3ID.T): T =
     t.block        := NIL;
     t.external     := FALSE;
     t.builtin      := FALSE;
+    t.assignable   := TRUE;
     t.predefined   := FALSE;
     t.result       := NIL;
     t.extName      := M3ID.NoID;
@@ -207,10 +213,12 @@ PROCEDURE Create (name: M3ID.T): T =
     RETURN t;
   END Create;
 
-PROCEDURE Define (name      : TEXT;
+PROCEDURE DefinePredefined
+                 (name      : TEXT;
                   methods   : CallExpr.MethodList;
                   reserved  : BOOLEAN;
-                  signature : Type.T := NIL) =
+                  signature : Type.T := NIL;
+                  assignable: BOOLEAN := FALSE) =
   VAR t: T;  s: M3ID.T;  sig: Type.T;
   BEGIN
     IF (signature = NIL)
@@ -222,10 +230,11 @@ PROCEDURE Define (name      : TEXT;
     t := Create (s);
     t.signature  := sig;
     t.builtin    := (signature = NIL);
+    t.assignable := assignable; 
     t.predefined := TRUE;
     Scope.Insert (t);
     IF (reserved) THEN Scanner.NoteReserved (s, t) END;
-  END Define;
+  END DefinePredefined;
 
 PROCEDURE NoteExport (implv, intfv: Value.T) =
   VAR impl: T := Value.Base (implv);  intf: T := Value.Base (intfv);
@@ -359,7 +368,13 @@ PROCEDURE Load (t: T) =
     IF (t.impl_peer # NIL) THEN t := t.impl_peer; END;
     t.used := TRUE;
     Value.Declare (t);
-    CG.Load_procedure (t.cg_proc);
+    IF t.assignable THEN
+      CG.Load_procedure (t.cg_proc);
+    ELSE
+      Error.ID 
+        (t.name, "this predefined procedure cannot be passed or assigned");
+      CG.Load_nil (); 
+    END; 
   END Load;
 
 PROCEDURE LoadStaticLink (t: T) =
@@ -442,9 +457,10 @@ PROCEDURE Declarer (p: T): BOOLEAN =
     n_formals: INTEGER;
     cconv: CG.CallingConvention;
   BEGIN
-    IF (p.predefined) AND (p.body = NIL) THEN
-      (* don't bother importing Word.* procedures or declaring their
-         signatures, but do generate a version stamp dependency *)
+    IF p.predefined AND p.body = NIL AND NOT p.assignable THEN
+      (* Don't bother importing procedures that can't be assigned
+         or passed, or declaring their signatures, but do generate 
+         a version stamp dependency *)
       RETURN TRUE;
     END;
 

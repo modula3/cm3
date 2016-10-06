@@ -466,7 +466,7 @@ PROCEDURE Initialize () =
                                  IsWritable,
                                  IsDesignator,
                                  NoteWrites);
-    Procedure.Define ("SUBARRAY", Z, TRUE);
+    Procedure.DefinePredefined ("SUBARRAY", Z, TRUE);
   END Initialize;
 
 BEGIN

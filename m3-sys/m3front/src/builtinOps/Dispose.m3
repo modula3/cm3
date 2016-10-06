@@ -82,7 +82,7 @@ PROCEDURE Initialize () =
                                  CallExpr.IsNever, (* writable *)
                                  CallExpr.IsNever, (* designator *)
                                  CallExpr.NotWritable (* noteWriter *));
-    Procedure.Define ("DISPOSE", Z, TRUE);
+    Procedure.DefinePredefined ("DISPOSE", Z, TRUE);
   END Initialize;
 
 BEGIN

@@ -140,7 +140,7 @@ PROCEDURE Initialize () =
                                  CallExpr.IsNever, (* writable *)
                                  CallExpr.IsNever, (* designator *)
                                  CallExpr.NotWritable (* noteWriter *));
-    Procedure.Define ("NUMBER", Z, TRUE);
+    Procedure.DefinePredefined ("NUMBER", Z, TRUE);
   END Initialize;
 
 BEGIN

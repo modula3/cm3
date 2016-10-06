@@ -100,7 +100,7 @@ PROCEDURE Initialize () =
                                  CallExpr.IsNever, (* writable *)
                                  CallExpr.IsNever, (* designator *)
                                  CallExpr.NotWritable (* noteWriter *));
-    Procedure.Define ("FLOAT", Z, TRUE);
+    Procedure.DefinePredefined ("FLOAT", Z, TRUE);
   END Initialize;
 
 BEGIN

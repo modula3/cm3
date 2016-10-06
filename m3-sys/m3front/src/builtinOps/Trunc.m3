@@ -67,7 +67,7 @@ PROCEDURE Initialize () =
                                  CallExpr.IsNever, (* writable *)
                                  CallExpr.IsNever, (* designator *)
                                  CallExpr.NotWritable (* noteWriter *));
-    Procedure.Define ("TRUNC", Z, TRUE);
+    Procedure.DefinePredefined ("TRUNC", Z, TRUE);
   END Initialize;
 
 BEGIN

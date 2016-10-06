@@ -41,7 +41,7 @@ PROCEDURE Initialize () =
                                  CallExpr.IsNever, (* writable *)
                                  CallExpr.IsNever, (* designator *)
                                  CallExpr.NotWritable (* noteWriter *));
-    Procedure.Define ("ThisException", Z, FALSE, t0);
+    Procedure.DefinePredefined ("ThisException", Z, FALSE, t0);
     formals := ProcType.Formals (t0);
   END Initialize;
 

@@ -53,7 +53,7 @@ PROCEDURE Initialize () =
                                  CallExpr.IsNever, (* writable *)
                                  CallExpr.IsNever, (* designator *)
                                  CallExpr.NotWritable (* noteWriter *));
-    Procedure.Define ("BYTESIZE", Z, TRUE);
+    Procedure.DefinePredefined ("BYTESIZE", Z, TRUE);
   END Initialize;
 
 BEGIN
