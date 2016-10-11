@@ -314,6 +314,8 @@ PROCEDURE ConvertOption (VAR s: State;  arg: TEXT;  arg_len: INTEGER)
     | 'x' => IF (arg_len = 2) THEN
                s.use_overrides := TRUE;  ok := TRUE;
              END;
+             
+    | 'X' => Out (wr, "M3_OPTIONS += \"" & Text.Sub(arg,2) & "\"");  ok := TRUE;
 
     | 'Z' => IF (arg_len = 2) THEN
                Out (wr, "M3_OPTIONS += \"-Z\"");
