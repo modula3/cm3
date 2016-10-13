@@ -39,7 +39,9 @@ ThreadInternal__StackGrowsDown (void)
 #ifndef _WIN32
 
 enum {WaitResult_Ready, WaitResult_Error, WaitResult_FDError, WaitResult_Timeout};
+/* ^Must match TYPE WaitResult declared in SchedularPosix.i3. */ 
 
+#define THOUSAND (1000)
 #define MILLION (1000 * 1000)
 
 M3_DLL_LOCAL
@@ -56,7 +58,7 @@ ThreadInternal__Poll(int fd,
     p.fd = fd;
     p.events = POLLERR | (read ? POLLIN : POLLOUT);
     p.revents = 0;
-    r = poll(&p, 1, (m3timeout < 0) ? -1 : (m3timeout * MILLION));
+    r = poll(&p, 1, (m3timeout < 0) ? -1 : (m3timeout * THOUSAND));
     assert(r == -1 || r == 0 || r == 1);
     if (r == -1)
         return WaitResult_Error;
