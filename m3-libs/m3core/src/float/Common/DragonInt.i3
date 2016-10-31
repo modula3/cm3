@@ -30,7 +30,10 @@ PROCEDURE EndSession (s: Session);
    
 TYPE (*OPAQUE*)
   T = RECORD s, w: INTEGER; END;
-
+  RefInt = REF ARRAY OF INTEGER;
+  Int32 = [-16_7FFFFFFF-1 .. 16_7FFFFFFF];  
+  RefInt32 = REF ARRAY OF Int32;
+  
 CONST
   Zero = T {0, 0};
   One  = T {1, 1};
@@ -38,6 +41,9 @@ CONST
 PROCEDURE New (s: Session;  a, b: INTEGER): T;
 (* returns a T representing the 64-bit value:
       (a & 16_ffffffff)<<32 + (b & 16_ffffffff) *)
+
+PROCEDURE NewFromArr (s: Session; in : RefInt): T;
+(* returns a T representing the array in of 32 bit integers *)
 
 PROCEDURE copy (s: Session;  READONLY a: T): T;
 (* returns a copy of a *)
@@ -47,6 +53,9 @@ PROCEDURE add (s: Session;  READONLY a,b: T): T;
 
 PROCEDURE diff (s: Session;  READONLY a,b: T): T;
 (* returns a - b; b is assumes a >= b *)
+
+PROCEDURE mult (s: Session; READONLY a,b: T) : T;
+(* returns a * b *)
 
 PROCEDURE compare (s: Session;  READONLY a, b: T): [-1..1];
 (* returns -1, 0, or 1 when a < b, a = b, or a > b *)
@@ -70,6 +79,9 @@ PROCEDURE divideTen (s: Session;  READONLY a: T): T;
 PROCEDURE divmod (s: Session;  READONLY a, b : T; VAR d: INTEGER): T;
 (* assume that a = d * b + res, with d a number between 0 and 9;
    computes d and returns res. *)
+
+PROCEDURE ToArr32(s : Session; a : T; VAR out : RefInt32; VAR len : INTEGER);
+(* returns a as an array of 32 bit integers *)
 
 
 (*----- debugging stats ---*)
