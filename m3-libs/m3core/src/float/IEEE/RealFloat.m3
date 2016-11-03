@@ -218,7 +218,7 @@ PROCEDURE ToDecimal(x: T): DecimalApprox =
         sig := Word.Or (sig, 16_800000); (* add the implied 24th bit *)
       END;
 
-      DragonT.F (exp, 0, sig, 24, DragonT.CutoffMode.normal, 0, 
+      DragonT.F (exp, 0, 0, 0, sig, 24, DragonT.CutoffMode.normal, 0, 
                  res.digits, count, res.exp);
     END;
     res.len := count;

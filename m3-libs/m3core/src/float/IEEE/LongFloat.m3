@@ -243,7 +243,7 @@ PROCEDURE ToDecimal(x: T): DecimalApprox =
         sig0 := Word.Or (sig0, 16_100000);  (* add the implied 53rd bit *)
       END;
 
-      DragonT.F (exp, sig0, sig1, 53, DragonT.CutoffMode.normal, 0, 
+      DragonT.F (exp, 0, 0, sig0, sig1, 53, DragonT.CutoffMode.normal, 0, 
                 res.digits, count, res.exp);
     END;
     res.len := count;
