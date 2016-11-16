@@ -502,8 +502,8 @@ PROCEDURE ToArr32(s : Session; a : T; VAR out : RefInt32; VAR len : INTEGER) =
     yp,zp : Ptr := ADR (s.w[a.w]);
     ep : Ptr;
   BEGIN
-    (* assume the allocator zeros this array *)
-    out := NEW(RefInt32,MAX(a.s, 1));
+    (* assume the allocator zeros this array, min size 128 bytes for quads *)
+    out := NEW(RefInt32,MAX(a.s, 4));
     IF a.s = 0 THEN
       len := 0;
       RETURN;
