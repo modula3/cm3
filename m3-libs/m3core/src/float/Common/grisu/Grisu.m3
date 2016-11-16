@@ -124,19 +124,19 @@ PROCEDURE RoundWeed(VAR buffer : DigitArr;
     bigDistance : Uint64 := distanceTooHigh + unit;
   BEGIN
     <*ASSERT Long.LE(rest, unsafeInterval) *>
-    WHILE (rest < smallDistance AND
-           unsafeInterval - rest >= tenKappa AND
-          (rest + tenKappa < smallDistance OR
-           smallDistance - rest >= rest + tenKappa - smallDistance)) DO
+    WHILE (Long.LT(rest, smallDistance) AND
+           Long.GE(unsafeInterval - rest, tenKappa) AND
+          (Long.LT(rest + tenKappa, smallDistance) OR
+           Long.GE(smallDistance - rest, rest + tenKappa - smallDistance))) DO
       DEC(buffer[length - 1]);
       rest := rest + tenKappa;
     END;
     (* We have approached w+ as much as possible. We now test if approaching w-
        would require changing the buffer. If yes, then we have two possible
        representations close to w, but we cannot decide which one is closer. *)
-    IF (rest < bigDistance) AND (unsafeInterval - rest >= tenKappa) AND
-       (rest + tenKappa < bigDistance OR
-        bigDistance - rest > rest + tenKappa - bigDistance) THEN
+    IF (Long.LT(rest, bigDistance)) AND (Long.GE(unsafeInterval - rest, tenKappa)) AND
+       (Long.LT(rest + tenKappa, bigDistance) OR
+        Long.GT(bigDistance - rest, rest + tenKappa - bigDistance)) THEN
       RETURN FALSE;
     END;
 
@@ -145,7 +145,7 @@ PROCEDURE RoundWeed(VAR buffer : DigitArr;
        Since tooLow = tooHigh - unsafeInterval this is equivalent to
           [tooHigh - unsafeInterval + 4 ulp; tooHigh - 2 ulp]
        Conceptually we have: rest ~= tooHigh - buffer *)    
-    RETURN (2L * unit <= rest) AND (rest <= unsafeInterval - 4L * unit);
+    RETURN (Long.LE(2L * unit, rest)) AND (Long.LE(rest, unsafeInterval - 4L * unit));
   END RoundWeed;
 
 (* Rounds the buffer upwards if the result is closer to v by possibly adding
@@ -181,18 +181,18 @@ PROCEDURE RoundWeedCounted(VAR buffer : DigitArr;
        If the unit is too big, then we don't know which way to round. For example
        a unit of 50 means that the real number lies within rest +/- 50. If
        10^kappa = 40 then there is no way to tell which way to round. *)    
-    IF (unit >= tenKappa) THEN RETURN FALSE; END;
+    IF (Long.GE(unit, tenKappa)) THEN RETURN FALSE; END;
     (* Even if unit is just half the size of 10^kappa we are already completely
        lost. (And after the previous test we know that the expression will not
        over/underflow.) *)    
-    IF (tenKappa - unit <= unit) THEN RETURN FALSE; END;
+    IF (Long.LE(tenKappa - unit, unit)) THEN RETURN FALSE; END;
     (* If 2 * (rest + unit) <= 10^kappa we can safely round down. *)
-    IF ((tenKappa - rest > rest) AND (tenKappa - 2L * rest >= 2L * unit)) THEN
+    IF ((Long.GT(tenKappa - rest, rest)) AND (Long.GE(tenKappa - 2L * rest, 2L * unit))) THEN
       RETURN TRUE;
     END;
     
     (* If 2 * (rest - unit) >= 10^kappa, then we can safely round up.*)
-    IF (rest > unit) AND (tenKappa - (rest - unit) <= (rest - unit)) THEN
+    IF (Long.GT(rest, unit)) AND (Long.LE(tenKappa - (rest - unit), (rest - unit))) THEN
       buf := NEW(BufType,length);
       FOR i := 0 TO length-1 DO buf^[i] := buffer[i]; END;
       INC(buf[length - 1]);
@@ -360,7 +360,7 @@ PROCEDURE DigitGen(low,w,high : GFP;
 
       (* Invariant: tooHigh = buffer * 10^kappa + GFP(rest, one.e())
          Reminder: unsafeInterval.e() = one.e() *)
-      IF rest < unsafeInterval.f() THEN
+      IF Long.LT(rest, unsafeInterval.f()) THEN
         (* Rounding down (by not emitting the remaining digits) yields a number
            that lies within the unsafe interval. *)
         RETURN RoundWeed(buffer, length, tooHigh.minus(w).f(),
@@ -391,7 +391,7 @@ PROCEDURE DigitGen(low,w,high : GFP;
       INC(length);
       fractionals := Long.And(fractionals, one.f() - 1L); (* Modulo by one. *)
       DEC(kappa);
-      IF fractionals < unsafeInterval.f() THEN
+      IF Long.LT(fractionals, unsafeInterval.f()) THEN
         RETURN RoundWeed(buffer, length, tooHigh.minus(w).f() * unit, 
                          unsafeInterval.f(), fractionals, one.f(), unit);
       END;
@@ -495,7 +495,7 @@ PROCEDURE DigitGenCounted(w : GFP;
     <*ASSERT fractionals < one.f()*>
     <*ASSERT Long.Divide(16_FFFFFFFFFFFFFFFFL, 10L) >= one.f()*>
     
-    WHILE requestedDigits > 0 AND fractionals > error DO
+    WHILE requestedDigits > 0 AND Long.GT(fractionals, error) DO
       fractionals := fractionals * 10L;
       error := error * 10L;
       (* Integer division by one. *)
