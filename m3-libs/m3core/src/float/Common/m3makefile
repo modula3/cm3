@@ -23,6 +23,8 @@ implementation ("Extended")
 
 module ("DragonInt")
 module ("DragonT")
+module ("FloatUtils")
+module ("TextToFloat")
 
 % FloatMode.i3.template is not compilable.  Its purpose is to appear
 % in the "Some Useful Modula-3 Interfaces" manual.  It should be
