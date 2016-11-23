@@ -75,7 +75,7 @@ BEGIN
     END;
 
     IF  ABS(FLOAT(ROUND(ar[ i ])) - ar[ i ]) >= 0.500001 THEN
-      Test.msg ("ERROR: ROUND (" & Fmt.Int (TRUNC(ar[i])) & " + "
+      Test.msg ("ERROR: ROUND (" & Fmt.Real(ar[i]) & " " & Fmt.Int (TRUNC(ar[i])) & " + "
                   & Fmt.Real (ar[i] - FLOAT (TRUNC (ar[i]))) & ") = "
                   & Fmt.Int (ROUND(ar[i])));
       Test.check (FALSE);
