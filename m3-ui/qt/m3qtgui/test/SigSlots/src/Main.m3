@@ -25,7 +25,7 @@ VAR
 
   dyn1,dyn2,dyn3 : QtDynamic.DynamicQObject;
 
-PROCEDURE Callback1(obj : ADDRESS; args : ADDRESS) =
+PROCEDURE Callback1(obj : ROOT; args : ADDRESS) =
 VAR
  i : INTEGER;
 BEGIN
@@ -38,7 +38,7 @@ BEGIN
 END Callback1;
 
 
-PROCEDURE Callback2(obj : ADDRESS; args : ADDRESS) =
+PROCEDURE Callback2(obj : ROOT; args : ADDRESS) =
 VAR
   month,year : INTEGER;
 BEGIN
@@ -53,7 +53,7 @@ BEGIN
 
 END Callback2;
 
-PROCEDURE Callback3(obj : ADDRESS; args : ADDRESS) =
+PROCEDURE Callback3(obj : ROOT; args : ADDRESS) =
 VAR
   date := NEW(QDate);
   doy : INTEGER;
@@ -95,7 +95,7 @@ BEGIN
 
   cal := NEW(QtCalendarWidget.T).init_0(mainWin);
   cal.move(100,100);
-  cal.resize(200,160);
+  cal.resize(220,200);
 
   dyn1 := NEW(QtDynamic.DynamicQObject).init_0(Callback1,NIL);
 

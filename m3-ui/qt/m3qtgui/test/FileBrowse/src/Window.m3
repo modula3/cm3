@@ -64,7 +64,7 @@ OVERRIDES
   init := New_Window;
 END;
 
-PROCEDURE Browse(args,obj : ADDRESS) =
+PROCEDURE Browse(obj : ROOT; args : ADDRESS) =
 VAR
   dir : TEXT;
 BEGIN
@@ -93,7 +93,7 @@ BEGIN
 
 END Browse;
 
-PROCEDURE Find(args,obj : ADDRESS) =
+PROCEDURE Find(obj : ROOT; args : ADDRESS) =
 BEGIN
 
   IO.Put("In M3 callback Find ");
