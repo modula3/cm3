@@ -437,7 +437,7 @@ PROCEDURE OpenProc (             fv  : FormsVBT.T;
 
     NodeVBT.LoadFromFile(screen[1], s);
 
-    IF loadingVerNum >= 30 THEN (* only for backward compatability *)
+    IF loadingVerNum >= 30 THEN (* only for backward compatibility *)
       (* load the session constructor code - version 3.0 and above *)
       RW.rtext(s, GenerateObliq.sessionConstructor);
       (* load the global code - version 3.0 and above *)
