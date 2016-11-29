@@ -89,7 +89,7 @@ PROCEDURE Get
     p.struct_align  := packing.struct_align;
     p.word_size     := packing.word_size;
     p.widechar_size := packing.widechar_size; 
-    (* We are already taking care of the compatability problem handled below 
+    (* We are already taking care of the compatibility problem handled below
        for LONGINT when decoding RTPacking.T. *) 
     p.word_align    := MIN (p.word_size, p.max_align);
     p.lazy_align    := packing.lazy_align;
