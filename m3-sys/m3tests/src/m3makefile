@@ -805,6 +805,9 @@ p_test ("p2", "p225", "__try/__finally")
 p_test ("p2", "p238", "'man vs. boy' aka nested procedures+recursion aka static chain test")
 p_test ("p2", "p264", "mixtures of fixed and open arrays")
 
+% grisu-based test, loophole integers/floats, multiply longint within function parameters
+p_test ("p2", "p265", "grisu-based")
+
 %------------------------------------------------------------------- rtests ---
 %  RUNTIME tests: modules containing runtime error where the generated
 %    error messages are of interest.

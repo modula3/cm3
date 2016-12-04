@@ -45,8 +45,36 @@ typedef int CheckMax[248 - sizeof(CheckMax_t)];
 #define X(x) EXTERN_CONST int Uerror__##x = x;
 #include "UerrorX.h"
 
-/* This needs to be aligned to 16, at least for Win32. */
-EXTERN_CONST INTEGER m3_jmpbuf_size = ((sizeof(jmp_buf) + 15) & ~15);
+#if 0
+/*
+Target.m3:
+  | Systems.I386_INTERIX =>
+
+    (* Visual C++'s 16 plus 2 ints: is sigmask saved, its value. *)
+
+    Jumpbuf_size := 18 * Address.size;
+
+  | Systems.NT386, Systems.I386_NT, Systems.I386_CYGWIN, Systems.I386_MINGW =>
+
+     (* Cygwin: 13, Visual C++: 16, Interix: 18.
+        Use 18 for interop.
+        Cygwin's setjmp.h is wrong by a factor of 4.
+        Cygwin provides setjmp and _setjmp that resolve the same.
+        Visual C++ provides only _setjmp.
+        Visual C++ also has _setjmp3 that the compiler generates
+        a call to. In fact _setjmp appears to only use 8 ints
+        and _setjmp3 appears to use more. Consider using _setjmp3.
+     *)
+*/
+#if defined(__i386__) && defined(__CYGWIN__) && _JBLEN == (13 * 4)
+EXTERN_CONST INTEGER m3_jmpbuf_size = 32;
+#else
+/* add two words, and keep it 16-aligned if it is already */
+EXTERN_CONST INTEGER m3_jmpbuf_size = sizeof(jmp_buf) + 16;
+#endif
+#else
+EXTERN_CONST INTEGER m3_jmpbuf_size = sizeof(jmp_buf);
+#endif
 
 #ifndef _WIN32
 

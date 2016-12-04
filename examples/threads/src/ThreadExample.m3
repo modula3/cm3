@@ -20,7 +20,7 @@ IMPORT Fmt, IO;
    Thread closures override the "apply" method to associate
    the work to be done. "TimerClosure"'s work is in procedure
    "TimerApply". *)
-   
+
 TYPE
   TimerClosure = Thread.Closure OBJECT
     time: LONGREAL;
@@ -31,7 +31,7 @@ TYPE
 
 PROCEDURE TimerApply (cl: TimerClosure): REFANY =
 (* "TimerApply" contains the work of the timer threads.
-   It prints out a message that it has started, waits for 
+   It prints out a message that it has started, waits for
    "cl.time" seconds, and then prints out a message that
    it has finished. The local variable "count" provides
    more information for matching starts and finish messages.  *)
@@ -39,12 +39,12 @@ PROCEDURE TimerApply (cl: TimerClosure): REFANY =
   VAR
     count := Counter();
   BEGIN
-    Print("\nStarting timer " & Fmt.Int(count) & 
+    Print("\nStarting timer " & Fmt.Int(count) &
             " for " & Fmt.LongReal (cl.time) & " seconds.");
 
     Thread.Pause (cl.time);
 
-    Print ("\nFinished timer " & Fmt.Int(count) & 
+    Print ("\nFinished timer " & Fmt.Int(count) &
             " after " & Fmt.LongReal (cl.time) & " seconds.\n");
     RETURN NIL;
   END TimerApply;
@@ -53,7 +53,7 @@ PROCEDURE TimerApply (cl: TimerClosure): REFANY =
 
 (* "timer_count" keeps track of the count for the threads created.
    "timer_count_mu", a <<em>>mutex<</em>> (or a lock) protects
-   the critical sections, where multiple threads may be in contention 
+   the critical sections, where multiple threads may be in contention
    of incrementing the timer. *)
 
 VAR
@@ -80,7 +80,7 @@ CONST
   Prompt = "thread-timer> ";
 
 PROCEDURE Print(t: TEXT) =
-(* Print "message", after appending "Prompt" to it. *) 
+(* Print "message", after appending "Prompt" to it. *)
   BEGIN
     IO.Put (t & "\n" & Prompt);
   END Print;
@@ -104,7 +104,7 @@ BEGIN
 END ThreadExample.
 
 (* There was no need for waiting for a forked
-   thread in this example. To wait for a forked thread to 
+   thread in this example. To wait for a forked thread to
    complete, you may use "Thread.Join(th)" which joins
    your current thread to "th".
 

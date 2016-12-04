@@ -81,7 +81,7 @@ PROCEDURE Initialize () =
                                  CallExpr.IsNever, (* writable *)
                                  CallExpr.IsNever, (* designator *)
                                  CallExpr.NotWritable (* noteWriter *));
-    Procedure.Define ("Swap", Z, FALSE, t0);
+    Procedure.DefinePredefined ("Swap", Z, FALSE, t0);
     formals := ProcType.Formals (t0);
   END Initialize;
 

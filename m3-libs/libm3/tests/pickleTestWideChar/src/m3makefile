@@ -1,0 +1,11 @@
+% (* ----------------------------------------------------------------------1- *)
+% (* File m3makefile for PickleTestWideChar.m3 et. al.                        *)
+% (* Copyright 2010 .. 2016, Rodney M. Bates.                                 *)
+% (* rodney.m.bates@acm.org                                                   *)
+% (* Licensed under the MIT license.                                          *)
+% (* ----------------------------------------------------------------------2- *)
+
+import("libm3")
+module("UnsafeUtils") 
+implementation("PickleTestWideChar")
+program("pickletestwidechar")

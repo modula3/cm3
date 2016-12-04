@@ -62,7 +62,7 @@ PROCEDURE Initialize () =
                                  CallExpr.IsNever, (* writable *)
                                  CallExpr.IsNever, (* designator *)
                                  CallExpr.NotWritable (* noteWriter *));
-    Procedure.Define ("ADR", Z, TRUE);
+    Procedure.DefinePredefined ("ADR", Z, TRUE);
   END Initialize;
 
 BEGIN

@@ -7,6 +7,27 @@
 
 GENERIC MODULE GenWord(Impl);
 
+(* This is confusing.  It is instantiated with its own interface as Impl,
+   which makes each of these procedures appear, at face value, to be 
+   direct, trivial, unconditional, infinite self-recursion.
+
+   In fact, the names of these procedures are predefined in the compiler, 
+   and, for *calls* on these, the compiler generates inline code instead
+   of actual calls.  So, when a call on one of these appears in ordinary
+   user code, this library is not involved at all.  
+
+   The self-recursive-appearing calls herein are also replaced by the 
+   compiler by the same inline code.  Thus, the library code here is
+   just trivial wrappers around that.  
+
+   However, the compiler handles non-call occurrences of their names
+   as usual, using the address of the procedure in this library.    
+   So the one way the procedures herein can be used is if user code 
+   assigns one of them to a variable of procedure type, or passes one 
+   to a parameter of procedure type, then makes a call through the 
+   variable/parameter.  
+*) 
+
 PROCEDURE Plus (x, y: T): T     = BEGIN RETURN Impl.Plus (x, y)   END Plus;
 PROCEDURE Times (x, y: T): T    = BEGIN RETURN Impl.Times (x, y)  END Times;
 PROCEDURE Minus (x, y: T): T    = BEGIN RETURN Impl.Minus (x, y)  END Minus;

@@ -8,7 +8,6 @@ INTERFACE UniRdClass
 
 ; IMPORT Rd  
 ; IMPORT UniCodec  
-; FROM UniCodec IMPORT Widechar  
 ; FROM UniEncoding IMPORT Encoding  
 ; IMPORT UniRd
 ; IMPORT Word 

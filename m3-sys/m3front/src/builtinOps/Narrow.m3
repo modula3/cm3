@@ -185,7 +185,7 @@ PROCEDURE Initialize () =
                                  CallExpr.IsNever, (* writable *)
                                  CallExpr.IsNever, (* designator *)
                                  NoteWrites);
-    Procedure.Define ("NARROW", Z, TRUE);
+    Procedure.DefinePredefined ("NARROW", Z, TRUE);
   END Initialize;
 
 BEGIN

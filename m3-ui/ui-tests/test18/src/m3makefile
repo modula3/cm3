@@ -5,7 +5,7 @@
 /* Last modified on Wed Sep 13 11:16:48 PDT 1995 by najork                   */
 /*       Created on Sat Jun 10 17:56:47 PDT 1995 by najork                   */
 
-import (ui)
+import ("ui")
 
-implementation (Main)
-Program (Test18)
+implementation ("Main")
+Program ("Test18")

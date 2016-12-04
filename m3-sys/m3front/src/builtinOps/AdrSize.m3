@@ -49,7 +49,7 @@ PROCEDURE Initialize () =
                                  CallExpr.IsNever, (* writable *)
                                  CallExpr.IsNever, (* designator *)
                                  CallExpr.NotWritable (* noteWriter *));
-    Procedure.Define ("ADRSIZE", Z, TRUE);
+    Procedure.DefinePredefined ("ADRSIZE", Z, TRUE);
   END Initialize;
 
 BEGIN

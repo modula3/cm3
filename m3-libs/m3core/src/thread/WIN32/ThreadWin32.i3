@@ -56,7 +56,7 @@ PROCEDURE StackPointerFromContext(context: PCONTEXT): ADDRESS;
 PROCEDURE NewContext(): ADDRESS;
 
 <*EXTERNAL ThreadWin32__DeleteContext*>
-PROCEDURE DeleteContext(a: ADDRESS);
+PROCEDURE DeleteContext(VAR a: PCONTEXT);
 
 (*---------------------------------------------------------------------------*)
 

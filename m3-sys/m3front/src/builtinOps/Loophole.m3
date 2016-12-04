@@ -90,7 +90,7 @@ PROCEDURE Initialize () =
                                  IsWritable,
                                  IsDesignator,
                                  NoteWrites);
-    Procedure.Define ("LOOPHOLE", Z, TRUE);
+    Procedure.DefinePredefined ("LOOPHOLE", Z, TRUE);
   END Initialize;
 
 BEGIN

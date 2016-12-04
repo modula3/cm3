@@ -3748,7 +3748,7 @@ Here are are the legal escape sequences and the characters they denote:
 </BLOCKQUOTE>
 A <code>\</code> followed by exactly three octal digits specifies the character
 whose code is that octal value.  
-A <code>\x</code> followed by exactly two hexadecimal digits specifies the character
+A <code>\X</code> followed by exactly two hexadecimal digits specifies the character
 whose code is that hexadecimal value.  
 The hexadecimal digits are case-insensitive. 
 The 'X' in a hexadecimal escape sequence is case-insensitive.  
@@ -3758,16 +3758,20 @@ escape sequences is a static error.
 <P>
 A wide character literal has the form <code>W charlit</code>, where <code>charlit</code>
 is like a character literal, except that an octal escape sequence
-within must have exactly six octal digits and a hexadecimal escape
-sequence within must have exactly four hexadecimal digits.  The type of
-a wide character literal is <code>WIDECHAR</code>.
+within must have exactly six octal digits, a hexadecimal escape sequence 
+within must have exactly four hexadecimal digits. and the escape 
+sequence <code>\U</code> followed by exactly six hexadecimal digits is allowed and
+specifies the Unicode character whose code point has that hexadecimal value.  
+It is a static error if that value lies outside the Unicode code point range. 
+The 'U' in a Unicode escape sequence is case-insensitive.  
+The type of a wide character literal is <code>WIDECHAR</code>.
 The leading 'W' is case-insensitive. 
 
 <P>
 Similarly, a wide text literal has the form <code>W textlit</code>, 
 where <code>textlit</code> is like a text literal, except any octal or hexadecimal
 escape sequences within must have exactly six octal or four hexadecimal 
-digits, respectively.  
+digits, respectively, and Unicode escape sequences are allowed.  
 Unlike character literals, ordinary text literals and wide text literals 
 both have the type <code>TEXT</code>, differing only in the method of specifying 
 the literal's value. 
@@ -4821,7 +4825,7 @@ Mathematics Department, Macquarie University, Sydney.
 The command line arguments were: <BR>
  <STRONG>latex2html</STRONG> <TT>-address m3-support@elego.de -link 0 -split 0 -show_section_numbers -local_icons -no_subdir -prefix m3-defn-complete m3-defn-complete.tex</TT>
 <P>
-The translation was initiated by Rodney M. Bates on 2013-04-10
+The translation was initiated by Rodney Bates on 2016-09-01
 <DIV CLASS="navigation"><HR>
 <!--Navigation Panel-->
 <IMG WIDTH="81" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next_inactive" SRC="nx_grp_g.png"> 

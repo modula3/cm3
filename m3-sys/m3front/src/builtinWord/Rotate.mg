@@ -139,7 +139,7 @@ PROCEDURE Initialize (r: INTEGER) =
                                  CallExpr.IsNever, (* writable *)
                                  CallExpr.IsNever, (* designator *)
                                  CallExpr.NotWritable (* noteWriter *));
-    Procedure.Define ("Rotate", Z, FALSE, t);
+    Procedure.DefinePredefined ("Rotate", Z, FALSE, t, assignable:=TRUE);
     formals := ProcType.Formals (t);
 
     ZL := CallExpr.NewMethodList (2, 2, TRUE, TRUE, TRUE, T,
@@ -157,7 +157,7 @@ PROCEDURE Initialize (r: INTEGER) =
                                  CallExpr.IsNever, (* writable *)
                                  CallExpr.IsNever, (* designator *)
                                  CallExpr.NotWritable (* noteWriter *));
-    Procedure.Define ("LeftRotate", ZL, FALSE, Lt);
+    Procedure.DefinePredefined ("LeftRotate", ZL, FALSE, Lt, assignable:=TRUE);
     formalsL := ProcType.Formals (Lt);
 
     ZR := CallExpr.NewMethodList (2, 2, TRUE, TRUE, TRUE,  T,
@@ -175,7 +175,7 @@ PROCEDURE Initialize (r: INTEGER) =
                                  CallExpr.IsNever, (* writable *)
                                  CallExpr.IsNever, (* designator *)
                                  CallExpr.NotWritable (* noteWriter *));
-    Procedure.Define ("RightRotate", ZR, FALSE, Rt);
+    Procedure.DefinePredefined ("RightRotate", ZR, FALSE, Rt, assignable:=TRUE);
     formalsR := ProcType.Formals (Rt);
   END Initialize;
 

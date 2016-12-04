@@ -14,7 +14,7 @@ GENERIC INTERFACE VarArray ( Subscript , Element , Ranges )
    covering the entire range of ordinal type Subscript.T, which can have 
    negative as well as positive values.
 
-   Each A in T has a distinguished initial element value InitElemValue(A), 
+   Each value A in T has a distinguished initial element value InitElemValue(A), 
    provided by the client at the time A is created.  All elements of A contain 
    InitElemValue(A) until explicitly assigned otherwise by the client.  
 
@@ -273,7 +273,7 @@ GENERIC INTERFACE VarArray ( Subscript , Element , Ranges )
   (* PRE: Array # NIL *) 
   (* Let R be the range [From..To], if By>=0, or [To..From], if By<0. 
      Let I be the intersection range of R and touched(Array).
-     Let [F..T] be I, if By>=0, or [I.Hi..I.Lo], of By<0. 
+     Let [F..T] be I, if By>=0, or [I.Hi..I.Lo], if By<0. 
      Abstract view: 
        Call back Do, passing Ss and Array[Ss], for the sequence 
        Ss=F, F+By, F+2*By, ... so long as Ss<=T, if By>=0, or Ss>=T, if By<0. 

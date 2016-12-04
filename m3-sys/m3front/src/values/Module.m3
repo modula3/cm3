@@ -105,6 +105,9 @@ CONST
 CONST
   GlobalDataPrefix = ARRAY (*t.interface*)BOOLEAN OF TEXT { "M_", "I_"   };
   MainBodySuffix   = ARRAY (*t.interface*)BOOLEAN OF TEXT { "_M3", "_I3" };
+  UnitKindRW = ARRAY (*t.interface*)BOOLEAN OF TEXT { "MODULE ", "INTERFACE " };
+  UnitKindText = ARRAY (*t.interface*)BOOLEAN OF TEXT { "module", "interface" };
+  UnitKindSuffix = ARRAY (*t.interface*)BOOLEAN OF TEXT { ".mg", ".ig" };
 
 PROCEDURE Reset () =
   BEGIN
@@ -372,11 +375,11 @@ PROCEDURE Parse (interfaceOnly : BOOLEAN := FALSE): T =
         END;
 
         IF (t.genericBase # M3ID.NoID) THEN
-          ParseFinalEndID (t.genericBase);
+          ParseFinalEndID (t, t.genericBase);
           Scanner.Pop ();
         END;
         Host.CloseFile (genericReader);
-        ParseFinalEndID (t.name);
+        ParseFinalEndID (t, t.name);
 
       Scope.PopNew (); (* localScope *)
 
@@ -442,7 +445,10 @@ PROCEDURE PushGeneric (t: T;  VAR rd: File.T): M3ID.T =
     id := MatchID ();
     IF (id # M3ID.NoID) THEN
       IF (id # genericName) THEN
-        Error.ID (id, "imported module has wrong name");
+        Error.Msg 
+          ("Instantiated " & UnitKindText[t.interface] & " in file \"" &
+           M3ID.ToText(genericName) & UnitKindSuffix[t.interface] &
+           "\" has wrong name: \"" & M3ID.ToText(id) & "\"");
         genericName := id;
       END;
     END;
@@ -488,13 +494,15 @@ PROCEDURE ParseGenericArgs (): INTEGER =
     RETURN n;
   END ParseGenericArgs;
 
-PROCEDURE ParseFinalEndID (goal: M3ID.T) =
+PROCEDURE ParseFinalEndID (t: T; goal: M3ID.T) =
   VAR id: M3ID.T;
   BEGIN
     Match (TK.tEND);
     id := MatchID ();
     IF (goal # id) THEN
-      Error.ID (id, "Initial module name doesn\'t match final name");
+      Error.Msg ("Initial " & UnitKindText[t.interface] & " name \"" & 
+                 M3ID.ToText(goal) & "\" is not matched by final name \"" & 
+                 M3ID.ToText(id) & "\"" );
     END;
     Match (TK.tDOT);
     IF (cur.token # TK.tEOF) THEN
@@ -1194,9 +1202,8 @@ PROCEDURE GenLinkerInfo (t: T;  proc_info, type_map, rev_full, rev_part: INTEGER
   END GenLinkerInfo;
 
 PROCEDURE AddFPTag (t: T;  VAR x: M3.FPInfo): CARDINAL =
-  CONST Tags = ARRAY BOOLEAN OF TEXT { "MODULE ", "INTERFACE " };
   BEGIN
-    ValueRep.FPStart (t, x, Tags[t.interface], 0, global := FALSE);
+    ValueRep.FPStart (t, x, UnitKindRW[t.interface], 0, global := FALSE);
     RETURN 0;
   END AddFPTag;
 

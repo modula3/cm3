@@ -83,6 +83,18 @@ PROCEDURE FindWideCharR(t: T; c: WIDECHAR;  start := LAST(INTEGER)): INTEGER;
 (* If "c = t[i]" for some "i" in "[0~..~MIN(start, Length(t)-1)]",
    return the largest such "i"; otherwise, return -1. *)
 
+TYPE ProcOfString = PROCEDURE ( READONLY ArrCh : ARRAY OF CHAR ) RAISES ANY;
+TYPE ProcOfWideString 
+     = PROCEDURE ( READONLY ArrWch : ARRAY OF WIDECHAR ) RAISES ANY;
+
+PROCEDURE ForAllDo 
+  ( t : TEXT; VisitString : ProcOfString; VisitWideString: ProcOfWideString ) 
+  RAISES ANY (* From the callbacks. *); 
+(* Execute a series of calls on the Visit* callback procedures that 
+   covers all the characters in t, in sequence.  Unlike GetChars and 
+   GetWideChars, this avoids the overhead of internally allocating 
+   and copying the characters of t into a flat array. *)  
+
 END Text.
 
 (*

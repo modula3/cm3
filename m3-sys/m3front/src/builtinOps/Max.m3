@@ -106,7 +106,7 @@ PROCEDURE Initialize () =
                                  CallExpr.IsNever, (* writable *)
                                  CallExpr.IsNever, (* designator *)
                                  CallExpr.NotWritable (* noteWriter *));
-    Procedure.Define ("MAX", Z, TRUE);
+    Procedure.DefinePredefined ("MAX", Z, TRUE);
   END Initialize;
 
 BEGIN

@@ -7,9 +7,11 @@
 UNSAFE MODULE Text;
 
 IMPORT Word, TextClass, TextStats, Text8, Text16, String8, String16;
+IMPORT TextCat, TextSub; 
 
 TYPE Info = TextClass.Info;
 
+(* EXPORTED *) 
 PROCEDURE Length (t: T): CARDINAL =
   VAR i: Info;
   BEGIN
@@ -17,6 +19,7 @@ PROCEDURE Length (t: T): CARDINAL =
     RETURN i.length;
   END Length;
 
+(* EXPORTED *) 
 PROCEDURE Empty (t: T): BOOLEAN =
   VAR i: Info;
   BEGIN
@@ -24,7 +27,7 @@ PROCEDURE Empty (t: T): BOOLEAN =
     RETURN i.length < 1;
   END Empty;
 
-
+(* EXPORTED *) 
 PROCEDURE Equal (t, u: T): BOOLEAN =
   VAR Result : BOOLEAN; 
   BEGIN
@@ -183,6 +186,7 @@ PROCEDURE EqualBufAny (t, u: TEXT;  len: CARDINAL): BOOLEAN =
     RETURN SUBARRAY (buf_t, 0, j) = SUBARRAY (buf_u, 0, j);
   END EqualBufAny;
 
+(* EXPORTED *) 
 PROCEDURE Compare (t, u: T): [-1..1] =
   VAR Result : [-1..1]; 
   BEGIN
@@ -330,11 +334,13 @@ PROCEDURE CompareBufAny (t, u: TEXT;  len_t, len_u: CARDINAL): [-1 .. 1] =
     RETURN Map [len_t < len_u];
   END CompareBufAny;
 
+(* EXPORTED *) 
 PROCEDURE Cat (t, u: TEXT): TEXT =
   BEGIN
     RETURN t & u;  (* => call RTHooks.Concat(t, u) *)
   END Cat;
 
+(* EXPORTED *) 
 PROCEDURE Hash (t: T): Word.T =
   VAR Result : Word.T; 
   BEGIN
@@ -430,6 +436,7 @@ PROCEDURE HashBufAny (t: T;  len: CARDINAL): Word.T =
     RETURN result;
   END HashBufAny;
 
+(* EXPORTED *) 
 PROCEDURE HasWideChars (t: T): BOOLEAN =
   VAR Result : BOOLEAN; 
   BEGIN
@@ -481,6 +488,7 @@ PROCEDURE HasWideCharsBuf16 (t: T;  len: CARDINAL): BOOLEAN =
     RETURN FALSE;
   END HasWideCharsBuf16;
 
+(* EXPORTED *) 
 PROCEDURE GetChar (t: T; i: CARDINAL): CHAR =
   VAR Result : CHAR;
   BEGIN
@@ -492,6 +500,7 @@ PROCEDURE GetChar (t: T; i: CARDINAL): CHAR =
     RETURN Result 
   END GetChar;
 
+(* EXPORTED *) 
 PROCEDURE GetWideChar (t: T; i: CARDINAL): WIDECHAR =
   VAR Result : WIDECHAR;
   BEGIN
@@ -503,6 +512,7 @@ PROCEDURE GetWideChar (t: T; i: CARDINAL): WIDECHAR =
     RETURN Result 
   END GetWideChar;
 
+(* EXPORTED *) 
 PROCEDURE SetChars (VAR a: ARRAY OF CHAR;  t: T;  start: CARDINAL) =
   BEGIN
     (*47 TextStats.NoteGround (TextStats.Op.SetChars); 74*) 
@@ -512,6 +522,7 @@ PROCEDURE SetChars (VAR a: ARRAY OF CHAR;  t: T;  start: CARDINAL) =
     (*47 TextStats.NoteFinished (TextStats.Op.SetChars); 74*) 
   END SetChars;
 
+(* EXPORTED *) 
 PROCEDURE SetWideChars (VAR a: ARRAY OF WIDECHAR;  t: T;  start: CARDINAL) =
   BEGIN
     (*47 TextStats.NoteGround (TextStats.Op.SetWideChars); 74*) 
@@ -523,6 +534,7 @@ PROCEDURE SetWideChars (VAR a: ARRAY OF WIDECHAR;  t: T;  start: CARDINAL) =
 
 VAR fromCharCache := ARRAY CHAR OF T {NIL, ..}; (* 1-char texts *)
 
+(* EXPORTED *) 
 PROCEDURE FromChar (c: CHAR): T =
   VAR Result: T; 
   BEGIN
@@ -542,6 +554,7 @@ PROCEDURE FromCharInner (c: CHAR): T =
     RETURN fromCharCache [c];
   END FromCharInner;
 
+(* EXPORTED *) 
 PROCEDURE FromWideChar (c: WIDECHAR): T =
   VAR buf: ARRAY [0..0] OF WIDECHAR;
   VAR Result: T; 
@@ -555,6 +568,7 @@ PROCEDURE FromWideChar (c: WIDECHAR): T =
     RETURN Result;
   END FromWideChar;
 
+(* EXPORTED *) 
 PROCEDURE FromChars (READONLY a: ARRAY OF CHAR): T =
   VAR n := NUMBER (a);
   VAR Result: T; 
@@ -568,6 +582,7 @@ PROCEDURE FromChars (READONLY a: ARRAY OF CHAR): T =
     RETURN Result;
   END FromChars;
 
+(* EXPORTED *) 
 PROCEDURE FromWideChars (READONLY a: ARRAY OF WIDECHAR): T =
   VAR n := NUMBER (a);
   VAR Result: T; 
@@ -583,6 +598,7 @@ PROCEDURE FromWideChars (READONLY a: ARRAY OF WIDECHAR): T =
 
 VAR FindCharOp: TextStats.Op; 
 
+(* EXPORTED *) 
 PROCEDURE FindChar (t: T;  c: CHAR;  start := 0): INTEGER =
   VAR Result : INTEGER; 
   BEGIN
@@ -596,6 +612,7 @@ PROCEDURE FindChar (t: T;  c: CHAR;  start := 0): INTEGER =
     RETURN Result
   END FindChar; 
 
+(* EXPORTED *) 
 PROCEDURE FindWideChar (t: T;  c: WIDECHAR;  start := 0): INTEGER =
   VAR Result : INTEGER; 
   BEGIN
@@ -778,6 +795,7 @@ PROCEDURE FindCharBufAny (t: T;  c: WIDECHAR;
     END;
   END FindCharBufAny;
 
+(* EXPORTED *) 
 PROCEDURE FindCharR (t: T;  c: CHAR; start := LAST (INTEGER)): INTEGER =
   VAR Result : INTEGER; 
   BEGIN
@@ -791,6 +809,7 @@ PROCEDURE FindCharR (t: T;  c: CHAR; start := LAST (INTEGER)): INTEGER =
     RETURN Result
   END FindCharR; 
 
+(* EXPORTED *) 
 PROCEDURE FindWideCharR 
   (t: T;  c: WIDECHAR;  start := LAST (INTEGER)): INTEGER =
   VAR Result : INTEGER; 
@@ -959,6 +978,67 @@ PROCEDURE FindCharRBufAny (t: TEXT;  c: WIDECHAR;
       (*47 TextStats.NoteIter (FindCharOp); 74*) 
     END;
   END FindCharRBufAny;
+
+(* EXPORTED *) 
+PROCEDURE ForAllDo 
+  ( t : TEXT; VisitString : ProcOfString; VisitWideString: ProcOfWideString ) 
+  RAISES ANY (* From the callbacks. *) = 
+(* Execute a series of calls on the Visit* callback procedures that 
+   covers all the characters in t, in sequence.  Unlike GetChars and 
+   GetWideChars, this avoids the overhead of internally allocating 
+   and copying the characters of t into a flat array. *)
+
+  (* Confusingly, 'info.start' is an absolute byte pointer, while other variables
+     named 'start' are character counts (wide or otherwise), and relative to
+     the beginning of a string.  Fields named 'len' are character counts. *)    
+
+  PROCEDURE Recurse (t : TEXT; start, len: CARDINAL) RAISES ANY = 
+    (* Handle SUBARRAY(t, start, MIN(len, Length(t)-start),
+       i.e., it is OK for len to be more that what is available in t. *) 
+
+    TYPE DopeTyp = RECORD startByteAddr: ADDRESS; len: CARDINAL END; 
+
+    VAR info: TextClass.Info;
+    VAR Dope: DopeTyp; 
+
+    BEGIN
+      IF len > 0 THEN 
+        TYPECASE t OF 
+        NULL => 
+
+        | TextCat.T (TCat) 
+        => IF start < TCat.a_len THEN (* Some from a. *) 
+             Recurse (TCat.a, start, len);
+             Recurse (TCat.b, 0, len-(TCat.a_len - start))
+           ELSE (* Only from b. *) 
+             Recurse(TCat.b, start - TCat.a_len, len)
+           END; 
+
+        | TextSub.TT ( TSub ) 
+          => Recurse ( TSub.base, TSub.start+start, MIN(len, TSub.len-start) ); 
+
+        ELSE
+          t.get_info(info); 
+          (* Rather than trying to use SUBARRAY to get the compiler to 
+             construct an open array value from a raw address and a length, 
+             (which would require a fixed array type, and its maximum length 
+             would be problematic), let's just construct the dope directly. *)
+          Dope.len := MIN(len, info.length-start); 
+          IF info.wide THEN
+            Dope.startByteAddr := info.start + start*BYTESIZE(WIDECHAR);
+            VisitWideString 
+              (LOOPHOLE (ADR (Dope), REF ARRAY OF WIDECHAR)^);
+          ELSE
+            Dope.startByteAddr := info.start + start;
+            VisitString (LOOPHOLE (ADR (Dope), REF ARRAY OF CHAR)^);
+          END;
+        END; 
+      END; 
+    END Recurse;
+
+  BEGIN (* ForAllDo *) 
+    Recurse ( t, 0, LAST (INTEGER)) 
+  END ForAllDo; 
 
 BEGIN
 END Text.

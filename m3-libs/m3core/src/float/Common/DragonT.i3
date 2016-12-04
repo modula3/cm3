@@ -13,16 +13,20 @@ TYPE
   CutoffMode = {normal, absolute, relative};
   Digit = [0 .. 9];
 
-PROCEDURE F (e           : INTEGER;
-             f1, f0      : INTEGER;
-             p           : INTEGER;
-             cutoffMode  : CutoffMode;
-             cutoffPlace : INTEGER;
-  VAR(*OUT*) digits      : ARRAY OF Digit;
-  VAR(*OUT*) count       : CARDINAL;
-  VAR(*OUT*) exp         : INTEGER);
+PROCEDURE F (e              : INTEGER;
+             f3, f2, f1, f0 : INTEGER;
+             p              : INTEGER;
+             cutoffMode     : CutoffMode;
+             cutoffPlace    : INTEGER;
+  VAR(*OUT*) digits         : ARRAY OF Digit;
+  VAR(*OUT*) count          : CARDINAL;
+  VAR(*OUT*) exp            : INTEGER);
 (* Implements the "Dragon" algorithm to print floating-point numbers.
-   The 64 mantissa bits are ((f1 & 16_ffffffff) << 32) + (f0 & 16_ffffffff) *)
+   For REAL and LONGREAL set f2 and f3 to 0
+   The 64 mantissa bits are ((f1 & 16_ffffffff) << 32) + (f0 & 16_ffffffff) 
+   For Quad precision EXTENDED
+   The 128 mantissa bits are ((f3 & 16_ffffffff) << 96) + (f2 & 16_ffffffff << 64) +                 
+                             ((f1 & 16_ffffffff) << 32) + (f0 & 16_ffffffff) *)
 
 
 <*EXTERNAL strtod*>

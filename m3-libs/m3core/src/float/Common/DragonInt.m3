@@ -8,7 +8,7 @@
 
 UNSAFE MODULE DragonInt;
 
-IMPORT Word;
+IMPORT Word,Long;
 
 (* Internal computations of Dragon require the use of bignums.
    Also, the fraction of a floating-point number can occupy more bits
@@ -55,7 +55,7 @@ CONST
    This value was chosen by running a test program that converted various real
    numbers to decimal representation and examining the distribution of
    required buffer sizes. *)
-
+    
 TYPE
   Words = REF ARRAY OF Word.T;
 
@@ -114,6 +114,10 @@ CONST
   SigBits  = Word.RightShift (Word.Not (0), Reserved);
   TopBit   = 16_08000000;
 
+CONST
+  WS = 32;
+  M = WS - Used;
+  
 CONST (* masks to assemble 28-bit units from 32-bit words *)
   Mask1  = 16_0fffffff; (* bottom 28 *)
   Mask2B = 16_f0000000; (* top 4 of bottom 32 *)
@@ -140,6 +144,7 @@ PROCEDURE New (s: Session;  a, b: INTEGER): T =
       END;
     ELSE (* a = 0 *)
       x0 := Word.And (b, Mask1);
+
       x1 := Word.RightShift (Word.And (b, Mask2B), 28);
       IF (x1 # 0)
         THEN p := InitValue (s, 2, res);  p[0] := x0; p[1] := x1;
@@ -149,6 +154,47 @@ PROCEDURE New (s: Session;  a, b: INTEGER): T =
     RETURN res;
   END New;
 
+(* Create a new bigint from array in *)
+PROCEDURE NewFromArr (s: Session; in : RefInt) : T =
+  VAR
+    res : T;
+    p : Ptr;
+    out : RefInt;
+    xl,xz,xo,x,leftExtract,n,len,olen,N : INTEGER := 0;
+  BEGIN
+    N := NUMBER(in^);
+
+    olen := N * WS DIV Used;
+    IF N * WS MOD Used > 0 THEN INC(olen); END;
+    out := NEW(RefInt, olen);
+
+    FOR i := 0 TO N - 1 DO
+      x := in[i];
+      xz := Word.Insert(x, 0, WS - (n+M), n+M); 
+      xl := Word.LeftShift(xz, n);
+      xo := Word.Or(xl, leftExtract);
+      out[len] := xo;
+      INC(len); 
+      INC(n,M);
+      leftExtract := Word.Extract(x, WS - n, n);
+      IF n = Used THEN
+        out[len] := leftExtract; INC(len); n := 0; leftExtract := 0;
+      END;
+    END;
+    IF leftExtract > 0 THEN
+      out[len] := leftExtract; INC(len);
+    END;
+    
+    p := InitValue (s, len, res);
+    
+    FOR j := 0 TO len - 1 DO
+      p^ := out[j];
+      INC (p, ADRSIZE (p^));
+    END;
+    FixSize(s,res);
+    RETURN res;
+  END NewFromArr;
+  
 PROCEDURE copy (s: Session;  READONLY a: T): T =
   VAR res: T;
   BEGIN
@@ -302,8 +348,8 @@ PROCEDURE shift (s: Session;  READONLY a: T; n: INTEGER): T =
 
     ELSE (* n < 0 *)
       (* shift right *)
-      k := (-n) DIV Word.Size;
-      n := (-n) MOD Word.Size;
+      k := (-n) DIV (Used);
+      n := (-n) MOD (Used);
       EVAL InitValue (s, a.s - k, res);
 
       WITH w = s.w^ DO
@@ -407,7 +453,79 @@ PROCEDURE divmod (s: Session;  READONLY a, b : T;  VAR(*OUT*) d: INTEGER): T =
     d := n - 1;
     RETURN diff (s, a, n1b);
   END divmod;
+  
+PROCEDURE mult (s: Session;  READONLY a, b: T) : T =
+  CONST
+    SigBitsL = VAL(SigBits,Long.T);
+  VAR 
+    res : T;
+    x,y,z,c,carry : Long.T;  
+    ap, bp, cp, cp0 : Ptr ;
+  BEGIN
+    cp := InitValue (s, a.s + b.s + 1, res);
+  
+    cp0 := ADR (s.w[res.w]);
+    FOR i := 0 TO res.s - 1 DO
+      cp0^ := 0;
+      INC (cp0, ADRSIZE (cp0^));
+    END;
 
+    bp := ADR (s.w[b.w]);
+    cp0 := ADR (s.w[res.w]);
+
+    FOR i := 0 TO b.s - 1 DO
+      ap := ADR (s.w[a.w]);
+      IF bp^ # 0 THEN
+        carry := 0L;
+        cp := cp0;
+        FOR j := 0 TO a.s - 1 DO
+          x := VAL(ap^,Long.T); y := VAL(bp^,Long.T); c := VAL(cp^,Long.T);
+          z := Long.Plus(Long.Times(x, y), Long.Plus(c, carry));
+          carry := Long.RightShift (z, Used);
+          cp^ := VAL(Long.And(z,SigBitsL), Word.T);
+          INC (ap, ADRSIZE (ap^));
+          INC (cp, ADRSIZE (cp^));
+        END;
+        cp^ := VAL(carry,Word.T);
+      END;
+      INC (cp0, ADRSIZE (cp0^));      
+      INC (bp, ADRSIZE (bp^));
+    END;
+    FixSize (s, res);
+    RETURN res;
+  END mult;
+
+PROCEDURE ToArr32(s : Session; a : T; VAR out : RefInt32; VAR len : INTEGER) =
+  VAR 
+    y,z : Word.T := 0;
+    n,j : INTEGER := 0;
+    yp,zp : Ptr := ADR (s.w[a.w]);
+    ep : Ptr;
+  BEGIN
+    (* assume the allocator zeros this array, min size 128 bits for quads *)
+    out := NEW(RefInt32,MAX(a.s, 4));
+    IF a.s = 0 THEN
+      len := 0;
+      RETURN;
+    END;
+    INC (zp, ADRSIZE (yp^));
+    ep := ADR (s.w[a.w + a.s - 1]);
+    y := Word.Extract(yp^, n, Used - n);
+
+    WHILE yp < ep  DO
+      z := Word.LeftShift(zp^,Used - n);
+      out[j] := Fix32(Word.Or(y,z)); INC(j);
+      n := (n + M ) MOD Used;
+      yp := zp; INC (zp, ADRSIZE (yp^));
+      IF n = 0 THEN
+        yp := zp; INC (zp, ADRSIZE (yp^));
+      END;
+      y := Word.Extract(yp^, n, Used - n);
+    END; 
+    IF y > 0 THEN out[j] := y; INC(j); END;
+    len := j;  
+  END ToArr32;
+  
 (*---------------------------------------------------- internal utilities ---*)
 
 PROCEDURE InitValue (s: Session;  n_words: INTEGER;  VAR(*OUT*) t: T): ADDRESS=
@@ -444,6 +562,18 @@ PROCEDURE FixSize (s: Session;  VAR a: T) =
     END;
   END FixSize;
 
-
+PROCEDURE Fix32 (x: Word.T): Int32 =
+  (* return the sign-extended bottom 32 bits of 'x' *)
+  CONST
+    SigBits = 16_ffffffff; (* mask to grab 32 significant bits *)
+    Sign = 16_80000000;
+    SignExtend = Word.LeftShift (Word.Not (0), 31);
+  BEGIN
+    IF Word.And (x, Sign) = 0
+      THEN RETURN Word.And (x, SigBits);
+      ELSE RETURN Word.Or (SignExtend, Word.And (x, SigBits));
+    END;
+  END Fix32;
+  
 BEGIN
 END DragonInt.

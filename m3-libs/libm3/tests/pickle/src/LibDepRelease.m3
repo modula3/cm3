@@ -1,8 +1,7 @@
 MODULE LibDepRelease EXPORTS LibDep 
 
 (* Things that need different source code, depending on the version of 
-   m3core and libm3.  Version for newer libraries that are are at least
-   aware of 21-biut WIDECHAR, alhtough they could be compiled with
+   m3core and libm3.  Version for older libraries that support only
    16-bit WIDECHAR. *)  
 
 ; IMPORT Pickle2 AS Pickle 

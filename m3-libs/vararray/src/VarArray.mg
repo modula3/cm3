@@ -110,7 +110,7 @@ GENERIC MODULE VarArray ( Ranges )
 
 ; CONST MinExpansionFactorR = 1.0 (* Never try to shrink when expanding. *) 
 
-(* VISIBLE: *) 
+(* EXPORTED: *) 
 ; PROCEDURE New 
     ( InitElemValue : ElemTyp 
     ; InitialAlloc : RangeTyp := EmptyRange 
@@ -170,7 +170,7 @@ GENERIC MODULE VarArray ( Ranges )
       END (* IF *) 
     END New 
 
-(* VISIBLE: *) 
+(* EXPORTED: *) 
 ; PROCEDURE TouchedRange ( Array : T ) : RangeTyp 
   (* PRE: Array # NIL *) 
   (* Abstract view: 
@@ -196,7 +196,7 @@ GENERIC MODULE VarArray ( Ranges )
       END (* IF *) 
     END TouchedRange 
 
-(* VISIBLE: *)
+(* EXPORTED: *)
 ; PROCEDURE Touch ( Array : T ; Range : RangeTyp ) 
   RAISES { AllocationFailure } 
   (* PRE: Array # NIL *) 
@@ -211,7 +211,7 @@ GENERIC MODULE VarArray ( Ranges )
         ( Array , ORD ( Range . Lo ) , ORD ( Range . Hi ) , DoInit := TRUE ) 
     END Touch 
 
-(* VISIBLE: *) 
+(* EXPORTED: *) 
 ; PROCEDURE InitElemValue ( Array : T ) : ElemTyp 
   (* PRE: Array # NIL *) 
   (* Abstract view: The value that was passed to the call on New that 
@@ -661,7 +661,7 @@ GENERIC MODULE VarArray ( Ranges )
       END (* IF Empty range. *)  
     END AllocateAndTouchRange  
 
-(* VISIBLE: *) 
+(* EXPORTED: *) 
 ; PROCEDURE Assign ( Array : T ; Ss : SsTyp ; Value : ElemTyp ) 
   RAISES { AllocationFailure } 
   (* PRE: Array # NIL *) 
@@ -682,7 +682,7 @@ GENERIC MODULE VarArray ( Ranges )
     ; Array . Elems ^ [ LBiasedSsW ] := Value   
     END Assign  
 
-(* VISIBLE: *) 
+(* EXPORTED: *) 
 ; PROCEDURE Fetch ( Array : T ; Ss : SsTyp ) : ElemTyp  
   (* PRE: Array # NIL *) 
   (* Abstract view: Return Array[Ss]. 
@@ -715,7 +715,7 @@ GENERIC MODULE VarArray ( Ranges )
       END (* IF *)  
     END Fetch 
  
-(* VISIBLE: *) 
+(* EXPORTED: *) 
 ; PROCEDURE AssignSubarray 
     ( Array : T ; Lo : SsTyp ; READONLY Elems : ARRAY OF ElemTyp ) 
   (* PRE: Array # NIL *) 
@@ -753,7 +753,7 @@ GENERIC MODULE VarArray ( Ranges )
       END (* IF *) 
     END AssignSubarray 
 
-(* VISIBLE: *) 
+(* EXPORTED: *) 
 ; PROCEDURE FetchSubarray 
     ( Array : T ; Lo : SsTyp ; VAR Elems : ARRAY OF ElemTyp )
   (* PRE: Array # NIL *) 
@@ -849,7 +849,7 @@ GENERIC MODULE VarArray ( Ranges )
       END (* IF *)       
     END FetchSubarray 
 
-(* VISIBLE: *) 
+(* EXPORTED: *) 
 ; PROCEDURE CallbackWithElem 
     ( Array : T ; Ss : SsTyp ; Callback : ProcOfSsTypVARElemTyp ) 
   RAISES ANY (* AllocationFailure from CallbackWithElem, ANY from Callback. *) 
@@ -876,7 +876,7 @@ GENERIC MODULE VarArray ( Ranges )
 
 ; VAR GEmptyArrayOfElem := ARRAY [ 1 .. 0 ] OF ElemTyp { } 
  
-(* VISIBLE: *) 
+(* EXPORTED: *) 
 ; PROCEDURE CallbackWithSubarray 
     ( Array : T 
     ; Lo : SsTyp 
@@ -988,7 +988,7 @@ GENERIC MODULE VarArray ( Ranges )
       END (* IF *) 
     END InnerFor
 
-(* VISIBLE: *) 
+(* EXPORTED: *) 
 ; PROCEDURE ForAllTouchedInRange
     ( Array : T 
     ; From : SsTyp := FIRST ( SsTyp )  
@@ -1053,7 +1053,7 @@ GENERIC MODULE VarArray ( Ranges )
       END (* IF *) 
     END ForAllTouchedInRange
 
-(* VISIBLE: *) 
+(* EXPORTED: *) 
 ; PROCEDURE ForAllInRange
     ( Array : T 
     ; From : SsTyp 
@@ -1093,7 +1093,7 @@ GENERIC MODULE VarArray ( Ranges )
     ; InnerFor ( Array , LFromI , LToI , By , Do ) 
     END ForAllInRange
 
-(* VISIBLE: *) 
+(* EXPORTED: *) 
 ; PROCEDURE Project ( Array : T ; Range : RangeTyp ) 
   (* PRE: Array # NIL *) 
   (* Let PRange be the intersection of Range with touched(Array). 
@@ -1147,7 +1147,7 @@ GENERIC MODULE VarArray ( Ranges )
       END (* IF *) 
     END Project 
 
-(* VISIBLE: *) 
+(* EXPORTED: *) 
 ; PROCEDURE Copy 
   (* PRE: Array # NIL *) 
     ( Array : T 
@@ -1292,7 +1292,7 @@ GENERIC MODULE VarArray ( Ranges )
     ; RETURN LResult 
     END Copy 
 
-(* VISIBLE: *) 
+(* EXPORTED: *) 
 ; PROCEDURE AllocatedRange ( Array : T ) : RangeTyp 
   (* PRE: Array # NIL *) 
   (* Abstract view: A noop.
@@ -1321,7 +1321,7 @@ GENERIC MODULE VarArray ( Ranges )
       END (* IF *) 
     END AllocatedRange 
 
-(* VISIBLE: *) 
+(* EXPORTED: *) 
 ; PROCEDURE Compact ( Array : T ) 
   RAISES { AllocationFailure } 
   (* PRE: Array # NIL *) 
@@ -1368,7 +1368,7 @@ GENERIC MODULE VarArray ( Ranges )
       END (* IF *) 
     END Compact 
 
-(* VISIBLE: *) 
+(* EXPORTED: *) 
 ; PROCEDURE RawInfo ( Array : T ) : RawInfoTyp  
   (* Return a record of information that allows fast, direct access to the
      underlying allocated array used by the implementation, at the risk of 

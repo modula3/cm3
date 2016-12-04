@@ -1,7 +1,7 @@
   
 (* -----------------------------------------------------------------------1- *)
 (* File Sets.m3  Modula-3 source code.                                       *)
-(* Copyright 2010 .. 2012, Rodney M. Bates.                                  *)
+(* Copyright 2010 .. 2016, Rodney M. Bates.                                  *)
 (* rodney.m.bates@acm.org                                                    *)
 (* Licensed under the MIT License.                                           *) 
 (* -----------------------------------------------------------------------2- *)
@@ -168,11 +168,46 @@ MODULE Sets
 
   = BEGIN 
       RETURN 
-        ( ElementCt + BITSIZE ( BitsetTyp )
+        ( ElementCt 
+          + BITSIZE ( BitsetTyp )
           - ElementCt MOD BITSIZE ( BitsetTyp )
         )
         DIV BITSIZE ( BitsetTyp )
     END NeededBitsetCount
+
+; PROCEDURE Check ( Set : tSet ) 
+
+  = VAR LCount : CARDINAL 
+  ; VAR LMaxBit : tElement 
+  ; VAR LMsg : TEXT := NIL 
+
+  ; BEGIN
+      IF Set # NIL 
+      THEN
+        IF Set ^ . BitsetPtr = NIL
+        THEN
+          LCount := 0  
+        ; LMaxBit := 0
+        ELSE 
+          LCount := NUMBER ( Set ^ . BitsetPtr ^ ) 
+        ; LMaxBit := LCount * BITSIZE ( BitsetTyp ) - 1 
+        END (* IF *) 
+      ; IF Set ^ . MaxElmt > LMaxBit 
+        THEN LMsg := "Bitset array is too small." 
+        ELSIF Set ^ . LastElmt < Set ^ . FirstElmt 
+        THEN (* Empty, OK. *) 
+        ELSIF Set . LastElmt > LMaxBit 
+        THEN LMsg := "LastElmt outside Bitset array."
+        ELSIF Set . LastElmt > Set ^ . MaxElmt  
+        THEN LMsg := "LastElmt exceeds MaxElmt."
+        ELSE (* OK *) 
+        END (* IF *)   
+      END (* IF *)
+    ; IF LMsg # NIL 
+      THEN
+        <* ASSERT FALSE *>
+      END (* IF *) 
+    END Check 
 
 ; PROCEDURE MakeSet ( VAR Set : tSet ; MaxElementCt : tElement := 256 )
 
@@ -181,10 +216,12 @@ MODULE Sets
   ; BEGIN (* MakeSet *)
       INC ( GSetCt ) 
     ; Set := NEW ( tSet )
+    ; MaxElementCt := MAX ( MaxElementCt , 1 ) (* Always room for one. *) 
     ; Set . MaxElmt := MaxElementCt - 1 
     ; LBitsetCount := NeededBitsetCount ( Set . MaxElmt ) 
     ; Set . BitsetPtr := NewRefArrayOfBitset ( LBitsetCount )
     ; AssignEmpty ( Set )
+    ; Check ( Set ) 
     END MakeSet
 
 ; PROCEDURE ReleaseSet ( VAR Set : tSet )
@@ -200,27 +237,22 @@ MODULE Sets
   ; VAR LNewBitsetPtr : RefArrayOfBitset 
 
   ; BEGIN (* Union *)
-      IF Set2 = NIL OR Set2 . BitsetPtr = NIL 
+      IF IsEmpty ( Set2 ) 
       THEN (* Set2 is empty, Set1 remains unchanged. *) 
-      ELSIF Set1 = NIL OR Set1 . BitsetPtr = NIL 
+      ELSIF IsEmpty ( Set1 ) 
       THEN (* Set1 is empty and Set2 is not. *) 
         Copy ( Set1 , Set2 )  
       ELSE (* Compute the result. *) 
         N1 := NUMBER ( Set1 . BitsetPtr ^ ) 
       ; N2 := NUMBER ( Set2 . BitsetPtr ^ )
-      ; WHILE N2 > 0 AND Set2 . BitsetPtr ^ [ N2 - 1 ] = 0 
-        DO DEC ( N2 ) 
-        END (* WHILE *)  
       ; IF N2 > N1 
         THEN (* Must expand Set1. *) 
           LNewBitsetPtr := NewRefArrayOfBitset ( N2 ) 
         ; SUBARRAY ( LNewBitsetPtr ^ , 0 , N1 ) := Set1 . BitsetPtr ^ 
         ; FOR RI := N1 TO N2 - 1 
-          DO 
-            LNewBitsetPtr ^ [ RI ] := 0 
-          END (* FoR *) 
+          DO LNewBitsetPtr ^ [ RI ] := 0 
+          END (* FOR *) 
         ; Set1 . BitsetPtr := LNewBitsetPtr 
-        ; N1 := N2 
         END (* IF *) 
       ; FOR i := 0 TO N2 - 1
         DO WITH WBitset1 = Set1 . BitsetPtr ^ [ i ]
@@ -229,16 +261,22 @@ MODULE Sets
           END (* WITH *)
         END (* FOR *)
       ; Set1 . Card := UnknownCardinality
+      ; Set1 . MaxElmt := MAX ( Set1 . MaxElmt , Set2 . MaxElmt )
       ; Set1 . FirstElmt := MIN ( Set1 . FirstElmt , Set2 . FirstElmt )
       ; Set1 . LastElmt := MAX ( Set1 . LastElmt , Set2 . LastElmt )
       END (* IF *) 
+    ; Check ( Set1 ) 
     END Union
 
 ; PROCEDURE Difference ( VAR Set1 : tSet ; Set2 : tSet )
 
   = BEGIN (* Difference *) 
-      IF Set1 = Set2 
-      THEN Copy ( Set1 , Set1 ) 
+      IF IsEmpty ( Set1 ) OR IsEmpty ( Set2 ) 
+      THEN RETURN (* Set1 remains unchanged. *) 
+      ELSIF Set1 = Set2 
+      THEN 
+        AssignEmpty ( Set1 ) 
+      ; RETURN 
       END (* IF *) 
     ; FOR i := 0 
           TO MIN ( NUMBER ( Set1 . BitsetPtr ^ )  
@@ -255,6 +293,7 @@ MODULE Sets
       END (* FOR *)
     ; Set1 . Card := UnknownCardinality
 (* CHECK: Is it OK for FirstElmt and LastElmt to be too wide a range? *)
+    ; Check ( Set1 ) 
     END Difference
 
 ; PROCEDURE Project ( VAR Set : tSet ; Min : tElement ; Max : tElement )
@@ -264,7 +303,9 @@ MODULE Sets
   ; VAR LLastBitset : CARDINAL
 
   ; BEGIN (* Project *)
-      IF Min > Max 
+      IF IsEmpty ( Set ) 
+      THEN (* Result is empty too. *) 
+      ELSIF Min > Max 
       THEN (* Project range is empty. *) 
         AssignEmpty ( Set ) 
       ELSE 
@@ -304,6 +345,7 @@ MODULE Sets
         ; Set . Card := UnknownCardinality
         END (* IF *) 
       END (* IF *) 
+    ; Check ( Set ) 
     END Project
 
 ; PROCEDURE Intersection ( VAR Set1 : tSet ; Set2 : tSet )
@@ -313,10 +355,10 @@ MODULE Sets
   ; VAR NCommon : CARDINAL 
 
   ; BEGIN (* Intersection *)
-      IF Set2 = NIL OR Set2 ^ . BitsetPtr = NIL 
+      IF IsEmpty ( Set2 ) 
       THEN (* Set2 is empty.  Make result empty too. *) 
         AssignEmpty ( Set1 ) 
-      ELSIF Set1 = NIL OR Set1 ^ . BitsetPtr = NIL 
+      ELSIF IsEmpty ( Set1 ) 
       THEN (* Set1 is empty and will remain unchanged. *) 
       ELSE 
         N1 := NUMBER ( Set1 ^ . BitsetPtr ^ )  
@@ -335,27 +377,48 @@ MODULE Sets
       ; Set1 . FirstElmt := MAX ( Set1 . FirstElmt , Set2 . FirstElmt )
       ; Set1 . LastElmt := MIN ( Set1 . LastElmt , Set2 . LastElmt )
       END (* IF *) 
+    ; Check ( Set1 ) 
     END Intersection
 
 ; PROCEDURE SymDiff ( VAR Set1 : tSet ; Set2 : tSet )
 
-  = BEGIN (* SymDiff *)
-      FOR RI := 0 
-          TO MIN ( NUMBER ( Set1 . BitsetPtr ^ )  
-                 , NUMBER ( Set2 . BitsetPtr ^ ) 
-                 ) 
-             - 1 
-      DO WITH WBitset1 = Set1 . BitsetPtr ^ [ RI ]
-        DO
-          WBitset1 := Word . Xor ( WBitset1 , Set2 . BitsetPtr ^ [ RI ] )
-        END (* WITH *)
-      END (* FOR *)
-    ; Set1 . Card := UnknownCardinality
-    ; Set1 . FirstElmt := MIN ( Set1 . FirstElmt , Set2 . FirstElmt )
-    ; Set1 . LastElmt := MAX ( Set1 . LastElmt , Set2 . LastElmt )
+  = VAR N1 , N2 : CARDINAL 
+  ; VAR LNewBitsetPtr : RefArrayOfBitset 
+
+  ; BEGIN (* SymDiff *)
+      IF IsEmpty ( Set2 ) 
+      THEN (* Result is Set1, unchanged. *) 
+      ELSIF IsEmpty ( Set1 ) 
+      THEN (* Result is Set2 *) 
+        Copy ( Set1 , Set2 )  
+      ELSE 
+
+        N1 := NUMBER ( Set1 . BitsetPtr ^ ) 
+      ; N2 := NUMBER ( Set2 . BitsetPtr ^ )
+      ; IF N2 > N1 
+        THEN (* Must expand Set1. *) 
+          LNewBitsetPtr := NewRefArrayOfBitset ( N2 ) 
+        ; SUBARRAY ( LNewBitsetPtr ^ , 0 , N1 ) := Set1 . BitsetPtr ^ 
+        ; FOR RI := N1 TO N2 - 1 
+          DO LNewBitsetPtr ^ [ RI ] := 0 
+          END (* FOR *) 
+        ; Set1 . BitsetPtr := LNewBitsetPtr 
+        END (* IF *) 
+      ; FOR RI := 0 TO NUMBER ( Set2 . BitsetPtr ^ ) - 1 
+        DO WITH WBitset1 = Set1 . BitsetPtr ^ [ RI ]
+          DO WBitset1 := Word . Xor ( WBitset1 , Set2 . BitsetPtr ^ [ RI ] )
+          END (* WITH *)
+        END (* FOR *)
+      ; Set1 . Card := UnknownCardinality
+      ; Set1 . FirstElmt := MIN ( Set1 . FirstElmt , Set2 . FirstElmt )
+      ; Set1 . LastElmt := MAX ( Set1 . LastElmt , Set2 . LastElmt )
+      ; Set1 . MaxElmt := MAX ( Set1 . MaxElmt , Set2 . MaxElmt )
+      END (* IF *) 
+    ; Check ( Set1 ) 
     END SymDiff
 
 ; PROCEDURE Complement ( VAR Set : tSet )
+  (* Not used in OrdSets test. *) 
 
   = VAR LN1 : CARDINAL 
   ; VAR LN2 : CARDINAL 
@@ -363,6 +426,7 @@ MODULE Sets
   ; VAR LBitsetPtr : RefArrayOfBitset  
 
   ; BEGIN (* Complement *)
+(* FIXME: IsEmpty ( Set ) !!!!! *) 
       IF Set # NIL 
       THEN 
         LN2 := NeededBitsetCount ( Set ^ . MaxElmt ) 
@@ -387,7 +451,7 @@ MODULE Sets
             END (* FOR *) 
           ; Set ^ . BitsetPtr := LBitsetPtr 
           END (* IF *)  
-(* FIX: Complete this. *) 
+(* FIXME: Complete this. *) 
         ; FOR RI := 0 TO NUMBER ( Set . BitsetPtr ^ ) - 2
           DO WITH WBitset = Set . BitsetPtr ^ [ RI ]
             DO
@@ -414,6 +478,7 @@ MODULE Sets
         ; Set . LastElmt := Set . MaxElmt
         END (* IF *) 
       END (* IF *) 
+    ; Check ( Set ) 
     END Complement
 
 ; PROCEDURE Include ( VAR Set : tSet ; Elmt : tElement )
@@ -424,7 +489,7 @@ MODULE Sets
   ; VAR LNewBitset : BitsetTyp 
 
   ; BEGIN (* Include *)
-      IF Set = NIL 
+      IF IsEmpty ( Set )  
       THEN 
         MakeSet ( Set , Elmt + 1 ) 
       ; Set . FirstElmt := Elmt 
@@ -434,6 +499,7 @@ MODULE Sets
       ; IF Set . BitsetPtr = NIL 
         THEN 
           Set . BitsetPtr := NewRefArrayOfBitset ( LNeededBitsetCount )
+        ; Set . MaxElmt := Elmt 
         ; AssignEmpty ( Set )
         ; Set . FirstElmt := Elmt 
         ; Set . LastElmt := Elmt 
@@ -445,9 +511,11 @@ MODULE Sets
           ; SUBARRAY ( LNewBitsetPtr ^ , 0 , LOldBitsetCount ) 
               := Set . BitsetPtr ^ 
           ; Set ^ . BitsetPtr := LNewBitsetPtr 
+          ; Set ^ . MaxElmt := Elmt 
           END (* IF *) 
         ; Set . FirstElmt := MIN ( Set . FirstElmt , Elmt )
-        ; Set . LastElmt := MAX ( Set . LastElmt , Elmt )
+        ; Set . LastElmt := MAX ( Set . LastElmt , Elmt ) 
+        ; Set ^ . MaxElmt := Set . LastElmt 
         END (* IF *) 
       END (* IF *) 
     ; WITH WBitset = Set . BitsetPtr ^ [ Elmt DIV BITSIZE ( BitsetTyp ) ]
@@ -460,12 +528,16 @@ MODULE Sets
         ; WBitset := LNewBitset
         END (* IF *) 
       END (* WITH *)
+    ; Check ( Set ) 
     END Include
 
 ; PROCEDURE Exclude ( VAR Set : tSet ; Elmt : tElement )
 
   = BEGIN (* Exclude *)
-      WITH WBitset = Set . BitsetPtr ^ [ Elmt DIV BITSIZE ( BitsetTyp ) ]
+      IF IsEmpty ( Set ) THEN RETURN END 
+    ; IF Elmt < Set ^ . FirstElmt THEN RETURN END 
+    ; IF Elmt > Set ^ . LastElmt THEN RETURN END 
+    ; WITH WBitset = Set . BitsetPtr ^ [ Elmt DIV BITSIZE ( BitsetTyp ) ]
       DO
         WBitset
           := Word . And
@@ -482,6 +554,7 @@ MODULE Sets
       THEN
         DEC ( Set . LastElmt )
       END (* IF *)
+    ; Check ( Set ) 
     END Exclude
 
 ; PROCEDURE Card ( VAR Set : tSet ) : tElement
@@ -490,14 +563,14 @@ MODULE Sets
   ; VAR LMax : tElement
 
   ; BEGIN (* Card *)
-      IF Set . Card = UnknownCardinality
+      IF Set = NIL THEN RETURN 0 END 
+    ; IF IsEmpty ( Set ) THEN Set . Card := 0 ; RETURN 0 END 
+    ; IF Set . Card = UnknownCardinality
       THEN
         LMin := Minimum ( Set ) (* Just for side effect on FirstElmt *)
       ; LMax := Maximum ( Set ) (* Just for side effect on LastElmt *)
       ; Set . Card := 0
-      ; FOR RI 
-        := Set . FirstElmt
-        TO Set . LastElmt
+      ; FOR RI := Set . FirstElmt TO Set . LastElmt
         DO IF IsElement ( RI , Set )
           THEN
             INC ( Set . Card )
@@ -510,15 +583,19 @@ MODULE Sets
 ; PROCEDURE Size ( VAR Set : tSet ) : tElement
 
   = BEGIN (* Size *)
-      RETURN Set . MaxElmt
+      IF IsEmpty ( Set ) THEN RETURN 0 
+      ELSE RETURN Set . MaxElmt
+      END (* IF *) 
     END Size
 
 ; PROCEDURE Minimum ( VAR Set : tSet ) : tElement
+  (* LAST(tElement), if IsEmpty(Set) *) 
 
   = VAR i : tElement
 
   ; BEGIN (* Minimum *)
-      i := Set . FirstElmt
+      IF IsEmpty ( Set ) THEN RETURN LAST ( tElement ) END
+    ; i := Set . FirstElmt
     ; WHILE i <= Set . LastElmt
       DO
         IF IsElement ( i , Set )
@@ -528,61 +605,82 @@ MODULE Sets
         END (* IF *)
       ; INC ( i )
       END (* WHILE *)
-    ; RETURN 0
+    ; <* ASSERT FALSE *>
     END Minimum
 
 ; PROCEDURE Maximum ( VAR Set : tSet ) : tElement
+  (* LAST(tElement), if IsEmpty(Set) *) 
 
   = VAR i : tInternalElmt
 
   ; BEGIN (* Maximum *)
-      i := Set . LastElmt
+      IF IsEmpty ( Set ) THEN RETURN LAST ( tElement ) END
+    ; i := Set . LastElmt
     ; WHILE i >= Set . FirstElmt
       DO
         IF IsElement ( i , Set )
         THEN
-          Set . LastElmt := i ; RETURN i
+          Set . LastElmt := i 
+        ; RETURN i
         END (* IF *)
       ; DEC ( i )
       END (* WHILE *)
-    ; RETURN 0
+    ; <* ASSERT FALSE *>
     END Maximum
 
 ; PROCEDURE Select ( VAR Set : tSet ) : tElement
+  (* LAST(tElement), if IsEmpty(Set) *) 
 
   = BEGIN (* Select *)
       RETURN Minimum ( Set )
     END Select
 
 ; PROCEDURE Extract ( VAR Set : tSet ) : tElement
+  (* LAST(tElement), if IsEmpty(Set) *) 
 
   = VAR i : tElement
 
   ; BEGIN (* Extract *)
       i := Minimum ( Set ) 
-    ; Exclude ( Set , i ) 
+    ; IF i # LAST ( tElement ) THEN Exclude ( Set , i ) END 
     ; RETURN i
     END Extract
 
 ; PROCEDURE IsSubset ( Set1 , Set2 : tSet ) : BOOLEAN
 
   = VAR i : tElement
+  ; VAR LCount1 , LCount2 , LCountMin : CARDINAL
 
   ; BEGIN (* IsSubset *)
-      i := 0
-    ; WHILE i < NUMBER ( Set1 . BitsetPtr ^ )
-      DO
-        IF Word . And
-             ( Set1 . BitsetPtr ^ [ i ]
-             , Word . Not ( Set2 . BitsetPtr ^ [ i ] )
-             )
-           # 0
+      IF IsEmpty ( Set1 ) THEN RETURN TRUE 
+      ELSIF IsEmpty ( Set2 ) THEN RETURN FALSE 
+      ELSE 
+        LCount1 := NUMBER ( Set1 . BitsetPtr ^ ) 
+      ; LCount2 := NUMBER ( Set2 . BitsetPtr ^ ) 
+      ; IF LCount1 > LCount2 
         THEN
-          RETURN FALSE
-        END (* IF *)
-      ; INC ( i )
-      END (* WHILE *)
-    ; RETURN TRUE
+          i := LCount2 
+        ; WHILE i < LCount1 
+          DO IF Set1 ^ . BitsetPtr ^ [ i ] # 0 THEN RETURN FALSE END 
+          ; INC ( i ) 
+          END (* WHILE *) 
+        END (* IF *) 
+      ; LCountMin := MIN ( LCount1 , LCount2 ) 
+      ; i := 0 
+      ; WHILE i < LCountMin
+        DO
+          IF Word . And
+               ( Set1 . BitsetPtr ^ [ i ]
+               , Word . Not ( Set2 . BitsetPtr ^ [ i ] )
+               )
+             # 0
+          THEN
+            RETURN FALSE
+          END (* IF *)
+        ; INC ( i )
+        END (* WHILE *)
+      ; RETURN TRUE
+      END (* IF *) 
     END IsSubset
 
 ; PROCEDURE IsProperSubset ( Set1 , Set2 : tSet ) : BOOLEAN
@@ -608,7 +706,7 @@ MODULE Sets
         LN1 := NUMBER ( Set1 . BitsetPtr ^ ) 
       ; LN2 := NUMBER ( Set2 . BitsetPtr ^ ) 
       ; IF LN1 > LN2 
-        THEN 
+        THEN (* Swap them. *)  
           LNTemp := LN1 
         ; LN1 := LN2 
         ; LN2 := LNTemp 
@@ -616,6 +714,7 @@ MODULE Sets
         ; Set1 := Set2
         ; Set2 := LSetTemp 
         END (* IF *) 
+      (* LN1 <= LN2 *) 
       ; i := 0
       ; WHILE i < LN1 
         DO
@@ -667,7 +766,7 @@ MODULE Sets
   = VAR LBitsetSs : CARDINAL 
 
   ; BEGIN (* IsElement *) 
-      IF Set = NIL 
+      IF IsEmpty ( Set )  
       THEN 
         RETURN FALSE 
       ELSIF Elmt < Set . FirstElmt 
@@ -698,7 +797,7 @@ MODULE Sets
   ; VAR i : tElement
 
   ; BEGIN (* IsEmpty *)
-      IF Set = NIL 
+      IF Set = NIL OR Set . BitsetPtr = NIL 
       THEN RETURN TRUE 
       ELSIF Set . FirstElmt <= Set . LastElmt
       THEN
@@ -708,12 +807,14 @@ MODULE Sets
       ; LOOP
           IF i > LMax
           THEN
-            Set . FirstElmt := Set . LastElmt + 1 ; RETURN TRUE
+            Set . FirstElmt := Set . LastElmt + 1 
+          ; RETURN TRUE
           ELSIF Set . BitsetPtr ^ [ i ] # 0
           THEN
             RETURN FALSE
           ELSE
-            Set . FirstElmt := i * BITSIZE ( BitsetTyp ) ; INC ( i )
+            Set . FirstElmt := i * BITSIZE ( BitsetTyp ) 
+          ; INC ( i )
           END (* IF *)
         END (* LOOP *)
       ELSE
@@ -725,7 +826,8 @@ MODULE Sets
   RAISES ANY
 
   = BEGIN (* ForAll *)
-      FOR i := Set . FirstElmt TO Set . LastElmt
+      IF IsEmpty ( Set ) THEN RETURN TRUE END 
+    ; FOR i := Set . FirstElmt TO Set . LastElmt
       DO IF IsElement ( i , Set ) AND NOT Proc ( i )
         THEN
           RETURN FALSE
@@ -738,7 +840,8 @@ MODULE Sets
   RAISES ANY
 
   = BEGIN (* Exists *)
-      FOR i := Set . FirstElmt TO Set . LastElmt
+      IF IsEmpty ( Set ) THEN RETURN FALSE END 
+    ; FOR i := Set . FirstElmt TO Set . LastElmt
       DO IF IsElement ( i , Set ) AND Proc ( i )
         THEN
           RETURN TRUE
@@ -753,7 +856,8 @@ MODULE Sets
   = VAR n : tInternalElmt
 
   ; BEGIN (* Exists1 *)
-      n := 0
+      IF IsEmpty ( Set ) THEN RETURN FALSE END 
+    ; n := 0
     ; FOR i := Set . FirstElmt TO Set . LastElmt
       DO IF IsElement ( i , Set ) AND Proc ( i )
         THEN
@@ -774,30 +878,25 @@ MODULE Sets
     ; Set1 . FirstElmt := Set2 . FirstElmt
     ; Set1 . LastElmt := Set2 . LastElmt
     ; Set1 . MaxElmt := Set2 . MaxElmt
+    ; Check ( Set1 ) 
     END Assign
 
 ; PROCEDURE Copy ( VAR Set1 : tSet ; Set2 : tSet )
-  (* Set1 could be unallocated or the wrong max size, in which case,
-     it will be (re)allocated with the same max size as Set2.
-  *)
 
-  = VAR LSet2MaxElmt : tElement 
+  = VAR LBitsetCount : CARDINAL 
 
   ; BEGIN (* Copy *)
-(* TODO: Rationalize this whole module to fix the mess of mutable
-         sets.
-*) 
       IF Set2 = NIL 
-      THEN Set1 := NIL 
-      ELSE 
-        LSet2MaxElmt := Set2 . MaxElmt 
-      ; IF Set1 = NIL OR Set1 = Set2 OR Set1 . MaxElmt # LSet2MaxElmt
-        THEN
-          MakeSet ( Set1 , LSet2MaxElmt + 1 )
-        ELSE 
-        END (* IF *)
+      THEN 
+        Set1 := NIL 
+      ELSE  
+        LBitsetCount := NUMBER ( Set2 ^ . BitsetPtr ^ ) 
+      ; INC ( GSetCt ) 
+      ; Set1 := NEW ( tSet )
+      ; Set1 . BitsetPtr := NewRefArrayOfBitset ( LBitsetCount )
       ; Assign ( Set1 , Set2 )
       END (* IF *) 
+    ; Check ( Set1 ) 
     END Copy
 
 ; PROCEDURE AssignSingleton ( VAR Set : tSet ; Elmt : tElement )
@@ -808,6 +907,7 @@ MODULE Sets
     ; Set . Card := 1
     ; Set . FirstElmt := Elmt
     ; Set . LastElmt := Elmt
+    ; Check ( Set ) 
     END AssignSingleton
 
 ; PROCEDURE AssignEmpty ( VAR Set : tSet )
@@ -825,14 +925,15 @@ MODULE Sets
       ; Set . FirstElmt := Set . MaxElmt
       ; Set . LastElmt := 0
       END (* IF *) 
+    ; Check ( Set ) 
     END AssignEmpty
 
 ; PROCEDURE ForAllDo ( Set : tSet ; Proc : ProcOftElement )
   RAISES ANY
 
   = BEGIN (* ForAllDo *)
-      IF Set . BitsetPtr # NIL
-      THEN
+      IF NOT IsEmpty ( Set ) 
+      THEN 
         FOR i := Set . FirstElmt TO Set . LastElmt
         DO IF IsElement ( i , Set )
           THEN

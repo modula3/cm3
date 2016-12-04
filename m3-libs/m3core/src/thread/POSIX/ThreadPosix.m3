@@ -35,7 +35,7 @@ REVEAL
   OVERRIDES
     acquire := LockMutex;
     release := UnlockMutex;
-  END; 
+  END;
 
 
   (* Threads that wait on a condition are inserted in the waitingForMe list,
@@ -72,12 +72,12 @@ TYPE SelectRec = RECORD
    Eric Muller, 3/16/94
 *)
 
-(* Support for catching signals (other than alarm clock) added by 
+(* Support for catching signals (other than alarm clock) added by
    Mika Nystrom <mika@alum.mit.edu>, February, 2011.
 
-   The idea is to piggy-back general signal catching on the mechanism 
+   The idea is to piggy-back general signal catching on the mechanism
    already used for thread switching.  Every thread that is "pausing"
-   can now wait for the disjunction of an expired timer or the delivery 
+   can now wait for the disjunction of an expired timer or the delivery
    of a specific signal.
 
    The main (only) client of pausing for signal delivery is
@@ -91,7 +91,7 @@ TYPE SelectRec = RECORD
    1. The system relies on changing ThreadPosix.XPause such that if a
    signal is allowed to wake up a threads, that fact is recorded in a
    new field in the thread's descriptor record (of type
-   ThreadPosix.T).  
+   ThreadPosix.T).
 
    2. On receipt of a waited-for unix signal, a mask is set and
    control is passed to the thread scheduler which maintains the
@@ -103,7 +103,7 @@ TYPE SelectRec = RECORD
 
    A final subtlety is that signals are traditionally re-enabled
    in switch_thread (i.e., inside the signal handler itself).  This
-   approach can't be used unchanged when catching SIGCHLD because 
+   approach can't be used unchanged when catching SIGCHLD because
    it can lead to very deeply nested signal handlers if many child
    processes are exiting at around the same time.  Instead, we only
    re-enable SIGCHLD when inCritical is zero, i.e., in an unnested
@@ -124,7 +124,7 @@ TYPE SelectRec = RECORD
    The mechanism could be generalized to handle other signals as well
    as multiple types of signals.
 
-   I have not carefully verified that no signals are ever "lost" 
+   I have not carefully verified that no signals are ever "lost"
    (the 0.1-second delay serves as a backstop), but I believe this
    to be the case.
 
@@ -157,13 +157,13 @@ TYPE SelectRec = RECORD
    end of the critical region, that is, they are prepared before the
    barrier DEC(inCritical) and executed after the barrier.  If a SEGV is
    pending, this is the point at which the exception is raised, same as
-   for Thread.Alerted 
+   for Thread.Alerted
 *)
 
 (* Note for people attempting to understand the code in this module:
    The real "magic" happens in the procedure Transfer.  It is vital that
    the magic only happens in one place as the procedure will appear to a
-   thread to return from where it left off (i.e., it has exactly the 
+   thread to return from where it left off (i.e., it has exactly the
    semantics of a coroutine call).
 
    This also means that applications can only be linked with ONE
@@ -172,7 +172,7 @@ TYPE SelectRec = RECORD
    and burn) and that Transfer must never, never be inlined anywhere.
 
    Transfer should therefore be kept as small as possible and changes to
-   it mean all libraries linked with m3core must be re-linked before 
+   it mean all libraries linked with m3core must be re-linked before
    linking any applications!
 *)
 
@@ -206,7 +206,7 @@ REVEAL
     (* if state = pausing, the signal that truncates the pause *)
     waitingForSig: int := -1;
 
-    (* true if we are waiting during an AlertWait or AlertJoin 
+    (* true if we are waiting during an AlertWait or AlertJoin
        or AlertPause *)
     alertable: BOOLEAN := FALSE;
 
@@ -263,7 +263,7 @@ VAR
 
   defaultStackSize := 3000;
 
-  (* note that even though the "heavy machinery" is only used for 
+  (* note that even though the "heavy machinery" is only used for
      multipleThreads, we still need to set up the signal handler so
      that we can catch signals from other sources than thread switching.
      e.g., we use SIGCHLD to speed up Process.Wait *)
@@ -297,7 +297,7 @@ PROCEDURE GetDefaultStackSize (): CARDINAL =
 PROCEDURE MinDefaultStackSize (new_min: CARDINAL) =
   BEGIN
     INC (inCritical);
-      defaultStackSize := MAX (defaultStackSize, new_min);      
+      defaultStackSize := MAX (defaultStackSize, new_min);
     DEC (inCritical);
   END MinDefaultStackSize;
 
@@ -467,7 +467,7 @@ PROCEDURE TestAlert (): BOOLEAN =
       result := self.alertPending;
       self.alertPending := FALSE;
     DEC (inCritical);
-    RETURN result; 
+    RETURN result;
   END TestAlert;
 
 PROCEDURE Yield () =
@@ -598,7 +598,7 @@ PROCEDURE ProcessStacks (p: PROCEDURE (start, limit: ADDRESS)) =
   VAR
     me := LOOPHOLE(LOOPHOLE(ADR(self), UNTRACED REF ADDRESS)^, T);
     t: T;
-    
+
   BEGIN
     (* flush thread state *)
     RTHeapRep.FlushThreadState(heapState);
@@ -645,7 +645,7 @@ PROCEDURE AlertPause(n: LONGREAL) RAISES {Alerted}=
     XPause(until, TRUE);
   END AlertPause;
 
-PROCEDURE XPause (READONLY until: Time.T; alertable := FALSE; sig:int := -1) 
+PROCEDURE XPause (READONLY until: Time.T; alertable := FALSE; sig:int := -1)
   RAISES {Alerted} =
   BEGIN
     INC (inCritical);
@@ -717,7 +717,7 @@ PROCEDURE XIOWait (fd: CARDINAL; read: BOOLEAN; interval: LONGREAL): WaitResult
       ELSE               RETURN WaitResult.Error;
       END;
     ELSE
-      (* This thing blocks, schedule it for later *) 
+      (* This thing blocks, schedule it for later *)
       VAR newRead, newWrite, newExcept: FDS := NIL;
       BEGIN
         IF fdindex >= gMaxFDSet THEN
@@ -823,7 +823,7 @@ PROCEDURE EnableSwitching () =
   END EnableSwitching;
 
 PROCEDURE StartSwitching () =
-(* set the SIGVTALRM timer and handler; can be called to change the 
+(* set the SIGVTALRM timer and handler; can be called to change the
    switching interval *)
   BEGIN
     IF preemption THEN
@@ -839,16 +839,16 @@ PROCEDURE StartSwitching () =
 CONST MaxSigs = 64;
 TYPE Sig = [ 0..MaxSigs-1 ];
 
-VAR           
+VAR
     gotSigs := SET OF Sig { };
 
 PROCEDURE switch_thread (sig: int) RAISES {Alerted} =
   BEGIN
-    allow_sigvtalrm (); 
+    allow_sigvtalrm ();
 
     INC(inCritical);
     IF inCritical = 1 THEN allow_othersigs ();  END;
-    
+
     (* mark signal as being delivered *)
     IF    sig = SIGSEGV THEN
       self.runtimeError := ORD(RuntimeError.T.BadMemoryReference)
@@ -857,23 +857,23 @@ PROCEDURE switch_thread (sig: int) RAISES {Alerted} =
     END;
     DEC(inCritical);
 
-    IF inCritical = 0 AND heapState.inCritical = 0 THEN 
-      InternalYield () 
+    IF inCritical = 0 AND heapState.inCritical = 0 THEN
+      InternalYield ()
     END;
   END switch_thread;
 
 (*------------------------------------------------------------- scheduler ---*)
 
-PROCEDURE CanRun (t: T) = 
+PROCEDURE CanRun (t: T) =
   BEGIN
-    t.state := State.alive; 
+    t.state := State.alive;
     t.nextWaiting := NIL;
     t.waitingForCondition := NIL;
     t.waitingForMutex := NIL;
     IF perfOn THEN PerfChanged (t.id, State.alive); END;
   END CanRun;
-  
-PROCEDURE ICannotRun (newState: State) = 
+
+PROCEDURE ICannotRun (newState: State) =
   BEGIN
     self.state := newState;
     IF perfOn THEN PerfChanged (self.id, newState); END;
@@ -916,7 +916,7 @@ BEGIN
     someBlocking   := FALSE;
 
     LOOP
-      CASE t.state OF 
+      CASE t.state OF
         | State.waiting =>
             IF t.alertable AND t.alertPending THEN
               WITH c = t.waitingForCondition DO
@@ -936,7 +936,7 @@ BEGIN
             IF t.alertable AND t.alertPending THEN
               CanRun (t);
               EXIT;
-              
+
             ELSIF t.waitingForSig IN gotSigs THEN
               t.waitingForSig := -1;
               CanRun(t);
@@ -955,11 +955,11 @@ BEGIN
               somePausing := TRUE;
 
             ELSIF t.waitingForTime < earliest THEN
-              earliest := t.waitingForTime; END; 
-  
+              earliest := t.waitingForTime; END;
+
         | State.blocking =>
             IF t.alertable AND t.alertPending THEN
-              CanRun (t); 
+              CanRun (t);
               EXIT;
 
             ELSIF NOT scanned THEN
@@ -1019,10 +1019,10 @@ BEGIN
                 earliest := t.select.timeout;
                 somePausing := TRUE;
               ELSIF t.select.timeout < earliest THEN
-                earliest := t.select.timeout; 
+                earliest := t.select.timeout;
               END
             END
-    
+
         | State.dying, State.dead =>
             (* remove this guy from the ring *)
             IF perfOn THEN PerfDeleted (t.id); END;
@@ -1039,7 +1039,7 @@ BEGIN
         | State.alive =>
             EXIT;
         END; (* case *)
-  
+
       t := t.next;
       IF t = from THEN
         IF NOT scanned THEN
@@ -1070,7 +1070,7 @@ BEGIN
       DEC (inCritical);
       IF do_alert THEN RAISE Alerted END;
       IF do_error # NoXError THEN
-        RAISE RuntimeError.E(VAL(do_error, RuntimeError.T)) 
+        RAISE RuntimeError.E(VAL(do_error, RuntimeError.T))
       END;
       RETURN;
 
@@ -1139,13 +1139,13 @@ PROCEDURE WaitProcess (pid: int; VAR status: int): int =
 VAR self: T;  (* the currently running thread *)
 
 (* The general strategy is:
-   - at initialization time, get an idea of what the stack frame and 
-     environment for a routine is; this is done by 
+   - at initialization time, get an idea of what the stack frame and
+     environment for a routine is; this is done by
      InitTopContext/DetermineContext. This context is stored in
      the  "model" variables.
 
-   - when a new thread is forked, its stack is initialized from the 
-     model stack, and the environment is restored after modifying the 
+   - when a new thread is forked, its stack is initialized from the
+     model stack, and the environment is restored after modifying the
      entries that depend on the stack position (eg. SP, AP, FP)
      running in that new context will send us in DetermineContext that
      will execute the thread closure (actually a shell that runs that
@@ -1369,7 +1369,7 @@ PROCEDURE PerfStart () =
     END;
   END PerfStart;
 
-PROCEDURE PerfStop () = 
+PROCEDURE PerfStop () =
   BEGIN
     (* UNSAFE, but needed to prevent deadlock if we're crashing! *)
     RTPerfTool.Close (perfW);
@@ -1381,7 +1381,7 @@ CONST
 TYPE
   TE = ThreadEvent.Kind;
 
-PROCEDURE PerfChanged (id: Id; s: State) = 
+PROCEDURE PerfChanged (id: Id; s: State) =
   VAR e := ThreadEvent.T {kind := TE.Changed, id := id, state := s};
   BEGIN
     perfOn := RTPerfTool.Send (perfW, ADR (e), EventSize);

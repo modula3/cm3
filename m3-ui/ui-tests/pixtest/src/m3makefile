@@ -6,6 +6,6 @@
 %      modified on Tue Dec 21 14:41:55 PST 1993 by kalsow
 %
 
-import (ui)
-implementation (Main)
-Program (Cards)
+import ("ui")
+implementation ("Main")
+Program ("Cards")

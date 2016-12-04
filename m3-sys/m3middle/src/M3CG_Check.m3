@@ -1360,10 +1360,22 @@ PROCEDURE compare_exchange (self: U;  t: MType;  u: ZType;  r: IType;
       PutErr (self, "illegal load memory order");
     ELSE (* ok *) END;
     IF failure > success THEN PutErr (self, "failure stronger than success"); END;
-    self.s_pop (T_to_ST [u], T_to_ST [u], ST.Addr);
+    self.s_pop (T_to_ST [u], ST.Addr, ST.Addr);
+(*                           ^ This was T_to_ST [u], which fails to account
+                               for the fact that this parameter is VAR, and
+                               thus passed by reference.  See Atomic.ig, 
+                               PROCEDURE Compare_Swap.  The front end is putting
+                               a T.Addr on the stack here, but all of the 
+                               backends and the definition of compare_exchange
+                               in M3CG_Ops seem to suggest it is passed by value.
+                               Then the local value is assigned-to, which would
+                               lose the assignment.
+                               I think this is the correct check to make here,
+                               but the back ends need reviewing.  
+                               2016-10-07, rodney.m.bates@acm.org. 
+*)  
     IF (self.clean_stores) THEN self.s_empty () END;
-    self.s_push (r);
-    self.s_push (u);
+    self.s_push (r); (* The BOOLEAN result *) 
     self.child.compare_exchange (t, u, r, success, failure);
   END compare_exchange;
 

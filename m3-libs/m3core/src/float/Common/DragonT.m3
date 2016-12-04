@@ -12,7 +12,7 @@ FROM DragonInt IMPORT timesTenInPlace, divideTen, max, shift, compare, add;
 FROM DragonInt IMPORT times2, copy, divmod, diff;
 
 PROCEDURE F (e: INTEGER;
-             f1, f0: INTEGER;
+             f3, f2, f1, f0: INTEGER;
              p: INTEGER;
              cutoffMode: CutoffMode;
              cutoffPlace: INTEGER;
@@ -24,6 +24,7 @@ PROCEDURE F (e: INTEGER;
     roundUpFlag := FALSE;
     U, k: INTEGER;
     R, S, Mm, Mp: DragonInt.T;
+    quad : DragonInt.RefInt;    
     low, high: BOOLEAN;
     s: DragonInt.Session;
     f: DragonInt.T;
@@ -78,15 +79,31 @@ PROCEDURE F (e: INTEGER;
     END fixup;
 
   BEGIN
-    IF (f0 = 0) AND (f1 = 0) THEN
-      count := 1;
-      exp := 0;
-      digits [0] := 0;
-      RETURN;
-    END;
-
     s := DragonInt.NewSession ();
-    f := DragonInt.New (s, f1, f0);
+    
+    IF p = 113 THEN
+      (* "EXTENDED" quad precision *)
+      IF (f0 = 0) AND (f1 = 0) AND (f2 = 0) AND (f3 = 0) THEN
+        count := 1;
+        exp := 0;
+        digits [0] := 0;
+        RETURN;
+      END;
+    
+      quad := NEW(DragonInt.RefInt,4);
+      quad[0] := f0; quad[1] := f1; quad[2] := f2; quad[3] := f3;
+      f := DragonInt.NewFromArr (s, quad);
+    ELSE
+      (* REAL or LONGREAL (p = 24 or 53) *)
+      IF (f0 = 0) AND (f1 = 0) THEN
+        count := 1;
+        exp := 0;
+        digits [0] := 0;
+        RETURN;
+      END;
+
+      f := DragonInt.New (s, f1, f0);
+    END;
 
     count := 0;
     R := shift (s, f, MAX (e - p, 0));

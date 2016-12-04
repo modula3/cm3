@@ -1,4 +1,4 @@
-# Try this prior to FreeBSD 4.7 -- when ld gained -z origin.
+% Try this prior to FreeBSD 4.7 -- when ld gained -z origin.
 
 readonly TARGET_OS = "FREEBSD"
 

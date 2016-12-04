@@ -114,6 +114,6 @@ end
 %
 % workaround
 %
-if IsDarwin() or IsSolaris()
+%if IsDarwin() or IsSolaris()
   SYSTEM_LIBS{"LIBC"} += "-lz"
-end
+%end

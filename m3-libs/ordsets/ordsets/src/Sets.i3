@@ -101,12 +101,16 @@ INTERFACE Sets
 ; PROCEDURE Size ( VAR Set : tSet ) : tElement 
 
 ; PROCEDURE Minimum ( VAR Set : tSet ) : tElement 
+  (* LAST(tElement), if IsEmpty(Set) *) 
 
 ; PROCEDURE Maximum ( VAR Set : tSet ) : tElement 
+  (* LAST(tElement), if IsEmpty(Set) *) 
 
 ; PROCEDURE Select ( VAR Set : tSet ) : tElement 
+  (* LAST(tElement), if IsEmpty(Set) *) 
 
 ; PROCEDURE Extract ( VAR Set : tSet ) : tElement 
+  (* LAST(tElement), if IsEmpty(Set) *) 
 
 ; PROCEDURE IsSubset ( Set1 , Set2 : tSet ) : BOOLEAN 
 

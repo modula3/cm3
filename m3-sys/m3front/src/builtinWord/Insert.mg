@@ -145,7 +145,7 @@ PROCEDURE Initialize (r: INTEGER) =
                                  CallExpr.IsNever, (* writable *)
                                  CallExpr.IsNever, (* designator *)
                                  CallExpr.NotWritable (* noteWriter *));
-    Procedure.Define ("Insert", Z, FALSE, t);
+    Procedure.DefinePredefined ("Insert", Z, FALSE, t, assignable:=TRUE);
     formals := ProcType.Formals (t);
   END Initialize;
 

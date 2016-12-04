@@ -39,8 +39,8 @@ BEGIN
 
   Roots.Init ();
 
-  Display.Start ();
   BrowserDB.Init ();
   WebServer.Run ();
+  Display.Start ();
 END Main.
 

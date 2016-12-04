@@ -82,7 +82,7 @@ PROCEDURE Initialize (r: INTEGER) =
                                  CallExpr.IsNever, (* writable *)
                                  CallExpr.IsNever, (* designator *)
                                  CallExpr.NotWritable (* noteWriter *));
-    Procedure.Define ("GT", Z, FALSE, t1);
+    Procedure.DefinePredefined ("GT", Z, FALSE, t1, assignable:=TRUE);
     formals := ProcType.Formals (t1);
   END Initialize;
 

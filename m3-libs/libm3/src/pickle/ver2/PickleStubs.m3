@@ -177,7 +177,7 @@ PROCEDURE OutChars(writer: Pickle.Writer; READONLY arr: ARRAY OF CHAR)
 
 PROCEDURE OutWC21(wr: Wr.T; wc: WIDECHAR)
   RAISES {Wr.Failure, Thread.Alerted} =
-(* Marshal one wide char in surrogate-tolerant WC21 incoding. *) 
+(* Marshal one wide char in surrogate-tolerant WC21 encoding. *) 
 
   VAR intVal, B0, B1, B2: UInt32;
   BEGIN  
@@ -478,11 +478,12 @@ PROCEDURE InLongint(reader: Pickle.Reader;
     RETURN i;
   END InLongint;
 
+(* Read 4 bytes, regardless of BYTESIZE(INTEGER). *) 
 PROCEDURE InInt32(reader: Pickle.Reader; 
                     min := FIRST(Int32);
                     max := LAST(Int32)): Int32
     RAISES {Pickle.Error, Rd.Failure, Thread.Alerted} =
-  VAR i32: Int32;
+  VAR i32: RECORD i: Int32 END;
       c32 := LOOPHOLE(ADR(i32), UNTRACED REF ARRAY [1..4] OF CHAR);
   BEGIN
     IF reader.rd.getSub(c32^) # NUMBER(c32^) THEN
@@ -490,12 +491,12 @@ PROCEDURE InInt32(reader: Pickle.Reader;
     END;
     CASE reader.wordConvKind OF
     | CPKind.Swap, CPKind.Swap64to32, CPKind.Swap32to64 =>
-      i32 := Swap.Swap4(i32);
+      i32.i := Swap.Swap4(i32.i);
     | CPKind.Copy, CPKind.Copy64to32, CPKind.Copy32to64 =>
     ELSE <* ASSERT FALSE *>
     END;
-    IF i32 < min OR i32 > max THEN RaiseUnmarshalFailure(); END;
-    RETURN i32;
+    IF i32.i < min OR i32.i > max THEN RaiseUnmarshalFailure(); END;
+    RETURN i32.i;
   END InInt32;
 
 PROCEDURE OutInteger(writer: Pickle.Writer; i: INTEGER)
@@ -514,9 +515,10 @@ PROCEDURE OutLongint(writer: Pickle.Writer; i: LONGINT)
     writer.wr.putString(ip^);
   END OutLongint;
 
+(* Write i in 4 bytes, regardless of BYTESIZE(INTEGER). *) 
 PROCEDURE OutInt32(writer: Pickle.Writer; i: Int32)
     RAISES {Wr.Failure, Thread.Alerted} =
-  VAR ip := LOOPHOLE(ADR(i), UNTRACED REF ARRAY [1..BYTESIZE(Int32)] OF CHAR);
+  VAR ip := LOOPHOLE(ADR(i), UNTRACED REF ARRAY [1..4] OF CHAR);
   BEGIN
     writer.wr.putString(ip^);
   END OutInt32;

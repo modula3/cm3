@@ -34,7 +34,7 @@ FROM WinNT IMPORT PSID, PACL, PLUID, LARGE_INTEGER, HANDLE, PHANDLE;
 FROM Ctypes IMPORT char;
 
 (*
- * Compatability macros
+ * Compatibility macros
  *)
 
 CONST

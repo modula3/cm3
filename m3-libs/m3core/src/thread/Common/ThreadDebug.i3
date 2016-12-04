@@ -1,5 +1,11 @@
 INTERFACE ThreadDebug;
 
+IMPORT Ctypes, Cstdint;
+
+TYPE
+  HANDLE = Ctypes.void_star;  (*** should be <: ADDRESS ***)
+  DWORD = Cstdint.uint32_t;
+
 <*EXTERNAL ThreadDebug__LockMutex*>
 PROCEDURE LockMutex (mutex: REFANY);
 
@@ -71,5 +77,11 @@ PROCEDURE WaitHeap();
 
 <*EXTERNAL ThreadDebug__BroadcastHeap*>
 PROCEDURE BroadcastHeap();
+
+<*EXTERNAL ThreadDebug__Event_Wait*>
+PROCEDURE Event_Wait(event: HANDLE; timeout: DWORD);
+
+<*EXTERNAL ThreadDebug__Event_Signal*>
+PROCEDURE Event_Signal(event: HANDLE);
 
 END ThreadDebug.

@@ -11,7 +11,7 @@
  *
  *)
 
-UNSAFE INTERFACE PickleWr;
+INTERFACE PickleWr;
 
 IMPORT RTPacking, Pickle2 AS Pickle, ConvertPacking;
 

@@ -12,8 +12,8 @@ UNSAFE MODULE Pickle2 EXPORTS Pickle2, PickleRd;
 
 IMPORT Rd, RT0, RTAllocator, RTCollector, RTHeap, RTHeapRep, RTType, RTTypeFP,
        RTTypeMap, Thread, Word, Wr, Fingerprint, RTPacking, PklFpMap, 
-       ConvertPacking, PklTipeMap, Swap, PickleRd, PickleWr, BuiltinSpecials2, 
-       Fmt;
+       ConvertPacking, PklTipeMap, Swap, PickleRd, PickleWr, PickleStubs,
+       BuiltinSpecials2, Fmt;
 
 (* *)
 (* Syntax of a pickle, and constants pertaining thereto *)
@@ -40,8 +40,9 @@ IMPORT Rd, RT0, RTAllocator, RTCollector, RTHeap, RTHeapRep, RTType, RTTypeFP,
                  '1' 4-byte-integer     - pickle-relative index of "r" (0 based)
                  '2' 8-bytes              - COMPATIBILITY, old fingerprint
                  '3' scInt acInt Contents - COMPATIBILITY, old value
-                 - '4' is not used, but occurs in Trailer as blunder check.
+                 '4'                    - occurs only in Trailer as blunder check.
                  '5' sc Contents        - an actual value
+                 '6' integer            - a pseudo pointer
    FingerPrint:: bytes                  - 8 bytes, details t.b.d.
    sc::          LocalCode              - typecode of Special
                                           writing the value
@@ -377,6 +378,14 @@ PROCEDURE WriteRef(writer: Writer; r: REFANY)
       (* Normal case: level#0 *)
       IF r = NIL THEN
         Wr.PutChar(writer.wr, '0');
+      ELSIF Word.And (LOOPHOLE (r, INTEGER), 1) = 1 THEN (* Pseudopointer.*)
+        Wr.PutChar(writer.wr, '6'); (* Always tag it as pseudopointer. *) 
+        LOCK specialsMu DO sp := thePseudoSpecial; END;
+        IF sp = NIL THEN  (* Pickle it as a Word.T. *)
+          PickleStubs.OutInteger (writer, LOOPHOLE (r, INTEGER)); 
+        ELSE (* Pickle it using the special's write method. *) 
+          sp.write (r, writer); 
+        END; 
       ELSE
         (* check refTable *)
         (* The following loop includes the entire hash table
@@ -539,7 +548,7 @@ PROCEDURE RefOfRefID (reader: Reader; ID : RefID) : REFANY =
     RETURN reader.refs [ ID ]
   END RefOfRefID; 
 
-PROCEDURE InvokeSpecial(reader: Reader; sc: TypeCode): REFANY
+PROCEDURE InvokeSpecialRead(reader: Reader; sc: TypeCode): REFANY
       RAISES { Error, Rd.EndOfFile, Rd.Failure, Thread.Alerted } =
   VAR sp: Special; r: REFANY; id: RefID;
   BEGIN
@@ -553,7 +562,7 @@ PROCEDURE InvokeSpecial(reader: Reader; sc: TypeCode): REFANY
     DEC(reader.level);
     reader.noteRef(r, id);
     RETURN r
-  END InvokeSpecial;
+  END InvokeSpecialRead;
 
 PROCEDURE ExpandRefs(reader: Reader) =
   VAR old := reader.refs;  n := NUMBER(old^);
@@ -566,6 +575,7 @@ PROCEDURE ReadRef(reader: Reader): REFANY
       RAISES { Error, Rd.EndOfFile, Rd.Failure, Thread.Alerted } =
     VAR r: REFANY; (* the result *)
     VAR repCase: CHAR;
+    VAR sp: Special; 
   BEGIN
     IF reader.level = 0 THEN StartRead (reader); END;
 
@@ -587,15 +597,29 @@ PROCEDURE ReadRef(reader: Reader): REFANY
         r := reader.refs[refIndex];
       END;
     ELSIF repCase = '5' THEN
-      r := InvokeSpecial(reader, reader.readType());
+      r := InvokeSpecialRead(reader, reader.readType());
     ELSIF repCase = '3' THEN
       (* COMPATIBILITY: OlderVersion uses 3 sc ac contents *)
       VAR sc := GetBinaryInt(reader);
       BEGIN
         reader.acPending := GetBinaryInt(reader);
-        r := InvokeSpecial(reader, TCFromIndex(reader, sc));
+        r := InvokeSpecialRead(reader, TCFromIndex(reader, sc));
         reader.acPending := 0;
       END
+    ELSIF repCase = '6' THEN (* Was pickled as a pseudopointer. *) 
+      VAR pseudoInt : INTEGER; 
+      BEGIN
+        LOCK specialsMu DO sp := thePseudoSpecial; END;
+        IF sp = NIL THEN (* Unpickle it as a Word.T. *) 
+          pseudoInt := PickleStubs.InWord (reader);  
+                    (* ^Which will do unsigned integer size and
+                        endianness conversions. *) 
+          <*ASSERT Word.And (pseudoInt, 1) = 1 *>
+          r := LOOPHOLE(pseudoInt, NULL);
+        ELSE (* Unpickle it using the special's read method. *) 
+          r := sp.read(reader,RefIDNull);
+        END; 
+      END;
     ELSE
       RAISE Error("Malformed pickle (unknown switch)")
     END;
@@ -724,9 +748,19 @@ TYPE
     (* indexed by RTType.TypeCode, yields Special for nearest super-type *)
 
 VAR
-  specialsMu     := NEW(MUTEX);
-  specials       : SpecialTable;            (* LL >= specialsMu *)
-  theRootSpecial : Special;                 (* LL >= specialsMu *)
+  specialsMu       := NEW(MUTEX);
+  specials         : SpecialTable;            (* LL >= specialsMu *)
+  theRootSpecial   : Special;                 (* LL >= specialsMu *)
+  thePseudoSpecial : Special;                 (* LL >= specialsMu *)
+
+<* INLINE *>
+PROCEDURE GetSpecialLocked (tc: TypeCode): Special =
+  (* LL >= specialsMu *)
+  BEGIN
+    IF (specials = NIL) THEN InitSpecials (); END;
+    IF (tc >= NUMBER (specials^)) THEN ExpandSpecials (); END;
+    RETURN specials[tc];
+  END GetSpecialLocked;
 
 PROCEDURE GetSpecial (tc: TypeCode): Special =
   (* LL = 0 *)
@@ -769,6 +803,7 @@ PROCEDURE ExpandSpecials() =
   END ExpandSpecials;
 
 PROCEDURE FindBestSpecial (tc: TypeCode): Special =
+  (* LL >= specialsMu *)
   VAR sp: Special;
   BEGIN
     LOOP
@@ -789,9 +824,9 @@ PROCEDURE RegisterSpecial(sp: Special) =
   <* FATAL DuplicateSpecial *>
   VAR xp: Special;
   BEGIN
-    xp := GetSpecial (sp.sc);
-    IF xp.sc = sp.sc THEN RAISE DuplicateSpecial; END;
     LOCK specialsMu DO
+      xp := GetSpecialLocked (sp.sc);
+      IF xp.sc = sp.sc THEN RAISE DuplicateSpecial; END;
       FOR i := 0 TO LAST(specials^) DO
         IF (i # RT0.NilTypecode) AND RTType.IsSubtype(i,sp.sc) THEN
           (* i is a sub-type of this special *)
@@ -808,8 +843,8 @@ PROCEDURE RegisterSpecial(sp: Special) =
 PROCEDURE ReRegisterSpecial(sp: Special) =
   VAR xp: Special;
   BEGIN
-    xp := GetSpecial (sp.sc);
     LOCK specialsMu DO
+      xp := GetSpecialLocked (sp.sc);
       IF xp.sc = sp.sc THEN sp.prev := xp; END;
       FOR i := 0 TO LAST(specials^) DO
         IF (i # RT0.NilTypecode) AND RTType.IsSubtype(i,sp.sc) THEN
@@ -823,6 +858,27 @@ PROCEDURE ReRegisterSpecial(sp: Special) =
       END;
     END;
   END ReRegisterSpecial;
+
+PROCEDURE RegisterPseudoSpecial(sp: Special) =
+  <* FATAL DuplicateSpecial *>
+  BEGIN
+    LOCK specialsMu DO
+      IF thePseudoSpecial = NIL THEN 
+         thePseudoSpecial := sp; 
+      ELSE RAISE DuplicateSpecial;
+      END;
+    END;
+  END RegisterPseudoSpecial;
+
+PROCEDURE ReRegisterPseudoSpecial(sp: Special) =
+  BEGIN
+    LOCK specialsMu DO
+      IF thePseudoSpecial # NIL THEN 
+        sp.prev := thePseudoSpecial;
+      END;
+      thePseudoSpecial := sp; 
+    END;
+  END ReRegisterPseudoSpecial;
 
 (* BLAIR ---> *)
 PROCEDURE VisitWrite(v: WriteVisitor; field: ADDRESS; kind: RTTypeMap.Kind)
@@ -887,7 +943,7 @@ PROCEDURE RootSpecialWrite(<*UNUSED*> sp: Special;
                            r: REFANY; writer: Writer)
         RAISES { Error <*NOWARN*>, Wr.Failure, Thread.Alerted } =
     VAR nDim: INTEGER;
-    VAR shape: UNTRACED REF ARRAY [0..999] OF INTEGER;
+    VAR shape: RTHeapRep.UnsafeArrayShape; 
 (*    VAR limit: ADDRESS;
     VAR start: ADDRESS; *)
     VAR tmp: ARRAY [0..1] OF INTEGER;
@@ -1019,11 +1075,16 @@ PROCEDURE TipeGetWriter(v: TipeWriteVisitor):Writer =
     RETURN v.writer; 
   END TipeGetWriter; 
 
+CONST fixedShapeNumber = 10; 
+      (* ^Number of open array dimensions not needing heap allocated local. *) 
+
 PROCEDURE RootSpecialRead(<*UNUSED*> sp: Special;
                           reader: Reader; id: RefID): REFANY
     RAISES { Error, Rd.EndOfFile, Rd.Failure, Thread.Alerted } =
     VAR nDim: INTEGER;
-    VAR shape: ARRAY [0..10] OF INTEGER;
+    VAR fixedShape : ARRAY [ 0 .. fixedShapeNumber - 1 ] OF INTEGER;
+    VAR allocShapeRef : REF ARRAY OF INTEGER := NIL; 
+    VAR shape: RTHeapRep.UnsafeArrayShape := ADR(fixedShape); 
     VAR limit: ADDRESS;
     VAR r: REFANY;
     VAR ac := reader.readType();
@@ -1031,10 +1092,15 @@ PROCEDURE RootSpecialRead(<*UNUSED*> sp: Special;
     TRY
       nDim := RTType.GetNDimensions(ac);
       IF nDim > 0 THEN
-        FOR i := 0 TO nDim-1 DO
-          shape[i] := reader.readInt();
+        IF nDim > NUMBER(fixedShape)
+        THEN
+          allocShapeRef := NEW (REF ARRAY OF INTEGER, nDim);
+          shape := ADR(allocShapeRef^[0]); 
         END;
-        r := RTAllocator.NewTracedArray(ac, SUBARRAY(shape, 0, nDim));
+        FOR i := 0 TO nDim-1 DO
+          shape^[i] := reader.readInt();
+        END;
+        r := RTAllocator.NewTracedArray(ac, SUBARRAY(shape^, 0, nDim));
       ELSE
         r := RTAllocator.NewTraced(ac);
       END;
@@ -1060,12 +1126,13 @@ PROCEDURE RootSpecialRead(<*UNUSED*> sp: Special;
       (* Use the RTTipe functions to fill in the data. *)
       TRY
         PklTipeMap.Read(reader.tipeVisitor, r, ac, reader.packing, myPacking, 
-                     SUBARRAY(shape, 0, nDim)); 
+                     SUBARRAY(shape^, 0, nDim)); 
       EXCEPT
       | PklTipeMap.Error(t) => RAISE Error("PklTipeMap.Error: " & t);
       END;
     END;
 
+    allocShapeRef := NIL; 
     RETURN r;
   END RootSpecialRead;
 

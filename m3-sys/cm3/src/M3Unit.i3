@@ -15,7 +15,28 @@ TYPE
     name         : M3ID.T  := M3ID.NoID;
     loc          : M3Loc.T := NIL;
     library      : T       := NIL;  (* containing library unit *)
+    
+    (* object is what cm3 will produce,
+     * including possible invocation of an external
+     * backend such as m3cg.
+     *
+     * When cm3 -boot is not specified, it stops "late"
+     * at .o/.mo/.io/_m.o/_i.o. i.e. all that remains
+     * is making a library or linking.
+     *
+     * When cm3 -boot is specified, it stops "early"
+     * at .ms/.is/.s or .c/.cpp. i.e. the next phase
+     * of bootstrapping -- running an assembler or C compiler -- remains.
+     *)
     object       : TEXT    := NIL;
+    
+    (* boot_makefile_object is similar to object.
+     * When cm3 -boot is not given, boot_makefile_object is not used.
+     * When cm3 -boot is used, boot_makefile_object is what object
+     * would have been. That is, these are the files written
+     * into the makefiles that cm3 -boot produces.
+     *)
+    boot_makefile_object : TEXT    := NIL;
     link_info    : Mx.Unit := NIL;
     exporters    : Exporter:= NIL;
     kind         : Kind    := Kind.Unknown;

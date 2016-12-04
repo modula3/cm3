@@ -42,6 +42,8 @@ typedef struct _ThreadDebug__LogEntry_t {
     void* c;            /* condition */
     void* m;            /* mutex */
     void* t;            /* thread */
+    void* e;            /* event */
+    unsigned long to;   /* timeout */
 } ThreadDebug__LogEntry_t;
 
 static ThreadDebug__LogEntry_t ThreadDebug__Log[10]; /* size can be tuned for the scenario */
@@ -73,7 +75,7 @@ static const char LockMutex[] = "LockMutex";
 static const char UnlockMutex[] = "UnlockMutex";
 
 static void __cdecl
-ThreadDebug__LogEntry(const char* function, void* c, void* m, void* t)
+ThreadDebug__LogEntry(const char* function, void* c, void* m, void* t, void* event, unsigned long timeout)
 {
     if (function != LockMutex && function != UnlockMutex)
     {
@@ -88,16 +90,20 @@ ThreadDebug__LogEntry(const char* function, void* c, void* m, void* t)
             entry->c = c;
             entry->m = m;
             entry->t = t;
+            entry->e = event;
+            entry->to = timeout;
         }
     }
 }
 
-#define LOG(f) do { ThreadDebug__LogEntry(f, c, m, t); } while(0)
+#define LOG(f) do { ThreadDebug__LogEntry(f, c, m, t, event, timeout); } while(0)
 
 /* scope-based trick to log NULL for functions that don't have the corresponding parameter */
 static void* const c;
 static void* const m;
 static void* const t;
+static void* const event;
+static unsigned long const timeout;
 
 #else
 
@@ -123,6 +129,18 @@ void __cdecl
 ThreadDebug__InnerWait(void* m, void* c, void* t /* self */)
 {
     LOG("InnerWait");
+}
+
+void __cdecl
+ThreadDebug__Event_Wait(void* event, unsigned long timeout)
+{
+    LOG("Event_Wait");
+}
+
+void __cdecl
+ThreadDebug__Event_Signal(void* event)
+{
+    LOG("Event_Signal");
 }
 
 void __cdecl

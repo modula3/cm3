@@ -35,6 +35,12 @@ TYPE
     proc   : Proc;
   END;
 
+Call_t = RECORD
+  param_size := 0;
+  static_link: x86Var := NIL;
+  next: REF Call_t := NIL;
+END;
+
 REVEAL
   U = Public BRANDED "M3x86.U" OBJECT
         rawwr           : Wr.T := NIL;
@@ -45,9 +51,9 @@ REVEAL
         debug           := FALSE;
         Err             : ErrorHandler := NIL;
         runtime         : IntRefTbl.T := NIL;  (* Name -> RuntimeHook *)
-        textsym         : INTEGER;
+        textsym         := 0;
         init_varstore   : x86Var := NIL;
-        init_count      : INTEGER;
+        init_count      := 0;
 
         (* calls are never nested; results are stored in temporaries and repushed
         F1(F2(F3()) compiles to
@@ -55,26 +61,27 @@ REVEAL
           temp = F2(temp)
           F1(temp)
           (whether it is the same temp, is a different matter; I don't know)
+
+          However:
+            VAR: a, b: LONGINT;
+            F(a * b);
+            generates an internal/helper call while calling F,
+            so we use a stack of Call_t instead of a fixed sized array.
         *)
-        call_param_size := ARRAY [0 .. 1] OF INTEGER { 0, 0 };
-
-        (* TODO in_proc_call should be a boolean and merely asserted. *)
-        in_proc_call    : [0 .. 1] := 0;
-        static_link     := ARRAY [0 .. 1] OF x86Var { NIL, NIL };
-
+        call            : REF Call_t := NIL;
         current_proc    : x86Proc := NIL;
         param_proc      : x86Proc := NIL;
-        in_proc         : BOOLEAN;
+        in_proc         := FALSE;
         procframe_ptr   : ByteOffset;
         exit_proclabel  : Label := -1;
         last_exitbranch := -1;
-        n_params        : INTEGER;
+        n_params        := 0;
         next_var        := 1;
         next_proc       := 1;
         next_scope      := 1;
         builtins        : ARRAY Builtin OF x86Proc;
         global_var      : x86Var := NIL;
-        lineno          : INTEGER;
+        lineno          := 0;
         source_file     : TEXT := NIL;
         reportlabel     : Label;
         usedfault       := FALSE;
@@ -324,8 +331,6 @@ PROCEDURE begin_unit (u: U;  optimize : INTEGER) =
     u.next_scope := 1;
     u.global_var := NIL;
 
-    u.in_proc_call := 0;
-
     u.reportlabel := u.cg.reserve_labels(1);
     u.usedfault := FALSE;
 
@@ -542,7 +547,6 @@ PROCEDURE declare_pointer (u: U; type, target: TypeUID; brand: TEXT; traced: BOO
     END
   END declare_pointer;
 
-
 PROCEDURE declare_indirect (u: U;  type, target: TypeUID) =
   BEGIN
     IF u.debug THEN
@@ -552,7 +556,6 @@ PROCEDURE declare_indirect (u: U;  type, target: TypeUID) =
       u.wr.NL   ();
     END
   END declare_indirect;
-
 
 PROCEDURE declare_proctype (u: U;  type: TypeUID;  n_formals: INTEGER;
                             result: TypeUID;  n_raises: INTEGER;
@@ -587,7 +590,6 @@ PROCEDURE declare_raises (u: U;  n: Name) =
       u.wr.NL    ();
     END
   END declare_raises;
-
 
 PROCEDURE declare_object (u: U;  type, super: TypeUID;
                           brand: TEXT;  traced: BOOLEAN;
@@ -3643,7 +3645,7 @@ PROCEDURE makereportproc (u: U) =
 
     IF (repproc # NIL) THEN
       start_call_direct(u, repproc, 0, Type.Void);
-      INC(u.call_param_size[u.in_proc_call - 1], 4); (* remember error code *)
+      INC(u.call.param_size, 4); (* remember error code *)
       load_address(u, u.global_var, 0);
       pop_param(u, Type.Addr);
       call_direct(u, repproc, Type.Void);
@@ -3736,12 +3738,22 @@ PROCEDURE index_address (u: U;  type: IType;  size: INTEGER) =
 
 (*------------------------------------------------------- procedure calls ---*)
 
+PROCEDURE PushCall(u: U) =
+BEGIN
+  u.call := NEW(REF Call_t, next := u.call);
+END PushCall;
+
+PROCEDURE PopCall(u: U) =
+BEGIN
+  u.call := u.call.next;
+END PopCall;
+
 PROCEDURE call_64 (u: U; builtin: Builtin) =
   BEGIN
 
     (* all 64bit helpers pop their parameters, even if they are __cdecl named. *)
 
-    u.call_param_size[u.in_proc_call - 1] := 0;
+    u.call.param_size := 0;
 
     (* There is a problem with our register bookkeeping, such
      * that we can't preserve non volatiles across function calls,
@@ -3775,11 +3787,7 @@ PROCEDURE start_call_direct (u: U;  p: Proc;  lev: INTEGER;  type: Type) =
       u.wr.NL    ();
     END;
 
-    <* ASSERT u.in_proc_call = 0 *> (* TODO cleanup *)
-
-    u.static_link[u.in_proc_call] := NIL;
-    u.call_param_size[u.in_proc_call] := 0;
-    INC(u.in_proc_call);
+    PushCall(u);
     <* ASSERT u.calling_alloca = FALSE *>
     u.calling_alloca := proc.is_alloca;
   END start_call_direct;
@@ -3794,11 +3802,7 @@ PROCEDURE start_call_indirect (u: U;  type: Type;  cc: CallingConvention) =
       u.wr.NL    ();
     END;
 
-    <* ASSERT u.in_proc_call = 0 *> (* TOO cleanup *)
-
-    u.static_link[u.in_proc_call] := NIL;
-    u.call_param_size[u.in_proc_call] := 0;
-    INC(u.in_proc_call);
+    PushCall(u);
     <* ASSERT u.calling_alloca = FALSE *>
     u.calling_alloca := FALSE;
   END start_call_indirect;
@@ -3832,7 +3836,7 @@ PROCEDURE load_stack_param (u: U; type: MType; depth: INTEGER) =
 
     u.vstack.unlock();
 
-    <* ASSERT u.in_proc_call > 0 *>
+    <* ASSERT u.call # NIL *>
 
     WITH stack = u.vstack.pos(depth, "load_stack_param") DO
       IF Target.FloatType [type] THEN
@@ -3846,7 +3850,7 @@ PROCEDURE load_stack_param (u: U; type: MType; depth: INTEGER) =
         u.cg.f_storeind(u.cg.reg[ESP], 0, type);
       ELSE
         IF u.calling_alloca THEN (* Alloca takes its first and only parameter in eax. *)
-          <* ASSERT u.call_param_size[u.in_proc_call - 1] = 0 *>
+          <* ASSERT u.call.param_size = 0 *>
           u.vstack.find(stack, Force.regset, RegSet { EAX });
         ELSE
           u.vstack.find(stack, Force.anyregimm);
@@ -3862,9 +3866,9 @@ PROCEDURE load_stack_param (u: U; type: MType; depth: INTEGER) =
 
       <* ASSERT CG_Bytes[type] <= 4 OR CG_Bytes[type] = 8 *>
       IF CG_Bytes[type] <= 4 THEN
-        INC(u.call_param_size[u.in_proc_call - 1], 4);
+        INC(u.call.param_size, 4);
       ELSE
-        INC(u.call_param_size[u.in_proc_call - 1], 8);
+        INC(u.call.param_size, 8);
       END
 
     END;
@@ -3888,7 +3892,7 @@ PROCEDURE pop_struct (u: U;  type: TypeUID;  s: ByteSize;  a: Alignment) =
 
     <* ASSERT u.calling_alloca = FALSE *>
 
-    <* ASSERT u.in_proc_call > 0 *>
+    <* ASSERT u.call # NIL *>
 
     (* round struct size up to multiple of 4 or 8 *)
 
@@ -3941,7 +3945,7 @@ PROCEDURE pop_struct (u: U;  type: TypeUID;  s: ByteSize;  a: Alignment) =
 
     u.vstack.discard(1);
 
-    INC(u.call_param_size[u.in_proc_call - 1], s);
+    INC(u.call.param_size, s);
   END pop_struct;
 
 PROCEDURE pop_static_link (u: U) =
@@ -3953,11 +3957,11 @@ PROCEDURE pop_static_link (u: U) =
 
     <* ASSERT u.calling_alloca = FALSE *> (* Alloca does not take a static link. *)
 
-    <* ASSERT u.in_proc_call > 0 *>
+    <* ASSERT u.call # NIL *>
 
-    u.static_link[u.in_proc_call - 1] := declare_temp(u, 4, 4, Type.Addr, FALSE);
+    u.call.static_link := declare_temp(u, 4, 4, Type.Addr, FALSE);
 
-    u.vstack.pop(MVar {var := u.static_link[u.in_proc_call - 1],
+    u.vstack.pop(MVar {var := u.call.static_link,
                        mvar_offset := 0, mvar_type := Type.Addr} );
   END pop_static_link;
 
@@ -4068,7 +4072,7 @@ PROCEDURE call_direct (u: U; p: Proc;  type: Type) =
       u.wr.NL    ();
     END;
 
-    <* ASSERT u.in_proc_call > 0 *>
+    <* ASSERT u.call # NIL *>
 
     IF realproc.lev # 0 THEN
       load_static_link_toC(u, p);
@@ -4089,9 +4093,9 @@ PROCEDURE call_direct (u: U; p: Proc;  type: Type) =
     END;
 
     IF (NOT realproc.stdcall) (* => caller cleans *)
-       AND u.call_param_size[u.in_proc_call - 1] > 0 THEN
+       AND u.call.param_size > 0 THEN
 
-        IF NOT TIntN.FromHostInteger(u.call_param_size[u.in_proc_call - 1], Target.Integer.bytes, call_param_size) THEN
+        IF NOT TIntN.FromHostInteger(u.call.param_size, Target.Integer.bytes, call_param_size) THEN
           Err(u, "call_direct: unable to convert param_size to target integer");
         END;
         u.cg.immOp(Op.oADD, u.cg.reg[ESP], call_param_size);
@@ -4121,7 +4125,7 @@ PROCEDURE call_direct (u: U; p: Proc;  type: Type) =
       END
     END;
 
-    DEC(u.in_proc_call);
+    PopCall(u);
     u.calling_alloca := FALSE;
   END call_direct;
 
@@ -4138,30 +4142,30 @@ PROCEDURE call_indirect (u: U; type: Type;  cc: CallingConvention) =
     END;
 
     <* ASSERT u.calling_alloca = FALSE *>
-    <* ASSERT u.in_proc_call > 0 *>
+    <* ASSERT u.call # NIL *>
 
     u.vstack.releaseall();
 
-    IF u.static_link[u.in_proc_call - 1] # NIL THEN
+    IF u.call.static_link # NIL THEN
       (*u.vstack.corrupt(ECX, operandPart := 0);*)
       u.cg.movOp(u.cg.reg[ECX],
                  Operand { loc := OLoc.mem, optype := Type.Addr,
                            mvar :=
-                             MVar { var := u.static_link[u.in_proc_call - 1],
+                             MVar { var := u.call.static_link,
                                     mvar_offset := 0,
                                     mvar_type := Type.Addr } } );
-      free_temp(u, u.static_link[u.in_proc_call - 1]);
-      u.static_link[u.in_proc_call - 1] := NIL;
+      free_temp(u, u.call.static_link);
+      u.call.static_link := NIL;
     END;
 
     u.cg.rmCall(u.vstack.op(u.vstack.pos(0, "call_indirect")));
     u.vstack.discard(1);
 
-    IF (cc.m3cg_id = 0) AND u.call_param_size[u.in_proc_call - 1] > 0 THEN
+    IF (cc.m3cg_id = 0) AND u.call.param_size > 0 THEN
 
       (* caller-cleans calling convention *)
 
-      IF NOT TIntN.FromHostInteger(u.call_param_size[u.in_proc_call - 1], Target.Integer.bytes, call_param_size) THEN
+      IF NOT TIntN.FromHostInteger(u.call.param_size, Target.Integer.bytes, call_param_size) THEN
         Err(u, "call_indirect: unable to convert param_size to target integer");
       END;
 
@@ -4183,7 +4187,7 @@ PROCEDURE call_indirect (u: U; type: Type;  cc: CallingConvention) =
       END
     END;
 
-    DEC(u.in_proc_call);
+    PopCall(u);
   END call_indirect;
 
 PROCEDURE FixReturnValue (u: U;  type: Type): Type =
@@ -4562,7 +4566,7 @@ PROCEDURE fence (u: U; <*UNUSED*>order: MemoryOrder) =
       u.wr.NL    ();
     END;
 
-    <* ASSERT u.in_proc *>
+    <* ASSERT u.call # NIL *>
     <* ASSERT u.current_proc # NIL *>
 
     u.vstack.unlock();

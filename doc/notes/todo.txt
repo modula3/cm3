@@ -74,8 +74,8 @@ and/or produce enough type information in backend
 to make gdb much better and m3gdb moot
 -----------------------------------------------------------------------------
 write a C or C++ generating backend
-C++ is useful for possbly more portable optimized exception handling.
-That is, given a C++ compiler that implementations exception handling,
+C++ is useful for possibly more portable optimized exception handling.
+That is, given a C++ compiler that implements exception handling,
 which is all these days, and most through time, but not all through time,
 there is some good chance the exception handling is more efficient
 than setjmp/longjmp

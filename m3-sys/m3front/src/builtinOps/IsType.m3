@@ -227,7 +227,7 @@ PROCEDURE Initialize () =
                                  CallExpr.IsNever, (* writable *)
                                  CallExpr.IsNever, (* designator *)
                                  CallExpr.NotWritable (* noteWriter *));
-    Procedure.Define ("ISTYPE", Z, TRUE);
+    Procedure.DefinePredefined ("ISTYPE", Z, TRUE);
   END Initialize;
 
 BEGIN

@@ -114,7 +114,7 @@ PROCEDURE AlertJoin(t: T): REFANY RAISES {Alerted};
   WHEN t.done
     ENSURES RESULT = t.close.res /\ t.joined'
       /\ UNCHANGED(pendingAlerts)
-  WHEN CURRENT \in pendingAlerts 
+  WHEN CURRENT \in pendingAlerts
     ENSURES RAISES Alerted
       /\ pendingAlerts' = delete(CURRENT, pendingAlerts)
       /\ UNCHANGED(t.joined)
@@ -127,7 +127,7 @@ PROCEDURE AlertPause(n: LONGREAL) RAISES {Alerted};
     ENSURES start' = NOW
   ACTION Resume
     WHEN (NOW - start) > n ENSURES UNCHANGED(ALL)
-    WHEN CURRENT \in pendingAlerts 
+    WHEN CURRENT \in pendingAlerts
       ENSURES RAISES Alerted
         /\ pendingAlerts' = delete(CURRENT, pendingAlerts)
 

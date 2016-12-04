@@ -81,23 +81,25 @@ UNSAFE MODULE UnsafeUniCodec
       RETURN DecTable [ IsBE , Enc ] ( Source ) 
     END FastDecode 
 
-; PROCEDURE FastEncNull ( Sink : Wr . T ; Wch : Widechar ) 
-  RAISES { Alerted , Wr . Failure , Range } 
+; PROCEDURE FastEncNull 
+    ( <* UNUSED *> Sink : Wr . T ; <* UNUSED *> Wch : Widechar ) 
+  RAISES { Alerted , Wr . Failure , Range } <* NOWARN*> 
   (* A NOOP.  Placeholder for Encoding.Null. *) 
 
   = BEGIN (* Do nothing. *) 
     END FastEncNull
 
-; PROCEDURE FastDecNull ( Source : Rd . T ) : Widechar
-  RAISES { EndOfFile , Rd . Failure , Alerted } 
+; PROCEDURE FastDecNull ( <* UNUSED *> Source : Rd . T ) : Widechar
+  RAISES { EndOfFile , Rd . Failure , Alerted } <* NOWARN*> 
   (* A NOOP.  Placeholder for Encoding.Null. *) 
 
   = BEGIN (* FastDecNull *) 
       RETURN UniEncoding . ReplacementWch
     END FastDecNull
 
-; PROCEDURE FastEncInternal ( Sink : Wr . T ; Wch : Widechar ) 
-  RAISES { Alerted , Wr . Failure , Range } 
+; PROCEDURE FastEncInternal 
+    ( <* UNUSED *> Sink : Wr . T ; <* UNUSED *> Wch : Widechar ) 
+  RAISES { Alerted , Wr . Failure , Range } <* NOWARN*> 
   (* A NOOP. Placeholder for Encoding.Internal, which is used for
      in-memory representations normally hidden by abstractions. 
   *) 
@@ -105,8 +107,8 @@ UNSAFE MODULE UnsafeUniCodec
   = BEGIN 
     END FastEncInternal
 
-; PROCEDURE FastDecInternal ( Source : Rd . T ) : Widechar
-   RAISES { EndOfFile , Rd . Failure , Alerted } 
+; PROCEDURE FastDecInternal ( <* UNUSED *> Source : Rd . T ) : Widechar
+   RAISES { EndOfFile , Rd . Failure , Alerted } <* NOWARN*> 
   (* A NOOP. Placeholder for Encoding.Internal, which is used for
      in-memory representations normally hidden by abstractions. 
   *) 
@@ -449,7 +451,10 @@ UNSAFE MODULE UnsafeUniCodec
                                , And ( 16_3F , B3 )
                                ) 
                           ) 
-                ; RETURN LOOPHOLE ( ResultWt , ArrWchWt ) [ ArrWchWt0 ] 
+                ; RETURN <* NOWARN*>
+(* COMPILER BUG?? ^On this line, CM3 says:
+                   "warning: function may not return a value (FastDecUTF8)" *) 
+                    LOOPHOLE ( ResultWt , ArrWchWt ) [ ArrWchWt0 ]  
                 END (* IF *) 
               END (* IF *) 
             END (* IF *) 

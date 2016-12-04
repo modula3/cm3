@@ -795,7 +795,7 @@ PROCEDURE Convert
                 FOR i := 1 TO insnUnitCt (*32-bit words*) DO
                   intVal := PickleStubs.InWC21(v.getReader().rd); 
                   IF intVal > 16_10FFFF THEN 
-                    RAISE Error("Malformed pickle: WIDECHAR out of range.");
+                    RAISE Error("Malformed pickle: WIDECHAR out of Unicode range.");
                   END; 
                   WITH int32p = LOOPHOLE(dest, UNTRACED REF UInt32) DO
                     int32p^ := intVal; 

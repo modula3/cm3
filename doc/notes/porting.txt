@@ -24,7 +24,7 @@ Our portability rests on some large pillars:
          See ThreadPosixC.c, it contains both get/setcontext and sigaltstack variants.
        sigstack might be the way to go on e.g. VMS, where pthreads don't get context.
        Lastly the old way of digging around in jmpbuf remains viable, but not portable,
-       if desparate.
+       if desperate.
 
 
 In the past, a large tedious error-prone part of porting was "rewriting /usr/include in Modula-3".
