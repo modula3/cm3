@@ -1,4 +1,4 @@
-/* M3 language support routines for GDB, the GNU debugger.
+/* Modula-3 language support routines for GDB, the GNU debugger.
    Copyright 2006 Free Software Foundation, Inc.
 
 This file is part of GDB.
