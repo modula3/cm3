@@ -112,7 +112,7 @@ EXTERN_C_END
 "}"		{BufferLexeme(1); return(RBRACE);}
 "|"		{BufferLexeme(1); return(BAR);}
 
-[0-9]+(_[0-9A-Fa-f]+)?        {BufferLexeme(1); return(CARD_CONST);}
+[0-9]+(_[0-9A-Fa-f]+)?([lL])?    {BufferLexeme(1); return(CARD_CONST);}
 
 [0-9]+"."[0-9]*([EeDdXx][-+]?[0-9]+)?/[^.] {BufferLexeme(1); return(REAL_CONST);}
 
