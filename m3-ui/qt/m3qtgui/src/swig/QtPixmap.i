@@ -68,6 +68,11 @@ IMPORT WeakRef;
 %apply ClassIn      {const QPixmap &};
 %apply SelfReturn   {QPixmap};
 
+//static method returns QImage
+%apply ClassReturn {QPixmap QPixmap::grabWindow};
+%apply ClassReturn {QPixmap QPixmap::grabWidget};
+%apply ClassReturn {QPixmap QPixmap::fromImage};
+
 
 //alias the qbitmap and qwidget classes
 
@@ -81,7 +86,7 @@ IMPORT WeakRef;
 
 %apply const QWidget * {QWidget *};
 
-//dont import qwidget circular imports as wth qbitmap
+//dont import qwidget circular imports as with qbitmap
 //%typemap("m3wrapintype:import")  QWidget *  %{QtWidget $1_basetype%}
 
 %typemap("m3wrapintype:import")  const QString & %{QtString QString%}

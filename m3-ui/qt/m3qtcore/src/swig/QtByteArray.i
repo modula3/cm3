@@ -79,13 +79,11 @@ TYPE
 
 %ignore QByteRef;
 
-//can handle static types with the selfreturn apply
-//%ignore fromRawData;
-//%ignore fromBase64;
-//%ignore fromHex;
-//%ignore fromPercentEncoding;
-
-
+//static methods with no return checks
+%apply ClassReturn   {QByteArray QByteArray::fromRawData};
+%apply ClassReturn   {QByteArray QByteArray::fromBase64};
+%apply ClassReturn   {QByteArray QByteArray::fromHex};
+%apply ClassReturn   {QByteArray QByteArray::fromPercentEncoding};
 
 %typemap("m3wrapargraw")     char   %{ORD($1_name)%}
 

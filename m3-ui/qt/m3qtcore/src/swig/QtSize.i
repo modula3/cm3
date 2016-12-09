@@ -61,10 +61,10 @@ correct to compile
 %apply ClassIn     {const QSize &};
 %apply ClassIn     {const QSizeF &};
 
-%apply SelfReturn {QSize &};
-%apply SelfReturn {QSizeF &};
-%apply SelfReturn {QSize};
-%apply SelfReturn {QSizeF};
+%apply ClassReturn {QSize &};
+%apply ClassReturn {QSizeF &};
+%apply ClassReturn {QSize};
+%apply ClassReturn {QSizeF};
 
 //Only use DoType for imported classes. The local classes have apply
 //DoType(QSize,QtSize)

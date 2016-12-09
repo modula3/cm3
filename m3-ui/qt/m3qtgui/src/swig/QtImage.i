@@ -56,6 +56,9 @@ EnumMaps(QImage, Format, ErrMode)
 %apply ClassIn    {const QImage &};
 %apply SelfReturn {QImage};
 
+//static method returns QImage
+%apply ClassReturn {QImage QImage::fromData};
+
 
 DoType(QSize,QtSize)
 DoType(QPoint,QtPoint)

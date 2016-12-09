@@ -21,8 +21,11 @@ IMPORT WeakRef;
 %rename(NotEqual)    operator!=;
 
 
-%apply SelfReturn {QLine};
-%apply SelfReturn {QLineF};
+%apply ClassReturn {QLine};
+%apply ClassReturn {QLineF};
+
+//the static method has no self checking
+%apply ClassReturn   {QLineF QLineF::fromPolar};
 
 %apply ClassIn {const QLine &};
 %apply ClassIn {const QLineF &};

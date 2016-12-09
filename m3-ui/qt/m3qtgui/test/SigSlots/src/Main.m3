@@ -1,6 +1,6 @@
 MODULE Main;
 
-IMPORT IO,Thread,RTCollector;
+IMPORT IO,Thread;
 
 IMPORT QtLabel;
 IMPORT QtCheckBox;
@@ -77,14 +77,8 @@ END Callback3;
 
 BEGIN
 
-(*
-  RTCollector.Disable();
-*)
-
-(*  RTCollector.DisableMotion();*)
-
   argc := 1;
-  argv[0] := "./test window";
+  argv[0] := "test window";
 
   app := NEW(QtApplication.T).init_1(argc,argv);
   mainWin := NEW(QtMainWindow.T).init_2();
@@ -134,14 +128,5 @@ BEGIN
 
   IO.Put("pausing for 1 secs\n");
   Thread.Pause(1.0D0);
-
-(*  
-  RTCollector.EnableMotion();
-  RTCollector.Collect();*)
-
-(*
-  RTCollector.Enable();
-
-*)
 
 END Main.

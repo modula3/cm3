@@ -44,11 +44,6 @@
 
 //cope with the constructor conversion is this correct just for self parms
 %typemap("m3wrapretraw")       SWIGTYPE * %{result%}
-/*
-  used to be this but added m3rawrettype above to remove the untraced ref from raw
-%typemap("m3wrapretvar")    SWIGTYPE * %{ret := NEW($1_basetype);
-result : UNTRACED REF rectangleRaw.$1_basetype;%};
-*/
 
 //no need to allocate a new type we use the method self
 //%typemap("m3wrapretvar")     SWIGTYPE * %{ret := NEW($1_basetype);
@@ -69,40 +64,6 @@ result : UNTRACED REF rectangleRaw.$1_basetype;%};
 
 //define macro for enums
 
-//original ones
-/*
-%define EnumMaps(enumIN,M3Enum,RunCheck)
-
-%typemap("m3rawintype")    enumIN   %{C.int%} //removes comment from modula3.swg
-%typemap("m3rawrettype")   enumIN   %{C.int%} // not really necessary
-%typemap("m3wraprettype")  enumIN   %{M3Enum%}
-%typemap("m3wrapretvar")   enumIN   %{ret:INTEGER; result : M3Enum;%}
-%typemap("m3wrapretraw")   enumIN   %{ret%};
-%typemap("m3wrapretconv")  enumIN   %{result%}
-%typemap("m3wrapretcheck") enumIN   %{result := VAL(ret,M3Enum);  %};
-%typemap("m3wrapintype")   enumIN   %{M3Enum%}
-%typemap("m3wrapargraw")   enumIN   %{ORD($1_name)%}
-%typemap("m3wrapouttype")  enumIN   %{M3Enum%} //fixes .i3 not return correct type
-%typemap(in)               enumIN = enum SWIGTYPE; //fixes wrong typemap in wrap.cxx
-
-#if RunCheck > 0
-%typemap("m3wrapenumcheck") enumIN  %{M3Enum%};
-#endif
-
-%enddef
-
-//if an enum is defined in another module need an import
-
-%define EnumImport(enumIN,M3Enum,importMod)
-
-%typemap("m3wrapintype:import") enumIN  %{importMod M3Enum%}
-%typemap("m3wrapretvar:import") enumIN  %{importMod M3Enum%}
-
-%enddef
-*/
-
-//New Macros
-
 %define EnumMaps(enumPrefix, enumIn, RunCheck)
 
 %typemap("m3rawintype")    enumPrefix::enumIn   %{C.int%} //removes comment from modula3.swg
@@ -115,8 +76,10 @@ result : UNTRACED REF rectangleRaw.$1_basetype;%};
 %typemap("m3wrapintype")   enumPrefix::enumIn   %{enumIn%}
 %typemap("m3wrapargraw")   enumPrefix::enumIn   %{ORD($1_name)%}
 %typemap("m3wrapouttype")  enumPrefix::enumIn   %{enumIn%} //fixes .i3 not return correct type
-%typemap(in)               enumPrefix::enumIn = enum SWIGTYPE; //fixes wrong typemap in wrap.cxx
 
+%typemap(in)               enumPrefix::enumIn = enum SWIGTYPE;
+
+//if runcheck is a command line option, it generates code to check enum validity
 #if RunCheck > 0
 %typemap("m3wrapenumcheck")  enumPrefix::enumIn  %{enumIn%}
 #endif
@@ -152,8 +115,11 @@ result : UNTRACED REF rectangleRaw.$1_basetype;%};
 %typemap("m3wrapretcheck") enumIN   %{result := VAL(ret,M3Enum);  %};
 %typemap("m3wrapintype")   enumIN   %{M3Enum%}
 %typemap("m3wrapargraw")   enumIN   %{ORD($1_name)%}
-%typemap("m3wrapouttype")  enumIN   %{M3Enum%} //fixes .i3 not return correct type
-%typemap(in)               enumIN = enum SWIGTYPE; //fixes wrong typemap in wrap.cxx
+%typemap("m3wrapouttype")  enumIN   %{M3Enum%} 
+
+%typemap(in)               enumIN = enum SWIGTYPE;
+%typemap(ctype)            enumIN  %{int%}
+%typemap(out)              enumIN  %{cresult = (int)result;%}
 
 %enddef
 
@@ -167,63 +133,31 @@ result : UNTRACED REF rectangleRaw.$1_basetype;%};
 %enddef
 
 
-//Define a set of tmaps which can be used in an apply
 //Self returns are used where a class has a return type of itself
 //we dont want to crash collecting ourselves twice
-/*
-Could do away with the statcheck in the modula3.cxx which is a real kludge
-since we know how to apply a typemap to a static return member
-and indeed to a static parm??
-as in %apply SelfReturn   {QWidget *QWidget::mouseGrabber};
-so we could have 2 sets of SelfReturns one for member functions and one for statics
-and its only the m2wrapretcheck tmap which changes
-*/
+
 %typemap("ctype")          SelfReturn       %{$1_basetype *%}  //class returns are pointers
 %typemap("m3rawrettype")   SelfReturn       %{ADDRESS%}
 %typemap("m3wraprettype")  SelfReturn       %{$1_basetype%}
 %typemap("m3wrapretvar")   SelfReturn       %{ret:ADDRESS; result : $1_basetype;%}
 %typemap("m3wrapretraw")   SelfReturn       %{ret%};
 %typemap("m3wrapretconv")  SelfReturn       %{result%}
-//%typemap("m3wrapargvar")   SelfReturn       %{selfAdr :=  LOOPHOLE($1_name.cxxObj,ADDRESS);%}
 
-//the modula3 swig code strips off the comments in the case of statcheck
-//was this IF ISTYPE(result,$1_basetype) AND ret = selfAdr
-//but I think selfAdr was changed at one point to arg1tmp
-//m3wrapargvar in classin was added for some reason and it overrides the selfaddr
-//change the current ret = arg1tmp back to selfAdr as it should be
-//for qcolor etc and see which modules fail later. I thinkg
-//maybe a question of ordering ie that there is a classin after a selfreturn
-//check it out
-%typemap("m3wrapretcheck",statcheck="1") SelfReturn       %{
-(*IF ISTYPE(result,$1_basetype) AND ret = selfAdr THEN
-  result := LOOPHOLE(self,$1_basetype);
-ELSE*)
+%typemap("m3wrapretcheck") SelfReturn       %{
+IF ISTYPE(result,$1_basetype) AND ret = selfAdr THEN
+  result := self;
+ELSE
   result := NEW($1_basetype);
   result.cxxObj := ret;
   result.destroyCxx();
-(*END;*)
+END;
 %};
 
-//test of a set of tmaps for a static self return
-%typemap("ctype")          StaticSelfReturn     %{$1_basetype *%}  //class returns are pointers
-%typemap("m3rawrettype")   StaticSelfReturn     %{ADDRESS%}
-%typemap("m3wraprettype")  StaticSelfReturn     %{$1_basetype%}
-%typemap("m3wrapretvar")   StaticSelfReturn     %{ret:ADDRESS; result : $1_basetype;%}
-%typemap("m3wrapretraw")   StaticSelfReturn     %{ret%};
-%typemap("m3wrapretconv")  StaticSelfReturn     %{result%}
 
-%typemap("m3wrapretcheck") StaticSelfReturn     %{
-  result := NEW($1_basetype);
-  result.cxxObj := ret;
-  result.destroyCxx();
-%};
-//end static test
-
-//Define a set of tmaps which can be used in an apply
 //Class returns (normal case) are used where a class has
 //a return type different from itself so no checking if it can be destroyed
 
-%typemap("ctype")          ClassReturn        %{$1_basetype *%}  //class returns are pointers
+
 %typemap("m3rawrettype")   ClassReturn        %{ADDRESS%}
 %typemap("m3wraprettype")  ClassReturn        %{$1_basetype%}
 %typemap("m3wrapretvar")   ClassReturn        %{ret:ADDRESS; result : $1_basetype;%}
@@ -234,6 +168,7 @@ ELSE*)
   result.cxxObj := ret;
   result.destroyCxx();
 %};
+%typemap("ctype")          ClassReturn        %{$1_basetype *%}  //class returns are pointers
 
 //this seems to fix some compile errors in cxx but stuffs up others
 %typemap("out",optimal="1") SWIGTYPE %{*($&1_ltype*)&$result = new $1_ltype((const $1_ltype &)$1);%}
@@ -241,7 +176,6 @@ ELSE*)
 //Define a set of tmaps which can be used in an apply
 //ClassIn tmaps are for parameters for a method call
 
-//%typemap("ctype")          ClassIn            %{$1_basetype *%}  // not really needed
 %typemap("m3rawintype")    ClassIn            %{ADDRESS%}
 %typemap("m3rawinmode")    ClassIn            %{%}
 %typemap("m3wrapinmode")   ClassIn            %{%}
@@ -295,8 +229,6 @@ result : TEXT;%};
   result := ba.data();
 %}
 
-//also commented out the qstr.destroyCxx since getting mem corruption think
-//the qstr is being destroyed in to local8bit but needs testing
 
 //Did have this originally
 //ba.destroyCxx(); destroyed in tolocal8bit. Raises assert in collector
@@ -310,20 +242,15 @@ result : TEXT;%};
 //import qstring but stubbed at moment see below
 //%typemap("m3wrapintype:import")  QString  %{QtString $1_basetype%}
 
-//%typemap("in")  QObj      %{$1 = ($1_basetype *)&$input;%}
 
-//this works so test if can do away with QObj
-//%typemap("in")  const SWIGTYPE &   %{$1 = ($1_basetype *)&$input;%}
-//think should be this since does not produce correct results actually i must have
-//been getting segv with this before see comment below
 %typemap("in")  const SWIGTYPE &   %{$1 = *($1_basetype **)&$input;%}
 
 
-//The default cast in the wrap.cxx is  eg arg1 = *(QPoint **)&p; but this causes segv
-//and it should be   arg1 = (QPoint *)&p; to work correctly
-//so need an apply for every class that could be a ref input
-/*
-%apply QObj {const QPoint    &};
+/*The default cast in the wrap.cxx is  eg arg1 = *(QPoint **)&p; but this causes segv
+and it should be   arg1 = (QPoint *)&p; to work correctly
+so need an apply for every class that could be a ref input
+for example
+%apply QObj {const QPoint &};
 */
 
 %define DoType(typeIN,importMod)
@@ -347,4 +274,3 @@ result : TEXT;%};
 %typemap("m3wrapretvar:import") const typeIN & %{importMod  $1_basetype%}
 
 %enddef
-

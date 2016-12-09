@@ -11,7 +11,7 @@ end
 %SWIGBUILD="1"
 
 %if you have a local swig enable it here
-SWIGLOC="/home/user/swigtest/src/swig-2.0.4/"
+%SWIGLOC="/home/user/swigtest/src/swig-2.0.4/"
 
 if defined("SWIGLOC")
   SWIGBASE=SWIGLOC
@@ -22,17 +22,17 @@ else
 end
 
 QT_INCLUDE = " -I/usr/include/qt4 "
-SWIGQTINC = QT_INCLUDE & " -I../../common -I../../m3qtcore/src "
+SWIGQTINC = QT_INCLUDE & " -I../../common -I../../m3qtcore/src/swig "
 SWIGINCLUDES = SWIGLIBS & SWIGQTINC
 
 %SWIGENUM =  " -generateenumchecks "
 SWIGENUM = ""
 
 if defined("SWIGLOC")
-  SWIG=SWIGBASE & "swig" & SWIGINCLUDES & SWIGENUM & " -outcurrentdir  -c++  -modula3"
+  SWIG=SWIGBASE & "swig" & SWIGINCLUDES & SWIGENUM & " -noproxy -outcurrentdir  -c++  -modula3"
 else
 %normal case if installed
-  SWIG="swig " & SWIGQTINC & SWIGENUM & " -outcurrentdir -c++ -modula3"
+  SWIG="swig " & SWIGQTINC & SWIGENUM & " -noproxy -outcurrentdir -c++ -modula3"
 end
 
 
@@ -50,7 +50,6 @@ proc doswig(source) is
 
   local args = source
 
-%  write(SWIG & " " & args & "\n")
   write("swig " & args & "\n")
   return try_exec ("@" & SWIG, args)
 

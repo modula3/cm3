@@ -31,10 +31,6 @@ FROM QtByteArray IMPORT QByteArray;
 %ignore data;
 %ignore setData;
 
-//QStringList
-//%ignore setVerticalHeaderLabels;
-//%ignore setHorizontalHeaderLabels;
-
 //qlist
 %ignore selectedRanges;
 %ignore selectedItems;
@@ -51,7 +47,7 @@ EnumImport(QItemSelectionModel, SelectionFlags, QtItemSelectionModel, ErrMode)
 //not used in this module
 //EnumMaps(QTableWidget::ItemType, ItemType, 1)
 
-//EnumFlagsImport(QItemSelectionModel::SelectionFlags , SelectionFlags)
+EnumFlags(Qt::ItemFlags, ItemFlags)
 
 %apply ClassIn {const QTableWidgetSelectionRange &};
 %apply ClassIn {const QTableWidgetItem &};

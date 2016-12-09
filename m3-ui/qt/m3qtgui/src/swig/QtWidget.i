@@ -172,9 +172,9 @@ DoType(QGraphicsProxyWidget,QGuiStubs)
 %apply SelfReturn   {QWidget *childAt};
 
 //apply to the static members as well
-%apply StaticSelfReturn   {QWidget *QWidget::mouseGrabber};
-%apply StaticSelfReturn   {QWidget *QWidget::keyboardGrabber};
-%apply StaticSelfReturn   {QWidget *QWidget::find};
+%apply ClassReturn   {QWidget *QWidget::mouseGrabber};
+%apply ClassReturn   {QWidget *QWidget::keyboardGrabber};
+%apply ClassReturn   {QWidget *QWidget::find};
 
 
 //needs to be in a common include somewhere but not common.i

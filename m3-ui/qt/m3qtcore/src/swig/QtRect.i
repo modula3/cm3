@@ -24,25 +24,25 @@ TYPE
 %apply  intvar* {int *x, int *y, int *w, int *h};
 
 //the operators
-%rename(PlusEqual)     QRect::operator|;
-%rename(MinusEqual)    QRect::operator&;
-%rename(MultiplyEqual) QRect::operator|=;
-%rename(DivideEqual)   QRect::operator&=;
+%rename(Or)         QRect::operator|;
+%rename(And)        QRect::operator&;
+%rename(OrEqual)    QRect::operator|=;
+%rename(AndEqual)   QRect::operator&=;
 
 //the F ones
-%rename(PlusEqual)     QRectF::operator|;
-%rename(MinusEqual)    QRectF::operator&;
-%rename(MultiplyEqual) QRectF::operator|=;
-%rename(DivideEqual)   QRectF::operator&=;
+%rename(Or)         QRectF::operator|;
+%rename(And)        QRectF::operator&;
+%rename(OrEqual)    QRectF::operator|=;
+%rename(AndEqual)   QRectF::operator&=;
 
 %ignore operator==;
 %ignore operator!=;
 
 //Local classes
-%apply SelfReturn    {QRect &};
-%apply SelfReturn    {QRectF &};
-%apply SelfReturn    {QRect};
-%apply SelfReturn    {QRectF};
+%apply ClassReturn    {QRect &};
+%apply ClassReturn    {QRectF &};
+%apply ClassReturn    {QRect};
+%apply ClassReturn    {QRectF};
 
 %apply ClassIn       {const QRect &};
 %apply ClassIn       {const QRectF &};

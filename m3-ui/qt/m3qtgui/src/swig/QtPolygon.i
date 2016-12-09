@@ -62,8 +62,8 @@ public:
 %apply ClassIn {const QPolygon &};
 %apply ClassIn {QPolygonF &};
 %apply ClassIn {const QPolygonF &};
-%apply SelfReturn {QPolygon};
-%apply SelfReturn {QPolygonF};
+%apply ClassReturn {QPolygon};
+%apply ClassReturn {QPolygonF};
 
 
 DoType(QRect,QtRect)

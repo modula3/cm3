@@ -39,8 +39,8 @@ EnumImport(QImage, Format, QtImage, 0)
 %apply ClassIn      {const QBitmap &};
 %apply SelfReturn   {QBitmap};
 
-%apply StaticSelfReturn   {QBitmap QBitmap::fromImage};
-%apply StaticSelfReturn   {QBitmap QBitmap::fromData};
+%apply ClassReturn   {QBitmap QBitmap::fromImage};
+%apply ClassReturn   {QBitmap QBitmap::fromData};
 
 %typemap("m3wrapintype:import")  const QPixmap &  %{QtPixmap $1_basetype%}
 

@@ -70,7 +70,7 @@ EnumFlags(Sections, Sections)
 %apply ClassIn     {const QTime &};
 %apply ClassReturn {QDate};
 %apply ClassReturn {QTime};
-%apply SelfReturn  {QDateTime};
+%apply ClassReturn  {QDateTime};
 
 %apply ClassIn     {QCalendarWidget *};
 %apply ClassReturn {QCalendarWidget *};
@@ -82,11 +82,10 @@ EnumFlags(Sections, Sections)
 %typemap("m3wrapintype:import")  const QDateTime & %{QtDateTime QDateTime%}
 %typemap("m3wrapintype:import") QCalendarWidget * %{QtCalendarWidget QCalendarWidget%}
 
-/*
-use these when checked wether the selfreturn is working properly
+
 DoType(QDate,QtDateTime);
 DoType(QTime,QtDateTime);
 DoType(QDateTime,QtDateTime);
-*/
+
 
 %include <QtGui/qdatetimeedit.h>
