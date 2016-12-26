@@ -102,9 +102,10 @@ BEGIN
   self.createTabs();
   self.createHorizGroupBox();
 
-(* this fails until fix flags
+(*
   self.buttonBox := NEW(QtDialogButtonBox.T).init_4(Word.Or(Ok,Cancel),Horizontal,self);
 *)
+
   self.buttonBox := NEW(QtDialogButtonBox.T).init_0(self);
   EVAL self.buttonBox.addButton1("Button 1",3);
   EVAL self.buttonBox.addButton1("Button 2",3);
@@ -112,9 +113,7 @@ BEGIN
   EVAL self.buttonBox.addButton2(Ok);
   EVAL self.buttonBox.addButton2(Cancel);
 
-(* this fails until fix flags
   self.buttonBox.setStandardButtons(Word.Or(Ok,Cancel));
-*)
 
   mainLayout := NEW(QtBoxLayout.QVBoxLayout).init_1(self);
 
