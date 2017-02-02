@@ -15,8 +15,8 @@ import("libm3")
 interface("Test")
 module("XRd")
 implementation("NetObjTest")
-netobj("Test","T")
-netobj("Test","Return")
+netobjv2("Test","T")
+netobjv2("Test","Return")
 
 build_standalone()
 
