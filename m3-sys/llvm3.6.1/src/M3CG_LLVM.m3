@@ -339,8 +339,6 @@ TYPE
          calls a procedure nested one deeper than itself and that wants a
          display, this proc will create it in a local of this type (only once)
          and pass its address as an added static link parameter to the callee. *)
-    outgoingDisplayLv : LLVM.ValueRef := NIL; (* displayLty* *) 
-    (* ^Do we really even need to keep this in the LvProc? *) 
     outgoingDisplayI8StarLv : LLVM.ValueRef := NIL; (* i8* *) 
     (* ^The display this proc will pass to one-level more deeply nested procs.*)
     needsDisplay : BOOLEAN := FALSE; 
@@ -2091,22 +2089,15 @@ PROCEDURE begin_procedure (self: U;  p: Proc) =
       local := NARROW(arg,LvVar);
       self.allocVar(local);
     END;
-
     (* A temporary placeholder for display. To be replaced at end_procedure. The display will be added to all procedures
     regardless but we delete it in end_procedure if not needed *)
-    proc.outgoingDisplayLv 
-      := LLVM.LLVMBuildAlloca(builderIR, AdrTy, LT("_temp_outgoing_display"));
-    proc.outgoingDisplayI8StarLv
-          := LLVM.LLVMBuildBitCast
-               (builderIR, proc.outgoingDisplayLv, AdrTy, 
-                LT("_temp_outgoing_display_as_I8Star"));
+    proc.outgoingDisplayI8StarLv 
+      := LLVM.LLVMBuildAlloca(builderIR, AdrTy, LT("_temp_outgoing_display_as_I8Star"));
     (* WARNING!! ^We will, in end_procedure, do a ReplaceAllUsesWith on this.
                   It is essential that each instance of this is distinct and
                   doesn't get thrown into a single pot with the others.  
                   Otherwise, chaos will ensue.  The rules for what makes 
                   this unique are hard to ferret out. *) 
-(* CHECK: ^Can we avoid this bitcast? *) 
-
     LLVM.LLVMPositionBuilderAtEnd(builderIR,proc.secondBB);
     (* ^This is where general stuff will be inserted. *) 
     self.begin_block();
@@ -2184,7 +2175,7 @@ PROCEDURE end_procedure (self: U;  p: Proc) =
     prevInstr : LLVM.ValueRef;
     opCode : LLVM.Opcode;
     curBB : LLVM.BasicBlockRef;
-    tempDisplayLv : LLVM.ValueRef;
+    tempDisplayLv,displayAllocLv : LLVM.ValueRef;
     textName : TEXT;
     linkSize : CARDINAL;   
   BEGIN
@@ -2219,27 +2210,26 @@ PROCEDURE end_procedure (self: U;  p: Proc) =
     (* Final setup of this proc's display, which it can pass to any 
        one-level more deeply nested procedure. *) 
     IF proc.needsDisplay THEN 
-       (* ^proc contained a call on a deeper nested proc. *) 
-      IF proc.cumUplevelRefdCt > 0 THEN (* Display is nonempty. *) 
-        (* We need an llvm type for a local display area that this proc
-           can pass as static link to deeper-nested procedures. *) 
-        proc.displayLty := LLVM.LLVMArrayType(AdrTy,proc.cumUplevelRefdCt);
-        tempDisplayLv := proc.outgoingDisplayI8StarLv;
-        textName := M3ID.ToText(proc.name) & "__outgoing_display";
-        proc.outgoingDisplayLv 
-          := LLVM.LLVMBuildAlloca (builderIR, proc.displayLty, LT(textName));
-        proc.outgoingDisplayI8StarLv
-          := LLVM.LLVMBuildBitCast
-               (builderIR, proc.outgoingDisplayLv, AdrTy, 
-                LT(textName & "I8Star"));
-        linkSize := BuildDisplay(self);
-        LLVM.LLVMReplaceAllUsesWith
-          (tempDisplayLv, proc.outgoingDisplayI8StarLv); 
-      END; 
+      (* ^proc contained a call on a deeper nested proc. *) 
+      (* We need an llvm type for a local display area that this proc
+         can pass as static link to deeper-nested procedures. *) 
+      proc.displayLty := LLVM.LLVMArrayType(AdrTy,proc.cumUplevelRefdCt);
+      tempDisplayLv := proc.outgoingDisplayI8StarLv;
+      textName := M3ID.ToText(proc.name) & "__outgoing_display";
+      displayAllocLv 
+        := LLVM.LLVMBuildAlloca (builderIR, proc.displayLty, LT(textName));
+      proc.outgoingDisplayI8StarLv
+        := LLVM.LLVMBuildBitCast
+             (builderIR, displayAllocLv, AdrTy, 
+              LT(textName & "I8Star"));
+      linkSize := BuildDisplay(self);
+      LLVM.LLVMReplaceAllUsesWith
+        (tempDisplayLv, proc.outgoingDisplayI8StarLv);
+      (* remove the original temporary display *)
+      LLVM.LLVMInstructionEraseFromParent(tempDisplayLv);
     ELSE
-      (* the display alloc wasnt needed after all *)
+      (* the display pointer wasnt needed after all *)
       LLVM.LLVMInstructionEraseFromParent(proc.outgoingDisplayI8StarLv);
-      LLVM.LLVMInstructionEraseFromParent(proc.outgoingDisplayLv);
     END;
 
     (* Give entry BB a terminating  unconditional branch to secondBB. *) 
