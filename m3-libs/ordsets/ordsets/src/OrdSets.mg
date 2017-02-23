@@ -442,36 +442,28 @@ GENERIC MODULE OrdSets ( )
   = VAR LWord , LFlag : Word . T 
 
   ; BEGIN 
-      IF DoPseudopointers (* Hopefully, a compiler will fold this. *) 
-      THEN 
-        LWord := UnsafeUtils . IntOfRefany ( Set ) 
-      ; LFlag := Word . And ( LWord , PseudoFlagMask ) 
-      ; CASE LFlag 
-        OF TrueReferenceFlagBits  
-        => (* Fall through. *) 
-        | PseudoBitsetFlagBits  
-        => Bitword := Word . RightShift ( LWord , BitsPerPseudoFlag )  
-        ; Lo := Least1BitNoInBitword ( Bitword ) 
-        ; Hi := Greatest1BitNoInBitword ( Bitword ) 
-        ; RETURN 
-        | PseudoRangeFlagBits 
-        => Bitword := 0 
-        ; Hi := ExtractWSignExt 
-                  ( LWord , BitsPerPseudoFlag , BitsPerPseudoBound )   
-        ; Lo := ExtractWSignExt 
-                  ( LWord 
-                  , BitsPerPseudoFlag + BitsPerPseudoBound 
-                  , BitsPerPseudoBound 
-                  )   
-        ; RETURN 
-        ELSE <* ASSERT FALSE *> 
-        END (* CASE *)
-   (* ELSE Fall through. *)   
-      END (* IF *) 
-    (* Either we aren't checking for a pseudopointer, or we don't have one. *)
-    ; Bitword := 0 
-    ; Lo := IElemNull
-    ; Hi := IElemNull 
+      LWord := UnsafeUtils . IntOfRefany ( Set ) 
+    ; LFlag := Word . And ( LWord , PseudoFlagMask ) 
+    ; CASE LFlag 
+      OF TrueReferenceFlagBits 
+      => Bitword := 0 
+      ; Lo := IElemNull
+      ; Hi := IElemNull 
+      | PseudoBitsetFlagBits 
+      => Bitword := Word . RightShift ( LWord , BitsPerPseudoFlag ) 
+      ; Lo := Least1BitNoInBitword ( Bitword ) 
+      ; Hi := Greatest1BitNoInBitword ( Bitword ) 
+      | PseudoRangeFlagBits 
+      => Bitword := 0 
+      ; Hi := ExtractWSignExt 
+                ( LWord , BitsPerPseudoFlag , BitsPerPseudoBound ) 
+      ; Lo := ExtractWSignExt 
+                ( LWord 
+                , BitsPerPseudoFlag + BitsPerPseudoBound 
+                , BitsPerPseudoBound 
+                ) 
+      ELSE <* ASSERT FALSE *> 
+      END (* CASE *)
     END DissectPseudopointer 
 
 ; TYPE DissectInfo 
@@ -524,53 +516,43 @@ GENERIC MODULE OrdSets ( )
 
   ; BEGIN 
       LDInfo . Set := Set 
-    ; IF DoPseudopointers (* Hopefully, a compiler will fold this. *) 
-      THEN 
-        LWord := UnsafeUtils . IntOfRefany ( Set ) 
-      ; LFlag := Word . And ( LWord , PseudoFlagMask ) 
-      ; CASE LFlag <* NOWARN *>  
+    ; LWord := UnsafeUtils . IntOfRefany ( Set ) 
+    ; LFlag := Word . And ( LWord , PseudoFlagMask ) 
+    ; CASE LFlag <* NOWARN *> 
 
-        OF PseudoBitsetFlagBits  
-        => LBitword := Word . RightShift ( LWord , BitsPerPseudoFlag )  
-        ; ConstructBitsetInfo ( LBitword , (*VAR*) LDInfo . BitsetInfo ) 
-        ; Proc ( LDInfo , ARRAY OF BitwordTyp { LBitword } ) 
-        ; RETURN 
+      OF PseudoBitsetFlagBits 
+      => LBitword := Word . RightShift ( LWord , BitsPerPseudoFlag ) 
+      ; ConstructBitsetInfo ( LBitword , (*VAR*) LDInfo . BitsetInfo ) 
+      ; Proc ( LDInfo , ARRAY OF BitwordTyp { LBitword } ) 
 
-        | PseudoRangeFlagBits 
-        => LDInfo . RangeHi 
-            := ExtractWSignExt 
-                 ( LWord , BitsPerPseudoFlag , BitsPerPseudoBound )   
-        ; LDInfo . RangeLo 
-            := ExtractWSignExt 
-                 ( LWord 
-                 , BitsPerPseudoFlag + BitsPerPseudoBound 
-                 , BitsPerPseudoBound 
-                 )   
+      | PseudoRangeFlagBits 
+      => LDInfo . RangeHi 
+          := ExtractWSignExt 
+               ( LWord , BitsPerPseudoFlag , BitsPerPseudoBound ) 
+      ; LDInfo . RangeLo 
+          := ExtractWSignExt 
+               ( LWord 
+               , BitsPerPseudoFlag + BitsPerPseudoBound 
+               , BitsPerPseudoBound 
+               ) 
+      ; Proc ( LDInfo , BitwordArrayEmpty ) 
+
+      | TrueReferenceFlagBits 
+      => TYPECASE Set <* NOWARN *>
+        OF NULL 
+        => Proc ( LDInfo , BitwordArrayEmpty )
+
+        | BitsetTyp ( TBSet ) 
+        => LDInfo . BitsetInfo := TBSet . BitsetInfo 
+        ; LDInfo . BSet := TBSet 
+        ; Proc ( LDInfo , TBSet . BitwordArrayRef ^ ) 
+
+        | RangesetTyp ( TRSet ) 
+        => LDInfo . RangeLo := TRSet . RangeLo 
+        ; LDInfo . RangeHi := TRSet . RangeHi 
+        ; LDInfo . RSet := TRSet 
         ; Proc ( LDInfo , BitwordArrayEmpty ) 
-        ; RETURN 
-
-        | TrueReferenceFlagBits  
-        => (* Fall through. *) 
-
-        END (* CASE *)  
-   (* ELSE Fall through. *)   
-      END (* IF *) 
-
-    ; TYPECASE Set <* NOWARN *>
-      OF NULL 
-      => Proc ( LDInfo , BitwordArrayEmpty )
-
-      | BitsetTyp ( TBSet ) 
-      => LDInfo . BitsetInfo := TBSet . BitsetInfo 
-      ; LDInfo . BSet := TBSet 
-      ; Proc ( LDInfo , TBSet . BitwordArrayRef ^ ) 
-
-      | RangesetTyp ( TRSet ) 
-      => LDInfo . RangeLo := TRSet . RangeLo 
-      ; LDInfo . RangeHi := TRSet . RangeHi 
-      ; LDInfo . RSet := TRSet 
-      ; Proc ( LDInfo , BitwordArrayEmpty )  
-
+        END (* TYPECASE *) 
       END (* CASE *) 
     END CallWithOneSet 
 
@@ -643,11 +625,10 @@ GENERIC MODULE OrdSets ( )
   ; VAR LResult : T 
 
   ; BEGIN 
-      IF DoPseudopointers (* Hopefully, a compiler will fold this, if not. *) 
+      IF DoPseudopointers 
          AND 0 <= BitsetInfo . BitsetLo 
          AND BitsetInfo . BitsetHi <= PseudoBitsetMax 
-      THEN 
-      (* Put BitwordArrayRef ^ [ - Bias ] into a Bitset pseudopointer. *)
+      THEN (* Put BitwordArrayRef ^ [ - Bias ] into a Bitset pseudopointer. *)
         LResult 
           := PseudoBitset 
                ( BitsetInfo , BitwordArrayRef ^ [ - BitsetInfo . Bias ] ) 
@@ -675,22 +656,19 @@ GENERIC MODULE OrdSets ( )
   ; VAR LResult : T 
 
   ; BEGIN 
-      IF DoPseudopointers (* Hopefully, a compiler will fold this. *) 
-      THEN 
-        IF PseudoBoundMin <= Lo AND Lo <= PseudoBoundMax 
-           AND PseudoBoundMin <= Hi AND Hi <= PseudoBoundMax 
-        THEN (* Put Lo and Hi into a Rangeset pseudopointer. *)     
-          LResultWord := Word . LeftShift ( Lo , BitsPerPseudoBound ) 
-        ; LResultWord 
-            := Word . Or ( LResultWord , Word . And ( Hi , PseudoBoundMask ) ) 
-        ; LResultWord := Word . LeftShift ( LResultWord , BitsPerPseudoFlag ) 
-        ; LResultWord := Word . Or ( LResultWord , PseudoRangeFlagBits ) 
-        ; LResult := UnsafeUtils . NULLOfInt ( LResultWord )    
-        ; INC ( GPseudoRangesetCt ) 
-        ; RETURN LResult  
-        END (* IF *)  
+      IF DoPseudopointers 
+         AND PseudoBoundMin <= Lo AND Lo <= PseudoBoundMax 
+         AND PseudoBoundMin <= Hi AND Hi <= PseudoBoundMax 
+      THEN (* Put Lo and Hi into a Rangeset pseudopointer. *) 
+        LResultWord := Word . LeftShift ( Lo , BitsPerPseudoBound ) 
+      ; LResultWord 
+          := Word . Or ( LResultWord , Word . And ( Hi , PseudoBoundMask ) ) 
+      ; LResultWord := Word . LeftShift ( LResultWord , BitsPerPseudoFlag ) 
+      ; LResultWord := Word . Or ( LResultWord , PseudoRangeFlagBits ) 
+      ; LResult := UnsafeUtils . NULLOfInt ( LResultWord ) 
+      ; INC ( GPseudoRangesetCt ) 
+      ELSE LResult := NewRangeset ( Lo , Hi ) 
       END (* IF *) 
-    ; LResult := NewRangeset ( Lo , Hi ) 
     ; RETURN LResult 
     END ConstructRangeset 
 
@@ -899,7 +877,8 @@ GENERIC MODULE OrdSets ( )
   (* Ensure that ArrayRef points to an array whose elements all contain Value,
      of length in [ MinRefLength .. MIN ( DesiredLength , MaxRefLength ) ]
      PRE: ArrayRef # NIL IMPLIES ArrayRef ^ = BitwordArrayTyp { Value , .. }  
-  *) 
+  *)
+  (* FIXME: This needs MUTEX protection. *) 
 
   = VAR LOldLength , LNewLength : CARDINAL 
   ; VAR LNewArrayRef : BitwordArrayRefTyp 
@@ -6917,7 +6896,7 @@ GENERIC MODULE OrdSets ( )
 (* EXPORTED *) 
 ; PROCEDURE Compare ( Set1 , Set2 : T ) : [ - 1 .. 1 ] (* <, =, >*)  
   (* Compare two sets according to an arbitrary but consistent total ordering
-     on their abstract velues. 
+     on their abstract values. 
   *) 
 
   (* The ordering: 
@@ -7034,7 +7013,7 @@ GENERIC MODULE OrdSets ( )
      value HashZero in field Hash means not cached.  In case this
      hash code computation yields zero, it will not ever be cached, 
      and thus recomputed on demand.
-(* FIXME^ This is oversimplified. *) 
+(* FIXME^ This explanation is oversimplified. *) 
    - While this is no doubt not the greatest hash code possible, it
      allows hash codes to be computed incrementally from the
      operand(s)' cached hash codes in many cases where it could not
