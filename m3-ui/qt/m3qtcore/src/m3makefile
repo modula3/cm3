@@ -29,6 +29,7 @@ qtbuild("QtStringList")
 qtbuild("QtEventLoop")
 qtbuild("QtEvent")
 qtbuild("QtObject")
+qtbuild("QtSignalMapper")
 
 %core3 branch
 

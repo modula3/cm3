@@ -13,7 +13,7 @@ VAR
 BEGIN
 
   argc := 1;
-  argv[0] := "File Browse";
+  argv[0] := "./File Browse";
 
   app := NEW(QtApplication.T).init_1(argc,argv);
   window := NEW(Window).init();

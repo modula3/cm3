@@ -320,7 +320,7 @@ TYPE
           and all its static ancestors.  Computed at end of proc body. *) 
     cumUplevelRefdCt : CARDINAL := 0; 
       (* ^Sum of counts of up-level referenced params and locals for this proc 
-          and all its static ancestors.  Computed at end of proc body. *)
+          and all its static ancestors.  Computed when alloc locals or params. *)
     staticLinkFormal : LvVar := NIL; 
       (* ^For most procedures, CG emits neither a static link formal nor an
           actual for it in a call.  We provide these, for a nested procedure.
@@ -339,8 +339,6 @@ TYPE
          calls a procedure nested one deeper than itself and that wants a
          display, this proc will create it in a local of this type (only once)
          and pass its address as an added static link parameter to the callee. *)
-    outgoingDisplayLv : LLVM.ValueRef := NIL; (* displayLty* *) 
-    (* ^Do we really even need to keep this in the LvProc? *) 
     outgoingDisplayI8StarLv : LLVM.ValueRef := NIL; (* i8* *) 
     (* ^The display this proc will pass to one-level more deeply nested procs.*)
     needsDisplay : BOOLEAN := FALSE; 
@@ -599,13 +597,7 @@ VAR
    (* Keep EXTENDED type compatible with front end which is double. Later
    we could change it to a 128 bit quad precision floating point *)
    ExtendedType := LLVM.LLVMDoubleType();
-   (*
-   ExtendedType := LLVM.LLVMX86FP80Type();
-   ExtendedType := LLVM.LLVMFP128Type();
-   *)
-
-   (* dummy filename for output - fixme and use redirection or pipes *)
-   DefaultOutFileName := "./m3test.ll";
+   (* ExtendedType := LLVM.LLVMFP128Type(); *)
 
 (*--------------------------------------------------------------- Utility ---*)
 
@@ -690,7 +682,7 @@ PROCEDURE New
                 procStack := NEW(RefSeq.T).init(),
                 declStack := NEW(RefSeq.T).init(),
                 m3llvmDebugLev := m3llvmDebugLev,
-                genDebug := genDebug, 
+                genDebug := genDebug,
                 debugLexStack := NEW(RefSeq.T).init(),
                 allocaName := M3ID.Add("alloca"));
   END New;
@@ -989,34 +981,6 @@ PROCEDURE DeclSet(name : TEXT; fn : LLVM.ValueRef; numParams : INTEGER; hasRetur
     RETURN proc;
   END DeclSet;
 
-PROCEDURE DisplaySize(proc : LvProc) : INTEGER =
-(* Total number of locals and formals of 'proc' and its static ancestors that
-   are up-level referenced from somewhere. *)   
-  VAR
-    tp : LvProc;
-    linkSize, linkSize2 : CARDINAL := 0;
-  BEGIN
-    IF proc.uplevelRefdStack = NIL THEN
-      linkSize := 0; 
-    ELSE 
-      linkSize := proc.uplevelRefdStack.size()
-    END; 
-    IF proc.lev > 0 THEN
-      INC ( linkSize, proc.parent.cumUplevelRefdCt);
-    END; 
-    (* Brute-force compute it the old way and assert equal. *) 
-    linkSize2 := 0; 
-    tp := proc;
-    WHILE tp # NIL DO
-      IF tp.uplevelRefdStack # NIL THEN (*importeds are nil *)
-        INC(linkSize2,tp.uplevelRefdStack.size());
-      END;
-      tp := tp.parent;
-    END;
-    <* ASSERT linkSize2 = linkSize *> 
-    RETURN linkSize;
-  END DisplaySize;
-
 PROCEDURE CGProvidedStaticLinkFormal(proc : LvProc) : LvVar =
 (* Return the front-end generated static link formal parameter of proc, 
    if it has one, otherwise NIL.  This happens only for an internally
@@ -1146,22 +1110,6 @@ PROCEDURE DumpLLVMIR(<*UNUSED*> self : U; BitcodeFileName, AsmFileName: TEXT) =
       EVAL LLVM.LLVMWriteBitcodeToFile(modRef, LT(BitcodeFileName));
     END (*IF*); 
 
-
-
-(* use this to stream to stderr when called from frontend
-   which needs redirect but need all llvmdumpvalue calls removed
-*)
-(*
-  LLVM.LLVMDumpModule(modRef);
-*)
-
-(*
-    EVAL LLVM.LLVMPrintModuleToFile(modRef, LT(outFile), msg);
-*) 
-  (* or to bitcode *)
-  (*  
-    EVAL LLVM.LLVMWriteBitcodeToFile(modRef, LT(outFile & ".bc"));
-  *)
 
   (* test running a pass - not working c api missing pass addition procs
     VAR
@@ -1680,7 +1628,16 @@ PROCEDURE AllocVarInEntryBlock(self : U; v : LvVar) =
       DebugLine(self); (* resume debugging *)
     END; 
   END AllocVarInEntryBlock;
-
+  
+PROCEDURE CalcUplevelCount(proc : LvProc) =
+  BEGIN
+    (* Compute cumulative counts for this procedure. *)     
+    proc.cumUplevelRefdCt := proc.uplevelRefdStack.size();
+    IF proc.lev > 0 THEN
+      INC (proc.cumUplevelRefdCt, proc.parent.cumUplevelRefdCt); 
+    END;    
+  END CalcUplevelCount;
+  
 PROCEDURE declare_local 
   (self: U;  n: Name;  s: ByteSize;  a: Alignment; t: Type;  m3t: TypeUID; 
     in_memory, up_level: BOOLEAN; f: Frequency): Var =
@@ -1704,6 +1661,7 @@ PROCEDURE declare_local
       IF up_level THEN
         v.locDisplayIndex := proc.uplevelRefdStack.size(); 
         PushRev(proc.uplevelRefdStack, v);
+        CalcUplevelCount(proc);        
       END;
     ELSE (* We are in a procedure body. *)
       (* We are inside a local block of a procedure body.  Allocate it in the
@@ -1715,6 +1673,7 @@ PROCEDURE declare_local
       IF up_level THEN
         v.locDisplayIndex := self.curProc.uplevelRefdStack.size(); 
         PushRev(self.curProc.uplevelRefdStack, v);
+        CalcUplevelCount(self.curProc);
       END;
       DebugVar(self, v);
     END;
@@ -1784,6 +1743,7 @@ PROCEDURE declare_param (self: U;  n: Name;  s: ByteSize;  a: Alignment; t: Type
     IF up_level THEN
       v.locDisplayIndex := proc.uplevelRefdStack.size(); 
       PushRev(proc.uplevelRefdStack, v); (* Left-to-right. *)
+      CalcUplevelCount(proc);        
     END;
     RETURN v;
   END declare_param;
@@ -2077,7 +2037,6 @@ PROCEDURE begin_procedure (self: U;  p: Proc) =
     proc : LvProc;
     storeVal,lVal : LLVM.ValueRef;
     numParams,numLocals : CARDINAL;
-    textName : TEXT;  
     arg : REFANY;
   BEGIN
     (*  Declare this procedure and all its locals and parameters.*)
@@ -2128,26 +2087,17 @@ PROCEDURE begin_procedure (self: U;  p: Proc) =
     FOR i := 0 TO numLocals - 1 DO
       arg := Get(proc.localStack,i);
       local := NARROW(arg,LvVar);
-      textName := M3ID.ToText(local.name);
-(* CHECK ^What do we do with this?  allocVar takes it from local. *) 
       self.allocVar(local);
     END;
-
-    (* A temporary placeholder for display.  To be replaced at end_procedure. *)
-    textName := "_typed_outgoing_display";
-    proc.outgoingDisplayLv 
-      := LLVM.LLVMBuildAlloca(builderIR, AdrTy, LT("_temp_outgoing_display"));
-    proc.outgoingDisplayI8StarLv
-          := LLVM.LLVMBuildBitCast
-               (builderIR, proc.outgoingDisplayLv, AdrTy, 
-                LT("_temp_outgoing_display_as_I8Star"));
+    (* A temporary placeholder for display. To be replaced at end_procedure. The display will be added to all procedures
+    regardless but we delete it in end_procedure if not needed *)
+    proc.outgoingDisplayI8StarLv 
+      := LLVM.LLVMBuildAlloca(builderIR, AdrTy, LT("_temp_outgoing_display_as_I8Star"));
     (* WARNING!! ^We will, in end_procedure, do a ReplaceAllUsesWith on this.
                   It is essential that each instance of this is distinct and
                   doesn't get thrown into a single pot with the others.  
                   Otherwise, chaos will ensue.  The rules for what makes 
                   this unique are hard to ferret out. *) 
-(* CHECK: ^Can we avoid this bitcast? *) 
-
     LLVM.LLVMPositionBuilderAtEnd(builderIR,proc.secondBB);
     (* ^This is where general stuff will be inserted. *) 
     self.begin_block();
@@ -2225,13 +2175,18 @@ PROCEDURE end_procedure (self: U;  p: Proc) =
     prevInstr : LLVM.ValueRef;
     opCode : LLVM.Opcode;
     curBB : LLVM.BasicBlockRef;
-    tempDisplayLv : LLVM.ValueRef;
+    tempDisplayLv,displayAllocLv : LLVM.ValueRef;
     textName : TEXT;
     linkSize : CARDINAL;   
   BEGIN
     proc := NARROW(p,LvProc);
     <* ASSERT proc = self.curProc *> 
 
+(* Review - Moved to CalcUplevelCounts - The load and store need
+  a correct count for uplevel address calcs but doing it here is
+  too late. So we keep the count updated on the fly.
+  The cumLocalsParamsCt is not referenced anywhere else so
+  can probably delete them as well as this code.
     (* Compute cumulative counts for this procedure. *) 
     proc.cumLocalsParamsCt := 0; 
     IF proc.paramStack # NIL THEN 
@@ -2248,30 +2203,33 @@ PROCEDURE end_procedure (self: U;  p: Proc) =
       INC (proc.cumLocalsParamsCt, proc.parent.cumLocalsParamsCt); 
       INC (proc.cumUplevelRefdCt, proc.parent.cumUplevelRefdCt); 
     END; 
-
+*)
     curBB := LLVM.LLVMGetInsertBlock(builderIR);
     LLVM.LLVMPositionBuilderAtEnd(builderIR, proc.entryBB);
 
     (* Final setup of this proc's display, which it can pass to any 
        one-level more deeply nested procedure. *) 
     IF proc.needsDisplay THEN 
-       (* ^proc contained a call on a deeper nested proc. *) 
-      IF proc.cumUplevelRefdCt > 0 THEN (* Display is nonempty. *) 
-        (* We need an llvm type for a local display area that this proc
-           can pass as static link to deeper-nested procedures. *) 
-        proc.displayLty := LLVM.LLVMArrayType(AdrTy,proc.cumUplevelRefdCt);
-        tempDisplayLv := proc.outgoingDisplayI8StarLv;
-        textName := M3ID.ToText(proc.name) & "__outgoing_display";
-        proc.outgoingDisplayLv 
-          := LLVM.LLVMBuildAlloca (builderIR, proc.displayLty, LT(textName));
-        proc.outgoingDisplayI8StarLv
-          := LLVM.LLVMBuildBitCast
-               (builderIR, proc.outgoingDisplayLv, AdrTy, 
-                LT(textName & "I8Star"));
-        linkSize := BuildDisplay(self);
-        LLVM.LLVMReplaceAllUsesWith
-          (tempDisplayLv, proc.outgoingDisplayI8StarLv); 
-      END; 
+      (* ^proc contained a call on a deeper nested proc. *) 
+      (* We need an llvm type for a local display area that this proc
+         can pass as static link to deeper-nested procedures. *) 
+      proc.displayLty := LLVM.LLVMArrayType(AdrTy,proc.cumUplevelRefdCt);
+      tempDisplayLv := proc.outgoingDisplayI8StarLv;
+      textName := M3ID.ToText(proc.name) & "__outgoing_display";
+      displayAllocLv 
+        := LLVM.LLVMBuildAlloca (builderIR, proc.displayLty, LT(textName));
+      proc.outgoingDisplayI8StarLv
+        := LLVM.LLVMBuildBitCast
+             (builderIR, displayAllocLv, AdrTy, 
+              LT(textName & "I8Star"));
+      linkSize := BuildDisplay(self);
+      LLVM.LLVMReplaceAllUsesWith
+        (tempDisplayLv, proc.outgoingDisplayI8StarLv);
+      (* remove the original temporary display *)
+      LLVM.LLVMInstructionEraseFromParent(tempDisplayLv);
+    ELSE
+      (* the display pointer wasnt needed after all *)
+      LLVM.LLVMInstructionEraseFromParent(proc.outgoingDisplayI8StarLv);
     END;
 
     (* Give entry BB a terminating  unconditional branch to secondBB. *) 
@@ -2611,36 +2569,6 @@ PROCEDURE BuildConstGep(src : LLVM.ValueRef; o : ByteOffset) : LLVM.ValueRef =
     RETURN gepVal;
   END BuildConstGep;
 
-(*
-(* search the static links of all procs to find this var *)
-PROCEDURE CumDisplayIndex(proc : LvProc; var : LvVar) : INTEGER =
-(* Return the index of 'var' in a display for 'proc', by searching
-   all up-level referenceable variables of proper static ancestors 
-   of 'proc'. *)   
-
-  BEGIN 
-  VAR
-    tp : LvProc;
-    v : LvVar;
-    index : INTEGER := 0;
-  BEGIN
-    tp := proc.parent;
-    WHILE tp # NIL DO
-      IF tp.uplevelRefdStack # NIL THEN (*importeds are nil *)
-        FOR i := 0 TO tp.uplevelRefdStack.size() - 1 DO
-          v := Get(tp.uplevelRefdStack,i);
-          IF v = var THEN
-            RETURN(index);
-          END;
-          INC(index);
-        END;
-      END;
-      tp := tp.parent;
-    END;
-    RETURN -1;
-  END CumDisplayIndex;
-*)
-
 PROCEDURE GetAddrOfUplevelVar(self : U; var : LvVar) : LLVM.ValueRef =
 (* Generate an llvm ValueRef that contains the address of 'var'.
    PRE: 'var' is being up-level referenced from within 'self.curProc', which 
@@ -2723,7 +2651,7 @@ PROCEDURE load (self: U;  v: Var;  o: ByteOffset;  t: MType;  u: ZType) =
       IF src.inProc # self.curProc THEN
         srcVal := GetAddrOfUplevelVar(self,src);
         srcVal := LLVM.LLVMBuildBitCast
-                    (builderIR, srcVal, srcPtrTy, LT("_uplevel_ptr_true_type"));
+                    (builderIR, srcVal, srcPtrTy, LT("_uplevel_ptr"));
       END;
     END;
 
@@ -2733,7 +2661,7 @@ PROCEDURE load (self: U;  v: Var;  o: ByteOffset;  t: MType;  u: ZType) =
       END;
       srcVal 
         := LLVM.LLVMBuildBitCast
-            (builderIR, srcVal, srcPtrTy, LT("_struct_member_ptr_true_type"));
+            (builderIR, srcVal, srcPtrTy, LT("_struct_member_ptr"));
     END;
 
     destVal := LLVM.LLVMBuildLoad(builderIR, srcVal, VarName(v));
@@ -2762,18 +2690,6 @@ PROCEDURE store (self: U;  v: Var;  o: ByteOffset;  t: ZType;  u: MType) =
     srcTy := LLvmType(t);
     destTy := LLvmType(u);
     destPtrTy := LLVM.LLVMPointerType(destTy);
-
-   (* attempt to fix temp allocate in try finally with concat
-      and referenced in the finally block where it does not exist
-      here we allocate a new one in the finally scope.
-      Should be fixed in front end so can delete this alloc*)
-
-    IF (dest.varType = VarType.Temp) THEN
-      IF (self.curProc # dest.inProc) THEN
-        self.allocVarInEntryBlock(dest);
-        dest.inProc := self.curProc;
-      END;
-    END;
 
     IF TypeSize(u) # TypeSize(t) THEN
       IF TypeSize(u) < TypeSize(t) THEN
@@ -4247,17 +4163,17 @@ PROCEDURE loophole (self: U;  fromCGType, toCGType: ZType) =
         END; 
         second := SizeNSignedness (initial, fromCGType, toIType); 
         final := LLVM.LLVMBuildBitCast
-                   (builderIR, second, destLlvmType, LT("loophole-word->real"));
+                   (builderIR, second, destLlvmType, LT("loophole-word_real"));
       ELSE (* word/int->addr *) 
         final := LLVM.LLVMBuildIntToPtr
-                   (builderIR, initial, destLlvmType, LT("loophole-addr->word"));
+                   (builderIR, initial, destLlvmType, LT("loophole-addr_word"));
       END; 
     ELSIF fromCGType <= Type.XReel THEN (* Reel, LReel, XReel *) 
       IF toCGType <= Type.Int64 THEN (* real->word/int *)
         fromIType := SameSizedWordType (fromCGType); 
         second := LLVM.LLVMBuildBitCast
                    (builderIR, initial, LLvmType(fromIType), 
-                    LT("loophole-real->word"));
+                    LT("loophole-real_word"));
         final := SizeNSignedness (second, fromIType, toCGType); 
       ELSIF toCGType <= Type.XReel THEN (* real->real *) 
         fromLlvmType := LLvmType(fromCGType); 
@@ -4268,30 +4184,30 @@ PROCEDURE loophole (self: U;  fromCGType, toCGType: ZType) =
           toIType := SameSizedWordType (toCGType); 
           second := LLVM.LLVMBuildBitCast
                      (builderIR, initial, LLvmType(fromIType), 
-                      LT("loophole-real->real1"));
+                      LT("loophole-real_real1"));
           third := SizeNSignedness (second, fromIType, toIType); 
           final := LLVM.LLVMBuildBitCast
-                     (builderIR, third, destLlvmType, LT("loophole-real->real2"));
+                     (builderIR, third, destLlvmType, LT("loophole-real_real2"));
         END; 
       ELSE (* real->addr *) 
         fromIType := SameSizedWordType (fromCGType); 
         second := LLVM.LLVMBuildBitCast
                    (builderIR, initial, LLvmType(fromIType), 
-                    LT("loophole-real->addr"));
+                    LT("loophole-real_addr"));
         final := LLVM.LLVMBuildIntToPtr
                    (builderIR, second, destLlvmType, LT("loophole-IntToPtr"));
       END; 
     ELSE (* fromCGType = Type.Addr *) 
       IF toCGType <= Type.Int64 THEN (* addr->word/int *) 
         final := LLVM.LLVMBuildPtrToInt
-                   (builderIR, initial, destLlvmType, LT("loophole-addr->word"));
+                   (builderIR, initial, destLlvmType, LT("loophole-addr_word"));
       ELSIF toCGType <= Type.XReel THEN (* addr->real *) 
         toIType := SameSizedWordType (toCGType); 
         second := LLVM.LLVMBuildPtrToInt
                    (builderIR, initial, LLvmType(toIType), 
-                    LT("loophole-addr->real"));
+                    LT("loophole-addr_real"));
         final := LLVM.LLVMBuildBitCast
-                   (builderIR, second, destLlvmType, LT("loophole-addr->real"));
+                   (builderIR, second, destLlvmType, LT("loophole-addr_real"));
       ELSE (* addr->addr *)
         (* This won't happen, but it is easier to handle it than assert false. *)  
         final := initial; 
@@ -4441,7 +4357,6 @@ PROCEDURE add_offset (self: U; i: INTEGER) =
     gepVal := Gep(adrVal,b,FALSE);
     NARROW(s0,LvExpr).lVal := gepVal;
   END add_offset;
-
 
 PROCEDURE index_address (self: U; <*UNUSED*> t: IType; size: INTEGER) =
   (* s1.A := s1.A + s0.t * size; pop  -- where 'size' is in bytes *)
@@ -6019,14 +5934,13 @@ PROCEDURE DebugVar(self : U; v : LvVar; argNum : CARDINAL := 0) =
                                   VAL(ptrBits,uint64_t),
                                   VAL(ptrBits,uint64_t),
                                   LTD(M3ID.ToText(debugObj.typeName)));
-     END;
+    END;
 
     blockRef := Get(self.debugLexStack);
     scope := blockRef.value;
 
     lvDebug := M3DIB.DIBcreateLocalVariable
-       (self.debugRef, dwarfTag, scope, LTD(name), self.fileRef, self.curLine, 
-        tyVal, FALSE, flags, argNum);
+       (self.debugRef, dwarfTag, scope, LTD(name), self.fileRef, self.curLine, tyVal, FALSE, flags, argNum);
 
     (* we need this since setinstdebuglocation has to have a current loc *)
     decl := M3DIB.DIBinsertDeclareAtEnd(

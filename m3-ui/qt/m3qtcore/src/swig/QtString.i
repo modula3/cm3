@@ -190,7 +190,7 @@ TYPE
 %typemap("m3rawintype")    QLatin1String         %{ADDRESS%}
 
 %apply ClassIn    {const QByteArray &};
-%apply SelfReturn {QByteArray};
+%apply ClassReturn {QByteArray};
 
 
 //ctypes needed

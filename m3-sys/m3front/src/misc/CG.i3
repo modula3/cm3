@@ -177,7 +177,7 @@ PROCEDURE Bind_segment (seg: Var;  s: Size;  a: Alignment;  t: Type;
                         exported, init, is_const: BOOLEAN);
 (* Together Declare_segment and Bind_segment accomplish what
    Declare_global("is_const = FALSE") or Declare_constant("is_const=TRUE")
-   does, but Declare_segment gives the front-end a
+   does, but Declare_segment returns to the front-end, a
    handle on the variable before its size, type, or initial values
    are known.  Every declared segment must be bound exactly once. *)
 

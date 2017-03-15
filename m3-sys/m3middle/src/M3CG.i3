@@ -37,6 +37,29 @@ IMPORT Target, M3ID;
 
 TYPE T <: ROOT; (* a code generator *)
 
+TYPE UnitKind = { Interface, Module };
+
+(* Changes to the compiler intermediate representation have to be
+   reflected in *many* places.  To help with compatibility problems,
+   here is a versioning system.  Through CIV_WC_size, there was no
+   explicit versioning.  Starting with CIV_ext1, the version can 
+   optionally be placed into the IR.
+*) 
+   
+TYPE CM3_IR_Version = INTEGER;
+CONST
+  CIV_SRC = 0;
+  CIV_PM3 = 1;
+  CIV_CM3 = 2;        (* The earliest to be vetted. From Critical Mass? *) 
+  CIV_AtomicOps1 = 3; (* Jun 22, 2007. d099f0b. *) 
+  CIV_AtomicOps2 = 4; (* Feb 17, 2009. e66950a. *) 
+  CIV_AtomicOps3 = 5; (* Feb 3,  2010. 56e677d. *) 
+  CIV_extract = 6;    (* Mar 10, 2010. b352ffc. *) 
+  CIV_pop_struct = 7; (* Aug 27, 2010. 6ee95af. *) 
+  CIV_RT_hook = 8;    (* Aug 27, 2010. dda2a77. *) 
+  CIV_WC_size = 9;    (* Feb 26, 2014. 655eeac. *) 
+  CIV_ext1 = 10;      (*  *) 
+
 TYPE
   Type = Target.CGType;
   MType = [ Type.Word8  .. Type.Addr  ];  (* "memory" types *)
@@ -74,7 +97,7 @@ CONST (*  A op B  ===  NOT (A NotCompare[op] B)  *)
                      CompareOp.LT, CompareOp.GE, CompareOp.GT };
 
 TYPE
-  Name = M3ID.T;
+  Name = M3ID.T; (* Numbering of a simple identifier. *) 
 
 TYPE
   Var    = BRANDED "M3CG.Var"  OBJECT END; (* represents a variable *)
@@ -99,8 +122,9 @@ CONST
 
 TYPE
   TypeUID = (* BITS 32 FOR *) [-16_7fffffff-1 .. 16_7fffffff];
-  (* a 32-bit unique id (fingerprint) for each type.  *)
+    (* ^A 32-bit unique id: a fingerprint or hash of the type's structure.  *)
   TypeUIDBits = BITS 32 FOR TypeUID;
+
 CONST NO_UID : TypeUID = -1;
 (* TODO: There are duplicate declarations of NO_UID in m3front/src/type/TypeRep.i3,
          m3front/src/misc/M3String.m3, and m3front/src/misc/M3WString.m3. 
@@ -113,8 +137,8 @@ PROCEDURE FormatUID(tUID: TypeUID) : TEXT;
 
 TYPE
   Label = INTEGER;
-  (* a unique value for each label.  The client is responsible for
-     allocating these id's with the 'next_label' field declared below. *)
+  (* A unique numbering for each label.  The client is responsible for
+     allocating these id's with the 'next_label' method of M3CG_OpsPublic. *)
 
 CONST
   No_label: Label = -1;

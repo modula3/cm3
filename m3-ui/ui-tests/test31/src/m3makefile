@@ -10,7 +10,7 @@ if equal (TARGET, "NT386")
   override ("ui", "..\\..")
 end
 
-import (ui)
+import ("ui")
 
-implementation (Main)
-Program (Test31)
+implementation ("Main")
+Program ("Test31")

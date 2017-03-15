@@ -206,7 +206,7 @@ typedef void (*Newline_t)(Formatter_t*);
 #else
 typedef char Formatter_t;
 #endif
-int yyinput (void);
+static int yyinput (void);
 void BufferLexeme (int addLength);
 void CapBufferLexeme (int addLength);
 void PR (const char *s);
@@ -258,10 +258,10 @@ initParser (
     PROC noAlign,
     PROC col,
     PROC end);
-void yyerror(char*);
+void yyerror(const char*);
 void PrintOnePragma(void);
 void PrintNPS(int);
-int FixedComment(char*);
+int FixedComment(const char*);
 void
 HandleComments(
     int firstTime,		/* first time on this comment? */
@@ -1766,7 +1766,7 @@ PK (s)
 }
 
 #ifdef USE_PROTOS
-void PF(char *s, char *f)
+void PF(const char *s, const char *f)
 #else
 PF(s, f)
     char *s;
@@ -1801,6 +1801,8 @@ static const char *builtins[] = {
     "INTEGER",
     "ISTYPE",
     "LAST",
+    "LONGCARD",
+    "LONGINT",
     "LONGREAL",
     "LOOPHOLE",
     "MAX",

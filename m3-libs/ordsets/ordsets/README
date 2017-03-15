@@ -22,7 +22,7 @@ and Ordsets.mg in a source directory and instantiate them using your
 m3makefile.  You can use IntForOrdSets.i3 as instantiatiating
 interface to OrdSets.ig to instantiate for INTEGER.  You can use
 IntSets.[im]3 as instantiations.  Alternatively you can copy the
-build_generic_intf and build_generic_impl commands in this m3makefile
+build_generic_intf and build_generic_impl commands in the m3makefile
 to accomplish the instantiations using the Modula-3 build system.
 Both instantiation methods are exemplified in the m3makefile, the
 former commented out.

@@ -189,7 +189,7 @@ GENERIC INTERFACE OrdSets ( Element )
 
 ; PROCEDURE Compare ( Set1 , Set2 : T ) : [ - 1 .. 1 ] (* <, =, >*)  
   (* Compare two sets according to an arbitrary but consistent total ordering
-     on their abstract velues. 
+     on their abstract values. 
   *) 
 
 ; TYPE HashTyp = Word . T 

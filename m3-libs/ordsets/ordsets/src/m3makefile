@@ -1,7 +1,6 @@
-
 % (* ----------------------------------------------------------------------1- *)
 % (* File m3makefile for test instantiation and running of OrdSets.[im]g.     *)
-% (* Copyright 2010 .. 2012, Rodney M. Bates.                                 *)
+% (* Copyright 2010 .. 2016, Rodney M. Bates.                                 *)
 % (* rodney.m.bates@acm.org                                                   *)
 % (* Licensed under the MIT license.                                          *)
 % (* ----------------------------------------------------------------------2- *)
