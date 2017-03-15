@@ -4798,7 +4798,8 @@ BEGIN
                      & " ok2=" & BoolToText[ok2] & "\n"
                      );
         RTIO.Flush();
-        <* ASSERT FALSE *>
+        <* ASSERT ok1 *>
+        <* ASSERT ok2 *>
     END;
     IF type = CGType.Int32 AND TInt.EQ(i, TInt.Min32) THEN
         RETURN "-" & intLiteralPrefix[type] & TInt.ToText(TInt.Max32) & intLiteralSuffix[type] & "-1";
