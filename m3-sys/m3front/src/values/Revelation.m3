@@ -53,7 +53,7 @@ REVEAL
           count  : INTEGER    := 0;
           idents : List       := NIL;
           hash   : HashTable  := NIL;
-          (* the visible revelations are in the union of indents and hash *)
+          (* The visible revelations are in the union of idents and hash *)
         END;
 
 TYPE
