@@ -206,6 +206,8 @@ PROCEDURE WriteVS (VAR s: State;  vs: MxVS.T): INTEGER =
   END WriteVS;
 
 PROCEDURE WriteName (VAR s: State;  nm: Mx.Name): INTEGER =
+(* If not already done, create a new id number, create a new nameMap
+   rule mapping it to nm, and write a Nx y operator for it. *) 
   VAR id: INTEGER;
   BEGIN
     IF NOT s.nameMap.get (nm, id) THEN

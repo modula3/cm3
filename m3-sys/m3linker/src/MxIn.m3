@@ -253,6 +253,25 @@ PROCEDURE BadChar (VAR s: State): BOOLEAN =
 
 (*----------------------------------------------------------- global maps ---*)
 
+(* nameMap:
+
+   Type M3ID.T (=Mx.Name) is an integer, used pervasively in the compiler, that
+   maps to an identifier (actually, any character string).  For the linker info
+   file only, there is a second-level mapping in front of this, which maps an
+   "id number" to an M3ID.T.  Only MxOut and MxIn use the second-level mapping.
+
+   MxOut initially creates it, (using IntIntTbl), writes each pair of its contents
+   as "Nx y" operators, and emits all other references to identifiers as id numbers. 
+   MxIn recreates it from the "Nx y" operators (as an array, subscripted by
+   id number) and then maps all other references through it.  
+
+   The only apparent benefit of this is that the number of identifiers occurring in
+   the linker info file is presumably much smaller than the number of identifiers
+   used elsewhere in the compiler, so the id numbers in the linker file will shorter,
+   but only by LOG10 of this ratio.  And that is partly offset by the extra defining
+   "Nx y" operators.  
+*) 
+
 PROCEDURE ReadName (VAR s: State): BOOLEAN
   RAISES {OSError.E} =
   (* Nx y   --- define id number 'x' to be name 'y' *)
@@ -573,13 +592,15 @@ PROCEDURE SkipBlank (<*UNUSED*> VAR s: State): BOOLEAN =
   END SkipBlank;
 
 PROCEDURE GetName (VAR s: State;  term: CHAR): Mx.Name
+(* The input should contain an integer, previously defined in ReadName. 
+   Read it and map it through the nameMap to an M3ID. *) 
   RAISES {OSError.E} =
   VAR id := GetInteger (s, term);
   BEGIN
     IF (0 <= id) AND (id < NUMBER (s.nameMap^)) THEN
       RETURN s.nameMap [id];
     ELSE
-      Error (s, "bad unit number: " & Fmt.Int (id));
+      Error (s, "bad indentifier number: " & Fmt.Int (id));
       RETURN M3ID.NoID;
     END;
   END GetName;
@@ -660,6 +681,8 @@ PROCEDURE GetTypeName (VAR s: State;  term: CHAR): Mx.TypeName
 
 PROCEDURE GetID (VAR s: State;  term: CHAR): Mx.Name
   RAISES {OSError.E} =
+(* The characters of an identifier should be next in the input.
+   Read it and convert to an M3ID. *) 
 (* Note: we don't need to check for array overruns since all calls
    to GetString include a terminating character that's in the "stop set"
    at the end of the buffer *)
@@ -675,15 +698,15 @@ PROCEDURE GetID (VAR s: State;  term: CHAR): Mx.Name
     END;
 
     IF (stop < s.buf_len) THEN
-      (* this is the simple case, the string's entirely in the buffer *)
+      (* This is the simple case, the string's entirely in the buffer *)
       s.buf_ptr := stop + 1;
       RETURN M3ID.FromStr (SUBARRAY (s.buf,start,stop-start));
     END;
 
     overflow := "";
     LOOP
-      (* we've overrun the end of the buffer *)
-      (* save the current string & refill the buffer *)
+      (* We've overrun the end of the buffer *)
+      (* Save the current string & refill the buffer *)
       len := MAX (s.buf_len - start, 0);
       overflow := overflow & Text.FromChars (SUBARRAY (s.buf, start, len));
       RefillBuffer (s);
