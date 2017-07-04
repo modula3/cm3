@@ -28,9 +28,6 @@ m3cg
 Language
 M3CG
 
-y
-m3cg M3CG
-
 fopcodes-trace
 m3cg M3CG
 Trace opcodes
@@ -59,10 +56,17 @@ ftypes-trace
 m3cg M3CG
 Trace types
 
+reduce-target-variation
+m3cg M3CG
+Reduce target variation somewhat, such as by omitting current working
+directory from debug info. Many necessary target variations remain.
+
 v
 m3cg M3CG
+print version
 
 y
 m3cg M3CG
+Trace opcodes
 
 ; This comment is to ensure we retain the blank line above.

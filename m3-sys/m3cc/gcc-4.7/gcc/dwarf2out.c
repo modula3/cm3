@@ -15450,19 +15450,20 @@ add_gnat_descriptive_type_attribute (dw_die_ref die, tree type,
 static void
 add_comp_dir_attribute (dw_die_ref die)
 {
+  /* Limit paths in debug output, to limit target variation. */
+  if (reduce_target_variation)
+    return;
+
   const char *wd = get_src_pwd ();
-  char *wd1;
 
   if (wd == NULL)
     return;
 
   if (DWARF2_DIR_SHOULD_END_WITH_SEPARATOR)
     {
-      int wdlen;
-
-      wdlen = strlen (wd);
-      wd1 = (char *) ggc_alloc_atomic (wdlen + 2);
-      strcpy (wd1, wd);
+      size_t const wdlen = strlen (wd);
+      char * const wd1 = (char *) ggc_alloc_atomic (wdlen + 2);
+      memcpy (wd1, wd, wdlen);
       wd1 [wdlen] = DIR_SEPARATOR;
       wd1 [wdlen + 1] = 0;
       wd = wd1;

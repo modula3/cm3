@@ -5,7 +5,7 @@ MODULE Main;
 
 IMPORT M3Timers, Pathname, Process, Quake;
 IMPORT RTCollector, RTParams, RTutils, Thread, Wr;
-IMPORT TextTextTbl;
+IMPORT TextTextTbl, Target;
 
 IMPORT Builder, Dirs, M3Build, M3Options, Makefile, Msg, Utils, WebFile;
 IMPORT MxConfig(*, M3Config, CMKey, CMCurrent *);
@@ -17,6 +17,8 @@ VAR
   makefile  : TEXT          := NIL;
   build_dir : TEXT          := NIL;
   mach      : Quake.Machine := NIL;
+
+CONST BoolToText = ARRAY BOOLEAN OF TEXT{"FALSE", "TRUE"};
 
 PROCEDURE DefineIfNotDefined (qmachine: Quake.Machine;
                               symbol, value: TEXT) RAISES {Quake.Error} =
@@ -73,6 +75,7 @@ VAR defs: TextTextTbl.T;
         (* DefineIfNotDefined (mach, "THREAD_LIBRARY", Version.ThreadLibrary); *)
         (* DefineIfNotDefined (mach, "WINDOW_LIBRARY", Version.WindowLibrary); *)
         DefineIfNotDefined (mach, "WORD_SIZE", MxConfig.HOST_WORD_SIZE);
+        DefineIfNotDefined (mach, "REDUCE_TARGET_VARIATION", BoolToText[Target.ReduceTargetVariation]);
 
         (* Even if the config file overrides the defaults, such as to do
            a cross build, the host characteristics are still available. *)

@@ -29,7 +29,7 @@ VAR CaseDefaultAssertFalse := FALSE;
 
 (* Taken together, these help debugging, as you get more lines in the
    C and the error messages reference C line numbers *)
-  CONST output_line_directives = TRUE;
+  VAR  output_line_directives := TRUE;
   CONST output_extra_newlines = FALSE;
   CONST inline_extract = FALSE;
 
@@ -1811,6 +1811,28 @@ PROCEDURE Proc_Locals(p: Proc_t; i: INTEGER): Var_t = BEGIN RETURN NARROW(p.loca
 
 (*---------------------------------------------------------------------------*)
 
+CONST DeclareSize_TForMemcmpEtc  = ARRAY OF TEXT {
+(* Declare size_t if needed, i.e. for memcmp, memmove, memset, copy_n, zero, set_compare.
+   We could (used to) output this unconditionally but output is optimized and minimize
+   #include <stddef.h> in particular.
+   NOTE: While the vast majority of systems, except NT and VMS, have unsigned
+   long the same size as size_t, size_t could also be unsigned int on 32bit
+   systems or unsigned long long on 64bit systems, and the correct type
+   should be used, unless we have an intermediate function and cast.
+   NOTE: NT and likely VMS are the exception to the previous -- 32bit long always.
+*)
+"#ifndef _MSC_VER",
+"#if defined(__SIZE_TYPE__)", (* gcc, clang *)
+"typedef __SIZE_TYPE__ size_t;",
+"#elif defined(__APPLE__) || defined(_LP64) || defined(__LP64__) || defined(_I32LPx)",
+"typedef unsigned long size_t;",
+"#else",
+(* TODO: Metrowerks, Symantec, MPW, etc. *)
+(*"typedef unsigned int size_t;",*)
+"#include <stddef.h>", (* try to remove this, it is slow -- need size_t *)
+"#endif",
+"#endif"
+};
 
 CONST Prefix = ARRAY OF TEXT {
 (* It is unfortunate to #include anything -- slows down compilation;
@@ -1824,6 +1846,9 @@ CONST Prefix = ARRAY OF TEXT {
 "#else",
 "#define GCC_VERSION 0",
 "#endif",
+(* Some older versions of gcc warn about unsigned comparisons less or greater than zero.
+   We should try to eliminate them, but currently do not.
+   Such versions of gcc can be fooled by burying the compare in functions. *)
 "#if GCC_VERSION > 0 && GCC_VERSION < 403",
 (*"#define AVOID_GCC_TYPE_LIMIT_WARNING 1",*)
 (*"#define M3_OP2(fun, op, a, b) fun(a, b)",*)
@@ -1847,6 +1872,7 @@ CONST Prefix = ARRAY OF TEXT {
 "#define m3_xor_T(T) static int __stdcall m3_xor_##T(T x, T y){return x ^ y;}",
 "#define m3_xor(T, x, y) m3_xor_##T(x, y)",
 "#else",
+(* When not using older gcc, inline comparisons. *)
 (*"#define AVOID_GCC_TYPE_LIMIT_WARNING 0",*)
 (*"#define M3_OP2(fun, op, a, b) a op b",*)
 (*"#define M3_IF_TRUE(fun, a) a",*)
@@ -1896,57 +1922,63 @@ CONST Prefix = ARRAY OF TEXT {
 "typedef unsigned short UINT16;",
 "typedef int INT32;",
 "typedef unsigned int UINT32;",
-"#if defined(_MSC_VER) || defined(__DECC) || defined(__DECCXX) || defined(__int64)",
+"#if defined(_LP64) || defined(__LP64__)",
+(* On most 64bit systems, except Microsoft, long was widened to 64bits, and thus
+ * "long long" isn't required, or sometimes even provided. *)
+"typedef long INT64;",
+"typedef unsigned long UINT64;",
+"#define  INT64_(x) x##L",
+"#define UINT64_(x) x##UL",
+"#elif defined(_MSC_VER) || defined(__DECC) || defined(__DECCXX) /*|| defined(__int64)*/",
+(* Microsoft and Digital provide __int64. On Microsoft esp. long never changes
+   size, it is always 32 bits. size_t/ptrdiff_t grew. *)
 "typedef __int64 INT64;",
 "typedef unsigned __int64 UINT64;",
-"#define  INT64_(x) x##I64",
+"#define  INT64_(x) x##I64", (* NOTE: This is less portable than preceding two lines. *)
 "#define UINT64_(x) x##UI64",
 "#else",
+(* Many compilers have provided long long, for a long time. Microsoft was a hold out.
+   As well, as handled previously by ifdef _LP64/__LP64__, there are plenty of
+   environments with a 64bit long, and they don't need long long, and might not have it.
+   TODO: Retest HPPA and confirm lack of long long, and presence of defined(LP64).
+*)
 "typedef long long INT64;",
 "typedef unsigned long long UINT64;",
 "#define  INT64_(x) x##LL",
 "#define UINT64_(x) x##ULL",
 "#endif",
 
-(* This chunk can/should be moved to HelperFunctions i.e. memcmp | memmove |
-   memcpy | memset | copy_n | zero | set_compare, esp. to reduce #include
-   <stddef.h>.
-   NOTE: While the vast majority of systems, except NT and VMS, have unsigned
-   long the same size as size_t, size_t could also be unsigned int on 32bit
-   systems or unsigned long long on 64bit systems, and the correct type
-   should be used, unless we have an intermediate function and cast.
-   NOTE: NT and likely VMS are the exception the previous -- 32bit long always.
-*)
-"#if defined(_WIN64)",
-"typedef UINT64 size_t;",
-"#elif defined(_WIN32)",
-"typedef unsigned size_t;",
-"#elif defined(__SIZE_TYPE__)", (* gcc, clang *)
-"typedef __SIZE_TYPE__ size_t;",
-"#elif defined(__APPLE__) /*|| defined(_LP64) || defined(__LP64__)*/",
-"typedef unsigned long size_t;",
-"#else",
-(*"typedef unsigned int size_t;",*)
-"#include <stddef.h>", (* try to remove this, it is slow -- need size_t *)
-"#endif",
-
 (* "#include <setjmp.h>", TODO do not always #include *)
 
+(* TODO: This should not be output unless the module calls alloca. *)
 "/* http://c.knowcoding.com/view/23699-portable-alloca.html */",
+"/* https://www.gnu.org/software/autoconf/manual/autoconf-2.67/html_node/Particular-Functions.html#Particular-Functions */",
 "/* Find a good version of alloca. */",
+
+(* NOTE: This is separate from the rest of the size_t logic deliberately. *)
+"#ifdef _MSC_VER",
+"#if defined(_WIN64) || defined(_M_AMD64) || defined(_M_IA64) || defined(_M_ARM64)",
+(* AMD64 etc. is to try to cover Interix64 *)
+"typedef UINT64 size_t;",
+"#else",
+"/* Win32 and maybe e.g. Interix or CE or old Mac support. */",
+"typedef unsigned size_t;",
+"#endif",
+"void * __cdecl _alloca(size_t size);",
+"#endif", (* MSC_VER *)
+
 "#ifndef alloca",
-"# ifdef __GNUC__",
-"#  define alloca __builtin_alloca",
-"# else",
-"#  if defined(__DECC) || defined(__DECCXX)",
-"#   define alloca(x) __ALLOCA(x)",
-"#  else",
-"#   ifdef _MSC_VER",
-"     void * __cdecl _alloca(size_t size);",
-"#    define alloca _alloca",
-"#   endif",
-"#  endif",
-"# endif",
+"#ifdef __GNUC__", (* really __GNUC__ >= 3? *)
+"#define alloca __builtin_alloca",
+"#elif defined _AIX",
+"#define alloca __alloca",
+"#elif defined(__DECC) || defined(__DECCXX)",
+"#define alloca(x) __ALLOCA(x)",
+"#elif defined(_MSC_VER)",
+"#define alloca _alloca",
+"#else",
+"#include <alloca.h>",
+"#endif",
 "#endif",
 
 "typedef float REAL;",
@@ -2165,7 +2197,9 @@ BEGIN
     END;
 
     IF (*self.suppress_line_directive < 1 AND*) text_last_char = '\n' THEN
-        Wr.PutText(self.c, self.line_directive);
+        IF NOT Target.ReduceTargetVariation THEN
+          Wr.PutText(self.c, self.line_directive);
+        END;
         self.width := 0;
         self.last_char_was_newline := TRUE;
         RETURN;
@@ -2173,7 +2207,9 @@ BEGIN
 
     IF Text.FindChar(text, '\n') # -1 THEN
         self.width := 0; (* roughly *)
-        Wr.PutText(self.c, self.nl_line_directive);
+        IF NOT Target.ReduceTargetVariation THEN
+          Wr.PutText(self.c, self.nl_line_directive);
+        END;
         self.last_char_was_newline := TRUE;
         RETURN;
     END;
@@ -2185,10 +2221,12 @@ BEGIN
     END;
 
     self.width := 0;
-    IF self.last_char_was_newline THEN
+    IF NOT Target.ReduceTargetVariation THEN
+      IF self.last_char_was_newline THEN
         Wr.PutText(self.c, self.line_directive);
-    ELSE
+      ELSE
         Wr.PutText(self.c, self.nl_line_directive);
+      END;
     END;
     self.last_char_was_newline := TRUE;
 END print;
@@ -2307,7 +2345,10 @@ END set_error_handler;
 PROCEDURE Prefix_Print(self: T; multipass: Multipass_t) =
 BEGIN
     self.comment("begin unit");
-    self.comment("M3_TARGET = ", Target.System_name);
+    output_line_directives := output_line_directives AND NOT Target.ReduceTargetVariation;
+    IF NOT Target.ReduceTargetVariation THEN
+      self.comment("M3_TARGET = ", Target.System_name);
+    END;
     self.comment("M3_WORDSIZE = ", IntToDec(Target.Word.size));
     self.static_link_id := M3ID.Add("_static_link");
     self.alloca_id := M3ID.Add("alloca");
@@ -3495,7 +3536,7 @@ END HelperFunctions;
 TYPE HelperFunctions_t = M3CG_DoNothing.T BRANDED "M3C.HelperFunctions_t" OBJECT
     self: T := NIL;
     data: RECORD
-        pos, memcmp, memcpy, memmove, memset, floor, ceil, fence,
+        size_t, pos, memcmp, memcpy, memmove, memset, floor, ceil, fence,
         set_le, set_lt, extract_inline := FALSE;
         cvt_int := ARRAY ConvertOp OF BOOLEAN{FALSE, ..};
         shift, rotate, rotate_left, rotate_right, div, mod, min, max, abs,
@@ -3588,24 +3629,28 @@ END HelperFunctions_helper_with_type;
 PROCEDURE HelperFunctions_memset(self: HelperFunctions_t) =
 CONST text = "void* __cdecl memset(void*, int, size_t); /* string.h */";
 BEGIN
+    HelperFunctions_helper_with_boolean_and_array(self, self.data.size_t, DeclareSize_TForMemcmpEtc);
     HelperFunctions_helper_with_boolean(self, self.data.memset, text);
 END HelperFunctions_memset;
 
 PROCEDURE HelperFunctions_memmove(self: HelperFunctions_t) =
 CONST text = "void* __cdecl memmove(void*, const void*, size_t); /* string.h */";
 BEGIN
+    HelperFunctions_helper_with_boolean_and_array(self, self.data.size_t, DeclareSize_TForMemcmpEtc);
     HelperFunctions_helper_with_boolean(self, self.data.memmove, text);
 END HelperFunctions_memmove;
 
 PROCEDURE HelperFunctions_memcpy(self: HelperFunctions_t) =
 CONST text = "void* __cdecl memcpy(void*, const void*, size_t); /* string.h */";
 BEGIN
+    HelperFunctions_helper_with_boolean_and_array(self, self.data.size_t, DeclareSize_TForMemcmpEtc);
     HelperFunctions_helper_with_boolean(self, self.data.memcpy, text);
 END HelperFunctions_memcpy;
 
 PROCEDURE HelperFunctions_memcmp(self: HelperFunctions_t) =
 CONST text = "int __cdecl memcmp(const void*, const void*, size_t); /* string.h */";
 BEGIN
+    HelperFunctions_helper_with_boolean_and_array(self, self.data.size_t, DeclareSize_TForMemcmpEtc);
     HelperFunctions_helper_with_boolean(self, self.data.memcmp, text);
 END HelperFunctions_memcmp;
 

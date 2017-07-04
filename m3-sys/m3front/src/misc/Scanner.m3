@@ -228,13 +228,16 @@ PROCEDURE Here (VAR file: TEXT;  VAR line: INTEGER) =
   BEGIN
     file := files [offset DIV MaxLines];
     line := offset MOD MaxLines;
+    IF Target.ReduceTargetVariation THEN
+      file := Host.FileTail(file);
+    END;
   END Here;
 
 PROCEDURE LocalHere (VAR file: TEXT;  VAR line: INTEGER) =
   VAR fnum := offset DIV MaxLines;
   BEGIN
     IF (local_files[fnum] = NIL) THEN
-      local_files[fnum] := files[fnum];
+      local_files[fnum] := Host.FileTail(files[fnum]);
     END;
     file := local_files [fnum];
     line := offset MOD MaxLines;

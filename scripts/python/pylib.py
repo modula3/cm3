@@ -388,7 +388,7 @@ def _GetAllTargets():
 
 _CBackend = "c" in sys.argv or "C" in sys.argv
 _BuildDirC = ["", "c"][_CBackend]
-_PossibleCm3Flags = ["boot", "keep", "override", "commands", "verbose", "why"]
+_PossibleCm3Flags = ["boot", "keep", "override", "commands", "verbose", "why", "reduce-target-variation", "reducetargetvariation"]
 _SkipGccFlags = ["nogcc", "skipgcc", "omitgcc"]
 _PossiblePylibFlags = ["noclean", "nocleangcc", "c", "C"] + _SkipGccFlags + _PossibleCm3Flags
 
@@ -1610,9 +1610,9 @@ def Boot():
             Makefile.close()
 
     if vms or nt:
-        _MakeZip(BootDir[2:])
+        pass#_MakeZip(BootDir[2:])
     else:
-        _MakeTGZ(BootDir[2:])
+        pass#_MakeTGZ(BootDir[2:])
 
 #-----------------------------------------------------------------------------
 # map action names to code and possibly other data

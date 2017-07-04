@@ -1065,8 +1065,11 @@ dbxout_init (const char *input_file_name)
      labels.  */
   ASM_GENERATE_INTERNAL_LABEL (ltext_label_name, "Ltext", 0);
 
-  /* Put the current working directory in an N_SO symbol.  */
-  if (use_gnu_debug_info_extensions && !NO_DBX_MAIN_SOURCE_DIRECTORY)
+  /* Limit paths in debug output, to limit target variation. */
+  if (!reduce_target_variation)
+  {
+    /* Put the current working directory in an N_SO symbol.  */
+    if (use_gnu_debug_info_extensions && !NO_DBX_MAIN_SOURCE_DIRECTORY)
     {
       static const char *cwd;
 
@@ -1087,6 +1090,7 @@ dbxout_init (const char *input_file_name)
       used_ltext_label_name = true;
 #endif /* no DBX_OUTPUT_MAIN_SOURCE_DIRECTORY */
     }
+  }
 
   mapped_name = remap_debug_filename (input_file_name);
 #ifdef DBX_OUTPUT_MAIN_SOURCE_FILENAME

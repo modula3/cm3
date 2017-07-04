@@ -80,4 +80,6 @@ extern bool set_src_pwd		       (const char *);
 extern HOST_WIDE_INT get_random_seed (bool);
 extern const char *set_random_seed (const char *);
 
+extern bool reduce_target_variation;
+
 #endif /* ! GCC_TOPLEV_H */

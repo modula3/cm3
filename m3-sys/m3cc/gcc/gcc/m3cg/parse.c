@@ -246,6 +246,7 @@ build_case_label (tree low_value, tree high_value, tree label_decl)
 /*======================================================= OPTION HANDLING ===*/
 
 static int option_trace_all;
+bool reduce_target_variation;
 
 /*===========================================================================*/
 
@@ -6363,6 +6364,10 @@ m3_handle_option (size_t code, PCSTR /*arg*/, int /*value*/)
     case OPT_fmisc_trace:
     case OPT_ftypes_trace:
       option_trace_all += 1;
+      break;
+
+    case OPT_reduce_target_variation:
+      reduce_target_variation = true;
       break;
     }
 

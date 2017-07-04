@@ -75,4 +75,7 @@ PROCEDURE OpenUnit (name: M3ID.T; interface, generic: BOOLEAN;
 
 PROCEDURE CloseFile (rd: File.T);
 
+PROCEDURE FileTail (path: TEXT): TEXT;
+ (* returns the 'tail' of 'path' -- after any slashes or even spaces *)
+
 END Host.

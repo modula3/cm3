@@ -424,7 +424,7 @@ PROCEDURE PushGeneric (t: T;  VAR rd: File.T): M3ID.T =
     END;
 
     (* build a synthetic file name & start reading *)
-    filename := old_filename & " => " & filename;
+    filename := Host.FileTail(old_filename) & " => " & filename;
     Scanner.Push (filename, rd, is_main := Scanner.in_main);
     t.genericFile := filename;
 

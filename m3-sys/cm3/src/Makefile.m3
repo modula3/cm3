@@ -5,7 +5,7 @@ MODULE Makefile;
 
 IMPORT FS, M3File, M3Timers, OSError, Params, Process, Text, Thread, Wr;
 IMPORT Arg, M3Build, M3Options, M3Path, Msg, Utils, TextSeq, TextTextTbl;
-IMPORT MxConfig, Dirs, Version;
+IMPORT MxConfig, Dirs, Version, Target;
 
 TYPE
   NK = M3Path.Kind;
@@ -267,6 +267,9 @@ PROCEDURE ConvertOption (VAR s: State;  arg: TEXT;  arg_len: INTEGER)
     | 'r' => IF Text.Equal(arg, "-realclean") THEN
                ok := TRUE;  (* mode set during the pre-scan *)
                s.found_work := TRUE;
+             ELSIF Text.Equal(arg, "-reduce-target-variation") THEN
+               ok := TRUE;
+               Target.ReduceTargetVariation := TRUE;
              END;
 
     | 's' => IF Text.Equal (arg, "-silent") THEN
@@ -709,6 +712,9 @@ CONST
     "  -group-writable \"",
     "  -pb <n>        allow <n> parallelism in running back-end (experimental)",
     "  -no-m3ship-resolution use quake variables in .M3SHIP (experimental)",
+    "  -reduce-target-variation omit target in some minor places such as",
+    "                  current working directory in debug information",
+    "                  for internal development purposes (showing target equivalence)",
     "",
     "environment variables:",
     "  M3CONFIG       platform dependent configuration file to use (cm3.cfg)",

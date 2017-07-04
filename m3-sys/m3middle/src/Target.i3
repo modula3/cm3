@@ -529,4 +529,8 @@ VAR (*CONST*)
      test for nested procedures passed as parameters must be more
      elaborate (e.g. HPPA). *)
 
+ (* This removes some unnecessary target variation in the output,
+  * such as current working directory in debug output. *)
+ ReduceTargetVariation: BOOLEAN;
+
 END Target.

@@ -458,8 +458,14 @@ proc GetM3Back() is
   else if equal(HOST, TARGET)
     m3back = INSTALL_ROOT & "/bin/"
   end end
-  
+
   m3back = "@" & m3back & "cm3cg " & GetM3BackFlags()
+
+  if defined ("REDUCE_TARGET_VARIATION")
+    if REDUCE_TARGET_VARIATION
+      %m3back = m3back & " -freduce-target-variation"
+    end
+  end
   return m3back
 end
 

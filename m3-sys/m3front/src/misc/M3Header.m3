@@ -104,7 +104,7 @@ PROCEDURE PushGeneric (VAR s: State) =
     IF (s.generic = NIL) THEN s.failed := TRUE;  RETURN; END;
 
     (* build a synthetic file name & start reading *)
-    filename := old_filename & " => " & filename;
+    filename := Host.FileTail(old_filename) & " => " & filename;
     Scanner.Push (filename, s.generic, is_main := Scanner.in_main);
 
     (* make sure we got what we wanted *)
