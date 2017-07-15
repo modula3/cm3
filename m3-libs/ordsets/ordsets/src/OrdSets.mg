@@ -1429,7 +1429,7 @@ GENERIC MODULE OrdSets ( )
 
 (* =============== Construction of sets from their elements. =============== *) 
 
-(* VISIBLE: *) 
+(* EXPORTED: *) 
 ; PROCEDURE Empty ( ) : T 
   (* Empty set. *) 
 
@@ -1437,7 +1437,7 @@ GENERIC MODULE OrdSets ( )
       RETURN NIL 
     END Empty
 
-(* VISIBLE: *) 
+(* EXPORTED: *) 
 ; PROCEDURE Singleton ( Elem : ElemT ) : T 
   (* Singleton set containing just Elem.  Empty set if 
      Elem not in ValidElemT 
@@ -1455,7 +1455,7 @@ GENERIC MODULE OrdSets ( )
       END (* IF *) 
     END Singleton
 
-(* VISIBLE: *) 
+(* EXPORTED: *) 
 ; PROCEDURE Range ( Lo , Hi : ElemT ) : T 
   (* Set containing all elements in the range [ Lo .. Hi ].  Empty set if
      either Lo or Hi is not in ValidElemT, or Lo > Hi  
@@ -1523,7 +1523,6 @@ GENERIC MODULE OrdSets ( )
       ; LResultHiBitwordNo := BitwordNoOfIElem ( LHi )
       ; LResultBitwordArrayRef 
           := NewBitwordArray ( LResultHiBitwordNo - LResultLoBitwordNo + 1 ) 
-      ; LResultSs := 0 
       ; LBitword := LTMaskOfIElem ( LLo ) (* Set low garbage bits. *)    
       ; LBitsHash := LBitword 
       ; LResultBitwordArrayRef ^ [ 0 ] := LBitword 
@@ -2871,7 +2870,7 @@ GENERIC MODULE OrdSets ( )
 ; VAR GUnionRangeCt : INTEGER := 0 
 (* FIXME^ Protect with MUTEX. *) 
 
-(* VISIBLE: *) 
+(* EXPORTED: *) 
 ; PROCEDURE Union ( Set1 : T ; Set2 : T ) : T
   (* Union of Set1 and Set2. *) 
 
@@ -3305,7 +3304,7 @@ GENERIC MODULE OrdSets ( )
                 ; LBitwordsNewlyAllocated := TRUE  
                 ; LResultBias := LResultLoBitwordNo 
                 ; LResultBitwordArrayRef ^ [ 0 ] := LLoBitword 
-                ; SUBARRAY 
+                ; SUBARRAY
                     ( LResultBitwordArrayRef ^ , 1 , LResultBitwordCt - 2 ) 
                   := WMiddle 
                 ; LResultBitwordArrayRef ^ [ LResultBitwordCt - 1 ] 
@@ -3420,7 +3419,6 @@ GENERIC MODULE OrdSets ( )
             END (* IF *) 
           ELSE (* There is a distinct high Bitword in the result. *)  
             LResultCard := NoOf1BitsInBitword ( LLoBitword )  
-          ; LResultHasA0Bit := FALSE 
           ; LLoBitword 
               := Word . Or ( LLoBitword , LTMaskOfIElem ( LResultLoIElem ) )
             (* ^Set result low garbage bits of LLoBitword. *) 
@@ -3478,7 +3476,7 @@ GENERIC MODULE OrdSets ( )
       END (* IF *) 
     END IntersectionBitsets 
 
-(* VISIBLE: *) 
+(* EXPORTED: *) 
 ; PROCEDURE Intersection ( Set1 : T ; Set2 : T ) : T 
   (* Intersection of Set1 and Set2. *) 
 
@@ -3546,7 +3544,7 @@ GENERIC MODULE OrdSets ( )
 
 (* ================================ Project ================================ *)
 
-(* VISIBLE: *) 
+(* EXPORTED: *) 
 ; PROCEDURE Project ( Set : T ; Min , Max : ElemT ) : T 
   (* Remove elements outside the range Min .. Max *)
 
@@ -3753,7 +3751,7 @@ GENERIC MODULE OrdSets ( )
             := GreatestAbsentIElemOfBSetInRange
                  ( BSetRInfo , BSetRBitwords  , BSetRInfo . BitsetLo , RSetLHi )
         ; IF LIElem = IElemNull 
-          THEN (* No such 0-bit.  REsult is the lower ens of SetL. *) 
+          THEN (* No such 0-bit.  Result is the lower end of SetL. *) 
             RETURN 
               ConstructRangeset 
                 ( Lo := RSetLLo , Hi := BSetRInfo . BitsetLo - 1 ) 
@@ -3801,7 +3799,7 @@ GENERIC MODULE OrdSets ( )
           LResultIsRange := FALSE 
         END (* IF *) 
       ELSIF LOverlapLoBitwordNo + 1 = LOverlapHiBitwordNo 
-      THEN (* Two Bitwords of overlap in result. *) 
+      THEN (* Exactly two Bitwords of overlap in result. *) 
         IF LLoBitword = AllOnes AND LHiBitword = AllOnes   
         THEN (* And non-overlapping Bitwords are all ones too. *)  
           RETURN 
@@ -4643,7 +4641,7 @@ GENERIC MODULE OrdSets ( )
       END (* IF *) 
     END DifferenceOverlappingBitsets 
 
-(* VISIBLE: *) 
+(* EXPORTED: *) 
 ; PROCEDURE Difference ( SetL : T ; SetR : T ) : T 
   (* Set difference of SetL minus SetR. *) 
 
@@ -4753,7 +4751,7 @@ GENERIC MODULE OrdSets ( )
   : T 
 
   (* PRE: BSet1Info and BSet1Bitwords come from Set1. 
-     PRE: BSet1 # NIL IMPLIES BSet1Info and BSet1Bitwords come from BSet1.
+     PRE: BSet1 # NIL IMPLIES (BSet1Info AND BSet1Bitwords come from BSet1).
      PRE: RSet2Lo <= RSet2Hi. 
      PRE: BSet1 has a BitNo in RSet2Lo .. RSet2Hi.
   *) 
@@ -5148,9 +5146,9 @@ GENERIC MODULE OrdSets ( )
   : T
 
   (* PRE: BSet1Info and BSet1Bitwords come from Set1. 
-     PRE: BSet1 # NIL IMPLIES BSet1Info and BSet1Bitwords come from BSet1.
+     PRE: BSet1 # NIL IMPLIES (BSet1Info AND BSet1Bitwords come from BSet1).
      PRE: BSet2Info and BSet2Bitwords come from Set2. 
-     PRE: BSet2 # NIL IMPLIES BSet2Info and BSet2Bitwords come from BSet2.
+     PRE: BSet2 # NIL IMPLIES (BSet2Info AND BSet2Bitwords come from BSet2).
      PRE: The ranges of BSet1 and BSet2 have a BitNo in common.
   *)  
  
@@ -5178,8 +5176,8 @@ GENERIC MODULE OrdSets ( )
 (* TODO: Maybe. Perhaps try to reuse one or the other of the operand Bitword 
          arrays.  This is a fairly unlikely case.  To reuse the array for
          operand 1, operand 2 would have to have all zeros corresponding to
-         real bits of operand 1  (which implies 2 is longer than 1 on both 
-         ends), while outlying bits of 2 would have to match corresponding 
+         real bits of operand 1 (which implies BSet2 is longer than BSet1 on both 
+         ends), while outlying bits of BSet2 would have to match corresponding 
          garbage bits of 1.   
 *) 
       LSet1LoBitwordNo := BitwordNoOfIElem ( BSet1Info . BitsetLo ) 
@@ -5634,7 +5632,7 @@ GENERIC MODULE OrdSets ( )
       END (* IF *) 
     END SymDiffOverlappingBitsets
 
-(* VISIBLE: *) 
+(* EXPORTED: *) 
 ; PROCEDURE SymDiff ( Set1 : T ; Set2 : T ) : T 
   (* Symmetric difference of Set1 and Set2. 
      IsElement(E,SymDiff(S1,S2)) iff IsElement(E,S1) # IsElement(E,S2) 
@@ -5803,7 +5801,7 @@ GENERIC MODULE OrdSets ( )
 
 (* ============================ Other operations =========================== *)
 
-(* VISIBLE: *) 
+(* EXPORTED: *) 
 ; PROCEDURE Include ( Set : T ; Elem : ElemT ) : T 
   (* Union of Set and Singleton(Elem), but often more efficient. *) 
 
@@ -5866,7 +5864,7 @@ GENERIC MODULE OrdSets ( )
       END (* IF *) 
     END Include 
 
-(* VISIBLE: *) 
+(* EXPORTED: *) 
 ; PROCEDURE Exclude ( Set : T ; Elem : ElemT ) : T 
   (* Difference of Set minus Singleton(Elem), but often more efficient. *) 
 
@@ -5930,14 +5928,14 @@ GENERIC MODULE OrdSets ( )
       END (* IF *) 
     END Exclude
 
-(* VISIBLE: *) 
+(* EXPORTED: *) 
 ; PROCEDURE IsEmpty ( Set : T ) : BOOLEAN
 
   = BEGIN (* IsEmpty *)
       RETURN Set = NIL 
     END IsEmpty
 
-(* VISIBLE: *) 
+(* EXPORTED: *) 
 ; PROCEDURE Minimum ( Set : T ) : ElemT 
   (* Minimum valued element of Set.  NullElem, if Set is empty. *) 
 
@@ -5967,7 +5965,7 @@ GENERIC MODULE OrdSets ( )
     ; RETURN MinimumResult
     END Minimum
 
-(* VISIBLE: *) 
+(* EXPORTED: *) 
 ; PROCEDURE Maximum ( Set : T ) : ElemT 
   (* Maximum valued element of Set.  NullElem, if Set is empty. *) 
 
@@ -5997,7 +5995,7 @@ GENERIC MODULE OrdSets ( )
     ; RETURN MaximumResult
     END Maximum
 
-(* VISIBLE: *) 
+(* EXPORTED: *) 
 ; <* INLINE *> 
   PROCEDURE ArbitraryMember ( Set : T ) : ElemT 
   (* An arbitrary member of Set.  NullElem, if Set is empty. *) 
@@ -6006,7 +6004,7 @@ GENERIC MODULE OrdSets ( )
       RETURN Minimum ( Set )
     END ArbitraryMember
 
-(* VISIBLE: *) 
+(* EXPORTED: *) 
 ; PROCEDURE ExtractArbitraryMember ( VAR Set : T ) : ElemT 
   (* Equivalent to: 
        WITH W = ArbitraryMember ( Set ) 
@@ -6059,7 +6057,7 @@ GENERIC MODULE OrdSets ( )
     ; RETURN VAL ( ExtractIResult , ElemT )  
     END ExtractArbitraryMember
 
-(* VISIBLE: *) 
+(* EXPORTED: *) 
 ; PROCEDURE Complement 
     ( Set : T ; UnivLo , UnivHi : ElemT := NullElem ) : T 
   (* Complement WRT a universe of [ UnivLo .. UnivHi ].
@@ -6212,7 +6210,7 @@ GENERIC MODULE OrdSets ( )
       END (* IF *) 
     END BitsetCard
 
-(* VISIBLE: *) 
+(* EXPORTED: *) 
 ; PROCEDURE Card ( Set : T ) : CardTyp 
   (* Cardinality of Set. *) 
 
@@ -6403,7 +6401,7 @@ GENERIC MODULE OrdSets ( )
       END (* IF *) 
     END IsSubsetBitsets 
 
-(* VISIBLE: *) 
+(* EXPORTED: *) 
 ; PROCEDURE IsSubset ( SetL : T ; SetR : T ) : BOOLEAN
 
   = VAR IsSubsetResult : BOOLEAN 
@@ -6477,7 +6475,7 @@ GENERIC MODULE OrdSets ( )
     ; RETURN IsSubsetResult
     END IsSubset 
 
-(* VISIBLE: *) 
+(* EXPORTED: *) 
 ; PROCEDURE IsProperSubset ( SetL : T ; SetR : T ) : BOOLEAN
 
   = VAR IsProperSubsetResult : BOOLEAN
@@ -6636,7 +6634,7 @@ GENERIC MODULE OrdSets ( )
       END (* IF *) 
     END EqualBitsets 
 
-(* VISIBLE: *) 
+(* EXPORTED: *) 
 ; PROCEDURE Equal ( Set1 , Set2 : T ) : BOOLEAN
 
   = VAR EqualResult : BOOLEAN
@@ -6696,7 +6694,7 @@ GENERIC MODULE OrdSets ( )
     ; RETURN EqualResult
     END Equal
 
-(* VISIBLE: *) 
+(* EXPORTED: *) 
 ; <* INLINE *> PROCEDURE Unequal ( Set1 : T ; Set2 : T ) : BOOLEAN
 
   = BEGIN (* Unequal *)
@@ -6764,7 +6762,7 @@ GENERIC MODULE OrdSets ( )
       END (* IF *)  
     END DisjointBitsets 
 
-(* VISIBLE: *) 
+(* EXPORTED: *) 
 ; PROCEDURE Disjoint ( Set1 , Set2 : T ) : BOOLEAN
   (* Set1 and Set2 are disjoint.  Usually faster than empty intersection, and
      never does any heap allocation. 
@@ -6935,7 +6933,7 @@ GENERIC MODULE OrdSets ( )
       END (* LOOP *)   
     END CompareBitsets 
 
-(* VISIBLE: *) 
+(* EXPORTED: *) 
 ; PROCEDURE Compare ( Set1 , Set2 : T ) : [ - 1 .. 1 ] (* <, =, >*)  
   (* Compare two sets according to an arbitrary but consistent total ordering
      on their abstract velues. 
@@ -7217,7 +7215,7 @@ GENERIC MODULE OrdSets ( )
     ; Result := LResult 
     END RecoverBitsHash  
 
-(* VISIBLE: *) 
+(* EXPORTED: *) 
 ; PROCEDURE Hash ( Set : T ) : HashTyp  
   (* Hash(S) = 0 iff Equal(S,Empty()) *)  
 
@@ -7254,7 +7252,7 @@ GENERIC MODULE OrdSets ( )
                  BSetInfo . Hash denotes unknown.  But we still need to return a
                  hash code, and it must be nonzero.  Since the bounds can not
                  be equal, their contribution cannot be zero, and thus, if the
-                 complete code is zero, the Bitwords portion is not.  We can
+                 complete hashcode is zero, the Bitwords portion is not.  We can
                  use it for the returned hash code in this special case.
               *) 
               <* ASSERT LBitwordsHash # HashZero *>
@@ -7299,7 +7297,7 @@ GENERIC MODULE OrdSets ( )
       END (* IF *)
     END IsIElemBitset  
 
-(* VISIBLE: *) 
+(* EXPORTED: *) 
 ; PROCEDURE IsElement ( Elem : ElemT ; Set : T ) : BOOLEAN
 
   = VAR IsElementResult : BOOLEAN 
@@ -7352,7 +7350,7 @@ GENERIC MODULE OrdSets ( )
       END (* WHILE *)  
     END ForAllInBitwordDo 
 
-(* VISIBLE: *) 
+(* EXPORTED: *) 
 ; PROCEDURE ForAllDo ( Set : T ; Proc : ProcOfValidElem )
   RAISES ANY
   (* Callback Proc(m) for every member m of T, in ascending order of ORD(m) *) 
@@ -7575,7 +7573,7 @@ GENERIC MODULE OrdSets ( )
 
 (* =========================== Image ======================================= *) 
 
-(* VISIBLE: *) 
+(* EXPORTED: *) 
 ; PROCEDURE Image 
     ( Set : T 
     ; ElemImage : ElemImageFuncTyp 
@@ -7681,7 +7679,7 @@ GENERIC MODULE OrdSets ( )
 
 (* ================= Verification of internal invariants ================== *) 
 
-(* VISIBLE: *) 
+(* EXPORTED: *) 
 ; PROCEDURE VerifySet ( Set : T ) RAISES { BadInvariant } 
 
   = PROCEDURE InnerVerifySet
@@ -7857,7 +7855,8 @@ GENERIC MODULE OrdSets ( )
       END (* IF *) 
     ; FOR RI := 0 TO LBitwordCt - 1 
       DO 
-        LResult [ RI ] := PickleStubs . InInteger ( reader ) 
+        LResult [ RI ] := PickleStubs . InInteger ( reader )
+                       (* ^InInteger will take care of endianness. ) 
       END (* FOR *) 
     ; RETURN LResult 
     END ReadBitwordsSameSize  
@@ -7869,8 +7868,8 @@ GENERIC MODULE OrdSets ( )
   (* PRE: Pickle was written on a 64-bit machine, but we are executing on
      a 32-bit. *) 
 
-  = VAR LBitwordCt64 : INTEGER 
-  ; VAR LBitwordCt32 : CARDINAL 
+  = VAR LBitwordCt64 : INTEGER (* Number of 64-bit bitwords. *) 
+  ; VAR LBitwordCt32 : CARDINAL (* Number of 32-bit bitwords. *) 
   ; VAR LResult : BitwordArrayRefTyp 
   ; VAR LBytes : ARRAY [ 0 .. 7 ] OF CHAR 
 
@@ -7891,7 +7890,7 @@ GENERIC MODULE OrdSets ( )
     ; IF reader . packing . little_endian 
       THEN 
         IF Compiler . ThisEndian = Compiler . ENDIAN . LITTLE 
-        THEN (* Written little endian, reading little. *)  
+        THEN (* Written little endian, reading little endian. *)  
           FOR RI := 0 TO LBitwordCt32 - 1 BY 2 
           DO (* No byte rearrangement needed. *)  
             WITH WBytes 
@@ -7900,13 +7899,14 @@ GENERIC MODULE OrdSets ( )
             END (* WITH *) 
           END (* FOR *) 
 
-        ELSE (* Written little endian, reading big. *) 
+        ELSE (* Written little endian, reading big endian. *) 
           FOR RI := 0 TO LBitwordCt32 - 1 BY 2 
           DO 
             WITH WBytes 
                  = UnsafeUtils . PtrTo8CharArray ( LResult ^ [ RI ] ) ^
             DO 
               PickleStubs . InChars ( reader , (* VAR *) LBytes )
+            (* Reverse bytes within each 32-bit word. *) 
             ; WBytes [ 0 ] := LBytes [ 3 ] 
             ; WBytes [ 1 ] := LBytes [ 2 ] 
             ; WBytes [ 2 ] := LBytes [ 1 ] 
@@ -7920,13 +7920,14 @@ GENERIC MODULE OrdSets ( )
         END (* IF *) 
       ELSE (* Written big endian. *) 
         IF Compiler . ThisEndian = Compiler . ENDIAN . LITTLE 
-        THEN (* Written big endian, reading little. *)  
+        THEN (* Written big endian, reading little endian. *)  
           FOR RI := 0 TO LBitwordCt32 - 1 BY 2 
           DO 
             WITH WBytes 
                  = UnsafeUtils . PtrTo8CharArray ( LResult ^ [ RI ] ) ^
             DO 
               PickleStubs . InChars ( reader , (* VAR *) LBytes )
+            (* Reverse all 8 bytes. *) 
             ; WBytes [ 0 ] := LBytes [ 7 ] 
             ; WBytes [ 1 ] := LBytes [ 6 ] 
             ; WBytes [ 2 ] := LBytes [ 5 ] 
@@ -7938,13 +7939,14 @@ GENERIC MODULE OrdSets ( )
             END (* WITH *) 
           END (* FOR *) 
 
-        ELSE (* Written big endian, reading big. *)
+        ELSE (* Written big endian, reading big endian. *)
           FOR RI := 0 TO LBitwordCt32 - 1 BY 2 
           DO 
             WITH WBytes 
                  = UnsafeUtils . PtrTo8CharArray ( LResult ^ [ RI ] ) ^
             DO 
               PickleStubs . InChars ( reader , (* VAR *) LBytes )
+            (* Swap 32-bit words only. *) 
             ; WBytes [ 0 ] := LBytes [ 4 ] 
             ; WBytes [ 1 ] := LBytes [ 5 ] 
             ; WBytes [ 2 ] := LBytes [ 6 ] 
@@ -7972,8 +7974,8 @@ GENERIC MODULE OrdSets ( )
      a 64-bit. *) 
 
   = VAR LSs , LDoneSs : CARDINAL 
-  ; VAR LBitwordCt32 : INTEGER 
-  ; VAR LBitwordCt64 : CARDINAL 
+  ; VAR LBitwordCt32 : INTEGER (* Number of 32-bit bitwords. *)
+  ; VAR LBitwordCt64 : CARDINAL (* Number of 64-bit bitwords. *)
   ; VAR LResult : BitwordArrayRefTyp
   ; VAR LBitword32 : BitwordTyp  
   ; VAR LPrepend , LAppend : BOOLEAN 
@@ -8008,7 +8010,7 @@ GENERIC MODULE OrdSets ( )
     ; IF reader . packing . little_endian 
       THEN 
         IF Compiler . ThisEndian = Compiler . ENDIAN . LITTLE 
-        THEN (* Written little endian, reading little. *) 
+        THEN (* Written little endian, reading little endian. *) 
              (* No byte rearrangement needed. *) 
           LOOP 
             IF LSs >= LDoneSs 
@@ -8023,7 +8025,7 @@ GENERIC MODULE OrdSets ( )
             END (* IF *) 
           END (* LOOP *) 
 
-        ELSE (* Written little endian, reading big. *) 
+        ELSE (* Written little endian, reading big endian. *) 
           LOOP 
             IF LSs >= LDoneSs 
             THEN EXIT 
@@ -8032,7 +8034,7 @@ GENERIC MODULE OrdSets ( )
                    = UnsafeUtils . PtrTo8CharArray ( LResult ^ [ LSs ] ) ^
               DO 
                 PickleStubs . InChars ( reader , (* VAR *) LBytes ) 
-              (* Swap all 8 bytes. *) 
+              (* Reverse all 8 bytes. *) 
               ; WBytes [ 0 ] := LBytes [ 7 ] 
               ; WBytes [ 1 ] := LBytes [ 6 ] 
               ; WBytes [ 2 ] := LBytes [ 5 ] 
@@ -8049,7 +8051,7 @@ GENERIC MODULE OrdSets ( )
 
       ELSE (* Written big endian. *) 
         IF Compiler . ThisEndian = Compiler . ENDIAN . LITTLE 
-        THEN (* Written big endian, reading little. *)  
+        THEN (* Written big endian, reading little endiain. *)  
           LOOP 
             IF LSs >= LDoneSs 
             THEN EXIT 
@@ -8058,7 +8060,7 @@ GENERIC MODULE OrdSets ( )
                    = UnsafeUtils . PtrTo8CharArray ( LResult ^ [ LSs ] ) ^
               DO 
                 PickleStubs . InChars ( reader , (* VAR *) LBytes ) 
-              (* Swap bytes within each word. *) 
+              (* Reverse bytes within each 32-bit word. *) 
               ; WBytes [ 0 ] := LBytes [ 3 ] 
               ; WBytes [ 1 ] := LBytes [ 2 ] 
               ; WBytes [ 2 ] := LBytes [ 1 ] 
@@ -8072,7 +8074,7 @@ GENERIC MODULE OrdSets ( )
             END (* IF *) 
           END (* LOOP *) 
 
-        ELSE (* Written big endian, reading big. *)
+        ELSE (* Written big endian, reading big endian. *)
           LOOP
             IF LSs >= LDoneSs 
             THEN EXIT 
@@ -8081,7 +8083,7 @@ GENERIC MODULE OrdSets ( )
                    = UnsafeUtils . PtrTo8CharArray ( LResult ^ [ LSs ] ) ^
               DO 
                 PickleStubs . InChars ( reader , (* VAR *) LBytes ) 
-              (* Swap words only. *) 
+              (* Swap 32-bit words only. *) 
               ; WBytes [ 0 ] := LBytes [ 4 ] 
               ; WBytes [ 1 ] := LBytes [ 5 ] 
               ; WBytes [ 2 ] := LBytes [ 6 ] 
@@ -8166,7 +8168,8 @@ GENERIC MODULE OrdSets ( )
 
 ; PROCEDURE SetSpecialRead 
     ( special : Pickle2 . Special 
-    ; reader : Pickle2 . Reader 
+    ; reader : Pickle2 . Reader
+      (* Confusingly, 'reader' has properties of the machine that *wrote* the pickle. *)  
     ; Id : Pickle2 . RefID 
     )
   : REFANY 
