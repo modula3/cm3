@@ -80,7 +80,8 @@ REVEAL
     widecharSize  := 16; (* May change to 32. *) 
     optLevel      := 0; (* optimize level - not used yet *)
 
-    allocaName    : Name; (* "alloca", for detecting library call on it. *) 
+    allocaName    : Name;
+      (* "alloca", for detecting CG-generated library call on it. *) 
 
     (* State for generating calls. *) 
     callState     : callStateTyp; 
@@ -667,6 +668,7 @@ PROCEDURE NewArrayRefOfMetadataRef
     ArrRef . Length := ElemCt;    
   END NewArrayRefOfMetadataRef; 
 
+(* EXPORTED: *) 
 PROCEDURE New 
   (output: Wr.T; m3llvmDebugLev: m3llvmDebugLevTyp; genDebug: BOOLEAN)
 : M3CG.T =
@@ -1619,7 +1621,7 @@ PROCEDURE AllocVarInEntryBlock(self : U; v : LvVar) =
     curBB := LLVM.LLVMGetInsertBlock(builderIR);
     LLVM.LLVMPositionBuilderAtEnd(builderIR, self.curProc.entryBB);
 
-    (* alloc the temp in the entry BB *)
+    (* alloc the variable in the entry BB *)
     self.allocVar(v);
 
     (* Back to regular insertion point. *) 
@@ -2089,10 +2091,11 @@ PROCEDURE begin_procedure (self: U;  p: Proc) =
       local := NARROW(arg,LvVar);
       self.allocVar(local);
     END;
-    (* A temporary placeholder for display. To be replaced at end_procedure. The display will be added to all procedures
-    regardless but we delete it in end_procedure if not needed *)
+    (* A temporary placeholder for display. To be replaced at end_procedure.
+       The display will be added to all procedures regardless but we delete
+       it in end_procedure if not needed *)
     proc.outgoingDisplayI8StarLv 
-      := LLVM.LLVMBuildAlloca(builderIR, AdrTy, LT("_temp_outgoing_display_as_I8Star"));
+      := LLVM.LLVMBuildAlloca(builderIR, AdrTy, LT("tempOGD.I8Star"));
     (* WARNING!! ^We will, in end_procedure, do a ReplaceAllUsesWith on this.
                   It is essential that each instance of this is distinct and
                   doesn't get thrown into a single pot with the others.  
@@ -2132,11 +2135,11 @@ PROCEDURE BuildDisplay(self : U)
             varLv := GetAddrOfUplevelVar(self,v);
             storeLv 
               := BuildGep (self.curProc.outgoingDisplayI8StarLv,
-                           index * ptrBytes, textName & "__DisplaySlotAddr");
+                           index * ptrBytes, textName & "__CopyToDisplaySlot.addr");
             storeLv 
               := LLVM.LLVMBuildBitCast
                    (builderIR,storeLv,AdrAdrTy,
-                    LT(textName & "__DisplaySlotAddr.addraddr"));
+                    LT(textName & "__CopyToDisplaySlot.addraddr"));
             EVAL LLVM.LLVMBuildStore(builderIR,varLv,storeLv);
             INC(index);
           END;
@@ -2155,11 +2158,11 @@ PROCEDURE BuildDisplay(self : U)
                    (builderIR,v.lv,AdrTy,LT(textName & ".addr"));
         storeLv 
           := BuildGep(self.curProc.outgoingDisplayI8StarLv,index * ptrBytes, 
-                      textName & "__DisplaySlotAddr");
+                      textName & "__NewDisplaySlot.addr");
         storeLv 
           := LLVM.LLVMBuildBitCast
                (builderIR,storeLv,AdrAdrTy
-                ,LT(textName & "__DisplaySlotAddr.addraddr"));
+                ,LT(textName & "__NewDisplaySlot.addraddr"));
         EVAL LLVM.LLVMBuildStore(builderIR,varLv,storeLv);
         INC(index);
       END;
@@ -2220,7 +2223,7 @@ PROCEDURE end_procedure (self: U;  p: Proc) =
         := LLVM.LLVMBuildAlloca (builderIR, proc.displayLty, LT(textName));
       proc.outgoingDisplayI8StarLv
         := LLVM.LLVMBuildBitCast
-             (builderIR, displayAllocLv, AdrTy, 
+             (builderIR, displayAllocLv, AdrAdrTy, 
               LT(textName & "I8Star"));
       linkSize := BuildDisplay(self);
       LLVM.LLVMReplaceAllUsesWith
@@ -2228,7 +2231,7 @@ PROCEDURE end_procedure (self: U;  p: Proc) =
       (* remove the original temporary display *)
       LLVM.LLVMInstructionEraseFromParent(tempDisplayLv);
     ELSE
-      (* the display pointer wasnt needed after all *)
+      (* the display pointer wasn't needed after all *)
       LLVM.LLVMInstructionEraseFromParent(proc.outgoingDisplayI8StarLv);
     END;
 
@@ -4448,7 +4451,10 @@ PROCEDURE call_direct (self: U; p: Proc; <*UNUSED*> t: Type) =
       IF calleeProc.lev = self.curProc.lev + 1 THEN 
       (* Calling a nested procedure one level deeper than caller. *) 
         self.curProc.needsDisplay := TRUE; 
-        staticLinkActualLv := self.curProc.outgoingDisplayI8StarLv;
+        staticLinkActualLv
+          := LLVM.LLVMBuildLoad
+               (builderIR, self.curProc.outgoingDisplayI8StarLv,
+                LT("_outgoing_display"));
         (* ^The code to build this will end up in the entry BB of the caller,
            but we don't generate it until we get to its end_procedure, since
            there could still be more locals of inner blocks flattened into
