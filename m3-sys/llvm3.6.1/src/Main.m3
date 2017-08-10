@@ -241,7 +241,7 @@ VAR
     END; 
 
 (*  Temporary, for comparing compiler tests with m3cc and m3llvm: *) 
-    LM3llvmDebugLev := 0;
+(*  LM3llvmDebugLev := 0; *) 
 
     cg := M3CG_LLVM.New(wr_out, LM3llvmDebugLev, GGenDebug);
 
