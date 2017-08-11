@@ -1,0 +1,82 @@
+P0, visit no. 0, at entry:
+  Inc = 48
+  P0_x = 3
+  P0_y = 4
+  P0_z = 5
+  P0_w = 6
+P0, visit no. 0, before 1st call on P0_0:
+  Inc = 48
+  P0_x = 51
+  P0_y = 52
+  P0_z = 5
+  P0_w = 6
+  P0_0, visit no. 0, at entry:
+    Inc = 16
+    P0_0_F = 5
+    P0_0_G = 6
+    P0_0_A = 47
+P0, visit no. 0, inside P0_0, before call on P0_0_0:
+  Inc = 48
+  P0_x = 67
+  P0_y = 68
+  P0_z = 5
+  P0_w = 22
+  P0_0, visit no. 0, before call on P0_0_0:
+    Inc = 16
+    P0_0_F = 21
+    P0_0_G = 22
+    P0_0_A = 63
+    P0_0_0, visit no. 0, at entry:
+      Inc = 8
+P0, visit no. 0, inside P0_0, after call on P0_0_0:
+  Inc = 48
+  P0_x = 75
+  P0_y = 68
+  P0_z = 13
+  P0_w = 30
+  P0_0, visit no. 0, at exit:
+    Inc = 16
+    P0_0_F = 21
+    P0_0_G = 30
+    P0_0_A = 79
+P0, visit no. 0, before 2nd, indirect, call on P0_0:
+  Inc = 48
+  P0_x = 75
+  P0_y = 68
+  P0_z = 68
+  P0_w = 85
+  P0_0, visit no. 1, at entry:
+    Inc = 32
+    P0_0_F = 75
+    P0_0_G = 68
+    P0_0_A = 47
+P0, visit no. 0, inside P0_0, before call on P0_0_0:
+  Inc = 48
+  P0_x = 107
+  P0_y = 132
+  P0_z = 68
+  P0_w = 85
+  P0_0, visit no. 1, before call on P0_0_0:
+    Inc = 32
+    P0_0_F = 107
+    P0_0_G = 132
+    P0_0_A = 79
+    P0_0_0, visit no. 1, at entry:
+      Inc = 16
+P0, visit no. 0, inside P0_0, after call on P0_0_0:
+  Inc = 48
+  P0_x = 123
+  P0_y = 132
+  P0_z = 84
+  P0_w = 101
+  P0_0, visit no. 1, at exit:
+    Inc = 32
+    P0_0_F = 107
+    P0_0_G = 132
+    P0_0_A = 111
+P0, visit no. 0, at exit:
+  Inc = 48
+  P0_x = 123
+  P0_y = 132
+  P0_z = 84
+  P0_w = 101
