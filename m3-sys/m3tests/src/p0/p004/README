@@ -1,0 +1,3 @@
+Test p004, differing order of compiler front end warning messages is normal
+for different back ends, probably owing to their requesting different ordering
+of nested procedures.  
