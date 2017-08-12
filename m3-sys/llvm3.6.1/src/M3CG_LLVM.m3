@@ -64,11 +64,15 @@ REVEAL
     exprStack     : RefSeq.T := NIL;
     callStack     : RefSeq.T := NIL;
     curVar        : LvVar;
-    curProc       : LvProc;
+    curProc       : LvProc; (* Procedure whose body we are in. *) 
+    curParamOwner : LvProc; (* Most recent signature introducer, either
+                               declare_procedure or import_procedure. *) 
+    curLocalOwner : LvProc; (* Most recent procedure, introduced either 
+                               by declare_procedure or begin_procedure. *)
     abortFunc     : LLVM.ValueRef;
 
     procStack     : RefSeq.T := NIL;
-    declStack     : RefSeq.T := NIL;
+
     labelTable    : IntRefTbl.T := NIL;
     structTable   : IntRefTbl.T := NIL;
 
@@ -710,7 +714,6 @@ PROCEDURE New
                 exprStack := NEW(RefSeq.T).init(),
                 callStack := NEW(RefSeq.T).init(),
                 procStack := NEW(RefSeq.T).init(),
-                declStack := NEW(RefSeq.T).init(),
                 m3llvmDebugLev := m3llvmDebugLev,
                 genDebug := genDebug,
                 debugLexStack := NEW(RefSeq.T).init(),
@@ -782,18 +785,6 @@ PROCEDURE Put(stack : RefSeq.T; n: CARDINAL; e : REFANY) =
   BEGIN
     stack.put(n,e);
   END Put;
-
-PROCEDURE PopDecl(self : U) =
-  BEGIN
-    IF self.declStack.size() > 0 THEN
-      Pop(self.declStack);
-    END;
-  END PopDecl;
-
-PROCEDURE PushDecl(self : U; p : LvProc) =
-  BEGIN
-    Push(self.declStack,p);
-  END PushDecl;
 
 PROCEDURE VarName(var : Var) : Ctypes.char_star =
   BEGIN
@@ -1530,7 +1521,6 @@ PROCEDURE set_runtime_proc (self: U;  n: Name;  p: Proc) =
       (* save the fault proc *)
       self.abortFunc := proc.lvProc;
     END;
-    PopDecl(self);
   END set_runtime_proc;
 
 (*------------------------------------------------- variable declarations ---*)
@@ -1691,19 +1681,19 @@ PROCEDURE declare_local
            varType:=VarType.Local);
     proc : LvProc;
   BEGIN
-    (* Locals are declared either within a signature, i.e., after declare_procedure
-       or within a body, i.e., within a begin_procedure/end_procedure pair.
-       In the former case, we can't allocate them yet, so just save them in
-       localStack, to be allocated in begin_procedure.  In the latter case,
-       allocate now.  
+    (* Locals are declared either within a procedure signature, i.e., after
+       declare_procedure or within a body, i.e., within a begin_procedure/
+       end_procedure pair.  In the former case, we can't allocate them yet,
+       so just save them in localStack, to be allocated in begin_procedure.
+       In the latter case,  allocate them now.  
        Since begin_procedure implies a begin_block, checking for blockLevel > 0
        is sufficient to allocate now. *)
+    proc := self.curLocalOwner;
     IF self.blockLevel = 0 THEN (* We are in a signature. *) 
     (* NOTE: If n is "_result", we are in the signature of a function procedure
              with a scalar result, and this is a compiler-generated local to 
              hold the result. *) 
-      <*ASSERT self.declStack.size() = 1 *>
-      proc := Get(self.declStack); (* Get the current proc. *)
+        (* ^The proc belonging to the most recent declare_procedure. *)
       PushRev(proc.localStack, v); (* Left-to-right. *)  
       (* ^The local will be allocated later, in the proc body. *) 
       v.inProc := proc;
@@ -1713,10 +1703,11 @@ PROCEDURE declare_local
         INC(proc.cumUplevelRefdCt);
       END;
     ELSE (* We are in the body of the procedure. *) 
+      <* ASSERT proc = self.curProc *> 
       self.allocVarInEntryBlock(v); 
         (* ^Which flattens it from an inner block into the locals of
             the containing proc. *) 
-      v.inProc := self.curProc;
+      v.inProc := proc;
       (* Could be up-level if M3 decl is in an inner block. *) 
       IF up_level THEN
         v.locDisplayIndex := self.curProc.uplevelRefdStack.size(); 
@@ -1762,16 +1753,15 @@ PROCEDURE declare_param (self: U;  n: Name;  s: ByteSize;  a: Alignment; t: Type
     proc : LvProc;
     size : ByteSize;
   BEGIN
-    (* This appears after either import_procedure (which can occur inside the 
-       body of a different procedure, i.e., between begin_procedure and 
-       end_procedure) or declare_procedure.  Either way the procDecl should 
-       be set from the previous import_procedure or declare_procedure. *)
+    (* This appears after either import_procedure (which can occur inside
+       the body of a different procedure, i.e., between begin_procedure and 
+       end_procedure), or after declare_procedure.  Either way, the LvProc
+       this parameter belongs to is self.curParamOwner. *)
 
     (* NOTE: If n is "_result", we are in the signature of a function procedure
              with a nonscalar result, and this is a compiler-generated VAR
              parameter used to return the result. *) 
-    <*ASSERT self.declStack.size() = 1 *>
-    proc := Get(self.declStack);
+    proc := self.curParamOwner; (* Get the current proc. *)
     
     IF proc.imported THEN
       (* Imported procs could have a value rec or array param classed as address
@@ -2050,8 +2040,6 @@ PROCEDURE import_procedure (self: U;  n: Name;  n_params: INTEGER; return_type: 
        paramstack. *)
     p.paramStack := NEW(RefSeq.T).init();
 
-    PopDecl(self);
-
     (* create a dummy llvm proc which we can replace later if called and we
      have the params *)
     retTy := LLvmType(p.returnType);
@@ -2061,7 +2049,17 @@ PROCEDURE import_procedure (self: U;  n: Name;  n_params: INTEGER; return_type: 
     p.lvProc := LLVM.LLVMAddFunction(modRef, LT(name), p.procTy);
 
     p.state := procState.decld; 
-    PushDecl(self,p);
+    self.curParamOwner := p;
+    (* ^Until further notice, occurences of declare_param belong to p. *)
+(* REVIEW: Hopefully, a declare_local can't occur belonging to import_procedure.
+   Otherwise, declare_local's ownership is ambiguous, since an
+   import_procedure, with its signature items, can occur inside a procedure
+   body, with its locals.  This is undocumented and hard to ferret out from CG.
+   Sometimes, there are declare_local's interspersed with declar_param's in a
+   signature, for certain, after declare_procedure.  Could this happen after an
+   import_procedure?  When inside a body, it would be ambiguous which the parameter
+   belonged to. *) 
+
     RETURN p;
   END import_procedure;
 
@@ -2072,14 +2070,16 @@ PROCEDURE declare_procedure (self: U;  n: Name;  n_params: INTEGER;
   VAR
     p : LvProc := NewProc(self,n,n_params,return_type,lev,cc,exported,parent);
   BEGIN
-    PopDecl(self);
     p.imported := FALSE;
     p.localStack := NEW(RefSeq.T).init();
     p.paramStack := NEW(RefSeq.T).init();
     p.uplevelRefdStack := NEW(RefSeq.T).init();
     p.cumUplevelRefdCt := 0; (* This is not cumlative yet. *)
     p.state := procState.decld; 
-    PushDecl(self,p);
+    self.curParamOwner := p;
+    self.curLocalOwner := p;
+    (* ^Until further notice, both occurences of declare_param and of 
+        declare_local belong to this procedure. *) 
     RETURN p;
   END declare_procedure;
 
@@ -2203,6 +2203,8 @@ PROCEDURE begin_procedure (self: U;  p: Proc) =
 
     LLVM.LLVMPositionBuilderAtEnd(builderIR,proc.secondBB);
     (* ^This is where compiled-from-Modula3 code will be inserted. *) 
+    self.curLocalOwner := p;
+    (* ^Until further notice, occurences of declare_local belong to p. *) 
     self.begin_block();
 
     (* debug for locals and params here, need the stacks intact *)
@@ -4507,7 +4509,6 @@ PROCEDURE start_call_direct
     self.callResultType := t; (* For completeness.  Won't be used. *) 
     proc := NARROW(p,LvProc);
     self.buildFunc(p);
-    PopDecl(self);
     self.callState := callStateTyp.insideDirect; 
   END start_call_direct;
 
