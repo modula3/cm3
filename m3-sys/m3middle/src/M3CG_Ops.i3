@@ -231,34 +231,40 @@ declare_constant (n: Name;  s: ByteSize;  a: Alignment;  t: Type;
 declare_local (n: Name;  s: ByteSize;  a: Alignment;  t: Type;
                m3t: TypeUID;  in_memory, up_level: BOOLEAN;
                f: Frequency): Var;
-(* Declare a local variable.  Within a signature, (i.e., between the declare_procedure
-   and the begin_procedure), a *local* with name 'n' of "_result" is a
-   compiler-generated local to hold the result of scalar function result.
-   Otherwise, the local belongs to the closest enclosing begin_procedure/
-   end_procedure pair or begin_block/end_block pair, which denotes its lifetime
-   and scope. 
+(* Declare a local variable.  This can appear either within a
+   signature, (i.e., after a declare_procedure but before is
+   begin_procedure) or inside the body, (i.e., within a
+   begin_procedure/end_procedure pair.)
 
-   CHECK: Is the following really true? Do any of them appear inside
-   begin_procedure/end_procedure? 
+   In a signature, it my be interspersed with declare_param
+   occurences.  If it has name 'n' of "_result", it is a compiler-
+   generated local to hold the result of scalar function result.
+   (Compare this to declare_param named "_result".)
 
-  (Also occurs, for an M3-declared local, after declare_procedure,
-   possibly interspersed with occurrences of declare_param.)  
+   Note that declare_local does not occur as part of an imported
+   signature, i.e., attached to an occurrence of import_procedure.  An
+   imported signature can occur inside a body, but any declare_local
+   there belongs to the procedure body, not the imported signature.
 
-*)
+   Inside a body, the local belongs to the closest enclosing
+   begin_block/end_block pair, which denotes its lifetime and scope.
+   Note that every body has a begin_block/end_block pair for the body
+   itself. *)
 
 declare_param (n: Name;  s: ByteSize;  a: Alignment;  t: Type;
                m3t: TypeUID;  in_memory, up_level: BOOLEAN;
                f: Frequency): Var;
-(* Declare a formal parameter, belonging to the most recent declare_procedure
-   or import_procedure.  Formals are declared in their lexical order, relative
-   to each other, but many other things can be interspersed.  import_procedure
-   and its following parameters could be inside the body of a different
-   procedure, i.e., between begin_procedure and end_procedure.
+(* Declare a formal parameter, belonging to the most recent
+   declare_procedure or import_procedure.  Formals are declared in
+   their lexical order, relative to each other, but many other things
+   can be interspersed.  import_procedure and its following parameters
+   could be inside the body of a different procedure, i.e., between
+   begin_procedure and end_procedure.
 
-   NOTE: If n is "_result", we are in the signature (i.e., between the declare_procedure
-   and its matching begin_procedure) of a function procedure with a nonscalar
-   result, and this is a compiler-generated VAR parameter used to return the result.
-*)
+   NOTE: If 'n' is "_result", we are in the signature (i.e., between the
+   declare_procedure and its matching begin_procedure) of a function
+   procedure with a nonscalar result, and this is a compiler-generated
+   VAR parameter used to return the result.  *)
 
 declare_temp (s: ByteSize;  a: Alignment;  t: Type;
               in_memory: BOOLEAN): Var;
@@ -323,6 +329,7 @@ init_float (o: ByteOffset;  READONLY f: Target.Float);
         ...declare locals...
       cg.begin_procedure (proc)
         ...generate statements of procedure...
+        (could include imported procedures and more locals)
       cg.end_procedure (...)
 
   Nested procedure bodies may be generated before their parent's
