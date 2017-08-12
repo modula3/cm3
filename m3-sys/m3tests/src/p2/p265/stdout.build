@@ -1,0 +1,21 @@
+--- building in AMD64_LINUX ---
+
+cd AMD64_LINUX
+rm .M3SHIP
+rm .M3OVERRIDES
+inhale pgm.mx
+inhale /usr/local/cm3/pkg/m3core/AMD64_LINUX/libm3core.a
+inhale /usr/local/cm3/pkg/libm3/AMD64_LINUX/libm3.a
+inhale /home/rodney/proj/m3/git/cm3/m3-sys/m3tests/AMD64_LINUX/libtest.a
+
+new source -> compiling Main.m3
+m3front ../Main.m3 -w1
+"../Main.m3", line 35: LOOPHOLE: expression's size differs from type's
+"../Main.m3", line 66: LOOPHOLE: expression's size differs from type's
+"../Main.m3", line 66: warning: LOOPHOLE: expression's alignment may differ from type's
+2 errors and 1 warning encountered
+rm pgm.manifest
+
+compilation failed => not building program "pgm"
+Fatal Error: package build failed
+cd ..
