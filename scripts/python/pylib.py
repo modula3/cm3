@@ -524,6 +524,7 @@ Variables += Versions.keys()
 b = ""
 for a in Variables:
     b += ("%s = os.getenv(\"%s\") or \"\"\n" % (a, a.upper()))
+#print(b)
 exec(b)
 
 for a in Versions.keys():
@@ -555,9 +556,13 @@ def GetVersion(Key):
     # CM3VERSIONNUM 050701
     # CM3LASTCHANGED 2009-01-21
     #
-    RegExp = re.compile("(" + "|".join(Versions.keys()) + ") (.+)$", re.IGNORECASE)
+    RegExp = "^(" + "|".join(Versions.keys()) + ") (.+)$"
+    #print("RegExp = %s\n" % str(RegExp))
+    RegExp = re.compile(RegExp, re.IGNORECASE)
     ShFilePath = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "version")
     for Line in open(ShFilePath):
+        Line = Line.replace("\r", "").replace("\n", "")
+        #print("Line = %s\n" % Line)
         Match = RegExp.match(Line)
         if Match:
             MatchKey = Match.group(1)
@@ -568,7 +573,11 @@ def GetVersion(Key):
             if not Versions[MatchKey]:
                 Value = Match.group(2)
                 Versions[MatchKey] = Value
-                exec("%s = \"%s\"" % (MatchKey, Value), locals(), globals())
+                a = ("%s = \"%s\"") % (MatchKey, Value)
+                #print("MatchKey = A%sB\n" % MatchKey)
+                #print("Value = C%sD\n" % Value)
+                #print(a)
+                exec(a)
     #
     # Make sure we found every key in the file (at least those
     # not defined in the environment)
