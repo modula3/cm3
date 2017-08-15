@@ -4741,7 +4741,7 @@ PROCEDURE call_indirect (self: U;  t: Type; cc: CallingConvention) =
 
     ELSE (* Big semantic mismatch between CG IR and llvm IR.  The former can have
             a call with dynamically differing parameter list (here, with/without a
-            static link), as long as it maches what the (also dynamically differing)
+            static link), as long as it matches what the (also dynamically differing)
             procedure's code expects.  In llvm, a call instruction has to have a
             static function type, including its parameter list.  So we need two
             call instructions, in different basic blocks.
@@ -4760,7 +4760,7 @@ PROCEDURE call_indirect (self: U;  t: Type; cc: CallingConvention) =
          exprStack is right for it. *)
 
       (* We have to use some inside knowledge of the code sequences CG is producing.
-         Specifically, staticLinkBB ends with load(of code address), a store(which
+         Specifically, staticLinkBB ends with load (of code address), a store (which
          don't use) and a branch (which we don't want to follow. *) 
 
       (* staticLinkBB already will have a terminating unconditional branch, because
