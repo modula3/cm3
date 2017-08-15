@@ -1,0 +1,11 @@
+% (* ----------------------------------------------------------------------1- *)
+% (* File m3makefile for Modula3 compiler test p013                           *)
+% (* Copyright 2017, Rodney M. Bates.                                         *)
+% (* rodney.m.bates@acm.org                                                   *)
+% (* Licensed under the MIT license.                                          *)
+% (* ----------------------------------------------------------------------2- *)
+
+ 
+module("Support")
+implementation ("Main")
+include ("../../Test.common") 
