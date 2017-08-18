@@ -2161,38 +2161,64 @@ def GetVisualCPlusPlusVersion():
 # The significanse of this is which C runtime libraries
 # to link to, i.e. just libcmt.lib or msvcrt.lib (prior to 2015)
 # or those and more.
+#
+# Note: Why the need to know compiler version?
+# To tag release archives.
+# Why tag release archives?
+# Because there can easily be compiler-specificity in the object
+# code, or more accurately, C runtime-specificity.
+#
+# Can the C runtime-specifity be removed? Maybe.
+#
+# Can the C runtime use be removed? Mostly yes, but ultimately
+# not easily -- we need to use either setjmp/longjmp, or C++ exception
+# handling, or obscure platform-specific things like RtlUnwind / libunwind.
+#
+# As well: malloc, free, open, read, write, close, assert, etc.
+#
     a = os.popen("cl 2>&1 >nul").read().lower()
     if a.find(" 19.00.") != -1:
         return "2015"
     if a.find(" 19.10.") != -1:
         return "2017"
-    if a.find("9.00.") != -1:
+
+    if a.find(" 9.00.") != -1:
         return "20"
-    if a.find("10.00.") != -1:
+    if a.find(" 10.00.") != -1:
         return "40"
-    if a.find("10.10.") != -1:
+    if a.find(" 10.10.") != -1:
         return "41"
-    if a.find("10.20.") != -1:
+    if a.find(" 10.20.") != -1:
         return "42"
-    if a.find("11.00.") != -1:
+    if a.find(" 11.00.") != -1:
         return "50"
-    if a.find("12.00.") != -1:
+    if a.find(" 12.00.") != -1:
         return "60"
-    if a.find("13.00.") != -1:
+    if a.find(" 13.00.") != -1:
         return "70"
-    if a.find("13.10.") != -1:
+    if a.find(" 13.10.") != -1:
         return "71"
-    if a.find("14.00.") != -1:
+    if a.find(" 14.00.") != -1:
         return "80"
-    if a.find("15.00.") != -1:
+    if a.find(" 15.00.") != -1:
         return "90"
-    if a.find("16.00.") != -1:
+    if a.find(" 16.00.") != -1:
         return "100"
-    if a.find("17.00.") != -1:
+    if a.find(" 17.00.") != -1:
         return "110"
-    if a.find("18.00.") != -1: # untested
-        return "120"           # untested
-    FatalError("unable to detect Visual C++ version, maybe cl is not in %PATH%, or a newer/older version?")
+    if a.find(" 18.00.") != -1:
+        return "120"
+
+def SetVisualCPlusPlus2015OrNewer():
+    if not os.environ.get("CM3_VS2015_OR_NEWER"):
+        cver = GetVisualCPlusPlusVersion()
+        if len(cver) == 4:
+            #sys.exit(1)
+            os.environ["CM3_VS2015_OR_NEWER"] = "1"
+        else:
+            #sys.exit(2)
+            os.environ["CM3_VS2015_OR_NEWER"] = "0"
+        #sys.exit(3)
 
 def IsCygwinHostTarget(): # confused
     return Host.endswith("_CYGWIN") or (Host == "NT386" and GCC_BACKEND and TargetOS == "POSIX")
@@ -2227,15 +2253,9 @@ def SetupEnvironment():
 
     if IsNativeNTHostTarget():
 
-
         # Inform NT.common to link to ucrt/vcruntime.
 
-        if not os.environ.get("CM3_VS2015_OR_NEWER"):
-            cver = GetVisualCPlusPlusVersion()
-            if len(cver) == 4:
-                os.environ["CM3_VS2015_OR_NEWER"] = "1"
-            else:
-                os.environ["CM3_VS2015_OR_NEWER"] = "0"
+        SetVisualCPlusPlus2015OrNewer()
 
         VCBin = ""
         VCInc = ""
