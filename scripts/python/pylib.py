@@ -2152,36 +2152,47 @@ def GetProgramFiles():
     return ProgramFiles
 
 def GetVisualCPlusPlusVersion():
+# Note: a bit of a hack: len == 4 means 2015 or newer
+# i.e. versions 2015 and newer are 4 digit years
+# versions prioer to 2015 are other
+# Given various 2017update1 and such, this should
+# probably be changed; the logic could just be here
+# instead. Look for uses of GetVisualCPlusPlusVersion / CM3_VS2015_OR_NEWER.
+# The significanse of this is which C runtime libraries
+# to link to, i.e. just libcmt.lib or msvcrt.lib (prior to 2015)
+# or those and more.
     a = os.popen("cl 2>&1 >nul").read().lower()
-    if a.find(" 19.00") != -1:
+    if a.find(" 19.00.") != -1:
         return "2015"
     if a.find(" 19.10.") != -1:
         return "2017"
-    if a.find("9.00") != -1:
+    if a.find("9.00.") != -1:
         return "20"
-    if a.find("10.00") != -1:
+    if a.find("10.00.") != -1:
         return "40"
-    if a.find("10.10") != -1:
+    if a.find("10.10.") != -1:
         return "41"
-    if a.find("10.20") != -1:
+    if a.find("10.20.") != -1:
         return "42"
-    if a.find("11.00") != -1:
+    if a.find("11.00.") != -1:
         return "50"
-    if a.find("12.00") != -1:
+    if a.find("12.00.") != -1:
         return "60"
-    if a.find("13.00") != -1:
+    if a.find("13.00.") != -1:
         return "70"
-    if a.find("13.10") != -1:
+    if a.find("13.10.") != -1:
         return "71"
-    if a.find("14.00") != -1:
+    if a.find("14.00.") != -1:
         return "80"
-    if a.find("15.00") != -1:
+    if a.find("15.00.") != -1:
         return "90"
-    if a.find("16.00") != -1:
+    if a.find("16.00.") != -1:
         return "100"
-    if a.find("17.00") != -1:
+    if a.find("17.00.") != -1:
         return "110"
-    FatalError("unable to detect Visual C++ version, maybe cl is not in %PATH%?")
+    if a.find("18.00.") != -1: # untested
+        return "120"           # untested
+    FatalError("unable to detect Visual C++ version, maybe cl is not in %PATH%, or a newer/older version?")
 
 def IsCygwinHostTarget(): # confused
     return Host.endswith("_CYGWIN") or (Host == "NT386" and GCC_BACKEND and TargetOS == "POSIX")
