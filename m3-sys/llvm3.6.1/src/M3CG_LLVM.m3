@@ -1079,7 +1079,7 @@ PROCEDURE BuildFunc(self : U; p : Proc) =
                     Type.Addr, isConst:=TRUE,m3t:=UID_ADDR,in_memory:=TRUE,
                     up_level:=FALSE,exported:=FALSE,inited:=FALSE,
                     frequency:=M3CG.Maybe,varType:=VarType.Param); 
-        Push(mlProc.paramStack, mlProc.staticLinkFormal); (* Make it first formal. *)
+        Push(mlProc.paramStack, mlProc.staticLinkFormal); (* Make it leftmost formal. *)
         INC(mlProc.numParams);
       END;
       (* Here, we have not necessarily seen mlProc's body, thus don't know the
@@ -1137,6 +1137,13 @@ PROCEDURE BuildFunc(self : U; p : Proc) =
       ELSE
         paramTextName := M3ID.ToText(param.name);
       END;
+      (* set 'nest' attribute of staticLinkFormal. This makes for ABI
+         compatibility with m3cc, and allows interoperation between
+         llvm-compiled code and an m3cc-compiled runtime . *)
+      IF param = mlProc.staticLinkFormal THEN
+        <* ASSERT i = 0 *> (* For leftmost SL. *)
+        LLVM.LLVMAddAttribute(lVal, LLVM.NestAttribute);
+      END; 
       (* set a name for the param - doesn't work for externals *)
       LLVM.LLVMSetValueName(lVal, LT(paramTextName));
 
@@ -4571,7 +4578,7 @@ PROCEDURE call_direct (self: U; p: Proc; <*UNUSED*> t: Type) =
     END; 
 (* SEE ALSO: load_static_link. *) 
     IF calleeProc.staticLinkFormal # NIL 
-    THEN (* We pass a static link to callee. *) 
+    THEN 
       <* ASSERT calleeProc.lev > 0 *> (* Callee is nested. *)  
       staticLinkCount := 1; 
       (* ^Always pass a SL actual to a nested procedure. *)
@@ -4644,7 +4651,7 @@ PROCEDURE start_call_indirect
 (* Construct a procedure signature type for use by an indirect call,
    using the actual parameters on the call stack (here, paramStack). *)
 PROCEDURE IndirectFuncType
-   (retType : Type; paramStack : RefSeq.T) : LLVM.TypeRef =
+   (retType : Type; paramStack : RefSeq.T; Nested: BOOLEAN) : LLVM.TypeRef =
   VAR
     retTy,funcTy : LLVM.TypeRef;
     numFormals : INTEGER;
@@ -4668,7 +4675,8 @@ PROCEDURE IndirectFuncType
   END IndirectFuncType;
 
 PROCEDURE InnerCallIndirect 
-  (self: U; proc: LLVM.ValueRef; t: Type; <*UNUSED*> cc: CallingConvention) 
+  (self: U; proc: LLVM.ValueRef; t: Type; <*UNUSED*> cc: CallingConvention;
+   Nested: BOOLEAN) 
   : LLVM.ValueRef =
   (* Call the procedure whose llvm address is proc.  The
      procedure returns a value of CG type t. 
@@ -4678,27 +4686,33 @@ PROCEDURE InnerCallIndirect
   VAR
     callVal : LLVM.ValueRef;
     resultVal : LLVM.ValueRef;
+    funcVal : LLVM.ValueRef;
+    lVal : LLVM.ValueRef;
     paramsArr : ValueArrType;
     paramsRef : ValueRefType := NIL;
-    param : LvExpr; 
+    arg : REFANY; 
+    actual : LvExpr; 
     funcTy, funcPtrTy : LLVM.TypeRef;
     numFormals : INTEGER;
+    formalName : TEXT;
     returnName : TEXT := "";
   BEGIN
-    (* Build the function signature from the actual parameters. *)
-    funcTy := IndirectFuncType(t,self.callStack);
-
     numFormals := self.callStack.size(); 
+
+    (* Concoct a function signature from the actual parameters. *)
+    funcTy := IndirectFuncType(t,self.callStack,Nested);
+
+    (* Build the actual parameter list. *) 
     IF numFormals > 0 THEN
       paramsRef := NewValueArr(paramsArr,numFormals);
       FOR paramNo := 0 TO numFormals - 1 DO
-        param := NARROW(Get(self.callStack, paramNo), LvExpr);
-        paramsArr[paramNo] := param.lVal;
+        actual := NARROW(Get(self.callStack, paramNo), LvExpr);
+
+        paramsArr[paramNo] := actual.lVal;
       END;
     END;
-
     IF t # Type.Void THEN
-      returnName := "result";
+      returnName := "indir_call_result";
     END;
 
     (* Need a pointer to function type for the call. *)
@@ -4706,8 +4720,13 @@ PROCEDURE InnerCallIndirect
     callVal := LLVM.LLVMBuildBitCast(builderIR, proc, funcPtrTy, LT("call_ind"));
     resultVal := LLVM.LLVMBuildCall
       (builderIR, callVal, paramsRef, numFormals, LT(returnName));
-    RETURN resultVal; 
 
+    (* Set 'nest' attribute of static link formal. *) 
+    IF Nested THEN
+      LLVM.LLVMAddInstrAttribute
+        (resultVal, 1 (*The parameter no. Zero is func return*), LLVM.NestAttribute);
+    END;
+    RETURN resultVal; 
   END InnerCallIndirect;
 
 PROCEDURE call_indirect (self: U;  t: Type; cc: CallingConvention) =
@@ -4730,12 +4749,17 @@ PROCEDURE call_indirect (self: U;  t: Type; cc: CallingConvention) =
     currentBB := LLVM.LLVMGetInsertBlock (builderIR); (* Save. *) 
     IF self.callState = callStateTyp . insideIndirect
        (* ^There was no pop_static_link => statically known to call a global proc. *)
-       OR self.staticLinkBB = currentBB
-          (* same BB as the pop_static_link => statically known to call a nested proc. *)
-    THEN (* The simple case.  Only one function signature and on llvm call are needed. *) 
-      resultVal3 := InnerCallIndirect (self, procExpr.lVal, t, cc);
-      IF t # Type.Void THEN
-        (* push the return val onto exprStack*)
+    THEN 
+      resultVal3 := InnerCallIndirect (self, procExpr.lVal, t, cc, Nested:=FALSE);
+      IF t # Type.Void THEN (* push the return val onto exprStack*)
+        Push(self.exprStack,NEW(LvExpr,lVal := resultVal3));
+      END
+    ELSIF self.staticLinkBB = currentBB
+          (* same BB as the pop_static_link => statically known to call
+             a nested proc. *)
+    THEN 
+      resultVal3 := InnerCallIndirect (self, procExpr.lVal, t, cc, Nested:=TRUE);
+      IF t # Type.Void THEN (* push the return val onto exprStack*)
         Push(self.exprStack,NEW(LvExpr,lVal := resultVal3));
       END;
 
@@ -4756,7 +4780,7 @@ PROCEDURE call_indirect (self: U;  t: Type; cc: CallingConvention) =
       mergeBB := LLVM.LLVMAppendBasicBlock 
         (self.curProc.lvProc,LT("indir_sl_merge"));
 
-      (* Let's switch to self.staticLinkBB first and take care of  that case while
+      (* Let's switch to self.staticLinkBB first and take care of that case while
          exprStack is right for it. *)
 
       (* We have to use some inside knowledge of the code sequences CG is producing.
@@ -4783,7 +4807,7 @@ PROCEDURE call_indirect (self: U;  t: Type; cc: CallingConvention) =
             duplicates the earlier check, in the non-closure case, on the same
             pointer.  But it is needed in that case, because only it does an
             abort when it fails.  The CG code could really be reviewed here. *) 
-      resultVal1 := InnerCallIndirect (self, loadInst, t, cc);
+      resultVal1 := InnerCallIndirect (self, loadInst, t, cc, Nested:=TRUE);
       EVAL LLVM.LLVMBuildBr(builderIR, mergeBB);
 
       (* If it has a result, prepare for a Phi at the top of the mergedBB. *) 
@@ -4802,7 +4826,7 @@ PROCEDURE call_indirect (self: U;  t: Type; cc: CallingConvention) =
                               is how we would remove it. *)
       (* But leave the rest of the params on self.call_stack.
          They will be needed by InnerCallIndirect. *) 
-      resultVal2 := InnerCallIndirect (self, procExpr.lVal, t, cc);
+      resultVal2 := InnerCallIndirect (self, procExpr.lVal, t, cc, Nested:=FALSE);
       EVAL LLVM.LLVMBuildBr(builderIR, mergeBB); 
       LLVM.LLVMPositionBuilderAtEnd (builderIR, mergeBB); 
 
