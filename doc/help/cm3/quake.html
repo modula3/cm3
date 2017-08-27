@@ -193,7 +193,7 @@ This evaluates to the value of the key &quot;a&quot; in the table s.
 <a name="names"></a>
 <h3>3  Names</h3>
 
-<p>Names in <b>quake</b> start with an letter
+<p>Names in <b>quake</b> start with a letter
 (<code>a</code>..<code>z</code>, <code>A</code>..<code>Z</code>) or an
 underscore (<code>_</code>), followed by those characters, digits
 (<code>0</code>..<code>9</code>), hyphens (<code>-</code>), or periods (<code>.</code>). </p>
@@ -329,10 +329,17 @@ side-effects!
 <a name="procedures"></a>
 <h4>7.3  Procedures</h4>
 
-<p>Procedures may be defined in the global scope only. Here is the
+<p>A procedure definition may appear anywhere in Quake code, including
+  inside inner scopes.  However, its name will always be declared in the
+  global scope.  Similarly, any nonlocal identifier references from
+  inside the procedure's definition that are not declared therein are
+  further looked up only in the global scope.   
+</p>
+
+<p> Here is the
 definition of a procedure <code>simple</code>, taking two arguments
 bound to the local names <code>prefix</code> and <code>suffix</code>
-in the procedure</code>s local scope.
+in the procedure's local scope.
 </p>
 
 <pre>    proc simple(prefix, suffix) is
@@ -802,7 +809,7 @@ creates a temporary file containing a list of the strings in the array
 Returns true if <code>foo</code> is defined, otherwise returns
 false. Remember that the Boolean values false and true are represented
 as empty and non-empty strings respectively. In this example,
-<code>foo</code> looks like a name, and is evaluated before begin
+<code>foo</code> looks like a name, and is evaluated before being
 passed to <code>defined</code>. So if you really want to find out
 whether <code>foo</code> is defined, use
 <code>defined(&quot;foo&quot;)</code>.
