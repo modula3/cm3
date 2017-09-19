@@ -752,7 +752,7 @@ PROCEDURE GenFPLiteral (p: P;  buf: M3Buf.T) =
     M3Buf.PutChar (buf, '>');
   END GenFPLiteral;
 
-PROCEDURE GenLiteral (p: P;  offset: INTEGER;  type: Type.T;  is_const: BOOLEAN) =
+PROCEDURE GenLiteral (p: P;  offset: INTEGER;  <*UNUSED*> type: Type.T;  is_const: BOOLEAN) =
   VAR
     range        : Type.T;
     min_T, max_T : Target.Int;
@@ -765,7 +765,6 @@ PROCEDURE GenLiteral (p: P;  offset: INTEGER;  type: Type.T;  is_const: BOOLEAN)
     b            : BOOLEAN;
     tmp          : Target.Int;
   BEGIN
-    <*ASSERT Type.IsEqual (type, p.tipe, NIL) *>
     b := SetType.Split (p.tipe, range);  <*ASSERT b*>
     EVAL Type.GetBounds (range, min_T, max_T);
     IF NOT TInt.ToInt (min_T, minT)
