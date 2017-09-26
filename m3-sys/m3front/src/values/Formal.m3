@@ -343,7 +343,7 @@ PROCEDURE DoCheckArgs (VAR cs       : Value.CheckState;
         CASE tt.mode OF
         | Mode.mVALUE =>
             IF NOT Type.IsAssignable (t, te) THEN
-              Err (slots[i], "incompatible types");
+              Err (slots[i], "actual not assignable to VALUE formal");
               ok := FALSE;
             END;
         | Mode.mVAR =>
@@ -360,12 +360,12 @@ PROCEDURE DoCheckArgs (VAR cs       : Value.CheckState;
               AND Type.IsAssignable (t, te) THEN
               Expr.NeedsAddress (e);
             ELSE
-              Err (slots[i], "incompatible types");
+              Err (slots[i], "actual not compatible with VAR formal");
               ok := FALSE;
             END;
         | Mode.mCONST =>
             IF NOT Type.IsAssignable (t, te) THEN
-              Err (slots[i], "incompatible types");
+              Err (slots[i], "actual not assignable to READONLY formal");
               ok := FALSE;
             ELSIF NOT Expr.IsDesignator (e) THEN
               (* we'll make a copy when it's generated *)
@@ -376,7 +376,7 @@ PROCEDURE DoCheckArgs (VAR cs       : Value.CheckState;
             END;
         END; (*case*)
 
-        (* check to see if this value needs an implicit NARROW,
+        (* check to see if it's a reference and needs an implicit NARROW,
            which may generate a nested procedure call... *)
         IF (ok) AND Host.doNarrowChk
                 AND ((tt.kind = Type.Class.Ref)
@@ -427,16 +427,20 @@ PROCEDURE PrepArg (formal: Value.T; actual: Expr.T) =
   VAR t: T := formal;
   BEGIN
     CASE t.mode OF
-    | Mode.mVALUE =>
+    | Mode.mVALUE => (* Pass by value. *) 
         Expr.Prep (actual);
-    | Mode.mVAR =>
+    | Mode.mVAR => (* Pass by reference. *) 
         Expr.PrepLValue (actual, traced := TRUE);
     | Mode.mCONST =>
         IF NOT Type.IsEqual (t.tipe, Expr.TypeOf (actual), NIL) THEN
+          (* Effectively pass by value, by copying at call site and passing
+             the copy by reference. *) 
           Expr.Prep (actual);
-        ELSIF Expr.IsDesignator (actual) THEN
+        ELSIF Expr.IsDesignator (actual) THEN (* Pass by reference. *)
           Expr.PrepLValue (actual, traced := FALSE);
         ELSE (* non-designator, same type *)
+          (* Effectively pass by value, by copying at call site and passing
+             the copy by reference. *) 
           Expr.Prep (actual);
         END;
     END;
@@ -486,14 +490,15 @@ PROCEDURE GenOrdinal (t: T;  actual: Expr.T) =
          and have allocated temporaries that still need to be freed ....
     IF (constant # NIL) THEN actual := constant END;
     ***)
-    EVAL Type.GetBounds (t.tipe, min, max);
     CASE t.mode OF
     | Mode.mVALUE =>
+        EVAL Type.GetBounds (t.tipe, min, max); (* Of formal. *) 
         CheckExpr.EmitChecks (actual, min, max, CG.RuntimeError.ValueOutOfRange);
     | Mode.mVAR =>
         Expr.CompileAddress (actual, traced := TRUE);
     | Mode.mCONST =>
         IF NOT Type.IsEqual (t.tipe, Expr.TypeOf (actual), NIL) THEN
+          EVAL Type.GetBounds (t.tipe, min, max); (* Of formal. *) 
           CheckExpr.EmitChecks (actual, min, max, CG.RuntimeError.ValueOutOfRange);
           GenCopy (t.tipe);
         ELSIF Expr.IsDesignator (actual) THEN
@@ -618,19 +623,18 @@ PROCEDURE GenRecord (t: T;  actual: Expr.T) =
 
 PROCEDURE GenSet (t: T;  actual: Expr.T) =
   BEGIN
-    <* ASSERT Type.IsEqual (t.tipe, Expr.TypeOf (actual), NIL) *>
     CASE t.mode OF
     | Mode.mVALUE =>
         Expr.Compile (actual);
     | Mode.mVAR =>
+        <* ASSERT Type.IsEqual (t.tipe, Expr.TypeOf (actual), NIL) *>
         Expr.CompileAddress (actual, traced := TRUE);
     | Mode.mCONST =>
-        IF Expr.IsDesignator (actual) THEN
+        IF Expr.IsDesignator (actual)
+           AND Type.IsEqual (t.tipe, Expr.TypeOf (actual), NIL)
+        THEN (* Pass truly by reference. *) 
           Expr.CompileAddress (actual, traced := FALSE);
-        ELSIF Type.IsStructured (t.tipe) THEN
-          Expr.Compile (actual);
-          (* not needed because of the ASSERT above: GenCopy (t.tipe); *)
-        ELSE (* small, non-designator set *)
+        ELSE (* Pass by value (actually, pass a copy by reference). *) 
           Expr.Compile (actual);
           GenCopy (t.tipe);
         END;
