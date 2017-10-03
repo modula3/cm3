@@ -518,7 +518,8 @@ PROCEDURE GenFloat (t: T;  actual: Expr.T) =
     | Mode.mVAR =>
         Expr.CompileAddress (actual, traced := TRUE);
     | Mode.mCONST =>
-        IF Expr.IsDesignator (actual) THEN
+        IF Expr.IsDesignator (actual)
+           AND Type.IsEqual (t.tipe, Expr.TypeOf (actual), NIL) THEN
           Expr.CompileAddress (actual, traced := FALSE);
         ELSE
           Expr.Compile (actual);
@@ -557,7 +558,8 @@ PROCEDURE GenProcedure (t: T;  actual: Expr.T;  proc: Expr.T) =
     | Mode.mVAR =>
         Expr.CompileAddress (actual, traced := TRUE);
     | Mode.mCONST =>
-        IF Expr.IsDesignator (actual) THEN
+        IF Expr.IsDesignator (actual)
+           AND Type.IsEqual (t.tipe, Expr.TypeOf (actual), NIL) THEN
           Expr.CompileAddress (actual, traced := FALSE);
         ELSE
           Expr.Compile (actual);
@@ -612,11 +614,12 @@ PROCEDURE GenRecord (t: T;  actual: Expr.T) =
     | Mode.mVAR =>
         Expr.CompileAddress (actual, traced := TRUE);
     | Mode.mCONST =>
-        IF Expr.IsDesignator (actual) THEN
+        IF Expr.IsDesignator (actual)
+           AND Type.IsEqual (t.tipe, Expr.TypeOf (actual), NIL) THEN
           Expr.CompileAddress (actual, traced := FALSE);
         ELSE
           Expr.Compile (actual);
-          (* not needed because of the ASSERT above: GenCopy (t.tipe); *)
+          GenCopy (t.tipe); 
         END;
     END;
   END GenRecord;
@@ -733,6 +736,8 @@ PROCEDURE ReshapeArray (tlhs, trhs: Type.T) =
   END ReshapeArray;
 
 PROCEDURE GenCopy (type: Type.T) =
+  (* PRE: Tos is addr of a variable of type 'type'. *)
+  (* POST: TOS replaced by addr of a local copy thereof. *) 
   VAR info: Type.Info;  tmp: CG.Var;  id: CG.TypeUID;
   BEGIN
     EVAL Type.CheckInfo (type, info);
@@ -744,6 +749,7 @@ PROCEDURE GenCopy (type: Type.T) =
       CG.Load_addr_of (tmp, 0, info.alignment);
       CG.Swap ();
       CG.Copy (info.size, overlap := FALSE);
+(* CHECK/FIXME: Don't we need to free the temp? *) 
     ELSE
       tmp := CG.Declare_local (M3ID.NoID, info.size, info.alignment,
                                info.mem_type, id, in_memory := TRUE,
