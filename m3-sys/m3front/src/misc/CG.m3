@@ -600,7 +600,7 @@ PROCEDURE Pop (): Val =
     END;
     SPop (1, "Pop");
 
-    (* mark it as busy *)
+    (* put it on the busy_values list. *)
     v.next := busy_values;
     busy_values := v;
 
@@ -678,7 +678,7 @@ PROCEDURE Free (v: Val) =
       END;
     END;
 
-    (* finally, free the temps *)
+    (* finally, free v's temps *)
     Release_temps (v^);
   END Free;
 

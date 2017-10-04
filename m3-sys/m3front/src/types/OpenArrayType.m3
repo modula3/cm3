@@ -142,6 +142,8 @@ PROCEDURE CheckAlign (p: P;  offset: INTEGER): BOOLEAN =
   END CheckAlign;
 
 PROCEDURE DeclareTemp (t: Type.T): CG.Var =
+(* If 't' is an open array, declare and return a temporary to hold its
+   dope vector, otherwise abort. *)
   VAR
     p    := Reduce (t);
     size := Target.Address.pack + OpenDepth (p) * Target.Integer.pack;

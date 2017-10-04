@@ -666,7 +666,10 @@ PROCEDURE LangInit (t: T) =
       IF (t.indirect) AND Formal.RefOpenArray (t.formal, ref) THEN
         (* a by-value open array! *)
         CG.Gen_location (t.origin);
+        Load(t);
         CopyOpenArray (t, ref);
+        (* set the formal parameter to refer to the new storage *)
+        CG.Store_addr (t.cg_var);
       END;
       (* formal parameters don't need any further initialization *)
       Tracer.Schedule (t.trace);
@@ -710,8 +713,10 @@ PROCEDURE ForceInit (t: T) =
   END ForceInit;
 
 PROCEDURE CopyOpenArray (t: T;  ref: Type.T) =
+(* PRE: Pointer to array dope is on TOS. *)
+(* POST: TOS replaced by pointer to dope of copy. *) 
   VAR
-    ptr   : CG.Val;
+    oldDopePtr, newDopePtr : CG.Val;
     depth := OpenArrayType.OpenDepth (t.tipe);
     align := OpenArrayType.EltAlign (t.tipe);
     pack  := OpenArrayType.EltPack (t.tipe);
@@ -720,8 +725,10 @@ PROCEDURE CopyOpenArray (t: T;  ref: Type.T) =
                               in_memory := TRUE);
     proc  : Procedure.T;
   BEGIN
-    (* build the dope vector that describes the array *)
-    Load (t);
+    oldDopePtr := CG.Pop (); 
+    (* This is confusing.  Build a new 1-D dope vector that treats the shape
+       portion of the to-be-copied dope vector as an open array. *) 
+    CG.Push(oldDopePtr);
     CG.Add_offset (M3RT.OA_sizes);
     (*** CG.Check_byte_aligned (); ****)
     CG.Store_addr (sizes, M3RT.OA_elt_ptr);
@@ -742,35 +749,35 @@ PROCEDURE CopyOpenArray (t: T;  ref: Type.T) =
       Type.LoadInfo (ref, -1);
       CG.Pop_param (CG.Type.Addr);
     END;
-    ptr := Procedure.EmitValueCall (proc);
+    newDopePtr := Procedure.EmitValueCall (proc);
 
-    (* load the destination and source addresses *)
-    CG.Push (ptr);
+    (* load the destination and source elements addresses *)
+    CG.Push (newDopePtr);
     CG.Boost_alignment (t.align);
-    CG.Open_elt_ptr (align);
+    CG.Open_elt_ptr (align); (* Addr of the old elements. *) 
     CG.Force ();
-    Load (t);
-    CG.Open_elt_ptr (align);
+    CG.Push(oldDopePtr);
+    CG.Open_elt_ptr (align); (* Addr of the new elements. *) 
     CG.Force ();
 
     (* compute the number of elements *)
     FOR i := 0 TO depth - 1 DO
-      Load (t); (* CG.Load_addr (sizes, M3RT.OA_elt_ptr); *)
+      CG.Push(oldDopePtr); 
       CG.Open_size (i);
       IF (i # 0) THEN CG.Multiply (Target.Word.cg_type) END;
     END;
 
-    (* copy the actual argument into the new storage *)
+    (* copy the elements into the new storage *)
     CG.Copy_n (pack, overlap := FALSE);
 
-    (* set the formal parameter to refer to the new storage *)
-    CG.Push (ptr);
+    (* Push new dope pointer for the caller. *) 
+    CG.Push (newDopePtr);
     CG.Boost_alignment (t.align);
-    CG.Store_addr (t.cg_var);
 
     (* free our temps *)
     CG.Free_temp (sizes);
-    CG.Free (ptr);
+    CG.Free (oldDopePtr);
+    CG.Free (newDopePtr); (* It's now safely on the stack, so this is OK. *) 
   END CopyOpenArray;
 
 PROCEDURE UserInit (t: T) =

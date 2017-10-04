@@ -505,7 +505,7 @@ PROCEDURE GenOrdinal (t: T;  actual: Expr.T) =
           Expr.CompileAddress (actual, traced := FALSE);
         ELSE (* non-designator, same type *)
           Expr.Compile (actual);
-          GenCopy (t.tipe);
+          GenCopy (t.tipe); 
         END;
     END;
   END GenOrdinal;
@@ -542,8 +542,13 @@ PROCEDURE GenReference (t: T;  actual: Expr.T) =
           GenCopy (t.tipe);
         ELSIF Expr.IsDesignator (actual) THEN
           Expr.CompileAddress (actual, traced := FALSE);
-        ELSE
+        ELSE (* Same type, non-designator. *) 
           Expr.Compile (actual);
+          (* A reference actual could be a NARROW, which, by language
+             definition, produces a non-designator, but Expr.Compile
+             does not generate a copy, so we do it here.  Are there
+             other non-designator reference cases that would not be
+             aliasable, and thus not need a copy? *) 
           GenCopy (t.tipe);
         END;
     END;
