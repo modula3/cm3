@@ -1,0 +1,11 @@
+import("libm3")
+
+Module("Image")
+Module("Rectangles")
+Module("Classifier")
+Module("Haar")
+
+implementation("Main")
+
+program("facedetect")
+
