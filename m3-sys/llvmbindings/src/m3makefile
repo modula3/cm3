@@ -65,7 +65,6 @@ end
 LLVM_INCLUDE_DIR = LLVM_SOURCE_DIR & "/include" 
 
 % Directory wherein to find various system libraries: 
-%if not defined("LIB_DIR") LIB_DIR = "/usr/lib" end  % Peter McKinna 
 if not defined("LIB_DIR") LIB_DIR = "/usr/lib/x86_64-linux-gnu" end % Rodney Bates
 
 % This m3makefile will invoke make to do the C++ compilation.  
@@ -104,7 +103,6 @@ import_obj("M3DIBuilder")
 %include("llvmLibs.quake") %Don't need any of these. 
 
 import_lib("curses",LIB_DIR) 
-%import_lib("ncurses","/usr/lib") % Peter McKinna 
 import_lib("dl",LIB_DIR)
 import_lib("stdc++",LIB_DIR)
 
