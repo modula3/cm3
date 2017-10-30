@@ -52,8 +52,12 @@ BEGIN
           IO.Put ("path=" & path & "\n");
           IO.Put (Rd.GetLine(rd) & "\n");
 
+          (* send protocol reply *)
+          Wr.PutText (wr, "HTTP/1.1 200\n\n");
+
 (* If there is a request for root, return a welcome string, otherwise
    find the file residing in a subdirectory. *)
+
           IF Text.Equal (path, "/") THEN
             Wr.PutText (wr, "<H1>Welcome to our web server!</H1>" &
                             "Try <a href=welcome.html>this link</a>.\n");
