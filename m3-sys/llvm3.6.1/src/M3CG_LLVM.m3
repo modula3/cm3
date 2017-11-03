@@ -782,10 +782,12 @@ PROCEDURE Push(stack : RefSeq.T; value : REFANY) =
     stack.addlo(value);
   END Push;
 
+(* unused now static link is first parm
 PROCEDURE PopRev(stack : RefSeq.T; n: CARDINAL := 1) =
   BEGIN
     FOR i := 1 TO n DO EVAL stack.remhi(); END;
   END PopRev;
+*)
 
 PROCEDURE PushRev(stack : RefSeq.T; value : REFANY) =
   BEGIN
@@ -1171,20 +1173,6 @@ PROCEDURE DumpLLVMIR(<*UNUSED*> self : U; BitcodeFileName, AsmFileName: TEXT) =
     IF BitcodeFileName # NIL THEN
       EVAL LLVM.LLVMWriteBitcodeToFile(modRef, LT(BitcodeFileName));
     END (*IF*); 
-
-
-  (* test running a pass - not working c api missing pass addition procs
-    VAR
-      passRef : LLVM.PassManagerRef;
-      modified : BOOLEAN;
-    BEGIN
-      passRef := LLVM.LLVMCreatePassManager();
-      modified := LLVM.LLVMRunPassManager(passRef,modRef);
-      IF modified AND m3llvmDebugLev > 0 THEN
-        IO.Put("pass modified\n");
-      END;
-    END;
-  *)
   END DumpLLVMIR;
 
 (*----------------------------------------------------------- ID counters ---*)
@@ -4362,16 +4350,20 @@ PROCEDURE abort (self: U;  code: RuntimeError) =
   (* generate a checked runtime error for "code" *)
   CONST numParams = 2;
   VAR
-    lVal,codeVal,modVal : LLVM.ValueRef;
+    codeVal,modVal : LLVM.ValueRef;
     paramsArr : ValueArrType;
     paramsRef : ValueRefType;
+    codeAndLine : Word.T;
   BEGIN
     paramsRef := NewValueArr(paramsArr,numParams);
-    codeVal := LLVM.LLVMConstInt(LLVM.LLVMInt64Type(), VAL(ORD(code),LONGINT), TRUE);
+    (* encode the current line number with the error *)
+    codeAndLine := Word.LeftShift(self.curLine,5);
+    codeAndLine := Word.Or(codeAndLine,ORD(code));
+    codeVal := LLVM.LLVMConstInt(LLVM.LLVMInt64Type(), VAL(ORD(codeAndLine),LONGINT), TRUE);    
     modVal := LLVM.LLVMBuildBitCast(builderIR, faultVal, AdrTy, LT("fault_toadr"));
     paramsArr[0] := modVal;
     paramsArr[1] := codeVal;
-    lVal := LLVM.LLVMBuildCall(builderIR, self.abortFunc, paramsRef, numParams, LT(""));
+    EVAL LLVM.LLVMBuildCall(builderIR, self.abortFunc, paramsRef, numParams, LT(""));
   END abort;
 
 PROCEDURE DoCheck(self : U; a,b : LLVM.ValueRef; pred : LLVM.IntPredicate; code : RuntimeError) =
@@ -4686,11 +4678,8 @@ PROCEDURE InnerCallIndirect
   VAR
     callVal : LLVM.ValueRef;
     resultVal : LLVM.ValueRef;
-    funcVal : LLVM.ValueRef;
-    lVal : LLVM.ValueRef;
     paramsArr : ValueArrType;
     paramsRef : ValueRefType := NIL;
-    arg : REFANY; 
     actual : LvExpr; 
     funcTy, funcPtrTy : LLVM.TypeRef;
     numFormals : INTEGER;
