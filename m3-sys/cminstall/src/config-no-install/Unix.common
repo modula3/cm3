@@ -78,8 +78,9 @@ if not defined("m3back_debug")
   m3back_debug = "-gstabs+"
 end
 
+%default optimization level if passed -O
 if not defined("m3back_optimize")
-  m3back_optimize = "-O2 -Wuninitialized"
+  m3back_optimize = "-O2"
 end
 
 if not defined("m3back_pic")
@@ -115,6 +116,7 @@ proc m3_backend(source, object, optimize, debug) is
                    m3back_m64 ]
     if optimize
         args += m3back_optimize
+        args += "-Wuninitialized"
     end
     if debug
         args += m3back_debug
@@ -161,7 +163,7 @@ if not defined("llvmback_debug")
 end
 
 if not defined("llvmback_optimize")
-  llvmback_optimize = "-O0"
+  llvmback_optimize = "-O2"
 end
 
 if not defined("llvmback_pic")
@@ -174,11 +176,19 @@ if not defined("llvm_backend")
       %local t = try_exec ("llvm-dis", outfile) 
 
       local args = [ "-disable-fp-elim"] 
+      local llvmopt = ""
 
       args += "-filetype=" & filetype
 
       if optimize
           args += llvmback_optimize
+          local tmp = split(source,".")
+          llvmopt = tmp[0] & "_opt." & tmp[1]
+          local opt_ret = try_exec ("@opt", llvmback_optimize, source, "-o", llvmopt )
+          %reset source for llc
+          source = llvmopt 
+      else
+          args += "-O0"
       end
       if debug
           args += llvmback_debug
@@ -186,7 +196,11 @@ if not defined("llvm_backend")
       args += llvmback_pic
 
       local llvmback = "@llc"
-      return try_exec (llvmback, args, source, "-o", outfile )
+      local llc_ret = try_exec (llvmback, args, source, "-o", outfile )
+      if optimize and not defined ("M3_KEEP_FILES")
+          DeleteFile(llvmopt)
+      end
+      return llc_ret
   end % proc llvm_backend
 
 end % if not defined("llvm_backend")
