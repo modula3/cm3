@@ -209,6 +209,8 @@ PROCEDURE ConvertOption (VAR s: State;  arg: TEXT;  arg_len: INTEGER)
 
     | 'g' => IF (arg_len = 2) THEN
                Out (wr, "m3_debug (TRUE)");  ok := TRUE;
+             ELSIF Text.Equal (arg, "-g0") THEN (* no debug *)
+               Out (wr, "m3_debug (FALSE)");  ok := TRUE;
              ELSIF Text.Equal(arg, "-gui") THEN
                Out (wr, "M3_WINDOWS_GUI = TRUE");  ok := TRUE;
              ELSIF Text.Equal(arg, "-gw") OR
@@ -262,6 +264,10 @@ PROCEDURE ConvertOption (VAR s: State;  arg: TEXT;  arg_len: INTEGER)
 
     | 'O' => IF (arg_len = 2) THEN
                Out (wr, "m3_optimize (TRUE)");  ok := TRUE;
+             ELSIF arg_len = 3 THEN
+               Out (wr, "m3_optimize (TRUE)");  ok := TRUE;
+               Out (wr, "m3back_optimize = \"-O" & Text.Sub(arg,2) & "\" ");
+               Out (wr, "llvmback_optimize = \"-O" & Text.Sub(arg,2) & "\" ");
              END;
 
     | 'r' => IF Text.Equal(arg, "-realclean") THEN
@@ -653,7 +659,9 @@ CONST
     "",
     "compile options:  (default: -g -w1)",
     "  -g             produce symbol table information for debugger",
-    "  -O             optimize code",
+    "  -g0            disable debugger output",
+    "  -O             optimize code (defaults to -O2)",
+    "  -O0 .. -O3     optimization level (0 - disable, 1 - limited, 2 - moderate, 3 - full)",
     "  -A             disable code generation for assertions",
     "  -once          don't recompile to improve opaque object code",
     "  -w0 .. -w3     limit compiler warning messages",
