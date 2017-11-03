@@ -385,6 +385,12 @@ html(["      <tbody>", CR])
 
 cm3opts = ""
 runopts = ""
+if equal(M3_BACKEND_MODE, "StAloneLlvmAsm")
+% llvm debug mode not tested
+  cm3opts = cm3opts & "-g0 "
+% llvm optimisations if required
+%  cm3opts = cm3opts & "-O2 "
+end
 
 readonly proc run_test (class, group, uid, comment, should_run, cm3opts, runopts, probeForTargetSpecificFiles) is  local dir = "../src/" & group & "/" & uid
   FileRemoveRecursive(dir & "/" & BUILD_DIR)
