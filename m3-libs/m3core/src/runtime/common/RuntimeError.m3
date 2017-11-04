@@ -38,7 +38,7 @@ CONST
     "Integer result too large to represent.",
     "Attempt to DIV or MOD by zero.",
     "Attempted floating-point division by zero.",
-    "Rloating-point result is too large to represent.",
+    "Floating-point result is too large to represent.",
     "Floating-point result is too small to represent.",
     "Floating-point result is inexact.",
     "Invalid floating-point number.",
