@@ -1024,7 +1024,7 @@ PROCEDURE DeclSet(name : TEXT; fn : LLVM.ValueRef; numParams : INTEGER; hasRetur
   END DeclSet;
 
 PROCEDURE CGProvidedStaticLinkFormal(proc : LvProc) : LvVar =
-(* Return the LvVar of the front-end generated static link formal parameter
+(* Return the LvVar of the front-end-generated static link formal parameter
    of proc, if it has one, otherwise NIL.  This happens only for an internally
    generated FINALLY procedure, by CG.   
    Making a pretty big assumption here.  The criterion is proc is nested,
@@ -1105,9 +1105,11 @@ PROCEDURE BuildFunc(self : U; p : Proc) =
       param := NARROW(arg,LvVar);
       IF param.type = Type.Struct THEN
         param.lvType := LLVM.LLVMPointerType(param.lvType);
-(* NOTE: NewVar already set this to StructType(size). *) 
-(* REVIEW: This seems oversimplified.  Adding byVal attribute below is
-           commented out. *) 
+(* NOTE: NewVar already set this to StructType(size). *)
+(* REVIEW: We always pass structs by reference at IR code level.
+           If M3 mode is VALUE, call code will use pop_struct, which
+           makes a call-site copy before passing the address.
+           But what type do we want here? *) 
       END;
       paramsArr[i] := param.lvType;
     END;
@@ -1149,10 +1151,14 @@ PROCEDURE BuildFunc(self : U; p : Proc) =
       (* set a name for the param - doesn't work for externals *)
       LLVM.LLVMSetValueName(lVal, LT(paramTextName));
 
-      (* this sets the byval attribute by which the caller makes a copy *)
-      IF param.type = Type.Struct THEN
+      (* Don't use byval attribute, because it is too hard to know when to
+         apply it to an indirect call.  Instead, we generate explicit copy code
+         at the call site, in response to the pop_struct operator. Eli Friedman,
+         says, on llvm-dev@lists.llvm.org at 11/03/2017 05:44 PM, that this may
+         allow better optimizations anyway. *) 
+   (* IF param.type = Type.Struct THEN
         LLVM.LLVMAddAttribute(lVal, LLVM.ByValAttribute);
-      END;
+      END; *) 
       (* set the alignment not sure we need it except for struct *)
       LLVM.LLVMSetParamAlignment(lVal, param.align);
       IF param = mlProc.staticLinkFormal THEN param.lvSsa := lVal; END; 
@@ -4670,8 +4676,8 @@ PROCEDURE InnerCallIndirect
   (self: U; proc: LLVM.ValueRef; t: Type; <*UNUSED*> cc: CallingConvention;
    Nested: BOOLEAN) 
   : LLVM.ValueRef =
-  (* Call the procedure whose llvm address is proc.  The
-     procedure returns a value of CG type t. 
+  (* Call the procedure whose llvm address is proc.
+     The procedure returns a value of CG type t. 
      Use the actual parameters on self.callStack (which will include a
      static link, if appropriate. 
      Do not pop the parameters. *)
@@ -4715,6 +4721,13 @@ PROCEDURE InnerCallIndirect
       LLVM.LLVMAddInstrAttribute
         (resultVal, 1 (*The parameter no. Zero is func return*), LLVM.NestAttribute);
     END;
+
+    (* If we knew whether to, we would set the 'byval' attribute for structs
+       passed by value here, but it is too hard to know whether, since we don't
+       have the procedure type here. Instead, we forget byval and generate
+       explicit copy code at the call site, in response to the pop_struct
+       operator. *)
+
     RETURN resultVal; 
   END InnerCallIndirect;
 
@@ -4774,7 +4787,7 @@ PROCEDURE call_indirect (self: U;  t: Type; cc: CallingConvention) =
 
       (* We have to use some inside knowledge of the code sequences CG is producing.
          Specifically, staticLinkBB ends with load (of code address), a store (which
-         don't use) and a branch (which we don't want to follow. *) 
+         we don't use) and a branch (which we don't want to follow. *) 
 
       (* staticLinkBB already will have a terminating unconditional branch, because
          it is followed by label for not-a-closure-call.  We have to remove it.  
@@ -4788,7 +4801,7 @@ PROCEDURE call_indirect (self: U;  t: Type; cc: CallingConvention) =
       
       LLVM.LLVMPositionBuilderAtEnd (builderIR, self.staticLinkBB);
  (* REVIEW: The CG IR code contains another nil-check at this point on the code
-            addressthat was  taken from the closure (having earlier nil-checked
+            address that was taken from the closure (having earlier nil-checked
             the procedure pointer itself).  I think nil here can't happen.
             If it ever does, just insert nil-check and abort on loadInst here.
             
@@ -4862,32 +4875,43 @@ PROCEDURE pop_param (self: U;  t: MType) =
   END pop_param;
 
 PROCEDURE pop_struct 
-  (self: U; <*UNUSED*> t: TypeUID; s: ByteSize; <*UNUSED*>  a: Alignment) =
+  (self: U; t: TypeUID; s: ByteSize; <*UNUSED*>  a: Alignment) =
   (* pop s0.A, it's a pointer to a structure occupying 's' bytes that's
-    'a' byte aligned; pass the structure by value as the "next" parameter
-    in the current call. *)
+    'a' byte aligned;  It is passed by value in M3, but llvm code passes
+    the *address* of the structure, so we first make a copy here. *)
   VAR
     s0 := Get(self.exprStack,0);
     expr : LvExpr;
-    structTy : LLVM.TypeRef;
-    typeExists : BOOLEAN;
+    structTy, refTy : LLVM.TypeRef;
+    origRef_lVal, copyRef_lVal : LLVM.ValueRef;
+    copyRefLvExpr : LvExpr; 
     structRef : REFANY;
+    typeExists : BOOLEAN;
   BEGIN
     expr := NARROW(s0,LvExpr);
+    Pop(self.exprStack);
  
     (* This parm needs to agree with its declared type. All structs
-       should be in the struct table indexed by their size. 
-       Find the type and cast the parm to its correct type *)
-    typeExists := self.structTable.get(s,structRef);
+       should be in the struct table indexed by their byte size. 
+       Find the type and cast the parm to its pointer type *)
+    typeExists := self.structTable.get(s,(*VAR*)structRef);
     <*ASSERT typeExists *>
     structTy := NARROW(structRef,LvStruct).struct;
-    structTy := LLVM.LLVMPointerType(structTy);
+    refTy := LLVM.LLVMPointerType(structTy);
     (* this is the proper type for the call *)
-    expr.lVal := LLVM.LLVMBuildBitCast
-      (builderIR, expr.lVal, structTy, LT("pop_tostructty"));
-    
+    origRef_lVal := LLVM.LLVMBuildBitCast
+      (builderIR, expr.lVal, refTy, LT("pop_struct-reftype"));
+    copyRef_lVal := LLVM.LLVMBuildAlloca(builderIR, structTy, LT("ValueFormalCopyRef"));
+    LLVM.LLVMSetAlignment
+      (copyRef_lVal, LLVM.LLVMPreferredAlignmentOfType(targetData, refTy));
+(* CHECK ^Is this really necessary? *)
+    copyRefLvExpr := NEW (LvExpr, lVal := copyRef_lVal);
+    Push(self.exprStack, copyRefLvExpr);
+    Push(self.exprStack, expr);
+    copy (self, s, Type.Word8, overlap := FALSE); (* Pops 2 *)
+    expr.lVal := copyRef_lVal;
+
     PushRev(self.callStack,s0);
-    Pop(self.exprStack);
   END pop_struct;
 
 PROCEDURE pop_static_link (self: U) =
