@@ -676,6 +676,14 @@ pop_struct (t: TypeUID;  s: ByteSize;  a: Alignment);
 (* pop s0.A, it's a pointer to a structure occupying 's' bytes that's
   'a' byte aligned; pass the structure by value as the "next" parameter
   in the current call. *)
+(* NOTE: This is the only executable operator that denotes that a struct
+         (could be any in-memory aggregate) is passed by value.  It occurs
+         at the end of actual parameter evaluation, at a call site.  No
+         operator(s) appear near begin_procedure that would indicate that a
+         struct formal is passed by value.  This system strongly suggests
+         that the copy is to be made at the call site.  A backend would
+         have to use the formal's VALUE mode to trigger internal generating
+         of copy code, if prolog site copy is desired. *) 
 
 pop_static_link ();
 (* pop s0.A for the current indirect procedure call's static link  *)
