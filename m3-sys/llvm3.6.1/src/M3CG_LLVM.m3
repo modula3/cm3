@@ -1698,7 +1698,7 @@ PROCEDURE declare_local
     proc : LvProc;
   BEGIN
     (* Locals are declared either within a procedure signature, i.e., after
-       declare_procedure or within a body, i.e., within a begin_procedure/
+       declare_procedure, or within a body, i.e., within a begin_procedure/
        end_procedure pair.  In the former case, we can't allocate them yet,
        so just save them in localStack, to be allocated in begin_procedure.
        In the latter case,  allocate them now.  
@@ -4883,13 +4883,12 @@ PROCEDURE pop_struct
     s0 := Get(self.exprStack,0);
     expr : LvExpr;
     structTy, refTy : LLVM.TypeRef;
-    origRef_lVal, copyRef_lVal : LLVM.ValueRef;
-    copyRefLvExpr : LvExpr; 
+    origRef_lVal, copyRef_lVal, len_lVal : LLVM.ValueRef;
     structRef : REFANY;
+    curBB : LLVM.BasicBlockRef;
     typeExists : BOOLEAN;
   BEGIN
     expr := NARROW(s0,LvExpr);
-    Pop(self.exprStack);
  
     (* This parm needs to agree with its declared type. All structs
        should be in the struct table indexed by their byte size. 
@@ -4901,17 +4900,24 @@ PROCEDURE pop_struct
     (* this is the proper type for the call *)
     origRef_lVal := LLVM.LLVMBuildBitCast
       (builderIR, expr.lVal, refTy, LT("pop_struct-reftype"));
+
+    (* Allocate a temp for the copy in the entry BB *)
+    curBB := LLVM.LLVMGetInsertBlock(builderIR);
+    LLVM.LLVMPositionBuilderAtEnd(builderIR, self.curProc.entryBB);
     copyRef_lVal := LLVM.LLVMBuildAlloca(builderIR, structTy, LT("ValueFormalCopyRef"));
     LLVM.LLVMSetAlignment
       (copyRef_lVal, LLVM.LLVMPreferredAlignmentOfType(targetData, refTy));
+    LLVM.LLVMPositionBuilderAtEnd(builderIR, curBB);
 (* CHECK ^Is this really necessary? *)
-    copyRefLvExpr := NEW (LvExpr, lVal := copyRef_lVal);
-    Push(self.exprStack, copyRefLvExpr);
-    Push(self.exprStack, expr);
-    copy (self, s, Type.Word8, overlap := FALSE); (* Pops 2 *)
-    expr.lVal := copyRef_lVal;
 
-    PushRev(self.callStack,s0);
+    (* Generate the copy. *) 
+    len_lVal := LLVM.LLVMConstInt(IntPtrTy, VAL(s,LONGINT), TRUE);
+    DoMemCopy(expr.lVal,copyRef_lVal,len_lVal,align:=1,overlap:=FALSE);
+
+    (* Update things. *) 
+    expr.lVal := copyRef_lVal;
+    Pop(self.exprStack);
+    PushRev(self.callStack,expr);
   END pop_struct;
 
 PROCEDURE pop_static_link (self: U) =
