@@ -157,7 +157,7 @@ PROCEDURE Check (p: P) =
     p.info.size      := p.recSize;
     p.info.min_size  := p.recSize;
     p.info.alignment := p.align;
-    p.info.mem_type  := CG.Type.Addr;  (* should be Struct! ??? *)
+    p.info.mem_type  := CG.Type.Struct;
     p.info.stk_type  := CG.Type.Addr;
     p.info.class     := Type.Class.Record;
   END Check;
