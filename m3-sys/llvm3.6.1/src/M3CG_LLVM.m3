@@ -4884,18 +4884,14 @@ PROCEDURE pop_struct
     expr : LvExpr;
     structTy, refTy : LLVM.TypeRef;
     origRef_lVal, copyRef_lVal, len_lVal : LLVM.ValueRef;
-    structRef : REFANY;
     curBB : LLVM.BasicBlockRef;
-    typeExists : BOOLEAN;
   BEGIN
     expr := NARROW(s0,LvExpr);
  
     (* This parm needs to agree with its declared type. All structs
        should be in the struct table indexed by their byte size. 
-       Find the type and cast the parm to its pointer type *)
-    typeExists := self.structTable.get(s,(*VAR*)structRef);
-    <*ASSERT typeExists *>
-    structTy := NARROW(structRef,LvStruct).struct;
+       Find, or create, the type and cast the parm to its pointer type. *)
+    structTy := StructType(self,s);
     refTy := LLVM.LLVMPointerType(structTy);
     (* this is the proper type for the call *)
     origRef_lVal := LLVM.LLVMBuildBitCast
