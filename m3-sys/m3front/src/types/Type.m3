@@ -261,6 +261,8 @@ PROCEDURE CGType (t: T;  in_memory: BOOLEAN): CG.Type =
   END CGType;
 
 PROCEDURE IsStructured (t: T): BOOLEAN =
+(* <=> rec, set, or array <=> is represented as an address on the CG stack *)
+(* PRE: t need not be checked. *) 
   BEGIN
     IF (t = NIL) THEN RETURN FALSE END;
     CASE t.info.class OF

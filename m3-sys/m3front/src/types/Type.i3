@@ -84,6 +84,7 @@ PROCEDURE CGType (t: T;  in_memory: BOOLEAN := FALSE): CG.Type;
 
 PROCEDURE IsStructured (t: T): BOOLEAN;
 (* <=> rec, set, or array <=> is represented as an address on the CG stack *)
+(* PRE: t need not be checked. *) 
 
 PROCEDURE LoadScalar (t: T);
 (* If 't' is not a structured type, generate code to load the scalar

@@ -31,6 +31,10 @@ PROCEDURE HasClosure (t: T): BOOLEAN;
 
 PROCEDURE NeedsAddress (t: T);
 
+PROCEDURE CopyOpenArray (tipe: Type.T;  ref: Type.T);
+(* PRE: Pointer to array dope is on TOS. *)
+(* POST: TOS replaced by pointer to dope of copy. *) 
+
 PROCEDURE SetBounds (t: T;  READONLY min, max: Target.Int);
 PROCEDURE GetBounds (t: T;  VAR min, max: Target.Int);
 

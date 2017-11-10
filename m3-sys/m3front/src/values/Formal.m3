@@ -12,6 +12,7 @@ IMPORT M3, M3ID, CG, Value, ValueRep, Type, Error, Expr, ProcType;
 IMPORT KeywordExpr, OpenArrayType, RefType, CheckExpr;
 IMPORT ArrayType, Host, NarrowExpr, M3Buf, Tracer;
 IMPORT Procedure, UserProc, Target, M3RT;
+IMPORT Variable;
 
 TYPE
   T = Value.T BRANDED OBJECT 
@@ -714,8 +715,7 @@ PROCEDURE ReshapeArray (tlhs, trhs: Type.T) =
 
       (* leave the result *)
       CG.Load_addr_of_temp (tmp, 0, Target.Address.align);
-    ELSE
-      <*ASSERT d_lhs < d_rhs *>
+    ELSE (* d_lhs < d_rhs *)
       (* check some array bounds;  don't build a smaller dope vector
          just reuse the existing one! *)
 

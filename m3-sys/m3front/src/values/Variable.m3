@@ -200,6 +200,7 @@ PROCEDURE NewFormal (formal: Value.T;  name: M3ID.T): T =
     t.readonly := (f_info.mode = Formal.Mode.mCONST);
     t.unused   := f_info.unused;
     t.initDone := TRUE;
+(* REVIEW^ can this be right? *) 
     t.imported := FALSE; (* in spite of Module.depth *)
     IF (NOT t.indirect) AND (OpenArrayType.Is (t.tipe)) THEN
       t.indirect := TRUE;
@@ -295,7 +296,7 @@ PROCEDURE Check (t: T;  VAR cs: Value.CheckState) =
                        & Fmt.Int (info.size DIV Target.Char.size) & " bytes)");
       END;
     ELSIF (t.formal # NIL) AND (info.class = Type.Class.OpenArray)
-      AND Formal.RefOpenArray (t.formal, ref) THEN
+      AND Formal.RefOpenArray (t.formal, (*VAR*) ref) THEN
       Error.WarnID (1, t.name, "open array passed by value");
     END;
 
@@ -644,7 +645,7 @@ PROCEDURE NeedInit (t: T): BOOLEAN =
     IF (t.imported) OR (t.external) OR (t.initDone) THEN
       RETURN FALSE;
     ELSIF (t.formal # NIL) THEN
-      RETURN (t.indirect) AND Formal.RefOpenArray (t.formal, ref);
+      RETURN (t.indirect) AND Formal.RefOpenArray (t.formal, (*VAR*) ref);
     ELSIF (t.indirect) AND (NOT t.global) THEN
       RETURN FALSE;
     ELSIF (t.global) AND (t.init # NIL) AND (NOT t.initStatic)
@@ -663,12 +664,12 @@ PROCEDURE LangInit (t: T) =
     IF (t.imported) OR (t.external) THEN
       t.initDone := TRUE;
     ELSIF (t.formal # NIL) THEN
-      IF (t.indirect) AND Formal.RefOpenArray (t.formal, ref) THEN
+      IF (t.indirect) AND Formal.RefOpenArray (t.formal, (*VAR*) ref) THEN
         (* a by-value open array! *)
         CG.Gen_location (t.origin);
         Load(t);
-        CopyOpenArray (t, ref);
-        (* set the formal parameter to refer to the new storage *)
+        CopyOpenArray (t.tipe, ref);
+        (* change the formal parameter to refer to the new storage *)
         CG.Store_addr (t.cg_var);
       END;
       (* formal parameters don't need any further initialization *)
@@ -712,14 +713,14 @@ PROCEDURE ForceInit (t: T) =
     Type.InitValue (t.tipe, FALSE);
   END ForceInit;
 
-PROCEDURE CopyOpenArray (t: T;  ref: Type.T) =
+PROCEDURE CopyOpenArray (tipe: Type.T;  ref: Type.T) =
 (* PRE: Pointer to array dope is on TOS. *)
 (* POST: TOS replaced by pointer to dope of copy. *) 
   VAR
     oldDopePtr, newDopePtr : CG.Val;
-    depth := OpenArrayType.OpenDepth (t.tipe);
-    align := OpenArrayType.EltAlign (t.tipe);
-    pack  := OpenArrayType.EltPack (t.tipe);
+    depth := OpenArrayType.OpenDepth (tipe);
+    align := OpenArrayType.EltAlign (tipe);
+    pack  := OpenArrayType.EltPack (tipe);
     sizes := CG.Declare_temp (Target.Address.pack + Target.Integer.pack,
                               Target.Address.align, CG.Type.Struct,
                               in_memory := TRUE);
@@ -753,7 +754,7 @@ PROCEDURE CopyOpenArray (t: T;  ref: Type.T) =
 
     (* load the destination and source elements addresses *)
     CG.Push (newDopePtr);
-    CG.Boost_alignment (t.align);
+    CG.Boost_alignment (Target.Address.align);
     CG.Open_elt_ptr (align); (* Addr of the old elements. *) 
     CG.Force ();
     CG.Push(oldDopePtr);
@@ -772,7 +773,7 @@ PROCEDURE CopyOpenArray (t: T;  ref: Type.T) =
 
     (* Push new dope pointer for the caller. *) 
     CG.Push (newDopePtr);
-    CG.Boost_alignment (t.align);
+    CG.Boost_alignment (Target.Address.align);
 
     (* free our temps *)
     CG.Free_temp (sizes);
