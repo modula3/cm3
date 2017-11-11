@@ -12,7 +12,6 @@ IMPORT M3, M3ID, CG, Value, ValueRep, Type, Error, Expr, ProcType;
 IMPORT KeywordExpr, OpenArrayType, RefType, CheckExpr;
 IMPORT ArrayType, Host, NarrowExpr, M3Buf, Tracer;
 IMPORT Procedure, UserProc, Target, M3RT;
-IMPORT Variable;
 
 TYPE
   T = Value.T BRANDED OBJECT 
@@ -661,6 +660,10 @@ PROCEDURE GenArray (t: T;  actual: Expr.T) =
         Expr.CompileAddress (actual, traced := TRUE);
         ReshapeArray (t.tipe, t_actual);
     | Mode.mCONST =>
+        (* This is tricky.  We never copy an array here, even if it
+           is a nondesignator.  But the only possible nondesignator
+           arrays are constants and function results.  Neither can
+           be aliased or changed, so they behave as already copies. *)  
         IF NOT Type.IsEqual (t.tipe, t_actual, NIL) THEN
           Expr.Compile (actual);
           ReshapeArray (t.tipe, t_actual);
