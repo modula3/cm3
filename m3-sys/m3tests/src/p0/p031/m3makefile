@@ -1,0 +1,38 @@
+% (* ----------------------------------------------------------------------1- *)
+% (* File m3makefile for Modula3 compiler test p031                           *)
+% (* Copyright 2017, Rodney M. Bates.                                         *)
+% (* rodney.m.bates@acm.org                                                   *)
+% (* Licensed under the MIT license.                                          *)
+% (* ----------------------------------------------------------------------2- *)
+
+import("libm3")
+
+module("Support") 
+generic_module ("Tests")
+
+interface ("OrdInst")
+build_generic_intf("TestOrd","Tests",[],HIDDEN)
+build_generic_impl("TestOrd","Tests",["OrdInst"])
+
+interface ("FloatInst")
+build_generic_intf("TestFloat","Tests",[],HIDDEN)
+build_generic_impl("TestFloat","Tests",["FloatInst"])
+
+module ("RefInst")
+build_generic_intf("TestRef","Tests",[],HIDDEN)
+build_generic_impl("TestRef","Tests",["RefInst"])
+
+module("ProcInst")
+build_generic_intf("TestProc","Tests",[],HIDDEN)
+build_generic_impl("TestProc","Tests",["ProcInst"])
+
+interface ("SetsInst")
+build_generic_intf("TestSets","Tests",[],HIDDEN)
+build_generic_impl("TestSets","Tests",["SetsInst"])
+
+interface ("RecInst")
+build_generic_intf("TestRecs","Tests",[],HIDDEN)
+build_generic_impl("TestRecs","Tests",["RecInst"])
+
+implementation("Main")
+include ("../../Test.common")

@@ -1,0 +1,114 @@
+Parameters of Ordinal type:
+  VALUE mode:
+    In PT1VALUE
+    As expected.
+  VAR mode:
+    In PT1VAR
+    As expected.
+  READONLY mode, same type, designator (pass by reference):
+    In PT1RO
+    As expected through alias.
+    As expected through by-ref formal.
+  READONLY mode, same type, nondesignator (copy and pass by reference):
+    In PT1RO
+    As expected through alias.
+    As expected through value formal.
+  READONLY mode, different type, designator (copy and pass by reference):
+    In PT1ROT2
+    As expected through alias.
+    As expected through value formal.
+Parameters of Float type:
+  VALUE mode:
+    In PT1VALUE
+    As expected.
+  VAR mode:
+    In PT1VAR
+    As expected.
+  READONLY mode, same type, designator (pass by reference):
+    In PT1RO
+    As expected through alias.
+    As expected through by-ref formal.
+  READONLY mode, same type, nondesignator (copy and pass by reference):
+    In PT1RO
+    As expected through alias.
+    As expected through value formal.
+  READONLY mode, different type, designator (copy and pass by reference):
+    In PT1ROT2
+    As expected through alias.
+    As expected through value formal.
+Parameters of Reference type:
+  VALUE mode:
+    In PT1VALUE
+    As expected.
+  VAR mode:
+    In PT1VAR
+    As expected.
+  READONLY mode, same type, designator (pass by reference):
+    In PT1RO
+    As expected through alias.
+    As expected through by-ref formal.
+  READONLY mode, same type, nondesignator (copy and pass by reference):
+    In PT1RO
+    As expected through alias.
+    As expected through value formal.
+  READONLY mode, different type, designator (copy and pass by reference):
+    In PT1ROT2
+    As expected through alias.
+    As expected through value formal.
+Parameters of Procedure type:
+  VALUE mode:
+    In PT1VALUE
+    As expected.
+  VAR mode:
+    In PT1VAR
+    As expected.
+  READONLY mode, same type, designator (pass by reference):
+    In PT1RO
+    As expected through alias.
+    As expected through by-ref formal.
+  READONLY mode, same type, nondesignator (copy and pass by reference):
+    In PT1RO
+    As expected through alias.
+    As expected through value formal.
+  READONLY mode, different type, designator (copy and pass by reference):
+    In PT1ROT2
+    As expected through alias.
+    As expected through value formal.
+Parameters of Set type:
+  VALUE mode:
+    In PT1VALUE
+    As expected.
+  VAR mode:
+    In PT1VAR
+    As expected.
+  READONLY mode, same type, designator (pass by reference):
+    In PT1RO
+    As expected through alias.
+    As expected through by-ref formal.
+  READONLY mode, same type, nondesignator (copy and pass by reference):
+    In PT1RO
+    As expected through alias.
+    As expected through value formal.
+  READONLY mode, different type, designator (copy and pass by reference):
+    In PT1ROT2
+    As expected through alias.
+    As expected through value formal.
+Parameters of Record type:
+  VALUE mode:
+    In PT1VALUE
+    As expected.
+  VAR mode:
+    In PT1VAR
+    As expected.
+  READONLY mode, same type, designator (pass by reference):
+    In PT1RO
+    As expected through alias.
+    As expected through by-ref formal.
+  READONLY mode, same type, nondesignator (copy and pass by reference):
+    In PT1RO
+    As expected through alias.
+    As expected through value formal.
+  READONLY mode, different type, designator (copy and pass by reference):
+    In PT1ROT2
+    As expected through alias.
+    As expected through value formal.
