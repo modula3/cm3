@@ -1,0 +1,79 @@
+Test of array parameters.
+By VALUE, fixed: 
+VALUE, fixed, formals not aliased.
+VALUE, fixed, initially, subscript = 0, actual = 5, expected = 5.
+VALUE, fixed, initially, subscript = 1, actual = 9, expected = 9.
+VALUE, fixed, initially, subscript = 2, actual = 13, expected = 13.
+VALUE, fixed, initially, subscript = 3, actual = 17, expected = 17.
+VALUE, fixed, finally, subscript = 0, actual = 5, expected = 5.
+VALUE, fixed, finally, subscript = 1, actual = 9, expected = 9.
+VALUE, fixed, finally, subscript = 2, actual = 13, expected = 13.
+VALUE, fixed, finally, subscript = 3, actual = 17, expected = 17.
+By VAR, fixed:
+VAR, fixed:, formals aliased.
+VAR, fixed:, initially, subscript = 0, actual = 5, expected = 5.
+VAR, fixed:, initially, subscript = 1, actual = 9, expected = 9.
+VAR, fixed:, initially, subscript = 2, actual = 13, expected = 13.
+VAR, fixed:, initially, subscript = 3, actual = 17, expected = 17.
+VAR, fixed:, finally, subscript = 0, actual = 107, expected = 107.
+VAR, fixed:, finally, subscript = 1, actual = 111, expected = 111.
+VAR, fixed:, finally, subscript = 2, actual = 115, expected = 115.
+VAR, fixed:, finally, subscript = 3, actual = 119, expected = 119.
+By READONLY, fixed:
+READONLY, fixed, formals aliased.
+READONLY, fixed, initially, subscript = 0, actual = 5, expected = 5.
+READONLY, fixed, initially, subscript = 1, actual = 9, expected = 9.
+READONLY, fixed, initially, subscript = 2, actual = 13, expected = 13.
+READONLY, fixed, initially, subscript = 3, actual = 17, expected = 17.
+READONLY, fixed, finally, subscript = 0, actual = 107, expected = 107.
+READONLY, fixed, finally, subscript = 1, actual = 111, expected = 111.
+READONLY, fixed, finally, subscript = 2, actual = 115, expected = 115.
+READONLY, fixed, finally, subscript = 3, actual = 119, expected = 119.
+By VALUE, open: 
+VALUE, open, formals not aliased.
+VALUE, open, initially, subscript = 0, actual = 5, expected = 5.
+VALUE, open, initially, subscript = 1, actual = 9, expected = 9.
+VALUE, open, initially, subscript = 2, actual = 13, expected = 13.
+VALUE, open, initially, subscript = 3, actual = 17, expected = 17.
+VALUE, open, finally, subscript = 0, actual = 5, expected = 5.
+VALUE, open, finally, subscript = 1, actual = 9, expected = 9.
+VALUE, open, finally, subscript = 2, actual = 13, expected = 13.
+VALUE, open, finally, subscript = 3, actual = 17, expected = 17.
+By VAR, open:
+VAR, open:, formals aliased.
+VAR, open:, initially, subscript = 0, actual = 5, expected = 5.
+VAR, open:, initially, subscript = 1, actual = 9, expected = 9.
+VAR, open:, initially, subscript = 2, actual = 13, expected = 13.
+VAR, open:, initially, subscript = 3, actual = 17, expected = 17.
+VAR, open:, finally, subscript = 0, actual = 107, expected = 107.
+VAR, open:, finally, subscript = 1, actual = 111, expected = 111.
+VAR, open:, finally, subscript = 2, actual = 115, expected = 115.
+VAR, open:, finally, subscript = 3, actual = 119, expected = 119.
+By READONLY, open:
+READONLY, open, formals aliased.
+READONLY, open, initially, subscript = 0, actual = 5, expected = 5.
+READONLY, open, initially, subscript = 1, actual = 9, expected = 9.
+READONLY, open, initially, subscript = 2, actual = 13, expected = 13.
+READONLY, open, initially, subscript = 3, actual = 17, expected = 17.
+READONLY, open, finally, subscript = 0, actual = 107, expected = 107.
+READONLY, open, finally, subscript = 1, actual = 111, expected = 111.
+READONLY, open, finally, subscript = 2, actual = 115, expected = 115.
+READONLY, open, finally, subscript = 3, actual = 119, expected = 119.
+Array constructor nondesignator: 
+READONLY, open, nondesignator, initially, subscript = 0, actual = 5, expected = 5.
+READONLY, open, nondesignator, initially, subscript = 1, actual = 9, expected = 9.
+READONLY, open, nondesignator, initially, subscript = 2, actual = 13, expected = 13.
+READONLY, open, nondesignator, initially, subscript = 3, actual = 17, expected = 17.
+Fixed function result nondesignator: 
+READONLY, open, nondesignator, initially, subscript = 0, actual = 5, expected = 5.
+READONLY, open, nondesignator, initially, subscript = 1, actual = 9, expected = 9.
+READONLY, open, nondesignator, initially, subscript = 2, actual = 13, expected = 13.
+READONLY, open, nondesignator, initially, subscript = 3, actual = 17, expected = 17.
+Open function result nondesignator: 
+READONLY, open, nondesignator, initially, subscript = 0, actual = 5, expected = 5.
+READONLY, open, nondesignator, initially, subscript = 1, actual = 9, expected = 9.
+READONLY, open, nondesignator, initially, subscript = 2, actual = 13, expected = 13.
+READONLY, open, nondesignator, initially, subscript = 3, actual = 17, expected = 17.
+66 tests performed.
+All tests succeeded.
+SUCCESS.
