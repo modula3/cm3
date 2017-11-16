@@ -447,7 +447,7 @@ PROCEDURE PrepArg (formal: Value.T; actual: Expr.T) =
   END PrepArg;
 
 PROCEDURE EmitArg (proc: Expr.T;  formal: Value.T; actual: Expr.T) =
-  VAR t: T := formal;   is_struct := FALSE;  info: Type.Info;
+  VAR t: T := formal; info: Type.Info;
   BEGIN
     CASE t.kind OF
     | Type.Class.Error, Type.Class.Named, Type.Class.Packed
@@ -462,24 +462,14 @@ PROCEDURE EmitArg (proc: Expr.T;  formal: Value.T; actual: Expr.T) =
     | Type.Class.Procedure
         =>  GenProcedure (t, actual, proc);
     | Type.Class.Record
-        =>  GenRecord (t, actual);  is_struct := TRUE;
+        =>  GenRecord (t, actual);
     | Type.Class.Set
-        =>  GenSet (t, actual);     is_struct := Type.IsStructured (t.tipe);
+        =>  GenSet (t, actual);
     | Type.Class.Array
-        =>  GenArray (t, actual);   is_struct := TRUE;
+        =>  GenArray (t, actual, is_open := FALSE);
     | Type.Class.OpenArray
-        =>  GenArray (t, actual);   is_struct := FALSE;
+        =>  GenArray (t, actual, is_open := TRUE);
     END;
-    IF (t.mode # Mode.mVALUE) THEN
-      CG.Pop_param (CG.Type.Addr)
-    ELSIF (is_struct) THEN
-      EVAL Type.CheckInfo (t.tipe, info);
-      Type.Compile (t.tipe);
-      CG.Pop_struct (Type.GlobalUID (t.tipe), info.size, info.alignment);
-    ELSE (* by-value scalar *)
-      CG.Pop_param (Type.CGType (t.tipe, in_memory := TRUE));
-    END;
-    IF (t.mode = Mode.mVAR) THEN Expr.NoteWrite (actual); END;
   END EmitArg;
 
 PROCEDURE GenOrdinal (t: T;  actual: Expr.T) =
@@ -494,8 +484,11 @@ PROCEDURE GenOrdinal (t: T;  actual: Expr.T) =
     | Mode.mVALUE =>
         EVAL Type.GetBounds (t.tipe, min, max); (* Of formal. *) 
         CheckExpr.EmitChecks (actual, min, max, CG.RuntimeError.ValueOutOfRange);
+        CG.Pop_param (Type.CGType (t.tipe, in_memory := TRUE));
     | Mode.mVAR =>
         Expr.CompileAddress (actual, traced := TRUE);
+        CG.Pop_param (CG.Type.Addr);
+        Expr.NoteWrite (actual);
     | Mode.mCONST =>
         IF NOT Type.IsEqual (t.tipe, Expr.TypeOf (actual), NIL) THEN
           EVAL Type.GetBounds (t.tipe, min, max); (* Of formal. *) 
@@ -507,6 +500,7 @@ PROCEDURE GenOrdinal (t: T;  actual: Expr.T) =
           Expr.Compile (actual);
           GenCopy (t.tipe); 
         END;
+        CG.Pop_param (CG.Type.Addr);
     END;
   END GenOrdinal;
 
@@ -515,8 +509,11 @@ PROCEDURE GenFloat (t: T;  actual: Expr.T) =
     CASE t.mode OF
     | Mode.mVALUE =>
         Expr.Compile (actual);
+        CG.Pop_param (Type.CGType (t.tipe, in_memory := TRUE));
     | Mode.mVAR =>
         Expr.CompileAddress (actual, traced := TRUE);
+        CG.Pop_param (CG.Type.Addr);
+        Expr.NoteWrite (actual);
     | Mode.mCONST =>
         IF Expr.IsDesignator (actual)
            AND Type.IsEqual (t.tipe, Expr.TypeOf (actual), NIL) THEN
@@ -525,6 +522,7 @@ PROCEDURE GenFloat (t: T;  actual: Expr.T) =
           Expr.Compile (actual);
           GenCopy (t.tipe);
         END;
+        CG.Pop_param (CG.Type.Addr);
     END;
   END GenFloat;
 
@@ -534,8 +532,11 @@ PROCEDURE GenReference (t: T;  actual: Expr.T) =
     CASE t.mode OF
     | Mode.mVALUE =>
         Expr.Compile (actual);
+        CG.Pop_param (Type.CGType (t.tipe, in_memory := TRUE));
     | Mode.mVAR =>
         Expr.CompileAddress (actual, traced := TRUE);
+        CG.Pop_param (CG.Type.Addr);
+        Expr.NoteWrite (actual);
     | Mode.mCONST =>
         IF NOT Type.IsEqual (t.tipe, t_actual, NIL) THEN
           Expr.Compile (actual);
@@ -551,6 +552,7 @@ PROCEDURE GenReference (t: T;  actual: Expr.T) =
              aliasable, and thus not need a copy? *) 
           GenCopy (t.tipe);
         END;
+        CG.Pop_param (CG.Type.Addr);
     END;
   END GenReference;
 
@@ -560,8 +562,11 @@ PROCEDURE GenProcedure (t: T;  actual: Expr.T;  proc: Expr.T) =
     | Mode.mVALUE =>
         Expr.Compile (actual);
         GenClosure (actual, proc);
+        CG.Pop_param (Type.CGType (t.tipe, in_memory := TRUE));
     | Mode.mVAR =>
         Expr.CompileAddress (actual, traced := TRUE);
+        CG.Pop_param (CG.Type.Addr);
+        Expr.NoteWrite (actual);
     | Mode.mCONST =>
         IF Expr.IsDesignator (actual)
            AND Type.IsEqual (t.tipe, Expr.TypeOf (actual), NIL) THEN
@@ -571,6 +576,7 @@ PROCEDURE GenProcedure (t: T;  actual: Expr.T;  proc: Expr.T) =
           GenClosure (actual, proc);
           GenCopy (t.tipe);
         END;
+        CG.Pop_param (CG.Type.Addr);
     END;
   END GenProcedure;
 
@@ -611,13 +617,19 @@ PROCEDURE IsExternalProcedure (e: Expr.T): BOOLEAN =
   END IsExternalProcedure;
 
 PROCEDURE GenRecord (t: T;  actual: Expr.T) =
+  VAR info: Type.Info;
   BEGIN
     (* <* ASSERT Type.IsEqual (t.tipe, Expr.TypeOf (actual), NIL) *> *)
     CASE t.mode OF
     | Mode.mVALUE =>
         Expr.Compile (actual);
+        EVAL Type.CheckInfo (t.tipe, info);
+        Type.Compile (t.tipe);
+        CG.Pop_struct (Type.GlobalUID (t.tipe), info.size, info.alignment);
     | Mode.mVAR =>
         Expr.CompileAddress (actual, traced := TRUE);
+        CG.Pop_param (CG.Type.Addr);
+        Expr.NoteWrite (actual);
     | Mode.mCONST =>
         IF Expr.IsDesignator (actual)
            AND Type.IsEqual (t.tipe, Expr.TypeOf (actual), NIL) THEN
@@ -626,17 +638,28 @@ PROCEDURE GenRecord (t: T;  actual: Expr.T) =
           Expr.Compile (actual);
           GenCopy (t.tipe); 
         END;
+        CG.Pop_param (CG.Type.Addr);
     END;
   END GenRecord;
 
 PROCEDURE GenSet (t: T;  actual: Expr.T) =
+  VAR info: Type.Info;
   BEGIN
     CASE t.mode OF
     | Mode.mVALUE =>
         Expr.Compile (actual);
+        IF Type.IsStructured (t.tipe) THEN
+          EVAL Type.CheckInfo (t.tipe, info);
+          Type.Compile (t.tipe);
+          CG.Pop_struct (Type.GlobalUID (t.tipe), info.size, info.alignment);
+        ELSE
+          CG.Pop_param (Type.CGType (t.tipe, in_memory := TRUE));
+        END;
     | Mode.mVAR =>
         <* ASSERT Type.IsEqual (t.tipe, Expr.TypeOf (actual), NIL) *>
         Expr.CompileAddress (actual, traced := TRUE);
+        CG.Pop_param (CG.Type.Addr);
+        Expr.NoteWrite (actual);
     | Mode.mCONST =>
         IF Expr.IsDesignator (actual)
            AND Type.IsEqual (t.tipe, Expr.TypeOf (actual), NIL)
@@ -646,24 +669,34 @@ PROCEDURE GenSet (t: T;  actual: Expr.T) =
           Expr.Compile (actual);
           GenCopy (t.tipe);
         END;
+        CG.Pop_param (CG.Type.Addr);
     END;
   END GenSet;
 
-PROCEDURE GenArray (t: T;  actual: Expr.T) =
-  VAR t_actual := Expr.TypeOf (actual);
+PROCEDURE GenArray (t: T;  actual: Expr.T; is_open: BOOLEAN) =
+  VAR t_actual := Expr.TypeOf (actual); info: Type.Info;
   BEGIN
     CASE t.mode OF
     | Mode.mVALUE =>
         Expr.Compile (actual);
         ReshapeArray (t.tipe, t_actual);
+        IF is_open THEN
+          CG.Pop_param (CG.Type.Addr);
+        ELSE
+          EVAL Type.CheckInfo (t.tipe, info);
+          Type.Compile (t.tipe);
+          CG.Pop_struct (Type.GlobalUID (t.tipe), info.size, info.alignment);
+        END;
     | Mode.mVAR =>
         Expr.CompileAddress (actual, traced := TRUE);
         ReshapeArray (t.tipe, t_actual);
+        CG.Pop_param (CG.Type.Addr);
+        Expr.NoteWrite (actual);
     | Mode.mCONST =>
-        (* This is tricky.  We never copy an array here, even if it
-           is a nondesignator.  But the only possible nondesignator
-           arrays are constants and function results.  Neither can
-           be aliased or changed, so they behave as already copies. *)  
+        (* This is tricky.  We never copy an array here, even if it is a
+           nondesignator.  The only possible nondesignator arrays that can
+           be passed READONLY are constants and function results.  Neither
+           can be aliased or changed, so they behave as already copies. *)  
         IF NOT Type.IsEqual (t.tipe, t_actual, NIL) THEN
           Expr.Compile (actual);
           ReshapeArray (t.tipe, t_actual);
@@ -672,6 +705,7 @@ PROCEDURE GenArray (t: T;  actual: Expr.T) =
         ELSE
           Expr.Compile (actual);
         END;
+        CG.Pop_param (CG.Type.Addr);
     END;
   END GenArray;
 
