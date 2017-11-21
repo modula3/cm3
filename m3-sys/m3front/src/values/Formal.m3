@@ -447,7 +447,7 @@ PROCEDURE PrepArg (formal: Value.T; actual: Expr.T) =
   END PrepArg;
 
 PROCEDURE EmitArg (proc: Expr.T;  formal: Value.T; actual: Expr.T) =
-  VAR t: T := formal; info: Type.Info;
+  VAR t: T := formal;
   BEGIN
     CASE t.kind OF
     | Type.Class.Error, Type.Class.Named, Type.Class.Packed

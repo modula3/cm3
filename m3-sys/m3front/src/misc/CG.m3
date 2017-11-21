@@ -20,15 +20,15 @@ REVEAL
   Val = BRANDED "CG.Val" REF ValRec;
 
 TYPE
-  VKind = {      (* TYPE   VALUE                 *)
-    Integer,     (* Int    int                   *)
-    Float,       (* Float  float                 *)
-    Stacked,     (* any    S0.type               *)
-    Direct,      (* any    MEM(ADR(base) + OFFS) *)
-    Absolute,    (* Addr   ADR(base) + OFFS      *)
-    Indirect,    (* Addr   MEM(base) + OFFS      *)
-    Pointer      (* Addr   S0.A + OFFS           *)
-  }; (* where OFFS == offset + MEM(bits)         *)
+  VKind = {      (* TYPE   VALUE                   *)
+    Integer,     (* Int    int                     *)
+    Float,       (* Float  float                   *)
+    Stacked,     (* any    S0.type                 *)
+    Direct,      (* any    Value(ADR(base) + OFFS) *)
+    Absolute,    (* Addr   ADR(base) + OFFS        *)
+    Indirect,    (* Addr   Value(base) + OFFS      *)
+    Pointer      (* Addr   S0.A + OFFS             *)
+  }; (* where OFFS == offset + MEM(bits)           *)
 
 TYPE
   ValRec = RECORD
@@ -507,7 +507,9 @@ PROCEDURE Free_temp (<*UNUSED*> v: Var) =
   END Free_temp;
 
 PROCEDURE Free_temps () =
-  (* Move all temps from the busy_temps list to the free_temps list.  No deallocation. *) 
+  (* Move all temps from the busy_temps wrapper list to the free_temps wrapper list.
+     No deallocation of CG temps (Vars) or TempWrappers.
+     No backend free_temp code emitted. *) 
   VAR w := busy_temps;
   BEGIN
     SEmpty ("Free_temps");
@@ -547,7 +549,8 @@ PROCEDURE Free_one_temp (v: Var) =
 *********)
 
 PROCEDURE Free_all_temps () = 
-  (* Emit code to deallocate all busy and free temps. *) 
+  (* Emit code to deallocate all busy and free temps.
+     Allow TempWrappers and CG temps (Vars) to be GC'd. *) 
   VAR w: TempWrapper;
   BEGIN
     Free_temps ();
@@ -561,7 +564,8 @@ PROCEDURE Free_all_temps () =
   END Free_all_temps;
 
 PROCEDURE Free_block_temps (block: INTEGER) = 
-  (* Emit deallocate of all busy and free temps belonging to block. *) 
+  (* Emit code to deallocate of busy and free temps belonging to block.
+     Allow TempWrappers and CG temps (Vars) to be GC'd. *) 
   VAR w, prev_w: TempWrapper;
   BEGIN
     Free_temps ();
@@ -702,11 +706,15 @@ PROCEDURE XForce () =
     END;
   END XForce;
 
-PROCEDURE Force () =
+PROCEDURE Force (s: Size := 0) =
+(* s needs to be provided only if s0 could be stuctured and packed. *)
+(* TODO: It would be a lot cleaner and more consistent if a ValRec had a size field
+         (in bits), which could be used here. *) 
   BEGIN
     WITH x = stack [SCheck (1, "Force")] DO
+      IF s = 0 THEN s := TargetMap.CG_Size[x.type]; END;
 
-      (* force the value on the stack *)
+      (* force the value onto the stack *)
       CASE (x.kind) OF
 
       | VKind.Integer =>
@@ -731,25 +739,25 @@ PROCEDURE Force () =
           (* value is already on the stack *)
 
       | VKind.Direct =>
-          Force_align (x);
+          Force_byte_align (x, s);
           cg.load (x.base, AsBytes (x.offset), x.type, StackType[x.type]);
           IF (x.bits # NIL) THEN
             Err ("attempt to force a direct bit-level address...");
           END;
 
       | VKind.Absolute =>
-          Force_align (x);
+          Force_byte_align (x, s);
           cg.load_address (x.base, AsBytes (x.offset));
           Force_LValue (x);
 
       | VKind.Indirect =>
-          Force_align (x);
+          Force_byte_align (x, s);
           cg.load  (x.base, 0, Type.Addr, Type.Addr);
           IF (x.offset # 0) THEN cg.add_offset (AsBytes (x.offset)) END;
           Force_LValue (x);
 
       | VKind.Pointer =>
-          Force_align (x);
+          Force_byte_align (x, s);
           IF (x.offset # 0) THEN cg.add_offset (AsBytes (x.offset)) END;
           Force_LValue (x);
 
@@ -768,13 +776,41 @@ PROCEDURE Force () =
     END;
   END Force;
 
-PROCEDURE Force_align (VAR x: ValRec) =
+PROCEDURE Force_byte_align (VAR x: ValRec; s: Size) =
+(* Force x's alignment as large as statically known, but at least byte-aligned. *) 
+  VAR best_align: INTEGER;
+      word_size := TargetMap.CG_Size[Target.Word.cg_type];
+      word_align := TargetMap.CG_Align[Target.Word.cg_type];
+      tmp: Var; 
+      shift_TInt : Target.Int; 
   BEGIN
-    x.align := LV_align (x);
-    IF (x.align MOD Target.Byte) # 0 THEN
-      Err ("address is not byte-aligned");
+    best_align := LV_align (x);
+    IF best_align MOD Target.Byte = 0 THEN (* Already byte-aligned. *) 
+      x.align := best_align; 
+    ELSE (* Address is not statically known to be byte-aligned. *)
+      <* ASSERT TargetMap.CG_Size[x.type] <= word_size *>
+      (* ^Because front end won't allow a BITS component to cross a word boundary. *)
+      
+      (* Extract into a temp and change x to refer to it. *)
+      Load (x.base, x.offset, s, x.align, Target.Word.cg_type); 
+      tmp := Declare_temp (word_size, word_align, Target.Word.cg_type, in_memory := TRUE);
+      Store (tmp, 0, word_size, word_align, Target.Word.cg_type);
+      IF NOT Target.Little_endian THEN
+        (* Get byte zero of the value at tmp's address. *) 
+        EVAL TInt.FromInt(word_size - s, (*VAR*) shift_TInt);
+        cg.load_integer (Target.Word.cg_type, shift_TInt); 
+        cg.shift_left(Target.Word.cg_type);
+      END; 
+      x.kind := VKind.Absolute;
+      x.type := Type.Addr;
+      x.base := tmp;
+      x.temp_base:= TRUE;
+      x.bits := NIL;
+      x.temp_bits := FALSE;
+      x.align := word_align;
+      x.offset := 0;
     END;
-  END Force_align;
+  END Force_byte_align;
 
 PROCEDURE Force_LValue (VAR x: ValRec) =
   BEGIN
@@ -2573,7 +2609,7 @@ PROCEDURE Pop_param (t: Type) =
 
 PROCEDURE Pop_struct (t: TypeUID;  s: Size;  a: Alignment) =
   BEGIN
-    Force ();
+    Force (s);
     cg.pop_struct (t, ToBytes (s), FixAlign (a));
     SPop (1, "Pop_struct");
     SEmpty ("Pop_struct");
@@ -2837,6 +2873,7 @@ PROCEDURE SLV_align (n: INTEGER): INTEGER =
   END SLV_align;
 
 PROCEDURE LV_align (READONLY x: ValRec): INTEGER =
+  (* Largest alignment x is statically sure to have. *) 
   VAR align := x.align;
   BEGIN
     IF (x.offset # 0) THEN align := GCD (align, x.offset) END;

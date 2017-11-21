@@ -235,9 +235,10 @@ PROCEDURE Free (v: Val);
 PROCEDURE Store_temp (v: Val);
 (* v := s0;  pop  -- v must have been created by "Pop_temp" *)
 
-PROCEDURE Force ();
+PROCEDURE Force (s: Size := 0); 
 (* force s0 to be materialized on the M3CG stack.  If s0 is an L-value,
    a byte-aligned address is generated.  *)
+(* s needs to be provided only if s0 could be stuctured and packed. *)
 
 (*---------------------------------------- static variable initialization ---*)
 
