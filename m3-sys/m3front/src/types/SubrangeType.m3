@@ -152,14 +152,14 @@ PROCEDURE Seal (p: P) =
   END Seal;
 
 PROCEDURE Check (p: P) =
-  VAR hash: INTEGER;  cs := M3.OuterCheckState;  i: INTEGER;  info: Type.Info;
+  VAR hash: INTEGER;  cs := M3.OuterCheckState;  i: INTEGER;  baseInfo: Type.Info;
   BEGIN
     Seal (p);
     Expr.TypeCheck (p.minE, cs);
     Expr.TypeCheck (p.maxE, cs);
-    p.baseType := Type.CheckInfo (p.baseType, info);
+    p.baseType := Type.CheckInfo (p.baseType, baseInfo);
 
-    hash := info.hash;
+    hash := baseInfo.hash;
     IF NOT TInt.ToInt (p.min, i) THEN i := 19 END;
     hash := Word.Plus (Word.Times (hash, 487), i);
     IF NOT TInt.ToInt (p.max, i) THEN i := 23 END;

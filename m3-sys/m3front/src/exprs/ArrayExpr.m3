@@ -669,7 +669,7 @@ PROCEDURE PrepLiteral (p: P; type: Type.T; is_const: BOOLEAN) =
                                Type.GlobalUID(p.solidType), is_const);
       EVAL GenOpenLiteral (p, p.offset,
                            OpenArrayType.OpenDepth (p.tipe),
-                           OpenArrayType.OpenType (p.tipe),
+                           OpenArrayType.NonOpenEltType (p.tipe),
                            OpenArrayType.EltPack (p.type),
                            is_const);
     END;

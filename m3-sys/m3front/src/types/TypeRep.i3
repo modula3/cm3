@@ -60,6 +60,6 @@ PROCEDURE GenRefDesc (t: TT);
 (* == TypeDesc.AddO (Op.{Untraced}Ref); TypeDesc.AddI (UID(t)) *)
 
 PROCEDURE ScalarAlign (t: TT;  offset: INTEGER): BOOLEAN;
-(* == RETURN (t.alignment MOD offset = 0) *)
+(* == RETURN (offset MOD t.alignment = 0) *)
 
 END TypeRep.

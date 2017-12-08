@@ -315,7 +315,7 @@ PROCEDURE PushTmp (p: P;  align: INTEGER) =
 PROCEDURE BuildArray (p: P;  src_size: INTEGER): CG.Var =
   VAR
     array : CG.Var;
-    elt   := OpenArrayType.OpenType (p.tipe);
+    elt   := OpenArrayType.NonOpenEltType (p.tipe);
     elt_info: Type.Info;
   BEGIN
     elt := Type.CheckInfo (elt, elt_info);

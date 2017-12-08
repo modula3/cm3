@@ -31,6 +31,7 @@ TYPE
         fprint     := FPrinter;
       END;
 
+(* EXPORTED: *) 
 PROCEDURE New (element: Type.T): Type.T =
   VAR p: P;
   BEGIN
@@ -43,11 +44,13 @@ PROCEDURE New (element: Type.T): Type.T =
     RETURN p;
   END New;
 
+(* EXPORTED: *) 
 PROCEDURE Is (t: Type.T): BOOLEAN =
   BEGIN
     RETURN (Reduce (t) # NIL);
   END Is;
 
+(* EXPORTED: *) 
 PROCEDURE Split (t: Type.T;  VAR element: Type.T): BOOLEAN =
   VAR p := Reduce (t);
   BEGIN
@@ -56,6 +59,7 @@ PROCEDURE Split (t: Type.T;  VAR element: Type.T): BOOLEAN =
     RETURN TRUE;
   END Split;
 
+(* EXPORTED: *) 
 PROCEDURE EltPack (t: Type.T): INTEGER =
   VAR p := Reduce (t);
   BEGIN
@@ -65,6 +69,7 @@ PROCEDURE EltPack (t: Type.T): INTEGER =
     END;
   END EltPack;
 
+(* EXPORTED: *) 
 PROCEDURE EltAlign (t: Type.T): INTEGER =
   VAR p := Reduce (t);
   BEGIN
@@ -74,6 +79,7 @@ PROCEDURE EltAlign (t: Type.T): INTEGER =
     END;
   END EltAlign;
 
+(* EXPORTED: *) 
 PROCEDURE OpenDepth (t: Type.T): INTEGER =
   VAR p := Reduce (t);
   BEGIN
@@ -82,13 +88,17 @@ PROCEDURE OpenDepth (t: Type.T): INTEGER =
     RETURN p.depth;
   END OpenDepth;
 
-PROCEDURE OpenType (t: Type.T): Type.T =
+(* EXPORTED: *) 
+PROCEDURE NonOpenEltType (t: Type.T): Type.T =
+(* If 't' is an n-dimensional open array, returns the type of the base
+   elements; otherwise, returns t. That is, strip all the ARRAY OF in 
+   front of t *)
   VAR p := Reduce (t);
   BEGIN
     IF (p = NIL) THEN RETURN t END;
-    IF (p.baseElt = NIL) THEN  p.baseElt := OpenType (p.element)  END;
+    IF (p.baseElt = NIL) THEN  p.baseElt := NonOpenEltType (p.element)  END;
     RETURN p.baseElt;
-  END OpenType;
+  END NonOpenEltType;
 
 PROCEDURE Check (p: P) =
   VAR
@@ -99,7 +109,7 @@ PROCEDURE Check (p: P) =
                      MAX (Target.Address.align, Target.Integer.align));
   BEGIN
     p.element := Type.Check (p.element);
-    elt := Type.CheckInfo (OpenType (p), elt_info);
+    elt := Type.CheckInfo (NonOpenEltType (p), elt_info);
     align := elt_info.alignment;
     p.elt_align := align;
 
@@ -132,7 +142,7 @@ PROCEDURE Check (p: P) =
 PROCEDURE CheckAlign (p: P;  offset: INTEGER): BOOLEAN =
   VAR
     x0 := offset MOD Target.Integer.size;  x := x0;
-    t  := OpenType (p);
+    t  := NonOpenEltType (p);
   BEGIN
     REPEAT
       IF NOT Type.IsAlignedOk (t, x) THEN RETURN FALSE END;
@@ -141,6 +151,7 @@ PROCEDURE CheckAlign (p: P;  offset: INTEGER): BOOLEAN =
     RETURN TRUE;
   END CheckAlign;
 
+(* EXPORTED: *) 
 PROCEDURE DeclareTemp (t: Type.T): CG.Var =
 (* If 't' is an open array, declare and return a temporary to hold its
    dope vector, otherwise abort. *)
@@ -223,7 +234,7 @@ PROCEDURE InitCoster (p: P; zeroed: BOOLEAN): INTEGER =
 PROCEDURE GenInit (p: P;  zeroed: BOOLEAN) =
   VAR
     depth := OpenDepth (p);
-    elt   := OpenType (p);
+    elt   := NonOpenEltType (p);
     top   : CG.Label;
     cnt   : CG.Val;
     max   : CG.Val;
@@ -280,7 +291,7 @@ PROCEDURE GenMap (p: P;  offset: INTEGER;  <*UNUSED*> size: INTEGER;
   BEGIN
     TipeMap.Add (offset, TipeMap.Op.OpenArray_1, OpenDepth (p));
     a := TipeMap.GetCursor ();
-    Type.GenMap (OpenType (p), a, p.elt_pack, refs_only);
+    Type.GenMap (NonOpenEltType (p), a, p.elt_pack, refs_only);
     TipeMap.Add (a + p.elt_pack, TipeMap.Op.Stop, 0);
   END GenMap;
 
@@ -288,7 +299,7 @@ PROCEDURE GenDesc (p: P) =
   BEGIN
     IF TipeDesc.AddO (TipeDesc.Op.OpenArray, p) THEN
       TipeDesc.AddI (OpenDepth (p));
-      Type.GenDesc (OpenType (p));
+      Type.GenDesc (NonOpenEltType (p));
     END;
   END GenDesc;
 

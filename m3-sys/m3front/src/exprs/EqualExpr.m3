@@ -572,7 +572,7 @@ PROCEDURE GenOpenValueCheck (t1: Type.T;  p1, p2: CG.Val;
                              false: CG.Label;  freq: CG.Frequency) =
   VAR
     d1  := OpenArrayType.OpenDepth (t1);
-    elt := OpenArrayType.OpenType (t1);
+    elt := OpenArrayType.NonOpenEltType (t1);
     cnt       : CG.Val;
     elt_align : INTEGER;
     elt_pack  : INTEGER;

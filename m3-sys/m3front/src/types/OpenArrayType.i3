@@ -30,7 +30,7 @@ PROCEDURE EltAlign (array: Type.T): INTEGER;
 PROCEDURE OpenDepth (t: Type.T): INTEGER;
 (* If 't' is an n-dimensional open array, returns n else returns 0 *)
 
-PROCEDURE OpenType (t: Type.T): Type.T;
+PROCEDURE NonOpenEltType (t: Type.T): Type.T;
 (* If 't' is an n-dimensional open array, returns the type of the base
    elements; otherwise, returns t. That is, strip all the ARRAY OF in 
    front of t *)

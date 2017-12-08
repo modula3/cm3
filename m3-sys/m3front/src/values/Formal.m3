@@ -756,7 +756,7 @@ PROCEDURE ReshapeArray (tlhs, trhs: Type.T) =
       (* check some array bounds;  don't build a smaller dope vector
          just reuse the existing one! *)
 
-      tlhs := OpenArrayType.OpenType (tlhs);
+      tlhs := OpenArrayType.NonOpenEltType (tlhs);
       FOR i := d_lhs TO d_rhs - 1 DO
         b := ArrayType.Split (tlhs, index, elt); <*ASSERT b*>
         <*ASSERT index # NIL*>
