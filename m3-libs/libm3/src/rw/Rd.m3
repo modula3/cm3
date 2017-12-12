@@ -386,7 +386,7 @@ PROCEDURE CharsReady(rd: T): CARDINAL
     LOCK rd DO 
       IF rd.cur = rd.hi THEN
         IF rd.closed THEN Die() END;
-        IF NextBuff (rd) THEN RETURN 1 END
+        IF rd.seek(rd.cur, TRUE) = SeekResult.Eof THEN RETURN 1 END
       END;
       RETURN rd.hi - rd.cur;
     END;
