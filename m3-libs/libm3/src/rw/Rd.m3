@@ -156,7 +156,7 @@ PROCEDURE NextBuff(rd: T; dontBlock: BOOLEAN): SeekResult
     END;
     
     (* Try to get the next buffer from class implementation: *)  
-    LResult := rd.seek(rd.cur, dontBlock:= FALSE); 
+    LResult := rd.seek(rd.cur, dontBlock); 
     (* seek methods vary in what they do with buff at EOF.  E.g., FileRd 
        advances to a new but empty buffer (lo=hi=cur=len), but TextRd leaves 
        lo=0, preserving the text for subsequent seek back inside it.  We want
