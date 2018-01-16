@@ -28,6 +28,7 @@ TYPE
         objType     : Type.T;
         temp        : CG.Val;
         name        : M3ID.T;
+        align       : Type.BitAlignT;
         class       : Class;
         inFold      : BOOLEAN;
         inIsZeroes  : BOOLEAN;
@@ -53,6 +54,7 @@ TYPE
         prepLiteral  := ExprRep.NoPrepLiteral;
         genLiteral   := ExprRep.NoLiteral;
         note_write   := NoteWrites;
+        exprAlign    := QualifyExprAlign;
       END;
 
 PROCEDURE New (a: Expr.T;  id: M3ID.T): Expr.T =
@@ -243,6 +245,37 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
       p.type := Type.Check (p.type);
     END;
   END Check;
+
+PROCEDURE QualifyExprAlign (p: P): Type.BitAlignT =
+  VAR fieldInfo: Field.Info;
+  VAR offset, obj_offset, obj_align, prefixAlign: INTEGER;
+
+  BEGIN
+    CASE p.class
+    OF Class.cFIELD =>
+        Field.Split (p.obj, fieldInfo);
+        offset := fieldInfo.offset MOD Target.Word.size;
+        RETURN CG.GCD (Expr.Alignment (p.expr), offset);
+    | Class.cOBJFIELD =>
+        Field.Split (p.obj, fieldInfo);
+        ObjectType.GetFieldOffset (p.holder, obj_offset, obj_align);
+        (* Changing compilation order can change whether we statically
+           know the offset occupied by fields of supertypes.  When we
+           don't, we know only that it is a byte multiple, so, to avoid
+           legality changing with compilation order, we also treat as a
+           byte multiple even when we know it statically.  The exception
+           is when it is statically zero.  This means there are no fields
+           of supertypes, and it will always be zero.  *)
+        IF obj_offset = 0
+        THEN prefixAlign := Target.Word.size
+        ELSE prefixAlign := Target.Byte
+        END; 
+        offset := fieldInfo.offset MOD Target.Word.size;
+        RETURN CG.GCD (prefixAlign, offset);
+    | Class.cMETHOD => RETURN Target.Address.align;
+    ELSE RETURN Expr.Alignment (Value.ToExpr (p.obj));
+    END (*CASE*)
+  END QualifyExprAlign; 
 
 PROCEDURE EqCheck (a: P;  e: Expr.T;  x: M3.EqAssumption): BOOLEAN =
   BEGIN

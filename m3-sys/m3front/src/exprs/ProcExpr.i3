@@ -6,6 +6,7 @@
 (* Last Modified On Thu Jul 27 13:25:40 1989 By kalsow         *)
 
 INTERFACE ProcExpr;
+(* A PROCEDURE constant. *) 
 
 IMPORT Expr, Value;
 

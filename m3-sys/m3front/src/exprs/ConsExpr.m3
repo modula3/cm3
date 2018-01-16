@@ -8,6 +8,8 @@
 (*      modified on Fri Dec 14 21:41:11 1990 by muller         *)
 
 MODULE ConsExpr;
+(* A value constructor. Has an array, record, or set constructor
+   as a child. *) 
 
 IMPORT M3, Expr, ExprRep, Error, Type;
 IMPORT TypeExpr, SetExpr, RecordExpr, ArrayExpr;
@@ -17,11 +19,11 @@ TYPE
 
 TYPE
   P = Expr.T BRANDED "ConsExpr.P" OBJECT
-        tipe : Expr.T;
-        args : Expr.List;
-        dots : BOOLEAN;
-        base : Expr.T;
-        kind : Kind;
+        typeExpr : Expr.T; (* An *expression* for the type being constructed. *)
+        args     : Expr.List;
+        dots     : BOOLEAN;
+        base     : Expr.T;
+        kind     : Kind;
       OVERRIDES
         typeOf       := TypeOf;
         check        := Check;
@@ -44,11 +46,11 @@ TYPE
         note_write   := ExprRep.NotWritable;
       END;
 
-PROCEDURE New (type: Expr.T;  args: Expr.List;  dots: BOOLEAN): Expr.T =
+PROCEDURE New (typeExpr: Expr.T;  args: Expr.List;  dots: BOOLEAN): Expr.T =
   VAR p := NEW (P);
   BEGIN
     ExprRep.Init (p);
-    p.tipe      := type;
+    p.typeExpr  := typeExpr;
     p.args      := args;
     p.dots      := dots;
     p.base      := NIL;
@@ -78,9 +80,9 @@ PROCEDURE Base (e: Expr.T): Expr.T =
 PROCEDURE TypeOf (p: P): Type.T =
   VAR ta: Type.T;
   BEGIN
-    IF TypeExpr.Split (p.tipe, ta)
+    IF TypeExpr.Split (p.typeExpr, ta)
       THEN RETURN ta;
-      ELSE RETURN Expr.TypeOf (p.tipe);
+      ELSE RETURN Expr.TypeOf (p.typeExpr);
     END;
   END TypeOf;
 
@@ -88,7 +90,7 @@ PROCEDURE Seal (p: P) =
   VAR ta: Type.T;  info: Type.Info;
   BEGIN
     IF (p.base # NIL) THEN RETURN END;
-    IF NOT TypeExpr.Split (p.tipe, ta) THEN RETURN END;
+    IF NOT TypeExpr.Split (p.typeExpr, ta) THEN RETURN END;
     ta := Type.Base (ta);  (* strip any BITS FOR packing *)
     ta := Type.CheckInfo (ta, info);
     IF (ta = NIL) THEN
@@ -109,7 +111,7 @@ PROCEDURE Seal (p: P) =
 PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
   BEGIN
     Seal (p);
-    Expr.TypeCheck (p.tipe, cs);
+    Expr.TypeCheck (p.typeExpr, cs);
     p.type := TypeOf (p);
     IF (p.kind = Kind.Unknown) THEN
       Error.Msg ("constructor type must be array, record, or set type");
@@ -140,7 +142,7 @@ PROCEDURE Prep (p: P) =
   VAR t: Type.T;
   BEGIN
     Seal (p);
-    IF TypeExpr.Split (p.tipe, t) THEN Type.Compile (t) END;
+    IF TypeExpr.Split (p.typeExpr, t) THEN Type.Compile (t) END;
     Expr.Prep (p.base);
   END Prep;
 

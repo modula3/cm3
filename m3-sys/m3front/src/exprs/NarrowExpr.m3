@@ -30,6 +30,7 @@ TYPE
         prepLiteral  := ExprRep.NoPrepLiteral;
         genLiteral   := ExprRep.NoLiteral;
         note_write   := ExprRep.NotWritable;
+        exprAlign    := NarrowExprAlign;
       END;
 
 PROCEDURE New (a: Expr.T;  t: Type.T): Expr.T =
@@ -66,6 +67,12 @@ PROCEDURE NeedsAddress (p: P) =
   BEGIN
     Expr.NeedsAddress (p.expr);
   END NeedsAddress;
+
+PROCEDURE NarrowExprAlign (p: P): Type.BitAlignT =
+  (* Just inherit from operand expression. *)
+  BEGIN
+    RETURN Expr.Alignment(p.expr);
+  END NarrowExprAlign;
 
 PROCEDURE Prep (p: P) =
   BEGIN

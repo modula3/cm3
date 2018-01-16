@@ -7,10 +7,12 @@
 (*      Modified On Thu Jun 15 14:03:43 PDT 1995 By ericv      *)
 
 INTERFACE ConsExpr;
+(* A value constructor. Has an array, record, or set constructor
+   as a child. *) 
 
 IMPORT Expr;
 
-PROCEDURE New (type: Expr.T;  args: Expr.List;  dots: BOOLEAN): Expr.T;
+PROCEDURE New (typeExpr: Expr.T;  args: Expr.List;  dots: BOOLEAN): Expr.T;
 
 PROCEDURE Is (e: Expr.T): BOOLEAN;
 

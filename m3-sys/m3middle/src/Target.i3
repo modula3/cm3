@@ -477,7 +477,7 @@ VAR (*CONST*)
   CONST First_readable_addr: CARDINAL = 4096 (* * Char.size *);
   (* Read or write references to addresses in the range [0..First_readable-1]
      will cause an address faults.  Hence, no explicit NIL checks are needed
-     for dereferencing with offsets in this range.
+     for dereferencing with referent sizes in this range.
 
      m3front only checks the size of surrounding accessed type,
      i.e. the field or array the element is within. This is overly conservative.

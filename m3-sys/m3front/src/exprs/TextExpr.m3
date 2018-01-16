@@ -36,6 +36,7 @@ TYPE
         prepLiteral  := PrepLiteral;
         genLiteral   := GenLiteral;
         note_write   := ExprRep.NotWritable;
+        exprAlign    := ExprRep.ExprAddrAlign; 
       END;
 
 TYPE

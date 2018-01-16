@@ -6,10 +6,12 @@
 (* Last Modified On Tue Aug 25 14:21:07 PDT 1992 By kalsow     *)
 
 INTERFACE IntegerExpr;
+(* INTEGER and LONGINT *Constants* only. *)
 
 IMPORT Type, Expr, Target;
 
 PROCEDURE New  (type: Type.T;  READONLY value: Target.Int): Expr.T;
+(* PRE: Type.IsSubtype (type, Int.T) OR Type.IsSubtype (type, LInt.T) *)
 
 PROCEDURE Split (e: Expr.T;  VAR v: Target.Int;  VAR t: Type.T): BOOLEAN;
 

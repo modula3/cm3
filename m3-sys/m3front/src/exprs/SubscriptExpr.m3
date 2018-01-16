@@ -38,6 +38,7 @@ TYPE
         prepLiteral  := ExprRep.NoPrepLiteral;
         genLiteral   := ExprRep.NoLiteral;
         note_write   := NoteWrites;
+        exprAlign    := SubscriptExprAlign;
       END;
 
 PROCEDURE New (a, b: Expr.T): Expr.T =
@@ -57,6 +58,16 @@ PROCEDURE TypeOf (p: P): Type.T =
   VAR ta, ti, te: Type.T;
   BEGIN
     ta := Type.Base (Expr.TypeOf (p.a));
+
+(* CHECK: Does the following make any sense?  This is a pure function.
+          Shouldn't it follow the deref node rather than create
+          another one?
+
+   How about:
+    IF RefType.Split (ta, (*OUT*)targetType) THEN (* Implicit dereference. *)
+       ta := Type.Base (target)
+    END;
+*)
 
     IF RefType.Is (ta) THEN
       (* auto-magic dereference *)
@@ -165,6 +176,29 @@ PROCEDURE NeedsAddress (p: P) =
   BEGIN
     Expr.NeedsAddress (p.a);
   END NeedsAddress;
+
+PROCEDURE SubscriptExprAlign (p: P): Type.BitAlignT =
+  VAR arrayAlign, eltPack: INTEGER;
+  VAR ta, ti, te, targetType: Type.T;
+  VAR minb, maxb: Target.Int;
+  BEGIN
+    arrayAlign := MIN (Expr.Alignment(p.a), Target.Word.align);
+    ta := Type.Base (Expr.TypeOf(p.a));
+    IF RefType.Split (ta, (*OUT*)targetType) THEN (* Implicit dereference. *)
+       ta := Type.Base (targetType)
+    END;
+    eltPack := ArrayType.EltPack(ta);
+    IF ArrayType.Split(ta, ti, te) THEN
+      IF te # NIL THEN (* Fixed array. *)
+        Expr.GetBounds (p.b, minb, maxb);
+        IF TInt.LE (maxb , minb) THEN (* one or fewer elements accessible. *)
+          RETURN arrayAlign (* element's align is as good as array's. *);
+        END
+      END;
+      RETURN CG.GCD (arrayAlign, eltPack);
+    END;
+    RETURN Expr.Alignment (p.a);
+  END SubscriptExprAlign;
 
 PROCEDURE Prep (p: P) =
   VAR info: Type.Info;

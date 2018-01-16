@@ -7,6 +7,7 @@
 (*      Modified On Fri Dec 21 01:19:11 1990 By muller         *)
 
 INTERFACE ArrayExpr;
+(* An array constructor. *) 
 
 IMPORT Type, Expr, Target;
 

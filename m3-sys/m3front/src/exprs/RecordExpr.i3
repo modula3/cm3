@@ -6,6 +6,7 @@
 (* Last Modified On Fri Jun 24 08:48:36 PDT 1994 By kalsow         *)
 
 INTERFACE RecordExpr;
+(* A record constructor. *) 
 
 IMPORT M3ID, Type, Expr;
 

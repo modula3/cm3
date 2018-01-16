@@ -7,6 +7,7 @@
 (*      Modified On Fri Jul  6 23:46:44 1990 By muller         *)
 
 INTERFACE SetExpr;
+(* For set constructors. *) 
 
 IMPORT Type, Expr;
 

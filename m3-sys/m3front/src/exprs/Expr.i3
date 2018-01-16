@@ -7,7 +7,7 @@
 
 INTERFACE Expr;
 
-IMPORT M3, M3Buf, CG, Target;
+IMPORT M3, M3Buf, CG, Target, Type;
 
 TYPE
   T    = M3.Expr;
@@ -63,10 +63,21 @@ PROCEDURE MarkForDirectAssignment (t: T);
 PROCEDURE IsMarkedForDirectAssignment (t: T): BOOLEAN;
 (* returns "TRUE" if "t" is marked for direct assignment *)
 
+PROCEDURE Alignment (t: T): Type.BitAlignT;
+(* A bit alignment that t is guaranteed to have.  Hopefully maximum, or
+   nearly so.  Always a true alignment, possibly as small as 1 bit. 
+   Expression alignments are more precise than type alignments ion that they
+   can take into account properties of an expression that the expression's
+   type does not necessarily have in general.  Particularly, if a value is
+   a field or element, they can depend on its containing record, object,
+   or array.
+   Compare to Type.T.info.alignment. 
+*)
+
 (*** phase 4 ****)
 
 (* Expressions are compiled in two steps:
-     Prep: emit any code that includes branchs or stores
+     Prep: emit any code that includes branches or stores
      Compile: emit the rest of the code
 *)
 

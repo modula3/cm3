@@ -7,6 +7,7 @@
 (*      modified on Thu May 20 08:20:18 PDT 1993 by muller     *)
 
 MODULE SetExpr;
+(* For set constructors. *) 
 
 IMPORT M3, CG, Expr, ExprRep, Type, Error, IntegerExpr, EnumExpr;
 IMPORT RangeExpr, KeywordExpr, SetType, AssignStmt, CheckExpr;

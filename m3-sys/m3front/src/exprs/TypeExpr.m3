@@ -9,6 +9,7 @@
 MODULE TypeExpr;
 
 IMPORT M3, M3ID, Expr, ExprRep, Type, Value, NamedExpr, QualifyExpr;
+IMPORT Target; 
 
 TYPE
   P = Expr.T BRANDED "TypeExpr.P"OBJECT
@@ -33,6 +34,7 @@ TYPE
         prepLiteral  := ExprRep.NoPrepLiteral;
         genLiteral   := ExprRep.NoLiteral;
         note_write   := ExprRep.NotWritable;
+        exprAlign    := TypeExprAlign; 
       END;
 
 PROCEDURE New (t: Type.T): Expr.T =
@@ -68,6 +70,18 @@ PROCEDURE Check (p: P;  <*UNUSED*> VAR cs: Expr.CheckState) =
   BEGIN
     p.t := Type.Check (p.t);
   END Check;
+
+PROCEDURE TypeExprAlign (p: P): Type.BitAlignT =
+  VAR type: Type.T;
+  VAR typeInfo: Type.Info;
+  BEGIN
+    type := Type.StripPacked (p.t);
+    IF type # NIL THEN
+      EVAL Type.CheckInfo (type, typeInfo);
+      RETURN typeInfo.alignment;
+    END;
+    RETURN Target.Word.align;
+  END TypeExprAlign;
 
 PROCEDURE EqCheck (a: P;  e: Expr.T;  x: M3.EqAssumption): BOOLEAN =
   BEGIN

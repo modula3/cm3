@@ -9,7 +9,7 @@
 
 INTERFACE ExprRep;
 
-IMPORT M3, M3Buf, CG, Target;
+IMPORT M3, M3Buf, CG, Target, Type;
 
 REVEAL
   M3.Expr = M3.Node BRANDED "Expr.T" OBJECT
@@ -17,6 +17,7 @@ REVEAL
     checked   : BOOLEAN;
     direct_ok : BOOLEAN;
     do_direct : BOOLEAN;
+    align     : INTEGER; 
   METHODS
     typeOf       (): M3.Type                       := NoType;
     check        (VAR cs: M3.CheckState)           := NoCheck;
@@ -37,6 +38,7 @@ REVEAL
     prepBR       (true, false: CG.Label;  freq: CG.Frequency) := NotBoolean;
     compileBR    (true, false: CG.Label;  freq: CG.Frequency) := NotBoolean;
     note_write   ()                                := NotWritable;
+    exprAlign    (): Type.BitAlignT                := ExprAlignDefault;
   END;
 
 TYPE Ta   = M3.Expr OBJECT a: M3.Expr     OVERRIDES isEqual := EqCheckA  END;
@@ -66,6 +68,14 @@ PROCEDURE NotBoolean     (e: M3.Expr; t,f: CG.Label; freq: CG.Frequency);
 PROCEDURE PrepNoBranch   (e: M3.Expr; t,f: CG.Label; freq: CG.Frequency);
 PROCEDURE NoBranch       (e: M3.Expr; t,f: CG.Label; freq: CG.Frequency);
 PROCEDURE NotWritable    (e: M3.Expr);
+
+(* Multi-use overrides for exprAlign:  *)
+PROCEDURE ExprAlignDefault (e: M3.Expr): Type.BitAlignT; (* Strips packed. *) 
+PROCEDURE ExprAddrAlign    (e: M3.Expr): Type.BitAlignT; 
+PROCEDURE ExprBoolAlign    (e: M3.Expr): Type.BitAlignT;
+PROCEDURE ExprIntAlign     (e: M3.Expr): Type.BitAlignT;
+PROCEDURE ExprAlignArg0    (e: Ta): Type.BitAlignT;
+  (* ^Inherit alignment from argument zero. *)  
 
 PROCEDURE EqCheckA  (e: Ta;  x: M3.Expr;  z: M3.EqAssumption): BOOLEAN;
 PROCEDURE EqCheckAB (e: Tab; x: M3.Expr;  z: M3.EqAssumption): BOOLEAN;

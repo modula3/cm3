@@ -34,6 +34,7 @@ TYPE
         prepLiteral  := PrepLiteral;
         genLiteral   := GenLiteral;
         note_write   := NoteWrites;
+        exprAlign    := KeywordExprAlign; 
       END;
 
 PROCEDURE New (key: M3ID.T;  arg: Expr.T): Expr.T =
@@ -74,6 +75,12 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
     Expr.TypeCheck (p.expr, cs);
     p.type := Expr.TypeOf (p.expr);
   END Check;
+
+PROCEDURE KeywordExprAlign (p: P): Type.BitAlignT =
+  (* Just inherit from operand expression. *)
+  BEGIN
+    RETURN Expr.Alignment(p.expr);
+  END KeywordExprAlign;
 
 PROCEDURE EqCheck (a: P;  e: Expr.T;  x: M3.EqAssumption): BOOLEAN =
   BEGIN

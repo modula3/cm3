@@ -37,6 +37,7 @@ TYPE
         prepLiteral  := ExprRep.NoPrepLiteral;
         genLiteral   := GenLiteral;
         note_write   := ExprRep.NotWritable;
+        exprAlign    := ExprRep.ExprAddrAlign; 
       END;
 
 PROCEDURE New (object: Type.T;  name: M3ID.T;

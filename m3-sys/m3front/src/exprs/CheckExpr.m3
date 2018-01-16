@@ -15,6 +15,12 @@ TYPE
   Class = { cLOWER, cUPPER, cBOTH };
 
 TYPE
+(* CLEAN ME UP: Use ExprRep.Ta as parent type, then replace uses of
+                field 'expr' by field 'a' from Ta.
+                Could then use general-purpose ExprRep.ExprAlignArg0
+                instead of CheckExpr-specific CheckExprAlign.
+                There are several *Expr.P types that could use the
+                same. *)
   P = Expr.T OBJECT
         expr  : Expr.T;
         min   : Target.Int;
@@ -41,6 +47,7 @@ TYPE
         prepLiteral  := ExprRep.NoPrepLiteral;
         genLiteral   := ExprRep.NoLiteral;
         note_write   := ExprRep.NotWritable;
+        exprAlign    := CheckExprAlign; 
       END;
 
 PROCEDURE New (a: Expr.T;  READONLY min, max: Target.Int;
@@ -98,6 +105,11 @@ PROCEDURE EqCheck (a: P;  e: Expr.T;  x: M3.EqAssumption): BOOLEAN =
     ELSE RETURN FALSE;
     END;
   END EqCheck;
+
+PROCEDURE CheckExprAlign (p: P): Type.BitAlignT =
+  BEGIN
+    RETURN Expr.Alignment(p.expr);
+  END CheckExprAlign;
 
 PROCEDURE Prep (p: P) =
   BEGIN

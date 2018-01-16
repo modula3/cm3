@@ -6,6 +6,7 @@
 (* Last Modified On Mon Aug 24 09:55:55 PDT 1992 By kalsow     *)
 
 INTERFACE AddressExpr;
+(* ADDRESS *Constants* only. *)
 
 IMPORT Expr, Target;
 

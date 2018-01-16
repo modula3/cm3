@@ -33,6 +33,7 @@ TYPE
         prepLiteral  := ExprRep.NoPrepLiteral;
         genLiteral   := ExprRep.NoLiteral;
         note_write   := ExprRep.NotWritable;
+        exprAlign    := ExprRep.ExprBoolAlign; 
       END;
 
 PROCEDURE New (a, b: Expr.T): Expr.T =

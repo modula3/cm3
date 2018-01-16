@@ -53,6 +53,7 @@ TYPE
         prepLiteral  := ExprRep.NoPrepLiteral;
         genLiteral   := ExprRep.NoLiteral;
         note_write   := NoteWrites;
+        exprAlign    := CastExprAlign;
       END;
 
 PROCEDURE New (a: Expr.T;  t: Type.T): Expr.T =
@@ -246,6 +247,15 @@ PROCEDURE Prep (p: P) =
         Expr.Prep (e);
     END;
   END Prep;
+
+PROCEDURE CastExprAlign (p: P): Type.BitAlignT =
+  VAR type: Type.T;
+  VAR typeInfo: Type.Info; 
+  BEGIN
+    type := Type.StripPacked (p.tipe);
+    type := Type.CheckInfo (type, typeInfo);
+    RETURN typeInfo.alignment;
+  END CastExprAlign;
 
 PROCEDURE Compile (p: P) =
   VAR

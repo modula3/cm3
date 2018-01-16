@@ -7,6 +7,7 @@
 (*      modified on Fri Apr 27 07:34:00 1990 by muller         *)
 
 MODULE AddressExpr;
+(* ADDRESS *Constants* only. *)
 
 IMPORT M3, CG, Expr, ExprRep, Type, Addr, Null, IntegerExpr;
 IMPORT Target, TInt, TWord, M3Buf;

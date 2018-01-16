@@ -7,6 +7,7 @@
 (*      modified on Tue Oct 10 18:42:24 1989 by muller         *)
 
 MODULE ProcExpr;
+(* A PROCEDURE constant. *) 
 
 IMPORT M3, CG, Expr, ExprRep, Type, Value, Procedure, M3Buf;
 IMPORT Scope;

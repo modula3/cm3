@@ -8,6 +8,7 @@
 (*      modified on Tue Mar 12 00:29:44 1991 by muller         *)
 
 MODULE ArrayExpr;
+(* An array constructor. *) 
 
 IMPORT M3, M3ID, CG, Expr, ExprRep, Error, Type, ArrayType;
 IMPORT KeywordExpr, RangeExpr, Int, OpenArrayType, Module;

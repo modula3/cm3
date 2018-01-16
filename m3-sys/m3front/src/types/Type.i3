@@ -14,6 +14,7 @@ TYPE
   T          = M3.Type;
   Assumption = M3.EqAssumption;
   ModuleInfo <: REFANY;
+  BitAlignT  = [0 .. 255];
 
 TYPE
   Class = { Error, Named, Integer, Longint, Real, Longreal, Extended,
@@ -73,6 +74,9 @@ PROCEDURE IsAlignedOk (t: T;  offs: INTEGER): BOOLEAN;
 
 PROCEDURE Strip (t: T): T;
 (* return the constructed type of 't' (ie. strip renaming) *)
+
+PROCEDURE StripPacked (t: T): T;
+(* return the unpacked type of 't' (i.e., strip renaming and packing.) *)
 
 PROCEDURE Base (t: T): T;
 (* return the base type of 't' (strip renaming, packing & subranges) *)

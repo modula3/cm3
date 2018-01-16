@@ -7,6 +7,7 @@
 (*      modified on Tue Apr 10 22:35:24 1990 by muller         *)
 
 MODULE IntegerExpr;
+(* INTEGER and LONGINT *Constants* only. *)
 
 IMPORT M3, CG, Expr, ExprRep, Type, Int, LInt, Error, M3Buf, Target, TInt;
 
@@ -38,6 +39,7 @@ TYPE
 VAR cache := ARRAY BOOLEAN, [-7 .. 64] OF P {ARRAY [-7 .. 64] OF P{NIL, ..},..};
 
 PROCEDURE New (type: Type.T;  READONLY value: Target.Int): Expr.T =
+(* PRE: Type.IsSubtype (type, Int.T) OR Type.IsSubtype (type, LInt.T) *)
   VAR p: P;  n: INTEGER;  t := Type.IsSubtype (type, LInt.T);
       min, max: Target.Int;
   BEGIN

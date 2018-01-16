@@ -8,6 +8,7 @@
 (*      modified on Wed Nov 28 02:47:43 1990 by muller         *)
 
 MODULE RecordExpr;
+(* A record constructor. *) 
 
 IMPORT M3, M3ID, CG, Expr, ExprRep, Error, Type, RecordType, Module;
 IMPORT Value, Field, KeywordExpr, RangeExpr, AssignStmt, M3Buf;

@@ -61,6 +61,7 @@ REVEAL
         prepLiteral  := ExprRep.NoPrepLiteral;
         genLiteral   := ExprRep.NoLiteral;
         note_write   := NoteWrites;
+        exprAlign    := CallExprAlign;
       END;
 
 PROCEDURE New (proc: Expr.T;  args: Expr.List): Expr.T =
@@ -308,6 +309,16 @@ PROCEDURE NeedsAddress (p: T) =
       p.methods.need_addr (p);
     END;
   END NeedsAddress;
+
+PROCEDURE CallExprAlign (p: T): Type.BitAlignT =
+  VAR resultType : Type.T;
+  VAR typeInfo: Type.Info;
+  BEGIN
+    resultType := ProcType.Result (p.proc_type);
+    resultType := Type.StripPacked (resultType);
+    EVAL Type.CheckInfo (resultType, typeInfo);
+    RETURN typeInfo.alignment;
+  END CallExprAlign;
 
 PROCEDURE Prep (p: T) =
   BEGIN

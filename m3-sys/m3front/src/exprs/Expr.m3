@@ -11,6 +11,7 @@ MODULE Expr EXPORTS Expr, ExprRep;
 
 IMPORT M3, M3Buf, CG, Type, Scanner, ExprParse;
 IMPORT Target, TInt, ErrType, Error;
+IMPORT Bool, Int; 
 
 (********************************************************************)
 
@@ -26,6 +27,7 @@ PROCEDURE Init (t: T) =
     t.checked   := FALSE;
     t.direct_ok := FALSE;
     t.do_direct := FALSE;
+    t.align     := Target.Word.align+1 (* => uncached. *);
   END Init;
 
 (********************************************************************)
@@ -128,6 +130,65 @@ PROCEDURE IsMarkedForDirectAssignment (t: T): BOOLEAN =
   BEGIN
     RETURN (t # NIL) AND (t.do_direct);
   END IsMarkedForDirectAssignment;
+
+PROCEDURE Alignment (t: T): Type.BitAlignT = 
+(* A bit alignment that t is guaranteed to have.  Hopefully maximum, or
+   nearly so.  Always a true alignment, possibly as small as 1 bit. 
+   Expression alignments are more precise than type alignments in that they
+   can take into account properties of an expression that the expression's
+   type does not necessarily have in general.  Particularly, if a value is
+   a field or element, they can depend on its containing record, object,
+   or array.
+   Compare to Type.T.info.alignment. 
+*)
+
+  BEGIN
+    IF t = NIL THEN RETURN Target.Word.align; END;
+    IF t.align > Target.Word.align THEN (* Compute and cache it. *)
+      t.align := t.exprAlign()
+    END; 
+    RETURN t.align;     
+  END Alignment;
+
+(* Multi-use overrides for exprAlign, declared in ExprRep:  *)
+
+PROCEDURE ExprAlignDefault (e: T): Type.BitAlignT =
+  (* Strips packed. *) 
+  VAR type: Type.T;
+  VAR info: Type.Info; 
+  BEGIN
+    type := Type.StripPacked (e.type);
+    (* ^Assume we are not in a packing environment. *) 
+    IF type # NIL THEN 
+      EVAL Type.CheckInfo (type, info);
+      RETURN info.alignment;
+    END; 
+    RETURN Target.Word.align; 
+  END ExprAlignDefault;
+
+PROCEDURE ExprAddrAlign (<*UNUSED*> e: T): Type.BitAlignT =
+  BEGIN
+    RETURN Target.Address.align; 
+  END ExprAddrAlign; 
+
+PROCEDURE ExprBoolAlign (<*UNUSED*> e: T): Type.BitAlignT =
+  VAR info: Type.Info;
+  BEGIN
+    EVAL Type.CheckInfo (Bool.T, info);
+    RETURN info.alignment; 
+  END ExprBoolAlign; 
+
+PROCEDURE ExprIntAlign (<*UNUSED*> e: T): Type.BitAlignT =
+  VAR info: Type.Info;
+  BEGIN
+    EVAL Type.CheckInfo (Int.T, info);
+    RETURN info.alignment; 
+  END ExprIntAlign; 
+
+PROCEDURE ExprAlignArg0 (e: Ta): Type.BitAlignT =
+  BEGIN
+    RETURN Alignment(e.a); 
+  END ExprAlignArg0; 
 
 (********************************************************************)
 
