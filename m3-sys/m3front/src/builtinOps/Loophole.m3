@@ -38,6 +38,11 @@ PROCEDURE NeedsAddress (ce: CallExpr.T) =
     Expr.NeedsAddress (ce.args[0]);
   END NeedsAddress;
 
+PROCEDURE LoopholeExprAlign (ce: CallExpr.T): Type.BitAlignT =
+  BEGIN
+    RETURN Expr.Alignment(ce.args[0]);
+  END LoopholeExprAlign;
+
 PROCEDURE Prep (ce: CallExpr.T) =
   BEGIN
     Expr.Prep (ce.args[0]);
@@ -89,7 +94,8 @@ PROCEDURE Initialize () =
                                  CallExpr.NoBounds,
                                  IsWritable,
                                  IsDesignator,
-                                 NoteWrites);
+                                 NoteWrites,
+                                 LoopholeExprAlign);
     Procedure.DefinePredefined ("LOOPHOLE", Z, TRUE);
   END Initialize;
 

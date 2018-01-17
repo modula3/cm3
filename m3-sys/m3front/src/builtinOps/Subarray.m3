@@ -61,6 +61,25 @@ PROCEDURE NeedsAddress (<*UNUSED*> ce: CallExpr.T) =
     (* yes, all subarray's get memory addresses *)
   END NeedsAddress;
 
+PROCEDURE SubarrayExprAlign (ce: CallExpr.T): Type.BitAlignT =
+  VAR 
+    arrayExpr := ce.args[0];
+    arrayType := Type.Base (Expr.TypeOf (arrayExpr));
+    eltPack, align, len : INTEGER; 
+  BEGIN
+    IF OpenArrayType.Is (arrayType) THEN
+      align := OpenArrayType.EltAlign (arrayType);
+      eltPack := OpenArrayType.EltPack (arrayType);
+    ELSE (* Fixed array. *)
+      align := Expr.Alignment(arrayExpr);
+      IF IntegerExpr.ToInt (Expr.ConstValue(ce.args[2]), len) THEN
+        IF len <= 1 THEN RETURN align END;
+      END; 
+      eltPack  := ArrayType.EltPack (arrayType);
+    END;
+    RETURN CG.GCD (align, eltPack);
+  END SubarrayExprAlign;
+
 PROCEDURE Prep (ce: CallExpr.T) =
   BEGIN
     PrepLV (ce, traced := FALSE);
@@ -465,7 +484,8 @@ PROCEDURE Initialize () =
                                  CallExpr.NoBounds,
                                  IsWritable,
                                  IsDesignator,
-                                 NoteWrites);
+                                 NoteWrites,
+                                 SubarrayExprAlign);
     Procedure.DefinePredefined ("SUBARRAY", Z, TRUE);
   END Initialize;
 

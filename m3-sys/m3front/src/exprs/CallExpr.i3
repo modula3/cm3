@@ -38,7 +38,8 @@ TYPE
   CompilerLV  = PROCEDURE (t: T;  traced: BOOLEAN);
   CompilerBR  = PROCEDURE (t: T;  true, false: CG.Label;  freq: CG.Frequency);
   NoteWriter  = PROCEDURE (t: T);
-
+  BuiltinAlign= PROCEDURE (t: T): Type.BitAlignT;
+  
 PROCEDURE NewMethodList
   (minArgs      : INTEGER;
    maxArgs      : INTEGER;
@@ -59,7 +60,9 @@ PROCEDURE NewMethodList
    bounder      : Bounder;
    isWritable   : Predicate;
    isDesignator : Predicate;
-   noteWriter   : NoteWriter): MethodList;
+   noteWriter   : NoteWriter;
+   builtinAlign : BuiltinAlign := BuiltinAlignDefault
+  ): MethodList;
 
 PROCEDURE Is (e: Expr.T): BOOLEAN;
 PROCEDURE IsUserProc (e: Expr.T): BOOLEAN;
@@ -75,5 +78,6 @@ PROCEDURE NotBoolean     (t: T;  true, false: CG.Label;  freq: CG.Frequency);
 PROCEDURE PrepNoBranch   (t: T;  true, false: CG.Label;  freq: CG.Frequency);
 PROCEDURE NoBranch       (t: T;  true, false: CG.Label;  freq: CG.Frequency);
 PROCEDURE NotWritable    (t: T);
+PROCEDURE BuiltinAlignDefault (t: T): Type.BitAlignT;
 
 END CallExpr.

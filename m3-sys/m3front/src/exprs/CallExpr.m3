@@ -35,6 +35,7 @@ REVEAL
                  isDesignator : Predicate;
                  noteWriter   : NoteWriter;
                  isIndirect   : Predicate;
+                 builtinAlign : BuiltinAlign;
                END;
 
 REVEAL
@@ -113,7 +114,9 @@ PROCEDURE NewMethodList (minArgs, maxArgs: INTEGER;
                          bounder      : Bounder;
                          isWritable   : Predicate;
                          isDesignator : Predicate;
-                         noteWriter   : NoteWriter): MethodList =
+                         noteWriter   : NoteWriter;
+                         builtinAlign : BuiltinAlign := BuiltinAlignDefault
+                        ): MethodList =
   VAR m: MethodList;
   BEGIN
     m := NEW (MethodList);
@@ -137,6 +140,7 @@ PROCEDURE NewMethodList (minArgs, maxArgs: INTEGER;
     m.isWritable   := isWritable;
     m.isDesignator := isDesignator;
     m.noteWriter   := noteWriter;
+    m.builtinAlign := builtinAlign;
     RETURN m;
   END NewMethodList;
 
@@ -314,11 +318,24 @@ PROCEDURE CallExprAlign (p: T): Type.BitAlignT =
   VAR resultType : Type.T;
   VAR typeInfo: Type.Info;
   BEGIN
-    resultType := ProcType.Result (p.proc_type);
-    resultType := Type.StripPacked (resultType);
-    EVAL Type.CheckInfo (resultType, typeInfo);
-    RETURN typeInfo.alignment;
+    IF p.methods = NIL THEN (* User proc, has non-nil proc_type. *) 
+      resultType := ProcType.Result (p.proc_type);
+      resultType := Type.StripPacked (resultType);
+      EVAL Type.CheckInfo (resultType, typeInfo);
+      RETURN typeInfo.alignment;
+    ELSE
+      RETURN p.methods.builtinAlign (p);
+    END;
   END CallExprAlign;
+
+PROCEDURE BuiltinAlignDefault (p: T): Type.BitAlignT =
+  VAR
+    resultType : Type.T;
+    resultInfo : Type.Info;
+  BEGIN
+    resultType := Type.CheckInfo (TypeOf (p), resultInfo);
+    RETURN resultInfo.alignment; 
+  END BuiltinAlignDefault; 
 
 PROCEDURE Prep (p: T) =
   BEGIN

@@ -777,7 +777,8 @@ PROCEDURE Force (s: Size := 0) =
   END Force;
 
 PROCEDURE Force_byte_align (VAR x: ValRec; s: Size) =
-(* Force x's alignment as large as statically known, but at least byte-aligned. *) 
+(* Force x's alignment as large as statically known, but at least byte-aligned. *)
+(* Make a copy, if necessary.  Works only on things that fit in a word. *) 
   VAR best_align: INTEGER;
       word_size := TargetMap.CG_Size[Target.Word.cg_type];
       word_align := TargetMap.CG_Align[Target.Word.cg_type];

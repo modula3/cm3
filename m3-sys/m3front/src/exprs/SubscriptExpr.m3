@@ -189,9 +189,9 @@ PROCEDURE SubscriptExprAlign (p: P): Type.BitAlignT =
     END;
     eltPack := ArrayType.EltPack(ta);
     IF ArrayType.Split(ta, ti, te) THEN
-      IF te # NIL THEN (* Fixed array. *)
+      IF ti # NIL THEN (* Fixed array. *)
         Expr.GetBounds (p.b, minb, maxb);
-        IF TInt.LE (maxb , minb) THEN (* one or fewer elements accessible. *)
+        IF TInt.LE (maxb, minb) THEN (* one or fewer elements accessible. *)
           RETURN arrayAlign (* element's align is as good as array's. *);
         END
       END;

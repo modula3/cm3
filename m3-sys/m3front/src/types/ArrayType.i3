@@ -15,8 +15,10 @@ PROCEDURE Parse (): Type.T;
 PROCEDURE New (index, element: Type.T): Type.T;
 
 PROCEDURE Split (array: Type.T; VAR index, element: Type.T): BOOLEAN;
-(* If 'array' is an array type, returns TRUE and sets index and element
-   to the appropriate types.  Otherwise, returns FALSE *)
+(* If 'array' is a fixed array type, returns TRUE and sets index and
+   element to the appropriate types.  If 'array' is an open array type,
+   returns TRUE, sets index to NIL, and sets element to the appropriate
+   type.  Otherwise, returns FALSE *)
 
 PROCEDURE EltPack (array: Type.T): INTEGER;
 (* If 'array' is an array type, returns the packed size in bits of
