@@ -232,11 +232,11 @@ declare_local (n: Name;  s: ByteSize;  a: Alignment;  t: Type;
                m3t: TypeUID;  in_memory, up_level: BOOLEAN;
                f: Frequency): Var;
 (* Declare a local variable.  This can appear either within a
-   signature, (i.e., after a declare_procedure but before is
+   signature, (i.e., after a declare_procedure but before its
    begin_procedure) or inside the body, (i.e., within a
    begin_procedure/end_procedure pair.)
 
-   In a signature, it my be interspersed with declare_param
+   In a signature, it may be interspersed with declare_param
    occurences.  If it has name 'n' of "_result", it is a compiler-
    generated local to hold the result of scalar function result.
    (Compare this to declare_param named "_result".)
