@@ -537,7 +537,7 @@ PROCEDURE Declare (t: T): BOOLEAN =
       IF (t.indirect) THEN
         t.cg_align := t.align;
         t.next_cg_var := all_cg_vars;  all_cg_vars := t;
-        t.bss_var := CG.Declare_global (M3ID.NoID, t.size, t.cg_align,
+        t.bss_var := CG.Declare_global (t.name, t.size, t.cg_align,
                               CG.Type.Struct, Type.GlobalUID (t.tipe),
                               exported := FALSE, init := FALSE);
         CG.Init_var (t.offset, t.bss_var, 0, FALSE);
