@@ -8,15 +8,19 @@ UNSAFE MODULE M3CG_LLVM;
          across unchecked bindings.  Check that this is right. *) 
 
 IMPORT Ctypes;
+IMPORT FileRd;
 IMPORT Fmt;
 IMPORT IntRefTbl;
 IMPORT IO; (* debug this module *)
 IMPORT M3toC;
+IMPORT MD5;
 IMPORT Pathname;
 IMPORT Process;
+IMPORT Rd;
 IMPORT RefSeq;
 IMPORT Text,TextExtras;
 IMPORT TextRefTbl;
+IMPORT TextSeq;
 IMPORT Word;
 IMPORT Wr;
 
@@ -532,6 +536,7 @@ could be wrong though. And maybe change name from DIDescr to DIType ? *)
   FieldDebug = BaseDebug OBJECT
     name : Name;
     bitOffset : LONGINT;
+    packed : BOOLEAN;
   END;
 
   PackedDebug = BaseDebug OBJECT
@@ -1450,12 +1455,16 @@ PROCEDURE Align(s : BitSize) : LONGINT =
 PROCEDURE declare_field (self: U; n: Name; o: BitOffset; s: BitSize; t: TypeUID) =
   VAR
     recordRef : RecordDebug;
+    debugObj : REFANY;
     align : LONGINT;
+    packed : BOOLEAN;
   BEGIN
     recordRef := self.debugObj;
     <*ASSERT ISTYPE(recordRef,RecordDebug) *>
     align := Align(s);
-    recordRef.fields[recordRef.fieldIndex] := NEW(FieldDebug,name := n, bitOffset := VAL(o,LONGINT), tUid := t, bitSize := VAL(s,LONGINT), align := align);
+    EVAL self.debugTable.get(t, (*OUT*)debugObj);
+    packed := ISTYPE(debugObj,PackedDebug);
+    recordRef.fields[recordRef.fieldIndex] := NEW(FieldDebug,name := n, bitOffset := VAL(o,LONGINT), tUid := t, bitSize := VAL(s,LONGINT), align := align, packed := packed);
     INC(recordRef.fieldIndex);
   END declare_field;
 
@@ -1703,7 +1712,9 @@ PROCEDURE bind_segment (self: U;  seg: Var;  s: ByteSize;  a: Alignment; <*UNUSE
     v.exported := exported; (* not used *)
     v.inited := inited;     (* not used *)
 (* possibly debug the segment. This will do the global data.  The const is broken at the moment since it gets the global data type. *)
+(* fix this - broken
     IF NOT v.isConst THEN EVAL DebugSegment(self,v); END;
+*)
   END bind_segment;
 
 PROCEDURE declare_global (self: U;  n: Name;  s: ByteSize;  a: Alignment; t: Type;  m3t: TypeUID;  exported, inited: BOOLEAN): Var =
@@ -5352,25 +5363,54 @@ PROCEDURE CreateModuleFlags(self : U) =
     LLVM.LLVMAddNamedMetadataOperand(modRef, flags, mdNode);
   END CreateModuleFlags;
   
+PROCEDURE CalcPaths(self : U) : TEXT =
+  VAR
+    arcs : Pathname.Arcs;
+    cwd,prefix : TEXT;
+  BEGIN
+    (* assume source file is in a relative directory and
+       construct an absolute path to it *)
+    cwd := Pathname.Prefix(Process.GetWorkingDirectory());
+    (* strip the filename and extension *)
+    prefix := Pathname.Prefix(self.curFile);
+    arcs := Pathname.Decompose(prefix);
+    <*ASSERT arcs.getlo() = NIL *>
+    arcs := TextSeq.Sub(arcs,2); (* remove root and .. *)
+    arcs.addlo(NIL); (* add the root dir back *)
+    prefix := Pathname.Compose(arcs);
+    self.debDir := Pathname.Join(cwd,prefix);
+    self.debFile := Pathname.Last(self.curFile);
+    RETURN(Pathname.Join(self.debDir,self.debFile));
+  END CalcPaths;
+  
 PROCEDURE DebugInit(self: U) =
   VAR
-    cwd : TEXT;
+    srcFile : TEXT;
+    rd : Rd.T;
+    chkSumKind : INTEGER := 0;
+    chkSum : StringRef := LLVMTypes.StringRefEmpty;
   BEGIN
     SetDebugType();
     InitUids(self);
     IF NOT self.genDebug THEN RETURN; END;
 
-    cwd := Pathname.Prefix(Process.GetWorkingDirectory());    
-    self.debDir := Pathname.Join(cwd,Pathname.Last(Pathname.Prefix(self.curFile)));    
-    self.debFile := Pathname.Last(self.curFile);
-    
+    srcFile := CalcPaths(self);
+
     self.debugRef := NEW(M3DIB.DIBuilder).init_0(modRef,TRUE);
 
+    (* generate checksum for codeview *)
+    IF NOT dwarfDbg THEN (* and maybe for dwarf > ver 5 *)
+      chkSumKind := 1; (* MD5 *)
+      rd := FileRd.Open(srcFile);
+      chkSum := LTD(MD5.FromFile(rd));
+      Rd.Close(rd);
+    END;
+    
     self.fileRef := self.debugRef.createFile(
       Filename  := LTD(self.debFile),
       Directory := LTD(self.debDir),
-      CSKind    := 0,
-      Checksum  := LLVMTypes.StringRefEmpty);
+      CSKind    := chkSumKind,
+      Checksum  := chkSum);
 
     self.cuRef := self.debugRef.createCompileUnit(
                 Lang        := DC.DW_LANG_Modula3,
@@ -5508,7 +5548,7 @@ PROCEDURE InitUids(self : U) =
     (* Reference types: *) 
     EVAL self.debugTable.put(UID_ROOT,NEW(ObjectDebug, tUid := UID_ROOT, bitSize := 0L, align := ptrBits, typeName := M3ID.Add("ROOT"), encoding := DC.DW_ATE_address));
     EVAL self.debugTable.put(UID_UNTRACED_ROOT,NEW(ObjectDebug, tUid := UID_UNTRACED_ROOT, bitSize := 0L, align := ptrBits, typeName := M3ID.Add("UNTRACED_ROOT"), encoding := DC.DW_ATE_address));
-    EVAL self.debugTable.put(UID_ADDR,NEW(BaseDebug, tUid := UID_ADDR, bitSize := ptrBits, align := ptrBits, typeName := M3ID.Add("ADDR"), encoding := DC.DW_ATE_address));
+    EVAL self.debugTable.put(UID_ADDR,NEW(ObjectDebug, tUid := UID_ADDR, bitSize := ptrBits, align := ptrBits, typeName := M3ID.Add("ADDR"), encoding := DC.DW_ATE_address));
 
     EVAL self.debugTable.put(UID_TEXT,NEW(ObjectDebug, tUid := UID_TEXT, superType := UID_REFANY, bitSize := ptrBits, align := ptrBits, typeName := M3ID.Add("TEXT"), encoding := DC.DW_ATE_address));
     EVAL self.debugTable.put(UID_REFANY,NEW(ObjectDebug, tUid := UID_REFANY, superType := UID_ROOT, bitSize := ptrBits, align := ptrBits, typeName := M3ID.Add("REFANY"), encoding := DC.DW_ATE_address));
@@ -5935,22 +5975,16 @@ PROCEDURE DebugProcType(self : U; p : ProcTypeDebug)
 
 PROCEDURE DebugObject(self : U; o : ObjectDebug) : M3DIB.DIDerivedType =
   VAR
-    heapObjectDIT : M3DIB.DICompositeType; 
-    opaqueObjectDIT : M3DIB.DICompositeType;         
-    ptrDIT,supertypeDIT : M3DIB.DIType; 
-    (*                   CHECK ^ was descriptor*)
-    fieldDIT : M3DIB.DIType; 
-    inheritDIT : M3DIB.DIDerivedType; 
-    memberDINode : M3DIB.DIDerivedType; 
-    (* ^Not really a type.  It contains lots of other info 
-        about the member besides its type. *)  
+    heapObjectDIT,opaqueObjectDIT : M3DIB.DICompositeType;
+    ptrDIT,fieldDIT : M3DIB.DIType; 
+    inheritDIT,memberDINode : M3DIB.DIDerivedType; 
+    (*              ^Not really a type.  It contains lots of other info about the member besides its type. *)  
     paramsArr : REF ARRAY OF MetadataRef; 
     paramsMetadata : LLVMTypes.ArrayRefOfMetadataRef; 
     paramsDIArr : M3DIB.DINodeArray;
-    (* CHECK ^ correct type ? *)
     uniqueId : StringRef; 
     nextMemberNo : CARDINAL := 0;
-    tUidExists, hasSupertype : BOOLEAN := FALSE;
+    tUidExists : BOOLEAN := FALSE;
     debugObj : REFANY;
     superObj : ObjectDebug;
   BEGIN
@@ -5959,20 +5993,9 @@ PROCEDURE DebugObject(self : U; o : ObjectDebug) : M3DIB.DIDerivedType =
     END; 
 
     EnsureDebugTypeName(o); 
-    
-    (* if this object is [untraced]root then won't have
-      a supertype *)
-    IF o.tUid # UID_ROOT AND o.tUid # UID_UNTRACED_ROOT THEN
-      
-      tUidExists := self.debugTable.get(o.superType, (*OUT*)debugObj);
-      <* ASSERT tUidExists *> (* Even if it's [UNTRACED]ROOT. *) 
-      superObj := NARROW(debugObj,ObjectDebug);
-      EnsureDebugTypeName(superObj); 
-    END;
     uniqueId := LTD(M3CG.FormatUID(o.tUid));
 
     IF o.opaque THEN
-
       opaqueObjectDIT := self.debugRef.createForwardDecl (
             Tag          := DC.DW_TAG_class_type,
             Name         := LTD( "__OpaqueObject"),
@@ -6032,30 +6055,27 @@ at the type creation line. *)
     (* save for recursive lookups in fields *)
     o.DIDescr := ptrDIT;
 
-    hasSupertype 
-       := o.superType # NO_UID 
-          AND o.superType # UID_ROOT 
-          AND o.superType # UID_UNTRACED_ROOT  
-          AND o.superType # UID_REFANY;  
-    IF hasSupertype
-    (* this object is neither root nor untraced root which
-    do not have a supertypes ( tried initing the [untraced]root objects above with superType = NO_UID
-    to avoid these extra tests, but get range error. *)
+    IF o.superType # NO_UID
+    (* this object is neither root nor untraced root nor address which do not have a supertypes.*)
         AND o.tUid # UID_ROOT 
           AND o.tUid # UID_UNTRACED_ROOT    
+            AND o.tUid # UID_ADDR    
     THEN (* o has a nontrivial supertype. *)
     
       (* create any supertype debug types *)
       EVAL DebugLookupLL(self,o.superType);
 
-      supertypeDIT := superObj.objectDescr;
+      tUidExists := self.debugTable.get(o.superType, (*OUT*)debugObj);
+      <* ASSERT tUidExists *> 
+      superObj := NARROW(debugObj,ObjectDebug);
+      EnsureDebugTypeName(superObj); 
       
       (* Create a DIBuilder inherit node connecting to the supertype
          and make it the first "param". *) 
       inheritDIT
         := self.debugRef.createInheritance
            (Ty         := heapObjectDIT,
-            BaseTy     := supertypeDIT,
+            BaseTy     := superObj.objectDescr,
             BaseOffset := VAL(0L,uint64_t),
             Flags      := 0);              
       paramsArr[0] := inheritDIT;
@@ -6077,7 +6097,8 @@ at the type creation line. *)
           AlignInBits  := VAL(o.fields[i].align,uint32_t),
           OffsetInBits := VAL(o.objSize - o.fieldSize + o.fields[i].bitOffset + ptrBits(*For typecell pointer *),uint64_t),
           Flags        := 0,
-          Ty           := fieldDIT);     
+          Ty           := fieldDIT);
+(* FIXME ^ Add packed support *)
       paramsArr[nextMemberNo] := memberDINode;
       INC(nextMemberNo);
     END;
@@ -6098,7 +6119,7 @@ PROCEDURE DebugRecord(self : U; r : RecordDebug) : M3DIB.DICompositeType =
     paramsArr : REF ARRAY OF MetadataRef; 
     paramsMetadata : LLVMTypes.ArrayRefOfMetadataRef; 
     paramsDIArr : M3DIB.DINodeArray;
-    uniqueId : StringRef; 
+    uniqueId : StringRef;
   BEGIN
     IF self.m3llvmDebugLev > 0 THEN
       IO.Put("record debug\n");
@@ -6125,18 +6146,34 @@ PROCEDURE DebugRecord(self : U; r : RecordDebug) : M3DIB.DICompositeType =
 
     FOR i := 0 TO r.numFields - 1 DO
       fieldDIT := DebugLookupLL(self,r.fields[i].tUid);
-                     
-      memberDIT := self.debugRef.createMemberType(
-                     Scope       := structDIT,
-                     Name        := LTD(M3ID.ToText(r.fields[i].name)),
-                     File        := self.fileRef,
-                     LineNo      := self.curLine,
-                     SizeInBits  := VAL(r.fields[i].bitSize,uint64_t),
-                     AlignInBits  := VAL(r.fields[i].align,uint32_t),
-                     OffsetInBits := VAL(r.fields[i].bitOffset,uint64_t),
-                     Flags        := 0,
-                     Ty           := fieldDIT);                     
 
+      IF r.fields[i].packed THEN
+(* packed members will use the base type of the subrange
+which will be signed. Sometimes its more convenient for them
+to be unsigned. Maybe if the subrange is positive we could
+change the base type to unsigned - worth considering. *)
+        memberDIT := self.debugRef.createBitFieldMemberType(
+                       Scope        := structDIT,
+                       Name         := LTD(M3ID.ToText(r.fields[i].name)),
+                       File         := self.fileRef,
+                       LineNo       := self.curLine,
+                       SizeInBits   := VAL(r.fields[i].bitSize,uint64_t),
+                       OffsetInBits := VAL(r.fields[i].bitOffset,uint64_t),
+                       StorageOffsetInBits := VAL(r.fields[i].bitOffset,uint64_t),                     
+                       Flags        := 0,
+                       Ty           := fieldDIT);
+      ELSE
+        memberDIT := self.debugRef.createMemberType(
+                       Scope        := structDIT,
+                       Name         := LTD(M3ID.ToText(r.fields[i].name)),
+                       File         := self.fileRef,
+                       LineNo       := self.curLine,
+                       SizeInBits   := VAL(r.fields[i].bitSize,uint64_t),
+                       AlignInBits  := VAL(r.fields[i].align,uint32_t),
+                       OffsetInBits := VAL(r.fields[i].bitOffset,uint64_t),
+                       Flags        := 0,
+                       Ty           := fieldDIT);                     
+      END;
       paramsArr[i] := memberDIT;
     END;
     paramsDIArr := self.debugRef.getOrCreateArray(paramsMetadata);

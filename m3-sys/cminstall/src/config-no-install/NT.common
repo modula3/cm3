@@ -509,6 +509,81 @@ proc m3_backend(source, object, optimize, debug) is
     return try_exec(m3back, args)
 end
 
+%--------------------------------------------------------- m3llvm ------------
+% Optionally, "m3llvm" is called to translate cm3 IR to llvm IR. 
+
+if not defined("m3llvm")
+
+  proc m3llvm(source, outfile, optimize, debug) is
+  % will we ever need optimize and/or debug? 
+
+      local m3llvmname = "@m3llvm"
+
+      local args = [ "-b" ] 
+
+      if debug
+        args += "-g" 
+      end
+
+      %args += "-d" %While m3llvm is under development.  
+
+      return try_exec (m3llvmname, args, "-o", outfile, source )
+  end % proc m3llvm
+
+end % if not defined("m3llvm")
+
+%--------------------------------------------------------- llvm backend ---
+% Optionally, "llvm_backend" is called to translate llvm bitcode to object code.
+
+% Some default options: 
+
+if not defined("llvmback_debug")
+  llvmback_debug = ""
+end
+
+if not defined("llvmback_optimize")
+  llvmback_optimize = "-O2"
+end
+
+if not defined("llvmback_pic")
+  llvmback_pic = "-relocation-model=pic"
+end
+
+if not defined("llvm_backend")
+
+  proc llvm_backend(source, outfile, optimize, debug, filetype) is
+      %local t = try_exec ("llvm-dis", outfile) 
+
+      local args = [ "-disable-fp-elim"] 
+      local llvmopt = ""
+
+      args += "-filetype=" & filetype
+
+      if optimize
+          args += llvmback_optimize
+          local tmp = split(source,".")
+          llvmopt = tmp[0] & "_opt." & tmp[1]
+          local opt_ret = try_exec ("@opt", llvmback_optimize, source, "-o", llvmopt )
+          %reset source for llc
+          source = llvmopt 
+      else
+          args += "-O0"
+      end
+      if debug
+          args += llvmback_debug
+      end
+      args += llvmback_pic
+
+      local llvmback = "@llc"
+      local llc_ret = try_exec (llvmback, args, source, "-o", outfile )
+      if optimize and not defined ("M3_KEEP_FILES")
+          DeleteFile(llvmopt)
+      end
+      return llc_ret
+  end % proc llvm_backend
+
+end % if not defined("llvm_backend")
+
 %--------------------------------------------------------------- C compiler ---
 % "compile_c" is called to compile C source files. Note that this function
 % is only called if your program or library explicitly includes C source
