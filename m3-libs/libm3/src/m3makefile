@@ -44,6 +44,7 @@ include_dir ("sqrt")
 %include_dir ("config") % see m3quake/MxConfig instead
 include_dir ("pickle")
 include_dir ("text")
+include_dir ("hash")
 
 % m3_option ("-times")
 
