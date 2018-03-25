@@ -125,14 +125,17 @@ REVEAL
     fileRef       : M3DIB.DIFile;
     funcRef       : M3DIB.DISubprogram;
     globDataDescr : RecordDebug; 
+    globalDataLv  : LLVM.ValueRef;  (* global data value *)
     seenConst     := FALSE;
     debugObj      : ROOT;
+    dwarfDbg      := TRUE; (* Dwarf output instead of CodeView *)
 METHODS
     allocVar(v : LvVar) := AllocVar;
     allocVarInEntryBlock(v : LvVar) := AllocVarInEntryBlock;
     buildFunc(p : Proc) := BuildFunc;
     getLabel(lab : Label; name : TEXT) : LabelObj := GetLabel;
     ifCommon(t: IType; l: Label; f: Frequency; op : CompareOp) := IfCommon;
+    setDebugType() := SetDebugType;
 OVERRIDES
     next_label := next_label;
     set_error_handler := set_error_handler;
@@ -609,9 +612,7 @@ VAR
   builderIR : LLVM.BuilderRef;
   globContext : LLVM.ContextRef;
   moduleID : Ctypes.char_star;
-  faultVal : LLVM.ValueRef;  (* the abort function *)
   targetData : LLVM.TargetDataRef;
-  dwarfDbg   := TRUE; (* Dwarf output instead of CodeView *)
 
 (* need to get these from front end somehow *)
 (* amd64 *)
@@ -667,12 +668,12 @@ PROCEDURE LvType ( Val: LLVM.ValueRef) : LLVM.TypeRef =
   END LvType;
 
 (* On POSIX systems output DWARF, on Windows its CodeView *)
-PROCEDURE SetDebugType() =
+PROCEDURE SetDebugType(self : U) =
   VAR index : CARDINAL;
   BEGIN
     (* This test is dependent on the target triple *)
     IF TextExtras.FindSub(targetTriple,"windows",index) THEN
-      dwarfDbg := FALSE;
+      self.dwarfDbg := FALSE;
     END;
   END SetDebugType;
   
@@ -1694,8 +1695,8 @@ PROCEDURE declare_segment (self: U;  n: Name;  m3t: TypeUID; is_const: BOOLEAN):
     IF is_const THEN
       LLVM.LLVMSetGlobalConstant(v.lv,TRUE);
     ELSE
-      (* save the global for abort procedure *)
-      faultVal := v.lv;
+      (* save the global for abort procedure and debugging *)
+      self.globalDataLv := v.lv;
     END;
     (* this global is internal *)
     LLVM.LLVMSetLinkage(v.lv,LLVM.Linkage.Internal);
@@ -1711,10 +1712,6 @@ PROCEDURE bind_segment (self: U;  seg: Var;  s: ByteSize;  a: Alignment; <*UNUSE
     v.size := s;
     v.exported := exported; (* not used *)
     v.inited := inited;     (* not used *)
-(* possibly debug the segment. This will do the global data.  The const is broken at the moment since it gets the global data type. *)
-(* fix this - broken
-    IF NOT v.isConst THEN EVAL DebugSegment(self,v); END;
-*)
   END bind_segment;
 
 PROCEDURE declare_global (self: U;  n: Name;  s: ByteSize;  a: Alignment; t: Type;  m3t: TypeUID;  exported, inited: BOOLEAN): Var =
@@ -4492,7 +4489,7 @@ PROCEDURE abort (self: U;  code: RuntimeError) =
     codeAndLine := Word.LeftShift(self.curLine,5);
     codeAndLine := Word.Or(codeAndLine,ORD(code));
     codeVal := LLVM.LLVMConstInt(IntPtrTy, VAL(ORD(codeAndLine),LONGINT), TRUE);
-    modVal := LLVM.LLVMBuildBitCast(builderIR, faultVal, AdrTy, LT("fault_toadr"));
+    modVal := LLVM.LLVMBuildBitCast(builderIR, self.globalDataLv, AdrTy, LT("fault_toadr"));
     paramsArr[0] := modVal;
     paramsArr[1] := codeVal;
     EVAL LLVM.LLVMBuildCall(builderIR, self.abortFunc, paramsRef, numParams, LT(""));
@@ -5306,9 +5303,7 @@ PROCEDURE fetch_and_op (self: U;  op: AtomicOp; <*UNUSED*> t: MType; u: ZType; o
     Pop(self.exprStack);
   END fetch_and_op;
 
-(* Debug support - *)
-(*
-   This is very tentative. Maybe move this stuff to its own module
+(* Debug support - 
 
   Thus far simple scalar locals and params work
   booleans, enumerations work
@@ -5317,17 +5312,16 @@ PROCEDURE fetch_and_op (self: U;  op: AtomicOp; <*UNUSED*> t: MType; u: ZType; o
   refs work
   recursive types work
   packed records and objects work
-  large global variables work
+  segment and large global variables work
 
   problems with debug so far
   packed arrays dont work
   set types half work but look like an array of bits
   
-  global variables in data segment dont work gdb says optimised out.
   subranges dont enforce the subrange they are just the base type
-  open arrays display the first 2 words of the allocation and are limited
-  to 100 items. Need dibuilder support to set the range.
-  text dont work same prob as open array i think.
+  open arrays need llvm support for subrange
+  text doesn't work - same prob as open array i think.
+  probably lots of other stuff - especially with imported vars.
 *)
 
 PROCEDURE CreateModuleFlags(self : U) =
@@ -5341,7 +5335,7 @@ PROCEDURE CreateModuleFlags(self : U) =
     valsMD[2] := NEW(REF INTEGER);
     NARROW(valsMD[0],REF INTEGER)^ := 2; (* num values *)
     
-    IF dwarfDbg THEN
+    IF self.dwarfDbg THEN
       valsMD[1] := "Dwarf Version";
       NARROW(valsMD[2],REF INTEGER)^ := DC.DWARF_VERSION;
     ELSE (* windows *)
@@ -5390,7 +5384,7 @@ PROCEDURE DebugInit(self: U) =
     chkSumKind : INTEGER := 0;
     chkSum : StringRef := LLVMTypes.StringRefEmpty;
   BEGIN
-    SetDebugType();
+    self.setDebugType();
     InitUids(self);
     IF NOT self.genDebug THEN RETURN; END;
 
@@ -5399,7 +5393,7 @@ PROCEDURE DebugInit(self: U) =
     self.debugRef := NEW(M3DIB.DIBuilder).init_0(modRef,TRUE);
 
     (* generate checksum for codeview *)
-    IF NOT dwarfDbg THEN (* and maybe for dwarf > ver 5 *)
+    IF NOT self.dwarfDbg THEN (* and maybe for dwarf > ver 5 *)
       chkSumKind := 1; (* MD5 *)
       rd := FileRd.Open(srcFile);
       chkSum := LTD(MD5.FromFile(rd));
@@ -5619,6 +5613,7 @@ PROCEDURE DebugFunc(self : U; p : Proc) =
     procName,linkageName : TEXT;
   BEGIN
     IF NOT self.genDebug THEN RETURN; END;
+    
     proc := NARROW(p,LvProc);
     numParams := proc.numParams;
 
@@ -5679,7 +5674,6 @@ a declare_local  _result *)
 
     (* puts the !dbg tag in the define func pointing to the DISubprogram definition*)
     LLVM.DIBSetFunctionTag(proc.lvProc,self.funcRef);
-  
   END DebugFunc;
 
 PROCEDURE DebugPushBlock(self : U) =
@@ -5736,10 +5730,6 @@ PROCEDURE DebugSubrange(self : U; subrange : SubrangeDebug)
   VAR Result : M3DIB.DISubrange;
       MLBase : BaseDebug;  
   BEGIN
-    IF self.m3llvmDebugLev > 0 THEN
-      IO.Put("subrange debug\n");
-    END; 
-
     IF subrange.domain # NO_UID AND subrange.domain # subrange.tUid
     THEN (* It has a non-self-referential base type. *) 
       MLBase := DebugLookupML(self, subrange.domain);
@@ -5773,10 +5763,6 @@ PROCEDURE DebugArray(self : U; a : ArrayDebug) : M3DIB.DICompositeType =
     arrDIT : M3DIB.DICompositeType; 
     min, count : TInt.Int; 
   BEGIN
-    IF self.m3llvmDebugLev > 0 THEN
-      IO.Put("array debug\n");
-    END; 
-
     eltVal := DebugLookupLL(self,a.elt);
     DebugLookupOrdinalBounds (self, a.index, (*OUT*)min, (*OUT*)count);  
     subsVal 
@@ -5803,14 +5789,11 @@ PROCEDURE DebugOpenArray
     paramsDIArr : M3DIB.DINodeArray;
     oarrDIT : M3DIB.DICompositeType; 
   BEGIN
-    IF self.m3llvmDebugLev > 0 THEN
-      IO.Put("openarray debug\n");
-    END; 
-
     eltVal := DebugLookupLL(self,a.elt);
     (* open arrays dont have a range so just fake it for now 0 - last(val)
-        fix this later
-    subrange := DebugSubrangeLookup(self,a.index);
+        llvm trunc has added an overloaded createsubrange
+        to allow a variable limit to support c99 VLA's
+        we prob wont get it until version 7
     *)
     (* fixme - temp usage to check if crash on windows is 
     empty elts for array type*)
@@ -5842,7 +5825,8 @@ PROCEDURE DebugSet(self : U; s : SetDebug) : M3DIB.DICompositeType =
     cnt,ind : INTEGER;
     uniqueId : StringRef; 
   BEGIN
-(* fixme - this constructs debugger output like an array *)
+(* FIXME - this constructs debugger output like an array,
+   need llvm support for set types. *)
     uniqueId := LTD(M3CG.FormatUID(s.tUid));
     DebugLookupOrdinalBounds (self, s.domain, (*OUT*)min, (*OUT*)count);
     ind := VAL(TIntToint64_t(min),INTEGER);
@@ -5988,10 +5972,6 @@ PROCEDURE DebugObject(self : U; o : ObjectDebug) : M3DIB.DIDerivedType =
     debugObj : REFANY;
     superObj : ObjectDebug;
   BEGIN
-    IF self.m3llvmDebugLev > 0 THEN
-      IO.Put("object debug\n");
-    END; 
-
     EnsureDebugTypeName(o); 
     uniqueId := LTD(M3CG.FormatUID(o.tUid));
 
@@ -6121,10 +6101,6 @@ PROCEDURE DebugRecord(self : U; r : RecordDebug) : M3DIB.DICompositeType =
     paramsDIArr : M3DIB.DINodeArray;
     uniqueId : StringRef;
   BEGIN
-    IF self.m3llvmDebugLev > 0 THEN
-      IO.Put("record debug\n");
-    END; 
-
     uniqueId := LTD(M3CG.FormatUID(r.tUid));
     NewArrayRefOfMetadataRef
       (r.numFields, (*OUT*)paramsArr, (*OUT*)paramsMetadata);
@@ -6423,40 +6399,16 @@ PROCEDURE DebugLocalsParams(self : U; proc : LvProc) =
     END;
   END DebugLocalsParams;
 
-(* Could be used for const and data segment*)
-PROCEDURE DebugSegment(self : U; var : LvVar) : M3DIB.DIGlobalVariableExpression =
-  VAR
-    globType : M3DIB.DIType;
-    gve : M3DIB.DIGlobalVariableExpression := NIL; 
-  BEGIN
-    IF NOT self.genDebug THEN RETURN NIL; END;
-    globType := DebugLookupLL(self,var.m3t);
-    IF globType # M3DIB.DITypeEmpty THEN            
-      gve :=               self.debugRef.createGlobalVariableExpression(
-        Context       := self.cuRef,
-        Name          := LTD(M3ID.ToText(var.name)), 
-        LinkageName   := LTD(M3ID.ToText(var.name)), 
-        File          := self.fileRef,
-        LineNo        := self.curLine,
-        Ty            := globType,
-        isLocalToUnit := TRUE,
-        Expr          := NIL,
-        Decl          := NIL,
-        AlignInBits   := 0);
-                                      
-      (* set the !dbg tag for this global *)
-      LLVM.DIBSetGlobalTag(var.lv,gve);
-    END;
-    RETURN gve;
-  END DebugSegment;
-
-
 PROCEDURE DebugGlobals(self : U) =
   VAR
     gve : M3DIB.DIGlobalVariableExpression := NIL;
     globType : M3DIB.DIType;
+    exp : M3DIB.DIExpression;
+    globalLv : LLVM.ValueRef;
+    paramsArr : REF ARRAY OF int64_t; 
+    paramsInt64 : LLVMTypes.ArrayRefOfint64_t;
     global : LvVar;
-    globRef : REFANY;
+    globalRef : REFANY;
     name : TEXT;
     ofs : INTEGER;
     m3t : TypeUID;
@@ -6469,32 +6421,39 @@ PROCEDURE DebugGlobals(self : U) =
         m3t := ds.tUid;
         ofs := VAL(ds.bitOffset,INTEGER) DIV 8;
         globType := DebugLookupLL(self,m3t);
-        IF self.globalTable.get(name,globRef) THEN
+
+        IF self.globalTable.get(name,globalRef) THEN
           (* A large global which is a seperate var *)
-          
-          global := NARROW(globRef,LvVar);
-          gve :=  self.debugRef.createGlobalVariableExpression(
-            Context       := self.cuRef,
-            Name          := LTD(name), 
-            LinkageName   := LTD(name), 
-            File          := self.fileRef,
-            (* front end line numbers dont correlate to
-               where the global is declared. Assume its 1 *)
-            LineNo        := 1,
-            Ty            := globType,
-            isLocalToUnit := TRUE,
-            Expr          := NIL,
-            Decl          := NIL,
-            AlignInBits   := 0);
-          (* set the !dbg tag for this global *)
-          LLVM.DIBSetGlobalTag(global.lv,gve);            
+          global := NARROW(globalRef,LvVar);
+          globalLv := global.lv;
+          exp := NIL;
         ELSE
-(* Must be a segment global. Having trouble with these.
-   Tried setting Expr as the offset from the
-   segment global ( Decl ) but llc gives errors.
-   Really need just an alias into the global segment.
-*)
-       END;
+          (* Must be a segment global *)
+          globalLv := self.globalDataLv;
+          NewArrayRefOfint64
+            (3, (*OUT*)paramsArr, (*OUT*)paramsInt64);
+
+          paramsArr[0] := VAL(DC.DW_OP_constu,LONGINT);      
+          paramsArr[1] := VAL(ofs,LONGINT);
+          paramsArr[2] := VAL(DC.DW_OP_plus,LONGINT);      
+          exp := self.debugRef.createExpression2(paramsInt64);
+        END;
+        gve :=  self.debugRef.createGlobalVariableExpression(
+          Context       := self.cuRef,
+          Name          := LTD(name), 
+          LinkageName   := LTD(name), 
+          File          := self.fileRef,
+          (* front end line numbers dont correlate to
+             where the global is declared. Assume its 1 *)
+          LineNo        := 1,
+          Ty            := globType,
+          isLocalToUnit := TRUE,
+          Expr          := exp,
+          Decl          := NIL,
+          AlignInBits   := 0);
+            
+        (* set the !dbg tag for this global *)
+        LLVM.DIBSetGlobalTag(globalLv,gve);   
       END;
     END;
     (*
