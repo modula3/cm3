@@ -136,6 +136,11 @@ METHODS
     getLabel(lab : Label; name : TEXT) : LabelObj := GetLabel;
     ifCommon(t: IType; l: Label; f: Frequency; op : CompareOp) := IfCommon;
     setDebugType() := SetDebugType;
+    structType(size : ByteSize) : LLVM.TypeRef := StructType;
+    divMod(t : IType; isDiv : BOOLEAN) : LLVM.ValueRef := DivMod;
+    doCheck(a,b : LLVM.ValueRef; pred : LLVM.IntPredicate; code : RuntimeError) := DoCheck;
+    innerCallIndirect(proc: LLVM.ValueRef; t: Type; cc: CallingConvention; Nested: BOOLEAN) : LLVM.ValueRef := InnerCallIndirect;
+  
 OVERRIDES
     next_label := next_label;
     set_error_handler := set_error_handler;
@@ -811,7 +816,7 @@ PROCEDURE NewVar
       v.inits := NEW(RefSeq.T).init();
     END;
     IF v.type = Type.Struct THEN
-      v.lvType := StructType(self,v.size);
+      v.lvType := self.structType(v.size);
     ELSE
       v.lvType := LLvmType(v.type);
     END;
@@ -1051,6 +1056,7 @@ PROCEDURE EmbedVersion() =
     llmajor,llminor : Ctypes.int;
   BEGIN
     cm3Ver := "5.8";
+(* FIXME - Get proper cm3 version *)
     LLVM.GetLLVMVersion(llmajor,llminor);
     llvmVer := Fmt.Int(llmajor) & "." & Fmt.Int(llminor);
     ident := "versions- cm3: " & cm3Ver & " llvm: " & llvmVer;
@@ -1704,7 +1710,7 @@ PROCEDURE declare_segment (self: U;  n: Name;  m3t: TypeUID; is_const: BOOLEAN):
     RETURN v;
   END declare_segment;
 
-PROCEDURE bind_segment (self: U;  seg: Var;  s: ByteSize;  a: Alignment; <*UNUSED*> t: Type;  exported, inited: BOOLEAN) =
+PROCEDURE bind_segment (<*UNUSED*>self: U;  seg: Var;  s: ByteSize;  a: Alignment; <*UNUSED*> t: Type;  exported, inited: BOOLEAN) =
   VAR v : LvVar;
   BEGIN
     v := NARROW(seg,LvVar);
@@ -2953,7 +2959,7 @@ PROCEDURE load_address (self: U;  v: Var;  o: ByteOffset) =
     srcVar := NARROW(v,LvVar);
     srcVal : LLVM.ValueRef;
   BEGIN
-    srcVal := srcVar.lv; (* LLVM.LLVMTypeOf(srcVal)* *)
+    srcVal := srcVar.lv;
 
     (* check if address of an uplevel variable to load *)
     IF srcVar.locDisplayIndex >= 0 THEN
@@ -3566,7 +3572,7 @@ PROCEDURE div (self: U;  t: IType; a, b: Sign) =
        (a = Sign.Negative AND b = Sign.Negative) THEN
       binop(self,t,BinOps.div);
     ELSE
-      res := DivMod(self,t,TRUE);
+      res := self.divMod(t,TRUE);
       s0 := Get(self.exprStack,0);
       NARROW(s0,LvExpr).lVal := res;
     END;
@@ -3582,7 +3588,7 @@ PROCEDURE mod (self: U;  t: IType; a, b: Sign) =
        (a = Sign.Negative AND b = Sign.Negative) THEN
       binop(self,t,BinOps.mod);
     ELSE  
-      res := DivMod(self,t,FALSE);
+      res := self.divMod(t,FALSE);
       s0 := Get(self.exprStack,0);
       NARROW(s0,LvExpr).lVal := res;
     END;
@@ -4536,7 +4542,7 @@ PROCEDURE check_nil (self: U;  code: RuntimeError) =
     a := NARROW(s0,LvExpr).lVal;
     b := LLVM.LLVMConstNull(AdrTy); (* all zeroes *)
     a := LLVM.LLVMBuildBitCast(builderIR, a, AdrTy, LT("checknil_toadr"));
-    DoCheck(self,a,b,LLVM.IntPredicate.EQ,code);
+    self.doCheck(a,b,LLVM.IntPredicate.EQ,code);
   END check_nil;
 
 PROCEDURE check_lo (self: U;  t: IType;  READONLY i: Target.Int; code: RuntimeError) =
@@ -4547,7 +4553,7 @@ PROCEDURE check_lo (self: U;  t: IType;  READONLY i: Target.Int; code: RuntimeEr
   BEGIN
     a := NARROW(s0,LvExpr).lVal;
     b := GetErrVal(i,t);
-    DoCheck(self,a,b,LLVM.IntPredicate.SLT,code);
+    self.doCheck(a,b,LLVM.IntPredicate.SLT,code);
   END check_lo;
 
 PROCEDURE check_hi (self: U;  t: IType;  READONLY i: Target.Int; code: RuntimeError) =
@@ -4558,7 +4564,7 @@ PROCEDURE check_hi (self: U;  t: IType;  READONLY i: Target.Int; code: RuntimeEr
   BEGIN
     a := NARROW(s0,LvExpr).lVal;
     b := GetErrVal(i,t);
-    DoCheck(self,b,a,LLVM.IntPredicate.SLT,code);
+    self.doCheck(b,a,LLVM.IntPredicate.SLT,code);
   END check_hi;
 
 PROCEDURE check_range (self: U;  t: IType;  READONLY i, j: Target.Int; code: RuntimeError) =
@@ -4570,8 +4576,8 @@ PROCEDURE check_range (self: U;  t: IType;  READONLY i, j: Target.Int; code: Run
     a := NARROW(s0,LvExpr).lVal;
     b := GetErrVal(i,t);
     c := GetErrVal(j,t);
-    DoCheck(self,a,b,LLVM.IntPredicate.SLT,code);
-    DoCheck(self,c,a,LLVM.IntPredicate.SLT,code);
+    self.doCheck(a,b,LLVM.IntPredicate.SLT,code);
+    self.doCheck(c,a,LLVM.IntPredicate.SLT,code);
   END check_range;
 
 PROCEDURE check_index (self: U; <*UNUSED*> t: IType;  code: RuntimeError) =
@@ -4586,7 +4592,7 @@ PROCEDURE check_index (self: U; <*UNUSED*> t: IType;  code: RuntimeError) =
     (* using comment recommend for unsigned single test *)
     a := NARROW(s0,LvExpr).lVal;
     b := NARROW(s1,LvExpr).lVal;
-    DoCheck(self,a,b,LLVM.IntPredicate.ULT,code);
+    self.doCheck(a,b,LLVM.IntPredicate.ULT,code);
     Pop(self.exprStack);
   END check_index;
 
@@ -4599,7 +4605,7 @@ PROCEDURE check_eq (self: U; <*UNUSED*> t: IType; code: RuntimeError) =
   BEGIN
     a := NARROW(s0,LvExpr).lVal;
     b := NARROW(s1,LvExpr).lVal;
-    DoCheck(self,a,b,LLVM.IntPredicate.NE,code);
+    self.doCheck(a,b,LLVM.IntPredicate.NE,code);
     Pop(self.exprStack,2);
   END check_eq;
 
@@ -4771,7 +4777,7 @@ PROCEDURE start_call_indirect
 (* Construct a procedure signature type for use by an indirect call,
    using the actual parameters on the call stack (here, paramStack). *)
 PROCEDURE IndirectFuncType
-   (retType : Type; paramStack : RefSeq.T; Nested: BOOLEAN) : LLVM.TypeRef =
+   (retType : Type; paramStack : RefSeq.T) : LLVM.TypeRef =
   VAR
     retTy,funcTy : LLVM.TypeRef;
     numFormals : INTEGER;
@@ -4816,7 +4822,7 @@ PROCEDURE InnerCallIndirect
     numFormals := self.callStack.size(); 
 
     (* Concoct a function signature from the actual parameters. *)
-    funcTy := IndirectFuncType(t,self.callStack,Nested);
+    funcTy := IndirectFuncType(t,self.callStack);
 
     (* Build the actual parameter list. *) 
     IF numFormals > 0 THEN
@@ -4872,7 +4878,7 @@ PROCEDURE call_indirect (self: U;  t: Type; cc: CallingConvention) =
     IF self.callState = callStateTyp . insideIndirect
        (* ^There was no pop_static_link => statically known to call a global proc. *)
     THEN 
-      resultVal3 := InnerCallIndirect (self, procExpr.lVal, t, cc, Nested:=FALSE);
+      resultVal3 := self.innerCallIndirect (procExpr.lVal, t, cc, Nested:=FALSE);
       IF t # Type.Void THEN (* push the return val onto exprStack*)
         Push(self.exprStack,NEW(LvExpr,lVal := resultVal3));
       END
@@ -4880,7 +4886,7 @@ PROCEDURE call_indirect (self: U;  t: Type; cc: CallingConvention) =
           (* same BB as the pop_static_link => statically known to call
              a nested proc. *)
     THEN 
-      resultVal3 := InnerCallIndirect (self, procExpr.lVal, t, cc, Nested:=TRUE);
+      resultVal3 := self.innerCallIndirect (procExpr.lVal, t, cc, Nested:=TRUE);
       IF t # Type.Void THEN (* push the return val onto exprStack*)
         Push(self.exprStack,NEW(LvExpr,lVal := resultVal3));
       END;
@@ -4929,7 +4935,7 @@ PROCEDURE call_indirect (self: U;  t: Type; cc: CallingConvention) =
             duplicates the earlier check, in the non-closure case, on the same
             pointer.  But it is needed in that case, because only it does an
             abort when it fails.  The CG code could really be reviewed here. *) 
-      resultVal1 := InnerCallIndirect (self, loadInst, t, cc, Nested:=TRUE);
+      resultVal1 := self.innerCallIndirect (loadInst, t, cc, Nested:=TRUE);
       EVAL LLVM.LLVMBuildBr(builderIR, mergeBB);
 
       (* If it has a result, prepare for a Phi at the top of the mergedBB. *) 
@@ -4948,7 +4954,7 @@ PROCEDURE call_indirect (self: U;  t: Type; cc: CallingConvention) =
                               is how we would remove it. *)
       (* But leave the rest of the params on self.call_stack.
          They will be needed by InnerCallIndirect. *) 
-      resultVal2 := InnerCallIndirect (self, procExpr.lVal, t, cc, Nested:=FALSE);
+      resultVal2 := self.innerCallIndirect (procExpr.lVal, t, cc, Nested:=FALSE);
       EVAL LLVM.LLVMBuildBr(builderIR, mergeBB); 
       LLVM.LLVMPositionBuilderAtEnd (builderIR, mergeBB); 
 
@@ -5011,7 +5017,7 @@ PROCEDURE pop_struct
     (* This parm needs to agree with its declared type. All structs
        should be in the struct table indexed by their byte size. 
        Find, or create, the type and cast the parm to its pointer type. *)
-    structTy := StructType(self,s);
+    structTy := self.structType(s);
     refTy := LLVM.LLVMPointerType(structTy);
     (* this is the proper type for the call *)
     origRef_lVal := LLVM.LLVMBuildBitCast
@@ -6411,49 +6417,50 @@ PROCEDURE DebugGlobals(self : U) =
     globalRef : REFANY;
     name : TEXT;
     ofs : INTEGER;
-    m3t : TypeUID;
   BEGIN
     IF NOT self.genDebug THEN RETURN; END;
     
     FOR i := 0 TO self.globDataDescr.numFields - 1 DO
       WITH ds = self.globDataDescr.fields[i] DO
-        name := M3ID.ToText(ds.name);
-        m3t := ds.tUid;
-        ofs := VAL(ds.bitOffset,INTEGER) DIV 8;
-        globType := DebugLookupLL(self,m3t);
+        (* cant debug exceptions yet *)
+        IF ds.tUid > 0 THEN
+          name := M3ID.ToText(ds.name);
+          ofs := VAL(ds.bitOffset,INTEGER) DIV 8;
+          globType := DebugLookupLL(self,ds.tUid);
 
-        IF self.globalTable.get(name,globalRef) THEN
-          (* A large global which is a seperate var *)
-          global := NARROW(globalRef,LvVar);
-          globalLv := global.lv;
-          exp := NIL;
-        ELSE
-          (* Must be a segment global *)
-          globalLv := self.globalDataLv;
-          NewArrayRefOfint64
-            (3, (*OUT*)paramsArr, (*OUT*)paramsInt64);
+          IF self.globalTable.get(name,globalRef) THEN
+            (* A large global which is a seperate var *)
+            global := NARROW(globalRef,LvVar);
+            globalLv := global.lv;
+            exp := NIL;
+          ELSE
+            (* Must be a segment global *)
+            globalLv := self.globalDataLv;
+            NewArrayRefOfint64
+              (3, (*OUT*)paramsArr, (*OUT*)paramsInt64);
 
-          paramsArr[0] := VAL(DC.DW_OP_constu,LONGINT);      
-          paramsArr[1] := VAL(ofs,LONGINT);
-          paramsArr[2] := VAL(DC.DW_OP_plus,LONGINT);      
-          exp := self.debugRef.createExpression2(paramsInt64);
-        END;
-        gve :=  self.debugRef.createGlobalVariableExpression(
-          Context       := self.cuRef,
-          Name          := LTD(name), 
-          LinkageName   := LTD(name), 
-          File          := self.fileRef,
-          (* front end line numbers dont correlate to
-             where the global is declared. Assume its 1 *)
-          LineNo        := 1,
-          Ty            := globType,
-          isLocalToUnit := TRUE,
-          Expr          := exp,
-          Decl          := NIL,
-          AlignInBits   := 0);
+            paramsArr[0] := VAL(DC.DW_OP_constu,LONGINT);      
+            paramsArr[1] := VAL(ofs,LONGINT);
+            paramsArr[2] := VAL(DC.DW_OP_plus,LONGINT);      
+            exp := self.debugRef.createExpression2(paramsInt64);
+          END;
+          gve :=  self.debugRef.createGlobalVariableExpression(
+            Context       := self.cuRef,
+            Name          := LTD(name), 
+            LinkageName   := LTD(name), 
+            File          := self.fileRef,
+            (* front end line numbers dont correlate to
+               where the global is declared. Assume its 1 *)
+            LineNo        := 1,
+            Ty            := globType,
+            isLocalToUnit := TRUE,
+            Expr          := exp,
+            Decl          := NIL,
+            AlignInBits   := 0);
             
-        (* set the !dbg tag for this global *)
-        LLVM.DIBSetGlobalTag(globalLv,gve);   
+          (* set the !dbg tag for this global *)
+          LLVM.DIBSetGlobalTag(globalLv,gve);   
+        END;
       END;
     END;
     (*
