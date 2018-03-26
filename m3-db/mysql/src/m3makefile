@@ -1,12 +1,12 @@
-% automatically generated quake file for MySQL
-
-
-% compiled / works with with CM3 ver 5.8
-import_lib("mysqlclient","/usr/lib")
-include_dir("class")
-
 import("libm3")
-module("MySQLRaw")
-module("MySQL")
 
-library("m3mysql")
+import_lib("mysqlclient","/usr/lib")
+
+Module("MySQLRaw")
+Module("MySQL")
+c_source("mysql_wrap")
+
+Library("m3mysql")
+
+%implementation("Main")
+%program("test")
