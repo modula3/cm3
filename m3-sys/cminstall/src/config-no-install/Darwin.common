@@ -16,7 +16,7 @@ readonly TARGET_OS = "DARWIN"
 % assembler errors on Mac OSX 10.10.4 Yosemite.
 % Plain -g causes cm3cg to access violate attempting to generate Dwarf symbols.
 
-m3back_debug = "-g1 "
+m3back_debug = " "
 
 if defined("HasCBackend")
   if HasCBackend()
