@@ -5949,10 +5949,29 @@ BEGIN
     push(self, type, CTextToExpr(s1.CText() & op & s0.CText()));
 END shift_left_or_right;
 
+PROCEDURE casted_shift_left(self: T; type: IType) =
+(* s1.type := Word.Shift  (s1.type, s0.Word); pop *)
+(* int f() { return -1 << 1; }
+ * cc -c 1.c
+ * warning: shifting a negative signed value is undefined [-Wshift-negative-value]
+ * So cast to unsigned and back -- which also might warn about casting negative number.
+ *)
+VAR s0 := cast(get(self, 0), Target.Word.cg_type);
+    s1 := cast(cast(get(self, 1), type), typeToUnsigned[type]);
+BEGIN
+    self.comment("shift_lexft");
+    pop(self, 2);
+    push(self, type, cast(CTextToExpr(s1.CText() & "<<" & s0.CText()), type));
+END casted_shift_left;
+
 PROCEDURE shift_left(self: T; type: IType) =
 (* s1.type := Word.Shift  (s1.type, s0.Word); pop *)
 BEGIN
-    shift_left_or_right(self, type, "shift_left", "<<");
+    IF typeToUnsigned[type] # type THEN
+      casted_shift_left(self, type);
+    ELSE
+      shift_left_or_right(self, type, "shift_left", "<<");
+    END;
 END shift_left;
 
 PROCEDURE shift_right(self: T; type: IType) =
