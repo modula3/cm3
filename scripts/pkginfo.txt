@@ -86,10 +86,6 @@ formsvbt gui
 formsview gui m3devtool
 formsedit gui m3devtool
 codeview anim
-cvsup/suplib cvsup
-cvsup/client cvsup
-cvsup/server cvsup
-cvsup/cvpasswd cvsup
 mg anim
 mgkit anim
 opengl gui
