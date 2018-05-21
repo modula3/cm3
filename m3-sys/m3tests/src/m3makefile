@@ -818,6 +818,9 @@ p_test ("p2", "p264", "mixtures of fixed and open arrays")
 % grisu-based test, loophole integers/floats, multiply longint within function parameters
 p_test ("p2", "p265", "grisu-based")
 
+% This fails in Grisu when using C backend.
+p_test ("p2", "p268", "grisuc")
+
 %------------------------------------------------------------------- rtests ---
 %  RUNTIME tests: modules containing runtime error where the generated
 %    error messages are of interest.
