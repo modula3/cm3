@@ -1126,6 +1126,9 @@ PROCEDURE PopScope(interp: T) =
 (*---------------------------------------------------------------------------*)
 PROCEDURE Copy (x: RefList.T): RefList.T =
   BEGIN
+    IF x = NIL THEN
+      RETURN NIL;
+    END;
     RETURN RefList.Cons (x.head, Copy (x.tail));
   END Copy;
 
