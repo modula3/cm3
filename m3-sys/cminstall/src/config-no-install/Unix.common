@@ -47,7 +47,9 @@ SYSTEM_LIBS =
 %   "ODBC"       : [ "-lodbc" ],
     "MOTIF"      : [ "-lXm" ],
     "TCP"        : [ ],
-    "X11"        : [  "-L/usr/X11R6/lib", "-lXaw", "-lXmu", "-lXext", "-lXt", "-lSM", "-lICE", "-lX11" ]
+    "X11"        : [  "-L/usr/X11R6/lib", "-lXaw", "-lXmu", "-lXext", "-lXt", "-lSM", "-lICE", "-lX11" ],
+    "READLINE"   : [ "-lreadline" ],
+    "EXPAT"      : [ "-lexpat" ]
 }
 
 % See Linux.common, FreeBSD.common, OpenBSD.common, NetBSD.common, etc.
@@ -63,10 +65,10 @@ end
 if not defined ("SYSTEM_LIBORDER")
   if HasOdbc()
     SYSTEM_LIBORDER = [ "OPENGL", "DECPEX", "MOTIF", "X11", "TCP",
-      "ODBC", "POSTGRES95", "FLEX-BISON", "LEX-YACC", "LIBC" ]
+      "ODBC", "POSTGRES95", "FLEX-BISON", "LEX-YACC", "READLINE", "EXPAT", "LIBC" ]
   else
     SYSTEM_LIBORDER = [ "OPENGL", "DECPEX", "MOTIF", "X11", "TCP",
-      "POSTGRES95", "FLEX-BISON", "LEX-YACC", "LIBC" ]
+      "POSTGRES95", "FLEX-BISON", "LEX-YACC", "READLINE", "EXPAT", "LIBC" ]
   end
 end
 
