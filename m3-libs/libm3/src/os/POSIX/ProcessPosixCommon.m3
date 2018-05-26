@@ -142,8 +142,17 @@ PROCEDURE GetPathToExec(pn: Pathname.T): Pathname.T RAISES {OSError.E} =
             IF uid = statBuf.st_uid THEN
               statBuf.st_mode := Word.And(statBuf.st_mode, Ustat.S_IEXEC)
             ELSE
+              (* this was wrong : it only checks the st_gid versus the
+                 egid.  It should check it against all our groups! 
+                 
+                 To correct: we check whether the statBuf.st_gid is
+                 in the list returned by getgroups() OR whether it is
+                 equal to the result of getegid().  (Per getgroups manual,
+                 it is not defined whether the egid is in the result of 
+                 that call.)
+              *)
               IF gid < 0 THEN gid := Uugid.getegid() END;
-              IF gid = statBuf.st_gid THEN
+              IF gid = statBuf.st_gid OR Uugid.havegroup(statBuf.st_gid) = 1 THEN
                 statBuf.st_mode := Word.And(statBuf.st_mode, Ustat.S_GEXEC)
               ELSE
                 statBuf.st_mode := Word.And(statBuf.st_mode, Ustat.S_OEXEC)
