@@ -228,7 +228,19 @@ proc compile_c(source, object, options, optimize, debug) is
     local args = options
     if M3_PROFILING args += "-pg" end
     if debug args += "-g" end
-    local ret_code = try_exec (SYSTEM_CC, args, "-xc++ -c", source, "-o", object)
+
+    if not defined (SYSTEM_CXXC)
+       SYSTEM_CXXC = SYSTEM_CC
+    end
+
+    local ret_code = 1
+
+    if equal(source, "_m3main.c")
+       ret_code = try_exec (SYSTEM_CXXC, args, "-c -xc++", source, "-o", object)
+    else
+       ret_code = try_exec (SYSTEM_CC, args, "-c", source, "-o", object)
+    end
+
     if not equal(ret_code, 0) and equal(source, "_m3main.c")
         % for _m3main.c, try also as C instead of C++ for older cm3
         % NOTE: This is gcc specific.
