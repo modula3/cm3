@@ -1016,7 +1016,16 @@ PROCEDURE ProcessMe (me: Activation;  p: PROCEDURE (start, limit: ADDRESS)) =
       RTIO.PutText("Processing act="); RTIO.PutAddr(me); RTIO.PutText("\n"); RTIO.Flush();
     END;
     RTHeapRep.FlushThreadState(me.heapState);
-    ProcessLive(me.stacks.stackbase, p);
+    VAR
+      q := me.stacks;
+    BEGIN
+      ProcessLive(q.stackbase, p);
+      q := q.next;
+      WHILE q # NIL DO
+        ProcessStopped(me.handle, q.stackbase, q.context, p);
+        q := q.next
+      END
+    END
   END ProcessMe;
 
 PROCEDURE ProcessOther (act: Activation;  p: PROCEDURE (start, stop: ADDRESS)) =
@@ -1027,8 +1036,15 @@ PROCEDURE ProcessOther (act: Activation;  p: PROCEDURE (start, stop: ADDRESS)) =
       RTIO.PutText("Processing act="); RTIO.PutAddr(act); RTIO.PutText("\n"); RTIO.Flush();
     END;
     RTHeapRep.FlushThreadState(act.heapState);
-    IF act.stacks.stackbase # NIL THEN
-      ProcessStopped(act.handle, act.stacks.stackbase, act.stacks.context, p);
+    VAR
+      q := act.stacks;
+    BEGIN
+      WHILE q # NIL DO
+        IF q.stackbase # NIL THEN
+          ProcessStopped(act.handle, q.stackbase, q.context, p);
+        END;
+        q := q.next;
+      END;
     END;
   END ProcessOther;
 
