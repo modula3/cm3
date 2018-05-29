@@ -54,7 +54,9 @@ REVEAL
 
 TYPE
   ActState = { Starting, Started, Stopping, Stopped };
-  REVEAL Activation = UNTRACED BRANDED REF RECORD
+
+REVEAL
+  Activation = UNTRACED BRANDED REF RECORD
     frame: ADDRESS := NIL;              (* exception handling support *)
     mutex: pthread_mutex_t := NIL;      (* write-once in CreateT *)
     cond: pthread_cond_t := NIL;        (* write-once in CreateT; a place to park while waiting *)
@@ -65,13 +67,30 @@ TYPE
        points to its tail, which is most recently added, i.e., last out). *)
     next, prev: Activation := NIL;      (* LL = activeMu; global doubly-linked, circular list of all active threads *)
     handle: pthread_t := NIL;           (* LL = activeMu; thread handle *)
-    stackbase: ADDRESS := NIL;          (* LL = activeMu; stack base for GC *)
-    context: ADDRESS := NIL;            (* LL = activeMu *)
+    stacks : StackState := NIL;
     state := ActState.Started;          (* LL = activeMu *)
     slot: CARDINAL := 0;                (* LL = slotMu; index in slots *)
     floatState : FloatMode.ThreadState; (* per-thread floating point state *)
     heapState : RTHeapRep.ThreadState;  (* per-thread heap state *)
   END;
+
+TYPE
+  StackState = UNTRACED BRANDED REF RECORD
+    stackbase: ADDRESS := NIL;          (* LL = activeMu; stack base for GC *)
+    context: ADDRESS := NIL;            (* LL = activeMu *)
+    next : StackState := NIL;
+  END;
+  (* older versions of CM3 had stackbase and context within the Activation.
+     we add it as a separate structure (alloc and dealloc with Activation)
+     to allow having multiple contexts per thread (coroutines).
+
+     Since there is always at least one context, we can use efficient list
+     routines without allocating a sentinel.  (It is an invariant that the
+     list of stacks is non-empty.
+
+     Design idea is to keep the active StackState at the head of the list
+     at all times. 
+  *)
 
 PROCEDURE SetState (act: Activation;  state: ActState) =
   CONST text = ARRAY ActState OF TEXT
@@ -486,8 +505,8 @@ PROCEDURE DumpThread (t: Activation) =
     RTIO.PutText("  next:       "); RTIO.PutAddr(t.next);        RTIO.PutChar('\n');
     RTIO.PutText("  prev:       "); RTIO.PutAddr(t.prev);        RTIO.PutChar('\n');
     RTIO.PutText("  handle:     "); RTIO.PutAddr(t.handle);      RTIO.PutChar('\n');
-    RTIO.PutText("  stackbase:  "); RTIO.PutAddr(t.stackbase);   RTIO.PutChar('\n');
-    RTIO.PutText("  context:    "); RTIO.PutAddr(t.context);     RTIO.PutChar('\n');
+    RTIO.PutText("  stackbase:  "); RTIO.PutAddr(t.stacks.stackbase);   RTIO.PutChar('\n');
+    RTIO.PutText("  context:    "); RTIO.PutAddr(t.stacks.context);     RTIO.PutChar('\n');
     RTIO.PutText("  state:      ");
     CASE t.state OF
     | ActState.Started => RTIO.PutText("Started\n");
@@ -512,11 +531,24 @@ PROCEDURE DumpThreads () =
 VAR (* LL=activeMu *)
   allThreads: Activation := NIL;            (* global list of active threads *)
 
+PROCEDURE DisposeStacks(act : Activation) =
+  VAR
+    p := act.stacks;
+  BEGIN
+    WHILE p # NIL DO
+      WITH nxt = p.next DO
+        DISPOSE(p);
+        p := nxt
+      END
+    END
+  END DisposeStacks;
+  
 PROCEDURE CleanThread (r: REFANY) =
   VAR t := NARROW(r, T);
   BEGIN
     pthread_mutex_delete(t.act.mutex);
     pthread_cond_delete(t.act.cond);
+    DisposeStacks(t.act);
     DISPOSE(t.act);
   END CleanThread;
 
@@ -529,7 +561,7 @@ PROCEDURE ThreadBase (param: ADDRESS): ADDRESS =
     me: Activation := param;
   BEGIN
     SetActivation(me);
-    me.stackbase := ADR(me); (* enable GC scanning of this stack *)
+    me.stacks.stackbase := ADR(me); (* enable GC scanning of this stack *)
     me.handle := pthread_self();
 
     (* add to the list of active threads *)
@@ -546,7 +578,7 @@ PROCEDURE ThreadBase (param: ADDRESS): ADDRESS =
     (* remove from the list of active threads *)
     WITH r = pthread_mutex_lock(activeMu) DO <*ASSERT r=0*> END;
       <*ASSERT allThreads # me*>
-      me.stackbase := NIL; (* disable GC scanning of my stack *)
+      me.stacks.stackbase := NIL; (* disable GC scanning of my stack *)
       me.next.prev := me.prev;
       me.prev.next := me.next;
       WITH r = pthread_detach_self(me.handle) DO <*ASSERT r=0*> END;
@@ -594,12 +626,13 @@ PROCEDURE Fork (closure: Closure): T =
   VAR
     act := NEW(Activation,
                mutex := pthread_mutex_new(),
-               cond := pthread_cond_new());
+               cond := pthread_cond_new(),
+               stacks := NEW(StackState));
     size := defaultStackSize;
     t: T := NIL;
   BEGIN
     TRY
-      IF act.mutex = NIL OR act.cond = NIL THEN
+      IF act.mutex = NIL OR act.cond = NIL OR act.stacks = NIL THEN
         RTE.Raise(RTE.T.OutOfMemory);
       END;
       t := NEW(T, act := act, closure := closure, join := NEW(Condition));
@@ -610,6 +643,7 @@ PROCEDURE Fork (closure: Closure): T =
         (* we failed, cleanup *)
         pthread_mutex_delete(act.mutex);
         pthread_cond_delete(act.cond);
+        DisposeStacks(act);
         DISPOSE(act);
       END;
     END;
@@ -982,7 +1016,7 @@ PROCEDURE ProcessMe (me: Activation;  p: PROCEDURE (start, limit: ADDRESS)) =
       RTIO.PutText("Processing act="); RTIO.PutAddr(me); RTIO.PutText("\n"); RTIO.Flush();
     END;
     RTHeapRep.FlushThreadState(me.heapState);
-    ProcessLive(me.stackbase, p);
+    ProcessLive(me.stacks.stackbase, p);
   END ProcessMe;
 
 PROCEDURE ProcessOther (act: Activation;  p: PROCEDURE (start, stop: ADDRESS)) =
@@ -993,8 +1027,8 @@ PROCEDURE ProcessOther (act: Activation;  p: PROCEDURE (start, stop: ADDRESS)) =
       RTIO.PutText("Processing act="); RTIO.PutAddr(act); RTIO.PutText("\n"); RTIO.Flush();
     END;
     RTHeapRep.FlushThreadState(act.heapState);
-    IF act.stackbase # NIL THEN
-      ProcessStopped(act.handle, act.stackbase, act.context, p);
+    IF act.stacks.stackbase # NIL THEN
+      ProcessStopped(act.handle, act.stacks.stackbase, act.stacks.context, p);
     END;
   END ProcessOther;
 
@@ -1201,11 +1235,11 @@ PROCEDURE SignalHandler (sig: int; <*UNUSED*>info: ADDRESS; context: ADDRESS) =
         RETURN;
       END;
       me.state := ActState.Stopped;
-      <*ASSERT me.context = NIL*>
-      me.context := context;
+      <*ASSERT me.stacks.context = NIL*>
+      me.stacks.context := context;
       WITH r = sem_post() DO <*ASSERT r=0*> END;
       REPEAT sigsuspend() UNTIL me.state = ActState.Starting;
-      me.context := NIL;
+      me.stacks.context := NIL;
       me.state := ActState.Started;
       WITH r = sem_post() DO <*ASSERT r=0*> END;
     END;
@@ -1321,9 +1355,10 @@ PROCEDURE InitWithStackBase (stackbase: ADDRESS) =
 
     me := NEW(Activation,
               mutex := pthread_mutex_new(),
-              cond := pthread_cond_new());
+              cond := pthread_cond_new(),
+              stacks := NEW(StackState));
     InitActivations(me);
-    me.stackbase := stackbase;
+    me.stacks.stackbase := stackbase;
     IF me.mutex = NIL OR me.cond = NIL THEN
       Die(ThisLine(), "Thread initialization failed.");
     END;
