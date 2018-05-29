@@ -697,7 +697,7 @@ if Target.endswith("_MINGW") or Target.endswith("_NT"):
     TargetOS = "WIN32"
     HAVE_SERIAL = True
 
-if Host.endswith("_NT") or Host == "NT386":
+if Host != None and (Host.endswith("_NT") or Host == "NT386"):
     Q = "" # q for quote: This is probably about the host, not the target.
 
 #-----------------------------------------------------------------------------
@@ -2221,7 +2221,7 @@ def SetVisualCPlusPlus2015OrNewer():
         #sys.exit(3)
 
 def IsCygwinHostTarget(): # confused
-    return Host.endswith("_CYGWIN") or (Host == "NT386" and GCC_BACKEND and TargetOS == "POSIX")
+    return Host!= None and (Host.endswith("_CYGWIN") or (Host == "NT386" and GCC_BACKEND and TargetOS == "POSIX"))
 
 def IsMinGWHostTarget():
     return (Target == "NT386" and GCC_BACKEND and TargetOS == "WIN32") or Target.endswith("_MINGW")
