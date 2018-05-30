@@ -229,7 +229,7 @@ proc compile_c(source, object, options, optimize, debug) is
     if M3_PROFILING args += "-pg" end
     if debug args += "-g" end
 
-    if not defined (SYSTEM_CXXC)
+    if not defined ("SYSTEM_CXXC")
        SYSTEM_CXXC = SYSTEM_CC
     end
 

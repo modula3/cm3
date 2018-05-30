@@ -5,7 +5,7 @@
 
 readonly TARGET_OS = "LINUX"
 
-SYSTEM_LD = SYSTEM_CC
+SYSTEM_LD = SYSTEM_CXXC
   & " -Wl,-z,now"
   & " -Wl,-z,origin"
   & " -Bsymbolic"
