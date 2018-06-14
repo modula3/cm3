@@ -86,10 +86,11 @@ TYPE
 
      Since there is always at least one context, we can use efficient list
      routines without allocating a sentinel.  (It is an invariant that the
-     list of stacks is non-empty.
+     list of stacks is non-empty.)
 
      Design idea is to keep the active StackState at the head of the list
-     at all times. 
+     at all times.  When swapping coroutines, update the head to be the
+     active coroutine.
   *)
 
 PROCEDURE SetState (act: Activation;  state: ActState) =

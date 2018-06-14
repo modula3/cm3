@@ -1,0 +1,9 @@
+include_dir ("Common")
+
+if equal (TARGET, "AMD64_LINUX")
+  include_dir("UCONTEXT")
+else
+  include_dir("DUMMY")
+end
+
+
