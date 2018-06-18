@@ -1263,6 +1263,86 @@ PROCEDURE SignalHandler (sig: int; <*UNUSED*>info: ADDRESS; context: ADDRESS) =
     Cerrno.SetErrno(errno);
   END SignalHandler;
 
+PROCEDURE GetStackState() : ADDRESS =
+  VAR
+    me := GetActivation();
+  BEGIN
+    RETURN me.stacks
+  END GetStackState;
+
+PROCEDURE DisposeStack(stack : ADDRESS) =
+  VAR
+    me := GetActivation();
+    p : StackState := me.stacks;
+    q : StackState;
+  BEGIN
+    (* cant delete the active stack so no need to check the head *)
+    q := p;
+    p := p.next;
+    WHILE p # NIL DO
+      IF p = stack THEN
+        INC(me.heapState.inCritical);
+        q.next := p.next;
+        p.next := NIL;
+        DEC(me.heapState.inCritical);
+        DISPOSE(p);
+        RETURN
+      END;
+      p := p.next
+    END;
+    <*ASSERT FALSE*>
+  END DisposeStack;
+
+PROCEDURE CreateStackState(base : ADDRESS; context : ADDRESS) : ADDRESS =
+  (* create a new stack record and place it as the first after the
+     active stack record *)
+  VAR
+    s := NEW(StackState, stackbase := base, context := context);
+    me := GetActivation();
+  BEGIN
+    INC(me.heapState.inCritical);
+    s.next := me.stacks.next;
+    me.stacks.next := s;
+    DEC(me.heapState.inCritical);
+    RETURN s
+  END CreateStackState;
+
+PROCEDURE SetCoStack(toStack     : ADDRESS;
+                     (* address of StackState record we're going TO *)
+                     
+                     fromContext : ADDRESS
+                     (* address of context we're coming FROM *)
+  ) =
+  (* called on a coroutine switch to record stack state:
+     set context of calling coroutine, then swap out stack to the
+     target stack *)
+  VAR
+    me := GetActivation();
+    p : StackState := me.stacks;
+    q : StackState := NIL;
+  BEGIN
+    me.stacks.context := fromContext;
+
+    (* find to in stacks, remove it from list, put it first *)
+    IF p = toStack THEN RETURN END; (* already in right place *)
+    q := p;
+    p := p.next;
+    WHILE p # NIL DO
+      IF p = toStack THEN
+        (* delete it from list *)
+        q.next := p.next;
+
+        (* move it to the front of list *)
+        p.next := me.stacks;
+        me.stacks := p;
+        RETURN (* and we're done *)
+      END;
+      q := p;
+      p := p.next
+    END;
+    <*ASSERT FALSE*> (* couldnt find stack *)
+  END SetCoStack;
+
 (*----------------------------------------------------------- misc. stuff ---*)
 
 PROCEDURE MyId (): Id RAISES {} =

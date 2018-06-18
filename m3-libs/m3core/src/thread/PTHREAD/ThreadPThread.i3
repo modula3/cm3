@@ -142,5 +142,24 @@ PROCEDURE ProcessLive
 PROCEDURE ProcessStopped
   (t: pthread_t; bottom, context: ADDRESS; p: PROCEDURE(start, limit: ADDRESS));
 (*---------------------------------------------------------------------------*)
+(* coroutine support *)
+
+PROCEDURE SetCoStack(toStack     : ADDRESS;
+                     (* address of StackState record we're going TO *)
+                     
+                     fromContext : ADDRESS
+                     (* address of context we're coming FROM *));
+  (* to denote that we have/are about to switch stacks on a coroutine switch *)
+  
+PROCEDURE GetStackState() : ADDRESS;
+  (* current stack state *)
+
+PROCEDURE CreateStackState(base : ADDRESS; context : ADDRESS) : ADDRESS;
+  (* create a new stack *)
+
+PROCEDURE DisposeStack(stack : ADDRESS);
+  (* destroy a stack *)
+
+(*---------------------------------------------------------------------------*)
 
 END ThreadPThread.

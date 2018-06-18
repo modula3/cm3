@@ -10,7 +10,6 @@ PROCEDURE New() : T;
 <*EXTERNAL ContextC__MakeContext*>
 PROCEDURE MakeContext(p      : Entry;
                       ssize  : Ctypes.int;
-                      resume : T;
                       arg    : Arg): T;
 
 <*EXTERNAL ContextC__Current*>
@@ -38,5 +37,7 @@ PROCEDURE Dbg(q : INTEGER (* ASCII value *));
 <*EXTERNAL ContextC__DbgPtr*>
 PROCEDURE DbgPtr(a : ADDRESS);
 
+<*EXTERNAL ContextC__SetLink*>  
+PROCEDURE SetLink(tgt, src : T); (* set return link of tgt to be src *)
   
 END ContextC.

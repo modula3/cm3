@@ -3,11 +3,6 @@ IMPORT ContextC;
 IMPORT WeakRef;
 IMPORT Thread;
 
-(*  (* cant import from libm3 into m3core *)
-FROM Fmt IMPORT F, Int;
-IMPORT Debug;
-*)
-
 REVEAL
   T = BRANDED OBJECT
     context : ContextC.T; (* ucontext_t *)
@@ -16,6 +11,7 @@ REVEAL
     id      : UNTRACED REF INTEGER; (* Tabulate() fills this in *)
     initial :=  TRUE; (* initial caller *)
     arg     : Arg;
+    from    : T := NIL;
   END;
 
 VAR coArr := NEW(REF ARRAY OF T, 1); (* entry 0 not used *)
@@ -30,6 +26,8 @@ PROCEDURE CreateInitialCoroutine() : T =
              thread  := Thread.Self());
   BEGIN
     Tabulate(t);
+    <*ASSERT t.id # NIL*>
+    EVAL Trace(t);
     RETURN t
   END CreateInitialCoroutine;
   
@@ -59,7 +57,7 @@ PROCEDURE Create(cl : Closure) : T =
     <*ASSERT cl # NIL*>
     WITH arg   = NEW(Arg, arg := cl, dbg := 'B'),
          ssz   = 16384,
-         ctx   = ContextC.MakeContext(Run, ssz, NIL, arg) DO
+         ctx   = ContextC.MakeContext(Run, ssz, arg) DO
       ContextC.DbgPtr(LOOPHOLE(arg,ADDRESS));
       t := NEW(T, arg := arg, context := ctx, thread := Thread.Self());
     END;
@@ -119,13 +117,20 @@ PROCEDURE Call(to : T) : T =
     END;
     
     ContextC.SetCurrentCoroutine(to.id);
+    ContextC.SetLink(to.context, me.context); (* set return link *)
+    to.from := me; (* in caller context *)
+
     ContextC.SwapContext(me.context, to.context);
-    RETURN me
+
+    ContextC.SetCurrentCoroutine(me.id); (* this is needed for those
+                                            coroutines that fall off the
+                                            end and are cleaned up *)
+
+    RETURN to.from (* in callee context *)
   END Call;
 
 PROCEDURE IsAlive(t : T) : BOOLEAN =
   BEGIN RETURN t.isAlive END IsAlive;
-
 
   (**********************************************************************)
 
@@ -140,7 +145,10 @@ PROCEDURE Cleanup(<*UNUSED*>READONLY self : WeakRef.T; ref : REFANY) =
     dead : T := ref;
   BEGIN
     ContextC.DisposeContext(dead.context);
-    dead.context := NIL
+    dead.context := NIL;
+    
+    DISPOSE(dead.id);
+    dead.id := NIL;
   END Cleanup;
 
 BEGIN

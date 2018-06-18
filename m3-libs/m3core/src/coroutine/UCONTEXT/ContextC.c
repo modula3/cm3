@@ -46,14 +46,16 @@ typedef struct {
   WORD_T     stacksize;
   stack_t    ss;
   ucontext_t uc;
+  ucontext_t pc; /* post context for cleanup */
   Closure    cl;
+  int        alive;
 } Context;
 
 static void
 trampoline(int lo, int hi)
 {
   /* take two 32-bit pointers and turn them into a 64-bit pointer */
-  Closure *cl = (Closure *)(((long)hi << 32UL) | (long)lo);
+  Closure *cl = (Closure *)(((unsigned long)(unsigned int)hi << 32UL) | (unsigned long)(unsigned int)lo);
   
   cl->p(cl->arg);
 }
@@ -61,13 +63,31 @@ trampoline(int lo, int hi)
 void *
 ContextC__New(void)
 {
-  return calloc(1,sizeof(Context));
+  Context *res=calloc(1,sizeof(Context));
+  res->alive = 1;
+  return res;
+}
+
+void
+ContextC__SetLink(Context *tgt, Context *src)
+{
+  tgt->uc.uc_link = &(src->uc);
+}
+
+static void
+cleanup(int lo, int hi)
+{
+  Context *c = (Context *)(((unsigned long)(unsigned int)hi << 32UL) | (unsigned long)(unsigned int)lo);
+  c->alive = 0;
+
+  assert(c->uc.uc_link);
+  
+  setcontext(c->uc.uc_link);
 }
 
 void *
 ContextC__MakeContext(void      (*p)(ARG),
                       INTEGER     words,
-                      Context    *resume,
                       void       *arg)
 {
   /* from ThreadPosixC.c */
@@ -82,6 +102,8 @@ ContextC__MakeContext(void      (*p)(ARG),
 
   if (c == NULL || cl == NULL)
     goto Error;
+
+  c->alive = 1;
   
   if (size <= 0) return c;
   if (size < MINSIGSTKSZ) size = MINSIGSTKSZ;
@@ -102,16 +124,26 @@ ContextC__MakeContext(void      (*p)(ARG),
   if (mprotect(sp + size - pagesize, pagesize, PROT_NONE)) abort();
 
   if (getcontext(&(c->uc))) abort();
+  if (getcontext(&(c->pc))) abort();
+
   c->uc.uc_stack.ss_sp = sp + pagesize;
   c->uc.uc_stack.ss_size = size - 2 * pagesize;
-  c->uc.uc_link = 0;
-
-  lo = (int)(long)cl;
-  hi = (int)(((long)cl) >> 32UL);
 
   cl->p   = p;
   cl->arg = arg;
-    
+
+  /* define the post context for cleanup */
+  c->pc.uc_stack = c->uc.uc_stack; /* reuse stack */
+  c->pc.uc_link = 0;               /* will never go through here */
+  
+  c->uc.uc_link = &(c->pc);        /* set up cleanup linkage */
+
+  lo = (int)(unsigned long)c;
+  hi = (int)(((unsigned long)c) >> 32UL);
+  makecontext(&(c->pc), (void (*)())cleanup, 2, lo, hi);
+  
+  lo = (int)(unsigned long)cl;
+  hi = (int)(((unsigned long)cl) >> 32UL);
   makecontext(&(c->uc), (void (*)())trampoline, 2, lo, hi);
 
   return c;
@@ -127,6 +159,12 @@ Error:
 void
 ContextC__SwapContext (Context *from, Context *to)
 {
+  if(!to->alive) {
+    fprintf(stderr,
+            "WARNING: calling dead coroutine context %#x\n",to);
+    return;
+  }
+    
   if (swapcontext(&(from->uc), &(to->uc))) abort();
 }
 
