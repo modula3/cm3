@@ -166,6 +166,12 @@ PROCEDURE CreateStackState(base : ADDRESS; context : ADDRESS) : ADDRESS;
 PROCEDURE DisposeStack(stack : ADDRESS);
   (* destroy a stack state *)
 
+PROCEDURE IncInCritical();
+  (* increment inCritical semaphore for my thread *)
+
+PROCEDURE DecInCritical();
+  (* deccrement inCritical semaphore for my thread *)
+
 (*---------------------------------------------------------------------------*)
 
 END ThreadPThread.

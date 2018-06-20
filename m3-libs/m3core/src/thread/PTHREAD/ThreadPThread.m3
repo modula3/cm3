@@ -1676,6 +1676,20 @@ PROCEDURE PopEFrame (frame: ADDRESS) =
     me.frame := frame;
   END PopEFrame;
 
+PROCEDURE IncInCritical() =
+  VAR
+    me := GetActivation();
+  BEGIN
+    INC(me.heapState.inCritical)
+  END IncInCritical;
+
+PROCEDURE DecInCritical() =
+  VAR
+    me := GetActivation();
+  BEGIN
+    DEC(me.heapState.inCritical)
+  END DecInCritical;
+  
 VAR DEBUG := RTParams.IsPresent("debugthreads");
 VAR MSDEBUG := RTParams.IsPresent("debugmultistackgc");
   

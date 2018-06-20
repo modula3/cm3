@@ -5,6 +5,7 @@ IMPORT Thread;
 IMPORT ThreadPThread;
 IMPORT RTIO;
 IMPORT Word;
+IMPORT RTParams;
 
 REVEAL
   T = BRANDED OBJECT
@@ -17,6 +18,7 @@ REVEAL
     from    : T := NIL;
     gcstack : ADDRESS; (* StackState from ThreadPThread.i3 *)
     succ    : T := NIL; (* successor if we run off end *)
+    dead    : T := NIL;
   END;
 
 VAR coArr := NEW(REF ARRAY OF T, 1); (* entry 0 not used *)
@@ -37,14 +39,16 @@ PROCEDURE CreateInitialCoroutine() : T =
     <*ASSERT t.id # NIL*>
     EVAL Trace(t);
 
-    RTIO.PutText("*** CreateInitial t=");
-    RTIO.PutAddr(LOOPHOLE(t,ADDRESS));
-    RTIO.PutText(" t.gcstack=");
-    RTIO.PutAddr(LOOPHOLE(t.gcstack,ADDRESS));
-    RTIO.PutText(" t.id^=");
-    RTIO.PutInt(t.id^);
-    RTIO.PutText("\n");
-    RTIO.Flush();
+    IF DEBUG THEN
+      RTIO.PutText("*** CreateInitial t=");
+      RTIO.PutAddr(LOOPHOLE(t,ADDRESS));
+      RTIO.PutText(" t.gcstack=");
+      RTIO.PutAddr(LOOPHOLE(t.gcstack,ADDRESS));
+      RTIO.PutText(" t.id^=");
+      RTIO.PutInt(t.id^);
+      RTIO.PutText("\n");
+      RTIO.Flush();
+    END;
 
     RETURN t
   END CreateInitialCoroutine;
@@ -80,11 +84,13 @@ PROCEDURE Create(cl : Closure) : T =
          gcstack   = ThreadPThread.CreateStackState(stackbase,stackbase)
             (*nothing to scan yet*)
      DO
-      RTIO.PutText("*** Create arg=");
-      RTIO.PutAddr(LOOPHOLE(arg,ADDRESS));
-      RTIO.PutText(" gcstack=");
-      RTIO.PutAddr(LOOPHOLE(gcstack,ADDRESS)); RTIO.PutText("\n");
-      RTIO.Flush();
+      IF DEBUG THEN
+        RTIO.PutText("*** Create arg=");
+        RTIO.PutAddr(LOOPHOLE(arg,ADDRESS));
+        RTIO.PutText(" gcstack=");
+        RTIO.PutAddr(LOOPHOLE(gcstack,ADDRESS)); RTIO.PutText("\n");
+        RTIO.Flush();
+      END;
       
       t := NEW(T,
                arg     := arg,
@@ -97,18 +103,20 @@ PROCEDURE Create(cl : Closure) : T =
     Tabulate(t);
     EVAL Trace(t);
 
-    RTIO.PutText("*** Create t=");
-    RTIO.PutAddr(LOOPHOLE(t,ADDRESS));
-    RTIO.PutText(" t.arg=");
-    RTIO.PutAddr(LOOPHOLE(t.arg,ADDRESS));
-    RTIO.PutText(" t.arg.this=");
-    RTIO.PutAddr(LOOPHOLE(t.arg.this,ADDRESS));
-    RTIO.PutText(" t.gcstack=");
-    RTIO.PutAddr(LOOPHOLE(t.gcstack,ADDRESS));
-    RTIO.PutText(" t.id^=");
-    RTIO.PutInt(t.id^);
-    RTIO.PutText("\n");
-    RTIO.Flush();
+    IF DEBUG THEN
+      RTIO.PutText("*** Create t=");
+      RTIO.PutAddr(LOOPHOLE(t,ADDRESS));
+      RTIO.PutText(" t.arg=");
+      RTIO.PutAddr(LOOPHOLE(t.arg,ADDRESS));
+      RTIO.PutText(" t.arg.this=");
+      RTIO.PutAddr(LOOPHOLE(t.arg.this,ADDRESS));
+      RTIO.PutText(" t.gcstack=");
+      RTIO.PutAddr(LOOPHOLE(t.gcstack,ADDRESS));
+      RTIO.PutText(" t.id^=");
+      RTIO.PutInt(t.id^);
+      RTIO.PutText("\n");
+      RTIO.Flush();
+    END;
 
     RETURN t
   END Create;
@@ -153,14 +161,19 @@ PROCEDURE DbgStackInfo(lab : TEXT) =
   
 PROCEDURE Run(arg : Arg) =
   BEGIN
-    RTIO.PutText("*** Run arg="); RTIO.PutAddr(LOOPHOLE(arg,ADDRESS));
-    RTIO.PutText(" arg.firstcaller="); RTIO.PutAddr(LOOPHOLE(arg.firstcaller,ADDRESS));
-    RTIO.PutText(" arg.firstcaller.gcstack="); RTIO.PutAddr(arg.firstcaller.gcstack);
+    ThreadPThread.DecInCritical();
     
-    RTIO.PutText("\n");
-    DbgStackInfo("Run start");
-    RTIO.Flush();
-    RTIO.PutChar(arg.dbg); RTIO.PutText("\n");
+    IF DEBUG THEN
+      RTIO.PutText("*** Run arg="); RTIO.PutAddr(LOOPHOLE(arg,ADDRESS));
+      RTIO.PutText(" arg.firstcaller="); RTIO.PutAddr(LOOPHOLE(arg.firstcaller,ADDRESS));
+      RTIO.PutText(" arg.firstcaller.gcstack="); RTIO.PutAddr(arg.firstcaller.gcstack);
+    
+      RTIO.PutText("\n");
+      DbgStackInfo("Run start");
+      RTIO.Flush();
+      RTIO.PutChar(arg.dbg); RTIO.PutText("\n");
+    END;
+    
     <*ASSERT arg # NIL*>
     <*ASSERT arg.arg # NIL*>
     WITH cl = NARROW(arg.arg, Closure) DO
@@ -173,15 +186,25 @@ PROCEDURE Run(arg : Arg) =
     (* we need to set up the correct stack HERE *)
 
     (* should probably increment inCritical *)
-    RTIO.PutText("Run exiting gcstack="); RTIO.PutAddr(arg.this.gcstack);
-    RTIO.PutText(" succ.gcstack="); RTIO.PutAddr(arg.this.succ.gcstack);
-    RTIO.PutText(" succ.id^="); RTIO.PutInt(arg.this.succ.id^);
-    RTIO.PutText("\n"); RTIO.Flush();
-    DbgStackInfo("Run stop");
+    IF DEBUG THEN
+      RTIO.PutText("Run exiting gcstack="); RTIO.PutAddr(arg.this.gcstack);
+      RTIO.PutText(" succ.gcstack="); RTIO.PutAddr(arg.this.succ.gcstack);
+      RTIO.PutText(" succ.id^="); RTIO.PutInt(arg.this.succ.id^);
+      RTIO.PutText("\n"); RTIO.Flush();
+      DbgStackInfo("Run stop");
+    END;
+    
+    ContextC.SetCurrentCoroutine(arg.this.succ.id);
+
+    (* how do we clean up current stack for threads that fall off the end? *)
+    arg.this.succ.dead := arg.this;
 
     WITH top = ContextC.PushContext(arg.this.context) DO
+      (* when the stack disagrees with the execution context is a 
+         critical section for GC *)
+      ThreadPThread.IncInCritical();
       ThreadPThread.SetCoStack(arg.this.succ.gcstack, top)
-    END
+    END;
   END Run;
 
   (* "conservation of call flows":
@@ -238,25 +261,54 @@ PROCEDURE Call(to : T) : T =
 
     (* mention to ThreadPThread that we are about to swap stacks *)
 
-    DbgStackInfo("Call before swap");
+    IF DEBUG THEN DbgStackInfo("Call before swap") END;
 
     WITH top = ContextC.PushContext(me.context) DO
+      (* when the stack disagrees with the execution context is a 
+         critical section for GC *)
+      ThreadPThread.IncInCritical();
       ThreadPThread.SetCoStack(to.gcstack, top)
     END;
 
     ContextC.SwapContext(me.context, to.context);
 
-    ContextC.SetCurrentCoroutine(me.id); (* this is needed for those
-                                            coroutines that fall off the
-                                            end and are cleaned up *)
+    ThreadPThread.DecInCritical();
 
-    (* how do we clean up current stack for threads that fall off the end? *)
+    (* if we wake up here and the dead field is set, another coroutine
+       exited and is notifying us to reap it,
+       
+       reaping needs to be done in the CS since we are changing the stack
+       list for the thread
+    *)
+    IF me.dead # NIL THEN
+      Reap(me.dead);
+      me.dead := NIL
+    END;
 
-    DbgStackInfo("Call after swap");
+    IF DEBUG THEN DbgStackInfo("Call after swap") END;
     
     RETURN to.from (* in callee context *)
   END Call;
 
+PROCEDURE Reap(dead : T) =
+  BEGIN
+    (* and blow away my data structures instead of letting the GC do it *)
+    LOCK coMu DO
+      coArr[dead.id^] := NIL
+    END;
+
+    ThreadPThread.DisposeStack(dead.gcstack);
+    ContextC.DisposeContext(dead.context);
+    dead.context := NIL;
+    DISPOSE(dead.id);
+    dead.id := NIL;
+    
+    (* note that we still need to have the GC-driven cleanup because
+       a coroutine doesn't necessarily exit through here.  It COULD be
+       suspended in the middle and forgotten, only to be found by GC much
+       later *)
+  END Reap;
+  
 (***********************************************************************)
   
 PROCEDURE IsAlive(t : T) : BOOLEAN =
@@ -274,13 +326,23 @@ PROCEDURE Cleanup(<*UNUSED*>READONLY self : WeakRef.T; ref : REFANY) =
   VAR
     dead : T := ref;
   BEGIN
-    ContextC.DisposeContext(dead.context);
-    dead.context := NIL;
-    
-    DISPOSE(dead.id);
-    dead.id := NIL;
+    IF dead.context # NIL THEN
+      ThreadPThread.DisposeStack(dead.gcstack);
+      ContextC.DisposeContext(dead.context);
+      dead.context := NIL;
+    END;
+
+    IF dead.id # NIL THEN
+      LOCK coMu DO
+        coArr[dead.id^] := NIL
+      END;
+      DISPOSE(dead.id);
+      dead.id := NIL;
+    END
   END Cleanup;
 
+VAR DEBUG := RTParams.IsPresent("debugcoroutines");
+    
 BEGIN
   ContextC.InitC()
 END CoroutineUcontext.
