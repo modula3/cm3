@@ -506,8 +506,21 @@ PROCEDURE DumpThread (t: Activation) =
     RTIO.PutText("  next:       "); RTIO.PutAddr(t.next);        RTIO.PutChar('\n');
     RTIO.PutText("  prev:       "); RTIO.PutAddr(t.prev);        RTIO.PutChar('\n');
     RTIO.PutText("  handle:     "); RTIO.PutAddr(t.handle);      RTIO.PutChar('\n');
-    RTIO.PutText("  stackbase:  "); RTIO.PutAddr(t.stacks.stackbase);   RTIO.PutChar('\n');
-    RTIO.PutText("  context:    "); RTIO.PutAddr(t.stacks.context);     RTIO.PutChar('\n');
+    VAR
+      q := t.stacks;
+      first := TRUE;
+    BEGIN
+      WHILE q # NIL DO
+        RTIO.PutText("  stackbase:  "); RTIO.PutAddr(q.stackbase);
+        IF first THEN RTIO.PutText(" (active)") END;
+        RTIO.PutChar('\n');
+        RTIO.PutText("  context:    "); RTIO.PutAddr(q.context);
+        IF first THEN RTIO.PutText(" (active)") END;
+        RTIO.PutChar('\n');
+        q := q.next;
+        first := FALSE;
+      END
+    END;
     RTIO.PutText("  state:      ");
     CASE t.state OF
     | ActState.Started => RTIO.PutText("Started\n");
@@ -1020,6 +1033,11 @@ PROCEDURE ProcessMe (me: Activation;  p: PROCEDURE (start, limit: ADDRESS)) =
     VAR
       q := me.stacks;
     BEGIN
+      IF MSDEBUG THEN
+        RTIO.PutText("ProcessMe: ADR(q)="); RTIO.PutAddr(ADR(q)); RTIO.PutText("\n");
+        RTIO.PutText("q.stackbase="); RTIO.PutAddr(q.stackbase); RTIO.PutText("\n");
+        RTIO.Flush();
+      END;
       ProcessLive(q.stackbase, p);
       q := q.next;
       WHILE q # NIL DO
@@ -1270,6 +1288,13 @@ PROCEDURE GetStackState() : ADDRESS =
     RETURN me.stacks
   END GetStackState;
 
+PROCEDURE GetCurStackBase() : ADDRESS =
+  VAR
+    stack := LOOPHOLE(GetStackState(),StackState);
+  BEGIN
+    RETURN stack.stackbase
+  END GetCurStackBase;
+
 PROCEDURE DisposeStack(stack : ADDRESS) =
   VAR
     me := GetActivation();
@@ -1307,11 +1332,8 @@ PROCEDURE CreateStackState(base : ADDRESS; context : ADDRESS) : ADDRESS =
     RETURN s
   END CreateStackState;
 
-PROCEDURE SetCoStack(toStack     : ADDRESS;
-                     (* address of StackState record we're going TO *)
-                     
-                     fromContext : ADDRESS
-                     (* address of context we're coming FROM *)
+PROCEDURE SetCoStack(toStackP    : ADDRESS;
+                     topOfStack  : ADDRESS
   ) =
   (* called on a coroutine switch to record stack state:
      set context of calling coroutine, then swap out stack to the
@@ -1320,8 +1342,26 @@ PROCEDURE SetCoStack(toStack     : ADDRESS;
     me := GetActivation();
     p : StackState := me.stacks;
     q : StackState := NIL;
+    toStack := LOOPHOLE(toStackP,StackState);
   BEGIN
-    me.stacks.context := fromContext;
+    IF MSDEBUG THEN
+      RTIO.PutText("SetCoStack toStack="); RTIO.PutAddr(toStack);
+      RTIO.PutText(" me="); RTIO.PutAddr(me.stacks);
+      RTIO.PutText(" equal="); RTIO.PutInt(ORD(me.stacks=toStack));
+      RTIO.PutText("\n");
+      
+      RTIO.PutText("SetCoStack stackbase="); RTIO.PutAddr(me.stacks.stackbase);
+      RTIO.PutText(" update="); RTIO.PutAddr(toStack.stackbase);
+      RTIO.PutText(" equal="); RTIO.PutInt(ORD(me.stacks.stackbase=toStack.stackbase));
+      RTIO.PutText(" topOfStack="); RTIO.PutAddr(topOfStack);
+
+      RTIO.PutText("\n"); RTIO.Flush()
+    END;
+
+    (* assert that this is an effective stack swap *)
+    <*ASSERT me.stacks # toStack*>
+
+    me.stacks.context := topOfStack;
 
     (* find to in stacks, remove it from list, put it first *)
     IF p = toStack THEN RETURN END; (* already in right place *)
@@ -1637,6 +1677,7 @@ PROCEDURE PopEFrame (frame: ADDRESS) =
   END PopEFrame;
 
 VAR DEBUG := RTParams.IsPresent("debugthreads");
-
+VAR MSDEBUG := RTParams.IsPresent("debugmultistackgc");
+  
 BEGIN
 END ThreadPThread.

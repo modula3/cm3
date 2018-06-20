@@ -147,18 +147,24 @@ PROCEDURE ProcessStopped
 PROCEDURE SetCoStack(toStack     : ADDRESS;
                      (* address of StackState record we're going TO *)
                      
-                     fromContext : ADDRESS
-                     (* address of context we're coming FROM *));
+                     topOfStack : ADDRESS
+                     (* address of top of stack we're coming FROM,
+                        must have the context pushed before being passed here,
+                        so that we have the register state on the stack *));
   (* to denote that we have/are about to switch stacks on a coroutine switch *)
   
 PROCEDURE GetStackState() : ADDRESS;
   (* current stack state *)
 
+PROCEDURE GetCurStackBase() : ADDRESS;
+  (* threading library's idea of what our current stack base is 
+     --- useful for assertions, if nothing else *)
+
 PROCEDURE CreateStackState(base : ADDRESS; context : ADDRESS) : ADDRESS;
-  (* create a new stack *)
+  (* create a new stack state *)
 
 PROCEDURE DisposeStack(stack : ADDRESS);
-  (* destroy a stack *)
+  (* destroy a stack state *)
 
 (*---------------------------------------------------------------------------*)
 

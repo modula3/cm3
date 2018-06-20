@@ -36,6 +36,8 @@
 #define WORD_T   unsigned long int
 #define ARG void *
 
+#define DEBUG 1
+
 typedef struct {
   void (*p)(ARG);
   void *arg;
@@ -77,10 +79,28 @@ ContextC__SetLink(Context *tgt, Context *src)
 static void
 cleanup(int lo, int hi)
 {
+  /* this is the cleanup routine
+     it is called when a context falls off the end (apply ends) 
+  */
+  
   Context *c = (Context *)(((unsigned long)(unsigned int)hi << 32UL) | (unsigned long)(unsigned int)lo);
+
   c->alive = 0;
 
   assert(c->uc.uc_link);
+
+  /* this is the only tricky part:
+     the semantics of creating the context are that the followon context
+     must be set when the context is created.
+
+     this is not the semantics we are going for here.  In our implementation,
+     when a coroutine "falls off the end", we resume with the context that
+     called it (and none other!).
+
+     this is implemented by updating uc_link on every coroutine call.
+     but it can't take effect like that, so we make a special catcher context 
+     (in which we are here in cleanup) that jumps explicitly to that context
+  */
   
   setcontext(c->uc.uc_link);
 }
@@ -116,6 +136,9 @@ ContextC__MakeContext(void      (*p)(ARG),
   pages = (size + pagesize - 1) / pagesize + 2;
   size = pages * pagesize;
   sp = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0);
+
+  if (DEBUG) fprintf(stderr, "creating coroutine stack %#lx\n", sp);
+  
   if (sp == NULL)
     goto Error;
   c->stackaddr = sp;
@@ -161,7 +184,7 @@ ContextC__SwapContext (Context *from, Context *to)
 {
   if(!to->alive) {
     fprintf(stderr,
-            "WARNING: calling dead coroutine context %#x\n",to);
+            "WARNING: calling dead coroutine context %#lx\n",to);
     return;
   }
     
@@ -207,15 +230,27 @@ ContextC__InitC(void) /* should be void *bottom? */
   M3_RETRY(pthread_key_create(&current_coroutine, NULL)); assert(r == 0);
 }
 
-void
-ContextC__Dbg(INTEGER x)
+void *
+ContextC__GetStackBase(Context *c)
 {
-  putc(x, stderr);
-  putc('\n', stderr);
+  return c->uc.uc_stack.ss_sp+c->uc.uc_stack.ss_size;
 }
 
-void
-ContextC__DbgPtr(void *p)
+void *
+stack_here(void)
 {
-  fprintf(stderr, "DbgPtr p=%#x\n", p);
+  char *top=(char *)&top;
+  return top;
 }
+      
+void *
+ContextC__PushContext(Context *c)
+{
+  ucontext_t uc=c->uc; /* write it on the stack */
+  void *top;
+
+  top = stack_here();
+  return top;
+}
+
+

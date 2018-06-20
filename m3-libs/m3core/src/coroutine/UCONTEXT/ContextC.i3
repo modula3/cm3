@@ -31,13 +31,13 @@ PROCEDURE  SetCurrentCoroutine(c : UNTRACED REF INTEGER);
 <*EXTERNAL ContextC__InitC*>
 PROCEDURE  InitC(); (* must call this before any of the other routines in this interface *)
 
-<*EXTERNAL ContextC__Dbg*>
-PROCEDURE Dbg(q : INTEGER (* ASCII value *));
-
-<*EXTERNAL ContextC__DbgPtr*>
-PROCEDURE DbgPtr(a : ADDRESS);
-
 <*EXTERNAL ContextC__SetLink*>  
 PROCEDURE SetLink(tgt, src : T); (* set return link of tgt to be src *)
+
+<*EXTERNAL ContextC__GetStackBase*>
+PROCEDURE GetStackBase(t : T) : ADDRESS;
   
+<*EXTERNAL ContextC__PushContext*>
+PROCEDURE PushContext(t : T) : ADDRESS;
+
 END ContextC.

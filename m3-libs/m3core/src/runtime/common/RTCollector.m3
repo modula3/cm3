@@ -520,9 +520,17 @@ PROCEDURE Moved (ref: RefReferent): BOOLEAN =
 PROCEDURE NoteStackLocations (start, stop: ADDRESS) =
   VAR fp : UNTRACED REF ADDRESS := start;
   BEGIN
+    IF DEBUG THEN
+        RTIO.PutText("start="); RTIO.PutAddr(start);
+        RTIO.PutText(" stop="); RTIO.PutAddr(stop);
+        RTIO.PutText("\n");
+        RTIO.Flush();
+    END;
+    
     IF NOT (start < stop) THEN RETURN END;
     stop := stop - ADRSIZE (ADDRESS); (* so we don't overrun the valid addresses *)
     WHILE fp <= stop DO               (* with the memory read on the next line.  *)
+      (*RTIO.PutAddr(fp);RTIO.Flush();*)
       WITH page = AddressToPage(fp^) DO
         IF page # NIL AND page.desc.space = Space.Previous THEN
           IF page.desc.pure
@@ -2797,6 +2805,8 @@ PROCEDURE Init () =
     PerfStart();
   END Init;
 
+VAR DEBUG := RTParams.IsPresent("debugmultistackgc");
+    
 BEGIN
   <*ASSERT LOOPHOLE(0, ADDRESS) = NIL*>
 
