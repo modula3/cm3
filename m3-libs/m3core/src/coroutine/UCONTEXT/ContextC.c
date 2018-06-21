@@ -95,11 +95,16 @@ cleanup(int lo, int hi)
 
      this is not the semantics we are going for here.  In our implementation,
      when a coroutine "falls off the end", we resume with the context that
-     called it (and none other!).
+     called it (and none other!)  This next coroutine is not known when
+     the dying coroutine is created, only when it is called.
 
      this is implemented by updating uc_link on every coroutine call.
      but it can't take effect like that, so we make a special catcher context 
-     (in which we are here in cleanup) that jumps explicitly to that context
+     (in which we are here in cleanup) that jumps explicitly to that context.
+
+     An alternate design would call in here to cleanup directly from the end
+     of CoroutineUcontext.Run .  That would probably be simpler and work
+     OK, too.
   */
   
   setcontext(c->uc.uc_link);
@@ -236,7 +241,7 @@ ContextC__GetStackBase(Context *c)
   return c->uc.uc_stack.ss_sp+c->uc.uc_stack.ss_size;
 }
 
-void *
+static void *
 stack_here(void)
 {
   char *top=(char *)&top;
