@@ -7,13 +7,30 @@ IMPORT RTIO;
 IMPORT Word;
 IMPORT RTParams;
 
+(* Modula-3 coroutines
+   Author : Mika Nystrom <mika.nystroem@intel.com>
+   June, 2018
+
+   Implements coroutines without stack back-references.  Interface is
+   thus very similar to Modula-3 Thread.T.
+
+   Some of the code will only work on AMD64 at present.
+
+   There are assumptions that: 
+   1. pointers are 64 bits 
+   2. stack grows downward
+   3. we rely on ThreadPThread.m3
+   4. we (further) rely on pthread thread-local (global) storage
+
+   Most of these assumptions are in the C code accompanying.
+*)
+
 CONST NoId : Id = NIL;
 
 REVEAL
   T = BRANDED OBJECT
     context : ContextC.T; (* ucontext_t * *)
     thread  : Thread.T;   (* for sanity checking *)
-    isAlive      := TRUE; (* ditto *)
     id           := NoId; (* Tabulate() fills this in *)
     firstcall    := TRUE; (* first call *)
     arg     : Arg;        (* data needed for the Closure *)
@@ -295,7 +312,6 @@ PROCEDURE Call(to : T) : T =
     END;
     <*ASSERT me # NIL*>
     <*ASSERT to # NIL*>
-    <*ASSERT to.isAlive*>
     <*ASSERT me.thread = to.thread*>
 
     IF to.firstcall THEN
@@ -325,7 +341,11 @@ PROCEDURE Call(to : T) : T =
       IF me.inPtr # NIL THEN LOOPHOLE(me.inPtr, T) := NIL END;
       me := NIL;
       (* no stack references to me, stack is clean! *)
+
+      (* THIS IS IT >>>>> *)
       ContextC.SwapContext(myCtx, tgCtx) (* might never return *)
+      (* <<<<< THAT WAS IT *)
+      
     END;
 
     (* I survived, so re-establish references to myself *)
@@ -353,6 +373,10 @@ PROCEDURE Call(to : T) : T =
   END Call;
 
 PROCEDURE Reap(id : INTEGER) =
+  (* note that we still need to have the GC-driven cleanup because
+     a coroutine doesn't necessarily exit through here.  It COULD be
+     suspended in the middle and forgotten, only to be found by GC much
+     later.  In such cases, Reap() never gets called. *)
   VAR
     dead : T;
   BEGIN
@@ -361,14 +385,20 @@ PROCEDURE Reap(id : INTEGER) =
     END;
     
     IF dead = NIL THEN RETURN END; (* hmm can this happen? *)
+
+    (* if we get here, dead is a LIVE reference to a coroutine.
+
+       therefore, we do not have to worry that this code runs concurrently
+       with Cleanup 
+    *)
     
     ThreadPThread.DisposeStack(dead.gcstack);
     ContextC.DisposeContext(dead.context);
     dead.context := NIL;
 
-    (* note also that the WeakRef in coArr has to be handled by GC since
-       we can't NIL it ourselves.  We could set it to Empty and then
-       check for that, however, if we wanted... *)
+    (* note also that the WeakRef in coArr normally has to be handled
+       by GC since we can't NIL it ourselves.  We could set it to
+       Empty and then check for that, however, if we want... *)
     LOCK coMu DO
       coArr[dead.id^] := WeakRef.FromRef(Empty)
     END;
@@ -376,20 +406,10 @@ PROCEDURE Reap(id : INTEGER) =
     DISPOSE(dead.id);
     dead.id := NIL;
     
-    (* note that we still need to have the GC-driven cleanup because
-       a coroutine doesn't necessarily exit through here.  It COULD be
-       suspended in the middle and forgotten, only to be found by GC much
-       later *)
-
   END Reap;
   
 (***********************************************************************)
   
-PROCEDURE IsAlive(t : T) : BOOLEAN =
-  BEGIN RETURN t.isAlive END IsAlive;
-
-  (**********************************************************************)
-
 PROCEDURE Trace(t : T) : T =
   BEGIN
     EVAL WeakRef.FromRef(t, Cleanup);
@@ -409,7 +429,10 @@ PROCEDURE Cleanup(<*UNUSED*>READONLY self : WeakRef.T; ref : REFANY) =
     IF dead.id # NIL THEN
       DISPOSE(dead.id);
       dead.id := NIL;
-    END
+    END;
+
+    (* note that WeakRef.ToRef(coArr[dead.id^]) will at this point return
+       NIL, so we do not need to do anything special about it *)
   END Cleanup;
 
 VAR DEBUG := RTParams.IsPresent("debugcoroutines");
