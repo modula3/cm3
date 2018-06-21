@@ -6,6 +6,8 @@ IMPORT ThreadPThread;
 IMPORT RTIO;
 IMPORT Word;
 IMPORT RTParams;
+IMPORT RTError;
+FROM Compiler IMPORT ThisFile, ThisLine;
 
 (* Modula-3 coroutines
    Author : Mika Nystrom <mika.nystroem@intel.com>
@@ -29,18 +31,22 @@ CONST NoId : Id = NIL;
 
 REVEAL
   T = BRANDED OBJECT
-    context : ContextC.T; (* ucontext_t * *)
-    thread  : Thread.T;   (* for sanity checking *)
-    id           := NoId; (* Tabulate() fills this in *)
-    firstcall    := TRUE; (* first call *)
-    arg     : Arg;        (* data needed for the Closure *)
-    from    : T  := NIL;  (* used to pass caller to callee in Call() *)
-    gcstack : ADDRESS;    (* StackState from ThreadPThread.i3 *)
-    succ    : T  := NIL;  (* successor if we run off end *)
-    dead    : Id := NoId; (* notification to successor that someone died *)
-    inPtr   : ADDRESS;    (* place for a pointer to myself to inhibit GC *)
+    context : ContextC.T;   (* ucontext_t * *)
+    thread  : Thread.T;     (* for sanity checking *)
+    id           := NoId;   (* Tabulate() fills this in *)
+    firstcall    := TRUE;   (* first call *)
+    arg     : Arg;          (* data needed for the Closure *)
+    from    : T  := NIL;    (* used to pass caller to callee in Call() *)
+    gcstack : ADDRESS;      (* StackState from ThreadPThread.i3 *)
+    succ    : T  := NIL;    (* successor if we run off end *)
+    dead    : Id := NoId;   (* notification to successor that someone died *)
+    inPtr   : ADDRESS;      (* place for a pointer to myself to inhibit GC *)
+    result  : REFANY := NIL;(* result of apply *)
   END;
 
+PROCEDURE Retval(t : T) : REFANY =
+  BEGIN RETURN t.result END Retval;
+  
 VAR
   Empty := NEW(T);                         (* dummy object, cant use NIL *)
   coArr := NEW(REF ARRAY OF WeakRef.T, 1); (* entry 0 not used *)
@@ -256,14 +262,17 @@ PROCEDURE Run(arg : Arg) =
     <*ASSERT arg.cl # NIL*>
     VAR
       fc := arg.firstcaller;
+      res : REFANY;
     BEGIN
       arg.firstcaller := NIL;
 
       (* hand over control to client, inhibit is live *)
-      EVAL arg.cl.apply(fc) (* return value? *)
+      res := arg.cl.apply(fc); (* return value? *)
+
+      (* client leaves inhibit live owing to action of Call() *)
+      <*ASSERT inhibit # NIL*>
+      inhibit.result := res
     END;
-    (* client leaves inhibit live owing to action of Call() *)
-    <*ASSERT inhibit # NIL*>
     
     (* when we fall off end, we will automatically be jumped to "succ"
        (see ContextC.c, cleanup()) *)
@@ -335,6 +344,10 @@ PROCEDURE Call(to : T) : T =
     END;
     
     ContextC.SetCurrentCoroutine(to.id);
+    IF to.context = NIL THEN
+      RTError.Msg(ThisFile(),ThisLine(), "Coroutine client error: ",
+                  "context is NIL, calling already exited coroutine?")
+    END;
     ContextC.SetLink(to.context, me.context); (* set return link *)
     to.succ := me;
     to.from := me; (* in caller context *)

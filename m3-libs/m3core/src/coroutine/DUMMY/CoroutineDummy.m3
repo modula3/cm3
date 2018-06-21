@@ -8,8 +8,8 @@ PROCEDURE Create(<*UNUSED*>cl : Closure) : T =
 PROCEDURE Call(<*UNUSED*>t : T) =
   BEGIN <*ASSERT FALSE*> END Call;
 
-PROCEDURE IsAlive(<*UNUSED*>t : T) : BOOLEAN =
-  BEGIN <*ASSERT FALSE*> END IsAlive;
+PROCEDURE Retval(<*UNUSED*>t : T) : REFANY =
+  BEGIN <*ASSERT FALSE*>; RETURN NIL END Retval;
 
 BEGIN END CoroutineDummy.
   
