@@ -352,11 +352,10 @@ PROCEDURE Call(to : T) : T =
     to.succ := me;
     to.from := me; (* in caller context *)
 
-    (* mention to ThreadPThread that we are about to swap stacks *)
-
     IF DEBUG THEN DbgStackInfo("Call before swap") END;
 
     WITH top = ContextC.PushContext(me.context) DO
+      (* mention to ThreadPThread that we are about to swap stacks *)
       (* when the stack disagrees with the execution context is a 
          critical section for GC *)
       ThreadPThread.IncInCritical();
@@ -385,9 +384,6 @@ PROCEDURE Call(to : T) : T =
 
     (* if we wake up here and the dead field is set, another coroutine
        exited and is notifying us to reap it,
-       
-       reaping needs to be done in the CS since we are changing the stack
-       list for the thread
     *)
     IF me.dead # NIL THEN
       Reap(me.dead^);
