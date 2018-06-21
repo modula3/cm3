@@ -14,11 +14,11 @@ REVEAL
     isAlive := TRUE;
     id      : UNTRACED REF INTEGER; (* Tabulate() fills this in *)
     firstcall :=  TRUE; (* first call *)
-    arg     : Arg;
-    from    : T := NIL;
-    gcstack : ADDRESS; (* StackState from ThreadPThread.i3 *)
+    arg     : Arg;      (* data needed for the Closure *)
+    from    : T := NIL; (* used to pass caller to callee in Call() *)
+    gcstack : ADDRESS;  (* StackState from ThreadPThread.i3 *)
     succ    : T := NIL; (* successor if we run off end *)
-    dead    : T := NIL;
+    dead    : T := NIL; (* notification to successor that someone died *)
   END;
 
 VAR coArr := NEW(REF ARRAY OF T, 1); (* entry 0 not used *)
@@ -77,7 +77,7 @@ PROCEDURE Create(cl : Closure) : T =
 
     (* need to get the context here *)
     <*ASSERT cl # NIL*>
-    WITH arg       = NEW(Arg, arg := cl, dbg := 'B'),
+    WITH arg       = NEW(Arg, arg := cl),
          ssz       = Thread.GetDefaultStackSize(), 
          ctx       = ContextC.MakeContext(Run, ssz, arg),
          stackbase = ContextC.GetStackBase(ctx),
@@ -171,7 +171,6 @@ PROCEDURE Run(arg : Arg) =
       RTIO.PutText("\n");
       DbgStackInfo("Run start");
       RTIO.Flush();
-      RTIO.PutChar(arg.dbg); RTIO.PutText("\n");
     END;
     
     <*ASSERT arg # NIL*>
