@@ -200,8 +200,10 @@ PROCEDURE DbgStackInfo(lab : TEXT) =
   END DbgStackInfo;
   
 PROCEDURE Run(arg : Arg) =
+  (* holding inCritical *)
   VAR
-    inhibit : T; (* placeholder for an inhibit ptr *)
+    inhibit : T; (* placeholder for an inhibit ptr -- when this is filled
+                    in with reference to myself, I cannot be GC'd *)
     myid := arg.id^;
   BEGIN
     inhibit := WeakRef.ToRef(coArr[myid]); (* inhibit GC, inhibit = me *)
@@ -246,15 +248,13 @@ PROCEDURE Run(arg : Arg) =
     
     ContextC.SetCurrentCoroutine(inhibit.succ.id);
 
-    (* how do we clean up current stack for threads that fall off the end? *)
     inhibit.succ.dead := inhibit.id;
 
     WITH top = ContextC.PushContext(inhibit.context) DO
       ThreadPThread.IncInCritical();
       ThreadPThread.SetCoStack(inhibit.succ.gcstack, top)
     END;
-    (* we could actually call cleanup() here instead of using the 
-       default next context mechanism.  why don't we? *)
+    (* holding inCritical *)
   END Run;
 
   (* "conservation of call flows":
@@ -279,16 +279,16 @@ PROCEDURE Run(arg : Arg) =
 
      case 3. flow goes into SwapContext and re-emerges at head of Run
 
-     all three swaps should probably be protected by inCritical so that
-     stack info in the thread header (ThreadPThread.m3) matches the
-     actual stack pointer!
+     all three swaps must be protected by inCritical so that stack
+     info in the thread header (ThreadPThread.m3) matches the actual
+     stack pointer!
 
     *)
   
 PROCEDURE Call(to : T) : T =
   VAR
     myId := ContextC.GetCurrentCoroutine();
-    me : T; (* this inhibits GC? *)
+    me : T; (* this inhibits GC if filled in *)
   BEGIN
     LOCK coMu DO
       me := WeakRef.ToRef(coArr[myId^]) (* hmm ... *)
@@ -324,11 +324,11 @@ PROCEDURE Call(to : T) : T =
          tgCtx = to.context DO
       IF me.inPtr # NIL THEN LOOPHOLE(me.inPtr, T) := NIL END;
       me := NIL;
-      (* no stack references to me, stack is clean *)
+      (* no stack references to me, stack is clean! *)
       ContextC.SwapContext(myCtx, tgCtx) (* might never return *)
     END;
 
-    (* re-establish references to myself *)
+    (* I survived, so re-establish references to myself *)
     LOCK coMu DO
       me := WeakRef.ToRef(coArr[myId^])
     END;
