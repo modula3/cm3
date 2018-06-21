@@ -7,32 +7,73 @@ IMPORT RTIO;
 IMPORT Word;
 IMPORT RTParams;
 
+CONST NoId : Id = NIL;
+
 REVEAL
   T = BRANDED OBJECT
     context : ContextC.T; (* ucontext_t * *)
-    thread  : Thread.T;
-    isAlive := TRUE;
-    id      : UNTRACED REF INTEGER; (* Tabulate() fills this in *)
-    firstcall :=  TRUE; (* first call *)
-    arg     : Arg;      (* data needed for the Closure *)
-    from    : T := NIL; (* used to pass caller to callee in Call() *)
-    gcstack : ADDRESS;  (* StackState from ThreadPThread.i3 *)
-    succ    : T := NIL; (* successor if we run off end *)
-    dead    : T := NIL; (* notification to successor that someone died *)
+    thread  : Thread.T;   (* for sanity checking *)
+    isAlive      := TRUE; (* ditto *)
+    id           := NoId; (* Tabulate() fills this in *)
+    firstcall    := TRUE; (* first call *)
+    arg     : Arg;        (* data needed for the Closure *)
+    from    : T  := NIL;  (* used to pass caller to callee in Call() *)
+    gcstack : ADDRESS;    (* StackState from ThreadPThread.i3 *)
+    succ    : T  := NIL;  (* successor if we run off end *)
+    dead    : Id := NoId; (* notification to successor that someone died *)
+    inPtr   : ADDRESS;    (* place for a pointer to myself to inhibit GC *)
   END;
 
-VAR coArr := NEW(REF ARRAY OF T, 1); (* entry 0 not used *)
-    coMu  := NEW(MUTEX); (* protect coArr and coId *)
+VAR
+  Empty := NEW(T);                         (* dummy object, cant use NIL *)
+  coArr := NEW(REF ARRAY OF WeakRef.T, 1); (* entry 0 not used *)
+  coMu  := NEW(MUTEX);                     (* protect coArr and coId *)
+
+  (* notes on garbage collection:
+
+     A "T" is a reference held by the client.
+
+     We desire the following behavior.
+
+     If a T is active (i.e., running = head of its thread), it should not be
+     collected.
+
+     If a T is referenced by any active or inactive stack, it should not be
+     collected.
+
+     An inactive T must not reference itself (unless of course the client
+     does so for it, which would inhibit collection).
+
+     Corollaries of the above are that--
+     an active T must have a reference to itself on its own stack, to inhibit
+     collection.  An inactive T must not have a reference to itself on its own
+     stack, so as not to inhibit collection.
+
+     Any reference from an inactive T's stack to itself must go via the
+     indirection of the coArr table and use its coroutine id.
+
+     Any reference to an inactive T may go NIL at any time (via GC and WeakRef
+     activity.)
+
+     An initial coroutine is a coroutine started outside of this framework,
+     i.e., a coroutine with a stack created by the threading system (or the
+     C runtime).  Such a coroutine should not be collected.
+
+     A reference from a coroutine to its successor (which inhibits collection
+     of the successor) is OK.  If the successor is to be collected, it will
+     eventually be collected through several rounds of GC.
+  *)
 
 PROCEDURE CreateInitialCoroutine() : T =
   VAR
     t := NEW(T,
              firstcall := FALSE,              (* since we're not a Closure *)
-             arg := NIL,                    (* since firstcall is FALSE *)
-             context := ContextC.Current(),
-             thread  := Thread.Self(),
-             gcstack := ThreadPThread.GetStackState(),
-             succ    := NIL (* should be OK *)
+             arg       := NIL,                (* since firstcall is FALSE *)
+             context   := ContextC.Current(),
+             thread    := Thread.Self(),
+             gcstack   := ThreadPThread.GetStackState(),
+             succ      := NIL                 (* I will not exit *),
+             inPtr     := NIL                 (* no need to inhibit *)
     );
   BEGIN
     Tabulate(t);
@@ -61,23 +102,19 @@ PROCEDURE Create(cl : Closure) : T =
        if this is the first/second coroutine created of this thread *)
     WITH cur = ContextC.GetCurrentCoroutine() DO
       IF LOOPHOLE(cur,INTEGER) = 0 OR cur^ = 0 THEN
-        
+        (* I do not exist yet, so I am the mother coroutine (normal thread) *)
         me := CreateInitialCoroutine();
-
-        (* the next line seems to cause a segfault in 
-           RTAllocator__GetTracedRef ?? *)
         ContextC.SetCurrentCoroutine(me.id)
-
       ELSE
         LOCK coMu DO
-          me := coArr[cur^]
+          me := WeakRef.ToRef(coArr[cur^])
         END
       END
     END;
 
     (* need to get the context here *)
     <*ASSERT cl # NIL*>
-    WITH arg       = NEW(Arg, arg := cl),
+    WITH arg       = NEW(Arg, cl := cl),
          ssz       = Thread.GetDefaultStackSize(), 
          ctx       = ContextC.MakeContext(Run, ssz, arg),
          stackbase = ContextC.GetStackBase(ctx),
@@ -98,18 +135,17 @@ PROCEDURE Create(cl : Closure) : T =
                thread  := Thread.Self(),
                gcstack := gcstack
       );
-      t.arg.this := t;
+
     END;
     Tabulate(t);
     EVAL Trace(t);
+    t.arg.id := t.id;
 
     IF DEBUG THEN
       RTIO.PutText("*** Create t=");
       RTIO.PutAddr(LOOPHOLE(t,ADDRESS));
       RTIO.PutText(" t.arg=");
       RTIO.PutAddr(LOOPHOLE(t.arg,ADDRESS));
-      RTIO.PutText(" t.arg.this=");
-      RTIO.PutAddr(LOOPHOLE(t.arg.this,ADDRESS));
       RTIO.PutText(" t.gcstack=");
       RTIO.PutAddr(LOOPHOLE(t.gcstack,ADDRESS));
       RTIO.PutText(" t.id^=");
@@ -125,19 +161,23 @@ PROCEDURE Tabulate(t : T) =
   BEGIN
     LOCK coMu DO
       FOR i := 1 TO LAST(coArr^) DO
-        IF coArr[i] = NIL THEN
-          t.id := NEW(UNTRACED REF INTEGER);
-          t.id^ := i;
-          coArr[t.id^] := t;
-          RETURN
+        (* check if old tenant has been GC'd or deleted *)
+        WITH tenant = WeakRef.ToRef(coArr[i]) DO
+          IF tenant = NIL OR tenant = Empty THEN
+            t.id := NEW(UNTRACED REF INTEGER);
+            t.id^ := i;
+            coArr[t.id^] := WeakRef.FromRef(t);
+            RETURN
+          END
         END
       END;
-      WITH new = NEW(REF ARRAY OF T, NUMBER(coArr^)+1) DO
+      (* no space, make new space *)
+      WITH new = NEW(REF ARRAY OF WeakRef.T, NUMBER(coArr^)+1) DO
         SUBARRAY(new^,0,NUMBER(coArr^)) := coArr^;
         coArr := new;
         t.id := NEW(UNTRACED REF INTEGER);
         t.id^ := LAST(coArr^);
-        coArr[t.id^] := t
+        coArr[t.id^] := WeakRef.FromRef(t)
       END
     END
   END Tabulate;
@@ -146,8 +186,8 @@ PROCEDURE Tabulate(t : T) =
 
 PROCEDURE DbgStackInfo(lab : TEXT) =
   VAR
-    x := 0;
-    adr := ADR(x);
+    x    := 0;
+    adr  := ADR(x);
     base := ThreadPThread.GetCurStackBase();
   BEGIN
     RTIO.PutText(lab);
@@ -160,7 +200,13 @@ PROCEDURE DbgStackInfo(lab : TEXT) =
   END DbgStackInfo;
   
 PROCEDURE Run(arg : Arg) =
+  VAR
+    inhibit : T; (* placeholder for an inhibit ptr *)
+    myid := arg.id^;
   BEGIN
+    inhibit := WeakRef.ToRef(coArr[myid]); (* inhibit GC, inhibit = me *)
+    inhibit.inPtr := ADR(inhibit);         (* remember stash *)
+    
     ThreadPThread.DecInCritical();
     
     IF DEBUG THEN
@@ -174,36 +220,41 @@ PROCEDURE Run(arg : Arg) =
     END;
     
     <*ASSERT arg # NIL*>
-    <*ASSERT arg.arg # NIL*>
-    WITH cl = NARROW(arg.arg, Closure) DO
-      EVAL cl.apply(arg.firstcaller) (* return value? *)
-      (* we could actually call cleanup() here instead of using the 
-         default next context mechanism.  why don't we? *)
-    END;
+    <*ASSERT arg.cl # NIL*>
+    VAR
+      fc := arg.firstcaller;
+    BEGIN
+      arg.firstcaller := NIL;
 
+      (* hand over control to client, inhibit is live *)
+      EVAL arg.cl.apply(fc) (* return value? *)
+    END;
+    (* client leaves inhibit live owing to action of Call() *)
+    <*ASSERT inhibit # NIL*>
+    
     (* when we fall off end, we will automatically be jumped to "succ" *)
     (* we need to set up the correct stack HERE *)
 
     (* should probably increment inCritical *)
     IF DEBUG THEN
-      RTIO.PutText("Run exiting gcstack="); RTIO.PutAddr(arg.this.gcstack);
-      RTIO.PutText(" succ.gcstack="); RTIO.PutAddr(arg.this.succ.gcstack);
-      RTIO.PutText(" succ.id^="); RTIO.PutInt(arg.this.succ.id^);
+      RTIO.PutText("Run exiting gcstack="); RTIO.PutAddr(inhibit.gcstack);
+      RTIO.PutText(" succ.gcstack="); RTIO.PutAddr(inhibit.succ.gcstack);
+      RTIO.PutText(" succ.id^="); RTIO.PutInt(inhibit.succ.id^);
       RTIO.PutText("\n"); RTIO.Flush();
       DbgStackInfo("Run stop");
     END;
     
-    ContextC.SetCurrentCoroutine(arg.this.succ.id);
+    ContextC.SetCurrentCoroutine(inhibit.succ.id);
 
     (* how do we clean up current stack for threads that fall off the end? *)
-    arg.this.succ.dead := arg.this;
+    inhibit.succ.dead := inhibit.id;
 
-    WITH top = ContextC.PushContext(arg.this.context) DO
-      (* when the stack disagrees with the execution context is a 
-         critical section for GC *)
+    WITH top = ContextC.PushContext(inhibit.context) DO
       ThreadPThread.IncInCritical();
-      ThreadPThread.SetCoStack(arg.this.succ.gcstack, top)
+      ThreadPThread.SetCoStack(inhibit.succ.gcstack, top)
     END;
+    (* we could actually call cleanup() here instead of using the 
+       default next context mechanism.  why don't we? *)
   END Run;
 
   (* "conservation of call flows":
@@ -237,10 +288,10 @@ PROCEDURE Run(arg : Arg) =
 PROCEDURE Call(to : T) : T =
   VAR
     myId := ContextC.GetCurrentCoroutine();
-    me : T;
+    me : T; (* this inhibits GC? *)
   BEGIN
     LOCK coMu DO
-      me := coArr[myId^]
+      me := WeakRef.ToRef(coArr[myId^]) (* hmm ... *)
     END;
     <*ASSERT me # NIL*>
     <*ASSERT to # NIL*>
@@ -268,9 +319,21 @@ PROCEDURE Call(to : T) : T =
       ThreadPThread.IncInCritical();
       ThreadPThread.SetCoStack(to.gcstack, top)
     END;
+    (* turn off gc inhibition of myself *)
+    WITH myCtx = me.context,
+         tgCtx = to.context DO
+      IF me.inPtr # NIL THEN LOOPHOLE(me.inPtr, T) := NIL END;
+      me := NIL;
+      (* no stack references to me, stack is clean *)
+      ContextC.SwapContext(myCtx, tgCtx) (* might never return *)
+    END;
 
-    ContextC.SwapContext(me.context, to.context);
-
+    (* re-establish references to myself *)
+    LOCK coMu DO
+      me := WeakRef.ToRef(coArr[myId^])
+    END;
+    IF me.inPtr # NIL THEN LOOPHOLE(me.inPtr, T) := me END;
+    
     ThreadPThread.DecInCritical();
 
     (* if we wake up here and the dead field is set, another coroutine
@@ -280,7 +343,7 @@ PROCEDURE Call(to : T) : T =
        list for the thread
     *)
     IF me.dead # NIL THEN
-      Reap(me.dead);
+      Reap(me.dead^);
       me.dead := NIL
     END;
 
@@ -289,16 +352,27 @@ PROCEDURE Call(to : T) : T =
     RETURN to.from (* in callee context *)
   END Call;
 
-PROCEDURE Reap(dead : T) =
+PROCEDURE Reap(id : INTEGER) =
+  VAR
+    dead : T;
   BEGIN
-    (* and blow away my data structures instead of letting the GC do it *)
     LOCK coMu DO
-      coArr[dead.id^] := NIL
+      dead := WeakRef.ToRef(coArr[id])
     END;
-
+    
+    IF dead = NIL THEN RETURN END; (* hmm can this happen? *)
+    
     ThreadPThread.DisposeStack(dead.gcstack);
     ContextC.DisposeContext(dead.context);
     dead.context := NIL;
+
+    (* note also that the WeakRef in coArr has to be handled by GC since
+       we can't NIL it ourselves.  We could set it to Empty and then
+       check for that, however, if we wanted... *)
+    LOCK coMu DO
+      coArr[dead.id^] := WeakRef.FromRef(Empty)
+    END;
+
     DISPOSE(dead.id);
     dead.id := NIL;
     
@@ -306,6 +380,7 @@ PROCEDURE Reap(dead : T) =
        a coroutine doesn't necessarily exit through here.  It COULD be
        suspended in the middle and forgotten, only to be found by GC much
        later *)
+
   END Reap;
   
 (***********************************************************************)
@@ -332,16 +407,13 @@ PROCEDURE Cleanup(<*UNUSED*>READONLY self : WeakRef.T; ref : REFANY) =
     END;
 
     IF dead.id # NIL THEN
-      LOCK coMu DO
-        coArr[dead.id^] := NIL
-      END;
       DISPOSE(dead.id);
       dead.id := NIL;
     END
   END Cleanup;
 
 VAR DEBUG := RTParams.IsPresent("debugcoroutines");
-    
+
 BEGIN
   ContextC.InitC()
 END CoroutineUcontext.

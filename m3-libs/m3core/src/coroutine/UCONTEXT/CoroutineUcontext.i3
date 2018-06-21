@@ -1,14 +1,20 @@
-INTERFACE CoroutineUcontext;
-FROM Coroutine IMPORT T;
+UNSAFE INTERFACE CoroutineUcontext;
+FROM Coroutine IMPORT T, Closure;
 
 TYPE
   Arg = REF RECORD
-    arg  : REFANY;
-    firstcaller : T; (* special trick for passing initial caller into 
-                        a coroutine the first time it runs *)
-    this : T;        (* the coroutine itself *)
+    cl          : Closure;
+    firstcaller : T;  (* special trick for passing initial caller into 
+                         a coroutine the first time it runs, gets NILed 
+                         right away *)
+    id          : Id; (* need this to find my coroutine in Run *)
   END;
 
   Entry = PROCEDURE(arg : Arg);
 
+  Id = UNTRACED REF INTEGER;
+  (* this strange declaration is used because our Id is held as a thread
+     local (i.e., global) with pthreads thread local system.  That system
+     can only handle pointers. *)
+      
 END CoroutineUcontext.

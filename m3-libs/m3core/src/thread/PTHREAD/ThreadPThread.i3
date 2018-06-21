@@ -151,7 +151,23 @@ PROCEDURE SetCoStack(toStack     : ADDRESS;
                      (* address of top of stack we're coming FROM,
                         must have the context pushed before being passed here,
                         so that we have the register state on the stack *));
-  (* to denote that we have/are about to switch stacks on a coroutine switch *)
+  (* to denote that we have/are about to switch stacks on a coroutine switch.
+
+  NOTE THAT:        
+  
+  when the stack disagrees with the execution context is a critical 
+  section for GC 
+
+  therefore, clients MUST call IncInCritical before SetCoStack.
+
+  The pattern is:
+
+  IncInCritical()
+  SetCoStack(...)
+  (* jump to new context *)
+  (* running in new context *)
+  DecInCritical()
+*)
   
 PROCEDURE GetStackState() : ADDRESS;
   (* current stack state *)
