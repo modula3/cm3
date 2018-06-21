@@ -110,6 +110,20 @@ PROCEDURE CreateInitialCoroutine() : T =
 
     RETURN t
   END CreateInitialCoroutine;
+
+  (* the whole GetCurrentCoroutine / SetCurrentCoroutine dance is really 
+     only used for one purpose, namely, to ensure that we can see that 
+     the initial creator (mother coroutine) has a Coroutine.T whither 
+     new coroutines may return.
+
+     I wonder if there is a simpler way.  One approach would be to
+     require every thread to have a mother coroutine record created
+     when the thread is created.  That could simplify a few things,
+     but would require (probably) changes to Thread.T (maybe could be
+     isolated to ThreadPThread only...)  It would only really hide the
+     thread local (global) issues in the threading library---these
+     issues dont seem to go away.
+  *)
   
 PROCEDURE Create(cl : Closure) : T =
   VAR
@@ -251,10 +265,10 @@ PROCEDURE Run(arg : Arg) =
     (* client leaves inhibit live owing to action of Call() *)
     <*ASSERT inhibit # NIL*>
     
-    (* when we fall off end, we will automatically be jumped to "succ" *)
+    (* when we fall off end, we will automatically be jumped to "succ"
+       (see ContextC.c, cleanup()) *)
     (* we need to set up the correct stack HERE *)
 
-    (* should probably increment inCritical *)
     IF DEBUG THEN
       RTIO.PutText("Run exiting gcstack="); RTIO.PutAddr(inhibit.gcstack);
       RTIO.PutText(" succ.gcstack="); RTIO.PutAddr(inhibit.succ.gcstack);
@@ -263,9 +277,9 @@ PROCEDURE Run(arg : Arg) =
       DbgStackInfo("Run stop");
     END;
     
-    ContextC.SetCurrentCoroutine(inhibit.succ.id);
+    ContextC.SetCurrentCoroutine(inhibit.succ.id); (* whither we are to go *)
 
-    inhibit.succ.dead := inhibit.id;
+    inhibit.succ.dead := inhibit.id; (* tell successor I am dead *)
 
     WITH top = ContextC.PushContext(inhibit.context) DO
       ThreadPThread.IncInCritical();
