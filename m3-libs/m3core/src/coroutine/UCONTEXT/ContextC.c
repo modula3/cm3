@@ -34,7 +34,7 @@
 
 #define INTEGER  long int
 #define WORD_T   unsigned long int
-#define ARG void *
+#define ARG      void *
 
 #define DEBUG 1
 
@@ -49,12 +49,23 @@ typedef struct {
   void      *stackaddr;
   WORD_T     stacksize;
   void      *stackbase; /* this is the base reported to M3's GC */
-  stack_t    ss;
   ucontext_t uc;
   ucontext_t pc; /* post context for cleanup */
-  Closure    cl;
   int        alive;
 } Context;
+
+/* a truly clever implementation would:
+
+   not store uc in the Context, but instead put it on the stack.  This
+   ought to be possible: uc is used for two purposes.  One is to keep
+   track of where we are in the coroutine so we can restart properly.
+   The second is so that GC can scan the registers of the thread.
+   Note that we need the uc on the stack at the same time (when the 
+   coroutine is inactive).  When the coroutine is active, the code in
+   ThreadPThread will *ensure* that the context is pushed anyhow. 
+*/
+
+   
 
 static void
 trampoline(int lo, int hi)
@@ -127,7 +138,7 @@ ContextC__MakeContext(void      (*p)(ARG),
   int er = { 0 };
   Closure *cl = (Closure *)calloc(1, sizeof(*cl));
   int lo, hi;
-  char *slim, *sbeg;
+  char *slim, *sbeg; /* limits of stack, for bookkeeping */
   
   if (c == NULL || cl == NULL)
     goto Error;
@@ -137,8 +148,11 @@ ContextC__MakeContext(void      (*p)(ARG),
   if (size <= 0) return c;
   if (size < MINSIGSTKSZ) size = MINSIGSTKSZ;
 
-  /* Round up to a whole number of pages, and
-   * allocate three extra pages */
+  /* 
+   * Round up to a whole number of pages, and
+   * allocate three extra pages.  Two pages for the redzone and one for 
+   * the arg pointer 
+   */
 
   pages = (size + pagesize - 1) / pagesize + 3;
   size = pages * pagesize;
@@ -210,7 +224,7 @@ ContextC__MakeContext(void      (*p)(ARG),
 
   /* define the post context for cleanup */
   c->pc.uc_stack = c->uc.uc_stack; /* reuse stack */
-  c->pc.uc_link = 0;               /* will never go through here */
+  c->pc.uc_link = (void *)0;       /* will never go through here */
   
   c->uc.uc_link = &(c->pc);        /* set up cleanup linkage */
 
