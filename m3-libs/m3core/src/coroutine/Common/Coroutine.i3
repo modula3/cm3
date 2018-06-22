@@ -26,14 +26,20 @@ PROCEDURE Call(c : T) : T;
      coroutine to call c will be activated at its last activation
      point
 
-   *)
+     A current implementation restriction is that the target coroutine
+     must be in the same thread as the calling coroutine.  This is not
+     a technically necessary restriction and may be removed in future
+     versions.  (Note to implementer: shifting a coroutine between
+     threads would involve moving the stack from one thread's linked
+     list of stacks to another thread's list in ThreadPThread.m3) 
+  *)
 
 PROCEDURE Retval(c : T) : REFANY;
   (* returns NIL if coroutine c is still active, returns return value
      of apply if c is done executing *)
 
 
-  (* Example:
+  (* Example of using this interface:
 
      VAR
        c := Create(NEW(Closure, apply := Apply));

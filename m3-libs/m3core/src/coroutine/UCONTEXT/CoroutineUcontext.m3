@@ -155,8 +155,11 @@ PROCEDURE Create(cl : Closure) : T =
          ssz       = Thread.GetDefaultStackSize(), 
          ctx       = ContextC.MakeContext(Run, ssz, arg),
          stackbase = ContextC.GetStackBase(ctx),
-         gcstack   = ThreadPThread.CreateStackState(stackbase,stackbase)
-            (*nothing to scan yet*)
+         gcstack   = ThreadPThread.CreateStackState(stackbase,
+                                                    stackbase-BYTESIZE(Arg))
+            (*nothing to scan yet---except the arg-pin (see ContextC.c)
+              assumption: stack grows downward
+            *)
      DO
       IF DEBUG THEN
         RTIO.PutText("*** Create arg=");

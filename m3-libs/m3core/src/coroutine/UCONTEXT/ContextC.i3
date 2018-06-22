@@ -4,17 +4,15 @@ FROM CoroutineUcontext IMPORT Arg, Entry;
 
 TYPE T = ADDRESS;
 
-<*EXTERNAL ContextC__New*>
-PROCEDURE New() : T;
-
 <*EXTERNAL ContextC__MakeContext*>
 PROCEDURE MakeContext(p      : Entry;
                       ssize  : Ctypes.int;
                       arg    : Arg): T;
+  (* creates a new T, which must eventually be freed using DisposeContext *)
 
 <*EXTERNAL ContextC__Current*>
-PROCEDURE Current() : T; (* creates a new T, which must eventually be
-                            freed using DisposeContext *)
+PROCEDURE Current() : T;
+  (* creates a new T, which must eventually be freed using DisposeContext *)
 
 <*EXTERNAL ContextC__SwapContext*>
 PROCEDURE SwapContext(from, to : T);  

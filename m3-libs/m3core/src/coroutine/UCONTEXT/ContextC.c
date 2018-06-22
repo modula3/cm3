@@ -63,20 +63,20 @@ typedef struct {
    Note that we need the uc on the stack at the same time (when the 
    coroutine is inactive).  When the coroutine is active, the code in
    ThreadPThread will *ensure* that the context is pushed anyhow. 
-*/
 
-   
+   We're not this clever yet.
+*/
 
 static void
 trampoline(int lo, int hi)
 {
-  /* take two 32-bit pointers and turn them into a 64-bit pointer */
+  /* take two 32-bit pointers as ints and turn them into a 64-bit pointer */
   Closure *cl = (Closure *)(((unsigned long)(unsigned int)hi << 32UL) | (unsigned long)(unsigned int)lo);
   
   cl->p(cl->arg);
 }
   
-void *
+static void *
 ContextC__New(void)
 {
   Context *res=calloc(1,sizeof(Context));
