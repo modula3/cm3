@@ -38,6 +38,8 @@
 
 #define DEBUG 1
 
+#define stack_grows_downward 1 /* AMD64_LINUX */
+
 typedef struct {
   void (*p)(ARG);
   void *arg;
@@ -46,6 +48,7 @@ typedef struct {
 typedef struct {
   void      *stackaddr;
   WORD_T     stacksize;
+  void      *stackbase; /* this is the base reported to M3's GC */
   stack_t    ss;
   ucontext_t uc;
   ucontext_t pc; /* post context for cleanup */
@@ -124,7 +127,8 @@ ContextC__MakeContext(void      (*p)(ARG),
   int er = { 0 };
   Closure *cl = (Closure *)calloc(1, sizeof(*cl));
   int lo, hi;
-
+  char *slim, *sbeg;
+  
   if (c == NULL || cl == NULL)
     goto Error;
 
@@ -134,29 +138,73 @@ ContextC__MakeContext(void      (*p)(ARG),
   if (size < MINSIGSTKSZ) size = MINSIGSTKSZ;
 
   /* Round up to a whole number of pages, and
-   * allocate two extra pages, one at the start
-   * and one at the end, and don't allow accessing
-   * either one (catch stack overflow and underflow).
-   */
-  pages = (size + pagesize - 1) / pagesize + 2;
+   * allocate three extra pages */
+
+  pages = (size + pagesize - 1) / pagesize + 3;
   size = pages * pagesize;
   sp = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0);
 
   if (DEBUG) fprintf(stderr, "creating coroutine stack %#lx\n", sp);
   
-  if (sp == NULL)
-    goto Error;
+  if (sp == NULL) goto Error;
+
   c->stackaddr = sp;
   c->stacksize = size;
-  if (mprotect(sp                  , pagesize, PROT_NONE)) abort();
-  if (mprotect(sp + size - pagesize, pagesize, PROT_NONE)) abort();
 
+  /* range for the stack is [sp, sp + size) */
+
+  sbeg = sp;
+  slim = sp + size;
+
+  /*
+   * redzone one page at the start
+   * and one at the end, don't allow accessing
+   * either one (catch stack overflow and underflow).
+   */
+
+  /* mprotect first and last page */
+  if (mprotect(sbeg                , pagesize, PROT_NONE)) abort();
+  if (mprotect(slim - pagesize     , pagesize, PROT_NONE)) abort();
+
+  /* adjust ends of stack region accordingly */
+  sbeg += pagesize;
+  slim -= pagesize;
+
+  /* the stack is now ready for use */
+  if (stack_grows_downward) {
+    c->stackbase = slim;
+  } else {
+    c->stackbase = sbeg;
+  }
+  
+  /*
+   * Modula-3 GC interaction tricks:
+   * we need to push arg on the stack to pin it from the gc 
+   * we do this by writing it at what could be the initial sp, and 
+   * adjust the sp by the size of arg
+   *
+   * in other words, the sp given to the garbage collector will include
+   * arg but the sp given to swapcontext will not 
+   */
+
+  if (stack_grows_downward) {
+    *(void **)(slim - sizeof(void *)) = arg;
+
+    /* adjust stack region accordingly */
+    slim -= sizeof(void *);
+  } else {
+    *(void **)(sbeg) = arg;
+
+    /* adjust stack region accordingly */
+    sbeg += sizeof(void *);
+  }
+  
   if (getcontext(&(c->uc))) abort();
   if (getcontext(&(c->pc))) abort();
-
-  c->uc.uc_stack.ss_sp = sp + pagesize;
-  c->uc.uc_stack.ss_size = size - 2 * pagesize;
-
+  
+  c->uc.uc_stack.ss_sp   = sbeg;
+  c->uc.uc_stack.ss_size = slim - sbeg;
+  
   cl->p   = p;
   cl->arg = arg;
 
@@ -238,24 +286,44 @@ ContextC__InitC(void) /* should be void *bottom? */
 void *
 ContextC__GetStackBase(Context *c)
 {
-  return c->uc.uc_stack.ss_sp+c->uc.uc_stack.ss_size;
+  return c->stackbase;
 }
+
+/* in the following functions, we use "auto" to signify that 
+   it is essential to the operation of the program that these variables
+   are indeed placed on the stack */
 
 static void *
 stack_here(void)
 {
-  char *top=(char *)&top;
+  auto char *top=(char *)&top;
   return top;
 }
       
-void *
-ContextC__PushContext(Context *c)
+static void *
+ContextC__PushContext1(Context *c)
 {
-  ucontext_t uc=c->uc; /* write it on the stack */
+  auto ucontext_t uc=c->uc; /* write it on the stack */
   void *top;
 
   top = stack_here();
   return top;
+}
+
+#define STACK_GAP 256
+
+void *
+ContextC__PushContext(Context *c)
+{
+  auto char a[STACK_GAP];
+
+  /* the purpose of the gap is to allow other routines to do some small
+     amount of work between when we return and the next GC event,
+     without clobbering the context we are about to push */
+  
+  (void)memset(a, 0, STACK_GAP);
+  
+  return ContextC__PushContext1(c);
 }
 
 

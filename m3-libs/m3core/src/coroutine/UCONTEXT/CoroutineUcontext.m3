@@ -290,8 +290,8 @@ PROCEDURE Run(arg : Arg) =
 
     inhibit.succ.dead := inhibit.id; (* tell successor I am dead *)
 
+    ThreadPThread.IncInCritical();
     WITH top = ContextC.PushContext(inhibit.context) DO
-      ThreadPThread.IncInCritical();
       ThreadPThread.SetCoStack(inhibit.succ.gcstack, top)
     END;
     (* holding inCritical *)
@@ -354,13 +354,26 @@ PROCEDURE Call(to : T) : T =
 
     IF DEBUG THEN DbgStackInfo("Call before swap") END;
 
+    (* mention to ThreadPThread that we are about to swap stacks.
+       
+       when the stack disagrees with the execution context is a 
+       critical section for GC.
+       
+       There is another dirty trick here: when PushContext has 
+       returned, it leaves the context ABOVE the top of stack.
+       The "top" that is returned by PushContext goes beyond the
+       end of stack, and it is assumed that the pop of PushContext
+       does not destroy what was there 
+       
+       Therefore, no code may intervene between ContextC.PushContext and
+       ThreadPThread.SetCoStack.  Not sure if this is safe enough...
+    *)
+
+    ThreadPThread.IncInCritical();
     WITH top = ContextC.PushContext(me.context) DO
-      (* mention to ThreadPThread that we are about to swap stacks *)
-      (* when the stack disagrees with the execution context is a 
-         critical section for GC *)
-      ThreadPThread.IncInCritical();
       ThreadPThread.SetCoStack(to.gcstack, top)
     END;
+    
     (* turn off gc inhibition of myself *)
     WITH myCtx = me.context,
          tgCtx = to.context DO
