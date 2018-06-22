@@ -367,6 +367,7 @@ PROCEDURE Call(to : T) : T =
        
        Therefore, no code may intervene between ContextC.PushContext and
        ThreadPThread.SetCoStack.  Not sure if this is safe enough...
+       ContextC leaves an extra 256B just to make sure.
     *)
 
     ThreadPThread.IncInCritical();
