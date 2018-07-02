@@ -28,7 +28,7 @@ IMPORT DwarfConst AS DC;
 IMPORT LLVM;
 IMPORT LLVMTypes; 
 FROM LLVMTypes IMPORT int64_t , uint64_t , uint32_t, unsigned;
-FROM LLVMTypes IMPORT Bool , False , True;   
+(*FROM LLVMTypes IMPORT Bool , False , True;*)
 FROM LLVMTypes IMPORT ArrayRefOfMetadataRef, MetadataRef, StringRef,ArrayRefOfint64_t;
 IMPORT M3Buf;
 IMPORT M3CG;
@@ -59,7 +59,7 @@ TYPE callStateTyp
                           before any pop_static_link. *) 
       indirectAfterSL  (* Need I belabor this one? *) 
     }; 
-CONST callStateSetIndirect 
+<*UNUSED*>CONST callStateSetIndirect 
   = SET OF callStateTyp 
       { callStateTyp.insideIndirect, callStateTyp.indirectAfterSL }; 
 
@@ -667,7 +667,7 @@ PROCEDURE TIntToint64_t(Val: TInt.Int) : int64_t =
   END TIntToint64_t; 
 
 (* For use from m3gdb: *) 
-PROCEDURE LvType ( Val: LLVM.ValueRef) : LLVM.TypeRef =
+<*UNUSED*>PROCEDURE LvType ( Val: LLVM.ValueRef) : LLVM.TypeRef =
   BEGIN
     RETURN LLVM.LLVMTypeOf(Val); 
   END LvType;
@@ -5731,7 +5731,7 @@ PROCEDURE DebugLookupOrdinalBounds(self : U; tUid : TypeUID; VAR min, count : TI
     END;
   END DebugLookupOrdinalBounds;
 
-PROCEDURE DebugSubrange(self : U; subrange : SubrangeDebug) 
+<*UNUSED*>PROCEDURE DebugSubrange(self : U; subrange : SubrangeDebug) 
 : M3DIB.DISubrange =
   VAR Result : M3DIB.DISubrange;
       MLBase : BaseDebug;  
@@ -6042,7 +6042,7 @@ at the type creation line. *)
     o.DIDescr := ptrDIT;
 
     IF o.superType # NO_UID
-    (* this object is neither root nor untraced root nor address which do not have a supertypes.*)
+    (* this object is neither root nor untraced root nor address which do not have a supertype.*)
         AND o.tUid # UID_ROOT 
           AND o.tUid # UID_UNTRACED_ROOT    
             AND o.tUid # UID_ADDR    
@@ -6169,7 +6169,9 @@ PROCEDURE DebugPointer(self : U; p : PointerDebug) : M3DIB.DIDerivedType =
   VAR
     referentDIType : M3DIB.DIType;
   BEGIN
-    referentDIType := DebugLookupLL(self,p.target);
+    IF p.tUid # p.target THEN (*avoid recursive type loop.*)
+      referentDIType := DebugLookupLL(self,p.target);
+    END;
     EnsureDebugTypeName(p); 
                
     RETURN self.debugRef.createPointerType(
@@ -6248,7 +6250,7 @@ PROCEDURE DebugLookupLL(self : U; tUid : TypeUID) : M3DIB.DIType =
 
 (* No used so far. Used for setting metadata values.
    Should probably pass the expression in as an array *)
-PROCEDURE SetExprValue(self : U; var : M3DIB.DILocalVariable; value : LLVM.ValueRef) =
+<*UNUSED*>PROCEDURE SetExprValue(self : U; var : M3DIB.DILocalVariable; value : LLVM.ValueRef) =
   VAR
     exp : M3DIB.DIExpression;
     paramsArr : REF ARRAY OF int64_t; 
@@ -6281,18 +6283,25 @@ PROCEDURE SetExprValue(self : U; var : M3DIB.DILocalVariable; value : LLVM.Value
             );
   END SetExprValue;
   
-PROCEDURE GetExpr(self : U; m3t : TypeUID) : M3DIB.DIExpression =
+PROCEDURE GetExpr(self : U; v : LvVar) : M3DIB.DIExpression =
   VAR
-    debugObj : REFANY;
     exp : M3DIB.DIExpression;
     paramsArr : REF ARRAY OF int64_t; 
-    paramsInt64 : LLVMTypes.ArrayRefOfint64_t;    
+    paramsInt64 : LLVMTypes.ArrayRefOfint64_t;
+    tuid : TypeUID;
+    debugObj : REFANY;
   BEGIN
+    tuid := v.m3t;
     (* default empty expression *)
     exp := self.debugRef.createExpression1();
   
-    EVAL self.debugTable.get(m3t, (*OUT*)debugObj);    
-    IF ISTYPE(debugObj,IndirectDebug) THEN
+    EVAL self.debugTable.get(tuid, (*OUT*)debugObj);    
+    IF ISTYPE(debugObj,IndirectDebug) OR
+      (* structure types passed by value actually
+         have their address passed *)
+       v.varType = VarType.Param AND
+         (ISTYPE(debugObj,ArrayDebug) OR
+          ISTYPE(debugObj,RecordDebug)) THEN
       NewArrayRefOfint64
       (1, (*OUT*)paramsArr, (*OUT*)paramsInt64);
       (* indirect expr used for VAR params *)
@@ -6364,7 +6373,7 @@ PROCEDURE DebugVar(self : U; v : LvVar; argNum : CARDINAL := 0) =
                    AlignInBits    := 0);                    
     END;
     
-    exp := GetExpr(self,v.m3t);
+    exp := GetExpr(self,v);
     
     loc := LLVM.DIBGetDebugLoc(self.curLine,0,self.funcRef);
     diLoc := LOOPHOLE(loc,M3DIB.DILocation);
@@ -6422,12 +6431,10 @@ PROCEDURE DebugGlobals(self : U) =
     
     FOR i := 0 TO self.globDataDescr.numFields - 1 DO
       WITH ds = self.globDataDescr.fields[i] DO
-        (* cant debug exceptions yet *)
-        IF ds.tUid > 0 THEN
+        IF ds.tUid # 0 THEN (* cant debug exceptions yet *)
           name := M3ID.ToText(ds.name);
           ofs := VAL(ds.bitOffset,INTEGER) DIV 8;
           globType := DebugLookupLL(self,ds.tUid);
-
           IF self.globalTable.get(name,globalRef) THEN
             (* A large global which is a seperate var *)
             global := NARROW(globalRef,LvVar);
@@ -6459,7 +6466,7 @@ PROCEDURE DebugGlobals(self : U) =
             AlignInBits   := 0);
             
           (* set the !dbg tag for this global *)
-          LLVM.DIBSetGlobalTag(globalLv,gve);   
+          LLVM.DIBSetGlobalTag(globalLv,gve);
         END;
       END;
     END;
