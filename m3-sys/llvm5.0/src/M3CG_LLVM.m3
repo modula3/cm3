@@ -5148,7 +5148,7 @@ PROCEDURE store_ordered (self: U;  t: ZType;  u: MType;  order: MemoryOrder) =
     s1 := Get(self.exprStack,1);
     var : LvVar;
   BEGIN
-    <*ASSERT (order # MemoryOrder.Release) AND 
+    <*ASSERT (order # MemoryOrder.AcquireRelease) AND 
              (order # MemoryOrder.Acquire) *>
     self.memoryOrder := NEW(REF MemoryOrder);
     self.memoryOrder^ := order;
@@ -5170,7 +5170,7 @@ PROCEDURE store_ordered (self: U;  t: ZType;  u: MType;  order: MemoryOrder) =
     var : LvVar;
   BEGIN
     <*ASSERT (order # MemoryOrder.Release) AND 
-             (order # MemoryOrder.Acquire) *>
+             (order # MemoryOrder.AcquireRelease) *>
     self.memoryOrder := NEW(REF MemoryOrder);
     self.memoryOrder^ := order;             
 
@@ -5232,9 +5232,8 @@ PROCEDURE compare_exchange (self: U;  t: MType;  u: ZType;  <*UNUSED*>r: IType; 
     successOrdering,failureOrdering : LLVM.AtomicOrdering;
   BEGIN
     <*ASSERT (failure # MemoryOrder.Release) AND 
-             (failure # MemoryOrder.Acquire) *> 
-    (* CHECK the ordering constraint on failure must be
-    no stronger than that of success *)
+             (failure # MemoryOrder.AcquireRelease) *> 
+    (* CHECK probably remove the asserts as the frontend does the check *)
     new := NARROW(s0,LvExpr).lVal;
     cmp := NARROW(s1,LvExpr).lVal;
     ptr := NARROW(s2,LvExpr).lVal;
