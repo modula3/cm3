@@ -33,8 +33,10 @@ TYPE
         is_const  : BOOLEAN;
         kind      : Kind;
         index     : Type.T;
-        refType   : Type.T; (* Kind.Open *)
-        solidType : Type.T; (* Kind.FixedOpen *)
+        refType   : Type.T; (* If Kind=Open, type REF theArray. *) 
+        fixingType: Type.T;
+        (* ^If Kind=FixedOpen, the type of an element with static inner element
+           count.  NIL if none exists. *)
         offset    : INTEGER;
         tmp       : CG.Val;
         tmp_cnt   : INTEGER;
@@ -60,23 +62,24 @@ TYPE
         note_write   := ExprRep.NotWritable;
       END;
 
+(* EXPORTED: *) 
 PROCEDURE New (type: Type.T;  args: Expr.List;  dots: BOOLEAN): Expr.T =
-  VAR p := NEW (P);  index, element: Type.T;
+  VAR p := NEW (P);  indexType, elementType: Type.T;
   BEGIN
     ExprRep.Init (p);
-    IF  NOT ArrayType.Split (type, index, element) THEN
+    IF  NOT ArrayType.Split (type, indexType, elementType) THEN
       Error.Msg ("expecting array type on array constructor");
-      index := NIL;
+      indexType := NIL;
     END;
     p.type      := type;
     p.tipe      := type;
-    p.index     := index;
+    p.index     := indexType;
     p.args      := args;
     p.dots      := dots;
     p.folded    := FALSE;
     p.is_const  := FALSE;
     p.refType   := NIL;
-    p.solidType := NIL;
+    p.fixingType:= NIL;
     p.offset    := 0;
     p.tmp       := NIL;
     p.tmp_cnt   := 0;
@@ -84,12 +87,14 @@ PROCEDURE New (type: Type.T;  args: Expr.List;  dots: BOOLEAN): Expr.T =
     RETURN p;
   END New;
 
+(* EXPORTED: *) 
 PROCEDURE Is (e: Expr.T): BOOLEAN =
   BEGIN
     RETURN (TYPECODE (e) = TYPECODE (P));
   END Is;
 
-PROCEDURE Subscript (array, index: Expr.T;  VAR e: Expr.T): BOOLEAN =
+(* EXPORTED: *) 
+PROCEDURE Subscript (array, indexType: Expr.T;  VAR e: Expr.T): BOOLEAN =
   VAR p: P;  i, n: INTEGER;  int, min, max, offs: Target.Int;  t: Type.T;
       b: BOOLEAN;
   BEGIN
@@ -98,9 +103,9 @@ PROCEDURE Subscript (array, index: Expr.T;  VAR e: Expr.T): BOOLEAN =
     | P(x) => p := x;
     ELSE      RETURN FALSE;
     END;
-    index := Expr.ConstValue (index);
-    IF (NOT IntegerExpr.Split (index, int, t))
-      AND (NOT EnumExpr.Split (index, int, t)) THEN
+    indexType := Expr.ConstValue (indexType);
+    IF (NOT IntegerExpr.Split (indexType, int, t))
+      AND (NOT EnumExpr.Split (indexType, int, t)) THEN
       RETURN FALSE;
     END;
     IF p.index = NIL THEN
@@ -121,6 +126,7 @@ PROCEDURE Subscript (array, index: Expr.T;  VAR e: Expr.T): BOOLEAN =
     RETURN FALSE;
   END Subscript;
 
+(* EXPORTED: *) 
 PROCEDURE GetBounds (array: Expr.T;  VAR min, max: Target.Int): BOOLEAN =
   VAR b: BOOLEAN;
   BEGIN
@@ -145,7 +151,7 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
     nn: Target.Int;
     n: INTEGER;
     e, value, minE, maxE: Expr.T;
-    index, element, solidElt, elt: Type.T;
+    indexType, elementType, solidElt, elt: Type.T;
     key: M3ID.T;
     elt_info: Type.Info;
   BEGIN
@@ -155,16 +161,17 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
 
     p.tipe := Type.Check (p.tipe);
     p.type := p.tipe;
-    WITH b = ArrayType.Split (p.tipe, index, element) DO <* ASSERT b *> END;
-    element := Type.CheckInfo (element, elt_info);
+    WITH b = ArrayType.Split (p.tipe, indexType, elementType)
+    DO <* ASSERT b *> END;
+    elementType := Type.CheckInfo (elementType, elt_info);
 
-    IF (index # ErrType.T) THEN
-      nn := Type.Number (index);
+    IF (indexType # ErrType.T) THEN
+      nn := Type.Number (indexType);
       IF NOT TInt.ToInt (nn, n) THEN
         Error.Msg 
-          ("Compiler limit: array constructor type has too many elements.");
+          ("CM3 limit: array constructor type has too many elements.");
       END;
-      IF (index # NIL) THEN
+      IF (indexType # NIL) THEN
         IF n < NUMBER (p.args^) THEN
           Error.Msg ("too many values specified in fixed array constructor.");
         ELSIF n > NUMBER (p.args^) AND NOT p.dots THEN
@@ -188,23 +195,23 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
         e := value;
       END;
 
-      IF NOT Type.IsAssignable (element, Expr.TypeOf (e)) THEN
-        Error.Msg ("expression is not assignable to array element");
+      IF NOT Type.IsAssignable (elementType, Expr.TypeOf (e)) THEN
+        Error.Int
+          (i, "expression is not assignable to array constructor elementType");
       ELSE
-        AssignStmt.Check (element, e, cs);
+        AssignStmt.Check (elementType, e, cs);
       END;
     END;
 
-
-    IF (index # NIL) OR (index = ErrType.T) THEN
+    IF (indexType # NIL) OR (indexType = ErrType.T) THEN
       p.kind := Kind.Fixed;
     ELSIF (NUMBER (p.args^) = 0) THEN
       p.kind := Kind.EmptyOpen;
     ELSE
       (* we're producing an open array => try to find a fixed shape element *)
       solidElt := NIL;
-      IF elt_info.size > 0 THEN
-        solidElt := element;
+      IF elt_info.size > 0 THEN (* Element type has statically-known size *)
+        solidElt := elementType;
       ELSE
         FOR i := 0 TO LAST (p.args^) DO
           elt := Expr.TypeOf (p.args[i]);
@@ -221,11 +228,12 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
         AND TInt.FromInt (LAST (p.args^), nn)
         AND NOT TInt.LT (nn, Target.Integer.min)
         AND NOT TInt.LT (Target.Integer.max, nn) THEN
+      (* Element count lies within target's INTEGER range. *) 
         p.kind := Kind.FixedOpen;
-        index := SubrangeType.New (TInt.Zero, nn, Int.T, FALSE);
-        p.solidType := ArrayType.New (index, solidElt);
-        p.solidType := Type.CheckInfo (p.solidType, elt_info);
-        element := solidElt;
+        indexType := SubrangeType.New (TInt.Zero, nn, Int.T, FALSE);
+        p.fixingType := ArrayType.New (indexType, solidElt);
+        p.fixingType := Type.CheckInfo (p.fixingType, elt_info);
+        elementType := solidElt;
       ELSE
         (* we can't determine the shape until runtime *)
         p.kind := Kind.Open;
@@ -235,12 +243,12 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
     END;
   END Check;
 
-PROCEDURE FixedArray (e: Expr.T;  VAR solidType: Type.T): BOOLEAN =
+PROCEDURE FixedArray (e: Expr.T;  VAR fixingType: Type.T): BOOLEAN =
   BEGIN
     TYPECASE e OF
     | NULL => RETURN FALSE;
-    | P(p) => solidType := p.solidType; RETURN (solidType # NIL);
-    ELSE      RETURN FixedArray (Expr.ConstValue (e), solidType);
+    | P(p) => fixingType := p.fixingType; RETURN (fixingType # NIL);
+    ELSE      RETURN FixedArray (Expr.ConstValue (e), fixingType);
     END;
   END FixedArray;
 
@@ -288,7 +296,7 @@ PROCEDURE Compile (p: P) =
       offset := Module.Allocate (size, align, TRUE, "*array*");
       PrepLiteral (p, p.tipe, TRUE);
       GenLiteral (p, offset, p.tipe, TRUE);
-      CG.Load_addr_of (Module.GlobalData (TRUE), offset, align);
+      CG.Load_addr_of (Module.GlobalData (TRUE), offset, CG.Max_alignment);
     ELSE
       CG.Push (p.tmp);
       DEC (p.tmp_cnt);
@@ -300,32 +308,33 @@ PROCEDURE Compile (p: P) =
   END Compile;
 
 PROCEDURE Prep (p: P) =
-  VAR index, element: Type.T;  elt_info: Type.Info;  elt_pack: INTEGER;
+  VAR indexType, elementType: Type.T;  elt_info: Type.Info;  elt_pack: INTEGER;
   BEGIN
     Type.Compile (p.tipe);
     Type.Compile (p.refType);
-    Type.Compile (p.solidType);
+    Type.Compile (p.fixingType);
 
     IF (Fold (p) # NIL) THEN RETURN END;
 
     INC (p.tmp_cnt);
     IF (p.tmp # NIL) AND (p.tmp_cnt > 1) THEN RETURN END;
 
-    index := p.tipe;  IF (p.solidType # NIL) THEN index := p.solidType END;
-    WITH b = ArrayType.Split (index, index, element) DO <* ASSERT b *> END;
-    element := Type.CheckInfo (element, elt_info);
-    elt_pack  := (elt_info.size + elt_info.alignment - 1)
-                     DIV elt_info.alignment * elt_info.alignment;
-
+    indexType := p.tipe;
+    IF (p.fixingType # NIL) THEN indexType := p.fixingType END;
+    WITH b = ArrayType.Split (indexType, indexType, elementType)
+    DO <* ASSERT b *> END;
+    elementType := Type.CheckInfo (elementType, elt_info);
+    elt_pack := ArrayType.EltPack (p.type);
     CASE p.kind OF
-    | Kind.Fixed     => DoFixed (p, element, elt_pack);
+    | Kind.Fixed     => DoFixed (p, elementType, elt_pack);
     | Kind.EmptyOpen => DoEmpty (p);
     | Kind.FixedOpen => DoFixedOpen (p, elt_pack);
     | Kind.Open      => DoOpen (p, elt_pack, elt_info.alignment);
     END;
   END Prep;
 
-PROCEDURE DoFixed (p: P;  element: Type.T;  elt_pack: INTEGER) =
+PROCEDURE DoFixed (p: P;  elementType: Type.T;  elt_pack: INTEGER) =
+  (* A fixed array constructor with fixed elementTypes. *) 
   VAR
     t1: CG.Var;
     t2: CG.Val;
@@ -334,6 +343,7 @@ PROCEDURE DoFixed (p: P;  element: Type.T;  elt_pack: INTEGER) =
     n_args := NUMBER (p.args^);
     nn_elts := Type.Number (p.index);
     n_elts : INTEGER;
+    elt_offset, elt_align: INTEGER;
     b: BOOLEAN;
     info: Type.Info;
     align: INTEGER;
@@ -355,37 +365,41 @@ PROCEDURE DoFixed (p: P;  element: Type.T;  elt_pack: INTEGER) =
 
     (* assign the given elements *)
     FOR i := 0 TO n_args-1 DO
-      AssignStmt.PrepForEmit (element, p.args[i], initializing := TRUE);
-      PushAddr (p, t1, i * elt_pack, align);
-      AssignStmt.DoEmit (element, p.args[i]);
+      AssignStmt.PrepForEmit (elementType, p.args[i], initializing := TRUE);
+      elt_offset := i * elt_pack;
+      elt_align := CG.GCD (align, elt_offset MOD Target.Word.size);
+      PushAddr (p, t1, elt_offset, align);
+      AssignStmt.DoEmit (elementType, p.args[i], elt_align);
     END;
 
-    (* fill in the '..' section *)
+    (* Code to fill in the '..' section *)
     IF (p.dots) AND (n_elts > n_args) THEN
       CG.Load_integer (Target.Integer.cg_type, nn_args);
       t2 := CG.Pop_temp ();
       top := CG.Next_label ();
       CG.Set_label (top);
 
-      (* ARRAY[t2] := ARRAY[n_args-1] *)
+      (* Code for ARRAY[t2] := ARRAY[n_args-1] *)
       PushAddr (p, t1, 0, align);
       CG.Push (t2);
       ArrayType.GenIndex (p.tipe);
-      PushAddr (p, t1, (n_args-1) * elt_pack, align);
-      IF ArrayType.IsBitAddressed (p.tipe) THEN
-        CG.Load_indirect (Target.Integer.cg_type, 0, elt_pack);
+      elt_offset := (n_args-1) * elt_pack;
+      elt_align := CG.GCD (align, elt_offset MOD Target.Word.size);
+      PushAddr (p, t1, elt_offset, align);
+      IF ArrayType.EltsAreBitAddressed (p.tipe) THEN
+        CG.Load_indirect (Target.Integer.cg_type, 0, elt_pack, elt_align);
         CG.Store_indirect (Target.Integer.cg_type, 0, elt_pack);
       ELSE
         CG.Copy (elt_pack, overlap := FALSE);
       END;
 
-      (* t2 := t2 + 1 *)
+      (* Code for t2 := t2 + 1 *)
       CG.Push (t2);
       CG.Load_integer (Target.Integer.cg_type, TInt.One);
       CG.Add (Target.Integer.cg_type);
       CG.Store_temp (t2);
 
-      (* IF (t2 < NUMBER(ARRAY) GOTO TOP-OF-LOOP *)
+      (* Code for IF (t2 < NUMBER(ARRAY) GOTO TOP-OF-LOOP *)
       CG.Push (t2);
       CG.Load_integer (Target.Integer.cg_type, nn_elts);
       CG.If_compare (Target.Integer.cg_type, CG.Cmp.LT, top, CG.Likely);
@@ -397,7 +411,7 @@ PROCEDURE DoFixed (p: P;  element: Type.T;  elt_pack: INTEGER) =
     IF p.do_direct THEN
       (* result is already in p.tmp *)
     ELSE
-      CG.Load_addr_of_temp (t1, 0, info.alignment);
+      CG.Load_addr_of_temp (t1, 0, align);
       p.tmp := CG.Pop ();
     END;
   END DoFixed;
@@ -413,25 +427,28 @@ PROCEDURE PushAddr (p: P; tmp: CG.Var; offset: INTEGER; align: CG.Alignment) =
   END PushAddr;
 
 PROCEDURE DoEmpty (p: P) =
-  VAR t1: CG.Var;
+  (* An open array constructor with empty element list. *) 
+  VAR dopeVar: CG.Var;
   BEGIN
-    t1 := CG.Declare_temp (Target.Address.pack + Target.Integer.pack,
-                           Target.Address.align,  CG.Type.Struct,
-                           in_memory := TRUE);
+    dopeVar := CG.Declare_temp
+      (Target.Address.pack + Target.Integer.pack, Target.Address.align,
+       CG.Type.Struct, in_memory := TRUE);
     CG.Load_nil ();
-    CG.Store_addr (t1, M3RT.OA_elt_ptr);
+    CG.Store_addr (dopeVar, M3RT.OA_elt_ptr);
     CG.Load_integer (Target.Integer.cg_type, TInt.Zero);
-    CG.Store_int (Target.Integer.cg_type, t1, M3RT.OA_size_0);
+    CG.Store_int (Target.Integer.cg_type, dopeVar, M3RT.OA_size_0);
 
     (* remember the result *)
-    CG.Load_addr_of_temp (t1, 0, Target.Address.align);
+    CG.Load_addr_of_temp (dopeVar, 0, Target.Address.align);
     p.tmp := CG.Pop ();
   END DoEmpty;
 
 PROCEDURE DoFixedOpen (p: P;  elt_pack: INTEGER) =
+  (* Open array constructor with an immediate element of fixed size.
+     It could be an open array constructor. *) 
   VAR
-    t1         : CG.Var;
-    index, element: Type.T; 
+    dopeVar         : CG.Var;
+    indexType, elementType: Type.T; 
     offset     : INTEGER;
     n_args     := NUMBER (p.args^);
     openDepth  := OpenArrayType.OpenDepth (p.type);
@@ -441,8 +458,9 @@ PROCEDURE DoFixedOpen (p: P;  elt_pack: INTEGER) =
     data_offs  : INTEGER;
     dope_align : INTEGER;
     total_size : INTEGER;
+    elt_offset, elt_align: INTEGER;
   BEGIN
-    EVAL Type.CheckInfo (p.solidType, info);
+    EVAL Type.CheckInfo (p.fixingType, info);
     align := info.alignment;
 
     (* allocate space for the result *)
@@ -450,46 +468,49 @@ PROCEDURE DoFixedOpen (p: P;  elt_pack: INTEGER) =
     dope_size  := Target.Address.pack + openDepth * Target.Integer.pack;
     data_offs  := (dope_size + align - 1) DIV align * align;
     total_size := data_offs + info.size;
-    t1 := CG.Declare_temp (total_size, dope_align, CG.Type.Struct,
-                           in_memory := TRUE);
+    dopeVar := CG.Declare_temp
+      (total_size, dope_align, CG.Type.Struct, in_memory := TRUE);
 
     (* initialize the element pointer *)
-    CG.Load_addr_of (t1, data_offs, align);
-    CG.Store_addr (t1, M3RT.OA_elt_ptr);
+    CG.Load_addr_of (dopeVar, data_offs, dope_align);
+    CG.Store_addr (dopeVar, M3RT.OA_elt_ptr);
 
     (* initialize size[0] of the dope vector *)
     CG.Load_intt (n_args);
-    CG.Store_int (Target.Integer.cg_type, t1, M3RT.OA_size_0);
+    CG.Store_int (Target.Integer.cg_type, dopeVar, M3RT.OA_size_0);
 
     (* initialize the remaining sizes of the dope vector *)
-    EVAL ArrayType.Split (p.solidType, index, element);
+    EVAL ArrayType.Split (p.fixingType, indexType, elementType);
     offset := M3RT.OA_size_0 + Target.Integer.pack;
     FOR i := 1 TO openDepth-1 DO
-      EVAL ArrayType.Split (element, index, element);
-      <*ASSERT index # NIL*>
-      CG.Load_integer (Target.Integer.cg_type, Type.Number (index));
-      CG.Store_int (Target.Integer.cg_type, t1, offset);
+      EVAL ArrayType.Split (elementType, indexType, elementType);
+      <*ASSERT indexType # NIL*>
+      CG.Load_integer (Target.Integer.cg_type, Type.Number (indexType));
+      CG.Store_int (Target.Integer.cg_type, dopeVar, offset);
       INC (offset, Target.Integer.pack);
     END;
 
     (* fill with the elements *)
-    EVAL ArrayType.Split (p.solidType, index, element);
+    EVAL ArrayType.Split (p.fixingType, indexType, elementType);
     FOR i := 0 TO n_args-1 DO
-      AssignStmt.PrepForEmit (element, p.args[i], initializing := TRUE);
-      CG.Load_addr_of (t1, data_offs + i * elt_pack, align);
-      AssignStmt.DoEmit (element, p.args[i]);
+      AssignStmt.PrepForEmit (elementType, p.args[i], initializing := TRUE);
+      elt_offset := data_offs + i * elt_pack;
+      elt_align := CG.GCD (align, elt_offset MOD Target.Word.size);
+      CG.Load_addr_of (dopeVar, elt_offset, dope_align);
+      AssignStmt.DoEmit (elementType, p.args[i], elt_align);
     END;
 
     (* remember the result *)
-    CG.Load_addr_of_temp (t1, 0, dope_align);
+    CG.Load_addr_of_temp (dopeVar, 0, dope_align);
     p.tmp := CG.Pop ();
   END DoFixedOpen;
 
 PROCEDURE DoOpen (p: P;  elt_pack, elt_align: INTEGER) =
+  (* An open array constructor with open elements. *) 
   VAR
-    t1: CG.Var;
-    t2, t3, t4: CG.Val;
-    index, element: Type.T; 
+    shapeVar: CG.Var;
+    innerVal, resultRefVal, elemCtVal: CG.Val;
+    indexType, elementType: Type.T; 
     offset    : INTEGER;
     n_args    := NUMBER (p.args^);
     openDepth := OpenArrayType.OpenDepth (p.type);
@@ -501,34 +522,34 @@ PROCEDURE DoOpen (p: P;  elt_pack, elt_align: INTEGER) =
     (* evaluate the first argument to fix the runtime shape *)
     Expr.Prep (p.args[0]);
     Expr.Compile (p.args[0]);
-    t2 := CG.Pop ();
+    innerVal := CG.Pop ();
 
     (* allocate the temporary "sizes" array  *)
     size := Target.Address.pack + (1 + openDepth) * Target.Integer.pack;
-    t1 := CG.Declare_temp (size, Target.Address.align, CG.Type.Struct,
+    shapeVar := CG.Declare_temp (size, Target.Address.align, CG.Type.Struct,
                            in_memory := TRUE);
 
     (* initialize the sizes array *)
-    CG.Load_addr_of (t1, M3RT.OA_size_1, Target.Address.align);
-    CG.Store_addr (t1, M3RT.OA_elt_ptr);
+    CG.Load_addr_of (shapeVar, M3RT.OA_size_1, Target.Address.align);
+    CG.Store_addr (shapeVar, M3RT.OA_elt_ptr);
 
     CG.Load_intt (openDepth);
-    CG.Store_int (Target.Integer.cg_type, t1, M3RT.OA_size_0);
+    CG.Store_int (Target.Integer.cg_type, shapeVar, M3RT.OA_size_0);
 
     CG.Load_intt (n_args);
-    CG.Store_int (Target.Integer.cg_type, t1, M3RT.OA_size_1);
+    CG.Store_int (Target.Integer.cg_type, shapeVar, M3RT.OA_size_1);
 
-    element := Expr.TypeOf (p.args[0]);
+    elementType := Expr.TypeOf (p.args[0]);
     offset := M3RT.OA_size_1 + Target.Integer.pack;
     FOR i := 1 TO openDepth-1 DO
-      EVAL ArrayType.Split (element, index, element);
-      IF (index = NIL) THEN
-        CG.Push (t2);
+      EVAL ArrayType.Split (elementType, indexType, elementType);
+      IF (indexType = NIL) THEN
+        CG.Push (innerVal);
         CG.Open_size (i - 1);
       ELSE
-        CG.Load_integer (Target.Integer.cg_type, Type.Number (index));
+        CG.Load_integer (Target.Integer.cg_type, Type.Number (indexType));
       END;
-      CG.Store_int (Target.Integer.cg_type, t1, offset);
+      CG.Store_int (Target.Integer.cg_type, shapeVar, offset);
       INC (offset, Target.Integer.pack);
     END;
 
@@ -537,65 +558,66 @@ PROCEDURE DoOpen (p: P;  elt_pack, elt_align: INTEGER) =
     IF Target.DefaultCall.args_left_to_right THEN
       Type.LoadInfo (p.refType, -1);
       CG.Pop_param (CG.Type.Addr);
-      CG.Load_addr_of (t1, 0, Target.Address.align);
+      CG.Load_addr_of (shapeVar, 0, Target.Address.align);
       CG.Pop_param (CG.Type.Addr);
     ELSE
-      CG.Load_addr_of (t1, 0, Target.Address.align);
+      CG.Load_addr_of (shapeVar, 0, Target.Address.align);
       CG.Pop_param (CG.Type.Addr);
       Type.LoadInfo (p.refType, -1);
       CG.Pop_param (CG.Type.Addr);
     END;
-    t3 := Procedure.EmitValueCall (proc);
+    resultRefVal := Procedure.EmitValueCall (proc);
 
     (* repack the "sizes" array as a dope vector for each array element *)
-    CG.Push (t3);
-    CG.Boost_alignment (elt_align);
+    CG.Push (resultRefVal);
+    CG.Boost_addr_alignment (elt_align);
     CG.Open_elt_ptr (Target.Integer.align);
-    CG.Store_addr (t1, M3RT.OA_elt_ptr);
+    CG.Store_addr (shapeVar, M3RT.OA_elt_ptr);
     FOR i := 0 TO openDepth-2 DO
       CG.Load_int (Target.Integer.cg_type,
-                   t1, M3RT.OA_sizes + (i + 2) * Target.Integer.pack);
+                   shapeVar, M3RT.OA_sizes + (i + 2) * Target.Integer.pack);
       CG.Store_int (Target.Integer.cg_type,
-                    t1, M3RT.OA_sizes + i * Target.Integer.pack);
+                    shapeVar, M3RT.OA_sizes + i * Target.Integer.pack);
     END;
 
     (* compute the size of each element in "elt_pack" units *)
     FOR i := 0 TO openDepth-2 DO
       CG.Load_int (Target.Integer.cg_type,
-                   t1, M3RT.OA_sizes + i * Target.Integer.pack);
+                   shapeVar, M3RT.OA_sizes + i * Target.Integer.pack);
       IF (i # 0) THEN CG.Multiply (Target.Integer.cg_type) END;
     END;
-    t4 := CG.Pop ();
+    elemCtVal := CG.Pop ();
 
     (* copy the first element into place *)
-    CG.Load_addr (t1, M3RT.OA_elt_ptr);
-    CG.Force ();
-    CG.Push (t2);
-    CG.Force ();
-    CG.Push (t4);
+    CG.Load_addr (shapeVar, M3RT.OA_elt_ptr, elt_align);
+    CG.ForceStacked ();
+    CG.Push (innerVal);
+    CG.Open_elt_ptr (Target.Address.align); 
+    CG.ForceStacked ();
+    CG.Push (elemCtVal);
     CG.Copy_n (elt_pack, overlap := FALSE);
 
     (* fill in the remaining elements *)
-    EVAL ArrayType.Split (p.tipe, index, element);
+    EVAL ArrayType.Split (p.tipe, indexType, elementType);
     FOR i := 1 TO n_args-1 DO
-      (* bump the pointer to the next element *)
-      CG.Load_addr (t1, M3RT.OA_elt_ptr);
-      CG.Push (t4); (* == element size *)
+      (* bump the pointer to the next elementType *)
+      CG.Load_addr (shapeVar, M3RT.OA_elt_ptr, elt_align);
+      CG.Push (elemCtVal); (* == elementType size *)
       CG.Index_bytes (elt_pack);
-      CG.Store_addr (t1, M3RT.OA_elt_ptr);
+      CG.Store_addr (shapeVar, M3RT.OA_elt_ptr);
 
       (* do the assignment *)
-      AssignStmt.PrepForEmit (element, p.args[i], initializing := TRUE);
-      CG.Load_addr (t1);
-      AssignStmt.DoEmit (element, p.args[i]);
+      AssignStmt.PrepForEmit (elementType, p.args[i], initializing := TRUE);
+      CG.Load_addr_of (shapeVar, 0, Target.Address.align);
+      AssignStmt.DoEmit (elementType, p.args[i]);
     END;
 
     (* remember the result and free the other temporaries *)
-    p.tmp := t3;
+    p.tmp := resultRefVal;
 
-    CG.Free_temp (t1);
-    CG.Free (t2);
-    CG.Free (t4);
+    CG.Free_temp (shapeVar);
+    CG.Free (innerVal);
+    CG.Free (elemCtVal);
   END DoOpen;
 
 PROCEDURE Fold (p: P): Expr.T =
@@ -651,7 +673,7 @@ PROCEDURE PrepLiteral (p: P; type: Type.T; is_const: BOOLEAN) =
   BEGIN
     IF (p.kind = Kind.Fixed) OR (p.kind = Kind.EmptyOpen) THEN RETURN END;
 
-    <*ASSERT (p.kind = Kind.FixedOpen) AND (p.solidType # NIL) *>
+    <*ASSERT (p.kind = Kind.FixedOpen) AND (p.fixingType # NIL) *>
     (* else p.kind = Kind.Open => not a runtime constant! *)
 
     type := Type.CheckInfo(type,info);
@@ -663,29 +685,30 @@ PROCEDURE PrepLiteral (p: P; type: Type.T; is_const: BOOLEAN) =
     PrepElements (p, p.tipe, is_const);
 
     IF (p.offset = 0) THEN
-      EVAL Type.CheckInfo (p.solidType, info);
+      EVAL Type.CheckInfo (p.fixingType, info);
       p.offset := Module.Allocate (info.size, info.alignment, is_const,
                                    "*open array literal*");
       CG.Declare_global_field (M3ID.Add ("_array"), p.offset, info.size,
-                               Type.GlobalUID(p.solidType), is_const);
+                               Type.GlobalUID(p.fixingType), is_const);
       EVAL GenOpenLiteral (p, p.offset,
                            OpenArrayType.OpenDepth (p.tipe),
-                           OpenArrayType.NonOpenEltType (p.tipe),
+                           OpenArrayType.NonopenEltType (p.tipe),
                            OpenArrayType.EltPack (p.type),
                            is_const);
     END;
   END PrepLiteral;
 
 PROCEDURE PrepElements (e: Expr.T;  type: Type.T;  is_const: BOOLEAN) =
-  VAR index, element: Type.T;  b: BOOLEAN;
+  VAR indexType, elementType: Type.T;  b: BOOLEAN;
   BEGIN
     TYPECASE e OF
     | NULL => (* skip *)
-    | P(p) => b := ArrayType.Split (type, index, element); <* ASSERT b *>
-              FOR i := FIRST (p.args^) TO LAST (p.args^) DO
-                PrepElements (p.args[i], element, is_const);
-              END;
-    ELSE      Expr.PrepLiteral (e, type, is_const);
+    | P(p) =>
+        b := ArrayType.Split (type, indexType, elementType); <* ASSERT b *>
+        FOR i := FIRST (p.args^) TO LAST (p.args^) DO
+           PrepElements (p.args[i], elementType, is_const);
+        END;
+    ELSE Expr.PrepLiteral (e, type, is_const);
     END;
   END PrepElements;
 
@@ -719,7 +742,7 @@ PROCEDURE GenOpenLiteral (e: Expr.T;  offset: INTEGER;  depth: INTEGER;
 
 PROCEDURE GenLiteral (p: P;  offset: INTEGER; type: Type.T;
                       is_const: BOOLEAN) =
-  VAR index, element: Type.T;  last, n_elts, elt_size: INTEGER;  
+  VAR indexType, elementType: Type.T;  last, n_elts, elt_size: INTEGER;  
       info: Type.Info; 
       b: BOOLEAN;
       LKind: Kind; 
@@ -731,12 +754,13 @@ PROCEDURE GenLiteral (p: P;  offset: INTEGER; type: Type.T;
          dope.  Instead, trick the code below into treating the array
          constructor as if had the variable's fixed array type. *) 
       LKind := Kind.Fixed; 
-      <*ASSERT p.solidType # NIL *>
-      p.solidType := Type.CheckInfo(p.solidType,info);
-      b := ArrayType.Split (p.solidType, index, element); <* ASSERT b *>
+      <*ASSERT p.fixingType # NIL *>
+      p.fixingType := Type.CheckInfo(p.fixingType,info);
+      b := ArrayType.Split (p.fixingType, indexType, elementType);
+      <* ASSERT b *>
     ELSE 
       LKind := p.kind; 
-      b := ArrayType.Split (p.tipe, index, element); <* ASSERT b *>
+      b := ArrayType.Split (p.tipe, indexType, elementType); <* ASSERT b *>
     END; 
 
     (* BUG!!  if p.tipe # type then we're generating an open literal
@@ -764,13 +788,13 @@ PROCEDURE GenLiteral (p: P;  offset: INTEGER; type: Type.T;
         IF (NUMBER (p.args^) > 0) THEN
           elt_size := ArrayType.EltPack (p.tipe);
           FOR i := 0 TO last DO
-            Expr.GenLiteral (p.args[i], offset, element, is_const);
+            Expr.GenLiteral (p.args[i], offset, elementType, is_const);
             INC (offset, elt_size);
           END;
           IF (p.dots) AND (last = LAST (p.args^)) THEN
-            b := TInt.ToInt (Type.Number (index), n_elts); <*ASSERT b*>
+            b := TInt.ToInt (Type.Number (indexType), n_elts); <*ASSERT b*>
             FOR i := last+1 TO n_elts-1 DO
-              Expr.GenLiteral (p.args[last], offset, element, is_const);
+              Expr.GenLiteral (p.args[last], offset, elementType, is_const);
               INC (offset, elt_size);
             END;
           END;
@@ -778,7 +802,8 @@ PROCEDURE GenLiteral (p: P;  offset: INTEGER; type: Type.T;
     END;
   END GenLiteral;
 
-PROCEDURE GenOpenDim (e: Expr.T;  depth: INTEGER;  offset: INTEGER;  is_const: BOOLEAN) =
+PROCEDURE GenOpenDim
+  (e: Expr.T;  depth: INTEGER;  offset: INTEGER;  is_const: BOOLEAN) =
   VAR n_elts: INTEGER;
   BEGIN
     WHILE (depth > 0) DO

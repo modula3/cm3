@@ -75,7 +75,7 @@ PROCEDURE Compile (p: P): Stmt.Outcomes =
     Expr.PrepLValue (p.lhs, traced := rhs_info.isTraced);
     PrepForEmit (tlhs, p.rhs, initializing := FALSE);
     Expr.CompileLValue (p.lhs, traced := rhs_info.isTraced);
-    DoEmit (tlhs, p.rhs);
+    DoEmit (tlhs, p.rhs, Expr.Alignment (p.lhs));
     Expr.NoteWrite (p.lhs);
     RETURN Stmt.Outcomes {Stmt.Outcome.FallThrough};
   END Compile;
@@ -90,22 +90,22 @@ PROCEDURE GetOutcome (<*UNUSED*> p: P): Stmt.Outcomes =
 
 PROCEDURE Check (tlhs: Type.T;  rhs: Expr.T;  VAR cs: Stmt.CheckState) =
   VAR
-    t := Type.Base (tlhs); (* strip renaming and packing *)
+    base_tlhs := Type.Base (tlhs); (* strip renaming and packing *)
     trhs := Expr.TypeOf (rhs);
-    lhs_info, t_info: Type.Info;
+    lhs_info, base_lhs_info: Type.Info;
     c: Type.Class;
   BEGIN
     tlhs := Type.CheckInfo (tlhs, lhs_info);
-    t := Type.CheckInfo (t, t_info);
-    c := t_info.class;
+    base_tlhs := Type.CheckInfo (base_tlhs, base_lhs_info);
+    c := base_lhs_info.class;
     Expr.TypeCheck (rhs, cs);
 
     IF NOT Type.IsAssignable (tlhs, trhs) THEN
       IF (tlhs # ErrType.T) AND (trhs # ErrType.T) THEN
-        Error.Msg ("types are not assignable");
+        Error.Msg ("types are not assignable in assignment statement");
       END;
 
-    ELSIF (Type.IsOrdinal (t)) THEN
+    ELSIF (Type.IsOrdinal (base_tlhs)) THEN
       CheckOrdinal (tlhs, rhs);
 
     ELSIF (c = Type.Class.Ref) OR (c = Type.Class.Object)
@@ -261,14 +261,14 @@ PROCEDURE CanAvoidCopy (tlhs: Type.T;  rhs: Expr.T;  initializing: BOOLEAN): BOO
     RETURN FALSE;
   END CanAvoidCopy;
 
-PROCEDURE DoEmit (tlhs: Type.T;  rhs: Expr.T) =
+PROCEDURE DoEmit (tlhs: Type.T;  rhs: Expr.T; lhs_align := Target.Byte) =
   (* on entry the lhs is compiled and the rhs is prepped,
      preferrably using PrepForEmit() above. *)
   VAR
-    t := Type.Base (tlhs); (* strip renaming and packing *)
-    lhs_info, t_info: Type.Info;
+    t_lhs_base := Type.Base (tlhs); (* strip renaming, packing, and subrange *)
+    lhs_info, t_lhs_base_info: Type.Info;
   BEGIN
-    t := Type.CheckInfo (t, t_info);
+    t_lhs_base := Type.CheckInfo (t_lhs_base, t_lhs_base_info);
     tlhs := Type.CheckInfo (tlhs, lhs_info);
 
     IF Expr.IsMarkedForDirectAssignment (rhs) THEN
@@ -279,7 +279,7 @@ PROCEDURE DoEmit (tlhs: Type.T;  rhs: Expr.T) =
       RETURN;
     END;
 
-    CASE t_info.class OF
+    CASE t_lhs_base_info.class OF
     | Type.Class.Integer, Type.Class.Longint, Type.Class.Subrange,
       Type.Class.Enum =>
         AssignOrdinal (tlhs, rhs, lhs_info);
@@ -288,11 +288,11 @@ PROCEDURE DoEmit (tlhs: Type.T;  rhs: Expr.T) =
     | Type.Class.Object, Type.Class.Opaque, Type.Class.Ref =>
         AssignReference (tlhs, rhs, lhs_info);
     | Type.Class.Array, Type.Class.OpenArray =>
-        AssignArray (tlhs, rhs, lhs_info);
+        AssignArray (tlhs, rhs, lhs_info, lhs_align);
     | Type.Class.Procedure =>
         AssignProcedure (rhs, lhs_info);
     | Type.Class.Record =>
-        AssignRecord (tlhs, rhs, lhs_info);
+        AssignRecord (tlhs, rhs, lhs_info, lhs_align);
     | Type.Class.Set =>
         AssignSet (tlhs, rhs, lhs_info);
     | Type.Class.Error =>
@@ -351,15 +351,20 @@ PROCEDURE AssignProcedure (rhs: Expr.T;  READONLY lhs_info: Type.Info) =
     CG.Store_indirect (lhs_info.stk_type, 0, lhs_info.size);
   END AssignProcedure;
 
-PROCEDURE AssignRecord (tlhs: Type.T;  rhs: Expr.T;
-                        READONLY lhs_info: Type.Info) =
+PROCEDURE AssignRecord
+  (tlhs: Type.T; rhs: Expr.T; READONLY lhs_info: Type.Info; lhs_align: INTEGER) =
   BEGIN
     AssertSameSize (tlhs, Expr.TypeOf (rhs));
     IF Expr.IsDesignator (rhs)
       THEN Expr.CompileLValue (rhs, traced := FALSE);
       ELSE Expr.Compile (rhs);
     END;
-    CG.Copy (lhs_info.size, overlap := FALSE);
+    IF lhs_align < Target.Byte OR lhs_info.size MOD Target.Byte # 0 THEN 
+      CG.Load_indirect (Target.Word.cg_type, 0 , lhs_info.size); 
+      CG.Store_indirect (Target.Word.cg_type, 0 , lhs_info.size); 
+    ELSE
+      CG.Copy (lhs_info.size, overlap := FALSE);
+    END; 
   END AssignRecord;
 
 PROCEDURE AssignSet (tlhs: Type.T;  rhs: Expr.T;
@@ -390,17 +395,16 @@ PROCEDURE AssertSameSize (a, b: Type.T) =
   END AssertSameSize;
 
 PROCEDURE AssignArray (tlhs: Type.T;  e_rhs: Expr.T;
-                       READONLY lhs_info: Type.Info) =
+                       READONLY lhs_info: Type.Info;
+                       lhs_align: INTEGER) =
   VAR
     trhs    := Expr.TypeOf (e_rhs);
     openRHS := OpenArrayType.Is (trhs);
     openLHS := OpenArrayType.Is (tlhs);
-    alignLHS:= ArrayType.EltAlign (tlhs);
-    alignRHS:= ArrayType.EltAlign (trhs);
     lhs, rhs: CG.Val;
-    rhs_info: Type.Info;
+    eltCt : INTEGER;
   BEGIN
-    (* capture the lhs & rhs pointers *)
+    (* Capture the lhs & rhs pointers in temps. *)
     IF (openRHS) OR (openLHS) THEN lhs := CG.Pop (); END;
     IF Expr.IsDesignator (e_rhs)
       THEN Expr.CompileLValue (e_rhs, traced := FALSE);
@@ -409,29 +413,28 @@ PROCEDURE AssignArray (tlhs: Type.T;  e_rhs: Expr.T;
     IF (openRHS) OR (openLHS) THEN rhs := CG.Pop (); END;
 
     IF openRHS AND openLHS THEN
-      GenOpenArraySizeChecks (lhs, rhs, tlhs, trhs);
+      GenOpenArraySizeChecks (lhs, rhs, tlhs, trhs, (*OUT*) eltCt);
       CG.Push (lhs);
-      CG.Open_elt_ptr (alignLHS);
-      CG.Force ();
+      CG.Open_elt_ptr (lhs_align);
+      CG.ForceStacked ();
       CG.Push (rhs);
-      CG.Open_elt_ptr (alignRHS);
-      CG.Force ();
+      CG.Open_elt_ptr (Expr.Alignment(e_rhs));
+      CG.ForceStacked ();
       GenOpenArrayCopy (rhs, tlhs, trhs);
 
     ELSIF openRHS THEN
-      GenOpenArraySizeChecks (lhs, rhs, tlhs, trhs);
+      GenOpenArraySizeChecks (lhs, rhs, tlhs, trhs, (*OUT*) eltCt);
       CG.Push (lhs);
       CG.Push (rhs);
-      CG.Open_elt_ptr (alignRHS);
-      CG.Copy (lhs_info.size, overlap := TRUE);
+      CG.Open_elt_ptr (Expr.Alignment(e_rhs));
+      CG.Copy (eltCt * ArrayType.EltPack(trhs), overlap := TRUE);
 
     ELSIF openLHS THEN
-      EVAL Type.CheckInfo (trhs, rhs_info);
-      GenOpenArraySizeChecks (lhs, rhs, tlhs, trhs);
+      GenOpenArraySizeChecks (lhs, rhs, tlhs, trhs, (*OUT*) eltCt);
       CG.Push (lhs);
-      CG.Open_elt_ptr (alignLHS);
+      CG.Open_elt_ptr (lhs_align);
       CG.Push (rhs);
-      CG.Copy (rhs_info.size, overlap := TRUE);
+      CG.Copy (eltCt *ArrayType.EltPack(trhs), overlap := TRUE);
 
     ELSE (* both sides are fixed length arrays *)
       CG.Copy (lhs_info.size, overlap := TRUE);
@@ -447,31 +450,48 @@ PROCEDURE AssignArray (tlhs: Type.T;  e_rhs: Expr.T;
   END AssignArray;
 
 PROCEDURE GenOpenArraySizeChecks (READONLY lhs, rhs: CG.Val;
-                                           tlhs, trhs: Type.T) =
+                                  tlhs, trhs: Type.T;
+                                  VAR eltCt: INTEGER) =
   VAR ilhs, irhs, elhs, erhs: Type.T;  n := 0;
+  VAR eltCtTInt: TInt.Int;
+  VAR b: BOOLEAN; 
   BEGIN
-    IF NOT Host.doNarrowChk THEN RETURN END;
+    eltCt := 0; 
     WHILE ArrayType.Split (tlhs, ilhs, elhs)
       AND ArrayType.Split (trhs, irhs, erhs) DO
 
-      IF (ilhs # NIL) AND (irhs # NIL) THEN
+      IF (ilhs # NIL) AND (irhs # NIL) THEN (* Neither is open in this dimension. *) 
+        eltCtTInt := Type.Number (ilhs);
+        b := TInt.ToInt (eltCtTInt, eltCt); <*ASSERT b*> 
         RETURN;
-      ELSIF (ilhs # NIL) THEN
+      ELSIF (ilhs # NIL) THEN (* Only lhs is open in this dimension. *) 
         CG.Push (rhs);
         CG.Open_size (n);
-        CG.Load_integer (Target.Integer.cg_type, Type.Number (ilhs));
-        CG.Check_eq (Target.Integer.cg_type, CG.RuntimeError.IncompatibleArrayShape);
-      ELSIF (irhs # NIL) THEN
+        eltCtTInt := Type.Number (ilhs);
+        b := TInt.ToInt (eltCtTInt, eltCt); <*ASSERT b*> 
+        (* ^In case this turns out to be the innermost dimension. *)
+        IF Host.doNarrowChk THEN
+          CG.Load_integer (Target.Integer.cg_type, eltCtTInt);
+          CG.Check_eq (Target.Integer.cg_type, CG.RuntimeError.IncompatibleArrayShape);
+        END
+      ELSIF (irhs # NIL) THEN (* Only rhs is open in this dimension. *)
         CG.Push (lhs);
         CG.Open_size (n);
-        CG.Load_integer (Target.Integer.cg_type, Type.Number (irhs));
-        CG.Check_eq (Target.Integer.cg_type, CG.RuntimeError.IncompatibleArrayShape);
+        eltCtTInt := Type.Number (irhs);
+        b := TInt.ToInt (eltCtTInt, eltCt); <*ASSERT b*>
+        (* ^In case this turns out to be the innermost dimension. *) 
+        IF Host.doNarrowChk THEN
+          CG.Load_integer (Target.Integer.cg_type, eltCtTInt);
+          CG.Check_eq (Target.Integer.cg_type, CG.RuntimeError.IncompatibleArrayShape);
+        END
       ELSE (* both arrays are open *)
-        CG.Push (lhs);
-        CG.Open_size (n);
-        CG.Push (rhs);
-        CG.Open_size (n);
-        CG.Check_eq (Target.Integer.cg_type, CG.RuntimeError.IncompatibleArrayShape);
+        IF Host.doNarrowChk THEN
+          CG.Push (lhs);
+          CG.Open_size (n);
+          CG.Push (rhs);
+          CG.Open_size (n);
+          CG.Check_eq (Target.Integer.cg_type, CG.RuntimeError.IncompatibleArrayShape);
+        END
       END;
       INC (n);
       tlhs := elhs;
@@ -503,13 +523,13 @@ PROCEDURE GenOpenArrayCopy (READONLY rhs: CG.Val;  tlhs, trhs: Type.T) =
 PROCEDURE DoEmitCheck (tlhs: Type.T;  rhs: Expr.T) =
   (* on entry the lhs is compiled and the rhs is prepped. *)
   VAR
-    t := Type.Base (tlhs); (* strip renaming and packing *)
-    lhs_info, t_info: Type.Info;
+    t_lhs_base := Type.Base (tlhs); (* strip renaming and packing *)
+    lhs_info, t_lhs_base_info: Type.Info;
   BEGIN
-    t := Type.CheckInfo (t, t_info);
+    t_lhs_base := Type.CheckInfo (t_lhs_base, t_lhs_base_info);
     tlhs := Type.CheckInfo (tlhs, lhs_info);
 
-    CASE t_info.class OF
+    CASE t_lhs_base_info.class OF
     | Type.Class.Integer, Type.Class.Longint, Type.Class.Subrange,
       Type.Class.Enum =>
         DoCheckOrdinal (tlhs, rhs);

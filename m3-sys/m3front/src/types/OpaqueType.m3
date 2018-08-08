@@ -19,7 +19,7 @@ TYPE
         isTraced   : BOOLEAN;
       OVERRIDES
         check      := Check;
-        check_align:= TypeRep.ScalarAlign;
+        no_straddle:= TypeRep.AddrNoStraddle;
         isEqual    := EqualChk;
         isSubtype  := Subtyper;
         compile    := Compiler;
@@ -92,6 +92,7 @@ PROCEDURE Check (p: P) =
     p.info.size      := Target.Address.size;
     p.info.min_size  := Target.Address.size;
     p.info.alignment := Target.Address.align;
+    p.info.addr_align:= Target.Address.align;
     p.info.mem_type  := CG.Type.Addr;
     p.info.stk_type  := CG.Type.Addr;
     p.info.class     := Type.Class.Opaque;

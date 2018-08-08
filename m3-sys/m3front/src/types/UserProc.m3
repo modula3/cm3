@@ -42,7 +42,7 @@ PROCEDURE Compile (ce: CallExpr.T) =
     (* all the real work is done by Prep *)
     IF (ce.tmp # NIL) THEN
       CG.Push (ce.tmp);
-      CG.Boost_alignment (ce.align);
+      CG.Boost_addr_alignment (ce.align);
       CG.Free (ce.tmp);
       ce.tmp := NIL;
     END;

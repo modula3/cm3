@@ -55,7 +55,7 @@ PROCEDURE Compile (ce: CallExpr.T) =
          the range checking code *)
       b := TInt.FromInt (Word_types[rep].size - i1, max);  <*ASSERT b*>
       Expr.Compile (ce.args[0]);
-      CG.Force ();
+      CG.ForceStacked ();
       CG.Load_intt (i1);
       CheckExpr.EmitChecks (ce.args[2], TInt.Zero, max,
                             CG.RuntimeError.ValueOutOfRange);
@@ -79,7 +79,7 @@ PROCEDURE Compile (ce: CallExpr.T) =
         CG.Discard (Target.Integer.cg_type);
       END;
       Expr.Compile (ce.args[0]);
-      CG.Force ();
+      CG.ForceStacked ();
       CG.Push (t1);
       CG.Push (t2);
       CG.Extract (Word_types[rep].cg_type, sign := FALSE);

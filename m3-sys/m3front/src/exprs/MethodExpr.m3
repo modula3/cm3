@@ -92,9 +92,9 @@ PROCEDURE Compile (p: P) =
       Type.LoadInfo (p.holder, M3RT.OTC_methodOffset);
       CG.Index_bytes (Target.Byte);
     END;
-    CG.Boost_alignment (Target.Address.align);
+    CG.Boost_addr_alignment (Target.Address.align);
     CG.Load_indirect (CG.Type.Addr, method.offset, Target.Address.size);
-    CG.Boost_alignment (Target.Address.align);
+    CG.Boost_addr_alignment (CG.ProcAlign ());
   END Compile;
 
 PROCEDURE GenFPLiteral (p: P;  buf: M3Buf.T) =

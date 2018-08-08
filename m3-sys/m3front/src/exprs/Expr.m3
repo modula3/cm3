@@ -131,6 +131,8 @@ PROCEDURE IsMarkedForDirectAssignment (t: T): BOOLEAN =
     RETURN (t # NIL) AND (t.do_direct);
   END IsMarkedForDirectAssignment;
 
+(******************************************** Alignments ************)
+
 PROCEDURE Alignment (t: T): Type.BitAlignT = 
 (* A bit alignment that t is guaranteed to have.  Hopefully maximum, or
    nearly so.  Always a true alignment, possibly as small as 1 bit. 
@@ -138,13 +140,15 @@ PROCEDURE Alignment (t: T): Type.BitAlignT =
    can take into account properties of an expression that the expression's
    type does not necessarily have in general.  Particularly, if a value is
    a field or element, they can depend on its containing record, object,
-   or array.
+   or array.  For an open array expression, this is the alignment of the
+   elements, not the dope.
    Compare to Type.T.info.alignment. 
 *)
 
   BEGIN
     IF t = NIL THEN RETURN Target.Word.align; END;
-    IF t.align > Target.Word.align THEN (* Compute and cache it. *)
+    IF t.align > Target.Word.align THEN
+      (* Uninitialized. Compute and cache it. *)
       t.align := t.exprAlign()
     END; 
     RETURN t.align;     

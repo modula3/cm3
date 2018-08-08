@@ -270,6 +270,8 @@ TYPE (* machine supported types *)
     Void             (* not-a-type *)
   };
 
+PROCEDURE TypeImage (cgt: CGType ): TEXT; 
+
 CONST
   TypeNames = ARRAY CGType OF TEXT {
     "Word.8",  "Int.8",

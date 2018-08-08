@@ -127,7 +127,7 @@ PROCEDURE Prep (p: P) =
         p.tmp := CG.Declare_temp (info.size, Target.Integer.align,
                                   CG.Type.Struct, in_memory := TRUE);
         CG.Load_addr_of (p.tmp, 0, Target.Integer.align);
-        CG.Force ();
+        CG.ForceStacked ();
         Expr.Compile (p.a);
         Expr.Compile (p.b);
         CG.Set_difference (info.size);

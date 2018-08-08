@@ -70,7 +70,8 @@ PROCEDURE NoBranch       (e: M3.Expr; t,f: CG.Label; freq: CG.Frequency);
 PROCEDURE NotWritable    (e: M3.Expr);
 
 (* Multi-use overrides for exprAlign:  *)
-PROCEDURE ExprAlignDefault (e: M3.Expr): Type.BitAlignT; (* Strips packed. *) 
+PROCEDURE ExprAlignDefault (e: M3.Expr): Type.BitAlignT;
+  (* ^Take it from the type.  Strip packed. *) 
 PROCEDURE ExprAddrAlign    (e: M3.Expr): Type.BitAlignT; 
 PROCEDURE ExprBoolAlign    (e: M3.Expr): Type.BitAlignT;
 PROCEDURE ExprIntAlign     (e: M3.Expr): Type.BitAlignT;

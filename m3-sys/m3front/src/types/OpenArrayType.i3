@@ -21,17 +21,21 @@ PROCEDURE Split (t: Type.T;  VAR element: Type.T): BOOLEAN;
 
 PROCEDURE EltPack (array: Type.T): INTEGER;
 (* If 'array' is an open array type, returns the packed size in bits of
-   the elements.  Otherwise, returns 0. *)
+   the non-open elements.  Otherwise, returns 0. *)
 
 PROCEDURE EltAlign (array: Type.T): INTEGER;
 (* If 'array' is an open array type, returns the bit alignment of
-   the elements.  Otherwise, returns Target.Byte. *)
+   the non-open elements.  Otherwise, returns Target.Byte. *)
+
+PROCEDURE EltsAreBitAddressed (t: Type.T): BOOLEAN;
+(* Returns TRUE if t is an open array whose non-open elements are not
+   guaranteed to be byte aligned. *)
 
 PROCEDURE OpenDepth (t: Type.T): INTEGER;
 (* If 't' is an n-dimensional open array, returns n else returns 0 *)
 
-PROCEDURE NonOpenEltType (t: Type.T): Type.T;
-(* If 't' is an n-dimensional open array, returns the type of the base
+PROCEDURE NonopenEltType (t: Type.T): Type.T;
+(* If 't' is an n-dimensional open array, returns the type of the non-open
    elements; otherwise, returns t. That is, strip all the ARRAY OF in 
    front of t *)
 

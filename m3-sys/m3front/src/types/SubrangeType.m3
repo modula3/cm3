@@ -24,7 +24,7 @@ TYPE
         sealed     : BOOLEAN;
       OVERRIDES
         check      := Check;
-        check_align:= CheckAlign;
+        no_straddle:= NoStraddle;
         isEqual    := EqualChk;
         isSubtype  := Subtyper;
         compile    := Compiler;
@@ -187,18 +187,19 @@ PROCEDURE Check (p: P) =
     p.info.hash      := hash;
   END Check;
 
-PROCEDURE CheckAlign (p: P;  offset: INTEGER): BOOLEAN =
+PROCEDURE NoStraddle
+  (p: P;  offset: INTEGER; <*UNUSED*> IsEltOrField: BOOLEAN): BOOLEAN =
   VAR
     sz := TargetMap.CG_Size[p.rep];
     z0: INTEGER;
   BEGIN
     IF p.info.lazyAligned THEN
-      z0 := offset DIV 8 * 8;
+      z0 := offset DIV Target.Byte * Target.Byte;
     ELSE
       z0 := offset DIV Target.Integer.align * Target.Integer.align;
     END;
     RETURN (offset + sz) <= (z0 + Target.Integer.size);
-  END CheckAlign;
+  END NoStraddle;
 
 PROCEDURE Compiler (p: P) =
   BEGIN

@@ -66,11 +66,12 @@ PROCEDURE IsMarkedForDirectAssignment (t: T): BOOLEAN;
 PROCEDURE Alignment (t: T): Type.BitAlignT;
 (* A bit alignment that t is guaranteed to have.  Hopefully maximum, or
    nearly so.  Always a true alignment, possibly as small as 1 bit. 
-   Expression alignments are more precise than type alignments ion that they
+   Expression alignments are more precise than type alignments in that they
    can take into account properties of an expression that the expression's
    type does not necessarily have in general.  Particularly, if a value is
    a field or element, they can depend on its containing record, object,
-   or array.
+   or array.  For an open array expression, this is the alignment of the
+   elements, not the dope.
    Compare to Type.T.info.alignment. 
 *)
 

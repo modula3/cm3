@@ -117,7 +117,7 @@ PROCEDURE Compile (p: P) =
       Expr.Compile (p.folded);
     ELSE
       CG.Push (p.tmp);
-      CG.Boost_alignment (Target.Address.align);
+      CG.Boost_addr_alignment (Target.Address.align);
       CG.Free (p.tmp);
       p.tmp := NIL;
     END;

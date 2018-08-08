@@ -16,7 +16,7 @@ TYPE
         range      : Type.T;
       OVERRIDES
         check      := Check;
-        check_align:= TypeRep.ScalarAlign;
+        no_straddle:= TypeRep.ScalarNoStraddle;
         isEqual    := EqualChk;
         isSubtype  := Subtyper;
         compile    := Compiler;
@@ -27,6 +27,7 @@ TYPE
         fprint     := FPrinter;
       END;
 
+(* EXPORTED: *)
 PROCEDURE Parse (): Type.T =
   TYPE TK = Token.T;
   VAR p := NEW (P);
@@ -46,6 +47,7 @@ PROCEDURE Reduce (t: Type.T): P =
     RETURN t;
   END Reduce;
 
+(* EXPORTED: *)
 PROCEDURE Split (t: Type.T;  VAR range: Type.T): BOOLEAN =
   VAR p := Reduce (t);
   BEGIN
@@ -66,8 +68,6 @@ PROCEDURE Check (p: P) =
     p.info.size      := SizeOf (p);
     p.info.min_size  := p.info.size;
     p.info.alignment := MAX (Target.Integer.align, Target.Structure_size_boundary);
-    p.info.mem_type  := CG.Type.Struct;
-    p.info.stk_type  := CG.Type.Addr;
     p.info.class     := Type.Class.Set;
     p.info.isTraced  := FALSE;
     p.info.isEmpty   := FALSE;
@@ -76,6 +76,10 @@ PROCEDURE Check (p: P) =
     IF (p.info.size <= Target.Integer.size) THEN
       p.info.mem_type := Target.Word.cg_type;
       p.info.stk_type := Target.Word.cg_type;
+    ELSE
+      p.info.mem_type  := CG.Type.Struct;
+      p.info.stk_type  := CG.Type.Addr;
+      p.info.addr_align := Target.Address.align;
     END;
   END Check;
 

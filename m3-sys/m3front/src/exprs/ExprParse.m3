@@ -221,6 +221,7 @@ PROCEDURE ESelector (types: BOOLEAN;  a: Expr.T;
     | TK.tARROW =>
         GetToken (); (* ^ *)
         a := DerefExpr.New (a);
+        a.origin := here; 
     | TK.tDOT =>
         GetToken (); (* . *)
         a := QualifyExpr.New (a, MatchID ());

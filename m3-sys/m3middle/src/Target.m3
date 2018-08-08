@@ -410,6 +410,26 @@ PROCEDURE InitCallingConventions(backend_mode: M3BackendMode_t;
     DefaultCall := CCs[0];
   END InitCallingConventions;
 
+PROCEDURE TypeImage (cgt: CGType ): TEXT =
+  BEGIN
+    CASE cgt OF
+    | CGType.Word8 => RETURN "Word8";
+    | CGType.Int8 => RETURN "Int8";
+    | CGType.Word16 => RETURN "Word16";
+    | CGType.Int16 => RETURN "Int16";  
+    | CGType.Word32 => RETURN "Word32";
+    | CGType.Int32 => RETURN "Int32";
+    | CGType.Word64 => RETURN "Word64";
+    | CGType.Int64 => RETURN "Int64";
+    | CGType.Reel => RETURN "Reel";
+    | CGType.LReel => RETURN "LReel";
+    | CGType.XReel => RETURN "XReel";
+    | CGType.Addr => RETURN "Addr";
+    | CGType.Struct => RETURN "Struct";
+    | CGType.Void => RETURN "Void";
+    END;
+  END TypeImage;
+
 PROCEDURE CheckI (READONLY i: Int_type; max_align: INTEGER) =
   BEGIN
     <* ASSERT i.align = MIN (i.align, max_align) *>

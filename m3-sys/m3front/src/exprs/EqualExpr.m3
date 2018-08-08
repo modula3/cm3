@@ -220,9 +220,9 @@ PROCEDURE CompileSolidUnrolled (p: P) =
 
     FOR i := 0 TO n_chunks - 1 DO
       CG.Push (xa);
-      CG.Load_indirect (cmp_type, i * chunk_size, chunk_size);
+      CG.Load_indirect (cmp_type, i * chunk_size, chunk_size, info.alignment);
       CG.Push (xb);
-      CG.Load_indirect (cmp_type, i * chunk_size, chunk_size);
+      CG.Load_indirect (cmp_type, i * chunk_size, chunk_size, info.alignment);
       CG.Compare (Target.Word.cg_type, p.op);
       IF (i > 0) THEN
         IF (p.op = CG.Cmp.EQ)
@@ -463,11 +463,13 @@ PROCEDURE CompileTest (x1, x2 : CG.Val;
     ELSIF (u1_info.class = Type.Class.Set) THEN
       CG.Push (x1);
       IF (u1_info.size <= Target.Integer.size) THEN
-        CG.Load_indirect (Target.Word.cg_type, 0, Target.Integer.size);
+        CG.Load_indirect
+          (Target.Word.cg_type, 0, Target.Integer.size, u1_info.alignment);
       END;
       CG.Push (x2);
       IF (u1_info.size <= Target.Integer.size) THEN
-        CG.Load_indirect (Target.Word.cg_type, 0, Target.Integer.size);
+        CG.Load_indirect
+          (Target.Word.cg_type, 0, Target.Integer.size, u2_info.alignment);
       END;
       CG.Set_compare (u1_info.size, CG.Cmp.EQ);
       CG.If_false (false, freq);
@@ -476,20 +478,20 @@ PROCEDURE CompileTest (x1, x2 : CG.Val;
        OR (u2_info.class = Type.Class.Procedure) THEN
       (* we're already inside some variable => no frame pointers *)
       CG.Push (x1);
-      CG.Load_indirect (CG.Type.Addr, 0, Target.Address.size);
+      CG.Load_indirect (CG.Type.Addr, 0, Target.Address.size, CG.ProcAlign ());
       CG.Push (x2);
-      CG.Load_indirect (CG.Type.Addr, 0, Target.Address.size);
+      CG.Load_indirect (CG.Type.Addr, 0, Target.Address.size, CG.ProcAlign ());
       CG.If_compare (CG.Type.Addr, CG.Cmp.NE, false, freq);
 
     ELSE (* simple scalars *)
       EVAL Type.CheckInfo (t1, u1_info);  (* can't ignore BITS FOR *)
       EVAL Type.CheckInfo (t2, u2_info);
       CG.Push (x1);
-      CG.Boost_alignment (u1_info.alignment);
-      CG.Load_indirect (u1_info.stk_type, 0, u1_info.size);
+      CG.Boost_addr_alignment (Target.Address.align);
+      CG.Load_indirect (u1_info.stk_type, 0, u1_info.size, u1_info.alignment);
       CG.Push (x2);
-      CG.Boost_alignment (u2_info.alignment);
-      CG.Load_indirect (u2_info.stk_type, 0, u2_info.size);
+      CG.Boost_addr_alignment (Target.Address.align);
+      CG.Load_indirect (u2_info.stk_type, 0, u2_info.size, u2_info.alignment);
       CG.If_compare (u1_info.stk_type, CG.Cmp.NE, false, freq);
     END;
   END CompileTest;
@@ -573,7 +575,7 @@ PROCEDURE GenOpenValueCheck (t1: Type.T;  p1, p2: CG.Val;
                              false: CG.Label;  freq: CG.Frequency) =
   VAR
     d1  := OpenArrayType.OpenDepth (t1);
-    elt := OpenArrayType.NonOpenEltType (t1);
+    elt := OpenArrayType.NonopenEltType (t1);
     cnt       : CG.Val;
     elt_align : INTEGER;
     elt_pack  : INTEGER;
@@ -735,9 +737,9 @@ PROCEDURE CompileSolid (p1, p2: CG.Val;  t1, t2: Type.T;
       (* unroll the loop of comparisons *)
       FOR i := 0 TO n_chunks - 1 DO
         CG.Push (p1);
-        CG.Load_indirect (cmp_type, i * chunk_size, chunk_size);
+        CG.Load_indirect (cmp_type, i * chunk_size, chunk_size, chunk_align);
         CG.Push (p2);
-        CG.Load_indirect (cmp_type, i * chunk_size, chunk_size);
+        CG.Load_indirect (cmp_type, i * chunk_size, chunk_size, chunk_align);
         CG.If_compare (Target.Word.cg_type, CG.Cmp.NE, false, freq);
       END;
 
@@ -753,12 +755,12 @@ PROCEDURE CompileSolid (p1, p2: CG.Val;  t1, t2: Type.T;
       CG.Push (p1);
       CG.Push (cnt);
       CG.Index_bytes (chunk_size);
-      CG.Load_indirect (cmp_type, 0, chunk_size);
+      CG.Load_indirect (cmp_type, 0, chunk_size, chunk_align);
 
       CG.Push (p2);
       CG.Push (cnt);
       CG.Index_bytes (chunk_size);
-      CG.Load_indirect (cmp_type, 0, chunk_size);
+      CG.Load_indirect (cmp_type, 0, chunk_size, chunk_align);
 
       (* do the comparison *)
       CG.If_compare (Target.Word.cg_type, CG.Cmp.NE, false, freq);

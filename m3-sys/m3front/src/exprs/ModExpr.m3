@@ -149,14 +149,14 @@ PROCEDURE Compile (p: P) =
       align := info.alignment;
       cg_type := CGType [p.class];
 
-      CG.Load (p.tmp1, 0, sz, align, cg_type);
-      CG.Load (p.tmp2, 0, sz, align, cg_type);
+      CG.Load (p.tmp1, 0, sz, align, info.addr_align, cg_type);
+      CG.Load (p.tmp2, 0, sz, align, info.addr_align, cg_type);
       CG.Divide (cg_type);
       CG.Cvt_int (cg_type, Target.Integer.cg_type, CG.Cvt.Floor);
       CG.Cvt_float (Target.Integer.cg_type, cg_type);
-      CG.Load (p.tmp2, 0, sz, align, cg_type);
+      CG.Load (p.tmp2, 0, sz, align, info.addr_align, cg_type);
       CG.Multiply (cg_type);
-      CG.Load (p.tmp1, 0, sz, align, cg_type);
+      CG.Load (p.tmp1, 0, sz, align, info.addr_align, cg_type);
       CG.Swap ();
       CG.Subtract (cg_type);
 

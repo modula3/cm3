@@ -87,11 +87,11 @@ PROCEDURE EmitCore (tlhs, trhs: Type.T): CG.Val =
     tlhs := Type.CheckInfo (tlhs, lhs_info);
     IF is_object THEN
       align := ObjectType.FieldAlignment (tlhs);
-      CG.Boost_alignment (align);
+      CG.Boost_addr_alignment (align);
     ELSIF RefType.Split (tlhs, target) THEN
       target := Type.CheckInfo (target, info);
       align := info.alignment;
-      CG.Boost_alignment (align);
+      CG.Boost_addr_alignment (align);
     END;
 
     (* CT test for the no-check cases... *)

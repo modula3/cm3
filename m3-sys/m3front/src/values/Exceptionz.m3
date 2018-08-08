@@ -156,8 +156,8 @@ PROCEDURE EmitRaise (v: Value.T;  arg: Expr.T) =
       END;
       LoadSelf (t);
       CG.Add_offset (M3RT.ED_SIZE);
-      CG.Boost_alignment (Target.Address.align);
-      CG.Load_indirect (CG.Type.Addr, 0, Target.Address.size);
+      CG.Boost_addr_alignment (Target.Address.align);
+      CG.Load_indirect (CG.Type.Addr, 0, CG.ProcAlign ());
       CG.Gen_Call_indirect (CG.Type.Void, Target.DefaultCall);
       EVAL Marker.EmitExceptionTest (Procedure.Signature (p), need_value := FALSE);
       CG.Free (tmp);
@@ -169,7 +169,7 @@ PROCEDURE LoadSelf (t: T) =
     IF (t.imported) THEN
       Module.LoadGlobalAddr (Scope.ToUnit (t), t.offset, is_const := FALSE);
       CG.Load_indirect (CG.Type.Addr, 0, Target.Address.size);
-      CG.Boost_alignment (Target.Address.align);
+      CG.Boost_addr_alignment (Target.Address.align);
     ELSE
       Module.LoadGlobalAddr (Scope.ToUnit (t), t.coffset, is_const := TRUE);
     END;
@@ -358,9 +358,8 @@ PROCEDURE EmitBody (x: Raiser) =
 
     (* ptr^ := arg^ *)
     CG.Push (ptr);
-    CG.Boost_alignment (align);
-    CG.Load_addr (x.arg);
-    CG.Boost_alignment (align);
+    CG.Boost_addr_alignment (align);
+    CG.Load_addr (x.arg, 0, align);
     CG.Copy (info.size, overlap := FALSE);
 
     (* RAISE (e, ptr) *)
@@ -371,14 +370,14 @@ PROCEDURE EmitBody (x: Raiser) =
       CG.Pop_param (CG.Type.Addr);
       CG.Push (ptr);
       CG.Pop_param (CG.Type.Addr);
-      CG.Load_addr (x.module);
+      CG.Load_addr (x.module, 0, Target.Address.align);
       CG.Pop_param (CG.Type.Addr);
       CG.Load_int (Target.Integer.cg_type, x.line);
       CG.Pop_param (Target.Integer.cg_type);
     ELSE
       CG.Load_int (Target.Integer.cg_type, x.line);
       CG.Pop_param (Target.Integer.cg_type);
-      CG.Load_addr (x.module);
+      CG.Load_addr (x.module, 0, Target.Address.align);
       CG.Pop_param (CG.Type.Addr);
       CG.Push (ptr);
       CG.Pop_param (CG.Type.Addr);

@@ -8,27 +8,30 @@
 
 MODULE ArrayType;
 
-IMPORT M3, CG, Type, TypeRep, Error, Token, OpenArrayType;
-IMPORT Word, Target, TInt, RecordType, TipeMap, TipeDesc, ErrType;
+IMPORT M3, CG, Type, TypeRep, Error, Token;
+IMPORT OpenArrayType, RecordType, PackedType; 
+IMPORT Word, Target, TInt, TipeMap, TipeDesc, ErrType;
 FROM Scanner IMPORT Match, GetToken, cur;
 
 CONST
-  MAXSIZE = LAST (INTEGER);
+  MAXSIZE = LAST (INTEGER) DIV Target.Byte;
 
 TYPE
   P = Type.T BRANDED "ArrayType.P" OBJECT
-        index      : Type.T;
-        element    : Type.T;
-        alignment  : INTEGER;
-        n_elts     : INTEGER;
-        elt_align  : INTEGER;
-        elt_pack   : INTEGER;
-        total_size : INTEGER;
-        openCousin : Type.T;  (* == ARRAY OF element *)
-        packed     : BOOLEAN;
+        indexType        : Type.T;
+        elementType      : Type.T;
+        alignment        : INTEGER;
+        n_elts           : INTEGER;
+        elt_align        : INTEGER;
+        elt_pack         : INTEGER;
+        total_size       : INTEGER;
+        fixedDepth       : INTEGER; (* # of dimensions, lazily computed. *) 
+        openCousin       : Type.T;  (* == ARRAY OF elementType *)
+        eltsBitAddressed : BOOLEAN;
+        (* ^Could be FALSE even if elements are BITS n FOR ... *)
       OVERRIDES
         check      := Check;
-        check_align:= CheckAlign;
+        no_straddle:= IsStraddleFree;
         isEqual    := EqualChk;
         isSubtype  := Subtyper;
         compile    := Compiler;
@@ -39,6 +42,7 @@ TYPE
         fprint     := FPrinter;
       END;
 
+(* EXPORTED: *)
 PROCEDURE Parse (): Type.T =
   TYPE TK = Token.T;
   VAR p, p0: P;
@@ -47,14 +51,14 @@ PROCEDURE Parse (): Type.T =
     IF (cur.token IN Token.TypeStart) THEN
       p0 := New (NIL, NIL);  p := p0;
       LOOP
-        p.index := Type.Parse ();
+        p.indexType := Type.Parse ();
         IF (cur.token # TK.tCOMMA) THEN EXIT END;
         GetToken (); (* , *)
-        p.element := New (NIL, NIL);
-        p := p.element;
+        p.elementType := New (NIL, NIL);
+        p := p.elementType;
       END;
       Match (TK.tOF);
-      p.element := Type.Parse ();
+      p.elementType := Type.Parse ();
       RETURN p0;
     ELSE
       (* must be an open array *)
@@ -63,28 +67,64 @@ PROCEDURE Parse (): Type.T =
     END;
   END Parse;
 
+(* EXPORTED: *)
 PROCEDURE New (index, element: Type.T): Type.T =
   VAR p: P;
   BEGIN
     p := NEW (P);
     TypeRep.Init (p, Type.Class.Array);
-    p.index      := index;
-    p.element    := element;
-    p.alignment  := 0;
-    p.n_elts     := 0;
-    p.total_size := 0;
-    p.elt_align  := 0;
-    p.elt_pack   := 0;
-    p.openCousin := NIL;
-    p.packed     := FALSE;
+    p.indexType  := index;
+    p.elementType := element;
+    p.alignment   := 0;
+    p.n_elts      := 0;
+    p.total_size  := 0;
+    p.elt_align   := 0;
+    p.elt_pack    := 0;
+    p.fixedDepth  := -1; 
+    p.openCousin  := NIL;
+    p.eltsBitAddressed := FALSE;
     RETURN p;
   END New;
 
+PROCEDURE FixedDepth (p: P): INTEGER =
+  BEGIN
+    IF p = NIL THEN RETURN 0 END;
+    IF p.fixedDepth <= 0 THEN (* Compute it lazily and cache. *) 
+      p.fixedDepth := 1;
+      TYPECASE p.elementType
+      OF NULL =>
+      | P (r) => INC (p.fixedDepth, FixedDepth (Type.StripPacked (r)));
+      ELSE
+      END;
+    END;
+    RETURN p.fixedDepth;
+  END FixedDepth;
+
+(* EXPORTED: *)
+PROCEDURE TotalDepth (t: Type.T): INTEGER =
+(* Total number of dimensions of t, open + fixed.
+   Works on open array t too. *) 
+  VAR p: P; 
+  VAR openDepth: INTEGER; 
+  BEGIN
+    IF t = NIL THEN RETURN 0 END;
+    IF OpenArrayType.Is (t) THEN
+      openDepth := OpenArrayType.OpenDepth (t);
+      p := Reduce (OpenArrayType.NonopenEltType (t));
+      RETURN openDepth + FixedDepth (p);
+    ELSE
+      p := Reduce (t);
+      RETURN FixedDepth (p); 
+    END;
+  END TotalDepth;
+
+(* EXPORTED: *)
 PROCEDURE Split (t: Type.T;  VAR index, element: Type.T): BOOLEAN =
+(* Succeeds on an open array too. *) 
   VAR p := Reduce (t);
   BEGIN
     IF (p # NIL) THEN
-      index := p.index;  element := p.element;
+      index := p.indexType;  element := p.elementType;
       RETURN TRUE;
     ELSIF OpenArrayType.Split (t, element) THEN
       index := NIL;
@@ -94,6 +134,7 @@ PROCEDURE Split (t: Type.T;  VAR index, element: Type.T): BOOLEAN =
     END;
   END Split;
 
+(* EXPORTED: *)
 PROCEDURE EltPack (t: Type.T): INTEGER =
   VAR p := Reduce (t);
   BEGIN
@@ -106,6 +147,7 @@ PROCEDURE EltPack (t: Type.T): INTEGER =
     END;
   END EltPack;
 
+(* EXPORTED: *)
 PROCEDURE EltAlign (t: Type.T): INTEGER =
   VAR p:= Reduce (t);
   BEGIN
@@ -113,17 +155,18 @@ PROCEDURE EltAlign (t: Type.T): INTEGER =
       RETURN p.elt_align;
     ELSIF OpenArrayType.Is (t) THEN
       RETURN OpenArrayType.EltAlign (t);
-    ELSE
+    ELSE (* Not an array. *) 
       RETURN Target.Byte;
     END;
   END EltAlign;
 
+(* EXPORTED: *)
 PROCEDURE OpenCousin (t: Type.T): Type.T =
   VAR p := Reduce (t);
   BEGIN
     IF (p # NIL) THEN
       IF (p.openCousin = NIL) THEN
-        p.openCousin := OpenArrayType.New (p.element);
+        p.openCousin := OpenArrayType.New (p.elementType);
       END;
       RETURN p.openCousin;
     ELSE
@@ -131,89 +174,112 @@ PROCEDURE OpenCousin (t: Type.T): Type.T =
     END;
   END OpenCousin;
 
-PROCEDURE IsBitAddressed (t: Type.T): BOOLEAN =
+(* EXPORTED: *)
+PROCEDURE EltsAreBitAddressed (t: Type.T): BOOLEAN =
   VAR p:= Reduce (t);
   BEGIN
-    RETURN (p # NIL) AND (p.packed);
-  END IsBitAddressed;
+    RETURN (p # NIL) AND (p.eltsBitAddressed);
+  END EltsAreBitAddressed;
 
+(* EXPORTED: *)
 PROCEDURE GenIndex (t: Type.T) =
-  VAR p := Reduce (t);  index: CG.Val;
+(* Given "ADR(a)" and "index" on the stack, generate code to replace them
+   by "ADR(a[index])" on the stack.  Beginning and ending "addresses" are
+   CG 'ValRec's and may include a 'bits' expression. *)
+(* Works for an open array too, but uses elt_pack of the first nonopen element
+   type, so, for an open array of depth > 1, 'index' must have been already
+   multiplied by the product of element counts of inner open dimensions. *)
+  VAR array_info : Type.Info;
+  VAR p := Reduce (t); (* If non-NIL, p is a fixed array type. *) 
+  VAR bit_index: CG.Val;
+  VAR array_align : INTEGER (* of the elements, not the dope fields. *);
+  VAR elt_pack: INTEGER;
+  VAR eltsBitAddressed: BOOLEAN;
   BEGIN
-    IF (p = NIL) THEN
-      CG.Index_bytes (OpenArrayType.EltPack (t));
-    ELSIF NOT p.packed THEN
-      CG.Index_bytes (p.elt_pack);
-    ELSE
-      (* we have a packed array with non-byte-aligned elements... *)
-      IF (p.elt_pack # 1) THEN
+    IF (p = NIL) THEN (* t is an open array. *)
+      eltsBitAddressed := OpenArrayType.EltsAreBitAddressed (t);
+      t := Type.CheckInfo(Type.StripPacked(t), array_info);
+      array_align := array_info.alignment;
+      elt_pack := OpenArrayType.EltPack (t);
+    ELSE (* Fixed array, p is its narrow type. *) 
+      eltsBitAddressed := p.eltsBitAddressed;
+      array_align := p.alignment;
+      elt_pack := p.elt_pack;
+    END;
+    IF NOT eltsBitAddressed THEN
+      <* ASSERT elt_pack MOD Target.Byte = 0 *> 
+      CG.Index_bytes (elt_pack);
+    ELSE (* We have an array with non-byte-aligned packed elements. *)
+      IF (elt_pack # 1) THEN
         (* compute the bit-offset of the indexed element *)
-        CG.Load_intt (p.elt_pack);
+        CG.Load_intt (elt_pack);
         CG.Multiply (Target.Integer.cg_type);
       END;
-      IF (p.total_size <= p.alignment) THEN
+      IF TRUE
+         OR p # NIL (* fixed array*) AND p.total_size <= p.alignment THEN
         CG.Index_bits ();
       ELSE
-        index := CG.Pop ();
-        CG.Push (index);
-        CG.Load_intt (p.alignment);
+        bit_index := CG.Pop ();
+        CG.Push (bit_index);
+        CG.Load_intt (array_align);
         CG.Div (Target.Integer.cg_type, CG.Sign.Positive, CG.Sign.Positive);
-        CG.Index_bytes (p.alignment);
-        CG.Push (index);
-        CG.Load_intt (p.alignment);
+        CG.Index_bytes (array_align);
+        CG.Push (bit_index);
+        CG.Load_intt (array_align);
         CG.Mod (Target.Integer.cg_type, CG.Sign.Positive, CG.Sign.Positive);
         CG.Index_bits ();
-        CG.Free (index);
+        CG.Free (bit_index);
       END;
     END;
   END GenIndex;
 
+(* Externally dispatched-to: *) 
 PROCEDURE Check (p: P) =
-  VAR align, full_size: INTEGER;  elt_info: Type.Info;
+  VAR min_size: INTEGER;
+  VAR elt_info: Type.Info;
   BEGIN
-    p.index := Type.Check (p.index);
-    IF NOT Type.IsOrdinal (p.index) THEN
+    p.indexType := Type.Check (p.indexType);
+    IF NOT Type.IsOrdinal (p.indexType) THEN
       Error.Msg ("array index type must be an ordinal type");
-      p.index := ErrType.T;
+      p.indexType := ErrType.T;
     END;
 
-    p.element := Type.CheckInfo (p.element, elt_info);
+    p.elementType := Type.CheckInfo (p.elementType, (*OUT*) elt_info);
     IF (elt_info.class = Type.Class.OpenArray) THEN
-      Error.Msg ("array element type cannot be an open array");
+      Error.Msg ("fixed array element type cannot be an open array");
     END;
 
-    IF NOT TInt.ToInt (Type.Number (p.index), p.n_elts) THEN
+    IF NOT TInt.ToInt (Type.Number (p.indexType), (*OUT*) p.n_elts) THEN
       Error.Msg ("CM3 restriction: array has too many elements");
       p.n_elts := 1;
     END;
 
-    align       := elt_info.alignment;
     p.elt_align := elt_info.alignment;
-    p.elt_pack  := elt_info.size;
-    IF (elt_info.class # Type.Class.Packed) THEN
-      (* naturally aligned elements must be OK *)
-      p.elt_pack  := (elt_info.size + align - 1) DIV align * align;
-      p.alignment := elt_info.alignment;
-      p.packed    := FALSE;
+    IF (elt_info.class = Type.Class.Packed) THEN
+      (* Find an element alignment that won't cause word straddle. *)
+      p.elt_pack  := elt_info.size; (* The BITS n size. *)
+      p.alignment := ArrayAlignWithPackedElts (p);
+      p.eltsBitAddressed
+         := (p.elt_pack < Target.Byte) OR (p.elt_pack MOD p.alignment # 0);
     ELSE
-      (* find a packing that's allowed *)
-      p.alignment := FindAlignment (p);
-      p.packed := (p.elt_pack < Target.Byte)
-               OR (p.elt_pack MOD p.alignment # 0);
+      (* Natural element alignment is the alignment of the whole array. *)
+      p.elt_pack := RecordType.RoundUp (elt_info.size, elt_info.alignment); 
+      p.alignment := elt_info.alignment;
+      p.eltsBitAddressed := FALSE;
     END;
 
     IF (p.n_elts > 0) AND (p.elt_pack > 0)
       AND (p.n_elts > MAXSIZE DIV p.elt_pack) THEN
       Error.Msg ("CM3 restriction: array type too large");
-      full_size := 0;
+      min_size := 0;
       p.total_size := 0;
     ELSE
-      full_size := p.elt_pack * p.n_elts;
-      p.total_size := RecordType.RoundUp (full_size, p.alignment);
+      min_size := p.elt_pack * p.n_elts;
+      p.total_size := RecordType.RoundUp (min_size, p.alignment);
     END;
 
     p.info.size      := p.total_size;
-    p.info.min_size  := p.total_size;
+    p.info.min_size  := min_size;
     p.info.alignment := p.alignment;
     p.info.mem_type  := CG.Type.Struct;
     p.info.stk_type  := CG.Type.Addr;
@@ -221,63 +287,82 @@ PROCEDURE Check (p: P) =
     p.info.isTraced  := elt_info.isTraced;
     p.info.isEmpty   := elt_info.isEmpty;
     p.info.isSolid   := elt_info.isSolid AND (p.elt_pack <= elt_info.size)
-                            AND (p.total_size <= full_size);
+                            AND (p.total_size <= min_size);
     p.info.hash      := Word.Plus (Word.Times (23, p.n_elts),
                               Word.Times (29, p.elt_pack));
   END Check;
 
-PROCEDURE FindAlignment (p: P): INTEGER =
-  VAR x: INTEGER;
+PROCEDURE ArrayAlignWithPackedElts (p: P): INTEGER =
+(* The smallest alignment of the whole array that will statically ensure
+   elements won't straddle word boundaries, ensured either because
+   the entire array ends before crossing a word boundary, or because 
+   word boundaries occur only at element boundaries. *) 
+  VAR trialAlign, offset: INTEGER;
   BEGIN
-    FOR a := FIRST (Target.Alignments) TO LAST (Target.Alignments) DO
-      x := Target.Alignments[a];
-      IF (x >= p.elt_align) AND Type.IsAlignedOk (p, x) THEN
-        RETURN x;
+    FOR a := FIRST (Target.Alignments) (* Smallest *)
+             TO LAST (Target.Alignments) DO
+      trialAlign := Target.Alignments[a];
+      IF trialAlign > Target.Word.align THEN EXIT END; 
+      offset := Target.Word.size;
+      LOOP (* Backwards through multiples of trialAlign within a word. *)
+        DEC (offset, trialAlign);
+        IF NOT IsStraddleFree (p, offset, IsEltOrField := TRUE) THEN EXIT
+        ELSIF offset <= 0 THEN RETURN trialAlign
+        END
       END;
     END;
-    Error.Msg ("CM3 restriction: scalars in packed array elements cannot cross word boundaries");
+    Error.Msg
+      ("CM3 restriction: scalars in packed array elements cannot cross word boundaries");
     RETURN Target.Byte;
-  END FindAlignment;
+  END ArrayAlignWithPackedElts;
 
-PROCEDURE CheckAlign (p: P;  offset: INTEGER): BOOLEAN =
-  VAR x0 := offset MOD Target.Integer.size;  x := x0;
+(* Externally dispatched-to: *) 
+PROCEDURE IsStraddleFree
+  (p: P;  offset: INTEGER; <*UNUSED*> IsEltOrField: BOOLEAN): BOOLEAN =
+  VAR x0 := offset MOD Target.Word.size;  x := x0;
   BEGIN
     FOR i := 0 TO p.n_elts-1 DO
-      IF NOT Type.IsAlignedOk (p.element, x) THEN RETURN FALSE END;
-      x := (x + p.elt_pack) MOD Target.Integer.size;
+      IF NOT Type.StraddleFreeScalars
+               (p.elementType, offs := x, IsEltOrField := TRUE)
+      THEN RETURN FALSE
+      END;
+      x := (x + p.elt_pack) MOD Target.Word.size;
       IF (x = x0) THEN EXIT END;
     END;
     RETURN TRUE;
-  END CheckAlign;
+  END IsStraddleFree;
 
+(* Externally dispatched-to: *) 
 PROCEDURE Compiler (p: P) =
   VAR self, index, elt: INTEGER;
   BEGIN
-    Type.Compile (p.index);
-    Type.Compile (p.element);
+    Type.Compile (p.indexType);
+    Type.Compile (p.elementType);
     self  := Type.GlobalUID (p);
-    index := Type.GlobalUID (p.index);
-    elt   := Type.GlobalUID (p.element);
+    index := Type.GlobalUID (p.indexType);
+    elt   := Type.GlobalUID (p.elementType);
     CG.Declare_array (self, index, elt, p.total_size);
   END Compiler;
 
+(* Externally dispatched-to: *) 
 PROCEDURE EqualChk (a: P;  t: Type.T;  x: Type.Assumption): BOOLEAN =
   VAR b: P := t;
   BEGIN
-    RETURN Type.IsEqual (a.element, b.element, x)
-       AND Type.IsEqual (a.index, b.index, x);
+    RETURN Type.IsEqual (a.elementType, b.elementType, x)
+       AND Type.IsEqual (a.indexType, b.indexType, x);
   END EqualChk;
 
+(* Externally dispatched-to: *) 
 PROCEDURE Subtyper (a: P;  tb: Type.T): BOOLEAN =
   VAR ta, eb: Type.T;  b: P;
   BEGIN
     ta := a;
 
-    (* peel off the fixed dimensions of A and open dimensions of B *)
+    (* peel off the fixed dimensions of A and matching open dimensions of B *)
     LOOP
       a := Reduce (ta);
       IF (a = NIL) OR NOT OpenArrayType.Split (tb, eb) THEN EXIT END;
-      ta := a.element;
+      ta := a.elementType;
       tb := eb;
     END;
 
@@ -285,13 +370,14 @@ PROCEDURE Subtyper (a: P;  tb: Type.T): BOOLEAN =
     LOOP
       a := Reduce (ta);  b := Reduce (tb);
       IF (a = NIL) OR (b = NIL) THEN EXIT END;
-      IF (a.index # b.index) THEN
-        IF NOT TInt.EQ (Type.Number (a.index), Type.Number (b.index)) THEN
+      IF (a.indexType # b.indexType) THEN
+        IF NOT TInt.EQ (Type.Number (a.indexType), Type.Number (b.indexType))
+        THEN
           RETURN FALSE;
         END;
       END;
-      ta := a.element;
-      tb := b.element;
+      ta := a.elementType;
+      tb := b.elementType;
     END;
 
     RETURN Type.IsEqual (ta, tb, NIL);
@@ -301,24 +387,27 @@ PROCEDURE Reduce (t: Type.T): P =
   BEGIN
     IF (t = NIL) THEN RETURN NIL END;
     IF (t.info.class = Type.Class.Named) THEN t := Type.Strip (t) END;
+    IF (t.info.class = Type.Class.Packed) THEN t := Type.StripPacked (t) END;
     IF (t.info.class # Type.Class.Array) THEN RETURN NIL END;
     RETURN t;
   END Reduce;
 
+(* Externally dispatched-to: *) 
 PROCEDURE InitCoster (p: P; zeroed: BOOLEAN): INTEGER =
   VAR n, m, res: Target.Int;  x: INTEGER;
   BEGIN
-    x := Type.InitCost (p.element, zeroed);
+    x := Type.InitCost (p.elementType, zeroed);
     IF NOT TInt.FromInt (x, m) THEN
       RETURN LAST (INTEGER);
     END;
-    n := Type.Number (p.index);
+    n := Type.Number (p.indexType);
     IF TInt.LT (n, TInt.Zero) THEN (*open array?*) RETURN 20 * x END;
     IF NOT TInt.Multiply (m, n, res) THEN RETURN LAST (INTEGER) END;
     IF NOT TInt.ToInt (res, x) THEN RETURN LAST (INTEGER) END;
     RETURN x;
   END InitCoster;
 
+(* Externally dispatched-to: *) 
 PROCEDURE GenInit (p: P;  zeroed: BOOLEAN) =
   VAR
     top   : CG.Label;
@@ -335,7 +424,7 @@ PROCEDURE GenInit (p: P;  zeroed: BOOLEAN) =
     CG.Push (array);
     CG.Push (cnt);
     GenIndex (p);
-    Type.InitValue (p.element, zeroed);
+    Type.InitValue (p.elementType, zeroed);
 
     (* cnt := cnt + 1 *)
     CG.Push (cnt);
@@ -353,30 +442,33 @@ PROCEDURE GenInit (p: P;  zeroed: BOOLEAN) =
     CG.Free (array);
   END GenInit;
 
+(* Externally dispatched-to: *) 
 PROCEDURE GenMap (p: P;  offset, size: INTEGER;  refs_only: BOOLEAN) =
   BEGIN
     EVAL size;
     IF (p.n_elts <= 0) THEN RETURN END;
     TipeMap.Add (offset, TipeMap.Op.Mark, 0);
-    Type.GenMap (p.element, offset, p.elt_pack, refs_only);
+    Type.GenMap (p.elementType, offset, p.elt_pack, refs_only);
     TipeMap.Add (offset + p.elt_pack, TipeMap.Op.Array_1, p.n_elts);
     TipeMap.SetCursor (offset + p.total_size);
   END GenMap;
 
+(* Externally dispatched-to: *) 
 PROCEDURE GenDesc (p: P) =
   BEGIN
     IF TipeDesc.AddO (TipeDesc.Op.Array, p) THEN
-      TipeDesc.AddX (Type.Number (p.index));
-      Type.GenDesc (p.element);
+      TipeDesc.AddX (Type.Number (p.indexType));
+      Type.GenDesc (p.elementType);
     END;
   END GenDesc;
 
+(* Externally dispatched-to: *) 
 PROCEDURE FPrinter (p: P;  VAR x: M3.FPInfo) =
   BEGIN
     x.tag      := "ARRAY";
     x.n_nodes  := 2;
-    x.nodes[0] := p.index;
-    x.nodes[1] := p.element;
+    x.nodes[0] := p.indexType;
+    x.nodes[1] := p.elementType;
   END FPrinter;
 
 BEGIN

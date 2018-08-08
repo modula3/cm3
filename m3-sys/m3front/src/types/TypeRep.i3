@@ -30,7 +30,7 @@ REVEAL
     next        : TT;   (* linked list of all types in the same module *)
   METHODS
     check       ();
-    check_align (offset: INTEGER): BOOLEAN;
+    no_straddle (offset: INTEGER; IsEltOrField: BOOLEAN): BOOLEAN;
     isEqual     (t: TT;  x: Type.Assumption): BOOLEAN;
     isSubtype   (t: TT): BOOLEAN := NoSubtypes;
     compile     ();
@@ -59,7 +59,14 @@ PROCEDURE GenRefMap (t: TT;  offset, size: INTEGER;  refs_only: BOOLEAN);
 PROCEDURE GenRefDesc (t: TT);
 (* == TypeDesc.AddO (Op.{Untraced}Ref); TypeDesc.AddI (UID(t)) *)
 
-PROCEDURE ScalarAlign (t: TT;  offset: INTEGER): BOOLEAN;
+PROCEDURE ScalarNoStraddle
+  (t: TT;  offset: INTEGER; IsEltOrField: BOOLEAN): BOOLEAN;
 (* == RETURN (offset MOD t.alignment = 0) *)
+(* To preclude word-boundary-straddle, this assumes t's size
+   is no greater than its alignment. *) 
+
+PROCEDURE AddrNoStraddle
+  (t: TT;  offset: INTEGER; IsEltOrField: BOOLEAN): BOOLEAN;
+(* == RETURN (offset MOD Target.Address.align = 0) *)
 
 END TypeRep.

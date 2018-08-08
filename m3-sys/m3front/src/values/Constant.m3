@@ -158,7 +158,7 @@ PROCEDURE Load (t: T) =
       IF (t.imported) THEN
         Module.LoadGlobalAddr (Scope.ToUnit (t), t.offset, is_const := FALSE);
         CG.Load_indirect (CG.Type.Addr, 0, Target.Address.size);
-        CG.Boost_alignment (t.calign);
+        CG.Boost_addr_alignment (t.calign);
       ELSE
         Module.LoadGlobalAddr (Scope.ToUnit (t), t.coffset, is_const := TRUE);
       END;

@@ -86,7 +86,7 @@ PROCEDURE Compile (p: P) =
   (* all the work was done by "Prep" *)
   BEGIN
     CG.Push (p.tmp);
-    CG.Boost_alignment (Target.Address.align);
+    CG.Boost_addr_alignment (Target.Address.align);
     CG.Free (p.tmp);
     p.tmp := NIL;
   END Compile;

@@ -15,9 +15,17 @@ IMPORT RefType, DerefExpr, Target, TInt, M3RT, RunTyme;
 
 TYPE
   P = ExprRep.Tab BRANDED "SubscriptExpr.P" OBJECT
-        biased_b : Expr.T;
-        depth    : INTEGER;  (* open array depth before subscripting *)
-        tmp      : CG.Val;
+        biased_b     : Expr.T; (* Subscript minus lowerBound. *) 
+        openDepth    : INTEGER; (* open depth of lhs's type. *)
+        tmp          : CG.Val;
+        tempDopeAddr : CG.Val;
+        taBase       : Type.T; 
+        leftSs       : P; (* p.a if it's a P; NIL otherwise. *) 
+        ssDepth      : INTEGER; (* R to L depth of this subscript in an
+                                   unbroken sequence of subscripts. *)
+        shapeSs      : INTEGER; (* L to R shape subscript corresponding to
+                                   this array subscript. *)
+        checkedPass1 : BOOLEAN 
       OVERRIDES
         typeOf       := TypeOf;
         check        := Check;
@@ -41,33 +49,30 @@ TYPE
         exprAlign    := SubscriptExprAlign;
       END;
 
+(* EXPORTED: *) 
 PROCEDURE New (a, b: Expr.T): Expr.T =
   VAR p: P;
   BEGIN
     p := NEW (P);
     ExprRep.Init (p);
-    p.a        := a;
-    p.b        := b;
-    p.biased_b := NIL;
-    p.depth    := 0;
-    p.tmp      := NIL;
+    p.a            := a;
+    p.b            := b;
+    p.leftSs       := NIL; 
+    p.ssDepth      := 0;
+    p.shapeSs      := 0;
+    p.biased_b     := NIL;
+    p.openDepth    := 0;
+    p.tmp          := NIL;
+    p.checkedPass1 := FALSE; 
+    p.checked      := FALSE; 
     RETURN p;
   END New;
 
+(* Externally dispatched-to: *) 
 PROCEDURE TypeOf (p: P): Type.T =
   VAR ta, ti, te: Type.T;
   BEGIN
     ta := Type.Base (Expr.TypeOf (p.a));
-
-(* CHECK: Does the following make any sense?  This is a pure function.
-          Shouldn't it follow the deref node rather than create
-          another one?
-
-   How about:
-    IF RefType.Split (ta, (*OUT*)targetType) THEN (* Implicit dereference. *)
-       ta := Type.Base (target)
-    END;
-*)
 
     IF RefType.Is (ta) THEN
       (* auto-magic dereference *)
@@ -82,54 +87,141 @@ PROCEDURE TypeOf (p: P): Type.T =
     END;
   END TypeOf;
 
+PROCEDURE GenRangeCheck
+  (p: P; mini, maxi, minb, maxb: Target.Int; VAR cs: Expr.CheckState) =
+  VAR z: Target.Int;
+  VAR b: BOOLEAN; 
+  BEGIN
+    IF TInt.LT (minb, mini) AND TInt.LT (maxi, maxb) THEN
+      b := TInt.Subtract (maxi, mini, z);  <*ASSERT b *>
+      p.biased_b := CheckExpr.New (p.biased_b, TInt.Zero, z,
+                                   CG.RuntimeError.SubscriptOutOfRange);
+      p.biased_b.origin := p.origin;
+      Expr.TypeCheck (p.biased_b, cs);
+    ELSIF TInt.LT (minb, mini) THEN
+      IF TInt.LT (maxb, mini) THEN
+        Error.Warn (2, "subscript is out of range");
+      END;
+      p.biased_b := CheckExpr.NewLower (p.biased_b, TInt.Zero,
+                                   CG.RuntimeError.SubscriptOutOfRange);
+      p.biased_b.origin := p.origin;
+      Expr.TypeCheck (p.biased_b, cs);
+    ELSIF TInt.LT (maxi, maxb) THEN
+      IF TInt.LT (maxi, minb) THEN
+        Error.Warn (2, "subscript is out of range");
+      END;
+      b := TInt.Subtract (maxi, mini, z);  <*ASSERT b *>
+      p.biased_b := CheckExpr.NewUpper (p.biased_b, z,
+                                   CG.RuntimeError.SubscriptOutOfRange);
+      p.biased_b.origin := p.origin;
+      Expr.TypeCheck (p.biased_b, cs);
+    END;
+  END GenRangeCheck;
+  
+(* Externally dispatched-to: *)
+(* Called only with the rightmost (topmost) of an uninterrupted sequence
+   of subscripts.  An implicit dereference counts as an interruption. *) 
 PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
+  BEGIN
+    DirectCheckPass1 (p, cs); 
+    DirectCheckPass2 (p, cs, ssDepth := 1); 
+  END Check;
+
+PROCEDURE DirectCheckPass1 (p: P; VAR cs: Expr.CheckState) =
+(* For this SubscriptExpr, do just enough to ascertain whether an implied
+   dereference of its left operand is needed.  Fully check deeper LHS
+   subexpression nodes that are not Ps.
+   POST: p.leftSs and p.type are computed.
+   POST: p.checkedPass1. *) 
+  VAR ta, ti: Type.T;
+  BEGIN
+    IF p = NIL THEN RETURN END;
+    IF p.checkedPass1 THEN RETURN END;
+    TYPECASE p.a OF
+    | NULL =>
+        p.type := ErrType.T;
+        p.checkedPass1 := TRUE; 
+        RETURN;
+    | P (pa) => (* Left operand is another subscript expression node. *)  
+      DirectCheckPass1 (pa, cs);
+      ta := Type.Check(Type.Base (Expr.TypeOf (p.a)));
+      IF RefType.Is (ta) THEN (* Insert an implicit dereference. *)
+        (* But first finish subscript node pa, as top-level. *)
+        DirectCheckPass2 (pa, cs, ssDepth := 1); 
+        p.leftSs := NIL; 
+        p.a := DerefExpr.New (pa);
+        p.a.origin := p.origin;
+        Expr.TypeCheck (p.a, cs);
+        ta := Type.Check (Type.Base (Expr.TypeOf (p.a)));
+      ELSE
+        p.leftSs := pa;
+      END;
+    ELSE
+      Expr.TypeCheck (p.a, cs);
+      ta := Type.Check (Type.Base (Expr.TypeOf (p.a)));
+      IF RefType.Is (ta) THEN (* Insert an implicit dereference. *)
+        p.a := DerefExpr.New (p.a);
+        p.a.origin := p.origin;
+        Expr.TypeCheck (p.a, cs);
+        ta := Type.Check (Type.Base (Expr.TypeOf (p.a)));
+      END; 
+    END; 
+    IF NOT ArrayType.Split (ta, ti, p.type) THEN
+      Error.Msg
+        ("Subscripted expression must be an array or reference thereto.");
+      p.type := ErrType.T;
+    END;
+    p.taBase := ta;
+    p.checkedPass1 := TRUE; 
+  END DirectCheckPass1;
+
+PROCEDURE DirectCheckPass2 (p: P; VAR cs: Expr.CheckState; ssDepth: INTEGER) =
+(* We need the ssDepth parameter for recursing between immediately
+   successive subscript nodes. *) 
   VAR
-    ta, tb, ti, te: Type.T;
-    mini, maxi, minb, maxb, z: Target.Int;
+    ti, te, tb: Type.T;
+    mini, maxi, minb, maxb: Target.Int;
     b: BOOLEAN;
   BEGIN
-    Expr.TypeCheck (p.a, cs);
-    Expr.TypeCheck (p.b, cs);
-    ta := Type.Base (Expr.TypeOf (p.a));
-    tb := Expr.TypeOf (p.b);
-
-    IF (ta = NIL) THEN
-      Error.Msg ("subscripted expression is not an array");
-      p.type := ErrType.T;
-      RETURN;
+    IF p = NIL THEN RETURN END;
+    IF p.checked THEN RETURN END;
+    p.ssDepth := ssDepth;
+    IF p.leftSs # NIL THEN
+      DirectCheckPass2 (p.leftSs, cs, ssDepth+1);
     END;
 
-    IF RefType.Is (ta) THEN
-      (* auto-magic dereference *)
-      p.a := DerefExpr.New (p.a);
-      p.a.origin := p.origin;
-      Expr.TypeCheck (p.a, cs);
-      ta := Type.Base (Expr.TypeOf (p.a));
-    END;
+    IF p.taBase = NIL OR p.taBase = ErrType.T THEN
+      p.checked := TRUE;
+      RETURN;
+    END; 
+    
+    p.openDepth := OpenArrayType.OpenDepth (p.taBase);
+    IF p.leftSs = NIL THEN p.shapeSs := 0
+    ELSE p.shapeSs := p.leftSs.shapeSs + 1
+    END; 
+    
+    IF p.ssDepth = 1 AND p.openDepth > 1
+       AND OpenArrayType.EltsAreBitAddressed(p.type) THEN 
+      Error.Msg
+        ("CM3 restriction: Open array of non-byte-aligned elements cannot be partially subscripted.");
+      p.type := ErrType.T;
+    END; 
 
-    ta := Type.Check (ta);
-    IF (ta = ErrType.T) THEN
-      p.type := ErrType.T;
-      RETURN;
-    ELSIF NOT ArrayType.Split (ta, ti, te) THEN
-      Error.Msg ("subscripted expression is not an array");
-      p.type := ErrType.T;
-      RETURN;
-    END;
-    p.type := te;
     Expr.NeedsAddress (p.a);
+    b := ArrayType.Split (p.taBase, ti, te); <* ASSERT b *>
 
     EVAL Type.GetBounds (ti, mini, maxi);
+    Expr.TypeCheck (p.b, cs);
+    tb := Expr.TypeOf (p.b);
+
     Expr.GetBounds (p.b, minb, maxb);
 
     p.biased_b := p.b;
-    IF (ti = NIL) THEN
-      (* a is an open array *)
-      p.depth := OpenArrayType.OpenDepth (ta);
+    IF (ti = NIL) THEN (* p.a has open array type. *)
       IF NOT Type.IsSubtype (tb, Int.T) THEN
         Error.Msg ("open arrays must be indexed by INTEGER expressions");
+        tb := Int.T;
       END;
-
     ELSIF Type.IsSubtype (tb, Type.Base (ti)) THEN
       (* the index value's type has a common base type with the index type *)
       IF NOT TInt.EQ (mini, TInt.Zero) THEN
@@ -142,36 +234,15 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
         p.biased_b.origin := p.origin;
         Expr.TypeCheck (p.biased_b, cs);
       END;
-      IF TInt.LT (minb, mini) AND TInt.LT (maxi, maxb) THEN
-        b := TInt.Subtract (maxi, mini, z);  <*ASSERT b *>
-        p.biased_b := CheckExpr.New (p.biased_b, TInt.Zero, z,
-                                     CG.RuntimeError.SubscriptOutOfRange);
-        p.biased_b.origin := p.origin;
-        Expr.TypeCheck (p.biased_b, cs);
-      ELSIF TInt.LT (minb, mini) THEN
-        IF TInt.LT (maxb, mini) THEN
-          Error.Warn (2, "subscript is out of range");
-        END;
-        p.biased_b := CheckExpr.NewLower (p.biased_b, TInt.Zero,
-                                     CG.RuntimeError.SubscriptOutOfRange);
-        p.biased_b.origin := p.origin;
-        Expr.TypeCheck (p.biased_b, cs);
-      ELSIF TInt.LT (maxi, maxb) THEN
-        IF TInt.LT (maxi, minb) THEN
-          Error.Warn (2, "subscript is out of range");
-        END;
-        b := TInt.Subtract (maxi, mini, z);  <*ASSERT b *>
-        p.biased_b := CheckExpr.NewUpper (p.biased_b, z,
-                                     CG.RuntimeError.SubscriptOutOfRange);
-        p.biased_b.origin := p.origin;
-        Expr.TypeCheck (p.biased_b, cs);
-      END;
+      GenRangeCheck (p, mini, maxi, minb, maxb, cs)
 
     ELSE
-      Error.Msg ("incompatible array index");
+      Error.Msg ("Subscript not assignable to array's index type.");
     END;
-  END Check;
+    p.checked := TRUE; 
+  END DirectCheckPass2;
 
+(* Externally dispatched-to: *) 
 PROCEDURE NeedsAddress (p: P) =
   BEGIN
     Expr.NeedsAddress (p.a);
@@ -200,6 +271,7 @@ PROCEDURE SubscriptExprAlign (p: P): Type.BitAlignT =
     RETURN Expr.Alignment (p.a);
   END SubscriptExprAlign;
 
+(* Externally dispatched-to: *) 
 PROCEDURE Prep (p: P) =
   VAR info: Type.Info;
   BEGIN
@@ -217,6 +289,7 @@ PROCEDURE Prep (p: P) =
     END
   END Prep;
 
+(* Externally dispatched-to: *) 
 PROCEDURE PrepLV (p: P; traced: BOOLEAN) =
   VAR e := Expr.ConstValue (p.biased_b);
   BEGIN
@@ -228,6 +301,7 @@ PROCEDURE PrepLV (p: P; traced: BOOLEAN) =
     Expr.Prep (p.biased_b);
   END PrepLV;
 
+(* Externally dispatched-to: *) 
 PROCEDURE Compile (p: P) =
   BEGIN
     IF p.tmp = NIL THEN
@@ -240,20 +314,33 @@ PROCEDURE Compile (p: P) =
     END
   END Compile;
 
+PROCEDURE StaticSs (p: P; VAR subscript: INTEGER): BOOLEAN (* It's static *) =
+  VAR e: Expr.T;
+  VAR ssIsStatic := FALSE;
+  VAR t: Type.T;
+  VAR subs: Target.Int;
+  BEGIN
+    e := Expr.ConstValue (p.biased_b);
+    IF e = NIL THEN RETURN FALSE
+    ELSE 
+      ssIsStatic
+        := IntegerExpr.Split (e, subs, t) OR EnumExpr.Split (e, subs, t);
+      ssIsStatic := ssIsStatic AND TInt.ToInt (subs, subscript);
+      RETURN ssIsStatic
+    END;
+  END StaticSs; 
+
+(* Externally dispatched-to: *) 
 PROCEDURE CompileLV (p: P; traced := FALSE) =
   VAR
-    ti, te    : Type.T;
-    subscript : INTEGER;
-    subs      : Target.Int;
-    e         : Expr.T;
-    t         : Type.T;
-    fixed     := FALSE;
-    ta        := Type.Base (Expr.TypeOf (p.a));
-    tb        := Type.Base (Expr.TypeOf (p.b));
-    b         := ArrayType.Split (ta, ti, te);
-    elt_pack  := ArrayType.EltPack (ta);
-    t1, t2    : CG.Val;
-    t3        : CG.Var;
+    ti, te      : Type.T;
+    subscript   : INTEGER;
+    newShapeLast: INTEGER;
+    ta          := Type.Base (Expr.TypeOf (p.a));
+    tb          := Type.Base (Expr.TypeOf (p.b));
+    elt_pack    := ArrayType.EltPack (ta);
+    newDopeVar  : CG.Var;
+    b             := ArrayType.Split (ta, ti, te);
   BEGIN
     <* ASSERT b *>
 
@@ -262,96 +349,112 @@ PROCEDURE CompileLV (p: P; traced := FALSE) =
       ELSE Expr.Compile (p.a);
     END;
 
-    IF (p.depth = 0) THEN
-      (* a is a fixed array *)
-      e := Expr.ConstValue (p.biased_b);
-      IF (e # NIL) THEN
-        fixed := (IntegerExpr.Split (e, subs, t))
-                  OR (EnumExpr.Split (e, subs, t));
-        fixed := fixed AND TInt.ToInt (subs, subscript);
-      END;
+    IF (p.openDepth = 0) THEN
+    (* p.a has fixed array type.
+       Top of CG stack is address of the elements.
+       Replace it by address of subscripted element. *) 
 
-      IF (fixed) THEN
-        CG.Add_offset (subscript * elt_pack);
+      IF StaticSs (p, subscript) THEN
+        IF subscript # 0 THEN
+          CG.Add_offset (subscript * elt_pack);
+        END 
       ELSE
         Expr.Compile (p.biased_b);
         IF Type.IsSubtype (tb, LInt.T) THEN
           CG.Loophole (Target.Longint.cg_type, Target.Integer.cg_type);
         END;
         ArrayType.GenIndex (ta);
+        CG.Boost_addr_alignment (ArrayType.EltAlign (ta));
       END;
 
-    ELSIF (p.depth = 1) THEN
-      (* a is a single dimension open array *)
-      t1 := CG.Pop ();
-      CG.Push (t1);
-      CG.Open_elt_ptr (ArrayType.EltAlign (ta));
-      Expr.Compile (p.biased_b);
-      <*ASSERT Type.CGType (tb) = Target.Integer.cg_type*>
-      IF Host.doRangeChk THEN
-        (* range check the subscript *)
-        CG.Push (t1);
-        CG.Open_size (0);
-        CG.Check_index (CG.RuntimeError.SubscriptOutOfRange);
+    ELSE (* p.a has open array type. *) 
+      IF p.leftSs = NIL THEN
+        (* This is the leftmost subscript.  Top of CG stack is address
+           of the dope.  Save the dope in p.tempDopeAddr and replace it
+           on the CG stack by the elements' addr. *) 
+        p.tempDopeAddr := CG.Pop ();
+        CG.Push (p.tempDopeAddr);
+        CG.Open_elt_ptr (ArrayType.EltAlign (ta));
+      ELSE (* Copy dope address up from the subscript to the left. *) 
+        p.tempDopeAddr := p.leftSs.tempDopeAddr;
+        (* Top of CG stack is already the address of the elements. *)
+      END; 
+
+      IF p.ssDepth = 1 AND p.openDepth > 1 THEN
+      
+      (* This is the RM subscript, but p.a has additional open dimensions after
+         this one. The final result will be an open array, so must build new
+         dope and leave its address on the CG stack.  Check will have prevented
+         non-open elements from being non-byte-aligned. *)
+         
+        (* allocate a new dope vector *)
+        newDopeVar := OpenArrayType.DeclareTemp (te);
+        newShapeLast := p.openDepth - 2 - p.shapeSs; 
+
+        (* copy the suffix of the shape portion of the dope vector *)
+        FOR i := 0 TO newShapeLast DO
+          CG.Push (p.tempDopeAddr);
+          CG.Open_size (i+p.shapeSs+1);
+          CG.Store_int
+           (Target.Integer.cg_type, newDopeVar,
+            M3RT.OA_sizes + i * Target.Integer.pack);
+        END;
+
+        (* build the new data pointer *)
+
+        Expr.Compile (p.biased_b);
+        IF Host.doRangeChk THEN (* range check the subscript *)
+          CG.Push (p.tempDopeAddr);
+          CG.Open_size (p.shapeSs);
+          CG.Check_index (CG.RuntimeError.SubscriptOutOfRange);
+        END;
+
+        FOR i := 0 TO newShapeLast DO
+          CG.Load_int (Target.Integer.cg_type,
+                       newDopeVar, M3RT.OA_sizes + i * Target.Integer.pack);
+          CG.Multiply (Target.Word.cg_type);
+        END;
+        CG.Index_bytes (elt_pack);
+        CG.Store_addr (newDopeVar, M3RT.OA_elt_ptr);
+        (* ^This is where we cannot handle sub-byte elements. A Var can only
+           hold a byte-aligned address or better. *) 
+        CG.Load_addr_of_temp (newDopeVar, 0, Target.Address.align);
+      ELSE
+      (* Either there is another subscript to the right, or the element
+         is not an array.  Either way, leave the address of the element
+         on top of the CG stack.  It will be a CG.Val, and can represent
+         a bit-level component. *)
+         
+        Expr.Compile (p.biased_b);
+        IF Host.doRangeChk THEN (* range check the subscript *)
+          CG.Push (p.tempDopeAddr);
+          CG.Open_size (p.shapeSs);
+          CG.Check_index (CG.RuntimeError.SubscriptOutOfRange);
+        END;
+        FOR I := 1 TO p.openDepth-1 DO 
+          CG.Push (p.tempDopeAddr);
+          CG.Open_size (I);
+          CG.Multiply (Target.Word.cg_type); 
+        END;
+        ArrayType.GenIndex (ta); 
+        CG.Boost_addr_alignment (OpenArrayType.EltAlign (ta));
       END;
-      CG.Index_bytes (elt_pack);
-      CG.Boost_alignment (ArrayType.EltAlign (ta));
-      CG.Free (t1);
-
-    ELSE
-      (* a is a multi-dimensional open array *)
-
-      (* evaluate the subexpressions & allocate space for the result *)
-      t1 := CG.Pop ();
-
-      Expr.Compile (p.biased_b);
-      <*ASSERT Type.CGType (tb) = Target.Integer.cg_type*>
-      IF Host.doRangeChk THEN
-        (* range check the subscript *)
-        CG.Push (t1);
-        CG.Open_size (0);
-        CG.Check_index (CG.RuntimeError.SubscriptOutOfRange);
-      END;
-      t2 := CG.Pop ();
-
-      (* allocate a new dope vector *)
-      t3 := OpenArrayType.DeclareTemp (ta);
-
-      (* copy the rest of the dope vector *)
-      FOR i := 1 TO p.depth-1 DO
-        CG.Push (t1);
-        CG.Open_size (i);
-        CG.Store_int (Target.Integer.cg_type,
-                      t3, M3RT.OA_sizes + (i-1) * Target.Integer.pack);
-      END;
-
-      (* build the new data pointer *)
-      CG.Push (t1);
-      CG.Open_elt_ptr (ArrayType.EltAlign (ta));
-      CG.Push (t2);
-      FOR i := 0 TO p.depth-2 DO
-        CG.Load_int (Target.Integer.cg_type,
-                     t3, M3RT.OA_sizes + i * Target.Integer.pack);
-        CG.Multiply (Target.Word.cg_type);
-      END;
-      CG.Index_bytes (elt_pack);
-      CG.Store_addr (t3, M3RT.OA_elt_ptr);
-      CG.Load_addr_of_temp (t3, 0, Target.Address.align);
-      CG.Free (t1);
-      CG.Free (t2);
     END;
   END CompileLV;
 
+(* Externally dispatched-to: *) 
 PROCEDURE IsDesignator (p: P;  <*UNUSED*> lhs: BOOLEAN): BOOLEAN =
   BEGIN
     RETURN Expr.IsDesignator (p.a);
   END IsDesignator;
 
+(* Externally dispatched-to: *) 
 PROCEDURE IsWritable (p: P;  lhs: BOOLEAN): BOOLEAN =
   BEGIN
     RETURN Expr.IsWritable (p.a, lhs);
   END IsWritable;
 
+(* Externally dispatched-to: *) 
 PROCEDURE Fold (p: P): Expr.T =
   VAR e1, e2, e3: Expr.T;
   BEGIN

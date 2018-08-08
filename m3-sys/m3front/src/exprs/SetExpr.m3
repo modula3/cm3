@@ -635,7 +635,7 @@ PROCEDURE CompileBig (p: P;  VAR info: Type.Info): CG.Var =
       e := p.others[i];
       IF RangeExpr.Split (e, min, max) THEN
         CG.Load_addr_of (t1, 0, Target.Integer.align);
-        CG.Force ();
+        CG.ForceStacked ();
         GenElement (min, min_T, max_T);
         GenElement (max, min_T, max_T);
         CG.Set_range (info.size);
@@ -713,7 +713,7 @@ PROCEDURE CompileSmall (p: P;  VAR info: Type.Info) =
 
     (* push the mask *)
     CG.Load_integer (Target.Integer.cg_type, curMask);
-    CG.Force ();
+    CG.ForceStacked ();
 
     (* finally, add the non-constant elements *)
     FOR i := 0 TO p.nOthers-1 DO

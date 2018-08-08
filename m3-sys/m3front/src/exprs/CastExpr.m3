@@ -95,7 +95,6 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
     END;
     sz0 := src_info.size;
 
-
     (* check to see that the destination type is legal *)
     IF array_out THEN
       (* open array type *)
@@ -278,17 +277,17 @@ PROCEDURE Compile (p: P) =
     CASE p.kind OF
     | Kind.Noop =>
         Expr.Compile (e);
-        CG.Boost_alignment (t_align);
+        CG.Boost_addr_alignment (t_align);
     | Kind.D_to_A,
       Kind.S_to_A,
       Kind.V_to_A =>
-        PushTmp (p, t_align);
+        PushTmp (p, z_align);
     | Kind.D_to_S =>
         Expr.CompileAddress (e, traced := FALSE);
-        CG.Boost_alignment (t_align);
+        CG.Boost_addr_alignment (t_align);
     | Kind.S_to_S =>
         Expr.Compile (e);
-        CG.Boost_alignment (t_align);
+        CG.Boost_addr_alignment (t_align);
     | Kind.V_to_S =>
         PushTmp (p, z_align);
     | Kind.D_to_V =>
@@ -298,13 +297,13 @@ PROCEDURE Compile (p: P) =
            variables may be in floating-point registers...
         Expr.PrepLValue (e);
         Expr.CompileLValue (e);
-        CG.Boost_alignment (t_align);
-        CG.Load_indirect (t_cg, 0, sz);
+        CG.Boost_addr_alignment (t_align);
+        CG.Load_indirect (t_cg, 0, sz, t_align);
         ******)
     | Kind.S_to_V =>
         Expr.Compile (e);
-        CG.Boost_alignment (t_align);
-        CG.Load_indirect (t_cg, 0, sz);
+        CG.Boost_addr_alignment (t_align);
+        CG.Load_indirect (t_cg, 0, sz, t_align);
     | Kind.V_to_V =>
         Expr.Compile (e);
         CG.Loophole (u_cg, t_cg);
@@ -325,7 +324,7 @@ PROCEDURE PushTmp (p: P;  align: INTEGER) =
 PROCEDURE BuildArray (p: P;  src_size: INTEGER): CG.Var =
   VAR
     array : CG.Var;
-    elt   := OpenArrayType.NonOpenEltType (p.tipe);
+    elt   := OpenArrayType.NonopenEltType (p.tipe);
     elt_info: Type.Info;
   BEGIN
     elt := Type.CheckInfo (elt, elt_info);
@@ -426,31 +425,31 @@ PROCEDURE CompileLV (p: P; traced: BOOLEAN) =
       Kind.S_to_V,
       Kind.V_to_V =>
         Expr.CompileLValue (p.expr, traced);
-        CG.Boost_alignment (t_align);
+        CG.Boost_addr_alignment (t_align);
 
     | Kind.D_to_S =>
         Expr.CompileLValue (p.expr, traced);
-        CG.Boost_alignment (t_align);
+        CG.Boost_addr_alignment (t_align);
 
         (* Inhibit some optimization that causes compilation to fail. e.g.:
          * m3core/src/float/IEEE/RealFloat.m3:
          * In function 'RealFloat__CopySign':
          * internal compiler error: in convert_move, at expr.c:371
          *
-         * ?Force() inhibits optimizations done by m3front/src/misc/CG.m3?
+         * ?ForceStacked() inhibits optimizations done by m3front/src/misc/CG.m3?
          * ?The particular optimizations are removal of address taken and
          * pointer indirections? ?Leaving the address taken inhibits
          * gcc optimization? ?Given that this is LOOPHOLE and floating point,
          * inhibiting optimization is very ok?
          *)
         IF FloatType[t_cg] # FloatType[u_cg] THEN
-          CG.Force ();
+          CG.ForceStacked ();
         END;
 
     | Kind.D_to_A,
       Kind.S_to_A,
       Kind.V_to_A =>
-        PushTmp (p, t_align);
+        PushTmp (p, z_align);
     | Kind.V_to_S =>
         PushTmp (p, z_align);
     END;

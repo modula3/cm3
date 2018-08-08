@@ -155,7 +155,7 @@ BEGIN
 
     IF try_count > 1 THEN
       FOR i := 1 TO try_count - 1 DO
-        CG.Load_addr (p.jmpbufs[i - 1]);
+        CG.Load_addr (p.jmpbufs[i - 1], 0, Target.Address.align);
         CG.Loophole (Target.Address.cg_type, Target.Word.cg_type);
         CG.Load_int (Target.Word.cg_type, size);
         CG.Add (Target.Word.cg_type);

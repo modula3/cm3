@@ -9,7 +9,7 @@
 
 INTERFACE AssignStmt;
 
-IMPORT Expr, Stmt, Type;
+IMPORT Expr, Stmt, Target, Type;
 
 PROCEDURE Parse (): Stmt.T;
 
@@ -23,10 +23,11 @@ PROCEDURE PrepForEmit (tlhs: Type.T;  rhs: Expr.T;  initializing: BOOLEAN);
    the result directly.  "initializing" is TRUE if the lhs is
    uninitialized storage (i.e. contains no user data). *)
 
-PROCEDURE DoEmit (tlhs: Type.T;  rhs: Expr.T);
+PROCEDURE DoEmit (tlhs: Type.T;  rhs: Expr.T; elt_align := Target.Byte);
 (* emit code to assign  (s0.A).tlhs := rhs.
    Note that Emit assumes that TypeOf(rhs) is assignable to tlhs
-   and that Expr.Prep(rhs) or preferably PrepRHS(rhs) has been called. *)
+   and that Expr.Prep(rhs) or preferably PrepForEmit(tlhs,rhs,initializing)
+   has been called. *)
 
 PROCEDURE DoEmitCheck (tlhs: Type.T;  rhs: Expr.T);
 (* emit code to evaluate "rhs" and generate whatever

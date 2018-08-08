@@ -9,7 +9,7 @@
 MODULE Formal;
 
 IMPORT M3, M3ID, CG, Value, ValueRep, Type, Error, Expr, ProcType;
-IMPORT KeywordExpr, OpenArrayType, RefType, CheckExpr;
+IMPORT KeywordExpr, OpenArrayType, RefType, ErrType, CheckExpr;
 IMPORT ArrayType, Host, NarrowExpr, M3Buf, Tracer;
 IMPORT Procedure, UserProc, Target, M3RT;
 
@@ -49,6 +49,7 @@ TYPE
     errored : BOOLEAN;
   END;
 
+(*EXPORTED*)
 PROCEDURE NewBuiltin (name: TEXT;  offset: INTEGER;  type: Type.T): Value.T =
   VAR t := NEW (T);
   BEGIN
@@ -66,6 +67,7 @@ PROCEDURE NewBuiltin (name: TEXT;  offset: INTEGER;  type: Type.T): Value.T =
     RETURN t;
   END NewBuiltin;
 
+(*EXPORTED*)
 PROCEDURE New (READONLY info: Info): Value.T =
   VAR t := NEW (T);
   BEGIN
@@ -83,6 +85,7 @@ PROCEDURE New (READONLY info: Info): Value.T =
     RETURN t;
   END New;
 
+(*EXPORTED*)
 PROCEDURE Split (formal: Value.T;  VAR info: Info) =
   VAR t: T := formal;
   BEGIN
@@ -95,6 +98,7 @@ PROCEDURE Split (formal: Value.T;  VAR info: Info) =
     info.trace  := t.trace;
   END Split;
 
+(*EXPORTED*)
 PROCEDURE EmitDeclaration (formal: Value.T;  types_only, param: BOOLEAN) =
   VAR
     t     : T := formal;
@@ -132,6 +136,7 @@ PROCEDURE EmitDeclaration (formal: Value.T;  types_only, param: BOOLEAN) =
     END;
   END EmitDeclaration;
 
+(*EXPORTED*)
 PROCEDURE HasClosure (formal: Value.T): BOOLEAN =
   BEGIN
     TYPECASE formal OF
@@ -143,6 +148,7 @@ PROCEDURE HasClosure (formal: Value.T): BOOLEAN =
     END;
   END HasClosure;
 
+(*EXPORTED*)
 PROCEDURE RefOpenArray (formal: Value.T;  VAR ref: Type.T): BOOLEAN =
   BEGIN
     TYPECASE formal OF
@@ -228,6 +234,7 @@ PROCEDURE AddFPTag  (t: T;  VAR x: M3.FPInfo): CARDINAL =
 
 (*--------------------------------------------------- actual typechecking ---*)
 
+(*EXPORTED*)
 PROCEDURE CheckArgs (VAR cs       : Value.CheckState;
                      VAR actuals  : Expr.List;
                          formals  : Value.T;
@@ -253,9 +260,9 @@ PROCEDURE DoCheckArgs (VAR cs       : Value.CheckState;
     j                 : INTEGER;
     e, value          : Expr.T;
     index, elt, t, te : Type.T; 
-    posOK, ok         : BOOLEAN;
     name              : M3ID.T;
     tt                : T;
+    posOK, ok         : BOOLEAN;
   BEGIN
     ok := TRUE;
 
@@ -353,11 +360,10 @@ PROCEDURE DoCheckArgs (VAR cs       : Value.CheckState;
             ELSIF NOT Expr.IsWritable (e, traced := TRUE) THEN
               Err (slots[i], "VAR actual must be writable");
               ok := FALSE;
-            ELSIF Type.IsEqual (t, te, NIL) THEN
-              Expr.NeedsAddress (e);
-            ELSIF ArrayType.Split (t, index, elt)
-              AND ArrayType.Split (te, index, elt)
-              AND Type.IsAssignable (t, te) THEN
+            ELSIF Type.IsEqual (t, te, NIL) 
+                  OR (ArrayType.Split (t, index, elt)
+                      AND ArrayType.Split (te, index, elt)
+                      AND Type.IsAssignable (t, te) ) THEN
               Expr.NeedsAddress (e);
             ELSE
               Err (slots[i], "actual not compatible with VAR formal");
@@ -367,11 +373,12 @@ PROCEDURE DoCheckArgs (VAR cs       : Value.CheckState;
             IF NOT Type.IsAssignable (t, te) THEN
               Err (slots[i], "actual not assignable to READONLY formal");
               ok := FALSE;
-            ELSIF NOT Expr.IsDesignator (e) THEN
-              (* we'll make a copy when it's generated *)
-            ELSIF Type.IsEqual (t, te, NIL) THEN
+            ELSIF Expr.IsDesignator (e)
+                  AND Type.IsEqual (t, te, NIL) 
+                      OR (ArrayType.Split (t, index, elt))
+            THEN (* Pass by reference. *) 
               Expr.NeedsAddress (e);
-            ELSE (* Type.IsAssignable (t, te) *)
+            ELSE (* Type.IsAssignable (t, te), pass by value. *)
               (* we'll make a copy when it's generated *)
             END;
         END; (*case*)
@@ -423,29 +430,41 @@ PROCEDURE ProcName (proc: Expr.T): TEXT =
 
 (*----------------------------------------------------------- caller code ---*)
 
+(*EXPORTED*)
 PROCEDURE PrepArg (formal: Value.T; actual: Expr.T) =
   VAR t: T := formal;
+    index, elt: Type.T; 
   BEGIN
     CASE t.mode OF
     | Mode.mVALUE => (* Pass by value. *) 
         Expr.Prep (actual);
     | Mode.mVAR => (* Pass by reference. *) 
-        Expr.PrepLValue (actual, traced := TRUE);
-    | Mode.mCONST =>
-        IF NOT Type.IsEqual (t.tipe, Expr.TypeOf (actual), NIL) THEN
-          (* Effectively pass by value, by copying at call site and passing
-             the copy by reference. *) 
-          Expr.Prep (actual);
-        ELSIF Expr.IsDesignator (actual) THEN (* Pass by reference. *)
-          Expr.PrepLValue (actual, traced := FALSE);
-        ELSE (* non-designator, same type *)
-          (* Effectively pass by value, by copying at call site and passing
-             the copy by reference. *) 
-          Expr.Prep (actual);
+        IF Expr.Alignment (actual) MOD Target.Byte = 0 THEN
+          Expr.PrepLValue (actual, traced := TRUE);
+        ELSE
+          Error.ID (formal.name,
+            "CM3 restriction: non-byte-aligned value cannot be passed VAR (2.3.2)"); 
         END;
+    | Mode.mCONST =>
+        IF ( Type.IsEqual (t.tipe, Expr.TypeOf (actual), NIL)
+             OR ArrayType.Split (t.tipe, index, elt)
+           ) AND Expr.IsDesignator (actual)
+        THEN (* Pass by ref. *) 
+          IF Expr.Alignment (actual) MOD Target.Byte = 0 THEN
+            Expr.PrepLValue (actual, traced := FALSE);
+          ELSE
+            Error.ID (formal.name,
+              "CM3 restriction: non-byte-aligned value cannot be passed by reference (2.3.2)");
+            t.tipe := ErrType.T;
+            t.kind := Type.Class.Error
+          END; 
+        ELSE (* Treat as VALUE: make a copy and pass it by reference. *) 
+          Expr.Prep (actual);
+        END (*IF*) 
     END;
   END PrepArg;
 
+(*EXPORTED*)
 PROCEDURE EmitArg (proc: Expr.T;  formal: Value.T; actual: Expr.T) =
   VAR t: T := formal;
   BEGIN
@@ -466,9 +485,9 @@ PROCEDURE EmitArg (proc: Expr.T;  formal: Value.T; actual: Expr.T) =
     | Type.Class.Set
         =>  GenSet (t, actual);
     | Type.Class.Array
-        =>  GenArray (t, actual, is_open := FALSE);
+        =>  GenArray (t, actual, formal_is_open := FALSE);
     | Type.Class.OpenArray
-        =>  GenArray (t, actual, is_open := TRUE);
+        =>  GenArray (t, actual, formal_is_open := TRUE);
     END;
   END EmitArg;
 
@@ -486,16 +505,25 @@ PROCEDURE GenOrdinal (t: T;  actual: Expr.T) =
         CheckExpr.EmitChecks (actual, min, max, CG.RuntimeError.ValueOutOfRange);
         CG.Pop_param (Type.CGType (t.tipe, in_memory := TRUE));
     | Mode.mVAR =>
-        Expr.CompileAddress (actual, traced := TRUE);
-        CG.Pop_param (CG.Type.Addr);
-        Expr.NoteWrite (actual);
+        IF Expr.Alignment (actual) MOD Target.Byte = 0 THEN
+          Expr.CompileAddress (actual, traced := TRUE);
+          CG.Pop_param (CG.Type.Addr);
+          Expr.NoteWrite (actual);
+        ELSE (* Error recovery. *) 
+          CG.Load_nil ();
+          CG.Pop_param (CG.Type.Addr);
+        END
     | Mode.mCONST =>
         IF NOT Type.IsEqual (t.tipe, Expr.TypeOf (actual), NIL) THEN
           EVAL Type.GetBounds (t.tipe, min, max); (* Of formal. *) 
           CheckExpr.EmitChecks (actual, min, max, CG.RuntimeError.ValueOutOfRange);
           GenCopy (t.tipe);
         ELSIF Expr.IsDesignator (actual) THEN
-          Expr.CompileAddress (actual, traced := FALSE);
+          IF Expr.Alignment (actual) MOD Target.Byte = 0 THEN
+            Expr.CompileAddress (actual, traced := FALSE);
+          ELSE (* Error recovery. *) 
+            CG.Load_nil ();
+          END
         ELSE (* non-designator, same type *)
           Expr.Compile (actual);
           GenCopy (t.tipe); 
@@ -627,13 +655,22 @@ PROCEDURE GenRecord (t: T;  actual: Expr.T) =
         Type.Compile (t.tipe);
         CG.Pop_struct (Type.GlobalUID (t.tipe), info.size, info.alignment);
     | Mode.mVAR =>
-        Expr.CompileAddress (actual, traced := TRUE);
-        CG.Pop_param (CG.Type.Addr);
-        Expr.NoteWrite (actual);
+        IF Expr.Alignment (actual) MOD Target.Byte = 0 THEN
+          Expr.CompileAddress (actual, traced := TRUE);
+          CG.Pop_param (CG.Type.Addr);
+          Expr.NoteWrite (actual);
+        ELSE (* Error recovery. *) 
+          CG.Load_nil ();
+          CG.Pop_param (CG.Type.Addr);
+        END
     | Mode.mCONST =>
         IF Expr.IsDesignator (actual)
            AND Type.IsEqual (t.tipe, Expr.TypeOf (actual), NIL) THEN
-          Expr.CompileAddress (actual, traced := FALSE);
+          IF Expr.Alignment (actual) MOD Target.Byte = 0 THEN
+            Expr.CompileAddress (actual, traced := FALSE);
+          ELSE (* Error recovery. *) 
+            CG.Load_nil ();
+          END
         ELSE
           Expr.Compile (actual);
           GenCopy (t.tipe); 
@@ -657,14 +694,23 @@ PROCEDURE GenSet (t: T;  actual: Expr.T) =
         END;
     | Mode.mVAR =>
         <* ASSERT Type.IsEqual (t.tipe, Expr.TypeOf (actual), NIL) *>
-        Expr.CompileAddress (actual, traced := TRUE);
-        CG.Pop_param (CG.Type.Addr);
-        Expr.NoteWrite (actual);
+        IF Expr.Alignment (actual) MOD Target.Byte = 0 THEN
+          Expr.CompileAddress (actual, traced := TRUE);
+          CG.Pop_param (CG.Type.Addr);
+          Expr.NoteWrite (actual);
+        ELSE (* Error recovery. *) 
+          CG.Load_nil ();
+          CG.Pop_param (CG.Type.Addr);
+        END
     | Mode.mCONST =>
         IF Expr.IsDesignator (actual)
            AND Type.IsEqual (t.tipe, Expr.TypeOf (actual), NIL)
         THEN (* Pass truly by reference. *) 
-          Expr.CompileAddress (actual, traced := FALSE);
+          IF Expr.Alignment (actual) MOD Target.Byte = 0 THEN
+            Expr.CompileAddress (actual, traced := FALSE);
+          ELSE (* Error recovery. *) 
+            CG.Load_nil ();
+          END
         ELSE (* Pass by value (actually, pass a copy by reference). *) 
           Expr.Compile (actual);
           GenCopy (t.tipe);
@@ -673,14 +719,17 @@ PROCEDURE GenSet (t: T;  actual: Expr.T) =
     END;
   END GenSet;
 
-PROCEDURE GenArray (t: T;  actual: Expr.T; is_open: BOOLEAN) =
+PROCEDURE GenArray (t: T; actual: Expr.T; formal_is_open: BOOLEAN) =
   VAR t_actual := Expr.TypeOf (actual); info: Type.Info;
   BEGIN
+    EVAL Type.CheckInfo (t.tipe, info);
+    Type.Compile (t.tipe);
     CASE t.mode OF
     | Mode.mVALUE =>
-        Expr.Compile (actual);
+        Expr.Compile (actual); (* For array, will compile an address. *)
         ReshapeArray (t.tipe, t_actual);
-        IF is_open THEN
+        IF formal_is_open THEN
+          (* Pass address, callee will make a copy in its prolog. *) 
           CG.Pop_param (CG.Type.Addr);
         ELSE
           EVAL Type.CheckInfo (t.tipe, info);
@@ -688,25 +737,37 @@ PROCEDURE GenArray (t: T;  actual: Expr.T; is_open: BOOLEAN) =
           CG.Pop_struct (Type.GlobalUID (t.tipe), info.size, info.alignment);
         END;
     | Mode.mVAR =>
-        Expr.CompileAddress (actual, traced := TRUE);
-        ReshapeArray (t.tipe, t_actual);
-        CG.Pop_param (CG.Type.Addr);
-        Expr.NoteWrite (actual);
-    | Mode.mCONST =>
-        (* This is tricky.  We never copy an array here, even if it is a
-           nondesignator.  The only possible nondesignator arrays that can
-           be passed READONLY are constants and function results.  Neither
-           can be aliased or changed, so they behave as already copies. *)  
-        IF NOT Type.IsEqual (t.tipe, t_actual, NIL) THEN
-          Expr.Compile (actual);
+        IF Expr.Alignment (actual) MOD Target.Byte = 0 THEN
+          Expr.CompileAddress (actual, traced := TRUE); 
           ReshapeArray (t.tipe, t_actual);
-        ELSIF Expr.IsDesignator (actual) THEN
-          Expr.CompileAddress (actual, traced := FALSE);
-        ELSE
-          Expr.Compile (actual);
-        END;
+          CG.Pop_param (CG.Type.Addr);
+          Expr.NoteWrite (actual);
+        ELSE (* Error recovery. *) 
+          CG.Load_nil ();
+          CG.Pop_param (CG.Type.Addr);
+        END (*IF*) 
+    | Mode.mCONST =>
+        IF Expr.IsDesignator (actual)
+        THEN (* Pass by reference. *) 
+          IF Expr.Alignment (actual) MOD Target.Byte = 0 THEN
+            Expr.CompileAddress (actual, traced := FALSE); 
+            ReshapeArray (t.tipe, t_actual);
+          ELSE (* Error recovery. *) 
+            CG.Load_nil ();
+          END (*IF*) 
+        ELSE (* Probably, this case is unnecessary.  It appears the only 
+                nondesignator arrays are array constructors and function
+                results.  Both are non-aliasiable and immutable, and
+                thus should not need copying. *) 
+        (* Treat as VALUE: make a copy and pass it by reference. *) 
+          Expr.Compile (actual); (* For array, will compile an address. *)
+          ReshapeArray (t.tipe, t_actual);
+          IF formal_is_open THEN (* Callee will make a copy in its prolog. *) 
+          ELSE GenCopy (t.tipe);
+          END;
+        END (*IF*); 
         CG.Pop_param (CG.Type.Addr);
-    END;
+    END (*CASE*);
   END GenArray;
 
 PROCEDURE ReshapeArray (tlhs, trhs: Type.T) =
@@ -756,7 +817,7 @@ PROCEDURE ReshapeArray (tlhs, trhs: Type.T) =
       (* check some array bounds;  don't build a smaller dope vector
          just reuse the existing one! *)
 
-      tlhs := OpenArrayType.NonOpenEltType (tlhs);
+      tlhs := OpenArrayType.NonopenEltType (tlhs);
       FOR i := d_lhs TO d_rhs - 1 DO
         b := ArrayType.Split (tlhs, index, elt); <*ASSERT b*>
         <*ASSERT index # NIL*>
@@ -771,34 +832,35 @@ PROCEDURE ReshapeArray (tlhs, trhs: Type.T) =
       (* leave the old dope vector as the result *)
       CG.Push (rhs);
       IF (d_lhs <= 0) THEN CG.Open_elt_ptr (Target.Byte); END;
-      CG.Force ();
+      CG.ForceStacked ();
     END;
 
     CG.Free (rhs);
   END ReshapeArray;
 
+(*EXPORTED*)
 PROCEDURE GenCopy (type: Type.T) =
   (* PRE: Tos is addr of a variable of type 'type'. *)
   (* POST: TOS replaced by addr of a local copy thereof. *) 
-  VAR info: Type.Info;  tmp: CG.Var;  id: CG.TypeUID;
+  VAR info: Type.Info;  copyVar: CG.Var;  id: CG.TypeUID;
   BEGIN
     EVAL Type.CheckInfo (type, info);
     id := Type.GlobalUID (type);
     IF Type.IsStructured (type) THEN
-      tmp := CG.Declare_local (M3ID.NoID, info.size, info.alignment,
+      copyVar := CG.Declare_local (M3ID.NoID, info.size, info.alignment,
                                CG.Type.Struct, id, in_memory := TRUE,
                                up_level := FALSE, f := CG.Never);
-      CG.Load_addr_of (tmp, 0, info.alignment);
+      CG.Load_addr_of (copyVar, 0, info.alignment);
       CG.Swap ();
       CG.Copy (info.size, overlap := FALSE);
 (* CHECK/FIXME: Don't we need to free the temp? *) 
     ELSE
-      tmp := CG.Declare_local (M3ID.NoID, info.size, info.alignment,
+      copyVar := CG.Declare_local (M3ID.NoID, info.size, info.alignment,
                                info.mem_type, id, in_memory := TRUE,
                                up_level := FALSE, f := CG.Never);
-      CG.Store (tmp, 0, info.size, info.alignment, info.stk_type);
+      CG.Store (copyVar, 0, info.size, info.alignment, info.stk_type);
     END;
-    CG.Load_addr_of (tmp, 0, info.alignment);
+    CG.Load_addr_of (copyVar, 0, info.alignment);
   END GenCopy;
 
 BEGIN

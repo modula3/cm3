@@ -11,8 +11,8 @@ INTERFACE CG;
 IMPORT Target, M3CG, M3;
 
 (*
-This interface provides a single front-end specific veneer over
-M3CG, M3CG_Ops and M3RT.
+This interface provides a single front-end specific, sometimes
+quite thick, veneer over M3CG, M3CG_Ops and M3RT.
 *)
 
 TYPE (* see M3CG for the interpretation of these types *)
@@ -48,6 +48,8 @@ CONST (* see M3CG for the interpretation of these values *)
   Likely : Frequency = M3CG.Likely;
   Always : Frequency = M3CG.Always;
 
+CONST noAlign: Alignment = 1; 
+
 VAR (* maximum possible machine alignment *)
   Max_alignment: CARDINAL;
 
@@ -81,11 +83,9 @@ PROCEDURE Gen_location (here: INTEGER);
 
 (* The debugging information for a type is identified by small a integer
    within a compilation unit.  The information is identified by a global
-   uid (an INTEGER) across compilation units. The following procedures generate
-   the symbol table entries needed to describe Modula-3 types to the
-   debugger.  Note that Modula-3's builtin types have the fixed IDs
-   listed above.  The 'hint' passed to 'import_type' is the name of
-   the source file that generated the type declaration.  *)
+   TypeUID (an INTEGER hash code on the type's structure) across compilation
+   units. The following procedures generate the symbol table entries needed
+   to describe Modula-3 types to the debugger. *)
 
 PROCEDURE Declare_typename (t: TypeUID;  n: Name);
 
@@ -210,8 +210,8 @@ PROCEDURE Declare_temp (s: Size;  a: Alignment;  t: Type;
    end_procedure calls.  Temps are never referenced by nested procedures. *)
 
 PROCEDURE Free_temp (v: Var);
-(* releases the space occupied by temp 'v' so that it may be reused by
-   other new temporaries. *)
+(* releases the space occupied by temp variable 'v' so that it may be reused
+   by other new temporaries. *)
 
 PROCEDURE Free_temps ();
 (* free any temps that are marked busy. *)
@@ -235,7 +235,7 @@ PROCEDURE Free (v: Val);
 PROCEDURE Store_temp (v: Val);
 (* v := s0;  pop  -- v must have been created by "Pop_temp" *)
 
-PROCEDURE Force (s: Size := 0); 
+PROCEDURE ForceStacked (s: Size := 0); 
 (* force s0 to be materialized on the M3CG stack.  If s0 is an L-value,
    a byte-aligned address is generated.  *)
 (* s needs to be provided only if s0 could be stuctured and packed. *)
@@ -403,25 +403,33 @@ PROCEDURE Exit_proc (t: Type);
 
 (*------------------------------------------------------------ load/store ---*)
 
-PROCEDURE Load (v: Var;  o: Offset;  s: Size;  a: Alignment;  t: Type);
+PROCEDURE Load
+  (v: Var; o: Offset; s: Size; base_align, addr_align: Alignment; t: Type);
 (* push ; s0.t := Mem [ ADR(v) + o : s ] *)
 
-PROCEDURE Load_addr_of (v: Var;  o: Offset;  a: Alignment);
+PROCEDURE Load_addr_of
+  (v: Var;  o: Offset; addr_align: Alignment);
 (* push ; s0.A := ADR(v) + o *)
+(* addr_align applies to where the address points. *) 
 
-PROCEDURE Load_addr_of_temp (v: Var;  o: Offset;  a: Alignment);
-(* == Load_addr_of (v, o, a) ; free v when this L-value is consumed *)
+PROCEDURE Load_addr_of_temp (v: Var;  o: Offset;  addr_align: Alignment);
+(* == Load_addr_of (v, o, addr_align) ; free v when this L-value is consumed *)
 
-PROCEDURE Load_indirect (t: Type;  o: Offset;  s: Size);
+PROCEDURE Load_indirect
+  (t: Type;  o: Offset;  s: Size; addr_align: Alignment := Target.Word8.align);
 (* s0.t := Mem [s0.A + o : s] *)
 
 PROCEDURE Load_int (t: IType;  v: Var;  o: Offset := 0);
 (* == Load (v, o, t.size, t.align, t) *)
 
-PROCEDURE Load_addr (v: Var;  o: Offset := 0);
+PROCEDURE Load_addr 
+  (v: Var;  o: Offset; addr_align: Alignment := Target.Word8.align);
+(* Actually, this means load the *value* of v and give it type Addr. *) 
+(* == Load (v, o, Target.Address.size, Target.Address.align, addr_align, Type.Addr) *)
+(* Actually, this means load the *value* of v and give it type Addr. *) 
 (* == Load (v, o, Target.Address.size, Target.Address.align, Type.Addr) *)
 
-PROCEDURE Store (v: Var;  o: Offset;  s: Size;  a: Alignment;  t: Type);
+PROCEDURE Store (v: Var;  o: Offset;  s: Size;  a: Alignment(*of Var*);  t: Type);
 (* Mem [ ADR(v) + o : s ] := s0.t ; pop *)
 
 PROCEDURE Store_indirect (t: Type;  o: Offset;  s: Size);
@@ -436,7 +444,7 @@ PROCEDURE Store_addr (v: Var;  o: Offset := 0);
 (*-------------------------------------------------------------- literals ---*)
 
 PROCEDURE Load_nil     ();                         (*push ; s0.A := NIL*)
-PROCEDURE Load_byte_address (x: INTEGER);          (*push ; s0.A := x *)
+PROCEDURE Load_byte_address (x: INTEGER);          (*push ; s0.A := x bytes *)
 PROCEDURE Load_intt    (i: INTEGER);               (*push;  s0.I := i *)
 PROCEDURE Load_integer (t: IType; READONLY i: Target.Int); (*push ; s0.t := i *)
 PROCEDURE Load_float   (READONLY f: Target.Float); (*push ; s0.t := f *)
@@ -522,7 +530,9 @@ PROCEDURE Swap ();           (* tmp := s1; s1 := s0; s0 := tmp *)
 PROCEDURE Discard (t: Type); (* pop(1) discard s0, not its side effects *)
 
 PROCEDURE Copy_n (s: Size;  overlap: BOOLEAN);
-(* Mem[s2.A:s0.I*s] := Mem[s1.A:s0.I*s]; pop(3) -- s2.A &s1.A must be forced.
+(* Mem[s2.A:s0.I*s] := Mem[s1.A:s0.I*s]; pop(3)
+   -- s2.A & s1.A must have byte value-alignment and must have been
+   ForceStacked by caller.  Copied data need not end on a byte boundary. 
    'overlap' is true if the source and destination may partially overlap
    (ie. you need memmove, not just memcpy). *)
 
@@ -568,17 +578,16 @@ PROCEDURE Check_byte_aligned ();
 (*---------------------------------------------------- address arithmetic ---*)
 
 PROCEDURE Add_offset (i: INTEGER);
-(* s0.A := s0.A + i *)
+(* s0.A := s0.A + i bits *)
 
 PROCEDURE Index_bytes (size: INTEGER);
-(* s1.A := s1.A + s0.I * size ; pop -- size must be a multiple of
-   Target.Byte. *)
+(* s1.A := s1.A + s0.I * size ; pop.  size is in bits, but must be a multiple
+   of Target.Byte. *)
 
-PROCEDURE Index_bits ();
-(* s1.A := s1.A + s0.I ; pop -- note that s0.I must be less than
-  or equal to the alignment of s1.A, otherwise bad code will be generated. *)
+PROCEDURE Index_bits (bits_addr_align: Alignment := 1);
+(* s1.A := s1.A + s0.I ; pop *)
 
-PROCEDURE Boost_alignment (a: Alignment);
+PROCEDURE Boost_addr_alignment (a: Alignment);
 (* note that s0.A has an alignment of at least 'a'. *)
 
 PROCEDURE GCD (a, b: INTEGER): INTEGER;
@@ -639,6 +648,9 @@ PROCEDURE Pop_static_link ();
 (* pop s0.A and make it the static link for the current indirect procedure call *)
 
 (*------------------------------------------- procedure and closure types ---*)
+
+PROCEDURE ProcAlign ( ): Alignment;
+(* Alignment of procedures, for the target. *) 
 
 PROCEDURE Load_procedure (p: Proc);
 (* push; s0.A := ADDR (p's body) *)

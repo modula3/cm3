@@ -21,7 +21,7 @@ TYPE
         user_name  : TEXT;
       OVERRIDES
         check      := Check;
-        check_align:= TypeRep.ScalarAlign;
+        no_straddle:= TypeRep.AddrNoStraddle;
         isEqual    := EqualChk;
         isSubtype  := Subtyper;
         compile    := Compiler;
@@ -138,10 +138,20 @@ PROCEDURE Check (p: P) =
       END;
     DEC (Type.recursionDepth); (*------------------------------------*)
 
+    IF p.target = NIL THEN p.info.addr_align := Target.Word8.align;
+    ELSE 
+      p.info.addr_align:= p.target.info.alignment;
+    END;
+    
     IF (NOT p.isTraced) AND (info.isTraced) AND Module.IsSafe() THEN
       Error.Msg ("unsafe: untraced ref type to a traced type");
     END;
-    EVAL Type.IsAlignedOk (p.target, 0);
+    EVAL Type.StraddleFreeScalars (p.target, 0, IsEltOrField := FALSE);
+(* CHECK: ^Why is this here? rodney.m.bates@acm.org.
+     1) It appears StraddleFreeScalars and all its many and recursive
+        overrides are side-effect-free functions, so why EVAL?
+     2) With an offset of 0, how could it fail?
+*)
   END Check;
 
 PROCEDURE Compiler (p: P) =
@@ -261,7 +271,7 @@ PROCEDURE GenTypeDesc (p: P): INTEGER =
   END GenTypeDesc;
 
 PROCEDURE GenInitProc (p: P): CG.Proc =
-  VAR name: TEXT;  proc: CG.Proc;  ref: CG.Var;  info: Type.Info;
+  VAR name: TEXT;  proc: CG.Proc;  ref: CG.Var;  targetInfo: Type.Info;
   BEGIN
     IF Type.InitCost (p.target, TRUE) <= 0 THEN RETURN NIL END;
 
@@ -284,9 +294,8 @@ PROCEDURE GenInitProc (p: P): CG.Proc =
     
 
     (* initialize the referent *)
-    EVAL Type.CheckInfo (p.target, info);
-    CG.Load_addr (ref);
-    CG.Boost_alignment (info.alignment);
+    EVAL Type.CheckInfo (p.target, targetInfo);
+    CG.Load_addr (ref, 0, targetInfo.alignment);
     Type.InitValue (p.target, TRUE);
 
     CG.Exit_proc (CG.Type.Void);

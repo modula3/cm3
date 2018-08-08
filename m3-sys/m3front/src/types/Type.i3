@@ -14,7 +14,7 @@ TYPE
   T          = M3.Type;
   Assumption = M3.EqAssumption;
   ModuleInfo <: REFANY;
-  BitAlignT  = [0 .. 255];
+  BitAlignT = [0 .. 255]; 
 
 TYPE
   Class = { Error, Named, Integer, Longint, Real, Longreal, Extended,
@@ -32,6 +32,8 @@ TYPE
     size      : INTEGER;  (* size in bits, -1 if variable sized *)
     min_size  : INTEGER;  (* minimum size in bits. *)
     alignment : INTEGER;  (* minimum alignment in bits *)
+    addr_align: INTEGER := Target.Word8.align;
+    (* ^When stk_type = CG.Type.Addr, the alignment of dereferenced location. *)
     hash      : INTEGER;  (* internal hash code *)
     stk_type  : CG.Type;  (* code generator representation on operator stack *)
     mem_type  : CG.Type;  (* code generator representation as a variable *)
@@ -68,9 +70,10 @@ PROCEDURE CheckInfo (t: T;  VAR(*OUT*) x: Info): T;
 (* type check type 't'.  Return the underlying constructed
    (ie. class # Class.Named) type node and in 'x' its info. *)
 
-PROCEDURE IsAlignedOk (t: T;  offs: INTEGER): BOOLEAN;
-(* Returns TRUE iff no scalars within a value of type 't' at a bit offset
-   of 'offs' cross word boundaries.  *)
+PROCEDURE StraddleFreeScalars
+  (t: T;  offs: INTEGER; IsEltOrField: BOOLEAN): BOOLEAN;
+(* Returns TRUE iff no scalars within a value of type 't', located at
+   a bit offset of 'offs' from a word boundary, cross word boundaries.  *)
 
 PROCEDURE Strip (t: T): T;
 (* return the constructed type of 't' (ie. strip renaming) *)

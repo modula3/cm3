@@ -251,7 +251,8 @@ PROCEDURE TypeOf (t: T): Type.T =
   BEGIN
     IF (t.tipe = NIL) THEN
       IF    (t.init # NIL)   THEN t.tipe := Expr.TypeOf (t.init)
-      ELSIF (t.formal # NIL) THEN t.tipe := Value.TypeOf (t.formal) END;
+      ELSIF (t.formal # NIL) THEN t.tipe := Value.TypeOf (t.formal)
+      END;
       IF (t.tipe = NIL)
         THEN Error.ID (t.name, "variable has no type");  t.tipe := ErrType.T;
       END;
@@ -361,6 +362,7 @@ PROCEDURE Check (t: T;  VAR cs: Value.CheckState) =
   END Check;
 
 PROCEDURE Load (t: T) =
+  VAR type_info: Type.Info;
   BEGIN
     t.used := TRUE;
     Value.Declare (t);
@@ -371,29 +373,30 @@ PROCEDURE Load (t: T) =
         CG.Load_addr_of (t.bss_var, 0, t.cg_align);
       ELSIF (t.cg_var = NIL) THEN (* => global *)
         Module.LoadGlobalAddr (Scope.ToUnit (t), t.offset, is_const := FALSE);
-        CG.Boost_alignment (t.align);
+        CG.Boost_addr_alignment (t.cg_align);
       ELSIF (t.indirect) THEN
-        CG.Load_addr (t.cg_var, t.offset);
-        CG.Boost_alignment (t.align);
+        CG.Load_addr (t.cg_var, t.offset, t.cg_align);
       ELSE
         CG.Load_addr_of (t.cg_var, t.offset, t.cg_align);
       END;
     ELSE (* simple scalar *)
+      EVAL Type.CheckInfo (t.tipe, type_info);
       IF (t.bss_var # NIL) THEN
-        CG.Load (t.bss_var, 0, t.size, t.cg_align, t.stk_type);
+        CG.Load
+          (t.bss_var, 0, t.size, t.cg_align, type_info.addr_align, t.stk_type);
       ELSIF (t.cg_var = NIL) THEN (* => global *)
         Module.LoadGlobalAddr (Scope.ToUnit (t), t.offset, is_const := FALSE);
         IF (t.indirect) THEN
           CG.Load_indirect (CG.Type.Addr, 0, Target.Address.size);
         END;
-        CG.Boost_alignment (t.align);
-        CG.Load_indirect (t.stk_type, 0, t.size);
+        CG.Boost_addr_alignment (t.cg_align);
+        CG.Load_indirect (t.stk_type, 0, t.size, type_info.addr_align);
       ELSIF (t.indirect) THEN
-        CG.Load_addr (t.cg_var, t.offset);
-        CG.Boost_alignment (t.align);
-        CG.Load_indirect (t.stk_type, 0, t.size);
+        CG.Load_addr (t.cg_var, t.offset, t.cg_align);
+        CG.Load_indirect (t.stk_type, 0, t.size, type_info.addr_align);
       ELSE
-        CG.Load (t.cg_var, t.offset, t.size, t.cg_align, t.stk_type);
+        CG.Load
+          (t.cg_var, t.offset, t.size, t.cg_align, type_info.addr_align, t.stk_type);
       END;
     END;
   END Load;
@@ -411,11 +414,11 @@ PROCEDURE LoadLValue (t: T) =
         CG.Load_indirect (CG.Type.Addr, 0, Target.Address.size);
       END;
     ELSIF (t.indirect) THEN
-      CG.Load_addr (t.cg_var, t.offset);
+      CG.Load_addr (t.cg_var, t.offset, t.cg_align);
     ELSE
       CG.Load_addr_of (t.cg_var, t.offset, t.cg_align);
     END;
-    CG.Boost_alignment (t.align);
+    CG.Boost_addr_alignment (t.cg_align);
   END LoadLValue;
 
 PROCEDURE SetLValue (t: T) =
@@ -431,7 +434,7 @@ PROCEDURE SetLValue (t: T) =
       align := CG.Max_alignment;
     END;
     <*ASSERT t.indirect *>
-    CG.Boost_alignment (align);
+    CG.Boost_addr_alignment (t.cg_align);
     CG.Store_addr (v, t.offset);
   END SetLValue;
 
@@ -537,7 +540,7 @@ PROCEDURE Declare (t: T): BOOLEAN =
       IF (t.indirect) THEN
         t.cg_align := t.align;
         t.next_cg_var := all_cg_vars;  all_cg_vars := t;
-        t.bss_var := CG.Declare_global (M3ID.NoID, t.size, t.cg_align,
+        t.bss_var := CG.Declare_global (t.name, t.size, t.cg_align,
                               CG.Type.Struct, Type.GlobalUID (t.tipe),
                               exported := FALSE, init := FALSE);
         CG.Init_var (t.offset, t.bss_var, 0, FALSE);
@@ -754,12 +757,12 @@ PROCEDURE CopyOpenArray (tipe: Type.T;  ref: Type.T) =
 
     (* load the destination and source elements addresses *)
     CG.Push (newDopePtr);
-    CG.Boost_alignment (Target.Address.align);
+    CG.Boost_addr_alignment (Target.Address.align);
     CG.Open_elt_ptr (align); (* Addr of the old elements. *) 
-    CG.Force ();
+    CG.ForceStacked ();
     CG.Push(oldDopePtr);
     CG.Open_elt_ptr (align); (* Addr of the new elements. *) 
-    CG.Force ();
+    CG.ForceStacked ();
 
     (* compute the number of elements *)
     FOR i := 0 TO depth - 1 DO
@@ -773,7 +776,7 @@ PROCEDURE CopyOpenArray (tipe: Type.T;  ref: Type.T) =
 
     (* Push new dope pointer for the caller. *) 
     CG.Push (newDopePtr);
-    CG.Boost_alignment (Target.Address.align);
+    CG.Boost_addr_alignment (Target.Address.align);
 
     (* free our temps *)
     CG.Free_temp (sizes);
@@ -798,7 +801,7 @@ PROCEDURE UserInit (t: T) =
         t.initPending := FALSE;
         AssignStmt.PrepForEmit (t.tipe, t.init, initializing := TRUE);
         LoadLValue (t);
-        AssignStmt.DoEmit (t.tipe, t.init);
+        AssignStmt.DoEmit (t.tipe, t.init, t.cg_align);
       END;
       t.initDone := TRUE;
       Tracer.Schedule (t.trace);

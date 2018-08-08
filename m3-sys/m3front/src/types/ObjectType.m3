@@ -39,7 +39,7 @@ TYPE
         user_name    : TEXT;
       OVERRIDES
         check      := Check;
-        check_align:= CheckAlign;
+        no_straddle:= TypeRep.AddrNoStraddle;
         isEqual    := EqualChk;
         isSubtype  := Subtyper;
         compile    := Compiler;
@@ -172,6 +172,7 @@ PROCEDURE Is (t: Type.T): BOOLEAN =
   VAR m: Revelation.TypeList;  u: Type.T;  x: Revelation.TypeSet;
   BEGIN
     IF (t = NIL) THEN RETURN FALSE END;
+    t := Type.StripPacked (t); 
     IF (t.info.class = Type.Class.Named) THEN t := Type.Strip (t); END;
 
     (* try for TYPE t = OBJECT ... END *)
@@ -219,6 +220,7 @@ PROCEDURE Is (t: Type.T): BOOLEAN =
 PROCEDURE IsBranded (t: Type.T): BOOLEAN =
   VAR info: Type.Info;
   BEGIN
+    t := Type.StripPacked (t); 
     t := Type.CheckInfo (t, info);
     IF (info.class # Type.Class.Object) THEN RETURN FALSE END;
 
@@ -243,6 +245,7 @@ PROCEDURE IsBranded (t: Type.T): BOOLEAN =
 PROCEDURE Super (t: Type.T): Type.T =
   VAR info: Type.Info;
   BEGIN
+    t := Type.StripPacked (t); 
     t := Type.CheckInfo (t, info);
     IF (info.class # Type.Class.Object) THEN RETURN NIL END;
     RETURN NARROW (t, P).superType;
@@ -253,6 +256,7 @@ PROCEDURE LookUp (t: Type.T; id: M3ID.T;
   VAR p: P;  v: Value.T;  z: Type.T;  info: Type.Info;  x: Revelation.TypeSet;
   BEGIN
     LOOP
+      t := Type.StripPacked (t); 
       t := Type.CheckInfo (t, info);
 
       IF (info.class = Type.Class.Error) THEN
@@ -386,6 +390,7 @@ PROCEDURE Check (p: P) =
     p.info.size      := Target.Address.size;
     p.info.min_size  := Target.Address.size;
     p.info.alignment := Target.Address.align;
+    p.info.addr_align:= Target.Address.align;
     p.info.mem_type  := CG.Type.Addr;
     p.info.stk_type  := CG.Type.Addr;
     p.info.class     := Type.Class.Object;
@@ -424,11 +429,6 @@ PROCEDURE Check (p: P) =
 
     IF (NOT p.isTraced) AND Module.IsSafe() THEN CheckTracedFields (p) END;
   END Check;
-
-PROCEDURE CheckAlign (<*UNUSED*> p: P;  offset: INTEGER): BOOLEAN =
-  BEGIN
-    RETURN (offset MOD Target.Address.align = 0);
-  END CheckAlign;
 
 PROCEDURE CheckTracedFields (p: P) =
   VAR v := Scope.ToList (p.fields);  info: Type.Info;
@@ -766,6 +766,7 @@ PROCEDURE GenInitProc (p: P): CG.Proc =
     done  : BOOLEAN := TRUE;
     name  : TEXT    := NIL;
     proc  : CG.Proc := NIL;
+    fieldExprAlign : INTEGER;
   BEGIN
     (* check to see if we need any initialization code *)
     WHILE (v # NIL) DO
@@ -796,7 +797,7 @@ PROCEDURE GenInitProc (p: P): CG.Proc =
     CG.Begin_procedure (proc);
 
     (* allocate and initialize a pointer to the data fields *)
-    CG.Load_addr (obj);
+    CG.Load_addr (obj, 0, p.fieldAlign);
     IF (p.fieldOffset >= 0) THEN
       (* the field offsets are constant *)
       CG.Add_offset (p.fieldOffset);
@@ -814,16 +815,17 @@ PROCEDURE GenInitProc (p: P): CG.Proc =
       IF (field.dfault = NIL) THEN
         IF Type.InitCost (field.type, TRUE) > 0 THEN
           CG.Push (ptr);
-          CG.Boost_alignment (p.fieldAlign);
+          CG.Boost_addr_alignment (p.fieldAlign);
           CG.Add_offset (field.offset);
           Type.InitValue (field.type, TRUE);
         END;
       ELSIF NOT Expr.IsZeroes (field.dfault) THEN
         AssignStmt.PrepForEmit (field.type, field.dfault, initializing := TRUE);
         CG.Push (ptr);
-        CG.Boost_alignment (p.fieldAlign);
+        CG.Boost_addr_alignment (p.fieldAlign);
         CG.Add_offset (field.offset);
-        AssignStmt.DoEmit (field.type, field.dfault);
+        fieldExprAlign := CG.GCD (p.fieldAlign, field.offset MOD Target.Word.size);
+        AssignStmt.DoEmit (field.type, field.dfault, fieldExprAlign);
       END;
       v := v.next;
     END;
@@ -879,8 +881,7 @@ PROCEDURE GenLinkProc (p: P;  defaults: INTEGER): CG.Proc =
     CG.Begin_procedure (proc);
 
     (* grab the default methodlist pointer *)
-    CG.Load_addr (defn);
-    CG.Boost_alignment (Target.Address.align);
+    CG.Load_addr (defn, 0 , Target.Address.align);
     CG.Load_indirect (CG.Type.Addr, M3RT.OTC_defaultMethods, Target.Address.size);
     ptr := CG.Pop ();
 
@@ -893,7 +894,7 @@ PROCEDURE GenLinkProc (p: P;  defaults: INTEGER): CG.Proc =
 
         AssignStmt.PrepForEmit (t_default, method.dfault, initializing := TRUE);
         CG.Push (ptr);
-        CG.Boost_alignment (Target.Address.align);
+        CG.Boost_addr_alignment (Target.Address.align);
         CG.Add_offset (method.offset);
         m_offset := MethodOffset (tVisible);
         IF (m_offset >= 0) THEN
@@ -902,8 +903,8 @@ PROCEDURE GenLinkProc (p: P;  defaults: INTEGER): CG.Proc =
           Type.LoadInfo (tVisible, M3RT.OTC_methodOffset);
           CG.Index_bytes (Target.Byte);
         END;
-        CG.Boost_alignment (Target.Address.align);
-        AssignStmt.DoEmit (t_default, method.dfault);
+        CG.Boost_addr_alignment (Target.Address.align);
+        AssignStmt.DoEmit (t_default, method.dfault, Target.Address.align);
       END;
       v := v.next;
     END;
@@ -1047,7 +1048,8 @@ PROCEDURE FieldSize (t: Type.T): INTEGER =
 ***********)
 
 PROCEDURE GetSizes (p: P) =
-  VAR solid: BOOLEAN;
+  VAR min_size: INTEGER;
+      solid: BOOLEAN;
   BEGIN
     IF (p.fieldSize >= 0) THEN (* already done *) RETURN END;
 
@@ -1056,7 +1058,7 @@ PROCEDURE GetSizes (p: P) =
       p.fieldAlign   := Target.Address.align;
     ELSE
       (* compute the field sizes and alignments *)
-      RecordType.SizeAndAlignment (p.fields, p.info.lazyAligned, 
+      RecordType.SizeAndAlignment (p.fields, p.info.lazyAligned, min_size,
                                    p.fieldSize, p.fieldAlign, solid);
 
       (* round the object's size up to at least the size of a heap header *)
@@ -1144,6 +1146,7 @@ PROCEDURE FindMagic (t_id: INTEGER;  VAR d_size, m_size: INTEGER): BOOLEAN =
 PROCEDURE Confirm (t: Type.T): P =
   VAR info: Type.Info;
   BEGIN
+    t := Type.StripPacked (t); 
     LOOP
       t := Type.CheckInfo (t, info);
       IF (info.class = Type.Class.Object) THEN

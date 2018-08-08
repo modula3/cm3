@@ -1025,8 +1025,9 @@ PROCEDURE LoadGlobalAddr (t: T;  offset: INTEGER;  is_const: BOOLEAN) =
     ELSE
       <*ASSERT NOT is_const*>
       ImportInterface (t);
-      CG.Load_addr (curModule.globals[FALSE].seg, t.import_offs + M3RT.II_import);
-      CG.Boost_alignment (CG.Max_alignment);
+      CG.Load_addr
+        (curModule.globals[FALSE].seg, t.import_offs + M3RT.II_import,
+         CG.Max_alignment);
       CG.Add_offset (offset);
     END;
   END LoadGlobalAddr;

@@ -71,7 +71,7 @@ PROCEDURE Prep (ce: CallExpr.T) =
       true := CG.Next_label ();
       ptr := CG.Pop ();
       Value.Load (Bool.True);
-      CG.Force (); (* we need a temp *)
+      CG.ForceStacked (); (* we need a temp *)
       ce.tmp := CG.Pop_temp ();
       CG.Push (ptr);
       CG.Load_nil ();

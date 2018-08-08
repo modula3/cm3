@@ -10,6 +10,7 @@ MODULE Subarray;
 
 IMPORT CG, CallExpr, Expr, ExprRep, Type, Procedure, Error, ArrayType, Card;
 IMPORT OpenArrayType, CheckExpr, Host, Target, TInt, M3RT, IntegerExpr;
+IMPORT ErrType; 
 
 VAR Z: CallExpr.MethodList;
 
@@ -18,36 +19,37 @@ PROCEDURE TypeOf (ce: CallExpr.T): Type.T =
     RETURN ArrayType.OpenCousin (Type.Base (Expr.TypeOf (ce.args[0])));
   END TypeOf;
 
+
+
 PROCEDURE Check (ce: CallExpr.T;  VAR cs: Expr.CheckState) =
-  VAR t, u, v, index, elt: Type.T;  info: Type.Info;
+  VAR t, u, v, index, elt: Type.T;
   BEGIN
     t := Type.Base (Expr.TypeOf (ce.args[0]));
     u := Expr.TypeOf (ce.args[1]);
     v := Expr.TypeOf (ce.args[2]);
+    ce.type := ErrType.T; (* May change. *) 
     IF (NOT ArrayType.Split (t, index, elt)) THEN
       Error.Msg ("SUBARRAY: first argument must be an array");
     ELSIF (NOT Type.IsAssignable (Card.T, u)) THEN
       Error.Msg ("SUBARRAY: second argument must be assignable to CARDINAL");
     ELSIF (NOT Type.IsAssignable (Card.T, v)) THEN
       Error.Msg ("SUBARRAY: third argument must be assignable to CARDINAL");
+    ELSIF ArrayType.EltAlign (t) MOD Target.Byte # 0 THEN
+      Error.Msg ("CM3 restriction: SUBARRAY elements must be byte-aligned.");
     ELSE
-      elt := Type.CheckInfo (elt, info);
-      IF (info.class # Type.Class.OpenArray)
-        AND (info.size MOD Target.Byte) # 0 THEN
-        Error.Msg ("SUBARRAY: array elements are not byte-aligned.");
-      END;
       ce.args[1] := CheckPositive (ce.args[1], cs);
       ce.args[2] := CheckPositive (ce.args[2], cs);
+      Expr.NeedsAddress (ce.args[0]);
+      t := ArrayType.OpenCousin (t);
+      ce.type := Type.Check (t);
     END;
-    Expr.NeedsAddress (ce.args[0]);
-    t := ArrayType.OpenCousin (t);
-    ce.type := Type.Check (t);
   END Check;
 
 PROCEDURE CheckPositive (e: Expr.T;  VAR cs: Expr.CheckState): Expr.T =
   VAR min, max: Target.Int;
   BEGIN
     IF (e = NIL) THEN RETURN NIL; END;
+(* TODO: Handle static values. *)
     Expr.GetBounds (e, min, max);
     IF TInt.LT (min, TInt.Zero) OR TInt.LT (max, min) THEN
       e := CheckExpr.NewLower (e, TInt.Zero, CG.RuntimeError.ValueOutOfRange);
@@ -62,6 +64,7 @@ PROCEDURE NeedsAddress (<*UNUSED*> ce: CallExpr.T) =
   END NeedsAddress;
 
 PROCEDURE SubarrayExprAlign (ce: CallExpr.T): Type.BitAlignT =
+(* TODO: Take advantage of static values of ce.args[1] and ce.args[2]. *)
   VAR 
     arrayExpr := ce.args[0];
     arrayType := Type.Base (Expr.TypeOf (arrayExpr));
@@ -448,7 +451,7 @@ PROCEDURE CompileLV (ce: CallExpr.T; <*UNUSED*> traced: BOOLEAN) =
   BEGIN
     (* all the real work was done by PrepLV *)
     CG.Push (ce.tmp);
-    CG.Boost_alignment (Target.Address.align);
+    CG.Boost_addr_alignment (Target.Address.align);
     CG.Free (ce.tmp);
     ce.tmp := NIL;
   END CompileLV;

@@ -61,11 +61,13 @@ VAR visible_types   : TypeTbl.T  := NIL;  (* type -> BOOLEAN *)
 
 (************************************************************************)
 
+(*EXPORTED*)
 PROCEDURE Initialize () =
   BEGIN
     UserProc.Initialize ();
   END Initialize;
 
+(*EXPORTED*)
 PROCEDURE Reset () =
   BEGIN
     recursionDepth  := 0;
@@ -78,6 +80,7 @@ PROCEDURE Reset () =
 
 (************************************************************************)
 
+(*EXPORTED*)
 PROCEDURE Parse (): T =
   TYPE TK = Token.T;
   VAR t: T;
@@ -112,6 +115,7 @@ PROCEDURE Parse (): T =
     RETURN t;
   END Parse;
 
+(*EXPORTED (TypeRep.i3) *)
 PROCEDURE Init (t: T;  c: Class) =
   BEGIN
     t.origin     := Scanner.offset;
@@ -126,6 +130,7 @@ PROCEDURE Init (t: T;  c: Class) =
     t.info.lazyAligned := FALSE;
   END Init;
 
+(*EXPORTED*)
 PROCEDURE SetModule (new: ModuleInfo): ModuleInfo =
   VAR old := cur;
   BEGIN
@@ -152,6 +157,7 @@ PROCEDURE Reorder () =
 
 (************************************************************************)
 
+(*EXPORTED*)
 PROCEDURE Check (t: T): T =
   (* ensure that 't' is checked and return the underlying constructed type *)
   VAR save_offset, save_depth: INTEGER;
@@ -176,6 +182,7 @@ PROCEDURE Check (t: T): T =
     RETURN t;
   END Check;
 
+(*EXPORTED*)
 PROCEDURE CheckInfo (t: T;  VAR x: Info): T =
   VAR u := Check (t);
   BEGIN
@@ -185,12 +192,17 @@ PROCEDURE CheckInfo (t: T;  VAR x: Info): T =
 
 (************************************************************************)
 
-PROCEDURE IsAlignedOk (t: T;  offset: INTEGER): BOOLEAN =
+(*EXPORTED*)
+PROCEDURE StraddleFreeScalars
+  (t: T;  offs: INTEGER; IsEltOrField: BOOLEAN): BOOLEAN =
+(* Returns TRUE iff no scalars within a value of type 't', located at
+   a bit offset of 'offs' from a word boundary, cross word boundaries.  *)
   BEGIN
-    IF (t = NIL) THEN RETURN TRUE END;
-    RETURN t.check_align (offset);
-  END IsAlignedOk;
+    IF t = NIL THEN RETURN TRUE END;
+    RETURN t.no_straddle (offs, IsEltOrField);
+  END StraddleFreeScalars;
 
+(*EXPORTED*)
 PROCEDURE Strip (t: T): T =
   VAR u := t;  v := t;
   BEGIN
@@ -206,6 +218,7 @@ PROCEDURE Strip (t: T): T =
     END;
   END Strip;
 
+(*EXPORTED*)
 PROCEDURE StripPacked (t: T): T =
   VAR u := t;  v := t;
   BEGIN
@@ -227,6 +240,7 @@ PROCEDURE StripPacked (t: T): T =
     END;
   END StripPacked;
 
+(*EXPORTED*)
 PROCEDURE Base (t: T): T =
   VAR u := t;  v := t;
   BEGIN
@@ -251,6 +265,7 @@ PROCEDURE Base (t: T): T =
     END;
   END Base;
 
+(*EXPORTED*)
 PROCEDURE CGType (t: T;  in_memory: BOOLEAN): CG.Type =
   BEGIN
     t := Check (t);
@@ -260,6 +275,7 @@ PROCEDURE CGType (t: T;  in_memory: BOOLEAN): CG.Type =
     END;
   END CGType;
 
+(*EXPORTED*)
 PROCEDURE IsStructured (t: T): BOOLEAN =
 (* <=> rec, set, or array <=> is represented as an address on the CG stack *)
 (* PRE: t need not be checked. *) 
@@ -275,6 +291,7 @@ PROCEDURE IsStructured (t: T): BOOLEAN =
     END;
   END IsStructured;
 
+(*EXPORTED*)
 PROCEDURE LoadScalar (t: T) =
   BEGIN
     t := Check (t);
@@ -282,26 +299,28 @@ PROCEDURE LoadScalar (t: T) =
     | Class.Integer, Class.Longint, Class.Real, Class.Longreal, Class.Extended,
       Class.Enum, Class.Object, Class.Opaque, Class.Procedure,
       Class.Ref, Class.Subrange =>
-        CG.Load_indirect (t.info.stk_type, 0, t.info.size);
+        CG.Load_indirect (t.info.stk_type, 0, t.info.size, t.info.alignment);
     | Class.Packed =>
         IF NOT IsStructured (t) THEN
-          CG.Load_indirect (t.info.stk_type, 0, t.info.size);
+          CG.Load_indirect (t.info.stk_type, 0, t.info.size, t.info.alignment);
         END;
     | Class.Set =>
         IF (t.info.size <= Target.Integer.size) THEN
-          CG.Load_indirect (t.info.stk_type, 0, t.info.size);
+          CG.Load_indirect (t.info.stk_type, 0, t.info.size, t.info.alignment);
         END;
     | Class.Error, Class.Named, Class.Array, Class.OpenArray, Class.Record =>
         (* skip -- either it's structured or it's an error *)
     END;
   END LoadScalar;
 
+(*EXPORTED*)
 PROCEDURE IsLazyAligned (t: T): BOOLEAN =
   BEGIN
     IF t = NIL THEN RETURN FALSE END;
     RETURN t.info.lazyAligned;
   END IsLazyAligned;
 
+(*EXPORTED*)
 PROCEDURE SetLazyAlignment (t: T; on: BOOLEAN) =
   BEGIN
     IF t # NIL THEN
@@ -309,7 +328,7 @@ PROCEDURE SetLazyAlignment (t: T; on: BOOLEAN) =
     END;
   END SetLazyAlignment;
 
-
+(*EXPORTED*)
 PROCEDURE BeginSetGlobals () =
   BEGIN
     Reorder ();
@@ -331,6 +350,7 @@ PROCEDURE NoteCells (m: Module.T) =
     END;
   END NoteCells;
 
+(*EXPORTED*)
 PROCEDURE SetGlobals (origin: INTEGER) =
   VAR t := cur.next_to_set;  u: T;
   BEGIN
@@ -376,6 +396,7 @@ PROCEDURE AddCell (t: T) =
     EVAL TypeTbl.Put (visible_cells, t, c);
   END AddCell;
 
+(*EXPORTED*)
 PROCEDURE IsOrdinal (t: T): BOOLEAN =
   VAR u := Check (t);  c := u.info.class;
   BEGIN
@@ -384,6 +405,7 @@ PROCEDURE IsOrdinal (t: T): BOOLEAN =
            OR ((c = Class.Packed) AND IsOrdinal (StripPacked (t)));
   END IsOrdinal;
 
+(*EXPORTED*)
 PROCEDURE Number (t: T): Target.Int =
   VAR
     u := Check (t);
@@ -420,6 +442,7 @@ PROCEDURE Number (t: T): Target.Int =
     RETURN Target.Integer.max;
   END Number;
 
+(*EXPORTED*)
 PROCEDURE GetBounds (t: T;  VAR min, max: Target.Int): BOOLEAN =
   VAR u := Check (t);  c := u.info.class;  b: BOOLEAN;
   BEGIN
@@ -465,6 +488,7 @@ PROCEDURE IllegalRecursion (t: T) =
 
 (************************************************************************)
 
+(*EXPORTED*)
 PROCEDURE IsEqual (a, b: T;  x: Assumption): BOOLEAN =
   VAR assume: AssumptionRec;  y: Assumption;  ac, bc: Class;
   BEGIN
@@ -514,6 +538,7 @@ PROCEDURE IsEqual (a, b: T;  x: Assumption): BOOLEAN =
 
 (************************************************************************)
 
+(*EXPORTED*)
 PROCEDURE IsSubtype (a, b: T): BOOLEAN =
   VAR ac, bc: Class;
   BEGIN
@@ -543,6 +568,7 @@ PROCEDURE IsCharacterType (t: T): BOOLEAN =
     RETURN IsEqual(t, Charr.T, NIL) OR IsEqual(t, WCharr.T, NIL); 
   END IsCharacterType; 
 
+(*EXPORTED*)
 PROCEDURE IsAssignable (a, b: T): BOOLEAN =
   VAR i, e: T;  min_a, max_a, min_b, max_b, min, max: Target.Int;
   VAR base_a, base_b: T; 
@@ -579,6 +605,7 @@ PROCEDURE IsAssignable (a, b: T): BOOLEAN =
 
 (************************************************************************)
 
+(*EXPORTED*)
 PROCEDURE GlobalUID (t: T): INTEGER =
   VAR u := Check (t);
   BEGIN
@@ -592,6 +619,7 @@ PROCEDURE GlobalUID (t: T): INTEGER =
     RETURN u.uid;
   END GlobalUID;
 
+(*EXPORTED*)
 PROCEDURE Name (t: T): TEXT =
   CONST digits = ARRAY [0..15] OF CHAR { '0','1','2','3','4','5','6','7',
                                          '8','9','a','b','c','d','e','f' };
@@ -607,6 +635,7 @@ PROCEDURE Name (t: T): TEXT =
 
 (************************************************************************)
 
+(*EXPORTED*)
 PROCEDURE CompileAll () =
   VAR t := cur.module_types;
   BEGIN
@@ -616,6 +645,7 @@ PROCEDURE CompileAll () =
     END;
   END CompileAll;
 
+(*EXPORTED*)
 PROCEDURE Compile (t: T) =
   VAR save: INTEGER;  u := Check (t);
   BEGIN
@@ -692,6 +722,7 @@ PROCEDURE FindCell (t: T): CellPtr =
     END;
   END FindCell;
 
+(*EXPORTED*)
 PROCEDURE LoadInfo (t: T;  offset: INTEGER;  addr: BOOLEAN := FALSE) =
   VAR
     c := FindCell (t);
@@ -699,27 +730,27 @@ PROCEDURE LoadInfo (t: T;  offset: INTEGER;  addr: BOOLEAN := FALSE) =
   BEGIN
     IF (offset < 0) THEN
       <*ASSERT NOT addr*>
-      CG.Load_addr (v, c.offset);
-      CG.Boost_alignment (M3RT.TC_ALIGN);
+      CG.Load_addr (v, c.offset, M3RT.TC_ALIGN);
     ELSIF (offset = M3RT.TC_typecode) THEN
       CG.Load_int (Target.Integer.cg_type, v, c.offset + Target.Address.pack);
     ELSE
-      CG.Load_addr (v, c.offset);
-      CG.Boost_alignment (M3RT.TC_ALIGN);
+      CG.Load_addr (v, c.offset, M3RT.TC_ALIGN);
       IF (addr) THEN
         CG.Load_indirect (CG.Type.Addr, offset, Target.Address.size);
-        CG.Boost_alignment (Target.Address.align);
+        CG.Boost_addr_alignment (Target.Address.align);
       ELSE
         CG.Load_indirect (Target.Integer.cg_type, offset, Target.Integer.size);
       END;
     END;
   END LoadInfo;
 
+(*EXPORTED*)
 PROCEDURE InitCost (t: T;  ifZeroed: BOOLEAN): INTEGER =
   BEGIN
     RETURN Check (t).initCost (ifZeroed);
   END InitCost;
 
+(*EXPORTED*)
 PROCEDURE GenMap (t: T;  offset, size: INTEGER;  refs_only: BOOLEAN) =
   VAR u := Check (t);  nat_sz := u.info.size;
   BEGIN
@@ -728,17 +759,20 @@ PROCEDURE GenMap (t: T;  offset, size: INTEGER;  refs_only: BOOLEAN) =
     u.mapper (offset, MIN (size, nat_sz), refs_only);
   END GenMap;
 
+(*EXPORTED*)
 PROCEDURE GenDesc (t: T) =
   BEGIN
     Check (t).gen_desc ();
   END GenDesc;
 
+(*EXPORTED*)
 PROCEDURE GenTag (t: T;  tag: TEXT;  offset: INTEGER) =
   BEGIN
     (** CG.Gen_location (t.origin); **)
     CG.Comment (offset, FALSE, tag, Name (t));
   END GenTag;
 
+(*EXPORTED*)
 PROCEDURE LinkName (t: T;  tag: TEXT): TEXT =
   CONST Insert = ARRAY BOOLEAN OF TEXT { "_M3", "_I3" };
   BEGIN
@@ -746,6 +780,7 @@ PROCEDURE LinkName (t: T;  tag: TEXT): TEXT =
          & Insert[Module.IsInterface ()] & Name (t) & tag;
   END LinkName;
 
+(*EXPORTED*)
 PROCEDURE GenCells (): INTEGER =
   VAR cell := cur.full_cells;  prev := 0;
   BEGIN
@@ -762,6 +797,7 @@ PROCEDURE GenCells (): INTEGER =
     RETURN prev;
   END GenCells;
 
+(*EXPORTED*)
 PROCEDURE GenCellPtrs (): INTEGER =
   VAR
     unit := Module.GlobalData (FALSE);
@@ -782,6 +818,7 @@ PROCEDURE GenCellPtrs (): INTEGER =
 
 (********************** variable initialization **************************)
 
+(*EXPORTED*)
 PROCEDURE InitValue (t: T;  zeroed: BOOLEAN) =
   VAR c1, c2: INTEGER;  tmp: CG.Val;
   BEGIN
@@ -797,17 +834,17 @@ PROCEDURE InitValue (t: T;  zeroed: BOOLEAN) =
       c2 := InitCost (t, TRUE);
       IF (c2 = 0) THEN
         (* all we need to do is zero it *)
-        CG.Boost_alignment (t.info.alignment);
+        CG.Boost_addr_alignment (t.info.alignment);
         Zero (t);
         RETURN;
       ELSIF (c1 > 2 * c2) THEN
         (* it will pay to zero the variable first *)
         tmp := CG.Pop ();
         CG.Push (tmp);
-        CG.Boost_alignment (t.info.alignment);
+        CG.Boost_addr_alignment (t.info.alignment);
         Zero (t);
         CG.Push (tmp);
-        CG.Boost_alignment (t.info.alignment);
+        CG.Boost_addr_alignment (t.info.alignment);
         t.initValue (TRUE);
         CG.Free (tmp);
         RETURN;
@@ -817,6 +854,7 @@ PROCEDURE InitValue (t: T;  zeroed: BOOLEAN) =
     t.initValue (zeroed);
   END InitValue;
 
+(*EXPORTED*)
 PROCEDURE Zero (full_t: T) =
   VAR
     u    := Check (full_t);
@@ -876,18 +914,21 @@ PROCEDURE ZeroWords (size: INTEGER) =
 
 (************************** default methods *******************************)
 
+(*EXPORTED (TypeRep.i3) *)
 PROCEDURE NeverEqual (a, b: TT;  <*UNUSED*> x: Assumption): BOOLEAN =
   BEGIN
     <* ASSERT a # b *>
     RETURN FALSE;
   END NeverEqual;
 
+(*EXPORTED (TypeRep.i3) *)
 PROCEDURE NoSubtypes (<*UNUSED*> a, b: T): BOOLEAN =
   BEGIN
     (* a is not a subtype of any type b *)
     RETURN FALSE;
   END NoSubtypes;
 
+(*EXPORTED (TypeRep.i3) *)
 PROCEDURE InitToZeros (t: T;  zeroed: BOOLEAN) =
   BEGIN
     IF NOT zeroed
@@ -896,6 +937,7 @@ PROCEDURE InitToZeros (t: T;  zeroed: BOOLEAN) =
     END;
   END InitToZeros;
 
+(*EXPORTED (TypeRep.i3) *)
 PROCEDURE GenRefMap (t: T;  offset, size: INTEGER;  refs_only: BOOLEAN) =
   VAR u := Check (t);
   BEGIN
@@ -907,6 +949,7 @@ PROCEDURE GenRefMap (t: T;  offset, size: INTEGER;  refs_only: BOOLEAN) =
     END;
   END GenRefMap;
 
+(*EXPORTED (TypeRep.i3) *)
 PROCEDURE GenRefDesc (t: T) =
   TYPE  TT = TipeDesc.Op;
   CONST XX = ARRAY BOOLEAN OF TT { TT.UntracedRef, TT.Ref };
@@ -917,15 +960,32 @@ PROCEDURE GenRefDesc (t: T) =
     END;
   END GenRefDesc;
 
-PROCEDURE ScalarAlign (t: TT;  offset: INTEGER): BOOLEAN =
+(*EXPORTED (TypeRep.i3) *)
+PROCEDURE ScalarNoStraddle
+  (t: TT;  offset: INTEGER; <*UNUSED*> IsEltOrField: BOOLEAN): BOOLEAN =
+(* To preclude word-boundary-straddle, this assumes t's size
+   is no greater than its alignment. *) 
   VAR u := Check (t);
   BEGIN
     IF u.info.lazyAligned THEN
       RETURN (offset MOD 8 = 0);
     ELSE
+      <* ASSERT u.info.size <= u.info.alignment *> 
       RETURN (offset MOD u.info.alignment = 0);
     END;
-  END ScalarAlign;
+  END ScalarNoStraddle;
+
+(*EXPORTED (TypeRep.i3) *)
+PROCEDURE AddrNoStraddle
+  (t: TT;  offset: INTEGER; <*UNUSED*> IsEltOrField: BOOLEAN): BOOLEAN =
+  VAR u := Check (t);
+  BEGIN
+    IF u.info.lazyAligned THEN
+      RETURN (offset MOD 8 = 0);
+    ELSE
+      RETURN (offset MOD Target.Address.align = 0);
+    END;
+  END AddrNoStraddle;
 
 BEGIN
 END Type.

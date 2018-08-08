@@ -26,9 +26,9 @@ VAR (* CONST after "begin_unit" call *)
 
 CONST
   ST_name = ARRAY ST OF TEXT {
-    "Addr ", "Int32", "Int64", "Real ", "LReal ", "ExReal ", "Void ",
+    "Addr ", "Int32 ", "Int64 ", "Real ", "LReal ", "ExReal ", "Void ",
     "W,I ", "R,L,E ", "W,I,R,L,E ",
-    "any ", "", "", "<=match "
+    "any ", "", "<dontCare> ", "<=match "
   };
 
 TYPE

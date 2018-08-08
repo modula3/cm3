@@ -25,18 +25,24 @@ PROCEDURE EltPack (array: Type.T): INTEGER;
    its elements.  Otherwise, returns 0. *)
 
 PROCEDURE EltAlign (array: Type.T): INTEGER;
-(* If 'array' is an array type, returns the bit alignment of
-   its elements.  Otherwise, returns Target.Byte. *)
+(* If 'array' is an array type, returns the bit alignment of its
+   elements.  If t is open, returns the first non-open or non-array
+   alignment. Otherwise, returns Target.Byte. *)
 
 PROCEDURE OpenCousin (t: Type.T): Type.T;
 (* If 't' is an 'ARRAY I OF X', returns 'ARRAY OF X', otherwise
    returns 't'. *)
 
-PROCEDURE IsBitAddressed (t: Type.T): BOOLEAN;
-(* Returns TRUE if the array's elements are not byte aligned. *)
+PROCEDURE EltsAreBitAddressed (t: Type.T): BOOLEAN;
+(* Returns TRUE if the array's elements are not guaranteed to be byte aligned.
+   Works on an open array too. *)
+
+PROCEDURE TotalDepth (t: Type.T): INTEGER;
+(* Total number of dimensions of t, open + fixed.
+   Works on an open array too. *) 
 
 PROCEDURE GenIndex (t: Type.T);
-(* Given "ADR(a)" and "x" on the stack,
-   generate code to compute "ADR(a[x])". *)
+(* Given "ADR(a)" and "x" on the stack, generate code to compute "ADR(a[x])". *)
+(* Works for an open array too. *)
 
 END ArrayType.

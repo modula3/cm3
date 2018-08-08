@@ -19,7 +19,7 @@ TYPE
         obj        : Value.T;
       OVERRIDES
         check      := Check;
-        check_align:= CheckAlign;
+        no_straddle:= NoStraddle;
         isEqual    := TypeRep.NeverEqual;
         isSubtype  := TypeRep.NoSubtypes;
         compile    := Compiler;
@@ -166,11 +166,12 @@ PROCEDURE Check (p: P) =
     p.info.class := Type.Class.Named; (* this node is still a Named node *)
   END Check;
 
-PROCEDURE CheckAlign (p: P;  offset: INTEGER): BOOLEAN =
+PROCEDURE
+  NoStraddle (p: P;  offset: INTEGER; IsEltOrField: BOOLEAN): BOOLEAN =
   BEGIN
     IF (p.type = NIL) THEN Resolve (p) END;
-    RETURN Type.IsAlignedOk (p.type, offset);
-  END CheckAlign;
+    RETURN Type.StraddleFreeScalars (p.type, offset, IsEltOrField);
+  END NoStraddle;
 
 PROCEDURE Compiler (p: P) =
   BEGIN

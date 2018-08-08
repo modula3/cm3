@@ -123,8 +123,9 @@ PROCEDURE Compile (p: P) =
     END;
     Expr.Compile (p.a);
     EVAL Type.CheckInfo (t, info);
-    CG.Force ();  (*'cause alignment applies to the referent, not the pointer*)
-    CG.Boost_alignment (info.alignment);
+    CG.ForceStacked ();
+    (* ^'cause alignment applies to the referent, not the pointer*)
+    CG.Boost_addr_alignment (info.alignment);
     Type.LoadScalar (t);
   END Compile;
 
@@ -155,8 +156,9 @@ PROCEDURE CompileLV (p: P; traced: BOOLEAN) =
       Expr.Compile (p.a);
     END;
     EVAL Type.CheckInfo (p.type, info);
-    CG.Force ();  (*'cause alignment applies to the referent, not the pointer*)
-    CG.Boost_alignment (info.alignment);
+    CG.ForceStacked ();
+    (*^ 'cause alignment applies to the referent, not the pointer*)
+    CG.Boost_addr_alignment (info.alignment);
   END CompileLV;
 
 PROCEDURE NoteWrites (p: P) =
