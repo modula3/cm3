@@ -5,7 +5,11 @@
 
 readonly TARGET_OS = "LINUX"
 
-SYSTEM_LD = SYSTEM_CXXC
+if not defined ("SYSTEM_CXXXC")
+   SYSTEM_CXXXC = SYSTEM_CC
+end
+
+SYSTEM_LD = SYSTEM_CXXXC
   & " -Wl,-z,now"
   & " -Wl,-z,origin"
   & " -Bsymbolic"
