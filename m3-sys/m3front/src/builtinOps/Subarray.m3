@@ -20,17 +20,24 @@ PROCEDURE TypeOf (ce: CallExpr.T): Type.T =
 
 PROCEDURE Check (ce: CallExpr.T;  VAR cs: Expr.CheckState) =
   VAR t, u, v, index, elt: Type.T;  info: Type.Info;
+  VAR IsOK := TRUE;
   BEGIN
     t := Type.Base (Expr.TypeOf (ce.args[0]));
     u := Expr.TypeOf (ce.args[1]);
     v := Expr.TypeOf (ce.args[2]);
     IF (NOT ArrayType.Split (t, index, elt)) THEN
       Error.Msg ("SUBARRAY: first argument must be an array");
-    ELSIF (NOT Type.IsAssignable (Card.T, u)) THEN
+      IsOK := FALSE;
+    END;
+    IF (NOT Type.IsAssignable (Card.T, u)) THEN
       Error.Msg ("SUBARRAY: second argument must be assignable to CARDINAL");
-    ELSIF (NOT Type.IsAssignable (Card.T, v)) THEN
+      IsOK := FALSE;
+    END;
+    IF (NOT Type.IsAssignable (Card.T, v)) THEN
       Error.Msg ("SUBARRAY: third argument must be assignable to CARDINAL");
-    ELSE
+      IsOK := FALSE;
+    END;
+    IF IsOK THEN
       elt := Type.CheckInfo (elt, info);
       IF (info.class # Type.Class.OpenArray)
         AND (info.size MOD Target.Byte) # 0 THEN
@@ -38,10 +45,10 @@ PROCEDURE Check (ce: CallExpr.T;  VAR cs: Expr.CheckState) =
       END;
       ce.args[1] := CheckPositive (ce.args[1], cs);
       ce.args[2] := CheckPositive (ce.args[2], cs);
+      Expr.NeedsAddress (ce.args[0]);
+      t := ArrayType.OpenCousin (t);
+      ce.type := Type.Check (t);
     END;
-    Expr.NeedsAddress (ce.args[0]);
-    t := ArrayType.OpenCousin (t);
-    ce.type := Type.Check (t);
   END Check;
 
 PROCEDURE CheckPositive (e: Expr.T;  VAR cs: Expr.CheckState): Expr.T =
