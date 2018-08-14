@@ -553,6 +553,11 @@ readonly proc mixed_portability_test (group, uid, comment) is
   run_test ("_mixed_portability_tests_less_portable", group, uid, comment, "", cm3opts, runopts, FALSE)
   run_test ("_mixed_portability_tests_portable", group, uid, comment, "run", cm3opts, runopts & " -include-less-portable-output", "probeForTargetSpecificFiles")
 end
+% tests moved to the front for quick testing.
+
+readonly proc e_test (group, uid, comment) is
+  run_test ("_etests", group, uid, comment, "", cm3opts, runopts, "probeForTargetSpecificFiles")
+end
 
 % some currently failing tests...
 
@@ -838,10 +843,6 @@ r_test ("r0", "r004", "negative size for an open array")
 % ERROR tests: modules containing static errors where the generated
 %   error messages are of interest.
 
-readonly proc e_test (group, uid, comment) is
-  run_test ("_etests", group, uid, comment, "", cm3opts, runopts, "probeForTargetSpecificFiles")
-end
-
 e_test ("e0", "e001", "assigning non-overlapping subrange types")
 e_test ("e0", "e002", "non-constant variable initialization in an interface")
 e_test ("e0", "e003", "exception not at the top-level")
@@ -877,6 +878,7 @@ e_test ("e0", "e032", "FROM IMPORT in an IMPORTed interface is visible in the mo
 e_test ("e0", "e033", "importing the builtin scope through an arbitrary interace")
 e_test ("e0", "e034", "structural equivalence of records")
 e_test ("e0", "e035", "illegal recursive declaration")
+e_test ("e0", "e040", "Bad SUBARRAY actuals")
 
 %------------------------------------------------------------------- xtests ---
 %  MISC tests (x): programs or modules that require a human to test
