@@ -157,7 +157,7 @@ PROCEDURE EmitRaise (v: Value.T;  arg: Expr.T) =
       LoadSelf (t);
       CG.Add_offset (M3RT.ED_SIZE);
       CG.Boost_addr_alignment (Target.Address.align);
-      CG.Load_indirect (CG.Type.Addr, 0, CG.ProcAlign ());
+      CG.Load_indirect (CG.Type.Addr, 0, Target.Address.size, CG.ProcAlign ());
       CG.Gen_Call_indirect (CG.Type.Void, Target.DefaultCall);
       EVAL Marker.EmitExceptionTest (Procedure.Signature (p), need_value := FALSE);
       CG.Free (tmp);
