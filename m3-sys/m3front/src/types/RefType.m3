@@ -146,7 +146,7 @@ PROCEDURE Check (p: P) =
     IF (NOT p.isTraced) AND (info.isTraced) AND Module.IsSafe() THEN
       Error.Msg ("unsafe: untraced ref type to a traced type");
     END;
-    EVAL Type.StraddleFreeScalars (p.target, 0, IsEltOrField := FALSE);
+ (* EVAL Type.StraddleFreeScalars (p.target, 0, IsEltOrField := FALSE); *)
 (* CHECK: ^Why is this here? rodney.m.bates@acm.org.
      1) It appears StraddleFreeScalars and all its many and recursive
         overrides are side-effect-free functions, so why EVAL?

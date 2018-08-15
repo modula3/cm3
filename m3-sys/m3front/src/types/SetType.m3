@@ -16,7 +16,7 @@ TYPE
         range      : Type.T;
       OVERRIDES
         check      := Check;
-        no_straddle:= TypeRep.ScalarNoStraddle;
+        no_straddle:= NoStraddle;
         isEqual    := EqualChk;
         isSubtype  := Subtyper;
         compile    := Compiler;
@@ -82,6 +82,14 @@ PROCEDURE Check (p: P) =
       p.info.addr_align := Target.Address.align;
     END;
   END Check;
+
+PROCEDURE NoStraddle (p: P;  offset: INTEGER; <*UNUSED*> IsEltOrField: BOOLEAN)
+: BOOLEAN =
+  BEGIN
+    (* Big or little, a set is word-multiple-sized and word-aligned.
+       It can cross a word boundary, though. *) 
+    RETURN offset MOD Target.Word.size = 0;
+  END NoStraddle;
 
 PROCEDURE Compiler (p: P) =
   VAR info: Type.Info;
