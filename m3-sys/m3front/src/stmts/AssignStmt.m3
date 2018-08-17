@@ -402,7 +402,7 @@ PROCEDURE AssignArray (tlhs: Type.T;  e_rhs: Expr.T;
     openRHS := OpenArrayType.Is (trhs);
     openLHS := OpenArrayType.Is (tlhs);
     lhs, rhs: CG.Val;
-    eltCt : INTEGER;
+    rhs_info: Type.Info;
   BEGIN
     (* Capture the lhs & rhs pointers in temps. *)
     IF (openRHS) OR (openLHS) THEN lhs := CG.Pop (); END;
@@ -413,7 +413,7 @@ PROCEDURE AssignArray (tlhs: Type.T;  e_rhs: Expr.T;
     IF (openRHS) OR (openLHS) THEN rhs := CG.Pop (); END;
 
     IF openRHS AND openLHS THEN
-      GenOpenArraySizeChecks (lhs, rhs, tlhs, trhs, (*OUT*) eltCt);
+      GenOpenArraySizeChecks (lhs, rhs, tlhs, trhs);
       CG.Push (lhs);
       CG.Open_elt_ptr (lhs_align);
       CG.ForceStacked ();
@@ -423,18 +423,19 @@ PROCEDURE AssignArray (tlhs: Type.T;  e_rhs: Expr.T;
       GenOpenArrayCopy (rhs, tlhs, trhs);
 
     ELSIF openRHS THEN
-      GenOpenArraySizeChecks (lhs, rhs, tlhs, trhs, (*OUT*) eltCt);
+      GenOpenArraySizeChecks (lhs, rhs, tlhs, trhs);
       CG.Push (lhs);
       CG.Push (rhs);
       CG.Open_elt_ptr (Expr.Alignment(e_rhs));
-      CG.Copy (eltCt * ArrayType.EltPack(trhs), overlap := TRUE);
+      CG.Copy (lhs_info.size, overlap := TRUE);
 
     ELSIF openLHS THEN
-      GenOpenArraySizeChecks (lhs, rhs, tlhs, trhs, (*OUT*) eltCt);
+      EVAL Type.CheckInfo (trhs, rhs_info);
+      GenOpenArraySizeChecks (lhs, rhs, tlhs, trhs);
       CG.Push (lhs);
       CG.Open_elt_ptr (lhs_align);
       CG.Push (rhs);
-      CG.Copy (eltCt *ArrayType.EltPack(trhs), overlap := TRUE);
+      CG.Copy (rhs_info.size, overlap := TRUE);
 
     ELSE (* both sides are fixed length arrays *)
       CG.Copy (lhs_info.size, overlap := TRUE);
@@ -450,48 +451,32 @@ PROCEDURE AssignArray (tlhs: Type.T;  e_rhs: Expr.T;
   END AssignArray;
 
 PROCEDURE GenOpenArraySizeChecks (READONLY lhs, rhs: CG.Val;
-                                  tlhs, trhs: Type.T;
-                                  VAR eltCt: INTEGER) =
+                                  tlhs, trhs: Type.T) =
   VAR ilhs, irhs, elhs, erhs: Type.T;  n := 0;
-  VAR eltCtTInt: TInt.Int;
-  VAR b: BOOLEAN; 
   BEGIN
-    eltCt := 0; 
+    IF NOT Host.doNarrowChk THEN RETURN; END;
     WHILE ArrayType.Split (tlhs, ilhs, elhs)
       AND ArrayType.Split (trhs, irhs, erhs) DO
 
-      IF (ilhs # NIL) AND (irhs # NIL) THEN (* Neither is open in this dimension. *) 
-        eltCtTInt := Type.Number (ilhs);
-        b := TInt.ToInt (eltCtTInt, eltCt); <*ASSERT b*> 
+      IF (ilhs # NIL) AND (irhs # NIL)
+      THEN (* Both are fixed in this dimension. *)
         RETURN;
-      ELSIF (ilhs # NIL) THEN (* Only lhs is open in this dimension. *) 
+      ELSIF (ilhs # NIL) THEN (* Only lhs is fixed in this dimension. *)
         CG.Push (rhs);
         CG.Open_size (n);
-        eltCtTInt := Type.Number (ilhs);
-        b := TInt.ToInt (eltCtTInt, eltCt); <*ASSERT b*> 
-        (* ^In case this turns out to be the innermost dimension. *)
-        IF Host.doNarrowChk THEN
-          CG.Load_integer (Target.Integer.cg_type, eltCtTInt);
-          CG.Check_eq (Target.Integer.cg_type, CG.RuntimeError.IncompatibleArrayShape);
-        END
-      ELSIF (irhs # NIL) THEN (* Only rhs is open in this dimension. *)
+        CG.Load_integer (Target.Integer.cg_type, Type.Number (ilhs));
+        CG.Check_eq (Target.Integer.cg_type, CG.RuntimeError.IncompatibleArrayShape);
+      ELSIF (irhs # NIL) THEN (* Only rhs is fixed in this dimension. *)
         CG.Push (lhs);
         CG.Open_size (n);
-        eltCtTInt := Type.Number (irhs);
-        b := TInt.ToInt (eltCtTInt, eltCt); <*ASSERT b*>
-        (* ^In case this turns out to be the innermost dimension. *) 
-        IF Host.doNarrowChk THEN
-          CG.Load_integer (Target.Integer.cg_type, eltCtTInt);
-          CG.Check_eq (Target.Integer.cg_type, CG.RuntimeError.IncompatibleArrayShape);
-        END
-      ELSE (* both arrays are open *)
-        IF Host.doNarrowChk THEN
-          CG.Push (lhs);
-          CG.Open_size (n);
-          CG.Push (rhs);
-          CG.Open_size (n);
-          CG.Check_eq (Target.Integer.cg_type, CG.RuntimeError.IncompatibleArrayShape);
-        END
+        CG.Load_integer (Target.Integer.cg_type, Type.Number (irhs));
+        CG.Check_eq (Target.Integer.cg_type, CG.RuntimeError.IncompatibleArrayShape);
+      ELSE (* both arrays are open in this dimension. *)
+        CG.Push (lhs);
+        CG.Open_size (n);
+        CG.Push (rhs);
+        CG.Open_size (n);
+        CG.Check_eq (Target.Integer.cg_type, CG.RuntimeError.IncompatibleArrayShape);
       END;
       INC (n);
       tlhs := elhs;
