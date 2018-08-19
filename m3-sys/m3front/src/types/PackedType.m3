@@ -148,8 +148,6 @@ PROCEDURE IsStraddleFree
       THEN (* The entire thing fits in a word. *) 
         RETURN TRUE; 
       ELSE (* It crosses a word boundary... *)
-        RETURN FALSE;
-        (* ^Insist that entire structured, packed component fit in a word. *) 
         IF Type.IsStructured (p) 
         THEN (* but maybe none of its scalar components do. *)  
           RETURN Type.StraddleFreeScalars (p.baseType, offset, IsEltOrField);
