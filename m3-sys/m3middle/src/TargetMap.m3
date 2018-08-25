@@ -16,10 +16,10 @@ PROCEDURE Init () =
     InitI (CGType.Word8,  Target.Word8);
     InitI (CGType.Int16,  Target.Int16);
     InitI (CGType.Word16, Target.Word16);
-    InitI (CGType.Int32,  Target.Int32);
-    InitI (CGType.Word32, Target.Word32);
-    InitI (CGType.Int64,  Target.Int64);
-    InitI (CGType.Word64, Target.Word64);
+    InitI (CGType.Int32,  Target.Integer);
+    InitI (CGType.Word32, Target.Word);
+    InitI (CGType.Int64,  Target.Longint);
+    InitI (CGType.Word64, Target.Long);
     InitF (CGType.Reel,   Target.Real);
     InitF (CGType.LReel,  Target.Longreal);
     InitF (CGType.XReel,  Target.Extended);

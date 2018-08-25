@@ -13,12 +13,31 @@ IMPORT Text, TargetMap, M3RT, TextUtils;
 VAR (*CONST*)
   CCs : ARRAY [0..8] OF CallingConvention;
 
+PROCEDURE Init32 () =
+  BEGIN
+    (* Change size and aligment: *)
+    Integer := Int32;
+    Word := Word32;
+    Address := Word32;
+    Address.cg_type := CGType.Addr;
+    (* Change only alignment.  Size is always 64: *) 
+    Longint.align := 32;
+    Long.align := 32;
+    Longreal.align := 32;
+    Extended.align := 32;
+  END Init32;
+
 PROCEDURE Init64 () =
   BEGIN
     Integer := Int64;
     Word := Word64;
     Address := Word64;
     Address.cg_type := CGType.Addr;
+    (* Change only alignment.  Size is always 64: *) 
+    Longint.align := 64;
+    Long.align := 64;
+    Longreal.align := 64;
+    Extended.align := 64;
   END Init64;
 
 PROCEDURE IsX86(): BOOLEAN =
@@ -139,6 +158,8 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
     IF TextUtils.StartsWith(system, "ALPHA_")       (* But not ALPHA32_. *)
         OR TextUtils.Contains(system, "64") THEN
       Init64();
+    ELSE
+      Init32();
     END;
 
     (* ALPHA, SPARC64, HPPA, MIPS64, ARM64, PPC64: aligned_procedures *)
