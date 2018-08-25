@@ -13,8 +13,7 @@ IMPORT OpenArrayType, RecordType, PackedType;
 IMPORT Word, Target, TInt, TipeMap, TipeDesc, ErrType;
 FROM Scanner IMPORT Match, GetToken, cur;
 
-CONST
-  MAXSIZE = LAST (INTEGER) DIV Target.Byte;
+VAR MaxBitSize := LAST (INTEGER);
 
 TYPE
   P = Type.T BRANDED "ArrayType.P" OBJECT
@@ -269,7 +268,7 @@ PROCEDURE Check (p: P) =
     END;
 
     IF (p.n_elts > 0) AND (p.elt_pack > 0)
-      AND (p.n_elts > MAXSIZE DIV p.elt_pack) THEN
+      AND (p.n_elts > MaxBitSize DIV p.elt_pack) THEN
       Error.Msg ("CM3 restriction: array type too large");
       min_size := 0;
       p.total_size := 0;
