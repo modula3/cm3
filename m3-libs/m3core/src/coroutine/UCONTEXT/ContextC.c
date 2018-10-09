@@ -16,6 +16,7 @@
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>
+#include <signal.h>
 #include <assert.h>
 
 #define M3_RETRY(expr)                                  \
