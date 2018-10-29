@@ -3,7 +3,15 @@ It may be freely distributed as open source according to the various
 copyrights under which different parts of the sources are placed.
 Please read the COPYRIGHT-* files found in this directory.
 
-To build everything, go to the scripts directory.
+To build everything, go to the `scripts` directory.
+Before trying anything there, you need to download
+a working compiler for your system;
+you can obtain one by clicking on the `Releases` tab on the main Github page
+and selecting one for your architecture.
+
+The `README` in the `scripts` directory describes several options.
+The `scripts` directory also contains a subdirectory of Python scripts
+for those who prefer or need it.
 
 The base system can be found in several packages in the collections
 m3-sys and m3-libs. All the rest is more or less optional. Complete
