@@ -18,7 +18,7 @@ havegroup(gid_t qgid)
   int   n;
   int   i;
   
-  for (i = 0; i < n; ++i)
+  for (i = 0; i < NGROUPS_MAX; ++i)
     list[i] = 0;
 
   n = getgroups(NGROUPS_MAX, list);
