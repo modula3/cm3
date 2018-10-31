@@ -119,7 +119,7 @@
 
     <para>
       To build &m3gdb; without using a &m3; compiler, go in to 
-      <filename>cm3/m3-sys/m3gdb</filename> and execute  
+      <filename>cm3/m3-sys/m3gdb/gdb</filename> and execute  
       <command>./configure</command> and <command>make</command>.
       This is the usual C build process.  The compiled executable
       will then be found in <filename>cm3/m3-sys/m3gdb/gdb/gdb</filename>,
