@@ -1,9 +1,9 @@
 (* Copyright (C) 2017 Peter McKinna. All rights reserved. *)
 (* See file COPYRIGHT-BSD for details. *)
 
-MODULE Sudoku EXPORTS Main;
+UNSAFE MODULE Sudoku EXPORTS Main;
 
-IMPORT IntSeq,IntRefTbl,Random,RandomPerm,Text;
+IMPORT IntSeq,IntRefTbl,Random,RandomPerm,Text,Word;
 IMPORT IO,Fmt;
 
 CONST
@@ -62,6 +62,7 @@ PROCEDURE Format(cell : SetType) : TEXT =
   END Format;
 
 (* Simple cardinality of a set *)
+(*
 PROCEDURE Card(s : SetType) : INTEGER =
   VAR card : INTEGER := 0;
   BEGIN
@@ -72,7 +73,23 @@ PROCEDURE Card(s : SetType) : INTEGER =
     END;
     RETURN card;
   END Card;
-
+  *)
+(* this version optimises to popcount on suitable
+hardware *)
+PROCEDURE Card(s : SetType) : INTEGER =
+  VAR card : INTEGER := 0;
+      p : Word.T;
+  BEGIN
+    p := LOOPHOLE(s,Word.T);
+    IF p # 0 THEN
+      REPEAT
+        INC(card);
+        p := Word.And(p,p - 1);
+      UNTIL p = 0;
+    END;
+    RETURN card;
+  END Card;
+  
 (* Return the single element of a set *)
 PROCEDURE Singleton(s : SetType) : INTEGER =
   BEGIN
