@@ -8,7 +8,7 @@ List("Sym", "Sym")
 Module("SymListParse")
 Module("Rule")
 List("Rule", "Rule")
-Table("TextBoolean", "Text", "Boolean")
+%Table("TextBoolean", "Text", "Boolean")
 Table("TextPrec", "Text", "Prec")
 Module("YaccParse")
 

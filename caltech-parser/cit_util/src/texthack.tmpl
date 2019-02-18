@@ -1,0 +1,72 @@
+% $Id$
+
+if not defined("TOP")
+  TOP = PACKAGE_DIR & SL & ".."
+end
+
+
+  _M3TMPLHACK = TOP & "/m3tmplhack/" & BUILD_DIR & "/m3tmplhack"
+  _M3TEXTHACK = TOP & "/m3texthack/" & BUILD_DIR & "/m3texthack"
+  _DERIVGEN   = TOP & "/m3texthack/src/derivgen.sh"
+
+
+
+% generics are annoying, because
+% "generic_derived_implementation" is not provided by the system.
+
+readonly proc Generic_intexterface(nm) is
+	Generic_interface(nm)
+        %m3texthack in interface doesn't work anyway
+end
+readonly proc generic_implementextation(nm, rename) is
+	local lib = nm & "_lib"
+	local tmpl = lib
+	local f = rename & ".mg"
+	local g = path_of(nm & ".mg")
+	if stale(f, [g])
+		_exec([_M3TEXTHACK,g,f])
+                _exec([_DERIVGEN,rename,lib,tmpl&".tmpl",nm,TOP])
+	end
+	derived_template(tmpl)
+        import(lib)
+end
+readonly proc generic_mojule(nm, rename) is
+	local lib = nm & "_lib"
+	local tmpl = lib
+	local f = rename & ".mg"
+	local g = path_of(nm & ".mg")
+        local h = path_of(nm&".ig")
+	if stale(f, [g, h])
+		_exec([_M3TEXTHACK,g,f])
+                _exec(["cp",h,rename&".ig"])
+                _exec([_DERIVGEN,rename,lib,tmpl&".tmpl",nm,TOP])
+	end
+	derived_template(tmpl)
+        import(lib)
+end
+readonly proc Intexterface(nm) is
+	local f = nm & ".i3"
+	local g = path_of(f)
+	if stale(f, [g])
+		_exec([_M3TEXTHACK,g,f])
+	end
+	derived_interface(nm, VISIBLE)
+end
+readonly proc implementextation(nm) is
+	local f = nm & ".m3"
+	local g = path_of(f)
+	if stale(f, [g])
+		_exec([_M3TEXTHACK,g,f])
+	end
+	derived_implementation(nm)
+end
+readonly proc mojule(nm) is
+	Intexterface(nm)
+	implementextation(nm)
+end
+Mojule = mojule
+Jnterface = Intexterface
+jmplementation = implementextation
+Generic_mojule = generic_mojule
+Generic_jnterface = Generic_intexterface
+generic_jmplementation = generic_implementextation

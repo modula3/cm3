@@ -24,7 +24,7 @@ include_dir ("rw")
 include_dir ("fmtlex")
 include_dir ("list")
 include_dir ("sx")
-% include_dir ("types") % which no longer has an m3makefile
+include_dir ("types") % which no longer has an m3makefile
 include_dir ("arith")
 include_dir ("geometry")
 include_dir ("statistics")

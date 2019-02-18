@@ -110,6 +110,28 @@ PROCEDURE Apply(self: T; src: TEXT): TEXT =
     RETURN TextWr.ToText(wr);
   END Apply;
 
+PROCEDURE FromText(t: TEXT; argDelim:=':'; nextDelim:='\n'): T =
+  VAR
+    res := NEW(T).init();
+    start := 0;
+    next0, next1: INTEGER;
+    l := Text.Length(t);
+    orig: TEXT;
+  BEGIN
+    WHILE start # l DO
+      next0 := Text.FindChar(t, argDelim, start);
+      next1 := Text.FindChar(t, nextDelim, start);
+      IF next1 = -1 THEN next1 := l; END;
+      IF (next0 # -1) AND (next0 < next1) THEN
+        orig := Text.Sub(t, start, next0-start);
+        start := next0+1;
+        res.add(orig, Text.Sub(t, start, next1-start));
+      END;
+      start := next1+1;
+    END;
+    RETURN res;
+  END FromText;
+
 BEGIN
 END TextSubs.
     

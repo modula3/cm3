@@ -3,21 +3,21 @@ import("parseparams")
 import("libm3")
 import("cit_util")
 
-template("listf")
-generic_module("ListF")
+%template("listf")
+%generic_module("ListF")
 
-table("TextTextList", "Text", "TextList")
+%table("TextTextList", "Text", "TextList")
 Module("CharRange")
 Module("CharCodes")
 Module("Import")
 Module("TokSpec")
 Module("TokParams")
-Module("FileReWr")
+%Module("FileReWr")
 Module("FileRdErr")
 Module("BracedCode")
 
-Module("IntInt")
-Array_sort("IntInt", "IntInt")
+%Module("IntInt")
+%Array_sort("IntInt", "IntInt")
 
 /* moved to cit_util
 module("TextSubsClause")

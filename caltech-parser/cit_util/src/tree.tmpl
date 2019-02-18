@@ -1,0 +1,9 @@
+/* $Id$ */
+
+readonly proc _tree(nm, elem, vis) is 
+	build_generic_intf(nm&"Tree", "Tree", [elem], vis)
+	build_generic_impl(nm&"Tree", "Tree", [elem])
+end
+
+readonly proc tree(nm, elem) is _tree(nm, elem, HIDDEN) end
+readonly proc Tree(nm, elem) is _tree(nm, elem, VISIBLE) end

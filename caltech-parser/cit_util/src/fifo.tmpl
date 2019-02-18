@@ -1,0 +1,9 @@
+/* $Id$ */
+readonly proc _fifo (nm, elem, vis) is
+	build_generic_intf(nm & "Fifo", "Fifo", [elem], vis)	
+	build_generic_impl(nm & "Fifo", "Fifo", [elem])
+end
+
+readonly proc Fifo (nm, elem) is _fifo (nm, elem, VISIBLE) end
+readonly proc fifo (nm, elem) is _fifo (nm, elem, HIDDEN) end
+

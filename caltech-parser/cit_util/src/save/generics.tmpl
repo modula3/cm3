@@ -1,0 +1,126 @@
+
+/* generic template generator. */
+/* commands: gmodule, ginterface, gimplementation. */
+/* other commands: build_generic_module. */
+
+/* $Id: generics.tmpl,v 1.3 2008-01-28 23:10:59 wagner Exp $ */
+
+if defined("TOP")
+  _M3TMPLHACK = TOP & "/m3tmplhack/" & BUILD_DIR & "/m3tmplhack"
+else
+  _M3TMPLHACK = BIN_INSTALL & SL & "m3tmplhack"
+end
+
+readonly proc Build_generic_module(nam, gen, args1, args2) is
+        build_generic_intf(nam, gen, args1, VISIBLE)
+        build_generic_impl(nam, gen, args2)
+end
+
+readonly proc build_generic_module(nam, gen, args1, args2) is
+        build_generic_intf(nam, gen, args1, HIDDEN)
+        build_generic_impl(nam, gen, args2)
+end
+
+readonly proc Build_generic_interface(nam, gen, args) is
+	build_generic_intf(nam, gen, args, VISIBLE)
+end
+
+readonly proc build_generic_interface(nam, gen, args) is
+	build_generic_intf(nam, gen, args, HIDDEN)
+end
+
+build_generic_implementation = build_generic_impl
+Build_generic_implementation = build_generic_impl
+
+readonly proc _exec(cmd) is
+        %local ret = exec(cmd)
+        write (cmd, CR)
+	exec(cmd)
+        %if not equal(ret, 0) error("command failed with error code: ", ret) end
+end
+
+readonly proc derived_template(nm) is
+	template("../" & BUILD_DIR & "/" & nm)
+end
+
+readonly proc _check_clean(g) is
+	if defined("_clean")
+		write("delete " & g, CR)
+		/* deleting this file causes staleness, 
+			which is desired effect of clean. */
+		delete_file(g)
+	end
+end
+
+/*
+assumption: templates need only be generated when m3makefile changes.
+extra cleaning required if these commands are used 
+in a template imported by m3makefile!
+*/
+
+readonly proc gmodule_template(nm) is
+	local makefile = path_of("m3makefile")
+	local f = nm & ".tmpl"
+	local g = nm & ".generate_tmpl"
+	local intf = path_of(nm & ".ig")
+	local impl = path_of(nm & ".mg")
+	local sources = [makefile, intf, impl]
+	if stale(f, sources) or stale(g, sources)
+		> g in
+			write("module", CR)
+			write(intf, CR)
+			write(impl, CR)
+		end
+		_exec([_M3TMPLHACK,g])
+	end
+	_check_clean(g)
+	derived_template(nm)
+end
+
+readonly proc gother_template(nm,kind) is
+	local makefile = path_of("m3makefile")
+	local base = nm & "_" & kind
+	local f = base & ".tmpl"
+	local g = base & ".generate_tmpl"
+	local source = path_of(nm & ".ig")
+	local sources = [makefile, source]
+	if stale(f, sources) or stale(g, sources)
+		> g in
+			write(kind, CR)
+			write(source, CR)
+		end
+		_exec([_M3TMPLHACK,g])
+	end
+	_check_clean(g)
+	derived_template(base)
+end
+
+readonly proc gmodule(nm) is
+	generic_module(nm)
+	gmodule_template(nm)
+end
+
+readonly proc Gmodule(nm) is
+	Generic_module(nm)
+	gmodule_template(nm)
+end
+
+readonly proc ginterface(nm) is
+	generic_interface(nm)
+	gother_template(nm, "interface")
+end
+
+readonly proc Ginterface(nm) is
+	Generic_interface(nm)
+	gother_template(nm, "interface")
+end
+
+readonly proc gimplementation(nm) is
+	generic_implementation(nm)
+	gother_template(nm, "implementation")
+end
+
+readonly proc Gimplementation(nm) is
+	Generic_implementation(nm)
+	gother_template(nm, "implementation")
+end

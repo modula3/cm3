@@ -1,0 +1,3 @@
+MODULE TextFF;
+PROCEDURE Format(a: TEXT): TEXT = BEGIN RETURN a; END Format;
+BEGIN END TextFF.

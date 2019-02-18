@@ -9,7 +9,7 @@ import("libm3")
 import("cit_util")
 import("term")
 
-Module("PathnameUtils")
+%Module("PathnameUtils") % in cit_utils
 template("liste")
 generic_module("ListExtras")
 template("channel")

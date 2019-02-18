@@ -1,0 +1,8 @@
+/* $Id$ */
+readonly proc _factory (nm, of, vis) is
+	build_generic_intf(nm & "Factory", "Factory", [of], vis)	
+	build_generic_impl(nm & "Factory", "Factory", [of])
+end
+
+readonly proc Factory (nm, of) is _factory (nm, of, VISIBLE) end
+readonly proc factory (nm, of) is _factory (nm, of, HIDDEN) end
