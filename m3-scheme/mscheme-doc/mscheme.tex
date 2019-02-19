@@ -1,0 +1,71 @@
+%%
+%% $Id$
+%%
+\documentclass[12pt]{report}
+\usepackage{appendix}
+\usepackage{tocloft}
+\input gencapltd
+
+\setlength{\cftsubsecnumwidth}{3.5em}
+
+\title{\bfseries\sffamily\fontsize{24.88}{30}\selectfont A Modula-Scheme System: \\ MScheme \\ Description and Reference}
+\author{Mika Nystr\"om \\ {\tt mika@alum.mit.edu}}
+\date{November, 2008}
+
+\thispagestyle{empty}
+
+\begin{document}
+\def\ns{}
+\ifx\DIST\undefined
+\setbox0=\vbox{\verb+$Id$+}
+\lfoot{\copy0}
+\fi
+
+\thispagestyle{empty}
+
+\maketitle
+
+\thispagestyle{empty}
+
+\newpage
+\tableofcontents
+\newpage
+
+\input system
+\input usermanual
+\input sstubgen
+\input refmanual
+\input examples
+
+\newpage
+{
+\frenchspacing
+\begin{thebibliography}{99}
+
+\bibitem{sicp2} Hal Abelson and Gerald Jay Sussman with Julie Sussman.  {\it Structure and Interpretation of Computer Programs,} second edition.  Cambridge, Mass.:\ MIT Press, 1996.
+
+\bibitem{blue_book} Adele~Goldberg and Donald~Robson.  {\it Smalltalk-80: The Language and its Implementation.}  Reading, Mass.:\ Addison-Wesley, 1983.
+
+\bibitem{spwm3}  Greg~Nelson, ed.  {\it Systems Programming with Modula-3.}  Englewood Cliffs, N.J.:\ Prentice-Hall, 1991.
+
+\bibitem{netobj} Andrew~Birrell, Greg~Nelson, Susan~Owicki, and Edward~Wobber.  {\it Network Objects,} digital SRC Research Report~115.  Palo Alto, Calif.:\ Digital Equipment Corporation, 1994 (revised 1995).
+
+\bibitem{dp} Erich~Gamma, Richard~Helm, Ralph~Johnson, and John~Vlissides.  {\it Design Patterns: Elements of Reusable Object-Oriented Software.}  (Addison-Wesley Professional Computing Series.)  Reading, Mass.:\ Addison-Wesley, 1995.
+
+\bibitem{m3tk}  Mick Jordan.  An extensible programming environment for Modula-3.  {\it Proceedings of the Fourth ACM SIGSOFT Symposium on Software Development Environments,} Irvine, Calif., 1990.  New York, N.Y.:\ Association for Computing Machinery, 1990.
+
+\bibitem{r4rs}
+
+\bibitem{r5rs} Richard Kelsey, William Clinger, and Jonathan Rees, eds.
+Revised$^5$ Report on the Algorithmic Language Scheme.  1998.
+
+\bibitem{jscheme} Peter Norvig.
+
+\bibitem{Tcl} John~K.~Ousterhout.  Tcl and the Tk Toolkit.  Addison-Wesley, 1994.
+
+\bibitem{aim-349} Gerald Jay Sussman and Guy Lewis Steele, Jr.  Scheme: an intepreter for extended lambda calculus.  MIT Artificial Intelligence Memo 349.  Cambridge, Mass.:\ Massachusetts Institute of Technology, December 1975.
+\end{thebibliography}
+}
+
+
+\end{document}

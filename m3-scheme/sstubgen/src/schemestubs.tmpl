@@ -1,0 +1,7 @@
+PARALLEL_SSTUBGEN="T"
+
+if defined("CM3_VERSION") and defined ("PARALLEL_SSTUBGEN")
+	include ("schemestubs_pll.tmpl")
+else
+	include ("schemestubs_ser.tmpl")
+end

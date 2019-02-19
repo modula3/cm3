@@ -205,5 +205,14 @@ m3readline caltech-other
 
 cptr caltech-other
 
+scheme-lib m3-scheme
+mscheme m3-scheme
+schemesig m3-scheme
+modula3scheme m3-scheme
+schemereadline m3-scheme
+mscheme-interactive m3-scheme
+mscheme-interactive_r m3-scheme
+mscheme-threads m3-scheme
+
 cm3 core front unicode
 m3cc core front unicode m3gnudevtool

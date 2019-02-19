@@ -1,0 +1,25 @@
+/* $Id$ */
+import ("libm3")
+
+resource ("m3.scm")
+resource ("basic-defs.scm")
+resource ("display.scm")
+resource ("mergesort.scm")
+resource ("scodegen.scm")
+resource ("gnuplot.scm")
+resource ("require.scm")
+resource ("exit.scm")
+resource ("hashtable.scm")
+resource ("set.scm")
+resource ("mbe.scm")
+resource ("basic-mbe.scm")
+resource ("time.scm")
+resource ("history.scm")
+resource ("struct.scm")
+resource ("pregexp/pregexp.scm")
+resource ("marketdata-hfdate-conversion.scm")
+resource ("addresses.scm")
+
+bundle ("SchemeDefsBundle")
+
+library ("scheme-lib")

@@ -1,0 +1,52 @@
+% Copyright (C) 1994, Digital Equipment Corporation.
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+%
+% Makefile for network object stub generator
+%
+% Last modified on Mon Jan 23 14:47:21 PST 1995 by kalsow
+%      modified on Thu May 12 16:03:14 PDT 1994 by wobber
+
+/* m3_option("-X1@-Wf,-XNp300000@-Wf,-XNd200000@") */
+% m3_option ("-times")
+
+import("libm3")
+import("m3tk")
+import("mscheme")
+import("modula3scheme")
+import("schemereadline")
+import("m3readline")
+import("cit_util")
+
+interface("ValueProc")
+interface("SProtocol")
+
+Module("TypeTranslator")
+Module("ValueTranslator")
+
+Module("TypeNames")
+Module("Type")
+Module("Value")
+Module("AstToVal")
+Module("AstToType")
+Module("StubGenTool")
+Module("StubUtils")
+Module("FRefRefTbl")
+
+module("M3ASTScopeNames")
+
+template("schemestubs")
+template("schedulerwrap")
+
+interface("CM3Extensions")
+
+if defined("CM3_VERSION")
+  implementation("TypeCM3")
+	implementation("CM3Extensions")
+else
+	implementation("CM3ExtensionsPM3")
+end
+
+library("sstubgen")
+
+

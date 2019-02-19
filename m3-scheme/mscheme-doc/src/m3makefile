@@ -1,0 +1,20 @@
+/* $Id$ */
+
+
+
+if defined("pm3_version")
+	option("optimization","") 
+end
+
+
+import("libm3")
+import("cit_util")
+import("mscheme")
+import("modula3scheme")
+import("schemesig")
+import("m3readline")
+import("schemereadline")
+
+implementation("Main")
+
+program("mscheme-doc")

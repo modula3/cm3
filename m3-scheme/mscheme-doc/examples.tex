@@ -1,0 +1,23 @@
+%%
+%% $Id$
+%%
+
+\chapter{Extended Examples}
+
+\section{Scodegen, a simple library for defining SQL database access}
+
+Inspired by the popular Hibernate package for Java, the {\tt scodegen}
+library is a simple library that allows a user to describe SQL schemas
+in Scheme and generate Modula-3 code for conveniently accessing the
+tables of that schema.  The {\tt scodegen} library is fully integrated
+into the Modula-3 build system (the {\tt m3build} or {\tt cm3},
+depending on which specific Modula-3 implementation is being used).
+
+{\tt scodegen} itself is written entirely in Scheme but it interfaces
+with a certain Modula-3 implementation of access to an SQL database.
+It also interfaces with a Modula-3 generic, {\tt TableMonitor}, which
+makes it very easy to write programs that use a ``monitoring''
+semantics (poll a SQL database for changes and take some action based
+on those changes).
+
+

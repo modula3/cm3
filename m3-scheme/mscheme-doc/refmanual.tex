@@ -1,0 +1,104 @@
+%%
+%% $Id$
+%%
+
+\chapter{MScheme Reference Manual}
+
+The MScheme system follows the {\it Revised$^4$ Report on the
+  Algorithmic Language Scheme (R4RS)\/}, and therefore a detailed description
+of the Scheme language will be omitted from the present document.  We will
+present only the primitives provided by MScheme and also the differences
+with respect to {\it R4RS\/}.
+
+\section{Scheme Primitives}
+
+\subsection{Basic set}
+
+\subsection{Modula-Scheme extended set}
+
+\section{MScheme Module System}\label{sec:modules}
+
+MScheme provides, by default, a simple module system that exports a single
+Scheme procedure.
+\begin{verbatim}
+(require-modules mod1 mod2 ... modN)
+\end{verbatim}
+performs the following actions: for each of {\tt mod1} to {\tt modN},
+if that pathname or module name (see section~\ref{sec:provided}) has not
+previously been loaded, it is loaded (in order).  
+
+The system guarantees that ``loading loops'' cannot happen, since each
+file will only be loaded once.
+
+Modula-3 programmers using MScheme-provided interpreters directly
+should be aware that in order for the module system to be available,
+the string {\tt require} should be passed as the first filename for
+the created interpreter.  (A {\tt Scheme.T} does not, for example,
+provide {\tt require-modules} by default.)
+
+\noindent{\em Example.}
+\begin{verbatim}
+(require-modules "mergesort" "../myfile.scm")
+\end{verbatim}
+Load in the {\tt mergesort} provided library and the Scheme source file
+{\tt ../myfile.scm}\ .  Actual file paths are relative to the current working directory of the Scheme interpreter process.
+
+
+
+
+\section{R$^5$RS Hygienic Macros}
+
+The {\tt mbe} module provides the ``hygienic'' macros from the {\it
+  Revised$^5$ Report on the Algorithmic Language Scheme (R5RS)\/}
+(this module also works in JScheme, and uses JScheme/MScheme primitive
+macros to implement the {\it R5RS} macros).
+
+\section{Modula-3 Extension Library}
+
+\section{Modula-3 Stub Generator and Scheme Bindings}
+
+\section{Navigable Scheme Environments}
+
+\section{Synchronized Scheme Environments}
+
+\section{Implementation Restrictions}
+
+The implementation restrictions are currently the same as for JScheme (or at least very similar).
+
+\begin{itemize}
+
+\item Only a single numerical data type is provided, double precision
+  as provided by Modula-3.  This means IEEE~754 double precision on
+  most architectures.  MScheme does not properly distinguish between
+  {\em exact\/} and {\em inexact\/} arithmetic.  There are probably some
+  bugs where primitives are implemented with Modula-3's {\tt TRUNC} function,
+  which might lead to an incorrect array index being calculated owing to
+  rounding errors 
+  (JScheme would have the same bugs).
+
+\item {\tt call-with-current-continuation} only unwinds the stack.
+
+\section{Source Description}
+
+\section{Provided Scheme Libraries (Subject to Change)}\label{sec:provided}
+
+General-purpose Scheme libraries are provided in the source directory
+{\tt t/mscheme/scheme-lib/src}.  Libraries in this directory are {\em
+  bundled\/} into the Scheme executable using the {\tt m3bundle}
+program.  Hence they are available even without access to the
+filesystem and are loaded by providing the name of the library without
+the extension, e.g., the library provided by the file {\tt
+  t/mscheme/scheme-lib/src/exit.scm} can be loaded simply by running
+the following Scheme command:
+\begin{verbatim}
+(load "exit")
+\end{verbatim}
+Similarly, these libraries can be referred to without their extensions
+when using the {\tt require} module system (section~\ref{sec:modules}).
+
+\end{itemize}
+
+\section{Primitives}
+
+\input src/prims
+
