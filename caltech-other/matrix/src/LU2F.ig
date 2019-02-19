@@ -1,0 +1,6 @@
+(* $Id$ *)
+
+UNSAFE GENERIC INTERFACE LU2F(M);
+
+
+END LU2F.

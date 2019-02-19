@@ -1,0 +1,96 @@
+.TH VORONOI 7
+.SH NAME
+voronoi - compute Voronoi diagram or Delaunay triangulation
+.SH SYNOPSIS
+.B voronoi 
+[
+.B -s -t -p
+]
+.SH DESCRIPTION
+.I Voronoi 
+reads the standard input for a set of points in the plane and writes either
+the Voronoi diagram or the Delaunay triangulation to the standard output.
+Each input line should consist of two real numbers, separated by white space.
+.PP
+If option
+.B -t
+is present, the Delaunay triangulation is produced. 
+Each output line is a triple
+.I i j k,
+which are the indices of the three points in a Delaunay triangle. Points are
+numbered starting at 0.
+.PP
+If option
+.B -t
+is not present, the Voronoi diagram is produced.
+There are four output record types.
+.TP
+.I s a b
+indicates that an input point at coordinates 
+.I a b 
+was seen.
+.TP
+.I l a b c
+indicates a line with equation
+.I ax + by = c.
+.TP
+.I v a b
+indicates a vertex at 
+.I a b.
+.TP
+.I e l v1 v2
+indicates a Voronoi segment which is a subsegment of line number 
+.I l
+with endpoints numbered 
+.I v1
+and
+.I v2.
+If 
+.I v1
+or
+.I v2
+is -1, the line extends to infinity.
+.PP
+The other options are:
+.TP
+.B s
+The input is sorted by 
+.I y
+coordinate (the second number in the pair).  The first input line should be
+.I npoints xmin xmax ymin ymax.
+This describes the number of points and the range of the points.  This
+line is used to determine internal hash table size; it need not be exact
+but performance suffers if it is grossly wrong.
+.TP
+.B p
+Produce output suitable for input to 
+.I plot 
+(1), rather than the forms described above.
+.PP
+On unsorted data uniformly distributed in the unit square,
+.I voronoi
+uses about 
+.I 20n+140\(srn
+bytes of storage.  On sorted data,
+.I voronoi
+uses about
+.I 160\(srn
+bytes.
+.SH AUTHOR
+Steve J. Fortune (1987) A Sweepline Algorithm for Voronoi Diagrams,
+Algorithmica 2, 153-174.
+.SH DIAGNOSTICS
+Insufficient memory.
+.SH BUGS
+The sort used by 
+.I voronoi
+is much faster than 
+.I sort 
+(1).
+Also
+.I sort
+(1) does not correctly sort real data with embedded exponent fields.
+Very strange output results if 
+.B -s
+is used on unsorted data.
+Binary input-output would probably halve execution time.

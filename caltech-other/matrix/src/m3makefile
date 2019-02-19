@@ -1,0 +1,114 @@
+/* $Id$ */
+import("libm3")
+import("cit_util")
+
+Module("Quantity")
+Module("Matrix")
+Module("LU")
+Module("SVD")
+Module("Newton")
+Module("Fortran")
+Module("Tridiagonal")
+
+Module("MatrixM3")
+
+if equal(TARGET, "FreeBSD4") or equal(TARGET, "LINUXLIBC6")
+  interface("MatrixF")		
+  implementation("MatrixFGlue") 
+
+  % muld.s compiled with "ifort -msse2 -axTPSW"
+  s_source("muld")
+else
+  implementation("MatrixM3_only")
+end
+
+Generic_module("Matrix2")
+Generic_module("M2M3")
+Generic_module("LU2M3")
+Generic_module("LU2")
+
+readonly proc _matrix2(nm, elem, LUfortran, M2fortran, vis) is
+	%
+	% the fortran arg contains the name of the glue intf for the
+	% optional fortran code 	
+	%
+        % to disable the Fortran, just pass in the Modula-3 interface
+        % to the same code instead.
+        %
+	local mName = nm & "Matrix2"
+
+	build_generic_intf(mName, "Matrix2", [elem], vis)
+	build_generic_impl(mName, "Matrix2", [elem, nm & "M2M3", M2fortran])
+
+	build_generic_intf(nm & "M2M3", "M2M3", [mName], vis)
+	build_generic_impl(nm & "M2M3", "M2M3", [mName])
+
+	build_generic_intf(nm & "LU2", "LU2", [mName], vis)
+	build_generic_impl(nm & "LU2", "LU2", [mName, nm & "LU2M3", LUfortran])
+
+	build_generic_intf(nm & "LU2M3", "LU2M3", [mName], vis)
+	build_generic_impl(nm & "LU2M3", "LU2M3", [mName])
+
+end
+
+%if equal(TARGET, "FreeBSD4") or equal(TARGET, "LINUXLIBC6")
+%  implementation("LU2FGlue")
+%end
+
+readonly proc Matrix2(nm, elem, LUfortran, M2fortran) is 
+	_matrix2(nm, elem, LUfortran, M2fortran, VISIBLE)
+end
+
+readonly proc matrix2(nm, elem, LUfortran, M2fortran) is 
+	_matrix2(nm, elem, LUfortran, M2fortran, HIDDEN)
+end
+
+Module("Matrix2RType")
+Module("Matrix2LRType")
+Module("Matrix2XType")
+Matrix2("X", "Matrix2XType", "XLU2M3", "XMatrix2")
+
+/* 
+	The Fortran code was compiled on Debian Linux with
+
+	ifort -msse2 -axTPSW
+
+	It compiles on LINUXLIBC6, FreeBSD4.  
+
+	It only actually runs on Linux and FreeBSD 5 systems
+	(the latter of which normally uses the "FreeBSD4"
+	Modula-3 distribution)
+
+	For other targets we have to turn off the assembly 
+	sources.
+*/
+
+if equal(TARGET, "FreeBSD4") or equal(TARGET, "LINUXLIBC6")
+	Matrix2("R",  "Matrix2RType", "LU2_F_sp", "M2_F_sp")
+	Matrix2("LR", "Matrix2LRType", "LU2_F_dp", "M2_F_dp")
+
+        /* naming scheme:
+
+	   M2               : Matrix2 interface
+	     _F             : coded in Fortran
+	       _sp          : single precision
+	       _dp          : double precision
+
+	mulmv               : Multiply Matrix times Vector
+	mul_mtransposem     : Matrix-transpose times Matrix
+	lu2_backsubstitute  : LU.BackSubstitute
+	*/ 
+
+	module("M2_F_sp")
+	module("LU2_F_sp")
+	module("M2_F_dp")
+	module("LU2_F_dp")
+        include ("assem.m3k")
+else
+	Matrix2("R",  "Matrix2RType", "RLU2M3", "RMatrix2")
+	Matrix2("LR", "Matrix2LRType", "LRLU2M3", "LRMatrix2")
+end
+
+module("UseFortran")
+
+Library("matrix")

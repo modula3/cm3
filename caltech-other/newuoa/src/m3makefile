@@ -1,0 +1,25 @@
+if equal(TARGET,"AMD64_LINUX")
+build_standalone() % dont attempt to build shared libs from asm
+import ("libm3")
+import ("cit_util")
+import ("matrix")
+import ("minimize")
+
+s_source ("bigden")
+s_source ("biglag")
+s_source ("calfun")
+%s_source ("main")
+s_source ("newuoa")
+s_source ("newuob")
+s_source ("trsapp")
+s_source ("update")
+
+interface ("NewUOA")
+
+Module ("NewUOA_M3")
+Module ("NewUOAs")
+
+%implementation("Main")
+%program ("testnewuoa")
+end
+library ("newuoa")

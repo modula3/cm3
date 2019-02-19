@@ -1,0 +1,26 @@
+c
+c     $Id$
+c
+      subroutine mul_mtransposem_EXTENSION(a, b, c, arows, acols, bcols)
+      implicit none
+      
+      integer arows, acols, bcols, row, col, term
+      TYPE a(acols,arows), b(bcols,arows), c(bcols,acols)
+
+      do 30 row=1,acols
+         do 20 col=1,bcols
+            c(col,row) = 0.0
+   20    continue
+   30 continue
+
+      do 300 term=1,arows
+         do 200 row=1,acols
+            do 100 col=1,bcols
+               c(col,row) = c(col,row) +a(row,term) * b(col,term)
+ 100        continue
+ 200     continue
+ 300  continue
+
+      end
+
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc

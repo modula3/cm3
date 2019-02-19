@@ -1,4 +1,4 @@
-import-libs base core front unicode min gui comm caltech-parser
+import-libs base core front unicode min gui comm caltech-parser caltech-other
 m3core base core front unicode min
 libm3 base core front unicode min
 windowsResources core
@@ -188,6 +188,22 @@ elego/pkgvm elego
 elego/prjbase elego
 elego/prjm elego
 m3sleep core
+
+semaphore caltech-other
+trie caltech-other
+matrix caltech-other
+minimize caltech-other
+voronoi caltech-other
+integrate caltech-other
+splines caltech-other
+newuoa caltech-other
+
+csv caltech-other
+csvalign caltech-other
+sx caltech-other
+m3readline caltech-other
+
+cptr caltech-other
 
 cm3 core front unicode
 m3cc core front unicode m3gnudevtool

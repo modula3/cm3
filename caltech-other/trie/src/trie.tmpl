@@ -1,0 +1,15 @@
+/* $Id$ */
+
+readonly proc trie(nm, key, value) is
+	local nam = nm & "Trie"
+
+	build_generic_intf(nam, "Trie", [key, value], HIDDEN)
+	build_generic_impl(nam, "Trie", [key, value])
+end
+
+readonly proc Trie(nm, key, value) is
+	local nam = nm & "Trie"
+
+	build_generic_intf(nam, "Trie", [key, value], VISIBLE)
+	build_generic_impl(nam, "Trie", [key, value])
+end

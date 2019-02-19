@@ -1,0 +1,114 @@
+/* $Id$ */
+import ("libm3")
+import ("cit_util")
+import ("set")
+
+/* THE SX ("Spreadsheet eXpression") system */
+
+Interface("SXRoot")
+Interface("SXClass")
+Module("SX")
+Interface("SXSelect")
+Interface("SXDebug")
+
+/* most of the code in SX is generic: */
+template("sxtype")
+
+Generic_module("SXType")              /* base type */
+
+/* math interfaces: the use of these REQUIRES instantiation of SxFuncOps
+   with the SAME naming conventions, as well as Bool and Int versions of same.
+   
+   They are instantiated using "SxRealOps" or "SxIntOps" templates.
+
+   Example:
+
+      This is OK on its own:
+	SxType("LongReal", "LongrealType")  
+        
+      But to instantiate:
+	SxRealOps("LR", "SXLongReal")
+      The following are also req'd:
+	SxFuncOps("LR_LR", "SXLongReal", "SXLongReal")
+	SxFuncOps("LR_Int", "SXLongReal", "SXInt")
+	SxFuncOps("LR_Bool", "SXLongReal", "SXBool")
+	SxFuncOps("LR_LR", "SXLongReal", "SXLongReal")
+*/
+
+Generic_interface("SXNumOps")         /* overloaded numerical ops */
+Generic_implementation("SXIntOps")    /* integer-type overloaded ops */
+Generic_implementation("SXRealOps")   /* real-type overloaded ops */
+Generic_implementation("SXNumOps")    /* common overloaded ops */
+Generic_module("SXConvertOps")        /* FLOAT(), need to add ROUND, etc. */
+
+
+Generic_module("SXFuncOps")           /* general function operations */
+Generic_module("SXGenOps")            /* very generic stuff */
+
+SxType("LongReal", "LongrealType")
+SxType("Real", "RealType")
+SxType("Int", "Integer")              /* required */
+SxType("Bool", "Boolean")             /* required */
+SxType("Ref", "Refany")
+SxType("Text", "Text")
+
+Interface("LRP")
+SxType("LongRealPair", "LRP")
+
+SxGenOps2("LR","SXLongReal","SXLR_LRFuncOps")
+SxGenOps("Real","SXReal")
+SxGenOps("Int","SXInt")
+SxGenOps("Bool","SXBool")
+SxGenOps("Ref","SXRef")
+SxGenOps("Text","SXText")
+
+/* all desired unary and binary function types... */
+SxFuncOps("Int_Int", "SXInt", "SXInt")
+
+SxFuncOps("Int_Bool", "SXInt", "SXBool")
+SxFuncOps("Bool_Bool", "SXBool", "SXBool")
+
+SxFuncOps("Real_Real", "SXReal", "SXReal")
+SxFuncOps("Real_Int", "SXReal", "SXInt")
+SxFuncOps("Real_Bool", "SXReal", "SXBool")
+
+SxFuncOps("Int_LR", "SXInt", "SXLongReal")
+SxFuncOps("Int_Real", "SXInt", "SXReal")
+
+SxFuncOps("LR_LR", "SXLongReal", "SXLongReal")
+SxFuncOps("LR_Int", "SXLongReal", "SXInt")
+SxFuncOps("LR_Bool", "SXLongReal", "SXBool")
+
+SxFuncOps("Ref_Ref", "SXRef", "SXRef")
+SxFuncOps("Text_Text", "SXText", "SXText")
+
+/* Bool_IntOps required for SXGenOps */
+SxFuncOps("Bool_Int", "SXBool", "SXInt")
+
+Module("SXBoolOps")
+
+SxRealOps("LR", "SXLongReal")
+SxRealOps("Real", "SXReal")
+SxIntOps("Int", "SXInt")
+
+module("SXTest") /* testing code for SX stuff */
+
+Sequence("SX", "SX")
+MkSet("SX","SX")
+MkSetDef("SX", "SX")
+Table("SXRef", "SX", "Refany")
+
+Module("SXTime")
+Module("SXTimer")
+
+Module("SXIterator")
+Module("SXPrettyPrint")
+
+template ("sxsloppybuf")
+Generic_module("SXSloppyBuf")
+
+library ("sx")
+
+
+
+

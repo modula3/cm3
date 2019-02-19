@@ -1,0 +1,10 @@
+/* $Id$ */
+
+import ("libm3")
+import ("parseparams")
+import ("cit_util")
+import ("rdwr")
+
+implementation ("Main")
+
+program ("csvalign")

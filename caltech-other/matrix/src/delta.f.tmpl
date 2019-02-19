@@ -1,0 +1,13 @@
+c
+c     $Id$
+c	
+      subroutine delta_EXTENSION(v, d, n)
+      implicit none
+      integer  i, n
+      TYPE v(n+1), d(n)
+      
+      do 100 i=1,n
+         d(i) = v(i+1)-v(i)
+ 100  continue
+      end
+	

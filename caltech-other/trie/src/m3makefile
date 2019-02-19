@@ -1,0 +1,12 @@
+/* $Id$ */
+
+import ("libm3")
+
+Generic_module ("Trie")
+template ("trie")
+
+Interface("Alpha")
+
+Trie("AlphaRef", "Alpha", "Refany")
+
+library("trie")

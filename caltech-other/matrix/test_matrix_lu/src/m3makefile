@@ -1,0 +1,8 @@
+/* $Id$ */
+
+import ("matrix")
+
+option("optimization","")
+implementation ("Main")
+
+program ("test_lu")

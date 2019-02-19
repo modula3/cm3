@@ -1,0 +1,9 @@
+/* $Id$ */
+readonly proc parametricSpline(nm, baseSpline) is
+        build_generic_module("Parametric" & nm, "ParametricSplineImpl", [baseSpline], [baseSpline])
+end
+
+readonly proc ParametricSpline(nm, baseSpline) is
+        Build_generic_module("Parametric" & nm, "ParametricSplineImpl", [baseSpline], [baseSpline])
+end
+

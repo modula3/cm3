@@ -1,0 +1,14 @@
+/* $Id$ */
+
+readonly proc _sxSloppyBuf (nm, sx, vis) is
+	build_generic_intf(nm & "SloppyBuf", "SXSloppyBuf", [sx], vis)
+	build_generic_impl(nm & "SloppyBuf", "SXSloppyBuf", [sx])
+end
+
+readonly proc SxSloppyBuf (nm, sx) is
+	_sxSloppyBuf (nm, sx, VISIBLE)
+end
+
+readonly proc sxSloppyBuf (nm, sx) is
+	_sxSloppyBuf (nm, sx, HIDDEN)
+end
