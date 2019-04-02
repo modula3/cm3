@@ -18,7 +18,11 @@ INTERFACE stubs.
 MScheme inherits the main limitation of JScheme: as JScheme uses
 the Java stack as a call stack, MScheme uses the Modula-3 call
 stack.  As a result, these interpreters do not properly implement
-call-with-current-continuation (call/cc).
+call-with-current-continuation (call/cc).  MScheme also "probably" inherits
+the other limitations of JScheme as documented with that tool, plus other
+limitations.
+
+MScheme extensions are too numerous to list here.
 
 MScheme can be used in several modes.  Most applications will make MScheme
 the REPL of the application and export application functionality into MScheme
