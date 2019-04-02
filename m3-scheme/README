@@ -1,0 +1,52 @@
+This is the README in the mscheme directory.  
+
+MScheme is an interpreter for a restricted and expanded version of Scheme,
+largely in line with Revised^4 Revision of the Algorithmic Language Scheme
+(Clinger and Rees, eds., 1991).
+
+MScheme is written in Modula-3 and is shipped together with a stub
+generator that converts Modula-3 INTERFACEs to Scheme interfaces.
+Documentation is work in progress.  Many examples exist in the associated
+directories.
+
+MScheme started as a direct translation of JScheme, by Peter Norvig.
+JScheme was written in Java and translated line-for-line to Modula-3 by
+the author of this document.  A restricted compiler for closed lambdas was
+implemented, plus a number of system extensions, and linkage to the generated
+INTERFACE stubs.  
+
+MScheme inherits the main limitation of JScheme: as JScheme uses
+the Java stack as a call stack, MScheme uses the Modula-3 call
+stack.  As a result, these interpreters do not properly implement
+call-with-current-continuation (call/cc).
+
+MScheme can be used in several modes.  Most applications will make MScheme
+the REPL of the application and export application functionality into MScheme
+by defining symbols at startup.  The modula3scheme library can also be used
+to automatically pull in all visible Modula-3 symbols.
+
+MScheme is delivered together with source code for Scheme interpreters using
+both standard terminal input and a readline front end written in C, available
+elsewhere within CM3.
+
+MScheme has been used to develop a variety of applications in the financial,
+scientific, and hardware design computing fields.  Billions of dollars of
+stock trading has flown through MScheme.  No bugs are known but the software
+is delivered without warranty (see the appropriate license files).
+
+MScheme was written 2007-2008 with enhancements and bug fixes 2009-2018
+and is Copyright, Generation Capital Ltd.  It is delivered as an
+improvement to Critical Mass Modula-3 and also under its own open-source
+license.  The intent of the licenses is to make the software broadly
+available for any use without restriction.  Please contact the author
+for questions regarding software licenses if the licenses delivered with
+the software are insufficient for your purposes.
+
+For more information on JScheme please see Peter Norvig's site:
+
+https://norvig.com/jscheme.html
+
+README updated as of
+April 2, 2019
+Mika Nystrom <mika@alum.mit.edu>
+Pasadena, California, U.S.A.
