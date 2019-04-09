@@ -14,7 +14,7 @@ IMPORT Error, Field, Ident, PackedType, Target, TipeDesc;
 IMPORT Word, AssignStmt, M3Buf;
 FROM Scanner IMPORT Match, GetToken, cur;
 
-CONST MAXSIZE = LAST (INTEGER) DIV Target.Byte;
+VAR MaxBitSize := LAST (INTEGER);
 
 TYPE
   P = Type.T OBJECT
@@ -258,7 +258,7 @@ PROCEDURE SizeAndAlignment (fields: Scope.T; lazyAligned: BOOLEAN;
       END;
     END;
 
-    IF recSize > MAXSIZE THEN
+    IF recSize > MaxBitSize THEN
       Error.Msg ("CM3 restriction: record or object type is too large");
     END;
   END SizeAndAlignment;

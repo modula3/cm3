@@ -352,17 +352,26 @@ TYPE
 
 (*----------------------------------------------- machine supported types ---*)
 
-(* build a generic 32-bit/IEEE system description *)
+(* Build a generic 32-bit/IEEE system description.
+   Code in Target.m3 will change values as appropriate for 64-bit and any other
+   target properties. *)
 
 VAR (*CONST*)
-  Address   := Int_type{CGType.Addr, 32, 32, 32, 4, TInt.Zero, TWord.Max32}; (* default for the 32-bit platforms *)
-  Integer   := Int32; (* default for the 32-bit platforms *)
-  Word      := Word32; (* default for the 32-bit platforms *)
+  (* The following differ in size and alignment for 32/64-bit targets. *)
+  Address   := Addr32;
+  Integer   := Int32; 
+  Word      := Word32;
+  (* The following differ only in alignment. *) 
+  Longint   := Int64;
+  Long      := Word64;
+  Longreal  := Float_type{CGType.LReel, Precision.Long, 64, 64, 8, Float{Precision.Long, 0, -1.79769313486231570x+308}, Float{Precision.Long, 0, 1.79769313486231570x+308}};
+VAR
+  Extended  := Float_type{CGType.XReel, Precision.Extended, 64, 64, 8, Float{Precision.Extended, 0, -1.79769313486231570x+308}, Float{Precision.Extended, 0, 1.79769313486231570x+308}};
 
 CONST
-  Longint   = Int64;
-  Long      = Word64;
-  Int8      = Int_type{CGType.Int8,    8,  8,  8, 1,  TInt.Min8, TInt.Max8};
+  Addr32    = Int_type{CGType.Addr,   32, 32, 32, 4, TInt.Zero, TWord.Max32};
+  Addr64    = Int_type{CGType.Addr,   64, 64, 64, 8, TInt.Zero, TWord.Max64};
+  Int8      = Int_type{CGType.Int8,    8,  8,  8, 1, TInt.Min8, TInt.Max8};
   Int16     = Int_type{CGType.Int16,  16, 16, 16, 2, TInt.Min16, TInt.Max16};
   Int32     = Int_type{CGType.Int32,  32, 32, 32, 4, TInt.Min32, TInt.Max32};
   Int64     = Int_type{CGType.Int64,  64, 64, 64, 8, TInt.Min64, TInt.Max64};
@@ -373,9 +382,6 @@ CONST
   Char      = Word8;
   Void      = Int_type{CGType.Void,  0,  8,  0, 0, TInt.Zero, TInt.Zero};
   Real      = Float_type{CGType.Reel, Precision.Short, 32, 32, 4, Float{Precision.Short, 0, -3.40282346638528860x+38}, Float{Precision.Short, 0, 3.40282346638528860x+38}};
-  Longreal  = Float_type{CGType.LReel, Precision.Long, 64, 64, 8, Float{Precision.Long, 0, -1.79769313486231570x+308}, Float{Precision.Long, 0, 1.79769313486231570x+308}};
-VAR
-  Extended  := Float_type{CGType.XReel, Precision.Extended, 64, 64, 8, Float{Precision.Extended, 0, -1.79769313486231570x+308}, Float{Precision.Extended, 0, 1.79769313486231570x+308}};
 
 CONST (* sorted list of supported machine alignments *)
   Alignments = ARRAY [0..3] OF CARDINAL{8, 16, 32, 64};
