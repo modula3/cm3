@@ -9,11 +9,12 @@
 
 MODULE Variable;
 
-IMPORT M3, M3ID, CG, Value, ValueRep, Type, Expr, Error, RunTyme;
-IMPORT Scope, AssignStmt, Formal, M3RT, IntegerExpr, TipeMap, M3String;
-IMPORT OpenArrayType, Target, TInt, Token, Ident, Module, CallExpr;
-IMPORT Decl, Null, Int, LInt, Fmt, Procedure, Tracer, TextExpr, NamedExpr;
-IMPORT PackedType, ErrType;
+IMPORT M3, M3ID, CG, Value, ValueRep, Error, RunTyme;
+IMPORT Scope, AssignStmt, Formal, M3RT, M3String;
+IMPORT Target, TInt, Token, Ident, Module, CallExpr;
+IMPORT Decl, Null, Int, LInt, Fmt, Procedure, Tracer;
+IMPORT Expr, IntegerExpr, ArrayExpr, TextExpr, NamedExpr;
+IMPORT Type, PackedType, OpenArrayType, ErrType, TipeMap;
 FROM Scanner IMPORT GetToken, Match, cur;
 
 CONST
@@ -33,7 +34,7 @@ REVEAL
         cg_var      : CG.Var;
         bss_var     : CG.Var;
         next_cg_var : T;
-        init_var    : INTEGER;
+        initValOffset : INTEGER;
         offset      : INTEGER;
         size        : INTEGER;
         align       : AlignVal;
@@ -126,7 +127,7 @@ PROCEDURE ParseDecl (READONLY att: Decl.Attributes) =
       END;
       IF att.isExternal AND att.alias # M3ID.NoID AND n > 1 THEN
         Error.WarnID (2, att.alias,
-                       "EXTERNAL alias applies to first variable");
+                       "EXTERNAL alias applies only to first variable");
       END;
       alias := att.alias;
       j := Ident.top - n;
@@ -178,7 +179,7 @@ PROCEDURE New (name: M3ID.T;  used: BOOLEAN): T =
     t.cg_align    := 0;
     t.cg_var      := NIL;
     t.bss_var     := NIL;
-    t.init_var    := 0;
+    t.initValOffset := 0;
     t.offset      := 0;
     t.size        := 0;
     t.align       := 0;
@@ -468,25 +469,26 @@ PROCEDURE GetBounds (t: T;  VAR min, max: Target.Int) =
 
 PROCEDURE SetGlobals (t: T) =
   VAR size, align: INTEGER;
-  VAR initType: M3.Type := NIL; 
+  VAR initExpr: Expr.T;
+  VAR initRepType: M3.Type := NIL; 
   BEGIN
     (* Type.SetGlobals (t.tipe); *)
     (* IF (t.init # NIL) THEN Type.SetGlobals (Expr.TypeOf (t.init)) END; *)
     IF (t.offset # 0) OR (NOT t.global) OR (t.external) THEN RETURN END;
     EVAL Type.Check (t.tipe);
 
-    IF t.init # NIL THEN initType := Expr.TypeOf (t.init) END; 
+    IF t.init # NIL THEN
+      initExpr := Expr.ConstValue (t.init);
+      ArrayExpr.NoteTargetType (initExpr, t.tipe);
+      initRepType := Expr.RepTypeOf (t.init) END; 
 
     IF (t.indirect) THEN
       size  := Target.Address.size;
       align := Target.Address.align;
-    ELSIF FALSE AND OpenArrayType.Is (initType) THEN
-(* FIXME, maybe.  Can the variable be a formal with open array type, in 
-   addition to the initializer's having an open array type?  If so, we want 
-   to come here. *) 
+    ELSIF OpenArrayType.Is (initRepType) THEN
       align := MAX (Target.Address.align, Target.Integer.align);
       size  := Target.Address.pack
-               + OpenArrayType.OpenDepth(initType) * Target.Integer.pack;
+               + OpenArrayType.OpenDepth(initRepType) * Target.Integer.pack;
     ELSE
       size  := t.size;
       align := t.align;
@@ -619,12 +621,14 @@ PROCEDURE ConstInit (t: T) =
       (* declare the holder for the initial value *)
       name := "_INIT_" & M3ID.ToText (t.name);
       init_name := M3ID.Add (name);
-      t.init_var := Module.Allocate (size, align, TRUE,"initial value for ",t.name);
-      CG.Declare_global_field (init_name, t.init_var, size, type, TRUE);
-      CG.Comment (t.init_var, TRUE, "init expr for ",Value.GlobalName(t,TRUE,TRUE));
+      t.initValOffset
+        := Module.Allocate (size, align, TRUE,"initial value for ",t.name);
+      CG.Declare_global_field (init_name, t.initValOffset, size, type, TRUE);
+      CG.Comment
+        (t.initValOffset, TRUE, "init expr for ",Value.GlobalName(t,TRUE,TRUE));
       init_expr := Expr.ConstValue (t.init);
       Expr.PrepLiteral (init_expr, t.tipe, TRUE);
-      Expr.GenLiteral (init_expr, t.init_var, t.tipe, TRUE);
+      Expr.GenLiteral (init_expr, t.initValOffset, t.tipe, TRUE);
     END;
 
     IF (t.global) THEN
@@ -792,10 +796,13 @@ PROCEDURE UserInit (t: T) =
         t.initPending := FALSE;
         LoadLValue (t);
         Type.Zero (t.tipe);
-      ELSIF (t.init_var # 0) THEN
+      ELSIF (t.initValOffset # 0) THEN
+(* CHECK ^Couldn't zero mean an initial value that was allocated at the
+          beginning of the global constant area, instead of no such value? *)
         t.initPending := FALSE;
         LoadLValue (t);
-        Module.LoadGlobalAddr (Scope.ToUnit (t), t.init_var, is_const := TRUE);
+        Module.LoadGlobalAddr
+          (Scope.ToUnit (t), t.initValOffset, is_const := TRUE);
         CG.Copy (t.size, overlap := FALSE);
       ELSE
         t.initPending := FALSE;

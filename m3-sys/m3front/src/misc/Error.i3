@@ -22,6 +22,7 @@ PROCEDURE WarnID (level: INTEGER;  id: M3ID.T;  msg: TEXT);
 PROCEDURE IgnoreWarning (offset: INTEGER);
 
 PROCEDURE Info (msg: TEXT);
+PROCEDURE InfoInt (n: INTEGER;  msg: TEXT);
 
 PROCEDURE Count (VAR nErrors, nWarnings: INTEGER);
 

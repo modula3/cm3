@@ -242,7 +242,7 @@ PROCEDURE Gen (ce: CallExpr.T) =
     IF (RefType.Split (t, r)) THEN GenRef (t, Type.StripPacked (r), ce);
     ELSIF (ObjectType.Is (t)) THEN GenObject (t, ce);
     ELSIF (OpaqueType.Is (t)) THEN GenOpaque (t, ce);
-    ELSE Error.Msg ("NEW must be applied to a variable of a reference type");
+    ELSE Error.Msg ("NEW must name a reference type");
     END;
   END Gen;
 

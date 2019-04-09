@@ -12,6 +12,7 @@ IMPORT M3ID, CG, Type, Expr, ExprRep, ProcType, Formal;
 IMPORT Procedure, NamedExpr, Variable, QualifyExpr, Value;
 IMPORT CallExpr, ProcExpr, Marker, ErrType;
 
+(* Externally dispatched-to, using a field of Methods: *)
 PROCEDURE TypeOf (ce: CallExpr.T): Type.T =
   VAR t: Type.T;  proc := ce.proc;
   BEGIN
@@ -21,11 +22,13 @@ PROCEDURE TypeOf (ce: CallExpr.T): Type.T =
     RETURN ProcType.Result (Type.Base (t));
   END TypeOf;
 
+(* Externally dispatched-to, using a field of Methods: *)
 PROCEDURE NeedsAddress (<*UNUSED*> ce: CallExpr.T) =
   BEGIN
     (* ya, my result is a structure that needs an address... *)
   END NeedsAddress;
 
+(* Externally dispatched-to, using a field of Methods: *)
 PROCEDURE Check (ce: CallExpr.T;  VAR cs: Expr.CheckState) =
   VAR t: Type.T;  formals: Value.T;
   BEGIN
@@ -37,18 +40,7 @@ PROCEDURE Check (ce: CallExpr.T;  VAR cs: Expr.CheckState) =
     ce.type := ProcType.Result (t);
   END Check;
 
-PROCEDURE Compile (ce: CallExpr.T) =
-  BEGIN
-    (* all the real work is done by Prep *)
-    IF (ce.tmp # NIL) THEN
-      CG.Push (ce.tmp);
-      CG.Boost_addr_alignment (ce.align);
-      CG.Free (ce.tmp);
-      ce.tmp := NIL;
-    END;
-  END Compile;
-
-PROCEDURE Prep (ce: CallExpr.T) =
+PROCEDURE InnerPrep (ce: CallExpr.T) =
   VAR
     proc         : Expr.T    := ce.proc;
     args         : Expr.List := ce.args;
@@ -68,7 +60,7 @@ PROCEDURE Prep (ce: CallExpr.T) =
   BEGIN
     (* If this is a direct structure return, the LHS has already
      * been prepped and compiled -- save it.  *)
-    IF ce.do_direct THEN lhs_result := CG.Pop (); END;
+    IF ce.doDirectAssign THEN lhs_result := CG.Pop (); END;
 
     p_type := Expr.TypeOf (proc);
     IF (p_type = NIL) THEN p_type := QualifyExpr.MethodType (proc); END;
@@ -101,7 +93,7 @@ PROCEDURE Prep (ce: CallExpr.T) =
     cg_result    := ProcType.CGResult (p_type);
     align_result := result_info.alignment;
     large_result := ProcType.LargeResult (t_result);
-    IF large_result AND NOT ce.do_direct THEN
+    IF large_result AND NOT ce.doDirectAssign THEN
       tmp_result := CG.Declare_temp (result_info.size, align_result,
                                      CG.Type.Struct, in_memory := TRUE);
     END;
@@ -157,14 +149,38 @@ PROCEDURE Prep (ce: CallExpr.T) =
     ce.align := align_result;
     IF (large_result) THEN
       <*ASSERT ce.tmp = NIL *>
-      IF ce.do_direct THEN
+      IF ce.doDirectAssign THEN
         ce.tmp := lhs_result;
       ELSE
         CG.Load_addr_of_temp (tmp_result, 0, align_result);
         ce.tmp := CG.Pop ();
       END;
     END;
+  END InnerPrep;
+
+(* Externally dispatched-to, using a field of Methods: *)
+PROCEDURE Prep (ce: CallExpr.T) =
+  BEGIN
+    IF NOT ce.doDirectAssign
+    THEN InnerPrep (ce)
+ (* ELSE postpone InnerPrep until Compile, when LHS will have been pushed. *)
+    END;
   END Prep;
+
+(* Externally dispatched-to: *)
+PROCEDURE Compile (ce: CallExpr.T) =
+  BEGIN
+    IF ce.doDirectAssign
+    THEN (* InnerPrep was postponed until now. *)
+      InnerPrep (ce)
+    END;
+    IF (ce.tmp # NIL) THEN
+      CG.Push (ce.tmp);
+      CG.Boost_addr_alignment (ce.align);
+      CG.Free (ce.tmp);
+      ce.tmp := NIL;
+    END;
+  END Compile;
 
 PROCEDURE PrepRightToLeft (formal: Value.T;  args: Expr.List;  cnt: INTEGER) =
   BEGIN
@@ -217,6 +233,7 @@ PROCEDURE CouldBeClosure (proc: Expr.T): BOOLEAN =
         AND (Variable.HasClosure (value));
   END CouldBeClosure;
 
+(* EXPORTED: *)
 PROCEDURE IsProcedureLiteral (e: Expr.T;  VAR proc: Value.T): BOOLEAN =
   VAR name: M3ID.T;  v: Value.T;  vc: Value.Class;
   BEGIN
@@ -239,6 +256,7 @@ PROCEDURE IsProcedureLiteral (e: Expr.T;  VAR proc: Value.T): BOOLEAN =
     *******)
   END IsProcedureLiteral;
 
+(* EXPORTED: *)
 PROCEDURE Initialize () =
   BEGIN
     Methods := CallExpr.NewMethodList (0, 99999, FALSE, TRUE, TRUE, NIL,

@@ -9,15 +9,16 @@
 
 INTERFACE ExprRep;
 
-IMPORT M3, M3Buf, CG, Target, Type;
+IMPORT M3, M3Buf, CG, Target, Type, Expr;
 
 REVEAL
   M3.Expr = M3.Node BRANDED "Expr.T" OBJECT
-    type      : M3.Type;
-    checked   : BOOLEAN;
-    direct_ok : BOOLEAN;
-    do_direct : BOOLEAN;
-    align     : INTEGER; 
+    type                 : M3.Type;
+    align                : INTEGER; 
+    checked              : BOOLEAN;
+    directAssignableType : BOOLEAN;
+    doDirectAssign       : BOOLEAN;
+    isNamedConst         : BOOLEAN;
   METHODS
     typeOf       (): M3.Type                       := NoType;
     check        (VAR cs: M3.CheckState)           := NoCheck;
@@ -39,6 +40,11 @@ REVEAL
     compileBR    (true, false: CG.Label;  freq: CG.Frequency) := NotBoolean;
     note_write   ()                                := NotWritable;
     exprAlign    (): Type.BitAlignT                := ExprAlignDefault;
+    repTypeOf    (): Type.T                        := Expr.TypeOf;
+    staticLength (): Expr.lengthTyp                := StaticLengthDefault;
+    usesAssignProtocol (): BOOLEAN                 := UsesAssignProtocolDefault
+
+
   END;
 
 TYPE Ta   = M3.Expr OBJECT a: M3.Expr     OVERRIDES isEqual := EqCheckA  END;
@@ -77,6 +83,9 @@ PROCEDURE ExprBoolAlign    (e: M3.Expr): Type.BitAlignT;
 PROCEDURE ExprIntAlign     (e: M3.Expr): Type.BitAlignT;
 PROCEDURE ExprAlignArg0    (e: Ta): Type.BitAlignT;
   (* ^Inherit alignment from argument zero. *)  
+
+PROCEDURE StaticLengthDefault (e: M3.Expr): Expr.lengthTyp;
+PROCEDURE UsesAssignProtocolDefault (e: M3.Expr): BOOLEAN;
 
 PROCEDURE EqCheckA  (e: Ta;  x: M3.Expr;  z: M3.EqAssumption): BOOLEAN;
 PROCEDURE EqCheckAB (e: Tab; x: M3.Expr;  z: M3.EqAssumption): BOOLEAN;

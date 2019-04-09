@@ -212,9 +212,15 @@ PROCEDURE Declare_temp (s: Size;  a: Alignment;  t: Type;
 PROCEDURE Free_temp (v: Var);
 (* releases the space occupied by temp variable 'v' so that it may be reused
    by other new temporaries. *)
+(* NOTE This is disabled. The only way is to call Free_temps and hope you
+        are done with them all. *)
 
 PROCEDURE Free_temps ();
-(* free any temps that are marked busy. *)
+(* free "temps" (CG.Vars) that are marked busy. *)
+
+(* NOTE: This naming is very confusing.  A CG.Var and CG.Val are different
+         things.  But both are referred-to in many places as temporaries,
+         temps, tmps, etc.  Free_temp and Free_temps refer to CG.Vars. *)
 
 (*--------------------------------------------- direct stack manipulation ---*)
 
@@ -230,7 +236,11 @@ PROCEDURE Push (v: Val);
 (* push;  s0 := v *)
 
 PROCEDURE Free (v: Val);
-(* free any temporaries that "v" created *)
+(* free any "temporaries" that "v" created *)
+(* NOTE: This naming is very confusing.  A CG.Var and CG.Val are different
+         things.  But both are referred-to in many places as temporaries,
+         temps, tmps, etc.  'Free' frees a CG.Val.  It claims to also free
+         CG.Vars that the Val points to, but this is disabled. *)
 
 PROCEDURE Store_temp (v: Val);
 (* v := s0;  pop  -- v must have been created by "Pop_temp" *)
@@ -266,6 +276,7 @@ PROCEDURE Init_label (o: Offset;  value: Label;  is_const: BOOLEAN);
    of the label 'value'.  *)
 
 PROCEDURE Init_var (o: Offset;  value: Var;  bias: Offset;  is_const: BOOLEAN);
+(* 'init_address_of_var' would have been a more meaningful name here. *)
 (* initializes the static variable at 'ADR(v)+o' with the address
    of 'value+bias'.  *)
 
@@ -407,10 +418,9 @@ PROCEDURE Load
   (v: Var; o: Offset; s: Size; base_align, addr_align: Alignment; t: Type);
 (* push ; s0.t := Mem [ ADR(v) + o : s ] *)
 
-PROCEDURE Load_addr_of
-  (v: Var;  o: Offset; addr_align: Alignment);
+PROCEDURE Load_addr_of (v: Var;  o: Offset; addr_align: Alignment);
 (* push ; s0.A := ADR(v) + o *)
-(* addr_align applies to where the address points. *) 
+(* addr_align applies to where s0.A points. *) 
 
 PROCEDURE Load_addr_of_temp (v: Var;  o: Offset;  addr_align: Alignment);
 (* == Load_addr_of (v, o, addr_align) ; free v when this L-value is consumed *)
@@ -424,10 +434,8 @@ PROCEDURE Load_int (t: IType;  v: Var;  o: Offset := 0);
 
 PROCEDURE Load_addr 
   (v: Var;  o: Offset; addr_align: Alignment := Target.Word8.align);
-(* Actually, this means load the *value* of v and give it type Addr. *) 
+(* Actually, this means load the *contents* of v and give it type Addr. *) 
 (* == Load (v, o, Target.Address.size, Target.Address.align, addr_align, Type.Addr) *)
-(* Actually, this means load the *value* of v and give it type Addr. *) 
-(* == Load (v, o, Target.Address.size, Target.Address.align, Type.Addr) *)
 
 PROCEDURE Store (v: Var;  o: Offset;  s: Size;  a: Alignment(*of Var*);  t: Type);
 (* Mem [ ADR(v) + o : s ] := s0.t ; pop *)
@@ -588,7 +596,7 @@ PROCEDURE Index_bits (bits_addr_align: Alignment := 1);
 (* s1.A := s1.A + s0.I ; pop *)
 
 PROCEDURE Boost_addr_alignment (a: Alignment);
-(* note that s0.A has an alignment of at least 'a'. *)
+(* note that the referenct of s0.A has an alignment of at least 'a'. *)
 
 PROCEDURE GCD (a, b: INTEGER): INTEGER;
 (* return the greatest x that divides both a and b. *)
@@ -666,7 +674,7 @@ PROCEDURE Ref_to_info (offset, size: INTEGER);
 
 PROCEDURE Open_elt_ptr (a: Alignment);
 (* == Load_indirect (Type.Addr, M3RT.OA_elt_ptr, Target.Address.align,
-                        Target.Address.size);  Boost_alignment (a) *)
+                        Target.Address.size);  Boost_addr_alignment (a) *)
 
 PROCEDURE Open_size (n: INTEGER);
 (* == Load_indirect (Type.Int, M3RT.OA_sizes + n * Target.Integer.pack,

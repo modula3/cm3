@@ -11,12 +11,49 @@ INTERFACE ArrayExpr;
 
 IMPORT Type, Expr, Target;
 
-PROCEDURE New (type: Type.T;  args: Expr.List;  dots: BOOLEAN): Expr.T;
+TYPE P <: Expr.T;
+
+PROCEDURE New
+  (type: Type.T; args: Expr.List; dots: BOOLEAN): Expr.T;
+(* PRE: type is a fixed or open array type. *)
+
+(*
+PROCEDURE ArrayConstrExpr (e: Expr.T): P;
+(* Look through a ConsExpr for an ArrayExpr.  NIL if not. *)
+*)
+
+PROCEDURE NoteNested (constr: P);
+(* PRE: constr has not been checked. *)
+(* Mark constr as nested (ArrayExpr nested inside an ArrayExpr, directly,
+   except for a possible ConsExpr in between.  In particular, not a
+   named constant. *)
+
+PROCEDURE NoteTargetType (expr: Expr.T; type: Type.T);
+(* PRE: If expr is an array constructor, it is top-level.
+   If so, arrange for it to be compiled having type 'type'. *)
+(* Will look through a ConsExpr. *)
+
+PROCEDURE NoteUseTargetVar (expr: Expr.T);
+(* NOOP if expr is not an array constructor.  Otherwise: *)
+  (* PRE: expr is top-level, has been checked but not prepped, and
+          UsesAssignProtocol (expr) has not yet been called. *)
+  (* Arrange to use LHS from the CG stack to set nonstatic shape components. *)
+  (* Will look through a ConsExpr. *)
+
+PROCEDURE ShapeCheckNeeded (expr: Expr.T): BOOLEAN;
+(* PRE: If expr is an array constructor, it is top-level and Checked. *)
+(* If expr is an array constructor, assigning expr will require CT or RT array
+   shape check. (Otherwise, ArrayExpr will take care of shape checks.) *)
+(* Will look through a ConsExpr. *)
 
 PROCEDURE Is (e: Expr.T): BOOLEAN;
+(* Will look through a ConsExpr. *)
 
-PROCEDURE GetBounds (array: Expr.T; VAR min, max: Target.Int): BOOLEAN;
+PROCEDURE GetBounds
+  (expr: Expr.T;  VAR min, max: Target.Int): (* Success *) BOOLEAN;
+(* Will look through a ConsExpr. *)
 
-PROCEDURE Subscript (array, index: Expr.T;  VAR e: Expr.T): BOOLEAN;
+PROCEDURE ConstSubscript (array, index: Expr.T;  VAR e: Expr.T): BOOLEAN;
+(* Will look through a ConsExpr. *)
 
 END ArrayExpr.

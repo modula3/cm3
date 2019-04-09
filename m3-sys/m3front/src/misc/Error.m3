@@ -88,6 +88,18 @@ PROCEDURE Info (msg: TEXT) =
     END;
   END Info;
 
+PROCEDURE InfoInt (n: INTEGER;  msg: TEXT) =
+  BEGIN
+    IF Toss (FIRST (Level)) THEN RETURN END;
+    VAR wr := Header (FIRST (Level)); BEGIN
+      Out (wr, msg);
+      Out (wr, " (");
+      Out (wr, Fmt.Int (n));
+      Out (wr, ")");
+      Trailer (wr);
+    END;
+  END InfoInt;
+
 PROCEDURE Warn (level: INTEGER;  msg: TEXT) =
   BEGIN
     IF Toss (level) THEN RETURN END;

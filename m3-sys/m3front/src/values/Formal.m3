@@ -10,7 +10,7 @@ MODULE Formal;
 
 IMPORT M3, M3ID, CG, Value, ValueRep, Type, Error, Expr, ProcType;
 IMPORT KeywordExpr, OpenArrayType, RefType, ErrType, CheckExpr;
-IMPORT ArrayType, Host, NarrowExpr, M3Buf, Tracer;
+IMPORT ArrayType, ArrayExpr, Host, NarrowExpr, M3Buf, Tracer;
 IMPORT Procedure, UserProc, Target, M3RT;
 
 TYPE
@@ -258,10 +258,10 @@ PROCEDURE DoCheckArgs (VAR cs       : Value.CheckState;
                            proc     : Expr.T): BOOLEAN =
   VAR
     j                 : INTEGER;
-    e, value          : Expr.T;
+    actualExpr, value : Expr.T;
     index, elt, t, te : Type.T; 
     name              : M3ID.T;
-    tt                : T;
+    formal            : T;
     posOK, ok         : BOOLEAN;
   BEGIN
     ok := TRUE;
@@ -272,25 +272,25 @@ PROCEDURE DoCheckArgs (VAR cs       : Value.CheckState;
     END;
 
     (* initialize the argument list *)
-    tt := formals;
-    WHILE (tt # NIL) DO
-      WITH z = slots[tt.offset] DO
-        z.formal  := tt;
-        z.actual  := tt.dfault;
+    formal := formals;
+    WHILE (formal # NIL) DO
+      WITH z = slots[formal.offset] DO
+        z.formal  := formal;
+        z.actual  := formal.dfault;
         z.matched := FALSE;
         z.errored := FALSE;
-        z.name    := tt.name;
+        z.name    := formal.name;
       END;
-      tt := tt.next;
+      formal := formal.next;
     END;
 
     (* bind the parameters *)
     posOK := TRUE;
     FOR i := 0 TO MIN (LAST (actuals^) , nFormals -1) DO
-      e := actuals[i];
-      IF KeywordExpr.Split (e, name, value) THEN
+      actualExpr := actuals[i];
+      IF KeywordExpr.Split (actualExpr, name, value) THEN
         posOK := FALSE;
-        e := value;
+        actualExpr := value;
         j := 0;
         LOOP
           IF (j >= nFormals) THEN
@@ -316,7 +316,7 @@ PROCEDURE DoCheckArgs (VAR cs       : Value.CheckState;
           ok := FALSE;
         END;
         z.matched := TRUE;
-        z.actual := e;
+        z.actual := actualExpr;
       END;
     END;
 
@@ -331,40 +331,44 @@ PROCEDURE DoCheckArgs (VAR cs       : Value.CheckState;
 
     (* typecheck each binding *)
     FOR i := 0 TO nFormals - 1 DO
-      e  := slots[i].actual;
-      tt := slots[i].formal;
-      IF (e # NIL) AND (tt # NIL) THEN
+      actualExpr  := slots[i].actual;
+      formal := slots[i].formal;
+      IF (actualExpr # NIL) AND (formal # NIL) THEN
         (* we've got both a formal and an actual *)
-        Expr.TypeCheck (e, cs);
+     (* ArrayExpr.NoteTargetType (actualExpr, formal.tipe); *)
+        Expr.TypeCheck (actualExpr, cs);
 
         (* try to fold scalar constant values *)
         (* NOTE: if we fold named structured constants, we lose the
              names and hence generate code to build the value... *)
-        IF NOT Type.IsStructured (tt.tipe) THEN
-          value := Expr.ConstValue (e);
-          IF (value # NIL) THEN e := value;  slots[i].actual := e END;
+        IF NOT Type.IsStructured (formal.tipe) THEN
+          value := Expr.ConstValue (actualExpr);
+          IF value # NIL THEN
+            actualExpr := value;
+            slots[i].actual := actualExpr
+          END;
         END;
 
-        te := Expr.TypeOf (e);
-        t  := tt.tipe;
-        CASE tt.mode OF
+        te := Expr.TypeOf (actualExpr);
+        t  := formal.tipe;
+        CASE formal.mode OF
         | Mode.mVALUE =>
             IF NOT Type.IsAssignable (t, te) THEN
               Err (slots[i], "actual not assignable to VALUE formal");
               ok := FALSE;
             END;
         | Mode.mVAR =>
-            IF NOT Expr.IsDesignator (e) THEN
+            IF NOT Expr.IsDesignator (actualExpr) THEN
               Err (slots[i], "VAR actual must be a designator");
               ok := FALSE;
-            ELSIF NOT Expr.IsWritable (e, traced := TRUE) THEN
+            ELSIF NOT Expr.IsWritable (actualExpr, traced := TRUE) THEN
               Err (slots[i], "VAR actual must be writable");
               ok := FALSE;
             ELSIF Type.IsEqual (t, te, NIL) 
                   OR (ArrayType.Split (t, index, elt)
                       AND ArrayType.Split (te, index, elt)
                       AND Type.IsAssignable (t, te) ) THEN
-              Expr.NeedsAddress (e);
+              Expr.NeedsAddress (actualExpr);
             ELSE
               Err (slots[i], "actual not compatible with VAR formal");
               ok := FALSE;
@@ -373,11 +377,11 @@ PROCEDURE DoCheckArgs (VAR cs       : Value.CheckState;
             IF NOT Type.IsAssignable (t, te) THEN
               Err (slots[i], "actual not assignable to READONLY formal");
               ok := FALSE;
-            ELSIF Expr.IsDesignator (e)
+            ELSIF Expr.IsDesignator (actualExpr)
                   AND Type.IsEqual (t, te, NIL) 
                       OR (ArrayType.Split (t, index, elt))
             THEN (* Pass by reference. *) 
-              Expr.NeedsAddress (e);
+              Expr.NeedsAddress (actualExpr);
             ELSE (* Type.IsAssignable (t, te), pass by value. *)
               (* we'll make a copy when it's generated *)
             END;
@@ -386,19 +390,19 @@ PROCEDURE DoCheckArgs (VAR cs       : Value.CheckState;
         (* check to see if it's a reference and needs an implicit NARROW,
            which may generate a nested procedure call... *)
         IF (ok) AND Host.doNarrowChk
-                AND ((tt.kind = Type.Class.Ref)
-                  OR (tt.kind = Type.Class.Object)
-                  OR (tt.kind = Type.Class.Opaque)) THEN
+                AND ((formal.kind = Type.Class.Ref)
+                  OR (formal.kind = Type.Class.Object)
+                  OR (formal.kind = Type.Class.Opaque)) THEN
           IF NOT Type.IsSubtype (te, t) THEN
             (* This reference value needs an implicit NARROW *)
-            e := NarrowExpr.New (e, t);
-            slots[i].actual := e;
-            Expr.TypeCheck (e, cs);
+            actualExpr := NarrowExpr.New (actualExpr, t);
+            slots[i].actual := actualExpr;
+            Expr.TypeCheck (actualExpr, cs);
           END;
         END;
 
       END; (* if got actual & formal *)
-    END; (* for *)
+    END (*FOR*);
 
     IF (NOT ok) THEN RETURN FALSE END;
 
@@ -433,8 +437,10 @@ PROCEDURE ProcName (proc: Expr.T): TEXT =
 (*EXPORTED*)
 PROCEDURE PrepArg (formal: Value.T; actual: Expr.T) =
   VAR t: T := formal;
-    index, elt: Type.T; 
+  VAR index, elt: Type.T;
   BEGIN
+    ArrayExpr.NoteTargetType (actual, Value.TypeOf (formal));
+
     CASE t.mode OF
     | Mode.mVALUE => (* Pass by value. *) 
         Expr.Prep (actual);
@@ -722,12 +728,11 @@ PROCEDURE GenSet (t: T;  actual: Expr.T) =
 PROCEDURE GenArray (t: T; actual: Expr.T; formal_is_open: BOOLEAN) =
   VAR t_actual := Expr.TypeOf (actual); info: Type.Info;
   BEGIN
-    EVAL Type.CheckInfo (t.tipe, info);
     Type.Compile (t.tipe);
     CASE t.mode OF
     | Mode.mVALUE =>
         Expr.Compile (actual); (* For array, will compile an address. *)
-        ReshapeArray (t.tipe, t_actual);
+        RedepthArray (t.tipe, t_actual);
         IF formal_is_open THEN
           (* Pass address, callee will make a copy in its prolog. *) 
           CG.Pop_param (CG.Type.Addr);
@@ -739,7 +744,7 @@ PROCEDURE GenArray (t: T; actual: Expr.T; formal_is_open: BOOLEAN) =
     | Mode.mVAR =>
         IF Expr.Alignment (actual) MOD Target.Byte = 0 THEN
           Expr.CompileAddress (actual, traced := TRUE); 
-          ReshapeArray (t.tipe, t_actual);
+          RedepthArray (t.tipe, t_actual);
           CG.Pop_param (CG.Type.Addr);
           Expr.NoteWrite (actual);
         ELSE (* Error recovery. *) 
@@ -751,7 +756,7 @@ PROCEDURE GenArray (t: T; actual: Expr.T; formal_is_open: BOOLEAN) =
         THEN (* Pass by reference. *) 
           IF Expr.Alignment (actual) MOD Target.Byte = 0 THEN
             Expr.CompileAddress (actual, traced := FALSE); 
-            ReshapeArray (t.tipe, t_actual);
+            RedepthArray (t.tipe, t_actual);
           ELSE (* Error recovery. *) 
             CG.Load_nil ();
           END (*IF*) 
@@ -761,7 +766,7 @@ PROCEDURE GenArray (t: T; actual: Expr.T; formal_is_open: BOOLEAN) =
                 thus should not need copying. *) 
         (* Treat as VALUE: make a copy and pass it by reference. *) 
           Expr.Compile (actual); (* For array, will compile an address. *)
-          ReshapeArray (t.tipe, t_actual);
+          RedepthArray (t.tipe, t_actual);
           IF formal_is_open THEN (* Callee will make a copy in its prolog. *) 
           ELSE GenCopy (t.tipe);
           END;
@@ -770,7 +775,10 @@ PROCEDURE GenArray (t: T; actual: Expr.T; formal_is_open: BOOLEAN) =
     END (*CASE*);
   END GenArray;
 
-PROCEDURE ReshapeArray (tlhs, trhs: Type.T) =
+PROCEDURE RedepthArray (tlhs, trhs: Type.T) =
+(* PRE: RHS is pushed on CG stack. *)
+(* Change TOS array from trhs's open depth to tlhs's open depth,
+   while preserving shape.  Generate any necessary RT length checks. *)
   VAR
     d_lhs, d_rhs: INTEGER;
     index, elt: Type.T;
@@ -836,7 +844,7 @@ PROCEDURE ReshapeArray (tlhs, trhs: Type.T) =
     END;
 
     CG.Free (rhs);
-  END ReshapeArray;
+  END RedepthArray;
 
 (*EXPORTED*)
 PROCEDURE GenCopy (type: Type.T) =
@@ -853,7 +861,6 @@ PROCEDURE GenCopy (type: Type.T) =
       CG.Load_addr_of (copyVar, 0, info.alignment);
       CG.Swap ();
       CG.Copy (info.size, overlap := FALSE);
-(* CHECK/FIXME: Don't we need to free the temp? *) 
     ELSE
       copyVar := CG.Declare_local (M3ID.NoID, info.size, info.alignment,
                                info.mem_type, id, in_memory := TRUE,

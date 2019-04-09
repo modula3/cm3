@@ -280,7 +280,7 @@ PROCEDURE IsStructured (t: T): BOOLEAN =
 (* <=> rec, set, or array <=> is represented as an address on the CG stack *)
 (* PRE: t need not be checked. *) 
   BEGIN
-    IF (t = NIL) THEN RETURN FALSE END;
+    IF t = NIL THEN RETURN FALSE END;
     CASE t.info.class OF
     | Class.Packed    => RETURN IsStructured (Base (t));
     | Class.Record,

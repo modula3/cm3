@@ -9,7 +9,7 @@
 MODULE ArrayType;
 
 IMPORT M3, CG, Type, TypeRep, Error, Token;
-IMPORT OpenArrayType, RecordType, PackedType; 
+IMPORT OpenArrayType, RecordType;
 IMPORT Word, Target, TInt, TipeMap, TipeDesc, ErrType;
 FROM Scanner IMPORT Match, GetToken, cur;
 
@@ -119,6 +119,24 @@ PROCEDURE TotalDepth (t: Type.T): INTEGER =
   END TotalDepth;
 
 (* EXPORTED: *)
+PROCEDURE Is (t: Type.T): BOOLEAN =
+(* An array type, open or fixed. *)
+  VAR p := Reduce (t);
+  BEGIN
+    IF p # NIL THEN RETURN TRUE
+    ELSE RETURN OpenArrayType.Is (p)
+    END
+  END Is;
+
+(* EXPORTED: *)
+PROCEDURE IsFixed (t: Type.T): BOOLEAN =
+(* A fixed array type. *)
+  VAR p := Reduce (t);
+  BEGIN
+    RETURN p # NIL;
+  END IsFixed;
+
+(* EXPORTED: *)
 PROCEDURE Split (t: Type.T;  VAR index, element: Type.T): BOOLEAN =
 (* Succeeds on an open array too. *) 
   VAR p := Reduce (t);
@@ -135,7 +153,23 @@ PROCEDURE Split (t: Type.T;  VAR index, element: Type.T): BOOLEAN =
   END Split;
 
 (* EXPORTED: *)
+PROCEDURE EltType (array: Type.T): Type.T =
+(* If 'array' is a fixed array type, its element type, otherwise NIL. *)
+  VAR p := Reduce (array);
+  BEGIN
+    IF p # NIL THEN
+      RETURN p.indexType;
+    ELSE
+      RETURN NIL;
+    END;
+  END EltType;
+
+(* EXPORTED: *)
 PROCEDURE EltPack (t: Type.T): INTEGER =
+(* If 'array' is an array type, returns the packed size in bits of
+   its elements.  If 'array' is an open array type, this is for the
+   outermost fixed array dimension, if such exists.  Otherwise,
+   returns 0. *)
   VAR p := Reduce (t);
   BEGIN
     IF (p # NIL) THEN
@@ -185,7 +219,8 @@ PROCEDURE EltsAreBitAddressed (t: Type.T): BOOLEAN =
 PROCEDURE GenIndex (t: Type.T) =
 (* Given "ADR(a)" and "index" on the stack, generate code to replace them
    by "ADR(a[index])" on the stack.  Beginning and ending "addresses" are
-   CG 'ValRec's and may include a 'bits' expression. *)
+   CG 'ValRec's and may include a 'bits' expression. Generates no bounds
+   checks. *)
 (* Works for an open array too, but uses elt_pack of the first nonopen element
    type, so, for an open array of depth > 1, 'index' must have been already
    multiplied by the product of element counts of inner open dimensions. *)
@@ -312,7 +347,8 @@ PROCEDURE ArrayAlignWithPackedElts (p: P): INTEGER =
       END;
     END;
     Error.Msg
-      ("CM3 restriction: scalars in packed array elements cannot cross word boundaries");
+      ("CM3 restriction: scalars in packed array elements cannot cross "
+        & "word boundaries");
     RETURN Target.Byte;
   END ArrayAlignWithPackedElts;
 

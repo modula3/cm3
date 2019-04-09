@@ -117,8 +117,8 @@ PROCEDURE Compile (p: P): Stmt.Outcomes =
         Expr.CompileAddress (p.expr, traced);
         val := CG.Pop ();
     | Kind.structure =>
-        AssignStmt.PrepForEmit (Value.TypeOf (p.var), p.expr,
-                                initializing := TRUE);
+        tlhs := Value.TypeOf (p.var);
+        AssignStmt.PrepForEmit (tlhs, p.expr, initializing := TRUE);
     | Kind.openarray, Kind.other =>
         Expr.Prep (p.expr);
         Expr.Compile (p.expr);

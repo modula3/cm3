@@ -13,9 +13,9 @@ IMPORT ArrayType, PackedType, RecordType, TipeMap, TipeDesc;
 
 TYPE
   P = Type.T BRANDED "OpenArrayType.P" OBJECT
-        EltType                  : Type.T;
+        EltType                 : Type.T;
         NonopenEltType          : Type.T;
-        openDepth                : INTEGER;
+        openDepth               : INTEGER;
         NonopenEltAlign         : INTEGER;
         NonopenEltPack          : INTEGER;
         NonopenEltsBitAddressed : BOOLEAN := FALSE;
@@ -64,7 +64,7 @@ PROCEDURE Split (t: Type.T;  VAR EltType: Type.T): BOOLEAN =
 
 (* EXPORTED: *)
 PROCEDURE EltPack (t: Type.T): INTEGER =
-(* Of first nonopen element. *)
+(* Of outermost nonopen element. *)
   VAR p := Reduce (t);
   BEGIN
     IF (p # NIL)
@@ -115,6 +115,7 @@ PROCEDURE NonopenEltType (t: Type.T): Type.T =
     RETURN p.NonopenEltType;
   END NonopenEltType;
 
+(* Externally dispatched-to: *)
 PROCEDURE Check (p: P) =
   VAR
     LNonopenEltType, NonopenEltBase : Type.T;
@@ -177,6 +178,7 @@ PROCEDURE Check (p: P) =
                           );
   END Check;
 
+(* Externally dispatched-to: *)
 PROCEDURE IsStraddleFree
   (p: P;  offset: INTEGER; <*UNUSED*> IsEltOrField: BOOLEAN): BOOLEAN =
   VAR
@@ -204,6 +206,7 @@ PROCEDURE DeclareTemp (t: Type.T): CG.Var =
                             CG.Type.Struct, in_memory := TRUE);
   END DeclareTemp;
 
+(* Externally dispatched-to: *)
 PROCEDURE Compiler (p: P) =
   VAR size := Target.Address.pack + OpenDepth (p) * Target.Integer.pack;
   BEGIN
@@ -211,6 +214,7 @@ PROCEDURE Compiler (p: P) =
     CG.Declare_open_array (Type.GlobalUID(p), Type.GlobalUID(p.EltType), size);
   END Compiler;
 
+(* Externally dispatched-to: *)
 PROCEDURE EqualChk (a: P;  t: Type.T;  x: Type.Assumption): BOOLEAN =
   VAR b: P := t;
   BEGIN
@@ -218,6 +222,7 @@ PROCEDURE EqualChk (a: P;  t: Type.T;  x: Type.Assumption): BOOLEAN =
        AND Type.IsEqual (a.EltType, b.EltType, x);
   END EqualChk;
 
+(* Externally dispatched-to: *)
 PROCEDURE Subtyper (a: P;  tb: Type.T): BOOLEAN =
   VAR ta, ia, ea, ib, eb: Type.T;  b: P;
   BEGIN
@@ -261,6 +266,7 @@ PROCEDURE Reduce (t: Type.T): P =
     RETURN t;
   END Reduce;
 
+(* Externally dispatched-to: *)
 PROCEDURE InitCoster (p: P; zeroed: BOOLEAN): INTEGER =
   VAR n, m, res: Target.Int;  x: INTEGER;
   BEGIN
@@ -273,6 +279,7 @@ PROCEDURE InitCoster (p: P; zeroed: BOOLEAN): INTEGER =
     END;
   END InitCoster;
 
+(* Externally dispatched-to: *)
 PROCEDURE GenInit (p: P;  zeroed: BOOLEAN) =
   VAR
     depth := OpenDepth (p);
@@ -327,6 +334,7 @@ PROCEDURE GenInit (p: P;  zeroed: BOOLEAN) =
     CG.Free (array);
   END GenInit;
 
+(* Externally dispatched-to: *)
 PROCEDURE GenMap (p: P;  offset: INTEGER;  <*UNUSED*> size: INTEGER;
                   refs_only: BOOLEAN) =
   VAR a: INTEGER;
@@ -337,6 +345,7 @@ PROCEDURE GenMap (p: P;  offset: INTEGER;  <*UNUSED*> size: INTEGER;
     TipeMap.Add (a + p.NonopenEltPack, TipeMap.Op.Stop, 0);
   END GenMap;
 
+(* Externally dispatched-to: *)
 PROCEDURE GenDesc (p: P) =
   BEGIN
     IF TipeDesc.AddO (TipeDesc.Op.OpenArray, p) THEN
@@ -345,6 +354,7 @@ PROCEDURE GenDesc (p: P) =
     END;
   END GenDesc;
 
+(* Externally dispatched-to: *)
 PROCEDURE FPrinter (p: P;  VAR x: M3.FPInfo) =
   BEGIN
     x.tag      := "OPENARRAY";

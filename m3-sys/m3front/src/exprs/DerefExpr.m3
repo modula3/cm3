@@ -157,7 +157,7 @@ PROCEDURE CompileLV (p: P; traced: BOOLEAN) =
     END;
     EVAL Type.CheckInfo (p.type, info);
     CG.ForceStacked ();
-    (*^ 'cause alignment applies to the referent, not the pointer*)
+    (*^ Because alignment applies to the referent, not the pointer*)
     CG.Boost_addr_alignment (info.alignment);
   END CompileLV;
 

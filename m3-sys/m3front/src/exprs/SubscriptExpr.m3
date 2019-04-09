@@ -461,9 +461,9 @@ PROCEDURE Fold (p: P): Expr.T =
     e1 := Expr.ConstValue (p.a);
     e2 := Expr.ConstValue (p.b);
     e3 := NIL;
-    IF e1 = NIL OR e2 = NIL                THEN RETURN NIL
-    ELSIF ArrayExpr.Subscript (e1, e2, e3) THEN RETURN e3
-    ELSE                                        RETURN NIL; END;
+    IF e1 = NIL OR e2 = NIL THEN RETURN NIL
+    ELSIF ArrayExpr.ConstSubscript (e1, e2, e3) THEN RETURN e3
+    ELSE RETURN NIL; END;
   END Fold;
 
 PROCEDURE NoteWrites (p: P) =

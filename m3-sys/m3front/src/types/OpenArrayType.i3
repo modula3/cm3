@@ -25,7 +25,7 @@ PROCEDURE EltPack (array: Type.T): INTEGER;
 
 PROCEDURE EltAlign (array: Type.T): INTEGER;
 (* If 'array' is an open array type, returns the bit alignment of
-   the non-open elements.  Otherwise, returns Target.Byte. *)
+   the outermost non-open elements.  Otherwise, returns Target.Byte. *)
 
 PROCEDURE EltsAreBitAddressed (t: Type.T): BOOLEAN;
 (* Returns TRUE if t is an open array whose non-open elements are not

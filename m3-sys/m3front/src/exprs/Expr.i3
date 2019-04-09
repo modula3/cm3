@@ -24,14 +24,30 @@ PROCEDURE Parse (): T;
 PROCEDURE TypeOf (t: T): M3.Type;
 (* returns the type of the expression *)
 
+PROCEDURE SemTypeOf (t: T): M3.Type;
+(* returns the semantic type of the expression, as in source code. *)
+
+PROCEDURE RepTypeOf (t: T): M3.Type;
+(* returns the representation type of the expression, as in memory. *)
+(* PRE: t is Checked. *)
+
 PROCEDURE TypeCheck (t: T;  VAR cs: CheckState);
 (* typechecks the expression. *)
 
+TYPE lengthTyp = INTEGER;
+(* NOTE: Modula3 uses "length" to mean an array element count. *)
+CONST lengthNonStatic = -1;
+CONST lengthNonArray = -2;
+CONST lengthInvalid = -3;
+
+PROCEDURE StaticLength (t: T): lengthTyp;
+
+PROCEDURE UsesAssignProtocol (t: T): BOOLEAN;
 (*** phase 3 ***)
 
 PROCEDURE ConstValue (t: T): T;
 (* Returns NIL if t is not a constant, otherwise returns a simplified
-   expression that denotes t.  Value may be called before the expression
+   expression that denotes t.  May be called before the expression
    is typechecked. *)
 
 PROCEDURE GetBounds (t: T;  VAR min, max: Target.Int);
@@ -56,6 +72,7 @@ PROCEDURE SupportsDirectAssignment (t: T): BOOLEAN;
 (* returns "TRUE" if "t" supports direct assignments. *)
 
 PROCEDURE MarkForDirectAssignment (t: T);
+(* If called, must be before Prep(t). *)
 (* mark "t" so that when compiled it will assume the code generator
    stack contains the address of a LHS that is to be assigned and
    it will perform the assignment. *)
@@ -75,6 +92,7 @@ PROCEDURE Alignment (t: T): Type.BitAlignT;
    Compare to Type.T.info.alignment. 
 *)
 
+
 (*** phase 4 ****)
 
 (* Expressions are compiled in two steps:
@@ -92,6 +110,8 @@ PROCEDURE CompileLValue (t: T; traced: BOOLEAN);
 
 PROCEDURE CompileAddress (t: T; traced: BOOLEAN);
 (* emits code to evaluate 't's byte address onto the top of stack.
+   Equivalent to CompileLValue, followed by a runtime check that it
+   is byte aligned.
    Use PrepLValue to prep these expressions. *)
 
 PROCEDURE PrepBranch (t: T;  true, false: CG.Label;  freq: CG.Frequency);
@@ -102,7 +122,6 @@ PROCEDURE CompileBranch (t: T;  true, false: CG.Label;  freq: CG.Frequency);
 
 PROCEDURE NoteWrite (t: T);
 (* generates any tracing implied by a write to 't' *)
-
 
 PROCEDURE IsEqual (a, b: T;  x: M3.EqAssumption): BOOLEAN;
 (* TRUE iff (value(a) = value(b)), assuming a constant global store

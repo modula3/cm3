@@ -11,10 +11,13 @@ MODULE Expr EXPORTS Expr, ExprRep;
 
 IMPORT M3, M3Buf, CG, Type, Scanner, ExprParse;
 IMPORT Target, TInt, ErrType, Error;
-IMPORT Bool, Int; 
+IMPORT ConsExpr, OpenArrayType, ArrayType;
+IMPORT Bool, Int;
+IMPORT CallExpr;
 
 (********************************************************************)
 
+(* EXPORTED: *)
 PROCEDURE Parse (): T =
   BEGIN
     RETURN ExprParse.E0 (FALSE);
@@ -22,16 +25,18 @@ PROCEDURE Parse (): T =
 
 PROCEDURE Init (t: T) =
   BEGIN
-    t.origin    := Scanner.offset;
-    t.type      := NIL;
-    t.checked   := FALSE;
-    t.direct_ok := FALSE;
-    t.do_direct := FALSE;
-    t.align     := Target.Word.align+1 (* => uncached. *);
+    t.origin               := Scanner.offset;
+    t.type                 := NIL;
+    t.align                := Target.Word.align+1 (* => uncached. *);
+    t.checked              := FALSE;
+    t.directAssignableType := FALSE;
+    t.doDirectAssign       := FALSE;
+    t.isNamedConst         := FALSE;
   END Init;
 
 (********************************************************************)
 
+(* EXPORTED: *)
 PROCEDURE TypeOf (t: T): Type.T =
   BEGIN
     IF (t = NIL) THEN RETURN ErrType.T END;
@@ -39,6 +44,60 @@ PROCEDURE TypeOf (t: T): Type.T =
     RETURN t.type;
   END TypeOf;
 
+(* EXPORTED: *)
+PROCEDURE SemTypeOf (t: T): Type.T =
+  BEGIN
+    RETURN TypeOf (t);
+  END SemTypeOf;
+
+(* EXPORTED: *)
+PROCEDURE RepTypeOf (t: T): Type.T =
+  BEGIN
+    IF (t = NIL) THEN RETURN ErrType.T END;
+    RETURN t.repTypeOf ();
+  END RepTypeOf;
+
+(* EXPORTED: *)
+PROCEDURE StaticLength (t: T): lengthTyp =
+  BEGIN
+    IF (t = NIL) THEN RETURN lengthInvalid END;
+    RETURN t.staticLength ();
+  END StaticLength;
+
+(* EXPORTED: (ExprRep)*)
+PROCEDURE StaticLengthDefault (t: T): lengthTyp =
+  VAR exprType: Type.T := RepTypeOf (t);
+  BEGIN
+    IF exprType = NIL THEN
+      RETURN lengthInvalid
+    ELSIF OpenArrayType.Is (exprType) THEN
+      RETURN lengthNonStatic
+    ELSIF NOT ArrayType.Is (exprType) THEN
+      RETURN lengthNonArray
+    ELSE RETURN lengthInvalid
+    END
+  END StaticLengthDefault;
+
+(* EXPORTED: *)
+PROCEDURE UsesAssignProtocol (t: T): BOOLEAN =
+BEGIN
+    IF (t = NIL) THEN RETURN FALSE END;
+    IF CallExpr.IsUserProc (t) THEN RETURN t.doDirectAssign END;
+
+(* TODO ^This one-liner is an easy temporary way to sidestep having to add
+        massive and widely scattered apparatus for two different levels of
+        dispatching, using two different mechanisms, just to get
+        t.usesAssignProtocol to handle this case.  *)
+    RETURN t.usesAssignProtocol ();
+  END UsesAssignProtocol;
+
+(* EXPORTED: (ExprRep)*)
+PROCEDURE UsesAssignProtocolDefault (<*UNUSED*>t: T): BOOLEAN =
+  BEGIN
+    RETURN FALSE
+  END UsesAssignProtocolDefault;
+
+(* EXPORTED: *)
 PROCEDURE TypeCheck (t: T;  VAR cs: CheckState) =
   VAR save: INTEGER;
   BEGIN
@@ -53,11 +112,12 @@ PROCEDURE TypeCheck (t: T;  VAR cs: CheckState) =
 
 (********************************************************************)
 
+(* EXPORTED: *)
 PROCEDURE ConstValue (t: T): T =
   VAR new: T;  cs: CheckState;
   BEGIN
     IF (t = NIL) THEN RETURN NIL END;
-    (*** <* ASSERT t.checked *> ***)
+    (*** NOT necessarily: <* ASSERT t.checked *> ***)
     new := t.evaluate ();
     IF (new # t) THEN
       cs := M3.OuterCheckState; (* OK since constants don't raise exceptions *)
@@ -66,6 +126,7 @@ PROCEDURE ConstValue (t: T): T =
     RETURN new;
   END ConstValue;
 
+(* EXPORTED: *)
 PROCEDURE GetBounds (t: T;  VAR min, max: Target.Int) =
   BEGIN
     IF (t = NIL) THEN min := TInt.Zero; max := TInt.MOne; RETURN END;
@@ -73,6 +134,7 @@ PROCEDURE GetBounds (t: T;  VAR min, max: Target.Int) =
     t.getBounds (min, max);
   END GetBounds;
 
+(* EXPORTED: *)
 PROCEDURE IsDesignator (t: T): BOOLEAN =
   BEGIN
     IF (t = NIL) THEN RETURN TRUE END;
@@ -80,6 +142,7 @@ PROCEDURE IsDesignator (t: T): BOOLEAN =
     RETURN t.isDesignator ();
   END IsDesignator;
 
+(* EXPORTED: *)
 PROCEDURE IsWritable (t: T;  lhs: BOOLEAN): BOOLEAN =
   BEGIN
     IF (t = NIL) THEN RETURN TRUE END;
@@ -87,6 +150,7 @@ PROCEDURE IsWritable (t: T;  lhs: BOOLEAN): BOOLEAN =
     RETURN t.isWritable (lhs)
   END IsWritable;
 
+(* EXPORTED: *)
 PROCEDURE IsZeroes (t: T): BOOLEAN =
   BEGIN
     IF (t = NIL) THEN RETURN TRUE END;
@@ -94,6 +158,7 @@ PROCEDURE IsZeroes (t: T): BOOLEAN =
     RETURN t.isZeroes ()
   END IsZeroes;
 
+(* EXPORTED: *)
 PROCEDURE GetSign (t: T): CG.Sign =
   VAR min, max: Target.Int;
   BEGIN
@@ -106,6 +171,7 @@ PROCEDURE GetSign (t: T): CG.Sign =
 
 (********************************************************************)
 
+(* EXPORTED: *)
 PROCEDURE NeedsAddress (t: T) =
   BEGIN
     IF (t = NIL) THEN RETURN END;
@@ -115,24 +181,36 @@ PROCEDURE NeedsAddress (t: T) =
 
 (********************************************************************)
 
+(* EXPORTED: *)
 PROCEDURE SupportsDirectAssignment (t: T): BOOLEAN =
+  VAR baseExpr: T;
   BEGIN
-    RETURN (t # NIL) AND (t.direct_ok);
+    IF t = NIL THEN RETURN FALSE END;
+    IF ConsExpr.Is (t)
+    THEN baseExpr := ConsExpr.Base (t);
+    ELSE baseExpr := t;
+    END; 
+
+    RETURN baseExpr # NIL AND baseExpr.directAssignableType;
   END SupportsDirectAssignment;
 
+(* EXPORTED: *)
 PROCEDURE MarkForDirectAssignment (t: T) =
+(* If called, must be before Prep(t). *)
   BEGIN
-    <*ASSERT t.direct_ok*>
-    t.do_direct := TRUE;
+    <*ASSERT t.directAssignableType*>
+    t.doDirectAssign := TRUE;
   END MarkForDirectAssignment;
 
+(* EXPORTED: *)
 PROCEDURE IsMarkedForDirectAssignment (t: T): BOOLEAN =
   BEGIN
-    RETURN (t # NIL) AND (t.do_direct);
+    RETURN (t # NIL) AND (t.doDirectAssign);
   END IsMarkedForDirectAssignment;
 
 (******************************************** Alignments ************)
 
+(* EXPORTED: *)
 PROCEDURE Alignment (t: T): Type.BitAlignT = 
 (* A bit alignment that t is guaranteed to have.  Hopefully maximum, or
    nearly so.  Always a true alignment, possibly as small as 1 bit. 
@@ -196,6 +274,7 @@ PROCEDURE ExprAlignArg0 (e: Ta): Type.BitAlignT =
 
 (********************************************************************)
 
+(* EXPORTED: *)
 PROCEDURE Prep (t: T) =
   BEGIN
     IF (t = NIL) THEN RETURN END;
@@ -203,6 +282,7 @@ PROCEDURE Prep (t: T) =
     t.prep ();
   END Prep;
 
+(* EXPORTED: *)
 PROCEDURE Compile (t: T) =
   BEGIN
     IF (t = NIL) THEN RETURN END;
@@ -210,6 +290,7 @@ PROCEDURE Compile (t: T) =
     t.compile ();
   END Compile;
 
+(* EXPORTED: *)
 PROCEDURE PrepLValue (t: T; traced: BOOLEAN) =
   BEGIN
     IF (t = NIL) THEN RETURN END;
@@ -218,6 +299,7 @@ PROCEDURE PrepLValue (t: T; traced: BOOLEAN) =
     t.prepLV (traced);
   END PrepLValue;
 
+(* EXPORTED: *)
 PROCEDURE CompileLValue (t: T; traced: BOOLEAN) =
   BEGIN
     IF (t = NIL) THEN RETURN END;
@@ -225,6 +307,7 @@ PROCEDURE CompileLValue (t: T; traced: BOOLEAN) =
     t.compileLV (traced);
   END CompileLValue;
 
+(* EXPORTED: *)
 PROCEDURE CompileAddress (t: T; traced: BOOLEAN) =
   BEGIN
     IF (t = NIL) THEN RETURN END;
@@ -233,6 +316,7 @@ PROCEDURE CompileAddress (t: T; traced: BOOLEAN) =
     CG.Check_byte_aligned ();
   END CompileAddress;
 
+(* EXPORTED: *)
 PROCEDURE PrepBranch (t: T;  true, false: CG.Label;  freq: CG.Frequency) =
   BEGIN
     IF (t = NIL) THEN RETURN END;
@@ -242,6 +326,7 @@ PROCEDURE PrepBranch (t: T;  true, false: CG.Label;  freq: CG.Frequency) =
     t.prepBR (true, false, freq);
   END PrepBranch;
 
+(* EXPORTED: *)
 PROCEDURE CompileBranch (t: T;  true, false: CG.Label;  freq: CG.Frequency) =
   BEGIN
     IF (t = NIL) THEN RETURN END;
@@ -250,12 +335,14 @@ PROCEDURE CompileBranch (t: T;  true, false: CG.Label;  freq: CG.Frequency) =
     t.compileBR (true, false, freq);
   END CompileBranch;
 
+(* EXPORTED: *)
 PROCEDURE NoteWrite (t: T) =
   BEGIN
     IF (t = NIL) THEN RETURN END;
     t.note_write ();
   END NoteWrite;
 
+(* EXPORTED: *)
 PROCEDURE IsEqual (a, b: T;  x: M3.EqAssumption): BOOLEAN =
   BEGIN
     IF (a = b) THEN RETURN TRUE END;
@@ -263,6 +350,7 @@ PROCEDURE IsEqual (a, b: T;  x: M3.EqAssumption): BOOLEAN =
     RETURN a.isEqual (b, x);
   END IsEqual;
 
+(* EXPORTED: *)
 PROCEDURE PrepLiteral (t: T;  type: Type.T;  is_const: BOOLEAN) =
   BEGIN
     IF (t = NIL) THEN RETURN END;
@@ -271,6 +359,7 @@ PROCEDURE PrepLiteral (t: T;  type: Type.T;  is_const: BOOLEAN) =
     t.prepLiteral (type, is_const);
   END PrepLiteral;
 
+(* EXPORTED: *)
 PROCEDURE GenLiteral (t: T;  offset: INTEGER;  type: Type.T;  is_const: BOOLEAN) =
   BEGIN
     IF (t = NIL) THEN RETURN END;
@@ -279,6 +368,7 @@ PROCEDURE GenLiteral (t: T;  offset: INTEGER;  type: Type.T;  is_const: BOOLEAN)
     t.genLiteral (offset, type, is_const);
   END GenLiteral;
 
+(* EXPORTED: *)
 PROCEDURE GenFPLiteral (t: T;  mbuf: M3Buf.T) =
   VAR u := ConstValue (t);
   BEGIN
@@ -289,6 +379,7 @@ PROCEDURE GenFPLiteral (t: T;  mbuf: M3Buf.T) =
     u.genFPLiteral (mbuf);
   END GenFPLiteral;
 
+(* EXPORTED: *)
 PROCEDURE BadOperands (op: TEXT;  a, b: M3.Type := NIL): M3.Type =
   BEGIN
     IF (a # ErrType.T) AND (b # ErrType.T) THEN

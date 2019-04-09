@@ -127,8 +127,8 @@ VAR
   in_init     : BOOLEAN     := FALSE;
   init_pc     : INTEGER     := 0;
   init_bits   : Target.Int  := TInt.Zero;
-  (* In free_temps and free_values, "free" means they are allocated at runtime, but not
-     currently in use. *) 
+  (* In free_temps and free_values, "free" means they are allocated at runtime,
+     but not currently in use. *) 
   free_temps  : TempWrapper := NIL;
   busy_temps  : TempWrapper := NIL;
   free_values : Val         := NIL;
@@ -501,8 +501,9 @@ PROCEDURE Declare_param (n: Name;  s: Size;  a: Alignment;  t: Type;
 
 PROCEDURE Declare_temp (s: Size;  a: Alignment;  t: Type;
                           in_memory: BOOLEAN): Var =
-  (* If possible, get a temp off the free_temps list.  Otherwise, emit code to allocate
-     a temp and use it.  Either way, put the temp on the busy_temps list. *) 
+  (* If possible, get a temp off the free_temps list.  Otherwise, emit code to
+     allocate a temp and use it.  Either way, put the temp on the busy_temps
+     list. *) 
   VAR w : TempWrapper := free_temps;
   VAR last_w: TempWrapper := NIL;
   VAR tmp: Var;
@@ -544,8 +545,9 @@ PROCEDURE Free_temp (<*UNUSED*> v: Var) =
   END Free_temp;
 
 PROCEDURE Free_temps () =
-  (* Move all temps from the busy_temps wrapper list to the free_temps wrapper list.
-     No deallocation of CG temps (Vars) or TempWrappers.
+  (* Move all temps from the busy_temps wrapper list to the free_temps wrapper
+     list.
+     No deallocation of any CG.Var or TempWrapper.
      No backend free_temp code emitted. *) 
   VAR w := busy_temps;
   BEGIN
@@ -933,6 +935,7 @@ PROCEDURE Release_temps (VAR x: ValRec) =
   BEGIN
     IF (x.temp_base) THEN Free_temp (x.base); END;
     IF (x.temp_bits) THEN Free_temp (x.bits); END;
+    (* NOTE: Free_temp is a NOP. *)
     x.temp_base := FALSE;
     x.temp_bits := FALSE;
     x.base      := NIL;
@@ -977,7 +980,9 @@ PROCEDURE DumpPendingNodes (is_const: BOOLEAN) =
     n := pending[is_const];  cnt := 0;
     WHILE (n # NIL) DO xx[cnt] := n;  INC (cnt);  n := n.next;  END;
     SortNodes (xx^);
-    FOR i := 0 TO LAST (xx^) DO  xx[i].dump () END;
+    FOR i := 0 TO LAST (xx^) DO
+      xx[i].dump ()
+    END;
     pending[is_const] := NIL;
   END DumpPendingNodes;
 
@@ -1089,9 +1094,9 @@ PROCEDURE AdvanceInit (o: Offset) =
     n_bytes := (o - init_pc) DIV Target.Byte;
     tmp, new_bits: Target.Int;
     size, excess: CARDINAL;
-    t: Type;
+    t: Type; 
   BEGIN
-    <*ASSERT n_bytes >= 0*>
+    (* <*ASSERT n_bytes >= 0*> *)
     <*ASSERT in_init*>
     WHILE (n_bytes > 0) DO
       IF TInt.EQ (init_bits, TInt.Zero) THEN
@@ -1144,10 +1149,16 @@ PROCEDURE FindInitType (n_bytes, offset: INTEGER;  VAR t: Type): BOOLEAN =
     RETURN FALSE;
   END FindInitType;
 
+VAR GDebugOffset: INTEGER;
+
 PROCEDURE Init_int (o: Offset;  s: Size;  READONLY value: Target.Int;
                     is_const: BOOLEAN) =
   VAR bit_offset: CARDINAL;  itype: Type;  tmp: Target.Int;
   BEGIN
+IF o = GDebugOffset THEN
+  bit_offset := 17
+END;
+    <*ASSERT o >= 0 *>
     IF (NOT in_init) THEN
       PushPending (NEW (IntNode, o := o, s := s, v := value), is_const);
       RETURN;
@@ -1191,6 +1202,7 @@ PROCEDURE DumpInt (x: IntNode) =
 
 PROCEDURE Init_proc (o: Offset;  value: Proc;  is_const: BOOLEAN) =
   BEGIN
+    <*ASSERT o >= 0 *>
     <*ASSERT o MOD Target.Address.align = 0 *>
     IF (in_init) THEN
       AdvanceInit (o);
@@ -1209,6 +1221,7 @@ PROCEDURE DumpProc (x: ProcNode) =
 
 PROCEDURE Init_label (o: Offset;  value: Label;  is_const: BOOLEAN) =
   BEGIN
+    <*ASSERT o >= 0 *>
     <*ASSERT o MOD Target.Address.align = 0 *>
     IF (in_init) THEN
       AdvanceInit (o);
@@ -1226,12 +1239,14 @@ PROCEDURE DumpLabel (x: LabelNode) =
   END DumpLabel;
 
 PROCEDURE Init_var (o: Offset;  value: Var;  bias: Offset;  is_const: BOOLEAN) =
+(* 'init_address_of_var' would have been a more meaningful name here. *)
   BEGIN
+    <*ASSERT o >= 0 *>
+    <*ASSERT o MOD Target.Address.align = 0 *>
+    <*ASSERT bias MOD Target.Byte = 0*>
     IF (in_init) THEN
       AdvanceInit (o);
       <*ASSERT o = init_pc*>
-      <*ASSERT o MOD Target.Address.align = 0 *>
-      <*ASSERT bias MOD Target.Byte = 0*>
       cg.init_var (AsBytes (o), value, AsBytes (bias));
     ELSE
       PushPending (NEW (VarNode, o := o, v := value, b := bias), is_const);
@@ -1246,10 +1261,11 @@ PROCEDURE DumpVar (x: VarNode) =
 
 PROCEDURE Init_offset (o: Offset;  value: Var;  is_const: BOOLEAN) =
   BEGIN
+    <*ASSERT o >= 0 *>
+    <*ASSERT o MOD Target.Integer.align = 0 *>
     IF (in_init) THEN
       AdvanceInit (o);
       <*ASSERT o = init_pc*>
-      <*ASSERT o MOD Target.Integer.align = 0 *>
       cg.init_offset (AsBytes (o), value);
     ELSE
       PushPending (NEW (OffsetNode, o := o, v := value), is_const);
@@ -1265,10 +1281,11 @@ PROCEDURE DumpOffset (x: OffsetNode) =
 PROCEDURE Init_chars (o: Offset;  value: TEXT;  is_const: BOOLEAN) =
   VAR len, start: INTEGER;
   BEGIN
+    <*ASSERT o >= 0 *>
+    <*ASSERT o MOD Target.Char.align = 0 *>
     IF (in_init) THEN
       AdvanceInit (o);
       <*ASSERT o = init_pc*>
-      <*ASSERT o MOD Target.Char.align = 0 *>
       start := 0;
       len := Text.Length (value);
       WHILE (len - start > Max_init_chars) DO
@@ -1292,10 +1309,11 @@ PROCEDURE DumpChars (x: CharsNode) =
 
 PROCEDURE Init_float (o: Offset;  READONLY f: Target.Float;  is_const: BOOLEAN) =
   BEGIN
+    <*ASSERT o >= 0 *>
+    <*ASSERT o MOD Target.Real.align = 0 *>
     IF (in_init) THEN
       AdvanceInit (o);
       <*ASSERT o = init_pc*>
-      <*ASSERT o MOD Target.Real.align = 0 *>
       cg.init_float (AsBytes (o), f);
     ELSE
       PushPending (NEW (FloatNode, o := o, f := f), is_const);
@@ -1317,6 +1335,7 @@ PROCEDURE EmitText (t: TEXT;  is_const: BOOLEAN): INTEGER =
     (** align  := MAX (Target.Char.align, Target.Integer.align); **)
     align  := Target.Char.align;
     offset := Module.Allocate (size, align, is_const, "*string*");
+    <* ASSERT offset >= 0 *>
     PushPending (NEW (CharsNode, o := offset, t := t), is_const);
     RETURN offset;
   END EmitText;
@@ -2187,7 +2206,7 @@ PROCEDURE Store_indirect (t: Type; addedOffset: Offset;  s: Size) =
   BEGIN
     Swap ();
     ForceAddr2SAP (addedOffset);
-    (* Addess wherein to store is now Stacked, Absolute, or Pointer. *)
+    (* Address wherein to store is now Stacked, Absolute, or Pointer. *)
     Swap ();
     ForceStacked (); (* the value to be stored *)
 

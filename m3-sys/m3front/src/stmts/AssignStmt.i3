@@ -23,18 +23,19 @@ PROCEDURE PrepForEmit (tlhs: Type.T;  rhs: Expr.T;  initializing: BOOLEAN);
    the result directly.  "initializing" is TRUE if the lhs is
    uninitialized storage (i.e. contains no user data). *)
 
-PROCEDURE DoEmit (tlhs: Type.T;  rhs: Expr.T; elt_align := Target.Byte);
+PROCEDURE DoEmit (tlhs: Type.T;  rhs: Expr.T; lhs_align := Target.Byte);
+(* tlhs is the repType. *)
 (* emit code to assign  (s0.A).tlhs := rhs.
    Note that Emit assumes that TypeOf(rhs) is assignable to tlhs
    and that Expr.Prep(rhs) or preferably PrepForEmit(tlhs,rhs,initializing)
    has been called. *)
 
 PROCEDURE DoEmitCheck (tlhs: Type.T;  rhs: Expr.T);
-(* emit code to evaluate "rhs" and generate whatever
-   runtime checks would be needed if it were assigned to
-   a value of type 'tlhs'.  The new value is left on the stack.
-   Note that Emit assumes that TypeOf(rhs) is assignable to tlhs
-   and that Expr.Prep(rhs) has been called.  'tlhs' may not be
-   an open array type.  *)
+(* Emit code to evaluate "rhs" and generate any runtime 
+   runtime checks that would be needed if it were assigned to
+   a value of type 'tlhs'.  Leave the rhs value on the stack.
+   PRE: TypeOf(rhs) is assignable to tlhs.
+   PRE: Expr.Prep(rhs) has been called.
+   PRE: 'tlhs' is not an open array type.  *)
 
 END AssignStmt.

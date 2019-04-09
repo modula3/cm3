@@ -63,6 +63,7 @@ REVEAL
         genLiteral   := ExprRep.NoLiteral;
         note_write   := NoteWrites;
         exprAlign    := CallExprAlign;
+        usesAssignProtocol := UsesAssignProtocol;
       END;
 
 PROCEDURE New (proc: Expr.T;  args: Expr.List): Expr.T =
@@ -74,7 +75,7 @@ PROCEDURE New (proc: Expr.T;  args: Expr.List): Expr.T =
     p.tmp       := NIL;
     p.methods   := NIL;
     p.proc_type := NIL;
-    p.direct_ok := TRUE;
+    p.directAssignableType := TRUE;
     RETURN p;
   END New;
 
@@ -115,7 +116,8 @@ PROCEDURE NewMethodList (minArgs, maxArgs: INTEGER;
                          isWritable   : Predicate;
                          isDesignator : Predicate;
                          noteWriter   : NoteWriter;
-                         builtinAlign : BuiltinAlign := BuiltinAlignDefault
+                         builtinAlign : BuiltinAlign := BuiltinAlignDefault;
+                   (* usesAssignProtocol : Predicate; *)
                         ): MethodList =
   VAR m: MethodList;
   BEGIN
@@ -336,6 +338,11 @@ PROCEDURE BuiltinAlignDefault (p: T): Type.BitAlignT =
     resultType := Type.CheckInfo (TypeOf (p), resultInfo);
     RETURN resultInfo.alignment; 
   END BuiltinAlignDefault; 
+
+PROCEDURE UsesAssignProtocol (p: T): BOOLEAN =
+  BEGIN
+    RETURN FALSE
+  END UsesAssignProtocol;
 
 PROCEDURE Prep (p: T) =
   BEGIN
