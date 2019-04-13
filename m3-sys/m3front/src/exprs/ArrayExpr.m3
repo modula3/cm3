@@ -42,7 +42,7 @@ TYPE ResultKindTyp
   = { RKUnknown      (* Initial value. *)
 
     , RKGlobal       (* Mutable global data area. *)
-                       (* Uses top.globalDopeOffset, top.GlobalEltsOffset,
+                       (* Uses top.globalOffset, top.globalEltsOffset,
                           and top.inConstArea. *)
     , RKDirectElts   (* Caller-provided area, elements only. *)
                        (* Uses top.buildEltsAddrVal. *)
@@ -77,7 +77,6 @@ REVEAL
                                    constructor.  Could still be # semType,
                                    if semType is open but context fixes
                                    the length of some of the dimensions. *)
-    repIndexType      : Type.T;
     targetType        : Type.T; (* Requested by user of the constructor. *)
     depth             : INTEGER; (* Depth this constructor is below the
                                     top-level array constructor. *)
@@ -92,7 +91,7 @@ REVEAL
     
     (* Only used in top constructor: *)
     repOpenDepth      : INTEGER; 
-    globalDopeOffset  : INTEGER := FIRST (INTEGER) (* Means uninitialized. *);
+    globalOffset      : INTEGER := FIRST (INTEGER) (* Means uninitialized. *);
     globalEltsOffset  : INTEGER := FIRST (INTEGER) (* Means uninitialized. *);
     refType           : Type.T; (* If needed, type REF repType. *)
     finalVal          : CG.Val;
@@ -168,7 +167,6 @@ PROCEDURE New (type: Type.T; args: Expr.List; dots: BOOLEAN): Expr.T =
     WITH b = ArrayType.Split (type, constr.semIndexType, constr.semEltType)
     DO <* ASSERT b *> (* Which also implies type is an array type. *) END; 
 IsErr(constr.semIndexType) (* Just for debugging. *);
-    constr.repIndexType := NIL;
     constr.repType      := NIL;
     constr.args         := args;
 (* REVIEW: Initializations here vs. declared in P. *)    
@@ -923,7 +921,6 @@ PROCEDURE Represent (top: P) =
         END (*WITH*);
       END (*FOR*);
       top.repType := repSuccType;
-      top.repIndexType := repIndexType;
     ELSE (* repType is targetType. Just copy targetType component pointers. *)
          (* Do it outside in. *)
       repType := top.targetType;
@@ -931,10 +928,7 @@ PROCEDURE Represent (top: P) =
         WITH levelInfo = top.levels ^[i] DO
           b := ArrayType.Split (repType, repIndexType, repEltType);
           <* ASSERT b *>
-          IF i = 0 THEN
-            top.repType := repType;
-            top.repIndexType := repIndexType;
-          END;
+          IF i = 0 THEN top.repType := repType END;
           levelInfo.repType := repType;
           levelInfo.repIndexType := repIndexType;
 
@@ -1057,10 +1051,7 @@ PROCEDURE RepresentRecurse (constr: P) =
 
       (* Copy fields from level to constructor. *)
       IF constr # top THEN
-        WITH constrLevelInfo = top.levels^[constr.depth] DO
-          constr.repIndexType := constrLevelInfo.repIndexType;
-          constr.repType := constrLevelInfo.repType;
-        END (*WITH*);
+        constr.repType := top.levels^[constr.depth].repType;
       END;
     END;
     constr.state := StateTyp.Represented;
@@ -1175,7 +1166,7 @@ PROCEDURE Prep (top: P) =
     END;
     IF Evaluate (top) # NIL THEN (* It's a constant. *)
       top.inConstArea := TRUE
-      (* Postpone InnerPrep until Compile, when we have globalDopeOffset
+      (* Postpone InnerPrep until Compile, when we will have globalOffset
          and globalEltsOffzet to build into. *)
 (* TODO: Or, allocate globalspaces here, instead of in Compile? *)         
     ELSIF NOT UsesAssignProtocol (top)
@@ -1200,8 +1191,8 @@ PROCEDURE PrepLiteral (p: P; type: Type.T; inConstArea: BOOLEAN) =
     <* ASSERT Evaluate (top) # NIL *>
     top.targetType := type;
     Represent (top);
-    (* Postpone InnerPrep until GenLiteral, when we will have the
-       globalDopeOffset and globalEltsOffset to build into. *)
+    (* Postpone InnerPrep until GenLiteral, when we will have
+       globalOffset and globalEltsOffset to build into. *)
   END PrepLiteral;
 
 PROCEDURE GenEvalFixingInfo
@@ -1317,7 +1308,7 @@ PROCEDURE InnerPrep (top: P) =
     (* Set up result location info. *)
     CASE top.resultKind OF
     | RKTyp.RKUnknown => <* ASSERT FALSE *>
-    | RKTyp.RKGlobal => <* ASSERT top.globalDopeOffset >= 0 *>
+    | RKTyp.RKGlobal => <* ASSERT top.globalOffset >= 0 *>
 
     | RKTyp.RKDirectElts =>
       (* LHS Address is pushed. *)
@@ -1713,8 +1704,8 @@ PROCEDURE PrepRecurse (constr: P; selfFlatEltNo: INTEGER) =
                 END;
 
               END (*IF [non]static.*);
-            END (*IF*);
-          END (*IF argExpr # NIL*)
+            END (*IF argConstr # NIL*);
+          END (*IF argExpr # NIL..ELSE*)
         END (*WITH argExpr*);
       END (*FOR args*);
 
@@ -1781,20 +1772,20 @@ PROCEDURE InitLiteralDope
   (top: P; inConstArea: BOOLEAN) =
 (* PRE: top.repOpenDepth > 0 *)
 (* Initialize dope fields of literal. *)
-  VAR offset, eltCt: INTEGER; 
+  VAR shapeOffset, eltCt: INTEGER; 
   BEGIN
     <* ASSERT top.depth = 0 *>
     <* ASSERT top.resultKind = RKTyp.RKGlobal *>
     <* ASSERT top.repOpenDepth > 0 *>
     CG.Init_var
-      (top.globalDopeOffset + M3RT.OA_elt_ptr,
+      (top.globalOffset + M3RT.OA_elt_ptr,
        Module.GlobalData (inConstArea), top.globalEltsOffset, inConstArea);
 
-    offset := top.globalDopeOffset + M3RT.OA_size_0;
+    shapeOffset := top.globalOffset + M3RT.OA_size_0;
     FOR i := 0 TO top.repOpenDepth - 1 DO
       eltCt := top.levels^ [i].staticLen;
-      CG.Init_intt (offset, Target.Integer.size, eltCt, inConstArea);
-      INC (offset, Target.Integer.pack);
+      CG.Init_intt (shapeOffset, Target.Integer.size, eltCt, inConstArea);
+      INC (shapeOffset, Target.Integer.pack);
     END
   END InitLiteralDope;
 
@@ -1813,14 +1804,14 @@ PROCEDURE Compile (top: P) =
     
     (* Allocate static space if needed. *)
     IF top.resultKind = RKTyp.RKGlobal THEN
-      top.globalDopeOffset 
+      top.globalOffset 
         := Module.Allocate
              (top.totalSize, top.topRepAlign, top.inConstArea,
               tag := "ArrayExpr");
-      IF top.repOpenDepth = 0 THEN (* Elements only. *)
-        top.globalEltsOffset := top.globalDopeOffset;
+      IF top.repOpenDepth = 0 THEN (* No dope, elements only. *)
+        top.globalEltsOffset := top.globalOffset;
       ELSE (* Dope and elements. *)
-        top.globalEltsOffset := top.globalDopeOffset + top.dopeSize;
+        top.globalEltsOffset := top.globalOffset + top.dopeSize;
         InitLiteralDope (top, top.inConstArea);
       END;
     END;
@@ -1847,7 +1838,7 @@ PROCEDURE GenLiteral
     END;
     Classify (top);
     <* ASSERT top.resultKind = RKTyp.RKGlobal *>
-    top.globalDopeOffset := globalOffset;
+    top.globalOffset := globalOffset;
     IF top.repOpenDepth <= 0 THEN
        (* No dope.  globalOffset is for an area for the elements. *)
       top.globalEltsOffset := globalOffset;
@@ -1894,7 +1885,7 @@ PROCEDURE InnerCompile (top: P) =
 
     | RKTyp.RKGlobal
     => Module.LoadGlobalAddr
-         (Module.Current (), offset := top.globalDopeOffset,
+         (Module.Current (), offset := top.globalOffset,
           is_const := top.inConstArea);
 
     | RKTyp.RKDirectElts
