@@ -136,7 +136,7 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
     fieldCt := 0;
     WHILE (v # NIL) DO INC (fieldCt);  v := v.next END;
 
-    (* build vectors to map the fields *)
+    (* build vectors to map field numbers (of the record type) to Info nodes.*)
     p.map := NEW (REF ARRAY OF Info, fieldCt);
     v := fieldList;
     fieldNo := 0;
@@ -275,8 +275,7 @@ PROCEDURE InnerPrepLV (p: P;  traced: BOOLEAN) =
   BEGIN
     INC (p.finalValUseCt);
     IF (p.finalVal # NIL) AND (p.finalValUseCt > 1)
-    THEN
-Error.Info ("RecordExpr.InnerPrep recalled");
+    THEN (* We already did this before. *)
       <* ASSERT NOT usesAssignProtocol *>
       RETURN
     END;

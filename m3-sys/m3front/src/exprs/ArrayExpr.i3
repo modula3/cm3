@@ -11,7 +11,7 @@ INTERFACE ArrayExpr;
 
 IMPORT Type, Expr, Target;
 
-TYPE P <: Expr.T;
+TYPE T <: Expr.T;
 
 PROCEDURE New
   (type: Type.T; args: Expr.List; dots: BOOLEAN): Expr.T;
@@ -22,7 +22,7 @@ PROCEDURE ArrayConstrExpr (e: Expr.T): P;
 (* Look through a ConsExpr for an ArrayExpr.  NIL if not. *)
 *)
 
-PROCEDURE NoteNested (constr: P);
+PROCEDURE NoteNested (constr: T);
 (* PRE: constr has not been checked. *)
 (* Mark constr as nested (ArrayExpr nested inside an ArrayExpr, directly,
    except for a possible ConsExpr in between.  In particular, not a

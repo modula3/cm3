@@ -152,6 +152,7 @@ PROCEDURE IsWritable (t: T;  lhs: BOOLEAN): BOOLEAN =
 
 (* EXPORTED: *)
 PROCEDURE IsZeroes (t: T): BOOLEAN =
+(* PRE: t is checked. *)
   BEGIN
     IF (t = NIL) THEN RETURN TRUE END;
     <* ASSERT t.checked *>

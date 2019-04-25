@@ -63,8 +63,8 @@ CONST RKTypSetInitializing = RKTypSet
 
 (* Properties of an array constructor: *)
 REVEAL 
-  P = Expr.T BRANDED "ArrayExpr.P" OBJECT
-    top               : P;
+  T = Expr.T BRANDED "ArrayExpr.T" OBJECT
+    top               : T;
     tipe              : Type.T;
 (* CLEANUP ^ tipe always duplicates field "type", inherited from Expr.T *) 
     args              : Expr.List;
@@ -72,12 +72,13 @@ REVEAL
     semIndexType      : Type.T;
     semEltType        : Type.T;
     repType           : Type.T; (* Type used in RT representation of the
-                                   constructor.  Equals targetType if targetType
-                                   # NIL.  Otherwise, inferred entirely from the
+                                   constructor.  Equals targetType (or, for a
+                                   nested constructor, an element type thereof),
+                                   if top targetType # NIL.
+                                   Otherwise, inferred entirely from the
                                    constructor.  Could still be # semType,
                                    if semType is open but context fixes
                                    the length of some of the dimensions. *)
-    targetType        : Type.T; (* Requested by user of the constructor. *)
     depth             : INTEGER; (* Depth this constructor is below the
                                     top-level array constructor. *)
     eltCt             : INTEGER := Expr.lengthInvalid;
@@ -90,6 +91,7 @@ REVEAL
     broken            : BOOLEAN;
     
     (* Only used in top constructor: *)
+    targetType        : Type.T; (* Requested by user of the constructor. *)
     repOpenDepth      : INTEGER; 
     globalOffset      : INTEGER := FIRST (INTEGER) (* Means uninitialized. *);
     globalEltsOffset  : INTEGER := FIRST (INTEGER) (* Means uninitialized. *);
@@ -109,9 +111,9 @@ REVEAL
     firstArgDepth     : INTEGER := 0;
     firstArgDopeVal   : CG.Val;
     levels            : LevelsTyp;
-    resultKind        := RKTyp.RKUnknown;
     topRepAlign       : Type.BitAlignT;
     topEltsAlign      : Type.BitAlignT; (* The entire block of elements. *)
+    resultKind        := RKTyp.RKUnknown;
     inConstArea       : BOOLEAN;
     fixingInfoComputed: BOOLEAN;
     usesAssignProtocolCalled: BOOLEAN;
@@ -153,7 +155,7 @@ PROCEDURE IsErr (type: Type.T) =
 
 (* EXPORTED: *) 
 PROCEDURE New (type: Type.T; args: Expr.List; dots: BOOLEAN): Expr.T =
-  VAR constr := NEW (P);
+  VAR constr := NEW (T);
   BEGIN
     ExprRep.Init (constr);
     constr.resultKind   := RKTyp.RKUnknown;
@@ -169,7 +171,7 @@ PROCEDURE New (type: Type.T; args: Expr.List; dots: BOOLEAN): Expr.T =
 IsErr(constr.semIndexType) (* Just for debugging. *);
     constr.repType      := NIL;
     constr.args         := args;
-(* REVIEW: Initializations here vs. declared in P. *)    
+(* REVIEW: Initializations here vs. declared in T. *)
     constr.dots                 := dots;
     constr.evalAttempted        := FALSE;
     constr.is_const             := FALSE;
@@ -188,25 +190,25 @@ IsErr(constr.semIndexType) (* Just for debugging. *);
   END New;
 
 (* EXPORTED: *) 
-PROCEDURE ArrayConstrExpr (e: Expr.T): P =
+PROCEDURE ArrayConstrExpr (expr: Expr.T): T =
 (* Look through a ConsExpr for an ArrayExpr.  NIL if not. *)
    
   VAR base: Expr.T;
   BEGIN
-    ConsExpr.Seal (e);
-    (* DO NOT allow ConsExpr to Check e. That would make a (should be top-level)
-       call to ArrayExpr.Check on a nested array constructor. *)
-    base := ConsExpr.Base (e);
-    IF base = NIL THEN base := e END; 
+    ConsExpr.Seal (expr);
+    (* DO NOT allow ConsExpr to Check expr. That would make a (should be
+       top-level) call to ArrayExpr.Check on a nested array constructor. *)
+    base := ConsExpr.Base (expr);
+    IF base = NIL THEN base := expr END;
     TYPECASE base OF
     | NULL => RETURN NIL;
-    | P (arrayExpr) => RETURN arrayExpr;
+    | T (arrayExpr) => RETURN arrayExpr;
     ELSE RETURN NIL;
     END;
   END ArrayConstrExpr;
 
 (* EXPORTED: *) 
-PROCEDURE NoteNested (constr: P) =
+PROCEDURE NoteNested (constr: T) =
 (* PRE: constr has not been checked. *)
 (* Mark constr as nested (ArrayExpr nested inside an ArrayExpr, directly,
    except for a possible ConsExpr in between.  In particular, not a
@@ -218,29 +220,29 @@ PROCEDURE NoteNested (constr: P) =
   END NoteNested;
 
 (* EXPORTED: *) 
-PROCEDURE Is (e: Expr.T): BOOLEAN =
+PROCEDURE Is (expr: Expr.T): BOOLEAN =
 (* Purely syntactic. Will not look through a ConsExpr. *)
   BEGIN
-    TYPECASE e OF
+    TYPECASE expr OF
     | NULL => RETURN FALSE;
-    | P    => RETURN TRUE;
+    | T    => RETURN TRUE;
     ELSE      RETURN FALSE;
     END;
   END Is;
 
 (* Externally dispatched-to: *)
-PROCEDURE NeedsAddress (<*UNUSED*> constr: P) =
+PROCEDURE NeedsAddress (<*UNUSED*> constr: T) =
   BEGIN
     (* We don't need to be told this. It always needs an address. *)
   END NeedsAddress;
 
 (* Externally dispatched-to: *)
-PROCEDURE IsEqual (a: P;  e: Expr.T;  x: M3.EqAssumption): BOOLEAN =
+PROCEDURE IsEqual (a: T;  expr: Expr.T;  x: M3.EqAssumption): BOOLEAN =
 (* Purely syntactic. *)
   BEGIN
-    TYPECASE e OF
+    TYPECASE expr OF
     | NULL => RETURN FALSE;
-    | P(b) => 
+    | T(b) => 
       IF   (NOT Type.IsEqual (a.semType, b.semType, x))
         OR (a.dots # b.dots)
         OR ((a.args = NIL) # (b.args = NIL))
@@ -257,11 +259,10 @@ PROCEDURE IsEqual (a: P;  e: Expr.T;  x: M3.EqAssumption): BOOLEAN =
 
 (* ------------------------- Check ------------------------ *)
 
-PROCEDURE ArgCt (constr: P): INTEGER =
+PROCEDURE ArgCt (constr: T): INTEGER =
   BEGIN
     IF constr.args = NIL THEN RETURN 0
-    ELSE
-      RETURN NUMBER (constr.args^);
+    ELSE RETURN NUMBER (constr.args^);
     END;
   END ArgCt; 
 
@@ -283,7 +284,7 @@ PROCEDURE LengthOfOrdType (ordType: Type.T): Expr.lengthTyp =
   END LengthOfOrdType;
 
 PROCEDURE CheckArgStaticLength
-  (constr: P; VAR levelInfo: LevelInfoTyp; argLength, depth: INTEGER) =
+  (constr: T; VAR levelInfo: LevelInfoTyp; argLength, depth: INTEGER) =
   BEGIN
     IF argLength < 0 THEN RETURN END;
     IF levelInfo.staticLen = Expr.lengthNonStatic 
@@ -300,7 +301,7 @@ PROCEDURE CheckArgStaticLength
   END CheckArgStaticLength;
   
 (* Externally dispatched-to: *)
-PROCEDURE Check (top: P;  VAR cs: Expr.CheckState) =
+PROCEDURE Check (top: T;  VAR cs: Expr.CheckState) =
 (* Must be called IFF top is the top of a tree of array constructors. *)
 (* This will be called from ConsExpr.Check, through Expr.TypeCheck. *)
   VAR levelType, levelIndexType, levelEltType: Type.T;
@@ -345,13 +346,13 @@ PROCEDURE Check (top: P;  VAR cs: Expr.CheckState) =
   END Check;
 
 PROCEDURE CheckRecurse
-  (top, constr: P; VAR cs: Expr.CheckState; depth: INTEGER) =
+  (top, constr: T; VAR cs: Expr.CheckState; depth: INTEGER) =
   VAR argLength, argCt: INTEGER;
   VAR priorErrCt, priorWarnCt, laterErrCt, laterWarnCt: INTEGER;
   VAR depthWInArg, depthWInTopConstr: INTEGER;
   VAR argSemType, argRepType, argIndexType, argEltType: Type.T;
   VAR value, minE, maxE: Expr.T;
-  VAR argConstr: P;
+  VAR argConstr: T;
   VAR key: M3ID.T;
   VAR eltTypeInfo: Type.Info;
   VAR b: BOOLEAN;
@@ -359,13 +360,13 @@ PROCEDURE CheckRecurse
     <* ASSERT constr.state = StateTyp.Fresh *>
     constr.state := StateTyp.Checking;
     <* ASSERT constr.isNested = (depth > 0) *>
+    constr.depth := depth;
+    constr.top := top;
     IF depth > 0 THEN
       constr.type := Type.Check (constr.type);
       constr.tipe := constr.type;
       constr.semType := constr.type;
     END;
-    constr.depth := depth;
-    constr.top := top;
     EVAL Type.CheckInfo (constr.semEltType, eltTypeInfo);
 
     IF constr.type = ErrType.T
@@ -418,9 +419,9 @@ IsErr(constr.semIndexType) (* Just for debugging. *);
         END;
       ELSE selfLevelInfo.staticLen := constr.eltCt;
       END;
-    END;
+    END (*WITH*);
 
-    (* Go througn the arguments. *)
+    (* Go through the arguments. *)
     WITH argLevelInfo = top.levels^ [constr.depth + 1] DO
       FOR i := 0 TO argCt - 1 DO
         WITH argExpr = constr.args^ [i] DO
@@ -525,7 +526,7 @@ PROCEDURE ConstSubscript
 (* Will look through a ConsExpr. *)
 (* PRE: array is Checked. *)
 (* PRE: indexExpr is Checked. *)
-  VAR constr: P;
+  VAR constr: T;
   VAR i, n: INTEGER;
   VAR t: Type.T;
   VAR int, min, max, offs: Target.Int;
@@ -568,7 +569,7 @@ PROCEDURE ShapeCheckNeeded (expr: Expr.T): BOOLEAN =
 (* If expr is an array constructor, assigning expr will require CT or RT array
    shape check. (Otherwise, ArrayExpr will take care of shape checks.) *)
 (* Will look through a ConsExpr. *)
-  VAR top: P;
+  VAR top: T;
   BEGIN
     top := ArrayConstrExpr (expr);
     IF top = NIL THEN RETURN FALSE END;
@@ -583,7 +584,7 @@ PROCEDURE ShapeCheckNeeded (expr: Expr.T): BOOLEAN =
   END ShapeCheckNeeded;
 
 (* Externally dispatched-to: *)
-PROCEDURE StaticLength (constr: P): INTEGER =
+PROCEDURE StaticLength (constr: T): INTEGER =
 (* PRE: constr.checked. *)
   BEGIN
     <* ASSERT constr.checked *>
@@ -591,7 +592,7 @@ PROCEDURE StaticLength (constr: P): INTEGER =
   END StaticLength;
 
 (* Externally dispatched-to: *)
-PROCEDURE IsZeroes (constr: P;  <*UNUSED*> lhs: BOOLEAN): BOOLEAN =
+PROCEDURE IsZeroes (constr: T;  <*UNUSED*> lhs: BOOLEAN): BOOLEAN =
 (* PRE: constr.checked. *)
   BEGIN
     IF constr.args = NIL THEN RETURN TRUE (*Vacuously*) END;
@@ -602,22 +603,22 @@ PROCEDURE IsZeroes (constr: P;  <*UNUSED*> lhs: BOOLEAN): BOOLEAN =
   END IsZeroes;
 
 (* Externally dispatched-to: *)
-PROCEDURE Evaluate (constr: P): Expr.T =
+PROCEDURE Evaluate (constr: T): Expr.T =
 (* PRE: constr.checked. *)
 (* Return a constant expr if constr is constant, otherwise NIL. *)
 (* NOTE: This will fold any constant argument in place, even if the
          whole constructor is not constant. *)
-  VAR e: Expr.T;
+  VAR expr: Expr.T;
   BEGIN
     IF NOT constr.evalAttempted THEN
       constr.evalAttempted := TRUE;
       constr.is_const := TRUE;
       FOR i := 0 TO LAST (constr.args^) DO
         WITH arg = constr.args^[i] DO
-          e := Expr.ConstValue (arg);
-          IF (e = NIL)
+          expr := Expr.ConstValue (arg);
+          IF expr = NIL
           THEN constr.is_const := FALSE;
-          ELSE arg := e;
+          ELSE arg := expr;
           END;
         END (*WITH*)
       END;
@@ -629,28 +630,29 @@ PROCEDURE Evaluate (constr: P): Expr.T =
   END Evaluate;
 
 (* Externally dispatched-to: *)
-PROCEDURE GenFPLiteral (p: P;  buf: M3Buf.T) =
+PROCEDURE GenFPLiteral (constr: T;  buf: M3Buf.T) =
 (* PRE: constr.checked. *)
 (* "FP" is for "fingerprint". *)
   VAR argCt: INTEGER;
-  VAR e: Expr.T;
+  VAR expr: Expr.T;
   BEGIN
-    argCt := ArgCt (p);
+    <* ASSERT constr.checked *>
+    argCt := ArgCt (constr);
     M3Buf.PutText (buf, "ARRAY<");
     FOR i := 0 TO argCt-1 DO
       IF (i > 0) THEN M3Buf.PutChar (buf, ',') END;
-      Expr.GenFPLiteral (p.args^[i], buf);
+      Expr.GenFPLiteral (constr.args^[i], buf);
     END;
-    IF p.semIndexType # NIL AND p.dots AND p.eltCt > argCt THEN
-      e := p.args^[argCt-1];
-      e := Expr.ConstValue (e);
-      FOR i := argCt TO p.eltCt DO
-(* FIXME: reintroduce this change to go to p.eltCt-1. *)
+    IF constr.semIndexType # NIL AND constr.dots AND constr.eltCt > argCt THEN
+      expr := constr.args^[argCt-1];
+      expr := Expr.ConstValue (expr);
+      FOR i := argCt TO constr.eltCt DO
+(* FIXME: reintroduce this change to go to constr.eltCt-1. *)
       (* NOTE: Earlier, this loop incorrectly went to eltCt.  Fixing this
                could make earlier-written pickles unreadable by currently-
                compiled code. *)
         M3Buf.PutChar (buf, ',');
-        Expr.GenFPLiteral (e, buf);
+        Expr.GenFPLiteral (expr, buf);
       END;
     END;
     M3Buf.PutChar (buf, '>');
@@ -663,7 +665,7 @@ PROCEDURE NoteTargetType (expr: Expr.T; type: Type.T) =
 (* PRE: If expr is an array constructor, it is top-level.
    If so, arrange for it to be compiled having type 'type'. *)
 (* Will look through a ConsExpr. *)
-  VAR top: P;
+  VAR top: T;
   VAR baseType: Type.T; 
   BEGIN
     top := ArrayConstrExpr (expr);
@@ -675,15 +677,15 @@ PROCEDURE NoteTargetType (expr: Expr.T; type: Type.T) =
     IF top.targetType = NIL THEN (* First time noted. *)
       IF top.state >= StateTyp.Representing
       THEN (* Too late to use this info. *)
-        Error.Msg ("Target type supplied too late to use -- "
-                   & "harmless except for possible efficiency loss.");
+        Error.Info ("Target type supplied too late to use -- "
+                    & "harmless except for possible efficiency loss.");
         RETURN
       ELSE
         top.targetType := baseType;
       END;
     ELSE
-      Error.Msg ("Target type changed -- "
-                 & "harmless except for possible efficiency loss.");
+      Error.Info ("Target type changed -- "
+                   & "harmless except for possible efficiency loss.");
       top.targetType := baseType;
     END;
   (* Represent (top); *)
@@ -707,7 +709,7 @@ CONST eltPackIrrelevant = - 2;
 CONST eltPackUnknown = - 3;
 
 PROCEDURE CommonEltPack
-  (top: P; superType, subType: Type.T; depth: INTEGER): INTEGER =
+  (top: T; superType, subType: Type.T; depth: INTEGER): INTEGER =
 (* Common eltPack of both types, when superType is open and subType is fixed.
    eltPackIrrelevant, if these are not array types.
    eltPackInconsistent, if element packings are unequal.
@@ -784,7 +786,7 @@ PROCEDURE CommonEltPack
     END (*WITH*) 
   END CommonEltPack;
 
-PROCEDURE CheckFixedOpenEltPack (top: P; typeX, typeY: Type.T; depth: INTEGER)
+PROCEDURE CheckFixedOpenEltPack (top: T; typeX, typeY: Type.T; depth: INTEGER)
 : (* Not known to be bad. *) BOOLEAN =
 (* PRE: top is a top-level constructor. *)
 (* PRE: typeX and typeY are both assignable to repType of levels at 'depth'.
@@ -809,9 +811,9 @@ PROCEDURE CheckFixedOpenEltPack (top: P; typeX, typeY: Type.T; depth: INTEGER)
     RETURN eltPack # eltPackInconsistent
   END CheckFixedOpenEltPack;
 
-VAR DebugOrigin: INTEGER;
+<*UNUSED*> VAR DebugOrigin: INTEGER;
 
-PROCEDURE Represent (top: P) =
+PROCEDURE Represent (top: T) =
 (* PRE: top is the top of a tree of array constructors. *)
   VAR levelType, levelIndexType, levelEltType, semIndexType, semEltType: Type.T;
   VAR repType, repIndexType, repEltType, repSuccType: Type.T;
@@ -1014,12 +1016,12 @@ PROCEDURE Represent (top: P) =
     top.state := StateTyp.Represented
   END Represent;
 
-PROCEDURE RepresentRecurse (constr: P) =
-  VAR top: P;
+PROCEDURE RepresentRecurse (constr: T) =
+  VAR top: T;
   VAR argCt: INTEGER;
   VAR argRepType: Type.T;
   VAR argExpr: Expr.T;
-  VAR argConstr: P;
+  VAR argConstr: T;
   VAR fixedOpenOK: BOOLEAN;
   BEGIN
     <* ASSERT constr.state >= StateTyp.Checked *>
@@ -1034,7 +1036,7 @@ PROCEDURE RepresentRecurse (constr: P) =
           argExpr := constr.args^[i];
           IF argExpr # NIL THEN
             argConstr := ArrayConstrExpr (argExpr);
-            IF argConstr # NIL AND argConstr.isNested THEN
+            IF argConstr # NIL AND argConstr.depth > 0  THEN
               (* argConstr is an inner array constructor. *)
               RepresentRecurse (argConstr);
             ELSE (* argExpr is non-array or non-constructor. *)
@@ -1059,7 +1061,7 @@ PROCEDURE RepresentRecurse (constr: P) =
 
 (* ---------------- Dependent on Represent ---------------- *)
 
-PROCEDURE Classify (top: P) =
+PROCEDURE Classify (top: T) =
 (* Classify the method/location for storing the constructor's value. *)
   BEGIN
     IF top.resultKind # RKTyp.RKUnknown THEN RETURN END;
@@ -1087,7 +1089,7 @@ PROCEDURE Classify (top: P) =
 PROCEDURE GetBounds
   (expr: Expr.T;  VAR min, max: Target.Int): (* Success *) BOOLEAN =
 (* Will look through a ConsExpr. *)
-  VAR constr: P;
+  VAR constr: T;
   VAR b: BOOLEAN;
   BEGIN
     constr := ArrayConstrExpr (expr);
@@ -1102,13 +1104,13 @@ PROCEDURE GetBounds
   END GetBounds;
 
 (* Externally dispatched-to: *)
-PROCEDURE RepTypeOf (constr: P): Type.T =
+PROCEDURE RepTypeOf (constr: T): Type.T =
 (* PRE: constr is Checked. *)
   BEGIN
     IF constr = NIL THEN RETURN NIL END;
     <* ASSERT constr.state >= StateTyp.Checked *>
  IF constr.depth > 0 THEN
-   Error.Msg ("RepTypeOf called on nested array constructor.")
+   Error.Info ("RepTypeOf called on nested array constructor.")
  END;
     Represent (constr.top);
     <* ASSERT constr.repType # NIL *>
@@ -1125,7 +1127,7 @@ PROCEDURE NoteUseTargetVar (expr: Expr.T) =
           UsesAssignProtocol (expr) has not yet been called. *)
   (* Arrange to use LHS from the CG stack to set nonstatic shape components. *)
   (* Will look through a ConsExpr. *)
-  VAR top: P;
+  VAR top: T;
   BEGIN
     top := ArrayConstrExpr (expr);
     IF top = NIL THEN RETURN END;
@@ -1139,10 +1141,10 @@ PROCEDURE NoteUseTargetVar (expr: Expr.T) =
   END NoteUseTargetVar;
 
 (* Externally dispatched-to: *)
-PROCEDURE UsesAssignProtocol (expr: P): BOOLEAN =
+PROCEDURE UsesAssignProtocol (expr: Expr.T): BOOLEAN =
 (* PRE: IF expr is an array constructor, THEN it is top-level. *)
 (* Will look through a ConsExpr. *)
-  VAR top: P;
+  VAR top: T;
   BEGIN
     top := ArrayConstrExpr (expr);
     IF top = NIL THEN RETURN FALSE END;
@@ -1155,7 +1157,7 @@ PROCEDURE UsesAssignProtocol (expr: P): BOOLEAN =
   END UsesAssignProtocol;
 
 (* Externally dispatched-to: *)
-PROCEDURE Prep (top: P) =
+PROCEDURE Prep (top: T) =
 (* PRE: top.depth = 0. *)
   (* Must be called IFF top is the top of a tree of array constructors. *)
   BEGIN
@@ -1177,11 +1179,11 @@ PROCEDURE Prep (top: P) =
   END Prep;
 
 (* Externally dispatched-to: *)
-PROCEDURE PrepLiteral (p: P; type: Type.T; inConstArea: BOOLEAN) =
+PROCEDURE PrepLiteral (constr: T; type: Type.T; inConstArea: BOOLEAN) =
 (* If NOT inConstArea, do it in the initialized global area. *)
-  VAR top: P;
+  VAR top: T;
   BEGIN
-    top := p.top;
+    top := constr.top;
     <* ASSERT top.checked *>
     top.inConstArea := inConstArea;
     IF top.broken THEN
@@ -1196,7 +1198,7 @@ PROCEDURE PrepLiteral (p: P; type: Type.T; inConstArea: BOOLEAN) =
   END PrepLiteral;
 
 PROCEDURE GenEvalFixingInfo
-  (top: P; fixingDopeVal: CG.Val; fixingExprDepth: INTEGER) =
+  (top: T; fixingDopeVal: CG.Val; fixingExprDepth: INTEGER) =
 (* PRE: top is a top-level array constructor. *)
   VAR depthWInFixingExpr, depthWInTopConstr: INTEGER;
   VAR repType: Type.T;
@@ -1232,7 +1234,7 @@ PROCEDURE GenEvalFixingInfo
     top.fixingInfoComputed := TRUE;
   END GenEvalFixingInfo;
 
-PROCEDURE InitVarDope (top: P; var: CG.Var) =
+PROCEDURE InitVarDope (top: T; var: CG.Var) =
 (* PRE: top.depth = 0. *)
   VAR length: INTEGER;
   BEGIN
@@ -1253,7 +1255,7 @@ PROCEDURE InitVarDope (top: P; var: CG.Var) =
     END
   END InitVarDope; 
 
-PROCEDURE InitValDope (top: P; val: CG.Val; VAR eltsAddrVal: CG.Val) =
+PROCEDURE InitValDope (top: T; val: CG.Val; VAR eltsAddrVal: CG.Val) =
 (* PRE: top.depth = 0. *)
   VAR length: INTEGER;
   BEGIN
@@ -1284,7 +1286,7 @@ PROCEDURE InitValDope (top: P; val: CG.Val; VAR eltsAddrVal: CG.Val) =
     END
   END InitValDope;
 
-PROCEDURE InnerPrep (top: P) =
+PROCEDURE InnerPrep (top: T) =
 (* PRE: top.depth = 0. *)
   (* Must be called IFF top is the top of a tree of array constructors. *)
   (* PRE LHS addr is on CG stack IFF UsesAssignProtocol. *)
@@ -1453,10 +1455,10 @@ PROCEDURE InnerPrep (top: P) =
   END InnerPrep;
 
 PROCEDURE GenCopyOpenArgValueDyn
-  (constr: P; argDopeAddrVal: CG.Val; eltAlign: Type.BitAlignT) =
+  (constr: T; argDopeAddrVal: CG.Val; eltAlign: Type.BitAlignT) =
 (* PRE: TOS is a CG.Val for address w/in LHS to copy to. *)
 (* PRE: top.shallowestDynDepth >= 0 *)
-  VAR top: P;
+  VAR top: T;
   BEGIN
     top := constr.top;
     (* Target address. *)
@@ -1479,7 +1481,7 @@ PROCEDURE GenCopyOpenArgValueDyn
   END GenCopyOpenArgValueDyn;
 
 PROCEDURE GenPushLHSEltsAddr
-  (top: P; bitOffset: INTEGER; eltAlign: Type.BitAlignT) =
+  (top: T; bitOffset: INTEGER; eltAlign: Type.BitAlignT) =
 (* PRE: top.depth = 0 *)
 (* Push the address of the element at bitOffset within the elements
    portion of the temp or LHS location. *)
@@ -1502,11 +1504,11 @@ PROCEDURE GenPushLHSEltsAddr
     END (*CASE*);
   END GenPushLHSEltsAddr;
 
-PROCEDURE PrepRecurse (constr: P; selfFlatEltNo: INTEGER) =
+PROCEDURE PrepRecurse (constr: T; selfFlatEltNo: INTEGER) =
 (* Called only on an array constructor. *)
 (* selfFlatEltNo is the flattened element number of constr w/in the topmost
    array constructor. *)
-  VAR top: P;
+  VAR top: T;
   VAR argRepType: Type.T;
   VAR dotSsVal, argAddrVal: CG.Val := NIL;
   VAR topLab: CG.Label;
@@ -1514,7 +1516,7 @@ PROCEDURE PrepRecurse (constr: P; selfFlatEltNo: INTEGER) =
   VAR eltFlatOffset, flatEltPack, constrEltPack: INTEGER;
   VAR depthWInArg, depthWInTopConstr, argOpenDepth: INTEGER;
   VAR argExpr: Expr.T;
-  VAR argConstr: P;
+  VAR argConstr: T;
   VAR eltAlign: Type.BitAlignT;
   VAR argRepTypeInfo: Type.Info;
   BEGIN
@@ -1536,7 +1538,7 @@ PROCEDURE PrepRecurse (constr: P; selfFlatEltNo: INTEGER) =
           IF argExpr # NIL THEN
             argFlatEltNo := selfFlatEltNo + i * argLevelInfo.staticFlatEltCt;
             argConstr := ArrayConstrExpr (argExpr);
-            IF argConstr # NIL AND argConstr.isNested THEN
+            IF argConstr # NIL AND argConstr.depth > 0 THEN
               (* argConstr is an inner array constructor. *)
               PrepRecurse (argConstr, argFlatEltNo);
             ELSE (* argExpr is a non-array or non-constructor. *)
@@ -1769,7 +1771,7 @@ PROCEDURE PrepRecurse (constr: P; selfFlatEltNo: INTEGER) =
 (* -------------------------- Compile --------------------- *)
 
 PROCEDURE InitLiteralDope
-  (top: P; inConstArea: BOOLEAN) =
+  (top: T; inConstArea: BOOLEAN) =
 (* PRE: top.repOpenDepth > 0 *)
 (* Initialize dope fields of literal. *)
   VAR shapeOffset, eltCt: INTEGER; 
@@ -1790,7 +1792,7 @@ PROCEDURE InitLiteralDope
   END InitLiteralDope;
 
 (* Externally dispatched-to: *)
-PROCEDURE Compile (top: P) =
+PROCEDURE Compile (top: T) =
 (* PRE: top.depth = 0 *)
 (* PRE: LHS addr is on CG stack IFF UsesAssignProtocol. *)
   BEGIN
@@ -1821,7 +1823,7 @@ PROCEDURE Compile (top: P) =
 
 (* Externally dispatched-to: *)
 PROCEDURE GenLiteral
-  (top: P; globalOffset: INTEGER; <*UNUSED*>type: Type.T;
+  (top: T; globalOffset: INTEGER; <*UNUSED*>type: Type.T;
    inConstArea: BOOLEAN) =
 (* PRE: top.depth = 0 *)
   BEGIN
@@ -1855,7 +1857,7 @@ PROCEDURE GenLiteral
     CG.Discard (Target.Address.cg_type);
   END GenLiteral;
 
-PROCEDURE CompileGeneratedTypes (top: P) =
+PROCEDURE CompileGeneratedTypes (top: T) =
 (* PRE: top.depth = 0 *)
 (* POST: result address on TOS, even if called > once. *)
   BEGIN
@@ -1870,7 +1872,7 @@ PROCEDURE CompileGeneratedTypes (top: P) =
     Type.Compile (top.refType);
    END CompileGeneratedTypes;
 
-PROCEDURE InnerCompile (top: P) =
+PROCEDURE InnerCompile (top: T) =
 (* PRE: top.depth = 0 *)
   BEGIN
     IF top.broken THEN

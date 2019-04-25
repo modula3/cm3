@@ -78,11 +78,11 @@ PROCEDURE Check (tlhs: Type.T;  rhsExpr: Expr.T;  VAR cs: Stmt.CheckState) =
     base_tlhs := Type.Base (tlhs); (* strip renaming, packing, and subranges. *)
     trhs := Expr.SemTypeOf (rhsExpr);
     lhs_type_info, base_lhs_type_info: Type.Info;
-    c: Type.Class;
+    lhsClass: Type.Class;
   BEGIN
     tlhs := Type.CheckInfo (tlhs, lhs_type_info);
     base_tlhs := Type.CheckInfo (base_tlhs, base_lhs_type_info);
-    c := base_lhs_type_info.class;
+    lhsClass := base_lhs_type_info.class;
     Expr.TypeCheck (rhsExpr, cs);
     ArrayExpr.NoteUseTargetVar (rhsExpr);
 
@@ -91,7 +91,7 @@ PROCEDURE Check (tlhs: Type.T;  rhsExpr: Expr.T;  VAR cs: Stmt.CheckState) =
         Error.Msg ("types are not assignable in assignment statement");
       END;
     ELSE
-      CASE c OF
+      CASE lhsClass OF
       | Type.Class.Enum, Type.Class.Subrange, Type.Class.Integer,
         Type.Class.Longint =>
         CheckOrdinal (tlhs, rhsExpr);
@@ -122,6 +122,7 @@ PROCEDURE CheckOrdinal (tlhs: Type.T;  rhsExpr: Expr.T) =
 
 PROCEDURE CheckReference (tlhs, trhs: Type.T;  READONLY lhs_type_info: Type.Info) =
   BEGIN
+(* Check: Doesn't this just duplicate checks already done by Type.IsAssibable? *)
     IF Type.IsSubtype (trhs, tlhs) THEN
       (*ok*)
     ELSIF NOT Type.IsSubtype (tlhs, trhs) THEN
@@ -410,7 +411,7 @@ PROCEDURE AssignArray
     IF Expr.UsesAssignProtocol (rhsExpr)
     THEN
       CompileStruct (rhsExpr);
-      (* Compile will have done any needed shape check and copied rhsExpr's
+      (* CompileStruct will have done any needed shape check and copied rhsExpr's
          value into the LHS, leaving only the LHS address on CG stack, which
          is the expression's result. *)
       CG.Discard (CG.Type.Addr);

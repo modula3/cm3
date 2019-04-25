@@ -219,8 +219,8 @@ PROCEDURE Free_temps ();
 (* free "temps" (CG.Vars) that are marked busy. *)
 
 (* NOTE: This naming is very confusing.  A CG.Var and CG.Val are different
-         things.  But both are referred-to in many places as temporaries,
-         temps, tmps, etc.  Free_temp and Free_temps refer to CG.Vars. *)
+         things.  But both are referred-to in many places as "temporaries",
+         "temps", "tmps", etc.  Free_temp and Free_temps refer to CG.Vars. *)
 
 (*--------------------------------------------- direct stack manipulation ---*)
 

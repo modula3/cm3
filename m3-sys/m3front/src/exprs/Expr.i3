@@ -60,6 +60,7 @@ PROCEDURE IsWritable (t: T; traced: BOOLEAN): BOOLEAN;
 (* TRUE iff t is a writable designator *)
 
 PROCEDURE IsZeroes (t: T): BOOLEAN;
+(* PRE: t is checked. *)
 (* TRUE if t's binary representation is all zeroes *)
 
 PROCEDURE GetSign (t: T): CG.Sign;
