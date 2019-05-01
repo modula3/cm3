@@ -12,20 +12,22 @@ MODULE ConsExpr;
    or set constructor requires semantic analysis, so this placeholder
    node is built during parsing.  It stays in the tree, but is given
    an ArrayExpr.T, RecordExpr.T, or SetExpr.T as a child, by Seal,
-   after its type is known.. *)
+   after its type is can be looked up and checked. *)
 
 IMPORT M3, Expr, ExprRep, Error, ErrType, Type;
 IMPORT TypeExpr, SetExpr, RecordExpr, ArrayExpr;
 
-TYPE Kind = { Unknown, NonConstr, Record, Set, Array };
+TYPE Kind = {Unknown, NonConstr, Record, Set, Array};
 
 TYPE
   P = Expr.T BRANDED "ConsExpr.P" OBJECT
         typeExpr : Expr.T; (* An *expression* for the type being constructed. *)
         args     : Expr.List;
-        dots     : BOOLEAN;
         base     : Expr.T;
         kind     : Kind;
+        dots     : BOOLEAN;
+        isNestedArrayConstr: BOOLEAN := FALSE;
+        (* We're gonna want this someday. *)
       OVERRIDES
         typeOf       := TypeOf;
         check        := Check;
@@ -88,8 +90,8 @@ PROCEDURE TypeOf (p: P): Type.T =
   VAR ta: Type.T;
   BEGIN
     IF TypeExpr.Split (p.typeExpr, ta)
-      THEN RETURN ta;
-      ELSE RETURN Expr.TypeOf (p.typeExpr);
+    THEN RETURN ta;
+    ELSE RETURN Expr.TypeOf (p.typeExpr);
     END;
   END TypeOf;
 
@@ -139,6 +141,7 @@ PROCEDURE CheckRecurse
       consExpr.type := ErrType.T;
     ELSE
       IF parentKind = Kind.Array AND consExpr.kind = Kind.Array THEN
+        consExpr.isNestedArrayConstr := TRUE;
         ArrayExpr.NoteNested (consExpr.base);
       END;
       Expr.TypeCheck (consExpr.typeExpr, cs);
@@ -151,7 +154,9 @@ PROCEDURE CheckRecurse
         WITH argExpr = consExpr.args^[i] DO
           TYPECASE argExpr OF
           | NULL =>
-          | P (argCons) => CheckRecurse (argCons, consExpr.kind, cs);
+          | P (argCons) =>
+            (* Does not include named CONST w/ array constructor as its value. *)
+            CheckRecurse (argCons, consExpr.kind, cs);
           ELSE Expr.TypeCheck (argExpr, cs)
           END
         END

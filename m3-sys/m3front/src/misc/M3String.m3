@@ -10,9 +10,6 @@ MODULE M3String;
 
 IMPORT M3Buf, Text, Word, CG, Target;
 
-CONST
-  NO_UID = -1;
-
 TYPE
   Buf       = ARRAY OF CHAR;
   HashTable = REF ARRAY OF T;

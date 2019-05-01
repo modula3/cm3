@@ -34,8 +34,13 @@ PROCEDURE Init_chars (offset: INTEGER;  t: T;  is_const: BOOLEAN);
 PROCEDURE Length (t: T): INTEGER;
 (* returns the length of the string *)
 
+(* NOTE! These UIDs have nothing to do with the UIDs that are hashes
+         and used many places. *)
+
+CONST NO_UID = -1;
+
 PROCEDURE GetUID (t: T): INTEGER;
-(* returns the string's UID *)
+(* returns the string's UID. NO_UID if SetUID never called. *)
 
 PROCEDURE SetUID (t: T;  uid: INTEGER);
 (* sets the string's UID *)

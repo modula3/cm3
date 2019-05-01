@@ -691,7 +691,7 @@ PROCEDURE NoteTargetType (expr: Expr.T; type: Type.T) =
   (* Represent (top); *)
   END NoteTargetType;
   
-PROCEDURE IndexTypeForLength (length: INTEGER): Type.T =
+PROCEDURE IndexTypeForLength (length: INTEGER; origin: INTEGER): Type.T =
 (* Type [0..length-1] *)
   VAR result: Type.T;
   VAR LastTI: Target.Int;
@@ -700,6 +700,7 @@ PROCEDURE IndexTypeForLength (length: INTEGER): Type.T =
     result := SubrangeType.New (TInt.Zero, LastTI, Int.T, builtin := FALSE);
     (* Don't call Type.Check on this.  It expects syntactic expressions
        for the bounds, and we don't have them. *)
+    result.origin := origin;
 (* TODO: Cache these types, possibly inside SubrangeType. *)
     RETURN result; 
   END IndexTypeForLength; 
@@ -886,7 +887,8 @@ PROCEDURE Represent (top: T) =
              AND NOT repSuccIsOpen 
                (* ^and not forced open by an inner open dimension. *)
           THEN (* Make it fixed in the repType. *)
-            repIndexType := IndexTypeForLength (levelInfo.staticLen);
+            repIndexType
+              := IndexTypeForLength (levelInfo.staticLen, top.origin);
             levelInfo.repIndexType := repIndexType;
             levelInfo.repType := ArrayType.New (repIndexType, repSuccType);
             levelInfo.repType := Type.Check (levelInfo.repType);
