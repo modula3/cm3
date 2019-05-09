@@ -195,6 +195,7 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
             Error.ID
               (z.name, "expression is not assignable to record constructor field");
           ELSE
+            ArrayExpr.NoteUseTargetVar (e);
             AssignStmt.Check (z.type, e, cs);
             z.expr := e;
           END;

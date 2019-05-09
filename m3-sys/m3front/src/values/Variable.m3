@@ -516,9 +516,9 @@ PROCEDURE AllocGlobalVarSpace (t: T) =
       size  := Target.Address.size;
       align := Target.Address.align;
     ELSIF OpenArrayType.Is (initRepType) THEN
-      align := MAX (Target.Address.align, Target.Integer.align);
       size  := Target.Address.size
                + OpenArrayType.OpenDepth(initRepType) * Target.Integer.size;
+      align := MAX (Target.Address.align, Target.Integer.align);
     ELSE
       size  := t.size;
       align := t.align;
@@ -844,6 +844,7 @@ PROCEDURE UserInit (t: T) =
         CG.Copy (t.size, overlap := FALSE);
       ELSE
         t.initPending := FALSE;
+        ArrayExpr.NoteUseTargetVar (t.initExpr);
         AssignStmt.PrepForEmit (t.tipe, t.initExpr, initializing := TRUE);
         LoadLValue (t);
         AssignStmt.DoEmit (t.tipe, t.initExpr, t.cg_align);

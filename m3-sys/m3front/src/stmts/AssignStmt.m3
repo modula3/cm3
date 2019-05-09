@@ -84,7 +84,6 @@ PROCEDURE Check (tlhs: Type.T;  rhsExpr: Expr.T;  VAR cs: Stmt.CheckState) =
     base_tlhs := Type.CheckInfo (base_tlhs, base_lhs_type_info);
     lhsClass := base_lhs_type_info.class;
     Expr.TypeCheck (rhsExpr, cs);
-    ArrayExpr.NoteUseTargetVar (rhsExpr);
 
     IF NOT Type.IsAssignable (tlhs, trhs) THEN
       IF (tlhs # ErrType.T) AND (trhs # ErrType.T) THEN
@@ -122,7 +121,7 @@ PROCEDURE CheckOrdinal (tlhs: Type.T;  rhsExpr: Expr.T) =
 
 PROCEDURE CheckReference (tlhs, trhs: Type.T;  READONLY lhs_type_info: Type.Info) =
   BEGIN
-(* Check: Doesn't this just duplicate checks already done by Type.IsAssibable? *)
+(* CHECK: Doesn't this just duplicate checks already done by Type.IsAssibable? *)
     IF Type.IsSubtype (trhs, tlhs) THEN
       (*ok*)
     ELSIF NOT Type.IsSubtype (tlhs, trhs) THEN
@@ -365,7 +364,7 @@ PROCEDURE CompileStruct (expr: Expr.T) =
 
 PROCEDURE CopyStruct (lhsAlign: Type.BitAlignT; bitSize: INTEGER) =
 (* PRE: CGstack: RHS addr on top, LHS addr below. *)
-(* PRE: Using exprssion protocol. *)
+(* PRE: Using expression protocol. *)
   BEGIN
     IF lhsAlign < Target.Byte OR bitSize MOD Target.Byte # 0
     THEN 
@@ -373,7 +372,7 @@ PROCEDURE CopyStruct (lhsAlign: Type.BitAlignT; bitSize: INTEGER) =
       CG.Store_indirect (Target.Word.cg_type, 0 , bitSize); 
     ELSE
       CG.Copy (bitSize, overlap := FALSE);
-      (* Expression protocol means ^ thevalue is already in a temporary. *)
+      (* Expression protocol means ^ the value is already in a temporary. *)
     END
   END CopyStruct;
 

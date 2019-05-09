@@ -79,16 +79,16 @@ PROCEDURE StaticLengthDefault (t: T): lengthTyp =
   END StaticLengthDefault;
 
 (* EXPORTED: *)
-PROCEDURE UsesAssignProtocol (t: T): BOOLEAN =
+PROCEDURE UsesAssignProtocol (rhs: T): BOOLEAN =
 BEGIN
-    IF (t = NIL) THEN RETURN FALSE END;
-    IF CallExpr.IsUserProc (t) THEN RETURN t.doDirectAssign END;
+    IF (rhs = NIL) THEN RETURN FALSE END;
+    IF CallExpr.IsUserProc (rhs) THEN RETURN rhs.doDirectAssign END;
 
 (* TODO ^This one-liner is an easy temporary way to sidestep having to add
         massive and widely scattered apparatus for two different levels of
         dispatching, using two different mechanisms, just to get
-        t.usesAssignProtocol to handle this case.  *)
-    RETURN t.usesAssignProtocol ();
+        rhs.usesAssignProtocol to handle this case.  *)
+    RETURN rhs.usesAssignProtocol ();
   END UsesAssignProtocol;
 
 (* EXPORTED: (ExprRep)*)

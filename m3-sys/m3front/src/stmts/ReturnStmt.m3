@@ -9,7 +9,7 @@
 MODULE ReturnStmt;
 
 IMPORT Expr, Error, Type, AssignStmt, Token, Scanner;
-IMPORT Variable, Marker, Stmt, StmtRep;
+IMPORT Variable, Marker, Stmt, StmtRep, ArrayExpr;
 
 TYPE
   P = Stmt.T OBJECT
@@ -46,6 +46,9 @@ PROCEDURE Check (p: P;  VAR cs: Stmt.CheckState) =
     ELSIF (t = NIL) THEN
       Error.Msg ("procedure does not have a return result");
     ELSE
+      ArrayExpr.NoteUseTargetVar (p.expr);
+      (* ^Marker.EmitReturn will either build result value directly or
+         provide a temp. *)
       AssignStmt.Check (t, p.expr, cs);
     END;
   END Check;

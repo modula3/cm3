@@ -42,7 +42,8 @@ CONST lengthInvalid = -3;
 
 PROCEDURE StaticLength (t: T): lengthTyp;
 
-PROCEDURE UsesAssignProtocol (t: T): BOOLEAN;
+PROCEDURE UsesAssignProtocol (rhs: T): BOOLEAN;
+(* See ArrayExpr.m3 for explanation of protocols. *)
 (*** phase 3 ***)
 
 PROCEDURE ConstValue (t: T): T;

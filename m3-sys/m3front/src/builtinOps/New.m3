@@ -13,7 +13,7 @@ IMPORT CG, CallExpr, Expr, ExprRep, Type, Procedure, Error;
 IMPORT RefType, ObjectType, OpaqueType, KeywordExpr, Value;
 IMPORT Field, Method, Int, ProcType, AssignStmt, OpenArrayType;
 IMPORT Scope, RecordType, TypeExpr, Null, Revelation, Target;
-IMPORT M3ID, M3RT, RunTyme, ErrType;
+IMPORT ArrayExpr, M3ID, M3RT, RunTyme, ErrType;
 
 VAR Z: CallExpr.MethodList;
 
@@ -125,6 +125,7 @@ PROCEDURE CheckRecord (t: Type.T;  ce: CallExpr.T;  VAR cs: Expr.CheckState) =
       ELSIF NOT Type.IsAssignable (Value.TypeOf (field), x) THEN
         Error.ID (key, "value is not assignable to field");
       ELSE
+        ArrayExpr.NoteUseTargetVar (value);
         AssignStmt.Check (Value.TypeOf (field), value, cs);
       END;
     END;
@@ -192,8 +193,10 @@ PROCEDURE CheckObject (t: Type.T;  ce: CallExpr.T;  VAR cs: Expr.CheckState): Ty
       ELSIF Field.Is (v) THEN
         Field.Split (v, field);
         IF NOT Type.IsAssignable (field.type, x)
-          THEN Error.ID (key, "value is not assignable to field");
-          ELSE AssignStmt.Check (field.type, value, cs);
+        THEN Error.ID (key, "value is not assignable to field");
+        ELSE
+          ArrayExpr.NoteUseTargetVar (value);
+          AssignStmt.Check (field.type, value, cs);
         END;
       ELSE
         Error.ID (key, "undefined?");

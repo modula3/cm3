@@ -86,14 +86,14 @@ PROCEDURE New (index, element: Type.T): Type.T =
   END New;
 
 PROCEDURE FixedDepth (p: P): INTEGER =
+  VAR eltType: Type.T;
   BEGIN
     IF p = NIL THEN RETURN 0 END;
     IF p.fixedDepth <= 0 THEN (* Compute it lazily and cache. *) 
       p.fixedDepth := 1;
-      TYPECASE p.elementType
-      OF NULL =>
-      | P (r) => INC (p.fixedDepth, FixedDepth (Type.StripPacked (r)));
-      ELSE
+      eltType := Reduce (p.elementType);
+      IF eltType # NIL THEN
+        INC (p.fixedDepth, FixedDepth (eltType));
       END;
     END;
     RETURN p.fixedDepth;

@@ -7,6 +7,18 @@
 MODULE ArrayExpr;
 (* An array constructor. Built only during semantic procssing. *)
 
+(* An array constructor can use one of these protocols for getting
+   its value to where it belongs:
+   constant protocol:   The value is built directly into one of the
+                        static areas.
+   expression protocol: The value is built into a temporaray,
+                        independently of its ultimate destination
+                        and copied later.
+   assign protocol:     The value is built directly into a runtime
+                        variable, which must be available (on the
+                        CG stack) during Prep.
+*)
+
 IMPORT M3, M3ID, CG, Expr, ExprRep, Error, Type, ArrayType;
 IMPORT ConsExpr, KeywordExpr, RangeExpr, Int, OpenArrayType, Module;
 IMPORT IntegerExpr, EnumExpr, SubrangeType, Target, TInt, M3Buf;
@@ -116,9 +128,8 @@ REVEAL
     resultKind        := RKTyp.RKUnknown;
     inConstArea       : BOOLEAN;
     fixingInfoComputed: BOOLEAN;
-    usesAssignProtocolCalled: BOOLEAN;
     useTargetVar      : BOOLEAN := FALSE;
-    useTargetVarAccessed: BOOLEAN := FALSE;
+    useTargetVarLocked: BOOLEAN := FALSE;
   OVERRIDES
     typeOf       := ExprRep.NoType;
     check        := Check;
@@ -165,7 +176,7 @@ PROCEDURE New (type: Type.T; args: Expr.List; dots: BOOLEAN): Expr.T =
     constr.semType      := type;
     constr.targetType   := NIL;
     constr.useTargetVar := FALSE;
-    constr.useTargetVarAccessed := FALSE;
+    constr.useTargetVarLocked := FALSE;
     WITH b = ArrayType.Split (type, constr.semIndexType, constr.semEltType)
     DO <* ASSERT b *> (* Which also implies type is an array type. *) END; 
 IsErr(constr.semIndexType) (* Just for debugging. *);
@@ -178,7 +189,6 @@ IsErr(constr.semIndexType) (* Just for debugging. *);
     constr.broken               := FALSE;
     constr.checked              := FALSE;
     constr.fixingInfoComputed   := FALSE;
-    constr.usesAssignProtocolCalled := FALSE;
     constr.refType              := NIL;
     constr.dynOffsetVal         := NIL;
     constr.directAssignableType := TRUE; (* Inherited. *)
@@ -479,6 +489,7 @@ IsErr(constr.semIndexType) (* Just for debugging. *);
 
                 ELSE (* Arg is not a constructor. *)
                   Error.Count (priorErrCt, priorWarnCt);
+                  NoteUseTargetVar (argExpr);
                   AssignStmt.Check (constr.semEltType, argExpr, cs);
 (* FIXME^  On a constant-valued ordinal being out of range, This will only warn,
            leaving a RT error to occur during execution.
@@ -495,7 +506,7 @@ IsErr(constr.semIndexType) (* Just for debugging. *);
                         := constr.depth + 1 (*For arg*) + depthWInArg;
                       IF depthWInTopConstr >= LAST (top.levels^) THEN EXIT END;
                       b := ArrayType.Split
-                             (argRepType, (*VAR*) argIndexType,  (*VAR*) argEltType);
+                             (argRepType, (*VAR*) argIndexType, (*VAR*) argEltType);
                       <* ASSERT b *>
                       IF argIndexType # NIL THEN
                         argLength := LengthOfOrdType (argIndexType);
@@ -573,14 +584,13 @@ PROCEDURE ShapeCheckNeeded (expr: Expr.T): BOOLEAN =
   BEGIN
     top := ArrayConstrExpr (expr);
     IF top = NIL THEN RETURN FALSE END;
-    <* ASSERT top.depth = 0 *>
+    <* ASSERT NOT top.isNested *>
     IF top.isNamedConst THEN RETURN FALSE END;
     <* ASSERT top.state >= StateTyp.Representing *>
       (* ^So targetType is final. *)
     IF top.targetType = NIL THEN RETURN TRUE END;
     IF OpenArrayType.OpenDepth (top.targetType) = 0 THEN RETURN FALSE END;
-    IF NOT top.useTargetVar THEN top.useTargetVarAccessed := TRUE END;
-    RETURN NOT top.useTargetVar
+    RETURN NOT UseTargetVar (top)
   END ShapeCheckNeeded;
 
 (* Externally dispatched-to: *)
@@ -1072,7 +1082,8 @@ PROCEDURE Classify (top: T) =
     IF Evaluate (top) # NIL THEN (* It's a constant. *)
       <* ASSERT top.shallowestDynDepth < 0 *>
       top.resultKind := RKTyp.RKGlobal
-    ELSIF top.doDirectAssign THEN (* Build value directly into final location. *)
+    ELSIF UsesAssignProtocol (top)
+    THEN (* Build value directly into final location. *)
       IF top.repOpenDepth <= 0
       THEN top.resultKind := RKTyp.RKDirectElts;
       ELSE top.resultKind := RKTyp.RKDirectDoped;
@@ -1125,22 +1136,32 @@ PROCEDURE RepTypeOf (constr: T): Type.T =
 (* EXPORTED: *)
 PROCEDURE NoteUseTargetVar (expr: Expr.T) =
 (* NOOP if expr is not an array constructor.  Otherwise: *)
-  (* PRE: expr is top-level, has been checked but not prepped, and
-          UsesAssignProtocol (expr) has not yet been called. *)
-  (* Arrange to use LHS from the CG stack to set nonstatic shape components. *)
-  (* Will look through a ConsExpr. *)
+(* PRE: expr is top-level *)
+(* Arrange to use LHS from the CG stack to set nonstatic shape components. *)
+(* Will look through a ConsExpr. *)
   VAR top: T;
   BEGIN
     top := ArrayConstrExpr (expr);
     IF top = NIL THEN RETURN END;
-    IF top.state < StateTyp.Checked THEN RETURN END (*Called too early. *);
-    IF top.isNamedConst THEN RETURN END;
-    IF top.state >= StateTyp.Prepped THEN RETURN END (*Called too late. *);
-    <* ASSERT top.depth = 0 *>
-    <* ASSERT NOT top.usesAssignProtocolCalled *>
-    <* ASSERT NOT top.useTargetVarAccessed *>
+    <* ASSERT NOT top.isNested *>
+    IF top.state >= StateTyp.Prepped THEN  (* Called too late. *)
+      Error.Info
+        ("ArrayExpr.NoteUseTargetVar called too late"
+         & " -- harmless but for possible efficiency loss." );
+      RETURN
+    END;
+    <* ASSERT NOT top.useTargetVarLocked *>
     top.useTargetVar := TRUE;
   END NoteUseTargetVar;
+
+PROCEDURE UseTargetVar (top: T): BOOLEAN =
+(* SIDE EFFECTS !! *)
+(* PRE: top is top-level. *)
+   BEGIN
+     IF top.isNamedConst THEN RETURN FALSE END;
+     top.useTargetVarLocked := TRUE;
+     RETURN top.useTargetVar;
+   END UseTargetVar;
 
 (* Externally dispatched-to: *)
 PROCEDURE UsesAssignProtocol (expr: Expr.T): BOOLEAN =
@@ -1150,12 +1171,12 @@ PROCEDURE UsesAssignProtocol (expr: Expr.T): BOOLEAN =
   BEGIN
     top := ArrayConstrExpr (expr);
     IF top = NIL THEN RETURN FALSE END;
-    <* ASSERT top.depth = 0 *>
-    IF top.is_const THEN RETURN FALSE END;
-    top.usesAssignProtocolCalled := TRUE;
+    <* ASSERT NOT top.isNested *>
+    IF top.is_const THEN  (* The constant protocol. *)
+      RETURN FALSE
+    END;
     IF top.doDirectAssign THEN RETURN TRUE END;
-    top.useTargetVarAccessed := TRUE;
-    RETURN top.useTargetVar     
+    RETURN UseTargetVar (top)     
   END UsesAssignProtocol;
 
 (* Externally dispatched-to: *)
@@ -1261,7 +1282,10 @@ PROCEDURE InitValDope (top: T; val: CG.Val; VAR eltsAddrVal: CG.Val) =
 (* PRE: top.depth = 0. *)
   VAR length: INTEGER;
   BEGIN
-    IF top.repOpenDepth > 0 THEN
+    IF top.repOpenDepth <= 0 THEN
+      CG.Push (val);
+      eltsAddrVal := CG.Pop ();
+    ELSE
       (* Elements pointer. *)
       CG.Push (val);
       CG.Boost_addr_alignment (Target.Address.align);
@@ -1314,13 +1338,11 @@ PROCEDURE InnerPrep (top: T) =
     | RKTyp.RKUnknown => <* ASSERT FALSE *>
     | RKTyp.RKGlobal => <* ASSERT top.globalOffset >= 0 *>
 
-    | RKTyp.RKDirectElts =>
-      (* LHS Address is pushed. *)
+    | RKTyp.RKDirectElts => (* LHS elements address is atop the CG stack. *)
       CG.Boost_addr_alignment (top.topRepAlign);
       top.buildEltsAddrVal := CG.Pop (); (* LHS points to elements. *)
 
-    | RKTyp.RKDirectDoped =>
-      (* LHS Address is pushed. *)
+    | RKTyp.RKDirectDoped => (* LHS dope address is atop the CG stack. *)
       CG.Boost_addr_alignment (Target.Address.align);
       top.buildAddrVal := CG.Pop (); (* LHS points to dope. *)
       InitValDope (top, top.buildAddrVal, (*OUT*)top.buildEltsAddrVal);
@@ -1336,16 +1358,15 @@ PROCEDURE InnerPrep (top: T) =
         InitVarDope (top, top.buildTempVar);
       END;
 
-      IF NOT top.useTargetVar THEN top.useTargetVarAccessed := TRUE END;
-      IF top.useTargetVar THEN (* LHS address is on the CG stack. *)
+      IF UseTargetVar (top) THEN (* LHS address is on the CG stack. *)
         CG.Boost_addr_alignment (top.topRepAlign);
         top.finalVal := CG.Pop ();
       END;
 
     | RKTyp.RKTempDyn =>
-      (* Gen code to evaluate shape-derived dynamic info. *)
-      IF NOT top.useTargetVar THEN top.useTargetVarAccessed := TRUE END;
-      IF top.useTargetVar THEN (* LHS address is on the CG stack. *)
+
+      (* Gen code to evaluate shape-derived dynamic info: *)
+      IF UseTargetVar (top) THEN (* LHS address is on the CG stack. *)
         CG.Boost_addr_alignment (Target.Address.align);
         top.finalVal := CG.Pop ();
         GenEvalFixingInfo (top, top.finalVal, fixingExprDepth := 0);
@@ -1362,8 +1383,9 @@ PROCEDURE InnerPrep (top: T) =
 
       (* Allocate a temporary "shape" array.  This confusing.  It is a
          one-dimensional open array of integers, complete with contiguous
-         dope, to be passed to NewTracedArray, and its element list is the
-         shape of the n-dimensional array we are building. *)
+         dope, to be passed to RT library procedure NewTracedArray, and
+         its element list is the shape of the n-dimensional array we are
+         building. *)
       <* ASSERT top.repOpenDepth = top.deepestDynDepth + 1 *>
       shapeSize := dopeSize + Target.Integer.size;
       shapeVar := CG.Declare_temp (shapeSize, Target.Address.align,
@@ -1437,13 +1459,15 @@ PROCEDURE InnerPrep (top: T) =
       CG.Store_addr (top.heapTempPtrVar, (*Offset:=*) 0);
 
     END (*CASE top.resultKind*);
-    (* If UsesAssignProtocol, LHS addr is now stored in a field of top:
-       buildAddrVar, builtEltsAddrVar, or finalVal. *)
+    
+    (* If UsesAssignProtocol, LHS addr is now stored in
+       top.buildAddrVar, top.buildEltsAddrVar, or top.finalVal,
+       depending on top.resultKind. *)
 
     (* Traverse the tree of array constructors. *)
     PrepRecurse (top, selfFlatEltNo := 0);
 
-    (* remember the result and free the other temporaries *)
+    (* Free temporaries: *)
     CG.Free_temp (shapeVar);
     IF top.shallowestDynDepth >= 0 THEN
       FOR depth := top.shallowestDynDepth TO top.deepestDynDepth DO
@@ -1659,7 +1683,7 @@ PROCEDURE PrepRecurse (constr: T; selfFlatEltNo: INTEGER) =
                     <* ASSERT openLevelInfo.staticLen # Expr.lengthNonArray *>
                     IF openLevelInfo.staticLen >= 0
                     THEN (* Arg is open but statically constrained at this level. *)
-                      (* Check that RT length = static constraint. *)
+                      (* Check that RT Arg length = static constraint. *)
                       CG.Push (argAddrVal);
                       CG.Boost_addr_alignment (Target.Integer.align);
                       CG.Open_size (depthWInArg);
@@ -1667,13 +1691,13 @@ PROCEDURE PrepRecurse (constr: T; selfFlatEltNo: INTEGER) =
                       CG.Check_eq
                         (Target.Integer.cg_type,
                          CG.RuntimeError.IncompatibleArrayShape);
-                      IF NOT top.useTargetVar
-                      THEN top.useTargetVarAccessed := TRUE
-                      END;
-                    ELSIF argExpr # top.firstArgExpr
-                          OR top.useTargetVar
+                      top.useTargetVarLocked := TRUE;
+(* CHECK              ^ Why? *)
+                    ELSIF UseTargetVar (top)
                           OR top.resultKind = RKTyp.RKDirectDoped
-                    THEN (* Gen RT check against openLevelInfo.fixingVal. *)
+                          OR argExpr # top.firstArgExpr
+                    THEN (* Arg is open and dynamically constrained at this level. *)
+                      (* Gen RT check against openLevelInfo.fixingVal. *)
                       CG.Push (argAddrVal);
                       CG.Boost_addr_alignment (Target.Integer.align);
                       CG.Open_size (depthWInArg);
@@ -1917,11 +1941,16 @@ PROCEDURE InnerCompile (top: T) =
       END;
 
     | RKTyp.RKTempDyn
-    => (* We built into a heap-allocated, dynamic-sized, doped temp. *)
+    => (* We built into a heap-allocated, dynamic-sized, contiguous dope
+          and elements temp. *)
       <* ASSERT (top.finalVal = NIL) = (NOT UsesAssignProtocol (top)) *>
       IF top.finalVal = NIL THEN
-        CG.Push (top.buildAddrVal)
-      ELSE
+        CG.Push (top.buildAddrVal) (* Return the temp. *)
+(* CHECK: Leave top.heapTempPtr alone.  If used in a WITH-binding, WithStmt
+          will copy the dope only into a variable.  This will maintain only
+          a pointer to the elements portion of the temporary.  Is a pointer
+          to the interior of a heap object enough to protect it from CG? *)
+      ELSE (* Copy the temp into the provided LHS area. *)
         IF top.state < StateTyp.Compiled THEN (* Don't copy twice. *)
 (* CHECK^ Actually, do we want to copy multiple times? *)        
           CG.Push (top.finalVal);
@@ -1930,10 +1959,19 @@ PROCEDURE InnerCompile (top: T) =
           <* ASSERT top.shallowestDynDepth >= 0 *>
           CG.Push (top.levels^[top.shallowestDynDepth].dynBitsizeVal);
           CG.Multiply (Target.Integer.cg_type);
+          CG.Load_intt (top.dopeSize);
+          CG.Add (Target.Integer.cg_type);
           CG.Copy_n (s := 1(*Unit size*), overlap := FALSE);
         END;
         CG.Push (top.finalVal);
         CG.Free (top.finalVal);
+
+        (* Gen code to NIL out heap object pointer, to be collected. *)
+        IF top.heapTempPtrVar # NIL THEN
+          CG.Load_nil ();
+          CG.Store_addr (top.heapTempPtrVar, (*Offset:=*) 0);
+          CG.Free_temp (top.heapTempPtrVar);
+        END;
       END;
     END (*CASE*);
     

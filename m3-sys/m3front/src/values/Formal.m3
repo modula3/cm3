@@ -335,7 +335,6 @@ PROCEDURE DoCheckArgs (VAR cs       : Value.CheckState;
       formal := slots[i].formal;
       IF (actualExpr # NIL) AND (formal # NIL) THEN
         (* we've got both a formal and an actual *)
-     (* ArrayExpr.NoteTargetType (actualExpr, formal.tipe); *)
         Expr.TypeCheck (actualExpr, cs);
 
         (* try to fold scalar constant values *)

@@ -35,10 +35,9 @@ PROCEDURE NoteTargetType (expr: Expr.T; type: Type.T);
 
 PROCEDURE NoteUseTargetVar (expr: Expr.T);
 (* NOOP if expr is not an array constructor.  Otherwise: *)
-  (* PRE: expr is top-level, has been checked but not prepped, and
-          UsesAssignProtocol (expr) has not yet been called. *)
-  (* Arrange to use LHS from the CG stack to set nonstatic shape components. *)
-  (* Will look through a ConsExpr. *)
+(* PRE: expr is top-level *)
+(* Arrange to use LHS from the CG stack to set nonstatic shape components. *)
+(* Will look through a ConsExpr. *)
 
 PROCEDURE ShapeCheckNeeded (expr: Expr.T): BOOLEAN;
 (* PRE: If expr is an array constructor, it is top-level and Checked. *)

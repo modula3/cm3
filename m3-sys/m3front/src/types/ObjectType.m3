@@ -820,7 +820,6 @@ PROCEDURE GenInitProc (p: P): CG.Proc =
           Type.InitValue (field.type, TRUE);
         END;
       ELSIF NOT Expr.IsZeroes (field.dfault) THEN
-     (* ArrayExpr.NoteTargetType (field.dfault, field.type); *)
         AssignStmt.PrepForEmit (field.type, field.dfault, initializing := TRUE);
         CG.Push (ptr);
         CG.Boost_addr_alignment (p.fieldAlign);

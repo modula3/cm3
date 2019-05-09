@@ -128,7 +128,7 @@ PROCEDURE TypeCheck (t: T;  VAR cs: Value.CheckState) =
       AssignStmt.Check (t.tipe, t.dfault, cs);
       Expr.TypeCheck (t.dfault, cs);
       IF (Expr.ConstValue (t.dfault) = NIL) THEN
-        Error.ID (t.name, "default is not a constant");
+        Error.ID (t.name, "default value of a field must be constant");
       END;
       (* NOTE: we don't save the constant-folded version of the default,
          otherwise we'd loose references to large named constants. *)
