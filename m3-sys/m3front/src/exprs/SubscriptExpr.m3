@@ -170,6 +170,7 @@ PROCEDURE DirectCheckPass1 (p: P; VAR cs: Expr.CheckState) =
       Error.Msg
         ("Subscripted expression must be an array or reference thereto.");
       p.type := ErrType.T;
+      ta := ErrType.T;
     END;
     p.taBase := ta;
     p.checkedPass1 := TRUE; 
