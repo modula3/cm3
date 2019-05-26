@@ -59,7 +59,14 @@ UtimeOpsC__Get_second (const struct tm *t)
 int
 UtimeOpsC__Get_gmtoff (const struct tm *t) 
 {
+/* FIXME tm_gmtoff is a GNU extension, likely
+   occurs on other systems, and can probably be
+   implemented otherwise. */
+#if _WIN32 /* FIXME / UNDONE */
+	return 0;
+#else
 	return t->tm_gmtoff ;
+#endif
 }
 
 
@@ -72,7 +79,11 @@ UtimeOpsC__Get_minute (const struct tm *t)
 const char *
 UtimeOpsC__Get_zone (const struct tm *t) 
 {
+#if _WIN32 /* FIXME / UNDONE */
+	return 0;
+#else
 	return t->tm_zone ;
+#endif
 }
 
 
@@ -120,7 +131,12 @@ double
 UtimeOpsC__mktime(struct tm *t)
 {
 	t->tm_isdst = -1;
+/* FIXME tm_gmtoff is a GNU extension, likely
+   occurs on other systems, and can probably be
+   implemented otherwise. */
+#if !_WIN32 /* FIXME / UNDONE */
 	t->tm_gmtoff = 0;
+#endif
 	t->tm_wday   = 0;
 	t->tm_yday   = 0;
   return mktime(t);

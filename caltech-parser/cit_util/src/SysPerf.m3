@@ -17,19 +17,14 @@ PROCEDURE GetLoadAvg(VAR loadavg : ARRAY [0..2] OF LONGREAL) :
 
 PROCEDURE DiskAvail(mountPoint : Pathname.T) : LONGREAL RAISES { Error } =
   VAR
-    bsize : INTEGER;
-    total,avail,availNonSuperUser : LONGREAL;
+    percentAvailableNonSuperUser : LONGREAL;
   BEGIN
     WITH s = M3toC.CopyTtoS(mountPoint),
-         res = c_SysPerf.diskAvail(s,
-                                   bsize,total,avail,availNonSuperUser) DO
+         res = c_SysPerf.diskAvail(s, percentAvailableNonSuperUser) DO
       IF res < 0 THEN RAISE Error END;
       M3toC.FreeCopiedS(s)
     END;
-    WITH superPart = avail - availNonSuperUser,
-         nonSuperTotal = total - superPart DO
-      RETURN availNonSuperUser/nonSuperTotal
-    END
+    RETURN percentAvailableNonSuperUser;
   END DiskAvail;
 
 BEGIN END SysPerf.

@@ -11,8 +11,7 @@ PROCEDURE getloadavg_glue(VAR loadavg : LONGREAL; which : INTEGER) : INTEGER;
  
 <*EXTERNAL diskAvail*>
 PROCEDURE diskAvail(path : Ctypes.const_char_star; 
-                    VAR bsize : INTEGER;
-                    VAR total, avail, availNonSuperUser : LONGREAL) : INTEGER;
+                    VAR percentageAvailNonSuperUser : LONGREAL) : INTEGER;
   (* call to statfs(2) *)
 
 END c_SysPerf.
