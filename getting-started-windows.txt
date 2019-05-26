@@ -1,0 +1,66 @@
+Getting started.
+
+Since Modula-3 is written in Modula-3, you must start
+with a binary distribution or cross-compile from a working setup.
+
+In future we might have a generated C-based distribution.
+
+Here is an example of using a binary distribution for Windows.
+
+Install Python to e.g. c:\python27.
+ The Modula-3 build system is a little incomplete and
+ we use Python (or bash or cmd) to stitch it together.
+
+Install some version of Visual C++. Many versions are tested.
+
+On your start menu, find the shortcut that runs a command line window
+with a working C++ compiler/linker in %PATH, and run it.
+
+This could be called, for example "Developer Command Prompt for VS 2019".
+
+Put Python on path:
+ path=c:\python27;%PATH%
+
+If you are using Cygwin delete it's link.exe or make sure it is relatively late in %PATH%.
+
+Download and extract a release, for example:
+ http://www.opencm3.net/releng/cm3-bin-min-NT386-5.8.6-REL.tgz
+ 
+This will give you a few files, including system.tgz.
+
+Delete the other files.
+In this example, we will not use its installer or config files.
+
+Extract system.tgz.
+
+Place its content somewhere you prefer.
+For me this, this yields c:\cm3\bin\cm3.exe.
+
+Add this to path:
+ path=c:\cm3\bin;$PATH%
+
+git clone current cm3
+s is for source
+  mkdir \s
+  cd \s
+  git clone https://github.com/modula3/cm3
+
+The Python scripts can find some installs of Visual C++ without doing this, but only older ones.
+
+Go to the scripts\python directory and do a full "upgrade".
+This will rebuild the compiler with the old compiler, and then the entire
+system with this rebuilt compiler.
+
+The result is carefully copied (in a certain order, while running) in-place to the cm3.exe that is found in PATH.
+
+If you want to preserve a working system, you can either backup:
+
+  xcopy /fiverdy \cm3 \cm3.bak
+
+or start fresh:
+  xcopy /fiverdy c:\cm3 c:\cm3.new
+  PATH=c:\cm3.new\bin;%PATH%
+
+
+  cd scripts\python
+  python upgrade.py && python do-cm3-all.py realclean skipgcc && python do-cm3-all.py buildship
