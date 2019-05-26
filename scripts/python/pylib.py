@@ -2177,42 +2177,46 @@ def GetVisualCPlusPlusVersion():
 # As well: malloc, free, open, read, write, close, assert, etc.
 #
     a = os.popen("cl 2>&1 >nul").read().lower()
-    if a.find(" 19.00.") != -1:
+    if a.find(" 19.0") != -1:
         return "2015"
-    if a.find(" 19.10.") != -1:
+    if a.find(" 19.1") != -1:
         return "2017"
+    if a.find(" 19.2") != -1:
+        return "2019"
 
-    if a.find(" 9.00.") != -1:
+    if a.find(" 9.0") != -1:
         return "20"
-    if a.find(" 10.00.") != -1:
+    if a.find(" 10.0") != -1:
         return "40"
-    if a.find(" 10.10.") != -1:
+    if a.find(" 10.1") != -1:
         return "41"
-    if a.find(" 10.20.") != -1:
+    if a.find(" 10.2") != -1:
         return "42"
-    if a.find(" 11.00.") != -1:
+    if a.find(" 11.0") != -1:
         return "50"
-    if a.find(" 12.00.") != -1:
+    if a.find(" 12.0") != -1:
         return "60"
-    if a.find(" 13.00.") != -1:
+    if a.find(" 13.0") != -1:
         return "70"
-    if a.find(" 13.10.") != -1:
+    if a.find(" 13.1") != -1:
         return "71"
-    if a.find(" 14.00.") != -1:
+    if a.find(" 14.0") != -1:
         return "80"
-    if a.find(" 15.00.") != -1:
+    if a.find(" 15.0") != -1:
         return "90"
-    if a.find(" 16.00.") != -1:
+    if a.find(" 16.0") != -1:
         return "100"
-    if a.find(" 17.00.") != -1:
+    if a.find(" 17.0") != -1:
         return "110"
-    if a.find(" 18.00.") != -1:
+    if a.find(" 18.0") != -1:
         return "120"
+
+    return "unknown" # assume CM3_VS2015_OR_NEWER = 1
 
 def SetVisualCPlusPlus2015OrNewer():
     if not os.environ.get("CM3_VS2015_OR_NEWER"):
         cver = GetVisualCPlusPlusVersion()
-        if len(cver) == 4:
+        if len(cver) >= 4:
             #sys.exit(1)
             os.environ["CM3_VS2015_OR_NEWER"] = "1"
         else:
