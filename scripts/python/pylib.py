@@ -2179,7 +2179,7 @@ def GetVisualCPlusPlusVersion():
     a = os.popen("cl 2>&1 >nul").read().lower()
     if a.find(" 19.00.") != -1:
         return "2015"
-    if a.find(" 19.10.") != -1:
+    if a.find(" 19.1") != -1:
         return "2017"
 
     if a.find(" 9.00.") != -1:
