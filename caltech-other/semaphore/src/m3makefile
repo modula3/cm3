@@ -1,5 +1,7 @@
 /* $Id$ */
 
+if not equal (OS_TYPE, "WIN32")
+
 import ("libm3")
 import ("cit_util")
 
@@ -14,3 +16,5 @@ end
 interface ("Semaphore")
 
 library ("semaphore")
+
+end

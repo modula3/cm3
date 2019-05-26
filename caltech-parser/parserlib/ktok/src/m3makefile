@@ -1,3 +1,4 @@
+if not equal (OS_TYPE, "WIN32")
 
 import("libm3")
 import("ktoklib")
@@ -12,3 +13,5 @@ bundle("tokformBundle")
 implementation("Main")
 build_standalone()
 Program("ktok")
+
+end

@@ -1,3 +1,7 @@
+if not equal (OS_TYPE, "WIN32")
+
 import("libm3")
 implementation("Dummy")
 program("dummy")
+
+end

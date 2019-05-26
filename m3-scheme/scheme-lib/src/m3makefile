@@ -1,4 +1,7 @@
 /* $Id$ */
+
+if not equal (OS_TYPE, "WIN32")
+
 import ("libm3")
 
 resource ("m3.scm")
@@ -23,3 +26,5 @@ resource ("addresses.scm")
 bundle ("SchemeDefsBundle")
 
 library ("scheme-lib")
+
+end

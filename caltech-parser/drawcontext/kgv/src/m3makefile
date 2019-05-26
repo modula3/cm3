@@ -1,3 +1,7 @@
+if not equal (OS_TYPE, "WIN32")
+
 import("dcpane")
 implementation("Main")
 Program("kgv")
+
+end

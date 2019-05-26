@@ -1,3 +1,4 @@
+if not equal (OS_TYPE, "WIN32")
 
 import("libm3")
 import("term")
@@ -37,3 +38,5 @@ bundle("yaccformBundle")
 implementation("Main")
 build_standalone()
 Program("kyacc")
+
+end
