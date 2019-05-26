@@ -1,3 +1,5 @@
+if not equal (OS_TYPE, "WIN32")
+
 if not defined("TOP")
   TOP = PACKAGE_DIR & SL & ".."
 end
@@ -58,3 +60,5 @@ Equivalence("Text", "Text", "TextTextTbl")
 Module("TextTextTblExtras")
 
 Library("cit_util")
+
+end

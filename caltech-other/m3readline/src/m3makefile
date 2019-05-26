@@ -1,4 +1,7 @@
 /* $Id$ */
+
+if not equal (OS_TYPE, "WIN32")
+
 import ("libm3")
 import ("cit_util")
 import ("tcp")
@@ -34,3 +37,5 @@ interface("SXConversion")
 Netobj("ReadLine", "Public")
 
 library("m3readline")
+
+end

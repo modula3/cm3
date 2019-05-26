@@ -1,3 +1,4 @@
+if not equal (OS_TYPE, "WIN32")
 
 import("parseparams")
 import("libm3")
@@ -33,3 +34,5 @@ table("Pragma", "Text", "Pragma")
 Module("PragmaRead")
 
 Library("ktoklib")
+
+end

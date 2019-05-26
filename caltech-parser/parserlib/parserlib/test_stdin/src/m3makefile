@@ -1,3 +1,7 @@
+if not equal (OS_TYPE, "WIN32")
+
 import("parserlib")
 implementation("Main")
 program("test")
+
+end

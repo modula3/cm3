@@ -1,8 +1,12 @@
 /* $Id$ */
 
+if not equal (OS_TYPE, "WIN32")
+
 import("libm3")
 import("cit_util")
 
 implementation("Main")
 
 program("threads")
+
+end

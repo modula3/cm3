@@ -1,5 +1,7 @@
 /* $Id$ */
 
+if not equal (OS_TYPE, "WIN32")
+
 import ("libm3")
 
 Generic_module ("Trie")
@@ -10,3 +12,5 @@ Interface("Alpha")
 Trie("AlphaRef", "Alpha", "Refany")
 
 library("trie")
+
+end

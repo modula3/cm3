@@ -1,6 +1,7 @@
 /* $Id$ */
 
 
+if not equal (OS_TYPE, "WIN32")
 
 if defined("pm3_version")
 	option("optimization","") 
@@ -19,3 +20,5 @@ import("parseparams")
 implementation("Main")
 
 program("mscheme")
+
+end
