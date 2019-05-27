@@ -1930,7 +1930,13 @@ CONST Prefix = ARRAY OF TEXT {
 "#include <stddef.h>", (* try to remove this, it is slow -- need size_t *)
 "#endif",
 
-(* "#include <setjmp.h>", TODO do not always #include *)
+(* setjmp and maybe jmp_buf, longjmp must be properly declared.
+For example Visual C++ has an intrinsic setjmp with a
+compiler-produced second parameter that is only passed
+if you include setjmp.h, and without it, longjmp crashes.
+In future, only include in files that need it, or replace
+exception handling with optimized C++ *)
+"#include <setjmp.h>",
 
 "/* http://c.knowcoding.com/view/23699-portable-alloca.html */",
 "/* Find a good version of alloca. */",
