@@ -1,7 +1,5 @@
 /* $Id$ */
 
-if not equal (OS_TYPE, "WIN32")
-
 if not defined("TOP")
   TOP = PACKAGE_DIR & SL & ".."
 end
@@ -237,7 +235,8 @@ list("Flag", "Config")
 template("tree")
 Generic_module("Tree")
 
-module("UnixUtils")
+% defer to m3core
+% module("UnixUtils")
 
 Module("Stuff")
 MkSet("Stuff","Stuff")
@@ -403,4 +402,4 @@ Module ("FastNumParse")
 
 Library("cit_util")
 
-end
+

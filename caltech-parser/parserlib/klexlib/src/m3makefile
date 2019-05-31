@@ -1,5 +1,3 @@
-if not equal (OS_TYPE, "WIN32")
-
 import("libm3")
 import("ktoklib")
 
@@ -47,5 +45,3 @@ Table("NFA", "Text", "NFA")
 Module("LexParse")
 
 Library("klexlib")
-
-end

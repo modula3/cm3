@@ -1,6 +1,6 @@
 /* $Id$ */
 
-if not equal (OS_TYPE, "WIN32")
+
 
 if defined("pm3_version")
 	option("optimization","") 
@@ -18,5 +18,3 @@ import("schemereadline")
 implementation("Main")
 
 program("mscheme-doc")
-
-end

@@ -1,7 +1,4 @@
 /* $Id$ */
-
-if not equal (OS_TYPE, "WIN32")
-
 %m3_option("-X2@-pg@")
 %m3_option("-g")
 %remove_m3_option("-O")
@@ -16,5 +13,3 @@ else
 end
 
 Library("cit_common")
-
-end

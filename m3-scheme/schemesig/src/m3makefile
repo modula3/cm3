@@ -5,9 +5,6 @@
 
    Author: Mika Nystrom <mika@alum.mit.edu>
 */
-
-if not equal (OS_TYPE, "WIN32")
-
 import ("libm3")
 
 Interface("Csighandler")
@@ -15,5 +12,3 @@ Interface("Csighandler")
 c_source ("sighandler")
 
 library ("schemesig")
-
-end

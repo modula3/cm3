@@ -1,7 +1,4 @@
 /* $Id$ */
-
-if not equal (OS_TYPE, "WIN32")
-
 /*m3_option("-g") */
 /*m3_option("-times") */
 
@@ -18,5 +15,3 @@ template("parametricspline")
 ParametricSpline("CubicSpline","CubicSpline")
 
 library("splines")
-
-end

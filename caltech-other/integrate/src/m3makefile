@@ -1,7 +1,4 @@
 /* $Id$ */
-
-if not equal (OS_TYPE, "WIN32")
-
 m3_option("-g")
 m3_option("-times")
 
@@ -11,5 +8,3 @@ Module("IntegrateTrap")
 Module("DerivRidders")
 
 library("integrate")
-
-end

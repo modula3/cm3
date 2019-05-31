@@ -10,8 +10,6 @@
 /* m3_option("-X1@-Wf,-XNp300000@-Wf,-XNd200000@") */
 % m3_option ("-times")
 
-if not equal (OS_TYPE, "WIN32")
-
 import("libm3")
 import("m3tk")
 import("mscheme")
@@ -51,4 +49,4 @@ end
 
 library("sstubgen")
 
-end
+

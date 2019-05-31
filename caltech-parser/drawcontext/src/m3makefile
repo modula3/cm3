@@ -1,5 +1,3 @@
-if not equal (OS_TYPE, "WIN32")
-
 if not defined("TOP")
   TOP = PACKAGE_DIR & SL & ".." 
 end
@@ -41,5 +39,3 @@ Module("Stroker")
 Module("Figure")
 
 Library("drawcontext")
-
-end
