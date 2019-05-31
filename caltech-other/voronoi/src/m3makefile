@@ -1,7 +1,4 @@
 /* $Id$ */
-
-if not equal (OS_TYPE, "WIN32")
-
 import ("libm3")
 import ("cit_util")
 import ("set")
@@ -19,5 +16,3 @@ c_source("mymalloc")
 c_source("defs")
 
 library("voronoi")
-
-end

@@ -1,7 +1,5 @@
 /* $Id$ */
 
-if not equal (OS_TYPE, "WIN32")
-
 import ("libm3")
 import ("parseparams")
 import ("cit_util")
@@ -10,5 +8,3 @@ import ("rdwr")
 implementation ("Main")
 
 program ("csvalign")
-
-end

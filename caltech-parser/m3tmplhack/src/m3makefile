@@ -1,9 +1,5 @@
-if not equal (OS_TYPE, "WIN32")
-
 import("m3tk")
 import("cit_common")
 implementation("Main")
 build_standalone()
 Program("m3tmplhack")
-
-end

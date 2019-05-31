@@ -1,7 +1,4 @@
 /* $Id$ */
-
-if not equal (OS_TYPE, "WIN32")
-
 /*m3_option("-g")*/
 /*m3_option("-times")*/
 /*m3_option("-X2@-pg@")*/
@@ -28,5 +25,3 @@ Table("AdGridQRef","AdGridQ","Refany")
 Interface("AdGridChild")
 
 library("minimize")
-
-end

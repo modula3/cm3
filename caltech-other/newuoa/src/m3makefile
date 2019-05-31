@@ -1,7 +1,5 @@
-if not equal (OS_TYPE, "WIN32")
-
 if equal(TARGET,"AMD64_LINUX")
-build_standalone() % do not attempt to build shared libs from asm
+build_standalone() % dont attempt to build shared libs from asm
 import ("libm3")
 import ("cit_util")
 import ("matrix")
@@ -25,5 +23,3 @@ Module ("NewUOAs")
 %program ("testnewuoa")
 end
 library ("newuoa")
-
-end
