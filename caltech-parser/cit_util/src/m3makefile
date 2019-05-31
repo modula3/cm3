@@ -235,7 +235,8 @@ list("Flag", "Config")
 template("tree")
 Generic_module("Tree")
 
-module("UnixUtils")
+% defer to m3core
+% module("UnixUtils")
 
 Module("Stuff")
 MkSet("Stuff","Stuff")

@@ -11,7 +11,10 @@ IMPORT UtimeWrap;
 PROCEDURE ctime(clock : Time.T; keepNL, showTZ : BOOLEAN) : TEXT =
   VAR
     clockbuff : ARRAY [0..4] OF INTEGER; (* portable, hopefully... *)
-    buff : ARRAY [0..25] OF CHAR;
+    buff : ARRAY [0..32] OF CHAR;
+(*
+Wed Jan 02 02:03:55 1980\n\0
+*)
     tm := UtimeWrap.make_T();
   BEGIN
     TRY
