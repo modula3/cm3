@@ -418,35 +418,70 @@ if equal(OS_TYPE, "WIN32")
 %
 % Cutting the C runtime dependency from Modula-3 may be desirable.
 %
-% The environment variable USE_MSVCRT is 0, 1, or not defined.
+% If variable USE_MSVCRT is not defined, then the environment variable
+% USE_MSVCRT must be 0, 1, or not defined.
 % Not defined is treated as 1. This is a safe default for the
 % vast majority of toolsets, but not all.
 %
-    if not equal($USE_MSVCRT, "0")
-        if not equal($USE_MSVCRT, "1")
-            if not equal($USE_MSVCRT, "")
-                error("The environment variable USE_MSVCRT should be 0, 1, or not defined, but it is " & $USE_MSVCRT & "." & EOL)
+    if not defined("USE_MSVCRT")
+        if not equal($USE_MSVCRT, "0")
+            if not equal($USE_MSVCRT, "1")
+                if not equal($USE_MSVCRT, "")
+                    error("The environment variable USE_MSVCRT should be 0, 1, or not defined, but it is " & $USE_MSVCRT & "." & EOL)
+                end
             end
+        end
+
+        % Translate $USE_MSVCRT to USE_MSVCRT.
+        %
+        if equal($USE_MSVCRT, "0")
+            % explicit 0
+            USE_MSVCRT = FALSE
+        else
+            % 1 or empty (default)
+            USE_MSVCRT = TRUE
         end
     end
 
-    if not defined("USE_MSVCRT")
-        if equal($USE_MSVCRT, "0")
-            USE_MSVCRT = FALSE
+% If variable VS2015_OR_NEWER is not defined, then the environment variable
+% CM3_VS2015_OR_NEWER must be 0, 1, or not defined.
+% Not defined is treated as 1. There is no safe default here. It is required
+% for newer toolsets and breaks older toolsets.
+% TODO: Can we autodetect? Provide empty vcruntime.lib/ucrt.lib later
+% in $LIB? include stdio.h and reference stdout and look for certain symbols?
+% Inlude stdio.h and preprocess?
+%
+% cl usage or preprocess _MSC_VER and look at version.
+%
+    if not defined("VS2015_OR_NEWER")
+        if not equal($CM3_VS2015_OR_NEWER, "0")
+            if not equal($CM3_VS2015_OR_NEWER, "1")
+                if not equal($CM3_VS2015_OR_NEWER, "")
+                    error("The environment variable CM3_VS2015_OR_NEWER should be 0, 1, or not defined, but it is " & $CM3_VS2015_OR_NEWER & "." & EOL)
+                end
+            end
+        end
+
+        % Translate $CM3_VS2015_OR_NEWER to VS2015_OR_NEWER.
+        %
+        if equal($CM3_VS2015_OR_NEWER, "0")
+            % explicit 0
+            VS2015_OR_NEWER = FALSE
         else
-            USE_MSVCRT = TRUE
+            % 1 or empty (default)
+            VS2015_OR_NEWER = TRUE
         end
     end
 
     if USE_MSVCRT
         SYSTEM_LIBS{"LIBC"} += [LibIn("msvcrt")]
-        if equal ($CM3_VS2015_OR_NEWER, "1")
+        if VS2015_OR_NEWER
             SYSTEM_LIBS{"LIBC"} += [LibIn("vcruntime")]
             SYSTEM_LIBS{"LIBC"} += [LibIn("ucrt")]
         end
     else
         SYSTEM_LIBS{"LIBC"} += [LibIn("libcmt")]
-        if equal ($CM3_VS2015_OR_NEWER, "1")
+        if VS2015_OR_NEWER
             SYSTEM_LIBS{"LIBC"} += [LibIn("libvcruntime")]
             SYSTEM_LIBS{"LIBC"} += [LibIn("libucrt")]
         end
