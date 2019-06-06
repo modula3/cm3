@@ -25,7 +25,7 @@ CTZ__setTZ(const char *tzname)
 #if _WIN32
 	int res = _wputenv(L"TZ=tzname");
 #else
-	int res = setenv("TZ",tzname",1);
+	int res = setenv("TZ",tzname,1);
 #endif
 	assert(res==0);
 #if _WIN32
