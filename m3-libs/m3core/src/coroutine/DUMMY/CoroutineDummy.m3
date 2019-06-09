@@ -1,3 +1,7 @@
+(* Copyright (C) 2018-2019 Intel Corporation *)
+(* SPDX-License-Identifier: BSD-3-Clause *)
+(* see the file COPYRIGHT-INTEL for more information *)
+
 MODULE CoroutineDummy EXPORTS Coroutine;
 
 REVEAL T = BRANDED OBJECT END; (* nothing here *)

@@ -1,3 +1,7 @@
+(* Copyright (C) 2018-2019 Intel Corporation *)
+(* SPDX-License-Identifier: BSD-3-Clause *)
+(* see the file COPYRIGHT-INTEL for more information *)
+
 UNSAFE MODULE CoroutineUcontext EXPORTS Coroutine, CoroutineUcontext;
 IMPORT ContextC;
 IMPORT WeakRef;
