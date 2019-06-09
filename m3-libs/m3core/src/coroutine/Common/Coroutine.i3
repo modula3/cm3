@@ -2,6 +2,8 @@
 (* SPDX-License-Identifier: BSD-3-Clause *)
 (* see the file COPYRIGHT-INTEL for more information *)
 
+(* Author: Mika Nystrom <mika.nystroem@intel.com> *)
+
 INTERFACE Coroutine;
 
 TYPE
