@@ -133,16 +133,16 @@ ThreadPThread__ProcessStopped (m3_pthread_t mt, char *bottom, char *context,
   if (!bottom) return;
   if (stack_grows_down)
   {
-    assert(context < bottom);
+    assert(context <= bottom);  /* is it not OK to have an empty stack? */
     p(context, bottom);
   }
   else
   {
-    assert(bottom < context);
+    assert(bottom <= context);
     p(bottom, context);
   }
   /* process register context */
-  p(context, context + sizeof(ucontext_t));
+  /*p(context, context + sizeof(ucontext_t));*/ /* cant be right */
 }
 
 #else /* M3_DIRECT_SUSPEND */
