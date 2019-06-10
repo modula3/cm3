@@ -1,0 +1,32 @@
+Coroutines for Modula-3
+
+Author: Mika Nystrom <mika.nystroem@intel.com> <mika@alum.mit.edu>
+
+Copyright (C) 2018-2019, Intel Corporation
+
+based in part on code copyrighted by others (see top-level COPYRIGHT
+statements for more information).
+
+Acknowledgements to Tony Hosking (Purdue) and Rajit Manohar (Yale)
+for discussion and ideas.
+
+Released for AMD64_LINUX for now.
+
+How-to-use: see Coroutine.i3
+
+Sketch of implementation: use setcontext and getcontext to switch contexts
+between two coroutines.  Coroutines do NOT share a stack---this would
+be possible but would lead to cactus stacks and would require compiler
+modifications.  Instead, coroutines use an approach based on how Modula-3
+threads are specified, with a closure object.  The multiple stacks for
+a thread are linked together, leading to small changes to the pthreads
+threading implementation.  These changes are entirely backward compatible.
+The main design challenge in the coroutines library is getting the
+stack extent correct and at precisely the right time so that garbage
+collection is neither overly optimistic (leading to runtime failure)
+nor overly optimistic (leading to memory leaks).  The code as presented
+is believed to be correct---see the implementation files for further
+discussion (in comments).
+
+Oxelosund, Sweden
+MN, June 10, 2019 
