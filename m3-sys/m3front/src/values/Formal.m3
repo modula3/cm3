@@ -18,7 +18,7 @@ TYPE
         offset   : INTEGER;
         tipe     : Type.T;
         dfault   : Expr.T;
-        refType  : Type.T;
+        refType  : Type.T; (* Non-NIL IFF it's an open array passed by VALUE. *)
         cg_type  : CG.TypeUID;
         mode     : Mode;
         kind     : Type.Class;
@@ -149,14 +149,16 @@ PROCEDURE HasClosure (formal: Value.T): BOOLEAN =
   END HasClosure;
 
 (*EXPORTED*)
-PROCEDURE RefOpenArray (formal: Value.T;  VAR ref: Type.T): BOOLEAN =
+PROCEDURE OpenArrayByVALUE (formal: Value.T;  VAR refType: Type.T): BOOLEAN =
+(* If 'formal' is a "VALUE ARRAY OF X" formal, sets 'refType' to "REF ARRAY OF X"
+   and returns TRUE, otherwise returns FALSE. *)
   BEGIN
     TYPECASE formal OF
     | NULL => RETURN FALSE;
-    | T(t) => ref := t.refType;  RETURN (ref # NIL);
+    | T(t) => refType := t.refType;  RETURN (refType # NIL);
     ELSE      RETURN FALSE;
     END;
-  END RefOpenArray;
+  END OpenArrayByVALUE;
 
 PROCEDURE TypeOf (t: T): Type.T =
   BEGIN
@@ -434,16 +436,15 @@ PROCEDURE ProcName (proc: Expr.T): TEXT =
 (*----------------------------------------------------------- caller code ---*)
 
 (*EXPORTED*)
-PROCEDURE PrepArg (formal: Value.T; actual: Expr.T) =
-  VAR t: T := formal;
-  VAR index, elt: Type.T;
+PROCEDURE PrepArg (formalValue: Value.T; actual: Expr.T) =
+  VAR formal: T := formalValue;
   BEGIN
     ArrayExpr.NoteTargetType (actual, Value.TypeOf (formal));
 
-    CASE t.mode OF
-    | Mode.mVALUE => (* Pass by value. *) 
+    CASE formal.mode OF
+    | Mode.mVALUE => (* Will pass by value. *)
         Expr.Prep (actual);
-    | Mode.mVAR => (* Pass by reference. *) 
+    | Mode.mVAR => (* Will pass by reference. *)
         IF Expr.Alignment (actual) MOD Target.Byte = 0 THEN
           Expr.PrepLValue (actual, traced := TRUE);
         ELSE
@@ -451,48 +452,50 @@ PROCEDURE PrepArg (formal: Value.T; actual: Expr.T) =
             "CM3 restriction: non-byte-aligned value cannot be passed VAR (2.3.2)"); 
         END;
     | Mode.mCONST =>
-        IF ( Type.IsEqual (t.tipe, Expr.TypeOf (actual), NIL)
-             OR ArrayType.Split (t.tipe, index, elt)
-           ) AND Expr.IsDesignator (actual)
-        THEN (* Pass by ref. *) 
+        IF Expr.IsDesignator (actual)
+           AND ( Type.IsEqual (formal.tipe, Expr.TypeOf (actual), NIL)
+                 OR ArrayType.Is (formal.tipe) (* => assignable. *)
+               )
+(* CHECK^ This condition against that found in GenArray. *)
+        THEN (* Will pass by ref. *)
           IF Expr.Alignment (actual) MOD Target.Byte = 0 THEN
             Expr.PrepLValue (actual, traced := FALSE);
           ELSE
             Error.ID (formal.name,
               "CM3 restriction: non-byte-aligned value cannot be passed by reference (2.3.2)");
-            t.tipe := ErrType.T;
-            t.kind := Type.Class.Error
+            formal.tipe := ErrType.T;
+            formal.kind := Type.Class.Error
           END; 
-        ELSE (* Treat as VALUE: make a copy and pass it by reference. *) 
+        ELSE (* Treat as VALUE: will make a copy and pass it by reference. *)
           Expr.Prep (actual);
         END (*IF*) 
     END;
   END PrepArg;
 
 (*EXPORTED*)
-PROCEDURE EmitArg (proc: Expr.T;  formal: Value.T; actual: Expr.T) =
-  VAR t: T := formal;
+PROCEDURE EmitArg (proc: Expr.T;  formalValue: Value.T; actual: Expr.T) =
+  VAR formal: T := formalValue;
   BEGIN
-    CASE t.kind OF
+    CASE formal.kind OF
     | Type.Class.Error, Type.Class.Named, Type.Class.Packed
         =>  <*ASSERT FALSE*>
     | Type.Class.Integer, Type.Class.Enum, Type.Class.Subrange,
       Type.Class.Longint
-        =>  GenOrdinal (t, actual);
+        =>  GenOrdinal (formal, actual);
     | Type.Class.Real, Type.Class.Longreal, Type.Class.Extended
-        =>  GenFloat (t, actual);
+        =>  GenFloat (formal, actual);
     | Type.Class.Ref, Type.Class.Object, Type.Class.Opaque
-        =>  GenReference (t, actual);
+        =>  GenReference (formal, actual);
     | Type.Class.Procedure
-        =>  GenProcedure (t, actual, proc);
+        =>  GenProcedure (formal, actual, proc);
     | Type.Class.Record
-        =>  GenRecord (t, actual);
+        =>  GenRecord (formal, actual);
     | Type.Class.Set
-        =>  GenSet (t, actual);
+        =>  GenSet (formal, actual);
     | Type.Class.Array
-        =>  GenArray (t, actual, formal_is_open := FALSE);
+        =>  GenArray (formal, actual, formal_is_open := FALSE);
     | Type.Class.OpenArray
-        =>  GenArray (t, actual, formal_is_open := TRUE);
+        =>  GenArray (formal, actual, formal_is_open := TRUE);
     END;
   END EmitArg;
 
@@ -724,125 +727,139 @@ PROCEDURE GenSet (t: T;  actual: Expr.T) =
     END;
   END GenSet;
 
-PROCEDURE GenArray (t: T; actual: Expr.T; formal_is_open: BOOLEAN) =
-  VAR t_actual := Expr.TypeOf (actual); info: Type.Info;
+PROCEDURE RepTypeOf (expr: Expr.T): Type.T =
+  VAR Result: Type.T;
+  VAR arrayConstrExpr: Expr.T;
   BEGIN
-    Type.Compile (t.tipe);
-    CASE t.mode OF
+(* TODO The interaction between getting a repType and looking thru' a ConsExpr is a mess.
+   Clean it up and put things in the right place. *)
+    arrayConstrExpr := ArrayExpr.ArrayConstrExpr (expr);
+    IF arrayConstrExpr # NIL
+    THEN Result := Expr.RepTypeOf (arrayConstrExpr)
+    ELSE Result := Expr.RepTypeOf (expr)
+    END;
+    RETURN Result;
+  END RepTypeOf;
+
+PROCEDURE PassArrayVAR (formal: T; actual: Expr.T; actualRepType: Type.T) =
+  BEGIN
+    IF Expr.Alignment (actual) MOD Target.Byte = 0 THEN
+      Expr.CompileAddress (actual, traced := TRUE);
+      RedepthArray (formal.tipe, actualRepType);
+    ELSE (* Error recovery. *)
+      CG.Load_nil ();
+    END (*IF*);
+    CG.Pop_param (CG.Type.Addr);
+  END PassArrayVAR;
+
+PROCEDURE GenArray (formal: T; actual: Expr.T; formal_is_open: BOOLEAN) =
+  VAR actualRepType: Type.T; 
+  VAR formalTypeInfo: Type.Info;
+  BEGIN
+    actualRepType := RepTypeOf (actual);
+    Type.Compile (formal.tipe);
+    CASE formal.mode OF
+
     | Mode.mVALUE =>
-        Expr.Compile (actual); (* For array, will compile an address. *)
-        RedepthArray (t.tipe, t_actual);
+        Expr.Compile (actual); (* This being an array, will compile an address. *)
+        RedepthArray (formal.tipe, actualRepType);
+(* TODO: Avoid unnecessary copies when actual ia an array constructor or function
+             result, in a newly-filled temporary. *)
         IF formal_is_open THEN
-          (* Pass address, callee will make a copy in its prolog. *) 
+          (* Pass address, callee prolog will do copy, if needed. *)
           CG.Pop_param (CG.Type.Addr);
-        ELSE
-          EVAL Type.CheckInfo (t.tipe, info);
-          Type.Compile (t.tipe);
-          CG.Pop_struct (Type.GlobalUID (t.tipe), info.size, info.alignment);
+        ELSE (* Pass the (static-sized) value. *)
+          EVAL Type.CheckInfo (formal.tipe, formalTypeInfo);
+          Type.Compile (formal.tipe);
+          CG.Pop_struct
+            (Type.GlobalUID (formal.tipe), formalTypeInfo.size, formalTypeInfo.alignment);
+          (* ^Which copies the whole array to the callee. *)
         END;
+
     | Mode.mVAR =>
-        IF Expr.Alignment (actual) MOD Target.Byte = 0 THEN
-          Expr.CompileAddress (actual, traced := TRUE); 
-          RedepthArray (t.tipe, t_actual);
-          CG.Pop_param (CG.Type.Addr);
-          Expr.NoteWrite (actual);
-        ELSE (* Error recovery. *) 
-          CG.Load_nil ();
-          CG.Pop_param (CG.Type.Addr);
-        END (*IF*) 
+        PassArrayVAR (formal, actual, actualRepType);
+        Expr.NoteWrite (actual);
+
     | Mode.mCONST =>
-        IF Expr.IsDesignator (actual)
-        THEN (* Pass by reference. *) 
-          IF Expr.Alignment (actual) MOD Target.Byte = 0 THEN
-            Expr.CompileAddress (actual, traced := FALSE); 
-            RedepthArray (t.tipe, t_actual);
-          ELSE (* Error recovery. *) 
-            CG.Load_nil ();
-          END (*IF*) 
-        ELSE (* Probably, this case is unnecessary.  It appears the only 
-                nondesignator arrays are array constructors and function
-                results.  Both are non-aliasiable and immutable, and
-                thus should not need copying. *) 
-        (* Treat as VALUE: make a copy and pass it by reference. *) 
-          Expr.Compile (actual); (* For array, will compile an address. *)
-          RedepthArray (t.tipe, t_actual);
-          IF formal_is_open THEN (* Callee will make a copy in its prolog. *) 
-          ELSE GenCopy (t.tipe);
-          END;
-        END (*IF*); 
-        CG.Pop_param (CG.Type.Addr);
+        IF Expr.IsDesignator (actual) THEN (* Pass as VAR. *)
+          PassArrayVAR (formal, actual, actualRepType);
+        ELSE
+          Expr.Compile (actual);
+          RedepthArray (formal.tipe, actualRepType);
+          CG.Pop_param (CG.Type.Addr);
+        END;
     END (*CASE*);
   END GenArray;
 
-PROCEDURE RedepthArray (tlhs, trhs: Type.T) =
-(* PRE: RHS is pushed on CG stack. *)
-(* Change TOS array from trhs's open depth to tlhs's open depth,
+PROCEDURE RedepthArray (formalType, actualType: Type.T) =
+(* PRE: Actual is pushed on CG stack. *)
+(* Change TOS array from actualType's open depth to formalType's open depth,
    while preserving shape.  Generate any necessary RT length checks. *)
   VAR
-    d_lhs, d_rhs: INTEGER;
-    index, elt: Type.T;
-    tmp: CG.Var;
-    rhs: CG.Val;
+    formalDepth, actualDepth: INTEGER;
+    indexType, eltType: Type.T;
+    tempVar: CG.Var;
+    actualVal: CG.Val;
     b: BOOLEAN;
   BEGIN
-    IF Type.IsEqual (tlhs, trhs, NIL) THEN RETURN END;
+    IF Type.IsEqual (formalType, actualType, NIL) THEN RETURN END;
 
-    d_lhs := OpenArrayType.OpenDepth (tlhs);
-    d_rhs := OpenArrayType.OpenDepth (trhs);
+    formalDepth := OpenArrayType.OpenDepth (formalType);
+    actualDepth := OpenArrayType.OpenDepth (actualType);
 
-    IF (d_lhs = d_rhs) THEN RETURN END;
+    IF (formalDepth = actualDepth) THEN RETURN END;
 
     (* capture the actual *)
-    rhs := CG.Pop ();
+    actualVal := CG.Pop ();
 
-    IF (d_lhs > d_rhs) THEN
+    IF (formalDepth > actualDepth) THEN
       (* build a bigger dope vector *)
-      tmp := OpenArrayType.DeclareTemp (tlhs);
+      tempVar := OpenArrayType.DeclareTemp (formalType);
 
       (* copy the data pointer *)
-      CG.Push (rhs);
-      IF (d_rhs > 0) THEN CG.Open_elt_ptr (Target.Byte) END;
-      CG.Store_addr (tmp, M3RT.OA_elt_ptr);
+      CG.Push (actualVal);
+      IF (actualDepth > 0) THEN CG.Open_elt_ptr (Target.Byte) END;
+      CG.Store_addr (tempVar, M3RT.OA_elt_ptr);
 
       (* fill in the sizes *)
-      FOR i := 0 TO d_lhs-1 DO
-        b := ArrayType.Split (trhs, index, elt);  <*ASSERT b*>
-        IF (index = NIL) THEN
-          CG.Push (rhs);
+      FOR i := 0 TO formalDepth-1 DO
+        b := ArrayType.Split (actualType, indexType, eltType);  <*ASSERT b*>
+        IF (indexType = NIL) THEN
+          CG.Push (actualVal);
           CG.Open_size (i);
         ELSE
-          CG.Load_integer (Target.Integer.cg_type, Type.Number (index));
+          CG.Load_integer (Target.Integer.cg_type, Type.Number (indexType));
         END;
         CG.Store_int (Target.Integer.cg_type,
-                      tmp, M3RT.OA_sizes + i * Target.Integer.pack);
-        trhs := elt;
+                      tempVar, M3RT.OA_sizes + i * Target.Integer.pack);
+        actualType := eltType;
       END;
 
       (* leave the result *)
-      CG.Load_addr_of_temp (tmp, 0, Target.Address.align);
-    ELSE (* d_lhs < d_rhs *)
+      CG.Load_addr_of_temp (tempVar, 0, Target.Address.align);
+    ELSE (* formalDepth < actualDepth *)
       (* check some array bounds;  don't build a smaller dope vector
          just reuse the existing one! *)
 
-      tlhs := OpenArrayType.NonopenEltType (tlhs);
-      FOR i := d_lhs TO d_rhs - 1 DO
-        b := ArrayType.Split (tlhs, index, elt); <*ASSERT b*>
-        <*ASSERT index # NIL*>
-        CG.Push (rhs);
+      formalType := OpenArrayType.NonopenEltType (formalType);
+      FOR i := formalDepth TO actualDepth - 1 DO
+        b := ArrayType.Split (formalType, indexType, eltType); <*ASSERT b*>
+        <*ASSERT indexType # NIL*>
+        CG.Push (actualVal);
         CG.Open_size (i);
-        CG.Load_integer (Target.Integer.cg_type, Type.Number (index));
+        CG.Load_integer (Target.Integer.cg_type, Type.Number (indexType));
         CG.Check_eq (Target.Integer.cg_type,
                      CG.RuntimeError.IncompatibleArrayShape);
-        tlhs := elt;
+        formalType := eltType;
       END;
 
       (* leave the old dope vector as the result *)
-      CG.Push (rhs);
-      IF (d_lhs <= 0) THEN CG.Open_elt_ptr (Target.Byte); END;
+      CG.Push (actualVal);
+      IF (formalDepth <= 0) THEN CG.Open_elt_ptr (Target.Byte); END;
       CG.ForceStacked ();
     END;
 
-    CG.Free (rhs);
+    CG.Free (actualVal);
   END RedepthArray;
 
 (*EXPORTED*)

@@ -17,10 +17,8 @@ PROCEDURE New
   (type: Type.T; args: Expr.List; dots: BOOLEAN): Expr.T;
 (* PRE: type is a fixed or open array type. *)
 
-(*
-PROCEDURE ArrayConstrExpr (e: Expr.T): P;
+PROCEDURE ArrayConstrExpr (e: Expr.T): T;
 (* Look through a ConsExpr for an ArrayExpr.  NIL if not. *)
-*)
 
 PROCEDURE NoteNested (constr: T);
 (* PRE: constr has not been checked. *)

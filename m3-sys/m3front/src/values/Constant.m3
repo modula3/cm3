@@ -18,7 +18,11 @@ REVEAL
         tipe       : Type.T;
         valExpr    : Expr.T;
         offset     : INTEGER;
+        (* ^ Of a pointer, located within the static variable area, to the
+             constant's value, located in the static constant area. *)
         coffset    : INTEGER;
+        (* ^ Of a place in the static constant area for the constant's value.
+             Dope only, if constant has open array representation. *)
         calign     : INTEGER;
         structured : BOOLEAN;
         gen_init   : BOOLEAN;
@@ -153,6 +157,7 @@ PROCEDURE SetGlobals (t: T) =
 
     IF (depth > 0) THEN (* t.tipe is an open array *)
       (* Allocate space for the dope only. *)
+      (* See ArrayExpr.GenLiteral. *)
       size := Target.Address.pack + depth * Target.Integer.pack;
       align := MAX (Target.Address.align, Target.Integer.align);
     END;

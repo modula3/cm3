@@ -76,7 +76,7 @@ PROCEDURE SupportsDirectAssignment (t: T): BOOLEAN;
 PROCEDURE MarkForDirectAssignment (t: T);
 (* If called, must be before Prep(t). *)
 (* mark "t" so that when compiled it will assume the code generator
-   stack contains the address of a LHS that is to be assigned and
+   stack contains the address of a LHS that is to be assigned-to, and
    it will perform the assignment. *)
 
 PROCEDURE IsMarkedForDirectAssignment (t: T): BOOLEAN;
@@ -104,11 +104,12 @@ PROCEDURE Alignment (t: T): Type.BitAlignT;
 
 PROCEDURE Prep (t: T);
 PROCEDURE Compile (t: T);
-(* emits code to evaluate the expression onto the top of stack *)
+(* Emit code to evaluate the expression onto the top of stack. For some
+   types, this could be an address (arrays, records, bit sets). *)
 
 PROCEDURE PrepLValue (t: T; traced: BOOLEAN);
 PROCEDURE CompileLValue (t: T; traced: BOOLEAN);
-(* emits code to evaluate 't's L-value into s0.A. *)
+(* Emit code to evaluate 't's L-value into s0.A. 't' must be a designator. *)
 
 PROCEDURE CompileAddress (t: T; traced: BOOLEAN);
 (* emits code to evaluate 't's byte address onto the top of stack.

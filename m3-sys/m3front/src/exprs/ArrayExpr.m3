@@ -9,10 +9,10 @@ MODULE ArrayExpr;
 
 (* An array constructor can use one of these protocols for getting
    its value to where it belongs:
-   constant protocol:   The value is built directly into one of the
-                        static areas.
-   expression protocol: The value is built into a temporaray,
-                        independently of its ultimate destination
+   constant protocol:   The value is built at compile time, directly
+                        into one of the static areas.
+   expression protocol: The value is built into a temporary,
+                        independently of its ultimate destination,
                         and copied later.
    assign protocol:     The value is built directly into a runtime
                         variable, which must be available (on the
@@ -53,7 +53,7 @@ TYPE LevelsTyp = REF ARRAY OF LevelInfoTyp;
 TYPE ResultKindTyp
   = { RKUnknown      (* Initial value. *)
 
-    , RKGlobal       (* Mutable global data area. *)
+    , RKGlobal       (* One of the global data areas. *)
                        (* Uses top.globalOffset, top.globalEltsOffset,
                           and top.inConstArea. *)
     , RKDirectElts   (* Caller-provided area, elements only. *)
@@ -1459,7 +1459,7 @@ PROCEDURE InnerPrep (top: T) =
       CG.Store_addr (top.heapTempPtrVar, (*Offset:=*) 0);
 
     END (*CASE top.resultKind*);
-    
+
     (* If UsesAssignProtocol, LHS addr is now stored in
        top.buildAddrVar, top.buildEltsAddrVar, or top.finalVal,
        depending on top.resultKind. *)
@@ -1867,10 +1867,13 @@ PROCEDURE GenLiteral
     Classify (top);
     <* ASSERT top.resultKind = RKTyp.RKGlobal *>
     top.globalOffset := globalOffset;
-    IF top.repOpenDepth <= 0 THEN
-       (* No dope.  globalOffset is for an area for the elements. *)
+    IF top.repOpenDepth <= 0
+    THEN (* No dope.  globalOffset is to space in the static constant area
+          that our caller has allocated for the array elements. *)
       top.globalEltsOffset := globalOffset;
-    ELSE (* globalOffset points to space for the dope only. *)
+    ELSE (* globalOffset is to space in the static constant area
+            that our caller has allocated for the dope only.
+            We have to allocate space for the elements ourselves. *)
       top.globalEltsOffset 
         := Module.Allocate
              (top.staticEltsSize, top.topEltsAlign, inConstArea,

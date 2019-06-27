@@ -280,12 +280,12 @@ PROCEDURE TypeOf (t: T): Type.T =
 
 (* Externally dispatched-to *)
 PROCEDURE Check (t: T;  VAR cs: Value.CheckState) =
-  VAR dfault: Expr.T;  min, max: Target.Int;  info: Type.Info;  ref: Type.T;
+  VAR dfault: Expr.T;  min, max: Target.Int;  info: Type.Info;  refType: Type.T;
   BEGIN
     t.tipe     := Type.CheckInfo (TypeOf (t), info);
     IF (info.class = Type.Class.Packed)
-      AND (t.formal # NIL)
-      AND (NOT t.indirect) THEN (* VALUE formal of type BITS FOR. *)
+       AND (t.formal # NIL)
+       AND (NOT t.indirect) THEN (* VALUE formal of type BITS FOR. *)
       EVAL Type.CheckInfo (PackedType.Base (t.tipe), info);
     END;
     t.size     := info.size;
@@ -315,7 +315,7 @@ PROCEDURE Check (t: T;  VAR cs: Value.CheckState) =
                        & Fmt.Int (info.size DIV Target.Char.size) & " bytes)");
       END;
     ELSIF (t.formal # NIL) AND (info.class = Type.Class.OpenArray)
-      AND Formal.RefOpenArray (t.formal, (*VAR*) ref) THEN
+      AND Formal.OpenArrayByVALUE (t.formal, (*VAR*) refType) THEN
       Error.WarnID (1, t.name, "open array passed by value");
     END;
 
@@ -650,11 +650,11 @@ PROCEDURE ConstInit (t: T) =
     END;
 
     IF t.initStatic THEN
-      (* declare the holder for the initial value *)
+      (* Allocate space in the global constant area for the initial value. *)
       name := "_INIT_" & M3ID.ToText (t.name);
       initM3ID := M3ID.Add (name);
       t.initValOffset
-        := Module.Allocate (size, align, TRUE,"initial value for ",t.name);
+        := Module.Allocate (size, align, TRUE, "initial value for ", t.name);
       CG.Declare_global_field (initM3ID, t.initValOffset, size, typeUID, TRUE);
       CG.Comment
         (t.initValOffset, TRUE, "init expr for ", Value.GlobalName(t,TRUE,TRUE));
@@ -665,7 +665,7 @@ PROCEDURE ConstInit (t: T) =
     END;
 
     IF (t.global) THEN
-      (* try to statically initialize the variable *)
+      (* Try to statically initialize directly in the global variable area. *)
       <*ASSERT t.offset # 0*>
       constInitExpr := NIL;
       IF (t.initExpr # NIL) AND (NOT t.initDone) AND (NOT t.initStatic) THEN
@@ -681,12 +681,12 @@ PROCEDURE ConstInit (t: T) =
 
 (* Externally dispatched-to *)
 PROCEDURE NeedInit (t: T): BOOLEAN =
-  VAR ref: Type.T;
+  VAR refType: Type.T;
   BEGIN
     IF (t.imported) OR (t.external) OR (t.initDone) THEN
       RETURN FALSE;
     ELSIF (t.formal # NIL) THEN
-      RETURN (t.indirect) AND Formal.RefOpenArray (t.formal, (*VAR*) ref);
+      RETURN (t.indirect) AND Formal.OpenArrayByVALUE (t.formal, (*VAR*) refType);
     ELSIF (t.indirect) AND (NOT t.global) THEN
       RETURN FALSE;
     ELSIF (t.global) AND (t.initExpr # NIL) AND (NOT t.initStatic)
@@ -701,16 +701,16 @@ PROCEDURE NeedInit (t: T): BOOLEAN =
   
 (* Externally dispatched-to *)
 PROCEDURE LangInit (t: T) =
-  VAR ref: Type.T;
+  VAR refType: Type.T;
   BEGIN
     IF (t.imported) OR (t.external) THEN
       t.initDone := TRUE;
     ELSIF (t.formal # NIL) THEN
-      IF (t.indirect) AND Formal.RefOpenArray (t.formal, (*VAR*) ref) THEN
+      IF (t.indirect) AND Formal.OpenArrayByVALUE (t.formal, (*VAR*) refType) THEN
         (* a by-value open array! *)
         CG.Gen_location (t.origin);
         Load(t);
-        CopyOpenArray (t.tipe, ref);
+        CopyOpenArray (t.tipe, refType);
         (* change the formal parameter to refer to the new storage *)
         CG.Store_addr (t.cg_var);
       END;

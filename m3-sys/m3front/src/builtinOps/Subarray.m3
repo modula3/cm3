@@ -60,7 +60,7 @@ PROCEDURE CheckPositive (e: Expr.T;  VAR cs: Expr.CheckState): Expr.T =
 
 PROCEDURE NeedsAddress (<*UNUSED*> ce: CallExpr.T) =
   BEGIN
-    (* yes, all subarray's get memory addresses *)
+    (* yes, all subarrays get memory addresses *)
   END NeedsAddress;
 
 PROCEDURE SubarrayExprAlign (ce: CallExpr.T): Type.BitAlignT =

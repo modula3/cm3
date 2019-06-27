@@ -31,8 +31,8 @@ PROCEDURE Split (formal: Value.T;  VAR info: Info);
 
 PROCEDURE HasClosure (formal: Value.T): BOOLEAN;
 
-PROCEDURE RefOpenArray (formal: Value.T;  VAR ref: Type.T): BOOLEAN;
-(* if 'formal' is a "VALUE ARRAY OF X" formal, sets 'ref' to "REF ARRAY OF X"
+PROCEDURE OpenArrayByVALUE (formal: Value.T;  VAR refType: Type.T): BOOLEAN;
+(* If 'formal' is a "VALUE ARRAY OF X" formal, sets 'refType' to "REF ARRAY OF X"
    and returns TRUE, otherwise returns FALSE. *)
 
 PROCEDURE CheckArgs (VAR cs       : Value.CheckState;
@@ -40,8 +40,8 @@ PROCEDURE CheckArgs (VAR cs       : Value.CheckState;
                          formals  : Value.T;
                          proc     : Expr.T): BOOLEAN;
 
-PROCEDURE PrepArg (formal: Value.T;  actual: Expr.T);
-PROCEDURE EmitArg (proc: Expr.T;  formal: Value.T;  actual: Expr.T);
+PROCEDURE PrepArg (formalValue: Value.T;  actual: Expr.T);
+PROCEDURE EmitArg (proc: Expr.T;  formalValue: Value.T;  actual: Expr.T);
 (* generate code to pass 'actual' as a 'formal'.  *)
 
 PROCEDURE EmitDeclaration (formal: Value.T;  types_only, param: BOOLEAN);
