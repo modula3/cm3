@@ -3518,6 +3518,8 @@ PROCEDURE Index_bytes (size: INTEGER) =
 PROCEDURE Index_bits (bits_addr_align: Alignment := 1) =
 (* s1.A := s1.A + s0.I ; pop -- note that s0.I must be less than
   or equal to the alignment of s1.A, otherwise bad code will be generated. *)
+(* TODO: Remove this restriction by moving code from ArrayType.GenIndex in here,
+         and removing it from any other client sites. *)
   VAR index := Pop_temp (); (* Direct, no offset or bits. *) 
   BEGIN
     WITH x = stack [SCheck (1, "Index_bits")] DO

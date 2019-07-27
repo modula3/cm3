@@ -16,15 +16,16 @@ IMPORT RefType, DerefExpr, Target, TInt, M3RT, RunTyme;
 TYPE
   P = ExprRep.Tab BRANDED "SubscriptExpr.P" OBJECT
         biased_b     : Expr.T; (* Subscript minus lowerBound. *) 
-        openDepth    : INTEGER; (* open depth of lhs's type. *)
+        lhsOpenDepth : INTEGER; (* Open depth of lhs's type. *)
         tmp          : CG.Val;
-        tempDopeAddr : CG.Val;
+        OMDopeVal    : CG.Val (* Dope of outermost array, if it's open. *);
+        OMOpenDepth  : INTEGER := 0 (* Open depth of outermost array. *); 
         taBase       : Type.T; 
         leftSs       : P; (* p.a if it's a P; NIL otherwise. *) 
-        ssDepth      : INTEGER; (* R to L depth of this subscript in an
+        ssDepth      : INTEGER; (* 1-origin, R to L depth of this subscript in an
                                    unbroken sequence of subscripts. *)
         shapeSs      : INTEGER; (* L to R shape subscript corresponding to
-                                   this array subscript. *)
+                                   this array subscript, in OMDopeVal. *)
         checkedPass1 : BOOLEAN 
       OVERRIDES
         typeOf       := TypeOf;
@@ -61,7 +62,7 @@ PROCEDURE New (a, b: Expr.T): Expr.T =
     p.ssDepth      := 0;
     p.shapeSs      := 0;
     p.biased_b     := NIL;
-    p.openDepth    := 0;
+    p.lhsOpenDepth := 0;
     p.tmp          := NIL;
     p.checkedPass1 := FALSE; 
     p.checked      := FALSE; 
@@ -196,12 +197,12 @@ PROCEDURE DirectCheckPass2 (p: P; VAR cs: Expr.CheckState; ssDepth: INTEGER) =
       RETURN;
     END; 
     
-    p.openDepth := OpenArrayType.OpenDepth (p.taBase);
+    p.lhsOpenDepth := OpenArrayType.OpenDepth (p.taBase);
     IF p.leftSs = NIL THEN p.shapeSs := 0
     ELSE p.shapeSs := p.leftSs.shapeSs + 1
     END; 
     
-    IF p.ssDepth = 1 AND p.openDepth > 1
+    IF p.ssDepth = 1 AND p.lhsOpenDepth > 1
        AND OpenArrayType.EltsAreBitAddressed(p.type) THEN 
       Error.Msg
         ("CM3 restriction: Open array of non-byte-aligned elements cannot be partially subscripted.");
@@ -307,7 +308,7 @@ PROCEDURE Compile (p: P) =
   BEGIN
     IF p.tmp = NIL THEN
       CompileLV (p);
-      Type.LoadScalar (p.type);
+      Type.LoadScalar (p.type) (* Loads only if not a struct. *);
     ELSE
       CG.Push (p.tmp);
       CG.Free (p.tmp);
@@ -350,14 +351,14 @@ PROCEDURE CompileLV (p: P; traced := FALSE) =
       ELSE Expr.Compile (p.a);
     END;
 
-    IF (p.openDepth = 0) THEN
+    IF (p.lhsOpenDepth = 0) THEN
     (* p.a has fixed array type.
        Top of CG stack is address of the elements.
        Replace it by address of subscripted element. *) 
 
       IF StaticSs (p, subscript) THEN
         IF subscript # 0 THEN
-          CG.Add_offset (subscript * elt_pack);
+          CG.Add_offset (subscript * elt_pack (* bits. *));
         END 
       ELSE
         Expr.Compile (p.biased_b);
@@ -370,18 +371,20 @@ PROCEDURE CompileLV (p: P; traced := FALSE) =
 
     ELSE (* p.a has open array type. *) 
       IF p.leftSs = NIL THEN
-        (* This is the leftmost subscript.  Top of CG stack is address
-           of the dope.  Save the dope in p.tempDopeAddr and replace it
+        (* This is the leftmost subscript, to the outermost array.  Top of CG stack
+           is address of the dope.  Save the dope in p.OMDopeVal and replace it
            on the CG stack by the elements' addr. *) 
-        p.tempDopeAddr := CG.Pop ();
-        CG.Push (p.tempDopeAddr);
+        p.OMDopeVal := CG.Pop ();
+        CG.Push (p.OMDopeVal);
         CG.Open_elt_ptr (ArrayType.EltAlign (ta));
-      ELSE (* Copy dope address up from the subscript to the left. *) 
-        p.tempDopeAddr := p.leftSs.tempDopeAddr;
+        p.OMOpenDepth := p.lhsOpenDepth;
+      ELSE (* Copy OMDopeVal and OMOpenDepth up from the subscript to the left. *) 
+        p.OMDopeVal := p.leftSs.OMDopeVal;
         (* Top of CG stack is already the address of the elements. *)
+        p.OMOpenDepth := p.leftSs.OMOpenDepth;
       END; 
 
-      IF p.ssDepth = 1 AND p.openDepth > 1 THEN
+      IF p.ssDepth = 1 AND p.lhsOpenDepth > 1 THEN
       
       (* This is the RM subscript, but p.a has additional open dimensions after
          this one. The final result will be an open array, so must build new
@@ -390,11 +393,11 @@ PROCEDURE CompileLV (p: P; traced := FALSE) =
          
         (* allocate a new dope vector *)
         newDopeVar := OpenArrayType.DeclareTemp (te);
-        newShapeLast := p.openDepth - 2 - p.shapeSs; 
+        newShapeLast := p.OMOpenDepth - p.shapeSs - 2; 
 
         (* copy the suffix of the shape portion of the dope vector *)
         FOR i := 0 TO newShapeLast DO
-          CG.Push (p.tempDopeAddr);
+          CG.Push (p.OMDopeVal);
           CG.Open_size (i+p.shapeSs+1);
           CG.Store_int
            (Target.Integer.cg_type, newDopeVar,
@@ -405,7 +408,7 @@ PROCEDURE CompileLV (p: P; traced := FALSE) =
 
         Expr.Compile (p.biased_b);
         IF Host.doRangeChk THEN (* range check the subscript *)
-          CG.Push (p.tempDopeAddr);
+          CG.Push (p.OMDopeVal);
           CG.Open_size (p.shapeSs);
           CG.Check_index (CG.RuntimeError.SubscriptOutOfRange);
         END;
@@ -415,10 +418,11 @@ PROCEDURE CompileLV (p: P; traced := FALSE) =
                        newDopeVar, M3RT.OA_sizes + i * Target.Integer.pack);
           CG.Multiply (Target.Word.cg_type);
         END;
+        (* This is where we cannot handle sub-byte elements.  newDopeVar can only
+           hold a byte-aligned address or better, and Index_bytes requires a
+           bit size that is a multiple of byte size. *) 
         CG.Index_bytes (elt_pack);
         CG.Store_addr (newDopeVar, M3RT.OA_elt_ptr);
-        (* ^This is where we cannot handle sub-byte elements. A Var can only
-           hold a byte-aligned address or better. *) 
         CG.Load_addr_of_temp (newDopeVar, 0, Target.Address.align);
       ELSE
       (* Either there is another subscript to the right, or the element
@@ -428,12 +432,12 @@ PROCEDURE CompileLV (p: P; traced := FALSE) =
          
         Expr.Compile (p.biased_b);
         IF Host.doRangeChk THEN (* range check the subscript *)
-          CG.Push (p.tempDopeAddr);
+          CG.Push (p.OMDopeVal);
           CG.Open_size (p.shapeSs);
           CG.Check_index (CG.RuntimeError.SubscriptOutOfRange);
         END;
-        FOR I := 1 TO p.openDepth-1 DO 
-          CG.Push (p.tempDopeAddr);
+        FOR I := p.shapeSs + 1 TO p.OMOpenDepth - 1 DO 
+          CG.Push (p.OMDopeVal);
           CG.Open_size (I);
           CG.Multiply (Target.Word.cg_type); 
         END;

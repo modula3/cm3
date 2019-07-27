@@ -40,8 +40,8 @@ REVEAL
         bss_var     : CG.Var; (* Used if it's a global. *)
         nextTWACGVar : T; (* Link field for list of Variable..Ts that have a
                              non-NIL bss_var or cg_var. *)
-        initValOffset : INTEGER;
-        offset      : INTEGER;
+        initValOffset : INTEGER := 0;
+        offset      : INTEGER := 0;
         size        : INTEGER;
         align       : AlignVal;
         cg_align    : AlignVal;
@@ -57,6 +57,10 @@ REVEAL
         initPending : M3.Flag; (* Initialization is postponed. *)
         initStatic  : M3.Flag; (* Needs RT initialization with a value from
                                   the static constant area. *)
+        allocated     : M3.Flag;
+          (* ^Has allocated space in the global variable area. *)
+        initAllocated : M3.Flag;
+          (* ^Static initial value has allocated space in the global constant area. *)
       OVERRIDES
         typeCheck   := Check;
         set_globals := AllocGlobalVarSpace;
@@ -185,12 +189,12 @@ PROCEDURE New (name: M3ID.T;  used: BOOLEAN): T =
     t.initZero    := FALSE;
     t.initPending := FALSE;
     t.initStatic  := FALSE;
+    t.allocated   := FALSE;
+    t.initAllocated := FALSE;
     t.bounds      := NIL;
     t.cg_align    := 0;
     t.cg_var      := NIL;
     t.bss_var     := NIL;
-    t.initValOffset := 0;
-    t.offset      := 0;
     t.size        := 0;
     t.align       := 0;
     t.mem_type    := CG.Type.Void;
@@ -496,19 +500,17 @@ PROCEDURE GetBounds (t: T;  VAR min, max: Target.Int) =
 PROCEDURE AllocGlobalVarSpace (t: T) =
 (* Allocate space for a non-external global. *)
   VAR size, align: INTEGER;
-  VAR initExpr: Expr.T;
+  VAR constInitExpr: Expr.T;
   VAR initRepType: Type.T := NIL; 
   BEGIN
     (* Type.SetGlobals (t.tipe); *)
     (* IF (t.initExpr # NIL) THEN Type.SetGlobals (Expr.TypeOf (t.initExpr)) END; *)
-    IF t.offset # 0(* Already done.*)
-(* CHECK          ^Couldn't it be already allocated, with offset 0? *)    
-       OR NOT t.global OR t.external THEN RETURN END;
+    IF t.allocated (* Already done.*) OR NOT t.global OR t.external THEN RETURN END;
     EVAL Type.Check (t.tipe);
 
     IF t.initExpr # NIL THEN
-      initExpr := Expr.ConstValue (t.initExpr);
-      ArrayExpr.NoteTargetType (initExpr, t.tipe);
+      constInitExpr := Expr.ConstValue (t.initExpr);
+      ArrayExpr.NoteTargetType (constInitExpr, t.tipe);
       initRepType := Expr.RepTypeOf (t.initExpr)
     END;
 
@@ -526,6 +528,7 @@ PROCEDURE AllocGlobalVarSpace (t: T) =
 
     (* declare the actual variable *)
     t.offset := Module.Allocate (size, align, FALSE, id := t.name);
+    t.allocated := TRUE;
   END AllocGlobalVarSpace;
 
 (* Externally dispatched-to *)
@@ -563,10 +566,10 @@ PROCEDURE Declare (t: T): BOOLEAN =
       t.cg_align := align;
 
     ELSIF (t.imported) THEN
-      <*ASSERT t.offset # 0*>
+      <*ASSERT t.allocated*>
 
     ELSIF (t.global) THEN
-      <*ASSERT t.offset # 0*>
+      <*ASSERT t.allocated*>
       CG.Declare_global_field (t.name, t.offset, size, typeUID, FALSE);
       IF (t.initZero) THEN t.initDone := TRUE END;
       t.cg_align := align;
@@ -632,41 +635,58 @@ PROCEDURE FindAlignment (align: AlignVal;  size: INTEGER): AlignVal =
 (* Externally dispatched-to *)
 PROCEDURE ConstInit (t: T) =
   VAR
-    size          := t.size;
-    align         := t.align;
+    initSize : INTEGER;
+    initAlign : AlignVal;
+    initRepType : Type.T;
+    initDepth : INTEGER;
     typeUID       : INTEGER;
     constInitExpr : Expr.T;
     name          : TEXT;
     initM3ID      : M3ID.T;
+    initInfo : Type.Info;
   BEGIN
     IF t.external OR t.imported THEN RETURN END;
-    IF (NOT t.initStatic) AND (NOT t.global) THEN RETURN END;
-
-    typeUID := Type.GlobalUID (t.tipe);
-    IF (t.indirect) THEN
-      typeUID  := CG.Declare_indirect (typeUID);
-      size  := Target.Address.size;
-      align := Target.Address.align;
-    END;
-
-    IF t.initStatic THEN
+    IF NOT t.initStatic AND NOT t.global THEN RETURN END;
+    IF t.initStatic AND NOT t.initAllocated THEN
       (* Allocate space in the global constant area for the initial value. *)
-      name := "_INIT_" & M3ID.ToText (t.name);
-      initM3ID := M3ID.Add (name);
-      t.initValOffset
-        := Module.Allocate (size, align, TRUE, "initial value for ", t.name);
-      CG.Declare_global_field (initM3ID, t.initValOffset, size, typeUID, TRUE);
-      CG.Comment
-        (t.initValOffset, TRUE, "init expr for ", Value.GlobalName(t,TRUE,TRUE));
+      typeUID := Type.GlobalUID (t.tipe);
       constInitExpr := Expr.ConstValue (t.initExpr);
       <* ASSERT constInitExpr # NIL *>
-      Expr.PrepLiteral (constInitExpr, t.tipe, TRUE);
-      Expr.GenLiteral (constInitExpr, t.initValOffset, t.tipe, TRUE);
+      IF (t.indirect) THEN
+        typeUID  := CG.Declare_indirect (typeUID);
+        initSize  := Target.Address.size;
+        initAlign := Target.Address.align;
+      ELSE
+        initRepType := Expr.RepTypeOf (constInitExpr);
+        EVAL Type.CheckInfo (initRepType, initInfo);
+        initDepth := OpenArrayType.OpenDepth (initRepType);
+
+        IF initDepth > 0 THEN (* initial value is an open array *)
+          (* Allocate space for the dope only. *)
+          (* See ArrayExpr.GenLiteral, where element space will be allocated. *)
+          initSize := Target.Address.pack + initDepth * Target.Integer.pack;
+          initAlign := MAX (Target.Address.align, Target.Integer.align);
+        ELSE
+          initSize  := initInfo.size;
+          initAlign := initInfo.alignment;
+        END;
+      END;
+      name := "_INIT_" & M3ID.ToText (t.name);
+      initM3ID := M3ID.Add (name);
+(* TODO: Eliminate duplicate copies of same value, including reused, named constant. *) 
+      t.initValOffset
+        := Module.Allocate (initSize, initAlign, TRUE, "initial value for ", t.name);
+      t.initAllocated := TRUE;
+      CG.Declare_global_field (initM3ID, t.initValOffset, initSize, typeUID, TRUE);
+      CG.Comment
+        (t.initValOffset, TRUE, "init expr for ", Value.GlobalName(t,TRUE,TRUE));
+      Expr.PrepLiteral (constInitExpr, initRepType, TRUE);
+      Expr.GenLiteral (constInitExpr, t.initValOffset, initRepType, TRUE);
     END;
 
     IF (t.global) THEN
       (* Try to statically initialize directly in the global variable area. *)
-      <*ASSERT t.offset # 0*>
+      <*ASSERT t.allocated*>
       constInitExpr := NIL;
       IF (t.initExpr # NIL) AND (NOT t.initDone) AND (NOT t.initStatic) THEN
         constInitExpr := Expr.ConstValue (t.initExpr);
@@ -827,6 +847,8 @@ PROCEDURE CopyOpenArray (tipe: Type.T;  ref: Type.T) =
 
 (* Externally dispatched-to *)
 PROCEDURE UserInit (t: T) =
+  VAR constInitExpr: Expr.T;
+  VAR initRepType: Type.T;
   BEGIN
     IF (t.initExpr # NIL) AND (NOT t.initDone) AND (NOT t.imported) THEN
       CG.Gen_location (t.origin);
@@ -834,13 +856,17 @@ PROCEDURE UserInit (t: T) =
         t.initPending := FALSE;
         LoadLValue (t);
         Type.Zero (t.tipe);
-      ELSIF (t.initValOffset # 0) THEN
-(* CHECK ^Couldn't zero mean an initial value that was allocated at the
-          beginning of the global constant area, instead of no such value? *)
+      ELSIF t.initAllocated THEN
         t.initPending := FALSE;
         LoadLValue (t);
         Module.LoadGlobalAddr
           (Scope.ToUnit (t), t.initValOffset, is_const := TRUE);
+        constInitExpr := Expr.ConstValue (t.initExpr);
+        <* ASSERT constInitExpr # NIL *>
+        initRepType := Expr.RepTypeOf (constInitExpr);
+        IF OpenArrayType.Is (initRepType) THEN
+          CG.Open_elt_ptr (OpenArrayType.EltAlign(initRepType));
+        END;
         CG.Copy (t.size, overlap := FALSE);
       ELSE
         t.initPending := FALSE;

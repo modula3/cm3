@@ -163,6 +163,7 @@ PROCEDURE SetGlobals (t: T) =
     END;
 
     t.calign  := align;
+(* TODO: Eliminate duplicate copies of same value. *) 
     t.coffset := Module.Allocate (size, align, TRUE, "constant ", id := t.name);
     t.offset  := Module.Allocate (Target.Address.size, Target.Address.align,
                                   FALSE, "constant", id := t.name);

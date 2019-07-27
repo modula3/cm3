@@ -11,8 +11,8 @@ MODULE ConsExpr;
 (* A value constructor.  Ascertaining whether it is an array, record,
    or set constructor requires semantic analysis, so this placeholder
    node is built during parsing.  It stays in the tree, but is given
-   an ArrayExpr.T, RecordExpr.T, or SetExpr.T as a child, by Seal,
-   after its type is can be looked up and checked. *)
+   an ArrayExpr.T, RecordExpr.T, or SetExpr.T as a child (in field
+   'base'), by Seal, later when  its type can be looked up and checked. *)
 
 IMPORT M3, Expr, ExprRep, Error, ErrType, Type;
 IMPORT TypeExpr, SetExpr, RecordExpr, ArrayExpr;

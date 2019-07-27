@@ -593,10 +593,11 @@ PROCEDURE Index_bytes (size: INTEGER);
    of Target.Byte. *)
 
 PROCEDURE Index_bits (bits_addr_align: Alignment := 1);
-(* s1.A := s1.A + s0.I ; pop *)
+(* s1.A := s1.A + s0.I ; pop -- note that s0.I must be less than
+  or equal to the alignment of s1.A, otherwise bad code will be generated. *)
 
 PROCEDURE Boost_addr_alignment (a: Alignment);
-(* note that the referenct of s0.A has an alignment of at least 'a'. *)
+(* note that the referent of s0.A has an alignment of at least 'a'. *)
 
 PROCEDURE GCD (a, b: INTEGER): INTEGER;
 (* return the greatest x that divides both a and b. *)

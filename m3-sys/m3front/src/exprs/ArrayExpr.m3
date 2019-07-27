@@ -826,6 +826,7 @@ PROCEDURE CheckFixedOpenEltPack (top: T; typeX, typeY: Type.T; depth: INTEGER)
 
 PROCEDURE Represent (top: T) =
 (* PRE: top is the top of a tree of array constructors. *)
+(* Construct the representation for this constructor tree. *)
   VAR levelType, levelIndexType, levelEltType, semIndexType, semEltType: Type.T;
   VAR repType, repIndexType, repEltType, repSuccType: Type.T;
   VAR staticLen, staticFlatEltCt, lastArrayDepth, eltsSize: INTEGER;
@@ -1186,14 +1187,14 @@ PROCEDURE Prep (top: T) =
   BEGIN
     <* ASSERT top.depth = 0 *>
     IF top.broken THEN
-      top.state := StateTyp.Prepped;
+      top.state := MAX (top.state , StateTyp.Prepped);
       RETURN
     END;
-    IF Evaluate (top) # NIL THEN (* It's a constant. *)
+    IF Evaluate (top) # NIL (* Won't change if Prep is recalled. *)
+    THEN (* It's a constant. *)
       top.inConstArea := TRUE
       (* Postpone InnerPrep until Compile, when we will have globalOffset
-         and globalEltsOffzet to build into. *)
-(* TODO: Or, allocate globalspaces here, instead of in Compile? *)         
+         and globalEltsOffset to build into. *)
     ELSIF NOT UsesAssignProtocol (top)
     THEN InnerPrep (top)
  (* ELSE postpone InnerPrep until Compile & InnerCompile, when LHS will
@@ -1203,18 +1204,23 @@ PROCEDURE Prep (top: T) =
 
 (* Externally dispatched-to: *)
 PROCEDURE PrepLiteral (constr: T; type: Type.T; inConstArea: BOOLEAN) =
-(* If NOT inConstArea, do it in the initialized global area. *)
+(* If NOT inConstArea, set up to compile into the initialized global variable area. *)
   VAR top: T;
   BEGIN
     top := constr.top;
     <* ASSERT top.checked *>
-    top.inConstArea := inConstArea;
     IF top.broken THEN
-      top.state := StateTyp.Prepped;
+      top.state := MAX (top.state , StateTyp.Prepped);
       RETURN
     END;
     <* ASSERT Evaluate (top) # NIL *>
+    IF top.state >= StateTyp.Represented
+       AND (type # top.targetType OR inConstArea # top.inConstArea)
+    THEN
+      top.state := StateTyp.Checked (* Force redo of Represent. *);
+    END;
     top.targetType := type;
+    top.inConstArea := inConstArea;
     Represent (top);
     (* Postpone InnerPrep until GenLiteral, when we will have
        globalOffset and globalEltsOffset to build into. *)
@@ -1327,7 +1333,7 @@ PROCEDURE InnerPrep (top: T) =
     IF top.state >= StateTyp.Prepped THEN RETURN END;
     Represent (top);
     IF top.broken THEN
-      top.state := StateTyp.Prepped;
+      top.state := MAX (top.state, StateTyp.Prepped);
       RETURN
     END;
     Classify (top);
@@ -1532,6 +1538,7 @@ PROCEDURE GenPushLHSEltsAddr
 
 PROCEDURE PrepRecurse (constr: T; selfFlatEltNo: INTEGER) =
 (* Called only on an array constructor. *)
+(* "Flat" means with respect to constr.top. *)
 (* selfFlatEltNo is the flattened element number of constr w/in the topmost
    array constructor. *)
   VAR top: T;
@@ -1555,23 +1562,31 @@ PROCEDURE PrepRecurse (constr: T; selfFlatEltNo: INTEGER) =
     <* ASSERT constr.depth < LAST (top.levels^) *>
     <* ASSERT top.levels^ [constr.depth].staticLen >= 0 *>
     constrEltPack := ArrayType.EltPack (constr.repType);
-    eltFlatOffset := - 1;
+    flatEltPack := ArrayType.EltPack (top.levels^[LAST(top.levels^) - 1].repType);
     WITH argLevelInfo = top.levels^ [constr.depth + 1] DO
       (* Shape-check and assign the explicitly-coded arguments.*)
       FOR i := 0 TO MIN (argCt, constr.eltCt) - 1 DO
         WITH argExpr = constr.args^[i] DO
-
+          argFlatEltNo := selfFlatEltNo + i * argLevelInfo.staticFlatEltCt;
+          eltFlatOffset := argFlatEltNo * flatEltPack;
           IF argExpr # NIL THEN
-            argFlatEltNo := selfFlatEltNo + i * argLevelInfo.staticFlatEltCt;
             argConstr := ArrayConstrExpr (argExpr);
-            IF argConstr # NIL AND argConstr.depth > 0 THEN
-              (* argConstr is an inner array constructor. *)
-              PrepRecurse (argConstr, argFlatEltNo);
+            IF argConstr # NIL THEN (* argConstr is an inner array constructor. *)
+              <* ASSERT argConstr.depth > 0 OR argConstr.isNamedConst *>
+              IF argConstr.isNamedConst THEN
+                Represent (argConstr);
+                PrepLiteral (argConstr, argConstr.repType, inConstArea := TRUE);
+                Classify (argConstr);
+                <* ASSERT argConstr.resultKind = RKTyp.RKGlobal *>
+                <* ASSERT argConstr.top = argConstr *>
+                argConstr.globalEltsOffset := top.globalEltsOffset + eltFlatOffset;
+                PrepRecurse (argConstr, selfFlatEltNo := 0);
+(* FIXME: When argConstr is a named constant, but top is not. *)
+              ELSE
+                PrepRecurse (argConstr, argFlatEltNo);
+              END;
             ELSE (* argExpr is a non-array or non-constructor. *)
               argRepType := Expr.RepTypeOf (argExpr);
-              flatEltPack
-                := ArrayType.EltPack (top.levels^[LAST(top.levels^) - 1].repType);
-              eltFlatOffset := argFlatEltNo * flatEltPack;
               eltAlign
                 := CG.GCD (top.topEltsAlign, eltFlatOffset MOD Target.Word.size);
               depthWInArg := 0;
@@ -1831,7 +1846,7 @@ PROCEDURE Compile (top: T) =
     Classify (top);
     
     (* Allocate static space if needed. *)
-    IF top.resultKind = RKTyp.RKGlobal THEN
+    IF top.resultKind = RKTyp.RKGlobal AND top.globalOffset < 0 THEN
       top.globalOffset 
         := Module.Allocate
              (top.totalSize, top.topRepAlign, top.inConstArea,
@@ -1862,28 +1877,29 @@ PROCEDURE GenLiteral
     Represent (top);
     IF top.broken THEN
       top.state := StateTyp.Compiled;
-      RETURN
-    END;
-    Classify (top);
-    <* ASSERT top.resultKind = RKTyp.RKGlobal *>
-    top.globalOffset := globalOffset;
-    IF top.repOpenDepth <= 0
-    THEN (* No dope.  globalOffset is to space in the static constant area
-          that our caller has allocated for the array elements. *)
-      top.globalEltsOffset := globalOffset;
-    ELSE (* globalOffset is to space in the static constant area
-            that our caller has allocated for the dope only.
-            We have to allocate space for the elements ourselves. *)
-      top.globalEltsOffset 
-        := Module.Allocate
-             (top.staticEltsSize, top.topEltsAlign, inConstArea,
-              tag := "StaticOpenArrayElements");
-      InitLiteralDope (top, inConstArea);
-    END;
+      RETURN;
+    ELSE
+      Classify (top);
+      <* ASSERT top.resultKind = RKTyp.RKGlobal *>
+      top.globalOffset := globalOffset;
+      IF top.repOpenDepth <= 0
+      THEN (* No dope.  globalOffset is to space in a static area that our
+              caller has allocated for the array elements. *)
+        top.globalEltsOffset := globalOffset;
+      ELSE (* globalOffset is to space in a static area that our
+              caller has allocated for the dope only.
+              We have to allocate space for the elements ourselves. *)
+        top.globalEltsOffset
+          := Module.Allocate
+               (top.staticEltsSize, top.topEltsAlign, inConstArea,
+                tag := "StaticOpenArrayElements");
+        InitLiteralDope (top, inConstArea);
+      END;
 
-    PrepRecurse (top, selfFlatEltNo := 0);
-    InnerCompile (top);
-    CG.Discard (Target.Address.cg_type);
+      PrepRecurse (top, selfFlatEltNo := 0);
+      InnerCompile (top);
+      CG.Discard (Target.Address.cg_type);
+    END;
   END GenLiteral;
 
 PROCEDURE CompileGeneratedTypes (top: T) =
