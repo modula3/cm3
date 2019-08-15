@@ -299,7 +299,7 @@ PROCEDURE CheckArgStaticLength
     IF argLength < 0 THEN RETURN END;
     IF levelInfo.staticLen = Expr.lengthNonStatic 
     THEN (* First-found fixed-array argument.  All cousins at
-            this depth must have this same length. *)
+            this depth will have to have this same length. *)
       levelInfo.staticLen := argLength;
     ELSIF argLength # levelInfo.staticLen
     THEN
@@ -323,6 +323,7 @@ PROCEDURE Check (top: T;  VAR cs: Expr.CheckState) =
     top.type := Type.Check (top.type);
     top.tipe := top.type;
     top.semType := top.type;
+(* TODO^ Remove redundant type fields. *)
 
     (* Create the levels array. *)
     top.levels := NEW (LevelsTyp, ArrayType.TotalDepth (top.semType) + 1);
@@ -391,7 +392,6 @@ PROCEDURE CheckRecurse
       (* Don't do Type.Check on constr.semIndexType=NIL. It would turn the NIL
          into ErrType.T, losing an open array. *)
       constr.semIndexType := Type.Check (constr.semIndexType);
-IsErr(constr.semIndexType) (* Just for debugging. *);
     END;
     
     (* Check argument list length against constructor index type
@@ -436,7 +436,8 @@ IsErr(constr.semIndexType) (* Just for debugging. *);
       FOR i := 0 TO argCt - 1 DO
         WITH argExpr = constr.args^ [i] DO
           IF argExpr # NIL THEN
-            (* Check for arg forms that are not valid in an array constructor: *)
+
+            (* Check for arg forms that are invalid in an array constructor: *)
             IF KeywordExpr.Split (argExpr, key, value) THEN
               Error.Msg ("keyword values not allowed in array constructors");
               argExpr := NIL;
@@ -445,14 +446,15 @@ IsErr(constr.semIndexType) (* Just for debugging. *);
               Error.Msg ("range values not allowed in array constructors");
               argExpr := NIL;
               constr.broken := TRUE;
-            ELSE
+            ELSE (* Valid arg form. *)
               argConstr := ArrayConstrExpr (argExpr);
               IF argConstr # NIL AND argConstr.isNested THEN
                 (* argConstr is an inner array constructor. *)
                 CheckRecurse (top, argConstr, cs, depth + 1);
                 argLength := argConstr.eltCt;
                 argSemType := argConstr.semType;
-              ELSE (* argExpr is a non-array or non-constructor. *)
+              ELSE (* argExpr is a non-array, non-constructor, or named
+                      constant with an array constructor as value. *)
                 Expr.TypeCheck (argExpr, cs);
                 IF top.firstArgExpr = NIL THEN
                   top.firstArgExpr := argExpr;
@@ -484,9 +486,24 @@ IsErr(constr.semIndexType) (* Just for debugging. *);
               IF NOT constr.broken THEN
                 (* Check shape criterion of assignabilty. *)
                 IF argConstr # NIL THEN
-                  CheckArgStaticLength
-                    (constr, argLevelInfo, argLength, constr.depth + 1);
-
+                  IF argConstr.isNamedConst THEN
+                    (* Check its static lengths against top's. *)
+                    <* ASSERT argConstr.depth = 0 *>
+                    depthWInArg := 0;
+                    LOOP (* Thru array levels of arg. *)
+                      depthWInTopConstr
+                        := constr.depth + 1 (*For arg*) + depthWInArg;
+                      IF depthWInTopConstr >= LAST (top.levels^) THEN EXIT END;
+                      argLength := argConstr.levels^[depthWInArg].staticLen;
+                      CheckArgStaticLength
+                        (constr, top.levels^ [depthWInTopConstr], argLength,
+                         depthWInTopConstr);
+                      INC (depthWInArg);
+                    END  (*LOOP*)
+                  ELSE
+                    CheckArgStaticLength
+                      (constr, argLevelInfo, argConstr.eltCt, constr.depth + 1);
+                  END;
                 ELSE (* Arg is not a constructor. *)
                   Error.Count (priorErrCt, priorWarnCt);
                   NoteUseTargetVar (argExpr);
@@ -499,6 +516,7 @@ IsErr(constr.semIndexType) (* Just for debugging. *);
                   IF laterErrCt > priorErrCt THEN
                     argExpr := NIL
                   ELSE
+                    (* Not array constructor => no need to call Represent. *)
                     argRepType := Expr.RepTypeOf (argExpr);
                     depthWInArg := 0;
                     LOOP (* Thru array levels of arg. *)
@@ -806,7 +824,7 @@ PROCEDURE CheckFixedOpenEltPack (top: T; typeX, typeY: Type.T; depth: INTEGER)
 (* This is all to ensure that fixed and open arrays of same element type and
    that are copied-between have the same element packing.  This could maybe
    be inferred from type checking, but it is rather complicated to do so.
-   So we verify it with this and its helper procedure. *)
+   So we verify it with this and its helper procedure CommonEltPack. *)
   VAR eltPack: INTEGER;
   BEGIN
     <* ASSERT top.depth = 0 *>
@@ -829,7 +847,7 @@ PROCEDURE Represent (top: T) =
 (* Construct the representation for this constructor tree. *)
   VAR levelType, levelIndexType, levelEltType, semIndexType, semEltType: Type.T;
   VAR repType, repIndexType, repEltType, repSuccType: Type.T;
-  VAR staticLen, staticFlatEltCt, lastArrayDepth, eltsSize: INTEGER;
+  VAR locStaticLen, staticFlatEltCt, lastArrayDepth, eltsSize: INTEGER;
   VAR topRepTypeInfo: Type.Info;
   VAR repSuccIsOpen, repSuccHasChanged, fixedOpenOK, b: BOOLEAN;
   BEGIN
@@ -860,12 +878,12 @@ PROCEDURE Represent (top: T) =
           b := ArrayType.Split
                  (levelType, (*VAR*)levelIndexType, (*VAR*)levelEltType);
           <* ASSERT b *>
-          staticLen := LengthOfOrdType (levelIndexType);
-          IF staticLen >= 0 THEN 
+          locStaticLen := LengthOfOrdType (levelIndexType);
+          IF locStaticLen >= 0 THEN
             IF levelInfo.staticLen = Expr.lengthNonStatic
             THEN (* semType was open in this dimension.  Make it static. *)
-              levelInfo.staticLen := staticLen
-            ELSIF staticLen # levelInfo.staticLen THEN
+              levelInfo.staticLen := locStaticLen
+            ELSIF locStaticLen # levelInfo.staticLen THEN
               Error.Int
                 (i, "Constructor length # expression length, in dimension." );
               <* ASSERT FALSE *>
@@ -983,9 +1001,9 @@ PROCEDURE Represent (top: T) =
       lastArrayDepth := LAST(top.levels^) - 1;
       eltsSize := ArrayType.EltPack (top.levels^[lastArrayDepth].repType);
       FOR depth := 0 TO lastArrayDepth DO
-        staticLen := top.levels^[depth].staticLen;
-        <* ASSERT staticLen >= 0 *>
-        eltsSize := eltsSize * staticLen;
+        locStaticLen := top.levels^[depth].staticLen;
+        <* ASSERT locStaticLen >= 0 *>
+        eltsSize := eltsSize * locStaticLen;
       END (*FOR*);
       top.staticEltsSize := eltsSize;
     END;
@@ -1049,9 +1067,13 @@ PROCEDURE RepresentRecurse (constr: T) =
           argExpr := constr.args^[i];
           IF argExpr # NIL THEN
             argConstr := ArrayConstrExpr (argExpr);
-            IF argConstr # NIL AND argConstr.depth > 0  THEN
-              (* argConstr is an inner array constructor. *)
-              RepresentRecurse (argConstr);
+            IF argConstr # NIL THEN
+              IF argConstr.depth > 0 THEN
+                (* argConstr is an inner array constructor. *)
+                RepresentRecurse (argConstr);
+              ELSE (* argConstr is a named constant array constructor. *)
+                Represent (argConstr);
+              END;
             ELSE (* argExpr is non-array or non-constructor. *)
               argRepType := Expr.RepTypeOf (argExpr);
               fixedOpenOK
@@ -1064,7 +1086,7 @@ PROCEDURE RepresentRecurse (constr: T) =
         END (*FOR args*);
       END (*WITH argLevelInfo*);
 
-      (* Copy fields from level to constructor. *)
+      (* Copy repType from level to constructor. *)
       IF constr # top THEN
         constr.repType := top.levels^[constr.depth].repType;
       END;
@@ -1076,6 +1098,7 @@ PROCEDURE RepresentRecurse (constr: T) =
 
 PROCEDURE Classify (top: T) =
 (* Classify the method/location for storing the constructor's value. *)
+(* PRE: top.state >= StateTyp.Represented. *)
   BEGIN
     IF top.resultKind # RKTyp.RKUnknown THEN RETURN END;
     <* ASSERT top.depth = 0 *>
@@ -1214,11 +1237,6 @@ PROCEDURE PrepLiteral (constr: T; type: Type.T; inConstArea: BOOLEAN) =
       RETURN
     END;
     <* ASSERT Evaluate (top) # NIL *>
-    IF top.state >= StateTyp.Represented
-       AND (type # top.targetType OR inConstArea # top.inConstArea)
-    THEN
-      top.state := StateTyp.Checked (* Force redo of Represent. *);
-    END;
     top.targetType := type;
     top.inConstArea := inConstArea;
     Represent (top);
@@ -1471,7 +1489,7 @@ PROCEDURE InnerPrep (top: T) =
        depending on top.resultKind. *)
 
     (* Traverse the tree of array constructors. *)
-    PrepRecurse (top, selfFlatEltNo := 0);
+    PrepRecurse (top, top, selfFlatEltNo := 0, depth := 0);
 
     (* Free temporaries: *)
     CG.Free_temp (shapeVar);
@@ -1487,12 +1505,10 @@ PROCEDURE InnerPrep (top: T) =
   END InnerPrep;
 
 PROCEDURE GenCopyOpenArgValueDyn
-  (constr: T; argDopeAddrVal: CG.Val; eltAlign: Type.BitAlignT) =
+  (top, constr: T; argDopeAddrVal: CG.Val; eltAlign: Type.BitAlignT) =
 (* PRE: TOS is a CG.Val for address w/in LHS to copy to. *)
 (* PRE: top.shallowestDynDepth >= 0 *)
-  VAR top: T;
   BEGIN
-    top := constr.top;
     (* Target address. *)
     CG.ForceStacked ();
     (* Source address. *)
@@ -1536,12 +1552,12 @@ PROCEDURE GenPushLHSEltsAddr
     END (*CASE*);
   END GenPushLHSEltsAddr;
 
-PROCEDURE PrepRecurse (constr: T; selfFlatEltNo: INTEGER) =
+PROCEDURE PrepRecurse
+  (top, constr: T; selfFlatEltNo: INTEGER; depth: INTEGER) =
 (* Called only on an array constructor. *)
-(* "Flat" means with respect to constr.top. *)
+(* "Flat" means with respect to top. *)
 (* selfFlatEltNo is the flattened element number of constr w/in the topmost
    array constructor. *)
-  VAR top: T;
   VAR argRepType: Type.T;
   VAR dotSsVal, argAddrVal: CG.Val := NIL;
   VAR topLab: CG.Label;
@@ -1556,14 +1572,14 @@ PROCEDURE PrepRecurse (constr: T; selfFlatEltNo: INTEGER) =
     IF constr.broken THEN 
 (* CHECK: Do we need to do any CG stack manipulation here? *)
     RETURN END;
-    top := constr.top;
     argCt := ArgCt (constr);
     <* ASSERT constr.state >= StateTyp.Represented *>
-    <* ASSERT constr.depth < LAST (top.levels^) *>
-    <* ASSERT top.levels^ [constr.depth].staticLen >= 0 *>
-    constrEltPack := ArrayType.EltPack (constr.repType);
-    flatEltPack := ArrayType.EltPack (top.levels^[LAST(top.levels^) - 1].repType);
-    WITH argLevelInfo = top.levels^ [constr.depth + 1] DO
+    <* ASSERT depth < LAST (top.levels^) *>
+    <* ASSERT top.levels^ [depth].staticLen >= 0 *>
+    constrEltPack := ArrayType.EltPack (constr.semType);
+    flatEltPack
+      := ArrayType.EltPack (top.levels^[LAST(top.levels^) - 1].repType);
+    WITH argLevelInfo = top.levels^ [depth + 1] DO
       (* Shape-check and assign the explicitly-coded arguments.*)
       FOR i := 0 TO MIN (argCt, constr.eltCt) - 1 DO
         WITH argExpr = constr.args^[i] DO
@@ -1571,21 +1587,19 @@ PROCEDURE PrepRecurse (constr: T; selfFlatEltNo: INTEGER) =
           eltFlatOffset := argFlatEltNo * flatEltPack;
           IF argExpr # NIL THEN
             argConstr := ArrayConstrExpr (argExpr);
-            IF argConstr # NIL THEN (* argConstr is an inner array constructor. *)
-              <* ASSERT argConstr.depth > 0 OR argConstr.isNamedConst *>
-              IF argConstr.isNamedConst THEN
-                Represent (argConstr);
-                PrepLiteral (argConstr, argConstr.repType, inConstArea := TRUE);
-                Classify (argConstr);
-                <* ASSERT argConstr.resultKind = RKTyp.RKGlobal *>
-                <* ASSERT argConstr.top = argConstr *>
-                argConstr.globalEltsOffset := top.globalEltsOffset + eltFlatOffset;
-                PrepRecurse (argConstr, selfFlatEltNo := 0);
-(* FIXME: When argConstr is a named constant, but top is not. *)
-              ELSE
-                PrepRecurse (argConstr, argFlatEltNo);
-              END;
-            ELSE (* argExpr is a non-array or non-constructor. *)
+            IF top.resultKind = RKTyp.RKGlobal
+               AND argConstr # NIL
+               AND argConstr.isNamedConst
+            THEN
+              <* ASSERT argConstr.top = argConstr *>
+              <* ASSERT Evaluate (argConstr) # NIL *>
+              PrepLiteral
+                (argConstr, argLevelInfo.repType, inConstArea := TRUE);
+              PrepRecurse (top, argConstr, argFlatEltNo, depth := depth + 1);
+            ELSIF argConstr # NIL AND NOT argConstr.isNamedConst
+            THEN
+              PrepRecurse (top, argConstr, argFlatEltNo, depth := depth + 1);
+            ELSE (* Handle argExpr here. *)
               argRepType := Expr.RepTypeOf (argExpr);
               eltAlign
                 := CG.GCD (top.topEltsAlign, eltFlatOffset MOD Target.Word.size);
@@ -1634,7 +1648,7 @@ PROCEDURE PrepRecurse (constr: T; selfFlatEltNo: INTEGER) =
                   depthWInArg := 0;
                   LOOP
                     depthWInTopConstr
-                      := constr.depth + 1 (*For arg*) + depthWInArg;
+                      := depth + 1 (*For arg*) + depthWInArg;
                     IF depthWInArg >= argOpenDepth THEN EXIT END;
                     WITH openLevelInfo = top.levels^ [depthWInTopConstr] DO
                       (* Gen RT check, arg's dynamic vs. top's static length. *)
@@ -1659,7 +1673,7 @@ PROCEDURE PrepRecurse (constr: T; selfFlatEltNo: INTEGER) =
                       in some dimension, nonstatic, thus repType of this and
                       shallower levels is open array, and so is repType of
                       argExpr. *)
-                <* ASSERT top.shallowestDynDepth >= constr.depth + 1 *>
+                <* ASSERT top.shallowestDynDepth >= depth + 1 *>
                 <* ASSERT OpenArrayType.Is (argLevelInfo.repType) *>
                 <* ASSERT OpenArrayType.Is (Expr.RepTypeOf (argExpr)) *>
                 <* ASSERT NOT constr.dots *>
@@ -1692,7 +1706,7 @@ PROCEDURE PrepRecurse (constr: T; selfFlatEltNo: INTEGER) =
                 depthWInArg := 0; (* Array depth within the argument. *)
                 LOOP (* Through levels of arg. *)
                   depthWInTopConstr
-                    := constr.depth + 1 (*For arg*) + depthWInArg;
+                    := depth + 1 (*For arg*) + depthWInArg;
                   IF depthWInArg >= argOpenDepth THEN EXIT END;
                   WITH openLevelInfo = top.levels^ [depthWInTopConstr] DO
                     <* ASSERT openLevelInfo.staticLen # Expr.lengthNonArray *>
@@ -1730,16 +1744,16 @@ PROCEDURE PrepRecurse (constr: T; selfFlatEltNo: INTEGER) =
                 GenPushLHSEltsAddr  (top, 0, eltAlign);
                 IF top.dynOffsetVal = NIL
                 THEN (* First time. Dynamic offset is zero. *)
-                  GenCopyOpenArgValueDyn (constr, argAddrVal, eltAlign);
+                  GenCopyOpenArgValueDyn (top, constr, argAddrVal, eltAlign);
                   CG.Push (argLevelInfo.dynBitsizeVal);
                   top.dynOffsetVal := CG.Pop ();
                 ELSE
-(* TODO: Delay incrementing dynOffsetVal until here.  Would have to save the
-         previous argLevel subscript and use it here to select the correct
+(* TODO: Maybe. Delay incrementing dynOffsetVal until here.  Would have to save
+         the previous argLevel subscript and use it here to select the correct
          dynBitsizeVal. *)
                   CG.Push (top.dynOffsetVal);
                   CG.Index_bits (bits_addr_align := eltAlign);
-                  GenCopyOpenArgValueDyn (constr, argAddrVal, eltAlign);
+                  GenCopyOpenArgValueDyn (top, constr, argAddrVal, eltAlign);
                   CG.Push (top.dynOffsetVal);
                   CG.Push (argLevelInfo.dynBitsizeVal);
                   CG.Index_bits (bits_addr_align := eltAlign);
@@ -1776,20 +1790,22 @@ PROCEDURE PrepRecurse (constr: T; selfFlatEltNo: INTEGER) =
           CG.Set_label (topLab);
 
           (* Gen code for ARRAY[dotSsVal] := ARRAY[argCt-1] *)
-          GenPushLHSEltsAddr (top, bitOffset := 0, eltAlign := eltAlign);
-          CG.Push (dotSsVal);
-          ArrayType.GenIndex (constr.repType); (* Addr to store to. *)
-          GenPushLHSEltsAddr (top, eltFlatOffset, eltAlign);
-          (* ^Addr to fetch from -- where last explicit arg was assigned into
-             constructor. *)
-          IF ArrayType.EltsAreBitAddressed (constr.repType) THEN
-            CG.Load_indirect
-              (Target.Integer.cg_type, 0, constrEltPack, eltAlign);
-(* CHECK: That this won't straddle word boundary. *)          
-            CG.Store_indirect (Target.Integer.cg_type, 0, constrEltPack);
-          ELSE
-            CG.Copy (constrEltPack, overlap := FALSE);
-          END;
+          WITH constrLevelInfo = top.levels^[depth] DO
+            GenPushLHSEltsAddr (top, bitOffset := 0, eltAlign := eltAlign);
+            CG.Push (dotSsVal);
+            ArrayType.GenIndex (constrLevelInfo.repType); (* Addr to store to. *)
+            GenPushLHSEltsAddr (top, eltFlatOffset, eltAlign);
+            (* ^Addr to fetch from -- where last explicit arg was assigned into
+               constructor. *)
+            IF ArrayType.EltsAreBitAddressed (constrLevelInfo.repType) THEN
+              CG.Load_indirect
+                (Target.Integer.cg_type, 0, constrEltPack, eltAlign);
+(* CHECK: That this won't straddle word boundary. *)
+              CG.Store_indirect (Target.Integer.cg_type, 0, constrEltPack);
+            ELSE
+              CG.Copy (constrEltPack, overlap := FALSE);
+            END;
+          END (* WITH constrLevelInfo*);
 
           (* Gen RT code for dotSsVal := dotSsVal + 1 *)
           CG.Push (dotSsVal);
@@ -1896,7 +1912,7 @@ PROCEDURE GenLiteral
         InitLiteralDope (top, inConstArea);
       END;
 
-      PrepRecurse (top, selfFlatEltNo := 0);
+      PrepRecurse (top, top, selfFlatEltNo := 0, depth := 0);
       InnerCompile (top);
       CG.Discard (Target.Address.cg_type);
     END;
