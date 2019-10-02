@@ -13,8 +13,10 @@ IMPORT Expr, Stmt, Target, Type;
 
 PROCEDURE Parse (): Stmt.T;
 
-PROCEDURE Check (tlhs: Type.T;  rhs: Expr.T;  VAR cs: Stmt.CheckState);
+PROCEDURE Check
+  (tlhs: Type.T;  rhs: Expr.T;  VAR cs: Stmt.CheckState; IsError := FALSE);
 (* check that rhs is assignable to a variable of type tlhs. *)
+(* Assignable types but Non-assignable value emits a warning, unless IsError. *)
 
 PROCEDURE PrepForEmit (tlhs: Type.T;  rhs: Expr.T;  initializing: BOOLEAN);
 (* An alternative to calling Expr.Prep(rhs) before calling Emit() below,

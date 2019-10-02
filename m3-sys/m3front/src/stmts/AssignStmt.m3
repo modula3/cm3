@@ -73,7 +73,10 @@ PROCEDURE CheckMethod (p: P;  VAR cs: Stmt.CheckState) =
   END CheckMethod;
 
 (* EXPORTED: *) 
-PROCEDURE Check (tlhs: Type.T;  rhsExpr: Expr.T;  VAR cs: Stmt.CheckState) =
+PROCEDURE Check
+  (tlhs: Type.T;  rhsExpr: Expr.T;  VAR cs: Stmt.CheckState; IsError := FALSE)=
+(* check that rhsExpr is assignable to a variable of type tlhs. *)
+(* Non-assignable value is a warning unless IsError. *)
   VAR
     base_tlhs := Type.Base (tlhs); (* strip renaming, packing, and subranges. *)
     trhs := Expr.SemTypeOf (rhsExpr);
@@ -93,7 +96,7 @@ PROCEDURE Check (tlhs: Type.T;  rhsExpr: Expr.T;  VAR cs: Stmt.CheckState) =
       CASE lhsClass OF
       | Type.Class.Enum, Type.Class.Subrange, Type.Class.Integer,
         Type.Class.Longint =>
-        CheckOrdinal (tlhs, rhsExpr);
+        CheckOrdinal (tlhs, rhsExpr, IsError);
       | Type.Class.Ref, Type.Class.Object, Type.Class.Opaque =>
         CheckReference (tlhs, trhs, lhs_type_info);
       | Type.Class.Procedure =>
@@ -103,25 +106,35 @@ PROCEDURE Check (tlhs: Type.T;  rhsExpr: Expr.T;  VAR cs: Stmt.CheckState) =
     END
   END Check;
 
-PROCEDURE CheckOrdinal (tlhs: Type.T;  rhsExpr: Expr.T) =
-  VAR lmin, lmax, rmin, rmax: Target.Int;  constant: Expr.T;
+PROCEDURE CheckOrdinal (tlhs: Type.T;  rhsExpr: Expr.T; IsError: BOOLEAN) =
+  VAR lmin, lmax, rmin, rmax: Target.Int;
+  VAR constant: Expr.T;
+  VAR reason: TEXT;
   BEGIN
     (* Range check if rhsExpr is constant. *)
     constant := Expr.ConstValue (rhsExpr);
-    IF (constant # NIL) THEN rhsExpr := constant END;
+    IF constant # NIL THEN rhsExpr := constant END;
     Expr.GetBounds (rhsExpr, rmin, rmax);
     EVAL Type.GetBounds (tlhs, lmin, lmax);
     IF TInt.LE (lmin, lmax) AND TInt.LE (rmin, rmax)
-      AND (TInt.LT (lmax, rmin) OR TInt.LT (rmax, lmin)) THEN
-      (* non-overlapping, non-empty ranges *)
-(* CHECK^ Could/should tis only warn at CT and except at RT? *)
-      Error.Warn (2, "value not assignable (disjoint ranges)");
+       AND (TInt.LT (lmax, rmin) OR TInt.LT (rmax, lmin)) THEN
+      IF constant = NIL THEN reason := "(disjoint ranges)."
+      ELSE reason := "(value out of range)."
+      END; 
+(* CHECK^ Can this duplicate a warning from IsAssignable on types, if
+          RHS has a constant value outside LHS bounds? *)
+      IF IsError THEN
+        Error.Msg ("Constant value not assignable " & reason);
+      ELSE
+        Error.Warn (2, "Value not assignable " & reason);
+      END;
+    ELSE 
     END;
   END CheckOrdinal;
 
 PROCEDURE CheckReference (tlhs, trhs: Type.T;  READONLY lhs_type_info: Type.Info) =
   BEGIN
-(* CHECK: Doesn't this just duplicate checks already done by Type.IsAssibable? *)
+(* CHECK: Doesn't this just duplicate checks already done by Type.IsAssignable? *)
     IF Type.IsSubtype (trhs, tlhs) THEN
       (*ok*)
     ELSIF NOT Type.IsSubtype (tlhs, trhs) THEN
@@ -181,6 +194,7 @@ PROCEDURE PrepForEmit
     baseExpr := ConsExpr.Base (rhsExpr);
     IF baseExpr # NIL THEN rhsExpr := baseExpr END;
     ArrayExpr.NoteTargetType (rhsExpr, lhsRepType);
+(* REVIEW: Is this overconservate when assigning an array constructor? *)
     IF CanAvoidCopy (lhsRepType, rhsExpr, initializing)
     THEN Expr.MarkForDirectAssignment (rhsExpr)
     END;

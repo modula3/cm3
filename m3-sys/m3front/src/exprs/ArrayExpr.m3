@@ -115,8 +115,8 @@ REVEAL
     dynOffsetVal      : CG.Val := NIL; (* Top only. *)
     shallowestDynDepth: INTEGER := FIRST (INTEGER);
     deepestDynDepth   : INTEGER := FIRST (INTEGER);
-    heapTempPtrVar    : CG.Var;
-    staticEltsSize    : INTEGER; (* Excluding any dope.  Zero if not static. *)
+    heapTempPtrVar    : CG.Var := NIL;
+    staticEltsSize    : INTEGER; (* Excluding any dope.  Zero if not fully static. *)
     dopeSize          : INTEGER;
     totalSize         : INTEGER; (* Including any dope. *) 
     firstArgExpr      : Expr.T := NIL;
@@ -196,6 +196,7 @@ IsErr(constr.semIndexType) (* Just for debugging. *);
     constr.state                := StateTyp.Fresh;
     constr.shallowestDynDepth   := FIRST (INTEGER);
     constr.deepestDynDepth      := FIRST (INTEGER);
+    constr.heapTempPtrVar       := NIL;
     RETURN constr;
   END New;
 
@@ -304,7 +305,7 @@ PROCEDURE CheckArgStaticLength
     ELSIF argLength # levelInfo.staticLen
     THEN
       Error.Int (depth,
-         "array constructor element's static length differs "
+         "Array constructor element's static length differs "
          & "from previous static length, at depth:");
       constr.broken := TRUE;
     END;
@@ -401,17 +402,17 @@ PROCEDURE CheckRecurse
       constr.eltCt := LengthOfOrdType (constr.semIndexType);
       IF argCt > constr.eltCt THEN
         Error.Int
-          (argCt, "too many values specified in fixed array constructor.");
+          (argCt, "Too many values specified in fixed array constructor.");
         FOR i := constr.eltCt TO argCt - 1 DO
           constr.args^[i] := NIL
         END;
       ELSIF argCt < constr.eltCt AND NOT constr.dots THEN
-        Error.Msg ("not enough values specified in fixed array constructor.");
+        Error.Msg ("Too few values specified in fixed array constructor.");
       END;
     ELSE (* Open array semType. *)
       constr.eltCt := argCt;
       IF (constr.dots) THEN
-        Error.Msg ("\"..\" not allowed in open array constructor");
+        Error.Msg ("\"..\" not allowed in open array constructor.");
         (* NOTE: ^The language seems to say this is illegal.  It was
                  previously a warning, so this change could invalidate
                  existing code. *)
@@ -439,11 +440,11 @@ PROCEDURE CheckRecurse
 
             (* Check for arg forms that are invalid in an array constructor: *)
             IF KeywordExpr.Split (argExpr, key, value) THEN
-              Error.Msg ("keyword values not allowed in array constructors");
+              Error.Msg ("Keyword values are not allowed in array constructors.");
               argExpr := NIL;
               constr.broken := TRUE;
             ELSIF RangeExpr.Split (argExpr, minE, maxE) THEN
-              Error.Msg ("range values not allowed in array constructors");
+              Error.Msg ("Range values are not allowed in array constructors.");
               argExpr := NIL;
               constr.broken := TRUE;
             ELSE (* Valid arg form. *)
@@ -467,7 +468,7 @@ PROCEDURE CheckRecurse
               IF argSemType # NIL THEN
                 IF NOT Type.IsAssignable (constr.semEltType, argSemType) THEN
                   Error.Int (i,
-                     "expression is not assignable to containing array"
+                     "Expression is not assignable to containing array"
                      & " constructor's element type.");
                   argExpr := NIL;
                   constr.broken := TRUE;
@@ -508,8 +509,8 @@ PROCEDURE CheckRecurse
                   Error.Count (priorErrCt, priorWarnCt);
                   NoteUseTargetVar (argExpr);
                   AssignStmt.Check (constr.semEltType, argExpr, cs);
-(* FIXME^  On a constant-valued ordinal being out of range, This will only warn,
-           leaving a RT error to occur during execution.
+(* FIXME^  For a constant-valued ordinal that is  out of range, This will only
+           warn, leaving a RT error to occur during execution.
            But if it's going into a global area, nothing happens at RT.
            We need to make it a CT error. *)
                   Error.Count (laterErrCt, laterWarnCt);
@@ -644,6 +645,7 @@ PROCEDURE Evaluate (constr: T): Expr.T =
       FOR i := 0 TO LAST (constr.args^) DO
         WITH arg = constr.args^[i] DO
           expr := Expr.ConstValue (arg);
+          (* ^Will change in place to its constant value, if it has one. *)
           IF expr = NIL
           THEN constr.is_const := FALSE;
           ELSE arg := expr;
@@ -700,6 +702,8 @@ PROCEDURE NoteTargetType (expr: Expr.T; type: Type.T) =
     IF top = NIL THEN RETURN END;
     <* ASSERT NOT top.isNested *>
     baseType := Type.StripPacked (type);
+(* CHECK: What if it really is packed?  This can happen if the top-level
+          constructor is a field. *)
     IF baseType = NIL THEN RETURN END;
     IF baseType = top.targetType THEN (* No change. *) RETURN END;
     IF top.targetType = NIL THEN (* First time noted. *)
@@ -726,8 +730,8 @@ PROCEDURE IndexTypeForLength (length: INTEGER; origin: INTEGER): Type.T =
   BEGIN
     WITH b = TInt.FromInt (length-1, LastTI) DO <* ASSERT b *> END;
     result := SubrangeType.New (TInt.Zero, LastTI, Int.T, builtin := FALSE);
-    (* Don't call Type.Check on this.  It expects syntactic expressions
-       for the bounds, and we don't have them. *)
+    (* Don't call Type.Check on 'result'.  Type.Check expects syntactic
+       expressions for the bounds, and 'result' doesn't have them. *)
     result.origin := origin;
 (* TODO: Cache these types, possibly inside SubrangeType. *)
     RETURN result; 
@@ -735,7 +739,6 @@ PROCEDURE IndexTypeForLength (length: INTEGER; origin: INTEGER): Type.T =
 
 CONST eltPackInconsistent = - 1;
 CONST eltPackIrrelevant = - 2;
-CONST eltPackUnknown = - 3;
 
 PROCEDURE CommonEltPack
   (top: T; superType, subType: Type.T; depth: INTEGER): INTEGER =
@@ -769,30 +772,32 @@ PROCEDURE CommonEltPack
         IF superIndexType # NIL
         THEN (* Both superType and subType are fixed arrays. *)
           <* ASSERT subIndexType # NIL *>
-          (* No info *)
-          RETURN eltPackUnknown; 
+          RETURN subEltPack; (* Both are the same, by assignability.*)
         ELSIF subIndexType = NIL
         THEN (* Both superType and subType are open arrays. *)
-          (* No info about this level, but we can still check deeper. *)
+          (* No negative info about this level, but we can still check deeper. *)
           deeperEltPack
             := CommonEltPack (top, superEltType, subEltType, depth + 1);
-          IF deeperEltPack = eltPackInconsistent (* This propagates. *)
-          THEN
+          IF deeperEltPack = eltPackInconsistent
+          THEN (* Inconsistent propagates to the top. *)
             levelInfo.eltPack := eltPackInconsistent;
             levelInfo.FixedOpenChecked := TRUE;
-          ELSE 
-            RETURN eltPackUnknown; 
+          ELSE
+            RETURN OpenArrayType.EltPack (superType);
+                   (* ^Both are the same, by assignability.*)
           END
         ELSE (* superType is open, subType is fixed. *)
           (* The interesting case.  A fixed/open pair. *)
           deeperEltPack
             := CommonEltPack (top, superEltType, subEltType, depth + 1);
-          IF deeperEltPack = eltPackInconsistent THEN (* This propagates. *)
+          IF deeperEltPack = eltPackInconsistent
+          THEN (* Inconsistent propagates to the top. *)
             levelInfo.eltPack := eltPackInconsistent;
             levelInfo.FixedOpenChecked := TRUE;
-          ELSIF deeperEltPack = eltPackIrrelevant THEN
+          ELSIF deeperEltPack = eltPackIrrelevant
+          THEN (* This is the deepest array level. *)
             superEltPack := OpenArrayType.EltPack (superType);
-            <* ASSERT superEltPack = subEltPack *>   
+            <* ASSERT superEltPack = subEltPack *> (* By assignability. *)
             levelInfo.eltPack := subEltPack;
             levelInfo.FixedOpenChecked := TRUE;
           ELSE
@@ -819,8 +824,8 @@ PROCEDURE CheckFixedOpenEltPack (top: T; typeX, typeY: Type.T; depth: INTEGER)
 : (* Not known to be bad. *) BOOLEAN =
 (* PRE: top is a top-level constructor. *)
 (* PRE: typeX and typeY are both assignable to repType of levels at 'depth'.
-        Thus they differ from it and each other only in fixedness vs. openness
-        in each corresponding dimension. *)
+        Thus they can differ from it and each other only in fixedness vs.
+        openness in each corresponding dimension. *)
 (* This is all to ensure that fixed and open arrays of same element type and
    that are copied-between have the same element packing.  This could maybe
    be inferred from type checking, but it is rather complicated to do so.
@@ -844,9 +849,11 @@ PROCEDURE CheckFixedOpenEltPack (top: T; typeX, typeY: Type.T; depth: INTEGER)
 
 PROCEDURE Represent (top: T) =
 (* PRE: top is the top of a tree of array constructors. *)
-(* Construct the representation for this constructor tree. *)
-  VAR levelType, levelIndexType, levelEltType, semIndexType, semEltType: Type.T;
-  VAR repType, repIndexType, repEltType, repSuccType: Type.T;
+(* Construct the representation for this constructor tree.
+   This is postponed from Check until here to give clients needed opportunity
+   to call NoteTargetType first. *)
+  VAR levelType, levelIndexType, levelEltType, semIndexType: Type.T;
+  VAR semEltType, repType, repIndexType, repEltType, repSuccType: Type.T;
   VAR locStaticLen, staticFlatEltCt, lastArrayDepth, eltsSize: INTEGER;
   VAR topRepTypeInfo: Type.Info;
   VAR repSuccIsOpen, repSuccHasChanged, fixedOpenOK, b: BOOLEAN;
@@ -859,33 +866,35 @@ PROCEDURE Represent (top: T) =
       RETURN
     END;
     top.state := StateTyp.Representing;
-    IF top.targetType # NIL THEN
+    lastArrayDepth := LAST(top.levels^) - 1;
+    IF top.targetType # NIL AND top.targetType # top.semType THEN
 (* CHECK: Clients will likely duplicate this assignability check.
           Can we eliminate the duplication? *)
       top.targetType := Type.Check (top.targetType);
       IF NOT Type.IsAssignable (top.targetType, top.semType) THEN
         Error.Msg
-          ( "array constructor is not assignable to expected type.");
+          ( "Array constructor is not assignable to expected type.");
         top.broken := TRUE;
         top.state := StateTyp.Represented;
         RETURN;
       END;
 
-      (* Collect more level info (staticLen) from top.targetType. *)
+      (* Collect any static lengths from top.targetType into levels. *)
+      (* Do it outside in. *)
       levelType := top.targetType;
-      FOR i := 0 TO LAST (top.levels^) - 1 DO
-        WITH levelInfo = top.levels^[i] DO
+      FOR depth := 0 TO lastArrayDepth DO
+        WITH levelInfo = top.levels^[depth] DO
           b := ArrayType.Split
                  (levelType, (*VAR*)levelIndexType, (*VAR*)levelEltType);
           <* ASSERT b *>
           locStaticLen := LengthOfOrdType (levelIndexType);
           IF locStaticLen >= 0 THEN
             IF levelInfo.staticLen = Expr.lengthNonStatic
-            THEN (* semType was open in this dimension.  Make it static. *)
+            THEN (* semType is open in this dimension.  Make level static. *)
               levelInfo.staticLen := locStaticLen
             ELSIF locStaticLen # levelInfo.staticLen THEN
               Error.Int
-                (i, "Constructor length # expression length, in dimension." );
+                (depth, "Constructor length # expression length, in dimension." );
               <* ASSERT FALSE *>
               (* ^top.targetType assignability checks above should avert this. *)
               top.broken <* NOWARN *> (* Unreachable. *) := TRUE;
@@ -906,9 +915,10 @@ PROCEDURE Represent (top: T) =
       repSuccHasChanged := FALSE;
       repSuccType := top.levels ^[LAST (top.levels ^)].semType;
       staticFlatEltCt := 1;
-      FOR i := LAST (top.levels ^) - 1 TO 0 BY - 1 DO
-        WITH levelInfo = top.levels ^[i] DO
-          b := ArrayType.Split (levelInfo.semType, semIndexType, semEltType);
+      FOR depth := lastArrayDepth TO 0 BY - 1 DO
+        WITH levelInfo = top.levels ^[depth] DO
+          b := ArrayType.Split
+                 (levelInfo.semType, (*VAR*)semIndexType, (*VAR*)semEltType);
           <* ASSERT b *>
           IF semIndexType = NIL (* SemType is open in this dimension, *)
              AND levelInfo.staticLen >= 0 
@@ -936,9 +946,9 @@ PROCEDURE Represent (top: T) =
 
           (* Develop shallowestDynDepth and deepestDynDepth. *)
           IF levelInfo.staticLen = Expr.lengthNonStatic THEN
-            (* All cousins at depth i are open and nonstatic. *)
-            top.deepestDynDepth := MAX (top.deepestDynDepth, i);
-            top.shallowestDynDepth := i;
+            (* All cousins at 'depth' are open and nonstatic. *)
+            top.deepestDynDepth := MAX (top.deepestDynDepth, depth);
+            top.shallowestDynDepth := depth;
           END;
 
           (* Develop static element count product. *) 
@@ -949,39 +959,39 @@ PROCEDURE Represent (top: T) =
           ELSE (* Start the product over. *)
             staticFlatEltCt := 1;
           END;
-        repSuccType := levelInfo.repType;
-        IF repIndexType = NIL THEN repSuccIsOpen := TRUE END;
+          repSuccType := levelInfo.repType;
+          IF repIndexType = NIL THEN repSuccIsOpen := TRUE END;
         END (*WITH*);
       END (*FOR*);
       top.repType := repSuccType;
     ELSE (* repType is targetType. Just copy targetType component pointers. *)
          (* Do it outside in. *)
       repType := top.targetType;
-      FOR i := 0 TO LAST (top.levels ^) - 1 DO
-        WITH levelInfo = top.levels ^[i] DO
-          b := ArrayType.Split (repType, repIndexType, repEltType);
+      FOR depth := 0 TO lastArrayDepth DO
+        WITH levelInfo = top.levels ^[depth] DO
+          b := ArrayType.Split
+                 (repType, (*VAR*)repIndexType, (*VAR*)repEltType);
           <* ASSERT b *>
-          IF i = 0 THEN top.repType := repType END;
+          IF depth = 0 THEN top.repType := repType END;
           levelInfo.repType := repType;
           levelInfo.repIndexType := repIndexType;
 
           (* Develop shallowestDynDepth and deepestDynDepth. *)
           IF levelInfo.staticLen = Expr.lengthNonStatic THEN
-            (* All cousins at depth i are open and nonstatic. *)
-            top.deepestDynDepth := i;
+            (* All cousins at 'depth' are open and nonstatic. *)
+            top.deepestDynDepth := depth;
             IF top.shallowestDynDepth < 0 THEN
-              top.shallowestDynDepth := i;
+              top.shallowestDynDepth := depth;
             END
           END;
-
           repType := repEltType;              
         END (*WITH*);
       END (*FOR*);
 
       (* Compute static element count product, inside to out. *) 
       staticFlatEltCt := 1;
-      FOR i := LAST (top.levels ^) - 1 TO 0 BY - 1 DO
-        WITH levelInfo = top.levels ^[i] DO
+      FOR depth := lastArrayDepth TO 0 BY - 1 DO
+        WITH levelInfo = top.levels ^[depth] DO
           IF levelInfo.staticLen >= 0
           THEN 
             levelInfo.staticFlatEltCt := staticFlatEltCt * levelInfo.staticLen;
@@ -996,9 +1006,9 @@ PROCEDURE Represent (top: T) =
 
     (* Compute representation sizes. *)
     IF top.shallowestDynDepth >= 0
-    THEN top.staticEltsSize :=0;
+    THEN (* Nonstatic. No static allocation. *)
+      top.staticEltsSize :=0;
     ELSE
-      lastArrayDepth := LAST(top.levels^) - 1;
       eltsSize := ArrayType.EltPack (top.levels^[lastArrayDepth].repType);
       FOR depth := 0 TO lastArrayDepth DO
         locStaticLen := top.levels^[depth].staticLen;
@@ -1023,7 +1033,7 @@ PROCEDURE Represent (top: T) =
     IF top.topEltsAlign < Target.Word8.align THEN
       Error.InfoInt
         (top.topEltsAlign,
-         "Array constructor element group has sub-byte alignment");
+         "CM3 restriction: array constructor has sub-byte alignment.");
     END;
 
     (* Make sure fixed and open arrays of same length have the same bitsize. *)
@@ -1034,25 +1044,24 @@ PROCEDURE Represent (top: T) =
     (* Apply repType to the tree of array constructors and Check.*)
     RepresentRecurse (top);
     
-    (* CHECK: The below are segfaulting in Builder when elements are opaque,
-              due to Host.env being NIL.  Do we need these?  Maybe do them
-              later, in Compile? *)
+(* CHECK: The below are segfaulting in Builder when elements are opaque,
+          due to Host.env being NIL.  Do we need these?  Maybe do them
+          later, in Compile? *)
 (*
     top.semType := Type.Check (top.semType);
     Type.Compile (top.semType);
     top.repType := Type.Check (top.repType);
     Type.Compile (top.repType);
 *) 
-<* ASSERT top.repType # NIL *>            
+    <* ASSERT top.repType # NIL *>
     top.state := StateTyp.Represented
   END Represent;
 
 PROCEDURE RepresentRecurse (constr: T) =
-  VAR top: T;
+  VAR top, argConstr: T;
   VAR argCt: INTEGER;
   VAR argRepType: Type.T;
   VAR argExpr: Expr.T;
-  VAR argConstr: T;
   VAR fixedOpenOK: BOOLEAN;
   BEGIN
     <* ASSERT constr.state >= StateTyp.Checked *>
@@ -1883,6 +1892,7 @@ PROCEDURE GenLiteral
   (top: T; globalOffset: INTEGER; <*UNUSED*>type: Type.T;
    inConstArea: BOOLEAN) =
 (* PRE: top.depth = 0 *)
+  VAR allocSize : INTEGER;
   BEGIN
     <* ASSERT top.depth = 0 *>
     <* ASSERT top.checked *>
@@ -1904,10 +1914,20 @@ PROCEDURE GenLiteral
         top.globalEltsOffset := globalOffset;
       ELSE (* globalOffset is to space in a static area that our
               caller has allocated for the dope only.
-              We have to allocate space for the elements ourselves. *)
+              Allocate space for the elements here. *)
+        <* ASSERT top.staticEltsSize >= 0 *>
+        IF top.staticEltsSize = 0 THEN
+           (* Just for safety, for a constant (thus static) empty array, let's
+              allocate storage for one innermost dimension's element, thus an
+              address that is unique from any other constant. *)
+          allocSize
+            := ArrayType.EltPack (top.levels^[LAST(top.levels^) - 1].repType);
+        ELSE
+          allocSize := top.staticEltsSize
+        END;
         top.globalEltsOffset
           := Module.Allocate
-               (top.staticEltsSize, top.topEltsAlign, inConstArea,
+               (allocSize, top.topEltsAlign, inConstArea,
                 tag := "StaticOpenArrayElements");
         InitLiteralDope (top, inConstArea);
       END;
@@ -1976,13 +1996,13 @@ PROCEDURE InnerCompile (top: T) =
       END;
 
     | RKTyp.RKTempDyn
-    => (* We built into a heap-allocated, dynamic-sized, contiguous dope
-          and elements temp. *)
+    => (* We built into a heap-allocated, dynamic-sized, contiguous
+          dope-and-elements temp. *)
       <* ASSERT (top.finalVal = NIL) = (NOT UsesAssignProtocol (top)) *>
       IF top.finalVal = NIL THEN
         CG.Push (top.buildAddrVal) (* Return the temp. *)
 (* CHECK: Leave top.heapTempPtr alone.  If used in a WITH-binding, WithStmt
-          will copy the dope only into a variable.  This will maintain only
+          will copy only the dope into a variable.  This will maintain only
           a pointer to the elements portion of the temporary.  Is a pointer
           to the interior of a heap object enough to protect it from CG? *)
       ELSE (* Copy the temp into the provided LHS area. *)
@@ -2010,12 +2030,6 @@ PROCEDURE InnerCompile (top: T) =
       END;
     END (*CASE*);
     
-    (* Gen code to NIL out heap object pointer, to be collected. *)
-    IF top.heapTempPtrVar # NIL THEN
-      CG.Load_nil ();
-      CG.Store_addr (top.heapTempPtrVar, (*Offset:=*) 0);
-      CG.Free_temp (top.heapTempPtrVar);
-    END;
     top.state := StateTyp.Compiled;
   END InnerCompile;
 

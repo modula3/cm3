@@ -76,6 +76,7 @@ PROCEDURE Check (p: P;  VAR cs: Stmt.CheckState) =
     IF OpenArrayType.Is (t) THEN
       p.kind := Kind.openarray;
       Variable.NeedsAddress (p.var);
+      ArrayExpr.NoteTargetType (p.expr, t);
     ELSIF Expr.IsDesignator (p.expr) THEN
       p.kind := Kind.designator;
       Expr.NeedsAddress (p.expr);

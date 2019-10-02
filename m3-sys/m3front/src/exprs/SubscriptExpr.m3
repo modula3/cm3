@@ -284,6 +284,7 @@ PROCEDURE Prep (p: P) =
       | Type.Class.Object, Type.Class.Opaque, Type.Class.Ref =>
         Compile (p);
         RunTyme.EmitCheckLoadTracedRef ();
+(* CHECK^ When do we need this? *)
         p.tmp := CG.Pop ();
       ELSE
         (* no check *)
@@ -441,6 +442,7 @@ PROCEDURE CompileLV (p: P; traced := FALSE) =
           CG.Open_size (I);
           CG.Multiply (Target.Word.cg_type); 
         END;
+(* CHECK: Can we just use some CG op directly here? See CG.Index_bits. *)
         ArrayType.GenIndex (ta); 
         CG.Boost_addr_alignment (OpenArrayType.EltAlign (ta));
       END;

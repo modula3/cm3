@@ -127,7 +127,7 @@ PROCEDURE ParseDecl (READONLY att: Decl.Attributes) =
         type := Type.Parse ();
       END;
       IF (cur.token = TK.tEQUAL) THEN
-        Error.Msg ("variable initialization must begin with ':='");
+        Error.Msg ("Variable initialization must begin with ':='.");
         cur.token := TK.tASSIGN;
       END;
       IF (cur.token = TK.tASSIGN) THEN
@@ -136,11 +136,11 @@ PROCEDURE ParseDecl (READONLY att: Decl.Attributes) =
       END;
       trace := ParseTrace ();
       IF (expr = NIL) AND (type = NIL) THEN
-        Error.Msg("variable declaration must include a type or initial value");
+        Error.Msg("Variable declaration must include a type or initial value.");
       END;
       IF att.isExternal AND att.alias # M3ID.NoID AND n > 1 THEN
         Error.WarnID (2, att.alias,
-                       "EXTERNAL alias applies only to first variable");
+                       "EXTERNAL alias applies only to the first variable.");
       END;
       alias := att.alias;
       j := Ident.top - n;
@@ -276,7 +276,7 @@ PROCEDURE TypeOf (t: T): Type.T =
       ELSIF  t.formal # NIL THEN t.tipe := Value.TypeOf (t.formal)
       END;
       IF (t.tipe = NIL)
-        THEN Error.ID (t.name, "variable has no type");  t.tipe := ErrType.T;
+        THEN Error.ID (t.name, "Variable has no type.");  t.tipe := ErrType.T;
       END;
     END;
     RETURN t.tipe;
@@ -298,13 +298,13 @@ PROCEDURE Check (t: T;  VAR cs: Value.CheckState) =
     t.stk_type := info.stk_type;
     IF (info.class = Type.Class.OpenArray)
       AND (t.formal = NIL) AND (NOT t.open_ok) THEN
-      Error.ID (t.name, "variable cannot be an open array");
+      Error.ID (t.name, "Variable cannot be an open array.");
     END;
     IF (info.isEmpty) THEN
-      Error.ID (t.name, "variable has empty type");
+      Error.ID (t.name, "Variable has empty type.");
     END;
     IF Type.IsEqual (t.tipe, Null.T, NIL) THEN
-      Error.WarnID (1, t.name, "variable has type NULL"); 
+      Error.WarnID (1, t.name, "Variable has type NULL."); 
     END;
 
     t.global := Scope.OuterMost (t.scope);
@@ -312,15 +312,15 @@ PROCEDURE Check (t: T;  VAR cs: Value.CheckState) =
 
     IF (NOT t.indirect) AND (NOT t.global) THEN
       IF (t.formal # NIL) AND (info.size > Big_Param * Target.Integer.size) THEN
-        Error.WarnID (1, t.name, "large parameter passed by value ("
-                       & Fmt.Int (info.size DIV Target.Char.size) & " bytes)");
+        Error.WarnID (1, t.name, "Large parameter passed by value ("
+                       & Fmt.Int (info.size DIV Target.Char.size) & " bytes).");
       ELSIF (info.size > Big_Local * Target.Char.size) THEN
-        Error.WarnID (1, t.name, "large local variable ("
-                       & Fmt.Int (info.size DIV Target.Char.size) & " bytes)");
+        Error.WarnID (1, t.name, "Large local variable ("
+                       & Fmt.Int (info.size DIV Target.Char.size) & " bytes).");
       END;
     ELSIF (t.formal # NIL) AND (info.class = Type.Class.OpenArray)
       AND Formal.OpenArrayByVALUE (t.formal, (*VAR*) refType) THEN
-      Error.WarnID (1, t.name, "open array passed by value");
+      Error.WarnID (1, t.name, "Open array passed by value.");
     END;
 
     IF Type.IsStructured (t.tipe) THEN
@@ -330,7 +330,7 @@ PROCEDURE Check (t: T;  VAR cs: Value.CheckState) =
     Value.TypeCheck (t.formal, cs);
     IF (t.external) THEN
       IF (t.initExpr # NIL) THEN
-        Error.Msg ("<*EXTERNAL*> variables cannot be initialized");
+        Error.Msg ("<*EXTERNAL*> variables cannot be initialized.");
         Expr.TypeCheck (t.initExpr, cs);
         AssignStmt.Check (t.tipe, t.initExpr, cs);
       END;
@@ -340,7 +340,7 @@ PROCEDURE Check (t: T;  VAR cs: Value.CheckState) =
       dfault := Expr.ConstValue (t.initExpr);
       IF (dfault = NIL) THEN
         IF Module.IsInterface () THEN
-          Error.ID (t.name, "initial value in an interface must be constant");
+          Error.ID (t.name, "Initial value in an interface must be constant.");
         END;
         IF (t.global) AND (info.size > Max_zero_global * Target.Integer.size) THEN
           <*ASSERT NOT t.indirect*>
