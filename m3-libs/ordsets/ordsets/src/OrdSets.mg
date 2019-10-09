@@ -7856,7 +7856,7 @@ GENERIC MODULE OrdSets ( )
     ; FOR RI := 0 TO LBitwordCt - 1 
       DO 
         LResult [ RI ] := PickleStubs . InInteger ( reader )
-                       (* ^InInteger will take care of endianness. ) 
+                       (* ^InInteger will take care of endianness. *) 
       END (* FOR *) 
     ; RETURN LResult 
     END ReadBitwordsSameSize  
