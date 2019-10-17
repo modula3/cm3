@@ -339,7 +339,7 @@ PROCEDURE BuiltinAlignDefault (p: T): Type.BitAlignT =
     RETURN resultInfo.alignment; 
   END BuiltinAlignDefault; 
 
-PROCEDURE UsesAssignProtocol (p: T): BOOLEAN =
+PROCEDURE UsesAssignProtocol (<*UNUSED*>p: T): BOOLEAN =
   BEGIN
     RETURN FALSE
   END UsesAssignProtocol;

@@ -337,6 +337,7 @@ PROCEDURE Check (t: T;  VAR cs: Value.CheckState) =
     ELSIF (t.initExpr # NIL) THEN
       Expr.TypeCheck (t.initExpr, cs);
       AssignStmt.Check (t.tipe, t.initExpr, cs);
+(* TODO: What if initExpr contains RT errors? *)
       dfault := Expr.ConstValue (t.initExpr);
       IF (dfault = NIL) THEN
         IF Module.IsInterface () THEN
@@ -692,6 +693,10 @@ PROCEDURE ConstInit (t: T) =
         constInitExpr := Expr.ConstValue (t.initExpr);
       END;
       IF (constInitExpr # NIL) THEN
+        IF NOT Expr.Use (t.initExpr) THEN
+(* CHECK ^Or Expr.Use (constInitExpr?*)
+          Error.Msg ("Value not runtime assignable.");
+        END;
         Expr.PrepLiteral (constInitExpr, t.tipe, FALSE);
         Expr.GenLiteral (constInitExpr, t.offset, t.tipe, FALSE);
         t.initDone := TRUE;
@@ -858,16 +863,18 @@ PROCEDURE UserInit (t: T) =
         Type.Zero (t.tipe);
       ELSIF t.initAllocated THEN
         t.initPending := FALSE;
-        LoadLValue (t);
-        Module.LoadGlobalAddr
-          (Scope.ToUnit (t), t.initValOffset, is_const := TRUE);
-        constInitExpr := Expr.ConstValue (t.initExpr);
-        <* ASSERT constInitExpr # NIL *>
-        initRepType := Expr.RepTypeOf (constInitExpr);
-        IF OpenArrayType.Is (initRepType) THEN
-          CG.Open_elt_ptr (OpenArrayType.EltAlign(initRepType));
+        IF Expr.Use (t.initExpr) THEN
+          LoadLValue (t);
+          Module.LoadGlobalAddr
+            (Scope.ToUnit (t), t.initValOffset, is_const := TRUE);
+          constInitExpr := Expr.ConstValue (t.initExpr);
+          <* ASSERT constInitExpr # NIL *>
+          initRepType := Expr.RepTypeOf (constInitExpr);
+          IF OpenArrayType.Is (initRepType) THEN
+            CG.Open_elt_ptr (OpenArrayType.EltAlign(initRepType));
+          END;
+          CG.Copy (t.size, overlap := FALSE);
         END;
-        CG.Copy (t.size, overlap := FALSE);
       ELSE
         t.initPending := FALSE;
         ArrayExpr.NoteUseTargetVar (t.initExpr);

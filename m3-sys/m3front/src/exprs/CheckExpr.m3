@@ -149,12 +149,12 @@ PROCEDURE EmitChecks (e: Expr.T;  READONLY min, max: Target.Int;
         CG.Check_range (cg_type, min, max, err);
       ELSIF TInt.LT (minE, min) THEN
         IF TInt.LT (maxE, min) THEN
-          Error.Warn (2, "value out of range");
+          Error.Warn (2, "Value out of range--low.");
         END;
         CG.Check_lo (cg_type, min, err);
       ELSIF TInt.LT (max, maxE) THEN
         IF TInt.LT (max, minE) THEN
-          Error.Warn (2, "value out of range");
+          Error.Warn (2, "Value out of range--high.");
         END;
         CG.Check_hi (cg_type, max, err);
       END;

@@ -16,8 +16,7 @@ IMPORT QualifyExpr, ArrayExpr;
 IMPORT Variable, Procedure, OpenArrayType;
 IMPORT ProcExpr, ProcType, ObjectType, CallExpr, Host, Narrow;
 
-TYPE
-  P = Stmt.T OBJECT
+TYPE P = Stmt.T OBJECT
         lhs     : Expr.T;
         rhs     : Expr.T;
       OVERRIDES
@@ -75,8 +74,20 @@ PROCEDURE CheckMethod (p: P;  VAR cs: Stmt.CheckState) =
 (* EXPORTED: *) 
 PROCEDURE Check
   (tlhs: Type.T;  rhsExpr: Expr.T;  VAR cs: Stmt.CheckState; IsError := FALSE)=
-(* check that rhsExpr is assignable to a variable of type tlhs. *)
-(* Non-assignable value is a warning unless IsError. *)
+  VAR Code: CG.RuntimeError;
+  VAR Msg: TEXT;
+  BEGIN
+    CheckRT ( tlhs, rhsExpr, cs , IsError, (*VAR*)Code, (*VAR*)Msg);
+  END Check;
+
+(* EXPORTED: *) 
+PROCEDURE CheckRT
+  (tlhs: Type.T;  rhsExpr: Expr.T;  VAR cs: Stmt.CheckState; IsError := FALSE;
+   VAR Code: CG.RuntimeError; VAR Msg: TEXT) =
+(* Like Check, but if a warning is produced for a runtime error that is
+   statically certain if this code is executed, return the RT error code and
+   a message text. *)
+
   VAR
     base_tlhs := Type.Base (tlhs); (* strip renaming, packing, and subranges. *)
     trhs := Expr.SemTypeOf (rhsExpr);
@@ -90,13 +101,14 @@ PROCEDURE Check
 
     IF NOT Type.IsAssignable (tlhs, trhs) THEN
       IF (tlhs # ErrType.T) AND (trhs # ErrType.T) THEN
-        Error.Msg ("types are not assignable in assignment statement");
+        Error.Msg ("Types are not assignable in assignment.");
       END;
     ELSE
       CASE lhsClass OF
       | Type.Class.Enum, Type.Class.Subrange, Type.Class.Integer,
         Type.Class.Longint =>
-        CheckOrdinal (tlhs, rhsExpr, IsError);
+        CheckOrdinal (tlhs, rhsExpr, IsError, (*VAR*)Code, (*VAR*)Msg);
+(* TODO: return CT codes/messages for other type classes. *)
       | Type.Class.Ref, Type.Class.Object, Type.Class.Opaque =>
         CheckReference (tlhs, trhs, lhs_type_info);
       | Type.Class.Procedure =>
@@ -104,9 +116,12 @@ PROCEDURE Check
       ELSE
       END (*CASE*)
     END
-  END Check;
+  END CheckRT;
 
-PROCEDURE CheckOrdinal (tlhs: Type.T;  rhsExpr: Expr.T; IsError: BOOLEAN) =
+PROCEDURE CheckOrdinal
+  (tlhs: Type.T;  rhsExpr: Expr.T; IsError: BOOLEAN;
+   VAR Code: CG.RuntimeError; VAR Msg: TEXT) =
+   
   VAR lmin, lmax, rmin, rmax: Target.Int;
   VAR constant: Expr.T;
   VAR reason: TEXT;
@@ -118,7 +133,11 @@ PROCEDURE CheckOrdinal (tlhs: Type.T;  rhsExpr: Expr.T; IsError: BOOLEAN) =
     EVAL Type.GetBounds (tlhs, lmin, lmax);
     IF TInt.LE (lmin, lmax) AND TInt.LE (rmin, rmax)
        AND (TInt.LT (lmax, rmin) OR TInt.LT (rmax, lmin)) THEN
-      IF constant = NIL THEN reason := "(disjoint ranges)."
+      IF constant = NIL THEN
+        (* Non-constant RHS, disjoint ranges.  Type assignability check in
+           Check will have given a CT error and precluded this. *)
+        reason := "(disjoint ranges).";
+        <* ASSERT FALSE *>
       ELSE reason := "(value out of range)."
       END; 
 (* CHECK^ Can this duplicate a warning from IsAssignable on types, if
@@ -126,7 +145,9 @@ PROCEDURE CheckOrdinal (tlhs: Type.T;  rhsExpr: Expr.T; IsError: BOOLEAN) =
       IF IsError THEN
         Error.Msg ("Constant value not assignable " & reason);
       ELSE
-        Error.Warn (2, "Value not assignable " & reason);
+        Error.Warn (2, "Value not assignable at runtime " & reason);
+        Code := CG.RuntimeError.ValueOutOfRange;
+        Msg := "value out of range."
       END;
     ELSE 
     END;
@@ -333,6 +354,8 @@ PROCEDURE AssignProcedure (rhsExpr: Expr.T;  READONLY lhsTypeInfo: Type.Info) =
       ok := CG.Next_label ();
       CG.If_closure (rhsVal, CG.No_label, ok, CG.Always);
       CG.Abort (CG.RuntimeError.NarrowFailed);
+(* TODO^ I think we need another runtime error code for assigning a nested
+         procedure. *)
       CG.Set_label (ok);
       CG.Push (lhsVal);
       CG.Push (rhsVal);
@@ -424,9 +447,9 @@ PROCEDURE AssignArray
     IF Expr.UsesAssignProtocol (rhsExpr)
     THEN
       CompileStruct (rhsExpr);
-      (* CompileStruct will have done any needed shape check and copied rhsExpr's
-         value into the LHS, leaving only the LHS address on CG stack, which
-         is the expression's result. *)
+      (* CompileStruct will have done any needed shape check and copied
+         rhsExpr's value into the LHS, leaving only the LHS address on CG
+         stack, which is the expression's result. *)
       CG.Discard (CG.Type.Addr);
     ELSE (* Using expression protocol. *)
       LHSIsOpen := OpenArrayType.Is (lhsRepType);

@@ -180,6 +180,7 @@ PROCEDURE Load (t: T) =
   BEGIN
     IF (t.structured) THEN
       SetGlobals (t);
+      EVAL Expr.Use (t.valExpr);
       IF (t.imported) THEN
         Module.LoadGlobalAddr (Scope.ToUnit (t), t.offset, is_const := FALSE);
         CG.Load_indirect (CG.Type.Addr, 0, Target.Address.size);

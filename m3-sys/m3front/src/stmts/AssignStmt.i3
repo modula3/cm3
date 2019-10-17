@@ -9,14 +9,21 @@
 
 INTERFACE AssignStmt;
 
-IMPORT Expr, Stmt, Target, Type;
+IMPORT Expr, Stmt, Target, Type, CG;
 
 PROCEDURE Parse (): Stmt.T;
 
 PROCEDURE Check
   (tlhs: Type.T;  rhs: Expr.T;  VAR cs: Stmt.CheckState; IsError := FALSE);
-(* check that rhs is assignable to a variable of type tlhs. *)
+(* Check that rhs is assignable to a variable of type tlhs. *)
 (* Assignable types but Non-assignable value emits a warning, unless IsError. *)
+
+PROCEDURE CheckRT
+  (tlhs: Type.T;  rhsExpr: Expr.T;  VAR cs: Stmt.CheckState; IsError := FALSE;
+   VAR Code: CG.RuntimeError; VAR Msg: TEXT);
+(* Like Check, but if a warning is produced for a runtime error that is
+   statically certain if this code is executed, return the RT error code and
+   a message text. *)
 
 PROCEDURE PrepForEmit (tlhs: Type.T;  rhs: Expr.T;  initializing: BOOLEAN);
 (* An alternative to calling Expr.Prep(rhs) before calling Emit() below,
@@ -34,7 +41,7 @@ PROCEDURE DoEmit (tlhs: Type.T;  rhs: Expr.T; lhs_align := Target.Byte);
 
 PROCEDURE DoEmitCheck (tlhs: Type.T;  rhs: Expr.T);
 (* Emit code to evaluate "rhs" and generate any runtime 
-   runtime checks that would be needed if it were assigned to
+   checks that would be needed if it were assigned to
    a value of type 'tlhs'.  Leave the rhs value on the stack.
    PRE: TypeOf(rhs) is assignable to tlhs.
    PRE: Expr.Prep(rhs) has been called.

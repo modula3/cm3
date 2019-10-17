@@ -42,9 +42,8 @@ REVEAL
     exprAlign    (): Type.BitAlignT                := ExprAlignDefault;
     repTypeOf    (): Type.T                        := Expr.TypeOf;
     staticLength (): Expr.lengthTyp                := StaticLengthDefault;
-    usesAssignProtocol (): BOOLEAN                 := UsesAssignProtocolDefault
-
-
+    usesAssignProtocol (): BOOLEAN                 := UsesAssignProtocolDefault;
+    use (): BOOLEAN                                := DefaultUse
   END;
 
 TYPE Ta   = M3.Expr OBJECT a: M3.Expr     OVERRIDES isEqual := EqCheckA  END;
@@ -86,6 +85,7 @@ PROCEDURE ExprAlignArg0    (e: Ta): Type.BitAlignT;
 
 PROCEDURE StaticLengthDefault (e: M3.Expr): Expr.lengthTyp;
 PROCEDURE UsesAssignProtocolDefault (e: M3.Expr): BOOLEAN;
+PROCEDURE DefaultUse (e: M3.Expr): BOOLEAN;
 
 PROCEDURE EqCheckA  (e: Ta;  x: M3.Expr;  z: M3.EqAssumption): BOOLEAN;
 PROCEDURE EqCheckAB (e: Tab; x: M3.Expr;  z: M3.EqAssumption): BOOLEAN;

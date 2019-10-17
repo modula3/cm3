@@ -72,6 +72,7 @@ TYPE RKTyp = ResultKindTyp;
 TYPE RKTypSet = SET OF RKTyp;
 CONST RKTypSetInitializing = RKTypSet
   { RKTyp.RKGlobal, RKTyp.RKTempElts, RKTyp.RKTempStatic, RKTyp.RKTempDyn};
+  (* ^We are building into a previously uninitialized area. *)
 
 (* Properties of an array constructor: *)
 REVEAL 
@@ -125,6 +126,8 @@ REVEAL
     levels            : LevelsTyp;
     topRepAlign       : Type.BitAlignT;
     topEltsAlign      : Type.BitAlignT; (* The entire block of elements. *)
+    RTErrorCode       : CG.RuntimeError;
+    RTErrorMsg        : TEXT := NIL;
     resultKind        := RKTyp.RKUnknown;
     inConstArea       : BOOLEAN;
     fixingInfoComputed: BOOLEAN;
@@ -153,6 +156,7 @@ REVEAL
     repTypeOf    := RepTypeOf;
     staticLength := StaticLength;
     usesAssignProtocol := UsesAssignProtocol;
+    use          := Use
   END (*OBJECT*);
 
 PROCEDURE IsErr (type: Type.T) =
@@ -357,6 +361,14 @@ PROCEDURE Check (top: T;  VAR cs: Expr.CheckState) =
     top.checked := TRUE;
   END Check;
 
+PROCEDURE MergeRTError (top: T; Code: CG.RuntimeError; Msg: TEXT) =
+  BEGIN
+    IF top.RTErrorMsg = NIL THEN
+      top.RTErrorCode := Code;
+      top.RTErrorMsg := Msg;
+    END;
+  END MergeRTError;
+
 PROCEDURE CheckRecurse
   (top, constr: T; VAR cs: Expr.CheckState; depth: INTEGER) =
   VAR argLength, argCt: INTEGER;
@@ -366,6 +378,8 @@ PROCEDURE CheckRecurse
   VAR value, minE, maxE: Expr.T;
   VAR argConstr: T;
   VAR key: M3ID.T;
+  VAR RTErrorCode: CG.RuntimeError;
+  VAR RTErrorMsg: TEXT;
   VAR eltTypeInfo: Type.Info;
   VAR b: BOOLEAN;
   BEGIN
@@ -508,11 +522,10 @@ PROCEDURE CheckRecurse
                 ELSE (* Arg is not a constructor. *)
                   Error.Count (priorErrCt, priorWarnCt);
                   NoteUseTargetVar (argExpr);
-                  AssignStmt.Check (constr.semEltType, argExpr, cs);
-(* FIXME^  For a constant-valued ordinal that is  out of range, This will only
-           warn, leaving a RT error to occur during execution.
-           But if it's going into a global area, nothing happens at RT.
-           We need to make it a CT error. *)
+                  AssignStmt.CheckRT
+                    (constr.semEltType, argExpr, cs, IsError := FALSE,
+                     Code := RTErrorCode, Msg := RTErrorMsg);
+                  MergeRTError (top, RTErrorCode, RTErrorMsg);
                   Error.Count (laterErrCt, laterWarnCt);
                   IF laterErrCt > priorErrCt THEN
                     argExpr := NIL
@@ -677,7 +690,7 @@ PROCEDURE GenFPLiteral (constr: T;  buf: M3Buf.T) =
       expr := constr.args^[argCt-1];
       expr := Expr.ConstValue (expr);
       FOR i := argCt TO constr.eltCt DO
-(* FIXME: reintroduce this change to go to constr.eltCt-1. *)
+(* FIXME^ reintroduce the change below by making this loop go to constr.eltCt-1. *)
       (* NOTE: Earlier, this loop incorrectly went to eltCt.  Fixing this
                could make earlier-written pickles unreadable by currently-
                compiled code. *)
@@ -1599,14 +1612,15 @@ PROCEDURE PrepRecurse
             IF top.resultKind = RKTyp.RKGlobal
                AND argConstr # NIL
                AND argConstr.isNamedConst
-            THEN
+            THEN (* It's a named, constant array constructor. *)
+              (* Retraverse it as if it were inline. *)
               <* ASSERT argConstr.top = argConstr *>
               <* ASSERT Evaluate (argConstr) # NIL *>
               PrepLiteral
                 (argConstr, argLevelInfo.repType, inConstArea := TRUE);
               PrepRecurse (top, argConstr, argFlatEltNo, depth := depth + 1);
             ELSIF argConstr # NIL AND NOT argConstr.isNamedConst
-            THEN
+            THEN (* It's an inline array constructor. *)
               PrepRecurse (top, argConstr, argFlatEltNo, depth := depth + 1);
             ELSE (* Handle argExpr here. *)
               argRepType := Expr.RepTypeOf (argExpr);
@@ -1614,8 +1628,6 @@ PROCEDURE PrepRecurse
                 := CG.GCD (top.topEltsAlign, eltFlatOffset MOD Target.Word.size);
               depthWInArg := 0;
               IF top.resultKind = RKTyp.RKGlobal THEN
-(* TODO: Value checks. *)
-
                 Expr.PrepLiteral
                   (argExpr, argLevelInfo.repType, top.inConstArea);
                 Expr.GenLiteral
@@ -1885,6 +1897,7 @@ PROCEDURE Compile (top: T) =
     END;
     InnerPrep (top);
     InnerCompile (top);
+    EVAL Use (top);
   END Compile;
 
 (* Externally dispatched-to: *)
@@ -1909,10 +1922,10 @@ PROCEDURE GenLiteral
       <* ASSERT top.resultKind = RKTyp.RKGlobal *>
       top.globalOffset := globalOffset;
       IF top.repOpenDepth <= 0
-      THEN (* No dope.  globalOffset is to space in a static area that our
+      THEN (* No dope.  globalOffset leads to space in a static area that our
               caller has allocated for the array elements. *)
         top.globalEltsOffset := globalOffset;
-      ELSE (* globalOffset is to space in a static area that our
+      ELSE (* globalOffset leads to space in a static area that our
               caller has allocated for the dope only.
               Allocate space for the elements here. *)
         <* ASSERT top.staticEltsSize >= 0 *>
@@ -2032,6 +2045,19 @@ PROCEDURE InnerCompile (top: T) =
     
     top.state := StateTyp.Compiled;
   END InnerCompile;
+
+PROCEDURE Use (top: T): BOOLEAN =
+  BEGIN
+    <* ASSERT top.state >= StateTyp.Checked *>
+    IF top.RTErrorMsg # NIL AND Evaluate (top) # NIL THEN
+      CG.Comment
+        (top.globalOffset, top.inConstArea, "Use of bad array constructor: ",
+         top.RTErrorMsg);
+      CG.Abort (top.RTErrorCode);
+      RETURN FALSE;
+    ELSE RETURN TRUE;
+    END;
+  END Use;
 
 BEGIN
 END ArrayExpr.

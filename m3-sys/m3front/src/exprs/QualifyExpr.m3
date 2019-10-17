@@ -394,6 +394,7 @@ PROCEDURE Compile (p: P) =
           p.temp := NIL;
           RETURN;
         END;
+        (* Do we need to Compile p.obj, if it is a constant? *)
         Value.Load (p.obj);
     | Class.cENUM =>
         Value.Load (p.obj);

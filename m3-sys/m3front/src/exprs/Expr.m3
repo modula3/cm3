@@ -97,6 +97,12 @@ PROCEDURE UsesAssignProtocolDefault (<*UNUSED*>t: T): BOOLEAN =
     RETURN FALSE
   END UsesAssignProtocolDefault;
 
+(* EXPORTED: (ExprRep)*)
+PROCEDURE DefaultUse (<*UNUSED*>e: M3.Expr): BOOLEAN =
+  BEGIN
+    RETURN TRUE;
+  END DefaultUse;
+
 (* EXPORTED: *)
 PROCEDURE TypeCheck (t: T;  VAR cs: CheckState) =
   VAR save: INTEGER;
@@ -517,6 +523,15 @@ PROCEDURE EqCheckAB (a: Tab;  e: T;  x: M3.EqAssumption): BOOLEAN =
     ELSE        RETURN FALSE;
     END;
   END EqCheckAB;
+
+PROCEDURE Use (t: T): BOOLEAN =
+(* Generate runtime actions prior to a use of t that does not call Compile.
+   Return TRUE IFF following code is reachable. *)
+  BEGIN
+    IF t = NIL THEN RETURN TRUE END;
+    <* ASSERT t.checked *>
+    RETURN t.use ();
+  END Use;
 
 BEGIN
 END Expr.
