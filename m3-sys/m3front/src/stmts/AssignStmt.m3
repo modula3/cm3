@@ -94,6 +94,8 @@ PROCEDURE CheckRT
     lhs_type_info, base_lhs_type_info: Type.Info;
     lhsClass: Type.Class;
   BEGIN
+    Msg := NIL;
+    Code := CG.RuntimeError.Unknown;
     tlhs := Type.CheckInfo (tlhs, lhs_type_info);
     base_tlhs := Type.CheckInfo (base_tlhs, base_lhs_type_info);
     lhsClass := base_lhs_type_info.class;
@@ -194,6 +196,15 @@ PROCEDURE NeedsClosureCheck (proc: Expr.T;  errors: BOOLEAN): BOOLEAN =
       nested := Procedure.IsNested (obj);
       IF (nested) AND (errors) THEN
         Error.ID (Value.CName (obj), "cannot assign nested procedures");
+(* TODO: Since Modula3 defines this as a checked runtime error, this
+         should just issue a (compile time) warning here, but also:
+         1) Return a RT error code and message through CheckProcedure
+            and CheckRT.  (This will result in a RT abort being generated
+            whereever a static constructor containing a field/element
+            with this procedure constant value is used.)
+         2) Arrange that RT aborts are emitted, near the sites of the calls
+            on NeedsClosureCheck in AssignProcedure and DoCheckProcedure.
+*)
       END;
       RETURN FALSE;
     ELSIF (class = Value.Class.Var) AND Variable.HasClosure (obj) THEN

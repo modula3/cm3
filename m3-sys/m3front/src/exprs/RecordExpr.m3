@@ -30,6 +30,8 @@ TYPE
         map           : REF ARRAY OF Info;
         finalVal      : CG.Val;
         finalValUseCt : INTEGER;
+        RTErrorMsg    : TEXT := NIL;
+        RTErrorCode   := CG.RuntimeError.Unknown;
         evalAttempted : BOOLEAN; (* TRUE even if Evaluate was called
                                     unsuccessfully. *) 
         is_const      : BOOLEAN; (* Meaningless if NOT evalAttempted.
@@ -55,6 +57,7 @@ TYPE
         genLiteral   := GenLiteral;
         note_write   := ExprRep.NotWritable;
         usesAssignProtocol := UsesAssignProtocol;
+        use          := Use;
       END;
 
 (* EXPORTED: *)
@@ -110,6 +113,14 @@ PROCEDURE Qualify (e: Expr.T;  id: M3ID.T;  VAR result: Expr.T): BOOLEAN =
     RETURN FALSE;
   END Qualify;
 
+PROCEDURE MergeRTError (p: P; Code: CG.RuntimeError; Msg: TEXT) =
+  BEGIN
+    IF p.RTErrorMsg = NIL THEN
+      p.RTErrorCode := Code;
+      p.RTErrorMsg := Msg;
+    END;
+  END MergeRTError;
+
 (* Externally dispatched-to: *)
 PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
   VAR
@@ -122,6 +133,8 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
     Id        : M3ID.T;
     fieldInfo : Field.Info;
     posOK     : BOOLEAN;
+    RTErrorCode: CG.RuntimeError;
+    RTErrorMsg: TEXT;
   BEGIN
     p.tipe := Type.Check (p.tipe);
     FOR i := 0 TO LAST (p.args^) DO Expr.TypeCheck (p.args[i], cs) END;
@@ -196,7 +209,12 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
               (z.name, "expression is not assignable to record constructor field");
           ELSE
             ArrayExpr.NoteUseTargetVar (e);
-            AssignStmt.Check (z.type, e, cs);
+
+
+            AssignStmt.CheckRT
+              (z.type, e, cs, IsError := FALSE, Code := RTErrorCode,
+               Msg := RTErrorMsg);
+            MergeRTError (p, RTErrorCode, RTErrorMsg);
             z.expr := e;
           END;
         END;
@@ -419,5 +437,15 @@ PROCEDURE GenLiteral (p: P;  offset: INTEGER;  <*UNUSED*> type: Type.T;
     END;
   END GenLiteral;
 
+(* Externally dispatched-to: *)
+PROCEDURE Use (p: P): BOOLEAN =
+  BEGIN
+    <* ASSERT p.checked *>
+    IF p.RTErrorMsg # NIL AND Evaluate (p) # NIL THEN
+      CG.Abort (p.RTErrorCode);
+      RETURN FALSE;
+    ELSE RETURN TRUE;
+    END;
+  END Use;
 BEGIN
 END RecordExpr.

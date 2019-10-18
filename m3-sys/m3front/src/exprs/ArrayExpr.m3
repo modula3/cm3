@@ -126,8 +126,8 @@ REVEAL
     levels            : LevelsTyp;
     topRepAlign       : Type.BitAlignT;
     topEltsAlign      : Type.BitAlignT; (* The entire block of elements. *)
-    RTErrorCode       : CG.RuntimeError;
     RTErrorMsg        : TEXT := NIL;
+    RTErrorCode       := CG.RuntimeError.Unknown;
     resultKind        := RKTyp.RKUnknown;
     inConstArea       : BOOLEAN;
     fixingInfoComputed: BOOLEAN;
@@ -2046,6 +2046,7 @@ PROCEDURE InnerCompile (top: T) =
     top.state := StateTyp.Compiled;
   END InnerCompile;
 
+(* Externally dispatched-to: *)
 PROCEDURE Use (top: T): BOOLEAN =
   BEGIN
     <* ASSERT top.state >= StateTyp.Checked *>

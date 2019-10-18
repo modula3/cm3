@@ -694,8 +694,15 @@ PROCEDURE ConstInit (t: T) =
       END;
       IF (constInitExpr # NIL) THEN
         IF NOT Expr.Use (t.initExpr) THEN
-(* CHECK ^Or Expr.Use (constInitExpr?*)
-          Error.Msg ("Value not runtime assignable.");
+         (* NOTE: Modula3 defines this as a checked runtime error, but in a
+            global variable, execution of the assignment is inevitable.  Also,
+            portions of the runtime system are executed before their module's
+            initialization (the only place the compiler could put a runtime
+            abort) and depend instead on variables statically initialized.
+            So we make this a compile time error.
+          *)
+          Error.Msg
+            ("Variable's initial value contains runtime assignability failure(s).");
         END;
         Expr.PrepLiteral (constInitExpr, t.tipe, FALSE);
         Expr.GenLiteral (constInitExpr, t.offset, t.tipe, FALSE);
@@ -874,6 +881,7 @@ PROCEDURE UserInit (t: T) =
             CG.Open_elt_ptr (OpenArrayType.EltAlign(initRepType));
           END;
           CG.Copy (t.size, overlap := FALSE);
+        ELSE (* Expr.Use will have generated an abort *)
         END;
       ELSE
         t.initPending := FALSE;
