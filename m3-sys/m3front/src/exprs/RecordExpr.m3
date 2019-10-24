@@ -26,16 +26,18 @@ TYPE
 TYPE
   P = Expr.T OBJECT
         tipe          : Type.T;
-        args          : Expr.List;
-        map           : REF ARRAY OF Info;
-        finalVal      : CG.Val;
-        finalValUseCt : INTEGER;
+(* TODO: Eliminate p.type/p.tipe redundancy. *)
+        args          : Expr.List := NIL;
+        map           : REF ARRAY OF Info := NIL;
+        finalVal      : CG.Val := NIL;
+        finalValUseCt : INTEGER := 0;
         RTErrorMsg    : TEXT := NIL;
         RTErrorCode   := CG.RuntimeError.Unknown;
-        evalAttempted : BOOLEAN; (* TRUE even if Evaluate was called
-                                    unsuccessfully. *) 
-        is_const      : BOOLEAN; (* Meaningless if NOT evalAttempted.
-                                    Otherwise, Evaluate was successful. *)
+        evalAttempted : BOOLEAN := FALSE;
+        (* TRUE even if Evaluate was called unsuccessfully. *)
+        is_const      : BOOLEAN := FALSE;
+        (* Meaningless if NOT evalAttempted.  Otherwise, Evaluate was successful. *)
+        prepped       : BOOLEAN := FALSE;
       OVERRIDES
         typeOf       := ExprRep.NoType;
         check        := Check;
@@ -66,15 +68,17 @@ PROCEDURE New (type: Type.T;  args: Expr.List): Expr.T =
   BEGIN
     p := NEW (P);
     ExprRep.Init (p);
-    p.type      := type;
-    p.tipe      := type;
-    p.args      := args;
-    p.map       := NIL;
+    p.directAssignableType := TRUE;
+
+    p.type           := type;
+    p.tipe           := type;
+    p.args           := args;
+    p.map            := NIL;
     p.finalVal       := NIL;
     p.finalValUseCt  := 0;
-    p.evalAttempted    := FALSE;
-    p.is_const  := FALSE;
-    p.directAssignableType := TRUE;
+    p.evalAttempted  := FALSE;
+    p.is_const       := FALSE;
+    p.prepped        := FALSE;
     RETURN p;
   END New;
 
@@ -144,7 +148,7 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
       RETURN;
     END;
 
-    (* count the fields *)
+    (* Count the fields of the record type. *)
     v := fieldList;
     fieldCt := 0;
     WHILE (v # NIL) DO INC (fieldCt);  v := v.next END;
@@ -221,7 +225,7 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
       ELSE
         (* some other error, so don't even try *)
       END;
-    END (*FOR*);
+    END (*FOR args*);
 
     FOR fieldNo := 0 TO fieldCt - 1 DO
       WITH z = p.map^[fieldNo] DO
@@ -234,6 +238,8 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
 
 (* Externally dispatched-to: *)
 PROCEDURE EqCheck (a: P;  e: Expr.T;  x: M3.EqAssumption): BOOLEAN =
+(* TODO: This requires exact keyword/isPositional/positionalOrder/default match
+         to return TRUE.  This is probably too picky. *)
   VAR b: P;
   BEGIN
     TYPECASE e OF
@@ -262,6 +268,7 @@ PROCEDURE NeedsAddress (<*UNUSED*> p: P) =
 PROCEDURE UsesAssignProtocol (p: P): BOOLEAN =
 (* PRE: p has been checked but not Prepped. *)
   BEGIN
+    <*ASSERT p.checked*>
     EVAL Evaluate (p);
     IF p.is_const THEN RETURN FALSE END;
     RETURN p.doDirectAssign
@@ -278,30 +285,34 @@ PROCEDURE Prep (p: P) =
 PROCEDURE PrepLV (p: P;  traced: BOOLEAN) =
   BEGIN
     IF NOT UsesAssignProtocol (p)
-    THEN InnerPrepLV (p, traced)
+    THEN InnerPrepLV (p, traced, usesAssignProtocol := FALSE)
  (* ELSE postpone InnerPrepLV until Compile, when LHS will have been pushed. *)
     END;
   END PrepLV;
 
-PROCEDURE InnerPrepLV (p: P;  traced: BOOLEAN) =
-  (* PRE: IF UsesAssignProtocol (p), LHS address is compiled and on top of the
+PROCEDURE InnerPrepLV (p: P;  traced: BOOLEAN; usesAssignProtocol: BOOLEAN) =
+  (* PRE: IF usesAssignProtocol (p), LHS address is compiled and on top of the
           CG stack, for us to use. *)
   VAR
     info: Type.Info;
     field: Field.Info;
     resultVar: CG.Var;
-    usesAssignProtocol : BOOLEAN := UsesAssignProtocol (p);
   BEGIN
     INC (p.finalValUseCt);
     IF (p.finalVal # NIL) AND (p.finalValUseCt > 1)
     THEN (* We already did this before. *)
       <* ASSERT NOT usesAssignProtocol *>
+      p.prepped := TRUE;
       RETURN
     END;
     EVAL Type.CheckInfo (p.type, info);
 
-    IF usesAssignProtocol THEN
-      <* ASSERT NOT traced *>             (* CHECK ME? *)
+    IF p.is_const THEN
+      p.prepped := TRUE;
+      RETURN
+    END;
+    IF usesAssignProtocol THEN (* lhs addr is on tos. *)
+      <* ASSERT NOT traced *>             (* CHECKME? *)
       p.finalVal := CG.Pop ();
     ELSE
       resultVar := CG.Declare_temp (info.size, info.alignment,
@@ -328,6 +339,7 @@ PROCEDURE InnerPrepLV (p: P;  traced: BOOLEAN) =
       CG.Load_addr_of_temp (resultVar, 0, info.alignment);
       p.finalVal := CG.Pop ();
     END;
+    p.prepped := TRUE;
   END InnerPrepLV;
 
 (* Externally dispatched-to: *)
@@ -342,11 +354,13 @@ PROCEDURE CompileLV (p: P; traced: BOOLEAN) =
   BEGIN
     IF UsesAssignProtocol (p)
     THEN (* InnerPrep was postponed until now. *)
-      InnerPrepLV (p, traced)
+      InnerPrepLV (p, traced, usesAssignProtocol := TRUE)
     END;
     IF (p.is_const) THEN
       EVAL Type.CheckInfo (p.type, info);
-      offset := Module.Allocate (info.size, info.alignment, TRUE, "*record*");
+      offset
+        := Module.Allocate
+             (info.size, info.alignment, TRUE, "*recordConstructor*");
       PrepLiteral (p, p.tipe, TRUE);
       GenLiteral (p, offset, p.tipe, TRUE);
       CG.Load_addr_of (Module.GlobalData (TRUE), offset, info.alignment);
