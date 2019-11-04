@@ -1433,7 +1433,7 @@ PROCEDURE FulfilRP(rp : RemovePromise) : QPromise.ExitCode =
 
 TYPE Temps_t = RECORD
   count := 0;
-  names := ARRAY [0..2] OF TEXT { NIL, .. };
+  names := ARRAY [0..3] OF TEXT { NIL, .. };
 END;
 
 PROCEDURE Temps_Add (VAR temps: Temps_t; s: State; name: TEXT) =
@@ -1481,6 +1481,7 @@ PROCEDURE PushOneM3 (s: State;  u: M3Unit.T): BOOLEAN =
 
     cm3IRName: TEXT := NIL;
     llvmIRName: TEXT := NIL;
+    llvmIROptName: TEXT := NIL;
     CCodeName: TEXT := NIL;
     asmName: TEXT := NIL;
     mode := s.m3backend_mode;
@@ -1559,12 +1560,14 @@ PROCEDURE PushOneM3 (s: State;  u: M3Unit.T): BOOLEAN =
         DoRunAsm := NOT boot; 
     | Mode_t.ExtLlvmObj =>  
         llvmIRName := LlvmIRNameForUnit (u);
+        llvmIROptName := LlvmIROptNameForUnit (u);
         cm3OutName := llvmIRName; 
         codeGenOutName := u.object; 
         DoRunLlc := TRUE; 
         (* boot has no effect on this mode. *) 
     | Mode_t.ExtLlvmAsm =>  
         llvmIRName := LlvmIRNameForUnit (u);
+        llvmIROptName := LlvmIROptNameForUnit (u);
         cm3OutName := llvmIRName; 
         codeGenOutName := AsmNameForUnit (u);
         DoWriteAsm := TRUE; 
@@ -1573,12 +1576,14 @@ PROCEDURE PushOneM3 (s: State;  u: M3Unit.T): BOOLEAN =
         asmName := codeGenOutName; 
     | Mode_t.StAloneLlvmObj => 
         llvmIRName := LlvmIRNameForUnit (u);  
+        llvmIROptName := LlvmIROptNameForUnit (u);
         DoRunM3llvm := TRUE; 
         codeGenOutName := u.object; 
         DoRunLlc := TRUE; 
         (* boot has no effect on this mode. *) 
     | Mode_t.StAloneLlvmAsm => 
         llvmIRName := LlvmIRNameForUnit (u);  
+        llvmIROptName := LlvmIROptNameForUnit (u);
         DoRunM3llvm := TRUE; 
         codeGenOutName := AsmNameForUnit (u);  
         DoWriteAsm := TRUE; 
@@ -1602,6 +1607,7 @@ PROCEDURE PushOneM3 (s: State;  u: M3Unit.T): BOOLEAN =
     *)
     Temps_Add (temps, s, cm3IRName);
     Temps_Add (temps, s, llvmIRName);
+    Temps_Add (temps, s, llvmIROptName); 
 
     (* C, assembly are always temporary except for "boot", per above. *)
     IF NOT boot THEN
@@ -3287,6 +3293,17 @@ PROCEDURE LlvmIRNameForUnit (u: M3Unit.T): TEXT =
     END;
     RETURN M3Path.Join (NIL, M3ID.ToText (u.name), ext);
   END LlvmIRNameForUnit;
+
+  PROCEDURE LlvmIROptNameForUnit (u: M3Unit.T): TEXT =
+  VAR ext := u.kind;
+  BEGIN
+    CASE ext OF
+    | UK.I3, UK.IC => ext := UK.IB;
+    | UK.M3, UK.MC => ext := UK.MB;
+    ELSE <* ASSERT FALSE *>
+    END;
+    RETURN M3Path.Join (NIL, M3ID.ToText (u.name) & "_opt", ext);
+  END LlvmIROptNameForUnit;
 
 PROCEDURE AsmNameForUnit (u: M3Unit.T): TEXT =
   VAR ext := u.kind;
