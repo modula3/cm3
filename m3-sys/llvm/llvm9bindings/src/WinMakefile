@@ -1,0 +1,51 @@
+
+# File: m3-sys/llvm9bindings/src/WinMakefile
+
+# Copyright 2015, Rodney M. Bates.
+# rodney.m.bates@acm.org
+# Licensed under the Gnu Public License, version 2 or later.
+
+# This Makefile builds C++ code supplied in this package,
+# from outside of the llvm source tree.  
+
+# This Makefile needs the following variables:  
+# LLVM_INCLUDE_DIR    
+# LLVM_BUILD_INCLUDE_DIR    
+
+
+# This Makefile is "executed" with the target-dependent Modula3 build 
+# directory as current directory.  
+
+# The .obj files we build here are target-dependent and belong in the build
+# directory, but cm3's build system is broken in that case.  So for now, 
+# put objects in the src directory.  
+CPP_BUILD_DIR=../src
+#CPP_BUILD_DIR=. 
+
+# If you have visual studio installed you can use cl but
+# if you are building this llvm library you probably have
+# clang installed. But you still need cl for the link unless
+# you have built ldd as a replacement
+CPP_COMPILER = cl 
+#CPP_COMPILER = clang++ 
+
+# By default we should be building for X86 32 bit so need
+# the MD flag for the correct libraries.
+CPP_MISC_FLAGS = -c -MD -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS 
+
+all : $(CPP_BUILD_DIR)/M3Extras.obj 
+all : $(CPP_BUILD_DIR)/M3DIBuilder.obj 
+
+$(CPP_BUILD_DIR)/M3Extras.obj : ../src/M3Extras.h ../src/M3Extras.cpp
+	$(CPP_COMPILER) $(CPP_MISC_FLAGS) -I$(LLVM_INCLUDE_DIR) -I$(LLVM_BUILD_INCLUDE_DIR)  ../src/M3Extras.cpp
+	copy M3Extras.obj ..\src
+
+$(CPP_BUILD_DIR)/M3DIBuilder.obj : ../src/M3DIBuilder.cpp
+	$(CPP_COMPILER) $(CPP_MISC_FLAGS) -I$(LLVM_INCLUDE_DIR) -I$(LLVM_BUILD_INCLUDE_DIR)  ../src/M3DIBuilder.cpp
+	copy M3DIBuilder.obj ..\src
+
+clean : 
+	rm -f $(CPP_BUILD_DIR)/M3Extras.obj
+	rm -f $(CPP_BUILD_DIR)/M3DIBuilder.obj
+
+# End of m3-sys/llvmbindings/src/WinMakefile
