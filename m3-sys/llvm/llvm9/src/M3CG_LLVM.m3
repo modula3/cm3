@@ -339,7 +339,6 @@ TYPE
     lev : INTEGER;
     cc : CallingConvention;
     exported : BOOLEAN := FALSE;
-    volatile : BOOLEAN := FALSE;
     lvProc : LLVM.ValueRef;  (* llvm procedure definition *)
     procTy : LLVM.TypeRef;
     parent : LvProc := NIL;
@@ -447,7 +446,7 @@ TYPE
 
   LabelObj = OBJECT
     id : Label;
-    barrier : BOOLEAN := FALSE; (* unused *)
+    barrier : BOOLEAN := FALSE;  (* set an exception handling scope *)
     labBB : LLVM.BasicBlockRef;  (* jmps goto this bb *)
     elseBB : LLVM.BasicBlockRef; (* else bb for compares *)
     cmpInstr : LLVM.ValueRef; (* saved cmp instr used to move the bb *)
@@ -1323,6 +1322,8 @@ PROCEDURE end_unit (self: U) =
     label : LabelObj;
     terminator : LLVM.ValueRef;
     curBB : LLVM.BasicBlockRef;
+    instr : LLVM.ValueRef;
+    opCode : LLVM.Opcode;
   BEGIN
 
     (* There could be a label after an exit_proc which created a bb or a loop with no
@@ -1340,6 +1341,22 @@ PROCEDURE end_unit (self: U) =
         EVAL LLVM.LLVMBuildUnreachable(builderIR);
         DebugLine(self); (* resume debugging *)
         LLVM.LLVMPositionBuilderAtEnd(builderIR,curBB);
+      END;
+
+      (* If a label specifies an exception barrier set volatile on 
+         all loads and stores in the bb to prevent optimisers moving
+         code *)
+      IF label.barrier THEN
+        curBB := label.labBB;
+        instr := LLVM.LLVMGetFirstInstruction(curBB);
+        WHILE instr # NIL DO
+          opCode := LLVM.LLVMGetInstructionOpcode(instr);
+          IF opCode = LLVM.Opcode.Store OR
+             opCode = LLVM.Opcode.Load THEN
+            LLVM.LLVMSetVolatile(instr, TRUE);
+          END;
+          instr := LLVM.LLVMGetNextInstruction(instr);
+        END;
       END;
     END;
 
@@ -2447,30 +2464,6 @@ PROCEDURE end_procedure (self: U;  p: Proc) =
       END;
     END;
 
-    IF proc.volatile THEN
-      VAR
-        bb : LLVM.BasicBlockRef;
-        instr : LLVM.ValueRef;
-        opCode : LLVM.Opcode;
-      BEGIN
-        bb := LLVM.LLVMGetFirstBasicBlock(proc.lvProc);
-        WHILE bb # NIL DO
-          instr := LLVM.LLVMGetFirstInstruction(bb);
-          WHILE instr # NIL DO
-            opCode := LLVM.LLVMGetInstructionOpcode(instr);
-            IF opCode = LLVM.Opcode.Store THEN
-              (* set the volatile flag on store - Do we need it on loads as well ? *)
-
-              LLVM.LLVMSetVolatile(instr, TRUE);
-
-            END;
-            instr := LLVM.LLVMGetNextInstruction(instr);
-          END;
-          bb := LLVM.LLVMGetNextBasicBlock(bb);
-        END;
-      END;
-    END;
-
     self.curProc.state := procState.complete;
     Pop(self.procStack);
     IF self.procStack.size() > 0 THEN
@@ -2544,7 +2537,7 @@ PROCEDURE set_label (self: U;  lab: Label;  barrier: BOOLEAN) =
 
     curBB := LLVM.LLVMGetInsertBlock(builderIR);
     label := self.getLabel(lab,"label_");
-    label.barrier := barrier;  (* not using barrier thus far *)
+    label.barrier := barrier;
 
     IF label.cmpInstr # NIL THEN
       LLVM.LLVMMoveBasicBlockAfter(label.labBB,curBB);
@@ -4746,21 +4739,6 @@ PROCEDURE call_direct (self: U; p: Proc; <*UNUSED*> t: Type) =
 
     IF Is_alloca (self, calleeProc) THEN 
 
-     (*
-      This is a kludge. We are depending on detecting a call on alloca as the 
-      indication that this proc uses exceptions ie setjmp and so we have to
-      set the volatile flag on stores to prevent optimisations that
-      screw with ordering of assignments etc. see test p140 - P25 
-      The jmpbuf code actually emits the the number of try_counts in a comment
-      before begin_procedure so the front end could possibly emit that as an op or
-      something which might allow us to avoid doing this because at that stage we can
-      identify the locals and parms and just set them volatile.
-      Ideally we should identify the start and end of the TRY EXCEPT block
-      and only set volatile in that area.
-      *)
-
-      self.curProc.volatile := TRUE;
-
       (* Front end encoded this as a call on library function 'alloca'.  
          Convert to an llvm 'alloca' instruction. *)  
       (* As of 2015-09-03, the only way a library call on 'alloca' appears
@@ -4768,7 +4746,7 @@ PROCEDURE call_direct (self: U; p: Proc; <*UNUSED*> t: Type) =
       arg := Get(self.callStack);
       Pop(self.callStack);
       lVal := LLVM.LLVMBuildArrayAlloca
-                (builderIR, i8Type, arg.lVal, LT("m3_jmpbuf_size"));
+                (builderIR, i8Type, arg.lVal, LT("jmpbuf_size"));
       Push(self.exprStack,NEW(LvExpr,lVal := lVal));
       self.callState := callStateTyp.outside; 
       RETURN; 
