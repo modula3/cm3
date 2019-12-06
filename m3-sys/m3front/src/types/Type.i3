@@ -141,6 +141,12 @@ PROCEDURE CompileAll ();
 PROCEDURE Compile (t: T);
 (* generates the debugging declarations for 't' *)
 
+PROCEDURE AddCell (t: T);
+(* Creates a typecell for t.  Normally, this done after Check
+   time by Module.SetGlobals, but that only gets types created during
+   the Check phase.  This is for types that can be only created later.
+   In particular, see ArrayExpr.InnerPrep. *)
+
 PROCEDURE LoadInfo (t: T;  offset: INTEGER;  addr := FALSE);
 (* loads the specified field of 't's typecell.  If 'offset' is less than
    zero, 'LoadInfo' loads the address of the typecell.  *)

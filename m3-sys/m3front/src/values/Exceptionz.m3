@@ -50,6 +50,7 @@ TYPE
     gen_body := EmitBody;
   END;
 
+(* EXPORTED: *)
 PROCEDURE ParseDecl (READONLY att: Decl.Attributes) =
   TYPE TK = Token.T;
   VAR t: T; id: M3ID.T;
@@ -78,6 +79,7 @@ PROCEDURE ParseDecl (READONLY att: Decl.Attributes) =
     END;
   END ParseDecl;
 
+(* EXPORTED: *)
 PROCEDURE EmitRaise (v: Value.T;  arg: Expr.T) =
   VAR
     t: T := Value.Base (v);
@@ -196,6 +198,7 @@ PROCEDURE PassLocation () =
     END;
   END PassLocation;
 
+(* EXPORTED: *)
 PROCEDURE ArgByReference (type: Type.T): BOOLEAN =
   VAR info: Type.Info;
   BEGIN
@@ -203,6 +206,7 @@ PROCEDURE ArgByReference (type: Type.T): BOOLEAN =
     RETURN (info.size > Target.Address.size) OR Type.IsStructured (type);
   END ArgByReference;
 
+(* Externally dispatched-to: *)
 PROCEDURE Check (t: T;  <*UNUSED*> VAR cs: Value.CheckState) =
   VAR info: Type.Info;
   BEGIN
@@ -218,6 +222,7 @@ PROCEDURE Check (t: T;  <*UNUSED*> VAR cs: Value.CheckState) =
     END;
   END Check;
 
+(* EXPORTED: *)
 PROCEDURE ArgType (v: Value.T): Type.T =
   BEGIN
     TYPECASE Value.Base (v) OF
@@ -227,6 +232,7 @@ PROCEDURE ArgType (v: Value.T): Type.T =
     END;
   END ArgType;
 
+(* EXPORTED: *)
 PROCEDURE UID (v: Value.T): INTEGER =
   BEGIN
     TYPECASE Value.Base (v) OF
@@ -236,6 +242,7 @@ PROCEDURE UID (v: Value.T): INTEGER =
     END;
   END UID;
 
+(* EXPORTED: *)
 PROCEDURE IsImplicit (v: Value.T): BOOLEAN =
   BEGIN
     TYPECASE Value.Base (v) OF
@@ -245,12 +252,14 @@ PROCEDURE IsImplicit (v: Value.T): BOOLEAN =
     END;
   END IsImplicit;
 
+(* Externally dispatched-to: *)
 PROCEDURE Load (t: T) =
   BEGIN
     Value.Declare (t);
     LoadSelf (t);
   END Load;
 
+(* Externally dispatched-to: *)
 PROCEDURE SetGlobals (t: T) =
   VAR name: TEXT;  size: INTEGER;
   BEGIN
@@ -268,6 +277,7 @@ PROCEDURE SetGlobals (t: T) =
     t.uid := M3FP.ToInt (M3FP.FromText (name));
   END SetGlobals;
 
+(* Externally dispatched-to: *)
 PROCEDURE Declarer (t: T): BOOLEAN =
   VAR
     name: TEXT;
@@ -332,10 +342,12 @@ PROCEDURE DeclareRaiseProc (t: T): CG.Proc =
     RETURN r.cg_proc;
   END DeclareRaiseProc;
 
+(* Externally dispatched-to: *)
 PROCEDURE EmitDecl (<*UNUSED*> x: Raiser) =
   BEGIN
   END EmitDecl;
 
+(* Externally dispatched-to: *)
 PROCEDURE EmitBody (x: Raiser) =
   VAR
     t := x.self;
@@ -390,6 +402,7 @@ PROCEDURE EmitBody (x: Raiser) =
     CG.End_procedure (x.cg_proc);
   END EmitBody;
 
+(* EXPORTED: *)
 PROCEDURE AddFPSetTag (tt: Value.T;  VAR x: M3.FPInfo): CARDINAL =
   (* called for RAISES sets, doesn't include the interface record offset *)
   VAR t: T := Value.Base (tt);
@@ -400,6 +413,7 @@ PROCEDURE AddFPSetTag (tt: Value.T;  VAR x: M3.FPInfo): CARDINAL =
     RETURN ORD (t.tipe # NIL);
   END AddFPSetTag;
 
+(* Externally dispatched-to: *)
 PROCEDURE AddFPTag (t: T;  VAR x: M3.FPInfo): CARDINAL =
   VAR offset := t.offset DIV Target.Address.align;
   BEGIN

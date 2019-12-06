@@ -1,3 +1,4 @@
+
 (* Copyright (C) 1992, Digital Equipment Corporation           *)
 (* All rights reserved.                                        *)
 (* See the file COPYRIGHT for a full description.              *)
@@ -13,7 +14,7 @@ MODULE ArrayExpr;
                         into one of the static areas.
    expression protocol: The value is built into a temporary,
                         independently of its ultimate destination,
-                        and copied later.
+                        and used or copied later.
    assign protocol:     The value is built directly into a runtime
                         variable, which must be available (on the
                         CG stack) during Prep.
@@ -23,6 +24,7 @@ IMPORT M3, M3ID, CG, Expr, ExprRep, Error, Type, ArrayType;
 IMPORT ConsExpr, KeywordExpr, RangeExpr, Int, OpenArrayType, Module;
 IMPORT IntegerExpr, EnumExpr, SubrangeType, Target, TInt, M3Buf;
 IMPORT AssignStmt, RefType, M3RT, Procedure, RunTyme, ErrType;
+IMPORT Fmt;
 
 (* Monitor sequencing of operations: *)
 TYPE StateTyp
@@ -35,8 +37,8 @@ TYPE LevelInfoTyp = RECORD
     semType           : Type.T := NIL;
     repType           : Type.T := NIL;
     repIndexType      : Type.T := NIL;
-    fixingVal         : CG.Val := NIL;
-    dynBitsizeVal     : CG.Val := NIL;
+    fixingLenVal      : CG.Val := NIL;
+    dynBytesizeVal    : CG.Val := NIL;
     staticLen         : Expr.lengthTyp := Expr.lengthNonArray;
     staticFlatEltCt   : INTEGER := 1;
                         (* Product of non-neg. staticLen values for this
@@ -65,14 +67,16 @@ TYPE ResultKindTyp
     , RKTempStatic   (* Static-sized CG.Var temp, with dope. *)
                        (* Uses top.buildTempVar. *)
     , RKTempDyn      (* Dynamically sized and allocated temp. *)
-                       (* Uses top.buildAddrVal and top.buildEltsAddrVal. *)
+                       (* Uses top.heapTempPtrVar, top.buildAddrVal,
+                          and top.buildEltsAddrVal. *)
     };
 
 TYPE RKTyp = ResultKindTyp;
 TYPE RKTypSet = SET OF RKTyp;
 CONST RKTypSetInitializing = RKTypSet
   { RKTyp.RKGlobal, RKTyp.RKTempElts, RKTyp.RKTempStatic, RKTyp.RKTempDyn};
-  (* ^We are building into a previously uninitialized area. *)
+  (* ^We are building into a previously uninitialized area whose preexisting
+     contents will never be accessed. *)
 
 (* Properties of an array constructor: *)
 REVEAL 
@@ -113,7 +117,7 @@ REVEAL
     buildAddrVal      : CG.Val;
     buildEltsAddrVal  : CG.Val;
     buildTempVar      : CG.Var;
-    dynOffsetVal      : CG.Val := NIL; (* Top only. *)
+    dynByteOffsetVal      : CG.Val := NIL; (* Top only. *)
     shallowestDynDepth: INTEGER := FIRST (INTEGER);
     deepestDynDepth   : INTEGER := FIRST (INTEGER);
     heapTempPtrVar    : CG.Var := NIL;
@@ -123,12 +127,13 @@ REVEAL
     firstArgExpr      : Expr.T := NIL;
     firstArgDepth     : INTEGER := 0;
     firstArgDopeVal   : CG.Val;
+    lastArgExpr       : Expr.T := NIL;
     levels            : LevelsTyp;
-    topRepAlign       : Type.BitAlignT;
-    topEltsAlign      : Type.BitAlignT; (* The entire block of elements. *)
     RTErrorMsg        : TEXT := NIL;
     RTErrorCode       := CG.RuntimeError.Unknown;
     resultKind        := RKTyp.RKUnknown;
+    topRepAlign       : Type.BitAlignT;
+    topEltsAlign      : Type.BitAlignT; (* The entire block of elements. *)
     inConstArea       : BOOLEAN;
     fixingInfoComputed: BOOLEAN;
     useTargetVar      : BOOLEAN := FALSE;
@@ -194,7 +199,7 @@ IsErr(constr.semIndexType) (* Just for debugging. *);
     constr.checked              := FALSE;
     constr.fixingInfoComputed   := FALSE;
     constr.refType              := NIL;
-    constr.dynOffsetVal         := NIL;
+    constr.dynByteOffsetVal     := NIL;
     constr.directAssignableType := TRUE; (* Inherited. *)
     constr.eltCt                := Expr.lengthInvalid;
     constr.state                := StateTyp.Fresh;
@@ -304,7 +309,7 @@ PROCEDURE CheckArgStaticLength
     IF argLength < 0 THEN RETURN END;
     IF levelInfo.staticLen = Expr.lengthNonStatic 
     THEN (* First-found fixed-array argument.  All cousins at
-            this depth will have to have this same length. *)
+            this depth must have this same length. *)
       levelInfo.staticLen := argLength;
     ELSIF argLength # levelInfo.staticLen
     THEN
@@ -355,7 +360,8 @@ PROCEDURE Check (top: T;  VAR cs: Expr.CheckState) =
     END;
     
     (* Recursively traverse and check the tree of nested array constructors.
-       Also compute levelInfo.staticLen, top.firstArgExpr, top.firstArgDepth. *)
+       Also compute levelInfo.staticLen, top.firstArgExpr, top.firstArgDepth,
+       top.lastArgExpr. *)
     CheckRecurse (top, top, cs, depth := 0);
     top.state := StateTyp.Checked;
     top.checked := TRUE;
@@ -363,15 +369,17 @@ PROCEDURE Check (top: T;  VAR cs: Expr.CheckState) =
 
 PROCEDURE MergeRTError (top: T; Code: CG.RuntimeError; Msg: TEXT) =
   BEGIN
-    IF top.RTErrorMsg = NIL THEN
+    IF Msg # NIL AND top.RTErrorMsg = NIL THEN
       top.RTErrorCode := Code;
       top.RTErrorMsg := Msg;
+      Error.Warn
+        (2, "Will raise runtime error if executed: " & Msg);
     END;
   END MergeRTError;
 
 PROCEDURE CheckRecurse
   (top, constr: T; VAR cs: Expr.CheckState; depth: INTEGER) =
-  VAR argLength, argCt: INTEGER;
+  VAR argLength, argDepth, argCt: INTEGER;
   VAR priorErrCt, priorWarnCt, laterErrCt, laterWarnCt: INTEGER;
   VAR depthWInArg, depthWInTopConstr: INTEGER;
   VAR argSemType, argRepType, argIndexType, argEltType: Type.T;
@@ -381,7 +389,6 @@ PROCEDURE CheckRecurse
   VAR RTErrorCode: CG.RuntimeError;
   VAR RTErrorMsg: TEXT;
   VAR eltTypeInfo: Type.Info;
-  VAR b: BOOLEAN;
   BEGIN
     <* ASSERT constr.state = StateTyp.Fresh *>
     constr.state := StateTyp.Checking;
@@ -433,13 +440,15 @@ PROCEDURE CheckRecurse
         constr.dots := FALSE;
       END;
     END;
-    WITH selfLevelInfo = top.levels^ [constr.depth] DO
+    WITH selfLevelInfo = top.levels^ [depth] DO
       IF selfLevelInfo.staticLen >= 0
       THEN 
         IF constr.eltCt # selfLevelInfo.staticLen
         THEN
-          Error.Msg ("Constructor argument's list length unequal to fixed "
-                     & " length of declared type." );
+          Error.Int
+            (selfLevelInfo.staticLen,
+             "Constructor argument's list length unequal to fixed "
+             & " length of declared type.");
           constr.broken := TRUE;
         END;
       ELSE selfLevelInfo.staticLen := constr.eltCt;
@@ -447,7 +456,8 @@ PROCEDURE CheckRecurse
     END (*WITH*);
 
     (* Go through the arguments. *)
-    WITH argLevelInfo = top.levels^ [constr.depth + 1] DO
+    argDepth := depth + 1;
+    WITH argLevelInfo = top.levels^ [argDepth] DO
       FOR i := 0 TO argCt - 1 DO
         WITH argExpr = constr.args^ [i] DO
           IF argExpr # NIL THEN
@@ -465,16 +475,17 @@ PROCEDURE CheckRecurse
               argConstr := ArrayConstrExpr (argExpr);
               IF argConstr # NIL AND argConstr.isNested THEN
                 (* argConstr is an inner array constructor. *)
-                CheckRecurse (top, argConstr, cs, depth + 1);
+                CheckRecurse (top, argConstr, cs, argDepth);
                 argLength := argConstr.eltCt;
                 argSemType := argConstr.semType;
-              ELSE (* argExpr is a non-array, non-constructor, or named
+              ELSE (* argExpr is a non-array, or non-constructor, or named
                       constant with an array constructor as value. *)
                 Expr.TypeCheck (argExpr, cs);
                 IF top.firstArgExpr = NIL THEN
                   top.firstArgExpr := argExpr;
-                  top.firstArgDepth := depth;
+                  top.firstArgDepth := argDepth;
                 END;
+                top.lastArgExpr := argExpr;
                 argSemType := Expr.SemTypeOf (argExpr);
               END (*TYPECASE*);
 
@@ -502,7 +513,7 @@ PROCEDURE CheckRecurse
                 (* Check shape criterion of assignabilty. *)
                 IF argConstr # NIL THEN
                   IF argConstr.isNamedConst THEN
-                    (* Check its static lengths against top's. *)
+                    (* Check argConstr's static lengths against top's. *)
                     <* ASSERT argConstr.depth = 0 *>
                     depthWInArg := 0;
                     LOOP (* Thru array levels of arg. *)
@@ -537,9 +548,10 @@ PROCEDURE CheckRecurse
                       depthWInTopConstr
                         := constr.depth + 1 (*For arg*) + depthWInArg;
                       IF depthWInTopConstr >= LAST (top.levels^) THEN EXIT END;
-                      b := ArrayType.Split
-                             (argRepType, (*VAR*) argIndexType, (*VAR*) argEltType);
-                      <* ASSERT b *>
+                      IF NOT ArrayType.Split
+                               (argRepType, (*VAR*) argIndexType, (*VAR*) argEltType)
+                      THEN EXIT
+                      END;
                       IF argIndexType # NIL THEN
                         argLength := LengthOfOrdType (argIndexType);
                         CheckArgStaticLength
@@ -867,7 +879,8 @@ PROCEDURE Represent (top: T) =
    to call NoteTargetType first. *)
   VAR levelType, levelIndexType, levelEltType, semIndexType: Type.T;
   VAR semEltType, repType, repIndexType, repEltType, repSuccType: Type.T;
-  VAR locStaticLen, staticFlatEltCt, lastArrayDepth, eltsSize: INTEGER;
+  VAR locStaticLen, deeperStaticFlatEltCt, lastArrayDepth, eltsSize: INTEGER;
+  VAR eltPack: INTEGER;
   VAR topRepTypeInfo: Type.Info;
   VAR repSuccIsOpen, repSuccHasChanged, fixedOpenOK, b: BOOLEAN;
   BEGIN
@@ -927,7 +940,8 @@ PROCEDURE Represent (top: T) =
       repSuccIsOpen := FALSE; (* The innermost, non-array level. *)
       repSuccHasChanged := FALSE;
       repSuccType := top.levels ^[LAST (top.levels ^)].semType;
-      staticFlatEltCt := 1;
+      deeperStaticFlatEltCt := 1;
+      eltPack := ArrayType.EltPack (top.levels ^[lastArrayDepth].semType);
       FOR depth := lastArrayDepth TO 0 BY - 1 DO
         WITH levelInfo = top.levels ^[depth] DO
           b := ArrayType.Split
@@ -964,19 +978,34 @@ PROCEDURE Represent (top: T) =
             top.shallowestDynDepth := depth;
           END;
 
-          (* Develop static element count product. *) 
+          (* Develop eltPack and static element count product. *)
+          levelInfo.eltPack := eltPack;
           IF levelInfo.staticLen >= 0
           THEN 
-            levelInfo.staticFlatEltCt := staticFlatEltCt * levelInfo.staticLen;
-            staticFlatEltCt := levelInfo.staticFlatEltCt;
+            levelInfo.staticFlatEltCt
+              := deeperStaticFlatEltCt * levelInfo.staticLen;
+            deeperStaticFlatEltCt := levelInfo.staticFlatEltCt;
+            eltPack := eltPack * levelInfo.staticLen
           ELSE (* Start the product over. *)
-            staticFlatEltCt := 1;
+            deeperStaticFlatEltCt := 1;
+            (* Just let eltPack of inner static levels propagate up unchanged. *)
           END;
           repSuccType := levelInfo.repType;
           IF repIndexType = NIL THEN repSuccIsOpen := TRUE END;
         END (*WITH*);
       END (*FOR*);
       top.repType := repSuccType;
+      IF top.shallowestDynDepth >= 0 THEN
+        WITH levelInfo = top.levels ^[top.deepestDynDepth] DO
+          IF OpenArrayType.EltPack (levelInfo.repType) MOD Target.Byte # 0 THEN
+            Error.Int
+              ( top . deepestDynDepth,
+                "CM3 restriction: Elements of dynamic-length array "
+                & "constructor must have byte-multiple size. Dimension:" );
+            top.broken := TRUE;
+          END;
+        END (*WITH*);
+      END;
     ELSE (* repType is targetType. Just copy targetType component pointers. *)
          (* Do it outside in. *)
       repType := top.targetType;
@@ -1001,16 +1030,21 @@ PROCEDURE Represent (top: T) =
         END (*WITH*);
       END (*FOR*);
 
-      (* Compute static element count product, inside to out. *) 
-      staticFlatEltCt := 1;
+      (* Compute eltPack and static element count product, inside to out. *)
+      deeperStaticFlatEltCt := 1;
+      eltPack := ArrayType.EltPack (top.levels ^[lastArrayDepth].semType);
       FOR depth := lastArrayDepth TO 0 BY - 1 DO
         WITH levelInfo = top.levels ^[depth] DO
+          levelInfo.eltPack := eltPack;
           IF levelInfo.staticLen >= 0
           THEN 
-            levelInfo.staticFlatEltCt := staticFlatEltCt * levelInfo.staticLen;
-            staticFlatEltCt := levelInfo.staticFlatEltCt;
+            levelInfo.staticFlatEltCt
+              := deeperStaticFlatEltCt * levelInfo.staticLen;
+            deeperStaticFlatEltCt := levelInfo.staticFlatEltCt;
+            eltPack := eltPack * levelInfo.staticLen
           ELSE (* Start the product over. *)
-            staticFlatEltCt := 1;
+            deeperStaticFlatEltCt := 1;
+            (* Just let eltPack of inner static levels propagate up unchanged. *)
           END;
         END (*WITH*);
       END (*FOR*);
@@ -1044,9 +1078,9 @@ PROCEDURE Represent (top: T) =
     top.topRepAlign := topRepTypeInfo.alignment;
     top.topEltsAlign := ArrayType.EltAlign (top.repType);
     IF top.topEltsAlign < Target.Word8.align THEN
-      Error.InfoInt
+      Error.Int
         (top.topEltsAlign,
-         "CM3 restriction: array constructor has sub-byte alignment.");
+         "CM3 restriction: array constructor cannot have sub-byte alignment.");
     END;
 
     (* Make sure fixed and open arrays of same length have the same bitsize. *)
@@ -1057,15 +1091,9 @@ PROCEDURE Represent (top: T) =
     (* Apply repType to the tree of array constructors and Check.*)
     RepresentRecurse (top);
     
-(* CHECK: The below are segfaulting in Builder when elements are opaque,
-          due to Host.env being NIL.  Do we need these?  Maybe do them
-          later, in Compile? *)
-(*
-    top.semType := Type.Check (top.semType);
-    Type.Compile (top.semType);
-    top.repType := Type.Check (top.repType);
-    Type.Compile (top.repType);
-*) 
+    (* NOTE: Trying to Check top.semType and top.repType now will segfault in
+             Builder when elements are opaque,  due to Host.env being NIL. *)
+
     <* ASSERT top.repType # NIL *>
     top.state := StateTyp.Represented
   END Represent;
@@ -1269,33 +1297,41 @@ PROCEDURE PrepLiteral (constr: T; type: Type.T; inConstArea: BOOLEAN) =
 PROCEDURE GenEvalFixingInfo
   (top: T; fixingDopeVal: CG.Val; fixingExprDepth: INTEGER) =
 (* PRE: top is a top-level array constructor. *)
+(* PRE: NOT top.broken. *)
+(* Gen RT code to compute dynBytesizeVal and fixingLenVal, for all
+   fully dynamic levels . *)
   VAR depthWInFixingExpr, depthWInTopConstr: INTEGER;
+  VAR eltPack, eltByteSize: INTEGER;
   VAR repType: Type.T;
   BEGIN
     IF top.shallowestDynDepth < 0 THEN (* No RT fixing info needed. *)
     RETURN END;
     IF top.fixingInfoComputed THEN (* We already did this. *) RETURN END;
 
-    depthWInTopConstr := top.deepestDynDepth; (* Will go inside-out. *)
-    <* ASSERT top.shallowestDynDepth <= depthWInTopConstr *>
-    
     (* Go through the dynamic levels inside to out. *)
+    depthWInTopConstr := top.deepestDynDepth;
+
     repType := top.levels^[depthWInTopConstr].repType;
     <* ASSERT OpenArrayType.Is (repType) *>
-    CG.Load_intt (OpenArrayType.EltPack (repType));
+    eltPack := top.levels^ [top.deepestDynDepth].eltPack;
+    <* ASSERT eltPack MOD Target.Byte = 0 *>
+    eltByteSize := eltPack DIV Target.Byte;
+    CG.Load_intt (eltByteSize);
+(* TODO^ Eliminate mutiply by one case. *)
     LOOP
+      <* ASSERT top.shallowestDynDepth <= depthWInTopConstr *>
       depthWInFixingExpr := depthWInTopConstr - fixingExprDepth;
       WITH levelInfo = top.levels^[depthWInTopConstr] DO
         CG.Push (fixingDopeVal);
-        CG.Open_size (depthWInFixingExpr);
-        levelInfo.fixingVal := CG.Pop ();
-        CG.Push (levelInfo.fixingVal);
+        CG.Open_size (depthWInFixingExpr) (* *length* *);
+        levelInfo.fixingLenVal := CG.Pop ();
+        CG.Push (levelInfo.fixingLenVal);
         CG.Multiply (Target.Integer.cg_type);
-        levelInfo.dynBitsizeVal := CG.Pop ();
+        levelInfo.dynBytesizeVal := CG.Pop ();
         IF depthWInTopConstr <= top.shallowestDynDepth THEN
           EXIT
         ELSE 
-          CG.Push (levelInfo.dynBitsizeVal);
+          CG.Push (levelInfo.dynBytesizeVal);
           DEC (depthWInTopConstr);
         END;
       END (*WITH*);
@@ -1365,10 +1401,10 @@ PROCEDURE InnerPrep (top: T) =
   (* POST If UsesAssignProtocol, LHS has been popped and stored in some field. *)
   VAR
     shapeVar: CG.Var := NIL;
-    dopeSize, shapeSize: INTEGER;
+    shapeSize, length, offset: INTEGER;
     NewTracedArrayProc: Procedure.T;
-    length, offset: INTEGER;
     firstArgTypeInfo: Type.Info;
+    name: M3ID.T;
   BEGIN
     IF top.state >= StateTyp.Prepped THEN RETURN END;
     Represent (top);
@@ -1432,8 +1468,7 @@ PROCEDURE InnerPrep (top: T) =
          dope, to be passed to RT library procedure NewTracedArray, and
          its element list is the shape of the n-dimensional array we are
          building. *)
-      <* ASSERT top.repOpenDepth = top.deepestDynDepth + 1 *>
-      shapeSize := dopeSize + Target.Integer.size;
+      shapeSize := top.dopeSize + Target.Integer.size;
       shapeVar := CG.Declare_temp (shapeSize, Target.Address.align,
                                    CG.Type.Struct, in_memory := TRUE);
 
@@ -1451,7 +1486,7 @@ PROCEDURE InnerPrep (top: T) =
       offset := M3RT.OA_size_1 (* 0th element. *);
       <* ASSERT top.shallowestDynDepth >= 0 *>
 
-      (* Lengths w/open representation, but a static value is imposed. *)
+      (* Outer levels w/open representation, but a static value is imposed. *)
       FOR depth := 0 TO top.shallowestDynDepth - 1 DO
         length := top.levels^ [depth].staticLen;
         <* ASSERT length >= 0 *>
@@ -1463,7 +1498,17 @@ PROCEDURE InnerPrep (top: T) =
 
       (* Lengths with dynamic, open length. *)
       FOR depth := top.shallowestDynDepth TO top.deepestDynDepth DO
-        CG.Push (top.levels^ [depth].fixingVal);
+        CG.Push (top.levels^ [depth].fixingLenVal);
+        CG.Store (shapeVar, offset, Target.Integer.size, Target.Integer.align
+                  , Target.Integer.cg_type);
+        INC (offset, Target.Integer.size);
+      END;
+
+      (* Inner levels w/open representation, but a static value is imposed. *)
+      FOR depth := top.deepestDynDepth + 1 TO top.repOpenDepth - 1 DO
+        length := top.levels^ [depth].staticLen;
+        <* ASSERT length >= 0 *>
+        CG.Load_intt (length);
         CG.Store (shapeVar, offset, Target.Integer.size, Target.Integer.align
                   , Target.Integer.cg_type);
         INC (offset, Target.Integer.size);
@@ -1474,6 +1519,7 @@ PROCEDURE InnerPrep (top: T) =
       (* We didn't know whether refType would be needed, at Check time. *)
       top.refType := RefType.New (top.repType, traced := TRUE, brand := NIL);
       top.refType := Type.Check (top.refType);
+      Type.AddCell (top.refType);
       NewTracedArrayProc := RunTyme.LookUpProc (RunTyme.Hook.NewTracedArray);
       Procedure.StartCall (NewTracedArrayProc);
       IF Target.DefaultCall.args_left_to_right THEN
@@ -1494,12 +1540,16 @@ PROCEDURE InnerPrep (top: T) =
       CG.Open_elt_ptr (top.topEltsAlign);
       top.buildEltsAddrVal:= CG.Pop ();
 
-      (* Gen code to store address of heap-allocated temp in a local temp,
-         so GC will leave it alone. *)
+      (* There must exist a variable of type top.refType, to get its typecell
+         emitted.  Also, we gen code to store address of heap-allocated temp
+         therein, so GC will leave it alone. *)
+      name
+        := M3ID.Add ("Heap temp ptr, line " & Fmt.Int (top.origin MOD 100000));
       top.heapTempPtrVar
-        := CG.Declare_temp
-             (Target.Address.size, Target.Address.align, CG.Type.Addr,
-              in_memory := TRUE);
+        := CG.Declare_local
+             (name, Target.Address.size, Target.Address.align, CG.Type.Addr,
+              Type.GlobalUID (top.refType), in_memory := TRUE, up_level := FALSE,
+              f := CG.Maybe);
       CG.Push (top.buildAddrVal);
       CG.Boost_addr_alignment (Target.Address.align);
       CG.Store_addr (top.heapTempPtrVar, (*Offset:=*) 0);
@@ -1517,37 +1567,41 @@ PROCEDURE InnerPrep (top: T) =
     CG.Free_temp (shapeVar);
     IF top.shallowestDynDepth >= 0 THEN
       FOR depth := top.shallowestDynDepth TO top.deepestDynDepth DO
-        CG.Free (top.levels^ [depth].fixingVal);
-        CG.Free (top.levels^ [depth].dynBitsizeVal);
+        CG.Free (top.levels^ [depth].fixingLenVal);
+        CG.Free (top.levels^ [depth].dynBytesizeVal);
       END;
     END;
-    CG.Free (top.dynOffsetVal);
+    CG.Free (top.dynByteOffsetVal);
 (* CHECK: Will Free_temps get done sometime? *)
     top.state := StateTyp.Prepped;
   END InnerPrep;
 
 PROCEDURE GenCopyOpenArgValueDyn
   (top, constr: T; argDopeAddrVal: CG.Val; eltAlign: Type.BitAlignT) =
-(* PRE: TOS is a CG.Val for address w/in LHS to copy to. *)
+(* PRE: TOS is a CG.Val for address (w/in LHS) to copy to. *)
 (* PRE: top.shallowestDynDepth >= 0 *)
+  VAR staticFlatEltCt: INTEGER;
   BEGIN
-    (* Target address. *)
+    (* Target address: *)
     CG.ForceStacked ();
-    (* Source address. *)
+    (* Source address: *)
     CG.Push (argDopeAddrVal);
     CG.Boost_addr_alignment (Target.Address.align);
     CG.Open_elt_ptr (eltAlign);
     CG.ForceStacked ();
-    (* Size. *)
-    CG.Load_intt
-      (top.levels^[constr.depth + 1(*Of Arg. *)].staticFlatEltCt);
+    (* Size in bytes: *)
     <* ASSERT top.shallowestDynDepth >= 0 *>
-    <* ASSERT top.shallowestDynDepth > constr.depth *>
-    CG.Push (top.levels^[top.shallowestDynDepth].dynBitsizeVal);
-    CG.Multiply (Target.Integer.cg_type);
+    <* ASSERT constr.depth < top.shallowestDynDepth *>
+    CG.Push (top.levels^[top.shallowestDynDepth].dynBytesizeVal);
+    staticFlatEltCt
+      := top.levels^[constr.depth + 1(*Of Arg.*)].staticFlatEltCt;
+    IF staticFlatEltCt # 1 THEN
+      CG.Load_intt (staticFlatEltCt);
+      CG.Multiply (Target.Integer.cg_type);
+    END;
 (* TODO: call NoteWrite, as needed. *)
 
-    CG.Copy_n (1(*bits*), overlap := TRUE);
+    CG.Copy_n (Target.Byte, overlap := FALSE);
   END GenCopyOpenArgValueDyn;
 
 PROCEDURE GenPushLHSEltsAddr
@@ -1573,6 +1627,26 @@ PROCEDURE GenPushLHSEltsAddr
          (top.buildTempVar, top.dopeSize + bitOffset, eltAlign);
     END (*CASE*);
   END GenPushLHSEltsAddr;
+
+PROCEDURE LoadDynBytesizeVal (top: T; depth: INTEGER) =
+  VAR eltPack, staticFlatEltCt: INTEGER;
+  BEGIN
+    <* ASSERT top.shallowestDynDepth >= 0 *>
+    IF depth > top.deepestDynDepth THEN
+      eltPack := top.levels^[depth].eltPack;
+      <* ASSERT eltPack MOD Target.Byte = 0 *>
+      CG.Load_intt (eltPack DIV Target.Byte);
+    ELSIF depth < top.shallowestDynDepth THEN
+      CG.Push (top.levels^[top.shallowestDynDepth].dynBytesizeVal);
+      staticFlatEltCt := top.levels^[depth].staticFlatEltCt;
+      IF staticFlatEltCt # 1 THEN
+        CG.Load_intt (staticFlatEltCt);
+        CG.Multiply (Target.Integer.cg_type);
+      END
+    ELSE
+      CG.Push (top.levels^[depth].dynBytesizeVal);
+    END;
+  END LoadDynBytesizeVal;
 
 PROCEDURE PrepRecurse
   (top, constr: T; selfFlatEltNo: INTEGER; depth: INTEGER) =
@@ -1650,8 +1724,8 @@ PROCEDURE PrepRecurse
 (* TODO: We are skipping AssignStmt.Compile here, which my fail to do
            an Expr.NoteWrite. *)
               ELSIF top.shallowestDynDepth < 0 
-              THEN (* Arg is a non-constructor array, possibly open. Top and
-                      all descendent constructors are fully static. *)
+              THEN (* Arg is a non-constructor array, possibly open, but static.
+                      Top and all descendent constructors are fully static. *)
                 <* ASSERT top.firstArgDopeVal = NIL *>
 (* TODO: Make do_direct work transitively through here. *)
                 Expr.Prep (argExpr);
@@ -1690,17 +1764,17 @@ PROCEDURE PrepRecurse
                 <* ASSERT argLevelInfo.staticLen >= 0 *>
                 CG.Copy
                   (argLevelInfo.staticLen * constrEltPack, overlap := FALSE);
-              ELSE (* Arg is a non-constructor array.  All args are open and,
-                      in some dimension, nonstatic, thus repType of this and
+              ELSE (* Arg is a non-constructor array.  Also, all args are open
+                      and, at some depth, nonstatic, thus repType of this and
                       shallower levels is open array, and so is repType of
                       argExpr. *)
-                <* ASSERT top.shallowestDynDepth >= depth + 1 *>
+                <* ASSERT depth < top.shallowestDynDepth *>
                 <* ASSERT OpenArrayType.Is (argLevelInfo.repType) *>
                 <* ASSERT OpenArrayType.Is (Expr.RepTypeOf (argExpr)) *>
                 <* ASSERT NOT constr.dots *>
                 <* ASSERT top.resultKind # RKTyp.RKGlobal *>
                 IF argExpr = top.firstArgExpr AND top.firstArgDopeVal # NIL
-                THEN (* We previously compiled this arg's address. *)
+                THEN (* We previously compiled this arg's (dope) address. *)
                   CG.Push (top.firstArgDopeVal);
                   argAddrVal := CG.Pop ()
                 ELSE (* Do so now. *)
@@ -1725,10 +1799,11 @@ PROCEDURE PrepRecurse
                    RT checks. *)
                 <* ASSERT top.fixingInfoComputed *>
                 depthWInArg := 0; (* Array depth within the argument. *)
+                argOpenDepth := OpenArrayType.OpenDepth (argRepType);
                 LOOP (* Through levels of arg. *)
+                  IF depthWInArg >= argOpenDepth THEN EXIT END;
                   depthWInTopConstr
                     := depth + 1 (*For arg*) + depthWInArg;
-                  IF depthWInArg >= argOpenDepth THEN EXIT END;
                   WITH openLevelInfo = top.levels^ [depthWInTopConstr] DO
                     <* ASSERT openLevelInfo.staticLen # Expr.lengthNonArray *>
                     IF openLevelInfo.staticLen >= 0
@@ -1741,21 +1816,22 @@ PROCEDURE PrepRecurse
                       CG.Check_eq
                         (Target.Integer.cg_type,
                          CG.RuntimeError.IncompatibleArrayShape);
+                    ELSE
                       top.useTargetVarLocked := TRUE;
-(* CHECK              ^ Why? *)
-                    ELSIF UseTargetVar (top)
-                          OR top.resultKind = RKTyp.RKDirectDoped
-                          OR argExpr # top.firstArgExpr
-                    THEN (* Arg is open and dynamically constrained at this level. *)
-                      (* Gen RT check against openLevelInfo.fixingVal. *)
-                      CG.Push (argAddrVal);
-                      CG.Boost_addr_alignment (Target.Integer.align);
-                      CG.Open_size (depthWInArg);
-                      <* ASSERT openLevelInfo.fixingVal # NIL *>
-                      CG.Push (openLevelInfo.fixingVal);
-                      CG.Check_eq
-                        (Target.Integer.cg_type,
-                         CG.RuntimeError.IncompatibleArrayShape);
+                      IF UseTargetVar (top)
+                            OR top.resultKind = RKTyp.RKDirectDoped
+                            OR argExpr # top.firstArgExpr
+                      THEN (* Arg is open and dynamically constrained at this level. *)
+                        (* Gen RT check against openLevelInfo.fixingLenVal. *)
+                        CG.Push (argAddrVal);
+                        CG.Boost_addr_alignment (Target.Integer.align);
+                        CG.Open_size (depthWInArg);
+                        <* ASSERT openLevelInfo.fixingLenVal # NIL *>
+                        CG.Push (openLevelInfo.fixingLenVal);
+                        CG.Check_eq
+                          (Target.Integer.cg_type,
+                           CG.RuntimeError.IncompatibleArrayShape);
+                      END;
                     END;
                   END (*WITH openLevelInfo*);
                   INC (depthWInArg); 
@@ -1763,22 +1839,22 @@ PROCEDURE PrepRecurse
 
                 (* Copy arg into LHS and increment LHS dynamic offset. *)
                 GenPushLHSEltsAddr  (top, 0, eltAlign);
-                IF top.dynOffsetVal = NIL
+                IF top.dynByteOffsetVal = NIL
                 THEN (* First time. Dynamic offset is zero. *)
                   GenCopyOpenArgValueDyn (top, constr, argAddrVal, eltAlign);
-                  CG.Push (argLevelInfo.dynBitsizeVal);
-                  top.dynOffsetVal := CG.Pop ();
+                  LoadDynBytesizeVal (top, depth + 1);
+                  top.dynByteOffsetVal := CG.Pop ();
                 ELSE
-(* TODO: Maybe. Delay incrementing dynOffsetVal until here.  Would have to save
-         the previous argLevel subscript and use it here to select the correct
-         dynBitsizeVal. *)
-                  CG.Push (top.dynOffsetVal);
-                  CG.Index_bits (bits_addr_align := eltAlign);
+                  CG.ForceStacked ();
+                  CG.Push (top.dynByteOffsetVal);
+                  CG.Index_bytes (Target.Byte);
                   GenCopyOpenArgValueDyn (top, constr, argAddrVal, eltAlign);
-                  CG.Push (top.dynOffsetVal);
-                  CG.Push (argLevelInfo.dynBitsizeVal);
-                  CG.Index_bits (bits_addr_align := eltAlign);
-                  top.dynOffsetVal := CG.Pop ();
+                  IF argExpr # top.lastArgExpr THEN
+                    CG.Push (top.dynByteOffsetVal);
+                    LoadDynBytesizeVal (top, depth + 1);
+                    CG.Add (Target.Integer.cg_type);
+                    top.dynByteOffsetVal := CG.Pop ();
+                  END;
                 END;
 
               END (*IF [non]static.*);
@@ -1963,6 +2039,10 @@ PROCEDURE CompileGeneratedTypes (top: T) =
         END
       END
     END;
+    top.semType := Type.Check (top.semType);
+    Type.Compile (top.semType);
+    top.repType := Type.Check (top.repType);
+    Type.Compile (top.repType);
     Type.Compile (top.refType);
    END CompileGeneratedTypes;
 
@@ -2014,18 +2094,19 @@ PROCEDURE InnerCompile (top: T) =
       <* ASSERT (top.finalVal = NIL) = (NOT UsesAssignProtocol (top)) *>
       IF top.finalVal = NIL THEN
         CG.Push (top.buildAddrVal) (* Return the temp. *)
-(* CHECK: Leave top.heapTempPtr alone.  If used in a WITH-binding, WithStmt
+(* CHECK: Leave top.heapTempPtrVar alone.  If used in a WITH-binding, WithStmt
           will copy only the dope into a variable.  This will maintain only
           a pointer to the elements portion of the temporary.  Is a pointer
-          to the interior of a heap object enough to protect it from CG? *)
+          to the interior of a heap object enough to protect it from GC? *)
       ELSE (* Copy the temp into the provided LHS area. *)
         IF top.state < StateTyp.Compiled THEN (* Don't copy twice. *)
 (* CHECK^ Actually, do we want to copy multiple times? *)        
           CG.Push (top.finalVal);
           CG.Push (top.buildAddrVal);
           CG.Load_intt (top.levels^[0].staticFlatEltCt);
+(* TODO ^Elliminate multply by one. *)
           <* ASSERT top.shallowestDynDepth >= 0 *>
-          CG.Push (top.levels^[top.shallowestDynDepth].dynBitsizeVal);
+          CG.Push (top.levels^[top.shallowestDynDepth].dynBytesizeVal);
           CG.Multiply (Target.Integer.cg_type);
           CG.Load_intt (top.dopeSize);
           CG.Add (Target.Integer.cg_type);
@@ -2034,11 +2115,10 @@ PROCEDURE InnerCompile (top: T) =
         CG.Push (top.finalVal);
         CG.Free (top.finalVal);
 
-        (* Gen code to NIL out heap object pointer, to be collected. *)
+        (* Now we can NIL out the heap object pointer, to be collected. *)
         IF top.heapTempPtrVar # NIL THEN
           CG.Load_nil ();
           CG.Store_addr (top.heapTempPtrVar, (*Offset:=*) 0);
-          CG.Free_temp (top.heapTempPtrVar);
         END;
       END;
     END (*CASE*);

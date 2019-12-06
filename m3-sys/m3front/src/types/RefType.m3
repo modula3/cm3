@@ -34,6 +34,7 @@ TYPE
 
 VAR root: M3ID.T := M3ID.NoID;
 
+(* EXPORTED *)
 PROCEDURE Parse (): Type.T =
   VAR brand: Brand.T := NIL;  traced: BOOLEAN := TRUE;  super: Type.T := NIL;
   BEGIN
@@ -64,6 +65,7 @@ PROCEDURE Parse (): Type.T =
     END;
   END Parse;
 
+(* EXPORTED *)
 PROCEDURE New (target: Type.T;  traced: BOOLEAN;  brand: Brand.T): Type.T =
   VAR p: P;
   BEGIN
@@ -87,10 +89,12 @@ PROCEDURE Reduce (t: Type.T): P =
     END;
   END Reduce;
 
+(* EXPORTED *)
 PROCEDURE Is (t: Type.T): BOOLEAN =
   BEGIN
     RETURN (Reduce (t) # NIL);
   END Is;
+(* EXPORTED *)
 
 PROCEDURE IsBranded (t: Type.T): BOOLEAN =
   VAR p := Reduce (t);
@@ -98,6 +102,7 @@ PROCEDURE IsBranded (t: Type.T): BOOLEAN =
     RETURN (p # NIL) AND (p.brand # NIL);
   END IsBranded;
 
+(* EXPORTED *)
 PROCEDURE Split (t: Type.T;  VAR target: Type.T): BOOLEAN =
   VAR p := Reduce (t);
   BEGIN
@@ -106,6 +111,7 @@ PROCEDURE Split (t: Type.T;  VAR target: Type.T): BOOLEAN =
     RETURN TRUE;
   END Split;
 
+(* Externally dispatched-to: *)
 PROCEDURE Check (p: P) =
   VAR
     t: Type.T;
@@ -154,6 +160,7 @@ PROCEDURE Check (p: P) =
 *)
   END Check;
 
+(* Externally dispatched-to: *)
 PROCEDURE Compiler (p: P) =
   BEGIN
     Type.Compile (p.target);
@@ -161,12 +168,14 @@ PROCEDURE Compiler (p: P) =
                         Brand.ToText (p.brand), p.isTraced);
   END Compiler;
 
+(* EXPORTED *)
 PROCEDURE NoteRefName (t: Type.T;  name: TEXT) =
   VAR p := Reduce (t);
   BEGIN
     IF (p # NIL) THEN p.user_name := name; END;
   END NoteRefName;
 
+(* EXPORTED *)
 PROCEDURE InitTypecell (t: Type.T;  offset, prev: INTEGER) =
   TYPE TKind = M3RT.TypeKind;
   CONST Kind = ARRAY BOOLEAN OF TKind { TKind.Ref, TKind.Array};
@@ -303,6 +312,7 @@ PROCEDURE GenInitProc (p: P): CG.Proc =
     RETURN proc;
   END GenInitProc;
 
+(* Externally dispatched-to: *)
 PROCEDURE EqualChk (a: P;  t: Type.T;  x: Type.Assumption): BOOLEAN =
   VAR b: P := t;
   BEGIN
@@ -312,6 +322,7 @@ PROCEDURE EqualChk (a: P;  t: Type.T;  x: Type.Assumption): BOOLEAN =
              OR Type.IsEqual (a.target, b.target, x));
   END EqualChk;
 
+(* Externally dispatched-to: *)
 PROCEDURE Subtyper (a: P;  b: Type.T): BOOLEAN =
   BEGIN
     IF Type.IsEqual (a, b, NIL) THEN RETURN TRUE END;
@@ -326,11 +337,13 @@ PROCEDURE Subtyper (a: P;  b: Type.T): BOOLEAN =
         OR ((NOT a.isTraced) AND Type.IsEqual (b, Addr.T, NIL));
   END Subtyper;
 
+(* Externally dispatched-to: *)
 PROCEDURE InitCoster (<*UNUSED*>p: P;  zeroed: BOOLEAN): INTEGER =
   BEGIN
     IF NOT zeroed THEN RETURN 1 ELSE RETURN 0 END;
   END InitCoster;
 
+(* Externally dispatched-to: *)
 PROCEDURE GenDesc (p: P) =
   BEGIN
     IF Type.IsEqual (p, Reff.T, NIL) THEN
@@ -344,6 +357,7 @@ PROCEDURE GenDesc (p: P) =
     END;
   END GenDesc;
 
+(* Externally dispatched-to: *)
 PROCEDURE FPrinter (p: P;  VAR x: M3.FPInfo) =
   BEGIN
     IF Type.IsEqual (p, Reff.T, NIL) THEN

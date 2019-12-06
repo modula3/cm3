@@ -381,6 +381,7 @@ PROCEDURE InitPredefinedCells () =
     **********************************************************)
   END InitPredefinedCells;
 
+(*EXPORTED*)
 PROCEDURE AddCell (t: T) =
   VAR c := NEW (CellInfo);  size := M3RT.TC_SIZE;  u: T;
   BEGIN

@@ -116,7 +116,7 @@ PROCEDURE GenLiteral (p: P;  offset: INTEGER;  type: Type.T;  is_const: BOOLEAN)
     CG.Init_var (offset, var, 0, is_const);
     Type.Compile (type);
     Error.ID (p.name,
-    "CM3 restriction: default method is not a compile-time constant");
+    "CM3 restriction: default method must be a compile-time constant");
   END GenLiteral;
 
 BEGIN

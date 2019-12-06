@@ -276,7 +276,7 @@ PROCEDURE Init_label (o: Offset;  value: Label;  is_const: BOOLEAN);
    of the label 'value'.  *)
 
 PROCEDURE Init_var (o: Offset;  value: Var;  bias: Offset;  is_const: BOOLEAN);
-(* 'init_address_of_var' would have been a more meaningful name here. *)
+(* 'Init_address_of_var' would have been a more meaningful name here. *)
 (* initializes the static variable at 'ADR(v)+o' with the address
    of 'value+bias'.  *)
 
@@ -434,7 +434,8 @@ PROCEDURE Load_int (t: IType;  v: Var;  o: Offset := 0);
 
 PROCEDURE Load_addr 
   (v: Var;  o: Offset; addr_align: Alignment := Target.Word8.align);
-(* Actually, this means load the *contents* of v and give it type Addr. *) 
+(* 'Load_as_addr' would have been a more meaningful name here. 
+   It actually means load the *contents* of v and give it type Addr. *)
 (* == Load (v, o, Target.Address.size, Target.Address.align, addr_align, Type.Addr) *)
 
 PROCEDURE Store (v: Var;  o: Offset;  s: Size;  a: Alignment(*of Var*);  t: Type);
