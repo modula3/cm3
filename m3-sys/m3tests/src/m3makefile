@@ -554,6 +554,10 @@ readonly proc mixed_portability_test (group, uid, comment) is
   run_test ("_mixed_portability_tests_portable", group, uid, comment, "run", cm3opts, runopts & " -include-less-portable-output", "probeForTargetSpecificFiles")
 end
 
+% Recently added tests...
+
+p_test ("p2", "p268", "Record constructors with statically inevitable RT errors.")
+
 % some currently failing tests...
 
 %p_test ("p2", "p204", "IP address initializers")

@@ -1,0 +1,18 @@
+"../Lib.i3", line 14: warning: Value not assignable at runtime (value out of range).
+"../Lib.i3", line 14: warning: Value not assignable at runtime (value out of range).
+2 warnings encountered
+"../Main.m3", line 28: warning: Value not assignable at runtime (value out of range).
+"../Main.m3", line 28: warning: Value not assignable at runtime (value out of range).
+"../Main.m3", line 47: warning: Value not assignable at runtime (value out of range).
+"../Main.m3", line 47: warning: Value not assignable at runtime (value out of range).
+"../Main.m3", line 51: warning: Value not assignable at runtime (value out of range).
+"../Main.m3", line 51: warning: Value not assignable at runtime (value out of range).
+"../Main.m3", line 79: warning: Value not assignable at runtime (value out of range).
+"../Main.m3", line 79: warning: Value not assignable at runtime (value out of range).
+"../Main.m3", line 84: warning: Value not assignable at runtime (value out of range).
+"../Main.m3", line 84: warning: Value not assignable at runtime (value out of range).
+"../Main.m3", line 116: warning: Value not assignable at runtime (value out of range).
+"../Main.m3", line 116: warning: Value not assignable at runtime (value out of range).
+"../Main.m3", line 125: warning: Value not assignable at runtime (value out of range).
+"../Main.m3", line 125: warning: Value not assignable at runtime (value out of range).
+14 warnings encountered
