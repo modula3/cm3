@@ -105,6 +105,9 @@ REVEAL
     targetTriple  : TEXT;
     dataRep       : TEXT;
 
+    (* Are we generating for windows. Primarily for type of debug output *)
+    isWindows     : BOOLEAN := FALSE;
+
     (* State for generating calls. *) 
     callState     : callStateTyp; 
     callResultType : Type; (* Meaningful when inside a call. *) 
@@ -150,7 +153,8 @@ METHODS
     divMod(t : IType; isDiv : BOOLEAN) : LLVM.ValueRef := DivMod;
     doCheck(a,b : LLVM.ValueRef; pred : LLVM.IntPredicate; code : RuntimeError) := DoCheck;
     innerCallIndirect(proc: LLVM.ValueRef; t: Type; cc: CallingConvention; Nested: BOOLEAN) : LLVM.ValueRef := InnerCallIndirect;
-  
+    declSet(name : TEXT; fn : LLVM.ValueRef; numParams : INTEGER; hasReturn : BOOLEAN; setRange : BOOLEAN := FALSE) : LLVM.ValueRef := DeclSet;
+
 OVERRIDES
     next_label := next_label;
     set_error_handler := set_error_handler;
@@ -662,12 +666,17 @@ PROCEDURE TIntToint64_t(Val: TInt.Int) : int64_t =
     RETURN LLVM.LLVMTypeOf(Val); 
   END LvType;
 
-(* On POSIX systems output DWARF, on Windows its CodeView *)
-PROCEDURE SetDebugType(self : U) =
+PROCEDURE IsWindows(targetTriple : TEXT) : BOOLEAN =
   VAR index : CARDINAL;
   BEGIN
     (* This test is dependent on the target triple *)
-    IF TextExtras.FindSub(self.targetTriple,"windows",index) THEN
+    RETURN TextExtras.FindSub(targetTriple,"windows",index);
+  END IsWindows;
+
+PROCEDURE SetDebugType(self : U) =
+  BEGIN
+   (* On POSIX systems output DWARF, on Windows its CodeView *)
+    IF self.isWindows THEN
       self.dwarfDbg := FALSE;
     END;
   END SetDebugType;
@@ -788,6 +797,7 @@ PROCEDURE New
                 procStack := NEW(RefSeq.T).init(),
                 m3llvmDebugLev := m3llvmDebugLev,
                 genDebug := genDebug,
+                isWindows := IsWindows(targetTriple),
                 debugLexStack := NEW(RefSeq.T).init(),
                 allocaName := M3ID.Add("alloca"));
   END New;
@@ -1056,7 +1066,7 @@ PROCEDURE EmbedVersion() =
     mdNode : LLVM.ValueRef;
     identMD : ARRAY[0..0] OF REFANY;
     cm3Ver,llvmVer,ident : TEXT;
-    llmajor,llminor : Ctypes.int;
+    llmajor,llminor : Ctypes.int;    
   BEGIN
     cm3Ver := "5.8";
 (* FIXME - Get proper cm3 version *)
@@ -1069,9 +1079,8 @@ PROCEDURE EmbedVersion() =
     LLVM.LLVMAddNamedMetadataOperand(modRef, LT("llvm.ident"), mdNode);
   END EmbedVersion;
 
-
 (* declare an external set function *)
-PROCEDURE DeclSet(name : TEXT; fn : LLVM.ValueRef; numParams : INTEGER; hasReturn : BOOLEAN; setRange : BOOLEAN := FALSE) : LLVM.ValueRef =
+PROCEDURE DeclSet(self : U; name : TEXT; fn : LLVM.ValueRef; numParams : INTEGER; hasReturn : BOOLEAN; setRange : BOOLEAN := FALSE) : LLVM.ValueRef =
   VAR
     proc : LLVM.ValueRef;
     retTy,procTy : LLVM.TypeRef;
@@ -1097,6 +1106,9 @@ PROCEDURE DeclSet(name : TEXT; fn : LLVM.ValueRef; numParams : INTEGER; hasRetur
 
     procTy := LLVM.LLVMFunctionType(retTy, paramsRef, numParams, FALSE);
     proc := LLVM.LLVMAddFunction(modRef, LT(name), procTy);
+    IF self.isWindows THEN
+      LLVM.LLVMSetFunctionCallConv(proc, LLVM.X86StdcallCallConv);
+    END;
     RETURN proc;
   END DeclSet;
 
@@ -1314,6 +1326,22 @@ PROCEDURE begin_unit (self: U;  optimize : INTEGER) =
     byteSize := LLVM.LLVMConstInt(IntPtrTy, VAL(ptrBytes,LONGINT), TRUE);
   END begin_unit;
 
+PROCEDURE SetBBVolatile(bb : LLVM.BasicBlockRef) =
+  VAR
+    instr : LLVM.ValueRef;
+    opCode : LLVM.Opcode;
+  BEGIN
+    instr := LLVM.LLVMGetFirstInstruction(bb);
+    WHILE instr # NIL DO
+      opCode := LLVM.LLVMGetInstructionOpcode(instr);
+      IF opCode = LLVM.Opcode.Store OR
+         opCode = LLVM.Opcode.Load THEN
+        LLVM.LLVMSetVolatile(instr, TRUE);
+      END;
+      instr := LLVM.LLVMGetNextInstruction(instr);
+    END;
+  END SetBBVolatile;
+
 PROCEDURE end_unit (self: U) =
   VAR
     iter : IntRefTbl.Iterator;
@@ -1321,9 +1349,8 @@ PROCEDURE end_unit (self: U) =
     lab : REFANY;
     label : LabelObj;
     terminator : LLVM.ValueRef;
-    curBB : LLVM.BasicBlockRef;
-    instr : LLVM.ValueRef;
-    opCode : LLVM.Opcode;
+    bb : LLVM.BasicBlockRef;
+    fn : LLVM.ValueRef;
   BEGIN
 
     (* There could be a label after an exit_proc which created a bb or a loop with no
@@ -1335,28 +1362,25 @@ PROCEDURE end_unit (self: U) =
       IF terminator = NIL THEN
         <*ASSERT LLVM.LLVMGetFirstInstruction(label.labBB) = NIL *>
         <*ASSERT label.branchList.size() = 0 *>
-        curBB := LLVM.LLVMGetInsertBlock(builderIR);
+        bb := LLVM.LLVMGetInsertBlock(builderIR);
         LLVM.LLVMPositionBuilderAtEnd(builderIR,label.labBB);
         DebugClearLoc(self); (* unreachable instr cant be debugged *)        
         EVAL LLVM.LLVMBuildUnreachable(builderIR);
         DebugLine(self); (* resume debugging *)
-        LLVM.LLVMPositionBuilderAtEnd(builderIR,curBB);
+        LLVM.LLVMPositionBuilderAtEnd(builderIR,bb);
       END;
 
       (* If a label specifies an exception barrier set volatile on 
          all loads and stores in the bb to prevent optimisers moving
          code *)
       IF label.barrier THEN
-        curBB := label.labBB;
-        instr := LLVM.LLVMGetFirstInstruction(curBB);
-        WHILE instr # NIL DO
-          opCode := LLVM.LLVMGetInstructionOpcode(instr);
-          IF opCode = LLVM.Opcode.Store OR
-             opCode = LLVM.Opcode.Load THEN
-            LLVM.LLVMSetVolatile(instr, TRUE);
-          END;
-          instr := LLVM.LLVMGetNextInstruction(instr);
-        END;
+        SetBBVolatile(label.labBB);
+        (* set the 'second' bb volatile as well. This is where locals
+           get inited and seems to be necessary to stop optimisations *)
+        fn := LLVM.LLVMGetBasicBlockParent(label.labBB);
+        bb := LLVM.LLVMGetFirstBasicBlock(fn);
+        bb := LLVM.LLVMGetNextBasicBlock(bb);
+        SetBBVolatile(bb);
       END;
     END;
 
@@ -1495,13 +1519,15 @@ PROCEDURE declare_field (self: U; n: Name; o: BitOffset; s: BitSize; t: TypeUID)
     recordRef : RecordDebug;
     debugObj : REFANY;
     align : LONGINT;
-    packed : BOOLEAN;
+    packed,found : BOOLEAN := FALSE;
   BEGIN
     recordRef := self.debugObj;
     <*ASSERT ISTYPE(recordRef,RecordDebug) *>
     align := Align(s);
-    EVAL self.debugTable.get(t, (*OUT*)debugObj);
-    packed := ISTYPE(debugObj,PackedDebug);
+    found := self.debugTable.get(t, (*OUT*)debugObj);
+    IF found AND ISTYPE(debugObj,PackedDebug) THEN
+      packed := TRUE;
+    END;
     recordRef.fields[recordRef.fieldIndex] := NEW(FieldDebug,name := n, bitOffset := VAL(o,LONGINT), tUid := t, bitSize := VAL(s,LONGINT), align := align, packed := packed);
     INC(recordRef.fieldIndex);
   END declare_field;
@@ -2879,6 +2905,8 @@ PROCEDURE load (self: U;  v: Var;  o: ByteOffset;  t: MType;  u: ZType) =
         (* srcVal is a pointer, of size ptrBytes, but o is a byte offset.  Must
            bitcast to i8*, do the GEP, and bitcast back. *) 
         srcVal := LLVM.LLVMBuildBitCast (builderIR, srcVal, AdrTy, LT("load_base.i8p"));
+(* FIXME for opaque pointers need to pass srcPtrTy to BuildGep
+and then Gep and then LLVMBuildInboundsGep2 *)
         srcVal := BuildGep(srcVal,o,"load_dest.i8p");
         srcVal := LLVM.LLVMBuildBitCast (builderIR, srcVal, srcPtrTy, LT("load_dest"));
       END;
@@ -2947,6 +2975,8 @@ PROCEDURE store (self: U;  v: Var;  o: ByteOffset;  t: ZType;  u: MType) =
     IF dest.type = Type.Addr THEN
       (* Remove the first pointer from destination type. *)
       destEltTy := LLVM.LLVMGetElementType(LLVM.LLVMTypeOf(destVal));
+      (* ^ FIXME - New LLVM Opaque Pointers - see BuildGEP2 et al -means we cant use
+      getelementtype on a pointer - find out what we can use *)
       IF u = Type.Addr THEN      
         srcVal := LLVM.LLVMBuildBitCast(builderIR, srcVal, destEltTy, LT("store_val"));
       ELSE
@@ -3674,7 +3704,7 @@ PROCEDURE SetBinopCommon
 VAR
   s0,s1,s2,sizeVal : LLVM.ValueRef;
   BEGIN
-    fn := DeclSet(name,fn,4,FALSE);
+    fn := self.declSet(name,fn,4,FALSE);
     sizeVal := LLVM.LLVMConstInt(IntPtrTy, VAL(s * 8,LONGINT), TRUE);
     GetSetStackVals(self,TRUE,s0,s1,s2);
     EVAL SetCall(fn,4,sizeVal,s0,s1,s2);
@@ -3715,7 +3745,7 @@ PROCEDURE set_member (self: U; <*UNUSED*> s: ByteSize; <*UNUSED*> t: IType) =
     s0 := NARROW(st0,LvExpr).lVal;
     s1 := NARROW(st1,LvExpr).lVal;
     s1 := LLVM.LLVMBuildBitCast(builderIR, s1, PtrTy, LT("set_cast"));
-    self.setMember := DeclSet("set_member",self.setMember,2,TRUE);
+    self.setMember := self.declSet("set_member",self.setMember,2,TRUE);
     res := SetCall(self.setMember,2,s0,s1);
     NARROW(st1,LvExpr).lVal := res;
     Pop(self.exprStack);
@@ -3730,7 +3760,7 @@ PROCEDURE SetCompareCommon
     size : LLVM.ValueRef;
   BEGIN
     size := LLVM.LLVMConstInt(IntPtrTy, VAL(s * 8,LONGINT), TRUE);
-    fn := DeclSet(name,fn,3,TRUE);
+    fn := self.declSet(name,fn,3,TRUE);
     GetSetStackVals(self,FALSE,s0,s1,s2);
     res := SetCall(fn,3,size,s0,s1);
     NARROW(st1,LvExpr).lVal := res;
@@ -3769,7 +3799,7 @@ PROCEDURE set_range (self: U; <*UNUSED*> s: ByteSize; <*UNUSED*> t: IType) =
     s1 := NARROW(st1,LvExpr).lVal;
     s2 := NARROW(st2,LvExpr).lVal;
     s2 := LLVM.LLVMBuildBitCast(builderIR, s2, PtrTy, LT("set_cast"));
-    self.setRange := DeclSet("set_range",self.setRange,3,TRUE,TRUE);
+    self.setRange := self.declSet("set_range",self.setRange,3,TRUE,TRUE);
     EVAL SetCall(self.setRange,3,s0,s1,s2);
     Pop(self.exprStack,3);
   END set_range;
@@ -3784,7 +3814,7 @@ PROCEDURE set_singleton (self: U; <*UNUSED*> s: ByteSize; <*UNUSED*> t: IType) =
     s0 := NARROW(st0,LvExpr).lVal;
     s1 := NARROW(st1,LvExpr).lVal;
     s1 := LLVM.LLVMBuildBitCast(builderIR, s1, PtrTy, LT("set_cast"));
-    self.setSingleton := DeclSet("set_singleton",self.setSingleton,2,FALSE);
+    self.setSingleton := self.declSet("set_singleton",self.setSingleton,2,FALSE);
     EVAL SetCall(self.setSingleton,2,s0,s1);
     Pop(self.exprStack,2);
   END set_singleton;
@@ -5769,7 +5799,7 @@ a declare_local  _result *)
   END DebugFunc;
 
 (* lex block init for scoping. Lexical blocks are not completely working
-   in cases like.ubranges and arrays. *)
+   in cases like subranges and arrays. *)
 <*UNUSED*>PROCEDURE DebugInitLexBlock(self : U) =
   VAR
     lexBlock : M3DIB.DILexicalBlock;
@@ -5801,7 +5831,7 @@ PROCEDURE DebugPushBlock(self : U) =
       blockRef := NEW(BlockDebug, value:= lexBlock);
     END;
     Push(self.debugLexStack, blockRef);
-END DebugPushBlock;
+  END DebugPushBlock;
 
 PROCEDURE DebugPopBlock(self : U) =
   BEGIN
@@ -6459,7 +6489,10 @@ PROCEDURE DebugRecord(self : U; r : RecordDebug) : M3DIB.DICompositeType =
     paramsArr : REF ARRAY OF MetadataRef; 
     paramsMetadata : LLVMTypes.ArrayRefOfMetadataRef; 
     paramsDIArr : M3DIB.DINodeArray;
+    baseObj : BaseDebug;
+    packedObj : PackedDebug;
     uniqueId : StringRef;
+    min, count : TInt.Int; 
   BEGIN
     uniqueId := LTD(M3CG.FormatUID(r.tUid));
     NewArrayRefOfMetadataRef
@@ -6482,13 +6515,24 @@ PROCEDURE DebugRecord(self : U; r : RecordDebug) : M3DIB.DICompositeType =
     r.diType := structDIT;
 
     FOR i := 0 TO r.numFields - 1 DO
-      fieldDIT := DebugLookupLL(self,r.fields[i].tUid);
 
       IF r.fields[i].packed THEN
-(* packed members will use the base type of the subrange
-which will be signed. Sometimes its more convenient for them
-to be unsigned. Maybe if the subrange is positive we could
-change the base type to unsigned - worth considering. *)
+        (* packed members will use the base type of the subrange
+           which will be signed. GDB seems to need positive
+           packed members to be unsigned to work properly. Also maybe revisit
+           this when subranges work properly. *)
+
+        baseObj := DebugType(self,r.fields[i].tUid);
+        packedObj := NARROW(baseObj,PackedDebug);
+        DebugLookupOrdinalBounds (self, packedObj.base ,(*OUT*)min, (*OUT*)count);
+
+        IF TInt.GE(min,TInt.Zero) THEN
+          (* really just want an integer base type with encoding unsigned *)
+          fieldDIT := DebugLookupLL(self,UID_RANGE_0_63);
+        ELSE
+          fieldDIT := DebugLookupLL(self,UID_INTEGER);
+        END;
+
         memberDIT := self.debugRef.createBitFieldMemberType(
                        Scope        := structDIT,
                        Name         := LTD(M3ID.ToText(r.fields[i].name)),
@@ -6496,10 +6540,11 @@ change the base type to unsigned - worth considering. *)
                        LineNo       := self.curLine,
                        SizeInBits   := VAL(r.fields[i].bitSize,uint64_t),
                        OffsetInBits := VAL(r.fields[i].bitOffset,uint64_t),
-                       StorageOffsetInBits := VAL(r.fields[i].bitOffset,uint64_t),                     
+                       StorageOffsetInBits := 0L,                     
                        Flags        := 0,
                        Ty           := fieldDIT);
       ELSE
+        fieldDIT := DebugLookupLL(self,r.fields[i].tUid);
         memberDIT := self.debugRef.createMemberType(
                        Scope        := structDIT,
                        Name         := LTD(M3ID.ToText(r.fields[i].name)),
