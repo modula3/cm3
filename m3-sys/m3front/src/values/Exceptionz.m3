@@ -113,7 +113,7 @@ PROCEDURE EmitRaise (v: Value.T;  arg: Expr.T) =
       expr_type := Type.CheckInfo (expr_type, info);
       arg_type := info.stk_type;
       Expr.Prep (arg);
-      AssignStmt.DoEmitCheck (t.tipe, arg);
+      AssignStmt.EmitRTCheck (t.tipe, arg);
       tmp := CG.Pop ();
       Procedure.StartCall (p);
       IF Target.DefaultCall.args_left_to_right THEN
@@ -141,8 +141,9 @@ PROCEDURE EmitRaise (v: Value.T;  arg: Expr.T) =
       expr_type := Expr.TypeOf (arg);
       expr_type := Type.CheckInfo (expr_type, info);
       arg_type := info.stk_type;
+      EVAL Expr.Use (arg);
       Expr.Prep (arg);
-      AssignStmt.DoEmitCheck (t.tipe, arg);
+      AssignStmt.EmitRTCheck (t.tipe, arg);
       tmp := CG.Pop ();
       CG.Start_call_indirect (CG.Type.Void, Target.DefaultCall);
       IF Target.DefaultCall.args_left_to_right THEN

@@ -123,6 +123,7 @@ PROCEDURE Compile (p: P): Stmt.Outcomes =
         ArrayExpr.NoteUseTargetVar (p.expr);
         AssignStmt.PrepForEmit (tlhs, p.expr, initializing := TRUE);
     | Kind.openarray, Kind.other =>
+        EVAL Expr.Use (p.expr);
         Expr.Prep (p.expr);
         Expr.Compile (p.expr);
         val := CG.Pop ();

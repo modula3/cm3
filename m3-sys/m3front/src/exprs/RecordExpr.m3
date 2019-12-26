@@ -31,6 +31,7 @@ TYPE
         map           : REF ARRAY OF Info := NIL;
         finalVal      : CG.Val := NIL;
         finalValUseCt : INTEGER := 0;
+        globalOffset  : INTEGER := FIRST (INTEGER) (* Means uninitialized. *);
         RTErrorMsg    : TEXT := NIL;
         RTErrorCode   := CG.RuntimeError.Unknown;
         evalAttempted : BOOLEAN := FALSE;
@@ -144,7 +145,8 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
     FOR i := 0 TO LAST (p.args^) DO Expr.TypeCheck (p.args[i], cs) END;
     p.type := p.tipe;
     IF NOT RecordType.Split (p.tipe, fieldList) THEN
-      Error.Msg ("record constructor must specify a record type");
+(* CHECK: Can't we ASSERT FALSE here? *)
+      Error.Msg ("Record constructor must specify a record type (2.6.8)");
       RETURN;
     END;
 
@@ -175,7 +177,8 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
     FOR i := 0 TO LAST (p.args^) DO
       e := p.args[i];
       IF RangeExpr.Split (e, splitExpr, dfault) THEN
-        Error.Msg ("range expressions not allowed in record constructors");
+        Error.Msg
+          ("Range expressions not allowed in record constructors (2.6.8).");
       END;
 
       IF KeywordExpr.Split (e, Id, splitExpr) THEN
@@ -184,7 +187,7 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
         e := splitExpr;
         LOOP
           IF (fieldNo >= fieldCt) THEN
-            Error.ID (Id, "unknown field name in record constructor");
+            Error.ID (Id, "Unknown field name in record constructor (2.6.8).");
             fieldNo := i;
             EXIT;
           END;
@@ -193,10 +196,10 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
         END;
       ELSE (* positional parameter *)
         IF (NOT posOK) THEN
-          Error.Msg ("positional values must precede keyword values");
+          Error.Msg ("Positional values must precede keyword values (2.6.8).");
         END;
         IF (i >= fieldCt) THEN
-            Error.Msg ("too many values in record constructor");
+            Error.Msg ("Too many values in record constructor (2.6.8).");
             fieldNo := fieldCt - 1;
           ELSE  fieldNo := i;
         END;
@@ -205,19 +208,21 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
       IF (0 <= fieldNo) AND (fieldNo < fieldCt) THEN
         WITH z = p.map^[fieldNo] DO
           IF (z.done) THEN
-            Error.ID (z.name, "record constructor field previously specified");
+            Error.ID
+              (z.name, "Record constructor field previously specified (2.6.8).");
           END;
           z.done := TRUE;
           IF NOT Type.IsAssignable (z.type, Expr.TypeOf (e)) THEN
             Error.ID
-              (z.name, "expression is not assignable to record constructor field");
+              (z.name,
+               "Expression is not assignable to record constructor field  (2.6.8).");
           ELSE
             ArrayExpr.NoteUseTargetVar (e);
 
-
             AssignStmt.CheckRT
-              (z.type, e, cs, IsError := FALSE, Code := RTErrorCode,
-               Msg := RTErrorMsg);
+              (z.type, e, cs,
+               (*VAR*)Code := RTErrorCode, (*VAR*)Msg := RTErrorMsg
+              );
             MergeRTError (p, RTErrorCode, RTErrorMsg);
             z.expr := e;
           END;
@@ -230,7 +235,8 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
     FOR fieldNo := 0 TO fieldCt - 1 DO
       WITH z = p.map^[fieldNo] DO
         IF (NOT z.done) AND (z.expr = NIL) THEN
-          Error.ID (z.name, "no value specified for record constructor field");
+          Error.ID
+            (z.name, "No value specified for record constructor field (2.6.8).");
         END;
       END;
     END;
@@ -261,7 +267,7 @@ PROCEDURE EqCheck (a: P;  e: Expr.T;  x: M3.EqAssumption): BOOLEAN =
 (* Externally dispatched-to: *)
 PROCEDURE NeedsAddress (<*UNUSED*> p: P) =
   BEGIN
-    (* yep, all records get memory addresses *)
+    (* yep, we already know all records get memory addresses *)
   END NeedsAddress;
 
 (* Externally dispatched-to: *)
@@ -350,7 +356,7 @@ PROCEDURE Compile (p: P) =
 
 (* Externally dispatched-to: *)
 PROCEDURE CompileLV (p: P; traced: BOOLEAN) =
-  VAR info: Type.Info;  offset: INTEGER;
+  VAR info: Type.Info;
   BEGIN
     IF UsesAssignProtocol (p)
     THEN (* InnerPrep was postponed until now. *)
@@ -358,12 +364,13 @@ PROCEDURE CompileLV (p: P; traced: BOOLEAN) =
     END;
     IF (p.is_const) THEN
       EVAL Type.CheckInfo (p.type, info);
-      offset
+      p.globalOffset
         := Module.Allocate
              (info.size, info.alignment, TRUE, "*recordConstructor*");
       PrepLiteral (p, p.tipe, TRUE);
-      GenLiteral (p, offset, p.tipe, TRUE);
-      CG.Load_addr_of (Module.GlobalData (TRUE), offset, info.alignment);
+      GenLiteral (p, p.globalOffset, p.tipe, TRUE);
+      CG.Load_addr_of
+        (Module.GlobalData (TRUE), p.globalOffset, info.alignment);
     ELSE
       CG.Push (p.finalVal);
       DEC (p.finalValUseCt);
@@ -456,10 +463,14 @@ PROCEDURE Use (p: P): BOOLEAN =
   BEGIN
     <* ASSERT p.checked *>
     IF p.RTErrorMsg # NIL AND Evaluate (p) # NIL THEN
+      CG.Comment
+        (p.globalOffset, TRUE, "Use of bad record constructor: ",
+         p.RTErrorMsg);
       CG.Abort (p.RTErrorCode);
       RETURN FALSE;
     ELSE RETURN TRUE;
     END;
   END Use;
+
 BEGIN
 END RecordExpr.

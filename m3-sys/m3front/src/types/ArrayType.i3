@@ -27,7 +27,9 @@ PROCEDURE Split (array: Type.T; VAR index, element: Type.T): BOOLEAN;
    type.  Otherwise, returns FALSE *)
 
 PROCEDURE EltType (array: Type.T): Type.T;
-(* If 'array' is a fixed array type, its element type, otherwise NIL. *)
+(* If 'array' is a fixed array type, its element type, otherwise NIL.
+   *BUT NOTE*: If elements are packed, this is the alignment of the
+   unpacked element type !!! *)
 
 PROCEDURE EltPack (array: Type.T): INTEGER;
 (* If 'array' is an array type, returns the packed size in bits of

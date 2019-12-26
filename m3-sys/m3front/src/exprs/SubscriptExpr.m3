@@ -297,6 +297,7 @@ PROCEDURE PrepLV (p: P; traced: BOOLEAN) =
   VAR e := Expr.ConstValue (p.biased_b);
   BEGIN
     IF (e # NIL) THEN p.biased_b := e; END;
+    EVAL Expr.Use (p.a);
     IF Expr.IsDesignator (p.a)
       THEN Expr.PrepLValue (p.a, traced);
       ELSE Expr.Prep (p.a);

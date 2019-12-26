@@ -30,6 +30,7 @@ TYPE
         (* We're gonna want this someday. *)
       OVERRIDES
         typeOf       := TypeOf;
+        repTypeOf    := RepTypeOf;
         check        := Check;
         need_addr    := NeedsAddress;
         prep         := Prep;
@@ -48,6 +49,9 @@ TYPE
         prepLiteral  := ExprRep.NoPrepLiteral;
         genLiteral   := ExprRep.NoLiteral;
         note_write   := ExprRep.NotWritable;
+        staticLength := StaticLength;
+        usesAssignProtocol := UsesAssignProtocol;
+        use          := Use;
       END;
 
 (* EXPORTED: *)
@@ -218,6 +222,38 @@ PROCEDURE IsZeroes (p: P;  <*UNUSED*> lhs: BOOLEAN): BOOLEAN =
     InnerSeal (p);
     RETURN Expr.IsZeroes (p.base);
   END IsZeroes;
+
+(* Externally dispatched-to: *)
+PROCEDURE RepTypeOf (p: P): Type.T =
+  BEGIN
+    IF p = NIL THEN RETURN ErrType.T END;
+    InnerSeal (p);
+    RETURN p.base.repTypeOf () (* Delegate.*);
+  END RepTypeOf;
+
+(* Externally dispatched-to: *)
+PROCEDURE StaticLength (p: P): Expr.lengthTyp =
+  BEGIN
+    IF p = NIL THEN RETURN Expr.lengthInvalid END;
+    InnerSeal (p);
+    RETURN p.base.staticLength () (* Delegate.*);
+  END StaticLength;
+
+(* Externally dispatched-to: *)
+PROCEDURE UsesAssignProtocol (p: P): BOOLEAN =
+  BEGIN
+    IF p = NIL THEN RETURN FALSE END;
+    InnerSeal (p);
+    RETURN p.base.usesAssignProtocol () (* Delegate.*);
+  END UsesAssignProtocol;
+
+(* Externally dispatched-to: *)
+PROCEDURE Use (p: P): BOOLEAN =
+  BEGIN
+    IF p = NIL THEN RETURN TRUE END;
+    InnerSeal (p);
+    RETURN p.base.use () (* Delegate.*);
+  END Use;
 
 BEGIN
 END ConsExpr.

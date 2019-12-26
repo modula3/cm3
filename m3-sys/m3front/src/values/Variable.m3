@@ -795,7 +795,7 @@ PROCEDURE CopyOpenArray (tipe: Type.T;  ref: Type.T) =
   VAR
     oldDopePtr, newDopePtr : CG.Val;
     depth := OpenArrayType.OpenDepth (tipe);
-    align := OpenArrayType.EltAlign (tipe);
+    align := MAX (OpenArrayType.EltAlign (tipe), Target.Word8.align);
     pack  := OpenArrayType.EltPack (tipe);
     sizes := CG.Declare_temp (Target.Address.pack + Target.Integer.pack,
                               Target.Address.align, CG.Type.Struct,
@@ -861,6 +861,7 @@ PROCEDURE CopyOpenArray (tipe: Type.T;  ref: Type.T) =
 PROCEDURE UserInit (t: T) =
   VAR constInitExpr: Expr.T;
   VAR initRepType: Type.T;
+  VAR openEltAlign: INTEGER;
   BEGIN
     IF (t.initExpr # NIL) AND (NOT t.initDone) AND (NOT t.imported) THEN
       CG.Gen_location (t.origin);
@@ -878,10 +879,12 @@ PROCEDURE UserInit (t: T) =
           <* ASSERT constInitExpr # NIL *>
           initRepType := Expr.RepTypeOf (constInitExpr);
           IF OpenArrayType.Is (initRepType) THEN
-            CG.Open_elt_ptr (OpenArrayType.EltAlign(initRepType));
+            openEltAlign
+              := MAX (OpenArrayType.EltAlign(initRepType), Target.Word8.align);
+            CG.Open_elt_ptr (openEltAlign);
           END;
           CG.Copy (t.size, overlap := FALSE);
-        ELSE (* Expr.Use will have generated an abort *)
+        ELSE (* Expr.Use will have generated an unconditional RT error. *)
         END;
       ELSE
         t.initPending := FALSE;

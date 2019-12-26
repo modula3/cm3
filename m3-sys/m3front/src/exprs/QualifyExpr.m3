@@ -342,8 +342,10 @@ PROCEDURE Prep (p: P) =
         (* skip *)
     | Class.cFIELD =>
         IF Expr.IsDesignator (p.expr)
-          THEN Expr.PrepLValue (p.expr, traced := FALSE);
-          ELSE Expr.Prep (p.expr);
+        THEN Expr.PrepLValue (p.expr, traced := FALSE);
+        ELSE
+          EVAL Expr.Use (p.expr);
+          Expr.Prep (p.expr);
         END;
         Field.Split (p.obj, field);
         EVAL Type.CheckInfo (field.type, info);
@@ -479,8 +481,10 @@ PROCEDURE PrepLV (p: P; traced: BOOLEAN) =
         (* skip *)
     | Class.cFIELD =>
         IF Expr.IsDesignator (p.expr)
-          THEN Expr.PrepLValue (p.expr, traced);
-          ELSE Expr.Prep (p.expr);
+        THEN Expr.PrepLValue (p.expr, traced);
+        ELSE
+          EVAL Expr.Use (p.expr);
+          Expr.Prep (p.expr);
         END;
     | Class.cOBJFIELD =>
         Expr.Prep (p.expr);

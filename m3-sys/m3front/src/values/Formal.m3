@@ -203,6 +203,8 @@ PROCEDURE Load (t: T) =
     IF (t.dfault = NIL) THEN
       Error.ID (t.name, "formal has no default value");
     END;
+    EVAL Expr.Use (t.dfault);
+(* TODO^ Suppress generating code if Expr.Use returns TRUE? *)
     Expr.Prep (t.dfault);
     Expr.Compile (t.dfault);
   END Load;
@@ -658,6 +660,8 @@ PROCEDURE GenRecord (t: T;  actual: Expr.T) =
     (* <* ASSERT Type.IsEqual (t.tipe, Expr.TypeOf (actual), NIL) *> *)
     CASE t.mode OF
     | Mode.mVALUE =>
+        EVAL Expr.Use (actual);
+(* TODO^ Suppress generating code if Expr.Use returns TRUE? *)
         Expr.Compile (actual);
         EVAL Type.CheckInfo (t.tipe, info);
         Type.Compile (t.tipe);
@@ -672,6 +676,8 @@ PROCEDURE GenRecord (t: T;  actual: Expr.T) =
           CG.Pop_param (CG.Type.Addr);
         END
     | Mode.mCONST =>
+        EVAL Expr.Use (actual);
+(* TODO^ Suppress generating code if Expr.Use returns TRUE? *)
         IF Expr.IsDesignator (actual)
            AND Type.IsEqual (t.tipe, Expr.TypeOf (actual), NIL) THEN
           IF Expr.Alignment (actual) MOD Target.Byte = 0 THEN
@@ -731,7 +737,7 @@ PROCEDURE RepTypeOf (expr: Expr.T): Type.T =
   VAR Result: Type.T;
   VAR arrayConstrExpr: Expr.T;
   BEGIN
-(* TODO The interaction between getting a repType and looking thru' a ConsExpr is a mess.
+(* TODO: The interaction between getting a repType and looking thru' a ConsExpr is a mess.
    Clean it up and put things in the right place. *)
     arrayConstrExpr := ArrayExpr.ArrayConstrExpr (expr);
     IF arrayConstrExpr # NIL
@@ -761,6 +767,8 @@ PROCEDURE GenArray (formal: T; actual: Expr.T; formal_is_open: BOOLEAN) =
     CASE formal.mode OF
 
     | Mode.mVALUE =>
+        EVAL Expr.Use (actual);
+(* TODO^ Suppress generating code if Expr.Use returns TRUE? *)
         Expr.Compile (actual); (* This being an array, will compile an address. *)
         RedepthArray (formal.tipe, actualRepType);
 (* TODO: Avoid unnecessary copies when actual ia an array constructor or function
@@ -781,6 +789,8 @@ PROCEDURE GenArray (formal: T; actual: Expr.T; formal_is_open: BOOLEAN) =
         Expr.NoteWrite (actual);
 
     | Mode.mCONST =>
+        EVAL Expr.Use (actual);
+(* TODO^ Suppress generating code if Expr.Use returns TRUE? *)
         IF Expr.IsDesignator (actual) THEN (* Pass as VAR. *)
           PassArrayVAR (formal, actual, actualRepType);
         ELSE

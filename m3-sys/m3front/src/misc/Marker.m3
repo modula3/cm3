@@ -458,6 +458,7 @@ PROCEDURE EmitReturn (expr: Expr.T;  fromFinally: BOOLEAN) =
         WITH z = stack[i] DO
           CASE z.kind OF
           | Kind.zTRYELSE =>
+              EVAL Expr.Use (expr);
               Expr.Prep (expr);
               Expr.Compile (expr);
               CG.Discard (Type.CGType (Expr.TypeOf (expr)));
@@ -536,7 +537,7 @@ PROCEDURE EmitReturn (expr: Expr.T;  fromFinally: BOOLEAN) =
             CG.Exit_proc (CG.Type.Struct);
           END;
         ELSIF simple THEN
-          AssignStmt.DoEmitCheck (z.type, expr);
+          AssignStmt.EmitRTCheck (z.type, expr);
           CG.Exit_proc (Type.CGType (z.type));
         ELSE (* small scalar return value *)
           Variable.Load (z.variable);

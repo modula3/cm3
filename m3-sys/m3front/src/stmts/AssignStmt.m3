@@ -59,70 +59,71 @@ PROCEDURE CheckMethod (p: P;  VAR cs: Stmt.CheckState) =
 
     tlhs := Expr.SemTypeOf (p.lhs);
     IF  NOT Expr.IsDesignator (p.lhs) THEN
-      Error.Msg ("left-hand side is not a designator");
+      Error.Msg ("Assignment left-hand side is not a designator (2.3.1).");
     ELSE
       EVAL Type.CheckInfo (Expr.SemTypeOf (p.rhs), rhs_info);
       IF NOT Expr.IsWritable (p.lhs, rhs_info.isTraced) THEN
-        Error.Msg ("left-hand side is read-only");
+        Error.Msg ("Assignment left-hand side is read-only (2.3.1).");
       END;
     END;
     EVAL Type.Check(tlhs);
 
-    Check (tlhs, p.rhs, cs);
+    Check (tlhs, p.rhs, cs, IsError := FALSE);
   END CheckMethod;
 
 (* EXPORTED: *) 
 PROCEDURE Check
-  (tlhs: Type.T;  rhsExpr: Expr.T;  VAR cs: Stmt.CheckState; IsError := FALSE)=
+  (tlhs: Type.T;  rhsExpr: Expr.T;  VAR cs: Stmt.CheckState; IsError := FALSE )=
   VAR Code: CG.RuntimeError;
   VAR Msg: TEXT;
   BEGIN
-    CheckRT ( tlhs, rhsExpr, cs , IsError, (*VAR*)Code, (*VAR*)Msg);
+    CheckRT ( tlhs, rhsExpr, cs, (*VAR*)Code, (*VAR*)Msg, IsError);
   END Check;
 
 (* EXPORTED: *) 
 PROCEDURE CheckRT
-  (tlhs: Type.T;  rhsExpr: Expr.T;  VAR cs: Stmt.CheckState; IsError := FALSE;
-   VAR Code: CG.RuntimeError; VAR Msg: TEXT) =
+  (tlhs: Type.T;  rhsExpr: Expr.T;  VAR cs: Stmt.CheckState;
+   VAR Code: CG.RuntimeError; VAR Msg: TEXT; IsError := FALSE
+  ) =
 (* Like Check, but if a warning is produced for a runtime error that is
-   statically certain if this code is executed, return the RT error code and
-   a message text. *)
+   statically inevitable whenever its code is executed, return the RT error
+   Code # CG.RuntimeError.Unknown and a message text. in Msg.*)
 
   VAR
     base_tlhs := Type.Base (tlhs); (* strip renaming, packing, and subranges. *)
     trhs := Expr.SemTypeOf (rhsExpr);
     lhs_type_info, base_lhs_type_info: Type.Info;
-    lhsClass: Type.Class;
+    lhsTypeClass: Type.Class;
   BEGIN
     Msg := NIL;
     Code := CG.RuntimeError.Unknown;
     tlhs := Type.CheckInfo (tlhs, lhs_type_info);
     base_tlhs := Type.CheckInfo (base_tlhs, base_lhs_type_info);
-    lhsClass := base_lhs_type_info.class;
+    lhsTypeClass := base_lhs_type_info.class;
     Expr.TypeCheck (rhsExpr, cs);
 
     IF NOT Type.IsAssignable (tlhs, trhs) THEN
       IF (tlhs # ErrType.T) AND (trhs # ErrType.T) THEN
-        Error.Msg ("Types are not assignable in assignment.");
+        Error.Msg ("Types are not assignable in assignment (2.3.1).");
       END;
     ELSE
-      CASE lhsClass OF
+      CASE lhsTypeClass OF
       | Type.Class.Enum, Type.Class.Subrange, Type.Class.Integer,
         Type.Class.Longint =>
-        CheckOrdinal (tlhs, rhsExpr, IsError, (*VAR*)Code, (*VAR*)Msg);
-(* TODO: return CT codes/messages for other type classes. *)
+        CheckOrdinal (tlhs, rhsExpr, (*VAR*)Code, (*VAR*)Msg, IsError);
       | Type.Class.Ref, Type.Class.Object, Type.Class.Opaque =>
         CheckReference (tlhs, trhs, lhs_type_info);
       | Type.Class.Procedure =>
-        CheckProcedure (rhsExpr);
+        CheckProcedure (rhsExpr, (*VAR*)Code, (*VAR*)Msg, IsError);
       ELSE
       END (*CASE*)
     END
   END CheckRT;
 
 PROCEDURE CheckOrdinal
-  (tlhs: Type.T;  rhsExpr: Expr.T; IsError: BOOLEAN;
-   VAR Code: CG.RuntimeError; VAR Msg: TEXT) =
+  (tlhs: Type.T;  rhsExpr: Expr.T;
+   VAR Code: CG.RuntimeError; VAR Msg: TEXT; IsError: BOOLEAN
+  ) =
    
   VAR lmin, lmax, rmin, rmax: Target.Int;
   VAR constant: Expr.T;
@@ -140,14 +141,15 @@ PROCEDURE CheckOrdinal
            Check will have given a CT error and precluded this. *)
         reason := "(disjoint ranges).";
         <* ASSERT FALSE *>
-      ELSE reason := "(value out of range)."
+      ELSE reason := "(out of range)."
       END; 
 (* CHECK^ Can this duplicate a warning from IsAssignable on types, if
           RHS has a constant value outside LHS bounds? *)
       IF IsError THEN
-        Error.Msg ("Constant value not assignable " & reason);
+        Error.Msg ("Constant value not assignable " & reason & " (2.3.1).");
       ELSE
-        Error.Warn (2, "Value not assignable at runtime " & reason);
+        Error.Warn
+          (2, "Ordinal value not assignable at runtime " & reason & " (2.3.1).");
         Code := CG.RuntimeError.ValueOutOfRange;
         Msg := "value out of range."
       END;
@@ -155,64 +157,99 @@ PROCEDURE CheckOrdinal
     END;
   END CheckOrdinal;
 
-PROCEDURE CheckReference (tlhs, trhs: Type.T;  READONLY lhs_type_info: Type.Info) =
+PROCEDURE CheckReference
+  (tlhs, trhs: Type.T;  READONLY lhs_type_info: Type.Info) =
   BEGIN
 (* CHECK: Doesn't this just duplicate checks already done by Type.IsAssignable? *)
     IF Type.IsSubtype (trhs, tlhs) THEN
       (*ok*)
     ELSIF NOT Type.IsSubtype (tlhs, trhs) THEN
-      Error.Msg ("types are not assignable");
+      Error.Msg ("Reference types are not assignable (2.3.1).");
     ELSIF Type.IsEqual (trhs, Addr.T, NIL) THEN 
-      (* that is legal only in UNSAFE modules *)
-      IF Module.IsSafe() THEN Error.Msg ("unsafe implicit NARROW"); END;
+      (* this is legal only in UNSAFE modules *)
+      IF Module.IsSafe() THEN
+        Error.Msg ("Unsafe implicit NARROW to ADDRESS (2.3.1).");
+      END;
     ELSIF ObjectType.Is (trhs) THEN
       (*ok*)
     ELSIF lhs_type_info.isTraced THEN
       (*ok*)
     ELSE
-      Error.Msg ("expression not assignable to reference type");
+      Error.Msg ("Expression not assignable to reference type (2.3.1).");
     END;
+    (* A non-constant reference value will never be an element/field of a
+       constant constructor, so not in static constant area.  The only
+       constant value of any reference is NIL, and it will never fail a
+       CT narrow check. *)
   END CheckReference;
 
-PROCEDURE CheckProcedure (rhsExpr: Expr.T) =
-  BEGIN
-    IF NeedsClosureCheck (rhsExpr, TRUE) THEN
-      (* may generate a more detailed message *)
-    END;
-  END CheckProcedure;
-
-PROCEDURE NeedsClosureCheck (proc: Expr.T;  errors: BOOLEAN): BOOLEAN =
-  VAR name: M3ID.T;  obj: Value.T;  class: Value.Class;  nested: BOOLEAN;
+PROCEDURE CheckProcedure
+  (proc: Expr.T; VAR Code: CG.RuntimeError; VAR Msg: TEXT; IsError: BOOLEAN) =
+  VAR name: M3ID.T;
+  VAR obj: Value.T;
+  VAR valueClass: Value.Class;
+  VAR nested: BOOLEAN;
   BEGIN
     IF NOT (NamedExpr.Split (proc, name, obj)
             OR QualifyExpr.Split (proc, obj)
             OR ProcExpr.Split (proc, obj)) THEN
-      (* non-constant, non-variable => OK *)
-      RETURN FALSE;
+      (* NIL, or anything else? *)
+      RETURN 
     END;
     obj := Value.Base (obj);
-    class := Value.ClassOf (obj);
-    IF (class = Value.Class.Procedure) THEN
+    valueClass := Value.ClassOf (obj);
+    IF valueClass = Value.Class.Procedure THEN (* Procedure constant. *)
       nested := Procedure.IsNested (obj);
-      IF (nested) AND (errors) THEN
-        Error.ID (Value.CName (obj), "cannot assign nested procedures");
-(* TODO: Since Modula3 defines this as a checked runtime error, this
-         should just issue a (compile time) warning here, but also:
-         1) Return a RT error code and message through CheckProcedure
-            and CheckRT.  (This will result in a RT abort being generated
-            whereever a static constructor containing a field/element
-            with this procedure constant value is used.)
-         2) Arrange that RT aborts are emitted, near the sites of the calls
-            on NeedsClosureCheck in AssignProcedure and DoCheckProcedure.
-*)
+      IF nested THEN
+        (* Although we statically know this is an error, the rule (2.3.1) that
+           it violates is one that cannot in general be checked statically.  I
+           believe Modula3 is saying such cases should produce errors only at
+           runtime, if/when the subject code is actually executed.
+           rodney.m.bates@acm.org. *)
+        IF IsError THEN (* But the mechanism exists to make it a CT error. *)
+          Error.ID
+            ( Value.CName (obj),
+             "Nested procedure not assignable at runtime (2.3.1).");
+        ELSE 
+          Error.WarnID
+            (2, Value.CName (obj),
+             "Nested procedure not assignable at runtime (2.3.1).");
+          Code := CG.RuntimeError.NarrowFailed;
+          Msg := "Nested procedure assigned.";
+        END;
       END;
-      RETURN FALSE;
-    ELSIF (class = Value.Class.Var) AND Variable.HasClosure (obj) THEN
-      RETURN TRUE;
-    ELSE (* non-formal, non-const => no check *)
-      RETURN FALSE;
     END;
-  END NeedsClosureCheck;
+  END CheckProcedure;
+
+TYPE RTCheckKind = {None, Conditional, Fail}; 
+
+PROCEDURE ProcRTCheckKind (proc: Expr.T): RTCheckKind  =
+  VAR name: M3ID.T;
+  VAR obj: Value.T;
+  VAR valueClass: Value.Class;
+  VAR nested: BOOLEAN;
+  BEGIN
+    IF NOT Host.doNarrowChk THEN RETURN RTCheckKind.None END;
+    IF NOT (NamedExpr.Split (proc, name, obj)
+            OR QualifyExpr.Split (proc, obj)
+            OR ProcExpr.Split (proc, obj)) THEN
+      (* NIL, or anything else? *)
+      RETURN RTCheckKind.None
+    END;
+    obj := Value.Base (obj);
+    valueClass := Value.ClassOf (obj);
+    IF valueClass = Value.Class.Procedure THEN (* Procedure constant. *)
+      nested := Procedure.IsNested (obj);
+      IF nested THEN RETURN RTCheckKind.Fail;
+      ELSE RETURN RTCheckKind.None
+      END;
+    ELSIF valueClass = Value.Class.Var AND Variable.HasClosure (obj) THEN
+      (* Don't know statically.  RT check will be needed. *)
+      RETURN RTCheckKind.Conditional;
+    ELSE (* non-formal, non-const => no check *)
+      RETURN RTCheckKind.None;
+    END;
+  END ProcRTCheckKind;
 
 (*------------------------------------------------------- code generation ---*)
 
@@ -226,10 +263,12 @@ PROCEDURE PrepForEmit
     baseExpr := ConsExpr.Base (rhsExpr);
     IF baseExpr # NIL THEN rhsExpr := baseExpr END;
     ArrayExpr.NoteTargetType (rhsExpr, lhsRepType);
-(* REVIEW: Is this overconservate when assigning an array constructor? *)
+(* REVIEW: Is this overconservative when assigning an array constructor? *)
     IF CanAvoidCopy (lhsRepType, rhsExpr, initializing)
     THEN Expr.MarkForDirectAssignment (rhsExpr)
     END;
+    EVAL Expr.Use (rhsExpr);
+(* TODO^ Suppress generating code if Expr.Use returns TRUE? *)
     Expr.Prep (rhsExpr);
   END PrepForEmit;
 
@@ -302,7 +341,8 @@ PROCEDURE DoEmit
     | Type.Class.Object, Type.Class.Opaque, Type.Class.Ref =>
         AssignReference (lhsRepType, rhsExpr, lhsRepTypeInfo);
     | Type.Class.Procedure =>
-        AssignProcedure (rhsExpr, lhsRepTypeInfo);
+        RTCheckProcedure (rhsExpr);
+        CG.Store_indirect (lhsRepTypeInfo.stk_type, 0, lhsRepTypeInfo.size);
     | Type.Class.Record =>
         AssignRecord (lhsRepType, rhsExpr, lhsRepTypeInfo, lhsAlign);
     | Type.Class.Set =>
@@ -349,33 +389,6 @@ PROCEDURE AssignReference (tlhs: Type.T;  rhsExpr: Expr.T;
     CG.Free (lhsVal);
   END AssignReference;
 
-PROCEDURE AssignProcedure (rhsExpr: Expr.T;  READONLY lhsTypeInfo: Type.Info) =
-  (* PRE: LHS is compiled and on TOS. *)
-  (* PRE: RHS is prepped. *)
-  VAR ok: CG.Label;  lhsVal, rhsVal: CG.Val;
-  BEGIN
-    IF NOT Host.doNarrowChk THEN
-      Expr.Compile (rhsExpr);
-    ELSIF NOT NeedsClosureCheck (rhsExpr, FALSE) THEN
-      Expr.Compile (rhsExpr);
-    ELSE
-      lhsVal := CG.Pop ();
-      Expr.Compile (rhsExpr);
-      rhsVal := CG.Pop ();
-      ok := CG.Next_label ();
-      CG.If_closure (rhsVal, CG.No_label, ok, CG.Always);
-      CG.Abort (CG.RuntimeError.NarrowFailed);
-(* TODO^ I think we need another runtime error code for assigning a nested
-         procedure. *)
-      CG.Set_label (ok);
-      CG.Push (lhsVal);
-      CG.Push (rhsVal);
-      CG.Free (rhsVal);
-      CG.Free (lhsVal);
-    END;
-    CG.Store_indirect (lhsTypeInfo.stk_type, 0, lhsTypeInfo.size);
-  END AssignProcedure;
-
 PROCEDURE AssignSet (tlhs: Type.T;  rhsExpr: Expr.T;
                      READONLY lhsTypeInfo: Type.Info) =
   (* PRE: LHS is compiled and on TOS. *)
@@ -401,6 +414,7 @@ PROCEDURE AssignSet (tlhs: Type.T;  rhsExpr: Expr.T;
   END AssignSet;
 
 PROCEDURE CompileStruct (expr: Expr.T) =
+
 (* This works for a record or array that is a packed component of something. *)
   BEGIN
     IF Expr.IsDesignator (expr)
@@ -595,7 +609,7 @@ PROCEDURE AssertSameSize (a, b: Type.T) =
 (*---------------------------------------- code generation: checking only ---*)
 
 (* EXPORTED: *) 
-PROCEDURE DoEmitCheck (tlhs: Type.T;  rhsExpr: Expr.T) =
+PROCEDURE EmitRTCheck (tlhs: Type.T;  rhsExpr: Expr.T) =
   (* PRE: The lhs is compiled (thus on TOS).
      PRE: The rhsExpr is prepped.
      POST: RHS is TOS. *)
@@ -608,70 +622,86 @@ PROCEDURE DoEmitCheck (tlhs: Type.T;  rhsExpr: Expr.T) =
     CASE t_lhs_base_info.class OF
     | Type.Class.Integer, Type.Class.Longint, Type.Class.Subrange,
       Type.Class.Enum =>
-        DoCheckOrdinal (tlhs, rhsExpr);
+        RTCheckOrdinal (tlhs, rhsExpr);
     | Type.Class.Real, Type.Class.Longreal, Type.Class.Extended =>
-        DoCheckFloat (rhsExpr);
+        RTCheckFloat (rhsExpr);
     | Type.Class.Object, Type.Class.Opaque, Type.Class.Ref =>
-        DoCheckReference (tlhs, rhsExpr);
+        RTCheckReference (tlhs, rhsExpr);
     | Type.Class.Array, Type.Class.OpenArray =>
-        DoCheckArray (tlhs, rhsExpr);
+        RTCheckArray (tlhs, rhsExpr);
     | Type.Class.Procedure =>
-        DoCheckProcedure (rhsExpr);
+        RTCheckProcedure (rhsExpr);
     | Type.Class.Record =>
-        DoCheckRecord (tlhs, rhsExpr);
+        RTCheckRecord (tlhs, rhsExpr);
     | Type.Class.Set =>
-        DoCheckSet (tlhs, rhsExpr);
+        RTCheckSet (tlhs, rhsExpr);
     ELSE <* ASSERT FALSE *>
     END;
-  END DoEmitCheck;
+  END EmitRTCheck;
 
-PROCEDURE DoCheckOrdinal (tlhs: Type.T;  rhsExpr: Expr.T) =
+PROCEDURE RTCheckOrdinal (tlhs: Type.T;  rhsExpr: Expr.T) =
   VAR min, max : Target.Int;
   BEGIN
     EVAL Type.GetBounds (tlhs, min, max);
     CheckExpr.EmitChecks (rhsExpr, min, max, CG.RuntimeError.ValueOutOfRange);
-  END DoCheckOrdinal;
+  END RTCheckOrdinal;
 
-PROCEDURE DoCheckFloat (rhsExpr: Expr.T) =
+PROCEDURE RTCheckFloat (rhsExpr: Expr.T) =
   BEGIN
     Expr.Compile (rhsExpr);
-  END DoCheckFloat;
+  END RTCheckFloat;
 
-PROCEDURE DoCheckReference (tlhs: Type.T;  rhsExpr: Expr.T) =
+PROCEDURE RTCheckReference (tlhs: Type.T;  rhsExpr: Expr.T) =
   BEGIN
     Expr.Compile (rhsExpr);
     IF Host.doNarrowChk THEN Narrow.Emit (tlhs, Expr.TypeOf (rhsExpr)) END;
-  END DoCheckReference;
+  END RTCheckReference;
 
-PROCEDURE DoCheckProcedure (rhsExpr: Expr.T) =
-  VAR ok: CG.Label;  rhsVal: CG.Val;
+PROCEDURE RTCheckProcedure (rhsExpr: Expr.T) =
+  (* PRE: The lhs is compiled (thus on TOS).
+     PRE: The rhsExpr is prepped.
+     POST: RHS is TOS. *)
+  VAR ok: CG.Label;
+  VAR lhsVal, rhsVal: CG.Val;
   BEGIN
-    IF NOT Host.doNarrowChk THEN
+    CASE <*NOWARN*> ProcRTCheckKind (rhsExpr) OF
+    | RTCheckKind.Fail =>
+      (* Could there ever be a better example than this of what an
+         utterly dreadful idea an operand stack machine is? *) 
+      lhsVal := CG.Pop ();
+      CG.Abort (CG.RuntimeError.NarrowFailed);
+      CG.Push (lhsVal);
       Expr.Compile (rhsExpr);
-    ELSIF NOT NeedsClosureCheck (rhsExpr, FALSE) THEN
-      Expr.Compile (rhsExpr);
-    ELSE
+      CG.Free (lhsVal);
+    | RTCheckKind.Conditional =>
+      lhsVal := CG.Pop ();
       Expr.Compile (rhsExpr);
       rhsVal := CG.Pop ();
       ok := CG.Next_label ();
       CG.If_closure (rhsVal, CG.No_label, ok, CG.Always);
       CG.Abort (CG.RuntimeError.NarrowFailed);
+(* TODO^ I think we need another runtime error code for assigning a nested
+         procedure. *)
       CG.Set_label (ok);
+      CG.Push (lhsVal);
       CG.Push (rhsVal);
       CG.Free (rhsVal);
-    END;
-  END DoCheckProcedure;
+      CG.Free (lhsVal);
+    | RTCheckKind.None =>
+      Expr.Compile (rhsExpr);
+    END; 
+  END RTCheckProcedure;
 
-PROCEDURE DoCheckRecord (tlhs: Type.T;  rhsExpr: Expr.T) =
+PROCEDURE RTCheckRecord (tlhs: Type.T;  rhsExpr: Expr.T) =
   BEGIN
     AssertSameSize (tlhs, Expr.TypeOf (rhsExpr));
     IF Expr.IsDesignator (rhsExpr)
       THEN Expr.CompileLValue (rhsExpr, traced := FALSE);
       ELSE Expr.Compile (rhsExpr);
     END;
-  END DoCheckRecord;
+  END RTCheckRecord;
 
-PROCEDURE DoCheckSet (tlhs: Type.T;  rhsExpr: Expr.T) =
+PROCEDURE RTCheckSet (tlhs: Type.T;  rhsExpr: Expr.T) =
   BEGIN
     AssertSameSize (tlhs, Expr.TypeOf (rhsExpr));
     IF Type.IsStructured (tlhs) THEN
@@ -682,9 +712,9 @@ PROCEDURE DoCheckSet (tlhs: Type.T;  rhsExpr: Expr.T) =
     ELSE (* small set *)
       Expr.Compile (rhsExpr);
     END;
-  END DoCheckSet;
+  END RTCheckSet;
 
-PROCEDURE DoCheckArray (tlhs: Type.T;  rhsExpr: Expr.T) =
+PROCEDURE RTCheckArray (tlhs: Type.T;  rhsExpr: Expr.T) =
   VAR
     trhs    := Expr.TypeOf (rhsExpr);
     LHSIsOpen := OpenArrayType.Is (tlhs);
@@ -711,7 +741,7 @@ PROCEDURE DoCheckArray (tlhs: Type.T;  rhsExpr: Expr.T) =
       (* no more code to generate *)
 
     END;
-  END DoCheckArray;
+  END RTCheckArray;
 
 PROCEDURE GenOpenArraySizeChk (rhsVal: CG.Val;  tlhs, trhs: Type.T) =
   VAR lhsIndexType, rhsIndexType, lhsEltType, rhsEltType: Type.T;

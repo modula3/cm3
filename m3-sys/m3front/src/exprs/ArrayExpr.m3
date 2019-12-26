@@ -31,8 +31,8 @@ TYPE StateTyp
   = { Fresh, Checking, Checked, Representing, Represented,
       Prepping, Prepped, Compiling, Compiled};
 
-(* Information collected/matched across all cousins at a given array
-   multidimensional nesting depth. *)
+(* Information collected/matched across all cousins at a given
+   multidimensional array nesting depth. *)
 TYPE LevelInfoTyp = RECORD
     semType           : Type.T := NIL;
     repType           : Type.T := NIL;
@@ -164,15 +164,6 @@ REVEAL
     use          := Use
   END (*OBJECT*);
 
-PROCEDURE IsErr (type: Type.T) =
-  VAR Debug: INTEGER := 0;
-  BEGIN
-    IF type = ErrType.T
-    THEN
-      Debug := Target.Address.align (* For breakpoints. *)
-    END
-  END IsErr;
-
 (* EXPORTED: *) 
 PROCEDURE New (type: Type.T; args: Expr.List; dots: BOOLEAN): Expr.T =
   VAR constr := NEW (T);
@@ -188,7 +179,6 @@ PROCEDURE New (type: Type.T; args: Expr.List; dots: BOOLEAN): Expr.T =
     constr.useTargetVarLocked := FALSE;
     WITH b = ArrayType.Split (type, constr.semIndexType, constr.semEltType)
     DO <* ASSERT b *> (* Which also implies type is an array type. *) END; 
-IsErr(constr.semIndexType) (* Just for debugging. *);
     constr.repType      := NIL;
     constr.args         := args;
 (* REVIEW: Initializations here vs. declared in T. *)
@@ -372,8 +362,8 @@ PROCEDURE MergeRTError (top: T; Code: CG.RuntimeError; Msg: TEXT) =
     IF Msg # NIL AND top.RTErrorMsg = NIL THEN
       top.RTErrorCode := Code;
       top.RTErrorMsg := Msg;
-      Error.Warn
-        (2, "Will raise runtime error if executed: " & Msg);
+   (* Error.Warn
+        (2, "Will raise runtime error if executed: " & Msg); *)
     END;
   END MergeRTError;
 
@@ -534,8 +524,8 @@ PROCEDURE CheckRecurse
                   Error.Count (priorErrCt, priorWarnCt);
                   NoteUseTargetVar (argExpr);
                   AssignStmt.CheckRT
-                    (constr.semEltType, argExpr, cs, IsError := FALSE,
-                     Code := RTErrorCode, Msg := RTErrorMsg);
+                    (constr.semEltType, argExpr, cs,
+                     (*VAR*)Code := RTErrorCode, (*VAR*)Msg := RTErrorMsg);
                   MergeRTError (top, RTErrorCode, RTErrorMsg);
                   Error.Count (laterErrCt, laterWarnCt);
                   IF laterErrCt > priorErrCt THEN
@@ -894,7 +884,7 @@ PROCEDURE Represent (top: T) =
     top.state := StateTyp.Representing;
     lastArrayDepth := LAST(top.levels^) - 1;
     IF top.targetType # NIL AND top.targetType # top.semType THEN
-(* CHECK: Clients will likely duplicate this assignability check.
+(* CHECK: Callers will likely duplicate this assignability check.
           Can we eliminate the duplication? *)
       top.targetType := Type.Check (top.targetType);
       IF NOT Type.IsAssignable (top.targetType, top.semType) THEN
@@ -1081,6 +1071,7 @@ PROCEDURE Represent (top: T) =
       Error.Int
         (top.topEltsAlign,
          "CM3 restriction: array constructor cannot have sub-byte alignment.");
+      top.topEltsAlign := Target.Word8.align;
     END;
 
     (* Make sure fixed and open arrays of same length have the same bitsize. *)
@@ -1666,7 +1657,6 @@ PROCEDURE PrepRecurse
   VAR argRepTypeInfo: Type.Info;
   BEGIN
     IF constr.broken THEN 
-(* CHECK: Do we need to do any CG stack manipulation here? *)
     RETURN END;
     argCt := ArgCt (constr);
     <* ASSERT constr.state >= StateTyp.Represented *>

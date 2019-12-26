@@ -75,6 +75,11 @@ PROCEDURE EltPack (t: Type.T): INTEGER =
 
 (* EXPORTED: *)
 PROCEDURE EltAlign (t: Type.T): INTEGER =
+(* If 'array' is an open array type, returns the bit alignment of
+   the outermost non-open elements.
+   *BUT NOTE*: If elements are packed, this is the alignment of the
+   unpacked element type !!!
+   Otherwise, returns Target.Byte. *)
 (* Of first nonopen element. *)
   VAR p := Reduce (t);
   BEGIN

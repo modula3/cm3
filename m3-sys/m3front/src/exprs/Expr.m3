@@ -81,7 +81,7 @@ PROCEDURE StaticLengthDefault (t: T): lengthTyp =
 (* EXPORTED: *)
 PROCEDURE UsesAssignProtocol (rhs: T): BOOLEAN =
 BEGIN
-    IF (rhs = NIL) THEN RETURN FALSE END;
+    IF rhs = NIL THEN RETURN FALSE END;
     IF CallExpr.IsUserProc (rhs) THEN RETURN rhs.doDirectAssign END;
 
 (* TODO ^This one-liner is an easy temporary way to sidestep having to add
