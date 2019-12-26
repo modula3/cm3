@@ -2,6 +2,8 @@ Raised an exception, as expected: pass inline constant
 Raised an exception, as expected: pass local constant
 Raised an exception, as expected: pass global constant
 Raised an exception, as expected: pass imported constant
+Raised an exception, as expected: pass defaulted parameter
+Raised an exception, as expected: pass readonly
 Raised an exception, as expected: variable, initialized inline
 Raised an exception, as expected: variable, initialized to local constant
 Raised an exception, as expected: variable, initialized to global constant
@@ -10,6 +12,7 @@ Raised an exception, as expected: variable, assigned inline
 Raised an exception, as expected: variable, assigned to local constant
 Raised an exception, as expected: variable, assigned to global constant
 Raised an exception, as expected: variable, assigned to imported constant
-12 tests performed.
+Raised an exception, as expected: nested procedure assigned to field of variable
+15 tests performed.
 All succeeded.
 Overall test succeeded.

@@ -11,6 +11,10 @@
    which were not producing runtime errors when executed.
 *)
 
+(* This produces a bunch of compile-time warnings, but the real test is
+   for runtime behavior.
+*)
+
 MODULE Main
 
 ; IMPORT Fmt , Stdio , Thread , Wr 
@@ -35,6 +39,18 @@ MODULE Main
   ; BEGIN
       I := 11 (* Just for a breakpoint. *)
     END AcceptRec 
+
+; PROCEDURE AcceptRecDefault ( <*UNUSED*>F := Rec { 10 , 25 , 18 , 9 } )
+  = VAR I : INTEGER
+  ; BEGIN
+      I := 11 (* Just for a breakpoint. *)
+    END AcceptRecDefault
+
+; PROCEDURE AcceptRecRO ( <*UNUSED*> READONLY F : Rec )
+  = VAR I : INTEGER
+  ; BEGIN
+      I := 11 (* Just for a breakpoint. *)
+    END AcceptRecRO
 
 ; PROCEDURE PassInline ( ) (*RAISES ANY*) 
   = VAR I : INTEGER 
@@ -65,6 +81,20 @@ MODULE Main
       I := 7
     ; AcceptRec ( Lib.GC (* RT error *) )
     END PassImportConst
+
+; PROCEDURE PassDefault ( ) (*RAISES ANY*)
+  = VAR I : INTEGER
+  ; BEGIN
+      I := 7
+    ; AcceptRecDefault ( (* RT error *) )
+    END PassDefault
+
+; PROCEDURE PassRO ( ) (*RAISES ANY*)
+  = VAR I : INTEGER
+  ; BEGIN
+      I := 7
+    ; AcceptRecRO ( Rec { 10 , 25 , 18 , 9 } (* RT error *) )
+    END PassRO
 
 ; PROCEDURE AssignInline ( ) (*RAISES ANY*) 
   = VAR LV : Rec 
@@ -146,11 +176,27 @@ MODULE Main
     ; I := 7 (* Just for a breakpoint. *)
     END VarImportConst
 
+; TYPE ProcTyp = PROCEDURE ( ) RAISES ANY
+; TYPE RecProc = RECORD F : ProcTyp END
+
+; PROCEDURE ProcField  ( ) (*RAISES ANY*)
+  = PROCEDURE NestedProc ( )
+    = VAR K : INTEGER
+    ; BEGIN
+        K := 11 (* Just for a breakpoint. *)
+      END NestedProc
+
+  ; VAR I : INTEGER := 5
+  ; VAR Rec := RecProc { NestedProc }
+  ; BEGIN
+      I := 7 (* Just for a breakpoint. *)
+    ; Rec . F ( )
+    ; I := 9 (* Just for a breakpoint. *)
+    END ProcField
+
 ; <*UNUSED*> PROCEDURE NoRTError ( ) (*RAISES ANY*) 
   = BEGIN
     END NoRTError 
-
-; TYPE ProcTyp = PROCEDURE ( ) RAISES ANY 
 
 ; VAR TestCt : INTEGER
 ; VAR FailureCt : INTEGER
@@ -221,6 +267,8 @@ MODULE Main
   ; TestMustFail ( PassLocConst , "pass local constant" ) 
   ; TestMustFail ( PassGlobalConst , "pass global constant" ) 
   ; TestMustFail ( PassImportConst , "pass imported constant" ) 
+  ; TestMustFail ( PassDefault , "pass defaulted parameter" )
+  ; TestMustFail ( PassRO , "pass readonly" )
 
   ; TestMustFail ( VarInline , "variable, initialized inline" )
   ; TestMustFail ( VarLocConst , "variable, initialized to local constant" )
@@ -231,6 +279,8 @@ MODULE Main
   ; TestMustFail ( AssignLocConst , "variable, assigned to local constant" )
   ; TestMustFail ( AssignGlobalConst , "variable, assigned to global constant" )
   ; TestMustFail ( AssignImportConst , "variable, assigned to imported constant" )
+
+  ; TestMustFail ( ProcField , "nested procedure assigned to field of variable" )
 
 (* This is just to test reporting of failures: 
   ; TestMustFail ( NoRTError , "Actually, should fail to fail." )
