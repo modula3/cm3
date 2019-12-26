@@ -557,6 +557,7 @@ end
 % Recently added tests...
 
 p_test ("p2", "p268", "Record constructors with statically inevitable RT errors.")
+p_test ("p2", "p270", "Array constructors with statically inevitable RT errors.")
 
 % some currently failing tests...
 
