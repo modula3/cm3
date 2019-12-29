@@ -1,24 +1,24 @@
-"../Lib.i3", line 14: warning: Ordinal value not assignable at runtime (out of range). (2.3.1).
-"../Lib.i3", line 14: warning: Ordinal value not assignable at runtime (out of range). (2.3.1).
+"../Lib.i3", line 14: warning: Ordinal value not assignable at runtime (out of range) (2.3.1).
+"../Lib.i3", line 14: warning: Ordinal value not assignable at runtime (out of range) (2.3.1).
 2 warnings encountered
-"../Main.m3", line 28: warning: Ordinal value not assignable at runtime (out of range). (2.3.1).
-"../Main.m3", line 28: warning: Ordinal value not assignable at runtime (out of range). (2.3.1).
-"../Main.m3", line 43: warning: Ordinal value not assignable at runtime (out of range). (2.3.1).
-"../Main.m3", line 43: warning: Ordinal value not assignable at runtime (out of range). (2.3.1).
-"../Main.m3", line 59: warning: Ordinal value not assignable at runtime (out of range). (2.3.1).
-"../Main.m3", line 59: warning: Ordinal value not assignable at runtime (out of range). (2.3.1).
-"../Main.m3", line 63: warning: Ordinal value not assignable at runtime (out of range). (2.3.1).
-"../Main.m3", line 63: warning: Ordinal value not assignable at runtime (out of range). (2.3.1).
-"../Main.m3", line 96: warning: Ordinal value not assignable at runtime (out of range). (2.3.1).
-"../Main.m3", line 96: warning: Ordinal value not assignable at runtime (out of range). (2.3.1).
-"../Main.m3", line 105: warning: Ordinal value not assignable at runtime (out of range). (2.3.1).
-"../Main.m3", line 105: warning: Ordinal value not assignable at runtime (out of range). (2.3.1).
-"../Main.m3", line 110: warning: Ordinal value not assignable at runtime (out of range). (2.3.1).
-"../Main.m3", line 110: warning: Ordinal value not assignable at runtime (out of range). (2.3.1).
-"../Main.m3", line 142: warning: Ordinal value not assignable at runtime (out of range). (2.3.1).
-"../Main.m3", line 142: warning: Ordinal value not assignable at runtime (out of range). (2.3.1).
-"../Main.m3", line 151: warning: Ordinal value not assignable at runtime (out of range). (2.3.1).
-"../Main.m3", line 151: warning: Ordinal value not assignable at runtime (out of range). (2.3.1).
+"../Main.m3", line 28: warning: Ordinal value not assignable at runtime (out of range) (2.3.1).
+"../Main.m3", line 28: warning: Ordinal value not assignable at runtime (out of range) (2.3.1).
+"../Main.m3", line 43: warning: Ordinal value not assignable at runtime (out of range) (2.3.1).
+"../Main.m3", line 43: warning: Ordinal value not assignable at runtime (out of range) (2.3.1).
+"../Main.m3", line 59: warning: Ordinal value not assignable at runtime (out of range) (2.3.1).
+"../Main.m3", line 59: warning: Ordinal value not assignable at runtime (out of range) (2.3.1).
+"../Main.m3", line 63: warning: Ordinal value not assignable at runtime (out of range) (2.3.1).
+"../Main.m3", line 63: warning: Ordinal value not assignable at runtime (out of range) (2.3.1).
+"../Main.m3", line 96: warning: Ordinal value not assignable at runtime (out of range) (2.3.1).
+"../Main.m3", line 96: warning: Ordinal value not assignable at runtime (out of range) (2.3.1).
+"../Main.m3", line 105: warning: Ordinal value not assignable at runtime (out of range) (2.3.1).
+"../Main.m3", line 105: warning: Ordinal value not assignable at runtime (out of range) (2.3.1).
+"../Main.m3", line 110: warning: Ordinal value not assignable at runtime (out of range) (2.3.1).
+"../Main.m3", line 110: warning: Ordinal value not assignable at runtime (out of range) (2.3.1).
+"../Main.m3", line 142: warning: Ordinal value not assignable at runtime (out of range) (2.3.1).
+"../Main.m3", line 142: warning: Ordinal value not assignable at runtime (out of range) (2.3.1).
+"../Main.m3", line 151: warning: Ordinal value not assignable at runtime (out of range) (2.3.1).
+"../Main.m3", line 151: warning: Ordinal value not assignable at runtime (out of range) (2.3.1).
 "../Main.m3", line 190: warning: Nested procedure not assignable at runtime (2.3.1). (NestedProc)
 "../Main.m3", line 193: warning: potentially unhandled exception: <ANY>
 20 warnings encountered
