@@ -190,6 +190,7 @@ PROCEDURE Load (t: T) =
       END;
     ELSE
       Expr.Prep (t.valExpr);
+      EVAL Expr.Use (t.valExpr);
       Expr.Compile (t.valExpr);
     END;
   END Load;

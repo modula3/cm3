@@ -7,11 +7,13 @@
 (*      modified on Thu May 20 08:20:18 PDT 1993 by muller     *)
 
 MODULE SetExpr;
-(* For set constructors. *) 
+(* For set constructors. *)
+
+IMPORT Text, Fmt;
 
 IMPORT M3, CG, Expr, ExprRep, Type, Error, IntegerExpr, EnumExpr;
 IMPORT RangeExpr, KeywordExpr, SetType, AssignStmt, CheckExpr;
-IMPORT M3ID, Target, TInt, TWord, Bool, M3Buf, Module, Text;
+IMPORT M3ID, Target, TInt, TWord, Bool, M3Buf, Module;
 
 TYPE
   Node = REF RECORD
@@ -22,13 +24,20 @@ TYPE
 
 TYPE
   P = Expr.T OBJECT
-        tipe    : Type.T;
-        args    : Expr.List;
-        mapped  : BOOLEAN;
-        tree    : Node;
-        others  : Expr.List;
-        nOthers : INTEGER;
-        tmp     : CG.Var;
+        tipe        : Type.T;
+        args        : Expr.List;
+        tree        : Node;
+        others      : Expr.List;
+        nOthers     : INTEGER;
+        tmp         : CG.Var;
+        globalOffset: INTEGER;
+        minI, maxI  : INTEGER; (* Of the set's element type. *)
+        minT, maxT  : Target.Int;
+        RTErrorMsg  : TEXT := NIL;
+        RTErrorCode := CG.RuntimeError.Unknown;
+        mapped      : BOOLEAN;
+        is_const    : BOOLEAN;
+        broken      : BOOLEAN;
       OVERRIDES
         typeOf       := ExprRep.NoType;
         check        := Check;
@@ -39,7 +48,7 @@ TYPE
         compileLV    := ExprRep.NotLValue;
         prepBR       := ExprRep.NotBoolean;
         compileBR    := ExprRep.NotBoolean;
-        evaluate     := Fold;
+        evaluate     := Evaluate;
         isEqual      := EqCheck;
         getBounds    := ExprRep.NoBounds;
         isWritable   := ExprRep.IsNever;
@@ -49,6 +58,7 @@ TYPE
         prepLiteral  := ExprRep.NoPrepLiteral;
         genLiteral   := GenLiteral;
         note_write   := ExprRep.NotWritable;
+        use          := Use;
       END;
 
 TYPE
@@ -66,6 +76,7 @@ VAR (*CONST*)
   left  : ARRAY [0..64] OF Target.Int;
   right : ARRAY [0..64] OF Target.Int;
 
+(*EXPORTED:*)
 PROCEDURE New (type: Type.T;  args: Expr.List): Expr.T =
   VAR p: P;
   BEGIN
@@ -75,10 +86,12 @@ PROCEDURE New (type: Type.T;  args: Expr.List): Expr.T =
     p.tipe    := type;
     p.args    := args;
     p.mapped  := FALSE;
+    p.broken  := FALSE;
     p.tree    := NIL;
     p.others  := NIL;
     p.nOthers := -1;
     p.tmp     := NIL;
+    p.is_const := TRUE;
     RETURN p;
   END New;
 
@@ -92,17 +105,21 @@ PROCEDURE NewFromTree (p: P;  node: Node): Expr.T =
     c.tipe    := p.tipe;
     c.args    := p.args;
     c.mapped  := TRUE;
+    c.broken  := FALSE;
     c.tree    := NormalizeTree (node);
     c.others  := NIL;
-    p.nOthers := -1;
+    c.nOthers := -1;
+    c.is_const := TRUE;
     RETURN c;
   END NewFromTree;
 
+(*EXPORTED:*)
 PROCEDURE Is (e: Expr.T): BOOLEAN =
   BEGIN
     RETURN (TYPECODE (e) = TYPECODE (P));
   END Is;
 
+(*EXPORTED:*)
 PROCEDURE Compare (a, b: Expr.T;  VAR sign: INTEGER): BOOLEAN =
   VAR p, q: P;  le, eq, ge: BOOLEAN := TRUE;  s: VisitState;
   BEGIN
@@ -126,6 +143,7 @@ PROCEDURE Compare (a, b: Expr.T;  VAR sign: INTEGER): BOOLEAN =
     RETURN TRUE;
   END Compare;
 
+(*EXPORTED:*)
 PROCEDURE Union (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN =
   VAR p, q: P;  n, x: Node;
   BEGIN
@@ -145,6 +163,7 @@ PROCEDURE Union (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN =
     RETURN TRUE;
   END Union;
 
+(*EXPORTED:*)
 PROCEDURE Intersection (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN =
   VAR p, q: P;  n: Node;  s: VisitState;
   BEGIN
@@ -160,6 +179,7 @@ PROCEDURE Intersection (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN =
     RETURN TRUE;
   END Intersection;
 
+(*EXPORTED:*)
 PROCEDURE Difference (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN =
   VAR p, q: P;  n: Node;  s: VisitState;
   BEGIN
@@ -175,6 +195,7 @@ PROCEDURE Difference (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN =
     RETURN TRUE;
   END Difference;
 
+(*EXPORTED:*)
 PROCEDURE SymDifference (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN =
   VAR p, q: P;  n: Node;  s: VisitState;
   BEGIN
@@ -190,6 +211,7 @@ PROCEDURE SymDifference (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN =
     RETURN TRUE;
   END SymDifference;
 
+(*EXPORTED:*)
 PROCEDURE Include (set, elt: Expr.T;  VAR c: Expr.T): BOOLEAN =
   VAR p: P;  i: INTEGER;  n, x: Node;
   BEGIN
@@ -205,6 +227,7 @@ PROCEDURE Include (set, elt: Expr.T;  VAR c: Expr.T): BOOLEAN =
     RETURN TRUE;
   END Include;
 
+(*EXPORTED:*)
 PROCEDURE Exclude (set, elt: Expr.T;  VAR c: Expr.T): BOOLEAN =
   VAR p: P;  i: INTEGER;  n, x: Node;
   BEGIN
@@ -225,6 +248,7 @@ PROCEDURE Exclude (set, elt: Expr.T;  VAR c: Expr.T): BOOLEAN =
     RETURN TRUE;
   END Exclude;
 
+(*EXPORTED:*)
 PROCEDURE Member (set, elt: Expr.T;  VAR c: Expr.T): BOOLEAN =
   VAR p: P;  i: INTEGER;  x: Node;
   BEGIN
@@ -336,17 +360,16 @@ PROCEDURE BuildMap (e: Expr.T;  VAR p: P): BOOLEAN =
     (* IF TInt.LT (max, min) THEN RETURN FALSE END; ?? -- 8/2/93 WKK -- *)
     FOR i := 0 TO LAST (p.args^) DO
       elt := Expr.ConstValue (p.args[i]);
-      IF (elt = NIL) THEN
-        (* not a constant *)
+      IF (elt = NIL) THEN (* not a constant *)
+        p.is_const := FALSE;
         AddOther (p, p.args[i]);
       ELSIF IntegerExpr.Split (elt, from, t)
         OR EnumExpr.Split (elt, from, t) THEN
         IF TInt.LT (from, min) OR TInt.LT (max, from) THEN
-          Error.Warn (2, "set element out of range");
-          AddOther (p, elt);
+          (* CheckRT will have emitted a warning.  Omit the value. *)
         ELSIF TInt.ToInt (from, iFrom) THEN
           p.tree := AddNode (p.tree, iFrom, iFrom);
-        ELSE (* treat big values as non-constants *)
+        ELSE (* treat values outside host INTEGER as non-constants *)
           AddOther (p, elt);
         END;
       ELSIF (RangeExpr.Split (elt, eMin, eMax)) THEN
@@ -357,10 +380,9 @@ PROCEDURE BuildMap (e: Expr.T;  VAR p: P): BOOLEAN =
                OR EnumExpr.Split (eMin, from, t))
           AND (IntegerExpr.Split (eMax, to, t)
                OR EnumExpr.Split (eMax, to, t))
-          THEN
+        THEN
           IF TInt.LT (from, min) OR TInt.LT (max, from) THEN
-            Error.Warn (2, "set element out of range");
-            AddOther (p, elt);
+            (* CheckRT will have emitted a warning.  Omit the value. *)
           ELSIF TInt.ToInt (from, iFrom) AND TInt.ToInt (to, iTo) THEN
             p.tree := AddNode (p.tree, iFrom, iTo);
           ELSE (* since the values are so big, treat them as non-constants *)
@@ -370,10 +392,9 @@ PROCEDURE BuildMap (e: Expr.T;  VAR p: P): BOOLEAN =
           AddOther (p, elt);
         END;
       ELSE
-        Error.Warn (2, "set element is not an ordinal");
-        AddOther (p, elt);
+        <* ASSERT FALSE *>
       END;
-    END;
+    END (*FOR*);
     p.tree := NormalizeTree (p.tree);
     RETURN (p.others = NIL);
   END BuildMap;
@@ -447,58 +468,115 @@ PROCEDURE NormalizeTree (n: Node): Node =
     RETURN n;
   END NormalizeTree;
 
+PROCEDURE MergeRTError (p: P; Code: CG.RuntimeError; Msg: TEXT) =
+  BEGIN
+    IF p.RTErrorMsg = NIL THEN
+      p.RTErrorCode := Code;
+      p.RTErrorMsg := Msg;
+    END;
+  END MergeRTError;
+
+(* Externally dispatched-to: *)
 PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
   VAR
-    t, range   : Type.T;
-    minT, maxT : Target.Int;
-    minE, maxE : Target.Int;
-    min, max   : Expr.T;
-    e, value   : Expr.T;
-    key        : M3ID.T;
+    eltType          : Type.T;
+    minExpr, maxExpr : Expr.T;
+    argExpr, value   : Expr.T;
+    key              : M3ID.T;
+    RTErrorMsg       : TEXT;
+    RTErrorCode      : CG.RuntimeError;
+    buf: ARRAY [0..TInt.Size] OF CHAR;
+(*  argType          : Type.T;
+    minT, maxT       : Target.Int;
+    minE, maxE       : Target.Int;
+*)
   BEGIN
     p.tipe := Type.Check (p.tipe);
-    FOR i := 0 TO LAST (p.args^) DO Expr.TypeCheck (p.args[i], cs) END;
     p.type := p.tipe;
-    IF NOT SetType.Split (p.tipe, range) THEN
-      Error.Msg ("set constructor must specify a set type");
+    FOR i := 0 TO LAST (p.args^) DO Expr.TypeCheck (p.args[i], cs) END;
+    IF NOT SetType.Split (p.tipe, eltType) THEN
+      (* How can this happen? ConsExpr wouldn't have created this node, if not. *)
+      Error.Msg ("Set constructor must specify a set type (2.6.8).");
+      p.broken := TRUE;
       RETURN;
     END;
-    EVAL Type.GetBounds (range, minT, maxT);
+    EVAL Type.GetBounds (eltType, p.minT,p.maxT);
+    IF NOT TInt.ToInt (p.minT, p.minI)
+        OR NOT TInt.ToInt (p.maxT, p.maxI) THEN
+      Error.Msg
+        ("CM3 restriction: set domain (" 
+         & Text.FromChars (SUBARRAY(buf, 0, TInt.ToChars(p.minT, buf))) & ".."
+         & Text.FromChars (SUBARRAY(buf, 0, TInt.ToChars(p.maxT, buf)))
+         & ") too large for host INTEGER ("
+         & Fmt.Int (FIRST(INTEGER)) & ".." & Fmt.Int (FIRST(INTEGER)) & ").");
+      p.minI := FIRST (INTEGER);
+      <*ASSERT TInt.FromInt (p.minI, p.minT) *>
+      p.maxI := LAST (INTEGER);
+      <*ASSERT TInt.FromInt (p.maxI, p.maxT) *>
+    END;
     FOR i := 0 TO LAST (p.args^) DO
-      e := p.args[i];
-      t := Expr.TypeOf (e);
+      argExpr := p.args[i];
 
-      IF KeywordExpr.Split (e, key, value) THEN
+      IF KeywordExpr.Split (argExpr, key, value) THEN
         Error.Msg ("keyword values not allowed in set constructors");
-        e := value;
+        argExpr := value;
         p.args[i] := value;
       END;
 
-      IF RangeExpr.Split (e, min, max) THEN
-        AssignStmt.Check (range, min, cs);
-        AssignStmt.Check (range, max, cs);
-        min := Expr.ConstValue (min);
-        max := Expr.ConstValue (max);
-      ELSE (* single value *)
-        AssignStmt.Check (range, e, cs);
-        min := Expr.ConstValue (e);
-        max := min;
+      IF RangeExpr.Split (argExpr, minExpr, maxExpr) THEN
+        IF NOT Type.IsAssignable (eltType, Expr.TypeOf (minExpr)) THEN
+          Error.Msg
+            ("Range min is not assignable to set constructor's element type "
+             & "(2.6.8).");
+          p.broken := TRUE;
+        ELSE
+          AssignStmt.CheckRT
+            (eltType, minExpr, cs, (*VAR*) RTErrorCode, (*VAR*) RTErrorMsg);
+          MergeRTError (p, RTErrorCode, RTErrorMsg);
+        END;
+        IF NOT Type.IsAssignable (eltType, Expr.TypeOf (maxExpr)) THEN
+          Error.Msg
+            ("Range max is not assignable to set constructor's element type "
+             & "(2.6.8).");
+          p.broken := TRUE;
+        ELSE
+          AssignStmt.CheckRT
+            (eltType, maxExpr, cs, (*VAR*) RTErrorCode, (*VAR*) RTErrorMsg);
+          MergeRTError (p, RTErrorCode, RTErrorMsg);
+        END;
+      ELSE (* argExpr is a single set element value *)
+        IF NOT Type.IsAssignable (eltType, Expr.TypeOf (argExpr)) THEN
+          Error.Msg
+            ("Expression is not assignable to set constructor's element type "
+             & "(2.6.8).");
+          p.broken := TRUE;
+        ELSE
+          AssignStmt.CheckRT
+            (eltType, argExpr, cs,  RTErrorCode, (*VAR*) RTErrorMsg);
+          MergeRTError (p, RTErrorCode, RTErrorMsg);
+        END;
+        minExpr := argExpr;
+        maxExpr := argExpr;
       END;
-
-      IF (min # NIL) AND (max # NIL)
-        AND (IntegerExpr.Split (min, minE, t)
-             OR EnumExpr.Split (min, minE, t))
-        AND (IntegerExpr.Split (max, maxE, t)
-             OR EnumExpr.Split (max, maxE, t))
+(*
+      argType := Expr.TypeOf (argExpr);
+      minExpr := Expr.ConstValue (minExpr);
+      maxExpr := Expr.ConstValue (maxExpr);
+      IF (minExpr # NIL) AND (maxExpr # NIL)
+        AND (IntegerExpr.Split (minExpr, minE, argType)
+             OR EnumExpr.Split (minExpr, minE, argType))
+        AND (IntegerExpr.Split (maxExpr, maxE, argType)
+             OR EnumExpr.Split (maxExpr, maxE, argType))
         THEN
         IF TInt.LT (minE, minT) OR TInt.LT (maxT, maxE) THEN
           Error.Msg ("illegal set value");
         END;
       END;
-
-    END;
+*)
+    END (*FOR*);
   END Check;
 
+(* Externally dispatched-to: *)
 PROCEDURE EqCheck (a: P;  e: Expr.T;  x: M3.EqAssumption): BOOLEAN =
   VAR b: P;  ax, bx: Expr.T;
   BEGIN
@@ -525,14 +603,17 @@ PROCEDURE EqCheck (a: P;  e: Expr.T;  x: M3.EqAssumption): BOOLEAN =
     RETURN TRUE;
   END EqCheck;
 
+(* Externally dispatched-to: *)
 PROCEDURE NeedsAddress (<*UNUSED*> p: P) =
   BEGIN
     (* yep, all sets get memory addresses *)
   END NeedsAddress;
 
+(* Externally dispatched-to: *)
 PROCEDURE Prep (p: P) =
   VAR info: Type.Info;
   BEGIN
+    IF p.broken THEN RETURN; END;
     EVAL BuildMap (p, p);  (* evaluate the constants *)
     (* prep the non-constant elements *)
     FOR i := 0 TO p.nOthers-1 DO
@@ -548,17 +629,19 @@ PROCEDURE Prep (p: P) =
     END;
   END Prep;
 
+(* Externally dispatched-to: *)
 PROCEDURE Compile (p: P) =
-  VAR info: Type.Info;  offset: INTEGER;
+  VAR info: Type.Info;
   BEGIN
+    IF p.broken THEN RETURN; END;
     EVAL Type.CheckInfo (p.tipe, info);
     IF (info.size <= Target.Integer.size) THEN
       CompileSmall (p, info);
     ELSIF (p.nOthers <= 0) THEN
       (* large, constant set *)
-      offset := Module.Allocate (info.size, info.alignment, TRUE, "*set*");
-      GenLiteral (p, offset, p.tipe, TRUE);
-      CG.Load_addr_of (Module.GlobalData (TRUE), offset, info.alignment);
+      p.globalOffset := Module.Allocate (info.size, info.alignment, TRUE, "*set*");
+      GenLiteral (p, p.globalOffset, p.tipe, TRUE);
+      CG.Load_addr_of (Module.GlobalData (TRUE), p.globalOffset, info.alignment);
     ELSE
       CG.Load_addr_of_temp (p.tmp, 0, Target.Integer.align);
       p.tmp := NIL;
@@ -566,45 +649,34 @@ PROCEDURE Compile (p: P) =
   END Compile;
 
 PROCEDURE CompileBig (p: P;  VAR info: Type.Info): CG.Var =
+(* PRE: others can contain both non-constant exprs and constant values not
+        range of host INTEGER. *)
   VAR
-    range        : Type.T;
     w1, w2       : INTEGER;
     b1, b2       : INTEGER;
-    minT, maxT   : INTEGER;
-    min_T, max_T : Target.Int;
-    min, max     : Expr.T;
+    minExpr      : Expr.T;
+    maxExpr      : Expr.T;
     e            : Expr.T;
     t1           : CG.Var;
     nWords       : INTEGER;
     curWord      : INTEGER;
     curMask      : Target.Int;
     n            : Node;
-    b            : BOOLEAN;
     tmp          : Target.Int;
-    buf: ARRAY [0..TInt.Size] OF CHAR;
   BEGIN
-    b := SetType.Split (p.tipe, range); <* ASSERT b *>
-    EVAL Type.GetBounds (range, min_T, max_T);
-    IF NOT TInt.ToInt (min_T, minT)
-        OR NOT TInt.ToInt (max_T, maxT) THEN
-      Error.Msg ("set domain too large (" &
-        Text.FromChars (SUBARRAY(buf, 0, TInt.ToChars(min_T, buf))) & ".." &
-        Text.FromChars (SUBARRAY(buf, 0, TInt.ToChars(max_T, buf))) & ")");
-      minT := FIRST (INTEGER);
-      maxT := LAST (INTEGER);
-    END;
-
     nWords := info.size DIV Grain;
     t1 := CG.Declare_temp (nWords * Grain, Target.Integer.align,
                            CG.Type.Struct, in_memory := TRUE);
 
     (* generate the constant words *)
-    n := p.tree;  curWord := 0;   curMask := TInt.Zero;
+    n := p.tree;
+    curWord := 0;
+    curMask := TInt.Zero;
     WHILE (n # NIL) DO
-      w1 := (n.min - minT) DIV Grain; 
-      b1 := (n.min - minT) MOD Grain;
-      w2 := (n.max - minT) DIV Grain;
-      b2 := (n.max - minT) MOD Grain;
+      w1 := (n.min - p.minI) DIV Grain; 
+      b1 := (n.min - p.minI) MOD Grain;
+      w2 := (n.max - p.minI) DIV Grain;
+      b2 := (n.max - p.minI) MOD Grain;
       IF (w1 # curWord) THEN
         EmitAssign (t1, curWord, curMask);
         FOR i := curWord+1 TO w1-1 DO  EmitAssign (t1, i, TInt.Zero) END;
@@ -633,15 +705,15 @@ PROCEDURE CompileBig (p: P;  VAR info: Type.Info): CG.Var =
     (* finally, add the non-constant elements *)
     FOR i := 0 TO p.nOthers-1 DO
       e := p.others[i];
-      IF RangeExpr.Split (e, min, max) THEN
+      IF RangeExpr.Split (e, minExpr, maxExpr) THEN
         CG.Load_addr_of (t1, 0, Target.Integer.align);
         CG.ForceStacked ();
-        GenElement (min, min_T, max_T);
-        GenElement (max, min_T, max_T);
+        GenElement (minExpr, p.minT, p.maxT);
+        GenElement (maxExpr, p.minT, p.maxT);
         CG.Set_range (info.size);
       ELSE (* single value *)
         CG.Load_addr_of (t1, 0, Target.Integer.align);
-        GenElement (e, min_T, max_T);
+        GenElement (e, p.minT, p.maxT);
         CG.Set_singleton (info.size);
       END;
     END;
@@ -659,53 +731,40 @@ PROCEDURE EmitAssign (set: CG.Var;  index: INTEGER;
     <* ASSERT Grain = Target.Integer.size *>
   END EmitAssign;
 
-PROCEDURE GenElement (e: Expr.T;  READONLY min, max: Target.Int) =
+PROCEDURE GenElement (e: Expr.T;  READONLY minT, maxT: Target.Int) =
   VAR cg_type := Type.CGType (Type.Base (Expr.TypeOf (e)));
   BEGIN
-    CheckExpr.EmitChecks (e, min, max, CG.RuntimeError.ValueOutOfRange);
-    IF NOT TInt.EQ (min, TInt.Zero) THEN
-      CG.Load_integer (cg_type, min);
+    CheckExpr.EmitChecks (e, minT, maxT, CG.RuntimeError.ValueOutOfRange);
+    IF NOT TInt.EQ (minT, TInt.Zero) THEN
+      CG.Load_integer (cg_type, minT);
       CG.Subtract (cg_type);
     END;
     CG.Loophole (cg_type, Target.Integer.cg_type);
   END GenElement;
 
 PROCEDURE CompileSmall (p: P;  VAR info: Type.Info) =
+(* PRE: All bits fit in a target word. *)
+(* PRE: others contains no constants out if host INTEGER range. *)
   VAR
-    range        : Type.T;
     b1, b2       : INTEGER;
-    minT, maxT   : INTEGER;
-    min_T, max_T : Target.Int;
-    min, max     : Expr.T;
+    minExpr      : Expr.T;
+    maxExpr      : Expr.T;
     e            : Expr.T;
     nWords       : INTEGER;
     curMask      : Target.Int;
     n            : Node;
-    b            : BOOLEAN;
     tmp          : Target.Int;
-    buf: ARRAY [0..TInt.Size] OF CHAR;
   BEGIN
     Type.Compile (p.tipe);
     nWords  := info.size DIV Grain;
     <*ASSERT info.size <= Target.Integer.size *>
     <*ASSERT nWords <= 1 *>
 
-    b := SetType.Split (p.tipe, range); <* ASSERT b *>
-    EVAL Type.GetBounds (range, min_T, max_T);
-    IF NOT TInt.ToInt (min_T, minT)
-        OR NOT TInt.ToInt (max_T, maxT) THEN
-      Error.Msg ("set domain too large (" &
-        Text.FromChars (SUBARRAY(buf, 0, TInt.ToChars(min_T, buf))) & ".." &
-        Text.FromChars (SUBARRAY(buf, 0, TInt.ToChars(max_T, buf))) & ")");
-      minT := FIRST (INTEGER);
-      maxT := LAST (INTEGER);
-    END;
-
     (* generate the constant words *)
     n := p.tree;  curMask := TInt.Zero;
     WHILE (n # NIL) DO
-      b1 := (n.min - minT);
-      b2 := (n.max - minT);
+      b1 := (n.min - p.minI);
+      b2 := (n.max - p.minI);
       TWord.And (left [b1], right[b2], tmp);
       TWord.Or (curMask, tmp, curMask);
       n := n.next;
@@ -718,31 +777,35 @@ PROCEDURE CompileSmall (p: P;  VAR info: Type.Info) =
     (* finally, add the non-constant elements *)
     FOR i := 0 TO p.nOthers-1 DO
       e := p.others[i];
-      IF RangeExpr.Split (e, min, max) THEN
-        GenElement (min, min_T, max_T);
-        GenElement (max, min_T, max_T);
+      IF RangeExpr.Split (e, minExpr, maxExpr) THEN
+        GenElement (minExpr, p.minT, p.maxT);
+        GenElement (maxExpr, p.minT, p.maxT);
         CG.Set_range (info.size);
       ELSE (* single value *)
-        GenElement (e, min_T, max_T);
+        GenElement (e, p.minT, p.maxT);
         CG.Set_singleton (info.size);
       END;
     END;
   END CompileSmall;
 
-PROCEDURE Fold (e: Expr.T): Expr.T =
+(* Externally dispatched-to: *)
+PROCEDURE Evaluate (e: Expr.T): Expr.T =
   VAR p: P;
   BEGIN
-    IF BuildMap (e, p)
+    EVAL BuildMap (e, p);
+    IF p.is_const
       THEN RETURN e;
       ELSE RETURN NIL;
     END;
-  END Fold;
+  END Evaluate;
 
+(* Externally dispatched-to: *)
 PROCEDURE IsZeroes (p: P;  <*UNUSED*> lhs: BOOLEAN): BOOLEAN =
   BEGIN
     RETURN (p.args = NIL) OR (NUMBER (p.args^) <= 0);
   END IsZeroes;
 
+(* Externally dispatched-to: *)
 PROCEDURE GenFPLiteral (p: P;  buf: M3Buf.T) =
   BEGIN
     M3Buf.PutText (buf, "SET<");
@@ -753,37 +816,28 @@ PROCEDURE GenFPLiteral (p: P;  buf: M3Buf.T) =
     M3Buf.PutChar (buf, '>');
   END GenFPLiteral;
 
-PROCEDURE GenLiteral (p: P;  offset: INTEGER;  <*UNUSED*> type: Type.T;  is_const: BOOLEAN) =
+(* Externally dispatched-to: *)
+PROCEDURE GenLiteral
+  (p: P;  offset: INTEGER;  <*UNUSED*> type: Type.T;  is_const: BOOLEAN) =
   VAR
-    range        : Type.T;
-    min_T, max_T : Target.Int;
-    minT, maxT   : INTEGER;
     w1, w2       : INTEGER;
     b1, b2       : INTEGER;
     curWord      : INTEGER;
     curMask      : Target.Int;
     n            : Node;
-    b            : BOOLEAN;
     tmp          : Target.Int;
   BEGIN
-    b := SetType.Split (p.tipe, range);  <*ASSERT b*>
-    EVAL Type.GetBounds (range, min_T, max_T);
-    IF NOT TInt.ToInt (min_T, minT)
-      OR NOT TInt.ToInt (max_T, maxT) THEN
-      Error.Msg ("set constant's domain is too large");
-      minT := FIRST (INTEGER);
-      maxT := LAST (INTEGER);
-    END;
-
     EVAL BuildMap (p, p);
     <* ASSERT p.others = NIL *>
 
-    n := p.tree;  curWord := 0;   curMask := TInt.Zero;
+    n := p.tree;
+    curWord := 0;
+    curMask := TInt.Zero;
     WHILE (n # NIL) DO
-      w1 := (n.min - minT) DIV Grain;
-      b1 := (n.min - minT) MOD Grain;
-      w2 := (n.max - minT) DIV Grain;
-      b2 := (n.max - minT) MOD Grain;
+      w1 := (n.min - p.minI) DIV Grain;
+      b1 := (n.min - p.minI) MOD Grain;
+      w2 := (n.max - p.minI) DIV Grain;
+      b2 := (n.max - p.minI) MOD Grain;
       IF (w1 # curWord) THEN
         (* write the mask we've accumulated *)
         IF NOT TInt.EQ (curMask, TInt.Zero) THEN
@@ -822,6 +876,7 @@ PROCEDURE GenLiteral (p: P;  offset: INTEGER;  <*UNUSED*> type: Type.T;  is_cons
     END;
   END GenLiteral;
 
+(*EXPORTED:*)
 PROCEDURE Init () =
   BEGIN
     Grain := Target.Integer.size;
@@ -834,6 +889,20 @@ PROCEDURE Init () =
       TWord.And (left[i], Target.Word.max, left[i]);
     END;
   END Init;
+
+(* Externally dispatched-to: *)
+PROCEDURE Use (p: P): BOOLEAN =
+  BEGIN
+    <* ASSERT p.checked *>
+    IF p.RTErrorMsg # NIL AND Evaluate (p) # NIL THEN
+      CG.Comment
+        (p.globalOffset, TRUE, "Use of set constructor with bad element: ",
+         p.RTErrorMsg);
+      CG.Abort (p.RTErrorCode);
+      RETURN FALSE;
+    ELSE RETURN TRUE;
+    END;
+  END Use;
 
 BEGIN
 END SetExpr.

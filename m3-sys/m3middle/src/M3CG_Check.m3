@@ -1151,7 +1151,11 @@ PROCEDURE loophole (self: U;  from, two: ZType) =
 
 PROCEDURE abort (self: U;  code: RuntimeError) =
   BEGIN
-    self.s_empty ();
+    (*self.s_empty (); *)
+    (* 1) This is very difficult for producers to ensure.
+       2) None of 4 code generators make any access to the operand stack,
+          for the abort operation.
+    *)
     self.child.abort (code);
   END abort;
 

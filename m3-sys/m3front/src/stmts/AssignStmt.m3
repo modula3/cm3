@@ -83,7 +83,7 @@ PROCEDURE Check
 (* EXPORTED: *) 
 PROCEDURE CheckRT
   (tlhs: Type.T;  rhsExpr: Expr.T;  VAR cs: Stmt.CheckState;
-   VAR Code: CG.RuntimeError; VAR Msg: TEXT; IsError := FALSE
+   VAR(*OUT*) Code: CG.RuntimeError; VAR(*OUT*) Msg: TEXT; IsError := FALSE
   ) =
 (* Like Check, but if a warning is produced for a runtime error that is
    statically inevitable whenever its code is executed, return the RT error
@@ -122,7 +122,7 @@ PROCEDURE CheckRT
 
 PROCEDURE CheckOrdinal
   (tlhs: Type.T;  rhsExpr: Expr.T;
-   VAR Code: CG.RuntimeError; VAR Msg: TEXT; IsError: BOOLEAN
+   VAR(*OUT*) Code: CG.RuntimeError; VAR(*OUT*) Msg: TEXT; IsError: BOOLEAN
   ) =
    
   VAR lmin, lmax, rmin, rmax: Target.Int;
@@ -139,9 +139,9 @@ PROCEDURE CheckOrdinal
       IF constant = NIL THEN
         (* Non-constant RHS, disjoint ranges.  Type assignability check in
            Check will have given a CT error and precluded this. *)
-        reason := "(disjoint ranges).";
+        reason := "(disjoint ranges)";
         <* ASSERT FALSE *>
-      ELSE reason := "(out of range)."
+      ELSE reason := "(out of range)"
       END; 
 (* CHECK^ Can this duplicate a warning from IsAssignable on types, if
           RHS has a constant value outside LHS bounds? *)
@@ -161,6 +161,8 @@ PROCEDURE CheckReference
   (tlhs, trhs: Type.T;  READONLY lhs_type_info: Type.Info) =
   BEGIN
 (* CHECK: Doesn't this just duplicate checks already done by Type.IsAssignable? *)
+    (* Other than NIL, which is a member of every reference type, there are
+       no constant reference values to do CT assignability warnings for. *) 
     IF Type.IsSubtype (trhs, tlhs) THEN
       (*ok*)
     ELSIF NOT Type.IsSubtype (tlhs, trhs) THEN
@@ -184,7 +186,7 @@ PROCEDURE CheckReference
   END CheckReference;
 
 PROCEDURE CheckProcedure
-  (proc: Expr.T; VAR Code: CG.RuntimeError; VAR Msg: TEXT; IsError: BOOLEAN) =
+  (proc: Expr.T; VAR(*OUT*) Code: CG.RuntimeError; VAR(*OUT*) Msg: TEXT; IsError: BOOLEAN) =
   VAR name: M3ID.T;
   VAR obj: Value.T;
   VAR valueClass: Value.Class;
@@ -267,8 +269,7 @@ PROCEDURE PrepForEmit
     IF CanAvoidCopy (lhsRepType, rhsExpr, initializing)
     THEN Expr.MarkForDirectAssignment (rhsExpr)
     END;
-    EVAL Expr.Use (rhsExpr);
-(* TODO^ Suppress generating code if Expr.Use returns TRUE? *)
+ (* Expr.Use (rhsExpr); Moved to DoEmit and EmitRTCheck. *)
     Expr.Prep (rhsExpr);
   END PrepForEmit;
 
@@ -332,6 +333,7 @@ PROCEDURE DoEmit
     (* ^Strip renaming, packing, and subranges. *)
     lhsRepBaseType := Type.CheckInfo (lhsRepBaseType, lhsRepBaseTypeInfo);
 
+    EVAL Expr.Use (rhsExpr);
     CASE lhsRepBaseTypeInfo.class OF
     | Type.Class.Integer, Type.Class.Longint, Type.Class.Subrange,
       Type.Class.Enum =>
@@ -396,26 +398,24 @@ PROCEDURE AssignSet (tlhs: Type.T;  rhsExpr: Expr.T;
   BEGIN
 (* TODO: Merge AssignSet and AssignRecord. *)
     AssertSameSize (tlhs, Expr.TypeOf (rhsExpr));
-    (* RHS is Prepped. *)
+    (* Leave the LHS address on the CG stack, regardless of protocol. *)
     IF Type.IsStructured (tlhs) THEN
-      IF Expr.IsDesignator (rhsExpr)
-        THEN Expr.CompileLValue (rhsExpr, traced := FALSE);
-        ELSE Expr.Compile (rhsExpr);
-      END;
+      CompileStruct (rhsExpr);
       IF Expr.IsMarkedForDirectAssignment (rhsExpr) THEN
         CG.Discard (CG.Type.Addr);
       ELSE
         CG.Copy (lhsTypeInfo.size, overlap := FALSE);
       END
     ELSE (* small set *)
+(* REVIEW: Do we really need this case, or will CompileStruct handle it? *)
       Expr.Compile (rhsExpr);
       CG.Store_indirect (lhsTypeInfo.stk_type, 0, lhsTypeInfo.size);
     END;
   END AssignSet;
 
 PROCEDURE CompileStruct (expr: Expr.T) =
-
-(* This works for a record or array that is a packed component of something. *)
+(* This works for a record, set, or array that is a packed component
+   of something. *)
   BEGIN
     IF Expr.IsDesignator (expr)
     THEN Expr.CompileLValue (expr, traced := FALSE);
@@ -617,8 +617,9 @@ PROCEDURE EmitRTCheck (tlhs: Type.T;  rhsExpr: Expr.T) =
     t_lhs_base := Type.Base (tlhs); (* strip renaming and packing *)
     t_lhs_base_info: Type.Info;
   BEGIN
-    t_lhs_base := Type.CheckInfo (t_lhs_base, t_lhs_base_info);
+    EVAL Expr.Use (rhsExpr);
 
+    t_lhs_base := Type.CheckInfo (t_lhs_base, t_lhs_base_info);
     CASE t_lhs_base_info.class OF
     | Type.Class.Integer, Type.Class.Longint, Type.Class.Subrange,
       Type.Class.Enum =>

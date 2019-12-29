@@ -698,6 +698,7 @@ PROCEDURE GenSet (t: T;  actual: Expr.T) =
   BEGIN
     CASE t.mode OF
     | Mode.mVALUE =>
+        EVAL Expr.Use (actual);
         Expr.Compile (actual);
         IF Type.IsStructured (t.tipe) THEN
           EVAL Type.CheckInfo (t.tipe, info);
@@ -717,6 +718,7 @@ PROCEDURE GenSet (t: T;  actual: Expr.T) =
           CG.Pop_param (CG.Type.Addr);
         END
     | Mode.mCONST =>
+        EVAL Expr.Use (actual);
         IF Expr.IsDesignator (actual)
            AND Type.IsEqual (t.tipe, Expr.TypeOf (actual), NIL)
         THEN (* Pass truly by reference. *) 
