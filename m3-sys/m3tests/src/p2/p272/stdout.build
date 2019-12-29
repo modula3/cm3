@@ -1,0 +1,23 @@
+"../Lib.i3", line 14: warning: Ordinal value not assignable at runtime (out of range) (2.3.1).
+"../Lib.i3", line 14: warning: Ordinal value not assignable at runtime (out of range) (2.3.1).
+2 warnings encountered
+"../Main.m3", line 28: warning: Ordinal value not assignable at runtime (out of range) (2.3.1).
+"../Main.m3", line 28: warning: Ordinal value not assignable at runtime (out of range) (2.3.1).
+"../Main.m3", line 51: warning: Ordinal value not assignable at runtime (out of range) (2.3.1).
+"../Main.m3", line 51: warning: Ordinal value not assignable at runtime (out of range) (2.3.1).
+"../Main.m3", line 67: warning: Ordinal value not assignable at runtime (out of range) (2.3.1).
+"../Main.m3", line 67: warning: Ordinal value not assignable at runtime (out of range) (2.3.1).
+"../Main.m3", line 71: warning: Ordinal value not assignable at runtime (out of range) (2.3.1).
+"../Main.m3", line 71: warning: Ordinal value not assignable at runtime (out of range) (2.3.1).
+"../Main.m3", line 104: warning: Ordinal value not assignable at runtime (out of range) (2.3.1).
+"../Main.m3", line 104: warning: Ordinal value not assignable at runtime (out of range) (2.3.1).
+"../Main.m3", line 113: warning: Ordinal value not assignable at runtime (out of range) (2.3.1).
+"../Main.m3", line 113: warning: Ordinal value not assignable at runtime (out of range) (2.3.1).
+"../Main.m3", line 118: warning: Ordinal value not assignable at runtime (out of range) (2.3.1).
+"../Main.m3", line 118: warning: Ordinal value not assignable at runtime (out of range) (2.3.1).
+"../Main.m3", line 150: warning: Ordinal value not assignable at runtime (out of range) (2.3.1).
+"../Main.m3", line 150: warning: Ordinal value not assignable at runtime (out of range) (2.3.1).
+"../Main.m3", line 160: warning: Ordinal value not assignable at runtime (out of range) (2.3.1).
+"../Main.m3", line 160: warning: Ordinal value not assignable at runtime (out of range) (2.3.1).
+"../Main.m3", line 42: warning: not used (ABCD)
+19 warnings encountered
