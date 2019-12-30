@@ -112,6 +112,7 @@ PROCEDURE Compile (p: P): Stmt.Outcomes =
     t := Type.CheckInfo (Value.TypeOf (p.var), info);
 
     (* evaluate the expr outside the new scope and capture its value *)
+    EVAL Expr.Use (p.expr);
     CASE p.kind OF
     | Kind.designator =>
         Variable.Split (p.var, tlhs, global, indirect, traced);
@@ -123,7 +124,6 @@ PROCEDURE Compile (p: P): Stmt.Outcomes =
         ArrayExpr.NoteUseTargetVar (p.expr);
         AssignStmt.PrepForEmit (tlhs, p.expr, initializing := TRUE);
     | Kind.openarray, Kind.other =>
-        EVAL Expr.Use (p.expr);
         Expr.Prep (p.expr);
         Expr.Compile (p.expr);
         val := CG.Pop ();

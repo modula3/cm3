@@ -141,7 +141,6 @@ PROCEDURE EmitRaise (v: Value.T;  arg: Expr.T) =
       expr_type := Expr.TypeOf (arg);
       expr_type := Type.CheckInfo (expr_type, info);
       arg_type := info.stk_type;
-      EVAL Expr.Use (arg);
       Expr.Prep (arg);
       AssignStmt.EmitRTCheck (t.tipe, arg);
       tmp := CG.Pop ();

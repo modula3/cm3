@@ -458,7 +458,6 @@ PROCEDURE EmitReturn (expr: Expr.T;  fromFinally: BOOLEAN) =
         WITH z = stack[i] DO
           CASE z.kind OF
           | Kind.zTRYELSE =>
-              EVAL Expr.Use (expr);
               Expr.Prep (expr);
               Expr.Compile (expr);
               CG.Discard (Type.CGType (Expr.TypeOf (expr)));
