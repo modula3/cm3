@@ -176,56 +176,83 @@ MODULE Main
     ; I := 7 (* Just for a breakpoint. *)
     END VarImportConst
 
+; PROCEDURE SubscriptInline ( ) (*RAISES ANY*) 
+  = VAR I , J : INTEGER 
+  ; BEGIN
+      J := Arr { 10 , 25 , 18 , 9 } (* RT error *) [ 0 ] 
+    ; I := 7 (* Just for a breakpoint. *)
+    END SubscriptInline
+
 ; TYPE ProcTyp = PROCEDURE ( ) RAISES ANY  
 ; TYPE ArrOfProcTyp = ARRAY [ 0 .. 0 ] OF ProcTyp  
 ; TYPE OpenArrOfProcTyp = ARRAY  OF ProcTyp  
 
-; PROCEDURE ProcFixed  ( ) (*RAISES ANY*) 
-  = PROCEDURE NestedProc ( )
+; PROCEDURE ProcFixed  ( ) RAISES ANY  
+  = PROCEDURE ThisProcIsNested ( )
     = VAR K : INTEGER
     ; BEGIN
         K := 11 (* Just for a breakpoint. *)
-      END NestedProc 
+      END ThisProcIsNested 
   
   ; VAR I : INTEGER := 5  
-  ; VAR Arr := ArrOfProcTyp { NestedProc }
+  ; VAR Arr := ArrOfProcTyp { ThisProcIsNested }
   ; BEGIN
       I := 7 (* Just for a breakpoint. *)
     ; Arr [ 0 ] ( ) 
     ; I := 9 (* Just for a breakpoint. *)
     END ProcFixed 
 
-; PROCEDURE ProcOpenSs  ( ) (*RAISES ANY*) 
-  = PROCEDURE NestedProc ( )
+; PROCEDURE ProcOpenSs  ( ) RAISES ANY 
+  = PROCEDURE ThisProcIsNested ( )
     = VAR K : INTEGER
     ; BEGIN
         K := 11 (* Just for a breakpoint. *)
-      END NestedProc 
+      END ThisProcIsNested 
   
   ; VAR I : INTEGER := 5  
   ; VAR ArrRef : REF OpenArrOfProcTyp := NEW ( REF OpenArrOfProcTyp , 1 )
   ; BEGIN
       I := 7 (* Just for a breakpoint. *)
-    ; ArrRef ^ [ 0 ] := NestedProc  
+    ; ArrRef ^ [ 0 ] := ThisProcIsNested  
     ; ArrRef ^ [ 0 ] ( ) 
     ; I := 9 (* Just for a breakpoint. *)
     END ProcOpenSs 
 
-; PROCEDURE ProcOpenConstr ( ) (*RAISES ANY*) 
-  = PROCEDURE NestedProc ( )
+; PROCEDURE ProcOpenConstr ( ) RAISES ANY  
+  = PROCEDURE ThisProcIsNested ( )
     = VAR K : INTEGER
     ; BEGIN
         K := 11 (* Just for a breakpoint. *)
-      END NestedProc 
+      END ThisProcIsNested 
   
   ; VAR I : INTEGER := 5  
   ; VAR ArrRef : REF OpenArrOfProcTyp := NEW ( REF OpenArrOfProcTyp , 1 )
   ; BEGIN
       I := 7 (* Just for a breakpoint. *)
-    ; ArrRef ^ := OpenArrOfProcTyp { NestedProc }  
+    ; ArrRef ^ := OpenArrOfProcTyp { ThisProcIsNested }  
     ; ArrRef ^ [ 0 ] ( ) 
     ; I := 9 (* Just for a breakpoint. *)
     END ProcOpenConstr 
+
+; PROCEDURE WithInline ( ) 
+  = VAR I , J : INTEGER
+  ; BEGIN
+      WITH W = Arr { 10 , 25 , 18 , 9 } (* RT error *) 
+      DO
+        J := W [ 0 ] 
+      ; I := 9 (* Just for a breakpoint. *)
+      END 
+    END WithInline 
+
+; PROCEDURE WithGlobal ( ) 
+  = VAR I , J : INTEGER
+  ; BEGIN
+      WITH W = GC
+      DO
+        J := W [ 0 ] 
+      ; I := 9 (* Just for a breakpoint. *)
+      END 
+    END WithGlobal 
 
 ; <*UNUSED*> PROCEDURE NoRTError ( ) (*RAISES ANY*) 
   = BEGIN
@@ -313,6 +340,8 @@ MODULE Main
   ; TestMustFail ( AssignGlobalConst , "variable, assigned to global constant" )
   ; TestMustFail ( AssignImportConst , "variable, assigned to imported constant" )
 
+  ; TestMustFail ( SubscriptInline , "directly subscripted constructor" )
+
   ; TestMustFail
       ( ProcFixed
       , "nested procedure assigned element of fixed array variable"
@@ -325,6 +354,9 @@ MODULE Main
       ( ProcOpenConstr
       , "nested procedure ss element of open array constrctor"
       )  
+
+  ; TestMustFail ( WithInline , "WITH-bound global constant" )
+  ; TestMustFail ( WithGlobal , "WITH-bound inline constructor" )
 
 (* This is just to test reporting of failures: 
   ; TestMustFail ( NoRTError , "Actually, should fail to fail." )

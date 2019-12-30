@@ -23,7 +23,10 @@ MODULE Main
 
 ; TYPE Rng = [ 0 .. 15 ]
 
-; TYPE Set = SET OF Rng 
+; TYPE Set = SET OF Rng
+
+; TYPE BigRng = [ 0 .. 95 ] 
+; TYPE BigSet = SET OF BigRng
 
 ; CONST GC = Set { 10 , 25 , 16 , 9 } (* CT Warning. *)
 (* 
@@ -188,6 +191,25 @@ MODULE Main
     ; I := 7 (* Just for a breakpoint. *)
     END VarImportConst
 
+; EXCEPTION OkExcSmall ( Set )  
+; EXCEPTION OkExcBig ( BigSet )  
+
+; PROCEDURE RaiseSmall ( ) RAISES ANY
+  = VAR I : INTEGER
+  ; BEGIN
+      RAISE OkExcSmall ( GC )   
+    ; I := 7 (* Just for a breakpoint. *)
+    END RaiseSmall 
+
+; PROCEDURE RaiseBig ( ) RAISES ANY
+  = VAR I : INTEGER
+  ; VAR Last := LAST ( BigRng )
+  ; VAR LBig := BigSet { 0 , LAST ( BigRng ) + 1 } 
+  ; BEGIN
+      RAISE OkExcBig ( LBig )   
+    ; I := 7 (* Just for a breakpoint. *)
+    END RaiseBig  
+
 ; TYPE ProcTyp = PROCEDURE ( ) RAISES ANY
 
 ; <*UNUSED*> PROCEDURE NoRTError ( ) (*RAISES ANY*) 
@@ -229,6 +251,12 @@ MODULE Main
       ; WL ( "##### FAILED ##### to raise an expected exception: " , Label )
       ; INC ( FailureCt )
       EXCEPT
+      | OkExcSmall ( Small ) => 
+        WL ( "##### FAILED ##### to raise an expected exception: " , Label )
+      ; INC ( FailureCt )
+      | OkExcBig ( Big ) => 
+        WL ( "##### FAILED ##### to raise an expected exception: " , Label )
+      ; INC ( FailureCt )
       ELSE
         IF Verbose
         THEN
@@ -276,6 +304,9 @@ MODULE Main
   ; TestMustFail ( AssignLocConst , "variable, assigned to local constant" )
   ; TestMustFail ( AssignGlobalConst , "variable, assigned to global constant" )
   ; TestMustFail ( AssignImportConst , "variable, assigned to imported constant" )
+  
+  ; TestMustFail ( RaiseSmall , "raise exception with small set" )
+  ; TestMustFail ( RaiseBig , "raise exception with big set" )
 
 (* This is just to test reporting of failures: 
   ; TestMustFail ( NoRTError , "Actually, should fail to fail." )

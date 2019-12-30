@@ -179,20 +179,54 @@ MODULE Main
 ; TYPE ProcTyp = PROCEDURE ( ) RAISES ANY
 ; TYPE RecProc = RECORD F : ProcTyp END
 
-; PROCEDURE ProcField  ( ) (*RAISES ANY*)
-  = PROCEDURE NestedProc ( )
+; PROCEDURE ProcField  ( ) RAISES ANY 
+  = PROCEDURE ThisProcIsNested ( )
     = VAR K : INTEGER
     ; BEGIN
         K := 11 (* Just for a breakpoint. *)
-      END NestedProc
+      END ThisProcIsNested
 
   ; VAR I : INTEGER := 5
-  ; VAR Rec := RecProc { NestedProc }
+  ; VAR Rec := RecProc { ThisProcIsNested }
   ; BEGIN
       I := 7 (* Just for a breakpoint. *)
     ; Rec . F ( )
     ; I := 9 (* Just for a breakpoint. *)
     END ProcField
+
+; PROCEDURE QualifyInlineGoodVal ( ) (*RAISES ANY*) 
+  = VAR I , J : INTEGER 
+  ; BEGIN
+      J := Rec { 10 , 25 , 18 , 9 } (* RT error *) . X  
+    ; I := 7 (* Just for a breakpoint. *)
+    END QualifyInlineGoodVal
+
+; PROCEDURE QualifyInlineBadVal ( ) (*RAISES ANY*) 
+  = VAR I , J : INTEGER 
+  ; BEGIN
+      J := Rec { 10 , 25 , 18 , 9 } (* RT error *) . Y  
+    ; I := 7 (* Just for a breakpoint. *)
+    END QualifyInlineBadVal
+
+; PROCEDURE WithInline ( ) 
+  = VAR I , J : INTEGER
+  ; BEGIN
+      WITH W = Rec { 10 , 25 , 18 , 9 } (* RT error *) 
+      DO
+        J := W . Y
+      ; I := 9 (* Just for a breakpoint. *)
+      END 
+    END WithInline 
+
+; PROCEDURE WithGlobal ( ) 
+  = VAR I , J : INTEGER
+  ; BEGIN
+      WITH W = GC
+      DO
+        J := W . Y
+      ; I := 9 (* Just for a breakpoint. *)
+      END 
+    END WithGlobal 
 
 ; <*UNUSED*> PROCEDURE NoRTError ( ) (*RAISES ANY*) 
   = BEGIN
@@ -280,7 +314,13 @@ MODULE Main
   ; TestMustFail ( AssignGlobalConst , "variable, assigned to global constant" )
   ; TestMustFail ( AssignImportConst , "variable, assigned to imported constant" )
 
+  ; TestMustFail ( QualifyInlineGoodVal , "good field of bad constructor" )
+  ; TestMustFail ( QualifyInlineBadVal , "bad field of bad constructor" )
+  
   ; TestMustFail ( ProcField , "nested procedure assigned to field of variable" )
+  
+  ; TestMustFail ( WithInline , "WITH-bound global constant" )
+  ; TestMustFail ( WithGlobal , "WITH-bound inline constructor" )
 
 (* This is just to test reporting of failures: 
   ; TestMustFail ( NoRTError , "Actually, should fail to fail." )

@@ -19,10 +19,11 @@
 "../Main.m3", line 142: warning: Ordinal value not assignable at runtime (out of range) (2.3.1).
 "../Main.m3", line 151: warning: Ordinal value not assignable at runtime (out of range) (2.3.1).
 "../Main.m3", line 151: warning: Ordinal value not assignable at runtime (out of range) (2.3.1).
-"../Main.m3", line 191: warning: Nested procedure not assignable at runtime (2.3.1). (NestedProc)
-"../Main.m3", line 194: warning: potentially unhandled exception: <ANY>
-"../Main.m3", line 209: warning: Nested procedure not assignable at runtime (2.3.1). (NestedProc)
-"../Main.m3", line 210: warning: potentially unhandled exception: <ANY>
-"../Main.m3", line 225: warning: Nested procedure not assignable at runtime (2.3.1). (NestedProc)
-"../Main.m3", line 226: warning: potentially unhandled exception: <ANY>
-24 warnings encountered
+"../Main.m3", line 182: warning: Ordinal value not assignable at runtime (out of range) (2.3.1).
+"../Main.m3", line 182: warning: Ordinal value not assignable at runtime (out of range) (2.3.1).
+"../Main.m3", line 198: warning: Nested procedure not assignable at runtime (2.3.1). (ThisProcIsNested)
+"../Main.m3", line 216: warning: Nested procedure not assignable at runtime (2.3.1). (ThisProcIsNested)
+"../Main.m3", line 232: warning: Nested procedure not assignable at runtime (2.3.1). (ThisProcIsNested)
+"../Main.m3", line 240: warning: Ordinal value not assignable at runtime (out of range) (2.3.1).
+"../Main.m3", line 240: warning: Ordinal value not assignable at runtime (out of range) (2.3.1).
+25 warnings encountered

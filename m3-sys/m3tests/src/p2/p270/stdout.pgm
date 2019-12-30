@@ -12,9 +12,12 @@ Raised an exception, as expected: variable, assigned inline
 Raised an exception, as expected: variable, assigned to local constant
 Raised an exception, as expected: variable, assigned to global constant
 Raised an exception, as expected: variable, assigned to imported constant
+Raised an exception, as expected: directly subscripted constructor
 Raised an exception, as expected: nested procedure assigned element of fixed array variable
 Raised an exception, as expected: nested procedure assigned to element of open array heap object
 Raised an exception, as expected: nested procedure ss element of open array constrctor
-17 tests performed.
+Raised an exception, as expected: WITH-bound global constant
+Raised an exception, as expected: WITH-bound inline constructor
+20 tests performed.
 All succeeded.
 Overall test succeeded.

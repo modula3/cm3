@@ -12,6 +12,8 @@ Raised an exception, as expected: variable, assigned inline
 Raised an exception, as expected: variable, assigned to local constant
 Raised an exception, as expected: variable, assigned to global constant
 Raised an exception, as expected: variable, assigned to imported constant
-14 tests performed.
+Raised an exception, as expected: raise exception with small set
+Raised an exception, as expected: raise exception with big set
+16 tests performed.
 All succeeded.
 Overall test succeeded.
