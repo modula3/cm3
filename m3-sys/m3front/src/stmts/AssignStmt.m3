@@ -269,7 +269,6 @@ PROCEDURE PrepForEmit
     IF CanAvoidCopy (lhsRepType, rhsExpr, initializing)
     THEN Expr.MarkForDirectAssignment (rhsExpr)
     END;
- (* Expr.Use (rhsExpr); Moved to DoEmit and EmitRTCheck. *)
     Expr.Prep (rhsExpr);
   END PrepForEmit;
 
@@ -766,6 +765,21 @@ PROCEDURE GenOpenArraySizeChk (rhsVal: CG.Val;  tlhs, trhs: Type.T) =
   END GenOpenArraySizeChk;
 
 (* --------------------------- Compile ------------------------------ *)
+
+(* EXPORTED: *) 
+PROCEDURE DoGenRTAbort ( Code: CG.RuntimeError ): BOOLEAN =
+  BEGIN
+    CASE Code OF
+    | CG.RuntimeError.ValueOutOfRange
+    => RETURN Host.doRangeChk;
+    | CG.RuntimeError.NarrowFailed
+    => RETURN Host.doNarrowChk;
+    | CG.RuntimeError.IncompatibleArrayShape
+    => RETURN Host.doNarrowChk;
+(* TODO: We should have a separate compiler switch for this one. *)
+    ELSE RETURN FALSE;
+    END;
+  END DoGenRTAbort;
 
 (* Externally dispatched-to: *)
 PROCEDURE Compile (p: P): Stmt.Outcomes =

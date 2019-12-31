@@ -462,7 +462,7 @@ PROCEDURE GenLiteral (p: P;  offset: INTEGER;  <*UNUSED*> type: Type.T;
 PROCEDURE Use (p: P): BOOLEAN =
   BEGIN
     <* ASSERT p.checked *>
-    IF p.RTErrorMsg # NIL AND Evaluate (p) # NIL THEN
+    IF AssignStmt.DoGenRTAbort (p.RTErrorCode) AND Evaluate (p) # NIL THEN
       CG.Comment
         (p.globalOffset, TRUE, "Use of bad record constructor: ",
          p.RTErrorMsg);

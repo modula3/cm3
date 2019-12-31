@@ -2120,7 +2120,7 @@ PROCEDURE InnerCompile (top: T) =
 PROCEDURE Use (top: T): BOOLEAN =
   BEGIN
     <* ASSERT top.state >= StateTyp.Checked *>
-    IF top.RTErrorMsg # NIL AND Evaluate (top) # NIL THEN
+    IF AssignStmt.DoGenRTAbort (top.RTErrorCode) AND Evaluate (top) # NIL THEN
       CG.Comment
         (top.globalOffset, top.inConstArea, "Use of bad array constructor: ",
          top.RTErrorMsg);

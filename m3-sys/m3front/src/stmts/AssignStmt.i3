@@ -47,4 +47,7 @@ PROCEDURE EmitRTCheck (tlhs: Type.T;  rhs: Expr.T);
    PRE: Expr.Prep(rhs) has been called.
    PRE: 'tlhs' is not an open array type.  *)
 
+PROCEDURE DoGenRTAbort (Code: CG.RuntimeError): BOOLEAN;
+(* Does Code create runtime errors? *)
+
 END AssignStmt.

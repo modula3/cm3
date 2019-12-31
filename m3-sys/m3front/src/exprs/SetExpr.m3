@@ -894,7 +894,7 @@ PROCEDURE Init () =
 PROCEDURE Use (p: P): BOOLEAN =
   BEGIN
     <* ASSERT p.checked *>
-    IF p.RTErrorMsg # NIL AND Evaluate (p) # NIL THEN
+    IF AssignStmt.DoGenRTAbort (p.RTErrorCode) AND Evaluate (p) # NIL THEN
       CG.Comment
         (p.globalOffset, TRUE, "Use of set constructor with bad element: ",
          p.RTErrorMsg);
