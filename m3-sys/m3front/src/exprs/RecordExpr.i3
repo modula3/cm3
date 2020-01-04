@@ -8,12 +8,15 @@
 INTERFACE RecordExpr;
 (* A record constructor. *) 
 
-IMPORT M3ID, Type, Expr;
+IMPORT M3ID, Type, Expr, CG;
 
 PROCEDURE New (type: Type.T;  args: Expr.List): Expr.T;
 
 PROCEDURE Is (e: Expr.T): BOOLEAN;
 
 PROCEDURE Qualify (record: Expr.T;  id: M3ID.T;  VAR e: Expr.T): BOOLEAN;
+
+PROCEDURE CheckRT
+  (expr: Expr.T; VAR(*OUT*) Code: CG.RuntimeError; VAR(*OUT*) Msg: TEXT);
 
 END RecordExpr.

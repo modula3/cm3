@@ -12,7 +12,7 @@ MODULE AssignStmt;
 IMPORT CG, Stmt, StmtRep, Expr, Type, Error, Module, Target, TInt;
 IMPORT Token, Scanner, CallStmt, Addr, CheckExpr, ErrType;
 IMPORT M3ID, Value, NamedExpr, ArrayType, ConsExpr;
-IMPORT QualifyExpr, ArrayExpr;
+IMPORT QualifyExpr, SetExpr, RecordExpr, ArrayExpr;
 IMPORT Variable, Procedure, OpenArrayType;
 IMPORT ProcExpr, ProcType, ObjectType, CallExpr, Host, Narrow;
 
@@ -77,7 +77,7 @@ PROCEDURE Check
   VAR Code: CG.RuntimeError;
   VAR Msg: TEXT;
   BEGIN
-    CheckRT ( tlhs, rhsExpr, cs, (*VAR*)Code, (*VAR*)Msg, IsError);
+    CheckRT ( tlhs, rhsExpr, cs, (*OUT*)Code, (*OUT*)Msg, IsError);
   END Check;
 
 (* EXPORTED: *) 
@@ -110,11 +110,17 @@ PROCEDURE CheckRT
       CASE lhsTypeClass OF
       | Type.Class.Enum, Type.Class.Subrange, Type.Class.Integer,
         Type.Class.Longint =>
-        CheckOrdinal (tlhs, rhsExpr, (*VAR*)Code, (*VAR*)Msg, IsError);
+        CheckOrdinal (tlhs, rhsExpr, (*OUT*)Code, (*OUT*)Msg, IsError);
       | Type.Class.Ref, Type.Class.Object, Type.Class.Opaque =>
         CheckReference (tlhs, trhs, lhs_type_info);
       | Type.Class.Procedure =>
-        CheckProcedure (rhsExpr, (*VAR*)Code, (*VAR*)Msg, IsError);
+        CheckProcedure (rhsExpr, (*OUT*)Code, (*OUT*)Msg, IsError);
+      | Type.Class.Set =>
+        SetExpr.CheckRT (rhsExpr, (*OUT*)Code, (*OUT*)Msg);
+      | Type.Class.Record =>
+        RecordExpr.CheckRT (rhsExpr, (*OUT*)Code, (*OUT*)Msg);
+      | Type.Class.Array, Type.Class.OpenArray =>
+        ArrayExpr.CheckRT (rhsExpr, (*OUT*)Code, (*OUT*)Msg);
       ELSE
       END (*CASE*)
     END

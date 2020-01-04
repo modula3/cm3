@@ -373,7 +373,7 @@ PROCEDURE CheckRecurse
   VAR priorErrCt, priorWarnCt, laterErrCt, laterWarnCt: INTEGER;
   VAR depthWInArg, depthWInTopConstr: INTEGER;
   VAR argSemType, argRepType, argIndexType, argEltType: Type.T;
-  VAR value, minE, maxE: Expr.T;
+  VAR value, minE, maxE, argConstExpr: Expr.T;
   VAR argConstr: T;
   VAR key: M3ID.T;
   VAR RTErrorCode: CG.RuntimeError;
@@ -520,7 +520,9 @@ PROCEDURE CheckRecurse
                     CheckArgStaticLength
                       (constr, argLevelInfo, argConstr.eltCt, constr.depth + 1);
                   END;
-                ELSE (* Arg is not a constructor. *)
+                ELSE (* Arg is not an array constructor. *)
+                  argConstExpr := Expr.ConstValue (argExpr);
+                  IF argConstExpr # NIL THEN argExpr := argConstExpr END;
                   Error.Count (priorErrCt, priorWarnCt);
                   NoteUseTargetVar (argExpr);
                   AssignStmt.CheckRT
@@ -553,7 +555,7 @@ PROCEDURE CheckRecurse
                     END  (*LOOP*)
                   END
                 END
-              END
+              END (*IF not broken*)
             END
           END (*IF argExpr # NIL*)
         END (*WITH argExpr*)
@@ -2115,6 +2117,23 @@ PROCEDURE InnerCompile (top: T) =
     
     top.state := StateTyp.Compiled;
   END InnerCompile;
+
+(*EXPORTED:*)
+PROCEDURE CheckRT
+  (expr: Expr.T; VAR(*OUT*) Code: CG.RuntimeError; VAR(*OUT*) Msg: TEXT) =
+  BEGIN
+    TYPECASE expr OF
+    | NULL =>
+    | T(top) =>
+      <* ASSERT top.checked *>
+      Code := top.RTErrorCode;
+      Msg := top.RTErrorMsg;
+      RETURN;
+    ELSE
+    END;
+    Msg := NIL;
+    Code := CG.RuntimeError.Unknown;
+  END CheckRT;
 
 (* Externally dispatched-to: *)
 PROCEDURE Use (top: T): BOOLEAN =

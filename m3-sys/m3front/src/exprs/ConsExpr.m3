@@ -159,7 +159,8 @@ PROCEDURE CheckRecurse
           TYPECASE argExpr OF
           | NULL =>
           | P (argCons) =>
-            (* Does not include named CONST w/ array constructor as its value. *)
+            (* Does not include named CONST, particularly,  w/ an array
+               constructor as its value. *)
             CheckRecurse (argCons, consExpr.kind, cs);
           ELSE Expr.TypeCheck (argExpr, cs)
           END

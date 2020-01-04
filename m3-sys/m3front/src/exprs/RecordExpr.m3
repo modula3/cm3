@@ -38,6 +38,7 @@ TYPE
         (* TRUE even if Evaluate was called unsuccessfully. *)
         is_const      : BOOLEAN := FALSE;
         (* Meaningless if NOT evalAttempted.  Otherwise, Evaluate was successful. *)
+        broken        : BOOLEAN := FALSE;
         prepped       : BOOLEAN := FALSE;
       OVERRIDES
         typeOf       := ExprRep.NoType;
@@ -80,6 +81,7 @@ PROCEDURE New (type: Type.T;  args: Expr.List): Expr.T =
     p.evalAttempted  := FALSE;
     p.is_const       := FALSE;
     p.prepped        := FALSE;
+    p.checked        := FALSE;
     RETURN p;
   END New;
 
@@ -147,6 +149,8 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
     IF NOT RecordType.Split (p.tipe, fieldList) THEN
 (* CHECK: Can't we ASSERT FALSE here? *)
       Error.Msg ("Record constructor must specify a record type (2.6.8)");
+      p.broken := TRUE;
+      p.checked := TRUE;
       RETURN;
     END;
 
@@ -172,13 +176,14 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
       INC (fieldNo);
     END;
     posOK := TRUE;
-    EVAL Evaluate (p);  (* make sure that the everything that can be folded is *)
+    EVAL Evaluate (p); (* Fold all foldable arguments. *)
 
     FOR i := 0 TO LAST (p.args^) DO
       e := p.args[i];
       IF RangeExpr.Split (e, splitExpr, dfault) THEN
         Error.Msg
           ("Range expressions not allowed in record constructors (2.6.8).");
+        p.broken := TRUE;
       END;
 
       IF KeywordExpr.Split (e, Id, splitExpr) THEN
@@ -189,6 +194,7 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
           IF (fieldNo >= fieldCt) THEN
             Error.ID (Id, "Unknown field name in record constructor (2.6.8).");
             fieldNo := i;
+            p.broken := TRUE;
             EXIT;
           END;
           IF (p.map^[fieldNo].name = Id) THEN EXIT END;
@@ -201,6 +207,7 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
         IF (i >= fieldCt) THEN
             Error.Msg ("Too many values in record constructor (2.6.8).");
             fieldNo := fieldCt - 1;
+            p.broken := TRUE;
           ELSE  fieldNo := i;
         END;
       END;
@@ -240,6 +247,7 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
         END;
       END;
     END;
+    p.checked := TRUE;
   END Check;
 
 (* Externally dispatched-to: *)
@@ -457,6 +465,23 @@ PROCEDURE GenLiteral (p: P;  offset: INTEGER;  <*UNUSED*> type: Type.T;
       END;
     END;
   END GenLiteral;
+
+(*EXPORTED:*)
+PROCEDURE CheckRT
+  (expr: Expr.T; VAR(*OUT*) Code: CG.RuntimeError; VAR(*OUT*) Msg: TEXT) =
+  BEGIN
+    TYPECASE expr OF
+    | NULL =>
+    | P(p) =>
+      <* ASSERT p.checked *>
+      Code := p.RTErrorCode;
+      Msg := p.RTErrorMsg;
+      RETURN;
+    ELSE
+    END;
+    Msg := NIL;
+    Code := CG.RuntimeError.Unknown;
+  END CheckRT;
 
 (* Externally dispatched-to: *)
 PROCEDURE Use (p: P): BOOLEAN =

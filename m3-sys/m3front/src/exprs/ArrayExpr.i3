@@ -9,7 +9,7 @@
 INTERFACE ArrayExpr;
 (* An array constructor. *) 
 
-IMPORT Type, Expr, Target;
+IMPORT Type, Expr, Target, CG;
 
 TYPE T <: Expr.T;
 
@@ -53,4 +53,6 @@ PROCEDURE GetBounds
 PROCEDURE ConstSubscript (array, index: Expr.T;  VAR e: Expr.T): BOOLEAN;
 (* Will look through a ConsExpr. *)
 
+PROCEDURE CheckRT
+  (expr: Expr.T; VAR(*OUT*) Code: CG.RuntimeError; VAR(*OUT*) Msg: TEXT);
 END ArrayExpr.

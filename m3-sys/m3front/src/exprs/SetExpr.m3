@@ -92,6 +92,7 @@ PROCEDURE New (type: Type.T;  args: Expr.List): Expr.T =
     p.nOthers := -1;
     p.tmp     := NIL;
     p.is_const := TRUE;
+    p.checked := FALSE;
     RETURN p;
   END New;
 
@@ -498,6 +499,7 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
       (* How can this happen? ConsExpr wouldn't have created this node, if not. *)
       Error.Msg ("Set constructor must specify a set type (2.6.8).");
       p.broken := TRUE;
+      p.checked := TRUE;
       RETURN;
     END;
     EVAL Type.GetBounds (eltType, p.minT,p.maxT);
@@ -558,6 +560,7 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
         minExpr := argExpr;
         maxExpr := argExpr;
       END;
+      p.checked := TRUE;
 (*
       argType := Expr.TypeOf (argExpr);
       minExpr := Expr.ConstValue (minExpr);
@@ -889,6 +892,23 @@ PROCEDURE Init () =
       TWord.And (left[i], Target.Word.max, left[i]);
     END;
   END Init;
+
+(*EXPORTED:*)
+PROCEDURE CheckRT
+  (expr: Expr.T; VAR(*OUT*) Code: CG.RuntimeError; VAR(*OUT*) Msg: TEXT) =
+  BEGIN
+    TYPECASE expr OF
+    | NULL =>
+    | P(p) =>
+      <* ASSERT p.checked *>
+      Code := p.RTErrorCode;
+      Msg := p.RTErrorMsg;
+      RETURN;
+    ELSE
+    END;
+    Msg := NIL;
+    Code := CG.RuntimeError.Unknown;
+  END CheckRT;
 
 (* Externally dispatched-to: *)
 PROCEDURE Use (p: P): BOOLEAN =

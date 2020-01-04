@@ -9,7 +9,7 @@
 INTERFACE SetExpr;
 (* For set constructors. *) 
 
-IMPORT Type, Expr;
+IMPORT Type, Expr, CG;
 
 PROCEDURE New (type: Type.T;  args: Expr.List): Expr.T;
 
@@ -23,6 +23,8 @@ PROCEDURE SymDifference (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN;
 PROCEDURE Include       (set, elt: Expr.T;  VAR c: Expr.T): BOOLEAN;
 PROCEDURE Exclude       (set, elt: Expr.T;  VAR c: Expr.T): BOOLEAN;
 PROCEDURE Member        (set, elt: Expr.T;  VAR c: Expr.T): BOOLEAN;
+PROCEDURE CheckRT
+  (expr: Expr.T; VAR(*OUT*) Code: CG.RuntimeError; VAR(*OUT*) Msg: TEXT);
 
 PROCEDURE Init ();
 
