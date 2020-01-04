@@ -154,6 +154,7 @@ METHODS
     doCheck(a,b : LLVM.ValueRef; pred : LLVM.IntPredicate; code : RuntimeError) := DoCheck;
     innerCallIndirect(proc: LLVM.ValueRef; t: Type; cc: CallingConvention; Nested: BOOLEAN) : LLVM.ValueRef := InnerCallIndirect;
     declSet(name : TEXT; fn : LLVM.ValueRef; numParams : INTEGER; hasReturn : BOOLEAN; setRange : BOOLEAN := FALSE) : LLVM.ValueRef := DeclSet;
+    setCall(fn : LLVM.ValueRef; numParams : INTEGER; p1,p2,p3,p4 : LLVM.ValueRef := NIL) : LLVM.ValueRef := SetCall;
 
 OVERRIDES
     next_label := next_label;
@@ -1106,6 +1107,8 @@ PROCEDURE DeclSet(self : U; name : TEXT; fn : LLVM.ValueRef; numParams : INTEGER
 
     procTy := LLVM.LLVMFunctionType(retTy, paramsRef, numParams, FALSE);
     proc := LLVM.LLVMAddFunction(modRef, LT(name), procTy);
+    (* The external set functions in hand.c are declared __stdcall so 
+       we must accommodate. *)
     IF self.isWindows THEN
       LLVM.LLVMSetFunctionCallConv(proc, LLVM.X86StdcallCallConv);
     END;
@@ -3683,7 +3686,7 @@ PROCEDURE GetSetStackVals(self : U; all : BOOLEAN; VAR s0,s1,s2 : LLVM.ValueRef)
     END;
   END GetSetStackVals;
 
-PROCEDURE SetCall(fn : LLVM.ValueRef; numParams : INTEGER; p1,p2,p3,p4 : LLVM.ValueRef := NIL) : LLVM.ValueRef =
+PROCEDURE SetCall(self : U; fn : LLVM.ValueRef; numParams : INTEGER; p1,p2,p3,p4 : LLVM.ValueRef := NIL) : LLVM.ValueRef =
   CONST maxParams = 4;
   VAR
     res : LLVM.ValueRef;
@@ -3696,6 +3699,9 @@ PROCEDURE SetCall(fn : LLVM.ValueRef; numParams : INTEGER; p1,p2,p3,p4 : LLVM.Va
     paramsArr[2] := p3;
     paramsArr[3] := p4;
     res := LLVM.LLVMBuildCall(builderIR, fn, paramsRef, numParams, LT(""));
+    IF self.isWindows THEN
+      LLVM.LLVMSetInstructionCallConv(res, LLVM.X86StdcallCallConv);
+    END;
     RETURN res;
   END SetCall;
 
@@ -3707,7 +3713,7 @@ VAR
     fn := self.declSet(name,fn,4,FALSE);
     sizeVal := LLVM.LLVMConstInt(IntPtrTy, VAL(s * 8,LONGINT), TRUE);
     GetSetStackVals(self,TRUE,s0,s1,s2);
-    EVAL SetCall(fn,4,sizeVal,s0,s1,s2);
+    EVAL self.setCall(fn,4,sizeVal,s0,s1,s2);
     Pop(self.exprStack,3);
   END SetBinopCommon;
 
@@ -3746,7 +3752,7 @@ PROCEDURE set_member (self: U; <*UNUSED*> s: ByteSize; <*UNUSED*> t: IType) =
     s1 := NARROW(st1,LvExpr).lVal;
     s1 := LLVM.LLVMBuildBitCast(builderIR, s1, PtrTy, LT("set_cast"));
     self.setMember := self.declSet("set_member",self.setMember,2,TRUE);
-    res := SetCall(self.setMember,2,s0,s1);
+    res := self.setCall(self.setMember,2,s0,s1);
     NARROW(st1,LvExpr).lVal := res;
     Pop(self.exprStack);
   END set_member;
@@ -3762,7 +3768,7 @@ PROCEDURE SetCompareCommon
     size := LLVM.LLVMConstInt(IntPtrTy, VAL(s * 8,LONGINT), TRUE);
     fn := self.declSet(name,fn,3,TRUE);
     GetSetStackVals(self,FALSE,s0,s1,s2);
-    res := SetCall(fn,3,size,s0,s1);
+    res := self.setCall(fn,3,size,s0,s1);
     NARROW(st1,LvExpr).lVal := res;
     Pop(self.exprStack);
   END SetCompareCommon;
@@ -3800,7 +3806,7 @@ PROCEDURE set_range (self: U; <*UNUSED*> s: ByteSize; <*UNUSED*> t: IType) =
     s2 := NARROW(st2,LvExpr).lVal;
     s2 := LLVM.LLVMBuildBitCast(builderIR, s2, PtrTy, LT("set_cast"));
     self.setRange := self.declSet("set_range",self.setRange,3,TRUE,TRUE);
-    EVAL SetCall(self.setRange,3,s0,s1,s2);
+    EVAL self.setCall(self.setRange,3,s0,s1,s2);
     Pop(self.exprStack,3);
   END set_range;
 
@@ -3815,7 +3821,7 @@ PROCEDURE set_singleton (self: U; <*UNUSED*> s: ByteSize; <*UNUSED*> t: IType) =
     s1 := NARROW(st1,LvExpr).lVal;
     s1 := LLVM.LLVMBuildBitCast(builderIR, s1, PtrTy, LT("set_cast"));
     self.setSingleton := self.declSet("set_singleton",self.setSingleton,2,FALSE);
-    EVAL SetCall(self.setSingleton,2,s0,s1);
+    EVAL self.setCall(self.setSingleton,2,s0,s1);
     Pop(self.exprStack,2);
   END set_singleton;
 
