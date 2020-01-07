@@ -270,18 +270,15 @@ PROCEDURE Update(ctrl: RefMD5Control; bufLen : CARDINAL; buf : RefBlock) =
 
 PROCEDURE LengthBlock(ctrl : RefMD5Control) : RefBlock =
   VAR
-    length : LONGINT;
     len64 : Int64On32;
     buf : RefBlock;
   BEGIN
     buf := NEW(RefBlock,8);
-    length := VAL(ctrl.length + ctrl.bufLen,LONGINT) * 8L;
+    len64 := LOOPHOLE(VAL(ctrl.length + ctrl.bufLen,LONGINT) * 8L,Int64On32);
     IF endian = Endian.Big THEN
-      len64 := LOOPHOLE(length,Int64On32);
       len64 := Swap8(len64);
-      length := LOOPHOLE(len64,LONGINT);
     END;
-    buf^ := LOOPHOLE(length,ARRAY[0..7] OF Byte);
+    buf^ := LOOPHOLE(len64,ARRAY[0..7] OF Byte);
     RETURN buf;
   END LengthBlock;
   
