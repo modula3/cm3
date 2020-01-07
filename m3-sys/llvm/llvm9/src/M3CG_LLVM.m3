@@ -765,12 +765,12 @@ PROCEDURE NewArrayRefOfMetadataRef
 
 PROCEDURE NewArrayRefOfint64
   ( ElemCt : CARDINAL; 
-    VAR (*OUT*) Open : REF ARRAY OF int64_t; 
+    VAR (*OUT*) Open : REF ARRAY OF uint64_t; 
     VAR (*OUT*) ArrRef : ArrayRefOfint64_t 
   ) =
   BEGIN 
     IF ElemCt > 0 THEN
-      Open := NEW ( REF ARRAY OF int64_t , ElemCt );
+      Open := NEW ( REF ARRAY OF uint64_t , ElemCt );
       ArrRef . Data := ADR (Open[0]);
     ELSE 
       Open := NIL; 
@@ -6633,7 +6633,7 @@ PROCEDURE Expr(self : U; t1, t2, t3, t4, t5, t6, t7, t8, t9 ,t10: INTEGER := -1)
   VAR
     a := ARRAY [0..9] OF INTEGER {t1, t2, t3, t4, t5, t6, t7, t8, t9, t10};
     pos: INTEGER := LAST(a);
-    paramsArr : REF ARRAY OF int64_t; 
+    paramsArr : REF ARRAY OF uint64_t; 
     paramsInt64 : LLVMTypes.ArrayRefOfint64_t;    
   BEGIN
     WHILE pos >= 0 AND a[pos] = -1 DO DEC(pos) END;
