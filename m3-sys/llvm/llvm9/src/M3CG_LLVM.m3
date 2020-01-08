@@ -643,13 +643,8 @@ VAR
   (* Keep EXTENDED type compatible with front end which is double. Later
    we could change it to a 128 bit quad precision floating point *)
   
-  ExtendedType := LLVM.LLVMDoubleType();
-  ExtSize := 64L;
-  
-  (*
-  ExtendedType := LLVM.LLVMFP128Type();
-  ExtSize := 128L;
-*)
+  ExtendedType : LLVM.TypeRef;
+
 (*--------------------------------------------------------------- Utility ---*)
 
 PROCEDURE TIntToint64_t(Val: TInt.Int) : int64_t = 
@@ -1327,6 +1322,14 @@ PROCEDURE begin_unit (self: U;  optimize : INTEGER) =
     widecharBits := 16L; (* May change. *) 
     wordSize := LLVM.LLVMConstInt(IntPtrTy, VAL(ptrBits,LONGINT), TRUE);
     byteSize := LLVM.LLVMConstInt(IntPtrTy, VAL(ptrBytes,LONGINT), TRUE);
+
+    IF Target.Extended.size = 64 THEN
+      ExtendedType := LLVM.LLVMDoubleType();
+    ELSIF Target.Extended.size = 128 THEN
+      ExtendedType := LLVM.LLVMFP128Type();
+    ELSE
+      <*ASSERT FALSE *>
+    END;
   END begin_unit;
 
 PROCEDURE SetBBVolatile(bb : LLVM.BasicBlockRef) =
@@ -3138,7 +3141,7 @@ PROCEDURE ConvertFloat(t : RType; f : Target.Float) : LLVM.ValueRef =
     IF t = Type.Reel OR t = Type.LReel THEN 
       result := LLVM.LLVMConstReal(realTy,FLOAT(f.fraction,LONGREAL));
     ELSE (*Type.XReel*)
-      IF ExtSize = 64L THEN
+      IF Target.Extended.size = 64 THEN
         (* extended is same as longreal *)
         result := LLVM.LLVMConstReal(realTy,FLOAT(f.fraction,LONGREAL));
       ELSE
@@ -5576,7 +5579,7 @@ PROCEDURE BuiltinOrdinalDebug
    the requirement. *) 
 PROCEDURE InitUids(self : U) =
   VAR wordMin, wordMax, widecharMax: TInt.Int;
-    intBits, widecharBits: LONGINT;
+    intBits, widecharBits, extSize: LONGINT;
   BEGIN
 
     (* Builtin ordinal types: *) 
@@ -5594,7 +5597,9 @@ PROCEDURE InitUids(self : U) =
     THEN widecharMax := TInt.Max16U;
     ELSE <* ASSERT widecharBits = 32L *> 
          EVAL TInt.FromInt(16_10FFFF, (*OUT*)widecharMax);
-    END;  
+    END; 
+
+    extSize := VAL(Target.Extended.size,LONGINT);
 
     EVAL self.debugTable.put(UID_INTEGER,NEW(BaseDebug, bitSize := intBits, align := intBits, typeName := M3ID.Add("INTEGER"), encoding := DC.DW_ATE_signed));
     (*
@@ -5640,7 +5645,7 @@ PROCEDURE InitUids(self : U) =
     EVAL self.debugTable.put(UID_LREEL,NEW(BaseDebug, bitSize := 64L, align := 64L, typeName := M3ID.Add("LONGREAL"), encoding := DC.DW_ATE_float));
     (* change this if ever upgrade to 128 bit floats or change to store sizeof type - also the name should be
     EXTENDED but gdb only recognises this C name*)
-    EVAL self.debugTable.put(UID_XREEL,NEW(BaseDebug, bitSize := ExtSize, align := ExtSize, typeName := M3ID.Add("__float128"), encoding := DC.DW_ATE_float));
+    EVAL self.debugTable.put(UID_XREEL,NEW(BaseDebug, bitSize := extSize, align := extSize, typeName := M3ID.Add("__float128"), encoding := DC.DW_ATE_float));
 
     (* Reference types: *) 
     EVAL self.debugTable.put(UID_ROOT,NEW(ObjectDebug, tUid := UID_ROOT, bitSize := 0L, align := ptrBits, typeName := M3ID.Add("ROOT"), encoding := DC.DW_ATE_address));
