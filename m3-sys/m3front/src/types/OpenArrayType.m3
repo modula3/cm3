@@ -200,7 +200,7 @@ PROCEDURE IsStraddleFree
   END IsStraddleFree;
 
 (* EXPORTED: *)
-PROCEDURE DeclareTemp (t: Type.T): CG.Var =
+PROCEDURE DeclareDopeTemp (t: Type.T): CG.Var =
 (* If 't' is an open array type, declare and return a temporary to hold its
    dope vector, otherwise abort. *)
   VAR
@@ -209,7 +209,7 @@ PROCEDURE DeclareTemp (t: Type.T): CG.Var =
   BEGIN
     RETURN CG.Declare_temp (size, Target.Address.align,
                             CG.Type.Struct, in_memory := TRUE);
-  END DeclareTemp;
+  END DeclareDopeTemp;
 
 (* Externally dispatched-to: *)
 PROCEDURE Compiler (p: P) =

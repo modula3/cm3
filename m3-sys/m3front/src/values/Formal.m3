@@ -826,7 +826,7 @@ PROCEDURE RedepthArray (formalType, actualType: Type.T) =
 
     IF (formalDepth > actualDepth) THEN
       (* build a bigger dope vector *)
-      tempVar := OpenArrayType.DeclareTemp (formalType);
+      tempVar := OpenArrayType.DeclareDopeTemp (formalType);
 
       (* copy the data pointer *)
       CG.Push (actualVal);

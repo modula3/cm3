@@ -14,6 +14,7 @@ IMPORT Text, Fmt;
 IMPORT M3, CG, Expr, ExprRep, Type, Error, IntegerExpr, EnumExpr;
 IMPORT RangeExpr, KeywordExpr, SetType, AssignStmt, CheckExpr;
 IMPORT M3ID, Target, TInt, TWord, Bool, M3Buf, Module;
+IMPORT NamedExpr, ConsExpr, Value;
 
 TYPE
   Node = REF RECORD
@@ -893,18 +894,32 @@ PROCEDURE Init () =
     END;
   END Init;
 
+PROCEDURE SetConstrExpr (expr: Expr.T): P =
+(* Look through a NamedExpr and then a ConsExpr, for a SetExpr.T.  NIL if not. *)
+
+  VAR strippedExpr: Expr.T;
+  BEGIN
+    strippedExpr := Expr.StripNamedCons (expr);
+    TYPECASE strippedExpr OF
+    | NULL => RETURN NIL;
+    | P (setExpr) => RETURN setExpr;
+    ELSE RETURN NIL;
+    END;
+  END SetConstrExpr;
+
 (*EXPORTED:*)
 PROCEDURE CheckRT
   (expr: Expr.T; VAR(*OUT*) Code: CG.RuntimeError; VAR(*OUT*) Msg: TEXT) =
+  VAR constrExpr: P;
   BEGIN
-    TYPECASE expr OF
+    constrExpr := SetConstrExpr (expr);
+    TYPECASE constrExpr OF
     | NULL =>
     | P(p) =>
       <* ASSERT p.checked *>
       Code := p.RTErrorCode;
       Msg := p.RTErrorMsg;
       RETURN;
-    ELSE
     END;
     Msg := NIL;
     Code := CG.RuntimeError.Unknown;

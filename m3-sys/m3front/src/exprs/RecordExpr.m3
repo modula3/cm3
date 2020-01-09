@@ -13,6 +13,7 @@ MODULE RecordExpr;
 IMPORT M3, M3ID, CG, Error, Type, RecordType, Module;
 IMPORT Value, Field, AssignStmt, M3Buf;
 IMPORT Expr, ExprRep, KeywordExpr, RangeExpr, ArrayExpr;
+IMPORT NamedExpr, ConsExpr;
 
 TYPE
   Info = RECORD
@@ -466,18 +467,32 @@ PROCEDURE GenLiteral (p: P;  offset: INTEGER;  <*UNUSED*> type: Type.T;
     END;
   END GenLiteral;
 
+PROCEDURE RecConstrExpr (expr: Expr.T): P =
+(* Look through a NamedExpr and then a ConsExpr, for a RecordExpr.T.  NIL if not. *)
+
+  VAR strippedExpr: Expr.T;
+  BEGIN
+    strippedExpr := Expr.StripNamedCons (expr);
+    TYPECASE strippedExpr OF
+    | NULL => RETURN NIL;
+    | P (recordExpr) => RETURN recordExpr;
+    ELSE RETURN NIL;
+    END;
+  END RecConstrExpr;
+
 (*EXPORTED:*)
 PROCEDURE CheckRT
   (expr: Expr.T; VAR(*OUT*) Code: CG.RuntimeError; VAR(*OUT*) Msg: TEXT) =
+  VAR constrExpr: P;
   BEGIN
-    TYPECASE expr OF
+    constrExpr := RecConstrExpr (expr);
+    TYPECASE constrExpr OF
     | NULL =>
     | P(p) =>
       <* ASSERT p.checked *>
       Code := p.RTErrorCode;
       Msg := p.RTErrorMsg;
       RETURN;
-    ELSE
     END;
     Msg := NIL;
     Code := CG.RuntimeError.Unknown;

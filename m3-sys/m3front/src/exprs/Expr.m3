@@ -9,9 +9,9 @@
 
 MODULE Expr EXPORTS Expr, ExprRep;
 
-IMPORT M3, M3Buf, CG, Type, Scanner, ExprParse;
+IMPORT M3, M3ID, M3Buf, CG, Type, Scanner, ExprParse;
 IMPORT Target, TInt, ErrType, Error;
-IMPORT ConsExpr, OpenArrayType, ArrayType;
+IMPORT NamedExpr, ConsExpr, OpenArrayType, ArrayType, Value;
 IMPORT Bool, Int;
 IMPORT CallExpr;
 
@@ -524,13 +524,36 @@ PROCEDURE EqCheckAB (a: Tab;  e: T;  x: M3.EqAssumption): BOOLEAN =
     END;
   END EqCheckAB;
 
+PROCEDURE StripNamedCons (expr: T): T =
+(* Look through a NamedExpr and then a ConsExpr, for an Expr.T.  NIL if not. *)
+
+  VAR ident: M3ID.T;
+  VAR val: Value.T;
+  VAR unnamedExpr, resultExpr: T;
+  BEGIN
+    IF NamedExpr.Split (expr, ident, val) THEN
+      IF Value.ClassOf (val) # Value.Class.Expr THEN RETURN NIL END;
+      unnamedExpr := Value.ToExpr (val);
+    ELSE unnamedExpr := expr
+    END;
+    ConsExpr.Seal (unnamedExpr);
+    (* DO NOT allow ConsExpr to Check unnamedExpr.  That could make a (should be
+       top-level) call to ArrayExpr.Check on a nested array constructor.
+       But it's OK if ConsExpr previously checked unnamedExpr. *)
+    resultExpr := ConsExpr.Base (unnamedExpr);
+    IF resultExpr = NIL THEN resultExpr := unnamedExpr END;
+    RETURN resultExpr
+  END StripNamedCons;
+
 PROCEDURE Use (t: T): BOOLEAN =
 (* Generate runtime actions prior to a use of t that does not call Compile.
    Return TRUE IFF following code is reachable. *)
+  VAR strippedExpr: T;
   BEGIN
-    IF t = NIL THEN RETURN TRUE END;
-    <* ASSERT t.checked *>
-    RETURN t.use ();
+    strippedExpr := StripNamedCons (t);
+    IF strippedExpr = NIL THEN RETURN TRUE END;
+    <* ASSERT strippedExpr.checked *>
+    RETURN strippedExpr.use ();
   END Use;
 
 BEGIN

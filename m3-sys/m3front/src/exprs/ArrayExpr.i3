@@ -23,8 +23,8 @@ PROCEDURE ArrayConstrExpr (e: Expr.T): T;
 PROCEDURE NoteNested (constr: T);
 (* PRE: constr has not been checked. *)
 (* Mark constr as nested (ArrayExpr nested inside an ArrayExpr, directly,
-   except for a possible ConsExpr in between.  In particular, not a
-   named constant. *)
+   except for a possible ConsExpr in between.  In particular, must not
+   be accessed by the outer ArrayExpr through a named constant. *)
 
 PROCEDURE NoteTargetType (expr: Expr.T; type: Type.T);
 (* PRE: If expr is an array constructor, it is top-level.

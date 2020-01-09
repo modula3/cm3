@@ -20,11 +20,12 @@ MODULE ArrayExpr;
                         CG stack) during Prep.
 *)
 
-IMPORT M3, M3ID, CG, Expr, ExprRep, Error, Type, ArrayType;
-IMPORT ConsExpr, KeywordExpr, RangeExpr, Int, OpenArrayType, Module;
-IMPORT IntegerExpr, EnumExpr, SubrangeType, Target, TInt, M3Buf;
-IMPORT AssignStmt, RefType, M3RT, Procedure, RunTyme, ErrType;
 IMPORT Fmt;
+
+IMPORT M3, M3ID, CG, Expr, ExprRep, Error, Type, ArrayType;
+IMPORT KeywordExpr, RangeExpr, OpenArrayType, Module;
+IMPORT IntegerExpr, EnumExpr, SubrangeType, Target, TInt, Int, M3Buf;
+IMPORT AssignStmt, RefType, M3RT, Procedure, RunTyme, ErrType;
 
 (* Monitor sequencing of operations: *)
 TYPE StateTyp
@@ -100,7 +101,8 @@ REVEAL
                                     top-level array constructor. *)
     eltCt             : INTEGER := Expr.lengthInvalid;
     state             : StateTyp;
-    isNested          : BOOLEAN;
+    isNested          : BOOLEAN; (* Inside another ArrayExpr/ConsExpr pair, with no
+                                    NamedExpr intervening. *)
     dots              : BOOLEAN;
     evalAttempted     : BOOLEAN; (* TRUE even if Evaluate was called unsuccessfully. *) 
     is_const          : BOOLEAN; (* Meaningless if NOT evalAttempted.
@@ -193,24 +195,20 @@ PROCEDURE New (type: Type.T; args: Expr.List; dots: BOOLEAN): Expr.T =
     constr.directAssignableType := TRUE; (* Inherited. *)
     constr.eltCt                := Expr.lengthInvalid;
     constr.state                := StateTyp.Fresh;
-    constr.shallowestDynDepth   := FIRST (INTEGER);
-    constr.deepestDynDepth      := FIRST (INTEGER);
+    constr.shallowestDynDepth   := FIRST (INTEGER); (* < 0 => none exists. *)
+    constr.deepestDynDepth      := FIRST (INTEGER); (* < 0 => none exists. *)
     constr.heapTempPtrVar       := NIL;
     RETURN constr;
   END New;
 
 (* EXPORTED: *) 
 PROCEDURE ArrayConstrExpr (expr: Expr.T): T =
-(* Look through a ConsExpr for an ArrayExpr.  NIL if not. *)
-   
-  VAR base: Expr.T;
+(* Look through a NamedExpr and then a ConsExpr, for an ArrayExpr.  NIL if not. *)
+
+  VAR strippedExpr: Expr.T;
   BEGIN
-    ConsExpr.Seal (expr);
-    (* DO NOT allow ConsExpr to Check expr. That would make a (should be
-       top-level) call to ArrayExpr.Check on a nested array constructor. *)
-    base := ConsExpr.Base (expr);
-    IF base = NIL THEN base := expr END;
-    TYPECASE base OF
+    strippedExpr := Expr.StripNamedCons (expr);
+    TYPECASE strippedExpr OF
     | NULL => RETURN NIL;
     | T (arrayExpr) => RETURN arrayExpr;
     ELSE RETURN NIL;
@@ -221,8 +219,8 @@ PROCEDURE ArrayConstrExpr (expr: Expr.T): T =
 PROCEDURE NoteNested (constr: T) =
 (* PRE: constr has not been checked. *)
 (* Mark constr as nested (ArrayExpr nested inside an ArrayExpr, directly,
-   except for a possible ConsExpr in between.  In particular, not a
-   named constant. *)
+   except for a possible ConsExpr in between.  In particular, must not
+   be accessed by the outer ArrayExpr through a named constant. *)
   BEGIN
     IF constr = NIL THEN RETURN END;
     <* ASSERT constr.state < StateTyp.Checking *>
@@ -373,7 +371,7 @@ PROCEDURE CheckRecurse
   VAR priorErrCt, priorWarnCt, laterErrCt, laterWarnCt: INTEGER;
   VAR depthWInArg, depthWInTopConstr: INTEGER;
   VAR argSemType, argRepType, argIndexType, argEltType: Type.T;
-  VAR value, minE, maxE, argConstExpr: Expr.T;
+  VAR value, minE, maxE: Expr.T;
   VAR argConstr: T;
   VAR key: M3ID.T;
   VAR RTErrorCode: CG.RuntimeError;
@@ -469,7 +467,7 @@ PROCEDURE CheckRecurse
                 argLength := argConstr.eltCt;
                 argSemType := argConstr.semType;
               ELSE (* argExpr is a non-array, or non-constructor, or named
-                      constant with an array constructor as value. *)
+                      constant, possibly with an array constructor as value. *)
                 Expr.TypeCheck (argExpr, cs);
                 IF top.firstArgExpr = NIL THEN
                   top.firstArgExpr := argExpr;
@@ -488,7 +486,8 @@ PROCEDURE CheckRecurse
                   argExpr := NIL;
                   constr.broken := TRUE;
                 (* And to top constructor, if different. *)
-                ELSIF constr # top 
+                END;
+                IF constr # top 
                       AND NOT Type.IsAssignable (argLevelInfo.semType, argSemType)
                 THEN
                   Error.Int (i,
@@ -502,7 +501,11 @@ PROCEDURE CheckRecurse
               IF NOT constr.broken THEN
                 (* Check shape criterion of assignabilty. *)
                 IF argConstr # NIL THEN
-                  IF argConstr.isNamedConst THEN
+                  IF argConstr.isNested THEN
+                    CheckArgStaticLength
+                      (constr, argLevelInfo, argConstr.eltCt, constr.depth + 1);
+                  ELSE
+                    <* ASSERT Evaluate (argConstr) = argConstr *>
                     (* Check argConstr's static lengths against top's. *)
                     <* ASSERT argConstr.depth = 0 *>
                     depthWInArg := 0;
@@ -515,14 +518,13 @@ PROCEDURE CheckRecurse
                         (constr, top.levels^ [depthWInTopConstr], argLength,
                          depthWInTopConstr);
                       INC (depthWInArg);
-                    END  (*LOOP*)
-                  ELSE
-                    CheckArgStaticLength
-                      (constr, argLevelInfo, argConstr.eltCt, constr.depth + 1);
+                    END (*LOOP*);
+                    AssignStmt.CheckRT
+                      (constr.semEltType, argConstr, cs,
+                       (*VAR*)Code := RTErrorCode, (*VAR*)Msg := RTErrorMsg);
+                    MergeRTError (top, RTErrorCode, RTErrorMsg);
                   END;
                 ELSE (* Arg is not an array constructor. *)
-                  argConstExpr := Expr.ConstValue (argExpr);
-                  IF argConstExpr # NIL THEN argExpr := argConstExpr END;
                   Error.Count (priorErrCt, priorWarnCt);
                   NoteUseTargetVar (argExpr);
                   AssignStmt.CheckRT
@@ -552,7 +554,7 @@ PROCEDURE CheckRecurse
                       END;
                       argRepType := argEltType;
                       INC (depthWInArg);
-                    END  (*LOOP*)
+                    END (*LOOP*)
                   END
                 END
               END (*IF not broken*)
@@ -912,10 +914,9 @@ PROCEDURE Represent (top: T) =
               levelInfo.staticLen := locStaticLen
             ELSIF locStaticLen # levelInfo.staticLen THEN
               Error.Int
-                (depth, "Constructor length # expression length, in dimension." );
-              <* ASSERT FALSE *>
+                (depth, "Constructor length # expected length, in dimension." );
               (* ^top.targetType assignability checks above should avert this. *)
-              top.broken <* NOWARN *> (* Unreachable. *) := TRUE;
+              top.broken := TRUE;
               top.state := StateTyp.Represented;
               RETURN
             END;
@@ -1193,8 +1194,9 @@ PROCEDURE RepTypeOf (constr: T): Type.T =
    Error.Info ("RepTypeOf called on nested array constructor.")
  END;
     Represent (constr.top);
-    <* ASSERT constr.repType # NIL *>
-    IF constr.repType = NIL THEN RETURN constr.semType END;
+    IF constr.repType = NIL THEN
+      <* ASSERT constr.broken *>
+      RETURN constr.semType END;
     RETURN constr.repType;
   END RepTypeOf;
 
@@ -1224,12 +1226,13 @@ PROCEDURE NoteUseTargetVar (expr: Expr.T) =
 PROCEDURE UseTargetVar (top: T): BOOLEAN =
 (* SIDE EFFECTS !! *)
 (* PRE: top is top-level. *)
-   BEGIN
-     IF top.isNamedConst THEN RETURN FALSE END;
-     top.useTargetVarLocked := TRUE;
-     RETURN top.useTargetVar;
-   END UseTargetVar;
-
+  BEGIN
+    <* ASSERT NOT top.isNested *>
+    IF top.isNamedConst THEN RETURN FALSE END;
+    top.useTargetVarLocked := TRUE;
+    RETURN top.useTargetVar;
+  END UseTargetVar;
+  
 (* Externally dispatched-to: *)
 PROCEDURE UsesAssignProtocol (expr: Expr.T): BOOLEAN =
 (* PRE: IF expr is an array constructor, THEN it is top-level. *)
@@ -2121,15 +2124,16 @@ PROCEDURE InnerCompile (top: T) =
 (*EXPORTED:*)
 PROCEDURE CheckRT
   (expr: Expr.T; VAR(*OUT*) Code: CG.RuntimeError; VAR(*OUT*) Msg: TEXT) =
+  VAR constrExpr: T;
   BEGIN
-    TYPECASE expr OF
+    constrExpr := ArrayConstrExpr (expr);
+    TYPECASE constrExpr OF
     | NULL =>
     | T(top) =>
       <* ASSERT top.checked *>
       Code := top.RTErrorCode;
       Msg := top.RTErrorMsg;
       RETURN;
-    ELSE
     END;
     Msg := NIL;
     Code := CG.RuntimeError.Unknown;

@@ -394,7 +394,7 @@ PROCEDURE CompileLV (p: P; traced := FALSE) =
          non-open elements from being non-byte-aligned. *)
          
         (* allocate a new dope vector *)
-        newDopeVar := OpenArrayType.DeclareTemp (te);
+        newDopeVar := OpenArrayType.DeclareDopeTemp (te);
         newShapeLast := p.OMOpenDepth - p.shapeSs - 2; 
 
         (* copy the suffix of the shape portion of the dope vector *)

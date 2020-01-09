@@ -42,7 +42,7 @@ PROCEDURE NonopenEltType (t: Type.T): Type.T;
    elements; otherwise, returns t. That is, strip all the ARRAY OF in 
    front of t *)
 
-PROCEDURE DeclareTemp (t: Type.T): CG.Var;
+PROCEDURE DeclareDopeTemp (t: Type.T): CG.Var;
 (* If 't' is an open array, declare and return a temporary to hold its
    dope vector, otherwise abort. *)
 

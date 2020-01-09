@@ -329,7 +329,7 @@ PROCEDURE BuildArray (p: P;  src_size: INTEGER): CG.Var =
   BEGIN
     elt := Type.CheckInfo (elt, elt_info);
     (** CG.Check_byte_aligned (); **)
-    array := OpenArrayType.DeclareTemp (p.tipe);
+    array := OpenArrayType.DeclareDopeTemp (p.tipe);
     CG.Store_addr (array, M3RT.OA_elt_ptr);
     CG.Load_intt (src_size DIV elt_info.size);
     CG.Store_int (Target.Integer.cg_type, array, M3RT.OA_size_0);

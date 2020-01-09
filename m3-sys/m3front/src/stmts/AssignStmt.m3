@@ -91,7 +91,7 @@ PROCEDURE CheckRT
 
   VAR
     base_tlhs := Type.Base (tlhs); (* strip renaming, packing, and subranges. *)
-    trhs := Expr.SemTypeOf (rhsExpr);
+    trhs: Type.T;
     lhs_type_info, base_lhs_type_info: Type.Info;
     lhsTypeClass: Type.Class;
   BEGIN
@@ -101,6 +101,7 @@ PROCEDURE CheckRT
     base_tlhs := Type.CheckInfo (base_tlhs, base_lhs_type_info);
     lhsTypeClass := base_lhs_type_info.class;
     Expr.TypeCheck (rhsExpr, cs);
+    trhs := Expr.SemTypeOf (rhsExpr);
 
     IF NOT Type.IsAssignable (tlhs, trhs) THEN
       IF (tlhs # ErrType.T) AND (trhs # ErrType.T) THEN
@@ -401,7 +402,7 @@ PROCEDURE AssignSet (tlhs: Type.T;  rhsExpr: Expr.T;
   (* PRE: LHS is compiled and on TOS. *)
   (* PRE: RHS is prepped. *)
   BEGIN
-(* TODO: Merge AssignSet and AssignRecord. *)
+(* TODO: Merge AssignSet and AssignRecord.  Or maybe not. *)
     AssertSameSize (tlhs, Expr.TypeOf (rhsExpr));
     (* Leave the LHS address on the CG stack, regardless of protocol. *)
     IF Type.IsStructured (tlhs) THEN
@@ -429,7 +430,8 @@ PROCEDURE CompileStruct (expr: Expr.T) =
     END;
   END CompileStruct;
 
-PROCEDURE CopyStruct (lhsAlign: Type.BitAlignT; bitSize: INTEGER) =
+PROCEDURE CopyStruct
+  (lhsAlign: Type.BitAlignT; bitSize: INTEGER; overlap: BOOLEAN) =
 (* PRE: CGstack: RHS addr on top, LHS addr below. *)
 (* PRE: Using expression protocol. *)
   BEGIN
@@ -438,7 +440,7 @@ PROCEDURE CopyStruct (lhsAlign: Type.BitAlignT; bitSize: INTEGER) =
       CG.Load_indirect (Target.Word.cg_type, 0 , bitSize); 
       CG.Store_indirect (Target.Word.cg_type, 0 , bitSize); 
     ELSE
-      CG.Copy (bitSize, overlap := FALSE);
+      CG.Copy (bitSize, overlap);
       (* Expression protocol means ^ the value is already in a temporary. *)
     END
   END CopyStruct;
@@ -459,7 +461,7 @@ PROCEDURE AssignRecord
     ELSE (* Using expression protocol. *)
       (* RHS is on top of CG stack.  LHS is below.
          Compile will have left LHS alone. *)
-      CopyStruct (lhsAlign, lhsTypeInfo.size );
+      CopyStruct (lhsAlign, lhsTypeInfo.size, overlap := FALSE);
     END;
   END AssignRecord;
 
@@ -490,7 +492,7 @@ PROCEDURE AssignArray
       THEN(* Both sides are fixed length arrays *)
         CompileStruct (rhsExpr);
         (* RHS is on top of CG stack.  LHS is below, unmolested by Compile. *)
-        CopyStruct (lhsAlign, lhsRepTypeInfo.size);
+        CopyStruct (lhsAlign, lhsRepTypeInfo.size, overlap := TRUE);
       ELSE (* Something is open. *)
         lhsVal := CG.Pop ();
         CompileStruct (rhsExpr);
@@ -517,13 +519,13 @@ PROCEDURE AssignArray
             CG.Open_elt_ptr (lhsAlign);
             CG.Push (rhsVal);
             EVAL Type.CheckInfo (rhsRepType, rhsRepTypeInfo);
-            CopyStruct (lhsAlign, rhsRepTypeInfo.size);
+            CopyStruct (lhsAlign, rhsRepTypeInfo.size, overlap := TRUE);
           END;
         ELSE (* LHS is fixed and RHS is open. *)
           CG.Push (lhsVal);
           CG.Push (rhsVal);
           CG.Open_elt_ptr (Expr.Alignment(rhsExpr));
-          CopyStruct (lhsAlign, lhsRepTypeInfo.size);
+          CopyStruct (lhsAlign, lhsRepTypeInfo.size, overlap := TRUE);
         END;
         CG.Free (lhsVal);
         CG.Free (rhsVal);
@@ -596,8 +598,8 @@ PROCEDURE GenOpenArrayCopy (lhsDopeVal: CG.Val;  lhsRepType, rhsRepType: Type.T)
       IF (i # 0) THEN CG.Multiply (Target.Word.cg_type) END;
     END;
     IF lhsDepth < rhsDepth
-    THEN CG.Copy_n (OpenArrayType.EltPack (lhsRepType), overlap := FALSE);
-    ELSE CG.Copy_n (OpenArrayType.EltPack (rhsRepType), overlap := FALSE);
+    THEN CG.Copy_n (OpenArrayType.EltPack (lhsRepType), overlap := TRUE);
+    ELSE CG.Copy_n (OpenArrayType.EltPack (rhsRepType), overlap := TRUE);
     END;
   END GenOpenArrayCopy;
 

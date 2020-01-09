@@ -127,7 +127,7 @@ PROCEDURE PrepLV (ce: CallExpr.T; traced: BOOLEAN) =
     END;
 
     (* declare space for the result *)
-    t_result := OpenArrayType.DeclareTemp (open);
+    t_result := OpenArrayType.DeclareDopeTemp (open);
 
     CASE case OF
     | 0 =>  (* fixed array, var start, var len ------------------------------*)

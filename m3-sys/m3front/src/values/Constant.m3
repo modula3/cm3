@@ -113,7 +113,7 @@ PROCEDURE Check (t: T;  VAR cs: Value.CheckState) =
     IF ProcType.Is (t.tipe)
       AND UserProc.IsProcedureLiteral (t.valExpr, proc)
       AND Procedure.IsNested (proc) THEN
-      Error.Msg ("nested procedures are not constants");
+      Error.Msg ("Nested procedures are not constant (2.6.15).");
     END;
 
     IF (t.tipe = ErrType.T) THEN
@@ -121,16 +121,16 @@ PROCEDURE Check (t: T;  VAR cs: Value.CheckState) =
       t.structured := FALSE;
       IF (n_errs1 <= n_errs0) THEN
         (* no error was generated, but we don't have a type! *)
-        Error.Msg ("value is not a constant expression");
+        Error.Msg ("Value is not a constant expression (2.4.2).");
       END;
-    ELSE
+    ELSIF t.valExpr # NIL THEN
       t.valExpr.isNamedConst := TRUE;
       AssignStmt.Check (t.tipe, t.valExpr, cs);
       e := Expr.ConstValue (t.valExpr);
       (* N.B. ^This will strip away both a NamedExpr.T and a ConsExpr.T from
-               above a constant ArrayExpr.T. *)
-      IF (t.valExpr # NIL) AND (e = NIL)
-      THEN Error.Msg ("value is not constant");
+               above a constant expression, importantly, an ArrayExpr.T. *)
+      IF e = NIL
+      THEN Error.Msg ("Value of CONST is not constant (2.4.2).");
       ELSE
         e.isNamedConst := TRUE;
         ArrayExpr.NoteTargetType (e, t.tipe);

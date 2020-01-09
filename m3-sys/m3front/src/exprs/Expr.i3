@@ -145,6 +145,9 @@ PROCEDURE BadOperands (op: TEXT;  a, b: M3.Type := NIL): M3.Type;
 (* generate an "illegal operands" error message if neither 'a' nor 'b'
    is the contagious error type and return the error type *)
 
+PROCEDURE StripNamedCons (expr: T): T;
+(* Look through a NamedExpr and then a ConsExpr, for an Expr.T.  NIL if not. *)
+
 PROCEDURE Use (t: T): BOOLEAN;
 (* Generate runtime actions prior to a use of t that does not call Compile.
    Return TRUE IFF following code is reachable. *)

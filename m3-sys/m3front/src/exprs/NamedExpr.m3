@@ -42,6 +42,7 @@ TYPE
         prepLiteral  := ExprRep.NoPrepLiteral;
         genLiteral   := ExprRep.NoLiteral;
         note_write   := NoteWrites;
+        use          := Use;
       END;
 
 VAR cache := ARRAY [0..31] OF P { NIL, .. };
@@ -289,6 +290,15 @@ PROCEDURE NoteWrites (p: P) =
       Variable.ScheduleTrace (p.value);
     END;
   END NoteWrites;
+
+(* Externally dispatched-to: *)
+PROCEDURE Use (p: P): BOOLEAN =
+  VAR base: Expr.T;
+  BEGIN
+    <* ASSERT p.checked *>
+    base := Value.ToExpr (p.value);
+    RETURN Expr.Use (base);
+  END Use;
 
 BEGIN
 END NamedExpr.

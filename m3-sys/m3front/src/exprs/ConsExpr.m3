@@ -26,8 +26,8 @@ TYPE
         base     : Expr.T;
         kind     : Kind;
         dots     : BOOLEAN;
-        isNestedArrayConstr: BOOLEAN := FALSE;
-        (* We're gonna want this someday. *)
+        baseIsNestedArrayConstr: BOOLEAN := FALSE;
+        (* ^We're probably gonna want this someday. *)
       OVERRIDES
         typeOf       := TypeOf;
         repTypeOf    := RepTypeOf;
@@ -136,8 +136,9 @@ PROCEDURE InnerSeal (p: P) =
   END InnerSeal;
 
 PROCEDURE CheckRecurse
-(* Recurses only on a Cons/Array pair directly inside a Cons/Array pair. *)
   (consExpr: P; parentKind: Kind; VAR cs: Expr.CheckState) =
+(* Recurses only on a Cons/Array pair directly inside a Cons/Array pair
+   especially, no named expresson in between. *)
   BEGIN
     InnerSeal (consExpr);
     IF consExpr.kind = Kind.Unknown THEN
@@ -145,7 +146,7 @@ PROCEDURE CheckRecurse
       consExpr.type := ErrType.T;
     ELSE
       IF parentKind = Kind.Array AND consExpr.kind = Kind.Array THEN
-        consExpr.isNestedArrayConstr := TRUE;
+        consExpr.baseIsNestedArrayConstr := TRUE;
         ArrayExpr.NoteNested (consExpr.base);
       END;
       Expr.TypeCheck (consExpr.typeExpr, cs);
@@ -159,7 +160,7 @@ PROCEDURE CheckRecurse
           TYPECASE argExpr OF
           | NULL =>
           | P (argCons) =>
-            (* Does not include named CONST, particularly,  w/ an array
+            (* Does not include named CONST, particularly, w/ an array
                constructor as its value. *)
             CheckRecurse (argCons, consExpr.kind, cs);
           ELSE Expr.TypeCheck (argExpr, cs)
@@ -253,7 +254,7 @@ PROCEDURE Use (p: P): BOOLEAN =
   BEGIN
     IF p = NIL THEN RETURN TRUE END;
     InnerSeal (p);
-    RETURN p.base.use () (* Delegate.*);
+    RETURN Expr.Use (p.base) (* Delegate.*);
   END Use;
 
 BEGIN
