@@ -1,2 +1,2 @@
-"../Main.m3", line 19: warning: open array passed by value (pointarr)
+"../Main.m3", line 19: warning: Open array passed by value. (pointarr)
 1 warning encountered

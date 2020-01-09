@@ -12,7 +12,7 @@ MODULE Main
     = ARRAY OF INTEGER { 7 } 
 
 ; CONST D : ARRAY [ 0 .. 3 ] OF INTEGER 
-    = ARRAY OF INTEGER { 1 , 3 , 5 } 
+    = ARRAY OF INTEGER { 1 , 3 , 5 , 7 } 
 
 ; PROCEDURE Write 
     ( <* NOWARN *> F : ARRAY OF INTEGER ) 
