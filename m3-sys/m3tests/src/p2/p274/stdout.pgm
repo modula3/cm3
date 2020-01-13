@@ -9,7 +9,7 @@ Succeeded, with no mismatched values: constant arrays in variable record
 Succeeded, with no mismatched values: variable arrays in variable record
 Succeeded, with no mismatched values: constant sets in constant array
 Succeeded, with no mismatched values: constant sets in variable array
-Succeeded, with no mismatched values: constant sets in open array
+Succeeded, with no mismatched values: assigned sets in open array
 Succeeded, with no mismatched values: variable sets in variable array
 Succeeded, with no mismatched values: constant records in constant array
 Succeeded, with no mismatched values: constant records in variable array

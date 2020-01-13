@@ -9,7 +9,7 @@ INTERFACE SetsInst
 
 ; TYPE Range = [ 0 .. 31 ] 
 ; TYPE ParamTyp1 = SET OF Range
-; CONST ParamBits = 64
+; CONST ParamBits = 32
 ; TYPE ParamTyp2 = BITS ParamBits FOR ParamTyp1 
 ; CONST Name = "Set" 
 ; CONST Val1 = ParamTyp1 { 0 , 7 , 19 , 26 , 30 } 

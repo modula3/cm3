@@ -193,7 +193,7 @@ MODULE Main
     ; RETURN LMismatchCt 
     END CSetsInVArr 
 
-; PROCEDURE CSetsInOArr ( ) : INTEGER 
+; PROCEDURE ASetsInOArr ( ) : INTEGER
   = VAR Loc := ARRAY [ 0 .. 2 ] OF Set { Set { } , Set { } , Set { } }
   ; VAR LMismatchCt : INTEGER 
   ; PROCEDURE Inner ( VAR FArr : ARRAY OF Set )
@@ -205,10 +205,10 @@ MODULE Main
       ; INC ( LMismatchCt , SetMismatchCt ( FArr [ 1 ] , S2Exp ) )  
       ; INC ( LMismatchCt , SetMismatchCt ( FArr [ 2 ] , S3Exp ) )
       END Inner 
-  ; BEGIN (* CSetsInOArr *)
+  ; BEGIN (* ASetsInOArr *)
       Inner ( Loc )
     ; RETURN LMismatchCt 
-    END CSetsInOArr 
+    END ASetsInOArr
 
 ; PROCEDURE VSetsInVArr ( ) : INTEGER 
   = VAR Loc
@@ -459,7 +459,7 @@ MODULE Main
 
   ; TestVals ( CSetsInCArr , "constant sets in constant array" ) 
   ; TestVals ( CSetsInVArr , "constant sets in variable array" ) 
-  ; TestVals ( CSetsInOArr , "constant sets in open array" ) 
+  ; TestVals ( ASetsInOArr , "assigned sets in open array" )
   ; TestVals ( VSetsInVArr , "variable sets in variable array" )
   
   ; TestVals ( CRecsInCArr , "constant records in constant array" ) 
