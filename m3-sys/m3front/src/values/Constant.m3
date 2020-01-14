@@ -17,6 +17,8 @@ REVEAL
   T = Value.T BRANDED "Constant.T" OBJECT
         tipe       : Type.T;
         valExpr    : Expr.T;
+        qualName   : TEXT;
+        size       : INTEGER;
         offset     : INTEGER;
         (* ^ Of a pointer, located within the static variable area, to the
              constant's value, located in the static constant area. *)
@@ -138,35 +140,39 @@ PROCEDURE Check (t: T;  VAR cs: Value.CheckState) =
       END;
       t.structured := Type.IsStructured (t.tipe);
     END;
+    t.qualName := Value.GlobalName(t,TRUE,TRUE);
   END Check;
 
 (* Externally dispatched-to: *)
 PROCEDURE SetGlobals (t: T) =
-  VAR size, align, depth: INTEGER;
+  VAR align, depth: INTEGER;
   VAR repType: Type.T;
   VAR info: Type.Info;
+  VAR valID, addrID: M3ID.T;
   BEGIN
     (* Type.SetGlobals (t.tipe); *)
     IF (t.offset # 0) OR (NOT t.structured) THEN RETURN END;
 
     repType := Expr.RepTypeOf (t.valExpr);
     EVAL Type.CheckInfo (repType, info);
-    size  := info.size;
+    t.size  := info.size;
     align := info.alignment;
     depth := OpenArrayType.OpenDepth (repType);
 
     IF (depth > 0) THEN (* t.tipe is an open array *)
       (* Allocate space for the dope only. *)
       (* See ArrayExpr.GenLiteral. *)
-      size := Target.Address.pack + depth * Target.Integer.pack;
+      t.size := Target.Address.pack + depth * Target.Integer.pack;
       align := MAX (Target.Address.align, Target.Integer.align);
     END;
 
     t.calign  := align;
-(* TODO: Eliminate duplicate copies of same value. *) 
-    t.coffset := Module.Allocate (size, align, TRUE, "constant ", id := t.name);
+(* TODO: Eliminate duplicate copies of same value. *)
+    valID := M3ID.Add (t.qualName);
+    t.coffset := Module.Allocate (t.size, align, TRUE, "constant ", id := valID );
+    addrID := M3ID.Add (t.qualName & "_ADDR_");
     t.offset  := Module.Allocate (Target.Address.size, Target.Address.align,
-                                  FALSE, "constant", id := t.name);
+                                  FALSE, "constant", id := addrID);
   END SetGlobals;
 
 (* Externally dispatched-to: *)
@@ -197,30 +203,35 @@ PROCEDURE Load (t: T) =
 
 (* Externally dispatched-to: *)
 PROCEDURE Declarer (t: T): BOOLEAN =
-  VAR type: CG.TypeUID;  size, depth: INTEGER;  info: Type.Info;
+  VAR typeUID: CG.TypeUID;
+  VAR size, depth: INTEGER;
+  VAR info: Type.Info;
+  VAR addrID, valueID: M3ID.T;
   BEGIN
     IF (t.exported) THEN Type.Compile (t.tipe) END;
     IF (NOT t.structured) THEN RETURN TRUE END;
 
     EVAL Type.CheckInfo (t.tipe, info);
     Type.Compile (t.tipe);
-    type  := Type.GlobalUID (t.tipe);
-    size  := info.size;
+    typeUID  := Type.GlobalUID (t.tipe);
     depth := OpenArrayType.OpenDepth (t.tipe);
-
-    IF (depth > 0) THEN (* t.tipe is an open array *)
-      (* Declare debug field for the dope only. *)
-      size := Target.Address.pack + depth * Target.Integer.pack;
-    END;
 
     IF (t.imported) THEN
       EVAL Scope.ToUnit (t); (* force the module to be imported *)
     ELSE
       SetGlobals (t);
-      CG.Declare_global_field (t.name, t.offset, Target.Address.size,
-                               CG.Declare_indirect (type), is_const := FALSE);
-      CG.Declare_global_field (t.name, t.coffset, size,
-                               type, is_const := TRUE);
+      addrID := M3ID.Add (t.qualName & "_ADDR_");
+      CG.Declare_global_field
+        (addrID, t.offset, Target.Address.size,
+         CG.Declare_indirect (typeUID), is_const := FALSE);
+      IF depth > 0 THEN (* t.tipe is an open array *)
+        valueID := M3ID.Add (t.qualName & "_DOPE_");
+        size := Target.Address.pack + depth * Target.Integer.pack;
+      ELSE
+        valueID := M3ID.Add (t.qualName);
+        size  := info.size;
+      END;
+      CG.Declare_global_field (valueID, t.coffset, size, typeUID, is_const := TRUE);
       t.gen_init := TRUE;
     END;
 
@@ -232,14 +243,10 @@ PROCEDURE ConstInit (t: T) =
   BEGIN
     IF t.gen_init THEN
       t.gen_init := FALSE;
-
-      CG.Comment
-        (t.offset, FALSE, "Address of constant ", M3ID.ToText (t.name));
+      CG.Comment (t.offset, FALSE, "Address of constant ", t.qualName);
       CG.Init_var (t.offset, Module.GlobalData (TRUE), t.coffset, FALSE);
 
-      CG.Comment
-        (t.coffset, TRUE, "Contents of constant", M3ID.ToText (t.name));
-
+      CG.Comment (t.coffset, TRUE, "Contents of constant ", t.qualName);
       Expr.PrepLiteral (t.valExpr, t.tipe, TRUE);
       Expr.GenLiteral (t.valExpr, t.coffset, t.tipe, TRUE);
     END;

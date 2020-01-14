@@ -495,7 +495,7 @@ PROCEDURE Set_sym_difference (s: Size);  (* s2.B := s1.B / s0.B ; pop(3) *)
 PROCEDURE Set_member         (s: Size);  (* s1.I32 := (s0.I IN s1.B); pop *)
 PROCEDURE Set_compare        (s: Size;  op: Cmp);  (* s1.I := (s1.B op s0.B); pop *)
 PROCEDURE Set_singleton      (s: Size);  (* s1.A [s0.I] := 1; pop(2) *)
-PROCEDURE Set_range          (s: Size);  (* s2.A[s1.I..s0.I] := 1; pop(3)
+PROCEDURE Set_range          (s: Size);  (* s2.A[s1.I..s0.I] := 1...1; pop(3)
                                              --- S2.A must be forced *)
 
 (*------------------------------------------ Word.T/Long.T bit operations ---*)

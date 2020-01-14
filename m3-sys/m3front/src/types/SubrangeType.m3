@@ -148,6 +148,7 @@ PROCEDURE Seal (p: P) =
     END;
 
     SetRep (p);
+    p.info.size := TargetMap.CG_Size[p.rep];
     p.sealed := TRUE;
   END Seal;
 
@@ -165,7 +166,7 @@ PROCEDURE Check (p: P) =
     IF NOT TInt.ToInt (p.max, i) THEN i := 23 END;
     hash := Word.Plus (Word.Times (hash, 487), i);
 
-    p.info.size      := TargetMap.CG_Size[p.rep];
+    <* ASSERT p.info.size = TargetMap.CG_Size[p.rep] *>
     p.info.min_size  := MinSize (p);
     p.info.alignment := TargetMap.CG_Align[p.rep];
     p.info.mem_type  := p.rep;

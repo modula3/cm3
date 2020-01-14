@@ -352,7 +352,7 @@ PROCEDURE DoEmit
         RTCheckProcedure (rhsExpr);
         CG.Store_indirect (lhsRepTypeInfo.stk_type, 0, lhsRepTypeInfo.size);
     | Type.Class.Record =>
-        AssignRecord (lhsRepType, rhsExpr, lhsRepTypeInfo, lhsAlign);
+        AssignRecord (rhsExpr, lhsRepTypeInfo, lhsAlign);
     | Type.Class.Set =>
         AssignSet (lhsRepType, rhsExpr, lhsRepTypeInfo);
     | Type.Class.Array, Type.Class.OpenArray =>
@@ -403,9 +403,9 @@ PROCEDURE AssignSet (tlhs: Type.T;  rhsExpr: Expr.T;
   (* PRE: RHS is prepped. *)
   BEGIN
 (* TODO: Merge AssignSet and AssignRecord.  Or maybe not. *)
-    AssertSameSize (tlhs, Expr.TypeOf (rhsExpr));
     (* Leave the LHS address on the CG stack, regardless of protocol. *)
     IF Type.IsStructured (tlhs) THEN
+      AssertSameSize (tlhs, Expr.TypeOf (rhsExpr));
       CompileStruct (rhsExpr);
       IF Expr.IsMarkedForDirectAssignment (rhsExpr) THEN
         CG.Discard (CG.Type.Addr);
@@ -446,12 +446,11 @@ PROCEDURE CopyStruct
   END CopyStruct;
 
 PROCEDURE AssignRecord
-  (tlhs: Type.T; rhsExpr: Expr.T; READONLY lhsTypeInfo: Type.Info;
+  (rhsExpr: Expr.T; READONLY lhsTypeInfo: Type.Info;
    lhsAlign: Type.BitAlignT) =
   (* PRE: LHS is compiled and on TOS. *)
   (* PRE: RHS is prepped. *)
   BEGIN
-    AssertSameSize (tlhs, Expr.TypeOf (rhsExpr));
     (* Leave the LHS address on the CG stack, regardless of protocol. *)
     CompileStruct (rhsExpr);
     IF Expr.UsesAssignProtocol (rhsExpr)
@@ -617,7 +616,7 @@ PROCEDURE AssertSameSize (a, b: Type.T) =
 
 (* EXPORTED: *) 
 PROCEDURE EmitRTCheck (tlhs: Type.T;  rhsExpr: Expr.T) =
-  (* PRE: The lhs is compiled (thus on TOS).
+  (* PRE: The CG stack is empty.
      PRE: The rhsExpr is prepped.
      POST: RHS is TOS. *)
   VAR
@@ -640,7 +639,7 @@ PROCEDURE EmitRTCheck (tlhs: Type.T;  rhsExpr: Expr.T) =
     | Type.Class.Procedure =>
         RTCheckProcedure (rhsExpr);
     | Type.Class.Record =>
-        RTCheckRecord (tlhs, rhsExpr);
+        RTCheckRecord (rhsExpr);
     | Type.Class.Set =>
         RTCheckSet (tlhs, rhsExpr);
     ELSE <* ASSERT FALSE *>
@@ -666,23 +665,25 @@ PROCEDURE RTCheckReference (tlhs: Type.T;  rhsExpr: Expr.T) =
   END RTCheckReference;
 
 PROCEDURE RTCheckProcedure (rhsExpr: Expr.T) =
-  (* PRE: The lhs is compiled (thus on TOS).
+  (* PRE: The CG stack is empty.
      PRE: The rhsExpr is prepped.
      POST: RHS is TOS. *)
+  VAR rhsVal: CG.Val;
   VAR ok: CG.Label;
-  VAR lhsVal, rhsVal: CG.Val;
   BEGIN
     CASE <*NOWARN*> ProcRTCheckKind (rhsExpr) OF
     | RTCheckKind.Fail =>
-      (* Could there ever be a better example than this of what an
-         utterly dreadful idea an operand stack machine is? *) 
-      lhsVal := CG.Pop ();
       CG.Abort (CG.RuntimeError.NarrowFailed);
-      CG.Push (lhsVal);
       Expr.Compile (rhsExpr);
-      CG.Free (lhsVal);
     | RTCheckKind.Conditional =>
-      lhsVal := CG.Pop ();
+      (* Could there ever be a better example than this of what an
+         utterly dreadful idea an operand stack machine is?
+         We have to call If_Closure with empty stack.  We have to know it's
+         empty to begin with, which would involve backing up through many
+         places to put and ensure preconditions on stack contents.  Then,
+         after pushing the RHS, we have to spill it, pass the spilled value
+         to If_closure in a parameter, then re-push it afterwards for
+         further use by our callers. *) 
       Expr.Compile (rhsExpr);
       rhsVal := CG.Pop ();
       ok := CG.Next_label ();
@@ -691,18 +692,15 @@ PROCEDURE RTCheckProcedure (rhsExpr: Expr.T) =
 (* TODO^ I think we need another runtime error code for assigning a nested
          procedure. *)
       CG.Set_label (ok);
-      CG.Push (lhsVal);
       CG.Push (rhsVal);
       CG.Free (rhsVal);
-      CG.Free (lhsVal);
     | RTCheckKind.None =>
       Expr.Compile (rhsExpr);
     END; 
   END RTCheckProcedure;
 
-PROCEDURE RTCheckRecord (tlhs: Type.T;  rhsExpr: Expr.T) =
+PROCEDURE RTCheckRecord (rhsExpr: Expr.T) =
   BEGIN
-    AssertSameSize (tlhs, Expr.TypeOf (rhsExpr));
     IF Expr.IsDesignator (rhsExpr)
       THEN Expr.CompileLValue (rhsExpr, traced := FALSE);
       ELSE Expr.Compile (rhsExpr);
@@ -711,7 +709,6 @@ PROCEDURE RTCheckRecord (tlhs: Type.T;  rhsExpr: Expr.T) =
 
 PROCEDURE RTCheckSet (tlhs: Type.T;  rhsExpr: Expr.T) =
   BEGIN
-    AssertSameSize (tlhs, Expr.TypeOf (rhsExpr));
     IF Type.IsStructured (tlhs) THEN
       IF Expr.IsDesignator (rhsExpr)
         THEN Expr.CompileLValue (rhsExpr, traced := FALSE);

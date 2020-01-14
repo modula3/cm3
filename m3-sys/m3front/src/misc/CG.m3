@@ -2895,7 +2895,8 @@ PROCEDURE Set_compare (s: Size;  op: Cmp) =
 PROCEDURE Set_range (s: Size) =
   BEGIN
     EVAL Force_pair (commute := FALSE);
-    IF (s <= Target.Integer.size) THEN
+    IF (s <= Target.Word.size) THEN
+      (* Initial value on CG stack, in s2.  Final value will be left in s0. *)
       (* given x, a, b:  compute  x || {a..b} *)
 
       cg.load_integer (Target.Integer.cg_type, TInt.MOne);
@@ -2904,19 +2905,22 @@ PROCEDURE Set_range (s: Size) =
       cg_load_intt (Target.Integer.size-1);
       cg.swap (Target.Integer.cg_type, Target.Integer.cg_type);
       cg.subtract (Target.Integer.cg_type);
-      cg.shift_right (Target.Integer.cg_type);                  (*  x, a, {0..b} *)
+      cg.shift_right (Target.Integer.cg_type);                  (* x, a, {0..b} *)
 
-      cg.swap (Target.Integer.cg_type, Target.Integer.cg_type); (*  x, {0..b}, a *)
+      cg.swap (Target.Integer.cg_type, Target.Integer.cg_type); (* x, {0..b}, a *)
 
       cg.load_integer (Target.Integer.cg_type, TInt.MOne);
       cg.swap (Target.Integer.cg_type, Target.Integer.cg_type);
-      cg.shift_left (Target.Integer.cg_type);           (*  x, {0..b}, {a..N} *)
+      cg.shift_left (Target.Integer.cg_type);               (* x, {0..b}, {a..N} *)
 
-      cg.and (Target.Integer.cg_type);                  (*  x, {a..b} *)
-      cg.or (Target.Integer.cg_type);                   (*  x || {a..b} *)
+      cg.and (Target.Integer.cg_type);                      (* x, {a..b} *)
+      cg.or (Target.Integer.cg_type); (* s0 is the value *) (* x || {a..b} *)
+
       SPop (3, "Set_range-a");
       SPush (Target.Integer.cg_type);
-    ELSE
+    ELSE (* s2 is the *address* of the value. *)
+      (* CG stack s2 is the *address* of the value, which will be updated in
+         memory, leaving nothing on either stack. *)
       cg.set_range (AsBytes (s), Target.Integer.cg_type);
       SPop (3, "Set_range-b");
     END;
@@ -2924,17 +2928,20 @@ PROCEDURE Set_range (s: Size) =
 
 PROCEDURE Set_singleton (s: Size) =
   BEGIN
-    EVAL Force_pair (commute := FALSE);
-    IF (s <= Target.Integer.size) THEN
-      cg.load_integer (Target.Integer.cg_type, TInt.One);
-      cg.swap (Target.Integer.cg_type, Target.Integer.cg_type);
-      cg.shift_left (Target.Integer.cg_type);
-      cg.or (Target.Integer.cg_type);
-      SPop (2, "Set_single-b");
+    EVAL Force_pair (commute := FALSE);                         (* cg stack: *)
+    IF (s <= Target.Integer.size) THEN (* x is the value *)     (* x, a *)
+      (* Initial value is on CG stack, in s2.  Final value will be left in s0. *)
+      cg.load_integer (Target.Integer.cg_type, TInt.One);       (* x, a, 1 *)
+      cg.swap (Target.Integer.cg_type, Target.Integer.cg_type); (* x, 1 , a *)
+      cg.shift_left (Target.Integer.cg_type);                   (* x, 10...0 *)
+      cg.or (Target.Integer.cg_type); (* y is the result. *)    (* y *)
+      SPop (2, "Set_singleton-a");
       SPush (Target.Integer.cg_type);
-    ELSE
+    ELSE (* mem is the *addr* of the value (and result) *)      (* mem, a *)
+      (* CG stack s1 is the *address* of the value, which will be updated in
+         memory, leaving nothing on either stack. *)
       cg.set_singleton (AsBytes (s), Target.Integer.cg_type);
-      SPop (2, "Set_single-b");
+      SPop (2, "Set_singleton-b");
     END;
   END Set_singleton;
 

@@ -14,7 +14,6 @@ IMPORT Text, Fmt;
 IMPORT M3, CG, Expr, ExprRep, Type, Error, IntegerExpr, EnumExpr;
 IMPORT RangeExpr, KeywordExpr, SetType, AssignStmt, CheckExpr;
 IMPORT M3ID, Target, TInt, TWord, Bool, M3Buf, Module;
-IMPORT NamedExpr, ConsExpr, Value;
 
 TYPE
   Node = REF RECORD
@@ -32,9 +31,9 @@ TYPE
         nOthers     : INTEGER;
         tmp         : CG.Var;
         globalOffset: INTEGER;
+        RTErrorMsg  : TEXT := NIL;
         minI, maxI  : INTEGER; (* Of the set's element type. *)
         minT, maxT  : Target.Int;
-        RTErrorMsg  : TEXT := NIL;
         RTErrorCode := CG.RuntimeError.Unknown;
         mapped      : BOOLEAN;
         is_const    : BOOLEAN;
@@ -180,6 +179,21 @@ PROCEDURE Intersection (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN =
     c := NewFromTree (p, n);
     RETURN TRUE;
   END Intersection;
+
+(*
+(* Not implemented: *)
+(*EXPORTED:*)
+PROCEDURE Negate (set: Expr.T; VAR result: Expr.T): BOOLEAN =
+  VAR constSet: P;
+  BEGIN
+    result := NIL;
+    IF NOT BuildMap (set, constSet) THEN RETURN FALSE END;
+    n := NIL;
+    x := p.tree;
+    WHILE x # NIL DO
+    END;
+  END Negate;
+*)
 
 (*EXPORTED:*)
 PROCEDURE Difference (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN =
@@ -629,7 +643,7 @@ PROCEDURE Prep (p: P) =
       (* large non-constant sets almost always turn into procedure
          calls in the code generator, so we might as well make life
          simpler there... *)
-      p.tmp := CompileBig (p, info);
+      p.tmp := PrepBig (p, info);
     END;
   END Prep;
 
@@ -639,72 +653,76 @@ PROCEDURE Compile (p: P) =
   BEGIN
     IF p.broken THEN RETURN; END;
     EVAL Type.CheckInfo (p.tipe, info);
-    IF (info.size <= Target.Integer.size) THEN
+    IF info.size <= Target.Word.size THEN
+      (* Set fits w/in one target word. *)
       CompileSmall (p, info);
-    ELSIF (p.nOthers <= 0) THEN
-      (* large, constant set *)
+    ELSIF p.nOthers <= 0 THEN
+      (* Multi-word set, but all elements are constant and within host INTEGER range. *)
       p.globalOffset := Module.Allocate (info.size, info.alignment, TRUE, "*set*");
       GenLiteral (p, p.globalOffset, p.tipe, TRUE);
       CG.Load_addr_of (Module.GlobalData (TRUE), p.globalOffset, info.alignment);
     ELSE
+      (* Multi-word set with elements non-constant and/or outside host INTEGER
+         range. We built it at Prep time. *)
       CG.Load_addr_of_temp (p.tmp, 0, Target.Integer.align);
       p.tmp := NIL;
     END;
   END Compile;
 
-PROCEDURE CompileBig (p: P;  VAR info: Type.Info): CG.Var =
-(* PRE: others can contain both non-constant exprs and constant values not
-        range of host INTEGER. *)
+PROCEDURE PrepBig (p: P;  VAR info: Type.Info): CG.Var =
+(* PRE: others can contain both non-constant exprs and constant values outside
+        the range of host INTEGER. *)
+(* Leave result in p.tmp. *)
   VAR
-    w1, w2       : INTEGER;
-    b1, b2       : INTEGER;
+    loWordNo, hiWordNo       : INTEGER;
+    loBitNo, hiBitNo       : INTEGER;
     minExpr      : Expr.T;
     maxExpr      : Expr.T;
     e            : Expr.T;
     t1           : CG.Var;
     nWords       : INTEGER;
-    curWord      : INTEGER;
+    curWordNo      : INTEGER;
     curMask      : Target.Int;
     n            : Node;
     tmp          : Target.Int;
   BEGIN
     nWords := info.size DIV Grain;
-    t1 := CG.Declare_temp (nWords * Grain, Target.Integer.align,
+    t1 := CG.Declare_temp (nWords * Grain, Target.Word.align,
                            CG.Type.Struct, in_memory := TRUE);
 
     (* generate the constant words *)
     n := p.tree;
-    curWord := 0;
+    curWordNo := 0;
     curMask := TInt.Zero;
     WHILE (n # NIL) DO
-      w1 := (n.min - p.minI) DIV Grain; 
-      b1 := (n.min - p.minI) MOD Grain;
-      w2 := (n.max - p.minI) DIV Grain;
-      b2 := (n.max - p.minI) MOD Grain;
-      IF (w1 # curWord) THEN
-        EmitAssign (t1, curWord, curMask);
-        FOR i := curWord+1 TO w1-1 DO  EmitAssign (t1, i, TInt.Zero) END;
-        curWord := w1;
+      loWordNo := (n.min - p.minI) DIV Grain;
+      loBitNo := (n.min - p.minI) MOD Grain;
+      hiWordNo := (n.max - p.minI) DIV Grain;
+      hiBitNo := (n.max - p.minI) MOD Grain;
+      IF (loWordNo # curWordNo) THEN
+        EmitAssign (t1, curWordNo, curMask);
+        FOR i := curWordNo+1 TO loWordNo-1 DO  EmitAssign (t1, i, TInt.Zero) END;
+        curWordNo := loWordNo;
         curMask := TInt.Zero;
       END;
-      IF (w1 # w2) THEN
-        TWord.Or (curMask, left [b1], tmp);
-        EmitAssign (t1, w1, tmp);
-        FOR i := w1 + 1 TO w2 - 1 DO  EmitAssign (t1, i, full)  END;
-        curWord := w2;
-        curMask := right [b2];
+      IF (loWordNo # hiWordNo) THEN
+        TWord.Or (curMask, left [loBitNo], tmp);
+        EmitAssign (t1, loWordNo, tmp);
+        FOR i := loWordNo + 1 TO hiWordNo - 1 DO  EmitAssign (t1, i, full)  END;
+        curWordNo := hiWordNo;
+        curMask := right [hiBitNo];
       ELSE (* x = y *)
-        TWord.And (left [b1], right[b2], tmp);
+        TWord.And (left [loBitNo], right[hiBitNo], tmp);
         TWord.Or (curMask, tmp, curMask);
       END;
       n := n.next;
     END; (* while *)
 
     (* write the last mask *)
-    EmitAssign (t1, curWord, curMask);
+    EmitAssign (t1, curWordNo, curMask);
 
     (* write zeros for the remainder of the set *)
-    FOR i := curWord+1 TO nWords-1 DO EmitAssign (t1, i, TInt.Zero) END;
+    FOR i := curWordNo+1 TO nWords-1 DO EmitAssign (t1, i, TInt.Zero) END;
 
     (* finally, add the non-constant elements *)
     FOR i := 0 TO p.nOthers-1 DO
@@ -715,23 +733,25 @@ PROCEDURE CompileBig (p: P;  VAR info: Type.Info): CG.Var =
         GenElement (minExpr, p.minT, p.maxT);
         GenElement (maxExpr, p.minT, p.maxT);
         CG.Set_range (info.size);
+        (* ^For info.size > Target.Word.size, works on in-memory operands. *)
       ELSE (* single value *)
         CG.Load_addr_of (t1, 0, Target.Integer.align);
         GenElement (e, p.minT, p.maxT);
         CG.Set_singleton (info.size);
+        (* ^For info.size > Target.Word.size, works on in-memory operands. *)
       END;
     END;
 
     RETURN t1;
-  END CompileBig;
+  END PrepBig;
 
-PROCEDURE EmitAssign (set: CG.Var;  index: INTEGER; 
+PROCEDURE EmitAssign (set: CG.Var;  wordNo: INTEGER;
                       READONLY value: Target.Int) =
   VAR tmp: Target.Int;
   BEGIN
     EVAL TInt.Extend (value, Target.Integer.bytes, tmp);
     CG.Load_integer (Target.Integer.cg_type, tmp);
-    CG.Store_int (Target.Integer.cg_type, set, index * Grain);
+    CG.Store_int (Target.Integer.cg_type, set, wordNo * Grain);
     <* ASSERT Grain = Target.Integer.size *>
   END EmitAssign;
 
@@ -747,35 +767,33 @@ PROCEDURE GenElement (e: Expr.T;  READONLY minT, maxT: Target.Int) =
   END GenElement;
 
 PROCEDURE CompileSmall (p: P;  VAR info: Type.Info) =
-(* PRE: All bits fit in a target word. *)
-(* PRE: others contains no constants out if host INTEGER range. *)
+(* PRE: Entire set fits in a target word. *)
+(* PRE: p.others contains no constants with values outside of host INTEGER. *)
   VAR
-    b1, b2       : INTEGER;
+    loBitNo, hiBitNo: INTEGER;
     minExpr      : Expr.T;
     maxExpr      : Expr.T;
     e            : Expr.T;
-    nWords       : INTEGER;
     curMask      : Target.Int;
     n            : Node;
-    tmp          : Target.Int;
+    tmpT          : Target.Int;
   BEGIN
     Type.Compile (p.tipe);
-    nWords  := info.size DIV Grain;
-    <*ASSERT info.size <= Target.Integer.size *>
-    <*ASSERT nWords <= 1 *>
+    <*ASSERT info.size <= Target.Word.size *>
 
     (* generate the constant words *)
-    n := p.tree;  curMask := TInt.Zero;
+    n := p.tree;
+    curMask := TInt.Zero;
     WHILE (n # NIL) DO
-      b1 := (n.min - p.minI);
-      b2 := (n.max - p.minI);
-      TWord.And (left [b1], right[b2], tmp);
-      TWord.Or (curMask, tmp, curMask);
+      loBitNo := (n.min - p.minI);
+      hiBitNo := (n.max - p.minI);
+      TWord.And (left [loBitNo], right[hiBitNo], tmpT);
+      TWord.Or (curMask, tmpT, curMask);
       n := n.next;
-    END; (* while *)
+    END (*WHILE*);
 
     (* push the mask *)
-    CG.Load_integer (Target.Integer.cg_type, curMask);
+    CG.Load_integer (Target.Word.cg_type, curMask);
     CG.ForceStacked ();
 
     (* finally, add the non-constant elements *)
@@ -784,10 +802,12 @@ PROCEDURE CompileSmall (p: P;  VAR info: Type.Info) =
       IF RangeExpr.Split (e, minExpr, maxExpr) THEN
         GenElement (minExpr, p.minT, p.maxT);
         GenElement (maxExpr, p.minT, p.maxT);
-        CG.Set_range (info.size);
+        CG.Set_range (info.size)
+        (* ^For info.size <= Target.Word.size, works on on-stack operands. *)
       ELSE (* single value *)
         GenElement (e, p.minT, p.maxT);
         CG.Set_singleton (info.size);
+        (* ^For info.size <= Target.Word.size, works on on-stack operands. *)
       END;
     END;
   END CompileSmall;
@@ -822,68 +842,83 @@ PROCEDURE GenFPLiteral (p: P;  buf: M3Buf.T) =
 
 (* Externally dispatched-to: *)
 PROCEDURE GenLiteral
-  (p: P;  offset: INTEGER;  <*UNUSED*> type: Type.T;  is_const: BOOLEAN) =
+  (p: P;  offset: INTEGER; type: Type.T; is_const: BOOLEAN) =
   VAR
-    w1, w2       : INTEGER;
-    b1, b2       : INTEGER;
-    curWord      : INTEGER;
-    curMask      : Target.Int;
-    n            : Node;
-    tmp          : Target.Int;
-  BEGIN
+    loWordNo, hiWordNo : INTEGER;
+    loBitNo, hiBitNo   : INTEGER;
+    curWordNo          : INTEGER;
+    n                  : Node;
+    curMask            : Target.Int;
+    tmpT               : Target.Int;
+    info               : Type.Info;
+ BEGIN
     EVAL BuildMap (p, p);
     <* ASSERT p.others = NIL *>
 
-    n := p.tree;
-    curWord := 0;
     curMask := TInt.Zero;
-    WHILE (n # NIL) DO
-      w1 := (n.min - p.minI) DIV Grain;
-      b1 := (n.min - p.minI) MOD Grain;
-      w2 := (n.max - p.minI) DIV Grain;
-      b2 := (n.max - p.minI) MOD Grain;
-      IF (w1 # curWord) THEN
-        (* write the mask we've accumulated *)
-        IF NOT TInt.EQ (curMask, TInt.Zero) THEN
-          EVAL TInt.Extend (curMask, Target.Integer.bytes, tmp);
-          CG.Init_int (offset + curWord*Target.Integer.pack,
-                        Target.Integer.size, tmp, is_const);
+    n := p.tree;
+    EVAL Type.CheckInfo (type, info);
+    IF info.size <= Target.Integer.size THEN
+      (* Set fits in a target word, possibly less. *)
+      WHILE (n # NIL) DO
+        loBitNo := (n.min - p.minI);
+        hiBitNo := (n.max - p.minI);
+        <* ASSERT hiBitNo < Target.Word.size *>
+        TWord.And (left [loBitNo], right[hiBitNo], tmpT);
+        TWord.Or (curMask, tmpT, curMask);
+        n := n.next;
+      END (*WHILE*);
+      CG.Init_int (offset, info.size, curMask, is_const);
+    ELSE (* Multi-word set.  Whole words only. *)
+      curWordNo := 0;
+      WHILE (n # NIL) DO
+        loWordNo := (n.min - p.minI) DIV Grain;
+        loBitNo := (n.min - p.minI) MOD Grain;
+        hiWordNo := (n.max - p.minI) DIV Grain;
+        hiBitNo := (n.max - p.minI) MOD Grain;
+        IF (loWordNo # curWordNo) THEN
+          (* write the mask we've accumulated *)
+          IF NOT TInt.EQ (curMask, TInt.Zero) THEN
+            EVAL TInt.Extend (curMask, Target.Integer.bytes, tmpT);
+            CG.Init_int (offset + curWordNo*Target.Integer.pack,
+                          Target.Integer.size, tmpT, is_const);
+          END;
+          curWordNo := loWordNo;
+          curMask := TInt.Zero;
         END;
-        curWord := w1;
-        curMask := TInt.Zero;
-      END;
-      IF (w1 # w2) THEN
-        (* write the full words [w1..w2-1] *)
-        TWord.Or (curMask, left [b1], tmp);
-        EVAL TInt.Extend (tmp, Target.Integer.bytes, tmp);
-        CG.Init_int (offset + w1 * Target.Integer.pack, Target.Integer.size,
-                     tmp, is_const);
-        FOR i := w1 + 1 TO w2 - 1 DO
-          EVAL TInt.Extend (full, Target.Integer.bytes, tmp);
-          CG.Init_int (offset + i * Target.Integer.pack, Target.Integer.size,
-                       tmp, is_const);
+        IF (loWordNo # hiWordNo) THEN
+          (* write the full words [loWordNo..hiWordNo-1] *)
+          TWord.Or (curMask, left [loBitNo], tmpT);
+          EVAL TInt.Extend (tmpT, Target.Integer.bytes, tmpT);
+          CG.Init_int (offset + loWordNo * Target.Integer.pack, Target.Integer.size,
+                       tmpT, is_const);
+          FOR i := loWordNo + 1 TO hiWordNo - 1 DO
+            EVAL TInt.Extend (full, Target.Integer.bytes, tmpT);
+            CG.Init_int (offset + i * Target.Integer.pack, Target.Integer.size,
+                         tmpT, is_const);
+          END;
+          curWordNo := hiWordNo;
+          curMask := right [hiBitNo];
+        ELSE
+          TWord.And (left [loBitNo], right[hiBitNo], tmpT);
+          TWord.Or (curMask, tmpT, curMask);
         END;
-        curWord := w2;
-        curMask := right [b2];
-      ELSE
-        TWord.And (left [b1], right[b2], tmp);
-        TWord.Or (curMask, tmp, curMask);
-      END;
-      n := n.next;
-    END;
+        n := n.next;
+      END (*WHILE*);
 
-    (* write the last mask *)
-    IF NOT TInt.EQ (curMask, TInt.Zero) THEN
-      EVAL TInt.Extend (curMask, Target.Integer.bytes, tmp);
-      CG.Init_int (offset + curWord * Target.Integer.pack,
-                   Target.Integer.size, tmp, is_const);
+      (* write the last mask *)
+      IF NOT TInt.EQ (curMask, TInt.Zero) THEN
+        EVAL TInt.Extend (curMask, Target.Integer.bytes, tmpT);
+        CG.Init_int (offset + curWordNo * Target.Integer.pack,
+                     Target.Integer.size, tmpT, is_const);
+      END;
     END;
   END GenLiteral;
 
 (*EXPORTED:*)
 PROCEDURE Init () =
   BEGIN
-    Grain := Target.Integer.size;
+    Grain := Target.Word.size;
     TWord.Not (TInt.Zero, full);
     TWord.And (full, Target.Word.max, full);
     FOR i := 0 TO Grain - 1 DO

@@ -510,7 +510,7 @@ set_intersection (s: ByteSize);   (* s2.B := s1.B * s0.B; pop(3) *)
 set_sym_difference (s: ByteSize); (* s2.B := s1.B / s0.B; pop(3) *)
 set_member (s: ByteSize;  t: IType);  (* s1.t := (s0.t IN s1.B); pop *)
 set_compare (s: ByteSize;  op: CompareOp;  t: IType);  (* s1.t := (s1.B op s0.B); pop *)
-set_range (s: ByteSize;  t: IType);         (* s2.A[s1.t..s0.t] := 1; pop(3) *)
+set_range (s: ByteSize;  t: IType);         (* s2.A[s1.t..s0.t] := 1...1; pop(3) *)
 set_singleton (s: ByteSize;  t: IType);     (* s1.A [s0.t] := 1; pop(2) *)
 
 (*------------------------------------------------- Word.T bit operations ---*)

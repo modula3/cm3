@@ -106,10 +106,10 @@ PROCEDURE Prep (p: P) =
     Expr.Prep (p.b);
     IF (p.class = Class.cSET) THEN
       EVAL Type.CheckInfo (p.type, info);
-      IF (info.size > Target.Integer.size) THEN
-        p.tmp := CG.Declare_temp (info.size, Target.Integer.align,
+      IF (info.size > Target.Word.size) THEN
+        p.tmp := CG.Declare_temp (info.size, Target.Word.align,
                                   CG.Type.Struct, in_memory := TRUE);
-        CG.Load_addr_of (p.tmp, 0, Target.Integer.align);
+        CG.Load_addr_of (p.tmp, 0, Target.Word.align);
         CG.ForceStacked ();
         Expr.Compile (p.a);
         Expr.Compile (p.b);
@@ -124,8 +124,8 @@ PROCEDURE Compile (p: P) =
     CASE p.class OF
     | Class.cSET =>
         EVAL Type.CheckInfo (p.type, info);
-        IF (info.size > Target.Integer.size) THEN
-          CG.Load_addr_of_temp (p.tmp, 0, Target.Integer.align);
+        IF (info.size > Target.Word.size) THEN
+          CG.Load_addr_of_temp (p.tmp, 0, Target.Word.align);
           p.tmp := NIL;
         ELSE
           Expr.Compile (p.a);

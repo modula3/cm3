@@ -27,6 +27,7 @@ REVEAL
   T = Value.T BRANDED "Variable.T" OBJECT
         tipe        : Type.T;
         initExpr    : Expr.T;
+        qualName    : TEXT;
         sibling     : T;
         formal      : Value.T;
         (* ^This Variable.T represents a formal parameter, but that's a
@@ -381,6 +382,7 @@ PROCEDURE Check (t: T;  VAR cs: Value.CheckState) =
       END;
     END;
 
+    t.qualName := Value.GlobalName(t,TRUE,TRUE);
     CheckTrace (t.trace, cs);
   END Check;
 
@@ -502,7 +504,8 @@ PROCEDURE AllocGlobalVarSpace (t: T) =
 (* Allocate space for a non-external global. *)
   VAR size, align: INTEGER;
   VAR constInitExpr: Expr.T;
-  VAR initRepType: Type.T := NIL; 
+  VAR initRepType: Type.T := NIL;
+  VAR varID: M3ID.T;
   BEGIN
     (* Type.SetGlobals (t.tipe); *)
     (* IF (t.initExpr # NIL) THEN Type.SetGlobals (Expr.TypeOf (t.initExpr)) END; *)
@@ -518,17 +521,20 @@ PROCEDURE AllocGlobalVarSpace (t: T) =
     IF (t.indirect) THEN
       size  := Target.Address.size;
       align := Target.Address.align;
+      varID := M3ID.Add (t.qualName & "_INDIRECT_");
     ELSIF OpenArrayType.Is (initRepType) THEN
       size  := Target.Address.size
                + OpenArrayType.OpenDepth(initRepType) * Target.Integer.size;
       align := MAX (Target.Address.align, Target.Integer.align);
+      varID := M3ID.Add (t.qualName & "_DOPE_");
     ELSE
       size  := t.size;
       align := t.align;
+      varID := M3ID.Add (t.qualName);
     END;
 
     (* declare the actual variable *)
-    t.offset := Module.Allocate (size, align, FALSE, id := t.name);
+    t.offset := Module.Allocate (size, align, FALSE, id := varID);
     t.allocated := TRUE;
   END AllocGlobalVarSpace;
 
@@ -541,9 +547,12 @@ PROCEDURE Declare (t: T): BOOLEAN =
     mtype      := Type.CGType (t.tipe, in_memory := TRUE);
     is_struct  := Type.IsStructured (t.tipe);
     name       : TEXT;
+    qualID     : M3ID.T;
+    bssID      : M3ID.T;
     externM3ID : M3ID.T;
   BEGIN
     Type.Compile (t.tipe);
+    qualID := M3ID.Add (t.qualName);
 
     t.cg_var  := NIL;
     t.bss_var := NIL;
@@ -571,13 +580,14 @@ PROCEDURE Declare (t: T): BOOLEAN =
 
     ELSIF (t.global) THEN
       <*ASSERT t.allocated*>
-      CG.Declare_global_field (t.name, t.offset, size, typeUID, FALSE);
+      CG.Declare_global_field (qualID, t.offset, size, typeUID, FALSE);
       IF (t.initZero) THEN t.initDone := TRUE END;
       t.cg_align := align;
       IF (t.indirect) THEN
         t.cg_align := t.align;
         t.nextTWACGVar := TsWCGVars;  TsWCGVars := t;
-        t.bss_var := CG.Declare_global (t.name, t.size, t.cg_align,
+        bssID := M3ID.Add (t.qualName & "_BSS_");
+        t.bss_var := CG.Declare_global (bssID, t.size, t.cg_align,
                               CG.Type.Struct, Type.GlobalUID (t.tipe),
                               exported := FALSE, init := FALSE);
         CG.Init_var (t.offset, t.bss_var, 0, FALSE);
@@ -594,14 +604,14 @@ PROCEDURE Declare (t: T): BOOLEAN =
       (** align := FindAlignment (align, size); **)
       t.cg_align := align;
       t.nextTWACGVar := TsWCGVars;  TsWCGVars := t;
-      t.cg_var := CG.Declare_local (t.name, size, align, mtype, typeUID,
+      t.cg_var := CG.Declare_local (qualID, size, align, mtype, typeUID,
                                     t.need_addr, t.up_level, CG.Maybe);
 
     ELSIF (t.indirect) THEN
       (* formal passed by reference => param is an address *)
       t.cg_align := align;
       t.nextTWACGVar := TsWCGVars;  TsWCGVars := t;
-      t.cg_var := CG.Declare_param (t.name, size, align, mtype, typeUID,
+      t.cg_var := CG.Declare_param (qualID, size, align, mtype, typeUID,
                                     t.need_addr, t.up_level, CG.Maybe);
 
     ELSE
@@ -609,7 +619,7 @@ PROCEDURE Declare (t: T): BOOLEAN =
       (** align := FindAlignment (align, size); **)
       t.cg_align := align;
       t.nextTWACGVar := TsWCGVars;  TsWCGVars := t;
-      t.cg_var := CG.Declare_param (t.name, size, align, mtype, typeUID,
+      t.cg_var := CG.Declare_param (qualID, size, align, mtype, typeUID,
                                     t.need_addr, t.up_level, CG.Maybe);
     END;
 
@@ -642,12 +652,13 @@ PROCEDURE ConstInit (t: T) =
     initDepth : INTEGER;
     typeUID       : INTEGER;
     constInitExpr : Expr.T;
-    name          : TEXT;
+    initName      : TEXT;
     initM3ID      : M3ID.T;
     initInfo : Type.Info;
   BEGIN
     IF t.external OR t.imported THEN RETURN END;
     IF NOT t.initStatic AND NOT t.global THEN RETURN END;
+
     IF t.initStatic AND NOT t.initAllocated THEN
       (* Allocate space in the global constant area for the initial value. *)
       typeUID := Type.GlobalUID (t.tipe);
@@ -657,6 +668,7 @@ PROCEDURE ConstInit (t: T) =
         typeUID  := CG.Declare_indirect (typeUID);
         initSize  := Target.Address.size;
         initAlign := Target.Address.align;
+        initName := t.qualName & "_INIT_INDIRECT_";
       ELSE
         initRepType := Expr.RepTypeOf (constInitExpr);
         EVAL Type.CheckInfo (initRepType, initInfo);
@@ -667,20 +679,22 @@ PROCEDURE ConstInit (t: T) =
           (* See ArrayExpr.GenLiteral, where element space will be allocated. *)
           initSize := Target.Address.pack + initDepth * Target.Integer.pack;
           initAlign := MAX (Target.Address.align, Target.Integer.align);
+          initName := t.qualName & "_INIT_DOPE_";
         ELSE
           initSize  := initInfo.size;
           initAlign := initInfo.alignment;
+          initName := t.qualName & "_INIT_";
         END;
       END;
-      name := "_INIT_" & M3ID.ToText (t.name);
-      initM3ID := M3ID.Add (name);
+      initM3ID := M3ID.Add (initName);
 (* TODO: Eliminate duplicate copies of same value, including reused, named constant. *) 
       t.initValOffset
-        := Module.Allocate (initSize, initAlign, TRUE, "initial value for ", t.name);
+        := Module.Allocate
+             (initSize, initAlign, TRUE, "init value for ", initM3ID);
       t.initAllocated := TRUE;
       CG.Declare_global_field (initM3ID, t.initValOffset, initSize, typeUID, TRUE);
       CG.Comment
-        (t.initValOffset, TRUE, "init expr for ", Value.GlobalName(t,TRUE,TRUE));
+        (t.initValOffset, TRUE, "init value for ", initName);
       Expr.PrepLiteral (constInitExpr, initRepType, TRUE);
       Expr.GenLiteral (constInitExpr, t.initValOffset, initRepType, TRUE);
     END;

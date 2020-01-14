@@ -59,6 +59,7 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
     IF (t = Int.T) OR (t = LInt.T)
       OR (t = Reel.T) OR (t = LReel.T) OR (t = EReel.T) THEN
       (* ok *)
+(*    ELSIF SetType.split (t, range) THEN (* OK *) *)
     ELSE
       t := Expr.BadOperands ("unary \'-\'", t);
     END;
@@ -81,7 +82,7 @@ PROCEDURE Compile (p: P) =
       Expr.Compile (p.a);
       CG.Negate (Type.CGType (p.type));
     ELSE
-      Expr.Compile (e);
+      Expr.Compile (e); (* e is folded p, not p.a, thus already negated. *)
     END;
   END Compile;
 

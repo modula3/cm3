@@ -286,7 +286,7 @@ PROCEDURE IsStructured (t: T): BOOLEAN =
     | Class.Record,
       Class.Array,
       Class.OpenArray => RETURN TRUE;
-    | Class.Set       => RETURN (Check(t).info.size > Target.Integer.size);
+    | Class.Set       => RETURN (Check(t).info.size > Target.Word.size);
     ELSE                 RETURN FALSE;
     END;
   END IsStructured;

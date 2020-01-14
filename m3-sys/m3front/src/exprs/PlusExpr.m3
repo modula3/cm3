@@ -6,6 +6,8 @@
 (* Last modified on Fri Feb 24 16:45:09 PST 1995 by kalsow     *)
 (*      modified on Thu Nov 29 03:29:06 1990 by muller         *)
 
+(* Unary "+" operator. *)
+
 MODULE PlusExpr;
 
 IMPORT M3, Expr, ExprRep, Type, Int, Reel, LReel, EReel;

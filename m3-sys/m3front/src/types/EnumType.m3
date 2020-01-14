@@ -130,11 +130,14 @@ PROCEDURE SetRep (p: P) =
       WITH t = TargetMap.Word_types[i] DO
         IF (t.size <= Target.Word.size)
           AND TWord.LE (max, t.max) THEN
-          p.rep := i; RETURN;
+          p.rep := i;
+          p.info.size := TargetMap.Word_types[p.rep].size;
+          RETURN;
         END;
       END;
     END;
     p.rep := LAST (Rep);
+    p.info.size := TargetMap.Word_types[p.rep].size;
   END SetRep;
 
 PROCEDURE Check (p: P) =
@@ -148,7 +151,7 @@ PROCEDURE Check (p: P) =
       v := v.next;
     END;
 
-    p.info.size      := TargetMap.Word_types[p.rep].size;
+    <* ASSERT p.info.size = TargetMap.Word_types[p.rep].size *>
     p.info.min_size  := MinSize (p);
     p.info.alignment := TargetMap.Word_types[p.rep].align;
     p.info.mem_type  := TargetMap.Word_types[p.rep].cg_type;

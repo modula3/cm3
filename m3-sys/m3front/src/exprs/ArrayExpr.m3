@@ -146,8 +146,8 @@ REVEAL
     need_addr    := NeedsAddress;
     prep         := Prep;
     compile      := Compile;
-    prepLV       := ExprRep.NotLValue;(* Externally dispatched-to: *)
-    compileLV    := ExprRep.NotLValue;
+    prepLV       := PrepLV;
+    compileLV    := CompileLV;
     prepBR       := ExprRep.NotBoolean;
     compileBR    := ExprRep.NotBoolean;
     evaluate     := Evaluate;
@@ -1250,6 +1250,12 @@ PROCEDURE UsesAssignProtocol (expr: Expr.T): BOOLEAN =
   END UsesAssignProtocol;
 
 (* Externally dispatched-to: *)
+PROCEDURE PrepLV (top: T; <*UNUSED*>traced: BOOLEAN) =
+  BEGIN
+    Prep (top);
+  END PrepLV;
+
+(* Externally dispatched-to: *)
 PROCEDURE Prep (top: T) =
 (* PRE: top.depth = 0. *)
   (* Must be called IFF top is the top of a tree of array constructors. *)
@@ -1723,9 +1729,9 @@ PROCEDURE PrepRecurse
                       Top and all descendent constructors are fully static. *)
                 <* ASSERT top.firstArgDopeVal = NIL *>
 (* TODO: Make do_direct work transitively through here. *)
-                Expr.Prep (argExpr);
+                Expr.PrepLValue (argExpr, traced := argRepTypeInfo.isTraced);
                 EVAL Type.CheckInfo (argRepType, (*OUT*) argRepTypeInfo);
-                Expr.CompileLValue
+                Expr.CompileAddress
                   (argExpr, traced := argRepTypeInfo.isTraced);
 (* CHECK^ Do we need optional Compile instead of CompileLValue? *)
                 argAddrVal := CG.Pop ();
@@ -1941,6 +1947,12 @@ PROCEDURE InitLiteralDope
   END InitLiteralDope;
 
 (* Externally dispatched-to: *)
+PROCEDURE CompileLV (top: T; <*UNUSED*>traced: BOOLEAN) =
+  BEGIN
+    Compile (top);
+  END CompileLV;
+
+(* Externally dispatched-to: *)
 PROCEDURE Compile (top: T) =
 (* PRE: top.depth = 0 *)
 (* PRE: LHS addr is on CG stack IFF UsesAssignProtocol. *)
@@ -1998,7 +2010,7 @@ PROCEDURE GenLiteral
         top.globalEltsOffset := globalOffset;
       ELSE (* globalOffset leads to space in a static area that our
               caller has allocated for the dope only.
-              Allocate space for the elements here. *)
+              Allocate space for the elements now. *)
         <* ASSERT top.staticEltsSize >= 0 *>
         IF top.staticEltsSize = 0 THEN
            (* Just for safety, for a constant (thus static) empty array, let's

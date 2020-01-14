@@ -43,6 +43,7 @@ PROCEDURE EmitRTCheck (tlhs: Type.T;  rhs: Expr.T);
 (* Emit code to evaluate "rhs" and generate any runtime 
    checks that would be needed if it were assigned to
    a value of type 'tlhs'.  Leave the rhs value on the stack.
+   PRE: The CG stack is empty.
    PRE: TypeOf(rhs) is assignable to tlhs.
    PRE: Expr.Prep(rhs) has been called.
    PRE: 'tlhs' is not an open array type.  *)
