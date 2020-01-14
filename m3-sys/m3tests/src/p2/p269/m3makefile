@@ -1,0 +1,118 @@
+% (* ----------------------------------------------------------------------1- *)
+% (* File m3makefile for Modula3 compiler test p269                           *)
+% (* Copyright 2019, Rodney M. Bates.                                         *)
+% (* rodney.m.bates@acm.org                                                   *)
+% (* Licensed under the MIT license.                                          *)
+% (* ----------------------------------------------------------------------2- *)
+
+import ("libm3")
+
+module ("Support") 
+module ("Common")
+module ("UnsafeUtils")
+
+module ("SegList")
+build_generic_intf ("SegListSort","ArraySort",["SegList"],HIDDEN)
+build_generic_impl ("SegListSort","ArraySort",["SegList"])
+
+interface ("Globals")
+generic_module ("Checks0")
+generic_module ("Checks")
+
+% Element properties, for instantiating generic Dimension properties:
+interface ("EltsI4")
+interface ("EltsI16")
+
+% Shape properties for instantiating generic Dimension properties: 
+interface ("Shape4_4_4_4_4_4")
+interface ("Shape7_6_5_4_3_2")
+
+% Generic Dimension properties: 
+generic_module ("Dim0")
+generic_module ("Dim1")
+generic_module ("Dim2")
+generic_module ("Dim3")
+generic_module ("Dim4")
+generic_module ("Dim5")
+generic_module ("Dim6")
+
+% Dimension x Element x Shape instantiations: 
+build_generic_intf ("D0_EI4_S4_4_4_4_4_4","Dim0",["EltsI4","Shape4_4_4_4_4_4"],HIDDEN)
+build_generic_intf ("D1_EI4_S4_4_4_4_4_4","Dim1",["D0_EI4_S4_4_4_4_4_4"],HIDDEN)
+build_generic_intf ("D2_EI4_S4_4_4_4_4_4","Dim2",["D1_EI4_S4_4_4_4_4_4"],HIDDEN)
+build_generic_intf ("D3_EI4_S4_4_4_4_4_4","Dim3",["D2_EI4_S4_4_4_4_4_4"],HIDDEN)
+build_generic_intf ("D4_EI4_S4_4_4_4_4_4","Dim4",["D3_EI4_S4_4_4_4_4_4"],HIDDEN)
+build_generic_intf ("D5_EI4_S4_4_4_4_4_4","Dim5",["D4_EI4_S4_4_4_4_4_4"],HIDDEN)
+build_generic_intf ("D6_EI4_S4_4_4_4_4_4","Dim6",["D5_EI4_S4_4_4_4_4_4"],HIDDEN)
+
+build_generic_intf ("D0_EI16_S7_6_5_4_3_2","Dim0",["EltsI16","Shape7_6_5_4_3_2"],HIDDEN)
+build_generic_intf ("D1_EI16_S7_6_5_4_3_2","Dim1",["D0_EI16_S7_6_5_4_3_2"],HIDDEN)
+build_generic_intf ("D2_EI16_S7_6_5_4_3_2","Dim2",["D1_EI16_S7_6_5_4_3_2"],HIDDEN)
+build_generic_intf ("D3_EI16_S7_6_5_4_3_2","Dim3",["D2_EI16_S7_6_5_4_3_2"],HIDDEN)
+build_generic_intf ("D4_EI16_S7_6_5_4_3_2","Dim4",["D3_EI16_S7_6_5_4_3_2"],HIDDEN)
+build_generic_intf ("D5_EI16_S7_6_5_4_3_2","Dim5",["D4_EI16_S7_6_5_4_3_2"],HIDDEN)
+build_generic_intf ("D6_EI16_S7_6_5_4_3_2","Dim6",["D5_EI16_S7_6_5_4_3_2"],HIDDEN)
+
+build_generic_impl ("D0_EI4_S4_4_4_4_4_4","Dim0",["EltsI4","Shape4_4_4_4_4_4"])
+build_generic_impl ("D1_EI4_S4_4_4_4_4_4","Dim1",["D0_EI4_S4_4_4_4_4_4"])
+build_generic_impl ("D2_EI4_S4_4_4_4_4_4","Dim2",["D1_EI4_S4_4_4_4_4_4"])
+build_generic_impl ("D3_EI4_S4_4_4_4_4_4","Dim3",["D2_EI4_S4_4_4_4_4_4"])
+build_generic_impl ("D4_EI4_S4_4_4_4_4_4","Dim4",["D3_EI4_S4_4_4_4_4_4"])
+build_generic_impl ("D5_EI4_S4_4_4_4_4_4","Dim5",["D4_EI4_S4_4_4_4_4_4"])
+build_generic_impl ("D6_EI4_S4_4_4_4_4_4","Dim6",["D5_EI4_S4_4_4_4_4_4"])
+
+build_generic_impl ("D0_EI16_S7_6_5_4_3_2","Dim0",["EltsI16","Shape7_6_5_4_3_2"])
+build_generic_impl ("D1_EI16_S7_6_5_4_3_2","Dim1",["D0_EI16_S7_6_5_4_3_2"])
+build_generic_impl ("D2_EI16_S7_6_5_4_3_2","Dim2",["D1_EI16_S7_6_5_4_3_2"])
+build_generic_impl ("D3_EI16_S7_6_5_4_3_2","Dim3",["D2_EI16_S7_6_5_4_3_2"])
+build_generic_impl ("D4_EI16_S7_6_5_4_3_2","Dim4",["D3_EI16_S7_6_5_4_3_2"])
+build_generic_impl ("D5_EI16_S7_6_5_4_3_2","Dim5",["D4_EI16_S7_6_5_4_3_2"])
+build_generic_impl ("D6_EI16_S7_6_5_4_3_2","Dim6",["D5_EI16_S7_6_5_4_3_2"])
+
+% Zero-level Checks code.
+build_generic_intf ("Checks0_EI4","Checks0",["EltsI4"],HIDDEN)
+build_generic_impl ("Checks0_EI4","Checks0",["EltsI4"])
+
+build_generic_intf ("Checks0_EI16","Checks0",["EltsI16"],HIDDEN)
+build_generic_impl ("Checks0_EI16","Checks0",["EltsI16"])
+
+% Instantiations of Checks.ig, which are not UNSAFE:
+build_generic_intf ("Checks1_EI4_S4_4_4_4_4_4","Checks",["D1_EI4_S4_4_4_4_4_4"],HIDDEN)
+build_generic_intf ("Checks2_EI4_S4_4_4_4_4_4","Checks",["D2_EI4_S4_4_4_4_4_4"],HIDDEN)
+build_generic_intf ("Checks3_EI4_S4_4_4_4_4_4","Checks",["D3_EI4_S4_4_4_4_4_4"],HIDDEN)
+build_generic_intf ("Checks4_EI4_S4_4_4_4_4_4","Checks",["D4_EI4_S4_4_4_4_4_4"],HIDDEN)
+build_generic_intf ("Checks5_EI4_S4_4_4_4_4_4","Checks",["D5_EI4_S4_4_4_4_4_4"],HIDDEN)
+build_generic_intf ("Checks6_EI4_S4_4_4_4_4_4","Checks",["D6_EI4_S4_4_4_4_4_4"],HIDDEN)
+
+build_generic_intf ("Checks1_EI16_S7_6_5_4_3_2","Checks",["D1_EI16_S7_6_5_4_3_2"],HIDDEN)
+build_generic_intf ("Checks2_EI16_S7_6_5_4_3_2","Checks",["D2_EI16_S7_6_5_4_3_2"],HIDDEN)
+build_generic_intf ("Checks3_EI16_S7_6_5_4_3_2","Checks",["D3_EI16_S7_6_5_4_3_2"],HIDDEN)
+build_generic_intf ("Checks4_EI16_S7_6_5_4_3_2","Checks",["D4_EI16_S7_6_5_4_3_2"],HIDDEN)
+build_generic_intf ("Checks5_EI16_S7_6_5_4_3_2","Checks",["D5_EI16_S7_6_5_4_3_2"],HIDDEN)
+build_generic_intf ("Checks6_EI16_S7_6_5_4_3_2","Checks",["D6_EI16_S7_6_5_4_3_2"],HIDDEN)
+
+% UNSAFE instantiations of Checks.mg:
+% There are no Quake commands to instantiate and add UNSAFE,
+% so we have to have explicit M3 code for the instantions.
+implementation ("Checks1_EI4_S4_4_4_4_4_4")
+implementation ("Checks2_EI4_S4_4_4_4_4_4")
+implementation ("Checks3_EI4_S4_4_4_4_4_4")
+implementation ("Checks4_EI4_S4_4_4_4_4_4")
+implementation ("Checks5_EI4_S4_4_4_4_4_4")
+implementation ("Checks6_EI4_S4_4_4_4_4_4")
+
+implementation ("Checks1_EI16_S7_6_5_4_3_2")
+implementation ("Checks2_EI16_S7_6_5_4_3_2")
+implementation ("Checks3_EI16_S7_6_5_4_3_2")
+implementation ("Checks4_EI16_S7_6_5_4_3_2")
+implementation ("Checks5_EI16_S7_6_5_4_3_2")
+implementation ("Checks6_EI16_S7_6_5_4_3_2")
+
+% Specific test modules:
+module ("Constants")
+module ("Dynamic")
+
+implementation ("Main")
+%build_standalone
+program ("pgm")
+%include ("../../Test.common")

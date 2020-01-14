@@ -456,13 +456,13 @@ readonly proc run_test (class, group, uid, comment, should_run, cm3opts, runopts
       ok2 = cmp_file (dir, "stdout.pgm", ignoreLines, ignoreTexts, probeForTargetSpecificFiles) and
             cmp_file (dir, "stderr.pgm", ignoreLines, ignoreTexts, probeForTargetSpecificFiles)
     end
-    
+
     if probeForTargetSpecificFiles and FileExists (ExpectedDir)
       foreach a in fs_lsfiles(ExpectedDir, TRUE)
         ok3 = cmp_file(dir, a, ignoreLines, ignoreTexts, probeForTargetSpecificFiles) and ok3
       end
     end
-    
+
     if DATE and BC
       tstop = compress (q_exec_get (DATE & " '+%s'")[1])
       %write (tstop, CR)
@@ -558,11 +558,14 @@ end
 % Recently added tests...
 
 p_test ("p2", "p268", "Record constructors with statically inevitable RT errors.")
+p_test ("p2", "p269", "Nested array constructors.")
 p_test ("p2", "p270", "Array constructors with statically inevitable RT errors.")
 p_test ("p2", "p271", "Constant array constructor, passed READONLY, is passed by value.")
 p_test ("p2", "p272", "Set constructors with statically inevitable RT errors.")
 p_test ("p2", "p273", "Mixed, nested, constructors with statically inevitable RT errors.")
 p_test ("p2", "p274", "Mixed, nested, constructor values.")
+p_test ("p2", "p275", "More set operators on a small set type in a packed record.")
+p_test ("p2", "p276", "Packed set constructors.")
 
 % Some recently fixed tests in the packedVars branch: 
 
@@ -576,7 +579,7 @@ p_test ("p2", "p264", "mixtures of fixed and open arrays")
 % some currently failing tests...
 
 %p_test ("p1", "p161", "more operations on very big sets in the heap")
-p_test ("p1", "p158", "operations on subword-sized sets") % Currently not supported in CM3
+p_test ("p1", "p158", "operations on subword-sized sets") % Previously not supported in CM3
 %p_test ("p2", "p204", "IP address initializers")
 %p_test ("p2", "p206", "ARRAY constructors in var decls using named open array types")
 %p_test ("p2", "p207", "subrange declarations")

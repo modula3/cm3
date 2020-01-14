@@ -1,0 +1,59 @@
+"../AMD64_LINUX/D0_EI4_S4_4_4_4_4_4.m3 => ../Dim0.mg", line 11: warning: not used (Elts)
+"../AMD64_LINUX/D0_EI4_S4_4_4_4_4_4.m3 => ../Dim0.mg", line 11: warning: not used (Shape)
+2 warnings encountered
+"../AMD64_LINUX/D1_EI4_S4_4_4_4_4_4.m3 => ../Dim1.mg", line 11: warning: not used (InnerDim)
+1 warning encountered
+"../AMD64_LINUX/D2_EI4_S4_4_4_4_4_4.m3 => ../Dim2.mg", line 11: warning: not used (InnerDim)
+1 warning encountered
+"../AMD64_LINUX/D3_EI4_S4_4_4_4_4_4.m3 => ../Dim3.mg", line 11: warning: not used (InnerDim)
+1 warning encountered
+"../AMD64_LINUX/D4_EI4_S4_4_4_4_4_4.m3 => ../Dim4.mg", line 11: warning: not used (InnerDim)
+1 warning encountered
+"../AMD64_LINUX/D5_EI4_S4_4_4_4_4_4.m3 => ../Dim5.mg", line 11: warning: not used (InnerDim)
+1 warning encountered
+"../AMD64_LINUX/D6_EI4_S4_4_4_4_4_4.m3 => ../Dim6.mg", line 11: warning: not used (InnerDim)
+1 warning encountered
+"../AMD64_LINUX/D0_EI16_S7_6_5_4_3_2.m3 => ../Dim0.mg", line 11: warning: not used (Elts)
+"../AMD64_LINUX/D0_EI16_S7_6_5_4_3_2.m3 => ../Dim0.mg", line 11: warning: not used (Shape)
+2 warnings encountered
+"../AMD64_LINUX/D1_EI16_S7_6_5_4_3_2.m3 => ../Dim1.mg", line 11: warning: not used (InnerDim)
+1 warning encountered
+"../AMD64_LINUX/D2_EI16_S7_6_5_4_3_2.m3 => ../Dim2.mg", line 11: warning: not used (InnerDim)
+1 warning encountered
+"../AMD64_LINUX/D3_EI16_S7_6_5_4_3_2.m3 => ../Dim3.mg", line 11: warning: not used (InnerDim)
+1 warning encountered
+"../AMD64_LINUX/D4_EI16_S7_6_5_4_3_2.m3 => ../Dim4.mg", line 11: warning: not used (InnerDim)
+1 warning encountered
+"../AMD64_LINUX/D5_EI16_S7_6_5_4_3_2.m3 => ../Dim5.mg", line 11: warning: not used (InnerDim)
+1 warning encountered
+"../AMD64_LINUX/D6_EI16_S7_6_5_4_3_2.m3 => ../Dim6.mg", line 11: warning: not used (InnerDim)
+1 warning encountered
+"../AMD64_LINUX/Checks0_EI4.m3 => ../Checks0.mg", line 59: warning: Not StackType in ForceStacked, Kind = Stacked
+"../AMD64_LINUX/Checks0_EI4.m3 => ../Checks0.mg", line 59: warning: Not StackType in ForceStacked, Kind = Stacked
+"../AMD64_LINUX/Checks0_EI4.m3 => ../Checks0.mg", line 66: warning: Not StackType in ForceStacked, Kind = Stacked
+3 warnings encountered
+"../Checks1_EI4_S4_4_4_4_4_4.m3 => ../Checks.mg", line 94: warning: Not StackType in ForceStacked, Kind = Stacked
+"../Checks1_EI4_S4_4_4_4_4_4.m3 => ../Checks.mg", line 186: warning: Not StackType in ForceStacked, Kind = Stacked
+2 warnings encountered
+"../Checks2_EI4_S4_4_4_4_4_4.m3 => ../Checks.mg", line 94: warning: Not StackType in ForceStacked, Kind = Stacked
+"../Checks2_EI4_S4_4_4_4_4_4.m3 => ../Checks.mg", line 186: warning: Not StackType in ForceStacked, Kind = Stacked
+2 warnings encountered
+"../Checks3_EI4_S4_4_4_4_4_4.m3 => ../Checks.mg", line 94: warning: Not StackType in ForceStacked, Kind = Stacked
+"../Checks3_EI4_S4_4_4_4_4_4.m3 => ../Checks.mg", line 186: warning: Not StackType in ForceStacked, Kind = Stacked
+2 warnings encountered
+"../Checks4_EI4_S4_4_4_4_4_4.m3 => ../Checks.mg", line 94: warning: Not StackType in ForceStacked, Kind = Stacked
+"../Checks4_EI4_S4_4_4_4_4_4.m3 => ../Checks.mg", line 186: warning: Not StackType in ForceStacked, Kind = Stacked
+2 warnings encountered
+"../Checks5_EI4_S4_4_4_4_4_4.m3 => ../Checks.mg", line 94: warning: Not StackType in ForceStacked, Kind = Stacked
+"../Checks5_EI4_S4_4_4_4_4_4.m3 => ../Checks.mg", line 186: warning: Not StackType in ForceStacked, Kind = Stacked
+2 warnings encountered
+"../Checks6_EI4_S4_4_4_4_4_4.m3 => ../Checks.mg", line 94: warning: Not StackType in ForceStacked, Kind = Stacked
+"../Checks6_EI4_S4_4_4_4_4_4.m3 => ../Checks.mg", line 186: warning: Not StackType in ForceStacked, Kind = Stacked
+2 warnings encountered
+"../Dynamic.m3", line 478: warning: not used (FlatVals4_1)
+"../Dynamic.m3", line 17: warning: not used (EltsI16)
+"../Dynamic.m3", line 20: warning: not used (RepTyp)
+"../Dynamic.m3", line 20: warning: not used (RepSetTyp)
+"../Dynamic.m3", line 22: warning: not used (ModuleName)
+"../Dynamic.m3", line 526: warning: not used (Var6ROO32)
+6 warnings encountered
