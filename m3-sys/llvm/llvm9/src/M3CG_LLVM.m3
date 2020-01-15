@@ -3479,18 +3479,18 @@ PROCEDURE RealIntrinsic(t : RType; m3id : LLVM.M3Intrinsic) : LLVM.ValueRef =
     RETURN LLVM.LLVMGetIntrinsicDeclaration(modRef,id,types,1);
   END RealIntrinsic;
   
-PROCEDURE RotateLeftIntrinsic() : LLVM.ValueRef =
+PROCEDURE RotateLeftIntrinsic(t : LLVM.TypeRef) : LLVM.ValueRef =
   VAR
     fshlId := LLVM.GetM3IntrinsicId(LLVM.M3Intrinsic.m3fshl);
-    types := IntrinsicMemTypes(IntPtrTy,IntPtrTy,IntPtrTy);
+    types := IntrinsicMemTypes(t,t,t);
   BEGIN
     RETURN LLVM.LLVMGetIntrinsicDeclaration(modRef,fshlId,types,3);
   END RotateLeftIntrinsic;
 
-PROCEDURE RotateRightIntrinsic() : LLVM.ValueRef =
+PROCEDURE RotateRightIntrinsic(t : LLVM.TypeRef) : LLVM.ValueRef =
   VAR
     fshrId := LLVM.GetM3IntrinsicId(LLVM.M3Intrinsic.m3fshr);
-    types := IntrinsicMemTypes(IntPtrTy,IntPtrTy,IntPtrTy);
+    types := IntrinsicMemTypes(t,t,t);
   BEGIN
     RETURN LLVM.LLVMGetIntrinsicDeclaration(modRef,fshrId,types,3);
   END RotateRightIntrinsic;
@@ -3919,7 +3919,7 @@ PROCEDURE shift_right (self: U; t: IType) =
     binop(self,t,BinOps.shr);
   END shift_right;
 
-PROCEDURE DoRotate(value,shift : LLVM.ValueRef; rotLeft : BOOLEAN) : LLVM.ValueRef =
+PROCEDURE DoRotate(value,shift : LLVM.ValueRef; t : LLVM.TypeRef; rotLeft : BOOLEAN) : LLVM.ValueRef =
   CONST numParams = 3;
   VAR
     res : LLVM.ValueRef;
@@ -3932,9 +3932,9 @@ PROCEDURE DoRotate(value,shift : LLVM.ValueRef; rotLeft : BOOLEAN) : LLVM.ValueR
     paramsArr[2] := shift;
         
     IF rotLeft THEN
-      res := LLVM.LLVMBuildCall(builderIR, RotateLeftIntrinsic(), paramsRef, numParams, LT("rol"));
+      res := LLVM.LLVMBuildCall(builderIR, RotateLeftIntrinsic(t), paramsRef, numParams, LT("rol"));
     ELSE
-      res := LLVM.LLVMBuildCall(builderIR, RotateRightIntrinsic(), paramsRef, numParams, LT("ror"));
+      res := LLVM.LLVMBuildCall(builderIR, RotateRightIntrinsic(t), paramsRef, numParams, LT("ror"));
     END;
     RETURN res;
   END DoRotate;
@@ -3956,10 +3956,10 @@ PROCEDURE rotate (self: U;  t: IType) =
     IF LLVM.LLVMIsConstant(rot) THEN
       rotBits := LLVM.LLVMConstIntGetSExtValue(rot);
       IF rotBits >= 0L THEN
-        res := DoRotate(a,rot,TRUE);
+        res := DoRotate(a,rot,intType,TRUE);
       ELSE
         rot := LLVM.LLVMConstInt(intType, -rotBits, TRUE);
-        res := DoRotate(a,rot,FALSE);
+        res := DoRotate(a,rot,intType,FALSE);
       END;
     ELSE
       (* generate runtime check for rotate *)
@@ -3968,11 +3968,11 @@ PROCEDURE rotate (self: U;  t: IType) =
       cmpVal := LLVM.LLVMBuildICmp(builderIR,  LLVM.IntPredicate.SGE, rot, Zero(intType), LT("rotate_cmp"));
 
       ite := NEW(ITEObj, cmpVal := cmpVal, opName := "rotate", opType := t, curObj := self).init();
-      res := DoRotate(a,rot,TRUE);
+      res := DoRotate(a,rot,intType,TRUE);
       EVAL ite.block(res,FALSE);
       (* make the rotate positive  *)
       rot := LLVM.LLVMBuildNSWNeg(builderIR, rot, LT("neg"));
-      res := DoRotate(a,rot,FALSE);
+      res := DoRotate(a,rot,intType,FALSE);
       res := ite.block(res,TRUE);
     END;
     NARROW(s1,LvExpr).lVal := res;
@@ -3985,11 +3985,13 @@ PROCEDURE rotate_left (self: U; t: IType) =
     s0 := Get(self.exprStack,0);
     s1 := Get(self.exprStack,1);
     a,rot,res : LLVM.ValueRef;
+    intType : LLVM.TypeRef;
   BEGIN
+    intType := LLvmType(t);
     a := NARROW(s1,LvExpr).lVal;
     rot := NARROW(s0,LvExpr).lVal;
-    rot := Extend(rot, t, LLvmType(t));
-    res := DoRotate(a,rot,TRUE);
+    rot := Extend(rot, t, intType);
+    res := DoRotate(a,rot,intType,TRUE);
     NARROW(s1,LvExpr).lVal := res;
     Pop(self.exprStack);
   END rotate_left;
@@ -4000,11 +4002,13 @@ PROCEDURE rotate_right (self: U; t: IType) =
     s0 := Get(self.exprStack,0);
     s1 := Get(self.exprStack,1);
     a,rot,res : LLVM.ValueRef;
+    intType : LLVM.TypeRef;
   BEGIN
+    intType := LLvmType(t);
     a := NARROW(s1,LvExpr).lVal;
     rot := NARROW(s0,LvExpr).lVal;
-    rot := Extend(rot, t, LLvmType(t));    
-    res := DoRotate(a,rot,FALSE);
+    rot := Extend(rot, t, intType);    
+    res := DoRotate(a,rot,intType,FALSE);
     NARROW(s1,LvExpr).lVal := res;
     Pop(self.exprStack);
   END rotate_right;
