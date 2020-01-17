@@ -349,7 +349,7 @@ PROCEDURE DoEmit
     | Type.Class.Object, Type.Class.Opaque, Type.Class.Ref =>
         AssignReference (lhsRepType, rhsExpr, lhsRepTypeInfo);
     | Type.Class.Procedure =>
-        RTCheckProcedure (rhsExpr);
+        RTCheckProcedure (rhsExpr, lhsIsPushed := TRUE);
         CG.Store_indirect (lhsRepTypeInfo.stk_type, 0, lhsRepTypeInfo.size);
     | Type.Class.Record =>
         AssignRecord (rhsExpr, lhsRepTypeInfo, lhsAlign);
@@ -637,7 +637,7 @@ PROCEDURE EmitRTCheck (tlhs: Type.T;  rhsExpr: Expr.T) =
     | Type.Class.Array, Type.Class.OpenArray =>
         RTCheckArray (tlhs, rhsExpr);
     | Type.Class.Procedure =>
-        RTCheckProcedure (rhsExpr);
+        RTCheckProcedure (rhsExpr, lhsIsPushed := FALSE);
     | Type.Class.Record =>
         RTCheckRecord (rhsExpr);
     | Type.Class.Set =>
@@ -664,11 +664,11 @@ PROCEDURE RTCheckReference (tlhs: Type.T;  rhsExpr: Expr.T) =
     IF Host.doNarrowChk THEN Narrow.Emit (tlhs, Expr.TypeOf (rhsExpr)) END;
   END RTCheckReference;
 
-PROCEDURE RTCheckProcedure (rhsExpr: Expr.T) =
+PROCEDURE RTCheckProcedure (rhsExpr: Expr.T; lhsIsPushed: BOOLEAN) =
   (* PRE: The CG stack is empty.
      PRE: The rhsExpr is prepped.
      POST: RHS is TOS. *)
-  VAR rhsVal: CG.Val;
+  VAR lhsVal, rhsVal: CG.Val;
   VAR ok: CG.Label;
   BEGIN
     CASE <*NOWARN*> ProcRTCheckKind (rhsExpr) OF
@@ -676,14 +676,29 @@ PROCEDURE RTCheckProcedure (rhsExpr: Expr.T) =
       CG.Abort (CG.RuntimeError.NarrowFailed);
       Expr.Compile (rhsExpr);
     | RTCheckKind.Conditional =>
-      (* Could there ever be a better example than this of what an
-         utterly dreadful idea an operand stack machine is?
-         We have to call If_Closure with empty stack.  We have to know it's
-         empty to begin with, which would involve backing up through many
-         places to put and ensure preconditions on stack contents.  Then,
-         after pushing the RHS, we have to spill it, pass the spilled value
-         to If_closure in a parameter, then re-push it afterwards for
-         further use by our callers. *) 
+      (* <rant>
+         Could there ever be a better example than this of what
+         an utterly dreadful idea an operand stack machine is?
+         
+         We have to call If_Closure with empty stack.  We have to know how
+         many items are on it when we are called.  Not only does this involve
+         backing up through the reverse call graph in many places, checking
+         undocumented preconditions, but in the end, it is conditional.
+         If things are there, we have to spill them.
+
+         Then, after pushing the RHS, we have to spill it too, pass the
+         spilled rhs value to If_closure in a parameter, then re-push it
+         afterwards for further use by our callers.  Finally, conditionally
+         re-push the previously spilled items.
+
+         Or, we could have writen two nearly-same copies of this procedure.
+
+         All of this is entirely gratuitous, as it has no actual effect
+         on the If_closure operation.
+         </rant> *)
+      IF lhsIsPushed THEN
+        lhsVal := CG.Pop ();
+      END;
       Expr.Compile (rhsExpr);
       rhsVal := CG.Pop ();
       ok := CG.Next_label ();
@@ -692,6 +707,10 @@ PROCEDURE RTCheckProcedure (rhsExpr: Expr.T) =
 (* TODO^ I think we need another runtime error code for assigning a nested
          procedure. *)
       CG.Set_label (ok);
+      IF lhsIsPushed THEN
+        CG.Push (lhsVal);
+        CG.Free (lhsVal);
+      END;
       CG.Push (rhsVal);
       CG.Free (rhsVal);
     | RTCheckKind.None =>
