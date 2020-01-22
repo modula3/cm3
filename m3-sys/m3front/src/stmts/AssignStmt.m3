@@ -349,7 +349,7 @@ PROCEDURE DoEmit
     | Type.Class.Object, Type.Class.Opaque, Type.Class.Ref =>
         AssignReference (lhsRepType, rhsExpr, lhsRepTypeInfo);
     | Type.Class.Procedure =>
-        RTCheckProcedure (rhsExpr, lhsIsPushed := TRUE);
+        AssignOrRTCheckProcedure (rhsExpr, lhsIsPushed := TRUE);
         CG.Store_indirect (lhsRepTypeInfo.stk_type, 0, lhsRepTypeInfo.size);
     | Type.Class.Record =>
         AssignRecord (rhsExpr, lhsRepTypeInfo, lhsAlign);
@@ -637,7 +637,7 @@ PROCEDURE EmitRTCheck (tlhs: Type.T;  rhsExpr: Expr.T) =
     | Type.Class.Array, Type.Class.OpenArray =>
         RTCheckArray (tlhs, rhsExpr);
     | Type.Class.Procedure =>
-        RTCheckProcedure (rhsExpr, lhsIsPushed := FALSE);
+        AssignOrRTCheckProcedure (rhsExpr, lhsIsPushed := FALSE);
     | Type.Class.Record =>
         RTCheckRecord (rhsExpr);
     | Type.Class.Set =>
@@ -664,7 +664,7 @@ PROCEDURE RTCheckReference (tlhs: Type.T;  rhsExpr: Expr.T) =
     IF Host.doNarrowChk THEN Narrow.Emit (tlhs, Expr.TypeOf (rhsExpr)) END;
   END RTCheckReference;
 
-PROCEDURE RTCheckProcedure (rhsExpr: Expr.T; lhsIsPushed: BOOLEAN) =
+PROCEDURE AssignOrRTCheckProcedure (rhsExpr: Expr.T; lhsIsPushed: BOOLEAN) =
   (* PRE: The CG stack is empty.
      PRE: The rhsExpr is prepped.
      POST: RHS is TOS. *)
@@ -716,7 +716,7 @@ PROCEDURE RTCheckProcedure (rhsExpr: Expr.T; lhsIsPushed: BOOLEAN) =
     | RTCheckKind.None =>
       Expr.Compile (rhsExpr);
     END; 
-  END RTCheckProcedure;
+  END AssignOrRTCheckProcedure;
 
 PROCEDURE RTCheckRecord (rhsExpr: Expr.T) =
   BEGIN

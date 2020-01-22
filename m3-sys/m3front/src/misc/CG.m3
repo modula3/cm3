@@ -2893,6 +2893,12 @@ PROCEDURE Set_compare (s: Size;  op: Cmp) =
   END Set_compare;
 
 PROCEDURE Set_range (s: Size) =
+   (* IF s <= target word,
+        s2.I := s2.I || {S1.I..S0.I} pop(3)
+         --- S2.A must be forced
+      ELSE
+        s2.A[s1.I..s0.I] := 1...1; pop(3)
+         --- S2.A must be forced *)
   BEGIN
     EVAL Force_pair (commute := FALSE);
     IF (s <= Target.Word.size) THEN
@@ -2927,6 +2933,10 @@ PROCEDURE Set_range (s: Size) =
   END Set_range;
 
 PROCEDURE Set_singleton (s: Size) =
+  (* IF s <= target word,
+       s1.I := s1.I || Word.Shift (1, s0.I); pop(2)
+     ELSE
+       s1.A [s0.I] := 1; pop(2) *)
   BEGIN
     EVAL Force_pair (commute := FALSE);                         (* cg stack: *)
     IF (s <= Target.Integer.size) THEN (* x is the value *)     (* x, a *)
