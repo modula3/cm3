@@ -546,13 +546,10 @@ PROCEDURE Declare (t: T): BOOLEAN =
     typeUID    := Type.GlobalUID (t.tipe);
     mtype      := Type.CGType (t.tipe, in_memory := TRUE);
     is_struct  := Type.IsStructured (t.tipe);
-    name       : TEXT;
-    qualID     : M3ID.T;
-    bssID      : M3ID.T;
+    externName : TEXT;
     externM3ID : M3ID.T;
   BEGIN
     Type.Compile (t.tipe);
-    qualID := M3ID.Add (t.qualName);
 
     t.cg_var  := NIL;
     t.bss_var := NIL;
@@ -568,8 +565,8 @@ PROCEDURE Declare (t: T): BOOLEAN =
 
     (* declare the actual variable *)
     IF (t.external) THEN
-      name := Value.GlobalName (t, dots := FALSE, with_module := FALSE);
-      externM3ID := M3ID.Add (name);
+      externName := Value.GlobalName (t, dots := FALSE, with_module := FALSE);
+      externM3ID := M3ID.Add (externName);
       t.nextTWACGVar := TsWCGVars;  TsWCGVars := t;
       t.cg_var
         := CG.Import_global (externM3ID, size, align, mtype, 0(*no mangling*));
@@ -580,14 +577,13 @@ PROCEDURE Declare (t: T): BOOLEAN =
 
     ELSIF (t.global) THEN
       <*ASSERT t.allocated*>
-      CG.Declare_global_field (qualID, t.offset, size, typeUID, FALSE);
+      CG.Declare_global_field (t.name, t.offset, size, typeUID, FALSE);
       IF (t.initZero) THEN t.initDone := TRUE END;
       t.cg_align := align;
       IF (t.indirect) THEN
         t.cg_align := t.align;
         t.nextTWACGVar := TsWCGVars;  TsWCGVars := t;
-        bssID := M3ID.Add (t.qualName & "_BSS_");
-        t.bss_var := CG.Declare_global (bssID, t.size, t.cg_align,
+        t.bss_var := CG.Declare_global (t.name, t.size, t.cg_align,
                               CG.Type.Struct, Type.GlobalUID (t.tipe),
                               exported := FALSE, init := FALSE);
         CG.Init_var (t.offset, t.bss_var, 0, FALSE);
@@ -604,14 +600,14 @@ PROCEDURE Declare (t: T): BOOLEAN =
       (** align := FindAlignment (align, size); **)
       t.cg_align := align;
       t.nextTWACGVar := TsWCGVars;  TsWCGVars := t;
-      t.cg_var := CG.Declare_local (qualID, size, align, mtype, typeUID,
+      t.cg_var := CG.Declare_local (t.name, size, align, mtype, typeUID,
                                     t.need_addr, t.up_level, CG.Maybe);
 
     ELSIF (t.indirect) THEN
       (* formal passed by reference => param is an address *)
       t.cg_align := align;
       t.nextTWACGVar := TsWCGVars;  TsWCGVars := t;
-      t.cg_var := CG.Declare_param (qualID, size, align, mtype, typeUID,
+      t.cg_var := CG.Declare_param (t.name, size, align, mtype, typeUID,
                                     t.need_addr, t.up_level, CG.Maybe);
 
     ELSE
@@ -619,7 +615,7 @@ PROCEDURE Declare (t: T): BOOLEAN =
       (** align := FindAlignment (align, size); **)
       t.cg_align := align;
       t.nextTWACGVar := TsWCGVars;  TsWCGVars := t;
-      t.cg_var := CG.Declare_param (qualID, size, align, mtype, typeUID,
+      t.cg_var := CG.Declare_param (t.name, size, align, mtype, typeUID,
                                     t.need_addr, t.up_level, CG.Maybe);
     END;
 
@@ -692,7 +688,7 @@ PROCEDURE ConstInit (t: T) =
         := Module.Allocate
              (initSize, initAlign, TRUE, "init value for ", initM3ID);
       t.initAllocated := TRUE;
-      CG.Declare_global_field (initM3ID, t.initValOffset, initSize, typeUID, TRUE);
+      CG.Declare_global_field (t.name, t.initValOffset, initSize, typeUID, TRUE);
       CG.Comment
         (t.initValOffset, TRUE, "init value for ", initName);
       Expr.PrepLiteral (constInitExpr, initRepType, TRUE);

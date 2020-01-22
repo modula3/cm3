@@ -206,7 +206,6 @@ PROCEDURE Declarer (t: T): BOOLEAN =
   VAR typeUID: CG.TypeUID;
   VAR size, depth: INTEGER;
   VAR info: Type.Info;
-  VAR addrID, valueID: M3ID.T;
   BEGIN
     IF (t.exported) THEN Type.Compile (t.tipe) END;
     IF (NOT t.structured) THEN RETURN TRUE END;
@@ -220,18 +219,16 @@ PROCEDURE Declarer (t: T): BOOLEAN =
       EVAL Scope.ToUnit (t); (* force the module to be imported *)
     ELSE
       SetGlobals (t);
-      addrID := M3ID.Add (t.qualName & "_ADDR_");
       CG.Declare_global_field
-        (addrID, t.offset, Target.Address.size,
+        (t.name, t.offset, Target.Address.size,
          CG.Declare_indirect (typeUID), is_const := FALSE);
       IF depth > 0 THEN (* t.tipe is an open array *)
-        valueID := M3ID.Add (t.qualName & "_DOPE_");
         size := Target.Address.pack + depth * Target.Integer.pack;
       ELSE
-        valueID := M3ID.Add (t.qualName);
         size  := info.size;
       END;
-      CG.Declare_global_field (valueID, t.coffset, size, typeUID, is_const := TRUE);
+      CG.Declare_global_field
+        (t.name, t.coffset, size, typeUID, is_const := TRUE);
       t.gen_init := TRUE;
     END;
 
