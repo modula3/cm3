@@ -491,6 +491,7 @@ PROCEDURE IllegalRecursion (t: T) =
 
 (*EXPORTED*)
 PROCEDURE IsEqual (a, b: T;  x: Assumption): BOOLEAN =
+  (* Considers ErrType.T to be equal to any type. *)
   VAR assume: AssumptionRec;  y: Assumption;  ac, bc: Class;
   BEGIN
     IF (a = NIL) OR (b = NIL) THEN RETURN FALSE END;

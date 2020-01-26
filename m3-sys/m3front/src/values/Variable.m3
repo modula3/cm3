@@ -304,7 +304,7 @@ PROCEDURE Check (t: T;  VAR cs: Value.CheckState) =
     IF (info.isEmpty) THEN
       Error.ID (t.name, "Variable has empty type.");
     END;
-    IF Type.IsEqual (t.tipe, Null.T, NIL) THEN
+    IF t.tipe = Null.T THEN
       Error.WarnID (1, t.name, "Variable has type NULL."); 
     END;
 
