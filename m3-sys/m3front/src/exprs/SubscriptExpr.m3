@@ -284,7 +284,6 @@ PROCEDURE Prep (p: P) =
       | Type.Class.Object, Type.Class.Opaque, Type.Class.Ref =>
         Compile (p);
         RunTyme.EmitCheckLoadTracedRef ();
-(* CHECK^ When do we need this? *)
         p.tmp := CG.Pop ();
       ELSE
         (* no check *)
