@@ -1,0 +1,153 @@
+
+% Partly copied from CVSup by John D. Polstra
+%
+% Copyright 1999-2003 John D. Polstra.
+% All rights reserved.
+%
+% Redistribution and use in source and binary forms, with or without
+% modification, are permitted provided that the following conditions
+% are met:
+% 1. Redistributions of source code must retain the above copyright
+%    notice, this list of conditions and the following disclaimer.
+% 2. Redistributions in binary form must reproduce the above copyright
+%    notice, this list of conditions and the following disclaimer in the
+%    documentation and/or other materials provided with the distribution.
+% 3. All advertising materials mentioning features or use of this software
+%    must display the following acknowledgment:
+%      This product includes software developed by John D. Polstra.
+% 4. The name of the author may not be used to endorse or promote products
+%    derived from this software without specific prior written permission.
+%
+% THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+% IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+% OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+% IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+% INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+% NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+% DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+% THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+% (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+% THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+%
+% $Id: version.quake,v 1.29 2014-06-24 15:50:10 rodney Exp $
+
+
+%------------------------------------------------------------------------------
+
+proc FileExists(a) is
+    return not stale(a, a)
+end
+
+%------------------------------------------------------------------------------
+
+%
+% Generate the "Version.i3" implementation file. It contains the release
+% name, if any, else the compilation date and time, and other information
+% about the environment used to build the compiler.
+%
+proc version_impl(name) is
+    local filename = name & ".i3"
+    local tempname = "_m3temp_" & filename
+    local ret = 0
+
+    if not defined("_all")
+        return
+    end
+
+    > tempname in
+        write("INTERFACE ", name, ";", CR)
+    end
+    local NOW = "not available"
+    if defined("datetime")
+        NOW = datetime()
+    end
+    include(".." & SL & ".." & SL & ".." & SL & ".." & SL & "scripts" & SL & "version.quake")
+    >> tempname in
+        write("CONST", CR)
+        write("  Text = \"", CM3VERSION, "\";", CR)
+        write("  Number = \"", CM3VERSIONNUM, "\";", CR)
+        write("  LastChanged = \"", CM3LASTCHANGED, "\";", CR)
+        write("  Created = \"", NOW, "\";", CR)
+
+        %
+        % When cm3 uses this data, it is describing the HOST.
+        % They are reasonable defaults for the TARGET, ASSUMING a NATIVE build.
+        %
+        write("  Target = \"", TARGET, "\";", CR)
+        write("  OSType = \"", OS_TYPE, "\";", CR)
+        write("  WordSize = \"", WORD_SIZE, "\";", CR)
+
+        local GNUPlatform = ""
+        if defined ("GNU_PLATFORM")
+            GNUPlatform = GNU_PLATFORM
+        end
+        write("  GNUPlatform = \"", GNUPlatform, "\";", CR)
+
+        local CCompiler = ""
+        if defined ("C_COMPILER")
+            CCompiler = C_COMPILER
+        end
+        write("  CCompiler = \"", CCompiler, "\";", CR)
+
+        local Linker = ""
+        if defined ("LINKER")
+            Linker = LINKER
+        end
+        write("  Linker = \"", Linker, "\";", CR)
+
+        local ThreadLibrary = ""
+        if defined ("THREAD_LIBRARY")
+            ThreadLibrary = THREAD_LIBRARY
+        end
+        write("  ThreadLibrary = \"", ThreadLibrary, "\";", CR)
+
+        local WindowLibrary = ""
+        if defined ("WINDOW_LIBRARY")
+            WindowLibrary = WINDOW_LIBRARY
+        end
+        write("  WindowLibrary = \"", WindowLibrary, "\";", CR)
+
+        local GNUMake = "make"
+        if defined("GNU_MAKE")
+            GNUMake = GNU_MAKE
+        end
+        write("  GNUMake = \"", GNUMake, "\";", CR)
+
+        local readonly proc map(a, b) is
+            if a contains b
+                return a{b}
+            end
+            return b
+        end
+
+        write("  BackendMode = \"",
+            map({"0" : "IntegratedObject",
+                 "1" : "IntegratedAssembly",
+                 "2" : "ExternalObject",
+                 "3" : "ExternalAssembly",
+                 "4" : "C",
+                 "5" : "IntLlvmObj",
+                 "6" : "IntLlvmAsm",
+                 "7" : "ExtLlvmObj",
+                 "8" : "ExtLlvmAsm",
+                 "9" : "StAloneLlvmObj",
+                 "10": "StAloneLlvmAsm"}
+               , M3_BACKEND_MODE), "\";", CR)
+
+        local TargetNaming = ""
+        if defined("TARGET_NAMING")
+            TargetNaming = TARGET_NAMING
+        else if defined("NAMING_CONVENTIONS")
+            TargetNaming = NAMING_CONVENTIONS
+        end end
+        if TargetNaming
+            TargetNaming = map({"0" : "Unix", "1" : "GrumpyUnix", "2" : "Win32"}, TargetNaming)
+        end
+        write("  TargetNaming      = \"", TargetNaming, "\";", CR)
+        write("  NamingConventions = \"", TargetNaming, "\";", CR)
+
+        write("END ", name, ".", CR)
+    end
+    cp_if(tempname, filename)
+    derived_interface(name, HIDDEN)
+end

@@ -3,6 +3,9 @@ import("m3middle")
 import("m3quake")
 import("llvm9bindings")
 
+include("version.quake")
+version_impl("Version")
+
 module("M3CG_LLVM")
 
 implementation("Main")

@@ -25,6 +25,7 @@ IMPORT RefSeq;
 IMPORT Text,TextExtras;
 IMPORT TextRefTbl;
 IMPORT TextSeq;
+IMPORT Version;
 IMPORT Word;
 IMPORT Wr;
 
@@ -1064,8 +1065,7 @@ PROCEDURE EmbedVersion() =
     cm3Ver,llvmVer,ident : TEXT;
     llmajor,llminor : Ctypes.int;    
   BEGIN
-    cm3Ver := "5.8";
-(* FIXME - Get proper cm3 version *)
+    cm3Ver := Version.Text;
     LLVM.GetLLVMVersion(llmajor,llminor);
     llvmVer := ItoT(llmajor) & "." & ItoT(llminor);
     ident := "versions- cm3: " & cm3Ver & " llvm: " & llvmVer;
