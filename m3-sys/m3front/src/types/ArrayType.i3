@@ -26,21 +26,16 @@ PROCEDURE Split (array: Type.T; VAR index, element: Type.T): BOOLEAN;
    returns TRUE, sets index to NIL, and sets element to the appropriate
    type.  Otherwise, returns FALSE *)
 
-PROCEDURE EltType (array: Type.T): Type.T;
-(* If 'array' is a fixed array type, its element type, otherwise NIL.
-   *BUT NOTE*: If elements are packed, this is the alignment of the
-   unpacked element type !!! *)
-
 PROCEDURE EltPack (array: Type.T): INTEGER;
 (* If 'array' is an array type, returns the packed size in bits of
    its elements.  If 'array' is an open array type, this is for the
-   outermost fixed array dimension, if such exists.  Otherwise,
-   returns 0. *)
+   outermost fixed array dimension, if such exists.  If t is not an
+   array type, returns 0. *)
 
 PROCEDURE EltAlign (array: Type.T): INTEGER;
 (* If 'array' is an array type, returns the bit alignment of its
-   elements.  If t is open, returns the first non-open or non-array
-   alignment. Otherwise, returns Target.Byte. *)
+   elements.  If t is open, returns the nearest non-open or non-array
+   alignment. If array is not an array type, returns Target.Byte. *)
 
 PROCEDURE OpenCousin (t: Type.T): Type.T;
 (* If 't' is an 'ARRAY I OF X', returns 'ARRAY OF X', otherwise
@@ -49,6 +44,7 @@ PROCEDURE OpenCousin (t: Type.T): Type.T;
 PROCEDURE EltsAreBitAddressed (t: Type.T): BOOLEAN;
 (* Returns TRUE if the array's elements are not guaranteed to be byte aligned.
    Works on a fixed or open array. *)
+(* PRE: t is Checked. *)
 
 PROCEDURE TotalDepth (t: Type.T): INTEGER;
 (* Total number of dimensions of t, open + fixed.
@@ -62,5 +58,6 @@ PROCEDURE GenIndex (t: Type.T);
 (* Works for an open array too, but uses elt_pack of the first nonopen element
    type, so, for an open array of depth > 1, 'index' must have been already
    multiplied by the product of element counts of inner open dimensions. *)
+(* PRE: t is Checked. *)
 
 END ArrayType.

@@ -19,7 +19,8 @@ TYPE
         NonopenEltAlign         : INTEGER;
         NonopenEltPack          : INTEGER;
         NonopenEltsBitAddressed : BOOLEAN := FALSE;
-        (* ^Could be FALSE even if elements are BITS n FOR ... *) 
+        (* ^Could be FALSE even if elements are BITS n FOR, if 
+            n is divisible by 8. *) 
       OVERRIDES
         check      := Check;
         no_straddle:= IsStraddleFree;
@@ -47,6 +48,16 @@ PROCEDURE New (EltType: Type.T): Type.T =
     RETURN p;
   END New;
 
+PROCEDURE Reduce (t: Type.T): P =
+  (* Strip Named and Packed.  NIL if that's not an open array type. *) 
+  BEGIN
+    IF (t = NIL) THEN RETURN NIL END;
+    IF (t.info.class = Type.Class.Named) THEN t := Type.Strip (t) END;
+    IF (t.info.class = Type.Class.Packed) THEN t := Type.StripPacked (t) END;
+    IF (t.info.class # Type.Class.OpenArray) THEN RETURN NIL END;
+    RETURN t;
+  END Reduce;
+
 (* EXPORTED: *)
 PROCEDURE Is (t: Type.T): BOOLEAN =
   BEGIN
@@ -64,7 +75,8 @@ PROCEDURE Split (t: Type.T;  VAR EltType: Type.T): BOOLEAN =
 
 (* EXPORTED: *)
 PROCEDURE EltPack (t: Type.T): INTEGER =
-(* Of outermost nonopen element. *)
+(* If 'array' is an open array type, returns the packed size in bits of
+   the nearest non-open elements.  Otherwise, returns 0. *)
   VAR p := Reduce (t);
   BEGIN
     IF (p # NIL)
@@ -76,11 +88,11 @@ PROCEDURE EltPack (t: Type.T): INTEGER =
 (* EXPORTED: *)
 PROCEDURE EltAlign (t: Type.T): INTEGER =
 (* If 'array' is an open array type, returns the bit alignment of
-   the outermost non-open elements.
+   the nearest non-open or non-array elements.
    *BUT NOTE*: If elements are packed, this is the alignment of the
    unpacked element type !!!
    Otherwise, returns Target.Byte. *)
-(* Of first nonopen element. *)
+(* PRE: t is Checked. *)
   VAR p := Reduce (t);
   BEGIN
     IF (p # NIL)
@@ -91,7 +103,8 @@ PROCEDURE EltAlign (t: Type.T): INTEGER =
 
 (* EXPORTED: *)
 PROCEDURE EltsAreBitAddressed (t: Type.T): BOOLEAN =
-(* Of first nonopen element. *)
+(* Returns TRUE if t is an open array whose nearest non-open elements are not
+   at least byte-aligned. *)
   VAR p:= Reduce (t);
   BEGIN
     RETURN (p # NIL) AND (p.NonopenEltsBitAddressed);
@@ -149,7 +162,7 @@ PROCEDURE Check (p: P) =
         IF Target.Word64.size MOD p.NonopenEltPack # 0 THEN
            (* ^Allow 64-bit element pack, even on 32-bit target. *) 
           Error.Msg
-            ("CM3 restriction: open array scalar element size must evenly "
+            ("CM3 restriction: open array scalar element bit size must evenly "
              & "divide 64 bits.");
           p.NonopenEltPack := p.NonopenEltAlign;
         END;
@@ -201,8 +214,8 @@ PROCEDURE IsStraddleFree
 
 (* EXPORTED: *)
 PROCEDURE DeclareDopeTemp (t: Type.T): CG.Var =
-(* If 't' is an open array type, declare and return a temporary to hold its
-   dope vector, otherwise abort. *)
+(* If 't' is an open array type, declare and return a temporary variable to
+   hold its dope vector, otherwise abort. *)
   VAR
     p    := Reduce (t);
     size := Target.Address.pack + OpenDepth (p) * Target.Integer.pack;
@@ -262,15 +275,6 @@ PROCEDURE Subtyper (a: P;  tb: Type.T): BOOLEAN =
     RETURN Type.IsEqual (ta, tb, NIL);
   END Subtyper;
 
-PROCEDURE Reduce (t: Type.T): P =
-  BEGIN
-    IF (t = NIL) THEN RETURN NIL END;
-    IF (t.info.class = Type.Class.Named) THEN t := Type.Strip (t) END;
-    IF (t.info.class = Type.Class.Packed) THEN t := Type.StripPacked (t) END;
-    IF (t.info.class # Type.Class.OpenArray) THEN RETURN NIL END;
-    RETURN t;
-  END Reduce;
-
 (* Externally dispatched-to: *)
 PROCEDURE InitCoster (p: P; zeroed: BOOLEAN): INTEGER =
   VAR n, m, res: Target.Int;  x: INTEGER;
@@ -292,9 +296,9 @@ PROCEDURE GenInit (p: P;  zeroed: BOOLEAN) =
     top   : CG.Label;
     cnt   : CG.Val;
     max   : CG.Val;
-    array := CG.Pop (); (* capture the array's l-value *)
+    array := CG.Pop (); (* capture the array's L-value *)
   BEGIN
-    (* compute the number of non-open elements *)
+    (* Gen RT code to compute the product number of non-open elements *)
     FOR i := 0 TO depth-1 DO
       CG.Push (array);
       CG.Open_size (i);

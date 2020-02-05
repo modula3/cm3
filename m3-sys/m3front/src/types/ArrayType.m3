@@ -27,7 +27,8 @@ TYPE
         fixedDepth       : INTEGER; (* # of dimensions, lazily computed. *) 
         openCousin       : Type.T;  (* == ARRAY OF elementType *)
         eltsBitAddressed : BOOLEAN;
-        (* ^Could be FALSE even if elements are BITS n FOR ... *)
+        (* ^Could be FALSE even if elements are BITS n FOR, if 
+            n is divisible by 8. *) 
       OVERRIDES
         check      := Check;
         no_straddle:= IsStraddleFree;
@@ -65,6 +66,16 @@ PROCEDURE Parse (): Type.T =
       RETURN OpenArrayType.New (Type.Parse ());
     END;
   END Parse;
+
+PROCEDURE Reduce (t: Type.T): P =
+  (* Strip Named and Packed.  NIL if that's not an array type. *) 
+  BEGIN
+    IF (t = NIL) THEN RETURN NIL END;
+    IF (t.info.class = Type.Class.Named) THEN t := Type.Strip (t) END;
+    IF (t.info.class = Type.Class.Packed) THEN t := Type.StripPacked (t) END;
+    IF (t.info.class # Type.Class.Array) THEN RETURN NIL END;
+    RETURN t;
+  END Reduce;
 
 (* EXPORTED: *)
 PROCEDURE New (index, element: Type.T): Type.T =
@@ -152,23 +163,11 @@ PROCEDURE Split (t: Type.T;  VAR index, element: Type.T): BOOLEAN =
   END Split;
 
 (* EXPORTED: *)
-PROCEDURE EltType (array: Type.T): Type.T =
-(* If 'array' is a fixed array type, its element type, otherwise NIL. *)
-  VAR p := Reduce (array);
-  BEGIN
-    IF p # NIL THEN
-      RETURN p.indexType;
-    ELSE
-      RETURN NIL;
-    END;
-  END EltType;
-
-(* EXPORTED: *)
 PROCEDURE EltPack (t: Type.T): INTEGER =
 (* If 'array' is an array type, returns the packed size in bits of
    its elements.  If 'array' is an open array type, this is for the
-   outermost fixed array dimension, if such exists.  Otherwise,
-   returns 0. *)
+   outermost fixed array dimension, if such exists.  If t is not an
+   array type, returns 0. *)
   VAR p := Reduce (t);
   BEGIN
     IF (p # NIL) THEN
@@ -182,6 +181,9 @@ PROCEDURE EltPack (t: Type.T): INTEGER =
 
 (* EXPORTED: *)
 PROCEDURE EltAlign (t: Type.T): INTEGER =
+(* If 'array' is an array type, returns the bit alignment of its
+   elements.  If t is open, returns the nearest non-open or non-array
+   alignment. If array is not an array type, returns Target.Byte. *)
   VAR p:= Reduce (t);
   BEGIN
     IF (p # NIL) THEN
@@ -195,6 +197,8 @@ PROCEDURE EltAlign (t: Type.T): INTEGER =
 
 (* EXPORTED: *)
 PROCEDURE OpenCousin (t: Type.T): Type.T =
+(* If 't' is an 'ARRAY I OF X', returns 'ARRAY OF X', otherwise
+   returns 't'. *)
   VAR p := Reduce (t);
   BEGIN
     IF (p # NIL) THEN
@@ -209,6 +213,7 @@ PROCEDURE OpenCousin (t: Type.T): Type.T =
 
 (* EXPORTED: *)
 PROCEDURE EltsAreBitAddressed (t: Type.T): BOOLEAN =
+(* PRE: t is Checked. *)
   VAR p:= Reduce (t);
   BEGIN
     RETURN (p # NIL) AND (p.eltsBitAddressed);
@@ -223,6 +228,7 @@ PROCEDURE GenIndex (t: Type.T) =
 (* Works for an open array too, but uses elt_pack of the first nonopen element
    type, so, for an open array of depth > 1, 'index' must have been already
    multiplied by the product of element counts of inner open dimensions. *)
+(* PRE: t is Checked. *)
   VAR array_info : Type.Info;
   VAR p := Reduce (t); (* If non-NIL, p is a fixed array type. *) 
   VAR bit_index: CG.Val;
@@ -274,17 +280,19 @@ PROCEDURE Check (p: P) =
   BEGIN
     p.indexType := Type.Check (p.indexType);
     IF NOT Type.IsOrdinal (p.indexType) THEN
-      Error.Msg ("array index type must be an ordinal type");
+      Error.Msg ("Array index type must be an ordinal type (2.2.3).");
       p.indexType := ErrType.T;
     END;
 
     p.elementType := Type.CheckInfo (p.elementType, (*OUT*) elt_info);
     IF (elt_info.class = Type.Class.OpenArray) THEN
-      Error.Msg ("fixed array element type cannot be an open array");
+      Error.Msg ("fixed array element type cannot be open array (2.2.3).");
     END;
 
     IF NOT TInt.ToInt (Type.Number (p.indexType), (*OUT*) p.n_elts) THEN
-      Error.Msg ("CM3 restriction: array has too many elements");
+      Error.Msg ("CM3 restriction: array type has too many elements");
+(* FIXME: Tell the user how many is allowed.*)
+(* FIXME: Cross-compile 32-bit host to 64. *)
       p.n_elts := 1;
     END;
 
@@ -305,6 +313,8 @@ PROCEDURE Check (p: P) =
     IF (p.n_elts > 0) AND (p.elt_pack > 0)
       AND (p.n_elts > MaxBitSize DIV p.elt_pack) THEN
       Error.Msg ("CM3 restriction: array type too large");
+(* FIXME: Tell the user how large it can be.*)
+(* FIXME: Cross-compile 32-bit host to 64. *)
       min_size := 0;
       p.total_size := 0;
     ELSE
@@ -320,8 +330,9 @@ PROCEDURE Check (p: P) =
     p.info.class     := Type.Class.Array;
     p.info.isTraced  := elt_info.isTraced;
     p.info.isEmpty   := elt_info.isEmpty;
-    p.info.isSolid   := elt_info.isSolid AND (p.elt_pack <= elt_info.size)
-                            AND (p.total_size <= min_size);
+    p.info.isSolid   := elt_info.isSolid
+                        AND (p.elt_pack <= elt_info.size)
+                        AND (p.total_size <= min_size);
     p.info.hash      := Word.Plus (Word.Times (23, p.n_elts),
                               Word.Times (29, p.elt_pack));
   END Check;
@@ -346,8 +357,8 @@ PROCEDURE ArrayAlignWithPackedElts (p: P): INTEGER =
       END;
     END;
     Error.Msg
-      ("CM3 restriction: scalars in packed array elements cannot cross "
-        & "word boundaries");
+      ("CM3 restriction: Scalars in packed array elements cannot cross "
+        & "word boundaries (2.2.5).");
     RETURN Target.Byte;
   END ArrayAlignWithPackedElts;
 
@@ -417,15 +428,6 @@ PROCEDURE Subtyper (a: P;  tb: Type.T): BOOLEAN =
 
     RETURN Type.IsEqual (ta, tb, NIL);
   END Subtyper;
-
-PROCEDURE Reduce (t: Type.T): P =
-  BEGIN
-    IF (t = NIL) THEN RETURN NIL END;
-    IF (t.info.class = Type.Class.Named) THEN t := Type.Strip (t) END;
-    IF (t.info.class = Type.Class.Packed) THEN t := Type.StripPacked (t) END;
-    IF (t.info.class # Type.Class.Array) THEN RETURN NIL END;
-    RETURN t;
-  END Reduce;
 
 (* Externally dispatched-to: *) 
 PROCEDURE InitCoster (p: P; zeroed: BOOLEAN): INTEGER =

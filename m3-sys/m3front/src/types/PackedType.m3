@@ -73,7 +73,7 @@ PROCEDURE GetPackedSize (p: P): INTEGER =
     IF (p.newSize = NO_SIZE) AND (p.sizeE # NIL) THEN
       e := Expr.ConstValue (p.sizeE);
       IF (e = NIL) OR NOT IntegerExpr.ToInt (e, newSize)
-        THEN Error.Msg ("BITS FOR size must be a constant integer");
+        THEN Error.Msg ("BITS FOR size must be a constant integer (2.2.5)");
         ELSE p.sizeE := e;  p.newSize := newSize;
       END;
     END;
@@ -102,20 +102,38 @@ PROCEDURE Check (p: P) =
     baseInfo: Type.Info;
   VAR e: Expr.T;
   BEGIN
+    LOOP
+      TYPECASE p.baseType OF
+      | NULL => EXIT
+      | P (packedBaseType)
+        => p.baseType := packedBaseType.baseType;
+      ELSE EXIT
+      END;
+    END;
+    
     p.baseType := Type.CheckInfo (p.baseType, baseInfo);
+    IF baseInfo.class = Type.Class.OpenArray THEN
+      Error.Msg
+        ("CM3 restriction: 'BITS' cannot be applied to an open array type"
+         & "(2.2.5).");
+     p.info := baseInfo;
+     p.info.class := Type.Class.Packed;
+     RETURN;
+    END;
     
     IF (p.sizeE # NIL) THEN
       Expr.TypeCheck (p.sizeE, cs);
       e := Expr.ConstValue (p.sizeE);
       IF (e = NIL) OR NOT IntegerExpr.ToInt (e, p.newSize)
       THEN
-        Error.Msg ("BITS FOR size must be a constant integer");
+        Error.Msg ("BITS FOR size must be a constant integer (2.2.5).");
         p.newSize := baseInfo.size;
       ELSE
         p.sizeE := e;
         IF p.newSize < baseInfo.min_size THEN
           Error.Int
-            (baseInfo.min_size, "BITS FOR size too small, must be at least");
+            (baseInfo.min_size,
+             "BITS FOR size too small for base type, must be at least (2.2.5)");
           p.newSize := baseInfo.min_size; 
         END;
       END; 
@@ -123,7 +141,7 @@ PROCEDURE Check (p: P) =
 
     p.info.size      := p.newSize;
     p.info.min_size  := p.newSize;
-    p.info.alignment := baseInfo.alignment; (* Inherit from base type. *) 
+    p.info.alignment := baseInfo.alignment (* Inherit from base type. *);
     p.info.mem_type  := baseInfo.mem_type;
     p.info.stk_type  := baseInfo.stk_type;
     p.info.class     := Type.Class.Packed;
