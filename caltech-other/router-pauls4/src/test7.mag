@@ -1,0 +1,31 @@
+magic
+tech scmos
+timestamp 1039681332
+<< metal1 >>
+rect 24 24 61 27
+rect 24 12 27 24
+rect 32 16 37 21
+rect 42 12 45 24
+rect 48 16 53 21
+rect 57 12 61 24
+rect 24 8 61 12
+rect 24 -4 29 8
+rect 32 0 37 5
+rect 41 -4 45 8
+rect 48 0 53 5
+rect 57 -4 61 8
+rect 24 -8 61 -4
+rect 24 -20 27 -8
+rect 32 -16 37 -11
+rect 42 -20 45 -8
+rect 48 -16 53 -11
+rect 57 -20 61 -8
+rect 24 -23 61 -20
+<< labels >>
+rlabel metal1 51 2 51 2 3 x
+rlabel metal1 35 2 35 2 3 x
+rlabel metal1 49 18 49 18 3 y
+rlabel metal1 34 18 34 18 3 z
+rlabel metal1 49 -14 49 -14 3 y
+rlabel metal1 34 -14 34 -14 3 z
+<< end >>

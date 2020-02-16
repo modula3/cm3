@@ -1,0 +1,6 @@
+/* $Id$ */
+import("libm3")
+import("magic")
+
+implementation("Main")
+program("tileit")

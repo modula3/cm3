@@ -1,0 +1,9 @@
+/* $Id$ */
+
+import("libm3")
+import("magicextras")
+import("router")
+
+implementation("Main")
+
+program("testslasher")

@@ -1,0 +1,9 @@
+/* $Id$ */
+
+import("libm3")
+import("router")
+import("cit_util")
+
+implementation("Main")
+
+program("gentest")

@@ -1,0 +1,17 @@
+import("libm3")
+import("bool")
+import("bdd")
+
+Interface("SopFormatStyle")
+Generic_module("SopG")
+Generic_interface("SopRepG")
+Generic_module("SopLiteralG")
+
+Generic_module("SopConjunctG")
+
+template("sopgeneric")
+
+Sopgeneric("Sop", "Bool", "BoolTextTbl", "BoolImpl") % old version
+Sopgeneric("SopBDD", "BDD", "BDDTextTbl", "BDDImpl") % old version
+
+library("sop")

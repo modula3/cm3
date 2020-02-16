@@ -1,0 +1,77 @@
+magic
+tech scmos
+timestamp 1065832382
+<< ntransistor >>
+rect 5 4 7 20
+rect 10 4 12 20
+rect 15 4 17 20
+<< ptransistor >>
+rect 5 32 7 53
+rect 10 32 12 53
+rect 15 32 17 53
+<< ndiffusion >>
+rect 0 13 5 20
+rect 4 4 5 13
+rect 7 4 10 20
+rect 12 4 15 20
+rect 17 16 18 20
+rect 17 4 20 16
+<< pdiffusion >>
+rect 4 44 5 53
+rect 0 32 5 44
+rect 7 32 10 53
+rect 12 32 15 53
+rect 17 36 20 53
+rect 17 32 18 36
+<< ndcontact >>
+rect 0 4 4 13
+rect 18 16 22 20
+<< pdcontact >>
+rect 0 44 4 53
+rect 18 32 22 36
+<< polysilicon >>
+rect 10 59 23 61
+rect 5 53 7 56
+rect 10 53 12 59
+rect 21 57 23 59
+rect 15 53 17 56
+rect 5 29 7 32
+rect 0 25 7 29
+rect 5 20 7 25
+rect 10 20 12 32
+rect 15 29 17 32
+rect 15 25 20 29
+rect 15 20 17 25
+rect 5 1 7 4
+rect 10 1 12 4
+rect 15 1 17 4
+<< polycontact >>
+rect 21 53 25 57
+<< genericcontact >>
+rect 1 26 3 28
+rect 17 26 19 28
+<< metal1 >>
+rect -2 60 30 65
+rect 0 53 4 60
+rect 17 53 21 56
+rect 16 48 20 53
+rect 10 32 18 35
+rect 10 29 13 32
+rect 0 24 4 29
+rect 8 24 13 29
+rect 16 24 20 29
+rect 10 20 13 24
+rect 10 17 18 20
+rect 0 1 4 4
+rect -2 -3 30 1
+<< labels >>
+rlabel metal1 -1 -1 -1 -1 2 GND!
+rlabel metal1 -1 63 -1 63 3 Vdd!
+rlabel metal1 2 27 2 27 1 i0
+rlabel metal1 10 27 10 27 1 o0
+rlabel metal1 18 27 18 27 7 i2
+rlabel space -2 -5 30 67 1 _
+rlabel metal1 18 51 18 51 1 i1
+rlabel ndiffusion 4 4 20 17 1 nwidth_north@
+rlabel pdiffusion 4 35 20 53 1 pwidth_south@
+<< end >>

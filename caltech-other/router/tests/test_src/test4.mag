@@ -1,0 +1,127 @@
+magic
+tech scmos
+timestamp 976070675
+<< error_s >>
+rect 714 -483 718 -479
+rect 728 -483 732 -479
+<< metal1 >>
+rect -524 1661 -517 1664
+rect 324 1562 331 1565
+rect 893 1369 900 1372
+rect 716 1330 723 1333
+rect 395 1320 402 1323
+rect -228 1245 -221 1248
+rect 337 1244 344 1247
+rect -726 1136 -719 1139
+rect 252 1104 259 1107
+rect 588 1069 595 1072
+rect 1260 1043 1267 1046
+rect 911 992 918 995
+rect 357 981 364 984
+rect -121 952 -114 955
+rect 579 844 586 847
+rect -479 803 -472 806
+rect 13 789 20 792
+rect 880 766 887 769
+rect -1058 732 -1051 735
+rect 288 705 295 708
+rect 162 701 169 704
+rect -26 669 -19 672
+rect 366 621 373 624
+rect 665 597 672 600
+rect 243 584 250 587
+rect 768 580 775 583
+rect -8 535 -1 538
+rect -174 503 -167 506
+rect 126 499 133 502
+rect 539 472 546 475
+rect 705 454 712 457
+rect 257 450 264 453
+rect 853 437 860 440
+rect -9 425 -2 428
+rect 979 362 986 365
+rect -112 355 -105 358
+rect 366 339 373 342
+rect -518 327 -511 330
+rect 207 325 214 328
+rect 714 283 721 286
+rect 94 264 101 267
+rect 1 221 8 224
+rect 175 194 182 197
+rect 169 181 176 184
+rect -43 174 -36 177
+rect 354 173 361 176
+rect 947 95 954 98
+rect 504 75 511 78
+rect 85 62 92 65
+rect 153 64 160 67
+rect 14 50 21 53
+rect 346 36 353 39
+rect 1404 34 1411 37
+rect 36 29 43 32
+rect 0 0 7 3
+rect 1562 1 1569 4
+rect 727 -479 734 -476
+use router_generated_wiring gen_wiring
+timestamp 976070675
+transform 1 0 0 0 1 0
+box 714 -483 732 -479
+<< labels >>
+rlabel metal1 246 585 246 585 1 y
+rlabel metal1 165 702 165 702 1 y
+rlabel metal1 -5 536 -5 536 1 y
+rlabel metal1 -109 356 -109 356 1 y
+rlabel metal1 291 706 291 706 1 y
+rlabel metal1 717 284 717 284 1 y
+rlabel metal1 708 455 708 455 1 y
+rlabel metal1 771 581 771 581 1 y
+rlabel metal1 668 598 668 598 1 y
+rlabel metal1 542 473 542 473 1 y
+rlabel metal1 327 1563 327 1563 1 y
+rlabel metal1 896 1370 896 1370 1 y
+rlabel metal1 914 993 914 993 1 y
+rlabel metal1 582 845 582 845 1 y
+rlabel metal1 591 1070 591 1070 1 y
+rlabel metal1 255 1105 255 1105 1 y
+rlabel metal1 340 1245 340 1245 1 y
+rlabel metal1 -521 1662 -521 1662 1 y
+rlabel metal1 398 1321 398 1321 1 y
+rlabel metal1 -118 953 -118 953 1 y
+rlabel metal1 -23 670 -23 670 1 y
+rlabel metal1 129 500 129 500 1 y
+rlabel metal1 4 222 4 222 1 y
+rlabel metal1 156 65 156 65 1 y
+rlabel metal1 730 -478 730 -478 1 y
+rlabel metal1 950 96 950 96 1 y
+rlabel metal1 1565 2 1565 2 1 y
+rlabel metal1 -1055 733 -1055 733 1 y
+rlabel metal1 -171 504 -171 504 1 y
+rlabel metal1 -723 1137 -723 1137 1 y
+rlabel metal1 260 451 260 451 1 y
+rlabel metal1 210 326 210 326 1 y
+rlabel metal1 178 195 178 195 1 y
+rlabel metal1 983 364 983 364 6 x
+rlabel metal1 508 77 508 77 6 x
+rlabel metal1 1408 36 1408 36 6 x
+rlabel metal1 361 983 361 983 6 x
+rlabel metal1 720 1332 720 1332 6 x
+rlabel metal1 884 768 884 768 6 x
+rlabel metal1 -224 1247 -224 1247 6 x
+rlabel metal1 857 439 857 439 6 x
+rlabel metal1 17 791 17 791 6 x
+rlabel metal1 -514 329 -514 329 6 x
+rlabel metal1 -475 805 -475 805 6 x
+rlabel metal1 370 623 370 623 6 x
+rlabel metal1 -5 427 -5 427 6 x
+rlabel metal1 173 183 173 183 6 x
+rlabel metal1 358 175 358 175 6 x
+rlabel metal1 370 341 370 341 6 x
+rlabel metal1 -39 176 -39 176 6 x
+rlabel metal1 350 38 350 38 6 x
+rlabel metal1 98 266 98 266 6 x
+rlabel metal1 89 64 89 64 6 x
+rlabel metal1 18 52 18 52 6 x
+rlabel metal1 40 31 40 31 6 x
+rlabel metal1 1264 1045 1264 1045 6 x
+rlabel metal1 4 2 4 2 6 x
+<< end >>

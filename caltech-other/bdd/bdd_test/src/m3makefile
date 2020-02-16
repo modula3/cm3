@@ -1,0 +1,9 @@
+/* $Id$ */
+
+import("libm3")
+import("bdd")
+import("cit_util")
+
+implementation("BDDTest")
+
+program("bddtest")

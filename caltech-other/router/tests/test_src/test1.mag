@@ -1,0 +1,17 @@
+magic
+tech scmos
+timestamp 976044815
+<< metal1 >>
+rect 28 7 40 10
+rect 0 0 12 3
+<< metal5 >>
+rect 21 28 24 39
+use router_generated_wiring gen_wiring
+timestamp 976044815
+transform 1 0 0 0 1 0
+box 0 0 1 1
+<< labels >>
+rlabel metal1 34 9 34 9 1 x
+rlabel metal5 23 34 23 34 5 x
+rlabel metal1 6 1 6 1 1 x
+<< end >>

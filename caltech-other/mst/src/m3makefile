@@ -1,0 +1,10 @@
+/* $Id$ */
+import ("libm3")
+
+template("mst")
+Generic_module("MST")
+
+Module("TwoIndexedLongreal")
+Module("TwoIndexedLongrealArraySort")
+
+library("mst")

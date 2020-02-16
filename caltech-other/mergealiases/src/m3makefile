@@ -1,0 +1,9 @@
+/* $Id$ */
+
+import("libm3")
+import("cit_util")
+
+implementation("Main")
+table("Text_TextSet_","Text","TextSet")
+
+program("mergealiases")

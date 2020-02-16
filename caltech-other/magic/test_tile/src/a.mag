@@ -1,0 +1,10 @@
+magic
+tech scmos
+timestamp 1024864593
+<< polysilicon >>
+rect 4 4 8 8
+<< metal1 >>
+rect 0 0 4 4
+<< labels >>
+rlabel space 0 0 8 8 6 tile
+<< end >>

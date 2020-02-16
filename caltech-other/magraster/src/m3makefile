@@ -1,0 +1,29 @@
+/* $Id$ */
+import ("libm3")
+import ("cit_util")
+import ("magic")
+
+build_generic_intf("PixelTintTbl", "OpenArrayTable", ["FramePixel","Tint"], HIDDEN)
+build_generic_impl("PixelTintTbl", "OpenArrayTable", ["FramePixel","Tint"])
+
+module("PaintLayer")
+interface("PaintLayerClass")
+module("BaseLayer")
+list("BaseLayer", "BaseLayer")
+list_sort("BaseLayer", "BaseLayer")
+module("Configuration")
+module("Tint")
+module("AlphaBlend")
+
+
+/* rects are stored in tables keyed on layer */
+
+table("LayerIntImpl", "BaseLayer", "Integer")
+module("LayerIntTbl")
+
+module("FrameBuffer")
+module("FramePixel")
+interface("FrameBufferOutput")
+
+implementation("Main")
+program("magraster")

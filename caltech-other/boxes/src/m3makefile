@@ -1,0 +1,93 @@
+/* $Id$ */
+
+import("libm3")
+import("set")
+import("ui")
+
+import("cit_util")
+import("mst")
+
+Interface("Compass")
+Module("Bbox")
+
+module("Loc")
+pqueue("Loc","Loc")
+
+Module("GridPoint")
+Listf("GridPoint","GridPoint")
+MkSet("GridPoint", "GridPoint")
+MkSetDef("GridPoint", "GridPoint")
+table("GridPointRef", "GridPoint", "Refany")
+keyPair("GridPoint", "GridPoint", "GridPoint")
+module("GridPointSetRoutines")
+Module("GridPointSetWithDistance")
+Sequence("GridPoint","GridPoint")
+
+
+Sequence("GridPointSet","GridPointSet")
+
+Mst("GridPointSet", "GridPointSetWithDistance", "GridPointSetSeq")
+
+
+Table("GridPoint_GridPointSet", "GridPoint", "GridPointSet")
+Module("ForbiddenSteps")
+
+Module("Cost")
+interface("CostRec")
+table("CostRec","GridPointPair","CostRec")
+/*implementation("CostRecWithTables")*/
+table("GridPointCostRec", "GridPoint", "CostRec")
+implementation("CostRecWithTables2")
+
+Module("RouteID")
+mkSet("RouteID","RouteID")
+mkSetDef("RouteID","RouteID")
+table("RouteIDRef","RouteID","Refany")
+
+table("IntPairRouteID","IntPair","RouteID")
+
+Interface("Filled")
+
+module("FilledArray")
+generic_module("ArrayServices")
+generic_module("ITree")
+
+implementation("FilledWithTables")
+
+module("Step")
+module("SimpleStep")
+module("GridGrid")
+table("Grid","GridPoint","GridGrid")
+
+Module("Route")
+Module("SimpleRoute")
+
+module("RipUp")
+Module("RouteState")
+
+Module("GridPointCube")
+
+Module("Components")
+Module("TwoComponents")
+Table("GridPointComps","GridPoint","Components")
+MkSet("Components","Components")
+MkSetDef("Components","Components")
+Table("ComponentsRef","Components","Refany")
+Table("RouteIDComps","RouteID","Components")
+Module("OnGridRouter")
+
+Module("CompRoute")
+Table("IntCompRoute", "Integer", "CompRoute")
+Table("GridPointRouteID","GridPoint","RouteID")
+Table("GridPointInt", "GridPoint", "Integer")
+
+Table("IntGridPointSet", "Integer", "GridPointSet")
+
+module("OnGridComponents")
+module("GridPointSort")
+
+library("boxes")
+
+
+
+

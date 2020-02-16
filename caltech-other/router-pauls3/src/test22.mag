@@ -1,0 +1,10 @@
+magic
+tech scmos
+timestamp 1115240339
+<< metal1 >>
+rect -8 0 -3 5
+rect 0 0 5 5
+<< labels >>
+rlabel metal1 -6 2 -6 2 3 x
+rlabel metal1 2 2 2 2 7 x
+<< end >>

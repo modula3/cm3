@@ -149,7 +149,7 @@ parserlib/klex caltech-parser
 parserlib/kyacc caltech-parser
 parserlib/kext caltech-parser
 parserlib/parserlib caltech-parser
-parserlib/parserlib/test caltech-parser
+parserlib/parserlib/test_parserlib caltech-parser
 
 kate gui
 sgml devlib
@@ -204,6 +204,21 @@ sx caltech-other
 m3readline caltech-other
 
 cptr caltech-other
+bdd caltech-other
+bool caltech-other
+magic caltech-other
+magicextras caltech-other
+mst caltech-other
+boxes caltech-other
+simplegrid caltech-other
+router caltech-other
+router-pauls caltech-other
+router-pauls3 caltech-other
+router-pauls4 caltech-other
+conflictdensity caltech-other
+gentest caltech-other
+magraster caltech-other
+mergealiases caltech-other
 
 scheme-lib m3-scheme
 mscheme m3-scheme
@@ -216,3 +231,5 @@ mscheme-threads m3-scheme
 
 cm3 core front unicode
 m3cc core front unicode m3gnudevtool
+
+
