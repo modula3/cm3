@@ -3137,19 +3137,18 @@ PROCEDURE Copy_n (s: Size;  overlap: BOOLEAN) =
     IF rhs_align MOD Target.Byte # 0 THEN
       ErrI (rhs_align, "non-byte-aligned RHS in Copy_n")
     END;
-    a := MIN (stack_addr_align(2), stack_addr_align(3));
+    a := MIN (rhs_align, lhs_align);
     (* This uses a mix of cg.* calls, which only alter the M3CG stack,
        and CG calls, which manipulate the CG stack and M3CG stack,
        keeping them consistent.  This gets confusing.  The comments
        show the contents of both stacks, CG first.  Items on the M3CG
        stack in parentheses are conditionally there, and can be put
-       there unconditionally by a Force. call. *) 
+       there unconditionally by a Force. call.  Growth is leftward. *)
     (* Subscript AKA ec, from-address AKA fa, to-address AKA ta. *)
     (*                                          CG stack   ; M3CG stack *)
     (*                                          --------     ---------- *) 
                                              (* ec, fa, ta ; (ec.I), fa.A, ta.A *)
     ForceStacked ();                         (* ec, fa, ta ; ec, fa, ta *)
-    IF (a < Target.Byte) THEN ErrI (a, "unaligned copy_n") END;
 
     IF (s = Target.Byte) THEN
     (* Elements are exactly byte-sized. *) 

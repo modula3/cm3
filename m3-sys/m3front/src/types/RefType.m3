@@ -187,37 +187,50 @@ PROCEDURE InitTypecell (t: Type.T;  offset, prev: INTEGER) =
     type_desc := GenTypeDesc (p);
     initProc  := GenInitProc (p);
     dims      : INTEGER;
-    size      : INTEGER;
-    alignment : INTEGER;
+    objSize   : INTEGER;
+    objAlign  : INTEGER;
     elemSize  : INTEGER;
     ta        : Type.T;
-    info      : Type.Info;
     isz       : INTEGER := Target.Integer.size;
     name_offs : INTEGER := 0;
     fp        := TypeFP.FromType (p);
     globals   := Module.GlobalData (is_const := FALSE);
     consts    := Module.GlobalData (is_const := TRUE);
+    objInfo   : Type.Info;
   BEGIN
-    EVAL Type.CheckInfo (p.target, info);
+    EVAL Type.CheckInfo (p.target, objInfo);
     ta := Type.Base (p.target);
     dims := OpenArrayType.OpenDepth (ta);
-    alignment := info.alignment;
     IF (dims = 0) THEN
       (* not an open array *)
-      size := info.size;
-      elemSize := 0;
+      objSize := objInfo.size;
+      elemSize := 0 (* Properly bytes, but it's zero and won't be used. *);
     ELSE (* target is an open array *)
-      WITH ai = Target.Integer.align, ae = info.alignment DO
-        size := Target.Address.size;           (* address of the elements *)
-        size := ((size + ai - 1) DIV ai) * ai; (* align. for the sizes *)
-        INC (size, Target.Integer.size * dims);  (* the sizes *)
-        size := ((size + ae - 1) DIV ae) * ae; (* align. for the elements *)
+      WITH ai = Target.Integer.align DO
+        objSize := Target.Address.size (* Size of elements pointer. *);
+        objSize := ((objSize + ai - 1) DIV ai) * ai (* Padding, for shape *);
+        INC (objSize, Target.Integer.size * dims) (* The shapes. *);
       END;
-      elemSize := OpenArrayType.EltPack (ta);
+      WITH ae = objInfo.alignment DO
+        objSize := ((objSize + ae - 1) DIV ae) * ae (* Padding. for elements *);
+      END;
+      elemSize := OpenArrayType.EltPack (ta) (* Bits, for now.*);
+      IF elemSize < Target.Byte THEN (* Sub-byte elements, 1, 2, or 4 bits. *)
+        <* ASSERT Target.Byte MOD elemSize = 0 *>
+        elemSize := 1 (*Byte*);
+(* FIXME: This is a quick hack for open arrays of element bitsize 1, 2, or 4.
+          The RTS only knows byte counts for element sizes.  Until RTS can be
+          fixed to understand bit sizes, this will at least make things work,
+          at the cost of over-allocating a full byte for every element. *)
+      ELSE
+        <* ASSERT elemSize MOD Target.Byte = 0 *>
+        elemSize := elemSize DIV Target.Byte (*Bytes, now.*);
+      END;
     END;
-    size := MAX (size DIV Target.Byte, 1);
-    alignment := MAX (alignment DIV Target.Byte, 1);
-    elemSize := elemSize DIV Target.Byte;
+
+    objSize := MAX (objSize DIV Target.Byte, 1) (*Bytes, now.*);
+    objAlign := objInfo.alignment (*Bits.*);
+    objAlign := MAX (objAlign DIV Target.Byte, 1) (*Bytes, now.*);
 
     IF (p.user_name # NIL) THEN
       name_offs := CG.EmitText (p.user_name, is_const := TRUE);
@@ -230,8 +243,8 @@ PROCEDURE InitTypecell (t: Type.T;  offset, prev: INTEGER) =
     END;
     CG.Init_intt (offset + M3RT.TC_traced, 8, ORD (p.isTraced), FALSE);
     CG.Init_intt (offset + M3RT.TC_kind, 8, ORD (Kind[dims > 0]), FALSE);
-    CG.Init_intt (offset + M3RT.TC_dataAlignment, 8, alignment, FALSE);
-    CG.Init_intt (offset + M3RT.TC_dataSize, isz, size, FALSE);
+    CG.Init_intt (offset + M3RT.TC_dataAlignment, 8, objAlign, FALSE);
+    CG.Init_intt (offset + M3RT.TC_dataSize, isz, objSize, FALSE);
     IF (type_map >= 0) THEN
       CG.Init_var (offset + M3RT.TC_type_map, consts, type_map, FALSE);
     END;

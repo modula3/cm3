@@ -798,15 +798,15 @@ PROCEDURE ForceInit (t: T) =
   END ForceInit;
 
 (* EXPORTED *)
-PROCEDURE CopyOpenArray (tipe: Type.T;  ref: Type.T) =
+PROCEDURE CopyOpenArray (arrayType: Type.T;  refType: Type.T) =
 (* PRE: Pointer to array dope is on TOS. *)
 (* Generate code to heap-allocate the copy. *)
 (* POST: TOS replaced by pointer to dope of copy. *) 
   VAR
     oldDopePtr, newDopePtr : CG.Val;
-    depth := OpenArrayType.OpenDepth (tipe);
-    align := MAX (OpenArrayType.EltAlign (tipe), Target.Word8.align);
-    pack  := OpenArrayType.EltPack (tipe);
+    depth := OpenArrayType.OpenDepth (arrayType);
+    align := MAX (OpenArrayType.EltAlign (arrayType), Target.Word8.align);
+    pack  := OpenArrayType.EltPack (arrayType);
     sizes := CG.Declare_temp (Target.Address.pack + Target.Integer.pack,
                               Target.Address.align, CG.Type.Struct,
                               in_memory := TRUE);
@@ -817,7 +817,6 @@ PROCEDURE CopyOpenArray (tipe: Type.T;  ref: Type.T) =
        portion of the to-be-copied dope vector as an open array. *) 
     CG.Push(oldDopePtr);
     CG.Add_offset (M3RT.OA_sizes);
-    (*** CG.Check_byte_aligned (); ****)
     CG.Store_addr (sizes, M3RT.OA_elt_ptr);
     CG.Load_intt (depth);
     CG.Store_int (Target.Integer.cg_type, sizes, M3RT.OA_size_0);
@@ -826,14 +825,14 @@ PROCEDURE CopyOpenArray (tipe: Type.T;  ref: Type.T) =
     proc := RunTyme.LookUpProc (RunTyme.Hook.NewTracedArray);
     Procedure.StartCall (proc);
     IF Target.DefaultCall.args_left_to_right THEN
-      Type.LoadInfo (ref, -1);
+      Type.LoadInfo (refType, -1);
       CG.Pop_param (CG.Type.Addr);
       CG.Load_addr_of (sizes, 0, Target.Address.align);
       CG.Pop_param (CG.Type.Addr);
     ELSE
       CG.Load_addr_of (sizes, 0, Target.Address.align);
       CG.Pop_param (CG.Type.Addr);
-      Type.LoadInfo (ref, -1);
+      Type.LoadInfo (refType, -1);
       CG.Pop_param (CG.Type.Addr);
     END;
     newDopePtr := Procedure.EmitValueCall (proc);
@@ -841,10 +840,10 @@ PROCEDURE CopyOpenArray (tipe: Type.T;  ref: Type.T) =
     (* load the destination and source elements' addresses *)
     CG.Push (newDopePtr);
     CG.Boost_addr_alignment (Target.Address.align);
-    CG.Open_elt_ptr (align); (* Addr of the old elements. *) 
+    CG.Open_elt_ptr (align); (* Addr of the new elements. *)
     CG.ForceStacked ();
     CG.Push(oldDopePtr);
-    CG.Open_elt_ptr (align); (* Addr of the new elements. *) 
+    CG.Open_elt_ptr (align); (* Addr of the old elements. *)
     CG.ForceStacked ();
 
     (* compute the number of elements *)
