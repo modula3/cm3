@@ -575,6 +575,7 @@ p_test ("p0", "p081", "open array constants")
 p_test ("p1", "p138", "bit field assignments") % Fails on Master branch, 2020-1-9
 p_test ("p1", "p139", "memory copy")
 p_test ("p2", "p264", "mixtures of fixed and open arrays")
+p_test ("p2", "p277", "mixtures of nested constructors")
 
 % some currently failing tests...
 

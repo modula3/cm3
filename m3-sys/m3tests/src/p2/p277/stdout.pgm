@@ -1,0 +1,21 @@
+Succeeded, with no mismatched values: constant records in constant record
+Succeeded, with no mismatched values: constant records in variable record
+Succeeded, with no mismatched values: variable records in variable record
+Succeeded, with no mismatched values: constant arrays in constant record
+Succeeded, with no mismatched values: constant arrays in variable record
+Succeeded, with no mismatched values: variable arrays in variable record
+Succeeded, with no mismatched values: constant records in constant array
+Succeeded, with no mismatched values: constant records in variable array
+Succeeded, with no mismatched values: constant records in open array
+Succeeded, with no mismatched values: variable records in variable array
+Succeeded, with no mismatched values: constant arrays in constant array
+Succeeded, with no mismatched values: constant arrays inline in constant array
+Succeeded, with no mismatched values: constant arrays in variable array
+Succeeded, with no mismatched values: constant arrays in open array
+Succeeded, with no mismatched values: variable arrays in variable array
+Succeeded, with no mismatched values: open arrays in open array
+Succeeded, with no mismatched values: 4-bit packed in fixed array
+Succeeded, with no mismatched values: 4-bit packed in open array
+18 tests performed.
+All succeeded.
+Overall test succeeded.
