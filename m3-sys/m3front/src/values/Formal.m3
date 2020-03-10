@@ -35,6 +35,7 @@ TYPE
         toExpr      := ValueRep.NoExpr;
         toType      := ValueRep.NoType;
         typeOf      := TypeOf;
+        repTypeOf   := TypeOf (* Never differs from semType. *);
         base        := ValueRep.Self;
         add_fp_tag  := AddFPTag;
         fp_type     := TypeOf;
@@ -735,20 +736,6 @@ PROCEDURE GenSet (t: T;  actual: Expr.T) =
     END;
   END GenSet;
 
-PROCEDURE RepTypeOf (expr: Expr.T): Type.T =
-  VAR Result: Type.T;
-  VAR arrayConstrExpr: Expr.T;
-  BEGIN
-(* TODO: The interaction between getting a repType and looking thru' a ConsExpr is a mess.
-   Clean it up and put things in the right place. *)
-    arrayConstrExpr := ArrayExpr.ArrayConstrExpr (expr);
-    IF arrayConstrExpr # NIL
-    THEN Result := Expr.RepTypeOf (arrayConstrExpr)
-    ELSE Result := Expr.RepTypeOf (expr)
-    END;
-    RETURN Result;
-  END RepTypeOf;
-
 PROCEDURE PassArrayVAR (formal: T; actual: Expr.T; actualRepType: Type.T) =
   BEGIN
     IF Expr.Alignment (actual) MOD Target.Byte = 0 THEN
@@ -764,7 +751,7 @@ PROCEDURE GenArray (formal: T; actual: Expr.T; formal_is_open: BOOLEAN) =
   VAR actualRepType: Type.T; 
   VAR formalTypeInfo: Type.Info;
   BEGIN
-    actualRepType := RepTypeOf (actual);
+    actualRepType := Expr.RepTypeOf (actual);
     Type.Compile (formal.tipe);
     CASE formal.mode OF
 

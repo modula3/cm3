@@ -9,6 +9,10 @@
 
 MODULE CallExpr;
 
+(* NOTE: Notwithstanding its name, this module handles only
+         calls on builtin procedures.
+*)
+
 IMPORT CG, Expr, ExprRep, Error, ProcType, Type, UserProc;
 IMPORT KeywordExpr, ESet, QualifyExpr, ErrType, Value, Target;
 
@@ -21,6 +25,7 @@ REVEAL
                  strict       : BOOLEAN;
                  fixedType    : Type.T;
                  typeOf       : Typer;
+                 repTypeOf    : Typer;
                  need_addr    : Visitor;
                  checker      : TypeChecker;
                  prep         : Compiler;
@@ -44,6 +49,7 @@ REVEAL
         proc_type: Type.T;
       OVERRIDES
         typeOf       := TypeOf;
+        repTypeOf    := RepTypeOf;
         check        := Check;
         need_addr    := NeedsAddress;
         prep         := Prep;
@@ -103,6 +109,7 @@ PROCEDURE NewMethodList (minArgs, maxArgs: INTEGER;
                          strict       : BOOLEAN;
                          fixedType    : Type.T;
                          typeOf       : Typer;
+                         repTypeOf    : Typer;
                          need_addr    : Visitor;
                          checker      : TypeChecker;
                          prep         : Compiler;
@@ -129,6 +136,7 @@ PROCEDURE NewMethodList (minArgs, maxArgs: INTEGER;
     m.strict       := strict;
     m.fixedType    := fixedType;
     m.typeOf       := typeOf;
+    m.repTypeOf    := typeOf;
     m.need_addr    := need_addr;
     m.checker      := checker;
     m.prep         := prep;
@@ -228,19 +236,33 @@ PROCEDURE Resolve (p: T) =
     p.proc_type := t;
   END Resolve;
 
-PROCEDURE TypeOf (p: T): Type.T =
+PROCEDURE ComputeTypes (p: T) =
   BEGIN
     Resolve (p);
-    IF (p.methods = NIL) THEN
+    IF p.methods = NIL THEN
       p.type := ErrType.T;
+      p.repType := ErrType.T;
     ELSIF (p.methods.fixedType # NIL) OR (p.methods.typeOf = NIL) THEN
       p.type := p.methods.fixedType;
+      p.repType := p.type;
     ELSE
       FixArgs (p);
       p.type := p.methods.typeOf (p);
+      p.repType := p.methods.repTypeOf (p);
     END;
+  END ComputeTypes;
+
+PROCEDURE TypeOf (p: T): Type.T =
+  BEGIN
+    ComputeTypes (p);
     RETURN p.type;
   END TypeOf;
+
+PROCEDURE RepTypeOf (p: T): Type.T =
+  BEGIN
+    ComputeTypes (p);
+    RETURN p.repType;
+  END RepTypeOf;
 
 PROCEDURE Check (p: T;  VAR cs: Expr.CheckState) =
   VAR

@@ -95,6 +95,12 @@ CONST RKTypSetInitializing = RKTypSet
 (* Properties of an array constructor: *)
 REVEAL 
   T = Expr.T BRANDED "ArrayExpr.T" OBJECT
+    (* Field repType, inherited from Expr.T:
+       The type used in RT representation of the constructor.  Equals targetType
+       (or, for a nested constructor, an element type thereof), if top targetType # NIL.
+       Otherwise, inferred entirely from the constructor.  Could still be # semType,
+       if semType is open but context fixes the length of some of the dimensions.
+       It is computed in 'Represent'. *)
     top               : T;
     tipe              : Type.T;
 (* CLEANUP ^ tipe always duplicates field "type", inherited from Expr.T *) 
@@ -102,14 +108,6 @@ REVEAL
     semType           : Type.T; (* Original source code semantic type. *)
     semIndexType      : Type.T;
     semEltType        : Type.T;
-    repType           : Type.T; (* Type used in RT representation of the
-                                   constructor.  Equals targetType (or, for a
-                                   nested constructor, an element type thereof),
-                                   if top targetType # NIL.
-                                   Otherwise, inferred entirely from the
-                                   constructor.  Could still be # semType,
-                                   if semType is open but context fixes
-                                   the length of some of the dimensions. *)
     depth             : INTEGER; (* Depth this constructor is below the
                                     top-level array constructor. *)
     eltCt             : INTEGER := Expr.lengthInvalid;
@@ -154,7 +152,8 @@ REVEAL
     useTargetVar      : BOOLEAN := FALSE;
     useTargetVarLocked: BOOLEAN := FALSE;
   OVERRIDES
-    typeOf       := ExprRep.NoType;
+    typeOf       := TypeOf;
+    repTypeOf    := RepTypeOf;
     check        := Check;
     need_addr    := NeedsAddress;
     prep         := Prep;
@@ -173,7 +172,6 @@ REVEAL
     prepLiteral  := PrepLiteral;
     genLiteral   := GenLiteral;
     note_write   := ExprRep.NotWritable;
-    repTypeOf    := RepTypeOf;
     staticLength := StaticLength;
     usesAssignProtocol := UsesAssignProtocol;
     use          := Use
@@ -512,7 +510,7 @@ PROCEDURE CheckRecurse
               END;
 
               IF NOT constr.broken THEN
-                (* Check shape criterion of assignabilty. *)
+                (* Check shape criterion of assignability. *)
                 IF argConstr # NIL THEN
                   IF argConstr.isNested THEN
                     CheckArgStaticLength
@@ -1206,14 +1204,21 @@ PROCEDURE GetBounds
   END GetBounds;
 
 (* Externally dispatched-to: *)
+PROCEDURE TypeOf (constr: T): Type.T =
+(* PRE: constr is Checked. *)
+  BEGIN
+    <* ASSERT constr.state >= StateTyp.Checked *>
+    <* ASSERT constr.depth = 0 *>
+    <* ASSERT constr.type # NIL *>
+    RETURN constr.type;
+  END TypeOf;
+
+(* Externally dispatched-to: *)
 PROCEDURE RepTypeOf (constr: T): Type.T =
 (* PRE: constr is Checked. *)
   BEGIN
-    IF constr = NIL THEN RETURN NIL END;
     <* ASSERT constr.state >= StateTyp.Checked *>
- IF constr.depth > 0 THEN
-   Error.Info ("RepTypeOf called on nested array constructor.")
- END;
+    <* ASSERT constr.depth = 0 *>
     Represent (constr.top);
     IF constr.repType = NIL THEN
       <* ASSERT constr.broken *>

@@ -16,6 +16,7 @@ TYPE
         t: Type.T;
       OVERRIDES
         typeOf       := TypeOf;
+        repTypeOf    := TypeOf;
         check        := Check;
         need_addr    := ExprRep.NotAddressable;
         prep         := Compile;

@@ -127,7 +127,7 @@ PROCEDURE DoFold (e: Expr.T;  unit: INTEGER): Expr.T =
 PROCEDURE Initialize () =
   BEGIN
     Z := CallExpr.NewMethodList (1, 1, TRUE, FALSE, FALSE, Card.T,
-                                 NIL,
+                                 NIL, NIL,
                                  CallExpr.NotAddressable,
                                  Check,
                                  Prep,

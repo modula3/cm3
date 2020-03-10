@@ -16,6 +16,7 @@ FROM Scanner IMPORT GetToken, Match, MatchID, cur;
 REVEAL
   T = Value.T BRANDED "Constant.T" OBJECT
         tipe       : Type.T;
+        repType    : Type.T;
         valExpr    : Expr.T;
         qualName   : TEXT;
         size       : INTEGER;
@@ -40,6 +41,7 @@ REVEAL
         toExpr      := ToExpr;
         toType      := ValueRep.NoType;
         typeOf      := TypeOf;
+        repTypeOf   := RepTypeOf;
         base        := ValueRep.Self;
         add_fp_tag  := AddFPTag;
         fp_type     := TypeOf;
@@ -101,6 +103,14 @@ PROCEDURE TypeOf
     IF (t.tipe = NIL) THEN t.tipe := Expr.TypeOf (t.valExpr) END;
     RETURN t.tipe;
   END TypeOf;
+
+(* Externally dispatched-to: *)
+PROCEDURE RepTypeOf
+ (t: T): Type.T =
+  BEGIN
+    IF t.repType = NIL THEN t.repType := Expr.RepTypeOf (t.valExpr) END;
+    RETURN t.repType;
+  END RepTypeOf;
 
 (* Externally dispatched-to: *)
 PROCEDURE Check (t: T;  VAR cs: Value.CheckState) =

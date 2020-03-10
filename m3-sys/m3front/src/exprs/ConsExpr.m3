@@ -99,6 +99,14 @@ PROCEDURE TypeOf (p: P): Type.T =
     END;
   END TypeOf;
 
+(* Externally dispatched-to: *)
+PROCEDURE RepTypeOf (p: P): Type.T =
+  BEGIN
+    IF p = NIL THEN RETURN ErrType.T END;
+    InnerSeal (p);
+    RETURN p.base.repTypeOf () (* Delegate.*);
+  END RepTypeOf;
+
 (* EXPORTED: *)
 PROCEDURE Seal (e: Expr.T) =
 (* POST: Base will now return a valid result. *)
@@ -224,14 +232,6 @@ PROCEDURE IsZeroes (p: P;  <*UNUSED*> lhs: BOOLEAN): BOOLEAN =
     InnerSeal (p);
     RETURN Expr.IsZeroes (p.base);
   END IsZeroes;
-
-(* Externally dispatched-to: *)
-PROCEDURE RepTypeOf (p: P): Type.T =
-  BEGIN
-    IF p = NIL THEN RETURN ErrType.T END;
-    InnerSeal (p);
-    RETURN p.base.repTypeOf () (* Delegate.*);
-  END RepTypeOf;
 
 (* Externally dispatched-to: *)
 PROCEDURE StaticLength (p: P): Expr.lengthTyp =

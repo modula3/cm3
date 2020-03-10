@@ -23,9 +23,11 @@ PROCEDURE Parse (): T;
 
 PROCEDURE TypeOf (t: T): M3.Type;
 (* returns the type of the expression *)
+(* Not reliable in general until t has been 'Check'ed. *)
 
 PROCEDURE SemTypeOf (t: T): M3.Type;
 (* returns the semantic type of the expression, as in source code. *)
+(* Not reliable in general until t has been 'Check'ed. *)
 
 PROCEDURE RepTypeOf (t: T): M3.Type;
 (* returns the representation type of the expression, as in memory. *)

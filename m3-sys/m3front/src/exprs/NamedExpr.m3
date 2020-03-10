@@ -24,6 +24,7 @@ TYPE
         tmp         : CG.Val;
       OVERRIDES
         typeOf       := TypeOf;
+        repTypeOf    := RepTypeOf;
         check        := Check;
         need_addr    := NeedsAddress;
         prep         := Prep;
@@ -142,6 +143,20 @@ PROCEDURE TypeOf (p: P): Type.T =
     p.inTypeOf := FALSE;
     RETURN t;
   END TypeOf;
+
+PROCEDURE RepTypeOf (p: P): Type.T =
+  VAR t: Type.T;
+  BEGIN
+    IF (p.value = NIL) THEN Resolve (p) END;
+    IF (p.inTypeOf) THEN
+      Value.IllegalRecursion (p.value);
+      RETURN ErrType.T;
+    END;
+    p.inTypeOf := TRUE;
+    t := Value.RepTypeOf (p.value);
+    p.inTypeOf := FALSE;
+    RETURN t;
+  END RepTypeOf;
 
 PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
   BEGIN

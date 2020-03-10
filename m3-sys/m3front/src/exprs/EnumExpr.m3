@@ -15,6 +15,7 @@ TYPE
         value: Target.Int;
       OVERRIDES
         typeOf       := ExprRep.NoType;
+        repTypeOf    := ExprRep.NoType;
         check        := ExprRep.NoCheck;
         need_addr    := ExprRep.NotAddressable;
         prep         := ExprRep.NoPrep;
@@ -40,9 +41,10 @@ PROCEDURE New (type: Type.T;  READONLY value: Target.Int): Expr.T =
   BEGIN
     p := NEW (P);
     ExprRep.Init (p);
-    p.value   := value;
-    p.type    := type;
-    p.checked := TRUE;
+    p.value      := value;
+    p.type       := type;
+    p.repType    := type;
+    p.checked    := TRUE;
     RETURN p;
   END New;
 

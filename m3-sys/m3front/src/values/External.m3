@@ -49,6 +49,7 @@ TYPE
     toExpr      := ToExpr;
     toType      := ToType;
     typeOf      := TypeOf;
+    repTypeOf   := TypeOf;
     base        := Base;
   END;
 

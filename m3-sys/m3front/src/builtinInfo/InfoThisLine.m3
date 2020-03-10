@@ -36,7 +36,7 @@ PROCEDURE Initialize () =
   VAR t0 := ProcType.New (Card.T);
   BEGIN
     Z := CallExpr.NewMethodList (0, 0, TRUE, TRUE, TRUE, Card.T,
-                                 NIL,
+                                 NIL, NIL,
                                  CallExpr.NotAddressable,
                                  Check,
                                  CallExpr.PrepArgs,

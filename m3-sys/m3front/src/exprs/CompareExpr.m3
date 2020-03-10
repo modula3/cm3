@@ -47,6 +47,7 @@ TYPE
         bad_set : BOOLEAN;
       OVERRIDES
         typeOf       := ExprRep.NoType;
+        repTypeOf    := ExprRep.NoType;
         check        := Check;
         need_addr    := ExprRep.NotAddressable;
         prep         := Prep;
@@ -72,10 +73,11 @@ PROCEDURE New (a, b: Expr.T;  op: Op): Expr.T =
   BEGIN
     p := NEW (P);
     ExprRep.Init (p);
-    p.a    := a;
-    p.b    := b;
-    p.op   := op;
-    p.type := Bool.T;
+    p.a       := a;
+    p.b       := b;
+    p.op      := op;
+    p.type    := Bool.T;
+    p.repType := Bool.T;
     p.bad_set := FALSE;
     RETURN p;
   END New;

@@ -17,6 +17,7 @@ TYPE
         tmp    : CG.Val;
       OVERRIDES
         typeOf       := ExprRep.NoType;
+        repTypeOf    := ExprRep.NoType;
         check        := Check;
         need_addr    := ExprRep.NotAddressable;
         prep         := Prep;
@@ -46,6 +47,7 @@ PROCEDURE New (a, b: Expr.T): Expr.T =
     p.b := b;
     p.folded := NIL;
     p.type := Textt.T;
+    p.repType := Textt.T;
     p.tmp := NIL;
     RETURN p;
   END New;

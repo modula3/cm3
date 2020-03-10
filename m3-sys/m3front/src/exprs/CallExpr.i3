@@ -9,6 +9,9 @@
 
 INTERFACE CallExpr;
 
+(* NOTE: Notwithstanding its name, this interface handles only
+         calls on builtin procedures.
+*)
 IMPORT CG, Expr, Type, Target;
 
 PROCEDURE New (proc: Expr.T;  args: Expr.List): Expr.T;
@@ -48,6 +51,7 @@ PROCEDURE NewMethodList
    strict       : BOOLEAN;
    fixedType    : Type.T;
    typeOf       : Typer;
+   repTypeOf    : Typer;
    need_addr    : Visitor;
    checker      : TypeChecker;
    prep         : Compiler;

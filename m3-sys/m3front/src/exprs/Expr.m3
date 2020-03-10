@@ -38,6 +38,15 @@ PROCEDURE Init (t: T) =
 
 (* EXPORTED: *)
 PROCEDURE TypeOf (t: T): Type.T =
+
+(* This is a confusing mess.  Some expression kinds eagerly compute the type in 'New'.
+   Some give it a tentative non-nil value in 'New', but change it in 'Check'.
+   sometimes only to ErrType.T, sometimes to the real type.  'TypeOf' will return
+   the tentative value if called prior to 'Check'.  All such would ASSERT FALSE,
+   if their 'typeOf' method were called, which fortunately, can't happed.
+   For the others, 'TypeOf' computes and caches the type on-demand, using the
+   expression's 'typeOf' method.
+*)
   BEGIN
     IF (t = NIL) THEN RETURN ErrType.T END;
     IF (t.type = NIL) THEN t.type := t.typeOf () END;
@@ -52,9 +61,13 @@ PROCEDURE SemTypeOf (t: T): Type.T =
 
 (* EXPORTED: *)
 PROCEDURE RepTypeOf (t: T): Type.T =
+(* Works the same way as TypeOf. *)
+  VAR stripped: T;
   BEGIN
-    IF (t = NIL) THEN RETURN ErrType.T END;
-    RETURN t.repTypeOf ();
+    stripped := StripNamedCons (t);
+    IF stripped = NIL THEN stripped := t END;
+    IF stripped.repType = NIL THEN stripped.repType := stripped.repTypeOf () END;
+    RETURN stripped.repType;
   END RepTypeOf;
 
 (* EXPORTED: *)
@@ -85,7 +98,7 @@ BEGIN
     IF CallExpr.IsUserProc (rhs) THEN RETURN rhs.doDirectAssign END;
 
 (* TODO ^This one-liner is an easy temporary way to sidestep having to add
-        massive and widely scattered apparatus for two different levels of
+        massive and widely scattered apparatus for three different levels of
         dispatching, using two different mechanisms, just to get
         rhs.usesAssignProtocol to handle this case.  *)
     RETURN rhs.usesAssignProtocol ();

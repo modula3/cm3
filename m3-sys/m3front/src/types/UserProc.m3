@@ -261,6 +261,7 @@ PROCEDURE Initialize () =
   BEGIN
     Methods := CallExpr.NewMethodList (0, 99999, FALSE, TRUE, TRUE, NIL,
                                  TypeOf,
+                                 TypeOf,
                                  NeedsAddress,
                                  Check,
                                  Prep,

@@ -29,6 +29,7 @@ TYPE
         checkedPass1 : BOOLEAN 
       OVERRIDES
         typeOf       := TypeOf;
+        repTypeOf    := RepTypeOf;
         check        := Check;
         need_addr    := NeedsAddress;
         prep         := Prep;
@@ -87,6 +88,25 @@ PROCEDURE TypeOf (p: P): Type.T =
       ELSE RETURN ta;
     END;
   END TypeOf;
+
+(* Externally dispatched-to: *)
+PROCEDURE RepTypeOf (p: P): Type.T =
+  VAR ta, ti, te: Type.T;
+  BEGIN
+    ta := Type.Base (Expr.RepTypeOf (p.a));
+
+    IF RefType.Is (ta) THEN
+      (* auto-magic dereference *)
+      p.a := DerefExpr.New (p.a);
+      p.a.origin := p.origin;
+      ta := Type.Base (Expr.RepTypeOf (p.a));
+    END;
+
+    IF ArrayType.Split (ta, ti, te)
+      THEN RETURN te;
+      ELSE RETURN ta;
+    END;
+  END RepTypeOf;
 
 PROCEDURE GenRangeCheck
   (p: P; mini, maxi, minb, maxb: Target.Int; VAR cs: Expr.CheckState) =

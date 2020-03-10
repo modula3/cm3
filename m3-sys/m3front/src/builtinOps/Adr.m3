@@ -49,6 +49,7 @@ PROCEDURE Initialize () =
   BEGIN
     Z := CallExpr.NewMethodList (1, 1, TRUE, FALSE, TRUE, NIL,
                                  TypeOf,
+                                 TypeOf,
                                  CallExpr.NotAddressable,
                                  Check,
                                  Prep,

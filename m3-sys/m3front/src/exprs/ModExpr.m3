@@ -25,6 +25,7 @@ TYPE
         tmp2 : CG.Var;
       OVERRIDES
         typeOf       := ExprRep.NoType;
+        repTypeOf    := ExprRep.NoType;
         check        := Check;
         need_addr    := ExprRep.NotAddressable;
         prep         := Prep;
@@ -50,11 +51,12 @@ PROCEDURE New (a, b: Expr.T): Expr.T =
   BEGIN
     p := NEW (P);
     ExprRep.Init (p);
-    p.a    := a;
-    p.b    := b;
-    p.type := Int.T;
-    p.tmp1 := NIL;
-    p.tmp2 := NIL;
+    p.a       := a;
+    p.b       := b;
+    p.type    := Int.T (*May be changed by Check.*);
+    p.repType := Int.T (*May be changed by Check.*);
+    p.tmp1    := NIL;
+    p.tmp2    := NIL;
     RETURN p;
   END New;
 
@@ -79,6 +81,7 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
       ta := Expr.BadOperands ("MOD", ta, tb);
     END;
     p.type := ta;
+    p.repType := ta;
   END Check;
 
 PROCEDURE Prep (p: P) =

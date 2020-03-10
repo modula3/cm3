@@ -95,7 +95,7 @@ PROCEDURE Initialize () =
                         Formal.New (order));
   BEGIN
     Z := CallExpr.NewMethodList (1, 3, FALSE, TRUE, TRUE, Rep.T,
-                                 NIL,
+                                 NIL, NIL,
                                  CallExpr.NotAddressable,
                                  Check,
                                  Prep,

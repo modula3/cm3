@@ -29,6 +29,7 @@ REVEAL
         toExpr      := ValueRep.NoExpr;
         toType      := ValueRep.NoType;
         typeOf      := TypeOf;
+        repTypeOf   := RepTypeOf;
         base        := ValueRep.Self;
         add_fp_tag  := AddFPTag;
         fp_type     := TypeOf;
@@ -110,6 +111,12 @@ PROCEDURE TypeOf (t: T): Type.T =
     IF (t.tipe = NIL) THEN t.tipe := Expr.TypeOf (t.dfault) END;
     RETURN t.tipe;
   END TypeOf;
+
+PROCEDURE RepTypeOf (t: T): Type.T =
+  BEGIN
+    IF t.tipe # NIL THEN RETURN t.tipe; END;
+    RETURN Expr.RepTypeOf (t.dfault);
+  END RepTypeOf;
 
 PROCEDURE TypeCheck (t: T;  VAR cs: Value.CheckState) =
   VAR info: Type.Info;

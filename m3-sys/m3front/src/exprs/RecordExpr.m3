@@ -43,6 +43,7 @@ TYPE
         prepped       : BOOLEAN := FALSE;
       OVERRIDES
         typeOf       := ExprRep.NoType;
+        repTypeOf    := ExprRep.NoType;
         check        := Check;
         need_addr    := NeedsAddress;
         prep         := Prep;
@@ -74,6 +75,7 @@ PROCEDURE New (type: Type.T;  args: Expr.List): Expr.T =
     p.directAssignableType := TRUE;
 
     p.type           := type;
+    p.repType        := type;
     p.tipe           := type;
     p.args           := args;
     p.map            := NIL;

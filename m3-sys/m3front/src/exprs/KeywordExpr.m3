@@ -16,6 +16,7 @@ TYPE
         key  : M3ID.T;
       OVERRIDES
         typeOf       := TypeOf;
+        repTypeOf    := RepTypeOf;
         check        := Check;
         need_addr    := NeedsAddress;
         prep         := Prep;
@@ -69,6 +70,11 @@ PROCEDURE TypeOf (p: P): Type.T =
   BEGIN
     RETURN Expr.TypeOf (p.expr);
   END TypeOf;
+
+PROCEDURE RepTypeOf (p: P): Type.T =
+  BEGIN
+    RETURN Expr.RepTypeOf (p.expr);
+  END RepTypeOf;
 
 PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
   BEGIN

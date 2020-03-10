@@ -14,6 +14,7 @@ IMPORT M3, M3Buf, CG, Target, Type, Expr;
 REVEAL
   M3.Expr = M3.Node BRANDED "Expr.T" OBJECT
     type                 : M3.Type;
+    repType              : M3.Type;
     align                : INTEGER; 
     checked              : BOOLEAN;
     directAssignableType : BOOLEAN;
@@ -21,6 +22,7 @@ REVEAL
     isNamedConst         : BOOLEAN;
   METHODS
     typeOf       (): M3.Type                       := NoType;
+    repTypeOf    (): M3.Type                       := NoType;
     check        (VAR cs: M3.CheckState)           := NoCheck;
     isEqual      (e: M3.Expr; x: M3.EqAssumption): BOOLEAN := NeverEq;
     evaluate     (): M3.Expr                       := NoValue;
@@ -40,7 +42,6 @@ REVEAL
     compileBR    (true, false: CG.Label;  freq: CG.Frequency) := NotBoolean;
     note_write   ()                                := NotWritable;
     exprAlign    (): Type.BitAlignT                := ExprAlignDefault;
-    repTypeOf    (): Type.T                        := Expr.TypeOf;
     staticLength (): Expr.lengthTyp                := StaticLengthDefault;
     usesAssignProtocol (): BOOLEAN                 := UsesAssignProtocolDefault;
     use (): BOOLEAN                                := DefaultUse

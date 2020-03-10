@@ -120,7 +120,7 @@ PROCEDURE Compile (ce: CallExpr.T) =
 PROCEDURE Initialize () =
   BEGIN
     Z := CallExpr.NewMethodList (1, 2, FALSE, FALSE, TRUE, NIL,
-                                 NIL,
+                                 NIL, NIL,
                                  CallExpr.NotAddressable,
                                  Check,
                                  Prep,

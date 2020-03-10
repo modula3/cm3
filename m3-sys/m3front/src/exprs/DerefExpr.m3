@@ -16,6 +16,7 @@ TYPE
         tmp: CG.Val;
       OVERRIDES
         typeOf       := TypeOf;
+        repTypeOf    := RepTypeOf;
         check        := Check;
         need_addr    := NeedsAddress;
         prep         := Prep;
@@ -65,6 +66,16 @@ PROCEDURE TypeOf (p: P): Type.T =
       ELSE RETURN ErrType.T;
     END;
   END TypeOf;
+
+PROCEDURE RepTypeOf (p: P): Type.T =
+  VAR ta, target: Type.T;
+  BEGIN
+    ta := Expr.RepTypeOf (p.a);
+    IF RefType.Split (ta, target)
+      THEN RETURN target;
+      ELSE RETURN ErrType.T;
+    END;
+  END RepTypeOf;
 
 PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
   VAR tx, ta, target: Type.T;  err0, err1, warn: INTEGER;

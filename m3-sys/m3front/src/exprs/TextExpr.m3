@@ -18,6 +18,7 @@ TYPE
         value32 : M3WString.T;
       OVERRIDES
         typeOf       := ExprRep.NoType;
+        repTypeOf    := ExprRep.NoType;
         check        := ExprRep.NoCheck;
         need_addr    := ExprRep.NotAddressable;
         prep         := ExprRep.NoPrep;
@@ -71,6 +72,7 @@ PROCEDURE New8 (value: M3String.T): Expr.T =
     p.value8  := value;
     p.value32 := NIL;
     p.type    := Textt.T;
+    p.repType := Textt.T;
     p.checked := TRUE;
     RETURN p;
   END New8;
@@ -82,6 +84,7 @@ PROCEDURE New32 (value: M3WString.T): Expr.T =
     p.value8  := NIL;
     p.value32 := value;
     p.type    := Textt.T;
+    p.repType := Textt.T;
     p.checked := TRUE;
     RETURN p;
   END New32;

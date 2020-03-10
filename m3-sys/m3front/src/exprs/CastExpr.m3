@@ -35,6 +35,7 @@ TYPE
         tmp_cnt : INTEGER;
       OVERRIDES
         typeOf       := ExprRep.NoType;
+        repTypeOf    := ExprRep.NoType;
         check        := Check;
         need_addr    := NeedsAddress;
         prep         := Prep;
@@ -61,12 +62,13 @@ PROCEDURE New (a: Expr.T;  t: Type.T): Expr.T =
   BEGIN
     p := NEW (P);
     ExprRep.Init (p);
-    p.origin := a.origin;
-    p.expr   := a;
-    p.tipe   := t;
-    p.type   := t;
-    p.tmp    := NIL;
-    p.tmp_cnt:= 0;
+    p.origin    := a.origin;
+    p.expr      := a;
+    p.tipe      := t;
+    p.type      := t;
+    p.repType   := t;
+    p.tmp       := NIL;
+    p.tmp_cnt   := 0;
     RETURN p;
   END New;
 

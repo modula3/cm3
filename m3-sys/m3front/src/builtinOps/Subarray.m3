@@ -19,8 +19,6 @@ PROCEDURE TypeOf (ce: CallExpr.T): Type.T =
     RETURN ArrayType.OpenCousin (Type.Base (Expr.TypeOf (ce.args[0])));
   END TypeOf;
 
-
-
 PROCEDURE Check (ce: CallExpr.T;  VAR cs: Expr.CheckState) =
   VAR t, u, v, index, elt: Type.T;
   BEGIN
@@ -474,6 +472,7 @@ PROCEDURE NoteWrites (ce: CallExpr.T) =
 PROCEDURE Initialize () =
   BEGIN
     Z := CallExpr.NewMethodList (3, 3, TRUE, FALSE, TRUE, NIL,
+                                 TypeOf,
                                  TypeOf,
                                  NeedsAddress,
                                  Check,

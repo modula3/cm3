@@ -27,7 +27,7 @@ PROCEDURE Initialize () =
   VAR t0 := ProcType.New (Addr.T);
   BEGIN
     Z := CallExpr.NewMethodList (0, 0, TRUE, TRUE, TRUE, Addr.T,
-                                 NIL,
+                                 NIL, NIL,
                                  CallExpr.NotAddressable,
                                  Check,
                                  CallExpr.PrepArgs,

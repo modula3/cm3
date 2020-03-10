@@ -26,6 +26,7 @@ TYPE
         tmp : CG.Var;
       OVERRIDES
         typeOf       := TypeOf;
+        repTypeOf    := RepTypeOf;
         check        := Check;
         need_addr    := ExprRep.NotAddressable;
         prep         := Prep;
@@ -61,6 +62,11 @@ PROCEDURE TypeOf (p: P): Type.T =
   BEGIN
     RETURN Expr.TypeOf (p.a);
   END TypeOf;
+
+PROCEDURE RepTypeOf (p: P): Type.T =
+  BEGIN
+    RETURN Expr.RepTypeOf (p.a);
+  END RepTypeOf;
 
 PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
   VAR ta, tb, range: Type.T;

@@ -40,6 +40,7 @@ TYPE
         broken      : BOOLEAN;
       OVERRIDES
         typeOf       := ExprRep.NoType;
+        repTypeOf    := ExprRep.NoType;
         check        := Check;
         need_addr    := NeedsAddress;
         prep         := Prep;
@@ -83,6 +84,7 @@ PROCEDURE New (type: Type.T;  args: Expr.List): Expr.T =
     p := NEW (P);
     ExprRep.Init (p);
     p.type    := type;
+    p.repType := type;
     p.tipe    := type;
     p.args    := args;
     p.mapped  := FALSE;
@@ -102,6 +104,7 @@ PROCEDURE NewFromTree (p: P;  node: Node): Expr.T =
     c := NEW (P);
     c.origin  := p.origin;
     c.type    := p.type;
+    c.repType := p.repType;
     c.checked := p.checked;
     c.tipe    := p.tipe;
     c.args    := p.args;
@@ -509,6 +512,7 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
   BEGIN
     p.tipe := Type.Check (p.tipe);
     p.type := p.tipe;
+    p.repType := p.tipe;
     FOR i := 0 TO LAST (p.args^) DO Expr.TypeCheck (p.args[i], cs) END;
     IF NOT SetType.Split (p.tipe, eltType) THEN
       (* How can this happen? ConsExpr wouldn't have created this node, if not. *)

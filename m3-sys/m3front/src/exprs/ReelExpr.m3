@@ -16,6 +16,7 @@ TYPE
         val : Target.Float;
       OVERRIDES
         typeOf       := ExprRep.NoType;
+        repTypeOf    := ExprRep.NoType;
         check        := ExprRep.NoCheck;
         need_addr    := ExprRep.NotAddressable;
         prep         := ExprRep.NoPrep;
@@ -47,6 +48,7 @@ PROCEDURE New (READONLY value: Target.Float): Expr.T =
     | Target.Precision.Long     => p.type := LReel.T;
     | Target.Precision.Extended => p.type := EReel.T;
     END;
+    p.repType := p.type;
     RETURN p;
   END New;
 

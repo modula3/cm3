@@ -26,6 +26,7 @@ TYPE
         obj         : Value.T;
         holder      : Type.T; (* Visible supertype of the Q-expr. *) 
         objType     : Type.T;
+        repType     : Type.T;
         temp        : CG.Val;
         name        : M3ID.T;
         align       : Type.BitAlignT;
@@ -36,6 +37,7 @@ TYPE
         inTypeOf    : BOOLEAN;
       OVERRIDES
         typeOf       := TypeOf;
+        repTypeOf    := RepTypeOf;
         check        := Check;
         need_addr    := NeedsAddress;
         prep         := Prep;
@@ -198,24 +200,40 @@ PROCEDURE Resolve (p: P) =
     END;
   END Resolve;
 
-PROCEDURE TypeOf (p: P): Type.T =
+PROCEDURE ResolveTypes (p: P) =
   BEGIN
     Resolve (p);
     IF (p.inTypeOf) THEN
       Value.IllegalRecursion (p.obj);
       p.type := ErrType.T;
-      RETURN ErrType.T;
-    END;
-    p.inTypeOf := TRUE;
-    p.type := Value.TypeOf (p.obj);
-    IF p.class = Class.cMETHOD THEN
-      p.type := NIL;
-    ELSIF p.class = Class.cOBJTYPE THEN
-      p.type := ProcType.MethodSigAsProcSig (p.type, p.objType);
+      p.repType := p.type;
+    ELSE
+      p.inTypeOf := TRUE;
+      p.type := Value.TypeOf (p.obj);
+      IF p.type = ErrType.T THEN p.repType := ErrType.T;
+      ELSIF p.class = Class.cMETHOD THEN
+        p.type := NIL;
+        p.repType := NIL;
+      ELSIF p.class = Class.cOBJTYPE THEN
+        p.type := ProcType.MethodSigAsProcSig (p.type, p.objType);
+        p.repType := p.type;
+      ELSE p.repType := Value.RepTypeOf (p.obj);
+      END;
     END;
     p.inTypeOf := FALSE;
+  END ResolveTypes;
+
+PROCEDURE TypeOf (p: P): Type.T =
+  BEGIN
+    ResolveTypes (p);
     RETURN p.type;
   END TypeOf;
+
+PROCEDURE RepTypeOf (p: P): Type.T =
+  BEGIN
+    ResolveTypes (p);
+    RETURN p.repType;
+  END RepTypeOf;
 
 PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
   VAR nErrs0, nErrs1, nWarns: INTEGER;  info: Type.Info;
