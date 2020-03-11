@@ -13,7 +13,6 @@ MODULE RecordExpr;
 IMPORT M3, M3ID, CG, Error, Type, RecordType, Module;
 IMPORT Value, Field, AssignStmt, M3Buf;
 IMPORT Expr, ExprRep, KeywordExpr, RangeExpr, ArrayExpr;
-IMPORT NamedExpr, ConsExpr;
 
 TYPE
   Info = RECORD

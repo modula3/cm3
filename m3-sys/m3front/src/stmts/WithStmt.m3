@@ -43,9 +43,9 @@ PROCEDURE ParseTail (): Stmt.T =
   BEGIN
     p := NEW (P);
     StmtRep.Init (p);
-    IF cur.token = TK.tUNUSED THEN 
+    IF cur.token = TK.tUNUSED THEN
       u := TRUE; 
-      GetToken (); (* UNUSED *) 
+      GetToken (); (* UNUSED *)
       Match (TK.tENDPRAGMA);
     END; 
     id := MatchID ();
@@ -160,7 +160,7 @@ PROCEDURE Compile (p: P): Stmt.Outcomes =
           
       | Kind.structure =>
           Variable.LoadLValue (p.var);
-          AssignStmt.DoEmit (Value.TypeOf (p.var), p.expr);
+          AssignStmt.DoEmit (tlhs, p.expr);
       | Kind.other =>
           Variable.LoadLValue (p.var);
           CG.Push (val);

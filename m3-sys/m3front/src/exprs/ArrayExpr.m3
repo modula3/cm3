@@ -314,7 +314,7 @@ PROCEDURE CheckArgStaticLength
     THEN
       Error.Int (depth,
          "Array constructor element's static length differs "
-         & "from previous static length, at depth:");
+         & "from previous static length (2.6.8), at depth:");
       constr.broken := TRUE;
     END;
   END CheckArgStaticLength;
@@ -422,17 +422,17 @@ PROCEDURE CheckRecurse
       constr.eltCt := LengthOfOrdType (constr.semIndexType);
       IF argCt > constr.eltCt THEN
         Error.Int
-          (argCt, "Too many values specified in fixed array constructor.");
+          (argCt, "Too many values specified in fixed array constructor (2.6.8).");
         FOR i := constr.eltCt TO argCt - 1 DO
           constr.args^[i] := NIL
         END;
       ELSIF argCt < constr.eltCt AND NOT constr.dots THEN
-        Error.Msg ("Too few values specified in fixed array constructor.");
+        Error.Msg ("Too few values specified in fixed array constructor (2.6.8).");
       END;
     ELSE (* Open array semType. *)
       constr.eltCt := argCt;
       IF (constr.dots) THEN
-        Error.Msg ("\"..\" not allowed in open array constructor.");
+        Error.Msg ("\"..\" not allowed in open array constructor (2.6.8).");
         (* NOTE: ^The language seems to say this is illegal.  It was
                  previously a warning, so this change could invalidate
                  existing code. *)
@@ -446,8 +446,8 @@ PROCEDURE CheckRecurse
         THEN
           Error.Int
             (selfLevelInfo.staticLen,
-             "Constructor argument's list length unequal to fixed "
-             & " length of declared type.");
+             "Array constructor argument list length unequal to fixed "
+             & " length of declared type (2.6.8).");
           constr.broken := TRUE;
         END;
       ELSE selfLevelInfo.staticLen := constr.eltCt;
@@ -463,11 +463,11 @@ PROCEDURE CheckRecurse
 
             (* Check for arg forms that are invalid in an array constructor: *)
             IF KeywordExpr.Split (argExpr, key, value) THEN
-              Error.Msg ("Keyword values are not allowed in array constructors.");
+              Error.Msg ("Keyword values are not allowed in array constructors (2.6.8).");
               argExpr := NIL;
               constr.broken := TRUE;
             ELSIF RangeExpr.Split (argExpr, minE, maxE) THEN
-              Error.Msg ("Range values are not allowed in array constructors.");
+              Error.Msg ("Range values are not allowed in array constructors (2.6.8).");
               argExpr := NIL;
               constr.broken := TRUE;
             ELSE (* Valid arg form. *)
@@ -493,17 +493,17 @@ PROCEDURE CheckRecurse
                 IF NOT Type.IsAssignable (constr.semEltType, argSemType) THEN
                   Error.Int (i,
                      "Expression is not assignable to containing array"
-                     & " constructor's element type.");
+                     & " constructor's element type (2.6.8).");
                   argExpr := NIL;
                   constr.broken := TRUE;
                 (* And to top constructor, if different. *)
                 END;
                 IF constr # top 
-                      AND NOT Type.IsAssignable (argLevelInfo.semType, argSemType)
+                   AND NOT Type.IsAssignable (argLevelInfo.semType, argSemType)
                 THEN
                   Error.Int (i,
                      "Expression is not assignable to top-level array"
-                     & " constructor's element type.");
+                     & " constructor's element type (2.6.8).");
                   argExpr := NIL;
                   constr.broken := TRUE;
                 END;
@@ -968,7 +968,7 @@ PROCEDURE Represent (top: T) =
               levelInfo.staticLen := locStaticLen
             ELSIF locStaticLen # levelInfo.staticLen THEN
               Error.Int
-                (depth, "Constructor length # expected length, in dimension." );
+                (depth, "Constructor length # expected length (2.6.8), in dimension:" );
               (* ^top.targetType assignability checks above should avert this. *)
               top.broken := TRUE;
               top.state := StateTyp.Represented;

@@ -286,13 +286,13 @@ PROCEDURE Check (p: P) =
 
     p.elementType := Type.CheckInfo (p.elementType, (*OUT*) elt_info);
     IF (elt_info.class = Type.Class.OpenArray) THEN
-      Error.Msg ("fixed array element type cannot be open array (2.2.3).");
+      Error.Msg ("Fixed array element type cannot be open array (2.2.3).");
     END;
 
     IF NOT TInt.ToInt (Type.Number (p.indexType), (*OUT*) p.n_elts) THEN
       Error.Msg ("CM3 restriction: array type has too many elements");
-(* FIXME: Tell the user how many is allowed.*)
-(* FIXME: Cross-compile 32-bit host to 64. *)
+(* FIXME: Tell the user how many are allowed.*)
+(* FIXME: Cross-compile 32-bit host to 64-bit target. *)
       p.n_elts := 1;
     END;
 
