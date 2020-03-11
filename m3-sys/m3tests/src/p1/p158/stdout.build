@@ -1,4 +1,1 @@
---- building in AMD64_LINUX ---
-
-new source -> compiling Main.m3
- -> linking pgm
+./pgm >stdout.pgm.raw 2>stderr.pgm.raw

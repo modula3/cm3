@@ -1,8 +1,3 @@
---- building in AMD64_LINUX ---
-
-ignoring ../m3overrides
-
-new source -> compiling Main.m3
 "../Main.m3", line 26: warning: Ordinal value not assignable at runtime (out of range) (2.3.1).
 "../Main.m3", line 27: warning: Ordinal value not assignable at runtime (out of range) (2.3.1).
 "../Main.m3", line 247: warning: Open array passed by value. (FOArr)
@@ -12,4 +7,3 @@ new source -> compiling Main.m3
 "../Main.m3", line 26: warning: not used (GRec)
 "../Main.m3", line 27: warning: not used (GArr)
 8 warnings encountered
- -> linking pgm
