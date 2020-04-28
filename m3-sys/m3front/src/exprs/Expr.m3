@@ -13,7 +13,7 @@ IMPORT M3, M3ID, M3Buf, CG, Type, Scanner, ExprParse;
 IMPORT Target, TInt, ErrType, Error;
 IMPORT NamedExpr, ConsExpr, OpenArrayType, ArrayType, Value;
 IMPORT Bool, Int;
-IMPORT CallExpr;
+IMPORT CallExpr, SetExpr, RecordExpr, ArrayExpr;
 
 (********************************************************************)
 
@@ -39,13 +39,13 @@ PROCEDURE Init (t: T) =
 (* EXPORTED: *)
 PROCEDURE TypeOf (t: T): Type.T =
 
-(* This is a confusing mess.  Some expression kinds eagerly compute the type in 'New'.
-   Some give it a tentative non-nil value in 'New', but change it in 'Check'.
-   sometimes only to ErrType.T, sometimes to the real type.  'TypeOf' will return
-   the tentative value if called prior to 'Check'.  All such would ASSERT FALSE,
-   if their 'typeOf' method were called, which fortunately, can't happed.
-   For the others, 'TypeOf' computes and caches the type on-demand, using the
-   expression's 'typeOf' method.
+(* This is a confused mess.  Some expression kinds eagerly compute the type
+   in 'New'.  Some give it a tentative non-nil value in 'New', but change it
+   in 'Check', sometimes only to ErrType.T, sometimes to the real type.
+   'TypeOf' will return the tentative value if called prior to 'Check'.
+   All such would ASSERT FALSE, if their 'typeOf' method were called, which
+   fortunately, can't happen.  For the others, 'TypeOf' computes and caches
+   the type on-demand, using the expression's 'typeOf' method.
 *)
   BEGIN
     IF (t = NIL) THEN RETURN ErrType.T END;
@@ -66,7 +66,9 @@ PROCEDURE RepTypeOf (t: T): Type.T =
   BEGIN
     stripped := StripNamedCons (t);
     IF stripped = NIL THEN stripped := t END;
-    IF stripped.repType = NIL THEN stripped.repType := stripped.repTypeOf () END;
+    IF stripped.repType = NIL THEN
+      stripped.repType := stripped.repTypeOf ();
+    END;
     RETURN stripped.repType;
   END RepTypeOf;
 
@@ -111,10 +113,10 @@ PROCEDURE UsesAssignProtocolDefault (<*UNUSED*>t: T): BOOLEAN =
   END UsesAssignProtocolDefault;
 
 (* EXPORTED: (ExprRep)*)
-PROCEDURE DefaultUse (<*UNUSED*>e: M3.Expr): BOOLEAN =
+PROCEDURE DefaultCheckUseFailure (<*UNUSED*>e: M3.Expr): BOOLEAN =
   BEGIN
     RETURN TRUE;
-  END DefaultUse;
+  END DefaultCheckUseFailure;
 
 (* EXPORTED: *)
 PROCEDURE TypeCheck (t: T;  VAR cs: CheckState) =
@@ -227,6 +229,23 @@ PROCEDURE IsMarkedForDirectAssignment (t: T): BOOLEAN =
   BEGIN
     RETURN (t # NIL) AND (t.doDirectAssign);
   END IsMarkedForDirectAssignment;
+
+(* EXPORTED: *)
+PROCEDURE IsAnonConstructor (t: T): BOOLEAN =
+(* t is a non-named array, record, or set constructor. *)
+  VAR locExpr: T;
+  BEGIN
+    (* Let's avoid creating yet another dispatching method with 83
+       potential override sites to be checked by some poor maintainer. *)
+    locExpr := t;
+    IF locExpr = NIL THEN RETURN FALSE END;
+    IF NamedExpr.Is (locExpr) THEN RETURN FALSE END;
+    IF ConsExpr.Is (locExpr) THEN RETURN TRUE END;
+    IF ArrayExpr.Is (locExpr) THEN RETURN TRUE; END;
+    IF RecordExpr.Is (locExpr) THEN RETURN TRUE; END;
+    IF SetExpr.Is (locExpr) THEN RETURN TRUE; END;
+    RETURN FALSE;
+  END IsAnonConstructor;
 
 (******************************************** Alignments ************)
 
@@ -558,16 +577,36 @@ PROCEDURE StripNamedCons (expr: T): T =
     RETURN resultExpr
   END StripNamedCons;
 
-PROCEDURE Use (t: T): BOOLEAN =
+PROCEDURE StaticSize (expr: T): INTEGER =
+(* < 0, if nonstatic.  Can be static, even if open array repType. *)
+  VAR stripped: T;
+  VAR info: Type.Info;
+  BEGIN
+    stripped := StripNamedCons (expr);
+    IF stripped # NIL AND OpenArrayType.Is (RepTypeOf (stripped))
+    THEN (* It's an array constructor. *)
+      RETURN ArrayExpr.StaticSize (stripped);
+    END;
+    EVAL Type.CheckInfo (RepTypeOf (expr), info);
+    RETURN info.size;
+  END StaticSize;
+
+PROCEDURE CheckUseFailure (t: T): BOOLEAN =
 (* Generate runtime actions prior to a use of t that does not call Compile.
    Return TRUE IFF following code is reachable. *)
   VAR strippedExpr: T;
   BEGIN
     strippedExpr := StripNamedCons (t);
-    IF strippedExpr = NIL THEN RETURN TRUE END;
+    IF strippedExpr = NIL THEN
+      strippedExpr := t;
+      RETURN TRUE;
+(* FIXME ^Remove this RETURN and fix so checkUseFailure works on
+          fields, formals, variables.  Currently (2020-4-24), it
+          fails because Value.toExpr has no overrides for these. *)
+    END;
     <* ASSERT strippedExpr.checked *>
-    RETURN strippedExpr.use ();
-  END Use;
+    RETURN strippedExpr.checkUseFailure ();
+  END CheckUseFailure;
 
 BEGIN
 END Expr.

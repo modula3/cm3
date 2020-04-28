@@ -51,7 +51,7 @@ TYPE
         note_write   := ExprRep.NotWritable;
         staticLength := StaticLength;
         usesAssignProtocol := UsesAssignProtocol;
-        use          := Use;
+        checkUseFailure := CheckUseFailure;
       END;
 
 (* EXPORTED: *)
@@ -250,12 +250,12 @@ PROCEDURE UsesAssignProtocol (p: P): BOOLEAN =
   END UsesAssignProtocol;
 
 (* Externally dispatched-to: *)
-PROCEDURE Use (p: P): BOOLEAN =
+PROCEDURE CheckUseFailure (p: P): BOOLEAN =
   BEGIN
     IF p = NIL THEN RETURN TRUE END;
     InnerSeal (p);
-    RETURN Expr.Use (p.base) (* Delegate.*);
-  END Use;
+    RETURN Expr.CheckUseFailure (p.base) (* Delegate.*);
+  END CheckUseFailure;
 
 BEGIN
 END ConsExpr.

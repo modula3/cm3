@@ -134,7 +134,7 @@ PROCEDURE Is (t: Type.T): BOOLEAN =
   VAR p := Reduce (t);
   BEGIN
     IF p # NIL THEN RETURN TRUE
-    ELSE RETURN OpenArrayType.Is (p)
+    ELSE RETURN OpenArrayType.Is (t)
     END
   END Is;
 
@@ -314,7 +314,7 @@ PROCEDURE Check (p: P) =
       AND (p.n_elts > MaxBitSize DIV p.elt_pack) THEN
       Error.Msg ("CM3 restriction: array type too large");
 (* FIXME: Tell the user how large it can be.*)
-(* FIXME: Cross-compile 32-bit host to 64. *)
+(* FIXME: Cross-compile 32-bit host to 64-bit target. *)
       min_size := 0;
       p.total_size := 0;
     ELSE

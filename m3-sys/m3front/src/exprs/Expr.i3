@@ -84,6 +84,9 @@ PROCEDURE MarkForDirectAssignment (t: T);
 PROCEDURE IsMarkedForDirectAssignment (t: T): BOOLEAN;
 (* returns "TRUE" if "t" is marked for direct assignment *)
 
+PROCEDURE IsAnonConstructor (t: T): BOOLEAN;
+(* t is a non-named array, record, or set constructor. *)
+
 PROCEDURE Alignment (t: T): Type.BitAlignT;
 (* A bit alignment that t is guaranteed to have.  Hopefully maximum, or
    nearly so.  Always a true alignment, possibly as small as 1 bit. 
@@ -150,7 +153,10 @@ PROCEDURE BadOperands (op: TEXT;  a, b: M3.Type := NIL): M3.Type;
 PROCEDURE StripNamedCons (expr: T): T;
 (* Look through a NamedExpr and then a ConsExpr, for an Expr.T.  NIL if not. *)
 
-PROCEDURE Use (t: T): BOOLEAN;
+PROCEDURE StaticSize (expr: T): INTEGER;
+(* < 0, if nonstatic.  Can be static, even if open array repType. *)
+
+PROCEDURE CheckUseFailure (t: T): BOOLEAN;
 (* Generate runtime actions prior to a use of t that does not call Compile.
    Return TRUE IFF following code is reachable. *)
 

@@ -72,7 +72,7 @@ PROCEDURE RepTypeOf (p: P): Type.T =
   BEGIN
     ta := Expr.RepTypeOf (p.a);
     IF RefType.Split (ta, target)
-      THEN RETURN target;
+      THEN RETURN Type.StripPacked (target);
       ELSE RETURN ErrType.T;
     END;
   END RepTypeOf;

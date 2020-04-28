@@ -277,7 +277,7 @@ PROCEDURE CGType (t: T;  in_memory: BOOLEAN): CG.Type =
 
 (*EXPORTED*)
 PROCEDURE IsStructured (t: T): BOOLEAN =
-(* <=> rec, set, or array <=> is represented as an address on the CG stack *)
+(* Always represented as an address on the CG stack (record, array, or large set) *)
 (* PRE: t need not be checked. *) 
   BEGIN
     IF t = NIL THEN RETURN FALSE END;

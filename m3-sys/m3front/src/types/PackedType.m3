@@ -44,6 +44,7 @@ PROCEDURE Parse (): Type.T =
     RETURN p;
   END Parse;
 
+(* EXPORTED: *)
 PROCEDURE New (size: INTEGER;  base: Type.T): Type.T =
   VAR p: P;
   BEGIN
@@ -54,6 +55,16 @@ PROCEDURE New (size: INTEGER;  base: Type.T): Type.T =
     p.baseType := base;
     RETURN p;
   END New;
+
+(* EXPORTED: *)
+PROCEDURE Is (t:Type.T): BOOLEAN =
+  BEGIN
+    TYPECASE t OF
+    | NULL => RETURN FALSE;
+    | P => RETURN TRUE;
+    ELSE RETURN FALSE;
+    END;
+  END Is;
 
 PROCEDURE Reduce (t: Type.T): P =
   BEGIN
@@ -67,9 +78,10 @@ PROCEDURE GetPackedSize (p: P): INTEGER =
 (* This mostly duplicates code in Check, but doesn't depend on the
    base type's having been checked, won't adjust for some errors, and
    may leave p.newSize as NO_SIZE (and return NO_SIZE).  If Check has
-   happened, its result will prevail. *) 
+   happened, Check's result will prevail. *)
   VAR newSize: INTEGER;  e: Expr.T;
   BEGIN
+    IF p = NIL THEN RETURN NO_SIZE END;
     IF (p.newSize = NO_SIZE) AND (p.sizeE # NIL) THEN
       e := Expr.ConstValue (p.sizeE);
       IF (e = NIL) OR NOT IntegerExpr.ToInt (e, newSize)
@@ -133,7 +145,7 @@ PROCEDURE Check (p: P) =
         IF p.newSize < baseInfo.min_size THEN
           Error.Int
             (baseInfo.min_size,
-             "BITS FOR size too small for base type, must be at least (2.2.5)");
+             "BITS FOR size too small for base type (2.2.5), must be at least:");
           p.newSize := baseInfo.min_size; 
         END;
       END; 

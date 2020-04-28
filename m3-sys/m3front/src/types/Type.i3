@@ -90,7 +90,7 @@ PROCEDURE CGType (t: T;  in_memory: BOOLEAN := FALSE): CG.Type;
    depending on 'in_memory' *)
 
 PROCEDURE IsStructured (t: T): BOOLEAN;
-(* <=> rec, set, or array <=> is represented as an address on the CG stack *)
+(* Always represented as an address on the CG stack (record, array, or large set) *)
 (* PRE: t need not be checked. *) 
 
 PROCEDURE LoadScalar (t: T);
@@ -187,7 +187,7 @@ PROCEDURE GenCellPtrs (): INTEGER;
 END Type.
 
 (*
-  The following sets of procedures are may be called during the
+  The following sets of procedures may be called during the
   various phases of the compilation:
 
    initialization:

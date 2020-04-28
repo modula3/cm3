@@ -62,7 +62,7 @@ TYPE
         genLiteral   := GenLiteral;
         note_write   := ExprRep.NotWritable;
         usesAssignProtocol := UsesAssignProtocol;
-        use          := Use;
+        checkUseFailure := CheckUseFailure;
       END;
 
 (* EXPORTED: *)
@@ -74,7 +74,7 @@ PROCEDURE New (type: Type.T;  args: Expr.List): Expr.T =
     p.directAssignableType := TRUE;
 
     p.type           := type;
-    p.repType        := type;
+    p.repType        := Type.StripPacked (type);
     p.tipe           := type;
     p.args           := args;
     p.map            := NIL;
@@ -89,6 +89,7 @@ PROCEDURE New (type: Type.T;  args: Expr.List): Expr.T =
 
 (* EXPORTED: *)
 PROCEDURE Is (e: Expr.T): BOOLEAN =
+(* Purely syntactic. Will not look through a ConsExpr. *)
   BEGIN
     RETURN (TYPECODE (e) = TYPECODE (P));
   END Is;
@@ -345,7 +346,7 @@ PROCEDURE InnerPrepLV (p: P;  traced: BOOLEAN; usesAssignProtocol: BOOLEAN) =
         ELSE
           CG.Load_addr_of (resultVar, field.offset, info.alignment);
         END;
-        AssignStmt.DoEmit (field.type, z.expr);
+        AssignStmt.DoEmit (field.type, z.expr, initializing := TRUE);
       END;
     END;
 
@@ -500,7 +501,7 @@ PROCEDURE CheckRT
   END CheckRT;
 
 (* Externally dispatched-to: *)
-PROCEDURE Use (p: P): BOOLEAN =
+PROCEDURE CheckUseFailure (p: P): BOOLEAN =
   BEGIN
     <* ASSERT p.checked *>
     IF AssignStmt.DoGenRTAbort (p.RTErrorCode) AND Evaluate (p) # NIL THEN
@@ -511,7 +512,7 @@ PROCEDURE Use (p: P): BOOLEAN =
       RETURN FALSE;
     ELSE RETURN TRUE;
     END;
-  END Use;
+  END CheckUseFailure;
 
 BEGIN
 END RecordExpr.

@@ -825,7 +825,7 @@ PROCEDURE GenInitProc (p: P): CG.Proc =
         CG.Boost_addr_alignment (p.fieldAlign);
         CG.Add_offset (field.offset);
         fieldExprAlign := CG.GCD (p.fieldAlign, field.offset MOD Target.Word.size);
-        AssignStmt.DoEmit (field.type, field.dfault, fieldExprAlign);
+        AssignStmt.DoEmit (field.type, field.dfault, fieldExprAlign, initializing := TRUE);
       END;
       v := v.next;
     END;
@@ -904,7 +904,8 @@ PROCEDURE GenLinkProc (p: P;  defaults: INTEGER): CG.Proc =
           CG.Index_bytes (Target.Byte);
         END;
         CG.Boost_addr_alignment (Target.Address.align);
-        AssignStmt.DoEmit (t_default, method.dfault, Target.Address.align);
+        AssignStmt.DoEmit
+          (t_default, method.dfault, Target.Address.align, initializing := TRUE);
       END;
       v := v.next;
     END;

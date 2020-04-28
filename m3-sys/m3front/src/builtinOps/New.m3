@@ -20,13 +20,13 @@ VAR Z: CallExpr.MethodList;
 PROCEDURE TypeOf (ce: CallExpr.T): Type.T =
   VAR t: Type.T;
   BEGIN
-    IF NOT TypeExpr.Split (ce.args[0], t) THEN  t := Null.T;
+    IF NOT TypeExpr.Split (ce.args[0], t) THEN RETURN Null.T;
     ELSIF RefType.Is (t)    THEN (* ok *)
     ELSIF ObjectType.Is (t) THEN (* sleazy bug!!  ignore method overrides *)
     ELSIF OpaqueType.Is (t) THEN (* sleazy bug!!  ignore method overrides *)
-    ELSE  t := Null.T;
+    ELSE  RETURN Null.T;
     END;
-    RETURN t;
+    RETURN Type.StripPacked (t);
   END TypeOf;
 
 PROCEDURE Check (ce: CallExpr.T;  VAR cs: Expr.CheckState) =
@@ -357,7 +357,7 @@ PROCEDURE GenRecord (t, r: Type.T;  traced: BOOLEAN;
       CG.Push (ce.tmp);
       CG.Boost_addr_alignment (align);
       CG.Add_offset (field.offset);
-      AssignStmt.DoEmit (field.type, value);
+      AssignStmt.DoEmit (field.type, value, initializing := TRUE);
     END;
   END GenRecord;
 
@@ -403,7 +403,7 @@ PROCEDURE GenObject (t: Type.T;  ce: CallExpr.T) =
         END;
         CG.Add_offset (field.offset);
         CG.Boost_addr_alignment (obj_align);
-        AssignStmt.DoEmit (field.type, value);
+        AssignStmt.DoEmit (field.type, value, initializing := TRUE);
       END;
     END;
   END GenObject;

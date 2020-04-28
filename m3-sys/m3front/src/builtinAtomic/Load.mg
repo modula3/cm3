@@ -51,7 +51,7 @@ PROCEDURE Compile (ce: CallExpr.T) =
 PROCEDURE Initialize () =
   VAR
     var := Formal.Info { name := M3ID.Add ("var"),
-                         mode := Formal.Mode.mCONST,
+                         mode := Formal.Mode.mREADONLY,
                          offset := 0,
                          type := Atomic.T,
                          dfault := NIL,

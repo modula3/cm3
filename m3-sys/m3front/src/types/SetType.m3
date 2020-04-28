@@ -11,7 +11,7 @@ MODULE SetType;
 IMPORT Fmt;
 
 IMPORT M3, CG, Type, TypeRep, Target, TInt, TargetMap, Error, Token, Scanner;
-IMPORT Word, TipeMap, TipeDesc, ErrType;
+IMPORT Word, TipeMap, TipeDesc, ErrType, PackedType;
 
 TYPE
   P = Type.T OBJECT
@@ -195,6 +195,27 @@ PROCEDURE Check (p: P) =
     END;
     RETURN (offset + p.info.size) <= (z0 + Target.Integer.size);
   END NoStraddle;
+
+(* EXPORTED: *)
+PROCEDURE IsSmallSet (t: Type.T): BOOLEAN =
+(* Fits within a word.  Handled as a scalar. *)
+(* This includes a packed small set type, regardless of its use. *)
+  VAR s: Type.T;
+  BEGIN
+    IF t = NIL THEN RETURN FALSE END;
+    IF t.info.class = Type.Class.Named THEN t := Type.Strip (t) END;
+    IF t.info.class = Type.Class.Set THEN
+      RETURN t.info.size <= Target.Word.size
+    END;
+    IF t.info.class = Type.Class.Packed THEN
+      s := PackedType.Base (t);
+      IF s = NIL THEN RETURN FALSE END;
+      IF s.info.class = Type.Class.Set THEN
+        RETURN t.info.size <= Target.Word.size
+      END
+    END;
+    RETURN FALSE
+  END IsSmallSet;
 
 PROCEDURE Compiler (p: P) =
   VAR info: Type.Info;

@@ -17,7 +17,7 @@ PROCEDURE TypeOf (ce: CallExpr.T): Type.T =
   VAR t: Type.T;
   BEGIN
     IF TypeExpr.Split (ce.args[1], t)
-      THEN RETURN t;
+      THEN RETURN Type.StripPacked (t);
       ELSE RETURN Int.T;
     END;
   END TypeOf;

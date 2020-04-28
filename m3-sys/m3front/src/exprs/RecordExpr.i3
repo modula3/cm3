@@ -13,6 +13,7 @@ IMPORT M3ID, Type, Expr, CG;
 PROCEDURE New (type: Type.T;  args: Expr.List): Expr.T;
 
 PROCEDURE Is (e: Expr.T): BOOLEAN;
+(* Purely syntactic. Will not look through a ConsExpr. *)
 
 PROCEDURE Qualify (record: Expr.T;  id: M3ID.T;  VAR e: Expr.T): BOOLEAN;
 

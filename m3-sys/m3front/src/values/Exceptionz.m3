@@ -217,7 +217,8 @@ PROCEDURE Check (t: T;  <*UNUSED*> VAR cs: Value.CheckState) =
         Error.ID (t.name, "argument type must have fixed length");
       END;
       IF ArgByReference (t.tipe) THEN
-        t.refTipe := RefType.New (t.tipe, TRUE, NIL);
+        t.refTipe := RefType.New (Type.StripPacked (t.tipe), TRUE, NIL);
+(* FIXME: Most uses of t.tipe need to be StripPacked. *)
         t.refTipe := Type.Check (t.refTipe);
       END;
     END;

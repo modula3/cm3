@@ -136,7 +136,7 @@ PROCEDURE NewMethodList (minArgs, maxArgs: INTEGER;
     m.strict       := strict;
     m.fixedType    := fixedType;
     m.typeOf       := typeOf;
-    m.repTypeOf    := typeOf;
+    m.repTypeOf    := repTypeOf;
     m.need_addr    := need_addr;
     m.checker      := checker;
     m.prep         := prep;

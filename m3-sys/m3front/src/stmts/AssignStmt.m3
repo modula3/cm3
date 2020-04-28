@@ -324,7 +324,7 @@ PROCEDURE CanAvoidCopy
 
 (* EXPORTED: *) 
 PROCEDURE DoEmit
-  (lhsRepType: Type.T;  rhsExpr: Expr.T; lhsAlign := Target.Byte) =
+  (lhsRepType: Type.T;  rhsExpr: Expr.T; lhsAlign := Target.Byte; initializing: BOOLEAN) =
   (* PRE: LHS is Compiled and on TOS. It is dope if an open array. *)
   (* PRE: RHS is Prepped. *)
 
@@ -339,7 +339,7 @@ PROCEDURE DoEmit
     (* ^Strip renaming, packing, and subranges. *)
     lhsRepBaseType := Type.CheckInfo (lhsRepBaseType, lhsRepBaseTypeInfo);
 
-    EVAL Expr.Use (rhsExpr);
+    EVAL Expr.CheckUseFailure (rhsExpr);
     CASE lhsRepBaseTypeInfo.class OF
     | Type.Class.Integer, Type.Class.Longint, Type.Class.Subrange,
       Type.Class.Enum =>
@@ -352,11 +352,13 @@ PROCEDURE DoEmit
         AssignOrRTCheckProcedure (rhsExpr, lhsIsPushed := TRUE);
         CG.Store_indirect (lhsRepTypeInfo.stk_type, 0, lhsRepTypeInfo.size);
     | Type.Class.Record =>
-        AssignRecord (rhsExpr, lhsRepTypeInfo, lhsAlign);
+        AssignRecord
+          (rhsExpr, lhsRepTypeInfo, lhsAlign, initializing);
     | Type.Class.Set =>
-        AssignSet (lhsRepType, rhsExpr, lhsRepTypeInfo);
+        AssignSet (lhsRepType, rhsExpr, lhsRepTypeInfo, initializing);
     | Type.Class.Array, Type.Class.OpenArray =>
-        AssignArray (lhsRepType, lhsRepBaseTypeInfo, rhsExpr, lhsAlign);
+        AssignArray
+          (lhsRepType, lhsRepBaseTypeInfo, rhsExpr, lhsAlign, initializing);
     | Type.Class.Error =>
     ELSE <*ASSERT FALSE*>
     END;
@@ -397,8 +399,9 @@ PROCEDURE AssignReference (tlhs: Type.T;  rhsExpr: Expr.T;
     CG.Free (lhsVal);
   END AssignReference;
 
-PROCEDURE AssignSet (tlhs: Type.T;  rhsExpr: Expr.T;
-                     READONLY lhsTypeInfo: Type.Info) =
+PROCEDURE AssignSet
+  (tlhs: Type.T;  rhsExpr: Expr.T; READONLY lhsTypeInfo: Type.Info;
+   initializing: BOOLEAN) =
   (* PRE: LHS is compiled and on TOS. *)
   (* PRE: RHS is prepped. *)
   BEGIN
@@ -410,9 +413,9 @@ PROCEDURE AssignSet (tlhs: Type.T;  rhsExpr: Expr.T;
       IF Expr.IsMarkedForDirectAssignment (rhsExpr) THEN
         CG.Discard (CG.Type.Addr);
       ELSE
-        CG.Copy (lhsTypeInfo.size, overlap := FALSE);
+        CG.Copy (lhsTypeInfo.size, overlap := NOT initializing);
       END
-    ELSE (* small set *)
+    ELSE (* Small set. *)
 (* REVIEW: Do we really need this case, or will CompileStruct handle it? *)
       Expr.Compile (rhsExpr);
       CG.Store_indirect (lhsTypeInfo.stk_type, 0, lhsTypeInfo.size);
@@ -431,11 +434,13 @@ PROCEDURE CompileStruct (expr: Expr.T) =
   END CompileStruct;
 
 PROCEDURE CopyStruct
-  (lhsAlign: Type.BitAlignT; bitSize: INTEGER; overlap: BOOLEAN) =
+  (lhsAlign, rhsAlign: Type.BitAlignT; bitSize: INTEGER; overlap: BOOLEAN) =
 (* PRE: CGstack: RHS addr on top, LHS addr below. *)
 (* PRE: Using expression protocol. *)
   BEGIN
-    IF lhsAlign < Target.Byte OR bitSize MOD Target.Byte # 0
+    IF lhsAlign < Target.Byte
+       OR rhsAlign < Target.Byte
+       OR bitSize MOD Target.Byte # 0
     THEN 
       CG.Load_indirect (Target.Word.cg_type, 0 , bitSize); 
       CG.Store_indirect (Target.Word.cg_type, 0 , bitSize); 
@@ -446,31 +451,35 @@ PROCEDURE CopyStruct
   END CopyStruct;
 
 PROCEDURE AssignRecord
-  (rhsExpr: Expr.T; READONLY lhsTypeInfo: Type.Info;
-   lhsAlign: Type.BitAlignT) =
+  (rhsExpr: Expr.T; READONLY lhsTypeInfo: Type.Info; lhsAlign: Type.BitAlignT;
+   initializing: BOOLEAN) =
   (* PRE: LHS is compiled and on TOS. *)
   (* PRE: RHS is prepped. *)
+  VAR rhsAlign: Type.BitAlignT;
   BEGIN
     (* Leave the LHS address on the CG stack, regardless of protocol. *)
     CompileStruct (rhsExpr);
+    rhsAlign := Expr.Alignment (rhsExpr);
     IF Expr.UsesAssignProtocol (rhsExpr)
-    THEN (* Compile will have copied RHS into LHS,, leaving only the LHS
+    THEN (* Compile will have copied RHS into LHS, leaving only the LHS
             address on CG stack, which is the expression's result. *) 
       CG.Discard (CG.Type.Addr);
     ELSE (* Using expression protocol. *)
       (* RHS is on top of CG stack.  LHS is below.
          Compile will have left LHS alone. *)
-      CopyStruct (lhsAlign, lhsTypeInfo.size, overlap := FALSE);
+      CopyStruct
+        (lhsAlign, rhsAlign, lhsTypeInfo.size, overlap := NOT initializing);
     END;
   END AssignRecord;
 
 PROCEDURE AssignArray
   (lhsRepType: Type.T; READONLY lhsRepTypeInfo: Type.Info; rhsExpr: Expr.T; 
-   lhsAlign: Type.BitAlignT) =
+   lhsAlign: Type.BitAlignT; initializing: BOOLEAN) =
   (* PRE: LHS is compiled and on TOS. *)
   (* PRE: RHS is prepped. *)
   VAR
     lhsVal, rhsVal : CG.Val;
+    rhsAlign: Type.BitAlignT;
     rhsRepType: Type.T;
     rhsRepTypeInfo : Type.Info;
     LHSIsOpen, RHSIsOpen: BOOLEAN;
@@ -490,11 +499,14 @@ PROCEDURE AssignArray
       IF NOT RHSIsOpen AND NOT LHSIsOpen
       THEN(* Both sides are fixed length arrays *)
         CompileStruct (rhsExpr);
+        rhsAlign := Expr.Alignment (rhsExpr);
         (* RHS is on top of CG stack.  LHS is below, unmolested by Compile. *)
-        CopyStruct (lhsAlign, lhsRepTypeInfo.size, overlap := TRUE);
+        CopyStruct
+          (lhsAlign, rhsAlign, lhsRepTypeInfo.size, overlap := NOT initializing);
       ELSE (* Something is open. *)
         lhsVal := CG.Pop ();
         CompileStruct (rhsExpr);
+        rhsAlign := Expr.Alignment (rhsExpr);
         (* RHS on top of CG stack. *)
         rhsVal := CG.Pop ();
 
@@ -518,13 +530,15 @@ PROCEDURE AssignArray
             CG.Open_elt_ptr (lhsAlign);
             CG.Push (rhsVal);
             EVAL Type.CheckInfo (rhsRepType, rhsRepTypeInfo);
-            CopyStruct (lhsAlign, rhsRepTypeInfo.size, overlap := TRUE);
+            CopyStruct
+              (lhsAlign, rhsAlign, rhsRepTypeInfo.size, overlap := NOT initializing);
           END;
         ELSE (* LHS is fixed and RHS is open. *)
           CG.Push (lhsVal);
           CG.Push (rhsVal);
           CG.Open_elt_ptr (Expr.Alignment(rhsExpr));
-          CopyStruct (lhsAlign, lhsRepTypeInfo.size, overlap := TRUE);
+          CopyStruct
+            (lhsAlign, rhsAlign, lhsRepTypeInfo.size, overlap := NOT initializing);
         END;
         CG.Free (lhsVal);
         CG.Free (rhsVal);
@@ -623,7 +637,7 @@ PROCEDURE EmitRTCheck (tlhs: Type.T;  rhsExpr: Expr.T) =
     t_lhs_base := Type.Base (tlhs); (* strip renaming and packing *)
     t_lhs_base_info: Type.Info;
   BEGIN
-    EVAL Expr.Use (rhsExpr);
+    EVAL Expr.CheckUseFailure (rhsExpr);
 
     t_lhs_base := Type.CheckInfo (t_lhs_base, t_lhs_base_info);
     CASE t_lhs_base_info.class OF
@@ -815,7 +829,7 @@ PROCEDURE Compile (p: P): Stmt.Outcomes =
     Expr.PrepLValue (p.lhs, traced := rhs_info.isTraced);
     PrepForEmit (tlhs, p.rhs, initializing := FALSE);
     Expr.CompileLValue (p.lhs, traced := rhs_info.isTraced);
-    DoEmit (tlhs, p.rhs, Expr.Alignment (p.lhs));
+    DoEmit (tlhs, p.rhs, Expr.Alignment (p.lhs), initializing := FALSE);
     Expr.NoteWrite (p.lhs);
     RETURN Stmt.Outcomes {Stmt.Outcome.FallThrough};
   END Compile;

@@ -43,7 +43,7 @@ PROCEDURE New (a: Expr.T;  t: Type.T): Expr.T =
     p.expr    := a;
     p.tipe    := t;
     p.type    := t;
-    p.repType := t;
+    p.repType := Type.StripPacked (t);
     p.tmp     := NIL;
     RETURN p;
   END New;

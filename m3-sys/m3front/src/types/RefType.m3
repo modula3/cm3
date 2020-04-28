@@ -114,16 +114,19 @@ PROCEDURE Split (t: Type.T;  VAR target: Type.T): BOOLEAN =
 (* Externally dispatched-to: *)
 PROCEDURE Check (p: P) =
   VAR
-    t: Type.T;
+    targetType: Type.T;
     hash: INTEGER := 839;
     info: Type.Info;
     cs := M3.OuterCheckState;
   BEGIN
     Brand.Check (p.brand, p, hash, cs);
 
-    t := Type.Strip (p.target);
-    IF (t # NIL) THEN
-      hash := Word.Plus (Word.Times (hash, 43), ORD (t.info.class));
+    targetType := Type.Strip (p.target) (* Remove named. *);
+    IF targetType # NIL THEN
+      IF targetType.info.class = Type.Class.Packed THEN
+        targetType := Type.StripPacked (targetType);
+      END;
+      hash := Word.Plus (Word.Times (hash, 43), ORD (targetType.info.class));
     END;
 
     p.info.size      := Target.Address.size;

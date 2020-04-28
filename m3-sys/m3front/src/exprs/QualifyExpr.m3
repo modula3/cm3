@@ -284,7 +284,8 @@ PROCEDURE QualifyExprAlign (p: P): Type.BitAlignT =
            legality changing with compilation order, we also treat as a
            byte multiple even when we know it statically.  The exception
            is when the offset is statically zero.  This means there are
-           no fields of supertypes, and it will always be zero.  *)
+           no fields of supertypes, and the offset will always be zero,
+           regardless of compilation order.  *)
         IF obj_offset = 0
         THEN prefixAlign := Target.Word.size
         ELSE prefixAlign := Target.Byte
@@ -362,7 +363,7 @@ PROCEDURE Prep (p: P) =
         IF Expr.IsDesignator (p.expr)
         THEN Expr.PrepLValue (p.expr, traced := FALSE);
         ELSE
-          EVAL Expr.Use (p.expr);
+          EVAL Expr.CheckUseFailure (p.expr);
           Expr.Prep (p.expr);
         END;
         Field.Split (p.obj, field);
@@ -501,7 +502,7 @@ PROCEDURE PrepLV (p: P; traced: BOOLEAN) =
         IF Expr.IsDesignator (p.expr)
         THEN Expr.PrepLValue (p.expr, traced);
         ELSE
-          EVAL Expr.Use (p.expr);
+          EVAL Expr.CheckUseFailure (p.expr);
           Expr.Prep (p.expr);
         END;
     | Class.cOBJFIELD =>

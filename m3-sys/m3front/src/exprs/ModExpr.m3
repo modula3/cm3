@@ -24,8 +24,8 @@ TYPE
         tmp1 : CG.Var;
         tmp2 : CG.Var;
       OVERRIDES
-        typeOf       := ExprRep.NoType;
-        repTypeOf    := ExprRep.NoType;
+        typeOf       := TypeOf;
+        repTypeOf    := RepTypeOf;
         check        := Check;
         need_addr    := ExprRep.NotAddressable;
         prep         := Prep;
@@ -59,6 +59,16 @@ PROCEDURE New (a, b: Expr.T): Expr.T =
     p.tmp2    := NIL;
     RETURN p;
   END New;
+
+PROCEDURE TypeOf (p: P): Type.T =
+  BEGIN
+    RETURN Type.Base (Expr.TypeOf (p.a));
+  END TypeOf;
+
+PROCEDURE RepTypeOf (p: P): Type.T =
+  BEGIN
+    RETURN Type.Base (Expr.RepTypeOf (p.a));
+  END RepTypeOf;
 
 PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
   VAR ta, tb: Type.T;

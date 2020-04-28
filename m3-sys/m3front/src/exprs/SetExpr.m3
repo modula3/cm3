@@ -59,7 +59,7 @@ TYPE
         prepLiteral  := ExprRep.NoPrepLiteral;
         genLiteral   := GenLiteral;
         note_write   := ExprRep.NotWritable;
-        use          := Use;
+        checkUseFailure := CheckUseFailure;
       END;
 
 TYPE
@@ -84,7 +84,7 @@ PROCEDURE New (type: Type.T;  args: Expr.List): Expr.T =
     p := NEW (P);
     ExprRep.Init (p);
     p.type    := type;
-    p.repType := type;
+    p.repType := Type.StripPacked (type);
     p.tipe    := type;
     p.args    := args;
     p.mapped  := FALSE;
@@ -119,6 +119,7 @@ PROCEDURE NewFromTree (p: P;  node: Node): Expr.T =
 
 (*EXPORTED:*)
 PROCEDURE Is (e: Expr.T): BOOLEAN =
+(* Purely syntactic. Will not look through a ConsExpr. *)
   BEGIN
     RETURN (TYPECODE (e) = TYPECODE (P));
   END Is;
@@ -512,7 +513,7 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
   BEGIN
     p.tipe := Type.Check (p.tipe);
     p.type := p.tipe;
-    p.repType := p.tipe;
+    p.repType := Type.StripPacked (p.tipe);
     FOR i := 0 TO LAST (p.args^) DO Expr.TypeCheck (p.args[i], cs) END;
     IF NOT SetType.Split (p.tipe, eltType) THEN
       (* How can this happen? ConsExpr wouldn't have created this node, if not. *)
@@ -965,7 +966,7 @@ PROCEDURE CheckRT
   END CheckRT;
 
 (* Externally dispatched-to: *)
-PROCEDURE Use (p: P): BOOLEAN =
+PROCEDURE CheckUseFailure (p: P): BOOLEAN =
   BEGIN
     <* ASSERT p.checked *>
     IF AssignStmt.DoGenRTAbort (p.RTErrorCode) AND Evaluate (p) # NIL THEN
@@ -976,7 +977,7 @@ PROCEDURE Use (p: P): BOOLEAN =
       RETURN FALSE;
     ELSE RETURN TRUE;
     END;
-  END Use;
+  END CheckUseFailure;
 
 BEGIN
 END SetExpr.

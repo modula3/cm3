@@ -1947,7 +1947,7 @@ x4 := stack[SCheck(1,"Load_indirect-x4")];
               FinishLoadIndirect (x, t, addr_align);
             END;            
           ELSIF (x.bits = NIL) THEN
-            (* Unaligned, partial best_size'd store. *)
+            (* Unaligned, partial best_size'd load. *)
             DEC (x.offset, oddStaticBitCt);
 x5 := stack[SCheck(1,"Load_indirect-x5")];
             SimpleIndirectLoad (x, best_type, addr_align);
@@ -3096,7 +3096,7 @@ PROCEDURE Swap () =
       (* exchange the underlying values *)
       IF ((xa.kind = VKind.Stacked) OR (xa.kind = VKind.Pointer))
         AND ((xb.kind = VKind.Stacked) OR (xb.kind = VKind.Pointer)) THEN
-        (* both values are on the M3CG stack => must swap *)
+        (* Both values are on the M3CG stack => must swap them there. *)
         cg.swap (xa.type, xb.type);
       END;
 

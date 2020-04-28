@@ -65,6 +65,7 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
       p.b := CheckArg (Textt.T, tb, p.b, cs);
     ELSE
       p.type := Expr.BadOperands ("\'&\'", ta, tb);
+      p.repType := p.type;
     END;
 
     Error.Count (a, b);

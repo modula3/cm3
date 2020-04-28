@@ -14,6 +14,7 @@ IMPORT Type, Expr, CG;
 PROCEDURE New (type: Type.T;  args: Expr.List): Expr.T;
 
 PROCEDURE Is (e: Expr.T): BOOLEAN;
+(* Purely syntactic. Will not look through a ConsExpr. *)
 
 PROCEDURE Compare       (a, b: Expr.T;  VAR s: INTEGER): BOOLEAN;
 PROCEDURE Union         (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN;

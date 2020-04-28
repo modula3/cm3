@@ -32,7 +32,8 @@ PROCEDURE PrepForEmit (tlhs: Type.T;  rhs: Expr.T;  initializing: BOOLEAN);
    the result directly.  "initializing" is TRUE if the lhs is
    uninitialized storage (i.e. contains no user data). *)
 
-PROCEDURE DoEmit (tlhs: Type.T;  rhs: Expr.T; lhs_align := Target.Byte);
+PROCEDURE DoEmit
+  (tlhs: Type.T;  rhs: Expr.T; lhs_align := Target.Byte; initializing: BOOLEAN);
 (* tlhs is the repType. *)
 (* emit code to assign  (s0.A).tlhs := rhs.
    Note that Emit assumes that TypeOf(rhs) is assignable to tlhs

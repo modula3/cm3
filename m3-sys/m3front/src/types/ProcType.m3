@@ -96,7 +96,7 @@ PROCEDURE ParseFormal (p: P;  ) =
       formal.mode := Formal.Mode.mVAR;
       GetToken (); (* VAR *)
     ELSIF (cur.token = TK.tREADONLY) THEN
-      formal.mode := Formal.Mode.mCONST;
+      formal.mode := Formal.Mode.mREADONLY;
       GetToken (); (* READONLY *)
     END;
     n := Ident.ParseList ();

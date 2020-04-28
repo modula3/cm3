@@ -1,4 +1,3 @@
-
 (* Copyright (C) 1992, Digital Equipment Corporation           *)
 (* All rights reserved.                                        *)
 (* See the file COPYRIGHT for a full description.              *)
@@ -22,7 +21,7 @@ MODULE ArrayExpr;
 
 IMPORT Fmt;
 
-IMPORT M3, M3ID, CG, Expr, ExprRep, Error, Type, ArrayType;
+IMPORT M3, M3ID, CG, Expr, ExprRep, Error, Type, ArrayType, PackedType;
 IMPORT KeywordExpr, RangeExpr, OpenArrayType, Module;
 IMPORT IntegerExpr, EnumExpr, SubrangeType, Target, TInt, Int, M3Buf;
 IMPORT AssignStmt, RefType, M3RT, Procedure, RunTyme, ErrType;
@@ -37,10 +36,10 @@ TYPE StateTyp
 
 TYPE LevelInfoTyp = RECORD
     semType           : Type.T := NIL;
-    repType           : Type.T := NIL;
+    repType           : Type.T := NIL (* Packed stripped, top level only. *);
     repIndexType      : Type.T := NIL;
     fixingLenVal      : CG.Val := NIL;
-                        (* If this is a dynamic level, its runtime lenght. *)
+                        (* If this is a dynamic level, its runtime length. *)
     eltBytepackVal    : CG.Val := NIL;
                         (* If this is a dynamic level, its runtime element
                            packing in bytes. *)
@@ -68,7 +67,6 @@ TYPE LevelsTyp = REF ARRAY OF LevelInfoTyp;
 (* Different ways of delivering the result expression. *)
 TYPE ResultKindTyp
   = { RKUnknown      (* Initial value. *)
-
     , RKGlobal       (* One of the global data areas. *)
                        (* Uses top.globalOffset, top.globalEltsOffset,
                           and top.inConstArea. *)
@@ -97,10 +95,11 @@ REVEAL
   T = Expr.T BRANDED "ArrayExpr.T" OBJECT
     (* Field repType, inherited from Expr.T:
        The type used in RT representation of the constructor.  Equals targetType
-       (or, for a nested constructor, an element type thereof), if top targetType # NIL.
-       Otherwise, inferred entirely from the constructor.  Could still be # semType,
-       if semType is open but context fixes the length of some of the dimensions.
-       It is computed in 'Represent'. *)
+       (or, for a nested constructor, an element type thereof),
+       if top targetType # NIL.  Otherwise, inferred entirely from the
+       constructor.  Could still be # semType, if semType is open but
+       context fixes the length of some of the dimensions.
+       It is computed in 'Represent'. Packed is stripped, top level only. *)
     top               : T;
     tipe              : Type.T;
 (* CLEANUP ^ tipe always duplicates field "type", inherited from Expr.T *) 
@@ -174,7 +173,7 @@ REVEAL
     note_write   := ExprRep.NotWritable;
     staticLength := StaticLength;
     usesAssignProtocol := UsesAssignProtocol;
-    use          := Use
+    checkUseFailure := CheckUseFailure
   END (*OBJECT*);
 
 (* EXPORTED: *) 
@@ -248,6 +247,18 @@ PROCEDURE Is (expr: Expr.T): BOOLEAN =
     ELSE      RETURN FALSE;
     END;
   END Is;
+
+PROCEDURE StaticSize (expr: Expr.T): INTEGER =
+(* < 0, if nonstatic.  Can be static, even if open array repType. *)
+  VAR top: T;
+  BEGIN
+    top := ArrayConstrExpr (expr);
+    IF top = NIL THEN RETURN Expr.lengthNonArray END;
+    IF top.shallowestDynDepth >= 0 THEN (* Size is dynamic. *)
+      RETURN Expr.lengthNonStatic
+    END;
+    RETURN top.totalSize;
+  END StaticSize;
 
 (* Externally dispatched-to: *)
 PROCEDURE NeedsAddress (<*UNUSED*> constr: T) =
@@ -354,7 +365,7 @@ PROCEDURE Check (top: T;  VAR cs: Expr.CheckState) =
     (* Initialize level info for the deepest, (non-array) level. *)
     WITH lastLevelInfo = top.levels^ [LAST (top.levels^)] DO 
       lastLevelInfo.staticLen := Expr.lengthNonArray;
-      lastLevelInfo.repType := levelType;
+      lastLevelInfo.repType := levelType (* Preserve BITS..FOR.*);
       lastLevelInfo.semType := levelType;
     END;
     
@@ -920,6 +931,18 @@ PROCEDURE EltPackAndCount (top: T) =
     END (*FOR*);
   END EltPackAndCount;
 
+PROCEDURE NewArrayType (indexType, eltType, oldType: Type.T): Type.T =
+  VAR Result: Type.T;
+  VAR info: Type.Info;
+  BEGIN
+    Result := ArrayType.New (indexType, eltType);
+    IF PackedType.Is (oldType) THEN
+      EVAL Type.CheckInfo (oldType, info);
+      Result := PackedType.New (info.size, Result);
+    END;
+    RETURN Result;
+  END NewArrayType;
+
 PROCEDURE Represent (top: T) =
 (* PRE: top is the top of a tree of array constructors. *)
 (* Construct the representation for this constructor tree.
@@ -1003,7 +1026,8 @@ PROCEDURE Represent (top: T) =
             repIndexType
               := IndexTypeForLength (levelInfo.staticLen, top.origin);
             levelInfo.repIndexType := repIndexType;
-            levelInfo.repType := ArrayType.New (repIndexType, repSuccType);
+            levelInfo.repType
+               := NewArrayType (repIndexType, repSuccType, levelInfo.semType);
             levelInfo.repType := Type.Check (levelInfo.repType);
             repSuccHasChanged := TRUE;
           ELSE
@@ -1011,7 +1035,8 @@ PROCEDURE Represent (top: T) =
             levelInfo.repIndexType := repIndexType;
             IF repSuccHasChanged
             THEN (* Same indexType, different eltType pointer. *)
-              levelInfo.repType := ArrayType.New (repIndexType, repSuccType);
+              levelInfo.repType
+                 := NewArrayType (repIndexType, repSuccType, levelInfo.semType);
               levelInfo.repType := Type.Check (levelInfo.repType);
             ELSE
               levelInfo.repType := levelInfo.semType;
@@ -1022,7 +1047,8 @@ PROCEDURE Represent (top: T) =
           IF repIndexType = NIL THEN repSuccIsOpen := TRUE END;
         END (*WITH*);
       END (*FOR*);
-      top.repType := repSuccType;
+      top.repType := Type.StripPacked (repSuccType);
+      top.levels ^[0].repType := top.repType;
       EltPackAndCount (top);
       IF top.shallowestDynDepth >= 0 THEN
         WITH levelInfo = top.levels ^[top.deepestDynDepth] DO
@@ -1043,8 +1069,12 @@ PROCEDURE Represent (top: T) =
           b := ArrayType.Split
                  (repType, (*VAR*)repIndexType, (*VAR*)repEltType);
           <* ASSERT b *>
-          IF depth = 0 THEN top.repType := repType END;
-          levelInfo.repType := repType;
+          IF depth = 0 THEN
+            top.repType := Type.StripPacked (repType);
+            levelInfo.repType := top.repType;
+          ELSE
+            levelInfo.repType := repType;
+          END;
           levelInfo.repIndexType := repIndexType;
 
           (* Develop shallowestDynDepth and deepestDynDepth. *)
@@ -1763,7 +1793,8 @@ PROCEDURE PrepRecurse
                    initializing := top.resultKind IN RKTypSetInitializing);
 (* CHECK: Do we need to do any Check[Load|Store]Traced? *)
                 GenPushLHSEltsAddr (top, argFlatOffset, eltAlign);
-                AssignStmt.DoEmit (argLevelInfo.repType, argExpr, eltAlign);
+                AssignStmt.DoEmit
+                  (argLevelInfo.repType, argExpr, eltAlign, initializing := TRUE);
 (* CHECK: Does DoEmit take traced into account, as for the case below*)
 (* TODO: We are skipping AssignStmt.Compile here, which my fail to do
            an Expr.NoteWrite. *)
@@ -2034,7 +2065,7 @@ PROCEDURE Compile (top: T) =
     END;
     InnerPrep (top);
     InnerCompile (top);
-    EVAL Use (top);
+    EVAL CheckUseFailure (top);
   END Compile;
 
 (* Externally dispatched-to: *)
@@ -2206,7 +2237,7 @@ PROCEDURE CheckRT
   END CheckRT;
 
 (* Externally dispatched-to: *)
-PROCEDURE Use (top: T): BOOLEAN =
+PROCEDURE CheckUseFailure (top: T): BOOLEAN =
   BEGIN
     <* ASSERT top.state >= StateTyp.Checked *>
     IF AssignStmt.DoGenRTAbort (top.RTErrorCode) AND Evaluate (top) # NIL THEN
@@ -2217,7 +2248,7 @@ PROCEDURE Use (top: T): BOOLEAN =
       RETURN FALSE;
     ELSE RETURN TRUE;
     END;
-  END Use;
+  END CheckUseFailure;
 
 BEGIN
 END ArrayExpr.

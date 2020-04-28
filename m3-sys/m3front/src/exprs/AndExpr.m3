@@ -45,6 +45,7 @@ PROCEDURE New (a, b: Expr.T): Expr.T =
     p.a := a;
     p.b := b;
     p.type := Bool.T;
+    p.repType := Bool.T;
     p.tmp := NIL;
     RETURN p;
   END New;

@@ -483,11 +483,11 @@ PROCEDURE EmitReturn (expr: Expr.T;  fromFinally: BOOLEAN) =
             EVAL Type.CheckInfo (z.type, ret_info);
             AssignStmt.PrepForEmit (z.type, expr, initializing := TRUE);
             CG.Load_addr_of (z.tmp_result, 0, ret_info.alignment);
-            AssignStmt.DoEmit (z.type, expr);
+            AssignStmt.DoEmit (z.type, expr, initializing := TRUE);
           ELSIF is_large OR NOT simple THEN
             AssignStmt.PrepForEmit (z.type, expr, initializing := FALSE);
             Variable.LoadLValue (z.variable);
-            AssignStmt.DoEmit (z.type, expr);
+            AssignStmt.DoEmit (z.type, expr, initializing := FALSE);
           ELSE
             Expr.Prep (expr);
           END;

@@ -285,7 +285,7 @@ PROCEDURE SubscriptExprAlign (p: P): Type.BitAlignT =
       IF ti # NIL THEN (* Fixed array. *)
         Expr.GetBounds (p.b, minb, maxb);
         IF TInt.LE (maxb, minb) THEN (* one or fewer elements accessible. *)
-          RETURN arrayAlign (* element's align is as good as array's. *);
+          RETURN arrayAlign (* element's align is no smaller than array's. *);
         END
       END;
       RETURN CG.GCD (arrayAlign, eltPack);
@@ -316,7 +316,7 @@ PROCEDURE PrepLV (p: P; traced: BOOLEAN) =
   VAR e := Expr.ConstValue (p.biased_b);
   BEGIN
     IF (e # NIL) THEN p.biased_b := e; END;
-    EVAL Expr.Use (p.a);
+    EVAL Expr.CheckUseFailure (p.a);
     IF Expr.IsDesignator (p.a)
       THEN Expr.PrepLValue (p.a, traced);
       ELSE Expr.Prep (p.a);

@@ -17,4 +17,6 @@ PROCEDURE Split (e: Expr.T;  VAR name: M3ID.T;  VAR v: Value.T): BOOLEAN;
 
 PROCEDURE SplitName (e: Expr.T;  VAR name: M3ID.T): BOOLEAN;
 
+PROCEDURE Is (e: Expr.T): BOOLEAN;
+
 END NamedExpr.

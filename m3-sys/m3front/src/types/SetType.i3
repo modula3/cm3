@@ -13,4 +13,8 @@ PROCEDURE Parse (): Type.T;
 
 PROCEDURE Split (t: Type.T;  VAR range: Type.T): BOOLEAN;
 
+PROCEDURE IsSmallSet (t: Type.T): BOOLEAN;
+(* Fits within a word.  Handled as a scalar. *)
+(* This includes a packed small set type, regardless of its use. *)
+
 END SetType.

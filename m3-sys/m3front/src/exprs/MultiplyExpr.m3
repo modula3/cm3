@@ -62,12 +62,12 @@ PROCEDURE New (a, b: Expr.T): Expr.T =
 
 PROCEDURE TypeOf (p: P): Type.T =
   BEGIN
-    RETURN Expr.TypeOf (p.a);
+    RETURN Type.Base (Expr.TypeOf (p.a));
   END TypeOf;
 
 PROCEDURE RepTypeOf (p: P): Type.T =
   BEGIN
-    RETURN Expr.RepTypeOf (p.a);
+    RETURN Type.Base (Expr.RepTypeOf (p.a));
   END RepTypeOf;
 
 PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =

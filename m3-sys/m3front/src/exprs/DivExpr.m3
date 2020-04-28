@@ -71,6 +71,7 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
     ELSE
       p.type := Expr.BadOperands ("DIV", ta, tb);
     END;
+    p.repType := p.type;
   END Check;
 
 PROCEDURE Prep (p: P) =

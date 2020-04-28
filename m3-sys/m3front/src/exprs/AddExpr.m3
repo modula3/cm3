@@ -82,7 +82,7 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
     Expr.TypeCheck (p.b, cs);
     ta := Type.Base (Expr.TypeOf (p.a));
     tb := Type.Base (Expr.TypeOf (p.b));
-    IF    (ta = Int.T)   AND (tb = Int.T)   THEN
+    IF ta = Int.T AND tb = Int.T THEN
       p.class := Class.cINT;
     ELSIF (ta = LInt.T)  AND (tb = LInt.T) THEN
       p.class := Class.cLINT
@@ -97,7 +97,7 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
       ta := ErrType.T;
     ELSIF SetType.Split (ta, range) THEN
       p.class := Class.cSET;
-      IF  NOT Type.IsEqual (ta, tb, NIL) THEN
+      IF NOT Type.IsEqual (ta, tb, NIL) THEN
         ta := Expr.BadOperands ("\'+\'", ta, tb);
       END;
     ELSIF Type.IsSubtype (ta, Addr.T) AND (tb = Int.T) THEN

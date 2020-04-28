@@ -64,7 +64,7 @@ PROCEDURE ParseFieldList () =
       END;
       info.dfault := NIL;
       IF (cur.token = TK.tEQUAL) THEN
-        Error.Msg ("default value must begin with ':='");
+        Error.Msg ("Field default value must begin with ':=' (2.2.4).");
         cur.token := TK.tASSIGN;
       END;
       IF (cur.token = TK.tASSIGN) THEN
@@ -72,7 +72,7 @@ PROCEDURE ParseFieldList () =
         info.dfault := Expr.Parse ();
       END;
       IF (info.type = NIL) AND (info.dfault = NIL) THEN
-        Error.Msg ("fields must include a type or default value");
+        Error.Msg ("Fields must include a type or default value (2.2.4)");
       END;
       j := Ident.top - n;
       FOR i := 0 TO n - 1 DO
@@ -176,7 +176,7 @@ PROCEDURE Check (p: P) =
 PROCEDURE SizeAndAlignment (fields: Scope.T; lazyAligned: BOOLEAN; 
                             VAR(*OUT*) minSize, recSize, recAlign: INTEGER;
                             VAR(*OUT*) is_solid: BOOLEAN) =
-  (* Layout the fields, assuming the record starts at the largest
+  (* Lay out the fields, assuming the record starts at the largest
      possible alignment for the target. *)
   VAR
     curSize             : INTEGER;
@@ -213,7 +213,8 @@ PROCEDURE SizeAndAlignment (fields: Scope.T; lazyAligned: BOOLEAN;
         THEN
           Error.ID
             (fieldInfo.name,
-             "CM3 restriction: scalars in packed record fields cannot cross word boundaries.");
+             "CM3 restriction: scalars in packed fields cannot cross "
+             & "boundaries (2.2.5).");
           recSize := RoundUp (recSize, Target.Word.size);
           straddlesWord := TRUE; 
         END;
@@ -409,12 +410,12 @@ PROCEDURE GenInit (p: P;  zeroed: BOOLEAN) =
           Type.InitValue (field.type, zeroed);
         END;
       ELSIF (NOT zeroed) OR (NOT Expr.IsZeroes (field.dfault)) THEN
-        AssignStmt.PrepForEmit (field.type, field.dfault,
-                                initializing := TRUE);
+        AssignStmt.PrepForEmit
+          (field.type, field.dfault, initializing := TRUE);
         CG.Push (ptr);
         CG.Boost_addr_alignment (p.align);
         CG.Add_offset (field.offset);
-        AssignStmt.DoEmit (field.type, field.dfault);
+        AssignStmt.DoEmit (field.type, field.dfault, initializing := TRUE);
       END;
       v := v.next;
     END;

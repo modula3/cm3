@@ -17,7 +17,7 @@ PROCEDURE New
   (type: Type.T; args: Expr.List; dots: BOOLEAN): Expr.T;
 (* PRE: type is a fixed or open array type. *)
 
-PROCEDURE ArrayConstrExpr (e: Expr.T): T;
+PROCEDURE ArrayConstrExpr (expr: Expr.T): T;
 (* Look through a ConsExpr for an ArrayExpr.  NIL if not. *)
 
 PROCEDURE NoteNested (constr: T);
@@ -43,14 +43,17 @@ PROCEDURE ShapeCheckNeeded (expr: Expr.T): BOOLEAN;
    shape check. (Otherwise, ArrayExpr will take care of shape checks.) *)
 (* Will look through a ConsExpr. *)
 
-PROCEDURE Is (e: Expr.T): BOOLEAN;
-(* Will look through a ConsExpr. *)
+PROCEDURE Is (expr: Expr.T): BOOLEAN;
+(* Purely syntactic. Will not look through a ConsExpr. *)
+
+PROCEDURE StaticSize (expr: Expr.T): INTEGER;
+(* < 0, if nonstatic.  Can be static, even if open array repType. *)
 
 PROCEDURE GetBounds
   (expr: Expr.T;  VAR min, max: Target.Int): (* Success *) BOOLEAN;
 (* Will look through a ConsExpr. *)
 
-PROCEDURE ConstSubscript (array, index: Expr.T;  VAR e: Expr.T): BOOLEAN;
+PROCEDURE ConstSubscript (array, index: Expr.T;  VAR expr: Expr.T): BOOLEAN;
 (* Will look through a ConsExpr. *)
 
 PROCEDURE CheckRT

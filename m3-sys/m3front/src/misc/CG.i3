@@ -29,6 +29,8 @@ TYPE (* see M3CG for the interpretation of these types *)
   Offset      = M3CG.BitOffset;
   Size        = M3CG.BitSize;
   Alignment   = M3CG.Alignment;
+  (* NOTE: Notwithstanding the comment at M3CG.Alignment, alignments
+           this interface are in *bits*. *)
   TypeUID     = M3CG.TypeUID;
   Label       = M3CG.Label;
   Frequency   = M3CG.Frequency;
@@ -81,7 +83,7 @@ PROCEDURE Gen_location (here: INTEGER);
 
 (*------------------------------------------- debugging type declarations ---*)
 
-(* The debugging information for a type is identified by small a integer
+(* The debugging information for a type is identified by a small integer
    within a compilation unit.  The information is identified by a global
    TypeUID (an INTEGER hash code on the type's structure) across compilation
    units. The following procedures generate the symbol table entries needed
@@ -220,7 +222,8 @@ PROCEDURE Free_temps ();
 
 (* NOTE: This naming is very confusing.  A CG.Var and CG.Val are different
          things.  But both are referred-to in many places as "temporaries",
-         "temps", "tmps", etc.  Free_temp and Free_temps refer to CG.Vars. *)
+         "temps", "tmps", etc.  Declre_temp, Free_temp and Free_temps refer
+         to CG.Vars. *)
 
 (*--------------------------------------------- direct stack manipulation ---*)
 
@@ -417,17 +420,21 @@ PROCEDURE Exit_proc (t: Type);
 PROCEDURE Load
   (v: Var; o: Offset; s: Size; base_align, addr_align: Alignment; t: Type);
 (* push ; s0.t := Mem [ ADR(v) + o : s ] *)
+(* if t=A, addr_align applies to where s0.t points, otherwise irrelevant. *)
 
 PROCEDURE Load_addr_of (v: Var;  o: Offset; addr_align: Alignment);
 (* push ; s0.A := ADR(v) + o *)
 (* addr_align applies to where s0.A points. *) 
 
 PROCEDURE Load_addr_of_temp (v: Var;  o: Offset;  addr_align: Alignment);
-(* == Load_addr_of (v, o, addr_align) ; free v when this L-value is consumed *)
+(* == Load_addr_of (v, o, addr_align) ;
+   Once this said "free v when this L-value is consumed", but this mechanism
+   is disabled, apparently replaced by Free_temps. *)
 
 PROCEDURE Load_indirect
   (t: Type;  o: Offset;  s: Size; addr_align: Alignment := Target.Word8.align);
 (* s0.t := Mem [s0.A + o : s] *)
+(* if t=A, addr_align applies to where s0.t points, otherwise irrelevant. *)
 
 PROCEDURE Load_int (t: IType;  v: Var;  o: Offset := 0);
 (* == Load (v, o, t.size, t.align, t) *)
@@ -660,6 +667,7 @@ PROCEDURE Pop_struct (t: TypeUID;  s: Size;  a: Alignment);
 (* pop s0.A, it's a pointer to a structure occupying 's' bits that's
   'a' bit aligned; pass it by value as the "next" parameter in the current
   call. *)
+(* PRE: s MOD Target.Byte = 0 AND a MOD Target.Byte = 0 *)
 
 PROCEDURE Pop_static_link ();
 (* pop s0.A and make it the static link for the current indirect procedure call *)

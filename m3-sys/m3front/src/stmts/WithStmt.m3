@@ -112,7 +112,7 @@ PROCEDURE Compile (p: P): Stmt.Outcomes =
     t := Type.CheckInfo (Value.TypeOf (p.var), info);
 
     (* evaluate the expr outside the new scope and capture its value *)
-    EVAL Expr.Use (p.expr);
+    EVAL Expr.CheckUseFailure (p.expr);
     CASE p.kind OF
     | Kind.designator =>
         Variable.Split (p.var, tlhs, global, indirect, traced);
@@ -160,7 +160,7 @@ PROCEDURE Compile (p: P): Stmt.Outcomes =
           
       | Kind.structure =>
           Variable.LoadLValue (p.var);
-          AssignStmt.DoEmit (tlhs, p.expr);
+          AssignStmt.DoEmit (tlhs, p.expr, initializing := TRUE);
       | Kind.other =>
           Variable.LoadLValue (p.var);
           CG.Push (val);
