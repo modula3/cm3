@@ -25,6 +25,7 @@ TYPE
          args   : Expr.List;
          tmp    : CG.Val;         (* for use by the Prep methods *)
          align  : CG.Alignment;   (* for use by the Prep methods *)
+         hasError : BOOLEAN := FALSE;
        END;
 
 TYPE

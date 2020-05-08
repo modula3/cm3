@@ -426,7 +426,8 @@ PROCEDURE NameToPrefix (v: Value.T;
 
 PROCEDURE ScopeName (t: T): M3ID.T =
   BEGIN
-    IF (t.sname = M3ID.NoID) THEN
+    IF t = NIL THEN RETURN emptyStr END;
+    IF t.sname = M3ID.NoID THEN
       IF (t.parent = NIL) THEN
         t.sname := emptyStr;
       ELSE

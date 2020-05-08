@@ -26,10 +26,8 @@ TYPE
         obj         : Value.T;
         holder      : Type.T; (* Visible supertype of the Q-expr. *) 
         objType     : Type.T;
-        repType     : Type.T;
         temp        : CG.Val;
         name        : M3ID.T;
-        align       : Type.BitAlignT;
         class       : Class;
         inFold      : BOOLEAN;
         inIsZeroes  : BOOLEAN;

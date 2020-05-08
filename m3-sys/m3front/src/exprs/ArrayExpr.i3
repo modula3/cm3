@@ -47,7 +47,8 @@ PROCEDURE Is (expr: Expr.T): BOOLEAN;
 (* Purely syntactic. Will not look through a ConsExpr. *)
 
 PROCEDURE StaticSize (expr: Expr.T): INTEGER;
-(* < 0, if nonstatic.  Can be static, even if open array repType. *)
+(* < 0, if nonstatic.  Can be static, even if open array repType.
+   Does not include dope. *)
 
 PROCEDURE GetBounds
   (expr: Expr.T;  VAR min, max: Target.Int): (* Success *) BOOLEAN;

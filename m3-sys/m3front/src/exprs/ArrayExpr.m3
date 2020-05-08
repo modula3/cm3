@@ -249,7 +249,8 @@ PROCEDURE Is (expr: Expr.T): BOOLEAN =
   END Is;
 
 PROCEDURE StaticSize (expr: Expr.T): INTEGER =
-(* < 0, if nonstatic.  Can be static, even if open array repType. *)
+(* < 0, if nonstatic.  Can be static, even if open array repType.
+   Does not include dope. *)
   VAR top: T;
   BEGIN
     top := ArrayConstrExpr (expr);
@@ -257,7 +258,7 @@ PROCEDURE StaticSize (expr: Expr.T): INTEGER =
     IF top.shallowestDynDepth >= 0 THEN (* Size is dynamic. *)
       RETURN Expr.lengthNonStatic
     END;
-    RETURN top.totalSize;
+    RETURN top.staticEltsSize;
   END StaticSize;
 
 (* Externally dispatched-to: *)

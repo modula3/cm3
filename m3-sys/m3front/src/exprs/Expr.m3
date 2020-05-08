@@ -578,7 +578,8 @@ PROCEDURE StripNamedCons (expr: T): T =
   END StripNamedCons;
 
 PROCEDURE StaticSize (expr: T): INTEGER =
-(* < 0, if nonstatic.  Can be static, even if open array repType. *)
+(* < 0, if nonstatic.  Can be static, even if open array repType.
+   Does not include dope. *)
   VAR stripped: T;
   VAR info: Type.Info;
   BEGIN

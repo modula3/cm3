@@ -158,7 +158,7 @@ PROCEDURE RepTypeOf (p: P): Type.T =
       p.inTypeOf := TRUE;
       p.repType := Value.RepTypeOf (p.value);
       p.inTypeOf := FALSE;
-    END
+    END;
     RETURN p.repType;
   END RepTypeOf;
 

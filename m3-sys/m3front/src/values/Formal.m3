@@ -9,9 +9,9 @@
 MODULE Formal;
 
 IMPORT M3, M3ID, CG, Value, ValueRep, Type, Error, Expr, ProcType;
-IMPORT KeywordExpr, OpenArrayType, RefType, ErrType, CheckExpr;
+IMPORT KeywordExpr, OpenArrayType, RefType, CheckExpr;
 IMPORT ArrayType, ArrayExpr, SetType, Host, NarrowExpr, M3Buf, Tracer;
-IMPORT Procedure, UserProc, Target, M3RT;
+IMPORT Variable, Procedure, UserProc, Target, M3RT;
 
 TYPE
   T = Value.T BRANDED OBJECT 
@@ -20,11 +20,13 @@ TYPE
         repType  : Type.T;
         dfault   : Expr.T;
         refType  : Type.T; (* Needed to copy an open array. *)
+        tempCGVal: CG.Val;
         cg_type  : CG.TypeUID;
         mode     : Mode;
         kind     : Type.Class;
         trace    : Tracer.T;
         openArray: BOOLEAN;
+        hasError : BOOLEAN;
       OVERRIDES
         typeCheck   := Check;
         set_globals := SetGlobals;
@@ -66,6 +68,7 @@ PROCEDURE NewBuiltin (name: TEXT;  offset: INTEGER;  type: Type.T): Value.T =
     t.unused   := FALSE;
     t.kind     := Type.Class.Error;
     t.refType  := NIL;
+    t.tempCGVal:= NIL;
     t.cg_type  := 0;
     t.trace    := NIL;
     t.openArray := FALSE;
@@ -86,6 +89,7 @@ PROCEDURE New (READONLY info: Info): Value.T =
     t.unused   := info.unused;
     t.kind     := Type.Class.Error;
     t.refType  := NIL;
+    t.tempCGVal:= NIL;
     t.cg_type  := 0;
     t.trace    := info.trace;
     t.openArray := FALSE;
@@ -233,8 +237,8 @@ PROCEDURE Check (t: T;  VAR cs: Value.CheckState) =
        (* ^Open array VALUE formal is lo-level passed by reference.
           Prolog will make a copy. *)
        OR t.mode = Mode.mREADONLY (* lo-level passed by reference. *)
-          (* ^Also, some actuals (non-designator, multi-use, and open array)
-             passed READONLY will do call-site copying. *)
+          (* ^Also, some actuals (non-designator, multi-use, actual and formal
+             both open array) passed READONLY will do call-site copying. *)
     THEN (* We need a reference type to the formal type to do open array
             copying. *)
       t.refType := RefType.New (t.tipe, traced := TRUE, brand := NIL);
@@ -248,7 +252,7 @@ PROCEDURE Load (t: T) =
   VAR useOK: BOOLEAN;
   BEGIN
     IF (t.dfault = NIL) THEN
-      Error.ID (t.name, "formal has no default value");
+      Error.ID (t.name, "Unsupplied formal has no default value (2.2.8)");
     END;
     useOK := Expr.CheckUseFailure (t.dfault);
     IF useOK THEN
@@ -311,7 +315,7 @@ PROCEDURE DoCheckArgs (VAR cs       : Value.CheckState;
                            nFormals : INTEGER;
                        VAR slots    : ARRAY OF ArgSlot;
                            proc     : Expr.T): BOOLEAN =
-  (* Formals are linked.  Actuals are in an array.*)
+  (* Formals are linked.  Actuals are in a heap-allocated open array.*)
   VAR
     j                 : INTEGER;
     actualExpr, value : Expr.T;
@@ -350,7 +354,7 @@ PROCEDURE DoCheckArgs (VAR cs       : Value.CheckState;
         j := 0;
         LOOP
           IF (j >= nFormals) THEN
-            Error.ID (name, "unknown parameter (2.3.2): ");
+            Error.ID (name, "No such formal parameter (2.3.2): ");
             ok := FALSE;
             j := i;
             EXIT;
@@ -496,47 +500,100 @@ PROCEDURE ProcName (proc: Expr.T): TEXT =
 (*EXPORTED*)
 PROCEDURE PrepArg (formal: Value.T; actExpr: Expr.T) =
   VAR formVal: T := formal;
+  VAR actRepType: Type.T;
+  VAR actRepTypeInfo: Type.Info;
+  VAR formRepTypeInfo: Type.Info;
+  VAR actStaticSize: INTEGER (* Excluding dope. *);
+  VAR typeOKForByRef: BOOLEAN;
   BEGIN
+    formVal.hasError := FALSE;
+    formVal.tempCGVal := NIL;
+      (* We could be reusing formVal, after a previous call. *)
+    actRepType := Expr.RepTypeOf (actExpr);
+    (* ^May be a BITS-FOR, type, but only if actExpr is a field or element. *)
+    EVAL Type.CheckInfo (actRepType, actRepTypeInfo);
+    EVAL Type.CheckInfo (formVal.repType, formRepTypeInfo);
     ArrayExpr.NoteTargetType (actExpr, formVal.tipe);
-    Type.Compile (Expr.RepTypeOf (actExpr));
 
     CASE formVal.mode OF
-    | Mode.mVALUE => (* Will pass by value. *)
+    | Mode.mVALUE =>
         Expr.Prep (actExpr);
-    | Mode.mVAR => (* Will pass by reference. *)
-        IF Expr.Alignment (actExpr) MOD Target.Byte = 0 THEN
+
+    | Mode.mVAR =>
+        (* Pass by reference. *)
+        IF NOT Expr.IsDesignator (actExpr) THEN (* Just error recovery. *)
           Expr.PrepLValue (actExpr, traced := TRUE);
-        ELSE
+          formVal.hasError := TRUE;
+        ELSIF RequiresFetch
+                (formRepTypeInfo.size, formRepTypeInfo.alignment,
+                 actRepTypeInfo.size, actRepTypeInfo.alignment)
+        THEN
           Error.ID (formVal.name,
-            "CM3 restriction: non-byte-aligned value cannot be passed VAR (2.3.2)"); 
-          formVal.tipe := ErrType.T;
-          formVal.kind := Type.Class.Error
+            "CM3 restriction: non-byte-aligned value cannot be passed VAR"
+            & " (2.3.2)");
+          formVal.hasError := TRUE;
+        ELSE
+          Expr.PrepLValue (actExpr, traced := TRUE);
         END;
+
     | Mode.mREADONLY =>
-        IF Expr.IsDesignator (actExpr)
-           AND ( Type.IsEqual (formVal.tipe, Expr.TypeOf (actExpr), NIL)
-                 OR ArrayType.Is (formVal.tipe) (* => assignable. *)
-               )
-(* CHECK^ This condition against that found in GenArray. *)
-        THEN (* Will pass by ref. *)
-          IF Expr.Alignment (actExpr) MOD Target.Byte = 0 THEN
-            Expr.PrepLValue (actExpr, traced := FALSE);
-          ELSE
+        typeOKForByRef
+          := ArrayType.Is (formVal.tipe)
+             OR Type.IsEqual (formVal.tipe, Expr.SemTypeOf (actExpr), NIL);
+        IF typeOKForByRef AND Expr.IsDesignator (actExpr)
+        THEN (* Pass by reference. *)
+          IF RequiresFetch
+               (formRepTypeInfo.size, formRepTypeInfo.alignment,
+                actRepTypeInfo.size, actRepTypeInfo.alignment)
+          THEN
             Error.ID (formVal.name,
-              "CM3 restriction: non-byte-aligned value cannot be passed by reference (2.3.2)");
-            formVal.tipe := ErrType.T;
-            formVal.kind := Type.Class.Error
-          END; 
-        ELSE (* Treat as VALUE: will make a copy and pass it by reference. *)
+              "CM3 restriction: non-byte-aligned value cannot be passed READONLY"
+              & " by reference (2.3.2)");
+            formVal.hasError := TRUE;
+          ELSE
+            Expr.PrepLValue (actExpr, traced := FALSE);
+          END;
+        ELSIF typeOKForByRef AND Expr.IsAnonConstructor (actExpr)
+        THEN (* Pass by reference but do not treat as LValue. *)
+          IF RequiresFetch (* Can this happen? *)
+               (formRepTypeInfo.size, formRepTypeInfo.alignment,
+                actRepTypeInfo.size, actRepTypeInfo.alignment)
+          THEN
+            Error.ID (formVal.name,
+              "CM3 restriction: non-byte-aligned value cannot be passed READONLY"
+              & " by reference (2.3.2)");
+            formVal.hasError := TRUE;
+          ELSE
+            Expr.Prep (actExpr) (* Do not treat as LValue. *);
+          END;
+        ELSE (* Pass by value. Lo-level: make a copy here at the call site and
+                pass it by reference. *)
           Expr.Prep (actExpr);
+          actStaticSize := Expr.StaticSize (actExpr);
+          IF RequiresFetch
+               (formRepTypeInfo.size, formRepTypeInfo.alignment,
+                actRepTypeInfo.size, actRepTypeInfo.alignment)
+             OR SetType.IsSmallSet (formVal.repType)
+             OR NOT OpenArrayType.Is (formVal.repType)
+             OR actStaticSize > 0
+          THEN (* Static size. *)
+          ELSE (* Must make a dynamic-sized copy in a heap-allocated temp. *)
+            Expr.Compile (actExpr);
+            RedepthArray (formVal.repType, actRepType, 0);
+            Variable.CopyOpenArray (actRepType, formVal.refType);
+            formVal.tempCGVal := CG.Pop();
+          END;
         END (*IF*) 
-    END;
+    END (*CASE*);
   END PrepArg;
 
 (*EXPORTED*)
 PROCEDURE EmitArg (proc: Expr.T;  formalVal: Value.T; actExpr: Expr.T) =
   VAR form: T := formalVal;
+  VAR useOK: BOOLEAN;
   BEGIN
+    useOK := Expr.CheckUseFailure (actExpr);
+    IF NOT useOK THEN RETURN END;
     CASE form.kind OF
     | Type.Class.Error
         =>  <*ASSERT FALSE*>
@@ -564,7 +621,7 @@ PROCEDURE EmitArg (proc: Expr.T;  formalVal: Value.T; actExpr: Expr.T) =
   END EmitArg;
 
 PROCEDURE GenScalarCopy (type: Type.T) =
-(* PRE: A scalar of type type is on top of CG stack. *)
+(* PRE: A scalar of type 'type' is on top of CG stack. *)
 (* POST: TOS replaced by the address of a temp containing a copy. *)
   VAR tempVar: CG.Var;
   VAR typeInfo: Type.Info;
@@ -590,28 +647,26 @@ PROCEDURE GenOrdinal (t: T;  actExpr: Expr.T) =
         CheckExpr.EmitChecks (actExpr, min, max, CG.RuntimeError.ValueOutOfRange);
         CG.Pop_param (Type.CGType (t.tipe, in_memory := TRUE));
     | Mode.mVAR =>
-        IF Expr.Alignment (actExpr) MOD Target.Byte = 0 THEN
+        IF t.hasError THEN (* Error recovery. *)
+          CG.Load_nil ();
+          CG.Pop_param (CG.Type.Addr);
+        ELSE
           Expr.CompileAddress (actExpr, traced := TRUE);
           CG.Pop_param (CG.Type.Addr);
           Expr.NoteWrite (actExpr);
-        ELSE (* Error recovery. *) 
-          CG.Load_nil ();
-          CG.Pop_param (CG.Type.Addr);
         END
     | Mode.mREADONLY =>
-        IF NOT Type.IsEqual (t.tipe, Expr.TypeOf (actExpr), NIL) THEN
+        IF t.hasError THEN (* Error recovery. *)
+          CG.Load_nil ();
+          CG.Pop_param (CG.Type.Addr);
+        ELSIF NOT Type.IsEqual (t.tipe, Expr.TypeOf (actExpr), NIL) THEN
           EVAL Type.GetBounds (t.tipe, min, max); (* Of formal. *) 
           CheckExpr.EmitChecks (actExpr, min, max, CG.RuntimeError.ValueOutOfRange);
           GenScalarCopy (t.tipe);
           CG.Pop_param (CG.Type.Addr);
         ELSIF Expr.IsDesignator (actExpr) THEN
-          IF Expr.Alignment (actExpr) MOD Target.Byte = 0 THEN
-            Expr.CompileAddress (actExpr, traced := FALSE);
-            CG.Pop_param (CG.Type.Addr);
-          ELSE (* Error recovery. *) 
-            CG.Load_nil ();
-            CG.Pop_param (CG.Type.Addr);
-          END
+          Expr.CompileAddress (actExpr, traced := FALSE);
+          CG.Pop_param (CG.Type.Addr);
         ELSE (* non-designator, same type *)
           Expr.Compile (actExpr);
           GenScalarCopy (t.tipe);
@@ -628,9 +683,14 @@ PROCEDURE GenFloat (t: T;  actExpr: Expr.T) =
         Expr.Compile (actExpr);
         CG.Pop_param (Type.CGType (t.tipe, in_memory := TRUE));
     | Mode.mVAR =>
-        Expr.CompileAddress (actExpr, traced := TRUE);
-        CG.Pop_param (CG.Type.Addr);
-        Expr.NoteWrite (actExpr);
+        IF t.hasError THEN (* Error recovery. *)
+          CG.Load_nil ();
+          CG.Pop_param (CG.Type.Addr);
+        ELSE
+          Expr.CompileAddress (actExpr, traced := TRUE);
+          CG.Pop_param (CG.Type.Addr);
+          Expr.NoteWrite (actExpr);
+        END;
     | Mode.mREADONLY =>
         IF Expr.IsDesignator (actExpr)
            AND Type.IsEqual (t.tipe, Expr.TypeOf (actExpr), NIL) THEN
@@ -645,7 +705,6 @@ PROCEDURE GenFloat (t: T;  actExpr: Expr.T) =
   END GenFloat;
 
 PROCEDURE GenReference (t: T;  actExpr: Expr.T) =
-  VAR t_actExpr := Expr.TypeOf (actExpr);
   BEGIN
     <* ASSERT Expr.Alignment (actExpr) MOD Target.Byte = 0 *>
     CASE t.mode OF
@@ -653,18 +712,21 @@ PROCEDURE GenReference (t: T;  actExpr: Expr.T) =
         Expr.Compile (actExpr);
         CG.Pop_param (Type.CGType (t.tipe, in_memory := TRUE));
     | Mode.mVAR =>
-        Expr.CompileAddress (actExpr, traced := TRUE);
-        CG.Pop_param (CG.Type.Addr);
-        Expr.NoteWrite (actExpr);
-    | Mode.mREADONLY =>
-        IF NOT Type.IsEqual (t.tipe, t_actExpr, NIL) THEN
-          Expr.Compile (actExpr);
-          GenScalarCopy (t.tipe);
+        IF t.hasError THEN (* Error recovery. *)
+          CG.Load_nil ();
           CG.Pop_param (CG.Type.Addr);
-        ELSIF Expr.IsDesignator (actExpr) THEN
+        ELSE
+          Expr.CompileAddress (actExpr, traced := TRUE);
+          CG.Pop_param (CG.Type.Addr);
+          Expr.NoteWrite (actExpr);
+        END;
+    | Mode.mREADONLY =>
+        IF Expr.IsDesignator (actExpr)
+           AND Type.IsEqual (t.tipe, Expr.SemTypeOf (actExpr), NIL)
+        THEN (* Pass by reference, lo-level too. *)
           Expr.CompileAddress (actExpr, traced := FALSE);
           CG.Pop_param (CG.Type.Addr);
-        ELSE (* Same type, non-designator. *) 
+        ELSE (* Pass by value.  Lo-level, copy and pass the copy by ref. *)
           Expr.Compile (actExpr);
           (* A reference actual could be a NARROW, which, by language
              definition, produces a non-designator, but Expr.Compile
@@ -686,12 +748,17 @@ PROCEDURE GenProcedure (t: T;  actExpr: Expr.T;  proc: Expr.T) =
         GenClosure (actExpr, proc);
         CG.Pop_param (Type.CGType (t.tipe, in_memory := TRUE));
     | Mode.mVAR =>
-        Expr.CompileAddress (actExpr, traced := TRUE);
-        CG.Pop_param (CG.Type.Addr);
-        Expr.NoteWrite (actExpr);
+        IF t.hasError THEN (* Error recovery. *)
+          CG.Load_nil ();
+          CG.Pop_param (CG.Type.Addr);
+        ELSE
+          Expr.CompileAddress (actExpr, traced := TRUE);
+          CG.Pop_param (CG.Type.Addr);
+          Expr.NoteWrite (actExpr);
+        END;
     | Mode.mREADONLY =>
         IF Expr.IsDesignator (actExpr)
-           AND Type.IsEqual (t.tipe, Expr.TypeOf (actExpr), NIL) THEN
+           AND Type.IsEqual (t.tipe, Expr.SemTypeOf (actExpr), NIL) THEN
           Expr.CompileAddress (actExpr, traced := FALSE);
           CG.Pop_param (CG.Type.Addr);
         ELSE
@@ -739,17 +806,7 @@ PROCEDURE IsExternalProcedure (e: Expr.T): BOOLEAN =
     RETURN UserProc.IsProcedureLiteral (e, proc) AND Value.IsExternal (proc);
   END IsExternalProcedure;
 
-PROCEDURE CompileStruct (expr: Expr.T; traced: BOOLEAN) =
-(* Push the address of a struct.  It need not be byte- sized or aligned. *)
-  BEGIN
-    IF Expr.IsDesignator (expr)
-    THEN Expr.CompileLValue (expr, traced);
-    ELSE Expr.Compile (expr) (* Constant constructor, function result, or subarray thereof. *);
-         (* ^Which, for a struct will still push an address. *)
-    END;
-  END CompileStruct;
-
-PROCEDURE IsBitPacked
+PROCEDURE RequiresFetch
   (formSize, formAlign, actSize, actAlign: INTEGER): BOOLEAN =
 (* Not merely typed BITS-FOR and a field or element, but byte instructions
    cannot pass or copy it. *)
@@ -763,162 +820,171 @@ PROCEDURE IsBitPacked
         RETURN TRUE END;
       END;
     RETURN FALSE
-  END IsBitPacked;
+  END RequiresFetch;
 
 PROCEDURE CompileNCopyStructWInWord
-  (actExpr:Expr.T; actSize: INTEGER; traced: BOOLEAN) =
+  (formVal: T; actExpr:Expr.T; actSize: INTEGER) =
   (* Compile and copy a struct that lies within a word, leaving the address
      of the copy on top of the CG stack.  The original struct may be bitpacked.
-     The copy will be byte-aligned and right-justified within a word. *)
+     The copy will be byte-aligned. *)
   VAR actTempVar: CG.Var;
+  VAR offset: INTEGER;
   BEGIN
-    <* ASSERT actSize <= Target.Word.size *>
     actTempVar := CG.Declare_temp
        (Target.Word.size, Target.Word.align, Target.Word.cg_type,
         in_memory := TRUE);
-    CompileStruct (actExpr, traced);
-    CG.Load_indirect (Target.Word.cg_type, 0, actSize);
-    CG.Store_int (Target.Word.cg_type, actTempVar);
-    IF Target.Little_endian THEN
-    ELSE CG.Shift_left (Target.Word.cg_type);
+    IF formVal.hasError THEN
+      CG.Load_intt (0);
+    ELSE
+      Expr.Compile (actExpr);
+      <* ASSERT actSize <= Target.Word.size *>
+      CG.Load_indirect (Target.Word.cg_type, 0, actSize);
     END;
-    CG.Load_addr_of (actTempVar, 0, Target.Word.align);
+    CG.Store_int (Target.Word.cg_type, actTempVar);
+    IF Target.Little_endian
+    THEN offset := 0;
+    ELSE offset := Target.Word.size - actSize;
+    END;
+    CG.Load_addr_of (actTempVar, offset, Target.Word.align);
   END CompileNCopyStructWInWord;
-
-PROCEDURE CompileNPassStructByRef
-  (formRepType: Type.T; actExpr: Expr.T; actRepType: Type.T; traced: BOOLEAN) =
-  BEGIN
-    CompileStruct (actExpr, traced);
-    RedepthArray (formRepType, actRepType);
-    CG.Pop_param (CG.Type.Addr);
-  END CompileNPassStructByRef;
 
 PROCEDURE GenStruct
   (formVal: T; actExpr: Expr.T; formIsArray, formIsOpen: BOOLEAN) =
   VAR actRepType: Type.T;
   VAR actTempVar: CG.Var;
-  VAR formRepType: Type.T;
   VAR actRepTypeInfo: Type.Info;
   VAR formRepTypeInfo: Type.Info;
-  VAR actAlign: INTEGER;
-  VAR actStaticSize: INTEGER;
-  VAR useOK: BOOLEAN := FALSE;
+  VAR actStaticSize: INTEGER (* Excluding dope. *);
+  VAR typeOKForByRef: BOOLEAN := FALSE;
   BEGIN
     actRepType := Expr.RepTypeOf (actExpr);
     (* ^May be a BITS-FOR, type, but only if actExpr is a field or element. *)
     EVAL Type.CheckInfo (actRepType, actRepTypeInfo);
-    formRepType := formVal.repType;
-    EVAL Type.CheckInfo (formRepType, formRepTypeInfo);
-    useOK := Expr.CheckUseFailure (actExpr);
-    IF NOT useOK THEN RETURN END;
+    EVAL Type.CheckInfo (formVal.repType, formRepTypeInfo);
 
     CASE formVal.mode OF
     | Mode.mVALUE =>
-        IF SetType.IsSmallSet (formRepType) THEN
+        <* ASSERT formVal.tempCGVal = NIL *>
+        IF SetType.IsSmallSet (formVal.repType) THEN
           Expr.Compile (actExpr);
           (* ^Will push value and right-justify it within a word, even if
               non-byte-aligned and/or non-byte-sized. *)
-          CG.Pop_param (Type.CGType (formRepType, in_memory := FALSE));
+          CG.Pop_param (Type.CGType (formVal.repType, in_memory := TRUE));
         ELSE
-          actAlign := Expr.Alignment (actExpr);
-          IF IsBitPacked
+          IF RequiresFetch
                (formRepTypeInfo.size, formRepTypeInfo.alignment,
                 actRepTypeInfo.size, actRepTypeInfo.alignment)
           THEN (* Actual is bitpacked, which implies not open array.
                   Formal is never bitpacked, but could be open. *)
-            (* Right-justify a copy of bitpacked struct and pass it by value. *)
-            CompileNCopyStructWInWord
-              (actExpr, actRepTypeInfo.size, traced := TRUE);
+            (* Make a byte-aligned copy of bitpacked struct,
+               and pass it by value. *)
+            CompileNCopyStructWInWord (formVal, actExpr, actRepTypeInfo.size);
           ELSE (* No bit packing. *)
-            CompileStruct (actExpr, traced := TRUE);
+            Expr.Compile (actExpr);
           END;
-          RedepthArray (formRepType, actRepType);
+          RedepthArray (formVal.repType, actRepType, 0);
           IF formIsOpen
           THEN (* Pass address.  Copy will be made by callee prolog. *)
             CG.Pop_param (CG.Type.Addr);
           ELSE
             CG.Pop_struct
-              (Type.GlobalUID (formRepType), formRepTypeInfo.size,
+              (Type.GlobalUID (formVal.repType), formRepTypeInfo.size,
                formRepTypeInfo.alignment);
           END;
         END;
 
     | Mode.mVAR =>
-        CompileNPassStructByRef
-          (formRepType, actExpr, actRepType, traced := TRUE);
-        Expr.NoteWrite (actExpr);
+        <* ASSERT formVal.tempCGVal = NIL *>
+        IF formVal.hasError THEN
+          CG.Load_nil ();
+          CG.Pop_param (CG.Type.Addr);
+        ELSE
+          Expr.CompileAddress (actExpr, traced := TRUE);
+          RedepthArray (formVal.repType, actRepType, 0);
+          CG.Pop_param (CG.Type.Addr);
+          Expr.NoteWrite (actExpr);
+        END;
 
     | Mode.mREADONLY =>
-        IF (Expr.IsDesignator (actExpr)
-            OR Expr.IsAnonConstructor (actExpr))
+        typeOKForByRef
+          := formIsArray
+             OR Type.IsEqual (formVal.tipe, Expr.SemTypeOf (actExpr), NIL);
+        IF typeOKForByRef AND Expr.IsDesignator (actExpr)
+        THEN (* Pass by reference (2.3.2).  Lo-level, pass by ref also. *)
+          <* ASSERT formVal.tempCGVal = NIL *>
+          IF formVal.hasError THEN
+            CG.Load_nil ();
+            CG.Pop_param (CG.Type.Addr);
+          ELSE
+            Expr.CompileAddress (actExpr, traced := FALSE);
+            RedepthArray (formVal.repType, actRepType, 0);
+            CG.Pop_param (CG.Type.Addr);
+          END;
+
+        ELSIF typeOKForByRef AND Expr.IsAnonConstructor (actExpr)
            (* ^We don't need a constructor to be a designator to avoid copying.
               This includes function results; constructors; and fields,
               elements, and SUBARRAYs thereof.  Any of these need not be copied
-              because this its only use.  The formal will become a designator
+              because this is its only use.  The formal will become a designator
               (per 2.6.3), but this is OK because it will be stored in memory.
               This makes it possible to test where a constant open array
               constructor has placed its dope. *)
-            AND (formIsArray
-                 OR (Type.IsEqual (formVal.tipe, Expr.SemTypeOf (actExpr), NIL)))
-        THEN (* Pass truly by reference (2.3.2). *)
-          CompileNPassStructByRef
-            (formRepType, actExpr, actRepType, traced := FALSE);
+        THEN (* Pass by reference (2.3.2).  Lo-level, pass by ref too, but
+                do not treat as LValue. *)
+          <* ASSERT formVal.tempCGVal = NIL *>
+          IF formVal.hasError THEN (* Can this happen? *)
+            CG.Load_nil ();
+            CG.Pop_param (CG.Type.Addr);
+          ELSE
+            Expr.Compile (actExpr);
+            RedepthArray (formVal.repType, actRepType, 0);
+            CG.Pop_param (CG.Type.Addr);
+          END;
 
-        ELSE (* Pass by value (2.3.2).  Lo-level pass a copy by reference. *)
-          actAlign := Expr.Alignment (actExpr);
-          IF SetType.IsSmallSet (formRepType)
-             OR IsBitPacked
+        ELSE (* Pass by value (2.3.2).  Lo-level, pass a copy by reference. *)
+          IF SetType.IsSmallSet (formVal.repType)
+             OR RequiresFetch
                   (formRepTypeInfo.size, formRepTypeInfo.alignment,
                    actRepTypeInfo.size, actRepTypeInfo.alignment)
              (* ^Actual is a small set or bitpacked, which implies it is not
                  an open array.  Formals are never bitpacked. *)
           THEN
+            <* ASSERT formVal.tempCGVal = NIL *>
             (* Copy within-word value and pass it by reference. *)
-            CompileNCopyStructWInWord
-              (actExpr, actRepTypeInfo.size, traced := FALSE);
-            RedepthArray (formRepType, actRepType);
+            CompileNCopyStructWInWord (formVal, actExpr, actRepTypeInfo.size);
+            RedepthArray (formVal.repType, actRepType, 0)
+              (* ^Formal could be open. *);
             CG.Pop_param (CG.Type.Addr);
           ELSE (* Actual is byte-sized and aligned.
-                  Pass by value.  Lo-level pass a copy by reference. *)
-
-            IF NOT OpenArrayType.Is (formRepType)
-            THEN (* Formal gives static size for the copy. *)
+                  Pass by value (2.3.2).  Lo-level, pass a copy by reference. *)
+            IF NOT OpenArrayType.Is (formVal.repType)
+            THEN (* Formal gives static size for the copy.
+                    Could be any kind of struct. *)
+              <* ASSERT formVal.tempCGVal = NIL *>
               actTempVar := CG.Declare_temp
                 (formRepTypeInfo.size, formRepTypeInfo.alignment,
                  CG.Type.Struct, in_memory := TRUE);
+              (* ^Elements only, if array. *)
               CG.Load_addr_of (actTempVar, 0, formRepTypeInfo.alignment);
-              CompileStruct (actExpr, traced := FALSE);
-              RedepthArray (formRepType, actRepType);
+              Expr.Compile (actExpr);
+              RedepthArray (formVal.repType, actRepType, 0);
               CG.Copy (formRepTypeInfo.size, overlap := FALSE);
               CG.Load_addr_of (actTempVar, 0, formRepTypeInfo.alignment);
               CG.Pop_param (CG.Type.Addr);
 
-            ELSE
+            ELSE (* Formal is open array. *)
               actStaticSize := Expr.StaticSize (actExpr);
               IF actStaticSize > 0 
-              THEN (* Actual gives static size for the copy. *)
-                actTempVar := CG.Declare_temp
-                  (actStaticSize, actRepTypeInfo.alignment, CG.Type.Struct,
-                   in_memory := TRUE);
-                CG.Load_addr_of (actTempVar, 0, actRepTypeInfo.alignment);
-                CompileStruct (actExpr, traced := FALSE);
-                CG.Copy (actStaticSize, overlap := FALSE);
-                CG.Load_addr_of (actTempVar, 0, actRepTypeInfo.alignment);
-                RedepthArray (formRepType, actRepType);
+              THEN (* Formal is open array.  Actual could be open, but still
+                      gives static size for the copy.  *)
+                <* ASSERT formVal.tempCGVal = NIL *>
+                Expr.Compile (actExpr);
+                RedepthArray (formVal.repType, actRepType, actStaticSize);
                 CG.Pop_param (CG.Type.Addr);
               ELSE (* No static size available. *)
-  (* FIXME: -------V *)
-                (* We are already inside a call, so can't do CopyOpenArray
-                   here.  Must do it in Prep, under same conditions.
-                   For now, punt and pass by reference, without copying. *)
-                CompileNPassStructByRef
-                  (formRepType, actExpr, actRepType, traced := FALSE);
-             (* CompileStruct (actExpr, traced := FALSE);
-                Variable.CopyOpenArray (actRepType, formVal.refType);
-                RedepthArray (formRepType, actRepType);
+                <* ASSERT formVal.tempCGVal # NIL *>
+                CG.Push (formVal.tempCGVal);
                 CG.Pop_param (CG.Type.Addr);
-             *)
-
               END;
             END;
           END;
@@ -926,74 +992,116 @@ PROCEDURE GenStruct
     END (*CASE*);
   END GenStruct;
 
-PROCEDURE RedepthArray (formType, actType: Type.T) =
+PROCEDURE RedepthArray (formType, actType: Type.T; eltsCopySize: CARDINAL) =
 (* PRE: Address of actual is pushed on CG stack. *)
-(* Change TOS array from actType's open depth to formType's open depth,
-   while preserving shape.  Generate any necessary RT length checks. *)
-  VAR
-    formDepth, actDepth: INTEGER;
-    indexType, eltType: Type.T;
-    tempVar: CG.Var;
-    actVal: CG.Val;
-    b: BOOLEAN;
+(* Change TOS array from actType's open depth to formType's open depth, while
+   preserving shape and elements.  Generate any necessary RT length checks.
+   If eltsCopySize > 0, copy the elements into a new temporary with static
+   size eltsCopySize.  Otherwise, make no copy of elements. *)
+
+  VAR formDepth, actDepth, eltsAlign: INTEGER;
+  VAR actInnerType, formInnerType, indexType, eltType: Type.T;
+  VAR dopeTempVar, eltsTempVar: CG.Var := NIL;
+  VAR actVal: CG.Val := NIL;
+  VAR actTypeInfo, formTypeInfo: Type.Info;
+  VAR b: BOOLEAN;
   BEGIN
     IF NOT ArrayType.Is (formType) THEN RETURN END;
-    IF Type.IsEqual (formType, actType, NIL) THEN RETURN END;
-
     formDepth := OpenArrayType.OpenDepth (formType);
     actDepth := OpenArrayType.OpenDepth (actType);
-
-    IF (formDepth = actDepth) THEN RETURN END;
-
-    (* Capture the actual's address. *)
-    actVal := CG.Pop ();
-
-    IF (formDepth > actDepth) THEN
-      (* Must build a bigger dope vector. *)
-      tempVar := OpenArrayType.DeclareDopeTemp (formType);
-
-      (* Copy the elements pointer. *)
+    IF eltsCopySize = 0 AND formDepth = actDepth THEN RETURN END;
+    EVAL Type.CheckInfo (actType, actTypeInfo);
+    EVAL Type.CheckInfo (formType, formTypeInfo);
+    IF eltsCopySize > 0 THEN (* Make a copy of elements. *)
+      actVal := CG.Pop ();
+      eltsAlign := MAX (actTypeInfo.alignment, formTypeInfo.alignment);
+      eltsTempVar
+        := CG.Declare_temp
+             (eltsCopySize, eltsAlign, CG.Type.Struct, in_memory := TRUE);
+      CG.Load_addr_of (eltsTempVar, 0, eltsAlign);
       CG.Push (actVal);
-      IF (actDepth > 0) THEN CG.Open_elt_ptr (Target.Byte) END;
-      CG.Store_addr (tempVar, M3RT.OA_elt_ptr);
+      IF actDepth > 0 THEN CG.Open_elt_ptr (actTypeInfo.alignment) END;
+      CG.Copy (eltsCopySize, overlap := FALSE);
+    END;
 
-      (* Fill in the lengths. *)
-      FOR i := 0 TO formDepth-1 DO
-        b := ArrayType.Split (actType, indexType, eltType);  <*ASSERT b*>
-        IF (indexType = NIL) THEN (* Actual is open at depth 'i'. *)
-          CG.Push (actVal);
-          CG.Open_size (i);
-        ELSE
-          CG.Load_integer (Target.Integer.cg_type, Type.Number (indexType));
-        END;
-        CG.Store_int (Target.Integer.cg_type,
-                      tempVar, M3RT.OA_sizes + i * Target.Integer.pack);
-        actType := eltType;
+    IF eltsCopySize > 0 OR formDepth > actDepth THEN (* New dope needed. *)
+      dopeTempVar := OpenArrayType.DeclareDopeTemp (formType);
+
+      (* Set new dope's elements pointer. *)
+      IF eltsTempVar = NIL THEN
+        IF actVal = NIL THEN actVal := CG.Pop () END;
+        CG.Push (actVal);
+        IF actDepth > 0 THEN CG.Open_elt_ptr (actTypeInfo.alignment) END;
+      ELSE
+        CG.Load_addr_of (eltsTempVar, M3RT.OA_elt_ptr, eltsAlign);
+      END;
+      CG.Store_addr (dopeTempVar, M3RT.OA_elt_ptr);
+
+      (* Copy actual/formal-shared open lengths from old to new dope. *)
+      FOR i := 0 TO MIN (actDepth, formDepth) - 1 DO
+        IF actVal = NIL THEN actVal := CG.Pop () END;
+        CG.Push (actVal);
+        CG.Open_size (i);
+        CG.Store_int
+          (Target.Integer.cg_type, dopeTempVar,
+           M3RT.OA_sizes + i * Target.Integer.pack);
+      END;
+    END;
+
+    IF formDepth > actDepth THEN
+      <* ASSERT dopeTempVar # NIL *>
+
+      (* Skip actual/formal-shared open dimensions of actual type. *)
+      actInnerType := actType;
+      FOR i := 0 TO actDepth - 1 DO
+        b := ArrayType.Split (actInnerType, indexType, eltType);
+        <* ASSERT b *>
+        <* ASSERT indexType = NIL *>
+        actInnerType := eltType;
       END;
 
-      (* Leave the address of the new dope. *)
-      CG.Load_addr_of (tempVar, 0, Target.Address.align);
-    ELSE (* formDepth < actDepth *)
-      (* Check formal fixed array bounds;  Don't build a smaller dope vector.
-         Just reuse the existing one! *)
+      (* Store additional lengths from actual type into new dope. *)
+      FOR i := actDepth TO formDepth-1 DO
+        b := ArrayType.Split (actInnerType, indexType, eltType);
+        <* ASSERT b *>
+        <* ASSERT indexType # NIL *>
+        CG.Load_integer (Target.Integer.cg_type, Type.Number (indexType));
+        CG.Store_int (Target.Integer.cg_type,
+                      dopeTempVar, M3RT.OA_sizes + i * Target.Integer.pack);
+        actInnerType := eltType;
+      END;
+    ELSE (* formDepth <= actDepth *)
 
-      formType := OpenArrayType.NonopenEltType (formType);
+      (* Gen RT checks of deeper actual dimensions against formal's type. *)
+      formInnerType := OpenArrayType.NonopenEltType (formType);
       FOR i := formDepth TO actDepth - 1 DO
-        b := ArrayType.Split (formType, indexType, eltType); <*ASSERT b*>
+        b := ArrayType.Split (formInnerType, indexType, eltType);
+        <*ASSERT b*>
         <*ASSERT indexType # NIL*>
+        IF actVal = NIL THEN actVal := CG.Pop () END;
         CG.Push (actVal);
         CG.Open_size (i);
         CG.Load_integer (Target.Integer.cg_type, Type.Number (indexType));
         CG.Check_eq (Target.Integer.cg_type,
                      CG.RuntimeError.IncompatibleArrayShape);
-        formType := eltType;
+        formInnerType := eltType;
       END;
-
-      (* Leave the old dope vector or elements pointer as the result. *)
-      CG.Push (actVal);
-      IF (formDepth <= 0) THEN CG.Open_elt_ptr (Target.Byte); END;
-      CG.ForceStacked ();
     END;
+
+    IF dopeTempVar = NIL THEN (* Use actual's dope. *)
+      IF actVal # NIL THEN CG.Push (actVal)
+      ELSE (* Actual address is still undisturbed on TOS.  Use it. *)
+      END;
+      IF actDepth > 0 AND formDepth <= 0 THEN
+        CG.Open_elt_ptr (actTypeInfo.alignment)
+      END;
+    ELSE
+      IF actVal = NIL THEN (* Actual address is still on TOS.  Discard it. *)
+        CG.Discard (CG.Type.Addr);
+      END;
+      CG.Load_addr_of (dopeTempVar, 0, Target.Address.align);
+    END;
+    CG.ForceStacked ();
 
     CG.Free (actVal);
   END RedepthArray;

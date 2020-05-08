@@ -437,6 +437,8 @@ PROCEDURE Load_indirect
 (* if t=A, addr_align applies to where s0.t points, otherwise irrelevant. *)
 
 PROCEDURE Load_int (t: IType;  v: Var;  o: Offset := 0);
+(* Load_as_int' would have been a more meaningful name here.
+   It actually means load the *contents* of v and gives it integer type t. *)
 (* == Load (v, o, t.size, t.align, t) *)
 
 PROCEDURE Load_addr 
