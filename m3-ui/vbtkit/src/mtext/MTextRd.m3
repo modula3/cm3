@@ -63,6 +63,10 @@ PROCEDURE Init (rd        : T;
     rd.st := 0;
     rd.lo := 0;
     rd.hi := 0;
+    rd.Ungetlo := 0;
+    rd.Ungethi := 0;
+    rd.Waitinglo := 0;
+    rd.Waitinghi := 0;
     IF rd.chars = NIL THEN
       rd.chars := NEW (REF ARRAY OF CHAR, BufferSize)
     END;
