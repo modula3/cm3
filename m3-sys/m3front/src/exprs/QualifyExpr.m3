@@ -269,27 +269,10 @@ PROCEDURE QualifyExprAlign (p: P): Type.BitAlignT =
   VAR objTypeInfo: Type.Info;
   BEGIN
     CASE p.class
-    OF Class.cFIELD =>
+    OF Class.cFIELD, Class.cOBJFIELD =>
         Field.Split (p.obj, fieldInfo);
         offset := fieldInfo.offset MOD Target.Word.size;
         RETURN CG.GCD (Expr.Alignment (p.expr), offset); 
-    | Class.cOBJFIELD =>
-        Field.Split (p.obj, fieldInfo);
-        ObjectType.GetFieldOffset (p.holder, obj_offset, obj_align);
-        (* Changing compilation order can change whether we statically
-           know the offset occupied by fields of supertypes.  When we
-           don't, we know only that it is a byte multiple, so, to avoid
-           legality changing with compilation order, we also treat as a
-           byte multiple even when we know it statically.  The exception
-           is when the offset is statically zero.  This means there are
-           no fields of supertypes, and the offset will always be zero,
-           regardless of compilation order.  *)
-        IF obj_offset = 0
-        THEN prefixAlign := Target.Word.size
-        ELSE prefixAlign := Target.Byte
-        END; 
-        offset := fieldInfo.offset MOD Target.Word.size;
-        RETURN CG.GCD (prefixAlign, offset);
     | Class.cMETHOD => RETURN Target.Address.align;
     ELSE
       objType := Value.TypeOf (p.obj);

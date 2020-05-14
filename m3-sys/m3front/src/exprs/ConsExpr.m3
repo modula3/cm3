@@ -104,6 +104,7 @@ PROCEDURE RepTypeOf (p: P): Type.T =
   BEGIN
     IF p = NIL THEN RETURN ErrType.T END;
     InnerSeal (p);
+    IF p.base = NIL THEN RETURN NIL END;
     RETURN p.base.repTypeOf () (* Delegate.*);
   END RepTypeOf;
 
@@ -238,6 +239,7 @@ PROCEDURE StaticLength (p: P): Expr.lengthTyp =
   BEGIN
     IF p = NIL THEN RETURN Expr.lengthInvalid END;
     InnerSeal (p);
+    IF p.base = NIL THEN RETURN Expr.lengthInvalid END;
     RETURN p.base.staticLength () (* Delegate.*);
   END StaticLength;
 
@@ -246,6 +248,7 @@ PROCEDURE UsesAssignProtocol (p: P): BOOLEAN =
   BEGIN
     IF p = NIL THEN RETURN FALSE END;
     InnerSeal (p);
+    IF p.base = NIL THEN RETURN FALSE END;
     RETURN p.base.usesAssignProtocol () (* Delegate.*);
   END UsesAssignProtocol;
 

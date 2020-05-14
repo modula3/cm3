@@ -828,11 +828,10 @@ PROCEDURE CommonEltPack
           THEN (* Inconsistent propagates to the top. *)
             result := eltPackInconsistent;
           ELSE
-            subEltPack := OpenArrayType.EltPack (subType);
-            superEltPack := OpenArrayType.EltPack (superType);
-            <* ASSERT subEltPack = superEltPack *>
-            <* ASSERT subEltPack = levelInfo.levEltPack *>
-            result := subEltPack; (* Both are the same, by assignability.*)
+            IF levelInfo.staticLen >= 0 THEN
+              result := deeperEltPack * levelInfo.staticLen
+            ELSE result := deeperEltPack
+            END;
             (* ^Any shallower levels will both be open, and their lengths
                 will be ensured equal by other mechanisms, static or dynamic,
                 so no need to take the lengths into account. *)
@@ -2046,6 +2045,7 @@ PROCEDURE Compile (top: T) =
     <* ASSERT top.depth = 0 *>
     Represent (top);
     IF top.broken THEN
+      CG.Load_nil ();
       top.state := StateTyp.Compiled;
       RETURN
     END;

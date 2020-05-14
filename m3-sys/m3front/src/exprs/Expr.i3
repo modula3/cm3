@@ -154,7 +154,7 @@ PROCEDURE StripNamedCons (expr: T): T;
 (* Look through a NamedExpr and then a ConsExpr, for an Expr.T.  NIL if not. *)
 
 PROCEDURE StaticSize (expr: T): INTEGER;
-(* < 0, if nonstatic.  Can be static, even if open array repType.
+(* < 0, if nonstatic.  Can be static, even if repType is open array.
    Does not include dope. *)
 
 PROCEDURE CheckUseFailure (t: T): BOOLEAN;

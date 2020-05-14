@@ -43,9 +43,9 @@ PROCEDURE New (t: Type.T;  name: M3ID.T): Expr.T =
     ExprRep.Init (p);
     p.v := Variable.New (name, TRUE);
     p.type := Type.Base (t);
-    p.repType := p.type;
     Variable.BindType (p.v, p.type, indirect := FALSE, readonly := FALSE,
                        open_array_ok := FALSE,  needs_init := TRUE);
+    p.repType := p.type;
     RETURN p;
   END New;
 

@@ -40,7 +40,7 @@ REVEAL
         bounds      : BoundPair;
         cg_var      : CG.Var; (* Used if it's a local, formal, or external. *)
         bss_var     : CG.Var; (* Used if it's a global. *)
-        nextTWACGVar : T; (* Link field for list of Variable..Ts that have a
+        nextTWACGVar : T; (* Link field for list of Variable.Ts that have a
                              non-NIL bss_var or cg_var. *)
         initValOffset : INTEGER := 0;
         offset      : INTEGER := 0;
@@ -291,11 +291,11 @@ PROCEDURE TypeOf (t: T): Type.T =
 
 (* Externally dispatched-to *)
 PROCEDURE RepTypeOf (t: T): Type.T =
+  VAR semType: Type.T;
   BEGIN
     IF t.repType = NIL THEN
-      IF t.initExpr # NIL THEN t.repType := Expr.RepTypeOf (t.initExpr)
-      ELSIF t.formal # NIL THEN t.repType := Value.RepTypeOf (t.formal)
-      END;
+      semType := TypeOf (t);
+      t.repType := Type.StripPacked (semType);
     END;
     RETURN t.repType;
   END RepTypeOf;
