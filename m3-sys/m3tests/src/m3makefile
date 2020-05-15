@@ -568,6 +568,7 @@ p_test ("p2", "p275", "More set operators on a small set type in a packed record
 p_test ("p2", "p276", "Packed set constructors.")
 p_test ("p2", "p278", "64-bit-sized but only 32-bit-aligned values, on 32-bit machines.")
 p_test ("p2", "p279", "misaligned, packed components of array and record constructors.")
+p_test ("p2", "p280", "Parameter passing, many cases, including packed.")
 
 % Some recently fixed tests in the packedVars branch: 
 
@@ -581,7 +582,7 @@ p_test ("p2", "p277", "mixtures of nested constructors")
 
 % some currently failing tests...
 
-%p_test ("p1", "p161", "more operations on very big sets in the heap")
+%p_test ("p1", "p161", "more operations on very big sets in the heap") %Extremely time-consuming
 p_test ("p1", "p158", "operations on subword-sized sets") % Previously not supported in CM3
 %p_test ("p2", "p204", "IP address initializers")
 %p_test ("p2", "p206", "ARRAY constructors in var decls using named open array types")
@@ -672,7 +673,7 @@ p_test ("p0", "p064", "procedure parameters")
 p_test ("p0", "p065", "typecode")
 p_test ("p0", "p066", "exception handler stack screwed up")
 p_test ("p0", "p067", "mixup in imported names")
-% p_test ("p0", "p068", "PrintProc for arrays and array of chars and Text.T")
+%p_test ("p0", "p068", "PrintProc for arrays and array of chars and Text.T")
 p_test ("p0", "p069", "two object types that differs only by default overwriting")
 % p_test ("p0", "p070", "procedure registration") % not supported in CM3
 p_test ("p0", "p071", "SUBARRAY := SUBARRAY")
@@ -739,7 +740,7 @@ p_test ("p1", "p126", "REAL arithmetic")
 p_test ("p1", "p127", "TRUNC, ROUND, FLOOR, CEILING")
 p_test ("p1", "p128", "simple FLOOR test")
 p_test ("p1", "p129", "simple DIV test")
-% p_test ("p1", "p130", "signed/unsigned conversions")
+%p_test ("p1", "p130", "signed/unsigned conversions")
 p_test ("p1", "p131", "TRUNC, ROUND, FLOOR, CEILING again")
 p_test ("p1", "p132", "assignments of builtin types")
 p_test ("p1", "p133", "assignments of records and arrays")
@@ -808,13 +809,8 @@ p_test ("p2", "p200", "recursive types again")
 p_test ("p2", "p201", "recursive values")
 p_test ("p2", "p202", "SUBARRAY actual parameter")
 p_test ("p2", "p203", "fingerprint of NULL")
-p_test ("p2", "p204", "IP address initializers")
 p_test ("p2", "p205", "SUBARRAY of imported CONST ARRAY")
-p_test ("p2", "p206", "ARRAY constructors in var decls using named open array types")
-p_test ("p2", "p207", "subrange declarations")
 p_test ("p2", "p208", "catching runtime errors")
-p_test ("p2", "p209", "open array initializers compile failure")
-p_test ("p2", "p210", "open array initializers runtime failure")
 
 p_run_flags_test ("p2", "p213", "runtime arguments: @M3paranoidgc", "@M3paranoidgc")
 p_run_flags_test ("p2", "p214", "runtime arguments: @M3noincremental", "@M3noincremental")

@@ -1,0 +1,38 @@
+"../TestEnum.m3 => ../Modes.mg", line 262: warning: Not StackType in ForceStacked, Kind = Stacked
+"../TestEnum.m3 => ../Modes.mg", line 306: warning: Not StackType in ForceStacked, Kind = Stacked
+2 warnings encountered
+"../TestSmallSet.m3 => ../Modes.mg", line 262: warning: Not StackType in ForceStacked, Kind = Stacked
+"../TestSmallSet.m3 => ../Modes.mg", line 306: warning: Not StackType in ForceStacked, Kind = Stacked
+2 warnings encountered
+"../TestArrayMO_0_0.m3 => ../ArrayModes.mg", line 21: warning: Large parameter passed by value (216 bytes). (ValForm)
+1 warning encountered
+"../TestArrayMO_0_1.m3 => ../ArrayModes.mg", line 21: warning: Open array passed by value. (ValForm)
+1 warning encountered
+"../TestArrayMO_0_2.m3 => ../ArrayModes.mg", line 21: warning: Open array passed by value. (ValForm)
+1 warning encountered
+"../TestArrayMO_0_3.m3 => ../ArrayModes.mg", line 21: warning: Open array passed by value. (ValForm)
+1 warning encountered
+"../TestArrayMO_1_0.m3 => ../ArrayModes.mg", line 21: warning: Large parameter passed by value (216 bytes). (ValForm)
+1 warning encountered
+"../TestArrayMO_1_1.m3 => ../ArrayModes.mg", line 21: warning: Open array passed by value. (ValForm)
+1 warning encountered
+"../TestArrayMO_1_2.m3 => ../ArrayModes.mg", line 21: warning: Open array passed by value. (ValForm)
+1 warning encountered
+"../TestArrayMO_1_3.m3 => ../ArrayModes.mg", line 21: warning: Open array passed by value. (ValForm)
+1 warning encountered
+"../TestArrayMO_2_0.m3 => ../ArrayModes.mg", line 21: warning: Large parameter passed by value (216 bytes). (ValForm)
+1 warning encountered
+"../TestArrayMO_2_1.m3 => ../ArrayModes.mg", line 21: warning: Open array passed by value. (ValForm)
+1 warning encountered
+"../TestArrayMO_2_2.m3 => ../ArrayModes.mg", line 21: warning: Open array passed by value. (ValForm)
+1 warning encountered
+"../TestArrayMO_2_3.m3 => ../ArrayModes.mg", line 21: warning: Open array passed by value. (ValForm)
+1 warning encountered
+"../TestArrayMO_3_0.m3 => ../ArrayModes.mg", line 21: warning: Large parameter passed by value (216 bytes). (ValForm)
+1 warning encountered
+"../TestArrayMO_3_1.m3 => ../ArrayModes.mg", line 21: warning: Open array passed by value. (ValForm)
+1 warning encountered
+"../TestArrayMO_3_2.m3 => ../ArrayModes.mg", line 21: warning: Open array passed by value. (ValForm)
+1 warning encountered
+"../TestArrayMO_3_3.m3 => ../ArrayModes.mg", line 21: warning: Open array passed by value. (ValForm)
+1 warning encountered
