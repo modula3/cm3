@@ -796,7 +796,7 @@ PROCEDURE CommonEltPack
   VAR result: INTEGER;
   VAR superIndexType, superEltType: Type.T; 
   VAR subIndexType, subEltType : Type.T; 
-  VAR subEltPack, superEltPack, deeperEltPack: INTEGER;
+  VAR subEltPack, superEltPack, deeperStaticLen, deeperEltPack: INTEGER;
   VAR subIsArray, superIsArray: BOOLEAN;
 
   BEGIN
@@ -828,10 +828,7 @@ PROCEDURE CommonEltPack
           THEN (* Inconsistent propagates to the top. *)
             result := eltPackInconsistent;
           ELSE
-            IF levelInfo.staticLen >= 0 THEN
-              result := deeperEltPack * levelInfo.staticLen
-            ELSE result := deeperEltPack
-            END;
+            result := deeperEltPack;
             (* ^Any shallower levels will both be open, and their lengths
                 will be ensured equal by other mechanisms, static or dynamic,
                 so no need to take the lengths into account. *)
@@ -852,13 +849,14 @@ PROCEDURE CommonEltPack
             result := subEltPack;
           ELSE (* super has > 1 open levels, all matching fixed sub levels. *)
             subEltPack := ArrayType.EltPack (subType);
-            <* ASSERT levelInfo.staticLen >= 0 *>
-            superEltPack := levelInfo.staticLen * deeperEltPack; 
+            deeperStaticLen := top.levels^ [depth+1].staticLen;
+            IF deeperStaticLen < 0 THEN deeperStaticLen := 1 END;
+            superEltPack := deeperStaticLen * deeperEltPack;
             IF superEltPack # subEltPack THEN (* An inconsistency. *)
               result := eltPackInconsistent;
             ELSE
               <* ASSERT levelInfo.levEltPack = subEltPack *>
-              (* All fixed-typed cousins have levelInfo.staticLen.  So if
+              (* All fixed-typed cousins have deeperStaticLen.  So if
                  any of them matches the one open type here, they all will. *)
               result := subEltPack;
             END
