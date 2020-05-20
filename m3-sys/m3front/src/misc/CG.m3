@@ -840,10 +840,20 @@ PROCEDURE ForceStacked (s: Size := 0) =
 
       (* finish the descriptor *)
       IF x.type # StackType[x.type] THEN
-        Error.Warn
+
+(*      Error.Warn
           (2, "Not StackType in ForceStacked, Kind = "
-              & VKindImage (OrigKind));
+              & VKindImage (OrigKind)); *)
         x.type := StackType[x.type];
+(* REVIEW: This seems peculiar.  It converts any Word* type to its
+           same-sized Int* counterpart on the stack.  ZTypes (in
+           M3CG.i3), which claims to be the set of arithmetic types
+           used on the stack, includes Word* types.  Perhaps this is
+           just an un-updated leftover from Modula2 or 2+.  Perhaps
+           it all works because not direct stack operators care about
+           signedness.  Operands of short memory types *are*
+           sign-extended or zero-extended when loaded, as here. *)
+
       END; 
       x.kind      := VKind.Stacked;
       x.offset    := 0;
