@@ -1,9 +1,3 @@
-"../TestEnum.m3 => ../Modes.mg", line 262: warning: Not StackType in ForceStacked, Kind = Stacked
-"../TestEnum.m3 => ../Modes.mg", line 306: warning: Not StackType in ForceStacked, Kind = Stacked
-2 warnings encountered
-"../TestSmallSet.m3 => ../Modes.mg", line 262: warning: Not StackType in ForceStacked, Kind = Stacked
-"../TestSmallSet.m3 => ../Modes.mg", line 306: warning: Not StackType in ForceStacked, Kind = Stacked
-2 warnings encountered
 "../TestArrayMO_0_0.m3 => ../ArrayModes.mg", line 21: warning: Large parameter passed by value (216 bytes). (ValForm)
 1 warning encountered
 "../TestArrayMO_0_1.m3 => ../ArrayModes.mg", line 21: warning: Open array passed by value. (ValForm)

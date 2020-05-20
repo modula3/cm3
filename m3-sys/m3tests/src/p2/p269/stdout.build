@@ -28,28 +28,6 @@
 1 warning encountered
 "../AMD64_LINUX/D6_EI16_S7_6_5_4_3_2.m3 => ../Dim6.mg", line 11: warning: not used (InnerDim)
 1 warning encountered
-"../AMD64_LINUX/Checks0_EI4.m3 => ../Checks0.mg", line 59: warning: Not StackType in ForceStacked, Kind = Stacked
-"../AMD64_LINUX/Checks0_EI4.m3 => ../Checks0.mg", line 59: warning: Not StackType in ForceStacked, Kind = Stacked
-"../AMD64_LINUX/Checks0_EI4.m3 => ../Checks0.mg", line 66: warning: Not StackType in ForceStacked, Kind = Stacked
-3 warnings encountered
-"../Checks1_EI4_S4_4_4_4_4_4.m3 => ../Checks.mg", line 94: warning: Not StackType in ForceStacked, Kind = Stacked
-"../Checks1_EI4_S4_4_4_4_4_4.m3 => ../Checks.mg", line 186: warning: Not StackType in ForceStacked, Kind = Stacked
-2 warnings encountered
-"../Checks2_EI4_S4_4_4_4_4_4.m3 => ../Checks.mg", line 94: warning: Not StackType in ForceStacked, Kind = Stacked
-"../Checks2_EI4_S4_4_4_4_4_4.m3 => ../Checks.mg", line 186: warning: Not StackType in ForceStacked, Kind = Stacked
-2 warnings encountered
-"../Checks3_EI4_S4_4_4_4_4_4.m3 => ../Checks.mg", line 94: warning: Not StackType in ForceStacked, Kind = Stacked
-"../Checks3_EI4_S4_4_4_4_4_4.m3 => ../Checks.mg", line 186: warning: Not StackType in ForceStacked, Kind = Stacked
-2 warnings encountered
-"../Checks4_EI4_S4_4_4_4_4_4.m3 => ../Checks.mg", line 94: warning: Not StackType in ForceStacked, Kind = Stacked
-"../Checks4_EI4_S4_4_4_4_4_4.m3 => ../Checks.mg", line 186: warning: Not StackType in ForceStacked, Kind = Stacked
-2 warnings encountered
-"../Checks5_EI4_S4_4_4_4_4_4.m3 => ../Checks.mg", line 94: warning: Not StackType in ForceStacked, Kind = Stacked
-"../Checks5_EI4_S4_4_4_4_4_4.m3 => ../Checks.mg", line 186: warning: Not StackType in ForceStacked, Kind = Stacked
-2 warnings encountered
-"../Checks6_EI4_S4_4_4_4_4_4.m3 => ../Checks.mg", line 94: warning: Not StackType in ForceStacked, Kind = Stacked
-"../Checks6_EI4_S4_4_4_4_4_4.m3 => ../Checks.mg", line 186: warning: Not StackType in ForceStacked, Kind = Stacked
-2 warnings encountered
 "../Dynamic.m3", line 478: warning: not used (FlatVals4_1)
 "../Dynamic.m3", line 17: warning: not used (EltsI16)
 "../Dynamic.m3", line 20: warning: not used (RepTyp)
