@@ -320,7 +320,8 @@ PROCEDURE DoCheckArgs (VAR cs       : Value.CheckState;
   VAR
     j                 : INTEGER;
     actualExpr, value : Expr.T;
-    index, elt, t, te : Type.T; 
+    index, elt, t     : Type.T;
+    actSemType        : Type.T;
     name              : M3ID.T;
     formal            : T;
     posOK, ok         : BOOLEAN;
@@ -410,11 +411,11 @@ PROCEDURE DoCheckArgs (VAR cs       : Value.CheckState;
           END;
         END;
 
-        te := Expr.TypeOf (actualExpr);
+        actSemType := Expr.SemTypeOf (actualExpr);
         t  := formal.tipe;
         CASE formal.mode OF
         | Mode.mVALUE =>
-            IF NOT Type.IsAssignable (t, te) THEN
+            IF NOT Type.IsAssignable (t, actSemType) THEN
               Err (slots[i], "actual not assignable to VALUE formal (2.3.2) ");
               ok := FALSE;
             END;
@@ -427,26 +428,32 @@ PROCEDURE DoCheckArgs (VAR cs       : Value.CheckState;
               Err (slots[i], "VAR actual must be writable (2.3.2): ");
               ok := FALSE;
             END;
-            IF Type.IsEqual (t, te, NIL) 
+            IF Type.IsEqual (t, actSemType, NIL)
                   OR (ArrayType.Split (t, index, elt)
-                      AND ArrayType.Split (te, index, elt)
-                      AND Type.IsAssignable (t, te) ) THEN
-              Expr.NeedsAddress (actualExpr);
+                      AND ArrayType.Split (actSemType, index, elt)
+                      AND Type.IsAssignable (t, actSemType) ) THEN
+              IF PackedType.Is (actSemType) THEN
+                Err (slots[i],
+                     "CM3 restriction: VAR actual cannot be packed. (2.3.2): ");
+                ok := FALSE;
+              ELSE
+                Expr.NeedsAddress (actualExpr);
+              END;
             ELSE
               Err (slots[i], "Actual's type must equal VAR formal's (2.3.2): ");
               ok := FALSE;
             END;
         | Mode.mREADONLY =>
-            IF NOT Type.IsAssignable (t, te) THEN
+            IF NOT Type.IsAssignable (t, actSemType) THEN
               Err (slots[i],
                    "Actual must be assignable to READONLY formal (2.3.2): ");
               ok := FALSE;
             ELSIF Expr.IsDesignator (actualExpr)
-                  AND Type.IsEqual (t, te, NIL) 
+                  AND Type.IsEqual (t, actSemType, NIL)
                       OR (ArrayType.Split (t, index, elt))
             THEN (* Pass by reference. *) 
               Expr.NeedsAddress (actualExpr);
-            ELSE (* Type.IsAssignable (t, te), pass by value. *)
+            ELSE (* Type.IsAssignable (t, actSemType), pass by value. *)
               (* we'll make a copy when it's generated *)
             END;
         END; (*case*)
@@ -457,7 +464,7 @@ PROCEDURE DoCheckArgs (VAR cs       : Value.CheckState;
                 AND ((formal.kind = Type.Class.Ref)
                   OR (formal.kind = Type.Class.Object)
                   OR (formal.kind = Type.Class.Opaque)) THEN
-          IF NOT Type.IsSubtype (te, t) THEN
+          IF NOT Type.IsSubtype (actSemType, t) THEN
             (* This reference value needs an implicit NARROW *)
             actualExpr := NarrowExpr.New (actualExpr, t);
             slots[i].actual := actualExpr;
@@ -516,7 +523,10 @@ PROCEDURE PrepArg (formal: Value.T; actExpr: Expr.T) =
 
     | Mode.mVAR =>
         (* Pass by reference. *)
-        IF NOT Expr.IsDesignator (actExpr) THEN (* Just error recovery. *)
+        IF NOT Expr.IsDesignator (actExpr)
+           OR NOT Expr.IsWritable (actExpr, traced := TRUE)
+           OR PackedType.Is (actSemType)
+        THEN (* Just error recovery. *)
           formVal.hasError := TRUE;
         ELSIF RequiresFetch (formVal, actExpr)
         THEN
@@ -896,8 +906,8 @@ PROCEDURE GenSmallSet (formVal: T;  actExpr: Expr.T) =
           actSemType := Expr.TypeOf (actExpr);
           IF Type.IsEqual (formVal.tipe, actSemType, NIL)
              AND Expr.IsDesignator (actExpr)
+             AND NOT PackedType.Is (actSemType)
           THEN (* Pass by ref. *)
-            <* ASSERT NOT PackedType.Is (actSemType) *>
             Expr.CompileAddress (actExpr, traced := FALSE);
             CG.Pop_param (CG.Type.Addr);
           ELSE (* Pass by value, lo-level: copy by reference. *)
