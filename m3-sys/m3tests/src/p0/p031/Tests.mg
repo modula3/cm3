@@ -10,9 +10,11 @@ GENERIC MODULE Tests ( ParamInfo )
 ; FROM Support IMPORT WL
 ; FROM ParamInfo IMPORT ParamTyp1 , ParamTyp2 , Val1 , Val2 , Name 
 
+; TYPE RecOfT1 = RECORD Fld : ParamTyp1 END
 ; TYPE RecOfT2 = RECORD Fld : ParamTyp2 END
 ; VAR (* WONT CHANGE *) ValT1 : ParamTyp1 := Val1 
 ; VAR (* WONT CHANGE *) ValT1Mod : ParamTyp1 := Val2 
+; VAR (* WONT CHANGE *) ValRecOfT1 := RecOfT1 { ValT1 }
 ; VAR (* WONT CHANGE *) ValRecOfT2 := RecOfT2 { ValT1 }
 
 ; VAR GFailures : BOOLEAN := FALSE  
@@ -46,7 +48,7 @@ GENERIC MODULE Tests ( ParamInfo )
     ; RETURN Form
     END PT1RO 
 
-; PROCEDURE PT1ROT2 ( READONLY Form : ParamTyp1 ; VAR Alias : ParamTyp2 ) : ParamTyp1 
+; PROCEDURE PT1ROT2 ( READONLY Form : ParamTyp2 ; VAR Alias : ParamTyp1 ) : ParamTyp1
   = BEGIN
       WL ( "    In PT1ROT2" ) 
     ; Alias := ValT1Mod
@@ -61,7 +63,8 @@ GENERIC MODULE Tests ( ParamInfo )
 
 ; PROCEDURE Work ( VAR Failures : BOOLEAN ) 
 
-  = VAR LVT1A , LVT1B : ParamTyp1 
+  = VAR LVT1A , LVT1B : ParamTyp1
+  ; VAR LVRecOfT1 : RecOfT1
   ; VAR LVRecOfT2 : RecOfT2
   ; BEGIN
       GFailures := FALSE 
@@ -98,10 +101,11 @@ GENERIC MODULE Tests ( ParamInfo )
     (* READONLY, different type, designator: *) 
     ; WL ( "  READONLY mode, different type, designator (copy and pass by reference):" )
     ; LVT1A  := ValT1
+    ; LVRecOfT1  := ValRecOfT1
     ; LVRecOfT2  := ValRecOfT2
-    ; LVT1B := PT1ROT2 ( LVRecOfT2 . Fld , LVRecOfT2 . Fld ) 
+    ; LVT1B := PT1ROT2 ( LVRecOfT2 . Fld , LVRecOfT1 . Fld )
       (* Should be passed by value, result should be unchanged. *) 
-    ; Check ( LVRecOfT2 . Fld, ValT1Mod , " through alias." ) 
+    ; Check ( LVRecOfT1 . Fld, ValT1Mod , " through alias." )
     ; Check ( LVT1B , ValT1 , " through value formal." )
 
     ; IF GFailures

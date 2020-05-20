@@ -673,7 +673,7 @@ p_test ("p0", "p064", "procedure parameters")
 p_test ("p0", "p065", "typecode")
 p_test ("p0", "p066", "exception handler stack screwed up")
 p_test ("p0", "p067", "mixup in imported names")
-%p_test ("p0", "p068", "PrintProc for arrays and array of chars and Text.T")
+%p_test ("p0", "p068", "PrintProc for arrays and array of chars and Text.T") %obsolete.
 p_test ("p0", "p069", "two object types that differs only by default overwriting")
 % p_test ("p0", "p070", "procedure registration") % not supported in CM3
 p_test ("p0", "p071", "SUBARRAY := SUBARRAY")
