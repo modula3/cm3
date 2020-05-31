@@ -32,7 +32,7 @@ INTERFACE Common
 ; PROCEDURE StripDope ( Value : ADDRESS ; ExpLen : INTEGER ; Label : TEXT )
   : ADDRESS 
 
-(* The zero-t element value of these must not be the same as any open
+(* The zero-th element value of these must not be the same as any open
    array length, to avoid confusing StripDope.
 *)
 ; CONST Array3DVal = Array3DOpen 

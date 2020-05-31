@@ -116,7 +116,7 @@ UNSAFE MODULE Common
    values used in arrays in this test program.
 *)
 
-; VAR InformStrippingDope := TRUE
+; VAR InformStrippingDope := FALSE
 
 ; PROCEDURE StripDope ( Value : ADDRESS ; ExpLen : INTEGER ; Label : TEXT )
   : ADDRESS 
