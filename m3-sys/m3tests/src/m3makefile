@@ -585,10 +585,10 @@ p_test ("p2", "p277", "mixtures of nested constructors")
 %p_test ("p1", "p161", "more operations on very big sets in the heap") %Extremely time-consuming
 p_test ("p1", "p158", "operations on subword-sized sets") % Previously not supported in CM3
 %p_test ("p2", "p204", "IP address initializers")
-%p_test ("p2", "p206", "ARRAY constructors in var decls using named open array types")
-%p_test ("p2", "p207", "subrange declarations")
-%p_test ("p2", "p209", "open array initializers compile failure")
-%p_test ("p2", "p210", "open array initializers runtime failure")
+p_test ("p2", "p206", "ARRAY constructors in var decls using named open array types")
+p_test ("p2", "p207", "subrange declarations")
+p_test ("p2", "p209", "open array initializers compile failure")
+p_test ("p2", "p210", "open array initializers runtime failure")
 
 %p_test ("p2", "p240", "exact codegen")
 
