@@ -49,7 +49,7 @@ PROCEDURE RTCheckNonNeg (e: Expr.T;  VAR cs: Expr.CheckState): Expr.T =
   VAR min, max: Target.Int;
   BEGIN
     IF (e = NIL) THEN RETURN NIL; END;
-(* TODO: Handle static values. *)
+(* TODO: Warn on statically-detectable negative value. *)
     Expr.GetBounds (e, min, max);
     IF TInt.LT (min, TInt.Zero) OR TInt.LT (max, min) THEN
       e := CheckExpr.NewLower (e, TInt.Zero, CG.RuntimeError.ValueOutOfRange);

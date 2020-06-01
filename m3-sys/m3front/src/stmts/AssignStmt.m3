@@ -77,11 +77,11 @@ PROCEDURE Check
   VAR Code: CG.RuntimeError;
   VAR Msg: TEXT;
   BEGIN
-    CheckRT ( tlhs, rhsExpr, cs, (*OUT*)Code, (*OUT*)Msg, IsError);
+    CheckStaticRTErrExec ( tlhs, rhsExpr, cs, (*OUT*)Code, (*OUT*)Msg, IsError);
   END Check;
 
 (* EXPORTED: *) 
-PROCEDURE CheckRT
+PROCEDURE CheckStaticRTErrExec
   (tlhs: Type.T;  rhsExpr: Expr.T;  VAR cs: Stmt.CheckState;
    VAR(*OUT*) Code: CG.RuntimeError; VAR(*OUT*) Msg: TEXT; IsError := FALSE
   ) =
@@ -117,15 +117,17 @@ PROCEDURE CheckRT
       | Type.Class.Procedure =>
         CheckProcedure (rhsExpr, (*OUT*)Code, (*OUT*)Msg, IsError);
       | Type.Class.Set =>
-        SetExpr.CheckRT (rhsExpr, (*OUT*)Code, (*OUT*)Msg);
+        SetExpr.CheckStaticRTErrEval (rhsExpr, (*OUT*)Code, (*OUT*)Msg);
       | Type.Class.Record =>
-        RecordExpr.CheckRT (rhsExpr, (*OUT*)Code, (*OUT*)Msg);
+        RecordExpr.CheckStaticRTErrEval (rhsExpr, (*OUT*)Code, (*OUT*)Msg);
       | Type.Class.Array, Type.Class.OpenArray =>
-        ArrayExpr.CheckRT (rhsExpr, (*OUT*)Code, (*OUT*)Msg);
+        ArrayExpr.CheckStaticRTErrEval (rhsExpr, (*OUT*)Code, (*OUT*)Msg);
+        ArrayExpr.CheckStaticRTErrAssign
+          (tlhs, rhsExpr, (*OUT*)Code, (*OUT*)Msg);
       ELSE
       END (*CASE*)
     END
-  END CheckRT;
+  END CheckStaticRTErrExec;
 
 PROCEDURE CheckOrdinal
   (tlhs: Type.T;  rhsExpr: Expr.T;

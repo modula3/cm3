@@ -57,6 +57,17 @@ PROCEDURE GetBounds
 PROCEDURE ConstSubscript (array, index: Expr.T;  VAR expr: Expr.T): BOOLEAN;
 (* Will look through a ConsExpr. *)
 
-PROCEDURE CheckRT
+PROCEDURE CheckStaticRTErrEval
   (expr: Expr.T; VAR(*OUT*) Code: CG.RuntimeError; VAR(*OUT*) Msg: TEXT);
+(* Set Code and Msg if they are not set and expr is known to produce a
+   statically unconditional runtime error when evaluated. *)
+
+PROCEDURE CheckStaticRTErrAssign
+  (lhsType: Type.T; expr: Expr.T;
+   VAR(*OUT*) Code: CG.RuntimeError; VAR(*OUT*) Msg: TEXT);
+(* PRE: expr has been Checked. *)
+(* Set Code and Msg if they are not set and expr is known to produce a
+   statically unconditional runtime error when assigned to a variable
+   of lhsType. *)
+
 END ArrayExpr.

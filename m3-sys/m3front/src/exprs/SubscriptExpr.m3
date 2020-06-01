@@ -121,7 +121,8 @@ PROCEDURE GenRangeCheck
       Expr.TypeCheck (p.biased_b, cs);
     ELSIF TInt.LT (minb, mini) THEN
       IF TInt.LT (maxb, mini) THEN
-        Error.Warn (2, "subscript is out of range");
+        Error.Warn (2, "Will raise runtime error if executed: "
+          & "subscript is below array index type.");
       END;
       p.biased_b := CheckExpr.NewLower (p.biased_b, TInt.Zero,
                                    CG.RuntimeError.SubscriptOutOfRange);
@@ -129,7 +130,8 @@ PROCEDURE GenRangeCheck
       Expr.TypeCheck (p.biased_b, cs);
     ELSIF TInt.LT (maxi, maxb) THEN
       IF TInt.LT (maxi, minb) THEN
-        Error.Warn (2, "subscript is out of range");
+        Error.Warn (2, "Will raise runtime error if executed: "
+          & "subscript is above array index type.");
       END;
       b := TInt.Subtract (maxi, mini, z);  <*ASSERT b *>
       p.biased_b := CheckExpr.NewUpper (p.biased_b, z,
@@ -225,7 +227,8 @@ PROCEDURE DirectCheckPass2 (p: P; VAR cs: Expr.CheckState; ssDepth: INTEGER) =
     IF p.ssDepth = 1 AND p.lhsOpenDepth > 1
        AND OpenArrayType.EltsAreBitAddressed(p.type) THEN 
       Error.Msg
-        ("CM3 restriction: Open array of non-byte-aligned elements cannot be partially subscripted.");
+        ("CM3 restriction: Open array of non-byte-aligned elements cannot "
+          & "be partially subscripted (2.2.5).");
       p.type := ErrType.T;
     END; 
 

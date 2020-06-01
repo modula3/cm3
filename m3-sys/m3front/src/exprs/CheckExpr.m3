@@ -139,6 +139,8 @@ PROCEDURE Compile (p: P) =
 
 PROCEDURE EmitChecks (e: Expr.T;  READONLY min, max: Target.Int;
                       err: CG.RuntimeError) =
+(* Compiles 'e' and ensures that it's contained in [min..max].
+   Does not construct an expression node. *)
   VAR minE, maxE: Target.Int;  x: Expr.T;
       t := Expr.TypeOf (e);  cg_type: CG.Type;
   BEGIN
@@ -155,6 +157,10 @@ PROCEDURE EmitChecks (e: Expr.T;  READONLY min, max: Target.Int;
         CG.Check_range (cg_type, min, max, err);
       ELSIF TInt.LT (minE, min) THEN
         IF TInt.LT (maxE, min) THEN
+
+
+
+
           Error.Warn (2, "Value out of range--low.");
         END;
         CG.Check_lo (cg_type, min, err);

@@ -31,9 +31,9 @@ TYPE
         nOthers     : INTEGER;
         tmp         : CG.Var;
         globalOffset: INTEGER;
-        RTErrorMsg  : TEXT := NIL;
         minI, maxI  : INTEGER; (* Of the set's element type. *)
         minT, maxT  : Target.Int;
+        RTErrorMsg  : TEXT := NIL;
         RTErrorCode := CG.RuntimeError.Unknown;
         mapped      : BOOLEAN;
         is_const    : BOOLEAN;
@@ -95,6 +95,8 @@ PROCEDURE New (type: Type.T;  args: Expr.List): Expr.T =
     p.tmp     := NIL;
     p.is_const := TRUE;
     p.checked := FALSE;
+    p.RTErrorCode := CG.RuntimeError.Unknown;
+    p.RTErrorMsg := NIL;
     RETURN p;
   END New;
 
@@ -114,6 +116,8 @@ PROCEDURE NewFromTree (p: P;  node: Node): Expr.T =
     c.others  := NIL;
     c.nOthers := -1;
     c.is_const := TRUE;
+    p.RTErrorCode := CG.RuntimeError.Unknown;
+    p.RTErrorMsg := NIL;
     RETURN c;
   END NewFromTree;
 
@@ -386,7 +390,8 @@ PROCEDURE BuildMap (e: Expr.T;  VAR p: P): BOOLEAN =
       ELSIF IntegerExpr.Split (elt, from, t)
         OR EnumExpr.Split (elt, from, t) THEN
         IF TInt.LT (from, min) OR TInt.LT (max, from) THEN
-          (* CheckRT will have emitted a warning.  Omit the value. *)
+          (* CheckStaticRTErrEval will have emitted a warning.
+             Omit the value from the constructor. *)
         ELSIF TInt.ToInt (from, iFrom) THEN
           p.tree := AddNode (p.tree, iFrom, iFrom);
         ELSE (* treat values outside host INTEGER as non-constants *)
@@ -402,7 +407,8 @@ PROCEDURE BuildMap (e: Expr.T;  VAR p: P): BOOLEAN =
                OR EnumExpr.Split (eMax, to, t))
         THEN
           IF TInt.LT (from, min) OR TInt.LT (max, from) THEN
-            (* CheckRT will have emitted a warning.  Omit the value. *)
+            (* CheckStaticRTErrEval will have emitted a warning.
+               Omit the value from the constructor. *)
           ELSIF TInt.ToInt (from, iFrom) AND TInt.ToInt (to, iTo) THEN
             p.tree := AddNode (p.tree, iFrom, iTo);
           ELSE (* since the values are so big, treat them as non-constants *)
@@ -552,7 +558,7 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
              & "(2.6.8).");
           p.broken := TRUE;
         ELSE
-          AssignStmt.CheckRT
+          AssignStmt.CheckStaticRTErrExec
             (eltType, minExpr, cs, (*VAR*) RTErrorCode, (*VAR*) RTErrorMsg);
           MergeRTError (p, RTErrorCode, RTErrorMsg);
         END;
@@ -562,7 +568,7 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
              & "(2.6.8).");
           p.broken := TRUE;
         ELSE
-          AssignStmt.CheckRT
+          AssignStmt.CheckStaticRTErrExec
             (eltType, maxExpr, cs, (*VAR*) RTErrorCode, (*VAR*) RTErrorMsg);
           MergeRTError (p, RTErrorCode, RTErrorMsg);
         END;
@@ -573,8 +579,8 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
              & "(2.6.8).");
           p.broken := TRUE;
         ELSE
-          AssignStmt.CheckRT
-            (eltType, argExpr, cs,  RTErrorCode, (*VAR*) RTErrorMsg);
+          AssignStmt.CheckStaticRTErrExec
+            (eltType, argExpr, cs, (*VAR*) RTErrorCode, (*VAR*) RTErrorMsg);
           MergeRTError (p, RTErrorCode, RTErrorMsg);
         END;
         minExpr := argExpr;
@@ -756,8 +762,8 @@ PROCEDURE EmitAssign (set: CG.Var;  wordNo: INTEGER;
   BEGIN
     EVAL TInt.Extend (value, Target.Integer.bytes, tmp);
     CG.Load_integer (Target.Integer.cg_type, tmp);
-    CG.Store_int (Target.Integer.cg_type, set, wordNo * Grain);
     <* ASSERT Grain = Target.Integer.size *>
+    CG.Store_int (Target.Integer.cg_type, set, wordNo * Grain);
   END EmitAssign;
 
 PROCEDURE GenElement (e: Expr.T;  READONLY minT, maxT: Target.Int) =
@@ -948,22 +954,25 @@ PROCEDURE SetConstrExpr (expr: Expr.T): P =
   END SetConstrExpr;
 
 (*EXPORTED:*)
-PROCEDURE CheckRT
+PROCEDURE CheckStaticRTErrEval
   (expr: Expr.T; VAR(*OUT*) Code: CG.RuntimeError; VAR(*OUT*) Msg: TEXT) =
+(* Set Code and Msg if they are not set and expr is known to produce a
+   statically unconditional runtime error when evaluated. *)
+(* Return the first-discovered error found and stored during Check. *)
   VAR constrExpr: P;
   BEGIN
+    IF Code # CG.RuntimeError.Unknown THEN RETURN END;
     constrExpr := SetConstrExpr (expr);
     TYPECASE constrExpr OF
     | NULL =>
     | P(p) =>
       <* ASSERT p.checked *>
-      Code := p.RTErrorCode;
-      Msg := p.RTErrorMsg;
-      RETURN;
+      IF p.RTErrorCode # CG.RuntimeError.Unknown THEN
+        Code := p.RTErrorCode;
+        Msg := p.RTErrorMsg;
+      END;
     END;
-    Msg := NIL;
-    Code := CG.RuntimeError.Unknown;
-  END CheckRT;
+  END CheckStaticRTErrEval;
 
 (* Externally dispatched-to: *)
 PROCEDURE CheckUseFailure (p: P): BOOLEAN =
@@ -971,7 +980,8 @@ PROCEDURE CheckUseFailure (p: P): BOOLEAN =
     <* ASSERT p.checked *>
     IF AssignStmt.DoGenRTAbort (p.RTErrorCode) AND Evaluate (p) # NIL THEN
       CG.Comment
-        (p.globalOffset, TRUE, "Use of set constructor with bad element: ",
+        (p.globalOffset, TRUE,
+         "Use of set constructor with statically detected runtime error: ",
          p.RTErrorMsg);
       CG.Abort (p.RTErrorCode);
       RETURN FALSE;

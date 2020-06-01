@@ -84,6 +84,8 @@ PROCEDURE New (type: Type.T;  args: Expr.List): Expr.T =
     p.is_const       := FALSE;
     p.prepped        := FALSE;
     p.checked        := FALSE;
+    p.RTErrorCode    := CG.RuntimeError.Unknown;
+    p.RTErrorMsg     := NIL;
     RETURN p;
   END New;
 
@@ -229,7 +231,7 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
           ELSE
             ArrayExpr.NoteUseTargetVar (e);
 
-            AssignStmt.CheckRT
+            AssignStmt.CheckStaticRTErrExec
               (z.type, e, cs,
                (*VAR*)Code := RTErrorCode, (*VAR*)Msg := RTErrorMsg
               );
@@ -470,7 +472,8 @@ PROCEDURE GenLiteral (p: P;  offset: INTEGER;  <*UNUSED*> type: Type.T;
   END GenLiteral;
 
 PROCEDURE RecConstrExpr (expr: Expr.T): P =
-(* Look through a NamedExpr and then a ConsExpr, for a RecordExpr.T.  NIL if not. *)
+(* Look through a NamedExpr and then a ConsExpr, for a RecordExpr.T.
+   NIL if no RecordExpr.T. *)
 
   VAR strippedExpr: Expr.T;
   BEGIN
@@ -483,22 +486,25 @@ PROCEDURE RecConstrExpr (expr: Expr.T): P =
   END RecConstrExpr;
 
 (*EXPORTED:*)
-PROCEDURE CheckRT
+PROCEDURE CheckStaticRTErrEval
   (expr: Expr.T; VAR(*OUT*) Code: CG.RuntimeError; VAR(*OUT*) Msg: TEXT) =
+(* Set Code and Msg if they are not set and expr is known to produce a
+   statically unconditional runtime error when evaluated. *)
+(* Return the first-discovered error found and stored during Check. *)
   VAR constrExpr: P;
   BEGIN
+    IF Code # CG.RuntimeError.Unknown THEN RETURN END;
     constrExpr := RecConstrExpr (expr);
     TYPECASE constrExpr OF
     | NULL =>
     | P(p) =>
       <* ASSERT p.checked *>
-      Code := p.RTErrorCode;
-      Msg := p.RTErrorMsg;
-      RETURN;
+      IF p.RTErrorCode # CG.RuntimeError.Unknown THEN
+        Code := p.RTErrorCode;
+        Msg := p.RTErrorMsg;
+      END;
     END;
-    Msg := NIL;
-    Code := CG.RuntimeError.Unknown;
-  END CheckRT;
+  END CheckStaticRTErrEval;
 
 (* Externally dispatched-to: *)
 PROCEDURE CheckUseFailure (p: P): BOOLEAN =
@@ -506,7 +512,8 @@ PROCEDURE CheckUseFailure (p: P): BOOLEAN =
     <* ASSERT p.checked *>
     IF AssignStmt.DoGenRTAbort (p.RTErrorCode) AND Evaluate (p) # NIL THEN
       CG.Comment
-        (p.globalOffset, TRUE, "Use of bad record constructor: ",
+        (p.globalOffset, TRUE,
+         "Use of record constructor with statically detected runtime error: ",
          p.RTErrorMsg);
       CG.Abort (p.RTErrorCode);
       RETURN FALSE;

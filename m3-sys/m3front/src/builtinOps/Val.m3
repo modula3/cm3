@@ -40,6 +40,7 @@ PROCEDURE Check (ce: CallExpr.T;  VAR cs: Expr.CheckState) =
     ELSE (* looks ok *)
       Expr.GetBounds (ce.args[0], minu, maxu);
       EVAL Type.GetBounds (t, mint, maxt);
+(* TODO: Emit warnings when statically detectable RT errors. *)
       IF TInt.LT (minu, mint) THEN
         (* we need a lower bound check *)
         IF TInt.LT (maxt, maxu) THEN

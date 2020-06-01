@@ -17,7 +17,9 @@ PROCEDURE Is (e: Expr.T): BOOLEAN;
 
 PROCEDURE Qualify (record: Expr.T;  id: M3ID.T;  VAR e: Expr.T): BOOLEAN;
 
-PROCEDURE CheckRT
+PROCEDURE CheckStaticRTErrEval
   (expr: Expr.T; VAR(*OUT*) Code: CG.RuntimeError; VAR(*OUT*) Msg: TEXT);
+(* Set Code and Msg if they are not set and expr is known to produce a
+   statically unconditional runtime error when evaluated. *)
 
 END RecordExpr.

@@ -208,6 +208,8 @@ PROCEDURE New (type: Type.T; args: Expr.List; dots: BOOLEAN): Expr.T =
     constr.shallowestDynDepth   := FIRST (INTEGER); (* < 0 => none exists. *)
     constr.deepestDynDepth      := FIRST (INTEGER); (* < 0 => none exists. *)
     constr.heapTempPtrVar       := NIL;
+    constr.RTErrorCode          := CG.RuntimeError.Unknown;
+    constr.RTErrorMsg           := NIL;
     RETURN constr;
   END New;
 
@@ -542,7 +544,7 @@ PROCEDURE CheckRecurse
                          depthWInTopConstr);
                       INC (depthWInArg);
                     END (*LOOP*);
-                    AssignStmt.CheckRT
+                    AssignStmt.CheckStaticRTErrExec
                       (constr.semEltType, argConstr, cs,
                        (*VAR*)Code := RTErrorCode, (*VAR*)Msg := RTErrorMsg);
                     MergeRTError (top, RTErrorCode, RTErrorMsg);
@@ -550,7 +552,7 @@ PROCEDURE CheckRecurse
                 ELSE (* Arg is not an array constructor. *)
                   Error.Count (priorErrCt, priorWarnCt);
                   NoteUseTargetVar (argExpr);
-                  AssignStmt.CheckRT
+                  AssignStmt.CheckStaticRTErrExec
                     (constr.semEltType, argExpr, cs,
                      (*VAR*)Code := RTErrorCode, (*VAR*)Msg := RTErrorMsg);
                   MergeRTError (top, RTErrorCode, RTErrorMsg);
@@ -988,9 +990,18 @@ PROCEDURE Represent (top: T) =
             THEN (* semType is open in this dimension.  Make level static. *)
               levelInfo.staticLen := locStaticLen
             ELSIF locStaticLen # levelInfo.staticLen THEN
-              Error.Int
-                (depth, "Constructor length # expected length (2.6.8), in dimension:" );
-              (* ^top.targetType assignability checks above should avert this. *)
+              (* This is a statically detected error of normally runtime kind. *)
+              (* This is really not the best place to do this.  It would be
+                 better to do it in Formal and AssignStmt.  But that entails
+                 substantial, widespread rework.  Only because we were given
+                 top.targetType, can we do it here. *)
+              Error.Warn
+                (depth,
+                 "Shape mismatch will occur at runtime (2.3.1), at depth "
+                 & Fmt.Int (depth));
+              MergeRTError
+                (top, CG.RuntimeError.IncompatibleArrayShape,
+                 "Shape mismatch, depth " & Fmt.Int (depth));
               top.broken := TRUE;
               top.state := StateTyp.Represented;
               RETURN
@@ -2218,22 +2229,78 @@ PROCEDURE InnerCompile (top: T) =
   END InnerCompile;
 
 (*EXPORTED:*)
-PROCEDURE CheckRT
+PROCEDURE CheckStaticRTErrEval
   (expr: Expr.T; VAR(*OUT*) Code: CG.RuntimeError; VAR(*OUT*) Msg: TEXT) =
+(* Set Code and Msg if they are not set and expr is known to produce a
+   statically unconditional runtime error when evaluated. *)
+(* Return the first-discovered error found and stored during Check. *)
   VAR constrExpr: T;
+  BEGIN
+    IF Code # CG.RuntimeError.Unknown THEN RETURN END;
+    constrExpr := ArrayConstrExpr (expr);
+    TYPECASE constrExpr OF
+    | NULL =>
+    | T(top) =>
+      <* ASSERT top.state >= StateTyp.Checked *>
+      IF top.RTErrorCode # CG.RuntimeError.Unknown THEN
+        Code := top.RTErrorCode;
+        Msg := top.RTErrorMsg;
+      END;
+    END;
+  END CheckStaticRTErrEval;
+
+(*EXPORTED:*)
+PROCEDURE CheckStaticRTErrAssign
+  (lhsType: Type.T; expr: Expr.T;
+   VAR(*OUT*) Code: CG.RuntimeError; VAR(*OUT*) Msg: TEXT) =
+(* PRE: expr has been Checked. *)
+(* Set Code and Msg if they are not set and expr is known to produce a
+   statically unconditional runtime error when assigned to a variable
+   of lhsType. *)
+(* Although runtime shape checks in general require the LHS variable, we
+   are interested here only in statically detectable mismatches, and static
+   components of the LHS shape come entirely from its type. *)
+  VAR constrExpr: T;
+  VAR indexType, eltType, lhsInnerType: Type.T;
+  VAR arrayDepth, lhsNumber: INTEGER;
+  VAR locMsg: TEXT;
+  VAR b: BOOLEAN;
   BEGIN
     constrExpr := ArrayConstrExpr (expr);
     TYPECASE constrExpr OF
     | NULL =>
     | T(top) =>
-      <* ASSERT top.checked *>
-      Code := top.RTErrorCode;
-      Msg := top.RTErrorMsg;
-      RETURN;
+      <* ASSERT top.state >= StateTyp.Checked *>
+      lhsInnerType := lhsType;
+      arrayDepth := LAST (top.levels^);
+      FOR depth := 0 TO arrayDepth-1 DO
+        WITH levelInfo = top.levels^[depth] DO
+          b := ArrayType.Split (lhsInnerType, indexType, eltType);
+          <* ASSERT b *>
+          IF indexType # NIL AND levelInfo.staticLen >= 0 THEN
+            lhsNumber := LengthOfOrdType (indexType);
+            IF levelInfo.staticLen # lhsNumber
+            THEN (* Found a static runtime shape mismatch. *)
+              locMsg := "Shape mismatch";
+              IF arrayDepth > 1 THEN
+                locMsg := locMsg & ", dimension " & Fmt . Int (depth);
+              END;
+              locMsg
+                := locMsg & ", is " & Fmt.Int (levelInfo.staticLen)
+                   & ", must be " & Fmt.Int (lhsNumber) & "(2.3.1.)";
+              Error.Warn
+                (2, "Will raise runtime error if executed: " & locMsg);
+              IF Code = CG.RuntimeError.Unknown THEN (* It's the first. *)
+                Code := CG.RuntimeError.IncompatibleArrayShape;
+                Msg := locMsg;
+              END
+            END
+          END
+        END;
+        lhsInnerType := eltType;
+      END;
     END;
-    Msg := NIL;
-    Code := CG.RuntimeError.Unknown;
-  END CheckRT;
+  END CheckStaticRTErrAssign;
 
 (* Externally dispatched-to: *)
 PROCEDURE CheckUseFailure (top: T): BOOLEAN =
@@ -2241,7 +2308,8 @@ PROCEDURE CheckUseFailure (top: T): BOOLEAN =
     <* ASSERT top.state >= StateTyp.Checked *>
     IF AssignStmt.DoGenRTAbort (top.RTErrorCode) AND Evaluate (top) # NIL THEN
       CG.Comment
-        (top.globalOffset, top.inConstArea, "Use of bad array constructor: ",
+        (top.globalOffset, top.inConstArea,
+         "Use of array constructor with statically detected runtime error: ",
          top.RTErrorMsg);
       CG.Abort (top.RTErrorCode);
       RETURN FALSE;
