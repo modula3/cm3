@@ -142,7 +142,7 @@ PROCEDURE Check (t: T;  VAR cs: Value.CheckState) =
       (* N.B. ^This will strip away both a NamedExpr.T and a ConsExpr.T from
                above a constant expression, importantly, an ArrayExpr.T. *)
       IF e = NIL
-      THEN Error.Msg ("Value of CONST is not constant (2.4.2).");
+      THEN Error.Msg ("Value of CONST is not constant (2.4.2, 2.6.15).");
       ELSE
         e.isNamedConst := TRUE;
         ArrayExpr.NoteTargetType (e, t.tipe);

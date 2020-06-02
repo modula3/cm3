@@ -122,6 +122,10 @@ PROCEDURE Qualify (e: Expr.T;  id: M3ID.T;  VAR result: Expr.T): BOOLEAN =
         RETURN TRUE;
       END;
     END;
+    IF fieldInfo.dfault # NIL THEN
+      result := Expr.ConstValue (fieldInfo.dfault);
+      RETURN result # NIL;
+    END;
     RETURN FALSE;
   END Qualify;
 
