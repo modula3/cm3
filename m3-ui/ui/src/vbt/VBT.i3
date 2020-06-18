@@ -260,7 +260,15 @@ TYPE
   Button = [Modifier.MouseL..Modifier.Mouse4];
 
   Modifiers = SET OF Modifier;
+CONST
+  ModifiersLB = Word.Shift (-1, BITSIZE (Modifiers)-1);
+  ModifiersUB = Word.Not (ModifiersLB);
+TYPE
+  ModifiersAsInt = [ModifiersLB .. ModifiersUB];
+  (* ^A signed subrange of INTEGER (Possibly all of INTEGER)
+      with same BITSIZE as Modifiers. *)
 
+TYPE
   ScreenID = INTEGER;
 
   CursorPosition = RECORD
