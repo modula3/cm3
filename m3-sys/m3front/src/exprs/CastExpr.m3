@@ -103,7 +103,7 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
       elt := Type.CheckInfo (elt, elt_info);
       IF (elt_info.class = Type.Class.OpenArray) THEN
         Error.Msg
-          ("CM3 restriction: LOOPHOLE to multidimensional open array type not supported");
+          ("Cannot LOOPHOLE to a multidimensional open array type (2.7).");
       END;
       sz1 := elt_info.size;
       IF (sz1 <= 0) OR ((sz0 MOD sz1) # 0) THEN
