@@ -9,7 +9,7 @@
 MODULE CastExpr;
 
 IMPORT M3Buf, CG, Expr, ExprRep, Type, Error, OpenArrayType;
-IMPORT M3, M3ID, M3RT, Target, TInt;
+IMPORT M3, M3ID, M3RT, Target, TInt, Fmt;
 FROM Target IMPORT FloatType;
 
 TYPE
@@ -102,18 +102,25 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
       (* open array type *)
       elt := Type.CheckInfo (elt, elt_info);
       IF (elt_info.class = Type.Class.OpenArray) THEN
-        Error.Msg ("LOOPHOLE: multidimensional open arrays not supported");
+        Error.Msg
+          ("CM3 restriction: LOOPHOLE to multidimensional open array type not supported");
       END;
       sz1 := elt_info.size;
       IF (sz1 <= 0) OR ((sz0 MOD sz1) # 0) THEN
-        Error.Msg ("LOOPHOLE: expression's size incompatible with type's");
+        Error.Msg
+          ("LOOPHOLE: expression's size ("
+            & Fmt.Int (sz0) & ") is not a multiple of type's ("
+            & Fmt.Int (sz1) & ") (2.7).");
       END;
       align_out := elt_info.alignment;
     ELSE
       (* fixed size type *)
       sz1 := dest_info.size;
       IF (sz0 # sz1) THEN
-        Error.Msg ("LOOPHOLE: expression's size differs from type's");
+        Error.Msg
+          ("LOOPHOLE: expression's size ("
+            & Fmt.Int (sz0) & ") differs from type's ("
+            & Fmt.Int (sz1) & ") (2.7).");
       END;
     END;
 
