@@ -64,7 +64,7 @@ VAR
 TYPE 
   Port = [0..65535];
   Address4 = RECORD a: ARRAY [0..3] OF BITS 8 FOR [0..255]; END;
-  Address16 = RECORD a: ARRAY [0..16] OF BITS 8 FOR [0..255]; END;
+  Address16 = RECORD a: ARRAY [0..15] OF BITS 8 FOR [0..255]; END;
   Address = Address4;
   Endpoint = RECORD addr: Address; port: Port END;
 
@@ -74,8 +74,8 @@ TYPE
 
 CONST 
   NullPort: Port = 0;
-  NullAddress4 = Address{a := ARRAY OF BITS 8 FOR [0..255] {0,0,0,0}};
-  NullAddress16 = Address{a := ARRAY OF BITS 8 FOR [0..255] {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}};
+  NullAddress4 = Address4{a := ARRAY OF BITS 8 FOR [0..255] {0,0,0,0}};
+  NullAddress16 = Address16{a := ARRAY OF BITS 8 FOR [0..255] {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}};
   NullAddress = NullAddress4;
   NullEndPoint = Endpoint{NullAddress, NullPort};
 
