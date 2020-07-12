@@ -41,7 +41,7 @@ PROCEDURE Close (t: T) =
 TYPE
   LongArrayPtr =
     UNTRACED REF
-      ARRAY [0 .. ((LAST(CARDINAL) DIV BITSIZE(CHAR)) - 1)] OF CHAR;
+      ARRAY [0 .. ((LAST(CARDINAL) DIV (BITSIZE(CHAR)*8)) - 1)] OF CHAR;
 (* hack to get around type system.  The horrible formula for the length of
    the array gives the longest possible array *)
 
