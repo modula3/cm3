@@ -39,7 +39,9 @@ TYPE
     temp_bits : BOOLEAN;      (* TRUE => bits is a temp. *)
     old_align : Alignment;    (* known alignment of ??? *)
     base_align: Alignment;    (* alignment of ADR(base). *)
-    base_value_align: Alignment; (* alignment of MEM(base). *)
+    base_value_align: Alignment;
+      (* ^Alignment of MEM(base) (Direct,Absolute, or Indirect),
+                 or of MEM(S0.A) (Stacked or Pointer. *)
     addr_align: Alignment;    (* when type=Addr, alignment of VALUE. *)
     (* NOTE: Originally, field 'align' was highly inconsistent on whether it
              was the alignment where a value is (or could be) stored, or, when
@@ -800,7 +802,7 @@ PROCEDURE ForceStacked (s: Size := 0) =
           cg.load (x.base, AsBytes (x.offset), x.type, StackType[x.type]);
           x.type := StackType[x.type];
           x.base_align := TargetMap.CG_Align[x.type];
-          x.base_value_align := x.addr_align;
+       (* x.base_value_align := x.addr_align; Does not change. *)
  
       | VKind.Absolute =>
           IF (x.bits # NIL) THEN
@@ -808,8 +810,8 @@ PROCEDURE ForceStacked (s: Size := 0) =
           END;
           Force_byte_align (x, s);
           cg.load_address (x.base, AsBytes (x.offset));
+          x.base_value_align := x.base_align;
           x.base_align := Target.Address.align; 
-          x.base_value_align := x.addr_align;
 
       | VKind.Indirect =>
           IF (x.bits # NIL) THEN
@@ -817,20 +819,22 @@ PROCEDURE ForceStacked (s: Size := 0) =
           END;
           Force_byte_align (x, s);
           cg.load  (x.base, 0, Type.Addr, Type.Addr);
-          x.base_align := Target.Address.align;
+          (* x.base_value_align is unchanged. *)
           IF (x.offset # 0) THEN
             cg.add_offset (AsBytes (x.offset));
-            x.base_value_align := x.addr_align;
+            x.addr_align := GCD (x.addr_align, x.offset);
           END;
+          x.base_align := Target.Address.align;
 
       | VKind.Pointer =>
           IF (x.bits # NIL) THEN
             Err ("attempt to force Pointer with variable bits.");
           END;
           Force_byte_align (x, s);
+          (* x.base_value_align is unchanged. *)
           IF (x.offset # 0) THEN
             cg.add_offset (AsBytes (x.offset));
-            x.base_value_align := x.addr_align;
+            x.addr_align := GCD (x.addr_align, x.offset);
           END;
 
       END;
@@ -850,7 +854,7 @@ PROCEDURE ForceStacked (s: Size := 0) =
            M3CG.i3), which claims to be the set of arithmetic types
            used on the stack, includes Word* types.  Perhaps this is
            just an un-updated leftover from Modula2 or 2+.  Perhaps
-           it all works because not direct stack operators care about
+           it all works because no direct stack operators care about
            signedness.  Operands of short memory types *are*
            sign-extended or zero-extended when loaded, as here. *)
 
@@ -2156,6 +2160,7 @@ PROCEDURE ForceAddr2SAP (addedOffset: Offset) =
   BEGIN
     WITH x = stack [SCheck (1, "ForceAddr2SAP")] DO
       <* ASSERT x.type = Type.Addr *>
+      <* ASSERT x.base_align = Target.Address.align *>
       CASE x.kind OF
       | VKind.Stacked => 
         <*ASSERT x.offset = 0*>
@@ -2176,13 +2181,13 @@ PROCEDURE ForceAddr2SAP (addedOffset: Offset) =
           cg.load (x.base, AsBytes (x.offset), Type.Addr, Type.Addr);
           x.kind := VKind.Stacked;
           x.base_align := Target.Address.align;
-          x.base_value_align := x.addr_align;
+       (* x.base_value_align := x.addr_align; Does not change. *)
           x.offset := 0;
         ELSE
           cg.load (x.base, AsBytes (x.offset), Type.Addr, Type.Addr);
           x.kind := VKind.Pointer;
           x.base_align := Target.Address.align;
-          x.base_value_align := x.addr_align;
+       (* x.base_value_align := x.addr_align; Does not change. *)
           x.offset := addedOffset;
           x.addr_align := GCD (x.addr_align, addedOffset);
         END; 
@@ -2192,7 +2197,7 @@ PROCEDURE ForceAddr2SAP (addedOffset: Offset) =
         x.kind := VKind.Pointer;
         x.base_align := Target.Address.align;
         INC (x.offset, addedOffset);
-        x.base_value_align := x.addr_align;
+     (* x.base_value_align := x.addr_align; Does not change. *)
         x.addr_align := GCD (x.addr_align, addedOffset);
       ELSE 
       END;
@@ -2656,6 +2661,7 @@ PROCEDURE Load_float (READONLY f: Target.Float) =
     SPush (t);
     WITH x = stack[SCheck(1,"Load_float")] DO
       x.kind  := VKind.Float;
+      x.base_align := TargetMap.CG_Align [t];
       x.float := f;
     END;
   END Load_float;
@@ -3994,14 +4000,14 @@ PROCEDURE MayFindIntType
 
 PROCEDURE ScanTypes (READONLY Types: ARRAY [0..3] OF Target.Int_type;
                      t: Type;  s: Size;  o: Offset;  base_align: Alignment): Type =
-  (* From Types, find and return a CG type 'tt', with the  that satisfies:
+  (* From Types, find and return a CG type 'tt', with that satisfies:
      1) align(tt) evenly divides base_align (thus align(tt) <= base_align)
      2) A field of size(tt) and aligned align(tt) will fully contain a field
         of size s, that starts at offset o from a point with alignment
         base_align (thus size(tt) >= s).
      3) size(tt) <= size(t)
      4) align(tt) <= align(t)
-     5) no other GC type ij Types has smaller size or alignment.
+     5) no other GC type in Types has smaller size or alignment.
   *) 
   VAR
     best_s := TargetMap.CG_Size [t] + 1;
