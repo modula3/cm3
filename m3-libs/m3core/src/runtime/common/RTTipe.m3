@@ -62,8 +62,9 @@ TYPE
     word_size     : INTEGER;
     word_align    : INTEGER;
     long_size     : INTEGER;
-    widechar_size     : INTEGER;
-    lazy_align    : BOOLEAN
+    widechar_size : INTEGER;
+    lazy_align    : BOOLEAN;
+    small_sets    : BOOLEAN
   (* FIXME: ^ Use this below. *) 
   END;
 
@@ -93,6 +94,7 @@ PROCEDURE Get
        for LONGINT when decoding RTPacking.T. *) 
     p.word_align    := MIN (p.word_size, p.max_align);
     p.lazy_align    := packing.lazy_align;
+    p.small_sets    := packing.small_sets;
     IF packing.long_size = 8 
     THEN p.long_size := BITSIZE(LONGINT)
          (* ^Compatibility:  This can can happen if we read an old pickle that
@@ -448,8 +450,18 @@ PROCEDURE FixSizes (t: T;  READONLY p: Packing) =
 
     | Kind.Set =>
         VAR set: Set := t; BEGIN
-          t.size  := RoundUp (set.n_elts, p.word_size);
-          t.align := MAX (p.word_align, p.struct_align);
+          IF p.small_sets THEN
+            IF set.n_elts <= 8 THEN t.size := 8; t.align := 8
+            ELSIF set.n_elts <= 16 THEN t.size := 16; t.align := 16
+            ELSIF set.n_elts <= 32 THEN t.size := 32; t.align := 32
+            ELSE
+              t.size  := RoundUp (set.n_elts, p.word_size);
+              t.align := MAX (p.word_align, p.struct_align);
+            END;
+          ELSE
+            t.size  := RoundUp (set.n_elts, p.word_size);
+            t.align := MAX (p.word_align, p.struct_align);
+          END;
         END;
 
     | Kind.Packed =>

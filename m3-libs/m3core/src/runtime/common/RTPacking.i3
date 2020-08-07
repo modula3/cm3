@@ -28,7 +28,10 @@ TYPE
     float         : FloatKind;
     little_endian : BOOLEAN;
     lazy_align    : BOOLEAN;
-    widechar_size : CARDINAL   (* 16 or 32 *) 
+    widechar_size : CARDINAL;  (* 16 or 32 *)
+    small_sets    : BOOLEAN (* TRUE means sets may be 8, 16, or 32, as needed
+                               to contain the value.  Otherwise, all sets are
+                               a multiple of word_size. *)
   END;
 
 TYPE
