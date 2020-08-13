@@ -122,7 +122,6 @@ REVEAL
     END;
 
   Reader = PickleRd.Private BRANDED "Pickle.Reader 2.0" OBJECT
-      level := 0;
       acPending := 0;            (* COMPATIBILITY - OlderVersion *)
       refCount: INTEGER;         (* count of refs read in this pickle *)
       tcCount: INTEGER;          (* count of typecodes in this pickle *)
@@ -459,6 +458,8 @@ PROCEDURE WriteType(writer: Writer; tc: INTEGER)
     END;
   END WriteType;
 
+(* BEWARE. WriteInt always writes 32 bits, regardless of native word size.
+           See PickleStubs for a word-size-adapting INTEGER writer. *)
 PROCEDURE WriteInt(writer: Writer; i: INTEGER)
         RAISES { Wr.Failure, Thread.Alerted } =
     VAR int32: Int32 := i;
@@ -478,6 +479,8 @@ PROCEDURE ExtendReaderTypes(reader: Reader) =
     SUBARRAY(reader.pklToTC^, 0, NUMBER(old^)) := old^;
   END ExtendReaderTypes;
 
+(* BEWARE. GetBinaryInt always reads 32 bits, regardless of native word size.
+           See PickleStubs for a word-size-adapting INTEGER read procedure. *)
 PROCEDURE GetBinaryInt(reader: Reader): INTEGER
         RAISES { Rd.EndOfFile, Rd.Failure, Thread.Alerted } =
   VAR i: Int32 := 0;
@@ -542,9 +545,13 @@ PROCEDURE NewReadRefID (reader: Reader): RefID =
     RETURN id; 
   END NewReadRefID; 
 
-PROCEDURE RefOfRefID (reader: Reader; ID : RefID) : REFANY = 
+PROCEDURE RefOfRefID (reader: Reader; ID : RefID) : REFANY 
+      RAISES { Error } =
 (* The reference indexed by ID *) 
   BEGIN 
+    IF ID >= reader.refCount THEN
+      RAISE Error("Malformed pickle (ref index too large)")
+    END;
     RETURN reader.refs [ ID ]
   END RefOfRefID; 
 
@@ -727,6 +734,8 @@ PROCEDURE ReadType(reader: Reader): TypeCode
     END;
   END ReadType;
 
+(* BEWARE. ReadInt always reads 32 bits, regardless of native word size.
+           See PickleStubs for a word-size-adapting INTEGER reader. *)
 PROCEDURE ReadInt(reader: Reader): INTEGER
         RAISES {Rd.EndOfFile, Rd.Failure, Thread.Alerted} =
   BEGIN
@@ -944,7 +953,7 @@ PROCEDURE RootSpecialWrite(<*UNUSED*> sp: Special;
         RAISES { Error <*NOWARN*>, Wr.Failure, Thread.Alerted } =
     VAR nDim: INTEGER;
     VAR shape: RTHeapRep.UnsafeArrayShape; 
-(*    VAR limit: ADDRESS;
+(*  VAR limit: ADDRESS;
     VAR start: ADDRESS; *)
     VAR tmp: ARRAY [0..1] OF INTEGER;
   BEGIN
@@ -1132,7 +1141,9 @@ PROCEDURE RootSpecialRead(<*UNUSED*> sp: Special;
       END;
     END;
 
-    allocShapeRef := NIL; 
+    allocShapeRef := NIL;
+ (* TODO: ^Keep this around for future use, at least until done reading this
+          pickle. *)
     RETURN r;
   END RootSpecialRead;
 

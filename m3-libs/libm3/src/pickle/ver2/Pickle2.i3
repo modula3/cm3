@@ -152,6 +152,9 @@ TYPE
         {Wr.Failure, Thread.Alerted};
       writeInt(i: INTEGER) RAISES
         {Wr.Failure, Thread.Alerted};
+(* BEWARE. ^Unless this is overridden elsewhere, it always writes 32 bits,
+            regardless of native word size.
+            See PickleStubs for a word-size-adapting INTEGER writer. *)
     END;
 
 (* If "w" is a "Pickle.Writer", then "w.write(r)"
@@ -216,6 +219,7 @@ CONST RefIDNull = FIRST(INTEGER);
 TYPE
   ReaderPublic = OBJECT
       rd: Rd.T;
+      level := 0;
     METHODS
       read(): REFANY RAISES
         {Error, Rd.EndOfFile, Rd.Failure, Thread.Alerted};
@@ -229,7 +233,7 @@ TYPE
 PROCEDURE NewReadRefID (reader: Reader): RefID; 
 (* Allocate and return a new object index. *) 
 
-PROCEDURE RefOfRefID (reader: Reader; ID : RefID) : REFANY; 
+PROCEDURE RefOfRefID (reader: Reader; ID : RefID) : REFANY RAISES { Error }; 
 (* The reference indexed by ID *) 
 
 (* If "r" is a "Pickle.Reader", then "r.read()"
