@@ -145,15 +145,19 @@ PROCEDURE CheckOrdinal
     EVAL Type.GetBounds (tlhs, lmin, lmax);
     IF TInt.LE (lmin, lmax) AND TInt.LE (rmin, rmax)
        AND (TInt.LT (lmax, rmin) OR TInt.LT (rmax, lmin)) THEN
-      IF constant = NIL THEN
-        (* Non-constant RHS, disjoint ranges.  Type assignability check in
-           Check will have given a CT error and precluded this. *)
+      IF constant = NIL THEN (* Non-constant RHS, disjoint ranges. *)
         reason := "(disjoint ranges)";
-        <* ASSERT FALSE *>
+(* FIXME: This is a mess.  This is a true CT error--the first case of
+          expression assignability (2.3.1), i.e., assignability of types.
+          When called by CheckStaticRTErrExec, (which happens for an
+          assignment statement), that will already have been verified,
+          so this can't happen.  But for exception with an argument, it
+          type assignability seems not to be CT checked at all, which
+          causes this to an if-executed warning.  The whole mechanism for
+          ordinal range checks is self-inconsistent and inconsistent with
+          that for procedures. *)
       ELSE reason := "(out of range)"
       END; 
-(* CHECK^ Can this duplicate a warning from IsAssignable on types, if
-          RHS has a constant value outside LHS bounds? *)
       IF IsError THEN
         Error.Msg ("Constant value not assignable " & reason & " (2.3.1).");
       ELSE
