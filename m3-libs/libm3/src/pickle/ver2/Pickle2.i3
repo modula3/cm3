@@ -191,7 +191,7 @@ TYPE
    is written to a pickle many times, occurences after the first
    typically occupy only one byte.
 
-   The call "w.writeInt(i)" writes bytes on "w.wr" to represent
+   The call "w.writeInt(i)" writes 4 bytes on "w.wr" to represent
    the integer "i" in a platform-independent fashion. In
    particular, the "readInt" method of a subsequent "Pickle.Reader"
    can read the integer correctly, even if executed on a platform

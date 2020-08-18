@@ -84,9 +84,13 @@ PROCEDURE OutInteger (writer: Pickle.Writer; i: INTEGER)
   RAISES {Wr.Failure, Thread.Alerted};
 (* Marshal an integer in native format. *)
 
+CONST OutWord = OutInteger;
+
 PROCEDURE OutLongint (writer: Pickle.Writer; i: LONGINT)
   RAISES {Wr.Failure, Thread.Alerted};
 (* Marshal an integer in native format. *)
+
+CONST OutLongWord = OutLongint;
 
 PROCEDURE OutInt32 (writer: Pickle.Writer; i: Int32) 
   RAISES {Wr.Failure, Thread.Alerted}; 
@@ -160,6 +164,8 @@ PROCEDURE InLongint (reader: Pickle.Reader;
                      max            := LAST(LONGINT)   ): LONGINT
   RAISES {Pickle.Error, Rd.Failure, Thread.Alerted};
 (* Unmarshal an integer, checking that its value is in "[min..max]". *)
+
+(* COMPLETEME: Add an InLongWord. *)
 
 PROCEDURE InInt32 (reader: Pickle.Reader; min := FIRST(Int32); 
                    max := LAST(Int32)): Int32
