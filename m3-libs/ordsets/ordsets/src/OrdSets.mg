@@ -1,7 +1,7 @@
 
 (* -----------------------------------------------------------------------1- *)
 (* File OrdSets.mg  Modula-3 source code.                                    *)
-(* Copyright 2010 .. 2016, Rodney M. Bates.                                  *)
+(* Copyright 2010 .. 2020, Rodney M. Bates.                                  *)
 (* rodney.m.bates@acm.org                                                    *)
 (* Licensed under the MIT License.                                           *) 
 (* -----------------------------------------------------------------------2- *)
@@ -7819,8 +7819,7 @@ GENERIC MODULE OrdSets ( )
 
 (* ================= Specials for [un]pickling ordsets. =====================*) 
 
-; PROCEDURE ReadBitwordsSameSize 
-    ( <* UNUSED *> special : Pickle2 . Special ; reader : Pickle2 . Reader ) 
+; PROCEDURE ReadBitwordsSameSize ( reader : Pickle2 . Reader ) 
   : BitwordArrayRefTyp
   RAISES { Pickle2 . Error , Rd . Failure , Thread . Alerted } 
   (* PRE: Pickle was written with the same INTEGER size as native on the
@@ -7830,7 +7829,9 @@ GENERIC MODULE OrdSets ( )
   ; VAR LResult : BitwordArrayRefTyp 
 
   ; BEGIN 
-      LBitwordCt := PickleStubs . InInteger ( reader )  
+      LBitwordCt := PickleStubs . InInt32 ( reader )
+(* TODO: Pickle2 always [un]pickles shape components in 32 bits, regardless
+         of host word size.  Fix this here and in pickles. *)
     ; LResult := NewBitwordArray ( LBitwordCt ) 
     ; IF LResult = NIL 
       THEN RAISE Pickle2 . Error ( "Can't read pickle (out of memory)." )
@@ -7842,8 +7843,7 @@ GENERIC MODULE OrdSets ( )
     ; RETURN LResult 
     END ReadBitwordsSameSize  
 
-; PROCEDURE ReadBitwords64to32 
-    ( <* UNUSED *> special : Pickle2 . Special ; reader : Pickle2 . Reader ) 
+; PROCEDURE ReadBitwords64to32 ( reader : Pickle2 . Reader ) 
   : BitwordArrayRefTyp 
   RAISES { Pickle2 . Error , Rd . Failure , Thread . Alerted } 
   (* PRE: Pickle was written on a 64-bit machine, but we are executing on
@@ -7855,8 +7855,8 @@ GENERIC MODULE OrdSets ( )
   ; VAR LBytes : ARRAY [ 0 .. 7 ] OF CHAR 
 
   ; BEGIN 
-      LBitwordCt64 := PickleStubs . InInteger ( reader ) 
-                     (* ^Could overflow, but very unlikely. *)
+      LBitwordCt64 := PickleStubs . InInt32 ( reader ) 
+                   (* ^Could overflow, but very unlikely. *)
     ; IF LBitwordCt64 > LAST ( CARDINAL ) DIV 2
       THEN 
         RAISE Pickle2 . Error 
@@ -7941,8 +7941,7 @@ GENERIC MODULE OrdSets ( )
     END ReadBitwords64to32 
 
 ; PROCEDURE ReadBitwords32to64 
-    ( <* UNUSED *> special : Pickle2 . Special 
-    ; reader : Pickle2 . Reader 
+    ( reader : Pickle2 . Reader 
     ; Bias32 : BiasTyp 
       (* ^Bias as it was in the 32-bit pickle. *)  
     ) 
@@ -7960,7 +7959,7 @@ GENERIC MODULE OrdSets ( )
   ; VAR LBytes : ARRAY [ 0 .. 7 ] OF CHAR 
 
   ; BEGIN 
-      LBitwordCt32 := PickleStubs . InInteger ( reader ) 
+      LBitwordCt32 := PickleStubs . InInt32 ( reader ) 
     ; LPrepend := Bias32 MOD 2 = 1
     ; LAppend := LPrepend # ( LBitwordCt32 MOD 2 = 1 ) 
     ; LBitwordCt64 
@@ -8098,7 +8097,7 @@ GENERIC MODULE OrdSets ( )
 ; CONST RangesetRealFlag = ORD ( 'R' ) 
 ; CONST RangesetPseudoFlag = ORD ( 'r' )
 ; CONST BitsetRealFlag = ORD ( 'B' )
-; CONST BitsetPseudoFlag = ORD ( 'b' ) 
+; CONST BitsetPseudoFlag = ORD ( 'b' )
 
 ; PROCEDURE SetSpecialWrite 
     ( <* UNUSED *> special : Pickle2 . Special 
@@ -8173,6 +8172,7 @@ GENERIC MODULE OrdSets ( )
         ; PickleStubs . OutInteger ( writer , TBitset . BitsetInfo . Hash )
         ; PickleStubs . OutInteger ( writer , TBitset . BitsetInfo . BitsetLo )
         ; PickleStubs . OutInteger ( writer , TBitset . BitsetInfo . BitsetHi )
+
         ; PickleStubs . OutRef ( writer , TBitset . BitwordArrayRef ) 
           (* ^Which takes care of uniquing duplicates. *) 
         ELSE <* ASSERT FALSE *> 
@@ -8200,7 +8200,7 @@ GENERIC MODULE OrdSets ( )
   ; VAR LDimCt : INTEGER 
   ; VAR LRefID : Pickle2 . RefID 
   ; VAR LBias : BiasTyp 
-  ; VAR LTC : Pickle2 . TypeCode 
+  ; VAR LSpecialCode , LTypeCode : Pickle2 . TypeCode
   ; VAR LLoBitno , LHiBitno : BitNoTyp 
   ; VAR LBitsetLo , LBitsetHi : BitNoTyp 
   ; VAR LBitwordArrayRef : BitwordArrayRefTyp 
@@ -8287,7 +8287,8 @@ GENERIC MODULE OrdSets ( )
 
         ELSIF reader . packing . word_size = 32 
         THEN (* 32 to 64 *) 
-          <* ASSERT BITSIZE ( INTEGER ) = 64 *> 
+          <* ASSERT BITSIZE ( INTEGER ) = 64 *>
+          (* Unreachable here on 32-bit host. *) 
           LBitsetInfo . Bias := LBias DIV 2 
           (* Later, ReadBitwords32to64 will take care of an odd LBias. *) 
         ; LBitsetInfo . Hash := HashZero (* Force recompute. *) 
@@ -8295,6 +8296,7 @@ GENERIC MODULE OrdSets ( )
         ELSIF reader . packing . word_size = 64 
         THEN (* 64 to 32 *) 
           <* ASSERT BITSIZE ( INTEGER ) = 32 *> 
+          (* Unreachable here on 64-bit host. *) 
           IF LBias > LAST ( BiasTyp ) DIV 2 
           THEN
             RAISE Pickle2 . Error ( "Overflow unpickling OrdSet Bias." ) 
@@ -8319,47 +8321,61 @@ GENERIC MODULE OrdSets ( )
 
       ; LCh := VAL ( PickleStubs . InByte ( reader ) , CHAR ) 
       ; CASE LCh 
-        OF '0' (* Shouldn't happen, but let's reproduce what was pickled. *) 
+        OF '0' (* NIL Bitword pointer.  Shouldn't happen, but let's reproduce
+                  what was pickled. *) 
           => LBitset := NewBitset ( )  
           ; LBitset . BitsetInfo := LBitsetInfo 
           ; LBitset . BitwordArrayRef := NIL 
 
         | '1' (* Ref to previously read Bitword array. *)  
-          => LRefID := PickleStubs . InInteger ( reader )
-                       (* ^I sure hope this one doesn't overflow. *)  
+          => LRefID := PickleStubs . InInt32 ( reader )
           ; LBitwordArrayRef := Pickle2 . RefOfRefID ( reader , LRefID )
-          ; LBitset := ConstructBitset ( LBitsetInfo , LBitwordArrayRef ) 
+          ; LBitset := ConstructBitset ( LBitsetInfo , LBitwordArrayRef )
 
-        | '5' (* Must read not-previously-seen Bitword array. *) 
-          => LTC := reader . readType ( ) 
-          ; IF LTC # TYPECODE ( BitwordArrayRefTyp ) 
+        | '2' , '3' 
+          => RAISE Pickle2 . Error 
+               ( "Invalid pickled OrdSet Bitword array (old pickle version)." ) 
+
+        | '6' 
+          => RAISE Pickle2 . Error 
+               ( "Invalid pickled OrdSet Bitword array (pseudo pointer)." ) 
+
+        | '5' (* Read not-previously-seen Bitword array. *) 
+          => LSpecialCode := reader . readType ( ) (* Ignore it. *) 
+          ; LRefID := Pickle2 . NewReadRefID ( reader )
+          ; INC ( reader . level )
+          ; LTypeCode := reader . readType ( ) 
+          ; IF LTypeCode # TYPECODE ( BitwordArrayRefTyp ) 
             THEN 
               RAISE Pickle2 . Error 
                 ( "Invalid pickled OrdSet Bitword array (Wrong type)." )
             END (* IF *) 
-          ; LDimCt := RTType . GetNDimensions ( LTC )
+          ; LDimCt := RTType . GetNDimensions ( LTypeCode )
           ; IF LDimCt # 1 
             THEN 
               RAISE Pickle2 . Error 
                 ( "Invalid pickled OrdSet Bitword array (Wrong dimension count)." ) 
-          ; END (* IF *) 
-          ; LRefID := Pickle2 . NewReadRefID ( reader ) 
+          ; END (* IF *)
+(* TODO: Check that reader.version = Pickle2.Version, neither of which is
+         visible here. *) 
           ; IF reader . packing . word_size = BITSIZE ( INTEGER ) 
             THEN (* Same word size. *) 
-              LBitwordArrayRef := ReadBitwordsSameSize ( special , reader ) 
+              LBitwordArrayRef := ReadBitwordsSameSize ( reader ) 
             ELSIF reader . packing . word_size = 32 
             THEN (* 32 to 64 *) 
               LBitwordArrayRef 
-                := ReadBitwords32to64 ( special , reader , LBias )
+                := ReadBitwords32to64 ( reader , LBias )
             ELSE (* 64 to 32 *) 
-              LBitwordArrayRef := ReadBitwords64to32 ( special , reader ) 
+              LBitwordArrayRef := ReadBitwords64to32 ( reader ) 
             END (* IF *) 
           (* It is possible we can make a Pseudo bitset on this machine.
              Even if we do, we must read and keep the Bitword array, 
              because a different bitset with different Lo and Hi could
              also refer to it. *)  
-          ; LBitset := ConstructBitset ( LBitsetInfo , LBitwordArrayRef ) 
-          ; reader . noteRef ( LBitwordArrayRef , LRefID ) 
+          ; LBitset := ConstructBitset ( LBitsetInfo , LBitwordArrayRef )
+
+          ; DEC ( reader . level ) 
+          ; reader . noteRef ( LBitwordArrayRef , LRefID )
 
         ELSE 
 (* TODO: Something about compatibility with older pickles, cases '2', '3'. *)
@@ -8463,7 +8479,7 @@ GENERIC MODULE OrdSets ( )
       ELSE  
         RAISE Pickle2 . Error 
           ( "Invalid pickled OrdSet (invalid set kind flag byte)." )
-      END (* CASE *) 
+      END (* CASE LFlag *) 
     ; reader . noteRef ( LResult , Id )
     ; RETURN LResult 
     END SetSpecialRead 
