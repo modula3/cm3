@@ -1,0 +1,17 @@
+% Copyright (C) 1992, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+%
+% File: m3makefile
+% Last modified on Tue Dec 21 15:10:13 PST 1993 by kalsow
+
+import ("libm3")
+import ("json")
+
+implementation("Main")
+
+%build_standalone ()
+
+program("test")
+
+
