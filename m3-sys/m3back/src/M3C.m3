@@ -1757,24 +1757,20 @@ VAR name := proc.name;
 BEGIN
     (* Omit a few prototypes that the frontend might have slightly wrong,
        e.g. alloca(unsigned int vs. unsigned long vs. unsigned long long)
-       vs. not a function.
-       e.g. setjmp(void* ) vs. setjmp(array)
+            vs. compiler intrinsic
+       e.g. setjmp(void*) vs. setjmp(array) vs. compiler intrinsic
+       e.g. longjmp(...) vs. compiler intrinsic
     *)
     proc.omit_prototype := is_common
-                           AND parameter_count = 1 (* TODO 2 for longjmp *)
-                           AND (name = self.alloca_id
+                           AND ((parameter_count = 1
+                                 AND (name = self.alloca_id OR name = self.setjmp_id OR name = self.u_setjmp_id))
+                             OR (parameter_count = 2 AND name = self.longjmp_id));
                            (* TODO
                            - add CGType.Jmpbuf
                            - #include <setjmp.h> if there are any
                              calls to setjmp/_setjmp/longjmp
                              or instances of CGType.Jmpbuf
-                           - render CGType.Jmpbuf as "jmp_buf"
-                           - omit setjmp/_setjmp/longjmp prototypes
-                             OR name = self.setjmp_id
-                             OR name = self.u_setjmp_id
-                             OR name = self.longjmp_id
-                             *)
-                             );
+                           - render CGType.Jmpbuf as "jmp_buf" *)
     proc.is_RTHooks_Raise := is_common_void
                              AND name = self.RTHooks_Raise_id
                              AND parameter_count = 4;
@@ -4378,7 +4374,9 @@ BEGIN
 
     prototype := function_prototype(proc, FunctionPrototype_t.Declare) & ARRAY BOOLEAN OF TEXT{";\n", " M3_ATTRIBUTE_NO_RETURN;\n"}[proc.no_return];
     <* ASSERT NOT self.in_proc *>
-    print(self, prototype);
+    IF NOT proc.omit_prototype THEN
+      print(self, prototype);
+    END;
     self.param_proc := NIL;
 END last_param;
 
