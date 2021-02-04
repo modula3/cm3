@@ -9,8 +9,8 @@ INTERFACE IP;
 IMPORT Atom, AtomList;
 
 (* This interface defines the addresses used for communicating
-   with the internet protocol family. 
-   
+   with the internet protocol family.
+
    An IP ``endpoint'' identifies a running program in a way that allows
    other programs to communicate with it.
 
@@ -25,10 +25,10 @@ IMPORT Atom, AtomList;
    internet police (try to) guarantee that the same address is never
    in use simultaneously by more than one machine in the world, but
    the same machine may be identified by several addresses.
-   
-   Port numbers and host addresses can be recycled: the operating system 
+
+   Port numbers and host addresses can be recycled: the operating system
    can reuse a port number of a program that has exited or explicitly
-   freed the port, and the internet police will reassign addresses 
+   freed the port, and the internet police will reassign addresses
    from old hosts to new ones. *)
 
 TYPE EC = AtomList.T;
@@ -61,10 +61,10 @@ VAR
 *)
 
 
-TYPE 
+TYPE
   Port = [0..65535];
   Address4 = RECORD a: ARRAY [0..3] OF BITS 8 FOR [0..255]; END;
-  Address16 = RECORD a: ARRAY [0..16] OF BITS 8 FOR [0..255]; END;
+  Address16 = RECORD a: ARRAY [0..15] OF BITS 8 FOR [0..255]; END;
   Address = Address4;
   Endpoint = RECORD addr: Address; port: Port END;
 
@@ -72,10 +72,20 @@ TYPE
    The type "Port" is an IP port number in host byte order.
 *)
 
-CONST 
+  EP = OBJECT
+    port : Port := NullPort;
+  END;
+  Endpoint4 = EP OBJECT
+   adr : Address4 := NullAddress4;
+  END;
+  Endpoint16 = EP OBJECT
+   adr : Address16 := NullAddress16;
+  END;
+
+CONST
   NullPort: Port = 0;
   NullAddress4 = Address{a := ARRAY OF BITS 8 FOR [0..255] {0,0,0,0}};
-  NullAddress16 = Address{a := ARRAY OF BITS 8 FOR [0..255] {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}};
+  NullAddress16 = Address16{a := ARRAY OF BITS 8 FOR [0..255] {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}};
   NullAddress = NullAddress4;
   NullEndPoint = Endpoint{NullAddress, NullPort};
 
@@ -86,12 +96,12 @@ PROCEDURE GetHostByName(nm: TEXT; VAR (*out*) res: Address): BOOLEAN
    returns "FALSE".  If the lookup cannot complete then "Error" is
    raised with "LookupFailure" in the error list. *)
 
-(* For example, 
+(* For example,
 
-| GetHostByName("gatekeeper.dec.com", addr) 
+| GetHostByName("gatekeeper.dec.com", addr)
 
   returns the address of the machine ``gatekeeper'' at DEC SRC.
-    
+
   Different systems use different algorithms for
   implementing "GetHostByName". *)
 
@@ -101,7 +111,7 @@ PROCEDURE GetCanonicalByName(nm: TEXT): TEXT RAISES {Error};
    "GetCanonicalByName" returns "NIL".  If the lookup cannot complete
    then "Error" is raised with "LookupFailure" in the error list. *)
 
-(* For example, 
+(* For example,
 
 | GetCanonicalName("gatekeeper.pa.dec.com")
 
@@ -113,5 +123,11 @@ PROCEDURE GetCanonicalByAddr(addr: Address): TEXT RAISES {Error};
 
 PROCEDURE GetHostAddr(): Address;
 (* Return an address of the machine executing the call to "GetHostAddr". *)
+
+PROCEDURE GetAddrInfo(READONLY name,service : TEXT) : EP RAISES {Error};
+(* Return an address of the machine executing the call to "GetAddrInfo". *)
+
+PROCEDURE GetNameInfo(ep : EP; VAR (* out *) host,service : TEXT) RAISES {Error};
+(* Return the name for a machine with addr executing the call to "GetNameInfo" *)
 
 END IP.

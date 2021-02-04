@@ -4,7 +4,7 @@
 
 INTERFACE Usocket;
 
-FROM Ctypes IMPORT int, void_star, const_void_star, const_char_star, char_star;
+FROM Ctypes IMPORT int, void_star, const_void_star;
 FROM Cstddef IMPORT size_t;
 FROM Uin IMPORT struct_sockaddr_in;
 IMPORT Utypes, Uin;
@@ -171,23 +171,5 @@ PROCEDURE shutdown(s, how: int): int RAISES {};
 
 <*EXTERNAL "Usocket__socket"*>
 PROCEDURE socket(af, type, protocol: int): int RAISES {};
-
-TYPE
-  addrinfo_t = RECORD
-    ai_flags: int;
-    ai_family: int;
-    ai_socktype: int;
-    ai_protocol: int;
-    ai_addrlen: size_t;
-    ai_canonname: char_star;
-    ai_addr: UNTRACED REF struct_sockaddr_in;
-    ai_next: UNTRACED REF addrinfo_t;
-  END;
-
-<*EXTERNAL "Usocket__getaddrinfo"*>
-PROCEDURE getaddrinfo(nodename: const_char_star; servname: const_char_star; hints: UNTRACED REF addrinfo_t; res: UNTRACED REF addrinfo_t): int;
-
-<*EXTERNAL "Usocket__freeaddrinfo"*>
-PROCEDURE freeaddrinfo(addrinfo: UNTRACED REF addrinfo_t);
 
 END Usocket.
