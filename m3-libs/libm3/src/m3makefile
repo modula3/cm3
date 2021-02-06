@@ -45,6 +45,7 @@ include_dir ("sqrt")
 include_dir ("pickle")
 include_dir ("text")
 include_dir ("hash")
+include_dir ("resource")
 
 % m3_option ("-times")
 
