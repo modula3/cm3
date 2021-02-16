@@ -5,7 +5,7 @@
 UNSAFE INTERFACE Unetdb;
 
 FROM Ctypes IMPORT int, char_star, char_star_star, const_char_star;
-IMPORT Uin, Utypes;
+IMPORT Uin;
 
 TYPE
 (* This is a portable idealized form that need not match the
@@ -45,7 +45,7 @@ PROCEDURE gethostbyaddr (addr: const_char_star; len: int; type: int;
                          result: struct_hostent_star): struct_hostent_star;
 
 TYPE
-  socklen_t = Utypes.socklen_t;
+  socklen_t = int; (* this should be Utypes.socklen_t but it breaks. *)
 
   addrinfo_t = RECORD
     ai_flags: int;
