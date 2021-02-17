@@ -38,16 +38,19 @@ if not defined ("SYSTEM_LIBS")
 SYSTEM_LIBS =
 {
     "LIBC"       : [ "-lm", "-pthread" ],
+    "QUADMATH"   : [ "-lquadmath" ],
     "LEX-YACC"   : [ "-ll" ],
     "FLEX-BISON" : [ "-lfl" ],
 % See Linux.common, FreeBSD.common, OpenBSD.common, NetBSD.common, etc.
 %   "POSTGRES95" : [ "-L/usr/local/pgsql/lib", "-lpq" ],
     "OPENGL"     : [ "-lGLU", "-lGL", "-lXext" ],
+% If OPENGL does not work try
+%    "OPENGL"     : [ "-L/lib/x86_64-linux-gnu", "-lGLU", "-lGL", "-lXext" ],
 % See Linux.common, FreeBSD.common, OpenBSD.common, NetBSD.common, etc.
 %   "ODBC"       : [ "-lodbc" ],
     "MOTIF"      : [ "-lXm" ],
     "TCP"        : [ ],
-    "X11"        : [  "-L/usr/X11R6/lib", "-lXaw", "-lXmu", "-lXext", "-lXt", "-lSM", "-lICE", "-lX11" ],
+    "X11"        : [  "-L/usr/X11R6/lib", "-lXft", "-lXaw", "-lXmu", "-lXext", "-lXt", "-lSM", "-lICE", "-lX11" ],
     "READLINE"   : [ "-lreadline" ],
     "EXPAT"      : [ "-lexpat" ]
 }
@@ -133,22 +136,22 @@ end
 end
 
 %--------------------------------------------------------- m3llvm ------------
-% Optionally, "m3llvm" is called to translate cm3 IR to llvm IR. 
+% Optionally, "m3llvm" is called to translate cm3 IR to llvm IR.
 
 if not defined("m3llvm")
 
   proc m3llvm(source, outfile, optimize, debug) is
-  % will we ever need optimize and/or debug? 
+  % will we ever need optimize and/or debug?
 
       local m3llvmname = "@m3llvm"
 
-      local args = [ "-b" ] 
+      local args = [ "-b" ]
 
       if debug
-        args += "-g" 
+        args += "-g"
       end
 
-      %args += "-d" %While m3llvm is under development.  
+      %args += "-d" %While m3llvm is under development.
 
       return try_exec (m3llvmname, args, "-o", outfile, source )
   end % proc m3llvm
@@ -158,7 +161,7 @@ end % if not defined("m3llvm")
 %--------------------------------------------------------- llvm backend ---
 % Optionally, "llvm_backend" is called to translate llvm bitcode to object code.
 
-% Some default options: 
+% Some default options:
 
 if not defined("llvmback_debug")
   llvmback_debug = ""
@@ -175,37 +178,42 @@ end
 if not defined("llvm_backend")
 
   proc llvm_backend(source, outfile, optimize, debug, filetype) is
-      %local t = try_exec ("llvm-dis", outfile) 
-
-      local args = [ "-disable-fp-elim"] 
-      local llvmopt = ""
+      local llcname = "@llc"
+      local args = [ "-frame-pointer=all"]
+%llvm 8 changed option for frame pointer.
+%      local args = [ "-disable-fp-elim"]
 
       args += "-filetype=" & filetype
+      args += llvmback_pic
 
       if optimize
           args += llvmback_optimize
-          local tmp = split(source,".")
-          llvmopt = tmp[0] & "_opt." & tmp[1]
-          local opt_ret = try_exec ("@opt", llvmback_optimize, source, "-o", llvmopt )
-          %reset source for llc
-          source = llvmopt 
       else
           args += "-O0"
       end
       if debug
           args += llvmback_debug
       end
-      args += llvmback_pic
 
-      local llvmback = "@llc"
-      local llc_ret = try_exec (llvmback, args, source, "-o", outfile )
-      if optimize and not defined ("M3_KEEP_FILES")
-          DeleteFile(llvmopt)
-      end
+      local llc_ret = try_exec (llcname, args, source, "-o", outfile )
+
       return llc_ret
   end % proc llvm_backend
 
 end % if not defined("llvm_backend")
+
+% Optionally call the llvm optimiser
+
+if not defined("llvm_opt")
+
+  proc llvm_opt(source, outfile) is
+
+      local opt_ret = try_exec ("@opt", llvmback_optimize, source, "-o", outfile )
+
+      return opt_ret
+  end % proc llvm_opt
+
+end % if not defined("llvm_opt")
 
 %--------------------------------------------------------------- C compiler ---
 % "compile_c" is called to compile C source files.  Note that this function
@@ -341,7 +349,7 @@ proc make_lib(lib, options, objects, imported_libs, shared) is
     local ret_code = 0
 
     make_lib_delete_outputs(lib)
-    
+
     %
     % The historical way to build libraries on Unix is:
     %  ar cru libfoo.a 1.o 2.o
@@ -362,7 +370,7 @@ proc make_lib(lib, options, objects, imported_libs, shared) is
 
     % first build the non-shared library in the usual ar/ranlib way
 
-    ret_code = try_exec("@ar", "cru", lib_a, objects)
+    ret_code = try_exec("@ar", "cr", lib_a, objects)
     if not equal(ret_code, 0)
         make_lib_delete_outputs(lib)
         return ret_code
