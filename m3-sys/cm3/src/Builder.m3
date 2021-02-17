@@ -113,6 +113,7 @@ TYPE
     m3backend     : ConfigProc;         (* translate M3CG -> ASM or OBJ *)
     m3llvm        : ConfigProc;         (* translate M3CG -> LLVM bitcode *) 
     llvmbackend   : ConfigProc;         (* translate llvm bitcode -> ASM or OBJ *)
+    llvmopt       : ConfigProc;         (* optimize llvm bitcode *)
     c_compiler    : ConfigProc;         (* compile C code *)
     assembler     : ConfigProc;         (* assemble  *)
     librarian     : ConfigProc;         (* make libraries *)
@@ -316,6 +317,7 @@ PROCEDURE CompileUnits (main     : TEXT;
     s.m3backend   := GetConfigProc (s, "m3_backend", 4);
     s.m3llvm      := GetConfigProc (s, "m3llvm", 4); 
     s.llvmbackend := GetConfigProc (s, "llvm_backend", 5);
+    s.llvmopt     := GetConfigProc (s, "llvm_opt", 2);
     s.c_compiler  := GetConfigProc (s, "compile_c", 5);
     s.assembler   := GetConfigProc (s, "assemble", 2);
     s.librarian   := GetConfigProc (s, "make_lib", 5);
@@ -1431,39 +1433,40 @@ PROCEDURE FulfilNP(np : NotePromise) : QPromise.ExitCode =
 PROCEDURE FulfilRP(rp : RemovePromise) : QPromise.ExitCode = 
   BEGIN LOCK utilsMu DO Utils.Remove(rp.nam) END; RETURN 0 END FulfilRP;
 
-TYPE Temps_t = RECORD
-  count := 0;
-  names := ARRAY [0..3] OF TEXT { NIL, .. };
-END;
+TYPE
+  Temps_t = RECORD
+    count := 0;
+    names := ARRAY [0..3] OF TEXT { NIL, .. };
+  END;
 
 PROCEDURE Temps_Add (VAR temps: Temps_t; s: State; name: TEXT) =
-BEGIN
-  IF name = NIL OR s.keep_files THEN RETURN END;
-  <* ASSERT temps.count <= LAST(temps.names) *>
-  temps.names[temps.count] := name;
-  INC(temps.count);
+  BEGIN
+    IF name = NIL OR s.keep_files THEN RETURN END;
+    <* ASSERT temps.count <= LAST(temps.names) *>
+    temps.names[temps.count] := name;
+    INC(temps.count);
  
-  IF s.delayBackend THEN
-    s.machine.promises.addhi(NEW(NotePromise, nam := name));
-  ELSE
-    Utils.NoteTempFile (name);
-  END;
-END Temps_Add;
+    IF s.delayBackend THEN
+      s.machine.promises.addhi(NEW(NotePromise, nam := name));
+    ELSE
+      Utils.NoteTempFile (name);
+    END;
+  END Temps_Add;
 
 PROCEDURE Temps_Remove (VAR temps: Temps_t; s: State) =
-VAR count := temps.count;
+  VAR count := temps.count;
     name: TEXT;
-BEGIN
-  IF count = 0 THEN RETURN END;
-  FOR i := 0 TO count - 1 DO
-    name := temps.names[i];
-    IF s.delayBackend THEN
-      s.machine.promises.addhi(NEW(RemovePromise, nam := name));
-    ELSE
-      Utils.Remove (name);
+  BEGIN
+    IF count = 0 THEN RETURN END;
+    FOR i := 0 TO count - 1 DO
+      name := temps.names[i];
+      IF s.delayBackend THEN
+        s.machine.promises.addhi(NEW(RemovePromise, nam := name));
+      ELSE
+        Utils.Remove (name);
+      END;
     END;
-  END;
-END Temps_Remove;
+  END Temps_Remove;
 
 PROCEDURE PushOneM3 (s: State;  u: M3Unit.T): BOOLEAN =
 (* PRE: u.kind IN {UK.I3, UK.M3} *) 
@@ -1630,6 +1633,9 @@ PROCEDURE PushOneM3 (s: State;  u: M3Unit.T): BOOLEAN =
           ok := RunM3Llvm (s, cm3IRName, llvmIRName, u.debug, u.optimize);
         END; 
         IF ok AND DoRunLlc THEN
+          IF u.optimize THEN
+            EVAL RunLlvmOpt(s, llvmIRName, llvmIROptName);
+          END;
           ok := RunLlcBack 
                  (s, llvmIRName, codeGenOutName, u.debug, u.optimize, 
                   Asm := DoWriteAsm);
@@ -2379,7 +2385,7 @@ PROCEDURE RunM3Llvm (s: State;  source, object: TEXT;
                      debug, optimize: BOOLEAN): BOOLEAN (* Success. *) =
   VAR failed: BOOLEAN;
   BEGIN
-    ETimer.Push (M3Timers.pass_6);
+    ETimer.Push (M3Timers.m3llvm);
     StartCall (s, s.m3llvm);
     PushText (s, source);
     PushText (s, object);
@@ -2401,7 +2407,7 @@ PROCEDURE RunLlcBack
   VAR failed: BOOLEAN;
   VAR filetype: TEXT; 
   BEGIN
-    ETimer.Push (M3Timers.pass_6);
+    ETimer.Push (M3Timers.llc);
     StartCall (s, s.llvmbackend);
     PushText (s, source);
     PushText (s, object);
@@ -2420,6 +2426,23 @@ PROCEDURE RunLlcBack
     ETimer.Pop ();
     RETURN NOT failed;
   END RunLlcBack; 
+
+PROCEDURE RunLlvmOpt (s: State;  source, dest: TEXT) : BOOLEAN (* Success. *) =
+  VAR failed: BOOLEAN;
+  BEGIN
+    ETimer.Push (M3Timers.llvmopt);
+    StartCall (s, s.llvmopt);
+    PushText (s, source);
+    PushText (s, dest);
+    failed := CallProc (s, s.llvmopt);
+    IF failed THEN
+      s.compile_failed := TRUE;
+      Msg.Error (NIL, "llvm compiler (opt) failed optimizing: ", source);
+      IF NOT s.keep_files THEN Utils.Remove (dest); END;
+    END;
+    ETimer.Pop ();
+    RETURN NOT failed;
+  END RunLlvmOpt; 
 
 PROCEDURE RunAsm (s: State;  source, object: TEXT): BOOLEAN (* Success. *) =
   VAR failed: BOOLEAN;
