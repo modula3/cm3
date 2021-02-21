@@ -6,6 +6,7 @@
    Author: Mika Nystrom <mika@alum.mit.edu>
 */
 
+if not equal (OS_TYPE, "WIN32")
 
 if defined("pm3_version")
 	option("optimization","") 
@@ -89,7 +90,4 @@ c_source("schemeUnixDeps")
 
 library ("mscheme")
 
-
-
-
-
+end
