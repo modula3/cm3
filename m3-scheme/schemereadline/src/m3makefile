@@ -1,5 +1,7 @@
 /* $Id$ */
 
+if not equal (OS_TYPE, "WIN32")
+
 import("libm3")
 import("cit_util")
 import("mscheme")
@@ -11,3 +13,5 @@ Module("SchemeReadLine")
 Module("SchemeInteraction")
 
 library("schemereadline")
+
+end

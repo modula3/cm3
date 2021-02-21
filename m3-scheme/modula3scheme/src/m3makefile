@@ -1,5 +1,7 @@
 /* $Id$ */
 
+if not equal (OS_TYPE, "WIN32")
+
 if defined("CM3_VERSION")
 	m3_optimize("")
 end
@@ -43,3 +45,5 @@ Module("SchemeApply")
 Module("SchemeProcedureStubs")
 
 library ("modula3scheme")
+
+end
