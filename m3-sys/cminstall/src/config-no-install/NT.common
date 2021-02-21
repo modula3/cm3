@@ -1097,6 +1097,9 @@ proc make_lib(lib, options, objects, imported_libs, shared) is
         if ShipUconstants
             LibdExport("Uconstants" & Obj)
         end
+        if ShipWinConstants
+            LibdExport("WinConstants" & Obj)
+        end
     end
     return ret_code
 end
