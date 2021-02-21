@@ -264,11 +264,10 @@ def Setup(ExistingCompilerRoot, NewRoot):
 
     CopyCompiler(ExistingCompilerRoot, NewRoot) or FatalError()
 
-    if NewRoot == InstallRoot_CompilerWithPrevious:
-        NewLib = os.path.join(NewRoot, "lib")
-        CreateDirectory(NewLib)
-        for a in glob.glob(os.path.join(ExistingCompilerRoot, "lib", "*.obj")):
-            CopyFile(a, NewLib) or FatalError()
+    NewLib = os.path.join(NewRoot, "lib")
+    CreateDirectory(NewLib)
+    for a in glob.glob(os.path.join(ExistingCompilerRoot, "lib", "*.obj")):
+        CopyFile(a, NewLib) or FatalError()
 
     CopyConfigForDistribution(NewRoot) or sys.exit(1)
 
