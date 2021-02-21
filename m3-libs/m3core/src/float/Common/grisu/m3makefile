@@ -3,7 +3,7 @@ module ("CachedPowers")
 module ("SimFP")
 module ("IEEE")
 
-% temporarily disable Grisu for NT386 until problems investigated
+% temporarily disable Grisu for Win32 until problems investigated
 
 local readonly proc MakeGrisuDisable(Name, Value) is
     > Name & ".i3.tmp" in
@@ -15,7 +15,7 @@ local readonly proc MakeGrisuDisable(Name, Value) is
     cp_if(Name & ".i3.tmp", Name & ".i3")
 end
 
-if equal(TARGET, "NT386")
+if equal (OS_TYPE, "WIN32")
   MakeGrisuDisable("GrisuDisable", "TRUE")
 else
   MakeGrisuDisable("GrisuDisable", "FALSE")
