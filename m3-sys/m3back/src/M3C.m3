@@ -1758,7 +1758,7 @@ BEGIN
     (* Omit a few prototypes that the frontend might have slightly wrong,
        e.g. alloca(unsigned int vs. unsigned long vs. unsigned long long)
             vs. compiler intrinsic
-       e.g. setjmp(void*) vs. setjmp(array) vs. compiler intrinsic
+       e.g. setjmp(void* ) vs. setjmp(array) vs. compiler intrinsic
        e.g. longjmp(...) vs. compiler intrinsic
     *)
     proc.omit_prototype := is_common
