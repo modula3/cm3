@@ -61,4 +61,6 @@ if equal(WORD_SIZE, "32BITS") % temporary hack
 end
 implementation ("WinImageList")
 
+c_source("WinConstants")
+
 end
