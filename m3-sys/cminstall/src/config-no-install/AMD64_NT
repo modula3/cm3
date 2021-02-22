@@ -7,4 +7,6 @@ M3_BACKEND_MODE = "C"
 % temporary workaround, some problem with our exception handling
 USE_MSVCRT = FALSE
 
+M3_PARALLEL_BACK = 20 % AMD64 machines usually have lots of cores
+
 include("NT.common")
