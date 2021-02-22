@@ -7,7 +7,7 @@ IMPORT File, FileWin32, OSError, Terminal, WinBase, WinCon, WinDef;
 
 TYPE
   T = Terminal.T OBJECT
-    hd    : WinDef.DWORD;
+    hd    : WinDef.INT32;
     setup : BOOLEAN := FALSE;
   OVERRIDES
     read   := Read;
@@ -16,7 +16,7 @@ TYPE
     status := Status;
   END;
 
-PROCEDURE New (hd: WinDef.DWORD; ds: FileWin32.DirectionSet): File.T =
+PROCEDURE New (hd: WinDef.INT32; ds: FileWin32.DirectionSet): File.T =
   BEGIN
     RETURN NEW (T, ds := ds, hd := hd);
   END New;
