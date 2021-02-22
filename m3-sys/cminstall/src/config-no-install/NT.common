@@ -1245,6 +1245,7 @@ proc m3_link_ms(prog, options, objects, imported_libs, shared, pgm_file, listing
                 subst_chars(imported_libs, "/", "\\"),
                 subst_chars(UseHand, "/", "\\"),
                 subst_chars(UseWinConstants, "/", "\\"),
+                subst_chars(UseUconstants, "/", "\\"),
             ]),
         "2>&1",
         ">", listing
