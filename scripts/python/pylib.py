@@ -12,6 +12,9 @@ import tempfile
 import shutil
 import time
 
+false = False
+true = True
+
 class Tee:
     def __init__(self, a, b = None):
         self.a = a
@@ -28,6 +31,8 @@ class Tee:
             self.a.flush()
         if self.b != None and self.a != self.b:
             self.b.flush()
+
+LowercaseArgv = map(lambda(a): a.lower(), sys.argv)
 
 sys.stdout = Tee(sys.stdout, open(sys.argv[0] + ".log", "a"))
 
@@ -387,12 +392,15 @@ def _GetAllTargets():
     return Targets
 
 #-----------------------------------------------------------------------------
-
-_CBackend = "c" in sys.argv or "C" in sys.argv
-_BuildDirC = ["", "c"][_CBackend]
+#
+# Tentatively, +C means C backend, and append C to BuildDir.
+# But it does not work yet and that is ok.
+# It probably does not work because cm3 does not implement it.
+#
+_CBackend = "c" in LowercaseArgv or "+c" in LowercaseArgv
 _PossibleCm3Flags = ["boot", "keep", "override", "commands", "verbose", "why"]
 _SkipGccFlags = ["nogcc", "skipgcc", "omitgcc"]
-_PossiblePylibFlags = ["noclean", "nocleangcc", "c", "C"] + _SkipGccFlags + _PossibleCm3Flags
+_PossiblePylibFlags = ["noclean", "nocleangcc", "c", "C", "+c", "+C"] + _SkipGccFlags + _PossibleCm3Flags
 
 skipgcc = False
 for a in _SkipGccFlags:
@@ -651,6 +659,39 @@ for a in sys.argv:
     if Target:
         break
 Target = Target or getenv("CM3_TARGET") or Host
+
+#-----------------------------------------------------------------------------
+
+def TargetOnlyHasCBackend(a):
+    # Many targets have a gcc backend.
+    # NT386 etc. have the integrated backend.
+    # Many targets only have the C backend.
+    #
+    # The C backend ABI is not the same as the others,
+    # therefore, likely, BuildDir should have "C" appended,
+    # for targets that have C backend and another backend.
+    #
+    # Todo: arm32 is unclear barely existant
+    # Historical targets probably should should gcc backend.
+    # All targets probably should drop gcc backend.
+    # Even NT386 integrated backend is not super interesting.
+    #
+    a = a.lower()
+    if a == "i386_nt":
+        return false
+    return a.endswith("_nt") or a.startswith("arm64") or a.startswith("riscv")
+
+#-----------------------------------------------------------------------------
+#
+# Append c to BuildDir (i.e. Target) if +c in command line.
+# Previously this was if plain C in argv but this is perhaps a separate factor,
+# least for targets that have other backends. i.e. so NT386 and NT386c build
+# directories can coexist.
+#
+# But not if target only has C backend.
+#
+#_BuildDirC = ["", "c"]["+c" in LowercaseArgv and not TargetOnlyHasCBackend(Target)]
+_BuildDirC = ["", "c"][_CBackend and not TargetOnlyHasCBackend(Target)]
 
 #-----------------------------------------------------------------------------
 #
@@ -1069,7 +1110,7 @@ def _MakeTGZ(a):
     b = Tar + " cfz " + out + " " + a
     print(b + "\n")
     os.system(b)
-    
+
 def _MakeZip(a):
     out = a + ".zip"
     DeleteFile(out)
@@ -1131,9 +1172,9 @@ def Boot():
     bsd = StringContainsI(Target, "BSD")
 
     # pick the compiler
-    
+
     CBackend = _CBackend
-    
+
     CCompilerOut = ""
 
     if alpha32vms:
@@ -1190,7 +1231,7 @@ def Boot():
         "SPARC32_LINUX"   : " -m32 -mcpu=v9 -mno-app-regs ",
         "SPARC64_LINUX"   : " -m64 -mno-app-regs ",
         }.get(Config) or " ")
-        
+
     LinkExts = { }
 
     obj = ["o", "obj"][nt]
@@ -1198,7 +1239,7 @@ def Boot():
     #Link = "$(CC) $(CFLAGS)"
 
     # link flags
-    
+
     # TBD: add more and retest, e.g. Irix, AIX, HPUX, Android
     # http://www.openldap.org/lists/openldap-bugs/200006/msg00070.html
     # http://www.gnu.org/software/autoconf-archive/ax_pthread.html#ax_pthread
@@ -1228,7 +1269,7 @@ def Boot():
         Link = Link  +  " -lm -pthread "
     else:
         Link = Link + " -lm -lpthread "
-    
+
     # add -c to compiler but not link (i.e. not CCompilerFlags)
 
     Compile = "$(CC) $(CFLAGS) " + [" -c ", ""][vms]
@@ -1297,7 +1338,7 @@ def Boot():
     if (not vms) or AssembleOnHost:
         Assembler = GnuPlatformPrefix + Assembler
 
-    P = FilterPackages([ "m3cc", "import-libs", "m3core", "libm3", "sysutils",
+    P = FilterPackages([ "m3cc", "m3core", "libm3", "sysutils",
           "m3middle", "m3quake", "m3objfile", "m3linker", "m3back",
           "m3front" ])
     main_packages = ["cm3"]
@@ -1343,9 +1384,9 @@ def Boot():
     UpdateSource = open(os.path.join(BootDir, "updatesource.sh"), "wb")
     Objects = { }
     ObjectsExceptMain = { }
-    
+
     # main_m.s or main.ms, depending on what we see
-    mainS = "" 
+    mainS = ""
 
     for pkg in main_packages:
         CreateDirectory(os.path.join(BootDir, pkg + ".d"))
@@ -1359,7 +1400,7 @@ def Boot():
             a.write("Assemble=" + Assembler + " " + AssemblerFlags + NL)
         a.write("Link=" + Link + NL
                 + NL + "# no more editing should be needed" + NL2)
-                
+
     #Makefile.write("#AssembleOnTarget:" + str(AssembleOnTarget) + NL)
     #Makefile.write("#CBackend:" + str(CBackend) + NL)
     #Makefile.write("#BuildDir:" + BuildDir + NL)
@@ -1369,7 +1410,7 @@ def Boot():
         Makefile.write(".SUFFIXES:" + NL
                        + ".SUFFIXES: .c .is .ms .s .o .obj .io .mo" + NL2)
 
-    Makefile.write("all: ")    
+    Makefile.write("all: ")
     for pkg in main_packages:
         Makefile.write(pkg + EXE + " ")
     Makefile.write(NL2)
@@ -1440,9 +1481,9 @@ def Boot():
                     print(a)
                     os.system(a)
                 else:
-                    VmsMake.write("$ " + Assembler + " " + a + "\n")                    
+                    VmsMake.write("$ " + Assembler + " " + a + "\n")
             VmsLink.write(Object + "/SELECTIVE_SEARCH\n")
-            
+
     # double colon batches and is much faster
     colon = [":", "::"][nt]
 
@@ -1451,7 +1492,7 @@ def Boot():
         for c in ["c", "cpp"]:
             for o in ["o", "obj"]:
                 Makefile.write("." + c + "." + o + colon + NL + "\t$(Compile) " + CCompilerOut + " $<" + NL2)
-            
+
         # write inference rules: .is => .io, .s => .o, .ms => .mo
         if not CBackend:
             for source_obj in [["is", "io"], ["s", "o"], ["ms", "mo"]]:
@@ -1462,7 +1503,7 @@ def Boot():
     Makefile.write("OBJECTS=")
     Objects = ObjectsExceptMain.keys()
     Objects.sort()
-    k = 8    
+    k = 8
     for a in Objects:
         k = k + 1 + len(a)
         if k > 76: # line wrap
@@ -1478,9 +1519,9 @@ def Boot():
         Makefile.write(" " + a)
 
     Makefile.write(NL2)
- 
+
     LinkOut = [" -o ", " -out:"][nt]
-    
+
     maino_ext = "o"
     if CBackend:
         maino_ext = "m3.c"
@@ -1496,7 +1537,7 @@ def Boot():
         Makefile.write(" " + "$(OBJECTS) ")
         Makefile.write(pkg + ".d/Main." + maino_ext)
         Makefile.write(NL)
-            
+
         # NOTE: We use *.o/*.obj to avoid command line length limits.
         # TODO: Response files? gcc 4.2 supports them. Visual C++ all
         # versions support them. TODO: Research xlc, Sun CC, etc.
@@ -1507,11 +1548,11 @@ def Boot():
     for o in obj_suffixes:
         VmsMake.write("$ set file/attr=(rfm=var,rat=none) *." + o + "\n")
     VmsMake.write("$ link /executable=cm3.exe vmslink/options\n")
-    
+
     # TODO
     for a in [Make]:
         a.write("$(Link) " + LinkOut + "$@" + NL)
-        
+
     if False:
         for a in [
             #
@@ -1599,7 +1640,7 @@ def Boot():
 
     for a in [UpdateSource, Make, Makefile, VmsMake, VmsLink]:
         a.close()
-        
+
     # write entirely new custom makefile for NT
     # We always have object files so just compile and link in one fell swoop.
     # NOTE: This is quite crude/slow/inefficient. Needs work.
