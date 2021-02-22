@@ -57,4 +57,25 @@ include_dir ("types")
 
 % m3_option ("-times")
 
+% These are special objects.
+% Mainly they are to avoid importing data on Windows.
+% i.e. They are always statically linked.
+%
+% But hand.obj might also be useful on non-Windows.
+% hand.obj contains helper functions for set manipulation,
+% referenced by some backends. Dynamic linking it should be ok,
+% but the functions have also churned through the years and static
+% linking might provide better compatibility. Todo.
+%
+% Failure to static link Uconstants on Windows is quite fatal,
+% due to TRY alloca(m3_jumpbuf_size) and m3_jumpbuf_size is in Uconstants.obj.
+% Todo: Attempt various kinds of "passthrough" in C backend.
+%
+% The values could be output by the backend, or even the generated C
+% include the native headers and reference the native symbols.
+%
+LibdExport("hand" & Obj)
+LibdExport("Uconstants" & Obj)
+LibdExport("WinConstants" & Obj)
+
 Library("m3core")
