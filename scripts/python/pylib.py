@@ -251,7 +251,9 @@ def SearchPath(name, paths = getenv("PATH")):
         for sep in seps:
             for path in paths.split(sep):
                 candidate = os.path.join(path, name)
+                #print("SearchPath check:" + candidate)
                 if isfile(candidate):
+                    print("SearchPath return:" + candidate)
                     return os.path.abspath(candidate)
     #print("SearchPath " + name + " returning None 2")
     return None
@@ -2634,10 +2636,45 @@ def FormInstallRoot(PackageSetName):
     a = a + "-" + time.strftime("%Y%m%d")
     return a
 
+def SearchPathWix():
+    path = os.environ["PATH"] or getenv("PATH")
+    #print("path:" + path)
+    return SearchPath("candle.exe", path) and SearchPath("light.exe", path)
+
+def TryAddWixToPath():
+    print("SearchPath candle light")
+
+    WixCandidates = ["WiX Toolset v3.11", "Windows Installer XML v3"]
+
+    wixFound = SearchPathWix()
+    for a in GetProgramFiles():
+        #print("ProgramFiles:" + a)
+        if wixFound:
+            return wixFound
+        for wixCandidate in WixCandidates:
+            b = os.path.join(ConvertPathForPython(a), wixCandidate, "bin")
+            #print("a:" + a)
+            #print("b:" + b)
+            if isdir(b):
+                SetEnvironmentVariable("PATH", b + os.pathsep + os.environ["PATH"])
+                wixFound = SearchPathWix()
+                if wixFound:
+                    return wixFound
+            if wixFound:
+                return wixFound
+        if wixFound:
+            return wixFound
+    return wixFound
+
 def MakeMSIWithWix(input):
 # input is a directory such as c:\stage1\cm3-min-NT386-d5.8.1-VC90
 # The output goes to input + ".msi" and other temporary files go similarly (.wix, .wixobj)
 # (We edit the filename slightly for friendlyness.)
+
+    if not TryAddWixToPath():
+        print("skipping msi/wix")
+        return
+
     import uuid
 
     InstallLicense(Root, input)
@@ -2703,15 +2740,6 @@ def MakeMSIWithWix(input):
 """)
 
     wix.close()
-
-    print("SearchPath candle light")
-
-    if not SearchPath("candle") or not SearchPath("light"):
-        for a in GetProgramFiles():
-            b = os.path.join(ConvertPathForPython(a), "Windows Installer XML v3", "bin")
-            if isdir(b):
-                SetEnvironmentVariable("PATH", b + os.pathsep + os.environ["PATH"])
-                break
 
     command = "candle " + ConvertPathForWin32(input) + ".wxs -out " + ConvertPathForWin32(input) + ".wixobj" + " 2>&1"
     if os.name == "posix":
@@ -2907,6 +2935,9 @@ if __name__ == "__main__":
     #
     # run test code if module run directly
     #
+
+    TryAddWixToPath()
+    sys.exit(1)
 
     print("GetVisualCPlusPlusVersion:" + GetVisualCPlusPlusVersion())
     sys.exit(1)
