@@ -574,7 +574,7 @@ PROCEDURE connect (
     s: SOCKET; addr: struct_sockaddr_star; namelen: INT32): INT32;
 
 <* EXTERNAL ioctlsocket:PASCAL *>
-PROCEDURE ioctlsocket (s: SOCKET; cmd: INT32; argp: UNTRACED REF UINT32): INT32;
+PROCEDURE ioctlsocket (s: SOCKET; cmd: UINT32; argp: UNTRACED REF UINT32): INT32;
 
 <* EXTERNAL getpeername:PASCAL *>
 PROCEDURE getpeername (
