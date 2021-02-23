@@ -2,6 +2,10 @@
 
 #include "defs.h"
 
+#if __cplusplus
+extern "C" {
+#endif
+
 int triangulate, sorted, plot, debug;
 float xmin, xmax, ymin, ymax, deltax, deltay;
 struct	Site	*sites;
@@ -23,3 +27,7 @@ struct Triple *tfl;
 struct Halfedge *hfl;
 struct Site *sfl;
 struct Edge *efl;
+
+#if __cplusplus
+} /* extern "C" */
+#endif

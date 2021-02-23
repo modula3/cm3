@@ -1,15 +1,17 @@
-#
 #include "defs.h"
 
+#if __cplusplus
+extern "C" {
+#endif
 
 /* implicit parameters: nsites, sqrt_nsites, xmin, xmax, ymin, ymax,
    deltax, deltay (can all be estimates).
    Performance suffers if they are wrong; better to make nsites,
    deltax, and deltay too big than too small.  (?) */
-
-voronoi(triangulate, nextsite)
-int triangulate;
-struct Site *(*nextsite)();
+void
+voronoi(
+int triangulate,
+struct Site *(*nextsite)())
 {
 struct Site *newsite, *bot, *top, *temp, *p;
 struct Site *v;
@@ -42,14 +44,14 @@ while(1)
 		e = bisect(bot, newsite);
 		bisector = HEcreate(e, le);
 		ELinsert(lbnd, bisector);
-		if ((p = intersect(lbnd, bisector)) != (struct Site *) NULL) 
+		if ((p = intersect(lbnd, bisector)) != NULL)
 		{	PQdelete(lbnd);
 			PQinsert(lbnd, p, dist(p,newsite));
 		};
 		lbnd = bisector;
 		bisector = HEcreate(e, re);
 		ELinsert(lbnd, bisector);
-		if ((p = intersect(bisector, rbnd)) != (struct Site *) NULL)
+		if ((p = intersect(bisector, rbnd)) != NULL)
 		{	PQinsert(bisector, p, dist(p,newsite));	
 		};
 		newsite = (*nextsite)();	
@@ -77,11 +79,11 @@ while(1)
 		bisector = HEcreate(e, pm);
 		ELinsert(llbnd, bisector);
 		endpoint(e, re-pm, v);
-		if((p = intersect(llbnd, bisector)) != (struct Site *) NULL)
+		if((p = intersect(llbnd, bisector)) != NULL)
 		{	PQdelete(llbnd);
 			PQinsert(llbnd, p, dist(p,bot));
 		};
-		if ((p = intersect(bisector, rrbnd)) != (struct Site *) NULL)
+		if ((p = intersect(bisector, rrbnd)) != NULL)
 		{	PQinsert(bisector, p, dist(p,bot));
 		};
 	}
@@ -93,3 +95,7 @@ for(lbnd=ELright(ELleftend); lbnd != ELrightend; lbnd=ELright(lbnd))
 		out_ep(e);
 	};
 }
+
+#if __cplusplus
+} /* extern "C" */
+#endif

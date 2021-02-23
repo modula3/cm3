@@ -1,18 +1,28 @@
-#
 #include "defs.h"
 #include "mymalloc.h"
 #include <stdio.h>
-/* for those who don't have Cherry's plot */
 /* #include <plot.h> */
-openpl(){}
+
+#if __cplusplus
+extern "C" {
+#endif
+
+/* for those who don't have Cherry's plot */
+void openpl(void){}
+#if __cplusplus
+void line(...){}
+void circle(...){}
+void range(...){}
+#else
 line(){}
 circle(){}
 range(){}
+#endif
 
 static float pxmin, pxmax, pymin, pymax, cradius;
 
-out_bisector(e)
-struct Edge *e;
+void
+out_bisector(struct Edge *e)
 {
 if(triangulate & plot &!debug)
 	line(e->reg[0]->coord.x, e->reg[0]->coord.y, 
@@ -24,9 +34,8 @@ if(debug)
 	    e->a, e->b, e->c, e->reg[le]->sitenbr, e->reg[re]->sitenbr);
 }
 
-
-out_ep(e)
-struct Edge *e;
+void
+out_ep(struct Edge *e)
 {
 if(!triangulate & plot) 
 	clip_line(e);
@@ -37,8 +46,8 @@ if(!triangulate & !plot)
 };
 }
 
-out_vertex(v)
-struct Site *v;
+void
+out_vertex(struct Site *v)
 {
 if(!triangulate & !plot &!debug)
 	printf ("v %f %f\n", v->coord.x, v->coord.y);
@@ -46,9 +55,8 @@ if(debug)
 	printf("vertex(%d) at %f %f\n", v->sitenbr, v->coord.x, v->coord.y);
 }
 
-
-out_site(s)
-struct Site *s;
+void
+out_site(struct Site *s)
 {
 if(!triangulate & plot & !debug)
 	circle (s->coord.x, s->coord.y, cradius);
@@ -61,8 +69,11 @@ if(debug)
 #define TALLOC 100
 static int tp=0;
 
-out_triple(s1, s2, s3)
-struct Site *s1, *s2, *s3;
+void
+out_triple(
+struct Site *s1,
+struct Site *s2,
+struct Site *s3)
 {
   struct Triple *t;
 
@@ -81,8 +92,7 @@ struct Site *s1, *s2, *s3;
 
 }
 
-
-
+void
 plotinit()
 {
 float dx,dy,d;
@@ -99,9 +109,8 @@ openpl();
 range(pxmin, pymin, pxmax, pymax);
 }
 
-
-int clip_line(e)
-struct Edge *e;
+void
+clip_line(struct Edge *e)
 {
 struct Site *s1, *s2;
 float x1,x2,y1,y2;
@@ -125,7 +134,7 @@ float x1,x2,y1,y2;
 		y2 = pymax;
 		if (s2!=(struct Site *)NULL && s2->coord.y < pymax) 
 			y2 = s2->coord.y;
-		if(y2<pymin) return(0);
+		if(y2<pymin) return;
 		x2 = e -> c - e -> b * y2;
 		if ((x1> pxmax & x2>pxmax) | (x1<pxmin&x2<pxmin)) return;
 		if(x1> pxmax)
@@ -142,14 +151,14 @@ float x1,x2,y1,y2;
 		x1 = pxmin;
 		if (s1!=(struct Site *)NULL && s1->coord.x > pxmin) 
 			x1 = s1->coord.x;
-		if(x1>pxmax) return(0);
+		if(x1>pxmax) return;
 		y1 = e -> c - e -> a * x1;
 		x2 = pxmax;
 		if (s2!=(struct Site *)NULL && s2->coord.x < pxmax) 
 			x2 = s2->coord.x;
-		if(x2<pxmin) return(0);
+		if(x2<pxmin) return;
 		y2 = e -> c - e -> a * x2;
-		if ((y1> pymax & y2>pymax) | (y1<pymin&y2<pymin)) return(0);
+		if ((y1> pymax & y2>pymax) | (y1<pymin&y2<pymin)) return;
 		if(y1> pymax)
 		{	y1 = pymax; x1 = (e -> c - y1)/e -> a;};
 		if(y1<pymin)
@@ -162,3 +171,7 @@ float x1,x2,y1,y2;
 	
 	line(x1,y1,x2,y2);
 }
+
+#if __cplusplus
+} /* extern "C" */
+#endif

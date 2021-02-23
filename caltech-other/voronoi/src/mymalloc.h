@@ -30,6 +30,10 @@
 #include <stdlib.h>
 #include <signal.h>
 
+#if __cplusplus
+extern "C" {
+#endif
+
 /* FAIL_SLEEP is how many seconds to pause for when malloc fails.
    To turn off this feature, #define it to zero */
 
@@ -114,6 +118,10 @@ char *_mystrdup (const char *str, const char *file, const int line);
 # define __free(x) free(x)
 
 #endif /* !_NDEBUG */
+
+#if __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* !_MYMALLOC_H */
 
