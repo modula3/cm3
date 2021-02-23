@@ -13,6 +13,9 @@
 #include <string.h>
 #include "misc.h"
 
+#if __cplusplus
+extern "C" {
+#endif
 
 /*-------------------------------------------------------------------------
  * print error message and die.
@@ -37,3 +40,7 @@ char *Strdup (char *s)
   strcpy (t, s);
   return t;
 }
+
+#if __cplusplus
+} /* extern "C" */
+#endif

@@ -24,6 +24,10 @@
 #include "bool.h"
 #include "misc.h"
 
+#if __cplusplus
+extern "C" {
+#endif
+
 #define PTR_TO_INT(b) ((unsigned long)(b))
 #define PMIN(a,b) ((PTR_TO_INT(a) < PTR_TO_INT(b)) ? a : b)
 #define PMAX(a,b) ((PTR_TO_INT(a) > PTR_TO_INT(b)) ? a : b)
@@ -336,26 +340,26 @@ extern BOOL_T *bool_init (void)
   for (i=0; i < BOOL_MAXOP; i++)
     B->TH[i] = thash_new (128);
 
-  B->true = newbool ();
-  ASSIGN_LEAF(B->true,1);
-  B->true->id = 1;
-  SET_HIBIT (B->true->id);
+  B->True = newbool ();
+  ASSIGN_LEAF(B->True,1);
+  B->True->id = 1;
+  SET_HIBIT (B->True->id);
 
-  B->false = newbool();
-  ASSIGN_LEAF(B->false,1);
-  B->false->id = 0;
-  SET_HIBIT (B->false->id);
+  B->False = newbool();
+  ASSIGN_LEAF(B->False,1);
+  B->False->id = 0;
+  SET_HIBIT (B->False->id);
 
   return B;
 }
 
 /*-------------------------------------------------------------------------
- * return the bdd for "true"
+ * return the bdd for "True"
  *-----------------------------------------------------------------------*/
 extern bool_t *bool_true (BOOL_T *B)
 {
-  INC_REF(B->true);
-  return B->true;
+  INC_REF(B->True);
+  return B->True;
 }
 
 /*-------------------------------------------------------------------------
@@ -363,8 +367,8 @@ extern bool_t *bool_true (BOOL_T *B)
  *-----------------------------------------------------------------------*/
 extern bool_t *bool_false (BOOL_T *B)
 {
-  INC_REF (B->false);
-  return B->false;
+  INC_REF (B->False);
+  return B->False;
 }
 
 /*-------------------------------------------------------------------------
@@ -386,15 +390,15 @@ extern bool_t *bool_newvar (BOOL_T *B)
       B->H[i] = hash_new (HASH_BLOCK);
   }
 
-  /* increment refcounts for "true", "false" */
+  /* increment refcounts for "True", "False" */
   b = newbool();		/* create a new node. */
   b->id = B->nvar;		/* set its id */
   ASSIGN_LEAF (b,0);		/* make it a non-leaf node. */
   INC_REF (b);			/* increment ref counts */
-  INC_REF (B->true);
-  INC_REF (B->false);
-  b->l = B->true;
-  b->r = B->false;
+  INC_REF (B->True);
+  INC_REF (B->False);
+  b->l = B->True;
+  b->r = B->False;
 
   /* add to hashtable */
   hash_insert (B->H[B->nvar], b);
@@ -415,15 +419,15 @@ extern bool_t *bool_var (BOOL_T *B, bool_var_t v)
   if (v >= B->nvar)
     return NULL;
   else {
-    b = hash_locate (B->H[v], B->true, B->false);
+    b = hash_locate (B->H[v], B->True, B->False);
     if (!b) {
       b = newbool();
       b->id = v;
-      b->l = B->true;
-      b->r = B->false;
+      b->l = B->True;
+      b->r = B->False;
       ASSIGN_LEAF (b,0);	/* make it a non-leaf node. */
-      INC_REF (B->true);
-      INC_REF (B->false);
+      INC_REF (B->True);
+      INC_REF (B->False);
       hash_insert (B->H[v], b);
     }
     INC_REF (b);
@@ -445,10 +449,10 @@ static bool_t *_bool_and (BOOL_T *B, bool_t *b1, bool_t *b2)
   bool_t *b;
 
   if (b1 == b2) { INC_REF (b1); return b1; } /* & is idempotent */
-  if (b1 == B->false) { INC_REF (B->false); return b1; } /* false is a zero */
-  if (b2 == B->false) { INC_REF (B->false); return b2; } /* and is symmetric */
-  if (b1 == B->true) { INC_REF (b2); return b2; }
-  if (b2 == B->true) { INC_REF (b1); return b1; }
+  if (b1 == B->False) { INC_REF (B->False); return b1; } /* False is a zero */
+  if (b2 == B->False) { INC_REF (B->False); return b2; } /* and is symmetric */
+  if (b1 == B->True) { INC_REF (b2); return b2; }
+  if (b2 == B->True) { INC_REF (b1); return b1; }
 
   if (b1->id > b2->id) {
     l = b1;
@@ -510,10 +514,10 @@ static bool_t *_bool_or (BOOL_T *B, bool_t *b1, bool_t *b2)
   bool_t *b;
 
   if (b1 == b2) { INC_REF (b1); return b1; } /* or is idempotent */
-  if (b1 == B->true) { INC_REF (B->true); return b1; } /* true is a zero */
-  if (b2 == B->true) { INC_REF (B->true); return b2; } /* or is symmetric */
-  if (b1 == B->false){ INC_REF (b2); return b2; } /* false is an id */
-  if (b2 == B->false){ INC_REF (b1); return b1; } /* false is an id */
+  if (b1 == B->True) { INC_REF (B->True); return b1; } /* True is a zero */
+  if (b2 == B->True) { INC_REF (B->True); return b2; } /* or is symmetric */
+  if (b1 == B->False){ INC_REF (b2); return b2; } /* False is an id */
+  if (b2 == B->False){ INC_REF (b1); return b1; } /* False is an id */
 
   if ((b = thash_locate (pairvisited,PMIN(b1,b2),PMAX(b1,b2)))) {
     INC_REF (b);
@@ -579,19 +583,19 @@ static bool_t *_bool_xor (BOOL_T *B, bool_t *b1, bool_t *b2)
   assert(b1);
   assert(b2);
 
-  if (b1 == b2) { INC_REF (B->false); return B->false; }
-  if (b1 == B->false){ INC_REF (b2); return b2; } /* false is an id */
-  if (b2 == B->false){ INC_REF (b1); return b1; } /* false is an id */
+  if (b1 == b2) { INC_REF (B->False); return B->False; }
+  if (b1 == B->False){ INC_REF (b2); return b2; } /* False is an id */
+  if (b2 == B->False){ INC_REF (b1); return b1; } /* False is an id */
 
   if (ISLEAF(b1) && ISLEAF(b2)) {
     val = (b1->id ^ b2->id);
     if (val) {
-      INC_REF (B->true);
-      return B->true;
+      INC_REF (B->True);
+      return B->True;
     }
     else {
-      INC_REF (B->false);
-      return B->false;
+      INC_REF (B->False);
+      return B->False;
     }
   }
 
@@ -657,10 +661,10 @@ static bool_t *_bool_implies (BOOL_T *B, bool_t *b1, bool_t *b2)
   bool_t *b;
   bool_var_t id;
 
-  if (b1 == b2) { INC_REF (B->true); return B->true; }
-  if (b1 == B->true){ INC_REF (b2); return b2; }
-  if (b1 == B->false){ INC_REF (B->true); return B->true; }
-  if (b2 == B->true) { INC_REF (B->true); return B->true; }
+  if (b1 == b2) { INC_REF (B->True); return B->True; }
+  if (b1 == B->True){ INC_REF (b2); return b2; }
+  if (b1 == B->False){ INC_REF (B->True); return B->True; }
+  if (b2 == B->True) { INC_REF (B->True); return B->True; }
 
   if ((b = thash_locate (pairvisited,b1,b2))) {
     INC_REF(b);
@@ -725,10 +729,10 @@ bool_t *_bool_not (BOOL_T *B, bool_t *b1)
 {
   bool_t *b, *l, *r;
 
-  if (b1 == B->true) { INC_REF (B->false); return B->false; }
-  if (b1 == B->false) { INC_REF (B->true); return B->true; }
+  if (b1 == B->True) { INC_REF (B->False); return B->False; }
+  if (b1 == B->False) { INC_REF (B->True); return B->True; }
 
-  if ((b = thash_locate(pairvisited,b1,B->true))) {
+  if ((b = thash_locate(pairvisited,b1,B->True))) {
     INC_REF(b);
     return b;
   }
@@ -738,7 +742,7 @@ bool_t *_bool_not (BOOL_T *B, bool_t *b1)
   if ((b = hash_locate (B->H[b1->id], l, r))) {
     DEC_REF (l); DEC_REF (r);
     INC_REF (b);
-    thash_insert (pairvisited,b1,B->true,b);
+    thash_insert (pairvisited,b1,B->True,b);
     return b;
   }
   else {
@@ -749,7 +753,7 @@ bool_t *_bool_not (BOOL_T *B, bool_t *b1)
     b->r = r;
     hash_insert (B->H[b->id], b);
     INC_REF (b);
-    thash_insert (pairvisited,b1,B->true,b);
+    thash_insert (pairvisited,b1,B->True,b);
     return b;
   }
 }
@@ -827,12 +831,12 @@ static bool_t *_bool_maketrue (BOOL_T *B, bool_t *b, bool_t *v)
 }
 
 /*-------------------------------------------------------------------------
- * make variable "v" true
+ * make variable "v" True
  *-----------------------------------------------------------------------*/
 bool_t *bool_maketrue (BOOL_T *B, bool_t *b1, bool_t *v)
 {
   bool_t *b;
-  if (v->l != B->true || v->r != B->false)
+  if (v->l != B->True || v->r != B->False)
     return NULL;
   pairvisited = B->TH[BOOL_MKTRUE];
   b = _bool_maketrue (B,b1,v);
@@ -891,12 +895,12 @@ static bool_t *_bool_makefalse (BOOL_T *B, bool_t *b, bool_t *v)
 }
 
 /*-------------------------------------------------------------------------
- * make variable "v" false
+ * make variable "v" False
  *-----------------------------------------------------------------------*/
 bool_t *bool_makefalse (BOOL_T *B, bool_t *b1, bool_t *v)
 {
   bool_t *b;
-  if (v->l != B->true || v->r != B->false)
+  if (v->l != B->True || v->r != B->False)
     return NULL;
   pairvisited = B->TH[BOOL_MKFALSE];
   b = _bool_makefalse (B,b1,v);
@@ -1133,7 +1137,7 @@ extern void bool_delroot (BOOL_T *B, bool_t *b)
  *-----------------------------------------------------------------------*/
 extern void bool_free (BOOL_T *B, bool_t *b)
 {
-  if (b == B->true || b == B->false) return;
+  if (b == B->True || b == B->False) return;
 #if 0
   fprintf(stderr,"freeing %#x, REF() = %d\n",b, REF(b));
 #endif
@@ -1191,7 +1195,7 @@ extern void bool_info (BOOL_T *B)
 
 
 /*------------------------------------------------------------------------
- * Return true if leaf, false otherwise
+ * Return True if leaf, False otherwise
  *------------------------------------------------------------------------*/
 extern int bool_isleaf (bool_t *b)
 {
@@ -1229,3 +1233,7 @@ extern int bool_refs(BOOL_T *B, bool_t *b)
 { 
   return b->ref;
 }
+
+#if __cplusplus
+} /* extern "C" */
+#endif

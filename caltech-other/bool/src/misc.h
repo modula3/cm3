@@ -17,6 +17,10 @@
 #include <malloc.h>
 #endif
 
+#if __cplusplus
+extern "C" {
+#endif
+
 extern void fatal_error (const char *s, ...);
 
 #define MALLOC(a,b,c)  do { if(!(a=(b*)malloc(sizeof(b)*(c)))) fatal_error("malloc failed, size=%d", sizeof(b)*(c)); }while(0)
@@ -34,5 +38,9 @@ extern void fatal_error (const char *s, ...);
   /*  Assert "a". If assertion failed, print message "b" and die. */
 
 char *Strdup (char *s);
+
+#if __cplusplus
+} /* extern "C" */
+#endif
 
 #endif

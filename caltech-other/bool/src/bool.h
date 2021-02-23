@@ -16,6 +16,10 @@
 #ifndef __BOOL_H__
 #define __BOOL_H__
 
+#if __cplusplus
+extern "C" {
+#endif
+
 typedef unsigned long bool_var_t;
 
 /* do not rearrange order of fields! */
@@ -38,7 +42,7 @@ typedef struct bool_t {
  /* max value of "ref" */
 
 #define ISLEAF(b)      (((b)->id & (1UL << HIBIT_OFFSET)) ? 1 : 0)
- /* true if "b" is a leaf */
+ /* True if "b" is a leaf */
 
 #define ASSIGN_LEAF(b,n) ((b)->id = ((b)->id & ~(1UL<<HIBIT_OFFSET))|(((unsigned long)n) << HIBIT_OFFSET))
  /* assign to the "leaf" bit. */
@@ -97,7 +101,7 @@ typedef struct {
   unsigned long totvar;		/* total number of variables */
   pairhash_t **H;		/* hashtable for each variable */
   triplehash_t *TH[BOOL_MAXOP];	/* hashtable for (a,b)->c values */
-  bool_t *true, *false;
+  bool_t *True, *False;
   struct rootlist *roots;	/* roots */
 } BOOL_T;
 
@@ -139,5 +143,9 @@ extern int bool_getid(bool_t *b);
 extern int bool_isleaf (bool_t *b);
 
 #define bool_topvar(b) ((b)->id)
+
+#if __cplusplus
+} /* extern "C" */
+#endif
 
 #endif
