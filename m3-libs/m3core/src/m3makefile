@@ -76,6 +76,5 @@ include_dir ("types")
 %
 LibdExport("hand" & { "WIN32" : ".obj", "POSIX" : ".o"  }{OS_TYPE})
 LibdExport("Uconstants" & { "WIN32" : ".obj", "POSIX" : ".o"  }{OS_TYPE})
-LibdExport("WinConstants" & { "WIN32" : ".obj", "POSIX" : ".o"  }{OS_TYPE})
 
 Library("m3core")
