@@ -75,6 +75,10 @@ TYPE
     SPARC64_OPENBSD,
     SPARC64_SOLARIS,
     AMD64_NT,
+    ARM64_DARWIN,
+    ARM64_LINUX,
+    ARM64_NT,
+    RISCV64_LINUX,
     Undefined
   };
 
@@ -129,7 +133,11 @@ CONST
     "SPARC64_LINUX",
     "SPARC64_OPENBSD",
     "SPARC64_SOLARIS",
-    "AMD64_NT"
+    "AMD64_NT",
+    "ARM64_DARWIN",
+    "ARM64_LINUX",
+    "ARM64_NT",
+    "RISCV64_LINUX"
   };
 
 CONST
