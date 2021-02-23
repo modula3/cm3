@@ -5,6 +5,10 @@
 #include <pwd.h>
 #include <errno.h>
 
+#if __cplusplus
+extern "C" {
+#endif
+
 char *
 SchemeUnixDeps__getCurrentUserWrapper(void) 
 {
@@ -29,3 +33,7 @@ SchemeUnixDeps__getErrno()
 {
 	return errno;
 }
+
+#if __cplusplus
+} /* extern "C" */
+#endif
