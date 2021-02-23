@@ -37,6 +37,10 @@
 # include "mymalloc.h"  
 #undef _ANSI_SOURCE
 
+#if __cplusplus
+extern "C" {
+#endif
+
 #ifndef _DONT_MYMALLOC 
 #define REDPATTERN "abcd"
 #define REDZONE strlen(REDPATTERN)
@@ -358,3 +362,7 @@ void __free(void *ptr)
 }
 
 #endif /* _DONT_MYMALLOC */
+
+#if __cplusplus
+} /* extern "C" */
+#endif

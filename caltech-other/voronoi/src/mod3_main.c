@@ -21,12 +21,16 @@
 #include "defs.h"
 #include "mymalloc.h"
 
+#if __cplusplus
+extern "C" {
+#endif
+
 struct Site *readone();
 struct Site *nextone();
 
-
 static int setup=0;
 
+void
 mod3_start()
 {
   setup=0;
@@ -41,9 +45,8 @@ mod3_start()
   triples=NULL;
 }
 
-
-mod3_addsite(p)
-     struct Point p;
+void
+mod3_addsite(struct Point p)
 {
   assert(!setup);
   sites[nsites].coord = p;
@@ -67,9 +70,13 @@ mod3_addsite(p)
 }
 
 /* sort sites on y, then x, coord */
-int scomp(s1,s2)
-struct Point *s1,*s2;
+static
+int scomp(
+const void *p1,
+const void *p2)
 {
+    const struct Point *s1 = (const struct Point*)p1;
+    const struct Point *s2 = (const struct Point*)p2;
 	if(s1 -> y < s2 -> y) return(-1);
 	if(s1 -> y > s2 -> y) return(1);
 	if(s1 -> x < s2 -> x) return(-1);
@@ -77,6 +84,7 @@ struct Point *s1,*s2;
 	return(0);
 }
 
+void
 mod3_setup() 
 {
 int i;
@@ -92,6 +100,7 @@ ymin = sites[0].coord.y;
 ymax = sites[nsites-1].coord.y;
 }
 
+void
 mod3_delaunay()
 {	
 int c;
@@ -111,6 +120,7 @@ voronoi(triangulate, next);
 
 }
 
+void
 clear_triples()
 {
   struct Triple *t=triples;
@@ -135,8 +145,11 @@ int mod3_gettriple(struct TripleArg *t)
     triples=u->next;
 
   }
+
+  return 1;
 }
 
+void
 mod3_voronoi()
 {	
 int c;
@@ -164,7 +177,7 @@ if(siteidx < nsites)
 	siteidx += 1;
 	return(s);
 }
-else	return( (struct Site *)NULL);
+else	return NULL;
 }
 
 
@@ -188,10 +201,10 @@ char *mem=NULL;
    P.S. I hate C programming!!!!
  */
 
-char *memmalloc(siz)
-     int siz;
+char *memmalloc(
+     size_t siz)
 {
-  char *res=mymalloc(siz+sizeof(char *));
+  char *res = (char*)mymalloc(siz+sizeof(char *));
 
   *((char **)res) = mem;
   mem=res;
@@ -199,6 +212,7 @@ char *memmalloc(siz)
 }
 
 /* clear it all out */
+void
 mod3_finish()
 {
   char *q;
@@ -209,3 +223,7 @@ mod3_finish()
     mem=q;
   }
 }
+
+#if __cplusplus
+} /* extern "C" */
+#endif

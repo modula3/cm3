@@ -3,6 +3,11 @@
 #include <math.h>
 #include "mymalloc.h"
 
+#if __cplusplus
+extern "C" {
+#endif
+
+void
 geominit()
 {
 struct Edge e;
@@ -19,8 +24,9 @@ float sn;
 #define EALLOC 100
 static int ep=100;
 
-struct Edge *bisect(s1,s2)
-struct	Site *s1,*s2;
+struct Edge *bisect(
+struct	Site *s1,
+struct	Site *s2)
 {
   float dx,dy,adx,ady;
   struct Edge *newedge;
@@ -56,9 +62,9 @@ struct	Site *s1,*s2;
 #define SALLOC 100
 static int sp=0;
 
-struct Site *intersect(el1, el2, p)
-struct Halfedge *el1, *el2;
-struct Point *p;
+struct Site *intersect(
+struct Halfedge *el1,
+struct Halfedge *el2)
 {
 struct	Edge *e1,*e2, *e;
 struct  Halfedge *el;
@@ -68,12 +74,12 @@ struct Site *v;
 
 	e1 = el1 -> ELedge;
 	e2 = el2 -> ELedge;
-	if(e1 == (struct Edge*)NULL || e2 == (struct Edge*)NULL) 
-		return ((struct Site *) NULL);
-	if (e1->reg[1] == e2->reg[1]) return ((struct Site *) NULL);
+	if(e1 == NULL || e2 == NULL)
+		return NULL;
+	if (e1->reg[1] == e2->reg[1]) return NULL;
 
 	d = e1->a * e2->b - e1->b * e2->a;
-	if (-1.0e-10<d && d<1.0e-10) return ((struct Site *) NULL);
+	if (-1.0e-10<d && d<1.0e-10) return NULL;
 
 	xint = (e1->c*e2->b - e2->c*e1->b)/d;
 	yint = (e2->c*e1->a - e1->c*e2->a)/d;
@@ -86,7 +92,7 @@ struct Site *v;
 	{	el = el2; e = e2;};
 	right_of_site = xint >= e -> reg[1] -> coord.x;
 	if ((right_of_site && el -> ELpm == le) ||
-	   (!right_of_site && el -> ELpm == re)) return ((struct Site *) NULL);
+	   (!right_of_site && el -> ELpm == re)) return NULL;
 
 	if (!sfl || sp==SALLOC) {
 	  sfl = (struct Site *)memmalloc(sizeof(struct Site)*SALLOC);
@@ -99,9 +105,9 @@ struct Site *v;
 }
 
 /* returns 1 if p is to right of halfedge e */
-int right_of(el, p)
-struct Halfedge *el;
-struct Point *p;
+int right_of(
+struct Halfedge *el,
+struct Point *p)
 {
 struct Edge *e;
 struct Site *topsite;
@@ -144,20 +150,20 @@ else  /*e->b==1.0 */
 return (el->ELpm==le ? above : !above);
 }
 
-
-endpoint(e, lr, s)
-struct Edge *e;
-int	lr;
-struct Site *s;
+void
+endpoint(
+struct Edge *e,
+int	lr,
+struct Site *s)
 {
 e -> ep[lr] = s;
-if(e -> ep[re-lr]== (struct Site *) NULL) return;
+if(e -> ep[re-lr]== NULL) return;
 out_ep(e);
 }
 
-
-float dist(s,t)
-struct Site *s,*t;
+float dist(
+struct Site *s,
+struct Site *t)
 {
 float dx,dy;
 	dx = s->coord.x - t->coord.x;
@@ -165,12 +171,13 @@ float dx,dy;
 	return(sqrt(dx*dx + dy*dy));
 }
 
-
-int makevertex(v)
-struct Site *v;
+void makevertex(struct Site *v)
 {
 v -> sitenbr = nvertices;
 nvertices += 1;
 out_vertex(v);
 }
 
+#if __cplusplus
+} /* extern "C" */
+#endif

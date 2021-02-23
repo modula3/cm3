@@ -14,12 +14,22 @@
 #
 #include <stdio.h>
 #include "defs.h"
+
+#if __cplusplus
+extern "C" {
+#endif
+
 struct Site *readone();
 struct Site *nextone();
 
-main(argc,argv) 
-char **argv; 
-int argc;
+#if __cplusplus
+} /* extern "C" */
+#endif
+
+int
+main(
+int argc,
+char *argv[])
 {	
 int c;
 struct Site *(*next)();
@@ -55,10 +65,18 @@ voronoi(triangulate, next);
 
 }
 
+#if __cplusplus
+extern "C" {
+#endif
+
 /* sort sites on y, then x, coord */
-int scomp(s1,s2)
-struct Point *s1,*s2;
+static
+int scomp(
+const void *p1,
+const void *p2)
 {
+    const struct Point *s1 = (const struct Point*)p1;
+    const struct Point *s2 = (const struct Point*)p2;
 	if(s1 -> y < s2 -> y) return(-1);
 	if(s1 -> y > s2 -> y) return(1);
 	if(s1 -> x < s2 -> x) return(-1);
@@ -75,11 +93,11 @@ if(siteidx < nsites)
 	siteidx += 1;
 	return(s);
 }
-else	return( (struct Site *)NULL);
+else	return NULL;
 }
 
-
 /* read all sites, sort, and compute xmin, xmax, ymin, ymax */
+void
 readsites()
 {
 int i;
@@ -114,6 +132,10 @@ s -> refcnt = 0;
 s -> sitenbr = siteidx;
 siteidx += 1;
 if(scanf("%f %f", &(s->coord.x), &(s->coord.y)) == EOF)
-	return ((struct Site *) NULL );
+	return NULL;
 return(s);
 }
+
+#if __cplusplus
+} /* extern "C" */
+#endif

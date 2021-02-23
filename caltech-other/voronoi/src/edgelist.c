@@ -1,11 +1,14 @@
-#
 #include "defs.h"
 #include "mymalloc.h"
+
+#if __cplusplus
+extern "C" {
+#endif
 
 static int ntry, totalsearch;
 
 /*int ELhashsize;*/
-
+void
 ELinitialize()
 {
 int i;
@@ -13,13 +16,13 @@ int i;
 
 
 	ELhash = (struct Halfedge **) memmalloc ( sizeof *ELhash * ELhashsize);
-	for(i=0; i<ELhashsize; i +=1) ELhash[i] = (struct Halfedge *)NULL;
-	ELleftend = HEcreate( (struct Edge *)NULL, 0);
-	ELrightend = HEcreate( (struct Edge *)NULL, 0);
-	ELleftend -> ELleft = (struct Halfedge *)NULL;
+	for(i=0; i<ELhashsize; i +=1) ELhash[i] = NULL;
+	ELleftend = HEcreate(NULL, 0);
+	ELrightend = HEcreate(NULL, 0);
+	ELleftend -> ELleft = NULL;
 	ELleftend -> ELright = ELrightend;
 	ELrightend -> ELleft = ELleftend;
-	ELrightend -> ELright = (struct Halfedge *)NULL;
+	ELrightend -> ELright = NULL;
 	ELhash[0] = ELleftend;
 	ELhash[ELhashsize-1] = ELrightend;
 }
@@ -27,9 +30,9 @@ int i;
 #define HALLOC 100
 static int hp=0;
 
-struct Halfedge *HEcreate(e, pm)
-struct Edge *e;
-int pm;
+struct Halfedge *HEcreate(
+struct Edge *e,
+int pm)
 {
   struct Halfedge *answer;
  
@@ -41,39 +44,38 @@ int pm;
 
 	answer -> ELedge = e;
 	answer -> ELpm = pm;
-	answer -> PQnext = (struct Halfedge *) NULL;
-	answer -> vertex = (struct Site *) NULL;
+	answer -> PQnext = NULL;
+	answer -> vertex = NULL;
 	return(answer);
 }
 
-
-ELinsert(lb, new)
-struct	Halfedge *lb, *new;
+void
+ELinsert(
+struct	Halfedge *lb,
+struct	Halfedge *new_)
 {
-	new -> ELleft = lb;
-	new -> ELright = lb -> ELright;
-	(lb -> ELright) -> ELleft = new;
-	lb -> ELright = new;
+	new_ -> ELleft = lb;
+	new_ -> ELright = lb -> ELright;
+	(lb -> ELright) -> ELleft = new_;
+	lb -> ELright = new_;
 }
 
 /* Get entry from hash table, pruning any deleted nodes */
-struct Halfedge *ELgethash(b)
-int b;
+struct Halfedge *ELgethash(int b)
 {
 struct Halfedge *he;
 
-	if(b<0 || b>=ELhashsize) return((struct Halfedge *) NULL);
+	if(b<0 || b>=ELhashsize) return NULL;
 	he = ELhash[b]; 
-	if (he == (struct Halfedge *) NULL || 
-	    he -> ELedge != (struct Edge *) DELETED ) return (he);
+	if (he == NULL ||
+	    he -> ELedge != DELETED ) return (he);
 
 /* Hash table points to deleted half edge.  Patch as necessary. */
-	ELhash[b] = (struct Halfedge *) NULL;
-	return ((struct Halfedge *) NULL);
+	ELhash[b] = NULL;
+	return NULL;
 }	
 
-struct Halfedge *ELleftbnd(p)
-struct Point *p;
+struct Halfedge *ELleftbnd(struct Point *p)
 {
 int i, bucket;
 struct Halfedge *he;
@@ -83,10 +85,10 @@ struct Halfedge *he;
 	if(bucket<0) bucket =0;
 	if(bucket>=ELhashsize) bucket = ELhashsize - 1;
 	he = ELgethash(bucket);
-	if(he == (struct Halfedge *) NULL)
+	if(he == NULL)
 	{   for(i=1; 1 ; i += 1)
-	    {	if ((he=ELgethash(bucket-i)) != (struct Halfedge *) NULL) break;
-		if ((he=ELgethash(bucket+i)) != (struct Halfedge *) NULL) break;
+	    {	if ((he=ELgethash(bucket-i)) != NULL) break;
+		if ((he=ELgethash(bucket+i)) != NULL) break;
 	    };
 	totalsearch += i;
 	};
@@ -107,46 +109,40 @@ struct Halfedge *he;
 	return (he);
 }
 
-	
-/* This delete routine can't reclaim node, since pointers from hash
+	/* This delete routine can't reclaim node, since pointers from hash
    table may be present.   */
-ELdelete(he)
-struct Halfedge *he;
+void
+ELdelete(struct Halfedge *he)
 {
 	(he -> ELleft) -> ELright = he -> ELright;
 	(he -> ELright) -> ELleft = he -> ELleft;
 	he -> ELedge = (struct Edge *)DELETED;
 }
 
-
-struct Halfedge *ELright(he)
-struct Halfedge *he;
+struct Halfedge *ELright(struct Halfedge *he)
 {
 	return (he -> ELright);
 }
 
-struct Halfedge *ELleft(he)
-struct Halfedge *he;
+struct Halfedge *ELleft(struct Halfedge *he)
 {
 	return (he -> ELleft);
 }
 
-
-struct Site *leftreg(he)
-struct Halfedge *he;
+struct Site *leftreg(struct Halfedge *he)
 {
-	if(he -> ELedge == (struct Edge *)NULL) return(bottomsite);
+	if(he -> ELedge == NULL) return(bottomsite);
 	return( he -> ELpm == le ? 
 		he -> ELedge -> reg[le] : he -> ELedge -> reg[re]);
 }
 
-struct Site *rightreg(he)
-struct Halfedge *he;
+struct Site *rightreg(struct Halfedge *he)
 {
-	if(he -> ELedge == (struct Edge *)NULL) return(bottomsite);
+	if(he -> ELedge == NULL) return(bottomsite);
 	return( he -> ELpm == le ? 
 		he -> ELedge -> reg[re] : he -> ELedge -> reg[le]);
 }
 
-
-
+#if __cplusplus
+} /* extern "C" */
+#endif
