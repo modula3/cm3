@@ -387,6 +387,8 @@ along with GCC; see the file COPYING3.  If not see
 #include "ira-int.h"
 #include "dce.h"
 
+// cm3 cm3cg crashes on Linux/x86 host if ira is optimized.
+#pragma GCC optimize ("O1")
 
 struct target_ira default_target_ira;
 struct target_ira_int default_target_ira_int;

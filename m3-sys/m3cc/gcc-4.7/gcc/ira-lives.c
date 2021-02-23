@@ -42,6 +42,9 @@ along with GCC; see the file COPYING3.  If not see
 #include "sparseset.h"
 #include "ira-int.h"
 
+// cm3 cm3cg crashes on Linux/x86 host if ira is optimized.
+#pragma GCC optimize ("O1")
+
 /* The code in this file is similar to one in global but the code
    works on the allocno basis and creates live ranges instead of
    pseudo-register conflicts.  */

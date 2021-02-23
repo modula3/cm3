@@ -41,6 +41,9 @@ along with GCC; see the file COPYING3.  If not see
 #include "params.h"
 #include "ira-int.h"
 
+// cm3 cm3cg crashes on Linux/x86 host if ira is optimized.
+#pragma GCC optimize ("O1")
+
 /* The flags is set up every time when we calculate pseudo register
    classes through function ira_set_pseudo_classes.  */
 static bool pseudo_classes_defined_p = false;
