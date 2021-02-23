@@ -27,16 +27,11 @@ if equal (TARGET, "OS2")
   include_dir ("OS2")
 end
 
-if equal (OS_TYPE, "WIN32") or equal(TARGET, "NT386")
-   or ({"NT", "MINGW", "CYGWIN"} contains TARGET)
-% 2014-02-24 win32 contains hundreds of WINAPI, APIENTRY, and PASCAL calling 
-% conventions.  These all give compile errors on non-windows targets, when
-% building with the release compiler. 
-% When there is a released version of the now-head compiler, (which accepts
-% these for any target,) we could reinstate win32, though it still may not be
-% of any use on non-windows targets.  
-  include_dir ("win32")
-end
+% Declare all of the Win32 types, constants, functions for all platforms.
+% This can be useful, for example, to build mklib hosted on other platforms.
+% Mklib clones some of this as a workaround.
+% Frontend accepts the Win32 calling conventions for all targets, usually ignoring them.
+include_dir ("win32")
 
 include_dir ("unix")
 
