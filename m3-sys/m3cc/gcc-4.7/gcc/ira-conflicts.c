@@ -41,6 +41,9 @@ along with GCC; see the file COPYING3.  If not see
 #include "ira-int.h"
 #include "addresses.h"
 
+// cm3 cm3cg crashes on Linux/x86 host if ira is optimized.
+#pragma GCC optimize ("O1")
+
 /* This file contains code responsible for allocno conflict creation,
    allocno copy creation and allocno info accumulation on upper level
    regions.  */
