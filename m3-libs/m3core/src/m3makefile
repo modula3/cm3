@@ -74,8 +74,8 @@ include_dir ("types")
 % The values could be output by the backend, or even the generated C
 % include the native headers and reference the native symbols.
 %
-LibdExport("hand" & Obj)
-LibdExport("Uconstants" & Obj)
-LibdExport("WinConstants" & Obj)
+LibdExport("hand" & { "WIN32" : ".obj", "POSIX" : ".o"  }{OS_TYPE})
+LibdExport("Uconstants" & { "WIN32" : ".obj", "POSIX" : ".o"  }{OS_TYPE})
+LibdExport("WinConstants" & { "WIN32" : ".obj", "POSIX" : ".o"  }{OS_TYPE})
 
 Library("m3core")
