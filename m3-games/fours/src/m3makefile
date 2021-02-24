@@ -5,6 +5,7 @@
 % Last modified on Tue Aug 27 10:55:43 PDT 1996 by najork
 %      modified on Wed Jun 14 11:59:54 PDT 1995 by kalsow
 
+if HasTrestle()
 
 m3_option ("-times")
 import ("libbuf")
@@ -38,3 +39,5 @@ implementation ("Main")
 m3_option ("-gui")
 Program ("Fours")
 ManPage ("Fours", "1")
+
+end

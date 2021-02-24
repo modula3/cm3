@@ -1,3 +1,5 @@
+if HasTrestle()
+
 dcpane = ".." & SL & ".." & SL & "dcpane"
 dcpaneTarget = dcpane & SL & TARGET
 if stale( dcpaneTarget, dcpaneTarget )
@@ -18,3 +20,5 @@ program("test")
 %  r = q_exec( "." & SL & "test" )
 %  write( CR, "program returned ", r, CR )
 %end
+
+end

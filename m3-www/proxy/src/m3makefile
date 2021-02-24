@@ -1,3 +1,5 @@
+if HasTrestle()
+
 import ("http")
 import ("vbtkit")
 
@@ -7,3 +9,5 @@ bundle ("ProxyBundle")
 implementation ("Proxy")
 
 Program("Proxy")
+
+end

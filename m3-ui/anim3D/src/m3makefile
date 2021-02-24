@@ -5,6 +5,10 @@
 /* Last modified on Thu Oct 12 13:16:26 PDT 1995 by najork                   */
 /*       Created on Thu Mar  3 19:12:25 PST 1994 by najork                   */
 
+if not HasTrestle()
+  build_standalone()
+end
+
 import ("parseparams")
 import ("vbtkit")
 

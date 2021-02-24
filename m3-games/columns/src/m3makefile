@@ -6,6 +6,8 @@
 %      modified on Wed Jan 12 15:55:18 PST 1994 by kalsow
 %      modified on Mon May 04 15:16:48 PDT 1992 by muller
 
+if HasTrestle()
+
 import ("libbuf")
 import ("vbtkit")
 
@@ -43,3 +45,5 @@ implementation ("Main")
 m3_option ("-gui")
 Program ("columns")
 ManPage ("columns", 6)
+
+end

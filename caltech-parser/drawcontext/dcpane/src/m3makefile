@@ -1,3 +1,7 @@
+if not HasTrestle()
+  build_standalone()
+end
+
 import("libm3")
 import("drawcontext")
 import("paneman")

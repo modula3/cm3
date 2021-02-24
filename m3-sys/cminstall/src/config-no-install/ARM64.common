@@ -1,0 +1,3 @@
+readonly TARGET_ARCH = "ARM64"
+readonly TARGET_ENDIAN = "LITTLE"   % { "BIG" OR "LITTLE" }
+readonly WORD_SIZE    = "64BITS"    % { "32BITS" or "64BITS" }

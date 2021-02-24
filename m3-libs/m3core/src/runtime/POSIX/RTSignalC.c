@@ -63,10 +63,9 @@ static void Quit SIGNAL_HANDLER_SIGNATURE;
 static void InstallOneHandler(WORD_T i);
 static void RestoreOneHandler(WORD_T i);
 
-#if defined(__CYGWIN__) || defined(__INTERIX) || defined(__vms) \
-|| (defined(__APPLE__) && defined(__arm))
- 
-/* Revisit Apple/arm and VMS */
+#if defined(__CYGWIN__) || defined(__INTERIX) || defined(__vms)
+
+/* Revisit VMS */
 
 #define GetPC(x) 0
 
@@ -102,8 +101,13 @@ static WORD_T GetPC(void* xcontext)
 #else
     context->uc_mcontext->ss.srr0
 #endif
+#elif defined(__arm__) || defined(__arm64__)
+#if __DARWIN_UNIX03
+    __darwin_arm_thread_state64_get_pc(context->uc_mcontext->__ss)
 #else
-/* arm is dealt with earlier */
+    __darwin_arm_thread_state64_get_pc(context->uc_mcontext->ss)
+#endif
+#else
 #error Unknown __APPLE__ target
 #endif
 

@@ -1,3 +1,7 @@
+if not HasTrestle()
+  build_standalone()
+end
+
 if not defined("TOP")
   TOP = PACKAGE_DIR & SL & ".." 
 end

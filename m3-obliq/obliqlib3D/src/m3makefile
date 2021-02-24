@@ -5,6 +5,10 @@
 /* Last modified on Fri Apr 12 12:23:18 PDT 1996 by najork                   */
 /*       Created on Tue Jan 18 09:44:12 PST 1994 by najork                   */
 
+if not HasTrestle()
+  build_standalone()
+end
+
 import ("anim3D")
 import ("obliqlibanim")
 import ("obliq")
