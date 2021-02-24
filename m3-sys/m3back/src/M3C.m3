@@ -84,7 +84,6 @@ T = M3CG_DoNothing.T BRANDED "M3C.T" OBJECT
         setjmp_id := M3ID.NoID;
         u_setjmp_id := M3ID.NoID;
         vms_setjmp_id := M3ID.NoID;
-        longjmp_id := M3ID.NoID;
         jmpbuf_size_id := M3ID.NoID;
         done_include_setjmp_h := FALSE;
 
@@ -1764,19 +1763,15 @@ VAR name := proc.name;
                   name = self.u_setjmp_id OR
                   name = self.vms_setjmp_id);
     is_alloca := is_common_not_void AND parameter_count = 1 AND name = self.alloca_id;
-    is_longjmp := is_common_not_void AND parameter_count = 2 AND name = self.longjmp_id;
 BEGIN
     (* Omit a few prototypes that the frontend might have slightly wrong,
        e.g. alloca(unsigned int vs. unsigned long vs. unsigned long long)
             vs. compiler intrinsic
        e.g. setjmp(void* ) vs. setjmp(array of something) vs. compiler intrinsic
-       e.g. longjmp(...) vs. compiler intrinsic
-       Though I do not think the Modula-3 code ever references longjmp, really, but uses
-         a C helper instead.
        setjmp must be referenced "inline", cannot be delegated to a C helper (except for a macro).
     *)
     proc.is_setjmp := is_setjmp;
-    proc.omit_prototype := is_setjmp OR is_alloca OR is_longjmp;
+    proc.omit_prototype := is_setjmp OR is_alloca;
                            (* TODO
                            - add CGType.Jmpbuf
                            - #include <setjmp.h> if there are any
@@ -1808,7 +1803,7 @@ BEGIN
     proc.params := NEW(REF ARRAY OF Var_t, proc.parameter_count);
     proc.ForwardDeclareFrameType(); (* TODO do not always do this *)
 
-    IF is_setjmp OR is_longjmp THEN
+    IF is_setjmp THEN
       include_setjmp_h(self);
     END;
 
@@ -2324,7 +2319,6 @@ BEGIN
     self.u_setjmp_id := M3ID.Add("_setjmp"); (* "u" is for underscore; BSD-ism to not save/restore procmask *)
     self.vms_setjmp_id := M3ID.Add("decc$setjmp"); (* see m3middle *)
 
-    self.longjmp_id := M3ID.Add("longjmp"); (* Is this really ever referenced? *)
     self.RTHooks_ReportFault_id := M3ID.Add("RTHooks__ReportFault");
     self.RTHooks_Raise_id := M3ID.Add("RTHooks__Raise");
     self.RTException_Raise_id := M3ID.Add("RTException__Raise");
@@ -2957,7 +2951,7 @@ BEGIN
 END declare_exception;
 
 PROCEDURE include_setjmp_h(self: T) =
-(* Upon importing setjmp or longjmp, include setjmp.h
+(* Upon importing setjmp, include setjmp.h
  *
  * setjmp and maybe jmp_buf, longjmp must be properly declared.
  * For example Visual C++ has an intrinsic setjmp with a
