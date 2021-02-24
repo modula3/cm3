@@ -25,17 +25,17 @@
 extern "C" {
 #endif
 
-struct Site *readone();
-struct Site *nextone();
+Site *readone(void);
+Site *nextone(void);
 
 static int setup=0;
 
 void
-mod3_start()
+mod3_start(void)
 {
   setup=0;
   nsites = 0;
-  sites = (struct Site *) memmalloc(4000*sizeof *sites);
+  sites = (Site*)memmalloc(4000 * sizeof(*sites));
 
   tfl=NULL;
   hfl=NULL;
@@ -46,7 +46,7 @@ mod3_start()
 }
 
 void
-mod3_addsite(struct Point p)
+mod3_addsite(Point p)
 {
   assert(!setup);
   sites[nsites].coord = p;
@@ -56,10 +56,10 @@ mod3_addsite(struct Point p)
     /* let's just free this here, as it is such a large data structure */
 
     /* the following code is wrong anyway (two args to memmalloc) */
-    /* struct Site *newsites = (struct Site *) memmalloc(sites,(nsites+4000)*sizeof*sites); */
+    /* Site *newsites = (Site*)memmalloc(sites,(nsites+4000)*sizeof*sites); */
 
-    struct Site *newsites = (struct Site *) mymalloc((nsites+4000)*sizeof*sites);
-    bcopy(sites,newsites,nsites*sizeof*sites);
+    Site *newsites = (Site*)mymalloc((nsites+4000) * sizeof(*sites));
+    bcopy(sites, newsites, nsites * sizeof(*sites));
 
     /* don't free first time, as the first block as allocated by memmalloc */
     if (nsites!=4000) myfree(sites);
@@ -75,8 +75,8 @@ int scomp(
 const void *p1,
 const void *p2)
 {
-    const struct Point *s1 = (const struct Point*)p1;
-    const struct Point *s2 = (const struct Point*)p2;
+    const Point *s1 = (const Point*)p1;
+    const Point *s2 = (const Point*)p2;
 	if(s1 -> y < s2 -> y) return(-1);
 	if(s1 -> y > s2 -> y) return(1);
 	if(s1 -> x < s2 -> x) return(-1);
@@ -85,7 +85,7 @@ const void *p2)
 }
 
 void
-mod3_setup() 
+mod3_setup(void) 
 {
 int i;
   setup=1;
@@ -95,17 +95,17 @@ xmax=sites[0].coord.x;
 for(i=1; i<nsites; i+=1)
 {	if(sites[i].coord.x < xmin) xmin = sites[i].coord.x;
 	if(sites[i].coord.x > xmax) xmax = sites[i].coord.x;
-};
+}
 ymin = sites[0].coord.y;
 ymax = sites[nsites-1].coord.y;
 }
 
 void
-mod3_delaunay()
+mod3_delaunay(void)
 {	
 int c;
  int i;
-struct Site *(*next)();
+Site *(*next)(void);
 
  assert(setup); 
 triangulate = 1; 
@@ -121,25 +121,25 @@ voronoi(triangulate, next);
 }
 
 void
-clear_triples()
+clear_triples(void)
 {
-  struct Triple *t=triples;
+  Triple *t=triples;
   triples=NULL;
 
   while (t!=NULL) {
-    struct Triple *u=t;
+    Triple *u=t;
     t=t->next;
   }
 
 }
 
-int mod3_gettriple(struct TripleArg *t)
+int mod3_gettriple(TripleArg *t)
 {
   if (!triples) 
     return 0;
   
   {
-    struct Triple *u=triples;
+    Triple *u=triples;
     *t = triples->d;
 
     triples=u->next;
@@ -150,10 +150,10 @@ int mod3_gettriple(struct TripleArg *t)
 }
 
 void
-mod3_voronoi()
+mod3_voronoi(void)
 {	
 int c;
-struct Site *(*next)();
+Site *(*next)(void);
 
  assert(setup); 
 triangulate = 0; 
@@ -164,14 +164,13 @@ siteidx = 0;
 geominit();
 
 voronoi(triangulate, next); 
-
 }
 
 
 /* return a single in-storage site */
-struct Site *nextone()
+Site *nextone(void)
 {
-struct Site *s;
+Site *s;
 if(siteidx < nsites)
 {	s = &sites[siteidx];
 	siteidx += 1;
@@ -179,7 +178,6 @@ if(siteidx < nsites)
 }
 else	return NULL;
 }
-
 
 char *mem=NULL;
 
@@ -201,10 +199,10 @@ char *mem=NULL;
    P.S. I hate C programming!!!!
  */
 
-char *memmalloc(
-     size_t siz)
+char *memmalloc(size_t siz)
 {
-  char *res = (char*)mymalloc(siz+sizeof(char *));
+  /* TODO This reduces alignment. Better to use two pointers. */
+  char *res = (char*)mymalloc(siz + sizeof(char*));
 
   *((char **)res) = mem;
   mem=res;
@@ -213,7 +211,7 @@ char *memmalloc(
 
 /* clear it all out */
 void
-mod3_finish()
+mod3_finish(void)
 {
   char *q;
   

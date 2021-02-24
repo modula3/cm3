@@ -20,15 +20,23 @@
 extern "C" {
 #endif
 
-typedef unsigned long bool_var_t;
+typedef size_t bool_var_t;
+
+struct bool_t;
+struct rootlist;
+struct triple;
+
+typedef struct bool_t bool_t;
+typedef struct rootlist rootlist;
+typedef struct triple triple;
 
 /* do not rearrange order of fields! */
-typedef struct bool_t {
-  struct bool_t *l, *r;		/* left, right links */
-  struct bool_t *next;		/* next ptr, for hashtable */
+struct bool_t {
+  bool_t *l, *r;		/* left, right links */
+  bool_t *next;		/* next ptr, for hashtable */
   bool_var_t id;		/* variable, if non-leaf, value if leaf. */
   unsigned int ref:14;		/* refcount */
-} bool_t;
+};
 
 #ifdef BOOL_INTERNAL_H
 
@@ -44,7 +52,7 @@ typedef struct bool_t {
 #define ISLEAF(b)      (((b)->id & (1UL << HIBIT_OFFSET)) ? 1 : 0)
  /* True if "b" is a leaf */
 
-#define ASSIGN_LEAF(b,n) ((b)->id = ((b)->id & ~(1UL<<HIBIT_OFFSET))|(((unsigned long)n) << HIBIT_OFFSET))
+#define ASSIGN_LEAF(b,n) ((b)->id = ((b)->id & ~(1UL<<HIBIT_OFFSET))|(((size_t)n) << HIBIT_OFFSET))
  /* assign to the "leaf" bit. */
 
 #define REF(b)         ((b)->ref)
@@ -75,72 +83,72 @@ enum triple_operations_t {
 #define BOOL_MAXOP 7
 
 typedef struct {
-  unsigned long nelements;	/* number of elements in the hashtable */
-  unsigned long nbuckets;	/* number of buckets */
+  size_t nelements;	/* number of elements in the hashtable */
+  size_t nbuckets;	/* number of buckets */
   bool_t **bucket;		/* the buckets */
 } pairhash_t;
 
-struct triple {			/* triple for hashing */
+struct triple { /* triple for hashing */
   bool_t *v1, *v2, *v3;
-  struct triple *next;
+  triple *next;
 };
 
 typedef struct {
-  unsigned long nbuckets;
-  unsigned long nelements;
-  struct triple **bucket;
+  size_t nbuckets;
+  size_t nelements;
+  triple **bucket;
 } triplehash_t;			/* triple hash table */
 
 struct rootlist {
   bool_t *b;
-  struct rootlist *next;
+  rootlist *next;
 }; 
 
 typedef struct {
-  unsigned long nvar;		/* number of variables */
-  unsigned long totvar;		/* total number of variables */
+  size_t nvar;		/* number of variables */
+  size_t totvar;		/* total number of variables */
   pairhash_t **H;		/* hashtable for each variable */
   triplehash_t *TH[BOOL_MAXOP];	/* hashtable for (a,b)->c values */
   bool_t *True, *False;
-  struct rootlist *roots;	/* roots */
+  rootlist *roots;	/* roots */
 } BOOL_T;
 
 typedef struct {
   bool_var_t *v;
-  unsigned long n;
+  size_t n;
 } bool_list_t;			/* sorted list of variables */
 
-extern BOOL_T *bool_init (void);
+BOOL_T *bool_init (void);
 
-extern bool_t *bool_true (BOOL_T *);
-extern bool_t *bool_false (BOOL_T *);
-extern bool_t *bool_newvar (BOOL_T *);
-extern bool_t *bool_var (BOOL_T *, bool_var_t);
+bool_t *bool_true (BOOL_T *);
+bool_t *bool_false (BOOL_T *);
+bool_t *bool_newvar (BOOL_T *);
+bool_t *bool_var (BOOL_T *, bool_var_t);
 
-extern bool_t *bool_and (BOOL_T *, bool_t *, bool_t *);
-extern bool_t *bool_or (BOOL_T *, bool_t *, bool_t *);
-extern bool_t *bool_xor (BOOL_T *, bool_t *, bool_t *);
-extern bool_t *bool_not (BOOL_T *, bool_t *);
-extern bool_t *bool_copy  (BOOL_T *, bool_t *);
-extern bool_t *bool_implies (BOOL_T *, bool_t *, bool_t *);
+bool_t *bool_and (BOOL_T *, bool_t *, bool_t *);
+bool_t *bool_or (BOOL_T *, bool_t *, bool_t *);
+bool_t *bool_xor (BOOL_T *, bool_t *, bool_t *);
+bool_t *bool_not (BOOL_T *, bool_t *);
+bool_t *bool_copy  (BOOL_T *, bool_t *);
+bool_t *bool_implies (BOOL_T *, bool_t *, bool_t *);
 
-extern bool_t *bool_maketrue (BOOL_T *, bool_t *, bool_t *);
-extern bool_t *bool_makefalse (BOOL_T *, bool_t *, bool_t *);
+bool_t *bool_maketrue (BOOL_T *, bool_t *, bool_t *);
+bool_t *bool_makefalse (BOOL_T *, bool_t *, bool_t *);
 
-extern bool_t *bool_substitute (BOOL_T *, bool_list_t *, bool_list_t *, 
+bool_t *bool_substitute (BOOL_T *, bool_list_t *, bool_list_t *,
 				bool_t *);
-extern bool_t *bool_exists (BOOL_T *, bool_list_t *, bool_t *);
-extern bool_t *bool_exists2 (BOOL_T *, bool_list_t *, bool_t *, bool_t *);
-extern bool_list_t *bool_qlist (BOOL_T *, unsigned long, bool_var_t *);
+bool_t *bool_exists (BOOL_T *, bool_list_t *, bool_t *);
+bool_t *bool_exists2 (BOOL_T *, bool_list_t *, bool_t *, bool_t *);
+bool_list_t *bool_qlist (BOOL_T *, size_t, bool_var_t *);
 
-extern void bool_free (BOOL_T *, bool_t *);
-extern void bool_gc (BOOL_T *);
+void bool_free (BOOL_T *, bool_t *);
+void bool_gc (BOOL_T *);
 
-extern void bool_print (bool_t *);
-extern void bool_info (BOOL_T *B);
-extern int bool_getid(bool_t *b);
+void bool_print (bool_t *);
+void bool_info (BOOL_T *B);
+int bool_getid(bool_t *b);
 
-extern int bool_isleaf (bool_t *b);
+int bool_isleaf (bool_t *b);
 
 #define bool_topvar(b) ((b)->id)
 

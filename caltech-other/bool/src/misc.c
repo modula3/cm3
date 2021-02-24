@@ -32,12 +32,13 @@ void fatal_error (const char *s, ...)
   exit (1);
 }
 
-
 char *Strdup (char *s)
 {
   char *t;
-  MALLOC (t, char, strlen(s)+1);
-  strcpy (t, s);
+  size_t length;
+  length = strlen(s) + 1;
+  MALLOC (t, char, length);
+  memcpy (t, s, length);
   return t;
 }
 

@@ -9,17 +9,14 @@ extern "C" {
    Performance suffers if they are wrong; better to make nsites,
    deltax, and deltay too big than too small.  (?) */
 void
-voronoi(
-int triangulate,
-struct Site *(*nextsite)())
+voronoi(int triangulate, Site *(*nextsite)(void))
 {
-struct Site *newsite, *bot, *top, *temp, *p;
-struct Site *v;
-struct Point newintstar;
+Site *newsite, *bot, *top, *temp, *p;
+Site *v;
+Point newintstar;
 int pm;
-struct Halfedge *lbnd, *rbnd, *llbnd, *rrbnd, *bisector;
-struct Edge *e;
-
+Halfedge *lbnd, *rbnd, *llbnd, *rrbnd, *bisector;
+Edge *e;
 
 PQinitialize();
 bottomsite = (*nextsite)();
@@ -31,7 +28,7 @@ while(1)
 {
 	if(!PQempty()) newintstar = PQ_min();
 
-	if (newsite != (struct Site *)NULL 
+	if (newsite != NULL
 	   && (PQempty() 
 		 || newsite -> coord.y < newintstar.y
 	 	 || (newsite->coord.y == newintstar.y 
@@ -47,13 +44,13 @@ while(1)
 		if ((p = intersect(lbnd, bisector)) != NULL)
 		{	PQdelete(lbnd);
 			PQinsert(lbnd, p, dist(p,newsite));
-		};
+		}
 		lbnd = bisector;
 		bisector = HEcreate(e, re);
 		ELinsert(lbnd, bisector);
 		if ((p = intersect(bisector, rbnd)) != NULL)
 		{	PQinsert(bisector, p, dist(p,newsite));	
-		};
+		}
 		newsite = (*nextsite)();	
 	}
 	else if (!PQempty()) 
@@ -82,18 +79,18 @@ while(1)
 		if((p = intersect(llbnd, bisector)) != NULL)
 		{	PQdelete(llbnd);
 			PQinsert(llbnd, p, dist(p,bot));
-		};
+		}
 		if ((p = intersect(bisector, rrbnd)) != NULL)
 		{	PQinsert(bisector, p, dist(p,bot));
-		};
+		}
 	}
 	else break;
-};
+}
 
 for(lbnd=ELright(ELleftend); lbnd != ELrightend; lbnd=ELright(lbnd))
 	{	e = lbnd -> ELedge;
 		out_ep(e);
-	};
+	}
 }
 
 #if __cplusplus

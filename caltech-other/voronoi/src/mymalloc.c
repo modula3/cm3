@@ -49,15 +49,17 @@ static int mymalloc_where=0; /* for future use */
 static int mblocks=0,fblocks=0,mbytes=0,fbytes=0;
 
 /* this is a private data structure */
+struct mtabent;
+typedef struct mtabent mtabent;
 
-typedef struct mtabent {
+struct mtabent {
   void *address;
   size_t size;
   int where;
-  struct mtabent *next;
+  mtabent *next;
   char *file;
   int line;
-} mtabent;
+};
 
 static   mtabent *mallocs=NULL;
 

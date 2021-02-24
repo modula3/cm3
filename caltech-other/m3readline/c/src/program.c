@@ -35,7 +35,6 @@ install_int_handler(void) { signal(SIGINT, SIG_IGN); signal(SIGTTOU, SIG_IGN); s
 static void
 deinstall_int_handler(void) { signal(SIGINT, NULL); }
 
-
 /**********************************************************************/
 
 void
@@ -47,7 +46,6 @@ fatal(const char *whatfailed)
 }
 
 int debug=0;
-
 
 /**********************************************************************/
 
@@ -64,10 +62,13 @@ readline_callback(char *r_line)
   rl_callback_handler_remove();
 }
 
-typedef struct inelem {
+struct inelem;
+typedef struct inelem inelem;
+
+struct inelem {
   char *data;
-  struct inelem *next, *prev;
-} inelem;
+  inelem *next, *prev;
+};
 
 void 
 mainloop2(int fd)
@@ -203,7 +204,6 @@ mainloop2(int fd)
     }
   }
 }
-  
 
 int 
 main(int argc, const char **argv) 
@@ -235,5 +235,3 @@ main(int argc, const char **argv)
   mainloop2(s);
   exit(0);
 }
-
-

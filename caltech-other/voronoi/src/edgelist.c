@@ -9,13 +9,13 @@ static int ntry, totalsearch;
 
 /*int ELhashsize;*/
 void
-ELinitialize()
+ELinitialize(void)
 {
 int i;
 	ELhashsize = 2 * sqrt_nsites;
 
 
-	ELhash = (struct Halfedge **) memmalloc ( sizeof *ELhash * ELhashsize);
+	ELhash = (Halfedge**)memmalloc(sizeof *ELhash * ELhashsize);
 	for(i=0; i<ELhashsize; i +=1) ELhash[i] = NULL;
 	ELleftend = HEcreate(NULL, 0);
 	ELrightend = HEcreate(NULL, 0);
@@ -30,17 +30,17 @@ int i;
 #define HALLOC 100
 static int hp=0;
 
-struct Halfedge *HEcreate(
-struct Edge *e,
+Halfedge *HEcreate(
+Edge *e,
 int pm)
 {
-  struct Halfedge *answer;
+  Halfedge *answer;
  
   if (!hfl || hp==HALLOC) {
-    hfl=(struct Halfedge *)memmalloc(sizeof(struct Halfedge)*HALLOC);
+    hfl = (Halfedge*)memmalloc(sizeof(Halfedge) * HALLOC);
     hp=0;
   }
-  answer=(struct Halfedge *)hfl+(hp++);
+  answer=(Halfedge *)hfl+(hp++);
 
 	answer -> ELedge = e;
 	answer -> ELpm = pm;
@@ -51,8 +51,8 @@ int pm)
 
 void
 ELinsert(
-struct	Halfedge *lb,
-struct	Halfedge *new_)
+Halfedge *lb,
+Halfedge *new_)
 {
 	new_ -> ELleft = lb;
 	new_ -> ELright = lb -> ELright;
@@ -61,9 +61,9 @@ struct	Halfedge *new_)
 }
 
 /* Get entry from hash table, pruning any deleted nodes */
-struct Halfedge *ELgethash(int b)
+Halfedge *ELgethash(int b)
 {
-struct Halfedge *he;
+Halfedge *he;
 
 	if(b<0 || b>=ELhashsize) return NULL;
 	he = ELhash[b]; 
@@ -75,10 +75,10 @@ struct Halfedge *he;
 	return NULL;
 }	
 
-struct Halfedge *ELleftbnd(struct Point *p)
+Halfedge *ELleftbnd(Point *p)
 {
 int i, bucket;
-struct Halfedge *he;
+Halfedge *he;
 
 /* Use hash table to get close to desired halfedge */
 	bucket = (p->x - xmin)/deltax * ELhashsize;
@@ -89,9 +89,9 @@ struct Halfedge *he;
 	{   for(i=1; 1 ; i += 1)
 	    {	if ((he=ELgethash(bucket-i)) != NULL) break;
 		if ((he=ELgethash(bucket+i)) != NULL) break;
-	    };
+	    }
 	totalsearch += i;
-	};
+	}
 	ntry += 1;
 /* Now search linear list of halfedges for the corect one */
 	if (he==ELleftend  || (he != ELrightend && right_of(he,p)))
@@ -105,38 +105,38 @@ struct Halfedge *he;
 	if(bucket > 0 && bucket <ELhashsize-1)
 	{
 		ELhash[bucket] = he;
-	};
+	}
 	return (he);
 }
 
 	/* This delete routine can't reclaim node, since pointers from hash
    table may be present.   */
 void
-ELdelete(struct Halfedge *he)
+ELdelete(Halfedge *he)
 {
 	(he -> ELleft) -> ELright = he -> ELright;
 	(he -> ELright) -> ELleft = he -> ELleft;
-	he -> ELedge = (struct Edge *)DELETED;
+	he -> ELedge = (Edge*)DELETED;
 }
 
-struct Halfedge *ELright(struct Halfedge *he)
+Halfedge *ELright(Halfedge *he)
 {
 	return (he -> ELright);
 }
 
-struct Halfedge *ELleft(struct Halfedge *he)
+Halfedge *ELleft(Halfedge *he)
 {
 	return (he -> ELleft);
 }
 
-struct Site *leftreg(struct Halfedge *he)
+Site *leftreg(Halfedge *he)
 {
 	if(he -> ELedge == NULL) return(bottomsite);
 	return( he -> ELpm == le ? 
 		he -> ELedge -> reg[le] : he -> ELedge -> reg[re]);
 }
 
-struct Site *rightreg(struct Halfedge *he)
+Site *rightreg(Halfedge *he)
 {
 	if(he -> ELedge == NULL) return(bottomsite);
 	return( he -> ELpm == le ? 
