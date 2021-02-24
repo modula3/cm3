@@ -31,7 +31,7 @@ PROCEDURE  GetCurrentCoroutine() : UNTRACED REF INTEGER;
 PROCEDURE  SetCurrentCoroutine(c : UNTRACED REF INTEGER);
 
 <*EXTERNAL ContextC__InitC*>
-PROCEDURE  InitC(); (* must call this before any of the other routines in this interface *)
+PROCEDURE  InitC(stack: ADDRESS); (* must call this before any of the other routines in this interface *)
 
 <*EXTERNAL ContextC__SetLink*>  
 PROCEDURE SetLink(tgt, src : T); (* set return link of tgt to be src *)

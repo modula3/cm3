@@ -12,16 +12,9 @@
  * and the POSIX code by DEC-SRC.
  */
 
-#include <ucontext.h>
-#include <pthread.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <sys/mman.h>
-#include <errno.h>
-#include <stdio.h>
-#include <string.h>
-#include <signal.h>
-#include <assert.h>
+#include "m3core.h"
+
+M3EXTERNC_BEGIN
 
 #define M3_RETRY(expr)                                  \
   r = (expr);                                           \
@@ -37,13 +30,11 @@
     }                                                   \
   }
 
-#define INTEGER  long int
-#define WORD_T   unsigned long int
 #define ARG      void *
 
 #define DEBUG 1
 
-#define stack_grows_downward 1 /* AMD64_LINUX */
+static int stack_grows_downward;
 
 typedef struct {
   void (*p)(ARG);
@@ -76,15 +67,15 @@ static void
 trampoline(int lo, int hi)
 {
   /* take two 32-bit pointers as ints and turn them into a 64-bit pointer */
-  Closure *cl = (Closure *)(((unsigned long)(unsigned int)hi << 32UL) | (unsigned long)(unsigned int)lo);
+  Closure *cl = (Closure *)(((size_t)(unsigned)hi << 32UL) | (size_t)(unsigned)lo);
   
   cl->p(cl->arg);
 }
   
-static void *
+static Context*
 ContextC__New(void)
 {
-  Context *res=calloc(1,sizeof(Context));
+  Context *res=(Context*)calloc(1,sizeof(Context));
   res->alive = 1;
   return res;
 }
@@ -101,8 +92,7 @@ cleanup(int lo, int hi)
   /* this is the cleanup routine
      it is called when a context falls off the end (apply ends) 
   */
-  
-  Context *c = (Context *)(((unsigned long)(unsigned int)hi << 32UL) | (unsigned long)(unsigned int)lo);
+  Context *c = (Context *)(((size_t)(unsigned)hi << 32UL) | (size_t)(unsigned)lo);
 
   c->alive = 0;
 
@@ -125,7 +115,6 @@ cleanup(int lo, int hi)
      of CoroutineUcontext.Run .  That would probably be simpler and work
      OK, too.
   */
-  
   setcontext(c->uc.uc_link);
 }
 
@@ -158,12 +147,11 @@ ContextC__MakeContext(void      (*p)(ARG),
    * allocate three extra pages.  Two pages for the redzone and one for 
    * the arg pointer 
    */
-
   pages = (size + pagesize - 1) / pagesize + 3;
   size = pages * pagesize;
-  sp = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0);
+  sp = (char*)mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0);
 
-  if (DEBUG) fprintf(stderr, "creating coroutine stack %#lx\n", sp);
+  if (DEBUG) fprintf(stderr, "creating coroutine stack %p\n", sp);
   
   if (sp == NULL) goto Error;
 
@@ -205,7 +193,6 @@ ContextC__MakeContext(void      (*p)(ARG),
    * in other words, the sp given to the garbage collector will include
    * arg but the sp given to swapcontext will not 
    */
-
   if (stack_grows_downward) {
     *(void **)(slim - sizeof(void *)) = arg;
 
@@ -229,23 +216,23 @@ ContextC__MakeContext(void      (*p)(ARG),
 
   /* define the post context for cleanup */
   c->pc.uc_stack = c->uc.uc_stack; /* reuse stack */
-  c->pc.uc_link = (void *)0;       /* will never go through here */
+  c->pc.uc_link = (ucontext_t*)0;  /* will never go through here */
   
   c->uc.uc_link = &(c->pc);        /* set up cleanup linkage */
 
-  lo = (int)(unsigned long)c;
-  hi = (int)(((unsigned long)c) >> 32UL);
+  lo = (int)(size_t)c;
+  hi = (int)(((size_t)c) >> 32UL);
   makecontext(&(c->pc), (void (*)())cleanup, 2, lo, hi);
   
-  lo = (int)(unsigned long)cl;
-  hi = (int)(((unsigned long)cl) >> 32UL);
+  lo = (int)(size_t)cl;
+  hi = (int)(((size_t)cl) >> 32UL);
   makecontext(&(c->uc), (void (*)())trampoline, 2, lo, hi);
 
   return c;
 Error:
   er = errno;
-  if (c) free(c);
-  if (cl) free(cl);
+  free(c);
+  free(cl);
   if (sp) munmap(sp, size);
   errno = er;
   return NULL;
@@ -256,7 +243,7 @@ ContextC__SwapContext (Context *from, Context *to)
 {
   if(!to->alive) {
     fprintf(stderr,
-            "WARNING: calling dead coroutine context %#lx\n",to);
+            "WARNING: calling dead coroutine context %p\n",to);
     return;
   }
     
@@ -273,9 +260,9 @@ ContextC__DisposeContext (Context *c)
 void *
 ContextC__Current(void)
 {
-  Context *new=ContextC__New();
-  if (getcontext(&(new->uc))) abort();
-  return new;
+  Context *context=ContextC__New();
+  if (getcontext(&(context->uc))) abort();
+  return context;
 }
 
 static pthread_key_t current_coroutine;
@@ -296,9 +283,19 @@ ContextC__GetCurrentCoroutine(void)
 }
 
 void
-ContextC__InitC(void) /* should be void *bottom? */
+ContextC__InitC(int* stack)
 {
   int r = { 0 };
+  stack_grows_downward = (stack > &r);
+#if defined(__APPLE__)   || \
+    defined(__FreeBSD__) || \
+    defined(__INTERIX)   || \
+    defined(__i386__)    || \
+    defined(__x86_64__)  || \
+    defined(_AMD64_)     || \
+    defined(_X86_)
+    assert(stack_grows_downward);
+#endif
   M3_RETRY(pthread_key_create(&current_coroutine, NULL)); assert(r == 0);
 }
 
@@ -312,17 +309,23 @@ ContextC__GetStackBase(Context *c)
    it is essential to the operation of the program that these variables
    are indeed placed on the stack */
 
+#if __cplusplus
+#define AUTO /* nothing */
+#else
+#define AUTO auto
+#endif
+
 static void *
 stack_here(void)
 {
-  auto char *top=(char *)&top;
+  AUTO char *top=(char *)&top;
   return top;
 }
       
 static void *
 ContextC__PushContext1(Context *c)
 {
-  auto ucontext_t uc=c->uc; /* write it on the stack */
+  AUTO ucontext_t uc=c->uc; /* write it on the stack */
   void *top;
 
   top = stack_here();
@@ -334,7 +337,7 @@ ContextC__PushContext1(Context *c)
 void *
 ContextC__PushContext(Context *c)
 {
-  auto char a[STACK_GAP];
+  AUTO char a[STACK_GAP];
 
   /* the purpose of the gap is to allow other routines to do some small
      amount of work between when we return and the next GC event,
@@ -345,4 +348,4 @@ ContextC__PushContext(Context *c)
   return ContextC__PushContext1(c);
 }
 
-
+M3EXTERNC_END
