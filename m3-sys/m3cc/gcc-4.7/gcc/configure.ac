@@ -331,6 +331,8 @@ GCC_STDINT_TYPES
 # * C++11 narrowing conversions in { }
 # So, we only use -pedantic if we can disable those warnings.
 
+# cm3: -pedantic is patched out as it causes very many warnings e.g. for __FUNCTION__
+
 ACX_PROG_CC_WARNING_OPTS(
 	m4_quote(m4_do([-W -Wno-missing-field-initializers -Wall -Wno-narrowing -Wwrite-strings -Wcast-qual])), [loose_warn])
 ACX_PROG_CC_WARNING_OPTS(
