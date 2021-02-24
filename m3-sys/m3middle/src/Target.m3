@@ -130,6 +130,7 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
        Target-variation is to be reduced and is not any target-specific optimization here.
     *)
 
+    (* TODO aligned_procedures is long obsolete; remove *)
     Aligned_procedures := FALSE; (* Use the safe default for all targets. *)
 
     (* add the system-specific customization *)
@@ -180,9 +181,11 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
         Setjmp := "decc$setjmp";
     END;
 
-    IF System IN SET OF Systems{Systems.AMD64_NT} THEN
+    IF System IN SET OF Systems{Systems.AMD64_NT, Systems.ARM64_NT} THEN
          Setjmp := "setjmp";
     END;
+
+    (* TODO jumpbuf_size is long obsolete; remove *)
 
     CASE System OF
 

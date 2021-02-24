@@ -66,7 +66,7 @@ T = M3CG_DoNothing.T BRANDED "M3C.T" OBJECT
         Err    : ErrorHandler := DefaultErrorHandler;
         anonymousCounter := -1;
         c      : Wr.T := NIL;
-        debug := 1; (* 1-4 *)
+        debug := 1; (* 1-5 >4 is to stdio *)
         stack  : RefSeq.T := NIL;
         params : TextSeq.T := NIL;
         op_index := 0;
@@ -83,7 +83,10 @@ T = M3CG_DoNothing.T BRANDED "M3C.T" OBJECT
         alloca_id := M3ID.NoID;
         setjmp_id := M3ID.NoID;
         u_setjmp_id := M3ID.NoID;
+        vms_setjmp_id := M3ID.NoID;
         longjmp_id := M3ID.NoID;
+        jmpbuf_size_id := M3ID.NoID;
+        done_include_setjmp_h := FALSE;
 
         (* labels *)
         labels_min := FIRST(Label);
@@ -1668,6 +1671,7 @@ TYPE Proc_t = M3CG.Proc OBJECT
     uplevels := FALSE;
     is_exception_handler := FALSE;
     is_RTHooks_Raise := FALSE;
+    is_setjmp := FALSE;
     omit_prototype := FALSE;
     is_RTException_Raise := FALSE;
     no_return := FALSE;
@@ -1748,28 +1752,35 @@ VAR name := proc.name;
                  AND (proc.exported = TRUE OR proc.imported = TRUE)
                  AND proc.level = 0;
     is_common_void := is_common AND proc.return_type = CGType.Void;
+    is_common_not_void := is_common AND NOT is_common_void;
     is_RTHooks_ReportFault := is_common_void
                               AND name = self.RTHooks_ReportFault_id
                               AND parameter_count = 2;
     is_RTHooks_AssertFailed := is_common_void
                                AND name = self.RTHooks_AssertFailed_id
                                AND parameter_count = 3;
+    is_setjmp := is_common_not_void AND parameter_count = 1 AND
+                 (name = self.setjmp_id OR
+                  name = self.u_setjmp_id OR
+                  name = self.vms_setjmp_id);
+    is_alloca := is_common_not_void AND parameter_count = 1 AND name = self.alloca_id;
+    is_longjmp := is_common_not_void AND parameter_count = 2 AND name = self.longjmp_id;
 BEGIN
     (* Omit a few prototypes that the frontend might have slightly wrong,
        e.g. alloca(unsigned int vs. unsigned long vs. unsigned long long)
             vs. compiler intrinsic
-       e.g. setjmp(void* ) vs. setjmp(array) vs. compiler intrinsic
+       e.g. setjmp(void* ) vs. setjmp(array of something) vs. compiler intrinsic
        e.g. longjmp(...) vs. compiler intrinsic
+       Though I do not think the Modula-3 code ever references longjmp, really, but uses
+         a C helper instead.
+       setjmp must be referenced "inline", cannot be delegated to a C helper (except for a macro).
     *)
-    proc.omit_prototype := is_common
-                           AND ((parameter_count = 1
-                                 AND (name = self.alloca_id OR name = self.setjmp_id OR name = self.u_setjmp_id))
-                             OR (parameter_count = 2 AND name = self.longjmp_id));
+    proc.is_setjmp := is_setjmp;
+    proc.omit_prototype := is_setjmp OR is_alloca OR is_longjmp;
                            (* TODO
                            - add CGType.Jmpbuf
                            - #include <setjmp.h> if there are any
-                             calls to setjmp/_setjmp/longjmp
-                             or instances of CGType.Jmpbuf
+                             instances of CGType.Jmpbuf
                            - render CGType.Jmpbuf as "jmp_buf" *)
     proc.is_RTHooks_Raise := is_common_void
                              AND name = self.RTHooks_Raise_id
@@ -1796,6 +1807,11 @@ BEGIN
     proc.block_stack := NEW(RefSeq.T).init();
     proc.params := NEW(REF ARRAY OF Var_t, proc.parameter_count);
     proc.ForwardDeclareFrameType(); (* TODO do not always do this *)
+
+    IF is_setjmp OR is_longjmp THEN
+      include_setjmp_h(self);
+    END;
+
     RETURN proc;
 END Proc_Init;
 
@@ -1806,7 +1822,6 @@ PROCEDURE Proc_Locals_Size(p: Proc_t): INTEGER = BEGIN RETURN p.locals.size(); E
 PROCEDURE Proc_Locals(p: Proc_t; i: INTEGER): Var_t = BEGIN RETURN NARROW(p.locals.get(i), Var_t); END Proc_Locals;
 
 (*---------------------------------------------------------------------------*)
-
 
 CONST Prefix = ARRAY OF TEXT {
 (* It is unfortunate to #include anything -- slows down compilation;
@@ -1925,14 +1940,6 @@ CONST Prefix = ARRAY OF TEXT {
 (*"typedef unsigned int size_t;",*)
 "#include <stddef.h>", (* try to remove this, it is slow -- need size_t *)
 "#endif",
-
-(* setjmp and maybe jmp_buf, longjmp must be properly declared.
-For example Visual C++ has an intrinsic setjmp with a
-compiler-produced second parameter that is only passed
-if you include setjmp.h, and without it, longjmp crashes.
-In future, only include in files that need it, or replace
-exception handling with optimized C++ *)
-"#include <setjmp.h>",
 
 "/* http://c.knowcoding.com/view/23699-portable-alloca.html */",
 "/* Find a good version of alloca. */",
@@ -2313,9 +2320,11 @@ BEGIN
     self.comment("M3_WORDSIZE = ", IntToDec(Target.Word.size));
     self.static_link_id := M3ID.Add("_static_link");
     self.alloca_id := M3ID.Add("alloca");
-    self.setjmp_id := M3ID.Add("setjmp");
-    self.u_setjmp_id := M3ID.Add("_setjmp"); (* "u" is for underscore *)
-    self.longjmp_id := M3ID.Add("longjmp");
+    self.setjmp_id := M3ID.Add("setjmp"); (* portable, but can be slow, saving/restoring procmask *)
+    self.u_setjmp_id := M3ID.Add("_setjmp"); (* "u" is for underscore; BSD-ism to not save/restore procmask *)
+    self.vms_setjmp_id := M3ID.Add("decc$setjmp"); (* see m3middle *)
+
+    self.longjmp_id := M3ID.Add("longjmp"); (* Is this really ever referenced? *)
     self.RTHooks_ReportFault_id := M3ID.Add("RTHooks__ReportFault");
     self.RTHooks_Raise_id := M3ID.Add("RTHooks__Raise");
     self.RTException_Raise_id := M3ID.Add("RTException__Raise");
@@ -2946,6 +2955,25 @@ BEGIN
         x.comment("declare_exception");
     END;
 END declare_exception;
+
+PROCEDURE include_setjmp_h(self: T) =
+(* Upon importing setjmp or longjmp, include setjmp.h
+ *
+ * setjmp and maybe jmp_buf, longjmp must be properly declared.
+ * For example Visual C++ has an intrinsic setjmp with a
+ * compiler-produced second parameter that is only passed
+ * if you include setjmp.h, and without it, longjmp crashes.
+ *
+ * Avoid including setjmp.h unless needed, to speed up compilation.
+ *
+ * In future, replace exception handling with optimized C++.
+ *)
+BEGIN
+  IF NOT self.done_include_setjmp_h THEN
+    print(self, "#include <setjmp.h>\n");
+    self.done_include_setjmp_h := TRUE;
+  END;
+END include_setjmp_h;
 
 (*--------------------------------------------------------- runtime hooks ---*)
 
@@ -6434,13 +6462,18 @@ BEGIN
         t3 := "";
         t4 := "";
         IF direct THEN
-            WITH param = types[index] DO
-                IF param.cgtype # CGType.Struct OR param.typeid = UID_ADDR THEN
-                    t1 := " /* call_helper t1 */ (";
-                    (* TODO type.text *)
-                    t2 := " /* call_helper t2 */ " & param.type_text;
-                    t3 := " /* call_helper t3 */ )(";
-                    t4 := " /* call_helper t4 */ )";
+            (* Fix for setjmp. *)
+            IF index = 0 AND self.proc_being_called.is_setjmp THEN
+                t1 := "*(jmp_buf*)"
+            ELSE
+                WITH param = types[index] DO
+                    IF param.cgtype # CGType.Struct OR param.typeid = UID_ADDR THEN
+                        t1 := " /* call_helper t1 */ (";
+                        (* TODO type.text *)
+                        t2 := " /* call_helper t2 */ " & param.type_text;
+                        t3 := " /* call_helper t3 */ )(";
+                        t4 := " /* call_helper t4 */ )";
+                    END;
                 END;
             END;
             INC(index);
