@@ -21,7 +21,7 @@
 extern "C" {
 #endif
 
-extern void fatal_error (const char *s, ...);
+void fatal_error (const char *s, ...);
 
 #define MALLOC(a,b,c)  do { if(!(a=(b*)malloc(sizeof(b)*(c)))) fatal_error("malloc failed, size=%d", sizeof(b)*(c)); }while(0)
   /* allocate "c" number of elements of type "b" and assign the resulting

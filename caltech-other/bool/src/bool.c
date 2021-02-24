@@ -28,15 +28,15 @@
 extern "C" {
 #endif
 
-#define PTR_TO_INT(b) ((unsigned long)(b))
+#define PTR_TO_INT(b) ((size_t)(b))
 #define PMIN(a,b) ((PTR_TO_INT(a) < PTR_TO_INT(b)) ? a : b)
 #define PMAX(a,b) ((PTR_TO_INT(a) > PTR_TO_INT(b)) ? a : b)
 
 static bool_t *freelist = NULL;
 #ifdef PROFILE
-static unsigned long nfreed = 0;
-static unsigned long nbools = 0;
-static unsigned long extrabools = 0;
+static size_t nfreed = 0;
+static size_t nbools = 0;
+static size_t extrabools = 0;
 #endif
 
 static bool_t *newbool (void)
@@ -88,23 +88,23 @@ static unsigned char T[] = {
   51, 65, 28,144,254,221, 93,189,194,139,112, 43, 71,109,184,209
 };
 
-static triplehash_t *thash_new (unsigned long sz)
+static triplehash_t *thash_new (size_t sz)
 {
   triplehash_t *t;
-  unsigned long i;
+  size_t i;
 
   MALLOC(t,triplehash_t,1);
   t->nelements = 0;
   t->nbuckets = sz;
-  MALLOC(t->bucket,struct triple *,sz);
+  MALLOC(t->bucket, triple*, sz);
   for (i=0;i<sz;i++) t->bucket[i] = NULL;
   return t;
 }
 
-static pairhash_t *hash_new (unsigned long sz)
+static pairhash_t *hash_new (size_t sz)
 {
   pairhash_t *p;
-  unsigned long i;
+  size_t i;
 
   MALLOC(p,pairhash_t,1);
   p->nelements = 0;
@@ -114,11 +114,11 @@ static pairhash_t *hash_new (unsigned long sz)
   return p;
 }
 
-static unsigned long hash (unsigned long sz, bool_t *v1, bool_t *v2)
+static size_t hash (size_t sz, bool_t *v1, bool_t *v2)
 {
   int i;
   unsigned char h1, h2, h3, h4;
-  unsigned long val;
+  size_t val;
   unsigned char *c;
 
   if (sz <= (1<<8)) {
@@ -172,11 +172,11 @@ static unsigned long hash (unsigned long sz, bool_t *v1, bool_t *v2)
 
 static void doublethashtable (triplehash_t *t)
 {
-  struct triple **r;
-  struct triple *p, *u;
-  unsigned long i, j;
+  triple **r;
+  triple *p, *u;
+  size_t i, j;
 
-  MALLOC(r,struct triple *,(t->nbuckets<<1));
+  MALLOC(r, triple*, t->nbuckets<<1);
   t->nbuckets <<=1;
   for (i=0; i < t->nbuckets; i++)
     r[i] = NULL;
@@ -196,7 +196,7 @@ static void doublehashtable (pairhash_t *p)
 {
   bool_t **r;
   bool_t *t, *u;
-  unsigned long i, j;
+  size_t i, j;
 
   MALLOC(r,bool_t*,(p->nbuckets<<1));
   p->nbuckets <<= 1;
@@ -217,8 +217,8 @@ static void doublehashtable (pairhash_t *p)
 
 static bool_t *thash_locate (triplehash_t *t, bool_t *v1, bool_t *v2)
 {
-  unsigned long i;
-  struct triple *v;
+  size_t i;
+  triple *v;
 
   i = hash (t->nbuckets, v1, v2);
   for (v = t->bucket[i]; v; v = v->next)
@@ -229,7 +229,7 @@ static bool_t *thash_locate (triplehash_t *t, bool_t *v1, bool_t *v2)
 
 static bool_t *hash_locate (pairhash_t *p, bool_t *v1, bool_t *v2)
 {
-  unsigned long i;
+  size_t i;
   bool_t *b;
 #ifdef PROFILE
   extrabools++;
@@ -246,14 +246,14 @@ static bool_t *hash_locate (pairhash_t *p, bool_t *v1, bool_t *v2)
 
 static void thash_insert (triplehash_t *t, bool_t *v1, bool_t *v2, bool_t *v3)
 {
-  unsigned long i;
-  struct triple *tr;
+  size_t i;
+  triple *tr;
 
   t->nelements++;
   if ((t->nelements > (t->nbuckets<<2)) && (t->nbuckets<<2) > t->nbuckets)
     doublethashtable (t);
   i = hash (t->nbuckets, v1, v2);
-  MALLOC(tr,struct triple,1);
+  MALLOC(tr,triple,1);
   tr->v1 = v1; tr->v2 = v2; tr->v3 = v3;
   INC_REF (v1); INC_REF (v2); INC_REF (v3);
   tr->next = t->bucket[i];
@@ -262,7 +262,7 @@ static void thash_insert (triplehash_t *t, bool_t *v1, bool_t *v2, bool_t *v3)
 
 static void hash_insert (pairhash_t *p, bool_t *b)
 {
-  unsigned long i;
+  size_t i;
 
   p->nelements ++;
   if ((p->nelements > (p->nbuckets<<2)) && ((p->nbuckets<<2) > p->nbuckets))
@@ -274,7 +274,7 @@ static void hash_insert (pairhash_t *p, bool_t *b)
 
 static void hash_delete (pairhash_t *p, bool_t *b0)
 {
-  unsigned long i;
+  size_t i;
   bool_t *prev, *b;
 
   i = hash (p->nbuckets, b0->l, b0->r);
@@ -302,8 +302,8 @@ static void hash_free (pairhash_t *p)
 
 static void thash_free (BOOL_T *B, triplehash_t *t)
 {
-  unsigned long i;
-  struct triple *p, *u;
+  size_t i;
+  triple *p, *u;
 
   for (i=0; i < t->nbuckets; i++)
     for (p=t->bucket[i]; p; ) {
@@ -325,7 +325,7 @@ static void thash_free (BOOL_T *B, triplehash_t *t)
 /*-------------------------------------------------------------------------
  * return a new BOOL_T structure
  *-----------------------------------------------------------------------*/
-extern BOOL_T *bool_init (void)
+BOOL_T *bool_init (void)
 {
   BOOL_T *B;
   int i;
@@ -356,7 +356,7 @@ extern BOOL_T *bool_init (void)
 /*-------------------------------------------------------------------------
  * return the bdd for "True"
  *-----------------------------------------------------------------------*/
-extern bool_t *bool_true (BOOL_T *B)
+bool_t *bool_true (BOOL_T *B)
 {
   INC_REF(B->True);
   return B->True;
@@ -365,7 +365,7 @@ extern bool_t *bool_true (BOOL_T *B)
 /*-------------------------------------------------------------------------
  * return the bdd for "false"
  *-----------------------------------------------------------------------*/
-extern bool_t *bool_false (BOOL_T *B)
+bool_t *bool_false (BOOL_T *B)
 {
   INC_REF (B->False);
   return B->False;
@@ -374,7 +374,7 @@ extern bool_t *bool_false (BOOL_T *B)
 /*-------------------------------------------------------------------------
  * return the bdd for a new variable
  *-----------------------------------------------------------------------*/
-extern bool_t *bool_newvar (BOOL_T *B)
+bool_t *bool_newvar (BOOL_T *B)
 {
   bool_t *b;
 
@@ -412,7 +412,7 @@ extern bool_t *bool_newvar (BOOL_T *B)
 /*-------------------------------------------------------------------------
  * return bdd for old variable
  *-----------------------------------------------------------------------*/
-extern bool_t *bool_var (BOOL_T *B, bool_var_t v)
+bool_t *bool_var (BOOL_T *B, bool_var_t v)
 {
   bool_t *b;
 
@@ -498,7 +498,7 @@ static bool_t *_bool_and (BOOL_T *B, bool_t *b1, bool_t *b2)
 /*-------------------------------------------------------------------------
  * AND of two bdds
  *-----------------------------------------------------------------------*/
-extern bool_t *bool_and (BOOL_T *B, bool_t *b1, bool_t *b2)
+bool_t *bool_and (BOOL_T *B, bool_t *b1, bool_t *b2)
 {
   bool_t *b;
 
@@ -564,7 +564,7 @@ static bool_t *_bool_or (BOOL_T *B, bool_t *b1, bool_t *b2)
 /*-------------------------------------------------------------------------
  * OR of two bdds
  *-----------------------------------------------------------------------*/
-extern bool_t *bool_or (BOOL_T *B, bool_t *b1, bool_t *b2)
+bool_t *bool_or (BOOL_T *B, bool_t *b1, bool_t *b2)
 {
   bool_t *b;
 
@@ -644,7 +644,7 @@ static bool_t *_bool_xor (BOOL_T *B, bool_t *b1, bool_t *b2)
 /*-------------------------------------------------------------------------
  * XOR of two bdds
  *-----------------------------------------------------------------------*/
-extern bool_t *bool_xor (BOOL_T *B, bool_t *b1, bool_t *b2)
+bool_t *bool_xor (BOOL_T *B, bool_t *b1, bool_t *b2)
 {
   bool_t *b;
 
@@ -713,7 +713,7 @@ static bool_t *_bool_implies (BOOL_T *B, bool_t *b1, bool_t *b2)
 /*-------------------------------------------------------------------------
  * bdd of (b1 => b2)
  *-----------------------------------------------------------------------*/
-extern bool_t *bool_implies (BOOL_T *B, bool_t *b1, bool_t *b2)
+bool_t *bool_implies (BOOL_T *B, bool_t *b1, bool_t *b2)
 {
   bool_t *b;
 
@@ -761,7 +761,7 @@ bool_t *_bool_not (BOOL_T *B, bool_t *b1)
 /*-------------------------------------------------------------------------
  * negation
  *-----------------------------------------------------------------------*/
-extern bool_t *bool_not (BOOL_T *B, bool_t *b1)
+bool_t *bool_not (BOOL_T *B, bool_t *b1)
 {
   bool_t *b;
 
@@ -773,7 +773,7 @@ extern bool_t *bool_not (BOOL_T *B, bool_t *b1)
 /*-------------------------------------------------------------------------
  * copy
  *-----------------------------------------------------------------------*/
-extern bool_t *bool_copy (BOOL_T *B, bool_t *b)
+bool_t *bool_copy (BOOL_T *B, bool_t *b)
 {
   INC_REF (b);
   return b;
@@ -909,10 +909,10 @@ bool_t *bool_makefalse (BOOL_T *B, bool_t *b1, bool_t *v)
 
 
 /*=======================================================================*/
-static void msort (bool_var_t *v, bool_var_t *v1, unsigned long i, 
-		       unsigned long n)
+static void msort (bool_var_t *v, bool_var_t *v1, size_t i,
+		       size_t n)
 {
-  unsigned long j, k, l;
+  size_t j, k, l;
 
   if (n == 0)
     return;
@@ -942,7 +942,7 @@ static void msort (bool_var_t *v, bool_var_t *v1, unsigned long i,
 /*-------------------------------------------------------------------------
  * returns a list of variables
  *-----------------------------------------------------------------------*/
-bool_list_t *bool_qlist (BOOL_T *B, unsigned long n, bool_var_t *v)
+bool_list_t *bool_qlist (BOOL_T *B, size_t n, bool_var_t *v)
 {
   bool_list_t *l;
 
@@ -1014,7 +1014,7 @@ static bool_t *_bool_substitute (BOOL_T *B, bool_list_t *l1, bool_list_t *l2,
  * Assumed:
  *      EVERY VARIABLE FROM "b" is in l1.
  *-----------------------------------------------------------------------*/
-extern bool_t *bool_substitute (BOOL_T *B, bool_list_t *l1, bool_list_t *l2,
+bool_t *bool_substitute (BOOL_T *B, bool_list_t *l1, bool_list_t *l2,
 				bool_t *b)
 {
   bool_t *b1;
@@ -1078,7 +1078,7 @@ static bool_t *_bool_exists (BOOL_T *B, bool_list_t *l1, bool_t *b, int loc)
 /*-------------------------------------------------------------------------
  * existential quantification
  *-----------------------------------------------------------------------*/
-extern bool_t *bool_exists (BOOL_T *B, bool_list_t *l, bool_t *b)
+bool_t *bool_exists (BOOL_T *B, bool_list_t *l, bool_t *b)
 {
   bool_t *b1;
   pairvisited = thash_new (128);
@@ -1090,7 +1090,7 @@ extern bool_t *bool_exists (BOOL_T *B, bool_list_t *l, bool_t *b)
 /*-------------------------------------------------------------------------
  * relational product. fix it later.
  *-----------------------------------------------------------------------*/
-extern bool_t *bool_exists2 (BOOL_T *B, bool_list_t *l, bool_t *b1, bool_t *b2)
+bool_t *bool_exists2 (BOOL_T *B, bool_list_t *l, bool_t *b1, bool_t *b2)
 {
   bool_t *b3, *b4;
   b3 = bool_and (B, b1, b2);
@@ -1102,7 +1102,7 @@ extern bool_t *bool_exists2 (BOOL_T *B, bool_list_t *l, bool_t *b1, bool_t *b2)
 /*-------------------------------------------------------------------------
  * actually free bdds
  *-----------------------------------------------------------------------*/
-extern void bool_gc (BOOL_T *B)
+void bool_gc (BOOL_T *B)
 {
   /* free the internal caches */
   int i;
@@ -1113,19 +1113,19 @@ extern void bool_gc (BOOL_T *B)
   }
 }
 
-extern void bool_addroot (BOOL_T *B, bool_t *b)
+void bool_addroot (BOOL_T *B, bool_t *b)
 {
-  struct rootlist *r;
-  MALLOC (r, struct rootlist, 1);
+  rootlist *r;
+  MALLOC (r, rootlist, 1);
   r->next = B->roots;
   r->b = b;
   B->roots = r;
 }
 
 
-extern void bool_delroot (BOOL_T *B, bool_t *b)
+void bool_delroot (BOOL_T *B, bool_t *b)
 {
-  struct rootlist *r;
+  rootlist *r;
   r = B->roots->next;
   FREE (B->roots);
   B->roots = r;
@@ -1135,7 +1135,7 @@ extern void bool_delroot (BOOL_T *B, bool_t *b)
 /*-------------------------------------------------------------------------
  * free a bdd
  *-----------------------------------------------------------------------*/
-extern void bool_free (BOOL_T *B, bool_t *b)
+void bool_free (BOOL_T *B, bool_t *b)
 {
   if (b == B->True || b == B->False) return;
 #if 0
@@ -1160,7 +1160,7 @@ extern void bool_free (BOOL_T *B, bool_t *b)
 /*-------------------------------------------------------------------------
  * print a bdd
  *-----------------------------------------------------------------------*/
-extern void bool_print (bool_t *b)
+void bool_print (bool_t *b)
 {
   if (ISLEAF(b))
     fprintf (stderr,"%s", b->id & 0x01 ? "T" : "F");
@@ -1177,7 +1177,7 @@ extern void bool_print (bool_t *b)
 /*-------------------------------------------------------------------------
  * print out bdd operating parameters
  *-----------------------------------------------------------------------*/
-extern void bool_info (BOOL_T *B)
+void bool_info (BOOL_T *B)
 {
   printf ("memory per node: %d\n", sizeof(bool_t));
   printf ("max. num. of vars: %ld\n", (1UL<<(sizeof(bool_var_t)*8-1)));
@@ -1197,26 +1197,26 @@ extern void bool_info (BOOL_T *B)
 /*------------------------------------------------------------------------
  * Return True if leaf, False otherwise
  *------------------------------------------------------------------------*/
-extern int bool_isleaf (bool_t *b)
+int bool_isleaf (bool_t *b)
 {
   return ISLEAF(b);
 }
 
-extern int bool_getid(bool_t *b)
+int bool_getid(bool_t *b)
 {
   return (int)b->id;
 }
 
 /* the following routines are used by routines that understand the bool_t
    data structure and wish to traverse it */
-extern bool_t *bool_r(bool_t *b)
+bool_t *bool_r(bool_t *b)
 {
   assert(!ISLEAF(b));
   INC_REF(b->r);
   return b->r;
 }
 
-extern bool_t *bool_l(bool_t *b)
+bool_t *bool_l(bool_t *b)
 {
   assert(!ISLEAF(b));
   INC_REF(b->l);
@@ -1224,12 +1224,12 @@ extern bool_t *bool_l(bool_t *b)
 }
 
 /* this routine allows us to build a literal of a variable in a node */
-extern bool_t *bool_node_var(BOOL_T *B, bool_t *b)
+bool_t *bool_node_var(BOOL_T *B, bool_t *b)
 {
   return bool_var(B,b->id);
 }
 
-extern int bool_refs(BOOL_T *B, bool_t *b)
+int bool_refs(BOOL_T *B, bool_t *b)
 { 
   return b->ref;
 }

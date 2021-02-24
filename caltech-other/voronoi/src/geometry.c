@@ -8,9 +8,9 @@ extern "C" {
 #endif
 
 void
-geominit()
+geominit(void)
 {
-struct Edge e;
+Edge e;
 float sn;
 
 	nvertices = 0;
@@ -24,24 +24,24 @@ float sn;
 #define EALLOC 100
 static int ep=100;
 
-struct Edge *bisect(
-struct	Site *s1,
-struct	Site *s2)
+Edge *bisect(
+Site *s1,
+Site *s2)
 {
   float dx,dy,adx,ady;
-  struct Edge *newedge;
+  Edge *newedge;
   
   if (!efl || ep == EALLOC) {
-    efl=(struct Edge *)memmalloc(sizeof(struct Edge)*EALLOC);
+    efl = (Edge*)memmalloc(sizeof(Edge) * EALLOC);
     ep=0;
   }
    
-  newedge=(struct Edge *)efl+(ep++);
+  newedge=(Edge *)efl+(ep++);
 
 	newedge -> reg[0] = s1;
 	newedge -> reg[1] = s2;
-	newedge -> ep[0] = (struct Site *) NULL;
-	newedge -> ep[1] = (struct Site *) NULL;
+	newedge -> ep[0] = NULL;
+	newedge -> ep[1] = NULL;
 
 	dx = s2->coord.x - s1->coord.x;
 	dy = s2->coord.y - s1->coord.y;
@@ -51,7 +51,7 @@ struct	Site *s2)
 	if (adx>ady)
 	{	newedge -> a = 1.0; newedge -> b = dy/dx; newedge -> c /= dx;}
 	else
-	{	newedge -> b = 1.0; newedge -> a = dx/dy; newedge -> c /= dy;};
+	{	newedge -> b = 1.0; newedge -> a = dx/dy; newedge -> c /= dy;}
 
 	newedge -> edgenbr = nedges;
 	out_bisector(newedge);
@@ -62,15 +62,15 @@ struct	Site *s2)
 #define SALLOC 100
 static int sp=0;
 
-struct Site *intersect(
-struct Halfedge *el1,
-struct Halfedge *el2)
+Site *intersect(
+Halfedge *el1,
+Halfedge *el2)
 {
-struct	Edge *e1,*e2, *e;
-struct  Halfedge *el;
+Edge *e1,*e2, *e;
+ Halfedge *el;
 float d, xint, yint;
 int right_of_site;
-struct Site *v;
+Site *v;
 
 	e1 = el1 -> ELedge;
 	e2 = el2 -> ELedge;
@@ -89,16 +89,16 @@ struct Site *v;
 		e1->reg[1]->coord.x < e2->reg[1]->coord.x) )
 	{	el = el1; e = e1;}
 	else
-	{	el = el2; e = e2;};
+	{	el = el2; e = e2;}
 	right_of_site = xint >= e -> reg[1] -> coord.x;
 	if ((right_of_site && el -> ELpm == le) ||
 	   (!right_of_site && el -> ELpm == re)) return NULL;
 
 	if (!sfl || sp==SALLOC) {
-	  sfl = (struct Site *)memmalloc(sizeof(struct Site)*SALLOC);
+	  sfl = (Site*)memmalloc(sizeof(Site) * SALLOC);
 	  sp=0;
 	}
-	    v = (struct Site *)sfl+(sp++);
+	    v = (Site*)sfl+(sp++);
 	v -> coord.x = xint;
 	v -> coord.y = yint;
 	return(v);
@@ -106,11 +106,11 @@ struct Site *v;
 
 /* returns 1 if p is to right of halfedge e */
 int right_of(
-struct Halfedge *el,
-struct Point *p)
+Halfedge *el,
+Point *p)
 {
-struct Edge *e;
-struct Site *topsite;
+Edge *e;
+Site *topsite;
 int right_of_site, above, fast;
 float dxp, dyp, dxs, t1, t2, t3, yl;
 
@@ -132,13 +132,13 @@ if (e->a == 1.0)
 	{	above = p->x + p->y*e->b > e-> c;
 		if(e->b<0.0) above = !above;
 		if (!above) fast = 1;
-	};
+	}
 	if (!fast)
 	{	dxs = topsite->coord.x - (e->reg[0])->coord.x;
 		above = e->b * (dxp*dxp - dyp*dyp) <
 		        dxs*dyp*(1.0+2.0*dxp/dxs + e->b*e->b);
 		if(e->b<0.0) above = !above;
-	};
+	}
 }
 else  /*e->b==1.0 */
 {	yl = e->c - e->a*p->x;
@@ -146,24 +146,19 @@ else  /*e->b==1.0 */
 	t2 = p->x - topsite->coord.x;
 	t3 = yl - topsite->coord.y;
 	above = t1*t1 > t2*t2 + t3*t3;
-};
+}
 return (el->ELpm==le ? above : !above);
 }
 
 void
-endpoint(
-struct Edge *e,
-int	lr,
-struct Site *s)
+endpoint(Edge *e, int lr, Site *s)
 {
 e -> ep[lr] = s;
 if(e -> ep[re-lr]== NULL) return;
 out_ep(e);
 }
 
-float dist(
-struct Site *s,
-struct Site *t)
+float dist(Site *s, Site *t)
 {
 float dx,dy;
 	dx = s->coord.x - t->coord.x;
@@ -171,7 +166,7 @@ float dx,dy;
 	return(sqrt(dx*dx + dy*dy));
 }
 
-void makevertex(struct Site *v)
+void makevertex(Site *v)
 {
 v -> sitenbr = nvertices;
 nvertices += 1;

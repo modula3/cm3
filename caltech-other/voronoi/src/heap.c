@@ -6,12 +6,9 @@ extern "C" {
 #endif
 
 void
-PQinsert(
-struct Halfedge *he,
-struct Site *v,
-float 	offset)
+PQinsert(Halfedge *he, Site *v, float offset)
 {
-struct Halfedge *last, *next;
+Halfedge *last, *next;
 
 he -> vertex = v;
 he -> ystar = v -> coord.y + offset;
@@ -19,16 +16,16 @@ last = &PQhash[PQbucket(he)];
 while ((next = last -> PQnext) != NULL &&
       (he -> ystar  > next -> ystar  ||
       (he -> ystar == next -> ystar && v -> coord.x > next->vertex->coord.x)))
-	{	last = next;};
+	{	last = next;}
 he -> PQnext = last -> PQnext; 
 last -> PQnext = he;
 PQcount += 1;
 }
 
 void
-PQdelete(struct Halfedge *he)
+PQdelete(Halfedge *he)
 {
-struct Halfedge *last;
+Halfedge *last;
 
 if(he ->  vertex != NULL)
 {	last = &PQhash[PQbucket(he)];
@@ -36,10 +33,10 @@ if(he ->  vertex != NULL)
 	last -> PQnext = he -> PQnext;
 	PQcount -= 1;
 	he -> vertex = NULL;
-};
+}
 }
 
-int PQbucket(struct Halfedge *he)
+int PQbucket(Halfedge *he)
 {
 int bucket;
 
@@ -50,42 +47,41 @@ if (bucket < PQmin) PQmin = bucket;
 return(bucket);
 }
 
-int PQempty()
+int PQempty(void)
 {
 	return(PQcount==0);
 }
 
-struct Point PQ_min()
+Point PQ_min(void)
 {
-struct Point answer;
+Point answer;
 
-	while(PQhash[PQmin].PQnext == NULL) {PQmin += 1;};
+	while(PQhash[PQmin].PQnext == NULL) {PQmin += 1;}
 	answer.x = PQhash[PQmin].PQnext -> vertex -> coord.x;
 	answer.y = PQhash[PQmin].PQnext -> ystar;
-	return (answer);
+	return answer;
 }
 
-struct Halfedge *PQextractmin()
+Halfedge *PQextractmin(void)
 {
-struct Halfedge *curr;
+Halfedge *curr;
 
 	curr = PQhash[PQmin].PQnext;
 	PQhash[PQmin].PQnext = curr -> PQnext;
 	PQcount -= 1;
-	return(curr);
+	return curr;
 }
 
 void
-PQinitialize()
+PQinitialize(void)
 {
-int i; struct Point *s;
+int i; Point *s;
 
 	PQcount = 0;
 	PQmin = 0;
 	PQhashsize = 4 * sqrt_nsites;
 
-
-	PQhash = (struct Halfedge *) memmalloc(PQhashsize * sizeof *PQhash);
+	PQhash = (Halfedge*)memmalloc(PQhashsize * sizeof(*PQhash));
 	for(i=0; i<PQhashsize; i+=1) PQhash[i].PQnext = NULL;
 }
 
