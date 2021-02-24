@@ -481,6 +481,12 @@ PROCEDURE Cleanup(<*UNUSED*>READONLY self : WeakRef.T; ref : REFANY) =
 
 VAR DEBUG := RTParams.IsPresent("debugcoroutines");
 
+PROCEDURE Init() =
+VAR stack: INTEGER;
 BEGIN
-  ContextC.InitC()
+  ContextC.InitC(ADR(stack))
+END Init;
+
+BEGIN
+  Init()
 END CoroutineUcontext.
