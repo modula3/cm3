@@ -4782,13 +4782,13 @@ WARN_PEDANTIC=
 # Do the check with the no- prefix removed from the warning options
 # since gcc silently accepts any -Wno-* option on purpose
 if test "$GCC" = yes; then :
-  { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $CC supports -pedantic -Wlong-long" >&5
-$as_echo_n "checking whether $CC supports -pedantic -Wlong-long... " >&6; }
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $CC supports -Wlong-long" >&5
+$as_echo_n "checking whether $CC supports -Wlong-long... " >&6; }
 if test "${acx_cv_prog_cc_pedantic__Wlong_long+set}" = set; then :
   $as_echo_n "(cached) " >&6
 else
   save_CFLAGS="$CFLAGS"
-CFLAGS="-pedantic -Wlong-long"
+CFLAGS="-Wlong-long"
 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
@@ -4811,7 +4811,7 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $acx_cv_prog_cc_pedantic__Wlong_long" >&5
 $as_echo "$acx_cv_prog_cc_pedantic__Wlong_long" >&6; }
 if test $acx_cv_prog_cc_pedantic__Wlong_long = yes; then :
-  WARN_PEDANTIC="$WARN_PEDANTIC${WARN_PEDANTIC:+ }-pedantic -Wno-long-long"
+  WARN_PEDANTIC="$WARN_PEDANTIC${WARN_PEDANTIC:+ }-Wno-long-long"
 fi
 
 fi

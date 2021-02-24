@@ -141,7 +141,13 @@ So instead we use the macro below and test it against specific values.  */
    gcc at all.  */
 #ifndef GCC_VERSION
 #define GCC_VERSION (__GNUC__ * 1000 + __GNUC_MINOR__)
-#define ENABLE_CHECKING_GCC_VERSION ((GCC_VERSION > 3003) || (!defined(__cplusplus) && (GCC_VERSION > 2007)))
+#if ((GCC_VERSION > 3003) || (!defined(__cplusplus) && (GCC_VERSION > 2007)))
+#define ENABLE_CHECKING_GCC_VERSION 1
+#else
+#define ENABLE_CHECKING_GCC_VERSION 0
+#endif
+#else
+#define ENABLE_CHECKING_GCC_VERSION 0
 #endif /* GCC_VERSION */
 
 #if defined (__STDC__) || defined(__cplusplus) || defined (_AIX) || (defined (__mips) && defined (_SYSTYPE_SVR4)) || defined(_WIN32)

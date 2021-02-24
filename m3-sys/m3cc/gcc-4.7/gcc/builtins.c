@@ -111,7 +111,6 @@ static rtx expand_builtin_frame_address (tree, tree);
 static tree stabilize_va_list_loc (location_t, tree, int);
 static rtx expand_builtin_expect (tree, rtx);
 static bool validate_arg (const_tree, enum tree_code code);
-static bool integer_valued_real_p (tree);
 static bool readonly_data_expr (tree);
 static tree fold_builtin_memory_op (location_t, tree, tree, tree, tree, bool, int);
 static tree fold_builtin_memchr (location_t, tree, tree, tree, tree);
@@ -5004,78 +5003,6 @@ builtin_mathfn_code (const_tree t)
 
   /* Variable-length argument list.  */
   return DECL_FUNCTION_CODE (fndecl);
-}
-
-/* Return true if the floating point expression T has an integer value.
-   We also allow +Inf, -Inf and NaN to be considered integer values.  */
-
-static bool
-integer_valued_real_p (tree t)
-{
-  switch (TREE_CODE (t))
-    {
-    case FLOAT_EXPR:
-      return true;
-
-    case ABS_EXPR:
-    case SAVE_EXPR:
-      return integer_valued_real_p (TREE_OPERAND (t, 0));
-
-    case COMPOUND_EXPR:
-    case MODIFY_EXPR:
-    case BIND_EXPR:
-      return integer_valued_real_p (TREE_OPERAND (t, 1));
-
-    case PLUS_EXPR:
-    case MINUS_EXPR:
-    case MULT_EXPR:
-    case MIN_EXPR:
-    case MAX_EXPR:
-      return integer_valued_real_p (TREE_OPERAND (t, 0))
-	     && integer_valued_real_p (TREE_OPERAND (t, 1));
-
-    case COND_EXPR:
-      return integer_valued_real_p (TREE_OPERAND (t, 1))
-	     && integer_valued_real_p (TREE_OPERAND (t, 2));
-
-    case REAL_CST:
-      return real_isinteger (TREE_REAL_CST_PTR (t), TYPE_MODE (TREE_TYPE (t)));
-
-    case NOP_EXPR:
-      {
-	tree type = TREE_TYPE (TREE_OPERAND (t, 0));
-	if (TREE_CODE (type) == INTEGER_TYPE)
-	  return true;
-	if (TREE_CODE (type) == REAL_TYPE)
-	  return integer_valued_real_p (TREE_OPERAND (t, 0));
-	break;
-      }
-
-    case CALL_EXPR:
-      switch (builtin_mathfn_code (t))
-	{
-	CASE_FLT_FN (BUILT_IN_CEIL):
-	CASE_FLT_FN (BUILT_IN_FLOOR):
-	CASE_FLT_FN (BUILT_IN_NEARBYINT):
-	CASE_FLT_FN (BUILT_IN_RINT):
-	CASE_FLT_FN (BUILT_IN_ROUND):
-	CASE_FLT_FN (BUILT_IN_TRUNC):
-	  return true;
-
-	CASE_FLT_FN (BUILT_IN_FMIN):
-	CASE_FLT_FN (BUILT_IN_FMAX):
-	  return integer_valued_real_p (CALL_EXPR_ARG (t, 0))
- 	    && integer_valued_real_p (CALL_EXPR_ARG (t, 1));
-
-	default:
-	  break;
-	}
-      break;
-
-    default:
-      break;
-    }
-  return false;
 }
 
 /* Return true if VAR is a VAR_DECL or a component thereof.  */

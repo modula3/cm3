@@ -482,7 +482,7 @@ extern int do_dump;		/* (-d) program argument. */
    gengtype source code).  Only useful to debug gengtype itself.  */
 extern int do_debug;		/* (-D) program argument. */
 
-#if ENABLE_CHECKING
+#if 1 /* ENABLE_CHECKING */
 #define DBGPRINTF(Fmt,...) do {if (do_debug)				\
       fprintf (stderr, "%s:%d: " Fmt "\n",				\
 	       lbasename (__FILE__),__LINE__, ##__VA_ARGS__);} while (0)
