@@ -201,6 +201,11 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
        Systems.AMD64_FREEBSD =>
                  Jumpbuf_size              := 12 * Address.size;
 
+    | Systems.ARM64_DARWIN,
+      Systems.ARM64_LINUX,
+      Systems.ARM64_NT =>
+                 EVAL 0;
+
     | Systems.ARM_LINUX,
       Systems.ARMEL_LINUX =>
                  Jumpbuf_size := 64 * Int64.size; (* 392 bytes = 49 * Int64.size on Raspberry Pi *)

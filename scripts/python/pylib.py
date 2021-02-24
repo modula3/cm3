@@ -379,8 +379,9 @@ def _GetAllTargets():
 
     # systematic naming
 
-    for proc in ["ALPHA", "ALPHA32", "ALPHA64", "AMD64", "ARM", "ARMEL", "IA64", "I386", "PPC", "PPC32",
-                 "PPC64", "SPARC", "SPARC32", "SPARC64", "MIPS32", "MIPS64EL", "MIPS64", "PA32", "PA64", "SH"]:
+    for proc in ["ALPHA", "ALPHA32", "ALPHA64", "AMD64", "ARM", "ARMEL", "ARM64",
+                 "IA64", "I386", "PPC", "PPC32", "PPC64", "SPARC", "SPARC32",
+                 "SPARC64", "MIPS32", "MIPS64EL", "MIPS64", "PA32", "PA64", "SH"]:
         for os in ["AIX",  "CE", "CYGWIN", "DARWIN",  "FREEBSD", "HPUX", "INTERIX", "IRIX",
                    "LINUX", "MINGW", "NETBSD", "NT", "OPENBSD", "OSF", "SOLARIS", "VMS"]:
                    # "BEOS", "MSDOS" (DJGPP), "OS2" (EMX), "PLAN9"
@@ -690,8 +691,13 @@ def TargetOnlyHasCBackend(a):
 #
 # But not if target only has C backend.
 #
+# TODO
+#
+_BuildDirC = ["", "c"]["c" in LowercaseArgv]
+#_BuildDirC = ["", "c"]["+c" in LowercaseArgv]
 #_BuildDirC = ["", "c"]["+c" in LowercaseArgv and not TargetOnlyHasCBackend(Target)]
-_BuildDirC = ["", "c"][_CBackend and not TargetOnlyHasCBackend(Target)]
+#_BuildDirC = ["", "c"][_CBackend and not TargetOnlyHasCBackend(Target)]
+#_BuildDirC = ""
 
 #-----------------------------------------------------------------------------
 #

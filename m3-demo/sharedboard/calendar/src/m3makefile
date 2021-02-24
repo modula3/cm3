@@ -2,6 +2,9 @@
 % All rights reserved.
 % See the file COPYRIGHT for a full description.
 %
+
+if HasTrestle()
+
 import ("ui")
 import ("netobj")
 %override ("board", "/udir/umesh/m3/board/3")
@@ -12,4 +15,4 @@ sequence ("Item", "Item")
 implementation ("Calendar")
 program ("calendar")
 
-
+end

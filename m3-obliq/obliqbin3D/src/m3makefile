@@ -5,6 +5,8 @@
 /* Last modified on Tue Aug 22 13:17:45 PDT 1995 by najork                   */
 /*       Created on Tue Jan 18 09:39:01 PST 1994 by najork                   */
 
+if HasTrestle()
+
 import("obliqlibm3") 
 import("obliqlib3D")
 import("obliq")
@@ -13,3 +15,5 @@ implementation("Main")
 
 Program("obliq-3D")
 ManPage("obliq-3D",1)
+
+end

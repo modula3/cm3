@@ -4,6 +4,8 @@
 %
 % Last modified on Wed Jan 12 15:59:09 PST 1994 by kalsow
 
+if HasTrestle()
+
 import ("ui")
 
 implementation ("BadBricks")
@@ -11,3 +13,5 @@ implementation ("BadBricks")
 m3_option ("-gui")
 Program ("BadBricks")
 ManPage ("BadBricks","6")
+
+end

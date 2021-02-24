@@ -4,6 +4,8 @@
 %
 % Last modified on Fri Apr 12 07:37:49 PDT 1996 by mhb
 
+if HasTrestle()
+
 import ("obliqlibm3")
 import ("obliqlibui")
 import ("obliqlibanim")
@@ -13,3 +15,5 @@ import ("obliq")
 Module          ("ObLibWeb")
 implementation  ("Oblet")
 % Module          ("ObMetaEval")
+
+end

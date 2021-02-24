@@ -6,6 +6,10 @@
 %      modified on Tue Dec 21 14:41:55 PST 1993 by kalsow
 %
 
+if HasTrestle()
+
 import ("ui")
 implementation ("Main")
 Program ("Cards")
+
+end

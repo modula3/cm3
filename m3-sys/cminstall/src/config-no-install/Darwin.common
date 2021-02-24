@@ -37,12 +37,12 @@ proc configure_assembler() is
     return
   end
   SYSTEM_ASM = "/usr/libexec/gcc/darwin/" & DarwinArch & "/as"
-  
+
   % NOTE: Some versions of m3cg are incompatible with LLVM assembler that gcc -x assembler
   % might run. Workaround is to run as instead of gcc -x assembler.
   % See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=67183
   % http://llvm.org/bugs/show_bug.cgi?id=24428
-  
+
   % NOTE: Do all as versions accept -arch? It'd be nice, but I doubt it. i.e. old PowerPC
   % Does cm3cg record an architecture in the .s for as to dispatch on? Ditto.
 
@@ -145,10 +145,8 @@ SYSTEM_LIBS = {
   "LIBC"       : [ "-lSystem" ],
   "LEX-YACC"   : [ "-ll" ],
   "FLEX-BISON" : [ "-lfl" ],
-  "OPENGL"     : [ "-Wl,-dylib_file," & LIBGL_DYLIB & ":" & LIBGL_DYLIB,
-                   "-L/usr/X11R6/lib", "-lGLU", "-lGL", "-lXext" ],
   "TCP"        : [ ]
-% below: X11, ODBC, POSTGRES95, MOTIF
+% below: X11, ODBC, POSTGRES95, MOTIF. OPENGL
 }
 
 proc internal_configure_system_lib(name, known, args) is
@@ -171,15 +169,31 @@ proc internal_configure_system_lib(name, known, args) is
 end
 
 proc configure_system_libs() is
-  internal_configure_system_lib("ODBC", not equal(TARGET, "PPC64_DARWIN"), ["-liodbc", "-liodbcinst"])
-    
+
   % X11 is no longer provided by Apple.
   % 10.5.8 Leopard had it; 10.10.4 Yosemite does not.
   % OpenGL is similarly affected?
   % see http://xquartz.macosforge.org.
-  
-  internal_configure_system_lib("X11", not equal(TARGET, "PPC64_DARWIN"), ["-L/usr/X11R6/lib", "-lXaw", "-lXmu", "-lXext", "-lXt", "-lSM", "-lICE", "-lX11"])
-  
+
+  if not equal(TARGET, "ARM64_DARWIN")
+
+    internal_configure_system_lib(
+      "ODBC",
+      not equal(TARGET, "PPC64_DARWIN"),
+      ["-liodbc", "-liodbcinst"])
+
+    internal_configure_system_lib(
+      "X11",
+      not equal(TARGET, "PPC64_DARWIN"),
+      ["-L/usr/X11R6/lib", "-lXaw", "-lXmu", "-lXext", "-lXt", "-lSM", "-lICE", "-lX11"])
+
+    internal_configure_system_lib(
+      "OPENGL",
+      TRUE,
+      [ "-Wl,-dylib_file," & LIBGL_DYLIB & ":" & LIBGL_DYLIB,
+        "-L/usr/X11R6/lib", "-lGLU", "-lGL", "-lXext" ])
+  end
+
   % Given the probing, why not enable these lines?
 
   % not present by default, but this is the default install location

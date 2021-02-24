@@ -5,6 +5,8 @@
 % Last modified on Tue Dec 21 14:41:55 PST 1993 by kalsow
 %
 
+if HasTrestle()
+
 import ("bicycle")
 
 module ("Solve")
@@ -18,3 +20,4 @@ build_standalone()
 Program ("solitaire")
 ManPage ("solitaire","6")
 
+end

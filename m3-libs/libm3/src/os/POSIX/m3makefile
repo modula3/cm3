@@ -64,6 +64,7 @@ local readonly DefaultArch = {
     "ALPHA64" : "alpha",
     "AMD64" : "AMD64",
     "ARM" : "arm",
+    "ARM64" : "arm64",
     "HPPA" : "hppa",
     "HPPA64" : "hppa64",
     "I386" : "x86",
