@@ -11,9 +11,14 @@ extern "C" {
 
 extern int triangulate, sorted, plot, debug;
 
-
 extern float xmin, xmax, ymin, ymax, deltax, deltay;
 
+struct Edge;
+struct Halfedge;
+struct Point;
+struct Site;
+struct Triple;
+struct TripleArg;
 
 struct Point	{
 float x,y;
