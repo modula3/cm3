@@ -967,7 +967,7 @@ PROCEDURE GlobalAlloc (uFlags: UINT32; dwBytes: SIZE_T): HGLOBAL;
 PROCEDURE GlobalReAlloc (hMem: HGLOBAL; dwBytes: SIZE_T; uFlags: UINT32): HGLOBAL;
 
 <*EXTERNAL GlobalSize:WINAPI*>
-PROCEDURE GlobalSize (hMem: HGLOBAL): UINT32;
+PROCEDURE GlobalSize (hMem: HGLOBAL): SIZE_T;
 
 <*EXTERNAL GlobalFlags:WINAPI*>
 PROCEDURE GlobalFlags (hMem: HGLOBAL): UINT32;
@@ -1019,7 +1019,7 @@ PROCEDURE LocalHandle (pMem: PVOID): HLOCAL;
 PROCEDURE LocalUnlock (hMem: HLOCAL): BOOL;
 
 <*EXTERNAL LocalSize:WINAPI*>
-PROCEDURE LocalSize (hMem: HLOCAL): UINT32;
+PROCEDURE LocalSize (hMem: HLOCAL): SIZE_T;
 
 <*EXTERNAL LocalFlags:WINAPI*>
 PROCEDURE LocalFlags (hMem: HLOCAL): UINT32;
@@ -1028,10 +1028,10 @@ PROCEDURE LocalFlags (hMem: HLOCAL): UINT32;
 PROCEDURE LocalFree (hMem: HLOCAL): HLOCAL;
 
 <*EXTERNAL LocalShrink:WINAPI*>
-PROCEDURE LocalShrink (hMem: HLOCAL; cbNewSize: UINT32): UINT32;
+PROCEDURE LocalShrink (hMem: HLOCAL; cbNewSize: SIZE_T): SIZE_T;
 
 <*EXTERNAL LocalCompact:WINAPI*>
-PROCEDURE LocalCompact (uMinFree: UINT32): UINT32;
+PROCEDURE LocalCompact (uMinFree: UINT32): SIZE_T;
 
 <*EXTERNAL FlushInstructionCache:WINAPI*>
 PROCEDURE FlushInstructionCache (hProcess     : HANDLE;
@@ -1197,8 +1197,8 @@ CONST GetShortPathName = GetShortPathNameA;
 
 <*EXTERNAL GetProcessAffinityMask:WINAPI*>
 PROCEDURE GetProcessAffinityMask (hProcess              : HANDLE;
-                                  lpProcessAffinityMask : PUINT32;
-                                  lpSystemAffinityMask  : PUINT32): BOOL;
+                                  lpProcessAffinityMask : PSIZE_T;
+                                  lpSystemAffinityMask  : PSIZE_T): BOOL;
 
 <*EXTERNAL GetProcessTimes:WINAPI*>
 PROCEDURE GetProcessTimes (hProcess       : HANDLE;
@@ -1279,7 +1279,7 @@ PROCEDURE SetUnhandledExceptionFilter (
 
 <*EXTERNAL CreateThread:WINAPI*>
 PROCEDURE CreateThread (lpThreadAttributes: PSECURITY_ATTRIBUTES;
-                        dwStackSize       : UINT32;
+                        dwStackSize       : SIZE_T;
                         lpStartAddress    : PTHREAD_START_ROUTINE;
                         lpParameter       : PVOID;
                         dwCreationFlags   : UINT32;
@@ -1288,7 +1288,7 @@ PROCEDURE CreateThread (lpThreadAttributes: PSECURITY_ATTRIBUTES;
 <*EXTERNAL CreateRemoteThread:WINAPI*>
 PROCEDURE CreateRemoteThread (hProcess          : HANDLE;
                               lpThreadAttributes: PSECURITY_ATTRIBUTES;
-                              dwStackSize       : UINT32;
+                              dwStackSize       : SIZE_T;
                               lpStartAddress : PTHREAD_START_ROUTINE;
                               lpParameter    : PVOID;
                               dwCreationFlags: UINT32;
@@ -1302,7 +1302,7 @@ PROCEDURE GetCurrentThreadId (): UINT32;
 
 <*EXTERNAL SetThreadAffinityMask:WINAPI*>
 PROCEDURE SetThreadAffinityMask (hThread              : HANDLE;
-                                 dwThreadAffinityMask : UINT32): UINT32;
+                                 dwThreadAffinityMask : SIZE_T): SIZE_T;
 
 <*EXTERNAL SetThreadPriority:WINAPI*>
 PROCEDURE SetThreadPriority (hThread: HANDLE; nPriority: INT32): BOOL;
