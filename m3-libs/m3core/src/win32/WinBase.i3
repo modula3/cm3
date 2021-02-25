@@ -140,9 +140,12 @@ CONST
 
   MAILSLOT_WAIT_FOREVER: INT32 = -1;
 
-(* File structures *)
-
 TYPE
+
+(* Widen some parameters to INTEGER for convenience. *)
+  UINT32_ARG = INTEGER;
+
+(* File structures *)
   POVERLAPPED = UNTRACED REF OVERLAPPED;
   LPOVERLAPPED = POVERLAPPED; (* compat *)
   OVERLAPPED = RECORD
@@ -1229,10 +1232,10 @@ PROCEDURE GetCurrentProcess (): HANDLE;
 PROCEDURE GetCurrentProcessId (): UINT32;
 
 <*EXTERNAL ExitProcess:WINAPI*>
-PROCEDURE ExitProcess (uExitCode: UINT32);
+PROCEDURE ExitProcess (uExitCode: UINT32_ARG);
 
 <*EXTERNAL TerminateProcess:WINAPI*>
-PROCEDURE TerminateProcess (hProcess: HANDLE; uExitCode: UINT32): BOOL;
+PROCEDURE TerminateProcess (hProcess: HANDLE; uExitCode: UINT32_ARG): BOOL;
 
 <*EXTERNAL GetExitCodeProcess:WINAPI*>
 PROCEDURE GetExitCodeProcess (hProcess: HANDLE; lpExitCode: PUINT32): BOOL;
