@@ -51,7 +51,7 @@ TYPE Multipass_t = M3CG_MultiPass.T BRANDED "M3C.Multipass_t" OBJECT
 TYPE
 T = M3CG_DoNothing.T BRANDED "M3C.T" OBJECT
 
-        no_return := FALSE; (* are there any no_return functions -- i.e. #include <sys/cdefs.h on Darwon for __dead2 *)
+        no_return := FALSE; (* are there any no_return functions -- i.e. #include <sys/cdefs.h on Darwin for __dead2 *)
 
         imported_procs: RefSeq.T := NIL; (*TODO*) (* Proc_t *)
         declared_procs: RefSeq.T := NIL; (*TODO*) (* Proc_t *)
@@ -66,7 +66,7 @@ T = M3CG_DoNothing.T BRANDED "M3C.T" OBJECT
         Err    : ErrorHandler := DefaultErrorHandler;
         anonymousCounter := -1;
         c      : Wr.T := NIL;
-        debug := 1; (* 1-5 >4 is to stdio *)
+        debug := 2; (* 1-5 >4 is to stdio *)
         stack  : RefSeq.T := NIL;
         params : TextSeq.T := NIL;
         op_index := 0;
@@ -127,6 +127,7 @@ T = M3CG_DoNothing.T BRANDED "M3C.T" OBJECT
 
     METHODS
         Type_Init(type: Type_t; typedef := FALSE) := Type_Init;
+        TIntLiteral(type: CGType; READONLY i: Target.Int): TEXT := TIntLiteral;
 
     OVERRIDES
         end_unit   := end_unit;
@@ -1415,7 +1416,7 @@ TYPE Expr_ConstantInt_t = Expr_t OBJECT OVERRIDES CText := Expr_ConstantInt_CTex
 PROCEDURE Expr_ConstantInt_CText(self: Expr_ConstantInt_t): TEXT =
 BEGIN
     (* ASSERT self.minmax[Min] = self.minmax[Max] *)
-    RETURN TIntLiteral(self.cgtype, self.minmax[Min]);
+    RETURN self.self.TIntLiteral(self.cgtype, self.minmax[Min]);
 END Expr_ConstantInt_CText;
 
 TYPE Expr_Cast_t = Expr_Unary_t OBJECT
@@ -4655,7 +4656,7 @@ BEGIN
     END;
     init_helper(self, offset, type);
     (* TIntLiteral includes suffixes like T, ULL, UI64, etc. *)
-    initializer_addhi(self, TIntLiteral(type, value));
+    initializer_addhi(self, self.TIntLiteral(type, value));
 END init_int;
 
 PROCEDURE Segments_init_int(
@@ -4795,19 +4796,23 @@ BEGIN
     RETURN TIntToExpr(self, IntToTInt(self, i));
 END IntToExpr;
 
-PROCEDURE TIntLiteral(type: CGType; READONLY i: Target.Int): TEXT =
+PROCEDURE TIntLiteral(self: T; type: CGType; READONLY i: Target.Int): TEXT =
 VAR ok1 := TRUE;
     ok2 := TRUE;
 BEGIN
     CASE type OF
         | CGType.Int8   => ok1 := TInt.GE(i, TInt.Min8 );
                          (*ok2 := TInt.LE(i, TInt.Max8);*)
+                           ok2 := TInt.LE(i, TWord.Max8);
         | CGType.Int16  => ok1 := TInt.GE(i, TInt.Min16);
                          (*ok2 := TInt.LE(i, TInt.Max16);*)
+                           ok2 := TInt.LE(i, TWord.Max16);
         | CGType.Int32  => ok1 := TInt.GE(i, TInt.Min32);
                          (*ok2 := TInt.LE(i, TInt.Max32);*)
+                           ok2 := TInt.LE(i, TWord.Max32);
         | CGType.Int64  => ok1 := TInt.GE(i, TInt.Min64);
-                           ok2 := TInt.LE(i, TInt.Max64);
+                         (*ok2 := TInt.LE(i, TInt.Max64);*)
+                           ok2 := TInt.LE(i, TWord.Max64);
         | CGType.Word8  => ok1 := TWord.LE(i, TWord.Max8);
         | CGType.Word16 => ok1 := TWord.LE(i, TWord.Max16);
         | CGType.Word32 => ok1 := TWord.LE(i, TWord.Max32);
@@ -4821,9 +4826,9 @@ BEGIN
         RTIO.PutText("TIntLiteral:type=" & cgtypeToText[type]
                      & " i=" & TInt.ToText(i)
                      & " ok1=" & BoolToText[ok1]
-                     & " ok2=" & BoolToText[ok2] & "\n"
-                     );
+                     & " ok2=" & BoolToText[ok2] & "\n");
         RTIO.Flush();
+        Wr.Flush(self.c);
         <* ASSERT ok1 *>
         <* ASSERT ok2 *>
     END;
@@ -4838,7 +4843,7 @@ END TIntLiteral;
 
 PROCEDURE IntLiteral(self: T; type: CGType; i: INTEGER): TEXT =
 BEGIN
-    RETURN TIntLiteral(type, IntToTarget(self, i));
+    RETURN self.TIntLiteral(type, IntToTarget(self, i));
 END IntLiteral;
 
 PROCEDURE FloatLiteral(READONLY float: Target.Float): TEXT =
@@ -4968,8 +4973,7 @@ BEGIN
             & " return_type:" & cgtypeToText[return_type]
             & " exported:" & BoolToText[exported]
             & " level:" & IntToDec(level)
-            & " parent:" & ProcNameOrNIL(parent)
-            );
+            & " parent:" & ProcNameOrNIL(parent));
     ELSE
         self.comment("declare_procedure");
     END;
@@ -5544,7 +5548,7 @@ END load_host_integer;
 PROCEDURE load_target_integer(self: T; type: IType; READONLY readonly_i: Target.Int) =
 (* push; s0.type := i *)
 VAR i := readonly_i;
-    expr := CTextToExpr(TIntLiteral(type, i));
+    expr := CTextToExpr(self.TIntLiteral(type, i));
     size := cgtypeSizeBytes[type];
     signed   := cgtypeIsSignedInt[type];
     unsigned := cgtypeIsUnsignedInt[type];
@@ -6234,7 +6238,7 @@ BEGIN
     self.comment("check_lo");
     self.store(t, 0, type, type);
     self.load(t, 0, type, type);
-    print(self, "/*check_lo*/if(" & get(self).CText() & "<" & TIntLiteral(type, i) & ")");
+    print(self, "/*check_lo*/if(" & get(self).CText() & "<" & self.TIntLiteral(type, i) & ")");
     reportfault(self, code);
 END check_lo;
 
@@ -6245,15 +6249,15 @@ BEGIN
     self.comment("check_hi");
     self.store(t, 0, type, type);
     self.load(t, 0, type, type);
-    print(self, "/*check_hi*/if(" & TIntLiteral(type, i) & "<" & get(self).CText() & ")");
+    print(self, "/*check_hi*/if(" & self.TIntLiteral(type, i) & "<" & get(self).CText() & ")");
     reportfault(self, code);
 END check_hi;
 
 PROCEDURE check_range(self: T; type: IType; READONLY low, high: Target.Int; code: RuntimeError) =
 (* IF (s0.type < low) OR (high < s0.type) THEN abort(code) *)
 VAR t := self.temp_vars[self.op_index];
-    low_expr := CTextToExpr(TIntLiteral(type, low));
-    high_expr := CTextToExpr(TIntLiteral(type, high));
+    low_expr := CTextToExpr(self.TIntLiteral(type, low));
+    high_expr := CTextToExpr(self.TIntLiteral(type, high));
 BEGIN
     self.comment("check_range");
     self.store(t, 0, type, type);
