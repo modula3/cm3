@@ -1,0 +1,8 @@
+readonly TARGET = "RISCV64_LINUX" % code generation target
+% readonly GNU_PLATFORM = "riscv64-linux" % "cpu-os" string for GNU
+
+readonly SYSTEM_CC = "g++ -g -fPIC" % C compiler
+readonly SYSTEM_ASM = "as" % Assembler
+
+include("RISCV64.common")
+include("Linux.common")

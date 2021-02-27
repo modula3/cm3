@@ -74,6 +74,7 @@ local readonly DefaultArch = {
     "MIPS64" : "mips64",
     "PPC": "ppc",
     "PPC64": "ppc64",
+    "RISCV64" : "riscv64",
     "SPARC" : "sparc",
     "SPARC64" : "sparc64",
     "VAX" : "vax",
