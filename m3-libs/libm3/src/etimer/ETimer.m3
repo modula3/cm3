@@ -81,6 +81,14 @@ PROCEDURE Push (t: T) =
     END;
   END Push;
 
+PROCEDURE Append (t: T; duration : LONGREAL) =
+  BEGIN
+    IF NOT enabled THEN RETURN END;
+    LOCK mu DO
+      t.time := t.time + duration;
+    END;
+  END Append;
+
 PROCEDURE Pop () =
   VAR now: Time.T;
   BEGIN
