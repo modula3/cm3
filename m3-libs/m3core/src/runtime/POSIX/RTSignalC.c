@@ -156,6 +156,8 @@ static WORD_T GetPC(void* xcontext)
 #elif defined(__s390__)
 #error untested __linux target
       context->uc_mcontext.sregs.regs.psw.addr
+#elif defined(__riscv) || defined(__riscv64)
+      context->uc_mcontext.__gregs[REG_PC]
 #else
 #error unknown __linux target
 #endif

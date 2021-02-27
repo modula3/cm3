@@ -203,7 +203,8 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
 
     | Systems.ARM64_DARWIN,
       Systems.ARM64_LINUX,
-      Systems.ARM64_NT =>
+      Systems.ARM64_NT,
+      Systems.RISCV64_LINUX =>
                  EVAL 0;
 
     | Systems.ARM_LINUX,
