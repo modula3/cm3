@@ -1022,7 +1022,7 @@ PROCEDURE ForceAllPromisesInParallel(promises : QPromiseSeq.T;
             threads.addhi (Thread.Fork(cl));
             
             IF threads.size() > parallelism-1 THEN 
-              EVAL Thread.Join(threads.remlo()) 
+              EVAL Thread.Join(threads.remlo()); 
             END;
             
             curSeq := NEW(QPromiseSeq.T).init()
@@ -2345,6 +2345,7 @@ PROCEDURE RunCC (s: State;  source, object: TEXT;  debug, optimize: BOOLEAN;
     IF IfDebug () THEN DoDebug ("RunCC " & NilText(source) & " " & NilText(object)); END;
 
     ETimer.Push (M3Timers.pass_1);
+    s.machine.timer := M3Timers.pass_1;
     StartCall (s, s.c_compiler);
     PushText  (s, source);
     PushText  (s, object);
@@ -2366,6 +2367,7 @@ PROCEDURE RunM3Back (s: State;  source, object: TEXT;
   VAR failed: BOOLEAN;
   BEGIN
     ETimer.Push (M3Timers.pass_6);
+    s.machine.timer := M3Timers.pass_6;
     StartCall (s, s.m3backend);
     PushText (s, source);
     PushText (s, object);
@@ -2386,6 +2388,7 @@ PROCEDURE RunM3Llvm (s: State;  source, object: TEXT;
   VAR failed: BOOLEAN;
   BEGIN
     ETimer.Push (M3Timers.m3llvm);
+    s.machine.timer := M3Timers.m3llvm;
     StartCall (s, s.m3llvm);
     PushText (s, source);
     PushText (s, object);
@@ -2408,6 +2411,7 @@ PROCEDURE RunLlcBack
   VAR filetype: TEXT; 
   BEGIN
     ETimer.Push (M3Timers.llc);
+    s.machine.timer := M3Timers.llc;
     StartCall (s, s.llvmbackend);
     PushText (s, source);
     PushText (s, object);
@@ -2431,6 +2435,7 @@ PROCEDURE RunLlvmOpt (s: State;  source, dest: TEXT) : BOOLEAN (* Success. *) =
   VAR failed: BOOLEAN;
   BEGIN
     ETimer.Push (M3Timers.llvmopt);
+    s.machine.timer := M3Timers.llvmopt;
     StartCall (s, s.llvmopt);
     PushText (s, source);
     PushText (s, dest);
@@ -2448,6 +2453,7 @@ PROCEDURE RunAsm (s: State;  source, object: TEXT): BOOLEAN (* Success. *) =
   VAR failed: BOOLEAN;
   BEGIN
     ETimer.Push (M3Timers.pass_7);
+    s.machine.timer := M3Timers.pass_7;
     StartCall (s, s.assembler);
     PushText (s, source);
     PushText (s, object);
