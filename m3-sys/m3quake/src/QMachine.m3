@@ -17,6 +17,7 @@ IMPORT TextUtils, FSUtils, System, DirStack; (* sysutils *)
 IMPORT Compiler;
 IMPORT M3Path;
 IMPORT QPromise, QPromiseSeq;
+IMPORT ETimer;
 
 CONST
   OnUnix = (Compiler.ThisOS = Compiler.OS.POSIX);
@@ -1597,6 +1598,8 @@ PROCEDURE ExecCommand (t: T;  n_args: INTEGER;
                                      wr := wrx,
                                      args := a,
                                      t := t,
+                                     timer := t.timer,
+                                     doRecord := t.doRecord,
                                      ignore_errors := ignore_errors OR onlyTry) DO
                 IF t.doRecord THEN
                   t.promises.addhi(promise)
@@ -1644,6 +1647,8 @@ TYPE
     cmd : TEXT;
     args : REF ARRAY OF TEXT;
     t : T;
+    timer : ETimer.T;
+    doRecord : BOOLEAN;
     wr : Wr.T;
     ignore_errors : BOOLEAN;
   OVERRIDES
@@ -1655,7 +1660,14 @@ PROCEDURE FulfilExecPromise(ep : ExecPromise) : QPromise.ExitCode
   VAR
     stdin, stdout, stderr: File.T;
     handle : Process.T;
+    start : Time.T;
   BEGIN
+    IF ep.doRecord AND ep.timer # NIL THEN
+      (* this records wall clock for the thread (and process).
+         We could possibly use rusage to get cpu time *)
+      start := Time.Now();
+    END;
+
     Process.GetStandardFileHandles (stdin, stdout, stderr);
     TRY
       IF ep.wr # NIL THEN
@@ -1664,14 +1676,16 @@ PROCEDURE FulfilExecPromise(ep : ExecPromise) : QPromise.ExitCode
         FlushIO ();
       END;
       handle := Process.Create (ep.cmd, ep.args^,
-                                    stdin := stdin, stdout := stdout,
-                                    stderr := stderr);
+                                stdin := stdin, stdout := stdout, stderr := stderr);
 
       WITH  exit_code = Process.Wait(handle) DO
         IF exit_code # 0 AND NOT ep.ignore_errors THEN
           Err (ep.t, Fmt.F("exit %s: %s", Fmt.Int(exit_code), ep.args[1]));
           <*ASSERT FALSE*>
         ELSE
+          IF ep.doRecord AND ep.timer # NIL THEN
+            ETimer.Append(ep.timer, Time.Now() - start);
+          END;
           RETURN exit_code
         END
       END
