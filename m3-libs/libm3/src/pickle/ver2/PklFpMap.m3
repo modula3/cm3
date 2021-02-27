@@ -29,25 +29,25 @@ UNSAFE MODULE PklFpMap
 
 ; CONST 
   (* Fingerprints that differ between pm3 and cm3. *) 
-    NULL_uid = 16_48ec756e
+    NULL_uid = 16_48ec756e <*NOWARN*>
   ; pm3_NULL_FP = FPT{FPA{16_24,16_80,16_00,16_00,16_6c,16_6c,16_75,16_6e}} 
   ; cm3_NULL_FP = FPT{FPA{16_6e,16_75,16_6c,16_6c,16_00,16_00,16_80,16_24}}
 
-  ; ROOT_uid = 16_9d8fb489
+  ; ROOT_uid = 16_9d8fb489 <*NOWARN*>
   ; pm3_ROOT_FP = FPT{FPA{16_f8,16_09,16_19,16_c8,16_65,16_86,16_ad,16_41}}
   ; cm3_ROOT_FP = FPT{FPA{16_41,16_ad,16_86,16_65,16_c8,16_19,16_09,16_f8}}
 
-  ; UNTRACED_ROOT_uid = 16_898ea789
+  ; UNTRACED_ROOT_uid = 16_898ea789 <*NOWARN*>
   ; pm3_UNTRACED_ROOT_FP = FPT{FPA{16_f8,16_09,16_19,16_c8,16_71,16_87,16_be,16_41}}
   ; cm3_UNTRACED_ROOT_FP = FPT{FPA{16_41,16_be,16_87,16_71,16_c8,16_19,16_09,16_f8}}
 
   (* Can the following two occur in a pickle?  Maybe if somebody registered a
      special for them? *) 
-  ; ADDRESS_uid = 16_08402063
+  ; ADDRESS_uid = 16_08402063 <*NOWARN*>
   ; pm3_ADDRESS_FP = FPT{FPA{16_91,16_21,16_8a,16_62,16_f2,16_01,16_ca,16_6a}}
   ; cm3_ADDRESS_FP = FPT{FPA{16_f2,16_01,16_ca,16_6a,16_91,16_21,16_8a,16_62}}
 
-  ; REFANY_uid = 16_1c1c45e6
+  ; REFANY_uid = 16_1c1c45e6 <*NOWARN*>
   ; pm3_REFANY_FP = FPT{FPA{16_65,16_72,16_24,16_80,16_79,16_6e,16_61,16_66}}
   ; cm3_REFANY_FP = FPT{FPA{16_66,16_61,16_6e,16_79,16_80,16_24,16_72,16_65}}
 
@@ -103,12 +103,12 @@ UNSAFE MODULE PklFpMap
     , cm3_UNTRACED_ROOT_FP 
     } 
 
-; CONST ADDRESS_FPs = ARRAY OF Fingerprint . T 
+; CONST ADDRESS_FPs = ARRAY OF Fingerprint . T  <*NOWARN*>
     { pm3_ADDRESS_FP 
     , cm3_ADDRESS_FP 
     } 
 
-; CONST REFANY_FPs = ARRAY OF Fingerprint . T 
+; CONST REFANY_FPs = ARRAY OF Fingerprint . T  <*NOWARN*>
     { pm3_REFANY_FP 
     , cm3_REFANY_FP 
     } 
