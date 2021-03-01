@@ -11,7 +11,7 @@
 
 UNSAFE MODULE IP;
 
-IMPORT IPError, M3toC, Process, WinSock;
+IMPORT IPError, M3toC, Process, WinSock, Uin, Unetdb;
 
 VAR mu := NEW(MUTEX);
 
@@ -144,6 +144,26 @@ PROCEDURE GetHostAddr(): Address =
       RETURN GetAddress(ent);
     END;
   END GetHostAddr;
+
+CONST
+  MaxHost = 1025;
+  MaxService = 32;
+
+TYPE
+  RefAddrInfo = UNTRACED REF Unetdb.addrinfo_t;
+  RefSockaddr4 = UNTRACED REF Uin.struct_sockaddr_in;
+  RefSockaddr16 = UNTRACED REF Uin.struct_sockaddr_in6;
+
+(* Return the first usable address - there could be many - and more likely an IP4 address. *)
+PROCEDURE GetAddrInfo(READONLY name,service : TEXT) : EP RAISES {Error} =
+  BEGIN
+    (* stub version - to be completed *)
+  END GetAddrInfo;
+
+PROCEDURE GetNameInfo(ep : EP; VAR (*out*) host,service : TEXT) RAISES {Error} =
+  BEGIN
+    (* stub version - to be completed *)
+  END GetNameInfo;
 
 PROCEDURE InterpretError() RAISES {Error} =
   VAR err := WinSock.WSAGetLastError();
