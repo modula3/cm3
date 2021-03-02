@@ -591,37 +591,42 @@ end
 if not defined("llvm_backend")
 
   proc llvm_backend(source, outfile, optimize, debug, filetype) is
-      %local t = try_exec ("llvm-dis", outfile) 
-
-      local args = [ "-disable-fp-elim"] 
-      local llvmopt = ""
+      local llcname = "@llc"
+      local args = [ "-frame-pointer=all"]
+%llvm 8 changed option for frame pointer.
+%      local args = [ "-disable-fp-elim"]
 
       args += "-filetype=" & filetype
+      args += llvmback_pic
 
       if optimize
           args += llvmback_optimize
-          local tmp = split(source,".")
-          llvmopt = tmp[0] & "_opt." & tmp[1]
-          local opt_ret = try_exec ("@opt", llvmback_optimize, source, "-o", llvmopt )
-          %reset source for llc
-          source = llvmopt 
       else
           args += "-O0"
       end
       if debug
           args += llvmback_debug
       end
-      args += llvmback_pic
 
-      local llvmback = "@llc"
-      local llc_ret = try_exec (llvmback, args, source, "-o", outfile )
-      if optimize and not defined ("M3_KEEP_FILES")
-          DeleteFile(llvmopt)
-      end
+      local llc_ret = try_exec (llcname, args, source, "-o", outfile )
+
       return llc_ret
   end % proc llvm_backend
 
 end % if not defined("llvm_backend")
+
+% Optionally call the llvm optimiser
+
+if not defined("llvm_opt")
+
+  proc llvm_opt(source, outfile) is
+
+      local opt_ret = try_exec ("@opt", llvmback_optimize, source, "-o", outfile )
+
+      return opt_ret
+  end % proc llvm_opt
+
+end % if not defined("llvm_opt")
 
 %--------------------------------------------------------------- C compiler ---
 % "compile_c" is called to compile C source files. Note that this function
