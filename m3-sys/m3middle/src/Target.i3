@@ -451,17 +451,19 @@ VAR (*CONST*)
 CONST
   Byte = 8;  (* minimum addressable unit (in bits) *)
 
-VAR (*CONST*)
-
   (* Is the jmpbuf for RTExFrame allocated with alloca,
      or does the frontend know its size?
-     RTExFrame.Alloca_jmpbuf and Target.Alloca_jmpbuf must match. *)
-  Alloca_jmpbuf : BOOLEAN;
+     RTExFrame.Alloca_jmpbuf and Target.Alloca_jmpbuf must match.
+     This could become FALSE again, if the backend learns of jmp_buf,
+     and jmp_buf is again embedded in the larger structs and m3front
+     does not do that layout. *)
+  Alloca_jmpbuf = TRUE;
 
-  (* If Alloca_jmpbuf = TRUE, then this is the size of a jmp_buf.
-     If Alloca_jmpbuf = FALSE, then this is not used. *)
-  Jumpbuf_size     : CARDINAL; (* size of a "jmp_buf" *)
+  (* If Alloca_jmpbuf = FALSE, then this is the size of a jmp_buf.
+     If Alloca_jmpbuf = TRUE, then this is not used. *)
+  Jumpbuf_size = 0; (* size of a "jmp_buf" *)
 
+VAR (*CONST*)
   Little_endian : BOOLEAN;
   (* TRUE => byte[0] of an integer contains its least-significant bits *)
 
