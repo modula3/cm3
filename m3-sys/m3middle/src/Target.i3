@@ -537,7 +537,7 @@ VAR (*CONST*)
   (* The C name of the routine used to capture the machine state in
        an exception handler frame. *)
 
-  Aligned_procedures: BOOLEAN;
+  CONST Aligned_procedures = FALSE;
   (* TRUE => all procedure values are aligned to at least Integer.align
      and can be safely dereferenced.  Otherwise, the code generated to
      test for nested procedures passed as parameters must be more
