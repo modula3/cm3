@@ -1,16 +1,35 @@
 UNSAFE INTERFACE XShape;
 
 (*==============================================================*)
-(* The X11 R4 Interface for Modula 3                            *)
-(*                                                              *)
-(* contains: /usr/include/X11/extensions/shape.h                *)
+(* The X11 R4 Interface for Modula 3 *)
+(* *)
+(* contains: /usr/include/X11/extensions/shape.h *)
 (*==============================================================*)
 
-FROM Ctypes IMPORT int, int_star, unsigned_int,
-                   unsigned_long, unsigned_int_star;
+FROM Ctypes IMPORT int, int_star, unsigned_int, unsigned_long,
+                   unsigned_int_star;
 
 FROM X IMPORT DisplayStar, Pixmap, Region, XRectangleStar, Window, Time,
               BoolStar, Status;
+
+
+CONST
+  SHAPENAME = "SHAPE";
+
+  ShapeSet       = 0;
+  ShapeUnion     = 1;
+  ShapeIntersect = 2;
+  ShapeSubtract  = 3;
+  ShapeInvert    = 4;
+
+  ShapeBounding = 0;
+  ShapeClip     = 1;
+  ShapeInput    = 2;
+
+  ShapeNotifyMask = 1L;
+  ShapeNotify     = 0;
+
+  ShapeNumberEvents = ShapeNotify + 1;
 
 TYPE
   ShapeEvent =
