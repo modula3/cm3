@@ -50,7 +50,7 @@ SYSTEM_LIBS =
 %   "ODBC"       : [ "-lodbc" ],
     "MOTIF"      : [ "-lXm" ],
     "TCP"        : [ ],
-    "X11"        : [  "-L/usr/X11R6/lib", "-lXft", "-lXaw", "-lXmu", "-lXext", "-lXt", "-lSM", "-lICE", "-lX11" ],
+    "X11"        : [  "-L/usr/X11R6/lib", "-lXft", "-lfontconfig", "-lXaw", "-lXmu", "-lXext", "-lXt", "-lSM", "-lICE", "-lX11" ],
     "READLINE"   : [ "-lreadline" ],
     "EXPAT"      : [ "-lexpat" ]
 }
