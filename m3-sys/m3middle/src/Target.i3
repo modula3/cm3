@@ -463,6 +463,16 @@ CONST
      If Alloca_jmpbuf = TRUE, then this is not used. *)
   Jumpbuf_size = 0; (* size of a "jmp_buf" *)
 
+  Structure_size_boundary: CARDINAL = 8;
+  (* Every structure size must be a multiple of this.
+   * In gcc, this is 8 almost always.
+   * arm32 has multiple ABIs.
+   * In some ABIs, the default is 32.
+   * For Linux/arm32, it is 8.
+   * For arm32, it is changable on the command line, deprecated, to 8, 16, 64.
+   *
+   * Comments suggest it might have been not 8 for M68k, SH, and PA. *)
+
 VAR (*CONST*)
   Little_endian : BOOLEAN;
   (* TRUE => byte[0] of an integer contains its least-significant bits *)
@@ -470,12 +480,6 @@ VAR (*CONST*)
   PCC_bitfield_type_matters: BOOLEAN;
   (* TRUE => the C compiler uses the type rather than the size of
      a bit-field to compute the alignment of the struct *)
-
-  Structure_size_boundary: CARDINAL;
-  (* every structure size must be a multiple of this
-   * This is 8 for all current targets, or could be 0.
-   * OpenBSD/m68k would have it be different, and sometimes but not
-   * always sh and arm. *)
 
   Allow_packed_byte_aligned: BOOLEAN;
   (* Allow the compiler to align scalar types on byte boundaries when packing.
