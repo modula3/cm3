@@ -582,6 +582,18 @@ BEGIN
     RETURN NameT(GenerateName(self));
 END GenerateNameText;
 
+PROCEDURE Assert(self: T; value: BOOLEAN; message: TEXT) =
+BEGIN
+  IF NOT value THEN
+    RTIO.PutText("Assertion failure: " & message);
+    RTIO.Flush();
+    IF self.c # NIL THEN
+      Wr.Flush(self.c);
+    END;
+  END;
+  <* ASSERT value *>
+END Assert;
+
 PROCEDURE Proc_FixName(self: T; name: Name): Name =
 VAR text: TEXT := NIL;
 BEGIN
@@ -590,7 +602,7 @@ BEGIN
     END;
     text := NameT (name);
     IF Text.GetChar (text, 0) = '*' THEN
-        <* ASSERT Text.Length(text) = 1 *>
+        Assert(self, Text.Length(text) = 1, "Text.Length(text) = 1");
         RETURN GenerateName(self);
     END;
     (* rename C names like int, short, void *)
@@ -910,7 +922,7 @@ VAR field: Field_t := NIL;
 BEGIN
     FOR i := 0 TO fields.size() - 1 DO
         field := NARROW(fields.get(i), Field_t);
-        <* ASSERT field # NIL *>
+        Assert(self, field # NIL, "field # NIL");
         IF NOT ResolveType(self, field.typeid, field.type) THEN
             self.comment("1 record_canBeDefined: typeid:" & type.text & " pending field name:" & NameT(field.name) & " typeid:" & TypeIDToText(field.typeid));
             RETURN FALSE;
@@ -967,7 +979,7 @@ BEGIN
             END;
 
             (* Eat up bits to the field. *)
-            <* ASSERT bit_pad < 8 *>
+            Assert(self, bit_pad < 8, "bit_pad < 8");
             IF bit_pad > 0 THEN
                 i := bit_pad;
                 print(x, "UINT8 " & GenerateNameText(x) & ":" & IntToDec(i) & ";\n");
@@ -1012,7 +1024,7 @@ BEGIN
             INC(bit_offset, i);
             DEC(bit_pad, i);
         END;
-        <* ASSERT (bit_pad MOD 8) = 0 *>
+        Assert (self, (bit_pad MOD 8) = 0, "(bit_pad MOD 8) = 0");
         IF bit_pad > 0 THEN
             i := bit_pad DIV 8;
             print(x, "UINT8 " & GenerateNameText(x) & "[" & IntToDec(i) & "];\n");
@@ -1113,7 +1125,7 @@ BEGIN
         (*RTIO.PutInt(names^[i]);
         RTIO.PutText(" ");
         RTIO.Flush();*)
-        <* ASSERT NameT(names^[i]) # NIL *>
+        Assert (x, NameT(names^[i]) # NIL, "NameT(names^[i]) # NIL");
         print(x, start & NameT(names^[i]) & cast & IntToDec(i) & end);
     END;
 END enum_define;
@@ -1179,7 +1191,7 @@ VAR text := "";
     Integer_size := Target.Integer.size;
     dimensions := (type.bit_size - Integer_size) DIV Integer_size;
 BEGIN
-    <* ASSERT dimensions >= 1 *>
+    Assert (x, dimensions >= 1, "dimensions >= 1");
     IF element_type # NIL THEN
         element_type_text := element_type.text;
     END;
@@ -2512,10 +2524,11 @@ BEGIN
     ELSE
         x.comment("declare_enum");
     END;
-    <* ASSERT bit_size = 8 OR bit_size = 16 OR bit_size = 32 *>
-    <* ASSERT element_count > 0 *>
-    <* ASSERT self.enum = NIL *>
-    <* ASSERT self.enum_value = -1 *>
+    Assert (x, bit_size = 8 OR bit_size = 16 OR bit_size = 32, "bit_size = 8 OR bit_size = 16 OR bit_size = 32");
+    Assert (x, element_count > 0, "element_count > 0");
+    Assert (x, self.enum = NIL, "self.enum = NIL");
+    Assert (x, self.enum_value = -1, "self.enum_value = -1");
+
     enum := NEW(Enum_t,
                 typeid := typeid,
                 min := TInt.Zero,
@@ -2523,7 +2536,8 @@ BEGIN
                 names := NEW(REF ARRAY OF Name, element_count),
                 cgtype := BitsToCGUInt[bit_size],
                 text := TypeIDToText(typeid));
-    <* ASSERT self.enum = NIL AND self.enum_value = -1 *>
+    Assert (x, self.enum = NIL, "self.enum = NIL");
+    Assert (x, self.enum_value = -1, "self.enum_value = -1");
     self.enum := enum;
     self.enum_element_count := element_count;
     self.enum_value := 0;
@@ -2539,13 +2553,19 @@ BEGIN
     ELSE
         x.comment("declare_enum_elt");
     END;
+
     IF enum_value < 0 OR enum_value >= enum_element_count THEN
         Err(x, "declare_enum_elt overflow");
         RETURN;
     END;
-    <* ASSERT self.enum # NIL *>
-    <* ASSERT self.enum.names # NIL *>
-    <* ASSERT NUMBER(self.enum.names^) = enum_element_count *>
+
+    Assert (x, self.enum # NIL, "self.enum # NIL");
+    Assert (x, self.enum.names # NIL, "self.enum.names # NIL");
+
+    x.comment("declare_enum_elt: NUMBER(self.enum.names^):", IntToDec(NUMBER(self.enum.names^)));
+    x.comment("declare_enum_elt: enum_element_count:", IntToDec(enum_element_count));
+    Assert (x, NUMBER(self.enum.names^) = enum_element_count, "NUMBER(self.enum.names^) = enum_element_count");
+
     self.enum.names[enum_value] := name;
     INC(enum_value);
     IF enum_value = enum_element_count THEN
@@ -4116,7 +4136,9 @@ BEGIN
     prev := -1;
     FOR i := 0 TO getStructSizes.count - 1 DO
         size := sizes[i];
+
         <* ASSERT (size > 0) AND (size >= prev) *>
+
         IF (size > 0) AND (size # prev) THEN
             prev := size;
             FOR unit := FIRST(units) TO LAST(units) DO
@@ -4132,8 +4154,10 @@ END GetStructSizes;
 
 PROCEDURE GetStructSizes_Declare(self: GetStructSizes_t; type: CGType; byte_size: ByteSize; alignment: Alignment): M3CG.Var =
 BEGIN
+
     <* ASSERT byte_size >= 0 *>
     <* ASSERT (byte_size MOD alignment) = 0 *>
+
     byte_size := MAX(byte_size, 1);
     IF type = CGType.Struct THEN
         self.sizes[self.count] := byte_size;
@@ -4295,8 +4319,10 @@ BEGIN
     ELSE
         self.comment("declare_local");
     END;
+
     <* ASSERT self.current_proc # NIL *>
     <* ASSERT self.current_proc.locals # NIL *>
+
     IF up_level THEN
         self.current_proc.uplevels := TRUE;
     END;
@@ -4395,7 +4421,9 @@ BEGIN
     END;
 
     prototype := function_prototype(proc, FunctionPrototype_t.Declare) & ARRAY BOOLEAN OF TEXT{";\n", " M3_ATTRIBUTE_NO_RETURN;\n"}[proc.no_return];
+
     <* ASSERT NOT self.in_proc *>
+
     IF NOT proc.omit_prototype THEN
       print(self, prototype);
     END;
@@ -4575,7 +4603,9 @@ BEGIN
     print(self, "};\n");
 
     IF NOT var.const AND self.report_fault_used THEN (* See M3x86.m3 *)
+
         <* ASSERT self.no_return *>
+
         no_return(self);
         self.report_fault := NameT(var.name) & "_CRASH";
         IF NOT self.RTHooks_ReportFault_imported_or_declared THEN
@@ -4597,9 +4627,11 @@ PROCEDURE init_to_offset(self: T; offset: ByteOffset) =
 VAR pad := offset - self.current_offset;
 BEGIN
     (* self.comment("init_to_offset offset=", IntToDec(offset)); *)
+
     <* ASSERT offset >= self.current_offset *>
     <* ASSERT pad >= 0 *>
     <* ASSERT self.current_offset >= 0 *>
+
     IF pad > 0 THEN
         end_init_helper(self);
         self.fields.addhi("char " & GenerateNameText(self) & "[" & IntToDec(pad) & "];\n");
@@ -4682,8 +4714,10 @@ END init_proc;
 PROCEDURE MarkUsed_proc(self: T; p: M3CG.Proc) =
 VAR proc: Proc_t;
 BEGIN
+
     <* ASSERT p # NIL *>
     <* ASSERT self.procs_pending_output # NIL *>
+
     proc := NARROW(p, Proc_t);
     IF proc.pending_output OR proc.output THEN RETURN END;
     proc.pending_output := TRUE;
