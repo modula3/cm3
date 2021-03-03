@@ -11,6 +11,7 @@ MODULE AssertStmt;
 IMPORT CG, Expr, Token, Scanner, Stmt, StmtRep, Error;
 IMPORT Host, EnumExpr, Type, Bool, Target, TInt, ErrType;
 IMPORT Textt, Procedure, NarrowExpr, Module, AssignStmt, RunTyme;
+IMPORT TextExpr, M3String;
 
 TYPE
   P = Stmt.T OBJECT
@@ -22,11 +23,18 @@ TYPE
         outcomes    := GetOutcome;
       END;
 
+CONST includeTextInAsserts = TRUE;
+
 PROCEDURE Parse (): Stmt.T =
   VAR p: P;
+      text: REF ARRAY OF CHAR := NIL;
+      size := 0;
   BEGIN
     p := NEW (P);
     StmtRep.Init (p);
+    IF includeTextInAsserts THEN
+      Scanner.EnableTextCapture ();
+    END;
     Scanner.Match (Token.T.tASSERT);
     p.cond := Expr.Parse ();
     p.msg  := NIL;
@@ -34,6 +42,12 @@ PROCEDURE Parse (): Stmt.T =
       OR (Scanner.cur.token = Token.T.tCOMMA) THEN
       Scanner.GetToken ();  (* "," or "WITH" *)
       p.msg := Expr.Parse ();
+    END;
+    IF includeTextInAsserts THEN
+      Scanner.DisableTextCapture (text, size);
+      IF p.msg = NIL AND size > 3 THEN (* 3 is to remove "*>" *)
+        p.msg := TextExpr.New8 (M3String.FromStr (text^, size - 3));
+      END;
     END;
     IF (Scanner.cur.token # Token.T.tENDPRAGMA) THEN
       Scanner.Fail ("missing \'*>\'");

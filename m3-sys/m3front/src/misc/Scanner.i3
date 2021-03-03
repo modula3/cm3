@@ -45,4 +45,8 @@ PROCEDURE Pop ();
 PROCEDURE Initialize ();
 PROCEDURE Reset ();
 
+(* Support for retrieving actual text. *)
+PROCEDURE EnableTextCapture();
+PROCEDURE DisableTextCapture(VAR text: REF ARRAY OF CHAR; VAR size: INTEGER);
+
 END Scanner.
