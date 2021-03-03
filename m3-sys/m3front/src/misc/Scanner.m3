@@ -9,7 +9,7 @@ UNSAFE MODULE Scanner;
 IMPORT Text, Fmt, File, OSError, TextIntTbl, Word;
 IMPORT M3, M3ID, Error, M3String, M3WString, Token;
 IMPORT Target, TInt, TWord, TFloat, Host, M3Buf;
-IMPORT WCharr; 
+IMPORT WCharr, CharSeq, CharSeqRep;
 
 CONST
   MaxStack  = 40;
@@ -83,7 +83,6 @@ VAR (* explicitly reset *)
   tos         : INTEGER;
   stack       : ARRAY [0..MaxStack] OF FileState;
   buf         : StringBuffer;
-  
 
 PROCEDURE Initialize () =
   BEGIN
@@ -359,6 +358,11 @@ PROCEDURE NoteReserved (name: M3ID.T;  value: M3.Value) =
     LOOP
       IF (input_ptr < input_len) THEN
         ch := VAL (input_buf[input_ptr], CHAR);
+
+        IF capturingText THEN
+          capturedText.addhi(ch);
+        END;
+
         INC (input_ptr);
         RETURN;
       ELSIF (input_len = 0) THEN
@@ -1057,6 +1061,35 @@ PROCEDURE ScanPragma () =
 
     GetToken (); (* get the next token *)
   END ScanPragma;
+
+(* Support capturing underlying text while scanning.
+ * This is used for assertion messages.
+ * Consider a different implementation:
+ *  - Turn on full buffering
+ *  - Use positions within the buffer.
+ *
+ * Or consider mmap, really.
+ *)
+VAR capturingText: BOOLEAN;
+VAR capturedText: CharSeq.T;
+
+PROCEDURE EnableTextCapture() =
+BEGIN
+  IF capturedText = NIL THEN
+    capturedText := NEW(CharSeq.T);
+  END;
+  EVAL capturedText.init(99);
+  capturingText := TRUE;
+END EnableTextCapture;
+
+PROCEDURE DisableTextCapture(VAR text: REF ARRAY OF CHAR; VAR size: INTEGER) =
+BEGIN
+  IF capturingText THEN
+    capturingText := FALSE;
+    text := capturedText.elem;
+    size := capturedText.sz;
+  END;
+END DisableTextCapture;
 
 BEGIN
 END Scanner.

@@ -838,6 +838,7 @@ r_test ("r0", "r001", "unhandled exception")
 r_test ("r0", "r002", "stack overflow in the main thread")
 r_test ("r0", "r003", "b3tests/b002 - improper size for an open array parameter")
 r_test ("r0", "r004", "negative size for an open array")
+r_test ("r0", "r005", "assertion failure messages include expression")
 
 %------------------------------------------------------------------- etests ---
 % ERROR tests: modules containing static errors where the generated

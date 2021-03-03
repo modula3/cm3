@@ -16,6 +16,7 @@ Generic_implementation("Sequence")
 template ("sequence")
 
 Sequence ("Atom", "Atom")
+Sequence ("Char", "Char")
 Sequence ("Int",  "Integer")
 Sequence ("Ref",  "Refany")
 Sequence ("Text", "Text")
