@@ -18,7 +18,8 @@ Module("FilePosix")
 implementation("FSPosix")
 implementation("PipePosix")
 implementation("PathnamePosix")
-implementation("SocketPosix")
+module("SocketPosix")
+c_source("SocketPosixC")
 implementation("OSConfigPosix")
 
 module("ProcessPosixCommon")
@@ -92,11 +93,5 @@ end
 
 MakeInterfaceForConstant("OSConfigPosix_DefaultOSName", "\"" & DefaultOSName{TARGET_OS} & "\"")
 MakeInterfaceForConstant("OSConfigPosix_DefaultArch", "\"" & DefaultArch{TARGET_ARCH} & "\"")
-
-if equal(TARGET, "ALPHA_OSF") or equal(TARGET, "DS3100")  	 
-  MakeInterfaceForConstant("SocketPosix_IsUltrixOrOSF", "TRUE") 	 
-else 	 
-  MakeInterfaceForConstant("SocketPosix_IsUltrixOrOSF", "FALSE") 	 
-end
  
 end

@@ -7,6 +7,8 @@
 #include <sys/socket.h>
 #include <netdb.h>
 #include <arpa/inet.h>
+#include <netinet/in.h>
+#include <netinet/tcp.h>
 #else
 #include <winsock2.h>
 #include <stdlib.h>
@@ -14,6 +16,24 @@
 
 #define TRUE 1
 #define FALSE 0
+
+/* https://github.com/natefoo/predef/wiki/OperatingSystems */
+#if defined(ULTRIX)     || \
+    defined(ultrix)     || \
+    defined(__ultrix)   || \
+    defined(__ultrix__) || \
+    defined(__osf__)    || \
+    defined(__osf)
+static char refetchError = TRUE;
+#else
+static char refetchError = FALSE;
+#endif
+
+#define RefetchError SocketPosix__RefetchError
+void RefetchError(INTEGER fd);
+
+#if 0
+
 typedef double LONGREAL;
 
 #ifdef __cplusplus
@@ -21,18 +41,12 @@ extern "C" {
 #endif
 
 enum {WaitResult_Ready, WaitResult_Error, WaitResult_FDError, WaitResult_Timeout};
+
 int
 __cdecl
 SchedulerPosix__IOWait(int fd, int/*boolean*/read, LONGREAL timeout);
 
 typedef struct sockaddr_in SockAddrIn;
-
-#if defined(ULTRIX) || defined(ultrix) || defined(__osf__)
-#define REFETCH_ERROR 1
-static int RefetchError(int fd);
-#else
-#define REFETCH_ERROR 0
-#endif
 
 typedef struct {
     INTEGER addr4;
@@ -212,14 +226,12 @@ SocketPosixC__Connect(int fd, EndPoint* ep)
         if (connect(fd, (struct sockaddr *)&name, sizeof(name)) == 0)
             break;
         error = GetSocketError();
-#if REFETCH_ERROR
         switch (error)
         {
         case EINVAL: /* hack to try to get real GetSocketError(), hidden due to NBIO bug in connect */
         case EBADF:  /* we'll try the same for EBADF, which we've seen on Alpha */
-            error = RefetchError(fd);
+            RefetchError(fd, &error);
         }
-#endif
         if (CommonError(error))
             return;
         switch (error)
@@ -599,20 +611,20 @@ static void MakeNonBlocking(int fd)
         IOError(Unexpected);
 }
 
-#if REFETCH_ERROR
+#endif
 
-static int RefetchError(int fd)
+void RefetchError(INTEGER fd)
 {
-/* Awful hack to retrieve a meaningful error from a TCP accept
-   socket.  Only works on Ultrix and OSF.  Leaves result
-   in errno.  */
+  if (refetchError)
+  {
+    /* Awful hack to retrieve a meaningful error from a TCP accept
+       socket.  Only works on Ultrix and OSF.  Leaves result
+       in errno.  */
     int optbuf = 0;
     socklen_t optlen = sizeof(optbuf);
-    getsockopt(fd, IPPROTO_TCP, TCP_NODELAY, optbuf, &optlen);
-    return errno;
+    getsockopt((int)fd, IPPROTO_TCP, TCP_NODELAY, &optbuf, &optlen);
+  }
 }
-
-#endif
 
 #ifdef __cplusplus
 } /* extern C */
