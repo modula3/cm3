@@ -102,48 +102,43 @@ TYPE
 (* Return the first usable address - there could be many - and more likely an IP4 address. *)
 PROCEDURE GetAddrInfo(READONLY name,service : TEXT) : EP RAISES {Error} =
   VAR
-    node,port : Ctypes.char_star;
-    res : RefAddrInfo;
-    sa4 : RefSockaddr4;
-    sa16 : RefSockaddr16;
+    node: Ctypes.char_star := NIL;
+    port : Ctypes.char_star := NIL;
+    res : RefAddrInfo := NIL;
+    free : RefAddrInfo := NIL;
+    sa4 : RefSockaddr4 := NIL;
+    sa16 : RefSockaddr16 := NIL;
     a4 : Address4;
     a16 : Address16;
-    ep4 : Endpoint4;
-    ep16 : Endpoint16;
-    err : Ctypes.int;
+    err : Ctypes.int := 0;
+    ep: EP := NIL;
   BEGIN
     IF name = NIL AND service = NIL THEN
       IPError.Raise (LookupFailure);
     END;
-    IF name = NIL THEN node := NIL; ELSE node := M3toC.CopyTtoS(name); END;
-    IF service = NIL THEN port := NIL; ELSE port := M3toC.CopyTtoS(service); END;
+    IF name # NIL THEN node := M3toC.CopyTtoS(name); END;
+    IF service # NIL THEN port := M3toC.CopyTtoS(service); END;
 
     err := Unetdb.getaddrinfo(node,port,NIL,res);
     IF err # 0 THEN
       IPError.Raise (LookupFailure, err);
     ELSE
-      WHILE res # NIL DO
+      free := res;
+      WHILE ep = NIL AND res # NIL DO
         IF res.ai_family = Usocket.AF_INET THEN
           sa4 := LOOPHOLE(res.ai_addr,RefSockaddr4);
           a4 := LOOPHOLE(sa4.sin_addr,Address4);
-          ep4 := NEW(Endpoint4);
-          ep4.adr := a4;
-          ep4.port := sa4.sin_port;
-          Unetdb.freeaddrinfo(res);
-          RETURN ep4;
+          ep := NEW(Endpoint4, adr := a4, port := sa4.sin_port);
         ELSIF res.ai_family = Usocket.AF_INET6 THEN
           sa16 := LOOPHOLE(res.ai_addr, RefSockaddr16);
           a16 := LOOPHOLE(sa16.sin6_addr, Address16);
-          ep16 := NEW(Endpoint16);
-          ep16.adr := a16;
-          ep16.port := sa16.sin6_port;
-          Unetdb.freeaddrinfo(res);
-          RETURN ep16;
+          ep := NEW(Endpoint16, adr := a16, port := sa16.sin6_port);
         END;
         res := res.ai_next;
+      END;
+      Unetdb.freeaddrinfo(free);
     END;
-  END;
-  RETURN NIL;
+    RETURN ep;
 END GetAddrInfo;
 
 PROCEDURE GetNameInfo(ep : EP; VAR (*out*) host,service : TEXT) RAISES {Error} =
