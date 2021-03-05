@@ -1,18 +1,29 @@
-On computers without Visual C++ 2005 (8.0) or CLR 2.0 installed, download and
- run the setup for the Visual C++ runtime -- vcredist_x86.exe -- from either
+Modula-3 generally depends on a redistributable Visual C++ runtime.
+There are many versions through the years.
+Which one is required depends on how Modula-3 was built.
 
-RTM (release to manufacturing):
+Search the web for "vcredist".
 
+Here are some examples:
+
+Visual C++ 2005 (8.0) RTM (release to manufacturing):
   http://www.microsoft.com/downloads/details.aspx?familyid=32BC1BEE-A3F9-4C13-9C99-220B62A191EE
 
-or Service Pack 1:
-
+Visual C++ 2005 (8.0) Service Pack 1:
   http://www.microsoft.com/downloads/details.aspx?FamilyID=200b2fd9-ae1a-4a14-984d-389c36f85647
 
-Or if you use Visual C++ 2008 (9.0)
+Visual C++ 2008 (9.0):
+  http://www.microsoft.com/downloads/details.aspx?familyid=9B2DA534-3E03-4391-8A4D-074B9F2BC1BF&displaylang=en
 
-http://www.microsoft.com/downloads/details.aspx?familyid=9B2DA534-3E03-4391-8A4D-074B9F2BC1BF&displaylang=en
+Visual C++ 2008 (9.0) Service Pack 1:
+  http://www.microsoft.com/downloads/details.aspx?familyid=A5C84275-3B97-4AB7-A40D-3802B2AF5FC2&displaylang=en
 
-or 2008 Service Pack 1:
+Visual C++ Redistributable Packages for Visual Studio 2013
+  https://www.microsoft.com/en-us/download/details.aspx?id=40784
+  https://support.microsoft.com/en-us/topic/update-for-visual-c-2013-redistributable-package-d8ccd6a5-4e26-c290-517b-8da6cfdf4f10
 
-http://www.microsoft.com/downloads/details.aspx?familyid=A5C84275-3B97-4AB7-A40D-3802B2AF5FC2&displaylang=en
+Visual C++ Redistributable for Visual Studio 2015
+  https://www.microsoft.com/en-us/download/details.aspx?id=48145
+
+Visual Studio 2015, 2017 and 2019
+  https://support.microsoft.com/en-us/topic/the-latest-supported-visual-c-downloads-2647da03-1eea-4433-9aff-95f26a218cc0
