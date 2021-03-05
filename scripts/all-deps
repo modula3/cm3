@@ -1,5 +1,4 @@
 
-m3-win/import-libs import-libs: 
 m3-sys/m3cc m3cc: 
 m3-libs/m3core m3core: 
 m3-libs/libm3 libm3: m3core

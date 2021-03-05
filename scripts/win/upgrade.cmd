@@ -8,7 +8,6 @@
 @if defined CM3 set CM3=
 
 @set p_runtime=^
- import-libs ^
  m3core ^
  libm3
 
@@ -28,7 +27,7 @@ call %~dp0do-cm3-core realclean || exit /b 1
 @echo on
 
 @call :header building just new compiler with old compiler (old compiler cannot necessarily build new runtime)
-call %~dp0do-pkg buildship import-libs %p_compiler% || exit /b 1
+call %~dp0do-pkg buildship %p_compiler% || exit /b 1
 @echo on
 
 @call :header installing new compiler
