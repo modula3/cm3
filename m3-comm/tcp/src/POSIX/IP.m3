@@ -15,53 +15,47 @@ VAR mu := NEW(MUTEX);
 PROCEDURE GetHostByName(nm: TEXT; VAR (*out*) res: Address): BOOLEAN
     RAISES {Error} =
   VAR hostent: Unetdb.struct_hostent;
+      h: Unetdb.struct_hostent_star;
+      s := M3toC.SharedTtoS(nm);
   BEGIN
     LOCK mu DO
-      VAR
-        s := M3toC.SharedTtoS(nm);
         h := Unetdb.gethostbyname(s, ADR(hostent));
-      BEGIN
-        M3toC.FreeSharedS(nm, s);
-        IF h = NIL THEN InterpretError(); RETURN FALSE; END;
         res := GetAddress(h);
-      END;
     END;
+    M3toC.FreeSharedS(nm, s);
+    IF h = NIL THEN InterpretError(); RETURN FALSE; END;
     RETURN TRUE;
   END GetHostByName;
 
 PROCEDURE GetCanonicalByName(nm: TEXT): TEXT RAISES {Error} =
   VAR hostent: Unetdb.struct_hostent;
+      h: Unetdb.struct_hostent_star;
+      s := M3toC.SharedTtoS(nm);
   BEGIN
     LOCK mu DO
-      VAR
-        s := M3toC.SharedTtoS(nm);
-        h := Unetdb.gethostbyname(s, ADR(hostent));
-      BEGIN
-        M3toC.FreeSharedS(nm, s);
-        IF h # NIL THEN
-          RETURN M3toC.CopyStoT(h.h_name);
-        END;
-        InterpretError();
+      h := Unetdb.gethostbyname(s, ADR(hostent));
+      M3toC.FreeSharedS(nm, s);
+      IF h # NIL THEN
+        RETURN M3toC.CopyStoT(h.h_name);
       END;
     END;
+    InterpretError();
     RETURN NIL;
   END GetCanonicalByName;
 
 PROCEDURE GetCanonicalByAddr(addr: Address): TEXT RAISES {Error} =
-  VAR ua: Uin.struct_in_addr;
+  VAR ua := Uin.struct_in_addr{0};
       hostent: Unetdb.struct_hostent;
+      h: Unetdb.struct_hostent_star;
   BEGIN
     ua.s_addr := LOOPHOLE(addr, Utypes.u_int);
     LOCK mu DO
-      VAR h := Unetdb.gethostbyaddr(
-                   ADR(ua), BYTESIZE(ua), Usocket.AF_INET, ADR(hostent));
-      BEGIN
-        IF h # NIL THEN
-          RETURN M3toC.CopyStoT(h.h_name);
-        END;
-        InterpretError();
+      h := Unetdb.gethostbyaddr(ADR(ua), BYTESIZE(ua), Usocket.AF_INET, ADR(hostent));
+      IF h # NIL THEN
+        RETURN M3toC.CopyStoT(h.h_name);
       END;
     END;
+    InterpretError();
     RETURN NIL;
   END GetCanonicalByAddr;
 
@@ -79,20 +73,21 @@ PROCEDURE GetHostAddr(): Address =
       hostent: Unetdb.struct_hostent;
       lochost := ARRAY [0..9] OF CHAR {'1', '2', '7', '.', '0', '.', '0',
                 '.', '1', '\000'};
+      h: Unetdb.struct_hostent_star;
   BEGIN
     LOCK mu DO
-      IF Unix.gethostname(ADR(hname[0]), BYTESIZE(hname)) # 0 THEN
-        IPError.Die ();
-      END;
-      VAR h := Unetdb.gethostbyname(ADR(hname[0]), ADR(hostent));
-      BEGIN
+      IF Unix.gethostname(ADR(hname[0]), BYTESIZE(hname)) = 0 THEN
+        h := Unetdb.gethostbyname(ADR(hname[0]), ADR(hostent));
         IF h = NIL THEN
           h := Unetdb.gethostbyname(ADR(lochost[0]), ADR(hostent));
-          IF h = NIL THEN IPError.Die(); END;
         END;
-        RETURN GetAddress(h);
+        IF h # NIL THEN
+          RETURN GetAddress(h);
+        END;
       END;
     END;
+    IPError.Die ();
+    RETURN NullAddress4;
   END GetHostAddr;
 
 CONST
