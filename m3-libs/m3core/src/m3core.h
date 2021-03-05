@@ -171,6 +171,11 @@
 #define __cdecl /* nothing */
 #endif
 
+#ifndef _MSC_VER
+#define __try /* nothing */
+#define __finally /* nothing */
+#endif
+
 #ifdef __cplusplus
 #define M3_EXTERN_C         extern "C"
 #define M3_EXTERN_C_BEGIN   extern "C" {
