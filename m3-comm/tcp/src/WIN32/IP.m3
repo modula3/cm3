@@ -13,13 +13,10 @@ UNSAFE MODULE IP;
 
 IMPORT IPError, M3toC, Process, WinSock, Uin, Unetdb;
 
-VAR mu := NEW(MUTEX);
-
 (************
 PROCEDURE GetHostByName(nm: TEXT; VAR (*out*) res: Address): BOOLEAN
     RAISES {Error} =
   BEGIN
-    LOCK mu DO
       VAR
         s := M3toC.SharedTtoS(nm);
         h := WinSock.gethostbyname(s);
@@ -28,7 +25,6 @@ PROCEDURE GetHostByName(nm: TEXT; VAR (*out*) res: Address): BOOLEAN
         IF h = NIL THEN InterpretError(); RETURN FALSE; END;
         res := GetAddress(h);
       END;
-    END;
     RETURN TRUE;
   END GetHostByName;
 **************)
@@ -49,12 +45,10 @@ PROCEDURE GetHostByName(nm: TEXT; VAR (*out*) res: Address): BOOLEAN
       res := LOOPHOLE (a, Address);
     ELSE
       (* the name is not a dotted IP address *)
-      LOCK mu DO
         h := WinSock.gethostbyname(s);
         M3toC.FreeSharedS(nm, s);
         IF h = NIL THEN InterpretError(); RETURN FALSE; END;
         res := GetAddress(h);
-      END;
     END;
     RETURN TRUE;
   END GetHostByName;
@@ -62,7 +56,6 @@ PROCEDURE GetHostByName(nm: TEXT; VAR (*out*) res: Address): BOOLEAN
 (*************
 PROCEDURE GetCanonicalByName(nm: TEXT): TEXT RAISES {Error} =
   BEGIN
-    LOCK mu DO
       VAR
         s := M3toC.SharedTtoS(nm);
         h := WinSock.gethostbyname(s);
@@ -73,7 +66,6 @@ PROCEDURE GetCanonicalByName(nm: TEXT): TEXT RAISES {Error} =
         END;
         InterpretError();
       END;
-    END;
     RETURN NIL;
   END GetCanonicalByName;
 ************)
@@ -87,7 +79,6 @@ PROCEDURE GetCanonicalByName(nm: TEXT): TEXT RAISES {Error} =
     a := WinSock.inet_addr(s);
     h : WinSock.struct_hostent_star;
   BEGIN
-    LOCK mu DO
       IF a = WinSock.INADDR_NONE THEN
         (* the name is not a dotted IP address *)
         h := WinSock.gethostbyname(s);
@@ -98,14 +89,12 @@ PROCEDURE GetCanonicalByName(nm: TEXT): TEXT RAISES {Error} =
       M3toC.FreeSharedS(nm, s);
       IF h = NIL THEN  InterpretError();  RETURN NIL;  END;
       RETURN M3toC.CopyStoT(h.h_name);
-    END;
   END GetCanonicalByName;
 
 PROCEDURE GetCanonicalByAddr(addr: Address): TEXT RAISES {Error} =
   VAR ua: WinSock.struct_in_addr;
   BEGIN
     ua.s_addr := LOOPHOLE(addr, WinSock.u_long);
-    LOCK mu DO
       VAR h := WinSock.gethostbyaddr(
                    ADR(ua), BYTESIZE(ua), WinSock.AF_INET);
       BEGIN
@@ -114,7 +103,6 @@ PROCEDURE GetCanonicalByAddr(addr: Address): TEXT RAISES {Error} =
         END;
       END;
       InterpretError();
-    END;
     RETURN NIL;
   END GetCanonicalByAddr;
 
@@ -133,7 +121,6 @@ PROCEDURE GetHostAddr(): Address =
                 '.', '1', '\000'};
       ent: WinSock.struct_hostent_star;
   BEGIN
-    LOCK mu DO
       IF WinSock.gethostname(ADR(hname[0]), BYTESIZE(hname)) # 0 THEN
         IPError.Die();
       END;
@@ -142,7 +129,6 @@ PROCEDURE GetHostAddr(): Address =
         ent := WinSock.gethostbyname(ADR(lochost[0])); 
       END;
       RETURN GetAddress(ent);
-    END;
   END GetHostAddr;
 
 CONST
