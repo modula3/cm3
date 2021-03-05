@@ -24,9 +24,14 @@
 #pragma warning(disable:4668) /* #if of undefined symbol */
 #endif
 
+#ifdef _WIN32
+#include "ws2tcpip.h"
+#include "wspiapi.h"
+#else
 typedef int BOOL;
 #define TRUE 1
 #define FALSE 0
+#endif
 
 #if __GNUC__ >= 4 && !defined(__osf__) && !defined(__CYGWIN__)
 #define M3_HAS_VISIBILITY 1
@@ -608,6 +613,10 @@ M3_DLL_LOCAL
 int
 __cdecl
 ThreadInternal__StackGrowsDown (void);
+
+void
+__cdecl
+Process__RegisterExitor(void (__cdecl*)(void));
 
 #ifdef __cplusplus
 } /* extern "C" */
