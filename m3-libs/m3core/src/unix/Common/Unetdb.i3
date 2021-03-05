@@ -76,7 +76,4 @@ PROCEDURE getnameinfo(addr : (*const*) UNTRACED REF Uin.struct_sockaddr;
                       servlen : socklen_t;
                       flags : int) : int ;
 
-<*EXTERNAL*>
-PROCEDURE gai_strerror(err : int) : char_star;
-
 END Unetdb.
