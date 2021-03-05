@@ -24,6 +24,10 @@
 #pragma warning(disable:4668) /* #if of undefined symbol */
 #endif
 
+typedef int BOOL;
+#define TRUE 1
+#define FALSE 0
+
 #if __GNUC__ >= 4 && !defined(__osf__) && !defined(__CYGWIN__)
 #define M3_HAS_VISIBILITY 1
 #else
