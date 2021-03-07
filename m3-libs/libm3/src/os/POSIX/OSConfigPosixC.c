@@ -1,6 +1,7 @@
 /* Copyright 1996-2000, Critical Mass, Inc.  All rights reserved. */
 /* See file COPYRIGHT-CMASS for details. */
 
+#include "m3core.h"
 #include <sys/utsname.h>
 
 #ifdef __cplusplus
@@ -8,31 +9,29 @@ extern "C"
 {           
 #endif
 
-typedef void* TEXT;
+// Callback from C to Modula3 so that C does not traffic in traced references.
+void
+__cdecl
+OSConfigPosixC__InitFromC(
+    const char* host_name,
+    const char* host_arch,
+    const char* os_name,
+    const char* os_version);
 
-TEXT M3toC__CopyStoT(const char*);
-
-int
-OSConfigPosixC__Init(
-    TEXT* host_name,
-    TEXT* host_arch,
-    TEXT* os_name,
-    TEXT* os_version)
+void
+__cdecl
+OSConfigPosixC__InitC(void)
 {
     struct utsname uts;
-    int result;
 
-    result = uname(&uts);
-    if (result < 0)
-        goto Exit;
+    // Workaround: Some builds of WSL1 do not nul terminate.
+    ZeroMemory(&uts, sizeof(uts));
 
-    *host_name  = M3toC__CopyStoT(uts.nodename);
-    *host_arch  = M3toC__CopyStoT(uts.machine);
-    *os_name    = M3toC__CopyStoT(uts.sysname);
-    *os_version = M3toC__CopyStoT(uts.release);
+    int result = uname(&uts);
 
-Exit:
-    return result;
+    assert(result == 0);
+
+    OSConfigPosixC__InitFromC(uts.nodename, uts.machine, uts.sysname, uts.release);
 }
 
 #ifdef __cplusplus
