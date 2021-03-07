@@ -1,6 +1,9 @@
 /* Copyright 1996-2000, Critical Mass, Inc.  All rights reserved. */
 /* See file COPYRIGHT-CMASS for details. */
 
+// TODO Just delete this old code? All the copies?
+// git grep RefetchError
+
 #include "m3core.h"
 #ifndef _WIN32
 #include <sys/types.h>
@@ -24,9 +27,9 @@
     defined(__ultrix__) || \
     defined(__osf__)    || \
     defined(__osf)
-static char refetchError = TRUE;
+static const char refetchError = TRUE;
 #else
-static char refetchError = FALSE;
+static const char refetchError;
 #endif
 
 #define RefetchError SocketPosix__RefetchError
@@ -613,7 +616,9 @@ static void MakeNonBlocking(int fd)
 
 #endif
 
-void RefetchError(INTEGER fd)
+void
+__cdecl
+RefetchError(INTEGER fd)
 {
   if (refetchError)
   {

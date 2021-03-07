@@ -2,6 +2,8 @@
 (* Distributed only by permission. *)
 (* Created on Sat Jan 11 15:49:00 PST 1992 by wobber *)
 
+(* This has been moved to TCPHackC.c.
+
 UNSAFE MODULE TCPHack;
 
 IMPORT Uin, Usocket;
@@ -18,3 +20,5 @@ PROCEDURE RefetchError(fd: INTEGER): BOOLEAN =
 
 BEGIN
 END TCPHack.
+
+*)
