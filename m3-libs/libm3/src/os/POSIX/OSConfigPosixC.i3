@@ -3,14 +3,12 @@
 
 INTERFACE OSConfigPosixC;
 
-FROM Ctypes IMPORT int;
+FROM Ctypes IMPORT char_star;
 
-<*EXTERNAL OSConfigPosixC__Init*>
-PROCEDURE
-Init (
-    VAR host_name: TEXT;
-    VAR host_arch: TEXT;
-    VAR os_name: TEXT;
-    VAR os_version: TEXT) : int;
+(* Callback from C to Modula3 so that C does not traffic in traced references. *)
+PROCEDURE InitFromC (host_name, host_arch, os_name, os_version: char_star);
+
+<*EXTERNAL OSConfigPosixC__InitC*>
+PROCEDURE InitC ();
 
 END OSConfigPosixC.

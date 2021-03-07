@@ -1,0 +1,97 @@
+% Copyright (C) 1992, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+%
+% Last modified on Sat Jan  7 14:58:01 PST 1995 by kalsow  
+%      modified on Thu Jul 14 13:10:18 PDT 1994 by mcjones 
+%      modified on Thu Jun 17 19:14:47 PDT 1993 by harrison
+%      modified on Thu May  6 21:38:22 PDT 1993 by mjordan
+
+Module("OSErrorPosix")
+
+if equal (OS_TYPE, "POSIX")
+
+Interface("OSConfig")
+
+Module("FilePosix")
+
+implementation("FSPosix")
+implementation("PipePosix")
+implementation("PathnamePosix")
+module("SocketPosix")
+c_source("SocketPosixC")
+implementation("OSConfigPosix")
+
+module("ProcessPosixCommon")
+if equal (TARGET, "NT386")
+    implementation("ProcessCygwin")
+else
+    implementation("ProcessPosix")
+end
+
+c_source("FilePosixC")
+interface("FilePosixC")
+
+interface("OSConfigPosixC")
+c_source("OSConfigPosixC")
+
+interface("FSPosixC")
+c_source("FSPosixC")
+
+local readonly DefaultOSName = {
+    "AIX" : "AIX",
+    "CYGWIN" : "Cygwin",
+    "DARWIN" : "Darwin",
+    "FREEBSD" : "FreeBSD",
+    "HPUX" : "HPUX",
+    "INTERIX" : "Interix",
+    "IRIX" : "Irix",
+    "LINUX" : "Linux",
+    "NETBSD" : "NetBSD",
+    "NT" : "Win32",
+    "OPENBSD" : "OpenBSD",
+    "OS2" : "OS/2",
+    "SOLARIS" : "Solaris",
+    "OSF" : "Digital Unix",
+    "TRU64" : "Digital Unix",
+    "VMS" : "VMS",
+}
+
+% a lowercase primitive here would be good
+
+local readonly DefaultArch = {
+    "ALPHA" : "alpha",
+    "ALPHA32" : "alpha",
+    "ALPHA64" : "alpha",
+    "AMD64" : "AMD64",
+    "ARM" : "arm",
+    "ARM64" : "arm64",
+    "HPPA" : "hppa",
+    "HPPA64" : "hppa64",
+    "I386" : "x86",
+    "IA64" : "IA64",
+    "M68K" : "m68K",
+    "MIPS" : "mips",
+    "MIPS64" : "mips64",
+    "PPC": "ppc",
+    "PPC64": "ppc64",
+    "RISCV64" : "riscv64",
+    "SPARC" : "sparc",
+    "SPARC64" : "sparc64",
+    "VAX" : "vax",
+}
+
+local readonly proc MakeInterfaceForConstant(Name, Value) is
+    > Name & ".i3.tmp" in
+        write("INTERFACE " & Name & ";\n")
+        write("CONST Value = " & Value & ";\n")
+        write("END " & Name & ".")
+        derived_interface(Name, HIDDEN)
+    end
+    cp_if(Name & ".i3.tmp", Name & ".i3")
+end
+
+MakeInterfaceForConstant("OSConfigPosix_DefaultOSName", "\"" & DefaultOSName{TARGET_OS} & "\"")
+MakeInterfaceForConstant("OSConfigPosix_DefaultArch", "\"" & DefaultArch{TARGET_ARCH} & "\"")
+ 
+end

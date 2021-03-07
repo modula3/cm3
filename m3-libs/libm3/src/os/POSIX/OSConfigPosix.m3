@@ -1,10 +1,12 @@
 (* Copyright 1996-2000, Critical Mass, Inc.  All rights reserved. *)
 (* See file COPYRIGHT-CMASS for details. *)
 
-UNSAFE MODULE OSConfigPosix EXPORTS OSConfig;
+UNSAFE MODULE OSConfigPosix EXPORTS OSConfig, OSConfigPosixC;
 
-IMPORT Env, OSError, Process, OSConfigPosixC;
-IMPORT OSConfigPosix_DefaultOSName, OSConfigPosix_DefaultArch;
+IMPORT Env, OSError, Process, OSConfigPosixC, M3toC, Ctypes;
+(* IMPORT OSConfigPosix_DefaultOSName, OSConfigPosix_DefaultArch; *)
+
+TYPE char_star = Ctypes.char_star;
 
 VAR
   host_name  : TEXT := NIL;
@@ -52,18 +54,37 @@ PROCEDURE UserHome (): TEXT =
 
 (*---------------------------------------------------------- internal ---*)
 
+PROCEDURE CopyStoT (c: char_star; VAR text: TEXT) =
+BEGIN
+  IF text = NIL THEN
+    text := M3toC.CopyStoT(c);
+  END;
+END CopyStoT;
+
+(* Callback from C to Modula3 so that C does not traffic in traced references. *)
+PROCEDURE InitFromC (c_host_name, c_host_arch, c_os_name, c_os_version: char_star) =
+BEGIN
+  CopyStoT(c_host_name, host_name);
+  CopyStoT(c_host_arch, host_arch);
+  CopyStoT(c_os_name, os_name);
+  CopyStoT(c_os_version, os_version);
+END InitFromC;
+
 PROCEDURE Init () =
   BEGIN
     IF (host_name # NIL) AND (host_arch # NIL)
             AND (os_name # NIL) AND (os_version # NIL) THEN
         RETURN;
     END;
+    OSConfigPosixC.InitC ();
+(*
     IF OSConfigPosixC.Init (host_name, host_arch, os_name, os_version) < 0 THEN
       host_name  := "<unknown>";
       host_arch  := OSConfigPosix_DefaultArch.Value;
       os_name    := OSConfigPosix_DefaultOSName.Value;
       os_version := "";
     END;
+*)
   END Init;
 
 PROCEDURE InitUserName () =
