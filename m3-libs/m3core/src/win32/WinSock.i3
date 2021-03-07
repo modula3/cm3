@@ -76,7 +76,7 @@ CONST
 
   FC  = Shift (ORD ('f'), 8);
   SC  = Shift (ORD ('s'), 8);
-  INT = Shift (And (BYTESIZE (INTEGER), IOCPARM_MASK), 16);
+  INT = Shift (And (BYTESIZE (u_long), IOCPARM_MASK), 16);
   R   = IOC_OUT;
   W   = IOC_IN;
 
