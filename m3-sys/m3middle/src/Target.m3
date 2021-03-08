@@ -41,12 +41,6 @@ PROCEDURE IsAMD64(): BOOLEAN =
     RETURN TextUtils.StartsWith(System_name, "AMD64_");
   END IsAMD64;
 
-<*UNUSED*>PROCEDURE IsSPARC(): BOOLEAN =
-CONST startsWith = TextUtils.StartsWith;
-  BEGIN
-    RETURN startsWith(System_name, "SPARC") OR startsWith(System_name, "SOL");
-  END IsSPARC;
-
 PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): BOOLEAN =
   VAR sys := 0;  max_align := 64;
   BEGIN
