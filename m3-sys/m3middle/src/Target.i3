@@ -473,13 +473,41 @@ CONST
    *
    * Comments suggest it might have been not 8 for M68k, SH, and PA. *)
 
+  PCC_bitfield_type_matters = TRUE;
+  (* TRUE => the C compiler uses the type rather than the size of
+   * a bit-field to compute the alignment of the struct
+   *
+   * What this means is:
+   * Always:
+   *   sizeof(struct { int a; }) == 4
+   *   sizeof(struct { char a; }) == 1
+   *
+   * PCC_bitfield_type_matters = false:
+   *   sizeof(struct { int a : 8; }) == 1
+   *
+   * PCC_bitfield_type_matters = true:
+   *   sizeof(struct { int a : 8; }) == 4
+   *
+   * Bitfields are aligned by their type, not their size,
+   * affecting then the alignment of the container.
+   *
+   * This is true for the vast majority of gcc targets.
+   *
+   * In Modula3 this presumably translates to:
+   * Always:
+   *   BYTESIZE(RECORD a:int; END) == 4
+   *   BYTESIZE(RECORD a:CHAR; END) == 1
+   *
+   * PCC_bitfield_type_matters = false:
+   *   BYTESIZE(RECORD BITS 8 FOR a:int; END) == 1
+   *
+   * PCC_bitfield_type_matters = true:
+   *   BYTESIZE(RECORD BITS 8 FOR a:int; END) == 4
+   *)
+
 VAR (*CONST*)
   Little_endian : BOOLEAN;
   (* TRUE => byte[0] of an integer contains its least-significant bits *)
-
-  PCC_bitfield_type_matters: BOOLEAN;
-  (* TRUE => the C compiler uses the type rather than the size of
-     a bit-field to compute the alignment of the struct *)
 
   Allow_packed_byte_aligned: BOOLEAN;
   (* Allow the compiler to align scalar types on byte boundaries when packing.
