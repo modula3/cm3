@@ -551,11 +551,14 @@ VAR (*CONST*)
        a small offset.
     *)
 
-VAR (*CONST*)
   (* floating point values *)
-  All_floats_legal : BOOLEAN;
+  All_floats_legal = TRUE;
   (* If all bit patterns are "legal" floating point values (i.e. they can
-     be assigned without causing traps or faults). *)
+   * be assigned without causing traps or faults).
+   * This is true for all targets except VAX.
+   *)
+
+VAR (*CONST*)
 
   Has_stack_walker: BOOLEAN;
   (* TRUE => generate PC-tables for exception scopes.  Otherwise, generate
