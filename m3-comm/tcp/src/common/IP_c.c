@@ -111,7 +111,7 @@ GetCanonicalByName(const char* s, TEXT* text, hostent** h)
 
 int
 __cdecl
-GetCanonicalByAddr(const int* addr, TEXT* result)
+GetCanonicalByAddr(const int* addr, TEXT* result, hostent** h)
 {
     sockaddr_in ua;
     ZeroMemory(&ua, sizeof(ua));
@@ -121,10 +121,10 @@ GetCanonicalByAddr(const int* addr, TEXT* result)
 
     memcpy(&ua.sin_addr, addr, 4);
 
-    hostent* h = gethostbyaddr((char*)&ua, sizeof(ua), AF_INET);
-    if (h)
+    *h = gethostbyaddr((char*)&ua, sizeof(ua), AF_INET);
+    if (*h)
     {
-        IPInternal__CopyStoT(h->h_name, result); // under lock unfortunately
+        IPInternal__CopyStoT((*h)->h_name, result); // under lock unfortunately
         return 0; // no error
     }
 

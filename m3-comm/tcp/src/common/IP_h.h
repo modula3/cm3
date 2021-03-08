@@ -36,7 +36,7 @@ GetCanonicalByName(const char* s, TEXT* text, hostent** h);
 
 int
 __cdecl
-GetCanonicalByAddr(const int* addr, TEXT* result);
+GetCanonicalByAddr(const int* addr, TEXT* result, hostent** h);
 
 hostent*
 __cdecl
