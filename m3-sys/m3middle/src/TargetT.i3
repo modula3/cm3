@@ -40,7 +40,7 @@ TYPE T = RECORD
     (* TRUE => platform has lock-free atomic primitives for this type *)
   little_endian : BOOLEAN;
     (* TRUE => byte[0] of an integer contains its least-significant bits *)
-  PCC_bitfield_type_matters: BOOLEAN;
+  PCC_bitfield_type_matters: BOOLEAN := TRUE;
     (* TRUE => the C compiler uses the type rather than the size of
        a bit-field to compute the alignment of the struct *)
   structure_size_boundary: CARDINAL;

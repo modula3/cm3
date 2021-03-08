@@ -68,7 +68,6 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
 
     Allow_packed_byte_aligned := FALSE;
     All_floats_legal          := TRUE;
-    PCC_bitfield_type_matters := TRUE;
     Little_endian             := TRUE;
 
     IF backend_mode = M3BackendMode_t.C THEN
