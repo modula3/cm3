@@ -306,7 +306,7 @@ M3_BACKEND_MODE = "3"
 proc compile_c (source, object, options, optimize, debug) is
   local args = [ "-w", options ]
   if optimize  args += "-O"  end
-  if debug     args += "-gstabs"  end
+  if debug     args += "-g"  end
   return try_exec ("@" & SYSTEM_CC, args, "-c", source)
 end
 
