@@ -282,7 +282,7 @@ proc compile_c (source, object, options, optimize, debug) is
   %%PIC local args = [ "+z", options ]  % +Z => -fpic for cc
   local args = [ options, "-Dalloca=malloc" ]
   if optimize  args += "-O"  end
-  if debug     args += "-gstabs"  end
+  if debug     args += "-g"  end
   return try_exec ("@" & SYSTEM_CC, args, "-c", source)
 end
 
@@ -290,7 +290,7 @@ end
 % proc compile_c (source, object, options, optimize, debug) is
 %   local args = [ "-fPIC", "-z", options ] % gcc
 %   if optimize  args += "-O"  end
-%   if debug     args += "-gstabs"  end
+%   if debug     args += "-g"  end
 %   return try_exec ("@" & SYSTEM_CC, args, "-c", source)
 % end
 
@@ -454,6 +454,6 @@ end
 %
 
 GNU_CC     = "gcc"
-GNU_CFLAGS = "-gstabs"
+GNU_CFLAGS = "-g"
 GNU_MAKE   = "/usr/local/gnu/bin/make"
 

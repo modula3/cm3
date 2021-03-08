@@ -94,10 +94,6 @@ proc configure_c_compiler() is
   %
   % Clang assembler gives warnings for -fPIC, which appears meaningless (review for arm/arm64).
   %
-  % -gstabs+ does not work on Mac OSX.
-  %
-
-  %SYSTEM_CC = "gcc -gstabs+ -fPIC"
   %SYSTEM_CC = "gcc -g -fPIC"
   SYSTEM_CC = "g++ -g -fPIC"
   SYSTEM_CC = SYSTEM_CC & " -Wall"

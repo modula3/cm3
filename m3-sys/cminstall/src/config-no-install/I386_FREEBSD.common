@@ -20,7 +20,7 @@ proc configure_c_compiler() is
   % gcc -c -m32 -x c /dev/null
   % cc1: Invalid option `32'
 
-  SYSTEM_CC = "g++ -gstabs+ -fPIC"
+  SYSTEM_CC = "g++ -g -fPIC"
   if defined("FREEBSD_LD_CC_APPEND")
     SYSTEM_CC = SYSTEM_CC & FREEBSD_LD_CC_APPEND
   end
