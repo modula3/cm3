@@ -70,11 +70,13 @@ PROCEDURE Parse (interface, top_level: BOOLEAN;  VAR fails: M3.ExSet) =
           GetToken (); (* convention name *)
           Match (TK.tENDPRAGMA);
       | TK.tLAZYALIGN =>
+          Error.Msg ("<*LazyAlign*> is no longer supported");
           att.isLazyAligned := TRUE;
           Module.SetLazyAlignment (TRUE);
           GetToken (); (* LAZYALIGN *)
           Match (TK.tENDPRAGMA);
       | TK.tSTRICTALIGN =>
+          Error.Msg ("<*StrictAlign*> is no longer supported");
           att.isLazyAligned := FALSE;
           Module.SetLazyAlignment (FALSE);
           GetToken (); (* LAZYALIGN *)
