@@ -38,9 +38,9 @@ int
 __cdecl
 GetCanonicalByAddr(const int* addr, TEXT* result, hostent** h);
 
-hostent*
+int
 __cdecl
-GetHostAddr(int* address);
+GetHostAddr(int* address, hostent** h);
 
 int
 __cdecl

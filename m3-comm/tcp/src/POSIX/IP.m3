@@ -10,20 +10,20 @@ IMPORT IPInternal, IPError, M3toC, Unetdb, Ctypes;
 
 TYPE int = Ctypes.int;
 
-(* TODO Not all systems need this lock, e.g. Linux *)
+(* TODO Not all systems need this lock, e.g. Linux, NT, Solaris, AIX *)
 VAR mu := NEW(MUTEX);
 
 PROCEDURE GetHostByName(nm: TEXT; VAR (*out*) res: Address): BOOLEAN
     RAISES {Error} =
   VAR s := M3toC.SharedTtoS(nm);
       err: int := 0;
-      h: ADDRESS := NIL;
+      h: ADDRESS := NIL; (* hostent, null or not *)
   BEGIN
     LOCK mu DO
         err := IPInternal.GetHostByName(s, res, h);
     END;
     M3toC.FreeSharedS(nm, s);
-    IF h = NIL THEN InterpretError(err); RETURN FALSE; END;
+    IF h = NIL THEN IPInternal.InterpretError(err); RETURN FALSE; END;
     RETURN TRUE;
   END GetHostByName;
 
@@ -31,7 +31,7 @@ PROCEDURE GetCanonicalByName(nm: TEXT): TEXT RAISES {Error} =
   VAR text: TEXT := NIL;
       err: int := 0;
       s := M3toC.SharedTtoS(nm);
-      h: ADDRESS := NIL;
+      h: ADDRESS := NIL; (* hostent, null or not *)
   BEGIN
     LOCK mu DO
       err := IPInternal.GetCanonicalByName(s, text, h);
@@ -40,14 +40,14 @@ PROCEDURE GetCanonicalByName(nm: TEXT): TEXT RAISES {Error} =
     IF h # NIL THEN
       RETURN text;
     END;
-    InterpretError(err);
+    IPInternal.InterpretError(err);
     RETURN NIL;
   END GetCanonicalByName;
 
 PROCEDURE GetCanonicalByAddr(addr: Address): TEXT RAISES {Error} =
   VAR text: TEXT := NIL;
       err: int := 0;
-      h: ADDRESS := NIL;
+      h: ADDRESS := NIL; (* hostent, null or not *)
   BEGIN
     LOCK mu DO
       err := IPInternal.GetCanonicalByAddr(addr, text, h);
@@ -55,16 +55,17 @@ PROCEDURE GetCanonicalByAddr(addr: Address): TEXT RAISES {Error} =
     IF h # NIL THEN
       RETURN text;
     END;
-    InterpretError(err);
+    IPInternal.InterpretError(err);
     RETURN NIL;
   END GetCanonicalByAddr;
 
 PROCEDURE GetHostAddr(): Address =
   VAR address := NullAddress4;
-      h: ADDRESS := NIL;
+      h: ADDRESS := NIL; (* hostent, null or not *)
+      err: int := 0;
   BEGIN
     LOCK mu DO
-      h := IPInternal.GetHostAddr(address);
+      err := IPInternal.GetHostAddr(address, h);
     END;
     IF h # NIL THEN
       RETURN address;
@@ -72,13 +73,6 @@ PROCEDURE GetHostAddr(): Address =
     IPError.Die ();
     RETURN NullAddress4;
   END GetHostAddr;
-
-PROCEDURE InterpretError(err: int) RAISES {Error} =
-  BEGIN
-    IF (err = Unetdb.TRY_AGAIN) OR (err = Unetdb.NO_RECOVERY) OR (err = Unetdb.NO_ADDRESS) THEN
-        IPError.Raise (LookupFailure);
-    END;
-  END InterpretError;
 
 BEGIN
 END IP.

@@ -28,6 +28,12 @@
 extern "C" {
 #endif
 
+#undef X
+#define X(x) EXTERN_CONST int IPInternal__##x = x;
+X(TRY_AGAIN)
+X(NO_RECOVERY)
+X(NO_ADDRESS)
+
 static
 int
 __cdecl
@@ -69,7 +75,7 @@ GetHostByName(const char* s, int* res, hostent** h)
         return 0; // no error
     }
 #endif
-    *h = gethostbyname(s);
+    *h = gethostbyname(s); // the name is not a dotted IP address
     if (*h)
     {
         *res = GetAddress(*h);
@@ -131,29 +137,29 @@ GetCanonicalByAddr(const int* addr, TEXT* result, hostent** h)
     return WSAGetLastError();
 }
 
-hostent*
+int
 __cdecl
-GetHostAddr(int* address)
+GetHostAddr(int* address, hostent** h)
 // Get the IP4 address of the current system.
 // TODO Getting the name first seems silly.
 {
     char hname[256];
-    hostent* h = 0;
+    *h = 0;
     int err = gethostname(hname, sizeof(hname));
     if (err == 0)
     {
-        h = gethostbyname(hname);
+        *h = gethostbyname(hname);
 
-        if (h == NULL)
-            h = gethostbyname("127.0.0.1");
+        if (*h == NULL)
+            *h = gethostbyname("127.0.0.1");
 
-        if (h)
+        if (*h)
         {
-            *address = GetAddress(h);
+            *address = GetAddress(*h);
         }
     }
 
-    return h;
+    return err;
 }
 
 EXTERN_CONST int IPInternal__AF_INET6 = AF_INET6;

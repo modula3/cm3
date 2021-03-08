@@ -57,9 +57,14 @@ BEGIN
   RTIO.PutText("\n");
 
   RTIO.PutText("GetCanonicalByAddr:");
-  text := IP.GetCanonicalByAddr(IP.GetHostAddr());
-  IF text = NIL THEN text := "NIL"; END;
-  RTIO.PutText(text);
+  TRY
+      text := IP.GetCanonicalByAddr(IP.GetHostAddr());
+      IF text = NIL THEN text := "NIL"; END;
+      RTIO.PutText(text);
+  EXCEPT
+  ELSE
+    RTIO.PutText("exception");
+  END;
   RTIO.PutText("\n");
 
   RTIO.PutText("GetAddrInfo+GetNameInfo:192.168 ");
