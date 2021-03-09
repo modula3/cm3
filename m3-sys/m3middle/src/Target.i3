@@ -326,6 +326,10 @@ VAR (*CONST*)
 
 (* sizes are specified in bits *)
 
+TYPE Endian = { Undefined, Little, Big };
+VAR endian: Endian;
+  (* Little => byte[0] of an integer contains its least-significant bits *)
+
 CONST
   Byte = 8;  (* minimum addressable unit (in bits) *)
 
@@ -384,9 +388,6 @@ CONST
    *)
 
 VAR (*CONST*)
-  Little_endian : BOOLEAN;
-  (* TRUE => byte[0] of an integer contains its least-significant bits *)
-
   Allow_packed_byte_aligned: BOOLEAN;
   (* Allow the compiler to align scalar types on byte boundaries when packing.
      The target processor must support byte alignment of scalar store and

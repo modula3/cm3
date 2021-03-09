@@ -38,8 +38,8 @@ TYPE T = RECORD
   defaultCall: CallingConvention := NIL;
   atomic_lock_free: ARRAY [CGType.Word8 .. CGType.Addr] OF BOOLEAN;
     (* TRUE => platform has lock-free atomic primitives for this type *)
-  little_endian : BOOLEAN;
-    (* TRUE => byte[0] of an integer contains its least-significant bits *)
+  endian    := Endian.Little;
+    (* Little => byte[0] of an integer contains its least-significant bits *)
   PCC_bitfield_type_matters: BOOLEAN := TRUE;
     (* TRUE => the C compiler uses the type rather than the size of
        a bit-field to compute the alignment of the struct *)
