@@ -93,7 +93,7 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
     (* this is overly optimistic... *)
 
     Allow_packed_byte_aligned := FALSE;
-    Little_endian             := TRUE;
+    endian := Endian.Little;
 
     IF backend_mode = M3BackendMode_t.C THEN
       Setjmp := "m3_setjmp";
@@ -141,7 +141,7 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
         OR TextUtils.StartsWith(system, "PPC")  (* ambiguous *)
         OR TextUtils.StartsWith(system, "SPARC")
         OR TextUtils.StartsWith(system, "SOL") THEN
-      Little_endian := FALSE;
+      endian := Endian.Big;
     END;
 
     (* x86 and AMD64 allow unaligned loads/stores but converge C *)

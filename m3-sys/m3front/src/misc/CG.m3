@@ -796,7 +796,7 @@ PROCEDURE Force_byte_align (VAR x: ValRec; s: Size) =
       Load (x.base, x.offset, s, x.align, Target.Word.cg_type); 
       tmp := Declare_temp (word_size, word_align, Target.Word.cg_type, in_memory := TRUE);
       Store (tmp, 0, word_size, word_align, Target.Word.cg_type);
-      IF NOT Target.Little_endian THEN
+      IF Target.endian = Target.Endian.Big THEN
         (* Get byte zero of the value at tmp's address. *) 
         EVAL TInt.FromInt(word_size - s, (*VAR*) shift_TInt);
         cg.load_integer (Target.Word.cg_type, shift_TInt); 
@@ -998,12 +998,12 @@ PROCEDURE AdvanceInit (o: Offset) =
         IF (excess = 0) THEN
           cg.init_int (init_pc DIV Target.Byte, init_bits, t);
           init_bits := TInt.Zero;
-        ELSIF Target.Little_endian
+        ELSIF Target.endian = Target.Endian.Little
           AND TWord.Extract (init_bits, 0, size, tmp)
           AND TWord.Extract (init_bits, size, excess, new_bits) THEN
           cg.init_int (init_pc DIV Target.Byte, tmp, t);
           init_bits := new_bits;
-        ELSIF (NOT Target.Little_endian)
+        ELSIF Target.endian = Target.Endian.Big
           AND TWord.Extract (init_bits, excess, size, tmp)
           AND TWord.Extract (init_bits, 0, excess, new_bits) THEN
           cg.init_int (init_pc DIV Target.Byte, tmp, t);
@@ -1046,7 +1046,7 @@ PROCEDURE Init_int (o: Offset;  s: Size;  READONLY value: Target.Int;
     END;
 
     AdvanceInit (o);
-    IF Target.Little_endian
+    IF Target.endian = Target.Endian.Little
       THEN bit_offset := o - init_pc;
       ELSE bit_offset := TWord.Size - (o - init_pc) - s;
     END;
@@ -1375,7 +1375,7 @@ PROCEDURE Load (v: Var;  o: Offset;  s: Size;  a: Alignment;  t: Type) =
       ELSE
         (* unaligned, partial load *)
         cg.load (v, AsBytes (o - align), best_type, StackType[t]);
-        IF Target.Little_endian
+        IF Target.endian = Target.Endian.Little
           THEN cg.extract_mn (StackType[t], Target.SignedType[t],
                               align, s);
           ELSE cg.extract_mn (StackType[t], Target.SignedType[t],
@@ -1502,7 +1502,7 @@ PROCEDURE Load_indirect (t: Type;  o: Offset;  s: Size) =
           (** x.type := TargetMap.CG_Base [best_type]; -- nope **)
           IF (s # best_size) THEN
             Force ();
-            IF Target.Little_endian
+            IF Target.endian = Target.Endian.Little
               THEN cg.extract_mn (StackType[t],
                                   Target.SignedType[t], 0, s);
               ELSE cg.extract_mn (StackType[t],
@@ -1514,7 +1514,7 @@ PROCEDURE Load_indirect (t: Type;  o: Offset;  s: Size) =
           x.offset := x.offset - bit_offset;
           SimpleIndirectLoad (x, best_type);
           Force ();
-          IF Target.Little_endian
+          IF Target.endian = Target.Endian.Little
             THEN cg.extract_mn (StackType[t], Target.SignedType[t],
                                 bit_offset, s);
             ELSE cg.extract_mn (StackType[t], Target.SignedType[t],
@@ -1548,7 +1548,7 @@ PROCEDURE Load_indirect (t: Type;  o: Offset;  s: Size) =
           Force ();
 
           (* compute the full bit offset *)
-          IF Target.Little_endian THEN
+          IF Target.endian = Target.Endian.Little THEN
             cg.load (save_bits, 0, Target.Integer.cg_type, Target.Integer.cg_type);
             IF (const_bits # 0) THEN
               Push_int (const_bits);
@@ -1631,7 +1631,7 @@ PROCEDURE Store (v: Var;  o: Offset;  s: Size;  a: Alignment;  t: Type) =
         (* unaligned, partial store *)
         cg.load (v, AsBytes (o - align), best_type, StackType[t]);
         cg.swap (t, t);
-        IF Target.Little_endian
+        IF Target.endian = Target.Endian.Little
           THEN cg.insert_mn (StackType[t], align, s);
           ELSE cg.insert_mn (StackType[t], best_size - align - s, s);
         END;
@@ -1760,7 +1760,7 @@ PROCEDURE Store_indirect (t: Type;  o: Offset;  s: Size) =
           SimpleIndirectLoad (stack [SCheck (1,"Store_indirect-3")],best_type);
           Swap ();
           EVAL Force_pair (commute := FALSE);
-          IF Target.Little_endian
+          IF Target.endian = Target.Endian.Little
             THEN cg.insert_mn (StackType[t], 0, s);
             ELSE cg.insert_mn (StackType[t], best_size - s, s);
           END;
@@ -1778,7 +1778,7 @@ PROCEDURE Store_indirect (t: Type;  o: Offset;  s: Size) =
           SimpleIndirectLoad (stack [SCheck (1, "Store_indirect-4")], best_type);
           Swap ();
           EVAL Force_pair (commute := FALSE);
-          IF Target.Little_endian
+          IF Target.endian = Target.Endian.Little
             THEN cg.insert_mn (StackType[t], const_bits, s);
             ELSE cg.insert_mn (StackType[t], best_size - const_bits - s, s);
           END;
@@ -1819,7 +1819,7 @@ PROCEDURE Store_indirect (t: Type;  o: Offset;  s: Size) =
 
           (* stuff the bits *)
           Swap ();
-          IF Target.Little_endian THEN
+          IF Target.endian = Target.Endian.Little THEN
             cg.load (save_bits, 0, Target.Integer.cg_type, Target.Integer.cg_type);
             IF (const_bits # 0) THEN
               Push_int (const_bits);
@@ -2649,7 +2649,7 @@ PROCEDURE Hdr_to_info (offset, size: INTEGER) =
   VAR base: INTEGER;
   BEGIN
     Force ();
-    IF Target.Little_endian
+    IF Target.endian = Target.Endian.Little
       THEN base := offset;
       ELSE base := Target.Integer.size - offset - size;
     END;

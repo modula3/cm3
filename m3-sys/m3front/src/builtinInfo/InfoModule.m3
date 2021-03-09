@@ -53,7 +53,7 @@ PROCEDURE Initialize () =
     END;
     Constant.Declare ("ThisPlatform", Value.ToExpr (enum), FALSE);
 *)
-    IF Target.Little_endian THEN nm := "LITTLE" ELSE nm := "BIG" END; 
+    IF Target.endian = Target.Endian.Little THEN nm := "LITTLE" ELSE nm := "BIG" END;
     IF NOT EnumType.LookUp (endian, M3ID.Add (nm), enum) THEN
       Error.Txt (nm, "Unknown Compiler.ENDIAN value");
       <*ASSERT FALSE*>
