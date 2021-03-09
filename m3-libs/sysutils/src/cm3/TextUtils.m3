@@ -490,14 +490,43 @@ PROCEDURE Tokenize(text : TEXT; sepchars := ASCII.Spaces;
   END Tokenize;
 
 (*--------------------------------------------------------------------------*)
+PROCEDURE IsUpper(t : TEXT; len : INTEGER) : BOOLEAN =
+  (* return if all of a text is already all uppercase *)
+  BEGIN
+    FOR i := 0 TO len - 1 DO
+      WITH ch = TextClass.GetChar(t, i) DO
+        IF ASCII.Upper[ch] # ch THEN
+          RETURN FALSE;
+        END;
+      END;
+    END;
+    RETURN TRUE;
+  END IsUpper;
+
+(*--------------------------------------------------------------------------*)
+PROCEDURE IsLower(t : TEXT; len : INTEGER) : BOOLEAN =
+  (* return if all of a text is already all lowercase *)
+  BEGIN
+    FOR i := 0 TO len - 1 DO
+      WITH ch = TextClass.GetChar(t, i) DO
+        IF ASCII.Lower[ch] # ch THEN
+          RETURN FALSE;
+        END;
+      END;
+    END;
+    RETURN TRUE;
+  END IsLower;
+
+(*--------------------------------------------------------------------------*)
 PROCEDURE Lower(t : TEXT) : TEXT =
   (* return a text where all alphas are in lower case *)
   VAR
     len :  INTEGER;
     res :  Text8.T;
   BEGIN
-    IF t = NIL THEN RETURN NIL; END;
+    IF t = NIL THEN RETURN t; END;
     len := Text.Length(t);
+    IF IsLower(t, len) THEN RETURN t; END;
     res := Text8.Create(len);
     FOR i := 0 TO len - 1 DO
       res.contents[i] := ASCII.Lower[TextClass.GetChar(t, i)]
@@ -512,8 +541,9 @@ PROCEDURE Upper(t : TEXT) : TEXT =
     len :  INTEGER;
     res :  Text8.T;
   BEGIN
-    IF t = NIL THEN RETURN NIL; END;
+    IF t = NIL THEN RETURN t; END;
     len := Text.Length(t);
+    IF IsUpper(t, len) THEN RETURN t; END;
     res := Text8.Create(len);
     FOR i := 0 TO len - 1 DO
       res.contents[i] := ASCII.Upper[TextClass.GetChar(t, i)]
