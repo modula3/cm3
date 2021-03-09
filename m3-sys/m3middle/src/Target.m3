@@ -47,10 +47,10 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
     (* lookup the system -- linear search *)
     IF (system = NIL) THEN RETURN FALSE END;
     WHILE NOT Text.Equal (system, SystemNames[sys]) DO
-      INC (sys);  IF (sys >= NUMBER (SystemNames)) THEN RETURN FALSE END;
+      INC (sys);  IF (sys >= NUMBER (SystemNames)) THEN EXIT END;
     END;
     System := VAL(sys, Systems);
-    System_name := SystemNames[sys];
+    System_name := system;
 
     OS_name := in_OS_name;
 
