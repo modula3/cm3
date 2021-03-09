@@ -491,9 +491,11 @@ PROCEDURE Tokenize(text : TEXT; sepchars := ASCII.Spaces;
 PROCEDURE Lower(t : TEXT) : TEXT =
   (* return a text where all alphas are in lower case *)
   VAR
-    len := Text.Length(t);
+    len :  INTEGER;
     res :  CharacterArray;
   BEGIN
+    IF t = NIL THEN RETURN NIL; END;
+    len := Text.Length(t);
     res := NEW(CharacterArray, len);
     FOR i := 0 TO len - 1 DO
       res^[i] := ASCII.Lower[t^[i]]
@@ -505,9 +507,11 @@ PROCEDURE Lower(t : TEXT) : TEXT =
 PROCEDURE Upper(t : TEXT) : TEXT =
   (* return a text where all alphas are in upper case *)
   VAR
-    len := Text.Length(t);
+    len :  INTEGER;
     res :  CharacterArray;
   BEGIN
+    IF t = NIL THEN RETURN NIL; END;
+    len := Text.Length(t);
     res := NEW(CharacterArray, len);
     FOR i := 0 TO len - 1 DO
       res^[i] := ASCII.Upper[t^[i]]
