@@ -54,6 +54,12 @@
       packages again (do-cm3-core.sh).
     </p>
     <p>
+	The above is no longer true. The large enum listing all targets
+	no longer exists. However the compiler and m3core are tightly
+	coupled and there can still be incompatible changes in them.
+	Therefore:
+    </p>
+    <p>
       As of Sat Jul 19, 2003, there is a script that performs a safe
       update for you by compiling and shipping the right packages in
       the correct order:
@@ -65,6 +71,36 @@
       You can call it with the -n (no action) option to see what it
       would do.
     </p>
+
+	<p>
+	  It is recommended to instead
+      <blockquote>
+	  <tt>scripts/python/upgrade.py</tt>
+      </blockquote>
+	  to upgrade just the compiler, m3core, libm3
+
+	  Or
+      <blockquote>
+	  <tt>scripts/python/upgrade-full.sh</tt>
+      </blockquote>
+	  or
+      <blockquote>
+	  <tt>scripts/python/upgrade-full.cmd</tt>
+      </blockquote>
+
+	  to upgrade the compiler and then rebuild the entire system with that.
+	  <br>
+	  There are other ways, that need more development.
+	  Specifically, ideally, the system is not updated in place while
+	  it is building.
+      <blockquote>
+	  <tt>scripts/python/make-dist.py</tt>
+      </blockquote>
+	  does this well (TODO) and a new script should be derived from it.
+	  It copies a minimal system away (cm3, m3core, libm3),
+	  uses that to build a minimal system, and then uses that to build
+	  the entire system.
+	</p>
 
     <hr>
     <address><a href="mailto:m3-support{at}elego.de">m3-support{at}elego.de</a></address>
