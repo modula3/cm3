@@ -10,8 +10,41 @@ MODULE Target;
 
 IMPORT Text, TargetMap, M3RT, TextUtils;
 
+TYPE
+  (* Just a few systems need special handling and are listed here.
+   * Far more targets than this are supported.
+   * See m3-sys/cminstall/src/config-no-install and scripts/python/targets.txt
+   * for an idea as to the working targets.
+   *
+   * SystemNames and Systems need to roughly match.
+   *)
+  Systems = {
+    Undefined,
+    FreeBSD4,
+    I386_CYGWIN,
+    I386_INTERIX,
+    I386_MINGW,
+    I386_NT,
+    LINUXLIBC6,
+    NT386,
+    Other
+  };
+
+CONST
+  SystemNames = ARRAY OF TEXT {
+    "",
+    "FreeBSD4",
+    "I386_CYGWIN",
+    "I386_INTERIX",
+    "I386_MINGW",
+    "I386_NT",
+    "LINUXLIBC6",
+    "NT386"
+  };
+
 VAR (*CONST*)
   CCs : ARRAY [0..8] OF CallingConvention;
+  System: Systems;
 
 PROCEDURE Init64 () =
   BEGIN
@@ -47,11 +80,10 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
     (* lookup the system -- linear search *)
     IF (system = NIL) THEN RETURN FALSE END;
     WHILE NOT Text.Equal (system, SystemNames[sys]) DO
-      INC (sys);  IF (sys >= NUMBER (SystemNames)) THEN RETURN FALSE END;
+      INC (sys);  IF (sys >= NUMBER (SystemNames)) THEN EXIT END;
     END;
     System := VAL(sys, Systems);
-    System_name := SystemNames[sys];
-
+    System_name := system;
     OS_name := in_OS_name;
 
     (* common values *)
