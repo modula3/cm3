@@ -31,9 +31,10 @@ TYPE
   };
 
 CONST
+  (* These are uppercase to facilitate case insensitivity. *)
   SystemNames = ARRAY OF TEXT {
     "",
-    "FreeBSD4",
+    "FREEBSD4",
     "I386_CYGWIN",
     "I386_INTERIX",
     "I386_MINGW",
@@ -54,7 +55,8 @@ PROCEDURE Init64 () =
     Address.cg_type := CGType.Addr;
   END Init64;
 
-PROCEDURE IsX86(): BOOLEAN =
+PROCEDURE IsX86(System_name: TEXT): BOOLEAN =
+(* System_name is uppercased to facilitate case insensitivity. *)
   BEGIN
     IF TextUtils.StartsWith(System_name, "I") AND
           (TextUtils.StartsWith(System_name, "I386_")
@@ -69,21 +71,24 @@ PROCEDURE IsX86(): BOOLEAN =
     END;
   END IsX86;
 
-PROCEDURE IsAMD64(): BOOLEAN =
+PROCEDURE IsAMD64(System_name: TEXT): BOOLEAN =
+(* System_name is uppercased to facilitate case insensitivity. *)
   BEGIN
     RETURN TextUtils.StartsWith(System_name, "AMD64_");
   END IsAMD64;
 
 PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): BOOLEAN =
   VAR sys := 0;  max_align := 64;
+      casePreservedSystem := system;
   BEGIN
     (* lookup the system -- linear search *)
     IF (system = NIL) THEN RETURN FALSE END;
+    system := TextUtils.Upper(system); (* Uppercase for case insensitivity. *)
     WHILE NOT Text.Equal (system, SystemNames[sys]) DO
       INC (sys);  IF (sys >= NUMBER (SystemNames)) THEN EXIT END;
     END;
     System := VAL(sys, Systems);
-    System_name := system;
+    System_name := casePreservedSystem;
     OS_name := in_OS_name;
 
     (* common values *)
@@ -146,7 +151,7 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
 
     (* x86 and AMD64 allow unaligned loads/stores but converge C *)
     IF backend_mode # M3BackendMode_t.C THEN
-      IF IsX86() OR IsAMD64() THEN
+      IF IsX86(System_name) OR IsAMD64(System_name) THEN
         Allow_packed_byte_aligned := TRUE;
       END;
     END;
