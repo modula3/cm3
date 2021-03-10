@@ -156,6 +156,9 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
       END;
     END;
 
+    (* NT/x86 is the only system with multiple calling conventions,
+     * ignoring little-used vectorcall of NT/amd64 and NT/x86.
+     *)
     InitCallingConventions (backend_mode,
                             System IN SET OF Systems{Systems.I386_INTERIX,
                                                      Systems.NT386,
