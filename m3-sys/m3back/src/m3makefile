@@ -16,6 +16,12 @@ import ("m3objfile")
 % THEY ARE A MASSIVE HACK BECAUSE THE INTEGRATED BACK-END (m3back)
 % CONTAINS SIGNIFICANT CONFUSION REGARDING TARGET INTEGER TYPES
 % THEY SHOULD BE REMOVED AS SOON AS SOMEONE CAN FIX m3back
+%
+% But first someone should explain what is the problem/hack/confusion here,
+% and what it should be instead. The files are used to implement
+% constant folding of up to 64bit integers, on a system potentially with
+% only 32bit integers, very much like is done in m3front.
+%
 Module ("TIntN")
 Module ("TWordN")
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
