@@ -3,9 +3,11 @@
 
 #define _WINSOCK_DEPRECATED_NO_WARNINGS 1
 #ifdef _MSC_VER
+#pragma warning(disable:4616) // x is not a valid warning with older compiler
 #pragma warning(disable:4242) // integer conversion
 #pragma warning(disable:4244) // integer conversion
 #pragma warning(disable:4255) // () vs. (void)
+#pragma warning(disable:4668) // padding
 #pragma warning(disable:4710) // function not inlined
 #pragma warning(disable:4820) // padding
 #pragma warning(disable:5045) // Spectre
@@ -61,16 +63,19 @@ __cdecl
 GetHostByName(const char* s, int* res, hostent** h)
 // Get the IP4 address of a host, given its name.
 {
+#ifdef _WIN32
+    int a = {0};
+#endif
     *h = 0;
 #ifdef _WIN32
     // Apparently WinSock "gethostbyname" does not resolve names
     // that happen to be dotted IP addresses (e.g. "123.33.44.44").
     // This function does.
-    int a = inet_addr(s);
+    a = inet_addr(s);
     if (a != INADDR_NONE)
     {
-        *res = a; // the name is already a dotted IP address
         static hostent h_no_error;
+        *res = a; // the name is already a dotted IP address
         *h = &h_no_error;
         return 0; // no error
     }
@@ -89,12 +94,15 @@ int
 __cdecl
 GetCanonicalByName(const char* s, TEXT* text, hostent** h)
 {
+#ifdef _WIN32
+    int a = {0};
+#endif
     *h = 0;
 #ifdef _WIN32
     // Apparently WinSock "gethostbyname" does not resolve names
     // that happen to be dotted IP addresses (e.g. "123.33.44.44").
     // This function does.
-    int a = inet_addr(s);
+    a = inet_addr(s);
     if (a != INADDR_NONE)
     {
         // the name is not a dotted IP address
@@ -120,11 +128,10 @@ __cdecl
 GetCanonicalByAddr(const int* addr, TEXT* result, hostent** h)
 {
     sockaddr_in ua;
-    ZeroMemory(&ua, sizeof(ua));
-
     M3_STATIC_ASSERT(sizeof(*addr) == 4);
     M3_STATIC_ASSERT(sizeof(ua.sin_addr) == 4);
 
+    ZeroMemory(&ua, sizeof(ua));
     memcpy(&ua.sin_addr, addr, 4);
 
     *h = gethostbyaddr((char*)&ua, sizeof(ua), AF_INET);
@@ -144,8 +151,9 @@ GetHostAddr(int* address, hostent** h)
 // TODO Getting the name first seems silly.
 {
     char hname[256];
+    int err = {0};
     *h = 0;
-    int err = gethostname(hname, sizeof(hname));
+    err = gethostname(hname, sizeof(hname));
     if (err == 0)
     {
         *h = gethostbyname(hname);
@@ -171,15 +179,17 @@ IPInternal__GetAddrInfo(IP__Endpoint** endpoint, const char* node, const char* p
 {
     M3_STATIC_ASSERT(AF_INET);
     M3_STATIC_ASSERT(AF_INET6);
+    addrinfo* addressInfo = {0};
+    int err = {0};
+    addrinfo* free = {0};
 
     *endpoint = 0;
-    addrinfo* addressInfo = {0};
-    int err = getaddrinfo(node, port, NULL, &addressInfo);
+    err = getaddrinfo(node, port, NULL, &addressInfo);
 
     if (err)
         return err;
 
-    addrinfo* free = addressInfo;
+    free = addressInfo;
     while (addressInfo)
     {
         int family = addressInfo->ai_family;
@@ -217,6 +227,7 @@ IPInternal__GetNameInfo(int family, int port, const void* addr, TEXT* hostText, 
         sockaddr_in6 sa6;
     } sa;
     int size = sizeof(sa.sa4);
+    int err = {0};
 
     M3_STATIC_ASSERT(sizeof(in_addr) == 4);
     M3_STATIC_ASSERT(sizeof(in6_addr) == 16);
@@ -242,13 +253,13 @@ IPInternal__GetNameInfo(int family, int port, const void* addr, TEXT* hostText, 
         break;
     }
 
-    int err = getnameinfo(&sa.sa,
-                          size,
-                          host,
-                          sizeof(host),
-                          port ? service : 0,
-                          port ? sizeof(service) : 0,
-                          0);
+    err = getnameinfo(&sa.sa,
+                      size,
+                      host,
+                      sizeof(host),
+                      port ? service : 0,
+                      port ? sizeof(service) : 0,
+                      0);
     if (err == 0)
     {
         IPInternal__CopyStoT(host, hostText);
