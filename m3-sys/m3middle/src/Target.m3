@@ -55,27 +55,35 @@ PROCEDURE Init64 () =
     Address.cg_type := CGType.Addr;
   END Init64;
 
-PROCEDURE IsX86(System_name: TEXT): BOOLEAN =
-(* System_name is uppercased to facilitate case insensitivity. *)
+PROCEDURE IsX86orAmd64(System_name: TEXT): BOOLEAN =
+(* System_name is uppercased to facilitate case insensitivity.
+ * Is this too broad? *)
+CONST start = ARRAY OF TEXT{"AMD64", "86",
+                            "X86", "I386", "I486", "I586", "I686",
+                            "I86",  "386",  "486",  "586",  "686"};
+        end = ARRAY OF TEXT{"AMD64", "86"};
   BEGIN
-    IF TextUtils.StartsWith(System_name, "I") AND
-          (TextUtils.StartsWith(System_name, "I386_")
-        OR TextUtils.StartsWith(System_name, "I486_")
-        OR TextUtils.StartsWith(System_name, "I586_")
-        OR TextUtils.StartsWith(System_name, "I686_")) THEN
-      RETURN TRUE;
+    IF System IN SET OF Systems{Systems.FreeBSD4,
+                                Systems.I386_CYGWIN,
+                                Systems.I386_INTERIX,
+                                Systems.I386_MINGW,
+                                Systems.I386_NT,
+                                Systems.LINUXLIBC6,
+                                Systems.NT386} THEN
+        RETURN TRUE;
     END;
-    CASE System OF
-    | Systems.FreeBSD4, Systems.NT386, Systems.LINUXLIBC6 => RETURN TRUE;
-    ELSE RETURN FALSE;
+    FOR i := FIRST(start) TO LAST(start) DO
+      IF TextUtils.StartsWith(System_name, start[i]) THEN
+        RETURN TRUE;
+      END;
     END;
-  END IsX86;
-
-PROCEDURE IsAMD64(System_name: TEXT): BOOLEAN =
-(* System_name is uppercased to facilitate case insensitivity. *)
-  BEGIN
-    RETURN TextUtils.StartsWith(System_name, "AMD64_");
-  END IsAMD64;
+    FOR i := FIRST(end) TO LAST(end) DO
+      IF TextUtils.EndsWith(System_name, end[i]) THEN
+        RETURN TRUE;
+      END;
+    END;
+    RETURN FALSE;
+  END IsX86orAmd64;
 
 PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): BOOLEAN =
   VAR sys := 0;  max_align := 64;
@@ -151,7 +159,7 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
 
     (* x86 and AMD64 allow unaligned loads/stores but converge C *)
     IF backend_mode # M3BackendMode_t.C THEN
-      IF IsX86(System_name) OR IsAMD64(System_name) THEN
+      IF IsX86orAmd64(system) THEN
         Allow_packed_byte_aligned := TRUE;
       END;
     END;
