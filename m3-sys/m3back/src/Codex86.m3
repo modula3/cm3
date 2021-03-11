@@ -660,12 +660,13 @@ PROCEDURE binOp1 (t: T; op: Op; READONLY dest, src: Operand) =
 
     <* ASSERT NOT (op IN SET OF Op{Op.oSHLD, Op.oSHRD}) *>
 
+    <* ASSERT src.loc = OLoc.register OR dest.loc = OLoc.register *>
+    <* ASSERT src.loc # OLoc.mem OR CG_Bytes[src.mvar.mvar_type] = 4 *>
+    <* ASSERT dest.loc # OLoc.mem OR CG_Bytes[dest.mvar.mvar_type] = 4 *>
+
     IF dest.loc = OLoc.register THEN
       build_modrm(t, src, dest, ins);
       ins.opcode := opcode[op].rrm + 1;
-      IF src.loc = OLoc.mem THEN
-        <* ASSERT CG_Bytes[src.mvar.mvar_type] = 4 *>
-      END
     ELSE
       <* ASSERT src.loc = OLoc.register AND CG_Bytes[src.mvar.mvar_type] = 4 *>
       build_modrm(t, dest, src, ins);
