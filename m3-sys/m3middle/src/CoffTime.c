@@ -4,6 +4,8 @@
 
 #include "m3core.h"
 
+#error This file is an inactive prototype. Come back to later?
+
 #ifdef __cplusplus
 extern "C" {
 #endif
