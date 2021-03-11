@@ -1,0 +1,6 @@
+% This is an excerpt from from p240 that fails
+% an assert in the integrated backend.
+
+implementation("Main")
+build_standalone()
+include ("../../Test.common")
