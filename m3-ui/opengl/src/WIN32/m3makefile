@@ -11,5 +11,5 @@
 
 import ("libm3")
 
-Interface ("GL")
-Interface ("GLu")
+Interface ("../WIN32/GL")
+Interface ("../WIN32/GLu")
