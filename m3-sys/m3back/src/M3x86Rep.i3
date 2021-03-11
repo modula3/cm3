@@ -27,6 +27,7 @@ TYPE Public = M3CG.T OBJECT
 TYPE VLoc = {global, temp};
 
 TYPE OLoc = {mem, register, fstack, imm};
+CONST OLocToText = ARRAY OLoc OF TEXT{"mem", "register", "fstack", "imm"};
 
 TYPE
   x86Var = Var OBJECT
