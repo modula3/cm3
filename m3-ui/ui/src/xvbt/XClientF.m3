@@ -471,6 +471,7 @@ PROCEDURE Connect (inst: TEXT; trsl: T := NIL): Trestle.T
             END;
             opening := TRUE
           END;
+          X.XInitThreads();
           dpy := X.XOpenDisplay(s);
           IF doHack THEN
             TRY

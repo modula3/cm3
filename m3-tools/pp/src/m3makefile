@@ -13,13 +13,16 @@
 %  or src/flex-bison directory and run the standard make.
 %
 
+% Need g++ to do the link
+SYSTEM_CC = "g++"
+
 if defined("configure_system_libs")
   configure_system_libs()
 end
 
 if SYSTEM_LIBS contains "LEX-YACC" or SYSTEM_LIBS contains "FLEX-BISON"
 
-import ("vbtkit")
+import ("libm3")
 
 include_dir("afm")
 bundle("AFMBundle")

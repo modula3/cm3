@@ -1,0 +1,38 @@
+/* $Id$ */
+m3_option("-g")
+m3_option("-times")
+/*m3_option("-X2@-pg@")*/
+/*m3_option("-Z")*/
+/*remove_m3_option("-O")*/
+import ("libm3")
+import ("set")
+import ("cit_util") /* CardSet */
+
+Module("BDD")
+List("BDD","BDD")
+Interface("BDDDepends")
+implementation("BDDImpl")
+module("BDDTripleHash")
+module("BDDPair")
+interface("BDDPrivate")
+
+generic_module("ProcTable")
+
+Table ("BDDRef", "BDD", "Refany")
+MkSet ("BDD", "BDD")
+MkSetDef ("BDD", "BDD")
+
+Sequence ("BDD", "BDD")
+
+Table ("BDDText", "BDD", "Text")
+Table ("BDDBDD", "BDD", "BDD")
+
+Interface("BDDImpl")
+
+Module ("BDDTruthTable")
+
+Interface ("BDDSystemState")
+Interface ("BDDCleaner")
+
+import("libm3")
+library("bdd")

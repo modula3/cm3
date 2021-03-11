@@ -1,9 +1,9 @@
 if not defined("ROOT")
   ROOT = PKG_INSTALL
 end
-if not defined("TOP")
+%if not defined("TOP")  % this is wrong to take from cit_util... hmm.
   TOP = ROOT & SL & "caltech-parser"
-end
+%end
 if not defined("_PARSER_TOP")
   _PARSER_TOP = TOP & SL & "parserlib"
 end

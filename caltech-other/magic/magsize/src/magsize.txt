@@ -1,0 +1,11 @@
+$Id$
+
+Usage: magsize [-magic] [-recursive] [-gnuplot] <type_1> ... <type_n>
+
+-magic says read magic-format cell.  Default is to read from std. cell DB.
+
+-recursive says print data for every cell, at every level of subcell hierarchy.
+
+-gnuplot says print outline of cell in gnuplot format.  otherwise cell is 
+	 printed as a bbox with type name.  0x0 sized cells are not printed
+	 in the gnuplot version.

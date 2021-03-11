@@ -1,0 +1,36 @@
+%
+% $Id$
+%
+
+readonly proc LockedTable(nm, k, v, tbl) is
+  local intf_args = [tbl]
+  local impl_args = [k, v, tbl]
+
+  Build_generic_module("Locked" & nm & "Tbl", "LockedTbl", 
+                       intf_args , impl_args)
+end
+
+readonly proc lockedTable(nm, k, v, tbl) is
+  local intf_args = [tbl]
+  local impl_args = [k, v, tbl]
+
+  build_generic_module("Locked" & nm & "Tbl", "LockedTbl", 
+                       intf_args , impl_args)
+end
+
+readonly proc MkLockedSetDef (nm, elem) is
+  local set = nm & "Set"
+  local setDef = "Locked" & nm & "SetDef"
+  local elemRefTbl = "Locked" & nm & "RefTbl"
+  build_generic_intf (setDef, "SetDef", [set], VISIBLE)
+  build_generic_impl (setDef, "SetDef", [elem, set, elemRefTbl])
+end
+
+readonly proc mkLockedSetDef (nm, elem) is
+  local set = nm & "Set"
+  local setDef = "Locked" & nm & "SetDef"
+  local elemRefTbl = "Locked" & nm & "RefTbl"
+  build_generic_intf (setDef, "SetDef", [set], HIDDEN)
+  build_generic_impl (setDef, "SetDef", [elem, set, elemRefTbl])
+end
+

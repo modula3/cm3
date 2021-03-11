@@ -1,0 +1,17 @@
+/* $Id$ */
+import ("libm3")
+import ("cit_util")
+import ("magic")
+import ("boxes")
+
+/* the simple Lee's router for endpoint hookup */
+
+Module("SimpleGrid")
+Interface("PointType")
+table("MagPointInt", "MagPoint", "Integer")
+table("PointType", "MagPoint", "PointType")
+
+module("MagPointDist")
+pqueue("MagPoint","MagPointDist")
+
+Library("simplegrid")

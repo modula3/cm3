@@ -554,6 +554,11 @@ readonly proc mixed_portability_test (group, uid, comment) is
   run_test ("_mixed_portability_tests_less_portable", group, uid, comment, "", cm3opts, runopts, FALSE)
   run_test ("_mixed_portability_tests_portable", group, uid, comment, "run", cm3opts, runopts & " -include-less-portable-output", "probeForTargetSpecificFiles")
 end
+% tests moved to the front for quick testing.
+
+readonly proc e_test (group, uid, comment) is
+  run_test ("_etests", group, uid, comment, "", cm3opts, runopts, "probeForTargetSpecificFiles")
+end
 
 % Recently added tests...
 
@@ -570,6 +575,8 @@ p_test ("p2", "p278", "64-bit-sized but only 32-bit-aligned values, on 32-bit ma
 p_test ("p2", "p279", "misaligned, packed components of array and record constructors.")
 p_test ("p2", "p280", "Parameter passing, many cases, including packed.")
 p_test ("p2", "p281", "Const Array Decl Bugs (#25), reported by darko20 on 03/24/2018.)
+% This fails in Grisu when using C backend.
+p_test ("p2", "p282", "grisuc")
 
 % Some recently fixed tests in the packedVars branch: 
 
@@ -835,6 +842,9 @@ p_test ("p2", "p238", "'man vs. boy' aka nested procedures+recursion aka static 
 % grisu-based test, loophole integers/floats, multiply longint within function parameters
 p_test ("p2", "p265", "grisu-based")
 
+% This fails in Grisu when using C backend.
+p_test ("p2", "p268", "grisuc")
+
 %------------------------------------------------------------------- rtests ---
 %  RUNTIME tests: modules containing runtime error where the generated
 %    error messages are of interest.
@@ -847,14 +857,11 @@ r_test ("r0", "r001", "unhandled exception")
 r_test ("r0", "r002", "stack overflow in the main thread")
 r_test ("r0", "r003", "b3tests/b002 - improper size for an open array parameter")
 r_test ("r0", "r004", "negative size for an open array")
+r_test ("r0", "r005", "assertion failure messages include expression")
 
 %------------------------------------------------------------------- etests ---
 % ERROR tests: modules containing static errors where the generated
 %   error messages are of interest.
-
-readonly proc e_test (group, uid, comment) is
-  run_test ("_etests", group, uid, comment, "", cm3opts, runopts, "probeForTargetSpecificFiles")
-end
 
 e_test ("e0", "e001", "assigning non-overlapping subrange types")
 e_test ("e0", "e002", "non-constant variable initialization in an interface")
@@ -891,6 +898,7 @@ e_test ("e0", "e032", "FROM IMPORT in an IMPORTed interface is visible in the mo
 e_test ("e0", "e033", "importing the builtin scope through an arbitrary interace")
 e_test ("e0", "e034", "structural equivalence of records")
 e_test ("e0", "e035", "illegal recursive declaration")
+e_test ("e0", "e040", "Bad SUBARRAY actuals")
 
 %------------------------------------------------------------------- xtests ---
 %  MISC tests (x): programs or modules that require a human to test

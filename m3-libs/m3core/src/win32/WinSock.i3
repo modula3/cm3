@@ -15,10 +15,12 @@ FROM Ctypes IMPORT char_star, char_star_star, char, int;
 FROM WinBaseTypes IMPORT UINT8, UINT16, UINT32, INT16, INT32, PINT32, SIZE_T;
 FROM Word IMPORT Or, And, Shift, Not;
 
+TYPE
+
+(* Wide some parameters to INTEGER for convenience. *)
+  UINT32_ARG = INTEGER;
 
 (* Basic system type definitions, taken from the BSD file sys/types.h. *)
-
-TYPE
   u_char  = UINT8; (* compat *)
   u_short = UINT16; (* compat *)
   u_int   = UINT32; (* compat *)
@@ -574,7 +576,7 @@ PROCEDURE connect (
     s: SOCKET; addr: struct_sockaddr_star; namelen: INT32): INT32;
 
 <* EXTERNAL ioctlsocket:PASCAL *>
-PROCEDURE ioctlsocket (s: SOCKET; cmd: INT32; argp: UNTRACED REF UINT32): INT32;
+PROCEDURE ioctlsocket (s: SOCKET; cmd: UINT32_ARG; argp: UNTRACED REF UINT32): INT32;
 
 <* EXTERNAL getpeername:PASCAL *>
 PROCEDURE getpeername (

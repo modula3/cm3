@@ -5,7 +5,7 @@ INTERFACE LazyConsole;
 
 IMPORT File, FileWin32, WinDef;
 
-PROCEDURE New (hd: WinDef.DWORD; ds: FileWin32.DirectionSet): File.T;
+PROCEDURE New (hd: WinDef.INT32; ds: FileWin32.DirectionSet): File.T;
 (* Returns a file that if ever written to or read from will allocate
    a fresh Windows console for the I/O.  *)
 

@@ -18,8 +18,9 @@
 (*  provided "as is" without express or implied warranty. Export of this     *)
 (*  software outside of the United States of America may require an          *)
 (*  export license.                                                          *)
+(* $Id$ *)
 
-GENERIC MODULE Equivalence(Elem, ElemElemTbl);
+GENERIC MODULE Equivalence(Elem, ElemList, ElemElemTbl, ElemElemListTbl);
 
 TYPE
   Public = T OBJECT METHODS
@@ -37,6 +38,7 @@ TYPE
 REVEAL
   Default = Public BRANDED "DefEquiv(" & Elem.Brand & ")" OBJECT
     t: ElemElemTbl.T;
+    r: ElemElemListTbl.T; (* invariant: either mirrors "t" or is "NIL". *)
     p: Preference;
   OVERRIDES
     init := Init;
@@ -44,6 +46,10 @@ REVEAL
     identify := Identify;
     canon := Canon;
     iterate := Iterate;
+    getClass := GetClass;
+    toTable := ToTable;
+    toRevTable := ToRevTable;
+    initCopy := InitCopy;
   END;
 
 PROCEDURE Init(self: Default;
@@ -51,6 +57,7 @@ PROCEDURE Init(self: Default;
                leaderPreference: Preference := NIL): Default =
   BEGIN
     self.t := NEW(ElemElemTbl.Default).init(sizeHint);
+    self.r := NIL;
     self.p := leaderPreference;
     RETURN self;
   END Init;
@@ -69,6 +76,7 @@ PROCEDURE Identify(self: Default; e1, e2: Elem.T): BOOLEAN =
     IF Elem.Equal(c1, c2) THEN
       RETURN TRUE;
     ELSE
+      self.r := NIL;
       IF self.p = NIL OR self.p.is(c2, c1) THEN
         not := self.t.put(c1, c2);
       ELSE
@@ -110,9 +118,58 @@ PROCEDURE Next(self: PrivateIter; VAR alias, canon: Elem.T): BOOLEAN =
     dummy: Elem.T;
     result := self.iter.next(alias, dummy);
   BEGIN
+    IF NOT result THEN RETURN FALSE; END;
     canon := CanonNonMutating(self.tbl, alias);
-    RETURN result;
+    RETURN TRUE;
   END Next;
+
+PROCEDURE GetClass(self: Default; e: Elem.T): ElemList.T =
+  VAR
+    l: ElemList.T := NIL;
+    canon := self.canon(e);
+  BEGIN
+    EVAL self.toRevTable().get(canon, l);
+    RETURN ElemList.Cons(canon, l);
+  END GetClass;
+
+PROCEDURE ToTable(self: Default): ElemElemTbl.T =
+  BEGIN
+    RETURN self.t;
+  END ToTable;
+
+PROCEDURE ToRevTable(self: Default): ElemElemListTbl.T =
+  BEGIN
+    IF self.r = NIL THEN
+      self.r := NEW(ElemElemListTbl.Default).init(self.t.size());
+      VAR
+        iter := self.iterate();
+        alias, canon: Elem.T;
+        l: ElemList.T;
+      BEGIN
+        WHILE iter.next(alias, canon) DO
+          l := NIL;
+          EVAL self.r.get(canon, l);
+          EVAL self.r.put(canon, ElemList.Cons(alias, l));
+        END;
+      END;
+    END;
+    RETURN self.r;
+  END ToRevTable;
+
+PROCEDURE InitCopy(t, toCopy : T) : T =
+  VAR
+    iter := toCopy.iterate();
+    a1, a2 : Elem.T;
+  BEGIN
+    WHILE iter.next(a1,a2) DO
+      EVAL t.identify(a1,a2)
+    END;
+    RETURN t
+  END InitCopy;
 
 BEGIN
 END Equivalence.
+
+
+
+

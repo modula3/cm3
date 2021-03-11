@@ -1,3 +1,5 @@
+(* $Id$ *)
+
 GENERIC MODULE DblTable(Key, Value, KeyValueTbl, ValueKeySetTbl, KeySet);
 IMPORT Word;
 

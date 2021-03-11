@@ -8,7 +8,7 @@ INTERFACE QMachine;
 
 IMPORT Thread, Wr, QValue, QCode;
 FROM Quake IMPORT Machine, Error, ID, IDMap;
-IMPORT QPromiseSeq;
+IMPORT QPromiseSeq, ETimer;
 
 REVEAL
   T <: T_;
@@ -17,6 +17,7 @@ TYPE
   T_ = OBJECT
     map: IDMap := NIL; (* READONLY *)
     promises : QPromiseSeq.T;
+    timer : ETimer.T;
   METHODS
     init      (map: IDMap): T;
     evaluate  (s: QCode.Stream)                     RAISES {Error, Thread.Alerted};

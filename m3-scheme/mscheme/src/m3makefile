@@ -1,0 +1,92 @@
+/* $Id$ */
+
+/* 
+   Copyright (c) Generation Capital Ltd., 2008.  All rights reserved.
+
+   Author: Mika Nystrom <mika@alum.mit.edu>
+*/
+
+if not equal (OS_TYPE, "WIN32")
+
+if defined("pm3_version")
+	option("optimization","") 
+else 
+	m3_optimize("T")
+end
+
+import ("libm3")
+import ("m3core")
+import ("cit_util")
+import ("scheme-lib")
+import ("netobj")
+
+Module("Scheme")
+Module("SchemeProfiler")
+
+Interface("SchemeClass")
+
+Module("SchemePair")
+
+Module("SchemeUtils")
+implementation("SchemeUtilsFormat")
+
+interface("SchemePrimitives")
+
+Module("SchemeProcedure")
+interface("SchemeProcedureClass")
+
+Module("SchemeClosure")
+Interface("SchemeClosureClass")
+
+Module("SchemeMacro")
+
+Module("SchemePrimitive")
+
+Module("SchemeEnvironment")
+Interface("SchemeEnvironmentClass")
+Interface("SchemeEnvironmentSuper")
+Interface("SchemeEnvironmentInstanceRep")
+implementation("SchemeEnvironmentUnsafe")
+
+%generic_implementation ("SchemeEnvironmentSafely")
+implementation ("SchemeEnvironmentSafe")
+
+Module("SchemeNavigatorEnvironment")
+
+Module("SchemeInputPort")
+Interface("SchemeInputPortClass")
+
+Interface("SchemeObject")
+
+Interface("SchemeEnvironmentBinding")
+
+Module("SchemeBoolean")
+
+Module("SchemeLongReal")
+
+Module("SchemeChar")
+
+Module("SchemeSymbol")
+
+Module("SchemeString")
+
+Interface("SchemeVector")
+
+Module("SchemeContinuation")
+
+template ("sgenerics")
+
+Module("SchemeAtRun")
+
+Netobj("SchemeEnvironment", "T")
+
+Module("SchemeUnixDeps")
+module("SchemeProfilerSysDep")
+Module("SchemeConvertHooks")
+List("SchemeConvertHooks","SchemeConvertHooks")
+
+c_source("schemeUnixDeps")
+
+library ("mscheme")
+
+end

@@ -1,4 +1,15 @@
+/* $Id$ */
+%m3_option("-X2@-pg@")
+%m3_option("-g")
+%remove_m3_option("-O")
+m3_option("-times")
 import ("libm3")
-Module("TextReader") % needed by m3tmplhack, must be compiled before cit_util
+Module("TextReader") /* needed by m3tmplhack, must be compiled before cit_util. */
+
+if defined("CM3_VERSION")
+	template("cm3")
+else
+	template("non-cm3")
+end
 
 Library("cit_common")

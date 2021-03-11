@@ -1,16 +1,16 @@
 (* Copyright 1996-2000, Critical Mass, Inc.  All rights reserved. *)
 (* See file COPYRIGHT-CMASS for details. *)
 
-UNSAFE MODULE SocketPosix EXPORTS Socket;
+UNSAFE MODULE SocketPosix EXPORTS Socket, SocketPosix;
 
-IMPORT Atom, AtomList, SocketPosix_IsUltrixOrOSF, File, FilePosix;
+IMPORT Atom, AtomList, File, FilePosix;
 IMPORT OSError, OSErrorPosix, SchedulerPosix, Thread;
 IMPORT Uuio, Ustat, Word;
 FROM Cerrno IMPORT GetErrno;
 FROM Unetdb IMPORT struct_hostent, struct_hostent_star, gethostbyname;
 FROM Ctypes IMPORT int, char, char_star;
 FROM Usocket IMPORT accept, AF_INET, bind, connect, getpeername, getsockname,
-                    getsockopt, listen, MSG_PEEK, recvfrom, sendto, setsockopt,
+                    listen, MSG_PEEK, recvfrom, sendto, setsockopt,
                     SO_LINGER, SO_REUSEADDR, SOCK_DGRAM, SOCK_STREAM, socket,
                     SOL_SOCKET, struct_linger, socklen_t;
 FROM Uin IMPORT IPPROTO_TCP, ntohs, htons, struct_in_addr, struct_sockaddr_in;
@@ -470,18 +470,6 @@ PROCEDURE MakeNonBlocking (fd: INTEGER)
       IOError (Unexpected);
     END;
   END MakeNonBlocking;
-
-PROCEDURE RefetchError(fd: INTEGER) =
-(* Awful hack to retrieve a meaningful error from a TCP accept
-   socket.  Only works on Ultrix and OSF.  Leaves result
-   in GetError().  *)
-  VAR optbuf: int := 0;   optlen: socklen_t := BYTESIZE(optbuf);
-  BEGIN
-    IF SocketPosix_IsUltrixOrOSF.Value THEN
-      EVAL getsockopt (fd, IPPROTO_TCP, TCP_NODELAY,
-                       ADR(optbuf), ADR(optlen));
-    END;
-  END RefetchError;
 
 PROCEDURE IOError (a: Atom.T) RAISES {OSError.E} =
   VAR ec: AtomList.T := NIL;

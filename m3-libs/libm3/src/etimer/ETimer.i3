@@ -29,6 +29,9 @@ PROCEDURE Relabel (t: T;  lab: TEXT);
 PROCEDURE Push (t: T);
 (* Suspend the currently running timer, start "t". *)
 
+PROCEDURE Append (t: T; duration : LONGREAL);
+(* Append duration to timer "t". *)
+
 PROCEDURE Pop ();
 (* Suspend the currently running timer, resume the previous one. *)
 

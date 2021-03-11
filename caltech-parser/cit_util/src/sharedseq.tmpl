@@ -1,0 +1,16 @@
+/* $Id$ */
+
+readonly proc _sharedSequence (nm, elem, elemSeq, vis) is
+	build_generic_intf(nm & "SharedSeq", "SharedSequence", [elem, elemSeq], vis)	
+	build_generic_impl(nm & "SharedSeq", "SharedSequence", [elem, elemSeq])
+end
+
+readonly proc SharedSequence (nm, elem, elemSeq) is 
+	_sharedSequence (nm, elem, elemSeq, VISIBLE) 
+end
+
+readonly proc sharedSequence (nm, elem, elemSeq) is 
+	_sharedSequence (nm, elem, elemSeq, HIDDEN) 
+end
+
+

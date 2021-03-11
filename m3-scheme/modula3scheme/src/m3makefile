@@ -1,0 +1,49 @@
+/* $Id$ */
+
+if not equal (OS_TYPE, "WIN32")
+
+if defined("CM3_VERSION")
+	m3_optimize("")
+end
+
+import ("libm3")
+import ("mscheme")
+%import ("finlib")
+import ("rdwr")
+
+Generic_module("SchemeAutoTbl")
+template ("schemeautotbl")
+
+Interface("SchemeJailBreak")
+
+Module ("SchemeM3TableOps")
+
+if defined("CM3_VERSION")
+	implementation("SchemeModula3TypesCM3")
+else 
+	implementation("SchemeModula3TypesPM3")
+end
+
+Module("M3toSTextString")
+
+Module("M3toSRefany")
+SchemeAutoTbl("TextRef", "TextRefTbl", "M3toSTextString", "M3toSRefany")
+
+KeyPair("CardAtom", "Cardinal", "Atom")
+
+table("CARef", "CardAtomPair", "Refany")
+
+Table("AtomCard", "Atom", "Cardinal")
+
+Module("SchemeM3")
+Module("SchemeCommandRunner")
+
+Module("SchemeModula3Types")
+
+Module("SchemeApply")
+
+Module("SchemeProcedureStubs")
+
+library ("modula3scheme")
+
+end

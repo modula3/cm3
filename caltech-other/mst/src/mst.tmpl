@@ -1,0 +1,9 @@
+/* $Id$ */
+
+readonly proc _mst (nm, from, to, vis) is
+	build_generic_intf(nm & "MST", "MST", [from, to], vis)	
+	build_generic_impl(nm & "MST", "MST", [from, to])
+end
+
+readonly proc Mst (nm, elem, elemseq) is _mst (nm, elem, elemseq, VISIBLE) end
+readonly proc mst (nm, elem, elemseq) is _mst (nm, elem, elemseq, HIDDEN) end

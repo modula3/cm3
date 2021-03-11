@@ -1,0 +1,14 @@
+/* $Id$ */
+
+readonly proc _mkSetArray(nm, elem, set, vis) is
+	build_generic_intf(nm & "SetArray", "SetArray", [elem, set], vis)
+	build_generic_impl(nm & "SetArray", "SetArray", [elem, set])
+end
+
+readonly proc mkSetArray(nm, elem, set) is
+	_mkSetArray(nm, elem, set, HIDDEN)
+end
+
+readonly proc MkSetArray(nm, elem, set) is
+	_mkSetArray(nm, elem, set, VISIBLE)
+end

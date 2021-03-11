@@ -43,6 +43,9 @@ along with GCC; see the file COPYING3.  If not see
 #include "ira-int.h"
 #include "emit-rtl.h"  /* FIXME: Can go away once crtl is moved to rtl.h.  */
 
+// cm3 cm3cg crashes on Linux/x86 host if ira is optimized.
+#pragma GCC optimize ("O1")
+
 static ira_copy_t find_allocno_copy (ira_allocno_t, ira_allocno_t, rtx,
 				     ira_loop_tree_node_t);
 

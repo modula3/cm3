@@ -1,0 +1,18 @@
+c
+c     $Id$
+c
+      subroutine mulmv_EXTENSION(a, b, c, rows, cols)
+      implicit none
+      
+      integer rows, cols, i, j
+      TYPE a(cols,rows), b(cols), c(rows)
+
+      do 200 i=1,rows
+         c(i) = 0.0
+         do 100 j=1,cols
+            c(i) = c(i) + a(j,i)*b(j)
+ 100     continue
+ 200  continue
+      end
+
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc

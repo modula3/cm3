@@ -1,0 +1,22 @@
+if not equal (OS_TYPE, "WIN32")
+
+/* $Id$ */
+import ("libm3")
+import ("cit_util")
+import ("set")
+
+Module("Voronoi")
+
+c_source("edgelist")
+c_source("geometry")
+c_source("heap")
+c_source("memory")
+c_source("mod3_main")
+c_source("output")
+c_source("voronoi")
+c_source("mymalloc")
+c_source("defs")
+
+library("voronoi")
+
+end

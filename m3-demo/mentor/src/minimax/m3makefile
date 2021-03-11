@@ -2,6 +2,8 @@
 /* All rights reserved.                                      */
 /* See the file COPYRIGHT for a full description.            */
 
+if HasTrestle()
+
 import ("zeus")
 import ("obliqrt")
 
@@ -27,4 +29,6 @@ if not defined ("MENTOR_UMBRELLA")
   implementation  ("Main")
   bundle  ("MinimaxBundle")
   program  ("minimax")
+end
+
 end

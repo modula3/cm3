@@ -1,0 +1,74 @@
+magic
+tech scmos
+timestamp 976160673
+<< metal1 >>
+rect 18 68 73 76
+rect 18 28 26 68
+rect 42 56 49 59
+rect 42 49 49 52
+rect 42 42 49 45
+rect 42 35 49 38
+rect 18 21 49 28
+rect 18 20 33 21
+rect 41 -93 49 21
+rect 65 -45 73 68
+rect 65 -53 103 -45
+rect 79 -63 86 -60
+rect 79 -70 86 -67
+rect 79 -77 86 -74
+rect 79 -84 86 -81
+rect 95 -93 103 -53
+rect 41 -101 103 -93
+<< metal2 >>
+rect 18 68 73 76
+rect 18 28 26 68
+rect 18 20 49 28
+rect 41 -93 49 20
+rect 65 -45 73 68
+rect 65 -53 103 -45
+rect 95 -93 103 -53
+rect 41 -101 103 -93
+<< metal3 >>
+rect 19 67 71 75
+rect 19 28 27 67
+rect 19 20 49 28
+rect 41 -92 49 20
+rect 63 -44 71 67
+rect 63 -52 102 -44
+rect 94 -92 102 -52
+rect 41 -100 102 -92
+rect 41 -101 49 -100
+<< metal4 >>
+rect 19 67 71 75
+rect 19 28 27 67
+rect 19 20 49 28
+rect 41 -92 49 20
+rect 63 -44 71 67
+rect 63 -52 102 -44
+rect 94 -92 102 -52
+rect 41 -100 102 -92
+rect 41 -101 49 -100
+<< metal5 >>
+rect 19 67 71 75
+rect 19 28 27 67
+rect 19 20 49 28
+rect 41 -92 49 20
+rect 63 -44 71 67
+rect 63 -52 102 -44
+rect 94 -92 102 -52
+rect 41 -100 102 -92
+rect 41 -101 49 -100
+use router_generated_wiring gen_wiring
+timestamp 976160673
+transform 1 0 0 0 1 0
+box 0 0 1 1
+<< labels >>
+rlabel metal1 46 36 46 36 8 x
+rlabel metal1 45 43 45 43 7 y
+rlabel metal1 46 49 46 49 7 z
+rlabel metal1 46 56 46 56 6 t
+rlabel metal1 83 -83 83 -83 8 x
+rlabel metal1 82 -76 82 -76 7 y
+rlabel metal1 83 -70 83 -70 7 z
+rlabel metal1 83 -63 83 -63 6 t
+<< end >>

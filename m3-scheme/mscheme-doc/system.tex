@@ -1,0 +1,365 @@
+%%
+%% $Id$
+%% 
+
+\chapter{Description of the MScheme System}
+
+{\bf NOTE: The source for this document is available in the directory:}\par
+\hskip4pc{\tt mscheme/doc/}
+
+\bigskip
+
+\section{Overview}
+
+This document describes the design and implementation of the
+Modula-Scheme development environment, or MScheme for short.  The
+MScheme system consists of several components and is intended for
+several uses.  In the simplest view, the MScheme system is simply an
+interpreter for the Scheme\cite{scheme-initial-report,r4rs}
+programming language, which happens to be coded in the
+Modula-3\cite{spwm3} language.  This is not a completely satisfying
+description, however, as it does not capture those aspects of the
+system intended to be novel.
+
+The MScheme system intends to innovate in two separate but intertwined
+areas: embedded interpreters and distributed agent systems.  In short,
+the MScheme system aims at bringing the same kind of inter-language
+bindings possible in a two-level interpreted environment\footnote{A
+  two-level interpreted environment is one in which an interpreter has
+  been coded, or {\em embedded\/}, in another interpreted language in
+  such a way that the embedded language has access to all the
+  facilities of the implementation language } to an environment based
+on a traditionally compiled systems language; it aims to do this in a
+way that, when necessary, allows the system integrator to have so much
+control over the interpreted environment that untrusted third-party
+code can be allowed to run in the interpreter.
+
+\section{Intended Uses of the MScheme System}
+
+The MScheme system is intended to be usable in several very different
+ways.  Some users may choose to use it simply as a convenient Scheme
+interpreter.  It is also intended to be easy to use as a ``glue''
+interpreter for building large Modula-3 applications out of components
+and to replace special-purpose interpreters built into many large
+Modula-3 applications.  Finally, and perhaps most interestingly,
+MScheme interpeters are intended to be usable as ``agent
+environments'' for code run that can be uploaded into an application
+by a remote user.  Depending on the application, such code can either
+be trusted and hence given full access to Modula-3 facilities, or else
+untrusted and hence given only restricted access to Modula-3
+facilities.
+
+\section{Components of the MScheme System}
+
+The MScheme system consists of a number of software components written
+both in Modula-3 and Scheme.  In order for the project to achieve all its
+goals, it will also include some components not yet written.
+
+\subsection{The MScheme interpreter}
+
+The basic component of the MScheme system is a Scheme interpreter
+written in Modula-3.  This Scheme interpreter is closely based on
+Peter Norvig's final version of the JScheme
+interpreter\cite{jscheme}.\footnote{The current JScheme interpreter
+  available from {\tt sourceforge.net} is a highly developed system
+  that has achieved much higher performance than Norvig's original
+  version but without really fixing some of the basic deficiencies of
+  JScheme.  We use Norvig's old version as our starting point simply
+  because there is less code in it to fix.}  JScheme is an interpreter
+that Norvig wrote in around 1997 to teach himself Java.  JScheme is
+well embedded in Java: it allows the {\tt new}ing of any Java object
+and it also allows the calling of any named method on any such Java
+object.
+
+MScheme started out as a direct translation of JScheme into Modula-3.
+The fact that Modula-3 does not permit as extensive
+introspection\footnote{{\em Introspection\/} is the process whereby a
+  program can analyze its own code; it is a facility available to a
+  greater or lesser extent in certain dynamically typed languages like
+  Smalltalk\cite{blue_book} but generally not in languages with
+  traditional compiler architectures like C, Fortran, or C++.
+  Modula-3 permits limited introspection (mainly of certain aspects of
+  the type system), but not enough to be useful to us in the MScheme
+  system.} as Java means that in order to provide access to all
+Modula-3 facilities from MScheme, a special {\em stub generator\/}
+program has to be provided, which will be described in section
+\ref{sec:stub_generator} below.
+
+\subsubsection{Deficiencies of the JScheme interpreter}
+
+A few aspects of Norvig's JScheme system reflect his desire to write
+what is close to the smallest Scheme interpreter possible in Java at
+the expense of some usability.  Norvig's Scheme interpreter was
+written in the ``Web 1.0'' days, while Java was still thought to be
+the language by which Web browsers would gain more functionality
+through the so-called {\em web applets\/}\footnote{Web applets are
+  untrusted code intended to be downloaded by a web browser from a web
+  server and run in a controlled environment so that they cannot cause
+  any damage on the user's computer.  This was intended to be the way
+  that powerful applications would be provided via the web, but has
+  been superseded by inferior technoligies such as JavaScript.}
+Because of Norvig's intent to embed his Scheme interpreter in Web
+pages, he was very eager to make the interpreter as small as possible,
+and its original name, SILK, is a pun on this, ``Scheme in L K'',
+where L is the Roman numeral for decimal 50.  As a result, JScheme has some
+serious limitations, some of which seem to be (somewhat puzzlingly) present
+in the latest versions of JScheme as well, which have long since abandoned
+the ``smallest Scheme interpreter possible in Java'' goal.
+
+Some limitations of JScheme are the following.
+\begin{itemize}
+\item JScheme offers an all-or-nothing (really an ``all'') approach to
+  interfacing with Java.  Scheme code is allowed to make any and all
+  Java calls.  This is perhaps acceptable in a web-applet environment,
+  in which the Java interpreter enforces strict access control to
+  system resources, but it is not at all sufficient for use in the
+  ``reverse'' environment, where untrusted Scheme code is uploaded
+  into a server-side {\em application.}  It is easy enough to remove
+  the Scheme interpreter's ability to make {\em any\/} Java calls but
+  that is throwing the baby out with the bath water.
+
+\item JScheme offers no specific mechanism for extending the Scheme
+  interpreter.  Again,this may be acceptable as long as one provides a
+  simple mechanism for accessing any Java facilities whatsoever, but
+  it is not acceptable if one's goal is to provide access to a limited
+  list of external facilities.
+
+\item JScheme has no specific design details that address
+  multi-threading.  Specifically, JScheme makes no provision for two
+  threads' concurrently accessing a single Scheme environment nor of
+  having two interpreter that share a single Scheme environment.
+
+\item JScheme is exceedingly inefficient with its memory allocations,
+  which puts a heavy load on the Java garbage collector.
+
+\item JScheme maintains Scheme environments as a Java data structure,
+  but it uses the Java stack for {\em control\/}.  This means that the
+  only control facilities that can be provided in the interpreter are
+  a subset of Java's control facilities.  In particular, full Scheme
+  continuations cannot be implemented in Java.  (Unwinding Scheme
+  continuations are provided in JScheme by means of an exception.)
+  This choice of implementation also implies high memory use for stacks
+  in a multi-threaded environment, since the stacks have to be sized
+  large enough to accomodate all the control levels of the Scheme program.
+  When a Scheme program is not properly tail recursive this is especially
+  problematic as even modest programs can run out of stack space.
+
+\end{itemize}
+
+Of the issues raised in the above list, MScheme has addressed all but
+the last as of this writing.  MScheme has a library interface for
+extending the interpreter (see
+section~\ref{sec:extending_the_interpreter}), and it has a new type of
+synchronized, ``navigable'' environment system that allows several
+interpreters to cooperate via shared environments (see
+section~\ref{sec:navigable_environments}). The MScheme implementation
+also recycles memory aggressively and uses small arrays instead of
+linked lists to represent very small environments, both of which
+greatly reduce the load on the garbage collector.  On the same type of
+processor, MScheme currently runs several times faster than the version
+of JScheme upon which it was based.  The only point on the list that 
+remains to be addressed is the ``stacked'' implementation of the interpreter
+(see section~\ref{sec:future_enhancements});
+
+\subsection{The Modula-3 analyzer and stub generator}\label{sec:stub_generator}
+
+\subsection{Interactive environments}
+
+Two interactive, ``bare'', interpreters are provided, {\tt
+  mscheme/interactive}, a basic Scheme interpreter with a terminal
+interface and {\tt mscheme/interactive\_r}, the same interpreter with a
+GNU Readline interface.
+
+%%%%%%%%%%%%%%%%%%%%
+
+\section{Future Enhancements}\label{sec:future_enhancements}
+
+\subsection{Concurrency}
+
+The present implementation of the system provides thread-safe
+environments as an option.  However, all this accomplishes is that two
+Scheme threads can safely share variables.  Synchronization in the
+Scheme code itself would have to be provided via Dekker's or
+Peterson's algorithms, which is not very convenient.  Allowing direct
+access from Scheme to locks or mutexes is not really an acceptable
+solution, as this would permit Scheme programs to deadlock the
+Modula-3 system (and cause a system crash).  In keeping with the areas
+where we expect to see the system used, it would be acceptable to
+allow Scheme programs to deadlock, but it should not cause resource
+starvation for other programs if that happens (some sort of abortion
+and garbage collection should be provided).  Also the correct
+synchronization primitives must be chosen out of the zoo of
+possibilities---something like a functional monitor might be elegant
+and Scheme-like.\footnote{The original Scheme system was intended to
+  be run on a concurrent system, a hardware implementation of Scheme,
+  in fact, but the synchronization primitives provided in that system
+  are somewhat inconvenient.}
+
+\subsection{Enhancements required in the interpreter}
+
+The use of the Modula-3 stack to push Scheme control has to be
+eliminated.  One straightforward way of doing this is to code the
+interpreter in a {\em continuation-passing style (CPS)\/}.  The Scheme
+stack would in such a system be implemented directly as a Modula-3
+data structure.  Many benefits would accrue from such a design change.
+First, Modula-3 stack would not be pushed when the Scheme stack is,
+which would allow much higher recursion depths in Scheme, limited only
+by the available heap space, which is much better managed than the
+stack space by the Modula-3 runtime (this is true for most if not all
+contemporary systems programming languages).  Secondly, the move from
+stack to heap memory would make it much easier to set specific limits
+on how much ``stack'' a particular instance of Scheme is allowed to
+push (mostly because there is enough available to set a reasonable
+limit, rather than having to limit it to something unreasonably
+small!)  Lastly, the described change would make it possible to implement
+Scheme's {\tt call-with-current-continuation}, which is, after all,
+one of the main innovations of the Scheme language.
+
+
+\section{Running Untrusted Code}
+
+One important way of using MScheme is permitting an untrusted user to
+provide Scheme code that can be run inside an application.  Such code
+might, for instance, be uploaded over the Internet and used in
+e-commerce or some other application that requires distributed
+decision making and reliable code.  Some of the author's earlier
+experiences (see section~\ref{sec:prior_work}) have indicated that
+being able to run third-party untrusted code in a powerful environment
+such as Scheme has a number of potential pitfalls.  The following is
+a short summary of the steps that must be taken.
+\begin{itemize}
+
+\item Obviously, the system must not, indirectly or directly, provide
+  access to untrusted low-level primitives (e.g., write a file at an
+  arbitrary path on the server system).  MScheme can be put in a mode
+  where it does not provide access to such primitives simply by not
+  loading untrusted primitives (the default interpreter does not provide
+  any).
+
+\item The system must not permit a single untrusted third-party
+  application to crash more than the parts of the system belonging to
+  the user uploading the application.  This can be easier said than
+  done!  Obviously it means that certain categories of bugs must be
+  ruled out of the system, but less obviously, the system must not
+  allow a single untrusted program to use up a large amount of
+  resources (especially memory).  Unfortunately this objective is
+  difficult to attain as long as the Scheme interpreter runs on the
+  Modula/Java stack, which sets a fairly low limit on the amount of
+  stack that can be pushed before a crash.  It is on the other hand
+  fairly easy to ensure that a buggy or looping Scheme program does not
+  cause any adverse effects (the author has coded a version of JScheme
+  that has these properties, see section~\ref{sec:prior_work}.
+
+\item Continuing in the vein of the previous point, there can be no
+  non-terminating loops in the interpreter itself.  Again, this is a
+  bit more difficult to ensure than is obvious at first sight.  The
+  main problem is that Scheme interpreters are notorious for getting
+  into infinite loops when performing certain actions (e.g., printing)
+  on circular data structures.  If a loop (in the interpreter!) cannot
+  be proved to terminate, it {\em must\/} have a facility for
+  detecting that it is looping at runtime, e.g., breaking off if a
+  timer has expired or if it can otherwise be prove that the code is
+  looping.
+
+\item The most difficult issues can occur in the application itself.
+  Sometimes it is difficult to know what aspects of the application
+  can be revealed to third parties and which might constitute
+  ``information leakage'', especially in a financial-services
+  environment.
+
+\end{itemize}
+
+
+\section{Background and Prior Work}\label{sec:prior_work}
+
+\subsection{History of the MScheme system}
+
+The MScheme system was originally conceived as a Modula-Smalltalk
+combination, to be used principally for enhancing Modula-3
+applications used for the financial software activities of Generation
+Capital, Ltd.  The author of the present paper produced a white paper
+on the design of the Modula-Smalltalk system and proceeded to
+implement some of the basic components of the system.  This effort was
+redirected towards Python, mainly because Python is more widely used
+today than Smalltalk, and also Smalltalk has a few design decisions
+that reflect its age, mostly in the area of concurrency, which is via
+cooperative multitasking.  The intention with Modula-Python was to
+start with the existing C implementation of Python and link it
+together with Modula-3, using the fact that Modula-3 and C have the
+same function call conventions (on most systems).  However, the
+difficulty in combining the languages in this way is to make the
+Modula-3 and Python runtime systems respect each other: the difficulty
+here is mainly in the area of garbage collection.  (It must be said
+that an enterprising programmer could definitely port Python-in-Java,
+Jython, to Modula-3 just as we have with JScheme.)  
+
+At the same time that work at Generation Capital was revolving around
+discussions on how to combine Modula-3 and Smalltalk or Python, the
+author was involved in a marketing project at a startup company
+in Southern California.  This project involved the use of JScheme to
+provide a safe environment for third-party agents to run in and to
+access an underlying database system.  The experiences with this system
+were so positive that the author decided to port JScheme to Modula-3.
+
+The decision to use Scheme rather than Smalltalk or Python has one
+drawback, namely that while Smalltalk and Python are both
+object-oriented languages with type systems similar to Modula-3's,
+Scheme is not explicitly an object-oriented language.  It is however
+probably true that by the use of Scheme's powerful macro system and
+its first-class procedures, a convienently usable object-oriented
+system can be provided to MScheme programmers.  Several existing
+systems (Tiny-CLOS, ooo) provided object orientation in Scheme
+already.  The advantage of using Scheme is, of course, that Scheme is
+a much smaller language than either Python or Smalltalk and it is
+therefore far easier both to provide the initial interpreter and to
+verify that it meets the necessary properties for the intended
+applications.
+
+The MScheme system is currently being used to implement one 
+substantial software system, an order-management system for stock market
+trading.
+
+\subsection{Prior work}
+
+The idea of embedded languages is hardly a new one.  Embedded
+languages has been the way that Lisp programmers have come up with new
+versions of Lisp ever since that language was invented some fifty
+years ago.  However, the use of embedded languages in ``traditional''
+systems programming environments such as C has a shorter history.
+Recently, the GNU project has chosen Scheme to be its standard
+``scripting'' language, via the GNU Guile interpreter.  In specialized
+applications, the same sort of argument has been used previously:
+Cadence, Inc. has provided a scripting language called SKILL (also
+based on Scheme) in its VLSI design tools for many years.  Scheme is
+also the scripting language of the Magic VLSI layout editor.  A
+language with a slightly longer history is the language Tcl,
+originally invented in the early 1990s by Ousterhout et al. at
+Berkeley, also with the goal of scripting VLSI design tools.
+
+The idea that it is possible to put together a scripting language and
+a systems language ``transparently'' has an even shorter history than
+the VLSI design tools experience, and started with several projects
+like JScheme in the late 1990s.  Much later, Sun started providing
+support for such scripting language access to Java.  Microsoft is as
+of this writing still working on exactly how to do it within their
+.NET framework.
+
+The approach we have taken is different from the prior approaches in two
+different ways: we specifically have chosen a {\em simple\/} language,
+Scheme, in order that we can hope to verify very high-level properties
+of the resulting system, which would be necessary for any real application
+involving untrusted third-party code; also, the MScheme system is the
+first time to our knowledge that the transparent embedding of a scripting
+language has been done in a systems programming language that relies on
+a traditional compiler architecture.  Java, for instance, provides its
+scripting interface via its advanced introspection facility.  By processing
+the Modula-3 source itself, the MScheme system obviates the need for such
+introspection.
+
+It is important to note that many of the features that make it
+possible to implement MScheme and to provide a transparent interface
+to Modula-3 facilities depend on having an underlying environment that
+has features that systems languages have only been slowly accepting
+of, e.g., garbage collected storage and runtime access to type information.  It
+would be very difficult, for instance, to implement MScheme in a C++
+environment.

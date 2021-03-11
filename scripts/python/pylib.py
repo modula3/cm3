@@ -12,6 +12,9 @@ import tempfile
 import shutil
 import time
 
+false = False
+true = True
+
 class Tee:
     def __init__(self, a, b = None):
         self.a = a
@@ -28,6 +31,8 @@ class Tee:
             self.a.flush()
         if self.b != None and self.a != self.b:
             self.b.flush()
+
+LowercaseArgv = map(lambda(a): a.lower(), sys.argv)
 
 sys.stdout = Tee(sys.stdout, open(sys.argv[0] + ".log", "a"))
 
@@ -251,7 +256,9 @@ def SearchPath(name, paths = getenv("PATH")):
         for sep in seps:
             for path in paths.split(sep):
                 candidate = os.path.join(path, name)
+                #print("SearchPath check:" + candidate)
                 if isfile(candidate):
+                    print("SearchPath return:" + candidate)
                     return os.path.abspath(candidate)
     #print("SearchPath " + name + " returning None 2")
     return None
@@ -372,8 +379,9 @@ def _GetAllTargets():
 
     # systematic naming
 
-    for proc in ["ALPHA", "ALPHA32", "ALPHA64", "AMD64", "ARM", "ARMEL", "IA64", "I386", "PPC", "PPC32",
-                 "PPC64", "SPARC", "SPARC32", "SPARC64", "MIPS32", "MIPS64EL", "MIPS64", "PA32", "PA64", "SH"]:
+    for proc in ["ALPHA", "ALPHA32", "ALPHA64", "AMD64", "ARM", "ARMEL", "ARM64",
+                 "IA64", "I386", "PPC", "PPC32", "PPC64", "SPARC", "SPARC32",
+                 "SPARC64", "MIPS32", "MIPS64EL", "MIPS64", "PA32", "PA64", "RISCV64", "SH"]:
         for os in ["AIX",  "CE", "CYGWIN", "DARWIN",  "FREEBSD", "HPUX", "INTERIX", "IRIX",
                    "LINUX", "MINGW", "NETBSD", "NT", "OPENBSD", "OSF", "SOLARIS", "VMS"]:
                    # "BEOS", "MSDOS" (DJGPP), "OS2" (EMX), "PLAN9"
@@ -385,12 +393,15 @@ def _GetAllTargets():
     return Targets
 
 #-----------------------------------------------------------------------------
-
-_CBackend = "c" in sys.argv or "C" in sys.argv
-_BuildDirC = ["", "c"][_CBackend]
+#
+# Tentatively, +C means C backend, and append C to BuildDir.
+# But it does not work yet and that is ok.
+# It probably does not work because cm3 does not implement it.
+#
+_CBackend = "c" in LowercaseArgv or "+c" in LowercaseArgv
 _PossibleCm3Flags = ["boot", "keep", "override", "commands", "verbose", "why"]
 _SkipGccFlags = ["nogcc", "skipgcc", "omitgcc"]
-_PossiblePylibFlags = ["noclean", "nocleangcc", "c", "C"] + _SkipGccFlags + _PossibleCm3Flags
+_PossiblePylibFlags = ["noclean", "nocleangcc", "c", "C", "+c", "+C"] + _SkipGccFlags + _PossibleCm3Flags
 
 skipgcc = False
 for a in _SkipGccFlags:
@@ -651,6 +662,44 @@ for a in sys.argv:
 Target = Target or getenv("CM3_TARGET") or Host
 
 #-----------------------------------------------------------------------------
+
+def TargetOnlyHasCBackend(a):
+    # Many targets have a gcc backend.
+    # NT386 etc. have the integrated backend.
+    # Many targets only have the C backend.
+    #
+    # The C backend ABI is not the same as the others,
+    # therefore, likely, BuildDir should have "C" appended,
+    # for targets that have C backend and another backend.
+    #
+    # Todo: arm32 is unclear barely existant
+    # Historical targets probably should should gcc backend.
+    # All targets probably should drop gcc backend.
+    # Even NT386 integrated backend is not super interesting.
+    #
+    a = a.lower()
+    if a == "i386_nt":
+        return false
+    return a.endswith("_nt") or a.startswith("arm64") or a.startswith("riscv")
+
+#-----------------------------------------------------------------------------
+#
+# Append c to BuildDir (i.e. Target) if +c in command line.
+# Previously this was if plain C in argv but this is perhaps a separate factor,
+# least for targets that have other backends. i.e. so NT386 and NT386c build
+# directories can coexist.
+#
+# But not if target only has C backend.
+#
+# TODO
+#
+_BuildDirC = ["", "c"]["c" in LowercaseArgv]
+#_BuildDirC = ["", "c"]["+c" in LowercaseArgv]
+#_BuildDirC = ["", "c"]["+c" in LowercaseArgv and not TargetOnlyHasCBackend(Target)]
+#_BuildDirC = ["", "c"][_CBackend and not TargetOnlyHasCBackend(Target)]
+#_BuildDirC = ""
+
+#-----------------------------------------------------------------------------
 #
 # TargetOS is almost always POSIX, the user cannot set it, it is changed to WIN32 sometimes later
 #
@@ -697,7 +746,7 @@ if Target.endswith("_MINGW") or Target.endswith("_NT"):
     TargetOS = "WIN32"
     HAVE_SERIAL = True
 
-if Host.endswith("_NT") or Host == "NT386":
+if Host != None and (Host.endswith("_NT") or Host == "NT386"):
     Q = "" # q for quote: This is probably about the host, not the target.
 
 #-----------------------------------------------------------------------------
@@ -1067,7 +1116,7 @@ def _MakeTGZ(a):
     b = Tar + " cfz " + out + " " + a
     print(b + "\n")
     os.system(b)
-    
+
 def _MakeZip(a):
     out = a + ".zip"
     DeleteFile(out)
@@ -1129,9 +1178,9 @@ def Boot():
     bsd = StringContainsI(Target, "BSD")
 
     # pick the compiler
-    
+
     CBackend = _CBackend
-    
+
     CCompilerOut = ""
 
     if alpha32vms:
@@ -1188,7 +1237,7 @@ def Boot():
         "SPARC32_LINUX"   : " -m32 -mcpu=v9 -mno-app-regs ",
         "SPARC64_LINUX"   : " -m64 -mno-app-regs ",
         }.get(Config) or " ")
-        
+
     LinkExts = { }
 
     obj = ["o", "obj"][nt]
@@ -1196,7 +1245,7 @@ def Boot():
     #Link = "$(CC) $(CFLAGS)"
 
     # link flags
-    
+
     # TBD: add more and retest, e.g. Irix, AIX, HPUX, Android
     # http://www.openldap.org/lists/openldap-bugs/200006/msg00070.html
     # http://www.gnu.org/software/autoconf-archive/ax_pthread.html#ax_pthread
@@ -1226,7 +1275,7 @@ def Boot():
         Link = Link  +  " -lm -pthread "
     else:
         Link = Link + " -lm -lpthread "
-    
+
     # add -c to compiler but not link (i.e. not CCompilerFlags)
 
     Compile = "$(CC) $(CFLAGS) " + [" -c ", ""][vms]
@@ -1295,7 +1344,7 @@ def Boot():
     if (not vms) or AssembleOnHost:
         Assembler = GnuPlatformPrefix + Assembler
 
-    P = FilterPackages([ "m3cc", "import-libs", "m3core", "libm3", "sysutils",
+    P = FilterPackages([ "m3cc", "m3core", "libm3", "sysutils",
           "m3middle", "m3quake", "m3objfile", "m3linker", "m3back",
           "m3front" ])
     main_packages = ["cm3"]
@@ -1341,9 +1390,9 @@ def Boot():
     UpdateSource = open(os.path.join(BootDir, "updatesource.sh"), "wb")
     Objects = { }
     ObjectsExceptMain = { }
-    
+
     # main_m.s or main.ms, depending on what we see
-    mainS = "" 
+    mainS = ""
 
     for pkg in main_packages:
         CreateDirectory(os.path.join(BootDir, pkg + ".d"))
@@ -1357,7 +1406,7 @@ def Boot():
             a.write("Assemble=" + Assembler + " " + AssemblerFlags + NL)
         a.write("Link=" + Link + NL
                 + NL + "# no more editing should be needed" + NL2)
-                
+
     #Makefile.write("#AssembleOnTarget:" + str(AssembleOnTarget) + NL)
     #Makefile.write("#CBackend:" + str(CBackend) + NL)
     #Makefile.write("#BuildDir:" + BuildDir + NL)
@@ -1367,7 +1416,7 @@ def Boot():
         Makefile.write(".SUFFIXES:" + NL
                        + ".SUFFIXES: .c .is .ms .s .o .obj .io .mo" + NL2)
 
-    Makefile.write("all: ")    
+    Makefile.write("all: ")
     for pkg in main_packages:
         Makefile.write(pkg + EXE + " ")
     Makefile.write(NL2)
@@ -1438,9 +1487,9 @@ def Boot():
                     print(a)
                     os.system(a)
                 else:
-                    VmsMake.write("$ " + Assembler + " " + a + "\n")                    
+                    VmsMake.write("$ " + Assembler + " " + a + "\n")
             VmsLink.write(Object + "/SELECTIVE_SEARCH\n")
-            
+
     # double colon batches and is much faster
     colon = [":", "::"][nt]
 
@@ -1449,7 +1498,7 @@ def Boot():
         for c in ["c", "cpp"]:
             for o in ["o", "obj"]:
                 Makefile.write("." + c + "." + o + colon + NL + "\t$(Compile) " + CCompilerOut + " $<" + NL2)
-            
+
         # write inference rules: .is => .io, .s => .o, .ms => .mo
         if not CBackend:
             for source_obj in [["is", "io"], ["s", "o"], ["ms", "mo"]]:
@@ -1460,7 +1509,7 @@ def Boot():
     Makefile.write("OBJECTS=")
     Objects = ObjectsExceptMain.keys()
     Objects.sort()
-    k = 8    
+    k = 8
     for a in Objects:
         k = k + 1 + len(a)
         if k > 76: # line wrap
@@ -1476,9 +1525,9 @@ def Boot():
         Makefile.write(" " + a)
 
     Makefile.write(NL2)
- 
+
     LinkOut = [" -o ", " -out:"][nt]
-    
+
     maino_ext = "o"
     if CBackend:
         maino_ext = "m3.c"
@@ -1494,7 +1543,7 @@ def Boot():
         Makefile.write(" " + "$(OBJECTS) ")
         Makefile.write(pkg + ".d/Main." + maino_ext)
         Makefile.write(NL)
-            
+
         # NOTE: We use *.o/*.obj to avoid command line length limits.
         # TODO: Response files? gcc 4.2 supports them. Visual C++ all
         # versions support them. TODO: Research xlc, Sun CC, etc.
@@ -1505,11 +1554,11 @@ def Boot():
     for o in obj_suffixes:
         VmsMake.write("$ set file/attr=(rfm=var,rat=none) *." + o + "\n")
     VmsMake.write("$ link /executable=cm3.exe vmslink/options\n")
-    
+
     # TODO
     for a in [Make]:
         a.write("$(Link) " + LinkOut + "$@" + NL)
-        
+
     if False:
         for a in [
             #
@@ -1597,7 +1646,7 @@ def Boot():
 
     for a in [UpdateSource, Make, Makefile, VmsMake, VmsLink]:
         a.close()
-        
+
     # write entirely new custom makefile for NT
     # We always have object files so just compile and link in one fell swoop.
     # NOTE: This is quite crude/slow/inefficient. Needs work.
@@ -2177,42 +2226,46 @@ def GetVisualCPlusPlusVersion():
 # As well: malloc, free, open, read, write, close, assert, etc.
 #
     a = os.popen("cl 2>&1 >nul").read().lower()
-    if a.find(" 19.00.") != -1:
+    if a.find(" 19.0") != -1:
         return "2015"
-    if a.find(" 19.10.") != -1:
+    if a.find(" 19.1") != -1:
         return "2017"
+    if a.find(" 19.2") != -1:
+        return "2019"
 
-    if a.find(" 9.00.") != -1:
+    if a.find(" 9.0") != -1:
         return "20"
-    if a.find(" 10.00.") != -1:
+    if a.find(" 10.0") != -1:
         return "40"
-    if a.find(" 10.10.") != -1:
+    if a.find(" 10.1") != -1:
         return "41"
-    if a.find(" 10.20.") != -1:
+    if a.find(" 10.2") != -1:
         return "42"
-    if a.find(" 11.00.") != -1:
+    if a.find(" 11.0") != -1:
         return "50"
-    if a.find(" 12.00.") != -1:
+    if a.find(" 12.0") != -1:
         return "60"
-    if a.find(" 13.00.") != -1:
+    if a.find(" 13.0") != -1:
         return "70"
-    if a.find(" 13.10.") != -1:
+    if a.find(" 13.1") != -1:
         return "71"
-    if a.find(" 14.00.") != -1:
+    if a.find(" 14.0") != -1:
         return "80"
-    if a.find(" 15.00.") != -1:
+    if a.find(" 15.0") != -1:
         return "90"
-    if a.find(" 16.00.") != -1:
+    if a.find(" 16.0") != -1:
         return "100"
-    if a.find(" 17.00.") != -1:
+    if a.find(" 17.0") != -1:
         return "110"
-    if a.find(" 18.00.") != -1:
+    if a.find(" 18.0") != -1:
         return "120"
+
+    return "unknown" # assume CM3_VS2015_OR_NEWER = 1
 
 def SetVisualCPlusPlus2015OrNewer():
     if not os.environ.get("CM3_VS2015_OR_NEWER"):
         cver = GetVisualCPlusPlusVersion()
-        if len(cver) == 4:
+        if len(cver) >= 4:
             #sys.exit(1)
             os.environ["CM3_VS2015_OR_NEWER"] = "1"
         else:
@@ -2221,7 +2274,7 @@ def SetVisualCPlusPlus2015OrNewer():
         #sys.exit(3)
 
 def IsCygwinHostTarget(): # confused
-    return Host.endswith("_CYGWIN") or (Host == "NT386" and GCC_BACKEND and TargetOS == "POSIX")
+    return Host!= None and (Host.endswith("_CYGWIN") or (Host == "NT386" and GCC_BACKEND and TargetOS == "POSIX"))
 
 def IsMinGWHostTarget():
     return (Target == "NT386" and GCC_BACKEND and TargetOS == "WIN32") or Target.endswith("_MINGW")
@@ -2630,10 +2683,45 @@ def FormInstallRoot(PackageSetName):
     a = a + "-" + time.strftime("%Y%m%d")
     return a
 
+def SearchPathWix():
+    path = os.environ["PATH"] or getenv("PATH")
+    #print("path:" + path)
+    return SearchPath("candle.exe", path) and SearchPath("light.exe", path)
+
+def TryAddWixToPath():
+    print("SearchPath candle light")
+
+    WixCandidates = ["WiX Toolset v3.11", "Windows Installer XML v3"]
+
+    wixFound = SearchPathWix()
+    for a in GetProgramFiles():
+        #print("ProgramFiles:" + a)
+        if wixFound:
+            return wixFound
+        for wixCandidate in WixCandidates:
+            b = os.path.join(ConvertPathForPython(a), wixCandidate, "bin")
+            #print("a:" + a)
+            #print("b:" + b)
+            if isdir(b):
+                SetEnvironmentVariable("PATH", b + os.pathsep + os.environ["PATH"])
+                wixFound = SearchPathWix()
+                if wixFound:
+                    return wixFound
+            if wixFound:
+                return wixFound
+        if wixFound:
+            return wixFound
+    return wixFound
+
 def MakeMSIWithWix(input):
 # input is a directory such as c:\stage1\cm3-min-NT386-d5.8.1-VC90
 # The output goes to input + ".msi" and other temporary files go similarly (.wix, .wixobj)
 # (We edit the filename slightly for friendlyness.)
+
+    if not TryAddWixToPath():
+        print("skipping msi/wix")
+        return
+
     import uuid
 
     InstallLicense(Root, input)
@@ -2699,15 +2787,6 @@ def MakeMSIWithWix(input):
 """)
 
     wix.close()
-
-    print("SearchPath candle light")
-
-    if not SearchPath("candle") or not SearchPath("light"):
-        for a in GetProgramFiles():
-            b = os.path.join(ConvertPathForPython(a), "Windows Installer XML v3", "bin")
-            if isdir(b):
-                SetEnvironmentVariable("PATH", b + os.pathsep + os.environ["PATH"])
-                break
 
     command = "candle " + ConvertPathForWin32(input) + ".wxs -out " + ConvertPathForWin32(input) + ".wixobj" + " 2>&1"
     if os.name == "posix":
@@ -2903,6 +2982,9 @@ if __name__ == "__main__":
     #
     # run test code if module run directly
     #
+
+    TryAddWixToPath()
+    sys.exit(1)
 
     print("GetVisualCPlusPlusVersion:" + GetVisualCPlusPlusVersion())
     sys.exit(1)

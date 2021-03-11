@@ -1,0 +1,46 @@
+magic
+tech scmos
+timestamp 1065832382
+<< error_s >>
+rect 96 109 98 110
+rect 96 105 99 109
+rect 92 36 98 48
+rect 104 34 108 36
+rect 104 32 112 34
+use celem2 a92
+timestamp 1065832382
+transform 1 0 8 0 1 128
+box -2 -5 22 67
+use inv a94.invs.v[1]
+timestamp 1065832382
+transform 1 0 0 0 1 0
+box -2 -5 14 67
+use celem2 a93
+timestamp 1065832382
+transform 1 0 16 0 -1 125
+box -2 -5 22 67
+use nor2 a95
+timestamp 1065832382
+transform 1 0 16 0 1 0
+box -2 -5 22 67
+use copyS_up Q1
+timestamp 1065832382
+transform 1 0 48 0 -1 125
+box -2 -3 48 65
+use celem3 a91
+timestamp 1065832382
+transform 1 0 48 0 1 0
+box -2 -5 30 67
+use nand2 a94.nando
+timestamp 1065832382
+transform 1 0 96 0 -1 125
+box -2 -5 22 67
+use inv a94.invs.v[0]
+timestamp 1065832382
+transform 1 0 88 0 1 0
+box -2 -5 14 67
+use copyS_down Q0
+timestamp 1065832382
+transform 1 0 104 0 1 0
+box -2 -3 104 65
+<< end >>

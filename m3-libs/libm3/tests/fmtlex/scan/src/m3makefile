@@ -8,8 +8,8 @@
 /* m3makefile for /proj/m3/pkg/fmtlex/tests/lex/src */
 
 /* imported/included packages */
-import		(libm3)
+import		("libm3")
 
 /* modules for this application */
-implementation	(ScanTest)
-program		(ScanTest)
+implementation	("ScanTest")
+program		("ScanTest")

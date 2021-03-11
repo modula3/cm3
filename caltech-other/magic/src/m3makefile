@@ -1,0 +1,96 @@
+/* $Id$ */
+/*m3_option("-g") */
+/*m3_option("-times") */
+/*m3_option("-X2@-pg@")*/
+/*m3_option("-Z")*/
+/*remove_m3_option("-O")*/
+import("cit_util")
+
+/* exported things */
+
+Module("MagPath")
+Module("MagCell")
+Interface("MagCellExtendable")
+Module("MagSession")
+Module("MagRect")
+Module("MagLabel")
+Module("MagPoint")
+Interface("MagDir")
+List("MagPoint", "MagPoint")
+Sequence("MagPoint","MagPoint")
+Table("TextMagPoint","Text","MagPoint")
+MkSet("MagRect","MagRect")
+MkSetDef("MagRect","MagRect")
+Table("MagRectRef", "MagRect", "Refany")
+
+MkSet("MagCell", "MagCell")
+MkSetDef("MagCell", "MagCell")
+Table("MagCellRef", "MagCell", "Refany")
+
+Interface("MagCoord")
+Module("MagLayer")
+Module("MagRouteLayer")
+MkSet("MagLayer", "MagLayer")
+MkSetDef("MagLayer", "MagLayer")
+table("MagLayerRef", "MagLayer", "Refany")
+table("LayerLayer", "MagLayer", "MagLayer")
+
+Module("MagLayerRect")
+List("MagLayerRect", "MagLayerRect")
+MkSet("MagLayerRect", "MagLayerRect")
+MkSetDef("MagLayerRect", "MagLayerRect")
+table("MagLayerRectRef", "MagLayerRect", "Refany")
+
+Module("MagSubCell")
+Module("MagTransform")
+Interface("MagTimeStamp")
+Module("MagArrayData")
+
+Table("TextMagLayer", "Text", "MagLayer")
+
+/* user convenience */
+
+Module("MagRectUtils")
+Module("MagCellUtils")
+
+
+/* things that are internal to the library */
+
+interface("MagArrayDataClass")
+module("MagArrayElemTransform")
+list("SubCell", "MagSubCell")
+table("TextSubCell", "Text", "MagSubCell")
+
+table("TextCell", "Text", "MagCell")
+
+list("MagCell","MagCell")
+
+module("MagCellReader")
+list("Transform", "MagArrayElemTransform")
+List("MagRect", "MagRect")
+List("MagLabel", "MagLabel")
+Table("LayerRect", "MagLayer", "MagRectList")
+
+Table("MagLabelRef", "MagLabel", "Refany")
+MkSet("MagLabel","MagLabel")
+MkSetDef("MagLabel","MagLabel")
+
+module("MagCellFlatten")
+Module("MagCellInstance")
+Table("TextCellInstance", "Text", "MagCellInstance")
+
+/* layer merging */
+List("MagLayer", "MagLayer")
+table("MagLayer_LayerSet", "MagLayer", "MagLayerSet")
+Module("MagMergeDB")
+table("Rect_LayerSet", "MagRect", "MagLayerSet")
+
+/* tile things */
+Module("MagTile")
+
+MkSet("MagPoint","MagPoint")
+MkSetDef("MagPoint","MagPoint")
+Table("MagPointRef","MagPoint","Refany")
+
+import("libm3")
+library("magic")

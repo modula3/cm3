@@ -1,0 +1,7 @@
+/* $Id$ */
+
+import ("matrix")
+
+implementation ("Main")
+
+program ("test_mul")

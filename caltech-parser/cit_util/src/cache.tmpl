@@ -1,0 +1,12 @@
+readonly proc _cache (nm, from, to, fromreftbl, vis) is
+	build_generic_intf(nm & "Cache", "Cache", [from, to], vis)	
+	build_generic_impl(nm & "Cache", "Cache", [from, to, fromreftbl])
+end
+
+readonly proc Cache (nm, from, to, fromreftbl) is 
+	_cache (nm, from, to, fromreftbl, VISIBLE) 
+end
+
+readonly proc cache (nm, from, to, fromreftbl) is 
+	_cache (nm, from, to, fromreftbl, HIDDEN) 
+end

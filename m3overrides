@@ -6,7 +6,9 @@ proc Override(a, b) is
   end
 end
 
+
 % caltech-parser packages that we don't have
+% probably a bunch of other stuff missing here
 %Override("bdd",TOP)
 %Override("bool",TOP)
 %Override("boxes",TOP)
@@ -129,6 +131,7 @@ Override("webvbt", "m3-ui")
 Override("wellfett", "m3-libs")
 Override("X11R4", "m3-ui")
 Override("zeus", "m3-ui")
+Override("semaphore", "m3-libs")
 
 %_NETOBJ_OVERRIDE = TRUE % m3-comm/netobj/src/m3overrides
 %_SHAREDOBJ_OVERRIDE = TRUE % m3-comm/sharedobj/src/m3overrides

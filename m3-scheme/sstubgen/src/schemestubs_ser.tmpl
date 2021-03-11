@@ -1,0 +1,103 @@
+/* $Id$ */
+
+/* m3build/cm3 Quake for building Scheme stubs */
+
+
+_SSTUBGEN    = TOP & "/mscheme/sstubgen/program/" & BUILD_DIR & "/sstubgen"
+_SSTUBGENSCM = TOP & "/mscheme/sstubgen/program/src/sstubgen.scm"
+_SEXIT       = "exit"
+
+_EXPORTSSPECIAL = "__SCHEMEEXPORTS__"
+
+intfs=""
+
+localExports = ""
+
+readonly proc SchemeStubs(intf) is
+	local nam = intf & "SchemeStubs"
+
+	local cmd = "(make-standard-stuff \"" & nam & "\")"
+
+%	if stale("build1.scm", sources) 
+%	end
+
+% problem here: we can build SchemeStubs for things *not* in this
+% package.  stale() doesn't seem to catch those, at least not the
+% way we've coded it here.
+
+	intfs=intfs & " " & nam
+	
+	%write(path_of(intf & ".i3"), CR)
+
+	if stale(nam & ".i3", path_of(intf & ".i3"))
+		generate_tfile()
+
+		> "build1.scm" in
+ 			write (cmd, CR)
+		end
+
+
+		_exec([_SSTUBGEN, "-nointeractive", "-unsafe", "-si", intf, "-T.M3IMPTAB", "-scm", _SSTUBGENSCM, "build1.scm", _SEXIT])
+	end
+
+	derived_interface(nam, VISIBLE)
+	derived_implementation(nam)
+
+end
+
+
+readonly proc ExportSchemeStubs(package) is
+
+	local intf_data = "(define scm-intfs '(" & intfs & "))"
+	local tgt = package & _EXPORTSSPECIAL
+	local cmd      = "(write-scheme-package-exports scm-intfs \""&tgt&"\" \""&tgt&"TMP\")"
+        local cmd2     = "(rename-if-different \""&tgt&"TMP\" \""&tgt&"\")"
+
+	> "build2.scm" in
+	  write (intf_data, CR)
+		write (cmd, CR)
+		write (cmd2, CR)
+  end
+
+	_exec([_SSTUBGEN, "-nointeractive", "-unsafe", "-scm", _SSTUBGENSCM, "build2.scm", _SEXIT])
+	
+	derived_interface(tgt, VISIBLE)
+	derived_implementation(tgt)
+
+	localExports = "\"" & tgt & "\""
+end	
+
+readonly proc importSchemeStubs() is
+	local cmd = "(make-global-scheme-stubs \""&_EXPORTSSPECIAL&"\" \".M3IMPTAB\" \"SchemeStubs\" \"SchemeStubsTMP\" "&localExports&")"
+        local cmd2     = "(rename-if-different \"SchemeStubsTMP\" \"SchemeStubs\")"
+
+	> "build3.scm" in
+ 		write (cmd, CR)
+ 		write (cmd2, CR)
+	end
+
+	_exec([_SSTUBGEN, "-nointeractive", "-unsafe", "-scm", _SSTUBGENSCM, "build3.scm", _SEXIT])
+
+	derived_interface("SchemeStubs",VISIBLE)
+	derived_implementation("SchemeStubs")
+end
+
+readonly proc smodule(nam) is
+  module(nam)
+  SchemeStubs(nam)
+end
+
+readonly proc Smodule(nam) is
+  Module(nam)
+  SchemeStubs(nam)
+end
+
+readonly proc sinterface(nam) is
+  interface(nam)
+  SchemeStubs(nam)
+end
+
+readonly proc Sinterface(nam) is
+  Interface(nam)
+  SchemeStubs(nam)
+end

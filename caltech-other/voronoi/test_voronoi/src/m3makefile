@@ -1,0 +1,10 @@
+/* $Id$ */
+
+import("libm3")
+import("cit_util")
+import("voronoi")
+%import("sysiphus")
+
+%implementation("Main")
+
+%program("x")

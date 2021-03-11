@@ -1,0 +1,41 @@
+magic
+tech scmos
+timestamp 1039745528
+<< metal1 >>
+rect -8 35 13 36
+rect 42 35 61 36
+rect -8 32 61 35
+rect -8 20 -3 32
+rect 0 24 5 29
+rect 9 20 45 32
+rect 48 24 53 29
+rect 57 20 61 32
+rect -8 16 61 20
+rect 11 11 51 16
+rect -8 8 69 11
+rect -8 -4 -5 8
+rect 0 0 5 5
+rect 10 -4 51 8
+rect 56 0 61 5
+rect 66 -4 69 8
+rect -8 -7 69 -4
+rect -8 -8 13 -7
+rect 48 -8 69 -7
+<< metal2 >>
+rect -27 -4 -3 49
+rect 24 8 32 49
+rect 56 16 96 48
+rect 64 8 96 16
+rect 8 7 32 8
+rect 8 -4 44 7
+rect 72 -4 96 8
+rect -27 -8 96 -4
+rect -9 -9 96 -8
+<< metal3 >>
+rect -18 -9 79 47
+<< labels >>
+rlabel metal1 3 26 3 26 3 x
+rlabel metal1 2 2 2 2 3 z
+rlabel metal1 58 2 58 2 3 z
+rlabel metal1 51 26 51 26 3 x
+<< end >>

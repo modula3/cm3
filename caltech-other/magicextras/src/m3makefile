@@ -1,0 +1,33 @@
+/* $Id$ */
+import("libm3")
+import("cit_util")
+import("magic")
+
+sequence("MagLayerRect", "MagLayerRect")
+/* table("Bins", "IntPair", "MagLayerRectList")*/
+table("Bins", "IntPair", "MagLayerRectSet")
+
+Module("RectSet")
+Sequence("RectSet","RectSet")
+
+Module("Bins")
+Module("RectBins")
+module("RectBinsClass")
+
+Module("LabelFinder")
+
+Interface("MagRouter")
+Module("NodeNameSplitter")
+
+Module("MagLabelListExt")
+MkSet("LabelList", "MagLabelList")
+List("LabelList","MagLabelListExt")
+MkSetList("LabelList", "MagLabelListExt")
+
+/* this is to keep track of how many connected components there are */
+/* for each node */
+Table("NodeComponents", "MagLabelListExt", "Integer")
+
+Module("MagSlasher")
+
+Library("magicextras")

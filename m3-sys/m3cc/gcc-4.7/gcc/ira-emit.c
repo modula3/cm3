@@ -91,6 +91,8 @@ along with GCC; see the file COPYING3.  If not see
 #include "df.h"
 #include "ira-int.h"
 
+// cm3 cm3cg crashes on Linux/x86 host if ira is optimized.
+#pragma GCC optimize ("O1")
 
 /* Data used to emit live range split insns and to flattening IR.  */
 ira_emit_data_t ira_allocno_emit_data;

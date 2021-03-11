@@ -1,0 +1,7 @@
+import ("libm3")
+Module("CPtr") 
+table("CPtr","CPtrImpl","CPtrRec")
+interface("CPtrRec") 
+Module("CPtrImpl") 
+
+library("cptr")

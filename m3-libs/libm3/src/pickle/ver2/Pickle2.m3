@@ -61,11 +61,11 @@ IMPORT Rd, RT0, RTAllocator, RTCollector, RTHeap, RTHeapRep, RTType, RTTypeFP,
 CONST
   Header1 = '&';
   Header2 = '%';
-  (* BLAIR ---> *)
+  
   Version = '3';                       (* new vastly improved version *)
   OldVersion = '2';                    (* old broken pickle version *)
   OlderVersion = '1';                  (* really old FP and ac syntax *)
-  (* <--- BLAIR *)
+  
   CharRepISOLatin1 = 'I';              (* 8-bit ISO Latin 1 *)
   LittleEndian = 'L';                  (* l.s. byte first *)
   BigEndian = 'B';                     (* m.s. byte first *)
@@ -111,10 +111,8 @@ REVEAL
       nextAddr: ADDRESS;         (* Used within RootSpecialWrite *)
       collisions: INTEGER := 0;  (* Performance measure *)
       visitor: WriteVisitor := NIL;
-      (* BLAIR ---> *)
       firstAddr: ADDRESS;
       tipeVisitor: TipeWriteVisitor := NIL;
-      (* <--- BLAIR *)
     OVERRIDES
       write := WriteRef;
       writeType := WriteType;
@@ -127,11 +125,9 @@ REVEAL
       tcCount: INTEGER;          (* count of typecodes in this pickle *)
       refs: RefArray := NIL;     (* array of refs in this pickle *)
       pklToTC: TypeTable := NIL; (* pickle TC -> process TC *)
-      (* BLAIR ---> *)
       nextAddr: ADDRESS;         (* COMPATIBILITY - Used in RootSpecialWrite *)
       version: CHAR;
       tipeVisitor: TipeReadVisitor := NIL;
-      (* <--- BLAIR *)
       visitor: ReadVisitor := NIL; (* COMPATIBILITY *)
     OVERRIDES
       read := ReadRef;
@@ -159,7 +155,6 @@ TYPE
       apply := VisitRead;
     END;
 
-(* BLAIR ---> *)
 TYPE TipeReadVisitor = ConvertPacking.ReadVisitor OBJECT 
       reader: Reader := NIL;
     OVERRIDES
@@ -179,7 +174,6 @@ TYPE TipeWriteVisitor = ConvertPacking.WriteVisitor OBJECT
       writeChar := TipeWriteChar; 
       getWriter := TipeGetWriter; 
     END;
-(* <--- BLAIR*)
 
 CONST
   RefFields = RTTypeMap.Mask { RTTypeMap.Kind.Ref,
@@ -191,10 +185,8 @@ TYPE (* for binary I/O loopholes *)
   CharFP    = ARRAY [0..BYTESIZE(Fingerprint.T)-1] OF CHAR;
   ToChars   = UNTRACED REF ARRAY [0..100000000] OF CHAR; (* for misc. data *)
 
-(*BLAIR ---> *)
 TYPE
   Int32  = [-16_7fffffff-1 .. 16_7fffffff];
-(* <--- BLAIR*)
 
 TYPE
   HC = { h1, h2, v, p0, p1, p2, p3 }; (* the chars in a pickle header *)
@@ -326,11 +318,9 @@ PROCEDURE WriteRef(writer: Writer; r: REFANY)
       writer.widecharConvKind 
         := ConvertPacking.GetWidecharKind(writer.packing, writer.packing);
 
-      (* BLAIR ---> *)
       IF writer.tipeVisitor = NIL THEN
         writer.tipeVisitor := NEW (TipeWriteVisitor, writer := writer);
       END;
-      (* <--- BLAIR *)
       IF writer.refs = NIL THEN
         (* deferred allocation *)
         writer.refs := NEW(RefTable, InitRefCapacity * 2 - 1);
@@ -889,7 +879,6 @@ PROCEDURE ReRegisterPseudoSpecial(sp: Special) =
     END;
   END ReRegisterPseudoSpecial;
 
-(* BLAIR ---> *)
 PROCEDURE VisitWrite(v: WriteVisitor; field: ADDRESS; kind: RTTypeMap.Kind)
   RAISES ANY =
   (* Call-back from RTType.Visit for RootSpecialWrite *)
@@ -995,7 +984,6 @@ PROCEDURE RootSpecialWrite(<*UNUSED*> sp: Special;
     | PklTipeMap.Error(t) => RAISE Error("PklTipeMap.Write Error: " & t);
     END;
   END RootSpecialWrite;
-(* <--- BLAIR *)
 
 PROCEDURE VisitRead(v: ReadVisitor; field: ADDRESS; kind: RTTypeMap.Kind)
   RAISES ANY =
@@ -1016,7 +1004,6 @@ PROCEDURE VisitRead(v: ReadVisitor; field: ADDRESS; kind: RTTypeMap.Kind)
     reader.nextAddr := field + ADRSIZE(ADDRESS);
   END VisitRead;
 
-(* BLAIR ---> *)
 PROCEDURE TipeReadData(v: TipeReadVisitor; VAR data: ARRAY OF CHAR) 
       RAISES { Rd.Failure, Thread.Alerted } =
   VAR reader := v.reader;
@@ -1058,7 +1045,6 @@ PROCEDURE TipeReadRef(v: TipeReadVisitor;
     | Error(t) => RAISE ConvertPacking.Error("Pickle.Error: " & t);
     END;
   END TipeReadRef; 
-(* <--- BLAIR *)
 
 PROCEDURE TipeReadChar(v: TipeReadVisitor): CHAR 
   RAISES {Rd.EndOfFile, Rd.Failure, Thread.Alerted} = 
@@ -1149,7 +1135,7 @@ PROCEDURE RootSpecialRead(<*UNUSED*> sp: Special;
 
 (*---------------------------------------------------------- initialization ---*)
 
-(* BLAIR ---> We are assuming that RTPacking.T's are encoded in the
+(* We are assuming that RTPacking.T's are encoded in the
    first 32 bits of INTEGER on any machine.  I think that's valid,
    since it should fit in an INTEGER on a 32bit machine! *)
 PROCEDURE GetPacking (header: Header): INTEGER =
@@ -1189,7 +1175,6 @@ PROCEDURE InitHeader() =
     VAR test: BITS 16 FOR [0..32767];
     TYPE EndianTest = ARRAY[0..1] OF BITS 8 FOR [0..255];
   BEGIN
-    (* BLAIR ---> *)
     v1_header[HC.h1] := Header1;
     v1_header[HC.h2] := Header2;
     v1_header[HC.v] := OldVersion;
@@ -1212,7 +1197,6 @@ PROCEDURE InitHeader() =
     
     myPacking := RTPacking.Local();
     myPackingCode := RTPacking.Encode(myPacking);
-    (* <--- BLAIR *)
     myTrailer[HT.t1] := Trailer1;
     myTrailer[HT.t2] := Trailer2;
   END InitHeader;

@@ -1,0 +1,30 @@
+# swig build script for llvm debug bindings DIBuilder.h
+
+#the directory where you downloaded llvm
+Base="/home/peter/projects/llvm9/"
+
+#use this for c++ dibuilder
+INC="${Base}/llvm-9.0.0.src/include/llvm"
+
+#Dont need these if llvm is installed to default /usr/local
+INC1="${Base}/llvm-9.0.0.src/include"
+INC2="${Base}build/include"
+
+#call swig to create the m3 modules from the C++ DIBuilder.h interface
+swig -I$INC -c++ -modula3 -doxygen -o M3DIBuilder.cpp M3DIBuilder.i
+
+#this generates an ignores list suppress warning 850 which is
+#no raw typemap defined
+#swig -I$INC -modula3 -w850 -generateignores M3DIBuilder.i
+
+#The Makefile compiles the cpp file now
+#gcc -c -g -fpic -std=c++11 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -I$INC1 -I$INC2 M3DIBuilder.cpp
+
+#Optionally pretty print the output
+m3pp M3DIBuilder.i3 > xxx ; mv xxx M3DIBuilder.i3
+m3pp M3DIBuilder.m3 > xxx ; mv xxx M3DIBuilder.m3
+m3pp M3DIBuilderRaw.i3 > xxx ; mv xxx M3DIBuilderRaw.i3
+
+#Just build it
+
+cm3

@@ -1,0 +1,18 @@
+magic
+tech scmos
+timestamp 1035354092
+<< metal2 >>
+rect 0 42 7 46
+rect 56 42 63 46
+rect 0 21 7 25
+rect 56 21 63 25
+rect 0 0 7 4
+rect 56 0 63 4
+<< labels >>
+rlabel metal2 4 2 4 2 1 x
+rlabel metal2 4 23 4 23 8 y
+rlabel metal2 4 44 4 44 4 z
+rlabel metal2 60 44 60 44 6 y
+rlabel metal2 60 23 60 23 5 x
+rlabel metal2 60 2 60 2 8 z
+<< end >>

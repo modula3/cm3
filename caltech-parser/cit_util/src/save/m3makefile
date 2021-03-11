@@ -1,0 +1,60 @@
+if not defined("TOP")
+  TOP = PACKAGE_DIR & SL & ".."
+end
+
+import("cit_common")
+template("generics")
+Interface("DblRefany")
+Module("Debug")
+Module("TextUtils")
+implementation("TextUtilsFmt")
+
+template("dbltable")
+Generic_module("DblTable")
+
+Generic_module("BrandedSet")
+template("brandedset")
+Module("RTBrand")
+
+Module("SIsuffix")
+table("Suffix", "Char", "SIsuffix")
+
+Generic_module("KeyPair")
+template("keypair")
+KeyPair("Int", "Integer", "Integer")
+List("IntPair", "IntPair")
+
+gmodule("Ref")
+gmodule("ArrayRef")
+ArrayRef("Int", "Integer")
+
+Module("ToRefany")
+Gmodule("ToRefany")
+Interface("ToRefanyClass")
+table("ToRefany","Integer","ToRefanyClass")
+
+/* this is a dumb hack.  to ensure that initialization code gets run,
+   you MUST import xToRefany in ToRefanyPrivate (or in some other 
+   module that does get run). */
+
+implementation("ToRefanyPrivate")
+template("to_refany")
+ord_to_refany("Int", "Integer")
+ord_to_refany("Bool", "Boolean")
+ord_to_refany("Char", "Char")
+ord_to_refany("Real", "Real")
+ord_to_refany("Longreal", "LongReal")
+
+/* new stuff */
+MkSet("IntPair", "IntPair")
+MkSetDef("IntPair", "IntPair")
+Table("IntPairRef", "IntPair", "Refany")
+
+/* used to be in ktoklib */
+Module("TextSubs")
+
+Gmodule("Equivalence")
+Equivalence("Text", "Text", "TextTextTbl")
+Module("TextTextTblExtras")
+
+Library("cit_util")

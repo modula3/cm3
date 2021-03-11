@@ -85,14 +85,14 @@ void __cdecl PutBytes(const unsigned char* p, WORD_T count)
 void __cdecl RTIO__PutLong(int64 i)
 {
     Flush();
-    printf("%"I64"d", i);
+    printf("%" I64 "d", i);
     fflush(NULL);
 }
 
 void __cdecl RTIO__PutLongHex(uint64 i)
 {
     Flush();
-    printf("0x%"I64"x", i);
+    printf("0x%" I64 "x", i);
     fflush(NULL);
 }
 

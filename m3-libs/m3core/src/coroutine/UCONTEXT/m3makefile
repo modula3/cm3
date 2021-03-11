@@ -1,0 +1,8 @@
+/* Copyright (C) 2018-2019 Intel Corporation */
+/* SPDX-License-Identifier: BSD-3-Clause */
+/* see the file COPYRIGHT-INTEL for more information */
+ 
+c_source("ContextC")
+interface("ContextC")
+Module("CoroutineUcontext")
+

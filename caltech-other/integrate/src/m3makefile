@@ -1,0 +1,10 @@
+/* $Id$ */
+m3_option("-g")
+m3_option("-times")
+
+import("cit_util")
+
+Module("IntegrateTrap")
+Module("DerivRidders")
+
+library("integrate")

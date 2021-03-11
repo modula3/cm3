@@ -1,3 +1,5 @@
+(* $Id$ *)
+
 GENERIC INTERFACE DblTable(Key, Value, KeyValueTbl, ValueKeySetTbl, KeySet);
 IMPORT Word;
 

@@ -13,16 +13,11 @@ def contains(s, t):
 # no hardcoded paths in runpath, just $ORIGIN
 os.environ["M3_PORTABLE_RUN_PATH"] = "1"
 target      = Target.lower()
-currentVC   = ["80", "90", "100", "110"] # TODO test and expand this: 20 40 41 42 50 60 70 71 120, etc.
 nativeNT    = contains(target, "nt386") or target.endswith("_nt")
-currentNT   = nativeNT and (GetVisualCPlusPlusVersion() in currentVC)
-oldNT       = nativeNT and not currentNT
 preferZip   = contains(target, "vms") or contains(target, "nt386") or target.endswith("_nt")
 supportsMSI = nativeNT or contains(target, "interix") or contains(target, "cygwin") or contains(target, "mingw") or contains(target, "uwin")
 
 PackageSets = ["min", "all"]
-if oldNT:
-    PackageSets = ["min"] # TODO test and expand this
 
 def Echo(a):
     print("")
@@ -264,11 +259,10 @@ def Setup(ExistingCompilerRoot, NewRoot):
 
     CopyCompiler(ExistingCompilerRoot, NewRoot) or FatalError()
 
-    if NewRoot == InstallRoot_CompilerWithPrevious:
-        NewLib = os.path.join(NewRoot, "lib")
-        CreateDirectory(NewLib)
-        for a in glob.glob(os.path.join(ExistingCompilerRoot, "lib", "*.obj")):
-            CopyFile(a, NewLib) or FatalError()
+    NewLib = os.path.join(NewRoot, "lib")
+    CreateDirectory(NewLib)
+    for a in glob.glob(os.path.join(ExistingCompilerRoot, "lib", "*.obj")):
+        CopyFile(a, NewLib) or FatalError()
 
     CopyConfigForDistribution(NewRoot) or sys.exit(1)
 
@@ -339,7 +333,7 @@ MakeArchives()
 if contains(target, "linux"):
     MakeDebianPackage(FormInstallRoot("all"), "/usr/local/cm3")
 
-if supportsMSI and not oldNT:
+if supportsMSI:
     for name in PackageSets:
         MakeMSIWithWix(FormInstallRoot(name))
 

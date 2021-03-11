@@ -75,6 +75,10 @@ TYPE
     SPARC64_OPENBSD,
     SPARC64_SOLARIS,
     AMD64_NT,
+    ARM64_DARWIN,
+    ARM64_LINUX,
+    ARM64_NT,
+    RISCV64_LINUX,
     Undefined
   };
 
@@ -129,7 +133,11 @@ CONST
     "SPARC64_LINUX",
     "SPARC64_OPENBSD",
     "SPARC64_SOLARIS",
-    "AMD64_NT"
+    "AMD64_NT",
+    "ARM64_DARWIN",
+    "ARM64_LINUX",
+    "ARM64_NT",
+    "RISCV64_LINUX"
   };
 
 CONST
@@ -451,29 +459,35 @@ VAR (*CONST*)
 CONST
   Byte = 8;  (* minimum addressable unit (in bits) *)
 
-VAR (*CONST*)
-
   (* Is the jmpbuf for RTExFrame allocated with alloca,
      or does the frontend know its size?
-     RTExFrame.Alloca_jmpbuf and Target.Alloca_jmpbuf must match. *)
-  Alloca_jmpbuf : BOOLEAN;
+     RTExFrame.Alloca_jmpbuf and Target.Alloca_jmpbuf must match.
+     This could become FALSE again, if the backend learns of jmp_buf,
+     and jmp_buf is again embedded in the larger structs and m3front
+     does not do that layout. *)
+  Alloca_jmpbuf = TRUE;
 
-  (* If Alloca_jmpbuf = TRUE, then this is the size of a jmp_buf.
-     If Alloca_jmpbuf = FALSE, then this is not used. *)
-  Jumpbuf_size     : CARDINAL; (* size of a "jmp_buf" *)
+  (* If Alloca_jmpbuf = FALSE, then this is the size of a jmp_buf.
+     If Alloca_jmpbuf = TRUE, then this is not used. *)
+  Jumpbuf_size = 0; (* size of a "jmp_buf" *)
 
+  Structure_size_boundary: CARDINAL = 8;
+  (* Every structure size must be a multiple of this.
+   * In gcc, this is 8 almost always.
+   * arm32 has multiple ABIs.
+   * In some ABIs, the default is 32.
+   * For Linux/arm32, it is 8.
+   * For arm32, it is changable on the command line, deprecated, to 8, 16, 64.
+   *
+   * Comments suggest it might have been not 8 for M68k, SH, and PA. *)
+
+VAR (*CONST*)
   Little_endian : BOOLEAN;
   (* TRUE => byte[0] of an integer contains its least-significant bits *)
 
   PCC_bitfield_type_matters: BOOLEAN;
   (* TRUE => the C compiler uses the type rather than the size of
      a bit-field to compute the alignment of the struct *)
-
-  Structure_size_boundary: CARDINAL;
-  (* every structure size must be a multiple of this
-   * This is 8 for all current targets, or could be 0.
-   * OpenBSD/m68k would have it be different, and sometimes but not
-   * always sh and arm. *)
 
   Allow_packed_byte_aligned: BOOLEAN;
   (* Allow the compiler to align scalar types on byte boundaries when packing.
@@ -531,7 +545,7 @@ VAR (*CONST*)
   (* The C name of the routine used to capture the machine state in
        an exception handler frame. *)
 
-  Aligned_procedures: BOOLEAN;
+  CONST Aligned_procedures = FALSE;
   (* TRUE => all procedure values are aligned to at least Integer.align
      and can be safely dereferenced.  Otherwise, the code generated to
      test for nested procedures passed as parameters must be more

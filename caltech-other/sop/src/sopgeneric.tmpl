@@ -1,0 +1,16 @@
+readonly proc Sopgeneric (nm, bdd, bddtexttbl, bddimpl) is
+  build_generic_intf(nm,         "SopG", [nm & "Literal", bdd, bddtexttbl], VISIBLE)
+  build_generic_impl(nm,         "SopG", [nm & "Rep", bdd, bddtexttbl, nm & "Literal", bddimpl, nm & "ConjunctArraySort", nm & "LiteralArraySort"])
+
+  build_generic_intf(nm & "Literal", "SopLiteralG", [bdd], VISIBLE)
+  build_generic_impl(nm & "Literal", "SopLiteralG", [bdd])
+
+  build_generic_intf(nm & "Rep", "SopRepG", [nm, nm & "Literal"], VISIBLE)
+  
+  build_generic_intf(nm & "Conjunct", "SopConjunctG", [nm & "Literal"], VISIBLE)
+  build_generic_impl(nm & "Conjunct", "SopConjunctG", [])
+
+  array_sort(nm & "Conjunct", nm & "Conjunct")
+  array_sort(nm & "Literal", nm & "Literal")
+
+end

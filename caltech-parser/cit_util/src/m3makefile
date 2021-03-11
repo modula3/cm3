@@ -1,28 +1,122 @@
+/* $Id$ */
+
 if not defined("TOP")
   TOP = PACKAGE_DIR & SL & ".."
 end
 
+import ("netobj")
 import("cit_common")
+import("set")
+%import("rdwrreset") % now part of rdwr
+import("rdwr")
+import("m3core")
+import("libm3")
+
+if defined("CM3_VERSION")
+	import ("libbuf")
+	m3_optimize("T")
+end
+
+template("texthack")
 template("generics")
 Interface("DblRefany")
 Module("Debug")
+Interface("DebugStream")
+List("DebugStream", "DebugStream")
+Module("DebugClass")
+implementation("DebugFmtPointer")
+Module("BreakHere")
 Module("TextUtils")
+Module("WordUtils")
 implementation("TextUtilsFmt")
+Module("PrefixDB")
+Table("TextLongReal", "Text", "LongrealType")
+List("Longreal", "LongrealType")
+Pqueue("Longreal","LongrealType")
+module("ScanList")
 
+Generic_module("OpenArrayTable")
 template("dbltable")
 Generic_module("DblTable")
 
+Generic_module("LockedTbl")
+template("lockedtbl")
+
+LockedTable("TextRef", "Text", "Refany", "TextRefTbl")
+MkLockedSetDef("Text", "Text")
+
+LockedTable("TextBoolean", "Text", "Boolean", "TextBooleanTbl")
+
 Generic_module("BrandedSet")
 template("brandedset")
-Module("RTBrand")
+
+template("arrayset")
+Generic_module("SetArray")
+
+Interface("RTBrand")
+Interface("RefRecord")
+Interface("SchedulerIndirection")
+if defined("CM3_VERSION")
+%	implementation("WxDefault")
+	implementation("RTBrandCM3")
+	import("patternmatching")
+        implementation("RefRecordCM3")
+        implementation("SchedulerIndirectionCM3")
+else
+	Interface("RuntimeError")
+	Interface("Wx")
+        implementation("Wx")
+	implementation("RTBrand")
+        implementation("RefRecord")
+        implementation("SchedulerIndirectionPM3")
+end
+c_source("printf")
+interface("Cprintf")
+Module("RTRefStats")
+Module("RTName")
 
 Module("SIsuffix")
 table("Suffix", "Char", "SIsuffix")
 
 Generic_module("KeyPair")
 template("keypair")
+
 KeyPair("Int", "Integer", "Integer")
+KeyPair("Ref", "Refany", "Refany")
+KeyPair("TextCard", "Text", "Cardinal")
+KeyPair("TextInt", "Text", "Integer")
+Table("TextIntPairRef", "TextIntPair", "Refany")
+
+Sequence("RefPair", "RefPair")
+Sequence("IntPair", "IntPair")
+
 List("IntPair", "IntPair")
+Interface("IntTriple")
+Table("Int_IntTriple", "Integer", "IntTriple")
+
+KeyPair("Card", "Cardinal", "Cardinal")
+MkSet("CardPair", "CardPair")
+MkSetDef("CardPair", "CardPair")
+Table("CardPairRef", "CardPair", "Refany")
+
+Table("CardCard", "Cardinal", "Cardinal")
+
+List("CardPair", "CardPair")
+
+KeyPair ("Text", "Text", "Text")
+KeyPair ("LongReal", "LongrealType", "LongrealType")
+
+List("TextPair", "TextPair")
+
+List("Card", "Cardinal")
+MkSet("Card", "Cardinal")
+MkSetDef("Card", "Cardinal")
+MkSetArray("Card", "Cardinal", "CardSet")
+Table("CardRef", "Cardinal", "Refany")
+
+MkSet("Longreal", "LongrealType")
+MkSetDef("Longreal", "LongrealType")
+%Table("LongRealRef", "LongrealType", "Refany")
 
 gmodule("Ref")
 gmodule("ArrayRef")
@@ -37,13 +131,13 @@ table("ToRefany","Integer","ToRefanyClass")
    you MUST import xToRefany in ToRefanyPrivate (or in some other 
    module that does get run). */
 
-implementation("ToRefanyPrivate")
+%implementation("ToRefanyPrivate")
 template("to_refany")
 ord_to_refany("Int", "Integer")
 ord_to_refany("Bool", "Boolean")
 ord_to_refany("Char", "Char")
-ord_to_refany("Real", "Real")
-ord_to_refany("Longreal", "LongReal")
+ord_to_refany("Real", "RealType")
+%ord_to_refany("Longreal", "LongrealType")
 
 /* new stuff */
 MkSet("IntPair", "IntPair")
@@ -54,7 +148,258 @@ Table("IntPairRef", "IntPair", "Refany")
 Module("TextSubs")
 
 Gmodule("Equivalence")
-Equivalence("Text", "Text", "TextTextTbl")
+Table("TextTextList", "Text", "TextList")
+Equivalence("Text", "Text", "TextList", "TextTextTbl", "TextTextListTbl")
 Module("TextTextTblExtras")
+Module("TextTextListTblExtras")
+module("FewerDotsTextPref")
+Table("TextBoolean", "Text", "Boolean")
+
+template("map")
+Interface("MapError")
+Generic_module("Map")
+Generic_module("TblMap")
+Generic_module("Memo")
+Generic_module("MapMap")
+
+template("fifo")
+generic_module("Fifo")
+
+Module("LRVector")
+Interface("LRPoint")
+Module("LRPt")
+gmodule("Interval")
+Interval("LR", "LongrealType")
+gmodule("SettableRef")
+SettableRef_named("LongRealRef", "LongrealType")
+List("LongRealRef", "LongRealRef")
+Table("TextLongRealRef", "Text", "LongRealRef")
+
+Interface("Threadd")
+Sequence("Thread","Threadd")
+Module("MyLongrealType")
+Map("LRFunction","MyLongrealType","MyLongrealType")
+Map("LRScalarField","LRVector","MyLongrealType")
+Map("LRVectorField","LRVector","LRVector")
+Map("LRParametricCurve", "MyLongrealType", "LRPoint")
+
+Module("Pointe")
+
+Interface("BoolF")
+
+template("listf")
+generic_module("ListF")
+TextListF("TextFF")
+Interface("BrandedRd")
+List("Rd","BrandedRd")
+
+Interface("CharF")
+Module("RefanyF")
+List("Char","Char")
+List("Bool","Boolean")
+
+Module("Cardinal")
+Sequence("Card","Cardinal")
+Sequence("Char","Char")
+
+Module("IntForRat")
+Module("BigInt")
+Gmodule("Rational")
+Rational("Int","IntForRat")
+Rational("Big", "BigInt")
+Gmodule("IntOps")
+Table("TextBigInt", "Text", "BigInt")
+IntOps("Lil", "IntForRat", "TextIntTbl")
+IntOps("Big", "BigInt", "TextBigIntTbl")
+Module("UnsafeMutex")
+Module("CatRd")
+Module("FileReWr")
+
+
+Module("ObjectFactory")
+Interface("ObjectFactoryClass")
+Generic_module("Factory")
+template("factory")
+
+Gmodule("ArrayHash")
+ArrayHash("Int", "Integer")
+
+Module("CITRandom")
+Module("ProcUtils")
+Module("RemoteFileRd")
+Module("PathnameUtils")
+
+Module("Config")
+list("Flag", "Config")
+
+template("tree")
+Generic_module("Tree")
+
+% defer to m3core
+% module("UnixUtils")
+
+Module("Stuff")
+MkSet("Stuff","Stuff")
+MkSetDef("Stuff","Stuff")
+Table("StuffRef","Stuff", "Refany")
+
+Module("FmtScanVar")
+
+Module("PMPTimer")
+List("Point", "Pointe")
+
+template("cache")
+Generic_module("Cache")
+Cache("IntInt", "Integer", "Integer", "IntRefTbl")
+
+Module("IDGen")
+Gmodule("IDTbl")
+IDTbl_named("IDTextTbl", "Text", "IntTextTbl")
+
+Gmodule("QueueTbl")
+QueueTbl("IDText", "IDTextTbl", "Integer", "Text", "IntRefTbl")
+
+Module("KeyObject")
+Table("KeyObjectRef", "KeyObject", "Refany")
+
+Gmodule("SetUtils")
+SetUtils("Text", "TextFF", "TextSet")
+
+Gmodule("ListMultiTbl")
+ListMultiTbl("TextTextListMultiTbl",
+	"Text", "Text", "TextList", "TextTextListTbl")
+Interface("BrandedWr")
+
+Module("UnixFilter")
+Module("SlowTextCompress")
+
+Fifo("Text", "Text")
+Fifo("Ref", "Refany")
+Fifo("Char", "Char")
+Fifo("Int", "Integer")
+Fifo("LongReal", "LongrealType")
+
+Array_sort("Longreal", "LongrealType")
+Array_sort("Refany", "Refany")
+Array_sort("Card", "Cardinal")
+
+Sequence("LongReal", "LongrealType") 
+
+Module("LongrealSort")
+
+Module("Chmod")
+
+template("sharedseq")
+generic_module("SharedSequence")
+
+SharedSequence("LongReal", "LongrealType", "LongRealSeq")
+
+Module("LRArrayOps")
+
+generic_module("PersistentTable")
+template("persistbl")
+
+PersistentTable("IntRef", "Refany", "IntRefTbl")
+
+Interface("FileSharing")
+
+%Interface("MyUtime")
+%c_source("myutime")
+
+if equal(TARGET,"NT386GNU") 
+  /* the following interfaces are from FreeBSD and seem to 
+     do the trick on Cygwin */
+  Interface("Unix")
+  Interface("Utypes")
+  Interface("Usignal")
+%  if not defined("CM3_VERSION") 
+%    Interface("Utime")
+%  end
+  implementation("FileSharingWindows")
+  implementation("SysPerfWindows")
+else
+  implementation("FileSharingPOSIX")
+  implementation("SysPerf")
+  interface("c_SysPerf")
+  c_source("getloadavg_glue")
+  c_source("diskAvail")
+end
+
+Interface("SysPerf")
+
+%Interface("UtimeR") /* re-entrant "_r" routines in Utime */
+
+Module("FileUtils")
+
+Module("IntInt")
+Array_sort("IntInt", "IntInt")
+
+Module("AL")
+Module("LineMatcher")
+Module("StepFunction")
+
+Module("TCPMaker")
+
+Module("LimitFmt")
+Module("FancyFmt")
+
+Module("AttrWr")
+Sequence("AttrWr","AttrWr")
+Module("UCTime")
+
+Module("IntSetBits")
+
+Module("Hashable")
+Table("HashRef","Hashable","Refany")
+Table("HashText","Hashable","Text")
+Table("HashInt","Hashable","Integer")
+MkSet("Hash","Hashable")
+MkSetDef("Hash","Hashable")
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% TZ package...
+
+interface ("CTZ")
+c_source ("CTZ")
+
+Module ("TZ")
+implementation("SafeTZ")
+
+Module("FinDate")
+Module("HMTime")
+implementation("HMTimeToday")
+
+Table("IntFinDate", "Integer", "FinDate")
+Array_sort("FinDate","FinDate")
+
+Module("AscTimeParse")
+
+% sloppy TZ stuff
+
+Table("TZRef", "TZ", "Refany")
+Table("LongrealRef", "LongrealType", "Refany")
+Sorted_table("LongrealRef", "LongrealType", "Refany")
+
+Module("SloppyTimeConverter")
+
+Module ("XTime")
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Module   ("LRElem")
+Array_sort("LRElem", "LRElem")
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+module   ("UtimeOpsC")
+module   ("UtimeWrap")
+c_source ("UtimeOpsC")
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Module ("FastNumParse")
 
 Library("cit_util")
+
+

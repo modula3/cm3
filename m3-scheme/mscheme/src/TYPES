@@ -1,0 +1,25 @@
+$Id$
+
+Mapping of Scheme to Modula-3 types.  See also Norvig's papers on
+JScheme mappings.
+
+Scheme          M3
+------          --
+pair            Pair.T
+empty list      NIL (NULL)
+boolean         REF BOOLEAN
+number          REF LONGREAL
+string          REF ARRAY OF CHAR
+character       REF CHAR
+symbol          Atom.T
+vector          REF ARRAY OF REFANY
+procedure       (as in JScheme)
+input port      SchemeInputPort.T 
+output port     Wr.T
+interpreter     Scheme.T
+environment     SchemeEnvironment.T
+continuation    SchemeContinuation.T
+error           Scheme.E
+symbol table    --
+variable        --
+

@@ -1,0 +1,11 @@
+/* $Id$ */
+
+import("libm3")
+import("router")
+import("cit_util")
+
+table("TextRouterDeferral","Text","RouterDeferral")
+
+implementation("Main")
+
+program("x")

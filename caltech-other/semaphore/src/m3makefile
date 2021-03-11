@@ -1,0 +1,16 @@
+/* $Id$ */
+
+import ("libm3")
+import ("cit_util")
+
+if defined("PTHREADS")
+  interface ("SemaphoreC")
+  c_source ("SemaphoreC")
+
+  implementation ("Semaphore")
+else
+  implementation ("SemaphoreUser")
+end
+interface ("Semaphore")
+
+library ("semaphore")

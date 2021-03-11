@@ -14,7 +14,4 @@ FROM Ctypes IMPORT int;
 <*EXTERNAL "m3_Herrno_Get_h_errno"*>
 PROCEDURE Get_h_errno(): int;
 
-<*EXTERNAL "m3_Herrno_Set_h_errno"*>
-PROCEDURE Set_h_errno(he: int);
-
 END Herrno.

@@ -1,0 +1,17 @@
+readonly proc _listf (nm, elt, vis) is
+    local list = nm & "List"
+    local listf = nm & "ListF"
+    build_generic_intf (list, "List", [elt], vis)
+    build_generic_impl (list, "List", [elt])
+    build_generic_intf (listf, "ListF", [elt, list], vis)
+    build_generic_impl (listf, "ListF", [elt, list])
+  end
+  
+readonly proc Listf (nm, elt) is _listf (nm, elt, VISIBLE) end
+readonly proc listf (nm, elt) is _listf (nm, elt, HIDDEN)  end
+
+readonly proc TextListF(elt) is
+    Module(elt)
+    build_generic_intf("TextListF", "ListF", [elt, "TextList"], VISIBLE)
+    build_generic_impl("TextListF", "ListF", [elt, "TextList"])
+  end

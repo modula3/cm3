@@ -324,7 +324,7 @@ PROCEDURE IsWidechar (Type: RTTipe.T): BOOLEAN =
     END; 
   END IsWidechar; 
 
-PROCEDURE ReadWC21(rd: Rd.T): UInt32 
+<*NOWARN*>PROCEDURE ReadWC21(rd: Rd.T): UInt32 
 RAISES{Rd.EndOfFile, Rd.Failure, Thread.Alerted} = 
 (* Read one WIDECHAR value in WC21 encoding and return in a 32-bit int. *) 
 
@@ -848,7 +848,7 @@ PROCEDURE WriteData(v: WriteVisitor;  src: ADDRESS;  len: INTEGER)
     END;
   END WriteData;
 
-PROCEDURE WriteWC21(wr: Wr.T; intVal: UInt32)
+<*NOWARN*>PROCEDURE WriteWC21(wr: Wr.T; intVal: UInt32)
   RAISES {Wr.Failure, Thread.Alerted} =
 
   VAR B0, B1, B2: UInt32;

@@ -20,7 +20,8 @@ if not ({"AMD64_DARWIN", "ARM_DARWIN", "I386_DARWIN", "PPC_DARWIN",
          "PPC64_DARWIN"} contains TARGET or equal(OS_TYPE, "WIN32"))
 
 readonly proc Platform_ExeExtension (Platform) is
-  if {"NT386","NT386GNU","AMD64_NT","IA64_NT","ARM_CE"} contains Platform
+  if {"NT386","NT386GNU","AMD64_NT","IA64_NT","ARM_CE",
+      "I386_NT", "ARM64_NT"} contains Platform
     return ".exe"
   end
   return ""

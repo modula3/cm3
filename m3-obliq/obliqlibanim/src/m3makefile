@@ -5,6 +5,10 @@
 % Last modified on Mon Mar 21 23:12:13 PST 1994 by luca  
 %      modified on Wed Dec 22 15:16:44 PST 1993 by kalsow
 
+if not HasTrestle()
+  build_standalone()
+end
+
 %%%%  if AT_SRC m3_option("-O") end   --- old m3build
 %%%% remove_m3_option("-w1")		--- old m3build
 %%%% m3_option("-w2")			--- old m3build
@@ -19,5 +23,3 @@ Module ("ObLibAnim")
 Library("obliqlibanim")
 
 /* ManPage(obliqlibm3,?) */
-
-

@@ -51,7 +51,7 @@ TYPE Multipass_t = M3CG_MultiPass.T BRANDED "M3C.Multipass_t" OBJECT
 TYPE
 T = M3CG_DoNothing.T BRANDED "M3C.T" OBJECT
 
-        no_return := FALSE; (* are there any no_return functions -- i.e. #include <sys/cdefs.h on Darwon for __dead2 *)
+        no_return := FALSE; (* are there any no_return functions -- i.e. #include <sys/cdefs.h on Darwin for __dead2 *)
 
         imported_procs: RefSeq.T := NIL; (*TODO*) (* Proc_t *)
         declared_procs: RefSeq.T := NIL; (*TODO*) (* Proc_t *)
@@ -66,7 +66,7 @@ T = M3CG_DoNothing.T BRANDED "M3C.T" OBJECT
         Err    : ErrorHandler := DefaultErrorHandler;
         anonymousCounter := -1;
         c      : Wr.T := NIL;
-        debug := 1; (* 1-4 *)
+        debug := 2; (* 1-5 >4 is to stdio *)
         stack  : RefSeq.T := NIL;
         params : TextSeq.T := NIL;
         op_index := 0;
@@ -82,8 +82,8 @@ T = M3CG_DoNothing.T BRANDED "M3C.T" OBJECT
         RTHooks_ReportFault_imported_or_declared := FALSE;
         alloca_id := M3ID.NoID;
         setjmp_id := M3ID.NoID;
-        u_setjmp_id := M3ID.NoID;
-        longjmp_id := M3ID.NoID;
+        jmpbuf_size_id := M3ID.NoID;
+        done_include_setjmp_h := FALSE;
 
         (* labels *)
         labels_min := FIRST(Label);
@@ -125,6 +125,7 @@ T = M3CG_DoNothing.T BRANDED "M3C.T" OBJECT
 
     METHODS
         Type_Init(type: Type_t; typedef := FALSE) := Type_Init;
+        TIntLiteral(type: CGType; READONLY i: Target.Int): TEXT := TIntLiteral;
 
     OVERRIDES
         end_unit   := end_unit;
@@ -581,6 +582,18 @@ BEGIN
     RETURN NameT(GenerateName(self));
 END GenerateNameText;
 
+PROCEDURE Assert(self: T; value: BOOLEAN; message: TEXT) =
+BEGIN
+  IF NOT value THEN
+    RTIO.PutText("Assertion failure: " & message);
+    RTIO.Flush();
+    IF self.c # NIL THEN
+      Wr.Flush(self.c);
+    END;
+  END;
+  <* ASSERT value *>
+END Assert;
+
 PROCEDURE Proc_FixName(self: T; name: Name): Name =
 VAR text: TEXT := NIL;
 BEGIN
@@ -589,7 +602,7 @@ BEGIN
     END;
     text := NameT (name);
     IF Text.GetChar (text, 0) = '*' THEN
-        <* ASSERT Text.Length(text) = 1 *>
+        Assert(self, Text.Length(text) = 1, "Text.Length(text) = 1");
         RETURN GenerateName(self);
     END;
     (* rename C names like int, short, void *)
@@ -909,7 +922,7 @@ VAR field: Field_t := NIL;
 BEGIN
     FOR i := 0 TO fields.size() - 1 DO
         field := NARROW(fields.get(i), Field_t);
-        <* ASSERT field # NIL *>
+        Assert(self, field # NIL, "field # NIL");
         IF NOT ResolveType(self, field.typeid, field.type) THEN
             self.comment("1 record_canBeDefined: typeid:" & type.text & " pending field name:" & NameT(field.name) & " typeid:" & TypeIDToText(field.typeid));
             RETURN FALSE;
@@ -966,7 +979,7 @@ BEGIN
             END;
 
             (* Eat up bits to the field. *)
-            <* ASSERT bit_pad < 8 *>
+            Assert(self, bit_pad < 8, "bit_pad < 8");
             IF bit_pad > 0 THEN
                 i := bit_pad;
                 print(x, "UINT8 " & GenerateNameText(x) & ":" & IntToDec(i) & ";\n");
@@ -1011,7 +1024,7 @@ BEGIN
             INC(bit_offset, i);
             DEC(bit_pad, i);
         END;
-        <* ASSERT (bit_pad MOD 8) = 0 *>
+        Assert (self, (bit_pad MOD 8) = 0, "(bit_pad MOD 8) = 0");
         IF bit_pad > 0 THEN
             i := bit_pad DIV 8;
             print(x, "UINT8 " & GenerateNameText(x) & "[" & IntToDec(i) & "];\n");
@@ -1112,7 +1125,7 @@ BEGIN
         (*RTIO.PutInt(names^[i]);
         RTIO.PutText(" ");
         RTIO.Flush();*)
-        <* ASSERT NameT(names^[i]) # NIL *>
+        Assert (x, NameT(names^[i]) # NIL, "NameT(names^[i]) # NIL");
         print(x, start & NameT(names^[i]) & cast & IntToDec(i) & end);
     END;
 END enum_define;
@@ -1178,7 +1191,7 @@ VAR text := "";
     Integer_size := Target.Integer.size;
     dimensions := (type.bit_size - Integer_size) DIV Integer_size;
 BEGIN
-    <* ASSERT dimensions >= 1 *>
+    Assert (x, dimensions >= 1, "dimensions >= 1");
     IF element_type # NIL THEN
         element_type_text := element_type.text;
     END;
@@ -1413,7 +1426,7 @@ TYPE Expr_ConstantInt_t = Expr_t OBJECT OVERRIDES CText := Expr_ConstantInt_CTex
 PROCEDURE Expr_ConstantInt_CText(self: Expr_ConstantInt_t): TEXT =
 BEGIN
     (* ASSERT self.minmax[Min] = self.minmax[Max] *)
-    RETURN TIntLiteral(self.cgtype, self.minmax[Min]);
+    RETURN self.self.TIntLiteral(self.cgtype, self.minmax[Min]);
 END Expr_ConstantInt_CText;
 
 TYPE Expr_Cast_t = Expr_Unary_t OBJECT
@@ -1668,6 +1681,7 @@ TYPE Proc_t = M3CG.Proc OBJECT
     uplevels := FALSE;
     is_exception_handler := FALSE;
     is_RTHooks_Raise := FALSE;
+    is_setjmp := FALSE;
     omit_prototype := FALSE;
     is_RTException_Raise := FALSE;
     no_return := FALSE;
@@ -1748,33 +1762,29 @@ VAR name := proc.name;
                  AND (proc.exported = TRUE OR proc.imported = TRUE)
                  AND proc.level = 0;
     is_common_void := is_common AND proc.return_type = CGType.Void;
+    is_common_not_void := is_common AND NOT is_common_void;
     is_RTHooks_ReportFault := is_common_void
                               AND name = self.RTHooks_ReportFault_id
                               AND parameter_count = 2;
     is_RTHooks_AssertFailed := is_common_void
                                AND name = self.RTHooks_AssertFailed_id
                                AND parameter_count = 3;
+    is_setjmp := is_common_not_void AND parameter_count = 1 AND name = self.setjmp_id;
+    is_alloca := is_common_not_void AND parameter_count = 1 AND name = self.alloca_id;
 BEGIN
     (* Omit a few prototypes that the frontend might have slightly wrong,
        e.g. alloca(unsigned int vs. unsigned long vs. unsigned long long)
-       vs. not a function.
-       e.g. setjmp(void* ) vs. setjmp(array)
+            vs. compiler intrinsic
+       e.g. setjmp(void* ) vs. setjmp(array of something) vs. compiler intrinsic
+       setjmp must be referenced "inline", cannot be delegated to a C helper (except for a macro).
     *)
-    proc.omit_prototype := is_common
-                           AND parameter_count = 1 (* TODO 2 for longjmp *)
-                           AND (name = self.alloca_id
+    proc.is_setjmp := is_setjmp;
+    proc.omit_prototype := is_setjmp OR is_alloca;
                            (* TODO
                            - add CGType.Jmpbuf
                            - #include <setjmp.h> if there are any
-                             calls to setjmp/_setjmp/longjmp
-                             or instances of CGType.Jmpbuf
-                           - render CGType.Jmpbuf as "jmp_buf"
-                           - omit setjmp/_setjmp/longjmp prototypes
-                             OR name = self.setjmp_id
-                             OR name = self.u_setjmp_id
-                             OR name = self.longjmp_id
-                             *)
-                             );
+                             instances of CGType.Jmpbuf
+                           - render CGType.Jmpbuf as "jmp_buf" *)
     proc.is_RTHooks_Raise := is_common_void
                              AND name = self.RTHooks_Raise_id
                              AND parameter_count = 4;
@@ -1800,6 +1810,11 @@ BEGIN
     proc.block_stack := NEW(RefSeq.T).init();
     proc.params := NEW(REF ARRAY OF Var_t, proc.parameter_count);
     proc.ForwardDeclareFrameType(); (* TODO do not always do this *)
+
+    IF is_setjmp THEN
+      include_setjmp_h(self);
+    END;
+
     RETURN proc;
 END Proc_Init;
 
@@ -1810,7 +1825,6 @@ PROCEDURE Proc_Locals_Size(p: Proc_t): INTEGER = BEGIN RETURN p.locals.size(); E
 PROCEDURE Proc_Locals(p: Proc_t; i: INTEGER): Var_t = BEGIN RETURN NARROW(p.locals.get(i), Var_t); END Proc_Locals;
 
 (*---------------------------------------------------------------------------*)
-
 
 CONST Prefix = ARRAY OF TEXT {
 (* It is unfortunate to #include anything -- slows down compilation;
@@ -1929,8 +1943,6 @@ CONST Prefix = ARRAY OF TEXT {
 (*"typedef unsigned int size_t;",*)
 "#include <stddef.h>", (* try to remove this, it is slow -- need size_t *)
 "#endif",
-
-(* "#include <setjmp.h>", TODO do not always #include *)
 
 "/* http://c.knowcoding.com/view/23699-portable-alloca.html */",
 "/* Find a good version of alloca. */",
@@ -2311,9 +2323,7 @@ BEGIN
     self.comment("M3_WORDSIZE = ", IntToDec(Target.Word.size));
     self.static_link_id := M3ID.Add("_static_link");
     self.alloca_id := M3ID.Add("alloca");
-    self.setjmp_id := M3ID.Add("setjmp");
-    self.u_setjmp_id := M3ID.Add("_setjmp"); (* "u" is for underscore *)
-    self.longjmp_id := M3ID.Add("longjmp");
+    self.setjmp_id := M3ID.Add("m3_setjmp");
     self.RTHooks_ReportFault_id := M3ID.Add("RTHooks__ReportFault");
     self.RTHooks_Raise_id := M3ID.Add("RTHooks__Raise");
     self.RTException_Raise_id := M3ID.Add("RTException__Raise");
@@ -2514,10 +2524,11 @@ BEGIN
     ELSE
         x.comment("declare_enum");
     END;
-    <* ASSERT bit_size = 8 OR bit_size = 16 OR bit_size = 32 *>
-    <* ASSERT element_count > 0 *>
-    <* ASSERT self.enum = NIL *>
-    <* ASSERT self.enum_value = -1 *>
+    Assert (x, bit_size = 8 OR bit_size = 16 OR bit_size = 32, "bit_size = 8 OR bit_size = 16 OR bit_size = 32");
+    Assert (x, element_count > 0, "element_count > 0");
+    Assert (x, self.enum = NIL, "self.enum = NIL");
+    Assert (x, self.enum_value = -1, "self.enum_value = -1");
+
     enum := NEW(Enum_t,
                 typeid := typeid,
                 min := TInt.Zero,
@@ -2525,7 +2536,8 @@ BEGIN
                 names := NEW(REF ARRAY OF Name, element_count),
                 cgtype := BitsToCGUInt[bit_size],
                 text := TypeIDToText(typeid));
-    <* ASSERT self.enum = NIL AND self.enum_value = -1 *>
+    Assert (x, self.enum = NIL, "self.enum = NIL");
+    Assert (x, self.enum_value = -1, "self.enum_value = -1");
     self.enum := enum;
     self.enum_element_count := element_count;
     self.enum_value := 0;
@@ -2541,13 +2553,19 @@ BEGIN
     ELSE
         x.comment("declare_enum_elt");
     END;
+
     IF enum_value < 0 OR enum_value >= enum_element_count THEN
         Err(x, "declare_enum_elt overflow");
         RETURN;
     END;
-    <* ASSERT self.enum # NIL *>
-    <* ASSERT self.enum.names # NIL *>
-    <* ASSERT NUMBER(self.enum.names^) = enum_element_count *>
+
+    Assert (x, self.enum # NIL, "self.enum # NIL");
+    Assert (x, self.enum.names # NIL, "self.enum.names # NIL");
+
+    x.comment("declare_enum_elt: NUMBER(self.enum.names^):", IntToDec(NUMBER(self.enum.names^)));
+    x.comment("declare_enum_elt: enum_element_count:", IntToDec(enum_element_count));
+    Assert (x, NUMBER(self.enum.names^) = enum_element_count, "NUMBER(self.enum.names^) = enum_element_count");
+
     self.enum.names[enum_value] := name;
     INC(enum_value);
     IF enum_value = enum_element_count THEN
@@ -2944,6 +2962,32 @@ BEGIN
         x.comment("declare_exception");
     END;
 END declare_exception;
+
+PROCEDURE include_setjmp_h(self: T) =
+(* Upon importing setjmp, include setjmp.h
+ *
+ * setjmp and maybe jmp_buf, longjmp must be properly declared.
+ * For example Visual C++ has an intrinsic setjmp with a
+ * compiler-produced second parameter that is only passed
+ * if you include setjmp.h, and without it, longjmp crashes.
+ *
+ * Avoid including setjmp.h unless needed, to speed up compilation.
+ *
+ * In future, replace exception handling with optimized C++.
+ *)
+BEGIN
+  IF NOT self.done_include_setjmp_h THEN
+    print(self,
+        "#include <setjmp.h>\n" &
+        "#if defined(_WIN32) || defined(__vms)\n" &
+        "#define m3_setjmp(env) (setjmp(env))\n" &
+        "#else\n" &
+        "/* Do not save/restore signal mask. Doing so is much more expensive. TODO: sigsetjmp. */\n" &
+        "#define m3_setjmp(env) (_setjmp(env))\n" &
+        "#endif\n");
+    self.done_include_setjmp_h := TRUE;
+  END;
+END include_setjmp_h;
 
 (*--------------------------------------------------------- runtime hooks ---*)
 
@@ -4092,7 +4136,9 @@ BEGIN
     prev := -1;
     FOR i := 0 TO getStructSizes.count - 1 DO
         size := sizes[i];
+
         <* ASSERT (size > 0) AND (size >= prev) *>
+
         IF (size > 0) AND (size # prev) THEN
             prev := size;
             FOR unit := FIRST(units) TO LAST(units) DO
@@ -4108,8 +4154,10 @@ END GetStructSizes;
 
 PROCEDURE GetStructSizes_Declare(self: GetStructSizes_t; type: CGType; byte_size: ByteSize; alignment: Alignment): M3CG.Var =
 BEGIN
+
     <* ASSERT byte_size >= 0 *>
     <* ASSERT (byte_size MOD alignment) = 0 *>
+
     byte_size := MAX(byte_size, 1);
     IF type = CGType.Struct THEN
         self.sizes[self.count] := byte_size;
@@ -4271,8 +4319,10 @@ BEGIN
     ELSE
         self.comment("declare_local");
     END;
+
     <* ASSERT self.current_proc # NIL *>
     <* ASSERT self.current_proc.locals # NIL *>
+
     IF up_level THEN
         self.current_proc.uplevels := TRUE;
     END;
@@ -4371,8 +4421,12 @@ BEGIN
     END;
 
     prototype := function_prototype(proc, FunctionPrototype_t.Declare) & ARRAY BOOLEAN OF TEXT{";\n", " M3_ATTRIBUTE_NO_RETURN;\n"}[proc.no_return];
+
     <* ASSERT NOT self.in_proc *>
-    print(self, prototype);
+
+    IF NOT proc.omit_prototype THEN
+      print(self, prototype);
+    END;
     self.param_proc := NIL;
 END last_param;
 
@@ -4549,7 +4603,9 @@ BEGIN
     print(self, "};\n");
 
     IF NOT var.const AND self.report_fault_used THEN (* See M3x86.m3 *)
+
         <* ASSERT self.no_return *>
+
         no_return(self);
         self.report_fault := NameT(var.name) & "_CRASH";
         IF NOT self.RTHooks_ReportFault_imported_or_declared THEN
@@ -4571,9 +4627,11 @@ PROCEDURE init_to_offset(self: T; offset: ByteOffset) =
 VAR pad := offset - self.current_offset;
 BEGIN
     (* self.comment("init_to_offset offset=", IntToDec(offset)); *)
+
     <* ASSERT offset >= self.current_offset *>
     <* ASSERT pad >= 0 *>
     <* ASSERT self.current_offset >= 0 *>
+
     IF pad > 0 THEN
         end_init_helper(self);
         self.fields.addhi("char " & GenerateNameText(self) & "[" & IntToDec(pad) & "];\n");
@@ -4629,7 +4687,7 @@ BEGIN
     END;
     init_helper(self, offset, type);
     (* TIntLiteral includes suffixes like T, ULL, UI64, etc. *)
-    initializer_addhi(self, TIntLiteral(type, value));
+    initializer_addhi(self, self.TIntLiteral(type, value));
 END init_int;
 
 PROCEDURE Segments_init_int(
@@ -4656,8 +4714,10 @@ END init_proc;
 PROCEDURE MarkUsed_proc(self: T; p: M3CG.Proc) =
 VAR proc: Proc_t;
 BEGIN
+
     <* ASSERT p # NIL *>
     <* ASSERT self.procs_pending_output # NIL *>
+
     proc := NARROW(p, Proc_t);
     IF proc.pending_output OR proc.output THEN RETURN END;
     proc.pending_output := TRUE;
@@ -4769,19 +4829,23 @@ BEGIN
     RETURN TIntToExpr(self, IntToTInt(self, i));
 END IntToExpr;
 
-PROCEDURE TIntLiteral(type: CGType; READONLY i: Target.Int): TEXT =
+PROCEDURE TIntLiteral(self: T; type: CGType; READONLY i: Target.Int): TEXT =
 VAR ok1 := TRUE;
     ok2 := TRUE;
 BEGIN
     CASE type OF
         | CGType.Int8   => ok1 := TInt.GE(i, TInt.Min8 );
                          (*ok2 := TInt.LE(i, TInt.Max8);*)
+                           ok2 := TInt.LE(i, TWord.Max8);
         | CGType.Int16  => ok1 := TInt.GE(i, TInt.Min16);
                          (*ok2 := TInt.LE(i, TInt.Max16);*)
+                           ok2 := TInt.LE(i, TWord.Max16);
         | CGType.Int32  => ok1 := TInt.GE(i, TInt.Min32);
                          (*ok2 := TInt.LE(i, TInt.Max32);*)
+                           ok2 := TInt.LE(i, TWord.Max32);
         | CGType.Int64  => ok1 := TInt.GE(i, TInt.Min64);
-                           ok2 := TInt.LE(i, TInt.Max64);
+                         (*ok2 := TInt.LE(i, TInt.Max64);*)
+                           ok2 := TInt.LE(i, TWord.Max64);
         | CGType.Word8  => ok1 := TWord.LE(i, TWord.Max8);
         | CGType.Word16 => ok1 := TWord.LE(i, TWord.Max16);
         | CGType.Word32 => ok1 := TWord.LE(i, TWord.Max32);
@@ -4795,9 +4859,9 @@ BEGIN
         RTIO.PutText("TIntLiteral:type=" & cgtypeToText[type]
                      & " i=" & TInt.ToText(i)
                      & " ok1=" & BoolToText[ok1]
-                     & " ok2=" & BoolToText[ok2] & "\n"
-                     );
+                     & " ok2=" & BoolToText[ok2] & "\n");
         RTIO.Flush();
+        Wr.Flush(self.c);
         <* ASSERT ok1 *>
         <* ASSERT ok2 *>
     END;
@@ -4812,7 +4876,7 @@ END TIntLiteral;
 
 PROCEDURE IntLiteral(self: T; type: CGType; i: INTEGER): TEXT =
 BEGIN
-    RETURN TIntLiteral(type, IntToTarget(self, i));
+    RETURN self.TIntLiteral(type, IntToTarget(self, i));
 END IntLiteral;
 
 PROCEDURE FloatLiteral(READONLY float: Target.Float): TEXT =
@@ -4942,8 +5006,7 @@ BEGIN
             & " return_type:" & cgtypeToText[return_type]
             & " exported:" & BoolToText[exported]
             & " level:" & IntToDec(level)
-            & " parent:" & ProcNameOrNIL(parent)
-            );
+            & " parent:" & ProcNameOrNIL(parent));
     ELSE
         self.comment("declare_procedure");
     END;
@@ -5518,7 +5581,7 @@ END load_host_integer;
 PROCEDURE load_target_integer(self: T; type: IType; READONLY readonly_i: Target.Int) =
 (* push; s0.type := i *)
 VAR i := readonly_i;
-    expr := CTextToExpr(TIntLiteral(type, i));
+    expr := CTextToExpr(self.TIntLiteral(type, i));
     size := cgtypeSizeBytes[type];
     signed   := cgtypeIsSignedInt[type];
     unsigned := cgtypeIsUnsignedInt[type];
@@ -5949,10 +6012,29 @@ BEGIN
     push(self, type, CTextToExpr(s1.CText() & op & s0.CText()));
 END shift_left_or_right;
 
+PROCEDURE casted_shift_left(self: T; type: IType) =
+(* s1.type := Word.Shift  (s1.type, s0.Word); pop *)
+(* int f() { return -1 << 1; }
+ * cc -c 1.c
+ * warning: shifting a negative signed value is undefined [-Wshift-negative-value]
+ * So cast to unsigned and back -- which also might warn about casting negative number.
+ *)
+VAR s0 := cast(get(self, 0), Target.Word.cg_type);
+    s1 := cast(cast(get(self, 1), type), typeToUnsigned[type]);
+BEGIN
+    self.comment("shift_lexft");
+    pop(self, 2);
+    push(self, type, cast(CTextToExpr(s1.CText() & "<<" & s0.CText()), type));
+END casted_shift_left;
+
 PROCEDURE shift_left(self: T; type: IType) =
 (* s1.type := Word.Shift  (s1.type, s0.Word); pop *)
 BEGIN
-    shift_left_or_right(self, type, "shift_left", "<<");
+    IF typeToUnsigned[type] # type THEN
+      casted_shift_left(self, type);
+    ELSE
+      shift_left_or_right(self, type, "shift_left", "<<");
+    END;
 END shift_left;
 
 PROCEDURE shift_right(self: T; type: IType) =
@@ -6189,7 +6271,7 @@ BEGIN
     self.comment("check_lo");
     self.store(t, 0, type, type);
     self.load(t, 0, type, type);
-    print(self, "/*check_lo*/if(" & get(self).CText() & "<" & TIntLiteral(type, i) & ")");
+    print(self, "/*check_lo*/if(" & get(self).CText() & "<" & self.TIntLiteral(type, i) & ")");
     reportfault(self, code);
 END check_lo;
 
@@ -6200,15 +6282,15 @@ BEGIN
     self.comment("check_hi");
     self.store(t, 0, type, type);
     self.load(t, 0, type, type);
-    print(self, "/*check_hi*/if(" & TIntLiteral(type, i) & "<" & get(self).CText() & ")");
+    print(self, "/*check_hi*/if(" & self.TIntLiteral(type, i) & "<" & get(self).CText() & ")");
     reportfault(self, code);
 END check_hi;
 
 PROCEDURE check_range(self: T; type: IType; READONLY low, high: Target.Int; code: RuntimeError) =
 (* IF (s0.type < low) OR (high < s0.type) THEN abort(code) *)
 VAR t := self.temp_vars[self.op_index];
-    low_expr := CTextToExpr(TIntLiteral(type, low));
-    high_expr := CTextToExpr(TIntLiteral(type, high));
+    low_expr := CTextToExpr(self.TIntLiteral(type, low));
+    high_expr := CTextToExpr(self.TIntLiteral(type, high));
 BEGIN
     self.comment("check_range");
     self.store(t, 0, type, type);
@@ -6411,13 +6493,18 @@ BEGIN
         t3 := "";
         t4 := "";
         IF direct THEN
-            WITH param = types[index] DO
-                IF param.cgtype # CGType.Struct OR param.typeid = UID_ADDR THEN
-                    t1 := " /* call_helper t1 */ (";
-                    (* TODO type.text *)
-                    t2 := " /* call_helper t2 */ " & param.type_text;
-                    t3 := " /* call_helper t3 */ )(";
-                    t4 := " /* call_helper t4 */ )";
+            (* Fix for setjmp. *)
+            IF index = 0 AND self.proc_being_called.is_setjmp THEN
+                t1 := "*(jmp_buf*)"
+            ELSE
+                WITH param = types[index] DO
+                    IF param.cgtype # CGType.Struct OR param.typeid = UID_ADDR THEN
+                        t1 := " /* call_helper t1 */ (";
+                        (* TODO type.text *)
+                        t2 := " /* call_helper t2 */ " & param.type_text;
+                        t3 := " /* call_helper t3 */ )(";
+                        t4 := " /* call_helper t4 */ )";
+                    END;
                 END;
             END;
             INC(index);

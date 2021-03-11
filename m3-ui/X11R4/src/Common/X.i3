@@ -4841,6 +4841,9 @@ TYPE
         dr_return:                  Region
 );
 
+<*EXTERNAL*> PROCEDURE XInitThreads ( );
+<*EXTERNAL*> PROCEDURE XLockDisplay (display : DisplayStar);
+<*EXTERNAL*> PROCEDURE XUnLockDisplay (display : DisplayStar);
 
 END X.
 

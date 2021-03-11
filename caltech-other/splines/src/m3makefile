@@ -1,0 +1,17 @@
+/* $Id$ */
+/*m3_option("-g") */
+/*m3_option("-times") */
+
+import("cit_util")
+import("integrate")
+
+Module("Spline")
+Module("CubicSpline")
+Module("ParametricSpline")
+interface("ParametricSplineRep")
+
+Generic_module("ParametricSplineImpl")
+template("parametricspline")
+ParametricSpline("CubicSpline","CubicSpline")
+
+library("splines")

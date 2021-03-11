@@ -41,6 +41,9 @@ along with GCC; see the file COPYING3.  If not see
 #include "df.h"
 #include "ira-int.h"
 
+// cm3 cm3cg crashes on Linux/x86 host if ira is optimized.
+#pragma GCC optimize ("O1")
+
 typedef struct allocno_hard_regs *allocno_hard_regs_t;
 
 /* The structure contains information about hard registers can be

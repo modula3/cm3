@@ -23,7 +23,7 @@ ALL=`awk "{print \\$1}" ${ROOT}/scripts/pkginfo.txt | tr '\\n' ' '`
 ALLDEPS=${ROOT}/scripts/all-deps
 #echo "ALLDEPS=${ALLDEPS}"
 #echo "ALL=${ALL}"
-PKG_COLLECTIONS="core devlib gui webdev m3gdb m3devtool anim database cvsup obliq juno caltech-parser demo tool math game"
+PKG_COLLECTIONS="core devlib gui webdev m3gdb m3devtool anim database cvsup obliq juno caltech-parser caltech-other demo tool math game"
 
 [ ! -f ${ALLDEPS} ] && {
   CM3_ALL=yes \

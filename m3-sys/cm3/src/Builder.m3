@@ -113,6 +113,7 @@ TYPE
     m3backend     : ConfigProc;         (* translate M3CG -> ASM or OBJ *)
     m3llvm        : ConfigProc;         (* translate M3CG -> LLVM bitcode *) 
     llvmbackend   : ConfigProc;         (* translate llvm bitcode -> ASM or OBJ *)
+    llvmopt       : ConfigProc;         (* optimize llvm bitcode *)
     c_compiler    : ConfigProc;         (* compile C code *)
     assembler     : ConfigProc;         (* assemble  *)
     librarian     : ConfigProc;         (* make libraries *)
@@ -316,6 +317,7 @@ PROCEDURE CompileUnits (main     : TEXT;
     s.m3backend   := GetConfigProc (s, "m3_backend", 4);
     s.m3llvm      := GetConfigProc (s, "m3llvm", 4); 
     s.llvmbackend := GetConfigProc (s, "llvm_backend", 5);
+    s.llvmopt     := GetConfigProc (s, "llvm_opt", 2);
     s.c_compiler  := GetConfigProc (s, "compile_c", 5);
     s.assembler   := GetConfigProc (s, "assemble", 2);
     s.librarian   := GetConfigProc (s, "make_lib", 5);
@@ -1020,7 +1022,7 @@ PROCEDURE ForceAllPromisesInParallel(promises : QPromiseSeq.T;
             threads.addhi (Thread.Fork(cl));
             
             IF threads.size() > parallelism-1 THEN 
-              EVAL Thread.Join(threads.remlo()) 
+              EVAL Thread.Join(threads.remlo()); 
             END;
             
             curSeq := NEW(QPromiseSeq.T).init()
@@ -1431,39 +1433,40 @@ PROCEDURE FulfilNP(np : NotePromise) : QPromise.ExitCode =
 PROCEDURE FulfilRP(rp : RemovePromise) : QPromise.ExitCode = 
   BEGIN LOCK utilsMu DO Utils.Remove(rp.nam) END; RETURN 0 END FulfilRP;
 
-TYPE Temps_t = RECORD
-  count := 0;
-  names := ARRAY [0..2] OF TEXT { NIL, .. };
-END;
+TYPE
+  Temps_t = RECORD
+    count := 0;
+    names := ARRAY [0..3] OF TEXT { NIL, .. };
+  END;
 
 PROCEDURE Temps_Add (VAR temps: Temps_t; s: State; name: TEXT) =
-BEGIN
-  IF name = NIL OR s.keep_files THEN RETURN END;
-  <* ASSERT temps.count <= LAST(temps.names) *>
-  temps.names[temps.count] := name;
-  INC(temps.count);
+  BEGIN
+    IF name = NIL OR s.keep_files THEN RETURN END;
+    <* ASSERT temps.count <= LAST(temps.names) *>
+    temps.names[temps.count] := name;
+    INC(temps.count);
  
-  IF s.delayBackend THEN
-    s.machine.promises.addhi(NEW(NotePromise, nam := name));
-  ELSE
-    Utils.NoteTempFile (name);
-  END;
-END Temps_Add;
+    IF s.delayBackend THEN
+      s.machine.promises.addhi(NEW(NotePromise, nam := name));
+    ELSE
+      Utils.NoteTempFile (name);
+    END;
+  END Temps_Add;
 
 PROCEDURE Temps_Remove (VAR temps: Temps_t; s: State) =
-VAR count := temps.count;
+  VAR count := temps.count;
     name: TEXT;
-BEGIN
-  IF count = 0 THEN RETURN END;
-  FOR i := 0 TO count - 1 DO
-    name := temps.names[i];
-    IF s.delayBackend THEN
-      s.machine.promises.addhi(NEW(RemovePromise, nam := name));
-    ELSE
-      Utils.Remove (name);
+  BEGIN
+    IF count = 0 THEN RETURN END;
+    FOR i := 0 TO count - 1 DO
+      name := temps.names[i];
+      IF s.delayBackend THEN
+        s.machine.promises.addhi(NEW(RemovePromise, nam := name));
+      ELSE
+        Utils.Remove (name);
+      END;
     END;
-  END;
-END Temps_Remove;
+  END Temps_Remove;
 
 PROCEDURE PushOneM3 (s: State;  u: M3Unit.T): BOOLEAN =
 (* PRE: u.kind IN {UK.I3, UK.M3} *) 
@@ -1481,6 +1484,7 @@ PROCEDURE PushOneM3 (s: State;  u: M3Unit.T): BOOLEAN =
 
     cm3IRName: TEXT := NIL;
     llvmIRName: TEXT := NIL;
+    llvmIROptName: TEXT := NIL;
     CCodeName: TEXT := NIL;
     asmName: TEXT := NIL;
     mode := s.m3backend_mode;
@@ -1559,12 +1563,14 @@ PROCEDURE PushOneM3 (s: State;  u: M3Unit.T): BOOLEAN =
         DoRunAsm := NOT boot; 
     | Mode_t.ExtLlvmObj =>  
         llvmIRName := LlvmIRNameForUnit (u);
+        llvmIROptName := LlvmIROptNameForUnit (u);
         cm3OutName := llvmIRName; 
         codeGenOutName := u.object; 
         DoRunLlc := TRUE; 
         (* boot has no effect on this mode. *) 
     | Mode_t.ExtLlvmAsm =>  
         llvmIRName := LlvmIRNameForUnit (u);
+        llvmIROptName := LlvmIROptNameForUnit (u);
         cm3OutName := llvmIRName; 
         codeGenOutName := AsmNameForUnit (u);
         DoWriteAsm := TRUE; 
@@ -1573,12 +1579,14 @@ PROCEDURE PushOneM3 (s: State;  u: M3Unit.T): BOOLEAN =
         asmName := codeGenOutName; 
     | Mode_t.StAloneLlvmObj => 
         llvmIRName := LlvmIRNameForUnit (u);  
+        llvmIROptName := LlvmIROptNameForUnit (u);
         DoRunM3llvm := TRUE; 
         codeGenOutName := u.object; 
         DoRunLlc := TRUE; 
         (* boot has no effect on this mode. *) 
     | Mode_t.StAloneLlvmAsm => 
         llvmIRName := LlvmIRNameForUnit (u);  
+        llvmIROptName := LlvmIROptNameForUnit (u);
         DoRunM3llvm := TRUE; 
         codeGenOutName := AsmNameForUnit (u);  
         DoWriteAsm := TRUE; 
@@ -1602,6 +1610,7 @@ PROCEDURE PushOneM3 (s: State;  u: M3Unit.T): BOOLEAN =
     *)
     Temps_Add (temps, s, cm3IRName);
     Temps_Add (temps, s, llvmIRName);
+    Temps_Add (temps, s, llvmIROptName); 
 
     (* C, assembly are always temporary except for "boot", per above. *)
     IF NOT boot THEN
@@ -1624,6 +1633,9 @@ PROCEDURE PushOneM3 (s: State;  u: M3Unit.T): BOOLEAN =
           ok := RunM3Llvm (s, cm3IRName, llvmIRName, u.debug, u.optimize);
         END; 
         IF ok AND DoRunLlc THEN
+          IF u.optimize THEN
+            EVAL RunLlvmOpt(s, llvmIRName, llvmIROptName);
+          END;
           ok := RunLlcBack 
                  (s, llvmIRName, codeGenOutName, u.debug, u.optimize, 
                   Asm := DoWriteAsm);
@@ -2333,6 +2345,7 @@ PROCEDURE RunCC (s: State;  source, object: TEXT;  debug, optimize: BOOLEAN;
     IF IfDebug () THEN DoDebug ("RunCC " & NilText(source) & " " & NilText(object)); END;
 
     ETimer.Push (M3Timers.pass_1);
+    s.machine.timer := M3Timers.pass_1;
     StartCall (s, s.c_compiler);
     PushText  (s, source);
     PushText  (s, object);
@@ -2354,6 +2367,7 @@ PROCEDURE RunM3Back (s: State;  source, object: TEXT;
   VAR failed: BOOLEAN;
   BEGIN
     ETimer.Push (M3Timers.pass_6);
+    s.machine.timer := M3Timers.pass_6;
     StartCall (s, s.m3backend);
     PushText (s, source);
     PushText (s, object);
@@ -2373,7 +2387,8 @@ PROCEDURE RunM3Llvm (s: State;  source, object: TEXT;
                      debug, optimize: BOOLEAN): BOOLEAN (* Success. *) =
   VAR failed: BOOLEAN;
   BEGIN
-    ETimer.Push (M3Timers.pass_6);
+    ETimer.Push (M3Timers.m3llvm);
+    s.machine.timer := M3Timers.m3llvm;
     StartCall (s, s.m3llvm);
     PushText (s, source);
     PushText (s, object);
@@ -2395,7 +2410,8 @@ PROCEDURE RunLlcBack
   VAR failed: BOOLEAN;
   VAR filetype: TEXT; 
   BEGIN
-    ETimer.Push (M3Timers.pass_6);
+    ETimer.Push (M3Timers.llc);
+    s.machine.timer := M3Timers.llc;
     StartCall (s, s.llvmbackend);
     PushText (s, source);
     PushText (s, object);
@@ -2415,10 +2431,29 @@ PROCEDURE RunLlcBack
     RETURN NOT failed;
   END RunLlcBack; 
 
+PROCEDURE RunLlvmOpt (s: State;  source, dest: TEXT) : BOOLEAN (* Success. *) =
+  VAR failed: BOOLEAN;
+  BEGIN
+    ETimer.Push (M3Timers.llvmopt);
+    s.machine.timer := M3Timers.llvmopt;
+    StartCall (s, s.llvmopt);
+    PushText (s, source);
+    PushText (s, dest);
+    failed := CallProc (s, s.llvmopt);
+    IF failed THEN
+      s.compile_failed := TRUE;
+      Msg.Error (NIL, "llvm compiler (opt) failed optimizing: ", source);
+      IF NOT s.keep_files THEN Utils.Remove (dest); END;
+    END;
+    ETimer.Pop ();
+    RETURN NOT failed;
+  END RunLlvmOpt; 
+
 PROCEDURE RunAsm (s: State;  source, object: TEXT): BOOLEAN (* Success. *) =
   VAR failed: BOOLEAN;
   BEGIN
     ETimer.Push (M3Timers.pass_7);
+    s.machine.timer := M3Timers.pass_7;
     StartCall (s, s.assembler);
     PushText (s, source);
     PushText (s, object);
@@ -3287,6 +3322,17 @@ PROCEDURE LlvmIRNameForUnit (u: M3Unit.T): TEXT =
     END;
     RETURN M3Path.Join (NIL, M3ID.ToText (u.name), ext);
   END LlvmIRNameForUnit;
+
+  PROCEDURE LlvmIROptNameForUnit (u: M3Unit.T): TEXT =
+  VAR ext := u.kind;
+  BEGIN
+    CASE ext OF
+    | UK.I3, UK.IC => ext := UK.IB;
+    | UK.M3, UK.MC => ext := UK.MB;
+    ELSE <* ASSERT FALSE *>
+    END;
+    RETURN M3Path.Join (NIL, M3ID.ToText (u.name) & "_opt", ext);
+  END LlvmIROptNameForUnit;
 
 PROCEDURE AsmNameForUnit (u: M3Unit.T): TEXT =
   VAR ext := u.kind;

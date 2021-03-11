@@ -1,4 +1,4 @@
-(* $Id: ToRefany.m3,v 1.2 2001-09-19 14:07:43 wagner Exp $ *)
+(* $Id$ *)
 
 MODULE ToRefany;
 IMPORT ToRefanyClass;

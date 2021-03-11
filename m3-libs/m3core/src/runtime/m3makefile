@@ -24,6 +24,7 @@ if (equal(TARGET, "NT386")
     or equal(TARGET, "AMD64_NT")
     or equal(TARGET, "IA64_NT")
     or equal(TARGET, "ARM_NT")
+    or equal(TARGET, "ARM64_NT")
     ) and equal(OS_TYPE, "POSIX")
   % nothing -- no user thread support (Cygwin?)
 else

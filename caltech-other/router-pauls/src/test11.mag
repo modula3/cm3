@@ -1,0 +1,62 @@
+magic
+tech scmos
+timestamp 1051739459
+<< metal1 >>
+rect 2169 3155 2177 3163
+rect -3966 3088 -3958 3096
+rect -1529 3003 -1521 3011
+rect -202 2131 -194 2139
+rect 1960 1941 1968 1949
+rect -1624 1808 -1616 1816
+rect 1145 1439 1153 1447
+rect -951 870 -943 878
+rect -2079 623 -2071 631
+rect -4061 538 -4053 546
+rect 67 471 75 479
+rect 3041 310 3049 318
+rect 595 299 603 307
+rect -471 251 -463 259
+rect 3107 206 3115 214
+rect 0 0 8 8
+rect 1505 -21 1513 -13
+rect -757 -40 -749 -32
+rect 872 -251 880 -243
+rect -478 -374 -470 -366
+rect -1662 -695 -1654 -687
+rect -2781 -1330 -2773 -1322
+rect 1022 -1538 1030 -1530
+rect 235 -1747 243 -1739
+rect -808 -2136 -800 -2128
+rect -1671 -2468 -1663 -2460
+rect 1970 -2544 1978 -2536
+rect 121 -3330 129 -3322
+<< labels >>
+rlabel metal1 5 4 5 4 1 x
+rlabel metal1 600 303 600 303 1 x
+rlabel metal1 -466 255 -466 255 1 x
+rlabel metal1 -473 -370 -473 -370 1 x
+rlabel metal1 877 -247 877 -247 1 x
+rlabel metal1 72 475 72 475 1 x
+rlabel metal1 -752 -36 -752 -36 1 x
+rlabel metal1 -2074 627 -2074 627 1 x
+rlabel metal1 1965 1945 1965 1945 1 x
+rlabel metal1 240 -1743 240 -1743 1 x
+rlabel metal1 -1657 -691 -1657 -691 1 x
+rlabel metal1 -197 2135 -197 2135 1 x
+rlabel metal1 1510 -17 1510 -17 1 x
+rlabel metal1 -1619 1812 -1619 1812 1 x
+rlabel metal1 -946 874 -946 874 1 x
+rlabel metal1 1150 1443 1150 1443 1 x
+rlabel metal1 3112 210 3112 210 1 x
+rlabel metal1 1027 -1534 1027 -1534 1 x
+rlabel metal1 -1666 -2464 -1666 -2464 1 x
+rlabel metal1 -2776 -1326 -2776 -1326 1 x
+rlabel metal1 -803 -2132 -803 -2132 1 x
+rlabel metal1 126 -3326 126 -3326 1 x
+rlabel metal1 1975 -2540 1975 -2540 1 x
+rlabel metal1 -4056 542 -4056 542 1 x
+rlabel metal1 -3961 3092 -3961 3092 1 x
+rlabel metal1 -1524 3007 -1524 3007 1 x
+rlabel metal1 2174 3159 2174 3159 1 x
+rlabel metal1 3046 314 3046 314 1 x
+<< end >>

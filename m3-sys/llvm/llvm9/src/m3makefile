@@ -1,0 +1,16 @@
+import("libm3")
+import("m3middle")
+import("m3quake")
+import("llvm9bindings")
+
+include("version.quake")
+version_impl("Version")
+
+module("M3CG_LLVM")
+
+implementation("Main")
+
+% ideally:
+%build_standalone()
+% but there are problems with it.
+Program("m3llvm")

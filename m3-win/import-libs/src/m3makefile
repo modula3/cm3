@@ -1,3 +1,8 @@
+write("WARNING: import-libs is of historical interest only,\n")
+write("WARNING: for use with very old CM3 and/or lacking a Windows SDK.\n")
+
+if FALSE
+
 % Jay Krell
 % jay.krell@cornell.edu
 % October 18, 2006 in Windows cmd
@@ -299,4 +304,6 @@ if not equal(M3_MODE, "clean")
     > ".M3WEB" in 
       write("")
     end
+end
+
 end

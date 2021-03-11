@@ -61,4 +61,7 @@ if equal(WORD_SIZE, "32BITS") % temporary hack
 end
 implementation ("WinImageList")
 
+c_source("WinConstants")
+LibdExport("WinConstants" & { "WIN32" : ".obj", "POSIX" : ".o"  }{OS_TYPE})
+
 end

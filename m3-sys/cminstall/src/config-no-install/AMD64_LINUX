@@ -1,7 +1,9 @@
 readonly TARGET = "AMD64_LINUX" % code generation target
 readonly GNU_PLATFORM = "amd64-linux" % "cpu-os" string for GNU
 
-SYSTEM_CC = "g++ -gstabs+ -m64 -fPIC" % C compiler
+SYSTEM_CC = "gcc -gstabs+ -m64 -fPIC" % C compiler
+SYSTEM_CXXC = "g++ -gstabs+ -m64 -fPIC" % C++ compiler
+
 readonly SYSTEM_ASM = "as --64" % Assembler
 
 include("AMD64.common")

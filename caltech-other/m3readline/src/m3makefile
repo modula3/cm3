@@ -1,0 +1,36 @@
+/* $Id$ */
+import ("libm3")
+import ("cit_util")
+import ("tcp")
+import ("netobj")
+import ("sx")
+
+template ("sxproxy")
+
+Interface("ReadLineTable")
+Interface("ReadLineLogFormat")
+Interface("ReadLineError")
+Interface("Displayer")
+Module("ReadLine")
+Module("ReadLineUI")
+Module("ReadLineHelp")
+interface("ReadLineHelpClass")
+Module("ReadLineHelpNode")
+
+Module("VarUI")
+implementation("VarProxyDefs")
+Interface("VarProxyClass")
+
+Generic_module("SXProxy")
+implementation("SXProxys")
+
+SxProxy("Int", "Integer", "SXInt")
+SxProxy("Text", "Text", "SXText")
+SxProxy("Bool", "Boolean", "SXBool")
+SxProxy("LongReal", "LongrealType", "SXLongReal")
+
+interface("SXConversion")
+
+Netobj("ReadLine", "Public")
+
+library("m3readline")

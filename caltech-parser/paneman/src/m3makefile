@@ -1,3 +1,7 @@
+if not HasTrestle()
+  build_standalone()
+end
+
 if not defined("TOP")
   TOP = PACKAGE_DIR & SL & ".." 
 end
@@ -9,7 +13,7 @@ import("libm3")
 import("cit_util")
 import("term")
 
-Module("PathnameUtils")
+%Module("PathnameUtils") % in cit_utils
 template("liste")
 generic_module("ListExtras")
 template("channel")

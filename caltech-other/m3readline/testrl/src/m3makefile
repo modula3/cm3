@@ -1,0 +1,9 @@
+/* $Id$ */
+import ("libm3")
+import ("cit_util")
+import ("tcp")
+import ("m3readline")
+
+implementation ("Main")
+
+program ("testrl")

@@ -1,3 +1,7 @@
+if not HasTrestle()
+  build_standalone()
+end
+
 if not defined("TOP")
   TOP = PACKAGE_DIR & SL & ".." 
 end
@@ -15,7 +19,7 @@ Module("OneFont")
 Interface("TextBounder")
 Module("VBTTextBounder")
 Module("PSTextBounder")
-Module("Pointe")
+%Module("Pointe") % now in cit_util
 Module("Recte")
 List("Transform", "TransformOther")
 Module("TransformOther")

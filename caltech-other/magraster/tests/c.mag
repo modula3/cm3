@@ -1,0 +1,13 @@
+magic
+tech scmos
+timestamp 908334937
+use b b_0
+array 0 0 4 0 3 8
+timestamp 908305645
+transform 0 1 0 -1 0 4
+box 0 0 4 4
+use b b_1
+timestamp 908305645
+transform 1 0 0 0 1 -23
+box 0 0 4 4
+<< end >>

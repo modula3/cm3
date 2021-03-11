@@ -1,0 +1,21 @@
+/* $Id$ */
+
+if not equal (OS_TYPE, "WIN32")
+
+if defined("pm3_version")
+	option("optimization","") 
+end
+
+
+import("libm3")
+import("cit_util")
+import("mscheme")
+import("schemesig")
+import("modula3scheme")
+import("parseparams")
+
+implementation("Main")
+
+program("mscheme")
+
+end

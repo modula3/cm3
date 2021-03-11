@@ -346,7 +346,7 @@ EOF
           fi
         done
       fi
-      if [ "$b" != "import-libs" -a "$b" != "m3cc" -a "$b" != "m3gdb" ]; then
+      if [ "$b" != "m3cc" -a "$b" != "m3gdb" ]; then
         echo "<a href=\"http://www.opencm3.net/doc/help/gen_html/${b}/INDEX.html\">Browse Sources Online</a><br>"
       fi
       for section in 1 5 6 7 8; do

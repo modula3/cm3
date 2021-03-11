@@ -1,0 +1,9 @@
+/* $Id$ */
+readonly proc _persistentTable (nm, elem, intElemTbl, vis) is
+	build_generic_intf("Persistent" & nm & "Tbl", "PersistentTable", [elem, intElemTbl], vis)	
+	build_generic_impl("Persistent" & nm & "Tbl", "PersistentTable", [elem, intElemTbl])
+end
+
+readonly proc PersistentTable (nm, elem, intElemTbl) is _persistentTable (nm, elem, intElemTbl, VISIBLE) end
+readonly proc persistentTable (nm, elem, intElemTbl) is _persistentTable (nm, elem, intElemTbl, HIDDEN) end
+

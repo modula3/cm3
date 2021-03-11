@@ -1,0 +1,8 @@
+/* $Id$ */
+
+import ("libm3")
+import ("sx")
+import ("cit_util")
+
+implementation ("Main")
+program ("test_highspeed")

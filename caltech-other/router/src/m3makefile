@@ -1,0 +1,75 @@
+/* $Id$ */
+
+import ("libm3")
+import ("cit_util")
+import ("magic")
+import ("magicextras")
+import ("boxes")
+import ("simplegrid")
+
+Module("Conf")
+interface("ConfPrivate")
+
+Module("GridRouter2")
+
+list("Layer", "MagRouteLayer")
+
+mkSet("RectSet", "RectSet")
+mkSetDef("RectSet", "RectSet")
+table("RectSetRef", "RectSet", "Refany")
+
+table("RouteLayerInt", "MagRouteLayer", "Integer")
+
+/* Array_sort("TwoIndexedLongreal","TwoIndexedLongreal") */
+
+Mst("RectSet", "RectSet", "RectSetSeq")
+
+Module("EndPointStatus")
+table("GridPointStatus", "GridPoint", "EndPointStatus")
+
+/* layer equivalence things */
+
+mkSet("RouteLayer", "MagRouteLayer")
+mkSetDef("RouteLayer", "MagRouteLayer")
+table("RouteLayerRef", "MagRouteLayer", "Refany")
+
+interface("EntryWays")
+module("TaggedEntryWays")
+list("TaggedEntryWays","TaggedEntryWays")
+table("GridPointEntry", "GridPoint", "TaggedEntryWaysList")
+Module("EntryDB")
+
+/* for forbidden vias */
+module("ForbiddenVias")
+table("RectIntSet", "MagRect", "IntSet")
+
+Module("RouteComponents")
+
+table("GridPointSession","GridPoint","MagSession")
+
+list("GridPointSet_","GridPointSet")
+
+table("GridPointRectSet","GridPoint","RectSet")
+
+mkSet("GridPointList","GridPointListF")
+mkSetDef("GridPointList","GridPointListF")
+table("GridPointListRef","GridPointListF","Refany")
+
+Module("MagicStuff")
+
+Module("RouterDeferral")
+interface("RouterDeferralClass")
+List("RouterDeferral","RouterDeferral")
+
+Module("RouteEntries")
+Table("GridPointEntries", "GridPoint", "RouteEntries")
+Module("MagSlasherUtils")
+
+Module("Quitter")
+
+Library("router")
+
+
+
+
+

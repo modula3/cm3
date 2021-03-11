@@ -8,7 +8,7 @@
 (*  Department of Computer Science                                           *)
 (*  Pasadena, CA 91125.                                                      *)
 (*                                                                           *)
-(*  Author: Karl Papadantonakis <kp@caltech.edu                              *)
+(*  Author: Karl Papadantonakis <kp@caltech.edu>                             *)
 (*                                                                           *)
 (*  Permission to use, copy, modify, and distribute this software            *)
 (*  and its documentation for any purpose and without fee is hereby          *)
@@ -18,8 +18,9 @@
 (*  provided "as is" without express or implied warranty. Export of this     *)
 (*  software outside of the United States of America may require an          *)
 (*  export license.                                                          *)
+(* $Id$ *)
 
-GENERIC INTERFACE Equivalence(Elem);
+GENERIC INTERFACE Equivalence(Elem, ElemList, ElemElemTbl, ElemElemListTbl);
 
 (*
 A "T" represents an equivalence relation on the set of all "Elem.T"s.
@@ -32,8 +33,8 @@ Interface "Elem" is expected to have the following declaration:
 
 which defines the a priori equality of two elements.
 
-The "Default" implementation (union-find with path compression using
-hash tables) also expects an "ElemElemTbl".
+The "Default" implementation is union-find with path compression using
+hash tables.
 *)
 
 TYPE
@@ -46,12 +47,27 @@ TYPE
    return "TRUE" iff they are already equal. *)
 
     canon(e: Elem.T): Elem.T;
-(* return the canonical representative of the class containing "e". *)
+(* return the canonical representative of the class containing "e".
+    canon may change the data structure, so unmonitored concurrent calls
+    are not allowed. *)
 
     iterate(): Iterator;
 (* For each element which is not its own canonical representative,
    obtain that element as "alias", and
    its canonical representative as "canon". *)
+
+    getClass(e: Elem.T): ElemList.T;
+(* return a list of all elements in the class containing "e". *)
+
+    toTable(): ElemElemTbl.T;
+(* return a table mapping aliases to canonical elements. *)
+
+    toRevTable(): ElemElemListTbl.T;
+(* return a table mapping canonical elements to lists of aliases. *)
+
+    initCopy(toCopy : T) : T;
+(* initialize as a copy of toCopy; for a Default, call standard init first,
+   e.g., write new := NEW(Default).init().initCopy(old) *)
   END;
   Iterator = OBJECT METHODS
     next(VAR alias, canon: Elem.T): BOOLEAN;

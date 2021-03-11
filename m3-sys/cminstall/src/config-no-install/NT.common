@@ -418,35 +418,70 @@ if equal(OS_TYPE, "WIN32")
 %
 % Cutting the C runtime dependency from Modula-3 may be desirable.
 %
-% The environment variable USE_MSVCRT is 0, 1, or not defined.
+% If variable USE_MSVCRT is not defined, then the environment variable
+% USE_MSVCRT must be 0, 1, or not defined.
 % Not defined is treated as 1. This is a safe default for the
 % vast majority of toolsets, but not all.
 %
-    if not equal($USE_MSVCRT, "0")
-        if not equal($USE_MSVCRT, "1")
-            if not equal($USE_MSVCRT, "")
-                error("The environment variable USE_MSVCRT should be 0, 1, or not defined, but it is " & $USE_MSVCRT & "." & EOL)
+    if not defined("USE_MSVCRT")
+        if not equal($USE_MSVCRT, "0")
+            if not equal($USE_MSVCRT, "1")
+                if not equal($USE_MSVCRT, "")
+                    error("The environment variable USE_MSVCRT should be 0, 1, or not defined, but it is " & $USE_MSVCRT & "." & EOL)
+                end
             end
+        end
+
+        % Translate $USE_MSVCRT to USE_MSVCRT.
+        %
+        if equal($USE_MSVCRT, "0")
+            % explicit 0
+            USE_MSVCRT = FALSE
+        else
+            % 1 or empty (default)
+            USE_MSVCRT = TRUE
         end
     end
 
-    if not defined("USE_MSVCRT")
-        if equal($USE_MSVCRT, "0")
-            USE_MSVCRT = FALSE
+% If variable VS2015_OR_NEWER is not defined, then the environment variable
+% CM3_VS2015_OR_NEWER must be 0, 1, or not defined.
+% Not defined is treated as 1. There is no safe default here. It is required
+% for newer toolsets and breaks older toolsets.
+% TODO: Can we autodetect? Provide empty vcruntime.lib/ucrt.lib later
+% in $LIB? include stdio.h and reference stdout and look for certain symbols?
+% Inlude stdio.h and preprocess?
+%
+% cl usage or preprocess _MSC_VER and look at version.
+%
+    if not defined("VS2015_OR_NEWER")
+        if not equal($CM3_VS2015_OR_NEWER, "0")
+            if not equal($CM3_VS2015_OR_NEWER, "1")
+                if not equal($CM3_VS2015_OR_NEWER, "")
+                    error("The environment variable CM3_VS2015_OR_NEWER should be 0, 1, or not defined, but it is " & $CM3_VS2015_OR_NEWER & "." & EOL)
+                end
+            end
+        end
+
+        % Translate $CM3_VS2015_OR_NEWER to VS2015_OR_NEWER.
+        %
+        if equal($CM3_VS2015_OR_NEWER, "0")
+            % explicit 0
+            VS2015_OR_NEWER = FALSE
         else
-            USE_MSVCRT = TRUE
+            % 1 or empty (default)
+            VS2015_OR_NEWER = TRUE
         end
     end
 
     if USE_MSVCRT
         SYSTEM_LIBS{"LIBC"} += [LibIn("msvcrt")]
-        if equal ($CM3_VS2015_OR_NEWER, "1")
+        if VS2015_OR_NEWER
             SYSTEM_LIBS{"LIBC"} += [LibIn("vcruntime")]
             SYSTEM_LIBS{"LIBC"} += [LibIn("ucrt")]
         end
     else
         SYSTEM_LIBS{"LIBC"} += [LibIn("libcmt")]
-        if equal ($CM3_VS2015_OR_NEWER, "1")
+        if VS2015_OR_NEWER
             SYSTEM_LIBS{"LIBC"} += [LibIn("libvcruntime")]
             SYSTEM_LIBS{"LIBC"} += [LibIn("libucrt")]
         end
@@ -508,6 +543,81 @@ proc m3_backend(source, object, optimize, debug) is
     local m3back = GetM3Back()
     return try_exec(m3back, args)
 end
+
+%--------------------------------------------------------- m3llvm ------------
+% Optionally, "m3llvm" is called to translate cm3 IR to llvm IR. 
+
+if not defined("m3llvm")
+
+  proc m3llvm(source, outfile, optimize, debug) is
+  % will we ever need optimize and/or debug? 
+
+      local m3llvmname = "@m3llvm"
+
+      local args = [ "-b" ] 
+
+      if debug
+        args += "-g" 
+      end
+
+      %args += "-d" %While m3llvm is under development.  
+
+      return try_exec (m3llvmname, args, "-o", outfile, source )
+  end % proc m3llvm
+
+end % if not defined("m3llvm")
+
+%--------------------------------------------------------- llvm backend ---
+% Optionally, "llvm_backend" is called to translate llvm bitcode to object code.
+
+% Some default options: 
+
+if not defined("llvmback_debug")
+  llvmback_debug = ""
+end
+
+if not defined("llvmback_optimize")
+  llvmback_optimize = "-O2"
+end
+
+if not defined("llvmback_pic")
+  llvmback_pic = "-relocation-model=pic"
+end
+
+if not defined("llvm_backend")
+
+  proc llvm_backend(source, outfile, optimize, debug, filetype) is
+      %local t = try_exec ("llvm-dis", outfile) 
+
+      local args = [ "-disable-fp-elim"] 
+      local llvmopt = ""
+
+      args += "-filetype=" & filetype
+
+      if optimize
+          args += llvmback_optimize
+          local tmp = split(source,".")
+          llvmopt = tmp[0] & "_opt." & tmp[1]
+          local opt_ret = try_exec ("@opt", llvmback_optimize, source, "-o", llvmopt )
+          %reset source for llc
+          source = llvmopt 
+      else
+          args += "-O0"
+      end
+      if debug
+          args += llvmback_debug
+      end
+      args += llvmback_pic
+
+      local llvmback = "@llc"
+      local llc_ret = try_exec (llvmback, args, source, "-o", outfile )
+      if optimize and not defined ("M3_KEEP_FILES")
+          DeleteFile(llvmopt)
+      end
+      return llc_ret
+  end % proc llvm_backend
+
+end % if not defined("llvm_backend")
 
 %--------------------------------------------------------------- C compiler ---
 % "compile_c" is called to compile C source files. Note that this function
@@ -795,6 +905,7 @@ proc make_dll_ms(options, objects, imported_libs, lib_file, def_file, dll_file, 
                  objects,
                  subst_chars(imported_libs, "/", "\\"),
                  subst_chars(UseHand, "/", "\\"),
+                 subst_chars(UseUconstants, "/", "\\"),
                  subst_chars(UseWinConstants, "/", "\\"),
             ]),
         "2>&1",
@@ -986,6 +1097,9 @@ proc make_lib(lib, options, objects, imported_libs, shared) is
         if ShipUconstants
             LibdExport("Uconstants" & Obj)
         end
+        if ShipWinConstants
+            LibdExport("WinConstants" & Obj)
+        end
     end
     return ret_code
 end
@@ -1131,6 +1245,7 @@ proc m3_link_ms(prog, options, objects, imported_libs, shared, pgm_file, listing
                 subst_chars(imported_libs, "/", "\\"),
                 subst_chars(UseHand, "/", "\\"),
                 subst_chars(UseWinConstants, "/", "\\"),
+                subst_chars(UseUconstants, "/", "\\"),
             ]),
         "2>&1",
         ">", listing

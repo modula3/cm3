@@ -1,1 +1,2 @@
-include(ROOT & "/m3overrides")
+/* $Id$ */
+include("../../m3overrides")

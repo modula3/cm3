@@ -1,5 +1,4 @@
 
-m3-win/import-libs import-libs: 
 m3-sys/m3cc m3cc: 
 m3-libs/m3core m3core: 
 m3-libs/libm3 libm3: m3core
@@ -155,7 +154,7 @@ caltech-parser/parserlib/klex klex: klexlib ktoklib term libm3
 caltech-parser/parserlib/kyacc kyacc: kyacclib ktoklib cit_util term libm3
 caltech-parser/parserlib/kext kext: kyacclib klexlib ktoklib cit_util parseparams libm3
 caltech-parser/parserlib/parserlib parserlib: libm3
-caltech-parser/parserlib/parserlib/test test: parserlib cit_util
+caltech-parser/parserlib/parserlib/test_parserlib test_parserlib: parserlib cit_util
 m3-tools/pp pp: vbtkit
 m3-tools/kate kate: 
 m3-libs/sgml sgml: m3quake deepcopy libm3
@@ -169,3 +168,23 @@ m3-games/fours fours: vbtkit libbuf
 m3-games/maze maze: libm3
 m3-games/solitaire solitaire: bicycle
 m3-games/tetris tetris: X11R4
+caltech-other/cptr cptr: libm3
+caltech-other/bdd bdd: cit_util libm3
+caltech-other/bool bool: cit_util cptr libm3
+caltech-other/boxes boxes: cit_util mst libm3
+caltech-other/conflictdensity conflictdensity: cit_util libm3
+caltech-other/gentest gentest: cit_util router libm3
+caltech-other/magic magic: cit_util libm3
+caltech-other/magicextras magicextras: magic cit_util libm3
+caltech-other/magraster magraster: magic cit_util libm3
+caltech-other/mergealiases mergealiases: cit_util libm3
+caltech-other/mst mst: libm3
+caltech-other/router-pauls router-pauls: router cit_util router
+caltech-other/router-pauls3 router-pauls3: router cit_util router
+caltech-other/router-pauls4 router-pauls4: router cit_util router
+caltech-other/router router: libm3 cit_util magic magicextras boxes simplegrid
+caltech-other/simplegrid simplegrid: libm3 cit_util magic boxes
+caltech-other/bdd/bdd_test bdd_test: bdd
+caltech-other/bdd/bool bool: bool
+caltech-other/sop sop: libm3 bool bdd
+caltech-other/router/router_test router_test: router

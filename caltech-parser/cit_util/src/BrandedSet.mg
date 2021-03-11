@@ -1,3 +1,4 @@
+(* $Id$ *)
 GENERIC MODULE BrandedSet(Elem);
 IMPORT Word;
 

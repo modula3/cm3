@@ -54,7 +54,9 @@ REVEAL
 
 TYPE
   ActState = { Starting, Started, Stopping, Stopped };
-  REVEAL Activation = UNTRACED BRANDED REF RECORD
+
+REVEAL
+  Activation = UNTRACED BRANDED REF RECORD
     frame: ADDRESS := NIL;              (* exception handling support *)
     mutex: pthread_mutex_t := NIL;      (* write-once in CreateT *)
     cond: pthread_cond_t := NIL;        (* write-once in CreateT; a place to park while waiting *)
@@ -65,13 +67,31 @@ TYPE
        points to its tail, which is most recently added, i.e., last out). *)
     next, prev: Activation := NIL;      (* LL = activeMu; global doubly-linked, circular list of all active threads *)
     handle: pthread_t := NIL;           (* LL = activeMu; thread handle *)
-    stackbase: ADDRESS := NIL;          (* LL = activeMu; stack base for GC *)
-    context: ADDRESS := NIL;            (* LL = activeMu *)
+    stacks : StackState := NIL;
     state := ActState.Started;          (* LL = activeMu *)
     slot: CARDINAL := 0;                (* LL = slotMu; index in slots *)
     floatState : FloatMode.ThreadState; (* per-thread floating point state *)
     heapState : RTHeapRep.ThreadState;  (* per-thread heap state *)
   END;
+
+TYPE
+  StackState = UNTRACED BRANDED REF RECORD
+    stackbase: ADDRESS := NIL;          (* LL = activeMu; stack base for GC *)
+    context: ADDRESS := NIL;            (* LL = activeMu *)
+    next : StackState := NIL;
+  END;
+  (* older versions of CM3 had stackbase and context within the Activation.
+     we add it as a separate structure (alloc and dealloc with Activation)
+     to allow having multiple contexts per thread (coroutines).
+
+     Since there is always at least one context, we can use efficient list
+     routines without allocating a sentinel.  (It is an invariant that the
+     list of stacks is non-empty.)
+
+     Design idea is to keep the active StackState at the head of the list
+     at all times.  When swapping coroutines, update the head to be the
+     active coroutine.
+  *)
 
 PROCEDURE SetState (act: Activation;  state: ActState) =
   CONST text = ARRAY ActState OF TEXT
@@ -486,8 +506,21 @@ PROCEDURE DumpThread (t: Activation) =
     RTIO.PutText("  next:       "); RTIO.PutAddr(t.next);        RTIO.PutChar('\n');
     RTIO.PutText("  prev:       "); RTIO.PutAddr(t.prev);        RTIO.PutChar('\n');
     RTIO.PutText("  handle:     "); RTIO.PutAddr(t.handle);      RTIO.PutChar('\n');
-    RTIO.PutText("  stackbase:  "); RTIO.PutAddr(t.stackbase);   RTIO.PutChar('\n');
-    RTIO.PutText("  context:    "); RTIO.PutAddr(t.context);     RTIO.PutChar('\n');
+    VAR
+      q := t.stacks;
+      first := TRUE;
+    BEGIN
+      WHILE q # NIL DO
+        RTIO.PutText("  stackbase:  "); RTIO.PutAddr(q.stackbase);
+        IF first THEN RTIO.PutText(" (active)") END;
+        RTIO.PutChar('\n');
+        RTIO.PutText("  context:    "); RTIO.PutAddr(q.context);
+        IF first THEN RTIO.PutText(" (active)") END;
+        RTIO.PutChar('\n');
+        q := q.next;
+        first := FALSE;
+      END
+    END;
     RTIO.PutText("  state:      ");
     CASE t.state OF
     | ActState.Started => RTIO.PutText("Started\n");
@@ -512,11 +545,24 @@ PROCEDURE DumpThreads () =
 VAR (* LL=activeMu *)
   allThreads: Activation := NIL;            (* global list of active threads *)
 
+PROCEDURE DisposeStacks(act : Activation) =
+  VAR
+    p := act.stacks;
+  BEGIN
+    WHILE p # NIL DO
+      WITH nxt = p.next DO
+        DISPOSE(p);
+        p := nxt
+      END
+    END
+  END DisposeStacks;
+  
 PROCEDURE CleanThread (r: REFANY) =
   VAR t := NARROW(r, T);
   BEGIN
     pthread_mutex_delete(t.act.mutex);
     pthread_cond_delete(t.act.cond);
+    DisposeStacks(t.act);
     DISPOSE(t.act);
   END CleanThread;
 
@@ -529,7 +575,7 @@ PROCEDURE ThreadBase (param: ADDRESS): ADDRESS =
     me: Activation := param;
   BEGIN
     SetActivation(me);
-    me.stackbase := ADR(me); (* enable GC scanning of this stack *)
+    me.stacks.stackbase := ADR(me); (* enable GC scanning of this stack *)
     me.handle := pthread_self();
 
     (* add to the list of active threads *)
@@ -546,7 +592,7 @@ PROCEDURE ThreadBase (param: ADDRESS): ADDRESS =
     (* remove from the list of active threads *)
     WITH r = pthread_mutex_lock(activeMu) DO <*ASSERT r=0*> END;
       <*ASSERT allThreads # me*>
-      me.stackbase := NIL; (* disable GC scanning of my stack *)
+      me.stacks.stackbase := NIL; (* disable GC scanning of my stack *)
       me.next.prev := me.prev;
       me.prev.next := me.next;
       WITH r = pthread_detach_self(me.handle) DO <*ASSERT r=0*> END;
@@ -594,12 +640,13 @@ PROCEDURE Fork (closure: Closure): T =
   VAR
     act := NEW(Activation,
                mutex := pthread_mutex_new(),
-               cond := pthread_cond_new());
+               cond := pthread_cond_new(),
+               stacks := NEW(StackState));
     size := defaultStackSize;
     t: T := NIL;
   BEGIN
     TRY
-      IF act.mutex = NIL OR act.cond = NIL THEN
+      IF act.mutex = NIL OR act.cond = NIL OR act.stacks = NIL THEN
         RTE.Raise(RTE.T.OutOfMemory);
       END;
       t := NEW(T, act := act, closure := closure, join := NEW(Condition));
@@ -610,6 +657,7 @@ PROCEDURE Fork (closure: Closure): T =
         (* we failed, cleanup *)
         pthread_mutex_delete(act.mutex);
         pthread_cond_delete(act.cond);
+        DisposeStacks(act);
         DISPOSE(act);
       END;
     END;
@@ -982,7 +1030,21 @@ PROCEDURE ProcessMe (me: Activation;  p: PROCEDURE (start, limit: ADDRESS)) =
       RTIO.PutText("Processing act="); RTIO.PutAddr(me); RTIO.PutText("\n"); RTIO.Flush();
     END;
     RTHeapRep.FlushThreadState(me.heapState);
-    ProcessLive(me.stackbase, p);
+    VAR
+      q := me.stacks;
+    BEGIN
+      IF MSDEBUG THEN
+        RTIO.PutText("ProcessMe: ADR(q)="); RTIO.PutAddr(ADR(q)); RTIO.PutText("\n");
+        RTIO.PutText("q.stackbase="); RTIO.PutAddr(q.stackbase); RTIO.PutText("\n");
+        RTIO.Flush();
+      END;
+      ProcessLive(q.stackbase, p);
+      q := q.next;
+      WHILE q # NIL DO
+        ProcessStopped(me.handle, q.stackbase, q.context, p);
+        q := q.next
+      END
+    END
   END ProcessMe;
 
 PROCEDURE ProcessOther (act: Activation;  p: PROCEDURE (start, stop: ADDRESS)) =
@@ -993,8 +1055,15 @@ PROCEDURE ProcessOther (act: Activation;  p: PROCEDURE (start, stop: ADDRESS)) =
       RTIO.PutText("Processing act="); RTIO.PutAddr(act); RTIO.PutText("\n"); RTIO.Flush();
     END;
     RTHeapRep.FlushThreadState(act.heapState);
-    IF act.stackbase # NIL THEN
-      ProcessStopped(act.handle, act.stackbase, act.context, p);
+    VAR
+      q := act.stacks;
+    BEGIN
+      WHILE q # NIL DO
+        IF q.stackbase # NIL THEN
+          ProcessStopped(act.handle, q.stackbase, q.context, p);
+        END;
+        q := q.next;
+      END;
     END;
   END ProcessOther;
 
@@ -1201,16 +1270,118 @@ PROCEDURE SignalHandler (sig: int; <*UNUSED*>info: ADDRESS; context: ADDRESS) =
         RETURN;
       END;
       me.state := ActState.Stopped;
-      <*ASSERT me.context = NIL*>
-      me.context := context;
+      <*ASSERT me.stacks.context = NIL*>
+      me.stacks.context := context;
       WITH r = sem_post() DO <*ASSERT r=0*> END;
       REPEAT sigsuspend() UNTIL me.state = ActState.Starting;
-      me.context := NIL;
+      me.stacks.context := NIL;
       me.state := ActState.Started;
       WITH r = sem_post() DO <*ASSERT r=0*> END;
     END;
     Cerrno.SetErrno(errno);
   END SignalHandler;
+
+PROCEDURE GetStackState() : ADDRESS =
+  VAR
+    me := GetActivation();
+  BEGIN
+    RETURN me.stacks
+  END GetStackState;
+
+PROCEDURE GetCurStackBase() : ADDRESS =
+  VAR
+    stack := LOOPHOLE(GetStackState(),StackState);
+  BEGIN
+    RETURN stack.stackbase
+  END GetCurStackBase;
+
+PROCEDURE DisposeStack(stack : ADDRESS) =
+  VAR
+    me := GetActivation();
+    p : StackState := me.stacks;
+    q : StackState;
+  BEGIN
+    (* cant delete the active stack so no need to check the head *)
+    q := p;
+    p := p.next;
+    WHILE p # NIL DO
+      IF p = stack THEN
+        INC(me.heapState.inCritical);
+        q.next := p.next;
+        p.next := NIL;
+        DEC(me.heapState.inCritical);
+        DISPOSE(p);
+        RETURN
+      END;
+      p := p.next
+    END;
+    <*ASSERT FALSE*>
+  END DisposeStack;
+
+PROCEDURE CreateStackState(base : ADDRESS; context : ADDRESS) : ADDRESS =
+  (* create a new stack record and place it as the first after the
+     active stack record *)
+  VAR
+    s := NEW(StackState, stackbase := base, context := context);
+    me := GetActivation();
+  BEGIN
+    INC(me.heapState.inCritical);
+    s.next := me.stacks.next;
+    me.stacks.next := s;
+    DEC(me.heapState.inCritical);
+    RETURN s
+  END CreateStackState;
+
+PROCEDURE SetCoStack(toStackP    : ADDRESS;
+                     topOfStack  : ADDRESS
+  ) =
+  (* called on a coroutine switch to record stack state:
+     set context of calling coroutine, then swap out stack to the
+     target stack *)
+  VAR
+    me := GetActivation();
+    p : StackState := me.stacks;
+    q : StackState := NIL;
+    toStack := LOOPHOLE(toStackP,StackState);
+  BEGIN
+    IF MSDEBUG THEN
+      RTIO.PutText("SetCoStack toStack="); RTIO.PutAddr(toStack);
+      RTIO.PutText(" me="); RTIO.PutAddr(me.stacks);
+      RTIO.PutText(" equal="); RTIO.PutInt(ORD(me.stacks=toStack));
+      RTIO.PutText("\n");
+      
+      RTIO.PutText("SetCoStack stackbase="); RTIO.PutAddr(me.stacks.stackbase);
+      RTIO.PutText(" update="); RTIO.PutAddr(toStack.stackbase);
+      RTIO.PutText(" equal="); RTIO.PutInt(ORD(me.stacks.stackbase=toStack.stackbase));
+      RTIO.PutText(" topOfStack="); RTIO.PutAddr(topOfStack);
+
+      RTIO.PutText("\n"); RTIO.Flush()
+    END;
+
+    (* assert that this is an effective stack swap *)
+    <*ASSERT me.stacks # toStack*>
+
+    me.stacks.context := topOfStack;
+
+    (* find to in stacks, remove it from list, put it first *)
+    IF p = toStack THEN RETURN END; (* already in right place *)
+    q := p;
+    p := p.next;
+    WHILE p # NIL DO
+      IF p = toStack THEN
+        (* delete it from list *)
+        q.next := p.next;
+
+        (* move it to the front of list *)
+        p.next := me.stacks;
+        me.stacks := p;
+        RETURN (* and we're done *)
+      END;
+      q := p;
+      p := p.next
+    END;
+    <*ASSERT FALSE*> (* couldnt find stack *)
+  END SetCoStack;
 
 (*----------------------------------------------------------- misc. stuff ---*)
 
@@ -1321,9 +1492,10 @@ PROCEDURE InitWithStackBase (stackbase: ADDRESS) =
 
     me := NEW(Activation,
               mutex := pthread_mutex_new(),
-              cond := pthread_cond_new());
+              cond := pthread_cond_new(),
+              stacks := NEW(StackState));
     InitActivations(me);
-    me.stackbase := stackbase;
+    me.stacks.stackbase := stackbase;
     IF me.mutex = NIL OR me.cond = NIL THEN
       Die(ThisLine(), "Thread initialization failed.");
     END;
@@ -1504,7 +1676,22 @@ PROCEDURE PopEFrame (frame: ADDRESS) =
     me.frame := frame;
   END PopEFrame;
 
-VAR DEBUG := RTParams.IsPresent("debugthreads");
+PROCEDURE IncInCritical() =
+  VAR
+    me := GetActivation();
+  BEGIN
+    INC(me.heapState.inCritical)
+  END IncInCritical;
 
+PROCEDURE DecInCritical() =
+  VAR
+    me := GetActivation();
+  BEGIN
+    DEC(me.heapState.inCritical)
+  END DecInCritical;
+  
+VAR DEBUG := RTParams.IsPresent("debugthreads");
+VAR MSDEBUG := RTParams.IsPresent("debugmultistackgc");
+  
 BEGIN
 END ThreadPThread.

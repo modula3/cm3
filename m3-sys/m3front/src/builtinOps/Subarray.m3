@@ -23,6 +23,7 @@ PROCEDURE TypeOf (ce: CallExpr.T): Type.T =
 (* Called indirectly through MethodList. *)
 PROCEDURE Check (ce: CallExpr.T;  VAR cs: Expr.CheckState) =
   VAR t, u, v, index, elt: Type.T;
+  VAR IsOK := TRUE;
   BEGIN
     t := Type.Base (Expr.TypeOf (ce.args[0]));
     u := Expr.TypeOf (ce.args[1]);
@@ -30,13 +31,20 @@ PROCEDURE Check (ce: CallExpr.T;  VAR cs: Expr.CheckState) =
     ce.type := ErrType.T; (* May change. *) 
     IF (NOT ArrayType.Split (t, index, elt)) THEN
       Error.Msg ("SUBARRAY: first argument must be an array (2.6.3).");
-    ELSIF (NOT Type.IsAssignable (Card.T, u)) THEN
+      IsOK := FALSE;
+    END;
+    IF (NOT Type.IsAssignable (Card.T, u)) THEN
       Error.Msg ("SUBARRAY: second argument must be assignable to CARDINAL (2.6.3).");
-    ELSIF (NOT Type.IsAssignable (Card.T, v)) THEN
+      IsOK := FALSE;
+    END;
+    IF (NOT Type.IsAssignable (Card.T, v)) THEN
       Error.Msg ("SUBARRAY: third argument must be assignable to CARDINAL (2.6.3).");
-    ELSIF ArrayType.EltAlign (t) MOD Target.Byte # 0 THEN
+      IsOK := FALSE;
+    END
+    IF ArrayType.EltAlign (t) MOD Target.Byte # 0 THEN
       Error.Msg ("CM3 restriction: SUBARRAY elements must be byte-aligned (2.2.5).");
-    ELSE
+      IsOK := FALSE;
+    IF IsOK THEN
       ce.args[1] := RTCheckNonNeg (ce.args[1], cs);
       ce.args[2] := RTCheckNonNeg (ce.args[2], cs);
       Expr.NeedsAddress (ce.args[0]);

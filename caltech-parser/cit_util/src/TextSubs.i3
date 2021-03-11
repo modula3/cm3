@@ -7,4 +7,7 @@ TYPE
     int(original: TEXT; replacement: INTEGER);
     apply(src: TEXT): TEXT;
   END;
+
+PROCEDURE FromText(t: TEXT; argDelim:=':'; nextDelim:='\n'): T;
+
 END TextSubs.

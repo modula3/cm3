@@ -5,7 +5,7 @@
 #----------------------------------------------
 
 # set to the name of your architecture directory:
-ARCH="DS"
+ARCH="AMD64_LINUX"
 
 # set to "-verbose" if you want test program traces
 # VERBOSE="-verbose"
@@ -37,7 +37,7 @@ done
 
 if [ ! -f $ARCH/Test ]
 then
-    m3build
+    cm3
 fi
 for i in $TESTS
 do

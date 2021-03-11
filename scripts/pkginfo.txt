@@ -1,4 +1,3 @@
-import-libs base core front unicode min gui comm caltech-parser
 m3core base core front unicode min
 libm3 base core front unicode min
 windowsResources core
@@ -86,10 +85,6 @@ formsvbt gui
 formsview gui m3devtool
 formsedit gui m3devtool
 codeview anim
-cvsup/suplib cvsup
-cvsup/client cvsup
-cvsup/server cvsup
-cvsup/cvpasswd cvsup
 mg anim
 mgkit anim
 opengl gui
@@ -153,7 +148,7 @@ parserlib/klex caltech-parser
 parserlib/kyacc caltech-parser
 parserlib/kext caltech-parser
 parserlib/parserlib caltech-parser
-parserlib/parserlib/test caltech-parser
+parserlib/parserlib/test_parserlib caltech-parser
 
 kate gui
 sgml devlib
@@ -193,5 +188,47 @@ elego/prjbase elego
 elego/prjm elego
 m3sleep core
 
+semaphore caltech-other
+trie caltech-other
+matrix caltech-other
+minimize caltech-other
+voronoi caltech-other
+integrate caltech-other
+splines caltech-other
+newuoa caltech-other
+
+csv caltech-other
+csvalign caltech-other
+sx caltech-other
+m3readline caltech-other
+
+cptr caltech-other
+bdd caltech-other
+bool caltech-other
+magic caltech-other
+magicextras caltech-other
+mst caltech-other
+boxes caltech-other
+simplegrid caltech-other
+router caltech-other
+router-pauls caltech-other
+router-pauls3 caltech-other
+router-pauls4 caltech-other
+conflictdensity caltech-other
+gentest caltech-other
+magraster caltech-other
+mergealiases caltech-other
+
+scheme-lib m3-scheme
+mscheme m3-scheme
+schemesig m3-scheme
+modula3scheme m3-scheme
+schemereadline m3-scheme
+mscheme-interactive m3-scheme
+mscheme-interactive_r m3-scheme
+mscheme-threads m3-scheme
+
 cm3 core front unicode
 m3cc core front unicode m3gnudevtool
+
+

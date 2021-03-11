@@ -1,0 +1,18 @@
+readonly M3_BACKEND_MODE = "C"
+
+% TODO Remove these lines and delegate to Darwin.common
+% but there is a problem currently.
+readonly SYSTEM_ASM = "as"
+readonly SYSTEM_CC = "@clang -fPIC"
+readonly SYSTEM_CC_LD = "clang++ -g -fPIC"
+% readonly SYSTEM_LIBTOOL = "libtool"
+
+readonly TARGET = "ARM64_DARWIN"
+
+% probably not used readonly GNU_PLATFORM = "arm-apple-darwin"
+readonly DarwinArch = "arm64"
+
+include("ARM64.common")
+include("Darwin.common")
+
+M3_PARALLEL_BACK = 20

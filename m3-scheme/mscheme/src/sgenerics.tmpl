@@ -1,0 +1,54 @@
+/* $Id$ */
+
+_MSCHEME  = TOP & "/mscheme/interactive/" & BUILD_DIR & "/mscheme"
+_SCODEGEN = TOP & "/mscheme/scheme-lib/src/scodegen.scm" /* for now, easier to modify */
+_SEXIT    = "exit"
+
+readonly proc scodegen(nam) is
+	local makefile = path_of("m3makefile")
+
+	/* we produce the derived mkf */
+	local derived_mkf = "../" & BUILD_DIR & "/" & nam & ".m3m"
+
+	/* source code. */
+	local g = "../src/" & nam & ".scm"
+	
+	/* name of a scheme file for passing the name of the output
+	   to the scodegen system */
+	local derived_scm = nam & "_derv.scm"
+
+	/* make the Scheme definition */
+	local mkf_defn = "(define scodegen-m3makefile \"" & derived_mkf & "\")"
+
+	/* sources we check for staleness:
+	     * m3makefile
+	     * source Scheme code
+         */
+
+	local sources = [g, makefile]
+	if stale(derived_mkf, sources)
+
+		/* write scheme defn to file */
+		> derived_scm in
+			write (mkf_defn, CR)
+		end
+
+		/* run the scheme interpreter:
+		   we want to call: 
+			0. basic Scheme defs (basic + display)
+			1. derived scheme file with output defn
+			2. scodegen library
+			3. source file
+			4. exit.scm
+ 		 */
+
+		_exec([_MSCHEME, "-unsafeenv", derived_scm, _SCODEGEN, g, _SEXIT])
+	end
+	include (derived_mkf)
+	_check_clean (derived_mkf) /* delete this to keep from errors */
+	_check_clean (derived_scm) /* delete this for the sake of order */
+
+	/* we should also delete the SQL, but our Scheme calling 
+	   convention is as yet not good enough (need to be able to
+	   bind vars on the cmd line, I think) */
+end

@@ -1,0 +1,61 @@
+/* $Id$ */
+
+readonly proc _map (nm, from, to, vis) is
+	build_generic_intf(nm, "Map", [from, to], vis)	
+	build_generic_impl(nm, "Map", [from, to])
+end
+
+readonly proc Map (nm, from, to) is _map (nm, from, to, VISIBLE) end
+readonly proc map (nm, from, to) is _map (nm, from, to, HIDDEN) end
+
+/**********************************************************************/
+
+readonly proc _tblMap (nm, tbl, map, vis) is
+	build_generic_intf(nm, "TblMap", [tbl, map], vis)	
+	build_generic_impl(nm, "TblMap", [tbl, map])
+end
+
+readonly proc TblMap (nm, tbl, map) is _tblMap (nm, tbl, map, VISIBLE) end
+readonly proc tblMap (nm, tbl, map) is _tblMap (nm, tbl, map, HIDDEN) end
+
+/**********************************************************************/
+
+readonly proc _memo (nm, map, tbl, vis) is
+	build_generic_intf(nm, "Memo", [map, tbl], vis)	
+	build_generic_impl(nm, "Memo", [map, tbl])
+end
+
+readonly proc Memo (nm, map, tbl) is _memo (nm, map, tbl, VISIBLE) end
+readonly proc memo (nm, map, tbl) is _memo (nm, map, tbl, HIDDEN) end
+
+/**********************************************************************/
+
+% note there is no _table in table.tmpl from DECSRC
+
+readonly proc tableAndMap (nm, from, to) is 
+  map    (nm & "Map"   , from, to)
+  table  (nm           , from, to)
+  tblMap (nm & "TblMap", nm & "Tbl", nm & "Map")
+  memo   (nm & "Memo"  , nm & "Map", nm & "Tbl")
+end
+
+readonly proc TableAndMap (nm, from, to) is 
+  Map (nm & "Map", from, to)
+  Table (nm, from, to)
+  TblMap (nm & "TblMap", nm & "Tbl", nm & "Map")
+  Memo   (nm & "Memo"  , nm & "Map", nm & "Tbl")
+end
+
+/**********************************************************************/
+
+readonly proc _mapMap (f, t, vis) is
+	local from = f & "Map"
+	local to   = t & "Map"
+  local nm = from & "2" & to
+  build_generic_intf(nm, "MapMap", [from, to], vis)
+  build_generic_impl(nm, "MapMap", [from, to])
+end
+
+readonly proc MapMap (from, to) is _mapMap (from, to, VISIBLE) end
+readonly proc mapMap (from, to) is _mapMap (from, to, HIDDEN) end
+

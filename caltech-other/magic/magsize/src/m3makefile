@@ -1,0 +1,12 @@
+/* $Id$ */
+
+import ("libm3")
+import ("cit_common")
+import ("cit_util")
+import ("magic")
+import ("celldb")
+
+implementation ("Main")
+
+program ("magsize")
+

@@ -15,7 +15,8 @@
  * its parameter.
  */
 #define _XOPEN_SOURCE 500
-#define _BSD_SOURCE
+//#define _BSD_SOURCE deprecated
+#define _DEFAULT_SOURCE
 #define _XPG4_2
 #define _DARWIN_C_SOURCE
 

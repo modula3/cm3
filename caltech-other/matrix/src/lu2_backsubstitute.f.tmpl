@@ -1,0 +1,47 @@
+c
+c     $Id$
+c     
+      subroutine lu2_backsubstitute_EXTENSION(m, indx, b, n)
+      implicit none
+      integer n, indx(n)
+      TYPE m(n,n), b(n)
+
+c     local vars
+      integer ii, ll
+      TYPE sum
+
+c     indices
+      integer row, col
+
+      ii = 0
+
+      do 300 row = 1, n
+
+c     remember, we're using Modula-3/C addressing conventions in interface
+c
+c                         |
+c                         v
+c
+         ll = indx(row) + 1
+         sum = b(ll)
+         b(ll) = b(row)
+         if (ii .ne. 0) then
+            do 100 col = ii, row-1
+               sum = sum - m(col,row)*b(col)
+ 100        continue
+         else if (sum .ne. 0.0) then
+            ii = row
+         endif
+         b(row) = sum
+ 300  continue
+
+      do 500 row = n,1,-1
+         sum = b(row)
+         do 400 col = row+1, n 
+            sum = sum - m(col,row)*b(col)
+ 400     continue
+         b(row) = sum / m(row,row)
+ 500  continue
+      end
+         
+         

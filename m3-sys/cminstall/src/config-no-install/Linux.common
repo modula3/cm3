@@ -5,7 +5,18 @@
 
 readonly TARGET_OS = "LINUX"
 
-SYSTEM_LD = SYSTEM_CC
+if not defined ("SYSTEM_CXXXC")
+   SYSTEM_CXXXC = SYSTEM_CC
+end
+
+% use the gold linker for large links in preference to the system linker
+% if you have lld installed it is better still
+%LD_PREF = " "
+LD_PREF = " -fuse-ld=gold"
+%LD_PREF = " -fuse-ld=lld"
+
+SYSTEM_LD = SYSTEM_CXXXC
+  & LD_PREF
   & " -Wl,-z,now"
   & " -Wl,-z,origin"
   & " -Bsymbolic"

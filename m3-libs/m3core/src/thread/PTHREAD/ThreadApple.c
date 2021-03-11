@@ -97,17 +97,23 @@ typedef x86_thread_state64_t  m3_thread_state_t;
 typedef struct arm_thread_state m3_thread_state_t;
 #define M3_THREAD_STATE         ARM_THREAD_STATE
 #define M3_THREAD_STATE_COUNT   ARM_THREAD_STATE_COUNT
-/*define M3_STACK_REGISTER r13*/
-#define M3_STACK_REGISTER       sp
 #define M3_STACK_ADJUST         0
 #endif /* arm */
+
+#ifdef __arm64__
+/* TODO ARM ARM_UNIFIED ARM64? */
+typedef _STRUCT_ARM_THREAD_STATE64 m3_thread_state_t;
+#define M3_THREAD_STATE            ARM_THREAD_STATE64
+#define M3_THREAD_STATE_COUNT      ARM_THREAD_STATE64_COUNT
+#define M3_STACK_ADJUST            0
+#endif /* arm64 */
 
 void
 __cdecl
 ThreadPThread__ProcessStopped (m3_pthread_t mt, void *bottom, void *context,
                                void (*p)(void *start, void *limit))
 {
-  void *sp = { 0 };
+  char *sp = { 0 };
   m3_thread_state_t state = { 0 };
   kern_return_t status = { 0 };
   mach_msg_type_number_t thread_state_count = M3_THREAD_STATE_COUNT;
@@ -129,7 +135,12 @@ ThreadPThread__ProcessStopped (m3_pthread_t mt, void *bottom, void *context,
             (int)thread_state_count, (int)M3_THREAD_STATE_COUNT);
     abort();
   }
-  sp = (void *)(state.M3_STACK_REGISTER - M3_STACK_ADJUST);
+#if defined(__arm__) || defined(__arm64__)
+  sp = (char*)__darwin_arm_thread_state64_get_sp(state);
+#else
+  sp = (char*)(state.M3_STACK_REGISTER);
+#endif
+  sp -= M3_STACK_ADJUST;
   /* process the stack */
 #if 0
   assert(stack_grows_down); /* See ThreadPThreadC.c */

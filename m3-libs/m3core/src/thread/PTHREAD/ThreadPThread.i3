@@ -142,5 +142,52 @@ PROCEDURE ProcessLive
 PROCEDURE ProcessStopped
   (t: pthread_t; bottom, context: ADDRESS; p: PROCEDURE(start, limit: ADDRESS));
 (*---------------------------------------------------------------------------*)
+(* coroutine support *)
+
+PROCEDURE SetCoStack(toStack     : ADDRESS;
+                     (* address of StackState record we're going TO *)
+                     
+                     topOfStack : ADDRESS
+                     (* address of top of stack we're coming FROM,
+                        must have the context pushed before being passed here,
+                        so that we have the register state on the stack *));
+  (* to denote that we have/are about to switch stacks on a coroutine switch.
+
+  NOTE THAT:        
+  
+  when the stack disagrees with the execution context is a critical 
+  section for GC 
+
+  therefore, clients MUST call IncInCritical before SetCoStack.
+
+  The pattern is:
+
+  IncInCritical()
+  SetCoStack(...)
+  (* jump to new context *)
+  (* running in new context *)
+  DecInCritical()
+*)
+  
+PROCEDURE GetStackState() : ADDRESS;
+  (* current stack state *)
+
+PROCEDURE GetCurStackBase() : ADDRESS;
+  (* threading library's idea of what our current stack base is 
+     --- useful for assertions, if nothing else *)
+
+PROCEDURE CreateStackState(base : ADDRESS; context : ADDRESS) : ADDRESS;
+  (* create a new stack state *)
+
+PROCEDURE DisposeStack(stack : ADDRESS);
+  (* destroy a stack state *)
+
+PROCEDURE IncInCritical();
+  (* increment inCritical semaphore for my thread *)
+
+PROCEDURE DecInCritical();
+  (* deccrement inCritical semaphore for my thread *)
+
+(*---------------------------------------------------------------------------*)
 
 END ThreadPThread.

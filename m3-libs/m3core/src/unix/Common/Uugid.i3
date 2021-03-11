@@ -11,5 +11,6 @@ FROM Ctypes IMPORT int;
 <*EXTERNAL "Uugid__getegid"*>PROCEDURE getegid (): gid_t;
 <*EXTERNAL "Uugid__getuid"*>PROCEDURE getuid(): uid_t;
 <*EXTERNAL "Uugid__setreuid"*>PROCEDURE setreuid(ruid: uid_t; euid: uid_t): int;
-
+<*EXTERNAL "Uugid__havegroup"*>PROCEDURE havegroup(qgid : gid_t): int;
+(* returns 1 if qgid is member of getgroups(), -1 in case of error, 0 otherwise *)
 END Uugid.

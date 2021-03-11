@@ -1,0 +1,54 @@
+magic
+tech scmos
+timestamp 976045849
+<< metal1 >>
+rect 716 1330 723 1333
+rect -228 1245 -221 1248
+rect 1260 1043 1267 1046
+rect 357 981 364 984
+rect -479 803 -472 806
+rect 13 789 20 792
+rect 880 766 887 769
+rect 366 621 373 624
+rect 853 437 860 440
+rect -9 425 -2 428
+rect 979 362 986 365
+rect 366 339 373 342
+rect -518 327 -511 330
+rect 94 264 101 267
+rect 169 181 176 184
+rect -43 174 -36 177
+rect 354 173 361 176
+rect 504 75 511 78
+rect 85 62 92 65
+rect 14 50 21 53
+rect 346 36 353 39
+rect 1404 34 1411 37
+rect 36 29 43 32
+rect 0 0 7 3
+<< labels >>
+rlabel metal1 4 2 4 2 6 x
+rlabel metal1 1264 1045 1264 1045 6 x
+rlabel metal1 40 31 40 31 6 x
+rlabel metal1 18 52 18 52 6 x
+rlabel metal1 89 64 89 64 6 x
+rlabel metal1 98 266 98 266 6 x
+rlabel metal1 350 38 350 38 6 x
+rlabel metal1 -39 176 -39 176 6 x
+rlabel metal1 370 341 370 341 6 x
+rlabel metal1 358 175 358 175 6 x
+rlabel metal1 173 183 173 183 6 x
+rlabel metal1 -5 427 -5 427 6 x
+rlabel metal1 370 623 370 623 6 x
+rlabel metal1 -475 805 -475 805 6 x
+rlabel metal1 -514 329 -514 329 6 x
+rlabel metal1 17 791 17 791 6 x
+rlabel metal1 857 439 857 439 6 x
+rlabel metal1 -224 1247 -224 1247 6 x
+rlabel metal1 884 768 884 768 6 x
+rlabel metal1 720 1332 720 1332 6 x
+rlabel metal1 361 983 361 983 6 x
+rlabel metal1 1408 36 1408 36 6 x
+rlabel metal1 508 77 508 77 6 x
+rlabel metal1 983 364 983 364 6 x
+<< end >>

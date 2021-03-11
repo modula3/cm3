@@ -1,0 +1,3 @@
+connect b0.r.0 b1.l.0
+connect b0.r.1 b1.l.1
+connect b0.r.e b1.l.e
