@@ -45,9 +45,8 @@ CoffTime__Now(void)
 
 INTEGER /* should be LONGINT */
 __cdecl
-CoffTime__OfFile(TEXT tpath)
+CoffTime__OfFile(const char* path)
 {
-    const char* path = (tpath ? M3toC__SharedTtoS(tpath) : NULL);
     INTEGER t = { 0 }; /* ignore error */
     if (path)
     {
@@ -63,7 +62,6 @@ CoffTime__OfFile(TEXT tpath)
         if (stat(path, &st) == 0)
             t = st.st_mtime;
 #endif
-        M3toC__FreeSharedS(tpath, path);
     }
     return t;
 }

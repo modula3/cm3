@@ -21,20 +21,17 @@ CoffTime__Now(void)
 
 INTEGER /* should be LONGINT */
 __cdecl
-CoffTime__OfFile(TEXT tpath)
+CoffTime__OfFile(const char* path)
 {
-    const char* path;
     struct stat st;
     int i;
 
-    if (tpath == NULL)
+    if (path == NULL)
         return 0;
 
     ZERO_MEMORY(st);
-    path = M3toC__SharedTtoS(tpath);
 
     i = stat(path, &st);
-    M3toC__FreeSharedS(tpath, path);
     if (i) /* ignore error */
         return 0;
     return st.st_mtime;
