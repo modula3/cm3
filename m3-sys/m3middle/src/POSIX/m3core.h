@@ -43,20 +43,6 @@ typedef __int64 INTEGER;
 typedef ptrdiff_t INTEGER;
 #endif
 
-typedef void* TEXT;
-
-const char*
-__cdecl
-M3toC__SharedTtoS(TEXT);
-
-void
-__cdecl
-M3toC__FreeSharedS(TEXT, const char*);
-
-TEXT
-__cdecl
-M3toC__CopyStoT(const char*);
-
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
