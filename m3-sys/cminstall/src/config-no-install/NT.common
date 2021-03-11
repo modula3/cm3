@@ -9,6 +9,8 @@
 % arbitrary configurations can be produced by changing them.
 %
 
+M3_PARALLEL_BACK = 20 % AMD64 machines usually have lots of cores
+
 %-------------------------------------------------------------------
 % defined by cm3, but not the other MxConfig users
 if not defined("CR") CR = "\n" end
@@ -685,7 +687,7 @@ proc compile_c_ms(source, object, options, optimize, debug) is
 
     local Listing = "_m3.lst"
     if defined("pos")
-       Listing = Path_GetBase (source) & ".lst"
+       Listing = Path_GetLastElement (source) & ".lst"
     end
     local readonly Command = ["cl.exe", escape(subst_chars(args, "\\", "/")), "-c", escape(source), "-Fo" & object]
     local ret = try_exec("@" & Command, ">", Listing)
@@ -721,7 +723,7 @@ proc compile_c_gnu(source, object, options, optimize, debug) is
     if M3_PROFILING
         args += "-pg"
     end
-    return try_exec("@g++", "-gstabs+", escape(subst_chars(args, "\\", "/")), "-c", subst_chars(source, "\\", "/"), "-o", object)
+    return try_exec("@g++", "-g", escape(subst_chars(args, "\\", "/")), "-c", subst_chars(source, "\\", "/"), "-o", object)
 end
 
 proc compile_c(source, object, options, optimize, debug) is
@@ -922,7 +924,7 @@ proc make_dll_gnu(options, objects, imported_libs, lib_file, def_file, dll_file,
 
     return try_exec(
             "@g++",
-            "-gstabs+",
+            "-g",
             %"-v",
             "-shared", % must be visible to compiler
             "-Wl,"
@@ -1274,7 +1276,7 @@ proc m3_link_gnu(prog, options, objects, imported_libs, shared, pgm_file, listin
 
     return try_exec(
             "@g++",
-            "-gstabs+",
+            "-g",
             %"-v",
             "-Wl,"
                 & WriteResponseFile(

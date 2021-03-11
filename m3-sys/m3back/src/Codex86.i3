@@ -231,7 +231,14 @@ TYPE Op = { oAND,   oXOR,   oOR,    oMOV,   oADD,  oADC,  oSUB,   oSBB,
             oCMP,   oNEG,   oNOT,   oLEA,   oSHL,  oSAR,  oSHR,   oSHLD,
             oSHRD,  oROL,   oROR,   oSAHF,  oWAIT, oCLD,  oSTD,   oREP,
             oMOVSB, oMOVSD, oSTOSB, oSTOSD, oCWDE, oCDQ,  oLEAVE, oRET,
-            oNOP, oXCHG, oXADD };
+            oNOP,   oXCHG,  oXADD };
+
+CONST OpToText = ARRAY Op OF TEXT {
+  "oAND",   "oXOR",   "oOR",    "oMOV",   "oADD",  "oADC",  "oSUB",   "oSBB",
+  "oCMP",   "oNEG",   "oNOT",   "oLEA",   "oSHL",  "oSAR",  "oSHR",   "oSHLD",
+  "oSHRD",  "oROL",   "oROR",   "oSAHF",  "oWAIT", "oCLD",  "oSTD",   "oREP",
+  "oMOVSB", "oMOVSD", "oSTOSB", "oSTOSD", "oCWDE", "oCDQ",  "oLEAVE", "oRET",
+  "oNOP",   "oXCHG",  "oXADD" };
 
 CONST opcode = ARRAY Op OF OpCode
   { OpCode { "AND",  16_25, 16_83, 16_81, 4, 16_20, 16_22 },

@@ -23,123 +23,6 @@ INTERFACE Target;
 
 IMPORT TInt, TWord;
 
-TYPE
-  Systems = {
-    ALPHA32_VMS,
-    ALPHA64_VMS,
-    ALPHA_LINUX,
-    ALPHA_OPENBSD,
-    ALPHA_OSF,
-    AMD64_DARWIN,
-    AMD64_FREEBSD,
-    AMD64_LINUX,
-    AMD64_NETBSD,
-    AMD64_OPENBSD,
-    AMD64_SOLARIS,
-    ARM_DARWIN,
-    ARM_LINUX,    (* little endian, v6, hard float, vfp *)
-    ARMEL_LINUX,  (* same thing *)
-    FreeBSD4,
-    I386_CYGWIN,
-    I386_DARWIN,
-    I386_FREEBSD,
-    I386_INTERIX,
-    I386_LINUX,
-    I386_MINGW,
-    I386_NETBSD,
-    I386_NT,
-    I386_OPENBSD,
-    I386_SOLARIS,
-    IA64_FREEBSD,
-    IA64_HPUX,
-    IA64_LINUX,
-    IA64_NETBSD,
-    IA64_NT,
-    IA64_OPENBSD,
-    IA64_VMS,
-    LINUXLIBC6,
-    MIPS64_OPENBSD, (* e.g. SGI *)
-    MIPS64EL_OPENBSD, (* e.g. Loongson *)
-    NT386,
-    PA32_HPUX,
-    PA64_HPUX,
-    PPC32_OPENBSD,
-    PPC64_DARWIN,
-    PPC_DARWIN,
-    PPC_LINUX,
-    SOLgnu,
-    SOLsun,
-    SPARC32_LINUX,
-    SPARC32_SOLARIS,
-    SPARC64_LINUX,
-    SPARC64_OPENBSD,
-    SPARC64_SOLARIS,
-    AMD64_NT,
-    ARM64_DARWIN,
-    ARM64_LINUX,
-    ARM64_NT,
-    RISCV64_LINUX,
-    Undefined
-  };
-
-CONST
-  SystemNames = ARRAY OF TEXT {
-    "ALPHA32_VMS",
-    "ALPHA64_VMS",
-    "ALPHA_LINUX",
-    "ALPHA_OPENBSD",
-    "ALPHA_OSF",
-    "AMD64_DARWIN",
-    "AMD64_FREEBSD",
-    "AMD64_LINUX",
-    "AMD64_NETBSD",
-    "AMD64_OPENBSD",
-    "AMD64_SOLARIS",
-    "ARM_DARWIN",
-    "ARM_LINUX",    (* little endian, v6, hard float, vfp *)
-    "ARMEL_LINUX",  (* same thing *)
-    "FreeBSD4",
-    "I386_CYGWIN",
-    "I386_DARWIN",
-    "I386_FREEBSD",
-    "I386_INTERIX",
-    "I386_LINUX",
-    "I386_MINGW",
-    "I386_NETBSD",
-    "I386_NT",
-    "I386_OPENBSD",
-    "I386_SOLARIS",
-    "IA64_FREEBSD",
-    "IA64_HPUX",
-    "IA64_LINUX",
-    "IA64_NETBSD",
-    "IA64_NT",
-    "IA64_OPENBSD",
-    "IA64_VMS",
-    "LINUXLIBC6",
-    "MIPS64_OPENBSD",
-    "MIPS64EL_OPENBSD",
-    "NT386",
-    "PA32_HPUX",
-    "PA64_HPUX",
-    "PPC32_OPENBSD",
-    "PPC64_DARWIN",
-    "PPC_DARWIN",
-    "PPC_LINUX",
-    "SOLgnu",
-    "SOLsun",
-    "SPARC32_LINUX",
-    "SPARC32_SOLARIS",
-    "SPARC64_LINUX",
-    "SPARC64_OPENBSD",
-    "SPARC64_SOLARIS",
-    "AMD64_NT",
-    "ARM64_DARWIN",
-    "ARM64_LINUX",
-    "ARM64_NT",
-    "RISCV64_LINUX"
-  };
-
 CONST
   OSNames = ARRAY OF TEXT { "POSIX", "WIN32" };
   EndianNames = ARRAY OF TEXT { "LITTLE", "BIG" }; 
@@ -254,12 +137,7 @@ PROCEDURE Init
    was successful.  *)
 
 VAR (*CONST*)
-  System: Systems := Systems.Undefined; (* initialized by "Init" *)
-
-VAR (*CONST*)
   System_name: TEXT := NIL; (* initialized by "Init" *)
-
-VAR (*CONST*)
   OS_name: TEXT := NIL; (* initialized by "Init" *)
 
 (*------------------------------------------ machine/code generator types ---*)
@@ -456,6 +334,10 @@ VAR (*CONST*)
 
 (* sizes are specified in bits *)
 
+TYPE Endian = { Undefined, Little, Big };
+VAR endian: Endian;
+  (* Little => byte[0] of an integer contains its least-significant bits *)
+
 CONST
   Byte = 8;  (* minimum addressable unit (in bits) *)
 
@@ -481,14 +363,39 @@ CONST
    *
    * Comments suggest it might have been not 8 for M68k, SH, and PA. *)
 
-VAR (*CONST*)
-  Little_endian : BOOLEAN;
-  (* TRUE => byte[0] of an integer contains its least-significant bits *)
-
-  PCC_bitfield_type_matters: BOOLEAN;
+  PCC_bitfield_type_matters = TRUE;
   (* TRUE => the C compiler uses the type rather than the size of
-     a bit-field to compute the alignment of the struct *)
+   * a bit-field to compute the alignment of the struct
+   *
+   * What this means is:
+   * Always:
+   *   sizeof(struct { int a; }) == 4
+   *   sizeof(struct { char a; }) == 1
+   *
+   * PCC_bitfield_type_matters = false:
+   *   sizeof(struct { int a : 8; }) == 1
+   *
+   * PCC_bitfield_type_matters = true:
+   *   sizeof(struct { int a : 8; }) == 4
+   *
+   * Bitfields are aligned by their type, not their size,
+   * affecting then the alignment of the container.
+   *
+   * This is true for the vast majority of gcc targets.
+   *
+   * In Modula3 this presumably translates to:
+   * Always:
+   *   BYTESIZE(RECORD a:int; END) == 4
+   *   BYTESIZE(RECORD a:CHAR; END) == 1
+   *
+   * PCC_bitfield_type_matters = false:
+   *   BYTESIZE(RECORD BITS 8 FOR a:int; END) == 1
+   *
+   * PCC_bitfield_type_matters = true:
+   *   BYTESIZE(RECORD BITS 8 FOR a:int; END) == 4
+   *)
 
+VAR (*CONST*)
   Allow_packed_byte_aligned: BOOLEAN;
   (* Allow the compiler to align scalar types on byte boundaries when packing.
      The target processor must support byte alignment of scalar store and
@@ -531,11 +438,14 @@ VAR (*CONST*)
        a small offset.
     *)
 
-VAR (*CONST*)
   (* floating point values *)
-  All_floats_legal : BOOLEAN;
+  All_floats_legal = TRUE;
   (* If all bit patterns are "legal" floating point values (i.e. they can
-     be assigned without causing traps or faults). *)
+   * be assigned without causing traps or faults).
+   * This is true for all targets except VAX.
+   *)
+
+VAR (*CONST*)
 
   Has_stack_walker: BOOLEAN;
   (* TRUE => generate PC-tables for exception scopes.  Otherwise, generate

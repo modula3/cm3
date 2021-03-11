@@ -1,7 +1,7 @@
 readonly TARGET = "I386_OPENBSD"
 readonly GNU_PLATFORM = "i686-openbsd" % "cpu-os" string for GNU
 
-SYSTEM_CC = "g++ -gstabs+ -m32 -fPIC"
+SYSTEM_CC = "g++ -g -m32 -fPIC"
 readonly SYSTEM_ASM = "as -32"
 
 include("I386.common")

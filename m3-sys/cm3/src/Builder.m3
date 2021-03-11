@@ -107,8 +107,8 @@ TYPE
     main          : M3ID.T;             (* "Main" *)
     m3env         : Env;                (* the compiler's environment closure *)
     target        : TEXT;               (* target machine *)
-    (* target_os is misused; needs work *)
-    target_os     := M3Path.OSKind.Unix;(* target os *)
+    (* target_oskind is misused; needs work *)
+    target_oskind := M3Path.OSKind.Unix; (* target oskind: Win32 or Unix *)
     m3backend_mode: M3BackendMode_t;    (* tells how to turn M3CG -> object *)
     m3backend     : ConfigProc;         (* translate M3CG -> ASM or OBJ *)
     m3llvm        : ConfigProc;         (* translate M3CG -> LLVM bitcode *) 
@@ -168,7 +168,7 @@ PROCEDURE SetupNamingConventionsInternal (VAR s : State; mach : Quake.Machine) =
 
        The host has always been probed correctly, and the Quake variables were
        not checked at the right time. Host and target naming conventions rarely
-       varied.  Current uses of target_os need attention. *)
+       varied.  Current uses of target_oskind need attention. *)
     
     value := GetDefn (s, "NAMING_CONVENTIONS");
     IF value # NIL THEN
@@ -177,9 +177,9 @@ PROCEDURE SetupNamingConventionsInternal (VAR s : State; mach : Quake.Machine) =
 
     value := GetDefn (s, "TARGET_NAMING");
     IF value # NIL THEN
-      WITH target_os = ConvertNamingConventionStringToEnum (s, value) DO
-        s.target_os := target_os;
-        M3Path.SetTargetOS (target_os);
+      WITH target_oskind = ConvertNamingConventionStringToEnum (s, value) DO
+        s.target_oskind := target_oskind;
+        M3Path.SetTargetOS (target_oskind);
       END;
     END;
 
@@ -300,9 +300,9 @@ PROCEDURE CompileUnits (main     : TEXT;
 
     value := GetDefn (s, "TARGET_NAMING");
     IF value # NIL THEN
-      WITH target_os = ConvertNamingConventionStringToEnum (s, value) DO
-        s.target_os := target_os;
-        M3Path.SetTargetOS (target_os);
+      WITH target_oskind = ConvertNamingConventionStringToEnum (s, value) DO
+        s.target_oskind := target_oskind;
+        M3Path.SetTargetOS (target_oskind);
       END;
     END;
 
@@ -2497,9 +2497,9 @@ PROCEDURE GenerateCMain (s: State;  Main_O: TEXT) =
     Msg.Commands ("generate ", init_code);
     wr := Utils.OpenWriter (init_code, fatal := TRUE);
     MxGen.GenerateMain (s.link_base, wr, NIL, Msg.level >= Msg.Level.Debug,
-                        (* Use of target_os needs work:
+                        (* Use of target_oskind needs work:
                            NT386GNU can generate Windowed apps. *)
-                        s.gui AND (s.target_os = M3Path.OSKind.Win32),
+                        s.gui AND (s.target_oskind = M3Path.OSKind.Win32),
                         s.lazy_init);
     Utils.CloseWriter (wr, init_code);
     ETimer.Pop ();
@@ -2816,8 +2816,8 @@ PROCEDURE WriteProgramDesc (s: State;  desc_file, main_o: TEXT) =
 
   PROCEDURE Emit (wr: Wr.T) RAISES {Wr.Failure, Thread.Alerted} =
     BEGIN
-      (* Use of target_os needs work. *)
-      IF (s.target_os = M3Path.OSKind.Win32) THEN
+      (* Use of target_oskind needs work. *)
+      IF (s.target_oskind = M3Path.OSKind.Win32) THEN
         Wr.PutText (wr, "-out:");
         Wr.PutText (wr, s.result_name);
         Wr.PutText (wr, ".exe");
@@ -2899,9 +2899,9 @@ PROCEDURE BuildBootProgram (s: State) =
   PROCEDURE EmitMain (wr: Wr.T) RAISES {} =
     BEGIN
       MxGen.GenerateMain (s.link_base, wr, NIL, Msg.level >=Msg.Level.Debug,
-                          (* Use of target_os needs work:
+                          (* Use of target_oskind needs work:
                              NT386GNU can generate Windowed apps. *)
-                          s.gui AND (s.target_os = M3Path.OSKind.Win32),
+                          s.gui AND (s.target_oskind = M3Path.OSKind.Win32),
                           s.lazy_init);
     END EmitMain;
 
@@ -3018,7 +3018,7 @@ PROCEDURE BuildLibrary (s: State;  shared: BOOLEAN) =
     Msg.Debug ("building the library...", Wr.EOL);
     Utils.Remove (lib_file);
 
-    IF (s.target_os = M3Path.OSKind.Win32) THEN
+    IF (s.target_oskind = M3Path.OSKind.Win32) THEN
       GenLibDef (name.base);
     END;
 

@@ -1,6 +1,6 @@
 readonly GNU_PLATFORM = "arm-linux-gnueabihf" % "cpu-os" string for GNU
 
-SYSTEM_CC = "g++ -gstabs+ -fPIC" % C compiler
+SYSTEM_CC = "g++ -g -fPIC" % C compiler
 SYSTEM_ASM = "as" % Assembler
 % SYSTEM_CC = GNU_PLATFORM & "-" & SYSTEM_CC
 % SYSTEM_CC = GNU_PLATFORM & "-" & SYSTEM_ASM

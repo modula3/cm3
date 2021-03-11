@@ -12,9 +12,4 @@ implementation("TCP")
 implementation("TCPExtras")
 implementation("TCPPeer")
 interface("TCPHack")
-
-if equal (TARGET, "ALPHA_OSF") or equal(TARGET, "DS3100")
-   implementation("TCPHack")
-else
-   implementation("TCPHackNull")
-end
+c_source("TCPHackC")

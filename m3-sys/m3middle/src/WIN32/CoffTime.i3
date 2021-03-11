@@ -10,8 +10,12 @@ INTERFACE CoffTime;
 
 CONST EpochAdjust = 11644473600.0d0; (* seconds from 1/1/1600 -> 1/1/1970 *)
 
+(* TODO Change INTEGER to LONGINT *)
 PROCEDURE Now (): INTEGER;
 
+(* TODO Change INTEGER to LONGINT
+ * This is not used.
 PROCEDURE OfFile (file: TEXT): INTEGER;
+ *)
 
 END CoffTime.

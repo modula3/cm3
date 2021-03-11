@@ -10,8 +10,42 @@ MODULE Target;
 
 IMPORT Text, TargetMap, M3RT, TextUtils;
 
+TYPE
+  (* Just a few systems need special handling and are listed here.
+   * Far more targets than this are supported.
+   * See m3-sys/cminstall/src/config-no-install and scripts/python/targets.txt
+   * for an idea as to the working targets.
+   *
+   * SystemNames and Systems need to roughly match.
+   *)
+  Systems = {
+    Undefined,
+    FreeBSD4,
+    I386_CYGWIN,
+    I386_INTERIX,
+    I386_MINGW,
+    I386_NT,
+    LINUXLIBC6,
+    NT386,
+    Other
+  };
+
+CONST
+  (* These are uppercase to facilitate case insensitivity. *)
+  SystemNames = ARRAY OF TEXT {
+    "",
+    "FREEBSD4",
+    "I386_CYGWIN",
+    "I386_INTERIX",
+    "I386_MINGW",
+    "I386_NT",
+    "LINUXLIBC6",
+    "NT386"
+  };
+
 VAR (*CONST*)
   CCs : ARRAY [0..8] OF CallingConvention;
+  System: Systems;
 
 PROCEDURE Init32 () =
   BEGIN
@@ -40,43 +74,48 @@ PROCEDURE Init64 () =
     Extended.align := 64;
   END Init64;
 
-PROCEDURE IsX86(): BOOLEAN =
+PROCEDURE IsX86orAmd64(System_name: TEXT): BOOLEAN =
+(* System_name is uppercased to facilitate case insensitivity.
+ * Is this too broad? *)
+CONST start = ARRAY OF TEXT{"AMD64", "86",
+                            "X86", "I386", "I486", "I586", "I686",
+                            "I86",  "386",  "486",  "586",  "686"};
+        end = ARRAY OF TEXT{"AMD64", "86"};
   BEGIN
-    IF TextUtils.StartsWith(System_name, "I") AND
-          (TextUtils.StartsWith(System_name, "I386_")
-        OR TextUtils.StartsWith(System_name, "I486_")
-        OR TextUtils.StartsWith(System_name, "I586_")
-        OR TextUtils.StartsWith(System_name, "I686_")) THEN
-      RETURN TRUE;
+    IF System IN SET OF Systems{Systems.FreeBSD4,
+                                Systems.I386_CYGWIN,
+                                Systems.I386_INTERIX,
+                                Systems.I386_MINGW,
+                                Systems.I386_NT,
+                                Systems.LINUXLIBC6,
+                                Systems.NT386} THEN
+        RETURN TRUE;
     END;
-    CASE System OF
-    | Systems.FreeBSD4, Systems.NT386, Systems.LINUXLIBC6 => RETURN TRUE;
-    ELSE RETURN FALSE;
+    FOR i := FIRST(start) TO LAST(start) DO
+      IF TextUtils.StartsWith(System_name, start[i]) THEN
+        RETURN TRUE;
+      END;
     END;
-  END IsX86;
-
-PROCEDURE IsAMD64(): BOOLEAN =
-  BEGIN
-    RETURN TextUtils.StartsWith(System_name, "AMD64_");
-  END IsAMD64;
-
-<*UNUSED*>PROCEDURE IsSPARC(): BOOLEAN =
-CONST startsWith = TextUtils.StartsWith;
-  BEGIN
-    RETURN startsWith(System_name, "SPARC") OR startsWith(System_name, "SOL");
-  END IsSPARC;
+    FOR i := FIRST(end) TO LAST(end) DO
+      IF TextUtils.EndsWith(System_name, end[i]) THEN
+        RETURN TRUE;
+      END;
+    END;
+    RETURN FALSE;
+  END IsX86orAmd64;
 
 PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): BOOLEAN =
   VAR sys := 0;  max_align := 64;
+      casePreservedSystem := system;
   BEGIN
     (* lookup the system -- linear search *)
     IF (system = NIL) THEN RETURN FALSE END;
+    system := TextUtils.Upper(system); (* Uppercase for case insensitivity. *)
     WHILE NOT Text.Equal (system, SystemNames[sys]) DO
-      INC (sys);  IF (sys >= NUMBER (SystemNames)) THEN RETURN FALSE END;
+      INC (sys);  IF (sys >= NUMBER (SystemNames)) THEN EXIT END;
     END;
     System := VAL(sys, Systems);
-    System_name := SystemNames[sys];
-
+    System_name := casePreservedSystem;
     OS_name := in_OS_name;
 
     (* common values *)
@@ -86,9 +125,7 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
     (* this is overly optimistic... *)
 
     Allow_packed_byte_aligned := FALSE;
-    All_floats_legal          := TRUE;
-    PCC_bitfield_type_matters := TRUE;
-    Little_endian             := TRUE;
+    endian := Endian.Little;
 
     IF backend_mode = M3BackendMode_t.C THEN
       Setjmp := "m3_setjmp";
@@ -138,15 +175,19 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
         OR TextUtils.StartsWith(system, "PPC")  (* ambiguous *)
         OR TextUtils.StartsWith(system, "SPARC")
         OR TextUtils.StartsWith(system, "SOL") THEN
-      Little_endian := FALSE;
+      endian := Endian.Big;
     END;
 
-    (* x86 and AMD64 allow unaligned loads/stores *)
-
-    IF IsX86() OR IsAMD64() THEN
-      Allow_packed_byte_aligned := TRUE;
+    (* x86 and AMD64 allow unaligned loads/stores but converge C *)
+    IF backend_mode # M3BackendMode_t.C THEN
+      IF IsX86orAmd64(system) THEN
+        Allow_packed_byte_aligned := TRUE;
+      END;
     END;
 
+    (* NT/x86 is the only system with multiple calling conventions,
+     * ignoring little-used vectorcall of NT/amd64 and NT/x86.
+     *)
     InitCallingConventions (backend_mode,
                             System IN SET OF Systems{Systems.I386_INTERIX,
                                                      Systems.NT386,

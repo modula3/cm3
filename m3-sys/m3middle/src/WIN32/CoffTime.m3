@@ -8,12 +8,17 @@ MODULE CoffTime;
 
 IMPORT Time, File, FS, OSError;
 
+(* TODO Change INTEGER to LONGINT *)
 PROCEDURE Now (): INTEGER =
   VAR now := Time.Now ();
   BEGIN
     RETURN ROUND (now - EpochAdjust);
   END Now;
 
+(* This code is not used.
+ * If it is refactored into C, avoid passing TEXT to C.
+ * TODO Change INTEGER to LONGINT
+ *
 PROCEDURE OfFile (file: TEXT): INTEGER =
   VAR s: File.Status;
   BEGIN
@@ -24,6 +29,7 @@ PROCEDURE OfFile (file: TEXT): INTEGER =
     END;
     RETURN ROUND (s.modificationTime - EpochAdjust);
   END OfFile;
+*)
 
 BEGIN
 END CoffTime.

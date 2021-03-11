@@ -578,6 +578,9 @@ p_test ("p2", "p281", "Const Array Decl Bugs (#25), reported by darko20 on 03/24
 % This fails in Grisu when using C backend.
 p_test ("p2", "p282", "grisuc")
 
+% This fails an assert in integrated backend.
+p_test ("p2", "p283", "Long.LT")
+
 % Some recently fixed tests in the packedVars branch: 
 
 p_test ("p0", "p050", "open array parameters")
@@ -841,9 +844,6 @@ p_test ("p2", "p238", "'man vs. boy' aka nested procedures+recursion aka static 
 
 % grisu-based test, loophole integers/floats, multiply longint within function parameters
 p_test ("p2", "p265", "grisu-based")
-
-% This fails in Grisu when using C backend.
-p_test ("p2", "p268", "grisuc")
 
 %------------------------------------------------------------------- rtests ---
 %  RUNTIME tests: modules containing runtime error where the generated

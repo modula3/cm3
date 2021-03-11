@@ -10,8 +10,12 @@ INTERFACE CoffTime;
 
 CONST EpochAdjust = 0.0d0; (* to 1/1/1970 *)
 
+(* TODO Change INTEGER to LONGINT *)
 <*EXTERNAL CoffTime__Now*>PROCEDURE Now (): INTEGER;
 
-<*EXTERNAL CoffTime__OfFile*>PROCEDURE OfFile (file: TEXT): INTEGER;
+(* This code is not used.
+<*EXTERNAL*> CoffTime__OfFileC*>PROCEDURE OfFileC (file: Ctypes.const_char_star): LONGINT;
+PROCEDURE OfFile (file: TEXT): LONGINT;
+ *)
 
 END CoffTime.

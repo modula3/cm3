@@ -38,7 +38,7 @@ EXCEPTION Error(EC);
 (* An IP implementation (or a layered IP protocolimplementation), can raise
    "Error" with error lists including, but not limited to, the following
    atoms: *)
-
+(*TODO Dynamic linking to data does not work on Win32.*)
 VAR
   LookupFailure, Unreachable, PortBusy, NoResources: Atom.T;
 

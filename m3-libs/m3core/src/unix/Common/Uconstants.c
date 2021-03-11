@@ -714,11 +714,10 @@ Y(SF_SNAPSHOT, 0)
 #endif
 
 #undef X
-#define X(x) EXTERN_CONST int Unetdb__##x = x;
+#define X(x) M3_STATIC_ASSERT(x); EXTERN_CONST int Unetdb__##x = x;
 X(TRY_AGAIN)
 X(NO_RECOVERY)
 X(NO_ADDRESS)
-
 
 #undef X
 #define X(x) EXTERN_CONST int Uin__##x = x;

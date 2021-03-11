@@ -200,7 +200,6 @@ List("Bool","Boolean")
 
 Module("Cardinal")
 Sequence("Card","Cardinal")
-Sequence("Char","Char")
 
 Module("IntForRat")
 Module("BigInt")
