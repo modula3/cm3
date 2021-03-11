@@ -11,6 +11,9 @@
 
 import ("X11R4")
 
+% The Win32 bindings work on Unix.
+% The Unix compiler ignores the Win32 calling convention annotations.
+% The bindings were otherwise identical.
 Interface ("../WIN32/GL")
 Interface ("GLX")
 Interface ("../WIN32/GLu")
