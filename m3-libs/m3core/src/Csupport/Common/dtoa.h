@@ -1477,7 +1477,7 @@ match
 		if (c != d)
 			return 0;
 		}
-	*sp = s + 1;
+	*sp = (char*)(s + 1);
 	return 1;
 	}
 
