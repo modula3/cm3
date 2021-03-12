@@ -1269,7 +1269,7 @@ def Boot():
     elif nt:
         if CBackend:
             #Link = "link /incremental:no /debug /pdb:$(@R).pdb *." + obj + " "
-            Link = "link /incremental:no /debug /pdb:$(@R).pdb $** "
+            Link = "link /incremental:no /debug /pdb:$(@R).pdb "
             # be sure to get a .pdb out
             #open("empty.c", "w")
             #Link = CCompiler + CCompilerFlags + "empty.c /" + Link
@@ -1535,18 +1535,35 @@ def Boot():
             Makefile.write("\t$(Assemble) -o $@ " + pkg + ".d/" + mainS + NL)
             Makefile.write(NL)
 
-    for pkg in main_packages:
-        Makefile.write(pkg + EXE + ":")
-        Makefile.write(" " + "$(OBJECTS) ")
-        Makefile.write(pkg + ".d/Main." + maino_ext)
-        Makefile.write(NL)
+    # To make it look better, replace double space with single space.
+    if nt:
+        Makefile.write("OBJECTS=$(OBJECTS:  = )" + NL2)
 
+    for pkg in main_packages:
         # NOTE: We use *.o/*.obj to avoid command line length limits.
         # TODO: Response files? gcc 4.2 supports them. Visual C++ all
         # versions support them. TODO: Research xlc, Sun CC, etc.
         # Or, use libraries (building them from small command lines).
+        #
+        # Use response files at least for Visual C++ linking as we
+        # are over the limits.
 
-        Makefile.write("\t$(Link) " + pkg + ".d/Main." + maino_ext + LinkOut + "$@" + NL2)
+        if nt:
+            Makefile.write(pkg + """.exe: $(OBJECTS) $(@R).d/Main.m3.c
+	$(Compile) $(@R).d/Main.m3.c /Fo$(@R).d/Main.m3.obj
+    $(Link) -out:$@ @<<$(@).responseFile
+$(@R).d/Main.m3.obj
+$(OBJECTS: =
+)
+<<keep
+
+""");
+        else:
+            Makefile.write(pkg + EXE + ":")
+            Makefile.write(" " + "$(OBJECTS) ")
+            Makefile.write(pkg + ".d/Main." + maino_ext)
+            Makefile.write(NL)
+            Makefile.write("\t$(Link) " + pkg + ".d/Main." + maino_ext + LinkOut + "$@" + NL2)
 
     for o in obj_suffixes:
         VmsMake.write("$ set file/attr=(rfm=var,rat=none) *." + o + "\n")
