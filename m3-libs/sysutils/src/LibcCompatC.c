@@ -1,5 +1,20 @@
 /* Strongly consider requiring a different bootstrap procedure and remove this file. */
 
+char cm3_libccompat; /* Ensure translation unit is not empty. */
+
+/* This is not working for me and it a perilous area.
+ * The problem is real though.
+ * The problem is using an old m3core/libm3 (static libraries) with
+ * newer Visual C++ toolset. The old C headers/compiler will reference
+ * symbols no longer present in the newer C runtime.
+ *
+ * A better solution that exists and works and avoids this problem is to use boot1.py
+ * to bootstrap, via the C compiler or the integrated backend.
+ *
+ * This procedure defers C compilation and avoids mixing toolsets.
+ */
+#if 0
+
 #ifdef _MSC_VER
 
 #if 0 /* This is a problem with certain old<=>new bootstrap steps,
@@ -201,4 +216,4 @@ m3core.lib.sa(ThreadWin32C.obj) : error LNK2019: unresolved external symbol @__s
 #endif /* _M_IX86 */
 #endif /* _MSC_VER */
 
-char cm3_libccompat; /* Ensure translation unit is not empty. */
+#endif
