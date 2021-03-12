@@ -1656,11 +1656,16 @@ def Boot():
             Makefile.write("all: cm3.exe mklib.exe\r\n\r\n")
             Makefile.write("clean:\r\n del cm3.exe mklib.exe\r\n\r\n")
 
+            # -MT is used instead of -MD for the sake of some older toolsets
+            # and this Makefile not handling manifests with mt.exe.
+            #
+            # The larger cm3 config/quake files do handle that.
+
             Makefile.write("cm3.exe: *.io *.mo *.c cm3.d\\Main.mo\r\n"
-            + " cl -Zi -MD *.c -link *.mo *.io cm3.d\\Main.mo -out:$@ user32.lib kernel32.lib wsock32.lib comctl32.lib gdi32.lib advapi32.lib netapi32.lib\r\n\r\n")
+            + " cl -Zi -MT *.c -link *.mo *.io cm3.d\\Main.mo -out:$@ user32.lib kernel32.lib wsock32.lib comctl32.lib gdi32.lib advapi32.lib netapi32.lib\r\n\r\n")
 
             Makefile.write("mklib.exe: *.io *.mo *.c mklib.d\\Main.mo\r\n"
-            + " cl -Zi -MD *.c -link *.mo *.io mklib.d\\Main.mo -out:$@ user32.lib kernel32.lib wsock32.lib comctl32.lib gdi32.lib advapi32.lib netapi32.lib\r\n\r\n")
+            + " cl -Zi -MT *.c -link *.mo *.io mklib.d\\Main.mo -out:$@ user32.lib kernel32.lib wsock32.lib comctl32.lib gdi32.lib advapi32.lib netapi32.lib\r\n\r\n")
 
             Makefile.close()
 
