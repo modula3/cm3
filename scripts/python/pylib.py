@@ -671,7 +671,7 @@ Target = Target or getenv("CM3_TARGET") or Host
 # But it does not work yet and that is ok.
 # It probably does not work because cm3 does not implement it.
 #
-_CBackend = "c" in LowercaseArgv or "+c" in LowercaseArgv or TargetOnlyHasCBackend
+_CBackend = "c" in LowercaseArgv or "+c" in LowercaseArgv or TargetOnlyHasCBackend(Target)
 
 if TargetOnlyHasCBackend(Target):
     _CBackend = true
