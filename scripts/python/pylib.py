@@ -1521,13 +1521,6 @@ def Boot():
             k = 1 + len(a)
         Makefile.write(" " + a)
 
-    for a in Objects:
-        k = k + 1 + len(a)
-        if k > 76: # line wrap
-            Makefile.write(" \\" + NL)
-            k = 1 + len(a)
-        Makefile.write(" " + a)
-
     Makefile.write(NL2)
 
     LinkOut = [" -o ", " -out:"][nt]
