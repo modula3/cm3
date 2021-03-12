@@ -17,6 +17,10 @@
 #include <stdlib.h>
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define TRUE 1
 #define FALSE 0
 
@@ -29,7 +33,7 @@
     defined(__osf)
 static const char refetchError = TRUE;
 #else
-static const char refetchError;
+static const char refetchError = FALSE;
 #endif
 
 #define RefetchError SocketPosix__RefetchError
@@ -38,10 +42,6 @@ void RefetchError(INTEGER fd);
 #if 0
 
 typedef double LONGREAL;
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 enum {WaitResult_Ready, WaitResult_Error, WaitResult_FDError, WaitResult_Timeout};
 

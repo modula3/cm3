@@ -879,7 +879,7 @@ PROCEDURE CompileNCopyStructWInWord
       END;
     END;
     CG.Store_int (Target.Word.cg_type, actTempVar);
-    IF NOT Target.Little_endian
+    IF Target.endian = Target.Endian.Big
     THEN
       CG.Load_intt (Target.Word.size - actSize);
       CG.Shift_left (Target.Word.cg_type);

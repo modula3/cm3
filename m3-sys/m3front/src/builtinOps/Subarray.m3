@@ -40,10 +40,11 @@ PROCEDURE Check (ce: CallExpr.T;  VAR cs: Expr.CheckState) =
     IF (NOT Type.IsAssignable (Card.T, v)) THEN
       Error.Msg ("SUBARRAY: third argument must be assignable to CARDINAL (2.6.3).");
       IsOK := FALSE;
-    END
+    END;
     IF ArrayType.EltAlign (t) MOD Target.Byte # 0 THEN
       Error.Msg ("CM3 restriction: SUBARRAY elements must be byte-aligned (2.2.5).");
       IsOK := FALSE;
+    END; 
     IF IsOK THEN
       ce.args[1] := RTCheckNonNeg (ce.args[1], cs);
       ce.args[2] := RTCheckNonNeg (ce.args[2], cs);
