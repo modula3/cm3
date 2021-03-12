@@ -393,12 +393,26 @@ def _GetAllTargets():
     return Targets
 
 #-----------------------------------------------------------------------------
-#
-# Tentatively, +C means C backend, and append C to BuildDir.
-# But it does not work yet and that is ok.
-# It probably does not work because cm3 does not implement it.
-#
-_CBackend = "c" in LowercaseArgv or "+c" in LowercaseArgv
+
+def TargetOnlyHasCBackend(a):
+    # Many targets have a gcc backend.
+    # NT386 etc. have the integrated backend.
+    # Many targets only have the C backend.
+    #
+    # The C backend ABI is not the same as the others,
+    # therefore, likely, BuildDir should have "C" appended,
+    # for targets that have C backend and another backend.
+    #
+    # Todo: arm32 is unclear barely existant
+    # Historical targets probably should should gcc backend.
+    # All targets probably should drop gcc backend.
+    # Even NT386 integrated backend is not super interesting.
+    #
+    a = a.lower()
+    if a == "i386_nt":
+        return false
+    return a.endswith("_nt") or a.startswith("arm64") or a.startswith("riscv")
+
 _PossibleCm3Flags = ["boot", "keep", "override", "commands", "verbose", "why"]
 _SkipGccFlags = ["nogcc", "skipgcc", "omitgcc"]
 _PossiblePylibFlags = ["noclean", "nocleangcc", "c", "C", "+c", "+C"] + _SkipGccFlags + _PossibleCm3Flags
@@ -412,9 +426,6 @@ CM3_FLAGS = ""
 for a in _PossibleCm3Flags:
     if a in sys.argv:
         CM3_FLAGS = CM3_FLAGS + " -" + a
-
-if _CBackend:
-    CM3_FLAGS = CM3_FLAGS + " -DM3_BACKEND_MODE=C"
 
 CM3 = ConvertPathForPython(getenv("CM3")) or "cm3"
 CM3 = SearchPath(CM3)
@@ -623,13 +634,6 @@ Q = "" # TBD
 
 #-----------------------------------------------------------------------------
 #
-# GCC_BACKEND is almost always true.
-#
-
-GCC_BACKEND = not _CBackend
-
-#-----------------------------------------------------------------------------
-#
 # Sniff to determine host, which is the default target.
 #
 
@@ -662,25 +666,25 @@ for a in sys.argv:
 Target = Target or getenv("CM3_TARGET") or Host
 
 #-----------------------------------------------------------------------------
+#
+# Tentatively, +C means C backend, and append C to BuildDir.
+# But it does not work yet and that is ok.
+# It probably does not work because cm3 does not implement it.
+#
+_CBackend = "c" in LowercaseArgv or "+c" in LowercaseArgv or TargetOnlyHasCBackend
 
-def TargetOnlyHasCBackend(a):
-    # Many targets have a gcc backend.
-    # NT386 etc. have the integrated backend.
-    # Many targets only have the C backend.
-    #
-    # The C backend ABI is not the same as the others,
-    # therefore, likely, BuildDir should have "C" appended,
-    # for targets that have C backend and another backend.
-    #
-    # Todo: arm32 is unclear barely existant
-    # Historical targets probably should should gcc backend.
-    # All targets probably should drop gcc backend.
-    # Even NT386 integrated backend is not super interesting.
-    #
-    a = a.lower()
-    if a == "i386_nt":
-        return false
-    return a.endswith("_nt") or a.startswith("arm64") or a.startswith("riscv")
+if TargetOnlyHasCBackend(Target):
+    _CBackend = true
+
+if _CBackend:
+    CM3_FLAGS = CM3_FLAGS + " -DM3_BACKEND_MODE=C"
+
+#-----------------------------------------------------------------------------
+#
+# GCC_BACKEND if not CBackend.
+#
+
+GCC_BACKEND = not _CBackend
 
 #-----------------------------------------------------------------------------
 #
