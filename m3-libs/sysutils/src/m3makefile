@@ -41,7 +41,6 @@ import("libm3")
 %  import("http")
 %end
 
-c_source("LibcCompatC")
 c_source("SystemC")
 module("EnvUtils")
 module("FingerprintFmt")
