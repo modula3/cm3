@@ -67,7 +67,7 @@ PROCEDURE Initialize () =
     t0 := ProcType.New (Rep.T, Formal.New (var), val, Formal.New (order));
   BEGIN
     Z := CallExpr.NewMethodList (2, 3, FALSE, TRUE, TRUE, Rep.T,
-                                 NIL,
+                                 NIL, NIL,
                                  CallExpr.NotAddressable,
                                  Check,
                                  Prep,

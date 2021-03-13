@@ -8,12 +8,14 @@
 (*      Modified On Thu Dec  5 17:21:40 PST 1991 By muller     *)
 
 MODULE Variable;
+(* Including formal parameters. *)
 
-IMPORT M3, M3ID, CG, Value, ValueRep, Type, Expr, Error, RunTyme;
-IMPORT Scope, AssignStmt, Formal, M3RT, IntegerExpr, TipeMap, M3String;
-IMPORT OpenArrayType, Target, TInt, Token, Ident, Module, CallExpr;
-IMPORT Decl, Null, Int, LInt, Fmt, Procedure, Tracer, TextExpr, NamedExpr;
-IMPORT PackedType, ErrType;
+IMPORT M3, M3ID, CG, Value, ValueRep, Error, RunTyme;
+IMPORT Scope, AssignStmt, Formal, M3RT, M3String;
+IMPORT Target, TInt, Token, Ident, Module, CallExpr;
+IMPORT Decl, Null, Int, LInt, Fmt, Procedure, Tracer;
+IMPORT Expr, IntegerExpr, ArrayExpr, TextExpr, NamedExpr;
+IMPORT Type, OpenArrayType, ErrType, TipeMap;
 FROM Scanner IMPORT GetToken, Match, cur;
 
 CONST
@@ -24,17 +26,24 @@ CONST
 REVEAL
   T = Value.T BRANDED "Variable.T" OBJECT
         tipe        : Type.T;
-        init        : Expr.T;
+        repType     : Type.T;
+        initExpr    : Expr.T;
+        qualName    : TEXT;
         sibling     : T;
         formal      : Value.T;
+        (* ^This Variable.T represents a formal parameter, but that's a
+            Formal.T, a different and hidden proper subtype of Value.T.
+            Field formal is actually the Formal.T object.
+            A great example of TMIH (Too Much Information Hiding). *)
         alias       : T;
         trace       : Tracer.T;
         bounds      : BoundPair;
-        cg_var      : CG.Var;
-        bss_var     : CG.Var;
-        next_cg_var : T;
-        init_var    : INTEGER;
-        offset      : INTEGER;
+        cg_var      : CG.Var; (* Used if it's a local, formal, or external. *)
+        bss_var     : CG.Var; (* Used if it's a global. *)
+        nextTWACGVar : T; (* Link field for list of Variable.Ts that have a
+                             non-NIL bss_var or cg_var. *)
+        initValOffset : INTEGER := 0;
+        offset      : INTEGER := 0;
         size        : INTEGER;
         align       : AlignVal;
         cg_align    : AlignVal;
@@ -43,15 +52,20 @@ REVEAL
         indirect    : M3.Flag;
         open_ok     : M3.Flag;
         need_addr   : M3.Flag;
-        no_type     : M3.Flag;
-        global      : M3.Flag;
+        no_type     : M3.Flag; (* Type not explicitly coded. *)
+        global      : M3.Flag; (* Declared in outermost scope. *)
         initDone    : M3.Flag;
-        initZero    : M3.Flag;
-        initPending : M3.Flag;
-        initStatic  : M3.Flag;
+        initZero    : M3.Flag; (* Initial value is all binary zeros. *)
+        initPending : M3.Flag; (* Initialization is postponed. *)
+        initStatic  : M3.Flag; (* Needs RT initialization with a value from
+                                  the static constant area. *)
+        allocated     : M3.Flag;
+          (* ^Has allocated space in the global variable area. *)
+        initAllocated : M3.Flag;
+          (* ^Static initial value has allocated space in the global constant area. *)
       OVERRIDES
         typeCheck   := Check;
-        set_globals := SetGlobals;
+        set_globals := AllocGlobalVarSpace;
         load        := Load;
         declare     := Declare;
         const_init  := ConstInit;
@@ -61,6 +75,7 @@ REVEAL
         toExpr      := ValueRep.NoExpr;
         toType      := ValueRep.NoType;
         typeOf      := TypeOf;
+        repTypeOf   := RepTypeOf;
         base        := ValueRep.Self;
         add_fp_tag  := AddFPTag;
         fp_type     := TypeOf;
@@ -76,23 +91,25 @@ TYPE
   END;
 
 VAR
-  all_cg_vars: T := NIL;
-  (* variables with attached M3CG values *)
+  TsWCGVars: T := NIL;
+  (* Linked list of Variable.Ts that have a non-NIL bss_var or cg_var. *)
 
+(* EXPORTED *)
 PROCEDURE Reset () =
+(* Toss as garbage, any CG.Var nodes that we've created *)
   VAR t, u: T;
   BEGIN
-    (* release any M3CG nodes that we've created *)
-    t := all_cg_vars;
+    t := TsWCGVars;
     WHILE (t # NIL) DO
-      u := t;  t := t.next_cg_var;
+      u := t;  t := t.nextTWACGVar;
       u.cg_var      := NIL;
       u.bss_var     := NIL;
-      u.next_cg_var := NIL;
+      u.nextTWACGVar := NIL;
     END;
-    all_cg_vars := NIL;
+    TsWCGVars := NIL;
   END Reset;
 
+(* EXPORTED *)
 PROCEDURE ParseDecl (READONLY att: Decl.Attributes) =
   TYPE TK = Token.T;
   VAR
@@ -113,7 +130,7 @@ PROCEDURE ParseDecl (READONLY att: Decl.Attributes) =
         type := Type.Parse ();
       END;
       IF (cur.token = TK.tEQUAL) THEN
-        Error.Msg ("variable initialization must begin with ':='");
+        Error.Msg ("Variable initialization must begin with ':='.");
         cur.token := TK.tASSIGN;
       END;
       IF (cur.token = TK.tASSIGN) THEN
@@ -122,11 +139,11 @@ PROCEDURE ParseDecl (READONLY att: Decl.Attributes) =
       END;
       trace := ParseTrace ();
       IF (expr = NIL) AND (type = NIL) THEN
-        Error.Msg("variable declaration must include a type or initial value");
+        Error.Msg("Variable declaration must include a type or initial value.");
       END;
       IF att.isExternal AND att.alias # M3ID.NoID AND n > 1 THEN
         Error.WarnID (2, att.alias,
-                       "EXTERNAL alias applies to first variable");
+                       "EXTERNAL alias applies only to the first variable.");
       END;
       alias := att.alias;
       j := Ident.top - n;
@@ -137,7 +154,8 @@ PROCEDURE ParseDecl (READONLY att: Decl.Attributes) =
         t.unused   := att.isUnused;
         t.obsolete := att.isObsolete;
         t.tipe     := type;
-        t.init     := expr;
+        t.repType  := NIL;
+        t.initExpr := expr;
         t.no_type  := (type = NIL);
         IF (att.isExternal) THEN
           IF (alias # M3ID.NoID)
@@ -153,6 +171,7 @@ PROCEDURE ParseDecl (READONLY att: Decl.Attributes) =
     END;
   END ParseDecl;
 
+(* EXPORTED *)
 PROCEDURE New (name: M3ID.T;  used: BOOLEAN): T =
   VAR t: T;
   BEGIN
@@ -160,7 +179,8 @@ PROCEDURE New (name: M3ID.T;  used: BOOLEAN): T =
     ValueRep.Init (t, name, Value.Class.Var);
     t.used        := used;
     t.tipe        := NIL;
-    t.init        := NIL;
+    t.repType     := NIL;
+    t.initExpr    := NIL;
     t.readonly    := FALSE;
     t.indirect    := FALSE;
     t.global      := FALSE;
@@ -174,12 +194,12 @@ PROCEDURE New (name: M3ID.T;  used: BOOLEAN): T =
     t.initZero    := FALSE;
     t.initPending := FALSE;
     t.initStatic  := FALSE;
+    t.allocated   := FALSE;
+    t.initAllocated := FALSE;
     t.bounds      := NIL;
     t.cg_align    := 0;
     t.cg_var      := NIL;
     t.bss_var     := NIL;
-    t.init_var    := 0;
-    t.offset      := 0;
     t.size        := 0;
     t.align       := 0;
     t.mem_type    := CG.Type.Void;
@@ -188,6 +208,7 @@ PROCEDURE New (name: M3ID.T;  used: BOOLEAN): T =
     RETURN t;
   END New;
 
+(* EXPORTED *)
 PROCEDURE NewFormal (formal: Value.T;  name: M3ID.T): T =
   VAR t: T;  f_info: Formal.Info;
   BEGIN
@@ -197,7 +218,7 @@ PROCEDURE NewFormal (formal: Value.T;  name: M3ID.T): T =
     t.tipe     := f_info.type;
     t.origin   := formal.origin;
     t.indirect := (f_info.mode # Formal.Mode.mVALUE);
-    t.readonly := (f_info.mode = Formal.Mode.mCONST);
+    t.readonly := (f_info.mode = Formal.Mode.mREADONLY);
     t.unused   := f_info.unused;
     t.initDone := TRUE;
 (* REVIEW^ can this be right? *) 
@@ -210,6 +231,7 @@ PROCEDURE NewFormal (formal: Value.T;  name: M3ID.T): T =
     RETURN t;
   END NewFormal;
 
+(* EXPORTED *)
 PROCEDURE Split (t: T;  VAR type: Type.T;
                  VAR global, indirect, traced: BOOLEAN) =
   BEGIN
@@ -220,84 +242,100 @@ PROCEDURE Split (t: T;  VAR type: Type.T;
     traced   := t.traced;
   END Split;
 
+(* EXPORTED *)
 PROCEDURE BindType (t: T; type: Type.T; 
                     indirect, readonly, open_array_ok, needs_init: BOOLEAN) =
+(* This gets called at parse time, so can't do any Check. *)
   BEGIN
     <* ASSERT t.tipe = NIL *>
     t.tipe     := type;
+    t.repType  := NIL;
     t.readonly := readonly;
     t.indirect := indirect;
     t.open_ok  := open_array_ok;
     IF NOT needs_init THEN t.initDone := TRUE END;
   END BindType;
 
+(* EXPORTED *)
 PROCEDURE NeedsAddress (t: T) =
   BEGIN
     IF (t = NIL) THEN RETURN END;
     t.need_addr := TRUE;
   END NeedsAddress;
 
+(* EXPORTED *)
 PROCEDURE IsFormal (t: T): BOOLEAN =
   BEGIN
     RETURN (t # NIL) AND (t.formal # NIL);
   END IsFormal;
 
+(* EXPORTED *)
 PROCEDURE HasClosure (t: T): BOOLEAN =
   BEGIN
     RETURN (t # NIL) AND (t.formal # NIL) AND Formal.HasClosure (t.formal);
   END HasClosure;
 
+(* Externally dispatched-to *)
 PROCEDURE TypeOf (t: T): Type.T =
   BEGIN
     IF (t.tipe = NIL) THEN
-      IF    (t.init # NIL)   THEN t.tipe := Expr.TypeOf (t.init)
-      ELSIF (t.formal # NIL) THEN t.tipe := Value.TypeOf (t.formal) END;
+      IF t.initExpr # NIL THEN t.tipe := Expr.TypeOf (t.initExpr)
+      ELSIF  t.formal # NIL THEN t.tipe := Value.TypeOf (t.formal)
+      END;
       IF (t.tipe = NIL)
-        THEN Error.ID (t.name, "variable has no type");  t.tipe := ErrType.T;
+        THEN Error.ID (t.name, "Variable has no type.");  t.tipe := ErrType.T;
       END;
     END;
     RETURN t.tipe;
   END TypeOf;
 
-PROCEDURE Check (t: T;  VAR cs: Value.CheckState) =
-  VAR dfault: Expr.T;  min, max: Target.Int;  info: Type.Info;  ref: Type.T;
+(* Externally dispatched-to *)
+PROCEDURE RepTypeOf (t: T): Type.T =
+  VAR semType: Type.T;
   BEGIN
-    t.tipe     := Type.CheckInfo (TypeOf (t), info);
-    IF (info.class = Type.Class.Packed)
-      AND (t.formal # NIL)
-      AND (NOT t.indirect) THEN
-      EVAL Type.CheckInfo (PackedType.Base (t.tipe), info);
+    IF t.repType = NIL THEN
+      semType := TypeOf (t);
+      t.repType := Type.StripPacked (semType);
     END;
+    RETURN t.repType;
+  END RepTypeOf;
+
+(* Externally dispatched-to *)
+PROCEDURE Check (t: T;  VAR cs: Value.CheckState) =
+  VAR dfault: Expr.T;  min, max: Target.Int;  info: Type.Info;  refType: Type.T;
+  BEGIN
+    t.tipe := Type.CheckInfo (TypeOf (t), info);
+    t.repType := Type.Check (Type.StripPacked (t.tipe));
     t.size     := info.size;
     t.align    := info.alignment;
     t.mem_type := info.mem_type;
     t.stk_type := info.stk_type;
     IF (info.class = Type.Class.OpenArray)
       AND (t.formal = NIL) AND (NOT t.open_ok) THEN
-      Error.ID (t.name, "variable cannot be an open array");
+      Error.ID (t.name, "Variable cannot have an open array type.");
     END;
     IF (info.isEmpty) THEN
-      Error.ID (t.name, "variable has empty type");
+      Error.ID (t.name, "Variable cannot have empty type.");
+(* CHECK: Is this always only secondary to some other error. *)
     END;
-    IF (t.no_type) AND (t.tipe # ErrType.T)
-      AND Type.IsEqual (t.tipe, Null.T, NIL) THEN
-      Error.WarnID (1, t.name, "variable has type NULL"); 
+    IF t.tipe = Null.T THEN
+      Error.WarnID (1, t.name, "Variable cannot have type NULL.");
     END;
 
     t.global := Scope.OuterMost (t.scope);
-    t.checked := TRUE; (* allow recursions through the init expr *)
+    t.checked := TRUE; (* Allow recursions through initExpr. *)
 
     IF (NOT t.indirect) AND (NOT t.global) THEN
       IF (t.formal # NIL) AND (info.size > Big_Param * Target.Integer.size) THEN
-        Error.WarnID (1, t.name, "large parameter passed by value ("
-                       & Fmt.Int (info.size DIV Target.Char.size) & " bytes)");
+        Error.WarnID (1, t.name, "Large parameter passed by value ("
+                       & Fmt.Int (info.size DIV Target.Char.size) & " bytes).");
       ELSIF (info.size > Big_Local * Target.Char.size) THEN
-        Error.WarnID (1, t.name, "large local variable ("
-                       & Fmt.Int (info.size DIV Target.Char.size) & " bytes)");
+        Error.WarnID (1, t.name, "Large local variable ("
+                       & Fmt.Int (info.size DIV Target.Char.size) & " bytes).");
       END;
     ELSIF (t.formal # NIL) AND (info.class = Type.Class.OpenArray)
-      AND Formal.RefOpenArray (t.formal, (*VAR*) ref) THEN
-      Error.WarnID (1, t.name, "open array passed by value");
+      AND Formal.OpenArrayByVALUE (t.formal, (*VAR*) refType) THEN
+      Error.WarnID (1, t.name, "Open array passed by value.");
     END;
 
     IF Type.IsStructured (t.tipe) THEN
@@ -306,18 +344,19 @@ PROCEDURE Check (t: T;  VAR cs: Value.CheckState) =
 
     Value.TypeCheck (t.formal, cs);
     IF (t.external) THEN
-      IF (t.init # NIL) THEN
-        Error.Msg ("<*EXTERNAL*> variables cannot be initialized");
-        Expr.TypeCheck (t.init, cs);
-        AssignStmt.Check (t.tipe, t.init, cs);
+      IF (t.initExpr # NIL) THEN
+        Error.Msg ("<*EXTERNAL*> variables cannot be initialized.");
+        Expr.TypeCheck (t.initExpr, cs);
+        AssignStmt.Check (t.tipe, t.initExpr, cs);
       END;
-    ELSIF (t.init # NIL) THEN
-      Expr.TypeCheck (t.init, cs);
-      AssignStmt.Check (t.tipe, t.init, cs);
-      dfault := Expr.ConstValue (t.init);
+    ELSIF (t.initExpr # NIL) THEN
+      Expr.TypeCheck (t.initExpr, cs);
+      AssignStmt.Check (t.tipe, t.initExpr, cs);
+(* TODO: What if initExpr contains RT errors? *)
+      dfault := Expr.ConstValue (t.initExpr);
       IF (dfault = NIL) THEN
         IF Module.IsInterface () THEN
-          Error.ID (t.name, "initial value is not a constant");
+          Error.ID (t.name, "Initial value in an interface must be constant.");
         END;
         IF (t.global) AND (info.size > Max_zero_global * Target.Integer.size) THEN
           <*ASSERT NOT t.indirect*>
@@ -337,7 +376,7 @@ PROCEDURE Check (t: T;  VAR cs: Value.CheckState) =
           ELSIF (NOT t.initZero) AND Type.IsStructured (t.tipe) THEN
             t.initStatic := TRUE;
           END;
-          t.init := dfault;
+          t.initExpr := dfault;
         END;
       END;
     ELSIF (t.global) THEN
@@ -351,53 +390,60 @@ PROCEDURE Check (t: T;  VAR cs: Value.CheckState) =
       ELSIF Type.GetBounds (t.tipe, min, max) THEN
         (* synthesize an initialization expression *)
         IF Type.IsSubtype (t.tipe, LInt.T)
-          THEN t.init := IntegerExpr.New (LInt.T, min);
-          ELSE t.init := IntegerExpr.New (Int.T, min);
+        THEN t.initExpr := IntegerExpr.New (LInt.T, min);
+        ELSE t.initExpr := IntegerExpr.New (Int.T, min);
         END;
       END;
     END;
 
+    t.qualName := Value.GlobalName(t,TRUE,TRUE);
     CheckTrace (t.trace, cs);
   END Check;
 
+(* EXPORTED *)
+(* Externally dispatched-to *)
 PROCEDURE Load (t: T) =
+  VAR type_info: Type.Info;
   BEGIN
     t.used := TRUE;
     Value.Declare (t);
     IF (t.initPending) THEN ForceInit (t); END;
     IF Type.IsStructured (t.tipe) THEN
-      (* the RunTyme representation is an address *)
+      (* The runtime representation is an address *)
       IF (t.bss_var # NIL) THEN
         CG.Load_addr_of (t.bss_var, 0, t.cg_align);
       ELSIF (t.cg_var = NIL) THEN (* => global *)
         Module.LoadGlobalAddr (Scope.ToUnit (t), t.offset, is_const := FALSE);
-        CG.Boost_alignment (t.align);
+        CG.Boost_addr_alignment (t.cg_align);
       ELSIF (t.indirect) THEN
-        CG.Load_addr (t.cg_var, t.offset);
-        CG.Boost_alignment (t.align);
+        CG.Load_addr (t.cg_var, t.offset, t.cg_align);
       ELSE
-        CG.Load_addr_of (t.cg_var, t.offset, t.cg_align);
+        CG.Load_addr_of (t.cg_var, t.offset, CG.GCD(t.cg_align, t.offset));
       END;
     ELSE (* simple scalar *)
+      EVAL Type.CheckInfo (t.tipe, type_info);
       IF (t.bss_var # NIL) THEN
-        CG.Load (t.bss_var, 0, t.size, t.cg_align, t.stk_type);
+        CG.Load
+          (t.bss_var, 0, t.size, t.cg_align, type_info.addr_align, t.stk_type);
       ELSIF (t.cg_var = NIL) THEN (* => global *)
         Module.LoadGlobalAddr (Scope.ToUnit (t), t.offset, is_const := FALSE);
         IF (t.indirect) THEN
           CG.Load_indirect (CG.Type.Addr, 0, Target.Address.size);
         END;
-        CG.Boost_alignment (t.align);
-        CG.Load_indirect (t.stk_type, 0, t.size);
+        CG.Boost_addr_alignment (t.cg_align);
+        CG.Load_indirect (t.stk_type, 0, t.size, type_info.addr_align);
       ELSIF (t.indirect) THEN
-        CG.Load_addr (t.cg_var, t.offset);
-        CG.Boost_alignment (t.align);
-        CG.Load_indirect (t.stk_type, 0, t.size);
+        CG.Load_addr (t.cg_var, t.offset, t.cg_align);
+        CG.Load_indirect (t.stk_type, 0, t.size, type_info.addr_align);
       ELSE
-        CG.Load (t.cg_var, t.offset, t.size, t.cg_align, t.stk_type);
+        CG.Load
+          (t.cg_var, t.offset, t.size, CG.GCD (t.cg_align, t.offset),
+           type_info.addr_align, t.stk_type);
       END;
     END;
   END Load;
 
+(* EXPORTED *)
 PROCEDURE LoadLValue (t: T) =
   BEGIN
     t.used := TRUE;
@@ -411,13 +457,14 @@ PROCEDURE LoadLValue (t: T) =
         CG.Load_indirect (CG.Type.Addr, 0, Target.Address.size);
       END;
     ELSIF (t.indirect) THEN
-      CG.Load_addr (t.cg_var, t.offset);
+      CG.Load_addr (t.cg_var, t.offset, t.cg_align);
     ELSE
-      CG.Load_addr_of (t.cg_var, t.offset, t.cg_align);
+      CG.Load_addr_of (t.cg_var, t.offset, CG.GCD (t.cg_align, t.offset));
     END;
-    CG.Boost_alignment (t.align);
+    CG.Boost_addr_alignment (t.cg_align);
   END LoadLValue;
 
+(* EXPORTED *)
 PROCEDURE SetLValue (t: T) =
   VAR v: CG.Var;  align: INTEGER;
   BEGIN
@@ -431,10 +478,11 @@ PROCEDURE SetLValue (t: T) =
       align := CG.Max_alignment;
     END;
     <*ASSERT t.indirect *>
-    CG.Boost_alignment (align);
+    CG.Boost_addr_alignment (t.cg_align);
     CG.Store_addr (v, t.offset);
   END SetLValue;
 
+(* EXPORTED *)
 PROCEDURE LocalCGName (t: T;  VAR unit: CG.Var;  VAR offset: INTEGER) =
   BEGIN
     t.used := TRUE;
@@ -447,6 +495,7 @@ PROCEDURE LocalCGName (t: T;  VAR unit: CG.Var;  VAR offset: INTEGER) =
     END;
   END LocalCGName;
 
+(* EXPORTED *)
 PROCEDURE SetBounds (t: T;  READONLY min, max: Target.Int) =
   BEGIN
     IF (t.bounds = NIL) THEN t.bounds := NEW (BoundPair) END;
@@ -454,6 +503,7 @@ PROCEDURE SetBounds (t: T;  READONLY min, max: Target.Int) =
     t.bounds.max := max;
   END SetBounds;
 
+(* EXPORTED *)
 PROCEDURE GetBounds (t: T;  VAR min, max: Target.Int) =
   VAR xx := t.bounds;
   BEGIN
@@ -463,45 +513,55 @@ PROCEDURE GetBounds (t: T;  VAR min, max: Target.Int) =
     IF TInt.LT (xx.max, max) THEN max := xx.max; END;
   END GetBounds;
 
-PROCEDURE SetGlobals (t: T) =
+(* Externally dispatched-to *)
+PROCEDURE AllocGlobalVarSpace (t: T) =
+(* Allocate space for a non-external global. *)
   VAR size, align: INTEGER;
-  VAR initType: M3.Type := NIL; 
+  VAR constInitExpr: Expr.T;
+  VAR initRepType: Type.T := NIL;
+  VAR varID: M3ID.T;
   BEGIN
     (* Type.SetGlobals (t.tipe); *)
-    (* IF (t.init # NIL) THEN Type.SetGlobals (Expr.TypeOf (t.init)) END; *)
-    IF (t.offset # 0) OR (NOT t.global) OR (t.external) THEN RETURN END;
+    (* IF (t.initExpr # NIL) THEN Type.SetGlobals (Expr.TypeOf (t.initExpr)) END; *)
+    IF t.allocated (* Already done.*) OR NOT t.global OR t.external THEN RETURN END;
     EVAL Type.Check (t.tipe);
 
-    IF t.init # NIL THEN initType := Expr.TypeOf (t.init) END; 
+    IF t.initExpr # NIL THEN
+      constInitExpr := Expr.ConstValue (t.initExpr);
+      ArrayExpr.NoteTargetType (constInitExpr, t.tipe);
+      initRepType := Expr.RepTypeOf (t.initExpr)
+    END;
 
     IF (t.indirect) THEN
       size  := Target.Address.size;
       align := Target.Address.align;
-    ELSIF FALSE AND OpenArrayType.Is (initType) THEN
-(* FIXME, maybe.  Can the variable be a formal with open array type, in 
-   addition to the initializer's having an open array type?  If so, we want 
-   to come here. *) 
+      varID := M3ID.Add (t.qualName & "_INDIRECT_");
+    ELSIF OpenArrayType.Is (initRepType) THEN
+      size  := Target.Address.size
+               + OpenArrayType.OpenDepth(initRepType) * Target.Integer.size;
       align := MAX (Target.Address.align, Target.Integer.align);
-      size  := Target.Address.pack
-               + OpenArrayType.OpenDepth(initType) * Target.Integer.pack;
+      varID := M3ID.Add (t.qualName & "_DOPE_");
     ELSE
       size  := t.size;
       align := t.align;
+      varID := M3ID.Add (t.qualName);
     END;
 
     (* declare the actual variable *)
-    t.offset := Module.Allocate (size, align, FALSE, id := t.name);
-  END SetGlobals;
+    t.offset := Module.Allocate (size, align, FALSE, id := varID);
+    t.allocated := TRUE;
+  END AllocGlobalVarSpace;
 
+(* Externally dispatched-to *)
 PROCEDURE Declare (t: T): BOOLEAN =
   VAR
-    size      := t.size;
-    align     := t.align;
-    type      := Type.GlobalUID (t.tipe);
-    mtype     := Type.CGType (t.tipe, in_memory := TRUE);
-    is_struct := Type.IsStructured (t.tipe);
-    name        : TEXT;
-    extern_name : M3ID.T;
+    size       := t.size;
+    align      := t.align;
+    typeUID    := Type.GlobalUID (t.tipe);
+    mtype      := Type.CGType (t.tipe, in_memory := TRUE);
+    is_struct  := Type.IsStructured (t.tipe);
+    externName : TEXT;
+    externM3ID : M3ID.T;
   BEGIN
     Type.Compile (t.tipe);
 
@@ -511,32 +571,32 @@ PROCEDURE Declare (t: T): BOOLEAN =
     IF (is_struct) THEN mtype := CG.Type.Struct; END;
 
     IF (t.indirect) THEN
-      type  := CG.Declare_indirect (type);
-      size  := Target.Address.size;
+      typeUID := CG.Declare_indirect (typeUID);
+      size := Target.Address.size;
       align := Target.Address.align;
       mtype := CG.Type.Addr;
     END;
 
     (* declare the actual variable *)
     IF (t.external) THEN
-      name := Value.GlobalName (t, dots := FALSE, with_module := FALSE);
-      extern_name := M3ID.Add (name);
-      t.next_cg_var := all_cg_vars;  all_cg_vars := t;
-      t.cg_var := CG.Import_global (extern_name, size, align,
-                                    mtype, 0(*no mangling*));
+      externName := Value.GlobalName (t, dots := FALSE, with_module := FALSE);
+      externM3ID := M3ID.Add (externName);
+      t.nextTWACGVar := TsWCGVars;  TsWCGVars := t;
+      t.cg_var
+        := CG.Import_global (externM3ID, size, align, mtype, 0(*no mangling*));
       t.cg_align := align;
 
     ELSIF (t.imported) THEN
-      <*ASSERT t.offset # 0*>
+      <*ASSERT t.allocated*>
 
     ELSIF (t.global) THEN
-      <*ASSERT t.offset # 0*>
-      CG.Declare_global_field (t.name, t.offset, size, type, FALSE);
+      <*ASSERT t.allocated*>
+      CG.Declare_global_field (t.name, t.offset, size, typeUID, FALSE);
       IF (t.initZero) THEN t.initDone := TRUE END;
       t.cg_align := align;
       IF (t.indirect) THEN
         t.cg_align := t.align;
-        t.next_cg_var := all_cg_vars;  all_cg_vars := t;
+        t.nextTWACGVar := TsWCGVars;  TsWCGVars := t;
         t.bss_var := CG.Declare_global (t.name, t.size, t.cg_align,
                               CG.Type.Struct, Type.GlobalUID (t.tipe),
                               exported := FALSE, init := FALSE);
@@ -553,23 +613,23 @@ PROCEDURE Declare (t: T): BOOLEAN =
       END;
       (** align := FindAlignment (align, size); **)
       t.cg_align := align;
-      t.next_cg_var := all_cg_vars;  all_cg_vars := t;
-      t.cg_var := CG.Declare_local (t.name, size, align, mtype, type,
+      t.nextTWACGVar := TsWCGVars;  TsWCGVars := t;
+      t.cg_var := CG.Declare_local (t.name, size, align, mtype, typeUID,
                                     t.need_addr, t.up_level, CG.Maybe);
 
     ELSIF (t.indirect) THEN
       (* formal passed by reference => param is an address *)
       t.cg_align := align;
-      t.next_cg_var := all_cg_vars;  all_cg_vars := t;
-      t.cg_var := CG.Declare_param (t.name, size, align, mtype, type,
+      t.nextTWACGVar := TsWCGVars;  TsWCGVars := t;
+      t.cg_var := CG.Declare_param (t.name, size, align, mtype, typeUID,
                                     t.need_addr, t.up_level, CG.Maybe);
 
     ELSE
       (* simple parameter *)
       (** align := FindAlignment (align, size); **)
       t.cg_align := align;
-      t.next_cg_var := all_cg_vars;  all_cg_vars := t;
-      t.cg_var := CG.Declare_param (t.name, size, align, mtype, type,
+      t.nextTWACGVar := TsWCGVars;  TsWCGVars := t;
+      t.cg_var := CG.Declare_param (t.name, size, align, mtype, typeUID,
                                     t.need_addr, t.up_level, CG.Maybe);
     END;
 
@@ -593,83 +653,123 @@ PROCEDURE FindAlignment (align: AlignVal;  size: INTEGER): AlignVal =
   END FindAlignment;
 **)
 
+(* Externally dispatched-to *)
 PROCEDURE ConstInit (t: T) =
   VAR
-    size      := t.size;
-    align     := t.align;
-    type      : INTEGER;
-    init_expr : Expr.T;
-    name      : TEXT;
-    init_name : M3ID.T;
+    initSize : INTEGER;
+    initAlign : AlignVal;
+    initRepType : Type.T;
+    initDepth : INTEGER;
+    typeUID       : INTEGER;
+    constInitExpr : Expr.T;
+    initName      : TEXT;
+    initM3ID      : M3ID.T;
+    initInfo : Type.Info;
   BEGIN
     IF t.external OR t.imported THEN RETURN END;
-    IF (NOT t.initStatic) AND (NOT t.global) THEN RETURN END;
+    IF NOT t.initStatic AND NOT t.global THEN RETURN END;
 
-    type := Type.GlobalUID (t.tipe);
-    IF (t.indirect) THEN
-      type  := CG.Declare_indirect (type);
-      size  := Target.Address.size;
-      align := Target.Address.align;
-    END;
+    IF t.initStatic AND NOT t.initAllocated THEN
+      (* Allocate space in the global constant area for the initial value. *)
+      typeUID := Type.GlobalUID (t.tipe);
+      constInitExpr := Expr.ConstValue (t.initExpr);
+      <* ASSERT constInitExpr # NIL *>
+      IF (t.indirect) THEN
+        typeUID  := CG.Declare_indirect (typeUID);
+        initSize  := Target.Address.size;
+        initAlign := Target.Address.align;
+        initName := t.qualName & "_INIT_INDIRECT_";
+      ELSE
+        initRepType := Expr.RepTypeOf (constInitExpr);
+        EVAL Type.CheckInfo (initRepType, initInfo);
+        initDepth := OpenArrayType.OpenDepth (initRepType);
 
-    IF (t.initStatic) THEN
-      (* declare the holder for the initial value *)
-      name := "_INIT_" & M3ID.ToText (t.name);
-      init_name := M3ID.Add (name);
-      t.init_var := Module.Allocate (size, align, TRUE,"initial value for ",t.name);
-      CG.Declare_global_field (init_name, t.init_var, size, type, TRUE);
-      CG.Comment (t.init_var, TRUE, "init expr for ",Value.GlobalName(t,TRUE,TRUE));
-      init_expr := Expr.ConstValue (t.init);
-      Expr.PrepLiteral (init_expr, t.tipe, TRUE);
-      Expr.GenLiteral (init_expr, t.init_var, t.tipe, TRUE);
+        IF initDepth > 0 THEN (* initial value is an open array *)
+          (* Allocate space for the dope only. *)
+          (* See ArrayExpr.GenLiteral, where element space will be allocated. *)
+          initSize := Target.Address.pack + initDepth * Target.Integer.pack;
+          initAlign := MAX (Target.Address.align, Target.Integer.align);
+          initName := t.qualName & "_INIT_DOPE_";
+        ELSE
+          initSize  := initInfo.size;
+          initAlign := initInfo.alignment;
+          initName := t.qualName & "_INIT_";
+        END;
+      END;
+      initM3ID := M3ID.Add (initName);
+(* TODO: Eliminate duplicate copies of same value, including reused, named constant. *) 
+      t.initValOffset
+        := Module.Allocate
+             (initSize, initAlign, TRUE, "init value for ", initM3ID);
+      t.initAllocated := TRUE;
+      CG.Declare_global_field (t.name, t.initValOffset, initSize, typeUID, TRUE);
+      CG.Comment
+        (t.initValOffset, TRUE, "init value for ", initName);
+      Expr.PrepLiteral (constInitExpr, initRepType, TRUE);
+      Expr.GenLiteral (constInitExpr, t.initValOffset, initRepType, TRUE);
     END;
 
     IF (t.global) THEN
-      (* try to statically initialize the variable *)
-      <*ASSERT t.offset # 0*>
-      init_expr := NIL;
-      IF (t.init # NIL) AND (NOT t.initDone) AND (NOT t.initStatic) THEN
-        init_expr := Expr.ConstValue (t.init);
+      (* Try to statically initialize directly in the global variable area. *)
+      <*ASSERT t.allocated*>
+      constInitExpr := NIL;
+      IF (t.initExpr # NIL) AND (NOT t.initDone) AND (NOT t.initStatic) THEN
+        constInitExpr := Expr.ConstValue (t.initExpr);
       END;
-      IF (init_expr # NIL) THEN
-        Expr.PrepLiteral (init_expr, t.tipe, FALSE);
-        Expr.GenLiteral (init_expr, t.offset, t.tipe, FALSE);
+      IF (constInitExpr # NIL) THEN
+        IF NOT Expr.CheckUseFailure (t.initExpr) THEN
+         (* NOTE: Modula3 defines this as a checked runtime error, but in a
+            global variable, execution of the assignment is inevitable.  Also,
+            portions of the runtime system are executed before their module's
+            initialization (the only place the compiler could put a runtime
+            abort) and depend instead on variables statically initialized.
+            So we make this a compile time error.
+          *)
+          Error.Msg
+            ("Variable's initial value contains runtime assignability failure(s).");
+        END;
+        Expr.PrepLiteral (constInitExpr, t.tipe, FALSE);
+        Expr.GenLiteral (constInitExpr, t.offset, t.tipe, FALSE);
         t.initDone := TRUE;
       END;
     END;
   END ConstInit;
 
+(* Externally dispatched-to *)
 PROCEDURE NeedInit (t: T): BOOLEAN =
-  VAR ref: Type.T;
+  VAR refType: Type.T;
   BEGIN
     IF (t.imported) OR (t.external) OR (t.initDone) THEN
       RETURN FALSE;
     ELSIF (t.formal # NIL) THEN
-      RETURN (t.indirect) AND Formal.RefOpenArray (t.formal, (*VAR*) ref);
+      RETURN (t.indirect)
+             AND Formal.OpenArrayByVALUE (t.formal, (*VAR*) refType);
     ELSIF (t.indirect) AND (NOT t.global) THEN
       RETURN FALSE;
-    ELSIF (t.global) AND (t.init # NIL) AND (NOT t.initStatic)
-      AND (Expr.ConstValue (t.init) # NIL) THEN
+    ELSIF (t.global) AND (t.initExpr # NIL) AND (NOT t.initStatic)
+      AND (Expr.ConstValue (t.initExpr) # NIL) THEN
       RETURN FALSE;
-    ELSIF (t.init # NIL) THEN
+    ELSIF (t.initExpr # NIL) THEN
       RETURN TRUE;
     ELSE
       RETURN Type.InitCost (t.tipe, FALSE) > 0;
     END;
   END NeedInit;
   
+(* Externally dispatched-to *)
 PROCEDURE LangInit (t: T) =
-  VAR ref: Type.T;
+  VAR refType: Type.T;
   BEGIN
     IF (t.imported) OR (t.external) THEN
       t.initDone := TRUE;
     ELSIF (t.formal # NIL) THEN
-      IF (t.indirect) AND Formal.RefOpenArray (t.formal, (*VAR*) ref) THEN
+      IF t.indirect
+         AND Formal.OpenArrayByVALUE (t.formal, (*VAR*) refType) THEN
         (* a by-value open array! *)
         CG.Gen_location (t.origin);
         Load(t);
-        CopyOpenArray (t.tipe, ref);
-        (* change the formal parameter to refer to the new storage *)
+        CopyOpenArray (t.tipe, refType);
+        (* ^Change the formal parameter to refer to the new storage. *)
         CG.Store_addr (t.cg_var);
       END;
       (* formal parameters don't need any further initialization *)
@@ -684,8 +784,8 @@ PROCEDURE LangInit (t: T) =
     IF (t.initDone) THEN RETURN END;
 
     (* initialize the value *)
-    IF (t.init # NIL) AND (NOT t.up_level) AND (NOT t.imported) THEN
-      (* variable has a user specified init value and isn't referenced
+    IF (t.initExpr # NIL) AND (NOT t.up_level) AND (NOT t.imported) THEN
+      (* variable has a user specified initExpr value and isn't referenced
          by any nested procedures => try to avoid the language defined
          init and wait until we get to the user defined initialization. *)
       t.initPending := TRUE;
@@ -696,7 +796,7 @@ PROCEDURE LangInit (t: T) =
         Type.InitValue (t.tipe, FALSE);
       END;
       IF (t.trace # NIL) AND (NOT t.imported) THEN
-        IF (t.init = NIL) OR (t.initDone) THEN
+        IF (t.initExpr = NIL) OR (t.initDone) THEN
           (* there's no explicit user init => might as well trace it now *)
           CG.Gen_location (t.origin);
           Tracer.Schedule (t.trace);
@@ -713,14 +813,16 @@ PROCEDURE ForceInit (t: T) =
     Type.InitValue (t.tipe, FALSE);
   END ForceInit;
 
-PROCEDURE CopyOpenArray (tipe: Type.T;  ref: Type.T) =
+(* EXPORTED *)
+PROCEDURE CopyOpenArray (arrayType: Type.T;  refType: Type.T) =
 (* PRE: Pointer to array dope is on TOS. *)
+(* Generate code to heap-allocate the copy. *)
 (* POST: TOS replaced by pointer to dope of copy. *) 
   VAR
     oldDopePtr, newDopePtr : CG.Val;
-    depth := OpenArrayType.OpenDepth (tipe);
-    align := OpenArrayType.EltAlign (tipe);
-    pack  := OpenArrayType.EltPack (tipe);
+    depth := OpenArrayType.OpenDepth (arrayType);
+    align := MAX (OpenArrayType.EltAlign (arrayType), Target.Word8.align);
+    pack  := OpenArrayType.EltPack (arrayType);
     sizes := CG.Declare_temp (Target.Address.pack + Target.Integer.pack,
                               Target.Address.align, CG.Type.Struct,
                               in_memory := TRUE);
@@ -731,7 +833,6 @@ PROCEDURE CopyOpenArray (tipe: Type.T;  ref: Type.T) =
        portion of the to-be-copied dope vector as an open array. *) 
     CG.Push(oldDopePtr);
     CG.Add_offset (M3RT.OA_sizes);
-    (*** CG.Check_byte_aligned (); ****)
     CG.Store_addr (sizes, M3RT.OA_elt_ptr);
     CG.Load_intt (depth);
     CG.Store_int (Target.Integer.cg_type, sizes, M3RT.OA_size_0);
@@ -740,26 +841,26 @@ PROCEDURE CopyOpenArray (tipe: Type.T;  ref: Type.T) =
     proc := RunTyme.LookUpProc (RunTyme.Hook.NewTracedArray);
     Procedure.StartCall (proc);
     IF Target.DefaultCall.args_left_to_right THEN
-      Type.LoadInfo (ref, -1);
+      Type.LoadInfo (refType, -1);
       CG.Pop_param (CG.Type.Addr);
       CG.Load_addr_of (sizes, 0, Target.Address.align);
       CG.Pop_param (CG.Type.Addr);
     ELSE
       CG.Load_addr_of (sizes, 0, Target.Address.align);
       CG.Pop_param (CG.Type.Addr);
-      Type.LoadInfo (ref, -1);
+      Type.LoadInfo (refType, -1);
       CG.Pop_param (CG.Type.Addr);
     END;
     newDopePtr := Procedure.EmitValueCall (proc);
 
-    (* load the destination and source elements addresses *)
+    (* load the destination and source elements' addresses *)
     CG.Push (newDopePtr);
-    CG.Boost_alignment (Target.Address.align);
-    CG.Open_elt_ptr (align); (* Addr of the old elements. *) 
-    CG.Force ();
+    CG.Boost_addr_alignment (Target.Address.align);
+    CG.Open_elt_ptr (align); (* Addr of the new elements. *)
+    CG.ForceStacked ();
     CG.Push(oldDopePtr);
-    CG.Open_elt_ptr (align); (* Addr of the new elements. *) 
-    CG.Force ();
+    CG.Open_elt_ptr (align); (* Addr of the old elements. *)
+    CG.ForceStacked ();
 
     (* compute the number of elements *)
     FOR i := 0 TO depth - 1 DO
@@ -773,7 +874,7 @@ PROCEDURE CopyOpenArray (tipe: Type.T;  ref: Type.T) =
 
     (* Push new dope pointer for the caller. *) 
     CG.Push (newDopePtr);
-    CG.Boost_alignment (Target.Address.align);
+    CG.Boost_addr_alignment (Target.Address.align);
 
     (* free our temps *)
     CG.Free_temp (sizes);
@@ -781,30 +882,49 @@ PROCEDURE CopyOpenArray (tipe: Type.T;  ref: Type.T) =
     CG.Free (newDopePtr); (* It's now safely on the stack, so this is OK. *) 
   END CopyOpenArray;
 
+(* Externally dispatched-to *)
 PROCEDURE UserInit (t: T) =
+  VAR constInitExpr: Expr.T;
+  VAR initRepType: Type.T;
+  VAR openEltAlign: INTEGER;
   BEGIN
-    IF (t.init # NIL) AND (NOT t.initDone) AND (NOT t.imported) THEN
+    IF (t.initExpr # NIL) AND (NOT t.initDone) AND (NOT t.imported) THEN
       CG.Gen_location (t.origin);
       IF (t.initZero) THEN
         t.initPending := FALSE;
         LoadLValue (t);
         Type.Zero (t.tipe);
-      ELSIF (t.init_var # 0) THEN
+      ELSIF t.initAllocated THEN
         t.initPending := FALSE;
-        LoadLValue (t);
-        Module.LoadGlobalAddr (Scope.ToUnit (t), t.init_var, is_const := TRUE);
-        CG.Copy (t.size, overlap := FALSE);
+        IF Expr.CheckUseFailure (t.initExpr) THEN
+          LoadLValue (t);
+          Module.LoadGlobalAddr
+            (Scope.ToUnit (t), t.initValOffset, is_const := TRUE);
+          constInitExpr := Expr.ConstValue (t.initExpr);
+          <* ASSERT constInitExpr # NIL *>
+          initRepType := Expr.RepTypeOf (constInitExpr);
+          IF OpenArrayType.Is (initRepType) THEN
+            openEltAlign
+              := MAX (OpenArrayType.EltAlign(initRepType), Target.Word8.align);
+            CG.Open_elt_ptr (openEltAlign);
+          END;
+          CG.Copy (t.size, overlap := FALSE);
+        ELSE
+          (* Expr.CheckUseFailure will have generated an unconditional RT error. *)
+        END;
       ELSE
         t.initPending := FALSE;
-        AssignStmt.PrepForEmit (t.tipe, t.init, initializing := TRUE);
+        ArrayExpr.NoteUseTargetVar (t.initExpr);
+        AssignStmt.PrepForEmit (t.tipe, t.initExpr, initializing := TRUE);
         LoadLValue (t);
-        AssignStmt.DoEmit (t.tipe, t.init);
+        AssignStmt.DoEmit (t.tipe, t.initExpr, t.cg_align, initializing := TRUE);
       END;
       t.initDone := TRUE;
       Tracer.Schedule (t.trace);
     END;
   END UserInit;
 
+(* EXPORTED *)
 PROCEDURE GenGlobalMap (s: Scope.T): INTEGER =
   (* generate the garbage collector's map-proc for the variables of s *)
   VAR started := FALSE;  info: Type.Info;  v := Scope.ToList (s);
@@ -842,11 +962,13 @@ PROCEDURE GenGlobalMap (s: Scope.T): INTEGER =
     END;
   END GenGlobalMap;
 
+(* EXPORTED *)
 PROCEDURE NeedGlobalInit (t: T): BOOLEAN =
   BEGIN
     RETURN (NOT t.initDone) AND (NOT t.external);
   END NeedGlobalInit;
 
+(* EXPORTED *)
 PROCEDURE InitGlobal (t: T) =
   BEGIN
     IF (NOT t.initDone) AND (NOT t.external) THEN
@@ -855,6 +977,7 @@ PROCEDURE InitGlobal (t: T) =
     END;
   END InitGlobal;
 
+(* Externally dispatched-to *)
 PROCEDURE AddFPTag (t: T;  VAR x: M3.FPInfo): CARDINAL =
   BEGIN
     ValueRep.FPStart (t, x, "VAR ", t.offset, global := TRUE);
@@ -870,6 +993,7 @@ TYPE TraceNode = Tracer.T OBJECT
                    apply := DoTrace;
                  END;
 
+(* EXPORTED *)
 PROCEDURE ParseTrace (): Tracer.T =
   TYPE TK = Token.T;
   VAR e: Expr.T;
@@ -882,6 +1006,7 @@ PROCEDURE ParseTrace (): Tracer.T =
     RETURN NEW (TraceNode, handler := e);
   END ParseTrace;
 
+(* EXPORTED *)
 PROCEDURE BindTrace (t: T;  xx: Tracer.T) =
   VAR x: TraceNode := xx;  p: Scope.IDStack;  z: M3String.T;  args: Expr.List;
   BEGIN
@@ -912,6 +1037,7 @@ PROCEDURE DoTrace (x: TraceNode) =
     Expr.Compile (x.call);
   END DoTrace;
 
+(* EXPORTED *)
 PROCEDURE CheckTrace (tt: Tracer.T;  VAR cs: Value.CheckState) =
   VAR x: TraceNode := tt;
   BEGIN
@@ -921,6 +1047,7 @@ PROCEDURE CheckTrace (tt: Tracer.T;  VAR cs: Value.CheckState) =
     END;
   END CheckTrace;
 
+(* EXPORTED *)
 PROCEDURE ScheduleTrace (t: T) =
   BEGIN
     Tracer.Schedule (t.trace);

@@ -15,7 +15,7 @@ CONST
 (* We desire no limit here:
     MaxBytes = LAST (INTEGER);
 
-   But cm3 measures sizes in bits, and the size must fit in an INTEGER:
+   But cm3 measures sizes in bits, and the size, in bits, must fit in an INTEGER:
     MaxBytes = LAST(INTEGER) DIV BITSIZE(Byte).
 
    And the overall type size, in bits, must fit in an INTEGER:

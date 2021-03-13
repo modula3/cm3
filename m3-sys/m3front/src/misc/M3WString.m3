@@ -5,9 +5,6 @@ MODULE M3WString;
 
 IMPORT M3Buf, Text, Word, CG, WCharr;
 
-CONST
-  NO_UID = -1;
-
 TYPE
   HashTable = REF ARRAY OF T;
   WText_T   = REF Buf; 

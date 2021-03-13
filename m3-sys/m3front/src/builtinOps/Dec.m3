@@ -96,7 +96,7 @@ PROCEDURE Compile (ce: CallExpr.T) =
     CG.Push (lvalue);
 
     CG.Push (lvalue);
-    CG.Load_indirect (info.stk_type, 0, info.size);
+    CG.Load_indirect (info.stk_type, 0, info.size, info.alignment);
     Expr.Compile (dec);
 
     IF (info.stk_type = CG.Type.Addr)
@@ -120,7 +120,7 @@ PROCEDURE Compile (ce: CallExpr.T) =
 PROCEDURE Initialize () =
   BEGIN
     Z := CallExpr.NewMethodList (1, 2, FALSE, FALSE, TRUE, NIL,
-                                 NIL,
+                                 NIL, NIL,
                                  CallExpr.NotAddressable,
                                  Check,
                                  Prep,

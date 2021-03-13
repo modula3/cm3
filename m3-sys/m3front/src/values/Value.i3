@@ -21,7 +21,10 @@ TYPE
 PROCEDURE TypeCheck (t: T;  VAR cs: CheckState);
 
 PROCEDURE TypeOf (t: T): M3.Type;
-(* returns the type of 't' *)
+(* returns the (semantic) type of 't' *)
+
+PROCEDURE RepTypeOf (t: T): M3.Type;
+(* returns the representation type of 't' *)
 
 PROCEDURE SetGlobals (t: T);
 (* assign offsets to any needed global data. *)

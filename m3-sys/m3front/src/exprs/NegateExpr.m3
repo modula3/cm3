@@ -16,6 +16,7 @@ TYPE
         folded : Expr.T;
       OVERRIDES
         typeOf       := TypeOf;
+        repTypeOf    := RepTypeOf;
         check        := Check;
         need_addr    := ExprRep.NotAddressable;
         prep         := Prep;
@@ -51,6 +52,11 @@ PROCEDURE TypeOf (p: P): Type.T =
     RETURN Type.Base (Expr.TypeOf (p.a));
   END TypeOf;
 
+PROCEDURE RepTypeOf (p: P): Type.T =
+  BEGIN
+    RETURN Type.Base (Expr.RepTypeOf (p.a));
+  END RepTypeOf;
+
 PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
   VAR t: Type.T;
   BEGIN
@@ -59,6 +65,7 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
     IF (t = Int.T) OR (t = LInt.T)
       OR (t = Reel.T) OR (t = LReel.T) OR (t = EReel.T) THEN
       (* ok *)
+(*    ELSIF SetType.split (t, range) THEN (* OK *) *)
     ELSE
       t := Expr.BadOperands ("unary \'-\'", t);
     END;
@@ -81,7 +88,7 @@ PROCEDURE Compile (p: P) =
       Expr.Compile (p.a);
       CG.Negate (Type.CGType (p.type));
     ELSE
-      Expr.Compile (e);
+      Expr.Compile (e); (* e is folded p, not p.a, thus already negated. *)
     END;
   END Compile;
 

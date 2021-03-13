@@ -12,6 +12,7 @@ TYPE
         tmp  : CG.Val;
       OVERRIDES
         typeOf       := ExprRep.NoType;
+        repTypeOf    := ExprRep.NoType;
         check        := Check;
         need_addr    := NeedsAddress;
         prep         := Prep;
@@ -38,11 +39,12 @@ PROCEDURE New (a: Expr.T;  t: Type.T): Expr.T =
   BEGIN
     p := NEW (P);
     ExprRep.Init (p);
-    p.origin := a.origin;
-    p.expr   := a;
-    p.tipe   := t;
-    p.type   := t;
-    p.tmp    := NIL;
+    p.origin  := a.origin;
+    p.expr    := a;
+    p.tipe    := t;
+    p.type    := t;
+    p.repType := Type.StripPacked (t);
+    p.tmp     := NIL;
     RETURN p;
   END New;
 
@@ -86,7 +88,7 @@ PROCEDURE Compile (p: P) =
   (* all the work was done by "Prep" *)
   BEGIN
     CG.Push (p.tmp);
-    CG.Boost_alignment (Target.Address.align);
+    CG.Boost_addr_alignment (Target.Address.align);
     CG.Free (p.tmp);
     p.tmp := NIL;
   END Compile;

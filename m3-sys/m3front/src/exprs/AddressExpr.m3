@@ -17,6 +17,7 @@ TYPE
         value        : Target.Int;
       OVERRIDES
         typeOf       := ExprRep.NoType;
+        repTypeOf    := ExprRep.NoType;
         check        := ExprRep.NoCheck;
         need_addr    := ExprRep.NotAddressable;
         prep         := ExprRep.NoPrep;
@@ -45,8 +46,12 @@ PROCEDURE New (READONLY value: Target.Int): Expr.T =
     p.value   := value;
     p.checked := TRUE;
     IF TInt.EQ (value, TInt.Zero)
-      THEN p.type := Null.T;
-      ELSE p.type := Addr.T;
+    THEN
+      p.type := Null.T;
+      p.repType := Null.T;
+    ELSE
+      p.type := Addr.T;
+      p.repType := Addr.T;
     END;
     RETURN p;
   END New;

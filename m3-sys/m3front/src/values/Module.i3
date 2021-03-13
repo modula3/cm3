@@ -77,7 +77,7 @@ PROCEDURE MakeCurrent (t: T);
    constant initialized in C; these functions are in Module
    to accomodate hypothetical multi-threaded m3front,
    i.e. instead of having globals initialized on-demand in Jmpbufs.
-   i.e. Module compilation still assumed single threadied, but
+   i.e. Module compilation still assumed single threaded, but
    possibly multiple Modules compiled on separate threads. *)
 PROCEDURE GetAlloca (t: T) : CG.Proc;
 PROCEDURE GetJmpbufSize (t: T): CG.Var;

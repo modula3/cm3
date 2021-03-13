@@ -190,7 +190,7 @@ GENERIC INTERFACE VarArray ( Subscript , Element , Ranges )
       Ss need not be in touched(A).
       Do not touch Array[Ss].
         (Untouched elements implicitly have InitElemValue(Array)) 
-     Concrete view: (Make no change of allocation. )
+     Concrete view: (Make no change of allocation.)
      Performance: O(1). 
   *)  
 

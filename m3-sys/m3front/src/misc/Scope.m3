@@ -363,7 +363,7 @@ PROCEDURE NameToPrefix (v: Value.T;
       p.stk [p.top] := v.extName;
       INC (p.top);
 
-    ELSIF v.exported OR v.imported OR v.scope.module THEN
+    ELSIF v.exported OR v.imported OR (v.scope # NIL AND v.scope.module) THEN
       (* global names:   foo   module.foo  *)
       scope_name := ScopeName (v.scope);
       IF (scope_name = emptyStr) OR (NOT with_module) THEN
@@ -426,7 +426,8 @@ PROCEDURE NameToPrefix (v: Value.T;
 
 PROCEDURE ScopeName (t: T): M3ID.T =
   BEGIN
-    IF (t.sname = M3ID.NoID) THEN
+    IF t = NIL THEN RETURN emptyStr END;
+    IF t.sname = M3ID.NoID THEN
       IF (t.parent = NIL) THEN
         t.sname := emptyStr;
       ELSE

@@ -13,6 +13,8 @@ PROCEDURE Parse (): Type.T;
 
 PROCEDURE New (size: INTEGER;  base: Type.T): Type.T;
 
+PROCEDURE Is (t:Type.T): BOOLEAN;
+
 PROCEDURE Split (t: Type.T;  VAR size: INTEGER;  VAR base: Type.T);
 
 PROCEDURE Base (t: Type.T): Type.T;

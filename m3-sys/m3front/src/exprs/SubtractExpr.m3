@@ -26,6 +26,7 @@ TYPE
         tmp      : CG.Var;
       OVERRIDES
         typeOf       := TypeOf;
+        repTypeOf    := RepTypeOf;
         check        := Check;
         need_addr    := ExprRep.NotAddressable;
         prep         := Prep;
@@ -70,6 +71,19 @@ PROCEDURE TypeOf (p: P): Type.T =
     END;
     RETURN ta;
   END TypeOf;
+
+PROCEDURE RepTypeOf (p: P): Type.T =
+  VAR ta: Type.T;
+  BEGIN
+    ta := Type.Base (Expr.RepTypeOf (p.a));
+    IF (p.extended) AND EnumType.Is (ta) THEN
+      ta := Int.T;
+    ELSIF Type.IsSubtype (ta, Addr.T) AND
+      Type.IsSubtype (Type.Base (Expr.RepTypeOf (p.b)), Addr.T) THEN
+      ta := Int.T;
+    END;
+    RETURN ta;
+  END RepTypeOf;
 
 PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
   VAR ta, tb, range: Type.T;
@@ -127,7 +141,7 @@ PROCEDURE Prep (p: P) =
         p.tmp := CG.Declare_temp (info.size, Target.Integer.align,
                                   CG.Type.Struct, in_memory := TRUE);
         CG.Load_addr_of (p.tmp, 0, Target.Integer.align);
-        CG.Force ();
+        CG.ForceStacked ();
         Expr.Compile (p.a);
         Expr.Compile (p.b);
         CG.Set_difference (info.size);

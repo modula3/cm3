@@ -8,12 +8,18 @@
 INTERFACE RecordExpr;
 (* A record constructor. *) 
 
-IMPORT M3ID, Type, Expr;
+IMPORT M3ID, Type, Expr, CG;
 
 PROCEDURE New (type: Type.T;  args: Expr.List): Expr.T;
 
 PROCEDURE Is (e: Expr.T): BOOLEAN;
+(* Purely syntactic. Will not look through a ConsExpr. *)
 
 PROCEDURE Qualify (record: Expr.T;  id: M3ID.T;  VAR e: Expr.T): BOOLEAN;
+
+PROCEDURE CheckStaticRTErrEval
+  (expr: Expr.T; VAR(*OUT*) Code: CG.RuntimeError; VAR(*OUT*) Msg: TEXT);
+(* Set Code and Msg if they are not set and expr is known to produce a
+   statically unconditional runtime error when evaluated. *)
 
 END RecordExpr.

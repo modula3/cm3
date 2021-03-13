@@ -40,7 +40,7 @@ TYPE T <: ROOT; (* a code generator *)
 TYPE UnitKind = { Interface, Module };
 
 (* Changes to the compiler intermediate representation have to be
-   reflected in *many* places.  To help with compatibility problems,
+   consistified in *many* places.  To help with compatibility problems,
    here is a versioning system.  Through CIV_WC_size, there was no
    explicit versioning.  Starting with CIV_ext1, the version can 
    optionally be placed into the IR.
@@ -70,8 +70,8 @@ TYPE
   (* The code generator manipulates scalar values of the types
      listed above.  The notation "sN.B" denotes the stack value
      that is "N" elements from the top of stack and has the type
-     whose first letter is "B".  Only loads and stores manipulate
-     MTypes, when loaded values are sign-extended or zero-extended
+     abbreviated by "B".  Only loads and stores manipulate
+     MTypes.  When loaded, values are sign-extended or zero-extended
      as necessary to produce ZTypes.  *)
 
 TYPE

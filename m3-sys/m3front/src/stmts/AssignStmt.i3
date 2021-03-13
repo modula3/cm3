@@ -9,12 +9,21 @@
 
 INTERFACE AssignStmt;
 
-IMPORT Expr, Stmt, Type;
+IMPORT Expr, Stmt, Target, Type, CG;
 
 PROCEDURE Parse (): Stmt.T;
 
-PROCEDURE Check (tlhs: Type.T;  rhs: Expr.T;  VAR cs: Stmt.CheckState);
-(* check that rhs is assignable to a variable of type tlhs. *)
+PROCEDURE Check
+  (tlhs: Type.T;  rhs: Expr.T;  VAR cs: Stmt.CheckState; IsError := FALSE);
+(* Check that rhs is assignable to a variable of type tlhs. *)
+(* Assignable types but Non-assignable value emits a warning, unless IsError. *)
+
+PROCEDURE CheckStaticRTErrExec
+  (tlhs: Type.T;  rhsExpr: Expr.T;  VAR cs: Stmt.CheckState;
+   VAR Code: CG.RuntimeError; VAR Msg: TEXT; IsError := FALSE);
+(* Like Check, but if a warning is produced for a runtime error that is
+   statically inevitable whenever this code is executed, return the RT error
+   Code # CG.RuntimeError.Unknown and a message text in Msg.*)
 
 PROCEDURE PrepForEmit (tlhs: Type.T;  rhs: Expr.T;  initializing: BOOLEAN);
 (* An alternative to calling Expr.Prep(rhs) before calling Emit() below,
@@ -23,17 +32,24 @@ PROCEDURE PrepForEmit (tlhs: Type.T;  rhs: Expr.T;  initializing: BOOLEAN);
    the result directly.  "initializing" is TRUE if the lhs is
    uninitialized storage (i.e. contains no user data). *)
 
-PROCEDURE DoEmit (tlhs: Type.T;  rhs: Expr.T);
+PROCEDURE DoEmit
+  (tlhs: Type.T;  rhs: Expr.T; lhs_align := Target.Byte; initializing: BOOLEAN);
+(* tlhs is the repType. *)
 (* emit code to assign  (s0.A).tlhs := rhs.
    Note that Emit assumes that TypeOf(rhs) is assignable to tlhs
-   and that Expr.Prep(rhs) or preferably PrepRHS(rhs) has been called. *)
+   and that Expr.Prep(rhs) or preferably PrepForEmit(tlhs,rhs,initializing)
+   has been called. *)
 
-PROCEDURE DoEmitCheck (tlhs: Type.T;  rhs: Expr.T);
-(* emit code to evaluate "rhs" and generate whatever
-   runtime checks would be needed if it were assigned to
-   a value of type 'tlhs'.  The new value is left on the stack.
-   Note that Emit assumes that TypeOf(rhs) is assignable to tlhs
-   and that Expr.Prep(rhs) has been called.  'tlhs' may not be
-   an open array type.  *)
+PROCEDURE EmitRTCheck (tlhs: Type.T;  rhs: Expr.T);
+(* Emit code to evaluate "rhs" and generate any runtime 
+   checks that would be needed if it were assigned to
+   a value of type 'tlhs'.  Leave the rhs value on the stack.
+   PRE: The CG stack is empty.
+   PRE: TypeOf(rhs) is assignable to tlhs.
+   PRE: Expr.Prep(rhs) has been called.
+   PRE: 'tlhs' is not an open array type.  *)
+
+PROCEDURE DoGenRTAbort (Code: CG.RuntimeError): BOOLEAN;
+(* Does Code create runtime errors? *)
 
 END AssignStmt.

@@ -26,9 +26,9 @@ VAR (* CONST after "begin_unit" call *)
 
 CONST
   ST_name = ARRAY ST OF TEXT {
-    "Addr ", "Int32", "Int64", "Real ", "LReal ", "ExReal ", "Void ",
+    "Addr ", "Int32 ", "Int64 ", "Real ", "LReal ", "ExReal ", "Void ",
     "W,I ", "R,L,E ", "W,I,R,L,E ",
-    "any ", "", "", "<=match "
+    "any ", "", "<dontCare> ", "<=match "
   };
 
 TYPE
@@ -1151,7 +1151,11 @@ PROCEDURE loophole (self: U;  from, two: ZType) =
 
 PROCEDURE abort (self: U;  code: RuntimeError) =
   BEGIN
-    self.s_empty ();
+    (*self.s_empty (); *)
+    (* 1) This is very difficult for producers to ensure.
+       2) None of 4 code generators make any access to the operand stack,
+          for the abort operation.
+    *)
     self.child.abort (code);
   END abort;
 

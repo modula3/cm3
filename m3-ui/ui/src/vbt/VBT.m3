@@ -1429,6 +1429,7 @@ VAR
   sel, mct := AtomTable{0, NEW(TextIntTbl.Default).init(), NEW(TextSeq, 0)};
 
 BEGIN
+  <* ASSERT BITSIZE (ModifiersAsInt) = BITSIZE (Modifiers) *>
   IF pedantic
     THEN mu := NEW(Mutex);
     ELSE mu := NEW(MUTEX);

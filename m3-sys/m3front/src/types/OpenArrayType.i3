@@ -20,23 +20,33 @@ PROCEDURE Split (t: Type.T;  VAR element: Type.T): BOOLEAN;
    to the appropriate type.  Otherwise, returns FALSE *)
 
 PROCEDURE EltPack (array: Type.T): INTEGER;
-(* If 'array' is an open array type, returns the packed size in bits of
-   the elements.  Otherwise, returns 0. *)
+(* If 'array' is an array type, returns the packed size in bits of
+   its elements.  If 'array' is an open array type, this is for the
+   nearest fixed array dimension, if such exists.  If t is not an
+   array type, returns 0. *)
 
 PROCEDURE EltAlign (array: Type.T): INTEGER;
 (* If 'array' is an open array type, returns the bit alignment of
-   the elements.  Otherwise, returns Target.Byte. *)
+   the nearest non-open or non-array elements.
+   *BUT NOTE*: If elements are packed, this is the alignment of the
+   unpacked element type !!!
+   Otherwise, returns Target.Byte. *)
+(* PRE: t is Checked. *)
+
+PROCEDURE EltsAreBitAddressed (t: Type.T): BOOLEAN;
+(* Returns TRUE if t is an open array whose nearest non-open elements are not
+   at least byte-aligned. *)
 
 PROCEDURE OpenDepth (t: Type.T): INTEGER;
 (* If 't' is an n-dimensional open array, returns n else returns 0 *)
 
-PROCEDURE NonOpenEltType (t: Type.T): Type.T;
-(* If 't' is an n-dimensional open array, returns the type of the base
+PROCEDURE NonopenEltType (t: Type.T): Type.T;
+(* If 't' is an n-dimensional open array, returns the type of the non-open
    elements; otherwise, returns t. That is, strip all the ARRAY OF in 
    front of t *)
 
-PROCEDURE DeclareTemp (t: Type.T): CG.Var;
-(* If 't' is an open array, declare and return a temporary to hold its
-   dope vector, otherwise abort. *)
+PROCEDURE DeclareDopeTemp (t: Type.T): CG.Var;
+(* If 't' is an open array type, declare and return a temporary variable to
+   hold its dope vector, otherwise abort. *)
 
 END OpenArrayType.

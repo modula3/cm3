@@ -15,6 +15,7 @@ TYPE
   P = ExprRep.Tab BRANDED "RangeExpr.P" OBJECT
       OVERRIDES
         typeOf       := TypeOf;
+        repTypeOf    := RepTypeOf;
         check        := Check;
         need_addr    := ExprRep.NotAddressable;
         prep         := Prep;
@@ -57,6 +58,11 @@ PROCEDURE TypeOf (p: P): Type.T =
   BEGIN
     RETURN Type.Base (Expr.TypeOf (p.a));
   END TypeOf;
+
+PROCEDURE RepTypeOf (p: P): Type.T =
+  BEGIN
+    RETURN Type.Base (Expr.RepTypeOf (p.a));
+  END RepTypeOf;
 
 PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
   VAR ta, tb: Type.T;

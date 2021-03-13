@@ -9,7 +9,7 @@
 MODULE CastExpr;
 
 IMPORT M3Buf, CG, Expr, ExprRep, Type, Error, OpenArrayType;
-IMPORT M3, M3ID, M3RT, Target, TInt;
+IMPORT M3, M3ID, M3RT, Target, TInt, Fmt;
 FROM Target IMPORT FloatType;
 
 TYPE
@@ -35,6 +35,7 @@ TYPE
         tmp_cnt : INTEGER;
       OVERRIDES
         typeOf       := ExprRep.NoType;
+        repTypeOf    := ExprRep.NoType;
         check        := Check;
         need_addr    := NeedsAddress;
         prep         := Prep;
@@ -61,12 +62,13 @@ PROCEDURE New (a: Expr.T;  t: Type.T): Expr.T =
   BEGIN
     p := NEW (P);
     ExprRep.Init (p);
-    p.origin := a.origin;
-    p.expr   := a;
-    p.tipe   := t;
-    p.type   := t;
-    p.tmp    := NIL;
-    p.tmp_cnt:= 0;
+    p.origin    := a.origin;
+    p.expr      := a;
+    p.tipe      := t;
+    p.type      := t;
+    p.repType   := Type.StripPacked(t);
+    p.tmp       := NIL;
+    p.tmp_cnt   := 0;
     RETURN p;
   END New;
 
@@ -95,24 +97,30 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
     END;
     sz0 := src_info.size;
 
-
     (* check to see that the destination type is legal *)
     IF array_out THEN
       (* open array type *)
       elt := Type.CheckInfo (elt, elt_info);
       IF (elt_info.class = Type.Class.OpenArray) THEN
-        Error.Msg ("LOOPHOLE: multidimensional open arrays not supported");
+        Error.Msg
+          ("Cannot LOOPHOLE to a multidimensional open array type (2.7).");
       END;
       sz1 := elt_info.size;
       IF (sz1 <= 0) OR ((sz0 MOD sz1) # 0) THEN
-        Error.Msg ("LOOPHOLE: expression's size incompatible with type's");
+        Error.Msg
+          ("LOOPHOLE: expression's size ("
+            & Fmt.Int (sz0) & ") is not a multiple of type's ("
+            & Fmt.Int (sz1) & ") (2.7).");
       END;
       align_out := elt_info.alignment;
     ELSE
       (* fixed size type *)
       sz1 := dest_info.size;
       IF (sz0 # sz1) THEN
-        Error.Msg ("LOOPHOLE: expression's size differs from type's");
+        Error.Msg
+          ("LOOPHOLE: expression's size ("
+            & Fmt.Int (sz0) & ") differs from type's ("
+            & Fmt.Int (sz1) & ") (2.7).");
       END;
     END;
 
@@ -278,17 +286,17 @@ PROCEDURE Compile (p: P) =
     CASE p.kind OF
     | Kind.Noop =>
         Expr.Compile (e);
-        CG.Boost_alignment (t_align);
+        CG.Boost_addr_alignment (t_align);
     | Kind.D_to_A,
       Kind.S_to_A,
       Kind.V_to_A =>
-        PushTmp (p, t_align);
+        PushTmp (p, z_align);
     | Kind.D_to_S =>
         Expr.CompileAddress (e, traced := FALSE);
-        CG.Boost_alignment (t_align);
+        CG.Boost_addr_alignment (t_align);
     | Kind.S_to_S =>
         Expr.Compile (e);
-        CG.Boost_alignment (t_align);
+        CG.Boost_addr_alignment (t_align);
     | Kind.V_to_S =>
         PushTmp (p, z_align);
     | Kind.D_to_V =>
@@ -298,13 +306,13 @@ PROCEDURE Compile (p: P) =
            variables may be in floating-point registers...
         Expr.PrepLValue (e);
         Expr.CompileLValue (e);
-        CG.Boost_alignment (t_align);
-        CG.Load_indirect (t_cg, 0, sz);
+        CG.Boost_addr_alignment (t_align);
+        CG.Load_indirect (t_cg, 0, sz, t_align);
         ******)
     | Kind.S_to_V =>
         Expr.Compile (e);
-        CG.Boost_alignment (t_align);
-        CG.Load_indirect (t_cg, 0, sz);
+        CG.Boost_addr_alignment (t_align);
+        CG.Load_indirect (t_cg, 0, sz, t_align);
     | Kind.V_to_V =>
         Expr.Compile (e);
         CG.Loophole (u_cg, t_cg);
@@ -325,12 +333,12 @@ PROCEDURE PushTmp (p: P;  align: INTEGER) =
 PROCEDURE BuildArray (p: P;  src_size: INTEGER): CG.Var =
   VAR
     array : CG.Var;
-    elt   := OpenArrayType.NonOpenEltType (p.tipe);
+    elt   := OpenArrayType.NonopenEltType (p.tipe);
     elt_info: Type.Info;
   BEGIN
     elt := Type.CheckInfo (elt, elt_info);
     (** CG.Check_byte_aligned (); **)
-    array := OpenArrayType.DeclareTemp (p.tipe);
+    array := OpenArrayType.DeclareDopeTemp (p.tipe);
     CG.Store_addr (array, M3RT.OA_elt_ptr);
     CG.Load_intt (src_size DIV elt_info.size);
     CG.Store_int (Target.Integer.cg_type, array, M3RT.OA_size_0);
@@ -426,31 +434,31 @@ PROCEDURE CompileLV (p: P; traced: BOOLEAN) =
       Kind.S_to_V,
       Kind.V_to_V =>
         Expr.CompileLValue (p.expr, traced);
-        CG.Boost_alignment (t_align);
+        CG.Boost_addr_alignment (t_align);
 
     | Kind.D_to_S =>
         Expr.CompileLValue (p.expr, traced);
-        CG.Boost_alignment (t_align);
+        CG.Boost_addr_alignment (t_align);
 
         (* Inhibit some optimization that causes compilation to fail. e.g.:
          * m3core/src/float/IEEE/RealFloat.m3:
          * In function 'RealFloat__CopySign':
          * internal compiler error: in convert_move, at expr.c:371
          *
-         * ?Force() inhibits optimizations done by m3front/src/misc/CG.m3?
+         * ?ForceStacked() inhibits optimizations done by m3front/src/misc/CG.m3?
          * ?The particular optimizations are removal of address taken and
          * pointer indirections? ?Leaving the address taken inhibits
          * gcc optimization? ?Given that this is LOOPHOLE and floating point,
          * inhibiting optimization is very ok?
          *)
         IF FloatType[t_cg] # FloatType[u_cg] THEN
-          CG.Force ();
+          CG.ForceStacked ();
         END;
 
     | Kind.D_to_A,
       Kind.S_to_A,
       Kind.V_to_A =>
-        PushTmp (p, t_align);
+        PushTmp (p, z_align);
     | Kind.V_to_S =>
         PushTmp (p, z_align);
     END;

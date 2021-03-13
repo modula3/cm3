@@ -1,0 +1,29 @@
+"../Lib.i3", line 14: warning: Ordinal value not assignable at runtime (out of range) (2.3.1).
+"../Lib.i3", line 14: warning: Ordinal value not assignable at runtime (out of range) (2.3.1).
+2 warnings encountered
+"../Main.m3", line 31: warning: Ordinal value not assignable at runtime (out of range) (2.3.1).
+"../Main.m3", line 31: warning: Ordinal value not assignable at runtime (out of range) (2.3.1).
+"../Main.m3", line 54: warning: Ordinal value not assignable at runtime (out of range) (2.3.1).
+"../Main.m3", line 54: warning: Ordinal value not assignable at runtime (out of range) (2.3.1).
+"../Main.m3", line 70: warning: Ordinal value not assignable at runtime (out of range) (2.3.1).
+"../Main.m3", line 70: warning: Ordinal value not assignable at runtime (out of range) (2.3.1).
+"../Main.m3", line 74: warning: Ordinal value not assignable at runtime (out of range) (2.3.1).
+"../Main.m3", line 74: warning: Ordinal value not assignable at runtime (out of range) (2.3.1).
+"../Main.m3", line 107: warning: Ordinal value not assignable at runtime (out of range) (2.3.1).
+"../Main.m3", line 107: warning: Ordinal value not assignable at runtime (out of range) (2.3.1).
+"../Main.m3", line 116: warning: Ordinal value not assignable at runtime (out of range) (2.3.1).
+"../Main.m3", line 116: warning: Ordinal value not assignable at runtime (out of range) (2.3.1).
+"../Main.m3", line 121: warning: Ordinal value not assignable at runtime (out of range) (2.3.1).
+"../Main.m3", line 121: warning: Ordinal value not assignable at runtime (out of range) (2.3.1).
+"../Main.m3", line 153: warning: Ordinal value not assignable at runtime (out of range) (2.3.1).
+"../Main.m3", line 153: warning: Ordinal value not assignable at runtime (out of range) (2.3.1).
+"../Main.m3", line 163: warning: Ordinal value not assignable at runtime (out of range) (2.3.1).
+"../Main.m3", line 163: warning: Ordinal value not assignable at runtime (out of range) (2.3.1).
+"../Main.m3", line 207: warning: Ordinal value not assignable at runtime (out of range) (2.3.1).
+"../Main.m3", line 206: warning: not used (Last)
+"../Main.m3", line 254: warning: not used (Small)
+"../Main.m3", line 257: warning: not used (Big)
+"../Main.m3", line 45: warning: not used (ABCD)
+"../Main.m3", line 201: warning: unreachable statement
+"../Main.m3", line 210: warning: unreachable statement
+25 warnings encountered

@@ -160,7 +160,7 @@ PROCEDURE HandleEvent (    v              : VBT.T;
                          e, ADR(junk[0]), NUMBER(junk), ADR(last.keysym),
                          ADR(last.xcompstatus))
                 END;
-                VAR state: INTEGER := e.state;
+                VAR state: VBT.ModifiersAsInt := e.state;
                 BEGIN
                   VBTClass.Key(
                     v, VBT.KeyRec{last.keysym, e.time, e.type = X.KeyPress,
@@ -256,7 +256,7 @@ PROCEDURE ButtonEvent (    v   : VBT.T;
   VAR
     cd: VBT.MouseRec;
     mf               := xcon.mouseFocus;
-    state : INTEGER := e.state;
+    state : VBT.ModifiersAsInt := e.state;
   CONST
     NonButtons = VBT.Modifiers{FIRST(VBT.Modifier).. LAST(VBT.Modifier)}
                    - VBT.Buttons;
@@ -360,7 +360,7 @@ PROCEDURE EnterLeave (v              : VBT.T;
                       lost, takeFocus: BOOLEAN;
                       e              : X.XCrossingEventStar) =
   VAR cd: VBT.PositionRec;
-      state: INTEGER := e.state;
+      state: VBT.ModifiersAsInt := e.state;
   BEGIN
     cd.time := e.time;
     cd.modifiers := LOOPHOLE(state, VBT.Modifiers);

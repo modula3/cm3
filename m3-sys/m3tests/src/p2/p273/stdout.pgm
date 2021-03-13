@@ -1,0 +1,15 @@
+Raised an exception, as expected: inline set inside record
+Raised an exception, as expected: named set inside record
+Raised an exception, as expected: inline record inside record
+Raised an exception, as expected: named record inside record
+Raised an exception, as expected: inline array inside record
+Raised an exception, as expected: named array inside record
+Raised an exception, as expected: inline set inside array
+Raised an exception, as expected: named set inside array
+Raised an exception, as expected: inline record inside array
+Raised an exception, as expected: named record inside array
+Raised an exception, as expected: inline array inside array
+Raised an exception, as expected: named array inside array
+12 tests performed.
+All succeeded.
+Overall test succeeded.

@@ -14,7 +14,7 @@ TYPE
   P = Type.T BRANDED "EReel.T" OBJECT
       OVERRIDES
         check      := Check;
-        check_align:= TypeRep.ScalarAlign;
+        no_straddle:= TypeRep.ScalarNoStraddle;
         isEqual    := TypeRep.NeverEqual;
         isSubtype  := TypeRep.NoSubtypes;
         compile    := Compiler;

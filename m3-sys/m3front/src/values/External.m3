@@ -49,6 +49,7 @@ TYPE
     toExpr      := ToExpr;
     toType      := ToType;
     typeOf      := TypeOf;
+    repTypeOf   := RepTypeOf;
     base        := Base;
   END;
 
@@ -453,6 +454,11 @@ PROCEDURE TypeOf (t: T): Type.T =
   BEGIN
     RETURN Value.TypeOf (t.obj);
   END TypeOf;
+
+PROCEDURE RepTypeOf (t: T): Type.T =
+  BEGIN
+    RETURN Value.RepTypeOf (t.obj);
+  END RepTypeOf;
 
 PROCEDURE Base (t: T): Value.T =
   BEGIN

@@ -20,6 +20,13 @@ PROCEDURE TypeOf (ce: CallExpr.T): Type.T =
     RETURN t;
   END TypeOf;
 
+PROCEDURE RepTypeOf (ce: CallExpr.T): Type.T =
+  VAR t: Type.T := Int.T;
+  BEGIN
+    IF TypeExpr.Split (ce.args[1], t) THEN (*ok*) END;
+    RETURN Type.StripPacked (t);
+  END RepTypeOf;
+
 PROCEDURE Check (ce: CallExpr.T;  VAR cs: Expr.CheckState) =
   VAR t: Type.T;
   BEGIN
@@ -82,6 +89,7 @@ PROCEDURE Initialize () =
   BEGIN
     Z := CallExpr.NewMethodList (2, 2, TRUE, FALSE, TRUE, NIL,
                                  TypeOf,
+                                 RepTypeOf,
                                  NeedsAddress,
                                  Check,
                                  Prep,

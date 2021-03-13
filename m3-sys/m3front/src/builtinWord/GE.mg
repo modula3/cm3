@@ -68,7 +68,7 @@ PROCEDURE Initialize (r: INTEGER) =
   BEGIN
     rep := r;
     Z := CallExpr.NewMethodList (2, 2, TRUE, TRUE, TRUE, Bool.T,
-                                 NIL,
+                                 NIL, NIL,
                                  CallExpr.NotAddressable,
                                  Check,
                                  CallExpr.PrepArgs,

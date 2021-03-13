@@ -46,6 +46,17 @@ PROCEDURE TypeOf (t: T): Type.T =
     RETURN x;
   END TypeOf;
 
+PROCEDURE RepTypeOf (t: T): Type.T =
+  VAR x: Type.T;
+  BEGIN
+    IF (t = NIL) THEN RETURN ErrType.T END;
+    IF (t.inTypeOf) THEN IllegalRecursion (t);  RETURN ErrType.T  END;
+    t.inTypeOf := TRUE;
+    x := t.repTypeOf ();
+    t.inTypeOf := FALSE;
+    RETURN x;
+  END RepTypeOf;
+
 PROCEDURE SetGlobals (t: T) =
   BEGIN
     IF (t = NIL ) THEN RETURN END;

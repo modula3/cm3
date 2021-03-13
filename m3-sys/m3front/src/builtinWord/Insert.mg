@@ -47,7 +47,7 @@ PROCEDURE Compile (ce: CallExpr.T) =
       (* we can use the insert_n operator *)
       b := TInt.FromInt (Word_types[rep].size - i3, max);  <*ASSERT b*>
       Expr.Compile (ce.args[0]);
-      CG.Force ();
+      CG.ForceStacked ();
       Expr.Compile (ce.args[1]);
       CheckExpr.EmitChecks (ce.args[2], TInt.Zero, max,
                             CG.RuntimeError.ValueOutOfRange);
@@ -58,9 +58,9 @@ PROCEDURE Compile (ce: CallExpr.T) =
          the range checking code *)
       b := TInt.FromInt (Word_types[rep].size - i2, max);  <*ASSERT b*>
       Expr.Compile (ce.args[0]);
-      CG.Force ();
+      CG.ForceStacked ();
       Expr.Compile (ce.args[1]);
-      CG.Force ();
+      CG.ForceStacked ();
       CG.Load_intt (i2);
       CheckExpr.EmitChecks (ce.args[3], TInt.Zero, max,
                             CG.RuntimeError.ValueOutOfRange);
@@ -84,9 +84,9 @@ PROCEDURE Compile (ce: CallExpr.T) =
         CG.Discard (Target.Integer.cg_type);
       END;
       Expr.Compile (ce.args[0]);
-      CG.Force ();
+      CG.ForceStacked ();
       Expr.Compile (ce.args[1]);
-      CG.Force ();
+      CG.ForceStacked ();
       CG.Push (t2);
       CG.Push (t3);
       CG.Insert (Word_types[rep].cg_type);
@@ -131,7 +131,7 @@ PROCEDURE Initialize (r: INTEGER) =
   BEGIN
     rep := r;
     Z := CallExpr.NewMethodList (4, 4, TRUE, TRUE, TRUE, T,
-                                 NIL,
+                                 NIL, NIL,
                                  CallExpr.NotAddressable,
                                  Check,
                                  CallExpr.PrepArgs,

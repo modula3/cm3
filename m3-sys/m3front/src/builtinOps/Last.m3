@@ -74,7 +74,7 @@ PROCEDURE Fold (ce: CallExpr.T): Expr.T =
       (* LAST (open array value) => try for constant open array *)
       e := Expr.ConstValue (e);
       IF (e = NIL) THEN RETURN NIL END;
-      IF ArrayExpr.GetBounds (e, min, max)
+      IF ArrayExpr.GetBounds (e, min, max) (* Array constructor. *)
         THEN RETURN IntegerExpr.New (Int.T, max);
         ELSE RETURN NIL;
       END;
@@ -108,6 +108,7 @@ PROCEDURE LastOfType (t: Type.T): Expr.T =
 PROCEDURE Initialize () =
   BEGIN
     Z := CallExpr.NewMethodList (1, 1, TRUE, FALSE, FALSE, NIL,
+                                 First.TypeOf,
                                  First.TypeOf,
                                  CallExpr.NotAddressable,
                                  Check,

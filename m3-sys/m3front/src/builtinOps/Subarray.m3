@@ -10,65 +10,72 @@ MODULE Subarray;
 
 IMPORT CG, CallExpr, Expr, ExprRep, Type, Procedure, Error, ArrayType, Card;
 IMPORT OpenArrayType, CheckExpr, Host, Target, TInt, M3RT, IntegerExpr;
+IMPORT ErrType; 
 
 VAR Z: CallExpr.MethodList;
 
+(* Called indirectly through MethodList. *)
 PROCEDURE TypeOf (ce: CallExpr.T): Type.T =
   BEGIN
     RETURN ArrayType.OpenCousin (Type.Base (Expr.TypeOf (ce.args[0])));
   END TypeOf;
 
+(* Called indirectly through MethodList. *)
 PROCEDURE Check (ce: CallExpr.T;  VAR cs: Expr.CheckState) =
-  VAR t, u, v, index, elt: Type.T;  info: Type.Info;
+  VAR t, u, v, index, elt: Type.T;
   VAR IsOK := TRUE;
   BEGIN
     t := Type.Base (Expr.TypeOf (ce.args[0]));
     u := Expr.TypeOf (ce.args[1]);
     v := Expr.TypeOf (ce.args[2]);
+    ce.type := ErrType.T; (* May change. *) 
     IF (NOT ArrayType.Split (t, index, elt)) THEN
-      Error.Msg ("SUBARRAY: first argument must be an array");
+      Error.Msg ("SUBARRAY: first argument must be an array (2.6.3).");
       IsOK := FALSE;
     END;
     IF (NOT Type.IsAssignable (Card.T, u)) THEN
-      Error.Msg ("SUBARRAY: second argument must be assignable to CARDINAL");
+      Error.Msg ("SUBARRAY: second argument must be assignable to CARDINAL (2.6.3).");
       IsOK := FALSE;
     END;
     IF (NOT Type.IsAssignable (Card.T, v)) THEN
-      Error.Msg ("SUBARRAY: third argument must be assignable to CARDINAL");
+      Error.Msg ("SUBARRAY: third argument must be assignable to CARDINAL (2.6.3).");
       IsOK := FALSE;
     END;
+    IF ArrayType.EltAlign (t) MOD Target.Byte # 0 THEN
+      Error.Msg ("CM3 restriction: SUBARRAY elements must be byte-aligned (2.2.5).");
+      IsOK := FALSE;
+    END; 
     IF IsOK THEN
-      elt := Type.CheckInfo (elt, info);
-      IF (info.class # Type.Class.OpenArray)
-        AND (info.size MOD Target.Byte) # 0 THEN
-        Error.Msg ("SUBARRAY: array elements are not byte-aligned.");
-      END;
-      ce.args[1] := CheckPositive (ce.args[1], cs);
-      ce.args[2] := CheckPositive (ce.args[2], cs);
+      ce.args[1] := RTCheckNonNeg (ce.args[1], cs);
+      ce.args[2] := RTCheckNonNeg (ce.args[2], cs);
       Expr.NeedsAddress (ce.args[0]);
       t := ArrayType.OpenCousin (t);
       ce.type := Type.Check (t);
     END;
   END Check;
 
-PROCEDURE CheckPositive (e: Expr.T;  VAR cs: Expr.CheckState): Expr.T =
+PROCEDURE RTCheckNonNeg (e: Expr.T;  VAR cs: Expr.CheckState): Expr.T =
   VAR min, max: Target.Int;
   BEGIN
     IF (e = NIL) THEN RETURN NIL; END;
+(* TODO: Warn on statically-detectable negative value. *)
     Expr.GetBounds (e, min, max);
     IF TInt.LT (min, TInt.Zero) OR TInt.LT (max, min) THEN
       e := CheckExpr.NewLower (e, TInt.Zero, CG.RuntimeError.ValueOutOfRange);
       Expr.TypeCheck (e, cs);
     END;
     RETURN e;
-  END CheckPositive;
+  END RTCheckNonNeg;
 
+(* Called indirectly through MethodList. *)
 PROCEDURE NeedsAddress (<*UNUSED*> ce: CallExpr.T) =
   BEGIN
-    (* yes, all subarray's get memory addresses *)
+    (* yes, all subarrays get memory addresses *)
   END NeedsAddress;
 
+(* Called indirectly through MethodList. *)
 PROCEDURE SubarrayExprAlign (ce: CallExpr.T): Type.BitAlignT =
+(* TODO: Take advantage of static values of ce.args[1] and ce.args[2]. *)
   VAR 
     arrayExpr := ce.args[0];
     arrayType := Type.Base (Expr.TypeOf (arrayExpr));
@@ -87,11 +94,13 @@ PROCEDURE SubarrayExprAlign (ce: CallExpr.T): Type.BitAlignT =
     RETURN CG.GCD (align, eltPack);
   END SubarrayExprAlign;
 
+(* Called indirectly through MethodList. *)
 PROCEDURE Prep (ce: CallExpr.T) =
   BEGIN
     PrepLV (ce, traced := FALSE);
   END Prep;
 
+(* Called indirectly through MethodList. *)
 PROCEDURE PrepLV (ce: CallExpr.T; traced: BOOLEAN) =
   VAR
     base      := ce.args[0];
@@ -118,23 +127,23 @@ PROCEDURE PrepLV (ce: CallExpr.T; traced: BOOLEAN) =
     (* determine which case to use *)
     case := 0;
     IF (src_depth # 0)
-      THEN case := 4;
+      THEN (*Open array*) case := 2_100;
       ELSE n_elts := Type.Number (index);
     END;
     IF GetCard (start, i_start, x_start)
-      THEN INC (case, 2);
+      THEN (*Constant stert*) INC (case, 2_010);
       ELSE Expr.Prep (start);
     END;
     IF GetCard (len,   i_len,   x_len)
-      THEN INC (case, 1);
+      THEN (*Constant length*)INC (case, 2_001);
       ELSE Expr.Prep (len);
     END;
 
     (* declare space for the result *)
-    t_result := OpenArrayType.DeclareTemp (open);
+    t_result := OpenArrayType.DeclareDopeTemp (open);
 
     CASE case OF
-    | 0 =>  (* fixed array, var start, var len ------------------------------*)
+    | 2_000 =>  (* fixed array, var start, var len ------------------------------*)
 
           (* initialize the new count *)
           Expr.Compile (len);
@@ -160,7 +169,7 @@ PROCEDURE PrepLV (ce: CallExpr.T; traced: BOOLEAN) =
           CG.Index_bytes (elt_pack);
           CG.Store_addr (t_result, M3RT.OA_elt_ptr);
 
-    | 1 =>  (* fixed array, var start, const len ----------------------------*)
+    | 2_001 =>  (* fixed array, var start, const len ----------------------------*)
 
           (* initialize the new count *)
           CG.Load_integer (Target.Integer.cg_type, x_len);
@@ -198,7 +207,7 @@ PROCEDURE PrepLV (ce: CallExpr.T; traced: BOOLEAN) =
           CG.Index_bytes (elt_pack);
           CG.Store_addr (t_result, M3RT.OA_elt_ptr);
 
-    | 2 =>  (* fixed array, const start, var len ----------------------------*)
+    | 2_010 =>  (* fixed array, const start, var len ----------------------------*)
 
           IF NOT Host.doRangeChk THEN
             (* no check => initialize the new count *)
@@ -235,7 +244,7 @@ PROCEDURE PrepLV (ce: CallExpr.T; traced: BOOLEAN) =
           CG.Add_offset (i_start * elt_pack);
           CG.Store_addr (t_result, M3RT.OA_elt_ptr);
 
-    | 3 =>  (* fixed array, const start, const len --------------------------*)
+    | 2_011 =>  (* fixed array, const start, const len --------------------------*)
 
           (* initialize the new count *)
           CG.Load_integer (Target.Integer.cg_type, x_len);
@@ -253,7 +262,7 @@ PROCEDURE PrepLV (ce: CallExpr.T; traced: BOOLEAN) =
             CG.Discard (Target.Integer.cg_type);
           ELSIF TInt.LT (n_elts, max) THEN
             (* oops, they're too big *)
-            Error.Warn (2, "SUBARRAY start+length out of range");
+            Error.Warn (2, "SUBARRAY start+length out of range (2.6.3).");
             CG.Load_integer (Target.Integer.cg_type, max);
             CG.Check_hi (Target.Integer.cg_type, n_elts,
                          CG.RuntimeError.ValueOutOfRange);
@@ -267,7 +276,7 @@ PROCEDURE PrepLV (ce: CallExpr.T; traced: BOOLEAN) =
           CG.Add_offset (i_start * elt_pack);
           CG.Store_addr (t_result, M3RT.OA_elt_ptr);
 
-    | 4 =>  (* open array, var start, var len -------------------------------*)
+    | 2_100 =>  (* open array, var start, var len -------------------------------*)
 
           Expr.CompileAddress (base, traced);   t_base  := CG.Pop ();
           Expr.Compile (start);                 t_start := CG.Pop ();
@@ -298,7 +307,7 @@ PROCEDURE PrepLV (ce: CallExpr.T; traced: BOOLEAN) =
           CG.Free (t_base);
           CG.Free (t_start);
 
-    | 5 =>  (* open array, var start, const len -----------------------------*)
+    | 2_101 =>  (* open array, var start, const len -----------------------------*)
 
           Expr.CompileAddress (base, traced);   t_base  := CG.Pop ();
           Expr.Compile (start);                 t_start := CG.Pop ();
@@ -329,7 +338,7 @@ PROCEDURE PrepLV (ce: CallExpr.T; traced: BOOLEAN) =
           CG.Free (t_base);
           CG.Free (t_start);
 
-    | 6 =>  (* open array, const start, var len -----------------------------*)
+    | 2_110 =>  (* open array, const start, var len -----------------------------*)
 
           Expr.CompileAddress (base, traced);   t_base  := CG.Pop ();
 
@@ -363,7 +372,7 @@ PROCEDURE PrepLV (ce: CallExpr.T; traced: BOOLEAN) =
 
           CG.Free (t_base);
 
-    | 7 =>  (* open array, const start, const len ---------------------------*)
+    | 2_111 =>  (* open array, const start, const len ---------------------------*)
 
           Expr.CompileAddress (base, traced);   t_base  := CG.Pop ();
 
@@ -446,38 +455,45 @@ PROCEDURE ComputeOffset (array: CG.Var;  depth, elt_pack: INTEGER) =
     CG.Store_addr (array, M3RT.OA_elt_ptr);
   END ComputeOffset;
 
+(* Called indirectly through MethodList. *)
 PROCEDURE Compile (ce: CallExpr.T) =
   BEGIN
     CompileLV (ce, traced := FALSE);
   END Compile;
 
+(* Called indirectly through MethodList. *)
 PROCEDURE CompileLV (ce: CallExpr.T; <*UNUSED*> traced: BOOLEAN) =
   BEGIN
     (* all the real work was done by PrepLV *)
     CG.Push (ce.tmp);
-    CG.Boost_alignment (Target.Address.align);
+    CG.Boost_addr_alignment (Target.Address.align);
     CG.Free (ce.tmp);
     ce.tmp := NIL;
   END CompileLV;
 
+(* Called indirectly through MethodList. *)
 PROCEDURE IsWritable (ce: CallExpr.T;  lhs: BOOLEAN): BOOLEAN =
   BEGIN
     RETURN Expr.IsWritable (ce.args[0], lhs);
   END IsWritable;
 
+(* Called indirectly through MethodList. *)
 PROCEDURE IsDesignator (ce: CallExpr.T;  <*UNUSED*> lhs: BOOLEAN): BOOLEAN =
   BEGIN
     RETURN Expr.IsDesignator (ce.args[0]);
   END IsDesignator;
 
+(* Called indirectly through MethodList. *)
 PROCEDURE NoteWrites (ce: CallExpr.T) =
   BEGIN
     Expr.NoteWrite (ce.args[0]);
   END NoteWrites;
 
+(* EXPORTED:*)
 PROCEDURE Initialize () =
   BEGIN
     Z := CallExpr.NewMethodList (3, 3, TRUE, FALSE, TRUE, NIL,
+                                 TypeOf,
                                  TypeOf,
                                  NeedsAddress,
                                  Check,

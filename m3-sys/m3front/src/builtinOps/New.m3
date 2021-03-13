@@ -13,20 +13,20 @@ IMPORT CG, CallExpr, Expr, ExprRep, Type, Procedure, Error;
 IMPORT RefType, ObjectType, OpaqueType, KeywordExpr, Value;
 IMPORT Field, Method, Int, ProcType, AssignStmt, OpenArrayType;
 IMPORT Scope, RecordType, TypeExpr, Null, Revelation, Target;
-IMPORT M3ID, M3RT, RunTyme, ErrType;
+IMPORT ArrayExpr, M3ID, M3RT, RunTyme, ErrType;
 
 VAR Z: CallExpr.MethodList;
 
 PROCEDURE TypeOf (ce: CallExpr.T): Type.T =
   VAR t: Type.T;
   BEGIN
-    IF NOT TypeExpr.Split (ce.args[0], t) THEN  t := Null.T;
+    IF NOT TypeExpr.Split (ce.args[0], t) THEN RETURN Null.T;
     ELSIF RefType.Is (t)    THEN (* ok *)
     ELSIF ObjectType.Is (t) THEN (* sleazy bug!!  ignore method overrides *)
     ELSIF OpaqueType.Is (t) THEN (* sleazy bug!!  ignore method overrides *)
-    ELSE  t := Null.T;
+    ELSE  RETURN Null.T;
     END;
-    RETURN t;
+    RETURN Type.StripPacked (t);
   END TypeOf;
 
 PROCEDURE Check (ce: CallExpr.T;  VAR cs: Expr.CheckState) =
@@ -70,12 +70,13 @@ PROCEDURE CheckRef (r: Type.T;  ce: CallExpr.T;  VAR cs: Expr.CheckState) =
      Error.Msg("cannot NEW a variable of type REFANY, ADDRESS, or NULL");
      RETURN;
     END;
-    r := Type.CheckInfo (r, info);
+    r := Type.Check (r);
     base := Type.Base (r);
+    base := Type.CheckInfo (base, info);
     IF (info.isEmpty) THEN
       Error.Msg ("cannot allocate variables of empty types");
     ELSIF (info.class = Type.Class.OpenArray) THEN
-      CheckOpenArray (r, ce);
+      CheckOpenArray (base, ce);
     ELSIF (info.class = Type.Class.Record) THEN
       CheckRecord (base, ce, cs);
     ELSIF RecordType.Split (base, fields) THEN
@@ -116,7 +117,7 @@ PROCEDURE CheckRecord (t: Type.T;  ce: CallExpr.T;  VAR cs: Expr.CheckState) =
     FOR i := 1 TO LAST (ce.args^) DO
       x := Expr.TypeOf (ce.args[i]);
       IF  NOT KeywordExpr.Split (ce.args[i], key, value) THEN
-        Error.Msg ("extra arguments must include keywords");
+        Error.Msg ("extra arguments to NEW must include keywords (2.6.9)");
       ELSIF NOT RecordType.LookUp (t, key, field) THEN
         Error.ID (key, "unknown record field");
       ELSIF NOT Field.Is (field) THEN
@@ -124,6 +125,7 @@ PROCEDURE CheckRecord (t: Type.T;  ce: CallExpr.T;  VAR cs: Expr.CheckState) =
       ELSIF NOT Type.IsAssignable (Value.TypeOf (field), x) THEN
         Error.ID (key, "value is not assignable to field");
       ELSE
+        ArrayExpr.NoteUseTargetVar (value);
         AssignStmt.Check (Value.TypeOf (field), value, cs);
       END;
     END;
@@ -191,8 +193,10 @@ PROCEDURE CheckObject (t: Type.T;  ce: CallExpr.T;  VAR cs: Expr.CheckState): Ty
       ELSIF Field.Is (v) THEN
         Field.Split (v, field);
         IF NOT Type.IsAssignable (field.type, x)
-          THEN Error.ID (key, "value is not assignable to field");
-          ELSE AssignStmt.Check (field.type, value, cs);
+        THEN Error.ID (key, "value is not assignable to field");
+        ELSE
+          ArrayExpr.NoteUseTargetVar (value);
+          AssignStmt.Check (field.type, value, cs);
         END;
       ELSE
         Error.ID (key, "undefined?");
@@ -227,7 +231,7 @@ PROCEDURE Compile (ce: CallExpr.T) =
   BEGIN
     (* all the work was done by Prep *)
     CG.Push (ce.tmp);
-    CG.Boost_alignment (ce.align);
+    CG.Boost_addr_alignment (ce.align);
     CG.Free (ce.tmp);
     ce.tmp := NIL;
   END Compile;
@@ -237,10 +241,11 @@ PROCEDURE Gen (ce: CallExpr.T) =
   BEGIN
     VAR b := TypeExpr.Split (ce.args[0], t); BEGIN <* ASSERT b *> END;
     Type.Compile (t);
-    IF (RefType.Split (t, r)) THEN GenRef (t, Type.Strip (r), ce);
+    t := Type.StripPacked (t); 
+    IF (RefType.Split (t, r)) THEN GenRef (t, Type.StripPacked (r), ce);
     ELSIF (ObjectType.Is (t)) THEN GenObject (t, ce);
     ELSIF (OpaqueType.Is (t)) THEN GenOpaque (t, ce);
-    ELSE Error.Msg ("NEW must be applied to a variable of a reference type");
+    ELSE Error.Msg ("NEW must name a reference type");
     END;
   END Gen;
 
@@ -255,6 +260,8 @@ PROCEDURE GenRef (t, r: Type.T;  ce: CallExpr.T) =
     r_info : Type.Info;
   BEGIN
     t := Type.CheckInfo (t, t_info);
+    r := Type.Check (r);
+    r := Type.StripPacked (r);
     r := Type.CheckInfo (r, r_info);
 
     IF (r_info.class = Type.Class.OpenArray) THEN
@@ -286,7 +293,7 @@ PROCEDURE GenOpenArray (t: Type.T;  traced: BOOLEAN;
     proc := RunTyme.LookUpProc (PHook [traced]);
   BEGIN
     (* initialize the pointer to the array sizes *)
-    CG.Load_addr_of (sizes, M3RT.OA_size_1, Target.Address.align);
+    CG.Load_addr_of (sizes, M3RT.OA_size_1, Target.Integer.align);
     CG.Store_addr (sizes, M3RT.OA_elt_ptr);
 
     (* initialize the count of array sizes *)
@@ -307,10 +314,10 @@ PROCEDURE GenOpenArray (t: Type.T;  traced: BOOLEAN;
     IF Target.DefaultCall.args_left_to_right THEN
       Type.LoadInfo (t, -1);
       CG.Pop_param (CG.Type.Addr);
-      CG.Load_addr_of (sizes, 0, Target.Address.align);
+      CG.Load_addr_of (sizes, 0, Target.Integer.align);
       CG.Pop_param (CG.Type.Addr);
     ELSE
-      CG.Load_addr_of (sizes, 0, Target.Address.align);
+      CG.Load_addr_of (sizes, 0, Target.Integer.align);
       CG.Pop_param (CG.Type.Addr);
       Type.LoadInfo (t, -1);
       CG.Pop_param (CG.Type.Addr);
@@ -348,9 +355,9 @@ PROCEDURE GenRecord (t, r: Type.T;  traced: BOOLEAN;
       EVAL RecordType.LookUp (r, key, v);
       Field.Split (v, field);
       CG.Push (ce.tmp);
-      CG.Boost_alignment (align);
+      CG.Boost_addr_alignment (align);
       CG.Add_offset (field.offset);
-      AssignStmt.DoEmit (field.type, value);
+      AssignStmt.DoEmit (field.type, value, initializing := TRUE);
     END;
   END GenRecord;
 
@@ -395,8 +402,8 @@ PROCEDURE GenObject (t: Type.T;  ce: CallExpr.T) =
           CG.Index_bytes (Target.Byte);
         END;
         CG.Add_offset (field.offset);
-        CG.Boost_alignment (obj_align);
-        AssignStmt.DoEmit (field.type, value);
+        CG.Boost_addr_alignment (obj_align);
+        AssignStmt.DoEmit (field.type, value, initializing := TRUE);
       END;
     END;
   END GenObject;
@@ -408,7 +415,7 @@ PROCEDURE GenOpaque (t: Type.T;  ce: CallExpr.T) =
       <* ASSERT FALSE *>
     ELSIF RefType.Split (x, r) THEN
       (* full revelation => t is a REF *)
-      GenRef (x, Type.Strip (r), ce);
+      GenRef (x, Type.StripPacked (r), ce);
     ELSE
       <* ASSERT FALSE *>
     END;
@@ -417,6 +424,7 @@ PROCEDURE GenOpaque (t: Type.T;  ce: CallExpr.T) =
 PROCEDURE Initialize () =
   BEGIN
     Z := CallExpr.NewMethodList (1, LAST (INTEGER), TRUE, TRUE, TRUE, NIL,
+                                 TypeOf,
                                  TypeOf,
                                  CallExpr.NotAddressable,
                                  Check,

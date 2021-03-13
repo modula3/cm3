@@ -22,7 +22,7 @@ TYPE
         rep        : Rep;
       OVERRIDES
         check      := Check;
-        check_align:= CheckAlign;
+        no_straddle:= NoStraddle;
         isEqual    := EqualChk;
         isSubtype  := Subtyper;
         compile    := Compiler;
@@ -130,11 +130,14 @@ PROCEDURE SetRep (p: P) =
       WITH t = TargetMap.Word_types[i] DO
         IF (t.size <= Target.Word.size)
           AND TWord.LE (max, t.max) THEN
-          p.rep := i; RETURN;
+          p.rep := i;
+          p.info.size := TargetMap.Word_types[p.rep].size;
+          RETURN;
         END;
       END;
     END;
     p.rep := LAST (Rep);
+    p.info.size := TargetMap.Word_types[p.rep].size;
   END SetRep;
 
 PROCEDURE Check (p: P) =
@@ -148,7 +151,7 @@ PROCEDURE Check (p: P) =
       v := v.next;
     END;
 
-    p.info.size      := TargetMap.Word_types[p.rep].size;
+    <* ASSERT p.info.size = TargetMap.Word_types[p.rep].size *>
     p.info.min_size  := MinSize (p);
     p.info.alignment := TargetMap.Word_types[p.rep].align;
     p.info.mem_type  := TargetMap.Word_types[p.rep].cg_type;
@@ -160,18 +163,19 @@ PROCEDURE Check (p: P) =
     p.info.hash      := hash;
   END Check;
 
-PROCEDURE CheckAlign (p: P;  offset: INTEGER): BOOLEAN =
+PROCEDURE NoStraddle
+  (p: P;  offset: INTEGER; <*UNUSED*> IsEltOrField: BOOLEAN): BOOLEAN =
   VAR
     sz := TargetMap.Word_types [p.rep].size;
     z0: INTEGER;
   BEGIN
     IF p.info.lazyAligned THEN
-      z0 := offset DIV 8 * 8;
+      z0 := offset DIV Target.Byte * Target.Byte;
     ELSE
       z0 := offset DIV Target.Integer.align * Target.Integer.align;
     END;
     RETURN (offset + sz) <= (z0 + Target.Integer.size);
-  END CheckAlign;
+  END NoStraddle;
 
 PROCEDURE Compiler (p: P) =
   VAR v := Scope.ToList (p.scope);

@@ -1,0 +1,12 @@
+This insanely complicated web of generics and instantiations is a
+way to avoid massive manual copying of source code.  To test array
+constructors, many cases require constructors that are coded directly
+inline.  Passing them in parameters often, adds, removes, or copies
+dope.  We want to know some things about the original dope.
+
+Even then, some tests are commented out because it seems impossible
+to obtain an original dope addess and chech whether it is in one of
+the static constant areas.  Perhaps some runtime addition of markers
+therein would help.
+
+In any case, much of this is a performance issue only.

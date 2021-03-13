@@ -24,11 +24,10 @@ TYPE
   P = Expr.T BRANDED "QualifyExpr.T" OBJECT
         expr        : Expr.T;
         obj         : Value.T;
-        holder      : Type.T;
+        holder      : Type.T; (* Visible supertype of the Q-expr. *) 
         objType     : Type.T;
         temp        : CG.Val;
         name        : M3ID.T;
-        align       : Type.BitAlignT;
         class       : Class;
         inFold      : BOOLEAN;
         inIsZeroes  : BOOLEAN;
@@ -36,6 +35,7 @@ TYPE
         inTypeOf    : BOOLEAN;
       OVERRIDES
         typeOf       := TypeOf;
+        repTypeOf    := RepTypeOf;
         check        := Check;
         need_addr    := NeedsAddress;
         prep         := Prep;
@@ -198,24 +198,40 @@ PROCEDURE Resolve (p: P) =
     END;
   END Resolve;
 
-PROCEDURE TypeOf (p: P): Type.T =
+PROCEDURE ResolveTypes (p: P) =
   BEGIN
     Resolve (p);
     IF (p.inTypeOf) THEN
       Value.IllegalRecursion (p.obj);
       p.type := ErrType.T;
-      RETURN ErrType.T;
-    END;
-    p.inTypeOf := TRUE;
-    p.type := Value.TypeOf (p.obj);
-    IF p.class = Class.cMETHOD THEN
-      p.type := NIL;
-    ELSIF p.class = Class.cOBJTYPE THEN
-      p.type := ProcType.MethodSigAsProcSig (p.type, p.objType);
+      p.repType := p.type;
+    ELSE
+      p.inTypeOf := TRUE;
+      p.type := Value.TypeOf (p.obj);
+      IF p.type = ErrType.T THEN p.repType := ErrType.T;
+      ELSIF p.class = Class.cMETHOD THEN
+        p.type := NIL;
+        p.repType := NIL;
+      ELSIF p.class = Class.cOBJTYPE THEN
+        p.type := ProcType.MethodSigAsProcSig (p.type, p.objType);
+        p.repType := p.type;
+      ELSE p.repType := Value.RepTypeOf (p.obj);
+      END;
     END;
     p.inTypeOf := FALSE;
+  END ResolveTypes;
+
+PROCEDURE TypeOf (p: P): Type.T =
+  BEGIN
+    ResolveTypes (p);
     RETURN p.type;
   END TypeOf;
+
+PROCEDURE RepTypeOf (p: P): Type.T =
+  BEGIN
+    ResolveTypes (p);
+    RETURN p.repType;
+  END RepTypeOf;
 
 PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
   VAR nErrs0, nErrs1, nWarns: INTEGER;  info: Type.Info;
@@ -249,31 +265,19 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
 PROCEDURE QualifyExprAlign (p: P): Type.BitAlignT =
   VAR fieldInfo: Field.Info;
   VAR offset, obj_offset, obj_align, prefixAlign: INTEGER;
-
+  VAR objType: Type.T;
+  VAR objTypeInfo: Type.Info;
   BEGIN
     CASE p.class
-    OF Class.cFIELD =>
+    OF Class.cFIELD, Class.cOBJFIELD =>
         Field.Split (p.obj, fieldInfo);
         offset := fieldInfo.offset MOD Target.Word.size;
-        RETURN CG.GCD (Expr.Alignment (p.expr), offset);
-    | Class.cOBJFIELD =>
-        Field.Split (p.obj, fieldInfo);
-        ObjectType.GetFieldOffset (p.holder, obj_offset, obj_align);
-        (* Changing compilation order can change whether we statically
-           know the offset occupied by fields of supertypes.  When we
-           don't, we know only that it is a byte multiple, so, to avoid
-           legality changing with compilation order, we also treat as a
-           byte multiple even when we know it statically.  The exception
-           is when it is statically zero.  This means there are no fields
-           of supertypes, and it will always be zero.  *)
-        IF obj_offset = 0
-        THEN prefixAlign := Target.Word.size
-        ELSE prefixAlign := Target.Byte
-        END; 
-        offset := fieldInfo.offset MOD Target.Word.size;
-        RETURN CG.GCD (prefixAlign, offset);
+        RETURN CG.GCD (Expr.Alignment (p.expr), offset); 
     | Class.cMETHOD => RETURN Target.Address.align;
-    ELSE RETURN Expr.Alignment (Value.ToExpr (p.obj));
+    ELSE
+      objType := Value.TypeOf (p.obj);
+      EVAL Type.CheckInfo (objType, objTypeInfo);
+      RETURN objTypeInfo.alignment; 
     END (*CASE*)
   END QualifyExprAlign; 
 
@@ -338,8 +342,10 @@ PROCEDURE Prep (p: P) =
         (* skip *)
     | Class.cFIELD =>
         IF Expr.IsDesignator (p.expr)
-          THEN Expr.PrepLValue (p.expr, traced := FALSE);
-          ELSE Expr.Prep (p.expr);
+        THEN Expr.PrepLValue (p.expr, traced := FALSE);
+        ELSE
+          EVAL Expr.CheckUseFailure (p.expr);
+          Expr.Prep (p.expr);
         END;
         Field.Split (p.obj, field);
         EVAL Type.CheckInfo (field.type, info);
@@ -390,6 +396,7 @@ PROCEDURE Compile (p: P) =
           p.temp := NIL;
           RETURN;
         END;
+        (* Do we need to Compile p.obj, if it is a constant? *)
         Value.Load (p.obj);
     | Class.cENUM =>
         Value.Load (p.obj);
@@ -405,9 +412,9 @@ PROCEDURE Compile (p: P) =
           Type.LoadInfo (p.holder, M3RT.OTC_methodOffset);
           CG.Index_bytes (Target.Byte);
         END;
-        CG.Boost_alignment (Target.Address.align);
+        CG.Boost_addr_alignment (Target.Address.align);
         CG.Load_indirect (CG.Type.Addr, method.offset, Target.Address.size);
-        CG.Boost_alignment (Target.Address.align);
+        CG.Boost_addr_alignment (Target.Address.align);
     | Class.cFIELD =>
         IF p.temp # NIL THEN
           CG.Push (p.temp);
@@ -431,7 +438,7 @@ PROCEDURE Compile (p: P) =
         END;
         Field.Split (p.obj, field);
         Expr.Compile (p.expr);
-        CG.Boost_alignment (Target.Address.align);
+        CG.Boost_addr_alignment (Target.Address.align);
         ObjectType.GetFieldOffset (p.holder, obj_offset, obj_align);
         IF (obj_offset >= 0) THEN
           INC (field.offset, obj_offset);
@@ -441,14 +448,14 @@ PROCEDURE Compile (p: P) =
           CG.Index_bytes (Target.Byte);
         END;
         CG.Add_offset (field.offset);
-        CG.Boost_alignment (obj_align);
+        CG.Boost_addr_alignment (obj_align);
         Type.LoadScalar (field.type);
     | Class.cMETHOD =>
         Method.SplitX (p.obj, method);
         CG.Push (p.temp);
-        CG.Boost_alignment (Target.Address.align);
+        CG.Boost_addr_alignment (Target.Address.align);
         CG.Load_indirect (CG.Type.Addr, 0, Target.Address.size);
-        CG.Boost_alignment (Target.Address.align);
+        CG.Boost_addr_alignment (Target.Address.align);
         obj_offset := ObjectType.MethodOffset (p.holder);
         IF (obj_offset >= 0) THEN
           INC (method.offset, obj_offset);
@@ -456,9 +463,9 @@ PROCEDURE Compile (p: P) =
           Type.LoadInfo (p.holder, M3RT.OTC_methodOffset);
           CG.Index_bytes (Target.Byte);
         END;
-        CG.Boost_alignment (Target.Address.align);
+        CG.Boost_addr_alignment (Target.Address.align);
         CG.Load_indirect (CG.Type.Addr, method.offset, Target.Address.size);
-        CG.Boost_alignment (Target.Address.align);
+        CG.Boost_addr_alignment (Target.Address.align);
     | Class.cUNKNOWN =>
         <* ASSERT FALSE *>
     END;
@@ -474,8 +481,10 @@ PROCEDURE PrepLV (p: P; traced: BOOLEAN) =
         (* skip *)
     | Class.cFIELD =>
         IF Expr.IsDesignator (p.expr)
-          THEN Expr.PrepLValue (p.expr, traced);
-          ELSE Expr.Prep (p.expr);
+        THEN Expr.PrepLValue (p.expr, traced);
+        ELSE
+          EVAL Expr.CheckUseFailure (p.expr);
+          Expr.Prep (p.expr);
         END;
     | Class.cOBJFIELD =>
         Expr.Prep (p.expr);
@@ -530,7 +539,7 @@ PROCEDURE CompileLV (p: P;  traced: BOOLEAN) =
           CG.Index_bytes (Target.Byte);
         END;
         CG.Add_offset (field.offset);
-        CG.Boost_alignment (obj_align);
+        CG.Boost_addr_alignment (obj_align);
     | Class.cENUM,
       Class.cOBJTYPE,
       Class.cMETHOD,

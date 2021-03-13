@@ -29,6 +29,7 @@ TYPE
         err   : CG.RuntimeError;
       OVERRIDES
         typeOf       := TypeOf;
+        repTypeOf    := RepTypeOf;
         check        := Check;
         need_addr    := ExprRep.NotAddressable;
         prep         := Prep;
@@ -89,6 +90,11 @@ PROCEDURE TypeOf (p: P): Type.T =
     RETURN Expr.TypeOf (p.expr);
   END TypeOf;
 
+PROCEDURE RepTypeOf (p: P): Type.T =
+  BEGIN
+    RETURN Expr.RepTypeOf (p.expr);
+  END RepTypeOf;
+
 PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
   BEGIN
     Expr.TypeCheck (p.expr, cs);
@@ -133,6 +139,8 @@ PROCEDURE Compile (p: P) =
 
 PROCEDURE EmitChecks (e: Expr.T;  READONLY min, max: Target.Int;
                       err: CG.RuntimeError) =
+(* Compiles 'e' and ensures that it's contained in [min..max].
+   Does not construct an expression node. *)
   VAR minE, maxE: Target.Int;  x: Expr.T;
       t := Expr.TypeOf (e);  cg_type: CG.Type;
   BEGIN
@@ -149,12 +157,16 @@ PROCEDURE EmitChecks (e: Expr.T;  READONLY min, max: Target.Int;
         CG.Check_range (cg_type, min, max, err);
       ELSIF TInt.LT (minE, min) THEN
         IF TInt.LT (maxE, min) THEN
-          Error.Warn (2, "value out of range");
+
+
+
+
+          Error.Warn (2, "Value out of range--low.");
         END;
         CG.Check_lo (cg_type, min, err);
       ELSIF TInt.LT (max, maxE) THEN
         IF TInt.LT (max, minE) THEN
-          Error.Warn (2, "value out of range");
+          Error.Warn (2, "Value out of range--high.");
         END;
         CG.Check_hi (cg_type, max, err);
       END;

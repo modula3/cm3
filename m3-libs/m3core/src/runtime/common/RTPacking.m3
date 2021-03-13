@@ -45,6 +45,7 @@ PROCEDURE Local (): T =
     i: INTEGER := 1;
     x: ADDRESS := ADR (i);
     p: UNTRACED REF CHAR := x;
+    s: SET OF [0..7];
   BEGIN
     IF NOT init_done THEN
       local.word_size     := SizeOf (ADRSIZE (INTEGER));
@@ -56,6 +57,7 @@ PROCEDURE Local (): T =
       IF NOT FloatMode.IEEE THEN local.float := FloatKind.VAX; END;
       local.lazy_align    := IsLazy();
       local.widechar_size := SizeOf (ADRSIZE (WIDECHAR));
+      local.small_sets    := BITSIZE (s) = 8;
       init_done := TRUE;
     END;
     RETURN local;
@@ -88,6 +90,7 @@ PROCEDURE Encode (READONLY t: T): INTEGER =
          so it will correctly decode values written by older Encode.  
          So we also encode 16 in the old way too, so older Decode will not 
          choke on Ts we write with 16-bit WIDECHAR. *) 
+    n := Word.Or (Word.Shift (n, 1), ORD (t.small_sets));
     n := Word.Or (Word.Shift (n, 2), wc );
     n := Word.Or (Word.Shift (n, 1), ORD (t.lazy_align));
     n := Word.Or (Word.Shift (n, 2), BitSize (t.long_size));
@@ -114,7 +117,8 @@ PROCEDURE Decode (i: INTEGER): T =
     THEN (* Was written by older RTPacking, without a widechar_size. *)
       t.widechar_size := 16 
     END; 
-    (* Ignore any remaing bits, in case we get a value from a later version
+    t.small_sets    := VAL (Word.And (i, 1), BOOLEAN); i := Word.Shift (i, -1);
+    (* Ignore any remaining bits, in case we get a value from a later version
        that has additional properties. *) 
     RETURN t;
   END Decode;

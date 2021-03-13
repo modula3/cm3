@@ -25,6 +25,7 @@ TYPE
         tmp     : CG.Var;
       OVERRIDES
         typeOf       := TypeOf;
+        repTypeOf    := RepTypeOf;
         check        := Check;
         need_addr    := ExprRep.NotAddressable;
         prep         := Prep;
@@ -65,6 +66,15 @@ PROCEDURE TypeOf (p: P): Type.T =
     RETURN Type.Base (ta);
   END TypeOf;
 
+PROCEDURE RepTypeOf (p: P): Type.T =
+  VAR ta: Type.T;
+  BEGIN
+    ta := Expr.RepTypeOf (p.a);
+    ta := Type.Check (ta);
+    IF Type.IsSubtype (ta, Addr.T) THEN ta := Addr.T END;
+    RETURN Type.Base (ta);
+  END RepTypeOf;
+
 PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
   VAR ta, tb, range: Type.T;
   BEGIN
@@ -72,7 +82,7 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
     Expr.TypeCheck (p.b, cs);
     ta := Type.Base (Expr.TypeOf (p.a));
     tb := Type.Base (Expr.TypeOf (p.b));
-    IF    (ta = Int.T)   AND (tb = Int.T)   THEN
+    IF ta = Int.T AND tb = Int.T THEN
       p.class := Class.cINT;
     ELSIF (ta = LInt.T)  AND (tb = LInt.T) THEN
       p.class := Class.cLINT
@@ -87,7 +97,7 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
       ta := ErrType.T;
     ELSIF SetType.Split (ta, range) THEN
       p.class := Class.cSET;
-      IF  NOT Type.IsEqual (ta, tb, NIL) THEN
+      IF NOT Type.IsEqual (ta, tb, NIL) THEN
         ta := Expr.BadOperands ("\'+\'", ta, tb);
       END;
     ELSIF Type.IsSubtype (ta, Addr.T) AND (tb = Int.T) THEN
@@ -97,6 +107,7 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
       ta := Expr.BadOperands ("\'+\'", ta, tb);
     END;
     p.type := ta;
+    p.repType := ta;
   END Check;
 
 PROCEDURE Prep (p: P) =
@@ -106,11 +117,11 @@ PROCEDURE Prep (p: P) =
     Expr.Prep (p.b);
     IF (p.class = Class.cSET) THEN
       EVAL Type.CheckInfo (p.type, info);
-      IF (info.size > Target.Integer.size) THEN
-        p.tmp := CG.Declare_temp (info.size, Target.Integer.align,
+      IF (info.size > Target.Word.size) THEN
+        p.tmp := CG.Declare_temp (info.size, Target.Word.align,
                                   CG.Type.Struct, in_memory := TRUE);
-        CG.Load_addr_of (p.tmp, 0, Target.Integer.align);
-        CG.Force ();
+        CG.Load_addr_of (p.tmp, 0, Target.Word.align);
+        CG.ForceStacked ();
         Expr.Compile (p.a);
         Expr.Compile (p.b);
         CG.Set_union (info.size);
@@ -124,8 +135,8 @@ PROCEDURE Compile (p: P) =
     CASE p.class OF
     | Class.cSET =>
         EVAL Type.CheckInfo (p.type, info);
-        IF (info.size > Target.Integer.size) THEN
-          CG.Load_addr_of_temp (p.tmp, 0, Target.Integer.align);
+        IF (info.size > Target.Word.size) THEN
+          CG.Load_addr_of_temp (p.tmp, 0, Target.Word.align);
           p.tmp := NIL;
         ELSE
           Expr.Compile (p.a);

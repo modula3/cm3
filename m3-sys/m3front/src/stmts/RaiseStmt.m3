@@ -79,6 +79,7 @@ PROCEDURE Check (p: P;  VAR cs: Stmt.CheckState) =
     ELSIF NOT Type.IsAssignable (u, t) THEN
       Error.QID (p.qid, "argument has wrong type");
     ELSE
+      (* We want p.arg compiled into a temp -> No NoteUseTargetVar *)
       AssignStmt.Check (u, p.arg, cs);
     END;
   END Check;

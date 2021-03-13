@@ -1,0 +1,22 @@
+Raised an exception, as expected: pass inline constant
+Raised an exception, as expected: pass local constant
+Raised an exception, as expected: pass global constant
+Raised an exception, as expected: pass imported constant
+Raised an exception, as expected: pass defaulted parameter
+Raised an exception, as expected: pass readonly
+Raised an exception, as expected: variable, initialized inline
+Raised an exception, as expected: variable, initialized to local constant
+Raised an exception, as expected: variable, initialized to global constant
+Raised an exception, as expected: variable, initialized to imported constant
+Raised an exception, as expected: variable, assigned inline
+Raised an exception, as expected: variable, assigned to local constant
+Raised an exception, as expected: variable, assigned to global constant
+Raised an exception, as expected: variable, assigned to imported constant
+Raised an exception, as expected: good field of bad constructor
+Raised an exception, as expected: bad field of bad constructor
+Raised an exception, as expected: nested procedure assigned to field of variable
+Raised an exception, as expected: WITH-bound global constant
+Raised an exception, as expected: WITH-bound inline constructor
+19 tests performed.
+All succeeded.
+Overall test succeeded.

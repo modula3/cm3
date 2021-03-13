@@ -450,7 +450,7 @@ PROCEDURE HasWideChars (t: T): BOOLEAN =
     RETURN Result
   END HasWideChars;
 
-PROCEDURE OldHasWideChars (t: T): BOOLEAN =
+<*UNUSED*>PROCEDURE OldHasWideChars (t: T): BOOLEAN =
   VAR i: Info;
   BEGIN
     t.get_info (i);

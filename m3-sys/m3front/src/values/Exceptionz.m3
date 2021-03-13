@@ -34,6 +34,7 @@ TYPE
         toExpr      := ValueRep.NoExpr;
         toType      := ValueRep.NoType;
         typeOf      := ValueRep.TypeVoid;
+        repTypeOf   := ValueRep.TypeVoid;
         base        := ValueRep.Self;
         add_fp_tag  := AddFPTag;
         fp_type     := FPType;
@@ -50,6 +51,7 @@ TYPE
     gen_body := EmitBody;
   END;
 
+(* EXPORTED: *)
 PROCEDURE ParseDecl (READONLY att: Decl.Attributes) =
   TYPE TK = Token.T;
   VAR t: T; id: M3ID.T;
@@ -78,6 +80,7 @@ PROCEDURE ParseDecl (READONLY att: Decl.Attributes) =
     END;
   END ParseDecl;
 
+(* EXPORTED: *)
 PROCEDURE EmitRaise (v: Value.T;  arg: Expr.T) =
   VAR
     t: T := Value.Base (v);
@@ -111,7 +114,7 @@ PROCEDURE EmitRaise (v: Value.T;  arg: Expr.T) =
       expr_type := Type.CheckInfo (expr_type, info);
       arg_type := info.stk_type;
       Expr.Prep (arg);
-      AssignStmt.DoEmitCheck (t.tipe, arg);
+      AssignStmt.EmitRTCheck (t.tipe, arg);
       tmp := CG.Pop ();
       Procedure.StartCall (p);
       IF Target.DefaultCall.args_left_to_right THEN
@@ -140,7 +143,7 @@ PROCEDURE EmitRaise (v: Value.T;  arg: Expr.T) =
       expr_type := Type.CheckInfo (expr_type, info);
       arg_type := info.stk_type;
       Expr.Prep (arg);
-      AssignStmt.DoEmitCheck (t.tipe, arg);
+      AssignStmt.EmitRTCheck (t.tipe, arg);
       tmp := CG.Pop ();
       CG.Start_call_indirect (CG.Type.Void, Target.DefaultCall);
       IF Target.DefaultCall.args_left_to_right THEN
@@ -156,8 +159,8 @@ PROCEDURE EmitRaise (v: Value.T;  arg: Expr.T) =
       END;
       LoadSelf (t);
       CG.Add_offset (M3RT.ED_SIZE);
-      CG.Boost_alignment (Target.Address.align);
-      CG.Load_indirect (CG.Type.Addr, 0, Target.Address.size);
+      CG.Boost_addr_alignment (Target.Address.align);
+      CG.Load_indirect (CG.Type.Addr, 0, Target.Address.size, CG.ProcAlign ());
       CG.Gen_Call_indirect (CG.Type.Void, Target.DefaultCall);
       EVAL Marker.EmitExceptionTest (Procedure.Signature (p), need_value := FALSE);
       CG.Free (tmp);
@@ -169,7 +172,7 @@ PROCEDURE LoadSelf (t: T) =
     IF (t.imported) THEN
       Module.LoadGlobalAddr (Scope.ToUnit (t), t.offset, is_const := FALSE);
       CG.Load_indirect (CG.Type.Addr, 0, Target.Address.size);
-      CG.Boost_alignment (Target.Address.align);
+      CG.Boost_addr_alignment (Target.Address.align);
     ELSE
       Module.LoadGlobalAddr (Scope.ToUnit (t), t.coffset, is_const := TRUE);
     END;
@@ -196,6 +199,7 @@ PROCEDURE PassLocation () =
     END;
   END PassLocation;
 
+(* EXPORTED: *)
 PROCEDURE ArgByReference (type: Type.T): BOOLEAN =
   VAR info: Type.Info;
   BEGIN
@@ -203,6 +207,7 @@ PROCEDURE ArgByReference (type: Type.T): BOOLEAN =
     RETURN (info.size > Target.Address.size) OR Type.IsStructured (type);
   END ArgByReference;
 
+(* Externally dispatched-to: *)
 PROCEDURE Check (t: T;  <*UNUSED*> VAR cs: Value.CheckState) =
   VAR info: Type.Info;
   BEGIN
@@ -212,12 +217,14 @@ PROCEDURE Check (t: T;  <*UNUSED*> VAR cs: Value.CheckState) =
         Error.ID (t.name, "argument type must have fixed length");
       END;
       IF ArgByReference (t.tipe) THEN
-        t.refTipe := RefType.New (t.tipe, TRUE, NIL);
+        t.refTipe := RefType.New (Type.StripPacked (t.tipe), TRUE, NIL);
+(* FIXME: Most uses of t.tipe need to be StripPacked. *)
         t.refTipe := Type.Check (t.refTipe);
       END;
     END;
   END Check;
 
+(* EXPORTED: *)
 PROCEDURE ArgType (v: Value.T): Type.T =
   BEGIN
     TYPECASE Value.Base (v) OF
@@ -227,6 +234,7 @@ PROCEDURE ArgType (v: Value.T): Type.T =
     END;
   END ArgType;
 
+(* EXPORTED: *)
 PROCEDURE UID (v: Value.T): INTEGER =
   BEGIN
     TYPECASE Value.Base (v) OF
@@ -236,6 +244,7 @@ PROCEDURE UID (v: Value.T): INTEGER =
     END;
   END UID;
 
+(* EXPORTED: *)
 PROCEDURE IsImplicit (v: Value.T): BOOLEAN =
   BEGIN
     TYPECASE Value.Base (v) OF
@@ -245,12 +254,14 @@ PROCEDURE IsImplicit (v: Value.T): BOOLEAN =
     END;
   END IsImplicit;
 
+(* Externally dispatched-to: *)
 PROCEDURE Load (t: T) =
   BEGIN
     Value.Declare (t);
     LoadSelf (t);
   END Load;
 
+(* Externally dispatched-to: *)
 PROCEDURE SetGlobals (t: T) =
   VAR name: TEXT;  size: INTEGER;
   BEGIN
@@ -268,6 +279,7 @@ PROCEDURE SetGlobals (t: T) =
     t.uid := M3FP.ToInt (M3FP.FromText (name));
   END SetGlobals;
 
+(* Externally dispatched-to: *)
 PROCEDURE Declarer (t: T): BOOLEAN =
   VAR
     name: TEXT;
@@ -332,10 +344,12 @@ PROCEDURE DeclareRaiseProc (t: T): CG.Proc =
     RETURN r.cg_proc;
   END DeclareRaiseProc;
 
+(* Externally dispatched-to: *)
 PROCEDURE EmitDecl (<*UNUSED*> x: Raiser) =
   BEGIN
   END EmitDecl;
 
+(* Externally dispatched-to: *)
 PROCEDURE EmitBody (x: Raiser) =
   VAR
     t := x.self;
@@ -358,9 +372,8 @@ PROCEDURE EmitBody (x: Raiser) =
 
     (* ptr^ := arg^ *)
     CG.Push (ptr);
-    CG.Boost_alignment (align);
-    CG.Load_addr (x.arg);
-    CG.Boost_alignment (align);
+    CG.Boost_addr_alignment (align);
+    CG.Load_addr (x.arg, 0, align);
     CG.Copy (info.size, overlap := FALSE);
 
     (* RAISE (e, ptr) *)
@@ -371,14 +384,14 @@ PROCEDURE EmitBody (x: Raiser) =
       CG.Pop_param (CG.Type.Addr);
       CG.Push (ptr);
       CG.Pop_param (CG.Type.Addr);
-      CG.Load_addr (x.module);
+      CG.Load_addr (x.module, 0, Target.Address.align);
       CG.Pop_param (CG.Type.Addr);
       CG.Load_int (Target.Integer.cg_type, x.line);
       CG.Pop_param (Target.Integer.cg_type);
     ELSE
       CG.Load_int (Target.Integer.cg_type, x.line);
       CG.Pop_param (Target.Integer.cg_type);
-      CG.Load_addr (x.module);
+      CG.Load_addr (x.module, 0, Target.Address.align);
       CG.Pop_param (CG.Type.Addr);
       CG.Push (ptr);
       CG.Pop_param (CG.Type.Addr);
@@ -391,6 +404,7 @@ PROCEDURE EmitBody (x: Raiser) =
     CG.End_procedure (x.cg_proc);
   END EmitBody;
 
+(* EXPORTED: *)
 PROCEDURE AddFPSetTag (tt: Value.T;  VAR x: M3.FPInfo): CARDINAL =
   (* called for RAISES sets, doesn't include the interface record offset *)
   VAR t: T := Value.Base (tt);
@@ -401,6 +415,7 @@ PROCEDURE AddFPSetTag (tt: Value.T;  VAR x: M3.FPInfo): CARDINAL =
     RETURN ORD (t.tipe # NIL);
   END AddFPSetTag;
 
+(* Externally dispatched-to: *)
 PROCEDURE AddFPTag (t: T;  VAR x: M3.FPInfo): CARDINAL =
   VAR offset := t.offset DIV Target.Address.align;
   BEGIN

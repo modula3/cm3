@@ -14,7 +14,7 @@ IMPORT Test, Word;
 
 TYPE
   Bit = [0 .. 31];
-  BitSet = (*BITS 32 FOR*) SET OF Bit;
+  BitSet = BITS BITSIZE(INTEGER) FOR SET OF Bit;
   (* BitVector = BITS 32 FOR ARRAY Bit OF BITS 1 FOR BOOLEAN;*)
 
 VAR

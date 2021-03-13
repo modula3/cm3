@@ -14,6 +14,8 @@ IMPORT Error, Field, Ident, PackedType, Target, TipeDesc;
 IMPORT Word, AssignStmt, M3Buf;
 FROM Scanner IMPORT Match, GetToken, cur;
 
+VAR MaxBitSize := LAST (INTEGER);
+
 TYPE
   P = Type.T OBJECT
         fields     : Scope.T;
@@ -21,7 +23,7 @@ TYPE
         align      : INTEGER := 0;
       OVERRIDES
         check      := Check;
-        check_align:= CheckAlign;
+        no_straddle:= NoStraddle;
         isEqual    := EqualChk;
         isSubtype  := TypeRep.NoSubtypes;
         compile    := Compiler;
@@ -32,6 +34,7 @@ TYPE
         fprint     := FPrinter;
       END;
 
+(* EXPORTED: *)
 PROCEDURE Parse (): Type.T =
   VAR p := Create (Scope.PushNew (FALSE, M3ID.NoID));
   BEGIN
@@ -43,6 +46,7 @@ PROCEDURE Parse (): Type.T =
     RETURN p;
   END Parse;
 
+(* EXPORTED: *)
 PROCEDURE ParseFieldList () =
   TYPE TK = Token.T;
   VAR
@@ -60,7 +64,7 @@ PROCEDURE ParseFieldList () =
       END;
       info.dfault := NIL;
       IF (cur.token = TK.tEQUAL) THEN
-        Error.Msg ("default value must begin with ':='");
+        Error.Msg ("Field default value must begin with ':=' (2.2.4).");
         cur.token := TK.tASSIGN;
       END;
       IF (cur.token = TK.tASSIGN) THEN
@@ -68,7 +72,7 @@ PROCEDURE ParseFieldList () =
         info.dfault := Expr.Parse ();
       END;
       IF (info.type = NIL) AND (info.dfault = NIL) THEN
-        Error.Msg ("fields must include a type or default value");
+        Error.Msg ("Fields must include a type or default value (2.2.4)");
       END;
       j := Ident.top - n;
       FOR i := 0 TO n - 1 DO
@@ -82,6 +86,7 @@ PROCEDURE ParseFieldList () =
     END;
   END ParseFieldList;
 
+(* EXPORTED: *)
 PROCEDURE New (fields: Scope.T): Type.T =
   VAR p := Create (fields);
   BEGIN
@@ -96,6 +101,7 @@ PROCEDURE Reduce (t: Type.T): P =
     RETURN t;
   END Reduce;
 
+(* EXPORTED: *)
 PROCEDURE Split (t: Type.T;  VAR fields: Value.T): BOOLEAN =
   VAR p := Reduce (t);
   BEGIN
@@ -104,6 +110,7 @@ PROCEDURE Split (t: Type.T;  VAR fields: Value.T): BOOLEAN =
     RETURN TRUE;
   END Split;
 
+(* EXPORTED: *)
 PROCEDURE LookUp (t: Type.T;  field: M3ID.T;  VAR obj: Value.T): BOOLEAN =
   VAR p := Reduce (t);
   BEGIN
@@ -128,14 +135,17 @@ PROCEDURE Check (p: P) =
     field    : Field.Info;
     info     : Type.Info;
     cs       := M3.OuterCheckState;
+    min_size : INTEGER;
     hash     : INTEGER;
     is_solid : BOOLEAN;
   BEGIN
     Scope.TypeCheck (p.fields, cs);
 
     (* assign the final offsets to each field *)
-    SizeAndAlignment (p.fields, p.info.lazyAligned, p.recSize, p.align,
-                      is_solid);
+    SizeAndAlignment (p.fields, p.info.lazyAligned,
+                      (*OUT*) min_size, (*OUT*) p.recSize, (*OUT*) p.align,
+                      (*OUT*) is_solid
+                     );
 
     (* compute the hash value and per-field predicates *)
     p.info.isTraced := FALSE;
@@ -155,150 +165,166 @@ PROCEDURE Check (p: P) =
 
     p.info.hash      := hash;
     p.info.size      := p.recSize;
-    p.info.min_size  := p.recSize;
+    p.info.min_size  := min_size;
     p.info.alignment := p.align;
     p.info.mem_type  := CG.Type.Struct;
     p.info.stk_type  := CG.Type.Addr;
     p.info.class     := Type.Class.Record;
   END Check;
 
-PROCEDURE SizeAndAlignment (fields: Scope.T; lazyAligned: BOOLEAN;
-                            VAR(*OUT*) recSize, recAlign: INTEGER;
+(* EXPORTED: *)
+PROCEDURE SizeAndAlignment (fields: Scope.T; lazyAligned: BOOLEAN; 
+                            VAR(*OUT*) minSize, recSize, recAlign: INTEGER;
                             VAR(*OUT*) is_solid: BOOLEAN) =
+  (* Lay out the fields, assuming the record starts at the largest
+     possible alignment for the target. *)
   VAR
-    field      : Field.Info;
-    base       : Type.T;
-    type       : Type.T;
-    fieldAlign : INTEGER;
-    fieldSize  : INTEGER;
-    anyPacked  := FALSE;
-    o          : Value.T;
-    info       : Type.Info;
-    newSize    : INTEGER;
-    newAlign   : INTEGER;
-    curSize    : INTEGER;
+    curSize             : INTEGER;
+    fieldType           : Type.T;
+    packedFieldBaseType : Type.T;
+    fieldAlign          : INTEGER;
+    fieldSize           : INTEGER;
+    fieldValue          : Value.T;
+    fieldInfo           : Field.Info;
+    fieldTypeInfo       : Type.Info;
+    anyPacked           := FALSE;
+    raiseRecAlign       := FALSE;
+    (* ^Let's disable this for now.  It will cause extra padding ahead of
+       this record.  Its only benefit is that it may allow whole-record
+       copying to be done with, e.g., a word-by-word copy instead of
+       memcopy.  
+    *)
+    straddlesWord : BOOLEAN := FALSE;
   BEGIN
-    (* compute the size of the record *)
-    newSize  := 0; (* total size of the record *)
-    newAlign := Target.Structure_size_boundary; (* minimum allowed alignment *)
+    recSize  := 0; (* total size of the record *)
+    recAlign := Target.Structure_size_boundary; (* minimum record alignment *)
     is_solid := TRUE;
 
     (* extract the fields and set their offsets *)
-    o := Scope.ToList (fields);
-    WHILE (o # NIL) DO
-      Field.Split (o, field);
-      type := Type.CheckInfo (field.type, info);
-      is_solid := is_solid AND info.isSolid;
-      IF (info.class = Type.Class.Packed) THEN
-        PackedType.Split (type, fieldSize, base);
+    fieldValue := Scope.ToList (fields);
+    WHILE (fieldValue # NIL) DO
+      Field.Split (fieldValue, fieldInfo);
+      fieldType := Type.CheckInfo (fieldInfo.type, fieldTypeInfo);
+      is_solid := is_solid AND fieldTypeInfo.isSolid;
+      IF (fieldTypeInfo.class = Type.Class.Packed) THEN
+        PackedType.Split (fieldType, fieldSize, packedFieldBaseType);
+        IF NOT Type.StraddleFreeScalars
+                 (fieldType, recSize, IsEltOrField := TRUE)
+        THEN
+          Error.ID
+            (fieldInfo.name,
+             "CM3 restriction: scalars in packed fields cannot cross "
+             & "boundaries (2.2.5).");
+          recSize := RoundUp (recSize, Target.Word.size);
+          straddlesWord := TRUE; 
+        END;
         anyPacked := TRUE;
-      ELSE
-        fieldSize  := info.size;
-        fieldAlign := info.alignment;
-        newAlign   := MAX (newAlign, fieldAlign);
-        curSize    := newSize;
-        newSize    := RoundUp (curSize, fieldAlign);
-        is_solid   := is_solid AND (curSize = newSize);
+      ELSE (* Field not packed. *) 
+        fieldSize  := fieldTypeInfo.size;
+        fieldAlign := fieldTypeInfo.alignment;
+        recAlign   := MAX (recAlign, fieldAlign);
+        curSize    := recSize;
+        recSize    := RoundUp (curSize, fieldAlign);
+        is_solid   := is_solid AND (curSize = recSize);
       END;
-      Field.SetOffset (o, newSize);
-      INC (newSize, fieldSize);
-      o := o.next;
+      Field.SetOffset (fieldValue, recSize);
+      INC (recSize, fieldSize);
+(* TODO: Fix so recSize won't overflow. *) 
+      fieldValue := fieldValue.next;
     END;
 
-    IF (anyPacked) THEN
-      (**************************************************
-      (* add a little bit of C compatibility *)
-      IF (Target.PCC_bitfield_type_matters) THEN
-        newAlign := MAX (newAlign, Target.Integer.align);
-      END;
-      ***************************************************)
-      IF NOT FindAlignment (newAlign, fields, lazyAligned) THEN
-        Error.Msg ("Could not find a legal alignment for the packed type.");
-      END;
+    IF anyPacked AND NOT straddlesWord THEN
+      (* Look for a smaller alignment that also avoids word straddling. *) 
+      RecAlignWithPackedElements ((*IN OUT*) recAlign, fields, lazyAligned)
     END;
 
-    curSize := newSize;
-    newSize := RoundUp (curSize, newAlign);
-    is_solid := is_solid AND (curSize = newSize);
-    (* make sure that all copy operations are an integral number of
+    minSize := recSize;
+    recSize := RoundUp (minSize, recAlign);
+    (* ^make sure that all copy operations are an integral number of
        aligned transfers. *)
+    is_solid := is_solid AND (minSize = recSize);
 
-    IF (newSize > 0) THEN
+    IF raiseRecAlign AND recSize > 0 THEN
       (* find the largest possible alignment that doesn't change the size
          of the record... *)
       VAR z: CARDINAL; BEGIN
         z := Target.Integer.align;  (* Int64 or Int32 *)
-        IF (z > newAlign) AND (newSize MOD z = 0) THEN  newAlign := z;  END;
+        IF (z > recAlign) AND (recSize MOD z = 0) THEN  recAlign := z;  END;
         z := Target.Int32.align;
-        IF (z > newAlign) AND (newSize MOD z = 0) THEN  newAlign := z;  END;
+        IF (z > recAlign) AND (recSize MOD z = 0) THEN  recAlign := z;  END;
         z := Target.Int16.align;
-        IF (z > newAlign) AND (newSize MOD z = 0) THEN  newAlign := z;  END;
+        IF (z > recAlign) AND (recSize MOD z = 0) THEN  recAlign := z;  END;
         z := Target.Int8.align;
-        IF (z > newAlign) AND (newSize MOD z = 0) THEN  newAlign := z;  END;
+        IF (z > recAlign) AND (recSize MOD z = 0) THEN  recAlign := z;  END;
       END;
     END;
 
-    (************************
-    (* find an alignment (and hence a size) that's some reasonable
-       number of machine addressable units *)
-    IF newSize <= Target.Int8.size THEN
-      newAlign := MAX (newAlign, Target.Int8.align);
-    ELSIF newSize <= Target.Int16.size THEN
-      newAlign := MAX (newAlign, Target.Int16.align);
-    ELSIF newSize <= Target.Int32.size THEN
-      newAlign := MAX (newAlign, Target.Int32.align);
-    ELSE
-      newAlign := MAX (newAlign, Target.Int64.align);
-    END;
-    **************************)
-
-    IF (newSize < 0) THEN
+    IF recSize > MaxBitSize THEN
       Error.Msg ("CM3 restriction: record or object type is too large");
     END;
-    recSize  := newSize;
-    recAlign := newAlign;
   END SizeAndAlignment;
 
-PROCEDURE FindAlignment (VAR align: INTEGER;  fields: Scope.T;
-                         lazyAligned: BOOLEAN): BOOLEAN =
-  VAR x: INTEGER;
+PROCEDURE RecAlignWithPackedElements
+  (VAR (*IN OUT*) recAlign: INTEGER; fields: Scope.T; lazyAligned: BOOLEAN) =
+  (* Assume no straddles if aligned initial value of recAlign.
+     Look for the smallest alignment that also is straddle-free. *) 
+  VAR trialAlign, offset: INTEGER;
   BEGIN
-    FOR a := FIRST (Target.Alignments) TO LAST (Target.Alignments) DO
-      x := Target.Alignments[a];
-      IF (x >= align) THEN
-        (* see if all the fields are ok at this alignment *)
-        IF AlignmentOK (x, fields, lazyAligned) THEN
-          align := x;
-          RETURN TRUE;
-        END;
-      END;
-    END;
-    RETURN FALSE;
-  END FindAlignment;
+    FOR a := FIRST (Target.Alignments) (* Smallest *)
+             TO LAST (Target.Alignments) DO
+      trialAlign := Target.Alignments[a];
+      IF trialAlign >= Target.Word.align THEN (* Already know this one works. *)
+        recAlign := Target.Word.align; 
+        RETURN
+      END; 
+      IF trialAlign >= recAlign THEN
+        offset := Target.Word.size;
+        LOOP (* Backwards through multiples of trialAlign within a word. *)
+          DEC (offset, trialAlign);
+          IF NOT OffsetIsStraddleFree (offset, fields, lazyAligned)
+          THEN (* trialAlign won't work. *) 
+            EXIT
+          ELSIF offset <= 0 THEN (* trialAlign works. *) 
+            recAlign := MAX (recAlign, trialAlign);
+            RETURN
+          END
+        END (* LOOP *)
+      END 
+    END; (* FOR *)
+  END RecAlignWithPackedElements;
 
-PROCEDURE AlignmentOK (align: INTEGER;  fields: Scope.T;
-                       lazyAligned: BOOLEAN): BOOLEAN =
-  VAR o: Value.T;  field: Field.Info;  rec_offs := 0;
+PROCEDURE OffsetIsStraddleFree
+  (recOffset: INTEGER; fields: Scope.T; lazyAligned: BOOLEAN)
+: BOOLEAN =
+  VAR fieldValue : Value.T;
+      fieldInfo  : Field.Info;
       origLazyAligned: BOOLEAN;
   BEGIN
-    REPEAT
-      o := Scope.ToList (fields);
-      WHILE (o # NIL) DO
-        Field.Split (o, field);
-        origLazyAligned := Type.IsLazyAligned (field.type);
-        Type.SetLazyAlignment (field.type, lazyAligned);
-        IF NOT Type.IsAlignedOk (field.type, rec_offs + field.offset) THEN
-          Type.SetLazyAlignment (field.type, origLazyAligned);
-          RETURN FALSE;
-        END;
-        Type.SetLazyAlignment (field.type, origLazyAligned);
-        o := o.next;
-      END;
-      rec_offs := (rec_offs + align) MOD Target.Integer.size;
-    UNTIL (rec_offs = 0);
-    RETURN TRUE;
-  END AlignmentOK;
+    fieldValue := Scope.ToList (fields);
+    WHILE (fieldValue # NIL) DO
 
+      Field.Split (fieldValue, fieldInfo);
+      origLazyAligned := Type.IsLazyAligned (fieldInfo.type);
+      Type.SetLazyAlignment (fieldInfo.type, lazyAligned);
+      IF NOT Type.StraddleFreeScalars
+               (fieldInfo.type, recOffset + fieldInfo.offset, IsEltOrField := TRUE)
+      THEN
+        Type.SetLazyAlignment (fieldInfo.type, origLazyAligned);
+        RETURN FALSE;
+      END;
+      Type.SetLazyAlignment (fieldInfo.type, origLazyAligned);
+      fieldValue := fieldValue.next; 
+    END (* WHILE *); 
+    RETURN TRUE;     
+  END OffsetIsStraddleFree;
+
+PROCEDURE NoStraddle (p: P;  offset: INTEGER; <*UNUSED*> IsEltOrField: BOOLEAN)
+: BOOLEAN =
+  BEGIN
+    RETURN OffsetIsStraddleFree ( offset, p.fields, p.info.lazyAligned); 
+  END NoStraddle;
+
+(* EXPORTED: *)
 PROCEDURE RoundUp (size, alignment: INTEGER): INTEGER =
   BEGIN
     IF (alignment = 0)
@@ -306,11 +332,6 @@ PROCEDURE RoundUp (size, alignment: INTEGER): INTEGER =
       ELSE RETURN ((size + alignment - 1) DIV alignment) * alignment;
     END;
   END RoundUp;
-
-PROCEDURE CheckAlign (p: P;  offset: INTEGER): BOOLEAN =
-  BEGIN
-    RETURN AlignmentOK (offset, p.fields, p.info.lazyAligned);
-  END CheckAlign;
 
 PROCEDURE Compiler (p: P) =
   VAR fields := Scope.ToList (p.fields);  o: Value.T;  n: INTEGER;
@@ -384,17 +405,17 @@ PROCEDURE GenInit (p: P;  zeroed: BOOLEAN) =
       IF (field.dfault = NIL) THEN
         IF (Type.InitCost (field.type, zeroed) > 0) THEN
           CG.Push (ptr);
-          CG.Boost_alignment (p.align);
+          CG.Boost_addr_alignment (p.align);
           CG.Add_offset (field.offset);
           Type.InitValue (field.type, zeroed);
         END;
       ELSIF (NOT zeroed) OR (NOT Expr.IsZeroes (field.dfault)) THEN
-        AssignStmt.PrepForEmit (field.type, field.dfault,
-                                initializing := TRUE);
+        AssignStmt.PrepForEmit
+          (field.type, field.dfault, initializing := TRUE);
         CG.Push (ptr);
-        CG.Boost_alignment (p.align);
+        CG.Boost_addr_alignment (p.align);
         CG.Add_offset (field.offset);
-        AssignStmt.DoEmit (field.type, field.dfault);
+        AssignStmt.DoEmit (field.type, field.dfault, initializing := TRUE);
       END;
       v := v.next;
     END;

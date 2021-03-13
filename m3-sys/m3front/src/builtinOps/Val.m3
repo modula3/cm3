@@ -17,7 +17,7 @@ PROCEDURE TypeOf (ce: CallExpr.T): Type.T =
   VAR t: Type.T;
   BEGIN
     IF TypeExpr.Split (ce.args[1], t)
-      THEN RETURN t;
+      THEN RETURN Type.StripPacked (t);
       ELSE RETURN Int.T;
     END;
   END TypeOf;
@@ -40,6 +40,7 @@ PROCEDURE Check (ce: CallExpr.T;  VAR cs: Expr.CheckState) =
     ELSE (* looks ok *)
       Expr.GetBounds (ce.args[0], minu, maxu);
       EVAL Type.GetBounds (t, mint, maxt);
+(* TODO: Emit warnings when statically detectable RT errors. *)
       IF TInt.LT (minu, mint) THEN
         (* we need a lower bound check *)
         IF TInt.LT (maxt, maxu) THEN
@@ -114,6 +115,7 @@ PROCEDURE GetBounds (ce: CallExpr.T;  VAR min, max: Target.Int) =
 PROCEDURE Initialize () =
   BEGIN
     Z := CallExpr.NewMethodList (2, 2, TRUE, FALSE, TRUE, NIL,
+                                 TypeOf,
                                  TypeOf,
                                  CallExpr.NotAddressable,
                                  Check,

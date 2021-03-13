@@ -14,6 +14,7 @@ TYPE
   P = ExprRep.Ta BRANDED "NotExpr.P" OBJECT
       OVERRIDES
         typeOf       := ExprRep.NoType;
+        repTypeOf    := ExprRep.NoType;
         check        := Check;
         need_addr    := ExprRep.NotAddressable;
         prep         := Prep;
@@ -40,8 +41,9 @@ PROCEDURE New (a: Expr.T): Expr.T =
   BEGIN
     p := NEW (P);
     ExprRep.Init (p);
-    p.a    := a;
-    p.type := Bool.T;
+    p.a       := a;
+    p.type    := Bool.T;
+    p.repType := Bool.T;
     RETURN p;
   END New;
 

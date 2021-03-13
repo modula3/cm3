@@ -37,6 +37,8 @@ TYPE
     h_level    : INTEGER;
   END;
 
+CONST jmpbufAlign = 128; 
+
 CONST
   RT_Kind = ARRAY Kind OF INTEGER {
     ORD (M3RT.HandlerClass.Finally),
@@ -185,7 +187,7 @@ PROCEDURE PopFrame (frame: CG.Var) =
   BEGIN
     pop := RunTyme.LookUpProc (RunTyme.Hook.PopEFrame);
     Procedure.StartCall (pop);
-    CG.Load_addr (frame, M3RT.EF_next);
+    CG.Load_addr (frame, M3RT.EF_next, Target.Address.align);
     CG.Pop_param (CG.Type.Addr);
     Procedure.EmitCall (pop);
   END PopFrame;
@@ -200,15 +202,14 @@ PROCEDURE SetLock (acquire: BOOLEAN;  var: CG.Var;  offset: INTEGER) =
 
     CG.Start_call_indirect (CG.Type.Void, Target.DefaultCall);
 
-    CG.Load_addr (var, offset); (* mutext object *)
+    CG.Load_addr (var, offset, Target.Address.align); (* mutex object *)
     CG.Pop_param (CG.Type.Addr);
 
-    CG.Load_addr (var, offset); (* mutex object *)
-    CG.Boost_alignment (Target.Address.align);
+    CG.Load_addr (var, offset, Target.Address.align); (* mutex object *)
     CG.Load_indirect (CG.Type.Addr, 0, Target.Address.size);  (* method list *)
-    CG.Boost_alignment (Target.Address.align);
+    CG.Boost_addr_alignment (Target.Address.align);
     CG.Load_indirect (CG.Type.Addr, method_offset, Target.Address.size); (* proc *)
-    CG.Boost_alignment (Target.Address.align);
+    CG.Boost_addr_alignment (Target.Address.align);
 
     CG.Gen_Call_indirect (CG.Type.Void, Target.DefaultCall);    
   END SetLock;
@@ -221,9 +222,9 @@ PROCEDURE CallFinallyHandler (info: CG.Var;
       CG.Call_direct (handler, CG.Type.Void);
     ELSE
       CG.Start_call_indirect (CG.Type.Void, Target.DefaultCall);
-      CG.Load_addr (info, M3RT.EF2_frame);
+      CG.Load_addr (info, M3RT.EF2_frame, Target.Address.align);
       CG.Pop_static_link ();
-      CG.Load_addr (info, M3RT.EF2_handler);
+      CG.Load_addr (info, M3RT.EF2_handler, Target.Address.align);
       CG.Gen_Call_indirect (CG.Type.Void, Target.DefaultCall);
     END;
   END CallFinallyHandler;
@@ -233,16 +234,16 @@ PROCEDURE CaptureState (frame: CG.Var;  jmpbuf: CG.Var;  handler: CG.Label) =
   BEGIN
 
     IF Target.Alloca_jmpbuf THEN
-      CG.Load_addr (jmpbuf);
+      CG.Load_addr (jmpbuf, 0, jmpbufAlign);
       CG.Store_addr (frame, M3RT.EF1_jmpbuf);
     END;
 
     CG.Start_call_direct (setjmp, 0, Target.Integer.cg_type);
 
     IF Target.Alloca_jmpbuf THEN
-      CG.Load_addr (jmpbuf);
+      CG.Load_addr (jmpbuf, 0, jmpbufAlign);
     ELSE
-      CG.Load_addr_of (frame, M3RT.EF1_jmpbuf, 128);
+      CG.Load_addr_of (frame, M3RT.EF1_jmpbuf, jmpbufAlign);
     END;
     CG.Pop_param (CG.Type.Addr);
     CG.Call_direct (setjmp, Target.Integer.cg_type);
@@ -482,11 +483,11 @@ PROCEDURE EmitReturn (expr: Expr.T;  fromFinally: BOOLEAN) =
             EVAL Type.CheckInfo (z.type, ret_info);
             AssignStmt.PrepForEmit (z.type, expr, initializing := TRUE);
             CG.Load_addr_of (z.tmp_result, 0, ret_info.alignment);
-            AssignStmt.DoEmit (z.type, expr);
+            AssignStmt.DoEmit (z.type, expr, initializing := TRUE);
           ELSIF is_large OR NOT simple THEN
             AssignStmt.PrepForEmit (z.type, expr, initializing := FALSE);
             Variable.LoadLValue (z.variable);
-            AssignStmt.DoEmit (z.type, expr);
+            AssignStmt.DoEmit (z.type, expr, initializing := FALSE);
           ELSE
             Expr.Prep (expr);
           END;
@@ -535,7 +536,7 @@ PROCEDURE EmitReturn (expr: Expr.T;  fromFinally: BOOLEAN) =
             CG.Exit_proc (CG.Type.Struct);
           END;
         ELSIF simple THEN
-          AssignStmt.DoEmitCheck (z.type, expr);
+          AssignStmt.EmitRTCheck (z.type, expr);
           CG.Exit_proc (Type.CGType (z.type));
         ELSE (* small scalar return value *)
           Variable.Load (z.variable);
@@ -709,7 +710,7 @@ PROCEDURE EmitExceptionTest (signature: Type.T;  need_value: BOOLEAN): CG.Val =
     END;
 
     (* generate the conditional branch to the handler *)
-    CG.Load_addr (stack[i].info, M3RT.EA_exception);
+    CG.Load_addr (stack[i].info, M3RT.EA_exception, Target.Address.align);
     CG.Load_nil ();
     CG.If_compare (CG.Type.Addr, CG.Cmp.NE, stack[i].stop, CG.Never);
 

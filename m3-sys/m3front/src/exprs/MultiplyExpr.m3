@@ -28,6 +28,7 @@ TYPE
         tmp : CG.Var;
       OVERRIDES
         typeOf       := TypeOf;
+        repTypeOf    := RepTypeOf;
         check        := Check;
         need_addr    := ExprRep.NotAddressable;
         prep         := Prep;
@@ -61,8 +62,13 @@ PROCEDURE New (a, b: Expr.T): Expr.T =
 
 PROCEDURE TypeOf (p: P): Type.T =
   BEGIN
-    RETURN Expr.TypeOf (p.a);
+    RETURN Type.Base (Expr.TypeOf (p.a));
   END TypeOf;
+
+PROCEDURE RepTypeOf (p: P): Type.T =
+  BEGIN
+    RETURN Type.Base (Expr.RepTypeOf (p.a));
+  END RepTypeOf;
 
 PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
   VAR ta, tb, range: Type.T;
@@ -105,7 +111,7 @@ PROCEDURE Prep (p: P) =
         p.tmp := CG.Declare_temp (size, Target.Integer.align,
                                   CG.Type.Struct, in_memory := TRUE);
         CG.Load_addr_of (p.tmp, 0, Target.Integer.align);
-        CG.Force ();
+        CG.ForceStacked ();
         Expr.Compile (p.a);
         Expr.Compile (p.b);
         CG.Set_intersection (size);

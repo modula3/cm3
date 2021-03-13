@@ -1,0 +1,3 @@
+"../Main.m3", line 12: warning: Open array passed by value. (x)
+"../Main.m3", line 18: warning: Large parameter passed by value (40 bytes). (x)
+2 warnings encountered

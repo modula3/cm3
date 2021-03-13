@@ -220,6 +220,7 @@ PROCEDURE Compile (p: P): Stmt.Outcomes =
     oc: Stmt.Outcomes; 
     foundForSure := FALSE;
     type_tbl  : INTEGER;
+    addr_align: INTEGER;
     n_cases   := CntCases (p.cases);
     n_labels  := CntLabels (p.cases);
     l_base    := CG.Next_label (n_cases);
@@ -268,16 +269,17 @@ PROCEDURE Compile (p: P): Stmt.Outcomes =
 
     (* let the runtime scan the table *)
     proc := RunTyme.LookUpProc (RunTyme.Hook.ScanTypecase);
+    addr_align := Expr.Alignment (p.expr);
     Procedure.StartCall (proc);
     IF Target.DefaultCall.args_left_to_right THEN
-      CG.Load_addr (ref);
+      CG.Load_addr (ref, 0, addr_align);
       CG.Pop_param (CG.Type.Addr);
-      CG.Load_addr_of (Module.GlobalData (FALSE), type_tbl, Target.Address.align);
+      CG.Load_addr_of (Module.GlobalData (FALSE), type_tbl, CG.Max_alignment);
       CG.Pop_param (CG.Type.Addr);
     ELSE
-      CG.Load_addr_of (Module.GlobalData (FALSE), type_tbl, Target.Address.align);
+      CG.Load_addr_of (Module.GlobalData (FALSE), type_tbl, CG.Max_alignment);
       CG.Pop_param (CG.Type.Addr);
-      CG.Load_addr (ref);
+      CG.Load_addr (ref, 0, addr_align);
       CG.Pop_param (CG.Type.Addr);
     END;
     Procedure.EmitCall (proc);
@@ -339,7 +341,7 @@ PROCEDURE CompileCaseBody (p: P;  c: Case;  ref: CG.Var;
         Scope.Enter (c.scope);
         Scope.InitValues (c.scope);
         Variable.LoadLValue (c.var);
-        CG.Load_addr (ref);
+        CG.Load_addr (ref, 0, Target.Address.align);
         CG.Store_indirect (CG.Type.Addr, 0, Target.Address.size);
         Variable.ScheduleTrace (c.var);
         oc := Stmt.Compile (c.stmt);

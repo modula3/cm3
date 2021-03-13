@@ -11,6 +11,7 @@ MODULE WithStmt;
 
 IMPORT M3ID, CG, Expr, Scope, Value, Variable, OpenArrayType;
 IMPORT Type, Stmt, StmtRep, Token, M3RT, Target, Tracer, AssignStmt;
+IMPORT ArrayExpr;
 FROM Scanner IMPORT Match, MatchID, GetToken, cur;
 
 TYPE
@@ -42,9 +43,9 @@ PROCEDURE ParseTail (): Stmt.T =
   BEGIN
     p := NEW (P);
     StmtRep.Init (p);
-    IF cur.token = TK.tUNUSED THEN 
+    IF cur.token = TK.tUNUSED THEN
       u := TRUE; 
-      GetToken (); (* UNUSED *) 
+      GetToken (); (* UNUSED *)
       Match (TK.tENDPRAGMA);
     END; 
     id := MatchID ();
@@ -75,6 +76,7 @@ PROCEDURE Check (p: P;  VAR cs: Stmt.CheckState) =
     IF OpenArrayType.Is (t) THEN
       p.kind := Kind.openarray;
       Variable.NeedsAddress (p.var);
+      ArrayExpr.NoteTargetType (p.expr, t);
     ELSIF Expr.IsDesignator (p.expr) THEN
       p.kind := Kind.designator;
       Expr.NeedsAddress (p.expr);
@@ -110,6 +112,7 @@ PROCEDURE Compile (p: P): Stmt.Outcomes =
     t := Type.CheckInfo (Value.TypeOf (p.var), info);
 
     (* evaluate the expr outside the new scope and capture its value *)
+    EVAL Expr.CheckUseFailure (p.expr);
     CASE p.kind OF
     | Kind.designator =>
         Variable.Split (p.var, tlhs, global, indirect, traced);
@@ -117,8 +120,9 @@ PROCEDURE Compile (p: P): Stmt.Outcomes =
         Expr.CompileAddress (p.expr, traced);
         val := CG.Pop ();
     | Kind.structure =>
-        AssignStmt.PrepForEmit (Value.TypeOf (p.var), p.expr,
-                                initializing := TRUE);
+        tlhs := Value.TypeOf (p.var);
+        ArrayExpr.NoteUseTargetVar (p.expr);
+        AssignStmt.PrepForEmit (tlhs, p.expr, initializing := TRUE);
     | Kind.openarray, Kind.other =>
         Expr.Prep (p.expr);
         Expr.Compile (p.expr);
@@ -136,15 +140,27 @@ PROCEDURE Compile (p: P): Stmt.Outcomes =
           Variable.SetLValue (p.var);
           CG.Free (val);
       | Kind.openarray =>
+          (* Copy dope-only into p.var. *)
           dope_size := OpenArrayType.OpenDepth(t) * Target.Integer.pack;
+          (* p.var will have been declared with independently-computed
+             size equal to dope_size.  See Variable.Declare. *)
           INC (dope_size, M3RT.OA_sizes);
           Variable.LoadLValue (p.var);
           CG.Push (val);
           CG.Copy (dope_size, overlap := FALSE);
           CG.Free (val);
+
+(* CHECK: p.expr can, if it's a truly dynamic open array constructor, be
+          compiled as a heap-allocated temporary, complete with contiguous
+          dope.  This will keep a pointer only to its interior, i.e., its
+          elements.  Is this enough to protect it from CG? See heapTempPtr
+          in ArrayExpr.m3, which maintains a pointer to the dope, but it
+          will remain until the containing procedure is exited -- overly
+          long. *)
+          
       | Kind.structure =>
           Variable.LoadLValue (p.var);
-          AssignStmt.DoEmit (Value.TypeOf (p.var), p.expr);
+          AssignStmt.DoEmit (tlhs, p.expr, initializing := TRUE);
       | Kind.other =>
           Variable.LoadLValue (p.var);
           CG.Push (val);

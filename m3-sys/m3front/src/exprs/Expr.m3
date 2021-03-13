@@ -9,12 +9,15 @@
 
 MODULE Expr EXPORTS Expr, ExprRep;
 
-IMPORT M3, M3Buf, CG, Type, Scanner, ExprParse;
+IMPORT M3, M3ID, M3Buf, CG, Type, Scanner, ExprParse;
 IMPORT Target, TInt, ErrType, Error;
-IMPORT Bool, Int; 
+IMPORT NamedExpr, ConsExpr, OpenArrayType, ArrayType, Value;
+IMPORT Bool, Int;
+IMPORT CallExpr, SetExpr, RecordExpr, ArrayExpr;
 
 (********************************************************************)
 
+(* EXPORTED: *)
 PROCEDURE Parse (): T =
   BEGIN
     RETURN ExprParse.E0 (FALSE);
@@ -22,23 +25,100 @@ PROCEDURE Parse (): T =
 
 PROCEDURE Init (t: T) =
   BEGIN
-    t.origin    := Scanner.offset;
-    t.type      := NIL;
-    t.checked   := FALSE;
-    t.direct_ok := FALSE;
-    t.do_direct := FALSE;
-    t.align     := Target.Word.align+1 (* => uncached. *);
+    t.origin               := Scanner.offset;
+    t.type                 := NIL;
+    t.align                := Target.Word.align+1 (* => uncached. *);
+    t.checked              := FALSE;
+    t.directAssignableType := FALSE;
+    t.doDirectAssign       := FALSE;
+    t.isNamedConst         := FALSE;
   END Init;
 
 (********************************************************************)
 
+(* EXPORTED: *)
 PROCEDURE TypeOf (t: T): Type.T =
+
+(* This is a confused mess.  Some expression kinds eagerly compute the type
+   in 'New'.  Some give it a tentative non-nil value in 'New', but change it
+   in 'Check', sometimes only to ErrType.T, sometimes to the real type.
+   'TypeOf' will return the tentative value if called prior to 'Check'.
+   All such would ASSERT FALSE, if their 'typeOf' method were called, which
+   fortunately, can't happen.  For the others, 'TypeOf' computes and caches
+   the type on-demand, using the expression's 'typeOf' method.
+*)
   BEGIN
     IF (t = NIL) THEN RETURN ErrType.T END;
     IF (t.type = NIL) THEN t.type := t.typeOf () END;
     RETURN t.type;
   END TypeOf;
 
+(* EXPORTED: *)
+PROCEDURE SemTypeOf (t: T): Type.T =
+  BEGIN
+    RETURN TypeOf (t);
+  END SemTypeOf;
+
+(* EXPORTED: *)
+PROCEDURE RepTypeOf (t: T): Type.T =
+(* Works the same way as TypeOf. *)
+  VAR stripped: T;
+  BEGIN
+    stripped := StripNamedCons (t);
+    IF stripped = NIL THEN stripped := t END;
+    IF stripped.repType = NIL THEN
+      stripped.repType := stripped.repTypeOf ();
+    END;
+    RETURN stripped.repType;
+  END RepTypeOf;
+
+(* EXPORTED: *)
+PROCEDURE StaticLength (t: T): lengthTyp =
+  BEGIN
+    IF (t = NIL) THEN RETURN lengthInvalid END;
+    RETURN t.staticLength ();
+  END StaticLength;
+
+(* EXPORTED: (ExprRep)*)
+PROCEDURE StaticLengthDefault (t: T): lengthTyp =
+  VAR exprType: Type.T := RepTypeOf (t);
+  BEGIN
+    IF exprType = NIL THEN
+      RETURN lengthInvalid
+    ELSIF OpenArrayType.Is (exprType) THEN
+      RETURN lengthNonStatic
+    ELSIF NOT ArrayType.Is (exprType) THEN
+      RETURN lengthNonArray
+    ELSE RETURN lengthInvalid
+    END
+  END StaticLengthDefault;
+
+(* EXPORTED: *)
+PROCEDURE UsesAssignProtocol (rhs: T): BOOLEAN =
+BEGIN
+    IF rhs = NIL THEN RETURN FALSE END;
+    IF CallExpr.IsUserProc (rhs) THEN RETURN rhs.doDirectAssign END;
+
+(* TODO ^This one-liner is an easy temporary way to sidestep having to add
+        massive and widely scattered apparatus for three different levels of
+        dispatching, using two different mechanisms, just to get
+        rhs.usesAssignProtocol to handle this case.  *)
+    RETURN rhs.usesAssignProtocol ();
+  END UsesAssignProtocol;
+
+(* EXPORTED: (ExprRep)*)
+PROCEDURE UsesAssignProtocolDefault (<*UNUSED*>t: T): BOOLEAN =
+  BEGIN
+    RETURN FALSE
+  END UsesAssignProtocolDefault;
+
+(* EXPORTED: (ExprRep)*)
+PROCEDURE DefaultCheckUseFailure (<*UNUSED*>e: M3.Expr): BOOLEAN =
+  BEGIN
+    RETURN TRUE;
+  END DefaultCheckUseFailure;
+
+(* EXPORTED: *)
 PROCEDURE TypeCheck (t: T;  VAR cs: CheckState) =
   VAR save: INTEGER;
   BEGIN
@@ -53,11 +133,12 @@ PROCEDURE TypeCheck (t: T;  VAR cs: CheckState) =
 
 (********************************************************************)
 
+(* EXPORTED: *)
 PROCEDURE ConstValue (t: T): T =
   VAR new: T;  cs: CheckState;
   BEGIN
     IF (t = NIL) THEN RETURN NIL END;
-    (*** <* ASSERT t.checked *> ***)
+    (*** NOT necessarily: <* ASSERT t.checked *> ***)
     new := t.evaluate ();
     IF (new # t) THEN
       cs := M3.OuterCheckState; (* OK since constants don't raise exceptions *)
@@ -66,6 +147,7 @@ PROCEDURE ConstValue (t: T): T =
     RETURN new;
   END ConstValue;
 
+(* EXPORTED: *)
 PROCEDURE GetBounds (t: T;  VAR min, max: Target.Int) =
   BEGIN
     IF (t = NIL) THEN min := TInt.Zero; max := TInt.MOne; RETURN END;
@@ -73,6 +155,7 @@ PROCEDURE GetBounds (t: T;  VAR min, max: Target.Int) =
     t.getBounds (min, max);
   END GetBounds;
 
+(* EXPORTED: *)
 PROCEDURE IsDesignator (t: T): BOOLEAN =
   BEGIN
     IF (t = NIL) THEN RETURN TRUE END;
@@ -80,6 +163,7 @@ PROCEDURE IsDesignator (t: T): BOOLEAN =
     RETURN t.isDesignator ();
   END IsDesignator;
 
+(* EXPORTED: *)
 PROCEDURE IsWritable (t: T;  lhs: BOOLEAN): BOOLEAN =
   BEGIN
     IF (t = NIL) THEN RETURN TRUE END;
@@ -87,13 +171,16 @@ PROCEDURE IsWritable (t: T;  lhs: BOOLEAN): BOOLEAN =
     RETURN t.isWritable (lhs)
   END IsWritable;
 
+(* EXPORTED: *)
 PROCEDURE IsZeroes (t: T): BOOLEAN =
+(* PRE: t is checked. *)
   BEGIN
     IF (t = NIL) THEN RETURN TRUE END;
     <* ASSERT t.checked *>
     RETURN t.isZeroes ()
   END IsZeroes;
 
+(* EXPORTED: *)
 PROCEDURE GetSign (t: T): CG.Sign =
   VAR min, max: Target.Int;
   BEGIN
@@ -106,6 +193,7 @@ PROCEDURE GetSign (t: T): CG.Sign =
 
 (********************************************************************)
 
+(* EXPORTED: *)
 PROCEDURE NeedsAddress (t: T) =
   BEGIN
     IF (t = NIL) THEN RETURN END;
@@ -115,22 +203,53 @@ PROCEDURE NeedsAddress (t: T) =
 
 (********************************************************************)
 
+(* EXPORTED: *)
 PROCEDURE SupportsDirectAssignment (t: T): BOOLEAN =
+  VAR baseExpr: T;
   BEGIN
-    RETURN (t # NIL) AND (t.direct_ok);
+    IF t = NIL THEN RETURN FALSE END;
+    IF ConsExpr.Is (t)
+    THEN baseExpr := ConsExpr.Base (t);
+    ELSE baseExpr := t;
+    END; 
+
+    RETURN baseExpr # NIL AND baseExpr.directAssignableType;
   END SupportsDirectAssignment;
 
+(* EXPORTED: *)
 PROCEDURE MarkForDirectAssignment (t: T) =
+(* If called, must be before Prep(t). *)
   BEGIN
-    <*ASSERT t.direct_ok*>
-    t.do_direct := TRUE;
+    <*ASSERT t.directAssignableType*>
+    t.doDirectAssign := TRUE;
   END MarkForDirectAssignment;
 
+(* EXPORTED: *)
 PROCEDURE IsMarkedForDirectAssignment (t: T): BOOLEAN =
   BEGIN
-    RETURN (t # NIL) AND (t.do_direct);
+    RETURN (t # NIL) AND (t.doDirectAssign);
   END IsMarkedForDirectAssignment;
 
+(* EXPORTED: *)
+PROCEDURE IsAnonConstructor (t: T): BOOLEAN =
+(* t is a non-named array, record, or set constructor. *)
+  VAR locExpr: T;
+  BEGIN
+    (* Let's avoid creating yet another dispatching method with 83
+       potential override sites to be checked by some poor maintainer. *)
+    locExpr := t;
+    IF locExpr = NIL THEN RETURN FALSE END;
+    IF NamedExpr.Is (locExpr) THEN RETURN FALSE END;
+    IF ConsExpr.Is (locExpr) THEN RETURN TRUE END;
+    IF ArrayExpr.Is (locExpr) THEN RETURN TRUE; END;
+    IF RecordExpr.Is (locExpr) THEN RETURN TRUE; END;
+    IF SetExpr.Is (locExpr) THEN RETURN TRUE; END;
+    RETURN FALSE;
+  END IsAnonConstructor;
+
+(******************************************** Alignments ************)
+
+(* EXPORTED: *)
 PROCEDURE Alignment (t: T): Type.BitAlignT = 
 (* A bit alignment that t is guaranteed to have.  Hopefully maximum, or
    nearly so.  Always a true alignment, possibly as small as 1 bit. 
@@ -138,13 +257,15 @@ PROCEDURE Alignment (t: T): Type.BitAlignT =
    can take into account properties of an expression that the expression's
    type does not necessarily have in general.  Particularly, if a value is
    a field or element, they can depend on its containing record, object,
-   or array.
+   or array.  For an open array expression, this is the alignment of the
+   elements, not the dope.
    Compare to Type.T.info.alignment. 
 *)
 
   BEGIN
     IF t = NIL THEN RETURN Target.Word.align; END;
-    IF t.align > Target.Word.align THEN (* Compute and cache it. *)
+    IF t.align > Target.Word.align THEN
+      (* Uninitialized. Compute and cache it. *)
       t.align := t.exprAlign()
     END; 
     RETURN t.align;     
@@ -192,6 +313,7 @@ PROCEDURE ExprAlignArg0 (e: Ta): Type.BitAlignT =
 
 (********************************************************************)
 
+(* EXPORTED: *)
 PROCEDURE Prep (t: T) =
   BEGIN
     IF (t = NIL) THEN RETURN END;
@@ -199,6 +321,7 @@ PROCEDURE Prep (t: T) =
     t.prep ();
   END Prep;
 
+(* EXPORTED: *)
 PROCEDURE Compile (t: T) =
   BEGIN
     IF (t = NIL) THEN RETURN END;
@@ -206,6 +329,7 @@ PROCEDURE Compile (t: T) =
     t.compile ();
   END Compile;
 
+(* EXPORTED: *)
 PROCEDURE PrepLValue (t: T; traced: BOOLEAN) =
   BEGIN
     IF (t = NIL) THEN RETURN END;
@@ -214,6 +338,7 @@ PROCEDURE PrepLValue (t: T; traced: BOOLEAN) =
     t.prepLV (traced);
   END PrepLValue;
 
+(* EXPORTED: *)
 PROCEDURE CompileLValue (t: T; traced: BOOLEAN) =
   BEGIN
     IF (t = NIL) THEN RETURN END;
@@ -221,6 +346,7 @@ PROCEDURE CompileLValue (t: T; traced: BOOLEAN) =
     t.compileLV (traced);
   END CompileLValue;
 
+(* EXPORTED: *)
 PROCEDURE CompileAddress (t: T; traced: BOOLEAN) =
   BEGIN
     IF (t = NIL) THEN RETURN END;
@@ -229,6 +355,7 @@ PROCEDURE CompileAddress (t: T; traced: BOOLEAN) =
     CG.Check_byte_aligned ();
   END CompileAddress;
 
+(* EXPORTED: *)
 PROCEDURE PrepBranch (t: T;  true, false: CG.Label;  freq: CG.Frequency) =
   BEGIN
     IF (t = NIL) THEN RETURN END;
@@ -238,6 +365,7 @@ PROCEDURE PrepBranch (t: T;  true, false: CG.Label;  freq: CG.Frequency) =
     t.prepBR (true, false, freq);
   END PrepBranch;
 
+(* EXPORTED: *)
 PROCEDURE CompileBranch (t: T;  true, false: CG.Label;  freq: CG.Frequency) =
   BEGIN
     IF (t = NIL) THEN RETURN END;
@@ -246,12 +374,14 @@ PROCEDURE CompileBranch (t: T;  true, false: CG.Label;  freq: CG.Frequency) =
     t.compileBR (true, false, freq);
   END CompileBranch;
 
+(* EXPORTED: *)
 PROCEDURE NoteWrite (t: T) =
   BEGIN
     IF (t = NIL) THEN RETURN END;
     t.note_write ();
   END NoteWrite;
 
+(* EXPORTED: *)
 PROCEDURE IsEqual (a, b: T;  x: M3.EqAssumption): BOOLEAN =
   BEGIN
     IF (a = b) THEN RETURN TRUE END;
@@ -259,6 +389,7 @@ PROCEDURE IsEqual (a, b: T;  x: M3.EqAssumption): BOOLEAN =
     RETURN a.isEqual (b, x);
   END IsEqual;
 
+(* EXPORTED: *)
 PROCEDURE PrepLiteral (t: T;  type: Type.T;  is_const: BOOLEAN) =
   BEGIN
     IF (t = NIL) THEN RETURN END;
@@ -267,6 +398,7 @@ PROCEDURE PrepLiteral (t: T;  type: Type.T;  is_const: BOOLEAN) =
     t.prepLiteral (type, is_const);
   END PrepLiteral;
 
+(* EXPORTED: *)
 PROCEDURE GenLiteral (t: T;  offset: INTEGER;  type: Type.T;  is_const: BOOLEAN) =
   BEGIN
     IF (t = NIL) THEN RETURN END;
@@ -275,6 +407,7 @@ PROCEDURE GenLiteral (t: T;  offset: INTEGER;  type: Type.T;  is_const: BOOLEAN)
     t.genLiteral (offset, type, is_const);
   END GenLiteral;
 
+(* EXPORTED: *)
 PROCEDURE GenFPLiteral (t: T;  mbuf: M3Buf.T) =
   VAR u := ConstValue (t);
   BEGIN
@@ -285,6 +418,7 @@ PROCEDURE GenFPLiteral (t: T;  mbuf: M3Buf.T) =
     u.genFPLiteral (mbuf);
   END GenFPLiteral;
 
+(* EXPORTED: *)
 PROCEDURE BadOperands (op: TEXT;  a, b: M3.Type := NIL): M3.Type =
   BEGIN
     IF (a # ErrType.T) AND (b # ErrType.T) THEN
@@ -421,6 +555,59 @@ PROCEDURE EqCheckAB (a: Tab;  e: T;  x: M3.EqAssumption): BOOLEAN =
     ELSE        RETURN FALSE;
     END;
   END EqCheckAB;
+
+PROCEDURE StripNamedCons (expr: T): T =
+(* Look through a NamedExpr and then a ConsExpr, for an Expr.T.  NIL if not. *)
+
+  VAR ident: M3ID.T;
+  VAR val: Value.T;
+  VAR unnamedExpr, resultExpr: T;
+  BEGIN
+    IF NamedExpr.Split (expr, ident, val) THEN
+      IF Value.ClassOf (val) # Value.Class.Expr THEN RETURN NIL END;
+      unnamedExpr := Value.ToExpr (val);
+    ELSE unnamedExpr := expr
+    END;
+    ConsExpr.Seal (unnamedExpr);
+    (* DO NOT allow ConsExpr to Check unnamedExpr.  That could make a (should be
+       top-level) call to ArrayExpr.Check on a nested array constructor.
+       But it's OK if ConsExpr previously checked unnamedExpr. *)
+    resultExpr := ConsExpr.Base (unnamedExpr);
+    IF resultExpr = NIL THEN resultExpr := unnamedExpr END;
+    RETURN resultExpr
+  END StripNamedCons;
+
+PROCEDURE StaticSize (expr: T): INTEGER =
+(* < 0, if nonstatic.  Can be static, even if open array repType.
+   Does not include dope. *)
+  VAR stripped: T;
+  VAR info: Type.Info;
+  BEGIN
+    stripped := StripNamedCons (expr);
+    IF stripped # NIL AND OpenArrayType.Is (RepTypeOf (stripped))
+    THEN (* It's an array constructor. *)
+      RETURN ArrayExpr.StaticSize (stripped);
+    END;
+    EVAL Type.CheckInfo (RepTypeOf (expr), info);
+    RETURN info.size;
+  END StaticSize;
+
+PROCEDURE CheckUseFailure (t: T): BOOLEAN =
+(* Generate runtime actions prior to a use of t that does not call Compile.
+   Return TRUE IFF following code is reachable. *)
+  VAR strippedExpr: T;
+  BEGIN
+    strippedExpr := StripNamedCons (t);
+    IF strippedExpr = NIL THEN
+      strippedExpr := t;
+      RETURN TRUE;
+(* FIXME ^Remove this RETURN and fix so checkUseFailure works on
+          fields, formals, variables.  Currently (2020-4-24), it
+          fails because Value.toExpr has no overrides for these. *)
+    END;
+    <* ASSERT strippedExpr.checked *>
+    RETURN strippedExpr.checkUseFailure ();
+  END CheckUseFailure;
 
 BEGIN
 END Expr.

@@ -1,0 +1,24 @@
+Succeeded, with no mismatched values: constant sets in constant record
+Succeeded, with no mismatched values: constant sets in variable record
+Succeeded, with no mismatched values: variable sets in variable record
+Succeeded, with no mismatched values: constant records in constant record
+Succeeded, with no mismatched values: constant records in variable record
+Succeeded, with no mismatched values: variable records in variable record
+Succeeded, with no mismatched values: constant arrays in constant record
+Succeeded, with no mismatched values: constant arrays in variable record
+Succeeded, with no mismatched values: variable arrays in variable record
+Succeeded, with no mismatched values: constant sets in constant array
+Succeeded, with no mismatched values: constant sets in variable array
+Succeeded, with no mismatched values: assigned sets in open array
+Succeeded, with no mismatched values: variable sets in variable array
+Succeeded, with no mismatched values: constant records in constant array
+Succeeded, with no mismatched values: constant records in variable array
+Succeeded, with no mismatched values: constant records in open array
+Succeeded, with no mismatched values: variable records in variable array
+Succeeded, with no mismatched values: constant arrays in constant array
+Succeeded, with no mismatched values: constant arrays in variable array
+Succeeded, with no mismatched values: constant arrays in open array
+Succeeded, with no mismatched values: variable arrays in variable array
+21 tests performed.
+All succeeded.
+Overall test succeeded.

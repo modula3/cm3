@@ -24,6 +24,12 @@ BEGIN
   g.q := Set{};
   g.r := Set{Elt.a .. Elt.b, Elt.a .. Elt.a, Elt.d .. Elt.b};
 
+  Test.checkI (BITSIZE (Set), 5);
+  Test.checkI (BITSIZE (g.p), 5);
+
+  Test.checkI (BITSIZE (Record), 16);
+  Test.checkI (BITSIZE (g), 16);
+
   Test.check (Elt.a IN g.p);
   Test.check (NOT (Elt.b IN g.p));
   Test.check (Elt.c IN g.p);

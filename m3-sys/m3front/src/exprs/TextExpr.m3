@@ -18,6 +18,7 @@ TYPE
         value32 : M3WString.T;
       OVERRIDES
         typeOf       := ExprRep.NoType;
+        repTypeOf    := ExprRep.NoType;
         check        := ExprRep.NoCheck;
         need_addr    := ExprRep.NotAddressable;
         prep         := ExprRep.NoPrep;
@@ -39,19 +40,25 @@ TYPE
         exprAlign    := ExprRep.ExprAddrAlign; 
       END;
 
-TYPE
-  LiteralTable = REF ARRAY OF INTEGER;
+(* NOTE! These UIDs have nothing to do with the UIDs that are hashes
+         and used many places. *)
 
-VAR nextID        : INTEGER := 0;
-VAR global_consts : CG.Var  := NIL;
-VAR literals      : LiteralTable := NIL;
-VAR lit_methods   : INTEGER := -1;
+VAR nextUID : INTEGER := 0;
+TYPE  LiteralTable = REF ARRAY OF INTEGER;
+      (* LiteralTable[uid] is the offset w/in the global constant area where
+         the uid-th literal is stored. *)
+
+VAR globalConstsCGVar : CG.Var  := NIL;
+VAR literals : LiteralTable := NIL;
+VAR methodListOffset : INTEGER := -1;
+    (* ^Offset w/in global constant area of a list of addresses of
+       TextLiteral.T's overrides of Text.T methods. *)
 
 PROCEDURE Reset () =
   BEGIN
-    nextID := 0;
-    global_consts := NIL;
-    lit_methods := -1;
+    nextUID := 0;
+    globalConstsCGVar := NIL;
+    methodListOffset := -1;
     (* literals := NIL; *)
     IF (literals # NIL) THEN
       FOR i := FIRST (literals^) TO LAST (literals^) DO literals[i] := 0; END;
@@ -65,6 +72,7 @@ PROCEDURE New8 (value: M3String.T): Expr.T =
     p.value8  := value;
     p.value32 := NIL;
     p.type    := Textt.T;
+    p.repType := Textt.T;
     p.checked := TRUE;
     RETURN p;
   END New8;
@@ -76,6 +84,7 @@ PROCEDURE New32 (value: M3WString.T): Expr.T =
     p.value8  := NIL;
     p.value32 := value;
     p.type    := Textt.T;
+    p.repType := Textt.T;
     p.checked := TRUE;
     RETURN p;
   END New32;
@@ -108,8 +117,8 @@ PROCEDURE SetUID (p: P): INTEGER =
       len   := M3String.Length (p.value8);
       cnt   := len;
       uid   := M3String.GetUID (p.value8);
-      IF (uid < 0) THEN
-        uid := nextID;  INC (nextID);
+      IF uid = M3String.NO_UID THEN
+        uid := nextUID;  INC (nextUID);
         M3String.SetUID (p.value8, uid);
       END;
     ELSE
@@ -120,8 +129,8 @@ PROCEDURE SetUID (p: P): INTEGER =
       len   := M3WString.Length (p.value32);
       cnt   := - len;
       uid   := M3WString.GetUID (p.value32);
-      IF (uid < 0) THEN
-        uid := nextID;  INC (nextID);
+      IF uid = M3WString.NO_UID THEN
+        uid := nextUID;  INC (nextUID);
         M3WString.SetUID (p.value32, uid);
       END;
     END;
@@ -132,9 +141,9 @@ PROCEDURE SetUID (p: P): INTEGER =
     x := literals [uid];
     IF (x # 0) THEN RETURN uid END;
 
-    IF (global_consts = NIL) THEN
-      global_consts := Module.GlobalData (is_const := TRUE);
-      lit_methods := BuildMethodList ();
+    IF (globalConstsCGVar = NIL) THEN
+      globalConstsCGVar := Module.GlobalData (is_const := TRUE);
+      methodListOffset := BuildMethodList ();
     END;
 
     (* allocate the variable with room for the trailing null character *)
@@ -145,7 +154,8 @@ PROCEDURE SetUID (p: P): INTEGER =
     (* initialize the variable *)
     CG.Init_intt (x+Header_offset + M3RT.RH_typecode_offset,
                   M3RT.RH_typecode_size, M3RT.TEXT_typecode, is_const := TRUE);
-    CG.Init_var  (x+Method_offset, global_consts, lit_methods, is_const := TRUE);
+    CG.Init_var
+      (x+Method_offset, globalConstsCGVar, methodListOffset, is_const := TRUE);
     CG.Init_intt (x+Length_offset, Target.Integer.size, cnt, is_const := TRUE);
     IF (p.value8 # NIL)
       THEN M3String.Init_chars (x+Chars_offset, p.value8, TRUE);
@@ -160,17 +170,17 @@ PROCEDURE BuildMethodList (): INTEGER =
     Methods = [RunTyme.Hook.TextLitInfo .. RunTyme.Hook.TextLitGetWideChars];
   VAR offs: INTEGER;
   BEGIN
-    IF lit_methods >= 0 THEN RETURN lit_methods; END;
+    IF methodListOffset >= 0 THEN RETURN methodListOffset; END;
 
-    lit_methods := Module.Allocate (NUMBER (Methods) * Target.Address.size,
+    methodListOffset := Module.Allocate (NUMBER (Methods) * Target.Address.size,
                      Target.Address.align, TRUE, "TEXT literal methods");
-    offs := lit_methods;
+    offs := methodListOffset;
     FOR i := FIRST (Methods) TO LAST (Methods) DO
       CG.Init_proc (offs, Procedure.CGName (RunTyme.LookUpProc (i)), TRUE);
       INC (offs, Target.Address.size);
     END;
 
-    RETURN lit_methods;
+    RETURN methodListOffset;
   END BuildMethodList;
 
 PROCEDURE ExpandLiterals () =
@@ -188,7 +198,7 @@ PROCEDURE ExpandLiterals () =
 PROCEDURE Compile (p: P) =
   VAR uid := SetUID (p);
   BEGIN
-    CG.Load_addr_of (global_consts, literals[uid] + Target.Address.pack,
+    CG.Load_addr_of (globalConstsCGVar, literals[uid] + Target.Address.pack,
                      Target.Address.align);
   END Compile;
 
@@ -266,11 +276,13 @@ PROCEDURE PrepLiteral (p: P;  <*UNUSED*> type: Type.T;
     EVAL SetUID (p);
   END PrepLiteral;
 
-PROCEDURE GenLiteral (p: P;  offset: INTEGER;  <*UNUSED*>type: Type.T;
-                      is_const: BOOLEAN) =
+PROCEDURE GenLiteral
+  (p: P;  offset: INTEGER;  <*UNUSED*>type: Type.T; is_const: BOOLEAN) =
+(* Put a pointer, at 'offset' w/in the 'is_const' static area, to the
+   literal 'p', (whose value is located in the global constant area) *)
   VAR uid := SetUID (p);
   BEGIN
-    CG.Init_var (offset, global_consts, literals[uid] + Target.Address.pack,
+    CG.Init_var (offset, globalConstsCGVar, literals[uid] + Target.Address.pack,
                  is_const);
   END GenLiteral;
 

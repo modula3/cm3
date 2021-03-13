@@ -9,11 +9,12 @@
 INTERFACE SetExpr;
 (* For set constructors. *) 
 
-IMPORT Type, Expr;
+IMPORT Type, Expr, CG;
 
 PROCEDURE New (type: Type.T;  args: Expr.List): Expr.T;
 
 PROCEDURE Is (e: Expr.T): BOOLEAN;
+(* Purely syntactic. Will not look through a ConsExpr. *)
 
 PROCEDURE Compare       (a, b: Expr.T;  VAR s: INTEGER): BOOLEAN;
 PROCEDURE Union         (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN;
@@ -23,6 +24,10 @@ PROCEDURE SymDifference (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN;
 PROCEDURE Include       (set, elt: Expr.T;  VAR c: Expr.T): BOOLEAN;
 PROCEDURE Exclude       (set, elt: Expr.T;  VAR c: Expr.T): BOOLEAN;
 PROCEDURE Member        (set, elt: Expr.T;  VAR c: Expr.T): BOOLEAN;
+PROCEDURE CheckStaticRTErrEval
+  (expr: Expr.T; VAR(*OUT*) Code: CG.RuntimeError; VAR(*OUT*) Msg: TEXT);
+(* Set Code and Msg if they are not set and expr is known to produce a
+   statically unconditional runtime error when evaluated. *)
 
 PROCEDURE Init ();
 

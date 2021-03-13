@@ -16,6 +16,10 @@ PROCEDURE New (typeExpr: Expr.T;  args: Expr.List;  dots: BOOLEAN): Expr.T;
 
 PROCEDURE Is (e: Expr.T): BOOLEAN;
 
+PROCEDURE Seal (e: Expr.T);
+(* POST: Base will now return a valid result. *)
+
 PROCEDURE Base (e: Expr.T): Expr.T;
+(* PRE: Seal (e) or Expr.TypeCheck (e) has been called. *)
 
 END ConsExpr.

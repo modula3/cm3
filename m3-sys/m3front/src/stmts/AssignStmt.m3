@@ -12,11 +12,11 @@ MODULE AssignStmt;
 IMPORT CG, Stmt, StmtRep, Expr, Type, Error, Module, Target, TInt;
 IMPORT Token, Scanner, CallStmt, Addr, CheckExpr, ErrType;
 IMPORT M3ID, Value, NamedExpr, ArrayType, ConsExpr;
-IMPORT QualifyExpr, Variable, Procedure, OpenArrayType;
+IMPORT QualifyExpr, SetExpr, RecordExpr, ArrayExpr;
+IMPORT Variable, Procedure, OpenArrayType;
 IMPORT ProcExpr, ProcType, ObjectType, CallExpr, Host, Narrow;
 
-TYPE
-  P = Stmt.T OBJECT
+TYPE P = Stmt.T OBJECT
         lhs     : Expr.T;
         rhs     : Expr.T;
       OVERRIDES
@@ -25,6 +25,7 @@ TYPE
         outcomes    := GetOutcome;
       END;
 
+(* EXPORTED: *) 
 PROCEDURE Parse (): Stmt.T =
   VAR e: Expr.T;  p: P;  s: Stmt.T;  here := Scanner.offset;
   BEGIN
@@ -47,336 +48,579 @@ PROCEDURE Parse (): Stmt.T =
     RETURN p;
   END Parse;
 
+(*--------------------------------------------------------- type checking ---*)
+
+(* Externally dispatched-to: *)
 PROCEDURE CheckMethod (p: P;  VAR cs: Stmt.CheckState) =
   VAR tlhs: Type.T;  rhs_info: Type.Info;
   BEGIN
     Expr.TypeCheck (p.lhs, cs);
     Expr.TypeCheck (p.rhs, cs);
 
-    tlhs := Expr.TypeOf (p.lhs);
+    tlhs := Expr.SemTypeOf (p.lhs);
     IF  NOT Expr.IsDesignator (p.lhs) THEN
-      Error.Msg ("left-hand side is not a designator");
+      Error.Msg ("Assignment left-hand side is not a designator (2.3.1).");
     ELSE
-      EVAL Type.CheckInfo (Expr.TypeOf (p.rhs), rhs_info);
+      EVAL Type.CheckInfo (Expr.SemTypeOf (p.rhs), rhs_info);
       IF NOT Expr.IsWritable (p.lhs, rhs_info.isTraced) THEN
-        Error.Msg ("left-hand side is read-only");
+        Error.Msg ("Assignment left-hand side is read-only (2.3.1).");
       END;
     END;
+    EVAL Type.Check(tlhs);
 
-    Check (tlhs, p.rhs, cs);
+    Check (tlhs, p.rhs, cs, IsError := FALSE);
   END CheckMethod;
 
-PROCEDURE Compile (p: P): Stmt.Outcomes =
+(* EXPORTED: *) 
+PROCEDURE Check
+  (tlhs: Type.T;  rhsExpr: Expr.T;  VAR cs: Stmt.CheckState; IsError := FALSE )=
+  VAR Code: CG.RuntimeError;
+  VAR Msg: TEXT;
+  BEGIN
+    CheckStaticRTErrExec ( tlhs, rhsExpr, cs, (*OUT*)Code, (*OUT*)Msg, IsError);
+  END Check;
+
+(* EXPORTED: *) 
+PROCEDURE CheckStaticRTErrExec
+  (tlhs: Type.T;  rhsExpr: Expr.T;  VAR cs: Stmt.CheckState;
+   VAR(*OUT*) Code: CG.RuntimeError; VAR(*OUT*) Msg: TEXT; IsError := FALSE
+  ) =
+(* Like Check, but if a warning is produced for a runtime error that is
+   statically inevitable whenever its code is executed, return the RT error
+   Code # CG.RuntimeError.Unknown and a message text. in Msg.*)
+
   VAR
-    tlhs := Expr.TypeOf (p.lhs);
-    rhs_info: Type.Info;
+    base_tlhs := Type.Base (tlhs); (* strip renaming, packing, and subranges. *)
+    trhs: Type.T;
+    lhs_type_info, base_lhs_type_info: Type.Info;
+    lhsTypeClass: Type.Class;
   BEGIN
-    EVAL Type.CheckInfo (Expr.TypeOf (p.rhs), rhs_info);
-    Expr.PrepLValue (p.lhs, traced := rhs_info.isTraced);
-    PrepForEmit (tlhs, p.rhs, initializing := FALSE);
-    Expr.CompileLValue (p.lhs, traced := rhs_info.isTraced);
-    DoEmit (tlhs, p.rhs);
-    Expr.NoteWrite (p.lhs);
-    RETURN Stmt.Outcomes {Stmt.Outcome.FallThrough};
-  END Compile;
-
-PROCEDURE GetOutcome (<*UNUSED*> p: P): Stmt.Outcomes =
-  BEGIN
-    RETURN Stmt.Outcomes {Stmt.Outcome.FallThrough};
-  END GetOutcome;
-
-
-(*--------------------------------------------------------- type checking ---*)
-
-PROCEDURE Check (tlhs: Type.T;  rhs: Expr.T;  VAR cs: Stmt.CheckState) =
-  VAR
-    t := Type.Base (tlhs); (* strip renaming and packing *)
-    trhs := Expr.TypeOf (rhs);
-    lhs_info, t_info: Type.Info;
-    c: Type.Class;
-  BEGIN
-    tlhs := Type.CheckInfo (tlhs, lhs_info);
-    t := Type.CheckInfo (t, t_info);
-    c := t_info.class;
-    Expr.TypeCheck (rhs, cs);
+    Msg := NIL;
+    Code := CG.RuntimeError.Unknown;
+    tlhs := Type.CheckInfo (tlhs, lhs_type_info);
+    base_tlhs := Type.CheckInfo (base_tlhs, base_lhs_type_info);
+    lhsTypeClass := base_lhs_type_info.class;
+    Expr.TypeCheck (rhsExpr, cs);
+    trhs := Expr.SemTypeOf (rhsExpr);
 
     IF NOT Type.IsAssignable (tlhs, trhs) THEN
       IF (tlhs # ErrType.T) AND (trhs # ErrType.T) THEN
-        Error.Msg ("types are not assignable");
+        Error.Msg ("Types are not assignable in assignment (2.3.1).");
       END;
-
-    ELSIF (Type.IsOrdinal (t)) THEN
-      CheckOrdinal (tlhs, rhs);
-
-    ELSIF (c = Type.Class.Ref) OR (c = Type.Class.Object)
-       OR (c = Type.Class.Opaque) THEN
-      CheckReference (tlhs, trhs, lhs_info);
-
-    ELSIF (c = Type.Class.Procedure) THEN
-      CheckProcedure (rhs);
-
     ELSE
-      (* ok *)
+      CASE lhsTypeClass OF
+      | Type.Class.Enum, Type.Class.Subrange, Type.Class.Integer,
+        Type.Class.Longint =>
+        CheckOrdinal (tlhs, rhsExpr, (*OUT*)Code, (*OUT*)Msg, IsError);
+      | Type.Class.Ref, Type.Class.Object, Type.Class.Opaque =>
+        CheckReference (tlhs, trhs, lhs_type_info);
+      | Type.Class.Procedure =>
+        CheckProcedure (rhsExpr, (*OUT*)Code, (*OUT*)Msg, IsError);
+      | Type.Class.Set =>
+        SetExpr.CheckStaticRTErrEval (rhsExpr, (*OUT*)Code, (*OUT*)Msg);
+      | Type.Class.Record =>
+        RecordExpr.CheckStaticRTErrEval (rhsExpr, (*OUT*)Code, (*OUT*)Msg);
+      | Type.Class.Array, Type.Class.OpenArray =>
+        ArrayExpr.CheckStaticRTErrEval (rhsExpr, (*OUT*)Code, (*OUT*)Msg);
+        ArrayExpr.CheckStaticRTErrAssign
+          (tlhs, rhsExpr, (*OUT*)Code, (*OUT*)Msg);
+      ELSE
+      END (*CASE*)
+    END
+  END CheckStaticRTErrExec;
 
-    END;
-  END Check;
-
-PROCEDURE CheckOrdinal (tlhs: Type.T;  rhs: Expr.T) =
-  VAR lmin, lmax, rmin, rmax: Target.Int;  constant: Expr.T;
+PROCEDURE CheckOrdinal
+  (tlhs: Type.T;  rhsExpr: Expr.T;
+   VAR(*OUT*) Code: CG.RuntimeError; VAR(*OUT*) Msg: TEXT; IsError: BOOLEAN
+  ) =
+   
+  VAR lmin, lmax, rmin, rmax: Target.Int;
+  VAR constant: Expr.T;
+  VAR reason: TEXT;
   BEGIN
-    (* ok, but must generate a check *)
-    constant := Expr.ConstValue (rhs);
-    IF (constant # NIL) THEN rhs := constant END;
-    Expr.GetBounds (rhs, rmin, rmax);
+    (* Range check if rhsExpr is constant. *)
+    constant := Expr.ConstValue (rhsExpr);
+    IF constant # NIL THEN rhsExpr := constant END;
+    Expr.GetBounds (rhsExpr, rmin, rmax);
     EVAL Type.GetBounds (tlhs, lmin, lmax);
     IF TInt.LE (lmin, lmax) AND TInt.LE (rmin, rmax)
-      AND (TInt.LT (lmax, rmin) OR TInt.LT (rmax, lmin)) THEN
-      (* non-overlapping, non-empty ranges *)
-      Error.Warn (2, "value not assignable (range fault)");
+       AND (TInt.LT (lmax, rmin) OR TInt.LT (rmax, lmin)) THEN
+      IF constant = NIL THEN (* Non-constant RHS, disjoint ranges. *)
+        reason := "(disjoint ranges)";
+(* FIXME: This is a mess.  This is a true CT error--the first case of
+          expression assignability (2.3.1), i.e., assignability of types.
+          When called by CheckStaticRTErrExec, (which happens for an
+          assignment statement), that will already have been verified,
+          so this can't happen.  But for exception with an argument, it
+          type assignability seems not to be CT checked at all, which
+          causes this to an if-executed warning.  The whole mechanism for
+          ordinal range checks is self-inconsistent and inconsistent with
+          that for procedures. *)
+      ELSE reason := "(out of range)"
+      END; 
+      IF IsError THEN
+        Error.Msg ("Constant value not assignable " & reason & " (2.3.1).");
+      ELSE
+        Error.Warn
+          (2, "Ordinal value not assignable at runtime " & reason & " (2.3.1).");
+        Code := CG.RuntimeError.ValueOutOfRange;
+        Msg := "value out of range."
+      END;
+    ELSE 
     END;
   END CheckOrdinal;
 
-PROCEDURE CheckReference (tlhs, trhs: Type.T;  READONLY lhs_info: Type.Info) =
+PROCEDURE CheckReference
+  (tlhs, trhs: Type.T;  READONLY lhs_type_info: Type.Info) =
   BEGIN
+(* CHECK: Doesn't this just duplicate checks already done by Type.IsAssignable? *)
+    (* Other than NIL, which is a member of every reference type, there are
+       no constant reference values to do CT assignability warnings for. *) 
     IF Type.IsSubtype (trhs, tlhs) THEN
       (*ok*)
     ELSIF NOT Type.IsSubtype (tlhs, trhs) THEN
-      Error.Msg ("types are not assignable");
+      Error.Msg ("Reference types are not assignable (2.3.1).");
     ELSIF Type.IsEqual (trhs, Addr.T, NIL) THEN 
-      (* that is legal only in UNSAFE modules *)
-      IF Module.IsSafe() THEN Error.Msg ("unsafe implicit NARROW"); END;
+      (* this is legal only in UNSAFE modules *)
+      IF Module.IsSafe() THEN
+        Error.Msg ("Unsafe implicit NARROW to ADDRESS (2.3.1).");
+      END;
     ELSIF ObjectType.Is (trhs) THEN
       (*ok*)
-    ELSIF lhs_info.isTraced THEN
+    ELSIF lhs_type_info.isTraced THEN
       (*ok*)
     ELSE
-      Error.Msg ("types are not assignable");
+      Error.Msg ("Expression not assignable to reference type (2.3.1).");
     END;
+    (* A non-constant reference value will never be an element/field of a
+       constant constructor, so not in static constant area.  The only
+       constant value of any reference is NIL, and it will never fail a
+       CT narrow check. *)
   END CheckReference;
 
-PROCEDURE CheckProcedure (rhs: Expr.T) =
-  BEGIN
-    IF NeedsClosureCheck (rhs, TRUE) THEN
-      (* may generate a more detailed message *)
-    END;
-  END CheckProcedure;
-
-PROCEDURE NeedsClosureCheck (proc: Expr.T;  errors: BOOLEAN): BOOLEAN =
-  VAR name: M3ID.T;  obj: Value.T;  class: Value.Class;  nested: BOOLEAN;
+PROCEDURE CheckProcedure
+  (proc: Expr.T; VAR(*OUT*) Code: CG.RuntimeError; VAR(*OUT*) Msg: TEXT; IsError: BOOLEAN) =
+  VAR name: M3ID.T;
+  VAR obj: Value.T;
+  VAR valueClass: Value.Class;
+  VAR nested: BOOLEAN;
   BEGIN
     IF NOT (NamedExpr.Split (proc, name, obj)
             OR QualifyExpr.Split (proc, obj)
             OR ProcExpr.Split (proc, obj)) THEN
-      (* non-constant, non-variable => OK *)
-      RETURN FALSE;
+      (* NIL, or anything else? *)
+      RETURN 
     END;
     obj := Value.Base (obj);
-    class := Value.ClassOf (obj);
-    IF (class = Value.Class.Procedure) THEN
+    valueClass := Value.ClassOf (obj);
+    IF valueClass = Value.Class.Procedure THEN (* Procedure constant. *)
       nested := Procedure.IsNested (obj);
-      IF (nested) AND (errors) THEN
-        Error.ID (Value.CName (obj), "cannot assign nested procedures");
+      IF nested THEN
+        (* Although we statically know this is an error, the rule (2.3.1) that
+           it violates is one that cannot in general be checked statically.  I
+           believe Modula3 is saying such cases should produce errors only at
+           runtime, if/when the subject code is actually executed.
+           rodney.m.bates@acm.org. *)
+        IF IsError THEN (* But the mechanism exists to make it a CT error. *)
+          Error.ID
+            ( Value.CName (obj),
+             "Nested procedure not assignable at runtime (2.3.1).");
+        ELSE 
+          Error.WarnID
+            (2, Value.CName (obj),
+             "Nested procedure not assignable at runtime (2.3.1).");
+          Code := CG.RuntimeError.NarrowFailed;
+          Msg := "Nested procedure assigned.";
+        END;
       END;
-      RETURN FALSE;
-    ELSIF (class = Value.Class.Var) AND Variable.HasClosure (obj) THEN
-      RETURN TRUE;
-    ELSE (* non-formal, non-const => no check *)
-      RETURN FALSE;
     END;
-  END NeedsClosureCheck;
+  END CheckProcedure;
+
+TYPE RTCheckKind = {None, Conditional, Fail}; 
+
+PROCEDURE ProcRTCheckKind (proc: Expr.T): RTCheckKind  =
+  VAR name: M3ID.T;
+  VAR obj: Value.T;
+  VAR valueClass: Value.Class;
+  VAR nested: BOOLEAN;
+  BEGIN
+    IF NOT Host.doNarrowChk THEN RETURN RTCheckKind.None END;
+    IF NOT (NamedExpr.Split (proc, name, obj)
+            OR QualifyExpr.Split (proc, obj)
+            OR ProcExpr.Split (proc, obj)) THEN
+      (* NIL, or anything else? *)
+      RETURN RTCheckKind.None
+    END;
+    obj := Value.Base (obj);
+    valueClass := Value.ClassOf (obj);
+    IF valueClass = Value.Class.Procedure THEN (* Procedure constant. *)
+      nested := Procedure.IsNested (obj);
+      IF nested THEN RETURN RTCheckKind.Fail;
+      ELSE RETURN RTCheckKind.None
+      END;
+    ELSIF valueClass = Value.Class.Var AND Variable.HasClosure (obj) THEN
+      (* Don't know statically.  RT check will be needed. *)
+      RETURN RTCheckKind.Conditional;
+    ELSE (* non-formal, non-const => no check *)
+      RETURN RTCheckKind.None;
+    END;
+  END ProcRTCheckKind;
 
 (*------------------------------------------------------- code generation ---*)
 
-PROCEDURE PrepForEmit (tlhs: Type.T;  rhs: Expr.T;  initializing: BOOLEAN) =
-  (* When the rhs has the potential to assign its result directly into
-     a given destination, try to avoid explicit copying.  Currently this
-     means large-result procedure calls and array and record constructors. *)
+(* EXPORTED: *) 
+PROCEDURE PrepForEmit
+  (lhsRepType: Type.T; rhsExpr: Expr.T; initializing: BOOLEAN) =
+(* Before Prepping the rhsExpr, give it some info it could need to decide where
+   to build its result and whether it needs a LHS expr on the CG stack. *)
+  VAR baseExpr: Expr.T;
   BEGIN
-    IF Host.direct_struct_assign
-      AND Expr.SupportsDirectAssignment (rhs)
-      AND CanAvoidCopy (tlhs, rhs, initializing)
-    THEN
-      Expr.MarkForDirectAssignment (rhs);
-    ELSE
-      Expr.Prep (rhs);
+    baseExpr := ConsExpr.Base (rhsExpr);
+    IF baseExpr # NIL THEN rhsExpr := baseExpr END;
+    ArrayExpr.NoteTargetType (rhsExpr, lhsRepType);
+(* REVIEW: Is this overconservative when assigning an array constructor? *)
+    IF CanAvoidCopy (lhsRepType, rhsExpr, initializing)
+    THEN Expr.MarkForDirectAssignment (rhsExpr)
     END;
+    Expr.Prep (rhsExpr);
   END PrepForEmit;
 
-PROCEDURE CanAvoidCopy (tlhs: Type.T;  rhs: Expr.T;  initializing: BOOLEAN): BOOLEAN =
+PROCEDURE CanAvoidCopy
+  (lhsRepType: Type.T;  rhsExpr: Expr.T;  initializing: BOOLEAN): BOOLEAN =
+(* Is it possible to assign directly into a LHS variable? *)
   VAR
-    t      : Type.T;
-    t_info : Type.Info;
-    r_info : Type.Info;
-    base   : Expr.T;
+    lhsBaseType, rhsRepType: Type.T;
+    lhsRepTypeInfo, rhsRepTypeInfo: Type.Info;
+    rhsBaseExpr: Expr.T;
   BEGIN
-    t := Type.Base (tlhs); (* strip renaming and packing *)
-    t := Type.CheckInfo (t, t_info);
-    IF NOT ProcType.LargeResult (t) THEN
-      RETURN FALSE;
+    IF NOT Host.direct_struct_assign THEN RETURN FALSE END;
+    IF NOT initializing THEN RETURN FALSE END;
+    (* If this is not the first assignment to the LHS, evaluation of the RHS
+       could access the LHS, whose contents must remain unchanged until all
+       RHS evaluation is done.  Or, the RHS could raise an exception, and the
+       the LHS must not be changed at all. *)
+    IF NOT Expr.SupportsDirectAssignment (rhsExpr) THEN
+      (* Currently array and record.  Maybe someday multi-word sets. *)
+      RETURN FALSE
     END;
-
-    (* Only attempt to avoid copying records and fixed-length arrays *)
-    CASE t_info.class OF
-    | Type.Class.Array =>
-        (* i.e. lhs is not Type.Class.OpenArray -- check rhs *)
-        IF OpenArrayType.Is (Expr.TypeOf (rhs)) THEN  RETURN FALSE;  END;
-        (* drop out of CASE *)
-    | Type.Class.Record =>
-        (* drop out of CASE *)
-    ELSE
-        RETURN FALSE;
-    END;
-
-    (* make sure the source and destination are both aligned properly *)
-    EVAL Type.CheckInfo (tlhs, t_info);
-    EVAL Type.CheckInfo (Expr.TypeOf (rhs), r_info);
-    IF (t_info.alignment # r_info.alignment) THEN RETURN FALSE; END;
-    IF (t_info.class # r_info.class)         THEN RETURN FALSE; END;
-    IF (t_info.class = Type.Class.Packed)    THEN RETURN FALSE; END;
-    IF (r_info.class = Type.Class.Packed)    THEN RETURN FALSE; END;
-
-    IF CallExpr.Is (rhs) THEN
+    lhsBaseType := Type.Base (lhsRepType);
+    IF CallExpr.Is (rhsExpr) THEN
+      IF NOT ProcType.LargeResult (lhsBaseType) THEN RETURN FALSE END;
+(* TODO: Allow direct assignment through SUBARRAY and LOOPHOLE. *)
+      IF NOT CallExpr.IsUserProc (rhsExpr) THEN RETURN FALSE END;
       (* For user procedures, we can always pass in the true destination.
          It is the callee's responsibility not to assign to this location
          until the final procedure outcome is known, and not to overwrite
          the contents until the entire result value has been computed. *)
-      RETURN CallExpr.IsUserProc (rhs);
     END;
 
-    (* If the lhs contents are uninitialized (i.e. the Modula-3 spec
-       only guarantees that the contents will be a member of its type),
-       then we can write to the final destination incrementally without
-       worrying about exceptions or references to the original contents. *)
-
-    IF NOT initializing THEN  RETURN FALSE;  END;
-
-    IF ConsExpr.Is (rhs) AND Expr.ConstValue (rhs) = NIL THEN
-      base := ConsExpr.Base (rhs);
-      IF Expr.SupportsDirectAssignment (base) THEN
-        Expr.MarkForDirectAssignment (base);
-        RETURN TRUE;
-      END;
+    (* Make sure the source and destination are both aligned properly. *)
+    EVAL Type.CheckInfo (lhsBaseType, lhsRepTypeInfo);
+    IF ConsExpr.Is (rhsExpr)
+    THEN rhsBaseExpr := ConsExpr.Base (rhsExpr);
+    ELSE rhsBaseExpr := rhsExpr;
     END;
-
-    RETURN FALSE;
+    rhsRepType := Type.StripPacked (Expr.RepTypeOf (rhsBaseExpr));
+    EVAL Type.CheckInfo (rhsRepType, rhsRepTypeInfo);
+    IF lhsRepTypeInfo.alignment # rhsRepTypeInfo.alignment THEN RETURN FALSE END;
+    IF lhsRepTypeInfo.class # rhsRepTypeInfo.class THEN RETURN FALSE; END;
+    IF lhsRepTypeInfo.class = Type.Class.Packed THEN RETURN FALSE; END;
+    RETURN TRUE;
   END CanAvoidCopy;
 
-PROCEDURE DoEmit (tlhs: Type.T;  rhs: Expr.T) =
-  (* on entry the lhs is compiled and the rhs is prepped,
-     preferrably using PrepForEmit() above. *)
-  VAR
-    t := Type.Base (tlhs); (* strip renaming and packing *)
-    lhs_info, t_info: Type.Info;
+(* EXPORTED: *) 
+PROCEDURE DoEmit
+  (lhsRepType: Type.T;  rhsExpr: Expr.T; lhsAlign := Target.Byte; initializing: BOOLEAN) =
+  (* PRE: LHS is Compiled and on TOS. It is dope if an open array. *)
+  (* PRE: RHS is Prepped. *)
+
+  VAR lhsRepBaseType: Type.T;
+  VAR lhsRepTypeInfo, lhsRepBaseTypeInfo: Type.Info;
+  VAR baseExpr: Expr.T;
   BEGIN
-    t := Type.CheckInfo (t, t_info);
-    tlhs := Type.CheckInfo (tlhs, lhs_info);
+    baseExpr := ConsExpr.Base (rhsExpr);
+    IF baseExpr # NIL THEN rhsExpr := baseExpr END;
+    lhsRepType := Type.CheckInfo (lhsRepType, lhsRepTypeInfo);
+    lhsRepBaseType := Type.Base (lhsRepType);
+    (* ^Strip renaming, packing, and subranges. *)
+    lhsRepBaseType := Type.CheckInfo (lhsRepBaseType, lhsRepBaseTypeInfo);
 
-    IF Expr.IsMarkedForDirectAssignment (rhs) THEN
-      (* Do the prep now that we have the LHS compiled *)
-      Expr.Prep (rhs);
-      Expr.Compile (rhs);
-      CG.Discard (Type.CGType (Expr.TypeOf (rhs)));
-      RETURN;
-    END;
-
-    CASE t_info.class OF
+    EVAL Expr.CheckUseFailure (rhsExpr);
+    CASE lhsRepBaseTypeInfo.class OF
     | Type.Class.Integer, Type.Class.Longint, Type.Class.Subrange,
       Type.Class.Enum =>
-        AssignOrdinal (tlhs, rhs, lhs_info);
+        AssignOrdinal (lhsRepType, rhsExpr, lhsRepTypeInfo);
     | Type.Class.Real, Type.Class.Longreal, Type.Class.Extended =>
-        AssignFloat (rhs, lhs_info);
+        AssignFloat (rhsExpr, lhsRepTypeInfo);
     | Type.Class.Object, Type.Class.Opaque, Type.Class.Ref =>
-        AssignReference (tlhs, rhs, lhs_info);
-    | Type.Class.Array, Type.Class.OpenArray =>
-        AssignArray (tlhs, rhs, lhs_info);
+        AssignReference (lhsRepType, rhsExpr, lhsRepTypeInfo);
     | Type.Class.Procedure =>
-        AssignProcedure (rhs, lhs_info);
+        AssignOrRTCheckProcedure (rhsExpr, lhsIsPushed := TRUE);
+        CG.Store_indirect (lhsRepTypeInfo.stk_type, 0, lhsRepTypeInfo.size);
     | Type.Class.Record =>
-        AssignRecord (tlhs, rhs, lhs_info);
+        AssignRecord
+          (rhsExpr, lhsRepTypeInfo, lhsAlign, initializing);
     | Type.Class.Set =>
-        AssignSet (tlhs, rhs, lhs_info);
+        AssignSet (lhsRepType, rhsExpr, lhsRepTypeInfo, initializing);
+    | Type.Class.Array, Type.Class.OpenArray =>
+        AssignArray
+          (lhsRepType, lhsRepBaseTypeInfo, rhsExpr, lhsAlign, initializing);
     | Type.Class.Error =>
     ELSE <*ASSERT FALSE*>
     END;
   END DoEmit;
 
-PROCEDURE AssignOrdinal (tlhs: Type.T;  rhs: Expr.T;
-                         READONLY lhs_info: Type.Info) =
+PROCEDURE AssignOrdinal (tlhs: Type.T;  rhsExpr: Expr.T;
+                         READONLY lhsTypeInfo: Type.Info) =
+  (* PRE: LHS is compiled and on TOS. *)
+  (* PRE: RHS is prepped. *)
   VAR min, max : Target.Int;
   BEGIN
     EVAL Type.GetBounds (tlhs, min, max);
-    CheckExpr.EmitChecks (rhs, min, max, CG.RuntimeError.ValueOutOfRange);
-    CG.Store_indirect (lhs_info.stk_type, 0, lhs_info.size);
+    CheckExpr.EmitChecks (rhsExpr, min, max, CG.RuntimeError.ValueOutOfRange);
+    (* ^Which does Compile(rhsExpr), thus pushing its CG.Val. *)
+    CG.Store_indirect (lhsTypeInfo.stk_type, 0, lhsTypeInfo.size);
   END AssignOrdinal;
 
-PROCEDURE AssignFloat (rhs: Expr.T;  READONLY lhs_info: Type.Info) =
+PROCEDURE AssignFloat (rhsExpr: Expr.T;  READONLY lhsTypeInfo: Type.Info) =
+  (* PRE: LHS is compiled and on TOS. *)
+  (* PRE: RHS is prepped. *)
   BEGIN
-    Expr.Compile (rhs);
-    CG.Store_indirect (lhs_info.stk_type, 0, lhs_info.size);
+    Expr.Compile (rhsExpr);
+    CG.Store_indirect (lhsTypeInfo.stk_type, 0, lhsTypeInfo.size);
   END AssignFloat;
 
-PROCEDURE AssignReference (tlhs: Type.T;  rhs: Expr.T;
-                           READONLY lhs_info: Type.Info) =
-  VAR lhs: CG.Val;
+PROCEDURE AssignReference (tlhs: Type.T;  rhsExpr: Expr.T;
+                           READONLY lhsTypeInfo: Type.Info) =
+  (* PRE: LHS is compiled and on TOS. *)
+  (* PRE: RHS is prepped. *)
+  VAR lhsVal: CG.Val;
   BEGIN
-    lhs := CG.Pop ();
-    Expr.Compile (rhs);
-    IF Host.doNarrowChk THEN Narrow.Emit (tlhs, Expr.TypeOf (rhs)) END;
-    CG.Push (lhs);
+    lhsVal := CG.Pop ();
+    Expr.Compile (rhsExpr);
+    IF Host.doNarrowChk THEN Narrow.Emit (tlhs, Expr.TypeOf (rhsExpr)) END;
+    CG.Push (lhsVal);
     CG.Swap ();
-    CG.Store_indirect (lhs_info.stk_type, 0, lhs_info.size);
-    CG.Free (lhs);
+    CG.Store_indirect (lhsTypeInfo.stk_type, 0, lhsTypeInfo.size);
+    CG.Free (lhsVal);
   END AssignReference;
 
-PROCEDURE AssignProcedure (rhs: Expr.T;  READONLY lhs_info: Type.Info) =
-  VAR ok: CG.Label;  lhs, t1: CG.Val;
+PROCEDURE AssignSet
+  (tlhs: Type.T;  rhsExpr: Expr.T; READONLY lhsTypeInfo: Type.Info;
+   initializing: BOOLEAN) =
+  (* PRE: LHS is compiled and on TOS. *)
+  (* PRE: RHS is prepped. *)
   BEGIN
-    IF NOT Host.doNarrowChk THEN
-      Expr.Compile (rhs);
-    ELSIF NOT NeedsClosureCheck (rhs, FALSE) THEN
-      Expr.Compile (rhs);
-    ELSE
-      lhs := CG.Pop ();
-      Expr.Compile (rhs);
-      t1 := CG.Pop ();
-      ok := CG.Next_label ();
-      CG.If_closure (t1, CG.No_label, ok, CG.Always);
-      CG.Abort (CG.RuntimeError.NarrowFailed);
-      CG.Set_label (ok);
-      CG.Push (t1);  CG.Free (t1);
-      CG.Push (lhs);
-      CG.Swap ();
-      CG.Free (lhs);
-    END;
-    CG.Store_indirect (lhs_info.stk_type, 0, lhs_info.size);
-  END AssignProcedure;
-
-PROCEDURE AssignRecord (tlhs: Type.T;  rhs: Expr.T;
-                        READONLY lhs_info: Type.Info) =
-  BEGIN
-    AssertSameSize (tlhs, Expr.TypeOf (rhs));
-    IF Expr.IsDesignator (rhs)
-      THEN Expr.CompileLValue (rhs, traced := FALSE);
-      ELSE Expr.Compile (rhs);
-    END;
-    CG.Copy (lhs_info.size, overlap := FALSE);
-  END AssignRecord;
-
-PROCEDURE AssignSet (tlhs: Type.T;  rhs: Expr.T;
-                     READONLY lhs_info: Type.Info) =
-  BEGIN
-    AssertSameSize (tlhs, Expr.TypeOf (rhs));
+(* TODO: Merge AssignSet and AssignRecord.  Or maybe not. *)
+    (* Leave the LHS address on the CG stack, regardless of protocol. *)
     IF Type.IsStructured (tlhs) THEN
-      IF Expr.IsDesignator (rhs)
-        THEN Expr.CompileLValue (rhs, traced := FALSE);
-        ELSE Expr.Compile (rhs);
-      END;
-      CG.Copy (lhs_info.size, overlap := FALSE);
-    ELSE (* small set *)
-      Expr.Compile (rhs);
-      CG.Store_indirect (lhs_info.stk_type, 0, lhs_info.size);
+      AssertSameSize (tlhs, Expr.TypeOf (rhsExpr));
+      CompileStruct (rhsExpr);
+      IF Expr.IsMarkedForDirectAssignment (rhsExpr) THEN
+        CG.Discard (CG.Type.Addr);
+      ELSE
+        CG.Copy (lhsTypeInfo.size, overlap := NOT initializing);
+      END
+    ELSE (* Small set. *)
+(* REVIEW: Do we really need this case, or will CompileStruct handle it? *)
+      Expr.Compile (rhsExpr);
+      CG.Store_indirect (lhsTypeInfo.stk_type, 0, lhsTypeInfo.size);
     END;
   END AssignSet;
+
+PROCEDURE CompileStruct (expr: Expr.T) =
+(* This works for a record, set, or array that is a packed component
+   of something. *)
+  BEGIN
+    IF Expr.IsDesignator (expr)
+    THEN Expr.CompileLValue (expr, traced := FALSE);
+(* CHECK ----------------------------------- ^ *)
+    ELSE Expr.Compile (expr);
+    END;
+  END CompileStruct;
+
+PROCEDURE CopyStruct
+  (lhsAlign, rhsAlign: Type.BitAlignT; bitSize: INTEGER; overlap: BOOLEAN) =
+(* PRE: CGstack: RHS addr on top, LHS addr below. *)
+(* PRE: Using expression protocol. *)
+  BEGIN
+    IF lhsAlign < Target.Byte
+       OR rhsAlign < Target.Byte
+       OR bitSize MOD Target.Byte # 0
+    THEN 
+      CG.Load_indirect (Target.Word.cg_type, 0 , bitSize); 
+      CG.Store_indirect (Target.Word.cg_type, 0 , bitSize); 
+    ELSE
+      CG.Copy (bitSize, overlap);
+      (* Expression protocol means ^ the value is already in a temporary. *)
+    END
+  END CopyStruct;
+
+PROCEDURE AssignRecord
+  (rhsExpr: Expr.T; READONLY lhsTypeInfo: Type.Info; lhsAlign: Type.BitAlignT;
+   initializing: BOOLEAN) =
+  (* PRE: LHS is compiled and on TOS. *)
+  (* PRE: RHS is prepped. *)
+  VAR rhsAlign: Type.BitAlignT;
+  BEGIN
+    (* Leave the LHS address on the CG stack, regardless of protocol. *)
+    CompileStruct (rhsExpr);
+    rhsAlign := Expr.Alignment (rhsExpr);
+    IF Expr.UsesAssignProtocol (rhsExpr)
+    THEN (* Compile will have copied RHS into LHS, leaving only the LHS
+            address on CG stack, which is the expression's result. *) 
+      CG.Discard (CG.Type.Addr);
+    ELSE (* Using expression protocol. *)
+      (* RHS is on top of CG stack.  LHS is below.
+         Compile will have left LHS alone. *)
+      CopyStruct
+        (lhsAlign, rhsAlign, lhsTypeInfo.size, overlap := NOT initializing);
+    END;
+  END AssignRecord;
+
+PROCEDURE AssignArray
+  (lhsRepType: Type.T; READONLY lhsRepTypeInfo: Type.Info; rhsExpr: Expr.T; 
+   lhsAlign: Type.BitAlignT; initializing: BOOLEAN) =
+  (* PRE: LHS is compiled and on TOS. *)
+  (* PRE: RHS is prepped. *)
+  VAR
+    lhsVal, rhsVal : CG.Val;
+    rhsAlign: Type.BitAlignT;
+    rhsRepType: Type.T;
+    rhsRepTypeInfo : Type.Info;
+    LHSIsOpen, RHSIsOpen: BOOLEAN;
+  BEGIN
+    IF Expr.UsesAssignProtocol (rhsExpr)
+    THEN
+      CompileStruct (rhsExpr);
+      (* CompileStruct will have done any needed shape check and copied
+         rhsExpr's value into the LHS, leaving only the LHS address on CG
+         stack, which is the expression's result. *)
+      CG.Discard (CG.Type.Addr);
+    ELSE (* Using expression protocol. *)
+      LHSIsOpen := OpenArrayType.Is (lhsRepType);
+      rhsRepType := Expr.RepTypeOf (rhsExpr);
+      rhsRepType := Type.StripPacked (rhsRepType);
+      RHSIsOpen := OpenArrayType.Is (rhsRepType);
+      IF NOT RHSIsOpen AND NOT LHSIsOpen
+      THEN(* Both sides are fixed length arrays *)
+        CompileStruct (rhsExpr);
+        rhsAlign := Expr.Alignment (rhsExpr);
+        (* RHS is on top of CG stack.  LHS is below, unmolested by Compile. *)
+        CopyStruct
+          (lhsAlign, rhsAlign, lhsRepTypeInfo.size, overlap := NOT initializing);
+      ELSE (* Something is open. *)
+        lhsVal := CG.Pop ();
+        CompileStruct (rhsExpr);
+        rhsAlign := Expr.Alignment (rhsExpr);
+        (* RHS on top of CG stack. *)
+        rhsVal := CG.Pop ();
+
+        IF ArrayExpr.ShapeCheckNeeded (rhsExpr) THEN
+          GenOpenArrayShapeChecks (lhsRepType, lhsVal, rhsRepType, rhsVal);
+          (* Assignability check, done in Check will have taken care of
+             static shape checking. *)
+        END;
+
+        IF LHSIsOpen THEN
+          IF RHSIsOpen THEN (* Both sides are open. *) 
+            CG.Push (lhsVal);
+            CG.Open_elt_ptr (lhsAlign);
+            CG.ForceStacked ();
+            CG.Push (rhsVal);
+            CG.Open_elt_ptr (Expr.Alignment(rhsExpr));
+            CG.ForceStacked ();
+            GenOpenArrayCopy (lhsVal, lhsRepType, rhsRepType);
+          ELSE (* LHS is open and RHS is fixed. *) 
+            CG.Push (lhsVal);
+            CG.Open_elt_ptr (lhsAlign);
+            CG.Push (rhsVal);
+            EVAL Type.CheckInfo (rhsRepType, rhsRepTypeInfo);
+            CopyStruct
+              (lhsAlign, rhsAlign, rhsRepTypeInfo.size, overlap := NOT initializing);
+          END;
+        ELSE (* LHS is fixed and RHS is open. *)
+          CG.Push (lhsVal);
+          CG.Push (rhsVal);
+          CG.Open_elt_ptr (Expr.Alignment(rhsExpr));
+          CopyStruct
+            (lhsAlign, rhsAlign, lhsRepTypeInfo.size, overlap := NOT initializing);
+        END;
+        CG.Free (lhsVal);
+        CG.Free (rhsVal);
+      END
+    END
+  END AssignArray;
+
+PROCEDURE GenOpenArrayShapeChecks       
+  (lhsRepType: Type.T; lhsDopeVal: CG.Val; rhsRepType: Type.T; rhsVal: CG.Val) =
+(* Leaves the CG stack alone. *)
+  VAR lhsIndexType, rhsIndexType, lhsEltType, rhsEltType: Type.T;
+  VAR depth:= 0;
+  BEGIN
+    IF NOT Host.doNarrowChk THEN RETURN; END;
+    lhsRepType := Type.StripPacked (lhsRepType);
+    rhsRepType := Type.StripPacked (rhsRepType);
+    WHILE ArrayType.Split (lhsRepType, lhsIndexType, lhsEltType)
+          AND ArrayType.Split (rhsRepType, rhsIndexType, rhsEltType) DO
+      IF lhsIndexType = NIL THEN
+        IF rhsIndexType = NIL THEN (* Both LHS and RHS are open. *)
+          CG.Push (lhsDopeVal);
+          CG.Open_size (depth);
+          CG.Push (rhsVal);
+          CG.Open_size (depth);
+          CG.Check_eq
+            (Target.Integer.cg_type, CG.RuntimeError.IncompatibleArrayShape);
+        ELSE (* LHS is open and RHS is fixed. *)
+          CG.Push (lhsDopeVal);
+          CG.Open_size (depth);
+          CG.Load_integer (Target.Integer.cg_type, Type.Number (rhsIndexType));
+          CG.Check_eq
+            (Target.Integer.cg_type, CG.RuntimeError.IncompatibleArrayShape);
+        END
+      ELSE
+        IF rhsIndexType = NIL THEN (* LHS is fixed and RHS is open. *)
+          CG.Push (rhsVal);
+          CG.Open_size (depth);
+          CG.Load_integer (Target.Integer.cg_type, Type.Number (lhsIndexType));
+          CG.Check_eq
+            (Target.Integer.cg_type, CG.RuntimeError.IncompatibleArrayShape);
+        ELSE (* Both LHS and RHS are fixed.  Static assignability check will
+                have ensured equality here and in any inner dimensions. *)
+          RETURN;
+        END
+      END;      
+
+      INC (depth);
+      lhsRepType := lhsEltType;
+      rhsRepType := rhsEltType;
+    END;
+  END GenOpenArrayShapeChecks;
+
+PROCEDURE GenOpenArrayCopy (lhsDopeVal: CG.Val;  lhsRepType, rhsRepType: Type.T) =
+(* PRE: formal lhsDopeVal is the LHS dope.
+   PRE: both lhsRepType and rhsRepType are open array types.
+   PRE: RHS element ptr on TOS and has been ForceStacked.
+   PRE: LHS element ptr below and has been ForceStacked.
+   PRE: Using the assign protocol.
+*)
+  VAR
+    lhsDepth, rhsDepth: INTEGER;
+  BEGIN
+    lhsDepth := OpenArrayType.OpenDepth (lhsRepType);
+    <*ASSERT lhsDepth > 0 *>
+    rhsDepth := OpenArrayType.OpenDepth (rhsRepType);
+    <*ASSERT rhsDepth > 0 *>
+    FOR i := 0 TO MIN (lhsDepth, rhsDepth) - 1 DO
+      CG.Push (lhsDopeVal);
+      CG.Open_size (i);
+      IF (i # 0) THEN CG.Multiply (Target.Word.cg_type) END;
+    END;
+    IF lhsDepth < rhsDepth
+    THEN CG.Copy_n (OpenArrayType.EltPack (lhsRepType), overlap := TRUE);
+    ELSE CG.Copy_n (OpenArrayType.EltPack (rhsRepType), overlap := TRUE);
+    END;
+  END GenOpenArrayCopy;
 
 PROCEDURE AssertSameSize (a, b: Type.T) = 
   VAR a_info, b_info: Type.Info;
@@ -385,225 +629,152 @@ PROCEDURE AssertSameSize (a, b: Type.T) =
     EVAL Type.CheckInfo (b, b_info);
     IF (a_info.size # b_info.size) THEN
       Error.Msg ("INTERNAL ERROR: trying to assign values of differing sizes");
-      <* ASSERT FALSE *>
     END;
   END AssertSameSize;
 
-PROCEDURE AssignArray (tlhs: Type.T;  e_rhs: Expr.T;
-                       READONLY lhs_info: Type.Info) =
-  VAR
-    trhs    := Expr.TypeOf (e_rhs);
-    openRHS := OpenArrayType.Is (trhs);
-    openLHS := OpenArrayType.Is (tlhs);
-    alignLHS:= ArrayType.EltAlign (tlhs);
-    alignRHS:= ArrayType.EltAlign (trhs);
-    lhs, rhs: CG.Val;
-    rhs_info: Type.Info;
-  BEGIN
-    (* capture the lhs & rhs pointers *)
-    IF (openRHS) OR (openLHS) THEN lhs := CG.Pop (); END;
-    IF Expr.IsDesignator (e_rhs)
-      THEN Expr.CompileLValue (e_rhs, traced := FALSE);
-      ELSE Expr.Compile (e_rhs);
-    END;
-    IF (openRHS) OR (openLHS) THEN rhs := CG.Pop (); END;
-
-    IF openRHS AND openLHS THEN
-      GenOpenArraySizeChecks (lhs, rhs, tlhs, trhs);
-      CG.Push (lhs);
-      CG.Open_elt_ptr (alignLHS);
-      CG.Force ();
-      CG.Push (rhs);
-      CG.Open_elt_ptr (alignRHS);
-      CG.Force ();
-      GenOpenArrayCopy (rhs, tlhs, trhs);
-
-    ELSIF openRHS THEN
-      GenOpenArraySizeChecks (lhs, rhs, tlhs, trhs);
-      CG.Push (lhs);
-      CG.Push (rhs);
-      CG.Open_elt_ptr (alignRHS);
-      CG.Copy (lhs_info.size, overlap := TRUE);
-
-    ELSIF openLHS THEN
-      EVAL Type.CheckInfo (trhs, rhs_info);
-      GenOpenArraySizeChecks (lhs, rhs, tlhs, trhs);
-      CG.Push (lhs);
-      CG.Open_elt_ptr (alignLHS);
-      CG.Push (rhs);
-      CG.Copy (rhs_info.size, overlap := TRUE);
-
-    ELSE (* both sides are fixed length arrays *)
-      CG.Copy (lhs_info.size, overlap := TRUE);
-      (* Note: overlap = TRUE because aliased VAR parameters can hide
-         the open arrays produced by SUBARRAY behind fixed array formal
-         parameters. *)
-    END;
-
-    IF (openRHS) OR (openLHS) THEN
-      CG.Free (lhs);
-      CG.Free (rhs);
-    END;
-  END AssignArray;
-
-PROCEDURE GenOpenArraySizeChecks (READONLY lhs, rhs: CG.Val;
-                                           tlhs, trhs: Type.T) =
-  VAR ilhs, irhs, elhs, erhs: Type.T;  n := 0;
-  BEGIN
-    IF NOT Host.doNarrowChk THEN RETURN END;
-    WHILE ArrayType.Split (tlhs, ilhs, elhs)
-      AND ArrayType.Split (trhs, irhs, erhs) DO
-
-      IF (ilhs # NIL) AND (irhs # NIL) THEN
-        RETURN;
-      ELSIF (ilhs # NIL) THEN
-        CG.Push (rhs);
-        CG.Open_size (n);
-        CG.Load_integer (Target.Integer.cg_type, Type.Number (ilhs));
-        CG.Check_eq (Target.Integer.cg_type, CG.RuntimeError.IncompatibleArrayShape);
-      ELSIF (irhs # NIL) THEN
-        CG.Push (lhs);
-        CG.Open_size (n);
-        CG.Load_integer (Target.Integer.cg_type, Type.Number (irhs));
-        CG.Check_eq (Target.Integer.cg_type, CG.RuntimeError.IncompatibleArrayShape);
-      ELSE (* both arrays are open *)
-        CG.Push (lhs);
-        CG.Open_size (n);
-        CG.Push (rhs);
-        CG.Open_size (n);
-        CG.Check_eq (Target.Integer.cg_type, CG.RuntimeError.IncompatibleArrayShape);
-      END;
-      INC (n);
-      tlhs := elhs;
-      trhs := erhs;
-    END;
-  END GenOpenArraySizeChecks;
-
-PROCEDURE GenOpenArrayCopy (READONLY rhs: CG.Val;  tlhs, trhs: Type.T) =
-  VAR
-    lhs_depth := OpenArrayType.OpenDepth (tlhs);
-    rhs_depth := OpenArrayType.OpenDepth (trhs);
-  BEGIN
-    <*ASSERT (lhs_depth > 0) AND (rhs_depth > 0) *>
-
-    FOR i := 0 TO MIN (lhs_depth, rhs_depth) - 1 DO
-      CG.Push (rhs);
-      CG.Open_size (i);
-      IF (i # 0) THEN CG.Multiply (Target.Word.cg_type) END;
-    END;
-
-    IF (lhs_depth < rhs_depth)
-      THEN CG.Copy_n (OpenArrayType.EltPack (tlhs), overlap := TRUE);
-      ELSE CG.Copy_n (OpenArrayType.EltPack (trhs), overlap := TRUE);
-    END;
-  END GenOpenArrayCopy;
-
 (*---------------------------------------- code generation: checking only ---*)
 
-PROCEDURE DoEmitCheck (tlhs: Type.T;  rhs: Expr.T) =
-  (* on entry the lhs is compiled and the rhs is prepped. *)
+(* EXPORTED: *) 
+PROCEDURE EmitRTCheck (tlhs: Type.T;  rhsExpr: Expr.T) =
+  (* PRE: The CG stack is empty.
+     PRE: The rhsExpr is prepped.
+     POST: RHS is TOS. *)
   VAR
-    t := Type.Base (tlhs); (* strip renaming and packing *)
-    lhs_info, t_info: Type.Info;
+    t_lhs_base := Type.Base (tlhs); (* strip renaming and packing *)
+    t_lhs_base_info: Type.Info;
   BEGIN
-    t := Type.CheckInfo (t, t_info);
-    tlhs := Type.CheckInfo (tlhs, lhs_info);
+    EVAL Expr.CheckUseFailure (rhsExpr);
 
-    CASE t_info.class OF
+    t_lhs_base := Type.CheckInfo (t_lhs_base, t_lhs_base_info);
+    CASE t_lhs_base_info.class OF
     | Type.Class.Integer, Type.Class.Longint, Type.Class.Subrange,
       Type.Class.Enum =>
-        DoCheckOrdinal (tlhs, rhs);
+        RTCheckOrdinal (tlhs, rhsExpr);
     | Type.Class.Real, Type.Class.Longreal, Type.Class.Extended =>
-        DoCheckFloat (rhs);
+        RTCheckFloat (rhsExpr);
     | Type.Class.Object, Type.Class.Opaque, Type.Class.Ref =>
-        DoCheckReference (tlhs, rhs);
+        RTCheckReference (tlhs, rhsExpr);
     | Type.Class.Array, Type.Class.OpenArray =>
-        DoCheckArray (tlhs, rhs);
+        RTCheckArray (tlhs, rhsExpr);
     | Type.Class.Procedure =>
-        DoCheckProcedure (rhs);
+        AssignOrRTCheckProcedure (rhsExpr, lhsIsPushed := FALSE);
     | Type.Class.Record =>
-        DoCheckRecord (tlhs, rhs);
+        RTCheckRecord (rhsExpr);
     | Type.Class.Set =>
-        DoCheckSet (tlhs, rhs);
+        RTCheckSet (tlhs, rhsExpr);
     ELSE <* ASSERT FALSE *>
     END;
-  END DoEmitCheck;
+  END EmitRTCheck;
 
-PROCEDURE DoCheckOrdinal (tlhs: Type.T;  rhs: Expr.T) =
+PROCEDURE RTCheckOrdinal (tlhs: Type.T;  rhsExpr: Expr.T) =
   VAR min, max : Target.Int;
   BEGIN
     EVAL Type.GetBounds (tlhs, min, max);
-    CheckExpr.EmitChecks (rhs, min, max, CG.RuntimeError.ValueOutOfRange);
-  END DoCheckOrdinal;
+    CheckExpr.EmitChecks (rhsExpr, min, max, CG.RuntimeError.ValueOutOfRange);
+  END RTCheckOrdinal;
 
-PROCEDURE DoCheckFloat (rhs: Expr.T) =
+PROCEDURE RTCheckFloat (rhsExpr: Expr.T) =
   BEGIN
-    Expr.Compile (rhs);
-  END DoCheckFloat;
+    Expr.Compile (rhsExpr);
+  END RTCheckFloat;
 
-PROCEDURE DoCheckReference (tlhs: Type.T;  rhs: Expr.T) =
+PROCEDURE RTCheckReference (tlhs: Type.T;  rhsExpr: Expr.T) =
   BEGIN
-    Expr.Compile (rhs);
-    IF Host.doNarrowChk THEN Narrow.Emit (tlhs, Expr.TypeOf (rhs)) END;
-  END DoCheckReference;
+    Expr.Compile (rhsExpr);
+    IF Host.doNarrowChk THEN Narrow.Emit (tlhs, Expr.TypeOf (rhsExpr)) END;
+  END RTCheckReference;
 
-PROCEDURE DoCheckProcedure (rhs: Expr.T) =
-  VAR ok: CG.Label;  t1: CG.Val;
+PROCEDURE AssignOrRTCheckProcedure (rhsExpr: Expr.T; lhsIsPushed: BOOLEAN) =
+  (* PRE: The CG stack is empty.
+     PRE: The rhsExpr is prepped.
+     POST: RHS is TOS. *)
+  VAR lhsVal, rhsVal: CG.Val;
+  VAR ok: CG.Label;
   BEGIN
-    IF NOT Host.doNarrowChk THEN
-      Expr.Compile (rhs);
-    ELSIF NOT NeedsClosureCheck (rhs, FALSE) THEN
-      Expr.Compile (rhs);
-    ELSE
-      Expr.Compile (rhs);
-      t1 := CG.Pop ();
-      ok := CG.Next_label ();
-      CG.If_closure (t1, CG.No_label, ok, CG.Always);
+    CASE <*NOWARN*> ProcRTCheckKind (rhsExpr) OF
+    | RTCheckKind.Fail =>
       CG.Abort (CG.RuntimeError.NarrowFailed);
+      Expr.Compile (rhsExpr);
+    | RTCheckKind.Conditional =>
+      (* <rant>
+         Could there ever be a better example than this of what
+         an utterly dreadful idea an operand stack machine is?
+         
+         We have to call If_Closure with empty stack.  We have to know how
+         many items are on it when we are called.  Not only does this involve
+         backing up through the reverse call graph in many places, checking
+         undocumented preconditions, but in the end, it is conditional.
+         If things are there, we have to spill them.
+
+         Then, after pushing the RHS, we have to spill it too, pass the
+         spilled rhs value to If_closure in a parameter, then re-push it
+         afterwards for further use by our callers.  Finally, conditionally
+         re-push the previously spilled items.
+
+         Or, we could have writen two nearly-same copies of this procedure.
+
+         All of this is entirely gratuitous, as it has no actual effect
+         on the If_closure operation.
+         </rant> *)
+      IF lhsIsPushed THEN
+        lhsVal := CG.Pop ();
+      END;
+      Expr.Compile (rhsExpr);
+      rhsVal := CG.Pop ();
+      ok := CG.Next_label ();
+      CG.If_closure (rhsVal, CG.No_label, ok, CG.Always);
+      CG.Abort (CG.RuntimeError.NarrowFailed);
+(* TODO^ I think we need another runtime error code for assigning a nested
+         procedure. *)
       CG.Set_label (ok);
-      CG.Push (t1);  CG.Free (t1);
-    END;
-  END DoCheckProcedure;
+      IF lhsIsPushed THEN
+        CG.Push (lhsVal);
+        CG.Free (lhsVal);
+      END;
+      CG.Push (rhsVal);
+      CG.Free (rhsVal);
+    | RTCheckKind.None =>
+      Expr.Compile (rhsExpr);
+    END; 
+  END AssignOrRTCheckProcedure;
 
-PROCEDURE DoCheckRecord (tlhs: Type.T;  rhs: Expr.T) =
+PROCEDURE RTCheckRecord (rhsExpr: Expr.T) =
   BEGIN
-    AssertSameSize (tlhs, Expr.TypeOf (rhs));
-    IF Expr.IsDesignator (rhs)
-      THEN Expr.CompileLValue (rhs, traced := FALSE);
-      ELSE Expr.Compile (rhs);
+    IF Expr.IsDesignator (rhsExpr)
+      THEN Expr.CompileLValue (rhsExpr, traced := FALSE);
+      ELSE Expr.Compile (rhsExpr);
     END;
-  END DoCheckRecord;
+  END RTCheckRecord;
 
-PROCEDURE DoCheckSet (tlhs: Type.T;  rhs: Expr.T) =
+PROCEDURE RTCheckSet (tlhs: Type.T;  rhsExpr: Expr.T) =
   BEGIN
-    AssertSameSize (tlhs, Expr.TypeOf (rhs));
     IF Type.IsStructured (tlhs) THEN
-      IF Expr.IsDesignator (rhs)
-        THEN Expr.CompileLValue (rhs, traced := FALSE);
-        ELSE Expr.Compile (rhs);
+      IF Expr.IsDesignator (rhsExpr)
+        THEN Expr.CompileLValue (rhsExpr, traced := FALSE);
+        ELSE Expr.Compile (rhsExpr);
       END;
     ELSE (* small set *)
-      Expr.Compile (rhs);
+      Expr.Compile (rhsExpr);
     END;
-  END DoCheckSet;
+  END RTCheckSet;
 
-PROCEDURE DoCheckArray (tlhs: Type.T;  e_rhs: Expr.T) =
+PROCEDURE RTCheckArray (tlhs: Type.T;  rhsExpr: Expr.T) =
   VAR
-    trhs    := Expr.TypeOf (e_rhs);
-    openRHS := OpenArrayType.Is (trhs);
-    openLHS := OpenArrayType.Is (tlhs);
+    trhs    := Expr.TypeOf (rhsExpr);
+    LHSIsOpen := OpenArrayType.Is (tlhs);
+    RHSIsOpen := OpenArrayType.Is (trhs);
     rhs     : CG.Val;
   BEGIN
     (* evaluate the right-hand side *)
-    IF Expr.IsDesignator (e_rhs)
-      THEN Expr.CompileLValue (e_rhs, traced := FALSE);
-      ELSE Expr.Compile (e_rhs);
+    IF Expr.IsDesignator (rhsExpr)
+      THEN Expr.CompileLValue (rhsExpr, traced := FALSE);
+      ELSE Expr.Compile (rhsExpr);
     END;
 
-    IF openLHS THEN
+    IF LHSIsOpen THEN
       Error.Msg ("INTERNAL ERROR: AssignStmt.EmitCheck (OPEN ARRAY)");
 
-    ELSIF openRHS THEN
+    ELSIF RHSIsOpen THEN
       rhs := CG.Pop ();
       GenOpenArraySizeChk (rhs, tlhs, trhs);
       CG.Push (rhs);
@@ -614,27 +785,66 @@ PROCEDURE DoCheckArray (tlhs: Type.T;  e_rhs: Expr.T) =
       (* no more code to generate *)
 
     END;
+  END RTCheckArray;
 
-  END DoCheckArray;
-
-PROCEDURE GenOpenArraySizeChk (READONLY rhs: CG.Val;  tlhs, trhs: Type.T) =
-  VAR ilhs, irhs, elhs, erhs: Type.T;  n := 0;
+PROCEDURE GenOpenArraySizeChk (rhsVal: CG.Val;  tlhs, trhs: Type.T) =
+  VAR lhsIndexType, rhsIndexType, lhsEltType, rhsEltType: Type.T;
+  VAR depth := 0;
   BEGIN
     IF NOT Host.doNarrowChk THEN RETURN END;
-    WHILE ArrayType.Split (tlhs, ilhs, elhs)
-      AND ArrayType.Split (trhs, irhs, erhs)
-      AND (irhs = NIL) DO
+    WHILE ArrayType.Split (tlhs, lhsIndexType, lhsEltType)
+      AND ArrayType.Split (trhs, rhsIndexType, rhsEltType)
+      AND (rhsIndexType = NIL) DO
 
-      CG.Push (rhs);
-      CG.Open_size (n);
-      CG.Load_integer (Target.Integer.cg_type, Type.Number (ilhs));
-      CG.Check_eq (Target.Integer.cg_type, CG.RuntimeError.IncompatibleArrayShape);
+      CG.Push (rhsVal);
+      CG.Open_size (depth);
+      CG.Load_integer (Target.Integer.cg_type, Type.Number (lhsIndexType));
+      CG.Check_eq
+        (Target.Integer.cg_type, CG.RuntimeError.IncompatibleArrayShape);
 
-      INC (n);
-      tlhs := elhs;
-      trhs := erhs;
+      INC (depth);
+      tlhs := lhsEltType;
+      trhs := rhsEltType;
     END;
   END GenOpenArraySizeChk;
+
+(* --------------------------- Compile ------------------------------ *)
+
+(* EXPORTED: *) 
+PROCEDURE DoGenRTAbort ( Code: CG.RuntimeError ): BOOLEAN =
+  BEGIN
+    CASE Code OF
+    | CG.RuntimeError.ValueOutOfRange
+    => RETURN Host.doRangeChk;
+    | CG.RuntimeError.NarrowFailed
+    => RETURN Host.doNarrowChk;
+    | CG.RuntimeError.IncompatibleArrayShape
+    => RETURN Host.doNarrowChk;
+(* TODO: We should have a separate compiler switch for this one. *)
+    ELSE RETURN FALSE;
+    END;
+  END DoGenRTAbort;
+
+(* Externally dispatched-to: *)
+PROCEDURE Compile (p: P): Stmt.Outcomes =
+  VAR
+    tlhs := Expr.RepTypeOf (p.lhs);
+    rhs_info: Type.Info;
+  BEGIN
+    EVAL Type.CheckInfo (Expr.TypeOf (p.rhs), rhs_info);
+    Expr.PrepLValue (p.lhs, traced := rhs_info.isTraced);
+    PrepForEmit (tlhs, p.rhs, initializing := FALSE);
+    Expr.CompileLValue (p.lhs, traced := rhs_info.isTraced);
+    DoEmit (tlhs, p.rhs, Expr.Alignment (p.lhs), initializing := FALSE);
+    Expr.NoteWrite (p.lhs);
+    RETURN Stmt.Outcomes {Stmt.Outcome.FallThrough};
+  END Compile;
+
+(* Externally dispatched-to: *)
+PROCEDURE GetOutcome (<*UNUSED*> p: P): Stmt.Outcomes =
+  BEGIN
+    RETURN Stmt.Outcomes {Stmt.Outcome.FallThrough};
+  END GetOutcome;
 
 BEGIN
 END AssignStmt.

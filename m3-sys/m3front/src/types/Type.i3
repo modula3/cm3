@@ -14,7 +14,7 @@ TYPE
   T          = M3.Type;
   Assumption = M3.EqAssumption;
   ModuleInfo <: REFANY;
-  BitAlignT  = [0 .. 255];
+  BitAlignT = [0 .. 255]; 
 
 TYPE
   Class = { Error, Named, Integer, Longint, Real, Longreal, Extended,
@@ -32,6 +32,8 @@ TYPE
     size      : INTEGER;  (* size in bits, -1 if variable sized *)
     min_size  : INTEGER;  (* minimum size in bits. *)
     alignment : INTEGER;  (* minimum alignment in bits *)
+    addr_align: INTEGER := Target.Word8.align;
+    (* ^When stk_type = CG.Type.Addr, the alignment of dereferenced location. *)
     hash      : INTEGER;  (* internal hash code *)
     stk_type  : CG.Type;  (* code generator representation on operator stack *)
     mem_type  : CG.Type;  (* code generator representation as a variable *)
@@ -68,9 +70,10 @@ PROCEDURE CheckInfo (t: T;  VAR(*OUT*) x: Info): T;
 (* type check type 't'.  Return the underlying constructed
    (ie. class # Class.Named) type node and in 'x' its info. *)
 
-PROCEDURE IsAlignedOk (t: T;  offs: INTEGER): BOOLEAN;
-(* Returns TRUE iff no scalars within a value of type 't' at a bit offset
-   of 'offs' cross word boundaries.  *)
+PROCEDURE StraddleFreeScalars
+  (t: T;  offs: INTEGER; IsEltOrField: BOOLEAN): BOOLEAN;
+(* Returns TRUE iff no scalars within a value of type 't', located at
+   a bit offset of 'offs' from a word boundary, cross word boundaries.  *)
 
 PROCEDURE Strip (t: T): T;
 (* return the constructed type of 't' (ie. strip renaming) *)
@@ -87,7 +90,7 @@ PROCEDURE CGType (t: T;  in_memory: BOOLEAN := FALSE): CG.Type;
    depending on 'in_memory' *)
 
 PROCEDURE IsStructured (t: T): BOOLEAN;
-(* <=> rec, set, or array <=> is represented as an address on the CG stack *)
+(* Always represented as an address on the CG stack (record, array, or large set) *)
 (* PRE: t need not be checked. *) 
 
 PROCEDURE LoadScalar (t: T);
@@ -138,6 +141,12 @@ PROCEDURE CompileAll ();
 PROCEDURE Compile (t: T);
 (* generates the debugging declarations for 't' *)
 
+PROCEDURE AddCell (t: T);
+(* Creates a typecell for t.  Normally, this done after Check
+   time by Module.SetGlobals, but that only gets types created during
+   the Check phase.  This is for types that can be only created later.
+   In particular, see ArrayExpr.InnerPrep. *)
+
 PROCEDURE LoadInfo (t: T;  offset: INTEGER;  addr := FALSE);
 (* loads the specified field of 't's typecell.  If 'offset' is less than
    zero, 'LoadInfo' loads the address of the typecell.  *)
@@ -178,7 +187,7 @@ PROCEDURE GenCellPtrs (): INTEGER;
 END Type.
 
 (*
-  The following sets of procedures are may be called during the
+  The following sets of procedures may be called during the
   various phases of the compilation:
 
    initialization:

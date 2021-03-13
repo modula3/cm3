@@ -19,7 +19,7 @@ TYPE
         isTraced   : BOOLEAN;
       OVERRIDES
         check      := Check;
-        check_align:= TypeRep.ScalarAlign;
+        no_straddle:= TypeRep.AddrNoStraddle;
         isEqual    := EqualChk;
         isSubtype  := Subtyper;
         compile    := Compiler;
@@ -92,6 +92,7 @@ PROCEDURE Check (p: P) =
     p.info.size      := Target.Address.size;
     p.info.min_size  := Target.Address.size;
     p.info.alignment := Target.Address.align;
+    p.info.addr_align:= Target.Address.align;
     p.info.mem_type  := CG.Type.Addr;
     p.info.stk_type  := CG.Type.Addr;
     p.info.class     := Type.Class.Opaque;
@@ -127,18 +128,34 @@ PROCEDURE IsSubtype (a, b: Type.T): BOOLEAN =
     RETURN Type.IsSubtype (a, t);
   END IsSubtype;
 
+VAR Depth: CARDINAL := 0;
+VAR StopDepth: INTEGER := LAST (INTEGER);
+VAR bkpt: INTEGER := 0;
+VAR is: BOOLEAN;
+
 PROCEDURE Subtyper (a: P;  b: Type.T): BOOLEAN =
   VAR t: Type.T;  x: Revelation.TypeSet;
   BEGIN
+
+INC(Depth);
+IF Depth > StopDepth THEN
+  bkpt := 9;
+END;
+
     (* try a's declared super type *)
-    IF Type.IsSubtype (a.super, b) THEN RETURN TRUE END;
+    IF Type.IsSubtype (a.super, b) THEN
+      DEC (Depth);
+      RETURN TRUE
+    END;
 
     (***********************************************
     (* try for a full revelation *)
     t := Revelation.LookUp (a);
     IF (t # NIL) THEN
       t := Type.Check (t);
-      RETURN Type.IsSubtype (t, b);
+      is := Type.IsSubtype (t, b);
+      DEC (Depth);
+      RETURN is;
     END;
     *************************************************)
 
@@ -146,15 +163,22 @@ PROCEDURE Subtyper (a: P;  b: Type.T): BOOLEAN =
     Revelation.LookUpAll (a, x);
     FOR i := 0 TO x.cnt-1 DO
       t := Type.Check (x.types[i]);
-      IF Type.IsSubtype (t, b) THEN RETURN TRUE END;
+      IF Type.IsSubtype (t, b) THEN
+        DEC (Depth);
+        RETURN TRUE
+      END;
     END;
     WHILE (x.others # NIL) DO
       t := Type.Check (x.others.type);
-      IF Type.IsSubtype (t, b) THEN RETURN TRUE END;
+      IF Type.IsSubtype (t, b) THEN
+        DEC (Depth);
+        RETURN TRUE
+      END;
       x.others := x.others.next;
     END;
 
-    RETURN FALSE;
+  DEC (Depth);
+  RETURN FALSE;
   END Subtyper;
 
 PROCEDURE InitCoster (p: P; zeroed: BOOLEAN): INTEGER =
@@ -182,5 +206,7 @@ PROCEDURE FPrinter (p: P;  VAR x: M3.FPInfo) =
   END FPrinter;
 
 BEGIN
+  Depth := 0;
+  StopDepth := 20;
 END OpaqueType.
 

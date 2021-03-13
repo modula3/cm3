@@ -90,7 +90,7 @@ PROCEDURE Compile (ce: CallExpr.T) =
 PROCEDURE Initialize () =
   BEGIN
     Z := CallExpr.NewMethodList (1, 1, TRUE, FALSE, TRUE, Card.T,
-                                 NIL,
+                                 NIL, NIL,
                                  CallExpr.NotAddressable,
                                  Check,
                                  Prep,

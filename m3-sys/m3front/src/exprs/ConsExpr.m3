@@ -8,24 +8,29 @@
 (*      modified on Fri Dec 14 21:41:11 1990 by muller         *)
 
 MODULE ConsExpr;
-(* A value constructor. Has an array, record, or set constructor
-   as a child. *) 
+(* A value constructor.  Ascertaining whether it is an array, record,
+   or set constructor requires semantic analysis, so this placeholder
+   node is built during parsing.  It stays in the tree, but is given
+   an ArrayExpr.T, RecordExpr.T, or SetExpr.T as a child (in field
+   'base'), by Seal, later when  its type can be looked up and checked. *)
 
-IMPORT M3, Expr, ExprRep, Error, Type;
+IMPORT M3, Expr, ExprRep, Error, ErrType, Type;
 IMPORT TypeExpr, SetExpr, RecordExpr, ArrayExpr;
 
-TYPE
-  Kind = { Unknown, Record, Set, Array };
+TYPE Kind = {Unknown, NonConstr, Record, Set, Array};
 
 TYPE
   P = Expr.T BRANDED "ConsExpr.P" OBJECT
         typeExpr : Expr.T; (* An *expression* for the type being constructed. *)
         args     : Expr.List;
-        dots     : BOOLEAN;
         base     : Expr.T;
         kind     : Kind;
+        dots     : BOOLEAN;
+        baseIsNestedArrayConstr: BOOLEAN := FALSE;
+        (* ^We're probably gonna want this someday. *)
       OVERRIDES
         typeOf       := TypeOf;
+        repTypeOf    := RepTypeOf;
         check        := Check;
         need_addr    := NeedsAddress;
         prep         := Prep;
@@ -34,7 +39,7 @@ TYPE
         compileLV    := ExprRep.NotLValue;
         prepBR       := ExprRep.NotBoolean;
         compileBR    := ExprRep.NotBoolean;
-        evaluate     := Fold;
+        evaluate     := Evaluate;
         isEqual      := EqCheck;
         getBounds    := ExprRep.NoBounds;
         isWritable   := ExprRep.IsNever;
@@ -44,8 +49,12 @@ TYPE
         prepLiteral  := ExprRep.NoPrepLiteral;
         genLiteral   := ExprRep.NoLiteral;
         note_write   := ExprRep.NotWritable;
+        staticLength := StaticLength;
+        usesAssignProtocol := UsesAssignProtocol;
+        checkUseFailure := CheckUseFailure;
       END;
 
+(* EXPORTED: *)
 PROCEDURE New (typeExpr: Expr.T;  args: Expr.List;  dots: BOOLEAN): Expr.T =
   VAR p := NEW (P);
   BEGIN
@@ -55,10 +64,11 @@ PROCEDURE New (typeExpr: Expr.T;  args: Expr.List;  dots: BOOLEAN): Expr.T =
     p.dots      := dots;
     p.base      := NIL;
     p.kind      := Kind.Unknown;
-    p.direct_ok := TRUE;
+    p.directAssignableType := TRUE;
     RETURN p;
   END New;
 
+(* EXPORTED: *)
 PROCEDURE Is (e: Expr.T): BOOLEAN =
   BEGIN
     TYPECASE e OF
@@ -68,7 +78,9 @@ PROCEDURE Is (e: Expr.T): BOOLEAN =
     END;   
   END Is;
 
+(* EXPORTED: *)
 PROCEDURE Base (e: Expr.T): Expr.T =
+(* PRE: Seal (e) or Expr.TypeCheck (e) has been called. *)
   BEGIN
     TYPECASE e OF
     | NULL => RETURN NIL;
@@ -77,91 +89,176 @@ PROCEDURE Base (e: Expr.T): Expr.T =
     END;   
   END Base;
 
+(* Externally dispatched-to: *)
 PROCEDURE TypeOf (p: P): Type.T =
   VAR ta: Type.T;
   BEGIN
     IF TypeExpr.Split (p.typeExpr, ta)
-      THEN RETURN ta;
-      ELSE RETURN Expr.TypeOf (p.typeExpr);
+    THEN RETURN ta;
+    ELSE RETURN Expr.TypeOf (p.typeExpr);
     END;
   END TypeOf;
 
-PROCEDURE Seal (p: P) =
-  VAR ta: Type.T;  info: Type.Info;
+(* Externally dispatched-to: *)
+PROCEDURE RepTypeOf (p: P): Type.T =
   BEGIN
-    IF (p.base # NIL) THEN RETURN END;
-    IF NOT TypeExpr.Split (p.typeExpr, ta) THEN RETURN END;
-    ta := Type.Base (ta);  (* strip any BITS FOR packing *)
-    ta := Type.CheckInfo (ta, info);
-    IF (ta = NIL) THEN
-      (* error *)
-    ELSIF (info.class = Type.Class.Record) THEN
-      p.base := RecordExpr.New (ta, p.args);
-      p.kind := Kind.Record;
-    ELSIF (info.class = Type.Class.Set) THEN
-      p.base := SetExpr.New (ta, p.args);
-      p.kind := Kind.Set;
-    ELSIF (info.class = Type.Class.Array)
-       OR (info.class = Type.Class.OpenArray) THEN
-      p.base := ArrayExpr.New (ta, p.args, p.dots);
-      p.kind := Kind.Array;
-    END;
+    IF p = NIL THEN RETURN ErrType.T END;
+    InnerSeal (p);
+    IF p.base = NIL THEN RETURN NIL END;
+    RETURN p.base.repTypeOf () (* Delegate.*);
+  END RepTypeOf;
+
+(* EXPORTED: *)
+PROCEDURE Seal (e: Expr.T) =
+(* POST: Base will now return a valid result. *)
+  BEGIN
+    TYPECASE e OF
+    | NULL =>
+    | P(p) => InnerSeal (p)
+    ELSE
+    END
   END Seal;
 
+PROCEDURE InnerSeal (p: P) =
+(* POST: Base will now return a valid result. *)
+  VAR consType: Type.T;  consTypeInfo: Type.Info;
+  BEGIN
+    IF (p.base # NIL) THEN RETURN END;
+    IF NOT TypeExpr.Split (p.typeExpr, consType) THEN RETURN END;
+    consType := Type.StripPacked (consType);  (* strip named and BITS FOR. *)
+    consType := Type.CheckInfo (consType, consTypeInfo);
+    IF (consType = NIL) THEN (* Prior error *)
+    ELSE
+      CASE consTypeInfo.class OF
+      | Type.Class.Record =>
+        p.base := RecordExpr.New (consType, p.args);
+        p.kind := Kind.Record;
+      | Type.Class.Set =>
+        p.base := SetExpr.New (consType, p.args);
+        p.kind := Kind.Set;
+      | Type.Class.Array, Type.Class.OpenArray =>
+        p.base := ArrayExpr.New (consType, p.args, p.dots);
+        p.kind := Kind.Array;
+      ELSE p.kind := Kind.Unknown
+      END (*CASE*);
+    END
+  END InnerSeal;
+
+PROCEDURE CheckRecurse
+  (consExpr: P; parentKind: Kind; VAR cs: Expr.CheckState) =
+(* Recurses only on a Cons/Array pair directly inside a Cons/Array pair
+   especially, no named expresson in between. *)
+  BEGIN
+    InnerSeal (consExpr);
+    IF consExpr.kind = Kind.Unknown THEN
+      Error.Msg ("constructor type must be array, record, or set type");
+      consExpr.type := ErrType.T;
+    ELSE
+      IF parentKind = Kind.Array AND consExpr.kind = Kind.Array THEN
+        consExpr.baseIsNestedArrayConstr := TRUE;
+        ArrayExpr.NoteNested (consExpr.base);
+      END;
+      Expr.TypeCheck (consExpr.typeExpr, cs);
+      consExpr.type := TypeOf (consExpr);
+      IF consExpr.dots AND consExpr.kind # Kind.Array THEN
+        Error.Msg ("trailing \'..\' in constructor, ignored");
+      END;
+
+      FOR i := 0 TO LAST (consExpr.args^) DO
+        WITH argExpr = consExpr.args^[i] DO
+          TYPECASE argExpr OF
+          | NULL =>
+          | P (argCons) =>
+            (* Does not include named CONST, particularly, w/ an array
+               constructor as its value. *)
+            CheckRecurse (argCons, consExpr.kind, cs);
+          ELSE Expr.TypeCheck (argExpr, cs)
+          END
+        END
+      END
+    END;
+    Expr.TypeCheck (consExpr.base, cs);
+    consExpr.checked := TRUE;
+  END CheckRecurse;
+
+(* Externally dispatched-to: *)
 PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
   BEGIN
-    Seal (p);
-    Expr.TypeCheck (p.typeExpr, cs);
-    p.type := TypeOf (p);
-    IF (p.kind = Kind.Unknown) THEN
-      Error.Msg ("constructor type must be array, record, or set type");
-    ELSIF (p.dots) AND (p.kind # Kind.Array) THEN
-      Error.Msg ("trailing \'..\' in constructor, ignored");
-    END;
-    FOR i := 0 TO LAST (p.args^) DO Expr.TypeCheck (p.args[i], cs) END;
-    Expr.TypeCheck (p.base, cs);
+    CheckRecurse (p, Kind.NonConstr, cs);
   END Check;
 
+(* Externally dispatched-to: *)
 PROCEDURE EqCheck (a: P;  e: Expr.T;  x: M3.EqAssumption): BOOLEAN =
   BEGIN
-    Seal (a);
+    InnerSeal (a);
     TYPECASE e OF
     | NULL => RETURN FALSE;
-    | P(b) => Seal (b);  RETURN Expr.IsEqual (a.base, b.base, x);
+    | P(b) => InnerSeal (b);  RETURN Expr.IsEqual (a.base, b.base, x);
     ELSE      RETURN Expr.IsEqual (a.base, e, x);
     END;
   END EqCheck;
 
+(* Externally dispatched-to: *)
 PROCEDURE NeedsAddress (p: P) =
   BEGIN
-    Seal (p);
+    InnerSeal (p);
     Expr.NeedsAddress (p.base);
   END NeedsAddress;
 
+(* Externally dispatched-to: *)
 PROCEDURE Prep (p: P) =
   VAR t: Type.T;
   BEGIN
-    Seal (p);
+    InnerSeal (p);
     IF TypeExpr.Split (p.typeExpr, t) THEN Type.Compile (t) END;
     Expr.Prep (p.base);
   END Prep;
 
+(* Externally dispatched-to: *)
 PROCEDURE Compile (p: P) =
   BEGIN
     Expr.Compile (p.base);
   END Compile;
 
-PROCEDURE Fold (p: P): Expr.T =
+(* Externally dispatched-to: *)
+PROCEDURE Evaluate (p: P): Expr.T =
   BEGIN
-    Seal (p);
+    InnerSeal (p);
     RETURN Expr.ConstValue (p.base);
-  END Fold;
+  END Evaluate;
 
+(* Externally dispatched-to: *)
 PROCEDURE IsZeroes (p: P;  <*UNUSED*> lhs: BOOLEAN): BOOLEAN =
   BEGIN
-    Seal (p);
+    InnerSeal (p);
     RETURN Expr.IsZeroes (p.base);
   END IsZeroes;
+
+(* Externally dispatched-to: *)
+PROCEDURE StaticLength (p: P): Expr.lengthTyp =
+  BEGIN
+    IF p = NIL THEN RETURN Expr.lengthInvalid END;
+    InnerSeal (p);
+    IF p.base = NIL THEN RETURN Expr.lengthInvalid END;
+    RETURN p.base.staticLength () (* Delegate.*);
+  END StaticLength;
+
+(* Externally dispatched-to: *)
+PROCEDURE UsesAssignProtocol (p: P): BOOLEAN =
+  BEGIN
+    IF p = NIL THEN RETURN FALSE END;
+    InnerSeal (p);
+    IF p.base = NIL THEN RETURN FALSE END;
+    RETURN p.base.usesAssignProtocol () (* Delegate.*);
+  END UsesAssignProtocol;
+
+(* Externally dispatched-to: *)
+PROCEDURE CheckUseFailure (p: P): BOOLEAN =
+  BEGIN
+    IF p = NIL THEN RETURN TRUE END;
+    InnerSeal (p);
+    RETURN Expr.CheckUseFailure (p.base) (* Delegate.*);
+  END CheckUseFailure;
 
 BEGIN
 END ConsExpr.

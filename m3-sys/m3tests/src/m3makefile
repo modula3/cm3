@@ -456,13 +456,13 @@ readonly proc run_test (class, group, uid, comment, should_run, cm3opts, runopts
       ok2 = cmp_file (dir, "stdout.pgm", ignoreLines, ignoreTexts, probeForTargetSpecificFiles) and
             cmp_file (dir, "stderr.pgm", ignoreLines, ignoreTexts, probeForTargetSpecificFiles)
     end
-    
+
     if probeForTargetSpecificFiles and FileExists (ExpectedDir)
       foreach a in fs_lsfiles(ExpectedDir, TRUE)
         ok3 = cmp_file(dir, a, ignoreLines, ignoreTexts, probeForTargetSpecificFiles) and ok3
       end
     end
-    
+
     if DATE and BC
       tstop = compress (q_exec_get (DATE & " '+%s'")[1])
       %write (tstop, CR)
@@ -546,7 +546,8 @@ readonly proc build_flags_test (group, uid, comment, cm3opts) is
 end
 
 % programs that we run with and without an agreed upon flag,
-% to hide or reveal output that will vary some across target platforms (wordsize and/or endian specific,
+% to hide or reveal output that will vary some across target platforms
+%  (wordsize and/or endian specific,
 % hopefully never "fully target specific")
 
 readonly proc mixed_portability_test (group, uid, comment) is
@@ -559,15 +560,50 @@ readonly proc e_test (group, uid, comment) is
   run_test ("_etests", group, uid, comment, "", cm3opts, runopts, "probeForTargetSpecificFiles")
 end
 
+% Recently added tests...
+
+p_test ("p2", "p268", "Record constructors with statically inevitable RT errors.")
+p_test ("p2", "p269", "Nested array constructors.")
+p_test ("p2", "p270", "Array constructors with statically inevitable RT errors.")
+p_test ("p2", "p271", "Constant array constructor, passed READONLY, is passed by value.")
+p_test ("p2", "p272", "Set constructors with statically inevitable RT errors.")
+p_test ("p2", "p273", "Mixed, nested, constructors with statically inevitable RT errors.")
+p_test ("p2", "p274", "Mixed, nested, constructor values.")
+p_test ("p2", "p275", "More set operators on a small set type in a packed record.")
+p_test ("p2", "p276", "Packed set constructors.")
+p_test ("p2", "p278", "64-bit-sized but only 32-bit-aligned values, on 32-bit machines.")
+p_test ("p2", "p279", "misaligned, packed components of array and record constructors.")
+p_test ("p2", "p280", "Parameter passing, many cases, including packed.")
+p_test ("p2", "p281", "Const Array Decl Bugs (#25), reported by darko20 on 03/24/2018.")
+% This fails in Grisu when using C backend.
+p_test ("p2", "p282", "grisuc")
+
+% This fails an assert in integrated backend.
+p_test ("p2", "p283", "Long.LT")
+
+% Some recently fixed tests in the packedVars branch: 
+
+p_test ("p0", "p050", "open array parameters")
+p_test ("p0", "p076", "b3tests/b005 - more array problems")
+p_test ("p0", "p081", "open array constants")
+p_test ("p1", "p138", "bit field assignments") % Fails on Master branch, 2020-1-9
+p_test ("p1", "p139", "memory copy")
+p_test ("p2", "p206", "ARRAY constructors in var decls using named open array types")
+p_test ("p2", "p207", "subrange declarations")
+p_test ("p2", "p209", "open array initializers compile failure")
+p_test ("p2", "p210", "open array initializers runtime failure")
+p_test ("p2", "p264", "mixtures of fixed and open arrays")
+p_test ("p2", "p277", "mixtures of nested constructors")
+
 % some currently failing tests...
 
+%p_test ("p1", "p161", "more operations on very big sets in the heap") %Extremely time-consuming
+p_test ("p1", "p158", "operations on subword-sized sets") % Previously not supported in CM3
 %p_test ("p2", "p204", "IP address initializers")
-%p_test ("p2", "p206", "ARRAY constructors in var decls using named open array types")
-%p_test ("p2", "p207", "subrange declarations")
-%p_test ("p2", "p209", "open array initializers compile failure")
-%p_test ("p2", "p210", "open array initializers runtime failure")
 
 %p_test ("p2", "p240", "exact codegen")
+
+
 p_test ("p2", "p241", "Formatter crashes gcc backend if 'ter' optimimization enabled")
 p_test ("p2", "p242", "m3totex crashes gcc backend if 'pre' optimimization enabled")
 p_test ("p2", "p243", "nested functions removed by gcc backend 'unit at a time'")
@@ -631,7 +667,6 @@ p_test ("p0", "p046", "Word.Insert, array of [0..255]")
 p_test ("p0", "p047", "Real - Integer LOOPHOLE")
 p_test ("p0", "p048", "nested procedures")
 p_test ("p0", "p049", "procedure parameters")
-p_test ("p0", "p050", "open array parameters")
 p_test ("p0", "p051", "external variables")
 p_test ("p0", "p052", "indexing of ref open array")
 p_test ("p0", "p053", "set operations")
@@ -649,7 +684,7 @@ p_test ("p0", "p064", "procedure parameters")
 p_test ("p0", "p065", "typecode")
 p_test ("p0", "p066", "exception handler stack screwed up")
 p_test ("p0", "p067", "mixup in imported names")
-% p_test ("p0", "p068", "PrintProc for arrays and array of chars and Text.T")
+%p_test ("p0", "p068", "PrintProc for arrays and array of chars and Text.T") %obsolete.
 p_test ("p0", "p069", "two object types that differs only by default overwriting")
 % p_test ("p0", "p070", "procedure registration") % not supported in CM3
 p_test ("p0", "p071", "SUBARRAY := SUBARRAY")
@@ -657,12 +692,10 @@ p_test ("p0", "p072", "CHAR literals > 127")
 p_test ("p0", "p073", "MOD and DIV - new fast versions")
 p_test ("p0", "p074", "b2tests/b004 - initialization of REF RECORD")
 p_test ("p0", "p075", "casting open/fixed array to/from open/fixed array")
-p_test ("p0", "p076", "b3tests/b005 - more array problems")
 p_test ("p0", "p077", "BITS 2 FOR [-1..1]")
 p_test ("p0", "p078", "use of constant open arrays in constants")
 p_test ("p0", "p079", "up-level reference of a FOR variable")
 p_test ("p0", "p080", "order of initialization between interfaces")
-p_test ("p0", "p081", "open array constants")
 p_test ("p0", "p082", "operations constant set expressions")
 p_test ("p0", "p083", "mixing of exceptions in version stamps")
 p_test ("p0", "p084", "method overrides and NARROW")
@@ -718,16 +751,13 @@ p_test ("p1", "p126", "REAL arithmetic")
 p_test ("p1", "p127", "TRUNC, ROUND, FLOOR, CEILING")
 p_test ("p1", "p128", "simple FLOOR test")
 p_test ("p1", "p129", "simple DIV test")
-% p_test ("p1", "p130", "signed/unsigned conversions")
+%p_test ("p1", "p130", "signed/unsigned conversions")
 p_test ("p1", "p131", "TRUNC, ROUND, FLOOR, CEILING again")
 p_test ("p1", "p132", "assignments of builtin types")
 p_test ("p1", "p133", "assignments of records and arrays")
 p_test ("p1", "p134", "BITS FOR tests") % -- archaic Modula-2+ bit-field packing
-%p_test ("p1", "p135", "more BITS FOR tests") % CM3 restriction: scalars in packed array elements cannot cross word boundaries
 p_test ("p1", "p136", "bit operations")
 p_test ("p1", "p137", "bit insert and extract")
-%p_test ("p1", "p138", "bit field assignments") % CM3 seems to be rather weak in packed types; perhaps something should be done in this area?
-p_test ("p1", "p139", "memory copy")
 p_test ("p1", "p140", "exceptions")
 p_test ("p1", "p141", "RTProcess.Exit")
 p_test ("p1", "p142", "procedure defaults")
@@ -746,10 +776,8 @@ p_test ("p1", "p151", "by-value open array parameters")
 p_test ("p1", "p155", "operations on small sets")
 p_test ("p1", "p156", "operations on medium-sized sets")
 p_test ("p1", "p157", "operations on big sets in the heap")
-% p_test ("p1", "p158", "operations on small packed sets") % again problems with BITS FOR; small packed types are not well supported in CM3
- p_test ("p1", "p159", "operations on very big sets in the heap")
+p_test ("p1", "p159", "operations on very big sets in the heap")
 p_test ("p1", "p160", "more operations on very big sets in the heap")
-% p_test ("p1", "p161", "more operations on very big sets in the heap")
 p_test ("p1", "p162", "more operations on very big sets in the heap")
 p_test ("p1", "p163", "simple statements")
 p_test ("p1", "p164", "simple thread tests")
@@ -792,13 +820,8 @@ p_test ("p2", "p200", "recursive types again")
 p_test ("p2", "p201", "recursive values")
 p_test ("p2", "p202", "SUBARRAY actual parameter")
 p_test ("p2", "p203", "fingerprint of NULL")
-p_test ("p2", "p204", "IP address initializers")
 p_test ("p2", "p205", "SUBARRAY of imported CONST ARRAY")
-p_test ("p2", "p206", "ARRAY constructors in var decls using named open array types")
-p_test ("p2", "p207", "subrange declarations")
 p_test ("p2", "p208", "catching runtime errors")
-p_test ("p2", "p209", "open array initializers compile failure")
-p_test ("p2", "p210", "open array initializers runtime failure")
 
 p_run_flags_test ("p2", "p213", "runtime arguments: @M3paranoidgc", "@M3paranoidgc")
 p_run_flags_test ("p2", "p214", "runtime arguments: @M3noincremental", "@M3noincremental")
@@ -818,16 +841,9 @@ build_flags_test ("p2", "p223", ".M3SHIP Library", "-no-m3ship-resolution -group
 p_test ("p2", "p225", "__try/__finally")
 
 p_test ("p2", "p238", "'man vs. boy' aka nested procedures+recursion aka static chain test")
-p_test ("p2", "p264", "mixtures of fixed and open arrays")
 
 % grisu-based test, loophole integers/floats, multiply longint within function parameters
 p_test ("p2", "p265", "grisu-based")
-
-% This fails in Grisu when using C backend.
-p_test ("p2", "p268", "grisuc")
-
-% This fails an assert in integrated backend.
-p_test ("p2", "p269", "Long.LT")
 
 %------------------------------------------------------------------- rtests ---
 %  RUNTIME tests: modules containing runtime error where the generated
@@ -1055,6 +1071,9 @@ c_test ("c1", "c139", "unknown")
 c_test ("c1", "c140", "unknown")
 c_test ("c1", "c141", "unknown")
 c_test ("c1", "c142", "imported procedure value parms in word or struct")
+%p_test ("p1", "p135", "more BITS FOR tests") % CM3 restriction: scalars in packed array elements cannot cross word boundaries
+%^ Changed and moved this to c143.
+c_test ("c1", "c143", "packed array element crosses word boundary")
 
 html(["      </tbody>", CR])
 html(["    </table>", CR])

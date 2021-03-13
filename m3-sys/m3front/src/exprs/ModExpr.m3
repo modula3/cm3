@@ -24,7 +24,8 @@ TYPE
         tmp1 : CG.Var;
         tmp2 : CG.Var;
       OVERRIDES
-        typeOf       := ExprRep.NoType;
+        typeOf       := TypeOf;
+        repTypeOf    := RepTypeOf;
         check        := Check;
         need_addr    := ExprRep.NotAddressable;
         prep         := Prep;
@@ -50,13 +51,24 @@ PROCEDURE New (a, b: Expr.T): Expr.T =
   BEGIN
     p := NEW (P);
     ExprRep.Init (p);
-    p.a    := a;
-    p.b    := b;
-    p.type := Int.T;
-    p.tmp1 := NIL;
-    p.tmp2 := NIL;
+    p.a       := a;
+    p.b       := b;
+    p.type    := Int.T (*May be changed by Check.*);
+    p.repType := Int.T (*May be changed by Check.*);
+    p.tmp1    := NIL;
+    p.tmp2    := NIL;
     RETURN p;
   END New;
+
+PROCEDURE TypeOf (p: P): Type.T =
+  BEGIN
+    RETURN Type.Base (Expr.TypeOf (p.a));
+  END TypeOf;
+
+PROCEDURE RepTypeOf (p: P): Type.T =
+  BEGIN
+    RETURN Type.Base (Expr.RepTypeOf (p.a));
+  END RepTypeOf;
 
 PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
   VAR ta, tb: Type.T;
@@ -79,6 +91,7 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
       ta := Expr.BadOperands ("MOD", ta, tb);
     END;
     p.type := ta;
+    p.repType := ta;
   END Check;
 
 PROCEDURE Prep (p: P) =
@@ -149,14 +162,14 @@ PROCEDURE Compile (p: P) =
       align := info.alignment;
       cg_type := CGType [p.class];
 
-      CG.Load (p.tmp1, 0, sz, align, cg_type);
-      CG.Load (p.tmp2, 0, sz, align, cg_type);
+      CG.Load (p.tmp1, 0, sz, align, info.addr_align, cg_type);
+      CG.Load (p.tmp2, 0, sz, align, info.addr_align, cg_type);
       CG.Divide (cg_type);
       CG.Cvt_int (cg_type, Target.Integer.cg_type, CG.Cvt.Floor);
       CG.Cvt_float (Target.Integer.cg_type, cg_type);
-      CG.Load (p.tmp2, 0, sz, align, cg_type);
+      CG.Load (p.tmp2, 0, sz, align, info.addr_align, cg_type);
       CG.Multiply (cg_type);
-      CG.Load (p.tmp1, 0, sz, align, cg_type);
+      CG.Load (p.tmp1, 0, sz, align, info.addr_align, cg_type);
       CG.Swap ();
       CG.Subtract (cg_type);
 

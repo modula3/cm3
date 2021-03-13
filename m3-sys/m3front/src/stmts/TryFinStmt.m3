@@ -174,7 +174,7 @@ PROCEDURE Compile1 (p: P): Stmt.Outcomes =
     (* resume the exception *)
     proc := RunTyme.LookUpProc (RunTyme.Hook.ResumeRaiseEx);
     lab := CG.Next_label ();
-    CG.Load_addr (info, M3RT.EA_exception);
+    CG.Load_addr (info, M3RT.EA_exception, Target.Address.align);
     CG.Load_nil ();
     CG.If_compare (CG.Type.Addr, CG.Cmp.EQ, lab, CG.Always);
     Procedure.StartCall (proc);
@@ -334,7 +334,8 @@ PROCEDURE Compile3 (p: P): Stmt.Outcomes =
       (* generate the bizzare end-tests *)
 
       (* exceptional outcome? *)
-      CG.Load_addr (frame, M3RT.EF1_info + M3RT.EA_exception);
+      CG.Load_addr
+        (frame, M3RT.EF1_info + M3RT.EA_exception, Target.Address.align);
       CG.Load_nil ();
       CG.If_compare (CG.Type.Addr, CG.Cmp.EQ, lab+2, CG.Always);
 

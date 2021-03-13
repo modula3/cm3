@@ -23,6 +23,15 @@ PROCEDURE TypeOf (ce: CallExpr.T): Type.T =
     END;
   END TypeOf;
 
+PROCEDURE RepTypeOf (ce: CallExpr.T): Type.T =
+  VAR t: Type.T;
+  BEGIN
+    IF TypeExpr.Split (ce.args[1], t)
+      THEN RETURN t;
+      ELSE RETURN Expr.RepTypeOf (ce.args[0]);
+    END;
+  END RepTypeOf;
+
 PROCEDURE Check (ce: CallExpr.T;  <*UNUSED*> VAR cs: Expr.CheckState) =
   VAR dest: Type.T;  src := Expr.TypeOf (ce.args[0]);
   BEGIN
@@ -87,11 +96,11 @@ PROCEDURE EmitCore (tlhs, trhs: Type.T): CG.Val =
     tlhs := Type.CheckInfo (tlhs, lhs_info);
     IF is_object THEN
       align := ObjectType.FieldAlignment (tlhs);
-      CG.Boost_alignment (align);
+      CG.Boost_addr_alignment (align);
     ELSIF RefType.Split (tlhs, target) THEN
       target := Type.CheckInfo (target, info);
       align := info.alignment;
-      CG.Boost_alignment (align);
+      CG.Boost_addr_alignment (align);
     END;
 
     (* CT test for the no-check cases... *)
@@ -172,6 +181,7 @@ PROCEDURE Initialize () =
   BEGIN
     Z := CallExpr.NewMethodList (2, 2, TRUE, FALSE, TRUE, NIL,
                                  TypeOf,
+                                 RepTypeOf,
                                  CallExpr.NotAddressable,
                                  Check,
                                  Prep,

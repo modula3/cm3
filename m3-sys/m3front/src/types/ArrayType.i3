@@ -14,6 +14,12 @@ PROCEDURE Parse (): Type.T;
 
 PROCEDURE New (index, element: Type.T): Type.T;
 
+PROCEDURE Is (t: Type.T): BOOLEAN;
+(* An array type, open or fixed. *)
+
+PROCEDURE IsFixed (t: Type.T): BOOLEAN;
+(* A fixed array type. *)
+
 PROCEDURE Split (array: Type.T; VAR index, element: Type.T): BOOLEAN;
 (* If 'array' is a fixed array type, returns TRUE and sets index and
    element to the appropriate types.  If 'array' is an open array type,
@@ -22,21 +28,36 @@ PROCEDURE Split (array: Type.T; VAR index, element: Type.T): BOOLEAN;
 
 PROCEDURE EltPack (array: Type.T): INTEGER;
 (* If 'array' is an array type, returns the packed size in bits of
-   its elements.  Otherwise, returns 0. *)
+   its elements.  If 'array' is an open array type, this is for the
+   outermost fixed array dimension, if such exists.  If t is not an
+   array type, returns 0. *)
 
 PROCEDURE EltAlign (array: Type.T): INTEGER;
-(* If 'array' is an array type, returns the bit alignment of
-   its elements.  Otherwise, returns Target.Byte. *)
+(* If 'array' is an array type, returns the bit alignment of its
+   elements.  If t is open, returns the nearest non-open or non-array
+   alignment. If array is not an array type, returns Target.Byte. *)
 
 PROCEDURE OpenCousin (t: Type.T): Type.T;
 (* If 't' is an 'ARRAY I OF X', returns 'ARRAY OF X', otherwise
    returns 't'. *)
 
-PROCEDURE IsBitAddressed (t: Type.T): BOOLEAN;
-(* Returns TRUE if the array's elements are not byte aligned. *)
+PROCEDURE EltsAreBitAddressed (t: Type.T): BOOLEAN;
+(* Returns TRUE if the array's elements are not guaranteed to be byte aligned.
+   Works on a fixed or open array. *)
+(* PRE: t is Checked. *)
+
+PROCEDURE TotalDepth (t: Type.T): INTEGER;
+(* Total number of dimensions of t, open + fixed.
+   Works on a fixed or open array. *)
 
 PROCEDURE GenIndex (t: Type.T);
-(* Given "ADR(a)" and "x" on the stack,
-   generate code to compute "ADR(a[x])". *)
+(* Given "ADR(a)" and "index" on the stack, generate code to replace them
+   by "ADR(a[index])" on the stack.  Beginning and ending "addresses" are
+   CG 'ValRec's and may include a 'bits' expression. Generates no bounds
+   checks. *)
+(* Works for an open array too, but uses elt_pack of the first nonopen element
+   type, so, for an open array of depth > 1, 'index' must have been already
+   multiplied by the product of element counts of inner open dimensions. *)
+(* PRE: t is Checked. *)
 
 END ArrayType.

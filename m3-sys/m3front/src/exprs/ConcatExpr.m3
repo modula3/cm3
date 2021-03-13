@@ -17,6 +17,7 @@ TYPE
         tmp    : CG.Val;
       OVERRIDES
         typeOf       := ExprRep.NoType;
+        repTypeOf    := ExprRep.NoType;
         check        := Check;
         need_addr    := ExprRep.NotAddressable;
         prep         := Prep;
@@ -46,6 +47,7 @@ PROCEDURE New (a, b: Expr.T): Expr.T =
     p.b := b;
     p.folded := NIL;
     p.type := Textt.T;
+    p.repType := Textt.T;
     p.tmp := NIL;
     RETURN p;
   END New;
@@ -63,6 +65,7 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
       p.b := CheckArg (Textt.T, tb, p.b, cs);
     ELSE
       p.type := Expr.BadOperands ("\'&\'", ta, tb);
+      p.repType := p.type;
     END;
 
     Error.Count (a, b);
@@ -117,7 +120,7 @@ PROCEDURE Compile (p: P) =
       Expr.Compile (p.folded);
     ELSE
       CG.Push (p.tmp);
-      CG.Boost_alignment (Target.Address.align);
+      CG.Boost_addr_alignment (Target.Address.align);
       CG.Free (p.tmp);
       p.tmp := NIL;
     END;

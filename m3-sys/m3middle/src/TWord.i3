@@ -98,4 +98,7 @@ PROCEDURE Truncate (READONLY a: Int;  n: CARDINAL;  VAR r: Int): BOOLEAN;
 (* truncates to the low-order 'n' bytes of 'i'.
    Returns TRUE if 'i' has at most 'n' significant bytes, FALSE otherwise. *)
 
+PROCEDURE nBitsOnRight(n: [0..Size-1]; VAR i: Int);
+(* Set rightmost n bits of i to ones, others zero. *) 
+
 END TWord.

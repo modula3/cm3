@@ -28,6 +28,7 @@ TYPE
         toExpr      := ValueRep.NoExpr;
         toType      := ToType;
         typeOf      := ValueRep.TypeVoid;
+        repTypeOf   := ValueRep.TypeVoid;
         base        := ValueRep.Self;
         add_fp_tag  := AddFPTag;
         fp_type     := ToType;

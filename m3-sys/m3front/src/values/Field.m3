@@ -29,11 +29,13 @@ REVEAL
         toExpr      := ValueRep.NoExpr;
         toType      := ValueRep.NoType;
         typeOf      := TypeOf;
+        repTypeOf   := RepTypeOf;
         base        := ValueRep.Self;
         add_fp_tag  := AddFPTag;
         fp_type     := TypeOf;
       END;
 
+(*EXPORTED:*)
 PROCEDURE New (READONLY info: Info): Value.T =
   VAR t := NEW (T);
   BEGIN
@@ -45,6 +47,7 @@ PROCEDURE New (READONLY info: Info): Value.T =
     RETURN t;
   END New;
 
+(*EXPORTED:*)
 PROCEDURE Is (v: Value.T): BOOLEAN =
   BEGIN
     TYPECASE v OF
@@ -54,6 +57,7 @@ PROCEDURE Is (v: Value.T): BOOLEAN =
     END;
   END Is;
 
+(*EXPORTED:*)
 PROCEDURE Split (field: Value.T;  VAR info: Info) =
   VAR t: T := field;
   BEGIN
@@ -64,12 +68,14 @@ PROCEDURE Split (field: Value.T;  VAR info: Info) =
     info.dfault := t.dfault;
   END Split;
 
+(*EXPORTED:*)
 PROCEDURE SetOffset (field: Value.T;  newOffset: INTEGER) =
   VAR t: T := field;
   BEGIN
     t.offset := newOffset;
   END SetOffset;
 
+(*EXPORTED:*)
 PROCEDURE EmitDeclaration (field: Value.T) =
   VAR
     t: T := field;
@@ -80,6 +86,7 @@ PROCEDURE EmitDeclaration (field: Value.T) =
     CG.Declare_field (t.name, t.offset, info.size, Type.GlobalUID (t.tipe));
   END EmitDeclaration;
 
+(*EXPORTED:*)
 PROCEDURE IsEqualList (a, b: Value.T;  x: Type.Assumption;
                        types: BOOLEAN): BOOLEAN =
   BEGIN
@@ -90,6 +97,7 @@ PROCEDURE IsEqualList (a, b: Value.T;  x: Type.Assumption;
     RETURN (a = NIL) AND (b = NIL);
   END IsEqualList;
 
+(*EXPORTED:*)
 PROCEDURE IsEqual (va, vb: Value.T;  x: Type.Assumption;
                    types: BOOLEAN): BOOLEAN =
   VAR a: T := va;  b: T := vb;
@@ -105,12 +113,21 @@ PROCEDURE IsEqual (va, vb: Value.T;  x: Type.Assumption;
                          Expr.ConstValue (b.dfault), x);
   END IsEqual;
 
+(*Externally dispatched-to:*)
 PROCEDURE TypeOf (t: T): Type.T =
   BEGIN
     IF (t.tipe = NIL) THEN t.tipe := Expr.TypeOf (t.dfault) END;
     RETURN t.tipe;
   END TypeOf;
 
+(*Externally dispatched-to:*)
+PROCEDURE RepTypeOf (t: T): Type.T =
+  BEGIN
+    IF t.tipe # NIL THEN RETURN t.tipe; END;
+    RETURN Expr.RepTypeOf (t.dfault);
+  END RepTypeOf;
+
+(*Externally dispatched-to:*)
 PROCEDURE TypeCheck (t: T;  VAR cs: Value.CheckState) =
   VAR info: Type.Info;
   BEGIN
@@ -128,24 +145,27 @@ PROCEDURE TypeCheck (t: T;  VAR cs: Value.CheckState) =
       AssignStmt.Check (t.tipe, t.dfault, cs);
       Expr.TypeCheck (t.dfault, cs);
       IF (Expr.ConstValue (t.dfault) = NIL) THEN
-        Error.ID (t.name, "default is not a constant");
+        Error.ID (t.name, "default value of a field must be constant");
       END;
       (* NOTE: we don't save the constant-folded version of the default,
          otherwise we'd loose references to large named constants. *)
     END;
   END TypeCheck;
 
+(*EXPORTED, Externally dispatched-to:*)
 PROCEDURE Compile (t: T) =
   BEGIN
     Type.Compile (t.tipe);
   END Compile;
 
+(*Externally dispatched-to:*)
 PROCEDURE SetGlobals (<*UNUSED*> t: T) =
   BEGIN
     (* Type.SetGlobals (t.tipe); *)
     (* IF (t.dfault # NIL) THEN Type.SetGlobals (Expr.TypeOf (t.dfault)) END; *)
   END SetGlobals;
 
+(*Externally dispatched-to:*)
 PROCEDURE AddFPTag  (t: T;  VAR x: M3.FPInfo): CARDINAL =
   BEGIN
     ValueRep.FPStart (t, x, "FIELD ", 0, global := FALSE);

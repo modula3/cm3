@@ -15,6 +15,7 @@ TYPE
         tmp: CG.Val;
       OVERRIDES
         typeOf       := ExprRep.NoType;
+        repTypeOf    := ExprRep.NoType;
         check        := Check;
         need_addr    := ExprRep.NotAddressable;
         prep         := Prep;
@@ -41,10 +42,11 @@ PROCEDURE New (a, b: Expr.T): Expr.T =
   BEGIN
     p := NEW (P);
     ExprRep.Init (p);
-    p.a    := a;
-    p.b    := b;
-    p.type := Bool.T;
-    p.tmp  := NIL;
+    p.a       := a;
+    p.b       := b;
+    p.type    := Bool.T;
+    p.repType := Bool.T;
+    p.tmp     := NIL;
     RETURN p;
   END New;
 

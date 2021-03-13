@@ -7,7 +7,7 @@
 (*      modified on Tue Apr 10 22:35:24 1990 by muller         *)
 
 MODULE IntegerExpr;
-(* INTEGER and LONGINT *Constants* only. *)
+(* INTEGER and LONGINT *Literals* only. *)
 
 IMPORT M3, CG, Expr, ExprRep, Type, Int, LInt, Error, M3Buf, Target, TInt;
 
@@ -16,6 +16,7 @@ TYPE
         value: Target.Int;
       OVERRIDES
         typeOf       := ExprRep.NoType;
+        repTypeOf    := ExprRep.NoType;
         check        := ExprRep.NoCheck;
         need_addr    := ExprRep.NotAddressable;
         prep         := ExprRep.NoPrep;
@@ -57,6 +58,7 @@ PROCEDURE New (type: Type.T;  READONLY value: Target.Int): Expr.T =
     ExprRep.Init (p);
     p.value   := value;
     p.type    := type;
+    p.repType := type;
     p.checked := TRUE;
     IF TInt.ToInt (value, n)
       AND (FIRST (cache[t]) <= n) AND (n <= LAST (cache[t])) THEN

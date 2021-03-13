@@ -23,7 +23,7 @@ TYPE
         callConv   : CG.CallingConvention;
       OVERRIDES
         check      := Check;
-        check_align:= CheckAlign;
+        no_straddle:= TypeRep.AddrNoStraddle;
         isEqual    := EqualChk;
         isSubtype  := Subtyper;
         compile    := Compiler;
@@ -96,7 +96,7 @@ PROCEDURE ParseFormal (p: P;  ) =
       formal.mode := Formal.Mode.mVAR;
       GetToken (); (* VAR *)
     ELSIF (cur.token = TK.tREADONLY) THEN
-      formal.mode := Formal.Mode.mCONST;
+      formal.mode := Formal.Mode.mREADONLY;
       GetToken (); (* READONLY *)
     END;
     n := Ident.ParseList ();
@@ -212,6 +212,7 @@ PROCEDURE Check (p: P) =
     p.info.size      := Target.Address.size;
     p.info.min_size  := Target.Address.size;
     p.info.alignment := Target.Address.align;
+    p.info.addr_align:= Target.Address.align;
     p.info.mem_type  := CG.Type.Addr;
     p.info.stk_type  := CG.Type.Addr;
     p.info.class     := Type.Class.Procedure;
@@ -231,11 +232,6 @@ PROCEDURE Check (p: P) =
       END;
     DEC (Type.recursionDepth); (*------------------------------------*)
   END Check;
-
-PROCEDURE CheckAlign (<*UNUSED*> p: P;  offset: INTEGER): BOOLEAN =
-  BEGIN
-    RETURN (offset MOD Target.Address.align = 0);
-  END CheckAlign;
 
 PROCEDURE Compiler (p: P) =
   VAR n_formals, n_raises: INTEGER;  v: Value.T;  result_id: CG.TypeUID;

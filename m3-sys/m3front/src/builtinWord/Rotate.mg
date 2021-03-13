@@ -125,7 +125,7 @@ PROCEDURE Initialize (r: INTEGER) =
     rep := r;
     <*ASSERT b*>
     Z := CallExpr.NewMethodList (2, 2, TRUE, TRUE, TRUE, T,
-                                 NIL,
+                                 NIL, NIL,
                                  CallExpr.NotAddressable,
                                  Check,
                                  CallExpr.PrepArgs,
@@ -143,7 +143,7 @@ PROCEDURE Initialize (r: INTEGER) =
     formals := ProcType.Formals (t);
 
     ZL := CallExpr.NewMethodList (2, 2, TRUE, TRUE, TRUE, T,
-                                 NIL,
+                                 NIL, NIL,
                                  CallExpr.NotAddressable,
                                  CheckL,
                                  CallExpr.PrepArgs,
@@ -161,7 +161,7 @@ PROCEDURE Initialize (r: INTEGER) =
     formalsL := ProcType.Formals (Lt);
 
     ZR := CallExpr.NewMethodList (2, 2, TRUE, TRUE, TRUE,  T,
-                                 NIL,
+                                 NIL, NIL,
                                  CallExpr.NotAddressable,
                                  CheckR,
                                  CallExpr.PrepArgs,

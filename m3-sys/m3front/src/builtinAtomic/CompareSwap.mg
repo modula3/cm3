@@ -59,7 +59,7 @@ PROCEDURE Compile (ce: CallExpr.T) =
   VAR order: Target.Int;  t: Type.T;  success, failure: INTEGER;
   BEGIN
     Expr.CompileAddress (ce.args[0], traced := TRUE);
-    CG.Force ();
+    CG.ForceStacked ();
     Expr.CompileLValue (ce.args[1], traced := TRUE);
     Expr.Compile (ce.args[2]);
     EVAL EnumExpr.Split (ce.args[3], order, t);
@@ -108,7 +108,7 @@ PROCEDURE Initialize () =
                         desired, Formal.New (success), Formal.New (failure));
   BEGIN
     Z := CallExpr.NewMethodList (3, 5, FALSE, TRUE, TRUE, Bool.T,
-                                 NIL,
+                                 NIL, NIL,
                                  CallExpr.NotAddressable,
                                  Check,
                                  Prep,

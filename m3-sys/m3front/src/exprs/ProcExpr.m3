@@ -17,6 +17,7 @@ TYPE
         proc : Value.T;
       OVERRIDES
         typeOf       := TypeOf;
+        repTypeOf    := TypeOf;
         check        := Check;
         need_addr    := ExprRep.NotAddressable;
         prep         := ExprRep.NoPrep;

@@ -422,5 +422,26 @@ PROCEDURE Truncate (READONLY a: Int;  n: CARDINAL;  VAR r: Int): BOOLEAN =
     RETURN result;
   END Truncate;
 
+PROCEDURE nBitsOnRight(n: [0..Size-1]; VAR i: Int) =
+(* Set rightmost n bits of i to ones, others zero. *)
+  VAR ln, ss: INTEGER; 
+  BEGIN
+    i := TInt.Zero; 
+    ln := n;
+    ss := 0; 
+    LOOP
+      IF ss > LAST (Int) THEN RETURN
+      ELSIF ln <= 0 THEN RETURN
+      ELSIF ln >= 8 THEN
+        i[ss]:= 16_FF;
+        DEC (ln, 8); 
+        INC(ss);
+      ELSE
+        i[ss] := Word.Shift(16_FF, ln-8);
+        RETURN
+      END
+    END; 
+  END nBitsOnRight; 
+
 BEGIN
 END TWord.

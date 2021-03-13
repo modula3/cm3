@@ -47,12 +47,31 @@ VAR (*CONST*)
   CCs : ARRAY [0..8] OF CallingConvention;
   System: Systems;
 
+PROCEDURE Init32 () =
+  BEGIN
+    (* Change size and aligment: *)
+    Integer := Int32;
+    Word := Word32;
+    Address := Word32;
+    Address.cg_type := CGType.Addr;
+    (* Change only alignment.  Size is always 64: *) 
+    Longint.align := 32;
+    Long.align := 32;
+    Longreal.align := 32;
+    Extended.align := 32;
+  END Init32;
+
 PROCEDURE Init64 () =
   BEGIN
     Integer := Int64;
     Word := Word64;
     Address := Word64;
     Address.cg_type := CGType.Addr;
+    (* Change only alignment.  Size is always 64: *) 
+    Longint.align := 64;
+    Long.align := 64;
+    Longreal.align := 64;
+    Extended.align := 64;
   END Init64;
 
 PROCEDURE IsX86orAmd64(System_name: TEXT): BOOLEAN =
@@ -142,6 +161,8 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
     IF TextUtils.StartsWith(system, "ALPHA_")       (* But not ALPHA32_. *)
         OR TextUtils.Contains(system, "64") THEN
       Init64();
+    ELSE
+      Init32();
     END;
 
     (* big endian *)
@@ -264,6 +285,26 @@ PROCEDURE InitCallingConventions(backend_mode: M3BackendMode_t;
 
     DefaultCall := CCs[0];
   END InitCallingConventions;
+
+PROCEDURE TypeImage (cgt: CGType ): TEXT =
+  BEGIN
+    CASE cgt OF
+    | CGType.Word8 => RETURN "Word8";
+    | CGType.Int8 => RETURN "Int8";
+    | CGType.Word16 => RETURN "Word16";
+    | CGType.Int16 => RETURN "Int16";  
+    | CGType.Word32 => RETURN "Word32";
+    | CGType.Int32 => RETURN "Int32";
+    | CGType.Word64 => RETURN "Word64";
+    | CGType.Int64 => RETURN "Int64";
+    | CGType.Reel => RETURN "Reel";
+    | CGType.LReel => RETURN "LReel";
+    | CGType.XReel => RETURN "XReel";
+    | CGType.Addr => RETURN "Addr";
+    | CGType.Struct => RETURN "Struct";
+    | CGType.Void => RETURN "Void";
+    END;
+  END TypeImage;
 
 PROCEDURE CheckI (READONLY i: Int_type; max_align: INTEGER) =
   BEGIN

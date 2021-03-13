@@ -351,8 +351,8 @@ PROCEDURE CompileHandler1 (h: Handler;  info: CG.Var;
       e := h.tags;
       <*ASSERT e # NIL*>
       WHILE (e # NIL) DO
-        CG.Load_addr (info, M3RT.EA_exception);
-        CG.Boost_alignment (Target.Integer.align);
+        CG.Load_addr (info, M3RT.EA_exception, Target.Address.align);
+        CG.Boost_addr_alignment (Target.Integer.align);
         CG.Load_indirect (Target.Integer.cg_type, 0, Target.Integer.size);
         CG.Load_intt (Exceptionz.UID (e.obj));  (** Value.Load (e.obj);  **)
         e := e.next;
@@ -373,11 +373,11 @@ PROCEDURE CompileHandler1 (h: Handler;  info: CG.Var;
         Variable.LoadLValue (h.var);
         EVAL Type.CheckInfo (h.type, t_info);
         IF Exceptionz.ArgByReference (h.type) THEN
-          CG.Load_addr (info, M3RT.EA_arg);
-          CG.Boost_alignment (t_info.alignment);
+          CG.Load_addr (info, M3RT.EA_arg, Target.Address.align);
+          CG.Boost_addr_alignment (t_info.alignment);
           CG.Copy (t_info.size, overlap := FALSE);
         ELSE
-          CG.Load_addr (info, M3RT.EA_arg);
+          CG.Load_addr (info, M3RT.EA_arg, Target.Address.align);
           CG.Loophole (CG.Type.Addr, t_info.stk_type);
           CG.Store_indirect (t_info.stk_type, 0, t_info.size);
         END;
@@ -425,7 +425,7 @@ PROCEDURE Compile2 (p: P): Stmt.Outcomes =
     ELSE
       Marker.PushTry (l, l+1, frame, p.handled);
       ESet.GetAddress (p.handled, eset, eoffset);
-      CG.Load_addr_of (eset, eoffset, Target.Address.align);
+      CG.Load_addr_of (eset, eoffset, Target.Integer.align);
       CG.Store_addr (frame, M3RT.EF1_handles);
       Marker.PushFrame (frame, M3RT.HandlerClass.Except);
     END;
@@ -491,8 +491,9 @@ PROCEDURE CompileHandler2 (h: Handler;  frame: CG.Var;
       e := h.tags;
       <*ASSERT e # NIL*>
       WHILE (e # NIL) DO
-        CG.Load_addr (frame, M3RT.EF1_info + M3RT.EA_exception);
-        CG.Boost_alignment (Target.Integer.align);
+        CG.Load_addr
+          (frame, M3RT.EF1_info + M3RT.EA_exception, Target.Address.align);
+        CG.Boost_addr_alignment (Target.Integer.align);
         CG.Load_indirect (Target.Integer.cg_type, 0, Target.Integer.size);
         CG.Load_intt (Exceptionz.UID (e.obj));  (** Value.Load (e.obj);  **)
         e := e.next;
@@ -513,11 +514,13 @@ PROCEDURE CompileHandler2 (h: Handler;  frame: CG.Var;
         Variable.LoadLValue (h.var);
         EVAL Type.CheckInfo (h.type, t_info);
         IF Exceptionz.ArgByReference (h.type) THEN
-          CG.Load_addr (frame, M3RT.EF1_info + M3RT.EA_arg);
-          CG.Boost_alignment (t_info.alignment);
+          CG.Load_addr
+            (frame, M3RT.EF1_info + M3RT.EA_arg, Target.Address.align);
+          CG.Boost_addr_alignment (t_info.alignment);
           CG.Copy (t_info.size, overlap := FALSE);
         ELSE
-          CG.Load_addr (frame, M3RT.EF1_info + M3RT.EA_arg);
+          CG.Load_addr
+            (frame, M3RT.EF1_info + M3RT.EA_arg, Target.Address.align);
           CG.Loophole (CG.Type.Addr, t_info.stk_type);
           CG.Store_indirect (t_info.stk_type, 0, t_info.size);
         END;
@@ -598,7 +601,7 @@ PROCEDURE LoadInfoPtr () =
       IF z.direct THEN
         CG.Load_addr_of (z.info, z.offset, Target.Address.align);
       ELSE
-        CG.Load_addr (z.info, z.offset);
+        CG.Load_addr (z.info, z.offset, Target.Address.align);
       END;
     END;
   END LoadInfoPtr;

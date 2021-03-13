@@ -24,6 +24,7 @@ TYPE
         tmp         : CG.Val;
       OVERRIDES
         typeOf       := TypeOf;
+        repTypeOf    := RepTypeOf;
         check        := Check;
         need_addr    := NeedsAddress;
         prep         := Prep;
@@ -42,6 +43,7 @@ TYPE
         prepLiteral  := ExprRep.NoPrepLiteral;
         genLiteral   := ExprRep.NoLiteral;
         note_write   := NoteWrites;
+        checkUseFailure := CheckUseFailure;
       END;
 
 VAR cache := ARRAY [0..31] OF P { NIL, .. };
@@ -129,24 +131,43 @@ PROCEDURE Resolve (p: P) =
   END Resolve;
 
 PROCEDURE TypeOf (p: P): Type.T =
-  VAR t: Type.T;
   BEGIN
-    IF (p.value = NIL) THEN Resolve (p) END;
-    IF (p.inTypeOf) THEN
-      Value.IllegalRecursion (p.value);
-      RETURN ErrType.T;
+    IF p.value = NIL THEN Resolve (p) END;
+    IF p.type = NIL THEN
+      IF p.inTypeOf THEN
+        Value.IllegalRecursion (p.value);
+        p.type := ErrType.T;
+        p.repType := ErrType.T;
+      END;
+      p.inTypeOf := TRUE;
+      p.type := Value.TypeOf (p.value);
+      p.inTypeOf := FALSE;
     END;
-    p.inTypeOf := TRUE;
-    t := Value.TypeOf (p.value);
-    p.inTypeOf := FALSE;
-    RETURN t;
+    RETURN p.type;
   END TypeOf;
+
+PROCEDURE RepTypeOf (p: P): Type.T =
+  BEGIN
+    IF p.value = NIL THEN Resolve (p) END;
+    IF p.repType = NIL THEN
+      IF p.inTypeOf THEN
+        Value.IllegalRecursion (p.value);
+        p.type := ErrType.T;
+        p.repType := ErrType.T;
+      END;
+      p.inTypeOf := TRUE;
+      p.repType := Value.RepTypeOf (p.value);
+      p.inTypeOf := FALSE;
+    END;
+    RETURN p.repType;
+  END RepTypeOf;
 
 PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
   BEGIN
     IF (p.value = NIL) THEN Resolve (p) END;
     Value.TypeCheck (p.value, cs);
     p.type := Value.TypeOf (p.value);
+    p.repType := Value.RepTypeOf (p.value);
     p.value := Value.Base (p.value);
   END Check;
 
@@ -289,6 +310,25 @@ PROCEDURE NoteWrites (p: P) =
       Variable.ScheduleTrace (p.value);
     END;
   END NoteWrites;
+
+(* Externally dispatched-to: *)
+PROCEDURE CheckUseFailure (p: P): BOOLEAN =
+  VAR base: Expr.T;
+  BEGIN
+    <* ASSERT p.checked *>
+    base := Value.ToExpr (p.value);
+    RETURN Expr.CheckUseFailure (base);
+  END CheckUseFailure;
+
+(* EXPORTED: *)
+PROCEDURE Is (e: Expr.T): BOOLEAN =
+  BEGIN
+    TYPECASE e OF
+    | NULL => RETURN FALSE;
+    | P => RETURN TRUE;
+    ELSE RETURN FALSE;
+    END;
+  END Is;
 
 BEGIN
 END NamedExpr.

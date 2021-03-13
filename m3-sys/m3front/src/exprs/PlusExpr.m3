@@ -6,6 +6,8 @@
 (* Last modified on Fri Feb 24 16:45:09 PST 1995 by kalsow     *)
 (*      modified on Thu Nov 29 03:29:06 1990 by muller         *)
 
+(* Unary "+" operator. *)
+
 MODULE PlusExpr;
 
 IMPORT M3, Expr, ExprRep, Type, Int, Reel, LReel, EReel;
@@ -14,6 +16,7 @@ TYPE
   P = ExprRep.Ta BRANDED "PlusExpr.P" OBJECT
       OVERRIDES
         typeOf       := TypeOf;
+        repTypeOf    := RepTypeOf;
         check        := Check;
         need_addr    := ExprRep.NotAddressable;
         prep         := Prep;
@@ -47,6 +50,11 @@ PROCEDURE TypeOf (p: P): Type.T =
   BEGIN
     RETURN Type.Base (Expr.TypeOf (p.a));
   END TypeOf;
+
+PROCEDURE RepTypeOf (p: P): Type.T =
+  BEGIN
+    RETURN Type.Base (Expr.RepTypeOf (p.a));
+  END RepTypeOf;
 
 PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
   VAR t: Type.T;

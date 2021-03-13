@@ -21,7 +21,7 @@ TYPE
         user_name  : TEXT;
       OVERRIDES
         check      := Check;
-        check_align:= TypeRep.ScalarAlign;
+        no_straddle:= TypeRep.AddrNoStraddle;
         isEqual    := EqualChk;
         isSubtype  := Subtyper;
         compile    := Compiler;
@@ -34,6 +34,7 @@ TYPE
 
 VAR root: M3ID.T := M3ID.NoID;
 
+(* EXPORTED *)
 PROCEDURE Parse (): Type.T =
   VAR brand: Brand.T := NIL;  traced: BOOLEAN := TRUE;  super: Type.T := NIL;
   BEGIN
@@ -64,6 +65,7 @@ PROCEDURE Parse (): Type.T =
     END;
   END Parse;
 
+(* EXPORTED *)
 PROCEDURE New (target: Type.T;  traced: BOOLEAN;  brand: Brand.T): Type.T =
   VAR p: P;
   BEGIN
@@ -87,10 +89,12 @@ PROCEDURE Reduce (t: Type.T): P =
     END;
   END Reduce;
 
+(* EXPORTED *)
 PROCEDURE Is (t: Type.T): BOOLEAN =
   BEGIN
     RETURN (Reduce (t) # NIL);
   END Is;
+(* EXPORTED *)
 
 PROCEDURE IsBranded (t: Type.T): BOOLEAN =
   VAR p := Reduce (t);
@@ -98,6 +102,7 @@ PROCEDURE IsBranded (t: Type.T): BOOLEAN =
     RETURN (p # NIL) AND (p.brand # NIL);
   END IsBranded;
 
+(* EXPORTED *)
 PROCEDURE Split (t: Type.T;  VAR target: Type.T): BOOLEAN =
   VAR p := Reduce (t);
   BEGIN
@@ -106,18 +111,22 @@ PROCEDURE Split (t: Type.T;  VAR target: Type.T): BOOLEAN =
     RETURN TRUE;
   END Split;
 
+(* Externally dispatched-to: *)
 PROCEDURE Check (p: P) =
   VAR
-    t: Type.T;
+    targetType: Type.T;
     hash: INTEGER := 839;
     info: Type.Info;
     cs := M3.OuterCheckState;
   BEGIN
     Brand.Check (p.brand, p, hash, cs);
 
-    t := Type.Strip (p.target);
-    IF (t # NIL) THEN
-      hash := Word.Plus (Word.Times (hash, 43), ORD (t.info.class));
+    targetType := Type.Strip (p.target) (* Remove named. *);
+    IF targetType # NIL THEN
+      IF targetType.info.class = Type.Class.Packed THEN
+        targetType := Type.StripPacked (targetType);
+      END;
+      hash := Word.Plus (Word.Times (hash, 43), ORD (targetType.info.class));
     END;
 
     p.info.size      := Target.Address.size;
@@ -138,12 +147,23 @@ PROCEDURE Check (p: P) =
       END;
     DEC (Type.recursionDepth); (*------------------------------------*)
 
+    IF p.target = NIL THEN p.info.addr_align := Target.Word8.align;
+    ELSE 
+      p.info.addr_align:= p.target.info.alignment;
+    END;
+    
     IF (NOT p.isTraced) AND (info.isTraced) AND Module.IsSafe() THEN
       Error.Msg ("unsafe: untraced ref type to a traced type");
     END;
-    EVAL Type.IsAlignedOk (p.target, 0);
+ (* EVAL Type.StraddleFreeScalars (p.target, 0, IsEltOrField := FALSE); *)
+(* CHECK: ^Why is this here? rodney.m.bates@acm.org.
+     1) It appears StraddleFreeScalars and all its many and recursive
+        overrides are side-effect-free functions, so why EVAL?
+     2) With an offset of 0, how could it fail?
+*)
   END Check;
 
+(* Externally dispatched-to: *)
 PROCEDURE Compiler (p: P) =
   BEGIN
     Type.Compile (p.target);
@@ -151,12 +171,14 @@ PROCEDURE Compiler (p: P) =
                         Brand.ToText (p.brand), p.isTraced);
   END Compiler;
 
+(* EXPORTED *)
 PROCEDURE NoteRefName (t: Type.T;  name: TEXT) =
   VAR p := Reduce (t);
   BEGIN
     IF (p # NIL) THEN p.user_name := name; END;
   END NoteRefName;
 
+(* EXPORTED *)
 PROCEDURE InitTypecell (t: Type.T;  offset, prev: INTEGER) =
   TYPE TKind = M3RT.TypeKind;
   CONST Kind = ARRAY BOOLEAN OF TKind { TKind.Ref, TKind.Array};
@@ -168,37 +190,50 @@ PROCEDURE InitTypecell (t: Type.T;  offset, prev: INTEGER) =
     type_desc := GenTypeDesc (p);
     initProc  := GenInitProc (p);
     dims      : INTEGER;
-    size      : INTEGER;
-    alignment : INTEGER;
+    objSize   : INTEGER;
+    objAlign  : INTEGER;
     elemSize  : INTEGER;
     ta        : Type.T;
-    info      : Type.Info;
     isz       : INTEGER := Target.Integer.size;
     name_offs : INTEGER := 0;
     fp        := TypeFP.FromType (p);
     globals   := Module.GlobalData (is_const := FALSE);
     consts    := Module.GlobalData (is_const := TRUE);
+    objInfo   : Type.Info;
   BEGIN
-    EVAL Type.CheckInfo (p.target, info);
+    EVAL Type.CheckInfo (p.target, objInfo);
     ta := Type.Base (p.target);
     dims := OpenArrayType.OpenDepth (ta);
-    alignment := info.alignment;
     IF (dims = 0) THEN
       (* not an open array *)
-      size := info.size;
-      elemSize := 0;
+      objSize := objInfo.size;
+      elemSize := 0 (* Properly bytes, but it's zero and won't be used. *);
     ELSE (* target is an open array *)
-      WITH ai = Target.Integer.align, ae = info.alignment DO
-        size := Target.Address.size;           (* address of the elements *)
-        size := ((size + ai - 1) DIV ai) * ai; (* align. for the sizes *)
-        INC (size, Target.Integer.size * dims);  (* the sizes *)
-        size := ((size + ae - 1) DIV ae) * ae; (* align. for the elements *)
+      WITH ai = Target.Integer.align DO
+        objSize := Target.Address.size (* Size of elements pointer. *);
+        objSize := ((objSize + ai - 1) DIV ai) * ai (* Padding, for shape *);
+        INC (objSize, Target.Integer.size * dims) (* The shapes. *);
       END;
-      elemSize := OpenArrayType.EltPack (ta);
+      WITH ae = objInfo.alignment DO
+        objSize := ((objSize + ae - 1) DIV ae) * ae (* Padding. for elements *);
+      END;
+      elemSize := OpenArrayType.EltPack (ta) (* Bits, for now.*);
+      IF elemSize < Target.Byte THEN (* Sub-byte elements, 1, 2, or 4 bits. *)
+        <* ASSERT Target.Byte MOD elemSize = 0 *>
+        elemSize := 1 (*Byte*);
+(* FIXME: This is a quick hack for open arrays of element bitsize 1, 2, or 4.
+          The RTS only knows byte counts for element sizes.  Until RTS can be
+          fixed to understand bit sizes, this will at least make things work,
+          at the cost of over-allocating a full byte for every element. *)
+      ELSE
+        <* ASSERT elemSize MOD Target.Byte = 0 *>
+        elemSize := elemSize DIV Target.Byte (*Bytes, now.*);
+      END;
     END;
-    size := MAX (size DIV Target.Byte, 1);
-    alignment := MAX (alignment DIV Target.Byte, 1);
-    elemSize := elemSize DIV Target.Byte;
+
+    objSize := MAX (objSize DIV Target.Byte, 1) (*Bytes, now.*);
+    objAlign := objInfo.alignment (*Bits.*);
+    objAlign := MAX (objAlign DIV Target.Byte, 1) (*Bytes, now.*);
 
     IF (p.user_name # NIL) THEN
       name_offs := CG.EmitText (p.user_name, is_const := TRUE);
@@ -211,8 +246,8 @@ PROCEDURE InitTypecell (t: Type.T;  offset, prev: INTEGER) =
     END;
     CG.Init_intt (offset + M3RT.TC_traced, 8, ORD (p.isTraced), FALSE);
     CG.Init_intt (offset + M3RT.TC_kind, 8, ORD (Kind[dims > 0]), FALSE);
-    CG.Init_intt (offset + M3RT.TC_dataAlignment, 8, alignment, FALSE);
-    CG.Init_intt (offset + M3RT.TC_dataSize, isz, size, FALSE);
+    CG.Init_intt (offset + M3RT.TC_dataAlignment, 8, objAlign, FALSE);
+    CG.Init_intt (offset + M3RT.TC_dataSize, isz, objSize, FALSE);
     IF (type_map >= 0) THEN
       CG.Init_var (offset + M3RT.TC_type_map, consts, type_map, FALSE);
     END;
@@ -261,7 +296,7 @@ PROCEDURE GenTypeDesc (p: P): INTEGER =
   END GenTypeDesc;
 
 PROCEDURE GenInitProc (p: P): CG.Proc =
-  VAR name: TEXT;  proc: CG.Proc;  ref: CG.Var;  info: Type.Info;
+  VAR name: TEXT;  proc: CG.Proc;  ref: CG.Var;  targetInfo: Type.Info;
   BEGIN
     IF Type.InitCost (p.target, TRUE) <= 0 THEN RETURN NIL END;
 
@@ -284,9 +319,8 @@ PROCEDURE GenInitProc (p: P): CG.Proc =
     
 
     (* initialize the referent *)
-    EVAL Type.CheckInfo (p.target, info);
-    CG.Load_addr (ref);
-    CG.Boost_alignment (info.alignment);
+    EVAL Type.CheckInfo (p.target, targetInfo);
+    CG.Load_addr (ref, 0, targetInfo.alignment);
     Type.InitValue (p.target, TRUE);
 
     CG.Exit_proc (CG.Type.Void);
@@ -294,6 +328,7 @@ PROCEDURE GenInitProc (p: P): CG.Proc =
     RETURN proc;
   END GenInitProc;
 
+(* Externally dispatched-to: *)
 PROCEDURE EqualChk (a: P;  t: Type.T;  x: Type.Assumption): BOOLEAN =
   VAR b: P := t;
   BEGIN
@@ -303,6 +338,7 @@ PROCEDURE EqualChk (a: P;  t: Type.T;  x: Type.Assumption): BOOLEAN =
              OR Type.IsEqual (a.target, b.target, x));
   END EqualChk;
 
+(* Externally dispatched-to: *)
 PROCEDURE Subtyper (a: P;  b: Type.T): BOOLEAN =
   BEGIN
     IF Type.IsEqual (a, b, NIL) THEN RETURN TRUE END;
@@ -317,11 +353,13 @@ PROCEDURE Subtyper (a: P;  b: Type.T): BOOLEAN =
         OR ((NOT a.isTraced) AND Type.IsEqual (b, Addr.T, NIL));
   END Subtyper;
 
+(* Externally dispatched-to: *)
 PROCEDURE InitCoster (<*UNUSED*>p: P;  zeroed: BOOLEAN): INTEGER =
   BEGIN
     IF NOT zeroed THEN RETURN 1 ELSE RETURN 0 END;
   END InitCoster;
 
+(* Externally dispatched-to: *)
 PROCEDURE GenDesc (p: P) =
   BEGIN
     IF Type.IsEqual (p, Reff.T, NIL) THEN
@@ -335,6 +373,7 @@ PROCEDURE GenDesc (p: P) =
     END;
   END GenDesc;
 
+(* Externally dispatched-to: *)
 PROCEDURE FPrinter (p: P;  VAR x: M3.FPInfo) =
   BEGIN
     IF Type.IsEqual (p, Reff.T, NIL) THEN

@@ -49,6 +49,7 @@ REVEAL
     toExpr      (): M3.Expr               := NoExpr;
     toType      (): M3.Type               := NoType;
     typeOf      (): M3.Type               := NoType;
+    repTypeOf   (): M3.Type               := NoType;
     base        (): M3.Value              := Self;
     add_fp_tag  (VAR x: M3.FPInfo): CARDINAL;
     fp_type     (): M3.Type;

@@ -1,0 +1,127 @@
+% (* ----------------------------------------------------------------------1- *)
+% (* File m3makefile for Modula3 compiler test p280                           *)
+% (* Copyright 2020, Rodney M. Bates.                                         *)
+% (* rodney.m.bates@acm.org                                                   *)
+% (* Licensed under the MIT license.                                          *)
+% (* ----------------------------------------------------------------------2- *)
+
+import ("libm3")
+
+module ("Common")
+
+% Modes tests a type with lots of parameter modes and subcases.
+% Does handle packed types.  Does not handle open arrays.
+generic_module ("Modes")
+
+% UNSAFE instantiations:
+% There are no Quake commands to instantiate and add UNSAFE,
+% and Modula3 does not allow UNSAFE on a generic unit.
+% So for these, we have to have explicit instance modules. 
+% But the interfaces are not UNSAFE, so Quake can generate them. 
+
+% For Modes, instantiating interfaces and their modules:
+module ("Enum")
+build_generic_intf ("TestEnum","Modes",["Enum"],HIDDEN)
+implementation ("TestEnum")
+
+module ("Float")
+build_generic_intf ("TestFloat","Modes",["Float"],HIDDEN)
+implementation ("TestFloat")
+
+module ("Ref")
+build_generic_intf ("TestRef","Modes",["Ref"],HIDDEN)
+implementation ("TestRef")
+
+module ("Proc")
+build_generic_intf ("TestProc","Modes",["Proc"],HIDDEN)
+implementation ("TestProc")
+
+module ("SmallSet")
+build_generic_intf ("TestSmallSet","Modes",["SmallSet"],HIDDEN)
+implementation ("TestSmallSet")
+
+module ("Set")
+build_generic_intf ("TestSet","Modes",["Set"],HIDDEN)
+implementation ("TestSet")
+
+module ("Record")
+build_generic_intf ("TestRecord","Modes",["Record"],HIDDEN)
+implementation ("TestRecord")
+
+module ("SmallArray")
+build_generic_intf ("TestSmallArray","Modes",["SmallArray"],HIDDEN)
+implementation ("TestSmallArray")
+
+module ("Array")
+build_generic_intf ("TestArray","Modes",["Array"],HIDDEN)
+implementation ("TestArray")
+
+% ArrayModes tests passing of nonpacked, 3-dimensional arrays
+%  of INTEGER, in various paramater modes and subcases. 
+generic_module ("ArrayModes")
+
+% For ArrayModes, instantiating interfaces and their modules:
+module ("ArrayMO_0")
+module ("ArrayMO_1")
+module ("ArrayMO_2")
+module ("ArrayMO_3")
+
+% 4x4 Cartesian product of formals x actuals, each with 0..3 open depths: 
+build_generic_intf ("TestArrayMO_0_0","ArrayModes",["ArrayMO_0", "ArrayMO_0"],HIDDEN)
+implementation ("TestArrayMO_0_0")
+
+build_generic_intf ("TestArrayMO_0_1","ArrayModes",["ArrayMO_0", "ArrayMO_1"],HIDDEN)
+implementation ("TestArrayMO_0_1")
+
+build_generic_intf ("TestArrayMO_0_2","ArrayModes",["ArrayMO_0", "ArrayMO_2"],HIDDEN)
+implementation ("TestArrayMO_0_2")
+
+build_generic_intf ("TestArrayMO_0_3","ArrayModes",["ArrayMO_0", "ArrayMO_3"],HIDDEN)
+implementation ("TestArrayMO_0_3")
+
+
+
+build_generic_intf ("TestArrayMO_1_0","ArrayModes",["ArrayMO_1", "ArrayMO_0"],HIDDEN)
+implementation ("TestArrayMO_1_0")
+
+build_generic_intf ("TestArrayMO_1_1","ArrayModes",["ArrayMO_1", "ArrayMO_1"],HIDDEN)
+implementation ("TestArrayMO_1_1")
+
+build_generic_intf ("TestArrayMO_1_2","ArrayModes",["ArrayMO_1", "ArrayMO_2"],HIDDEN)
+implementation ("TestArrayMO_1_2")
+
+build_generic_intf ("TestArrayMO_1_3","ArrayModes",["ArrayMO_1", "ArrayMO_3"],HIDDEN)
+implementation ("TestArrayMO_1_3")
+
+
+
+build_generic_intf ("TestArrayMO_2_0","ArrayModes",["ArrayMO_2", "ArrayMO_0"],HIDDEN)
+implementation ("TestArrayMO_2_0")
+
+build_generic_intf ("TestArrayMO_2_1","ArrayModes",["ArrayMO_2", "ArrayMO_1"],HIDDEN)
+implementation ("TestArrayMO_2_1")
+
+build_generic_intf ("TestArrayMO_2_2","ArrayModes",["ArrayMO_2", "ArrayMO_2"],HIDDEN)
+implementation ("TestArrayMO_2_2")
+
+build_generic_intf ("TestArrayMO_2_3","ArrayModes",["ArrayMO_2", "ArrayMO_3"],HIDDEN)
+implementation ("TestArrayMO_2_3")
+
+
+
+build_generic_intf ("TestArrayMO_3_0","ArrayModes",["ArrayMO_3", "ArrayMO_0"],HIDDEN)
+implementation ("TestArrayMO_3_0")
+
+build_generic_intf ("TestArrayMO_3_1","ArrayModes",["ArrayMO_3", "ArrayMO_1"],HIDDEN)
+implementation ("TestArrayMO_3_1")
+
+build_generic_intf ("TestArrayMO_3_2","ArrayModes",["ArrayMO_3", "ArrayMO_2"],HIDDEN)
+implementation ("TestArrayMO_3_2")
+
+build_generic_intf ("TestArrayMO_3_3","ArrayModes",["ArrayMO_3", "ArrayMO_3"],HIDDEN)
+implementation ("TestArrayMO_3_3")
+
+
+implementation ("Main")
+program ("pgm")
+

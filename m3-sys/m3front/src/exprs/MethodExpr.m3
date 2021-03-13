@@ -19,6 +19,7 @@ TYPE
         name        : M3ID.T;
       OVERRIDES
         typeOf       := TypeOf;
+        repTypeOf    := TypeOf;
         check        := Check;
         need_addr    := ExprRep.NotAddressable;
         prep         := ExprRep.NoPrep;
@@ -92,9 +93,9 @@ PROCEDURE Compile (p: P) =
       Type.LoadInfo (p.holder, M3RT.OTC_methodOffset);
       CG.Index_bytes (Target.Byte);
     END;
-    CG.Boost_alignment (Target.Address.align);
+    CG.Boost_addr_alignment (Target.Address.align);
     CG.Load_indirect (CG.Type.Addr, method.offset, Target.Address.size);
-    CG.Boost_alignment (Target.Address.align);
+    CG.Boost_addr_alignment (CG.ProcAlign ());
   END Compile;
 
 PROCEDURE GenFPLiteral (p: P;  buf: M3Buf.T) =
@@ -116,7 +117,7 @@ PROCEDURE GenLiteral (p: P;  offset: INTEGER;  type: Type.T;  is_const: BOOLEAN)
     CG.Init_var (offset, var, 0, is_const);
     Type.Compile (type);
     Error.ID (p.name,
-    "CM3 restriction: default method is not a compile-time constant");
+    "CM3 restriction: default method must be a compile-time constant");
   END GenLiteral;
 
 BEGIN

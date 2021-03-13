@@ -71,7 +71,7 @@ PROCEDURE Prep (ce: CallExpr.T) =
       true := CG.Next_label ();
       ptr := CG.Pop ();
       Value.Load (Bool.True);
-      CG.Force (); (* we need a temp *)
+      CG.ForceStacked (); (* we need a temp *)
       ce.tmp := CG.Pop_temp ();
       CG.Push (ptr);
       CG.Load_nil ();
@@ -213,7 +213,7 @@ PROCEDURE PrepBR (ce: CallExpr.T;  true, false: CG.Label;  freq: CG.Frequency)=
 PROCEDURE Initialize () =
   BEGIN
     Z := CallExpr.NewMethodList (2, 2, TRUE, FALSE, TRUE, Bool.T,
-                                 NIL,
+                                 NIL, NIL,
                                  CallExpr.NotAddressable,
                                  Check,
                                  Prep,
