@@ -225,8 +225,11 @@ if not defined ("compile_c")
 
 proc compile_c(source, object, options, optimize, debug) is
 
-    % hack
-
+    % hack: The C compiler driver generally accepts .s files
+    % for assembly source, but some files do not work here.
+    %
+    % Passing all .s files to assemble seems reasonable.
+    %
     if equal(source, "../src/runtime/SOLgnu/RTMachineASM.s")
         return assemble(source, object)
     end
@@ -254,6 +257,15 @@ proc compile_c(source, object, options, optimize, debug) is
         % NOTE: This is gcc specific.
         ret_code = try_exec (SYSTEM_CC, args, "-xc -c", source, "-o", object)
     end
+
+    % Try with -gstabs sometimes also.
+    % This is required for caltech-other/newuoa.
+    %
+    if not equal(ret_code, 0) and equal(pn_lastext(source), "s")
+      args += "-gstabs"
+      ret_code = try_exec (SYSTEM_CC, args, "-c", source, "-o", object)
+    end
+
     return ret_code
 end
 
