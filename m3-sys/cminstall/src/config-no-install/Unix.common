@@ -247,9 +247,9 @@ proc compile_c(source, object, options, optimize, debug) is
     local ret_code = 1
 
     if equal(source, "_m3main.c")
-       ret_code = try_exec (SYSTEM_CXXC, args, "-c -xc++", source, "-o", object)
+       ret_code = try_exec ("@" & SYSTEM_CXXC, args, "-c -xc++", source, "-o", object)
     else
-       ret_code = try_exec (SYSTEM_CC, args, "-c", source, "-o", object)
+       ret_code = try_exec ("@" & SYSTEM_CC, args, "-c", source, "-o", object)
     end
 
     if not equal(ret_code, 0) and equal(source, "_m3main.c")
