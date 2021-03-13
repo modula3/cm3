@@ -229,6 +229,6 @@ mscheme-interactive_r m3-scheme
 mscheme-threads m3-scheme
 
 cm3 core front unicode
-m3cc core front unicode m3gnudevtool
+m3cc core  unicode m3gnudevtool
 
 
