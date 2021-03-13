@@ -7,7 +7,6 @@ IMPORT Word,Long;
 IMPORT IEEE;
 IMPORT CachedPowers AS CP;
 FROM SimFP IMPORT SignificandSize,Uint64,Uint32,GFP;
-IMPORT GrisuDisable;
 
 CONST
 
