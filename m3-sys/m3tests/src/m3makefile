@@ -574,7 +574,7 @@ p_test ("p2", "p276", "Packed set constructors.")
 p_test ("p2", "p278", "64-bit-sized but only 32-bit-aligned values, on 32-bit machines.")
 p_test ("p2", "p279", "misaligned, packed components of array and record constructors.")
 p_test ("p2", "p280", "Parameter passing, many cases, including packed.")
-p_test ("p2", "p281", "Const Array Decl Bugs (#25), reported by darko20 on 03/24/2018.)
+p_test ("p2", "p281", "Const Array Decl Bugs (#25), reported by darko20 on 03/24/2018.")
 % This fails in Grisu when using C backend.
 p_test ("p2", "p282", "grisuc")
 
