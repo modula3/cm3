@@ -254,10 +254,25 @@ PROCEDURE ConvertNamingConventionStringToEnum(s: State;
   END ConvertNamingConventionStringToEnum;
 
 PROCEDURE SetupNamingConventions (mach : Quake.Machine) =
-  VAR s := NEW (State);
+VAR s := NEW (State); (* TODO: Refactor to avoid creating garbage. *)
   BEGIN
     SetupNamingConventionsInternal (s, mach);
   END SetupNamingConventions;
+
+PROCEDURE GetBackendMode (mach : Quake.Machine): Target.M3BackendMode_t =
+VAR s := NEW (State); (* TODO: Refactor to avoid creating garbage. *)
+    value: QValue.Binding;
+  BEGIN
+    s.machine := mach;
+    value := GetDefn (s, "M3_BACKEND_MODE");
+    IF value = NIL THEN
+      value := GetDefn (s, "BACKEND_MODE");
+    END;
+    IF value = NIL THEN
+        ConfigErr (s, "BACKEND_MODE or M3_BACKEND_MODE", "not defined");
+    END;
+    RETURN ConvertBackendModeStringToEnum(s, value);
+  END GetBackendMode;
 
 PROCEDURE CompileUnits (main     : TEXT;
                READONLY units    : M3Unit.Set;
@@ -288,14 +303,8 @@ PROCEDURE CompileUnits (main     : TEXT;
 
     s.target := GetConfigItem (s, "TARGET");
 
-    value := GetDefn (s, "M3_BACKEND_MODE");
-    IF value = NIL THEN
-      value := GetDefn (s, "BACKEND_MODE");
-    END;
-    IF value = NIL THEN
-        ConfigErr (s, "BACKEND_MODE or M3_BACKEND_MODE", "not defined");
-    END;
-    s.m3backend_mode := ConvertBackendModeStringToEnum(s, value);
+    <*ASSERT Target.BackendModeInitialized *>
+    s.m3backend_mode := Target.BackendMode;
 
     value := GetDefn (s, "TARGET_NAMING");
     IF value # NIL THEN
