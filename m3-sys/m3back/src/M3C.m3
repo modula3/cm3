@@ -1292,7 +1292,7 @@ CONST IntegerToTypeid = SignExtend32;
      - CONST foo = -1 (* 16_FFFFFFFF *);
      - VAR foo := IntegerToTypeid(16_FFFFFFFF);
 *)
-VAR UID_INTEGER := IntegerToTypeid(16_195C2A74); (* INTEGER *)
+CONST UID_INTEGER = 16_195C2A74; (* INTEGER *)
 CONST UID_LONGINT = 16_05562176; (* LONGINT *)
 VAR UID_WORD := IntegerToTypeid(16_97E237E2); (* CARDINAL *)
 VAR UID_LONGWORD := IntegerToTypeid(16_9CED36E7); (* LONGCARD *)
@@ -1319,6 +1319,16 @@ VAR UID_PROC6 := IntegerToTypeid(16_DC1B3625); (* PROCEDURE (x: INTEGER;  n: [0.
 VAR UID_PROC7 := IntegerToTypeid(16_EE17DF2C); (* PROCEDURE (x: INTEGER;  i, n: CARDINAL): INTEGER *)
 VAR UID_PROC8 := IntegerToTypeid(16_B740EFD0); (* PROCEDURE (x, y: INTEGER;  i, n: CARDINAL): INTEGER *)
 CONST UID_NULL = 16_48EC756E; (* NULL *) (* Occurs in elego/graphicutils/src/RsrcFilter.m3 *)
+
+(* Ctypes.i3.c suggests:
+CONST UID_INT8   = 16_66A2A904;
+CONST UID_INT16  = 16_7300E1E8;
+ VAR UID_INT32  := IntegerToTypeid(16_ADC6066D);
+ VAR UID_INT64  := IntegerToTypeid(16_839F750E);
+CONST UID_UINT8  = 16_B5B30AA;
+ VAR UID_UINT16 := IntegerToTypeid(16_A4B285DE);
+CONST UID_UINT32 = 16_6FA2E87D; only on 64bit system, else use UID_INT32 or UID_WORD
+*)
 
 TYPE ExprType = {
     Invalid,
@@ -2743,6 +2753,10 @@ END declare_field;
 
 PROCEDURE declare_set(self: DeclareTypes_t; typeid, domain_type: TypeUID; bit_size: BitSize) =
 VAR x := self.self;
+    integers := ARRAY [0..3] OF Target.Int_type { Target.Word8,
+                                                  Target.Word16,
+                                                  Target.Word32,
+                                                  Target.Word64 };
 BEGIN
     IF DebugVerbose(x) THEN
         x.comment("declare_set typeid:" & TypeIDToText(typeid)
@@ -2751,14 +2765,28 @@ BEGIN
     ELSE
         x.comment("declare_set");
     END;
-    IF (bit_size MOD Target.Integer.size) # 0 THEN
-        Err(x, "declare_set not multiple of integer size");
-    END;
+
+    (* Fit in a single integer or array of integers
+     * or single integer of any size.
+     * Array of any size integer would also make sense.
+     *)
     IF bit_size = Target.Integer.size THEN
         x.Type_Init(NEW(Integer_t, cgtype := Target.Integer.cg_type, typeid := typeid));
-    ELSE
+    ELSIF bit_size > Target.Integer.size THEN
+        <* ASSERT (bit_size MOD Target.Integer.size) = 0 *>
         self.declare_array(typeid, UID_WORD, UID_WORD, bit_size);
+    ELSE
+      (* Find smallest integer type that is larger than or equal in size.
+       *)
+      FOR i := FIRST(integers) TO LAST(integers) DO
+        IF bit_size <= integers[i].size THEN
+          x.Type_Init(NEW(Integer_t, cgtype := integers[i].cg_type, typeid := typeid));
+          RETURN;
+        END;
+      END;
+      Err(x, "declare_set not representable as single any size integer or array of integers");
     END;
+
 END declare_set;
 
 PROCEDURE SubrangeIsSigned(READONLY min, max: Target.Int): BOOLEAN =
