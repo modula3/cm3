@@ -14,7 +14,6 @@ IMPORT Quake, QMachine, QValue, QVal, QVSeq;
 IMPORT M3Loc, M3Unit, M3Options, MxConfig;
 IMPORT QIdent;
 IMPORT Target; 
-FROM Target IMPORT M3BackendMode_t, BackendModeStrings;
 FROM M3Path IMPORT OSKind, OSKindStrings;
 IMPORT Pathname;
 IMPORT QPromise, QPromiseSeq, RefSeq;
@@ -109,7 +108,7 @@ TYPE
     target        : TEXT;               (* target machine *)
     (* target_oskind is misused; needs work *)
     target_oskind := M3Path.OSKind.Unix; (* target oskind: Win32 or Unix *)
-    m3backend_mode: M3BackendMode_t;    (* tells how to turn M3CG -> object *)
+    m3backend_mode: Target.M3BackendMode_t; (* tells how to turn M3CG -> object *)
     m3backend     : ConfigProc;         (* translate M3CG -> ASM or OBJ *)
     m3llvm        : ConfigProc;         (* translate M3CG -> LLVM bitcode *) 
     llvmbackend   : ConfigProc;         (* translate llvm bitcode -> ASM or OBJ *)
@@ -234,13 +233,13 @@ PROCEDURE ConvertStringToEnum(s: State; name : TEXT; binding: QValue.Binding;
   END ConvertStringToEnum;
 
 PROCEDURE ConvertBackendModeStringToEnum(s: State; binding: QValue.Binding):
-  M3BackendMode_t =
+  Target.M3BackendMode_t =
   BEGIN
     RETURN VAL(ConvertStringToEnum(s, "backend mode", binding,
-                                   ORD(FIRST(M3BackendMode_t)),
-                                   ORD(LAST(M3BackendMode_t)),
-                                   BackendModeStrings),
-               M3BackendMode_t);
+                                   ORD(FIRST(Target.M3BackendMode_t)),
+                                   ORD(LAST(Target.M3BackendMode_t)),
+                                   Target.BackendModeStrings),
+               Target.M3BackendMode_t);
   END ConvertBackendModeStringToEnum;
 
 PROCEDURE ConvertNamingConventionStringToEnum(s: State;
@@ -1228,7 +1227,7 @@ PROCEDURE CompileC (s: State; u: M3Unit.T) =
 
 PROCEDURE CompileM3cc (s: State; u: M3Unit.T) = 
 (* PRE: u.kind IN {UK.IC, UK.MC} *) 
-  TYPE Mode_t = M3BackendMode_t;
+  TYPE Mode_t = Target.M3BackendMode_t;
   VAR tmpS: TEXT := NIL;
       keep := s.keep_files;
       mode := s.m3backend_mode;
@@ -1248,7 +1247,7 @@ PROCEDURE CompileM3cc (s: State; u: M3Unit.T) =
         Utils.NoteNewFile (u.object);
       ELSE 
         Msg.FatalError 
-          (NIL, "Compiler mode " & BackendModeStrings [ mode ] 
+          (NIL, "Compiler mode " & Target.BackendModeStrings [ mode ] 
                 & " cannot compile frontend output (.ic or .mc) files to assembly code.");
       END (*IF*) 
     ELSE 
@@ -1267,7 +1266,7 @@ PROCEDURE CompileM3cc (s: State; u: M3Unit.T) =
           Utils.NoteNewFile (u.object);
       ELSE
         Msg.FatalError 
-          (NIL, "Compiler mode " & BackendModeStrings [ mode ] 
+          (NIL, "Compiler mode " & Target.BackendModeStrings [ mode ] 
                 & " cannot compile frontend output (.ic or .mc) files");
       END (*CASE*);
     END;
@@ -1275,7 +1274,7 @@ PROCEDURE CompileM3cc (s: State; u: M3Unit.T) =
 
 PROCEDURE CompileM3llvm (s: State; u: M3Unit.T) = 
 (* PRE: u.kind IN {UK.IC, UK.MC} *) 
-  TYPE Mode_t = M3BackendMode_t;
+  TYPE Mode_t = Target.M3BackendMode_t;
   VAR tmpS: TEXT := NIL;
       keep := s.keep_files;
       mode := s.m3backend_mode;
@@ -1296,7 +1295,7 @@ PROCEDURE CompileM3llvm (s: State; u: M3Unit.T) =
         Utils.NoteNewFile (u.object);
       ELSE 
         Msg.FatalError 
-          (NIL, "Compiler mode " & BackendModeStrings [ mode ] 
+          (NIL, "Compiler mode " & Target.BackendModeStrings [ mode ] 
                 & " cannot compile frontend output (.ic or .mc) files to assembly code.");
       END (*IF*) 
     ELSE 
@@ -1315,7 +1314,7 @@ PROCEDURE CompileM3llvm (s: State; u: M3Unit.T) =
           Utils.NoteNewFile (u.object);
       ELSE
         Msg.FatalError 
-          (NIL, "Compiler mode " & BackendModeStrings [ mode ] 
+          (NIL, "Compiler mode " & Target.BackendModeStrings [ mode ] 
                 & " cannot compile frontend output (.ic or .mc) files");
       END (*CASE*);
     END;
@@ -1323,7 +1322,7 @@ PROCEDURE CompileM3llvm (s: State; u: M3Unit.T) =
 
 PROCEDURE CompileLlc (s: State; u: M3Unit.T) =
 (* PRE: u.kind IN {UK.IB, UK.MB, UK.B} *) 
-  TYPE Mode_t = M3BackendMode_t;
+  TYPE Mode_t = Target.M3BackendMode_t;
   VAR tmpS: TEXT := NIL;
       mode := s.m3backend_mode;
   BEGIN
@@ -1363,7 +1362,7 @@ PROCEDURE CompileLlc (s: State; u: M3Unit.T) =
         END (*IF*); 
       ELSE 
         Msg.FatalError 
-          (NIL, "Compiler mode " & BackendModeStrings [ mode ] 
+          (NIL, "Compiler mode " & Target.BackendModeStrings [ mode ] 
                 & " cannot compile llvm bitcode (.bc, .ib or .mb) files");
       END (*CASE*);
     END (*IF*);
@@ -1470,7 +1469,7 @@ PROCEDURE Temps_Remove (VAR temps: Temps_t; s: State) =
 
 PROCEDURE PushOneM3 (s: State;  u: M3Unit.T): BOOLEAN =
 (* PRE: u.kind IN {UK.I3, UK.M3} *) 
-  TYPE Mode_t = M3BackendMode_t;
+  TYPE Mode_t = Target.M3BackendMode_t;
   VAR
     temps := Temps_t { };
 

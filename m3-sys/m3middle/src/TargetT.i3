@@ -9,14 +9,14 @@
 INTERFACE TargetT;
 
 IMPORT Target;
-FROM Target IMORT Int_type, Float_type, CallingConvention, M3BackendMode_t;
+FROM Target IMORT Int_type, Float_type, CallingConvention;
 
 (*  Modula-3 target description *)
 
 TYPE T = RECORD
   system_name: TEXT; (* I386_LINUX, etc., use sparingly *)
   os_name: TEXT; (* POSIX, WIN32 *)
-  backendmode: M3BackendMode_t;
+  backendmode: Target.M3BackendMode_t;
   address   : Int_type;
   integer   : Int_type;
   longint   : Int_type;
