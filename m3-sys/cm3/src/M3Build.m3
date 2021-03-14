@@ -7,7 +7,7 @@ IMPORT Env, IntArraySort, IntRefTbl, M3ID, Pathname, Text, TextList, Thread, Wr;
 IMPORT Quake, QValue, QCode, QMachine, QVal, QVSeq, QVTbl, M3Timers;
 IMPORT Arg, Builder, M3Loc, M3Options, M3Path, M3Unit, Msg, Utils;
 FROM QMachine IMPORT PushBool, PushText, PopText, PopID, PopBool;
-IMPORT MxConfig;
+IMPORT MxConfig, Target;
 IMPORT OSError, Process, Dirs, TextUtils;
 
 TYPE
@@ -152,6 +152,7 @@ PROCEDURE SetUp (t: T;  pkg, to_pkg, build_dir: TEXT)
     t.build_pkg_dir   := M3ID.Add (pkg);
     t.build_dir       := M3ID.Add (build_dir);
     t.text_build_dir  := build_dir;
+    Target.Build_dir  := build_dir;
 
     t.pkg_use         := GetConfigPath (t, "PKG_USE");
     t.pkg_install     := GetConfigPath (t, "PKG_INSTALL");
