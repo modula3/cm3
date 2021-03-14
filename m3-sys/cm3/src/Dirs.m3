@@ -5,6 +5,7 @@ MODULE Dirs;
 
 IMPORT Atom, FS, File, M3File, OSError, Pathname, Process, RegularFile, Text;
 IMPORT Msg, M3Options, M3Path, Wr;
+IMPORT Target;
 
 CONST
   ModeVerb = ARRAY M3Options.Mode OF TEXT {
@@ -18,6 +19,9 @@ VAR
 PROCEDURE SetUp (target: TEXT) =
   VAR base, parent: TEXT;
   BEGIN
+
+    <*ASSERT Target.BackendModeInitialized *>
+
     TRY
       initial := Process.GetWorkingDirectory ();
     EXCEPT OSError.E(ec) =>

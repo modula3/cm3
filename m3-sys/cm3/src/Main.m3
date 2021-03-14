@@ -5,7 +5,7 @@ MODULE Main;
 
 IMPORT M3Timers, Pathname, Process, Quake;
 IMPORT RTCollector, RTParams, RTutils, Thread, Wr;
-IMPORT TextTextTbl;
+IMPORT TextTextTbl, Target;
 
 IMPORT Builder, Dirs, M3Build, M3Options, Makefile, Msg, Utils, WebFile;
 IMPORT MxConfig(*, M3Config, CMKey, CMCurrent *);
@@ -92,7 +92,9 @@ VAR defs: TextTextTbl.T;
         CheckExpire (Quake.LookUp (mach, "INSTALL_KEY"));
         *)
 
-        Builder.SetupNamingConventions (mach);
+        (* Get backendmode before Dirs.Setup. *)
+        Target.BackendMode := Builder.GetBackendMode (mach);
+        Target.BackendModeInitialized := TRUE;
 
         (* figure out where we are and get where we want to be *)
         build_dir := Quake.LookUp (mach, "BUILD_DIR");
