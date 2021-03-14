@@ -2329,8 +2329,10 @@ END set_error_handler;
 PROCEDURE Prefix_Print(self: T; multipass: Multipass_t) =
 BEGIN
     self.comment("begin unit");
+(*  This breaks portable distribution format.
     self.comment("M3_TARGET = ", Target.System_name);
     self.comment("M3_WORDSIZE = ", IntToDec(Target.Word.size));
+*)
     self.static_link_id := M3ID.Add("_static_link");
     self.alloca_id := M3ID.Add("alloca");
     self.setjmp_id := M3ID.Add("m3_setjmp");
