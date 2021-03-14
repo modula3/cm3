@@ -118,13 +118,16 @@ PROCEDURE ColorMapRead (cm: XColorMap; VAR res: ARRAY OF ScrnColorMap.Entry)
         xres[i].pixel := res[i].pix;
         xres[i].flags := X.DoRed + X.DoGreen + X.DoBlue
       END;
-      TrestleOnX.Enter(cm.st.trsl);
-      TRY
+      X.XLockDisplay(cm.st.trsl.dpy);
         X.XQueryColors(cm.st.trsl.dpy, cm.xid, ADR(xres[0]), NUMBER(res));
-        FOR i := 0 TO LAST(res) DO EntryFromXColor(res[i], xres[i]) END
-      FINALLY
-        TrestleOnX.Exit(cm.st.trsl)
-      END
+        FOR i := 0 TO LAST(res) DO
+          res[i].xrgb.red := xres[i].red;
+          res[i].xrgb.blue := xres[i].blue;
+          res[i].xrgb.green := xres[i].green;
+          res[i].xrgb.alpha := 65535;
+          EntryFromXColor(res[i], xres[i])
+        END;
+      X.XUnlockDisplay(cm.st.trsl.dpy);
     FINALLY
       DISPOSE(xres)
     END

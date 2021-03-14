@@ -4843,7 +4843,7 @@ TYPE
 
 <*EXTERNAL*> PROCEDURE XInitThreads ( );
 <*EXTERNAL*> PROCEDURE XLockDisplay (display : DisplayStar);
-<*EXTERNAL*> PROCEDURE XUnLockDisplay (display : DisplayStar);
+<*EXTERNAL*> PROCEDURE XUnlockDisplay (display : DisplayStar);
 
 END X.
 

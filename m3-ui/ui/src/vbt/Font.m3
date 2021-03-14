@@ -14,7 +14,7 @@ IMPORT Palette, PlttFrnds, ScrnFont, ScreenType, TrestleComm, Text;
 
 TYPE TextList = REF ARRAY OF TEXT;
 
-PROCEDURE FromName (READONLY names: ARRAY OF TEXT): T =
+PROCEDURE FromName (READONLY names: ARRAY OF TEXT; useXft : BOOLEAN := TRUE): T =
   VAR tl := NEW(TextList, NUMBER(names));
   BEGIN
     FOR i := 0 TO LAST(names) DO tl[i] := names[i] END;
@@ -38,11 +38,12 @@ PROCEDURE FromName (READONLY names: ARRAY OF TEXT): T =
         END
       END
     END;
-    RETURN Palette.FromFontClosure(NEW(Closure, names := tl))
+    RETURN Palette.FromFontClosure(NEW(Closure, names := tl, useXft := useXft));
   END FromName;
 
 TYPE Closure = Palette.FontClosure OBJECT
     names: TextList;
+    useXft : BOOLEAN := FALSE;
   OVERRIDES
     apply := Apply
   END;
@@ -51,7 +52,7 @@ PROCEDURE Apply(cl: Closure; st: ScreenType.T): ScrnFont.T =
   BEGIN
     FOR i := FIRST(cl.names^) TO LAST(cl.names^) DO
       TRY
-        RETURN st.font.lookup(cl.names[i])
+        RETURN st.font.lookup(cl.names[i], cl.useXft)
       EXCEPT
         TrestleComm.Failure, ScrnFont.Failure => (*skip*)
       END

@@ -1,5 +1,3 @@
-(* Copyright Peter McKinna 2019 *)
-
 UNSAFE INTERFACE Xft;
 
 (*==============================================================*)
@@ -30,6 +28,19 @@ CONST
   XFT_MAX_GLYPH_MEMORY = "maxglyphmemory";
   XFT_MAX_UNREF_FONTS  = "maxunreffonts";
 
+CONST
+(* from fontcofig.h for spacing metric *)
+  FC_PROPORTIONAL  =           0;
+  FC_DUAL          =          90;
+  FC_MONO          =          100;
+  FC_CHARCELL      =          110;
+
+CONST
+(* from fontcofig.h for slant metric *)
+  FC_SLANT_ROMAN   =          0;
+  FC_SLANT_ITALIC  =          100;
+  FC_SLANT_OBLIQUE =          110;
+
 TYPE Picture = XID;
 
 TYPE
@@ -55,8 +66,8 @@ TYPE
               descent          : Int;
               height           : Int;
               max_advance_width: Int;
-              charset : ADDRESS;
-              pattern : FcPatternStar;
+              charset          : ADDRESS;
+              pattern          : FcPatternStar;
             END;
 
   XftFontStar = REF XftFont;
@@ -307,7 +318,7 @@ PROCEDURE DrawSetSubwindowMode (draw: DrawStar; mode: Int);
 <* EXTERNAL XftGlyphExtents *>
 PROCEDURE GlyphExtents (dpy    : DisplayStar;
                         pub    : XftFontStar;
-                        glyphs : FT_UIntStar;
+                        VAR glyphs : FT_UInt;
                         nglyphs: Int;
                         extents: XGlyphInfoStar);
 
@@ -659,5 +670,99 @@ PROCEDURE TextRenderUtf16 (dpy   : DisplayStar;
 PROCEDURE XlfdParse
   (xlfd_orig: String; ignore_scalable: BOOLEAN; complete: BOOLEAN):
   FcPatternStar;
+
+(* FontConfig.h - we need a couple of functions to get font attributes *)
+
+<* EXTERNAL FcPatternGet *>
+PROCEDURE FcPatternGet (p : FcPatternStar;
+                        object  : String;
+                        id : INTEGER;
+                        v : REFANY) : FcResult;
+
+<* EXTERNAL FcPatternGetInteger *>
+PROCEDURE FcGetInteger (p : FcPatternStar;
+                        object : String;
+                        n : INTEGER;
+                        VAR i : INTEGER) : FcResult;
+
+<* EXTERNAL FcPatternGetDouble *>
+PROCEDURE FcGetLongReal (p : FcPatternStar;
+                        object : String;
+                        n : INTEGER;
+                        VAR d : LONGREAL) : FcResult;
+
+<* EXTERNAL FcPatternGetString *>
+PROCEDURE FcGetString (p : FcPatternStar;
+                       object : String;
+                       n : INTEGER;
+                       VAR s : String) : FcResult;
+
+<* EXTERNAL FcPatternGetBool *>
+PROCEDURE FcGetBool (p : FcPatternStar;
+                       object : String;
+                       n : INTEGER;
+                       VAR b : BOOLEAN) : FcResult;
+
+CONST
+  FC_FAMILY =          "family";            (* String *)
+  FC_STYLE  =          "style";             (* String *)
+  FC_SLANT  =          "slant";             (* Int *)
+  FC_WEIGHT =          "weight";            (* Int *)
+  FC_SIZE   =          "size";              (* Range (double) *)
+  FC_ASPECT =          "aspect";            (* Double *)
+  FC_PIXEL_SIZE =      "pixelsize";         (* Double *)
+  FC_SPACING    =      "spacing";           (* Int *)
+  FC_FOUNDRY    =      "foundry";           (* String *)
+  FC_ANTIALIAS  =      "antialias";         (* Bool (depends) *)
+  FC_HINTING    =      "hinting";           (* Bool (true) *)
+  FC_HINT_STYLE =      "hintstyle";         (* Int *)
+  FC_VERTICAL_LAYOUT=  "verticallayout";    (* Bool (false) *)
+  FC_AUTOHINT   =      "autohint";          (* Bool (false) *)
+
+  FC_WIDTH      =      "width";             (* Int *)
+  FC_FILE       =      "file";              (* String *)
+  FC_INDEX      =      "index";             (* Int *)
+  FC_FT_FACE    =      "ftface";            (* FT_Face *)
+  FC_RASTERIZER =      "rasterizer";        (* String (deprecated) *)
+  FC_OUTLINE    =      "outline";           (* Bool *)
+  FC_SCALABLE   =      "scalable";          (* Bool *)
+  FC_COLOR      =      "color";             (* Bool *)
+  FC_VARIABLE   =      "variable";          (* Bool *)
+  FC_SCALE      =      "scale";             (* double (deprecated) *)
+  FC_SYMBOL     =      "symbol";            (* Bool *)
+  FC_DPI        =      "dpi";               (* double *)
+  FC_RGBA       =      "rgba";              (* Int *)
+  FC_MINSPACE   =      "minspace";          (* Bool use minimum line spacing *)
+  FC_SOURCE     =      "source";            (* String (deprecated) *)
+  FC_CHARSET    =      "charset";           (* CharSet *)
+  FC_LANG       =      "lang";              (* String RFC 3066 langs *)
+  FC_FONTVERSION=      "fontversion";       (* Int from 'head' table *)
+  FC_FULLNAME   =      "fullname";          (* String *)
+  FC_FAMILYLANG =      "familylang";        (* String RFC 3066 langs *)
+  FC_STYLELANG  =      "stylelang";         (* String RFC 3066 langs *)
+  FC_FULLNAMELANG =    "fullnamelang";      (* String RFC 3066 langs *)
+  FC_CAPABILITY =      "capability";        (* String *)
+  FC_FONTFORMAT =      "fontformat";        (* String *)
+  FC_EMBOLDEN   =      "embolden";          (* Bool - true if emboldening needed*)
+  FC_EMBEDDED_BITMAP=  "embeddedbitmap";    (* Bool - true to enable embedded bitmaps *)
+  FC_DECORATIVE =      "decorative";        (* Bool - true if style is a decorative variant *)
+  FC_LCD_FILTER =      "lcdfilter";         (* Int *)
+  FC_FONT_FEATURES =   "fontfeatures";      (* String *)
+  FC_FONT_VARIATIONS=  "fontvariations";    (* String *)
+  FC_NAMELANG   =      "namelang";          (* String RFC 3866 langs *)
+  FC_PRGNAME    =      "prgname";           (* String *)
+  FC_HASH       =      "hash";              (* String (deprecated) *)
+  FC_POSTSCRIPT_NAME=  "postscriptname";    (* String *)
+
+  FC_CACHE_VERSION  = "7";
+  FC_CACHE_SUFFIX =            ".cache-"  & FC_CACHE_VERSION;
+  FC_DIR_CACHE_FILE =           "fonts.cache-"  & FC_CACHE_VERSION;
+  FC_USER_CACHE_FILE =         ".fonts.cache-"  & FC_CACHE_VERSION;
+
+  (* Adjust outline rasterizer *)
+  FC_CHARWIDTH =       "charwidth"; (* Int *)
+  FC_CHAR_WIDTH =      FC_CHARWIDTH;
+  FC_CHAR_HEIGHT =     "charheight"; (* Int *)
+  FC_MATRIX =          "matrix";     (* FcMatrix *)
 
 END Xft.

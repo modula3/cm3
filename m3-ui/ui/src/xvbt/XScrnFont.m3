@@ -16,7 +16,7 @@ UNSAFE MODULE XScrnFont;
 
 IMPORT Axis, Ctypes, Fmt, Font, M3toC, Palette, Rect, ScreenType, ScrnFont,
        Text, TrestleComm, X, XClient, XScreenType, XScrnTpRep, TrestleOnX,
-       Fingerprint;
+       Fingerprint, Xft;
 
 TYPE
   DeepFontOracle =
@@ -188,27 +188,42 @@ PROCEDURE ResNum (n: INTEGER; res: REAL): TEXT =
     END
   END ResNum;
 
-PROCEDURE DeepFontLookup (orc: DeepFontOracle; name: TEXT): ScrnFont.T
+PROCEDURE DeepFontLookup (orc: DeepFontOracle; name: TEXT; xft : BOOLEAN := TRUE): ScrnFont.T
   RAISES {ScrnFont.Failure, TrestleComm.Failure} =
   BEGIN
-    RETURN orc.st.bits.font.lookup(name)
+    RETURN orc.st.bits.font.lookup(name,xft)
   END DeepFontLookup;
 
-PROCEDURE FontLookup (orc: FontOracle; name: TEXT): ScrnFont.T
+PROCEDURE FontLookup (orc: FontOracle; name: TEXT; xft : BOOLEAN := TRUE): ScrnFont.T
   RAISES {ScrnFont.Failure, TrestleComm.Failure} =
   VAR
     s: Ctypes.char_star;
     uname: TEXT;
+    xfs : X.XFontStructStar;
+    xftFont : Xft.XftFontStar;
+    xlfd : BOOLEAN;
   BEGIN
     TRY
     TrestleOnX.Enter(orc.st.trsl);
     TRY
+      xlfd := NOT (Text.FindChar(name,',') > 0 OR Text.FindChar(name,':') > 0);
       uname := FindUnscaled(orc.st.trsl.dpy, name); (* Prefer unscaled font *)
       IF uname = NIL THEN uname := name END;
       s := M3toC.SharedTtoS(uname);
-      VAR xfs := X.XLoadQueryFont(orc.st.trsl.dpy, s);
       BEGIN
         M3toC.FreeSharedS(uname, s);
+        IF xft THEN
+          IF xlfd THEN
+            xftFont := Xft.FontOpenXlfd(orc.st.trsl.dpy, orc.st.screenID, s);
+          ELSE
+            xftFont := Xft.FontOpenName(orc.st.trsl.dpy, orc.st.screenID, s);
+          END;
+          IF xftFont # NIL THEN
+            RETURN FontFromXft(orc,xftFont)
+          END;
+        END;
+        (* fall through to use core fonts *)
+        xfs := X.XLoadQueryFont(orc.st.trsl.dpy, s);
         IF xfs = NIL THEN RAISE ScrnFont.Failure END;
         RETURN FontFromXStruct(orc, xfs)
       END
@@ -281,7 +296,7 @@ PROCEDURE IsScaled(name: TEXT): BOOLEAN =
 CONST
   BuiltInNames = ARRAY OF
                    TEXT{
-                   "-adobe-helvetica-medium-r-normal--*-100-*-*-p-*-iso8859-1",
+                   "-adobe-helvetica-medium-r-normal--*-400-*-*-p-*-iso8859-1",
                    "-*-helvetica-medium-r-*-*-*-10?-*-*-*-*-iso8859-1",
                    "-*-times-medium-r-*-*-*-10?-*-*-*-*-iso8859-1",
                    "fixed", "-*-helvetica-*-r-*-*-*-11?-*-*-*-*-iso8859-1",
@@ -289,6 +304,11 @@ CONST
                    "-*-helvetica-*-r-*-*-*-1??-*-*-*-*-iso8859-?",
                    "-*-times-*-r-*-*-*-1??-*-*-*-*-iso8859-?", "timrom1?",
                    "times_roman1?", "*"};
+
+  XftBuiltInNames = ARRAY OF
+                      TEXT{
+                      "Times,LuciduxSerif,serif-10",
+                      "courier,mono-48:weight=bold"};
 
 PROCEDURE DeepFontBuiltIn (orc: DeepFontOracle; id: Font.Predefined):
   ScrnFont.T =
@@ -298,6 +318,8 @@ PROCEDURE DeepFontBuiltIn (orc: DeepFontOracle; id: Font.Predefined):
 
 PROCEDURE FontBuiltIn (orc: FontOracle; id: Font.Predefined): ScrnFont.T =
   VAR xfont: X.XFontStructStar := NIL;
+      xftFont : Xft.XftFontStar := NIL;
+      s: Ctypes.char_star;
   BEGIN
     IF id # Font.BuiltIn.fnt THEN Crash() END;
     WITH st   = orc.st,
@@ -306,14 +328,19 @@ PROCEDURE FontBuiltIn (orc: FontOracle; id: Font.Predefined): ScrnFont.T =
       TRY
         TrestleOnX.Enter(trsl);
         TRY
+          (* try xft fonts first *)
+          FOR i := FIRST(XftBuiltInNames) TO LAST(XftBuiltInNames) DO
+            s := M3toC.FlatTtoS(XftBuiltInNames[i]);
+            xftFont := Xft.FontOpenName(dpy, st.screenID, s);
+            IF xftFont # NIL THEN RETURN FontFromXft(orc,xftFont) END;
+          END;
+          (* none found so check the core fonts *)
           FOR i := FIRST(BuiltInNames) TO LAST(BuiltInNames) DO
-            VAR s: Ctypes.char_star;
-            BEGIN
-              s := M3toC.FlatTtoS(BuiltInNames[i]);
-              xfont := X.XLoadQueryFont(dpy, s);
-            END;
+            s := M3toC.FlatTtoS(BuiltInNames[i]);
+            xfont := X.XLoadQueryFont(dpy, s);
             IF xfont # NIL THEN RETURN FontFromXStruct(orc, xfont) END
           END;
+
           Crash();   (* better to return a useless font *)
           <*ASSERT FALSE*>
         FINALLY
@@ -354,6 +381,209 @@ PROCEDURE NullTextProp (<*UNUSED*> self: NullMetrics;
   BEGIN
     RAISE ScrnFont.Failure
   END NullTextProp;
+
+PROCEDURE XftTextProp(xfs: Xft.XftFontStar; a : TEXT) : TEXT =
+  VAR
+    ret : Xft.FcResult;
+    s : Ctypes.char_star;
+  BEGIN
+    ret := Xft.FcGetString(xfs.pattern,M3toC.SharedTtoS(a),0,s);
+    IF ret = Xft.FcResult.FcResultMatch THEN
+      RETURN M3toC.StoT(s);
+    ELSE RETURN "*";
+    END;
+  END XftTextProp;
+
+PROCEDURE XftIntProp(xfs: Xft.XftFontStar; a : TEXT) : INTEGER =
+  VAR
+    ret : Xft.FcResult;
+    i : INTEGER;
+  BEGIN
+    ret := Xft.FcGetInteger(xfs.pattern,M3toC.SharedTtoS(a),0,i);
+    IF ret = Xft.FcResult.FcResultMatch THEN
+      RETURN i;
+    ELSE RETURN -1;
+    END;
+  END XftIntProp;
+
+PROCEDURE XftRealProp(xfs: Xft.XftFontStar; a : TEXT) : LONGREAL =
+  VAR
+    ret : Xft.FcResult;
+    r : LONGREAL;
+  BEGIN
+    ret := Xft.FcGetLongReal(xfs.pattern,M3toC.SharedTtoS(a),0,r);
+    IF ret = Xft.FcResult.FcResultMatch THEN
+      RETURN r;
+    ELSE RETURN -1.0D0;
+    END;
+  END XftRealProp;
+
+PROCEDURE XftMetrics(orc : FontOracle; xfs: Xft.XftFontStar; VAR m : ScrnFont.Metrics) =
+  VAR
+    extent : Xft.XGlyphInfoStar;
+    glyph : Xft.FT_UInt;
+    maxRect,minRect : Rect.T;
+    minWest : INTEGER := LAST(INTEGER);
+    maxEast : INTEGER := FIRST(INTEGER);
+    minNorth : INTEGER := LAST(INTEGER);
+    maxSouth : INTEGER := FIRST(INTEGER);
+    maxWest : INTEGER := FIRST(INTEGER);
+    minEast : INTEGER := LAST(INTEGER);
+    maxNorth : INTEGER := FIRST(INTEGER);
+    minSouth : INTEGER := LAST(INTEGER);
+  BEGIN
+    extent := NEW(Xft.XGlyphInfoStar);
+    m.charMetrics :=
+            NEW(ScrnFont.CharMetrics, m.lastChar - m.firstChar + 1);
+    WITH display = orc.st.trsl.dpy DO
+      FOR i := m.firstChar TO m.lastChar DO
+
+        IF Xft.CharExists(display, xfs, i) THEN
+          glyph := Xft.CharIndex(display, xfs, i);
+          Xft.GlyphExtents (display, xfs, glyph, 1, extent);
+          ToXftMetric(extent^, m.charMetrics[i]);
+
+          WITH xx = m.charMetrics[i].boundingBox DO
+            (* max bound box *)
+            IF xx.west < minWest THEN minWest := xx.west; END;
+            IF xx.east > maxEast THEN maxEast := xx.east; END;
+            IF xx.north < minNorth THEN minNorth := xx.north; END;
+            IF xx.south > maxSouth THEN maxSouth := xx.south; END;
+            (* min bound box *)
+            IF xx.west > maxWest THEN maxWest := xx.west; END;
+            IF xx.east < minEast THEN minEast := xx.east; END;
+            IF xx.north > maxNorth THEN maxNorth := xx.north; END;
+            IF xx.south < minSouth THEN minSouth := xx.south; END;
+          END;
+        ELSE (* char does not exist *)
+        END
+      END;
+    END;
+    maxRect := Rect.FromEdges(minWest,maxEast,minNorth,maxSouth);
+    minRect := Rect.FromEdges(maxWest,minEast,minNorth,maxSouth);
+
+    m.minBounds.boundingBox := minRect;
+    m.maxBounds.boundingBox := maxRect;
+    m.minBounds.printWidth := minRect.east - minRect.west;
+    m.maxBounds.printWidth := maxRect.east - maxRect.west;
+  END XftMetrics;
+
+PROCEDURE FontFromXft (orc : FontOracle; xfs: Xft.XftFontStar): XFont =
+  VAR
+    res := NEW(XFont, id := 0, metrics := NEW(NullMetrics));
+  BEGIN
+    res.xftFont := LOOPHOLE(xfs,ADDRESS);
+    WITH m = res.metrics DO
+      m.family := XftTextProp(xfs, Xft.FC_FAMILY);
+      (* the point size is supposed to be 10 * font size *)
+      m.pointSize := TRUNC(XftRealProp(xfs, Xft.FC_SIZE)) * 10;
+      (* xft slants dont have reverse values *)
+      VAR sp := XftIntProp(xfs, Xft.FC_SLANT);
+      BEGIN
+        CASE sp OF
+        | Xft.FC_SLANT_ROMAN  => m.slant := ScrnFont.Slant.Roman;
+        | Xft.FC_SLANT_ITALIC  => m.slant := ScrnFont.Slant.Italic;
+        | Xft.FC_SLANT_OBLIQUE => m.slant := ScrnFont.Slant.Oblique;
+        ELSE
+          m.slant := ScrnFont.Slant.Other;
+        END;
+      END;
+
+      (* no weight name in fontconfig *)
+      m.weightName := "";
+      m.version := Fmt.Int(XftIntProp(xfs, Xft.FC_FONTVERSION));
+      m.foundry := XftTextProp(xfs, Xft.FC_FOUNDRY);
+      m.width := Fmt.Int(XftIntProp(xfs, Xft.FC_WIDTH));
+      m.pixelsize := TRUNC(XftRealProp(xfs, Xft.FC_PIXEL_SIZE));
+      (* no hres or vres *)
+      m.hres := 0;
+      m.vres := 0;
+
+      VAR sp := XftIntProp(xfs, Xft.FC_SPACING);
+      BEGIN
+        CASE sp OF
+        | Xft.FC_PROPORTIONAL => m.spacing := ScrnFont.Spacing.Proportional;
+        | Xft.FC_MONO         => m.spacing := ScrnFont.Spacing.Monospaced;
+        | Xft.FC_CHARCELL     => m.spacing := ScrnFont.Spacing.CharCell;
+        ELSE
+          m.spacing := ScrnFont.Spacing.Any;
+        END;
+      END;
+
+      (* no ave width 0 is scalable *)
+      m.averageWidth := 0;
+
+      (* could get these from the metric *)
+      m.firstChar := 0;
+      m.lastChar := 255;
+      m.isAscii := FALSE;
+      m.defaultChar := 0; (* no default char *)
+
+      m.ascent := xfs.ascent;
+      m.descent := xfs.descent;
+      m.fprint := Fingerprint.FromText("X font:");
+      m.fprint :=
+        Fingerprint.FromChars(LOOPHOLE(ADR(m.firstChar), ARRAY OF CHAR),
+                              m.fprint);
+      m.fprint :=
+        Fingerprint.FromChars(LOOPHOLE(ADR(m.lastChar), ARRAY OF CHAR),
+                              m.fprint);
+      m.fprint := Fingerprint.FromChars(
+                    LOOPHOLE(ADR(m.defaultChar), ARRAY OF CHAR),
+                    m.fprint);
+      m.fprint :=
+        Fingerprint.FromChars(LOOPHOLE(ADR(m.ascent), ARRAY OF CHAR),
+                              m.fprint);
+      m.fprint :=
+        Fingerprint.FromChars(LOOPHOLE(ADR(m.descent), ARRAY OF CHAR),
+                              m.fprint);
+
+      XftMetrics(orc, xfs, m);
+
+      m.fprint :=
+        Fingerprint.FromChars(LOOPHOLE(ADR(m.minBounds), ARRAY OF CHAR),
+                              m.fprint);
+      m.fprint :=
+        Fingerprint.FromChars(LOOPHOLE(ADR(m.maxBounds), ARRAY OF CHAR),
+                              m.fprint);
+
+      IF m.minBounds = m.maxBounds THEN
+          m.charMetrics := NIL;
+          WITH bd = m.minBounds,
+               bb = bd.boundingBox DO
+            IF bd.printWidth >= 0 THEN
+              m.rightKerning := bb.east > bd.printWidth;
+              m.leftKerning := bb.west < 0
+            ELSE
+              m.rightKerning := bb.east > 0;
+              m.leftKerning := bb.west < bd.printWidth;
+            END;
+            m.selfClearing := NOT (m.rightKerning OR m.leftKerning)
+          END
+      ELSE
+        WITH maxb = m.maxBounds.boundingBox DO
+          m.selfClearing :=
+            (maxb.north >= -xfs.ascent) AND (maxb.south <= xfs.descent)
+        END;
+        m.rightKerning := FALSE;
+        m.leftKerning := FALSE;
+        FOR i := 0 TO LAST(m.charMetrics^) DO
+          WITH bd = m.charMetrics[i],
+               bb = bd.boundingBox    DO
+            IF bd.printWidth >= 0 THEN
+              m.rightKerning := m.rightKerning OR (bb.east > bd.printWidth);
+              m.leftKerning := m.leftKerning OR (bb.west < 0)
+            ELSE
+              m.rightKerning := m.rightKerning OR (bb.east > 0);
+              m.leftKerning := m.leftKerning OR (bb.west < bd.printWidth);
+            END;
+            m.selfClearing := m.selfClearing AND NOT (m.rightKerning OR m.leftKerning)
+          END;
+        END;
+      END;
+    END;
+    RETURN res;
+  END FontFromXft;
 
 PROCEDURE FontFromXStruct (orc: FontOracle; xfs: X.XFontStructStar): XFont
   RAISES {TrestleComm.Failure} <* LL.sup = orc.st.trsl *> =
@@ -484,6 +714,21 @@ PROCEDURE ToCharMetric (READONLY xcs: X.XCharStruct;
       END
     END
   END ToCharMetric;
+
+PROCEDURE ToXftMetric (READONLY xcs: Xft.XGlyphInfo;
+                       VAR      cm : ScrnFont.CharMetric) =
+  BEGIN
+    cm.printWidth := xcs.xOff;
+    WITH bb = cm.boundingBox DO
+      bb.west := -xcs.x;
+      bb.east := -xcs.x + xcs.width;
+      bb.north := -xcs.y;
+      bb.south := -xcs.y + xcs.height;
+      IF (bb.west >= bb.east) OR (bb.north >= bb.south) THEN
+        bb := Rect.Empty
+      END
+    END
+  END ToXftMetric;
 
 PROCEDURE TextProp (trsl: XClient.T; xfs: X.XFontStructStar; a: X.Atom):
   TEXT RAISES {TrestleComm.Failure} =

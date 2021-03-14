@@ -351,7 +351,7 @@ PROCEDURE List (orc: FontOracle; pat: TEXT; maxResults: INTEGER):
     RETURN orc.st.stParent.bits.font.list(pat, maxResults)
   END List;
 
-PROCEDURE Lookup (orc: FontOracle; name: TEXT): ScrnFont.T
+PROCEDURE Lookup (orc: FontOracle; name: TEXT; <*UNUSED*>useXft : BOOLEAN := TRUE): ScrnFont.T
   RAISES {ScrnFont.Failure, TrestleComm.Failure} =
   VAR size := PointSize(name);
   BEGIN

@@ -18,7 +18,7 @@ IMPORT Batch, BatchRep, BatchUtil, Completion, PaintExt, PaintPrivate,
        Path, PathPrivate, Point, PolyRegion, Rect, Region, Trapezoid,
        TrestleComm, VBT, VBTRep, Word, X, XClientF, XScreenType,
        XScrollQueue, TrestleOnX, XGC, TrestleClass, ScrnPixmap, Trestle,
-       Ctypes, VBTClass, XScrnPxmp, XPicture;
+       Ctypes, VBTClass, XScrnPxmp, XPicture, Xft, ScrnColorMap;
 
 FROM PaintPrivate IMPORT CommandPtr;
 FROM XScrnPxmp IMPORT PixmapDomain;
@@ -268,10 +268,13 @@ PROCEDURE TextCom (cmd       : CommandPtr;
     mode: XGC.XMode;
   BEGIN
     WITH op      = LOOPHOLE(cmd, PaintPrivate.TextPtr),
+         (* xft font from the op. If its NIL use old X paint *)
+         xftFont = LOOPHOLE(op.xftFnt,Xft.XftFontStar),
          clipped = PaintPrivate.Prop.Clipped IN op.props,
          gc = XGC.ResolveTextGC(dpy, w, st, op.op, clipped, op.fnt, mode),
          subbed = (mode = XGC.XMode.UseImageString)
                     AND PaintPrivate.Prop.FontSub IN op.props DO
+
       INC(pAdr, op.szOfRec * ADRSIZE(Word.T));
       IF op.byteOrder # PaintPrivate.HostByteOrder THEN
         BatchUtil.ByteSwap(ba)
@@ -279,7 +282,7 @@ PROCEDURE TextCom (cmd       : CommandPtr;
       IF NOT clipped THEN
         IF op.clip.west < op.clip.east THEN
           IF subbed THEN FillRect(dpy, w, gc, op.clip) END;
-          PaintString(dpy, w, gc, op, mode)
+          PaintString(dpy, st, xftFont, w, gc, op, mode)
         END
       ELSE
         pr := PolyRegion.Empty;
@@ -294,7 +297,7 @@ PROCEDURE TextCom (cmd       : CommandPtr;
               IF NOT Region.IsEmpty(rgn) THEN
                 SetClipRegion(dpy, gc, rgn);
                 IF subbed THEN FillRect(dpy, w, gc, rgn.r) END;
-                PaintString(dpy, w, gc, op, mode)
+                PaintString(dpy, st, xftFont, w, gc, op, mode)
               END
             END;
             pr := PolyRegion.Empty
@@ -305,7 +308,7 @@ PROCEDURE TextCom (cmd       : CommandPtr;
           IF NOT Region.IsEmpty(rgn) THEN
             SetClipRegion(dpy, gc, rgn);
             IF subbed THEN FillRect(dpy, w, gc, rgn.r) END;
-            PaintString(dpy, w, gc, op, mode)
+            PaintString(dpy, st, xftFont, w, gc, op, mode)
           END
         END
       END
@@ -570,14 +573,59 @@ PROCEDURE SetClipRegion (dpy: X.DisplayStar; gc: X.GC; rgn: Region.T)
     END;
   END SetClipRegion;
 
+PROCEDURE DrawXftText(dpy  : X.DisplayStar;
+                      st   : XScreenType.T;
+                      d    : X.Drawable;
+                      op   : PaintPrivate.TextPtr;
+                      font : Xft.XftFontStar;
+                      n    : INTEGER;
+                      VAR a: ARRAY OF X.XTextItem;
+                      )   RAISES {TrestleComm.Failure} =
+  VAR
+    screen : INTEGER;
+    visual : X.VisualStar;
+    colmap : X.Colormap;
+    draw : Xft.DrawStar;
+    renderColor : Xft.RenderColorStar := NEW(Xft.RenderColorStar);
+    xftColor : Xft.XftColorStar := NEW(Xft.XftColorStar);
+    ent : ARRAY[0..0] OF ScrnColorMap.Entry;
+    res : BOOLEAN;
+  BEGIN
+    screen := st.screenID;
+    visual := st.visual;
+    ent[0].pix := st.optable[op.op].foreground;
+    st.cmap.standard().read(ent);
+
+    WITH e = ent[0].xrgb, r = renderColor DO
+      r.red := e.red;
+      r.blue := e.blue;
+      r.green := e.green;
+      r.alpha := e.alpha;
+    END;
+
+    res := Xft.ColorAllocValue (dpy, visual, colmap, renderColor, xftColor);
+    IF NOT res THEN RAISE TrestleComm.Failure END;
+
+    draw := Xft.DrawCreate(dpy, d, visual, colmap );
+    IF draw = NIL THEN RAISE TrestleComm.Failure END;
+
+    FOR i := 0 TO n - 1 DO
+      Xft.DrawString8(draw, xftColor, font, op.refpt.h, op.refpt.v, a[i].chars, a[i].nchars);
+    END;
+
+    Xft.DrawDestroy(draw);
+  END DrawXftText;
+
 CONST
   ValidRect = Rect.T{west := -32768, east := 32768, north := -32768,
                      south := 32768};
 
-PROCEDURE PaintString (dpy : X.DisplayStar;
-                       d   : X.Drawable;
-                       gc  : X.GC;
-                       op  : PaintPrivate.TextPtr;
+PROCEDURE PaintString (dpy     : X.DisplayStar;
+                       st      : XScreenType.T;
+                       xftFont : Xft.XftFontStar;
+                       d       : X.Drawable;
+                       gc      : X.GC;
+                       op      : PaintPrivate.TextPtr;
                        mode: XGC.XMode             )
   RAISES {TrestleComm.Failure} =
   TYPE TextArray = UNTRACED REF ARRAY OF X.XTextItem;
@@ -620,7 +668,12 @@ PROCEDURE PaintString (dpy : X.DisplayStar;
         INC(n)
       END;
       IF n # 0 THEN
-        X.XDrawText(dpy, d, gc, op.refpt.h, op.refpt.v, ADR(a[0]), n)
+        IF xftFont # NIL THEN
+          DrawXftText(dpy, st, d, op, xftFont, n, a);
+        ELSE
+          X.XDrawText(dpy, d, gc, op.refpt.h, op.refpt.v, ADR(a[0]), n);
+        END
+
       END;
       EXCEPT X.Error => RAISE TrestleComm.Failure END;
     END PaintString2;

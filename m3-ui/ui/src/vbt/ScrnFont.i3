@@ -45,7 +45,7 @@ TYPE
         charsetRegistry: TEXT := "ISO8859";
         charsetEncoding: TEXT := "1")
       : REF ARRAY OF TEXT RAISES {TrestleComm.Failure};
-      lookup(name: TEXT): T
+      lookup(name: TEXT; useXft : BOOLEAN := TRUE): T
         RAISES {Failure, TrestleComm.Failure};
       builtIn(f: Font.Predefined): T;
     END;
@@ -232,7 +232,8 @@ TYPE
   T <: Public;
   Public = OBJECT (*CONST*)
     id: INTEGER;
-    metrics: Metrics
+    metrics: Metrics;
+    xftFont : ADDRESS;
   END;
 
 TYPE StrikeFont = T OBJECT

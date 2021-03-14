@@ -724,6 +724,7 @@ PROCEDURE PaintSub (         v      : Leaf;
               p.refpt := rfpt;
               p.byteOrder := PaintPrivate.HostByteOrder;
               p.fnt := sf.id;
+              p.xftFnt := sf.xftFont; (* copy the xft font*)
               p.txtsz := NUMBER(t);
               p.dlsz := NUMBER(dl);
               p.op := po.id;
@@ -796,7 +797,7 @@ PROCEDURE PaintSub (         v      : Leaf;
         LOCK v DO st := v.st END;
         IF st # NIL THEN
           EVAL Palette.ResolveFont(st, fntP);
-          EVAL Palette.ResolveOp(st, paintOp)
+          EVAL Palette.ResolveOp(st, paintOp);
         END
       END
     END

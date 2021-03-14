@@ -21,7 +21,7 @@ TYPE T = RECORD fnt: INTEGER END; Predefined = [0..0];
 
 CONST BuiltIn = T{0};
 
-PROCEDURE FromName(READONLY names: ARRAY OF TEXT): T;
+PROCEDURE FromName(READONLY names: ARRAY OF TEXT; useXft : BOOLEAN := TRUE): T;
 (* Return the first available font of those named in the array "names". *)
 
 (* The entries of "names" are font names as specified in the "ScrnFont"
@@ -41,6 +41,25 @@ PROCEDURE FromName(READONLY names: ARRAY OF TEXT): T;
   will return a font that, on an X server containing the standard fonts,
   is some Times Roman medium-weight unslanted font sized 10 to 10.9 points,
   and behaves like "Font.BuiltIn" on any screentye that doesn't have a font
-  whose name matches the pattern.  *)
+  whose name matches the pattern.
+
+  The Xft extension allows additional font name specification which will be
+  honoured with setting the useXft parameter.
+  Fontconfig provides a textual representation for patterns that the library
+  can both accept and generate.
+  The representation is in three parts, first a list of family names,
+  second a list of point sizes and finally a list of additional properties:
+
+  <families>-<point sizes>:<name1>=<values1>:<name2>=<values2>...
+
+  For example,
+
+| FromName(
+|  ARRAY OF TEXT{"Times,LuduxSerif,serif-38,40:slant=oblique:weight=bold"})
+
+  This form will always return a font even if it is not what is expected. In fact
+  one can request a gibberish, non existent font and one will be returned.
+
+  See the fontconfig docs for font matching details. *)
 
 END Font.

@@ -178,6 +178,7 @@ TYPE Prop = {Clipped, FontSub};
     props: Props;
     refpt: Point.T;
     fnt: Font;
+    xftFnt : ADDRESS;
     txtsz, dlsz: INTEGER;
 
 (*
