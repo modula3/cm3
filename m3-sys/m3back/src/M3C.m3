@@ -2423,8 +2423,24 @@ END end_unit;
 PROCEDURE set_source_file(self: T; file: TEXT) =
 (* Sets the current source file name. Subsequent statements
    and expressions are associated with this source location. *)
+VAR pos := 0; length := 0;
 BEGIN
-    file := TextUtils.SubstChar(file, '\\', '/');
+    IF file # NIL THEN
+      file := TextUtils.SubstChar(file, '\\', '/');
+
+      (* m3front does like:
+       * set_source_file("../AMD64_DARWINc/WordMod.m3 => ../src/builtinWord/Mod.mg")
+       * which damages debugging (this file does not exist) and is unnecessarily
+       * target specific, damaging portable redistribution formats.
+       *)
+      length := Text.Length(file);
+      IF length > 0 AND Text.GetChar(file, length - 1) = 'g' THEN
+        pos := TextUtils.Pos(file, " => ");
+        IF pos # -1 THEN
+          file := Text.Sub(file, pos + 4, length - pos - 4);
+        END
+      END;
+    END;
     IF DebugVerbose(self) THEN
         self.comment("set_source_file file:", file);
     ELSE
