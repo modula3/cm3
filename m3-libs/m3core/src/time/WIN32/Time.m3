@@ -22,6 +22,8 @@ PROCEDURE Now(): T=
 BEGIN
 VAR t0, t1: T;
 BEGIN
+  <* ASSERT BYTESIZE(WinBase.FILETIME) = 8 *>
+
   (* Determine value of "Grain" experimentally.  Note that
      this will fail if this thread is descheduled for a tick during the
      loop below. *)
