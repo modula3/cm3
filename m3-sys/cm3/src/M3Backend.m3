@@ -11,7 +11,6 @@ IMPORT LLGen; (* Could be a dummy.  See the m3makefile. *)
 IMPORT M3CG, Msg, Utils, NTObjFile, M3x86, M3ObjFile;
 IMPORT M3CG_BinWr;
 IMPORT Target; 
-FROM Target IMPORT M3BackendMode_t;
 
 VAR
   obj_file : M3ObjFile.T := NIL;
@@ -20,9 +19,9 @@ VAR
   log      : Wr.T        := NIL;
   log_name : TEXT        := NIL;
 
-PROCEDURE Open (target: Wr.T;  target_name: TEXT;  backend_mode: M3BackendMode_t): M3CG.T =
+PROCEDURE Open (target: Wr.T;  target_name: TEXT;  backend_mode: Target.M3BackendMode_t): M3CG.T =
   BEGIN
-    IF backend_mode = M3BackendMode_t.C THEN
+    IF backend_mode = Target.M3BackendMode_t.C THEN
       RETURN M3C.New (target);
     END;
     IF backend_mode IN Target.BackendLlvmSet THEN
