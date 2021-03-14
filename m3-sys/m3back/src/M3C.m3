@@ -2577,7 +2577,7 @@ VAR enum_value := self.enum_value;
     x := self.self;
 BEGIN
     IF DebugVerbose(x) THEN
-        x.comment("declare_enum_elt name:", IntToDec(name));
+        x.comment("declare_enum_elt name:", NameT(name), "=", IntToDec(self.enum_value));
     ELSE
         x.comment("declare_enum_elt");
     END;
