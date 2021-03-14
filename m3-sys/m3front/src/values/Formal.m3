@@ -436,13 +436,12 @@ PROCEDURE DoCheckArgs (VAR cs       : Value.CheckState;
                 Err (slots[i],
                      "CM3 restriction: VAR actual cannot be packed. (2.3.2): ");
                 ok := FALSE;
-              ELSE
-                Expr.NeedsAddress (actualExpr);
               END;
             ELSE
               Err (slots[i], "Actual's type must equal VAR formal's (2.3.2): ");
               ok := FALSE;
             END;
+            IF ok THEN Expr.NeedsAddress (actualExpr) END; 
         | Mode.mREADONLY =>
             IF NOT Type.IsAssignable (t, actSemType) THEN
               Err (slots[i],
