@@ -455,6 +455,14 @@ VAR (*CONST*)
   (* The C name of the routine used to capture the machine state in
        an exception handler frame. *)
 
+  Build_dir: TEXT;
+  (* The directory containing derived files. This to aid the C
+   * backend in converging target-dependent output to be target-independent.
+   * It occurs unnecessarily in some places such as line directives.
+   * m3front communicates to m3back via m3middle, a string that backend
+   * might want to change.
+   *)
+
   CONST Aligned_procedures = FALSE;
   (* TRUE => all procedure values are aligned to at least Integer.align
      and can be safely dereferenced.  Otherwise, the code generated to
