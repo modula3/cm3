@@ -3,7 +3,7 @@
 
 INTERFACE Builder;
 
-IMPORT Arg, M3Unit, Quake, QMachine, Target;
+IMPORT Arg, M3Unit, Quake, QMachine;
 
 PROCEDURE BuildPgm (prog: TEXT;  READONLY units: M3Unit.Set;
                     sys_libs: Arg.List;  shared: BOOLEAN;  m: Quake.Machine);
@@ -28,7 +28,5 @@ PROCEDURE EmitPkgImports (READONLY units: M3Unit.Set);
 (* Output all imported packages *)
 
 PROCEDURE SetupNamingConventions (mach : QMachine.T);
-
-PROCEDURE GetBackendMode (mach : Quake.Machine): Target.M3BackendMode_t;
 
 END Builder.
