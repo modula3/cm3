@@ -92,9 +92,6 @@ VAR defs: TextTextTbl.T;
         CheckExpire (Quake.LookUp (mach, "INSTALL_KEY"));
         *)
 
-        Target.BackendMode := Builder.GetBackendMode (mach);
-        Target.BackendModeInitialized := TRUE;
-
         (* figure out where we are and get where we want to be *)
         build_dir := Quake.LookUp (mach, "BUILD_DIR");
         IF (build_dir = NIL) THEN
@@ -102,6 +99,9 @@ VAR defs: TextTextTbl.T;
         END;
         Target.SetBuild_dir (build_dir);
         Dirs.SetUp (build_dir);
+
+        Target.BackendMode := Builder.GetBackendMode (mach);
+        Target.BackendModeInitialized := TRUE;
 
         (* define the "builtin" quake functions *)
         M3Build.SetUp (mach, Dirs.package, Dirs.to_package,
