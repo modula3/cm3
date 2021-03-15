@@ -4854,25 +4854,33 @@ CONST Printable = ASCII.AlphaNumerics
 PROCEDURE init_chars(self: T; offset: ByteOffset; value: TEXT) =
 VAR length := Text.Length(value);
     ch: CHAR;
+    debug_print := value;
 BEGIN
-    IF DebugVerbose(self) THEN
-      self.comment("init_chars offset:" & IntToDec(offset) &
-        " length:" & IntToDec(length));
-    ELSE
-      self.comment("init_chars");
-    END;
-    IF length = 0 THEN
-        RETURN;
-    END;
-    FOR i := 0 TO length - 1 DO
+
+    IF length # 0 THEN
+
+      FOR i := 0 TO length - 1 DO
         init_helper(self, offset + i, CGType.Word8);
         ch := Text.GetChar(value, i);
         IF ch IN Printable THEN
+            IF ch = '*' OR ch = '/' THEN
+              debug_print := "<not printable1>"; (* might terminate or nest comment *)
+            END;
             initializer_addhi(self, "'" & Text.Sub(value, i, 1) & "'");
         ELSE
+            debug_print := "<not printable2>";
             initializer_addhi(self, IntToDec(ORD(ch)));
         END;
+      END;
     END;
+
+    IF DebugVerbose(self) THEN
+      self.comment("init_chars offset:" & IntToDec(offset) &
+        " length:" & IntToDec(length) & " value:" & value);
+    ELSE
+      self.comment("init_chars");
+    END;
+
 END init_chars;
 
 PROCEDURE Segments_init_chars(self: Segments_t; offset: ByteOffset; value: TEXT) =
