@@ -1137,6 +1137,8 @@ PROCEDURE GenLinkerInfo (t: T;  proc_info, type_map, rev_full, rev_part: INTEGER
     Scanner.offset := t.origin;
     IF (t.genericFile # NIL) THEN
       file := t.genericFile;
+    ELSE
+      Scanner.Here (file, line);
     END;
     file := Target.CleanupSourcePath (file);
     offs := CG.EmitText (file, is_const := TRUE);
