@@ -761,6 +761,8 @@ M3GDB = (M3GDB or CM3_GDB)
 Scripts = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PKGSDB = os.path.join(Scripts, "PKGS")
 
+CM3_FLAGS = CM3_FLAGS + " -DBUILD_DIR=" + BuildDir
+
 #-----------------------------------------------------------------------------
 
 def GetConfigForDistribution(Target):
