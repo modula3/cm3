@@ -84,6 +84,8 @@ T = M3CG_DoNothing.T BRANDED "M3C.T" OBJECT
         setjmp_id := M3ID.NoID;
         jmpbuf_size_id := M3ID.NoID;
         done_include_setjmp_h := FALSE;
+        build_dir := "";
+        build_dir_length := 0;
 
         (* labels *)
         labels_min := FIRST(Label);
@@ -2235,6 +2237,8 @@ BEGIN
     self.imported_procs := NEW(RefSeq.T).init();
     self.declared_procs := NEW(RefSeq.T).init();
     self.procs_pending_output := NEW(RefSeq.T).init();
+    self.build_dir := "../" & Target.Build_dir & "/";
+    self.build_dir_length := Text.Length(self.build_dir);
 
     RETURN self.multipass;
 END New;
@@ -2425,7 +2429,10 @@ END end_unit;
 PROCEDURE set_source_file(self: T; file: TEXT) =
 (* Sets the current source file name. Subsequent statements
    and expressions are associated with this source location. *)
-VAR pos := 0; length := 0;
+VAR pos := 0;
+    length := 0;
+    build_dir := self.build_dir;
+    build_dir_length := self.build_dir_length;
 BEGIN
     IF file # NIL THEN
       file := TextUtils.SubstChar(file, '\\', '/');
@@ -2433,14 +2440,29 @@ BEGIN
       (* m3front does like:
        * set_source_file("../AMD64_DARWINc/WordMod.m3 => ../src/builtinWord/Mod.mg")
        * which damages debugging (this file does not exist) and is unnecessarily
-       * target specific, damaging portable redistribution formats.
+       * target specific, damaging portable distribution formats.
        *)
       length := Text.Length(file);
       IF length > 0 AND Text.GetChar(file, length - 1) = 'g' THEN
         pos := TextUtils.Pos(file, " => ");
         IF pos # -1 THEN
           file := Text.Sub(file, pos + 4, length - pos - 4);
+          length := Text.Length(file);
         END
+      END;
+
+      (* Remove build_dir from start for portable distribution format.
+       * This typically generic instantations but could be anything.
+       *)
+      IF length > build_dir_length THEN
+          FOR i := 0 TO build_dir_length - 1 DO
+            IF Text.GetChar(file, i) # Text.GetChar(build_dir, i) THEN
+              EXIT;
+            END;
+            IF i = build_dir_length - 1 THEN
+              file := Text.Sub(file, build_dir_length, length - build_dir_length);
+            END;
+          END;
       END;
     END;
     IF DebugVerbose(self) THEN
