@@ -10,11 +10,6 @@ module         ("RTPerfTool")
 
 readonly RTOSbrk = {
   %
-  % memory from mmap seemed to be too spread out for the allocator's data structures to describe
-  %
-  "AMD64_LINUX" : 1,
-
-  %
   % Several platforms don't define MAP_ANON or MAP_ANONYMOUS or even have Umman,
   % and sbrk was the historical implementation, but we probably don't care.
   % see http://modula3.elegosoft.com/cgi-bin/cvsweb.cgi/cm3/m3-libs/m3core/src/runtime/POSIX/RTOS.m3?rev=1.1;content-type=text%2Fplain
