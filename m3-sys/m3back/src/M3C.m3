@@ -4876,7 +4876,7 @@ BEGIN
 
     IF DebugVerbose(self) THEN
       self.comment("init_chars offset:" & IntToDec(offset) &
-        " length:" & IntToDec(length) & " value:" & value);
+        " length:" & IntToDec(length) & " value:" & debug_print);
     ELSE
       self.comment("init_chars");
     END;
