@@ -47,6 +47,15 @@ VAR (*CONST*)
   CCs : ARRAY [0..8] OF CallingConvention;
   System: Systems;
 
+  (* The directory containing derived files. This is to aid the C
+   * backend in converging target-dependent output to be target-independent.
+   * It occurs unnecessarily in some places such as line directives.
+   * m3front communicates to m3back via m3middle, a string that backend
+   * might want to change.
+   *)
+  Build_dir: TEXT;
+  Build_dir_length: INTEGER;
+
 PROCEDURE Init32 () =
   BEGIN
     (* Change size and aligment: *)
@@ -334,6 +343,69 @@ PROCEDURE ConventionFromID (id: INTEGER): CallingConvention =
   BEGIN
     RETURN CCs[id];
   END ConventionFromID;
+
+PROCEDURE SetBuild_dir(build_dir: TEXT) =
+BEGIN
+  build_dir := "../" & build_dir & "/";
+  Build_dir := build_dir;
+  Build_dir_length := Text.Length(build_dir);
+END SetBuild_dir;
+
+PROCEDURE PathCharEqual(ch1, ch2: CHAR): BOOLEAN =
+BEGIN
+  RETURN (ch1 = ch2) OR
+     (ch1 = '\\' AND ch2 = '/') OR
+     (ch2 = '\\' AND ch1 = '/');
+END PathCharEqual;
+
+PROCEDURE CleanupSourcePath(file: TEXT): TEXT =
+VAR length: INTEGER;
+    build_dir: TEXT;
+    build_dir_length: INTEGER;
+    pos: INTEGER;
+BEGIN
+
+  <* ASSERT BackendModeInitialized *>
+
+  (* Review: Is this function too lossy?
+   * Would we be better off with just substituting build_dir with "build_dir"?
+   *)
+
+  IF file # NIL AND BackendMode = M3BackendMode_t.C THEN
+    length := Text.Length(file);
+    build_dir := Build_dir;
+    build_dir_length := Build_dir_length;
+
+    (* m3front does like:
+     * set_source_file("../AMD64_DARWIN/WordMod.m3 => ../src/builtinWord/Mod.mg")
+     * which damages debugging (this file does not exist) and is unnecessarily
+     * target specific, damaging portable distribution format.
+     *)
+    IF length > 0 AND Text.GetChar(file, length - 1) = 'g' THEN
+      pos := TextUtils.Pos(file, " => ");
+      IF pos # -1 THEN
+        file := Text.Sub(file, pos + 4, length - pos - 4);
+        length := Text.Length(file);
+      END
+    END;
+
+    (* Remove build_dir from start for portable distribution format.
+     * This is typically generic instantations but could be anything.
+     *)
+    IF length > Build_dir_length THEN
+      FOR i := 0 TO build_dir_length - 1 DO
+        IF NOT PathCharEqual(Text.GetChar(file, i), Text.GetChar(build_dir, i)) THEN
+          EXIT;
+        END;
+        IF i = build_dir_length - 1 THEN
+          file := Text.Sub(file, build_dir_length, length - build_dir_length);
+        END;
+      END;
+    END;
+  END;
+
+  RETURN file;
+END CleanupSourcePath;
 
 BEGIN
 END Target.
