@@ -2452,7 +2452,7 @@ BEGIN
       END;
 
       (* Remove build_dir from start for portable distribution format.
-       * This typically generic instantations but could be anything.
+       * This is typically generic instantations but could be anything.
        *)
       IF length > build_dir_length THEN
           FOR i := 0 TO build_dir_length - 1 DO
