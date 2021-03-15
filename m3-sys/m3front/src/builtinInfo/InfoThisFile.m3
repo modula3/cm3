@@ -5,6 +5,7 @@ MODULE InfoThisFile;
 
 IMPORT CallExpr, Expr, ExprRep, Procedure, ProcType, Textt;
 IMPORT Formal, Value, Scanner, TextExpr, M3String;
+IMPORT Target;
 
 VAR Z: CallExpr.MethodList;
 VAR formals: Value.T;
@@ -61,6 +62,7 @@ PROCEDURE GetValue () =
   BEGIN
     IF (value = NIL) THEN
       Scanner.LocalHere (file, line);
+      file := Target.CleanupSourcePath (file);
       value := TextExpr.New8 (M3String.Add (file));
     END;
   END GetValue;
