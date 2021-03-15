@@ -33,7 +33,9 @@ else
     readonly PROFILING_P = ""
 end
 
-readonly BUILD_DIR = TARGET & PROFILING_P
+if not defined("BUILD_DIR")
+    readonly BUILD_DIR = TARGET & PROFILING_P
+end
 
 readonly M3_BACKEND_MODE = "3"
 % -- defines how the frontend, backend, and assembler interact

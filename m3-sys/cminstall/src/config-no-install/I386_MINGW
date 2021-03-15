@@ -29,7 +29,9 @@ else
     readonly PROFILING_P = ""
 end
 
-readonly BUILD_DIR = TARGET & PROFILING_P
+if not defined("BUILD_DIR")
+    readonly BUILD_DIR = TARGET & PROFILING_P
+end
 
 % see the NT386 file for information
 readonly M3_BACKEND_MODE = "3" % other values are 0, 1, 2
