@@ -372,6 +372,7 @@ BEGIN
    *)
 
   IF file # NIL AND BackendMode = M3BackendMode_t.C THEN
+    file := TextUtils.SubstChar(file, '\\', '/');
     length := Text.Length(file);
     build_dir := Build_dir;
     build_dir_length := Build_dir_length;
