@@ -53,4 +53,7 @@ PROCEDURE GetAddrInfo(VAR endpoint: EP; node, port: char_star): int;
 <*EXTERNAL "IPInternal__GetNameInfo"*>
 PROCEDURE GetNameInfo(family, port: int; addr: ADDRESS; VAR host, service: TEXT): int;
 
+<*EXTERNAL "IPInternal__getsockname"*>
+PROCEDURE getsockname(fd: INTEGER; address: char_star; VAR port: INTEGER): INTEGER;
+
 END IPInternal.

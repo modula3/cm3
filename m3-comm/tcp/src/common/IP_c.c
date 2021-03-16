@@ -226,7 +226,7 @@ IPInternal__GetNameInfo(int family, int port, const void* addr, TEXT* hostText, 
         sockaddr_in sa4;
         sockaddr_in6 sa6;
     } sa;
-    int size = sizeof(sa.sa4);
+    socklen_t size = sizeof(sa.sa4);
     int err = {0};
 
     M3_STATIC_ASSERT(sizeof(in_addr) == 4);
@@ -298,6 +298,41 @@ IPInternal__Init(void)
         Process__RegisterExitor(IPInternal__Exitor);
 #endif
 }
+
+#ifndef _WIN32
+
+INTEGER
+__cdecl
+IPInternal__getsockname(INTEGER fd, char* address, INTEGER* port)
+// TODO ipv6 support
+{
+    union {
+        sockaddr sa;
+        sockaddr_storage sas;
+#ifndef _WIN32
+        sockaddr_un sun; // On AIX, larger than sas.
+#endif
+        sockaddr_in sa4;
+        sockaddr_in6 sa6;
+    } sa = {0};
+    INTEGER err = {0};
+    socklen_t size = sizeof(sa);
+
+    ZERO_MEMORY(sa);
+
+    err = getsockname(fd, &sa.sa, &size);
+    if (err < 0)
+        return err;
+
+    // address might not be aligned
+    memcpy(address, &sa.sa4.sin_addr, 4);
+
+    *port = sa.sa4.sin_port;
+
+    return 0;
+}
+
+#endif
 
 #if __cplusplus
 } // extern "C"
