@@ -4,6 +4,23 @@
 
 #include "m3core.h"
 
+#ifndef _WIN32
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <netinet/in.h>
+#include <netinet/tcp.h>
+#include <sys/un.h>
+#endif
+
+#define STRUCT_AND_TYPEDEF(x) struct x; typedef struct x x
+
+STRUCT_AND_TYPEDEF(linger);
+STRUCT_AND_TYPEDEF(sockaddr);
+STRUCT_AND_TYPEDEF(sockaddr_storage);
+STRUCT_AND_TYPEDEF(sockaddr_un);
+STRUCT_AND_TYPEDEF(sockaddr_in);
+STRUCT_AND_TYPEDEF(sockaddr_in6);
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -225,6 +242,91 @@ Usocket__recvfrom(int s, void* buf, WORD_T length, int flags, struct sockaddr* a
         return r;
     }
 }
+
+#ifndef _WIN32
+
+static
+INTEGER
+Usocket__un(
+    sockaddr_un* addr,
+    const char* path)
+{
+    int err = 0;
+    Scheduler__DisableSwitching();
+    memset(addr, 0, sizeof(*addr));
+    addr->sun_family = AF_UNIX;
+    if (path)
+    {
+        size_t length = strlen(path);
+        if (length > sizeof(addr->sun_path))
+        {
+            errno = ENAMETOOLONG;
+            err = -1;
+        }
+        else
+        {
+            memcpy(addr->sun_path, path, length);
+            err = 0;
+        }
+    }
+    return err;
+}
+
+M3_DLL_EXPORT
+INTEGER
+__cdecl
+Usocket_accept_un(int fd)
+{
+    union {
+        sockaddr sa;
+        sockaddr_storage sas;
+#ifndef _WIN32
+        sockaddr_un sun; // On AIX, larger than sas.
+#endif
+        sockaddr_in sa4;
+        sockaddr_in6 sa6;
+    } addr;
+    int err;
+    socklen_t socklen = sizeof(addr);
+    memset(&addr, 0, sizeof(addr));
+    addr.sun.sun_family = AF_UNIX;
+    Scheduler__DisableSwitching();
+    err = accept(fd, &addr.sa, &socklen);
+    Scheduler__EnableSwitching();
+    return err;
+}
+
+M3_DLL_EXPORT
+INTEGER
+__cdecl
+Usocket__bind_un(
+    int fd,
+    const char* path)
+{
+    sockaddr_un addr;
+    int err = Usocket__un(&addr, path);
+    if (err >= 0)
+        err = bind(fd, (sockaddr*)&addr, sizeof(addr));
+    Scheduler__EnableSwitching();
+    return err;
+}
+
+M3_DLL_EXPORT
+INTEGER
+__cdecl
+Usocket__connect_un(
+    int fd,
+    const char* path)
+{
+    sockaddr_un addr;
+    int err = Usocket__un(&addr, path);
+    if (err >= 0)
+        err = connect(fd, (sockaddr*)&addr, sizeof(addr));
+    Scheduler__EnableSwitching();
+    return err;
+}
+
+#endif
 
 #ifdef __cplusplus
 } /* extern "C" */

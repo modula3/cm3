@@ -9,7 +9,7 @@
 UNSAFE MODULE Jv;
 
 IMPORT Atom, AtomList, Ctypes, FilePosix, FileRd, FileWr, M3toC,
-       OSError, OSErrorPosix, Rd, RTMisc, Text, Thread, Uin, Usocket, Wr;
+       OSError, OSErrorPosix, Rd, Thread, Usocket, Wr;
 
 REVEAL
   T = Public BRANDED OBJECT
@@ -23,26 +23,20 @@ REVEAL
 PROCEDURE Init (t: T; pipeName: TEXT): T RAISES {OSError.E} =
   (* open Unix domain connection to server. *)
   VAR
-    unaddr: Usocket.struct_sockaddr_un;
-    fd    : INTEGER;
-    strlen := Text.Length(pipeName);
-    addrlen: Usocket.socklen_t := BYTESIZE(unaddr.sun_family) + strlen;
-  BEGIN
-    unaddr.sun_family := Usocket.AF_UNIX;
-    WITH string = M3toC.SharedTtoS(pipeName) DO
-      RTMisc.Copy(
-        string, ADR(unaddr.sun_path[0]), strlen + 1 (* +1 for '\0' *));
-      M3toC.FreeSharedS(pipeName, string);
-    END;
-
+    err: INTEGER;
+    cpipeName: Ctypes.char_star;
     fd := Usocket.socket(Usocket.AF_UNIX, Usocket.SOCK_STREAM, 0);
+  BEGIN
+
     IF fd < 0 THEN OSErrorPosix.Raise(); END;
 
-    WITH addr = LOOPHOLE(ADR(unaddr), UNTRACED REF Uin.struct_sockaddr_in) DO
-      IF Usocket.connect(fd, addr, addrlen) < 0 THEN
-        OSErrorPosix.Raise();
-      END;
-    END;
+    cpipeName := M3toC.SharedTtoS(pipeName);
+
+    err := Usocket.connect_un(fd, cpipeName);
+
+    M3toC.FreeSharedS(pipeName, cpipeName);
+
+    IF err < 0 THEN OSErrorPosix.Raise(); END;
 
     WITH file = FilePosix.NewPipe(fd, FilePosix.ReadWrite) DO
       t.rd := NEW(FileRd.T).init(file);
