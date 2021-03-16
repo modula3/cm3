@@ -1,10 +1,10 @@
-(* Copyright (C) 1992, Digital Equipment Corporation           *)
-(* All rights reserved.                                        *)
-(* See the file COPYRIGHT for a full description.              *)
-
-(* File: ArrayExpr.i3                                          *)
-(* Last Modified On Thu Aug 27 09:10:06 PDT 1992 By kalsow     *)
-(*      Modified On Fri Dec 21 01:19:11 1990 By muller         *)
+(* -----------------------------------------------------------------------1- *)
+(* File ArrayExpr.i3                                                         *)
+(* Modula-3 source code.                                                     *)
+(* Copyright 2020, 2021, Rodney M. Bates.                                    *)
+(* rodney.m.bates@acm.org                                                    *)
+(* Licensed under the MIT License.                                           *) 
+(* -----------------------------------------------------------------------2- *)
 
 INTERFACE ArrayExpr;
 (* An array constructor. *) 

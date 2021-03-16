@@ -1,8 +1,10 @@
-(* Copyright (C) 1992, Digital Equipment Corporation           *)
-(* All rights reserved.                                        *)
-(* See the file COPYRIGHT for a full description.              *)
-
-(* File: ArrayExpr.m3                                          *)
+(* -----------------------------------------------------------------------1- *)
+(* File ArrayExpr.m3                                                         *)
+(* Modula-3 source code.                                                     *)
+(* Copyright 2020, 2021, Rodney M. Bates.                                    *)
+(* rodney.m.bates@acm.org                                                    *)
+(* Licensed under the MIT License.                                           *) 
+(* -----------------------------------------------------------------------2- *)
 
 MODULE ArrayExpr;
 (* An array constructor. Built only during semantic procssing. *)
