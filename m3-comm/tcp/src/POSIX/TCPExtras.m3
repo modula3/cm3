@@ -16,7 +16,7 @@ PROCEDURE LocalEndpoint (conn: TCP.T): IP.Endpoint RAISES {IP.Error} =
         IPError.RaiseUnexpected ();
       END;
     END;
-    ep.port := Uin.ntohs(port);
+    ep.port := port;
     RETURN ep;
   END LocalEndpoint;
 
