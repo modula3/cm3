@@ -40,7 +40,7 @@ TYPE
   END;
 
   struct_sockaddr_un = RECORD
-    sin_family: unsigned_short; (* this is signed on some platforms; it does not matter *)
+    sun_family: unsigned_short; (* this is signed on some platforms; it does not matter *)
     sun_path: ARRAY [0..103] OF char;
   END;
 
