@@ -6,7 +6,8 @@ UNSAFE MODULE UDPPosix EXPORTS UDP;
 
 IMPORT Atom, AtomList, Ctypes, IP, M3toC;
 IMPORT OSErrorPosix, SchedulerPosix, Thread;
-IMPORT Cerrno, Uerror, Uin, Unix, Usocket, Utypes;
+IMPORT Cerrno, Uerror, Unix, UDPInternal;
+FROM Ctypes IMPORT int;
 
 REVEAL
   T = Public BRANDED "UDPPosix.T" OBJECT
@@ -25,8 +26,6 @@ REVEAL
    socket's endpoint, and "udp.fileno" set to the socket's corresponding
    file descriptor. *)
 
-CONST SinZero = ARRAY [0 .. 7] OF Ctypes.char{VAL(0, Ctypes.char), ..};
-
 PROCEDURE Raise(a: Atom.T) RAISES {IP.Error} =
   BEGIN
     RAISE IP.Error(AtomList.List2(a, OSErrorPosix.ErrnoAtom(Cerrno.GetErrno())));
@@ -39,51 +38,43 @@ PROCEDURE RaiseUnexpected(syscall: TEXT) RAISES {IP.Error} =
 
 PROCEDURE Init(self: T; myPort: IP.Port; myAddr: IP.Address): T
     RAISES {IP.Error} =
+  VAR err, status: int := 0;
   BEGIN
     <* ASSERT NOT self.open *>
     self.myEnd.port := myPort;
     self.myEnd.addr := myAddr;
 
+    UDPInternal.Init(self.fileno, myAddr, myPort, err, status);
+
     (* create socket via socket(2) system call *)
-    self.fileno := Usocket.socket(Usocket.AF_INET, Usocket.SOCK_DGRAM, 0);
     IF self.fileno = -1 THEN
-      WITH errno = Cerrno.GetErrno() DO
-        IF errno = Uerror.EMFILE OR errno = Uerror.ENFILE
+      IF err = Uerror.EMFILE OR err = Uerror.ENFILE
         THEN Raise(IP.NoResources)
         ELSE RaiseUnexpected("socket(2)")
-        END
       END
     END;
 
     (* bind socket via bind(2) system call *)
-    VAR sockaddr: Uin.struct_sockaddr_in; status: INTEGER; BEGIN
-      sockaddr.sin_family := Usocket.AF_INET;
-      sockaddr.sin_port := Uin.htons(myPort);
-      sockaddr.sin_addr.s_addr := LOOPHOLE(myAddr, Utypes.u_int);
-      sockaddr.sin_zero := SinZero;
-      status := Usocket.bind(self.fileno,
-        (*INOUT*) ADR(sockaddr), BYTESIZE(Uin.struct_sockaddr_in));
-      IF status # 0 THEN
-        IF Cerrno.GetErrno() = Uerror.EADDRINUSE
-          THEN Raise(IP.PortBusy)
-          ELSE RaiseUnexpected("bind(2)")
-        END
+    IF status # 0 THEN
+      IF err = Uerror.EADDRINUSE
+        THEN Raise(IP.PortBusy)
+        ELSE RaiseUnexpected("bind(2)")
       END
     END;
+
     self.open := TRUE;
+
     RETURN self
   END Init;
 
 PROCEDURE Send(self: T; READONLY d: Datagram): INTEGER RAISES {IP.Error} =
-  VAR numSent: INTEGER; sockaddr: Uin.struct_sockaddr_in; BEGIN
+  VAR numSent := 0;
+      data := ADR(d.bytes[0]);
+  BEGIN
     <* ASSERT self.open AND d.len <= NUMBER(d.bytes^) *>
-    sockaddr.sin_family := Usocket.AF_INET;
-    sockaddr.sin_port := Uin.htons(d.other.port);
-    sockaddr.sin_addr.s_addr := LOOPHOLE(d.other.addr, Utypes.u_int);
-    sockaddr.sin_zero := SinZero;
-    numSent := Usocket.sendto(self.fileno,
-      LOOPHOLE(ADR(d.bytes[0]), Ctypes.char_star), d.len, (*flags=*) 0,
-      ADR(sockaddr), BYTESIZE(Uin.struct_sockaddr_in));
+    numSent := UDPInternal.Send(self.fileno, data, d.len,
+                                ADR(d.other.addr.a[0]),
+                                d.other.port);
     IF numSent < 0 THEN RaiseUnexpected("sendto(2)") END;
     RETURN numSent
   END Send;
@@ -97,20 +88,14 @@ PROCEDURE Len(cstr: Ctypes.char_star) : INTEGER =
 
 PROCEDURE SendText(self: T; READONLY other: IP.Endpoint; t: TEXT): INTEGER
     RAISES {IP.Error} =
-  VAR 
-    numSent: INTEGER; 
-    sockaddr: Uin.struct_sockaddr_in; 
-    cstr: Ctypes.char_star;
+  VAR numSent := 0;
+      cstr := M3toC.SharedTtoS(t);
   BEGIN
     <* ASSERT self.open *>
-    sockaddr.sin_family := Usocket.AF_INET;
-    sockaddr.sin_port := Uin.htons(other.port);
-    sockaddr.sin_addr.s_addr := LOOPHOLE(other.addr, Utypes.u_int);
-    sockaddr.sin_zero := SinZero;
-    cstr := M3toC.SharedTtoS(t);
-    numSent := Usocket.sendto(self.fileno, cstr, Len(cstr), (*flags=*) 0,
-(*    LOOPHOLE(ADR(t[0]), Ctypes.char_star), NUMBER(t^) - 1, (*flags=*) 0, *)
-      ADR(sockaddr), BYTESIZE(Uin.struct_sockaddr_in));
+    numSent := UDPInternal.Send(self.fileno,
+                                LOOPHOLE(cstr, ADDRESS), Len(cstr),
+                                ADR(other.addr.a[0]),
+                                other.port);
     M3toC.FreeSharedS(t, cstr);
     IF numSent < 0 THEN RaiseUnexpected("sendto(2)") END;
     RETURN numSent
@@ -120,9 +105,10 @@ PROCEDURE Receive(self: T; VAR (*INOUT*) d: Datagram; timeout: LONGREAL)
     RAISES {Timeout, IP.Error, Thread.Alerted} =
   VAR
     waitRes: SchedulerPosix.WaitResult;
-    numRead: INTEGER;
-    sockaddr: Uin.struct_sockaddr_in;
-    saSize: Usocket.socklen_t;
+    addr: IP.Address4;
+    port: int := 0;
+    numRead := 0;
+    data := ADR(d.bytes[0]);
   BEGIN
     <* ASSERT self.open *>
     waitRes := SchedulerPosix.IOAlertWait(self.fileno, TRUE, timeout);
@@ -132,18 +118,13 @@ PROCEDURE Receive(self: T; VAR (*INOUT*) d: Datagram; timeout: LONGREAL)
     | SchedulerPosix.WaitResult.FDError => <* ASSERT FALSE *>
     | SchedulerPosix.WaitResult.Timeout => RAISE Timeout;
     END;
-    sockaddr.sin_zero := SinZero;
-    saSize := BYTESIZE(Uin.struct_sockaddr_in);
-    numRead := Usocket.recvfrom(self.fileno,
-      LOOPHOLE(ADR(d.bytes[0]), Ctypes.char_star), NUMBER(d.bytes^),
-      (*flags=*) 0, ADR(sockaddr), ADR(saSize));
+    numRead := UDPInternal.Receive(self.fileno, data, NUMBER(d.bytes^), ADR(addr.a[0]), port);
     IF numRead < 0
       THEN RaiseUnexpected("recvfrom(2)")
       ELSE d.len := numRead
     END;
-    <* ASSERT saSize = BYTESIZE(Uin.struct_sockaddr_in) *>
-    d.other.port := Uin.ntohs(sockaddr.sin_port);
-    d.other.addr := LOOPHOLE(sockaddr.sin_addr.s_addr, IP.Address);
+    d.other.port := port;
+    d.other.addr := addr;
   END Receive;
 
 PROCEDURE Close(self: T) RAISES {IP.Error} =
