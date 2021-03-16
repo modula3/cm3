@@ -16,13 +16,10 @@ _FloatPieces = {
 %  "FreeBSD4"      : [ "IEEE", "IEEE-le", "C99" ]
 }
 
+% C99 might require Solaris 2.10 or newer for {I386,SPARC32,SPARC64}_SOLARIS.
+% AMD64_SOLARIS presumably requires Solaris 2.10.
 _FloatPiecesNoC99 = {
     "NT",
-    "SOLsun",           % Solaris <2.10
-    "SOLgnu",           % Solaris <2.10
-    "SPARC32_SOLARIS",  % Solaris <2.10
-    "SPARC64_SOLARIS",  % Solaris <2.10
-    "I386_SOLARIS",     % Solaris <2.10
 }
 
 _FloatPiecesC99 = {
