@@ -24,6 +24,7 @@ end
 Interface ("JVBuffer")
 Interface ("JVSink")
 Interface ("Jv")
+implementation ("Jv")
 Module    ("Jvs")
 Module    ("Jva")
 Interface ("JvsProtocol")

@@ -9,7 +9,7 @@
 UNSAFE MODULE Jv;
 
 IMPORT Atom, AtomList, Ctypes, FilePosix, FileRd, FileWr, M3toC,
-       OSError, OSErrorPosix, Rd, RTMisc, Text, Thread, Usocket, Wr;
+       OSError, OSErrorPosix, Rd, RTMisc, Text, Thread, Uin, Usocket, Wr;
 
 REVEAL
   T = Public BRANDED OBJECT
@@ -25,7 +25,8 @@ PROCEDURE Init (t: T; pipeName: TEXT): T RAISES {OSError.E} =
   VAR
     unaddr: Usocket.struct_sockaddr_un;
     fd    : INTEGER;
-    strlen                             := Text.Length(pipeName);
+    strlen := Text.Length(pipeName);
+    addrlen: Usocket.socklen_t := BYTESIZE(unaddr.sun_family) + strlen;
   BEGIN
     unaddr.sun_family := Usocket.AF_UNIX;
     WITH string = M3toC.SharedTtoS(pipeName) DO
@@ -37,8 +38,7 @@ PROCEDURE Init (t: T; pipeName: TEXT): T RAISES {OSError.E} =
     fd := Usocket.socket(Usocket.AF_UNIX, Usocket.SOCK_STREAM, 0);
     IF fd < 0 THEN OSErrorPosix.Raise(); END;
 
-    WITH addr = LOOPHOLE(ADR(unaddr), UNTRACED REF Usocket.struct_sockaddr),
-         addrlen = BYTESIZE(unaddr.sun_family) + strlen DO
+    WITH addr = LOOPHOLE(ADR(unaddr), UNTRACED REF Uin.struct_sockaddr_in) DO
       IF Usocket.connect(fd, addr, addrlen) < 0 THEN
         OSErrorPosix.Raise();
       END;
