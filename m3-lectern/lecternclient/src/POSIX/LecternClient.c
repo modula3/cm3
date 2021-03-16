@@ -17,15 +17,17 @@
 #include <stdio.h>
 #include <errno.h>
 #include <sys/param.h>
-extern char *getcwd(); /* args: char *buf, size_t size */
+#include <stdlib.h>
+#include <unistd.h>
 
 static char *argv0;
 
-static Abort(action) char *action; {
+static Abort(char *action)
+{
   fprintf(stderr, "%s: ", argv0);
   perror(action);
   exit(1);
-  }
+}
 
 static Usage() {
   fprintf(
@@ -35,10 +37,11 @@ static Usage() {
   exit(1);
   }
 
-static PutInt(n, wr) int n; FILE *wr; {
+static PutInt(int n, FILE *wr)
+{
   int i;
   for (i = 0; i <= 24; i += 8) putc((n >> i) % 256, wr);
-  }
+}
 
 #define NUMSTR 50
 #define STRSIZE 300
@@ -53,7 +56,9 @@ static StartLectern() {
     }
   }
 
-main(argc, argv) int argc; char *argv[]; {
+int
+main(int argc, char *argv[])
+{
   int s;
   struct sockaddr_un addr;
   struct stat statbuffer;
@@ -61,6 +66,8 @@ main(argc, argv) int argc; char *argv[]; {
   char str[NUMSTR][STRSIZE];
   char pathname[MAXPATHLEN+1];
   int i, nArgs, nChars, j;
+
+  memset(&addr, 0, sizeof(addr));
 
   argv0 = argv[0];
 
@@ -169,4 +176,4 @@ main(argc, argv) int argc; char *argv[]; {
   fflush(wr);
 
   exit(0);
-  }
+}
