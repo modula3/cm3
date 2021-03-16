@@ -15,7 +15,9 @@ readonly Compiler_i3 = [
   "CONST",
   "  ThisOS       = OS." & OS_TYPE & ";",
   "  ThisOS_String  = \"" & OS_TYPE & "\";",
-  "  ThisPlatform_String = \"" & TARGET & "\";",
+ % This makes C backend output different for every platform.
+ % Nobody in-tree uses it. If it is really needed, just omit it when using C backend.
+ %"  ThisPlatform_String = \"" & TARGET & "\";",
   "  ThisEndian = ENDIAN." & TARGET_ENDIAN & ";",
   "  ThisEndian_String = \"" & TARGET_ENDIAN & "\";",
   "",
