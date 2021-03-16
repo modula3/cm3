@@ -33,12 +33,6 @@ TYPE
     sin6_scope_id : unsigned;       (* Scope ID (new in 2.4) *)
   END;
 
-  (* generic struct just to get the family before casting *)
-  struct_sockaddr = RECORD
-    sin_family : unsigned_short;   (* AF_INET or AF_INET6 *)
-    data       : ARRAY [0..13] OF CHAR;
-  END;
-
 <*EXTERNAL "Uin__ntohl"*> PROCEDURE ntohl(x: unsigned): unsigned;
 <*EXTERNAL "Uin__ntohs"*> PROCEDURE ntohs(x: unsigned_short): unsigned_short;
 <*EXTERNAL "Uin__htonl"*> PROCEDURE htonl(x: unsigned): unsigned;
