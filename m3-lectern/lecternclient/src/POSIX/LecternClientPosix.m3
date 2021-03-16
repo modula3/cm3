@@ -11,7 +11,7 @@ UNSAFE MODULE LecternClientPosix EXPORTS LecternClient;
 
 FROM Ctypes IMPORT int;
 
-IMPORT Atom, Cerrno, FilePosix, FileWr, Fmt, OSError, OSErrorPosix, Process,
+IMPORT Atom, Cerrno, Ctypes, FilePosix, FileWr, Fmt, M3toC, OSError, OSErrorPosix, Process,
   Text, Thread, Uerror, Unix, Usocket, Ustat, Uugid, Word, Wr;
 
 PROCEDURE PutInt(wr: Wr.T; n: INTEGER) RAISES {Wr.Failure, Thread.Alerted} =
@@ -36,8 +36,8 @@ CONST Retries = 6;
 
 PROCEDURE Send(READONLY params: ARRAY OF TEXT) RAISES {Error} =
   VAR
-    s: int;
-    addr: Usocket.struct_sockaddr_un;
+    s: int := -1;
+    sun_path: Ctypes.char_star := NIL;
     name: TEXT;
     statbuffer: Ustat.struct_stat;
     wr: Wr.T;
@@ -46,35 +46,23 @@ PROCEDURE Send(READONLY params: ARRAY OF TEXT) RAISES {Error} =
       s := Usocket.socket(Usocket.AF_UNIX, Usocket.SOCK_STREAM, 0);
       IF s < 0 THEN OSErrorPosix.Raise() END;
       TRY
-
-	addr.sun_family := Usocket.AF_UNIX;
-
-	name := "/tmp/lectern"
-	  & Fmt.Int(Uugid.geteuid()) (* & "-" & GetHostname() *);
-
-	Text.SetChars(
-	  LOOPHOLE(addr.sun_path, ARRAY [0..NUMBER(addr.sun_path)-1] OF CHAR),
-	  name & "\000");
+        name := "/tmp/lectern" & Fmt.Int(Uugid.geteuid()) (* & "-" & GetHostname() *);
+        sun_path := M3toC.SharedTtoS(name);
 
         FOR i := 1 TO Retries DO
 
-	  IF Ustat.stat(ADR(addr.sun_path[0]), ADR(statbuffer)) = 0 THEN
+          IF Ustat.stat(sun_path, ADR(statbuffer)) = 0 THEN
             IF statbuffer.st_uid # Uugid.geteuid() THEN
-	      OSErrorPosix.Raise0(Uerror.EACCES)
-	    END;
-	    IF Usocket.connect(
-		 s,
-		 LOOPHOLE(ADR(addr), UNTRACED REF Usocket.struct_sockaddr),
-		 BYTESIZE(addr.sun_family) + Text.Length(name)) = 0 THEN
+              OSErrorPosix.Raise0(Uerror.EACCES)
+            END;
+            IF Usocket.connect_un(s, sun_path) = 0 THEN
               EXIT (* connection to Lectern established *)
             ELSIF Cerrno.GetErrno() # Uerror.ECONNREFUSED THEN
-	      OSErrorPosix.Raise()
-	    END
-          ELSE
-	    IF Cerrno.GetErrno() # Uerror.ENOENT THEN
-	      OSErrorPosix.Raise()
-	    END
-	  END;
+              OSErrorPosix.Raise()
+            END
+          ELSIF Cerrno.GetErrno() # Uerror.ENOENT THEN
+            OSErrorPosix.Raise()
+          END;
 
           IF i = 1 THEN StartLectern() END;
           IF i = Retries THEN OSErrorPosix.Raise() END;
@@ -82,23 +70,24 @@ PROCEDURE Send(READONLY params: ARRAY OF TEXT) RAISES {Error} =
 
         END;
 
-	wr := NEW(FileWr.T).init(FilePosix.NewPipe(s, FilePosix.Write));
+        wr := NEW(FileWr.T).init(FilePosix.NewPipe(s, FilePosix.Write));
 
-
-	TRY
-	  PutInt(wr, NUMBER(params));
-	  FOR i := 0 TO LAST(params) DO
-	    PutInt(wr, Text.Length(params[i]));
-	    Wr.PutText(wr, params[i])
-	  END;
-	  Wr.Flush(wr)
-	EXCEPT
-	  Wr.Failure, Thread.Alerted =>
-	END
-      FINALLY
-	EVAL Unix.close(s)
+        TRY
+          PutInt(wr, NUMBER(params));
+          FOR i := 0 TO LAST(params) DO
+            PutInt(wr, Text.Length(params[i]));
+            Wr.PutText(wr, params[i])
+          END;
+          Wr.Flush(wr)
+        EXCEPT
+          Wr.Failure, Thread.Alerted =>
+        END;
+        FINALLY
+          M3toC.FreeSharedS(name, sun_path);
+          EVAL Unix.close(s)
+        END
+      EXCEPT OSError.E(code) => RAISE Error(Atom.ToText(code.head))
       END
-    EXCEPT OSError.E(code) => RAISE Error(Atom.ToText(code.head))
     END
   END Send;
 

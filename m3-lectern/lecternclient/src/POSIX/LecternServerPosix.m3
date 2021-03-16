@@ -7,8 +7,8 @@ UNSAFE MODULE LecternServerPosix EXPORTS LecternServer;
 
 FROM Ctypes IMPORT int;
 
-IMPORT Atom, Cerrno, (*Cstring,*) FilePosix, FileRd, Fmt, FS, OSError,
-   OSErrorPosix, Rd, SchedulerPosix, Text, Thread, Uerror, Unix,
+IMPORT Atom, Cerrno, (*Cstring,*) Ctypes, FilePosix, FileRd, Fmt, FS, M3toC,
+   OSError, OSErrorPosix, Rd, SchedulerPosix, Text, Thread, Uerror, Unix,
    Usocket, Uugid, Word;
 
 VAR
@@ -30,31 +30,28 @@ PROCEDURE GetHostname(): TEXT RAISES {OSError.E} =
 PROCEDURE Initialize() RAISES {OSError.E} =
   VAR
     name: TEXT;
-    addr: Usocket.struct_sockaddr_un;
     mode: int;
+    sun_path: Ctypes.char_star;
+    err: INTEGER;
   BEGIN
     s := Usocket.socket(Usocket.AF_UNIX, Usocket.SOCK_STREAM, 0);
     IF s < 0 THEN OSErrorPosix.Raise() END;
     name := "/tmp/lectern"
       & Fmt.Int(Uugid.geteuid()) (* & "-" & GetHostname() *);
     TRY FS.DeleteFile(name) EXCEPT OSError.E => END;
-    addr.sun_family := Usocket.AF_UNIX;
-    Text.SetChars(
-      LOOPHOLE(addr.sun_path, ARRAY [0..NUMBER(addr.sun_path)-1] OF CHAR),
-      name);
-    WITH n = Text.Length(name) DO
-      addr.sun_path[n] := ORD('\000');
-      IF Usocket.bind(
-           s,
-           LOOPHOLE(ADR(addr), UNTRACED REF Usocket.struct_sockaddr),
-           BYTESIZE(addr.sun_family) + n) < 0 THEN
-        OSErrorPosix.Raise()
-      END
+    sun_path := M3toC.SharedTtoS(name);
+    err := Usocket.bind_un(s, sun_path);
+    IF err = 0 THEN
+      (* *** Call chmod before bind? *)
+      err := Unix.chmod(sun_path, Unix.MROWNER+Unix.MWOWNER);
     END;
-    (* *** Call chmod before bind? *)
-    IF Unix.chmod(ADR(addr.sun_path[0]), Unix.MROWNER+Unix.MWOWNER) < 0 THEN
+
+    M3toC.FreeSharedS(name, sun_path);
+
+    IF err < 0 THEN
       OSErrorPosix.Raise()
     END;
+
     IF Usocket.listen(s, 5) < 0 THEN OSErrorPosix.Raise() END;
     mode := Word.Or(Unix.fcntl(s, Unix.F_GETFL, 0), Unix.O_NDELAY);
     IF Unix.fcntl(s, Unix.F_SETFL, mode) # 0 THEN
@@ -79,17 +76,10 @@ PROCEDURE Accept(s: int): int RAISES {OSError.E} =
 (* Block until a new connection request arrives on file descriptor "s",
    and return a file descriptor for it. *)
   VAR
-    addr: Usocket.struct_sockaddr_un;
-    addrlen: int;
     fd: int;
   BEGIN
     LOOP
-      addr.sun_family := Usocket.AF_UNIX;
-      addrlen := BYTESIZE(addr);
-      fd := Usocket.accept(
-	s,
-	LOOPHOLE(ADR(addr), UNTRACED REF Usocket.struct_sockaddr), 
-	ADR(addrlen));
+      fd := Usocket.accept_un(s);
       IF fd < 0 THEN
         WITH errno = Cerrno.GetErrno() DO
           IF errno # Uerror.EWOULDBLOCK AND errno # Uerror.EAGAIN THEN
