@@ -44,7 +44,7 @@ PROCEDURE Init(self: T; myPort: IP.Port; myAddr: IP.Address): T
     self.myEnd.port := myPort;
     self.myEnd.addr := myAddr;
 
-    UDPInternal.Init(self.fileno, myAddr, myPort, err, status);
+    UDPInternal.Init(self.fileno, ADR(myAddr.a[0]), myPort, err, status);
 
     (* create socket via socket(2) system call *)
     IF self.fileno = -1 THEN
