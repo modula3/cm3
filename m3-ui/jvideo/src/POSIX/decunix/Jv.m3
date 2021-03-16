@@ -28,9 +28,10 @@ PROCEDURE Init (t: T; pipeName: TEXT): T RAISES {OSError.E} =
     strlen                             := Text.Length(pipeName);
   BEGIN
     unaddr.sun_family := Usocket.AF_UNIX;
-    WITH string = M3toC.TtoS(pipeName) DO
+    WITH string = M3toC.SharedTtoS(pipeName) DO
       RTMisc.Copy(
         string, ADR(unaddr.sun_path[0]), strlen + 1 (* +1 for '\0' *));
+      M3toC.FreeSharedS(pipeName, string);
     END;
 
     fd := Usocket.socket(Usocket.AF_UNIX, Usocket.SOCK_STREAM, 0);
