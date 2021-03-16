@@ -6,6 +6,9 @@
 
 Interface ("UDP")
 
+c_source("UDP_c")
+interface("UDPInternal")
+
 if AT_SRC
   local_i3 ("UDP")
 end
