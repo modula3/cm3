@@ -3,6 +3,7 @@ IMPORT Ctypes, IP;
 
 TYPE
   char_star = Ctypes.char_star;
+  const_char_star = Ctypes.const_char_star;
   EP = IP.EP;
   int = Ctypes.int;
   Address4 = IP.Address4;
@@ -55,5 +56,8 @@ PROCEDURE GetNameInfo(family, port: int; addr: ADDRESS; VAR host, service: TEXT)
 
 <*EXTERNAL "IPInternal__getsockname"*>
 PROCEDURE getsockname(fd: INTEGER; address: char_star; VAR port: INTEGER): INTEGER;
+
+<*EXTERNAL "IPInternal__NewConnector_Bind"*>
+PROCEDURE NewConnector_Bind(fd: INTEGER; address: const_char_star; port: INTEGER): INTEGER;
 
 END IPInternal.
