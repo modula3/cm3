@@ -7,48 +7,7 @@
 implementation ("RTArgs")
 implementation ("RTOS")
 module         ("RTPerfTool")
-
-readonly RTOSbrk = {
-  %
-  % memory from mmap seemed to be too spread out for the allocator's data structures to describe
-  %
-  "AMD64_LINUX" : 1,
-
-  %
-  % Several platforms don't define MAP_ANON or MAP_ANONYMOUS or even have Umman,
-  % and sbrk was the historical implementation, but we probably don't care.
-  % see http://modula3.elegosoft.com/cgi-bin/cvsweb.cgi/cm3/m3-libs/m3core/src/runtime/POSIX/RTOS.m3?rev=1.1;content-type=text%2Fplain
-  %
-  % This is very much a guess and should be confirmed if systems are available.
-  %
-  "AIX386" : 1,
-  "IBMR2" : 1,
-  "IBMRT" : 1,
-  "IRIX5" : 1, % Outdated? Seems not.
-  "SPARC" : 1, % SunOS 4.x
-}
-
-readonly Ultrix = {
-  "AP3000" : 1,
-  "ARM" : 1,
-  "DS3100" : 1,
-  "NEXT" : 1,
-  "SEQUENT" : 1,
-  "SUN3" : 1,
-  "SUN386" : 1,
-  "UMAX" : 1,
-  "VAX" : 1,
-}
-
-if (RTOSbrk contains TARGET) or (Ultrix contains TARGET)
-    c_source ("RTOSbrk")
-else
-    %
-    % default to mmap(MAP_ANON) which is very portable
-    %
-    c_source ("RTOSmmap")
-end
-
+c_source       ("RTOSc")
 interface      ("RTSignalPrivate")
 c_source       ("RTSignalC")
 interface      ("RTSignalC")
