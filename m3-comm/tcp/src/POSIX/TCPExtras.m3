@@ -4,22 +4,19 @@
 
 UNSAFE MODULE TCPExtras;
 
-IMPORT Ctypes, IP, IPError, TCP, TCPPosix, Uin, Usocket;
+IMPORT Ctypes, IP, IPError, IPInternal, TCP, TCPPosix, Uin;
 
 PROCEDURE LocalEndpoint (conn: TCP.T): IP.Endpoint RAISES {IP.Error} =
-  VAR
-    addr : Uin.struct_sockaddr_in;
-    len  : Usocket.socklen_t := BYTESIZE (addr);
-    ep   : IP.Endpoint;
+  VAR port := 0;
+      ep   : IP.Endpoint;
   BEGIN
     LOCK conn DO
       IF conn.closed THEN IPError.Raise (TCP.Closed); END;
-      IF Usocket.getsockname (conn.fd, ADR (addr), ADR(len)) < 0 THEN
+      IF IPInternal.getsockname (conn.fd, ADR(ep.addr.a[0]), port) < 0 THEN
         IPError.RaiseUnexpected ();
       END;
     END;
-    ep.addr := LOOPHOLE (addr.sin_addr, IP.Address);
-    ep.port := Uin.ntohs (addr.sin_port);
+    ep.port := Uin.ntohs(port);
     RETURN ep;
   END LocalEndpoint;
 
