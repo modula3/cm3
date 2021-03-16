@@ -22,6 +22,13 @@ TYPE
     sin_zero: ARRAY [0..7] OF char;
   END;
 
+  (* generic struct to get the family before casting *)
+  struct_sockaddr = RECORD
+    sin_len: unsigned_char; (* This is absent on other platforms. *)
+    sin_family: unsigned_char; (* This is 16 bits on other platforms. *)
+    data       : ARRAY [0..13] OF CHAR;
+  END;
+
   struct_sockaddr_un = RECORD
     sun_len: unsigned_char;
     sun_family: unsigned_char;
