@@ -2425,24 +2425,10 @@ END end_unit;
 PROCEDURE set_source_file(self: T; file: TEXT) =
 (* Sets the current source file name. Subsequent statements
    and expressions are associated with this source location. *)
-VAR pos := 0; length := 0;
 BEGIN
-    IF file # NIL THEN
-      file := TextUtils.SubstChar(file, '\\', '/');
+    file := TextUtils.SubstChar(file, '\\', '/');
+    file := Target.CleanupSourcePath(file);
 
-      (* m3front does like:
-       * set_source_file("../AMD64_DARWINc/WordMod.m3 => ../src/builtinWord/Mod.mg")
-       * which damages debugging (this file does not exist) and is unnecessarily
-       * target specific, damaging portable redistribution formats.
-       *)
-      length := Text.Length(file);
-      IF length > 0 AND Text.GetChar(file, length - 1) = 'g' THEN
-        pos := TextUtils.Pos(file, " => ");
-        IF pos # -1 THEN
-          file := Text.Sub(file, pos + 4, length - pos - 4);
-        END
-      END;
-    END;
     IF DebugVerbose(self) THEN
         self.comment("set_source_file file:", file);
     ELSE
@@ -4832,25 +4818,33 @@ CONST Printable = ASCII.AlphaNumerics
 PROCEDURE init_chars(self: T; offset: ByteOffset; value: TEXT) =
 VAR length := Text.Length(value);
     ch: CHAR;
+    debug_print := value;
 BEGIN
-    IF DebugVerbose(self) THEN
-      self.comment("init_chars offset:" & IntToDec(offset) &
-        " length:" & IntToDec(length));
-    ELSE
-      self.comment("init_chars");
-    END;
-    IF length = 0 THEN
-        RETURN;
-    END;
-    FOR i := 0 TO length - 1 DO
+
+    IF length # 0 THEN
+
+      FOR i := 0 TO length - 1 DO
         init_helper(self, offset + i, CGType.Word8);
         ch := Text.GetChar(value, i);
         IF ch IN Printable THEN
+            IF ch = '*' OR ch = '/' THEN
+              debug_print := "<not printable1>"; (* might terminate or nest comment *)
+            END;
             initializer_addhi(self, "'" & Text.Sub(value, i, 1) & "'");
         ELSE
+            debug_print := "<not printable2>";
             initializer_addhi(self, IntToDec(ORD(ch)));
         END;
+      END;
     END;
+
+    IF DebugVerbose(self) THEN
+      self.comment("init_chars offset:" & IntToDec(offset) &
+        " length:" & IntToDec(length) & " value:" & debug_print);
+    ELSE
+      self.comment("init_chars");
+    END;
+
 END init_chars;
 
 PROCEDURE Segments_init_chars(self: Segments_t; offset: ByteOffset; value: TEXT) =

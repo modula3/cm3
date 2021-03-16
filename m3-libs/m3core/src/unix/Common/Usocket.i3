@@ -4,7 +4,7 @@
 
 INTERFACE Usocket;
 
-FROM Ctypes IMPORT int, void_star, const_void_star;
+FROM Ctypes IMPORT int, void_star, const_void_star, const_char_star;
 FROM Cstddef IMPORT size_t;
 FROM Uin IMPORT struct_sockaddr_in;
 IMPORT Utypes, Uin;
@@ -117,7 +117,6 @@ IMPORT Utypes, Uin;
 <*EXTERNAL "Usocket__SOMAXCONN"*>   VAR SOMAXCONN: int; (* Maximum queue length specifiable by listen. *)
 
 TYPE
-  struct_sockaddr_un = Uin.struct_sockaddr_un;
   socklen_t = Utypes.socklen_t; (* size_t *)
   socklen_t_star = UNTRACED REF socklen_t;
 
@@ -171,5 +170,22 @@ PROCEDURE shutdown(s, how: int): int RAISES {};
 
 <*EXTERNAL "Usocket__socket"*>
 PROCEDURE socket(af, type, protocol: int): int RAISES {};
+
+(* Copy path into a struct sockaddr_un.sun_path
+ * set sun_family = AF_UNIX
+ * call bind or connect.
+ * For failure return -1.
+ * If path does not fit in sockaddr, errno = ENAMETOOLONG
+ *
+ * This hides the layout of sockaddr_un from Modula-3.
+ *)
+<*EXTERNAL "Usocket__connect_un"*>
+PROCEDURE connect_un(fd: int; path: const_char_star): int;
+
+<*EXTERNAL "Usocket__bind_un"*>
+PROCEDURE bind_un(fd: int; path: const_char_star): int;
+
+<*EXTERNAL "Usocket__accept_un"*>
+PROCEDURE accept_un(fd: int): int;
 
 END Usocket.

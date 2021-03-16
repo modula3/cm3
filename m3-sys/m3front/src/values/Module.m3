@@ -1136,11 +1136,12 @@ PROCEDURE GenLinkerInfo (t: T;  proc_info, type_map, rev_full, rev_part: INTEGER
   BEGIN
     Scanner.offset := t.origin;
     IF (t.genericFile # NIL) THEN
-      offs := CG.EmitText (t.genericFile, is_const := TRUE);
+      file := t.genericFile;
     ELSE
       Scanner.Here (file, line);
-      offs := CG.EmitText (file, is_const := TRUE);
     END;
+    file := Target.CleanupSourcePath (file);
+    offs := CG.EmitText (file, is_const := TRUE);
     CG.Init_var (M3RT.MI_file, vc, offs, is_const := FALSE);
     CG.Comment (offs, TRUE, "file name");
 

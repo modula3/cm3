@@ -461,4 +461,11 @@ VAR (*CONST*)
      test for nested procedures passed as parameters must be more
      elaborate (e.g. HPPA). *)
 
+(* Ideally the value 0 would be uninitialized, but it is used publically in Quake? *)
+VAR BackendMode: M3BackendMode_t;
+VAR BackendModeInitialized := FALSE;
+
+PROCEDURE SetBuild_dir(build_dir: TEXT);
+PROCEDURE CleanupSourcePath(file: TEXT): TEXT;
+
 END Target.

@@ -367,7 +367,9 @@ PROCEDURE Eval (t: T)
                  as it already has; the old value is kept *)
               val := bind.value;
             ELSE
-              Err (t, "cannot assign to readonly variable: " & t.map.id2txt(arg));
+              Err (t, "cannot assign to readonly variable: " & t.map.id2txt(arg) &
+                   " old:" & t.map.id2txt(bind.value.int) &
+                   " new:" & t.map.id2txt(val.int));
             END;
           END;
           bind.value := val;

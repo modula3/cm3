@@ -5,7 +5,7 @@ MODULE Main;
 
 IMPORT M3Timers, Pathname, Process, Quake;
 IMPORT RTCollector, RTParams, RTutils, Thread, Wr;
-IMPORT TextTextTbl;
+IMPORT TextTextTbl, Target;
 
 IMPORT Builder, Dirs, M3Build, M3Options, Makefile, Msg, Utils, WebFile;
 IMPORT MxConfig(*, M3Config, CMKey, CMCurrent *);
@@ -99,6 +99,7 @@ VAR defs: TextTextTbl.T;
         IF (build_dir = NIL) THEN
           Msg.FatalError (NIL, "configuration file didn't specify BUILD_DIR");
         END;
+        Target.SetBuild_dir (build_dir);
         Dirs.SetUp (build_dir);
 
         (* define the "builtin" quake functions *)

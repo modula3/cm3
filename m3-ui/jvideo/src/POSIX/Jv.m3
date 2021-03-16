@@ -2,13 +2,14 @@
 (* All rights reserved. *)
 (* See the file COPYRIGHT for a full description. *)
 
-(* Last modified on Tue Feb  7 11:22:30 PST 1995 by kalsow   *)
+(* Last modified on Tue Feb 22 23:08:42 PST 1994 by kalsow   *)
 (*      modified on Fri Jan  7 14:56:04 PST 1994 by msm      *)
 (*      modified on Thu Oct 21 17:03:16 PDT 1993 by sfreeman *)
 
 UNSAFE MODULE Jv;
 
-IMPORT Atom, AtomList, Ctypes, OSError, OSErrorPosix, Rd, Thread, Wr;
+IMPORT Atom, AtomList, Ctypes, FilePosix, FileRd, FileWr, M3toC,
+       OSError, OSErrorPosix, Rd, Thread, Usocket, Wr;
 
 REVEAL
   T = Public BRANDED OBJECT
@@ -19,12 +20,29 @@ REVEAL
         close := Close;
       END;
 
-PROCEDURE Init (<*UNUSED*> t: T;
-                <*UNUSED*> pipeName: TEXT): T RAISES {OSError.E} =
+PROCEDURE Init (t: T; pipeName: TEXT): T RAISES {OSError.E} =
   (* open Unix domain connection to server. *)
+  VAR
+    err: INTEGER;
+    cpipeName: Ctypes.char_star;
+    fd := Usocket.socket(Usocket.AF_UNIX, Usocket.SOCK_STREAM, 0);
   BEGIN
-    OSErrorPosix.Raise();
-    RETURN NIL;
+
+    IF fd < 0 THEN OSErrorPosix.Raise(); END;
+
+    cpipeName := M3toC.SharedTtoS(pipeName);
+
+    err := Usocket.connect_un(fd, cpipeName);
+
+    M3toC.FreeSharedS(pipeName, cpipeName);
+
+    IF err < 0 THEN OSErrorPosix.Raise(); END;
+
+    WITH file = FilePosix.NewPipe(fd, FilePosix.ReadWrite) DO
+      t.rd := NEW(FileRd.T).init(file);
+      t.wr := NEW(FileWr.T).init(file, FALSE);
+    END;
+    RETURN t;
   END Init;
 
 PROCEDURE Close (t: T) =
@@ -41,7 +59,7 @@ PROCEDURE Close (t: T) =
 TYPE
   LongArrayPtr =
     UNTRACED REF
-      ARRAY [0 .. ((LAST(CARDINAL) DIV (BITSIZE(CHAR)*8)) - 1)] OF CHAR;
+      ARRAY [0 .. ((LAST(CARDINAL) DIV BITSIZE(CHAR)) - 1)] OF CHAR;
 (* hack to get around type system.  The horrible formula for the length of
    the array gives the longest possible array *)
 

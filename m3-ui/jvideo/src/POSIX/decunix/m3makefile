@@ -5,6 +5,5 @@
 % Last modified on Tue Nov  1 09:24:09 PST 1994 by kalsow
 
 implementation ("JVSink")
-implementation ("Jv")
 implementation ("JvsBuffer")
 

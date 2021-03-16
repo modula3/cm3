@@ -254,7 +254,7 @@ PROCEDURE ConvertNamingConventionStringToEnum(s: State;
   END ConvertNamingConventionStringToEnum;
 
 PROCEDURE SetupNamingConventions (mach : Quake.Machine) =
-  VAR s := NEW (State);
+VAR s := NEW (State); (* TODO: Refactor to avoid creating garbage. *)
   BEGIN
     SetupNamingConventionsInternal (s, mach);
   END SetupNamingConventions;
@@ -296,6 +296,8 @@ PROCEDURE CompileUnits (main     : TEXT;
         ConfigErr (s, "BACKEND_MODE or M3_BACKEND_MODE", "not defined");
     END;
     s.m3backend_mode := ConvertBackendModeStringToEnum(s, value);
+    Target.BackendMode := Target.BackendMode;
+    Target.BackendModeInitialized := TRUE;
 
     value := GetDefn (s, "TARGET_NAMING");
     IF value # NIL THEN

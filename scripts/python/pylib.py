@@ -413,7 +413,7 @@ def TargetOnlyHasCBackend(a):
         return false
     return a.endswith("_nt") or a.startswith("arm64") or a.startswith("riscv")
 
-_PossibleCm3Flags = ["boot", "keep", "override", "commands", "verbose", "why"]
+_PossibleCm3Flags = ["boot", "keep", "override", "commands", "verbose", "why", "debug", "trace"]
 _SkipGccFlags = ["nogcc", "skipgcc", "omitgcc"]
 _PossiblePylibFlags = ["noclean", "nocleangcc", "c", "C", "+c", "+C"] + _SkipGccFlags + _PossibleCm3Flags
 
@@ -760,6 +760,8 @@ BuildDir = ("%(Config)s%(_BuildDirC)s" % vars())
 M3GDB = (M3GDB or CM3_GDB)
 Scripts = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PKGSDB = os.path.join(Scripts, "PKGS")
+
+CM3_FLAGS = CM3_FLAGS + " -DBUILD_DIR=" + BuildDir
 
 #-----------------------------------------------------------------------------
 
