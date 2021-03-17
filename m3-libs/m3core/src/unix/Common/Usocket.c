@@ -14,6 +14,11 @@ M3_STATIC_ASSERT(AF_INET6 > 0);
 M3_STATIC_ASSERT(AF_UNIX > 0);
 #endif
 
+// Win32 does define AF_UNIX but historically not implement it.
+#ifdef _WIN32
+#undef AF_UNIX
+#endif
+
 // Idealized Modula3 IPv4 socket address.
 // This does match many systems but not all.
 // Sometimes family is 8 bits, adjacent to another 8 bits,
@@ -87,8 +92,9 @@ M3_STATIC_ASSERT(offsetof(sockaddr_un, sun_family) == 0);
 // field and native sometimes does.
 M3_STATIC_ASSERT(sizeof(m3_sockaddr_in) == sizeof(sockaddr_in));
 M3_STATIC_ASSERT(sizeof(m3_sockaddr_in6) == sizeof(sockaddr_in6));
+#ifdef AF_UNIX
 M3_STATIC_ASSERT(sizeof(m3_sockaddr_un) >= sizeof(sockaddr_un));
-
+#endif
 M3_STATIC_ASSERT(M3_FIELD_SIZE(m3_sockaddr_in, family) >= M3_FIELD_SIZE(sockaddr_in, sin_family));
 M3_STATIC_ASSERT(M3_FIELD_SIZE(m3_sockaddr_in, port) == M3_FIELD_SIZE(sockaddr_in, sin_port));
 M3_STATIC_ASSERT(M3_FIELD_SIZE(m3_sockaddr_in, addr) == M3_FIELD_SIZE(sockaddr_in, sin_addr));
