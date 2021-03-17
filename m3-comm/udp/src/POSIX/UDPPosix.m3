@@ -7,6 +7,7 @@ UNSAFE MODULE UDPPosix EXPORTS UDP;
 IMPORT Atom, AtomList, Ctypes, IP, M3toC;
 IMPORT OSErrorPosix, SchedulerPosix, Thread;
 IMPORT Cerrno, Uerror, Unix, UDPInternal;
+FROM Ctypes IMPORT int;
 
 REVEAL
   T = Public BRANDED "UDPPosix.T" OBJECT
@@ -37,7 +38,7 @@ PROCEDURE RaiseUnexpected(syscall: TEXT) RAISES {IP.Error} =
 
 PROCEDURE Init(self: T; myPort: IP.Port; myAddr: IP.Address): T
     RAISES {IP.Error} =
-  VAR err, status := 0;
+  VAR err, status: int := 0;
   BEGIN
     <* ASSERT NOT self.open *>
     self.myEnd.port := myPort;
@@ -105,7 +106,7 @@ PROCEDURE Receive(self: T; VAR (*INOUT*) d: Datagram; timeout: LONGREAL)
   VAR
     waitRes: SchedulerPosix.WaitResult;
     addr: IP.Address4;
-    port := 0;
+    port: int := 0;
     numRead := 0;
     data := ADR(d.bytes[0]);
   BEGIN

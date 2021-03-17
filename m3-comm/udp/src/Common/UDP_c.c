@@ -47,9 +47,9 @@ __cdecl
 UDPInternal__Init(
     INTEGER* fd,
     char* addr,
-    INTEGER port,
-    INTEGER* err,
-    INTEGER* status)
+    int port,
+    int* err,
+    int* status)
 // addr is array of char so we cannot assume alignment.
 {
     sockaddr_in sockaddr = {0};
@@ -90,7 +90,7 @@ UDPInternal__Send(
     void const* volatile* data,
     INTEGER len,
     const char* addr,
-    INTEGER port)
+    int port)
 // addr is array of char so we cannot assume alignment.
 // data is volatile pointer to pointer on stack to try to cooperate with garbage collector
 {
@@ -119,7 +119,7 @@ UDPInternal__Receive(
     void* volatile* data,
     INTEGER len,
     char* addr,
-    INTEGER* port)
+    int* port)
 // data is volatile pointer to pointer on stack to try to cooperate with garbage collector
 // addr is array of char so we cannot assume alignment.
 {
