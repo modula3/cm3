@@ -36,20 +36,6 @@ X(TRY_AGAIN)
 X(NO_RECOVERY)
 X(NO_ADDRESS)
 
-union SockAddrUnionAll;
-typedef union SockAddrUnionAll SockAddrUnionAll;
-
-union SockAddrUnionAll
-{
-    sockaddr sa;
-    sockaddr_storage sas;
-#ifndef _WIN32
-    sockaddr_un sun; // On AIX, larger than sas.
-#endif
-    sockaddr_in sa4;
-    sockaddr_in6 sa6;
-};
-
 static
 int
 __cdecl
@@ -231,7 +217,15 @@ IPInternal__GetNameInfo(int family, int port, const void* addr, TEXT* hostText, 
 {
     char host[NI_MAXHOST];
     char service[NI_MAXSERV];
-    SockAddrUnionAll sa = {0};
+    union {
+        sockaddr sa;
+        sockaddr_storage sas;
+#ifndef _WIN32
+        sockaddr_un sun; // On AIX, larger than sas.
+#endif
+        sockaddr_in sa4;
+        sockaddr_in6 sa6;
+    } sa;
     socklen_t size = sizeof(sa.sa4);
     int err = {0};
 
@@ -239,7 +233,7 @@ IPInternal__GetNameInfo(int family, int port, const void* addr, TEXT* hostText, 
     M3_STATIC_ASSERT(sizeof(in6_addr) == 16);
     assert(family == AF_INET || family == AF_INET6);
 
-    ZERO_MEMORY(sa);
+    ZeroMemory(&sa, sizeof(sa));
     host[0] = 0;
     service[0] = 0;
 
@@ -312,8 +306,16 @@ __cdecl
 IPInternal__getsockname(INTEGER fd, char* address, INTEGER* port)
 // TODO ipv6 support
 {
+    union {
+        sockaddr sa;
+        sockaddr_storage sas;
+#ifndef _WIN32
+        sockaddr_un sun; // On AIX, larger than sas.
+#endif
+        sockaddr_in sa4;
+        sockaddr_in6 sa6;
+    } sa = {0};
     INTEGER err = {0};
-    SockAddrUnionAll sa = {0};
     socklen_t size = sizeof(sa);
 
     ZERO_MEMORY(sa);
@@ -325,24 +327,9 @@ IPInternal__getsockname(INTEGER fd, char* address, INTEGER* port)
     // address might not be aligned
     memcpy(address, &sa.sa4.sin_addr, 4);
 
-    *port = ntohs(sa.sa4.sin_port);
+    *port = sa.sa4.sin_port;
 
     return 0;
-}
-
-INTEGER
-__cdecl
-IPInternal__NewConnector_Bind(INTEGER fd, const char* address, INTEGER port)
-{
-    SockAddrUnionAll sa = {0};
-
-    ZERO_MEMORY(sa);
-
-    sa.sa4.sin_family = AF_INET;
-    sa.sa4.sin_port = htons(port);
-    // address might not be aligned
-    memcpy(&sa.sa4.sin_addr, address, 4);
-    return bind(fd, &sa.sa, sizeof(sa.sa4));
 }
 
 #endif

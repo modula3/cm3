@@ -9,7 +9,7 @@
 
 UNSAFE MODULE TCP EXPORTS TCP, TCPMisc, TCPSpecial;
 
-IMPORT Atom, AtomList, IP, IPInternal, Rd, Wr, Thread;
+IMPORT Atom, AtomList, IP, Rd, Wr, Thread;
 IMPORT Usocket, Uerror, Uin, Unix, Uuio, Utypes,
        SchedulerPosix, Fmt, Word;
 IMPORT ConnFD;
@@ -49,6 +49,7 @@ VAR ClosedErr: AtomList.T;
 PROCEDURE NewConnector (ep: IP.Endpoint): Connector RAISES {IP.Error} =
   VAR
     res                := NEW(Connector, ep := ep);
+    name  : SockAddrIn;
     status: INTEGER;
     True: int := 1;  (* CONST *)
   BEGIN
@@ -65,7 +66,11 @@ PROCEDURE NewConnector (ep: IP.Endpoint): Connector RAISES {IP.Error} =
     MakeNonBlocking (res.fd);
     EVAL Usocket.setsockopt(res.fd, Usocket.SOL_SOCKET, Usocket.SO_REUSEADDR,
       ADR(True), BYTESIZE(True));
-    status := IPInternal.NewConnector_Bind(res.fd, ADR(ep.addr.a[0]), ep.port);
+    name.sin_family := Usocket.AF_INET;
+    name.sin_port := Uin.htons(ep.port);
+    name.sin_addr.s_addr := LOOPHOLE(ep.addr, Utypes.u_int);
+    name.sin_zero := Sin_Zero;
+    status := Usocket.bind(res.fd, ADR(name), BYTESIZE(SockAddrIn));
     IF status # 0 THEN
       IF Cerrno.GetErrno() = Uerror.EADDRINUSE THEN
         Raise(IP.PortBusy);
