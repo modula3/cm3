@@ -77,7 +77,7 @@ IPError__Die(void);
 
 INTEGER
 __cdecl
-IPInternal__getsockname(INTEGER fd, char* address, INTEGER* port);
+IPInternal__getsockname_in(INTEGER fd, char* address, INTEGER* port);
 
 #ifdef __cplusplus
 } /* extern "C" */

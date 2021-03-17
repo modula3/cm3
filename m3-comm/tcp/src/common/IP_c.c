@@ -26,6 +26,13 @@
 #endif
 #include "IP_h.h"
 
+M3_STATIC_ASSERT(sizeof(int) == 4);
+M3_STATIC_ASSERT(M3_FIELD_SIZE(sockaddr_in, sin_addr) == 4);
+M3_STATIC_ASSERT(AF_INET);
+M3_STATIC_ASSERT(AF_INET6);
+M3_STATIC_ASSERT(sizeof(in_addr) == 4);
+M3_STATIC_ASSERT(sizeof(in6_addr) == 16);
+
 #if __cplusplus
 extern "C" {
 #endif
@@ -309,40 +316,36 @@ IPInternal__Init(void)
 
 INTEGER
 __cdecl
-IPInternal__getsockname(INTEGER fd, char* address, INTEGER* port)
-// TODO ipv6 support
+IPInternal__getsockname_in(INTEGER fd, char* address, INTEGER* port)
 {
-    INTEGER err = {0};
-    SockAddrUnionAll sa = {0};
+    INTEGER err;
+    struct sockaddr_in sa;
     socklen_t size = sizeof(sa);
 
     ZERO_MEMORY(sa);
-
-    err = getsockname(fd, &sa.sa, &size);
+    err = getsockname(fd, (struct sockaddr*)&sa, &size);
     if (err < 0)
         return err;
 
-    // address might not be aligned
-    memcpy(address, &sa.sa4.sin_addr, 4);
+    if (address)
+        memcpy(address, &sa.sin_addr, 4); // address might not be aligned
 
-    *port = ntohs(sa.sa4.sin_port);
+    *port = ntohs(sa.sin_port);
 
     return 0;
 }
 
 INTEGER
 __cdecl
-IPInternal__NewConnector_Bind(INTEGER fd, const char* address, INTEGER port)
+IPInternal__bind_in(INTEGER fd, const char* address, INTEGER port)
 {
-    SockAddrUnionAll sa = {0};
+    struct sockaddr_in sa;
 
     ZERO_MEMORY(sa);
-
-    sa.sa4.sin_family = AF_INET;
-    sa.sa4.sin_port = htons(port);
-    // address might not be aligned
-    memcpy(&sa.sa4.sin_addr, address, 4);
-    return bind(fd, &sa.sa, sizeof(sa.sa4));
+    sa.sin_family = AF_INET;
+    sa.sin_port = htons(port);
+    memcpy(&sa.sin_addr, address, 4); // address might not be aligned
+    return bind(fd, (struct sockaddr*)&sa, sizeof(sa));
 }
 
 #endif

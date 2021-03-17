@@ -54,10 +54,10 @@ PROCEDURE GetAddrInfo(VAR endpoint: EP; node, port: char_star): int;
 <*EXTERNAL "IPInternal__GetNameInfo"*>
 PROCEDURE GetNameInfo(family, port: int; addr: ADDRESS; VAR host, service: TEXT): int;
 
-<*EXTERNAL "IPInternal__getsockname"*>
-PROCEDURE getsockname(fd: INTEGER; address: char_star; VAR port: INTEGER): INTEGER;
+<*EXTERNAL "IPInternal__getsockname_in"*>
+PROCEDURE getsockname_in(fd: INTEGER; address: char_star; VAR port: INTEGER): INTEGER;
 
-<*EXTERNAL "IPInternal__NewConnector_Bind"*>
-PROCEDURE NewConnector_Bind(fd: INTEGER; address: const_char_star; port: INTEGER): INTEGER;
+<*EXTERNAL "IPInternal__bind_in"*>
+PROCEDURE bind_in(fd: INTEGER; address: const_char_star; port: INTEGER): INTEGER;
 
 END IPInternal.
