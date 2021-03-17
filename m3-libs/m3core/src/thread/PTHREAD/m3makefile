@@ -14,7 +14,11 @@ implementation ("ThreadPThread")
    %^Newer, with O(1) FIFO scheduling for Conditions and Mutexes. 
 
 c_source ("ThreadPThreadC")
-if defined("TARGET_OS") and not defined("M3_BOOTSTRAP")
+
+% Compile everything when using C backend, for overall convergence.
+% The files are internally ifdefed so compiling them on the "wrong" platform
+% does "nothing" (build optimization).
+if defined("TARGET_OS") and not defined("M3_BOOTSTRAP") and not equal(M3_BACKEND_MODE, "C")
   if equal(TARGET_OS, "DARWIN")
     c_source ("ThreadApple")
   end
