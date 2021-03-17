@@ -203,6 +203,28 @@ typedef int BOOL;
 #define M3_EXTERNC_END      /* nothing */
 #endif
 
+#define STRUCT_AND_TYPEDEF(x) struct x; typedef struct x x;
+
+STRUCT_AND_TYPEDEF(linger)
+STRUCT_AND_TYPEDEF(sockaddr)
+STRUCT_AND_TYPEDEF(sockaddr_storage)
+STRUCT_AND_TYPEDEF(sockaddr_un)
+STRUCT_AND_TYPEDEF(sockaddr_in)
+STRUCT_AND_TYPEDEF(sockaddr_in6)
+STRUCT_AND_TYPEDEF(in6_addr)
+STRUCT_AND_TYPEDEF(in_addr)
+
+STRUCT_AND_TYPEDEF(m3_sockaddr_un)
+STRUCT_AND_TYPEDEF(m3_sockaddr_in)
+STRUCT_AND_TYPEDEF(m3_sockaddr_in6)
+STRUCT_AND_TYPEDEF(m3_in_addr);
+//STRUCT_AND_TYPEDEF(m3_in6_addr); // use in6_addr instead
+
+union M3SockAddrUnionAll;
+union NativeSockAddrUnionAll;
+typedef union M3SockAddrUnionAll M3SockAddrUnionAll;
+typedef union NativeSockAddrUnionAll NativeSockAddrUnionAll;
+
 /* m3name vs. cname is structured carefully to deal with identifiers
    being #defined in headers, such as on NetBSD. For example, given:
   #define foo bar
@@ -337,6 +359,12 @@ typedef ptrdiff_t ssize_t;
 #endif /* Apple */
 #endif /* OpenBSD, Cygwin, VMS */
 #define ZeroMemory(a, b) (memset((a), 0, (b)))
+// Posix says include <arpa/inet.h>, but FreeBSD 4 inet.h
+// requires netinet/in.h
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <netinet/tcp.h>
+#include <sys/un.h>
 #endif /* Win32 vs. Posix */
 
 #define ZERO_MEMORY(a) (ZeroMemory(&(a), sizeof(a)))
@@ -451,7 +479,7 @@ int __cdecl Ustat__chflags(const char* path, unsigned long flags);
 socklen_t
 win32: signed 32 bit
 cygwin: signed 32 bit
-hpux: size_t (unsigned 32bit or 64bit)
+hpux: size_t (unsigned 32bit or 64bit) subject to ifdef, big mess
 everyone else: unsigned 32 bit
 
 The values involved are all small and positive, and we convert carefully.
@@ -473,15 +501,15 @@ typedef struct {
 int __cdecl Usocket__listen(int s, int backlog);
 int __cdecl Usocket__shutdown(int s, int how);
 int __cdecl Usocket__socket(int af, int type, int protocol);
-int __cdecl Usocket__bind(int s, struct sockaddr* name, m3_socklen_t len);
-int __cdecl Usocket__connect(int s, struct sockaddr* name, m3_socklen_t len);
-INTEGER __cdecl Usocket__sendto(int s, void* msg, WORD_T length, int flags, struct sockaddr* dest, m3_socklen_t len);
+int __cdecl Usocket__bind(int s, const M3SockAddrUnionAll*, m3_socklen_t);
+int __cdecl Usocket__connect(int s, const M3SockAddrUnionAll*, m3_socklen_t);
+INTEGER __cdecl Usocket__sendto(int s, void* msg, WORD_T length, int flags, const M3SockAddrUnionAll*, m3_socklen_t);
 int __cdecl Usocket__setsockopt(int s, int level, int optname, void* optval, m3_socklen_t len);
-int __cdecl Usocket__getpeername(int s, struct sockaddr* name, m3_socklen_t* plen);
-int __cdecl Usocket__getsockname(int s, struct sockaddr* name, m3_socklen_t* plen);
-int __cdecl Usocket__accept(int s, struct sockaddr* addr, m3_socklen_t* plen);
-int __cdecl Usocket__getsockopt(int s, int level, int optname, void* optval, m3_socklen_t* plen);
-INTEGER __cdecl Usocket__recvfrom(int s, void* buf, WORD_T len, int flags, struct sockaddr* from, m3_socklen_t* plen);
+int __cdecl Usocket__getpeername(int s, M3SockAddrUnionAll*, m3_socklen_t*);
+int __cdecl Usocket__getsockname(int s, M3SockAddrUnionAll*, m3_socklen_t*);
+int __cdecl Usocket__accept(int s, M3SockAddrUnionAll*, m3_socklen_t*);
+int __cdecl Usocket__getsockopt(int s, int level, int optname, void* optval, m3_socklen_t*);
+INTEGER __cdecl Usocket__recvfrom(int s, void* buf, WORD_T len, int flags, M3SockAddrUnionAll*, m3_socklen_t*);
 
 #ifndef _WIN32
 DIR* __cdecl Udir__opendir(const char* a);

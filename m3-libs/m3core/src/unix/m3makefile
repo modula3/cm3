@@ -2,19 +2,24 @@
 % All rights reserved.
 % See the file COPYRIGHT for a full description.
 
+% uin-len / uin-common have been replaced
+% by assuming uin-common (ushort family, no len)
+% and converting to native
 readonly _UnixPieces = {
   % AIX?
-  "CYGWIN"  : [ "uin-common" ],
-  "HPUX"    : [ "uin-common" ],
-  "INTERIX" : [ "uin-common" ],
+% "CYGWIN"  : [ "uin-common" ],
+% "HPUX"    : [ "uin-common" ],
+% "INTERIX" : [ "uin-common" ],
   % IRIX?
-  "LINUX"   : [ "uin-common" ],
-  "MINGW"   : [ "uin-common" ],
-  "NT"      : [ "uin-common" ],
-  "SOLgnu"  : [ "solaris-2-x", "uin-common" ],
-  "SOLsun"  : [ "solaris-2-x", "uin-common" ],
-  "SOLARIS" : [ "uin-common" ],
-  "VMS"     : [ "uin-common" ], % both are available, depending on #if
+% "LINUX"   : [ "uin-common" ],
+% "MINGW"   : [ "uin-common" ],
+% "NT"      : [ "uin-common" ],
+% "SOLgnu"  : [ "solaris-2-x", "uin-common" ],
+% "SOLsun"  : [ "solaris-2-x", "uin-common" ],
+  "SOLgnu"  : [ "solaris-2-x" ],
+  "SOLsun"  : [ "solaris-2-x" ],
+% "SOLARIS" : [ "uin-common" ],
+% "VMS"     : [ "uin-common" ], % both are available, depending on #if
 
   % both are available, depending on #if
   % We use a define for a more important purpose (socklen_t),
@@ -22,10 +27,10 @@ readonly _UnixPieces = {
   "ALPHA_OSF" : [ "uin-len" ],
 
   % BSD/Darwin have an 8 bit family and an 8 bit length field added
-  "DARWIN"  : [ "uin-len" ],
-  "NETBSD"  : [ "uin-len" ],
-  "FREEBSD" : [ "uin-len" ],
-  "OPENBSD" : [ "uin-len" ],
+% "DARWIN"  : [ "uin-len" ],
+% "NETBSD"  : [ "uin-len" ],
+% "FREEBSD" : [ "uin-len" ],
+% "OPENBSD" : [ "uin-len" ],
 }
 
 include_dir ("Common")

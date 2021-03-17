@@ -28,10 +28,6 @@
 extern "C" {
 #endif
 
-#define STRUCT_AND_TYPEDEF(x) struct x; typedef struct x x
-
-STRUCT_AND_TYPEDEF(sockaddr_in);
-
 void
 __cdecl
 UDPInternal__Assert(void)

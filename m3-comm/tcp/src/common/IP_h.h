@@ -4,8 +4,6 @@
 extern "C" {
 #endif
 
-#define STRUCT_AND_TYPEDEF(x) struct x; typedef struct x x
-
 STRUCT_AND_TYPEDEF(addrinfo);
 STRUCT_AND_TYPEDEF(hostent);
 STRUCT_AND_TYPEDEF(sockaddr);
