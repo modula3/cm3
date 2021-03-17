@@ -1,0 +1,61 @@
+Porting is much easier than it used to be.
+
+Countless things are no longer required.
+
+As long as you are porting to just another processor,
+but not another OS, e.g. NT, Linux, Darwin, Solaris, etc.
+there is almost nothing to do.
+
+You need to know endian (big or little), word size (32 or 64).
+
+Here is a good example, of just adding another Linux port:
+
+
+C:\s\cm3>git grep -i riscv
+
+optional but nice, trivial         : .gitignore:RISCV64_LINUX
+not needed                         : m3-libs/libm3/src/os/POSIX/m3makefile-old2:    "RISCV64" : "riscv64",
+important or will get compile error: m3-libs/m3core/src/runtime/POSIX/RTSignalC.c:#elif defined(__riscv) || defined(__riscv64)
+important, create a little file like this:
+  m3-sys/cminstall/src/config-no-install/RISCV64.common:readonly TARGET_ARCH = "RISCV64"
+  m3-sys/cminstall/src/config-no-install/RISCV64_LINUX:readonly TARGET = "RISCV64_LINUX" % code generation target
+  m3-sys/cminstall/src/config-no-install/RISCV64_LINUX:% readonly GNU_PLATFORM = "riscv64-linux" % "cpu-os" string for GNUm3-sys/cminstall/src/config-no-install/RISCV64_LINUX:include("RISCV64.common")
+
+important for ease of porting and using:
+  scripts/python/pylib.py:                 "SPARC64", "MIPS32", "MIPS64EL", "MIPS64", "PA32", "PA64", "RISCV64", "SH"]:
+  scripts/python/pylib.py:    return a.endswith("_nt") or a.startswith("arm64") or a.startswith("riscv")
+
+optional: scripts/python/targets.txt:RISCV64_LINUX
+
+no longer useful:
+  www/uploaded-archives/targets.txt:RISCV64_LINUX
+
+Because the Modula-3 system including the compiler is written in Modula-3, you need a working Modula-3 install.
+You will do a partial cross build.
+Make a git branch.
+Update those files.
+Commit.
+cd scripts/python
+./boot1.py <the name of your new system>
+This will produce cm3-boot-<your new system>-<timestamp>.tgz.
+Copy that to your system.
+Your native system must have make + C compiler and linker.
+Extract cm3-boot.tgz
+cd cm3-boot.
+make
+./cm3
+ make sure it kinda runs
+sudo mkdir -p /cm3/bin
+mv cm3 /cm3/bin
+export PATH=/cm3/bin:$PATH
+git clone on the new system
+cd scripts/python
+./boot2.py
+Voila.
+./make-dist.py
+Put a release on github.
+
+This will possibly be even easier in future.
+
+This is using the C backend.
+If you want to use gcc or other, you may have significant more work to do.
