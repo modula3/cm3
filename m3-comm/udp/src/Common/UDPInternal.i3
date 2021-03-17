@@ -2,8 +2,9 @@ UNSAFE INTERFACE UDPInternal;
 
 (* Isolate Modula-3 from /usr/include e.g. struct sockaddr *)
 
-FROM Ctypes IMPORT int, char_star;
-TYPE Address4 = char_star; (* instead of IP.Address4 for clarity of ABI *)
+IMPORT IP;
+FROM Ctypes IMPORT int;
+TYPE Address4 = Ctypes.char_star; (* instead of IP.Address4 for clarity of ABI *)
 
 <*EXTERNAL "UDPInternal__Init"*>
 PROCEDURE Init(VAR fd: INTEGER; addr: Address4; port: int; VAR err, status: int);
