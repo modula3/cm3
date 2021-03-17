@@ -2988,15 +2988,20 @@ BEGIN
     x.Type_Init(NEW(Type_t, cgtype := Target.Address.cg_type, typeid := typeid), typedef := TRUE); (* TODO? *)
 END declare_opaque;
 
-PROCEDURE reveal_opaque(self: DeclareTypes_t; lhs, rhs: TypeUID) =
-VAR x := self.self;
+PROCEDURE reveal_opaque(self: DeclareTypes_t; lhs, rhs: TypeUID) =<*NOWARN*>
+(* VAR x := self.self; *)
 BEGIN
-    IF DebugVerbose(x) THEN
-        x.comment("reveal_opaque lhs:", TypeIDToText(lhs),
-            " rhs:" & TypeIDToText(rhs));
-    ELSE
-        x.comment("reveal_opaque");
-    END;
+    (* m3front does not always reveal_opaque in the same order,
+     * damaging ability to diff output. So do not output the comment.
+     * This needs further attention.
+     *
+     * IF DebugVerbose(x) THEN
+     *  x.comment("reveal_opaque lhs:", TypeIDToText(lhs),
+     *      " rhs:" & TypeIDToText(rhs));
+     * ELSE
+     *  x.comment("reveal_opaque");
+     * END;
+     *)
 END reveal_opaque;
 
 PROCEDURE declare_exception(self: DeclareTypes_t; name: Name; arg_type: TypeUID; raise_proc: BOOLEAN; base: M3CG.Var; offset: INTEGER) =
