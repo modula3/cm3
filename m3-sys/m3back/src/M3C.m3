@@ -12,6 +12,7 @@ FROM M3CG IMPORT CompareOp, ConvertOp, RuntimeError, MemoryOrder, AtomicOp;
 FROM Target IMPORT CGType;
 FROM M3CG_Ops IMPORT ErrorHandler;
 IMPORT M3CG_MultiPass, M3CG_DoNothing, M3CG_Binary, RTIO;
+IMPORT CharSeq, CharSeqRep;
 FROM M3CC IMPORT IntToDec, IntToHex, UIntToHex, INT32;
 CONST NameT = M3ID.ToText;
 
@@ -95,6 +96,7 @@ T = M3CG_DoNothing.T BRANDED "M3C.T" OBJECT
         fields: TextSeq.T := NIL;
         current_offset := 0;
         initializer: TextSeq.T := NIL;
+        debug_initializer: CharSeq.T := NIL;
         initializer_comma := "";
 
         (* initializers are aggregated into arrays to avoid
@@ -2227,6 +2229,7 @@ BEGIN
     self.c := cfile;
     self.fields := NEW(TextSeq.T).init();
     self.initializer := NEW(TextSeq.T).init();
+    self.debug_initializer := NEW(CharSeq.T).init();
     self.stack := NEW(RefSeq.T).init(); (* Expr_t *)
     self.params := NEW(TextSeq.T).init(); (* TODO Expr_t *)
     self.pendingTypes := NEW(RefSeq.T).init();
@@ -4818,32 +4821,43 @@ CONST Printable = ASCII.AlphaNumerics
 PROCEDURE init_chars(self: T; offset: ByteOffset; value: TEXT) =
 VAR length := Text.Length(value);
     ch: CHAR;
-    debug_print := value;
+    debug_ch: CHAR;
+    debug_initializer := self.debug_initializer;
 BEGIN
+
+    <* ASSERT debug_initializer # NIL *>
+    <* ASSERT debug_initializer.st = 0 *>
+    <* ASSERT debug_initializer.sz = 0 *>
 
     IF length # 0 THEN
 
       FOR i := 0 TO length - 1 DO
         init_helper(self, offset + i, CGType.Word8);
         ch := Text.GetChar(value, i);
+        debug_ch := ch;
         IF ch IN Printable THEN
-            IF ch = '*' OR ch = '/' THEN
-              debug_print := "<not printable1>"; (* might terminate or nest comment *)
+            IF ch = '*' OR ch = '/' THEN (* Avoid breaking comment. *)
+              debug_ch := '.';
             END;
             initializer_addhi(self, "'" & Text.Sub(value, i, 1) & "'");
         ELSE
-            debug_print := "<not printable2>";
+            debug_ch := '.';
             initializer_addhi(self, IntToDec(ORD(ch)));
         END;
+        debug_initializer.addhi(debug_ch);
       END;
     END;
 
     IF DebugVerbose(self) THEN
       self.comment("init_chars offset:" & IntToDec(offset) &
-        " length:" & IntToDec(length) & " value:" & debug_print);
+        " length:" & IntToDec(length) &
+        " value:" &  Text.FromChars(SUBARRAY(debug_initializer.elem^, 0, debug_initializer.sz)));
     ELSE
       self.comment("init_chars");
     END;
+
+    debug_initializer.sz := 0;
+    debug_initializer.st := 0;
 
 END init_chars;
 
