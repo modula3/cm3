@@ -18,6 +18,9 @@ TYPE
     *)
   END;
 
+<*EXTERNAL Coroutine__Supported*>
+PROCEDURE Supported(): BOOLEAN;
+
 PROCEDURE Create(cl : Closure) : T;
 
 PROCEDURE Call(c : T) : T;
