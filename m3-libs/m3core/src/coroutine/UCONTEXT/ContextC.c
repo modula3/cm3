@@ -16,6 +16,25 @@
 
 M3EXTERNC_BEGIN
 
+// This code has only been tested on Linux/amd64.
+#if !(defined(__x86_64__) && defined(__linux))
+
+BOOL
+__cdecl
+Coroutine__Supported(void)
+{
+    return FALSE;
+}
+
+#else
+
+BOOL
+__cdecl
+Coroutine__Supported(void)
+{
+    return TRUE;
+}
+
 #define M3_RETRY(expr)                                  \
   r = (expr);                                           \
   if (r == EAGAIN || r == ENOMEM || r == ENOSPC)        \
@@ -347,5 +366,7 @@ ContextC__PushContext(Context *c)
   
   return ContextC__PushContext1(c);
 }
+
+#endif
 
 M3EXTERNC_END

@@ -49,7 +49,10 @@ REVEAL
   END;
 
 PROCEDURE Retval(t : T) : REFANY =
-  BEGIN RETURN t.result END Retval;
+  BEGIN
+    <*ASSERT Supported()*>
+    RETURN t.result
+  END Retval;
   
 VAR
   Empty := NEW(T);                         (* dummy object, cant use NIL *)
@@ -93,6 +96,11 @@ VAR
 
 PROCEDURE CreateInitialCoroutine() : T =
   VAR
+    t: T;
+  BEGIN
+
+    <*ASSERT Supported()*>
+
     t := NEW(T,
              firstcall := FALSE,              (* since we're not a Closure *)
              arg       := NIL,                (* since firstcall is FALSE *)
@@ -102,7 +110,7 @@ PROCEDURE CreateInitialCoroutine() : T =
              succ      := NIL                 (* I will not exit *),
              inPtr     := NIL                 (* no need to inhibit *)
     );
-  BEGIN
+
     Tabulate(t);
     <*ASSERT t.id # NIL*>
     EVAL Trace(t);
@@ -139,6 +147,9 @@ PROCEDURE Create(cl : Closure) : T =
   VAR
     me, t : T;
   BEGIN
+
+    <*ASSERT Supported()*>
+
     (* make sure that the current coroutine is defined, it will not be
        if this is the first/second coroutine created of this thread *)
     WITH cur = ContextC.GetCurrentCoroutine() DO
@@ -250,6 +261,9 @@ PROCEDURE Run(arg : Arg) =
                     in with reference to myself, I cannot be GC'd *)
     myid := arg.id^;
   BEGIN
+
+    <*ASSERT Supported()*>
+
     inhibit := WeakRef.ToRef(coArr[myid]); (* inhibit GC, inhibit = me *)
     inhibit.inPtr := ADR(inhibit);         (* remember stash *)
     
@@ -334,9 +348,14 @@ PROCEDURE Run(arg : Arg) =
   
 PROCEDURE Call(to : T) : T =
   VAR
-    myId := ContextC.GetCurrentCoroutine();
+    myId: UNTRACED REF INTEGER;
     me : T; (* this inhibits GC if filled in *)
   BEGIN
+
+    <*ASSERT Supported()*>
+
+    myId := ContextC.GetCurrentCoroutine();
+
     LOCK coMu DO
       me := WeakRef.ToRef(coArr[myId^]) (* hmm ... *)
     END;
@@ -424,6 +443,7 @@ PROCEDURE Reap(id : INTEGER) =
   VAR
     dead : T;
   BEGIN
+
     LOCK coMu DO
       dead := WeakRef.ToRef(coArr[id])
     END;
@@ -488,5 +508,7 @@ BEGIN
 END Init;
 
 BEGIN
-  Init()
+  IF Supported() THEN
+    Init();
+  END;
 END CoroutineUcontext.
