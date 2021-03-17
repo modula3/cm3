@@ -24,7 +24,7 @@ readonly _UnixPieces = {
   % both are available, depending on #if
   % We use a define for a more important purpose (socklen_t),
   % and it gives us this too.
-  "ALPHA_OSF" : [ "uin-len" ],
+% "ALPHA_OSF" : [ "uin-len" ],
 
   % BSD/Darwin have an 8 bit family and an 8 bit length field added
 % "DARWIN"  : [ "uin-len" ],
@@ -47,6 +47,6 @@ else
       include_dir (f)
     end
   else
-    error (format ("unix: unsupported platform: \"%s\"%s", TARGET, CR))
+    %error (format ("unix: unsupported platform: \"%s\"%s", TARGET, CR))
   end
 end
