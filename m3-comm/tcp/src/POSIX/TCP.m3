@@ -65,7 +65,7 @@ PROCEDURE NewConnector (ep: IP.Endpoint): Connector RAISES {IP.Error} =
     MakeNonBlocking (res.fd);
     EVAL Usocket.setsockopt(res.fd, Usocket.SOL_SOCKET, Usocket.SO_REUSEADDR,
       ADR(True), BYTESIZE(True));
-    status := IPInternal.NewConnector_Bind(res.fd, ADR(ep.addr.a[0]), ep.port);
+    status := IPInternal.bind_in(res.fd, ADR(ep.addr.a[0]), ep.port);
     IF status # 0 THEN
       IF Cerrno.GetErrno() = Uerror.EADDRINUSE THEN
         Raise(IP.PortBusy);
@@ -78,19 +78,16 @@ PROCEDURE NewConnector (ep: IP.Endpoint): Connector RAISES {IP.Error} =
   END NewConnector;
 
 PROCEDURE GetEndPoint(c: Connector): IP.Endpoint =
-  VAR
-    namelen  : socklen_t;
-    name  : SockAddrIn;
+VAR port := 0;
   BEGIN
     IF c.ep.addr = IP.NullAddress THEN
       c.ep.addr := IP.GetHostAddr();
     END;
     IF c.ep.port = IP.NullPort THEN
-      namelen := BYTESIZE(SockAddrIn);
-      IF Usocket.getsockname(c.fd, ADR(name), ADR(namelen)) # 0 THEN
+      IF IPInternal.getsockname_in(c.fd, NIL, port) # 0 THEN
         Die()
       END;
-      c.ep.port := Uin.ntohs(name.sin_port);
+      c.ep.port := port;
     END;
     RETURN c.ep
   END GetEndPoint;

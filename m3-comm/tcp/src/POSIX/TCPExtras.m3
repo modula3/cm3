@@ -12,7 +12,7 @@ PROCEDURE LocalEndpoint (conn: TCP.T): IP.Endpoint RAISES {IP.Error} =
   BEGIN
     LOCK conn DO
       IF conn.closed THEN IPError.Raise (TCP.Closed); END;
-      IF IPInternal.getsockname (conn.fd, ADR(ep.addr.a[0]), port) < 0 THEN
+      IF IPInternal.getsockname_in (conn.fd, ADR(ep.addr.a[0]), port) < 0 THEN
         IPError.RaiseUnexpected ();
       END;
     END;

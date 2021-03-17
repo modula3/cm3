@@ -6,7 +6,7 @@ UNSAFE MODULE UDPPosix EXPORTS UDP;
 
 IMPORT Atom, AtomList, Ctypes, IP, M3toC;
 IMPORT OSErrorPosix, SchedulerPosix, Thread;
-IMPORT Cerrno, Uerror, Unix, UDPInternal;
+IMPORT Cerrno, Uerror, Unix, UDPInternal, Usocket, IPInternal;
 
 REVEAL
   T = Public BRANDED "UDPPosix.T" OBJECT
@@ -37,25 +37,27 @@ PROCEDURE RaiseUnexpected(syscall: TEXT) RAISES {IP.Error} =
 
 PROCEDURE Init(self: T; myPort: IP.Port; myAddr: IP.Address): T
     RAISES {IP.Error} =
-  VAR err, status := 0;
+  VAR status := 0;
   BEGIN
     <* ASSERT NOT self.open *>
     self.myEnd.port := myPort;
     self.myEnd.addr := myAddr;
 
-    UDPInternal.Init(self.fileno, ADR(myAddr.a[0]), myPort, err, status);
-
     (* create socket via socket(2) system call *)
+    self.fileno := Usocket.socket(Usocket.AF_INET, Usocket.SOCK_DGRAM, 0);
     IF self.fileno = -1 THEN
-      IF err = Uerror.EMFILE OR err = Uerror.ENFILE
-        THEN Raise(IP.NoResources)
-        ELSE RaiseUnexpected("socket(2)")
+      WITH errno = Cerrno.GetErrno() DO
+        IF errno = Uerror.EMFILE OR errno = Uerror.ENFILE
+          THEN Raise(IP.NoResources)
+          ELSE RaiseUnexpected("socket(2)")
+        END
       END
     END;
 
     (* bind socket via bind(2) system call *)
+    status := IPInternal.bind_in(self.fileno, ADR(myAddr.a[0]), myPort);
     IF status # 0 THEN
-      IF err = Uerror.EADDRINUSE
+      IF Cerrno.GetErrno() = Uerror.EADDRINUSE
         THEN Raise(IP.PortBusy)
         ELSE RaiseUnexpected("bind(2)")
       END

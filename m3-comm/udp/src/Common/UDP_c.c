@@ -44,47 +44,6 @@ UDPInternal__Assert(void)
 
 INTEGER
 __cdecl
-UDPInternal__Init(
-    INTEGER* fd,
-    char* addr,
-    INTEGER port,
-    INTEGER* err,
-    INTEGER* status)
-// addr is array of char so we cannot assume alignment.
-{
-    sockaddr_in sockaddr = {0};
-
-    ZERO_MEMORY(sockaddr);
-
-    Scheduler__DisableSwitching();
-
-    // create socket via socket(2) system call
-    *fd = socket(AF_INET, SOCK_DGRAM, 0);
-    if (*fd == -1)
-    {
-        *err = errno;
-    }
-    else
-    {
-        // bind socket via bind(2) system call
-        sockaddr.sin_family = AF_INET;
-        sockaddr.sin_port = htons(port);
-
-        // Copy possibly unaligned 4 character array to 4 byte integer.
-        memcpy(&sockaddr.sin_addr.s_addr, addr, 4);
-
-        *status = bind(*fd, &sockaddr, sizeof(sockaddr));
-        if (*status)
-        {
-            *err = errno;
-        }
-    }
-
-    Scheduler__EnableSwitching();
-}
-
-INTEGER
-__cdecl
 UDPInternal__Send(
     INTEGER fd,
     void const* volatile* data,
