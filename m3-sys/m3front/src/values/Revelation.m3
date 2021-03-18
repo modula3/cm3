@@ -163,7 +163,6 @@ PROCEDURE TypeCheck (s: Set) =
 
     (* allocate and initialize the hash table *)
     <*ASSERT s.hash = NIL*> (* otherwise we've been checked twice!? *)
-
     n_buckets := 2 * s.count;
     s.hash := NEW (HashTable, n_buckets);
     FOR i := 0 TO n_buckets - 1 DO s.hash[i] := NIL END;
@@ -552,7 +551,7 @@ PROCEDURE GenList (s: Set;  cnt: INTEGER;  eq: BOOLEAN): INTEGER =
     iter : Iterator;
     l    : List;
     seq   := s.seq;
-    array : REF ARRAY OF PersistantRevelation.T;
+    array : REF ARRAY OF PersistentRevelation.T;
   BEGIN
 
     (* Collect into array in hash order, sort, and output. *)
