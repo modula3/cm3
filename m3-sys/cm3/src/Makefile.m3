@@ -1,11 +1,11 @@
 (* Copyright 1996-2000 Critical Mass, Inc. All rights reserved.    *)
 (* See file COPYRIGHT-CMASS for details. *)
 
-MODULE Makefile;
+UNSAFE MODULE Makefile;
 
 IMPORT FS, M3File, M3Timers, OSError, Params, Process, Text, Thread, Wr;
 IMPORT Arg, M3Build, M3Options, M3Path, Msg, Utils, TextSeq, TextTextTbl;
-IMPORT MxConfig, Dirs, Version;
+IMPORT MxConfig, Dirs, Version, M3toC;
 
 TYPE
   NK = M3Path.Kind;
@@ -758,7 +758,7 @@ BEGIN
   EVAL defs.put("CM3_VERSION", Version.Number);(* version as number *)
   EVAL defs.put("CM3_CHANGED", Version.LastChanged); (* date of last change *)
   EVAL defs.put("CM3_CREATED", Version.LastChanged); (* backw. compatibility *)
-  EVAL defs.put("CM3_COMPILED", Version.Created); (* date of compilation *)
+  EVAL defs.put("CM3_COMPILED", M3toC.StoT(Version.Created())); (* date of compilation *)
   EVAL defs.put("M3_PROFILING", "");           (* no profiling by default *)
   EVAL defs.put("EOL", Wr.EOL);
 END Makefile.

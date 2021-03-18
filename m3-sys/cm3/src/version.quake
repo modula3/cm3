@@ -63,11 +63,16 @@ proc version_impl(name) is
     end
     include(".." & SL & ".." & SL & ".." & SL & "scripts" & SL & "version.quake")
     >> tempname in
+        write("IMPORT Ctypes;", CR)
         write("CONST", CR)
         write("  Text = \"", CM3VERSION, "\";", CR)
         write("  Number = \"", CM3VERSIONNUM, "\";", CR)
         write("  LastChanged = \"", CM3LASTCHANGED, "\";", CR)
-        write("  Created = \"", NOW, "\";", CR)
+
+        % This comment serves to retain the old behavior where
+        % cm3 prints the time it built, if any of it changes.
+        % This does not end up in the C backend output.
+        write("  (* Created = \"", NOW, "\"; *)", CR)
 
         %
         % When cm3 uses this data, it is describing the HOST.
@@ -145,6 +150,9 @@ proc version_impl(name) is
         end
         write("  TargetNaming      = \"", TargetNaming, "\";", CR)
         write("  NamingConventions = \"", TargetNaming, "\";", CR)
+
+        % TODO Generating a constant TEXT in C would be nice maybe.
+        write("<*EXTERNAL \"Version__Created\"*> PROCEDURE Created():Ctypes.const_char_star;", CR)
 
         write("END ", name, ".", CR)
     end

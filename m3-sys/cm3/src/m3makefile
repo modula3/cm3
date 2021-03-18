@@ -34,6 +34,7 @@ import ("m3quake")
 
 include ("version.quake")
 version_impl ("Version")
+c_source ("Version")
 
 module ("M3Backend")
 import ("m3objfile")
