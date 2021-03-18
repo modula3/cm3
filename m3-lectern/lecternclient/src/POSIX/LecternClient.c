@@ -22,22 +22,23 @@
 
 static char *argv0;
 
-static Abort(char *action)
+static void Abort(char *action)
 {
   fprintf(stderr, "%s: ", argv0);
   perror(action);
   exit(1);
 }
 
-static Usage() {
+static void Usage(void)
+{
   fprintf(
     stderr,
     "Usage: %s pathname  or:  %s -f pathname\n   or:  %s -l arg...\n",
     argv0, argv0, argv0);
   exit(1);
-  }
+}
 
-static PutInt(int n, FILE *wr)
+static void PutInt(int n, FILE *wr)
 {
   int i;
   for (i = 0; i <= 24; i += 8) putc((n >> i) % 256, wr);
@@ -47,14 +48,15 @@ static PutInt(int n, FILE *wr)
 #define STRSIZE 300
 #define RETRIES 6
 
-static StartLectern() {
-  int status;
-  status = system("Lectern&\n");
-  if (status != 0) {
+static void StartLectern(void)
+{
+  int status = system("Lectern&\n");
+  if (status != 0)
+  {
     fprintf(stderr, "%s: couldn't start Lectern\n", argv0);
     exit(1);
-    }
   }
+}
 
 int
 main(int argc, char *argv[])
