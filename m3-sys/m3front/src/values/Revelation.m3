@@ -11,6 +11,7 @@ MODULE Revelation;
 IMPORT M3, M3ID, Value, Type, Error, OpaqueType, Scope, Decl, Host;
 IMPORT ObjectType, RefType, Scanner, Token, Module, ValueRep, CG;
 IMPORT M3RT, Target, Reff;
+IMPORT PersistentRevelation, PersistentRevelationArraySort, PersistentRevelationSeq, PersistentRevelationSeqRep;
 FROM Scanner IMPORT GetToken, Fail, Match, MatchID, cur;
 
 TYPE
@@ -53,7 +54,10 @@ REVEAL
           count  : INTEGER    := 0;
           idents : List       := NIL;
           hash   : HashTable  := NIL;
-          (* The visible revelations are in the union of idents and hash *)
+          seq    : PersistentRevelationSeq.T := NIL;
+          (* The visible revelations are in the union of idents and hash
+           * seq is a temporary, placed here to reduce heap allocations.
+           *)
         END;
 
 TYPE
@@ -70,7 +74,8 @@ VAR top := NewSet (NIL);
 
 PROCEDURE NewSet (module: Value.T): Set =
   BEGIN
-    RETURN NEW (Set, home := module);
+    RETURN NEW (Set, home := module,
+                     seq := NEW(PersistentRevelationSeq.T).init());
   END NewSet;
 
 PROCEDURE Push (s: Set): Set =
@@ -158,6 +163,7 @@ PROCEDURE TypeCheck (s: Set) =
 
     (* allocate and initialize the hash table *)
     <*ASSERT s.hash = NIL*> (* otherwise we've been checked twice!? *)
+
     n_buckets := 2 * s.count;
     s.hash := NEW (HashTable, n_buckets);
     FOR i := 0 TO n_buckets - 1 DO s.hash[i] := NIL END;
@@ -545,18 +551,35 @@ PROCEDURE GenList (s: Set;  cnt: INTEGER;  eq: BOOLEAN): INTEGER =
     offs := base;
     iter : Iterator;
     l    : List;
+    seq   := s.seq;
+    array : REF ARRAY OF PersistantRevelation.T;
   BEGIN
+
+    (* Collect into array in hash order, sort, and output. *)
+
+    seq.sz := 0;
+    <*ASSERT seq.st = 0*>
+
     InitIterator (s, iter);
     WHILE Iterate (iter) DO
       l := iter.cur;
       IF (l.local) AND (l.ident.equal = eq) THEN
-        CG.Init_intt (offs + M3RT.RV_lhs_id, Target.Integer.size,
-                      Type.GlobalUID (l.ident.lhs), TRUE);
-        CG.Init_intt (offs + M3RT.RV_rhs_id, Target.Integer.size,
-                      Type.GlobalUID (l.ident.rhs), TRUE);
-        INC (offs, M3RT.RV_SIZE);
+        seq.addhi (PersistentRevelation.T {
+                    Type.GlobalUID (l.ident.lhs),
+                    Type.GlobalUID (l.ident.rhs)});
       END;
     END;
+
+    array := seq.elem;
+
+    PersistentRevelationArraySort.Sort(SUBARRAY(array^, 0, seq.sz));
+
+    FOR i := 0 TO seq.sz - 1 DO
+      CG.Init_intt (offs + M3RT.RV_lhs_id, Target.Integer.size, array[i].lhs_id, TRUE);
+      CG.Init_intt (offs + M3RT.RV_rhs_id, Target.Integer.size, array[i].rhs_id, TRUE);
+      INC (offs, M3RT.RV_SIZE);
+    END;
+
     RETURN base;
   END GenList;
 
