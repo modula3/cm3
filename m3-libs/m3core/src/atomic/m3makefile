@@ -1,5 +1,3 @@
-if not equal(TARGET, "ARMEL_LINUX")
-
 Generic_module("Atomic")
 template("atomic")
 
@@ -12,10 +10,6 @@ if not ({"PPC_LINUX", "PPC_DARWIN", "PPC32_OPENBSD",
   Atomic("Longint")
 end
 
-if not ({"MIPS64_OPENBSD", "MIPS64EL_OPENBSD"} contains TARGET)
-  Atomic("Boolean")
-  Atomic("Char")
-  Atomic("WideChar")
-end
-
-end
+Atomic("Boolean")
+Atomic("Char")
+Atomic("WideChar")
