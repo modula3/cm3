@@ -13,6 +13,7 @@ IMPORT NetObj, NetObjRep, NetObjRT, Pickle, Pickle2, Protocol, Transport,
 IMPORT Atom, AtomList, Rd, RTType, Wr, Text, TextClass, Text8, Text16,
        Thread, RdClass, WrClass, UnsafeRd, UnsafeWr, FloatMode, Swap;
 IMPORT PickleStubs;
+IMPORT Target;
 FROM Word IMPORT And, Or, LeftShift; 
 
 FROM Protocol IMPORT MsgHeader, CallHeader, Op;
@@ -278,7 +279,7 @@ PROCEDURE InWideChars(c: Conn; rep: DataRep; VAR arr: ARRAY OF WIDECHAR)
         IF WideChar32(NativeRep.charSet) THEN (* 32 on both systems. *) 
           FOR RI := 0 TO LAST(arr) DO
             IntVal := PickleStubs.InWC21(c.rd);
-            IF IntVal > 16_10FFFF THEN 
+            IF IntVal > Target.WideChar32Max THEN
               RaiseError
                 (Atom.FromText("Malformed pickle: WIDECHAR out of range.")); 
             END;
@@ -287,7 +288,7 @@ PROCEDURE InWideChars(c: Conn; rep: DataRep; VAR arr: ARRAY OF WIDECHAR)
         ELSE (* Remote 32, local 16. *) 
           FOR RI := 0 TO LAST(arr) DO
             IntVal := PickleStubs.InWC21(c.rd);
-            IF IntVal > 16_FFFF THEN IntVal := ReplacementWt; END;
+            IF IntVal > Target.WideChar16Max THEN IntVal := ReplacementWt; END;
             arr[RI] := VAL(IntVal, WIDECHAR);  
           END; 
         END 
@@ -1355,7 +1356,7 @@ PROCEDURE ChooseFloatFmt(): Byte8 =
   END ChooseFloatFmt;
 
 CONST CharSet = 0; 
-CONST WideWIDECHAR = ORD(LAST(WIDECHAR)) > 16_FFFF; 
+CONST WideWIDECHAR = ORD(LAST(WIDECHAR)) > Target.WideChar16Max;
 
 PROCEDURE ChooseCharSet(): Byte8 = 
 (* Pack the original charSet (which has only a single value 0)

@@ -3,7 +3,7 @@
 
 MODULE M3WString;
 
-IMPORT M3Buf, Text, Word, CG, WCharr;
+IMPORT M3Buf, Text, Word, CG, Target;
 
 TYPE
   HashTable = REF ARRAY OF T;
@@ -118,10 +118,7 @@ PROCEDURE Init_chars (offset: INTEGER;  t: T;  is_const: BOOLEAN) =
     IF (t = NIL) THEN
       (* done *)
     ELSE
-      IF WCharr.IsUnicode
-      THEN TargetWCBitsize := 32
-      ELSE TargetWCBitsize := 16
-      END; 
+      TargetWCBitsize := Target.WideCharSize();
       IF (t.body # NIL) THEN
         FOR i := 0 TO t.length-1 DO
           CG.Init_intt (offset, TargetWCBitsize, t.body[i], is_const);
@@ -331,7 +328,7 @@ TYPE
 
 PROCEDURE CharLiteral (ch: Char;  VAR(*OUT*) lit: CharBuf): [1..8] =
   BEGIN
-    IF ch > 16_FFFF THEN 
+    IF ch > Target.WideChar16Max THEN
       lit[0] := '\\';  
       lit[1] := 'U';   
       lit[2] := Digits [Word.Extract (ch, 20, 1)];

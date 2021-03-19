@@ -7,10 +7,6 @@ IMPORT Type;
 
 VAR T: Type.T;
 
-VAR IsUnicode : BOOLEAN; 
-(* ^Value is set from within package cm3, where it is initially known,
-   prior to calling Initialize. *) 
-
 PROCEDURE Initialize ();
 
 END WCharr.

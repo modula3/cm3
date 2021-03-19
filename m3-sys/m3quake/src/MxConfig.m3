@@ -22,6 +22,9 @@ PROCEDURE FindFile (): TEXT =
   END FindFile;
 
 PROCEDURE Get (param: TEXT): TEXT =
+(* Avoid this function.
+ * It uses a global Quake.Machine and does not honor command line defines.
+ *)
   BEGIN
     LOCK mu DO
       EvalConfig ();
@@ -124,6 +127,9 @@ PROCEDURE TryConfig (a, b, c: TEXT := NIL): BOOLEAN =
   END TryConfig;
 
 PROCEDURE EvalConfig () =
+(* Avoid this function.
+ * It sets a global Quake.Machine and does not honor command line defines.
+ *)
   (* LL = mu *)
   BEGIN
     IF (mach # NIL) THEN RETURN END;

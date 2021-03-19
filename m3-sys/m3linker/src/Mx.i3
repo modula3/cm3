@@ -29,11 +29,6 @@ CONST
 CONST
   BuiltinUnitName = "M3_BUILTIN";
 
-VAR UnicodeWideChar := FALSE; 
-    (* This is set by the front end when it knows.  We do this this hackish
-       way to avoid cyclic package dependencies, as m3 front depends on
-       m3linker. *) 
-
 TYPE
   LinkSet <: REFANY;
 

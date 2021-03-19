@@ -12,7 +12,7 @@ IMPORT M3, M3ID, CG, Value, ValueRep, Scope, Stmt, Error, ESet,  External;
 IMPORT Variable, Type, Procedure, Ident, M3Buf, BlockStmt, Int;
 IMPORT Host, Token, Revelation, Coverage, Decl, Scanner, WebInfo;
 IMPORT ProcBody, Target, M3RT, Marker, File, Tracer, Wr;
-IMPORT WCharr, Jmpbufs;
+IMPORT Jmpbufs;
 
 FROM Scanner IMPORT GetToken, Fail, Match, MatchID, cur;
 
@@ -908,10 +908,7 @@ PROCEDURE Compile (t: T) =
     zz := Scope.Push (t.localScope);
       WebInfo.Reset ();
       CG.Begin_unit ();
-      IF WCharr.IsUnicode
-      THEN CG.Widechar_size (32);
-      ELSE CG.Widechar_size (16);
-      END;
+      CG.Widechar_size (Target.WideCharSize());
       CG.Gen_location (t.origin);
       Host.env.note_unit (t.name, t.interface);
       DeclareGlobalData (t);

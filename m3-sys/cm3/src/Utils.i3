@@ -6,7 +6,7 @@
 
 INTERFACE Utils;
 
-IMPORT File, Wr, Arg, Thread;
+IMPORT File, Wr, Arg, Thread, Builder;
 FROM Ctypes IMPORT const_char_star, int;
 
 PROCEDURE OpenWriter   (name: TEXT;  fatal: BOOLEAN): Wr.T;
@@ -42,7 +42,7 @@ PROCEDURE NoteNewFile      (file: TEXT);
 
 PROCEDURE NoteWidechar16 ();
 PROCEDURE NoteWidecharUni ();
-PROCEDURE InitWidechar (); 
+PROCEDURE InitWidechar (s: Builder.State);
 
 CONST NO_TIME = 0;
 

@@ -10,7 +10,6 @@ MODULE TextExpr;
 
 IMPORT M3, CG, Expr, ExprRep, M3String, Textt, Type, M3Buf;
 IMPORT Target, Module, M3RT, M3WString, RunTyme, Procedure;
-IMPORT WCharr;
 
 TYPE
   P = Expr.T OBJECT
@@ -122,10 +121,7 @@ PROCEDURE SetUID (p: P): INTEGER =
         M3String.SetUID (p.value8, uid);
       END;
     ELSE
-      IF WCharr.IsUnicode
-      THEN width := Target.Word32.size
-      ELSE width := Target.Word16.size
-      END; 
+      width := Target.WideCharSize();
       len   := M3WString.Length (p.value32);
       cnt   := - len;
       uid   := M3WString.GetUID (p.value32);

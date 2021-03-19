@@ -89,8 +89,8 @@ PROCEDURE EmitPkgImports (READONLY units: M3Unit.Set) =
 (*-------------------------------------------------- general compilation ---*)
 (* The "global" variables of a compilation are passed around in a "State". *)
 
-TYPE
-  State = REF RECORD
+REVEAL
+  State = BRANDED REF RECORD
     result_name   : TEXT;               (* base of program or library name *)
     info_name     : TEXT;               (* name of the version stamp file *)
     config_file   : TEXT;               (* name of the current config file *)
@@ -353,7 +353,13 @@ PROCEDURE CompileUnits (main     : TEXT;
       Utils.NoteLocalFileTimes ();
     ETimer.Pop ();
     BuildSearchPaths (s);
-    Utils.InitWidechar (); 
+
+     (* WIDECHAR can be 16 or 32 bits subject to command line and config
+      * If not specified on command line, check config. Default is 16.
+      * "Unicode" means 32.
+      *)
+    Utils.InitWidechar (s);
+
     InhaleLinkInfo (s);
     BuildLibraryPool (s);
 
