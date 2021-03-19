@@ -244,7 +244,8 @@ PROCEDURE InitCallingConventions(backend_mode: M3BackendMode_t;
   PROCEDURE New(name: TEXT; id: [0..1]): CallingConvention =
     VAR cc := NEW(CallingConvention, name := name);
     BEGIN
-      IF backend_mode = M3BackendMode_t.C OR target_has_calling_conventions THEN
+      (* This stuff seems messed up. *)
+      IF (*backend_mode = M3BackendMode_t.C OR*) target_has_calling_conventions THEN
         cc.m3cg_id            := id;
       ELSE
         cc.m3cg_id            := 0;
@@ -270,6 +271,16 @@ PROCEDURE InitCallingConventions(backend_mode: M3BackendMode_t;
       RETURN cc;
     END New;
   BEGIN
+    (* 0 is __cdecl, 1 is __stdcall. *)
+    CCs := ARRAY OF CallingConvention{ New("C",          0),
+                                       New("WINAPIV",    0),
+                                       New("__cdecl",    0),
+                                       New("WINAPI",     1),
+                                       New("CALLBACK",   1),
+                                       New("APIENTRY",   1),
+                                       New("APIPRIVATE", 1),
+                                       New("PASCAL",     1),
+                                       New("__stdcall",  1) };
     (* 0 is __cdecl, 1 is __stdcall. *)
     CCs := ARRAY OF CallingConvention{ New("__cdecl",    0), (* must be first *)
                                        New("__stdcall",  1), (* must be second *)
