@@ -5,10 +5,15 @@ Atomic("Address")
 Atomic("Integer")
 Atomic("Refany")
 
-if not ({"PPC_LINUX", "PPC_DARWIN", "PPC32_OPENBSD",
-         "SPARC32_LINUX"} contains TARGET)
+% It is possible atomic Longint does not work on
+% 32bit PowerPC or 32bit SPARC or other architectures.
+%
+% Wait and see if users with failures materialize.
+% (Including possibly Qemu-based CI in future).
+%
+%if not ({"PPC", "PPC32", "SPARC", "SPARC32"} contains TARGET_ARCH)
   Atomic("Longint")
-end
+%end
 
 Atomic("Boolean")
 Atomic("Char")
