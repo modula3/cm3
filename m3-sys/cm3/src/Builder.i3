@@ -29,4 +29,8 @@ PROCEDURE EmitPkgImports (READONLY units: M3Unit.Set);
 
 PROCEDURE SetupNamingConventions (mach : QMachine.T);
 
+TYPE State <: REFANY;
+
+PROCEDURE GetConfigItem (s: State;  symbol: TEXT; default: TEXT := NIL): TEXT;
+
 END Builder.

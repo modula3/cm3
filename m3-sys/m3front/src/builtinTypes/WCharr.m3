@@ -4,16 +4,14 @@
 MODULE WCharr;
 
 IMPORT M3, M3ID, EnumType, Tipe, Scope;
+IMPORT Target;
 
 PROCEDURE Initialize () =
   VAR elts: Scope.T;  cs := M3.OuterCheckState;
   VAR NUMBER_WIDECHAR: INTEGER; 
   BEGIN
     elts := Scope.PushNew (FALSE, M3ID.Add ("WIDECHAR"));
-    IF IsUnicode  
-    THEN NUMBER_WIDECHAR := 16_110000
-    ELSE NUMBER_WIDECHAR := 16_10000
-    END; 
+    NUMBER_WIDECHAR := Target.WideCharNumber();
     T := EnumType.New (NUMBER_WIDECHAR, elts);
 (* Widechar Tipe. *) 
 (* This looks OK for new TipeDesc.Op.Widechar.  It's just like Charr. *) 

@@ -9,6 +9,7 @@ MODULE MxIn;
 
 IMPORT Text, File, Wr, Stdio, Fmt, Word, Thread, Atom, AtomList;
 IMPORT Mx, MxRep, M3ID, M3FP, M3File, MxVS, OSError;
+IMPORT Target;
 <*FATAL Wr.Failure, Thread.Alerted*>
 
 CONST
@@ -165,7 +166,7 @@ PROCEDURE ReadMagic (VAR s: State)
     END;
     MagicText := Text.FromChars(SUBARRAY(MagicArr,0,i));
 
-    IF Mx.UnicodeWideChar
+    IF Target.IsWideChar32()
     THEN
       IF Text.Equal(MagicText, Mx.LinkerMagicWCUni)
       THEN (* All is Ok. *)

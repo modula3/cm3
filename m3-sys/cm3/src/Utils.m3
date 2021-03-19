@@ -9,7 +9,7 @@ UNSAFE MODULE Utils;
 IMPORT File, FileWr, Wr, Thread, Fmt, Process, TextIntTbl, M3toC;
 IMPORT Stdio, OSError, ETimer, FS, RegularFile, Time, Text;
 IMPORT Msg, Arg, M3Timers, CoffTime, M3File, Pathname;
-IMPORT WCharr, Mx, MxConfig; 
+IMPORT Target, Builder;
 FROM Ctypes IMPORT const_char_star, char_star, int;
 
 (*--------------------------------------------------------------- writers ---*)
@@ -306,52 +306,41 @@ PROCEDURE M3Time (t: Time.T): INTEGER =
 
 (*-------------------------- initializing range of WIDECHAR -----------------*)
 
-VAR GWidechar16Seen, GWidecharUniSeen: BOOLEAN := FALSE; 
+VAR widecharInitialized: BOOLEAN;
 
 PROCEDURE NoteWidechar16 () =
   BEGIN 
-    GWidecharUniSeen := FALSE; 
-    GWidechar16Seen := TRUE; 
+    Target.SetWideChar16 ();
+    widecharInitialized := TRUE;
   END NoteWidechar16; 
 
 PROCEDURE NoteWidecharUni () =
   BEGIN 
-    GWidechar16Seen := FALSE; 
-    GWidecharUniSeen := TRUE; 
+    Target.SetWideChar32 ();
+    widecharInitialized := TRUE;
   END NoteWidecharUni; 
 
-PROCEDURE InitWidechar () =
-
-  (* Because of the division of cm3 into packages, which cannot be
-     cyclically dependent, we have to do this a bit kludgily.  Here,
-     in package cm3, we initially have the necessary information.  It is
-     needed in m3front and m3linker, which can't refer to cm3 in any way.
-     So we push it down into global variables declared in m3front and m3linker, 
-     where they can access it.
-  *) 
-
+PROCEDURE InitWidechar (s: Builder.State) =
+(* cm3 is split into packages. Cycles are not allowed.
+ * Shared state e.g. between m3front, m3back, m3linker
+ * typically goes in m3middle, e.g. Target.
+ *)
   VAR Unicode_WIDECHAR_opt: TEXT;
   BEGIN
     (* Command line options override everthing else: *) 
-    IF GWidechar16Seen THEN (* Command line -widechar16. *) 
-      WCharr.IsUnicode := FALSE; 
-      Mx.UnicodeWideChar := FALSE; 
-    ELSIF GWidecharUniSeen THEN (* Command line -widecharuni. *) 
-      WCharr.IsUnicode := TRUE;
-      Mx.UnicodeWideChar := TRUE; 
+    IF widecharInitialized THEN
+      (* Command line -widechar16 or -widecharuni. *)
     ELSE 
       (* Next, look for the Quake configuration variable: *) 
-      Unicode_WIDECHAR_opt := MxConfig.Get("Unicode_WIDECHAR");
+      Unicode_WIDECHAR_opt := Builder.GetConfigItem (s, "Unicode_WIDECHAR", "");
       (* ^Possibly set in cm3.cfg, or just about any other Quake code. *)  
       IF Unicode_WIDECHAR_opt # NIL  
          AND NOT Text.Equal(Unicode_WIDECHAR_opt, "")
       THEN 
-        WCharr.IsUnicode := TRUE;
-        Mx.UnicodeWideChar := TRUE; 
+        NoteWidecharUni ();
       ELSE (* Hardcoded default of last resort: *) 
         (* Default case: 16-bit WIDECHAR. *) 
-        WCharr.IsUnicode := FALSE; 
-        Mx.UnicodeWideChar := FALSE; 
+        NoteWidechar16 ();
       END; 
     END; 
   END InitWidechar; 

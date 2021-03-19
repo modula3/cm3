@@ -468,4 +468,15 @@ VAR BackendModeInitialized := FALSE;
 PROCEDURE SetBuild_dir(build_dir: TEXT);
 PROCEDURE CleanupSourcePath(file: TEXT): TEXT;
 
+CONST WideChar16Max = 16_FFFF;
+CONST WideChar32Max = 16_10FFFF;
+
+PROCEDURE SetWideChar16 ();
+PROCEDURE SetWideChar32 ();
+
+PROCEDURE IsWideChar32 (): BOOLEAN; (* WideCharSize() = 32 *)
+PROCEDURE WideCharSize (): INTEGER;
+PROCEDURE WideCharMax (): INTEGER;
+PROCEDURE WideCharNumber (): INTEGER; (* WideCharMax() + 1 *)
+
 END Target.

@@ -408,5 +408,44 @@ BEGIN
   RETURN file;
 END CleanupSourcePath;
 
+(*-------------------------- range of WIDECHAR ------------------------------*)
+
+VAR wideCharSize        := 16;
+VAR wideCharMax         := WideChar16Max;
+
+PROCEDURE IsWideChar32 (): BOOLEAN =
+BEGIN
+  RETURN wideCharSize = 32;
+END IsWideChar32;
+
+PROCEDURE WideCharSize (): INTEGER =
+BEGIN
+  RETURN wideCharSize;
+END WideCharSize;
+
+PROCEDURE WideCharMax (): INTEGER =
+BEGIN
+  RETURN wideCharMax;
+END WideCharMax;
+
+PROCEDURE WideCharNumber (): INTEGER =
+BEGIN
+  RETURN wideCharMax + 1;
+END WideCharNumber;
+
+PROCEDURE SetWideChar16 () =
+BEGIN
+  wideCharSize := 16;
+  wideCharMax := WideChar16Max;
+END SetWideChar16;
+
+PROCEDURE SetWideChar32 () =
+BEGIN
+  wideCharSize := 32;
+  wideCharMax := WideChar32Max;
+END SetWideChar32;
+
+(*---------------------------------------------------------------------------*)
+
 BEGIN
 END Target.

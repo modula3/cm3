@@ -839,7 +839,7 @@ PROCEDURE GetOctalChar (wide: BOOLEAN): INTEGER =
       IF NOT GetOctalDigit (wide, value) THEN RETURN value; END;
       IF NOT GetOctalDigit (wide, value) THEN RETURN value; END;
       IF NOT GetOctalDigit (wide, value) THEN RETURN value; END;
-      IF value > 16_FFFF THEN 
+      IF value > Target.WideChar16Max THEN
         Error.Msg ("Octal escaped WIDECHAR value out of range");
         value := 0; 
       END; 
@@ -885,10 +885,10 @@ PROCEDURE GetHexChar (bytes: [1..3]): INTEGER =
         (* Only get here for a Unicode escape, which is always 6 hex digits. *) 
         IF NOT GetHexDigit (bytes, value) THEN RETURN value; END;
         IF NOT GetHexDigit (bytes, value) THEN RETURN value; END;
-        IF value > 16_10FFFF THEN 
+        IF value > Target.WideChar32Max THEN
           Error.Msg ("Unicode escaped character outside of Unicode range");
           value := 0; 
-        ELSIF NOT WCharr.IsUnicode AND value > 16_FFFF 
+        ELSIF value > Target.WideCharMax()
         THEN 
           Error.Warn
             (2, "Character outside WIDECHAR range, replaced by Unicode replacement character."); 

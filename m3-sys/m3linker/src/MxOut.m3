@@ -12,6 +12,7 @@ MODULE MxOut;
 IMPORT Wr, IntIntTbl;
 IMPORT M3Buf, M3ID;
 IMPORT Mx, MxVS, MxIO;
+IMPORT Target;
 
 TYPE
   State = RECORD
@@ -38,7 +39,7 @@ PROCEDURE WriteUnits (units: Mx.UnitList;  output: Wr.T) =
 
     M3Buf.AttachDrain (s.buf, s.wr);
 
-    IF Mx.UnicodeWideChar 
+    IF Target.IsWideChar32()
     THEN MxIO.PutTxt (s.buf,  Mx.LinkerMagicWCUni, Wr.EOL);
     ELSE MxIO.PutTxt (s.buf,  Mx.LinkerMagicWC16, Wr.EOL);
     END; 
@@ -128,7 +129,7 @@ PROCEDURE WriteOpaques (VAR s: State;  o: Mx.OpaqueType) =
   VAR name: INTEGER; 
   BEGIN
     WHILE (o # NIL) DO
-      IF Mx.UnicodeWideChar AND o.TypeName # M3ID.NoID THEN 
+      IF Target.IsWideChar32() AND o.TypeName # M3ID.NoID THEN
          (* ^Don't write "q" line unless writing >= v4.3 of mx file. *) 
         name := WriteName(s, o.TypeName); 
         MxIO.PutTxt (s.buf,  "q");
