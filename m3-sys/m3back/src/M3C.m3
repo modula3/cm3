@@ -2882,10 +2882,7 @@ END declare_indirect;
 PROCEDURE CallingConventionToText(callingConvention: CallingConvention): TEXT =
 BEGIN
     IF callingConvention = NIL THEN RETURN "<NIL>" END;
-    (* Return underlying __stdcall and __cdecl instead of aliases like WINAPI.
-     * RETURN callingConvention.name;
-     *)
-    RETURN Target.ConventionFromID(callingConvention.m3cg_id).name;
+    RETURN callingConvention.name;
 END CallingConventionToText;
 
 PROCEDURE declare_proctype(self: DeclareTypes_t; typeid: TypeUID; param_count: INTEGER; result: TypeUID; raise_count: INTEGER; callingConvention: CallingConvention) =
@@ -4402,9 +4399,7 @@ TYPE FunctionPrototype_t = { Declare, Define };
 
 PROCEDURE function_prototype(proc: Proc_t; kind: FunctionPrototype_t): TEXT =
 VAR params := proc.params;
-    text := cgtypeToText[proc.return_type] & "\n" &
-            CallingConventionToText(proc.callingConvention) & "\n" &
-            NameT(proc.name);
+    text := cgtypeToText[proc.return_type] & "\n__cdecl\n" & NameT(proc.name);
     after_param: TEXT := NIL;
     ansi := TRUE (*NOT is_exception_handler*);
     define_kr := NOT ansi AND kind = FunctionPrototype_t.Define;
