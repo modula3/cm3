@@ -62,7 +62,7 @@ PROCEDURE Format(cell : SetType) : TEXT =
   END Format;
 
 (* Simple cardinality of a set *)
-(*
+
 PROCEDURE Card(s : SetType) : INTEGER =
   VAR card : INTEGER := 0;
   BEGIN
@@ -73,14 +73,21 @@ PROCEDURE Card(s : SetType) : INTEGER =
     END;
     RETURN card;
   END Card;
-  *)
-(* this version optimises to popcount on suitable
-hardware *)
+
+(* this version optimises to popcount on suitable hardware *)
+(*
 PROCEDURE Card(s : SetType) : INTEGER =
+  TYPE
+    SetRange = [0..16_FFFF-1];
+(*
+    SetRange = BITS BITSIZE(SetType) FOR [0..16_FFFF - 1];
+   massive increase in code if use this
+    SetRange = BITS 16 FOR [0..10];
+*)
   VAR card : INTEGER := 0;
       p : Word.T;
   BEGIN
-    p := LOOPHOLE(s,Word.T);
+    p := LOOPHOLE(s,SetRange);
     IF p # 0 THEN
       REPEAT
         INC(card);
@@ -89,7 +96,7 @@ PROCEDURE Card(s : SetType) : INTEGER =
     END;
     RETURN card;
   END Card;
-  
+*)  
 (* Return the single element of a set *)
 PROCEDURE Singleton(s : SetType) : INTEGER =
   BEGIN
