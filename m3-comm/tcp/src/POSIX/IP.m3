@@ -6,7 +6,7 @@
 (*      modified on Sun Jan 12 16:17:06 PST 1992 by meehan *)
 
 UNSAFE MODULE IP;
-IMPORT IPInternal, IPError, M3toC, Unetdb, Ctypes;
+IMPORT IPInternal, IPError, M3toC, Ctypes;
 
 TYPE int = Ctypes.int;
 
