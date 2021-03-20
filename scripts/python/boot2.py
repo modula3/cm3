@@ -1,10 +1,11 @@
 #! /usr/bin/env python2
 
+# Roughly:
 #!/bin/sh
-
+#
 #set -e
 #set -x
-
+#
 #./make-dist-cfg.py $*
 #./do-pkg.py m3cc buildship $*
 #./do-cm3-all.py realclean skipgcc $*
@@ -14,7 +15,20 @@
 #./do-cm3-all.py buildship $*
 
 import os, sys, pylib
+from os import getenv
 argv = sys.argv
+
+env_OS = getenv("OS")
+
+def IsInterix():
+    return os.name == "posix" and os.uname()[0].lower().startswith("interix")
+
+if env_OS == "Windows_NT" and not IsInterix():
+    def uname():
+        PROCESSOR_ARCHITECTURE = getenv("PROCESSOR_ARCHITECTURE")
+        return (env_OS, "", PROCESSOR_ARCHITECTURE, "", PROCESSOR_ARCHITECTURE)
+else:
+    from os import uname
 
 def RemoveTrailingSpaces(a):
     while len(a) > 0 and a[-1] == ' ':
@@ -35,15 +49,21 @@ c = ""
 if _CBackend:
     c = "c"
 
-pyexe = "python2"
-if not pylib.SearchPath(pyexe):
-    pyexe = "py.exe"
+pyexe = ""
 
-Run(pyexe + " ./make-dist-cfg.py")
-if not _CBackend:
-    Run(pyexe + " ./do-pkg.py m3cc buildship " + c)
-Run(pyexe + " ./do-cm3-all.py realclean skipgcc " + c)
-Run(pyexe + " ./do-pkg.py m3cc m3core libm3 buildship " + c)
-Run(pyexe + " ./upgrade.py skipgcc " + c)
-Run(pyexe + " ./do-cm3-all.py realclean skipgcc " + c)
-Run(pyexe + " ./do-cm3-all.py buildship " + c)
+if env_OS == "Windows_NT" and not IsInterix():
+    pyexe = "python2.exe "
+    if not pylib.SearchPath("python2.exe"):
+        pyexe = "py.exe "
+
+Run(pyexe + "./make-dist-cfg.py")
+
+if not _CBackend and env_OS != "Windows_NT":
+    Run(pyexe + "./do-pkg.py m3cc buildship " + c)
+
+defines = pylib.PassThroughDefines()
+Run(pyexe + "./do-cm3-all.py realclean skipgcc " + c + defines)
+Run(pyexe + "./do-pkg.py m3cc m3core libm3 buildship " + c + defines)
+Run(pyexe + "./upgrade.py skipgcc " + c + defines)
+Run(pyexe + "./do-cm3-all.py realclean skipgcc " + c + defines)
+Run(pyexe + "./do-cm3-all.py buildship " + c + defines)
