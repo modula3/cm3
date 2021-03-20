@@ -213,7 +213,7 @@ TYPE
   SIZEL = SIZE;
   PSIZEL = UNTRACED REF SIZE;
 
-  PPOINTS = UNTRACED REF POINTS;
+  PPOINTS = UNTRACED REF POINTS; (* s is for signed 16bit short, not plural *)
   LPPOINTS = PPOINTS; (* compat *)
   POINTS = RECORD
     x: INT16;
