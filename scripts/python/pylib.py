@@ -427,6 +427,15 @@ for a in _PossibleCm3Flags:
     if a in sys.argv:
         CM3_FLAGS = CM3_FLAGS + " -" + a
 
+def PassThroughDefines():
+    result = " "
+    for a in sys.argv:
+        if a.startswith("-D"):
+            result = result + " " + a
+    return result
+
+CM3_FLAGS += PassThroughDefines()
+
 CM3 = ConvertPathForPython(getenv("CM3")) or "cm3"
 CM3 = SearchPath(CM3)
 
