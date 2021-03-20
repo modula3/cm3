@@ -172,8 +172,7 @@ PROCEDURE Match (self           : Oracle;
     RETURN List (self, fname, maxResults)
   END Match;
 
-
-PROCEDURE Lookup (<* UNUSED *> self: Oracle; name: TEXT): ScrnFont.T
+PROCEDURE Lookup (<*UNUSED*>self: Oracle; name: TEXT; <*UNUSED*>xft := TRUE): ScrnFont.T
     RAISES {ScrnFont.Failure} =
   VAR res: ScrnFont.T;
   BEGIN
