@@ -53,6 +53,7 @@ c_source   ("WinNTc")
 implementation ("WinGDI") % part of the implementation is portable
 implementation ("WinUser") % part of the implementation is portable
 c_source   ("WinUserC")
+c_source   ("WinGDIc")
 
 % New interfaces added March 2003 by darkov
 if equal(WORD_SIZE, "32BITS") % temporary hack

@@ -2040,12 +2040,15 @@ PROCEDURE TimerTick (hwnd: WinDef.HWND) =
    VAR
     status   : WinDef.BOOL;
     screenPos: WinDef.POINT;
+    shortPos : WinDef.POINTS; (* s is for 16bit short *)
     lParam   : WinDef.LPARAM;
   BEGIN
     IF trsl.mouseFocus = NIL THEN
       status := WinUser.GetCursorPos (ADR (screenPos));
       <* ASSERT status # False *>
-      lParam := LOOPHOLE (WinDef.POINTS {screenPos.x, screenPos.y}, WinDef.UINT32);
+      shortPos.x := screenPos.x; (* truncate 32bit to 16bit *)
+      shortPos.y := screenPos.y;
+      lParam := WinGDI.PointsToLParam(ADR (shortPos));
       DeliverMousePos (hwnd, lParam, 0);
     END;
   END TimerTick;

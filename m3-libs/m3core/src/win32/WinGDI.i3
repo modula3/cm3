@@ -17,14 +17,14 @@
 
 INTERFACE WinGDI;
 
-FROM Ctypes IMPORT char;
+FROM Ctypes IMPORT char, int;
 FROM Word IMPORT Or, Shift;
 FROM WinDef IMPORT INT16, BOOL, UINT16, UINT32, PUINT32, PVOID, HDC,
                    LPARAM, POINT, HBRUSH, RECT, UINT8, PUINT8, HBITMAP, PRECT,
                    PINT32, HRGN, PPOINT, INT32, COLORREF, WFLOAT,
                    HGDIOBJ, HMETAFILE, HMODULE, HFONT, HPEN, HPALETTE, HGLOBAL,
                    RECTL, SIZEL, PFLOAT, PSIZE, HENHMETAFILE, HGLRC, WCHAR,
-                   PSTR, PWSTR, PCSTR, PCWSTR, SIZE_T;
+                   POINTS, PSTR, PWSTR, PCSTR, PCWSTR, SIZE_T;
 
 (* Binary raster ops *)
 CONST
@@ -456,7 +456,14 @@ TYPE
   END;
   (*???  #pragma pack() *)
 
-(*!  ???  #define MAKEPOINTS(l) (*((POINTS FAR *)&(l))) *)
+(* Replace macros with functions. *)
+(* s in points is for signed 16bit short, not plural *)
+<*EXTERNAL "WinGDI__MAKEPOINTS"*>   PROCEDURE MAKEPOINTS(lParam: LPARAM; points: UNTRACED REF POINTS);
+<*EXTERNAL "WinGDI__GET_X_LPARAM"*> PROCEDURE GET_X_LPARAM(lParam: LPARAM): int;
+<*EXTERNAL "WinGDI__GET_Y_LPARAM"*> PROCEDURE GET_Y_LPARAM(lParam: LPARAM): int;
+
+(* Make up a new one. *)
+<*EXTERNAL "WinGDI__PointsToLParam"*> PROCEDURE PointsToLParam(points: UNTRACED REF POINTS): LPARAM;
 
 (* Clipboard Metafile Picture Structure *)
 TYPE
