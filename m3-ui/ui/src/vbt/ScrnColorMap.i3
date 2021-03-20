@@ -113,8 +113,8 @@ TYPE
   Cube = RECORD lo, hi: Pixel END;
   Pixel = INTEGER;
   RGB = RECORD r, g, b: REAL END;
-  XRGB = RECORD red, green, blue, alpha: INTEGER END;
-  Entry = RECORD pix: Pixel; rgb: RGB; xrgb : XRGB END;
+  XRGB = RECORD red, green, blue, alpha := 0 END;
+  Entry = RECORD pix: Pixel; rgb: RGB; xrgb := XRGB{}; END;
 
 (* The field "cm.depth" is the depth of "cm", and "cm.readOnly" is
    "TRUE" if "cm" cannot be written.  The field "cm.ramp" defines
