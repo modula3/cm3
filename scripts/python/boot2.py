@@ -13,7 +13,7 @@
 #./do-cm3-all.py realclean skipgcc $*
 #./do-cm3-all.py buildship $*
 
-import os, sys
+import os, sys, pylib
 argv = sys.argv
 
 def RemoveTrailingSpaces(a):
@@ -31,11 +31,19 @@ def Run(command):
 # ./do-pkg.py doesn't like skipgcc plus just m3cc -- no packages to build
 # Which is why this was rewritten in Python from Bourne shell.
 
-Run("./make-dist-cfg.py")
+c = ""
+if _CBackend:
+    c = "c"
+
+pyexe = "python2"
+if not pylib.SearchPath(pyexe):
+    pyexe = "py.exe"
+
+Run(pyexe + " ./make-dist-cfg.py")
 if not _CBackend:
-    Run("./do-pkg.py m3cc buildship")
-Run("./do-cm3-all.py realclean skipgcc")
-Run("./do-pkg.py m3cc m3core libm3 buildship")
-Run("./upgrade.py skipgcc")
-Run("./do-cm3-all.py realclean skipgcc")
-Run("./do-cm3-all.py buildship")
+    Run(pyexe + " ./do-pkg.py m3cc buildship " + c)
+Run(pyexe + " ./do-cm3-all.py realclean skipgcc " + c)
+Run(pyexe + " ./do-pkg.py m3cc m3core libm3 buildship " + c)
+Run(pyexe + " ./upgrade.py skipgcc " + c)
+Run(pyexe + " ./do-cm3-all.py realclean skipgcc " + c)
+Run(pyexe + " ./do-cm3-all.py buildship " + c)
