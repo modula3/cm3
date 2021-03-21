@@ -188,6 +188,7 @@ PROCEDURE PrepArgs (t: T) =
 
 PROCEDURE NoLValue (<*UNUSED*> t: T; <*UNUSED*> traced: BOOLEAN) =
   BEGIN
+    Error.Msg ("Internal compiler error CallExpr.NoLValue");
     <*ASSERT FALSE*>
   END NoLValue;
 
@@ -195,6 +196,7 @@ PROCEDURE NotBoolean (<*UNUSED*> t: T;
                       <*UNUSED*> true, false: CG.Label;
                       <*UNUSED*> freq: CG.Frequency) =
   BEGIN
+    Error.Msg ("Internal compiler error CallExpr.NotBoolean");
     <*ASSERT FALSE*>
   END NotBoolean;
 
