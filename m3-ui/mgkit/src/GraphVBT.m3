@@ -988,15 +988,13 @@ PROCEDURE AnimateGraphVertexHighlights (graph: T; tf: Animate.TimeFunction) =
                            MAX(ABS(vertexHighlight.new.vertex.size[1])
                                  + 2.0 * vertexHighlight.border[1], 0.0)};
             BEGIN
-              linearResize :=
-                NEW(LinearResize, graph := graph,
-                    shape := vertexHighlight.vertex.shape,
-                    corner0 := ARRAY [0 .. 1] OF
-                                 R2.T{SWFromCenter(center0PP, size0),
-                                      SWFromCenter(center1PP, size1)},
-                    corner1 := ARRAY [0 .. 1] OF
-                                 R2.T{NEFromCenter(center0PP, size0),
-                                      NEFromCenter(center1PP, size1)});
+              linearResize := NEW(LinearResize);
+              linearResize.graph := graph;
+              linearResize.shape := vertexHighlight.vertex.shape;
+              linearResize.corner0[0] := SWFromCenter(center0PP, size0);
+              linearResize.corner0[1] := SWFromCenter(center1PP, size1);
+              linearResize.corner1[0] := NEFromCenter(center0PP, size0);
+              linearResize.corner1[1] := NEFromCenter(center1PP, size1);
               EVAL linearResize.init(tf);
               animation := linearResize;
             END;
