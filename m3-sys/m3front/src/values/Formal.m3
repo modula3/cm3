@@ -953,6 +953,7 @@ PROCEDURE GenStruct
           THEN (* Pass address.  Copy will be made by callee prolog. *)
             CG.Pop_param (CG.Type.Addr);
           ELSE
+            Type.Compile (formVal.repType);
             CG.Pop_struct
               (Type.GlobalUID (formVal.repType), formRepTypeInfo.size,
                formRepTypeInfo.alignment);
