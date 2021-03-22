@@ -67,11 +67,6 @@ VAR defs: TextTextTbl.T;
 
         DefineIfNotDefined (mach, "TARGET", MxConfig.HOST);
         DefineIfNotDefined (mach, "OS_TYPE", MxConfig.HOST_OS_TYPE);
-        (* DefineIfNotDefined (mach, "BACKEND_MODE", Version.BackendMode); *)
-        (* DefineIfNotDefined (mach, "C_COMPILER", Version.CCompiler); *)
-        (* DefineIfNotDefined (mach, "LINKER", Version.Linker); *)
-        (* DefineIfNotDefined (mach, "THREAD_LIBRARY", Version.ThreadLibrary); *)
-        (* DefineIfNotDefined (mach, "WINDOW_LIBRARY", Version.WindowLibrary); *)
         DefineIfNotDefined (mach, "WORD_SIZE", MxConfig.HOST_WORD_SIZE);
 
         (* Even if the config file overrides the defaults, such as to do
@@ -82,7 +77,6 @@ VAR defs: TextTextTbl.T;
 
         Quake.Define(mach, "HOST", MxConfig.HOST);
         Quake.Define(mach, "HOST_OS_TYPE", MxConfig.HOST_OS_TYPE);
-        (* Quake.Define(mach, "HOST_GNU_MAKE", Version.GNUMake); *)
 
         (* define the site configuration *)
         Msg.Verbose ("EVAL (\"", config, "\")");
