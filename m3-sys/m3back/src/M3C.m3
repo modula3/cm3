@@ -4942,7 +4942,8 @@ BEGIN
         RTIO.Flush();
         Wr.Flush(self.c);
         <* ASSERT ok1 *>
-        <* ASSERT ok2 *>
+        (* There are tests that fail this and m3front allows it, with warnings. *)
+        (* ASSERT ok2 *)
     END;
     IF type = CGType.Int32 AND TInt.EQ(i, TInt.Min32) THEN
         RETURN "-" & intLiteralPrefix[type] & TInt.ToText(TInt.Max32) & intLiteralSuffix[type] & "-1";
