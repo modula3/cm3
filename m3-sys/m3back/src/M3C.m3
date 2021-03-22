@@ -119,6 +119,7 @@ T = M3CG_DoNothing.T BRANDED "M3C.T" OBJECT
         dummy_proc      : Proc_t := NIL; (* avoid null derefs for indirect calls *)
         in_proc         : BOOLEAN := FALSE; (* based on M3x86 *)
         in_proc_call    : BOOLEAN := FALSE; (* based on M3x86 *)
+        abort_in_call   := FALSE;
         in_call_indirect := FALSE;
         proc_being_called : Proc_t := NIL;
         report_fault: TEXT := NIL; (* based on M3x86 -- reportlabel, global_var *)
@@ -2422,6 +2423,7 @@ BEGIN
     self.in_proc := FALSE;
     self.current_proc := NIL;
     self.in_proc_call := FALSE;
+    self.abort_in_call := FALSE;
 END begin_unit;
 
 PROCEDURE end_unit(self: T) =
@@ -6331,6 +6333,7 @@ PROCEDURE abort(self: T; code: RuntimeError) =
 BEGIN
     self.comment("abort");
     reportfault(self, code);
+    self.abort_in_call := self.in_proc_call;
 END abort;
 
 PROCEDURE check_nil(self: T; code: RuntimeError) =
@@ -6464,6 +6467,7 @@ BEGIN
     <* ASSERT self.params.size() = 0 *>
     <* ASSERT NOT self.in_proc_call *>
     self.in_proc_call := TRUE; (* call cannot be nested *)
+    self.abort_in_call := FALSE;
 END start_call_helper;
 
 PROCEDURE MarkUsed_start_call_direct(self: MarkUsed_t;
@@ -6564,42 +6568,74 @@ VAR comma, t1, t2, t3, t4 := "";
     direct := NOT self.in_call_indirect;
     types := self.proc_being_called.params;
     values := self.params;
+    abort_in_call := self.abort_in_call;
 BEGIN
-    <* ASSERT self.in_proc_call *>
+  <* ASSERT self.in_proc_call *>
+
+  self.abort_in_call := FALSE;
+
+  (* m3front invalid IR:
+   * m3front issues abort within calls, and then stops
+   * issuing parameters, but does issue the call,
+   * which the C compiler rejects, insufficient parameters to call.
+   *
+   * Evaluate whatever parameters we got and then skip the call,
+   * which should be unreachable, due to following a fault.
+   *
+   * TODO: On the theory that abort is continuable in a debugger,
+   * consider making this conditional on if sufficient parameters
+   * have been seen, not if abort has been seen. They likely coincide.
+   *
+   * TODO: Consider requiring better IR from m3front.
+   *)
+  IF abort_in_call THEN
+    proc := " /* abort_in_call */ ";
+  ELSE
     proc := proc & "(\n ";
-    WHILE values.size() > 0 DO
-        t1 := "";
-        t2 := "";
-        t3 := "";
-        t4 := "";
-        IF direct THEN
-            (* Fix for setjmp. *)
-            IF index = 0 AND self.proc_being_called.is_setjmp THEN
-                t1 := "*(jmp_buf*)"
-            ELSE
-                WITH param = types[index] DO
-                    IF param.cgtype # CGType.Struct OR param.typeid = UID_ADDR THEN
-                        t1 := " /* call_helper t1 */ (";
-                        (* TODO type.text *)
-                        t2 := " /* call_helper t2 */ " & param.type_text;
-                        t3 := " /* call_helper t3 */ )(";
-                        t4 := " /* call_helper t4 */ )";
-                    END;
-                END;
-            END;
-            INC(index);
+  END;
+
+  WHILE values.size() > 0 DO
+    t1 := "";
+    t2 := "";
+    t3 := "";
+    t4 := "";
+    (* Aborted calls evalute but ignore the parameters. *)
+    IF abort_in_call THEN
+      t1 := " (void)( ";
+      t4 := " ) ";
+    ELSIF direct THEN (* TODO? No casts for indirect calls? *)
+      (* Fix for setjmp. *)
+      IF index = 0 AND self.proc_being_called.is_setjmp THEN
+        t1 := "*(jmp_buf*)"
+      ELSE
+        WITH param = types[index] DO
+          IF param.cgtype # CGType.Struct OR param.typeid = UID_ADDR THEN
+            t1 := " /* call_helper t1 */ (";
+            (* TODO type.text *)
+            t2 := " /* call_helper t2 */ " & param.type_text;
+            t3 := " /* call_helper t3 */ )(";
+            t4 := " /* call_helper t4 */ )";
+          END;
         END;
-        proc := proc & comma & t1 & t2 & t3 & values.remlo() & t4;
-        comma := ",\n ";
+      END;
+      INC(index);
     END;
-    self.proc_being_called := self.dummy_proc;
-    self.in_proc_call := FALSE; (* call cannot be nested *)
-    proc := proc & ")";
-    IF type = CGType.Void THEN
-        print(self, proc & ";\n");
+    proc := proc & comma & t1 & t2 & t3 & values.remlo() & t4;
+    IF abort_in_call THEN
+      comma := ";\n ";
     ELSE
-        push(self, type, CTextToExpr(proc));
+      comma := ",\n ";
     END;
+  END;
+  self.proc_being_called := self.dummy_proc;
+  self.in_proc_call := FALSE; (* call cannot be nested *)
+  IF abort_in_call THEN
+    print(self, proc & ";\n");
+  ELSIF type = CGType.Void THEN
+    print(self, proc & ");\n"); (* print, do not push *)
+  ELSE
+    push(self, type, CTextToExpr(proc & ")"));
+  END;
 END call_helper;
 
 PROCEDURE get_static_link(self: T; target: Proc_t): TEXT =
