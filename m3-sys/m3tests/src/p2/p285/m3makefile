@@ -1,0 +1,5 @@
+% Small program with array initializer that used to work.
+
+implementation("Main")
+build_standalone()
+include ("../../Test.common")
