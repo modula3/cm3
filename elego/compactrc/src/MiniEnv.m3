@@ -1,7 +1,7 @@
 (*--------------------------------------------------------------------------*)
 MODULE MiniEnv;
 
-IMPORT ASCII, Env, MxConfig, Pathname, Text, Process, Rd, Thread;
+IMPORT ASCII, Env, MxConfig, Pathname, Process, Rd, Thread;
 IMPORT SMsg AS Msg, TextUtils, FSUtils, PathRepr, System;
 IMPORT CompactEnvName;
 (* IMPORT IO; *)
@@ -60,8 +60,8 @@ VAR
     "/"
   };
 BEGIN
-  isPosix := Text.Equal(MxConfig.HOST_OS_TYPE, "POSIX");
-  isWin32 := Text.Equal(MxConfig.HOST_OS_TYPE, "WIN32");
+  isPosix := MxConfig.HOST_OS_TYPE() = MxConfig.OS_TYPE.POSIX;
+  isWin32 := MxConfig.HOST_OS_TYPE() = MxConfig.OS_TYPE.WIN32;
 
   tmpdir := Env.Get("TMPDIR");
   IF tmpdir = NIL THEN

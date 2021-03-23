@@ -3611,12 +3611,12 @@ VAR
   fileSuffixC  := 'a';
   nullDev      :  File.T;
   nullDevName  :  TEXT;
-  win32        := Text.Equal(MxConfig.HOST_OS_TYPE, "WIN32");
+  win32        := MxConfig.HOST_OS_TYPE() = MxConfig.OS_TYPE.WIN32;
   cvsDisableVM := win32;
   tmp          :  TEXT := NIL;
   debugFindCVSFiles := FALSE;
 BEGIN
-  IF Text.Equal(MxConfig.HOST_OS_TYPE, "POSIX") THEN
+  IF MxConfig.HOST_OS_TYPE() = MxConfig.OS_TYPE.POSIX THEN
     nullDevName := "/dev/null";
   ELSE
     nullDevName := "nul";

@@ -190,9 +190,9 @@ PROCEDURE ReplaceExt(pn: T; ext: TEXT): T =
 
 (*--------------------------------------------------------------------------*)
 VAR
-  posix := Text.Equal(MxConfig.HOST_OS_TYPE, "POSIX");
-  win32 := Text.Equal(MxConfig.HOST_OS_TYPE, "WIN32");
+  posix := MxConfig.HOST_OS_TYPE() = MxConfig.OS_TYPE.POSIX;
+  win32 := MxConfig.HOST_OS_TYPE() = MxConfig.OS_TYPE.WIN32;
 BEGIN
-  caseSensitivePathnames := NOT Text.Equal(MxConfig.HOST_OS_TYPE, "WIN32");
+  caseSensitivePathnames := NOT win32;
 END APN.
 
