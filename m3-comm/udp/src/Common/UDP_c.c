@@ -60,7 +60,7 @@ UDPInternal__Send(
     // Copy possibly unaligned 4 character array to 4 byte integer.
     memcpy(&sockaddr.sin_addr.s_addr, addr, 4);
 
-    len = sendto(fd, *data, len, 0 /* flags */, &sockaddr, sizeof(sockaddr));
+    len = sendto(fd, *data, len, 0 /* flags */, (sockaddr*)&sockaddr, sizeof(sockaddr));
 
     Scheduler__EnableSwitching();
 
@@ -85,7 +85,7 @@ UDPInternal__Receive(
 
     Scheduler__DisableSwitching();
 
-    len = recvfrom(fd, *data, len, 0 /* flags */, &sockaddr, &addr_len);
+    len = recvfrom(fd, *data, len, 0 /* flags */, (sockaddr*)&sockaddr, &addr_len);
 
     Scheduler__EnableSwitching();
 
