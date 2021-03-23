@@ -655,22 +655,12 @@ proc compile_c_ms(source, object, options, optimize, debug) is
         options
     ]
 
-    %
     % Put type information in .objs/.libs instead of shared in vc80.pdb, etc.
     % vc80.pdb can be renamed with /Fd, we'd need the target name.
     % This is bigger/slower but has advantages too.
     % Debug information does not inhibit optimization so always generate it.
     %
-    % Set CM3_NO_SYMBOLS to "bootstrap backwards" -- build with newer toolsets
-    % such that you can subsequently build with older toolsets.
-    %
-    if not defined("NO_SYMBOLS")
-        NO_SYMBOLS = equal($CM3_NO_SYMBOLS, "1")
-    end
-
-    if not NO_SYMBOLS
-        args += ["-Z7"]
-    end
+    args += ["-Z7"]
 
     if USE_MSVCRT
         %
