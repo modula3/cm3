@@ -1,3 +1,7 @@
+// OpenBSD 5.2 dropped thread suspend/resume,
+// and ThreadPThread__ProcessStopped does not seem to work here either.
+void __cdecl ThreadOpenBSD__Dummy(void) { } /* avoid empty file */
+#if 0
 /* Copyright (C) 2005, Purdue Research Foundation                  */
 /* All rights reserved.                                            */
 /* See the file COPYRIGHT-PURDUE for a full description.           */
@@ -14,11 +18,7 @@
 
 M3_EXTERNC_BEGIN
 
-#ifndef __OpenBSD__
-
-void __cdecl ThreadOpenBSD__Dummy(void) { } /* avoid empty file */
-
-#else /* OpenBSD */
+#ifdef __OpenBSD__
 
 int
 __cdecl
@@ -85,3 +85,4 @@ ThreadPThread__ProcessStopped (m3_pthread_t mt, char *bottom, char *context,
 #endif /* OpenBSD */
 
 M3_EXTERNC_END
+#endif
