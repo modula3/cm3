@@ -81,10 +81,9 @@ union NativeSockAddrUnionAll
 // native forms meet some assumptions.
 
 // Family overlaps in all forms.
-M3_STATIC_ASSERT(offsetof(sockaddr_in, sin_family) == 0);
-M3_STATIC_ASSERT(offsetof(sockaddr_in6, sin6_family) == 0);
+M3_STATIC_ASSERT(offsetof(sockaddr_in, sin_family) == offsetof(sockaddr_in6, sin6_family));
 #ifdef AF_UNIX
-M3_STATIC_ASSERT(offsetof(sockaddr_un, sun_family) == 0);
+M3_STATIC_ASSERT(offsetof(sockaddr_in, sin_family) == offsetof(sockaddr_un, sun_family));
 #endif
 
 // Modula-3 forms are same size as native or larger.
