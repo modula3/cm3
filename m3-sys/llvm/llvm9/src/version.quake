@@ -57,95 +57,12 @@ proc version_impl(name) is
     > tempname in
         write("INTERFACE ", name, ";", CR)
     end
-    local NOW = "not available"
-    if defined("datetime")
-        NOW = datetime()
-    end
+
     include(".." & SL & ".." & SL & ".." & SL & ".." & SL & "scripts" & SL & "version.quake")
+
     >> tempname in
         write("CONST", CR)
         write("  Text = \"", CM3VERSION, "\";", CR)
-        write("  Number = \"", CM3VERSIONNUM, "\";", CR)
-        write("  LastChanged = \"", CM3LASTCHANGED, "\";", CR)
-        write("  Created = \"", NOW, "\";", CR)
-
-        %
-        % When cm3 uses this data, it is describing the HOST.
-        % They are reasonable defaults for the TARGET, ASSUMING a NATIVE build.
-        %
-        write("  Target = \"", TARGET, "\";", CR)
-        write("  OSType = \"", OS_TYPE, "\";", CR)
-        write("  WordSize = \"", WORD_SIZE, "\";", CR)
-
-        local GNUPlatform = ""
-        if defined ("GNU_PLATFORM")
-            GNUPlatform = GNU_PLATFORM
-        end
-        write("  GNUPlatform = \"", GNUPlatform, "\";", CR)
-
-        local CCompiler = ""
-        if defined ("C_COMPILER")
-            CCompiler = C_COMPILER
-        end
-        write("  CCompiler = \"", CCompiler, "\";", CR)
-
-        local Linker = ""
-        if defined ("LINKER")
-            Linker = LINKER
-        end
-        write("  Linker = \"", Linker, "\";", CR)
-
-        local ThreadLibrary = ""
-        if defined ("THREAD_LIBRARY")
-            ThreadLibrary = THREAD_LIBRARY
-        end
-        write("  ThreadLibrary = \"", ThreadLibrary, "\";", CR)
-
-        local WindowLibrary = ""
-        if defined ("WINDOW_LIBRARY")
-            WindowLibrary = WINDOW_LIBRARY
-        end
-        write("  WindowLibrary = \"", WindowLibrary, "\";", CR)
-
-        local GNUMake = "make"
-        if defined("GNU_MAKE")
-            GNUMake = GNU_MAKE
-        end
-        write("  GNUMake = \"", GNUMake, "\";", CR)
-
-        local readonly proc map(a, b) is
-            if a contains b
-                return a{b}
-            end
-            return b
-        end
-
-        write("  BackendMode = \"",
-            map({"0" : "IntegratedObject",
-                 "1" : "IntegratedAssembly",
-                 "2" : "ExternalObject",
-                 "3" : "ExternalAssembly",
-                 "4" : "C",
-                 "5" : "IntLlvmObj",
-                 "6" : "IntLlvmAsm",
-                 "7" : "ExtLlvmObj",
-                 "8" : "ExtLlvmAsm",
-                 "9" : "StAloneLlvmObj",
-                 "10": "StAloneLlvmAsm"}
-               , M3_BACKEND_MODE), "\";", CR)
-
-        local TargetNaming = ""
-        if defined("TARGET_NAMING")
-            TargetNaming = TARGET_NAMING
-        else if defined("NAMING_CONVENTIONS")
-            TargetNaming = NAMING_CONVENTIONS
-        end end
-        if TargetNaming
-            TargetNaming = map({"0" : "Unix", "1" : "GrumpyUnix", "2" : "Win32"}, TargetNaming)
-        end
-        write("  TargetNaming      = \"", TargetNaming, "\";", CR)
-        write("  NamingConventions = \"", TargetNaming, "\";", CR)
-
         write("END ", name, ".", CR)
     end
     cp_if(tempname, filename)
