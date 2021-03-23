@@ -65,7 +65,7 @@ VAR defs: TextTextTbl.T;
         
         (* DefineIfNotDefined: overridable from command line with -D *)
 
-        DefineIfNotDefined (mach, "TARGET", MxConfig.HOST);
+        DefineIfNotDefined (mach, "TARGET", MxConfig.HOST());
         DefineIfNotDefined (mach, "OS_TYPE", MxConfig.HOST_OS_TYPE_TEXT());
         DefineIfNotDefined (mach, "WORD_SIZE", Fmt.Int(BITSIZE(INTEGER)));
 
@@ -75,7 +75,7 @@ VAR defs: TextTextTbl.T;
         (* Quake.Define vs. DefineIfNotDefined: These probably
         don't make sense to ever override from command line. *)
 
-        Quake.Define(mach, "HOST", MxConfig.HOST);
+        Quake.Define(mach, "HOST", MxConfig.HOST());
         Quake.Define(mach, "HOST_OS_TYPE", MxConfig.HOST_OS_TYPE_TEXT());
 
         (* define the site configuration *)
