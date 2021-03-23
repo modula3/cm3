@@ -26,10 +26,10 @@ if defined("TARGET_OS") and not defined("M3_BOOTSTRAP") and not equal(M3_BACKEND
     c_source ("ThreadFreeBSD")
   end
   if equal(TARGET_OS, "OPENBSD")
-    c_source ("ThreadOpenBSD")
+    %c_source ("ThreadOpenBSD")
   end
 else
   c_source ("ThreadApple")
   c_source ("ThreadFreeBSD")
-  c_source ("ThreadOpenBSD")
+  %c_source ("ThreadOpenBSD")
 end

@@ -4,8 +4,8 @@
 
 #include "m3core.h"
 
-#if defined(__APPLE__) || defined(__FreeBSD__) || defined(__OpenBSD__)
-/* See ThreadApple.c, ThreadFreeBSD.c, ThreadOpenBSD.c. */
+#if defined(__APPLE__) || defined(__FreeBSD__)
+/* See ThreadApple.c, ThreadFreeBSD.c. */
 #define M3_DIRECT_SUSPEND
 #endif
 
@@ -22,8 +22,8 @@
 
 #ifdef M3_DIRECT_SUSPEND
 #define M3_DIRECT_SUSPEND_ASSERT_FALSE do {                     \
-    assert(0 && "MacOS X, FreeBSD, OpenBSD should not get here."); \
-    fprintf(stderr, "MacOS X, FreeBSD, OpenBSD should not get here.\n"); \
+    assert(0 && "MacOS X, FreeBSD should not get here."); \
+    fprintf(stderr, "MacOS X, FreeBSD should not get here.\n"); \
     abort();                                                    \
   } while(0);
 #endif
@@ -47,7 +47,7 @@ void __cdecl SignalHandler(int signo, siginfo_t *info, void *context);
     Cygwin: 19 -- er, but maybe that's wrong
     Linux: 64
     FreeBSD: 31 (not used)
-    OpenBSD: 31 (not used)
+    OpenBSD: 31
     HPUX: 44
   Look at the history of Usignal and RTMachine to find more values.  There was
   RTMachine.SIG_SUSPEND and SIG was aliased to it.  Both SIG and SIG_SUSPEND
