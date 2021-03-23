@@ -636,19 +636,12 @@ end % if not defined("llvm_opt")
 proc compile_c_ms(source, object, options, optimize, debug) is
     local args =
     [
-%
 % Be quiet. Remove this if response file are used, since it
 % inhibits the compiler dumping the response file, which is useful
 % in any log.
 %
         "-nologo",
 
-%
-% needed for older headers such as with Visual C++ 2.0
-%
-        "-DWIN32",
-
-%
 % Don't put any default library names in .objs.
 %
         "-Zl",
@@ -663,12 +656,10 @@ proc compile_c_ms(source, object, options, optimize, debug) is
     args += ["-Z7"]
 
     if USE_MSVCRT
-        %
         % Use msvcrt.lib and define _MT and _DLL.
         %
         args += ["-MD"]
     else
-        %
         % Use libcmt.lib and define _MT.
         %
         args += ["-MT"]
