@@ -324,7 +324,7 @@ PROCEDURE LogText(self : T) : TEXT =
 
 VAR NL := "\n";
 BEGIN
-  IF Text.Equal(MxConfig.HOST_OS_TYPE, "WIN32") THEN
+  IF MxConfig.HOST_OS_TYPE() = MxConfig.OS_TYPE.WIN32 THEN
     NL := "\r\n";
   END;
 END ChangeSet.

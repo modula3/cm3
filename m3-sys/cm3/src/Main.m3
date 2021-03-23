@@ -66,8 +66,8 @@ VAR defs: TextTextTbl.T;
         (* DefineIfNotDefined: overridable from command line with -D *)
 
         DefineIfNotDefined (mach, "TARGET", MxConfig.HOST);
-        DefineIfNotDefined (mach, "OS_TYPE", MxConfig.HOST_OS_TYPE);
-        DefineIfNotDefined (mach, "WORD_SIZE", MxConfig.HOST_WORD_SIZE);
+        DefineIfNotDefined (mach, "OS_TYPE", MxConfig.HOST_OS_TYPE_TEXT());
+        DefineIfNotDefined (mach, "WORD_SIZE", MxConfig.HOST_WORD_SIZE_TEXT());
 
         (* Even if the config file overrides the defaults, such as to do
            a cross build, the host characteristics are still available. *)
@@ -76,7 +76,7 @@ VAR defs: TextTextTbl.T;
         don't make sense to ever override from command line. *)
 
         Quake.Define(mach, "HOST", MxConfig.HOST);
-        Quake.Define(mach, "HOST_OS_TYPE", MxConfig.HOST_OS_TYPE);
+        Quake.Define(mach, "HOST_OS_TYPE", MxConfig.HOST_OS_TYPE_TEXT());
 
         (* define the site configuration *)
         Msg.Verbose ("EVAL (\"", config, "\")");

@@ -46,8 +46,6 @@ readonly M3xConfig_body = [
   "",
   "CONST  (* misc. configuration *)",
   "  HOST           = \"" & TARGET & "\";",
-  "  HOST_OS_TYPE   = \"" & OS_TYPE & "\";",
-  "  HOST_WORD_SIZE = \"" & WORD_SIZE & "\";",
   "  HOST_PATH_SEP  = \"/\";",
   "",
   "END M3xConfig."
@@ -64,6 +62,8 @@ end
 
 derived_interface ("M3xConfig", HIDDEN)
 
+interface("MxConfigC")
+c_source("MxConfigC")
 
 build_standalone ()
 Library("m3quake")

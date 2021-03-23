@@ -115,7 +115,7 @@ PROCEDURE FromTime(t: Time.T): T =
 PROCEDURE ToTime(d: T): Time.T
   RAISES {Error} =
   BEGIN
-    IF Text.Equal(MxConfig.HOST_OS_TYPE, "WIN32") THEN
+    IF MxConfig.HOST_OS_TYPE() = MxConfig.OS_TYPE.WIN32 THEN
       RETURN ToTimeWin32(d);
     ELSE
       RETURN ToTimePOSIX(d);
@@ -124,7 +124,7 @@ PROCEDURE ToTime(d: T): Time.T
 
 PROCEDURE ToTimeApprox(d: T): Time.T =
   BEGIN
-    IF Text.Equal(MxConfig.HOST_OS_TYPE, "WIN32") THEN
+    IF MxConfig.HOST_OS_TYPE() = MxConfig.OS_TYPE.WIN32 THEN
       RETURN ToTimeWin32(d, exceptions := FALSE); <* NOWARN *>
     ELSE
       RETURN ToTimePOSIX(d, exceptions := FALSE); <* NOWARN *>
