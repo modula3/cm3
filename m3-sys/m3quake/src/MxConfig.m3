@@ -161,12 +161,12 @@ PROCEDURE ID2Txt (i: Quake.ID): TEXT =
     RETURN M3ID.ToText (i);
   END ID2Txt;
 
-(* porting: Other OS_TYPESs? *)
 PROCEDURE HOST_OS_TYPE() : OS_TYPE =
-VAR os_type := MxConfigC.os_type;
 BEGIN
-  <* ASSERT os_type = ORD(OS_TYPE.POSIX) OR os_type = ORD(OS_TYPE.WIN32) *>
-  RETURN VAL(MxConfigC.os_type, OS_TYPE);
+  IF MxConfigC.ifdef_win32() THEN
+    RETURN OS_TYPE.WIN32;
+  END;
+  RETURN OS_TYPE.POSIX;
 END HOST_OS_TYPE;
 
 (* porting: Other word sizes? *)
