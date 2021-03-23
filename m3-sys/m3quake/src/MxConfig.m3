@@ -1,11 +1,10 @@
 (* Copyright 1996-2000 Critical Mass, Inc. All rights reserved.    *)
 (* See file COPYRIGHT-CMASS for details. *)
 
-MODULE MxConfig;
+UNSAFE MODULE MxConfig;
 
 IMPORT Env, Params, Pathname, M3File, M3ID, Quake, RTIO, Text, Thread;
-IMPORT QMachine;
-IMPORT MxConfigC;
+IMPORT QMachine, MxConfigC, M3toC, Cstdlib;
 
 VAR
   mu     : MUTEX         := NEW (MUTEX);
@@ -161,6 +160,14 @@ PROCEDURE ID2Txt (i: Quake.ID): TEXT =
     RETURN M3ID.ToText (i);
   END ID2Txt;
 
+PROCEDURE HOST() : TEXT =
+  VAR hostC := MxConfigC.HOST();
+      hostT := M3toC.CopyStoT(hostC);
+BEGIN
+  Cstdlib.free(hostC);
+  RETURN hostT;
+END HOST;
+
 PROCEDURE HOST_OS_TYPE() : OS_TYPE =
 BEGIN
   IF MxConfigC.ifdef_win32() THEN
@@ -169,12 +176,9 @@ BEGIN
   RETURN OS_TYPE.POSIX;
 END HOST_OS_TYPE;
 
-(* porting: Other word sizes? *)
-(* TODO Generate const TEXT in C. *)
 PROCEDURE HOST_OS_TYPE_TEXT() : TEXT =
-VAR os_type := HOST_OS_TYPE();
 BEGIN
-  IF os_type = OS_TYPE.WIN32 THEN
+  IF MxConfigC.ifdef_win32() THEN
     RETURN "WIN32";
   END;
   RETURN "POSIX";

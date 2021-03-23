@@ -54,7 +54,7 @@ FROM ObValue IMPORT Error, Exception;
           nextFrame := NIL);
     TRY
       env := NewEnv("hostName", NewText(ObValue.machineAddress), env);
-      env := NewEnv("target", NewText(MxConfig.HOST), env);
+      env := NewEnv("target", NewText(MxConfig.HOST()), env);
       env := NewEnv("osType", NewText(MxConfig.HOST_OS_TYPE_TEXT()), env);
       env := NewEnv("pathSep", NewText(MxConfig.HOST_PATH_SEP), env);
       env := NewEnv("searchPathSep", 
