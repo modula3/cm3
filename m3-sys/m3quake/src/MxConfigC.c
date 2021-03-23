@@ -1,17 +1,24 @@
-// This file is possibly subject to porting work,
-// i.e. if there are systems that are not Win32 or Posix, or
-// word sizes other than 32 or 64, etc.
-//
-// Code should avoid depending on this stuff though too.
-#include "m3core.h"
+#include <stddef.h>
 
-M3_EXTERN_C_BEGIN
-
-// porting: Just Posix and Win32 or more?
-#ifdef _WIN32
-EXTERN_CONST int MxConfig__os_type = 1;
-#else
-EXTERN_CONST int MxConfig__os_type = 0;
+#if !defined(_MSC_VER) && !defined(__cdecl)
+#define __cdecl /* nothing */
 #endif
 
-M3_EXTERN_C_END
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+size_t
+__cdecl
+MxConfigC__ifdef_win32(void)
+{
+#ifdef _WIN32
+    return 1;
+#else
+    return 0;
+#endif
+}
+
+#ifdef __cplusplus
+} // extern "C"
+#endif
