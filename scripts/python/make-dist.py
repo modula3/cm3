@@ -271,10 +271,7 @@ def Setup(ExistingCompilerRoot, NewRoot):
 
 Setup(InstallRoot, InstallRoot_CompilerWithPrevious)
 RealClean(Packages) or FatalError()
-# NoSymbols increases success when bootstrapping to older tools.
-os.environ["CM3_NO_SYMBOLS"] = "1"
 BuildShip(Packages) or FatalError()
-del(os.environ["CM3_NO_SYMBOLS"])
 ShipCompiler() or FatalError()
 if "m3cc" in Packages:
     Packages.remove("m3cc")
