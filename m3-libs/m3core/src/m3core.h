@@ -100,7 +100,10 @@ typedef int BOOL;
 #define _FILE_OFFSET_BITS 64
 
 /* const is extern const in C, but static const in C++,
- * but gcc gives a warning for the correct portable form "extern const"
+ * but gcc gives a warning for the correct portable form "extern const",
+ * unless you also forward declare:
+ *  extern const int foo;
+ *  extern const int foo = 123;
  */
 #if defined(__cplusplus) || !defined(__GNUC__)
 #define EXTERN_CONST extern const
