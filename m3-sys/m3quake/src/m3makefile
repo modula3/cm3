@@ -46,7 +46,6 @@ readonly M3xConfig_body = [
   "",
   "CONST  (* misc. configuration *)",
   "  HOST           = \"" & TARGET & "\";",
-  "  HOST_PATH_SEP  = \"/\";",
   "",
   "END M3xConfig."
 ]
