@@ -178,8 +178,8 @@ TYPE
   PFILETIME = UNTRACED REF FILETIME;
   LPFILETIME = PFILETIME; (* compat *)
   FILETIME = RECORD
-    dwLowDateTime : BITS BITSIZE(UINT32) FOR UINT32;
-    dwHighDateTime: BITS BITSIZE(UINT32) FOR UINT32;
+    dwLowDateTime : UINT32;
+    dwHighDateTime: UINT32;
   END;
 
 (* System time is represented with the following structure: *)
@@ -1585,16 +1585,16 @@ TYPE
   PBY_HANDLE_FILE_INFORMATION = UNTRACED REF BY_HANDLE_FILE_INFORMATION;
   LPBY_HANDLE_FILE_INFORMATION = UNTRACED REF BY_HANDLE_FILE_INFORMATION;
   BY_HANDLE_FILE_INFORMATION = RECORD
-    dwFileAttributes    : BITS BITSIZE(UINT32) FOR UINT32;
-    ftCreationTime      : BITS BITSIZE(FILETIME) FOR FILETIME;
-    ftLastAccessTime    : BITS BITSIZE(FILETIME) FOR FILETIME;
-    ftLastWriteTime     : BITS BITSIZE(FILETIME) FOR FILETIME;
-    dwVolumeSerialNumber: BITS BITSIZE(UINT32) FOR UINT32;
-    nFileSizeHigh       : BITS BITSIZE(UINT32) FOR UINT32;
-    nFileSizeLow        : BITS BITSIZE(UINT32) FOR UINT32;
-    nNumberOfLinks      : BITS BITSIZE(UINT32) FOR UINT32;
-    nFileIndexHigh      : BITS BITSIZE(UINT32) FOR UINT32;
-    nFileIndexLow       : BITS BITSIZE(UINT32) FOR UINT32;
+    dwFileAttributes    : UINT32;
+    ftCreationTime      : FILETIME;
+    ftLastAccessTime    : FILETIME;
+    ftLastWriteTime     : FILETIME;
+    dwVolumeSerialNumber: UINT32;
+    nFileSizeHigh       : UINT32;
+    nFileSizeLow        : UINT32;
+    nNumberOfLinks      : UINT32;
+    nFileIndexHigh      : UINT32;
+    nFileIndexLow       : UINT32;
   END;
 
 <*EXTERNAL GetFileInformationByHandle:WINAPI*>
@@ -2280,14 +2280,14 @@ TYPE
   PWIN32_FIND_DATAA = UNTRACED REF WIN32_FIND_DATAA;
   LPWIN32_FIND_DATAA = UNTRACED REF WIN32_FIND_DATAA;
   WIN32_FIND_DATAA = RECORD
-    dwFileAttributes  : BITS BITSIZE(UINT32) FOR UINT32;
-    ftCreationTime    : BITS BITSIZE(FILETIME) FOR FILETIME;
-    ftLastAccessTime  : BITS BITSIZE(FILETIME) FOR FILETIME;
-    ftLastWriteTime   : BITS BITSIZE(FILETIME) FOR FILETIME;
-    nFileSizeHigh     : BITS BITSIZE(UINT32) FOR UINT32;
-    nFileSizeLow      : BITS BITSIZE(UINT32) FOR UINT32;
-    dwReserved0       : BITS BITSIZE(UINT32) FOR UINT32;
-    dwReserved1       : BITS BITSIZE(UINT32) FOR UINT32;
+    dwFileAttributes  : UINT32;
+    ftCreationTime    : FILETIME;
+    ftLastAccessTime  : FILETIME;
+    ftLastWriteTime   : FILETIME;
+    nFileSizeHigh     : UINT32;
+    nFileSizeLow      : UINT32;
+    dwReserved0       : UINT32;
+    dwReserved1       : UINT32;
     cFileName         : ARRAY [0 .. MAX_PATH - 1] OF CHAR;
     cAlternateFileName: ARRAY [0 .. 14 - 1] OF CHAR;
   END;
@@ -2295,14 +2295,14 @@ TYPE
   PWIN32_FIND_DATAW = UNTRACED REF WIN32_FIND_DATAW;
   LPWIN32_FIND_DATAW = UNTRACED REF WIN32_FIND_DATAW;
   WIN32_FIND_DATAW = RECORD
-    dwFileAttributes  : BITS BITSIZE(UINT32) FOR UINT32;
-    ftCreationTime    : BITS BITSIZE(FILETIME) FOR FILETIME;
-    ftLastAccessTime  : BITS BITSIZE(FILETIME) FOR FILETIME;
-    ftLastWriteTime   : BITS BITSIZE(FILETIME) FOR FILETIME;
-    nFileSizeHigh     : BITS BITSIZE(UINT32) FOR UINT32;
-    nFileSizeLow      : BITS BITSIZE(UINT32) FOR UINT32;
-    dwReserved0       : BITS BITSIZE(UINT32) FOR UINT32;
-    dwReserved1       : BITS BITSIZE(UINT32) FOR UINT32;
+    dwFileAttributes  : UINT32;
+    ftCreationTime    : FILETIME;
+    ftLastAccessTime  : FILETIME;
+    ftLastWriteTime   : FILETIME;
+    nFileSizeHigh     : UINT32;
+    nFileSizeLow      : UINT32;
+    dwReserved0       : UINT32;
+    dwReserved1       : UINT32;
     cFileName         : ARRAY [0 .. MAX_PATH - 1] OF WCHAR;
     cAlternateFileName: ARRAY [0 .. 14 - 1] OF WCHAR;
   END;
