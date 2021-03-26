@@ -1586,9 +1586,9 @@ TYPE
   LPBY_HANDLE_FILE_INFORMATION = UNTRACED REF BY_HANDLE_FILE_INFORMATION;
   BY_HANDLE_FILE_INFORMATION = RECORD
     dwFileAttributes    : UINT32;
-    ftCreationTime      : FILETIME;
-    ftLastAccessTime    : FILETIME;
-    ftLastWriteTime     : FILETIME;
+    ftCreationTime      : BITS 64 FOR FILETIME;
+    ftLastAccessTime    : BITS 64 FOR FILETIME;
+    ftLastWriteTime     : BITS 64 FOR FILETIME;
     dwVolumeSerialNumber: UINT32;
     nFileSizeHigh       : UINT32;
     nFileSizeLow        : UINT32;
@@ -2281,9 +2281,9 @@ TYPE
   LPWIN32_FIND_DATAA = UNTRACED REF WIN32_FIND_DATAA;
   WIN32_FIND_DATAA = RECORD
     dwFileAttributes  : UINT32;
-    ftCreationTime    : FILETIME;
-    ftLastAccessTime  : FILETIME;
-    ftLastWriteTime   : FILETIME;
+    ftCreationTime    : BITS 64 FOR FILETIME;
+    ftLastAccessTime  : BITS 64 FOR FILETIME;
+    ftLastWriteTime   : BITS 64 FOR FILETIME;
     nFileSizeHigh     : UINT32;
     nFileSizeLow      : UINT32;
     dwReserved0       : UINT32;
@@ -2296,9 +2296,9 @@ TYPE
   LPWIN32_FIND_DATAW = UNTRACED REF WIN32_FIND_DATAW;
   WIN32_FIND_DATAW = RECORD
     dwFileAttributes  : UINT32;
-    ftCreationTime    : FILETIME;
-    ftLastAccessTime  : FILETIME;
-    ftLastWriteTime   : FILETIME;
+    ftCreationTime    : BITS 64 FOR FILETIME;
+    ftLastAccessTime  : BITS 64 FOR FILETIME;
+    ftLastWriteTime   : BITS 64 FOR FILETIME;
     nFileSizeHigh     : UINT32;
     nFileSizeLow      : UINT32;
     dwReserved0       : UINT32;
