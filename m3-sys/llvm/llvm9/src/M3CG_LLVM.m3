@@ -2204,7 +2204,9 @@ PROCEDURE import_procedure (self: U;  n: Name;  n_params: INTEGER; return_type: 
     name := M3ID.ToText(p.name);
     p.lvProc := LLVM.LLVMAddFunction(modRef, LT(name), p.procTy);
 
-    IF Text.Equal(name,"_setjmp") THEN
+    IF Text.Equal(name,"_setjmp") OR
+       Text.Equal(name,"setjmp") OR
+       Text.Equal(name,"sigsetjmp") THEN
       p.returnsTwice := TRUE;
     END;
 

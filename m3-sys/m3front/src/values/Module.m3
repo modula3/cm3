@@ -157,9 +157,10 @@ END GetJmpbufSize;
 PROCEDURE GetSetjmp (t: T): CG.Proc =
 VAR new := FALSE;
 BEGIN
-  (* int setjmp(void* ); *)
+  (*    int setjmp(void* );
+   * or int sigsetjmp(void*, int); *)
   IF t.setjmp = NIL THEN
-    t.setjmp := CG.Import_procedure (M3ID.Add (Target.Setjmp), 1,
+    t.setjmp := CG.Import_procedure (M3ID.Add (Target.Setjmp), 1 + ORD(Target.Sigsetjmp),
                                      Target.Integer.cg_type,
                                      Target.DefaultCall, new);
     IF new THEN
@@ -167,6 +168,12 @@ BEGIN
                              Target.Address.align, CG.Type.Addr, 0,
                              in_memory := FALSE, up_level := FALSE,
                              f := CG.Never);
+      IF Target.Sigsetjmp THEN
+        EVAL CG.Declare_param (M3ID.Add ("save_mask"), Target.Int32.size, (* int *)
+                               Target.Int32.align, CG.Type.Int32, 0,
+                               in_memory := FALSE, up_level := FALSE,
+                               f := CG.Never);
+      END;
     END;
   END;
   RETURN t.setjmp;

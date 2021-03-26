@@ -451,6 +451,7 @@ VAR (*CONST*)
   (* TRUE => generate PC-tables for exception scopes.  Otherwise, generate
        an explicit stack of exception handler frames. *)
 
+  Sigsetjmp: BOOLEAN; (* one param or two? *)
   Setjmp: TEXT;
   (* The C name of the routine used to capture the machine state in
        an exception handler frame. *)

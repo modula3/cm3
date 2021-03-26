@@ -177,9 +177,9 @@ PROCEDURE InvokeHandler (f: Frame;  READONLY a: RT0.RaiseActivation) RAISES ANY 
     p.info := a;                         (* copy the exception to the new frame *)
     IF Alloca_jmpbuf THEN
       <* ASSERT p.jmpbuf # NIL *>
-      Csetjmp.ulongjmp (p.jmpbuf, 1);      (* and jump... *)
+      Csetjmp.m3_longjmp (p.jmpbuf, 1);      (* and jump... *)
     ELSE
-      Csetjmp.ulongjmp (ADR(p.jmpbuf), 1);  (* and jump... *)
+      Csetjmp.m3_longjmp (ADR(p.jmpbuf), 1); (* and jump... *)
     END;
     RAISE OUCH;
   END InvokeHandler;

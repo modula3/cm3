@@ -45,7 +45,12 @@ typedef int CheckMax[248 - sizeof(CheckMax_t)];
 #define X(x) EXTERN_CONST int Uerror__##x = x;
 #include "UerrorX.h"
 
+// This is messy, see CsetjmpC.c.
+#if defined(__sun)
+EXTERN_CONST INTEGER m3_jmpbuf_size = sizeof(sigjmp_buf);
+#else
 EXTERN_CONST INTEGER m3_jmpbuf_size = sizeof(jmp_buf);
+#endif
 
 #ifndef _WIN32
 

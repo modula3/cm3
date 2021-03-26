@@ -27,6 +27,12 @@ TYPE
     I386_NT,
     LINUXLIBC6,
     NT386,
+    SOLSUN, (* Old name for SPARC32_SOLARIS with Sun C compiler *)
+    SOLGNU, (* Old name for SPARC32_SOLARIS with GNU C compiler *)
+    SPARC32_SOLARIS,
+    SPARC64_SOLARIS,
+    I386_SOLARIS,
+    AMD64_SOLARIS,
     Other
   };
 
@@ -40,7 +46,13 @@ CONST
     "I386_MINGW",
     "I386_NT",
     "LINUXLIBC6",
-    "NT386"
+    "NT386",
+    "SOLSUN",
+    "SOLGNU",
+    "SPARC32_SOLARIS",
+    "SPARC64_SOLARIS",
+    "I386_SOLARIS",
+    "AMD64_SOLARIS"
   };
 
 VAR (*CONST*)
@@ -82,6 +94,16 @@ PROCEDURE Init64 () =
     Longreal.align := 64;
     Extended.align := 64;
   END Init64;
+
+PROCEDURE Solaris(): BOOLEAN =
+  BEGIN
+    RETURN System IN SET OF Systems{Systems.SOLSUN,
+                                    Systems.SOLGNU,
+                                    Systems.SPARC32_SOLARIS,
+                                    Systems.SPARC64_SOLARIS,
+                                    Systems.I386_SOLARIS,
+                                    Systems.AMD64_SOLARIS};
+  END Solaris;
 
 PROCEDURE IsX86orAmd64(System_name: TEXT): BOOLEAN =
 (* System_name is uppercased to facilitate case insensitivity.
@@ -136,11 +158,16 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
     Allow_packed_byte_aligned := FALSE;
     endian := Endian.Little;
 
+    (* This is messy. See CsetjmpC.c. *)
     IF backend_mode = M3BackendMode_t.C THEN
       Setjmp := "m3_setjmp";
+      Sigsetjmp := FALSE;
+    ELSIF Solaris() THEN
+      Setjmp := "sigsetjmp";
+      Sigsetjmp := TRUE;
     ELSE
-      (* Do not save/restore signal mask. Doing so is much more expensive. *)
       Setjmp := "_setjmp";
+      Sigsetjmp := FALSE;
     END;
 
     (* There is no portable stack walker, and therefore few systems have one.

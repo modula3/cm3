@@ -241,11 +241,32 @@ PROCEDURE CaptureState (frame: CG.Var;  jmpbuf: CG.Var;  handler: CG.Label) =
     CG.Start_call_direct (setjmp, 0, Target.Integer.cg_type);
 
     IF Target.Alloca_jmpbuf THEN
+      (* Jmpbuf is allocated with alloca and m3front/m3middle
+       * do not know its size.
+       *)
       CG.Load_addr (jmpbuf, 0, jmpbufAlign);
     ELSE
+      (* Inactive path where m3front/m3middle must know size of
+       * jmpbuf for each target: faster but much more work to port.
+       *)
       CG.Load_addr_of (frame, M3RT.EF1_jmpbuf, jmpbufAlign);
     END;
     CG.Pop_param (CG.Type.Addr);
+
+    (* Call single parameter setjmp/_setjmp or two parameter sigsetjmp?
+     * _setjmp is historical non-standard, and gives grief to C backend
+     * compiling as C++ on Solaris, but did/does work broadly.
+     * sigsetjmp is standard for _setjmp, taking a second parameter
+     * indicating to save signal mask.
+     *
+     * What frontend and C backend call, needs to agree with
+     * longjmp in m3core, jmpbuf size in m3core.
+     *)
+    IF Target.Sigsetjmp THEN
+      CG.Load_intt (0);             (* do not save signal mask *)
+      CG.Pop_param (CG.Type.Int32); (* int *)
+    END;
+
     CG.Call_direct (setjmp, Target.Integer.cg_type);
     CG.If_true (handler, CG.Never);
   END CaptureState;
