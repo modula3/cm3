@@ -3,6 +3,11 @@
 import os, sys
 
 PossibleExecutables = [
+    "/opt/developerstudio12.6/bin/CC",
+    "/opt/developerstudio12.5/bin/CC",
+    "/opt/solarisstudio12.4/bin/CC",
+    #"/usr/bin/g++",     # Does not understand the Sun cc flags.
+    #"/usr/bin/clang++", # Does not understand the Sun cc flags.
     "/usr/bin/cc",
     "/opt/solarisstudio12.3/bin/cc",
     "/opt/solstudio12.2/bin/cc",
