@@ -19,6 +19,6 @@ BEGIN
 END F1;
 
 BEGIN
- RTIO.PutInt(F1()[0][0]);
+ RTIO.PutInt(F1()[0][0], 5);
  RTIO.Flush();
 END Main.
