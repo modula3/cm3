@@ -14,6 +14,8 @@
 
 #include "m3core.h"
 
+typedef void* ARG;
+
 M3EXTERNC_BEGIN
 
 // This code has only been tested on Linux/amd64.
@@ -24,6 +26,83 @@ __cdecl
 Coroutine__Supported(void)
 {
     return FALSE;
+}
+
+void
+__cdecl
+ContextC__SetLink(Context* target, Context* src)
+{
+    assert(0);
+}
+
+void*
+__cdecl
+ContextC__MakeContext(void    (*p)(ARG),
+                      INTEGER words,
+                      void*   arg)
+{
+    assert(0);
+    return 0;
+}
+
+void
+__cdecl
+ContextC__SwapContext(Context* from, Context* to)
+{
+    assert(0);
+}
+
+void
+__cdecl
+ContextC__DisposeContext(Context* c)
+{
+    assert(0);
+}
+
+void*
+__cdecl
+ContextC__Current(void)
+{
+    assert(0);
+    return 0;
+}
+
+void
+__cdecl
+ContextC__SetCurrentCoroutine(INTEGER* value)
+{
+    assert(0);
+}
+
+INTEGER*
+__cdecl
+ContextC__GetCurrentCoroutine(void)
+{
+    assert(0);
+    return 0;
+}
+
+void
+__cdecl
+ContextC__InitC(int* stack)
+{
+    assert(0);
+}
+
+void*
+__cdecl
+ContextC__GetStackBase(Context* c)
+{
+    assert(0);
+    return 0;
+}
+
+void*
+__cdecl
+ContextC__PushContext(Context* c)
+{
+    assert(0);
+    return 0;
 }
 
 #else
@@ -48,8 +127,6 @@ Coroutine__Supported(void)
       r = (expr);                                       \
     }                                                   \
   }
-
-#define ARG      void *
 
 #define DEBUG 1
 
