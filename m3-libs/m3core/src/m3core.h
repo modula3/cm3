@@ -220,7 +220,7 @@ STRUCT_AND_TYPEDEF(in_addr)
 STRUCT_AND_TYPEDEF(m3_sockaddr_un)
 STRUCT_AND_TYPEDEF(m3_sockaddr_in)
 STRUCT_AND_TYPEDEF(m3_sockaddr_in6)
-STRUCT_AND_TYPEDEF(m3_in_addr);
+STRUCT_AND_TYPEDEF(m3_in_addr)
 //STRUCT_AND_TYPEDEF(m3_in6_addr); // use in6_addr instead
 
 union M3SockAddrUnionAll;
