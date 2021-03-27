@@ -52,7 +52,6 @@ struct m3_sockaddr_in6
     unsigned int   scope_id;
 };
 M3_STATIC_ASSERT(sizeof(m3_sockaddr_in6) == 28);
-M3_STATIC_ASSERT(sizeof(sockaddr_in6) == 28); // if this fails, ok, remove it
 
 // Idealized Modula3 Unix socket address.
 // This is likely slightly larger than all native forms.
@@ -90,7 +89,6 @@ M3_STATIC_ASSERT(offsetof(sockaddr_in, sin_family) == offsetof(sockaddr_un, sun_
 // This does mean exactly the same, as Modula-3 never has "len"
 // field and native sometimes does.
 M3_STATIC_ASSERT(sizeof(m3_sockaddr_in) == sizeof(sockaddr_in));
-M3_STATIC_ASSERT(sizeof(m3_sockaddr_in6) == sizeof(sockaddr_in6));
 #ifdef AF_UNIX
 M3_STATIC_ASSERT(sizeof(m3_sockaddr_un) >= sizeof(sockaddr_un));
 #endif
