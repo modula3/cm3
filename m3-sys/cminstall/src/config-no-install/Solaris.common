@@ -98,9 +98,27 @@ if equal (C_COMPILER, "SUN")
 end
 
 if equal (C_COMPILER, "GNU")
-    if not defined("SYSTEM_CC")
-        SYSTEM_CC = "/usr/sfw/bin/g++ -g -fPIC -pthreads -m" & WordSize
+  proc configure_c_compiler() is
+    if defined("SYSTEM_CC")
+      return
     end
+
+    local proc find_cc() is
+        readonly local possible = [
+            "/usr/bin/g++",
+            "/usr/bin/clang++",
+            "/usr/sfw/bin/g++",
+            ]
+        foreach a in possible
+            if FileExists(a)
+                return a
+            end
+        end
+        error("unable to find compiler among " & possible)
+    end
+
+    SYSTEM_CC = find_cc() & " -g -fPIC -pthreads -m" & WordSize
+  end
 end
 
 proc configure_linker() is
