@@ -972,7 +972,7 @@ PROCEDURE Represent (top: T) =
       top.targetType := Type.Check (top.targetType);
       IF NOT Type.IsAssignable (top.targetType, top.semType) THEN
         Error.Msg
-          ( "Array constructor is not assignable to expected type.");
+          ( "Array constructor is not assignable to expected type ( 2.6.8).");
         top.broken := TRUE;
         top.state := StateTyp.Represented;
         RETURN;
@@ -1811,16 +1811,17 @@ PROCEDURE PrepRecurse
            an Expr.NoteWrite. *)
               ELSIF top.shallowestDynDepth < 0 THEN
 
-              (* Arg is a non-constructor array, possibly open, but static.
+              (* Arg is a non-constructor array, possibly open, but made
+                 static by context from constructor.
                  Top and all descendent constructors are fully static. *)
 
                 <* ASSERT top.firstArgDopeVal = NIL *>
 (* TODO: Make do_direct work transitively through here. *)
-                Expr.PrepLValue (argExpr, traced := argRepTypeInfo.isTraced);
+                Expr.Prep (argExpr);
                 EVAL Type.CheckInfo (argRepType, (*OUT*) argRepTypeInfo);
-                Expr.CompileAddress
-                  (argExpr, traced := argRepTypeInfo.isTraced);
-(* CHECK^ Do we need optional Compile instead of CompileLValue? *)
+                Expr.Compile (argExpr);
+                (* It's an array, so Prep/Compile will pupsh an address
+                   regardless of whether it's a designator. *)
                 argAddrVal := CG.Pop ();
                 argOpenDepth := OpenArrayType.OpenDepth (argRepType);
                 IF argOpenDepth > 0
@@ -1830,9 +1831,9 @@ PROCEDURE PrepRecurse
                      this level's static length. *)
                   depthWInArg := 0;
                   LOOP
+                    IF depthWInArg >= argOpenDepth THEN EXIT END;
                     depthWInTopConstr
                       := depth + 1 (*For arg*) + depthWInArg;
-                    IF depthWInArg >= argOpenDepth THEN EXIT END;
                     WITH openLevelInfo = top.levels^ [depthWInTopConstr] DO
                       (* Gen RT check, arg's dynamic vs. top's static length. *)
                       CG.Push (argAddrVal);
@@ -1854,10 +1855,11 @@ PROCEDURE PrepRecurse
                   (argLevelInfo.staticLen * constrEltPack, overlap := FALSE);
               ELSE
 
-              (* The dynamic case.  top.shalloweseDynDepth >= 0.
-                 Arg is a non-constructor array.  Also, all args are open
-                 and, at some depth, nonstatic, thus repType of this and
-                 shallower levels is open array, and so is repType of
+              (* The dynamic case.  top.shallowestDynDepth >= 0.
+                 Arg is a non-constructor array.  Also, all cousing args
+                 in the entire topmost constructor are open at this level
+                 and, at some depth, nonstatic, thus repType of argLevel
+                 and shallower levels is open array, and so is repType of
                  argExpr. *)
 
                 <* ASSERT depth < top.shallowestDynDepth *>
@@ -1871,9 +1873,8 @@ PROCEDURE PrepRecurse
                   argAddrVal := CG.Pop ()
                 ELSE (* Do so now. *)
                   EVAL Type.CheckInfo (argRepType, (*OUT*) argRepTypeInfo);
-                  Expr.PrepLValue (argExpr, traced := argRepTypeInfo.isTraced);
-                  Expr.CompileAddress
-                    (argExpr, traced := argRepTypeInfo.isTraced);
+                  Expr.Prep (argExpr);
+                  Expr.Compile (argExpr);
                   argAddrVal := CG.Pop ();
                   (* This is a bit daring, but no need to RT store in
                      top.firstArgDopeVal, because we won't come through here

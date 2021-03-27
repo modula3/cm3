@@ -443,6 +443,7 @@ PROCEDURE CopyStruct
   (lhsAlign, rhsAlign: Type.BitAlignT; bitSize: INTEGER; overlap: BOOLEAN) =
 (* PRE: CGstack: RHS addr on top, LHS addr below. *)
 (* PRE: Using expression protocol. *)
+(*  Will handle a sub-byte-sized suffix. *) 
   BEGIN
     IF lhsAlign < Target.Byte
        OR rhsAlign < Target.Byte
@@ -452,7 +453,7 @@ PROCEDURE CopyStruct
       CG.Store_indirect (Target.Word.cg_type, 0 , bitSize); 
     ELSE
       CG.Copy (bitSize, overlap);
-      (* Expression protocol means ^ the value is already in a temporary. *)
+      (* Expression protocol means the value is already in a temporary. *)
     END
   END CopyStruct;
 
@@ -517,7 +518,7 @@ PROCEDURE AssignArray
         rhsVal := CG.Pop ();
 
         IF ArrayExpr.ShapeCheckNeeded (rhsExpr) THEN
-          GenOpenArrayShapeChecks (lhsRepType, lhsVal, rhsRepType, rhsVal);
+          GenOpenArrayRTShapeChecks (lhsRepType, lhsVal, rhsRepType, rhsVal);
           (* Assignability check, done in Check will have taken care of
              static shape checking. *)
         END;
@@ -552,9 +553,9 @@ PROCEDURE AssignArray
     END
   END AssignArray;
 
-PROCEDURE GenOpenArrayShapeChecks       
+PROCEDURE GenOpenArrayRTShapeChecks       
   (lhsRepType: Type.T; lhsDopeVal: CG.Val; rhsRepType: Type.T; rhsVal: CG.Val) =
-(* Leaves the CG stack alone. *)
+(* Leaves the CG stack as it is. *)
   VAR lhsIndexType, rhsIndexType, lhsEltType, rhsEltType: Type.T;
   VAR depth:= 0;
   BEGIN
@@ -595,7 +596,7 @@ PROCEDURE GenOpenArrayShapeChecks
       lhsRepType := lhsEltType;
       rhsRepType := rhsEltType;
     END;
-  END GenOpenArrayShapeChecks;
+  END GenOpenArrayRTShapeChecks;
 
 PROCEDURE GenOpenArrayCopy (lhsDopeVal: CG.Val;  lhsRepType, rhsRepType: Type.T) =
 (* PRE: formal lhsDopeVal is the LHS dope.

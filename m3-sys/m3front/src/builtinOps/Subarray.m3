@@ -100,7 +100,7 @@ PROCEDURE Prep (ce: CallExpr.T) =
     PrepLV (ce, traced := FALSE);
   END Prep;
 
-(* Called indirectly through MethodList. *)
+(* Called indirectly through MethodList, and directly from herein. *)
 PROCEDURE PrepLV (ce: CallExpr.T; traced: BOOLEAN) =
   VAR
     base      := ce.args[0];

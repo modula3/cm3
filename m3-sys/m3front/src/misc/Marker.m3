@@ -390,7 +390,7 @@ PROCEDURE AllocReturnTemp () =
   VAR
     ret_info: Type.Info;
   BEGIN
-    (* Normally, to return a value from a procedure we assign to
+    (* Normally, to return a value from a procedure, we assign to
        z.variable.  In the case of large-result procedures, z.variable
        is a hidden VAR parameter that points to a temporary allocated
        on the caller's stack.  This means that we can safely write
