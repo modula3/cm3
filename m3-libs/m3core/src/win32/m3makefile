@@ -4,33 +4,6 @@
 %
 % Last modified on Wed Nov  9 15:14:29 PST 1994 by kalsow  
 
-Interface  ("WinBaseTypes")
-Module     ("WinDef")
-Module     ("WinNT")
-
-Interface  ("WinError")
-Interface  ("WinBase")
-Interface  ("WinCon")
-Interface  ("WinGDI") % part of the implementation is portable
-Module     ("WinIoctl")
-Interface  ("WinNetwk")
-Interface  ("WinNLS")
-Module     ("WinReg")
-Module     ("WinSock")
-Interface  ("WinUser") % part of the implementation is portable
-Module     ("WinVer")
-Module     ("NB30")
-Interface  ("CDErr")
-Interface  ("CommDlg")
-Interface  ("TlHelp32")
-
-% New interfaces added March 2003 by darkov
-Interface  ("WinMidi")
-Interface  ("WinCommCtrl")
-Interface  ("WinTabCon")
-Interface  ("WinListView")
-Interface  ("WinImageList")
-
 %
 % copied from cm3cfg.common
 % Would prefer to update config files at start of build,
@@ -46,6 +19,42 @@ end
 
 proc IsTargetCygwin()  is return InternalCheckTargetOS("CYGWIN") end
 proc IsTargetNT()      is return InternalCheckTargetOS("NT") end
+
+Interface  ("WinBaseTypes")
+Module     ("WinDef")
+Module     ("WinNT")
+
+Interface  ("WinError")
+Interface  ("WinBase")
+Interface  ("WinCon")
+Interface  ("WinGDI") % part of the implementation is portable
+Module     ("WinIoctl")
+Interface  ("WinNetwk")
+Interface  ("WinNLS")
+Module     ("WinReg")
+
+% WinSock clashes with Posix.
+% jay@solaris:~/cm3-boot-I386_SOLARISc-d5.11.0-20210326$ make
+% ./c_compiler -g -mt -xldscope=symbolic -xarch=pentium_pro -Kpic -c  WinSock.i3.c
+% /opt/solarisstudio12.4/bin/CC -g -mt -xldscope=symbolic -xarch=pentium_pro -Kpic -c WinSock.i3.c
+% "WinSock.i3.c", line 869: Error: Only one of a set of overloaded functions can be extern "C".
+if equal (OS_TYPE, "WIN32") or equal(TARGET, "NT386") or IsTargetNT()
+  Module   ("WinSock")
+end
+
+Interface  ("WinUser") % part of the implementation is portable
+Module     ("WinVer")
+Module     ("NB30")
+Interface  ("CDErr")
+Interface  ("CommDlg")
+Interface  ("TlHelp32")
+
+% New interfaces added March 2003 by darkov
+Interface  ("WinMidi")
+Interface  ("WinCommCtrl")
+Interface  ("WinTabCon")
+Interface  ("WinListView")
+Interface  ("WinImageList")
 
 if IsTargetNT() or IsTargetCygwin()
 
