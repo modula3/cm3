@@ -16,6 +16,11 @@
 
 typedef void* ARG;
 
+struct Closure;
+typedef struct Closure Closure;
+struct Context;
+typedef struct Context Context;
+
 M3EXTERNC_BEGIN
 
 // This code has only been tested on Linux/amd64.
@@ -132,19 +137,21 @@ Coroutine__Supported(void)
 
 static int stack_grows_downward;
 
-typedef struct {
+struct Closure
+{
   void (*p)(ARG);
   void *arg;
-} Closure;
+};
 
-typedef struct {
+struct Context
+{
   void      *stackaddr;
   WORD_T     stacksize;
   void      *stackbase; /* this is the base reported to M3's GC */
   ucontext_t uc;
   ucontext_t pc; /* post context for cleanup */
   int        alive;
-} Context;
+};
 
 /* a truly clever implementation would:
 
