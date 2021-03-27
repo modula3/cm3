@@ -48,6 +48,9 @@ if equal (C_COMPILER, "SUN")
     local proc find_cc() is
         readonly local possible = [
             "/usr",
+            "/opt/developerstudio12.6",
+            "/opt/developerstudio12.5",
+            "/opt/solarisstudio12.4",
             "/opt/solarisstudio12.3",
             "/opt/solstudio12.2",
             "/opt/studio/SOS12/SUNWspro",

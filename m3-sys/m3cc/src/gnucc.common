@@ -109,6 +109,15 @@ if Native and (equal(nTARGET, "SPARC32_SOLARIS") or equal(TARGET, "SPARC64_SOLAR
             env = "CXX=/usr/bin/CC " & env
           end
 
+        else if SunCC_Check("/opt/developerstudio12.6")
+            env = SunCC_Get("/opt/developerstudio12.6") & env
+
+        else if SunCC_Check("/opt/developerstudio12.5")
+            env = SunCC_Get("/opt/developerstudio12.5") & env
+
+        else if SunCC_Check("/opt/solarisstudio12.4")
+            env = SunCC_Get("/opt/solarisstudio12.4") & env
+
         else if SunCC_Check("/opt/solarisstudio12.3")
             env = SunCC_Get("/opt/solarisstudio12.3") & env
 
