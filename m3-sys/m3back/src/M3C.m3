@@ -3033,15 +3033,19 @@ PROCEDURE include_setjmp_h(self: T) =
  * Avoid including setjmp.h unless needed, to speed up compilation.
  *
  * In future, replace exception handling with optimized C++.
+ * _setjmp sort of does not work in Solaris. The headers
+ * put it in std:: for C++.
  *)
 BEGIN
+  (* This is messy. See CsetjmpC.c. *)
   IF NOT self.done_include_setjmp_h THEN
     print(self,
         "#include <setjmp.h>\n" &
-        "#if defined(_WIN32) || defined(__vms)\n" &
+        "#if defined(_WIN32) || defined(__CYGWIN__) || defined(__MINGW__)\n" &
         "#define m3_setjmp(env) (setjmp(env))\n" &
+        "#elif defined(__sun)\n" &
+        "#define m3_setjmp(env) (sigsetjmp((env), 0))\n" &
         "#else\n" &
-        "/* Do not save/restore signal mask. Doing so is much more expensive. TODO: sigsetjmp. */\n" &
         "#define m3_setjmp(env) (_setjmp(env))\n" &
         "#endif\n");
     self.done_include_setjmp_h := TRUE;

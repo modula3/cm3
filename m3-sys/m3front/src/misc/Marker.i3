@@ -66,7 +66,10 @@ PROCEDURE SetLock (acquire: BOOLEAN;  var: CG.Var;  offset: INTEGER);
 
 PROCEDURE CaptureState (frame: CG.Var;  jmpbuf: CG.Var;  handler: CG.Label);
 (* frame.jmpbuf = jmpbuf
-   if (setjmp(jmpbuf)) goto handler *)
+   if (setjmp(jmpbuf)) goto handler
+   or
+   if (sigsetjmp(jmpbuf, 0)) goto handler
+*)
 
 PROCEDURE Reset ();
 
