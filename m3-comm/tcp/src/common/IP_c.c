@@ -51,7 +51,7 @@ union SockAddrUnionAll
     sockaddr sa;
     sockaddr_storage sas;
 #ifndef _WIN32
-    sockaddr_un sun; // On AIX, larger than sas.
+    sockaddr_un saun; // On AIX, larger than sas.
 #endif
     sockaddr_in sa4;
     sockaddr_in6 sa6;
