@@ -1517,7 +1517,7 @@ PROCEDURE InitWithStackBase (stackbase: ADDRESS) =
 PROCEDURE Init ()=
   VAR r: INTEGER;
   BEGIN
-    r := RTProcess.RegisterForkHandlers(AtForkPrepare,
+    r := RTProcess.RegisterForkHandlers(AtForkPrepareInFork,
                                         AtForkParent,
                                         AtForkChild);
     IF r # 0 THEN DieI(ThisLine(), r) END;
@@ -1561,6 +1561,39 @@ PROCEDURE AtForkPrepare() =
       act := act.next;
     UNTIL act = me;
   END AtForkPrepare;
+
+(* Solaris suspends/defers signals during fork handlers.
+ * This leads to deadlock if fork and collection happen
+ * at about the same time. The collector has the heap lock
+ * and the forker blocks getting it, and will not suspend.
+ * To solve this, on Solaris, run AtForkPrepare outside of
+ * fork. This is ok as long as fork is called within
+ * m3core (RTProcess.Fork). It is not ok if fork is called
+ * in external code, unless followed by exec; that leads
+ * to corrupt locks and state.
+ * See https://github.com/illumos/illumos-gate/blob/b89fc615f42c703d6100c78de04791708d190e5e/usr/src/lib/libc/port/threads/scalls.c#L194
+ * The deadlock is AtForkPrepare blocking in LockHeap while collector
+ * blocks holding LockHeap waiting for forker to suspend.
+ * Solution: Cooperative suspend instead of preemptive suspend, does not solve
+ * it on its own, as blocking in LockHeap will not poll
+ * Solution: spawn instead of fork+exec, does not solve it on its own, because
+ * the fork the handlers are for fork without exec. If there is no fork
+ * exec, just fork with exec, then the handlers are not needed as the exec
+ * child will not inherit the corrupt locks and state.
+ *)
+PROCEDURE AtForkPrepareInFork() =
+  BEGIN
+   IF NOT Solaris() THEN
+     AtForkPrepare();
+   END;
+ END AtForkPrepareInFork;
+
+PROCEDURE AtForkPrepareOutsideFork() =
+  BEGIN
+   IF Solaris() THEN
+     AtForkPrepare();
+   END;
+ END AtForkPrepareOutsideFork;
 
 PROCEDURE AtForkParent() =
   VAR me := GetActivation();

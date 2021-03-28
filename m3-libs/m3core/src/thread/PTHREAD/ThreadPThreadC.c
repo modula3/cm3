@@ -577,4 +577,15 @@ InitC(int *bottom)
 #endif
 }
 
+INTEGER
+__cdecl
+ThreadPThread__Solaris(void)
+{
+#ifdef __sun
+    return TRUE;
+#else
+    return FALSE;
+#endif
+}
+
 M3_EXTERNC_END

@@ -190,4 +190,9 @@ PROCEDURE DecInCritical();
 
 (*---------------------------------------------------------------------------*)
 
+<*EXTERNAL "ThreadPThread__Solaris"*>
+PROCEDURE Solaris(): BOOLEAN;
+
+(*---------------------------------------------------------------------------*)
+
 END ThreadPThread.
