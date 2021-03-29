@@ -13,5 +13,7 @@ m3back_debug = "-gstabs" % Sun assembler doesn't like .stabd.
 %SolarisAssemblerFlags = "-Qy -s -xarch=generic64"
 readonly SYSTEM_ASM = "/usr/ccs/bin/as -Qy -s -xarch=generic64"
 
+M3_BACKEND_MODE = "C"
+
 include("AMD64.common")
 include("Solaris.common")
