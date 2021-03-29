@@ -10,6 +10,8 @@ readonly TARGET_OS = "SOLARIS"
 readonly SYSTEM_AR = "/usr/ccs/bin/ar"
 readonly WordSize = {"32BITS" : "32", "64BITS" : "64"}{WORD_SIZE}
 
+M3_BACKEND_MODE = "C"
+
 proc configure_c_compiler() is
 end
 
