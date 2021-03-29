@@ -1,5 +1,9 @@
 #include "m3core.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // _longjmp does not work on Solaris/C++ because it is std::_longjump.
 #if !defined(__sun) || !defined(__cplusplus)
 
@@ -13,17 +17,17 @@ M3WRAP_RETURN_VOID(Csetjmp__ulongjmp, _longjmp, (jmp_buf env, int val), (env, va
 
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 // This is messy.
 //  - _setjmp does not work in Solaris C++; it is accidentally placed in std::
-//  - sigsetjmp is a good portable idea.
-//  - But sigsetjmp should be paired with siglongjmp.
-//  - And siglongjmp is not portably linkable, like with Linux/m3cc.
+//  - sigsetjmp is a good portable idea. We should use it on all Unix platforms.
+//  - sigsetjmp should be paired with siglongjmp, which is ok.
+//  - sigsetjmp is not portably linkable, like with Linux/m3cc. That is a problem.
+//    (Siglongjmp/longjmp linkability is no matter. We call it from C.)
 //
 // There is only one m3core for all backends.
+// TODO: Relax "one m3core" rule. Have the setjmp call leave a function
+// pointer or boolean or enum in the frame or in a global. Or inject a static
+// helper into every C backend output file, i.e. call siglongjmp from C backend output.
 //
 // Therefore:
 //   C backend gets "m3_setjmp"
@@ -41,7 +45,6 @@ extern "C" {
 //    => else _longjmp as usual
 //
 // Wrapper for longjmp / siglongjmp specifically for use by Modula-3 exception handling.
-//
 #ifdef __sun
 void __cdecl Csetjmp__m3_longjmp(sigjmp_buf env, int val)
 {
