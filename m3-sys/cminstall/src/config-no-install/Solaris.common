@@ -140,7 +140,7 @@ SYSTEM_LIBS = {
     % "OPENGL" below
     % "ODBC"     : [ ],
     "MOTIF"      : [ "-lXm" ],
-    "X11"        : [ "-lXaw", "-lXmu", "-lXext", "-lXt", "-lX11" ],
+    "X11"        : [ "-lXft", "-lfontconfig", "-lXaw", "-lXmu", "-lXext", "-lXt", "-lX11" ],
     "Z"          : [ "-lz" ],
     "TCP"        : [ ]
 }
