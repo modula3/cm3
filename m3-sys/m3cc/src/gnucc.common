@@ -142,7 +142,7 @@ if Native and (equal(nTARGET, "SPARC32_SOLARIS") or equal(TARGET, "SPARC64_SOLAR
             gcc = "/usr/sfw/bin:"
         else if FileExists("/opt/csw/gcc4/bin/gcc")
             gcc = "/opt/csw/gcc4/bin:"
-        end end end end end end end end end
+        end end end end end end end end end end end end
     end
 
     if ccs or gcc
