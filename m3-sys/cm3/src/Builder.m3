@@ -1642,6 +1642,7 @@ PROCEDURE PushOneM3 (s: State;  u: M3Unit.T): BOOLEAN =
         IF ok AND DoRunLlc THEN
           IF u.optimize THEN
             EVAL RunLlvmOpt(s, llvmIRName, llvmIROptName);
+            llvmIRName := llvmIROptName;
           END;
           ok := RunLlcBack 
                  (s, llvmIRName, codeGenOutName, u.debug, u.optimize, 
