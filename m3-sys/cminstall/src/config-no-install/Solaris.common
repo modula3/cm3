@@ -203,8 +203,10 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
         local shared_option = ""
         if equal(C_COMPILER, "GNU")
             shared_option = "-shared"
+        else
+            shared_option = "-G"
         end
-        ret_code = try_exec ("@" & SYSTEM_LD, shared_option, "-G", "-o",
+        ret_code = try_exec ("@" & SYSTEM_LD, shared_option, "-o",
                              lib_sox, "-h", lib_sox, objects,
                              imported_libs)
         if not equal (ret_code, 0)
@@ -232,7 +234,7 @@ proc m3_link (prog, options, objects, imported_libs, shared) is
     if shared or equal (C_COMPILER, "SUN")
         return try_exec (linker, args)
     else
-        return try_exec (linker, "-pie -dy -Bstatic", args)
+        return try_exec (linker, "-pie", args)
     end
 end
 
