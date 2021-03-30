@@ -176,6 +176,7 @@ PROCEDURE NoBounds (t: T;  VAR min, max: Target.Int) =
 
 PROCEDURE NotAddressable (<*UNUSED*> t: T) =
   BEGIN
+    Error.Msg ("Internal compiler error CallExpr.NotAddressable");
     <* ASSERT FALSE *>
   END NotAddressable;
 
