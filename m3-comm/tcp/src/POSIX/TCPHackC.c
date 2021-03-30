@@ -30,7 +30,7 @@
     defined(__osf)
 static const char refetchError = TRUE;
 #else
-static const char refetchError;
+static const char refetchError = FALSE;
 #endif
 
 #define RefetchError TCPHack__RefetchError
