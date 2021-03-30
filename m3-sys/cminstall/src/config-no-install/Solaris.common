@@ -57,7 +57,7 @@ if equal (C_COMPILER, "SUN")
             "/opt/studio/SOS11/SUNWspro",
             ]
         foreach a in possible
-            local b = a & "/bin/cc"
+            local b = a & "/bin/CC"
             if FileExists(b)
                 return b
             end
