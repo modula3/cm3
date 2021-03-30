@@ -68,31 +68,12 @@ VAR (*CONST*)
   Build_dir: TEXT;
   Build_dir_length: INTEGER;
 
-PROCEDURE Init32 () =
-  BEGIN
-    (* Change size and aligment: *)
-    Integer := Int32;
-    Word := Word32;
-    Address := Word32;
-    Address.cg_type := CGType.Addr;
-    (* Change only alignment.  Size is always 64: *) 
-    Longint.align := 32;
-    Long.align := 32;
-    Longreal.align := 32;
-    Extended.align := 32;
-  END Init32;
-
 PROCEDURE Init64 () =
   BEGIN
     Integer := Int64;
     Word := Word64;
     Address := Word64;
     Address.cg_type := CGType.Addr;
-    (* Change only alignment.  Size is always 64: *) 
-    Longint.align := 64;
-    Long.align := 64;
-    Longreal.align := 64;
-    Extended.align := 64;
   END Init64;
 
 PROCEDURE Solaris(): BOOLEAN =
@@ -197,8 +178,17 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
     IF TextUtils.StartsWith(system, "ALPHA_")       (* But not ALPHA32_. *)
         OR TextUtils.Contains(system, "64") THEN
       Init64();
-    ELSE
-      Init32();
+    ELSIF backend_mode # M3BackendMode_t.C THEN
+      (* Change only alignment.  Size is always 64:
+       * Aligning these types to 32 is incorrect on many but not all 32bit targets.
+       * C backend cannot portably reduce alignment but it can portably increase
+       * alignment. These types were 64-aligned for a very long time on
+       * all 32bit targets.
+       *)
+      Longint.align := 32;
+      Long.align := 32;
+      Longreal.align := 32;
+      Extended.align := 32;
     END;
 
     (* big endian *)
