@@ -2,5 +2,12 @@
 % See file COPYRIGHT-CMASS for details.
 
 readonly TARGET = "SPARC32_SOLARIS"
-readonly C_COMPILER = "SUN" % or GNU (SOLgnu configuration)
+
+% Solaris common will look for several compilers.
+% If you favor a specific compiler, set SYSTEM_CC here.
+% If you favor GNU (g++) or SUN compiler, set C_COMPILER = "SUN" or "GNU"
+% to guide the search.
+% readonly C_COMPILER = "SUN" % favor Sun CC
+% readonly C_COMPILER = "GNU" % favor g++
+
 include("SPARC32_SOLARIS.common")

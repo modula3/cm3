@@ -3,13 +3,19 @@
 
 readonly TARGET = "I386_SOLARIS"
 readonly GNU_PLATFORM = "i586-solaris2.10" % "cpu-os" string for GNU
-readonly C_COMPILER = "SUN" % or GNU to use gcc (untested)
 SunXArch = "pentium_pro"
 SunXRegs = ""
 m3back_debug = "-gstabs" % Sun assembler doesn't like .stabd.
 
 % -K PIC ?
 SolarisAssemblerFlags = "-Qy -s"
+
+% Solaris common will look for several compilers.
+% If you favor a specific compiler, set SYSTEM_CC here.
+% If you favor GNU (g++) or SUN compiler, set C_COMPILER = "SUN" or "GNU"
+% to guide the search.
+% readonly C_COMPILER = "SUN" % favor Sun CC
+% readonly C_COMPILER = "GNU" % favor g++
 
 include("I386.common")
 include("Solaris.common")
