@@ -193,6 +193,8 @@ PROCEDURE DecInCritical();
 <*EXTERNAL "ThreadPThread__Solaris"*>
 PROCEDURE Solaris(): BOOLEAN;
 
+PROCEDURE AtForkPrepareOutsideFork(); (* called from C *)
+
 (*---------------------------------------------------------------------------*)
 
 END ThreadPThread.
