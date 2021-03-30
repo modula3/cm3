@@ -313,12 +313,16 @@ PROCEDURE Init (t: T;  name: M3ID.T;  c: Class) =
 
 PROCEDURE NoExpr (<*UNUSED*> t: T): Expr.T =
   BEGIN
+    Error.Msg ("Internal compiler error Value.NoExpr");
     <* ASSERT FALSE *>
+    RETURN NIL; <*NOWARN*>
   END NoExpr;
 
 PROCEDURE NoType (<*UNUSED*> t: T): Type.T =
   BEGIN
+    Error.Msg ("Internal compiler error Value.NoType");
     <* ASSERT FALSE *>
+    RETURN NIL; <*NOWARN*>
   END NoType;
 
 PROCEDURE NoLoader (<*UNUSED*> t: T) =

@@ -432,7 +432,9 @@ PROCEDURE BadOperands (op: TEXT;  a, b: M3.Type := NIL): M3.Type =
 
 PROCEDURE NoType (<*UNUSED*> t: T): Type.T =
   BEGIN
+    Error.Msg ("Internal compiler error Expr.NoType");
     <* ASSERT FALSE *>
+    RETURN NIL; <*NOWARN*>
   END NoType;
 
 PROCEDURE NoCheck (<*UNUSED*> t: T;  <*UNUSED*> VAR cs: CheckState) =
