@@ -18,6 +18,10 @@
 #include <stdlib.h>
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define TRUE 1
 #define FALSE 0
 
@@ -55,3 +59,7 @@ RefetchError(INTEGER fd)
         return FALSE;
     }
 }
+
+#ifdef __cplusplus
+} /* extern C */
+#endif
