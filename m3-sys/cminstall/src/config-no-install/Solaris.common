@@ -87,6 +87,9 @@ if equal (C_COMPILER, "SUN")
     else
       cc = cc & old
     end
+    % -xF splits functions into sections so linker need not take them all
+    % This is equivalent to -Gy in Visual C++.
+    % TODO: It can be refined to split data also.
     if equal(TARGET, "I386_SOLARIS") or equal(TARGET, "AMD64_SOLARIS")
       SYSTEM_CC = cc & " -xF -Kpic"
     else
