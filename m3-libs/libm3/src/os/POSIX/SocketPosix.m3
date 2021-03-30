@@ -135,16 +135,6 @@ PROCEDURE Connect (t: T;  READONLY ep: EndPoint)
       IF status = 0 THEN EXIT; END;
 
       WITH errno = GetError() DO
-        IF errno = EINVAL THEN
-          (* hack to try to get real errno, hidden due to NBIO bug in connect *)
-          RefetchError (t.fd);
-        ELSIF errno = EBADF THEN
-          (* we'll try the same for EBADF, which we've seen on Alpha *)
-          RefetchError (t.fd);
-        END;
-      END;
-
-      WITH errno = GetError() DO
         IF errno = EISCONN THEN
           EXIT;
         ELSIF  (errno = EADDRNOTAVAIL)

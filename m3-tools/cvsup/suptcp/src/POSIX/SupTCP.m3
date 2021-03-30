@@ -14,7 +14,6 @@ IMPORT Usocket, Uerror, Uin, Unix, Uuio, Utypes,
        SchedulerPosix, Fmt, Word;
 IMPORT SupConnFD AS ConnFD;
 IMPORT SupErrno AS Cerrno;
-IMPORT SupTCPHack AS TCPHack;
 IMPORT SupTCPPosix AS TCPPosix;
 FROM Ctypes IMPORT char, int;
 
@@ -177,8 +176,6 @@ PROCEDURE FinishConnect(t: T; timeout: LONGREAL := -1.0D0): BOOLEAN
     RETURN TRUE;
   END FinishConnect;
 
-VAR seenBadFBug: BOOLEAN := FALSE;
-
 PROCEDURE CheckConnect(fd: INTEGER; ep: IP.Endpoint) : BOOLEAN
     RAISES {IP.Error} =
   VAR
@@ -191,15 +188,6 @@ PROCEDURE CheckConnect(fd: INTEGER; ep: IP.Endpoint) : BOOLEAN
     name.sin_zero := Sin_Zero;
     status := Usocket.connect(fd, ADR(name), BYTESIZE(SockAddrIn));
     IF status = 0 THEN RETURN TRUE; END;
-    WITH errno = Cerrno.GetErrno() DO
-      IF errno = Uerror.EINVAL THEN
-        (* special hack to try to get real errno, hidden due to NBIO bug in connect *)
-        EVAL TCPHack.RefetchError(fd);
-      ELSIF errno = Uerror.EBADF THEN
-        (* we'll try the same for EBADF, which we've seen on Alpha *)
-        IF TCPHack.RefetchError(fd) THEN seenBadFBug := TRUE END;
-      END;
-    END;
     WITH errno = Cerrno.GetErrno() DO
       IF (errno = Uerror.EISCONN) THEN
         RETURN TRUE;

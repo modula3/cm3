@@ -126,16 +126,6 @@ PROCEDURE <A NAME="Connect"><procedure>Connect</procedure></A> (t: T;  READONLY 
       IF status = 0 THEN EXIT; END;
 
       WITH errno = Cerrno.GetErrno() DO
-        IF errno = Uerror.EINVAL THEN
-          (* hack to try to get real errno, hidden due to NBIO bug in connect *)
-          RefetchError (t.fd);
-        ELSIF errno = Uerror.EBADF THEN
-          (* we'll try the same for EBADF, which we've seen on Alpha *)
-          RefetchError (t.fd);
-        END;
-      END;
-
-      WITH errno = Cerrno.GetErrno() DO
         IF errno = Uerror.EISCONN THEN
           EXIT;
         ELSIF  (errno = Uerror.EADDRNOTAVAIL)
