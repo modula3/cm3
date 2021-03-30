@@ -37,34 +37,86 @@ proc configure_assembler() is
     error("unable to find assembler among " & possible)
 end
 
+proc configure_c_compiler() is
+  if defined("SYSTEM_CC")
+    return
+  end
 
-if equal (C_COMPILER, "SUN")
+  readonly possible_sun_cc = [
+    "/usr/bin/CC",
+    "/opt/developerstudio12.6/bin/CC",
+    "/opt/developerstudio12.5/bin/CC",
+    "/opt/solarisstudio12.4/bin/CC",
+    "/opt/solarisstudio12.3/bin/CC",
+    "/opt/solstudio12.2/bin/CC",
+    "/opt/studio/SOS12/SUNWspro/bin/CC",
+    "/opt/studio/SOS11/SUNWspro/bin/CC",
+    ]
 
-  proc configure_c_compiler() is
-    if defined("SYSTEM_CC")
-      return
+  readonly possible_gnu_cc = [
+    "/usr/bin/g++",
+    % I386_SOLARIS and AMD64_SOLARIS fail with clang++
+    % /usr/gcc/7/lib/gcc/x86_64-pc-solaris2.11/7.3.0/../../../../include/c++/7.3.0/bits/std_abs.h:102:7: error: __float128 is
+    % not supported on this target
+    % abs(__float128 __x)
+    % ^
+    %"/usr/bin/clang++",
+    % clang can work but let's stick to C++.
+    "/usr/sfw/bin/g++",
+    ]
+
+  local proc find_sun_cc() is
+      foreach a in possible_sun_cc
+          if FileExists(a)
+              return a
+          end
+      end
+      return FALSE
     end
 
-    local proc find_cc() is
-        readonly local possible = [
-            "/usr",
-            "/opt/developerstudio12.6",
-            "/opt/developerstudio12.5",
-            "/opt/solarisstudio12.4",
-            "/opt/solarisstudio12.3",
-            "/opt/solstudio12.2",
-            "/opt/studio/SOS12/SUNWspro",
-            "/opt/studio/SOS11/SUNWspro",
-            ]
-        foreach a in possible
-            local b = a & "/bin/CC"
-            if FileExists(b)
-                return b
-            end
+  local proc find_gnu_cc() is
+    foreach a in possible_gnu_cc
+        if FileExists(a)
+            return a
         end
-        error("unable to find cc (bin/cc) among " & possible)
     end
+    return FALSE
+  end
 
+  local sun_cc = FALSE
+  local gnu_cc = FALSE
+
+  % User set nothing, look for all.
+  if not defined ("C_COMPILER")
+    sun_cc = find_sun_cc ()
+    if sun_cc
+      C_COMPILER = "SUN"
+    else
+      gnu_cc = find_gnu_cc ()
+      if gnu_cc
+        C_COMPILER = "GNU"
+      end
+    end
+    if not sun_cc and not gnu_cc
+      error("unable to find compiler among " & possible_gnu_cc & possible_sun_cc)
+    end
+  end
+
+  % User prefers SUN or GNU, look for just that.
+  if not sun_cc and equal (C_COMPILER, "SUN")
+    sun_cc = find_sun_cc ()
+    if not sun_cc
+      error("unable to find compiler among " & possible_sun_cc)
+    end
+  end
+  if not gnu_cc and equal (C_COMPILER, "GNU")
+    gnu_cc = find_gnu_cc ()
+    if not gnu_cc
+      error("unable to find compiler among " & possible_gnu_cc)
+    end
+  end
+
+  if equal (C_COMPILER, "SUN")
     % newer compiler says:
     % cc: Warning: -xarch=v8plus is deprecated, use -m32 -xarch=sparc instead
     % cc: Warning: -xarch=v9 is deprecated, use -m64 to create 64-bit programs
@@ -75,7 +127,7 @@ if equal (C_COMPILER, "SUN")
     % We presumably can't just always use the new syntax, in case
     % we are using older tools that don't understand it.
 
-    local cc = find_cc() & " -g -mt -xldscope=symbolic " & SunXRegs & " "
+    local cc = sun_cc & " -g -mt -xldscope=symbolic " & SunXRegs & " "
     local old = "-xarch=" & SunXArch
     local new = "-m" & WordSize
     if equal(WORD_SIZE, "32BITS") and not equal(TARGET, "I386_SOLARIS")
@@ -98,29 +150,11 @@ if equal (C_COMPILER, "SUN")
   end
 
   % SYSTEM_LD = "/usr/ccs/bin/ld"
-end
 
-if equal (C_COMPILER, "GNU")
-  proc configure_c_compiler() is
-    if defined("SYSTEM_CC")
-      return
-    end
-
-    local proc find_cc() is
-        readonly local possible = [
-            "/usr/bin/g++",
-            "/usr/bin/clang++",
-            "/usr/sfw/bin/g++",
-            ]
-        foreach a in possible
-            if FileExists(a)
-                return a
-            end
-        end
-        error("unable to find compiler among " & possible)
-    end
-
-    SYSTEM_CC = find_cc() & " -g -fPIC -pthreads -m" & WordSize
+  if equal (C_COMPILER, "GNU")
+    % -pthread and -pthreads seem the same for gcc but
+    % clang says -pthreads is ignored.
+    SYSTEM_CC = gnu_cc & " -g -fPIC -pthread -m" & WordSize
   end
 end
 
@@ -129,10 +163,19 @@ proc configure_linker() is
     return
   end
   configure_c_compiler()
+
   SYSTEM_LD = SYSTEM_CC & " -B direct -z ignore -z combreloc -z defs -z text"
-    & " -i -z now -z origin "
+    & " -z now -z origin "
     & " -R \\$ORIGIN"
     & " -R \\$ORIGIN/../lib"
+
+  if equal (C_COMPILER, "SUN")
+    SYSTEM_LD = SYSTEM_LD & " -i"
+  else
+    % This should work but it seems to get dropped.
+    SYSTEM_LD = SYSTEM_LD & " -Wl,-i"
+  end
+
 end
 
 SYSTEM_LIBS = {

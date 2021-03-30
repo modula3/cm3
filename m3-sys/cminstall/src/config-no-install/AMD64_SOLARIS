@@ -4,7 +4,6 @@
 readonly TARGET = "AMD64_SOLARIS"
 readonly GNU_PLATFORM = "i586-sun-solaris2.10" % "cpu-os" string for GNU
                                                % deliberately i586
-readonly C_COMPILER = "SUN" % or GNU to use gcc (untested)
 SunXArch = "generic64" % or amd64, equivalent?
 SunXRegs = ""
 m3back_debug = "-gstabs" % Sun assembler doesn't like .stabd.
@@ -16,4 +15,12 @@ readonly SYSTEM_ASM = "/usr/ccs/bin/as -Qy -s -xarch=generic64"
 M3_BACKEND_MODE = "C"
 
 include("AMD64.common")
+
+% Solaris common will look for several compilers.
+% If you favor a specific compiler, set SYSTEM_CC here.
+% If you favor GNU (g++) or SUN compiler, set C_COMPILER = "SUN" or "GNU"
+% to guide the search.
+% readonly C_COMPILER = "SUN" % favor Sun CC
+% readonly C_COMPILER = "GNU" % favor g++
+
 include("Solaris.common")
