@@ -1,8 +1,23 @@
 readonly TARGET = "AMD64_LINUX" % code generation target
 readonly GNU_PLATFORM = "amd64-linux" % "cpu-os" string for GNU
 
-SYSTEM_CC = "gcc -g -m64 -fPIC" % C compiler
-SYSTEM_CXXC = "g++ -g -m64 -fPIC" % C++ compiler
+SYSTEM_CC = "gcc -m64 -fPIC -g" % C compiler
+SYSTEM_CXXC = "g++ -m64 -fPIC -g" % C++ compiler
+
+% Sometimes stabs are incorrect for C.
+% But Dwarf interferes with m3gdb.
+% https://gcc.gnu.org/bugzilla/show_bug.cgi?id=99457
+%
+if defined("M3_BACKEND_MODE")
+  if not equal(M3_BACKEND_MODE, "C")
+    SYSTEM_CC = SYSTEM_CC & "stabs+"
+    SYSTEM_CXXC = SYSTEM_CXXC & "stabs+"
+  end
+else
+  % It will likely not default to C.
+  SYSTEM_CC = SYSTEM_CC & "stabs+"
+  SYSTEM_CXXC = SYSTEM_CXXC & "stabs+"
+end
 
 readonly SYSTEM_ASM = "as --64" % Assembler
 
