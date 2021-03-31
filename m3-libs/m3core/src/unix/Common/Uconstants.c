@@ -45,7 +45,7 @@ extern "C" {
 //
 #define M3_UERROR_MAX 248
 
-#if defined(__cplusplus) && defined(__clang__) && defined(__FreeBSD__)
+#ifdef _LIBCPP_ERRNO_H // e.g. __cplusplus && __clang__ && __FreeBSD__
 #if ENODATA > 9900 && ENODATA < 9999
 #undef ENODATA
 #endif
