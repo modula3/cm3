@@ -4,8 +4,8 @@
 
 #include "m3core.h"
 
-#if defined(__APPLE__) || defined(__FreeBSD__)
-/* See ThreadApple.c, ThreadFreeBSD.c. */
+#if defined(__APPLE__)
+/* See ThreadApple.c. */
 #define M3_DIRECT_SUSPEND
 #endif
 
@@ -21,10 +21,10 @@
 #endif
 
 #ifdef M3_DIRECT_SUSPEND
-#define M3_DIRECT_SUSPEND_ASSERT_FALSE do {                     \
-    assert(0 && "MacOS X, FreeBSD should not get here."); \
-    fprintf(stderr, "MacOS X, FreeBSD should not get here.\n"); \
-    abort();                                                    \
+#define M3_DIRECT_SUSPEND_ASSERT_FALSE do {            \
+    assert(0 && "MacOS X should not get here.");       \
+    fprintf(stderr, "MacOS X should not get here.\n"); \
+    abort();                                           \
   } while(0);
 #endif
 
@@ -46,7 +46,7 @@ void __cdecl SignalHandler(int signo, siginfo_t *info, void *context);
     Solaris: 17 (at least 32bit SPARC?)
     Cygwin: 19 -- er, but maybe that's wrong
     Linux: 64
-    FreeBSD: 31 (not used)
+    FreeBSD: 31
     OpenBSD: 31
     HPUX: 44
   Look at the history of Usignal and RTMachine to find more values.  There was
@@ -551,8 +551,8 @@ InitC(int *bottom)
 #endif
 
   stack_grows_down = (bottom > &r);
-#if defined(__APPLE__) || defined(__FreeBSD__) || defined(__INTERIX)
-  assert(stack_grows_down); /* See ThreadApple.c, ThreadFreeBSD.c */
+#if defined(__APPLE__) || defined(__INTERIX)
+  assert(stack_grows_down); /* See ThreadApple.c */
 #endif
 #ifndef M3_COMPILER_THREAD_LOCAL
   M3_RETRY(pthread_key_create(&activations, NULL)); assert(r == 0);
