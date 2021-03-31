@@ -26,13 +26,6 @@
 extern "C" {
 #endif
 
-typedef union {
-#define X(x) char a##x[x];
-#include "UerrorX.h"
-} CheckMax_t;
-/* check that Uerror.Max=248 is enough; if you get an error here, raise it in Uerror.i3 and here */
-typedef int CheckMax[248 - sizeof(CheckMax_t)];
-
 #if __GNUC__ >= 4
 #ifdef __APPLE__
 #pragma GCC visibility push(default)
@@ -44,6 +37,39 @@ typedef int CheckMax[248 - sizeof(CheckMax_t)];
 #undef X
 #define X(x) EXTERN_CONST int Uerror__##x = x;
 #include "UerrorX.h"
+
+// Check that Uerror.Max=248 is enough; if you get an error here, raise it in Uerror.i3 and here.
+//
+// FreeBSD (12.2/amd64) compiling with clang++ has some numbers between 9000 and 10000.
+// Skip these. The actual user of Uerror.Max is ok with this.
+//
+#define M3_UERROR_MAX 248
+
+#if defined(__cplusplus) && defined(__clang__) && defined(__FreeBSD__)
+#if ENODATA > 9900 && ENODATA < 9999
+#undef ENODATA
+#endif
+
+#if ENOSR > 9900 && ENOSR < 9999
+#undef ENOSR
+#endif
+
+#if ENOSTR > 9900 && ENOSTR < 9999
+#undef ENOSTR
+#endif
+
+#if ETIME > 9900 && ETIME < 9999
+#undef ETIME
+#endif
+#endif // FreeBSD/clang++
+
+typedef union {
+#define X(x) char a##x[x];
+#include "UerrorX.h"
+} M3UerrorCheckMax_t;
+// sizeof(M3UerrorCheckMax_t) is the largest errno.
+// If it is less or equal to M3_UERROR_MAX, this typedef is illegal, due to zero- or negative-sized array.
+typedef int M3UerrorCheckMax[M3_UERROR_MAX - sizeof(M3UerrorCheckMax_t)];
 
 // This is messy, see CsetjmpC.c.
 #if defined(__sun)
