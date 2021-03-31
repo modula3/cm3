@@ -4,17 +4,20 @@
 
 #include "m3core.h"
 
+#ifdef __FreeBSD__
+#include <pthread_np.h>
+#endif
+
 #if M3_HAS_VISIBILITY
 #pragma GCC visibility push(hidden)
 #endif
 
 M3_EXTERNC_BEGIN
 
-#ifndef __FreeBSD__
-
 void __cdecl ThreadFreeBSD__Dummy(void) { } /* avoid empty file */
 
-#else /* FreeBSD */
+#if 0 // Seems to not work?
+#ifdef __FreeBSD__
 
 static void __cdecl
 ThreadFreeBSD__Fatal(int error, const char* message)
@@ -76,5 +79,6 @@ ThreadPThread__ProcessStopped (m3_pthread_t mt, char *bottom, char *context,
 }
 
 #endif /* FreeBSD */
+#endif // 0
 
 M3_EXTERNC_END
