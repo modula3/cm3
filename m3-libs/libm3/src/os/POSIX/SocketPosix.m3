@@ -1,7 +1,7 @@
 (* Copyright 1996-2000, Critical Mass, Inc.  All rights reserved. *)
 (* See file COPYRIGHT-CMASS for details. *)
 
-UNSAFE MODULE SocketPosix EXPORTS Socket, SocketPosix;
+UNSAFE MODULE SocketPosix EXPORTS Socket;
 
 IMPORT Atom, AtomList, File, FilePosix;
 IMPORT OSError, OSErrorPosix, SchedulerPosix, Thread;
