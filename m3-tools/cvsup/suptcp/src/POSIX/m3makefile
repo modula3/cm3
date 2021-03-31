@@ -6,16 +6,9 @@
 %Interface("SupTCPPosix")
 %implementation("SupTCP")
 interface("SupTCPHack")
-interface("SockOpt")
 
 if equal (TARGET, "ALPHA_OSF") or equal(TARGET, "DS3100")
    implementation("SupTCPHack")
 else
    implementation("SupTCPHackNull")
-end
-
-if equal(TARGET, "FreeBSD2") or equal(TARGET, "FreeBSD2p")
-   implementation("SockOptFBSD")
-else
-   implementation("SockOptOther")
 end

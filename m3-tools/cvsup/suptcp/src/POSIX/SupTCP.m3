@@ -10,7 +10,7 @@
 UNSAFE MODULE SupTCP EXPORTS SupTCP, TCPMisc;
 
 IMPORT Atom, AtomList, IP, Rd, Wr, Thread;
-IMPORT Usocket, SockOpt, Uerror, Uin, Unix, Uuio, Utypes,
+IMPORT Usocket, Uerror, Uin, Unix, Uuio, Utypes,
        SchedulerPosix, Fmt, Word;
 IMPORT SupConnFD AS ConnFD;
 IMPORT SupErrno AS Cerrno;
@@ -63,7 +63,7 @@ PROCEDURE NewConnector (ep: IP.Endpoint): Connector RAISES {IP.Error} =
       END
     END;
     MakeNonBlocking (res.fd);
-    EVAL Usocket.setsockopt(res.fd, SockOpt.SOL_SOCKET, SockOpt.SO_REUSEADDR,
+    EVAL Usocket.setsockopt(res.fd, Usocket.SOL_SOCKET, Usocket.SO_REUSEADDR,
       ADR(True), BYTESIZE(True));
     name.sin_family := Usocket.AF_INET;
     name.sin_port := Uin.htons(ep.port);
@@ -138,7 +138,7 @@ PROCEDURE StartConnect(to: IP.Endpoint;
     InitFD(fd);
 
     IF from # IP.NullEndPoint THEN  (* Bind to the "from" address. *)
-      EVAL Usocket.setsockopt(fd, SockOpt.SOL_SOCKET, SockOpt.SO_REUSEADDR,
+      EVAL Usocket.setsockopt(fd, Usocket.SOL_SOCKET, Usocket.SO_REUSEADDR,
 	ADR(True), BYTESIZE(True));
       fromName.sin_family := Usocket.AF_INET;
       fromName.sin_port := Uin.htons(from.port);
@@ -269,7 +269,7 @@ PROCEDURE InitFD(fd: CARDINAL) =
     one: int := 1;
     linger := Usocket.struct_linger{1, 1};
   BEGIN
-    EVAL Usocket.setsockopt(fd, SockOpt.SOL_SOCKET, SockOpt.SO_LINGER,
+    EVAL Usocket.setsockopt(fd, Usocket.SOL_SOCKET, Usocket.SO_LINGER,
                             ADR(linger), BYTESIZE(linger));
     EVAL Usocket.setsockopt(
            fd, Uin.IPPROTO_TCP, TCP_NODELAY, ADR(one), BYTESIZE(one));
@@ -555,7 +555,7 @@ PROCEDURE KeepAlive(tcp: T; allow: BOOLEAN)
       IF tcp.closed THEN
 	RAISE IP.Error(AtomList.List1(Closed));
       END;
-      IF Usocket.setsockopt(tcp.fd, SockOpt.SOL_SOCKET, SockOpt.SO_KEEPALIVE,
+      IF Usocket.setsockopt(tcp.fd, Usocket.SOL_SOCKET, Usocket.SO_KEEPALIVE,
 	ADR(keepAlive), BYTESIZE(keepAlive)) = -1 THEN
 	RaiseUnexpected();
       END;
@@ -579,7 +579,7 @@ PROCEDURE LingerOnClose(tcp: T; allow: BOOLEAN)
       IF tcp.closed THEN
 	RAISE IP.Error(AtomList.List1(Closed));
       END;
-      IF Usocket.setsockopt(tcp.fd, SockOpt.SOL_SOCKET, SockOpt.SO_LINGER,
+      IF Usocket.setsockopt(tcp.fd, Usocket.SOL_SOCKET, Usocket.SO_LINGER,
 	ADR(linger), BYTESIZE(linger)) = -1 THEN
 	RaiseUnexpected();
       END;
