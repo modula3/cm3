@@ -937,7 +937,7 @@ PROCEDURE Force_LValue (VAR x: ValRec) =
     IF x.type # Type.Addr THEN
       Error.Warn
         (2, "####### not Addr in Force_LValue, Kind = " & VKindImage (x.kind) &
-            " CGType = " & Target.TypeImage (x.type));
+            " CGType = " & Target.TypeNames [x.type]);
       x.type := Type.Addr;
     END; 
     IF (x.bits # NIL) THEN
@@ -4132,14 +4132,6 @@ PROCEDURE NewNameTbl (): IntRefTbl.T =
 
 CONST
   Bool = ARRAY BOOLEAN OF TEXT { "F ", "T "};
-CONST
-  TypeName = ARRAY Type OF TEXT {
-    "Word8  ", "Int8   ", "Word16 ", "Int16  ",
-    "Word32 ", "Int32  ", "Word64 ", "Int64  ",
-    "Reel   ", "LReel  ", "XReel  ",
-    "Addr   ", "Struct ", "Void   "
-  };
-CONST
   VName = ARRAY VKind OF TEXT {
     "Integer  ",
     "Float    ",
@@ -4158,7 +4150,7 @@ PROCEDURE SDump (tag: TEXT) =
     FOR i := tos-1 TO 0 BY -1 DO
       WITH x = stack[i] DO
         msg := VName [x.kind];
-        msg := msg & TypeName [x.type];
+        msg := msg & Target.TypeNamesFixedWidth [x.type];
         msg := msg & Bool [x.temp_base];
         msg := msg & Bool [x.temp_bits];
         msg := msg & Fmt.Int (x.old_align) & " ";

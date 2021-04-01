@@ -232,7 +232,7 @@ PROCEDURE PName (u: U;  p: Proc) =
 PROCEDURE TName (u: U;  t: Type) =
   BEGIN
     OutC (u, ' ');
-    OutT (u, Target.TypeNames[t]);
+    OutT (u, Target.TypeNamesDotted[t]);
   END TName;
 
 PROCEDURE Flt (u: U;  READONLY f: Target.Float) =
