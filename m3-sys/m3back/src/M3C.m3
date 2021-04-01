@@ -5537,7 +5537,15 @@ PROCEDURE load(self: T; v: M3CG.Var; offset: ByteOffset; in_mtype: MType; out_zt
 VAR var := NARROW(v, Var_t);
     expr := Variable(self, var);
 BEGIN
-    self.comment("load");
+    IF DebugVerbose(self) THEN
+      self.comment("load var:", Var_Name(var),
+        " offset:" & IntToDec(offset),
+        " in_mtype:" & cgtypeToText[in_mtype] &
+        " out_ztype:" & cgtypeToText[out_ztype]);
+    ELSE
+      self.comment("load");
+    END;
+
     IF FALSE THEN
         IF NOT in_mtype = var.cgtype THEN
             RTIO.PutText("load in_mtype:" & cgtypeToText[in_mtype] & " var.cgtype:" & cgtypeToText[var.cgtype]);
@@ -5619,7 +5627,15 @@ PROCEDURE store_indirect(self: T; offset: ByteOffset; ztype: ZType; mtype: MType
 VAR s0 := cast(get(self, 0), ztype);
     s1 := get(self, 1);
 BEGIN
-    self.comment("store_indirect");
+    IF DebugVerbose(self) THEN
+      self.comment("store_indirect ",
+        " offset:" & IntToDec(offset),
+        " ztype:" & cgtypeToText[ztype],
+        " mtype:" & cgtypeToText[mtype]);
+    ELSE
+      self.comment("store_indirect");
+    END;
+
     pop(self, 2);
     store_helper(self, s0.CText(), ztype, s1.CText(), offset, mtype);
 END store_indirect;
