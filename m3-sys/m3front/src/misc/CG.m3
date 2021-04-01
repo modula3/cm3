@@ -1548,14 +1548,14 @@ PROCEDURE Load
         LoadIndirectStraddling (t, o, s);
 (* IMPROVEME: A (direct) LoadStraddling could generate better code. *) 
       ELSE
-        Err ("unaligned word-straddling load, type="& Fmt.Int (ORD (t))
+        Err ("unaligned word-straddling load, type="& Target.TypeNames[t]
             & "  size/offset/align=" & Fmt.Int (s) & "/" & Fmt.Int (o)
             & "/" & Fmt.Int (base_align));
         SimpleLoad (v, o, t, base_align, addr_align);
         ForceStacked ();  (* to connect the error message to the bad code *)
       END 
     ELSE
-      Err ("unaligned partial-word load, type="& Fmt.Int (ORD (t))
+      Err ("unaligned partial-word load, type="& Target.TypeNames[t]
           & "  size/offset/align=" & Fmt.Int (s) & "/" & Fmt.Int (o)
           & "/" & Fmt.Int (base_align));
       SimpleLoad (v, o, t, base_align, addr_align);
@@ -2030,14 +2030,14 @@ x10 := stack[SCheck(1,"Load_indirect-x10")];
         ELSIF x.addr_align MOD Target.Byte = 0 THEN
           LoadIndirectStraddling (t, addedOffset, s); 
         ELSE 
-          Err ("unaligned word-straddling load_indirect, type="& Fmt.Int (ORD (t))
+          Err ("unaligned word-straddling load_indirect, type="& Target.TypeNames[t]
               & "  s/a=" & Fmt.Int (s) & "/" & Fmt.Int (x.addr_align));
           ForceStacked ();  (* to connect the error message *)
           SimpleIndirectLoad (x, t, addr_align);
           ForceStacked ();
         END
       ELSE
-        Err ("unaligned partial-word load_indirect, type="& Fmt.Int (ORD (t))
+        Err ("unaligned partial-word load_indirect, type="& Target.TypeNames[t]
             & "  s/a=" & Fmt.Int (s) & "/" & Fmt.Int (x.addr_align));
         ForceStacked ();  (* to connect the error message *)
         SimpleIndirectLoad (x, t, addr_align);
@@ -2132,12 +2132,12 @@ PROCEDURE Store
         Swap ();
         StoreIndirectStraddling (t, o, s);
       ELSE
-        Err ("unaligned word-straddling store, type="& Fmt.Int (ORD (t))
+        Err ("unaligned word-straddling store, type="& Target.TypeNames[t]
               & "  size/offset/align=" & Fmt.Int (s) & "/" & Fmt.Int (o) & "/" & Fmt.Int(base_align));
         cg.store (v, ToBytes (o), Target.Integer.cg_type, t);
       END;
     ELSE
-      Err ("unaligned partial-word store, type="& Fmt.Int (ORD (t))
+      Err ("unaligned partial-word store, type="& Target.TypeNames[t]
             & "  size/offset/align=" & Fmt.Int (s) & "/" & Fmt.Int (o) & "/" & Fmt.Int(base_align));
       cg.store (v, ToBytes (o), Target.Integer.cg_type, t);
     END;
@@ -2375,12 +2375,12 @@ PROCEDURE Store_indirect (t: Type; addedOffset: Offset;  s: Size) =
           StoreIndirectStraddling (t, addedOffset, s);
           RETURN; (* ^This pops the operands. *)
         ELSE
-          Err ("unaligned word-straddling store_indirect, type="& Fmt.Int (ORD (t))
+          Err ("unaligned word-straddling store_indirect, type="& Target.TypeNames[t]
               & "  s/a=" & Fmt.Int (s) & "/" & Fmt.Int (x.addr_align));
           SimpleIndirectStore (x, t);
           END 
       ELSE
-        Err ("unaligned partial-word store_indirect, type="& Fmt.Int (ORD (t))
+        Err ("unaligned partial-word store_indirect, type="& Target.TypeNames[t]
             & "  s/a=" & Fmt.Int (s) & "/" & Fmt.Int (x.addr_align));
         SimpleIndirectStore (x, t);
       END;
