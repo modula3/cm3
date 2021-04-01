@@ -239,7 +239,7 @@ PROCEDURE Init () =
     FOR i := FIRST (CmdMap) TO LAST (CmdMap) DO
       EVAL cmds.put (M3ID.Add (CmdMap[i].op), i);
     END;
-    WITH z = Target.TypeNames DO
+    WITH z = Target.TypeNamesDotted DO
       types := NEW (IntIntTbl.Default).init (2 * NUMBER (z));
       FOR i := FIRST (z) TO LAST (z) DO
         EVAL types.put (M3ID.Add (z[i]), ORD (i));

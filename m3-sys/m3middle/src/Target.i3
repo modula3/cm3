@@ -156,10 +156,15 @@ TYPE (* machine supported types *)
     Void             (* not-a-type *)
   };
 
-PROCEDURE TypeImage (cgt: CGType ): TEXT; 
-
 CONST
-  TypeNames = ARRAY CGType OF TEXT {
+  TypeNamesFixedWidth = ARRAY CGType OF TEXT {
+    "Word8  ", "Int8   ", "Word16 ", "Int16  ",
+    "Word32 ", "Int32  ", "Word64 ", "Int64  ",
+    "Reel   ", "LReel  ", "XReel  ",
+    "Addr   ", "Struct ", "Void   "
+  };
+
+  TypeNamesDotted = ARRAY CGType OF TEXT {
     "Word.8",  "Int.8",
     "Word.16", "Int.16",
     "Word.32", "Int.32",
@@ -170,7 +175,17 @@ CONST
     "Void"
   };
 
-CONST
+  TypeNames = ARRAY CGType OF TEXT {
+    "Word8",  "Int8",
+    "Word16", "Int16",
+    "Word32", "Int32",
+    "Word64", "Int64",
+    "Reel", "LReel", "XReel",
+    "Addr",
+    "Struct",
+    "Void"
+  };
+
   SignedType = ARRAY CGType OF BOOLEAN {
      FALSE, TRUE,  FALSE, TRUE,  (* Word8 .. Int16 *)
      FALSE, TRUE,  FALSE, TRUE,  (* Word32 .. Int64 *)
