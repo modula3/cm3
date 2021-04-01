@@ -1364,9 +1364,11 @@ def Boot():
           "m3middle", "m3quake", "m3objfile", "m3linker", "m3back",
           "m3front" ])
     main_packages = ["cm3"]
-    #if nt:
+
+    # TODO: mklib = TRUE, something is wrong with the Makefile and it is not really needed,
+    # unless we want the minimal bootstrap system to be capable of crossing to NT
     #if True:
-    if not vms: # TODO
+    if nt:
         main_packages += ["mklib"]
     P += main_packages
 
