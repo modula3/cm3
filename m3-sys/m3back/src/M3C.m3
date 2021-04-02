@@ -1503,7 +1503,7 @@ BEGIN
         END;
     END;
     IF remove > 0 THEN
-        RETURN " /* cast_removed" & IntToDec(remove) & ": " & type_text & " */ " & left_text;
+        RETURN left_text;
     ELSE
         RETURN "(" & lparen & type_text & rparen & "(" & left_text & "))";
     END;
@@ -1535,7 +1535,7 @@ BEGIN
         END;
     END;
     IF remove > 0 THEN
-        RETURN " /* cast_removed" & IntToDec(remove) & ": (" & type_text & ") */ " & left_text;
+        RETURN left_text;
     ELSE
         RETURN "((" & type_text & ")(" & left_text & "))";
     END;
@@ -6666,8 +6666,8 @@ BEGIN
     t4 := "";
     (* Aborted calls evalute but ignore the parameters. *)
     IF abort_in_call THEN
-      t1 := " (void)( ";
-      t4 := " ) ";
+      t1 := "(void)(";
+      t4 := ")";
     ELSIF direct THEN (* TODO? No casts for indirect calls? *)
       (* Fix for setjmp. *)
       IF index = 0 AND self.proc_being_called.is_setjmp THEN
@@ -6675,11 +6675,11 @@ BEGIN
       ELSE
         WITH param = types[index] DO
           IF param.cgtype # CGType.Struct OR param.typeid = UID_ADDR THEN
-            t1 := " /* call_helper t1 */ (";
+            t1 := "(";
             (* TODO type.text *)
-            t2 := " /* call_helper t2 */ " & param.type_text;
-            t3 := " /* call_helper t3 */ )(";
-            t4 := " /* call_helper t4 */ )";
+            t2 := param.type_text;
+            t3 := ")(";
+            t4 := ")";
           END;
         END;
       END;
