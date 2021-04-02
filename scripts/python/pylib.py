@@ -707,11 +707,14 @@ GCC_BACKEND = not _CBackend
 #
 # TODO
 #
-_BuildDirC = ["", "c"]["c" in LowercaseArgv]
+#_BuildDirC = ["", "c"]["c" in LowercaseArgv]
 #_BuildDirC = ["", "c"]["+c" in LowercaseArgv]
 #_BuildDirC = ["", "c"]["+c" in LowercaseArgv and not TargetOnlyHasCBackend(Target)]
 #_BuildDirC = ["", "c"][_CBackend and not TargetOnlyHasCBackend(Target)]
 #_BuildDirC = ""
+
+# It is confusing as to when c is appended or not, so do it never.
+_BuildDirC = ""
 
 #-----------------------------------------------------------------------------
 #
