@@ -5639,7 +5639,14 @@ PROCEDURE load_indirect(self: T; offset: ByteOffset; mtype: MType; ztype: ZType)
 (* s0.ztype := Mem [s0.A + offset].mtype  *)
 VAR expr := get(self);
 BEGIN
-    self.comment("load_indirect");
+    IF DebugVerbose(self) THEN
+      self.comment("load_indirect",
+        " offset:" & IntToDec(offset),
+        " mtype:" & cgtypeToText[mtype] &
+        " ztype:" & cgtypeToText[ztype]);
+    ELSE
+      self.comment("load_indirect");
+    END;
     <* ASSERT CG_Bytes[ztype] >= CG_Bytes[mtype] *>
     pop(self);
     IF offset # 0 THEN
