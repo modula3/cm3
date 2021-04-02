@@ -693,7 +693,7 @@ def TargetOnlyHasCBackend(a):
 #
 # TODO
 #
-_BuildDirC = ["", "c"]["c" in LowercaseArgv]
+_BuildDirC = ""
 #_BuildDirC = ["", "c"]["+c" in LowercaseArgv]
 #_BuildDirC = ["", "c"]["+c" in LowercaseArgv and not TargetOnlyHasCBackend(Target)]
 #_BuildDirC = ["", "c"][_CBackend and not TargetOnlyHasCBackend(Target)]
