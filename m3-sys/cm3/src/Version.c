@@ -6,13 +6,15 @@ extern "C"
 {
 #endif
 
-const char* Version__Created(void); // declare for gcc/clang
+const char*
+__cdecl
+Version__Created(void); // declare for gcc/clang
 
 // Convert:
 //            1         2
 //  012345678901234567890123
 //  Wed Mar 17 23:52:48 2021 __TIMESTAMP__
-//  Mar 18 202100:14:43     __DATE__ __TIME__;
+//  Mar 18 202100:14:43      __DATE__ __TIME__;
 // to:
 //  2021-03-18 04:44:17
 
@@ -20,7 +22,9 @@ const char* Version__Created(void); // declare for gcc/clang
 static const char versionCreated1[] = __DATE__ __TIME__;
 static char versionCreated2[] = __DATE__ __TIME__;
 
-const char* Version__Created(void)
+const char*
+__cdecl
+Version__Created(void)
 {
     const char* month = versionCreated1;
     int i = -1;
