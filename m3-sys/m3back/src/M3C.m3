@@ -127,7 +127,7 @@ T = M3CG_DoNothing.T BRANDED "M3C.T" OBJECT
         width := 0;
 
     METHODS
-        Type_Init(type: Type_t; typedef := FALSE) := Type_Init;
+        Type_Init(type: Type_t) := Type_Init;
         TIntLiteral(type: CGType; READONLY i: Target.Int): TEXT := TIntLiteral;
 
     OVERRIDES
@@ -729,19 +729,19 @@ END type_forwardDeclare;
 PROCEDURE Type_CanBeDefined(type: Type_t; self: T): BOOLEAN =
 BEGIN
     IF type.state = Type_State.Defined THEN
-        (* self.comment("1 Type_CanBeDefined:FALSE:typeid " & TypeIDToText(type.typeid)); *)
+        self.comment("1 Type_CanBeDefined:FALSE:typeid " & TypeIDToText(type.typeid));
         RETURN FALSE;
     END;
     IF type.state = Type_State.CanBeDefined THEN
-        (* self.comment("2 Type_CanBeDefined:TRUE:typeid " & TypeIDToText(type.typeid)); *)
+        self.comment("2 Type_CanBeDefined:TRUE:typeid " & TypeIDToText(type.typeid));
         RETURN TRUE;
     END;
     IF type.canBeDefined(self) THEN
         type.state := Type_State.CanBeDefined;
-        (* self.comment("3 Type_CanBeDefined:TRUE:typeid " & TypeIDToText(type.typeid)); *)
+        self.comment("3 Type_CanBeDefined:TRUE:typeid " & TypeIDToText(type.typeid));
         RETURN TRUE;
     END;
-    (* self.comment("4 Type_CanBeDefined:FALSE:typeid " & TypeIDToText(type.typeid)); *)
+    self.comment("4 Type_CanBeDefined:FALSE:typeid " & TypeIDToText(type.typeid));
     RETURN FALSE;
 END Type_CanBeDefined;
 
@@ -805,16 +805,21 @@ VAR x := self;
 BEGIN
     (* We have recursive types TYPE FOO = UNTRACED REF FOO. Typos actually. *)
     IF type.points_to_typeid = type.typeid THEN
-      print(x, "/*self pointer_define*/typedef void* " & type.text & ";\n");
+      print(x, "/*1self pointer_define*/typedef void* " & type.text & ";\n");
       RETURN;
     END;
+
+    IF NOT ResolveType(self, type.points_to_typeid, type.points_to_type) THEN
+      print(x, "/*2pointer_define failing, falling back to void* for " & type.text & "*/;\n");
+    END;
+
     IF type.points_to_type = NIL THEN
-      print(x, "/*nil pointer_define*/typedef void* " & type.text & ";\n");
+      print(x, "/*3nil pointer_define*/typedef void* " & type.text & ";\n");
       RETURN;
     END;
     type.points_to_type.ForwardDeclare(self);
     type.points_to_type.Define(self);
-    print(x, "/*pointer_define*/typedef " & type.points_to_type.text & " * " & type.text & ";\n");
+    print(x, "/*4pointer_define*/typedef " & type.points_to_type.text & " * " & type.text & ";\n");
 END pointer_define;
 
 TYPE Packed_t = Type_t OBJECT
@@ -1123,8 +1128,13 @@ TYPE Enum_t  = Subrange_t OBJECT
 OVERRIDES
     define := enum_define;
     (* not used isEnum := type_isType_true; *)
-    canBeDefined := type_canBeDefined_true;
+    canBeDefined := enum_canBeDefined;
 END;
+
+PROCEDURE enum_canBeDefined(enum: Enum_t; x: T): BOOLEAN =
+BEGIN
+    RETURN enum.names # NIL;
+END enum_canBeDefined;
 
 PROCEDURE enum_define(enum: Enum_t; x: T) =
 VAR bit_size := enum.bit_size;
@@ -1239,7 +1249,7 @@ BEGIN
     RETURN NARROW(type, Type_t);
 END TypeidToType_Get;
 
-PROCEDURE Type_Init(self: T; type: Type_t; typedef := FALSE) =
+PROCEDURE Type_Init(self: T; type: Type_t) =
 VAR typedefs := ARRAY [0..1] OF TEXT{NIL, NIL};
     cgtype := type.cgtype;
 BEGIN
@@ -1265,16 +1275,14 @@ BEGIN
         EVAL self.typeidToType.put(type.typeid, type);
     END;
 
-    IF typedef THEN
-        (* typedef INT32 T1234; and such
-           TODO don't do this, it makes the code less readable. *)
-        FOR i := FIRST(typedefs) TO LAST(typedefs) DO
-            IF typedefs[i] # NIL AND typedefs[i] # Text_address THEN
-                print(self, "/*Type_Init*/typedef " & cgtypeToText[cgtype] & " " & typedefs[i] & ";\n");
-            END;
-        END;
+(*
+    FOR i := FIRST(typedefs) TO LAST(typedefs) DO
+      IF typedefs[i] # NIL AND typedefs[i] # Text_address THEN
+        print(self, "/*Type_Init*/typedef " & cgtypeToText[cgtype] & " " & typedefs[i] & ";\n");
         type.state := Type_State.Defined;
+      END;
     END;
+*)
 
     Type_ForwardDeclare(type, self);
     IF Type_CanBeDefined(type, self) THEN
@@ -2259,22 +2267,42 @@ END New;
 
 (*---------------------------------------------------------------------------*)
 
+(* Poorly defined types that are just ADDRESS *)
+(* TODO Some/all of these can be better typed *)
+
+TYPE AddressType_t = Type_CanBeDefinedTrue_t OBJECT
+OVERRIDES
+    define := addressType_define;
+END;
+
+PROCEDURE addressType_define(type: AddressType_t; self: T) =
+BEGIN
+    print(self, "/*addressType_define*/typedef ADDRESS " & type.text & ";\n");
+END addressType_define;
+
+(*---------------------------------------------------------------------------*)
+
 PROCEDURE DeclareBuiltinTypes(self: T) =
 VAR widechar_target_type: Target.CGType; 
 VAR widechar_last: INTEGER; 
 BEGIN
-    self.Type_Init(NEW(Integer_t, cgtype := Target.Integer.cg_type, typeid := UID_INTEGER, text := "INTEGER"));
-    self.Type_Init(NEW(Integer_t, cgtype := Target.Word.cg_type, typeid := UID_WORD, text := "WORD_T"));
+
+    (* Builtin/base types start out as state := Type_State.CanBeDefined or Defined  *)
+
+    self.Type_Init(NEW(Integer_t, state := Type_State.CanBeDefined, cgtype := Target.Integer.cg_type, typeid := UID_INTEGER, text := "INTEGER"));
+    self.Type_Init(NEW(Integer_t, state := Type_State.CanBeDefined, cgtype := Target.Word.cg_type, typeid := UID_WORD, text := "WORD_T"));
     print(self, "typedef WORD_T CARDINAL;\n");
     self.Type_Init(NEW(Integer_t, state := Type_State.Defined, cgtype := Target.Int64.cg_type, typeid := UID_LONGINT, text := "INT64"));
     self.Type_Init(NEW(Integer_t, state := Type_State.Defined, cgtype := Target.Word64.cg_type, typeid := UID_LONGWORD, text := "UINT64"));
 
-    self.Type_Init(NEW(Float_t, state := Type_State.Defined, cgtype := Target.Real.cg_type, typeid := UID_REEL, text := "REAL"));
-    self.Type_Init(NEW(Float_t, state := Type_State.Defined, cgtype := Target.Longreal.cg_type, typeid := UID_LREEL, text := "LONGREAL"));
-    self.Type_Init(NEW(Float_t, state := Type_State.Defined, cgtype := Target.Extended.cg_type, typeid := UID_XREEL, text := "EXTENDED"));
+    self.Type_Init(NEW(Float_t, state := Type_State.CanBeDefined, cgtype := Target.Real.cg_type, typeid := UID_REEL, text := "REAL"));
+    self.Type_Init(NEW(Float_t, state := Type_State.CanBeDefined, cgtype := Target.Longreal.cg_type, typeid := UID_LREEL, text := "LONGREAL"));
+    self.Type_Init(NEW(Float_t, state := Type_State.CanBeDefined, cgtype := Target.Extended.cg_type, typeid := UID_XREEL, text := "EXTENDED"));
 
-    self.Type_Init(NEW(Enum_t, cgtype := Target.Word8.cg_type, typeid := UID_BOOLEAN, max := IntToTarget(self, 1), text := "BOOLEAN"), typedef := TRUE);
-    self.Type_Init(NEW(Enum_t, cgtype := Target.Word8.cg_type, typeid := UID_CHAR, max := IntToTarget(self, 16_FF), text := "CHAR"), typedef := TRUE);
+(* Enum_t? *)
+    self.Type_Init(NEW(Integer_t, state := Type_State.CanBeDefined, cgtype := Target.Word8.cg_type, typeid := UID_BOOLEAN, (* max := IntToTarget(self, 1), *) text := "BOOLEAN"));
+    self.Type_Init(NEW(Integer_t, state := Type_State.CanBeDefined, cgtype := Target.Word8.cg_type, typeid := UID_CHAR, (* max := IntToTarget(self, 16_FF), *) text := "CHAR"));
+
     widechar_target_type := Target.Word16.cg_type; 
     widechar_last := 16_FFFF; (* The defaults. *) 
     IF self.multipass.op_counts[M3CG_Binary.Op.widechar_size] > 0 THEN 
@@ -2285,43 +2313,45 @@ BEGIN
           IF op_widechar_size.size = 32 THEN 
             widechar_target_type := Target.Word32.cg_type;
             widechar_last := 16_10FFFF;
-          END; 
+          END;
         ELSE
-        END; 
-      END; 
-    END; 
-    self.Type_Init(NEW(Enum_t, cgtype := widechar_target_type, typeid := UID_WIDECHAR, max := IntToTarget(self, widechar_last)
-                  , text := "WIDECHAR"), typedef := TRUE);
+        END;
+      END;
+    END;
+
+(* Enum_t? *)
+    self.Type_Init(NEW(Integer_t, state := Type_State.CanBeDefined, cgtype := widechar_target_type,
+                       typeid := UID_WIDECHAR, (* max := IntToTarget(self, widechar_last), *) text := "WIDECHAR"));
 
     (* self.declareTypes.declare_subrange(UID_RANGE_0_31, UID_INTEGER, TInt.Zero, IntToTarget(self, 31), Target.Integer.size); *)
     (* self.declareTypes.declare_subrange(UID_RANGE_0_63, UID_INTEGER, TInt.Zero, IntToTarget(self, 63), Target.Integer.size); *)
     
-    TYPE AddressType_t = RECORD
+    TYPE AddressTypeInit_t = RECORD
         typeid: TypeUID := 0;
         text: TEXT := NIL;
-    END;    
-    VAR addressTypes := ARRAY [0..13] OF AddressType_t {
-        AddressType_t {UID_MUTEX, "MUTEX"},
-        AddressType_t {UID_TEXT, "TEXT"},
-        AddressType_t {UID_ROOT, "ROOT"},
-        AddressType_t {UID_UNTRACED_ROOT, "UNTRACED_ROOT"},
-        AddressType_t {UID_REFANY, "REFANY"},
-        AddressType_t {UID_ADDR, Text_address},
-        AddressType_t {UID_PROC1, "PROC1"},
-        AddressType_t {UID_PROC2, "PROC2"},
-        (*AddressType_t {UID_PROC3, "PROC3"},*)
-        AddressType_t {UID_PROC4, "PROC4"},
-        AddressType_t {UID_PROC5, "PROC5"},
-        AddressType_t {UID_PROC6, "PROC6"},
-        AddressType_t {UID_PROC7, "PROC7"},
-        AddressType_t {UID_PROC8, "PROC8"},
-        AddressType_t {UID_NULL, "M3_NULL_T"}
+    END;
+    VAR addressTypes := ARRAY [0..13] OF AddressTypeInit_t {
+        AddressTypeInit_t {UID_MUTEX, "MUTEX"},
+        AddressTypeInit_t {UID_TEXT, "TEXT"},
+        AddressTypeInit_t {UID_ROOT, "ROOT"},
+        AddressTypeInit_t {UID_UNTRACED_ROOT, "UNTRACED_ROOT"},
+        AddressTypeInit_t {UID_REFANY, "REFANY"},
+        AddressTypeInit_t {UID_ADDR, Text_address},
+        AddressTypeInit_t {UID_PROC1, "PROC1"},
+        AddressTypeInit_t {UID_PROC2, "PROC2"},
+        (*AddressTypeInit_t {UID_PROC3, "PROC3"},*)
+        AddressTypeInit_t {UID_PROC4, "PROC4"},
+        AddressTypeInit_t {UID_PROC5, "PROC5"},
+        AddressTypeInit_t {UID_PROC6, "PROC6"},
+        AddressTypeInit_t {UID_PROC7, "PROC7"},
+        AddressTypeInit_t {UID_PROC8, "PROC8"},
+        AddressTypeInit_t {UID_NULL, "M3_NULL_T"}
     };
     BEGIN
         FOR i := FIRST(addressTypes) TO LAST(addressTypes) DO
             WITH a = addressTypes[i] DO
                 IF a.typeid # 0 THEN
-                    self.Type_Init(NEW(Type_t, cgtype := Target.Address.cg_type, typeid := a.typeid, text := a.text), typedef := TRUE);
+                    self.Type_Init(NEW(AddressType_t, state := Type_State.CanBeDefined, cgtype := Target.Address.cg_type, typeid := a.typeid, text := a.text));
                 END;
             END;
         END;
@@ -2901,7 +2931,8 @@ BEGIN
     ELSE
         x.comment("declare_proctype");
     END;
-    x.Type_Init(NEW(Type_t, cgtype := Target.Address.cg_type, typeid := typeid), typedef := TRUE); (* TODO? *)    
+    (* TODO Stronger types *)
+    x.Type_Init(NEW(AddressType_t, state := Type_State.CanBeDefined, cgtype := Target.Address.cg_type, typeid := typeid)); (* TODO? *)
     (* SuppressLineDirective(self, param_count + (ORD(raise_count >= 0) * raise_count), "declare_proctype param_count + raise_count"); *)
 END declare_proctype;
 
@@ -2989,7 +3020,8 @@ BEGIN
     ELSE
         x.comment("declare_opaque");
     END;
-    x.Type_Init(NEW(Type_t, cgtype := Target.Address.cg_type, typeid := typeid), typedef := TRUE); (* TODO? *)
+    (* TODO Stronger types *)
+    x.Type_Init(NEW(AddressType_t, cgtype := Target.Address.cg_type, typeid := typeid)); (* TODO? *)
 END declare_opaque;
 
 PROCEDURE reveal_opaque(self: DeclareTypes_t; lhs, rhs: TypeUID) =<*NOWARN*>
