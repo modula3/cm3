@@ -5,7 +5,7 @@ UNSAFE MODULE Makefile;
 
 IMPORT FS, M3File, M3Timers, OSError, Params, Process, Text, Thread, Wr;
 IMPORT Arg, M3Build, M3Options, M3Path, Msg, Utils, TextSeq, TextTextTbl;
-IMPORT MxConfig, Dirs, Version, M3toC;
+IMPORT MxConfig, Dirs, Version, M3toC, TextUtils;
 
 TYPE
   NK = M3Path.Kind;
@@ -624,9 +624,13 @@ PROCEDURE SetMode (VAR got_mode: BOOLEAN;  mode: MM) =
   END SetMode;
 
 PROCEDURE PrintVersion (exit: BOOLEAN) =
+  VAR gitInfo := Version.GitInfo;
   BEGIN
     IF traceQuake THEN MxConfig.EnableQuakeTrace() END;
     Msg.Out ("Critical Mass Modula-3 version ", Val("CM3_RELEASE"), Wr.EOL);
+    gitInfo := TextUtils.Substitute(Version.GitInfo, "\n", "\n           ");
+    gitInfo := TextUtils.SkipRight(gitInfo);
+    Msg.Out ("  GitInfo: ", gitInfo, Wr.EOL);
     Msg.Out ("  last updated: ", Val("CM3_CHANGED"), Wr.EOL);
     Msg.Out ("  compiled: ", Val("CM3_COMPILED"), Wr.EOL);
     Msg.Out ("  configuration: ", MxConfig.FindFile(), Wr.EOL);

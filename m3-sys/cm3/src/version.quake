@@ -62,6 +62,7 @@ proc version_impl(name) is
         NOW = datetime()
     end
     include(".." & SL & ".." & SL & ".." & SL & "scripts" & SL & "version.quake")
+
     >> tempname in
         write("IMPORT Ctypes;", CR)
         write("CONST", CR)
@@ -69,10 +70,48 @@ proc version_impl(name) is
         write("  Number = \"", CM3VERSIONNUM, "\";", CR)
         write("  LastChanged = \"", CM3LASTCHANGED, "\";", CR)
 
-        % This comment serves to retain the old behavior where
-        % cm3 prints the time it built, if any of it changes.
-        % This does not end up in the C backend output.
-        write("  (* Created = \"", NOW, "\"; *)", CR)
+        nul = "/dev/null"
+        if equal($OS, "Windows_NT")
+          nul = "nul:"
+        end
+
+        % TODO: Out of tree builds.
+
+        if (equal(0, try_exec("@git rev-parse --verify HEAD >", nul))) % or git rev-list -n 1 HEAD
+          local revision = compress(q_exec_get("git rev-parse --verify HEAD")[1])
+          local branch = compress(q_exec_get("git symbolic-ref -q --short HEAD")[1])
+          local remote_name = compress(q_exec_get("git config branch." & branch & ".remote")[1])
+          local remote_url = compress(q_exec_get("git config remote." & remote_name & ".url")[1])
+
+          % Replace git@github.com:x.git with https://github.com/x
+          % First requires ssh, second is open to public.
+
+          if equal(pn_lastext(remote_url), "git")
+            if tcontains(remote_url, "git@github.com:")
+              remote_url = subst(remote_url, "git@github.com:", "https://github.com/", 1)
+              remote_url = pn_join(pn_prefix(remote_url), pn_lastbase(remote_url))
+              remote_url = subst_chars(remote_url, "\\", "/")
+            end
+          end
+
+          write(
+          "  GitInfo = \"",
+            remote_url, "/", "commit", "/", revision, "\\n",
+            remote_url, "/", "commits", "/", branch, "\\n",
+            "remote: ", remote_url, "\\n",
+            "revision: ", revision, "\\n",
+            "branch: ", branch, "\\n", "\";", CR)
+
+          % Time "built" is still available, but it is not necessarily time built.
+          % It is when Version.c last compiled.
+          % We could touch it whenever git info changes, and have it use timestamp instead of time date.
+        else
+          % This comment serves to retain the old behavior where
+          % cm3 prints the time it built, if any of it changes.
+          % This does not end up in the C backend output.
+          write("  (* Created = \"", NOW, "\"; *)", CR)
+          write("  GitInfo = \"unknown\";", CR)
+        end
 
         % When cm3 uses this data, it is describing the HOST.
         % They are reasonable defaults for the TARGET, ASSUMING a NATIVE build.
@@ -86,6 +125,7 @@ proc version_impl(name) is
 
         write("END ", name, ".", CR)
     end
+
     cp_if(tempname, filename)
     derived_interface(name, HIDDEN)
 end
