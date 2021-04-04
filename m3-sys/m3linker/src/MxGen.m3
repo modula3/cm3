@@ -76,25 +76,32 @@ PROCEDURE GenerateMain (base: Mx.LinkSet;  c_output: Wr.T;  cg_output: M3CG.T;
       IF (s.gui) THEN
         Out (s, "#include <windows.h>", EOL);
       END;
+      Out (s, EOL);
+
       Out (s, "#if __INITIAL_POINTER_SIZE == 64", EOL);
       Out (s, "typedef __int64 INTEGER;", EOL);
       Out (s, "#else", EOL);
       Out (s, "typedef ptrdiff_t INTEGER;", EOL);
-      Out (s, "#endif", EOL);
+      Out (s, "#endif", EOL, EOL);
+
+      Out (s, "#if !defined(_MSC_VER) && !defined(__cdecl)", EOL);
+      Out (s, "#define __cdecl /* nothing */", EOL);
+      Out (s, "#endif", EOL, EOL);
+
       Out (s, "#ifdef __cplusplus", EOL);
       Out (s, "extern \"C\" {", EOL);
-      Out (s, "#endif", EOL);
-      Out (s, "void RTLinker__InitRuntime(INTEGER, char**, char**, void*);", EOL);
-      Out (s, "void RTProcess__Exit(INTEGER);", EOL);
-      Out (s, "void* Main_M3(void); /* ? */", EOL);
-      Out (s, "void RTLinker__AddUnitImports(void* (*)(void)); /* ? */", EOL);
-      Out (s, "void RTLinker__AddUnit(void* (*)(void)); /* ? */", EOL);
+      Out (s, "#endif", EOL, EOL);
+
+      Out (s, "void __cdecl RTLinker__InitRuntime(INTEGER, char**, char**, void*);", EOL);
+      Out (s, "void __cdecl RTProcess__Exit(INTEGER);", EOL);
+      IF NOT s.lazyInit THEN
+        Out (s, "void __cdecl RTLinker__AddUnitImports(void* (__cdecl*)(void));", EOL);
+      END;
+      Out (s, "void __cdecl RTLinker__AddUnit(void* (__cdecl*)(void));", EOL, EOL);
+    ELSE
+      GenCGTypeDecls (s);
     END;
 
-    IF s.genC
-      THEN GenCTypeDecls (s);
-      ELSE GenCGTypeDecls (s);
-    END;
     IF lazy THEN
       ImportMain (s);
     ELSE
@@ -102,22 +109,17 @@ PROCEDURE GenerateMain (base: Mx.LinkSet;  c_output: Wr.T;  cg_output: M3CG.T;
     END;
 
     IF s.genC THEN
-      Out (s, "#ifdef __cplusplus", EOL);
+      Out (s, EOL, "#ifdef __cplusplus", EOL);
       Out (s, "} /* extern \"C\" */", EOL);
-      Out (s, "#endif", EOL);
+      Out (s, "#endif", EOL, EOL);
+      GenerateCEntry (s)
+    ELSE
+      GenerateCGEntry (s);
     END;
 
-    IF s.genC
-      THEN GenerateCEntry (s);
-      ELSE GenerateCGEntry (s);
-    END;
   END GenerateMain;
 
 (*------------------------------------------------------------------------*)
-
-PROCEDURE GenCTypeDecls (<*UNUSED*> VAR s: State) =
-  BEGIN
-  END GenCTypeDecls;
 
 PROCEDURE GenCGTypeDecls (VAR s: State) =
   VAR
@@ -282,7 +284,7 @@ PROCEDURE ImportUnit (VAR s: State;  ui: UnitInfo) =
   BEGIN
     ui.binder := UnitName (u);
     IF s.genC THEN
-      Out (s, "extern void* ", ui.binder, "(void);", EOL);
+      Out (s, "void* __cdecl ", ui.binder, "(void);", EOL);
     ELSE
       ui.cg_proc := s.cg.import_procedure (M3ID.Add (ui.binder), 1,
                                           Target.CGType.Addr,
@@ -336,17 +338,16 @@ PROCEDURE GenerateCEntry (VAR s: State) =
     END GenAddUnitImports;
 
   BEGIN
+    Out (s, EOL);
     IF (s.gui) THEN
       Out (s, "int WINAPI ");
-      Out (s, "WinMain (HINSTANCE self, HINSTANCE prev,", EOL);
-      Out (s, "                    LPSTR args, int mode)", EOL);
+      Out (s, "WinMain (HINSTANCE self, HINSTANCE prev, PSTR args, int mode)", EOL);
       Out (s, "{", EOL);
-      Out (s, "  RTLinker__InitRuntime (-1, args, ");
-      Out (s,                        "GetEnvironmentStringsA(), self);", EOL);
+      Out (s, "  RTLinker__InitRuntime (-1, args, GetEnvironmentStringsA(), self);", EOL);
     ELSE
       Out (s, "int main (int argc, char** argv, char** envp)", EOL);
       Out (s, "{", EOL);
-      Out (s, "  RTLinker__InitRuntime (argc, argv, envp, (void*)0);", EOL);
+      Out (s, "  RTLinker__InitRuntime (argc, argv, envp, 0);", EOL);
     END;
 
     GenAddUnitImports(s.main_units);
@@ -416,10 +417,12 @@ PROCEDURE GenerateCGEntry (VAR s: State) =
                                        Target.CGType.Void, Target.DefaultCall);
     EVAL DeclareParam (s, "m", addr_t);
 
-    link_proc2 := s.cg.import_procedure (M3ID.Add ("RTLinker__AddUnitImports"),
-                                         1, Target.CGType.Void,
-                                         Target.DefaultCall);
-    EVAL DeclareParam (s, "m", addr_t);
+    IF NOT s.lazyInit THEN
+      link_proc2 := s.cg.import_procedure (M3ID.Add ("RTLinker__AddUnitImports"),
+                                           1, Target.CGType.Void,
+                                           Target.DefaultCall);
+      EVAL DeclareParam (s, "m", addr_t);
+    END;
 
     exit_proc := s.cg.import_procedure (M3ID.Add ("RTProcess__Exit"), 1,
                                        Target.CGType.Void, Target.DefaultCall);
@@ -428,7 +431,7 @@ PROCEDURE GenerateCGEntry (VAR s: State) =
     IF (s.gui) THEN
       (*
          #include <windows.h>
-         extern LPSTR WINAPI GetEnvironmentStringsA ();
+         PSTR WINAPI GetEnvironmentStringsA(void);
       *)
       winapi := Target.FindConvention ("WINAPI");
       getenv := s.cg.import_procedure (M3ID.Add ("GetEnvironmentStringsA"), 0, 
