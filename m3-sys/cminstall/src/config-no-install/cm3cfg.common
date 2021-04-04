@@ -595,11 +595,9 @@ proc skip_link(prog, shared) is
     local readonly pgm_file = format(FormatExe, prog)
     local readonly manifest_file = pgm_file & ".manifest"
     local readonly pdb_file = prog & ".pdb"
-    local readonly listing  = prog & ".lst"
 
     local readonly Outputs = [
         pgm_file,
-        listing,
         manifest_file,
         pdb_file,
         prog & ".ilk"]

@@ -669,30 +669,14 @@ proc compile_c_ms(source, object, options, optimize, debug) is
     end
     args += "-Oi"
 
-    % Visual C++ always echos source file names as they are compiled.
-    % This runs afoul of the goals of reducing the output of building.
-    % Therefore, redirect to a file and only be noisy upon errors.
-
-    local Listing = "_m3.lst"
-    if defined("pos")
-       Listing = Path_GetLastElement (source) & ".lst"
-    end
     local readonly Command = ["cl.exe", escape(subst_chars(args, "\\", "/")), "-c", escape(source), "-Fo" & object]
-    local ret = try_exec("@" & Command, ">", Listing)
+    local ret = try_exec("@" & Command)
 
     if not equal(ret, 0) and equal(source, "_m3main.c")
         % for _m3main.c, try also as C instead of C++ for older cm3
-        ret = try_exec("@" & Command, "-TC >", Listing)
+        ret = try_exec("@" & Command, "-TC")
     end
 
-    if not equal (ret, 0)
-        write (Command & CR)
-        if defined ("xxfs_contents") % fs_contents requires newer tools
-            write (fs_contents (Listing))
-        else
-            exec ("@type", Listing) % only one case to test
-        end
-    end
     return ret
 end
 
@@ -877,7 +861,7 @@ end
 % make_lib and m3_link need to share code!
 %
 
-proc make_dll_ms(options, objects, imported_libs, lib_file, def_file, dll_file, listing, LinkResponseFile) is
+proc make_dll_ms(options, objects, imported_libs, lib_file, def_file, dll_file, LinkResponseFile) is
     return try_exec(
         "@link.exe",
         WriteResponseFile(
@@ -898,14 +882,12 @@ proc make_dll_ms(options, objects, imported_libs, lib_file, def_file, dll_file, 
                  subst_chars(UseUconstants, "/", "\\"),
                  subst_chars(UseWinConstants, "/", "\\"),
             ]),
-        "2>&1",
-        ">", listing
-        )
+        "2>&1")
 end
 
 %------------------------------------------------------------------------------
 
-proc make_dll_gnu(options, objects, imported_libs, lib_file, def_file, dll_file, listing, LinkResponseFile) is
+proc make_dll_gnu(options, objects, imported_libs, lib_file, def_file, dll_file, LinkResponseFile) is
     if M3_PROFILING
         objects += "-pg"
     end
@@ -936,9 +918,7 @@ proc make_dll_gnu(options, objects, imported_libs, lib_file, def_file, dll_file,
                         escape(UseWinConstants),
                         %escape(UseHand),
                     ]),
-            "2>&1",
-            ">", listing
-            )
+            "2>&1")
 end
 
 %------------------------------------------------------------------------------
@@ -952,7 +932,6 @@ proc make_lib(lib, options, objects, imported_libs, shared) is
     local readonly dll_file = format(FormatDll, lib)
     local readonly manifest_file  = dll_file & ".manifest"
     local readonly pdb_file = lib & ".pdb"
-    local readonly listing  = lib & ".lst"
     local readonly LibResponseFile = GetResponseFileName()
     local LinkResponseFile = LibResponseFile
     local ShipHand = equal (lib, "m3core") and FileExists("hand" & Obj)
@@ -980,7 +959,6 @@ proc make_lib(lib, options, objects, imported_libs, shared) is
         lib0_file,
         dll_file,
         def_file,
-        listing,
         manifest_file,
         pdb_file,
         LibResponseFile,
@@ -1010,18 +988,9 @@ proc make_lib(lib, options, objects, imported_libs, shared) is
                 options,
                 objects,
             ]),
-        "2>&1",
-        ">", listing
-        )
+        "2>&1")
     if not equal(ret_code, 0) or not FileExists(lib_file)
-        error(
-            "library creation failed, see "
-            & GetPackageDirectory()
-            & BUILD_DIR
-            & SL
-            & listing
-            & " for more information"
-            & EOL)
+        error("library creation failed" & EOL)
         if not equal(ret_code, 0)
             return ret_code
         end
@@ -1043,7 +1012,6 @@ proc make_lib(lib, options, objects, imported_libs, shared) is
                     lib_file,
                     def_file,
                     dll_file,
-                    listing,
                     LinkResponseFile)
         else
             ret_code =
@@ -1054,19 +1022,11 @@ proc make_lib(lib, options, objects, imported_libs, shared) is
                     lib_file,
                     def_file,
                     dll_file,
-                    listing,
                     LinkResponseFile)
         end
 
         if not equal(ret_code, 0) or not FileExists(dll_file)
-            error(
-                "dynamic link library creation failed, see "
-                & GetPackageDirectory()
-                & BUILD_DIR
-                & SL
-                & listing
-                & " for more information"
-                & EOL)
+            error("dynamic link library creation failed" & EOL)
             if not equal(ret_code, 0)
                 return ret_code
             end
@@ -1106,14 +1066,12 @@ proc skip_lib(lib, shared) is
     local readonly dll_file = format(FormatDll, lib)
     local manifest_file  = dll_file & ".manifest"
     local pdb_file  = lib & ".pdb"
-    local listing   = lib & ".lst"
 
     local readonly Outputs = [
         lib_file,
         lib0_file,
         dll_file,
         def_file,
-        listing,
         manifest_file,
         pdb_file,
         lib & ".ilk"]
@@ -1213,7 +1171,7 @@ end
 
 %------------------------------------------------------------------------------
 
-proc m3_link_ms(prog, options, objects, imported_libs, shared, pgm_file, listing, LinkResponseFile) is
+proc m3_link_ms(prog, options, objects, imported_libs, shared, pgm_file, LinkResponseFile) is
     local entry = ["-subsystem:console", "-entry:mainCRTStartup"]
     if defined("M3_WINDOWS_GUI")
         if M3_WINDOWS_GUI
@@ -1237,14 +1195,12 @@ proc m3_link_ms(prog, options, objects, imported_libs, shared, pgm_file, listing
                 subst_chars(UseWinConstants, "/", "\\"),
                 subst_chars(UseUconstants, "/", "\\"),
             ]),
-        "2>&1",
-        ">", listing
-        )
+        "2>&1")
 end
 
 %------------------------------------------------------------------------------
 
-proc m3_link_gnu(prog, options, objects, imported_libs, shared, pgm_file, listing, LinkResponseFile) is
+proc m3_link_gnu(prog, options, objects, imported_libs, shared, pgm_file, LinkResponseFile) is
     if not shared
         %options += "-static"
     end
@@ -1283,9 +1239,7 @@ proc m3_link_gnu(prog, options, objects, imported_libs, shared, pgm_file, listin
                         escape(UseWinConstants),
                         %escape(UseHand),
                     ]),
-            "2>&1",
-            ">", listing
-            )
+            "2>&1")
 end
 
 %------------------------------------------------------------------------------
@@ -1295,12 +1249,10 @@ proc m3_link(prog, options, objects, imported_libs, shared) is
     local readonly pgm_file = format(FormatExe, prog)
     local readonly manifest_file = pgm_file & ".manifest"
     local readonly pdb_file = prog & ".pdb"
-    local readonly listing  = prog & ".lst"
     local readonly LinkResponseFile = GetResponseFileName()
 
     local readonly Outputs = [
         pgm_file,
-        listing,
         manifest_file,
         pdb_file,
         LinkResponseFile,
@@ -1326,7 +1278,6 @@ proc m3_link(prog, options, objects, imported_libs, shared) is
             imported_libs,
             shared,
             pgm_file,
-            listing,
             LinkResponseFile)
     else
         ret_code = m3_link_gnu(
@@ -1336,19 +1287,11 @@ proc m3_link(prog, options, objects, imported_libs, shared) is
             imported_libs,
             shared,
             pgm_file,
-            listing,
             LinkResponseFile)
     end
 
     if not equal(ret_code, 0) or not FileExists(pgm_file)
-        error(
-            "link failed, see "
-            & GetPackageDirectory()
-            & BUILD_DIR
-            & SL
-            & listing
-            & " for more information"
-            & EOL)
+        error("link failed" & EOL)
         if not equal(ret_code, 0)
             return ret_code
         end
