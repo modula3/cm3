@@ -1223,12 +1223,14 @@ def Boot():
             "AMD64_NT"      : "cl",
             }.get(Config) or "g++"
 
+        # For now, bootstrap does not build any shared libraries and -fPIC is not needed.
+        # -fPIC breaks Interix and is not needed on Cygwin/Mingw.
         CCompilerFlags = {
             "I386_INTERIX"  : " -g ", # gcc -fPIC generates incorrect code on Interix
-            "SOLgnu"        : " -g ", # -fPIC?
+            "SOLgnu"        : " -g ",
             #"AMD64_NT"      : " -Zi -MD ",
             "AMD64_NT"      : " -Zi ", # hack some problem with exception handling and alignment otherwise
-            }.get(Config) or " -g -fPIC "
+            }.get(Config) or " -g "
 
         CCompilerOut = {
             "AMD64_NT"      : "-Fo./",
