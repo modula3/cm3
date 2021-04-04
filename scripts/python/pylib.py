@@ -1203,25 +1203,25 @@ def Boot():
     CCompilerOut = ""
 
     if alpha32vms:
-        CCompiler = "cc"
+        CCompiler = "c++"
         CCompilerFlags = " "
     elif alpha64vms:
-        CCompiler = "cc"
+        CCompiler = "c++"
         CCompilerFlags = "/pointer_size=64 "
     elif solaris or solsun:
-        CCompiler = "/usr/bin/cc"
+        CCompiler = "/usr/bin/c++"
         CCompilerFlags = " -g -mt -xldscope=symbolic "
         CCompiler = "./c_compiler"
         CopyFile("./c_compiler", BootDir)
     elif osf:
-        CCompiler = "/usr/bin/cc"
+        CCompiler = "/usr/bin/c++"
         CCompilerFlags = " -g -pthread "
     else:
         # gcc and other platforms
         CCompiler = {
-            "SOLgnu" : "/usr/sfw/bin/gcc",
+            "SOLgnu" : "/usr/sfw/bin/g++",
             "AMD64_NT"      : "cl",
-            }.get(Config) or "gcc"
+            }.get(Config) or "g++"
 
         CCompilerFlags = {
             "I386_INTERIX"  : " -g ", # gcc -fPIC generates incorrect code on Interix

@@ -3,20 +3,20 @@
 import os, sys
 
 PossibleExecutables = [
+    "/usr/bin/CC",
     "/opt/developerstudio12.6/bin/CC",
     "/opt/developerstudio12.5/bin/CC",
     "/opt/solarisstudio12.4/bin/CC",
-    #"/usr/bin/g++",     # Does not understand the Sun cc flags.
-    #"/usr/bin/clang++", # Does not understand the Sun cc flags.
-    "/usr/bin/cc",
-    "/opt/solarisstudio12.3/bin/cc",
-    "/opt/solstudio12.2/bin/cc",
-    "/opt/studio/SOS12/SUNWspro/bin/cc",
-    "/opt/studio/SOS11/SUNWspro/bin/cc",
-    "/opt/SUNWspro/bin/cc",
-    #"/opt/csw/gcc4/bin/gcc",
-    #"/usr/sfw/bin/gcc",
-    #"/opt/csw/gcc4/bin/gcc",
+    "/opt/solarisstudio12.3/bin/CC",
+    "/opt/solstudio12.2/bin/CC",
+    "/opt/studio/SOS12/SUNWspro/bin/CC",
+    "/opt/studio/SOS11/SUNWspro/bin/CC",
+    # Good idea but mind the Sun cc switches.
+    #"/usr/bin/c++",
+    #"/usr/bin/g++",
+    #"/usr/sfw/bin/g++",
+    #"/opt/csw/gcc4/bin/g++",
+    #"/usr/bin/clang++",
     ]
 
 for Executable in PossibleExecutables:
