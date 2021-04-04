@@ -1209,8 +1209,8 @@ def Boot():
         CCompiler = "c++"
         CCompilerFlags = "/pointer_size=64 "
     elif solaris or solsun:
-        CCompiler = "/usr/bin/c++"
-        CCompilerFlags = " -g -mt -xldscope=symbolic "
+        #CCompiler = "/usr/bin/c++"
+        #CCompilerFlags = " -g -mt -xldscope=symbolic "
         CCompiler = "./c_compiler"
         CopyFile("./c_compiler", BootDir)
     elif osf:
