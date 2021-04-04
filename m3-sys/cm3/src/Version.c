@@ -1,6 +1,10 @@
 #include <assert.h>
 #include <string.h>
 
+#if !defined(_MSC_VER) && !defined(__cdecl)
+#define __cdecl /* nothing */
+#endif
+
 #ifdef __cplusplus
 extern "C"
 {
