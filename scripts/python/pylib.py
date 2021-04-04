@@ -1227,10 +1227,9 @@ def Boot():
         # -fPIC breaks Interix and is not needed on Cygwin/Mingw.
         CCompilerFlags = {
             "I386_INTERIX"  : " -g ", # gcc -fPIC generates incorrect code on Interix
-            "SOLgnu"        : " -g ",
             #"AMD64_NT"      : " -Zi -MD ",
             "AMD64_NT"      : " -Zi ", # hack some problem with exception handling and alignment otherwise
-            }.get(Config) or " -g "
+            }.get(Config) or " -pthread -g "
 
         CCompilerOut = {
             "AMD64_NT"      : "-Fo./",
@@ -1276,13 +1275,13 @@ def Boot():
     elif mingw:
         pass
     elif solaris or sol:
-        Link = Link  +  " -lpthread -lrt -lm -lnsl -lsocket -lc "
+        Link = Link  +  " -lpthread -lrt -lm -lnsl -lsocket -lc -pthread "
     elif hpux:
-        Link = Link + " -lrt -lm -lpthread "
+        Link = Link + " -lrt -lm -lpthread -pthread "
     elif osf:
-        Link = Link + " -lrt -lm "
+        Link = Link + " -lrt -lm -pthread "
     elif interix:
-        Link = Link + " -lm " # -pthread?
+        Link = Link + " -lm -pthread "
     elif nt:
         if CBackend:
             #Link = "link /incremental:no /debug /pdb:$(@R).pdb *." + obj + " "
@@ -1295,7 +1294,7 @@ def Boot():
     elif freebsd or netbsd or openbsd or cygwin or linux:
         Link = Link  +  " -lm -pthread "
     else:
-        Link = Link + " -lm -lpthread "
+        Link = Link + " -lm -lpthread -pthread "
 
     # add -c to compiler but not link (i.e. not CCompilerFlags)
 
