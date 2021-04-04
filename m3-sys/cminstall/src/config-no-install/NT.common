@@ -881,8 +881,7 @@ proc make_dll_ms(options, objects, imported_libs, lib_file, def_file, dll_file, 
                  subst_chars(UseHand, "/", "\\"),
                  subst_chars(UseUconstants, "/", "\\"),
                  subst_chars(UseWinConstants, "/", "\\"),
-            ]),
-        "2>&1")
+            ]))
 end
 
 %------------------------------------------------------------------------------
@@ -917,8 +916,7 @@ proc make_dll_gnu(options, objects, imported_libs, lib_file, def_file, dll_file,
                         escape(UseUconstants),
                         escape(UseWinConstants),
                         %escape(UseHand),
-                    ]),
-            "2>&1")
+                    ]))
 end
 
 %------------------------------------------------------------------------------
@@ -987,8 +985,7 @@ proc make_lib(lib, options, objects, imported_libs, shared) is
                 "-out:" & lib_file,
                 options,
                 objects,
-            ]),
-        "2>&1")
+            ]))
     if not equal(ret_code, 0) or not FileExists(lib_file)
         error("library creation failed" & EOL)
         if not equal(ret_code, 0)
@@ -1194,8 +1191,7 @@ proc m3_link_ms(prog, options, objects, imported_libs, shared, pgm_file, LinkRes
                 subst_chars(UseHand, "/", "\\"),
                 subst_chars(UseWinConstants, "/", "\\"),
                 subst_chars(UseUconstants, "/", "\\"),
-            ]),
-        "2>&1")
+            ]))
 end
 
 %------------------------------------------------------------------------------
@@ -1238,8 +1234,7 @@ proc m3_link_gnu(prog, options, objects, imported_libs, shared, pgm_file, LinkRe
                         escape(UseUconstants),
                         escape(UseWinConstants),
                         %escape(UseHand),
-                    ]),
-            "2>&1")
+                    ]))
 end
 
 %------------------------------------------------------------------------------
