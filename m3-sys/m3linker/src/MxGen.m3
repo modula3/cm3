@@ -76,9 +76,8 @@ PROCEDURE GenerateMain (base: Mx.LinkSet;  c_output: Wr.T;  cg_output: M3CG.T;
       IF (s.gui) THEN
         Out (s, "#include <windows.h>", EOL);
       END;
-      Out (s, EOL);
 
-      Out (s, "#if __INITIAL_POINTER_SIZE == 64", EOL);
+      Out (s, EOL, "#if __INITIAL_POINTER_SIZE == 64", EOL);
       Out (s, "typedef __int64 INTEGER;", EOL);
       Out (s, "#else", EOL);
       Out (s, "typedef ptrdiff_t INTEGER;", EOL);
@@ -437,7 +436,7 @@ PROCEDURE GenerateCGEntry (VAR s: State) =
       getenv := s.cg.import_procedure (M3ID.Add ("GetEnvironmentStringsA"), 0, 
                                        addr_t, winapi);
 
-      (* int WINAPI WinMain(HINSTANCE self, HINSTANCE prev, LPSTR args, int mode) *)
+      (* int WINAPI WinMain(HINSTANCE self, HINSTANCE prev, PSTR args, int mode) *)
       main := s.cg.declare_procedure (M3ID.Add ("WinMain"), (*n_params*) 4,
                                  int_t, (*lev*) 0, winapi, TRUE, NIL);
       self := DeclareParam (s, "self", addr_t);
