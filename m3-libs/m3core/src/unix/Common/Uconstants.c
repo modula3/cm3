@@ -64,6 +64,7 @@ extern "C" {
 #endif // FreeBSD/clang++
 
 typedef union {
+#undef X
 #define X(x) char a##x[x];
 #include "UerrorX.h"
 } M3UerrorCheckMax_t;
