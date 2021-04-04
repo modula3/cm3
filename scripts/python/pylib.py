@@ -1227,8 +1227,8 @@ def Boot():
         # -fPIC breaks Interix and is not needed on Cygwin/Mingw.
         CCompilerFlags = {
             "I386_INTERIX"  : " -g ", # gcc -fPIC generates incorrect code on Interix
-            #"AMD64_NT"      : " -Zi -MD ",
-            "AMD64_NT"      : " -Zi ", # hack some problem with exception handling and alignment otherwise
+            #"AMD64_NT"      : " -Zi -MD -Gy ",
+            "AMD64_NT"      : " -Zi -Gy ", # hack some problem with exception handling and alignment otherwise
             }.get(Config) or " -pthread -g "
 
         #CCompilerOut = {
