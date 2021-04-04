@@ -1865,7 +1865,7 @@ PROCEDURE Proc_Locals(p: Proc_t; i: INTEGER): Var_t = BEGIN RETURN NARROW(p.loca
 CONST Prefix = ARRAY OF TEXT {
 (* It is unfortunate to #include anything -- slows down compilation;
    try to minimize/eliminate it. *)
-"#ifdef __SUNPRO_C",
+"#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)", (* C or C++ *)
 (*"#pragma error_messages(off, E_INIT_DOES_NOT_FIT)",*)
 "#pragma error_messages(off, E_STATEMENT_NOT_REACHED)",
 "#endif",
