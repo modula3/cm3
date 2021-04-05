@@ -1200,6 +1200,7 @@ def Boot():
 
     CBackend = _CBackend
 
+    CCompilerFlags = " "
     CCompilerOut = ""
 
     if alpha32vms:
