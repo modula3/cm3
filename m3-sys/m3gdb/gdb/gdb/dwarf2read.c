@@ -1169,9 +1169,6 @@ dwarf2_locate_sections (bfd *ignore_abfd, asection *sectp, void *ignore_ptr)
 void
 dwarf2_build_psymtabs (struct objfile *objfile, int mainline)
 {
-
-  return; /* Temporary. */ 
-
   /* We definitely need the .debug_info and .debug_abbrev sections */
 
   dwarf2_per_objfile->info_buffer = dwarf2_read_section (objfile, dwarf_info_section);
@@ -2244,6 +2241,7 @@ skip_one_die (char *info_ptr, struct abbrev_info *abbrev,
 	case DW_FORM_strp:
 	  info_ptr += cu->header.offset_size;
 	  break;
+	case DW_FORM_exprloc:
 	case DW_FORM_block:
 	  info_ptr += read_unsigned_leb128 (abfd, info_ptr, &bytes_read);
 	  info_ptr += bytes_read;
@@ -2273,7 +2271,8 @@ skip_one_die (char *info_ptr, struct abbrev_info *abbrev,
           if (cu->header.offset_size == 4) { info_ptr += 4; }
           else { info_ptr += 8; }
           break; 
-
+    case DW_FORM_flag_present:
+        break;
 	default:
 	  error (_("Dwarf Error: Cannot handle %s in DWARF reader [in module %s]"),
 		 dwarf_form_name (form),
@@ -5689,6 +5688,7 @@ read_attribute_value (struct attribute *attr, unsigned form,
 					       &bytes_read);
       info_ptr += bytes_read;
       break;
+    case DW_FORM_exprloc:
     case DW_FORM_block:
       blk = dwarf_alloc_block (cu);
       blk->size = read_unsigned_leb128 (abfd, info_ptr, &bytes_read);
@@ -5757,6 +5757,9 @@ read_attribute_value (struct attribute *attr, unsigned form,
         { DW_UNSND (attr) = read_8_bytes (abfd, info_ptr);
           info_ptr += 8;
         }
+      break;
+    case DW_FORM_flag_present:
+      DW_UNSND (attr) = 1;
       break;
     default:
       error (_("Dwarf Error: Cannot handle %s in DWARF reader [in module %s]"),
@@ -7079,6 +7082,7 @@ dwarf2_const_value (struct attribute *attr, struct symbol *sym,
     case DW_FORM_block1:
     case DW_FORM_block2:
     case DW_FORM_block4:
+    case DW_FORM_exprloc:
     case DW_FORM_block:
       blk = DW_BLOCK (attr);
       if (TYPE_LENGTH (SYMBOL_TYPE (sym)) != blk->size)
@@ -8416,6 +8420,9 @@ dump_die (struct die_info *die)
 	case DW_FORM_block1:
 	  fprintf_unfiltered (gdb_stderr, "block: size %d", DW_BLOCK (&die->attrs[i])->size);
 	  break;
+	case DW_FORM_exprloc:
+	  fprintf_unfiltered (gdb_stderr, "expression: size %d", DW_BLOCK (&die->attrs[i])->size);
+	  break;
 	case DW_FORM_ref1:
 	case DW_FORM_ref2:
 	case DW_FORM_ref4:
@@ -8446,6 +8453,9 @@ dump_die (struct die_info *die)
 	  /* the reader will have reduced the indirect form to
 	     the "base form" so this form should not occur */
 	  fprintf_unfiltered (gdb_stderr, "unexpected attribute form: DW_FORM_indirect");
+	  break;
+	case DW_FORM_flag_present:
+	  fprintf_unfiltered (gdb_stderr, "flag: TRUE");
 	  break;
 	default:
 	  fprintf_unfiltered (gdb_stderr, "unsupported attribute form: %d.",
@@ -8615,13 +8625,22 @@ decode_locdesc (struct dwarf_block *blk, struct dwarf2_cu *cu)
   struct objfile *objfile = cu->objfile;
   struct comp_unit_head *cu_header = &cu->header;
   int i;
-  int size = blk->size;
-  char *data = blk->data;
+  int size;
+  char *data;
   CORE_ADDR stack[64];
   int stacki;
   unsigned int bytes_read, unsnd;
   unsigned char op;
 
+  /* Modula-3 hack */
+  if (blk < (void*)(ptrdiff_t)0x1000)
+      return 0;
+
+  /* Modula-3 hack, safer. */
+  return 0;
+
+  size = blk->size;
+  data = blk->data;
   i = 0;
   stacki = 0;
   stack[stacki] = 0;
@@ -9245,7 +9264,8 @@ attr_form_is_block (struct attribute *attr)
       attr->form == DW_FORM_block1
       || attr->form == DW_FORM_block2
       || attr->form == DW_FORM_block4
-      || attr->form == DW_FORM_block);
+      || attr->form == DW_FORM_block
+      || attr->form == DW_FORM_exprloc);
 }
 
 static void
