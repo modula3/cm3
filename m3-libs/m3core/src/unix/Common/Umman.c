@@ -7,8 +7,9 @@
 
 #ifndef _WIN32
 
-M3WRAP3(int, mprotect, ADDRESS, WORD_T, int)
-M3WRAP6(ADDRESS, mmap, ADDRESS, WORD_T, int, int, int, m3_off_t)
-M3WRAP2(int, munmap, ADDRESS, WORD_T)
+// char* instead of ADDRESS for default Solaris
+M3WRAP3(int, mprotect, caddr_t, WORD_T, int)
+M3WRAP6(ADDRESS, mmap, caddr_t, WORD_T, int, int, int, m3_off_t)
+M3WRAP2(int, munmap, caddr_t, WORD_T)
 
 #endif
