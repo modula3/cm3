@@ -651,6 +651,151 @@ void
 __cdecl
 Process__RegisterExitor(void (__cdecl*)(void));
 
+#if defined(__APPLE__)
+
+#if defined(__i386__)
+#if __DARWIN_UNIX03
+#define GET_PC(context) \
+    context->uc_mcontext->__ss.__eip
+#else
+#define GET_PC(context) \
+    context->uc_mcontext->ss.eip
+#endif
+#elif defined(__x86_64__)
+#if __DARWIN_UNIX03
+#define GET_PC(context) \
+    context->uc_mcontext->__ss.__rip
+#else
+#define GET_PC(context) \
+    context->uc_mcontext->ss.rip
+#endif
+#elif defined(__ppc__) || defined(__ppc64__)
+#if __DARWIN_UNIX03
+#define GET_PC(context) \
+    context->uc_mcontext->__ss.__srr0
+#else
+#define GET_PC(context) \
+    context->uc_mcontext->ss.srr0
+#endif
+#elif defined(__arm__) || defined(__arm64__)
+#if __DARWIN_UNIX03
+#define GET_PC(context) \
+    __darwin_arm_thread_state64_get_pc(context->uc_mcontext->__ss)
+#else
+#define GET_PC(context) \
+    __darwin_arm_thread_state64_get_pc(context->uc_mcontext->ss)
+#endif
+#else
+#error Unknown __APPLE__ target
+#endif
+
+#elif defined(__osf__)
+#define GET_PC(context) \
+    context->uc_mcontext.sc_pc
+
+#elif defined(__OpenBSD__)
+#if defined(__amd64)
+#define GET_PC(context) \
+    context->sc_rip
+#elif defined(__powerpc)
+#define GET_PC(context) \
+    context->sc_frame.srr0
+#else
+#define GET_PC(context) \
+    context->sc_pc
+#endif
+
+#elif defined(__linux) && defined(__sparc) && __WORDSIZE == 64
+#define GET_PC(context) \
+      context->uc_mcontext.mc_gregs[REG_PC]
+
+#elif defined(__sun) || defined(__sparc)
+#if defined(REG_PC)
+#define GET_PC(context) \
+      context->uc_mcontext.gregs[REG_PC]
+#elif defined(__sun) && defined(__i386) && (PC == 14)
+
+#define GET_PC(context) \
+      context->uc_mcontext.gregs[PC]
+
+#elif defined(__sun) && defined(__sparc) && (PC == 1)
+
+#define GET_PC(context) \
+      context->uc_mcontext.gregs[PC]
+
+#else
+#error unknown __sun/__sparc target
+#endif
+
+#elif defined(__linux)
+
+/* see /src/glibc-2.14/sysdeps/unix/sysv/linux/x/sigcontextinfo.h */
+#if defined(__i386)
+#define GET_PC(context) \
+      context->uc_mcontext.gregs[REG_EIP]
+#elif defined(__amd64)
+#define GET_PC(context) \
+      context->uc_mcontext.gregs[REG_RIP]
+#elif defined(__powerpc)
+#define GET_PC(context) \
+      context->uc_mcontext.uc_regs->gregs[PT_NIP]
+#elif defined(__arm__)
+#define GET_PC(context) \
+      context->uc_mcontext.arm_pc
+#elif defined(__alpha__)
+#define GET_PC(context) \
+      context->uc_mcontext.sc_pc
+#elif defined(__ia64__)
+#define GET_PC(context) \
+      context->uc_mcontext.sc_ip
+#elif defined(__sh__)
+#error untested __linux target
+#define GET_PC(context) \
+      context->uc_mcontext.sc_pc
+#elif defined(__s390__)
+#error untested __linux target
+#define GET_PC(context) \
+      context->uc_mcontext.sregs.regs.psw.addr
+#elif defined(__riscv) || defined(__riscv64)
+#define GET_PC(context) \
+      context->uc_mcontext.__gregs[REG_PC]
+#else
+#error unknown __linux target
+#endif
+
+#elif defined(__NetBSD__)
+#define GET_PC(context) \
+    _UC_MACHINE_PC(context)
+
+#elif defined(__FreeBSD__)
+#if defined(__amd64)
+#define GET_PC(context) \
+    context->uc_mcontext.mc_rip
+#elif defined(__i386)
+#define GET_PC(context) \
+    context->uc_mcontext.mc_eip
+#else
+#define GET_PC(context) \
+    context->uc_mcontext.mc_pc
+#endif
+
+#elif defined(__mips)
+#define GET_PC(context) \
+    context->uc_mcontext.scp_pc.lo
+#elif defined(__hppa)
+#define GET_PC(context) \
+    context->uc_mcontext.scp_pc
+#elif defined(__i386)
+#define GET_PC(context) \
+    context->uc_mcontext.ss.eip
+#elif defined(__amd64)
+#define GET_PC(context) \
+    context->uc_mcontext.ss.rip
+#elif defined(__powerpc)
+#define GET_PC(context) \
+    context->uc_mcontext.ss.srr0
+#endif
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
