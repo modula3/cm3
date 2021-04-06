@@ -215,7 +215,7 @@ MxConfigC__HOST(void)
         word_size = "";
     }
     else
-        word_size = size64 ? "64" : "32"; // sparc32 ppc32 arm32 pa32 pa64 ppc64 mips32 mip64 etc.
+        word_size = size64 ? "64" : "32"; // sparc32 ppc32 arm32 pa32 pa64 ppc64 mips32 mips64 etc.
 
     uname_system_size = strlen(uname_system);
     uname_machine_size = strlen(uname_machine);
@@ -232,6 +232,9 @@ MxConfigC__HOST(void)
         p += word_size_size;
         *p++ = '_';
         memcpy(p, uname_system, uname_system_size + 1);
+#ifdef M3_HOST
+        assert(strcmp(M3_HOST, result) == 0); // Check against m3core.h
+#endif
     }
     return result;
 #endif
