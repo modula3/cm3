@@ -417,6 +417,10 @@ PROCEDURE ScanExports (f: FileDesc) =
 PROCEDURE AddExport (sym: TEXT;  f: FileDesc) =
   VAR ref: REFANY; f2: FileDesc;
   BEGIN
+    IF NOT IsKeeper(CleanName(sym)) THEN
+      (* IO.Put("AddExport skipping:" & sym & "\n"); *)
+      RETURN;
+    END;
     IF (export_tbl = NIL) THEN
       export_tbl := NEW (TextRefTbl.Default).init ();
     END;
