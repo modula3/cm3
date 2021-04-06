@@ -1820,7 +1820,7 @@ PROCEDURE PrepRecurse
                 Expr.Prep (argExpr);
                 EVAL Type.CheckInfo (argRepType, (*OUT*) argRepTypeInfo);
                 Expr.Compile (argExpr);
-                (* It's an array, so Prep/Compile will pupsh an address
+                (* It's an array, so Prep/Compile will push an address
                    regardless of whether it's a designator. *)
                 argAddrVal := CG.Pop ();
                 argOpenDepth := OpenArrayType.OpenDepth (argRepType);
@@ -1851,8 +1851,7 @@ PROCEDURE PrepRecurse
                 GenPushLHSEltsAddr (top, argFlatOffset, eltAlign);
                 CG.Push (argAddrVal);
                 <* ASSERT argLevelInfo.staticLen >= 0 *>
-                CG.Copy
-                  (argLevelInfo.staticLen * constrEltPack, overlap := FALSE);
+                CG.Copy (constrEltPack, overlap := FALSE);
               ELSE
 
               (* The dynamic case.  top.shallowestDynDepth >= 0.
