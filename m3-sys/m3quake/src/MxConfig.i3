@@ -14,8 +14,6 @@ CONST
 
 PROCEDURE HOST_OS_TYPE() : OS_TYPE;
 PROCEDURE HOST_OS_TYPE_TEXT() : TEXT;
-PROCEDURE HOST_WORD_SIZE() : INTEGER;
-PROCEDURE HOST_WORD_SIZE_TEXT() : TEXT;
 
 PROCEDURE FindFile (): TEXT;
 (* Returns a path to the current configuration file.  If no

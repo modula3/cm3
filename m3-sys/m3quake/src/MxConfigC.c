@@ -14,6 +14,4 @@ EXTERN_CONST int MxConfig__os_type = 1;
 EXTERN_CONST int MxConfig__os_type = 0;
 #endif
 
-EXTERN_CONST int MxConfig__word_size = sizeof(INTEGER) * 8;
-
 M3_EXTERN_C_END

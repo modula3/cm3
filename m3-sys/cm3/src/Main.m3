@@ -5,7 +5,7 @@ MODULE Main;
 
 IMPORT M3Timers, Pathname, Process, Quake;
 IMPORT RTCollector, RTParams, RTutils, Thread, Wr;
-IMPORT TextTextTbl, Target;
+IMPORT TextTextTbl, Target, Fmt;
 
 IMPORT Builder, Dirs, M3Build, M3Options, Makefile, Msg, Utils, WebFile;
 IMPORT MxConfig(*, M3Config, CMKey, CMCurrent *);
@@ -67,7 +67,7 @@ VAR defs: TextTextTbl.T;
 
         DefineIfNotDefined (mach, "TARGET", MxConfig.HOST);
         DefineIfNotDefined (mach, "OS_TYPE", MxConfig.HOST_OS_TYPE_TEXT());
-        DefineIfNotDefined (mach, "WORD_SIZE", MxConfig.HOST_WORD_SIZE_TEXT());
+        DefineIfNotDefined (mach, "WORD_SIZE", Fmt.Int(BITSIZE(INTEGER)));
 
         (* Even if the config file overrides the defaults, such as to do
            a cross build, the host characteristics are still available. *)
