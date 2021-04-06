@@ -656,18 +656,17 @@ Process__RegisterExitor(void (__cdecl*)(void));
 #if defined(__APPLE__)
 
 #if defined(__i386__)
-
+#define M3_HOST "I386_DARWIN"
 #if __DARWIN_UNIX03
-
 #define GET_PC(context) ((context)->uc_mcontext->__ss.__eip)
-
 #else
-
 #define GET_PC(context) ((context)->uc_mcontext->ss.eip)
-
 #endif
 
 #elif defined(__x86_64__)
+
+#define M3_HOST "AMD64_DARWIN"
+
 #if __DARWIN_UNIX03
 #define GET_PC(context) ((context)->uc_mcontext->__ss.__rip)
 #else
@@ -675,12 +674,27 @@ Process__RegisterExitor(void (__cdecl*)(void));
 #endif
 
 #elif defined(__ppc__) || defined(__ppc64__)
+
+#if defined(__ppc64__)
+#define M3_HOST "PPC64_DARWIN"
+#else
+#define M3_HOST "PPC_DARWIN"
+#endif
+
 #if __DARWIN_UNIX03
 #define GET_PC(context) ((context)->uc_mcontext->__ss.__srr0)
 #else
 #define GET_PC(context) ((context)->uc_mcontext->ss.srr0)
 #endif
+
 #elif defined(__arm__) || defined(__arm64__)
+
+#if defined(__arm64__)
+#define M3_HOST "ARM64_DARWIN"
+#else
+#define M3_HOST "ARM32_DARWIN"
+#endif
+
 #if __DARWIN_UNIX03
 #define GET_PC(context) (__darwin_arm_thread_state64_get_pc(context->uc_mcontext->__ss))
 #else
@@ -698,15 +712,18 @@ Process__RegisterExitor(void (__cdecl*)(void));
 
 #if defined(__amd64)
 
+#define M3_HOST "AMD64_OPENBSD"
 #define GET_PC(context) ((context)->sc_rip)
 
 #elif defined(__powerpc)
+// unknown wordsize and endian; use uname
 #define GET_PC(context) ((context)->sc_frame.srr0)
 #else
 #define GET_PC(context) ((context)->sc_pc)
 #endif
 
 #elif defined(__linux) && defined(__sparc) && __WORDSIZE == 64
+#define M3_HOST "SPARC64_LINUX"
 #define GET_PC(context) ((context)->uc_mcontext.mc_gregs[REG_PC])
 
 #elif defined(__sun) || defined(__sparc)
@@ -714,6 +731,7 @@ Process__RegisterExitor(void (__cdecl*)(void));
 #if defined(REG_PC)
 #define GET_PC(context) ((context)->uc_mcontext.gregs[REG_PC])
 #elif defined(__sun) && defined(__i386) && (PC == 14)
+#define M3_HOST "I386_SOLARIS"
 #define GET_PC(context) ((context)->uc_mcontext.gregs[PC])
 #elif defined(__sun) && defined(__sparc) && (PC == 1)
 #define GET_PC(context) ((context)->uc_mcontext.gregs[PC])
@@ -725,24 +743,37 @@ Process__RegisterExitor(void (__cdecl*)(void));
 
 /* see /src/glibc-2.14/sysdeps/unix/sysv/linux/x/sigcontextinfo.h */
 #if defined(__i386)
+#define M3_HOST "I386_LINUX"
 #define GET_PC(context) ((context)->uc_mcontext.gregs[REG_EIP])
 #elif defined(__amd64)
+#define M3_HOST "AMD64_LINUX"
 #define GET_PC(context) ((context)->uc_mcontext.gregs[REG_RIP])
 #elif defined(__powerpc)
+// ambiguous endian and wordsize; use uname
 #define GET_PC(context) ((context)->uc_mcontext.uc_regs->gregs[PT_NIP])
 #elif defined(__arm__)
+// ambiguous endian and wordsize; use uname
 #define GET_PC(context) ((context)->uc_mcontext.arm_pc)
 #elif defined(__alpha__)
+#define M3_HOST "ALPHA_LINUX"
 #define GET_PC(context) ((context)->uc_mcontext.sc_pc)
 #elif defined(__ia64__)
+#define M3_HOST "IA64_LINUX"
 #define GET_PC(context) ((context)->uc_mcontext.sc_ip)
 #elif defined(__sh__)
+// unknown endian and wordsize; use uname
 #error untested __linux target
 #define GET_PC(context) ((context)->uc_mcontext.sc_pc)
 #elif defined(__s390__)
+// unknown wordsize; use uname
 #error untested __linux target
 #define GET_PC(context) ((context)->uc_mcontext.sregs.regs.psw.addr
 #elif defined(__riscv) || defined(__riscv64)
+#if defined(__riscv64)
+#define M3_HOST "RISCV64_LINUX"
+#else
+#define M3_HOST "RISCV32_LINUX"
+#endif
 #define GET_PC(context) ((context)->uc_mcontext.__gregs[REG_PC])
 #else
 #error unknown __linux target
