@@ -180,23 +180,5 @@ BEGIN
   RETURN "POSIX";
 END HOST_OS_TYPE_TEXT;
 
-(* porting *)
-PROCEDURE HOST_WORD_SIZE() : INTEGER =
-BEGIN
-  RETURN VAL(MxConfigC.word_size, INTEGER);
-END HOST_WORD_SIZE;
-
-(* porting: Other word sizes? *)
-(* TODO Generate const TEXT in C. *)
-PROCEDURE HOST_WORD_SIZE_TEXT() : TEXT =
-VAR wordSize := HOST_WORD_SIZE();
-BEGIN
-  <* ASSERT wordSize = 32 OR wordSize = 64 *>
-  IF wordSize = 32 THEN
-    RETURN "32";
-  END;
-  RETURN "64";
-END HOST_WORD_SIZE_TEXT;
-
 BEGIN
 END MxConfig.
