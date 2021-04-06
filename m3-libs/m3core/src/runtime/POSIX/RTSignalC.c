@@ -63,6 +63,153 @@ static void Quit SIGNAL_HANDLER_SIGNATURE;
 static void InstallOneHandler(WORD_T i);
 static void RestoreOneHandler(WORD_T i);
 
+#if defined(__APPLE__)
+
+#if defined(__i386__)
+#if __DARWIN_UNIX03
+#define GET_PC(context) \
+    context->uc_mcontext->__ss.__eip
+#else
+#define GET_PC(context) \
+    context->uc_mcontext->ss.eip
+#endif
+#elif defined(__x86_64__)
+#if __DARWIN_UNIX03
+#define GET_PC(context) \
+    context->uc_mcontext->__ss.__rip
+#else
+#define GET_PC(context) \
+    context->uc_mcontext->ss.rip
+#endif
+#elif defined(__ppc__) || defined(__ppc64__)
+#if __DARWIN_UNIX03
+#define GET_PC(context) \
+    context->uc_mcontext->__ss.__srr0
+#else
+#define GET_PC(context) \
+    context->uc_mcontext->ss.srr0
+#endif
+#elif defined(__arm__) || defined(__arm64__)
+#if __DARWIN_UNIX03
+#define GET_PC(context) \
+    __darwin_arm_thread_state64_get_pc(context->uc_mcontext->__ss)
+#else
+#define GET_PC(context) \
+    __darwin_arm_thread_state64_get_pc(context->uc_mcontext->ss)
+#endif
+#else
+#error Unknown __APPLE__ target
+#endif
+
+#elif defined(__osf__)
+#define GET_PC(context) \
+    context->uc_mcontext.sc_pc
+
+#elif defined(__OpenBSD__)
+#if defined(__amd64)
+#define GET_PC(context) \
+    context->sc_rip
+#elif defined(__powerpc)
+#define GET_PC(context) \
+    context->sc_frame.srr0
+#else
+#define GET_PC(context) \
+    context->sc_pc
+#endif
+
+#elif defined(__linux) && defined(__sparc) && __WORDSIZE == 64
+#define GET_PC(context) \
+      context->uc_mcontext.mc_gregs[REG_PC]
+
+#elif defined(__sun) || defined(__sparc)
+#if defined(REG_PC)
+#define GET_PC(context) \
+      context->uc_mcontext.gregs[REG_PC]
+#elif defined(__sun) && defined(__i386) && (PC == 14)
+
+#define GET_PC(context) \
+      context->uc_mcontext.gregs[PC]
+
+#elif defined(__sun) && defined(__sparc) && (PC == 1)
+
+#define GET_PC(context) \
+      context->uc_mcontext.gregs[PC]
+
+#else
+#error unknown __sun/__sparc target
+#endif
+
+#elif defined(__linux)
+
+/* see /src/glibc-2.14/sysdeps/unix/sysv/linux/x/sigcontextinfo.h */
+#if defined(__i386)
+#define GET_PC(context) \
+      context->uc_mcontext.gregs[REG_EIP]
+#elif defined(__amd64)
+#define GET_PC(context) \
+      context->uc_mcontext.gregs[REG_RIP]
+#elif defined(__powerpc)
+#define GET_PC(context) \
+      context->uc_mcontext.uc_regs->gregs[PT_NIP]
+#elif defined(__arm__)
+#define GET_PC(context) \
+      context->uc_mcontext.arm_pc
+#elif defined(__alpha__)
+#define GET_PC(context) \
+      context->uc_mcontext.sc_pc
+#elif defined(__ia64__)
+#define GET_PC(context) \
+      context->uc_mcontext.sc_ip
+#elif defined(__sh__)
+#error untested __linux target
+#define GET_PC(context) \
+      context->uc_mcontext.sc_pc
+#elif defined(__s390__)
+#error untested __linux target
+#define GET_PC(context) \
+      context->uc_mcontext.sregs.regs.psw.addr
+#elif defined(__riscv) || defined(__riscv64)
+#define GET_PC(context) \
+      context->uc_mcontext.__gregs[REG_PC]
+#else
+#error unknown __linux target
+#endif
+
+#elif defined(__NetBSD__)
+#define GET_PC(context) \
+    _UC_MACHINE_PC(context)
+
+#elif defined(__FreeBSD__)
+#if defined(__amd64)
+#define GET_PC(context) \
+    context->uc_mcontext.mc_rip
+#elif defined(__i386)
+#define GET_PC(context) \
+    context->uc_mcontext.mc_eip
+#else
+#define GET_PC(context) \
+    context->uc_mcontext.mc_pc
+#endif
+
+#elif defined(__mips)
+#define GET_PC(context) \
+    context->uc_mcontext.scp_pc.lo
+#elif defined(__hppa)
+#define GET_PC(context) \
+    context->uc_mcontext.scp_pc
+#elif defined(__i386)
+#define GET_PC(context) \
+    context->uc_mcontext.ss.eip
+#elif defined(__amd64)
+#define GET_PC(context) \
+    context->uc_mcontext.ss.rip
+#elif defined(__powerpc)
+#define GET_PC(context) \
+    context->uc_mcontext.ss.srr0
+#else
+#error unknown target
+#endif
+
 #if defined(__CYGWIN__) || defined(__INTERIX) || defined(__vms)
 
 /* Revisit VMS */
@@ -71,7 +218,10 @@ static void RestoreOneHandler(WORD_T i);
 
 #else
 
-static WORD_T GetPC(void* xcontext)
+static
+WORD_T
+__cdecl
+GetPC(void* xcontext)
 /* PC: program counter aka instruction pointer, etc. */
 {
     ucontext_t* context = (ucontext_t*)xcontext;
@@ -79,115 +229,7 @@ static WORD_T GetPC(void* xcontext)
     if (context == NULL)
         return 0;
 
-    return
-
-#if defined(__APPLE__)
-
-#if defined(__i386__)
-#if __DARWIN_UNIX03
-    context->uc_mcontext->__ss.__eip
-#else
-    context->uc_mcontext->ss.eip
-#endif
-#elif defined(__x86_64__)
-#if __DARWIN_UNIX03
-    context->uc_mcontext->__ss.__rip
-#else
-    context->uc_mcontext->ss.rip
-#endif
-#elif defined(__ppc__) || defined(__ppc64__)
-#if __DARWIN_UNIX03
-    context->uc_mcontext->__ss.__srr0
-#else
-    context->uc_mcontext->ss.srr0
-#endif
-#elif defined(__arm__) || defined(__arm64__)
-#if __DARWIN_UNIX03
-    __darwin_arm_thread_state64_get_pc(context->uc_mcontext->__ss)
-#else
-    __darwin_arm_thread_state64_get_pc(context->uc_mcontext->ss)
-#endif
-#else
-#error Unknown __APPLE__ target
-#endif
-
-#elif defined(__osf__)
-    context->uc_mcontext.sc_pc
-
-#elif defined(__OpenBSD__)
-#if defined(__amd64)
-    context->sc_rip
-#elif defined(__powerpc)
-    context->sc_frame.srr0
-#else
-    context->sc_pc
-#endif
-
-#elif defined(__linux) && defined(__sparc) && __WORDSIZE == 64
-      context->uc_mcontext.mc_gregs[REG_PC]
-
-#elif defined(__sun) || defined(__sparc)
-#if defined(REG_PC)
-      context->uc_mcontext.gregs[REG_PC]
-#elif defined(__sun) && defined(__i386) && (PC == 14)
-      context->uc_mcontext.gregs[PC]
-#elif defined(__sun) && defined(__sparc) && (PC == 1)
-      context->uc_mcontext.gregs[PC]
-#else
-#error unknown __sun/__sparc target
-#endif
-#elif defined(__linux)
-/* see /src/glibc-2.14/sysdeps/unix/sysv/linux/x/sigcontextinfo.h */
-#if defined(__i386)
-      context->uc_mcontext.gregs[REG_EIP]
-#elif defined(__amd64)
-      context->uc_mcontext.gregs[REG_RIP]
-#elif defined(__powerpc)
-      context->uc_mcontext.uc_regs->gregs[PT_NIP]
-#elif defined(__arm__)
-      context->uc_mcontext.arm_pc
-#elif defined(__alpha__)
-      context->uc_mcontext.sc_pc
-#elif defined(__ia64__)
-      context->uc_mcontext.sc_ip
-#elif defined(__sh__)
-#error untested __linux target
-      context->uc_mcontext.sc_pc
-#elif defined(__s390__)
-#error untested __linux target
-      context->uc_mcontext.sregs.regs.psw.addr
-#elif defined(__riscv) || defined(__riscv64)
-      context->uc_mcontext.__gregs[REG_PC]
-#else
-#error unknown __linux target
-#endif
-
-#elif defined(__NetBSD__)
-    _UC_MACHINE_PC(context)
-
-#elif defined(__FreeBSD__)
-#if defined(__amd64)
-    context->uc_mcontext.mc_rip
-#elif defined(__i386)
-    context->uc_mcontext.mc_eip
-#else
-    context->uc_mcontext.mc_pc
-#endif
-
-#elif defined(__mips)
-    context->uc_mcontext.scp_pc.lo
-#elif defined(__hppa)
-    context->uc_mcontext.scp_pc
-#elif defined(__i386)
-    context->uc_mcontext.ss.eip
-#elif defined(__amd64)
-    context->uc_mcontext.ss.rip
-#elif defined(__powerpc)
-    context->uc_mcontext.ss.srr0
-#else
-#error unknown target
-#endif
-    ;
+    return GET_PC(context);
 }
 
 #endif
