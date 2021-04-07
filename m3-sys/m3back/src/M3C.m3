@@ -958,6 +958,17 @@ BEGIN
     RETURN TRUE;
 END record_canBeDefined;
 
+(* ifndef so multiple files can be concatenated and compiled at once *)
+PROCEDURE ifndef_type(self:T; type: TEXT) =
+BEGIN
+  print(self, "#ifndef " & type & "\n#define " & type & " " & type & "\n");
+END ifndef_type;
+
+PROCEDURE endif(self: T) =
+BEGIN
+  print(self, "#endif\n");
+END endif;
+
 PROCEDURE record_define(record: Record_t; self: T) =
 VAR x := self;
     fields := record.fields;
@@ -970,6 +981,8 @@ BEGIN
     FOR j := 0 TO field_count - 1 DO
         NARROW(record.fields.get(j), Field_t).type.Define(self);
     END;
+
+    ifndef_type(x, record.text); (* ifdef so multiple files can be concatenated and compiled at once *)
 
     print(x, "/*record_define*/struct " & record.text & "{\n");
 
@@ -1060,6 +1073,7 @@ BEGIN
         Err(x, "failed to declare record to correct size");
     END;
     print(x, "};\n");
+    endif(x);
 END record_define;
 
 TYPE Subrange_t = Ordinal_t OBJECT
@@ -1188,11 +1202,15 @@ END;
 PROCEDURE fixedArray_define(type: FixedArray_t; x: T) =
 BEGIN
     type.element_type.Define(x);
+
+    ifndef_type(x, type.text); (* ifdef so multiple files can be concatenated and compiled at once *)
+
     print(x, "/*fixedArray_define*/struct " & type.text & "{");
     print(x, type.element_type.text);
     print(x, " _elts[");
     print(x, IntToDec(type.bit_size DIV type.element_type.bit_size));
     print(x, "];};\n");
+    endif(x);
 END fixedArray_define;
 
 PROCEDURE fixedArray_canBeDefined(type: Array_t; self: T): BOOLEAN =
@@ -1226,6 +1244,9 @@ BEGIN
     IF element_type_text = NIL THEN
         element_type_text := "char/*TODO*/";
     END;
+
+    ifndef_type(x, type.text); (* ifdef so multiple files can be concatenated and compiled at once *)
+
     text := "/*openArray_define*/struct " & type.text & "{\n" & element_type_text;
     FOR i := 1 TO dimensions DO
         text := text & "*";
@@ -1235,6 +1256,7 @@ BEGIN
         text := text & "s[" & IntToDec(dimensions) & "]";
     END;
     print(x, text & ";\n};");
+    endif(x);
 END openArray_define;
 
 PROCEDURE TypeidToType_Get(self: T; typeid: TypeUID): Type_t =
@@ -2558,6 +2580,7 @@ BEGIN
             RTIO.PutText("declare_array nil element_type\n");
             RTIO.Flush();
         END;
+        ifndef_type(self, element_type.text); (* ifdef so multiple files can be concatenated and compiled at once *)
         print(self, "/*declare_open_array*/typedef struct {");
         print(self, element_type.text);
         print(self, "* _elts; CARDINAL _size");
@@ -2572,6 +2595,7 @@ BEGIN
         bit_size := bit_size,
         element_typeid := element_typeid,
         element_type := element_type));
+        endif(self); (* ifdef so multiple files can be concatenated and compiled at once *)
     END;
 *)
   END declare_open_array;
