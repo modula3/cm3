@@ -1093,6 +1093,7 @@ PROCEDURE CompileEverything (s: State;  schedule: SourceList) =
   END CompileEverything;
 
 PROCEDURE CompileOne (s: State;  u: M3Unit.T) =
+  VAR u_object: TEXT;
   BEGIN
     IF (u.compiling) THEN RETURN; END;
     u.compiling := TRUE;
@@ -1105,7 +1106,11 @@ PROCEDURE CompileOne (s: State;  u: M3Unit.T) =
       FlushPending (s);
       FinalNameForUnit (s, u);
       IF IfDebug () THEN
-        DebugF ("CompileOne FinalNameForUnit(", u, "):" & u.object);
+        u_object := u.object;
+        IF u_object = NIL THEN
+          u_object := "NIL";
+        END;
+        DebugF ("CompileOne FinalNameForUnit(", u, "):" & u_object);
       END;
       CASE u.kind OF
       | UK.I3, UK.M3       => CompileM3 (s, u);
