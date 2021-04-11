@@ -13,7 +13,7 @@ IMPORT Msg, Arg, Utils, M3Path, M3Backend, M3Compiler;
 IMPORT Quake, QMachine, QValue, QVal, QVSeq;
 IMPORT M3Loc, M3Unit, M3Options, MxConfig;
 IMPORT QIdent;
-IMPORT Target; 
+IMPORT Target;
 FROM M3Path IMPORT OSKind, OSKindStrings;
 IMPORT Pathname;
 IMPORT QPromise, QPromiseSeq, RefSeq;
@@ -2020,7 +2020,12 @@ PROCEDURE Pass0_InitCodeGenerator (env: Env): M3CG.T =
     env.cg     := NIL;
     env.output := Utils.OpenWriter (env.object, fatal := FALSE);
     IF (env.output # NIL) THEN
-      env.cg := M3Backend.Open (env.output, env.object, env.globals.m3backend_mode);
+      env.cg := M3Backend.Open (
+        env.globals.result_name,
+        env.source_unit.name,
+        env.output,
+        env.object,
+        env.globals.m3backend_mode);
     END;
     RETURN env.cg;
   END Pass0_InitCodeGenerator;
