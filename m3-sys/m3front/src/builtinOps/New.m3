@@ -390,9 +390,9 @@ PROCEDURE GenObject (t: Type.T;  ce: CallExpr.T) =
     FOR i := 1 TO LAST (ce.args^) DO
       IF (ce.args[i] # NIL) THEN
         b := KeywordExpr.Split (ce.args[i], key, value); <*ASSERT b*>
-        AssignStmt.PrepForEmit (field.type, value, initializing := TRUE);
         b := ObjectType.LookUp (t, key, v, visible); <*ASSERT b*>
         Field.Split (v, field);
+        AssignStmt.PrepForEmit (field.type, value, initializing := TRUE);
         CG.Push (ce.tmp);
         ObjectType.GetFieldOffset (visible, obj_offset, obj_align);
         IF (obj_offset >= 0) THEN
