@@ -38,7 +38,7 @@ PROCEDURE DoIt () RAISES {Rd.Failure, Wr.Failure, Alerted, OSError.E} =
   TYPE Inhale_t = PROCEDURE (rd: Rd.T;  cg: M3CG.T);
        OutNew_t = PROCEDURE (wr: Wr.T): M3CG.T;
   CONST Inhale = ARRAY OF Inhale_t {M3CG_BinRd.Inhale, M3CG_Rd.Inhale};
-  CONST OutNew = ARRAY OF OutNew_t {M3CG_BinWr.New, M3CG_Wr.New, M3C.New};
+  CONST OutNew = ARRAY OF OutNew_t {M3CG_BinWr.New, M3CG_Wr.New, M3C.New0};
   CONST inout_text = ARRAY OF TEXT {"-in-", "-out-"};
   CONST types_text = ARRAY OF TEXT {"binary", "ascii", "c"};
   VAR arg : TEXT;

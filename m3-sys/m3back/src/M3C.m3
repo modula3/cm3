@@ -66,6 +66,7 @@ T = M3CG_DoNothing.T BRANDED "M3C.T" OBJECT
         multipass: Multipass_t := NIL;
         Err    : ErrorHandler := DefaultErrorHandler;
         anonymousCounter := -1;
+        unique := "L_"; (* changed later *)
         c      : Wr.T := NIL;
         debug := 2; (* 1-5 >4 is to stdio *)
         stack  : RefSeq.T := NIL;
@@ -590,15 +591,22 @@ BEGIN
     RETURN self.anonymousCounter;
 END AnonymousCounter;
 
-PROCEDURE GenerateName(self: T): Name =
+(* e.g. within a struct *)
+PROCEDURE GenerateNameLocal(self: T): Name =
 BEGIN
     RETURN M3ID.Add("L_" & IntToDec(AnonymousCounter(self)));
-END GenerateName;
+END GenerateNameLocal;
 
-PROCEDURE GenerateNameText(self: T): TEXT =
+(* e.g. so if we concatenate many files, still unique *)
+PROCEDURE GenerateNameGlobal(self: T): Name =
 BEGIN
-    RETURN NameT(GenerateName(self));
-END GenerateNameText;
+    RETURN M3ID.Add(self.unique & IntToDec(AnonymousCounter(self)));
+END GenerateNameGlobal;
+
+PROCEDURE GenerateNameLocalText(self: T): TEXT =
+BEGIN
+    RETURN NameT(GenerateNameLocal(self));
+END GenerateNameLocalText;
 
 PROCEDURE Assert(self: T; value: BOOLEAN; message: TEXT) =
 BEGIN
@@ -612,20 +620,37 @@ BEGIN
   <* ASSERT value *>
 END Assert;
 
+(* This is not just for procedures. *)
 PROCEDURE Proc_FixName(self: T; name: Name): Name =
 VAR text: TEXT := NIL;
 BEGIN
     IF name = M3ID.NoID THEN
-        RETURN GenerateName(self);
+        RETURN GenerateNameGlobal(self);
     END;
     text := NameT (name);
     IF Text.GetChar (text, 0) = '*' THEN
         Assert(self, Text.Length(text) = 1, "Text.Length(text) = 1");
-        RETURN GenerateName(self);
+        Err(self, "almost unnamed function");
+        RETURN GenerateNameLocal(self);
     END;
     (* rename C names like int, short, void *)
     RETURN ReplaceName(name);
 END Proc_FixName;
+
+(* segment names are not unique if files are concatenated; this fixes that
+   TODO: Handle it in m3front *)
+PROCEDURE Segment_FixName(self: T; name: Name): Name =
+VAR text := NameT(name);
+    ch: CHAR;
+BEGIN
+  IF Text.Length(text) > 2 AND Text.GetChar(text, 1) = '_' THEN
+    ch := Text.GetChar(text, 0);
+    IF ch = 'M' OR ch = 'I' THEN
+      name := M3ID.Add(self.unique & text);
+    END;
+  END;
+  RETURN name;
+END Segment_FixName;
 
 PROCEDURE Var_FixName(self: T; name: Name; imported_or_exported: BOOLEAN): Name =
 BEGIN
@@ -637,7 +662,7 @@ BEGIN
     IF NOT imported_or_exported AND name # self.static_link_id THEN
         name := M3ID.Add(NameT(name) & "_L_" & IntToDec(AnonymousCounter(self)));
     END;
-    RETURN name;
+    RETURN Segment_FixName(self, name);
 END Var_FixName;
 
 TYPE Type_State = {None, ForwardDeclared, CanBeDefined, Defined};
@@ -1000,7 +1025,7 @@ BEGIN
             (* Eat up bits, to the next byte boundary or up to the next field, whichever is earlier. *)
             IF (bit_offset MOD 8) # 0 THEN
                 i := MIN(bit_pad, 8 - (bit_pad MOD 8));
-                print(x, "UINT8 " & GenerateNameText(x) & ":" & IntToDec(i) & ";\n");
+                print(x, "UINT8 " & GenerateNameLocalText(x) & ":" & IntToDec(i) & ";\n");
                 INC(bit_offset, i);
                 DEC(bit_pad, i);
             END;
@@ -1008,7 +1033,7 @@ BEGIN
             (* Eat up bytes to the field. *)
             IF bit_pad >= 8 THEN
                 i := bit_pad DIV 8;
-                print(x, "UINT8 " & GenerateNameText(x) & "[" & IntToDec(i) & "];\n");
+                print(x, "UINT8 " & GenerateNameLocalText(x) & "[" & IntToDec(i) & "];\n");
                 i := i * 8;
                 INC(bit_offset, i);
                 DEC(bit_pad, i);
@@ -1018,7 +1043,7 @@ BEGIN
             Assert(self, bit_pad < 8, "bit_pad < 8");
             IF bit_pad > 0 THEN
                 i := bit_pad;
-                print(x, "UINT8 " & GenerateNameText(x) & ":" & IntToDec(i) & ";\n");
+                print(x, "UINT8 " & GenerateNameLocalText(x) & ":" & IntToDec(i) & ";\n");
                 INC(bit_offset, i);
                 DEC(bit_pad, i);
             END;
@@ -1056,14 +1081,14 @@ BEGIN
         i := bit_pad MOD 8;
         IF i > 0 THEN
             (*i := 8 - i;*)
-            print(x, "UINT8 " & GenerateNameText(x) & ":" & IntToDec(i) & ";\n");
+            print(x, "UINT8 " & GenerateNameLocalText(x) & ":" & IntToDec(i) & ";\n");
             INC(bit_offset, i);
             DEC(bit_pad, i);
         END;
         Assert (self, (bit_pad MOD 8) = 0, "(bit_pad MOD 8) = 0");
         IF bit_pad > 0 THEN
             i := bit_pad DIV 8;
-            print(x, "UINT8 " & GenerateNameText(x) & "[" & IntToDec(i) & "];\n");
+            print(x, "UINT8 " & GenerateNameLocalText(x) & "[" & IntToDec(i) & "];\n");
             i := i * 8;
             INC(bit_offset, i);
             DEC(bit_pad, i);
@@ -1145,7 +1170,7 @@ OVERRIDES
     canBeDefined := enum_canBeDefined;
 END;
 
-PROCEDURE enum_canBeDefined(enum: Enum_t; x: T): BOOLEAN =
+PROCEDURE enum_canBeDefined(enum: Enum_t; <*UNUSED*> x: T): BOOLEAN =
 BEGIN
     RETURN enum.names # NIL;
 END enum_canBeDefined;
@@ -1807,6 +1832,7 @@ BEGIN
                     RETURN FALSE;
                 END;
             END;
+            comment(self, "IsNameExceptionHandler:" & name);
             RETURN TRUE;
         END;
     END;
@@ -2264,7 +2290,7 @@ END print;
 
 (*---------------------------------------------------------------------------*)
 
-PROCEDURE New (cfile: Wr.T): M3CG.T =
+PROCEDURE NewInternal (cfile: Wr.T): T =
 VAR self := NEW (T);
 BEGIN
     self.typeidToType := NEW(SortedIntRefTbl.Default).init(); (* FUTURE? *)
@@ -2283,8 +2309,52 @@ BEGIN
     self.imported_procs := NEW(RefSeq.T).init();
     self.declared_procs := NEW(RefSeq.T).init();
     self.procs_pending_output := NEW(RefSeq.T).init();
+    RETURN self;
+END NewInternal;
 
+PROCEDURE New0 (cfile: Wr.T): M3CG.T =
+VAR self := NewInternal (cfile);
+BEGIN
     RETURN self.multipass;
+END New0;
+
+PROCEDURE TextRemoveAtEnd (VAR t: TEXT; a: TEXT): BOOLEAN =
+VAR result := TextUtils.EndsWith (t, a);
+BEGIN
+  IF result THEN
+    t := Text.Sub (t, 0, Text.Length (t) - Text.Length (a));
+  END;
+  RETURN result;
+END TextRemoveAtEnd;
+
+PROCEDURE TextSubstituteAtEnd (VAR t: TEXT; a, b: TEXT): BOOLEAN =
+VAR result := TextRemoveAtEnd (t, a);
+BEGIN
+  IF result THEN
+    t := t & b;
+  END;
+  RETURN result;
+END TextSubstituteAtEnd;
+
+PROCEDURE TextToId (VAR t: TEXT) =
+BEGIN
+  EVAL TextRemoveAtEnd (t, ".c");
+  EVAL TextRemoveAtEnd (t, ".cpp");
+  t := TextUtils.Substitute (t, "_", "_un_"); (* un for underscore *)
+  EVAL TextSubstituteAtEnd (t, ".m3", "_m");
+  EVAL TextSubstituteAtEnd (t, ".i3", "_i");
+  t := TextUtils.Substitute (t, ".", "_do_"); (* do for dot *)
+  t := TextUtils.Substitute (t, "-", "_da_"); (* da for dash *)
+  (* TODO more ways to turn into valid identifier prefix? Handle in m3front. *)
+END TextToId;
+
+PROCEDURE New (library (* or program *): TEXT; <*UNUSED*>source (* lacks extension .m3 or .i3 *): M3ID.T; cfile: Wr.T; target_name: TEXT): M3CG.T =
+VAR self := NewInternal (cfile);
+BEGIN
+  TextToId (target_name);
+  TextToId (library);
+  self.unique := library & "_" & target_name & "_";
+  RETURN self.multipass;
 END New;
 
 (*---------------------------------------------------------------------------*)
@@ -3157,8 +3227,10 @@ VAR var := NEW(Var_t,
     length := 0;
 BEGIN
     self.comment("declare_segment name:" & TextOrNIL(NameT(name))
-        & "typeid:" & TypeIDToText(typeid)
-        & "const:" & BoolToText[const]);
+        & " typeid:" & TypeIDToText(typeid)
+        & " const:" & BoolToText[const]);
+
+    (* TODO clean this up and/or document it *)
     IF name # 0 THEN
         text := NameT(name);
         length := Text.Length(text);
@@ -3172,6 +3244,7 @@ BEGIN
             self.unit_name := text;
             FOR i := FIRST(HandlerNamePieces) TO LAST(HandlerNamePieces) DO
                 self.handler_name_prefixes[i] := text & HandlerNamePieces[i];
+                comment(self, "handler_name_prefixes:" & self.handler_name_prefixes[i]);
             END;
         END;
     END;
@@ -4755,7 +4828,7 @@ BEGIN
 
     IF pad > 0 THEN
         end_init_helper(self);
-        self.fields.addhi("char " & GenerateNameText(self) & "[" & IntToDec(pad) & "];\n");
+        self.fields.addhi("char " & GenerateNameLocalText(self) & "[" & IntToDec(pad) & "];\n");
         initializer_addhi(self, Text_left_brace);
         FOR i := 1 TO pad DO
             initializer_addhi(self, "0 /* " & IntToDec(i) & " */ ");
@@ -4786,7 +4859,7 @@ BEGIN
     init_to_offset(self, offset);
     IF offset = 0 OR self.init_type # type OR offset # self.current_offset THEN
         end_init_helper(self);
-        self.fields.addhi(cgtypeToText[type] & " " & GenerateNameText(self));
+        self.fields.addhi(cgtypeToText[type] & " " & GenerateNameLocalText(self));
         initializer_addhi(self, Text_left_brace);
     END;
     INC(self.init_type_count);

@@ -9,7 +9,7 @@ MODULE M3Backend;
 IMPORT Wr, Thread, M3C;
 IMPORT LLGen; (* Could be a dummy.  See the m3makefile. *) 
 IMPORT M3CG, Msg, Utils, NTObjFile, M3x86, M3ObjFile;
-IMPORT M3CG_BinWr;
+IMPORT M3CG_BinWr, M3CG_Ops, M3ID;
 IMPORT Target; 
 
 VAR
@@ -19,10 +19,22 @@ VAR
   log      : Wr.T        := NIL;
   log_name : TEXT        := NIL;
 
-PROCEDURE Open (target: Wr.T;  target_name: TEXT;  backend_mode: Target.M3BackendMode_t): M3CG.T =
+PROCEDURE Open (library (* or program *): TEXT; source: M3ID.T; target: Wr.T; target_name: TEXT; backend_mode: Target.M3BackendMode_t): M3CG.T =
+  VAR cg: M3CG_Ops.Public := NIL;
   BEGIN
     IF backend_mode = Target.M3BackendMode_t.C THEN
-      RETURN M3C.New (target);
+      cg := M3C.New (library, source, target, target_name);
+      (* cg.comment would not appear at the top because
+       * earlier passes ignore it
+       *)
+      Wr.PutText(target, "// library:");
+      Wr.PutText(target, library);
+      Wr.PutText(target, "\n// source:");
+      Wr.PutText(target, M3ID.ToText(source));
+      Wr.PutText(target, "\n// target_name:");
+      Wr.PutText(target, target_name);
+      Wr.PutText(target, "\n");
+      RETURN cg;
     END;
     IF backend_mode IN Target.BackendLlvmSet THEN
       IF (Msg.level >= Msg.Level.Verbose) THEN
