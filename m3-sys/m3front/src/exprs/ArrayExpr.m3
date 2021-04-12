@@ -1736,11 +1736,11 @@ PROCEDURE PrepRecurse
       (* ^Meaningful only when there are no dynamic levels. *);
   VAR constrEltPack: INTEGER;
   VAR depthWInArg, depthWInTopConstr, argOpenDepth: INTEGER;
-  VAR argExpr: Expr.T;
+  VAR lArgExpr: Expr.T;
   VAR argConstr: T;
   VAR eltAlign: Type.BitAlignT;
   VAR argRepTypeInfo: Type.Info;
-  BEGIN
+  BEGIN (* PrepRecurse *)
     IF constr.broken THEN RETURN END;
     argCt := ArgCt (constr);
     <* ASSERT constr.state >= StateTyp.Represented *>
@@ -1750,10 +1750,10 @@ PROCEDURE PrepRecurse
     WITH argLevelInfo = top.levels^ [depth + 1] DO
       (* Shape-check and assign the explicitly-coded arguments.*)
       FOR i := 0 TO MIN (argCt, constr.eltCt) - 1 DO
-        WITH argExpr = constr.args^[i] DO
+        WITH wArgExpr = constr.args^[i] DO
           argFlatOffset := selfFlatOffset + i * constrEltPack;
-          IF argExpr # NIL THEN
-            argConstr := ArrayConstrExpr (argExpr);
+          IF wArgExpr # NIL THEN
+            argConstr := ArrayConstrExpr (wArgExpr);
             IF top.resultKind = RKTyp.RKGlobal
                AND argConstr # NIL
                AND argConstr.isNamedConst
@@ -1774,9 +1774,9 @@ PROCEDURE PrepRecurse
               PrepRecurse (top, argConstr, argFlatOffset, depth + 1);
             ELSE
 
-            (* Not a constructor.  Handle argExpr here. *)
+            (* Not a constructor.  Handle wArgExpr here. *)
 
-              argRepType := Expr.RepTypeOf (argExpr);
+              argRepType := Expr.RepTypeOf (wArgExpr);
               eltAlign
                 := CG.GCD (top.topEltsAlign, argFlatOffset MOD Target.Word.size);
               depthWInArg := 0;
@@ -1786,9 +1786,9 @@ PROCEDURE PrepRecurse
 
                 <* ASSERT top.shallowestDynDepth < 0 *>
                 Expr.PrepLiteral
-                  (argExpr, argLevelInfo.repType, top.inConstArea);
+                  (wArgExpr, argLevelInfo.repType, top.inConstArea);
                 Expr.GenLiteral
-                  (argExpr, top.globalEltsOffset + argFlatOffset,
+                  (wArgExpr, top.globalEltsOffset + argFlatOffset,
                    argLevelInfo.repType, top.inConstArea);
 
               ELSIF argLevelInfo.staticLen = Expr.lengthNonArray THEN
@@ -1800,12 +1800,12 @@ PROCEDURE PrepRecurse
                 <* ASSERT top.firstArgDopeVal = NIL *>
 (* TODO: Make do_direct work transitively through here. *)
                 AssignStmt.PrepForEmit
-                  (argLevelInfo.repType, argExpr,
+                  (argLevelInfo.repType, wArgExpr,
                    initializing := top.resultKind IN RKTypSetInitializing);
 (* CHECK: Do we need to do any Check[Load|Store]Traced? *)
                 GenPushLHSEltsAddr (top, argFlatOffset, eltAlign);
                 AssignStmt.DoEmit
-                  (argLevelInfo.repType, argExpr, eltAlign, initializing := TRUE);
+                  (argLevelInfo.repType, wArgExpr, eltAlign, initializing := TRUE);
 (* CHECK: Does DoEmit take traced into account, as for the case below*)
 (* TODO: We are skipping AssignStmt.Compile here, which my fail to do
            an Expr.NoteWrite. *)
@@ -1817,16 +1817,16 @@ PROCEDURE PrepRecurse
 
                 <* ASSERT top.firstArgDopeVal = NIL *>
 (* TODO: Make do_direct work transitively through here. *)
-                Expr.Prep (argExpr);
+                Expr.Prep (wArgExpr);
                 EVAL Type.CheckInfo (argRepType, (*OUT*) argRepTypeInfo);
-                Expr.Compile (argExpr);
+                Expr.Compile (wArgExpr);
                 (* It's an array, so Prep/Compile will push an address
                    regardless of whether it's a designator. *)
                 argAddrVal := CG.Pop ();
                 argOpenDepth := OpenArrayType.OpenDepth (argRepType);
                 IF argOpenDepth > 0
                 THEN (* argAddrVal is address of arg's dope. *)
-                  (* Go thru open dimensions of argExpr, generating needed RT
+                  (* Go thru open dimensions of wArgExpr, generating needed RT
                      checks of any open & dynamic dimension against
                      this level's static length. *)
                   depthWInArg := 0;
@@ -1855,29 +1855,29 @@ PROCEDURE PrepRecurse
               ELSE
 
               (* The dynamic case.  top.shallowestDynDepth >= 0.
-                 Arg is a non-constructor array.  Also, all cousing args
+                 Arg is a non-constructor array.  Also, all cousin args
                  in the entire topmost constructor are open at this level
                  and, at some depth, nonstatic, thus repType of argLevel
                  and shallower levels is open array, and so is repType of
-                 argExpr. *)
+                 wArgExpr. *)
 
                 <* ASSERT depth < top.shallowestDynDepth *>
                 <* ASSERT OpenArrayType.Is (argLevelInfo.repType) *>
-                <* ASSERT OpenArrayType.Is (Expr.RepTypeOf (argExpr)) *>
+                <* ASSERT OpenArrayType.Is (Expr.RepTypeOf (wArgExpr)) *>
                 <* ASSERT NOT constr.dots *>
                 <* ASSERT top.resultKind # RKTyp.RKGlobal *>
-                IF argExpr = top.firstArgExpr AND top.firstArgDopeVal # NIL
+                IF wArgExpr = top.firstArgExpr AND top.firstArgDopeVal # NIL
                 THEN (* We previously compiled this arg's (dope) address. *)
                   CG.Push (top.firstArgDopeVal);
                   argAddrVal := CG.Pop ()
                 ELSE (* Do so now. *)
                   EVAL Type.CheckInfo (argRepType, (*OUT*) argRepTypeInfo);
-                  Expr.Prep (argExpr);
-                  Expr.Compile (argExpr);
+                  Expr.Prep (wArgExpr);
+                  Expr.Compile (wArgExpr);
                   argAddrVal := CG.Pop ();
                   (* This is a bit daring, but no need to RT store in
                      top.firstArgDopeVal, because we won't come through here
-                     again with argExpr = top.firstArgExpr. *)
+                     again with wArgExpr = top.firstArgExpr. *)
                 END;
                 (* argAddrVal is address of arg's dope. *)
 
@@ -1887,7 +1887,7 @@ PROCEDURE PrepRecurse
                      (top.levels^[top.deepestDynDepth].repType))
                    MOD Target.Word.size;
 
-                (* Go thru array dimensions of argExpr, generating needed
+                (* Go thru array dimensions of wArgExpr, generating needed
                    RT checks. *)
                 <* ASSERT top.fixingInfoComputed *>
                 depthWInArg := 0; (* Array depth within the argument. *)
@@ -1912,7 +1912,7 @@ PROCEDURE PrepRecurse
                       top.useTargetVarLocked := TRUE;
                       IF UseTargetVar (top)
                          OR top.resultKind = RKTyp.RKDirectDoped
-                         OR argExpr # top.firstArgExpr
+                         OR wArgExpr # top.firstArgExpr
                       THEN (* Arg is open and dynamically constrained at this level. *)
                         (* Gen RT check against openLevelInfo.fixingLenVal. *)
                         CG.Push (argAddrVal);
@@ -1941,7 +1941,7 @@ PROCEDURE PrepRecurse
                   CG.Push (top.dynByteOffsetVal);
                   CG.Index_bytes (Target.Byte);
                   GenCopyOpenArgValueDyn (top, constr, argAddrVal, eltAlign);
-                  IF argExpr # top.lastArgExpr THEN
+                  IF wArgExpr # top.lastArgExpr THEN
                     CG.Push (top.dynByteOffsetVal);
                     PushDynBytesizeVal (top, depth + 1);
                     CG.Add (Target.Integer.cg_type);
@@ -1951,69 +1951,79 @@ PROCEDURE PrepRecurse
 
               END (*IF [non]static.*);
             END (*IF argConstr # NIL*);
-          END (*IF argExpr # NIL..ELSE*)
-        END (*WITH argExpr*);
+          END (*IF wArgExpr # NIL..ELSE*)
+        END (*WITH wArgExpr*);
       END (*FOR args*);
 
-      IF constr.dots AND constr.eltCt > argCt
-      THEN
+      IF constr.dots AND 0 < argCt AND argCt < constr.eltCt THEN 
+	lArgExpr := constr.args^[argCt - 1];
+	IF lArgExpr # NIL THEN
 
-        (* Fill in dots portion. *)
-        <* ASSERT
-             top.shallowestDynDepth < 0 OR depth + 1 = top.shallowestDynDepth *>
-        <* ASSERT NOT OpenArrayType.Is (constr.semType ) *>
-        <* ASSERT argFlatOffset >= 0 *>
-        CASE top.resultKind OF
-        | RKTyp.RKGlobal =>
-          argExpr := constr.args^ [argCt - 1];
-          Expr.PrepLiteral
-            (argExpr, argLevelInfo.repType, top.inConstArea);
-          FOR argNo := argCt TO constr.eltCt - 1 DO
-            INC (argFlatOffset, constrEltPack);
-            Expr.GenLiteral
-              (argExpr, top.globalEltsOffset + argFlatOffset,
-               argLevelInfo.repType,
-               top.inConstArea);
-          END (*FOR*)
-        ELSE (* Generate a RT loop to fill in the '..' section *)
-(* TODO: Is it worth it to unroll this loop for low iteration counts, or
-           just let the back end do it? *)
-          CG.Load_intt (argCt);
-          dotSsVal := CG.Pop_temp ();
-          topLab := CG.Next_label ();
-          CG.Set_label (topLab);
+	  (* Fill in dots portion. *)
+	  <* ASSERT
+	       top.shallowestDynDepth < 0 OR depth + 1 = top.shallowestDynDepth *>
+	  <* ASSERT NOT OpenArrayType.Is (constr.semType ) *>
+	  <* ASSERT argFlatOffset >= 0 *>
+          argConstr := ArrayConstrExpr (lArgExpr);
+	  CASE top.resultKind OF
 
-          (* Gen code for ARRAY[dotSsVal] := ARRAY[argCt-1] *)
-          WITH constrLevelInfo = top.levels^[depth] DO
-            GenPushLHSEltsAddr (top, bitOffset := 0, eltAlign := eltAlign);
-            CG.Push (dotSsVal);
-            ArrayType.GenIndex (constrLevelInfo.repType); (* Addr to store to. *)
-            GenPushLHSEltsAddr (top, argFlatOffset, eltAlign);
-            (* ^Addr to fetch from -- where last explicit arg was assigned into
-               constructor. *)
-            IF ArrayType.EltsAreBitAddressed (constrLevelInfo.repType) THEN
-              CG.Load_indirect
-                (Target.Integer.cg_type, 0, constrEltPack, eltAlign);
-(* CHECK: That this won't straddle word boundary. *)
-              CG.Store_indirect (Target.Integer.cg_type, 0, constrEltPack);
-            ELSE
-              CG.Copy (constrEltPack, overlap := FALSE);
-            END;
-          END (* WITH constrLevelInfo*);
+	  | RKTyp.RKGlobal =>
+	    IF argConstr # NIL THEN
+	      FOR argNo := argCt TO constr.eltCt - 1 DO
+		INC (argFlatOffset, constrEltPack);
+		PrepRecurse (top, argConstr, argFlatOffset, depth + 1);
+	      END (*FOR*)
+	    ELSE (* Not an array constructor. *)
+	      Expr.PrepLiteral
+		(lArgExpr, argLevelInfo.repType, top.inConstArea);
+	      FOR argNo := argCt TO constr.eltCt - 1 DO
+		INC (argFlatOffset, constrEltPack);
+		Expr.GenLiteral
+		  (lArgExpr, top.globalEltsOffset + argFlatOffset,
+		   argLevelInfo.repType,
+		   top.inConstArea);
+	      END (*FOR*)
+	    END (*IF*)
+	  ELSE (* Generate a RT loop to fill in the '..' section *)
+  (* TODO: Is it worth it to unroll this loop for low iteration counts, or
+	     just let the back end do it? *)
+	    CG.Load_intt (argCt);
+	    dotSsVal := CG.Pop_temp ();
+	    topLab := CG.Next_label ();
+	    CG.Set_label (topLab);
 
-          (* Gen RT code for dotSsVal := dotSsVal + 1 *)
-          CG.Push (dotSsVal);
-          CG.Load_intt (1);
-          CG.Add (Target.Integer.cg_type);
-          CG.Store_temp (dotSsVal);
+	    (* Gen code for ARRAY[dotSsVal] := ARRAY[argCt-1] *)
+	    WITH constrLevelInfo = top.levels^[depth] DO
+	      GenPushLHSEltsAddr (top, bitOffset := 0, eltAlign := eltAlign);
+	      CG.Push (dotSsVal);
+	      ArrayType.GenIndex (constrLevelInfo.repType); (* Addr to store to. *)
+	      GenPushLHSEltsAddr (top, argFlatOffset, eltAlign);
+	      (* ^Addr to fetch from -- where last explicit arg was assigned into
+		 constructor. *)
+	      IF ArrayType.EltsAreBitAddressed (constrLevelInfo.repType) THEN
+		CG.Load_indirect
+		  (Target.Integer.cg_type, 0, constrEltPack, eltAlign);
+  (* CHECK: That this won't straddle word boundary. *)
+		CG.Store_indirect (Target.Integer.cg_type, 0, constrEltPack);
+	      ELSE
+		CG.Copy (constrEltPack, overlap := FALSE);
+	      END;
+	    END (* WITH constrLevelInfo*);
 
-          (* Gen RT code for IF (dotSsVal < NUMBER(ARRAY) GOTO topLab *)
-          CG.Push (dotSsVal);
-          CG.Load_intt (constr.eltCt);
-          CG.If_compare (Target.Integer.cg_type, CG.Cmp.LT, topLab, CG.Likely);
+	    (* Gen RT code for dotSsVal := dotSsVal + 1 *)
+	    CG.Push (dotSsVal);
+	    CG.Load_intt (1);
+	    CG.Add (Target.Integer.cg_type);
+	    CG.Store_temp (dotSsVal);
 
-          CG.Free (dotSsVal);
-        END (*CASE*);
+	    (* Gen RT code for IF (dotSsVal < NUMBER(ARRAY) GOTO topLab *)
+	    CG.Push (dotSsVal);
+	    CG.Load_intt (constr.eltCt);
+	    CG.If_compare (Target.Integer.cg_type, CG.Cmp.LT, topLab, CG.Likely);
+
+	    CG.Free (dotSsVal);
+	  END (*CASE*);
+	END (*IF lArgExpr # NIL*)
       END (*IF dots, etc.*);
     END (*WITH argLevelInfo*);
     CG.Free (argAddrVal);
