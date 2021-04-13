@@ -91,6 +91,8 @@ CONST
   LastRegular = 247;
   (* Integer values in [0..247] are simply passed thru as single bytes *)
 
+PROCEDURE OpText(op: Op): TEXT;
+
 END M3CG_Binary.
 
 (*
