@@ -4203,6 +4203,7 @@ VAR size := 0;
     sizes: REF ARRAY OF INTEGER := NIL;
     x := self.self;
     index := 0;
+    sizestr: TEXT;
 BEGIN
 
     (* RETURN; *) (* TODO *)
@@ -4237,7 +4238,10 @@ BEGIN
             prev := size;
             FOR unit := FIRST(units) TO LAST(units) DO
                 IF (size MOD units[unit]) = 0 THEN
-                    print(x, "STRUCT" & IntToDec(units[unit]) & "(" & IntToDec(size) & ")\n");
+                    sizestr := IntToDec(size);
+                    ifndef_type(x, "struct_" & sizestr & "_t"); (* see define STRUCT *)
+                    print(x, "STRUCT" & IntToDec(units[unit]) & "(" & sizestr & ")\n");
+                    endif(x);
                     EXIT;
                 END;
             END;
