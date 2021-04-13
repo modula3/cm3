@@ -13,7 +13,7 @@ TYPE
   Desc = RECORD name: TEXT;  op: Op;  END;
 
 CONST
-  Map = ARRAY [Op.begin_unit..Op.widechar_size] OF Desc {
+  Map = ARRAY Op OF Desc {
     Desc { "begin_unit", Op.begin_unit }, 
     Desc { "end_unit", Op.end_unit }, 
     Desc { "import_unit", Op.import_unit }, 
@@ -203,7 +203,15 @@ CONST
     Desc { "fetch_and_or", Op.fetch_and_or },
     Desc { "fetch_and_and", Op.fetch_and_and },
     Desc { "fetch_and_xor", Op.fetch_and_xor },
-    Desc { "widechar_size", Op.widechar_size }
+    Desc { "widechar_size", Op.widechar_size },
+
+    (* The rest are not in the file form, see M3CG_Binary.i3 for why, but the data is useful. *)
+    Desc { "set_error_handler", Op.set_error_handler },
+    Desc { "compare", Op.compare },
+    Desc { "cvt_int", Op.cvt_int },
+    Desc { "fetch_and_op", Op.fetch_and_op },
+    Desc { "if_compare", Op.if_compare },
+    Desc { "set_compare", Op.set_compare }
   };
 
 PROCEDURE Out (a, b, c, d, e, f, g : TEXT := NIL) =
@@ -272,7 +280,7 @@ BEGIN
   Out ("");
 
   Out ("typedef enum {");
-  FOR op := FIRST(Map) TO LAST(Map) DO
+  FOR op := Op.begin_unit TO Op.widechar_size DO
     <*ASSERT op = Map[op].op*>
     Out ("  M3CG_", Upper (Map[op].name), ", ",
          Pad (Map[op].name), "/* ", Fmt.Int (ORD (op)), " */");
@@ -281,7 +289,7 @@ BEGIN
   Out ("");
 
   Out ("static const char *M3CG_opnames[] = {");
-  FOR op := FIRST(Map) TO LAST(Map) DO
+  FOR op := Op.begin_unit TO Op.widechar_size DO
     <*ASSERT op = Map[op].op*>
     Out ("  \"", Map[op].name, "\", ",
          Pad(Map[op].name), "/* ", Fmt.Int (ORD (op)), " */");
