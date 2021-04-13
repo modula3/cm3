@@ -222,15 +222,10 @@ proc SetupEnvironment() is
 %             ["msobj80.dll", "msobj71.dll", "msobj10.dll", "msobj10.dll", "mspdb50.dll", "mspdb41.dll", "mspdb40.dll", "dbi.dll"],
 %             MspdbDir)
 
-%         # The free Visual C++ 2003 has neither delayimp.lib nor msvcrt.lib.
-%         # Very old toolsets have no delayimp.lib.
-%         # The Quake config file checks these environment variables.
+%         # The free Visual C++ 2003 has no msvcrt.lib.
+%         # The Quake config file checks this environment variables.
 
 %         Lib = os.environ.get("LIB")
-%         if not SearchPath("delayimp.lib", Lib)
-%             os.environ["USE_DELAYLOAD"] = "0"
-%             print("set USE_DELAYLOAD=0")
-
 %         if not SearchPath("msvcrt.lib", Lib)
 %             os.environ["USE_MSVCRT"] = "0"
 %             print("set USE_MSVCRT=0")
@@ -1126,49 +1121,6 @@ m3_link_flags =
 %
 %   "-opt:icf",
 ]
-
-%
-% The environment variable USE_DELAYLOAD is 0, 1, or not defined.
-% Not defined is treated as 1. This is a safe default for
-% linker versions going back a long way, but not infinitely so.
-% sysinfo.cmd sets it based on probing the environment.
-%
-if not equal($USE_DELAYLOAD, "0")
-    if not equal($USE_DELAYLOAD, "1")
-        if not equal($USE_DELAYLOAD, "")
-            error("The environment variable USE_DELAYLOAD should be 0, 1, or not defined, but it is " & $USE_DELAYLOAD & "." & EOL)
-        end
-    end
-end
-
-if not defined("USE_DELAYLOAD")
-    if equal($USE_DELAYLOAD, "0")
-        USE_DELAYLOAD = FALSE
-    else
-        USE_DELAYLOAD = TRUE
-    end
-end
-
-if USE_DELAYLOAD
-    m3_link_flags +=
-    [
-    %
-    % The default static dependencies of Modula-3 binaries
-    % are larger than they should be. Reduce them via delayload.
-    % This requires a Visual C++ 6.0 or newer linker.
-    %
-        %"-delayload:ws2_32.dll",
-        "-delayload:wsock32.dll",
-        "-delayload:advapi32.dll",
-        "-delayload:gdi32.dll",
-        "-delayload:netapi32.dll",
-        "-delayload:user32.dll",
-        "-delayload:comctl32.dll",
-        "-delayload:rpcrt4.dll",
-        "-delayload:iphlpapid.dll",
-        "delayimp.lib",
-    ]
-end
 
 %------------------------------------------------------------------------------
 
