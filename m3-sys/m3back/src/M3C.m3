@@ -546,14 +546,14 @@ Cstring.i3 declares strcpy and strcat incorrectly..on purpose.
 "DOTDOTDOT",
 "STRUCT",
 "INT8", "UINT8", "INT16", "UINT16", "INT32", "UINT32", "INT64", "UINT64",
-"m3_eq", "m3_eq_T",
-"m3_ne", "m3_ne_T",
-"m3_gt", "m3_gt_T",
-"m3_ge", "m3_ge_T",
-"m3_lt", "m3_lt_T",
-"m3_le", "m3_le_T",
-"m3_xor", "m3_xor_T",
-"m3_check_range", "m3_check_range_T",
+"m3_eq",
+"m3_ne",
+"m3_gt",
+"m3_ge",
+"m3_lt",
+"m3_le",
+"m3_xor",
+"m3_check_range",
 "GCC_VERSION"
 };
 
@@ -1917,56 +1917,16 @@ CONST Prefix = ARRAY OF TEXT {
 (*"#pragma error_messages(off, E_INIT_DOES_NOT_FIT)",*)
 "#pragma error_messages(off, E_STATEMENT_NOT_REACHED)",
 "#endif",
-"#ifdef __GNUC__",
-"#define GCC_VERSION (__GNUC__ * 100 + __GNUC_MINOR__)",
-"#else",
-"#define GCC_VERSION 0",
-"#endif",
-"#if GCC_VERSION > 0 && GCC_VERSION < 403",
-(*"#define AVOID_GCC_TYPE_LIMIT_WARNING 1",*)
-(*"#define M3_OP2(fun, op, a, b) fun(a, b)",*)
-(*"#define M3_IF_TRUE(fun, a) fun(a,0)",*)
-(*"#define M3_IF_FALSE(fun, a) fun(a,0)",*)
-"/* This is a workaround to prevent warnings from older gcc. */",
-"#define m3_eq_T(T) static WORD_T __stdcall m3_eq_##T(T x, T y){return x==y;}",
-"#define m3_ne_T(T) static WORD_T __stdcall m3_ne_##T(T x, T y){return x!=y;}",
-"#define m3_gt_T(T) static WORD_T __stdcall m3_gt_##T(T x, T y){return x>y;}",
-"#define m3_ge_T(T) static WORD_T __stdcall m3_ge_##T(T x, T y){return x>=y;}",
-"#define m3_lt_T(T) static WORD_T __stdcall m3_lt_##T(T x, T y){return x<y;}",
-"#define m3_le_T(T) static WORD_T __stdcall m3_le_##T(T x, T y){return x<=y;}",
-"#define m3_eq(T, x, y) m3_eq_##T(x, y)",
-"#define m3_ne(T, x, y) m3_ne_##T(x, y)",
-"#define m3_gt(T, x, y) m3_gt_##T(x, y)",
-"#define m3_ge(T, x, y) m3_ge_##T(x, y)",
-"#define m3_lt(T, x, y) m3_lt_##T(x, y)",
-"#define m3_le(T, x, y) m3_le_##T(x, y)",
-"#define m3_check_range_T(T) static int __stdcall m3_check_range_##T(T value, T low, T high){return value<low||high<value;}",
-"#define m3_check_range(T, value, low, high) m3_check_range_##T(value, low, high)",
-"#define m3_xor_T(T) static int __stdcall m3_xor_##T(T x, T y){return x ^ y;}",
-"#define m3_xor(T, x, y) m3_xor_##T(x, y)",
-"#else",
-(*"#define AVOID_GCC_TYPE_LIMIT_WARNING 0",*)
-(*"#define M3_OP2(fun, op, a, b) a op b",*)
-(*"#define M3_IF_TRUE(fun, a) a",*)
-(*"#define M3_IF_FALSE(fun, a) !(a)",*)
-"/* ideally the few uses are guarded by #if AVOID_GCC_TYPE_LIMIT_WARNING and remove the macros */",
-"#define m3_eq_T(T) /* nothing */",
-"#define m3_ne_T(T) /* nothing */",
-"#define m3_gt_T(T) /* nothing */",
-"#define m3_ge_T(T) /* nothing */",
-"#define m3_lt_T(T) /* nothing */",
-"#define m3_le_T(T) /* nothing */",
+
 "#define m3_eq(T, x, y) (((T)(x)) == ((T)(y)))",
 "#define m3_ne(T, x, y) (((T)(x)) != ((T)(y)))",
 "#define m3_gt(T, x, y) (((T)(x)) > ((T)(y)))",
 "#define m3_ge(T, x, y) (((T)(x)) >= ((T)(y)))",
 "#define m3_lt(T, x, y) (((T)(x)) < ((T)(y)))",
 "#define m3_le(T, x, y) (((T)(x)) <= ((T)(y)))",
-"#define m3_check_range_T(T) /* nothing */",
 "#define m3_check_range(T, value, low, high) (((T)(value)) < ((T)(low)) || ((T)(high)) < ((T)(value)))",
-"#define m3_xor_T(T) /* nothing */",
 "#define m3_xor(T, x, y) (((T)(x)) ^ ((T)(y)))",
-"#endif",
+
 "#ifdef _MSC_VER",
 "#define _CRT_SECURE_NO_DEPRECATE",
 "#define _CRT_NONSTDC_NO_DEPRECATE",
@@ -3647,12 +3607,12 @@ CONST Ops = ARRAY OF Op{
         Op.copy_n,
         Op.fence,
         Op.zero,
-        Op.check_range, (* bug -- we use helper function only to quash gcc warnings *)
-        Op.xor,         (* bug -- we use helper function only to quash gcc warnings *)
-        Op.compare,     (* bug -- we use helper function only to quash gcc warnings *)
-        Op.if_compare,  (* bug -- we use helper function only to quash gcc warnings *)
-        Op.if_true,     (* bug -- we use helper function only to quash gcc warnings *)
-        Op.if_false     (* bug -- we use helper function only to quash gcc warnings *)
+        Op.check_range,
+        Op.xor,
+        Op.compare,
+        Op.if_compare,
+        Op.if_true,
+        Op.if_false
     };
 CONST OpsThatCanFault = ARRAY OF Op{
         Op.abort,
@@ -3728,6 +3688,8 @@ BEGIN
     x.comment("end: helper functions");
 END HelperFunctions;
 
+(* Helper functions are only output if needed, to avoid warnings about unused functions.
+ * This pass determines which helper functions are neded and outputs them. *)
 TYPE HelperFunctions_t = M3CG_DoNothing.T BRANDED "M3C.HelperFunctions_t" OBJECT
     self: T := NIL;
     data: RECORD
@@ -3763,12 +3725,6 @@ OVERRIDES
     copy_n := HelperFunctions_copy_n;
     zero := HelperFunctions_zero;
     fence := HelperFunctions_fence;
-    check_range := HelperFunctions_check_range;
-    xor := HelperFunctions_xor;
-    compare := HelperFunctions_compare;
-    if_compare := HelperFunctions_if_compare;
-    if_true := HelperFunctions_if_true;
-    if_false := HelperFunctions_if_false;
 END;
 
 PROCEDURE HelperFunctions_Init(self: HelperFunctions_t; outer: T): HelperFunctions_t =
@@ -4023,60 +3979,6 @@ CONST text = "#define m3_pop_T(T) static void __stdcall m3_pop_##T(volatile T a)
 BEGIN
     HelperFunctions_helper_with_type(self, "pop", type, self.data.pop, text);
 END HelperFunctions_pop;
-
-PROCEDURE HelperFunctions_check_range(self: HelperFunctions_t; type: IType; <*UNUSED*>READONLY low, high: Target.Int; <*UNUSED*>code: RuntimeError) =
-(* Ideally the helper would call report_fault but I do not think we have the name yet.
-   This is a workaround to prevent warnings from older gcc.
-*)
-BEGIN
-    HelperFunctions_helper_with_type(self, "check_range", type, self.data.check_range);
-END HelperFunctions_check_range;
-
-PROCEDURE HelperFunctions_xor(self: HelperFunctions_t; type: IType) =
-(* This is a workaround to prevent warnings from older gcc. *)
-BEGIN
-    HelperFunctions_helper_with_type(self, "xor", type, self.data.xor);
-END HelperFunctions_xor;
-
-PROCEDURE HelperFunctions_if_true(self: HelperFunctions_t; itype: IType; <*UNUSED*>label: Label; <*UNUSED*>frequency: Frequency) =
-(* IF (s0.itype # 0) GOTO label; pop *)
-BEGIN
-    HelperFunctions_internal_compare(self, itype, CompareOp.NE);
-END HelperFunctions_if_true;
-
-PROCEDURE HelperFunctions_if_false(self: HelperFunctions_t; itype: IType; <*UNUSED*>label: Label; <*UNUSED*>frequency: Frequency) =
-(* IF (s0.itype = 0) GOTO label; pop *)
-BEGIN
-    HelperFunctions_internal_compare(self, itype, CompareOp.EQ);
-END HelperFunctions_if_false;
-
-PROCEDURE HelperFunctions_internal_compare(
-    self: HelperFunctions_t;
-    type: Type;
-    op: CompareOp) =
-(* This is a workaround to prevent warnings from older gcc. *)
-BEGIN
-    HelperFunctions_helper_with_type(self, CompareOpName[op], type, self.data.compare[op]);
-END HelperFunctions_internal_compare;
-
-PROCEDURE HelperFunctions_compare(
-    self: HelperFunctions_t;
-    ztype: ZType;
-    <*UNUSED*>itype: IType;
-    op: CompareOp) =
-BEGIN
-    HelperFunctions_internal_compare(self, ztype, op);
-END HelperFunctions_compare;
-
-PROCEDURE HelperFunctions_if_compare(
-    self: HelperFunctions_t;
-    ztype: ZType;
-    op: CompareOp;
-    <*UNUSED*>label: Label;
-    <*UNUSED*>frequency: Frequency) =
-BEGIN
-    HelperFunctions_internal_compare(self, ztype, op);
-END HelperFunctions_if_compare;
 
 PROCEDURE HelperFunctions_copy_common(self: HelperFunctions_t; overlap: BOOLEAN) =
 BEGIN
