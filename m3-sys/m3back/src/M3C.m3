@@ -984,10 +984,10 @@ BEGIN
 END record_canBeDefined;
 
 (* ifndef so multiple files can be concatenated and compiled at once *)
-PROCEDURE ifndef_type(self:T; type: TEXT) =
+PROCEDURE ifndef(self:T; type: TEXT) =
 BEGIN
   print(self, "#ifndef " & type & "\n#define " & type & " " & type & "\n");
-END ifndef_type;
+END ifndef;
 
 PROCEDURE endif(self: T) =
 BEGIN
@@ -1007,7 +1007,7 @@ BEGIN
         NARROW(record.fields.get(j), Field_t).type.Define(self);
     END;
 
-    ifndef_type(x, record.text); (* ifdef so multiple files can be concatenated and compiled at once *)
+    ifndef(x, record.text); (* ifdef so multiple files can be concatenated and compiled at once *)
 
     print(x, "/*record_define*/struct " & record.text & "{\n");
 
@@ -1228,7 +1228,7 @@ PROCEDURE fixedArray_define(type: FixedArray_t; x: T) =
 BEGIN
     type.element_type.Define(x);
 
-    ifndef_type(x, type.text); (* ifdef so multiple files can be concatenated and compiled at once *)
+    ifndef(x, type.text); (* ifdef so multiple files can be concatenated and compiled at once *)
 
     print(x, "/*fixedArray_define*/struct " & type.text & "{");
     print(x, type.element_type.text);
@@ -1270,7 +1270,7 @@ BEGIN
         element_type_text := "char/*TODO*/";
     END;
 
-    ifndef_type(x, type.text); (* ifdef so multiple files can be concatenated and compiled at once *)
+    ifndef(x, type.text); (* ifdef so multiple files can be concatenated and compiled at once *)
 
     text := "/*openArray_define*/struct " & type.text & "{\n" & element_type_text;
     FOR i := 1 TO dimensions DO
@@ -2610,7 +2610,7 @@ BEGIN
             RTIO.PutText("declare_array nil element_type\n");
             RTIO.Flush();
         END;
-        ifndef_type(self, element_type.text); (* ifdef so multiple files can be concatenated and compiled at once *)
+        ifndef(self, element_type.text); (* ifdef so multiple files can be concatenated and compiled at once *)
         print(self, "/*declare_open_array*/typedef struct {");
         print(self, element_type.text);
         print(self, "* _elts; CARDINAL _size");
@@ -3766,7 +3766,9 @@ BEGIN
         HelperFunctions_print_array(self, first);
     END;
     IF NOT type IN types THEN
+        ifndef(self.self, "m3_" & op & "_" & cgtypeToText[type]);
         print(self.self, "m3_" & op & "_T(" & cgtypeToText[type] & ")\n");
+        endif(self.self);
         types := types + SET OF CGType{type};
     END;
 END HelperFunctions_helper_with_type_and_array;
@@ -4239,7 +4241,7 @@ BEGIN
             FOR unit := FIRST(units) TO LAST(units) DO
                 IF (size MOD units[unit]) = 0 THEN
                     sizestr := IntToDec(size);
-                    ifndef_type(x, "struct_" & sizestr & "_t"); (* see define STRUCT *)
+                    ifndef(x, "struct_" & sizestr & "_t"); (* see define STRUCT *)
                     print(x, "STRUCT" & IntToDec(units[unit]) & "(" & sizestr & ")\n");
                     endif(x);
                     EXIT;
