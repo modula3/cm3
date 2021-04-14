@@ -671,6 +671,7 @@ TYPE Type_t = OBJECT
     bit_size := 0;  (* FUTURE Target.Int or LONGINT *)
     typeid: TypeUID := 0;
     text: TEXT := NIL;
+    type_text_tail := ""; (* workaround for different types having same typeid *)
     cgtype: CGType := CGType.Addr;
     state := Type_State.None;
 METHODS
@@ -1323,13 +1324,12 @@ BEGIN
                 type.text := cgtypeToText[cgtype];
             END;
         ELSE
-            type.text := TypeIDToText(type.typeid);
+            type.text := TypeIDToText(type.typeid) & type.type_text_tail;
         END;
     END;
     IF type.typeid # -1 THEN
         EVAL self.typeidToType.put(type.typeid, type);
     END;
-
 (*
     FOR i := FIRST(typedefs) TO LAST(typedefs) DO
       IF typedefs[i] # NIL AND typedefs[i] # Text_address THEN
@@ -1338,7 +1338,6 @@ BEGIN
       END;
     END;
 *)
-
     Type_ForwardDeclare(type, self);
     IF Type_CanBeDefined(type, self) THEN
         type.Define(self);
@@ -2944,7 +2943,24 @@ BEGIN
         typeid := typeid,
         domain_typeid := domain_typeid,
         bit_size := bit_size,
-        cgtype := SubrangeCGType(min, max, bit_size)));
+        cgtype := SubrangeCGType(min, max, bit_size),
+        (* Subranges have colliding typeids. m3front bug?
+         * For example:
+         * libm3\Formatter.m3:
+         *    Int   = REF INTEGER;
+         *    ints: ARRAY [-256..256] OF Int;
+         *    declare_subrange typeid:T69A2A904 domain_type:T195C2A74 min:-256 max:256 bit_size:16 */
+         * libm3\Sx.m3
+         *    MinBoxedInt   = -100;
+         *    MaxBoxedInt   = 100;
+         *    BoxedInts  := ARRAY [MinBoxedInt .. MaxBoxedInt] OF REF INTEGER {NIL, ..};
+         *    declare_subrange typeid:T69A2A904 domain_type:T195C2A74 min:-100 max:100 bit_size:8 */
+         *
+         * Partial workaround it here by appending the size to the type text.
+         * We could further workaround by deferring the typedef until use, as in this
+         * case, neither type is used. Just defined.
+         *)
+        type_text_tail := "_" & IntToDec(bit_size)));
 END declare_subrange;
 
 PROCEDURE declare_pointer(self: DeclareTypes_t; typeid, target: TypeUID; brand: TEXT; traced: BOOLEAN) =
