@@ -2366,7 +2366,7 @@ BEGIN
 
 (* Enum_t? *)
     self.Type_Init(NEW(Integer_t, state := Type_State.CanBeDefined, cgtype := Target.Word8.cg_type, typeid := UID_BOOLEAN, (* max := IntToTarget(self, 1), *) text := "BOOLEAN"));
-    self.Type_Init(NEW(Integer_t, state := Type_State.CanBeDefined, cgtype := Target.Word8.cg_type, typeid := UID_CHAR, (* max := IntToTarget(self, 16_FF), *) text := "CHAR"));
+    self.Type_Init(NEW(Integer_t, state := Type_State.CanBeDefined, cgtype := Target.Word8.cg_type, typeid := UID_CHAR, (* max := IntToTarget(self, 16_FF), *) text := "UCHAR"));
 
     widechar_target_type := Target.Word16.cg_type; 
     widechar_last := 16_FFFF; (* The defaults. *) 
