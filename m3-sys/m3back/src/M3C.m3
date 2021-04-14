@@ -3900,7 +3900,7 @@ CONST text = ARRAY ConvertOp OF TEXT{
     & "static INT64 __stdcall m3_round(EXTENDED f) { return (INT64)f; }\n"
     & "#else\n"
     & "INT64 __cdecl llroundl(long double);\nstatic INT64 __stdcall m3_round(EXTENDED f) { return (INT64)llroundl(f); }\n"
-    & "#endif"
+    & "#endif\n"
     & "#endif",
 
     "#ifndef m3_trunc\n#define m3_trunc m3_trunc\nstatic INT64 __stdcall m3_trunc(EXTENDED f) { return (INT64)f; }\n#endif\n",
