@@ -1953,6 +1953,8 @@ CONST Prefix = ARRAY OF TEXT {
 "#pragma warning(disable:4514) /* unused inline function removed */",
 "#pragma warning(disable:4668) /* #if of undefined symbol */",
 "#pragma warning(disable:4705) /* statement has no effect for merely using assert() at -W4 */",
+"#pragma warning(disable:4715) /* not all control paths return a value */",
+"#pragma warning(disable:4716) /* must return a value */",
 "#pragma warning(disable:4820) /* padding inserted */",
 "#pragma warning(disable:5045) /* Compiler will insert Spectre mitigation for memory load if /Qspectre switch specified */", (* TODO fix *)
 "#endif",
