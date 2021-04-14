@@ -3753,35 +3753,41 @@ BEGIN
     END;
 END HelperFunctions_print_array;
 
-PROCEDURE HelperFunctions_helper_with_boolean_and_array(self: HelperFunctions_t; VAR boolean: BOOLEAN; READONLY text: ARRAY OF TEXT) =
+PROCEDURE HelperFunctions_helper_with_boolean_and_array(self: HelperFunctions_t; VAR already_printed: BOOLEAN; READONLY text: ARRAY OF TEXT) =
 BEGIN
-    IF NOT boolean THEN
+    IF NOT already_printed THEN
         HelperFunctions_print_array(self, text);
-        boolean := TRUE;
+        already_printed := TRUE;
     END;
 END HelperFunctions_helper_with_boolean_and_array;
 
-PROCEDURE HelperFunctions_helper_with_boolean(self: HelperFunctions_t; VAR boolean: BOOLEAN; text: TEXT) =
+PROCEDURE HelperFunctions_helper_with_boolean(self: HelperFunctions_t; VAR already_printed: BOOLEAN; text: TEXT) =
 BEGIN
-    HelperFunctions_helper_with_boolean_and_array(self, boolean, ARRAY OF TEXT{text});
+    HelperFunctions_helper_with_boolean_and_array(self, already_printed, ARRAY OF TEXT{text});
 END HelperFunctions_helper_with_boolean;
 
-PROCEDURE HelperFunctions_helper_with_type_and_array(self: HelperFunctions_t; op: TEXT; type: CGType; VAR types: SET OF CGType; READONLY first: ARRAY OF TEXT) =
+PROCEDURE HelperFunctions_helper_with_type_and_array(
+    self: HelperFunctions_t; op: TEXT; type: CGType; VAR types_already_printed: SET OF CGType; READONLY first: ARRAY OF TEXT) =
 BEGIN
-    IF types = SET OF CGType{} THEN
+    (* Print the prefix array before any type-specific content. *)
+    IF types_already_printed = SET OF CGType{} THEN
+        ifndef(self.self, op);
         HelperFunctions_print_array(self, first);
+        endif(self.self);
     END;
-    IF NOT type IN types THEN
+
+    (* Print per-type content. Remember what types are printed to avoid duplication. *)
+    IF NOT type IN types_already_printed THEN
         ifndef(self.self, op & "_" & cgtypeToText[type]);
         print(self.self, "m3_" & op & "_T(" & cgtypeToText[type] & ")\n");
         endif(self.self);
-        types := types + SET OF CGType{type};
+        types_already_printed := types_already_printed + SET OF CGType{type};
     END;
 END HelperFunctions_helper_with_type_and_array;
 
-PROCEDURE HelperFunctions_helper_with_type(self: HelperFunctions_t; op: TEXT; type: CGType; VAR types: SET OF CGType; first: TEXT := NIL) =
+PROCEDURE HelperFunctions_helper_with_type(self: HelperFunctions_t; op: TEXT; type: CGType; VAR types_already_printed: SET OF CGType; first: TEXT := NIL) =
 BEGIN
-    HelperFunctions_helper_with_type_and_array(self, op, type, types, ARRAY OF TEXT{first});
+    HelperFunctions_helper_with_type_and_array(self, op, type, types_already_printed, ARRAY OF TEXT{first});
 END HelperFunctions_helper_with_type;
 
 (* TODO give up and #include <string.h>? *)
