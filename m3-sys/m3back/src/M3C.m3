@@ -984,14 +984,14 @@ BEGIN
 END record_canBeDefined;
 
 (* ifndef so multiple files can be concatenated and compiled at once *)
-PROCEDURE ifndef(self:T; type: TEXT) =
+PROCEDURE ifndef(self:T; id: TEXT) =
 BEGIN
-  print(self, "#ifndef " & type & "\n#define " & type & " " & type & "\n");
+  print(self, "\n#ifndef m3once_" & id & "\n#define m3once_" & id & " m3once_" & id & "\n");
 END ifndef;
 
 PROCEDURE endif(self: T) =
 BEGIN
-  print(self, "#endif\n");
+  print(self, "\n#endif\n");
 END endif;
 
 PROCEDURE record_define(record: Record_t; self: T) =
@@ -3634,7 +3634,7 @@ CONST setData = ARRAY OF T1{
     T1{Op.set_intersection, "static void __stdcall m3_set_intersection(WORD_T n_words,WORD_T*c,WORD_T*b,WORD_T*a){WORD_T i=0;for(;i<n_words;++i)a[i]=b[i]&c[i];}"},
     T1{Op.set_sym_difference, "static void __stdcall m3_set_sym_difference(WORD_T n_words,WORD_T*c,WORD_T*b,WORD_T*a){WORD_T i=0;for(;i<n_words;++i)a[i]=b[i]^c[i];}"},
     T1{Op.set_range,
-          "\n#define M3_HIGH_BITS(a) ((~(WORD_T)0) << (a))\n"
+          "#define M3_HIGH_BITS(a) ((~(WORD_T)0) << (a))\n"
         & "#define M3_LOW_BITS(a)  ((~(WORD_T)0) >> (SET_GRAIN - (a) - 1))\n"
         & "static void __stdcall m3_set_range(WORD_T b, WORD_T a, WORD_T* s)\n"
         & "{\n"
@@ -3658,7 +3658,7 @@ CONST setData = ARRAY OF T1{
         & "      s[b_word] |= low_bits;\n"
         & "    }\n"
         & "  }\n"
-        & "}\n"
+        & "}"
         },
     T1{Op.set_singleton, "static void __stdcall m3_set_singleton(WORD_T a,WORD_T*s){s[a/SET_GRAIN]|=(((WORD_T)1)<<(a%SET_GRAIN));}"},
     T1{Op.set_member, "static WORD_T __stdcall m3_set_member(WORD_T elt,WORD_T*set){return(set[elt/SET_GRAIN]&(((WORD_T)1)<<(elt%SET_GRAIN)))!=0;}"}
@@ -3676,7 +3676,9 @@ BEGIN
                 print(x, "typedef WORD_T* SET;\n#define SET_GRAIN (sizeof(WORD_T)*8)\n");
                 setAny := TRUE;
             END;
+            ifndef(x, M3CG_Binary.OpText(setData[i].op));
             print(x, setData[i].text);
+            endif(x);
         END;
     END;
     FOR i := FIRST(OpsThatCanFault) TO LAST(OpsThatCanFault) DO
@@ -3770,7 +3772,7 @@ BEGIN
         HelperFunctions_print_array(self, first);
     END;
     IF NOT type IN types THEN
-        ifndef(self.self, "m3_" & op & "_" & cgtypeToText[type]);
+        ifndef(self.self, op & "_" & cgtypeToText[type]);
         print(self.self, "m3_" & op & "_T(" & cgtypeToText[type] & ")\n");
         endif(self.self);
         types := types + SET OF CGType{type};
