@@ -1200,8 +1200,8 @@ END enum_define;
 TYPE Array_t = Type_t OBJECT
     index_typeid := 0;
     element_typeid := 0;
-    index_type: Type_t;
-    element_type: Type_t;
+    index_type: Type_t := NIL;
+    element_type: Type_t := NIL;
 OVERRIDES
     isArray := type_isType_true;
     canBeForwardDeclared := type_canBeForwardDeclared_true;
@@ -4429,7 +4429,7 @@ VAR var := NEW(Var_t,
         byte_size := byte_size,
         typeid := typeid,
         proc := self.current_proc).Init();
-    type: Type_t;
+    type: Type_t := NIL;
 BEGIN
     IF DebugVerbose(self) THEN
         self.comment("declare_local name:" & NameT(var.name)
