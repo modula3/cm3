@@ -1052,9 +1052,10 @@ PROCEDURE BuildImportLink (nm: M3ID.T;  binder: TEXT): INTEGER =
     prev_link : INTEGER;
     offset    := Allocate (M3RT.II_SIZE, Target.Address.align, FALSE,
                            "import ", nm);
-    proc      := CG.Import_procedure (M3ID.Add (binder), 0, CG.Type.Addr,
+    proc      := CG.Import_procedure (M3ID.Add (binder), 1, CG.Type.Addr,
                                        Target.DefaultCall, new_proc);
   BEGIN
+    EVAL BinderDeclareParam ();
     IF (curModule.last_import = 0)
       THEN prev_link := M3RT.MI_imports;
       ELSE prev_link := curModule.last_import + M3RT.II_next;
@@ -1085,10 +1086,7 @@ PROCEDURE EmitDecl (x: InitBody) =
     CG.Gen_location (t.body_origin);
     x.cg_proc := CG.Declare_procedure (M3ID.Add (x.name), 1, CG.Type.Addr,
        lev := 0, cc := Target.DefaultCall, exported := TRUE, parent := NIL);
-    x.arg := CG.Declare_param (M3ID.Add ("mode"), Target.Integer.size,
-                               Target.Integer.align, Target.Integer.cg_type,
-                               Type.GlobalUID (Int.T), (*in_memory*) FALSE,
-                               (*up_level*) FALSE, (*frequency*) CG.Always);
+    x.arg := BinderDeclareParam ();
   END EmitDecl;
 
 PROCEDURE EmitBody (x: InitBody) =
@@ -1245,6 +1243,14 @@ PROCEDURE BinderName (nm: M3ID.T;  interface: BOOLEAN): TEXT =
   BEGIN
     RETURN M3ID.ToText (nm) & MainBodySuffix[interface];
   END BinderName;
+
+PROCEDURE BinderDeclareParam (): CG.Var =
+BEGIN
+  RETURN CG.Declare_param (M3ID.Add ("mode"), Target.Integer.size,
+                           Target.Integer.align, Target.Integer.cg_type,
+                           Type.GlobalUID (Int.T), (*in_memory*) FALSE,
+                           (*up_level*) FALSE, (*frequency*) CG.Always);
+END BinderDeclareParam;
 
 PROCEDURE GetNextCounter (VAR c: ARRAY [0..4] OF CHAR) =
   BEGIN
