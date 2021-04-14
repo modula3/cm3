@@ -986,7 +986,7 @@ END record_canBeDefined;
 (* ifndef so multiple files can be concatenated and compiled at once *)
 PROCEDURE ifndef(self:T; id: TEXT) =
 BEGIN
-  print(self, "\n#ifndef m3once_" & id & "\n#define m3once_" & id & " m3once_" & id & "\n");
+  print(self, "\n#ifndef m3once_" & id & "\n#define m3once_" & id & "\n");
 END ifndef;
 
 PROCEDURE endif(self: T) =
@@ -3894,14 +3894,20 @@ END HelperFunctions_min;
 
 PROCEDURE HelperFunctions_cvt_int(self: HelperFunctions_t; <*UNUSED*>rtype: RType; <*UNUSED*>itype: IType; op: ConvertOp) =
 CONST text = ARRAY ConvertOp OF TEXT{
-    "#ifdef _WIN64 /* temporary workaround */\n"
+
+    "#ifndef m3_round\n#define m3_round m3_round\n"
+    & "#ifdef _WIN64 /* temporary workaround */\n"
     & "static INT64 __stdcall m3_round(EXTENDED f) { return (INT64)f; }\n"
     & "#else\n"
     & "INT64 __cdecl llroundl(long double);\nstatic INT64 __stdcall m3_round(EXTENDED f) { return (INT64)llroundl(f); }\n"
+    & "#endif"
     & "#endif",
-    "static INT64 __stdcall m3_trunc(EXTENDED f) { return (INT64)f; }",
-    "double __cdecl floor(double);\nstatic INT64 __stdcall m3_floor(EXTENDED f) { return floor(f); } /* math.h */",
-    "double __cdecl ceil(double);\nstatic INT64 __stdcall m3_ceil(EXTENDED f) { return ceil(f); } /* math.h */"
+
+    "#ifndef m3_trunc\n#define m3_trunc m3_trunc\nstatic INT64 __stdcall m3_trunc(EXTENDED f) { return (INT64)f; }\n#endif\n",
+
+    "#ifndef m3_floor\n#define m3_floor m3_floor\ndouble __cdecl floor(double);\nstatic INT64 __stdcall m3_floor(EXTENDED f) { return floor(f); } /* math.h */\n#endif\n",
+
+    "#ifndef m3_ceil\n#define m3_ceil m3_ceil\ndouble __cdecl ceil(double);\nstatic INT64 __stdcall m3_ceil(EXTENDED f) { return ceil(f); } /* math.h */\n#endif\n"
     };
 BEGIN
     HelperFunctions_helper_with_boolean(self, self.data.cvt_int[op], text[op]);
@@ -4020,6 +4026,8 @@ END HelperFunctions_zero;
 
 PROCEDURE HelperFunctions_fence(self: HelperFunctions_t; <*UNUSED*>order: MemoryOrder) =
 CONST text = ARRAY OF TEXT{
+"#ifndef m3once_fence",
+"#define m3once_fence",
 "#ifdef _MSC_VER",
 "long __cdecl _InterlockedExchange(volatile long*, long);",
 "#pragma instrinsic(_InterlockedExchange)",
@@ -4027,6 +4035,7 @@ CONST text = ARRAY OF TEXT{
 "#define m3_fence() _InterlockedExchange(&m3_fence_var, 0)",
 "#else",
 "static void __stdcall m3_fence(void){}", (* not yet implemented *)
+"#endif",
 "#endif"
 };
 BEGIN
