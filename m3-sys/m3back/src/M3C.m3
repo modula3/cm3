@@ -783,8 +783,8 @@ END Type_Define;
 
 PROCEDURE Type_ForwardDeclare(type: Type_t; self: T) =
 BEGIN
-    IF ORD(type.state) >= ORD(Type_State.ForwardDeclared) THEN
-        RETURN;
+    IF ORD(type.state) >= ORD(Type_State.ForwardDeclared) OR NOT type.canBeForwardDeclared(self) THEN
+      RETURN;
     END;
     type.forwardDeclare(self);
     IF ORD(type.state) < ORD(Type_State.ForwardDeclared) THEN
@@ -835,11 +835,11 @@ BEGIN
     END;
 
     IF NOT ResolveType(self, type.points_to_typeid, type.points_to_type) THEN
-      print(x, "/*2pointer_define failing, falling back to void* for " & type.text & "*/;\n");
+      Err(x, "internal error: pointer_define(" & type.text & ") 1");
     END;
 
     IF type.points_to_type = NIL THEN
-      print(x, "/*3nil pointer_define*/typedef void* " & type.text & ";\n");
+      Err(x, "internal error: pointer_define(" & type.text & ") 2");
       RETURN;
     END;
     type.points_to_type.ForwardDeclare(self);
@@ -909,7 +909,7 @@ END ResolveType;
 PROCEDURE pointer_canBeDefined(type: Pointer_t; self: T): BOOLEAN =
 BEGIN
     (* We have recursive types TYPE FOO = UNTRACED REF FOO. Typos actually. *)
-    IF type.points_to_typeid = type.points_to_typeid THEN
+    IF type.points_to_typeid = type.typeid THEN
       RETURN TRUE;
     END;
     RETURN ResolveType(self, type.points_to_typeid, type.points_to_type)
@@ -1251,8 +1251,16 @@ END;
 
 PROCEDURE openArray_canBeDefined(type: Array_t; self: T): BOOLEAN =
 BEGIN
-    RETURN ResolveType(self, type.element_typeid, type.element_type)
-        AND Type_IsForwardDeclared(type.element_type);
+  IF NOT ResolveType(self, type.element_typeid, type.element_type) THEN
+    (*self.comment("1 openArray_canBeDefined:FALSE:typeid " & TypeIDToText(type.typeid));*)
+    RETURN FALSE;
+  END;
+  IF NOT Type_IsForwardDeclared(type.element_type) THEN
+    (*self.comment("2 openArray_canBeDefined:FALSE:typeid " & TypeIDToText(type.typeid));*)
+    RETURN FALSE;
+  END;
+  (*self.comment("3 openArray_canBeDefined:TRUE:typeid " & TypeIDToText(type.typeid));*)
+  RETURN TRUE;
 END openArray_canBeDefined;
 
 PROCEDURE openArray_define(type: OpenArray_t; x: T) =
