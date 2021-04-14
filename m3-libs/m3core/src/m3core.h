@@ -410,7 +410,9 @@ typedef float REAL;
 typedef double LONGREAL;
 typedef double EXTENDED;
 #if defined(__cplusplus) || __STDC__
-typedef void* ADDRESS;
+//Match m3c, so all the files can be concatenated.
+//typedef void* ADDRESS;
+typedef char* ADDRESS;
 #else
 typedef char* ADDRESS;
 #endif
