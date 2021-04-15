@@ -334,9 +334,7 @@ SYSTEM_LIBS_MS =
 {
     "LIBC" :
     [
-        % iphlpapi.lib is missing in older toolsets, e.g. Visual C++ 4.0,
-        % and our use of it now uses LoadLibrary / GetProcAddress because of this.
-        %LibIn("iphlpapi"),
+        LibIn("iphlpapi"),
         LibIn("rpcrt4"),
         LibIn("winspool"),
         LibIn("comctl32"),
