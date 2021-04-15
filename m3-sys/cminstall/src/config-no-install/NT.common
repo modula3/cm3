@@ -341,10 +341,7 @@ SYSTEM_LIBS_MS =
         LibIn("winspool"),
         LibIn("comctl32"),
 
-        % TODO ws2_32 is missing in Visual C++ 2.0 and 4.0, but present in 5.0.
-        % Either use wsock32, or use our own, or require it anyway.
-        %LibIn("ws2_32"),
-        LibIn("wsock32"),
+        LibIn("ws2_32"),
         LibIn("comdlg32"),
         LibIn("netapi32"),
         LibIn("gdi32"),
