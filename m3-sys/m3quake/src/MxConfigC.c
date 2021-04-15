@@ -3,7 +3,9 @@
 // word sizes other than 32 or 64, etc.
 //
 // Code should avoid depending on this stuff though too.
+#ifndef INCLUDED_M3CORE_H
 #include "m3core.h"
+#endif
 #include <string.h>
 #include <ctype.h>
 #ifdef _WIN32

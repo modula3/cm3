@@ -15,7 +15,9 @@
 //TODO #include <winsock2.h>
 #endif
 
+#ifndef INCLUDED_M3CORE_H
 #include "m3core.h"
+#endif
 
 #ifndef _WIN32
 #include <arpa/inet.h>

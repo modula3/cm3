@@ -4,7 +4,9 @@ By they don't define "reset".
 Let's see.
 */
 
+#ifndef INCLUDED_M3CORE_H
 #include "m3core.h"
+#endif
 
 void __cdecl alarm_handler(int sig)
 {

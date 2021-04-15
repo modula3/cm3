@@ -7,7 +7,9 @@
 /* Originally submitted on Fri, 22 Jul 1994 16:42:53 GMT      */
 /*   by jredford@lehman.com (John Redford)                    */
 
+#ifndef INCLUDED_M3CORE_H
 #include "m3core.h"
+#endif
 
 #ifndef _WIN32
 

@@ -1,7 +1,9 @@
 /* Copyright 1996-2000, Critical Mass, Inc.  All rights reserved. */
 /* See file COPYRIGHT-CMASS for details. */
 
+#ifndef INCLUDED_M3CORE_H
 #include "m3core.h"
+#endif
 
 #ifdef __cplusplus
 extern "C" {

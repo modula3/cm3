@@ -2,6 +2,9 @@
 #pragma once
 #endif
 
+// Before including m3core.h, check if INCLUDED_M3CORE_H is defined.
+// This is not so much as to optimize compilation, but to enable
+// concatenating all the files.
 #ifndef INCLUDED_M3CORE_H
 #define INCLUDED_M3CORE_H
 

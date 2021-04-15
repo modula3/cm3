@@ -7,7 +7,9 @@
 
 /*----------- types from RT0, for now ... -----------------*/
 
+#ifndef INCLUDED_M3CORE_H
 #include "m3core.h"
+#endif
 typedef INTEGER _INTEGER;
 
 #define _ADDRESS char*

@@ -5,7 +5,9 @@ such as on Windows going directly to HeapAlloc(GetProcessHeap()) and
 reducing C runtime dependency.
 */
 
+#ifndef INCLUDED_M3CORE_H
 #include "m3core.h"
+#endif
 
 #ifdef _MSC_VER
 #pragma warning(disable:4115) /* named type definition in paren (windows.h) */

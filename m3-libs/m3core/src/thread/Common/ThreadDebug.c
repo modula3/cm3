@@ -16,7 +16,9 @@ The code is also portable and could be used for ThreadPThread.m3 if desired.
 #pragma warning(disable:4100) /* unused parameter */
 #endif
 
+#ifndef INCLUDED_M3CORE_H
 #include "m3core.h"
+#endif
 #ifdef _WIN32
 #include <windows.h>
 #endif

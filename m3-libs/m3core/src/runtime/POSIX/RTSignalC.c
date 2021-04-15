@@ -7,7 +7,9 @@
 #undef _GNU_SOURCE
 #define _GNU_SOURCE
 
+#ifndef INCLUDED_M3CORE_H
 #include "m3core.h"
+#endif
 
 #if !defined(__INTERIX) && !defined(__vms) && !defined(SA_SIGINFO)
 #define SA_SIGINFO SA_SIGINFO

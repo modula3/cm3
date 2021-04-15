@@ -9,7 +9,9 @@ saves us from having to declare struct flock, which is gnarled up in #ifdefs.
 see http://www.opengroup.org/onlinepubs/009695399/functions/fcntl.html
 */
 
+#ifndef INCLUDED_M3CORE_H
 #include "m3core.h"
+#endif
 #include <string.h>
 
 #ifdef __cplusplus

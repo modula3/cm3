@@ -6,7 +6,9 @@
    even if it isn't passed as a parameter to the signal handler.
  */
 
+#ifndef INCLUDED_M3CORE_H
 #include "m3core.h"
+#endif
 #include <sys/procfs.h>
 
 void* thread1(void*a)

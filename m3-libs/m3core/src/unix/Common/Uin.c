@@ -1,4 +1,6 @@
+#ifndef INCLUDED_M3CORE_H
 #include "m3core.h"
+#endif
 #ifndef _WIN32
 /* Posix says include <arpa/inet.h>, but FreeBSD 4 inet.h
    requires netinet/in.h

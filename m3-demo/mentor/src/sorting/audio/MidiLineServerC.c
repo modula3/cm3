@@ -5,7 +5,9 @@
 /*      modified on Tue Dec 22 13:56:41 PST 1992 by mhb      */
 /*      modified on Fri Nov 20 15:49:27 PST 1992 by sclafani */
 
+#ifndef INCLUDED_M3CORE_H
 #include "m3core.h"
+#endif
 #include <poll.h>
 
 #ifdef __cplusplus

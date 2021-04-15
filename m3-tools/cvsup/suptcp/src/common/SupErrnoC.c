@@ -2,7 +2,9 @@
  * Helper functions for accessing standard C's "errno" value.
  */
 
+#ifndef INCLUDED_M3CORE_H
 #include "m3core.h"
+#endif
 #include <errno.h>
 
 #ifdef __cplusplus

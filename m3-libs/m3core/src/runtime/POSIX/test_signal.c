@@ -1,4 +1,6 @@
+#ifndef INCLUDED_M3CORE_H
 #include "m3core.h"
+#endif
 #include "RTSignalC.c"
 
 void RTSignalPrivate__MsgPCSegV (size_t a)

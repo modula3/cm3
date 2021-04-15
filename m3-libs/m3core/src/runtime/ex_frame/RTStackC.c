@@ -13,7 +13,9 @@
 #pragma warning(disable:4255) /* () converted to (void) */
 #endif
 
+#ifndef INCLUDED_M3CORE_H
 #include "m3core.h"
+#endif
 
 #ifdef __cplusplus
 extern "C" {

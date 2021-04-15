@@ -2,7 +2,9 @@
 /* All rights reserved.                                        */
 /* See the file COPYRIGHT for a full description.              */
 
+#ifndef INCLUDED_M3CORE_H
 #include "m3core.h"
+#endif
 #include <poll.h>
 
 M3_EXTERNC_BEGIN
