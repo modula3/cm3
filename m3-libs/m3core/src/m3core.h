@@ -337,7 +337,6 @@ M3EXTERNC_END
 #endif
 #include <direct.h>
 #include <io.h>
-#include <winsock.h>
 #include <process.h>
 typedef ptrdiff_t ssize_t;
 #else
