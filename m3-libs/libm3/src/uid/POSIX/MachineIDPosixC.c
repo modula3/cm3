@@ -8,11 +8,6 @@
 #ifndef INCLUDED_M3CORE_H
 #include "m3core.h"
 #endif
-#include <unistd.h>
-#include <netdb.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/ioctl.h>
 #ifdef __sun
 #include <sys/sockio.h>
 #endif
@@ -20,9 +15,6 @@
 #include <net/if.h>
 #include <net/if_arp.h>
 #endif
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
 #if !(defined(__APPLE__)    \
    || defined(__CYGWIN__)   \

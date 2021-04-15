@@ -4,16 +4,8 @@
 #ifndef INCLUDED_M3CORE_H
 #include "m3core.h"
 #endif
-#ifndef _WIN32
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netdb.h>
-#include <arpa/inet.h>
-#include <netinet/in.h>
-#include <netinet/tcp.h>
-#else
+#ifdef _WIN32
 #include <winsock2.h>
-#include <stdlib.h>
 #endif
 
 #ifdef __cplusplus

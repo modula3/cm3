@@ -12,14 +12,10 @@ see http://www.opengroup.org/onlinepubs/009695399/functions/fcntl.html
 #ifndef INCLUDED_M3CORE_H
 #include "m3core.h"
 #endif
-#include <string.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#define FALSE 0
-#define TRUE 1
 
 INTEGER FilePosixC__RegularFileLock(int fd)
 {

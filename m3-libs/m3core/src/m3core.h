@@ -8,33 +8,41 @@
 #ifndef INCLUDED_M3CORE_H
 #define INCLUDED_M3CORE_H
 
-#define _NO_CRT_STDIO_INLINE /* Do not accidentally export printf. */
+#define _NO_CRT_STDIO_INLINE 1 /* Do not accidentally export printf. */
+#define _CRT_SECURE_NO_DEPRECATE 1
+#define _CRT_NONSTDC_NO_DEPRECATE 1
+#define _WINSOCK_DEPRECATED_NO_WARNINGS 1
 #ifdef _MSC_VER
-#define _CRT_SECURE_NO_DEPRECATE
-#define _CRT_NONSTDC_NO_DEPRECATE
+// These two must come first.
 #pragma warning(disable:4616) /* there is no warning x (unavoidable if targeting multiple compiler versions) */
 #pragma warning(disable:4619) /* there is no warning x (unavoidable if targeting multiple compiler versions) */
+// The rest are sorted.
 #pragma warning(disable:4115) /* named type definition in parentheses */
 #pragma warning(disable:4100) /* unused parameter */
+#pragma warning(disable:4127) /* conditional expression is constant */
 #pragma warning(disable:4201) /* nonstandard extension: nameless struct/union */
+#pragma warning(disable:4209) /* nonstandard extension: benign re-typedef */
 #pragma warning(disable:4214) /* nonstandard extension: bitfield other than int */
+#pragma warning(disable:4226) /* nonstandard extension: __export */
+#pragma warning(disable:4242) /* 'return': conversion from '' to '', possible loss of data */
+#pragma warning(disable:4244) /* integer conversion */
+#pragma warning(disable:4255) /* () change to (void) */
 #pragma warning(disable:4514) /* unused inline function removed */
 #pragma warning(disable:4705) /* statement has no effect for merely using assert() at -W4 */
-#pragma warning(disable:4209) /* nonstandard extension: benign re-typedef */
-#pragma warning(disable:4226) /* nonstandard extension: __export */
-#pragma warning(disable:4820) /* padding inserted */
-#pragma warning(disable:4255) /* () change to (void) */
+#pragma warning(disable:4710) /* function not inlined */
 #pragma warning(disable:4668) /* #if of undefined symbol */
+#pragma warning(disable:4820) /* padding inserted */
+#pragma warning(disable:5045) /* Compiler will insert Spectre mitigation for memory load if /Qspectre switch specified */
 #endif
 
 #ifdef _WIN32
 #include "ws2tcpip.h"
 #include "wspiapi.h"
-#else
+//TODO #include <winsock2.h>
+#endif
 typedef int BOOL;
 #define TRUE 1
 #define FALSE 0
-#endif
 
 #if __GNUC__ >= 4 && !defined(__osf__) && !defined(__CYGWIN__)
 #define M3_HAS_VISIBILITY 1
@@ -657,6 +665,7 @@ __cdecl
 Process__RegisterExitor(void (__cdecl*)(void));
 
 // GET_PC returns approximately size_t.
+// Try to keep most platform specific code here.
 
 #if defined(__APPLE__)
 
