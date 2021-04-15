@@ -5,7 +5,7 @@
 #include "m3core.h"
 #endif
 #ifdef _WIN32
-#include <winsock2.h>
+#include "winsock2.h"
 #endif
 
 #ifdef __cplusplus
