@@ -14,60 +14,13 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <windows.h>
-#define IF_TYPE_ETHERNET_CSMACD         6
-#define IF_TYPE_IEEE80211               71
-
-/* C:\WINDDK\3790\inc\wnet\iprtrmib.h #includes mprapi.h
-   but there is no mprapi.h. Punt and duplicate header content.
-*/
-/*#include <iphlpapi.h>*/
-
-/* Copied from mprapi.h from other toolsets. */
-#define MAX_INTERFACE_NAME_LEN  256
-
-#define MAXLEN_IFDESCR 256
-#define MAXLEN_PHYSADDR 8
-
-typedef struct _MIB_IFROW
-{
-  WCHAR    wszName[MAX_INTERFACE_NAME_LEN];
-  DWORD    dwIndex;
-  DWORD    dwType;
-  DWORD    dwMtu;
-  DWORD    dwSpeed;
-  DWORD    dwPhysAddrLen;
-  BYTE     bPhysAddr[MAXLEN_PHYSADDR];
-  DWORD    dwAdminStatus;
-  DWORD    dwOperStatus;
-  DWORD    dwLastChange;
-  DWORD    dwInOctets;
-  DWORD    dwInUcastPkts;
-  DWORD    dwInNUcastPkts;
-  DWORD    dwInDiscards;
-  DWORD    dwInErrors;
-  DWORD    dwInUnknownProtos;
-  DWORD    dwOutOctets;
-  DWORD    dwOutUcastPkts;
-  DWORD    dwOutNUcastPkts;
-  DWORD    dwOutDiscards;
-  DWORD    dwOutErrors;
-  DWORD    dwOutQLen;
-  DWORD    dwDescrLen;
-  BYTE     bDescr[MAXLEN_IFDESCR];
-} MIB_IFROW, *PMIB_IFROW;
-
-#define ANY_SIZE 1
-
-typedef struct _MIB_IFTABLE
-{
-  DWORD     dwNumEntries;
-  MIB_IFROW table[ANY_SIZE];
-} MIB_IFTABLE, *PMIB_IFTABLE;
+#include "iphlpapi.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+// Get the 48bit MAC adddress.
 int/*BOOL*/
 __cdecl
 MachineIDC__CanGet(unsigned char* id)
