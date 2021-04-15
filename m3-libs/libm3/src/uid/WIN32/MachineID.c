@@ -72,7 +72,7 @@ MachineIDC__CanGet(unsigned char* id)
             MIB_IFROW* const Row = &Table->table[i];
             unsigned char * const phys = Row->bPhysAddr;
             size_t const len = Row->dwPhysAddrLen;
-           DWORD const type = Row->dwType;
+            DWORD const type = Row->dwType;
 
            if (len != 6)
                continue;
