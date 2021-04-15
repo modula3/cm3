@@ -104,6 +104,8 @@ Exit:
 
 #if 0 /* test code */
 
+#pragma comment(lib, "iphlpapi.lib")
+
 int main()
 {
     unsigned char id[6] = { 0 };
