@@ -111,7 +111,7 @@ typedef int BOOL;
 #define EXTERN_CONST const
 #endif
 
-#if defined(__sun) && defined(__sparc) && !defined(__MAKECONTEXT_V2_SOURCE)
+#if defined(__sun) && !defined(__MAKECONTEXT_V2_SOURCE)
 /* Support for userthreads on Solaris 9 4/03 and later.
  * Support for older is easy but absent.
  */
