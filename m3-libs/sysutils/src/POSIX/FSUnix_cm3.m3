@@ -2,14 +2,14 @@
 UNSAFE MODULE FSUnix_cm3 EXPORTS FSUtils;
 
 IMPORT Pathname, M3toC;
-IMPORT PathRepr;
+IMPORT PathRepr, Unix;
 
 (*--------------------------------------------------------------------------*)
 PROCEDURE IsReadable(fn : Pathname.T) : BOOLEAN =
   VAR
     fna := PathRepr.Native(fn);
     fname := M3toC.SharedTtoS(fna);
-    res := access(fname, R_OK) = 0;
+    res := Unix.access(fname, Unix.R_OK) = 0;
   BEGIN
     M3toC.FreeSharedS(fna, fname);
     RETURN res;
@@ -20,7 +20,7 @@ PROCEDURE IsWritable(fn : Pathname.T) : BOOLEAN =
   VAR
     fna := PathRepr.Native(fn);
     fname := M3toC.SharedTtoS(fna);
-    res := access(fname, W_OK) = 0;
+    res := Unix.access(fname, Unix.W_OK) = 0;
   BEGIN
     M3toC.FreeSharedS(fna, fname);
     RETURN res;
@@ -31,7 +31,7 @@ PROCEDURE IsExecutable(fn : Pathname.T) : BOOLEAN =
   VAR
     fna := PathRepr.Native(fn);
     fname := M3toC.SharedTtoS(fna);
-    res := access(fname, X_OK) = 0;
+    res := Unix.access(fname, Unix.X_OK) = 0;
   BEGIN
     M3toC.FreeSharedS(fna, fname);
     RETURN res;
