@@ -31,8 +31,6 @@ INTERFACE System;
 
 IMPORT Thread, AtomList, TextSeq, Rd, Wr, File, Process;
 IMPORT ProcessEnv, MsgIF;
-FROM Ctypes IMPORT int, char_star;
-FROM Cstddef IMPORT size_t;
 
 (*---------------------------------------------------------------------------*)
 EXCEPTION
@@ -173,29 +171,6 @@ PROCEDURE Wait(p: Process.T) : Process.ExitCode RAISES {Error};
 
      On WIN32 `Wait` is just a wrapper for Process.Wait. *)
 
-
 (*---------------------------------------------------------------------------*)
-
-(* We cannot access "errno" directly as a variable, because on some systems
-   it is a C macro that expands to something more complicated.
-
-   The "errno" value is preserved across thread switches.
-
-copied from m3core/src/C/Common/Cerrno.i3 for bootstrapping against older releases *)
-
-<*EXTERNAL System__GetErrno*>
-PROCEDURE GetErrno(): int;
-
-TYPE pid_t = INTEGER; (* generally only 32 bits but ok *)
-
-<*EXTERNAL System__waitpid*>
-PROCEDURE waitpid (pid: pid_t; status: UNTRACED REF int; options: int): pid_t;
-
-<*EXTERNAL System__gethostname*>
-PROCEDURE gethostname (name: char_star; namelen: size_t): int;
-
-<*EXTERNAL System__EINVAL*> VAR EINVAL: int;
-<*EXTERNAL System__ECHILD*> VAR ECHILD: int;
-<*EXTERNAL System__EINTR*>  VAR EINTR: int;
 
 END System.
