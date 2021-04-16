@@ -532,10 +532,10 @@ INTEGER __cdecl Usocket__recvfrom(int s, void* buf, WORD_T len, int flags, M3Soc
 DIR* __cdecl Udir__opendir(const char* a);
 #endif
 
-// char* instead of ADDRESS for default Solaris
+// char* (caddr_t) instead of void* for default Solaris
 typedef char* caddr_t;
 int __cdecl Umman__mprotect(caddr_t addr, WORD_T len, int prot);
-ADDRESS __cdecl Umman__mmap(caddr_t addr, WORD_T len, int prot, int flags, int fd, m3_off_t off);
+void* __cdecl Umman__mmap(caddr_t addr, WORD_T len, int prot, int flags, int fd, m3_off_t off);
 int __cdecl Umman__munmap(caddr_t addr, WORD_T len);
 
 typedef INT64 m3_time_t;
