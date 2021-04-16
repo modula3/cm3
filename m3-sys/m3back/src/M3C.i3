@@ -8,9 +8,10 @@
 
 INTERFACE M3C;
 
-IMPORT M3CG, Wr;
+IMPORT M3CG, Wr, M3ID;
 
-PROCEDURE New (cfile: Wr.T): M3CG.T;
+PROCEDURE New0 (cfile: Wr.T): M3CG.T;
+PROCEDURE New (library (* or program *): TEXT; source: M3ID.T; cfile: Wr.T; target_name: TEXT): M3CG.T;
 (* returns a new code generator that writes to 'cfile'. *)
 
 END M3C.

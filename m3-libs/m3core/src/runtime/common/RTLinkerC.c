@@ -1,5 +1,5 @@
-#if !defined(_MSC_VER) && !defined(__cdecl)
-#define __cdecl /* nothing */
+#ifndef INCLUDED_M3CORE_H
+#include "m3core.h"
 #endif
 
 #ifdef __cplusplus
@@ -11,12 +11,16 @@ EnvFromMain is either char** from main, or char* GetEnvironmentStringsA from Win
 Rather than make a coordinated compiler/runtime change, we just ignore
 the compiler-provided data and make the runtime always work.
 One additional copy of the environment variables is leaked per .exe/.dll.
+
+RTLinker__GetEnvironmentStrings here matches M3C output (subject to change).
+That is why "ADDRESS" and not e.g. "void*".
 */
-void* __cdecl RTLinker__GetEnvironmentStrings (void* EnvFromMain)
+ADDRESS
+__cdecl
+RTLinker__GetEnvironmentStrings (ADDRESS EnvFromMain)
 {
 #ifdef _WIN32
-    __declspec(dllimport) char** __stdcall GetEnvironmentStringsA(void);
-    return GetEnvironmentStringsA ();
+    return (ADDRESS)GetEnvironmentStringsA ();
 #else
     return EnvFromMain;
 #endif

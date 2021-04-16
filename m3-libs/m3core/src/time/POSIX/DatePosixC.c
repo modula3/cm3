@@ -1,5 +1,7 @@
 
+#ifndef INCLUDED_M3CORE_H
 #include "m3core.h"
+#endif
 
 #if __GNUC__ >= 4
 #pragma GCC visibility push(hidden)

@@ -39,7 +39,9 @@
 #define __BSD_VISIBLE 1
 #endif
 
+#ifndef INCLUDED_M3CORE_H
 #include "m3core.h"
+#endif
 #include <ucontext.h>
 
 #if M3_HAS_VISIBILITY

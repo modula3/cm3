@@ -1062,7 +1062,7 @@ PROCEDURE DoImportFile(filename: TEXT; base: BOOLEAN): BOOLEAN =
 
 VAR
   PKG_INSTALL := "/usr/local/cm3/pkg"; (* My default *)
-  BUILD_DIR := MxConfig.HOST; (* assumes HOST = TARGET == no cross. Of course. *)
+  BUILD_DIR := MxConfig.HOST(); (* assumes HOST = TARGET == no cross. Of course. *)
 
 PROCEDURE ImportPkg(pkg: TEXT): BOOLEAN =
   BEGIN

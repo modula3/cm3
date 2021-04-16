@@ -36,7 +36,9 @@
  * From FreeBSD fnmatch.c 1.11
  */
 
+#ifndef INCLUDED_M3CORE_H
 #include "m3core.h"
+#endif
 
 #if defined(LIBC_SCCS) && !defined(lint)
 static char sccsid[] = "@(#)fnmatch.c	8.2 (Berkeley) 4/16/94";

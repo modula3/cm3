@@ -12,7 +12,9 @@
  * and the POSIX code by DEC-SRC.
  */
 
+#ifndef INCLUDED_M3CORE_H
 #include "m3core.h"
+#endif
 
 typedef void* ARG;
 

@@ -1290,7 +1290,7 @@ def Boot():
             # be sure to get a .pdb out
             #open("empty.c", "w")
             #Link = CCompiler + CCompilerFlags + "empty.c /" + Link
-        Link = Link + " user32.lib kernel32.lib wsock32.lib comctl32.lib gdi32.lib advapi32.lib netapi32.lib "
+        Link = Link + " user32.lib kernel32.lib ws2_32.lib comctl32.lib gdi32.lib advapi32.lib netapi32.lib iphlpapi.lib "
     # not all of these tested esp. Cygwin, NetBSD
     elif freebsd or netbsd or openbsd or cygwin or linux:
         Link = Link  +  " -lm -pthread "
@@ -1698,10 +1698,10 @@ $(OBJECTS: =
             # The larger cm3 config/quake files do handle that.
 
             Makefile.write("cm3.exe: *.io *.mo *.c cm3.d\\Main.mo\r\n"
-            + " cl -Zi -MT *.c -link *.mo *.io cm3.d\\Main.mo -out:$@ user32.lib kernel32.lib wsock32.lib comctl32.lib gdi32.lib advapi32.lib netapi32.lib\r\n\r\n")
+            + " cl -Zi -MT *.c -link *.mo *.io cm3.d\\Main.mo -out:$@ user32.lib kernel32.lib ws2_32.lib comctl32.lib gdi32.lib advapi32.lib netapi32.lib iphlpapi.lib\r\n\r\n")
 
             Makefile.write("mklib.exe: *.io *.mo *.c mklib.d\\Main.mo\r\n"
-            + " cl -Zi -MT *.c -link *.mo *.io mklib.d\\Main.mo -out:$@ user32.lib kernel32.lib wsock32.lib comctl32.lib gdi32.lib advapi32.lib netapi32.lib\r\n\r\n")
+            + " cl -Zi -MT *.c -link *.mo *.io mklib.d\\Main.mo -out:$@ user32.lib kernel32.lib ws2_32.lib comctl32.lib gdi32.lib advapi32.lib netapi32.lib iphlpapi.lib\r\n\r\n")
 
             Makefile.close()
 

@@ -14,63 +14,13 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <windows.h>
-#define IF_TYPE_ETHERNET_CSMACD         6
-#define IF_TYPE_IEEE80211               71
-
-/* C:\WINDDK\3790\inc\wnet\iprtrmib.h #includes mprapi.h
-   but there is no mprapi.h. Punt and duplicate header content.
-*/
-/*#include <iphlpapi.h>*/
-
-/* Copied from mprapi.h from other toolsets. */
-#define MAX_INTERFACE_NAME_LEN  256
-
-#define MAXLEN_IFDESCR 256
-#define MAXLEN_PHYSADDR 8
-
-typedef struct _MIB_IFROW
-{
-  WCHAR    wszName[MAX_INTERFACE_NAME_LEN];
-  DWORD    dwIndex;
-  DWORD    dwType;
-  DWORD    dwMtu;
-  DWORD    dwSpeed;
-  DWORD    dwPhysAddrLen;
-  BYTE     bPhysAddr[MAXLEN_PHYSADDR];
-  DWORD    dwAdminStatus;
-  DWORD    dwOperStatus;
-  DWORD    dwLastChange;
-  DWORD    dwInOctets;
-  DWORD    dwInUcastPkts;
-  DWORD    dwInNUcastPkts;
-  DWORD    dwInDiscards;
-  DWORD    dwInErrors;
-  DWORD    dwInUnknownProtos;
-  DWORD    dwOutOctets;
-  DWORD    dwOutUcastPkts;
-  DWORD    dwOutNUcastPkts;
-  DWORD    dwOutDiscards;
-  DWORD    dwOutErrors;
-  DWORD    dwOutQLen;
-  DWORD    dwDescrLen;
-  BYTE     bDescr[MAXLEN_IFDESCR];
-} MIB_IFROW, *PMIB_IFROW;
-
-#define ANY_SIZE 1
-
-typedef struct _MIB_IFTABLE
-{
-  DWORD     dwNumEntries;
-  MIB_IFROW table[ANY_SIZE];
-} MIB_IFTABLE, *PMIB_IFTABLE;
+#include "iphlpapi.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/* older cm3 config files do not link with iphlpapi.lib so use LoadLibrary/GetProcAddress */
-typedef DWORD (__stdcall * GetIfTable_t)(PMIB_IFTABLE pIfTable, PULONG pdwSize, BOOL bOrder);
-
+// Get the 48bit MAC adddress.
 int/*BOOL*/
 __cdecl
 MachineIDC__CanGet(unsigned char* id)
@@ -81,26 +31,13 @@ MachineIDC__CanGet(unsigned char* id)
     MIB_IFTABLE* Table = { 0 };
     DWORD i = { 0 };
     DWORD NumEntries = { 0 };
-    static GetIfTable_t s_getIfTable;
-    GetIfTable_t getIfTable = s_getIfTable;
     UINT pass;
 
     ZeroMemory(id, 6);
-    
-    if (getIfTable == NULL)
-    {
-        HMODULE hmodule = LoadLibraryW(L"iphlpapi.dll");
-        if (hmodule == NULL)
-            goto Exit;
-        getIfTable = (GetIfTable_t)GetProcAddress(hmodule, "GetIfTable");
-        if (getIfTable == NULL)
-            goto Exit;
-        s_getIfTable = getIfTable;
-    }
 
     /* Call until it fits, typically twice. */
     Size = 0;
-    while ((Error = getIfTable(Table, &Size, TRUE)) == ERROR_INSUFFICIENT_BUFFER)
+    while ((Error = GetIfTable(Table, &Size, TRUE)) == ERROR_INSUFFICIENT_BUFFER)
     {
         free(Table);
         /* Favor calloc over malloc for the "safety" of zero-initialization.
@@ -135,7 +72,7 @@ MachineIDC__CanGet(unsigned char* id)
             MIB_IFROW* const Row = &Table->table[i];
             unsigned char * const phys = Row->bPhysAddr;
             size_t const len = Row->dwPhysAddrLen;
-           DWORD const type = Row->dwType;
+            DWORD const type = Row->dwType;
 
            if (len != 6)
                continue;
@@ -166,6 +103,8 @@ Exit:
 #endif
 
 #if 0 /* test code */
+
+#pragma comment(lib, "iphlpapi.lib")
 
 int main()
 {

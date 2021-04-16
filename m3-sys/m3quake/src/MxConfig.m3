@@ -1,11 +1,10 @@
 (* Copyright 1996-2000 Critical Mass, Inc. All rights reserved.    *)
 (* See file COPYRIGHT-CMASS for details. *)
 
-MODULE MxConfig;
+UNSAFE MODULE MxConfig;
 
 IMPORT Env, Params, Pathname, M3File, M3ID, Quake, RTIO, Text, Thread;
-IMPORT QMachine;
-IMPORT MxConfigC;
+IMPORT QMachine, MxConfigC, M3toC, Cstdlib;
 
 VAR
   mu     : MUTEX         := NEW (MUTEX);
@@ -161,42 +160,29 @@ PROCEDURE ID2Txt (i: Quake.ID): TEXT =
     RETURN M3ID.ToText (i);
   END ID2Txt;
 
-(* porting: Other OS_TYPESs? *)
-PROCEDURE HOST_OS_TYPE() : OS_TYPE =
-VAR os_type := MxConfigC.os_type;
+PROCEDURE HOST() : TEXT =
+  VAR hostC := MxConfigC.HOST();
+      hostT := M3toC.CopyStoT(hostC);
 BEGIN
-  <* ASSERT os_type = ORD(OS_TYPE.POSIX) OR os_type = ORD(OS_TYPE.WIN32) *>
-  RETURN VAL(MxConfigC.os_type, OS_TYPE);
+  Cstdlib.free(hostC);
+  RETURN hostT;
+END HOST;
+
+PROCEDURE HOST_OS_TYPE() : OS_TYPE =
+BEGIN
+  IF MxConfigC.ifdef_win32() THEN
+    RETURN OS_TYPE.WIN32;
+  END;
+  RETURN OS_TYPE.POSIX;
 END HOST_OS_TYPE;
 
-(* porting: Other word sizes? *)
-(* TODO Generate const TEXT in C. *)
 PROCEDURE HOST_OS_TYPE_TEXT() : TEXT =
-VAR os_type := HOST_OS_TYPE();
 BEGIN
-  IF os_type = OS_TYPE.WIN32 THEN
+  IF MxConfigC.ifdef_win32() THEN
     RETURN "WIN32";
   END;
   RETURN "POSIX";
 END HOST_OS_TYPE_TEXT;
-
-(* porting *)
-PROCEDURE HOST_WORD_SIZE() : INTEGER =
-BEGIN
-  RETURN VAL(MxConfigC.word_size, INTEGER);
-END HOST_WORD_SIZE;
-
-(* porting: Other word sizes? *)
-(* TODO Generate const TEXT in C. *)
-PROCEDURE HOST_WORD_SIZE_TEXT() : TEXT =
-VAR wordSize := HOST_WORD_SIZE();
-BEGIN
-  <* ASSERT wordSize = 32 OR wordSize = 64 *>
-  IF wordSize = 32 THEN
-    RETURN "32";
-  END;
-  RETURN "64";
-END HOST_WORD_SIZE_TEXT;
 
 BEGIN
 END MxConfig.

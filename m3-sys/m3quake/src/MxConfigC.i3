@@ -1,8 +1,7 @@
 INTERFACE MxConfigC;
-
 IMPORT Ctypes;
 
-<*EXTERNAL "MxConfig__os_type"*> VAR os_type: Ctypes.int; (*MxConfig.OS_TYPE*)
-<*EXTERNAL "MxConfig__word_size"*> VAR word_size: Ctypes.int;
+<*EXTERNAL "MxConfigC__ifdef_win32"*> PROCEDURE ifdef_win32(): BOOLEAN;
+<*EXTERNAL "MxConfigC__HOST"*> PROCEDURE HOST(): Ctypes.const_char_star;
 
 END MxConfigC.

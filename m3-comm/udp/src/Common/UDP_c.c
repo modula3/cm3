@@ -1,21 +1,6 @@
-#define _WINSOCK_DEPRECATED_NO_WARNINGS 1
-#ifdef _MSC_VER
-#pragma warning(disable:4616) // x is not a valid warning with older compiler
-#pragma warning(disable:4242) // integer conversion
-#pragma warning(disable:4244) // integer conversion
-#pragma warning(disable:4255) // () vs. (void)
-#pragma warning(disable:4668) // padding
-#pragma warning(disable:4710) // function not inlined
-#pragma warning(disable:4820) // padding
-#pragma warning(disable:5045) // Spectre
-#endif
-#ifdef _WIN32
-#include "ws2tcpip.h"
-#include "wspiapi.h"
-//TODO #include <winsock2.h>
-#endif
-
+#ifndef INCLUDED_M3CORE_H
 #include "m3core.h"
+#endif
 
 #ifndef _WIN32
 #include <arpa/inet.h>

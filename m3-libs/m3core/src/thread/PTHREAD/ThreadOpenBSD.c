@@ -6,7 +6,9 @@ void __cdecl ThreadOpenBSD__Dummy(void) { } /* avoid empty file */
 /* All rights reserved.                                            */
 /* See the file COPYRIGHT-PURDUE for a full description.           */
 
+#ifndef INCLUDED_M3CORE_H
 #include "m3core.h"
+#endif
 #ifdef __OpenBSD__
 #include <sys/signal.h>
 #include <pthread_np.h>

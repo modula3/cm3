@@ -26,7 +26,9 @@
  * edited for clarity and style only.
  */
 
+#ifndef INCLUDED_M3CORE_H
 #include "m3core.h"
+#endif
 
 #ifdef KERNEL
 #include <sys/param.h>

@@ -5,12 +5,9 @@
 /* Last modified on Mon Sep 20 11:46:17 PDT 1993 by kalsow     */
 /*      modified on Thu Jul 15 16:23:08 PDT 1993 by swart      */
 
+#ifndef INCLUDED_M3CORE_H
 #include "m3core.h"
-#include <unistd.h>
-#include <netdb.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/ioctl.h>
+#endif
 #ifdef __sun
 #include <sys/sockio.h>
 #endif
@@ -18,9 +15,6 @@
 #include <net/if.h>
 #include <net/if_arp.h>
 #endif
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
 #if !(defined(__APPLE__)    \
    || defined(__CYGWIN__)   \

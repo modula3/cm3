@@ -2,7 +2,9 @@
    This will break p227/p228. */
 #ifndef _WIN32
 
+#ifndef INCLUDED_M3CORE_H
 #include "m3core.h"
+#endif
 
 #if !defined(_MSC_VER) && !defined(__cdecl)
 #define __cdecl /* nothing */

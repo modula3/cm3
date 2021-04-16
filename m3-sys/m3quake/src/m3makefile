@@ -29,38 +29,6 @@ Module   ("M3Path")
 Module   ("QPromise")
 Sequence ("QPromise", "QPromise")
 
-
-%
-% from the former M3Config, now a building block of MxConfig
-%
-
-readonly M3xConfig_body = [
-  "(* Copyright (C) 1994, Digital Equipment Corporation *)",
-  "(* All rights reserved.                              *)",
-  "(* See the file COPYRIGHT for a full description.    *)",
-  "",
-  "(* This interface exports a little bit of the configuration",
-  "   information used by cm3. See MxConfig for more. *)",
-  "",
-  "INTERFACE M3xConfig;",
-  "",
-  "CONST  (* misc. configuration *)",
-  "  HOST           = \"" & TARGET & "\";",
-  "",
-  "END M3xConfig."
-]
-
-if defined("_all")
-  > "M3xConfig.tmp" in
-    foreach line in M3xConfig_body
-      write (line, CR)
-    end
-  end
-  cp_if ("M3xConfig.tmp", "M3xConfig.i3")
-end
-
-derived_interface ("M3xConfig", HIDDEN)
-
 interface("MxConfigC")
 c_source("MxConfigC")
 

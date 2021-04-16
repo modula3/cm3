@@ -2,7 +2,9 @@
 /* All rights reserved.                                            */
 /* See the file COPYRIGHT-PURDUE for a full description.           */
 
+#ifndef INCLUDED_M3CORE_H
 #include "m3core.h"
+#endif
 
 #ifdef __FreeBSD__
 #include <pthread_np.h>

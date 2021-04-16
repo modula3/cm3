@@ -27,7 +27,9 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifndef INCLUDED_M3CORE_H
 #include "m3core.h"
+#endif
 
 #ifdef __cplusplus
 extern "C" {

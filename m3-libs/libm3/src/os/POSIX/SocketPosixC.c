@@ -1,17 +1,11 @@
 /* Copyright 1996-2000, Critical Mass, Inc.  All rights reserved. */
 /* See file COPYRIGHT-CMASS for details. */
 
+#ifndef INCLUDED_M3CORE_H
 #include "m3core.h"
-#ifndef _WIN32
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netdb.h>
-#include <arpa/inet.h>
-#include <netinet/in.h>
-#include <netinet/tcp.h>
-#else
-#include <winsock2.h>
-#include <stdlib.h>
+#endif
+#ifdef _WIN32
+#include "winsock2.h"
 #endif
 
 #ifdef __cplusplus

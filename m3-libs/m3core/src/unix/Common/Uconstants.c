@@ -2,7 +2,9 @@
 /* All rights reserved.                                       */
 /* See the file COPYRIGHT for a full description.             */
 
+#ifndef INCLUDED_M3CORE_H
 #include "m3core.h"
+#endif
 #ifndef _WIN32
 #include <netinet/tcp.h>
 #include <netinet/in.h>

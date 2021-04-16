@@ -66,6 +66,7 @@ T = M3CG_DoNothing.T BRANDED "M3C.T" OBJECT
         multipass: Multipass_t := NIL;
         Err    : ErrorHandler := DefaultErrorHandler;
         anonymousCounter := -1;
+        unique := "L_"; (* changed later *)
         c      : Wr.T := NIL;
         debug := 2; (* 1-5 >4 is to stdio *)
         stack  : RefSeq.T := NIL;
@@ -545,14 +546,14 @@ Cstring.i3 declares strcpy and strcat incorrectly..on purpose.
 "DOTDOTDOT",
 "STRUCT",
 "INT8", "UINT8", "INT16", "UINT16", "INT32", "UINT32", "INT64", "UINT64",
-"m3_eq", "m3_eq_T",
-"m3_ne", "m3_ne_T",
-"m3_gt", "m3_gt_T",
-"m3_ge", "m3_ge_T",
-"m3_lt", "m3_lt_T",
-"m3_le", "m3_le_T",
-"m3_xor", "m3_xor_T",
-"m3_check_range", "m3_check_range_T",
+"m3_eq",
+"m3_ne",
+"m3_gt",
+"m3_ge",
+"m3_lt",
+"m3_le",
+"m3_xor",
+"m3_check_range",
 "GCC_VERSION"
 };
 
@@ -590,15 +591,22 @@ BEGIN
     RETURN self.anonymousCounter;
 END AnonymousCounter;
 
-PROCEDURE GenerateName(self: T): Name =
+(* e.g. within a struct *)
+PROCEDURE GenerateNameLocal(self: T): Name =
 BEGIN
     RETURN M3ID.Add("L_" & IntToDec(AnonymousCounter(self)));
-END GenerateName;
+END GenerateNameLocal;
 
-PROCEDURE GenerateNameText(self: T): TEXT =
+(* e.g. so if we concatenate many files, still unique *)
+PROCEDURE GenerateNameGlobal(self: T): Name =
 BEGIN
-    RETURN NameT(GenerateName(self));
-END GenerateNameText;
+    RETURN M3ID.Add(self.unique & IntToDec(AnonymousCounter(self)));
+END GenerateNameGlobal;
+
+PROCEDURE GenerateNameLocalText(self: T): TEXT =
+BEGIN
+    RETURN NameT(GenerateNameLocal(self));
+END GenerateNameLocalText;
 
 PROCEDURE Assert(self: T; value: BOOLEAN; message: TEXT) =
 BEGIN
@@ -612,20 +620,37 @@ BEGIN
   <* ASSERT value *>
 END Assert;
 
+(* This is not just for procedures. *)
 PROCEDURE Proc_FixName(self: T; name: Name): Name =
 VAR text: TEXT := NIL;
 BEGIN
     IF name = M3ID.NoID THEN
-        RETURN GenerateName(self);
+        RETURN GenerateNameGlobal(self);
     END;
     text := NameT (name);
     IF Text.GetChar (text, 0) = '*' THEN
         Assert(self, Text.Length(text) = 1, "Text.Length(text) = 1");
-        RETURN GenerateName(self);
+        Err(self, "almost unnamed function");
+        RETURN GenerateNameLocal(self);
     END;
     (* rename C names like int, short, void *)
     RETURN ReplaceName(name);
 END Proc_FixName;
+
+(* segment names are not unique if files are concatenated; this fixes that
+   TODO: Handle it in m3front *)
+PROCEDURE Segment_FixName(self: T; name: Name): Name =
+VAR text := NameT(name);
+    ch: CHAR;
+BEGIN
+  IF Text.Length(text) > 2 AND Text.GetChar(text, 1) = '_' THEN
+    ch := Text.GetChar(text, 0);
+    IF ch = 'M' OR ch = 'I' THEN
+      name := M3ID.Add(self.unique & text);
+    END;
+  END;
+  RETURN name;
+END Segment_FixName;
 
 PROCEDURE Var_FixName(self: T; name: Name; imported_or_exported: BOOLEAN): Name =
 BEGIN
@@ -637,7 +662,7 @@ BEGIN
     IF NOT imported_or_exported AND name # self.static_link_id THEN
         name := M3ID.Add(NameT(name) & "_L_" & IntToDec(AnonymousCounter(self)));
     END;
-    RETURN name;
+    RETURN Segment_FixName(self, name);
 END Var_FixName;
 
 TYPE Type_State = {None, ForwardDeclared, CanBeDefined, Defined};
@@ -646,6 +671,7 @@ TYPE Type_t = OBJECT
     bit_size := 0;  (* FUTURE Target.Int or LONGINT *)
     typeid: TypeUID := 0;
     text: TEXT := NIL;
+    type_text_tail := ""; (* workaround for different types having same typeid *)
     cgtype: CGType := CGType.Addr;
     state := Type_State.None;
 METHODS
@@ -758,8 +784,8 @@ END Type_Define;
 
 PROCEDURE Type_ForwardDeclare(type: Type_t; self: T) =
 BEGIN
-    IF ORD(type.state) >= ORD(Type_State.ForwardDeclared) THEN
-        RETURN;
+    IF ORD(type.state) >= ORD(Type_State.ForwardDeclared) OR NOT type.canBeForwardDeclared(self) THEN
+      RETURN;
     END;
     type.forwardDeclare(self);
     IF ORD(type.state) < ORD(Type_State.ForwardDeclared) THEN
@@ -810,11 +836,11 @@ BEGIN
     END;
 
     IF NOT ResolveType(self, type.points_to_typeid, type.points_to_type) THEN
-      print(x, "/*2pointer_define failing, falling back to void* for " & type.text & "*/;\n");
+      Err(x, "internal error: pointer_define(" & type.text & ") 1");
     END;
 
     IF type.points_to_type = NIL THEN
-      print(x, "/*3nil pointer_define*/typedef void* " & type.text & ";\n");
+      Err(x, "internal error: pointer_define(" & type.text & ") 2");
       RETURN;
     END;
     type.points_to_type.ForwardDeclare(self);
@@ -884,7 +910,7 @@ END ResolveType;
 PROCEDURE pointer_canBeDefined(type: Pointer_t; self: T): BOOLEAN =
 BEGIN
     (* We have recursive types TYPE FOO = UNTRACED REF FOO. Typos actually. *)
-    IF type.points_to_typeid = type.points_to_typeid THEN
+    IF type.points_to_typeid = type.typeid THEN
       RETURN TRUE;
     END;
     RETURN ResolveType(self, type.points_to_typeid, type.points_to_type)
@@ -958,6 +984,17 @@ BEGIN
     RETURN TRUE;
 END record_canBeDefined;
 
+(* ifndef so multiple files can be concatenated and compiled at once *)
+PROCEDURE ifndef(self:T; id: TEXT) =
+BEGIN
+  print(self, "\n#ifndef m3once_" & id & "\n#define m3once_" & id & "\n");
+END ifndef;
+
+PROCEDURE endif(self: T) =
+BEGIN
+  print(self, "\n#endif\n");
+END endif;
+
 PROCEDURE record_define(record: Record_t; self: T) =
 VAR x := self;
     fields := record.fields;
@@ -970,6 +1007,8 @@ BEGIN
     FOR j := 0 TO field_count - 1 DO
         NARROW(record.fields.get(j), Field_t).type.Define(self);
     END;
+
+    ifndef(x, record.text); (* ifdef so multiple files can be concatenated and compiled at once *)
 
     print(x, "/*record_define*/struct " & record.text & "{\n");
 
@@ -987,7 +1026,7 @@ BEGIN
             (* Eat up bits, to the next byte boundary or up to the next field, whichever is earlier. *)
             IF (bit_offset MOD 8) # 0 THEN
                 i := MIN(bit_pad, 8 - (bit_pad MOD 8));
-                print(x, "UINT8 " & GenerateNameText(x) & ":" & IntToDec(i) & ";\n");
+                print(x, "UINT8 " & GenerateNameLocalText(x) & ":" & IntToDec(i) & ";\n");
                 INC(bit_offset, i);
                 DEC(bit_pad, i);
             END;
@@ -995,7 +1034,7 @@ BEGIN
             (* Eat up bytes to the field. *)
             IF bit_pad >= 8 THEN
                 i := bit_pad DIV 8;
-                print(x, "UINT8 " & GenerateNameText(x) & "[" & IntToDec(i) & "];\n");
+                print(x, "UINT8 " & GenerateNameLocalText(x) & "[" & IntToDec(i) & "];\n");
                 i := i * 8;
                 INC(bit_offset, i);
                 DEC(bit_pad, i);
@@ -1005,7 +1044,7 @@ BEGIN
             Assert(self, bit_pad < 8, "bit_pad < 8");
             IF bit_pad > 0 THEN
                 i := bit_pad;
-                print(x, "UINT8 " & GenerateNameText(x) & ":" & IntToDec(i) & ";\n");
+                print(x, "UINT8 " & GenerateNameLocalText(x) & ":" & IntToDec(i) & ";\n");
                 INC(bit_offset, i);
                 DEC(bit_pad, i);
             END;
@@ -1043,14 +1082,14 @@ BEGIN
         i := bit_pad MOD 8;
         IF i > 0 THEN
             (*i := 8 - i;*)
-            print(x, "UINT8 " & GenerateNameText(x) & ":" & IntToDec(i) & ";\n");
+            print(x, "UINT8 " & GenerateNameLocalText(x) & ":" & IntToDec(i) & ";\n");
             INC(bit_offset, i);
             DEC(bit_pad, i);
         END;
         Assert (self, (bit_pad MOD 8) = 0, "(bit_pad MOD 8) = 0");
         IF bit_pad > 0 THEN
             i := bit_pad DIV 8;
-            print(x, "UINT8 " & GenerateNameText(x) & "[" & IntToDec(i) & "];\n");
+            print(x, "UINT8 " & GenerateNameLocalText(x) & "[" & IntToDec(i) & "];\n");
             i := i * 8;
             INC(bit_offset, i);
             DEC(bit_pad, i);
@@ -1060,6 +1099,7 @@ BEGIN
         Err(x, "failed to declare record to correct size");
     END;
     print(x, "};\n");
+    endif(x);
 END record_define;
 
 TYPE Subrange_t = Ordinal_t OBJECT
@@ -1131,7 +1171,7 @@ OVERRIDES
     canBeDefined := enum_canBeDefined;
 END;
 
-PROCEDURE enum_canBeDefined(enum: Enum_t; x: T): BOOLEAN =
+PROCEDURE enum_canBeDefined(enum: Enum_t; <*UNUSED*> x: T): BOOLEAN =
 BEGIN
     RETURN enum.names # NIL;
 END enum_canBeDefined;
@@ -1161,8 +1201,8 @@ END enum_define;
 TYPE Array_t = Type_t OBJECT
     index_typeid := 0;
     element_typeid := 0;
-    index_type: Type_t;
-    element_type: Type_t;
+    index_type: Type_t := NIL;
+    element_type: Type_t := NIL;
 OVERRIDES
     isArray := type_isType_true;
     canBeForwardDeclared := type_canBeForwardDeclared_true;
@@ -1188,11 +1228,15 @@ END;
 PROCEDURE fixedArray_define(type: FixedArray_t; x: T) =
 BEGIN
     type.element_type.Define(x);
+
+    ifndef(x, type.text); (* ifdef so multiple files can be concatenated and compiled at once *)
+
     print(x, "/*fixedArray_define*/struct " & type.text & "{");
     print(x, type.element_type.text);
     print(x, " _elts[");
     print(x, IntToDec(type.bit_size DIV type.element_type.bit_size));
     print(x, "];};\n");
+    endif(x);
 END fixedArray_define;
 
 PROCEDURE fixedArray_canBeDefined(type: Array_t; self: T): BOOLEAN =
@@ -1208,8 +1252,16 @@ END;
 
 PROCEDURE openArray_canBeDefined(type: Array_t; self: T): BOOLEAN =
 BEGIN
-    RETURN ResolveType(self, type.element_typeid, type.element_type)
-        AND Type_IsForwardDeclared(type.element_type);
+  IF NOT ResolveType(self, type.element_typeid, type.element_type) THEN
+    (*self.comment("1 openArray_canBeDefined:FALSE:typeid " & TypeIDToText(type.typeid));*)
+    RETURN FALSE;
+  END;
+  IF NOT Type_IsForwardDeclared(type.element_type) THEN
+    (*self.comment("2 openArray_canBeDefined:FALSE:typeid " & TypeIDToText(type.typeid));*)
+    RETURN FALSE;
+  END;
+  (*self.comment("3 openArray_canBeDefined:TRUE:typeid " & TypeIDToText(type.typeid));*)
+  RETURN TRUE;
 END openArray_canBeDefined;
 
 PROCEDURE openArray_define(type: OpenArray_t; x: T) =
@@ -1226,6 +1278,9 @@ BEGIN
     IF element_type_text = NIL THEN
         element_type_text := "char/*TODO*/";
     END;
+
+    ifndef(x, type.text); (* ifdef so multiple files can be concatenated and compiled at once *)
+
     text := "/*openArray_define*/struct " & type.text & "{\n" & element_type_text;
     FOR i := 1 TO dimensions DO
         text := text & "*";
@@ -1235,6 +1290,7 @@ BEGIN
         text := text & "s[" & IntToDec(dimensions) & "]";
     END;
     print(x, text & ";\n};");
+    endif(x);
 END openArray_define;
 
 PROCEDURE TypeidToType_Get(self: T; typeid: TypeUID): Type_t =
@@ -1268,13 +1324,12 @@ BEGIN
                 type.text := cgtypeToText[cgtype];
             END;
         ELSE
-            type.text := TypeIDToText(type.typeid);
+            type.text := TypeIDToText(type.typeid) & type.type_text_tail;
         END;
     END;
     IF type.typeid # -1 THEN
         EVAL self.typeidToType.put(type.typeid, type);
     END;
-
 (*
     FOR i := FIRST(typedefs) TO LAST(typedefs) DO
       IF typedefs[i] # NIL AND typedefs[i] # Text_address THEN
@@ -1283,7 +1338,6 @@ BEGIN
       END;
     END;
 *)
-
     Type_ForwardDeclare(type, self);
     IF Type_CanBeDefined(type, self) THEN
         type.Define(self);
@@ -1785,6 +1839,7 @@ BEGIN
                     RETURN FALSE;
                 END;
             END;
+            comment(self, "IsNameExceptionHandler:" & name);
             RETURN TRUE;
         END;
     END;
@@ -1869,72 +1924,38 @@ CONST Prefix = ARRAY OF TEXT {
 (*"#pragma error_messages(off, E_INIT_DOES_NOT_FIT)",*)
 "#pragma error_messages(off, E_STATEMENT_NOT_REACHED)",
 "#endif",
-"#ifdef __GNUC__",
-"#define GCC_VERSION (__GNUC__ * 100 + __GNUC_MINOR__)",
-"#else",
-"#define GCC_VERSION 0",
-"#endif",
-"#if GCC_VERSION > 0 && GCC_VERSION < 403",
-(*"#define AVOID_GCC_TYPE_LIMIT_WARNING 1",*)
-(*"#define M3_OP2(fun, op, a, b) fun(a, b)",*)
-(*"#define M3_IF_TRUE(fun, a) fun(a,0)",*)
-(*"#define M3_IF_FALSE(fun, a) fun(a,0)",*)
-"/* This is a workaround to prevent warnings from older gcc. */",
-"#define m3_eq_T(T) static WORD_T __stdcall m3_eq_##T(T x, T y){return x==y;}",
-"#define m3_ne_T(T) static WORD_T __stdcall m3_ne_##T(T x, T y){return x!=y;}",
-"#define m3_gt_T(T) static WORD_T __stdcall m3_gt_##T(T x, T y){return x>y;}",
-"#define m3_ge_T(T) static WORD_T __stdcall m3_ge_##T(T x, T y){return x>=y;}",
-"#define m3_lt_T(T) static WORD_T __stdcall m3_lt_##T(T x, T y){return x<y;}",
-"#define m3_le_T(T) static WORD_T __stdcall m3_le_##T(T x, T y){return x<=y;}",
-"#define m3_eq(T, x, y) m3_eq_##T(x, y)",
-"#define m3_ne(T, x, y) m3_ne_##T(x, y)",
-"#define m3_gt(T, x, y) m3_gt_##T(x, y)",
-"#define m3_ge(T, x, y) m3_ge_##T(x, y)",
-"#define m3_lt(T, x, y) m3_lt_##T(x, y)",
-"#define m3_le(T, x, y) m3_le_##T(x, y)",
-"#define m3_check_range_T(T) static int __stdcall m3_check_range_##T(T value, T low, T high){return value<low||high<value;}",
-"#define m3_check_range(T, value, low, high) m3_check_range_##T(value, low, high)",
-"#define m3_xor_T(T) static int __stdcall m3_xor_##T(T x, T y){return x ^ y;}",
-"#define m3_xor(T, x, y) m3_xor_##T(x, y)",
-"#else",
-(*"#define AVOID_GCC_TYPE_LIMIT_WARNING 0",*)
-(*"#define M3_OP2(fun, op, a, b) a op b",*)
-(*"#define M3_IF_TRUE(fun, a) a",*)
-(*"#define M3_IF_FALSE(fun, a) !(a)",*)
-"/* ideally the few uses are guarded by #if AVOID_GCC_TYPE_LIMIT_WARNING and remove the macros */",
-"#define m3_eq_T(T) /* nothing */",
-"#define m3_ne_T(T) /* nothing */",
-"#define m3_gt_T(T) /* nothing */",
-"#define m3_ge_T(T) /* nothing */",
-"#define m3_lt_T(T) /* nothing */",
-"#define m3_le_T(T) /* nothing */",
+
 "#define m3_eq(T, x, y) (((T)(x)) == ((T)(y)))",
 "#define m3_ne(T, x, y) (((T)(x)) != ((T)(y)))",
 "#define m3_gt(T, x, y) (((T)(x)) > ((T)(y)))",
 "#define m3_ge(T, x, y) (((T)(x)) >= ((T)(y)))",
 "#define m3_lt(T, x, y) (((T)(x)) < ((T)(y)))",
 "#define m3_le(T, x, y) (((T)(x)) <= ((T)(y)))",
-"#define m3_check_range_T(T) /* nothing */",
 "#define m3_check_range(T, value, low, high) (((T)(value)) < ((T)(low)) || ((T)(high)) < ((T)(value)))",
-"#define m3_xor_T(T) /* nothing */",
 "#define m3_xor(T, x, y) (((T)(x)) ^ ((T)(y)))",
-"#endif",
+
 "#ifdef _MSC_VER",
 "#define _CRT_SECURE_NO_DEPRECATE",
 "#define _CRT_NONSTDC_NO_DEPRECATE",
 "#pragma warning(disable:4616) /* there is no warning x (unavoidable if targeting multiple compiler versions) */",
 "#pragma warning(disable:4619) /* there is no warning x (unavoidable if targeting multiple compiler versions) */",
-"#pragma warning(disable:4115) /* named type definition in parentheses */",
 "#pragma warning(disable:4100) /* unused parameter */",
+"#pragma warning(disable:4115) /* named type definition in parentheses */",
+"#pragma warning(disable:4127) /* conditional expression is constant */",
 "#pragma warning(disable:4201) /* nonstandard extension: nameless struct/union */",
 "#pragma warning(disable:4214) /* nonstandard extension: bitfield other than int */",
-"#pragma warning(disable:4514) /* unused inline function removed */",
-"#pragma warning(disable:4705) /* statement has no effect for merely using assert() at -W4 */",
 "#pragma warning(disable:4209) /* nonstandard extension: benign re-typedef */",
 "#pragma warning(disable:4226) /* nonstandard extension: __export */",
-"#pragma warning(disable:4820) /* padding inserted */",
+"#pragma warning(disable:4242) /* 'return': conversion from '' to '', possible loss of data */",
 "#pragma warning(disable:4255) /* () change to (void) */",
+"#pragma warning(disable:4310) /* cast truncates constant value */", (* TODO fix these UINT64/INT64 confusion *)
+"#pragma warning(disable:4514) /* unused inline function removed */",
 "#pragma warning(disable:4668) /* #if of undefined symbol */",
+"#pragma warning(disable:4705) /* statement has no effect for merely using assert() at -W4 */",
+"#pragma warning(disable:4715) /* not all control paths return a value */",
+"#pragma warning(disable:4716) /* must return a value */",
+"#pragma warning(disable:4820) /* padding inserted */",
+"#pragma warning(disable:5045) /* Compiler will insert Spectre mitigation for memory load if /Qspectre switch specified */", (* TODO fix *)
 "#endif",
 (* TODO ideally these are char* for K&R or ideally absent when strong
    typing and setjmp work done *)
@@ -2242,7 +2263,7 @@ END print;
 
 (*---------------------------------------------------------------------------*)
 
-PROCEDURE New (cfile: Wr.T): M3CG.T =
+PROCEDURE NewInternal (cfile: Wr.T): T =
 VAR self := NEW (T);
 BEGIN
     self.typeidToType := NEW(SortedIntRefTbl.Default).init(); (* FUTURE? *)
@@ -2261,8 +2282,52 @@ BEGIN
     self.imported_procs := NEW(RefSeq.T).init();
     self.declared_procs := NEW(RefSeq.T).init();
     self.procs_pending_output := NEW(RefSeq.T).init();
+    RETURN self;
+END NewInternal;
 
+PROCEDURE New0 (cfile: Wr.T): M3CG.T =
+VAR self := NewInternal (cfile);
+BEGIN
     RETURN self.multipass;
+END New0;
+
+PROCEDURE TextRemoveAtEnd (VAR t: TEXT; a: TEXT): BOOLEAN =
+VAR result := TextUtils.EndsWith (t, a);
+BEGIN
+  IF result THEN
+    t := Text.Sub (t, 0, Text.Length (t) - Text.Length (a));
+  END;
+  RETURN result;
+END TextRemoveAtEnd;
+
+PROCEDURE TextSubstituteAtEnd (VAR t: TEXT; a, b: TEXT): BOOLEAN =
+VAR result := TextRemoveAtEnd (t, a);
+BEGIN
+  IF result THEN
+    t := t & b;
+  END;
+  RETURN result;
+END TextSubstituteAtEnd;
+
+PROCEDURE TextToId (VAR t: TEXT) =
+BEGIN
+  EVAL TextRemoveAtEnd (t, ".c");
+  EVAL TextRemoveAtEnd (t, ".cpp");
+  t := TextUtils.Substitute (t, "_", "_un_"); (* un for underscore *)
+  EVAL TextSubstituteAtEnd (t, ".m3", "_m");
+  EVAL TextSubstituteAtEnd (t, ".i3", "_i");
+  t := TextUtils.Substitute (t, ".", "_do_"); (* do for dot *)
+  t := TextUtils.Substitute (t, "-", "_da_"); (* da for dash *)
+  (* TODO more ways to turn into valid identifier prefix? Handle in m3front. *)
+END TextToId;
+
+PROCEDURE New (library (* or program *): TEXT; <*UNUSED*>source (* lacks extension .m3 or .i3 *): M3ID.T; cfile: Wr.T; target_name: TEXT): M3CG.T =
+VAR self := NewInternal (cfile);
+BEGIN
+  TextToId (target_name);
+  TextToId (library);
+  self.unique := library & "_" & target_name & "_";
+  RETURN self.multipass;
 END New;
 
 (*---------------------------------------------------------------------------*)
@@ -2301,7 +2366,7 @@ BEGIN
 
 (* Enum_t? *)
     self.Type_Init(NEW(Integer_t, state := Type_State.CanBeDefined, cgtype := Target.Word8.cg_type, typeid := UID_BOOLEAN, (* max := IntToTarget(self, 1), *) text := "BOOLEAN"));
-    self.Type_Init(NEW(Integer_t, state := Type_State.CanBeDefined, cgtype := Target.Word8.cg_type, typeid := UID_CHAR, (* max := IntToTarget(self, 16_FF), *) text := "CHAR"));
+    self.Type_Init(NEW(Integer_t, state := Type_State.CanBeDefined, cgtype := Target.Word8.cg_type, typeid := UID_CHAR, (* max := IntToTarget(self, 16_FF), *) text := "UCHAR"));
 
     widechar_target_type := Target.Word16.cg_type; 
     widechar_last := 16_FFFF; (* The defaults. *) 
@@ -2558,6 +2623,7 @@ BEGIN
             RTIO.PutText("declare_array nil element_type\n");
             RTIO.Flush();
         END;
+        ifndef(self, element_type.text); (* ifdef so multiple files can be concatenated and compiled at once *)
         print(self, "/*declare_open_array*/typedef struct {");
         print(self, element_type.text);
         print(self, "* _elts; CARDINAL _size");
@@ -2572,6 +2638,7 @@ BEGIN
         bit_size := bit_size,
         element_typeid := element_typeid,
         element_type := element_type));
+        endif(self); (* ifdef so multiple files can be concatenated and compiled at once *)
     END;
 *)
   END declare_open_array;
@@ -2876,7 +2943,24 @@ BEGIN
         typeid := typeid,
         domain_typeid := domain_typeid,
         bit_size := bit_size,
-        cgtype := SubrangeCGType(min, max, bit_size)));
+        cgtype := SubrangeCGType(min, max, bit_size),
+        (* Subranges have colliding typeids. m3front bug?
+         * For example:
+         * libm3\Formatter.m3:
+         *    Int   = REF INTEGER;
+         *    ints: ARRAY [-256..256] OF Int;
+         *    declare_subrange typeid:T69A2A904 domain_type:T195C2A74 min:-256 max:256 bit_size:16 */
+         * libm3\Sx.m3
+         *    MinBoxedInt   = -100;
+         *    MaxBoxedInt   = 100;
+         *    BoxedInts  := ARRAY [MinBoxedInt .. MaxBoxedInt] OF REF INTEGER {NIL, ..};
+         *    declare_subrange typeid:T69A2A904 domain_type:T195C2A74 min:-100 max:100 bit_size:8 */
+         *
+         * Partial workaround it here by appending the size to the type text.
+         * We could further workaround by deferring the typedef until use, as in this
+         * case, neither type is used. Just defined.
+         *)
+        type_text_tail := "_" & IntToDec(bit_size)));
 END declare_subrange;
 
 PROCEDURE declare_pointer(self: DeclareTypes_t; typeid, target: TypeUID; brand: TEXT; traced: BOOLEAN) =
@@ -3133,8 +3217,10 @@ VAR var := NEW(Var_t,
     length := 0;
 BEGIN
     self.comment("declare_segment name:" & TextOrNIL(NameT(name))
-        & "typeid:" & TypeIDToText(typeid)
-        & "const:" & BoolToText[const]);
+        & " typeid:" & TypeIDToText(typeid)
+        & " const:" & BoolToText[const]);
+
+    (* TODO clean this up and/or document it *)
     IF name # 0 THEN
         text := NameT(name);
         length := Text.Length(text);
@@ -3148,6 +3234,7 @@ BEGIN
             self.unit_name := text;
             FOR i := FIRST(HandlerNamePieces) TO LAST(HandlerNamePieces) DO
                 self.handler_name_prefixes[i] := text & HandlerNamePieces[i];
+                comment(self, "handler_name_prefixes:" & self.handler_name_prefixes[i]);
             END;
         END;
     END;
@@ -3550,12 +3637,12 @@ CONST Ops = ARRAY OF Op{
         Op.copy_n,
         Op.fence,
         Op.zero,
-        Op.check_range, (* bug -- we use helper function only to quash gcc warnings *)
-        Op.xor,         (* bug -- we use helper function only to quash gcc warnings *)
-        Op.compare,     (* bug -- we use helper function only to quash gcc warnings *)
-        Op.if_compare,  (* bug -- we use helper function only to quash gcc warnings *)
-        Op.if_true,     (* bug -- we use helper function only to quash gcc warnings *)
-        Op.if_false     (* bug -- we use helper function only to quash gcc warnings *)
+        Op.check_range,
+        Op.xor,
+        Op.compare,
+        Op.if_compare,
+        Op.if_true,
+        Op.if_false
     };
 CONST OpsThatCanFault = ARRAY OF Op{
         Op.abort,
@@ -3573,7 +3660,7 @@ CONST setData = ARRAY OF T1{
     T1{Op.set_intersection, "static void __stdcall m3_set_intersection(WORD_T n_words,WORD_T*c,WORD_T*b,WORD_T*a){WORD_T i=0;for(;i<n_words;++i)a[i]=b[i]&c[i];}"},
     T1{Op.set_sym_difference, "static void __stdcall m3_set_sym_difference(WORD_T n_words,WORD_T*c,WORD_T*b,WORD_T*a){WORD_T i=0;for(;i<n_words;++i)a[i]=b[i]^c[i];}"},
     T1{Op.set_range,
-          "\n#define M3_HIGH_BITS(a) ((~(WORD_T)0) << (a))\n"
+          "#define M3_HIGH_BITS(a) ((~(WORD_T)0) << (a))\n"
         & "#define M3_LOW_BITS(a)  ((~(WORD_T)0) >> (SET_GRAIN - (a) - 1))\n"
         & "static void __stdcall m3_set_range(WORD_T b, WORD_T a, WORD_T* s)\n"
         & "{\n"
@@ -3597,7 +3684,7 @@ CONST setData = ARRAY OF T1{
         & "      s[b_word] |= low_bits;\n"
         & "    }\n"
         & "  }\n"
-        & "}\n"
+        & "}"
         },
     T1{Op.set_singleton, "static void __stdcall m3_set_singleton(WORD_T a,WORD_T*s){s[a/SET_GRAIN]|=(((WORD_T)1)<<(a%SET_GRAIN));}"},
     T1{Op.set_member, "static WORD_T __stdcall m3_set_member(WORD_T elt,WORD_T*set){return(set[elt/SET_GRAIN]&(((WORD_T)1)<<(elt%SET_GRAIN)))!=0;}"}
@@ -3615,7 +3702,9 @@ BEGIN
                 print(x, "typedef WORD_T* SET;\n#define SET_GRAIN (sizeof(WORD_T)*8)\n");
                 setAny := TRUE;
             END;
+            ifndef(x, M3CG_Binary.OpText(setData[i].op));
             print(x, setData[i].text);
+            endif(x);
         END;
     END;
     FOR i := FIRST(OpsThatCanFault) TO LAST(OpsThatCanFault) DO
@@ -3631,6 +3720,8 @@ BEGIN
     x.comment("end: helper functions");
 END HelperFunctions;
 
+(* Helper functions are only output if needed, to avoid warnings about unused functions.
+ * This pass determines which helper functions are neded and outputs them. *)
 TYPE HelperFunctions_t = M3CG_DoNothing.T BRANDED "M3C.HelperFunctions_t" OBJECT
     self: T := NIL;
     data: RECORD
@@ -3666,12 +3757,6 @@ OVERRIDES
     copy_n := HelperFunctions_copy_n;
     zero := HelperFunctions_zero;
     fence := HelperFunctions_fence;
-    check_range := HelperFunctions_check_range;
-    xor := HelperFunctions_xor;
-    compare := HelperFunctions_compare;
-    if_compare := HelperFunctions_if_compare;
-    if_true := HelperFunctions_if_true;
-    if_false := HelperFunctions_if_false;
 END;
 
 PROCEDURE HelperFunctions_Init(self: HelperFunctions_t; outer: T): HelperFunctions_t =
@@ -3694,33 +3779,41 @@ BEGIN
     END;
 END HelperFunctions_print_array;
 
-PROCEDURE HelperFunctions_helper_with_boolean_and_array(self: HelperFunctions_t; VAR boolean: BOOLEAN; READONLY text: ARRAY OF TEXT) =
+PROCEDURE HelperFunctions_helper_with_boolean_and_array(self: HelperFunctions_t; VAR already_printed: BOOLEAN; READONLY text: ARRAY OF TEXT) =
 BEGIN
-    IF NOT boolean THEN
+    IF NOT already_printed THEN
         HelperFunctions_print_array(self, text);
-        boolean := TRUE;
+        already_printed := TRUE;
     END;
 END HelperFunctions_helper_with_boolean_and_array;
 
-PROCEDURE HelperFunctions_helper_with_boolean(self: HelperFunctions_t; VAR boolean: BOOLEAN; text: TEXT) =
+PROCEDURE HelperFunctions_helper_with_boolean(self: HelperFunctions_t; VAR already_printed: BOOLEAN; text: TEXT) =
 BEGIN
-    HelperFunctions_helper_with_boolean_and_array(self, boolean, ARRAY OF TEXT{text});
+    HelperFunctions_helper_with_boolean_and_array(self, already_printed, ARRAY OF TEXT{text});
 END HelperFunctions_helper_with_boolean;
 
-PROCEDURE HelperFunctions_helper_with_type_and_array(self: HelperFunctions_t; op: TEXT; type: CGType; VAR types: SET OF CGType; READONLY first: ARRAY OF TEXT) =
+PROCEDURE HelperFunctions_helper_with_type_and_array(
+    self: HelperFunctions_t; op: TEXT; type: CGType; VAR types_already_printed: SET OF CGType; READONLY first: ARRAY OF TEXT) =
 BEGIN
-    IF types = SET OF CGType{} THEN
+    (* Print the prefix array before any type-specific content. *)
+    IF types_already_printed = SET OF CGType{} THEN
+        ifndef(self.self, op);
         HelperFunctions_print_array(self, first);
+        endif(self.self);
     END;
-    IF NOT type IN types THEN
+
+    (* Print per-type content. Remember what types are printed to avoid duplication. *)
+    IF NOT type IN types_already_printed THEN
+        ifndef(self.self, op & "_" & cgtypeToText[type]);
         print(self.self, "m3_" & op & "_T(" & cgtypeToText[type] & ")\n");
-        types := types + SET OF CGType{type};
+        endif(self.self);
+        types_already_printed := types_already_printed + SET OF CGType{type};
     END;
 END HelperFunctions_helper_with_type_and_array;
 
-PROCEDURE HelperFunctions_helper_with_type(self: HelperFunctions_t; op: TEXT; type: CGType; VAR types: SET OF CGType; first: TEXT := NIL) =
+PROCEDURE HelperFunctions_helper_with_type(self: HelperFunctions_t; op: TEXT; type: CGType; VAR types_already_printed: SET OF CGType; first: TEXT := NIL) =
 BEGIN
-    HelperFunctions_helper_with_type_and_array(self, op, type, types, ARRAY OF TEXT{first});
+    HelperFunctions_helper_with_type_and_array(self, op, type, types_already_printed, ARRAY OF TEXT{first});
 END HelperFunctions_helper_with_type;
 
 (* TODO give up and #include <string.h>? *)
@@ -3827,14 +3920,20 @@ END HelperFunctions_min;
 
 PROCEDURE HelperFunctions_cvt_int(self: HelperFunctions_t; <*UNUSED*>rtype: RType; <*UNUSED*>itype: IType; op: ConvertOp) =
 CONST text = ARRAY ConvertOp OF TEXT{
-    "#ifdef _WIN64 /* temporary workaround */\n"
+
+    "#ifndef m3_round\n#define m3_round m3_round\n"
+    & "#ifdef _WIN64 /* temporary workaround */\n"
     & "static INT64 __stdcall m3_round(EXTENDED f) { return (INT64)f; }\n"
     & "#else\n"
     & "INT64 __cdecl llroundl(long double);\nstatic INT64 __stdcall m3_round(EXTENDED f) { return (INT64)llroundl(f); }\n"
+    & "#endif\n"
     & "#endif",
-    "static INT64 __stdcall m3_trunc(EXTENDED f) { return (INT64)f; }",
-    "double __cdecl floor(double);\nstatic INT64 __stdcall m3_floor(EXTENDED f) { return floor(f); } /* math.h */",
-    "double __cdecl ceil(double);\nstatic INT64 __stdcall m3_ceil(EXTENDED f) { return ceil(f); } /* math.h */"
+
+    "#ifndef m3_trunc\n#define m3_trunc m3_trunc\nstatic INT64 __stdcall m3_trunc(EXTENDED f) { return (INT64)f; }\n#endif\n",
+
+    "#ifndef m3_floor\n#define m3_floor m3_floor\ndouble __cdecl floor(double);\nstatic INT64 __stdcall m3_floor(EXTENDED f) { return floor(f); } /* math.h */\n#endif\n",
+
+    "#ifndef m3_ceil\n#define m3_ceil m3_ceil\ndouble __cdecl ceil(double);\nstatic INT64 __stdcall m3_ceil(EXTENDED f) { return ceil(f); } /* math.h */\n#endif\n"
     };
 BEGIN
     HelperFunctions_helper_with_boolean(self, self.data.cvt_int[op], text[op]);
@@ -3927,60 +4026,6 @@ BEGIN
     HelperFunctions_helper_with_type(self, "pop", type, self.data.pop, text);
 END HelperFunctions_pop;
 
-PROCEDURE HelperFunctions_check_range(self: HelperFunctions_t; type: IType; <*UNUSED*>READONLY low, high: Target.Int; <*UNUSED*>code: RuntimeError) =
-(* Ideally the helper would call report_fault but I do not think we have the name yet.
-   This is a workaround to prevent warnings from older gcc.
-*)
-BEGIN
-    HelperFunctions_helper_with_type(self, "check_range", type, self.data.check_range);
-END HelperFunctions_check_range;
-
-PROCEDURE HelperFunctions_xor(self: HelperFunctions_t; type: IType) =
-(* This is a workaround to prevent warnings from older gcc. *)
-BEGIN
-    HelperFunctions_helper_with_type(self, "xor", type, self.data.xor);
-END HelperFunctions_xor;
-
-PROCEDURE HelperFunctions_if_true(self: HelperFunctions_t; itype: IType; <*UNUSED*>label: Label; <*UNUSED*>frequency: Frequency) =
-(* IF (s0.itype # 0) GOTO label; pop *)
-BEGIN
-    HelperFunctions_internal_compare(self, itype, CompareOp.NE);
-END HelperFunctions_if_true;
-
-PROCEDURE HelperFunctions_if_false(self: HelperFunctions_t; itype: IType; <*UNUSED*>label: Label; <*UNUSED*>frequency: Frequency) =
-(* IF (s0.itype = 0) GOTO label; pop *)
-BEGIN
-    HelperFunctions_internal_compare(self, itype, CompareOp.EQ);
-END HelperFunctions_if_false;
-
-PROCEDURE HelperFunctions_internal_compare(
-    self: HelperFunctions_t;
-    type: Type;
-    op: CompareOp) =
-(* This is a workaround to prevent warnings from older gcc. *)
-BEGIN
-    HelperFunctions_helper_with_type(self, CompareOpName[op], type, self.data.compare[op]);
-END HelperFunctions_internal_compare;
-
-PROCEDURE HelperFunctions_compare(
-    self: HelperFunctions_t;
-    ztype: ZType;
-    <*UNUSED*>itype: IType;
-    op: CompareOp) =
-BEGIN
-    HelperFunctions_internal_compare(self, ztype, op);
-END HelperFunctions_compare;
-
-PROCEDURE HelperFunctions_if_compare(
-    self: HelperFunctions_t;
-    ztype: ZType;
-    op: CompareOp;
-    <*UNUSED*>label: Label;
-    <*UNUSED*>frequency: Frequency) =
-BEGIN
-    HelperFunctions_internal_compare(self, ztype, op);
-END HelperFunctions_if_compare;
-
 PROCEDURE HelperFunctions_copy_common(self: HelperFunctions_t; overlap: BOOLEAN) =
 BEGIN
     IF overlap THEN
@@ -4007,6 +4052,8 @@ END HelperFunctions_zero;
 
 PROCEDURE HelperFunctions_fence(self: HelperFunctions_t; <*UNUSED*>order: MemoryOrder) =
 CONST text = ARRAY OF TEXT{
+"#ifndef m3once_fence",
+"#define m3once_fence",
 "#ifdef _MSC_VER",
 "long __cdecl _InterlockedExchange(volatile long*, long);",
 "#pragma instrinsic(_InterlockedExchange)",
@@ -4014,6 +4061,7 @@ CONST text = ARRAY OF TEXT{
 "#define m3_fence() _InterlockedExchange(&m3_fence_var, 0)",
 "#else",
 "static void __stdcall m3_fence(void){}", (* not yet implemented *)
+"#endif",
 "#endif"
 };
 BEGIN
@@ -4204,6 +4252,7 @@ VAR size := 0;
     sizes: REF ARRAY OF INTEGER := NIL;
     x := self.self;
     index := 0;
+    sizestr: TEXT;
 BEGIN
 
     (* RETURN; *) (* TODO *)
@@ -4238,7 +4287,10 @@ BEGIN
             prev := size;
             FOR unit := FIRST(units) TO LAST(units) DO
                 IF (size MOD units[unit]) = 0 THEN
-                    print(x, "STRUCT" & IntToDec(units[unit]) & "(" & IntToDec(size) & ")\n");
+                    sizestr := IntToDec(size);
+                    ifndef(x, "struct_" & sizestr & "_t"); (* see define STRUCT *)
+                    print(x, "STRUCT" & IntToDec(units[unit]) & "(" & sizestr & ")\n");
+                    endif(x);
                     EXIT;
                 END;
             END;
@@ -4403,7 +4455,7 @@ VAR var := NEW(Var_t,
         byte_size := byte_size,
         typeid := typeid,
         proc := self.current_proc).Init();
-    type: Type_t;
+    type: Type_t := NIL;
 BEGIN
     IF DebugVerbose(self) THEN
         self.comment("declare_local name:" & NameT(var.name)
@@ -4731,7 +4783,7 @@ BEGIN
 
     IF pad > 0 THEN
         end_init_helper(self);
-        self.fields.addhi("char " & GenerateNameText(self) & "[" & IntToDec(pad) & "];\n");
+        self.fields.addhi("char " & GenerateNameLocalText(self) & "[" & IntToDec(pad) & "];\n");
         initializer_addhi(self, Text_left_brace);
         FOR i := 1 TO pad DO
             initializer_addhi(self, "0 /* " & IntToDec(i) & " */ ");
@@ -4762,7 +4814,7 @@ BEGIN
     init_to_offset(self, offset);
     IF offset = 0 OR self.init_type # type OR offset # self.current_offset THEN
         end_init_helper(self);
-        self.fields.addhi(cgtypeToText[type] & " " & GenerateNameText(self));
+        self.fields.addhi(cgtypeToText[type] & " " & GenerateNameLocalText(self));
         initializer_addhi(self, Text_left_brace);
     END;
     INC(self.init_type_count);

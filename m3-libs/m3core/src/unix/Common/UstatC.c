@@ -1,4 +1,6 @@
+#ifndef INCLUDED_M3CORE_H
 #include "m3core.h"
+#endif
 
 #if __GNUC__ >= 4
 #ifdef __APPLE__

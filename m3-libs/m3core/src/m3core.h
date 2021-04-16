@@ -2,36 +2,49 @@
 #pragma once
 #endif
 
+// Before including m3core.h, check if INCLUDED_M3CORE_H is defined.
+// This is not so much as to optimize compilation, but to enable
+// concatenating all the files.
 #ifndef INCLUDED_M3CORE_H
 #define INCLUDED_M3CORE_H
 
-#define _NO_CRT_STDIO_INLINE /* Do not accidentally export printf. */
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN 1
+#endif
+#define _NO_CRT_STDIO_INLINE 1 /* Do not accidentally export printf. */
+#define _CRT_SECURE_NO_DEPRECATE 1
+#define _CRT_NONSTDC_NO_DEPRECATE 1
+#define _WINSOCK_DEPRECATED_NO_WARNINGS 1
 #ifdef _MSC_VER
-#define _CRT_SECURE_NO_DEPRECATE
-#define _CRT_NONSTDC_NO_DEPRECATE
+// These two must come first.
 #pragma warning(disable:4616) /* there is no warning x (unavoidable if targeting multiple compiler versions) */
 #pragma warning(disable:4619) /* there is no warning x (unavoidable if targeting multiple compiler versions) */
+// The rest are sorted.
 #pragma warning(disable:4115) /* named type definition in parentheses */
 #pragma warning(disable:4100) /* unused parameter */
+#pragma warning(disable:4127) /* conditional expression is constant */
 #pragma warning(disable:4201) /* nonstandard extension: nameless struct/union */
+#pragma warning(disable:4209) /* nonstandard extension: benign re-typedef */
 #pragma warning(disable:4214) /* nonstandard extension: bitfield other than int */
+#pragma warning(disable:4226) /* nonstandard extension: __export */
+#pragma warning(disable:4242) /* 'return': conversion from '' to '', possible loss of data */
+#pragma warning(disable:4244) /* integer conversion */
+#pragma warning(disable:4255) /* () change to (void) */
 #pragma warning(disable:4514) /* unused inline function removed */
 #pragma warning(disable:4705) /* statement has no effect for merely using assert() at -W4 */
-#pragma warning(disable:4209) /* nonstandard extension: benign re-typedef */
-#pragma warning(disable:4226) /* nonstandard extension: __export */
-#pragma warning(disable:4820) /* padding inserted */
-#pragma warning(disable:4255) /* () change to (void) */
+#pragma warning(disable:4710) /* function not inlined */
 #pragma warning(disable:4668) /* #if of undefined symbol */
+#pragma warning(disable:4820) /* padding inserted */
+#pragma warning(disable:5045) /* Compiler will insert Spectre mitigation for memory load if /Qspectre switch specified */
 #endif
 
 #ifdef _WIN32
+#include "winsock2.h"
 #include "ws2tcpip.h"
-#include "wspiapi.h"
-#else
+#endif
 typedef int BOOL;
 #define TRUE 1
 #define FALSE 0
-#endif
 
 #if __GNUC__ >= 4 && !defined(__osf__) && !defined(__CYGWIN__)
 #define M3_HAS_VISIBILITY 1
@@ -111,7 +124,7 @@ typedef int BOOL;
 #define EXTERN_CONST const
 #endif
 
-#if defined(__sun) && defined(__sparc) && !defined(__MAKECONTEXT_V2_SOURCE)
+#if defined(__sun) && !defined(__MAKECONTEXT_V2_SOURCE)
 /* Support for userthreads on Solaris 9 4/03 and later.
  * Support for older is easy but absent.
  */
@@ -327,7 +340,6 @@ M3EXTERNC_END
 #endif
 #include <direct.h>
 #include <io.h>
-#include <winsock.h>
 #include <process.h>
 typedef ptrdiff_t ssize_t;
 #else
@@ -410,7 +422,9 @@ typedef float REAL;
 typedef double LONGREAL;
 typedef double EXTENDED;
 #if defined(__cplusplus) || __STDC__
-typedef void* ADDRESS;
+//Match m3c, so all the files can be concatenated.
+//typedef void* ADDRESS;
+typedef char* ADDRESS;
 #else
 typedef char* ADDRESS;
 #endif
@@ -425,7 +439,7 @@ extern "C" {
  * VMS sometimes has 32bit size_t/ptrdiff_t but 64bit pointers.
  */
 /* commented out is correct, but so is the #else */
-/*#if defined(_WIN64) || __INITIAL_POINTER_SIZE == 64 || defined(__LP64__) || defined(_LP64)*/
+/*#if defined(_WIN64) || __INITIAL_POINTER_SIZE == 64 || defined(__LP64__) || defined(_LP64) || __WORDSIZE == 64*/
 #if __INITIAL_POINTER_SIZE == 64
 typedef INT64 INTEGER;
 typedef UINT64 WORD_T;
@@ -650,6 +664,159 @@ ThreadInternal__StackGrowsDown (void);
 void
 __cdecl
 Process__RegisterExitor(void (__cdecl*)(void));
+
+// GET_PC returns approximately size_t.
+// Try to keep most platform specific code here.
+
+#if defined(__APPLE__)
+
+#if defined(__i386__)
+#define M3_HOST "I386_DARWIN"
+#if __DARWIN_UNIX03
+#define GET_PC(context) ((context)->uc_mcontext->__ss.__eip)
+#else
+#define GET_PC(context) ((context)->uc_mcontext->ss.eip)
+#endif
+
+#elif defined(__x86_64__)
+
+#define M3_HOST "AMD64_DARWIN"
+
+#if __DARWIN_UNIX03
+#define GET_PC(context) ((context)->uc_mcontext->__ss.__rip)
+#else
+#define GET_PC(context) ((context)->uc_mcontext->ss.rip)
+#endif
+
+#elif defined(__ppc__) || defined(__ppc64__)
+
+#if defined(__ppc64__)
+#define M3_HOST "PPC64_DARWIN"
+#else
+#define M3_HOST "PPC_DARWIN"
+#endif
+
+#if __DARWIN_UNIX03
+#define GET_PC(context) ((context)->uc_mcontext->__ss.__srr0)
+#else
+#define GET_PC(context) ((context)->uc_mcontext->ss.srr0)
+#endif
+
+#elif defined(__arm__) || defined(__arm64__)
+
+#if defined(__arm64__)
+#define M3_HOST "ARM64_DARWIN"
+#else
+#define M3_HOST "ARM32_DARWIN"
+#endif
+
+#if __DARWIN_UNIX03
+#define GET_PC(context) (__darwin_arm_thread_state64_get_pc(context->uc_mcontext->__ss))
+#else
+#define GET_PC(context) (__darwin_arm_thread_state64_get_pc(context->uc_mcontext->ss))
+#endif
+#else
+#error Unknown __APPLE__ target
+#endif
+
+#elif defined(__osf__)
+
+#define GET_PC(context) ((context)->uc_mcontext.sc_pc)
+
+#elif defined(__OpenBSD__)
+
+#if defined(__amd64)
+
+#define M3_HOST "AMD64_OPENBSD"
+#define GET_PC(context) ((context)->sc_rip)
+
+#elif defined(__powerpc)
+// unknown wordsize and endian; use uname
+#define GET_PC(context) ((context)->sc_frame.srr0)
+#else
+#define GET_PC(context) ((context)->sc_pc)
+#endif
+
+#elif defined(__linux) && defined(__sparc) && __WORDSIZE == 64
+#define M3_HOST "SPARC64_LINUX"
+#define GET_PC(context) ((context)->uc_mcontext.mc_gregs[REG_PC])
+
+#elif defined(__sun) || defined(__sparc)
+
+#if defined(REG_PC)
+#define GET_PC(context) ((context)->uc_mcontext.gregs[REG_PC])
+#elif defined(__sun) && defined(__i386) && (PC == 14)
+#define M3_HOST "I386_SOLARIS"
+#define GET_PC(context) ((context)->uc_mcontext.gregs[PC])
+#elif defined(__sun) && defined(__sparc) && (PC == 1)
+#define GET_PC(context) ((context)->uc_mcontext.gregs[PC])
+#else
+#error unknown __sun/__sparc target
+#endif
+
+#elif defined(__linux)
+
+/* see /src/glibc-2.14/sysdeps/unix/sysv/linux/x/sigcontextinfo.h */
+#if defined(__i386)
+#define M3_HOST "I386_LINUX"
+#define GET_PC(context) ((context)->uc_mcontext.gregs[REG_EIP])
+#elif defined(__amd64)
+#define M3_HOST "AMD64_LINUX"
+#define GET_PC(context) ((context)->uc_mcontext.gregs[REG_RIP])
+#elif defined(__powerpc)
+// ambiguous endian and wordsize; use uname
+#define GET_PC(context) ((context)->uc_mcontext.uc_regs->gregs[PT_NIP])
+#elif defined(__arm__)
+// ambiguous endian and wordsize; use uname
+#define GET_PC(context) ((context)->uc_mcontext.arm_pc)
+#elif defined(__alpha__)
+#define M3_HOST "ALPHA_LINUX"
+#define GET_PC(context) ((context)->uc_mcontext.sc_pc)
+#elif defined(__ia64__)
+#define M3_HOST "IA64_LINUX"
+#define GET_PC(context) ((context)->uc_mcontext.sc_ip)
+#elif defined(__sh__)
+// unknown endian and wordsize; use uname
+#error untested __linux target
+#define GET_PC(context) ((context)->uc_mcontext.sc_pc)
+#elif defined(__s390__)
+// unknown wordsize; use uname
+#error untested __linux target
+#define GET_PC(context) ((context)->uc_mcontext.sregs.regs.psw.addr
+#elif defined(__riscv) || defined(__riscv64)
+#if defined(__riscv64)
+#define M3_HOST "RISCV64_LINUX"
+#else
+#define M3_HOST "RISCV32_LINUX"
+#endif
+#define GET_PC(context) ((context)->uc_mcontext.__gregs[REG_PC])
+#else
+#error unknown __linux target
+#endif
+
+#elif defined(__NetBSD__)
+#define GET_PC(context) (_UC_MACHINE_PC(context))
+
+#elif defined(__FreeBSD__)
+#if defined(__amd64)
+#define GET_PC(context) ((context)->uc_mcontext.mc_rip)
+#elif defined(__i386)
+#define GET_PC(context) ((context)->uc_mcontext.mc_eip)
+#else
+#define GET_PC(context) ((context)->uc_mcontext.mc_pc)
+#endif
+
+#elif defined(__mips)
+#define GET_PC(context) ((context)->uc_mcontext.scp_pc.lo)
+#elif defined(__hppa)
+#define GET_PC(context) ((context)->uc_mcontext.scp_pc)
+#elif defined(__i386)
+#define GET_PC(context) ((context)->uc_mcontext.ss.eip)
+#elif defined(__amd64)
+#define GET_PC(context) ((context)->uc_mcontext.ss.rip)
+#elif defined(__powerpc)
+#define GET_PC(context) ((context)->uc_mcontext.ss.srr0)
+#endif
 
 #ifdef __cplusplus
 } /* extern "C" */

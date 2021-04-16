@@ -22,7 +22,9 @@
  * until convinced
  */
 
+#ifndef INCLUDED_M3CORE_H
 #include "m3core.h"
+#endif
 
 typedef unsigned long DWORD;
 typedef unsigned char BYTE;

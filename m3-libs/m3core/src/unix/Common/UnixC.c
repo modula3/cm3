@@ -27,7 +27,9 @@ However that is not portable.
 So use these wrappers instead.
 */
 
+#ifndef INCLUDED_M3CORE_H
 #include "m3core.h"
+#endif
 #ifdef _WIN32
 #include <windows.h>
 #endif
