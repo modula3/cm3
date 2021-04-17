@@ -6,72 +6,15 @@
 
 include_dir ("Common")
 
-if not defined("IsTargetFreeBSD4")
+% FreeBSD 4 or earlier might not have a viable pthreads,
+% in which case make a separate config file and set NOPTHREAD = TRUE or such.
+%
+% Cygwin might want to use Win32 threads.
 
-proc InternalPlatformEquivalent(a, b) is
-  if equal(a, b)
-    return TRUE
-  end
-  foreach c in [{"SPARC32_SOLARIS", "SOLgnu", "SOLsun"},
-                {"I386_FREEBSD", "FreeBSD4"},
-                {"I386_NT", "NT386"},
-                {"I386_CYGWIN", "NT386GNU"},
-                {"I386_MINGW", "NT386MINGNU"},
-                {"I386_LINUX", "LINUXLIBC6"}]
-    if (c contains a) and (c contains b)
-      return TRUE
-    end
-  end
-  return FALSE
-end
-
-proc IsHostFreeBSD4() is
-% remove this once cm3cfg.common is up to date
-  if defined("HOST")
-    if not InternalPlatformEquivalent(HOST, "I386_FREEBSD")
-      return FALSE
-    end
-  end
-  if not defined("xIsHostFreeBSD4")
-    xIsHostFreeBSD4 = equal(try_exec("@uname -sr | fgrep \"FreeBSD 4.\" > /dev/null"), 0)
-  end
-  return xIsHostFreeBSD4
-end
-
-proc InternalCheckTargetOS(x) is
-% remove this once cm3cfg.common is up to date
-  if defined("TARGET_OS")
-    return equal(TARGET_OS, x)
-  end
-  error("config file (or cm3 executable) must define TARGET_OS")
-  return FALSE
-end
-
-proc IsNativeBuild() is
-% remove this once cm3cfg.common is up to date
-  if defined("HOST") and defined("TARGET")
-    return InternalPlatformEquivalent(HOST, TARGET)
-  end
-  return FALSE
-end
-
-% remove this once cm3cfg.common is up to date
-proc IsTargetFreeBSD() is return InternalCheckTargetOS("FREEBSD") end
-
-proc IsTargetFreeBSD4() is
-% remove this once cm3cfg.common is up to date
-  % approx (doesn't work for cross builds)
-  return IsTargetFreeBSD() and IsNativeBuild() and IsHostFreeBSD4()
-end
-
-end
-
-if equal (OS_TYPE, "WIN32") or equal(TARGET, "NT386")
-    or ({"NT", "MINGW", "CYGWIN"} contains TARGET)
+if equal (OS_TYPE, "WIN32") or ({"CYGWIN"} contains TARGET_OS)
   include_dir ("WIN32")
 else
-  if (not defined("NOPTHREAD"))
-     and (not IsTargetFreeBSD4())
+  if not defined("NOPTHREAD")
     include_dir("PTHREAD")
   else
     include_dir (OS_TYPE)
