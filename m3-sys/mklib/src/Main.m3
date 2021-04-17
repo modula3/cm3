@@ -22,6 +22,37 @@ CONST
   EndHeader    = "`\n";
   PadChar      = '\n';
 
+  (* TODO Remove these when m3core updated *)
+  IMAGE_FILE_MACHINE_I386      = 16_014c;
+  IMAGE_FILE_MACHINE_R3000     = 16_0162;
+  IMAGE_FILE_MACHINE_R4000     = 16_0166;
+  IMAGE_FILE_MACHINE_R10000    = 16_0168;
+  IMAGE_FILE_MACHINE_WCEMIPSV2 = 16_0169;
+  IMAGE_FILE_MACHINE_ALPHA     = 16_0184;
+  IMAGE_FILE_MACHINE_SH3       = 16_01a2;
+  IMAGE_FILE_MACHINE_SH3DSP    = 16_01a3;
+  IMAGE_FILE_MACHINE_SH3E      = 16_01a4;
+  IMAGE_FILE_MACHINE_SH4       = 16_01a6;
+  IMAGE_FILE_MACHINE_SH5       = 16_01a8;
+  IMAGE_FILE_MACHINE_ARM       = 16_01c0;
+  IMAGE_FILE_MACHINE_THUMB     = 16_01c2;
+  IMAGE_FILE_MACHINE_ARMNT     = 16_01c4; (* ARM Thumb-2 Little-Endian *)
+  IMAGE_FILE_MACHINE_AM33      = 16_01d3;
+  IMAGE_FILE_MACHINE_POWERPC   = 16_01F0;
+  IMAGE_FILE_MACHINE_POWERPCFP = 16_01f1;
+  IMAGE_FILE_MACHINE_IA64      = 16_0200;
+  IMAGE_FILE_MACHINE_MIPS16    = 16_0266;
+  IMAGE_FILE_MACHINE_ALPHA64   = 16_0284;
+  IMAGE_FILE_MACHINE_MIPSFPU   = 16_0366;
+  IMAGE_FILE_MACHINE_MIPSFPU16 = 16_0466;
+  IMAGE_FILE_MACHINE_TRICORE   = 16_0520;
+  IMAGE_FILE_MACHINE_CEF       = 16_0CEF;
+  IMAGE_FILE_MACHINE_EBC       = 16_0EBC;
+  IMAGE_FILE_MACHINE_AMD64     = 16_8664;
+  IMAGE_FILE_MACHINE_M32R      = 16_9041;
+  IMAGE_FILE_MACHINE_ARM64     = 16_AA64;
+  IMAGE_FILE_MACHINE_CEE       = 16_C0EE;
+
 (* File header format. *)
 
 TYPE
@@ -82,15 +113,45 @@ BEGIN
         Die ("multiple architectures: ", Fmt.Int(Machine), ", ",
              Fmt.Int(machine));
     END;
+
     Machine := machine;
-    IF machine = WinNT.IMAGE_FILE_MACHINE_I386 THEN
-        trimUnderscore := TRUE;
-    ELSIF machine = WinNT.IMAGE_FILE_MACHINE_AMD64 THEN
-        trimUnderscore := FALSE;
-    ELSE
-        RETURN FALSE;
-    END;
-    RETURN TRUE;
+
+    (* x86 is presumed to be the only wierd one *)
+    trimUnderscore := machine = WinNT.IMAGE_FILE_MACHINE_I386;
+
+    RETURN machine = IMAGE_FILE_MACHINE_I386
+      OR machine = IMAGE_FILE_MACHINE_ARM
+      OR machine = IMAGE_FILE_MACHINE_ARM64
+      OR machine = IMAGE_FILE_MACHINE_ARMNT
+      OR machine = IMAGE_FILE_MACHINE_AMD64
+
+      (* The rest are historical/hypothetical. *)
+
+      OR machine = IMAGE_FILE_MACHINE_R3000
+      OR machine = IMAGE_FILE_MACHINE_R4000
+      OR machine = IMAGE_FILE_MACHINE_R10000
+      OR machine = IMAGE_FILE_MACHINE_WCEMIPSV2
+      OR machine = IMAGE_FILE_MACHINE_ALPHA
+      OR machine = IMAGE_FILE_MACHINE_SH3
+      OR machine = IMAGE_FILE_MACHINE_SH3DSP
+      OR machine = IMAGE_FILE_MACHINE_SH3E
+      OR machine = IMAGE_FILE_MACHINE_SH4
+      OR machine = IMAGE_FILE_MACHINE_SH5
+      OR machine = IMAGE_FILE_MACHINE_THUMB
+      OR machine = IMAGE_FILE_MACHINE_AM33
+      OR machine = IMAGE_FILE_MACHINE_POWERPC
+      OR machine = IMAGE_FILE_MACHINE_POWERPCFP
+      OR machine = IMAGE_FILE_MACHINE_IA64
+      OR machine = IMAGE_FILE_MACHINE_MIPS16
+      OR machine = IMAGE_FILE_MACHINE_ALPHA64
+      OR machine = IMAGE_FILE_MACHINE_MIPSFPU
+      OR machine = IMAGE_FILE_MACHINE_MIPSFPU16
+      OR machine = IMAGE_FILE_MACHINE_TRICORE
+      OR machine = IMAGE_FILE_MACHINE_CEF
+      OR machine = IMAGE_FILE_MACHINE_EBC
+      OR machine = IMAGE_FILE_MACHINE_M32R
+      OR machine = IMAGE_FILE_MACHINE_CEE;
+
 END HandleArchitecture;
 
 PROCEDURE DoIt () =
