@@ -32,21 +32,4 @@ else
   implementation("FSUnix_cm3")
 end
 
-> "UserThreads.i3.tmp" in
-  write("INTERFACE UserThreads;\n")
-  if defined("TARGET_OS")
-    if equal(TARGET_OS, "OPENBSD")
-      write("CONST Value = TRUE;\n")
-    else
-      write("CONST Value = FALSE;\n")
-    end
-  else
-    write("CONST Value = FALSE;\n")
-  end
-  write("END UserThreads.\n")
-end
-cp_if("UserThreads.i3.tmp", "UserThreads.i3")
-
-derived_interface("UserThreads", HIDDEN)
-
 end
