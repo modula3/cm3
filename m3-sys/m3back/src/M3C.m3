@@ -1293,6 +1293,66 @@ BEGIN
     endif(x);
 END openArray_define;
 
+TYPE ProcType_t = Type_CanBeDefinedTrue_t OBJECT
+  index := 0;
+  types: REF ARRAY OF Type_t := NIL;
+  typeids: REF ARRAY OF TypeUID := NIL;
+  callingConvention: CallingConvention;
+OVERRIDES
+  canBeDefined := ProcType_canBeDefined;
+  define := ProcType_define;
+END;
+
+PROCEDURE ProcType_canBeDefined(type: ProcType_t; self: T): BOOLEAN =
+BEGIN
+  IF type.index # NUMBER(type.types^) THEN
+    RETURN FALSE;
+  END;
+
+  FOR i := 0 TO NUMBER(type.types^) - 1 DO
+    IF type.types^[i] = NIL AND type.typeids^[i] # 0 THEN
+      type.types^[i] := TypeidToType_Get(self, type.typeids^[i]);
+      IF type.types^[i] = NIL THEN
+        RETURN FALSE;
+      END;
+      IF NOT type.types^[i].IsDefined() THEN
+        RETURN FALSE;
+      END;
+    END;
+  END;
+
+  type.typeids := NIL; (* no longer needed *)
+  RETURN TRUE;
+
+END ProcType_canBeDefined;
+
+PROCEDURE ProcType_define(type: ProcType_t; self: T) =
+VAR return := type.types[0];
+BEGIN
+  print(self, "typedef ");
+  IF return = NIL THEN
+    print(self, "void");
+  ELSE
+    print(self, return.text);
+  END;
+  print(self, "(");
+  print(self, CallingConventionToText(type.callingConvention));
+  print(self, "*");
+  print(self, type.text);
+  print(self, ")(");
+  IF NUMBER(type.types^) = 1 THEN
+    print(self, "void");
+  ELSE
+    FOR i := 1 TO NUMBER(type.types^) - 1 DO
+      print(self, type.types[i].text);
+      IF i # NUMBER(type.types^) - 1 THEN
+        print(self, ",");
+      END;
+    END;
+  END;
+  print(self, ");");
+END ProcType_define;
+
 PROCEDURE TypeidToType_Get(self: T; typeid: TypeUID): Type_t =
 VAR type: REFANY := NIL;
 BEGIN
@@ -2736,6 +2796,7 @@ TYPE DeclareTypes_t = M3CG_DoNothing.T BRANDED "M3C.DeclareTypes_t" OBJECT
     record: Record_t := NIL;
     previous_field: Field_t := NIL;
     field_count, field_index := 0;
+    procType: ProcType_t := NIL;
 
 OVERRIDES
     declare_enum := declare_enum;
@@ -3015,21 +3076,32 @@ BEGIN
     ELSE
         x.comment("declare_proctype");
     END;
-    (* TODO Stronger types *)
-    x.Type_Init(NEW(AddressType_t, state := Type_State.CanBeDefined, cgtype := Target.Address.cg_type, typeid := typeid)); (* TODO? *)
-    (* SuppressLineDirective(self, param_count + (ORD(raise_count >= 0) * raise_count), "declare_proctype param_count + raise_count"); *)
+    self.procType := NEW(ProcType_t,
+                         cgtype := Target.Address.cg_type,
+                         index := 1,
+                         callingConvention := callingConvention,
+                         types := NEW(REF ARRAY OF Type_t, param_count + 1),
+                         typeids := NEW(REF ARRAY OF TypeUID, param_count + 1),
+                         typeid := typeid);
+    self.procType.typeids[0] := result;
+    x.Type_Init(self.procType);
 END declare_proctype;
 
 PROCEDURE declare_formal(self: DeclareTypes_t; name: Name; typeid: TypeUID) =
 VAR x := self.self;
+    type := self.procType;
 BEGIN
-    IF DebugVerbose(x) THEN
-        x.comment("declare_formal name:", NameT(name),
-            " typeid:", TypeIDToText(typeid));
-    ELSE
-        x.comment("declare_formal");
-    END
-    (* SuppressLineDirective(self, -1, "declare_formal"); *)
+  IF DebugVerbose(x) THEN
+    x.comment("declare_formal name:", NameT(name),
+        " typeid:", TypeIDToText(typeid));
+  ELSE
+    x.comment("declare_formal");
+  END;
+  type.typeids[type.index] := typeid;
+  INC(type.index);
+  IF type.index = NUMBER(type.types^) THEN
+    self.procType := NIL;
+  END;
 END declare_formal;
 
 PROCEDURE declare_raises(self: DeclareTypes_t; name: Name) =
