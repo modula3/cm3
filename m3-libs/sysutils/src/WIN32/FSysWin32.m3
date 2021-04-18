@@ -3,7 +3,7 @@ UNSAFE MODULE FSysWin32 EXPORTS FSUtils;
 
 IMPORT Pathname, Text, OSError, File;
 IMPORT PathRepr, (* FSFixed AS *) FS;
-IMPORT ASCII, M3toC;
+IMPORT ASCII, M3toC, Unix;
 
 (*--------------------------------------------------------------------------*)
 PROCEDURE PosixIsReadable(fn : Pathname.T) : BOOLEAN =
@@ -11,7 +11,7 @@ PROCEDURE PosixIsReadable(fn : Pathname.T) : BOOLEAN =
   VAR
     fna := PathRepr.Native(fn);
     fname := M3toC.SharedTtoS(fna);
-    res := access(fname, R_OK) = 0;
+    res := Unix.access(fname, Unix.R_OK) = 0;
   BEGIN
     M3toC.FreeSharedS(fna, fname);
     RETURN res;
@@ -23,7 +23,7 @@ PROCEDURE PosixIsWritable(fn : Pathname.T) : BOOLEAN =
   VAR
     fna := PathRepr.Native(fn);
     fname := M3toC.SharedTtoS(fna);
-    res := access(fname, W_OK) = 0;
+    res := Unix.access(fname, Unix.W_OK) = 0;
   BEGIN
     M3toC.FreeSharedS(fna, fname);
     RETURN res;
@@ -35,7 +35,7 @@ PROCEDURE PosixIsExecutable(fn : Pathname.T) : BOOLEAN =
   VAR
     fna := PathRepr.Native(fn);
     fname := M3toC.SharedTtoS(fna);
-    res := access(fname, X_OK) = 0;
+    res := Unix.access(fname, Unix.F_OK) = 0;
   BEGIN
     M3toC.FreeSharedS(fna, fname);
     RETURN res;

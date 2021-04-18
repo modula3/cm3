@@ -1155,11 +1155,11 @@ PROCEDURE DrawPolygon (self         : T;
         <* ASSERT tess # NIL *>
 
         GLu.gluTessCallback (tess, GLu.GLU_BEGIN,
-                             LOOPHOLE (GL.glBegin, PROCEDURE ()));
+                             LOOPHOLE (GL.glBegin, GLu.GLUtessAnyProc));
         GLu.gluTessCallback (tess, GLu.GLU_VERTEX,
-                             LOOPHOLE (GL.glVertex3dv, PROCEDURE ()));
+                             LOOPHOLE (GL.glVertex3dv, GLu.GLUtessAnyProc));
         GLu.gluTessCallback (tess, GLu.GLU_END,
-                             LOOPHOLE (GL.glEnd, PROCEDURE ()));
+                             LOOPHOLE (GL.glEnd, GLu.GLUtessAnyProc));
 
         GLu.gluBeginPolygon (tess);
 

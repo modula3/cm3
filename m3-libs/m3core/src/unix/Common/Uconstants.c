@@ -231,9 +231,11 @@ X(X_OK)
 X(W_OK)
 X(R_OK)
 #else
-Y(F_OK, 0)
-Y(W_OK, 2)
-Y(R_OK, 4)
+// There are no #defines in the headers but the documention gives the values.
+Y(F_OK, 0) // existence only
+Y(W_OK, 2) // write-only
+Y(R_OK, 4) // read-only
+           // X_OK not in documentation
 #endif
 
 #ifndef _WIN32

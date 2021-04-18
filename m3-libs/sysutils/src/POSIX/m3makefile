@@ -21,35 +21,15 @@
 % (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 % THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-c_source("FSUnixC")
-
 if equal (OS_TYPE, "POSIX")
 
 implementation("OSSpecialsPosix")
 implementation("PathReprPosix")
 implementation("SystemPosix")
-c_source("SystemPosixC")
 if equal(M3_VARIANT, "PM3")
   implementation("FSUnix_pm3")
 else
   implementation("FSUnix_cm3")
 end
-
-> "UserThreads.i3.tmp" in
-  write("INTERFACE UserThreads;\n")
-  if defined("TARGET_OS")
-    if equal(TARGET_OS, "OPENBSD")
-      write("CONST Value = TRUE;\n")
-    else
-      write("CONST Value = FALSE;\n")
-    end
-  else
-    write("CONST Value = FALSE;\n")
-  end
-  write("END UserThreads.\n")
-end
-cp_if("UserThreads.i3.tmp", "UserThreads.i3")
-
-derived_interface("UserThreads", HIDDEN)
 
 end

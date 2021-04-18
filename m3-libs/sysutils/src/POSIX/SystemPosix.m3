@@ -25,8 +25,8 @@
 (*---------------------------------------------------------------------------*)
 UNSAFE MODULE SystemPosix EXPORTS System;
 
-IMPORT Text, Ctypes, (*Uexec,*) Process, Fmt, Uerror;
-IMPORT (*SchedulerPosix*) Word;
+IMPORT Text, Ctypes, (*Uexec,*) Process, Fmt, Uerror, Cerrno;
+IMPORT SchedulerPosix, Word, Unix;
 
 (*---------------------------------------------------------------------------*)
 PROCEDURE Hostname() : TEXT =
@@ -34,7 +34,7 @@ PROCEDURE Hostname() : TEXT =
     buf : ARRAY [0..1024] OF CHAR;
     len := 1024;
   BEGIN
-    IF gethostname(LOOPHOLE(ADR(buf), Ctypes.char_star), len) = 0 THEN
+    IF Unix.gethostname(LOOPHOLE(ADR(buf), Ctypes.char_star), len) = 0 THEN
       buf[1024] := '\000';
       len := 0;
       WHILE len < 1024 AND buf[len] # '\000' DO
@@ -52,13 +52,9 @@ PROCEDURE Wait(p: Process.T): Process.ExitCode RAISES {Error} =
     e : Ctypes.int;
     err : TEXT;
   BEGIN
-(* Use this once m3core is new enough.
     result := SchedulerPosix.WaitProcess (pid, status);
-*)
-    (* 0 should be WNOHANG on user threads platforms, which there are presently none of *)
-    result := (*Uexec.*)waitpid (pid, ADR(status), 0);
     IF result < 0 THEN
-      e := GetErrno();
+      e := Cerrno.GetErrno();
       IF (e = Uerror.ECHILD) THEN err := "The process specified in pid does not exist or is not a child of the calling process.";
       ELSIF (e = Uerror.EINTR) THEN err := "WNOHANG was not set and an unblocked signal or a SIGCHLD was caught.";
       ELSIF (e = Uerror.EINVAL) THEN err := "The options argument was invalid.";

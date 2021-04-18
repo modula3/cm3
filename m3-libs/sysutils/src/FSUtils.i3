@@ -26,7 +26,6 @@
 INTERFACE FSUtils;
 
 IMPORT Pathname, TextSeq;
-FROM Ctypes IMPORT int, const_char_star;
 
 (*--------------------------------------------------------------------------*)
 EXCEPTION E(TEXT);
@@ -118,10 +117,5 @@ PROCEDURE PutFile(fn : Pathname.T; data : TEXT) RAISES {E};
   (* Write `data' into file `fn'. Create or overwrite `fn' as needed. *)
 
 (*---------------------------------------------------------------------------*)
-
-<*EXTERNAL FSUtils__X_OK*> VAR X_OK: int; (* executable *)
-<*EXTERNAL FSUtils__W_OK*> VAR W_OK: int; (* writable *)
-<*EXTERNAL FSUtils__R_OK*> VAR R_OK: int; (* readable *)
-<*EXTERNAL FSUtils__access*>PROCEDURE access (path: const_char_star; mode: int): int;
 
 END FSUtils.
