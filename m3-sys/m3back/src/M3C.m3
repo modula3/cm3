@@ -755,29 +755,23 @@ END type_forwardDeclare;
 PROCEDURE Type_CanBeDefined(type: Type_t; self: T): BOOLEAN =
 BEGIN
     IF type.state = Type_State.Defined THEN
-        self.comment("1 Type_CanBeDefined:FALSE:typeid " & TypeIDToText(type.typeid));
         RETURN FALSE;
     END;
     IF type.state = Type_State.CanBeDefined THEN
-        self.comment("2 Type_CanBeDefined:TRUE:typeid " & TypeIDToText(type.typeid));
         RETURN TRUE;
     END;
     IF type.canBeDefined(self) THEN
         type.state := Type_State.CanBeDefined;
-        self.comment("3 Type_CanBeDefined:TRUE:typeid " & TypeIDToText(type.typeid));
         RETURN TRUE;
     END;
-    self.comment("4 Type_CanBeDefined:FALSE:typeid " & TypeIDToText(type.typeid));
     RETURN FALSE;
 END Type_CanBeDefined;
 
 PROCEDURE Type_Define(type: Type_t; self: T) =
 BEGIN
     IF NOT type.CanBeDefined(self) THEN
-        (* self.comment("1 Type_Define:typeid " & TypeIDToText(type.typeid)); *)
         RETURN;
     END;
-    (* self.comment("2 Type_Define:typeid " & TypeIDToText(type.typeid)); *)
     type.define(self);
     type.state := Type_State.Defined;
 END Type_Define;
@@ -973,11 +967,9 @@ BEGIN
         field := NARROW(fields.get(i), Field_t);
         Assert(self, field # NIL, "field # NIL");
         IF NOT ResolveType(self, field.typeid, field.type) THEN
-            self.comment("1 record_canBeDefined: typeid:" & type.text & " pending field name:" & NameT(field.name) & " typeid:" & TypeIDToText(field.typeid));
             RETURN FALSE;
         END;
         IF NOT ((field.type.IsDefined() (*OR field.type.CanBeDefined(self)*))) THEN
-            self.comment("2 record_canBeDefined: typeid:" & type.text & " pending field name:" & NameT(field.name) & " typeid:" & TypeIDToText(field.typeid));
             RETURN FALSE;
         END;
     END;
@@ -1190,9 +1182,6 @@ BEGIN
     (* TODO cplusplus and GNU C can do better *)
     print(x, "/*enum_define*/typedef " & int_type & " " & id & "; /*declare_enum*/\n");
     FOR i := 0 TO element_count - 1 DO
-        (*RTIO.PutInt(names^[i]);
-        RTIO.PutText(" ");
-        RTIO.Flush();*)
         Assert (x, NameT(names^[i]) # NIL, "NameT(names^[i]) # NIL");
         print(x, start & NameT(names^[i]) & cast & IntToDec(i) & end);
     END;
@@ -1253,14 +1242,11 @@ END;
 PROCEDURE openArray_canBeDefined(type: Array_t; self: T): BOOLEAN =
 BEGIN
   IF NOT ResolveType(self, type.element_typeid, type.element_type) THEN
-    (*self.comment("1 openArray_canBeDefined:FALSE:typeid " & TypeIDToText(type.typeid));*)
     RETURN FALSE;
   END;
   IF NOT Type_IsForwardDeclared(type.element_type) THEN
-    (*self.comment("2 openArray_canBeDefined:FALSE:typeid " & TypeIDToText(type.typeid));*)
     RETURN FALSE;
   END;
-  (*self.comment("3 openArray_canBeDefined:TRUE:typeid " & TypeIDToText(type.typeid));*)
   RETURN TRUE;
 END openArray_canBeDefined;
 
