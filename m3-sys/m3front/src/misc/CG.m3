@@ -1895,6 +1895,7 @@ PROCEDURE Load_addr
 PROCEDURE Load_indirect
   (t: Type;  addedOffset: Offset;  s: Size; addr_align: Alignment := Target.Word8.align) =
 (* s0.t := Mem [s0.A + o : s] *)
+(* If t=A, addr_align applies to where final s0.t points, otherwise irrelevant. *)
   VAR
     t_size     := TargetMap.CG_Size [t];
     t_align    := TargetMap.CG_Align [t];
@@ -1937,7 +1938,8 @@ x3 := stack[SCheck(1,"Load_indirect-x3")];
         SimpleIndirectLoad (x, t, addr_align);
 
       ELSIF (t = Target.Word.cg_type) OR (t = Target.Integer.cg_type)
-        OR  (t = Target.Long.cg_type) OR (t = Target.Longint.cg_type) THEN
+            OR (t = Target.Long.cg_type) OR (t = Target.Longint.cg_type)
+      THEN
         best_type := MayFindIntType (t, s, x.offset, x.base_value_align);
         IF best_type # Type.Void THEN
  best_type1 := best_type;

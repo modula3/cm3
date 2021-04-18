@@ -417,6 +417,7 @@ PROCEDURE Load (t: T) =
         CG.Boost_addr_alignment (t.cg_align);
       ELSIF (t.indirect) THEN
         CG.Load_addr (t.cg_var, t.offset, t.cg_align);
+        (* ^Misleading name.  Actually load value and label as an address. *)
       ELSE
         CG.Load_addr_of (t.cg_var, t.offset, CG.GCD(t.cg_align, t.offset));
       END;
@@ -424,17 +425,20 @@ PROCEDURE Load (t: T) =
       EVAL Type.CheckInfo (t.tipe, type_info);
       IF (t.bss_var # NIL) THEN
         CG.Load
-          (t.bss_var, 0, t.size, t.cg_align, type_info.addr_align, t.stk_type);
+          (t.bss_var, 0, t.size, t.cg_align, type_info.alignment, t.stk_type);
       ELSIF (t.cg_var = NIL) THEN (* => global *)
         Module.LoadGlobalAddr (Scope.ToUnit (t), t.offset, is_const := FALSE);
         IF (t.indirect) THEN
           CG.Load_indirect (CG.Type.Addr, 0, Target.Address.size);
         END;
-        CG.Boost_addr_alignment (t.cg_align);
+        CG.Boost_addr_alignment (type_info.alignment);
         CG.Load_indirect (t.stk_type, 0, t.size, type_info.addr_align);
       ELSIF (t.indirect) THEN
-        CG.Load_addr (t.cg_var, t.offset, t.cg_align);
-        CG.Load_indirect (t.stk_type, 0, t.size, type_info.addr_align);
+        CG.Load_addr (t.cg_var, t.offset, type_info.alignment);
+        (* ^Misleading name.  Actually load value and label as an address. *)
+     (* CG.Load_indirect (t.stk_type, 0, t.size, type_info.addr_align); *)
+        CG.Load_indirect
+          (type_info.stk_type, 0, type_info.size, type_info.addr_align);
       ELSE
         CG.Load
           (t.cg_var, t.offset, t.size, CG.GCD (t.cg_align, t.offset),
@@ -445,21 +449,25 @@ PROCEDURE Load (t: T) =
 
 (* EXPORTED *)
 PROCEDURE LoadLValue (t: T) =
+  VAR type_info: Type.Info;
   BEGIN
     t.used := TRUE;
     Value.Declare (t);
     IF (t.initPending) THEN ForceInit (t); END;
+    EVAL Type.CheckInfo (t.tipe, type_info);
     IF (t.bss_var # NIL) THEN
-      CG.Load_addr_of (t.bss_var, 0, t.cg_align);
+      CG.Load_addr_of (t.bss_var, 0, type_info.alignment);
     ELSIF (t.cg_var = NIL) THEN (* => global variable *)
       Module.LoadGlobalAddr (Scope.ToUnit (t), t.offset, is_const := FALSE);
       IF (t.indirect) THEN
         CG.Load_indirect (CG.Type.Addr, 0, Target.Address.size);
       END;
     ELSIF (t.indirect) THEN
-      CG.Load_addr (t.cg_var, t.offset, t.cg_align);
+      CG.Load_addr (t.cg_var, t.offset, type_info.alignment);
+      (* ^Misleading name.  Actually load value and label as an address. *)
     ELSE
-      CG.Load_addr_of (t.cg_var, t.offset, CG.GCD (t.cg_align, t.offset));
+      CG.Load_addr_of
+        (t.cg_var, t.offset, CG.GCD (type_info.alignment, t.offset));
     END;
     CG.Boost_addr_alignment (t.cg_align);
   END LoadLValue;
@@ -619,7 +627,7 @@ PROCEDURE Declare (t: T): BOOLEAN =
 
     ELSIF (t.indirect) THEN
       (* formal passed by reference => param is an address *)
-      t.cg_align := align;
+      t.cg_align := t.align;
       t.nextTWACGVar := TsWCGVars;  TsWCGVars := t;
       t.cg_var := CG.Declare_param (t.name, size, align, mtype, typeUID,
                                     t.need_addr, t.up_level, CG.Maybe);
