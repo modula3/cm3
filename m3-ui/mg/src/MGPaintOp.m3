@@ -43,6 +43,7 @@ PROCEDURE Apply (cl: Closure; st: VBT.ScreenType): ScrnPaintOp.T =
     cmap: ScrnColorMap.T;
     pix : INTEGER;
     t   : ScrnPaintOp.T;
+    xrgb : ScrnColorMap.XRGB;
   BEGIN
     IF st.depth = 24 THEN
       t := st.op.opaque(RGBTo24BitPixel(cl.rgb));
@@ -58,7 +59,7 @@ PROCEDURE Apply (cl: Closure; st: VBT.ScreenType): ScrnPaintOp.T =
       t := st.op.opaque(pix);
       TRY
         cmap.write(ARRAY [0 .. 0] OF
-                     ScrnColorMap.Entry{ScrnColorMap.Entry{pix, cl.rgb}});
+                     ScrnColorMap.Entry{ScrnColorMap.Entry{pix, cl.rgb, xrgb}});
       EXCEPT
       | ScrnColorMap.Failure =>
       END;
@@ -70,6 +71,7 @@ PROCEDURE Set (st: VBT.ScreenType; op: PaintOp.T; rgb: RGB) =
   VAR
     cl: Closure;
     ra: REFANY;
+    xrgb : ScrnColorMap.XRGB;
   BEGIN
     LOCK mu DO
       EVAL table.get(op.op, ra);
@@ -95,7 +97,7 @@ PROCEDURE Set (st: VBT.ScreenType; op: PaintOp.T; rgb: RGB) =
           TRY
             cmap.write(
               ARRAY [0 .. 0] OF
-                ScrnColorMap.Entry{ScrnColorMap.Entry{po.pix, rgb}});
+                ScrnColorMap.Entry{ScrnColorMap.Entry{po.pix, rgb, xrgb}});
           EXCEPT
           | ScrnColorMap.Failure =>
           END;
