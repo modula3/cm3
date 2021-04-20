@@ -6,5 +6,6 @@
 #include "m3core.h"
 #endif
 
+#undef M3MODULE /* Support concatenating multiple .c files. */
 #define M3MODULE Uprocess
 M3WRAP0_(m3_pid_t, getpid)

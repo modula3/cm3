@@ -6,6 +6,7 @@
 #include "m3core.h"
 #endif
 
+#undef M3MODULE /* Support concatenating multiple .c files. */
 #define M3MODULE Csignal
 
 typedef void (__cdecl*SignalHandler)(int s);

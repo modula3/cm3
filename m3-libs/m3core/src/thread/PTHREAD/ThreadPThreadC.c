@@ -16,6 +16,7 @@
 #include <mach/mach_init.h>
 #endif
 
+#undef M3MODULE /* Support concatenating multiple .c files. */
 #define M3MODULE ThreadPThread
 
 #if defined(__sparc) || defined(__ia64__)

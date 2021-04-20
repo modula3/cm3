@@ -8,6 +8,7 @@
 
 #ifndef _WIN32
 
+#undef M3MODULE /* Support concatenating multiple .c files. */
 #define M3MODULE Udir
 M3WRAP1(DIR*, opendir, const char*)
 M3WRAP1(void*, readdir, DIR*)

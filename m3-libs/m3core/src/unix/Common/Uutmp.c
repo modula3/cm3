@@ -8,6 +8,7 @@
 
 #ifndef _WIN32
 
+#undef M3MODULE /* Support concatenating multiple .c files. */
 #define M3MODULE Uutmp
 M3WRAP0(char*, getlogin)
 

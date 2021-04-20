@@ -8,6 +8,7 @@
 
 #ifndef _WIN32
 
+#undef M3MODULE /* Support concatenating multiple .c files. */
 #define M3MODULE Upwd
 
 M3WRAP1(struct passwd*, getpwuid, m3_uid_t)

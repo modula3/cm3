@@ -6,6 +6,7 @@
 extern "C" {
 #endif
 
+#undef M3MODULE /* Support concatenating multiple .c files. */
 #define M3MODULE Cstdio
 
 M3WRAP1(int, fclose, FILE*)
