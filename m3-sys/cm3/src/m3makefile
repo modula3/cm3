@@ -18,13 +18,6 @@ else
                            %(and doesn't do anything either.   
 end  
 
-
-cp_if(".." & SL & ".." & SL & ".." & SL & "m3-libs" & SL & "m3core" & SL & "src" & SL & "unix" & SL & "Common" & SL & "UnixLink.c", ".")
-cp_if(".." & SL & ".." & SL & ".." & SL & "m3-libs" & SL & "m3core" & SL & "src" & SL & "unix" & SL & "Common" & SL & "m3unix.h", ".")
-cp_if(".." & SL & ".." & SL & ".." & SL & "m3-libs" & SL & "m3core" & SL & "src" & SL & "m3core.h", ".")
-cp_if(".." & SL & "src" & SL & "cm3unix.c", ".")
-derived_c("cm3unix")
-
 import ("libm3")
 import ("m3middle")
 import ("m3linker")
