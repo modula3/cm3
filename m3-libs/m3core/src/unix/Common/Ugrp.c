@@ -23,7 +23,7 @@ struct _m3_group_t
     m3_gid_t gid;
 };
 
-static m3_group_t* native_to_m3(const struct group* native, m3_group_t* m3)
+static m3_group_t* native_to_m3group(const struct group* native, m3_group_t* m3)
 {
     if (native == NULL)
     {
@@ -43,21 +43,21 @@ M3_DLL_EXPORT m3_group_t* __cdecl
 Ugrp__getgrent(m3_group_t* m3group)
 {
     Scheduler__DisableSwitching();
-    return native_to_m3(getgrent(), m3group);
+    return native_to_m3group(getgrent(), m3group);
 }
 
 M3_DLL_EXPORT m3_group_t* __cdecl
 Ugrp__getgrgid(m3_group_t* m3group, m3_gid_t gid)
 {
     Scheduler__DisableSwitching();
-    return native_to_m3(getgrgid(gid), m3group);
+    return native_to_m3group(getgrgid(gid), m3group);
 }
 
 M3_DLL_EXPORT m3_group_t* __cdecl
 Ugrp__getgrnam(m3_group_t* m3group, const char* name)
 {
     Scheduler__DisableSwitching();
-    return native_to_m3(getgrnam(name), m3group);
+    return native_to_m3group(getgrnam(name), m3group);
 }
 
 M3_DLL_EXPORT void __cdecl
