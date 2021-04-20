@@ -26,26 +26,8 @@ M3_DLL_EXPORT int __cdecl
 Unix__link(const char* ExistingFile, const char* NewLink)
 {
 #ifdef _WIN32
-#ifdef _WIN64
     if (CreateHardLinkA(NewLink, ExistingFile, NULL) == FALSE)
         goto Error;
-#else
-    typedef BOOL (__stdcall * PFNCreateHardLinkA)(PCSTR NewLink, PCSTR ExistingFile, void* reserved);
-    static FARPROC pfnCreateHardLinkA;
-    
-    if (pfnCreateHardLinkA == NULL)
-    {
-        const static WCHAR Kernel32Name[] = L"Kernel32.dll";
-        HMODULE Kernel32Handle = LoadLibraryW(Kernel32Name);
-        if (Kernel32Handle == NULL)
-            goto Error;
-        pfnCreateHardLinkA = GetProcAddress(Kernel32Handle, "CreateHardLinkA");
-        if (pfnCreateHardLinkA == NULL)
-            goto Error;
-    }
-    if ((*(PFNCreateHardLinkA*)&pfnCreateHardLinkA)(NewLink, ExistingFile, NULL) == FALSE)
-        goto Error;
-#endif
     return 0;
 Error:
     errno = (int)GetLastError();
