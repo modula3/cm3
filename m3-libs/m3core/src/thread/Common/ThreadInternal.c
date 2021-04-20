@@ -43,6 +43,7 @@ ThreadInternal__StackGrowsDown (void)
 enum {WaitResult_Ready, WaitResult_Error, WaitResult_FDError, WaitResult_Timeout};
 /* ^Must match TYPE WaitResult declared in SchedularPosix.i3. */ 
 
+#undef THOUSAND /* Support concatenating multiple .c files. */
 #define THOUSAND (1000)
 #define MILLION (1000 * 1000)
 
