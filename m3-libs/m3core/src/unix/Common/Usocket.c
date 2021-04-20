@@ -325,6 +325,7 @@ Usocket__Assertions(void)
 
 /* wrap everything */
 
+#undef M3MODULE /* Support concatenating multiple .c files. */
 #define M3MODULE Usocket
 M3WRAP2(int, listen, int, int)
 M3WRAP2(int, shutdown, int, int)

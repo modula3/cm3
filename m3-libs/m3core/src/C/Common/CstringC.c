@@ -6,6 +6,7 @@
 #include "m3core.h"
 #endif
 
+#undef M3MODULE /* Support concatenating multiple .c files. */
 #define M3MODULE Cstring
 
 M3WRAP3(const void*, memchr, const void*, int, WORD_T)

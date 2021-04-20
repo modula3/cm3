@@ -8,6 +8,7 @@
 
 #ifndef _WIN32
 
+#undef M3MODULE /* Support concatenating multiple .c files. */
 #define M3MODULE Uugid
 M3WRAP0(m3_uid_t, geteuid)
 M3WRAP2(int, setreuid, m3_uid_t, m3_uid_t)

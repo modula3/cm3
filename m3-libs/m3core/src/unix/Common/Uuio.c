@@ -6,6 +6,7 @@
 #include "m3core.h"
 #endif
 
+#undef M3MODULE /* Support concatenating multiple .c files. */
 #define M3MODULE Uuio
 M3WRAP3_(ssize_t, read, int, void*, WORD_T)
 M3WRAP3_(ssize_t, write, int, const void*, WORD_T)

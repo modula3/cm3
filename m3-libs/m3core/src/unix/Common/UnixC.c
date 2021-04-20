@@ -33,6 +33,7 @@ So use these wrappers instead.
 #ifdef _WIN32
 #include <windows.h>
 #endif
+#undef M3MODULE /* Support concatenating multiple .c files. */
 #define M3MODULE Unix
 
 #ifdef __cplusplus

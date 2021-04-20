@@ -5,6 +5,7 @@
 #ifndef INCLUDED_M3CORE_H
 #include "m3core.h"
 #endif
+#undef M3MODULE /* Support concatenating multiple .c files. */
 #define M3MODULE Uexec
 
 #ifdef __cplusplus

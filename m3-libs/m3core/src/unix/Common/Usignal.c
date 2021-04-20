@@ -8,6 +8,7 @@
 
 #ifndef _WIN32
 
+#undef M3MODULE /* Support concatenating multiple .c files. */
 #define M3MODULE Usignal
 M3WRAP2(int, kill, m3_pid_t, int)
 
