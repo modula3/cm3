@@ -2007,7 +2007,7 @@ CONST Prefix = ARRAY OF TEXT {
    typing and setjmp work done *)
 "typedef char* ADDRESS;",
 "typedef char* STRUCT;",
-"typedef signed char INT8;",
+"typedef signed char INT8;", (* m3core.h is a bit more portable here, via limits.h; TODO: C99 *)
 "typedef unsigned char UINT8;",
 "typedef short INT16;",
 "typedef unsigned short UINT16;",
