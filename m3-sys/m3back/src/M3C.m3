@@ -2013,7 +2013,7 @@ CONST Prefix = ARRAY OF TEXT {
 "typedef unsigned short UINT16;",
 "typedef int INT32;",
 "typedef unsigned int UINT32;",
-"#if defined(_MSC_VER) || defined(__DECC) || defined(__DECCXX) || defined(__int64)",
+"#if defined(_MSC_VER) || defined(__DECC) || defined(__DECCXX) || defined(__int64)", (* matches m3core.h *)
 "typedef __int64 INT64;",
 "typedef unsigned __int64 UINT64;",
 "#define  INT64_(x) x##I64",
@@ -2400,9 +2400,16 @@ BEGIN
 
     (* Builtin/base types start out as state := Type_State.CanBeDefined or Defined  *)
 
+    print(self, "#ifndef INTEGER\n"); (* m3core.h interop *)
     self.Type_Init(NEW(Integer_t, state := Type_State.CanBeDefined, cgtype := Target.Integer.cg_type, typeid := UID_INTEGER, text := "INTEGER"));
+    print(self, "#endif\n");
+
+    print(self, "#ifndef WORD_T\n"); (* m3core.h interop *)
     self.Type_Init(NEW(Integer_t, state := Type_State.CanBeDefined, cgtype := Target.Word.cg_type, typeid := UID_WORD, text := "WORD_T"));
+    print(self, "#endif\n");
+
     print(self, "typedef WORD_T CARDINAL;\n");
+
     self.Type_Init(NEW(Integer_t, state := Type_State.Defined, cgtype := Target.Int64.cg_type, typeid := UID_LONGINT, text := "INT64"));
     self.Type_Init(NEW(Integer_t, state := Type_State.Defined, cgtype := Target.Word64.cg_type, typeid := UID_LONGWORD, text := "UINT64"));
 

@@ -448,6 +448,9 @@ typedef ptrdiff_t INTEGER;
 typedef size_t WORD_T;
 #endif
 
+#define INTEGER INTEGER /* Support composition with m3c output. */
+#define WORD_T WORD_T   /* Support composition with m3c output. */
+
 /* LONGINT is always signed and exactly 64 bits. */
 typedef INT64 LONGINT;
 
