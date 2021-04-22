@@ -1,7 +1,6 @@
-
 import("libm3")
 import("mysql")
 
 implementation("Main")
 
-program("testmysql")
+program("test")

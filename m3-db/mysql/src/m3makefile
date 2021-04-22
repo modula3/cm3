@@ -1,6 +1,6 @@
 import("libm3")
 
-import_lib("mysqlclient","/usr/lib")
+import_lib("mariadbclient","/usr/lib")
 
 Module("MySQLRaw")
 Module("MySQL")
@@ -8,5 +8,3 @@ c_source("mysql_wrap")
 
 Library("m3mysql")
 
-%implementation("Main")
-%program("test")

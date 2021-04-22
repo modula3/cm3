@@ -1,0 +1,12 @@
+# This the build file to create the Modula-3 bindings for MySQL
+# It uses swig to generate the bindings which you can get
+# here.  git clone https://github.com/demoitem/m3swig
+#
+swig -modula3 -noproxy -I/usr/include mysql.i
+
+#Optionally pretty print the output
+
+m3pp MySQL.i3 > zz ; mv zz MySQL.i3
+m3pp MySQL.m3 > zz ; mv zz MySQL.m3
+m3pp MySQLRaw.i3 > zz ; mv zz MySQLRaw.i3
+
