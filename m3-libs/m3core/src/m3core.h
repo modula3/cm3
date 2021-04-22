@@ -435,9 +435,16 @@ typedef ADDRESS MUTEX;
 extern "C" {
 #endif
 
-/* WORD_T/INTEGER are always exactly the same size as a pointer.
- * VMS sometimes has 32bit size_t/ptrdiff_t but 64bit pointers (confirmed April 2021).
- */
+// On all known systems, sizeof(size_t) == sizeof(intptr_t) == sizeof(void*).
+// Except VMS.
+// On VMS/Alpha confirmed April 2021:
+//   size_t is always 32bits, allocations are limited to 4GB.
+//   void* is 32bits or 64bits, depending on command line and pragmas
+//    e.g. cc /pointer_size=64
+//   intptr_t is always 64bits, can always store a pointer.
+// It is quite possible that VMS/IA64 and VMS/AMD64 are the same.
+// These environments provide maximum compatibility with older 32bit code,
+//  while still changing instruction set.
 /* commented out is correct, but so is the #else */
 /*#if defined(_WIN64) || __INITIAL_POINTER_SIZE == 64 || defined(__LP64__) || defined(_LP64) || __WORDSIZE == 64*/
 #if __INITIAL_POINTER_SIZE == 64
@@ -448,8 +455,8 @@ typedef ptrdiff_t INTEGER;
 typedef size_t WORD_T;
 #endif
 
-#define INTEGER INTEGER /* Support composition with m3c output. */
-#define WORD_T WORD_T   /* Support composition with m3c output. */
+#define INTEGER INTEGER /* Support concatenation with m3c output. */
+#define WORD_T WORD_T   /* Support concatenation with m3c output. */
 
 /* LONGINT is always signed and exactly 64 bits. */
 typedef INT64 LONGINT;
