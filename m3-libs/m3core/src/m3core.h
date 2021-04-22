@@ -389,7 +389,7 @@ typedef ptrdiff_t ssize_t;
 #endif
 
 #if UCHAR_MAX == 0x0FFUL
-typedef   signed char        INT8;
+typedef   signed char        INT8; // TODO: C99
 typedef unsigned char       UINT8;
 #else
 #error unable to find 8bit integer
