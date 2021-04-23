@@ -979,7 +979,7 @@ END record_canBeDefined;
 (* ifndef so multiple files can be concatenated and compiled at once *)
 PROCEDURE ifndef(self:T; id: TEXT) =
 BEGIN
-  print(self, "\n#ifndef m3once_" & id & "\n#define m3once_" & id & "\n");
+  print (self, "\n#ifndef " & id & "\n#define " & id & " " & id & "\n");
 END ifndef;
 
 PROCEDURE endif(self: T) =
@@ -2400,13 +2400,13 @@ BEGIN
 
     (* Builtin/base types start out as state := Type_State.CanBeDefined or Defined  *)
 
-    print(self, "#ifndef INTEGER\n"); (* m3core.h interop *)
+    ifndef (self, "INTEGER"); (* m3core.h interop *)
     self.Type_Init(NEW(Integer_t, state := Type_State.CanBeDefined, cgtype := Target.Integer.cg_type, typeid := UID_INTEGER, text := "INTEGER"));
-    print(self, "#endif\n");
+    endif (self);
 
-    print(self, "#ifndef WORD_T\n"); (* m3core.h interop *)
+    ifndef (self, "WORD_T"); (* m3core.h interop *)
     self.Type_Init(NEW(Integer_t, state := Type_State.CanBeDefined, cgtype := Target.Word.cg_type, typeid := UID_WORD, text := "WORD_T"));
-    print(self, "#endif\n");
+    endif (self);
 
     print(self, "typedef WORD_T CARDINAL;\n");
 
@@ -2676,7 +2676,7 @@ BEGIN
             RTIO.PutText("declare_array nil element_type\n");
             RTIO.Flush();
         END;
-        ifndef(self, element_type.text); (* ifdef so multiple files can be concatenated and compiled at once *)
+        ifndef (self, TypeIDToText (typeid)); (* ifdef so multiple files can be concatenated and compiled at once *)
         print(self, "/*declare_open_array*/typedef struct {");
         print(self, element_type.text);
         print(self, "* _elts; CARDINAL _size");
@@ -2687,10 +2687,10 @@ BEGIN
         END;
         print(self, ";}" & element_type.text & ";");
         EVAL typeidToType.put(typeid, NEW(OpenArray_t,
-        typeid := typeid,
-        bit_size := bit_size,
-        element_typeid := element_typeid,
-        element_type := element_type));
+                                          typeid := typeid,
+                                          bit_size := bit_size,
+                                          element_typeid := element_typeid,
+                                          element_type := element_type));
         endif(self); (* ifdef so multiple files can be concatenated and compiled at once *)
     END;
 *)
@@ -3767,7 +3767,7 @@ BEGIN
                 print(x, "typedef WORD_T* SET;\n#define SET_GRAIN (sizeof(WORD_T)*8)\n");
                 setAny := TRUE;
             END;
-            ifndef(x, M3CG_Binary.OpText(setData[i].op));
+            ifndef(x, "m3set" & M3CG_Binary.OpText(setData[i].op));
             print(x, setData[i].text);
             endif(x);
         END;
@@ -3862,14 +3862,12 @@ PROCEDURE HelperFunctions_helper_with_type_and_array(
 BEGIN
     (* Print the prefix array before any type-specific content. *)
     IF types_already_printed = SET OF CGType{} THEN
-        ifndef(self.self, op);
         HelperFunctions_print_array(self, first);
-        endif(self.self);
     END;
 
     (* Print per-type content. Remember what types are printed to avoid duplication. *)
     IF NOT type IN types_already_printed THEN
-        ifndef(self.self, op & "_" & cgtypeToText[type]);
+        ifndef(self.self, "m3_" & op & "_" & cgtypeToText[type]);
         print(self.self, "m3_" & op & "_T(" & cgtypeToText[type] & ")\n");
         endif(self.self);
         types_already_printed := types_already_printed + SET OF CGType{type};
@@ -4117,14 +4115,14 @@ END HelperFunctions_zero;
 
 PROCEDURE HelperFunctions_fence(self: HelperFunctions_t; <*UNUSED*>order: MemoryOrder) =
 CONST text = ARRAY OF TEXT{
-"#ifndef m3once_fence",
-"#define m3once_fence",
+"#ifndef m3_fence",
 "#ifdef _MSC_VER",
 "long __cdecl _InterlockedExchange(volatile long*, long);",
 "#pragma instrinsic(_InterlockedExchange)",
 "static volatile long m3_fence_var;",
 "#define m3_fence() _InterlockedExchange(&m3_fence_var, 0)",
 "#else",
+"#define m3_fence m3_fence",
 "static void __stdcall m3_fence(void){}", (* not yet implemented *)
 "#endif",
 "#endif"
