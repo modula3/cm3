@@ -2370,11 +2370,10 @@ PROCEDURE TextToId (VAR t: TEXT) =
 BEGIN
   EVAL TextRemoveAtEnd (t, ".c");
   EVAL TextRemoveAtEnd (t, ".cpp");
-  t := TextUtils.Substitute (t, "_", "_un_"); (* un for underscore *)
-  EVAL TextSubstituteAtEnd (t, ".m3", "_m");
-  EVAL TextSubstituteAtEnd (t, ".i3", "_i");
-  t := TextUtils.Substitute (t, ".", "_do_"); (* do for dot *)
-  t := TextUtils.Substitute (t, "-", "_da_"); (* da for dash *)
+  EVAL TextSubstituteAtEnd (t, ".m3", "_");
+  EVAL TextSubstituteAtEnd (t, ".i3", "_");
+  t := TextUtils.Substitute (t, ".", "_");
+  t := TextUtils.Substitute (t, "__", "_");
   (* TODO more ways to turn into valid identifier prefix? Handle in m3front. *)
 END TextToId;
 
