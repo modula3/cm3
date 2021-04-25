@@ -26,7 +26,7 @@ TYPE T = RECORD
 END;
 
 <*EXTERNAL DatePosix__FromTime*>
-PROCEDURE FromTime(time: LONGREAL; zone: Date.TimeZone; VAR date: T; unknown, gmt: TEXT);
+PROCEDURE FromTime(time: LONGREAL; zone: INTEGER; VAR date: T; unknown, gmt: TEXT);
 
 <*EXTERNAL DatePosix__ToTime*>
 PROCEDURE ToTime(READONLY d: T): Time.T;

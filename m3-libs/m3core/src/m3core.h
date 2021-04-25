@@ -648,7 +648,7 @@ typedef struct {
 
 void
 __cdecl
-DatePosix__FromTime(double t, /*const*/ INTEGER* zone, Date_t* date, TEXT unknown, TEXT gmt);
+DatePosix__FromTime(double t, INTEGER zone, Date_t* date, TEXT unknown, TEXT gmt);
 
 double
 __cdecl
