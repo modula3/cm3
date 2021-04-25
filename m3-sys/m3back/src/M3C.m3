@@ -2388,7 +2388,8 @@ END;
 
 PROCEDURE addressType_define(type: AddressType_t; self: T) =
 BEGIN
-    print(self, "/*addressType_define*/typedef ADDRESS " & type.text & ";\n");
+    print(self, "/*1addressType_define*/typedef ADDRESS " & type.text & ";\n");
+    print(self, "/*2addressType_define*/typedef ADDRESS " & TypeIDToText(type.typeid) & ";\n");
 END addressType_define;
 
 (*---------------------------------------------------------------------------*)
