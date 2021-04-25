@@ -813,6 +813,7 @@ TYPE Pointer_t = Type_t OBJECT
     points_to_typeid: TypeUID := 0;
     brand: TEXT := NIL;
     traced := FALSE;
+    typename := FALSE;
 OVERRIDES
     define := pointer_define;
     canBeDefined := pointer_canBeDefined;
@@ -822,10 +823,11 @@ END;
 PROCEDURE pointer_define(type: Pointer_t; self: T) =
 (* Does branding make a difference? *)
 VAR x := self;
+    star: TEXT;
 BEGIN
     (* We have recursive types TYPE FOO = UNTRACED REF FOO. Typos actually. *)
     IF type.points_to_typeid = type.typeid THEN
-      print(x, "/*1self pointer_define*/typedef void* " & type.text & ";\n");
+      print(x, "typedef void* " & type.text & ";\n");
       RETURN;
     END;
 
@@ -839,7 +841,16 @@ BEGIN
     END;
     type.points_to_type.ForwardDeclare(self);
     type.points_to_type.Define(self);
-    print(x, "/*4pointer_define*/typedef " & type.points_to_type.text & " * " & type.text & ";\n");
+    IF type.typename THEN
+      star := " ";
+      ifndef (self, type.text);
+    ELSE
+      star := " * ";
+    END;
+    print(x, "typedef " & type.points_to_type.text & star & type.text & ";\n");
+    IF type.typename THEN
+      endif (self);
+    END;
 END pointer_define;
 
 TYPE Packed_t = Type_t OBJECT
@@ -2621,13 +2632,20 @@ END set_source_line;
 (*------------------------------------------- debugging type declarations ---*)
 
 PROCEDURE declare_typename(self: T; typeid: TypeUID; name: Name) =
+VAR nameText := NameT(name);
 BEGIN
-    IF DebugVerbose(self) THEN
-        self.comment("declare_typename typeid:", TypeIDToText(typeid), " name:" & NameT(name));
-    ELSE
-        self.comment("declare_typename");
-    END;
-    print(self, "/*declare_typename typedef " & TypeIDToText(typeid) & " " & NameT(name) & ";*/\n");
+  IF DebugVerbose(self) THEN
+    self.comment("declare_typename typeid:", TypeIDToText(typeid), " name:" & nameText);
+  ELSE
+    self.comment("declare_typename");
+  END;
+  nameText := self.unique & nameText; (* unique ends with underscore *)
+  TextToId (nameText);
+  (* typename is like pointer but without the star and without a hash in the name *)
+  self.Type_Init (NEW (Pointer_t,
+                       text := nameText,
+                       typename := TRUE,
+                       points_to_typeid := typeid));
 END declare_typename;
 
 PROCEDURE TypeIDToText(x: M3CG.TypeUID): TEXT =
