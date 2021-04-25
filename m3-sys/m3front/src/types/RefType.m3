@@ -165,10 +165,17 @@ PROCEDURE Check (p: P) =
 
 (* Externally dispatched-to: *)
 PROCEDURE Compiler (p: P) =
+  VAR typeid: CG.TypeUID;
+      user_name: TEXT;
   BEGIN
     Type.Compile (p.target);
-    CG.Declare_pointer (Type.GlobalUID (p), Type.GlobalUID (p.target),
+    typeid := Type.GlobalUID (p);
+    CG.Declare_pointer (typeid, Type.GlobalUID (p.target),
                         Brand.ToText (p.brand), p.isTraced);
+    user_name := p.user_name;
+    IF user_name # NIL THEN
+      CG.Declare_typename (typeid, M3ID.Add (user_name));
+    END;
   END Compiler;
 
 (* EXPORTED *)
