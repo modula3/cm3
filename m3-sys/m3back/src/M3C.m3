@@ -2383,6 +2383,7 @@ BEGIN
   TextToId (target_name);
   TextToId (library);
   self.unique := library & "_" & target_name & "_";
+  TextToId (self.unique);
   RETURN self.multipass;
 END New;
 
