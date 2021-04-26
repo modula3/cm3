@@ -54,7 +54,7 @@ static time64_t TimePosix__ToSeconds(LONGREAL/*Time.T*/ t)
 static time_t TimePosix__ToSeconds(LONGREAL/*Time.T*/ t)
 #endif
 {
-    double n = { 0 };
+    double n = 0;
     modf(t, &n);
     return n;
 }
@@ -63,7 +63,7 @@ void
 __cdecl
 DatePosix__FromTime(double t, const ptrdiff_t* pzone, Date_t* date, TEXT unknown, TEXT gmt)
 {
-    struct tm* tm = { 0 };
+    struct tm* tm = 0;
 #ifdef _TIME64_T
     time64_t sec = TimePosix__ToSeconds(t);
 #else
@@ -129,15 +129,15 @@ __cdecl
 DatePosix__ToTime(const Date_t* date)
 {
     struct tm tm;
-    double t = { 0 };
+    double t = 0;
 #ifdef DATE_BSD
     const unsigned SecsPerHour = 60 * 60;
 #ifdef _TIME64_T
-    time64_t now = { 0 };
+    time64_t now = 0;
 #else
-    time_t now = { 0 };
+    time_t now = 0;
 #endif
-    struct tm* local_now = { 0 };
+    struct tm* local_now = 0;
 #endif
 
     /* prepare call to mktime(3) */
