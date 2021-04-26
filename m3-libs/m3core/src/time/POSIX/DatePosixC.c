@@ -56,7 +56,7 @@ TimePosix__ToSeconds(LONGREAL/*Time.T*/ t)
 
 void
 __cdecl
-DatePosix__FromTime(double t, INTEGER zone, Date_t* date, TEXT unknown, TEXT gmt)
+DatePosix__FromTime(double t, INTEGER zone, Date_t* date)
 {
     const INTEGER Local = 0;
     const INTEGER UTC = 1;
@@ -83,14 +83,14 @@ DatePosix__FromTime(double t, INTEGER zone, Date_t* date, TEXT unknown, TEXT gmt
      * the "date.offset" field is seconds *west* of GMT, so negate.
      */
     date->offset = -tm->m3_tm_gmtoff;
-    date->zone = M3toC__CopyStoT(tm->m3_tm_zone);
+    date->zone = (char*)tm->m3_tm_zone; // cast away const in case Modula-3 misses it
 #else
     if (zone == Local)
     {
         if (tm->tm_isdst == 0)
         {
             date->offset = M3_TIMEZONE;
-            date->zone = M3toC__CopyStoT(tzname[0]);
+            date->zone = (char*)tzname[0]; // cast away const in case Modula-3 misses it
         }
         else if (tm->tm_isdst > 0 && M3_DAYLIGHT)
         {
@@ -99,18 +99,18 @@ DatePosix__FromTime(double t, INTEGER zone, Date_t* date, TEXT unknown, TEXT gmt
 #else
             date->offset = M3_TIMEZONE - 3600;
 #endif
-            date->zone = M3toC__CopyStoT(tzname[1]);
+            date->zone = (char*)tzname[1]; // cast away const in case Modula-3 misses it
         }
         else
         {
             date->offset = 0;
-            date->zone   = unknown;
+            date->unknown = TRUE;
         }
     }
     else
     {
         date->offset = 0;
-        date->zone  = gmt;
+        date->gmt = TRUE;
     }
 #endif
 }
@@ -179,8 +179,10 @@ DatePosix__TypeCheck(/*const*/ Date_t* d, WORD_T sizeof_DateT)
     assert(d->minute == 5);
     assert(d->second == 6);
     assert(d->offset == 7);
-    assert(d->zone == (TEXT)8);
+    assert(d->zone == (char*)(INTEGER)8);
     assert(d->weekDay == 9);
+    assert(d->gmt == 10);
+    assert(d->unknown == 11);
 }
 
 #ifdef __cplusplus
