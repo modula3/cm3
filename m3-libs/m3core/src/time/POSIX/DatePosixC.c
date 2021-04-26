@@ -122,7 +122,7 @@ DatePosix__ToTime(/*const*/ Date_t* date)
     struct tm tm;
     double t = 0;
 #ifdef DATE_BSD
-    const unsigned SecsPerHour = 60 * 60;
+    const unsigned SecondsPerHour = 60 * 60;
     m3_time_t now = 0;
     struct tm* local_now = 0;
 #endif
@@ -158,7 +158,7 @@ DatePosix__ToTime(/*const*/ Date_t* date)
     assert(local_now != NULL);
     if (local_now->tm_isdst > 0)
       /* decrement the local time zone by one hour if DST is in effect */
-      local_now->m3_tm_gmtoff -= SecsPerHour;
+      local_now->m3_tm_gmtoff -= SecondsPerHour;
 
     /* As above, we must negate "date->offset" to account for the
        opposite sense of that field compared to Unix. */
