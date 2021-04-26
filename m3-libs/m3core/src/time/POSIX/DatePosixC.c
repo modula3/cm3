@@ -61,7 +61,7 @@ static time_t TimePosix__ToSeconds(LONGREAL/*Time.T*/ t)
 
 void
 __cdecl
-DatePosix__FromTime(double t, const INTEGER* pzone, Date_t* date, TEXT unknown, TEXT gmt)
+DatePosix__FromTime(double t, /*const*/ INTEGER* pzone, Date_t* date, TEXT unknown, TEXT gmt)
 {
     struct tm* tm = 0;
 #ifdef _TIME64_T
@@ -125,7 +125,7 @@ DatePosix__FromTime(double t, const INTEGER* pzone, Date_t* date, TEXT unknown, 
 
 double
 __cdecl
-DatePosix__ToTime(const Date_t* date)
+DatePosix__ToTime(/*const*/ Date_t* date)
 {
     struct tm tm;
     double t = 0;
@@ -182,7 +182,7 @@ Exit:
 
 void
 __cdecl
-DatePosix__TypeCheck(const Date_t* d, WORD_T sizeof_DateT)
+DatePosix__TypeCheck(/*const*/ Date_t* d, WORD_T sizeof_DateT)
 {
     assert(sizeof(Date_t) == sizeof_DateT);
     assert(d->year == 1);

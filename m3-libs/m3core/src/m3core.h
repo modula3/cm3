@@ -648,15 +648,15 @@ typedef struct {
 
 void
 __cdecl
-DatePosix__FromTime(double t, const INTEGER* zone, Date_t* date, TEXT unknown, TEXT gmt);
+DatePosix__FromTime(double t, /*const*/ INTEGER* zone, Date_t* date, TEXT unknown, TEXT gmt);
 
 double
 __cdecl
-DatePosix__ToTime(const Date_t* date);
+DatePosix__ToTime(/*const*/ Date_t* date);
 
 void
 __cdecl
-DatePosix__TypeCheck(const Date_t* d, WORD_T sizeof_DateT);
+DatePosix__TypeCheck(/*const*/ Date_t* d, WORD_T sizeof_DateT);
 
 void
 __cdecl
