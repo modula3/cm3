@@ -88,8 +88,7 @@ DatePosix__FromTime(double t, const ptrdiff_t* pzone, Date_t* date, TEXT unknown
 
 #ifdef DATE_BSD
     /* The "tm->tm_gmtoff" field is seconds *east* of GMT, whereas
-     * the "date.offset" field is seconds *west* of GMT, so a
-     * negation is necessary.
+     * the "date.offset" field is seconds *west* of GMT, so negate.
      */
     date->offset = -tm->m3_tm_gmtoff;
     date->zone = M3toC__CopyStoT(tm->m3_tm_zone);
