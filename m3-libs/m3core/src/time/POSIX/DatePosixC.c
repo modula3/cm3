@@ -26,9 +26,6 @@ extern "C" {
 #define DATE_BSD
 #endif
 
-#define Local 0
-#define UTC 1
-
 #ifdef __osf__
 /* This works whether or not _OSF_SOURCE is defined. The headers say:
 ifdef _OSF_SOURCE
@@ -63,6 +60,8 @@ void
 __cdecl
 DatePosix__FromTime(double t, INTEGER zone, Date_t* date, TEXT unknown, TEXT gmt)
 {
+    const INTEGER Local = 0;
+    const INTEGER UTC = 1;
     struct tm* tm = 0;
 #ifdef _TIME64_T
     time64_t sec = TimePosix__ToSeconds(t);
