@@ -45,11 +45,9 @@ else
 #define m3_tm_zone   tm_zone
 #endif
 
-#ifdef _TIME64_T
-static time64_t TimePosix__ToSeconds(LONGREAL/*Time.T*/ t)
-#else
-static time_t TimePosix__ToSeconds(LONGREAL/*Time.T*/ t)
-#endif
+static
+m3_time_t
+TimePosix__ToSeconds(LONGREAL/*Time.T*/ t)
 {
     double n = 0;
     modf(t, &n);
@@ -63,11 +61,7 @@ DatePosix__FromTime(double t, INTEGER zone, Date_t* date, TEXT unknown, TEXT gmt
     const INTEGER Local = 0;
     const INTEGER UTC = 1;
     struct tm* tm = 0;
-#ifdef _TIME64_T
-    time64_t sec = TimePosix__ToSeconds(t);
-#else
-    time_t sec = TimePosix__ToSeconds(t);
-#endif
+    m3_time_t sec = TimePosix__ToSeconds(t);
     ZeroMemory(date, sizeof(*date));
     assert(zone == Local || zone == UTC);
 #ifdef _TIME64_T
@@ -129,11 +123,7 @@ DatePosix__ToTime(/*const*/ Date_t* date)
     double t = 0;
 #ifdef DATE_BSD
     const unsigned SecsPerHour = 60 * 60;
-#ifdef _TIME64_T
-    time64_t now = 0;
-#else
-    time_t now = 0;
-#endif
+    m3_time_t now = 0;
     struct tm* local_now = 0;
 #endif
 

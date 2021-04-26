@@ -828,6 +828,14 @@ Process__RegisterExitor(void (__cdecl*)(void));
 #define GET_PC(context) ((context)->uc_mcontext.ss.srr0)
 #endif
 
+// m3_time_t is the time_t-ish of the underlying system.
+// If there is an explicitly 64bit type, use that.
+#ifdef _TIME64_T
+typedef time64_t m3_time_t;
+#else
+typedef time_t m3_time_t;
+#endif
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
