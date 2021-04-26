@@ -160,8 +160,7 @@ DatePosix__ToTime(/*const*/ Date_t* date)
       /* decrement the local time zone by one hour if DST is in effect */
       local_now->m3_tm_gmtoff -= SecondsPerHour;
 
-    /* As above, we must negate "date->offset" to account for the
-       opposite sense of that field compared to Unix. */
+    /* As above, negate "date->offset" to account for east vs. west of GMT. */
     t -= ((-date->offset) - local_now->m3_tm_gmtoff);
 Exit:
 #endif
