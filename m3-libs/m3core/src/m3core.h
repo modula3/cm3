@@ -633,6 +633,9 @@ M3toC__StoT(const char*);
  * The fields are ordered by size and alphabetically.
  * (They are all the same size.)
  */
+#ifndef m3core_DatePosix_T
+#define m3core_DatePosix_T m3core_DatePosix_T
+
 typedef struct {
     INTEGER day;
     INTEGER gmt;     // boolean
@@ -645,19 +648,21 @@ typedef struct {
     INTEGER weekDay;
     INTEGER year;
     const char* zone;
-} Date_t;
+} m3core_DatePosix_T;
+
+#endif
 
 void
 __cdecl
-DatePosix__FromTime(double t, INTEGER zone, Date_t* date);
+DatePosix__FromTime(double t, INTEGER zone, m3core_DatePosix_T* date);
 
 double
 __cdecl
-DatePosix__ToTime(/*const*/ Date_t* date);
+DatePosix__ToTime(/*const*/ m3core_DatePosix_T* date);
 
 void
 __cdecl
-DatePosix__TypeCheck(/*const*/ Date_t* d, WORD_T sizeof_DateT);
+DatePosix__TypeCheck(/*const*/ m3core_DatePosix_T* d, WORD_T sizeof_DateT);
 
 void
 __cdecl
