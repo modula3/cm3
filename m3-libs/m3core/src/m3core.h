@@ -635,20 +635,21 @@ M3toC__StoT(const char*);
  */
 typedef struct {
     INTEGER day;
+    INTEGER gmt;     // boolean
     INTEGER hour;
     INTEGER minute;
     INTEGER month;
     INTEGER offset;
     INTEGER second;
+    INTEGER unknown; // boolean
     INTEGER weekDay;
     INTEGER year;
-    TEXT    zone;
-    INTEGER zzalign;
+    const char* zone;
 } Date_t;
 
 void
 __cdecl
-DatePosix__FromTime(double t, INTEGER zone, Date_t* date, TEXT unknown, TEXT gmt);
+DatePosix__FromTime(double t, INTEGER zone, Date_t* date);
 
 double
 __cdecl
