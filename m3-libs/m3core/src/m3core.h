@@ -548,11 +548,11 @@ int __cdecl Umman__mprotect(caddr_t addr, WORD_T len, int prot);
 void* __cdecl Umman__mmap(caddr_t addr, WORD_T len, int prot, int flags, int fd, m3_off_t off);
 int __cdecl Umman__munmap(caddr_t addr, WORD_T len);
 
-typedef INT64 m3_time_t;
+typedef INT64 m3_time64_t;
 
 #ifndef _WIN32
-m3_time_t __cdecl Utime__time(m3_time_t* tloc);
-char* __cdecl Utime__ctime(const m3_time_t* m);
+m3_time64_t __cdecl Utime__time(m3_time64_t* tloc);
+char* __cdecl Utime__ctime(const m3_time64_t* m);
 #endif
 void __cdecl Utime__tzset(void);
 
