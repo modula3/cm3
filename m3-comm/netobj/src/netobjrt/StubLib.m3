@@ -13,7 +13,7 @@ IMPORT NetObj, NetObjRep, NetObjRT, Pickle, Pickle2, Protocol, Transport,
 IMPORT Atom, AtomList, Rd, RTType, Wr, Text, TextClass, Text8, Text16,
        Thread, RdClass, WrClass, UnsafeRd, UnsafeWr, FloatMode, Swap;
 IMPORT PickleStubs;
-IMPORT Target;
+IMPORT NetObjTarget AS Target;
 FROM Word IMPORT And, Or, LeftShift; 
 
 FROM Protocol IMPORT MsgHeader, CallHeader, Op;
