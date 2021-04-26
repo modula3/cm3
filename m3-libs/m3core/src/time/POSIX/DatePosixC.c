@@ -61,7 +61,7 @@ static time_t TimePosix__ToSeconds(LONGREAL/*Time.T*/ t)
 
 void
 __cdecl
-DatePosix__FromTime(double t, const ptrdiff_t* pzone, Date_t* date, TEXT unknown, TEXT gmt)
+DatePosix__FromTime(double t, const INTEGER* pzone, Date_t* date, TEXT unknown, TEXT gmt)
 {
     struct tm* tm = 0;
 #ifdef _TIME64_T
