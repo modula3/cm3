@@ -2373,6 +2373,7 @@ BEGIN
   EVAL TextSubstituteAtEnd (t, ".m3", "_");
   EVAL TextSubstituteAtEnd (t, ".i3", "_");
   t := TextUtils.Substitute (t, ".", "_");
+  t := TextUtils.Substitute (t, "-", "_");
   t := TextUtils.Substitute (t, "__", "_");
   (* TODO more ways to turn into valid identifier prefix? Handle in m3front. *)
 END TextToId;
