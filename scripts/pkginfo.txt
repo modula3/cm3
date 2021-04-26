@@ -197,8 +197,6 @@ integrate caltech-other
 splines caltech-other
 newuoa caltech-other
 
-csv caltech-other
-csvalign caltech-other
 sx caltech-other
 m3readline caltech-other
 
