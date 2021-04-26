@@ -32,13 +32,13 @@ extern "C" {
 #ifdef __osf__
 /* This works whether or not _OSF_SOURCE is defined. The headers say:
 ifdef _OSF_SOURCE
-	long	tm_gmtoff;
-	char	*tm_zone;
+    long    tm_gmtoff;
+    char    *tm_zone;
 define __tm_gmtoff tm_gmtoff
 define __tm_zone   tm_zone
 else
-     	long	__tm_gmtoff;
-	char	*__tm_zone;
+    long    __tm_gmtoff;
+    char    *__tm_zone;
 #endif
 */
 #define m3_tm_gmtoff __tm_gmtoff
