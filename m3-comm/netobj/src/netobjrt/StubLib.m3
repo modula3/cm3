@@ -1355,7 +1355,7 @@ PROCEDURE ChooseFloatFmt(): Byte8 =
   END ChooseFloatFmt;
 
 CONST CharSet = 0; 
-CONST WideWIDECHAR = ORD(LAST(WIDECHAR)) > Target.WideChar16Max;
+CONST WideWIDECHAR = ORD(LAST(WIDECHAR)) > WideChar.WideChar16Max;
 
 PROCEDURE ChooseCharSet(): Byte8 = 
 (* Pack the original charSet (which has only a single value 0)
