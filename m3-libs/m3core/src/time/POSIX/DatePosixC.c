@@ -61,13 +61,13 @@ DatePosix__FromTime(double t, INTEGER zone, Date_t* date, TEXT unknown, TEXT gmt
     const INTEGER Local = 0;
     const INTEGER UTC = 1;
     struct tm* tm = 0;
-    m3_time_t sec = TimePosix__ToSeconds(t);
+    m3_time_t seconds = TimePosix__ToSeconds(t);
     ZeroMemory(date, sizeof(*date));
     assert(zone == Local || zone == UTC);
 #ifdef _TIME64_T
-    tm = ((zone == Local) ? localtime64(&sec) : gmtime64(&sec));
+    tm = ((zone == Local) ? localtime64(&seconds) : gmtime64(&seconds));
 #else
-    tm = ((zone == Local) ? localtime(&sec) : gmtime(&sec));
+    tm = ((zone == Local) ? localtime(&seconds) : gmtime(&seconds));
 #endif
     assert(tm != NULL);
     date->year = tm->tm_year + 1900;
