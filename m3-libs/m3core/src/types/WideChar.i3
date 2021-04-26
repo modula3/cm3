@@ -13,6 +13,9 @@ TYPE T = WIDECHAR;
 
 CONST Brand = "WideChar";
 
+CONST WideChar16Max = 16_FFFF;   (* from Target *)
+CONST WideChar32Max = 16_10FFFF; (* from Target *)
+
 PROCEDURE Compare (a, b: T): [-1..1];
 (* == RETURN (a - b) *)
 

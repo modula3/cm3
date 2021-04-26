@@ -14,7 +14,7 @@ if defined ("AT_SRC") m3_option("-O") end
 % m3_option ("-verbose")
 % m3_option ("-keep")
 
-interface("NetObjTarget")
+import("m3core")
 import("libm3")
 import("tcp")
 
