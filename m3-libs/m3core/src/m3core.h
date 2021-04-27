@@ -631,23 +631,22 @@ M3toC__StoT(const char*);
 
 /* This MUST match DatePosix.i3.T.
  * The fields are ordered by size and alphabetically.
- * (They are all the same size.)
  */
 #ifndef m3core_DatePosix_T
 #define m3core_DatePosix_T m3core_DatePosix_T
 
 typedef struct {
-    INTEGER day;
-    INTEGER gmt;     // boolean
-    INTEGER hour;
-    INTEGER minute;
-    INTEGER month;
-    INTEGER offset;
-    INTEGER second;
-    INTEGER unknown; // boolean
-    INTEGER weekDay;
-    INTEGER year;
     const char* zone;
+    int day;
+    int gmt;     // boolean
+    int hour;
+    int minute;
+    int month;
+    int offset;
+    int second;
+    int unknown; // boolean
+    int weekDay;
+    int year;
 } m3core_DatePosix_T;
 
 #endif
