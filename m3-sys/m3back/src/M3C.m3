@@ -4181,7 +4181,8 @@ PROCEDURE Locals_declare_param(
     typeid: TypeUID;
     <*UNUSED*>in_memory: BOOLEAN;
     up_level: BOOLEAN;
-    <*UNUSED*>frequency: Frequency): M3CG.Var =
+    <*UNUSED*>frequency: Frequency;
+    qid := M3CG.NoQID): M3CG.Var =
 BEGIN
     RETURN declare_param(
         self.self,
@@ -4190,7 +4191,8 @@ BEGIN
         alignment,
         type,
         typeid,
-        up_level);
+        up_level,
+        qid);
 END Locals_declare_param;
 
 PROCEDURE Locals_declare_local(
@@ -4281,7 +4283,8 @@ PROCEDURE Imports_declare_param(
     typeid: TypeUID;
     <*UNUSED*>in_memory: BOOLEAN;
     up_level: BOOLEAN;
-    <*UNUSED*>frequency: Frequency): M3CG.Var =
+    <*UNUSED*>frequency: Frequency;
+    qid := M3CG.NoQID): M3CG.Var =
 BEGIN
     RETURN declare_param(
         self.self,
@@ -4290,7 +4293,8 @@ BEGIN
         alignment,
         type,
         typeid,
-        up_level);
+        up_level,
+        qid);
 END Imports_declare_param;
 
 PROCEDURE Imports_import_global(
@@ -4312,8 +4316,8 @@ METHODS
 OVERRIDES
     declare_constant := GetStructSizes_declare_constant;
     declare_global := GetStructSizes_declare_global;
-    declare_local := GetStructSizes_declare_local_or_param;
-    declare_param := GetStructSizes_declare_local_or_param;
+    declare_local := GetStructSizes_declare_local;
+    declare_param := GetStructSizes_declare_param;
     declare_temp := GetStructSizes_declare_temp;
     import_global := GetStructSizes_import_global;
 END;
@@ -4443,7 +4447,7 @@ BEGIN
     RETURN self.Declare(type, byte_size, alignment);
 END GetStructSizes_declare_constant;
 
-PROCEDURE GetStructSizes_declare_local_or_param(
+PROCEDURE GetStructSizes_declare_local(
     self: GetStructSizes_t;
     <*UNUSED*>name: Name;
     byte_size: ByteSize;
@@ -4455,7 +4459,22 @@ PROCEDURE GetStructSizes_declare_local_or_param(
     <*UNUSED*>frequency: Frequency): M3CG.Var =
 BEGIN
     RETURN self.Declare(type, byte_size, alignment);
-END GetStructSizes_declare_local_or_param;
+END GetStructSizes_declare_local;
+
+PROCEDURE GetStructSizes_declare_param(
+    self: GetStructSizes_t;
+    <*UNUSED*>name: Name;
+    byte_size: ByteSize;
+    alignment: Alignment;
+    type: CGType;
+    <*UNUSED*>typeid: TypeUID;
+    <*UNUSED*>in_memory: BOOLEAN;
+    <*UNUSED*>up_level: BOOLEAN;
+    <*UNUSED*>frequency: Frequency;
+    <*UNUSED*>qid := M3CG.NoQID): M3CG.Var =
+BEGIN
+    RETURN self.Declare(type, byte_size, alignment);
+END GetStructSizes_declare_param;
 
 PROCEDURE Struct(size: INTEGER): TEXT =
 BEGIN
@@ -4634,6 +4653,7 @@ PROCEDURE last_param(self: T) =
 VAR proc := self.param_proc;
     prototype: TEXT := NIL;
     param: Var_t := NIL;
+    qid := M3CG.NoQID;
 BEGIN
     IF proc.no_return THEN
         no_return(self);
@@ -4670,7 +4690,8 @@ PROCEDURE internal_declare_param(
     cgtype: CGType;
     typeid: TypeUID;
     up_level: BOOLEAN;
-    type_text: TEXT := NIL): M3CG.Var =
+    type_text: TEXT;
+    <*UNUSED*>qid := M3CG.NoQID): M3CG.Var =
 VAR function := self.param_proc;
     var: Var_t := NIL;
     type: Type_t := NIL;
@@ -4736,7 +4757,8 @@ declare_param(
     alignment: Alignment;
     type: CGType;
     typeid: TypeUID;
-    up_level: BOOLEAN): M3CG.Var =
+    up_level: BOOLEAN;
+    qid := M3CG.NoQID): M3CG.Var =
 BEGIN
     IF self.param_proc = NIL THEN
         RETURN NIL;
@@ -4749,7 +4771,8 @@ BEGIN
         type,
         typeid,
         up_level,
-        NIL);
+        NIL,
+        qid);
 END declare_param;
 
 PROCEDURE
