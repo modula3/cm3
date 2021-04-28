@@ -48,7 +48,7 @@ set _cm3_CfgDone=FALSE
 set _cm3_Repeat=1
 set _cm3_DO=
 set _z_ctrlArgs=
-set _z_Stage3=all
+set _z_Stage3=min
 
 
 
