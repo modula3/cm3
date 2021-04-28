@@ -10,20 +10,19 @@ IMPORT Date, Time, Ctypes;
 
 (* This MUST match m3core.h
  * The fields are ordered by size and alphabetically.
- * (They are all the same size.)
  *)
 TYPE T = RECORD
-  day:      INTEGER := 0;
-  gmt:      INTEGER := 0; (* boolean *)
-  hour:     INTEGER := 0;
-  minute:   INTEGER := 0;
-  month:    INTEGER := 0;
-  offset:   INTEGER := 0;
-  second:   INTEGER := 0;
-  unknown:  INTEGER := 0; (* boolean *)
-  weekDay:  INTEGER := 0;
-  year:     INTEGER := 0;
   zone:     Ctypes.const_char_star := NIL;
+  day:      Ctypes.int := 0;
+  gmt:      Ctypes.int := 0; (* boolean *)
+  hour:     Ctypes.int := 0;
+  minute:   Ctypes.int := 0;
+  month:    Ctypes.int := 0;
+  offset:   Ctypes.int := 0;
+  second:   Ctypes.int := 0;
+  unknown:  Ctypes.int := 0; (* boolean *)
+  weekDay:  Ctypes.int := 0;
+  year:     Ctypes.int := 0;
 END;
 
 <*EXTERNAL DatePosix__FromTime*>

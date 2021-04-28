@@ -56,7 +56,7 @@ TimePosix__ToSeconds(LONGREAL/*Time.T*/ t)
 
 void
 __cdecl
-DatePosix__FromTime(double t, INTEGER zone, Date_t* date)
+DatePosix__FromTime(double t, INTEGER zone, m3core_DatePosix_T* date)
 {
     const INTEGER Local = 0;
     const INTEGER UTC = 1;
@@ -117,7 +117,7 @@ DatePosix__FromTime(double t, INTEGER zone, Date_t* date)
 
 double
 __cdecl
-DatePosix__ToTime(/*const*/ Date_t* date)
+DatePosix__ToTime(/*const*/ m3core_DatePosix_T* date)
 {
     struct tm tm;
     double t = 0;
@@ -169,9 +169,9 @@ Exit:
 
 void
 __cdecl
-DatePosix__TypeCheck(/*const*/ Date_t* d, WORD_T sizeof_DateT)
+DatePosix__TypeCheck(/*const*/ m3core_DatePosix_T* d, WORD_T sizeof_DateT)
 {
-    assert(sizeof(Date_t) == sizeof_DateT);
+    assert(sizeof(m3core_DatePosix_T) == sizeof_DateT);
     assert(d->year == 1);
     assert(d->month == 2);
     assert(d->day == 3);
