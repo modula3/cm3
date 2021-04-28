@@ -9,7 +9,7 @@
 MODULE NamedType;
 
 IMPORT M3, M3ID, Token, Type, TypeRep, Scanner, ObjectType;
-IMPORT Error, Scope, Brand, Value, ErrType;
+IMPORT Error, Scope, Brand, Value, ErrType, CG;
 
 TYPE
   P = Type.T BRANDED "NamedType.T" OBJECT

@@ -8,7 +8,7 @@
 MODULE M3CG EXPORTS M3CG, M3CG_Ops;
 
 IMPORT Text, Word; 
-IMPORT Target;
+IMPORT Target, M3CG;
 
 REVEAL
   T = Public BRANDED "M3CG.T" OBJECT OVERRIDES
@@ -401,9 +401,9 @@ PROCEDURE declare_local (xx: T;  n: Name;  s: ByteSize;  a: Alignment;
 
 PROCEDURE declare_param (xx: T;  n: Name;  s: ByteSize;  a: Alignment;
                          t: Type;  m3t: TypeUID;  in_memory, up_level: BOOLEAN;
-                         f: Frequency): Var =
+                         f: Frequency; qid := M3CG.NoQID): Var =
   BEGIN
-    RETURN xx.child.declare_param (n, s, a, t, m3t, in_memory, up_level, f);
+    RETURN xx.child.declare_param (n, s, a, t, m3t, in_memory, up_level, f, qid);
   END declare_param;
 
 PROCEDURE declare_temp (xx: T;  s: ByteSize;  a: Alignment;  t: Type;

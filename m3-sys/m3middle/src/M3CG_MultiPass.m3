@@ -367,10 +367,10 @@ self.Add(NEW(declare_local_t, op := Op.declare_local, name := name, byte_size :=
 RETURN var;
 END declare_local;
 
-PROCEDURE declare_param(self: T; name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: TypeUID; in_memory, up_level: BOOLEAN; frequency: Frequency): Var =
+PROCEDURE declare_param(self: T; name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: TypeUID; in_memory, up_level: BOOLEAN; frequency: Frequency; qid := M3CG.NoQID): Var =
 VAR var := self.refs.NewVar();
 BEGIN
-self.Add(NEW(declare_param_t, op := Op.declare_param, name := name, byte_size := byte_size, alignment := alignment, type := type, typeid := typeid, in_memory := in_memory, up_level := up_level, frequency := frequency, tag := var.tag));
+self.Add(NEW(declare_param_t, op := Op.declare_param, name := name, byte_size := byte_size, alignment := alignment, type := type, typeid := typeid, in_memory := in_memory, up_level := up_level, frequency := frequency, tag := var.tag, qid := qid));
 RETURN var;
 END declare_param;
 
@@ -1084,7 +1084,7 @@ END replay_declare_local;
 
 PROCEDURE replay_declare_param(self: declare_param_t; replay: Replay_t; cg: cg_t) =
 BEGIN
-    replay.PutRef(self.tag, cg.declare_param(self.name, self.byte_size, self.alignment, self.type, self.typeid, self.in_memory, self.up_level, self.frequency));
+    replay.PutRef(self.tag, cg.declare_param(self.name, self.byte_size, self.alignment, self.type, self.typeid, self.in_memory, self.up_level, self.frequency, self.qid));
 END replay_declare_param;
 
 PROCEDURE replay_declare_temp(self: declare_temp_t; replay: Replay_t; cg: cg_t) =

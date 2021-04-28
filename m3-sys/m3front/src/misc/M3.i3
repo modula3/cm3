@@ -11,12 +11,13 @@
 
 INTERFACE M3;
 
-IMPORT M3ID, M3Buf, Jmpbufs;
+IMPORT M3ID, M3Buf, Jmpbufs, M3CG;
 
 TYPE
   Flag = BITS 1 FOR BOOLEAN;
 
-  QID  = RECORD module, item: M3ID.T; END;
+  QID  = M3CG.QID; (* module qualified name *)
+  CONST NoQID = M3CG.NoQID;
 
 (*------------------------------------------------------------- AST nodes ---*)
 

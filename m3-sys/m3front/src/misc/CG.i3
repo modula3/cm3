@@ -200,7 +200,7 @@ PROCEDURE Declare_local (n: Name;  s: Size;  a: Alignment;  t: Type;
 
 PROCEDURE Declare_param (n: Name;  s: Size;  a: Alignment;  t: Type;
                          m3t: TypeUID;  in_memory, up_level: BOOLEAN;
-                         f: Frequency): Var;
+                         f: Frequency; qid := M3.NoQID): Var;
 (* declares a formal parameter.  Formals are declared in their lexical
    order immediately following the 'declare_procedure' or
    'import_procedure' that contains them.  *)
