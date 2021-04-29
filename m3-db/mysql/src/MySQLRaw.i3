@@ -343,6 +343,7 @@ PROCEDURE GetClientInfo (): C.char_star;
 <* EXTERNAL mysql_get_client_version *>
 PROCEDURE GetClientVersion (): C.unsigned_long;
 
+(*  
 <* EXTERNAL mysql_get_server_name *>
 PROCEDURE GetServerName (mysql: RefMysqlT; ): C.char_star;
 
@@ -350,7 +351,8 @@ PROCEDURE GetServerName (mysql: RefMysqlT; ): C.char_star;
 PROCEDURE GetOption (mysql : RefMysqlT;
                      option: C.int (* enum mysql_option *);
                      arg   : ADDRESS;                       ): C.int;
-
+*)
+  
 <* EXTERNAL mysql_hex_string *>
 PROCEDURE HexString
   (to: C.char_star; from: C.const_char_star; len: C.unsigned_long; ):
@@ -440,9 +442,11 @@ PROCEDURE SelectDbStart
 <* EXTERNAL mysql_select_db_cont *>
 PROCEDURE SelectDbCont
   (VAR ret: C.int; mysql: RefMysqlT; ready_status: C.int; ): C.int;
-
+  
+(*
 <* EXTERNAL mysql_stmt_warning_count *>
 PROCEDURE StmtWarningCount (stmt: RefMysqlStmtT; ): C.int;
+*)
 
 <* EXTERNAL mysql_stmt_next_result_start *>
 PROCEDURE StmtNextResultStart (VAR ret: C.int; stmt: RefMysqlStmtT; ):
@@ -596,6 +600,7 @@ PROCEDURE ReadQueryResultStart (ret: C.char_star; mysql: RefMysqlT; ):
 PROCEDURE ReadQueryResultCont
   (ret: C.char_star; mysql: RefMysqlT; status: C.int; ): C.int;
 
+(*  
 <* EXTERNAL mysql_reset_connection_start *>
 PROCEDURE ResetConnectionStart (VAR ret: C.int; mysql: RefMysqlT; ): C.int;
 
@@ -616,6 +621,7 @@ PROCEDURE SessionTrackGetFirst
             type  : C.int (* enum enum_session_state_type *);
    READONLY data  : (*ARRAY OF*) C.char_star;
    VAR      length: INTEGER;                                  ): C.int;
+*)
 
 <* EXTERNAL mysql_stmt_prepare_start *>
 PROCEDURE StmtPrepareStart (VAR ret   : C.int;
@@ -682,7 +688,9 @@ PROCEDURE StmtSendLongDataStart (ret         : C.char_star;
 PROCEDURE StmtSendLongDataCont
   (ret: C.char_star; stmt: RefMysqlStmtT; status: C.int; ): C.int;
 
+(*  
 <* EXTERNAL mysql_reset_connection *>
 PROCEDURE ResetConnection (mysql: RefMysqlT; ): C.int;
+*)
 
 END MySQLRaw.

@@ -875,6 +875,7 @@ PROCEDURE GetClientVersion (): CARDINAL =
     RETURN MySQLRaw.GetClientVersion();
   END GetClientVersion;
 
+(*  
 PROCEDURE GetServerName (mysql: T; ): TEXT =
   VAR
     result: C.char_star;
@@ -889,6 +890,7 @@ PROCEDURE GetOption (mysql: T; option: INTEGER; arg: ADDRESS; ): Int32 =
   BEGIN
     RETURN MySQLRaw.GetOption(rawT, option, arg);
   END GetOption;
+*)
 
 PROCEDURE HexString (to, from: TEXT; len: CARDINAL; ): CARDINAL =
   VAR
@@ -1126,13 +1128,14 @@ PROCEDURE SelectDbCont (VAR ret: Int32; mysql: T; ready_status: Int32; ):
     RETURN MySQLRaw.SelectDbCont(ret, rawT, ready_status);
   END SelectDbCont;
 
+(*  
 PROCEDURE StmtWarningCount (stmt: StmtT; ): Int32 =
   VAR
     arg1: MySQLRaw.RefMysqlStmtT := LOOPHOLE(stmt, MySQLRaw.RefMysqlStmtT);
   BEGIN
     RETURN MySQLRaw.StmtWarningCount(arg1);
   END StmtWarningCount;
-
+*)
 PROCEDURE StmtNextResultStart (VAR ret: Int32; stmt: StmtT; ): Int32 =
   VAR
     arg2: MySQLRaw.RefMysqlStmtT := LOOPHOLE(stmt, MySQLRaw.RefMysqlStmtT);
@@ -1503,7 +1506,7 @@ PROCEDURE ReadQueryResultCont (ret: TEXT; mysql: T; status: Int32; ):
     FreeString(ret, arg1);
     RETURN result;
   END ReadQueryResultCont;
-
+(*
 PROCEDURE ResetConnectionStart (VAR ret: Int32; mysql: T; ): Int32 =
   VAR rawT: MySQLRaw.RefMysqlT := LOOPHOLE(mysql, MySQLRaw.RefMysqlT);
   BEGIN
@@ -1546,7 +1549,7 @@ PROCEDURE SessionTrackGetFirst (         mysql : T;
     FreeString(data[0], arg3);
     RETURN result;
   END SessionTrackGetFirst;
-
+*)
 PROCEDURE StmtPrepareStart
   (VAR ret: Int32; stmt: StmtT; query: TEXT; length: CARDINAL; ): Int32 =
   VAR
@@ -1718,13 +1721,13 @@ PROCEDURE StmtSendLongDataCont (ret: TEXT; stmt: StmtT; status: Int32; ):
     FreeString(ret, arg1);
     RETURN result;
   END StmtSendLongDataCont;
-
+(*
 PROCEDURE ResetConnection (mysql: T; ): Int32 =
   VAR rawT: MySQLRaw.RefMysqlT := LOOPHOLE(mysql, MySQLRaw.RefMysqlT);
   BEGIN
     RETURN MySQLRaw.ResetConnection(rawT);
   END ResetConnection;
-
+*)
 
 BEGIN
 END MySQL.

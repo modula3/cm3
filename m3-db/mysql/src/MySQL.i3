@@ -355,11 +355,11 @@ PROCEDURE SetServerOption (mysql: T; option: INTEGER; ): Int32;
 PROCEDURE GetClientInfo (): TEXT;
 
 PROCEDURE GetClientVersion (): CARDINAL;
-
+(*
 PROCEDURE GetServerName (mysql: T; ): TEXT;
 
 PROCEDURE GetOption (mysql: T; option: INTEGER; arg: ADDRESS; ): Int32;
-
+*)
 PROCEDURE HexString (to, from: TEXT; len: CARDINAL; ): CARDINAL;
 
 PROCEDURE GetSocket (mysql: T; ): Int32;
@@ -415,9 +415,9 @@ PROCEDURE SelectDbStart (VAR ret: Int32; mysql: T; db: TEXT; ): Int32;
 
 PROCEDURE SelectDbCont (VAR ret: Int32; mysql: T; ready_status: Int32; ):
   Int32;
-
+(*
 PROCEDURE StmtWarningCount (stmt: StmtT; ): Int32;
-
+*)
 PROCEDURE StmtNextResultStart (VAR ret: Int32; stmt: StmtT; ): Int32;
 
 PROCEDURE StmtNextResultCont
@@ -504,7 +504,7 @@ PROCEDURE ReadQueryResultStart (ret: TEXT; mysql: T; ): Int32;
 
 PROCEDURE ReadQueryResultCont (ret: TEXT; mysql: T; status: Int32; ):
   Int32;
-
+(*
 PROCEDURE ResetConnectionStart (VAR ret: Int32; mysql: T; ): Int32;
 
 PROCEDURE ResetConnectionCont (VAR ret: Int32; mysql: T; status: Int32; ):
@@ -519,7 +519,7 @@ PROCEDURE SessionTrackGetFirst (         mysql : T;
                                          type  : INTEGER;
                                 READONLY data  : ARRAY OF TEXT;
                                 VAR      length: INTEGER;       ): Int32;
-
+*)
 PROCEDURE StmtPrepareStart
   (VAR ret: Int32; stmt: StmtT; query: TEXT; length: CARDINAL; ): Int32;
 
@@ -562,8 +562,9 @@ PROCEDURE StmtSendLongDataStart (ret         : TEXT;
 
 PROCEDURE StmtSendLongDataCont (ret: TEXT; stmt: StmtT; status: Int32; ):
   Int32;
-
+(*
 PROCEDURE ResetConnection (mysql: T; ): Int32;
-
+*)
 
 END MySQL.
+
