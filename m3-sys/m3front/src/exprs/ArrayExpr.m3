@@ -691,7 +691,7 @@ PROCEDURE Evaluate (constr: T): Expr.T =
       FOR i := 0 TO LAST (constr.args^) DO
         WITH arg = constr.args^[i] DO
           expr := Expr.ConstValue (arg);
-          (* ^Will change in place to its constant value, if it has one. *)
+          (* ^This will change arg in place to its constant value, if it has one. *)
           IF expr = NIL
           THEN constr.is_const := FALSE;
           ELSE arg := expr;
@@ -1208,7 +1208,6 @@ PROCEDURE Classify (top: T) =
     <* ASSERT top.depth = 0 *>
     <* ASSERT top.state >= StateTyp.Represented *>
     IF Evaluate (top) # NIL THEN (* It's a constant. *)
-      <* ASSERT top.shallowestDynDepth < 0 *>
       top.resultKind := RKTyp.RKGlobal
     ELSIF UsesAssignProtocol (top)
     THEN (* Build value directly into final location. *)
@@ -2100,7 +2099,11 @@ PROCEDURE GenLiteral
     <* ASSERT top.depth = 0 *>
     <* ASSERT top.checked *>
     <* ASSERT Evaluate (top) # NIL *>
-    <* ASSERT top.shallowestDynDepth < 0 *>
+    <* ASSERT top.is_const *> 
+    (* NOTE: top.shallowestDynDepth could be >= 0, but since top.is_const,
+             this can happen only if the dynamic level(s) have no elements,
+             due to empty constructor(s) somewhere, i.e. '<type>{}'.
+             So we don't care here. *)
     <* ASSERT top.inConstArea = inConstArea *>
 
     Represent (top);

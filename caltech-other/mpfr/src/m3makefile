@@ -1,0 +1,14 @@
+import ("libm3")
+import ("m3core")
+import ("cit_util")
+if SYSTEM_LIBS contains "MPFR"
+        import_sys_lib ("MPFR")
+        c_source("MpfrC")
+end
+
+interface ("MpfrP")
+Interface ("MpfrRoundingMode")
+
+Module ("Mpfr")
+
+library ("mpfr")
