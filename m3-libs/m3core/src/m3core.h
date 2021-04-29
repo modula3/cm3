@@ -548,11 +548,11 @@ int __cdecl Umman__mprotect(caddr_t addr, WORD_T len, int prot);
 void* __cdecl Umman__mmap(caddr_t addr, WORD_T len, int prot, int flags, int fd, m3_off_t off);
 int __cdecl Umman__munmap(caddr_t addr, WORD_T len);
 
-typedef INT64 m3_time_t;
+typedef INT64 m3_time64_t;
 
 #ifndef _WIN32
-m3_time_t __cdecl Utime__time(m3_time_t* tloc);
-char* __cdecl Utime__ctime(const m3_time_t* m);
+m3_time64_t __cdecl Utime__time(m3_time64_t* tloc);
+char* __cdecl Utime__ctime(const m3_time64_t* m);
 #endif
 void __cdecl Utime__tzset(void);
 
@@ -631,32 +631,37 @@ M3toC__StoT(const char*);
 
 /* This MUST match DatePosix.i3.T.
  * The fields are ordered by size and alphabetically.
- * (They are all the same size.)
  */
+#ifndef m3core_DatePosix_T
+#define m3core_DatePosix_T m3core_DatePosix_T
+
 typedef struct {
-    INTEGER day;
-    INTEGER hour;
-    INTEGER minute;
-    INTEGER month;
-    INTEGER offset;
-    INTEGER second;
-    INTEGER weekDay;
-    INTEGER year;
-    TEXT    zone;
-    INTEGER zzalign;
-} Date_t;
+    const char* zone;
+    int day;
+    int gmt;     // boolean
+    int hour;
+    int minute;
+    int month;
+    int offset;
+    int second;
+    int unknown; // boolean
+    int weekDay;
+    int year;
+} m3core_DatePosix_T;
+
+#endif
 
 void
 __cdecl
-DatePosix__FromTime(double t, const INTEGER* zone, Date_t* date, TEXT unknown, TEXT gmt);
+DatePosix__FromTime(double t, INTEGER zone, m3core_DatePosix_T* date);
 
 double
 __cdecl
-DatePosix__ToTime(const Date_t* date);
+DatePosix__ToTime(/*const*/ m3core_DatePosix_T* date);
 
 void
 __cdecl
-DatePosix__TypeCheck(const Date_t* d, WORD_T sizeof_DateT);
+DatePosix__TypeCheck(/*const*/ m3core_DatePosix_T* d, WORD_T sizeof_DateT);
 
 void
 __cdecl
@@ -826,6 +831,14 @@ Process__RegisterExitor(void (__cdecl*)(void));
 #define GET_PC(context) ((context)->uc_mcontext.ss.rip)
 #elif defined(__powerpc)
 #define GET_PC(context) ((context)->uc_mcontext.ss.srr0)
+#endif
+
+// m3_time_t is the time_t-ish of the underlying system.
+// If there is an explicitly 64bit type, use that.
+#ifdef _TIME64_T
+typedef time64_t m3_time_t;
+#else
+typedef time_t m3_time_t;
 #endif
 
 #ifdef __cplusplus

@@ -6,27 +6,27 @@
 (*      modified on Thu Jan 28 10:00:32 PST 1993 by mjordan *)
 
 INTERFACE DatePosix;
-IMPORT Date, Time;
+IMPORT Date, Time, Ctypes;
 
 (* This MUST match m3core.h
  * The fields are ordered by size and alphabetically.
- * (They are all the same size.)
  *)
 TYPE T = RECORD
-  day:      INTEGER;
-  hour:     INTEGER;
-  minute:   INTEGER;
-  month:    INTEGER;
-  offset:   INTEGER;
-  second:   INTEGER;
-  weekDay:  INTEGER;
-  year:     INTEGER;
-  zone:     TEXT;
-  zzalign:  INTEGER := 10;
+  zone:     Ctypes.const_char_star := NIL;
+  day:      Ctypes.int := 0;
+  gmt:      Ctypes.int := 0; (* boolean *)
+  hour:     Ctypes.int := 0;
+  minute:   Ctypes.int := 0;
+  month:    Ctypes.int := 0;
+  offset:   Ctypes.int := 0;
+  second:   Ctypes.int := 0;
+  unknown:  Ctypes.int := 0; (* boolean *)
+  weekDay:  Ctypes.int := 0;
+  year:     Ctypes.int := 0;
 END;
 
 <*EXTERNAL DatePosix__FromTime*>
-PROCEDURE FromTime(time: LONGREAL; zone: Date.TimeZone; VAR date: T; unknown, gmt: TEXT);
+PROCEDURE FromTime(time: LONGREAL; zone: INTEGER; VAR date: T);
 
 <*EXTERNAL DatePosix__ToTime*>
 PROCEDURE ToTime(READONLY d: T): Time.T;

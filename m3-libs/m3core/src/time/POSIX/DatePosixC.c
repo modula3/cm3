@@ -26,19 +26,16 @@ extern "C" {
 #define DATE_BSD
 #endif
 
-#define Local 0
-#define UTC 1
-
 #ifdef __osf__
 /* This works whether or not _OSF_SOURCE is defined. The headers say:
 ifdef _OSF_SOURCE
-	long	tm_gmtoff;
-	char	*tm_zone;
+    long    tm_gmtoff;
+    char    *tm_zone;
 define __tm_gmtoff tm_gmtoff
 define __tm_zone   tm_zone
 else
-     	long	__tm_gmtoff;
-	char	*__tm_zone;
+    long    __tm_gmtoff;
+    char    *__tm_zone;
 #endif
 */
 #define m3_tm_gmtoff __tm_gmtoff
@@ -48,34 +45,29 @@ else
 #define m3_tm_zone   tm_zone
 #endif
 
-#ifdef _TIME64_T
-static time64_t TimePosix__ToSeconds(LONGREAL/*Time.T*/ t)
-#else
-static time_t TimePosix__ToSeconds(LONGREAL/*Time.T*/ t)
-#endif
+static
+m3_time_t
+TimePosix__ToSeconds(LONGREAL/*Time.T*/ t)
 {
-    double n = { 0 };
+    double n = 0;
     modf(t, &n);
     return n;
 }
 
 void
 __cdecl
-DatePosix__FromTime(double t, const ptrdiff_t* pzone, Date_t* date, TEXT unknown, TEXT gmt)
+DatePosix__FromTime(double t, INTEGER zone, m3core_DatePosix_T* date)
 {
-    struct tm* tm = { 0 };
-#ifdef _TIME64_T
-    time64_t sec = TimePosix__ToSeconds(t);
-#else
-    time_t sec = TimePosix__ToSeconds(t);
-#endif
-    ptrdiff_t zone = (pzone ? *pzone : Local);
+    const INTEGER Local = 0;
+    const INTEGER UTC = 1;
+    struct tm* tm = 0;
+    m3_time_t seconds = TimePosix__ToSeconds(t);
     ZeroMemory(date, sizeof(*date));
     assert(zone == Local || zone == UTC);
 #ifdef _TIME64_T
-    tm = ((zone == Local) ? localtime64(&sec) : gmtime64(&sec));
+    tm = ((zone == Local) ? localtime64(&seconds) : gmtime64(&seconds));
 #else
-    tm = ((zone == Local) ? localtime(&sec) : gmtime(&sec));
+    tm = ((zone == Local) ? localtime(&seconds) : gmtime(&seconds));
 #endif
     assert(tm != NULL);
     date->year = tm->tm_year + 1900;
@@ -88,18 +80,17 @@ DatePosix__FromTime(double t, const ptrdiff_t* pzone, Date_t* date, TEXT unknown
 
 #ifdef DATE_BSD
     /* The "tm->tm_gmtoff" field is seconds *east* of GMT, whereas
-     * the "date.offset" field is seconds *west* of GMT, so a
-     * negation is necessary.
+     * the "date.offset" field is seconds *west* of GMT, so negate.
      */
     date->offset = -tm->m3_tm_gmtoff;
-    date->zone = M3toC__CopyStoT(tm->m3_tm_zone);
+    date->zone = (char*)tm->m3_tm_zone; // cast away const in case Modula-3 misses it
 #else
     if (zone == Local)
     {
         if (tm->tm_isdst == 0)
         {
             date->offset = M3_TIMEZONE;
-            date->zone = M3toC__CopyStoT(tzname[0]);
+            date->zone = (char*)tzname[0]; // cast away const in case Modula-3 misses it
         }
         else if (tm->tm_isdst > 0 && M3_DAYLIGHT)
         {
@@ -108,36 +99,32 @@ DatePosix__FromTime(double t, const ptrdiff_t* pzone, Date_t* date, TEXT unknown
 #else
             date->offset = M3_TIMEZONE - 3600;
 #endif
-            date->zone = M3toC__CopyStoT(tzname[1]);
+            date->zone = (char*)tzname[1]; // cast away const in case Modula-3 misses it
         }
         else
         {
             date->offset = 0;
-            date->zone   = unknown;
+            date->unknown = TRUE;
         }
     }
     else
     {
         date->offset = 0;
-        date->zone  = gmt;
+        date->gmt = TRUE;
     }
 #endif
 }
 
 double
 __cdecl
-DatePosix__ToTime(const Date_t* date)
+DatePosix__ToTime(/*const*/ m3core_DatePosix_T* date)
 {
     struct tm tm;
-    double t = { 0 };
+    double t = 0;
 #ifdef DATE_BSD
-    const unsigned SecsPerHour = 60 * 60;
-#ifdef _TIME64_T
-    time64_t now = { 0 };
-#else
-    time_t now = { 0 };
-#endif
-    struct tm* local_now = { 0 };
+    const unsigned SecondsPerHour = 60 * 60;
+    m3_time_t now = 0;
+    struct tm* local_now = 0;
 #endif
 
     /* prepare call to mktime(3) */
@@ -171,10 +158,9 @@ DatePosix__ToTime(const Date_t* date)
     assert(local_now != NULL);
     if (local_now->tm_isdst > 0)
       /* decrement the local time zone by one hour if DST is in effect */
-      local_now->m3_tm_gmtoff -= SecsPerHour;
+      local_now->m3_tm_gmtoff -= SecondsPerHour;
 
-    /* As above, we must negate "date->offset" to account for the
-       opposite sense of that field compared to Unix. */
+    /* As above, negate "date->offset" to account for east vs. west of GMT. */
     t -= ((-date->offset) - local_now->m3_tm_gmtoff);
 Exit:
 #endif
@@ -183,9 +169,9 @@ Exit:
 
 void
 __cdecl
-DatePosix__TypeCheck(const Date_t* d, WORD_T sizeof_DateT)
+DatePosix__TypeCheck(/*const*/ m3core_DatePosix_T* d, WORD_T sizeof_DateT)
 {
-    assert(sizeof(Date_t) == sizeof_DateT);
+    assert(sizeof(m3core_DatePosix_T) == sizeof_DateT);
     assert(d->year == 1);
     assert(d->month == 2);
     assert(d->day == 3);
@@ -193,8 +179,10 @@ DatePosix__TypeCheck(const Date_t* d, WORD_T sizeof_DateT)
     assert(d->minute == 5);
     assert(d->second == 6);
     assert(d->offset == 7);
-    assert(d->zone == (TEXT)8);
+    assert(d->zone == (char*)(INTEGER)8);
     assert(d->weekDay == 9);
+    assert(d->gmt == 10);
+    assert(d->unknown == 11);
 }
 
 #ifdef __cplusplus

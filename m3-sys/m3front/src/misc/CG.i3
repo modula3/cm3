@@ -222,7 +222,7 @@ PROCEDURE Free_temps ();
 
 (* NOTE: This naming is very confusing.  A CG.Var and CG.Val are different
          things.  But both are referred-to in many places as "temporaries",
-         "temps", "tmps", etc.  Declre_temp, Free_temp and Free_temps refer
+         "temps", "tmps", etc.  Declare_temp, Free_temp and Free_temps refer
          to CG.Vars. *)
 
 (*--------------------------------------------- direct stack manipulation ---*)
