@@ -43,6 +43,7 @@ SYSTEM_LIBS =
     "FLEX-BISON" : [ "-lfl" ],
 % See Linux.common, FreeBSD.common, OpenBSD.common, NetBSD.common, etc.
 %   "POSTGRES95" : [ "-L/usr/local/pgsql/lib", "-lpq" ],
+%   "MYSQL"      : [ "-L/usr/local/lib", "-lmysqlclient" ],
     "OPENGL"     : [ "-lGLU", "-lGL", "-lXext" ],
 % If OPENGL does not work try
 %    "OPENGL"     : [ "-L/lib/x86_64-linux-gnu", "-lGLU", "-lGL", "-lXext" ],
@@ -68,10 +69,10 @@ end
 
 if not defined ("SYSTEM_LIBORDER")
   if HasOdbc()
-    SYSTEM_LIBORDER = [ "OPENGL", "DECPEX", "MOTIF", "X11", "TCP",
+    SYSTEM_LIBORDER = [ "OPENGL", "DECPEX", "MOTIF", "X11", "TCP", "MYSQL",
                         "ODBC", "POSTGRES95", "FLEX-BISON", "LEX-YACC", "READLINE", "EXPAT", "MPFR", "LIBC" ]
   else
-    SYSTEM_LIBORDER = [ "OPENGL", "DECPEX", "MOTIF", "X11", "TCP",
+    SYSTEM_LIBORDER = [ "OPENGL", "DECPEX", "MOTIF", "X11", "TCP", "MYSQL",
                         "POSTGRES95", "FLEX-BISON", "LEX-YACC", "READLINE", "EXPAT", "MPFR", "LIBC" ]
   end
 end

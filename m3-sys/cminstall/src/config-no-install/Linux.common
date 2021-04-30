@@ -28,5 +28,18 @@ SYSTEM_LD = SYSTEM_CXXXC
 include("Unix.common")
 include("gnuld.common")
 
+%assume the mariadb installed. Undefine to use real mysql.
+MARIADB = "TRUE"
+
+if defined("MARIADB")
+  MYSQLDB = "-lmariadbclient"
+  MYSQLLIB = "-L/usr/lib"
+else
+  MYSQLDB = "-lmysqlclient"
+  MYSQLLIB = "-L/usr/local/mysql/lib"
+end
+
 %SYSTEM_LIBS{"ODBC"}        = [ "-lodbc" ]
 %SYSTEM_LIBS{"POSTGRES95"} = [ "-L/usr/local/pgsql/lib", "-lpq" ]
+SYSTEM_LIBS{"MYSQL"}       = [ MYSQLLIB, MYSQLDB ]
+

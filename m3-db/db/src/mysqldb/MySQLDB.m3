@@ -13,8 +13,7 @@ IMPORT ASCII,
        Text,
        IO,
        DB,
-       MySQL,
-       MySQLMaps;
+       MySQL;
 
 FROM Text IMPORT Sub, FindChar, Length, GetChar;
 
@@ -49,11 +48,10 @@ PROCEDURE Connect (<* UNUSED *> interface        : Interface;
   DB.T RAISES {DB.Error} =
   VAR t := NEW(T);
   BEGIN
-    TRY
-      t.hdbc := MySQL.RealConnect(MySQL.Init(NIL), server, user_id,
-                                  password, database, 3306, NIL, 0);
-    EXCEPT
-    | MySQL.ConnE => CheckErr(t);
+    t.hdbc := MySQL.RealConnect(MySQL.Init(NIL), server, user_id,
+                                password, database, 3306, NIL, 0);
+    IF t.hdbc = NIL THEN
+      CheckErr(t);
     END;
     EVAL WeakRef.FromRef(t, CleanupConnection);
     RETURN t;
@@ -108,7 +106,7 @@ PROCEDURE AutoCommit (t: T; on: BOOLEAN) RAISES {DB.Error} =
     IF (t.hdbc = NIL) THEN
       Die(2, "Attempted to set AutoCommit on a disconnected DB.T.");
     END;
-    EVAL SQL(t, "SET AUTOCOMMIT = " & ARRAY BOOLEAN OF TEXT{"0", "1"}[on]);
+    SQL(t, "SET AUTOCOMMIT = " & ARRAY BOOLEAN OF TEXT{"0", "1"}[on]);
     t.auto_commit_on := on;
   END AutoCommit;
 
@@ -117,7 +115,7 @@ PROCEDURE Commit (t: T) RAISES {DB.Error} =
     IF (t.hdbc = NIL) THEN
       Die(3, "Attempted to commit a disconnected DB.T.");
     END;
-    EVAL SQL(t, "COMMIT");
+    SQL(t, "COMMIT");
   END Commit;
 
 PROCEDURE Abort (t: T) RAISES {DB.Error} =
@@ -125,7 +123,7 @@ PROCEDURE Abort (t: T) RAISES {DB.Error} =
     IF (t.hdbc = NIL) THEN
       Die(4, "Attempted to abort a disconnected DB.T.");
     END;
-    EVAL SQL(t, "ROLLBACK");
+    SQL(t, "ROLLBACK");
   END Abort;
 
 PROCEDURE NewStmt (t: T): DB.Stmt RAISES {DB.Error} =
@@ -140,7 +138,7 @@ PROCEDURE NewStmt (t: T): DB.Stmt RAISES {DB.Error} =
     st.prepared := FALSE;
     st.executed := FALSE;
 
-    EVAL SQL(t, "BEGIN");
+    SQL(t, "BEGIN");
     EVAL WeakRef.FromRef(st, CleanupStmt);
 
     RETURN st;
@@ -175,7 +173,7 @@ TYPE
            fetchable  : BOOLEAN;
            rows       : INTEGER;
            cursor_name: TEXT       := "myportal";
-           result     : MySQL.ResT := NIL;
+           result     : MySQL.ResultT := NIL;
          OVERRIDES
            prepare         := Prepare;
            execute         := Execute;
@@ -231,14 +229,13 @@ PROCEDURE Execute (st: Stmt; operation: TEXT) RAISES {DB.Error} =
       st.fetchable := Fetchable(st);
 
       IF NOT st.fetchable THEN
-        EVAL SQL(st.conn, st.hstmt);
+        SQL(st.conn, st.hstmt);
         st.rows := 0;
       ELSE
-        EVAL SQL(st.conn, st.hstmt);
-        TRY
-          st.result := MySQL.UseResult(st.conn.hdbc);
-        EXCEPT
-        | MySQL.ResultE =>       (* fixme CheckErr(st.conn.hdbc); *)
+        SQL(st.conn, st.hstmt);
+        st.result := MySQL.UseResult(st.conn.hdbc);
+        IF st.result = NIL THEN
+          CheckErr(st.conn);
         END;
         st.rows := 0;
       END;
@@ -484,11 +481,11 @@ PROCEDURE BuildColumnInfo (st: Stmt) RAISES {DB.Error} =
       FOR i := 0 TO c-1 DO 
 
         WITH field = MySQL.FetchField(st.result), info = st.col_info[i] DO 
-          info.name := MySQLMaps.Field(field).name;
-          info.type := MapSQLType (MySQLMaps.Field(field).type);
-          info.precision := MySQLMaps.Field(field).decimals;
+          info.name := field.name;
+          info.type := MapSQLType(field.type);
+          info.precision := field.decimals;
           info.scale := 0; 
-          info.nullable :=   DB.Nullable.Unknown;(* FIXME: get nullable from field.flags *) 
+          info.nullable := DB.Nullable.Unknown;(* FIXME: get nullable from field.flags *) 
         END;
       END; 
     END; 
@@ -498,7 +495,6 @@ PROCEDURE MapSQLType (sqltype: INTEGER): DataType RAISES {DB.Error} =
   VAR dt: DataType := DataType.Null;
   BEGIN
     CASE sqltype OF
-
     | MySQL.MYSQL_TYPE_ENUM			=> dt := DataType.Null;
     | MySQL.MYSQL_TYPE_DATETIME 		=> dt := DataType.Timestamp;
     | MySQL.MYSQL_TYPE_YEAR			=> dt := DataType.Date;
@@ -548,7 +544,7 @@ PROCEDURE CheckStmt
 
 (*------------------------------------------------------------- DBRep ---*)
 
-<*UNUSED*>PROCEDURE GetHENV (): NULL =
+<*UNUSED*>PROCEDURE GetHENV (): ADDRESS =
   BEGIN
     RETURN NIL;
   END GetHENV;
@@ -608,19 +604,16 @@ PROCEDURE Unimplemented (<* UNUSED *> msg: TEXT := "") =
     (* IO.Put (msg & " is not implemented yet\n"); *)
   END Unimplemented;
 
-PROCEDURE SQL (t: T; query: TEXT): MySQL.ResT RAISES {DB.Error} =
+PROCEDURE SQL (t: T; query: TEXT) RAISES {DB.Error} =
   (* LL = st.mu *)
   VAR
-    (* why are we returning this *)
-    result: MySQL.ResT;          (* := t.stmt.result;*)
+    ret : INTEGER;
   BEGIN
     IF Debug THEN IO.Put("SQL: " & query & "\n") END;
-    TRY
-      EVAL MySQL.Query(t.hdbc, query);
-    EXCEPT
-    | MySQL.ReturnE => CheckErr(t);
+    ret := MySQL.Query(t.hdbc, query);
+    IF ret # 0 THEN
+      CheckErr(t);
     END;
-    RETURN result;
   END SQL;
 
 BEGIN

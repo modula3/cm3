@@ -71,11 +71,33 @@
 %ignore mariadb_deinitialize_ssl;
 %ignore mariadb_convert_string;
 
+//mariadb_com includes
+%ignore mysql_enum_shutdown_level;
+%ignore enum_server_command;
+%ignore enum_session_state_type;
+%ignore st_net;
+%ignore ma_net_init;
+%ignore ma_net_end;
+%ignore ma_net_clear;
+%ignore ma_net_flush;
+%ignore ma_net_write;
+%ignore ma_net_write_command;
+%ignore ma_net_real_write;
+%ignore ma_net_read;
+%ignore ma_scramble_323;
+%ignore ma_scramble_41;
+%ignore ma_hash_password;
+%ignore ma_make_scrambled_password;
+%ignore mariadb_load_defaults;
+%ignore ma_thread_init;
+%ignore ma_thread_end;
+
 //only inserted if swigged with -generatem3make
 %insert(m3makefile) %{
 % compiled / works with with CM3 ver 5.8
 import_lib("mysqlclient","/usr/lib")
 %}
+
 
 %{
 #include <mariadb/mysql.h>

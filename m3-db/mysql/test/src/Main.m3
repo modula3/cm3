@@ -183,14 +183,16 @@ PROCEDURE TestQueries () RAISES {E} =
     IO.Put("Field names direct\n");
     FOR i := 0 TO numFields - 1 DO
       field := MySQL.FetchFieldDirect(res, i);
-      IO.Put(field.name & "\n");
+      IO.Put("fieldname " & field.name & "\n");
+      IO.Put("fieldtype "); IO.PutInt(field.type); IO.Put("\n");
     END;
 
     (* test getting fields all together *)
     IO.Put("Field names block\n");
     fields := MySQL.FetchFields(res);
     FOR i := 0 TO numFields - 1 DO
-      IO.Put(fields[i].name & "\n");
+      IO.Put("fieldname " & fields[i].name & "\n");
+      IO.Put("fieldtype "); IO.PutInt(fields[i].type); IO.Put("\n");
     END;
     IO.Put("End field name\n");
 
