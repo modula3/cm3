@@ -10,6 +10,7 @@
 % Makefile for Modula-3 Postcard
 
 import ("formsvbt")
+import ("sysutils")
 
 include_dir     ("resources")
 
