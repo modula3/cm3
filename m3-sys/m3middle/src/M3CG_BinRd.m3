@@ -904,6 +904,7 @@ PROCEDURE import_procedure (VAR s: State) =
       ret_type := Scan_type (s);
       calling  := Scan_callConv (s);
       p        := Scan_int (s);
+      (* TODO return_type_qid but nobody uses it *)
   BEGIN
     AddProc (s, p, s.cg.import_procedure (name, n_params, ret_type, calling));
   END import_procedure;

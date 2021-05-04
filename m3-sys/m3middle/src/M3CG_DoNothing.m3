@@ -163,7 +163,7 @@ END;
 <*NOWARN*>PROCEDURE declare_local(self: T; name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: TypeUID; in_memory, up_level: BOOLEAN; frequency: Frequency): Var = BEGIN RETURN NIL; END declare_local;
 <*NOWARN*>PROCEDURE declare_param(self: T; name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: TypeUID; in_memory, up_level: BOOLEAN; frequency: Frequency; qid := M3CG.NoQID): Var = BEGIN RETURN NIL; END declare_param;
 <*NOWARN*>PROCEDURE declare_temp(self: T; byte_size: ByteSize; alignment: Alignment; type: Type; in_memory: BOOLEAN): Var = BEGIN RETURN NIL; END declare_temp;
-<*NOWARN*>PROCEDURE import_procedure(self: T; name: Name; n_params: INTEGER; ret_type: Type; callingConvention: CallingConvention): Proc = BEGIN RETURN NIL; END import_procedure;
+<*NOWARN*>PROCEDURE import_procedure(self: T; name: Name; n_params: INTEGER; ret_type: Type; callingConvention: CallingConvention; return_type_qid := M3CG.NoQID): Proc = BEGIN RETURN NIL; END import_procedure;
 <*NOWARN*>PROCEDURE declare_procedure(self: T; name: Name; n_params: INTEGER; return_type: Type; level: INTEGER; callingConvention: CallingConvention; exported: BOOLEAN; parent: Proc): Proc = BEGIN RETURN NIL; END declare_procedure;
 <*NOWARN*>PROCEDURE set_error_handler(self: T; p: M3CG_Ops.ErrorHandler) = BEGIN END set_error_handler;
 <*NOWARN*>PROCEDURE begin_unit(self: T; optimize: INTEGER) = BEGIN END begin_unit;

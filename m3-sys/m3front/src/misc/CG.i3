@@ -318,7 +318,8 @@ PROCEDURE EmitText (t: TEXT;  is_const: BOOLEAN): INTEGER;
 
 PROCEDURE Import_procedure (n: Name;  n_params: INTEGER;  ret_type: Type;
                             cc: CallingConvention;
-                            VAR(*OUT*) new: BOOLEAN): Proc;
+                            VAR(*OUT*) new: BOOLEAN;
+                            return_type_qid := M3.NoQID): Proc;
 (* declare and import the external procedure with name 'n' and 'n_params'
    formal parameters.  It must be a top-level (=0) procedure that returns
    values of type 'ret_type'.  'cc' is the convention specified

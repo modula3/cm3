@@ -344,7 +344,7 @@ init_float (o: ByteOffset;  READONLY f: Target.Float);
 *)
 
 import_procedure (n: Name;  n_params: INTEGER;  return: Type;
-                  cc: CallingConvention): Proc;
+                  cc: CallingConvention; return_type_qid := M3CG.NoQID): Proc;
 (* declare and import the external procedure with name 'n' and 'n_params'
    formal parameters.  It must be a top-level (=0) procedure that returns
    values of type 'return'.  'cc' is derived from the procedure's <*EXTERNAL*>
