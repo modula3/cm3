@@ -4691,17 +4691,27 @@ PROCEDURE internal_declare_param(
     typeid: TypeUID;
     up_level: BOOLEAN;
     type_text: TEXT;
-    <*UNUSED*>qid := M3CG.NoQID): M3CG.Var =
+    qid := M3CG.NoQID): M3CG.Var =
 VAR function := self.param_proc;
     var: Var_t := NIL;
     type: Type_t := NIL;
+    qid_module, qid_item: TEXT;
 BEGIN
     IF DebugVerbose(self) THEN
+        qid_module := "";
+        qid_item := "";
+        IF qid.module # 0 THEN
+          qid_module := NameT(qid.module);
+        END;
+        IF qid.item # 0 THEN
+          qid_item := NameT(qid.item);
+        END;
         self.comment("internal_declare_param name:" & TextOrNIL(NameT(name))
             & " cgtype:" & cgtypeToText[cgtype]
             & " typeid:" & TypeIDToText(typeid)
             & " up_level:" & BoolToText[up_level]
-            & " type_text:" & TextOrNIL(type_text));
+            & " type_text:" & TextOrNIL(type_text)
+            & " qid:" & qid_module & "." & qid_item);
     ELSE
         self.comment("internal_declare_param");
     END;
