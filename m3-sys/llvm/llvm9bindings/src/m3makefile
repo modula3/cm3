@@ -123,6 +123,34 @@ if equal (OS_TYPE, "POSIX")
   import_lib("dl",LIB_DIR)
   import_lib("stdc++",LIB_DIR)
   import_lib("z",LIB_DIR)
+else
+  % Both Windows x64 and Windows X86
+  %
+  %  We should be shue that 
+  % kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib
+  % will be linked to our llvmbindings.lib / .dll
+  %
+  %  First copy First copy psapi.lib, gdi32.lib, shell32.lib, ole32.lib, oleaut32.lib, uuid.lib, msvcprt.lib, libvcruntime.lib, libcmt.lib, oldnames.lib
+  %  from
+  % C:/Program Files (x86)/Windows Kits/10/Lib/10.0.18362.0/um/x64/
+  %  or from
+  % C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.26.28801\lib\x64\
+  %  to
+  % C:/opt/llvm/libum
+  %  or to
+  % D:/opt/llvm/libum
+  %
+  import_lib("psapi"        ,"/opt/llvm/libum")
+  import_lib("gdi32"        ,"/opt/llvm/libum")
+  import_lib("shell32"      ,"/opt/llvm/libum")
+  import_lib("ole32"        ,"/opt/llvm/libum")     %%VVM  C:/Program Files (x86)/Windows Kits/10/Lib/10.0.18362.0/um/x64/
+  import_lib("oleaut32"     ,"/opt/llvm/libum")
+  import_lib("uuid"         ,"/opt/llvm/libum")
+
+  import_lib("msvcprt"      ,"/opt/llvm/libum")
+  import_lib("libvcruntime" ,"/opt/llvm/libum")
+  import_lib("libcmt"       ,"/opt/llvm/libum")     %%VVM C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.26.28801\lib\x64\
+  import_lib("oldnames"     ,"/opt/llvm/libum")
 end
 
 /* 
