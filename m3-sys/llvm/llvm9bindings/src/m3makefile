@@ -52,6 +52,7 @@ end
 if not defined("LLVM_BUILD_INCLUDE_DIR")
     LLVM_BUILD_INCLUDE_DIR = PickDir("LLVM_BUILD_INCLUDE_DIR", [
         "/obj/llvm-3.6.1/include", % Jay Krell
+        LLVM_SOURCE_DIR & "/../RelWithDebInfo/include", %VVM
         LLVM_SOURCE_DIR & "/../build/include",
         ])
 end
