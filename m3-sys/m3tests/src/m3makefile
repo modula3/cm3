@@ -1074,6 +1074,7 @@ c_test ("c1", "c142", "imported procedure value parms in word or struct")
 %p_test ("p1", "p135", "more BITS FOR tests") % CM3 restriction: scalars in packed array elements cannot cross word boundaries
 %^ Changed and moved this to c143.
 c_test ("c1", "c143", "packed array element crosses word boundary")
+c_test ("c1", "c144", "qid")
 
 html(["      </tbody>", CR])
 html(["    </table>", CR])
