@@ -37,6 +37,7 @@ TYPE
     hash      : INTEGER;  (* internal hash code *)
     stk_type  : CG.Type;  (* code generator representation on operator stack *)
     mem_type  : CG.Type;  (* code generator representation as a variable *)
+    qid       := M3.NoQID;
     class     : Class;
     isTraced  : M3.Flag;
     isEmpty   : M3.Flag;
