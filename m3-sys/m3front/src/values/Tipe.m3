@@ -128,12 +128,12 @@ PROCEDURE Compile (t: T): BOOLEAN =
   VAR uid: INTEGER;  name: TEXT;
   BEGIN
     Type.Compile (t.value);
-    IF NOT t.imported THEN
+    (*IF NOT t.imported THEN*)
       uid  := Type.GlobalUID (t.value);
       name := Value.GlobalName (t, dots := TRUE, with_module := FALSE);
       CG.Declare_typename (uid, M3ID.Add (name));
       WebInfo.Declare_typename (uid, t);
-    END;
+    (*END;*)
     RETURN TRUE;
   END Compile;
 
