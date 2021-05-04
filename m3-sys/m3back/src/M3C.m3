@@ -2641,8 +2641,8 @@ BEGIN
   ELSE
     self.comment("declare_typename");
   END;
-  nameText := self.unique & nameText; (* unique ends with underscore *)
-  TextToId (nameText);
+  (* nameText := self.unique & nameText; *) (* unique ends with underscore *)
+  (* TextToId (nameText); *)
   (* typename is like pointer but without the star and without a hash in the name *)
   self.Type_Init (NEW (Pointer_t,
                        text := nameText,
