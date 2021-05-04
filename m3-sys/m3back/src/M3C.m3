@@ -4653,7 +4653,6 @@ PROCEDURE last_param(self: T) =
 VAR proc := self.param_proc;
     prototype: TEXT := NIL;
     param: Var_t := NIL;
-    qid := M3CG.NoQID;
 BEGIN
     IF proc.no_return THEN
         no_return(self);
