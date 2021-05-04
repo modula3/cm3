@@ -81,7 +81,7 @@ if equal (OS_TYPE, "POSIX")
 
   exec("make", "-f" , "../src/Makefile", "-k", "LLVM_INCLUDE_DIR=" & LLVM_INCLUDE_DIR, "LLVM_BUILD_INCLUDE_DIR=" & LLVM_BUILD_INCLUDE_DIR, "BUILD_DIR=" & BUILD_DIR)
 else
-  % Windows X86
+  % Both Windows x64 and Windows X86
   exec("nmake", "-f" , "../src/WinMakefile", "-k", "LLVM_INCLUDE_DIR=" & LLVM_INCLUDE_DIR, "LLVM_BUILD_INCLUDE_DIR=" & LLVM_BUILD_INCLUDE_DIR, "BUILD_DIR=" & BUILD_DIR)
 end
 % ^ For now, until we get C++ files into m3 build system
