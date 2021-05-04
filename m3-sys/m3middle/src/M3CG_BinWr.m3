@@ -869,7 +869,8 @@ PROCEDURE NewProc (u: U): Proc =
   END NewProc;
 
 PROCEDURE import_procedure (u: U;  n: Name;  n_params: INTEGER;
-                          ret_type: Type;  cc: CallingConvention): Proc =
+                            ret_type: Type; cc: CallingConvention;
+                            <*UNUSED*>return_type_qid := M3CG.NoQID): Proc =
   VAR p := NewProc (u);
   BEGIN
     Cmd   (u, Bop.import_procedure);

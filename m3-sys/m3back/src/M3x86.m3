@@ -1278,7 +1278,8 @@ BEGIN
 END IsAlloca;
 
 PROCEDURE import_procedure (u: U;  n: Name;  n_params: INTEGER;
-                            ret_type: Type;  cc: CallingConvention): Proc =
+                            ret_type: Type;  cc: CallingConvention;
+                            <*UNUSED*>return_type_qid := M3CG.NoQID): Proc =
   VAR p := NewProc (u, n, n_params, ret_type, cc);
   BEGIN
     p.import := TRUE;

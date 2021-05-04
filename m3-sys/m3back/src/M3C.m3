@@ -4269,7 +4269,8 @@ PROCEDURE Imports_import_procedure(
     name: Name;
     parameter_count: INTEGER;
     return_type: CGType;
-    callingConvention: CallingConvention): M3CG.Proc =
+    callingConvention: CallingConvention;
+    <*UNUSED*>return_type_qid := M3CG.NoQID): M3CG.Proc =
 BEGIN
     RETURN import_procedure(self.self, name, parameter_count, return_type, callingConvention);
 END Imports_import_procedure;
@@ -5219,7 +5220,8 @@ END Segments_init_float;
 
 PROCEDURE import_procedure(
     self: T; name: Name; parameter_count: INTEGER;
-    return_type: CGType; callingConvention: CallingConvention): M3CG.Proc =
+    return_type: CGType; callingConvention: CallingConvention;
+    <*UNUSED*>return_type_qid := M3CG.NoQID): M3CG.Proc =
 VAR proc := NEW(Proc_t, name := name, parameter_count := parameter_count,
                 return_type := return_type, imported := TRUE,
                 callingConvention := callingConvention).Init(self);

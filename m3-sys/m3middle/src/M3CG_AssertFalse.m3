@@ -208,7 +208,7 @@ AssertFalse();
 RETURN NIL;
 END declare_temp;
 
-<*NOWARN*>PROCEDURE import_procedure(self: T; name: Name; n_params: INTEGER; ret_type: Type; callingConvention: CallingConvention): Proc =
+<*NOWARN*>PROCEDURE import_procedure(self: T; name: Name; n_params: INTEGER; ret_type: Type; callingConvention: CallingConvention; return_type_qid := M3CG.NoQID): Proc =
 BEGIN
 AssertFalse();
 RETURN NIL;

@@ -2045,7 +2045,7 @@ PROCEDURE init_float (self: U;  o: ByteOffset;  READONLY f: Target.Float) =
 
 (*------------------------------------------------------------ procedures ---*)
 
-PROCEDURE import_procedure (self: U;  n: Name;  n_params: INTEGER; return_type: Type;  cc: CallingConvention): Proc =
+PROCEDURE import_procedure (self: U;  n: Name;  n_params: INTEGER; return_type: Type;  cc: CallingConvention; return_type_qid := M3CG.NoQID): Proc =
   VAR
     p : LvProc := NewProc(self,n,n_params,return_type,-1,cc,FALSE,NIL);
     name : TEXT;
