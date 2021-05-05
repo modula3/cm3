@@ -116,7 +116,7 @@ PROCEDURE Check (t: T;  <*UNUSED*> VAR cs: Value.CheckState) =
     IF (NOT t.imported)
       AND ((info.class = Type.Class.Ref) OR (info.class = Type.Class.Object))
       AND (NOT NamedType.Split (initial, qid)) THEN
-      name := Value.GlobalName (t, dots := TRUE, with_module := TRUE);
+      name := Value.GlobalName (t);
       IF (info.class = Type.Class.Ref)
         THEN RefType.NoteRefName (t.value, name);
         ELSE ObjectType.NoteRefName (t.value, name);
@@ -130,7 +130,7 @@ PROCEDURE Compile (t: T): BOOLEAN =
     Type.Compile (t.value);
     (*IF NOT t.imported THEN*)
       uid  := Type.GlobalUID (t.value);
-      name := Value.GlobalName (t, dots := FALSE, with_module := TRUE);
+      name := Value.GlobalName (t, dots := FALSE);
       CG.Declare_typename (uid, M3ID.Add (name));
       WebInfo.Declare_typename (uid, t);
     (*END;*)

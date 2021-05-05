@@ -269,7 +269,7 @@ PROCEDURE SetGlobals (t: T) =
     (* Type.SetGlobals (t.refTipe); *)
     IF (t.offset # 0) OR (t.external) THEN RETURN END;
 
-    name := Value.GlobalName (t, dots := TRUE, with_module := TRUE);
+    name := Value.GlobalName (t);
     size := M3RT.ED_SIZE;
     IF (t.refTipe # NIL) THEN INC (size, Target.Address.size) END;
     INC (size, (Text.Length (name) + 1) * Target.Char.size);
@@ -296,7 +296,7 @@ PROCEDURE Declarer (t: T): BOOLEAN =
       (* don't bother to force the import *)
     ELSE (* locally declared *)
       SetGlobals (t);
-      name := Value.GlobalName (t, dots := TRUE, with_module := TRUE);
+      name := Value.GlobalName (t);
       globals := Module.GlobalData (is_const := FALSE);
       consts  := Module.GlobalData (is_const := TRUE);
       size := M3RT.ED_SIZE;
@@ -323,7 +323,7 @@ PROCEDURE Declarer (t: T): BOOLEAN =
 PROCEDURE DeclareRaiseProc (t: T): CG.Proc =
   VAR r := NEW (Raiser, self := t);
   BEGIN
-    r.name    := Value.GlobalName (t, dots := FALSE, with_module := TRUE);
+    r.name    := Value.GlobalName (t, dots := FALSE);
     r.name    := r.name & "_RAISE";
     r.cg_proc := CG.Declare_procedure (M3ID.Add (r.name), 3, CG.Type.Void,
                       lev := 0, cc := Target.DefaultCall, exported := FALSE,

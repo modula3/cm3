@@ -56,7 +56,7 @@ PROCEDURE ToExpr           (t: T): M3.Expr;
 PROCEDURE ToType           (t: T): M3.Type;
 PROCEDURE Base             (t: T): T;
 PROCEDURE CName            (t: T): M3ID.T;
-PROCEDURE GlobalName       (t: T;  dots, with_module: BOOLEAN): TEXT;
+PROCEDURE GlobalName       (t: T;  dots := TRUE; with_module := TRUE): TEXT;
 PROCEDURE IllegalRecursion (t: T);
 
 PROCEDURE AddFPTag   (t: T;  VAR x: M3.FPInfo): CARDINAL;

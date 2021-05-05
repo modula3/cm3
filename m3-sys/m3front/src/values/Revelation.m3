@@ -291,7 +291,7 @@ PROCEDURE DoCheck (t: T) =
         t.rhs := xx;
       END;
 
-      name := Value.GlobalName (t.obj, dots := TRUE, with_module := TRUE);
+      name := Value.GlobalName (t.obj);
       IF RefType.Is (t.rhs)
         THEN RefType.NoteRefName (t.rhs, name);
         ELSE ObjectType.NoteRefName (t.rhs, name);
