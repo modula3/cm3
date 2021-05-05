@@ -4283,9 +4283,9 @@ PROCEDURE Imports_import_procedure(
     parameter_count: INTEGER;
     return_type: CGType;
     callingConvention: CallingConvention;
-    <*UNUSED*>return_type_qid := M3CG.NoQID): M3CG.Proc =
+    return_type_qid := M3CG.NoQID): M3CG.Proc =
 BEGIN
-    RETURN import_procedure(self.self, name, parameter_count, return_type, callingConvention);
+    RETURN import_procedure(self.self, name, parameter_count, return_type, callingConvention, return_type_qid);
 END Imports_import_procedure;
 
 PROCEDURE Imports_declare_param(
