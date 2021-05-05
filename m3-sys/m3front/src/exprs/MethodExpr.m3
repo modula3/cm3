@@ -107,7 +107,7 @@ PROCEDURE GenFPLiteral (p: P;  buf: M3Buf.T) =
   END GenFPLiteral;
 
 PROCEDURE GenLiteral (p: P;  offset: INTEGER;  type: Type.T;  is_const: BOOLEAN) =
-  VAR m_name := Value.GlobalName (p.method, dots := FALSE, with_module :=TRUE);
+  VAR m_name := Value.GlobalName (p.method, dots := FALSE);
   VAR t_name := Type.Name (p.object);
   VAR name   := t_name & "_" & m_name;
   VAR uid    := Type.GlobalUID (type);

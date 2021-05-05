@@ -328,7 +328,7 @@ PROCEDURE ProcName (p: T): TEXT =
   VAR v: Value.T;
   BEGIN
     IF (p.proc # NIL) AND UserProc.IsProcedureLiteral (p.proc, v) THEN
-      RETURN ": " & Value.GlobalName (v, dots := TRUE, with_module := TRUE);
+      RETURN ": " & Value.GlobalName (v);
     ELSE
       RETURN "";
     END;

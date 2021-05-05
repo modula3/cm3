@@ -353,7 +353,7 @@ PROCEDURE CheckUnused (t: T) =
         AND (NOT Exceptionz.IsImplicit (e.except)) THEN
         Scanner.offset := e.origin;
         Error.Warn (1, "exception is never raised: "
-          & Value.GlobalName (e.except, dots := TRUE, with_module := TRUE));
+          & Value.GlobalName (e.except));
       END;
       e := e.next;
     END;
@@ -449,7 +449,7 @@ PROCEDURE CheckRaise (VAR cs: M3.CheckState;  v: Value.T): TEXT =
     cs.raises_others := TRUE;
     IF CheckTList (cs.no_error, v) THEN RETURN NIL END;
     IF Exceptionz.IsImplicit (v) THEN RETURN NIL END;
-    RETURN Value.GlobalName (v, dots := TRUE, with_module := TRUE);
+    RETURN Value.GlobalName (v);
   END CheckRaise;
 
 PROCEDURE CheckTList (u: TList;  v: Value.T): BOOLEAN =
@@ -499,8 +499,7 @@ PROCEDURE EmitNames (t: T) =
     e := t.elts;
     WHILE (e # NIL) DO
       IF (e.except # NIL) THEN
-        CG.Declare_raises (M3ID.Add (Value.GlobalName (e.except, dots := TRUE,
-                                                       with_module := TRUE)));
+        CG.Declare_raises (M3ID.Add (Value.GlobalName (e.except)));
       END;
       e := e.next;
     END;

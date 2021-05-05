@@ -150,7 +150,7 @@ PROCEDURE Check (t: T;  VAR cs: Value.CheckState) =
       END;
       t.structured := Type.IsStructured (t.tipe);
     END;
-    t.qualName := Value.GlobalName(t,TRUE,TRUE);
+    t.qualName := Value.GlobalName(t);
   END Check;
 
 (* Externally dispatched-to: *)

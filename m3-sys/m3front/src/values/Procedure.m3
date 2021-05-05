@@ -287,7 +287,7 @@ PROCEDURE CheckBody (p: T;  VAR cs: Value.CheckState) =
 
     Coverage.NoteProcedure (p);
     zz := Scope.Push (p.syms);
-    p.body.name := Value.GlobalName (p, dots := TRUE, with_module := FALSE);
+    p.body.name := Value.GlobalName (p, with_module := FALSE);
     result := ProcType.Result (p.signature);
     cconv := ProcType.CallConv (p.signature);
 
@@ -453,7 +453,7 @@ PROCEDURE Declarer (p: T): BOOLEAN =
     zz: Scope.T;
     par: CG.Proc := NIL;
     cg_result: CG.Type;
-    name := Value.GlobalName (p, dots := FALSE, with_module := TRUE);
+    name := Value.GlobalName (p, dots := FALSE);
     type: CG.TypeUID;
     sig := p.signature;
     n_formals: INTEGER;

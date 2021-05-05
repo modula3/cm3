@@ -68,8 +68,7 @@ PROCEDURE UID (t: Type.T): INTEGER =
   BEGIN
     IF (p = NIL) THEN RETURN M3ID.NoID END;
     IF (p.id = M3ID.NoID) THEN
-      p.id := M3ID.Add (Value.GlobalName (p.declared, dots := TRUE,
-                                          with_module := TRUE));
+      p.id := M3ID.Add (Value.GlobalName (p.declared));
     END;
     RETURN p.id;
   END UID;
