@@ -393,13 +393,14 @@ PROCEDURE LoadStaticLink (t: T) =
  END LoadStaticLink;
 
 PROCEDURE ImportProc (p: T;  name: TEXT;  n_formals: INTEGER;
-                      cg_result: CG.Type;  cc: CG.CallingConvention) =
+                      cg_result: CG.Type; return_type_qid := M3.NoQID;
+                      cc: CG.CallingConvention) =
   VAR zz: Scope.T;  new: BOOLEAN;
   BEGIN
     <*ASSERT p.cg_proc = NIL*>
     p.next_cg_proc := cg_procs;  cg_procs := p;
     p.cg_proc := CG.Import_procedure (M3ID.Add (name), n_formals,
-                                      cg_result, cc, new);
+                                      cg_result, cc, new, return_type_qid);
     IF (new) THEN
       (* declare the formals *)
       IF (p.syms # NIL) THEN
@@ -485,7 +486,7 @@ PROCEDURE Declarer (p: T): BOOLEAN =
         RETURN FALSE;
       ELSE
         (* it's an imported procedure *)
-        ImportProc (p, name, n_formals, cg_result, cconv);
+        ImportProc (p, name, n_formals, cg_result, ProcType.ResultQid (p.signature), cconv);
         RETURN TRUE;
       END;
     END;
