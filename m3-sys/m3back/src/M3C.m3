@@ -585,6 +585,19 @@ BEGIN
     RETURN id;
 END ReplaceName;
 
+PROCEDURE QidText(qid: M3CG.QID): TEXT=
+VAR qidtext := "";
+BEGIN
+  IF qid.module # 0 THEN
+    qidtext := qidtext & NameT(qid.module);
+  END;
+  qidtext := qidtext & ".";
+  IF qid.item # 0 THEN
+    qidtext := qidtext & NameT(qid.item);
+  END;
+  RETURN qidtext;
+END QidText;
+
 PROCEDURE AnonymousCounter(self: T): INTEGER =
 BEGIN
     INC(self.anonymousCounter, 1 + ORD(self.anonymousCounter = 385)); (* avoid "i386" -- really, it happened *)
@@ -4695,23 +4708,14 @@ PROCEDURE internal_declare_param(
 VAR function := self.param_proc;
     var: Var_t := NIL;
     type: Type_t := NIL;
-    qid_module, qid_item: TEXT;
 BEGIN
     IF DebugVerbose(self) THEN
-        qid_module := "";
-        qid_item := "";
-        IF qid.module # 0 THEN
-          qid_module := NameT(qid.module);
-        END;
-        IF qid.item # 0 THEN
-          qid_item := NameT(qid.item);
-        END;
         self.comment("internal_declare_param name:" & TextOrNIL(NameT(name))
             & " cgtype:" & cgtypeToText[cgtype]
             & " typeid:" & TypeIDToText(typeid)
             & " up_level:" & BoolToText[up_level]
             & " type_text:" & TextOrNIL(type_text)
-            & " qid:" & qid_module & "." & qid_item);
+            & " qid:" & QidText(qid));
     ELSE
         self.comment("internal_declare_param");
     END;
@@ -5221,7 +5225,7 @@ END Segments_init_float;
 PROCEDURE import_procedure(
     self: T; name: Name; parameter_count: INTEGER;
     return_type: CGType; callingConvention: CallingConvention;
-    <*UNUSED*>return_type_qid := M3CG.NoQID): M3CG.Proc =
+    return_type_qid := M3CG.NoQID): M3CG.Proc =
 VAR proc := NEW(Proc_t, name := name, parameter_count := parameter_count,
                 return_type := return_type, imported := TRUE,
                 callingConvention := callingConvention).Init(self);
@@ -5229,7 +5233,8 @@ BEGIN
     IF DebugVerbose(self) THEN
         self.comment("import_procedure name:" & NameT(name)
             & " parameter_count:" & IntToDec(parameter_count)
-            & " return_type:" & cgtypeToText[return_type]);
+            & " return_type:" & cgtypeToText[return_type]
+            & " return_type_qid:" & QidText(return_type_qid));
     ELSE
         self.comment("import_procedure");
     END;
