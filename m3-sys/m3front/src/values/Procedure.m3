@@ -486,6 +486,7 @@ PROCEDURE Declarer (p: T): BOOLEAN =
         RETURN FALSE;
       ELSE
         (* it's an imported procedure *)
+        Type.Compile (ProcType.Result (p.signature));
         ImportProc (p, name, n_formals, cg_result, ProcType.ResultQid (p.signature), cconv);
         RETURN TRUE;
       END;
