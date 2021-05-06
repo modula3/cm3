@@ -83,7 +83,6 @@ if equal (OS_TYPE, "POSIX")
 
   exec("make", "-f" , "../src/Makefile", "-k", "LLVM_INCLUDE_DIR=" & LLVM_INCLUDE_DIR, "LLVM_BUILD_INCLUDE_DIR=" & LLVM_BUILD_INCLUDE_DIR, "BUILD_DIR=" & BUILD_DIR)
 else
-  % Both Windows amd64 and Windows X86
   exec("nmake", "-f" , "../src/WinMakefile", "-k", "LLVM_INCLUDE_DIR=" & LLVM_INCLUDE_DIR, "LLVM_BUILD_INCLUDE_DIR=" & LLVM_BUILD_INCLUDE_DIR, "BUILD_DIR=" & BUILD_DIR)
 end
 % ^ For now, until we get C++ files into m3 build system
@@ -126,7 +125,6 @@ if equal (OS_TYPE, "POSIX")
   import_lib("stdc++",LIB_DIR)
   import_lib("z",LIB_DIR)
 else
-  % Both Windows amd64 and Windows X86
   %
   %  We should be sure that 
   % kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib
