@@ -6977,6 +6977,7 @@ PROCEDURE Err(self: T; text: TEXT) =
 BEGIN
     self.comment("ERROR:" & text);
     self.Err(text);
+    Wr.Flush(self.c);
 END Err;
 
 PROCEDURE comment_1(VAR text: TEXT; VAR length: INTEGER) =
