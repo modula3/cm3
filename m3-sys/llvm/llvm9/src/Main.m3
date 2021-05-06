@@ -288,6 +288,11 @@ VAR
     GCharDataRep := "e-m:e-p:32:32-i32:32-i64:32:64-f80:128-n8:16:32:64-S128";
 *)
 
+(* windows amd64
+    GCharTriple := "x86_64-pc-windows-msvc";
+    GCharDataRep := "e-m:w-i64:64-f80:128-n8:16:32:64-S128";
+*)
+
 (* windows 686  
     GCharTriple := "i686-pc-windows-msvc";
     GCharDataRep := "e-m:x-p:32:32-i64:64-f80:32-n8:16:32-a:0:32-S32";
