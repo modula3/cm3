@@ -8,7 +8,7 @@
 
 INTERFACE NamedType;
 
-IMPORT M3, M3CG, M3ID, Type, Value;
+IMPORT M3, M3ID, Type, Value;
 
 PROCEDURE Parse (): Type.T;
 
