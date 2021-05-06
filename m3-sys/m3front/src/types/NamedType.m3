@@ -93,11 +93,13 @@ PROCEDURE Split (t: Type.T;  VAR name: M3.QID): BOOLEAN =
   VAR p := Reduce (t);
   BEGIN
     IF (p = NIL) THEN RETURN FALSE END;
+    Resolve (p);
     name := p.qid;
     RETURN TRUE;
   END Split;
 
 PROCEDURE SplitV (t: Type.T;  VAR v: Value.T): BOOLEAN =
+(* return V for Value *)
   VAR p := Reduce (t);
   BEGIN
     IF (p = NIL) THEN RETURN FALSE END;
