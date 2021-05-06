@@ -136,14 +136,14 @@ PROCEDURE Resolve (p: P) =
 PROCEDURE Strip (t: Type.T): Type.T =
   VAR p: P := t;
   BEGIN
-    IF (p.type = NIL) THEN Resolve (p) END;
+    Resolve (p);
     RETURN p.type;
   END Strip;
 
 PROCEDURE Check (p: P) =
   VAR cs := M3.OuterCheckState;  nErrs, nWarns, nErrsB: INTEGER;
   BEGIN
-    IF (p.type = NIL) THEN Resolve (p) END;
+    Resolve (p);
     nErrs := 0;  nErrsB := 0;
     IF (p.obj # NIL) THEN
       Error.Count (nErrs, nWarns);
@@ -162,13 +162,13 @@ PROCEDURE Check (p: P) =
 PROCEDURE
   NoStraddle (p: P;  offset: INTEGER; IsEltOrField: BOOLEAN): BOOLEAN =
   BEGIN
-    IF (p.type = NIL) THEN Resolve (p) END;
+    Resolve (p);
     RETURN Type.StraddleFreeScalars (p.type, offset, IsEltOrField);
   END NoStraddle;
 
 PROCEDURE Compiler (p: P) =
   BEGIN
-    IF (p.type = NIL) THEN Resolve (p) END;
+    Resolve (p);
     (*** Type.Compile (p.type);  ***)
     IF (p.type # NIL) THEN
       Scanner.offset := p.type.origin;
@@ -178,32 +178,32 @@ PROCEDURE Compiler (p: P) =
 
 PROCEDURE InitCoster (p: P;  zeroed: BOOLEAN): INTEGER =
   BEGIN
-    IF (p.type = NIL) THEN Resolve (p) END;
+    Resolve (p);
     RETURN Type.InitCost (p.type, zeroed);
   END InitCoster;
 
 PROCEDURE GenInit (p: P;  zeroed: BOOLEAN) =
   BEGIN
-    IF (p.type = NIL) THEN Resolve (p) END;
+    Resolve (p);
     Type.InitValue (p.type, zeroed);
   END GenInit;
 
 PROCEDURE GenMap (p: P;  offset, size: INTEGER;  refs_only: BOOLEAN) =
   BEGIN
-    IF (p.type = NIL) THEN Resolve (p) END;
+    Resolve (p);
     Type.GenMap (p.type, offset, size, refs_only);
   END GenMap;
 
 PROCEDURE GenDesc (p: P) =
   BEGIN
-    IF (p.type = NIL) THEN Resolve (p) END;
+    Resolve (p);
     Type.GenDesc (p.type);
   END GenDesc;
 
 PROCEDURE FPrinter (p: P;  VAR x: M3.FPInfo) =
   BEGIN
     Error.QID (p.qid, "INTERNAL ERROR: fingerprint of named type");
-    IF (p.type = NIL) THEN Resolve (p) END;
+    Resolve (p);
     IF (p.type # NIL) THEN p.type.fprint (x); END;
   END FPrinter;
 
