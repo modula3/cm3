@@ -287,7 +287,7 @@ PROCEDURE CheckBody (p: T;  VAR cs: Value.CheckState) =
 
     Coverage.NoteProcedure (p);
     zz := Scope.Push (p.syms);
-    p.body.name := Value.GlobalName (p, dots := TRUE, with_module := FALSE);
+    p.body.name := Value.GlobalName (p, with_module := FALSE);
     result := ProcType.Result (p.signature);
     cconv := ProcType.CallConv (p.signature);
 
@@ -393,13 +393,14 @@ PROCEDURE LoadStaticLink (t: T) =
  END LoadStaticLink;
 
 PROCEDURE ImportProc (p: T;  name: TEXT;  n_formals: INTEGER;
-                      cg_result: CG.Type;  cc: CG.CallingConvention) =
+                      cg_result: CG.Type; return_type_qid := M3.NoQID;
+                      cc: CG.CallingConvention) =
   VAR zz: Scope.T;  new: BOOLEAN;
   BEGIN
     <*ASSERT p.cg_proc = NIL*>
     p.next_cg_proc := cg_procs;  cg_procs := p;
     p.cg_proc := CG.Import_procedure (M3ID.Add (name), n_formals,
-                                      cg_result, cc, new);
+                                      cg_result, cc, new, return_type_qid);
     IF (new) THEN
       (* declare the formals *)
       IF (p.syms # NIL) THEN
@@ -452,7 +453,7 @@ PROCEDURE Declarer (p: T): BOOLEAN =
     zz: Scope.T;
     par: CG.Proc := NIL;
     cg_result: CG.Type;
-    name := Value.GlobalName (p, dots := FALSE, with_module := TRUE);
+    name := Value.GlobalName (p, dots := FALSE);
     type: CG.TypeUID;
     sig := p.signature;
     n_formals: INTEGER;
@@ -485,7 +486,7 @@ PROCEDURE Declarer (p: T): BOOLEAN =
         RETURN FALSE;
       ELSE
         (* it's an imported procedure *)
-        ImportProc (p, name, n_formals, cg_result, cconv);
+        ImportProc (p, name, n_formals, cg_result, ProcType.ResultQid (p.signature), cconv);
         RETURN TRUE;
       END;
     END;

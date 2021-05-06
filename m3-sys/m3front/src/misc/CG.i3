@@ -200,7 +200,7 @@ PROCEDURE Declare_local (n: Name;  s: Size;  a: Alignment;  t: Type;
 
 PROCEDURE Declare_param (n: Name;  s: Size;  a: Alignment;  t: Type;
                          m3t: TypeUID;  in_memory, up_level: BOOLEAN;
-                         f: Frequency): Var;
+                         f: Frequency; qid := M3.NoQID): Var;
 (* declares a formal parameter.  Formals are declared in their lexical
    order immediately following the 'declare_procedure' or
    'import_procedure' that contains them.  *)
@@ -318,7 +318,8 @@ PROCEDURE EmitText (t: TEXT;  is_const: BOOLEAN): INTEGER;
 
 PROCEDURE Import_procedure (n: Name;  n_params: INTEGER;  ret_type: Type;
                             cc: CallingConvention;
-                            VAR(*OUT*) new: BOOLEAN): Proc;
+                            VAR(*OUT*) new: BOOLEAN;
+                            return_type_qid := M3.NoQID): Proc;
 (* declare and import the external procedure with name 'n' and 'n_params'
    formal parameters.  It must be a top-level (=0) procedure that returns
    values of type 'ret_type'.  'cc' is the convention specified

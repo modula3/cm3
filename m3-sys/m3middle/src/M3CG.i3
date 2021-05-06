@@ -99,6 +99,10 @@ CONST (*  A op B  ===  NOT (A NotCompare[op] B)  *)
 TYPE
   Name = M3ID.T; (* Numbering of a simple identifier. *) 
 
+  (* an optionally module qualified name *)
+  QID  = RECORD module, item: M3ID.T; END;
+  CONST NoQID = QID {M3ID.NoID, M3ID.NoID};
+
 TYPE
   Var    = BRANDED "M3CG.Var"  OBJECT END; (* represents a variable *)
   Proc   = BRANDED "M3CG.Proc" OBJECT END; (* represents a procedure *)

@@ -909,9 +909,10 @@ PROCEDURE declare_param (VAR s: State) =
       up_lev := Scan_bool (s);
       freq   := Scan_int (s);
       v      := Scan_varName (s);
+      qid    := M3CG.NoQID; (* TODO qid but it is not used downstream and can be omitted indefinitely *)
   BEGIN
     AddVar (s, v, s.cg.declare_param (name, size, align, type, m3t,
-                                      in_mem, up_lev, freq));
+                                      in_mem, up_lev, freq, qid));
   END declare_param;
 
 PROCEDURE declare_temp (VAR s: State) =
@@ -1016,6 +1017,7 @@ PROCEDURE import_procedure (VAR s: State) =
       ret_type := Scan_type (s);
       calling  := Scan_callConv (s);
       p        := Scan_procName (s);
+      (* TODO return_type_qid but it is not used *)
   BEGIN
     AddProc (s, p, s.cg.import_procedure (name, n_params, ret_type, calling));
   END import_procedure;

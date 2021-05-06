@@ -9,7 +9,7 @@
 MODULE ProcType;
 
 IMPORT M3, M3ID, CG, Expr, Type, TypeRep, Value, Scope, Target;
-IMPORT Formal, UserProc, Token, Ident, CallExpr, Word, Error;
+IMPORT Formal, UserProc, Token, Ident, CallExpr, Word, Error, NamedType;
 IMPORT ESet, TipeMap, TipeDesc, ErrType, M3Buf, Variable, OpenArrayType;
 FROM Scanner IMPORT Match, GetToken, cur;
 
@@ -21,6 +21,7 @@ TYPE
         result     : Type.T;
         raises     : ESet.T;
         callConv   : CG.CallingConvention;
+        result_qid := M3.NoQID;
       OVERRIDES
         check      := Check;
         no_straddle:= TypeRep.AddrNoStraddle;
@@ -65,6 +66,7 @@ PROCEDURE ParseSignature (name: M3ID.T;  cc: CG.CallingConvention): Type.T =
     IF (cur.token = TK.tCOLON) THEN
       GetToken (); (* : *)
       p.result := Type.Parse ();
+      EVAL NamedType.Split (p.result, p.result_qid);
     END;
     IF (cur.token = TK.tRAISES) THEN
       p.raises := ESet.ParseRaises ();
@@ -374,6 +376,15 @@ PROCEDURE Result (t: Type.T): Type.T =
       ELSE RETURN ErrType.T;
     END;
   END Result;
+
+PROCEDURE ResultQid (t: Type.T): M3.QID =
+  VAR p := Reduce (t);
+  BEGIN
+    IF (p # NIL)
+      THEN RETURN p.result_qid;
+      ELSE RETURN M3.NoQID;
+    END;
+  END ResultQid;
 
 PROCEDURE CGResult (t: Type.T): CG.Type =
   VAR p := Reduce (t);

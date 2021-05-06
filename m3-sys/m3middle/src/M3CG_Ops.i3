@@ -253,7 +253,7 @@ declare_local (n: Name;  s: ByteSize;  a: Alignment;  t: Type;
 
 declare_param (n: Name;  s: ByteSize;  a: Alignment;  t: Type;
                m3t: TypeUID;  in_memory, up_level: BOOLEAN;
-               f: Frequency): Var;
+               f: Frequency; qid := M3CG.NoQID): Var;
 (* Declare a formal parameter, belonging to the most recent
    declare_procedure or import_procedure.  Formals are declared in
    their lexical order, relative to each other, but many other things
@@ -344,7 +344,7 @@ init_float (o: ByteOffset;  READONLY f: Target.Float);
 *)
 
 import_procedure (n: Name;  n_params: INTEGER;  return: Type;
-                  cc: CallingConvention): Proc;
+                  cc: CallingConvention; return_type_qid := M3CG.NoQID): Proc;
 (* declare and import the external procedure with name 'n' and 'n_params'
    formal parameters.  It must be a top-level (=0) procedure that returns
    values of type 'return'.  'cc' is derived from the procedure's <*EXTERNAL*>

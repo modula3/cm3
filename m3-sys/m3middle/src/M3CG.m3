@@ -8,7 +8,7 @@
 MODULE M3CG EXPORTS M3CG, M3CG_Ops;
 
 IMPORT Text, Word; 
-IMPORT Target;
+IMPORT Target, M3CG;
 
 REVEAL
   T = Public BRANDED "M3CG.T" OBJECT OVERRIDES
@@ -401,9 +401,9 @@ PROCEDURE declare_local (xx: T;  n: Name;  s: ByteSize;  a: Alignment;
 
 PROCEDURE declare_param (xx: T;  n: Name;  s: ByteSize;  a: Alignment;
                          t: Type;  m3t: TypeUID;  in_memory, up_level: BOOLEAN;
-                         f: Frequency): Var =
+                         f: Frequency; qid := M3CG.NoQID): Var =
   BEGIN
-    RETURN xx.child.declare_param (n, s, a, t, m3t, in_memory, up_level, f);
+    RETURN xx.child.declare_param (n, s, a, t, m3t, in_memory, up_level, f, qid);
   END declare_param;
 
 PROCEDURE declare_temp (xx: T;  s: ByteSize;  a: Alignment;  t: Type;
@@ -468,9 +468,10 @@ PROCEDURE init_float (xx: T;  o: ByteOffset;  READONLY f: Target.Float) =
 (*------------------------------------------------------------ procedures ---*)
 
 PROCEDURE import_procedure (xx: T;  n: Name;  n_params: INTEGER;
-                          ret_type: Type;  cc: CallingConvention): Proc =
+                          ret_type: Type;  cc: CallingConvention;
+                          return_type_qid := M3CG.NoQID): Proc =
   BEGIN
-    RETURN xx.child.import_procedure (n, n_params, ret_type, cc);
+    RETURN xx.child.import_procedure (n, n_params, ret_type, cc, return_type_qid);
   END import_procedure;
 
 PROCEDURE declare_procedure (xx: T;  n: Name;  n_params: INTEGER;

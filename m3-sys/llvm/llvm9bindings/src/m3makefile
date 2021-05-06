@@ -42,6 +42,7 @@ if not defined ("LLVM_SOURCE_DIR")
     LLVM_SOURCE_DIR = PickDir("LLVM_SOURCE_DIR", [
         "/src/llvm-3.6.1.src",    % Jay Krell
         "/home/rodney/proj/llvm/llvm-3.6.1/llvm-3.6.1.src", % Rodney Bates
+        "/opt/llvm/llvm-9.0.1.src", % VVM
         "/home/peter/projects/llvm9/llvm-9.0.0.src", %Peter
         ])
 end
@@ -51,6 +52,7 @@ end
 if not defined("LLVM_BUILD_INCLUDE_DIR")
     LLVM_BUILD_INCLUDE_DIR = PickDir("LLVM_BUILD_INCLUDE_DIR", [
         "/obj/llvm-3.6.1/include", % Jay Krell
+        LLVM_SOURCE_DIR & "/../RelWithDebInfo/include", %VVM
         LLVM_SOURCE_DIR & "/../build/include",
         ])
 end
@@ -59,6 +61,7 @@ if not defined("LLVM_LIB_DIR")
     LLVM_LIB_DIR = PickDir("LLVM_LIB_DIR", [
         {"AMD64_LINUX"  : "/usr/local/lib", 
          "AMD64_LINUX"  : "/usr/local/llvm-3.6.1/lib", % Rodney Bates
+            "AMD64_NT"  : "/opt/llvm/lib", % VVM, de-facto it is C:\opt\llvm\lib\ or D:\opt\llvm\lib\
          "AMD64_DARWIN" : "/Users/jay/llvm-3.6.1/lib", % Jay Krell
          "I386_DARWIN"  : "/Users/jay/llvm-3.6.1-x86/lib", % Jay Krell
         }{TARGET},
@@ -80,7 +83,6 @@ if equal (OS_TYPE, "POSIX")
 
   exec("make", "-f" , "../src/Makefile", "-k", "LLVM_INCLUDE_DIR=" & LLVM_INCLUDE_DIR, "LLVM_BUILD_INCLUDE_DIR=" & LLVM_BUILD_INCLUDE_DIR, "BUILD_DIR=" & BUILD_DIR)
 else
-  % Windows X86
   exec("nmake", "-f" , "../src/WinMakefile", "-k", "LLVM_INCLUDE_DIR=" & LLVM_INCLUDE_DIR, "LLVM_BUILD_INCLUDE_DIR=" & LLVM_BUILD_INCLUDE_DIR, "BUILD_DIR=" & BUILD_DIR)
 end
 % ^ For now, until we get C++ files into m3 build system
@@ -122,6 +124,33 @@ if equal (OS_TYPE, "POSIX")
   import_lib("dl",LIB_DIR)
   import_lib("stdc++",LIB_DIR)
   import_lib("z",LIB_DIR)
+else
+  %
+  %  We should be sure that 
+  % kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib
+  % will be linked to our llvmbindings.lib / .dll
+  %
+  %  First copy First copy psapi.lib, gdi32.lib, shell32.lib, ole32.lib, oleaut32.lib, uuid.lib, msvcprt.lib, libvcruntime.lib, libcmt.lib, oldnames.lib
+  %  from
+  % C:/Program Files (x86)/Windows Kits/10/Lib/10.0.18362.0/um/x64/
+  %  or from
+  % C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.26.28801\lib\x64\
+  %  to
+  % C:/opt/llvm/libum
+  %  or to
+  % D:/opt/llvm/libum
+  %
+  import_lib("psapi"        ,"/opt/llvm/libum")
+  import_lib("gdi32"        ,"/opt/llvm/libum")
+  import_lib("shell32"      ,"/opt/llvm/libum")
+  import_lib("ole32"        ,"/opt/llvm/libum")     %%VVM  C:/Program Files (x86)/Windows Kits/10/Lib/10.0.18362.0/um/x64/
+  import_lib("oleaut32"     ,"/opt/llvm/libum")
+  import_lib("uuid"         ,"/opt/llvm/libum")
+
+  import_lib("msvcprt"      ,"/opt/llvm/libum")
+  import_lib("libvcruntime" ,"/opt/llvm/libum")
+  import_lib("libcmt"       ,"/opt/llvm/libum")     %%VVM C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.26.28801\lib\x64\
+  import_lib("oldnames"     ,"/opt/llvm/libum")
 end
 
 /* 

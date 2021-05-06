@@ -85,6 +85,9 @@ ver | (find /I "NT"   >NUL:) && ((set _cm3_ThisOS=NT)   & goto ver_NT)
 if NOT exist %SystemRoot%\system32\systeminfo.exe goto ver_NoSysInfo
 FOR /F "usebackq tokens=3* delims=: " %%i IN (`systeminfo ^| find /I "OS Name"`) DO set _cm3_ThisOS_Long=%%i %%j
 echo %_cm3_ThisOS_Long% | (find /I "Windows Vista"       >NUL:) && ((set _cm3_ThisOS=Vista) & goto ver_Vista)
+echo %_cm3_ThisOS_Long% | (find /I "Windows 10"           >NUL:) && ((set _cm3_ThisOS=Win7)  & goto ver_7)
+echo %_cm3_ThisOS_Long% | (find /I "Microsoft Windows Server 2016"           >NUL:) && ((set _cm3_ThisOS=Win7)  & goto ver_7)
+echo %_cm3_ThisOS_Long% | (find /I "Microsoft Windows Server 2019"           >NUL:) && ((set _cm3_ThisOS=Win7)  & goto ver_7)
 echo %_cm3_ThisOS_Long% | (find /I "Windows 7"           >NUL:) && ((set _cm3_ThisOS=Win7)  & goto ver_7)
 echo %_cm3_ThisOS_Long% | (find /I "Windows Server 2008" >NUL:) && ((set _cm3_ThisOS=2008)  & goto ver_2008)
 

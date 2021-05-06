@@ -13,10 +13,10 @@ IMPORT Error, Scope, Brand, Value, ErrType;
 
 TYPE
   P = Type.T BRANDED "NamedType.T" OBJECT
-        scope      : Scope.T;
-        qid        : M3.QID;
-        type       : Type.T;
-        obj        : Value.T;
+        scope      : Scope.T := NIL;
+        qid        := M3.NoQID;
+        type       : Type.T := NIL;
+        obj        : Value.T := NIL;
       OVERRIDES
         check      := Check;
         no_straddle:= NoStraddle;
@@ -45,9 +45,6 @@ PROCEDURE Parse (): Type.T =
       p := NEW (P);
       TypeRep.Init (p, Type.Class.Named);
       p.scope      := Scope.Top ();
-      p.type       := NIL;
-      p.obj        := NIL;
-      p.qid.module := M3ID.NoID;
       p.qid.item   := Scanner.MatchID ();
       IF (Scanner.cur.token = TK.tDOT) THEN
         Scanner.GetToken (); (* . *)
@@ -70,11 +67,7 @@ PROCEDURE New (t: Type.T): Type.T =
   BEGIN
     p := NEW (P);
     TypeRep.Init (p, Type.Class.Named);
-    p.scope      := NIL;
-    p.qid.module := M3ID.NoID;
-    p.qid.item   := M3ID.NoID;
     p.type       := t;
-    p.obj        := NIL;
     RETURN p;
   END New;
 
@@ -86,8 +79,6 @@ PROCEDURE Create (m, n: M3ID.T): Type.T =
     p.scope      := Scope.Top ();
     p.qid.module := m;
     p.qid.item   := n;
-    p.type       := NIL;
-    p.obj        := NIL;
     RETURN p;
   END Create;
 

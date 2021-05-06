@@ -785,7 +785,7 @@ PROCEDURE declare_local (u: U;  n: Name;  s: ByteSize;  a: Alignment;
 
 PROCEDURE declare_param (u: U;  n: Name;  s: ByteSize;  a: Alignment;
                          t: Type;  m3t: TypeUID;  in_memory, up_level: BOOLEAN;
-                         f: Frequency): Var =
+                         f: Frequency; <*UNUSED*>qid := M3CG.NoQID): Var =
   VAR v := NewVar (u);
   BEGIN
     Cmd   (u, "declare_param");
@@ -799,6 +799,7 @@ PROCEDURE declare_param (u: U;  n: Name;  s: ByteSize;  a: Alignment;
     Int   (u, f);
     VName (u, v);
     NL    (u);
+    (* TODO qid but it is not used downstream and can be omitted indefinitely *)
     RETURN v;
   END declare_param;
 
@@ -908,7 +909,8 @@ PROCEDURE NewProc (u: U): Proc =
   END NewProc;
 
 PROCEDURE import_procedure (u: U;  n: Name;  n_params: INTEGER;
-                          ret_type: Type;  cc: CallingConvention): Proc =
+                            ret_type: Type;  cc: CallingConvention;
+                            <*UNUSED*>return_type_qid := M3CG.NoQID): Proc =
   VAR p := NewProc (u);
   BEGIN
     Cmd   (u, "import_procedure");
@@ -918,6 +920,7 @@ PROCEDURE import_procedure (u: U;  n: Name;  n_params: INTEGER;
     Int   (u, cc.m3cg_id);
     PName (u, p);
     NL    (u);
+    (* TODO return_type_qid but it not used *)
     RETURN p;
   END import_procedure;
 
