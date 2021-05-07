@@ -222,7 +222,7 @@ typedef struct m3_flock_t {
 } m3_flock_t;
 
 M3_DLL_EXPORT int __cdecl
-Unix__fcntl(int fd, INTEGER request, void* m3_arg)
+Unix__fcntl(int fd, INTEGER request, INTEGER m3_arg)
 /* fcntl is actually fcntl(fd, request, ...).
  * Wrapper is needed on some systems to handle varargs.
  * See http://edoofus.blogspot.com/2008/08/interesting-bug-unbreaking-cvsupamd64.html.
@@ -237,7 +237,7 @@ Unix__fcntl(int fd, INTEGER request, void* m3_arg)
     int e = errno;
     struct flock native_lock = { 0 };
     m3_flock_t* m3_lock = { 0 };
-    void* native_arg = m3_arg;
+    void* native_arg = (void*)m3_arg;
     int r = { 0 };
 
     memset(&native_lock, 0, sizeof(native_lock));

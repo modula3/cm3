@@ -594,7 +594,7 @@ int __cdecl Unix__mkdir(const char* path, m3_mode_t mode);
 int __cdecl Unix__ftruncate(int fd, m3_off_t length);
 m3_off_t __cdecl Unix__lseek(int fd, m3_off_t offset, int whence);
 m3_off_t __cdecl Unix__tell(int fd);
-int __cdecl Unix__fcntl(int fd, INTEGER request, void* arg);
+int __cdecl Unix__fcntl(int fd, INTEGER request, INTEGER arg);
 int __cdecl Unix__ioctl(int fd, INTEGER request, void* argp);
 int __cdecl Unix__mknod(const char* path, m3_mode_t mode, m3_dev_t dev);
 m3_mode_t __cdecl Unix__umask(m3_mode_t newmask);
