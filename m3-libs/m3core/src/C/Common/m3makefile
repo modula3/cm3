@@ -13,8 +13,9 @@ c_source ("CerrnoC")
 
 Interface ("Cstring")
 c_source("CstringC")
-Interface ("Cstdio")
-c_source ("CstdioC")
+
+Interface ("Cstdio") % This is not used.
+c_source ("CstdioC") % This is not used.
 
 Interface ("Csignal") % not used by all ports
 c_source("CsignalC")
