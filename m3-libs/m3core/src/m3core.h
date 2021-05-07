@@ -268,6 +268,10 @@ M3EXTERNC_END
 
 #define M3PASTE_(a, b) a##b
 #define M3PASTE(a, b) M3PASTE_(a, b)
+
+#define M3PASTE3_(a, b, c) a##b##c
+#define M3PASTE3(a, b, c) M3PASTE3_(a, b, c)
+
 #define M3WRAP(ret, m3name, cname, in, out)                                 \
     M3EXTERNC_BEGIN M3_DLL_EXPORT ret __cdecl M3PASTE(M3MODULE, m3name) in  \
     {                                                                       \
@@ -306,6 +310,11 @@ M3EXTERNC_END
 #define M3WRAP_(ret, m3name, cname, in, out)    M3WRAP(ret, m3name, cname, in, out)
 #endif
 
+// Parameters a, b, c, etc. are the types of the first, second, third, etc. parameters.
+// i, j, k etc. are the first, second, third, etc. parameter values.
+#define M3WRAP1_RETURN_VOID(name, a)    M3WRAP_RETURN_VOID(M3PASTE3(M3MODULE, __, name), name, (a i), (i))
+#define M3WRAP2_RETURN_VOID(name, a, b) M3WRAP_RETURN_VOID(M3PASTE3(M3MODULE, __, name), name, (a i, b j), (i, j))
+
 #define M3WRAP0(ret, name)             M3WRAP(ret, __##name, name, (void),               ())
 #define M3WRAP1(ret, name, a)          M3WRAP(ret, __##name, name, (a i),                (i))
 #define M3WRAP2(ret, name, a, b)       M3WRAP(ret, __##name, name, (a i, b j),           (i, j))
@@ -314,6 +323,7 @@ M3EXTERNC_END
 #define M3WRAP5(ret, name, a, b, c, d, e) M3WRAP(ret, __##name, name, (a i, b j, c k, d m, e n), (i, j, k, m, n))
 #define M3WRAP6(ret, name, a, b, c, d, e, f) M3WRAP(ret, __##name, name, (a i, b j, c k, d m, e n, f o), (i, j, k, m, n, o))
 
+// Leading underscore is placed on C name, for Windows, like open vs. _open.
 #define M3WRAP0_(ret, name)           M3WRAP_(ret, __##name, name, (void),               ())
 #define M3WRAP1_(ret, name, a)        M3WRAP_(ret, __##name, name, (a i),                (i))
 #define M3WRAP2_(ret, name, a, b)     M3WRAP_(ret, __##name, name, (a i, b j),           (i, j))
@@ -334,10 +344,12 @@ M3EXTERNC_END
 #include <limits.h>
 #include <setjmp.h>
 
+// TODO Remove this. It supports very old toolsets.
 #ifdef _WIN32
 #ifndef WIN32
 #define WIN32
 #endif
+
 #include <direct.h>
 #include <io.h>
 #include <process.h>
@@ -409,6 +421,8 @@ typedef unsigned long      UINT32;
 #else
 #error unable to find 32bit integer
 #endif
+
+// Support pre-C99 for Windows and VMS and any system with an __int64 macro.
 #if defined(_MSC_VER) || defined(__DECC) || defined(__DECCXX) || defined(__int64)
 typedef          __int64    INT64;
 typedef unsigned __int64   UINT64;
@@ -511,6 +525,8 @@ everyone else: unsigned 32 bit
 
 The values involved are all small and positive, and we convert carefully.
 Note that socklen_t should be declared by system headers, but isn't always.
+
+TODO: Consider changing m3_socklen_t to int.
 */
 #if defined(__INTERIX) || (defined(__vms) && defined(_DECC_V4_SOURCE)) || defined(_WIN32)
 typedef int socklen_t;
@@ -556,7 +572,7 @@ char* __cdecl Utime__ctime(const m3_time64_t* m);
 #endif
 void __cdecl Utime__tzset(void);
 
-#if 1 /* Some compilers don't like this, will adjust as needed. */
+#if 1 /* Some compilers don't like this, will adjust as needed. e.g. old SGI */
 #if __GNUC__ /* gcc 4.8 warns about unused local typedefs. */
 #define GCC_ATTRIBUTE_UNUSED __attribute__ ((unused))
 #else
@@ -598,7 +614,6 @@ m3_group_t* __cdecl Ugrp__getgrgid(m3_group_t* m3group, m3_gid_t gid);
 m3_group_t* __cdecl Ugrp__getgrnam(m3_group_t* m3group, const char* name);
 void __cdecl Ugrp__setgrent(void);
 void __cdecl Ugrp__endgrent(void);
-
 
 int __cdecl Unix__link(const char* name1, const char* name2);
 int __cdecl Unix__chmod(const char* path, m3_mode_t mode);
@@ -681,7 +696,7 @@ __cdecl
 Process__RegisterExitor(void (__cdecl*)(void));
 
 // GET_PC returns approximately size_t.
-// Try to keep most platform specific code here.
+// Broadly speaking, try to keep most platform specific code here.
 
 #if defined(__APPLE__)
 
@@ -834,7 +849,7 @@ Process__RegisterExitor(void (__cdecl*)(void));
 #endif
 
 // m3_time_t is the time_t-ish of the underlying system.
-// If there is an explicitly 64bit type, use that.
+// If there is an explicitly 64bit type, use that. e.g. Tru64.
 #ifdef _TIME64_T
 typedef time64_t m3_time_t;
 #else
