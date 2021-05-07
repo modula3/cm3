@@ -1365,7 +1365,7 @@ def Boot():
     if (not vms) or AssembleOnHost:
         Assembler = GnuPlatformPrefix + Assembler
 
-    P = FilterPackages([ "m3cc", "m3core", "libm3", "sysutils",
+    P = FilterPackages([ "m3cc", "m3core", "libm3", "sysutils", "set",
           "m3middle", "m3quake", "m3objfile", "m3linker", "m3back",
           "m3front" ])
     main_packages = ["cm3"]

@@ -66,7 +66,7 @@ done
 # Build the compiler with the installed version of the runtime;
 # do _not_ compile m3core and libm3 here.
 # Start with the front end.
-P="import-libs sysutils m3middle m3objfile m3linker m3back \
+P="import-libs sysutils set m3middle m3objfile m3linker m3back \
    m3front m3quake cm3 mklib m3cggen"
 "$root/scripts/do-pkg.sh" "$@" "realclean" ${P} || exit 1
 "$root/scripts/do-pkg.sh" "$@" "buildship" ${P} || exit 1
