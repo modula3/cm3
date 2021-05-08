@@ -8,7 +8,7 @@
 
 INTERFACE Type;
 
-IMPORT M3, CG, Target;
+IMPORT M3, CG, Target, M3ID;
 
 TYPE
   T          = M3.Type;
@@ -35,6 +35,7 @@ TYPE
     addr_align: INTEGER := Target.Word8.align;
     (* ^When stk_type = CG.Type.Addr, the alignment of dereferenced location. *)
     hash      : INTEGER;  (* internal hash code *)
+    name      := M3ID.NoID;
     stk_type  : CG.Type;  (* code generator representation on operator stack *)
     mem_type  : CG.Type;  (* code generator representation as a variable *)
     class     : Class;
@@ -100,6 +101,8 @@ PROCEDURE LoadScalar (t: T);
 PROCEDURE IsLazyAligned (t: T): BOOLEAN;
 
 PROCEDURE SetLazyAlignment (t: T; on: BOOLEAN);
+
+PROCEDURE QID (t: T; VAR qid: M3.QID);
 
 (*** phase 3 ***)
 

@@ -190,6 +190,14 @@ PROCEDURE CheckInfo (t: T;  VAR x: Info): T =
     RETURN u;
   END CheckInfo;
 
+PROCEDURE QID (t: T; VAR qid: M3.QID) =
+BEGIN
+  IF NOT NamedType.Split (t, qid) THEN
+    qid.module := M3ID.NoID;
+    qid.item := t.info.name;
+  END;
+END QID;
+
 (************************************************************************)
 
 (*EXPORTED*)

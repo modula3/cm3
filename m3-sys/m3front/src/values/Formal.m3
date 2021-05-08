@@ -209,7 +209,7 @@ PROCEDURE Check (t: T;  VAR cs: Value.CheckState) =
   VAR info: Type.Info;
   BEGIN
     (* Capture qid before type gets reduced and loses NamedType. *)
-    EVAL NamedType.Split (TypeOf (t), t.qid);
+    Type.QID (TypeOf (t), t.qid);
     t.tipe := Type.CheckInfo (TypeOf (t), info);
     t.repType := Type.StripPacked (t.tipe);
     EVAL Type.Check (t.repType);
