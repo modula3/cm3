@@ -117,8 +117,9 @@ PROCEDURE LookUpQID (t: T;  VAR q: M3.QID): Value.T =
       END;
     ELSE
       TYPECASE Value.Base (LookUp (t, q.module, FALSE)) OF
-      | Module.T (m) => v := LookUp (Module.ExportScope (m), q.item, TRUE);
-      ELSE
+      | NULL         => RETURN NIL;
+      | Module.T (m) => RETURN LookUp (Module.ExportScope (m), q.item, TRUE);
+      ELSE              RETURN NIL;
       END;
     END;
     RETURN v;
