@@ -4,7 +4,7 @@
 
 INTERFACE Ustat;
 
-FROM Ctypes IMPORT const_int, int, const_char_star;
+FROM Ctypes IMPORT const_int, int, const_char_star, unsigned_long;
 
 <*EXTERNAL "Ustat__S_IFMT"*>   VAR S_IFMT: const_int;
 <*EXTERNAL "Ustat__S_IFSOCK"*> VAR S_IFSOCK: const_int;
@@ -76,9 +76,9 @@ PROCEDURE fstat (fd: int;  buf: struct_stat_star): int;
 PROCEDURE lstat (path: const_char_star; buf: struct_stat_star): int;
 
 <*EXTERNAL "Ustat__chflags"*> (* only on some platforms *)
-PROCEDURE chflags (path: const_char_star; flags: INTEGER): int;
+PROCEDURE chflags (path: const_char_star; flags: unsigned_long): int;
 
 <*EXTERNAL "Ustat__fchflags"*> (* only on some platforms *)
-PROCEDURE fchflags (fd: int; flags: INTEGER): int;
+PROCEDURE fchflags (fd: int; flags: unsigned_long): int;
 
 END Ustat.
