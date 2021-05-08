@@ -4,7 +4,7 @@
 
 UNSAFE INTERFACE Unetdb;
 
-FROM Ctypes IMPORT int, char_star, char_star_star, const_char_star;
+FROM Ctypes IMPORT const_int, int, char_star, char_star_star, const_char_star;
 
 TYPE
 (* This is a portable idealized form that need not match the
@@ -18,10 +18,9 @@ underlying platform. This is sorted by size and then by name. *)
   END;
   struct_hostent_star = UNTRACED REF struct_hostent;
 
-(*CONST*)
-<*EXTERNAL "Unetdb__TRY_AGAIN"*>   VAR TRY_AGAIN:   int;
-<*EXTERNAL "Unetdb__NO_RECOVERY"*> VAR NO_RECOVERY: int;
-<*EXTERNAL "Unetdb__NO_ADDRESS"*>  VAR NO_ADDRESS:  int;
+<*EXTERNAL "Unetdb__TRY_AGAIN"*>   VAR TRY_AGAIN:   const_int;
+<*EXTERNAL "Unetdb__NO_RECOVERY"*> VAR NO_RECOVERY: const_int;
+<*EXTERNAL "Unetdb__NO_ADDRESS"*>  VAR NO_ADDRESS:  const_int;
 
 (* These are thin C wrappers that do not quite match the underlying
    function, but are very close.

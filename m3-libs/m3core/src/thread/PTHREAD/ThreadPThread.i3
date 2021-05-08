@@ -6,7 +6,7 @@
 
 UNSAFE INTERFACE ThreadPThread;
 
-FROM Ctypes IMPORT int;
+FROM Ctypes IMPORT const_int, int;
 FROM Cstddef IMPORT size_t;
 
 TYPE
@@ -23,7 +23,7 @@ PROCEDURE SignalHandler(sig: int; info, uap: ADDRESS);
 (*---------------------------------------------------------------------------*)
 
 <*EXTERNAL "ThreadPThread__SIG_SUSPEND"*>
-(*CONST*) VAR SIG_SUSPEND: int;
+VAR SIG_SUSPEND: const_int;
 
 (*---------------------------------------------------------------------------*)
 

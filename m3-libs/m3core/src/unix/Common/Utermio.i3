@@ -17,41 +17,40 @@
 
 INTERFACE Utermio;
 IMPORT Usysdep;
-FROM Ctypes IMPORT int;
+FROM Ctypes IMPORT const_int, int;
 
-(*CONST*)
 VAR
-  B110: int;
-  B115200: int;
-  B1200: int;
-  B14400: int;
-  B19200: int;
-  B230400: int;
-  B2400: int;
-  B300: int;
-  B38400: int;
-  B4800: int;
-  B57600: int;
-  B600: int;
-  B75: int;
-  B9600: int;
-  BAUDBITS: int;
-  CREAD: int;
-  CS5: int;
-  CS6: int;
-  CS7: int;
-  CS8: int;
-  CSIZE: int;
-  CSTOPB: int;
-  IGNBRK: int;
-  IGNPAR: int;
-  PAREVEN: int;
-  PARITYBITS: int;
-  PARNONE: int;
-  PARODD: int;
-  TCSANOW: int;
-  VMIN: int;
-  VTIME: int;
+  B110: const_int;
+  B115200: const_int;
+  B1200: const_int;
+  B14400: const_int;
+  B19200: const_int;
+  B230400: const_int;
+  B2400: const_int;
+  B300: const_int;
+  B38400: const_int;
+  B4800: const_int;
+  B57600: const_int;
+  B600: const_int;
+  B75: const_int;
+  B9600: const_int;
+  BAUDBITS: const_int;
+  CREAD: const_int;
+  CS5: const_int;
+  CS6: const_int;
+  CS7: const_int;
+  CS8: const_int;
+  CSIZE: const_int;
+  CSTOPB: const_int;
+  IGNBRK: const_int;
+  IGNPAR: const_int;
+  PAREVEN: const_int;
+  PARITYBITS: const_int;
+  PARNONE: const_int;
+  PARODD: const_int;
+  TCSANOW: const_int;
+  VMIN: const_int;
+  VTIME: const_int;
 
 TYPE
   struct_termios = Usysdep.struct_termios;
