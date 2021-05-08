@@ -226,7 +226,7 @@ PROCEDURE Check (p: P) =
       p.checked := TRUE;
       Scope.TypeCheck (p.formals, cs);
       IF (p.result # NIL) THEN
-        EVAL NamedType.Split (p.result, p.result_qid);
+        Type.QID (p.result, p.result_qid);
         p.result := Type.Check (p.result);
         IF OpenArrayType.Is (p.result) THEN
           Error.Msg ("procedures may not return open arrays");
