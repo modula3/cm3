@@ -14,6 +14,7 @@ TYPE
   signed_char                = BasicCtypes.signed_char;
   short_int                  = BasicCtypes.short_int;
   int                        = BasicCtypes.int;
+  const_int                  = int;
   long_int                   = BasicCtypes.long_int;
   long_long                  = BasicCtypes.long_long;
   unsigned_char              = BasicCtypes.unsigned_char;
