@@ -19,6 +19,7 @@ TYPE
   UINT8 = Cstdint.uint8_t;
   UINT16 = Cstdint.uint16_t;
   UINT32 = Cstdint.uint32_t;
+  const_UINT32 = UINT32;
   UINT64 = Cstdint.uint64_t;
   INT8 = Cstdint.int8_t;
   INT16 = Cstdint.int16_t;
