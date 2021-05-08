@@ -505,8 +505,8 @@ typedef INTEGER m3_uid_t;
 #define HAS_STAT_FLAGS
 #endif
 
-struct _m3_stat_t;
-typedef struct _m3_stat_t m3_stat_t;
+struct m3_stat_t;
+typedef struct m3_stat_t m3_stat_t;
 
 int __cdecl Ustat__fstat(int fd, m3_stat_t* m3st);
 int __cdecl Ustat__lstat(const char* path, m3_stat_t* m3st);
@@ -599,15 +599,15 @@ int __cdecl Unix__ioctl(int fd, INTEGER request, void* argp);
 int __cdecl Unix__mknod(const char* path, m3_mode_t mode, m3_dev_t dev);
 m3_mode_t __cdecl Unix__umask(m3_mode_t newmask);
 
-struct _m3_hostent_t;
-typedef struct _m3_hostent_t m3_hostent_t;
+struct m3_hostent_t;
+typedef struct m3_hostent_t m3_hostent_t;
 
 m3_hostent_t* __cdecl Unetdb__gethostbyname(const char* name, m3_hostent_t* m3);
 m3_hostent_t* __cdecl Unetdb__gethostbyaddr(const char* addr, int len, int type, m3_hostent_t* m3);
 
 
-struct _m3_group_t;
-typedef struct _m3_group_t m3_group_t;
+struct m3_group_t;
+typedef struct m3_group_t m3_group_t;
 
 m3_group_t* __cdecl Ugrp__getgrent(m3_group_t* m3group);
 m3_group_t* __cdecl Ugrp__getgrgid(m3_group_t* m3group, m3_gid_t gid);

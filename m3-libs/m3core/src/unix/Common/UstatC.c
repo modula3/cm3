@@ -14,7 +14,7 @@
 extern "C" {
 #endif
 
-struct _m3_stat_t
+struct m3_stat_t
 {
 /*
 This MUST match Ustat.i3.
