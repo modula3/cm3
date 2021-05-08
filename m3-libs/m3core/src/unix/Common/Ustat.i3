@@ -4,7 +4,7 @@
 
 INTERFACE Ustat;
 
-FROM Ctypes IMPORT const_int, int, char_star;
+FROM Ctypes IMPORT const_int, int, const_char_star;
 
 <*EXTERNAL "Ustat__S_IFMT"*>   VAR S_IFMT: const_int;
 <*EXTERNAL "Ustat__S_IFSOCK"*> VAR S_IFSOCK: const_int;
@@ -67,16 +67,16 @@ commonality. *)
   struct_stat_star = UNTRACED REF struct_stat;
 
 <*EXTERNAL "Ustat__stat"*>
-PROCEDURE stat (path: char_star; buf: struct_stat_star): int;
+PROCEDURE stat (path: const_char_star; buf: struct_stat_star): int;
 
 <*EXTERNAL "Ustat__fstat"*>
 PROCEDURE fstat (fd: int;  buf: struct_stat_star): int;
 
 <*EXTERNAL "Ustat__lstat"*>
-PROCEDURE lstat (path: char_star; buf: struct_stat_star): int;
+PROCEDURE lstat (path: const_char_star; buf: struct_stat_star): int;
 
 <*EXTERNAL "Ustat__chflags"*> (* only on some platforms *)
-PROCEDURE chflags (path: char_star; flags: INTEGER): int;
+PROCEDURE chflags (path: const_char_star; flags: INTEGER): int;
 
 <*EXTERNAL "Ustat__fchflags"*> (* only on some platforms *)
 PROCEDURE fchflags (fd: int; flags: INTEGER): int;
