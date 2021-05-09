@@ -147,6 +147,7 @@ PROCEDURE Strip (t: Type.T): Type.T =
 
 PROCEDURE Check (p: P) =
   VAR cs := M3.OuterCheckState;  nErrs, nWarns, nErrsB: INTEGER;
+      name := p.info.name;
   BEGIN
     Resolve (p);
     nErrs := 0;  nErrsB := 0;
@@ -162,6 +163,7 @@ PROCEDURE Check (p: P) =
       EVAL Type.CheckInfo (ErrType.T, p.info);
     END;
     p.info.class := Type.Class.Named; (* this node is still a Named node *)
+    p.info.name  := name;
   END Check;
 
 PROCEDURE
