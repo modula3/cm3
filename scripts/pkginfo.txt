@@ -25,7 +25,7 @@ libdump tool
 tempfiles base core
 arithmetic math
 unittest-numeric math
-bitvector base core
+bitvector base core front
 digraph base core
 realgeometry base core
 set base core
