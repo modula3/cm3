@@ -1,3 +1,5 @@
+// Nothing in this file is used. Nothing in this file is tested.
+
 #ifndef INCLUDED_M3CORE_H
 #include "m3core.h"
 #endif
@@ -40,19 +42,15 @@ M3WRAP2(int, ungetc, int, FILE*)
 M3WRAP1_(int, getw, FILE*)
 M3WRAP2_(int, putw, int, FILE*)
 
-#define X(name, in, out) M3_DLL_EXPORT void __cdecl Cstdio__##name in { name out; }
-#define X1(name, a)             X(name, (a i),      (i))
-#define X2(name, a, b)          X(name, (a i, b j), (i, j))
-
-X1(clearerr, FILE*)
-X1(perror, const char*) /* print error */
-X1(rewind, FILE*)
-X2(setbuf, FILE*, char*)
+M3WRAP1_RETURN_VOID(clearerr, FILE*)
+M3WRAP1_RETURN_VOID(perror, const char*) /* print error */
+M3WRAP1_RETURN_VOID(rewind, FILE*)
+M3WRAP2_RETURN_VOID(setbuf, FILE*, char*)
 
 #undef X
 #undef X_
-#define X(a) M3_DLL_EXPORT EXTERN_CONST unsigned Cstdio__##a = a;
-#define X_(a) M3_DLL_EXPORT EXTERN_CONST unsigned Cstdio__##a = _##a;
+#define X(a) M3_DLL_EXPORT EXTERN_CONST int Cstdio__##a = a;
+#define X_(a) M3_DLL_EXPORT EXTERN_CONST int Cstdio__##a = _##a;
 
 X(BUFSIZ)
 X(FILENAME_MAX)
@@ -65,10 +63,6 @@ X(SEEK_CUR)
 X(SEEK_END)
 X(SEEK_SET)
 X(TMP_MAX)
-
-#undef X
-#define X(a) M3_DLL_EXPORT EXTERN_CONST int Cstdio__##a = a;
-
 X(EOF)
 
 #undef X

@@ -196,6 +196,7 @@ Echo("build new compiler with old compiler and old runtime (%(InstallRoot_Previo
 # That is, assuming we have m3core and libm3, build the rest of the compiler.
 
 Packages = [ "sysutils",
+             "set",
              "m3middle",
              "m3linker",
              "m3front",

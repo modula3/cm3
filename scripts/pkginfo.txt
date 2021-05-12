@@ -1,5 +1,6 @@
 m3core base core front unicode min
 libm3 base core front unicode min
+set base core front
 windowsResources core
 parseparams base core
 patternmatching core
@@ -28,7 +29,6 @@ unittest-numeric math
 bitvector base core
 digraph base core
 realgeometry base core
-set base core
 slisp base core
 sortedtableextras base core
 table-list base core

@@ -16,7 +16,7 @@ for alignment, and then by name.
 
 "h_" prefix is omitted from the names in case they are macros. */
 
-struct _m3_hostent_t
+struct m3_hostent_t
 {
     char** addr_list;
     char** aliases;

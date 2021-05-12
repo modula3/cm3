@@ -1372,12 +1372,14 @@ PROCEDURE Import_procedure (n: Name;  n_params: INTEGER;  ret_type: Type;
 
 PROCEDURE Declare_procedure (n: Name;  n_params: INTEGER;  ret_type: Type;
                              lev: INTEGER;  cc: CallingConvention;
-                             exported: BOOLEAN;  parent: Proc): Proc =
+                             exported: BOOLEAN;  parent: Proc;
+                             return_type_qid := M3CG.NoQID): Proc =
   VAR p: Proc;
   BEGIN
     IF (procedures = NIL) THEN procedures := NewNameTbl() END;
     p := cg.declare_procedure (n, n_params, ret_type,
-                                 lev, cc, exported, parent);
+                               lev, cc, exported, parent,
+                               return_type_qid);
     EVAL procedures.put (n, p);
     RETURN p;
   END Declare_procedure;

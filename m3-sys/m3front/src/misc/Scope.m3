@@ -106,10 +106,15 @@ PROCEDURE OuterMost (t: T) : BOOLEAN =
     RETURN (t # NIL) AND (t.module);
   END OuterMost;
 
-PROCEDURE LookUpQID (t: T;  READONLY q: M3.QID): Value.T =
+PROCEDURE LookUpQID (t: T;  VAR q: M3.QID): Value.T =
+  VAR v: Value.T := NIL;
   BEGIN
     IF (q.module = M3ID.NoID) THEN
-      RETURN LookUp (t, q.item, FALSE);
+      v := LookUp (t, q.item, FALSE);
+      IF v # NIL THEN
+        q.module := ModuleName (v);
+        <* ASSERT q.module # M3ID.NoID *>
+      END;
     ELSE
       TYPECASE Value.Base (LookUp (t, q.module, FALSE)) OF
       | NULL         => RETURN NIL;
@@ -117,6 +122,7 @@ PROCEDURE LookUpQID (t: T;  READONLY q: M3.QID): Value.T =
       ELSE              RETURN NIL;
       END;
     END;
+    RETURN v;
   END LookUpQID;
 
 PROCEDURE LookUp (t: T;  name: M3ID.T;  strict: BOOLEAN): Value.T =

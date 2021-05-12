@@ -1,5 +1,7 @@
 INTERFACE Cstdio;
 
+(* Nothing in this file is used. Nothing in this file is tested. *)
+
 FROM Ctypes IMPORT int, const_char_star, void_star;
 FROM Cstddef IMPORT size_t;
 

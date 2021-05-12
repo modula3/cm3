@@ -14,14 +14,14 @@ IMPORT Scope, Error, ErrType, TInt, CG, Host, RunTyme;
 
 TYPE
   P = Expr.T BRANDED "Named Expr" OBJECT
-        scope       : Scope.T;
-        value       : Value.T;
-        name        : M3ID.T;
-        inFold      : BOOLEAN;
-        inIsZeroes  : BOOLEAN;
-        inGetBounds : BOOLEAN;
-        inTypeOf    : BOOLEAN;
-        tmp         : CG.Val;
+        scope       : Scope.T := NIL;
+        value       : Value.T := NIL;
+        name        : M3ID.T  := M3ID.NoID;
+        inFold      : BOOLEAN := FALSE;
+        inIsZeroes  : BOOLEAN := FALSE;
+        inGetBounds : BOOLEAN := FALSE;
+        inTypeOf    : BOOLEAN := FALSE;
+        tmp         : CG.Val  := NIL;
       OVERRIDES
         typeOf       := TypeOf;
         repTypeOf    := RepTypeOf;
@@ -60,35 +60,18 @@ PROCEDURE New (name: M3ID.T;  value: Value.T): Expr.T =
       RETURN p;
     END;
 *)
-
     (* build a new node *)
-    p := NEW (P);
+    p := NEW (P, name := name, value := value, scope := cur_scope);
     ExprRep.Init (p);
-    p.scope       := cur_scope;
-    p.name        := name;
-    p.value       := value;
-    p.inFold      := FALSE;
-    p.inIsZeroes  := FALSE;
-    p.inGetBounds := FALSE;
-    p.inTypeOf    := FALSE;
-    p.tmp         := NIL;
     cache[hash] := p;
 
     RETURN p;
   END New;
 
 PROCEDURE FromValue (value: Value.T): Expr.T =
-  VAR p := NEW (P);
+  VAR p := NEW (P, value := value, name := Value.CName (value));
   BEGIN
     ExprRep.Init (p);
-    p.scope       := NIL;
-    p.name        := Value.CName (value);
-    p.value       := value;
-    p.inFold      := FALSE;
-    p.inIsZeroes  := FALSE;
-    p.inGetBounds := FALSE;
-    p.inTypeOf    := FALSE;
-    p.tmp         := NIL;
     RETURN p;
   END FromValue;
 

@@ -15,7 +15,7 @@
 
 M3EXTERNC_BEGIN
 
-struct _m3_group_t
+struct m3_group_t
 /* This MUST match Ugrp.i3 */
 {
     char** mem;

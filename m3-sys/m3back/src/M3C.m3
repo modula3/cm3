@@ -1681,7 +1681,8 @@ END CTextToExpr;
 
 PROCEDURE TextOrNil(a: TEXT): TEXT =
 BEGIN
-    RETURN ARRAY BOOLEAN OF TEXT{"NIL", a}[a # NIL];
+    IF a = NIL THEN RETURN "NIL" END;
+    RETURN a;
 END TextOrNil;
 
 PROCEDURE TextOrNIL(text: TEXT): TEXT =
@@ -5260,7 +5261,8 @@ PROCEDURE Locals_declare_procedure(
     level: INTEGER;
     callingConvention: CallingConvention;
     exported: BOOLEAN;
-    parent: M3CG.Proc): M3CG.Proc =
+    parent: M3CG.Proc;
+    <*UNUSED*>return_type_qid := M3CG.NoQID): M3CG.Proc =
 BEGIN
     RETURN declare_procedure(
         self.self,
@@ -5285,7 +5287,8 @@ PROCEDURE declare_procedure(
     self: T; name: Name; parameter_count: INTEGER;
     return_type: CGType; level: INTEGER;
     callingConvention: CallingConvention;
-    exported: BOOLEAN; parent: M3CG.Proc): M3CG.Proc =
+    exported: BOOLEAN; parent: M3CG.Proc;
+    <*UNUSED*>return_type_qid := M3CG.NoQID): M3CG.Proc =
 VAR proc := NEW(Proc_t, name := name, parameter_count := parameter_count,
                 return_type := return_type, level := level,
                 callingConvention := callingConvention, exported := exported,
@@ -6977,6 +6980,7 @@ PROCEDURE Err(self: T; text: TEXT) =
 BEGIN
     self.comment("ERROR:" & text);
     self.Err(text);
+    Wr.Flush(self.c);
 END Err;
 
 PROCEDURE comment_1(VAR text: TEXT; VAR length: INTEGER) =

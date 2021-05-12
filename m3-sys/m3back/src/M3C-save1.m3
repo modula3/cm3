@@ -1325,7 +1325,8 @@ VAR proc := NEW(CProc, name := FixName(name), n_params := n_params,
 PROCEDURE declare_procedure (this: T; name: Name; n_params: INTEGER;
                              return_type: Type; level: INTEGER;
                              callingConvention: CallingConvention;
-                             exported: BOOLEAN; parent: Proc): Proc =
+                             exported: BOOLEAN; parent: Proc;
+                             <*UNUSED*>return_type_qid := M3CG.NoQID): Proc =
 VAR proc := NEW(CProc, name := FixName(name), n_params := n_params,
                 return_type := return_type, level := level,
                 callingConvention := callingConvention, exported := exported,

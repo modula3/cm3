@@ -214,7 +214,7 @@ AssertFalse();
 RETURN NIL;
 END import_procedure;
 
-<*NOWARN*>PROCEDURE declare_procedure(self: T; name: Name; n_params: INTEGER; return_type: Type; level: INTEGER; callingConvention: CallingConvention; exported: BOOLEAN; parent: Proc): Proc =
+<*NOWARN*>PROCEDURE declare_procedure(self: T; name: Name; n_params: INTEGER; return_type: Type; level: INTEGER; callingConvention: CallingConvention; exported: BOOLEAN; parent: Proc; return_type_qid := M3CG.NoQID): Proc =
 BEGIN
 AssertFalse();
 RETURN NIL;

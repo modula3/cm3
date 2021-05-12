@@ -66,7 +66,6 @@ PROCEDURE ParseSignature (name: M3ID.T;  cc: CG.CallingConvention): Type.T =
     IF (cur.token = TK.tCOLON) THEN
       GetToken (); (* : *)
       p.result := Type.Parse ();
-      EVAL NamedType.Split (p.result, p.result_qid);
     END;
     IF (cur.token = TK.tRAISES) THEN
       p.raises := ESet.ParseRaises ();
@@ -227,6 +226,7 @@ PROCEDURE Check (p: P) =
       p.checked := TRUE;
       Scope.TypeCheck (p.formals, cs);
       IF (p.result # NIL) THEN
+        Type.QID (p.result, p.result_qid);
         p.result := Type.Check (p.result);
         IF OpenArrayType.Is (p.result) THEN
           Error.Msg ("procedures may not return open arrays");

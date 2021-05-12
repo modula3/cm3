@@ -29,7 +29,7 @@ PROCEDURE Top  (): T;
 PROCEDURE Insert (o: Value.T);
 
 PROCEDURE LookUp    (t: T;  name: M3ID.T;  strict: BOOLEAN): Value.T;
-PROCEDURE LookUpQID (t: T;  READONLY q: M3.QID): Value.T;
+PROCEDURE LookUpQID (t: T;  VAR q: M3.QID): Value.T;
 
 PROCEDURE ToList     (t: T): Value.T;
 PROCEDURE OuterMost  (t: T): BOOLEAN;
