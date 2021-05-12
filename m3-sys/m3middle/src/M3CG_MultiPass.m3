@@ -388,7 +388,7 @@ self.Add(NEW(import_procedure_t, op := Op.import_procedure, name := name, n_para
 RETURN proc;
 END import_procedure;
 
-PROCEDURE declare_procedure(self: T; name: Name; n_params: INTEGER; return_type: Type; level: INTEGER; callingConvention: CallingConvention; exported: BOOLEAN; parent: Proc): Proc =
+PROCEDURE declare_procedure(self: T; name: Name; n_params: INTEGER; return_type: Type; level: INTEGER; callingConvention: CallingConvention; exported: BOOLEAN; parent: Proc; return_type_qid := M3CG.NoQID): Proc =
 VAR proc := self.refs.NewProc();
     parent_tag := 0;
 BEGIN

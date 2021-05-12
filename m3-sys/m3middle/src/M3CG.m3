@@ -477,10 +477,12 @@ PROCEDURE import_procedure (xx: T;  n: Name;  n_params: INTEGER;
 PROCEDURE declare_procedure (xx: T;  n: Name;  n_params: INTEGER;
                              return_type: Type;  lev: INTEGER;
                              cc: CallingConvention;
-                             exported: BOOLEAN;  parent: Proc): Proc =
+                             exported: BOOLEAN;  parent: Proc;
+                             return_type_qid := M3CG.NoQID): Proc =
   BEGIN
     RETURN xx.child.declare_procedure (n, n_params, return_type,
-                                       lev, cc, exported, parent);
+                                       lev, cc, exported, parent,
+                                       return_type_qid);
   END declare_procedure;
 
 PROCEDURE begin_procedure (xx: T;  p: Proc) =

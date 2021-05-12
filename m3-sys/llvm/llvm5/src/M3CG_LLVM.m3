@@ -2122,7 +2122,8 @@ PROCEDURE init_float (self: U;  o: ByteOffset;  READONLY f: Target.Float) =
 
 (*------------------------------------------------------------ procedures ---*)
 
-PROCEDURE import_procedure (self: U;  n: Name;  n_params: INTEGER; return_type: Type;  cc: CallingConvention; <*UNUSED*>return_type_qid := M3CG.NoQID): Proc =
+PROCEDURE import_procedure (self: U;  n: Name;  n_params: INTEGER; return_type: Type;
+                            cc: CallingConvention; <*UNUSED*>return_type_qid := M3CG.NoQID): Proc =
   VAR
     p : LvProc := NewProc(self,n,n_params,return_type,-1,cc,FALSE,NIL);
     name : TEXT;
@@ -2156,10 +2157,11 @@ PROCEDURE import_procedure (self: U;  n: Name;  n_params: INTEGER; return_type: 
     RETURN p;
   END import_procedure;
 
-PROCEDURE declare_procedure (self: U;  n: Name;  n_params: INTEGER;
-                             return_type: Type;  lev: INTEGER;
-                             cc: CallingConvention;
-                             exported: BOOLEAN;  parent: Proc): Proc =
+PROCEDURE declare_procedure (
+    self: U;  n: Name;  n_params: INTEGER;
+    return_type: Type;  lev: INTEGER;
+    cc: CallingConvention; exported: BOOLEAN;
+    parent: Proc; <*UNUSED*>return_type_qid := M3CG.NoQID): Proc =
   VAR
     p : LvProc := NewProc(self,n,n_params,return_type,lev,cc,exported,parent);
   BEGIN
