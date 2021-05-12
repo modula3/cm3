@@ -328,7 +328,8 @@ PROCEDURE Import_procedure (n: Name;  n_params: INTEGER;  ret_type: Type;
 
 PROCEDURE Declare_procedure (n: Name;  n_params: INTEGER;  ret_type: Type;
                              lev: INTEGER;  cc: CallingConvention;
-                             exported: BOOLEAN;  parent: Proc): Proc;
+                             exported: BOOLEAN;  parent: Proc;
+                             return_type_qid := M3CG.NoQID): Proc;
 (* declare a procedure named 'n' with 'n_params' formal parameters
    at static level 'lev'.  Sets "current procedure" to this procedure.
    If the name 'n' is NIL, a new unique name will be supplied by the back-end.
