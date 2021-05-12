@@ -129,6 +129,7 @@ p=" m3-sys/m3middle \
 q=" m3-libs/m3core \
     m3-libs/libm3 \
     m3-libs/sysutils \
+    m3-libs/set \
     $p"
 
 for a in $q; do clean $a || exit 1; done

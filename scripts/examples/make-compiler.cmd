@@ -13,6 +13,7 @@ set p=^
     m3-libs/m3core ^
     m3-libs/libm3 ^
     m3-libs/sysutils ^
+    m3-libs/set ^
     m3-sys/m3middle ^
     m3-sys/m3quake ^
     m3-sys/m3front ^

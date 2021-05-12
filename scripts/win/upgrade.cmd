@@ -13,6 +13,7 @@
 
 @set p_compiler=^
  sysutils ^
+ set ^
  m3middle ^
  m3objfile ^
  m3linker ^
