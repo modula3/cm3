@@ -940,6 +940,7 @@ PROCEDURE declare_procedure (u: U;  n: Name;  n_params: INTEGER;
     PName (u, parent);
     PName (u, p);
     NL    (u);
+    (* TODO return_type_qid but it is not used downstream and can be omitted indefinitely *)
     RETURN p;
   END declare_procedure;
 

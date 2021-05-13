@@ -355,7 +355,7 @@ import_procedure (n: Name;  n_params: INTEGER;  return: Type;
 declare_procedure (n: Name;  n_params: INTEGER;  return: Type;
                    lev: INTEGER;  cc: CallingConvention;
                    exported: BOOLEAN;  parent: Proc;
-                   <*UNUSED*>return_type_qid := M3CG.NoQID): Proc;
+                   return_type_qid := M3CG.NoQID): Proc;
 (* Declare a procedure with simple name 'n' within the current scope,
    with 'n_params' formal parameters, at static nesting level 'lev'.
    Set the "current procedure" to this procedure.  If the name n is M3ID.NoID,
