@@ -451,7 +451,7 @@ PROCEDURE DeclareResult (result: Type.T) =
 PROCEDURE Declarer (p: T): BOOLEAN =
   VAR
     zz: Scope.T;
-    par: CG.Proc := NIL;
+    parent: CG.Proc := NIL;
     cg_result: CG.Type;
     name := Value.GlobalName (p, dots := FALSE);
     type: CG.TypeUID;
@@ -492,13 +492,13 @@ PROCEDURE Declarer (p: T): BOOLEAN =
       END;
     END;
 
-    IF (p.body.parent # NIL) THEN par := p.body.parent.cg_proc END;
+    IF (p.body.parent # NIL) THEN parent := p.body.parent.cg_proc END;
 
     p.next_cg_proc := cg_procs;  cg_procs := p;
     p.cg_proc := CG.Declare_procedure (M3ID.Add (name),
                     n_formals, cg_result, p.body.level,  cconv,
                     exported := (p.exported OR p.imported),
-                    parent := par);
+                    parent := parent);
     p.body.cg_proc := p.cg_proc;
     Scanner.offset := p.origin;
     IF (p.syms # NIL) THEN
