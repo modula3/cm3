@@ -5,7 +5,7 @@ IMPORT M3CG, M3CG_Ops, Target, TFloat, TargetMap, IntArraySort, Process;
 IMPORT M3ID, TInt, TWord, ASCII, Thread, Stdio, Word, TextUtils;
 FROM TargetMap IMPORT CG_Bytes;
 FROM M3CG IMPORT Name, ByteOffset, CallingConvention;
-FROM M3CG IMPORT BitSize, ByteSize, Alignment, Frequency;
+FROM M3CG IMPORT BitSize, ByteSize, Alignment, Frequency, QID, NoQID;
 FROM M3CG IMPORT Label, Sign, BitOffset, TypeUID;
 FROM M3CG IMPORT Type, ZType, AType, RType, IType, MType;
 FROM M3CG IMPORT CompareOp, ConvertOp, RuntimeError, MemoryOrder, AtomicOp;
@@ -585,17 +585,16 @@ BEGIN
     RETURN id;
 END ReplaceName;
 
-PROCEDURE QidText(qid: M3CG.QID): TEXT=
-VAR qidtext := "";
+PROCEDURE QidText(qid: QID): TEXT=
 BEGIN
   IF qid.module # 0 THEN
-    qidtext := qidtext & NameT(qid.module);
+    <* ASSERT qid.item # 0 *>
+    RETURN NameT(qid.module) & "__" & NameT(qid.item);
   END;
-  qidtext := qidtext & ".";
   IF qid.item # 0 THEN
-    qidtext := qidtext & NameT(qid.item);
+    RETURN NameT(qid.item);
   END;
-  RETURN qidtext;
+  RETURN NIL;
 END QidText;
 
 PROCEDURE AnonymousCounter(self: T): INTEGER =
@@ -4196,7 +4195,7 @@ PROCEDURE Locals_declare_param(
     <*UNUSED*>in_memory: BOOLEAN;
     up_level: BOOLEAN;
     <*UNUSED*>frequency: Frequency;
-    qid := M3CG.NoQID): M3CG.Var =
+    qid := NoQID): M3CG.Var =
 BEGIN
     RETURN declare_param(
         self.self,
@@ -4284,7 +4283,7 @@ PROCEDURE Imports_import_procedure(
     parameter_count: INTEGER;
     return_type: CGType;
     callingConvention: CallingConvention;
-    return_type_qid := M3CG.NoQID): M3CG.Proc =
+    return_type_qid := NoQID): M3CG.Proc =
 BEGIN
     RETURN import_procedure(self.self, name, parameter_count, return_type, callingConvention, return_type_qid);
 END Imports_import_procedure;
@@ -4299,7 +4298,7 @@ PROCEDURE Imports_declare_param(
     <*UNUSED*>in_memory: BOOLEAN;
     up_level: BOOLEAN;
     <*UNUSED*>frequency: Frequency;
-    qid := M3CG.NoQID): M3CG.Var =
+    qid := NoQID): M3CG.Var =
 BEGIN
     RETURN declare_param(
         self.self,
@@ -4486,7 +4485,7 @@ PROCEDURE GetStructSizes_declare_param(
     <*UNUSED*>in_memory: BOOLEAN;
     <*UNUSED*>up_level: BOOLEAN;
     <*UNUSED*>frequency: Frequency;
-    <*UNUSED*>qid := M3CG.NoQID): M3CG.Var =
+    <*UNUSED*>qid := NoQID): M3CG.Var =
 BEGIN
     RETURN self.Declare(type, byte_size, alignment);
 END GetStructSizes_declare_param;
@@ -4705,10 +4704,11 @@ PROCEDURE internal_declare_param(
     typeid: TypeUID;
     up_level: BOOLEAN;
     type_text: TEXT;
-    qid := M3CG.NoQID): M3CG.Var =
+    qid := NoQID): M3CG.Var =
 VAR function := self.param_proc;
     var: Var_t := NIL;
     type: Type_t := NIL;
+    qidtext := QidText(qid);
 BEGIN
     IF DebugVerbose(self) THEN
         self.comment("internal_declare_param name:" & TextOrNIL(NameT(name))
@@ -4716,7 +4716,7 @@ BEGIN
             & " typeid:" & TypeIDToText(typeid)
             & " up_level:" & BoolToText[up_level]
             & " type_text:" & TextOrNIL(type_text)
-            & " qid:" & QidText(qid));
+            & " qid:" & TextOrNil(qidtext));
     ELSE
         self.comment("internal_declare_param");
     END;
@@ -4773,7 +4773,7 @@ declare_param(
     type: CGType;
     typeid: TypeUID;
     up_level: BOOLEAN;
-    qid := M3CG.NoQID): M3CG.Var =
+    qid := NoQID): M3CG.Var =
 BEGIN
     IF self.param_proc = NIL THEN
         RETURN NIL;
@@ -5226,16 +5226,17 @@ END Segments_init_float;
 PROCEDURE import_procedure(
     self: T; name: Name; parameter_count: INTEGER;
     return_type: CGType; callingConvention: CallingConvention;
-    return_type_qid := M3CG.NoQID): M3CG.Proc =
+    return_type_qid := NoQID): M3CG.Proc =
 VAR proc := NEW(Proc_t, name := name, parameter_count := parameter_count,
                 return_type := return_type, imported := TRUE,
                 callingConvention := callingConvention).Init(self);
+    qidtext := QidText(return_type_qid);
 BEGIN
     IF DebugVerbose(self) THEN
         self.comment("import_procedure name:" & NameT(name)
             & " parameter_count:" & IntToDec(parameter_count)
             & " return_type:" & cgtypeToText[return_type]
-            & " return_type_qid:" & QidText(return_type_qid));
+            & " return_type_qid:" & TextOrNil(qidtext));
     ELSE
         self.comment("import_procedure");
     END;
@@ -5262,7 +5263,7 @@ PROCEDURE Locals_declare_procedure(
     callingConvention: CallingConvention;
     exported: BOOLEAN;
     parent: M3CG.Proc;
-    <*UNUSED*>return_type_qid := M3CG.NoQID): M3CG.Proc =
+    return_type_qid := NoQID): M3CG.Proc =
 BEGIN
     RETURN declare_procedure(
         self.self,
@@ -5272,7 +5273,8 @@ BEGIN
         level,
         callingConvention,
         exported,
-        parent);
+        parent,
+        return_type_qid);
 END Locals_declare_procedure;
 
 PROCEDURE ProcNameOrNIL(proc: M3CG.Proc): TEXT =
@@ -5288,11 +5290,12 @@ PROCEDURE declare_procedure(
     return_type: CGType; level: INTEGER;
     callingConvention: CallingConvention;
     exported: BOOLEAN; parent: M3CG.Proc;
-    <*UNUSED*>return_type_qid := M3CG.NoQID): M3CG.Proc =
+    return_type_qid := NoQID): M3CG.Proc =
 VAR proc := NEW(Proc_t, name := name, parameter_count := parameter_count,
                 return_type := return_type, level := level,
                 callingConvention := callingConvention, exported := exported,
                 parent := parent).Init(self);
+    qidtext := QidText(return_type_qid);
 BEGIN
     IF DebugVerbose(self) THEN
         self.comment("declare_procedure name:" & NameT(name)
@@ -5300,7 +5303,8 @@ BEGIN
             & " return_type:" & cgtypeToText[return_type]
             & " exported:" & BoolToText[exported]
             & " level:" & IntToDec(level)
-            & " parent:" & ProcNameOrNIL(parent));
+            & " parent:" & ProcNameOrNIL(parent)
+            & " return_type_qid:" & TextOrNil(qidtext));
     ELSE
         self.comment("declare_procedure");
     END;
