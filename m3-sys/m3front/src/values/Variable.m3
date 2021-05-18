@@ -25,43 +25,43 @@ CONST
 
 REVEAL
   T = Value.T BRANDED "Variable.T" OBJECT
-        type        : Type.T;
-        repType     : Type.T;
-        initExpr    : Expr.T;
-        qualName    : TEXT;
-        sibling     : T;
-        formal      : Value.T;
+        type        : Type.T    := NIL;
+        repType     : Type.T    := NIL;
+        initExpr    : Expr.T    := NIL;
+        qualName    : TEXT      := NIL;
+        sibling     : T         := NIL;
+        formal      : Value.T   := NIL;
         (* ^This Variable.T represents a formal parameter, but that's a
             Formal.T, a different and hidden proper subtype of Value.T.
             Field formal is actually the Formal.T object.
             A great example of TMIH (Too Much Information Hiding). *)
-        alias       : T;
-        trace       : Tracer.T;
-        bounds      : BoundPair;
-        cg_var      : CG.Var; (* Used if it's a local, formal, or external. *)
-        bss_var     : CG.Var; (* Used if it's a global. *)
+        alias       : T         := NIL;
+        trace       : Tracer.T  := NIL;
+        bounds      : BoundPair := NIL;
+        cg_var      : CG.Var    := NIL; (* Used if it's a local, formal, or external. *)
+        bss_var     : CG.Var    := NIL; (* Used if it's a global. *)
         nextTWACGVar : T; (* Link field for list of Variable.Ts that have a
                              non-NIL bss_var or cg_var. *)
         initValOffset : INTEGER := 0;
-        offset      : INTEGER := 0;
-        size        : INTEGER;
-        align       : AlignVal;
-        cg_align    : AlignVal;
-        mem_type    : BITS 4 FOR CG.Type;
-        stk_type    : BITS 4 FOR CG.Type;
-        indirect    : M3.Flag;
-        open_ok     : M3.Flag;
-        need_addr   : M3.Flag;
-        no_type     : M3.Flag; (* Type not explicitly coded. *)
-        global      : M3.Flag; (* Declared in outermost scope. *)
-        initDone    : M3.Flag;
-        initZero    : M3.Flag; (* Initial value is all binary zeros. *)
-        initPending : M3.Flag; (* Initialization is postponed. *)
-        initStatic  : M3.Flag; (* Needs RT initialization with a value from
-                                  the static constant area. *)
-        allocated     : M3.Flag;
+        offset      : INTEGER   := 0;
+        size        : INTEGER   := 0;
+        align       : AlignVal  := 0;
+        cg_align    : AlignVal  := 0;
+        mem_type    : BITS 4 FOR CG.Type := FIRST (CG.Type);
+        stk_type    : BITS 4 FOR CG.Type := FIRST (CG.Type);
+        indirect    : M3.Flag   := FALSE;
+        open_ok     : M3.Flag   := FALSE;
+        need_addr   : M3.Flag   := FALSE;
+        no_type     : M3.Flag   := FALSE; (* Type not explicitly coded. *)
+        global      : M3.Flag   := FALSE; (* Declared in outermost scope. *)
+        initDone    : M3.Flag   := FALSE;
+        initZero    : M3.Flag   := FALSE; (* Initial value is all binary zeros. *)
+        initPending : M3.Flag   := FALSE; (* Initialization is postponed. *)
+        initStatic  : M3.Flag   := FALSE; (* Needs RT initialization with a value from
+                                             the static constant area. *)
+        allocated     : M3.Flag := FALSE;
           (* ^Has allocated space in the global variable area. *)
-        initAllocated : M3.Flag;
+        initAllocated : M3.Flag := FALSE;
           (* ^Static initial value has allocated space in the global constant area. *)
       OVERRIDES
         typeCheck   := Check;
@@ -173,46 +173,21 @@ PROCEDURE ParseDecl (READONLY att: Decl.Attributes) =
 
 (* EXPORTED *)
 PROCEDURE New (name: M3ID.T;  used: BOOLEAN): T =
-  VAR t: T;
+  VAR t := NEW (T);
   BEGIN
-    t := NEW (T);
     ValueRep.Init (t, name, Value.Class.Var);
     t.used        := used;
-    t.type        := NIL;
-    t.repType     := NIL;
-    t.initExpr    := NIL;
     t.readonly    := FALSE;
-    t.indirect    := FALSE;
-    t.global      := FALSE;
-    t.formal      := NIL;
-    t.alias       := NIL;
     t.extName     := M3ID.NoID;
-    t.open_ok     := FALSE;
-    t.need_addr   := FALSE;
-    t.no_type     := FALSE;
-    t.initDone    := FALSE;
-    t.initZero    := FALSE;
-    t.initPending := FALSE;
-    t.initStatic  := FALSE;
-    t.allocated   := FALSE;
-    t.initAllocated := FALSE;
-    t.bounds      := NIL;
-    t.cg_align    := 0;
-    t.cg_var      := NIL;
-    t.bss_var     := NIL;
-    t.size        := 0;
-    t.align       := 0;
     t.mem_type    := CG.Type.Void;
     t.stk_type    := CG.Type.Void;
-    t.trace       := NIL;
     RETURN t;
   END New;
 
 (* EXPORTED *)
 PROCEDURE NewFormal (formal: Value.T;  name: M3ID.T): T =
-  VAR t: T;  f_info: Formal.Info;
+  VAR t := New (name, FALSE); f_info: Formal.Info;
   BEGIN
-    t := New (name, FALSE);
     Formal.Split (formal, f_info);
     t.formal   := formal;
     t.type     := f_info.type;
