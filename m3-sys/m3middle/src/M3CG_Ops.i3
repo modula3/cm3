@@ -253,7 +253,7 @@ declare_local (n: Name;  s: ByteSize;  a: Alignment;  t: Type;
 
 declare_param (n: Name;  s: ByteSize;  a: Alignment;  t: Type;
                m3t: TypeUID;  in_memory, up_level: BOOLEAN;
-               f: Frequency; qid := M3CG.NoQID): Var;
+               f: Frequency; typename := M3CG.NoQID): Var;
 (* Declare a formal parameter, belonging to the most recent
    declare_procedure or import_procedure.  Formals are declared in
    their lexical order, relative to each other, but many other things

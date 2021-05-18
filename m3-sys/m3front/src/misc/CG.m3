@@ -492,10 +492,10 @@ PROCEDURE Declare_local (n: Name;  s: Size;  a: Alignment;  t: Type;
 
 PROCEDURE Declare_param (n: Name;  s: Size;  a: Alignment;  t: Type;
                          m3t: TypeUID;  in_memory, up_level: BOOLEAN;
-                         f: Frequency; qid := M3CG.NoQID): Var =
+                         f: Frequency; typename := M3CG.NoQID): Var =
   BEGIN
     RETURN cg.declare_param (n, ToVarSize (s, a), ByteAlign (a),
-                             t, m3t, in_memory, up_level, f, qid);
+                             t, m3t, in_memory, up_level, f, typename);
   END Declare_param;
 
 (*----------------------------------------------------------- temporaries ---*)

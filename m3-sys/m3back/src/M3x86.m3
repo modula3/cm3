@@ -876,7 +876,7 @@ PROCEDURE mangle_procname (base: M3ID.T; arg_size: INTEGER;
 
 PROCEDURE declare_param (u: U;  n: Name;  s: ByteSize;  a: Alignment;
                          type: Type;  m3t: TypeUID;  in_memory, up_level: BOOLEAN;
-                         f: Frequency; <*UNUSED*>qid := M3CG.NoQID): Var =
+                         f: Frequency; <*UNUSED*>typename := M3CG.NoQID): Var =
   VAR v := NewVar(u, type, m3t, s, 4, n);
   BEGIN
     (* Assume a = 4 and ESP is dword aligned... *)

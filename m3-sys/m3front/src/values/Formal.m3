@@ -20,7 +20,7 @@ TYPE
         repType  : Type.T     := NIL;
         dfault   : Expr.T     := NIL;
         refType  : Type.T     := NIL; (* Needed to copy an open array. *)
-        qid                   := M3.NoQID;
+        typename              := M3.NoQID;
         tempCGVal: CG.Val     := NIL;
         cg_type  : CG.TypeUID := 0;
         mode     : Mode       := FIRST (Mode);
@@ -108,7 +108,7 @@ PROCEDURE EmitDeclaration (formal: Value.T;  types_only, param: BOOLEAN) =
     size     : CG.Size;
     align    : CG.Alignment;
     info     : Type.Info;
-    qid      := M3.NoQID;
+    typename := M3.NoQID;
   BEGIN
     IF (types_only) THEN
       Compile (t);
@@ -123,17 +123,17 @@ PROCEDURE EmitDeclaration (formal: Value.T;  types_only, param: BOOLEAN) =
         size  := Target.Address.size;
         align := Target.Address.align;
         mtype := CG.Type.Addr;
-        (* TODO qid *)
+        (* TODO typename *)
       ELSE (* lo-level pass by value. *)
         EVAL Type.CheckInfo (TypeOf (t), info);
         size  := info.size;
         align := info.alignment;
         mtype := info.mem_type;
-        qid   := t.qid;
+        typename := t.typename;
       END;
       EVAL CG.Declare_param (t.name, size, align, mtype,
                              t.cg_type, in_memory := FALSE, up_level := FALSE,
-                             f := CG.Maybe, qid := qid);
+                             f := CG.Maybe, typename := typename);
     ELSE (* This is part of debug info for a signature. *)
       CG.Declare_formal (t.name, t.cg_type);
     END;
@@ -188,8 +188,8 @@ PROCEDURE Check (t: T;  VAR cs: Value.CheckState) =
 (* Only checks on the formal itself. *)
   VAR info: Type.Info;
   BEGIN
-    (* Capture qid before type gets reduced and loses NamedType. *)
-    Type.QID (TypeOf (t), t.qid);
+    (* Capture typename before type gets reduced and loses NamedType. *)
+    Type.Typename (TypeOf (t), t.typename);
     t.type := Type.CheckInfo (TypeOf (t), info);
     t.repType := Type.StripPacked (t.type);
     EVAL Type.Check (t.repType);

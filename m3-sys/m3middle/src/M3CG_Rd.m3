@@ -909,10 +909,10 @@ PROCEDURE declare_param (VAR s: State) =
       up_lev := Scan_bool (s);
       freq   := Scan_int (s);
       v      := Scan_varName (s);
-      qid    := M3CG.NoQID; (* TODO qid but it is not used downstream and can be omitted indefinitely *)
+      typename := M3CG.NoQID; (* TODO typename but it is not used downstream and can be omitted indefinitely *)
   BEGIN
     AddVar (s, v, s.cg.declare_param (name, size, align, type, m3t,
-                                      in_mem, up_lev, freq, qid));
+                                      in_mem, up_lev, freq, typename));
   END declare_param;
 
 PROCEDURE declare_temp (VAR s: State) =
