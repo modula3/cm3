@@ -344,7 +344,7 @@ init_float (o: ByteOffset;  READONLY f: Target.Float);
 *)
 
 import_procedure (n: Name;  n_params: INTEGER;  return: Type;
-                  cc: CallingConvention; return_type_qid := M3CG.NoQID): Proc;
+                  cc: CallingConvention; return_typename := M3CG.NoQID): Proc;
 (* declare and import the external procedure with name 'n' and 'n_params'
    formal parameters.  It must be a top-level (=0) procedure that returns
    values of type 'return'.  'cc' is derived from the procedure's <*EXTERNAL*>
@@ -355,7 +355,7 @@ import_procedure (n: Name;  n_params: INTEGER;  return: Type;
 declare_procedure (n: Name;  n_params: INTEGER;  return: Type;
                    lev: INTEGER;  cc: CallingConvention;
                    exported: BOOLEAN;  parent: Proc;
-                   return_type_qid := M3CG.NoQID): Proc;
+                   return_typename := M3CG.NoQID): Proc;
 (* Declare a procedure with simple name 'n' within the current scope,
    with 'n_params' formal parameters, at static nesting level 'lev'.
    Set the "current procedure" to this procedure.  If the name n is M3ID.NoID,

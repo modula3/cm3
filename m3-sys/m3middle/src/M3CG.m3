@@ -469,20 +469,20 @@ PROCEDURE init_float (xx: T;  o: ByteOffset;  READONLY f: Target.Float) =
 
 PROCEDURE import_procedure (xx: T;  n: Name;  n_params: INTEGER;
                           ret_type: Type;  cc: CallingConvention;
-                          return_type_qid := M3CG.NoQID): Proc =
+                          return_typename := M3CG.NoQID): Proc =
   BEGIN
-    RETURN xx.child.import_procedure (n, n_params, ret_type, cc, return_type_qid);
+    RETURN xx.child.import_procedure (n, n_params, ret_type, cc, return_typename);
   END import_procedure;
 
 PROCEDURE declare_procedure (xx: T;  n: Name;  n_params: INTEGER;
                              return_type: Type;  lev: INTEGER;
                              cc: CallingConvention;
                              exported: BOOLEAN;  parent: Proc;
-                             return_type_qid := M3CG.NoQID): Proc =
+                             return_typename := M3CG.NoQID): Proc =
   BEGIN
     RETURN xx.child.declare_procedure (n, n_params, return_type,
                                        lev, cc, exported, parent,
-                                       return_type_qid);
+                                       return_typename);
   END declare_procedure;
 
 PROCEDURE begin_procedure (xx: T;  p: Proc) =

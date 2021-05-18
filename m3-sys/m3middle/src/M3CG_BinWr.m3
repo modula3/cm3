@@ -870,7 +870,7 @@ PROCEDURE NewProc (u: U): Proc =
 
 PROCEDURE import_procedure (u: U;  n: Name;  n_params: INTEGER;
                             ret_type: Type; cc: CallingConvention;
-                            <*UNUSED*>return_type_qid := M3CG.NoQID): Proc =
+                            <*UNUSED*>return_typename := M3CG.NoQID): Proc =
   VAR p := NewProc (u);
   BEGIN
     Cmd   (u, Bop.import_procedure);
@@ -885,7 +885,7 @@ PROCEDURE import_procedure (u: U;  n: Name;  n_params: INTEGER;
 PROCEDURE declare_procedure (u: U;  n: Name;  n_params: INTEGER;
                              return_type: Type;  lev: INTEGER;
                              cc: CallingConvention; exported: BOOLEAN;
-                             parent: Proc; <*UNUSED*>return_type_qid := M3CG.NoQID): Proc =
+                             parent: Proc; <*UNUSED*>return_typename := M3CG.NoQID): Proc =
   VAR p := NewProc (u);
   BEGIN
     Cmd   (u, Bop.declare_procedure);
@@ -897,7 +897,7 @@ PROCEDURE declare_procedure (u: U;  n: Name;  n_params: INTEGER;
     Bool  (u, exported);
     PName (u, parent);
     PName (u, p);
-    (* TODO return_type_qid but it is not used downstream and can be omitted indefinitely *)
+    (* TODO return_typename but it is not used downstream and can be omitted indefinitely *)
     RETURN p;
   END declare_procedure;
 

@@ -1359,12 +1359,12 @@ PROCEDURE EmitText (t: TEXT;  is_const: BOOLEAN): INTEGER =
 PROCEDURE Import_procedure (n: Name;  n_params: INTEGER;  ret_type: Type;
                             cc: CallingConvention;
                             VAR(*OUT*) new: BOOLEAN;
-                            return_type_qid := M3CG.NoQID): Proc =
+                            return_typename := M3CG.NoQID): Proc =
   VAR ref: REFANY;  p: Proc;
   BEGIN
     IF (procedures = NIL) THEN procedures := NewNameTbl() END;
     IF procedures.get (n, ref) THEN new := FALSE;  RETURN ref END;
-    p := cg.import_procedure (n, n_params, ret_type, cc, return_type_qid);
+    p := cg.import_procedure (n, n_params, ret_type, cc, return_typename);
     EVAL procedures.put (n, p);
     new := TRUE;
     RETURN p;
@@ -1373,13 +1373,13 @@ PROCEDURE Import_procedure (n: Name;  n_params: INTEGER;  ret_type: Type;
 PROCEDURE Declare_procedure (n: Name;  n_params: INTEGER;  ret_type: Type;
                              lev: INTEGER;  cc: CallingConvention;
                              exported: BOOLEAN;  parent: Proc;
-                             return_type_qid := M3CG.NoQID): Proc =
+                             return_typename := M3CG.NoQID): Proc =
   VAR p: Proc;
   BEGIN
     IF (procedures = NIL) THEN procedures := NewNameTbl() END;
     p := cg.declare_procedure (n, n_params, ret_type,
                                lev, cc, exported, parent,
-                               return_type_qid);
+                               return_typename);
     EVAL procedures.put (n, p);
     RETURN p;
   END Declare_procedure;
