@@ -192,10 +192,7 @@ PROCEDURE CheckInfo (t: T;  VAR x: Info): T =
 
 PROCEDURE Typename (t: T; VAR typename: M3.QID) =
 BEGIN
-  IF NOT NamedType.Split (t, typename) THEN
-    typename.module := M3ID.NoID;
-    typename.item := t.info.name;
-  END;
+  typename := t.info.name;
 END Typename;
 
 (************************************************************************)
