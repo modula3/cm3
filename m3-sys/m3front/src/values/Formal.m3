@@ -20,7 +20,7 @@ TYPE
         repType  : Type.T     := NIL;
         dfault   : Expr.T     := NIL;
         refType  : Type.T     := NIL; (* Needed to copy an open array. *)
-        typename              := M3.NoQID;
+        original_type: Type.T := NIL; (* only written once, to retain NamedType *)
         tempCGVal: CG.Val     := NIL;
         cg_type  : CG.TypeUID := 0;
         mode     : Mode       := FIRST (Mode);
@@ -65,6 +65,7 @@ PROCEDURE NewBuiltin (name: TEXT;  offset: INTEGER;  type: Type.T): Value.T =
     t.offset   := offset;
     t.mode     := Mode.mVALUE;
     t.type     := type;
+    t.original_type := type;
     t.unused   := FALSE;
     t.kind     := Type.Class.Error;
     RETURN t;
@@ -79,6 +80,7 @@ PROCEDURE New (READONLY info: Info): Value.T =
     t.offset   := info.offset;
     t.mode     := info.mode;
     t.type     := info.type;
+    t.original_type := info.type;
     t.dfault   := info.dfault;
     t.unused   := info.unused;
     t.kind     := Type.Class.Error;
@@ -93,7 +95,7 @@ PROCEDURE Split (formal: Value.T;  VAR info: Info) =
     info.name   := t.name;
     info.offset := t.offset;
     info.mode   := t.mode;
-    info.type   := TypeOf (t);
+    info.type   := OriginalTypeOf (t);
     info.dfault := t.dfault;
     info.unused := t.unused;
     info.trace  := t.trace;
@@ -129,7 +131,7 @@ PROCEDURE EmitDeclaration (formal: Value.T;  types_only, param: BOOLEAN) =
         size  := info.size;
         align := info.alignment;
         mtype := info.mem_type;
-        typename := t.typename;
+        Type.Typename (OriginalTypeOf (t), typename);
       END;
       EVAL CG.Declare_param (t.name, size, align, mtype,
                              t.cg_type, in_memory := FALSE, up_level := FALSE,
@@ -172,9 +174,30 @@ PROCEDURE OpenArrayByVALUE (formal: Value.T;  VAR refType: Type.T): BOOLEAN =
 (* Externally dispatched-to: *)
 PROCEDURE TypeOf (t: T): Type.T =
   BEGIN
-    IF (t.type = NIL) THEN t.type := Expr.TypeOf (t.dfault) END;
+    (* Type and original_type should both transition to non-nil at about
+     * the same time and then never become nil.
+     *)
+    <* ASSERT (t.original_type = NIL) = (t.type = NIL) *>
+    IF (t.type = NIL) THEN
+      t.type := Expr.TypeOf (t.dfault);
+      t.original_type := t.type;
+    END;
+    <* ASSERT t.original_type # NIL AND t.type # NIL *>
     RETURN t.type;
   END TypeOf;
+
+PROCEDURE OriginalTypeOf (t: T): Type.T =
+  BEGIN
+    (* Type and original_type should both transition to non-nil at about
+     * the same time and then never become nil.
+     *)
+    <* ASSERT (t.original_type = NIL) = (t.type = NIL) *>
+    IF t.original_type = NIL THEN
+      EVAL TypeOf (t);
+    END;
+    <* ASSERT t.original_type # NIL AND t.type # NIL *>
+    RETURN t.original_type;
+  END OriginalTypeOf;
 
 (* Externally dispatched-to: *)
 PROCEDURE RepTypeOf (t: T): Type.T =
@@ -188,8 +211,6 @@ PROCEDURE Check (t: T;  VAR cs: Value.CheckState) =
 (* Only checks on the formal itself. *)
   VAR info: Type.Info;
   BEGIN
-    (* Capture typename before type gets reduced and loses NamedType. *)
-    Type.Typename (TypeOf (t), t.typename);
     t.type := Type.CheckInfo (TypeOf (t), info);
     t.repType := Type.StripPacked (t.type);
     EVAL Type.Check (t.repType);
@@ -255,6 +276,7 @@ PROCEDURE Compile (t: T) =
     Type.Compile (RepTypeOf (t));
     Type.Compile (t.refType);
     Type.Compile (Expr.TypeOf (t.dfault));
+    Type.Compile (OriginalTypeOf (t));
   END Compile;
 
 (* Externally dispatched-to: *)
