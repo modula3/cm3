@@ -499,9 +499,9 @@ BEGIN
 self.Add(NEW(declare_indirect_t, op := Op.declare_indirect, typeid := typeid, target_typeid := target_typeid));
 END declare_indirect;
 
-PROCEDURE declare_proctype(self: T; typeid: TypeUID; n_formals: INTEGER; return_typeid: TypeUID; n_raises: INTEGER; callingConvention: CallingConvention) =
+PROCEDURE declare_proctype(self: T; typeid: TypeUID; n_formals: INTEGER; return_typeid: TypeUID; n_raises: INTEGER; callingConvention: CallingConvention; result_typename: M3CG.QID) =
 BEGIN
-self.Add(NEW(declare_proctype_t, op := Op.declare_proctype, typeid := typeid, n_formals := n_formals, return_typeid := return_typeid, n_raises := n_raises, callingConvention := callingConvention));
+self.Add(NEW(declare_proctype_t, op := Op.declare_proctype, typeid := typeid, n_formals := n_formals, return_typeid := return_typeid, n_raises := n_raises, callingConvention := callingConvention, result_typename := result_typename));
 END declare_proctype;
 
 PROCEDURE declare_formal(self: T; name: Name; typeid: TypeUID; typename: M3CG.QID) =

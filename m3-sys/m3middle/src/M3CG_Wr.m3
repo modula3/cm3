@@ -572,7 +572,7 @@ PROCEDURE declare_indirect (u: U;  t, target: TypeUID) =
 
 PROCEDURE declare_proctype (u: U;  t: TypeUID;  n_formals: INTEGER;
                             result: TypeUID;  n_raises: INTEGER;
-                            cc: CallingConvention) =
+                            cc: CallingConvention; <*UNUSED*>result_typename: M3CG.QID) =
   BEGIN
     Cmd  (u, "declare_proctype");
     Tipe (u, t);
@@ -580,6 +580,7 @@ PROCEDURE declare_proctype (u: U;  t: TypeUID;  n_formals: INTEGER;
     Tipe (u, result);
     Int  (u, n_raises);
     Int  (u, cc.m3cg_id);
+    (* TODO result_typename but it is not used downstream *)
     NL   (u);
   END declare_proctype;
 

@@ -120,7 +120,7 @@ declare_indirect (t, target: TypeUID);
 
 declare_proctype (t: TypeUID;  n_formals: INTEGER;
                   result: TypeUID;  n_raises: INTEGER;
-                  cc: CallingConvention);
+                  cc: CallingConvention; result_typename := M3CG.NoQID);
 (* Procedure type.  The subsequent n_formals occurrences of declare_formal
    define the formal parameters.  The subsequent n_raises occurrences of
    declare_raises are names of raised exceptions.  n_raises < 0 => RAISES ANY.

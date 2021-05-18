@@ -734,8 +734,9 @@ PROCEDURE declare_proctype (VAR s: State) =
       result    := Scan_tipe (s);
       n_raises  := Scan_int (s);
       calling   := Scan_callConv (s);
+      result_typename := M3CG.NoQID; (* TODO result_typename but it is not used downstream *)
   BEGIN
-    s.cg.declare_proctype (type, n_formals, result, n_raises, calling);
+    s.cg.declare_proctype (type, n_formals, result, n_raises, calling, result_typename);
   END declare_proctype;
 
 PROCEDURE declare_formal (VAR s: State) =

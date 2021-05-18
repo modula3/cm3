@@ -906,7 +906,7 @@ END declare_indirect;
 <*NOWARN*>PROCEDURE declare_proctype(
     this: T; typeid: TypeUID; n_formals: INTEGER;
     result: TypeUID; n_raises: INTEGER;
-    callingConvention: CallingConvention) =
+    callingConvention: CallingConvention; result_typename: M3CG.QID) =
 BEGIN
     SuppressLineDirective(this, n_formals + (ORD(n_raises >= 0) * n_raises), "declare_proctype n_formals + n_raises");
 END declare_proctype;
