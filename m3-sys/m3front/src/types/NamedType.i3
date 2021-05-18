@@ -13,7 +13,7 @@ IMPORT M3, M3ID, Type, Value;
 PROCEDURE Parse (): Type.T;
 
 PROCEDURE New (t: Type.T): Type.T;
-PROCEDURE Create (m, n: M3ID.T): Type.T;
+PROCEDURE Create (module, name: M3ID.T): Type.T;
 
 PROCEDURE Strip (t: Type.T): Type.T;
 PROCEDURE Split (t: Type.T;  VAR name: M3.QID): BOOLEAN;
