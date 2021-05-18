@@ -89,7 +89,7 @@ TYPE declare_subrange_t = op_t OBJECT typeid, domain_typeid: typeid_t; min, max:
 TYPE declare_pointer_t = op_t OBJECT typeid, target_typeid: typeid_t; brand: TEXT; traced: BOOLEAN; OVERRIDES replay := replay_declare_pointer END;
 TYPE declare_indirect_t = op_t OBJECT typeid, target_typeid: typeid_t; OVERRIDES replay := replay_declare_indirect END;
 TYPE declare_proctype_t = op_t OBJECT typeid: typeid_t; n_formals: INTEGER; return_typeid: typeid_t; n_raises: INTEGER; callingConvention: CallingConvention; OVERRIDES replay := replay_declare_proctype END;
-TYPE declare_formal_t = op_t OBJECT name: Name; typeid: typeid_t; OVERRIDES replay := replay_declare_formal END;
+TYPE declare_formal_t = op_t OBJECT name: Name; typeid: typeid_t; typename := M3CG.NoQID; OVERRIDES replay := replay_declare_formal END;
 TYPE declare_raises_t = op_t OBJECT name: Name; OVERRIDES replay := replay_declare_raises END;
 TYPE declare_object_t = op_t OBJECT typeid, super_typeid: typeid_t; brand: TEXT; traced: BOOLEAN; n_fields, n_methods: INTEGER; fields_bit_size: BitSize; OVERRIDES replay := replay_declare_object END;
 TYPE declare_method_t = op_t OBJECT name: Name; signature: typeid_t; OVERRIDES replay := replay_declare_method END;

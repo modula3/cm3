@@ -127,7 +127,7 @@ declare_proctype (t: TypeUID;  n_formals: INTEGER;
    These occurrences of declare_formal and declare_raises all preceed the next
    occurrence of declare_proctype.  *)
 
-declare_formal (n: Name;  t: TypeUID);
+declare_formal (n: Name;  t: TypeUID; typename := M3CG.NoQID);
 (* A formal of the most recent procedure *type*, i.e., introduced by
    declare_proctype. *) 
 

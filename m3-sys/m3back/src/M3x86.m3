@@ -572,12 +572,13 @@ PROCEDURE declare_proctype (u: U;  type: TypeUID;  n_formals: INTEGER;
     END
   END declare_proctype;
 
-PROCEDURE declare_formal (u: U;  n: Name;  type: TypeUID) =
+PROCEDURE declare_formal (u: U;  n: Name;  type: TypeUID; <*UNUSED*>typename := M3CG.NoQID) =
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("declare_formal");
       u.wr.ZName (n);
       u.wr.Tipe  (type);
+      (* TODO typename *)
       u.wr.NL    ();
     END
   END declare_formal;

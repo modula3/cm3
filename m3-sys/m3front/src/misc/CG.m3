@@ -347,9 +347,9 @@ PROCEDURE Declare_proctype (t: TypeUID;  n_formals: INTEGER;
     WebInfo.Declare_proctype (t, n_formals, result, n_raises);
   END Declare_proctype;
 
-PROCEDURE Declare_formal (n: Name;  t: TypeUID) =
+PROCEDURE Declare_formal (n: Name;  t: TypeUID; typename: M3CG.QID) =
   BEGIN
-    cg.declare_formal (n, t);
+    cg.declare_formal (n, t, typename);
     WebInfo.Declare_formal (n, t);
   END Declare_formal;
 

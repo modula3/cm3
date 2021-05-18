@@ -911,7 +911,7 @@ BEGIN
     SuppressLineDirective(this, n_formals + (ORD(n_raises >= 0) * n_raises), "declare_proctype n_formals + n_raises");
 END declare_proctype;
 
-<*NOWARN*>PROCEDURE declare_formal(this: T; name: Name; typeid: TypeUID) =
+<*NOWARN*>PROCEDURE declare_formal(this: T; name: Name; typeid: TypeUID; typename := M3CG.NoQID) =
 BEGIN
     print(this, "/* declare formal: " & M3ID.ToText(name) & " */\n");
     SuppressLineDirective(this, -1, "declare_formal");

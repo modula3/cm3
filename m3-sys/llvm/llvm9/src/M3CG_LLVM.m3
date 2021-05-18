@@ -1600,7 +1600,7 @@ PROCEDURE declare_proctype (self: U; t: TypeUID; n_formals: INTEGER; result: Typ
     self.debugObj := procRef; (* keep for the formals and raises *)
   END declare_proctype;
 
-PROCEDURE declare_formal (self: U; n: Name;  t: TypeUID) =
+PROCEDURE declare_formal (self: U; n: Name;  t: TypeUID; <*UNUSED*>typename := M3CG.NoQID) =
   (* A formal parameter of a procedure type. *) 
   VAR
     procRef : ProcTypeDebug;

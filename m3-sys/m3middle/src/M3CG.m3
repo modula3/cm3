@@ -308,9 +308,9 @@ PROCEDURE declare_proctype (xx: T; t: TypeUID; n_formals: INTEGER;
     xx.child.declare_proctype (t, n_formals, result, n_raises, cc);
   END declare_proctype;
 
-PROCEDURE declare_formal (xx: T;  n: Name;  t: TypeUID) =
+PROCEDURE declare_formal (xx: T;  n: Name;  t: TypeUID; typename: M3CG.QID) =
   BEGIN
-    xx.child.declare_formal (n, t);
+    xx.child.declare_formal (n, t, typename);
   END declare_formal;
 
 PROCEDURE declare_raises (xx: T;  n: Name) =

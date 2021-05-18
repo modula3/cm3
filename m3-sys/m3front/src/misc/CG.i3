@@ -119,7 +119,7 @@ PROCEDURE Declare_indirect (target: TypeUID): TypeUID;
 PROCEDURE Declare_proctype (t: TypeUID; n_formals: INTEGER;
                             result: TypeUID;  n_raises: INTEGER;
                             cc: CallingConvention);
-PROCEDURE Declare_formal (n: Name;  t: TypeUID);
+PROCEDURE Declare_formal (n: Name;  t: TypeUID; <*UNUSED*>typename := M3CG.NoQID);
 PROCEDURE Declare_raises (n: Name);
 
 PROCEDURE Declare_object (t, super: TypeUID;  brand: TEXT;  traced: BOOLEAN;
