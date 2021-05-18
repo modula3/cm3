@@ -504,9 +504,9 @@ BEGIN
 self.Add(NEW(declare_proctype_t, op := Op.declare_proctype, typeid := typeid, n_formals := n_formals, return_typeid := return_typeid, n_raises := n_raises, callingConvention := callingConvention));
 END declare_proctype;
 
-PROCEDURE declare_formal(self: T; name: Name; typeid: TypeUID) =
+PROCEDURE declare_formal(self: T; name: Name; typeid: TypeUID; typename: M3CG.QID) =
 BEGIN
-self.Add(NEW(declare_formal_t, op := Op.declare_formal, name := name, typeid := typeid));
+self.Add(NEW(declare_formal_t, op := Op.declare_formal, name := name, typeid := typeid, typename := typename));
 END declare_formal;
 
 PROCEDURE declare_raises(self: T; name: Name) =
@@ -1147,7 +1147,7 @@ PROCEDURE replay_declare_subrange(self: declare_subrange_t; <*UNUSED*>replay: Re
 PROCEDURE replay_declare_pointer(self: declare_pointer_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.declare_pointer(self.typeid, self.target_typeid, self.brand, self.traced); END replay_declare_pointer;
 PROCEDURE replay_declare_indirect(self: declare_indirect_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.declare_indirect(self.typeid, self.target_typeid); END replay_declare_indirect;
 PROCEDURE replay_declare_proctype(self: declare_proctype_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.declare_proctype(self.typeid, self.n_formals, self. return_typeid, self.n_raises, self.callingConvention); END replay_declare_proctype;
-PROCEDURE replay_declare_formal(self: declare_formal_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.declare_formal(self.name, self.typeid); END replay_declare_formal;
+PROCEDURE replay_declare_formal(self: declare_formal_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.declare_formal(self.name, self.typeid, self.typename); END replay_declare_formal;
 PROCEDURE replay_declare_raises(self: declare_raises_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.declare_raises(self.name); END replay_declare_raises;
 PROCEDURE replay_declare_object(self: declare_object_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.declare_object(self.typeid, self.super_typeid, self.brand, self.traced, self.n_fields, self.n_methods, self.fields_bit_size); END replay_declare_object;
 PROCEDURE replay_declare_method(self: declare_method_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.declare_method(self.name, self.signature); END replay_declare_method;

@@ -569,11 +569,12 @@ PROCEDURE declare_proctype (u: U;  t: TypeUID;  n_formals: INTEGER;
     OutB (u, cc.m3cg_id);
   END declare_proctype;
 
-PROCEDURE declare_formal (u: U;  n: Name;  t: TypeUID) =
+PROCEDURE declare_formal (u: U;  n: Name;  t: TypeUID; <*UNUSED*>typename: M3CG.QID) =
   BEGIN
     Cmd   (u, Bop.declare_formal);
     ZName (u, n);
     Tipe  (u, t);
+    (* TODO typename but it is not used downstream and can be omitted indefinitely *)
   END declare_formal;
 
 PROCEDURE declare_raises (u: U;  n: Name) =

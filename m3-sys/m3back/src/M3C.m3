@@ -3113,13 +3113,15 @@ BEGIN
     x.Type_Init(self.procType);
 END declare_proctype;
 
-PROCEDURE declare_formal(self: DeclareTypes_t; name: Name; typeid: TypeUID) =
+PROCEDURE declare_formal(self: DeclareTypes_t; name: Name; typeid: TypeUID; typename := M3CG.NoQID) =
 VAR x := self.self;
     type := self.procType;
+    qidtext := QidText(typename);
 BEGIN
   IF DebugVerbose(x) THEN
     x.comment("declare_formal name:", NameT(name),
-        " typeid:", TypeIDToText(typeid));
+              " typeid:" & TypeIDToText(typeid),
+              " typename:" & TextOrNil(qidtext));
   ELSE
     x.comment("declare_formal");
   END;

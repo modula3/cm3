@@ -628,8 +628,9 @@ PROCEDURE declare_proctype (VAR s: State) =
 PROCEDURE declare_formal (VAR s: State) =
   VAR name := Scan_name (s);
       type := Scan_tipe (s);
+      typename := M3CG.NoQID; (* TODO typename but it is not used downstream and can be omitted indefinitely *)
   BEGIN
-    s.cg.declare_formal (name, type);
+    s.cg.declare_formal (name, type, typename);
   END declare_formal;
 
 PROCEDURE declare_raises (VAR s: State) =

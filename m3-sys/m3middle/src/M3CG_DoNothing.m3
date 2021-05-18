@@ -185,7 +185,7 @@ END;
 <*NOWARN*>PROCEDURE declare_pointer(self: T; typeid, target_typeid: TypeUID; brand: TEXT; traced: BOOLEAN) = BEGIN END declare_pointer;
 <*NOWARN*>PROCEDURE declare_indirect(self: T; typeid, target_typeid: TypeUID) = BEGIN END declare_indirect;
 <*NOWARN*>PROCEDURE declare_proctype(self: T; typeid: TypeUID; n_formals: INTEGER; result: TypeUID; n_raises: INTEGER; callingConvention: CallingConvention) = BEGIN END declare_proctype;
-<*NOWARN*>PROCEDURE declare_formal(self: T; name: Name; typeid: TypeUID) = BEGIN END declare_formal;
+<*NOWARN*>PROCEDURE declare_formal(self: T; name: Name; typeid: TypeUID; typename := M3CG.NoQID) = BEGIN END declare_formal;
 <*NOWARN*>PROCEDURE declare_raises(self: T; name: Name) = BEGIN END declare_raises;
 <*NOWARN*>PROCEDURE declare_object(self: T; typeid, super_typeid: TypeUID; brand: TEXT; traced: BOOLEAN; n_fields, n_methods: INTEGER; field_size: BitSize) = BEGIN END declare_object;
 <*NOWARN*>PROCEDURE declare_method(self: T; name: Name; signature: TypeUID) = BEGIN END declare_method;
