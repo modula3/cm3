@@ -9,9 +9,10 @@
 MODULE ProcType;
 
 IMPORT M3, M3ID, CG, Expr, Type, TypeRep, Value, Scope, Target;
-IMPORT Formal, UserProc, Token, Ident, CallExpr, Word, Error, NamedType;
+IMPORT Formal, UserProc, Token, Ident, CallExpr, Word, Error;
 IMPORT ESet, TipeMap, TipeDesc, ErrType, M3Buf, Variable, OpenArrayType;
 FROM Scanner IMPORT Match, GetToken, cur;
+FROM M3CG IMPORT QID, NoQID;
 
 TYPE
   P = Type.T BRANDED "ProcType.T" OBJECT
@@ -21,7 +22,7 @@ TYPE
         result     : Type.T;
         raises     : ESet.T;
         callConv   : CG.CallingConvention;
-        result_typename := M3.NoQID;
+        result_typename := NoQID;
       OVERRIDES
         check      := Check;
         no_straddle:= TypeRep.AddrNoStraddle;
@@ -377,13 +378,13 @@ PROCEDURE Result (t: Type.T): Type.T =
     END;
   END Result;
 
-PROCEDURE ResultTypename (t: Type.T): M3.QID =
+PROCEDURE ResultTypename (t: Type.T): QID =
   VAR p := Reduce (t);
   BEGIN
     Type.Compile (t);
     IF (p # NIL)
       THEN RETURN p.result_typename;
-      ELSE RETURN M3.NoQID;
+      ELSE RETURN NoQID;
     END;
   END ResultTypename;
 

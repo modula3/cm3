@@ -10,6 +10,7 @@ MODULE NamedType;
 
 IMPORT M3, M3ID, Token, Type, TypeRep, Scanner, ObjectType;
 IMPORT Error, Scope, Brand, Value, ErrType;
+FROM M3CG IMPORT QID;
 
 TYPE
   P = Type.T BRANDED "NamedType.T" OBJECT
@@ -88,7 +89,7 @@ PROCEDURE Reduce (t: Type.T): P =
     RETURN t;
   END Reduce;
 
-PROCEDURE Split (t: Type.T;  VAR name: M3.QID): BOOLEAN =
+PROCEDURE Split (t: Type.T;  VAR name: QID): BOOLEAN =
   VAR p := Reduce (t);
   BEGIN
     IF (p = NIL) THEN RETURN FALSE END;

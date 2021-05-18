@@ -11,6 +11,7 @@ MODULE Tipe;
 IMPORT M3, M3ID, CG, Value, ValueRep, Scope, OpaqueType, WebInfo, TypeRep;
 IMPORT Token, Type, Decl, Scanner, NamedType, RefType, ObjectType, Module;
 FROM Scanner IMPORT GetToken, Fail, Match, MatchID, cur;
+FROM M3CG IMPORT QID;
 
 TYPE
   T = Value.T BRANDED "Tipe.T" OBJECT 
@@ -112,7 +113,7 @@ PROCEDURE DefineOpaque (name: TEXT;  super: Type.T): Type.T =
   END DefineOpaque;
 
 PROCEDURE Check (t: T;  <*UNUSED*> VAR cs: Value.CheckState) =
-  VAR info: Type.Info;  initial := t.value;  typename: M3.QID;  name: TEXT;
+  VAR info: Type.Info;  initial := t.value;  typename: QID;  name: TEXT;
   BEGIN
     t.value := Type.CheckInfo (t.value, info);
 
