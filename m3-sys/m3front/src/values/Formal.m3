@@ -116,8 +116,6 @@ PROCEDURE EmitDeclaration (formal: Value.T;  types_only, param: BOOLEAN) =
 (* Only for a formal of a procedure type or an imported procedure. *)
   VAR
     t        : T := formal;
-    type     : Type.T;
-    repType  : Type.T;
     mtype    : CG.Type;
     size     : CG.Size;
     align    : CG.Alignment;
@@ -125,19 +123,13 @@ PROCEDURE EmitDeclaration (formal: Value.T;  types_only, param: BOOLEAN) =
     qid      := M3.NoQID;
   BEGIN
     IF (types_only) THEN
-      type := TypeOf (t);
-      Type.Compile (type);
-      repType := RepTypeOf (t);
-      IF repType # type THEN Type.Compile (repType) END;
-      Type.Compile (t.refType);
-      IF (t.dfault # NIL) THEN Type.Compile (Expr.TypeOf (t.dfault)) END;
-      t.cg_type := Type.GlobalUID (type);
+      Compile (t);
+      t.cg_type := Type.GlobalUID (TypeOf (t));
       IF t.mode # Mode.mVALUE OR t.openArray
       THEN (* lo-level pass by reference. *)
         t.cg_type := CG.Declare_indirect (t.cg_type);
       END;
     ELSIF (param) THEN
-      type  := TypeOf (t);
       IF t.mode # Mode.mVALUE OR t.openArray
       THEN (* lo-level pass by reference. *)
         size  := Target.Address.size;
@@ -145,7 +137,7 @@ PROCEDURE EmitDeclaration (formal: Value.T;  types_only, param: BOOLEAN) =
         mtype := CG.Type.Addr;
         (* TODO qid *)
       ELSE (* lo-level pass by value. *)
-        EVAL Type.CheckInfo (type, info);
+        EVAL Type.CheckInfo (TypeOf (t), info);
         size  := info.size;
         align := info.alignment;
         mtype := info.mem_type;
@@ -271,10 +263,10 @@ PROCEDURE Load (t: T) =
 (* Externally dispatched-to: *)
 PROCEDURE Compile (t: T) =
   BEGIN
-    Type.Compile (t.type);
-    IF t.repType # t.type THEN Type.Compile (t.repType) END;
+    Type.Compile (TypeOf (t));
+    Type.Compile (RepTypeOf (t));
     Type.Compile (t.refType);
-    IF (t.dfault # NIL) THEN Type.Compile (Expr.TypeOf (t.dfault)) END;
+    Type.Compile (Expr.TypeOf (t.dfault));
   END Compile;
 
 (* Externally dispatched-to: *)
