@@ -71,14 +71,14 @@ PROCEDURE New (t: Type.T): Type.T =
     RETURN p;
   END New;
 
-PROCEDURE Create (m, n: M3ID.T): Type.T =
+PROCEDURE Create (module, name: M3ID.T): Type.T =
   VAR p: P;
   BEGIN
     p := NEW (P);
     TypeRep.Init (p, Type.Class.Named);
     p.scope      := Scope.Top ();
-    p.module     := m;
-    p.info.name  := n;
+    p.module     := module;
+    p.info.name  := name;
     RETURN p;
   END Create;
 
