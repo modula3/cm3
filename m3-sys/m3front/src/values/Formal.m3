@@ -16,7 +16,7 @@ IMPORT Variable, Procedure, UserProc, Target, M3RT, NamedType;
 TYPE
   T = Value.T BRANDED OBJECT 
         offset   : INTEGER;
-        tipe     : Type.T;
+        type     : Type.T;
         repType  : Type.T;
         dfault   : Expr.T;
         refType  : Type.T; (* Needed to copy an open array. *)
@@ -64,7 +64,7 @@ PROCEDURE NewBuiltin (name: TEXT;  offset: INTEGER;  type: Type.T): Value.T =
     t.readonly := FALSE;
     t.offset   := offset;
     t.mode     := Mode.mVALUE;
-    t.tipe     := type;
+    t.type     := type;
     t.repType  := NIL;
     t.dfault   := NIL;
     t.unused   := FALSE;
@@ -85,7 +85,7 @@ PROCEDURE New (READONLY info: Info): Value.T =
     t.readonly := (info.mode = Mode.mREADONLY);
     t.offset   := info.offset;
     t.mode     := info.mode;
-    t.tipe     := info.type;
+    t.type     := info.type;
     t.repType  := NIL;
     t.dfault   := info.dfault;
     t.unused   := info.unused;
@@ -192,8 +192,8 @@ PROCEDURE OpenArrayByVALUE (formal: Value.T;  VAR refType: Type.T): BOOLEAN =
 (* Externally dispatched-to: *)
 PROCEDURE TypeOf (t: T): Type.T =
   BEGIN
-    IF (t.tipe = NIL) THEN t.tipe := Expr.TypeOf (t.dfault) END;
-    RETURN t.tipe;
+    IF (t.type = NIL) THEN t.type := Expr.TypeOf (t.dfault) END;
+    RETURN t.type;
   END TypeOf;
 
 (* Externally dispatched-to: *)
@@ -210,12 +210,12 @@ PROCEDURE Check (t: T;  VAR cs: Value.CheckState) =
   BEGIN
     (* Capture qid before type gets reduced and loses NamedType. *)
     Type.QID (TypeOf (t), t.qid);
-    t.tipe := Type.CheckInfo (TypeOf (t), info);
-    t.repType := Type.StripPacked (t.tipe);
+    t.type := Type.CheckInfo (TypeOf (t), info);
+    t.repType := Type.StripPacked (t.type);
     EVAL Type.Check (t.repType);
     t.kind := info.class;
     IF (info.class = Type.Class.Packed) THEN (* Ignore BITS in setting class. *)
-      EVAL Type.CheckInfo (Type.Base (t.tipe), info);
+      EVAL Type.CheckInfo (Type.Base (t.type), info);
       t.kind := info.class;
     END;
 
@@ -225,9 +225,9 @@ PROCEDURE Check (t: T;  VAR cs: Value.CheckState) =
         Error.ID (t.name, "VAR parameters cannot have defaults (2.2.8).");
         t.kind := Type.Class.Error;
       END;
-      IF  NOT Type.IsAssignable (t.tipe, Expr.TypeOf (t.dfault)) THEN
+      IF  NOT Type.IsAssignable (t.type, Expr.TypeOf (t.dfault)) THEN
         Error.ID (t.name, "default must be assignable to formal (2.2.8).");
-(* FIXME ^ 2.2.8 says default must be a *member* of t.tipe, which is stronger
+(* FIXME ^ 2.2.8 says default must be a *member* of t.type, which is stronger
    than assignable. *)
         t.kind := Type.Class.Error;
       END;
@@ -239,7 +239,7 @@ PROCEDURE Check (t: T;  VAR cs: Value.CheckState) =
          otherwise we'd loose references to large named constants. *)
     END;
 
-    t.openArray := OpenArrayType.Is (Type.Base (t.tipe));
+    t.openArray := OpenArrayType.Is (Type.Base (t.type));
     IF t.openArray AND t.mode = Mode.mVALUE
        (* ^Open array VALUE formal is lo-level passed by reference.
           Prolog will make a copy. *)
@@ -248,7 +248,7 @@ PROCEDURE Check (t: T;  VAR cs: Value.CheckState) =
              both open array) passed READONLY will do call-site copying. *)
     THEN (* We need a reference type to the formal type to do open array
             copying. *)
-      t.refType := RefType.New (t.tipe, traced := TRUE, brand := NIL);
+      t.refType := RefType.New (t.type, traced := TRUE, brand := NIL);
       EVAL Type.Check (t.refType);
     END;
 
@@ -271,8 +271,8 @@ PROCEDURE Load (t: T) =
 (* Externally dispatched-to: *)
 PROCEDURE Compile (t: T) =
   BEGIN
-    Type.Compile (t.tipe);
-    IF t.repType # t.tipe THEN Type.Compile (t.repType) END;
+    Type.Compile (t.type);
+    IF t.repType # t.type THEN Type.Compile (t.repType) END;
     Type.Compile (t.refType);
     IF (t.dfault # NIL) THEN Type.Compile (Expr.TypeOf (t.dfault)) END;
   END Compile;
@@ -280,7 +280,7 @@ PROCEDURE Compile (t: T) =
 (* Externally dispatched-to: *)
 PROCEDURE SetGlobals (<*UNUSED*> t: T) =
   BEGIN
-    (* Type.SetGlobals (t.tipe); *)
+    (* Type.SetGlobals (t.type); *)
     (* Type.SetGlobals (t.refType); *)
     (* IF (t.dfault # NIL) THEN Type.SetGlobals (Expr.TypeOf (t.dfault)) END; *)
   END SetGlobals;
@@ -409,7 +409,7 @@ PROCEDURE DoCheckArgs (VAR cs       : Value.CheckState;
         (* try to fold scalar constant values *)
         (* NOTE: if we fold named structured constants, we lose the
              names and hence generate code to build the value... *)
-        IF NOT Type.IsStructured (formal.tipe) THEN
+        IF NOT Type.IsStructured (formal.type) THEN
           value := Expr.ConstValue (actualExpr);
           IF value # NIL THEN
             actualExpr := value;
@@ -418,7 +418,7 @@ PROCEDURE DoCheckArgs (VAR cs       : Value.CheckState;
         END;
 
         actSemType := Expr.SemTypeOf (actualExpr);
-        t  := formal.tipe;
+        t  := formal.type;
         CASE formal.mode OF
         | Mode.mVALUE =>
             IF NOT Type.IsAssignable (t, actSemType) THEN
@@ -520,7 +520,7 @@ PROCEDURE PrepArg (formal: Value.T; actExpr: Expr.T) =
     formVal.hasError := FALSE;
     formVal.tempCGVal := NIL;
       (* ^We could be reusing formVal, after a previous call. *)
-    ArrayExpr.NoteTargetType (actExpr, formVal.tipe);
+    ArrayExpr.NoteTargetType (actExpr, formVal.type);
 
     CASE formVal.mode OF
     | Mode.mVALUE =>
@@ -546,8 +546,8 @@ PROCEDURE PrepArg (formal: Value.T; actExpr: Expr.T) =
     | Mode.mREADONLY =>
         actSemType := Expr.SemTypeOf (actExpr);
         typeOKForByRef
-          := ArrayType.Is (formVal.tipe)
-             OR Type.IsEqual (formVal.tipe, actSemType, NIL);
+          := ArrayType.Is (formVal.type)
+             OR Type.IsEqual (formVal.type, actSemType, NIL);
         IF typeOKForByRef THEN
           IF PackedType.Is (actSemType) THEN
             Error.Info
@@ -667,26 +667,26 @@ PROCEDURE GenOrdinal (formVal: T;  actExpr: Expr.T) =
     ELSE
       CASE formVal.mode OF
       | Mode.mVALUE =>
-          EVAL Type.GetBounds (formVal.tipe, min, max); (* Of formal. *)
+          EVAL Type.GetBounds (formVal.type, min, max); (* Of formal. *)
           CheckExpr.EmitChecks (actExpr, min, max, CG.RuntimeError.ValueOutOfRange);
-          CG.Pop_param (Type.CGType (formVal.tipe, in_memory := TRUE));
+          CG.Pop_param (Type.CGType (formVal.type, in_memory := TRUE));
       | Mode.mVAR =>
           Expr.CompileAddress (actExpr, traced := TRUE);
           CG.Pop_param (CG.Type.Addr);
           Expr.NoteWrite (actExpr);
       | Mode.mREADONLY =>
           actSemType := Expr.TypeOf (actExpr);
-          IF NOT Type.IsEqual (formVal.tipe, actSemType, NIL)
+          IF NOT Type.IsEqual (formVal.type, actSemType, NIL)
           THEN (* Pass by value. Could need bounds check. *)
-            EVAL Type.GetBounds (formVal.tipe, min, max); (* Of formal. *)
+            EVAL Type.GetBounds (formVal.type, min, max); (* Of formal. *)
             CheckExpr.EmitChecks
               (actExpr, min, max, CG.RuntimeError.ValueOutOfRange);
-            GenScalarCopy (formVal.tipe);
+            GenScalarCopy (formVal.type);
             CG.Pop_param (CG.Type.Addr);
           ELSIF NOT Expr.IsDesignator (actExpr) OR PackedType.Is (actSemType)
           THEN (* Same type, no bounds check needed, pass by value. *)
             Expr.Compile (actExpr);
-            GenScalarCopy (formVal.tipe);
+            GenScalarCopy (formVal.type);
             CG.Pop_param (CG.Type.Addr);
           ELSE (* Pass by ref. *)
             Expr.CompileAddress (actExpr, traced := FALSE);
@@ -707,7 +707,7 @@ PROCEDURE GenFloat (formVal: T;  actExpr: Expr.T) =
       CASE formVal.mode OF
       | Mode.mVALUE =>
           Expr.Compile (actExpr);
-          CG.Pop_param (Type.CGType (formVal.tipe, in_memory := TRUE));
+          CG.Pop_param (Type.CGType (formVal.type, in_memory := TRUE));
       | Mode.mVAR =>
           Expr.CompileAddress (actExpr, traced := TRUE);
           CG.Pop_param (CG.Type.Addr);
@@ -715,13 +715,13 @@ PROCEDURE GenFloat (formVal: T;  actExpr: Expr.T) =
       | Mode.mREADONLY =>
           actSemType := Expr.TypeOf (actExpr);
           IF Expr.IsDesignator (actExpr)
-             AND Type.IsEqual (formVal.tipe, actSemType, NIL)
+             AND Type.IsEqual (formVal.type, actSemType, NIL)
              AND NOT PackedType.Is (actSemType) THEN
             Expr.CompileAddress (actExpr, traced := FALSE);
             CG.Pop_param (CG.Type.Addr);
           ELSE
             Expr.Compile (actExpr);
-            GenScalarCopy (formVal.tipe);
+            GenScalarCopy (formVal.type);
             CG.Pop_param (CG.Type.Addr);
           END;
       END;
@@ -739,7 +739,7 @@ PROCEDURE GenReference (formVal: T;  actExpr: Expr.T) =
       CASE formVal.mode OF
       | Mode.mVALUE =>
           Expr.Compile (actExpr);
-          CG.Pop_param (Type.CGType (formVal.tipe, in_memory := TRUE));
+          CG.Pop_param (Type.CGType (formVal.type, in_memory := TRUE));
       | Mode.mVAR =>
           Expr.CompileAddress (actExpr, traced := TRUE);
           CG.Pop_param (CG.Type.Addr);
@@ -747,7 +747,7 @@ PROCEDURE GenReference (formVal: T;  actExpr: Expr.T) =
       | Mode.mREADONLY =>
           actSemType := Expr.TypeOf (actExpr);
           IF Expr.IsDesignator (actExpr)
-             AND Type.IsEqual (formVal.tipe, actSemType, NIL)
+             AND Type.IsEqual (formVal.type, actSemType, NIL)
              AND NOT PackedType.Is (actSemType)
           THEN (* Pass by reference, lo-level too. *)
             Expr.CompileAddress (actExpr, traced := FALSE);
@@ -759,7 +759,7 @@ PROCEDURE GenReference (formVal: T;  actExpr: Expr.T) =
                does not generate a copy, so we do it here.  Are there
                other non-designator reference cases that would not be
                aliasable, and thus not need a copy? *)
-            GenScalarCopy (formVal.tipe);
+            GenScalarCopy (formVal.type);
             CG.Pop_param (CG.Type.Addr);
           END;
       END (*CASE*);
@@ -778,7 +778,7 @@ PROCEDURE GenProcedure (formVal: T;  actExpr: Expr.T;  proc: Expr.T) =
       | Mode.mVALUE =>
           Expr.Compile (actExpr);
           GenClosure (actExpr, proc);
-          CG.Pop_param (Type.CGType (formVal.tipe, in_memory := TRUE));
+          CG.Pop_param (Type.CGType (formVal.type, in_memory := TRUE));
       | Mode.mVAR =>
           Expr.CompileAddress (actExpr, traced := TRUE);
           CG.Pop_param (CG.Type.Addr);
@@ -786,14 +786,14 @@ PROCEDURE GenProcedure (formVal: T;  actExpr: Expr.T;  proc: Expr.T) =
       | Mode.mREADONLY =>
           actSemType := Expr.TypeOf (actExpr);
           IF Expr.IsDesignator (actExpr)
-             AND Type.IsEqual (formVal.tipe, actSemType, NIL)
+             AND Type.IsEqual (formVal.type, actSemType, NIL)
              AND NOT PackedType.Is (actSemType) THEN
             Expr.CompileAddress (actExpr, traced := FALSE);
             CG.Pop_param (CG.Type.Addr);
           ELSE
             Expr.Compile (actExpr);
             GenClosure (actExpr, proc);
-            GenScalarCopy (formVal.tipe);
+            GenScalarCopy (formVal.type);
             CG.Pop_param (CG.Type.Addr);
           END;
       END (*CASE*);
@@ -851,7 +851,7 @@ PROCEDURE RequiresFetch
     IF actSize MOD Target.Byte # 0 THEN RETURN TRUE END;
     IF Expr.Alignment (actExpr) MOD Target.Byte # 0 THEN RETURN TRUE END;
     EVAL Type.CheckInfo (formVal.repType, formRepTypeInfo);
-    IF OpenArrayType.OpenDepth (formVal.tipe) > 0
+    IF OpenArrayType.OpenDepth (formVal.type) > 0
     THEN (* Formal is open array. *)
       RETURN Expr.Alignment (actExpr) < formRepTypeInfo.addr_align;
     ELSE
@@ -879,7 +879,7 @@ PROCEDURE CompileNCopyStructWInWord
     ELSE
       Expr.Compile (actExpr);
       <* ASSERT actSize <= Target.Word.size *>
-      IF Type.IsStructured (formVal.tipe) THEN
+      IF Type.IsStructured (formVal.type) THEN
         CG.Load_indirect (Target.Word.cg_type, 0, actSize);
       END;
     END;
@@ -902,14 +902,14 @@ PROCEDURE GenSmallSet (formVal: T;  actExpr: Expr.T) =
       CASE formVal.mode OF
       | Mode.mVALUE =>
           Expr.Compile (actExpr);
-          CG.Pop_param (Type.CGType (formVal.tipe, in_memory := TRUE));
+          CG.Pop_param (Type.CGType (formVal.type, in_memory := TRUE));
       | Mode.mVAR =>
           Expr.CompileAddress (actExpr, traced := TRUE);
           CG.Pop_param (CG.Type.Addr);
           Expr.NoteWrite (actExpr);
       | Mode.mREADONLY =>
           actSemType := Expr.TypeOf (actExpr);
-          IF Type.IsEqual (formVal.tipe, actSemType, NIL)
+          IF Type.IsEqual (formVal.type, actSemType, NIL)
              AND Expr.IsDesignator (actExpr)
              AND NOT PackedType.Is (actSemType)
           THEN (* Pass by ref. *)
@@ -917,7 +917,7 @@ PROCEDURE GenSmallSet (formVal: T;  actExpr: Expr.T) =
             CG.Pop_param (CG.Type.Addr);
           ELSE (* Pass by value, lo-level: copy by reference. *)
             Expr.Compile (actExpr);
-            GenScalarCopy (formVal.tipe);
+            GenScalarCopy (formVal.type);
             CG.Pop_param (CG.Type.Addr);
           END;
       END (*CASE*)
@@ -976,7 +976,7 @@ PROCEDURE GenStruct
           actSemType := Expr.TypeOf (actExpr);
           typeOKForByRef
             := (formIsArray
-                 OR Type.IsEqual (formVal.tipe, actSemType, NIL)
+                 OR Type.IsEqual (formVal.type, actSemType, NIL)
                ) AND NOT PackedType.Is (actSemType);
           IF typeOKForByRef AND Expr.IsDesignator (actExpr)
           THEN (* Pass by reference (2.3.2).  Lo-level, pass by ref also. *)
