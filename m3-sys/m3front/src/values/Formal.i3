@@ -14,13 +14,13 @@ TYPE Mode = {mVALUE, mVAR, mREADONLY};
 
 TYPE
   Info = RECORD
-    name   : M3ID.T;
-    mode   : Mode;
-    offset : INTEGER;
-    type   : Type.T;
-    dfault : Expr.T;
-    unused : BOOLEAN;
-    trace  : Tracer.T;
+    name   : M3ID.T   := M3ID.NoID;
+    mode   : Mode     := FIRST (Mode);
+    offset : INTEGER  := 0;
+    type   : Type.T   := NIL;
+    dfault : Expr.T   := NIL;
+    unused : BOOLEAN  := FALSE;
+    trace  : Tracer.T := NIL;
   END;
 
 PROCEDURE New (READONLY info: Info): Value.T;

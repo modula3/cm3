@@ -15,19 +15,19 @@ IMPORT Variable, Procedure, UserProc, Target, M3RT, NamedType;
 
 TYPE
   T = Value.T BRANDED OBJECT 
-        offset   : INTEGER;
-        type     : Type.T;
-        repType  : Type.T;
-        dfault   : Expr.T;
-        refType  : Type.T; (* Needed to copy an open array. *)
-        qid      := M3.NoQID;
-        tempCGVal: CG.Val;
-        cg_type  : CG.TypeUID;
-        mode     : Mode;
-        kind     : Type.Class;
-        trace    : Tracer.T;
-        openArray: BOOLEAN;
-        hasError : BOOLEAN;
+        offset   : INTEGER    := 0;
+        type     : Type.T     := NIL;
+        repType  : Type.T     := NIL;
+        dfault   : Expr.T     := NIL;
+        refType  : Type.T     := NIL; (* Needed to copy an open array. *)
+        qid                   := M3.NoQID;
+        tempCGVal: CG.Val     := NIL;
+        cg_type  : CG.TypeUID := 0;
+        mode     : Mode       := FIRST (Mode);
+        kind     : Type.Class := FIRST (Type.Class);
+        trace    : Tracer.T   := NIL;
+        openArray: BOOLEAN    := FALSE;
+        hasError : BOOLEAN    := FALSE;
       OVERRIDES
         typeCheck   := Check;
         set_globals := SetGlobals;
@@ -65,15 +65,8 @@ PROCEDURE NewBuiltin (name: TEXT;  offset: INTEGER;  type: Type.T): Value.T =
     t.offset   := offset;
     t.mode     := Mode.mVALUE;
     t.type     := type;
-    t.repType  := NIL;
-    t.dfault   := NIL;
     t.unused   := FALSE;
     t.kind     := Type.Class.Error;
-    t.refType  := NIL;
-    t.tempCGVal:= NIL;
-    t.cg_type  := 0;
-    t.trace    := NIL;
-    t.openArray := FALSE;
     RETURN t;
   END NewBuiltin;
 
@@ -86,15 +79,10 @@ PROCEDURE New (READONLY info: Info): Value.T =
     t.offset   := info.offset;
     t.mode     := info.mode;
     t.type     := info.type;
-    t.repType  := NIL;
     t.dfault   := info.dfault;
     t.unused   := info.unused;
     t.kind     := Type.Class.Error;
-    t.refType  := NIL;
-    t.tempCGVal:= NIL;
-    t.cg_type  := 0;
     t.trace    := info.trace;
-    t.openArray := FALSE;
     RETURN t;
   END New;
 
