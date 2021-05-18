@@ -1854,7 +1854,7 @@ PROCEDURE declare_local
     RETURN v;
   END declare_local;
 
-PROCEDURE declare_param (self: U;  n: Name;  s: ByteSize;  a: Alignment; t: Type;  m3t: TypeUID;  in_memory, up_level: BOOLEAN; f: Frequency; <*UNUSED*>qid := M3CG.NoQID): Var =
+PROCEDURE declare_param (self: U;  n: Name;  s: ByteSize;  a: Alignment; t: Type;  m3t: TypeUID;  in_memory, up_level: BOOLEAN; f: Frequency; <*UNUSED*>typename := M3CG.NoQID): Var =
   (* A formal parameter of a procedure, not of a procedure type, (which
      is given by declare_formal). *) 
   VAR

@@ -112,13 +112,13 @@ PROCEDURE DefineOpaque (name: TEXT;  super: Type.T): Type.T =
   END DefineOpaque;
 
 PROCEDURE Check (t: T;  <*UNUSED*> VAR cs: Value.CheckState) =
-  VAR info: Type.Info;  initial := t.value;  qid: M3.QID;  name: TEXT;
+  VAR info: Type.Info;  initial := t.value;  typename: M3.QID;  name: TEXT;
   BEGIN
     t.value := Type.CheckInfo (t.value, info);
 
     IF (NOT t.imported)
       AND ((info.class = Type.Class.Ref) OR (info.class = Type.Class.Object))
-      AND (NOT NamedType.Split (initial, qid)) THEN
+      AND (NOT NamedType.Split (initial, typename)) THEN
       name := Value.GlobalName (t);
       IF (info.class = Type.Class.Ref)
         THEN RefType.NoteRefName (t.value, name);

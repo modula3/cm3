@@ -161,7 +161,7 @@ END;
 <*NOWARN*>PROCEDURE declare_global(self: T; name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: TypeUID; exported, inited: BOOLEAN): Var = BEGIN RETURN NIL; END declare_global;
 <*NOWARN*>PROCEDURE declare_constant(self: T; name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: TypeUID; exported, inited: BOOLEAN): Var = BEGIN RETURN NIL; END declare_constant;
 <*NOWARN*>PROCEDURE declare_local(self: T; name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: TypeUID; in_memory, up_level: BOOLEAN; frequency: Frequency): Var = BEGIN RETURN NIL; END declare_local;
-<*NOWARN*>PROCEDURE declare_param(self: T; name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: TypeUID; in_memory, up_level: BOOLEAN; frequency: Frequency; qid := M3CG.NoQID): Var = BEGIN RETURN NIL; END declare_param;
+<*NOWARN*>PROCEDURE declare_param(self: T; name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: TypeUID; in_memory, up_level: BOOLEAN; frequency: Frequency; typename := M3CG.NoQID): Var = BEGIN RETURN NIL; END declare_param;
 <*NOWARN*>PROCEDURE declare_temp(self: T; byte_size: ByteSize; alignment: Alignment; type: Type; in_memory: BOOLEAN): Var = BEGIN RETURN NIL; END declare_temp;
 <*NOWARN*>PROCEDURE import_procedure(self: T; name: Name; n_params: INTEGER; ret_type: Type; callingConvention: CallingConvention; return_type_qid := M3CG.NoQID): Proc = BEGIN RETURN NIL; END import_procedure;
 <*NOWARN*>PROCEDURE declare_procedure(self: T; name: Name; n_params: INTEGER; return_type: Type; level: INTEGER; callingConvention: CallingConvention; exported: BOOLEAN; parent: Proc; return_type_qid := M3CG.NoQID): Proc = BEGIN RETURN NIL; END declare_procedure;

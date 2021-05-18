@@ -19,7 +19,7 @@ PROCEDURE Is        (t: Type.T): BOOLEAN;
 PROCEDURE NFormals  (t: Type.T): INTEGER;
 PROCEDURE Formals   (t: Type.T): Value.T (*list*);
 PROCEDURE Result    (t: Type.T): Type.T;
-PROCEDURE ResultQid (t: Type.T): M3.QID;
+PROCEDURE ResultTypename (t: Type.T): M3.QID;
 PROCEDURE CGResult  (t: Type.T): CG.Type;
 PROCEDURE Raises    (t: Type.T): M3.ExSet;
 PROCEDURE Methods   (t: Type.T): CallExpr.MethodList;

@@ -196,7 +196,7 @@ AssertFalse();
 RETURN NIL;
 END declare_local;
 
-<*NOWARN*>PROCEDURE declare_param(self: T; name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: TypeUID; in_memory, up_level: BOOLEAN; frequency: Frequency; qid := M3CG.NoQID): Var =
+<*NOWARN*>PROCEDURE declare_param(self: T; name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: TypeUID; in_memory, up_level: BOOLEAN; frequency: Frequency; typename := M3CG.NoQID): Var =
 BEGIN
 AssertFalse();
 RETURN NIL;

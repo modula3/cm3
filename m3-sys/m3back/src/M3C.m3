@@ -4195,7 +4195,7 @@ PROCEDURE Locals_declare_param(
     <*UNUSED*>in_memory: BOOLEAN;
     up_level: BOOLEAN;
     <*UNUSED*>frequency: Frequency;
-    qid := NoQID): M3CG.Var =
+    typename := NoQID): M3CG.Var =
 BEGIN
     RETURN declare_param(
         self.self,
@@ -4205,7 +4205,7 @@ BEGIN
         type,
         typeid,
         up_level,
-        qid);
+        typename);
 END Locals_declare_param;
 
 PROCEDURE Locals_declare_local(
@@ -4298,7 +4298,7 @@ PROCEDURE Imports_declare_param(
     <*UNUSED*>in_memory: BOOLEAN;
     up_level: BOOLEAN;
     <*UNUSED*>frequency: Frequency;
-    qid := NoQID): M3CG.Var =
+    typename := NoQID): M3CG.Var =
 BEGIN
     RETURN declare_param(
         self.self,
@@ -4308,7 +4308,7 @@ BEGIN
         type,
         typeid,
         up_level,
-        qid);
+        typename);
 END Imports_declare_param;
 
 PROCEDURE Imports_import_global(
@@ -4485,7 +4485,7 @@ PROCEDURE GetStructSizes_declare_param(
     <*UNUSED*>in_memory: BOOLEAN;
     <*UNUSED*>up_level: BOOLEAN;
     <*UNUSED*>frequency: Frequency;
-    <*UNUSED*>qid := NoQID): M3CG.Var =
+    <*UNUSED*>typename := NoQID): M3CG.Var =
 BEGIN
     RETURN self.Declare(type, byte_size, alignment);
 END GetStructSizes_declare_param;
@@ -4704,11 +4704,11 @@ PROCEDURE internal_declare_param(
     typeid: TypeUID;
     up_level: BOOLEAN;
     type_text: TEXT;
-    qid := NoQID): M3CG.Var =
+    typename := NoQID): M3CG.Var =
 VAR function := self.param_proc;
     var: Var_t := NIL;
     type: Type_t := NIL;
-    qidtext := QidText(qid);
+    qidtext := QidText(typename);
 BEGIN
     IF DebugVerbose(self) THEN
         self.comment("internal_declare_param name:" & TextOrNIL(NameT(name))
@@ -4716,7 +4716,7 @@ BEGIN
             & " typeid:" & TypeIDToText(typeid)
             & " up_level:" & BoolToText[up_level]
             & " type_text:" & TextOrNIL(type_text)
-            & " qid:" & TextOrNil(qidtext));
+            & " typename:" & TextOrNil(qidtext));
     ELSE
         self.comment("internal_declare_param");
     END;
@@ -4773,7 +4773,7 @@ declare_param(
     type: CGType;
     typeid: TypeUID;
     up_level: BOOLEAN;
-    qid := NoQID): M3CG.Var =
+    typename := NoQID): M3CG.Var =
 BEGIN
     IF self.param_proc = NIL THEN
         RETURN NIL;
@@ -4787,7 +4787,7 @@ BEGIN
         typeid,
         up_level,
         NIL,
-        qid);
+        typename);
 END declare_param;
 
 PROCEDURE

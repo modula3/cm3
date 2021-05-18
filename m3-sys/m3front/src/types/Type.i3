@@ -102,7 +102,7 @@ PROCEDURE IsLazyAligned (t: T): BOOLEAN;
 
 PROCEDURE SetLazyAlignment (t: T; on: BOOLEAN);
 
-PROCEDURE QID (t: T; VAR qid: M3.QID);
+PROCEDURE Typename (t: T; VAR typename: M3.QID);
 
 (*** phase 3 ***)
 
