@@ -95,7 +95,7 @@ PROCEDURE Define (name: TEXT;  type: Type.T;  reserved: BOOLEAN) =
   BEGIN
     t := Create (M3ID.Add (name));
     t.value := type;
-    type.info.name := t.name;
+    type.info.name.item := t.name;
     Scope.Insert (t);
     IF (reserved) THEN Scanner.NoteReserved (t.name, t) END;
   END Define;
@@ -106,7 +106,7 @@ PROCEDURE DefineOpaque (name: TEXT;  super: Type.T): Type.T =
     t := Create (M3ID.Add (name));
     Scope.Insert (t);
     t.value := OpaqueType.New (super, t);
-    t.value.info.name := t.name;
+    t.value.info.name.item := t.name;
     Scanner.NoteReserved (t.name, t);
     RETURN t.value;
   END DefineOpaque;
