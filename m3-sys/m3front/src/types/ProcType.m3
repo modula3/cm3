@@ -380,6 +380,7 @@ PROCEDURE Result (t: Type.T): Type.T =
 PROCEDURE ResultTypename (t: Type.T): M3.QID =
   VAR p := Reduce (t);
   BEGIN
+    Type.Compile (t);
     IF (p # NIL)
       THEN RETURN p.result_typename;
       ELSE RETURN M3.NoQID;
