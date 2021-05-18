@@ -1017,7 +1017,7 @@ PROCEDURE import_procedure (VAR s: State) =
       ret_type := Scan_type (s);
       calling  := Scan_callConv (s);
       p        := Scan_procName (s);
-      (* TODO return_type_qid but it is not used *)
+      (* TODO return_typename but it is not used *)
   BEGIN
     AddProc (s, p, s.cg.import_procedure (name, n_params, ret_type, calling));
   END import_procedure;
@@ -1031,7 +1031,7 @@ PROCEDURE declare_procedure (VAR s: State) =
       export   := Scan_bool (s);
       parent   := Scan_proc (s);
       p        := Scan_procName (s);
-      (* TODO return_type_qid but it is not used downstream and can be omitted indefinitely *)
+      (* TODO return_typename but it is not used downstream and can be omitted indefinitely *)
   BEGIN
     AddProc (s, p, s.cg.declare_procedure (name, n_params, ret_type,
                                            level, calling, export, parent));

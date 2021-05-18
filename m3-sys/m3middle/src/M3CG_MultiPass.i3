@@ -54,8 +54,8 @@ TYPE op_tag_t = op_t OBJECT
 END;
 
 (* These create procs. *)
-TYPE import_procedure_t = op_tag_t OBJECT name: Name; n_params: INTEGER; return_type: Type; callingConvention: CallingConvention; return_type_qid := M3CG.NoQID; OVERRIDES replay := replay_import_procedure END;
-TYPE declare_procedure_t = op_tag_t OBJECT name: Name; n_params: INTEGER; return_type: Type; level: INTEGER; callingConvention: CallingConvention; exported: BOOLEAN; parent: INTEGER(*proc_t*); return_type_qid := M3CG.NoQID; OVERRIDES replay := replay_declare_procedure END;
+TYPE import_procedure_t = op_tag_t OBJECT name: Name; n_params: INTEGER; return_type: Type; callingConvention: CallingConvention; return_typename := M3CG.NoQID; OVERRIDES replay := replay_import_procedure END;
+TYPE declare_procedure_t = op_tag_t OBJECT name: Name; n_params: INTEGER; return_type: Type; level: INTEGER; callingConvention: CallingConvention; exported: BOOLEAN; parent: INTEGER(*proc_t*); return_typename := M3CG.NoQID; OVERRIDES replay := replay_declare_procedure END;
 
 (* These create vars. *)
 TYPE declare_segment_t = op_tag_t OBJECT name: Name; typeid: typeid_t; is_const: BOOLEAN; OVERRIDES replay := replay_declare_segment END;

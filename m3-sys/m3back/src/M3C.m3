@@ -4283,9 +4283,9 @@ PROCEDURE Imports_import_procedure(
     parameter_count: INTEGER;
     return_type: CGType;
     callingConvention: CallingConvention;
-    return_type_qid := NoQID): M3CG.Proc =
+    return_typename := NoQID): M3CG.Proc =
 BEGIN
-    RETURN import_procedure(self.self, name, parameter_count, return_type, callingConvention, return_type_qid);
+    RETURN import_procedure(self.self, name, parameter_count, return_type, callingConvention, return_typename);
 END Imports_import_procedure;
 
 PROCEDURE Imports_declare_param(
@@ -5226,17 +5226,17 @@ END Segments_init_float;
 PROCEDURE import_procedure(
     self: T; name: Name; parameter_count: INTEGER;
     return_type: CGType; callingConvention: CallingConvention;
-    return_type_qid := NoQID): M3CG.Proc =
+    return_typename := NoQID): M3CG.Proc =
 VAR proc := NEW(Proc_t, name := name, parameter_count := parameter_count,
                 return_type := return_type, imported := TRUE,
                 callingConvention := callingConvention).Init(self);
-    qidtext := QidText(return_type_qid);
+    qidtext := QidText(return_typename);
 BEGIN
     IF DebugVerbose(self) THEN
         self.comment("import_procedure name:" & NameT(name)
             & " parameter_count:" & IntToDec(parameter_count)
             & " return_type:" & cgtypeToText[return_type]
-            & " return_type_qid:" & TextOrNil(qidtext));
+            & " return_typename:" & TextOrNil(qidtext));
     ELSE
         self.comment("import_procedure");
     END;
@@ -5263,7 +5263,7 @@ PROCEDURE Locals_declare_procedure(
     callingConvention: CallingConvention;
     exported: BOOLEAN;
     parent: M3CG.Proc;
-    return_type_qid := NoQID): M3CG.Proc =
+    return_typename := NoQID): M3CG.Proc =
 BEGIN
     RETURN declare_procedure(
         self.self,
@@ -5274,7 +5274,7 @@ BEGIN
         callingConvention,
         exported,
         parent,
-        return_type_qid);
+        return_typename);
 END Locals_declare_procedure;
 
 PROCEDURE ProcNameOrNIL(proc: M3CG.Proc): TEXT =
@@ -5290,12 +5290,12 @@ PROCEDURE declare_procedure(
     return_type: CGType; level: INTEGER;
     callingConvention: CallingConvention;
     exported: BOOLEAN; parent: M3CG.Proc;
-    return_type_qid := NoQID): M3CG.Proc =
+    return_typename := NoQID): M3CG.Proc =
 VAR proc := NEW(Proc_t, name := name, parameter_count := parameter_count,
                 return_type := return_type, level := level,
                 callingConvention := callingConvention, exported := exported,
                 parent := parent).Init(self);
-    qidtext := QidText(return_type_qid);
+    qidtext := QidText(return_typename);
 BEGIN
     IF DebugVerbose(self) THEN
         self.comment("declare_procedure name:" & NameT(name)
@@ -5304,7 +5304,7 @@ BEGIN
             & " exported:" & BoolToText[exported]
             & " level:" & IntToDec(level)
             & " parent:" & ProcNameOrNIL(parent)
-            & " return_type_qid:" & TextOrNil(qidtext));
+            & " return_typename:" & TextOrNil(qidtext));
     ELSE
         self.comment("declare_procedure");
     END;
