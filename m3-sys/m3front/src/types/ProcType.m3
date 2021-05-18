@@ -254,7 +254,7 @@ PROCEDURE Compiler (p: P) =
     END;
     n_raises := ESet.EmitTypes (p.raises);
     CG.Declare_proctype (Type.GlobalUID (p), n_formals, result_id, n_raises,
-                         p.callConv);
+                         p.callConv); (* TODO result_typename *)
     v := Scope.ToList (p.formals);
     WHILE (v # NIL) DO
       Formal.EmitDeclaration (v, FALSE, FALSE);

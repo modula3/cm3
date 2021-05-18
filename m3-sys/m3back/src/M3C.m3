@@ -3090,7 +3090,7 @@ BEGIN
     RETURN Target.ConventionFromID(callingConvention.m3cg_id).name;
 END CallingConventionToText;
 
-PROCEDURE declare_proctype(self: DeclareTypes_t; typeid: TypeUID; param_count: INTEGER; result: TypeUID; raise_count: INTEGER; callingConvention: CallingConvention) =
+PROCEDURE declare_proctype(self: DeclareTypes_t; typeid: TypeUID; param_count: INTEGER; result: TypeUID; raise_count: INTEGER; callingConvention: CallingConvention; <*UNUSED*>result_typename: M3CG.QID) =
 VAR x := self.self;
 BEGIN
     IF DebugVerbose(x) THEN
@@ -3098,7 +3098,8 @@ BEGIN
             & " param_count:" & IntToDec(param_count)
             & " result:" & TypeIDToText(result)
             & " raise_count:" & IntToDec(raise_count)
-            & " callingConvention:" & CallingConventionToText(callingConvention));
+            & " callingConvention:" & CallingConventionToText(callingConvention)
+            & " result_typename:" & TextOrNil(QidText(result_typename)));
     ELSE
         x.comment("declare_proctype");
     END;
@@ -3116,12 +3117,11 @@ END declare_proctype;
 PROCEDURE declare_formal(self: DeclareTypes_t; name: Name; typeid: TypeUID; typename := M3CG.NoQID) =
 VAR x := self.self;
     type := self.procType;
-    qidtext := QidText(typename);
 BEGIN
   IF DebugVerbose(x) THEN
     x.comment("declare_formal name:", NameT(name),
               " typeid:" & TypeIDToText(typeid),
-              " typename:" & TextOrNil(qidtext));
+              " typename:" & TextOrNil(QidText(typename)));
   ELSE
     x.comment("declare_formal");
   END;

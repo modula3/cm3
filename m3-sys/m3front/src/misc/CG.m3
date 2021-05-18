@@ -341,9 +341,9 @@ PROCEDURE Declare_indirect (target: TypeUID): TypeUID =
 
 PROCEDURE Declare_proctype (t: TypeUID;  n_formals: INTEGER;
                             result: TypeUID;  n_raises: INTEGER;
-                            cc: CallingConvention) =
+                            cc: CallingConvention; result_typename: M3CG.QID) =
   BEGIN
-    cg.declare_proctype (t, n_formals, result, n_raises, cc);
+    cg.declare_proctype (t, n_formals, result, n_raises, cc, result_typename);
     WebInfo.Declare_proctype (t, n_formals, result, n_raises);
   END Declare_proctype;
 

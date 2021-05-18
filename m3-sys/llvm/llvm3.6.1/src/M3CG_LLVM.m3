@@ -1440,7 +1440,7 @@ PROCEDURE declare_indirect (self: U; t, target: TypeUID) =
     EVAL self.debugTable.put(t,indirectRef);
   END declare_indirect;
 
-PROCEDURE declare_proctype (self: U; t: TypeUID; n_formals: INTEGER; result: TypeUID;  n_raises: INTEGER; cc: CallingConvention) =
+PROCEDURE declare_proctype (self: U; t: TypeUID; n_formals: INTEGER; result: TypeUID;  n_raises: INTEGER; cc: CallingConvention; <*UNUSED*>result_typename: M3CG.QID) =
   VAR
     procRef : ProcTypeDebug;
   BEGIN

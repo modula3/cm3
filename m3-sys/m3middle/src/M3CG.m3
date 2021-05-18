@@ -303,9 +303,9 @@ PROCEDURE declare_indirect (xx: T;  t, target: TypeUID) =
 
 PROCEDURE declare_proctype (xx: T; t: TypeUID; n_formals: INTEGER;
                             result: TypeUID;  n_raises: INTEGER;
-                            cc: CallingConvention) =
+                            cc: CallingConvention; result_typename: M3CG.QID) =
   BEGIN
-    xx.child.declare_proctype (t, n_formals, result, n_raises, cc);
+    xx.child.declare_proctype (t, n_formals, result, n_raises, cc, result_typename);
   END declare_proctype;
 
 PROCEDURE declare_formal (xx: T;  n: Name;  t: TypeUID; typename: M3CG.QID) =

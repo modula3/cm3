@@ -559,7 +559,7 @@ PROCEDURE declare_indirect (u: U;  type, target: TypeUID) =
 
 PROCEDURE declare_proctype (u: U;  type: TypeUID;  n_formals: INTEGER;
                             result: TypeUID;  n_raises: INTEGER;
-                            cc: CallingConvention) =
+                            cc: CallingConvention; <*UNUSED*>result_typename: M3CG.QID) =
   BEGIN
     IF u.debug THEN
       u.wr.Cmd  ("declare_proctype");
@@ -568,11 +568,12 @@ PROCEDURE declare_proctype (u: U;  type: TypeUID;  n_formals: INTEGER;
       u.wr.Tipe (result);
       u.wr.Int  (n_raises);
       u.wr.Txt  (cc.name);
+      (* TODO result_typename *)
       u.wr.NL   ();
     END
   END declare_proctype;
 
-PROCEDURE declare_formal (u: U;  n: Name;  type: TypeUID; <*UNUSED*>typename := M3CG.NoQID) =
+PROCEDURE declare_formal (u: U;  n: Name;  type: TypeUID; <*UNUSED*>typename: M3CG.QID) =
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("declare_formal");
