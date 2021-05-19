@@ -295,9 +295,9 @@ PROCEDURE declare_pointer (xx: T;  t, target: TypeUID;  brand: TEXT;
   END declare_pointer;
 
 
-PROCEDURE declare_indirect (xx: T;  t, target: TypeUID) =
+PROCEDURE declare_indirect (xx: T;  t, target: TypeUID; target_typename: QID) =
   BEGIN
-    xx.child.declare_indirect (t, target);
+    xx.child.declare_indirect (t, target, target_typename);
   END declare_indirect;
 
 

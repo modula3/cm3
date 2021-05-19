@@ -550,11 +550,12 @@ PROCEDURE declare_pointer (u: U;  t, target: TypeUID;  brand: TEXT;
   END declare_pointer;
 
 
-PROCEDURE declare_indirect (u: U;  t, target: TypeUID) =
+PROCEDURE declare_indirect (u: U;  t, target: TypeUID; <*UNUSED*>target_typename: QID) =
   BEGIN
     Cmd  (u, Bop.declare_indirect);
     Tipe (u, t);
     Tipe (u, target);
+    (* TODO target_typename but there are no downstream users *)
   END declare_indirect;
 
 

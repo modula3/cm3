@@ -725,8 +725,9 @@ PROCEDURE declare_pointer (VAR s: State) =
 PROCEDURE declare_indirect (VAR s: State) =
   VAR type   := Scan_tipe (s);
       target := Scan_tipe (s);
+      target_typename := NoQID;
   BEGIN
-    s.cg.declare_indirect (type, target);
+    s.cg.declare_indirect (type, target, target_typename);
   END declare_indirect;
 
 PROCEDURE declare_proctype (VAR s: State) =

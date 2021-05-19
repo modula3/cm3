@@ -1515,7 +1515,7 @@ PROCEDURE declare_pointer (self: U; t,target: TypeUID;  brand: TEXT; traced: BOO
     EVAL self.debugTable.put(t,ptrRef);
   END declare_pointer;
 
-PROCEDURE declare_indirect (self: U; t, target: TypeUID) =
+PROCEDURE declare_indirect (self: U; t, target: TypeUID; <*UNUSED*>target_typename: QID) =
   VAR
     indirectRef : IndirectDebug;
   BEGIN

@@ -3069,12 +3069,13 @@ BEGIN
             traced := traced));
 END declare_pointer;
 
-PROCEDURE declare_indirect(self: DeclareTypes_t; typeid, target: TypeUID) =
+PROCEDURE declare_indirect(self: DeclareTypes_t; typeid, target: TypeUID; target_typename: QID) =
 VAR x := self.self;
 BEGIN
     IF DebugVerbose(x) THEN
         x.comment("declare_indirect typeid:", TypeIDToText(typeid),
-            " target:", TypeIDToText(target));
+            " target:" & TypeIDToText(target),
+            " target_typename:" & TextOrNil(QidText(target_typename)));
     ELSE
         x.comment("declare_indirect");
     END;

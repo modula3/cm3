@@ -116,7 +116,7 @@ declare_subrange (t,domain: TypeUID; READONLY min,max: Target.Int; s: BitSize);
 declare_pointer (t, target: TypeUID;  brand: TEXT;  traced: BOOLEAN);
 (* 'brand'=NIL ==> t is unbranded *)
 
-declare_indirect (t, target: TypeUID);
+declare_indirect (t, target: TypeUID; target_typename := NoQID);
 (* an automatically dereferenced pointer! (WITH variables, VAR formals, ...) *)
 
 declare_proctype (t: TypeUID;  n_formals: INTEGER;

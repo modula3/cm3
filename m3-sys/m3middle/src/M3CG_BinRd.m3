@@ -612,6 +612,7 @@ PROCEDURE declare_pointer (VAR s: State) =
 PROCEDURE declare_indirect (VAR s: State) =
   VAR type   := Scan_tipe (s);
       target := Scan_tipe (s);
+      (* TODO target_typename but there are no downstream users *)
   BEGIN
     s.cg.declare_indirect (type, target);
   END declare_indirect;

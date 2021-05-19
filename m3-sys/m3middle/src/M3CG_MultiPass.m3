@@ -495,9 +495,9 @@ BEGIN
 self.Add(NEW(declare_pointer_t, op := Op.declare_pointer, typeid := typeid, target_typeid := target_typeid, brand := brand, traced := traced));
 END declare_pointer;
 
-PROCEDURE declare_indirect(self: T; typeid, target_typeid: TypeUID) =
+PROCEDURE declare_indirect(self: T; typeid, target_typeid: TypeUID; target_typename: QID) =
 BEGIN
-self.Add(NEW(declare_indirect_t, op := Op.declare_indirect, typeid := typeid, target_typeid := target_typeid));
+self.Add(NEW(declare_indirect_t, op := Op.declare_indirect, typeid := typeid, target_typeid := target_typeid, target_typename := target_typename));
 END declare_indirect;
 
 PROCEDURE declare_proctype(self: T; typeid: TypeUID; n_formals: INTEGER; return_typeid: TypeUID; n_raises: INTEGER; callingConvention: CallingConvention; result_typename: QID) =
@@ -1146,7 +1146,7 @@ PROCEDURE replay_declare_field(self: declare_field_t; <*UNUSED*>replay: Replay_t
 PROCEDURE replay_declare_set(self: declare_set_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.declare_set(self.typeid, self.domain_typeid, self.bit_size); END replay_declare_set;
 PROCEDURE replay_declare_subrange(self: declare_subrange_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.declare_subrange(self.typeid, self.domain_typeid, self.min, self.max, self.bit_size); END replay_declare_subrange;
 PROCEDURE replay_declare_pointer(self: declare_pointer_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.declare_pointer(self.typeid, self.target_typeid, self.brand, self.traced); END replay_declare_pointer;
-PROCEDURE replay_declare_indirect(self: declare_indirect_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.declare_indirect(self.typeid, self.target_typeid); END replay_declare_indirect;
+PROCEDURE replay_declare_indirect(self: declare_indirect_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.declare_indirect(self.typeid, self.target_typeid, self.target_typename); END replay_declare_indirect;
 PROCEDURE replay_declare_proctype(self: declare_proctype_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.declare_proctype(self.typeid, self.n_formals, self. return_typeid, self.n_raises, self.callingConvention); END replay_declare_proctype;
 PROCEDURE replay_declare_formal(self: declare_formal_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.declare_formal(self.name, self.typeid, self.typename); END replay_declare_formal;
 PROCEDURE replay_declare_raises(self: declare_raises_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.declare_raises(self.name); END replay_declare_raises;
