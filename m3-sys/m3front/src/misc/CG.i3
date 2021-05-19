@@ -9,6 +9,7 @@
 INTERFACE CG;
 
 IMPORT Target, M3CG, M3;
+FROM M3CG IMPORT NoQID;
 
 (*
 This interface provides a single front-end specific, sometimes
@@ -118,8 +119,8 @@ PROCEDURE Declare_indirect (target: TypeUID): TypeUID;
 
 PROCEDURE Declare_proctype (t: TypeUID; n_formals: INTEGER;
                             result: TypeUID;  n_raises: INTEGER;
-                            cc: CallingConvention; <*UNUSED*>result_typename := M3CG.NoQID);
-PROCEDURE Declare_formal (n: Name;  t: TypeUID; <*UNUSED*>typename := M3CG.NoQID);
+                            cc: CallingConvention; <*UNUSED*>result_typename := NoQID);
+PROCEDURE Declare_formal (n: Name;  t: TypeUID; <*UNUSED*>typename := NoQID);
 PROCEDURE Declare_raises (n: Name);
 
 PROCEDURE Declare_object (t, super: TypeUID;  brand: TEXT;  traced: BOOLEAN;
@@ -200,7 +201,7 @@ PROCEDURE Declare_local (n: Name;  s: Size;  a: Alignment;  t: Type;
 
 PROCEDURE Declare_param (n: Name;  s: Size;  a: Alignment;  t: Type;
                          m3t: TypeUID;  in_memory, up_level: BOOLEAN;
-                         f: Frequency; typename := M3.NoQID): Var;
+                         f: Frequency; typename := NoQID): Var;
 (* declares a formal parameter.  Formals are declared in their lexical
    order immediately following the 'declare_procedure' or
    'import_procedure' that contains them.  *)
@@ -319,7 +320,7 @@ PROCEDURE EmitText (t: TEXT;  is_const: BOOLEAN): INTEGER;
 PROCEDURE Import_procedure (n: Name;  n_params: INTEGER;  ret_type: Type;
                             cc: CallingConvention;
                             VAR(*OUT*) new: BOOLEAN;
-                            return_typename := M3.NoQID): Proc;
+                            return_typename := NoQID): Proc;
 (* declare and import the external procedure with name 'n' and 'n_params'
    formal parameters.  It must be a top-level (=0) procedure that returns
    values of type 'ret_type'.  'cc' is the convention specified
@@ -329,7 +330,7 @@ PROCEDURE Import_procedure (n: Name;  n_params: INTEGER;  ret_type: Type;
 PROCEDURE Declare_procedure (n: Name;  n_params: INTEGER;  ret_type: Type;
                              lev: INTEGER;  cc: CallingConvention;
                              exported: BOOLEAN;  parent: Proc;
-                             return_typename := M3CG.NoQID): Proc;
+                             return_typename := NoQID): Proc;
 (* declare a procedure named 'n' with 'n_params' formal parameters
    at static level 'lev'.  Sets "current procedure" to this procedure.
    If the name 'n' is NIL, a new unique name will be supplied by the back-end.

@@ -8,7 +8,7 @@
 MODULE M3CG EXPORTS M3CG, M3CG_Ops;
 
 IMPORT Text, Word; 
-IMPORT Target, M3CG;
+IMPORT Target;
 
 REVEAL
   T = Public BRANDED "M3CG.T" OBJECT OVERRIDES
@@ -303,12 +303,12 @@ PROCEDURE declare_indirect (xx: T;  t, target: TypeUID) =
 
 PROCEDURE declare_proctype (xx: T; t: TypeUID; n_formals: INTEGER;
                             result: TypeUID;  n_raises: INTEGER;
-                            cc: CallingConvention; result_typename: M3CG.QID) =
+                            cc: CallingConvention; result_typename: QID) =
   BEGIN
     xx.child.declare_proctype (t, n_formals, result, n_raises, cc, result_typename);
   END declare_proctype;
 
-PROCEDURE declare_formal (xx: T;  n: Name;  t: TypeUID; typename: M3CG.QID) =
+PROCEDURE declare_formal (xx: T;  n: Name;  t: TypeUID; typename: QID) =
   BEGIN
     xx.child.declare_formal (n, t, typename);
   END declare_formal;
@@ -401,7 +401,7 @@ PROCEDURE declare_local (xx: T;  n: Name;  s: ByteSize;  a: Alignment;
 
 PROCEDURE declare_param (xx: T;  n: Name;  s: ByteSize;  a: Alignment;
                          t: Type;  m3t: TypeUID;  in_memory, up_level: BOOLEAN;
-                         f: Frequency; typename := M3CG.NoQID): Var =
+                         f: Frequency; typename: QID): Var =
   BEGIN
     RETURN xx.child.declare_param (n, s, a, t, m3t, in_memory, up_level, f, typename);
   END declare_param;
@@ -469,7 +469,7 @@ PROCEDURE init_float (xx: T;  o: ByteOffset;  READONLY f: Target.Float) =
 
 PROCEDURE import_procedure (xx: T;  n: Name;  n_params: INTEGER;
                           ret_type: Type;  cc: CallingConvention;
-                          return_typename := M3CG.NoQID): Proc =
+                          return_typename: QID): Proc =
   BEGIN
     RETURN xx.child.import_procedure (n, n_params, ret_type, cc, return_typename);
   END import_procedure;
@@ -478,7 +478,7 @@ PROCEDURE declare_procedure (xx: T;  n: Name;  n_params: INTEGER;
                              return_type: Type;  lev: INTEGER;
                              cc: CallingConvention;
                              exported: BOOLEAN;  parent: Proc;
-                             return_typename := M3CG.NoQID): Proc =
+                             return_typename: QID): Proc =
   BEGIN
     RETURN xx.child.declare_procedure (n, n_params, return_type,
                                        lev, cc, exported, parent,

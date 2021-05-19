@@ -17,6 +17,7 @@ IMPORT Decl, Null, Int, LInt, Fmt, Procedure, Tracer;
 IMPORT Expr, IntegerExpr, ArrayExpr, TextExpr, NamedExpr;
 IMPORT Type, OpenArrayType, ErrType, TipeMap;
 FROM Scanner IMPORT GetToken, Match, cur;
+FROM M3CG IMPORT NoQID;
 
 CONST
   Big_Local = 8192; (* x Target.Char.size *)
@@ -559,7 +560,7 @@ PROCEDURE Declare (t: T): BOOLEAN =
     is_struct  := Type.IsStructured (t.type);
     externName : TEXT;
     externM3ID : M3ID.T;
-    typename   := M3.NoQID;
+    typename   := NoQID;
   BEGIN
     Type.Compile (t.type);
 

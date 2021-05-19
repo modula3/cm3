@@ -3090,7 +3090,7 @@ BEGIN
     RETURN Target.ConventionFromID(callingConvention.m3cg_id).name;
 END CallingConventionToText;
 
-PROCEDURE declare_proctype(self: DeclareTypes_t; typeid: TypeUID; param_count: INTEGER; result: TypeUID; raise_count: INTEGER; callingConvention: CallingConvention; <*UNUSED*>result_typename: M3CG.QID) =
+PROCEDURE declare_proctype(self: DeclareTypes_t; typeid: TypeUID; param_count: INTEGER; result: TypeUID; raise_count: INTEGER; callingConvention: CallingConvention; result_typename: QID) =
 VAR x := self.self;
 BEGIN
     IF DebugVerbose(x) THEN
@@ -3114,7 +3114,7 @@ BEGIN
     x.Type_Init(self.procType);
 END declare_proctype;
 
-PROCEDURE declare_formal(self: DeclareTypes_t; name: Name; typeid: TypeUID; typename := M3CG.NoQID) =
+PROCEDURE declare_formal(self: DeclareTypes_t; name: Name; typeid: TypeUID; typename: QID) =
 VAR x := self.self;
     type := self.procType;
 BEGIN
@@ -4197,7 +4197,7 @@ PROCEDURE Locals_declare_param(
     <*UNUSED*>in_memory: BOOLEAN;
     up_level: BOOLEAN;
     <*UNUSED*>frequency: Frequency;
-    typename := NoQID): M3CG.Var =
+    typename: QID): M3CG.Var =
 BEGIN
     RETURN declare_param(
         self.self,
@@ -4285,7 +4285,7 @@ PROCEDURE Imports_import_procedure(
     parameter_count: INTEGER;
     return_type: CGType;
     callingConvention: CallingConvention;
-    return_typename := NoQID): M3CG.Proc =
+    return_typename: QID): M3CG.Proc =
 BEGIN
     RETURN import_procedure(self.self, name, parameter_count, return_type, callingConvention, return_typename);
 END Imports_import_procedure;
@@ -4300,7 +4300,7 @@ PROCEDURE Imports_declare_param(
     <*UNUSED*>in_memory: BOOLEAN;
     up_level: BOOLEAN;
     <*UNUSED*>frequency: Frequency;
-    typename := NoQID): M3CG.Var =
+    typename: QID): M3CG.Var =
 BEGIN
     RETURN declare_param(
         self.self,
@@ -4487,7 +4487,7 @@ PROCEDURE GetStructSizes_declare_param(
     <*UNUSED*>in_memory: BOOLEAN;
     <*UNUSED*>up_level: BOOLEAN;
     <*UNUSED*>frequency: Frequency;
-    <*UNUSED*>typename := NoQID): M3CG.Var =
+    <*UNUSED*>typename: QID): M3CG.Var =
 BEGIN
     RETURN self.Declare(type, byte_size, alignment);
 END GetStructSizes_declare_param;
@@ -4775,7 +4775,7 @@ declare_param(
     type: CGType;
     typeid: TypeUID;
     up_level: BOOLEAN;
-    typename := NoQID): M3CG.Var =
+    typename: QID): M3CG.Var =
 BEGIN
     IF self.param_proc = NIL THEN
         RETURN NIL;
@@ -5228,7 +5228,7 @@ END Segments_init_float;
 PROCEDURE import_procedure(
     self: T; name: Name; parameter_count: INTEGER;
     return_type: CGType; callingConvention: CallingConvention;
-    return_typename := NoQID): M3CG.Proc =
+    return_typename: QID): M3CG.Proc =
 VAR proc := NEW(Proc_t, name := name, parameter_count := parameter_count,
                 return_type := return_type, imported := TRUE,
                 callingConvention := callingConvention).Init(self);
@@ -5265,7 +5265,7 @@ PROCEDURE Locals_declare_procedure(
     callingConvention: CallingConvention;
     exported: BOOLEAN;
     parent: M3CG.Proc;
-    return_typename := NoQID): M3CG.Proc =
+    return_typename: QID): M3CG.Proc =
 BEGIN
     RETURN declare_procedure(
         self.self,
@@ -5292,7 +5292,7 @@ PROCEDURE declare_procedure(
     return_type: CGType; level: INTEGER;
     callingConvention: CallingConvention;
     exported: BOOLEAN; parent: M3CG.Proc;
-    return_typename := NoQID): M3CG.Proc =
+    return_typename: QID): M3CG.Proc =
 VAR proc := NEW(Proc_t, name := name, parameter_count := parameter_count,
                 return_type := return_type, level := level,
                 callingConvention := callingConvention, exported := exported,

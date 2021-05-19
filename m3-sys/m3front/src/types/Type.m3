@@ -8,13 +8,14 @@
 
 UNSAFE MODULE Type EXPORTS Type, TypeRep;
 
-IMPORT M3, CG, Error, Token, Scanner, NamedType, Word;
+IMPORT CG, Error, Token, Scanner, NamedType, Word;
 IMPORT ArrayType, PackedType, EnumType, ObjectType, RefType;
 IMPORT ProcType, UserProc, RecordType, SetType, SubrangeType, OpaqueType;
 IMPORT Value, Module, Host, TypeFP, TypeTbl, WCharr, Brand;
 IMPORT Addr, Bool, Charr, Card, EReel, Int, LInt, LReel, Mutex, Null;
 IMPORT ObjectRef, ObjectAdr, Reel, Reff, Textt, Target, TInt, TFloat;
 IMPORT Text, M3RT, TipeMap, TipeDesc, ErrType, OpenArrayType, M3ID;
+FROM M3CG IMPORT QID;
 
 CONST
   NOT_CHECKED = -1;
@@ -190,7 +191,7 @@ PROCEDURE CheckInfo (t: T;  VAR x: Info): T =
     RETURN u;
   END CheckInfo;
 
-PROCEDURE Typename (t: T; VAR typename: M3.QID) =
+PROCEDURE Typename (t: T; VAR typename: QID) =
 BEGIN
   typename := t.info.name;
 END Typename;
@@ -478,7 +479,7 @@ PROCEDURE GetBounds (t: T;  VAR min, max: Target.Int): BOOLEAN =
   END GetBounds;
 
 PROCEDURE IllegalRecursion (t: T) =
-  VAR name: M3.QID;  v: Value.T;
+  VAR name: QID;  v: Value.T;
   BEGIN
     IF (t.errored) THEN
       (* don't reissue the error message *)

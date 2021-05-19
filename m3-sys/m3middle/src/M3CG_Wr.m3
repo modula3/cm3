@@ -16,6 +16,7 @@ FROM M3CG IMPORT Var, Proc, Label, Sign, BitOffset, No_label;
 FROM M3CG IMPORT Type, ZType, AType, RType, IType, MType;
 FROM M3CG IMPORT CompareOp, ConvertOp, AtomicOp, RuntimeError;
 FROM M3CG IMPORT MemoryOrder;
+FROM M3CG IMPORT QID;
 
 TYPE WrVar    = Var    OBJECT tag: INTEGER END;
 TYPE WrProc   = Proc   OBJECT tag: INTEGER END;
@@ -572,7 +573,7 @@ PROCEDURE declare_indirect (u: U;  t, target: TypeUID) =
 
 PROCEDURE declare_proctype (u: U;  t: TypeUID;  n_formals: INTEGER;
                             result: TypeUID;  n_raises: INTEGER;
-                            cc: CallingConvention; <*UNUSED*>result_typename: M3CG.QID) =
+                            cc: CallingConvention; <*UNUSED*>result_typename: QID) =
   BEGIN
     Cmd  (u, "declare_proctype");
     Tipe (u, t);
@@ -584,7 +585,7 @@ PROCEDURE declare_proctype (u: U;  t: TypeUID;  n_formals: INTEGER;
     NL   (u);
   END declare_proctype;
 
-PROCEDURE declare_formal (u: U;  n: Name;  t: TypeUID; <*UNUSED*>typename: M3CG.QID) =
+PROCEDURE declare_formal (u: U;  n: Name;  t: TypeUID; <*UNUSED*>typename: QID) =
   BEGIN
     Cmd   (u, "declare_formal");
     ZName (u, n);
@@ -787,7 +788,7 @@ PROCEDURE declare_local (u: U;  n: Name;  s: ByteSize;  a: Alignment;
 
 PROCEDURE declare_param (u: U;  n: Name;  s: ByteSize;  a: Alignment;
                          t: Type;  m3t: TypeUID;  in_memory, up_level: BOOLEAN;
-                         f: Frequency; <*UNUSED*>typename := M3CG.NoQID): Var =
+                         f: Frequency; <*UNUSED*>typename: QID): Var =
   VAR v := NewVar (u);
   BEGIN
     Cmd   (u, "declare_param");
@@ -912,7 +913,7 @@ PROCEDURE NewProc (u: U): Proc =
 
 PROCEDURE import_procedure (u: U;  n: Name;  n_params: INTEGER;
                             ret_type: Type;  cc: CallingConvention;
-                            <*UNUSED*>return_typename := M3CG.NoQID): Proc =
+                            <*UNUSED*>return_typename: QID): Proc =
   VAR p := NewProc (u);
   BEGIN
     Cmd   (u, "import_procedure");
@@ -929,7 +930,7 @@ PROCEDURE import_procedure (u: U;  n: Name;  n_params: INTEGER;
 PROCEDURE declare_procedure (u: U;  n: Name;  n_params: INTEGER;
                              return_type: Type;  lev: INTEGER;
                              cc: CallingConvention; exported: BOOLEAN;
-                             parent: Proc; <*UNUSED*>return_typename := M3CG.NoQID): Proc =
+                             parent: Proc; <*UNUSED*>return_typename: QID): Proc =
   VAR p := NewProc (u);
   BEGIN
     Cmd   (u, "declare_procedure");

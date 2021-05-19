@@ -8,7 +8,7 @@
 
 MODULE Error;
 
-IMPORT M3, Fmt, M3ID, M3Buf, Host, Scanner;
+IMPORT Fmt, M3ID, M3Buf, Host, Scanner, M3CG;
 
 TYPE
   Level = [0..3];
@@ -65,7 +65,7 @@ PROCEDURE Txt (id, msg: TEXT) =
     Trailer (wr);
   END Txt;
 
-PROCEDURE QID (READONLY q: M3.QID;  msg: TEXT) =
+PROCEDURE QID (READONLY q: M3CG.QID;  msg: TEXT) =
   VAR wr := Header ();
   BEGIN
     Out (wr, msg);

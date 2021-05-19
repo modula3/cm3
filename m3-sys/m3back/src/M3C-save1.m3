@@ -13,6 +13,7 @@ FROM M3CG IMPORT CompareOp, ConvertOp, RuntimeError, MemoryOrder, AtomicOp;
 FROM Target IMPORT CGType;
 FROM M3CG_Ops IMPORT ErrorHandler;
 IMPORT Wrx86, M3ID, TInt;
+FROM M3CG IMPORT QID;
 (*
 IMPORT Wrx86, M3ID, M3CField, M3CFieldSeq;
 IMPORT SortedIntRefTbl;
@@ -906,12 +907,12 @@ END declare_indirect;
 <*NOWARN*>PROCEDURE declare_proctype(
     this: T; typeid: TypeUID; n_formals: INTEGER;
     result: TypeUID; n_raises: INTEGER;
-    callingConvention: CallingConvention; result_typename: M3CG.QID) =
+    callingConvention: CallingConvention; result_typename: QID) =
 BEGIN
     SuppressLineDirective(this, n_formals + (ORD(n_raises >= 0) * n_raises), "declare_proctype n_formals + n_raises");
 END declare_proctype;
 
-<*NOWARN*>PROCEDURE declare_formal(this: T; name: Name; typeid: TypeUID; typename := M3CG.NoQID) =
+<*NOWARN*>PROCEDURE declare_formal(this: T; name: Name; typeid: TypeUID; typename: QID) =
 BEGIN
     print(this, "/* declare formal: " & M3ID.ToText(name) & " */\n");
     SuppressLineDirective(this, -1, "declare_formal");
@@ -1326,7 +1327,7 @@ PROCEDURE declare_procedure (this: T; name: Name; n_params: INTEGER;
                              return_type: Type; level: INTEGER;
                              callingConvention: CallingConvention;
                              exported: BOOLEAN; parent: Proc;
-                             <*UNUSED*>return_typename := M3CG.NoQID): Proc =
+                             <*UNUSED*>return_typename: QID): Proc =
 VAR proc := NEW(CProc, name := FixName(name), n_params := n_params,
                 return_type := return_type, level := level,
                 callingConvention := callingConvention, exported := exported,

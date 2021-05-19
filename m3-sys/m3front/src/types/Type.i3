@@ -9,6 +9,7 @@
 INTERFACE Type;
 
 IMPORT M3, CG, Target;
+FROM M3CG IMPORT QID, NoQID;
 
 TYPE
   T          = M3.Type;
@@ -35,8 +36,8 @@ TYPE
     addr_align: INTEGER := Target.Word8.align;
     (* ^When stk_type = CG.Type.Addr, the alignment of dereferenced location. *)
     hash      : INTEGER;  (* internal hash code *)
-    name      := M3.NoQID; (* usually just one M3ID.T suffices and second could be in derived NamedType,
-                            * but this form is easier *)
+    name      := NoQID;   (* usually just one M3ID.T suffices and second could be in derived NamedType,
+                           * but this form is easier *)
     stk_type  : CG.Type;  (* code generator representation on operator stack *)
     mem_type  : CG.Type;  (* code generator representation as a variable *)
     class     : Class;
@@ -103,7 +104,7 @@ PROCEDURE IsLazyAligned (t: T): BOOLEAN;
 
 PROCEDURE SetLazyAlignment (t: T; on: BOOLEAN);
 
-PROCEDURE Typename (t: T; VAR typename: M3.QID);
+PROCEDURE Typename (t: T; VAR typename: QID);
 
 (*** phase 3 ***)
 

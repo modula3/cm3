@@ -14,6 +14,7 @@ IMPORT ProcType, Stmt, BlockStmt, Marker, Coverage, M3RT;
 IMPORT CallExpr, Token, Variable, ProcExpr, Tracer;
 IMPORT Scanner, Decl, ESet, ProcBody, Target, Expr, Formal, Jmpbufs;
 FROM Scanner IMPORT GetToken, Match, MatchID, cur;
+FROM M3CG IMPORT QID;
 
 REVEAL
   T = Value.T BRANDED OBJECT
@@ -393,7 +394,7 @@ PROCEDURE LoadStaticLink (t: T) =
  END LoadStaticLink;
 
 PROCEDURE ImportProc (p: T;  name: TEXT;  n_formals: INTEGER;
-                      cg_result: CG.Type; return_typename := M3.NoQID;
+                      cg_result: CG.Type; return_typename: QID;
                       cc: CG.CallingConvention) =
   VAR zz: Scope.T;  new: BOOLEAN;
   BEGIN

@@ -8,7 +8,8 @@
 
 INTERFACE NamedType;
 
-IMPORT M3, M3ID, Type, Value;
+IMPORT M3ID, Type, Value;
+FROM M3CG IMPORT QID;
 
 PROCEDURE Parse (): Type.T;
 
@@ -16,7 +17,7 @@ PROCEDURE New (t: Type.T): Type.T;
 PROCEDURE Create (module, name: M3ID.T): Type.T;
 
 PROCEDURE Strip (t: Type.T): Type.T;
-PROCEDURE Split (t: Type.T;  VAR name: M3.QID): BOOLEAN;
+PROCEDURE Split (t: Type.T;  VAR name: QID): BOOLEAN;
 PROCEDURE SplitV (t: Type.T;  VAR v: Value.T): BOOLEAN;
 
 END NamedType.

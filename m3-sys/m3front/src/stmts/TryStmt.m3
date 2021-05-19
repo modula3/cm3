@@ -8,10 +8,11 @@
 
 MODULE TryStmt;
 
-IMPORT M3, M3ID, CG, Variable, Scope, Exceptionz, Value, Error, Marker;
+IMPORT M3ID, CG, Variable, Scope, Exceptionz, Value, Error, Marker;
 IMPORT Type, Stmt, StmtRep, TryFinStmt, Token;
 IMPORT Scanner, ESet, Target, M3RT, Tracer, Jmpbufs;
 FROM Scanner IMPORT Match, MatchID, GetToken, Fail, cur;
+FROM M3CG IMPORT QID;
 
 TYPE
   P = Stmt.T OBJECT
@@ -43,7 +44,7 @@ TYPE
 TYPE
   Except = REF RECORD
              next : Except;
-             name : M3.QID;
+             name : QID;
              obj  : Value.T;
            END;
 
