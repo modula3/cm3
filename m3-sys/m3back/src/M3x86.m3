@@ -547,12 +547,13 @@ PROCEDURE declare_pointer (u: U; type, target: TypeUID; brand: TEXT; traced: BOO
     END
   END declare_pointer;
 
-PROCEDURE declare_indirect (u: U;  type, target: TypeUID) =
+PROCEDURE declare_indirect (u: U;  type, target: TypeUID; <*UNUSED*>target_typename: QID) =
   BEGIN
     IF u.debug THEN
       u.wr.Cmd  ("declare_indirect");
       u.wr.Tipe (type);
       u.wr.Tipe (target);
+      (* TODO target_typename *)
       u.wr.NL   ();
     END
   END declare_indirect;

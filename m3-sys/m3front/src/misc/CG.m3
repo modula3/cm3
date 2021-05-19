@@ -327,13 +327,13 @@ PROCEDURE Declare_pointer (t, target: TypeUID;  brand: TEXT;  traced: BOOLEAN)=
     WebInfo.Declare_pointer (t, target, brand, traced);
   END Declare_pointer;
 
-PROCEDURE Declare_indirect (target: TypeUID): TypeUID =
+PROCEDURE Declare_indirect (target: TypeUID; target_typename: QID): TypeUID =
   VAR x: INTEGER;
   BEGIN
     IF (indirects = NIL) THEN indirects := NewIntTbl () END;
     IF NOT indirects.get (target, x) THEN
       x := Word.Not (target);  (* !! fingerprint HACK !! *)
-      cg.declare_indirect (x, target);
+      cg.declare_indirect (x, target, target_typename);
       WebInfo.Declare_indirect (x, target);
       EVAL indirects.put (target, x);
     END;

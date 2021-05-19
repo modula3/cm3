@@ -184,7 +184,7 @@ END;
 <*NOWARN*>PROCEDURE declare_set(self: T; t, domain: TypeUID; bit_size: BitSize) = BEGIN END declare_set;
 <*NOWARN*>PROCEDURE declare_subrange(self: T; typeid, domain_typeid: TypeUID; READONLY min, max: Target.Int; bit_size: BitSize) = BEGIN END declare_subrange;
 <*NOWARN*>PROCEDURE declare_pointer(self: T; typeid, target_typeid: TypeUID; brand: TEXT; traced: BOOLEAN) = BEGIN END declare_pointer;
-<*NOWARN*>PROCEDURE declare_indirect(self: T; typeid, target_typeid: TypeUID) = BEGIN END declare_indirect;
+<*NOWARN*>PROCEDURE declare_indirect(self: T; typeid, target_typeid: TypeUID; target_typename: QID) = BEGIN END declare_indirect;
 <*NOWARN*>PROCEDURE declare_proctype(self: T; typeid: TypeUID; n_formals: INTEGER; result: TypeUID; n_raises: INTEGER; callingConvention: CallingConvention; result_typename: QID) = BEGIN END declare_proctype;
 <*NOWARN*>PROCEDURE declare_formal(self: T; name: Name; typeid: TypeUID; typename := NoQID) = BEGIN END declare_formal;
 <*NOWARN*>PROCEDURE declare_raises(self: T; name: Name) = BEGIN END declare_raises;

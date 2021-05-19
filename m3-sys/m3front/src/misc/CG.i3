@@ -114,7 +114,7 @@ PROCEDURE Declare_subrange (t, domain: TypeUID;  READONLY min, max: Target.Int;
 
 PROCEDURE Declare_pointer (t, target: TypeUID;  brand: TEXT;  traced: BOOLEAN);
 
-PROCEDURE Declare_indirect (target: TypeUID): TypeUID;
+PROCEDURE Declare_indirect (target: TypeUID; target_typename := NoQID): TypeUID;
 (* an automatically dereferenced pointer! (WITH variables, VAR formals, ...) *)
 
 PROCEDURE Declare_proctype (t: TypeUID; n_formals: INTEGER;

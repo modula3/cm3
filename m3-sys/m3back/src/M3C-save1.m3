@@ -899,7 +899,7 @@ BEGIN
     (* UNDONE? *)  
 END declare_pointer;
 
-<*NOWARN*>PROCEDURE declare_indirect(this: T; typeid, target: TypeUID) =
+<*NOWARN*>PROCEDURE declare_indirect(this: T; typeid, target: TypeUID; <*UNUSED*>target_typename: QID) =
 BEGIN
     (* UNDONE? *)  
 END declare_indirect;
