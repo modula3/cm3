@@ -1327,6 +1327,7 @@ PROCEDURE declare_procedure (this: T; name: Name; n_params: INTEGER;
                              return_type: Type; level: INTEGER;
                              callingConvention: CallingConvention;
                              exported: BOOLEAN; parent: Proc;
+                             <*UNUSED*>return_typeid: TypeUID;
                              <*UNUSED*>return_typename: QID): Proc =
 VAR proc := NEW(CProc, name := FixName(name), n_params := n_params,
                 return_type := return_type, level := level,

@@ -389,7 +389,7 @@ self.Add(NEW(import_procedure_t, op := Op.import_procedure, name := name, n_para
 RETURN proc;
 END import_procedure;
 
-PROCEDURE declare_procedure(self: T; name: Name; n_params: INTEGER; return_type: Type; level: INTEGER; callingConvention: CallingConvention; exported: BOOLEAN; parent: Proc; return_typename := NoQID): Proc =
+PROCEDURE declare_procedure(self: T; name: Name; n_params: INTEGER; return_type: Type; level: INTEGER; callingConvention: CallingConvention; exported: BOOLEAN; parent: Proc; return_typeid: TypeUID := 0; return_typename := NoQID): Proc =
 VAR proc := self.refs.NewProc();
     parent_tag := 0;
 BEGIN
@@ -397,7 +397,7 @@ BEGIN
         parent_tag := NARROW(parent, proc_t).tag;
     END;
     self.Add(NEW(declare_procedure_t, op := Op.declare_procedure, name := name, n_params := n_params, return_type := return_type, level := level,
-                 callingConvention := callingConvention, exported := exported, parent := parent_tag, return_typename := return_typename, tag := proc.tag));
+                 callingConvention := callingConvention, exported := exported, parent := parent_tag, return_typeid := return_typeid, return_typename := return_typename, tag := proc.tag));
     RETURN proc;
 END declare_procedure;
 
@@ -1101,7 +1101,7 @@ END replay_import_procedure;
 PROCEDURE replay_declare_procedure(self: declare_procedure_t; replay: Replay_t; cg: cg_t) =
 BEGIN
     replay.PutRef(self.tag, cg.declare_procedure(self.name, self.n_params, self.return_type,
-        self.level, self.callingConvention, self.exported, replay.GetProc(self.parent), self.return_typename));
+        self.level, self.callingConvention, self.exported, replay.GetProc(self.parent), self.return_typeid, self.return_typename));
 END replay_declare_procedure;
 
 PROCEDURE replay_import_global(self: import_global_t; replay: Replay_t; cg: cg_t) =

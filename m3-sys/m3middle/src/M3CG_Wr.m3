@@ -931,7 +931,9 @@ PROCEDURE import_procedure (u: U;  n: Name;  n_params: INTEGER;
 PROCEDURE declare_procedure (u: U;  n: Name;  n_params: INTEGER;
                              return_type: Type;  lev: INTEGER;
                              cc: CallingConvention; exported: BOOLEAN;
-                             parent: Proc; <*UNUSED*>return_typename: QID): Proc =
+                             parent: Proc;
+                             <*UNUSED*>return_typeid: TypeUID := 0;
+                             <*UNUSED*>return_typename: QID): Proc =
   VAR p := NewProc (u);
   BEGIN
     Cmd   (u, "declare_procedure");
@@ -944,7 +946,7 @@ PROCEDURE declare_procedure (u: U;  n: Name;  n_params: INTEGER;
     PName (u, parent);
     PName (u, p);
     NL    (u);
-    (* TODO return_typename but it is not used downstream and can be omitted indefinitely *)
+    (* TODO return_typeid, return_typename but it is not used downstream and can be omitted indefinitely *)
     RETURN p;
   END declare_procedure;
 

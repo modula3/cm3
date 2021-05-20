@@ -1374,13 +1374,14 @@ PROCEDURE Import_procedure (n: Name;  n_params: INTEGER;  ret_type: Type;
 PROCEDURE Declare_procedure (n: Name;  n_params: INTEGER;  ret_type: Type;
                              lev: INTEGER;  cc: CallingConvention;
                              exported: BOOLEAN;  parent: Proc;
+                             return_typeid: TypeUID;
                              return_typename: QID): Proc =
   VAR p: Proc;
   BEGIN
     IF (procedures = NIL) THEN procedures := NewNameTbl() END;
     p := cg.declare_procedure (n, n_params, ret_type,
                                lev, cc, exported, parent,
-                               return_typename);
+                               return_typeid, return_typename);
     EVAL procedures.put (n, p);
     RETURN p;
   END Declare_procedure;

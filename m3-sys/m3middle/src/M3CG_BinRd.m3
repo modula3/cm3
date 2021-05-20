@@ -922,7 +922,7 @@ PROCEDURE declare_procedure (VAR s: State) =
       export   := Scan_bool (s);
       parent   := Scan_proc (s);
       p        := Scan_int (s);
-      (* TODO return_typename but it is not used downstream and can be omitted indefinitely *)
+      (* TODO return_typeid, return_typename but it is not used downstream and can be omitted indefinitely *)
   BEGIN
     AddProc (s, p, s.cg.declare_procedure (name, n_params, ret_type,
                                            level, calling, export, parent));

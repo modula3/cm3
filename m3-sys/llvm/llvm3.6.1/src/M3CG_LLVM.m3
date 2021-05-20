@@ -2083,7 +2083,9 @@ PROCEDURE import_procedure (self: U;  n: Name;  n_params: INTEGER; return_type: 
 PROCEDURE declare_procedure (self: U;  n: Name;  n_params: INTEGER;
                              return_type: Type;  lev: INTEGER;
                              cc: CallingConvention; exported: BOOLEAN;
-                             parent: Proc; <*UNUSED*>return_typename: QID): Proc =
+                             parent: Proc;
+                             <*UNUSED*>return_typeid: TypeUID;
+                             <*UNUSED*>return_typename: QID): Proc =
   VAR
     p : LvProc := NewProc(self,n,n_params,return_type,lev,cc,exported,parent);
   BEGIN
