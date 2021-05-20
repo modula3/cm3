@@ -341,32 +341,6 @@ def _ClearEnvironmentVariable(Name):
 
 #-----------------------------------------------------------------------------
 
-def _MapTarget(a):
-
-    # don't map -- can't then cleanup the old
-
-    return a
-
-    # Convert sensible names that the user might provide on the
-    # command line into the legacy names other code knows about.
-
-    return {
-        "LINUXLIBC6"    : "I386_LINUX",
-        "NT386"         : "I386_NT",
-        "PPC32_DARWIN"  : "PPC_DARWIN",
-        "PPC32_LINUX"   : "PPC_LINUX",
-        "FreeBSD4"      : "I386_FREEBSD",
-
-        # both options sensible, double HP a bit redundant in the HPUX names
-
-        "HPPA32_HPUX"  : "PA32_HPUX",
-        "HPPA64_HPUX"  : "PA64_HPUX",
-        "HPPA32_LINUX" : "PA32_LINUX",
-        "HPPA64_LINUX" : "PA64_LINUX",
-    }.get(a) or a
-
-#-----------------------------------------------------------------------------
-
 def _GetAllTargets():
 
     # legacy naming
@@ -670,7 +644,7 @@ for a in os.popen(CM3 + " -version 2>" + DevNull):
 Target = None
 _AllTargets = _GetAllTargets()
 for a in sys.argv:
-    Target = _MapTarget(_AllTargets.get(a.lower()))
+    Target = _AllTargets.get(a.lower())
     if Target:
         break
 Target = Target or getenv("CM3_TARGET") or Host
