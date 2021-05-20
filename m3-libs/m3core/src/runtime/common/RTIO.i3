@@ -38,6 +38,9 @@ PROCEDURE PutHex (i: INTEGER;  width := 0);
 PROCEDURE PutAddr (a: ADDRESS;  width := 0);
 (* == PutHex (LOOPHOLE (a, INTEGER), width) *)
 
+PROCEDURE PutRef (a: REFANY);
+(* == PutAddr (LOOPHOLE (a, ADDRESS)) *)
+
 (* Normally RTIO goes to stderr; however these go to stdout
    in order to be agnostic between static and dynamic Windows C runtime *)
 <* EXTERNAL RTIO__PutE *>
