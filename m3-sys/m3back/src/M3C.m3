@@ -2551,9 +2551,7 @@ BEGIN
     BEGIN
         FOR i := FIRST(addressTypes) TO LAST(addressTypes) DO
             WITH a = addressTypes[i] DO
-                IF a.typeid # 0 THEN
-                    self.Type_Init(NEW(AddressType_t, state := Type_State.CanBeDefined, cgtype := Target.Address.cg_type, typeid := a.typeid, text := a.text));
-                END;
+                self.Type_Init(NEW(AddressType_t, state := Type_State.CanBeDefined, cgtype := Target.Address.cg_type, typeid := a.typeid, text := a.text));
             END;
         END;
     END;
