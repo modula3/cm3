@@ -143,6 +143,7 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
     IF backend_mode = M3BackendMode_t.C THEN
       Setjmp := "m3_setjmp";
       Sigsetjmp := FALSE;
+      LowerTypes := FALSE;
     ELSIF Solaris() THEN
       Setjmp := "sigsetjmp";
       Sigsetjmp := TRUE;
