@@ -916,11 +916,11 @@ END packed_isRecord;
 PROCEDURE ResolveType(self: T; typeid: INTEGER; VAR type: Type_t): BOOLEAN =
 BEGIN
     IF type # NIL THEN
-        (* self.comment("ResolveType 1 TRUE typeid:" & TypeIDToText(typeid)); *)
+        (* self.comment("ResolveType1 TRUE typeid:" & TypeIDToText(typeid)); *)
         RETURN TRUE;
     END;
     type := TypeidToType_Get(self, typeid);
-    (* self.comment("ResolveType 2 " & BoolToText[type # NIL] & " typeid:" & TypeIDToText(typeid)); *)
+    (* self.comment("ResolveType2 " & BoolToText[type # NIL] & " typeid:" & TypeIDToText(typeid)); *)
     RETURN type # NIL;
 END ResolveType;
 
@@ -4504,12 +4504,12 @@ END Struct;
 PROCEDURE Var_Type(var: Var_t): TEXT =
 BEGIN
     IF var.type_text # NIL THEN
-        RETURN " /* Var_Type 1 */ " & var.type_text;
+        RETURN " /* Var_Type1 */ " & var.type_text;
     END;
     IF var.cgtype # CGType.Struct THEN
-        RETURN " /* Var_Type 2 */ " & cgtypeToText[var.cgtype];
+        RETURN " /* Var_Type2 */ " & cgtypeToText[var.cgtype];
     END;
-    RETURN " /* Var_Type 3 */ " & Struct(var.byte_size);
+    RETURN " /* Var_Type3 */ " & Struct(var.byte_size);
 END Var_Type;
 
 PROCEDURE Var_Name(var: Var_t): TEXT =
@@ -4536,9 +4536,9 @@ END Var_InFrameDeclare;
 PROCEDURE Param_Type(var: Var_t): TEXT =
 BEGIN
     IF var.type_text # NIL THEN
-        RETURN " /* Param_Type 1 */ " & var.type_text;
+        RETURN " /* Param_Type1 */ " & var.type_text;
     END;
-    RETURN " /* Param_Type 2 */ " & cgtypeToText[var.cgtype];
+    RETURN " /* Param_Type2 */ " & cgtypeToText[var.cgtype];
 END Param_Type;
 
 PROCEDURE Param_Name(var: Var_t): TEXT =
