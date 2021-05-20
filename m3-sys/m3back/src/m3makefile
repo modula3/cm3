@@ -10,6 +10,7 @@
 import ("libm3")
 import ("m3middle")
 import ("m3objfile")
+import ("set")
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % HACK ALERT! THE FOLLOWING TWO FILES ARE DEPRECATED
