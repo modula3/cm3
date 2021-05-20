@@ -8,13 +8,14 @@
 
 UNSAFE MODULE Type EXPORTS Type, TypeRep;
 
-IMPORT M3, CG, Error, Token, Scanner, NamedType, Word;
+IMPORT CG, Error, Token, Scanner, NamedType, Word;
 IMPORT ArrayType, PackedType, EnumType, ObjectType, RefType;
 IMPORT ProcType, UserProc, RecordType, SetType, SubrangeType, OpaqueType;
 IMPORT Value, Module, Host, TypeFP, TypeTbl, WCharr, Brand;
 IMPORT Addr, Bool, Charr, Card, EReel, Int, LInt, LReel, Mutex, Null;
 IMPORT ObjectRef, ObjectAdr, Reel, Reff, Textt, Target, TInt, TFloat;
 IMPORT Text, M3RT, TipeMap, TipeDesc, ErrType, OpenArrayType, M3ID;
+FROM M3CG IMPORT QID;
 
 CONST
   NOT_CHECKED = -1;
@@ -178,8 +179,7 @@ PROCEDURE Check (t: T): T =
         t.checked := TRUE;
       END;
     END;
-    IF (t.info.class = Class.Named) THEN t := Strip (t) END;
-    RETURN t;
+    RETURN Strip (t);
   END Check;
 
 (*EXPORTED*)
@@ -190,13 +190,10 @@ PROCEDURE CheckInfo (t: T;  VAR x: Info): T =
     RETURN u;
   END CheckInfo;
 
-PROCEDURE QID (t: T; VAR qid: M3.QID) =
+PROCEDURE Typename (t: T; VAR typename: QID) =
 BEGIN
-  IF NOT NamedType.Split (t, qid) THEN
-    qid.module := M3ID.NoID;
-    qid.item := t.info.name;
-  END;
-END QID;
+  typename := t.info.name;
+END Typename;
 
 (************************************************************************)
 
@@ -210,65 +207,73 @@ PROCEDURE StraddleFreeScalars
     RETURN t.no_straddle (offs, IsEltOrField);
   END StraddleFreeScalars;
 
+(* internal to Strip *)
+(* Remove typenames. *)
+PROCEDURE StripOne (VAR u: T): BOOLEAN =
+  BEGIN
+    IF (u.info.class # Class.Named) THEN RETURN TRUE END;
+    u := NamedType.Strip (u);
+    RETURN FALSE;
+  END StripOne;
+
 (*EXPORTED*)
+(* Remove typenames. *)
 PROCEDURE Strip (t: T): T =
   VAR u := t;  v := t;
   BEGIN
     IF (u = NIL) THEN RETURN NIL END;
     LOOP
-      IF (u.info.class # Class.Named) THEN RETURN u END;
-      u := NamedType.Strip (u);
-      IF (v.info.class # Class.Named) THEN RETURN v END;
-      v := NamedType.Strip (v);
-      IF (v.info.class # Class.Named) THEN RETURN v END;
-      v := NamedType.Strip (v);
+      IF StripOne (u) THEN RETURN u END;
+      IF StripOne (v) OR StripOne (v) THEN RETURN v END;
       IF (u = v) THEN IllegalRecursion (t); RETURN ErrType.T END;
     END;
   END Strip;
 
+(* internal to StripPacked *)
+(* Remove typenames and packing. *)
+PROCEDURE StripPackedOne (VAR u: T): BOOLEAN =
+  BEGIN
+    IF    (u.info.class = Class.Named)  THEN u := NamedType.Strip (u);
+    ELSIF (u.info.class = Class.Packed) THEN u := PackedType.Base (u);
+    ELSE  RETURN TRUE;
+    END;
+    RETURN FALSE;
+  END StripPackedOne;
+
 (*EXPORTED*)
+(* Remove typenames and packing. *)
 PROCEDURE StripPacked (t: T): T =
   VAR u := t;  v := t;
   BEGIN
     IF (u = NIL) THEN RETURN NIL END;
     LOOP
-      IF    (u.info.class = Class.Named)  THEN u := NamedType.Strip (u);
-      ELSIF (u.info.class = Class.Packed) THEN u := PackedType.Base (u);
-      ELSE  RETURN u;
-      END;
-      IF    (v.info.class = Class.Named)  THEN v := NamedType.Strip (v);
-      ELSIF (v.info.class = Class.Packed) THEN v := PackedType.Base (v);
-      ELSE  RETURN v;
-      END;
-      IF    (v.info.class = Class.Named)  THEN v := NamedType.Strip (v);
-      ELSIF (v.info.class = Class.Packed) THEN v := PackedType.Base (v);
-      ELSE  RETURN v;
-      END;
+      IF StripPackedOne (u) THEN RETURN u; END;
+      IF StripPackedOne (v) OR StripPackedOne (v) THEN RETURN v; END;
       IF (u = v) THEN IllegalRecursion (t); RETURN ErrType.T END;
     END;
   END StripPacked;
 
+(* internal to Base *)
+(* Remove typenames and packing and subrange. *)
+PROCEDURE BaseOne (VAR u: T): BOOLEAN =
+  BEGIN
+    IF    (u.info.class = Class.Named)    THEN u := NamedType.Strip (u);
+    ELSIF (u.info.class = Class.Subrange) THEN u := SubrangeType.Base (u);
+    ELSIF (u.info.class = Class.Packed)   THEN u := PackedType.Base (u);
+    ELSE  RETURN TRUE;
+    END;
+    RETURN FALSE;
+  END BaseOne;
+
 (*EXPORTED*)
+(* Remove typenames and packing and subrange. *)
 PROCEDURE Base (t: T): T =
   VAR u := t;  v := t;
   BEGIN
     IF (u = NIL) THEN RETURN NIL END;
     LOOP
-      IF    (u.info.class = Class.Named)    THEN u := NamedType.Strip (u);
-      ELSIF (u.info.class = Class.Subrange) THEN u := SubrangeType.Base (u);
-      ELSIF (u.info.class = Class.Packed)   THEN u := PackedType.Base (u);
-      ELSE  RETURN u;
-      END;
-      IF    (v.info.class = Class.Named)    THEN v := NamedType.Strip (v);
-      ELSIF (v.info.class = Class.Subrange) THEN v := SubrangeType.Base (v);
-      ELSIF (v.info.class = Class.Packed)   THEN v := PackedType.Base (v);
-      ELSE  RETURN v;
-      END;
-      IF    (v.info.class = Class.Named)    THEN v := NamedType.Strip (v);
-      ELSIF (v.info.class = Class.Subrange) THEN v := SubrangeType.Base (v);
-      ELSIF (v.info.class = Class.Packed)   THEN v := PackedType.Base (v);
-      ELSE  RETURN v;
-      END;
+      IF BaseOne (u) THEN RETURN u; END;
+      IF BaseOne (v) OR BaseOne (v) THEN RETURN v; END;
       IF (u = v) THEN IllegalRecursion (t); RETURN ErrType.T END;
     END;
   END Base;
@@ -290,7 +295,8 @@ PROCEDURE IsStructured (t: T): BOOLEAN =
   BEGIN
     IF t = NIL THEN RETURN FALSE END;
     CASE t.info.class OF
-    | Class.Packed    => RETURN IsStructured (Base (t));
+    | Class.Named,
+      Class.Packed    => RETURN IsStructured (Base (t));
     | Class.Record,
       Class.Array,
       Class.OpenArray => RETURN TRUE;
@@ -481,7 +487,7 @@ PROCEDURE GetBounds (t: T;  VAR min, max: Target.Int): BOOLEAN =
   END GetBounds;
 
 PROCEDURE IllegalRecursion (t: T) =
-  VAR name: M3.QID;  v: Value.T;
+  VAR name: QID;  v: Value.T;
   BEGIN
     IF (t.errored) THEN
       (* don't reissue the error message *)

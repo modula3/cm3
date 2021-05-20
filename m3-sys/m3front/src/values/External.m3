@@ -7,9 +7,10 @@
 
 MODULE External;
 
-IMPORT M3, M3ID, Value, ValueRep, Token, Scope, Module, Error;
+IMPORT M3ID, Value, ValueRep, Token, Scope, Module, Error;
 IMPORT Type, Expr, Variable, Ident, Scanner, RunTyme, CG, Host;
 FROM Scanner IMPORT GetToken, Match, MatchID, cur;
+FROM M3CG IMPORT QID;
 
 TYPE TK = Token.T;
 
@@ -246,7 +247,7 @@ PROCEDURE ResolveImports (s: Set;  self: Module.T) =
           t.obj   := v;
           t.class := v.class;
         ELSE
-          Error.QID (M3.QID {module := p.name, item := t.name},
+          Error.QID (QID {module := p.name, item := t.name},
                       "symbol not exported")
         END;
       END;

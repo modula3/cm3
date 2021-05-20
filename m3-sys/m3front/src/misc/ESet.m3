@@ -10,6 +10,7 @@ MODULE ESet;
 IMPORT M3, M3ID, CG, Value, Token, Scope, Scanner, M3Buf;
 IMPORT Error, Word, Exceptionz, Target, Module;
 FROM Scanner IMPORT Match, MatchID, GetToken, cur;
+FROM M3CG IMPORT QID;
 
 TYPE TList = M3.ExSetList;
 REVEAL
@@ -33,7 +34,7 @@ REVEAL
 TYPE
   Elt = BRANDED "ESet.Elt" REF RECORD
     origin : INTEGER;
-    name   : M3.QID;
+    name   : QID;
     except : Value.T;
     next   : Elt;
     used   : BOOLEAN;
@@ -248,7 +249,7 @@ PROCEDURE NewEmpty (env: Scope.T): T =
     RETURN NEW (T, env := env, origin := Scanner.offset);
   END NewEmpty;
 
-PROCEDURE Add (t: T;  READONLY name: M3.QID;   ex: Value.T) =
+PROCEDURE Add (t: T;  READONLY name: QID;   ex: Value.T) =
   VAR e: Elt;
   BEGIN
     ex := Value.Base (ex);

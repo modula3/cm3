@@ -10,6 +10,7 @@ MODULE Scope;
 
 IMPORT M3, M3ID, M3Buf, CG, Value, Module, Error, Procedure;
 IMPORT Scanner, ValueRep, Variable, Tracer, Convert;
+FROM M3CG IMPORT QID;
 
 CONST
   MinHashed = 30;
@@ -106,7 +107,7 @@ PROCEDURE OuterMost (t: T) : BOOLEAN =
     RETURN (t # NIL) AND (t.module);
   END OuterMost;
 
-PROCEDURE LookUpQID (t: T;  VAR q: M3.QID): Value.T =
+PROCEDURE LookUpQID (t: T;  VAR q: QID): Value.T =
   VAR v: Value.T := NIL;
   BEGIN
     IF (q.module = M3ID.NoID) THEN

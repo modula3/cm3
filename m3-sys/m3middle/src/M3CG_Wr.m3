@@ -16,6 +16,7 @@ FROM M3CG IMPORT Var, Proc, Label, Sign, BitOffset, No_label;
 FROM M3CG IMPORT Type, ZType, AType, RType, IType, MType;
 FROM M3CG IMPORT CompareOp, ConvertOp, AtomicOp, RuntimeError;
 FROM M3CG IMPORT MemoryOrder;
+FROM M3CG IMPORT QID;
 
 TYPE WrVar    = Var    OBJECT tag: INTEGER END;
 TYPE WrProc   = Proc   OBJECT tag: INTEGER END;
@@ -562,17 +563,18 @@ PROCEDURE declare_pointer (u: U;  t, target: TypeUID;  brand: TEXT;
     NL   (u);
   END declare_pointer;
 
-PROCEDURE declare_indirect (u: U;  t, target: TypeUID) =
+PROCEDURE declare_indirect (u: U;  t, target: TypeUID; <*UNUSED*>target_typename: QID) =
   BEGIN
     Cmd  (u, "declare_indirect");
     Tipe (u, t);
     Tipe (u, target);
+    (* TODO target_typename but there are no downstream users *)
     NL   (u);
   END declare_indirect;
 
 PROCEDURE declare_proctype (u: U;  t: TypeUID;  n_formals: INTEGER;
                             result: TypeUID;  n_raises: INTEGER;
-                            cc: CallingConvention) =
+                            cc: CallingConvention; <*UNUSED*>result_typename: QID) =
   BEGIN
     Cmd  (u, "declare_proctype");
     Tipe (u, t);
@@ -580,14 +582,16 @@ PROCEDURE declare_proctype (u: U;  t: TypeUID;  n_formals: INTEGER;
     Tipe (u, result);
     Int  (u, n_raises);
     Int  (u, cc.m3cg_id);
+    (* TODO result_typename but it is not used downstream *)
     NL   (u);
   END declare_proctype;
 
-PROCEDURE declare_formal (u: U;  n: Name;  t: TypeUID) =
+PROCEDURE declare_formal (u: U;  n: Name;  t: TypeUID; <*UNUSED*>typename: QID) =
   BEGIN
     Cmd   (u, "declare_formal");
     ZName (u, n);
     Tipe  (u, t);
+    (* TODO typename but it is not used downstream and can be omitted indefinitely *)
     NL    (u);
   END declare_formal;
 
@@ -785,7 +789,7 @@ PROCEDURE declare_local (u: U;  n: Name;  s: ByteSize;  a: Alignment;
 
 PROCEDURE declare_param (u: U;  n: Name;  s: ByteSize;  a: Alignment;
                          t: Type;  m3t: TypeUID;  in_memory, up_level: BOOLEAN;
-                         f: Frequency; <*UNUSED*>qid := M3CG.NoQID): Var =
+                         f: Frequency; <*UNUSED*>typename: QID): Var =
   VAR v := NewVar (u);
   BEGIN
     Cmd   (u, "declare_param");
@@ -799,7 +803,7 @@ PROCEDURE declare_param (u: U;  n: Name;  s: ByteSize;  a: Alignment;
     Int   (u, f);
     VName (u, v);
     NL    (u);
-    (* TODO qid but it is not used downstream and can be omitted indefinitely *)
+    (* TODO typename but it is not used downstream and can be omitted indefinitely *)
     RETURN v;
   END declare_param;
 
@@ -910,7 +914,8 @@ PROCEDURE NewProc (u: U): Proc =
 
 PROCEDURE import_procedure (u: U;  n: Name;  n_params: INTEGER;
                             ret_type: Type;  cc: CallingConvention;
-                            <*UNUSED*>return_type_qid := M3CG.NoQID): Proc =
+                            <*UNUSED*>return_typeid: TypeUID;
+                            <*UNUSED*>return_typename: QID): Proc =
   VAR p := NewProc (u);
   BEGIN
     Cmd   (u, "import_procedure");
@@ -920,14 +925,16 @@ PROCEDURE import_procedure (u: U;  n: Name;  n_params: INTEGER;
     Int   (u, cc.m3cg_id);
     PName (u, p);
     NL    (u);
-    (* TODO return_type_qid but it not used *)
+    (* TODO return_typename but it not used *)
     RETURN p;
   END import_procedure;
 
 PROCEDURE declare_procedure (u: U;  n: Name;  n_params: INTEGER;
                              return_type: Type;  lev: INTEGER;
                              cc: CallingConvention; exported: BOOLEAN;
-                             parent: Proc; <*UNUSED*>return_type_qid := M3CG.NoQID): Proc =
+                             parent: Proc;
+                             <*UNUSED*>return_typeid: TypeUID := 0;
+                             <*UNUSED*>return_typename: QID): Proc =
   VAR p := NewProc (u);
   BEGIN
     Cmd   (u, "declare_procedure");
@@ -940,6 +947,7 @@ PROCEDURE declare_procedure (u: U;  n: Name;  n_params: INTEGER;
     PName (u, parent);
     PName (u, p);
     NL    (u);
+    (* TODO return_typeid, return_typename but it is not used downstream and can be omitted indefinitely *)
     RETURN p;
   END declare_procedure;
 

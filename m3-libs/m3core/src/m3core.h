@@ -437,6 +437,8 @@ typedef double LONGREAL;
 typedef double EXTENDED;
 #if defined(__cplusplus) || __STDC__
 //Match m3c, so all the files can be concatenated.
+// TODO change m3c to cast to char* and not depend on ADDRESS being either.
+// Maybe caddr_t.
 //typedef void* ADDRESS;
 typedef char* ADDRESS;
 #else
@@ -444,6 +446,50 @@ typedef char* ADDRESS;
 #endif
 typedef ADDRESS TEXT;
 typedef ADDRESS MUTEX;
+
+// These typenames allow for concatenating the hand written
+// .h/.c files with the m3c output so it can all be compiled at once.
+//
+// The m3c output uses ifndef to guard its own definitions, which
+// can vary subtly. For example "int" is a 32bit signed integer type, possibly long.
+// "long" is signed and the same size as long, but can on some platforms be int instead,
+// if int and long are the same size.
+// Presently const is meaningless in Modula-3 and m3c, so const is ommited there,
+// and could be ommited here as well.
+//
+// The names should match the .i3 files, assuming full qualification and replacing "." with "__".
+#define Cstddef__size_t             Cstddef__size_t             /* inhibit m3c type */
+#define Cstddef__ssize_t            Cstddef__ssize_t            /* inhibit m3c type */
+#define Cstdio__FILE_star           Cstdio__FILE_star           /* inhibit m3c type */
+#define Ctypes__char                Ctypes__char                /* inhibit m3c type */
+#define Ctypes__char_star           Ctypes__char_star           /* inhibit m3c type */
+#define Ctypes__char_star_star      Ctypes__char_star_star      /* inhibit m3c type */
+#define Ctypes__const_char_star     Ctypes__const_char_star     /* inhibit m3c type */
+#define Ctypes__const_int           Ctypes__const_int           /* inhibit m3c type */
+#define Ctypes__const_void_star     Ctypes__const_void_star     /* inhibit m3c type */
+#define Ctypes__int                 Ctypes__int                 /* inhibit m3c type */
+#define Ctypes__long                Ctypes__long                /* inhibit m3c type */
+#define Ctypes__size_t              Ctypes__size_t              /* inhibit m3c type */
+#define Ctypes__unsigned_long       Ctypes__unsigned_long       /* inhibit m3c type */
+#define Ctypes__void_star           Ctypes__void_star           /* inhibit m3c type */
+#define Utypes__size_t              Utypes__size_t              /* inhibit m3c type */
+#define WinBaseTypes__const_UINT32  WinBaseTypes__const_UINT32  /* inhibit m3c type */
+
+typedef size_t        Cstddef__size_t;
+typedef ssize_t       Cstddef__ssize_t;
+typedef FILE*         Cstdio__FILE_star;
+typedef char          Ctypes__char;
+typedef char*         Ctypes__char_star;
+typedef char**        Ctypes__char_star_star;
+typedef const char*   Ctypes__const_char_star;
+typedef int           Ctypes__const_int;
+typedef ADDRESS       Ctypes__const_void_star;    // TODO const void*
+typedef int           Ctypes__int;
+typedef long          Ctypes__long;
+typedef unsigned long Ctypes__unsigned_long;
+typedef ADDRESS       Ctypes__void_star;          // TODO void*
+typedef size_t        Utypes__size_t;             // redundant
+typedef UINT32        WinBaseTypes__const_UINT32;
 
 #ifdef __cplusplus
 extern "C" {
@@ -501,12 +547,16 @@ typedef INTEGER m3_uid_t;
 #define PTHREAD_FROM_M3(x) ((pthread_t)(WORD_T)(x))
 #endif
 
+// TODO: Dragonfly? Autoconf?
 #if defined(__APPLE__) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
 #define HAS_STAT_FLAGS
 #endif
 
 struct m3_stat_t;
 typedef struct m3_stat_t m3_stat_t;
+
+#define Ustat__struct_stat_star Ustat__struct_stat_star /* inhibit m3c type */
+typedef m3_stat_t* Ustat__struct_stat_star;
 
 int __cdecl Ustat__fstat(int fd, m3_stat_t* m3st);
 int __cdecl Ustat__lstat(const char* path, m3_stat_t* m3st);
@@ -535,6 +585,9 @@ typedef size_t socklen_t;
 #endif
 typedef WORD_T m3_socklen_t;
 
+#define Usocket__socklen_t Usocket__socklen_t /* inhibit m3c type */
+typedef m3_socklen_t Usocket__socklen_t;
+
 typedef struct {
 /* verified to exactly match struct linger in UnixC.c, except for Cygwin */
     int onoff;
@@ -560,9 +613,14 @@ DIR* __cdecl Udir__opendir(const char* a);
 
 // char* (caddr_t) instead of void* for default Solaris
 typedef char* caddr_t;
+typedef caddr_t Umman__caddr_t;
+#define Umman__caddr_t Umman__caddr_t /* inhibit m3c type */
 int __cdecl Umman__mprotect(caddr_t addr, WORD_T len, int prot);
 void* __cdecl Umman__mmap(caddr_t addr, WORD_T len, int prot, int flags, int fd, m3_off_t off);
 int __cdecl Umman__munmap(caddr_t addr, WORD_T len);
+
+ssize_t __cdecl Uuio__read(int, void*, WORD_T);
+ssize_t __cdecl Uuio__write(int, const void*, WORD_T);
 
 typedef INT64 m3_time64_t;
 
@@ -623,11 +681,13 @@ int __cdecl Unix__fchown(int fd, m3_uid_t owner, m3_gid_t group);
 int __cdecl Unix__creat(const char* path, m3_mode_t mode);
 int __cdecl Unix__dup(int oldd);
 
+// TODO widen to INTEGER
 UINT32 __cdecl Uin__ntohl(UINT32 x);
 UINT16 __cdecl Uin__ntohs(UINT16 x);
 UINT32 __cdecl Uin__htonl(UINT32 x);
 UINT16 __cdecl Uin__htons(UINT16 x);
 
+// TODO C should not use TEXT, i.e. for precise compacting GC.
 const char*
 __cdecl
 M3toC__SharedTtoS(TEXT);
@@ -647,8 +707,7 @@ M3toC__StoT(const char*);
 /* This MUST match DatePosix.i3.T.
  * The fields are ordered by size and alphabetically.
  */
-#ifndef m3core_DatePosix_T
-#define m3core_DatePosix_T m3core_DatePosix_T
+#define DatePosix__T DatePosix__T /* inhibit m3c type */
 
 typedef struct {
     const char* zone;
@@ -662,21 +721,19 @@ typedef struct {
     int unknown; // boolean
     int weekDay;
     int year;
-} m3core_DatePosix_T;
-
-#endif
+} DatePosix__T;
 
 void
 __cdecl
-DatePosix__FromTime(double t, INTEGER zone, m3core_DatePosix_T* date);
+DatePosix__FromTime(double t, INTEGER zone, DatePosix__T* date);
 
 double
 __cdecl
-DatePosix__ToTime(/*const*/ m3core_DatePosix_T* date);
+DatePosix__ToTime(/*const*/ DatePosix__T* date);
 
 void
 __cdecl
-DatePosix__TypeCheck(/*const*/ m3core_DatePosix_T* d, WORD_T sizeof_DateT);
+DatePosix__TypeCheck(/*const*/ DatePosix__T* d, INTEGER sizeof_DateT);
 
 void
 __cdecl

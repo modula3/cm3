@@ -14,6 +14,7 @@ IMPORT ProcType, Stmt, BlockStmt, Marker, Coverage, M3RT;
 IMPORT CallExpr, Token, Variable, ProcExpr, Tracer;
 IMPORT Scanner, Decl, ESet, ProcBody, Target, Expr, Formal, Jmpbufs;
 FROM Scanner IMPORT GetToken, Match, MatchID, cur;
+FROM M3CG IMPORT QID;
 
 REVEAL
   T = Value.T BRANDED OBJECT
@@ -393,14 +394,14 @@ PROCEDURE LoadStaticLink (t: T) =
  END LoadStaticLink;
 
 PROCEDURE ImportProc (p: T;  name: TEXT;  n_formals: INTEGER;
-                      cg_result: CG.Type; return_type_qid := M3.NoQID;
+                      cg_result: CG.Type; return_typename: QID;
                       cc: CG.CallingConvention) =
   VAR zz: Scope.T;  new: BOOLEAN;
   BEGIN
     <*ASSERT p.cg_proc = NIL*>
     p.next_cg_proc := cg_procs;  cg_procs := p;
     p.cg_proc := CG.Import_procedure (M3ID.Add (name), n_formals,
-                                      cg_result, cc, new, return_type_qid);
+                                      cg_result, cc, new, return_typename := return_typename);
     IF (new) THEN
       (* declare the formals *)
       IF (p.syms # NIL) THEN
@@ -451,7 +452,7 @@ PROCEDURE DeclareResult (result: Type.T) =
 PROCEDURE Declarer (p: T): BOOLEAN =
   VAR
     zz: Scope.T;
-    par: CG.Proc := NIL;
+    parent: CG.Proc := NIL;
     cg_result: CG.Type;
     name := Value.GlobalName (p, dots := FALSE);
     type: CG.TypeUID;
@@ -486,19 +487,18 @@ PROCEDURE Declarer (p: T): BOOLEAN =
         RETURN FALSE;
       ELSE
         (* it's an imported procedure *)
-        Type.Compile (ProcType.Result (p.signature));
-        ImportProc (p, name, n_formals, cg_result, ProcType.ResultQid (p.signature), cconv);
+        ImportProc (p, name, n_formals, cg_result, ProcType.ResultTypename (p.signature), cconv);
         RETURN TRUE;
       END;
     END;
 
-    IF (p.body.parent # NIL) THEN par := p.body.parent.cg_proc END;
+    IF (p.body.parent # NIL) THEN parent := p.body.parent.cg_proc END;
 
     p.next_cg_proc := cg_procs;  cg_procs := p;
     p.cg_proc := CG.Declare_procedure (M3ID.Add (name),
                     n_formals, cg_result, p.body.level,  cconv,
                     exported := (p.exported OR p.imported),
-                    parent := par);
+                    parent := parent, return_typename := ProcType.ResultTypename (p.signature));
     p.body.cg_proc := p.cg_proc;
     Scanner.offset := p.origin;
     IF (p.syms # NIL) THEN

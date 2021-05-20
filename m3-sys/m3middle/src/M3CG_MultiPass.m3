@@ -7,6 +7,7 @@ FROM M3CG IMPORT Frequency, CallingConvention, CompareOp, ConvertOp, AtomicOp;
 FROM M3CG IMPORT BitSize, ByteSize, BitOffset, ByteOffset, RuntimeError;
 FROM M3CG IMPORT MemoryOrder;
 FROM M3CG_Binary IMPORT Op;
+FROM M3CG IMPORT QID, NoQID;
 
 TYPE var_t = Var OBJECT tag: INTEGER END;
 TYPE proc_t = Proc OBJECT tag: INTEGER END;
@@ -367,10 +368,10 @@ self.Add(NEW(declare_local_t, op := Op.declare_local, name := name, byte_size :=
 RETURN var;
 END declare_local;
 
-PROCEDURE declare_param(self: T; name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: TypeUID; in_memory, up_level: BOOLEAN; frequency: Frequency; qid := M3CG.NoQID): Var =
+PROCEDURE declare_param(self: T; name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: TypeUID; in_memory, up_level: BOOLEAN; frequency: Frequency; typename := NoQID): Var =
 VAR var := self.refs.NewVar();
 BEGIN
-self.Add(NEW(declare_param_t, op := Op.declare_param, name := name, byte_size := byte_size, alignment := alignment, type := type, typeid := typeid, in_memory := in_memory, up_level := up_level, frequency := frequency, tag := var.tag, qid := qid));
+self.Add(NEW(declare_param_t, op := Op.declare_param, name := name, byte_size := byte_size, alignment := alignment, type := type, typeid := typeid, in_memory := in_memory, up_level := up_level, frequency := frequency, tag := var.tag, typename := typename));
 RETURN var;
 END declare_param;
 
@@ -381,14 +382,14 @@ self.Add(NEW(declare_temp_t, op := Op.declare_temp, byte_size := byte_size, alig
 RETURN var;
 END declare_temp;
 
-PROCEDURE import_procedure(self: T; name: Name; n_params: INTEGER; return_type: Type; callingConvention: CallingConvention; return_type_qid := M3CG.NoQID): Proc =
+PROCEDURE import_procedure(self: T; name: Name; n_params: INTEGER; return_type: Type; callingConvention: CallingConvention; return_typeid: TypeUID := 0; return_typename := NoQID): Proc =
 VAR proc := self.refs.NewProc();
 BEGIN
-self.Add(NEW(import_procedure_t, op := Op.import_procedure, name := name, n_params := n_params, return_type := return_type, callingConvention := callingConvention, return_type_qid := return_type_qid, tag := proc.tag));
+self.Add(NEW(import_procedure_t, op := Op.import_procedure, name := name, n_params := n_params, return_type := return_type, callingConvention := callingConvention, return_typename := return_typename, tag := proc.tag));
 RETURN proc;
 END import_procedure;
 
-PROCEDURE declare_procedure(self: T; name: Name; n_params: INTEGER; return_type: Type; level: INTEGER; callingConvention: CallingConvention; exported: BOOLEAN; parent: Proc; return_type_qid := M3CG.NoQID): Proc =
+PROCEDURE declare_procedure(self: T; name: Name; n_params: INTEGER; return_type: Type; level: INTEGER; callingConvention: CallingConvention; exported: BOOLEAN; parent: Proc; return_typeid: TypeUID := 0; return_typename := NoQID): Proc =
 VAR proc := self.refs.NewProc();
     parent_tag := 0;
 BEGIN
@@ -396,7 +397,7 @@ BEGIN
         parent_tag := NARROW(parent, proc_t).tag;
     END;
     self.Add(NEW(declare_procedure_t, op := Op.declare_procedure, name := name, n_params := n_params, return_type := return_type, level := level,
-                 callingConvention := callingConvention, exported := exported, parent := parent_tag, tag := proc.tag));
+                 callingConvention := callingConvention, exported := exported, parent := parent_tag, return_typeid := return_typeid, return_typename := return_typename, tag := proc.tag));
     RETURN proc;
 END declare_procedure;
 
@@ -494,19 +495,19 @@ BEGIN
 self.Add(NEW(declare_pointer_t, op := Op.declare_pointer, typeid := typeid, target_typeid := target_typeid, brand := brand, traced := traced));
 END declare_pointer;
 
-PROCEDURE declare_indirect(self: T; typeid, target_typeid: TypeUID) =
+PROCEDURE declare_indirect(self: T; typeid, target_typeid: TypeUID; target_typename: QID) =
 BEGIN
-self.Add(NEW(declare_indirect_t, op := Op.declare_indirect, typeid := typeid, target_typeid := target_typeid));
+self.Add(NEW(declare_indirect_t, op := Op.declare_indirect, typeid := typeid, target_typeid := target_typeid, target_typename := target_typename));
 END declare_indirect;
 
-PROCEDURE declare_proctype(self: T; typeid: TypeUID; n_formals: INTEGER; return_typeid: TypeUID; n_raises: INTEGER; callingConvention: CallingConvention) =
+PROCEDURE declare_proctype(self: T; typeid: TypeUID; n_formals: INTEGER; return_typeid: TypeUID; n_raises: INTEGER; callingConvention: CallingConvention; result_typename: QID) =
 BEGIN
-self.Add(NEW(declare_proctype_t, op := Op.declare_proctype, typeid := typeid, n_formals := n_formals, return_typeid := return_typeid, n_raises := n_raises, callingConvention := callingConvention));
+self.Add(NEW(declare_proctype_t, op := Op.declare_proctype, typeid := typeid, n_formals := n_formals, return_typeid := return_typeid, n_raises := n_raises, callingConvention := callingConvention, result_typename := result_typename));
 END declare_proctype;
 
-PROCEDURE declare_formal(self: T; name: Name; typeid: TypeUID) =
+PROCEDURE declare_formal(self: T; name: Name; typeid: TypeUID; typename: QID) =
 BEGIN
-self.Add(NEW(declare_formal_t, op := Op.declare_formal, name := name, typeid := typeid));
+self.Add(NEW(declare_formal_t, op := Op.declare_formal, name := name, typeid := typeid, typename := typename));
 END declare_formal;
 
 PROCEDURE declare_raises(self: T; name: Name) =
@@ -1084,7 +1085,7 @@ END replay_declare_local;
 
 PROCEDURE replay_declare_param(self: declare_param_t; replay: Replay_t; cg: cg_t) =
 BEGIN
-    replay.PutRef(self.tag, cg.declare_param(self.name, self.byte_size, self.alignment, self.type, self.typeid, self.in_memory, self.up_level, self.frequency, self.qid));
+    replay.PutRef(self.tag, cg.declare_param(self.name, self.byte_size, self.alignment, self.type, self.typeid, self.in_memory, self.up_level, self.frequency, self.typename));
 END replay_declare_param;
 
 PROCEDURE replay_declare_temp(self: declare_temp_t; replay: Replay_t; cg: cg_t) =
@@ -1094,13 +1095,13 @@ END replay_declare_temp;
 
 PROCEDURE replay_import_procedure(self: import_procedure_t; replay: Replay_t; cg: cg_t) =
 BEGIN
-    replay.PutRef(self.tag, cg.import_procedure(self.name, self.n_params, self.return_type, self.callingConvention, self.return_type_qid));
+    replay.PutRef(self.tag, cg.import_procedure(self.name, self.n_params, self.return_type, self.callingConvention, self.return_typeid, self.return_typename));
 END replay_import_procedure;
 
 PROCEDURE replay_declare_procedure(self: declare_procedure_t; replay: Replay_t; cg: cg_t) =
 BEGIN
     replay.PutRef(self.tag, cg.declare_procedure(self.name, self.n_params, self.return_type,
-        self.level, self.callingConvention, self.exported, replay.GetProc(self.parent)));
+        self.level, self.callingConvention, self.exported, replay.GetProc(self.parent), self.return_typeid, self.return_typename));
 END replay_declare_procedure;
 
 PROCEDURE replay_import_global(self: import_global_t; replay: Replay_t; cg: cg_t) =
@@ -1145,9 +1146,9 @@ PROCEDURE replay_declare_field(self: declare_field_t; <*UNUSED*>replay: Replay_t
 PROCEDURE replay_declare_set(self: declare_set_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.declare_set(self.typeid, self.domain_typeid, self.bit_size); END replay_declare_set;
 PROCEDURE replay_declare_subrange(self: declare_subrange_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.declare_subrange(self.typeid, self.domain_typeid, self.min, self.max, self.bit_size); END replay_declare_subrange;
 PROCEDURE replay_declare_pointer(self: declare_pointer_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.declare_pointer(self.typeid, self.target_typeid, self.brand, self.traced); END replay_declare_pointer;
-PROCEDURE replay_declare_indirect(self: declare_indirect_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.declare_indirect(self.typeid, self.target_typeid); END replay_declare_indirect;
+PROCEDURE replay_declare_indirect(self: declare_indirect_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.declare_indirect(self.typeid, self.target_typeid, self.target_typename); END replay_declare_indirect;
 PROCEDURE replay_declare_proctype(self: declare_proctype_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.declare_proctype(self.typeid, self.n_formals, self. return_typeid, self.n_raises, self.callingConvention); END replay_declare_proctype;
-PROCEDURE replay_declare_formal(self: declare_formal_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.declare_formal(self.name, self.typeid); END replay_declare_formal;
+PROCEDURE replay_declare_formal(self: declare_formal_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.declare_formal(self.name, self.typeid, self.typename); END replay_declare_formal;
 PROCEDURE replay_declare_raises(self: declare_raises_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.declare_raises(self.name); END replay_declare_raises;
 PROCEDURE replay_declare_object(self: declare_object_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.declare_object(self.typeid, self.super_typeid, self.brand, self.traced, self.n_fields, self.n_methods, self.fields_bit_size); END replay_declare_object;
 PROCEDURE replay_declare_method(self: declare_method_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.declare_method(self.name, self.signature); END replay_declare_method;

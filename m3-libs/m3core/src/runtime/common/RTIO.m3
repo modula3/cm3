@@ -65,6 +65,11 @@ PROCEDURE PutAddr (a: ADDRESS;  width: INTEGER) =
     PutHex (LOOPHOLE (a, INTEGER), width);
   END PutAddr;
 
+PROCEDURE PutRef (r: REFANY) =
+  BEGIN
+    PutAddr (LOOPHOLE (r, ADDRESS), 0);
+  END PutRef;
+
 PROCEDURE PutText (t: TEXT) =
   BEGIN
     FOR i := 0 TO Text.Length (t)-1 DO

@@ -8,13 +8,14 @@
 
 MODULE RaiseStmt;
 
-IMPORT M3, M3ID, Expr, Token, Scanner, Stmt, StmtRep, Error, ESet;
+IMPORT M3ID, Expr, Token, Scanner, Stmt, StmtRep, Error, ESet;
 IMPORT Value, Type, Scope, Exceptionz, AssignStmt;
+FROM M3CG IMPORT QID;
 
 TYPE
   P = Stmt.T OBJECT
         scope   : Scope.T;
-        qid     : M3.QID;
+        qid     : QID;
         except  : Value.T;
         arg     : Expr.T;
       OVERRIDES

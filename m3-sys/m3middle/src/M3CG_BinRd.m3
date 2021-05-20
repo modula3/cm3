@@ -7,6 +7,7 @@ IMPORT Fmt, Rd, Stdio, Text, Thread, Word, Wr;
 IMPORT M3ID, M3CG, M3CG_Ops, M3CG_Binary;
 IMPORT Target, TargetMap, TInt, TFloat, TWord;
 FROM M3CG IMPORT CompareOp, ConvertOp, AtomicOp, RuntimeError, MemoryOrder;
+FROM M3CG IMPORT NoQID;
 
 TYPE
   Bop = M3CG_Binary.Op;
@@ -611,6 +612,7 @@ PROCEDURE declare_pointer (VAR s: State) =
 PROCEDURE declare_indirect (VAR s: State) =
   VAR type   := Scan_tipe (s);
       target := Scan_tipe (s);
+      (* TODO target_typename but there are no downstream users *)
   BEGIN
     s.cg.declare_indirect (type, target);
   END declare_indirect;
@@ -621,15 +623,17 @@ PROCEDURE declare_proctype (VAR s: State) =
       result    := Scan_tipe (s);
       n_raises  := Scan_int (s);
       calling   := Scan_callConv (s);
+      result_typename := NoQID; (* TODO typename but it is not used downstream and can be omitted indefinitely *)
   BEGIN
-    s.cg.declare_proctype (type, n_formals, result, n_raises, calling);
+    s.cg.declare_proctype (type, n_formals, result, n_raises, calling, result_typename);
   END declare_proctype;
 
 PROCEDURE declare_formal (VAR s: State) =
   VAR name := Scan_name (s);
       type := Scan_tipe (s);
+      typename := NoQID; (* TODO typename but it is not used downstream and can be omitted indefinitely *)
   BEGIN
-    s.cg.declare_formal (name, type);
+    s.cg.declare_formal (name, type, typename);
   END declare_formal;
 
 PROCEDURE declare_raises (VAR s: State) =
@@ -796,10 +800,10 @@ PROCEDURE declare_param (VAR s: State) =
       up_lev := Scan_bool (s);
       freq   := Scan_int (s);
       v      := Scan_int (s);
-      qid    := M3CG.NoQID; (* TODO qid but it is not used downstream and can be omitted indefinitely *)
+      typename := NoQID; (* TODO typename but it is not used downstream and can be omitted indefinitely *)
   BEGIN
     AddVar (s, v, s.cg.declare_param (name, size, align, type, m3t,
-                                      in_mem, up_lev, freq, qid));
+                                      in_mem, up_lev, freq, typename));
   END declare_param;
 
 PROCEDURE declare_temp (VAR s: State) =
@@ -904,7 +908,7 @@ PROCEDURE import_procedure (VAR s: State) =
       ret_type := Scan_type (s);
       calling  := Scan_callConv (s);
       p        := Scan_int (s);
-      (* TODO return_type_qid but nobody uses it *)
+      (* TODO return_typeid, return_typename but nobody uses it *)
   BEGIN
     AddProc (s, p, s.cg.import_procedure (name, n_params, ret_type, calling));
   END import_procedure;
@@ -918,6 +922,7 @@ PROCEDURE declare_procedure (VAR s: State) =
       export   := Scan_bool (s);
       parent   := Scan_proc (s);
       p        := Scan_int (s);
+      (* TODO return_typeid, return_typename but it is not used downstream and can be omitted indefinitely *)
   BEGIN
     AddProc (s, p, s.cg.declare_procedure (name, n_params, ret_type,
                                            level, calling, export, parent));

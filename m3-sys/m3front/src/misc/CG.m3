@@ -12,6 +12,7 @@ IMPORT Text, IntIntTbl, IntRefTbl, Fmt, Word;
 IMPORT Scanner, Error, Module, RunTyme, WebInfo;
 IMPORT M3, M3CG, M3CG_Ops, M3CG_Check;
 IMPORT Host, Target, TInt, TFloat, TWord, TargetMap, M3RT (**, RTObject **);
+FROM M3CG IMPORT QID;
 
 CONST
   Max_init_chars = 256; (* max size of a single init_chars string *)
@@ -326,13 +327,13 @@ PROCEDURE Declare_pointer (t, target: TypeUID;  brand: TEXT;  traced: BOOLEAN)=
     WebInfo.Declare_pointer (t, target, brand, traced);
   END Declare_pointer;
 
-PROCEDURE Declare_indirect (target: TypeUID): TypeUID =
+PROCEDURE Declare_indirect (target: TypeUID; target_typename: QID): TypeUID =
   VAR x: INTEGER;
   BEGIN
     IF (indirects = NIL) THEN indirects := NewIntTbl () END;
     IF NOT indirects.get (target, x) THEN
       x := Word.Not (target);  (* !! fingerprint HACK !! *)
-      cg.declare_indirect (x, target);
+      cg.declare_indirect (x, target, target_typename);
       WebInfo.Declare_indirect (x, target);
       EVAL indirects.put (target, x);
     END;
@@ -341,15 +342,15 @@ PROCEDURE Declare_indirect (target: TypeUID): TypeUID =
 
 PROCEDURE Declare_proctype (t: TypeUID;  n_formals: INTEGER;
                             result: TypeUID;  n_raises: INTEGER;
-                            cc: CallingConvention) =
+                            cc: CallingConvention; result_typename: QID) =
   BEGIN
-    cg.declare_proctype (t, n_formals, result, n_raises, cc);
+    cg.declare_proctype (t, n_formals, result, n_raises, cc, result_typename);
     WebInfo.Declare_proctype (t, n_formals, result, n_raises);
   END Declare_proctype;
 
-PROCEDURE Declare_formal (n: Name;  t: TypeUID) =
+PROCEDURE Declare_formal (n: Name;  t: TypeUID; typename: QID) =
   BEGIN
-    cg.declare_formal (n, t);
+    cg.declare_formal (n, t, typename);
     WebInfo.Declare_formal (n, t);
   END Declare_formal;
 
@@ -492,10 +493,10 @@ PROCEDURE Declare_local (n: Name;  s: Size;  a: Alignment;  t: Type;
 
 PROCEDURE Declare_param (n: Name;  s: Size;  a: Alignment;  t: Type;
                          m3t: TypeUID;  in_memory, up_level: BOOLEAN;
-                         f: Frequency; qid := M3CG.NoQID): Var =
+                         f: Frequency; typename: QID): Var =
   BEGIN
     RETURN cg.declare_param (n, ToVarSize (s, a), ByteAlign (a),
-                             t, m3t, in_memory, up_level, f, qid);
+                             t, m3t, in_memory, up_level, f, typename);
   END Declare_param;
 
 (*----------------------------------------------------------- temporaries ---*)
@@ -1359,12 +1360,13 @@ PROCEDURE EmitText (t: TEXT;  is_const: BOOLEAN): INTEGER =
 PROCEDURE Import_procedure (n: Name;  n_params: INTEGER;  ret_type: Type;
                             cc: CallingConvention;
                             VAR(*OUT*) new: BOOLEAN;
-                            return_type_qid := M3CG.NoQID): Proc =
+                            return_typeid: TypeUID := 0;
+                            return_typename: QID): Proc =
   VAR ref: REFANY;  p: Proc;
   BEGIN
     IF (procedures = NIL) THEN procedures := NewNameTbl() END;
     IF procedures.get (n, ref) THEN new := FALSE;  RETURN ref END;
-    p := cg.import_procedure (n, n_params, ret_type, cc, return_type_qid);
+    p := cg.import_procedure (n, n_params, ret_type, cc, return_typeid, return_typename);
     EVAL procedures.put (n, p);
     new := TRUE;
     RETURN p;
@@ -1373,13 +1375,14 @@ PROCEDURE Import_procedure (n: Name;  n_params: INTEGER;  ret_type: Type;
 PROCEDURE Declare_procedure (n: Name;  n_params: INTEGER;  ret_type: Type;
                              lev: INTEGER;  cc: CallingConvention;
                              exported: BOOLEAN;  parent: Proc;
-                             return_type_qid := M3CG.NoQID): Proc =
+                             return_typeid: TypeUID;
+                             return_typename: QID): Proc =
   VAR p: Proc;
   BEGIN
     IF (procedures = NIL) THEN procedures := NewNameTbl() END;
     p := cg.declare_procedure (n, n_params, ret_type,
                                lev, cc, exported, parent,
-                               return_type_qid);
+                               return_typeid, return_typename);
     EVAL procedures.put (n, p);
     RETURN p;
   END Declare_procedure;

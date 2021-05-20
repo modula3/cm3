@@ -9,9 +9,10 @@
 MODULE ProcType;
 
 IMPORT M3, M3ID, CG, Expr, Type, TypeRep, Value, Scope, Target;
-IMPORT Formal, UserProc, Token, Ident, CallExpr, Word, Error, NamedType;
+IMPORT Formal, UserProc, Token, Ident, CallExpr, Word, Error;
 IMPORT ESet, TipeMap, TipeDesc, ErrType, M3Buf, Variable, OpenArrayType;
 FROM Scanner IMPORT Match, GetToken, cur;
+FROM M3CG IMPORT QID, NoQID;
 
 TYPE
   P = Type.T BRANDED "ProcType.T" OBJECT
@@ -21,7 +22,7 @@ TYPE
         result     : Type.T;
         raises     : ESet.T;
         callConv   : CG.CallingConvention;
-        result_qid := M3.NoQID;
+        result_typename := NoQID;
       OVERRIDES
         check      := Check;
         no_straddle:= TypeRep.AddrNoStraddle;
@@ -192,6 +193,7 @@ PROCEDURE Check (p: P) =
     v      : Value.T;
     formal : Formal.Info;
     cs     := M3.OuterCheckState;
+    result : Type.T := NIL;
   BEGIN
     (* look up each of the named exceptions *)
     ESet.TypeCheck (p.raises);
@@ -226,9 +228,12 @@ PROCEDURE Check (p: P) =
       p.checked := TRUE;
       Scope.TypeCheck (p.formals, cs);
       IF (p.result # NIL) THEN
-        Type.QID (p.result, p.result_qid);
-        p.result := Type.Check (p.result);
-        IF OpenArrayType.Is (p.result) THEN
+        Type.Typename (p.result, p.result_typename);
+        result := Type.Check (p.result);
+        IF Target.LowerTypes THEN
+          p.result := result;
+        END;
+        IF OpenArrayType.Is (result) THEN
           Error.Msg ("procedures may not return open arrays");
         END;
       END;
@@ -254,7 +259,7 @@ PROCEDURE Compiler (p: P) =
     END;
     n_raises := ESet.EmitTypes (p.raises);
     CG.Declare_proctype (Type.GlobalUID (p), n_formals, result_id, n_raises,
-                         p.callConv);
+                         p.callConv); (* TODO result_typename *)
     v := Scope.ToList (p.formals);
     WHILE (v # NIL) DO
       Formal.EmitDeclaration (v, FALSE, FALSE);
@@ -377,14 +382,15 @@ PROCEDURE Result (t: Type.T): Type.T =
     END;
   END Result;
 
-PROCEDURE ResultQid (t: Type.T): M3.QID =
+PROCEDURE ResultTypename (t: Type.T): QID =
   VAR p := Reduce (t);
   BEGIN
+    Type.Compile (t);
     IF (p # NIL)
-      THEN RETURN p.result_qid;
-      ELSE RETURN M3.NoQID;
+      THEN RETURN p.result_typename;
+      ELSE RETURN NoQID;
     END;
-  END ResultQid;
+  END ResultTypename;
 
 PROCEDURE CGResult (t: Type.T): CG.Type =
   VAR p := Reduce (t);

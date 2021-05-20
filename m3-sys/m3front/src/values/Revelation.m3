@@ -8,17 +8,18 @@
 
 MODULE Revelation;
 
-IMPORT M3, M3ID, Value, Type, Error, OpaqueType, Scope, Decl, Host;
+IMPORT M3ID, Value, Type, Error, OpaqueType, Scope, Decl, Host;
 IMPORT ObjectType, RefType, Scanner, Token, Module, ValueRep, CG;
 IMPORT M3RT, Target, Reff;
 IMPORT PersistentRevelation, PersistentRevelationArraySort, PersistentRevelationSeq, PersistentRevelationSeqRep;
 FROM Scanner IMPORT GetToken, Fail, Match, MatchID, cur;
+FROM M3CG IMPORT QID;
 
 TYPE
   T = BRANDED "Revelation.T" REF RECORD
         home    : Value.T; (* the containing interface or module *)
         env     : Scope.T;
-        qid     : M3.QID;
+        qid     : QID;
         obj     : Value.T; (* value named by 'qid' in scope 'env' *)
         rhs     : Type.T;  (* REVEAL qid (<:|=) rhs *)
         lhs     : Type.T;  (* == type that corresponds to qid *)

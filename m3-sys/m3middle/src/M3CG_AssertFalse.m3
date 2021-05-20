@@ -8,6 +8,7 @@ FROM M3CG IMPORT Var, Proc, Label, Sign, BitOffset;
 FROM M3CG IMPORT Type, ZType, AType, RType, IType, MType;
 FROM M3CG IMPORT CompareOp, ConvertOp, AtomicOp, RuntimeError;
 FROM M3CG IMPORT MemoryOrder;
+FROM M3CG IMPORT QID;
 
 REVEAL
 T = Public BRANDED "M3CG_AssertFalse.T" OBJECT
@@ -196,7 +197,7 @@ AssertFalse();
 RETURN NIL;
 END declare_local;
 
-<*NOWARN*>PROCEDURE declare_param(self: T; name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: TypeUID; in_memory, up_level: BOOLEAN; frequency: Frequency; qid := M3CG.NoQID): Var =
+<*NOWARN*>PROCEDURE declare_param(self: T; name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: TypeUID; in_memory, up_level: BOOLEAN; frequency: Frequency; typename: QID): Var =
 BEGIN
 AssertFalse();
 RETURN NIL;
@@ -208,13 +209,13 @@ AssertFalse();
 RETURN NIL;
 END declare_temp;
 
-<*NOWARN*>PROCEDURE import_procedure(self: T; name: Name; n_params: INTEGER; ret_type: Type; callingConvention: CallingConvention; return_type_qid := M3CG.NoQID): Proc =
+<*NOWARN*>PROCEDURE import_procedure(self: T; name: Name; n_params: INTEGER; ret_type: Type; callingConvention: CallingConvention; return_typeid: TypeUID; return_typename: QID): Proc =
 BEGIN
 AssertFalse();
 RETURN NIL;
 END import_procedure;
 
-<*NOWARN*>PROCEDURE declare_procedure(self: T; name: Name; n_params: INTEGER; return_type: Type; level: INTEGER; callingConvention: CallingConvention; exported: BOOLEAN; parent: Proc; return_type_qid := M3CG.NoQID): Proc =
+<*NOWARN*>PROCEDURE declare_procedure(self: T; name: Name; n_params: INTEGER; return_type: Type; level: INTEGER; callingConvention: CallingConvention; exported: BOOLEAN; parent: Proc; return_typeid: TypeUID; return_typename: QID): Proc =
 BEGIN
 AssertFalse();
 RETURN NIL;
@@ -238,9 +239,9 @@ END declare_procedure;
 <*NOWARN*>PROCEDURE declare_set(self: T; t, domain: TypeUID; bit_size: BitSize) = BEGIN AssertFalse(); END declare_set;
 <*NOWARN*>PROCEDURE declare_subrange(self: T; typeid, domain_typeid: TypeUID; READONLY min, max: Target.Int; bit_size: BitSize) = BEGIN AssertFalse(); END declare_subrange;
 <*NOWARN*>PROCEDURE declare_pointer(self: T; typeid, target_typeid: TypeUID; brand: TEXT; traced: BOOLEAN) = BEGIN AssertFalse(); END declare_pointer;
-<*NOWARN*>PROCEDURE declare_indirect(self: T; typeid, target_typeid: TypeUID) = BEGIN AssertFalse(); END declare_indirect;
-<*NOWARN*>PROCEDURE declare_proctype(self: T; typeid: TypeUID; n_formals: INTEGER; result: TypeUID; n_raises: INTEGER; callingConvention: CallingConvention) = BEGIN AssertFalse(); END declare_proctype;
-<*NOWARN*>PROCEDURE declare_formal(self: T; name: Name; typeid: TypeUID) = BEGIN AssertFalse(); END declare_formal;
+<*NOWARN*>PROCEDURE declare_indirect(self: T; typeid, target_typeid: TypeUID; target_typename: QID) = BEGIN AssertFalse(); END declare_indirect;
+<*NOWARN*>PROCEDURE declare_proctype(self: T; typeid: TypeUID; n_formals: INTEGER; result: TypeUID; n_raises: INTEGER; callingConvention: CallingConvention; result_typename: QID) = BEGIN AssertFalse(); END declare_proctype;
+<*NOWARN*>PROCEDURE declare_formal(self: T; name: Name; typeid: TypeUID; typename: QID) = BEGIN AssertFalse(); END declare_formal;
 <*NOWARN*>PROCEDURE declare_raises(self: T; name: Name) = BEGIN AssertFalse(); END declare_raises;
 <*NOWARN*>PROCEDURE declare_object(self: T; typeid, super_typeid: TypeUID; brand: TEXT; traced: BOOLEAN; n_fields, n_methods: INTEGER; field_size: BitSize) = BEGIN AssertFalse(); END declare_object;
 <*NOWARN*>PROCEDURE declare_method(self: T; name: Name; signature: TypeUID) = BEGIN AssertFalse(); END declare_method;

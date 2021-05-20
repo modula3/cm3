@@ -9,7 +9,7 @@ UNSAFE MODULE Scanner;
 IMPORT Text, Fmt, File, OSError, TextIntTbl, Word;
 IMPORT M3, M3ID, Error, M3String, M3WString, Token;
 IMPORT Target, TInt, TWord, TFloat, Host, M3Buf;
-IMPORT WCharr, CharSeq, CharSeqRep;
+IMPORT CharSeq, CharSeqRep;
 
 CONST
   MaxStack  = 40;

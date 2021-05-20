@@ -4,11 +4,12 @@
 
 INTERFACE Umman;
 
-FROM Ctypes IMPORT int;
+FROM Ctypes IMPORT int, void_star;
 FROM Cstddef IMPORT size_t;
 FROM Utypes IMPORT off_t;
 
-(*CONST*)
+TYPE caddr_t = ADDRESS;
+
 (* This first set very portable. *)
 <*EXTERNAL Umman__PROT_NONE*> VAR PROT_NONE: int;
 <*EXTERNAL Umman__PROT_READ*> VAR PROT_READ: int;
@@ -28,8 +29,8 @@ FROM Utypes IMPORT off_t;
 <*EXTERNAL Umman__MAP_ANON*> VAR MAP_ANON: int;
 <*EXTERNAL Umman__MAP_NOCORE*> VAR MAP_NOCORE: int;
 
-<*EXTERNAL Umman__mprotect*>PROCEDURE mprotect (addr: ADDRESS; len: size_t; prot:int): int;
-<*EXTERNAL Umman__mmap*>PROCEDURE mmap (addr: ADDRESS; len: size_t; prot, flags, fd: int; off: off_t): ADDRESS;
-<*EXTERNAL Umman__munmap*>PROCEDURE munmap (addr: ADDRESS; len: size_t): int;
+<*EXTERNAL Umman__mprotect*>PROCEDURE mprotect (addr: caddr_t; len: size_t; prot:int): int;
+<*EXTERNAL Umman__mmap*>    PROCEDURE mmap     (addr: caddr_t; len: size_t; prot, flags, fd: int; off: off_t): void_star;
+<*EXTERNAL Umman__munmap*>  PROCEDURE munmap  ( addr: caddr_t; len: size_t): int;
 
 END Umman.

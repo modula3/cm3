@@ -4,8 +4,8 @@
 
 MODULE RunTyme;
 
-IMPORT M3, M3ID, Value, ValueRep, Scope, Module, Error, Procedure;
-IMPORT CG, M3RT, Target, TInt;
+IMPORT M3ID, Value, ValueRep, Scope, Module, Error, Procedure;
+IMPORT CG, M3RT, Target, TInt, M3CG;
 
 CONST
   RunTimeModuleName = "RTHooks";
@@ -94,7 +94,7 @@ PROCEDURE LookUp (name: M3ID.T): Value.T =
       ELSE v := NIL; (* probably a circular import! *)
     END;
     IF (v = NIL) THEN
-      Error.QID (M3.QID {module := hooks_name, item := name},
+      Error.QID (M3CG.QID {module := hooks_name, item := name},
                   "undefined runtime symbol !!")
     END;
 

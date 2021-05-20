@@ -17,7 +17,7 @@ FROM TargetMap IMPORT CG_Bytes;
 FROM M3CG IMPORT Name, ByteOffset, TypeUID, CallingConvention;
 FROM M3CG IMPORT BitSize, ByteSize, Alignment, Frequency;
 FROM M3CG IMPORT Var, Proc, Label, No_label, Sign, BitOffset;
-FROM M3CG IMPORT Type, ZType, AType, RType, IType, MType;
+FROM M3CG IMPORT Type, ZType, AType, RType, IType, MType, QID, NoQID;
 FROM M3CG IMPORT CompareOp, ConvertOp, RuntimeError, MemoryOrder, AtomicOp;
 
 FROM M3CG_Ops IMPORT ErrorHandler;
@@ -547,19 +547,20 @@ PROCEDURE declare_pointer (u: U; type, target: TypeUID; brand: TEXT; traced: BOO
     END
   END declare_pointer;
 
-PROCEDURE declare_indirect (u: U;  type, target: TypeUID) =
+PROCEDURE declare_indirect (u: U;  type, target: TypeUID; <*UNUSED*>target_typename: QID) =
   BEGIN
     IF u.debug THEN
       u.wr.Cmd  ("declare_indirect");
       u.wr.Tipe (type);
       u.wr.Tipe (target);
+      (* TODO target_typename *)
       u.wr.NL   ();
     END
   END declare_indirect;
 
 PROCEDURE declare_proctype (u: U;  type: TypeUID;  n_formals: INTEGER;
                             result: TypeUID;  n_raises: INTEGER;
-                            cc: CallingConvention) =
+                            cc: CallingConvention; <*UNUSED*>result_typename: QID) =
   BEGIN
     IF u.debug THEN
       u.wr.Cmd  ("declare_proctype");
@@ -568,16 +569,18 @@ PROCEDURE declare_proctype (u: U;  type: TypeUID;  n_formals: INTEGER;
       u.wr.Tipe (result);
       u.wr.Int  (n_raises);
       u.wr.Txt  (cc.name);
+      (* TODO result_typename *)
       u.wr.NL   ();
     END
   END declare_proctype;
 
-PROCEDURE declare_formal (u: U;  n: Name;  type: TypeUID) =
+PROCEDURE declare_formal (u: U;  n: Name;  type: TypeUID; <*UNUSED*>typename: QID) =
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("declare_formal");
       u.wr.ZName (n);
       u.wr.Tipe  (type);
+      (* TODO typename *)
       u.wr.NL    ();
     END
   END declare_formal;
@@ -876,7 +879,7 @@ PROCEDURE mangle_procname (base: M3ID.T; arg_size: INTEGER;
 
 PROCEDURE declare_param (u: U;  n: Name;  s: ByteSize;  a: Alignment;
                          type: Type;  m3t: TypeUID;  in_memory, up_level: BOOLEAN;
-                         f: Frequency; <*UNUSED*>qid := M3CG.NoQID): Var =
+                         f: Frequency; <*UNUSED*>typename := NoQID): Var =
   VAR v := NewVar(u, type, m3t, s, 4, n);
   BEGIN
     (* Assume a = 4 and ESP is dword aligned... *)
@@ -1279,7 +1282,8 @@ END IsAlloca;
 
 PROCEDURE import_procedure (u: U;  n: Name;  n_params: INTEGER;
                             ret_type: Type;  cc: CallingConvention;
-                            <*UNUSED*>return_type_qid := M3CG.NoQID): Proc =
+                            <*UNUSED*>return_typeid: TypeUID := 0;
+                            <*UNUSED*>return_typename := NoQID): Proc =
   VAR p := NewProc (u, n, n_params, ret_type, cc);
   BEGIN
     p.import := TRUE;
@@ -1315,7 +1319,9 @@ PROCEDURE import_procedure (u: U;  n: Name;  n_params: INTEGER;
 PROCEDURE declare_procedure (u: U;  n: Name;  n_params: INTEGER;
                              return_type: Type;  lev: INTEGER;
                              cc: CallingConvention; exported: BOOLEAN;
-                             parent: Proc; <*UNUSED*>return_type_qid := M3CG.NoQID): Proc =
+                             parent: Proc;
+                             <*UNUSED*>return_typeid: TypeUID;
+                             <*UNUSED*>return_typename: QID): Proc =
   VAR p := NewProc (u, n, n_params, return_type, cc);
   BEGIN
     p.exported := exported;

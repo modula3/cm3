@@ -13,6 +13,7 @@ FROM M3CG IMPORT Var, Proc, Label, Sign, BitOffset;
 FROM M3CG IMPORT Type, ZType, AType, RType, IType, MType;
 FROM M3CG IMPORT CompareOp, ConvertOp, AtomicOp, RuntimeError;
 FROM M3CG IMPORT MemoryOrder;
+FROM M3CG IMPORT QID, NoQID;
 
 TYPE Bop    = M3CG_Binary.Op;
 TYPE WrVar  = Var    OBJECT tag: INTEGER END;
@@ -549,17 +550,18 @@ PROCEDURE declare_pointer (u: U;  t, target: TypeUID;  brand: TEXT;
   END declare_pointer;
 
 
-PROCEDURE declare_indirect (u: U;  t, target: TypeUID) =
+PROCEDURE declare_indirect (u: U;  t, target: TypeUID; <*UNUSED*>target_typename: QID) =
   BEGIN
     Cmd  (u, Bop.declare_indirect);
     Tipe (u, t);
     Tipe (u, target);
+    (* TODO target_typename but there are no downstream users *)
   END declare_indirect;
 
 
 PROCEDURE declare_proctype (u: U;  t: TypeUID;  n_formals: INTEGER;
                             result: TypeUID;  n_raises: INTEGER;
-                            cc: CallingConvention) =
+                            cc: CallingConvention; <*UNUSED*>result_typename: QID) =
   BEGIN
     Cmd  (u, Bop.declare_proctype);
     Tipe (u, t);
@@ -567,13 +569,15 @@ PROCEDURE declare_proctype (u: U;  t: TypeUID;  n_formals: INTEGER;
     Tipe (u, result);
     Int  (u, n_raises);
     OutB (u, cc.m3cg_id);
+    (* TODO result_typename but it is not used downstream *)
   END declare_proctype;
 
-PROCEDURE declare_formal (u: U;  n: Name;  t: TypeUID) =
+PROCEDURE declare_formal (u: U;  n: Name;  t: TypeUID; <*UNUSED*>typename: QID) =
   BEGIN
     Cmd   (u, Bop.declare_formal);
     ZName (u, n);
     Tipe  (u, t);
+    (* TODO typename but it is not used downstream and can be omitted indefinitely *)
   END declare_formal;
 
 PROCEDURE declare_raises (u: U;  n: Name) =
@@ -757,7 +761,7 @@ PROCEDURE declare_local (u: U;  n: Name;  s: ByteSize;  a: Alignment;
 
 PROCEDURE declare_param (u: U;  n: Name;  s: ByteSize;  a: Alignment;
                          t: Type;  m3t: TypeUID;  in_memory, up_level: BOOLEAN;
-                         f: Frequency; <*UNUSED*>qid := M3CG.NoQID): Var =
+                         f: Frequency; <*UNUSED*>typename := NoQID): Var =
   VAR v := NewVar (u);
   BEGIN
     Cmd   (u, Bop.declare_param);
@@ -770,7 +774,7 @@ PROCEDURE declare_param (u: U;  n: Name;  s: ByteSize;  a: Alignment;
     Bool  (u, up_level);
     Int   (u, f);
     VName (u, v);
-    (* TODO qid but it is not used downstream and can be omitted indefinitely *)
+    (* TODO typename but it is not used downstream and can be omitted indefinitely *)
     RETURN v;
   END declare_param;
 
@@ -870,7 +874,8 @@ PROCEDURE NewProc (u: U): Proc =
 
 PROCEDURE import_procedure (u: U;  n: Name;  n_params: INTEGER;
                             ret_type: Type; cc: CallingConvention;
-                            <*UNUSED*>return_type_qid := M3CG.NoQID): Proc =
+                            <*UNUSED*>return_typeid: TypeUID := 0;
+                            <*UNUSED*>return_typename := NoQID): Proc =
   VAR p := NewProc (u);
   BEGIN
     Cmd   (u, Bop.import_procedure);
@@ -885,7 +890,9 @@ PROCEDURE import_procedure (u: U;  n: Name;  n_params: INTEGER;
 PROCEDURE declare_procedure (u: U;  n: Name;  n_params: INTEGER;
                              return_type: Type;  lev: INTEGER;
                              cc: CallingConvention; exported: BOOLEAN;
-                             parent: Proc; <*UNUSED*>return_type_qid := M3CG.NoQID): Proc =
+                             parent: Proc;
+                             <*UNUSED*>return_typeid: TypeUID := 0;
+                             <*UNUSED*>return_typename := NoQID): Proc =
   VAR p := NewProc (u);
   BEGIN
     Cmd   (u, Bop.declare_procedure);
@@ -897,6 +904,7 @@ PROCEDURE declare_procedure (u: U;  n: Name;  n_params: INTEGER;
     Bool  (u, exported);
     PName (u, parent);
     PName (u, p);
+    (* TODO return_typename but it is not used downstream and can be omitted indefinitely *)
     RETURN p;
   END declare_procedure;
 

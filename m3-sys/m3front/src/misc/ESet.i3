@@ -8,6 +8,7 @@
 INTERFACE ESet;
 
 IMPORT M3, Value, Scope, CG;
+FROM M3CG IMPORT QID;
 
 TYPE
   T = M3.ExSet;
@@ -24,7 +25,7 @@ PROCEDURE RaisesNone (t: T): BOOLEAN;
 
 PROCEDURE NewAny (): T;
 PROCEDURE NewEmpty (env: Scope.T): T;
-PROCEDURE Add (t: T;  READONLY name: M3.QID;   ex: Value.T);
+PROCEDURE Add (t: T;  READONLY name: QID;   ex: Value.T);
 
 PROCEDURE IsEqual (a, b: T): BOOLEAN;
 (* TRUE iff 'a' equals 'b' *)

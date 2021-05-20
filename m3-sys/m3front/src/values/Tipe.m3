@@ -11,6 +11,7 @@ MODULE Tipe;
 IMPORT M3, M3ID, CG, Value, ValueRep, Scope, OpaqueType, WebInfo, TypeRep;
 IMPORT Token, Type, Decl, Scanner, NamedType, RefType, ObjectType, Module;
 FROM Scanner IMPORT GetToken, Fail, Match, MatchID, cur;
+FROM M3CG IMPORT QID;
 
 TYPE
   T = Value.T BRANDED "Tipe.T" OBJECT 
@@ -95,7 +96,7 @@ PROCEDURE Define (name: TEXT;  type: Type.T;  reserved: BOOLEAN) =
   BEGIN
     t := Create (M3ID.Add (name));
     t.value := type;
-    type.info.name := t.name;
+    type.info.name.item := t.name;
     Scope.Insert (t);
     IF (reserved) THEN Scanner.NoteReserved (t.name, t) END;
   END Define;
@@ -106,19 +107,19 @@ PROCEDURE DefineOpaque (name: TEXT;  super: Type.T): Type.T =
     t := Create (M3ID.Add (name));
     Scope.Insert (t);
     t.value := OpaqueType.New (super, t);
-    t.value.info.name := t.name;
+    t.value.info.name.item := t.name;
     Scanner.NoteReserved (t.name, t);
     RETURN t.value;
   END DefineOpaque;
 
 PROCEDURE Check (t: T;  <*UNUSED*> VAR cs: Value.CheckState) =
-  VAR info: Type.Info;  initial := t.value;  qid: M3.QID;  name: TEXT;
+  VAR info: Type.Info;  initial := t.value;  typename: QID;  name: TEXT;
   BEGIN
     t.value := Type.CheckInfo (t.value, info);
 
     IF (NOT t.imported)
       AND ((info.class = Type.Class.Ref) OR (info.class = Type.Class.Object))
-      AND (NOT NamedType.Split (initial, qid)) THEN
+      AND (NOT NamedType.Split (initial, typename)) THEN
       name := Value.GlobalName (t);
       IF (info.class = Type.Class.Ref)
         THEN RefType.NoteRefName (t.value, name);
