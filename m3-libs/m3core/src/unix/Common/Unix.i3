@@ -69,6 +69,7 @@ TYPE struct_flock = RECORD
   l_whence: INTEGER := 0;
 END;
 
+(* TODO replace this with higher level constructs *)
 <*EXTERNAL "Unix__fcntl"*>PROCEDURE fcntl (fd: int; request, arg: INTEGER): int;
 
 <*EXTERNAL "Unix__fsync"*>PROCEDURE fsync (fd: int): int;
@@ -79,8 +80,8 @@ END;
 
 <*EXTERNAL "Unix__FIONREAD"*> VAR FIONREAD: const_int;
 
-<*EXTERNAL "Unix__ioctl"*>
-PROCEDURE ioctl (d: int; request: INTEGER; argp: ADDRESS): int;
+(* TODO replace this with higher level constructs *)
+<*EXTERNAL "Unix__ioctl"*> PROCEDURE ioctl (d: int; request: INTEGER; argp: ADDRESS): int;
 
 <*EXTERNAL "Unix__lseek"*>
 PROCEDURE lseek (d: int; offset: off_t; whence: int): off_t;

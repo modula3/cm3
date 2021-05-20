@@ -2,6 +2,7 @@
 (* See file COPYRIGHT-CMASS for details. *)
 
 UNSAFE MODULE WinReg;
+(* TODO Move these to .c. *)
 BEGIN
   HKEY_CLASSES_ROOT     := LOOPHOLE (16_80000000, HKEY);
   HKEY_CURRENT_USER     := LOOPHOLE (16_80000001, HKEY);
