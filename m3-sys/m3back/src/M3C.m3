@@ -1365,7 +1365,7 @@ END ProcType_define;
 PROCEDURE TypeidToType_Get(self: T; typeid: TypeUID): Type_t =
 VAR type: REFANY := NIL;
 BEGIN
-    IF typeid # -1 THEN
+    IF typeid # -1 AND typeid # 0 THEN
         EVAL self.typeidToType.get(typeid, type);
     END;
     IF type = NIL THEN
@@ -1386,7 +1386,7 @@ BEGIN
     typedefs[1] := TypeIDToText(type.typeid);
 
     IF type.text = NIL THEN
-        IF type.typeid = -1 THEN
+        IF type.typeid = -1 OR type.typeid = 0 THEN
             IF cgtype = CGType.Struct THEN
                 type.text := " /* Type_Init Struct */ " & Struct(type.bit_size DIV 8);
             ELSE
@@ -1396,7 +1396,7 @@ BEGIN
             type.text := TypeIDToText(type.typeid) & type.type_text_tail;
         END;
     END;
-    IF type.typeid # -1 THEN
+    IF type.typeid # -1 AND type.typeid # 0 THEN
         EVAL self.typeidToType.put(type.typeid, type);
     END;
 (*
