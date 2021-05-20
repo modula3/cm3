@@ -5266,6 +5266,7 @@ PROCEDURE Locals_declare_procedure(
     callingConvention: CallingConvention;
     exported: BOOLEAN;
     parent: M3CG.Proc;
+    return_typeid: TypeUID;
     return_typename: QID): M3CG.Proc =
 BEGIN
     RETURN declare_procedure(
@@ -5277,6 +5278,7 @@ BEGIN
         callingConvention,
         exported,
         parent,
+        return_typeid,
         return_typename);
 END Locals_declare_procedure;
 
@@ -5293,6 +5295,7 @@ PROCEDURE declare_procedure(
     return_type: CGType; level: INTEGER;
     callingConvention: CallingConvention;
     exported: BOOLEAN; parent: M3CG.Proc;
+    return_typeid: TypeUID;
     return_typename: QID): M3CG.Proc =
 VAR proc := NEW(Proc_t, name := name, parameter_count := parameter_count,
                 return_type := return_type, level := level,
@@ -5307,6 +5310,7 @@ BEGIN
             & " exported:" & BoolToText[exported]
             & " level:" & IntToDec(level)
             & " parent:" & ProcNameOrNIL(parent)
+            & " return_typeid:" & TypeIDToText(return_typeid)
             & " return_typename:" & TextOrNil(qidtext));
     ELSE
         self.comment("declare_procedure");

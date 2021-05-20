@@ -215,7 +215,7 @@ AssertFalse();
 RETURN NIL;
 END import_procedure;
 
-<*NOWARN*>PROCEDURE declare_procedure(self: T; name: Name; n_params: INTEGER; return_type: Type; level: INTEGER; callingConvention: CallingConvention; exported: BOOLEAN; parent: Proc; return_typename: QID): Proc =
+<*NOWARN*>PROCEDURE declare_procedure(self: T; name: Name; n_params: INTEGER; return_type: Type; level: INTEGER; callingConvention: CallingConvention; exported: BOOLEAN; parent: Proc; return_typeid: TypeUID; return_typename: QID): Proc =
 BEGIN
 AssertFalse();
 RETURN NIL;

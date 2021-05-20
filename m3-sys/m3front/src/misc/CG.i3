@@ -201,7 +201,8 @@ PROCEDURE Declare_local (n: Name;  s: Size;  a: Alignment;  t: Type;
 
 PROCEDURE Declare_param (n: Name;  s: Size;  a: Alignment;  t: Type;
                          m3t: TypeUID;  in_memory, up_level: BOOLEAN;
-                         f: Frequency; typename := NoQID): Var;
+                         f: Frequency;
+                         typename := NoQID): Var;
 (* declares a formal parameter.  Formals are declared in their lexical
    order immediately following the 'declare_procedure' or
    'import_procedure' that contains them.  *)
@@ -330,6 +331,7 @@ PROCEDURE Import_procedure (n: Name;  n_params: INTEGER;  ret_type: Type;
 PROCEDURE Declare_procedure (n: Name;  n_params: INTEGER;  ret_type: Type;
                              lev: INTEGER;  cc: CallingConvention;
                              exported: BOOLEAN;  parent: Proc;
+                             return_typeid: TypeUID := 0;
                              return_typename := NoQID): Proc;
 (* declare a procedure named 'n' with 'n_params' formal parameters
    at static level 'lev'.  Sets "current procedure" to this procedure.

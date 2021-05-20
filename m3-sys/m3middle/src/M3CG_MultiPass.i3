@@ -15,7 +15,7 @@ FROM M3CG IMPORT Frequency, CallingConvention, CompareOp, ConvertOp, AtomicOp;
 FROM M3CG IMPORT BitSize, ByteSize, BitOffset, ByteOffset, RuntimeError;
 FROM M3CG IMPORT MemoryOrder;
 FROM M3CG_Binary IMPORT Op;
-FROM M3CG IMPORT QID, NoQID;
+FROM M3CG IMPORT NoQID, TypeUID;
 
 TYPE cg_t = M3CG.T;
 TYPE typeid_t = M3CG.TypeUID;
@@ -56,7 +56,7 @@ END;
 
 (* These create procs. *)
 TYPE import_procedure_t = op_tag_t OBJECT name: Name; n_params: INTEGER; return_type: Type; callingConvention: CallingConvention; return_typename := NoQID; OVERRIDES replay := replay_import_procedure END;
-TYPE declare_procedure_t = op_tag_t OBJECT name: Name; n_params: INTEGER; return_type: Type; level: INTEGER; callingConvention: CallingConvention; exported: BOOLEAN; parent: INTEGER(*proc_t*); return_typename := NoQID; OVERRIDES replay := replay_declare_procedure END;
+TYPE declare_procedure_t = op_tag_t OBJECT name: Name; n_params: INTEGER; return_type: Type; level: INTEGER; callingConvention: CallingConvention; exported: BOOLEAN; parent: INTEGER(*proc_t*); return_typeid: TypeUID := 0; return_typename := NoQID; OVERRIDES replay := replay_declare_procedure END;
 
 (* These create vars. *)
 TYPE declare_segment_t = op_tag_t OBJECT name: Name; typeid: typeid_t; is_const: BOOLEAN; OVERRIDES replay := replay_declare_segment END;

@@ -356,6 +356,7 @@ import_procedure (n: Name;  n_params: INTEGER;  return: Type;
 declare_procedure (n: Name;  n_params: INTEGER;  return: Type;
                    lev: INTEGER;  cc: CallingConvention;
                    exported: BOOLEAN;  parent: Proc;
+                   return_typeid: TypeUID := 0;
                    return_typename := NoQID): Proc;
 (* Declare a procedure with simple name 'n' within the current scope,
    with 'n_params' formal parameters, at static nesting level 'lev'.

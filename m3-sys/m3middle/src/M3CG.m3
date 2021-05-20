@@ -478,11 +478,12 @@ PROCEDURE declare_procedure (xx: T;  n: Name;  n_params: INTEGER;
                              return_type: Type;  lev: INTEGER;
                              cc: CallingConvention;
                              exported: BOOLEAN;  parent: Proc;
+                             return_typeid: TypeUID;
                              return_typename: QID): Proc =
   BEGIN
     RETURN xx.child.declare_procedure (n, n_params, return_type,
                                        lev, cc, exported, parent,
-                                       return_typename);
+                                       return_typeid, return_typename);
   END declare_procedure;
 
 PROCEDURE begin_procedure (xx: T;  p: Proc) =

@@ -1318,7 +1318,9 @@ PROCEDURE import_procedure (u: U;  n: Name;  n_params: INTEGER;
 PROCEDURE declare_procedure (u: U;  n: Name;  n_params: INTEGER;
                              return_type: Type;  lev: INTEGER;
                              cc: CallingConvention; exported: BOOLEAN;
-                             parent: Proc; <*UNUSED*>return_typename: QID): Proc =
+                             parent: Proc;
+                             <*UNUSED*>return_typeid: TypeUID;
+                             <*UNUSED*>return_typename: QID): Proc =
   VAR p := NewProc (u, n, n_params, return_type, cc);
   BEGIN
     p.exported := exported;
