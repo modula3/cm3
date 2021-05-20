@@ -1360,12 +1360,13 @@ PROCEDURE EmitText (t: TEXT;  is_const: BOOLEAN): INTEGER =
 PROCEDURE Import_procedure (n: Name;  n_params: INTEGER;  ret_type: Type;
                             cc: CallingConvention;
                             VAR(*OUT*) new: BOOLEAN;
+                            return_typeid: TypeUID := 0;
                             return_typename: QID): Proc =
   VAR ref: REFANY;  p: Proc;
   BEGIN
     IF (procedures = NIL) THEN procedures := NewNameTbl() END;
     IF procedures.get (n, ref) THEN new := FALSE;  RETURN ref END;
-    p := cg.import_procedure (n, n_params, ret_type, cc, return_typename);
+    p := cg.import_procedure (n, n_params, ret_type, cc, return_typeid, return_typename);
     EVAL procedures.put (n, p);
     new := TRUE;
     RETURN p;

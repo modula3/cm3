@@ -209,7 +209,7 @@ AssertFalse();
 RETURN NIL;
 END declare_temp;
 
-<*NOWARN*>PROCEDURE import_procedure(self: T; name: Name; n_params: INTEGER; ret_type: Type; callingConvention: CallingConvention; return_typename: QID): Proc =
+<*NOWARN*>PROCEDURE import_procedure(self: T; name: Name; n_params: INTEGER; ret_type: Type; callingConvention: CallingConvention; return_typeid: TypeUID; return_typename: QID): Proc =
 BEGIN
 AssertFalse();
 RETURN NIL;

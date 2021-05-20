@@ -469,9 +469,10 @@ PROCEDURE init_float (xx: T;  o: ByteOffset;  READONLY f: Target.Float) =
 
 PROCEDURE import_procedure (xx: T;  n: Name;  n_params: INTEGER;
                           ret_type: Type;  cc: CallingConvention;
+                          return_typeid: TypeUID;
                           return_typename: QID): Proc =
   BEGIN
-    RETURN xx.child.import_procedure (n, n_params, ret_type, cc, return_typename);
+    RETURN xx.child.import_procedure (n, n_params, ret_type, cc, return_typeid, return_typename);
   END import_procedure;
 
 PROCEDURE declare_procedure (xx: T;  n: Name;  n_params: INTEGER;

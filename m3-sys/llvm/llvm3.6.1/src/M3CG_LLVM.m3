@@ -2046,7 +2046,7 @@ PROCEDURE init_float (self: U;  o: ByteOffset;  READONLY f: Target.Float) =
 
 (*------------------------------------------------------------ procedures ---*)
 
-PROCEDURE import_procedure (self: U;  n: Name;  n_params: INTEGER; return_type: Type;  cc: CallingConvention; return_typename: QID): Proc =
+PROCEDURE import_procedure (self: U;  n: Name;  n_params: INTEGER; return_type: Type;  cc: CallingConvention; <*UNUSED*>return_typeid: TypeUID; <*UNUSED*>return_typename: QID): Proc =
   VAR
     p : LvProc := NewProc(self,n,n_params,return_type,-1,cc,FALSE,NIL);
     name : TEXT;
