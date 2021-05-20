@@ -5034,7 +5034,7 @@ BEGIN
     IF bias # 0 THEN
         bias_text := IntToDec(bias) & "+";
     END;
-    initializer_addhi(self, bias_text & "(ADDRESS)&" & NameT(var.name));
+    initializer_addhi(self, bias_text & "(char*)&" & NameT(var.name));
 END init_var;
 
 PROCEDURE Segments_init_var(self: Segments_t; offset: ByteOffset; v: M3CG.Var; bias: ByteOffset) =
@@ -5678,7 +5678,7 @@ PROCEDURE address_plus_offset(in: TEXT; in_offset: INTEGER): Expr_t =
 VAR pre := "("; post := ")";
 BEGIN
     IF in_offset # 0 THEN
-        pre := "((" & IntToDec(in_offset) & ")+(ADDRESS)(";
+        pre := "((" & IntToDec(in_offset) & ")+(char*)(";
         post := "))";
     END;
     RETURN CTextToExpr(pre & in & post);
