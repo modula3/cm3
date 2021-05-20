@@ -1113,7 +1113,7 @@ BEGIN
     IF bit_offset # bit_size THEN
         Err(x, "failed to declare record to correct size");
     END;
-    print(x, "};\n");
+    print(x, "};");
     endif(x);
 END record_define;
 
@@ -1247,7 +1247,7 @@ BEGIN
     print(x, type.element_type.text);
     print(x, " _elts[");
     print(x, IntToDec(type.bit_size DIV type.element_type.bit_size));
-    print(x, "];};\n");
+    print(x, "];};");
     endif(x);
 END fixedArray_define;
 
@@ -3904,7 +3904,7 @@ BEGIN
     (* Print per-type content. Remember what types are printed to avoid duplication. *)
     IF NOT type IN types_already_printed THEN
         ifndef(self.self, "m3_" & op & "_" & cgtypeToText[type]);
-        print(self.self, "m3_" & op & "_T(" & cgtypeToText[type] & ")\n");
+        print(self.self, "m3_" & op & "_T(" & cgtypeToText[type] & ")");
         endif(self.self);
         types_already_printed := types_already_printed + SET OF CGType{type};
     END;
@@ -4394,7 +4394,7 @@ BEGIN
                 IF (size MOD units[unit]) = 0 THEN
                     sizestr := IntToDec(size);
                     ifndef(x, "struct_" & sizestr & "_t"); (* see define STRUCT *)
-                    print(x, "STRUCT" & IntToDec(units[unit]) & "(" & sizestr & ")\n");
+                    print(x, "STRUCT" & IntToDec(units[unit]) & "(" & sizestr & ")");
                     endif(x);
                     EXIT;
                 END;
