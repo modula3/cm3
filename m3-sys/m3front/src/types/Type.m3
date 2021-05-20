@@ -295,7 +295,8 @@ PROCEDURE IsStructured (t: T): BOOLEAN =
   BEGIN
     IF t = NIL THEN RETURN FALSE END;
     CASE t.info.class OF
-    | Class.Packed    => RETURN IsStructured (Base (t));
+    | Class.Named,
+      Class.Packed    => RETURN IsStructured (Base (t));
     | Class.Record,
       Class.Array,
       Class.OpenArray => RETURN TRUE;
