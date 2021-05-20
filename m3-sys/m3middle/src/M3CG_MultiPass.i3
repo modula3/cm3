@@ -55,7 +55,7 @@ TYPE op_tag_t = op_t OBJECT
 END;
 
 (* These create procs. *)
-TYPE import_procedure_t = op_tag_t OBJECT name: Name; n_params: INTEGER; return_type: Type; callingConvention: CallingConvention; return_typename := NoQID; OVERRIDES replay := replay_import_procedure END;
+TYPE import_procedure_t = op_tag_t OBJECT name: Name; n_params: INTEGER; return_type: Type; callingConvention: CallingConvention; return_typeid: TypeUID := 0; return_typename := NoQID; OVERRIDES replay := replay_import_procedure END;
 TYPE declare_procedure_t = op_tag_t OBJECT name: Name; n_params: INTEGER; return_type: Type; level: INTEGER; callingConvention: CallingConvention; exported: BOOLEAN; parent: INTEGER(*proc_t*); return_typeid: TypeUID := 0; return_typename := NoQID; OVERRIDES replay := replay_declare_procedure END;
 
 (* These create vars. *)

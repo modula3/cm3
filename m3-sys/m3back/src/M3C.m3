@@ -4286,9 +4286,10 @@ PROCEDURE Imports_import_procedure(
     parameter_count: INTEGER;
     return_type: CGType;
     callingConvention: CallingConvention;
+    return_typeid: TypeUID;
     return_typename: QID): M3CG.Proc =
 BEGIN
-    RETURN import_procedure(self.self, name, parameter_count, return_type, callingConvention, return_typename);
+    RETURN import_procedure(self.self, name, parameter_count, return_type, callingConvention, return_typeid, return_typename);
 END Imports_import_procedure;
 
 PROCEDURE Imports_declare_param(
@@ -5229,6 +5230,7 @@ END Segments_init_float;
 PROCEDURE import_procedure(
     self: T; name: Name; parameter_count: INTEGER;
     return_type: CGType; callingConvention: CallingConvention;
+    return_typeid: TypeUID;
     return_typename: QID): M3CG.Proc =
 VAR proc := NEW(Proc_t, name := name, parameter_count := parameter_count,
                 return_type := return_type, imported := TRUE,
@@ -5239,6 +5241,7 @@ BEGIN
         self.comment("import_procedure name:" & NameT(name)
             & " parameter_count:" & IntToDec(parameter_count)
             & " return_type:" & cgtypeToText[return_type]
+            & " return_typeid:" & TypeIDToText(return_typeid)
             & " return_typename:" & TextOrNil(qidtext));
     ELSE
         self.comment("import_procedure");

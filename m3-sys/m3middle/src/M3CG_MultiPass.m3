@@ -382,7 +382,7 @@ self.Add(NEW(declare_temp_t, op := Op.declare_temp, byte_size := byte_size, alig
 RETURN var;
 END declare_temp;
 
-PROCEDURE import_procedure(self: T; name: Name; n_params: INTEGER; return_type: Type; callingConvention: CallingConvention; return_typename := NoQID): Proc =
+PROCEDURE import_procedure(self: T; name: Name; n_params: INTEGER; return_type: Type; callingConvention: CallingConvention; return_typeid: TypeUID := 0; return_typename := NoQID): Proc =
 VAR proc := self.refs.NewProc();
 BEGIN
 self.Add(NEW(import_procedure_t, op := Op.import_procedure, name := name, n_params := n_params, return_type := return_type, callingConvention := callingConvention, return_typename := return_typename, tag := proc.tag));
@@ -1095,7 +1095,7 @@ END replay_declare_temp;
 
 PROCEDURE replay_import_procedure(self: import_procedure_t; replay: Replay_t; cg: cg_t) =
 BEGIN
-    replay.PutRef(self.tag, cg.import_procedure(self.name, self.n_params, self.return_type, self.callingConvention, self.return_typename));
+    replay.PutRef(self.tag, cg.import_procedure(self.name, self.n_params, self.return_type, self.callingConvention, self.return_typeid, self.return_typename));
 END replay_import_procedure;
 
 PROCEDURE replay_declare_procedure(self: declare_procedure_t; replay: Replay_t; cg: cg_t) =

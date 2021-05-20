@@ -1295,8 +1295,7 @@ PROCEDURE init_float (this: T; offset: ByteOffset; READONLY float: Target.Float)
 
 (*------------------------------------------------------------ PROCEDUREs ---*)
 
-PROCEDURE import_procedure (this: T; name: Name; n_params: INTEGER;
-                            return_type: Type; callingConvention: CallingConvention): Proc =
+PROCEDURE import_procedure (...): Proc =
 VAR proc := NEW(CProc, name := FixName(name), n_params := n_params,
                 return_type := return_type,
                 callingConvention := callingConvention,

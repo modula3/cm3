@@ -874,6 +874,7 @@ PROCEDURE NewProc (u: U): Proc =
 
 PROCEDURE import_procedure (u: U;  n: Name;  n_params: INTEGER;
                             ret_type: Type; cc: CallingConvention;
+                            <*UNUSED*>return_typeid: TypeUID := 0;
                             <*UNUSED*>return_typename := NoQID): Proc =
   VAR p := NewProc (u);
   BEGIN
