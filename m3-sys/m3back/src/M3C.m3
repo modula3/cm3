@@ -14,6 +14,7 @@ FROM M3CG_Ops IMPORT ErrorHandler;
 IMPORT M3CG_MultiPass, M3CG_DoNothing, M3CG_Binary, RTIO;
 IMPORT CharSeq, CharSeqRep;
 FROM M3CC IMPORT IntToDec, IntToHex, UIntToHex, INT32;
+IMPORT TextSetDef;
 CONST NameT = M3ID.ToText;
 
 (* 
@@ -126,6 +127,7 @@ T = M3CG_DoNothing.T BRANDED "M3C.T" OBJECT
         report_fault: TEXT := NIL; (* based on M3x86 -- reportlabel, global_var *)
         report_fault_used := FALSE;
         width := 0;
+        typedef_defined: TextSetDef.T := NIL;
 
     METHODS
         Type_Init(type: Type_t) := Type_Init;
@@ -679,6 +681,48 @@ END Var_FixName;
 
 TYPE Type_State = {None, ForwardDeclared, CanBeDefined, Defined};
 
+PROCEDURE TypeText (self: T; cgtype: CGType; qidtext: TEXT; typeid: TypeUID := 0; type_text: TEXT := NIL; name := M3ID.NoID): TEXT =
+VAR type: Type_t := NIL;
+BEGIN
+  (* All typeids must be known, though this is maybe overkill. *)
+  IF typeid # -1 AND typeid # 0 AND NOT ResolveType(self, typeid, type) THEN
+    Err(self, "declare_param:"
+              & " unknown typeid:" & TypeIDToText(typeid)
+              & " type:" & cgtypeToText[cgtype]
+              & " name:" & TextOrNil(NameT(name)) & "\n");
+  END;
+
+  IF type_text = NIL THEN
+    IF type # NIL THEN
+      type_text := type.text & " /* StrongType1 */ ";
+      IF cgtype = CGType.Addr AND NOT PassStructsByValue
+          AND (type.isRecord() OR type.isArray()) THEN (* TODO remove this *)
+        type_text := type_text & " * " & " /* StrongType2 */ ";
+      END;
+    ELSE
+     type_text := cgtypeToText[cgtype] & " /* StrongType3 */ ";
+    END;
+  END;
+
+  (* If typename qidtext is already defined, such as from m3core.h, use that.
+   * Else typedef it to be type_text, which is the resolved
+   * lowlevel CG type like Int32, Int64, Address.
+   * Gradually all types should be qidtext and never just CG.
+   * Historically the other way around: There was only CG and no qid.
+   *)
+  qidtext := NIL;
+  IF qidtext # NIL THEN
+    IF NOT self.typedef_defined.insert(qidtext) THEN
+      ifndef(self, qidtext);
+      print(self, "typedef " & type_text & " " & qidtext & ";");
+      endif(self);
+    END;
+    RETURN qidtext;
+  END;
+
+  RETURN type_text;
+END TypeText;
+
 TYPE Type_t = OBJECT
     bit_size := 0;  (* FUTURE Target.Int or LONGINT *)
     typeid: TypeUID := 0;
@@ -835,7 +879,10 @@ END;
 PROCEDURE pointer_define(type: Pointer_t; self: T) =
 (* Does branding make a difference? *)
 VAR x := self;
-    star: TEXT;
+    star_or_space := " ";
+    do_endif := FALSE;
+    do_print := FALSE;
+    end_of_line := ";";
 BEGIN
     (* We have recursive types TYPE FOO = UNTRACED REF FOO. Typos actually. *)
     IF type.points_to_typeid = type.typeid THEN
@@ -854,13 +901,22 @@ BEGIN
     type.points_to_type.ForwardDeclare(self);
     type.points_to_type.Define(self);
     IF type.typename THEN
-      star := " ";
-      ifndef (self, type.text);
+      IF NOT x.typedef_defined.insert(type.text) THEN
+        do_print := TRUE;
+        ifndef (self, type.text);
+        do_endif := TRUE;
+        end_of_line := ";"; (* endif includes newline *)
+      END
     ELSE
-      star := " * ";
+      (* Equivalent pointers typedefs can be output multiple times; ignore typedef_defined *)
+      star_or_space := "*";
+      do_print := TRUE;
+      end_of_line := ";\n";
     END;
-    print(x, "typedef " & type.points_to_type.text & star & type.text & ";\n");
-    IF type.typename THEN
+    IF do_print THEN
+      print(x, "typedef " & type.points_to_type.text & star_or_space & type.text & end_of_line);
+    END;
+    IF do_endif THEN
       endif (self);
     END;
 END pointer_define;
@@ -1831,6 +1887,7 @@ TYPE Proc_t = M3CG.Proc OBJECT
     parameter_count := 0; (* FUTURE: remove this (same as NUMBER(params^)) *)
     parameter_count_without_static_link := 0; (* FUTURE: remove this (same as NUMBER(params^) - ORD(add_static_link)) *)
     return_type: CGType;
+    return_type_text: TEXT := NIL;
     level := 0;
     callingConvention: CallingConvention;
     exported := FALSE;
@@ -2552,6 +2609,7 @@ PROCEDURE multipass_end_unit(self: Multipass_t) =
 VAR x := self.self;
     index := 0;
 BEGIN
+    x.typedef_defined := NEW(TextSetDef.T).init(251);
     M3CG_MultiPass.end_unit(self); (* let M3CG_MultiPass do its usual last step *)
     self.Replay(x, index, self.op_data[M3CG_Binary.Op.begin_unit]);
     self.Replay(x, index, self.op_data[M3CG_Binary.Op.set_error_handler]);
@@ -4611,7 +4669,7 @@ TYPE FunctionPrototype_t = { Declare, Define };
 
 PROCEDURE function_prototype(proc: Proc_t; kind: FunctionPrototype_t): TEXT =
 VAR params := proc.params;
-    text := cgtypeToText[proc.return_type] & "\n" &
+    text := proc.return_type_text & "\n" &
             CallingConventionToText(proc.callingConvention) & "\n" &
             NameT(proc.name);
     after_param: TEXT := NIL;
@@ -4682,7 +4740,7 @@ BEGIN
             CG_Bytes[CGType.Addr], (* size *)
             CG_Bytes[CGType.Addr], (* alignment *)
             CGType.Addr,
-            -1,
+            -1, (* typeid *)
             TRUE, (* up_level, sort of -- needs to be stored, but is never written, can be read from direct parameter
                      This gets it stored in begin_function. *)
             NARROW(proc.parent, Proc_t).FrameType() & "*"), Var_t);
@@ -4711,7 +4769,6 @@ PROCEDURE internal_declare_param(
     typename := NoQID): M3CG.Var =
 VAR function := self.param_proc;
     var: Var_t := NIL;
-    type: Type_t := NIL;
     qidtext := QidText(typename);
 BEGIN
     IF DebugVerbose(self) THEN
@@ -4725,29 +4782,7 @@ BEGIN
         self.comment("internal_declare_param");
     END;
 
-    IF type_text = NIL THEN
-        IF NOT ResolveType(self, typeid, type) THEN
-            IF typeid # -1 AND typeid # 0 THEN
-                Err(self, "declare_param:"
-                    & " unknown typeid:" & TypeIDToText(typeid)
-                    & " type:" & cgtypeToText[cgtype]
-                    & " name:" & NameT(name) & "\n");
-            ELSE
-                (* RTIO.PutText("warning: declare_param: unknown typeid:" & TypeIDToText(typeid) & " type:" & cgtypeToText[cgtype] & "\n");
-                RTIO.Flush(); *)
-            END;
-        END;
-        IF type # NIL THEN
-            type_text := type.text & " /* strong_type1 */ ";
-            IF  cgtype = CGType.Addr AND NOT PassStructsByValue
-                    AND (type.isRecord() OR type.isArray()) THEN (* TODO remove this *)
-                type_text := type_text & " * " & " /* strong_type3 */ ";
-            END;
-        END;
-        IF type_text = NIL THEN
-            type_text := cgtypeToText[cgtype] & " /* strong_type2 */ ";
-        END;
-    END;
+    type_text := TypeText (self, cgtype, qidtext, typeid, type_text, name);
 
     var := NEW(Param_t,
         self := self,
@@ -4790,7 +4825,7 @@ BEGIN
         type,
         typeid,
         up_level,
-        NIL,
+        NIL, (* typetext *)
         typename);
 END declare_param;
 
@@ -5232,10 +5267,11 @@ PROCEDURE import_procedure(
     return_type: CGType; callingConvention: CallingConvention;
     return_typeid: TypeUID;
     return_typename: QID): M3CG.Proc =
-VAR proc := NEW(Proc_t, name := name, parameter_count := parameter_count,
+VAR qidtext := QidText(return_typename);
+    proc := NEW(Proc_t, name := name, parameter_count := parameter_count,
                 return_type := return_type, imported := TRUE,
+                return_type_text := TypeText (self, return_type, qidtext),
                 callingConvention := callingConvention).Init(self);
-    qidtext := QidText(return_typename);
 BEGIN
     IF DebugVerbose(self) THEN
         self.comment("import_procedure name:" & NameT(name)
@@ -5300,11 +5336,12 @@ PROCEDURE declare_procedure(
     exported: BOOLEAN; parent: M3CG.Proc;
     return_typeid: TypeUID;
     return_typename: QID): M3CG.Proc =
-VAR proc := NEW(Proc_t, name := name, parameter_count := parameter_count,
+VAR qidtext := QidText(return_typename);
+    proc := NEW(Proc_t, name := name, parameter_count := parameter_count,
                 return_type := return_type, level := level,
+                return_type_text := TypeText (self, return_type, qidtext),
                 callingConvention := callingConvention, exported := exported,
                 parent := parent).Init(self);
-    qidtext := QidText(return_typename);
 BEGIN
     IF DebugVerbose(self) THEN
         self.comment("declare_procedure name:" & NameT(name)
@@ -5646,7 +5683,7 @@ END case_jump;
 PROCEDURE exit_proc(self: T; type: CGType) =
 (* Returns s0.type if type is not Void, otherwise returns no value. *)
 VAR proc := self.current_proc;
-    cast1, cast2 := "";
+    cast1, cast2, cast3, cast4 := "";
 BEGIN
     self.comment("exit_proc");
     <* ASSERT self.in_proc *>
@@ -5663,11 +5700,14 @@ BEGIN
             print(self, "return;\n");
         END;
     ELSE
+        (* TODO Is the cast avoidable? *)
         IF type = CGType.Addr OR (NOT ReturnStructsByValue AND type = CGType.Struct) THEN
-            cast1 := "(ADDRESS)("; (* TODO remove this once return types are better *)
-            cast2 := ")"; (* TODO remove this once return types are better *)
+            cast1 := "(";
+            cast2 := proc.return_type_text;
+            cast3 := ")(";
+            cast4 := ")";
         END;
-        print(self, "return " & cast1 & get(self).CText() & cast2 & ";\n");
+        print(self, "return " & cast1 & cast2 & cast3 & get(self).CText() & cast4 & ";\n");
         pop(self);
     END;
 END exit_proc;
