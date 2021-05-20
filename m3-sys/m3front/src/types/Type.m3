@@ -179,8 +179,7 @@ PROCEDURE Check (t: T): T =
         t.checked := TRUE;
       END;
     END;
-    IF (t.info.class = Class.Named) THEN t := Strip (t) END;
-    RETURN t;
+    RETURN Strip (t);
   END Check;
 
 (*EXPORTED*)
