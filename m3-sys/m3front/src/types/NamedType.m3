@@ -9,7 +9,7 @@
 MODULE NamedType;
 
 IMPORT M3, M3ID, Token, Type, TypeRep, Scanner, ObjectType;
-IMPORT Error, Scope, Brand, Value, ErrType;
+IMPORT Error, Scope, Brand, Value, ErrType, Target;
 FROM M3CG IMPORT QID;
 
 TYPE
@@ -143,6 +143,7 @@ PROCEDURE Strip (t: Type.T): Type.T =
 PROCEDURE Check (p: P) =
   VAR cs := M3.OuterCheckState;  nErrs, nWarns, nErrsB: INTEGER;
       name := p.info.name;
+      type: Type.T := NIL;
   BEGIN
     Resolve (p);
     nErrs := 0;  nErrsB := 0;
@@ -153,7 +154,10 @@ PROCEDURE Check (p: P) =
     END;
     IF (nErrs = nErrsB) THEN
       (* no errors yet... *)
-      p.type := Type.CheckInfo (p.type, p.info);
+      type := Type.CheckInfo (p.type, p.info);
+      IF Target.LowerTypes THEN
+        p.type := type;
+      END;
     ELSE (* some sort of error (probably illegal recursion...) *)
       EVAL Type.CheckInfo (ErrType.T, p.info);
     END;

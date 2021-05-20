@@ -211,13 +211,17 @@ PROCEDURE RepTypeOf (t: T): Type.T =
 PROCEDURE Check (t: T;  VAR cs: Value.CheckState) =
 (* Only checks on the formal itself. *)
   VAR info: Type.Info;
+      type: Type.T := NIL;
   BEGIN
-    t.type := Type.CheckInfo (TypeOf (t), info);
-    t.repType := Type.StripPacked (t.type);
+    type := Type.CheckInfo (TypeOf (t), info);
+    IF Target.LowerTypes THEN
+      t.type := type;
+    END;
+    t.repType := Type.StripPacked (type);
     EVAL Type.Check (t.repType);
     t.kind := info.class;
     IF (info.class = Type.Class.Packed) THEN (* Ignore BITS in setting class. *)
-      EVAL Type.CheckInfo (Type.Base (t.type), info);
+      EVAL Type.CheckInfo (Type.Base (type), info);
       t.kind := info.class;
     END;
 
@@ -250,7 +254,7 @@ PROCEDURE Check (t: T;  VAR cs: Value.CheckState) =
              both open array) passed READONLY will do call-site copying. *)
     THEN (* We need a reference type to the formal type to do open array
             copying. *)
-      t.refType := RefType.New (t.type, traced := TRUE, brand := NIL);
+      t.refType := RefType.New (type, traced := TRUE, brand := NIL);
       EVAL Type.Check (t.refType);
     END;
 

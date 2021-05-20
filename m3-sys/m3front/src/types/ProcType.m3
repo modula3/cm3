@@ -193,6 +193,7 @@ PROCEDURE Check (p: P) =
     v      : Value.T;
     formal : Formal.Info;
     cs     := M3.OuterCheckState;
+    result : Type.T := NIL;
   BEGIN
     (* look up each of the named exceptions *)
     ESet.TypeCheck (p.raises);
@@ -228,8 +229,11 @@ PROCEDURE Check (p: P) =
       Scope.TypeCheck (p.formals, cs);
       IF (p.result # NIL) THEN
         Type.Typename (p.result, p.result_typename);
-        p.result := Type.Check (p.result);
-        IF OpenArrayType.Is (p.result) THEN
+        result := Type.Check (p.result);
+        IF Target.LowerTypes THEN
+          p.result := result;
+        END;
+        IF OpenArrayType.Is (result) THEN
           Error.Msg ("procedures may not return open arrays");
         END;
       END;

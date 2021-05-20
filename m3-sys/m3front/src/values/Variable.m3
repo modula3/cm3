@@ -293,9 +293,13 @@ PROCEDURE RepTypeOf (t: T): Type.T =
 (* Externally dispatched-to *)
 PROCEDURE Check (t: T;  VAR cs: Value.CheckState) =
   VAR dfault: Expr.T;  min, max: Target.Int;  info: Type.Info;  refType: Type.T;
+      type: Type.T := NIL;
   BEGIN
-    t.type := Type.CheckInfo (TypeOf (t), info);
-    t.repType := Type.Check (Type.StripPacked (t.type));
+    type := Type.CheckInfo (TypeOf (t), info);
+    IF Target.LowerTypes THEN
+      t.type := type;
+    END;
+    t.repType  := Type.Check (Type.StripPacked (type));
     t.size     := info.size;
     t.align    := info.alignment;
     t.mem_type := info.mem_type;
@@ -308,7 +312,7 @@ PROCEDURE Check (t: T;  VAR cs: Value.CheckState) =
       Error.ID (t.name, "Variable cannot have empty type.");
 (* CHECK: Is this always only secondary to some other error. *)
     END;
-    IF t.type = Null.T THEN
+    IF type = Null.T THEN
       Error.WarnID (1, t.name, "Variable cannot have type NULL.");
     END;
 
@@ -328,7 +332,7 @@ PROCEDURE Check (t: T;  VAR cs: Value.CheckState) =
       Error.WarnID (1, t.name, "Open array passed by value.");
     END;
 
-    IF Type.IsStructured (t.type) THEN
+    IF Type.IsStructured (type) THEN
       t.need_addr := TRUE; (* every load requires an address *)
     END;
 
@@ -337,11 +341,11 @@ PROCEDURE Check (t: T;  VAR cs: Value.CheckState) =
       IF (t.initExpr # NIL) THEN
         Error.Msg ("<*EXTERNAL*> variables cannot be initialized.");
         Expr.TypeCheck (t.initExpr, cs);
-        AssignStmt.Check (t.type, t.initExpr, cs);
+        AssignStmt.Check (type, t.initExpr, cs);
       END;
     ELSIF (t.initExpr # NIL) THEN
       Expr.TypeCheck (t.initExpr, cs);
-      AssignStmt.Check (t.type, t.initExpr, cs);
+      AssignStmt.Check (type, t.initExpr, cs);
 (* TODO: What if initExpr contains RT errors? *)
       dfault := Expr.ConstValue (t.initExpr);
       IF (dfault = NIL) THEN
@@ -363,7 +367,7 @@ PROCEDURE Check (t: T;  VAR cs: Value.CheckState) =
                 t.indirect := TRUE;
               END;
             END;
-          ELSIF (NOT t.initZero) AND Type.IsStructured (t.type) THEN
+          ELSIF (NOT t.initZero) AND Type.IsStructured (type) THEN
             t.initStatic := TRUE;
           END;
           t.initExpr := dfault;
@@ -371,15 +375,15 @@ PROCEDURE Check (t: T;  VAR cs: Value.CheckState) =
       END;
     ELSIF (t.global) THEN
       (* no explict initialization is given, but the var is global *)
-      IF Type.InitCost (t.type, TRUE) <= 0 THEN
+      IF Type.InitCost (type, TRUE) <= 0 THEN
         IF (info.size > Max_zero_global * Target.Integer.size) THEN
           <*ASSERT NOT t.indirect*>
           t.indirect := TRUE;
         END;
         t.initDone := TRUE;
-      ELSIF Type.GetBounds (t.type, min, max) THEN
+      ELSIF Type.GetBounds (type, min, max) THEN
         (* synthesize an initialization expression *)
-        IF Type.IsSubtype (t.type, LInt.T)
+        IF Type.IsSubtype (type, LInt.T)
         THEN t.initExpr := IntegerExpr.New (LInt.T, min);
         ELSE t.initExpr := IntegerExpr.New (Int.T, min);
         END;
