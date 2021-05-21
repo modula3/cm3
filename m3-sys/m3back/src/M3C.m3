@@ -43,7 +43,7 @@ VAR CaseDefaultAssertFalse := FALSE;
  *        an in-memory layout
  *)
 
-TYPE Multipass_t = M3CG_MultiPass.T BRANDED "M3C.Multipass_t" OBJECT
+TYPE Multipass_t = M3CG_MultiPass.T OBJECT
         self: T;
     OVERRIDES
         end_unit := multipass_end_unit;
@@ -51,7 +51,7 @@ TYPE Multipass_t = M3CG_MultiPass.T BRANDED "M3C.Multipass_t" OBJECT
     END;
 
 TYPE
-T = M3CG_DoNothing.T BRANDED "M3C.T" OBJECT
+T = M3CG_DoNothing.T OBJECT
 
         no_return := FALSE; (* are there any no_return functions -- i.e. #include <sys/cdefs.h on Darwin for __dead2 *)
 
@@ -2866,7 +2866,7 @@ BEGIN
         ));
 END declare_packed;
 
-TYPE DeclareTypes_t = M3CG_DoNothing.T BRANDED "M3C.DeclareTypes_t" OBJECT
+TYPE DeclareTypes_t = M3CG_DoNothing.T OBJECT
     self: T := NIL;
 
     (* declare_enum, declare_enum_elt *)
@@ -3573,13 +3573,13 @@ BEGIN
     MarkUsed_var(var);
 END MarkUsed_store;
 
-TYPE CountUsedLabels_t = M3CG_DoNothing.T BRANDED "M3C.CountUsedLabels_t" OBJECT
+TYPE CountUsedLabels_t = M3CG_DoNothing.T OBJECT
     count := 0;
 OVERRIDES
     case_jump := CountUsedLabels_case_jump;
 END;
 
-TYPE MarkUsed_t = M3CG_DoNothing.T BRANDED "M3C.MarkUsed_t" OBJECT
+TYPE MarkUsed_t = M3CG_DoNothing.T OBJECT
     self: T;
     labels: REF ARRAY OF Label := NIL;
     index := 0;
@@ -3718,7 +3718,7 @@ BEGIN
    x.comment("end: mark used");
 END MarkUsed;
 
-TYPE Segments_t = M3CG_DoNothing.T BRANDED "M3C.Segments_t" OBJECT
+TYPE Segments_t = M3CG_DoNothing.T OBJECT
 (* The goal of this pass is to build up segments/globals before they are used.
    Specifically, we used to do this:
        struct foo_t; typedef struct foo_t foo_t;
@@ -3879,7 +3879,7 @@ END HelperFunctions;
 
 (* Helper functions are only output if needed, to avoid warnings about unused functions.
  * This pass determines which helper functions are neded and outputs them. *)
-TYPE HelperFunctions_t = M3CG_DoNothing.T BRANDED "M3C.HelperFunctions_t" OBJECT
+TYPE HelperFunctions_t = M3CG_DoNothing.T OBJECT
     self: T := NIL;
     data: RECORD
         pos, memcmp, memcpy, memmove, memset, floor, ceil, fence,
@@ -4223,7 +4223,7 @@ BEGIN
     HelperFunctions_helper_with_boolean_and_array(self, self.data.fence, text);
 END HelperFunctions_fence;
 
-TYPE Locals_t = M3CG_DoNothing.T BRANDED "M3C.Locals_t" OBJECT
+TYPE Locals_t = M3CG_DoNothing.T OBJECT
     self: T := NIL;
 OVERRIDES
     declare_segment := Locals_declare_segment; (* declare_segment is needed, to get the unit name, to check for exception handlers *)
@@ -4328,7 +4328,7 @@ BEGIN
     AllocateTemps_common(self, type);
 END AllocateTemps_check_index;
 
-TYPE Imports_t = M3CG_DoNothing.T BRANDED "M3C.Imports_t" OBJECT
+TYPE Imports_t = M3CG_DoNothing.T OBJECT
     self: T;
 OVERRIDES
     import_procedure := Imports_import_procedure;
@@ -4382,7 +4382,7 @@ BEGIN
     RETURN import_global(self.self, name, byte_size, alignment, type, typeid);
 END Imports_import_global;
 
-TYPE GetStructSizes_t = M3CG_DoNothing.T BRANDED "M3C.GetStructSizes_t" OBJECT
+TYPE GetStructSizes_t = M3CG_DoNothing.T OBJECT
     sizes: REF ARRAY OF INTEGER := NIL;
     count := 0;
 METHODS
