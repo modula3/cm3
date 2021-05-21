@@ -17,16 +17,16 @@ VAR MaxBitSize := LAST (INTEGER);
 
 TYPE
   P = Type.T BRANDED "ArrayType.P" OBJECT
-        indexType        : Type.T;
-        elementType      : Type.T;
-        alignment        : INTEGER;
-        n_elts           : INTEGER;
-        elt_align        : INTEGER;
-        elt_pack         : INTEGER;
-        total_size       : INTEGER;
-        fixedDepth       : INTEGER; (* # of dimensions, lazily computed. *) 
-        openCousin       : Type.T;  (* == ARRAY OF elementType *)
-        eltsBitAddressed : BOOLEAN;
+        indexType        : Type.T  := NIL;
+        elementType      : Type.T  := NIL;
+        alignment        : INTEGER := 0;
+        n_elts           : INTEGER := 0;
+        elt_align        : INTEGER := 0;
+        elt_pack         : INTEGER := 0;
+        total_size       : INTEGER := 0;
+        fixedDepth       : INTEGER := 0; (* # of dimensions, lazily computed. *) 
+        openCousin       : Type.T  := NIL;  (* == ARRAY OF elementType *)
+        eltsBitAddressed : BOOLEAN := FALSE;
         (* ^Could be FALSE even if elements are BITS n FOR, if 
             n is divisible by 8. *) 
       OVERRIDES
@@ -83,14 +83,7 @@ PROCEDURE New (index, element: Type.T): Type.T =
     TypeRep.Init (p, Type.Class.Array);
     p.indexType  := index;
     p.elementType := element;
-    p.alignment   := 0;
-    p.n_elts      := 0;
-    p.total_size  := 0;
-    p.elt_align   := 0;
-    p.elt_pack    := 0;
     p.fixedDepth  := -1; 
-    p.openCousin  := NIL;
-    p.eltsBitAddressed := FALSE;
     RETURN p;
   END New;
 

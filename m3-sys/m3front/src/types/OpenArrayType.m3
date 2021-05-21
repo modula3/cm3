@@ -13,11 +13,11 @@ IMPORT ArrayType, PackedType, RecordType, TipeMap, TipeDesc;
 
 TYPE
   P = Type.T BRANDED "OpenArrayType.P" OBJECT
-        EltType                 : Type.T;
-        NonopenEltType          : Type.T;
-        openDepth               : INTEGER;
-        NonopenEltAlign         : INTEGER;
-        NonopenEltPack          : INTEGER;
+        EltType                 : Type.T  := NIL;
+        NonopenEltType          : Type.T  := NIL;
+        openDepth               : INTEGER := 0;
+        NonopenEltAlign         : INTEGER := 0;
+        NonopenEltPack          : INTEGER := 0;
         NonopenEltsBitAddressed : BOOLEAN := FALSE;
         (* ^Could be FALSE even if elements are BITS n FOR, if 
             n is divisible by 8. *) 
@@ -41,10 +41,7 @@ PROCEDURE New (EltType: Type.T): Type.T =
     p := NEW (P);
     TypeRep.Init (p, Type.Class.OpenArray);
     p.EltType := EltType;
-    p.NonopenEltType := NIL;
     p.openDepth := -1;
-    p.NonopenEltPack := 0;
-    p.NonopenEltsBitAddressed := FALSE;
     RETURN p;
   END New;
 
