@@ -129,7 +129,7 @@ T = M3CG_DoNothing.T OBJECT
         typedef_defined: TextSetDef.T := NIL;
 
     METHODS
-        Type_Init(type: Type_t) := Type_Init;
+        Type_Init(type: Type_t; type_text_tail := "") := Type_Init;
         TIntLiteral(type: CGType; READONLY i: Target.Int): TEXT := TIntLiteral;
 
     OVERRIDES
@@ -1429,7 +1429,7 @@ BEGIN
     RETURN NARROW(type, Type_t);
 END TypeidToType_Get;
 
-PROCEDURE Type_Init(self: T; type: Type_t) =
+PROCEDURE Type_Init(self: T; type: Type_t; type_text_tail := "") =
 VAR typedefs := ARRAY [0..1] OF TEXT{NIL, NIL};
     cgtype := type.cgtype;
 BEGIN
@@ -1448,7 +1448,7 @@ BEGIN
                 type.text := cgtypeToText[cgtype];
             END;
         ELSE
-            type.text := TypeIDToText(type.typeid) & type.type_text_tail;
+            type.text := TypeIDToText(type.typeid) & type_text_tail;
         END;
     END;
     IF type.typeid # -1 AND type.typeid # 0 THEN
@@ -3084,7 +3084,7 @@ BEGIN
         typeid := typeid,
         domain_typeid := domain_typeid,
         bit_size := bit_size,
-        cgtype := SubrangeCGType(min, max, bit_size),
+        cgtype := SubrangeCGType(min, max, bit_size)),
         (* Subranges have colliding typeids. m3front bug?
          * For example:
          * libm3\Formatter.m3:
@@ -3101,7 +3101,7 @@ BEGIN
          * We could further workaround by deferring the typedef until use, as in this
          * case, neither type is used. Just defined.
          *)
-        type_text_tail := "_" & IntToDec(bit_size)));
+        (*type_text_tail :=*) "_" & IntToDec(bit_size));
 END declare_subrange;
 
 PROCEDURE declare_pointer(self: DeclareTypes_t; typeid, target: TypeUID; brand: TEXT; traced: BOOLEAN) =
