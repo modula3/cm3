@@ -264,7 +264,7 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
 
 PROCEDURE QualifyExprAlign (p: P): Type.BitAlignT =
   VAR fieldInfo: Field.Info;
-  VAR offset, obj_offset, obj_align, prefixAlign: INTEGER;
+  VAR offset: INTEGER;
   VAR objType: Type.T;
   VAR objTypeInfo: Type.Info;
   BEGIN
