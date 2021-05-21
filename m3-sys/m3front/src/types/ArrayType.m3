@@ -70,10 +70,8 @@ PROCEDURE Parse (): Type.T =
 PROCEDURE Reduce (t: Type.T): P =
   (* Strip Named and Packed.  NIL if that's not an array type. *) 
   BEGIN
-    IF (t = NIL) THEN RETURN NIL END;
-    IF (t.info.class = Type.Class.Named) THEN t := Type.Strip (t) END;
-    IF (t.info.class = Type.Class.Packed) THEN t := Type.StripPacked (t) END;
-    IF (t.info.class # Type.Class.Array) THEN RETURN NIL END;
+    t := Type.StripPacked (t);
+    IF (t = NIL) OR (t.info.class # Type.Class.Array) THEN RETURN NIL END;
     RETURN t;
   END Reduce;
 
