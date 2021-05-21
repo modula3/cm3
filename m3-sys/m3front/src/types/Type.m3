@@ -413,17 +413,16 @@ PROCEDURE AddCell (t: T) =
 
 (*EXPORTED*)
 PROCEDURE IsOrdinal (t: T): BOOLEAN =
-  VAR u := Check (t);  c := u.info.class;
+  VAR u := StripPacked (Check (t));  c := u.info.class;
   BEGIN
     RETURN (c = Class.Integer) OR (c = Class.Longint) OR (c = Class.Subrange)
-           OR (c = Class.Enum) OR (c = Class.Error)
-           OR ((c = Class.Packed) AND IsOrdinal (StripPacked (t)));
+           OR (c = Class.Enum) OR (c = Class.Error);
   END IsOrdinal;
 
 (*EXPORTED*)
 PROCEDURE Number (t: T): Target.Int =
   VAR
-    u := Check (t);
+    u := StripPacked (Check (t));
     c := u.info.class;
     b: BOOLEAN;
     min, max, tmp: Target.Int;
@@ -441,8 +440,6 @@ PROCEDURE Number (t: T): Target.Int =
       max := Target.Longint.max;
     ELSIF (c = Class.Error) THEN
       RETURN TInt.Zero;
-    ELSIF (c = Class.Packed) THEN
-      RETURN Number (StripPacked (u));
     ELSE
       Error.Msg ("INTERNAL ERROR: Type.Number applied to a non-ordinal type");
       <*ASSERT FALSE*>
@@ -459,7 +456,7 @@ PROCEDURE Number (t: T): Target.Int =
 
 (*EXPORTED*)
 PROCEDURE GetBounds (t: T;  VAR min, max: Target.Int): BOOLEAN =
-  VAR u := Check (t);  c := u.info.class;  b: BOOLEAN;
+  VAR u := StripPacked (Check (t));  c := u.info.class;  b: BOOLEAN;
   BEGIN
     IF (c = Class.Subrange) THEN
       b := SubrangeType.Split (u, min, max);  <*ASSERT b*>
@@ -477,8 +474,6 @@ PROCEDURE GetBounds (t: T;  VAR min, max: Target.Int): BOOLEAN =
       min := Target.Longint.min;
       max := Target.Longint.max;
       RETURN TRUE;
-    ELSIF (c = Class.Packed) THEN
-      RETURN GetBounds (StripPacked (u), min, max);
     ELSE
       min := TInt.Zero;
       max := TInt.MOne;
