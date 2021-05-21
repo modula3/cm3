@@ -60,7 +60,6 @@ T = M3CG_DoNothing.T OBJECT
         procs_pending_output: RefSeq.T := NIL; (*TODO*) (* Proc_t *)
         typeidToType: IntRefTbl.T := NIL;
         pendingTypes: RefSeq.T := NIL; (* Type_t *)
-        declareTypes: DeclareTypes_t := NIL;
         temp_vars: REF ARRAY OF Var_t := NIL; (* for check_* to avoid double evaluation, and pop_static_link *)
         current_block: Block_t := NIL;
 
@@ -2927,7 +2926,6 @@ VAR x := multipass.self;
     index := 0;
     size_before, size_after := 0;
 BEGIN
-    x.declareTypes := self;
     x.comment("begin: DeclareTypes");
     DeclareBuiltinTypes(x); (* This must be before replay. *)
     multipass.Replay(self, index);
