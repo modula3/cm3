@@ -11,7 +11,7 @@ MODULE Formal;
 IMPORT M3, M3ID, CG, Value, ValueRep, Type, Error, Expr, ProcType;
 IMPORT KeywordExpr, OpenArrayType, RefType, CheckExpr, PackedType;
 IMPORT ArrayType, ArrayExpr, SetType, Host, NarrowExpr, M3Buf, Tracer;
-IMPORT Variable, Procedure, UserProc, Target, M3RT, NamedType;
+IMPORT Variable, Procedure, UserProc, Target, M3RT;
 FROM M3CG IMPORT NoQID;
 
 TYPE
