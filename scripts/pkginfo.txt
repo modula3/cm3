@@ -66,6 +66,7 @@ rdwr devlib
 sharedobj obliq
 sharedobjgen obliq
 odbc database
+mysql database
 postgres95 database
 db database
 smalldb database
