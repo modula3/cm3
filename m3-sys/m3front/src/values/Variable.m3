@@ -296,9 +296,6 @@ PROCEDURE Check (t: T;  VAR cs: Value.CheckState) =
       type: Type.T := NIL;
   BEGIN
     type := Type.CheckInfo (TypeOf (t), info);
-    IF Target.LowerTypes THEN
-      t.type := type;
-    END;
     t.repType  := Type.Check (Type.StripPacked (type));
     t.size     := info.size;
     t.align    := info.alignment;

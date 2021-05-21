@@ -230,9 +230,6 @@ PROCEDURE Check (p: P) =
       IF (p.result # NIL) THEN
         Type.Typename (p.result, p.result_typename);
         result := Type.Check (p.result);
-        IF Target.LowerTypes THEN
-          p.result := result;
-        END;
         IF OpenArrayType.Is (result) THEN
           Error.Msg ("procedures may not return open arrays");
         END;
