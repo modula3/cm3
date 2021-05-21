@@ -399,6 +399,7 @@ PROCEDURE InitPredefinedCells () =
 PROCEDURE AddCell (t: T) =
   VAR c := NEW (CellInfo);  size := M3RT.TC_SIZE;  u: T;
   BEGIN
+    t := Strip (t);
     IF (t.info.class = Class.Object) THEN
       size := M3RT.OTC_SIZE;
     ELSIF RefType.Split (t, u) AND OpenArrayType.Is (u) THEN
