@@ -511,9 +511,9 @@ PROCEDURE IsEqual (a, b: T;  x: Assumption): BOOLEAN =
     IF (a = NIL) OR (b = NIL) THEN RETURN FALSE END;
     IF (a = b) (*** OR (a = NIL) OR (b = NIL) ***) THEN RETURN TRUE END;
 
+    a := StripPacked (a);
+    b := StripPacked (b);
     ac := a.info.class;  bc := b.info.class;
-    IF (ac = Class.Named) THEN a := Strip (a);  ac := a.info.class END;
-    IF (bc = Class.Named) THEN b := Strip (b);  bc := b.info.class END;
     IF (a = b) THEN RETURN TRUE END;
     IF (ac = Class.Error) OR (bc = Class.Error) THEN RETURN TRUE END;
     IF (ac # bc) THEN RETURN FALSE END;
@@ -556,17 +556,13 @@ PROCEDURE IsEqual (a, b: T;  x: Assumption): BOOLEAN =
 
 (*EXPORTED*)
 PROCEDURE IsSubtype (a, b: T): BOOLEAN =
-  VAR ac, bc: Class;
   BEGIN
     IF (a = NIL) OR (b = NIL) THEN RETURN FALSE END;
     IF (a = b) (*** OR (a = NIL) OR (b = NIL) ***) THEN RETURN TRUE END;
 
-    ac := a.info.class;  bc := b.info.class;
-    IF (ac = Class.Named) THEN a := Strip (a);  ac := a.info.class END;
-    IF (bc = Class.Named) THEN b := Strip (b);  bc := b.info.class END;
-    IF (ac = Class.Error) OR (bc = Class.Error) THEN RETURN TRUE END;
-    IF (ac = Class.Packed) THEN a := StripPacked (a) END;
-    IF (bc = Class.Packed) THEN b := StripPacked (b) END;
+    a := StripPacked (a);
+    b := StripPacked (b);
+    IF (a.info.class = Class.Error) OR (b.info.class = Class.Error) THEN RETURN TRUE END;
 
     (* try their id's first *)
     IF (a.uid = NO_UID) OR (b.uid = NO_UID) THEN
