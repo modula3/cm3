@@ -464,7 +464,7 @@ PROCEDURE declare_typename (u: U;  t: TypeUID;  n: Name) =
     NL    (u);
   END declare_typename;
 
-PROCEDURE declare_array (u: U;  t, index, elt: TypeUID;  s: BitSize) =
+PROCEDURE declare_array (u: U;  t, index, elt: TypeUID;  s: BitSize; <*UNUSED*>element_typename: Name) =
   BEGIN
     Cmd  (u, "declare_array");
     Tipe (u, t);
@@ -474,7 +474,7 @@ PROCEDURE declare_array (u: U;  t, index, elt: TypeUID;  s: BitSize) =
     NL   (u);
   END declare_array;
 
-PROCEDURE declare_open_array (u: U;  t, elt: TypeUID;  s: BitSize) =
+PROCEDURE declare_open_array (u: U;  t, elt: TypeUID;  s: BitSize; <*UNUSED*>element_typename: Name) =
   BEGIN
     Cmd  (u, "declare_open_array");
     Tipe (u, t);
@@ -499,7 +499,7 @@ PROCEDURE declare_enum_elt (u: U;  n: Name) =
     NL    (u);
   END declare_enum_elt;
 
-PROCEDURE declare_packed  (u: U;  t: TypeUID;  s: BitSize;  base: TypeUID) =
+PROCEDURE declare_packed  (u: U;  t: TypeUID;  s: BitSize;  base: TypeUID; <*UNUSED*>base_typename: Name) =
   BEGIN
     Cmd  (u, "declare_packed");
     Tipe (u, t);
@@ -519,7 +519,7 @@ PROCEDURE declare_record (u: U; t: TypeUID;  s: BitSize;
   END declare_record;
 
 PROCEDURE declare_field (u: U;  n: Name;  o: BitOffset;  s: BitSize;
-                         t: TypeUID)=
+                         t: TypeUID; <*UNUSED*>typename: Name)=
   BEGIN
     Cmd   (u, "declare_field");
     ZName (u, n);
@@ -529,7 +529,7 @@ PROCEDURE declare_field (u: U;  n: Name;  o: BitOffset;  s: BitSize;
     NL    (u);
   END declare_field;
 
-PROCEDURE declare_set (u: U;  t, domain: TypeUID;  s: BitSize) =
+PROCEDURE declare_set (u: U;  t, domain: TypeUID;  s: BitSize; <*UNUSED*>domain_typename: Name) =
   BEGIN
     Cmd  (u, "declare_set");
     Tipe (u, t);
@@ -540,7 +540,7 @@ PROCEDURE declare_set (u: U;  t, domain: TypeUID;  s: BitSize) =
 
 PROCEDURE declare_subrange (u: U; t, domain: TypeUID;
                             READONLY min, max: Target.Int;
-                            s: BitSize) =
+                            s: BitSize; <*UNUSED*>domain_typename: Name) =
   BEGIN
     Cmd  (u, "declare_subrange");
     Tipe (u, t);
@@ -552,7 +552,7 @@ PROCEDURE declare_subrange (u: U; t, domain: TypeUID;
   END declare_subrange;
 
 PROCEDURE declare_pointer (u: U;  t, target: TypeUID;  brand: TEXT;
-                           traced: BOOLEAN) =
+                           traced: BOOLEAN; <*UNUSED*>target_typename: Name) =
   BEGIN
     Cmd  (u, "declare_pointer");
     Tipe (u, t);
@@ -604,7 +604,7 @@ PROCEDURE declare_raises (u: U;  n: Name) =
 PROCEDURE declare_object (u: U;  t, super: TypeUID;
                           brand: TEXT;  traced: BOOLEAN;
                           n_fields, n_methods: INTEGER;
-                          field_size: BitSize) =
+                          field_size: BitSize; <*UNUSED*>super_typename: Name) =
   BEGIN
     Cmd  (u, "declare_object");
     Tipe (u, t);
@@ -694,7 +694,7 @@ PROCEDURE NewVar (u: U): Var =
   END NewVar;
 
 PROCEDURE import_global (u: U;  n: Name;  s: ByteSize;  a: Alignment;
-                         t: Type;  m3t: TypeUID): Var =
+                         t: Type;  m3t: TypeUID; <*UNUSED*>typename: Name): Var =
   VAR v := NewVar (u);
   BEGIN
     Cmd   (u, "import_global");
@@ -734,7 +734,7 @@ PROCEDURE bind_segment (u: U;  seg: Var;  s: ByteSize;  a: Alignment;
   END bind_segment;
 
 PROCEDURE declare_global (u: U;  n: Name;  s: ByteSize;  a: Alignment;
-                     t: Type;  m3t: TypeUID;  exported, inited: BOOLEAN): Var =
+                     t: Type;  m3t: TypeUID;  exported, inited: BOOLEAN; <*UNUSED*>typename: Name): Var =
   VAR v := NewVar (u);
   BEGIN
     Cmd   (u, "declare_global");
@@ -751,7 +751,7 @@ PROCEDURE declare_global (u: U;  n: Name;  s: ByteSize;  a: Alignment;
   END declare_global;
 
 PROCEDURE declare_constant (u: U;  n: Name;  s: ByteSize;  a: Alignment;
-                     t: Type;  m3t: TypeUID;  exported, inited: BOOLEAN): Var =
+                     t: Type;  m3t: TypeUID;  exported, inited: BOOLEAN; <*UNUSED*>typename: Name): Var =
   VAR v := NewVar (u);
   BEGIN
     Cmd   (u, "declare_constant");
@@ -769,7 +769,7 @@ PROCEDURE declare_constant (u: U;  n: Name;  s: ByteSize;  a: Alignment;
 
 PROCEDURE declare_local (u: U;  n: Name;  s: ByteSize;  a: Alignment;
                          t: Type;  m3t: TypeUID;  in_memory, up_level: BOOLEAN;
-                         f: Frequency): Var =
+                         f: Frequency; <*UNUSED*>typename: Name): Var =
   VAR v := NewVar (u);
   BEGIN
     Cmd   (u, "declare_local");
@@ -807,7 +807,7 @@ PROCEDURE declare_param (u: U;  n: Name;  s: ByteSize;  a: Alignment;
   END declare_param;
 
 PROCEDURE declare_temp   (u: U;  s: ByteSize;  a: Alignment;  t: Type;
-                          in_memory:BOOLEAN): Var =
+                          in_memory:BOOLEAN; <*UNUSED*>typename: Name): Var =
   VAR v := NewVar (u);
   BEGIN
     Cmd   (u, "declare_temp");
