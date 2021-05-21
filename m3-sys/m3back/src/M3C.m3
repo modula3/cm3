@@ -2861,8 +2861,7 @@ BEGIN
     x.Type_Init(NEW(Packed_t,
         typeid := typeid,
         base_typeid := base_typeid,
-        bit_size := bit_size
-        ));
+        bit_size := bit_size));
 END declare_packed;
 
 TYPE DeclareTypes_t = M3CG_DoNothing.T OBJECT
