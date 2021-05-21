@@ -214,9 +214,6 @@ PROCEDURE Check (t: T;  VAR cs: Value.CheckState) =
       type: Type.T := NIL;
   BEGIN
     type := Type.CheckInfo (TypeOf (t), info);
-    IF Target.LowerTypes THEN
-      t.type := type;
-    END;
     t.repType := Type.StripPacked (type);
     EVAL Type.Check (t.repType);
     t.kind := info.class;

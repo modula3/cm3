@@ -155,9 +155,6 @@ PROCEDURE Check (p: P) =
     IF (nErrs = nErrsB) THEN
       (* no errors yet... *)
       type := Type.CheckInfo (p.type, p.info);
-      IF Target.LowerTypes THEN
-        p.type := type;
-      END;
     ELSE (* some sort of error (probably illegal recursion...) *)
       EVAL Type.CheckInfo (ErrType.T, p.info);
     END;
