@@ -385,7 +385,7 @@ END declare_temp;
 PROCEDURE import_procedure(self: T; name: Name; n_params: INTEGER; return_type: Type; callingConvention: CallingConvention; return_typeid: TypeUID := 0; return_typename := NoQID): Proc =
 VAR proc := self.refs.NewProc();
 BEGIN
-self.Add(NEW(import_procedure_t, op := Op.import_procedure, name := name, n_params := n_params, return_type := return_type, callingConvention := callingConvention, return_typename := return_typename, tag := proc.tag));
+self.Add(NEW(import_procedure_t, op := Op.import_procedure, name := name, n_params := n_params, return_type := return_type, callingConvention := callingConvention, return_typeid := return_typeid, return_typename := return_typename, tag := proc.tag));
 RETURN proc;
 END import_procedure;
 
