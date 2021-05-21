@@ -135,8 +135,6 @@ T = M3CG_DoNothing.T OBJECT
     OVERRIDES
         end_unit   := end_unit;
 
-        declare_typename := declare_typename;
-
         set_error_handler := set_error_handler;
         begin_unit := begin_unit;
         set_source_file := set_source_file;
@@ -725,8 +723,8 @@ END TypeText;
 TYPE Type_t = OBJECT
     bit_size := 0;  (* FUTURE Target.Int or LONGINT *)
     typeid: TypeUID := 0;
-    text: TEXT := NIL;
-    type_text_tail := ""; (* workaround for different types having same typeid *)
+    text: TEXT := NIL; (* Replaced with typename. Use for params, returns, locals, globals, fields. *)
+    base_text: TEXT := NIL; (* The first value, typically a hash. Use for maybe typedefs and struct definitions. *)
     cgtype: CGType := CGType.Addr;
     state := Type_State.None;
 METHODS
@@ -875,47 +873,49 @@ OVERRIDES
     (* not used isPointer := type_isType_true; *)
 END;
 
-PROCEDURE pointer_define(type: Pointer_t; self: T) =
+PROCEDURE pointer_define(ref: Pointer_t; self: T) =
 (* Does branding make a difference? *)
 VAR x := self;
-    star_or_space := " ";
-    do_endif := FALSE;
-    do_print := FALSE;
-    end_of_line := ";";
+    star_or_space := "";
+    end_of_line := "";
+    typename := ref.typename;
 BEGIN
     (* We have recursive types TYPE FOO = UNTRACED REF FOO. Typos actually. *)
-    IF type.points_to_typeid = type.typeid THEN
-      print(x, "typedef void* " & type.text & ";\n");
+    IF ref.points_to_typeid = ref.typeid THEN
+      print(x, "typedef void* " & ref.text & ";\n");
       RETURN;
     END;
 
-    IF NOT ResolveType(self, type.points_to_typeid, type.points_to_type) THEN
-      Err(x, "internal error: pointer_define(" & type.text & ") 1");
+    IF NOT ResolveType(self, ref.points_to_typeid, ref.points_to_type) THEN
+      Err(x, "internal error: pointer_define(" & ref.text & ") 1");
     END;
 
-    IF type.points_to_type = NIL THEN
-      Err(x, "internal error: pointer_define(" & type.text & ") 2");
+    IF ref.points_to_type = NIL THEN
+      Err(x, "internal error: pointer_define(" & ref.text & ") 2");
       RETURN;
     END;
-    type.points_to_type.ForwardDeclare(self);
-    type.points_to_type.Define(self);
-    IF type.typename THEN
-      IF NOT x.typedef_defined.insert(type.text) THEN
-        do_print := TRUE;
-        ifndef (self, type.text);
-        do_endif := TRUE;
-        end_of_line := ";"; (* endif includes newline *)
-      END
+
+    (* TODO m3front duplicates? Don't do that? *)
+    IF typename AND x.typedef_defined.insert(ref.text) THEN
+      RETURN;
+    END;
+
+    ref.points_to_type.ForwardDeclare(self);
+
+    IF typename THEN
+      ifndef (self, ref.text);
+      star_or_space := " ";
+      end_of_line := ";"; (* endif includes newline *)
     ELSE
       (* Equivalent pointers typedefs can be output multiple times; ignore typedef_defined *)
       star_or_space := "*";
-      do_print := TRUE;
       end_of_line := ";\n";
     END;
-    IF do_print THEN
-      print(x, "typedef " & type.points_to_type.text & star_or_space & type.text & end_of_line);
-    END;
-    IF do_endif THEN
+
+    print(x, "typedef " & ref.points_to_type.base_text & star_or_space & ref.text & end_of_line);
+
+    IF typename THEN
+      ref.points_to_type.text := ref.text;
       endif (self);
     END;
 END pointer_define;
@@ -1078,9 +1078,9 @@ BEGIN
         NARROW(record.fields.get(j), Field_t).type.Define(self);
     END;
 
-    ifndef(x, record.text); (* ifdef so multiple files can be concatenated and compiled at once *)
+    ifndef(x, record.base_text); (* ifdef so multiple files can be concatenated and compiled at once *)
 
-    print(x, "/*record_define*/struct " & record.text & "{\n");
+    print(x, "/*record_define*/struct " & record.base_text & "{\n");
 
     FOR j := 0 TO field_count - 1 DO
         field := NARROW(record.fields.get(j), Field_t);
@@ -1277,7 +1277,7 @@ OVERRIDES
 END;
 
 PROCEDURE array_forwardDeclare(type: Array_t; self: T) =
-VAR id := type.text;
+VAR id := type.base_text;
 BEGIN
     (*  typedef struct foo foo is different than
         struct foo; typedef struct foo foo, in the presence of C++ namespaces?,
@@ -1296,9 +1296,9 @@ PROCEDURE fixedArray_define(type: FixedArray_t; x: T) =
 BEGIN
     type.element_type.Define(x);
 
-    ifndef(x, type.text); (* ifdef so multiple files can be concatenated and compiled at once *)
+    ifndef(x, type.base_text); (* ifdef so multiple files can be concatenated and compiled at once *)
 
-    print(x, "/*fixedArray_define*/struct " & type.text & "{");
+    print(x, "/*fixedArray_define*/struct " & type.base_text & "{");
     print(x, type.element_type.text);
     print(x, " _elts[");
     print(x, IntToDec(type.bit_size DIV type.element_type.bit_size));
@@ -1343,9 +1343,9 @@ BEGIN
         element_type_text := "char/*TODO*/";
     END;
 
-    ifndef(x, type.text); (* ifdef so multiple files can be concatenated and compiled at once *)
+    ifndef(x, type.base_text); (* ifdef so multiple files can be concatenated and compiled at once *)
 
-    text := "/*openArray_define*/struct " & type.text & "{\n" & element_type_text;
+    text := "/*openArray_define*/struct " & type.base_text & "{\n" & element_type_text;
     FOR i := 1 TO dimensions DO
         text := text & "*";
     END;
@@ -1451,6 +1451,7 @@ BEGIN
             type.text := TypeIDToText(type.typeid) & type_text_tail;
         END;
     END;
+    type.base_text := type.text;
     IF type.typeid # -1 AND type.typeid # 0 THEN
         EVAL self.typeidToType.put(type.typeid, type);
     END;
@@ -2701,8 +2702,9 @@ END set_source_line;
 
 (*------------------------------------------- debugging type declarations ---*)
 
-PROCEDURE declare_typename(self: T; typeid: TypeUID; name: Name) =
+PROCEDURE declare_typename(declareType: DeclareTypes_t; typeid: TypeUID; name: Name) =
 VAR nameText := NameT(name);
+    self := declareType.self;
 BEGIN
   IF DebugVerbose(self) THEN
     self.comment("declare_typename typeid:", TypeIDToText(typeid), " name:" & nameText);
@@ -2879,6 +2881,7 @@ TYPE DeclareTypes_t = M3CG_DoNothing.T OBJECT
     procType: ProcType_t := NIL;
 
 OVERRIDES
+    declare_typename := declare_typename;
     declare_enum := declare_enum;
     declare_enum_elt := declare_enum_elt;
     declare_record := declare_record;
