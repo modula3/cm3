@@ -43,9 +43,8 @@ PROCEDURE New (super: Type.T;  decl: Value.T): Type.T =
 
 PROCEDURE Reduce (t: Type.T): P =
   BEGIN
-    IF (t = NIL) THEN RETURN NIL END;
-    IF (t.info.class = Type.Class.Named) THEN t := Type.Strip (t) END;
-    IF (t.info.class # Type.Class.Opaque) THEN RETURN NIL END;
+    t := Type.Strip (t); (* StripPacked? *)
+    IF (t = NIL) OR (t.info.class # Type.Class.Opaque) THEN RETURN NIL END;
     RETURN t;
   END Reduce;
 
