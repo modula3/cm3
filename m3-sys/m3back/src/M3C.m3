@@ -2417,7 +2417,7 @@ BEGIN
   RETURN result;
 END TextRemoveAtEnd;
 
-PROCEDURE TextSubstituteAtEnd (VAR t: TEXT; a, b: TEXT): BOOLEAN =
+<*UNUSED*>PROCEDURE TextSubstituteAtEnd (VAR t: TEXT; a, b: TEXT): BOOLEAN =
 VAR result := TextRemoveAtEnd (t, a);
 BEGIN
   IF result THEN
@@ -2428,23 +2428,30 @@ END TextSubstituteAtEnd;
 
 PROCEDURE TextToId (VAR t: TEXT) =
 BEGIN
-  EVAL TextRemoveAtEnd (t, ".c");
-  EVAL TextRemoveAtEnd (t, ".cpp");
-  EVAL TextSubstituteAtEnd (t, ".m3", "_");
-  EVAL TextSubstituteAtEnd (t, ".i3", "_");
   t := TextUtils.Substitute (t, ".", "_");
   t := TextUtils.Substitute (t, "-", "_");
-  t := TextUtils.Substitute (t, "__", "_");
   (* TODO more ways to turn into valid identifier prefix? Handle in m3front. *)
 END TextToId;
 
-PROCEDURE New (library (* or program *): TEXT; <*UNUSED*>source (* lacks extension .m3 or .i3 *): M3ID.T; cfile: Wr.T; target_name: TEXT): M3CG.T =
+PROCEDURE New (<*UNUSED*>library (* or program *): TEXT;
+               <*UNUSED*>source (* lacks extension .m3 or .i3 *): M3ID.T;
+               cfile: Wr.T;
+               target_name: TEXT): M3CG.T =
 VAR self := NewInternal (cfile);
 BEGIN
+  EVAL TextRemoveAtEnd (target_name, "3.c") OR TextRemoveAtEnd (target_name, "3.cpp");
   TextToId (target_name);
-  TextToId (library);
-  self.unique := library & "_" & target_name & "_";
-  TextToId (self.unique);
+  (* library is like "cm3"
+   * source is like "Arg" unfortunately without module or interface indicated.
+   * target_name is like "Arg.i3.c"
+   *
+   * We want to be able to concatenate m3c output files across a static link.
+   * m3front gives us unnamed linked symbols like segments.
+   * self.unique and an incrementing counter is used to generate unique symbols.
+   *
+   * TODO m3front should satisfy these requirements instead.
+   *)
+  self.unique := target_name & "_";
   RETURN self.multipass;
 END New;
 
