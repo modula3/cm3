@@ -1430,15 +1430,12 @@ BEGIN
 END TypeidToType_Get;
 
 PROCEDURE Type_Init(self: T; type: Type_t; type_text_tail := "") =
-VAR typedefs := ARRAY [0..1] OF TEXT{NIL, NIL};
-    cgtype := type.cgtype;
+VAR cgtype := type.cgtype;
 BEGIN
     (* TODO require bit_size be set *)
     IF type.bit_size = 0 THEN
         type.bit_size := TargetMap.CG_Size[cgtype];
     END;
-    typedefs[0] := type.text;
-    typedefs[1] := TypeIDToText(type.typeid);
 
     IF type.text = NIL THEN
         IF type.typeid = -1 OR type.typeid = 0 THEN
@@ -1455,14 +1452,7 @@ BEGIN
     IF type.typeid # -1 AND type.typeid # 0 THEN
         EVAL self.typeidToType.put(type.typeid, type);
     END;
-(*
-    FOR i := FIRST(typedefs) TO LAST(typedefs) DO
-      IF typedefs[i] # NIL AND typedefs[i] # Text_address THEN
-        print(self, "/*Type_Init*/typedef " & cgtypeToText[cgtype] & " " & typedefs[i] & ";\n");
-        type.state := Type_State.Defined;
-      END;
-    END;
-*)
+
     Type_ForwardDeclare(type, self);
     IF Type_CanBeDefined(type, self) THEN
         type.Define(self);
