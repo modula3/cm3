@@ -591,7 +591,7 @@ BEGIN
     RETURN NameT(qid.module) & "__" & NameT(qid.item);
   END;
   IF qid.item # 0 THEN
-    RETURN NameT(qid.item);
+    RETURN NameT(qid.item); (* builtins: INTEGER CARDINAL etc. *)
   END;
   RETURN NIL;
 END QidText;
