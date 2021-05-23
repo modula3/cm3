@@ -382,7 +382,8 @@ PROCEDURE ResultTypename (t: Type.T): QID =
   VAR p := Reduce (t);
   BEGIN
     Type.Compile (t);
-    IF (p # NIL)
+    (* If LargeResult AND standard_structs turned into void, return no type here. *)
+    IF p # NIL AND CGResult (p) # CG.Type.Void
       THEN RETURN p.result_typename;
       ELSE RETURN NoQID;
     END;
