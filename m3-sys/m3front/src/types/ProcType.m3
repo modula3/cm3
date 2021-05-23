@@ -22,7 +22,6 @@ TYPE
         result     : Type.T;
         raises     : ESet.T;
         callConv   : CG.CallingConvention;
-        result_typename := NoQID;
       OVERRIDES
         check      := Check;
         no_straddle:= TypeRep.AddrNoStraddle;
@@ -228,7 +227,6 @@ PROCEDURE Check (p: P) =
       p.checked := TRUE;
       Scope.TypeCheck (p.formals, cs);
       IF (p.result # NIL) THEN
-        Type.Typename (p.result, p.result_typename);
         result := Type.Check (p.result);
         IF OpenArrayType.Is (result) THEN
           Error.Msg ("procedures may not return open arrays");
@@ -380,13 +378,14 @@ PROCEDURE Result (t: Type.T): Type.T =
 
 PROCEDURE ResultTypename (t: Type.T): QID =
   VAR p := Reduce (t);
+      qid: QID;
   BEGIN
     Type.Compile (t);
     (* If LargeResult AND standard_structs turned into void, return no type here. *)
     IF p # NIL AND CGResult (p) # CG.Type.Void
-      THEN RETURN p.result_typename;
-      ELSE RETURN NoQID;
+      THEN Type.Typename (p.result, qid);
     END;
+    RETURN qid;
   END ResultTypename;
 
 PROCEDURE CGResult (t: Type.T): CG.Type =
