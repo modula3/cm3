@@ -739,7 +739,7 @@ PROCEDURE SetGlobals (t: T) =
   END SetGlobals;
 
 PROCEDURE Allocate (size, align: INTEGER;  is_const : BOOLEAN;
-                    tag: TEXT := NIL;  id: M3ID.T := M3ID.NoID): INTEGER =
+                    tag: TEXT := NIL;  id := M3ID.NoID): INTEGER =
   VAR offset: INTEGER;
   BEGIN
     align  := MAX (align, Target.Byte);

@@ -32,7 +32,7 @@ TYPE
         fprint     := FPrinter;
       END;
 
-VAR root: M3ID.T := M3ID.NoID;
+VAR root := M3ID.NoID;
 
 (* EXPORTED *)
 PROCEDURE Parse (): Type.T =

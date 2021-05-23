@@ -1083,7 +1083,7 @@ PROCEDURE PackedType (VAR s: State) RAISES {Error} =
   END PackedType;
 
 PROCEDURE ProcType (VAR s: State) RAISES {Error} =
-  VAR cc: M3ID.T := M3ID.NoID;
+  VAR cc := M3ID.NoID;
   BEGIN
     IF (s.tok = TK_CallConv) THEN
       cc := s.scan.id;

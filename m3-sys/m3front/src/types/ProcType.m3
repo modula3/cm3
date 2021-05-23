@@ -130,7 +130,7 @@ PROCEDURE ParseFormal (p: P;  ) =
     DEC (Ident.top, n);
   END ParseFormal;
 
-VAR unnamed: M3ID.T := M3ID.NoID;
+VAR unnamed := M3ID.NoID;
 
 PROCEDURE MethodSigAsProcSig (sig, objType: Type.T): Type.T =
   VAR

@@ -67,8 +67,8 @@ TYPE
   END;
 
 VAR (*CONST*)
-  resultName : M3ID.T := M3ID.NoID;
-  returnName : M3ID.T := M3ID.NoID;
+  resultName := M3ID.NoID;
+  returnName := M3ID.NoID;
 
 VAR
   defined_procs: T := NIL;
