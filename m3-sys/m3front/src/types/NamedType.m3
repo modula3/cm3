@@ -142,10 +142,11 @@ PROCEDURE Strip (t: Type.T): Type.T =
 
 PROCEDURE Check (p: P) =
   VAR cs := M3.OuterCheckState;  nErrs, nWarns, nErrsB: INTEGER;
-      name := p.info.name;
+      name: QID;
       type: Type.T := NIL;
   BEGIN
-    Resolve (p);
+    Resolve (p);         (* Resolve can fill in name.module. *)
+    name := p.info.name; (* Preserve name around Type.CheckInfo. *)
     nErrs := 0;  nErrsB := 0;
     IF (p.obj # NIL) THEN
       Error.Count (nErrs, nWarns);
