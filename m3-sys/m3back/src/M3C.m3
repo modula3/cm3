@@ -2690,7 +2690,7 @@ END set_source_line;
 
 (*------------------------------------------- debugging type declarations ---*)
 
-PROCEDURE declare_typename(declareType: DeclareTypes_t; typeid: TypeUID; name: Name) =
+<*NOWARN*>PROCEDURE declare_typename(declareType: DeclareTypes_t; typeid: TypeUID; name: Name) =
 VAR nameText := NameT(name);
     self := declareType.self;
 BEGIN
@@ -2699,13 +2699,15 @@ BEGIN
   ELSE
     self.comment("declare_typename");
   END;
-  (* nameText := self.unique & nameText; *) (* unique ends with underscore *)
+
+  (* Declare_typename is inferior to and conflicts with the later typename feature. *)
+
+  RETURN;
+
   TextToId (nameText);
   (* typename is like pointer but without the star and without a hash in the name *)
-  self.Type_Init (NEW (Pointer_t,
-                       text := nameText,
-                       typename := TRUE,
-                       points_to_typeid := typeid));
+  self.Type_Init (NEW (Pointer_t, text := nameText, typename := TRUE, points_to_typeid := typeid));
+
 END declare_typename;
 
 PROCEDURE TypeIDToText(x: M3CG.TypeUID): TEXT =
