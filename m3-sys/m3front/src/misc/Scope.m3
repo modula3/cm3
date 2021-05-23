@@ -113,7 +113,7 @@ PROCEDURE LookUpQID (t: T;  VAR q: QID): Value.T =
     IF (q.module = M3ID.NoID) THEN
       v := LookUp (t, q.item, FALSE);
       IF v # NIL THEN
-        q.module := ModuleName (v);
+        q.module := ModuleName (v); (* TODO GlobalName *)
         <* ASSERT q.module # M3ID.NoID *>
       END;
     ELSE
