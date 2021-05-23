@@ -933,7 +933,7 @@ PROCEDURE declare_procedure (u: U;  n: Name;  n_params: INTEGER;
                              return_type: Type;  lev: INTEGER;
                              cc: CallingConvention; exported: BOOLEAN;
                              parent: Proc;
-                             <*UNUSED*>return_typeid: TypeUID := 0;
+                             <*UNUSED*>return_typeid: TypeUID;
                              <*UNUSED*>return_typename: QID): Proc =
   VAR p := NewProc (u);
   BEGIN

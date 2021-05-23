@@ -13,7 +13,7 @@ FROM M3CG IMPORT Var, Proc, Label, Sign, BitOffset;
 FROM M3CG IMPORT Type, ZType, AType, RType, IType, MType;
 FROM M3CG IMPORT CompareOp, ConvertOp, AtomicOp, RuntimeError;
 FROM M3CG IMPORT MemoryOrder;
-FROM M3CG IMPORT QID, NoQID;
+FROM M3CG IMPORT QID;
 
 TYPE Bop    = M3CG_Binary.Op;
 TYPE WrVar  = Var    OBJECT tag: INTEGER END;
@@ -761,7 +761,7 @@ PROCEDURE declare_local (u: U;  n: Name;  s: ByteSize;  a: Alignment;
 
 PROCEDURE declare_param (u: U;  n: Name;  s: ByteSize;  a: Alignment;
                          t: Type;  m3t: TypeUID;  in_memory, up_level: BOOLEAN;
-                         f: Frequency; <*UNUSED*>typename := NoQID): Var =
+                         f: Frequency; <*UNUSED*>typename: QID): Var =
   VAR v := NewVar (u);
   BEGIN
     Cmd   (u, Bop.declare_param);
@@ -874,8 +874,8 @@ PROCEDURE NewProc (u: U): Proc =
 
 PROCEDURE import_procedure (u: U;  n: Name;  n_params: INTEGER;
                             ret_type: Type; cc: CallingConvention;
-                            <*UNUSED*>return_typeid: TypeUID := 0;
-                            <*UNUSED*>return_typename := NoQID): Proc =
+                            <*UNUSED*>return_typeid: TypeUID;
+                            <*UNUSED*>return_typename: QID): Proc =
   VAR p := NewProc (u);
   BEGIN
     Cmd   (u, Bop.import_procedure);
@@ -891,8 +891,8 @@ PROCEDURE declare_procedure (u: U;  n: Name;  n_params: INTEGER;
                              return_type: Type;  lev: INTEGER;
                              cc: CallingConvention; exported: BOOLEAN;
                              parent: Proc;
-                             <*UNUSED*>return_typeid: TypeUID := 0;
-                             <*UNUSED*>return_typename := NoQID): Proc =
+                             <*UNUSED*>return_typeid: TypeUID;
+                             <*UNUSED*>return_typename: QID): Proc =
   VAR p := NewProc (u);
   BEGIN
     Cmd   (u, Bop.declare_procedure);

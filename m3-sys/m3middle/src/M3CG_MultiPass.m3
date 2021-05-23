@@ -7,7 +7,7 @@ FROM M3CG IMPORT Frequency, CallingConvention, CompareOp, ConvertOp, AtomicOp;
 FROM M3CG IMPORT BitSize, ByteSize, BitOffset, ByteOffset, RuntimeError;
 FROM M3CG IMPORT MemoryOrder;
 FROM M3CG_Binary IMPORT Op;
-FROM M3CG IMPORT QID, NoQID;
+FROM M3CG IMPORT QID;
 
 TYPE var_t = Var OBJECT tag: INTEGER END;
 TYPE proc_t = Proc OBJECT tag: INTEGER END;
@@ -368,7 +368,7 @@ self.Add(NEW(declare_local_t, op := Op.declare_local, name := name, byte_size :=
 RETURN var;
 END declare_local;
 
-PROCEDURE declare_param(self: T; name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: TypeUID; in_memory, up_level: BOOLEAN; frequency: Frequency; typename := NoQID): Var =
+PROCEDURE declare_param(self: T; name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: TypeUID; in_memory, up_level: BOOLEAN; frequency: Frequency; typename: QID): Var =
 VAR var := self.refs.NewVar();
 BEGIN
 self.Add(NEW(declare_param_t, op := Op.declare_param, name := name, byte_size := byte_size, alignment := alignment, type := type, typeid := typeid, in_memory := in_memory, up_level := up_level, frequency := frequency, tag := var.tag, typename := typename));
@@ -382,14 +382,14 @@ self.Add(NEW(declare_temp_t, op := Op.declare_temp, byte_size := byte_size, alig
 RETURN var;
 END declare_temp;
 
-PROCEDURE import_procedure(self: T; name: Name; n_params: INTEGER; return_type: Type; callingConvention: CallingConvention; return_typeid: TypeUID := 0; return_typename := NoQID): Proc =
+PROCEDURE import_procedure(self: T; name: Name; n_params: INTEGER; return_type: Type; callingConvention: CallingConvention; return_typeid: TypeUID; return_typename: QID): Proc =
 VAR proc := self.refs.NewProc();
 BEGIN
 self.Add(NEW(import_procedure_t, op := Op.import_procedure, name := name, n_params := n_params, return_type := return_type, callingConvention := callingConvention, return_typeid := return_typeid, return_typename := return_typename, tag := proc.tag));
 RETURN proc;
 END import_procedure;
 
-PROCEDURE declare_procedure(self: T; name: Name; n_params: INTEGER; return_type: Type; level: INTEGER; callingConvention: CallingConvention; exported: BOOLEAN; parent: Proc; return_typeid: TypeUID := 0; return_typename := NoQID): Proc =
+PROCEDURE declare_procedure(self: T; name: Name; n_params: INTEGER; return_type: Type; level: INTEGER; callingConvention: CallingConvention; exported: BOOLEAN; parent: Proc; return_typeid: TypeUID; return_typename: QID): Proc =
 VAR proc := self.refs.NewProc();
     parent_tag := 0;
 BEGIN
