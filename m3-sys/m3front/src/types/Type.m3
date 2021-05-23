@@ -236,9 +236,10 @@ PROCEDURE Strip (t: T): T =
 (* Remove typenames and packing. *)
 PROCEDURE StripPackedOne (VAR u: T): BOOLEAN =
   BEGIN
-    IF    (u.info.class = Class.Named)  THEN u := NamedType.Strip (u);
-    ELSIF (u.info.class = Class.Packed) THEN u := PackedType.Base (u);
-    ELSE  RETURN TRUE;
+    CASE u.info.class OF
+    | Class.Named     => u := NamedType.Strip (u);
+    | Class.Packed    => u := PackedType.Base (u);
+    ELSE                 RETURN TRUE;
     END;
     RETURN FALSE;
   END StripPackedOne;
@@ -263,10 +264,11 @@ PROCEDURE StripPacked (t: T): T =
 (* Remove typenames and packing and subrange. *)
 PROCEDURE BaseOne (VAR u: T): BOOLEAN =
   BEGIN
-    IF    (u.info.class = Class.Named)    THEN u := NamedType.Strip (u);
-    ELSIF (u.info.class = Class.Subrange) THEN u := SubrangeType.Base (u);
-    ELSIF (u.info.class = Class.Packed)   THEN u := PackedType.Base (u);
-    ELSE  RETURN TRUE;
+    CASE u.info.class OF
+    | Class.Named     => u := NamedType.Strip (u);
+    | Class.Packed    => u := PackedType.Base (u);
+    | Class.Subrange  => u := SubrangeType.Base (u);
+    ELSE                 RETURN TRUE;
     END;
     RETURN FALSE;
   END BaseOne;
