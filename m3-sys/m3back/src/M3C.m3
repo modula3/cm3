@@ -712,7 +712,9 @@ BEGIN
    * more like GlobalName instead of ModuleName. Thus the check for
    * first character.
    *)
-  IF qidtext # NIL AND Text.Length (qidtext) > 0 AND Text.GetChar (qidtext, 0) IN ASCII.Letters THEN
+  (* > 4 instead of != NULL, which occurs in elego\m3msh\src\M3MiniShell.m3 *)
+  (* IF qidtext # NIL AND Text.Length (qidtext) > 0 AND Text.GetChar (qidtext, 0) IN ASCII.Letters AND NOT Text.Equal (qidtext, "NULL") THEN *)
+  IF qidtext # NIL AND Text.Length (qidtext) > 4 AND Text.GetChar (qidtext, 0) IN ASCII.Letters THEN
     IF NOT self.typedef_defined.insert(qidtext) THEN
       ifndef(self, qidtext);
       print(self, "typedef " & type_text & " " & qidtext & ";");
