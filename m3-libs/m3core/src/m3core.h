@@ -475,6 +475,7 @@ typedef ADDRESS MUTEX;
 #define Utypes__size_t              Utypes__size_t              /* inhibit m3c type */
 #define WinBaseTypes__const_UINT32  WinBaseTypes__const_UINT32  /* inhibit m3c type */
 #define Csignal__Handler            Csignal__Handler            /* inhibit m3c type */
+#define Csetjmp__jmp_buf            Csetjmp__jmp_buf            /* inhibit m3c type */
 
 typedef size_t        Cstddef__size_t;
 typedef ssize_t       Cstddef__ssize_t;
@@ -492,6 +493,12 @@ typedef void*         Ctypes__void_star;
 typedef size_t        Utypes__size_t;             // redundant
 typedef UINT32        WinBaseTypes__const_UINT32;
 typedef void (__cdecl*Csignal__Handler)(int s);
+
+#ifdef __sun /* Messy. See Csetjmp.c. */
+typedef sigjmp_buf    Csetjmp__jmp_buf;
+#else
+typedef jmp_buf       Csetjmp__jmp_buf;
+#endif
 
 #ifdef __cplusplus
 extern "C" {
