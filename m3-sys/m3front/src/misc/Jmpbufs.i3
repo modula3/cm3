@@ -25,7 +25,7 @@ TYPE
   Proc = REF RECORD (* procedure or module *)
     try_count    := 0;
     jmpbufs      : REF ARRAY OF CG.Var := NIL;
-    name         : M3ID.T := 0;
+    name         := M3ID.NoID;
   END;
 
   Try = RECORD (* opaque *)

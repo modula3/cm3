@@ -42,7 +42,7 @@ PROCEDURE GetNextCounter (VAR c: ARRAY [0..4] OF CHAR);
    increment the counter. *)
 
 PROCEDURE Allocate (size, align: INTEGER;  is_const: BOOLEAN;
-                    tag: TEXT := NIL;  id: M3ID.T := M3ID.NoID): INTEGER;
+                    tag: TEXT := NIL;  id := M3ID.NoID): INTEGER;
 (* allocate 'size' bits of space with the specified alignment
    in the current module's global data or constant segment.  Return the
    bit offset of allocated data. *)

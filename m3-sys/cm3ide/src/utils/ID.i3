@@ -13,7 +13,7 @@ INTERFACE ID;
 IMPORT Wx, Wr, Thread;
 
 TYPE  T    = [-16_7fffffff-1 .. 16_7fffffff]; (* a 32-bit integer *)
-CONST NoID = 0;  (* an illegal ID, never returned by Add or FromStr *)
+CONST NoID: T = 0;  (* an illegal ID, never returned by Add or FromStr *)
 
 PROCEDURE Add (x: TEXT): T;
 (* Returns the ID representing "x". *)

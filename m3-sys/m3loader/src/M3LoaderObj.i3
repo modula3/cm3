@@ -25,7 +25,7 @@ TYPE
     imports        : REF ARRAY OF M3ID.T := NIL;
     exports        : REF ARRAY OF Symbol := NIL;
     linker_defined : REF ARRAY OF LinkDef := NIL;
-    dllname        : M3ID.T := M3ID.NoID;
+    dllname        := M3ID.NoID;
     dllordinal     : INTEGER := -1;
   METHODS
     fixup () RAISES {M3Loader.LoadError};
