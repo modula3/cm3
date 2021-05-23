@@ -602,7 +602,7 @@ BEGIN
     RETURN self.anonymousCounter;
 END AnonymousCounter;
 
-(* e.g. within a struct *)
+(* e.g. padding fields within a struct *)
 PROCEDURE GenerateNameLocal(self: T): Name =
 BEGIN
     RETURN M3ID.Add("L_" & IntToDec(AnonymousCounter(self)));
