@@ -711,7 +711,10 @@ BEGIN
    * Nested scopes do not work properly. They should be using something
    * more like GlobalName instead of ModuleName. Thus the check for
    * first character.
+   *
+   * Generics are also a problem.
    *)
+  qidtext := NIL;
   (* > 4 instead of != NULL, which occurs in elego\m3msh\src\M3MiniShell.m3 *)
   (* IF qidtext # NIL AND Text.Length (qidtext) > 0 AND Text.GetChar (qidtext, 0) IN ASCII.Letters AND NOT Text.Equal (qidtext, "NULL") THEN *)
   IF qidtext # NIL AND Text.Length (qidtext) > 4 AND Text.GetChar (qidtext, 0) IN ASCII.Letters THEN
