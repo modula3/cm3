@@ -6,19 +6,6 @@
 extern "C" {
 #endif
 
-// _longjmp does not work on Solaris/C++ because it is std::_longjump.
-#if !defined(__sun) || !defined(__cplusplus)
-
-// Temporary for compat, not used.
-// u is for underscore, do not save/restore signal mask.
-#if defined(_WIN32) || defined(__CYGWIN__) || defined(__MINGW__)
-M3WRAP_RETURN_VOID(Csetjmp__ulongjmp, longjmp, (jmp_buf env, int val), (env, val))
-#else
-M3WRAP_RETURN_VOID(Csetjmp__ulongjmp, _longjmp, (jmp_buf env, int val), (env, val))
-#endif
-
-#endif
-
 // This is messy.
 //  - _setjmp does not work in Solaris C++; it is accidentally placed in std::
 //  - sigsetjmp is a good portable idea. We should use it on all Unix platforms.
