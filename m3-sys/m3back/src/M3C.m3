@@ -5263,10 +5263,10 @@ PROCEDURE import_procedure(
     return_type: CGType; callingConvention: CallingConvention;
     return_typeid: TypeUID;
     return_typename: QID): M3CG.Proc =
-VAR qidtext := QidText(return_typename);
+VAR return_type_text := QidText(return_typename);
     proc := NEW(Proc_t, name := name, parameter_count := parameter_count,
                 return_type := return_type, imported := TRUE,
-                return_type_text := TypeText (self, return_type, qidtext),
+                return_type_text := TypeText (self, return_type, return_type_text),
                 callingConvention := callingConvention).Init(self);
 BEGIN
     IF DebugVerbose(self) THEN
@@ -5274,7 +5274,7 @@ BEGIN
             & " parameter_count:" & IntToDec(parameter_count)
             & " return_type:" & cgtypeToText[return_type]
             & " return_typeid:" & TypeIDToText(return_typeid)
-            & " return_typename:" & TextOrNil(qidtext));
+            & " return_typename:" & TextOrNil(return_type_text));
     ELSE
         self.comment("import_procedure");
     END;
@@ -5332,10 +5332,10 @@ PROCEDURE declare_procedure(
     exported: BOOLEAN; parent: M3CG.Proc;
     return_typeid: TypeUID;
     return_typename: QID): M3CG.Proc =
-VAR qidtext := QidText(return_typename);
+VAR return_type_text := QidText(return_typename);
     proc := NEW(Proc_t, name := name, parameter_count := parameter_count,
                 return_type := return_type, level := level,
-                return_type_text := TypeText (self, return_type, qidtext),
+                return_type_text := TypeText (self, return_type, return_type_text),
                 callingConvention := callingConvention, exported := exported,
                 parent := parent).Init(self);
 BEGIN
@@ -5347,7 +5347,7 @@ BEGIN
             & " level:" & IntToDec(level)
             & " parent:" & ProcNameOrNIL(parent)
             & " return_typeid:" & TypeIDToText(return_typeid)
-            & " return_typename:" & TextOrNil(qidtext));
+            & " return_typename:" & TextOrNil(return_type_text));
     ELSE
         self.comment("declare_procedure");
     END;
