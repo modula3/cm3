@@ -474,6 +474,7 @@ typedef ADDRESS MUTEX;
 #define Ctypes__void_star           Ctypes__void_star           /* inhibit m3c type */
 #define Utypes__size_t              Utypes__size_t              /* inhibit m3c type */
 #define WinBaseTypes__const_UINT32  WinBaseTypes__const_UINT32  /* inhibit m3c type */
+#define Csignal__Handler            Csignal__Handler            /* inhibit m3c type */
 
 typedef size_t        Cstddef__size_t;
 typedef ssize_t       Cstddef__ssize_t;
@@ -490,6 +491,7 @@ typedef unsigned long Ctypes__unsigned_long;
 typedef ADDRESS       Ctypes__void_star;          // TODO void*
 typedef size_t        Utypes__size_t;             // redundant
 typedef UINT32        WinBaseTypes__const_UINT32;
+typedef void (__cdecl*Csignal__Handler)(int s);
 
 #ifdef __cplusplus
 extern "C" {

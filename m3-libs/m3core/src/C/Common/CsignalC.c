@@ -9,6 +9,4 @@
 #undef M3MODULE /* Support concatenating multiple .c files. */
 #define M3MODULE Csignal
 
-typedef void (__cdecl*SignalHandler)(int s);
-
-M3WRAP2(SignalHandler, signal, int, SignalHandler)
+M3WRAP2(Csignal__Handler, signal, int, Csignal__Handler)
