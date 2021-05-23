@@ -484,11 +484,11 @@ typedef char*         Ctypes__char_star;
 typedef char**        Ctypes__char_star_star;
 typedef const char*   Ctypes__const_char_star;
 typedef int           Ctypes__const_int;
-typedef ADDRESS       Ctypes__const_void_star;    // TODO const void*
+typedef const void*   Ctypes__const_void_star;
 typedef int           Ctypes__int;
 typedef long          Ctypes__long;
 typedef unsigned long Ctypes__unsigned_long;
-typedef ADDRESS       Ctypes__void_star;          // TODO void*
+typedef void*         Ctypes__void_star;
 typedef size_t        Utypes__size_t;             // redundant
 typedef UINT32        WinBaseTypes__const_UINT32;
 typedef void (__cdecl*Csignal__Handler)(int s);
