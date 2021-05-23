@@ -1390,6 +1390,10 @@ BEGIN
   ELSE
     print(self, return.text);
   END;
+  (* Ifdef guard might be needed here, but it is also advantageous
+   * to omit. If there are duplicates, the C compiler verifies
+   * they are equivalent, else errors.
+   *)
   print(self, "(");
   print(self, CallingConventionToText(type.callingConvention));
   print(self, "*");
