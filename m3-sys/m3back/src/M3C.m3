@@ -664,13 +664,14 @@ BEGIN
 END Segment_FixName;
 
 PROCEDURE Var_FixName(self: T; name: Name; imported_or_exported: BOOLEAN): Name =
+VAR name1 := name;
 BEGIN
     name := Proc_FixName(self, name);
     (* workaround: begin/end_block should keep the names separate,
      * but they do nothing until import_procedure all moved up.
      * e.g. ETimer__Push() has parameter and local "self"
      *)
-    IF NOT imported_or_exported AND name # self.static_link_id THEN
+    IF NOT imported_or_exported AND name1 # self.static_link_id THEN
         name := M3ID.Add(NameT(name) & "_L_" & IntToDec(AnonymousCounter(self)));
     END;
     RETURN Segment_FixName(self, name);
