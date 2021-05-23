@@ -15,7 +15,7 @@ IMPORT Value, Module, Host, TypeFP, TypeTbl, WCharr, Brand;
 IMPORT Addr, Bool, Charr, Card, EReel, Int, LInt, LReel, Mutex, Null;
 IMPORT ObjectRef, ObjectAdr, Reel, Reff, Textt, Target, TInt, TFloat;
 IMPORT Text, M3RT, TipeMap, TipeDesc, ErrType, OpenArrayType, M3ID;
-FROM M3CG IMPORT QID;
+FROM M3 IMPORT QID;
 
 CONST
   NOT_CHECKED = -1;
@@ -190,7 +190,7 @@ PROCEDURE CheckInfo (t: T;  VAR x: Info): T =
     RETURN u;
   END CheckInfo;
 
-PROCEDURE Typename (t: T; VAR typename: QID) =
+PROCEDURE Typename (t: T; VAR typename: M3ID.T) =
 BEGIN
   typename := t.info.name;
 END Typename;

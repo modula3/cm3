@@ -38,7 +38,6 @@ IMPORT Target;
 IMPORT TargetMap;
 IMPORT TFloat;
 IMPORT TInt;
-FROM M3CG IMPORT QID;
 
 (* Pervasive ASSUMPTION: Modula-3 NIL = C++ null pointer. *) 
 
@@ -1433,7 +1432,7 @@ PROCEDURE declare_pointer (self: U; t,target: TypeUID;  brand: TEXT; traced: BOO
     EVAL self.debugTable.put(t,ptrRef);
   END declare_pointer;
 
-PROCEDURE declare_indirect (self: U; t, target: TypeUID; <*UNUSED*>target_typename: QID) =
+PROCEDURE declare_indirect (self: U; t, target: TypeUID; <*UNUSED*>target_typename: Name) =
   VAR
     indirectRef : IndirectDebug;
   BEGIN
@@ -1441,7 +1440,7 @@ PROCEDURE declare_indirect (self: U; t, target: TypeUID; <*UNUSED*>target_typena
     EVAL self.debugTable.put(t,indirectRef);
   END declare_indirect;
 
-PROCEDURE declare_proctype (self: U; t: TypeUID; n_formals: INTEGER; result: TypeUID;  n_raises: INTEGER; cc: CallingConvention; <*UNUSED*>result_typename: QID) =
+PROCEDURE declare_proctype (self: U; t: TypeUID; n_formals: INTEGER; result: TypeUID;  n_raises: INTEGER; cc: CallingConvention; <*UNUSED*>result_typename: Name) =
   VAR
     procRef : ProcTypeDebug;
   BEGIN
@@ -1456,7 +1455,7 @@ PROCEDURE declare_proctype (self: U; t: TypeUID; n_formals: INTEGER; result: Typ
     self.debugObj := procRef; (* keep for the formals and raises *)
   END declare_proctype;
 
-PROCEDURE declare_formal (self: U; n: Name;  t: TypeUID; <*UNUSED*>typename: QID) =
+PROCEDURE declare_formal (self: U; n: Name;  t: TypeUID; <*UNUSED*>typename: Name) =
   (* A formal parameter of a procedure type. *) 
   VAR
     procRef : ProcTypeDebug;
@@ -1762,7 +1761,7 @@ to check this. Perhaps the front end could supply the correct type. *)
     RETURN size;    
   END ImportedStructSize;
 
-PROCEDURE declare_param (self: U;  n: Name;  s: ByteSize;  a: Alignment; t: Type;  m3t: TypeUID;  in_memory, up_level: BOOLEAN; f: Frequency; <*UNUSED*>typename: QID): Var =
+PROCEDURE declare_param (self: U;  n: Name;  s: ByteSize;  a: Alignment; t: Type;  m3t: TypeUID;  in_memory, up_level: BOOLEAN; f: Frequency; <*UNUSED*>typename: Name): Var =
   (* A formal parameter of a procedure, not of a procedure type, (which
      is given by declare_formal). *) 
   VAR
@@ -2046,7 +2045,7 @@ PROCEDURE init_float (self: U;  o: ByteOffset;  READONLY f: Target.Float) =
 
 (*------------------------------------------------------------ procedures ---*)
 
-PROCEDURE import_procedure (self: U;  n: Name;  n_params: INTEGER; return_type: Type;  cc: CallingConvention; <*UNUSED*>return_typeid: TypeUID; <*UNUSED*>return_typename: QID): Proc =
+PROCEDURE import_procedure (self: U;  n: Name;  n_params: INTEGER; return_type: Type;  cc: CallingConvention; <*UNUSED*>return_typeid: TypeUID; <*UNUSED*>return_typename: Name): Proc =
   VAR
     p : LvProc := NewProc(self,n,n_params,return_type,-1,cc,FALSE,NIL);
     name : TEXT;
@@ -2085,7 +2084,7 @@ PROCEDURE declare_procedure (self: U;  n: Name;  n_params: INTEGER;
                              cc: CallingConvention; exported: BOOLEAN;
                              parent: Proc;
                              <*UNUSED*>return_typeid: TypeUID;
-                             <*UNUSED*>return_typename: QID): Proc =
+                             <*UNUSED*>return_typename: Name): Proc =
   VAR
     p : LvProc := NewProc(self,n,n_params,return_type,lev,cc,exported,parent);
   BEGIN

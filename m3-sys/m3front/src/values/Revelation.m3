@@ -13,7 +13,7 @@ IMPORT ObjectType, RefType, Scanner, Token, Module, ValueRep, CG;
 IMPORT M3RT, Target, Reff;
 IMPORT PersistentRevelation, PersistentRevelationArraySort, PersistentRevelationSeq, PersistentRevelationSeqRep;
 FROM Scanner IMPORT GetToken, Fail, Match, MatchID, cur;
-FROM M3CG IMPORT QID;
+FROM M3 IMPORT QID;
 
 TYPE
   T = BRANDED "Revelation.T" REF RECORD

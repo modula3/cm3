@@ -12,7 +12,6 @@ IMPORT M3, M3ID, CG, Value, ValueRep, Type, Error, Expr, ProcType;
 IMPORT KeywordExpr, OpenArrayType, RefType, CheckExpr, PackedType;
 IMPORT ArrayType, ArrayExpr, SetType, Host, NarrowExpr, M3Buf, Tracer;
 IMPORT Variable, Procedure, UserProc, Target, M3RT;
-FROM M3CG IMPORT NoQID;
 
 TYPE
   T = Value.T BRANDED OBJECT 
@@ -111,7 +110,7 @@ PROCEDURE EmitDeclaration (formal: Value.T;  types_only, param: BOOLEAN) =
     size     : CG.Size;
     align    : CG.Alignment;
     info     : Type.Info;
-    typename := NoQID;
+    typename : M3ID.T;
   BEGIN
     IF (types_only) THEN
       Compile (t);

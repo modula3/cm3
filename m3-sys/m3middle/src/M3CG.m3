@@ -8,7 +8,7 @@
 MODULE M3CG EXPORTS M3CG, M3CG_Ops;
 
 IMPORT Text, Word; 
-IMPORT Target;
+IMPORT Target, M3ID;
 
 REVEAL
   T = Public BRANDED "M3CG.T" OBJECT OVERRIDES
@@ -295,7 +295,7 @@ PROCEDURE declare_pointer (xx: T;  t, target: TypeUID;  brand: TEXT;
   END declare_pointer;
 
 
-PROCEDURE declare_indirect (xx: T;  t, target: TypeUID; target_typename: QID) =
+PROCEDURE declare_indirect (xx: T;  t, target: TypeUID; target_typename: Name) =
   BEGIN
     xx.child.declare_indirect (t, target, target_typename);
   END declare_indirect;
@@ -303,12 +303,12 @@ PROCEDURE declare_indirect (xx: T;  t, target: TypeUID; target_typename: QID) =
 
 PROCEDURE declare_proctype (xx: T; t: TypeUID; n_formals: INTEGER;
                             result: TypeUID;  n_raises: INTEGER;
-                            cc: CallingConvention; result_typename: QID) =
+                            cc: CallingConvention; result_typename: Name) =
   BEGIN
     xx.child.declare_proctype (t, n_formals, result, n_raises, cc, result_typename);
   END declare_proctype;
 
-PROCEDURE declare_formal (xx: T;  n: Name;  t: TypeUID; typename: QID) =
+PROCEDURE declare_formal (xx: T;  n: Name;  t: TypeUID; typename: Name) =
   BEGIN
     xx.child.declare_formal (n, t, typename);
   END declare_formal;
@@ -401,7 +401,7 @@ PROCEDURE declare_local (xx: T;  n: Name;  s: ByteSize;  a: Alignment;
 
 PROCEDURE declare_param (xx: T;  n: Name;  s: ByteSize;  a: Alignment;
                          t: Type;  m3t: TypeUID;  in_memory, up_level: BOOLEAN;
-                         f: Frequency; typename: QID): Var =
+                         f: Frequency; typename: Name): Var =
   BEGIN
     RETURN xx.child.declare_param (n, s, a, t, m3t, in_memory, up_level, f, typename);
   END declare_param;
@@ -470,7 +470,7 @@ PROCEDURE init_float (xx: T;  o: ByteOffset;  READONLY f: Target.Float) =
 PROCEDURE import_procedure (xx: T;  n: Name;  n_params: INTEGER;
                           ret_type: Type;  cc: CallingConvention;
                           return_typeid: TypeUID;
-                          return_typename: QID): Proc =
+                          return_typename: Name): Proc =
   BEGIN
     RETURN xx.child.import_procedure (n, n_params, ret_type, cc, return_typeid, return_typename);
   END import_procedure;
@@ -480,7 +480,7 @@ PROCEDURE declare_procedure (xx: T;  n: Name;  n_params: INTEGER;
                              cc: CallingConvention;
                              exported: BOOLEAN;  parent: Proc;
                              return_typeid: TypeUID;
-                             return_typename: QID): Proc =
+                             return_typename: Name): Proc =
   BEGIN
     RETURN xx.child.declare_procedure (n, n_params, return_type,
                                        lev, cc, exported, parent,

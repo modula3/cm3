@@ -13,13 +13,12 @@
 
 INTERFACE M3CG_Ops;
 
-IMPORT Target, M3CG;
+IMPORT Target, M3CG, M3ID;
 FROM M3CG IMPORT Type, MType, IType, RType, AType, ZType, Sign;
 FROM M3CG IMPORT Name, Var, Proc, Alignment, TypeUID, Label;
 FROM M3CG IMPORT Frequency, CallingConvention, CompareOp, ConvertOp, AtomicOp;
 FROM M3CG IMPORT BitSize, ByteSize, BitOffset, ByteOffset, RuntimeError;
 FROM M3CG IMPORT MemoryOrder;
-FROM M3CG IMPORT NoQID;
 
 TYPE
   ErrorHandler = PROCEDURE (msg: TEXT);
@@ -116,19 +115,19 @@ declare_subrange (t,domain: TypeUID; READONLY min,max: Target.Int; s: BitSize);
 declare_pointer (t, target: TypeUID;  brand: TEXT;  traced: BOOLEAN);
 (* 'brand'=NIL ==> t is unbranded *)
 
-declare_indirect (t, target: TypeUID; target_typename := NoQID);
+declare_indirect (t, target: TypeUID; target_typename := M3ID.NoID);
 (* an automatically dereferenced pointer! (WITH variables, VAR formals, ...) *)
 
 declare_proctype (t: TypeUID;  n_formals: INTEGER;
                   result: TypeUID;  n_raises: INTEGER;
-                  cc: CallingConvention; result_typename := NoQID);
+                  cc: CallingConvention; result_typename := M3ID.NoID);
 (* Procedure type.  The subsequent n_formals occurrences of declare_formal
    define the formal parameters.  The subsequent n_raises occurrences of
    declare_raises are names of raised exceptions.  n_raises < 0 => RAISES ANY.
    These occurrences of declare_formal and declare_raises all preceed the next
    occurrence of declare_proctype.  *)
 
-declare_formal (n: Name;  t: TypeUID; typename := NoQID);
+declare_formal (n: Name;  t: TypeUID; typename := M3ID.NoID);
 (* A formal of the most recent procedure *type*, i.e., introduced by
    declare_proctype. *) 
 
@@ -199,6 +198,8 @@ set_runtime_proc (n: Name;  p: Proc);
 |                         nested procedures.
 |    f: Frequency       is the front-end estimate of how frequently the
 |                         variable is accessed.
+|    typename: M3ID     a full contextual typename like Cstddef__size_t or Ctypes__int
+|                       Only passed if Target.Typenames, since most backends do not use them.
 
 *)
 
@@ -254,7 +255,7 @@ declare_local (n: Name;  s: ByteSize;  a: Alignment;  t: Type;
 
 declare_param (n: Name;  s: ByteSize;  a: Alignment;  t: Type;
                m3t: TypeUID;  in_memory, up_level: BOOLEAN;
-               f: Frequency; typename := NoQID): Var;
+               f: Frequency; typename := M3ID.NoID): Var;
 (* Declare a formal parameter, belonging to the most recent
    declare_procedure or import_procedure.  Formals are declared in
    their lexical order, relative to each other, but many other things
@@ -347,7 +348,7 @@ init_float (o: ByteOffset;  READONLY f: Target.Float);
 import_procedure (n: Name;  n_params: INTEGER;  return: Type;
                   cc: CallingConvention;
                   return_typeid: TypeUID := 0;
-                  return_typename := NoQID): Proc;
+                  return_typename := M3ID.NoID): Proc;
 (* declare and import the external procedure with name 'n' and 'n_params'
    formal parameters.  It must be a top-level (=0) procedure that returns
    values of type 'return'.  'cc' is derived from the procedure's <*EXTERNAL*>
@@ -359,7 +360,7 @@ declare_procedure (n: Name;  n_params: INTEGER;  return: Type;
                    lev: INTEGER;  cc: CallingConvention;
                    exported: BOOLEAN;  parent: Proc;
                    return_typeid: TypeUID := 0;
-                   return_typename := NoQID): Proc;
+                   return_typename := M3ID.NoID): Proc;
 (* Declare a procedure with simple name 'n' within the current scope,
    with 'n_params' formal parameters, at static nesting level 'lev'.
    Set the "current procedure" to this procedure.  If the name n is M3ID.NoID,

@@ -10,7 +10,7 @@ MODULE RaiseStmt;
 
 IMPORT M3ID, Expr, Token, Scanner, Stmt, StmtRep, Error, ESet;
 IMPORT Value, Type, Scope, Exceptionz, AssignStmt;
-FROM M3CG IMPORT QID;
+FROM M3 IMPORT QID;
 
 TYPE
   P = Stmt.T OBJECT

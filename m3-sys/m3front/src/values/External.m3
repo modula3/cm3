@@ -10,7 +10,7 @@ MODULE External;
 IMPORT M3ID, Value, ValueRep, Token, Scope, Module, Error;
 IMPORT Type, Expr, Variable, Ident, Scanner, RunTyme, CG, Host;
 FROM Scanner IMPORT GetToken, Match, MatchID, cur;
-FROM M3CG IMPORT QID;
+FROM M3 IMPORT QID;
 
 TYPE TK = Token.T;
 
