@@ -520,7 +520,7 @@ PROCEDURE IsEqual (a, b: T;  x: Assumption): BOOLEAN =
     b := Strip (b);
     ac := a.info.class;  bc := b.info.class;
     IF (a = b) THEN RETURN TRUE END;
-    IF (ac = Class.Error) OR (bc = Class.Error) THEN RETURN TRUE END;
+    IF (ac = Class.Error) OR (bc = Class.Error) THEN RETURN TRUE END; (*Reduce error cascade.*)
     IF (ac # bc) THEN RETURN FALSE END;
 
     (* try their id's first *)
@@ -567,7 +567,7 @@ PROCEDURE IsSubtype (a, b: T): BOOLEAN =
 
     a := Strip (a);
     b := Strip (b);
-    IF (a.info.class = Class.Error) OR (b.info.class = Class.Error) THEN RETURN TRUE END;
+    IF (a.info.class = Class.Error) OR (b.info.class = Class.Error) THEN RETURN TRUE END; (*Reduce error cascade.*)
     a := StripPacked (a);
     b := StripPacked (b);
 
