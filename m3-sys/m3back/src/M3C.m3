@@ -684,7 +684,7 @@ VAR type: Type_t := NIL;
 BEGIN
   (* All typeids must be known, though this is maybe overkill. *)
   IF typeid # -1 AND typeid # 0 AND NOT ResolveType(self, typeid, type) THEN
-    Err(self, "declare_param:"
+    Err(self, "TypeText:"
               & " unknown typeid:" & TypeIDToText(typeid)
               & " type:" & cgtypeToText[cgtype]
               & " name:" & TextOrNil(NameT(name)) & "\n");
