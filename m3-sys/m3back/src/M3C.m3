@@ -707,9 +707,12 @@ BEGIN
    * lowlevel CG type like Int32, Int64, Address.
    * Gradually all types should be qidtext and never just CG.
    * Historically the other way around: There was only CG and no qid.
+   *
+   * Nested scopes do not work properly. They should be using something
+   * more like GlobalName instead of ModuleName. Thus the check for
+   * first character.
    *)
-  qidtext := NIL;
-  IF qidtext # NIL THEN
+  IF qidtext # NIL AND Text.Length (qidtext) > 0 AND Text.GetChar (qidtext, 0) IN ASCII.Letters THEN
     IF NOT self.typedef_defined.insert(qidtext) THEN
       ifndef(self, qidtext);
       print(self, "typedef " & type_text & " " & qidtext & ";");
