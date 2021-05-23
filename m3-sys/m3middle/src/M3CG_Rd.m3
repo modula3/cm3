@@ -11,7 +11,6 @@ IMPORT Text, Rd, IntIntTbl, Thread, Convert, Wr, Stdio, Fmt;
 IMPORT M3ID, M3CG, M3CG_Ops, Target, TInt, TFloat;
 FROM M3CG IMPORT CompareOp, ConvertOp, AtomicOp, RuntimeError;
 FROM M3CG IMPORT MemoryOrder;
-FROM M3CG IMPORT NoQID;
 
 CONST
   EOF = '\000';
@@ -725,7 +724,7 @@ PROCEDURE declare_pointer (VAR s: State) =
 PROCEDURE declare_indirect (VAR s: State) =
   VAR type   := Scan_tipe (s);
       target := Scan_tipe (s);
-      target_typename := NoQID;
+      target_typename := M3ID.NoID;
   BEGIN
     s.cg.declare_indirect (type, target, target_typename);
   END declare_indirect;
@@ -736,7 +735,7 @@ PROCEDURE declare_proctype (VAR s: State) =
       result    := Scan_tipe (s);
       n_raises  := Scan_int (s);
       calling   := Scan_callConv (s);
-      result_typename := NoQID; (* TODO result_typename but it is not used downstream *)
+      result_typename := M3ID.NoID; (* TODO result_typename but it is not used downstream *)
   BEGIN
     s.cg.declare_proctype (type, n_formals, result, n_raises, calling, result_typename);
   END declare_proctype;
@@ -744,7 +743,7 @@ PROCEDURE declare_proctype (VAR s: State) =
 PROCEDURE declare_formal (VAR s: State) =
   VAR name := Scan_name (s);
       type := Scan_tipe (s);
-      typename := NoQID; (* TODO typename but it is not used downstream and can be omitted indefinitely *)
+      typename := M3ID.NoID; (* TODO typename but it is not used downstream and can be omitted indefinitely *)
   BEGIN
     s.cg.declare_formal (name, type, typename);
   END declare_formal;
@@ -913,7 +912,7 @@ PROCEDURE declare_param (VAR s: State) =
       up_lev := Scan_bool (s);
       freq   := Scan_int (s);
       v      := Scan_varName (s);
-      typename := NoQID; (* TODO typename but it is not used downstream and can be omitted indefinitely *)
+      typename := M3ID.NoID; (* TODO typename but it is not used downstream and can be omitted indefinitely *)
   BEGIN
     AddVar (s, v, s.cg.declare_param (name, size, align, type, m3t,
                                       in_mem, up_lev, freq, typename));

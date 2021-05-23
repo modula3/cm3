@@ -12,7 +12,7 @@ IMPORT M3ID, CG, Variable, Scope, Exceptionz, Value, Error, Marker;
 IMPORT Type, Stmt, StmtRep, TryFinStmt, Token;
 IMPORT Scanner, ESet, Target, M3RT, Tracer, Jmpbufs;
 FROM Scanner IMPORT Match, MatchID, GetToken, Fail, cur;
-FROM M3CG IMPORT QID;
+FROM M3 IMPORT QID;
 
 TYPE
   P = Stmt.T OBJECT

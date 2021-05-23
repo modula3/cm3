@@ -12,7 +12,6 @@ IMPORT M3, M3ID, CG, Expr, Type, TypeRep, Value, Scope, Target;
 IMPORT Formal, UserProc, Token, Ident, CallExpr, Word, Error;
 IMPORT ESet, TipeMap, TipeDesc, ErrType, M3Buf, Variable, OpenArrayType;
 FROM Scanner IMPORT Match, GetToken, cur;
-FROM M3CG IMPORT QID, NoQID;
 
 TYPE
   P = Type.T BRANDED "ProcType.T" OBJECT
@@ -376,16 +375,16 @@ PROCEDURE Result (t: Type.T): Type.T =
     END;
   END Result;
 
-PROCEDURE ResultTypename (t: Type.T): QID =
+PROCEDURE ResultTypename (t: Type.T): M3ID.T =
   VAR p := Reduce (t);
-      qid: QID;
+      id: M3ID.T := M3ID.NoID;
   BEGIN
     Type.Compile (t);
     (* If LargeResult AND standard_structs turned into void, return no type here. *)
     IF p # NIL AND CGResult (p) # CG.Type.Void
-      THEN Type.Typename (p.result, qid);
+      THEN Type.Typename (p.result, id);
     END;
-    RETURN qid;
+    RETURN id;
   END ResultTypename;
 
 PROCEDURE CGResult (t: Type.T): CG.Type =

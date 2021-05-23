@@ -9,7 +9,7 @@
 INTERFACE NamedType;
 
 IMPORT M3ID, Type, Value;
-FROM M3CG IMPORT QID;
+FROM M3 IMPORT QID;
 
 PROCEDURE Parse (): Type.T;
 

@@ -11,7 +11,7 @@ MODULE Tipe;
 IMPORT M3, M3ID, CG, Value, ValueRep, Scope, OpaqueType, WebInfo, TypeRep;
 IMPORT Token, Type, Decl, Scanner, NamedType, RefType, ObjectType, Module;
 FROM Scanner IMPORT GetToken, Fail, Match, MatchID, cur;
-FROM M3CG IMPORT QID;
+FROM M3 IMPORT QID;
 
 TYPE
   T = Value.T BRANDED "Tipe.T" OBJECT 
@@ -96,7 +96,7 @@ PROCEDURE Define (name: TEXT;  type: Type.T;  reserved: BOOLEAN) =
   BEGIN
     t := Create (M3ID.Add (name));
     t.value := type;
-    type.info.name.item := t.name;
+    type.info.name := t.name;
     Scope.Insert (t);
     IF (reserved) THEN Scanner.NoteReserved (t.name, t) END;
   END Define;
@@ -107,7 +107,7 @@ PROCEDURE DefineOpaque (name: TEXT;  super: Type.T): Type.T =
     t := Create (M3ID.Add (name));
     Scope.Insert (t);
     t.value := OpaqueType.New (super, t);
-    t.value.info.name.item := t.name;
+    t.value.info.name := t.name;
     Scanner.NoteReserved (t.name, t);
     RETURN t.value;
   END DefineOpaque;

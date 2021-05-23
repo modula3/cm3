@@ -8,14 +8,14 @@ INTERFACE M3CG_MultiPass;
  * I expect to use #3.
  *)
 
-IMPORT M3CG, Target, M3CG_AssertFalse;
+IMPORT M3CG, Target, M3CG_AssertFalse, M3ID;
 FROM M3CG IMPORT Type, MType, IType, RType, AType, ZType, Sign;
 FROM M3CG IMPORT Name, Alignment, Label;
 FROM M3CG IMPORT Frequency, CallingConvention, CompareOp, ConvertOp, AtomicOp;
 FROM M3CG IMPORT BitSize, ByteSize, BitOffset, ByteOffset, RuntimeError;
 FROM M3CG IMPORT MemoryOrder;
 FROM M3CG_Binary IMPORT Op;
-FROM M3CG IMPORT NoQID, TypeUID;
+FROM M3CG IMPORT TypeUID;
 
 TYPE cg_t = M3CG.T;
 TYPE typeid_t = M3CG.TypeUID;
@@ -55,15 +55,15 @@ TYPE op_tag_t = op_t OBJECT
 END;
 
 (* These create procs. *)
-TYPE import_procedure_t = op_tag_t OBJECT name: Name; n_params: INTEGER; return_type: Type; callingConvention: CallingConvention; return_typeid: TypeUID := 0; return_typename := NoQID; OVERRIDES replay := replay_import_procedure END;
-TYPE declare_procedure_t = op_tag_t OBJECT name: Name; n_params: INTEGER; return_type: Type; level: INTEGER; callingConvention: CallingConvention; exported: BOOLEAN; parent: INTEGER(*proc_t*); return_typeid: TypeUID := 0; return_typename := NoQID; OVERRIDES replay := replay_declare_procedure END;
+TYPE import_procedure_t = op_tag_t OBJECT name: Name; n_params: INTEGER; return_type: Type; callingConvention: CallingConvention; return_typeid: TypeUID := 0; return_typename := M3ID.NoID; OVERRIDES replay := replay_import_procedure END;
+TYPE declare_procedure_t = op_tag_t OBJECT name: Name; n_params: INTEGER; return_type: Type; level: INTEGER; callingConvention: CallingConvention; exported: BOOLEAN; parent: INTEGER(*proc_t*); return_typeid: TypeUID := 0; return_typename := M3ID.NoID; OVERRIDES replay := replay_declare_procedure END;
 
 (* These create vars. *)
 TYPE declare_segment_t = op_tag_t OBJECT name: Name; typeid: typeid_t; is_const: BOOLEAN; OVERRIDES replay := replay_declare_segment END;
 TYPE declare_global_t = op_tag_t OBJECT name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: typeid_t; exported, inited: BOOLEAN; OVERRIDES replay := replay_declare_global END;
 TYPE declare_constant_t = op_tag_t OBJECT name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: typeid_t; exported, inited: BOOLEAN; OVERRIDES replay := replay_declare_constant END;
 TYPE declare_local_t = op_tag_t OBJECT name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: typeid_t; in_memory, up_level: BOOLEAN; frequency: Frequency; OVERRIDES replay := replay_declare_local END;
-TYPE declare_param_t = op_tag_t OBJECT name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: typeid_t; in_memory, up_level: BOOLEAN; frequency: Frequency; typename := NoQID; OVERRIDES replay := replay_declare_param END;
+TYPE declare_param_t = op_tag_t OBJECT name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: typeid_t; in_memory, up_level: BOOLEAN; frequency: Frequency; typename := M3ID.NoID; OVERRIDES replay := replay_declare_param END;
 TYPE declare_temp_t = op_tag_t OBJECT byte_size: ByteSize; alignment: Alignment; type: Type; in_memory: BOOLEAN; OVERRIDES replay := replay_declare_temp END;
 TYPE import_global_t = op_tag_t OBJECT name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: typeid_t; OVERRIDES replay := replay_import_global END;
 
@@ -88,9 +88,9 @@ TYPE declare_field_t = op_t OBJECT name: Name; bit_offset: BitOffset; bit_size: 
 TYPE declare_set_t = op_t OBJECT typeid, domain_typeid: typeid_t; bit_size: BitSize; OVERRIDES replay := replay_declare_set END;
 TYPE declare_subrange_t = op_t OBJECT typeid, domain_typeid: typeid_t; min, max: Target.Int; bit_size: BitSize; OVERRIDES replay := replay_declare_subrange END;
 TYPE declare_pointer_t = op_t OBJECT typeid, target_typeid: typeid_t; brand: TEXT; traced: BOOLEAN; OVERRIDES replay := replay_declare_pointer END;
-TYPE declare_indirect_t = op_t OBJECT typeid, target_typeid: typeid_t; target_typename := NoQID; OVERRIDES replay := replay_declare_indirect END;
-TYPE declare_proctype_t = op_t OBJECT typeid: typeid_t; n_formals: INTEGER; return_typeid: typeid_t; n_raises: INTEGER; callingConvention: CallingConvention; result_typename := NoQID; OVERRIDES replay := replay_declare_proctype END;
-TYPE declare_formal_t = op_t OBJECT name: Name; typeid: typeid_t; typename := NoQID; OVERRIDES replay := replay_declare_formal END;
+TYPE declare_indirect_t = op_t OBJECT typeid, target_typeid: typeid_t; target_typename := M3ID.NoID; OVERRIDES replay := replay_declare_indirect END;
+TYPE declare_proctype_t = op_t OBJECT typeid: typeid_t; n_formals: INTEGER; return_typeid: typeid_t; n_raises: INTEGER; callingConvention: CallingConvention; result_typename := M3ID.NoID; OVERRIDES replay := replay_declare_proctype END;
+TYPE declare_formal_t = op_t OBJECT name: Name; typeid: typeid_t; typename := M3ID.NoID; OVERRIDES replay := replay_declare_formal END;
 TYPE declare_raises_t = op_t OBJECT name: Name; OVERRIDES replay := replay_declare_raises END;
 TYPE declare_object_t = op_t OBJECT typeid, super_typeid: typeid_t; brand: TEXT; traced: BOOLEAN; n_fields, n_methods: INTEGER; fields_bit_size: BitSize; OVERRIDES replay := replay_declare_object END;
 TYPE declare_method_t = op_t OBJECT name: Name; signature: typeid_t; OVERRIDES replay := replay_declare_method END;
