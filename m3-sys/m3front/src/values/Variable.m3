@@ -25,8 +25,7 @@ CONST
 
 REVEAL
   T = Value.T BRANDED "Variable.T" OBJECT
-        type        : Type.T    := NIL;
-        original_type: Type.T   := NIL;
+        type        : Type.T    := NIL; (* only written once, not lowered, to retain NamedType *)
         repType     : Type.T    := NIL;
         initExpr    : Expr.T    := NIL;
         qualName    : TEXT      := NIL;
@@ -155,7 +154,6 @@ PROCEDURE ParseDecl (READONLY att: Decl.Attributes) =
         t.unused   := att.isUnused;
         t.obsolete := att.isObsolete;
         t.type     := type;
-        t.original_type := type;
         t.repType  := NIL;
         t.initExpr := expr;
         t.no_type  := (type = NIL);
@@ -193,7 +191,6 @@ PROCEDURE NewFormal (formal: Value.T;  name: M3ID.T): T =
     Formal.Split (formal, f_info);
     t.formal   := formal;
     t.type     := f_info.type;
-    t.original_type := f_info.type;
     t.origin   := formal.origin;
     t.indirect := (f_info.mode # Formal.Mode.mVALUE);
     t.readonly := (f_info.mode = Formal.Mode.mREADONLY);
@@ -226,9 +223,7 @@ PROCEDURE BindType (t: T; type: Type.T;
 (* This gets called at parse time, so can't do any Check. *)
   BEGIN
     <* ASSERT t.type = NIL *>
-    <* ASSERT t.original_type = NIL *>
     t.type     := type;
-    t.original_type := type;
     t.repType  := NIL;
     t.readonly := readonly;
     t.indirect := indirect;
@@ -258,7 +253,6 @@ PROCEDURE HasClosure (t: T): BOOLEAN =
 (* Externally dispatched-to *)
 PROCEDURE TypeOf (t: T): Type.T =
   BEGIN
-    <* ASSERT (t.type # NIL) = (t.original_type # NIL) *>
     IF (t.type = NIL) THEN
       IF t.initExpr # NIL THEN t.type := Expr.TypeOf (t.initExpr)
       ELSIF  t.formal # NIL THEN t.type := Value.TypeOf (t.formal)
@@ -266,17 +260,9 @@ PROCEDURE TypeOf (t: T): Type.T =
       IF (t.type = NIL)
         THEN Error.ID (t.name, "Variable has no type.");  t.type := ErrType.T;
       END;
-      t.original_type := t.type;
     END;
-    <* ASSERT (t.type # NIL) AND (t.original_type # NIL) *>
     RETURN t.type;
   END TypeOf;
-
-PROCEDURE OriginalTypeOf (t: T): Type.T =
-  BEGIN
-    EVAL TypeOf (t);
-    RETURN t.original_type;
-  END OriginalTypeOf;
 
 (* Externally dispatched-to *)
 PROCEDURE RepTypeOf (t: T): Type.T =
@@ -628,7 +614,7 @@ PROCEDURE Declare (t: T): BOOLEAN =
       (** align := FindAlignment (align, size); **)
       t.cg_align := align;
       t.nextTWACGVar := TsWCGVars;  TsWCGVars := t;
-      Type.Typename (OriginalTypeOf (t), typename);
+      Type.Typename (TypeOf (t), typename);
       t.cg_var := CG.Declare_param (t.name, size, align, mtype, typeUID,
                                     t.need_addr, t.up_level, CG.Maybe, typename);
     END;
