@@ -7,11 +7,7 @@ Module("MySQLRaw")
 Module("MySQL")
 c_source("mysql_wrap")
 
-else
-
-build_standalone()
+Library("m3mysql")
 
 end
-
-Library("m3mysql")
 
