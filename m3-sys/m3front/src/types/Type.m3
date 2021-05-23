@@ -223,6 +223,9 @@ PROCEDURE Strip (t: T): T =
   BEGIN
     IF (u = NIL) THEN RETURN NIL END;
     LOOP
+      (* If there is a cycle, then advancing one at a time
+       * and two at a time will eventually make them equal.
+       *)
       IF StripOne (u) THEN RETURN u END;
       IF StripOne (v) OR StripOne (v) THEN RETURN v END;
       IF (u = v) THEN IllegalRecursion (t); RETURN ErrType.T END;
@@ -247,6 +250,9 @@ PROCEDURE StripPacked (t: T): T =
   BEGIN
     IF (u = NIL) THEN RETURN NIL END;
     LOOP
+      (* If there is a cycle, then advancing one at a time
+       * and two at a time will eventually make them equal.
+       *)
       IF StripPackedOne (u) THEN RETURN u; END;
       IF StripPackedOne (v) OR StripPackedOne (v) THEN RETURN v; END;
       IF (u = v) THEN IllegalRecursion (t); RETURN ErrType.T END;
@@ -272,6 +278,9 @@ PROCEDURE Base (t: T): T =
   BEGIN
     IF (u = NIL) THEN RETURN NIL END;
     LOOP
+      (* If there is a cycle, then advancing one at a time
+       * and two at a time will eventually make them equal.
+       *)
       IF BaseOne (u) THEN RETURN u; END;
       IF BaseOne (v) OR BaseOne (v) THEN RETURN v; END;
       IF (u = v) THEN IllegalRecursion (t); RETURN ErrType.T END;
