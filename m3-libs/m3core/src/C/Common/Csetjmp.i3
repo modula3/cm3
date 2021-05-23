@@ -5,11 +5,6 @@
 UNSAFE INTERFACE Csetjmp;
 FROM Ctypes IMPORT int;
 
-(* temporary for compat, not used; u is for underscore;
- * _longjmp does not save/restore signal mask, saving much time
- *)
-<*EXTERNAL "Csetjmp__ulongjmp" *> PROCEDURE ulongjmp (env: ADDRESS; val: int);
-
 (* Modula-3 exception uses setjmp/longjmp, without signal mask save/restore
  * TODO: Use C++ exceptions or Win32 exceptions or libunwind.
  *)
