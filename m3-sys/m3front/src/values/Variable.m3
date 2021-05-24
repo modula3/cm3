@@ -544,9 +544,9 @@ PROCEDURE Declare (t: T): BOOLEAN =
     typeUID    := Type.GlobalUID (t.type);
     mtype      := Type.CGType (t.type, in_memory := TRUE);
     is_struct  := Type.IsStructured (t.type);
-    externName : TEXT;
-    externM3ID : M3ID.T;
-    typename   : M3ID.T;
+    externName :TEXT := NIL;
+    externM3ID := M3ID.NoID;
+    typename   := M3ID.NoID;
   BEGIN
     Type.Compile (t.type);
 

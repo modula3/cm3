@@ -107,7 +107,7 @@ PROCEDURE EmitDeclaration (formal: Value.T;  types_only, param: BOOLEAN) =
     size     : CG.Size;
     align    : CG.Alignment;
     info     : Type.Info;
-    typename : M3ID.T;
+    typename := M3ID.NoID;
   BEGIN
     IF (types_only) THEN
       Compile (t);
