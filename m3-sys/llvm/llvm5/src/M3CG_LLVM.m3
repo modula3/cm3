@@ -1387,7 +1387,7 @@ PROCEDURE declare_typename (self: U; t: TypeUID; n: Name) =
     END;
   END declare_typename;
 
-PROCEDURE declare_array (self: U; t,index,elt: TypeUID; s: BitSize) =
+PROCEDURE declare_array (self: U; t,index,elt: TypeUID; s: BitSize; <*UNUSED*>element_typename: Name) =
   VAR
     arrayRef : ArrayDebug;
   BEGIN
@@ -1395,7 +1395,7 @@ PROCEDURE declare_array (self: U; t,index,elt: TypeUID; s: BitSize) =
     EVAL self.debugTable.put(t,arrayRef);
   END declare_array;
 
-PROCEDURE declare_open_array (self: U; t, elt: TypeUID; s: BitSize) =
+PROCEDURE declare_open_array (self: U; t, elt: TypeUID; s: BitSize; <*UNUSED*>element_typename: Name) =
   VAR
     arrayRef : OpenArrayDebug;
   BEGIN
@@ -1424,7 +1424,7 @@ PROCEDURE declare_enum_elt (self: U; n: Name) =
     INC(enumRef.index);
   END declare_enum_elt;
 
-PROCEDURE declare_packed (self: U; t: TypeUID; s: BitSize; base: TypeUID) =
+PROCEDURE declare_packed (self: U; t: TypeUID; s: BitSize; base: TypeUID; <*UNUSED*>base_typename: Name) =
   VAR
     packedRef : PackedDebug;
   BEGIN
@@ -1459,7 +1459,7 @@ PROCEDURE Align(s : BitSize) : LONGINT =
     END;
   END Align;
 
-PROCEDURE declare_field (self: U; n: Name; o: BitOffset; s: BitSize; t: TypeUID) =
+PROCEDURE declare_field (self: U; n: Name; o: BitOffset; s: BitSize; t: TypeUID; <*UNUSED*>typename: Name) =
   VAR
     recordRef : RecordDebug;
     debugObj : REFANY;
@@ -1475,7 +1475,7 @@ PROCEDURE declare_field (self: U; n: Name; o: BitOffset; s: BitSize; t: TypeUID)
     INC(recordRef.fieldIndex);
   END declare_field;
 
-PROCEDURE declare_set (self: U; t,domain: TypeUID;  s: BitSize) =
+PROCEDURE declare_set (self: U; t,domain: TypeUID;  s: BitSize; <*UNUSED*>domain_typename: Name) =
   VAR
     setRef : SetDebug;
     align : LONGINT;
@@ -1486,7 +1486,7 @@ PROCEDURE declare_set (self: U; t,domain: TypeUID;  s: BitSize) =
   END declare_set;
 
 PROCEDURE declare_subrange 
-  (self: U; t,domain: TypeUID; READONLY min, max: Target.Int(*=Tint.Int*); s: BitSize) 
+  (self: U; t,domain: TypeUID; READONLY min, max: Target.Int(*=Tint.Int*); s: BitSize; <*UNUSED*>domain_typename: Name)
 = 
   VAR
     LDebug : SubrangeDebug;
@@ -1506,7 +1506,7 @@ PROCEDURE declare_subrange
             nameText := nameText); 
   END declare_subrange;
 
-PROCEDURE declare_pointer (self: U; t,target: TypeUID;  brand: TEXT; traced: BOOLEAN) =
+PROCEDURE declare_pointer (self: U; t,target: TypeUID;  brand: TEXT; traced: BOOLEAN; <*UNUSED*>target_typename: Name) =
   VAR
     ptrRef : PointerDebug;
   BEGIN
@@ -1558,7 +1558,7 @@ PROCEDURE declare_raises (self: U; n: Name) =
     INC(procRef.raisesIdx);
   END declare_raises;
 
-PROCEDURE declare_object (self: U; t, super: TypeUID; brand: TEXT;  traced: BOOLEAN; n_fields, n_methods: INTEGER; field_size: BitSize) =
+PROCEDURE declare_object (self: U; t, super: TypeUID; brand: TEXT;  traced: BOOLEAN; n_fields, n_methods: INTEGER; field_size: BitSize; <*UNUSED*>super_typename: Name) =
   VAR
     objectRef,parentRef : ObjectDebug;
     superObj : REFANY;
@@ -1659,7 +1659,7 @@ PROCEDURE set_runtime_proc (self: U;  n: Name;  p: Proc) =
 
 (*------------------------------------------------- variable declarations ---*)
 
-PROCEDURE import_global (self: U;  n: Name;  s: ByteSize;  a: Alignment; t: Type;  m3t: TypeUID): Var =
+PROCEDURE import_global (self: U;  n: Name;  s: ByteSize;  a: Alignment; t: Type;  m3t: TypeUID; <*UNUSED*>typename: Name): Var =
   VAR
     v : LvVar := NewVar(self,n,s,a,t,FALSE,m3t,TRUE,FALSE,FALSE,FALSE,M3CG.Maybe,VarType.Global);
     globName : TEXT;
@@ -1720,7 +1720,7 @@ PROCEDURE bind_segment (<*UNUSED*>self: U;  seg: Var;  s: ByteSize;  a: Alignmen
     v.inited := inited;     (* not used *)
   END bind_segment;
 
-PROCEDURE declare_global (self: U;  n: Name;  s: ByteSize;  a: Alignment; t: Type;  m3t: TypeUID;  exported, inited: BOOLEAN): Var =
+PROCEDURE declare_global (self: U;  n: Name;  s: ByteSize;  a: Alignment; t: Type;  m3t: TypeUID;  exported, inited: BOOLEAN; <*UNUSED*>typename: Name): Var =
   VAR
     v : LvVar := NewVar(self,n,s,a,t,FALSE,m3t,TRUE,FALSE,exported,inited,M3CG.Maybe,VarType.Global);
     globName : TEXT;
@@ -1752,7 +1752,7 @@ PROCEDURE declare_global (self: U;  n: Name;  s: ByteSize;  a: Alignment; t: Typ
     RETURN v;
   END declare_global;
 
-<*NOWARN*> PROCEDURE declare_constant (self: U;  n: Name;  s: ByteSize;  a: Alignment; t: Type;  m3t: TypeUID;  exported, inited: BOOLEAN): Var =
+<*NOWARN*> PROCEDURE declare_constant (self: U;  n: Name;  s: ByteSize;  a: Alignment; t: Type;  m3t: TypeUID;  exported, inited: BOOLEAN; <*UNUSED*>typename: Name): Var =
   BEGIN
   (* fixme ever generated ??*)
   <* ASSERT FALSE *>
@@ -1804,7 +1804,7 @@ PROCEDURE AllocVarInEntryBlock(self : U; v : LvVar) =
   
 PROCEDURE declare_local 
   (self: U;  n: Name;  s: ByteSize;  a: Alignment; t: Type;  m3t: TypeUID; 
-    in_memory, up_level: BOOLEAN; f: Frequency): Var =
+    in_memory, up_level: BOOLEAN; f: Frequency; <*UNUSED*>typename: Name): Var =
   VAR
     v : LvVar := NewVar
           (self,n,s,a,t,isConst:=FALSE,m3t:=m3t,in_memory:=in_memory,
@@ -1887,7 +1887,7 @@ PROCEDURE declare_param (self: U;  n: Name;  s: ByteSize;  a: Alignment; t: Type
     RETURN v;
   END declare_param;
 
-PROCEDURE declare_temp (self: U; s: ByteSize; a: Alignment; t: Type; in_memory: BOOLEAN): Var =
+PROCEDURE declare_temp (self: U; s: ByteSize; a: Alignment; t: Type; in_memory: BOOLEAN; <*UNUSED*>typename: Name): Var =
   VAR
     v : LvVar := NewVar(self,M3ID.NoID,s,a,t,FALSE,0,in_memory,FALSE,FALSE,FALSE,M3CG.Maybe,VarType.Temp);
   BEGIN

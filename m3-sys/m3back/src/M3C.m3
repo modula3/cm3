@@ -584,6 +584,14 @@ BEGIN
     RETURN id;
 END ReplaceName;
 
+PROCEDURE TypeTextPointer(typetext: TEXT): TEXT=
+BEGIN
+  IF typetext # NIL THEN
+    RETURN typetext & "*";
+  END;
+  RETURN NIL;
+END TypeTextPointer;
+
 PROCEDURE AnonymousCounter(self: T): INTEGER =
 BEGIN
     INC(self.anonymousCounter, 1 + ORD(self.anonymousCounter = 385)); (* avoid "i386" -- really, it happened *)
@@ -680,13 +688,12 @@ BEGIN
 
   IF type_text = NIL THEN
     IF type # NIL THEN
-      type_text := type.text & " /* StrongType1 */ ";
-      IF cgtype = CGType.Addr AND NOT PassStructsByValue
-          AND (type.isRecord() OR type.isArray()) THEN (* TODO remove this *)
-        type_text := type_text & " * " & " /* StrongType2 */ ";
+      type_text := type.text & " /* TypeText1 */ ";
+      IF cgtype = CGType.Addr AND NOT PassStructsByValue AND (type.isRecord() OR type.isArray()) THEN (* TODO remove this *)
+        type_text := type_text & " * " & " /* TypeText2 */ ";
       END;
     ELSE
-     type_text := cgtypeToText[cgtype] & " /* StrongType3 */ ";
+      type_text := cgtypeToText[cgtype] & " /* TypeText3 */ ";
     END;
   END;
 
@@ -1444,6 +1451,7 @@ BEGIN
         END;
     END;
     type.base_text := type.text;
+
     IF type.typeid # -1 AND type.typeid # 0 THEN
         EVAL self.typeidToType.put(type.typeid, type);
     END;
@@ -2470,31 +2478,45 @@ END addressType_define;
 
 PROCEDURE DeclareBuiltinTypes(self: T) =
 VAR widechar_target_type: Target.CGType; 
-VAR widechar_last: INTEGER; 
+    widechar_last := 0;
+    type: Type_t := NIL;
 BEGIN
 
     (* Builtin/base types start out as state := Type_State.CanBeDefined or Defined  *)
 
     ifndef (self, "INTEGER"); (* m3core.h interop *)
-    self.Type_Init(NEW(Integer_t, state := Type_State.CanBeDefined, cgtype := Target.Integer.cg_type, typeid := UID_INTEGER, text := "INTEGER"));
+    type := NEW(Integer_t, state := Type_State.CanBeDefined, cgtype := Target.Integer.cg_type, typeid := UID_INTEGER, text := "INTEGER");
+    self.Type_Init(type);
     endif (self);
 
     ifndef (self, "WORD_T"); (* m3core.h interop *)
-    self.Type_Init(NEW(Integer_t, state := Type_State.CanBeDefined, cgtype := Target.Word.cg_type, typeid := UID_WORD, text := "WORD_T"));
+    type := NEW(Integer_t, state := Type_State.CanBeDefined, cgtype := Target.Word.cg_type, typeid := UID_WORD, text := "WORD_T");
+    self.Type_Init(type);
     endif (self);
 
     print(self, "typedef WORD_T CARDINAL;\n");
 
-    self.Type_Init(NEW(Integer_t, state := Type_State.Defined, cgtype := Target.Int64.cg_type, typeid := UID_LONGINT, text := "INT64"));
-    self.Type_Init(NEW(Integer_t, state := Type_State.Defined, cgtype := Target.Word64.cg_type, typeid := UID_LONGWORD, text := "UINT64"));
+    type := NEW(Integer_t, state := Type_State.Defined, cgtype := Target.Int64.cg_type, typeid := UID_LONGINT, text := "INT64");
+    self.Type_Init(type);
 
-    self.Type_Init(NEW(Float_t, state := Type_State.CanBeDefined, cgtype := Target.Real.cg_type, typeid := UID_REEL, text := "REAL"));
-    self.Type_Init(NEW(Float_t, state := Type_State.CanBeDefined, cgtype := Target.Longreal.cg_type, typeid := UID_LREEL, text := "LONGREAL"));
-    self.Type_Init(NEW(Float_t, state := Type_State.CanBeDefined, cgtype := Target.Extended.cg_type, typeid := UID_XREEL, text := "EXTENDED"));
+    type := NEW(Integer_t, state := Type_State.Defined, cgtype := Target.Word64.cg_type, typeid := UID_LONGWORD, text := "UINT64");
+    self.Type_Init(type);
+
+    type := NEW(Float_t, state := Type_State.CanBeDefined, cgtype := Target.Real.cg_type, typeid := UID_REEL, text := "REAL");
+    self.Type_Init(type);
+
+    type := NEW(Float_t, state := Type_State.CanBeDefined, cgtype := Target.Longreal.cg_type, typeid := UID_LREEL, text := "LONGREAL");
+    self.Type_Init(type);
+
+    type := NEW(Float_t, state := Type_State.CanBeDefined, cgtype := Target.Extended.cg_type, typeid := UID_XREEL, text := "EXTENDED");
+    self.Type_Init(type);
 
 (* Enum_t? *)
-    self.Type_Init(NEW(Integer_t, state := Type_State.CanBeDefined, cgtype := Target.Word8.cg_type, typeid := UID_BOOLEAN, (* max := IntToTarget(self, 1), *) text := "BOOLEAN"));
-    self.Type_Init(NEW(Integer_t, state := Type_State.CanBeDefined, cgtype := Target.Word8.cg_type, typeid := UID_CHAR, (* max := IntToTarget(self, 16_FF), *) text := "UCHAR"));
+    type := NEW(Integer_t, state := Type_State.CanBeDefined, cgtype := Target.Word8.cg_type, typeid := UID_BOOLEAN, (* max := IntToTarget(self, 1), *) text := "BOOLEAN");
+    self.Type_Init(type);
+
+    type := NEW(Integer_t, state := Type_State.CanBeDefined, cgtype := Target.Word8.cg_type, typeid := UID_CHAR, (* max := IntToTarget(self, 16_FF), *) text := "UCHAR");
+    self.Type_Init(type);
 
     widechar_target_type := Target.Word16.cg_type; 
     widechar_last := 16_FFFF; (* The defaults. *) 
@@ -2513,8 +2535,9 @@ BEGIN
     END;
 
 (* Enum_t? *)
-    self.Type_Init(NEW(Integer_t, state := Type_State.CanBeDefined, cgtype := widechar_target_type,
-                       typeid := UID_WIDECHAR, (* max := IntToTarget(self, widechar_last), *) text := "WIDECHAR"));
+    type := NEW(Integer_t, state := Type_State.CanBeDefined, cgtype := widechar_target_type,
+                typeid := UID_WIDECHAR, (* max := IntToTarget(self, widechar_last), *) text := "WIDECHAR");
+    self.Type_Init(type);
 
     (* self.declareTypes.declare_subrange(UID_RANGE_0_31, UID_INTEGER, TInt.Zero, IntToTarget(self, 31), Target.Integer.size); *)
     (* self.declareTypes.declare_subrange(UID_RANGE_0_63, UID_INTEGER, TInt.Zero, IntToTarget(self, 63), Target.Integer.size); *)
@@ -2543,7 +2566,8 @@ BEGIN
     BEGIN
         FOR i := FIRST(addressTypes) TO LAST(addressTypes) DO
             WITH a = addressTypes[i] DO
-                self.Type_Init(NEW(AddressType_t, state := Type_State.CanBeDefined, cgtype := Target.Address.cg_type, typeid := a.typeid, text := a.text));
+                type := NEW(AddressType_t, state := Type_State.CanBeDefined, cgtype := Target.Address.cg_type, typeid := a.typeid, text := a.text);
+                self.Type_Init(type);
             END;
         END;
     END;
@@ -2719,7 +2743,7 @@ BEGIN
     RETURN "T" & UIntToHex(Word.And(16_FFFFFFFF, x));
 END TypeIDToText;
 
-PROCEDURE declare_array(self: DeclareTypes_t; typeid, index_typeid, element_typeid: TypeUID; bit_size: BitSize) =
+PROCEDURE declare_array(self: DeclareTypes_t; typeid, index_typeid, element_typeid: TypeUID; bit_size: BitSize; <*UNUSED*>element_typename: Name) =
 VAR x := self.self;
 BEGIN
     IF DebugVerbose(x) THEN
@@ -2730,15 +2754,11 @@ BEGIN
     ELSE
         x.comment("declare_array");
     END;
-    x.Type_Init(NEW(FixedArray_t,
-        typeid := typeid,
-        index_typeid := index_typeid,
-        element_typeid := element_typeid,
-        bit_size := bit_size
-        ));
+
+    x.Type_Init(NEW(FixedArray_t, typeid := typeid, index_typeid := index_typeid, element_typeid := element_typeid, bit_size := bit_size));
   END declare_array;
 
-PROCEDURE declare_open_array(self: DeclareTypes_t; typeid, element_typeid: TypeUID; bit_size: BitSize) =
+PROCEDURE declare_open_array(self: DeclareTypes_t; typeid, element_typeid: TypeUID; bit_size: BitSize; <*UNUSED*>element_typename: Name) =
 VAR x := self.self;
 BEGIN
     IF TRUE OR DebugVerbose(x) THEN
@@ -2752,8 +2772,7 @@ BEGIN
     x.Type_Init(NEW(OpenArray_t,
         typeid := typeid,
         element_typeid := element_typeid,
-        bit_size := bit_size
-        ));
+        bit_size := bit_size));
 (*
     WITH element_type = TypeidToType_Get(element_typeid) DO
         IF element_type = NIL THEN
@@ -2844,7 +2863,7 @@ BEGIN
     self.enum_value := enum_value;
   END declare_enum_elt;
 
-PROCEDURE declare_packed(self: DeclareTypes_t; typeid: TypeUID; bit_size: BitSize; base_typeid: TypeUID) =
+PROCEDURE declare_packed(self: DeclareTypes_t; typeid: TypeUID; bit_size: BitSize; base_typeid: TypeUID; <*UNUSED*>base_typename: Name) =
 VAR x := self.self;
 BEGIN
     IF DebugVerbose(x) THEN
@@ -2969,7 +2988,7 @@ BEGIN
     END;
 END declare_record;
 
-PROCEDURE declare_field(self: DeclareTypes_t; name: Name; bit_offset: BitOffset; bit_size: BitSize; typeid: TypeUID) =
+PROCEDURE declare_field(self: DeclareTypes_t; name: Name; bit_offset: BitOffset; bit_size: BitSize; typeid: TypeUID; <*UNUSED*>typename: Name) =
 VAR field: Field_t := NIL;
     previous_field := self.previous_field;
     x := self.self;
@@ -3008,7 +3027,7 @@ BEGIN
     END;
 END declare_field;
 
-PROCEDURE declare_set(self: DeclareTypes_t; typeid, domain_type: TypeUID; bit_size: BitSize) =
+PROCEDURE declare_set(self: DeclareTypes_t; typeid, domain_type: TypeUID; bit_size: BitSize; <*UNUSED*>domain_typename: Name) =
 VAR x := self.self;
     integers := ARRAY [0..3] OF Target.Int_type { Target.Word8,
                                                   Target.Word16,
@@ -3060,7 +3079,7 @@ BEGIN
     RETURN SignedAndBitsToCGType[SubrangeIsSigned(min, max)][bit_size];
 END SubrangeCGType;
 
-PROCEDURE declare_subrange(self: DeclareTypes_t; typeid, domain_typeid: TypeUID; READONLY min, max: Target.Int; bit_size: BitSize) =
+PROCEDURE declare_subrange(self: DeclareTypes_t; typeid, domain_typeid: TypeUID; READONLY min, max: Target.Int; bit_size: BitSize; <*UNUSED*>domain_typename: Name) =
 VAR x := self.self;
 BEGIN
     IF DebugVerbose(x) THEN
@@ -3097,39 +3116,48 @@ BEGIN
          * We could further workaround by deferring the typedef until use, as in this
          * case, neither type is used. Just defined.
          *)
-        (*type_text_tail :=*) "_" & IntToDec(bit_size));
+        (*type_text_tail*) "_" & IntToDec(bit_size));
 END declare_subrange;
 
-PROCEDURE declare_pointer(self: DeclareTypes_t; typeid, target: TypeUID; brand: TEXT; traced: BOOLEAN) =
-VAR x := self.self;
+PROCEDURE declare_pointer_no_trace(x: T; typeid, target: TypeUID; target_typename: TEXT; brand: TEXT := NIL; traced: BOOLEAN := FALSE) =
 BEGIN
-    IF typeid = target OR DebugVerbose(x) THEN
-        x.comment("declare_pointer typeid:" & TypeIDToText(typeid)
-            & " target:" & TypeIDToText(target)
-            & " brand:" & TextOrNIL(brand)
-            & " traced:" & BoolToText[traced]);
-    ELSE
-        x.comment("declare_pointer");
-    END;
     x.Type_Init(
         NEW(Pointer_t,
             typeid := typeid,
             points_to_typeid := target,
             brand := brand,
+            text := TypeTextPointer(target_typename),
             traced := traced));
+END declare_pointer_no_trace;
+
+PROCEDURE declare_pointer(self: DeclareTypes_t; typeid, target: TypeUID; brand: TEXT; traced: BOOLEAN; target_typename: Name) =
+VAR x := self.self;
+    target_typename_text := NameT(target_typename);
+BEGIN
+    IF typeid = target OR DebugVerbose(x) THEN
+        x.comment("declare_pointer typeid:" & TypeIDToText(typeid)
+            & " target:" & TypeIDToText(target)
+            & " brand:" & TextOrNIL(brand)
+            & " traced:" & BoolToText[traced]
+            & " target_typename:" & TextOrNil(target_typename_text));
+    ELSE
+        x.comment("declare_pointer");
+    END;
+    declare_pointer_no_trace(x, typeid, target, target_typename_text, brand, traced);
 END declare_pointer;
 
 PROCEDURE declare_indirect(self: DeclareTypes_t; typeid, target: TypeUID; target_typename: M3ID.T) =
 VAR x := self.self;
+    target_typename_text := NameT(target_typename);
 BEGIN
-    IF DebugVerbose(x) THEN
+    IF typeid = target OR DebugVerbose(x) THEN
         x.comment("declare_indirect typeid:", TypeIDToText(typeid),
             " target:" & TypeIDToText(target),
             " target_typename:" & TextOrNil(NameT(target_typename)));
     ELSE
         x.comment("declare_indirect");
     END;
-    self.declare_pointer(typeid, target, NIL, FALSE);
+    declare_pointer_no_trace(x, typeid, target, target_typename_text);
 END declare_indirect;
 
 PROCEDURE CallingConventionToText(callingConvention: CallingConvention): TEXT =
@@ -3194,7 +3222,7 @@ BEGIN
     (* SuppressLineDirective(self, -1, "declare_raises"); *)
 END declare_raises;
 
-PROCEDURE declare_object(self: DeclareTypes_t; typeid, super: TypeUID; brand: TEXT; traced: BOOLEAN; field_count, method_count: INTEGER; field_size: BitSize) =
+PROCEDURE declare_object(self: DeclareTypes_t; typeid, super: TypeUID; brand: TEXT; traced: BOOLEAN; field_count, method_count: INTEGER; field_size: BitSize; <*UNUSED*>super_typename: Name) =
 VAR record: Record_t := NIL;
     x := self.self;
 BEGIN
@@ -3333,7 +3361,7 @@ END set_runtime_proc;
 
 (*------------------------------------------------- variable declarations ---*)
 
-PROCEDURE import_global(self: T; name: Name; byte_size: ByteSize; alignment: Alignment; cgtype: CGType; typeid: TypeUID): M3CG.Var =
+PROCEDURE import_global(self: T; name: Name; byte_size: ByteSize; alignment: Alignment; cgtype: CGType; typeid: TypeUID; <*UNUSED*>typename: Name): M3CG.Var =
 VAR var := NEW(Var_t,
         self := self,
         cgtype := cgtype,
@@ -3439,7 +3467,8 @@ PROCEDURE declare_global(
     cgtype: CGType;
     typeid: TypeUID;
     exported: BOOLEAN;
-    inited: BOOLEAN): M3CG.Var =
+    inited: BOOLEAN;
+    typename: Name): M3CG.Var =
 BEGIN
     IF DebugVerbose(self) THEN
         self.comment("declare_global name:" & TextOrNIL(NameT(name))
@@ -3451,7 +3480,7 @@ BEGIN
     ELSE
         self.comment("declare_global");
     END;
-    RETURN DeclareGlobal(self, name, byte_size, alignment, cgtype, typeid, exported, inited, FALSE);
+    RETURN DeclareGlobal(self, name, byte_size, alignment, cgtype, typeid, exported, inited, FALSE, typename);
 END declare_global;
 
 PROCEDURE Segments_declare_global(
@@ -3462,9 +3491,10 @@ PROCEDURE Segments_declare_global(
     cgtype: CGType;
     typeid: TypeUID;
     exported: BOOLEAN;
-    inited: BOOLEAN): M3CG.Var =
+    inited: BOOLEAN;
+    typename: Name): M3CG.Var =
 BEGIN
-    RETURN declare_global(self.self, name, byte_size, alignment, cgtype, typeid, exported, inited);
+    RETURN declare_global(self.self, name, byte_size, alignment, cgtype, typeid, exported, inited, typename);
 END Segments_declare_global;
 
 PROCEDURE declare_constant(
@@ -3475,7 +3505,8 @@ PROCEDURE declare_constant(
     cgtype: CGType;
     typeid: TypeUID;
     exported: BOOLEAN;
-    inited: BOOLEAN): M3CG.Var =
+    inited: BOOLEAN;
+    typename: Name): M3CG.Var =
 BEGIN
     IF DebugVerbose(self) THEN
         self.comment("declare_global name:" & NameT(name)
@@ -3483,12 +3514,11 @@ BEGIN
             & " cgtype:" & cgtypeToText[cgtype]
             & " typeid:" & TypeIDToText(typeid)
             & " exported:" & BoolToText[exported]
-            & " inited:" & BoolToText[inited]
-            );
+            & " inited:" & BoolToText[inited]);
     ELSE
         self.comment("declare_constant");
     END;
-    RETURN DeclareGlobal(self, name, byte_size, alignment, cgtype, typeid, exported, inited, TRUE);
+    RETURN DeclareGlobal(self, name, byte_size, alignment, cgtype, typeid, exported, inited, TRUE, typename);
 END declare_constant;
 
 PROCEDURE Segments_declare_constant(
@@ -3499,9 +3529,10 @@ PROCEDURE Segments_declare_constant(
     cgtype: CGType;
     typeid: TypeUID;
     exported: BOOLEAN;
-    inited: BOOLEAN): M3CG.Var =
+    inited: BOOLEAN;
+    typename: Name): M3CG.Var =
 BEGIN
-    RETURN declare_constant(self.self, name, byte_size, alignment, cgtype, typeid, exported, inited);
+    RETURN declare_constant(self.self, name, byte_size, alignment, cgtype, typeid, exported, inited, typename);
 END Segments_declare_constant;
 
 PROCEDURE DeclareGlobal(
@@ -3513,7 +3544,8 @@ PROCEDURE DeclareGlobal(
     typeid: TypeUID;
     exported: BOOLEAN;
     <*UNUSED*>inited: BOOLEAN;
-    const: BOOLEAN): M3CG.Var =
+    const: BOOLEAN;
+    <*UNUSED*>typename: Name): M3CG.Var =
 CONST DeclTag = ARRAY BOOLEAN OF TEXT { "declare_global", "declare_constant" };
 VAR var := NEW(Var_t,
         self := self,
@@ -4270,9 +4302,10 @@ PROCEDURE Locals_declare_local(
     typeid: TypeUID;
     <*UNUSED*>in_memory: BOOLEAN;
     up_level: BOOLEAN;
-    <*UNUSED*>frequency: Frequency): M3CG.Var =
+    <*UNUSED*>frequency: Frequency;
+    typename: Name): M3CG.Var =
 BEGIN
-    RETURN declare_local(self.self, name, byte_size, alignment, type, typeid, up_level);
+    RETURN declare_local(self.self, name, byte_size, alignment, type, typeid, up_level, typename);
 END Locals_declare_local;
 
 TYPE AllocateTemps_t = Locals_t;
@@ -4371,9 +4404,10 @@ PROCEDURE Imports_import_global(
     byte_size: ByteSize;
     alignment: Alignment;
     type: CGType;
-    typeid: TypeUID): M3CG.Var =
+    typeid: TypeUID;
+    typename: Name): M3CG.Var =
 BEGIN
-    RETURN import_global(self.self, name, byte_size, alignment, type, typeid);
+    RETURN import_global(self.self, name, byte_size, alignment, type, typeid, typename);
 END Imports_import_global;
 
 TYPE GetStructSizes_t = M3CG_DoNothing.T OBJECT
@@ -4473,7 +4507,8 @@ PROCEDURE GetStructSizes_declare_temp(
     byte_size: ByteSize;
     alignment: Alignment;
     type: CGType;
-    <*UNUSED*>in_memory:BOOLEAN): M3CG.Var =
+    <*UNUSED*>in_memory:BOOLEAN;
+    <*UNUSED*>typename: Name): M3CG.Var =
 BEGIN
     RETURN self.Declare(type, byte_size, alignment);
 END GetStructSizes_declare_temp;
@@ -4486,7 +4521,8 @@ PROCEDURE GetStructSizes_declare_global(
     type: CGType;
     <*UNUSED*>typeid: TypeUID;
     <*UNUSED*>exported: BOOLEAN;
-    <*UNUSED*>inited: BOOLEAN): M3CG.Var =
+    <*UNUSED*>inited: BOOLEAN;
+    <*UNUSED*>typename: Name): M3CG.Var =
 BEGIN
     RETURN self.Declare(type, byte_size, alignment);
 END GetStructSizes_declare_global;
@@ -4497,7 +4533,8 @@ PROCEDURE GetStructSizes_import_global(
     byte_size: ByteSize;
     alignment: Alignment;
     type: CGType;
-    <*UNUSED*>typeid: TypeUID): M3CG.Var =
+    <*UNUSED*>typeid: TypeUID;
+    <*UNUSED*>typename: Name): M3CG.Var =
 BEGIN
     RETURN self.Declare(type, byte_size, alignment);
 END GetStructSizes_import_global;
@@ -4510,7 +4547,8 @@ PROCEDURE GetStructSizes_declare_constant(
     type: CGType;
     <*UNUSED*>typeid: TypeUID;
     <*UNUSED*>exported: BOOLEAN;
-    <*UNUSED*>inited: BOOLEAN): M3CG.Var =
+    <*UNUSED*>inited: BOOLEAN;
+    <*UNUSED*>typename: Name): M3CG.Var =
 BEGIN
     RETURN self.Declare(type, byte_size, alignment);
 END GetStructSizes_declare_constant;
@@ -4524,7 +4562,8 @@ PROCEDURE GetStructSizes_declare_local(
     <*UNUSED*>typeid: TypeUID;
     <*UNUSED*>in_memory: BOOLEAN;
     <*UNUSED*>up_level: BOOLEAN;
-    <*UNUSED*>frequency: Frequency): M3CG.Var =
+    <*UNUSED*>frequency: Frequency;
+    <*UNUSED*>typename: Name): M3CG.Var =
 BEGIN
     RETURN self.Declare(type, byte_size, alignment);
 END GetStructSizes_declare_local;
@@ -4616,7 +4655,8 @@ PROCEDURE declare_local(
     <*UNUSED*>alignment: Alignment;
     cgtype: CGType;
     typeid: TypeUID;
-    up_level: BOOLEAN): Var_t =
+    up_level: BOOLEAN;
+    <*UNUSED*>typename := M3ID.NoID): Var_t =
 VAR var := NEW(Var_t,
         self := self,
         cgtype := cgtype,
@@ -4844,7 +4884,8 @@ PROCEDURE Locals_declare_temp(
     byte_size: ByteSize;
     alignment: Alignment;
     type: CGType;
-    <*UNUSED*>in_memory:BOOLEAN): M3CG.Var =
+    <*UNUSED*>in_memory:BOOLEAN;
+    <*UNUSED*>typename: Name): M3CG.Var =
 BEGIN
     RETURN internal_declare_temp(self.self, byte_size, alignment, type);
 END Locals_declare_temp;

@@ -166,7 +166,7 @@ AssertFalse();
 RETURN 0;
 END next_label;
 
-<*NOWARN*>PROCEDURE import_global(self: T; name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: TypeUID): Var =
+<*NOWARN*>PROCEDURE import_global(self: T; name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: TypeUID; typename: Name): Var =
 BEGIN
 AssertFalse();
 RETURN NIL;
@@ -178,19 +178,19 @@ AssertFalse();
 RETURN NIL;
 END declare_segment;
 
-<*NOWARN*>PROCEDURE declare_global(self: T; name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: TypeUID; exported, inited: BOOLEAN): Var =
+<*NOWARN*>PROCEDURE declare_global(self: T; name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: TypeUID; exported, inited: BOOLEAN; typename: Name): Var =
 BEGIN
 AssertFalse();
 RETURN NIL;
 END declare_global;
 
-<*NOWARN*>PROCEDURE declare_constant(self: T; name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: TypeUID; exported, inited: BOOLEAN): Var =
+<*NOWARN*>PROCEDURE declare_constant(self: T; name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: TypeUID; exported, inited: BOOLEAN; typename: Name): Var =
 BEGIN
 AssertFalse();
 RETURN NIL;
 END declare_constant;
 
-<*NOWARN*>PROCEDURE declare_local(self: T; name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: TypeUID; in_memory, up_level: BOOLEAN; frequency: Frequency): Var =
+<*NOWARN*>PROCEDURE declare_local(self: T; name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: TypeUID; in_memory, up_level: BOOLEAN; frequency: Frequency; typename: Name): Var =
 BEGIN
 AssertFalse();
 RETURN NIL;
@@ -202,7 +202,7 @@ AssertFalse();
 RETURN NIL;
 END declare_param;
 
-<*NOWARN*>PROCEDURE declare_temp(self: T; byte_size: ByteSize; alignment: Alignment; type: Type; in_memory: BOOLEAN): Var =
+<*NOWARN*>PROCEDURE declare_temp(self: T; byte_size: ByteSize; alignment: Alignment; type: Type; in_memory: BOOLEAN; typename: Name): Var =
 BEGIN
 AssertFalse();
 RETURN NIL;
@@ -228,21 +228,21 @@ END declare_procedure;
 <*NOWARN*>PROCEDURE set_source_file(self: T; file: TEXT) = BEGIN AssertFalse(); END set_source_file;
 <*NOWARN*>PROCEDURE set_source_line(self: T; line: INTEGER) = BEGIN AssertFalse(); END set_source_line;
 <*NOWARN*>PROCEDURE declare_typename(self: T; typeid: TypeUID; name: Name) = BEGIN AssertFalse(); END declare_typename;
-<*NOWARN*>PROCEDURE declare_array(self: T; typeid, index_typeid, element_typeid: TypeUID; bit_size: BitSize) = BEGIN AssertFalse(); END declare_array;
-<*NOWARN*>PROCEDURE declare_open_array(self: T; typeid, element_typeid: TypeUID; bit_size: BitSize) = BEGIN AssertFalse(); END declare_open_array;
+<*NOWARN*>PROCEDURE declare_array(self: T; typeid, index_typeid, element_typeid: TypeUID; bit_size: BitSize; element_typename: Name) = BEGIN AssertFalse(); END declare_array;
+<*NOWARN*>PROCEDURE declare_open_array(self: T; typeid, element_typeid: TypeUID; bit_size: BitSize; element_typename: Name) = BEGIN AssertFalse(); END declare_open_array;
 <*NOWARN*>PROCEDURE declare_enum(self: T; typeid: TypeUID; n_elts: INTEGER; bit_size: BitSize) = BEGIN AssertFalse(); END declare_enum;
 <*NOWARN*>PROCEDURE declare_enum_elt(self: T; name: Name) = BEGIN AssertFalse(); END declare_enum_elt;
-<*NOWARN*>PROCEDURE declare_packed(self: T; typeid: TypeUID; bit_size: BitSize; base: TypeUID) = BEGIN AssertFalse(); END declare_packed;
+<*NOWARN*>PROCEDURE declare_packed(self: T; typeid: TypeUID; bit_size: BitSize; base: TypeUID; base_typename: Name) = BEGIN AssertFalse(); END declare_packed;
 <*NOWARN*>PROCEDURE declare_record(self: T; typeid: TypeUID; bit_size: BitSize; n_fields: INTEGER) = BEGIN AssertFalse(); END declare_record;
-<*NOWARN*>PROCEDURE declare_field(self: T; name: Name; bit_offset: BitOffset; bit_size: BitSize; typeid: TypeUID) = BEGIN AssertFalse(); END declare_field;
-<*NOWARN*>PROCEDURE declare_set(self: T; t, domain: TypeUID; bit_size: BitSize) = BEGIN AssertFalse(); END declare_set;
-<*NOWARN*>PROCEDURE declare_subrange(self: T; typeid, domain_typeid: TypeUID; READONLY min, max: Target.Int; bit_size: BitSize) = BEGIN AssertFalse(); END declare_subrange;
-<*NOWARN*>PROCEDURE declare_pointer(self: T; typeid, target_typeid: TypeUID; brand: TEXT; traced: BOOLEAN) = BEGIN AssertFalse(); END declare_pointer;
+<*NOWARN*>PROCEDURE declare_field(self: T; name: Name; bit_offset: BitOffset; bit_size: BitSize; typeid: TypeUID; typename: Name) = BEGIN AssertFalse(); END declare_field;
+<*NOWARN*>PROCEDURE declare_set(self: T; t, domain: TypeUID; bit_size: BitSize; domain_typename: Name) = BEGIN AssertFalse(); END declare_set;
+<*NOWARN*>PROCEDURE declare_subrange(self: T; typeid, domain_typeid: TypeUID; READONLY min, max: Target.Int; bit_size: BitSize; domain_typename: Name) = BEGIN AssertFalse(); END declare_subrange;
+<*NOWARN*>PROCEDURE declare_pointer(self: T; typeid, target_typeid: TypeUID; brand: TEXT; traced: BOOLEAN; target_typename: Name) = BEGIN AssertFalse(); END declare_pointer;
 <*NOWARN*>PROCEDURE declare_indirect(self: T; typeid, target_typeid: TypeUID; target_typename: Name) = BEGIN AssertFalse(); END declare_indirect;
 <*NOWARN*>PROCEDURE declare_proctype(self: T; typeid: TypeUID; n_formals: INTEGER; result: TypeUID; n_raises: INTEGER; callingConvention: CallingConvention; result_typename: Name) = BEGIN AssertFalse(); END declare_proctype;
 <*NOWARN*>PROCEDURE declare_formal(self: T; name: Name; typeid: TypeUID; typename: Name) = BEGIN AssertFalse(); END declare_formal;
 <*NOWARN*>PROCEDURE declare_raises(self: T; name: Name) = BEGIN AssertFalse(); END declare_raises;
-<*NOWARN*>PROCEDURE declare_object(self: T; typeid, super_typeid: TypeUID; brand: TEXT; traced: BOOLEAN; n_fields, n_methods: INTEGER; field_size: BitSize) = BEGIN AssertFalse(); END declare_object;
+<*NOWARN*>PROCEDURE declare_object(self: T; typeid, super_typeid: TypeUID; brand: TEXT; traced: BOOLEAN; n_fields, n_methods: INTEGER; field_size: BitSize; super_typename: Name) = BEGIN AssertFalse(); END declare_object;
 <*NOWARN*>PROCEDURE declare_method(self: T; name: Name; signature: TypeUID) = BEGIN AssertFalse(); END declare_method;
 <*NOWARN*>PROCEDURE declare_opaque(self: T; typeid, super_typeid: TypeUID) = BEGIN AssertFalse(); END declare_opaque;
 <*NOWARN*>PROCEDURE reveal_opaque(self: T; lhs_typeid, rhs_typeid: TypeUID) = BEGIN AssertFalse(); END reveal_opaque;

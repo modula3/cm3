@@ -773,7 +773,7 @@ BEGIN
 END TypeIDToText;
 *)
 
-<*NOWARN*>PROCEDURE declare_array (this: T; typeid, index_typeid, element_typeid: TypeUID; total_bit_size: BitSize) =
+<*NOWARN*>PROCEDURE declare_array (this: T; typeid, index_typeid, element_typeid: TypeUID; total_bit_size: BitSize; <*UNUSED*>element_typename: Name) =
 BEGIN
 (*
     WITH index_type = TypeidToType_Get(index_typeid),
@@ -804,7 +804,7 @@ BEGIN
 *)
 END declare_array;
 
-<*NOWARN*>PROCEDURE declare_open_array (this: T; typeid, element_typeid: TypeUID; bit_size: BitSize) =
+<*NOWARN*>PROCEDURE declare_open_array (this: T; typeid, element_typeid: TypeUID; bit_size: BitSize; element_typename: Name) =
 BEGIN
     <* ASSERT bit_size MOD 32 = 0 *>
 (*
@@ -893,7 +893,7 @@ BEGIN
     (* UNDONE? *)  
 END declare_subrange;
 
-<*NOWARN*>PROCEDURE declare_pointer(this: T; typeid, target: TypeUID; brand: TEXT; traced: BOOLEAN) =
+<*NOWARN*>PROCEDURE declare_pointer(this: T; typeid, target: TypeUID; brand: TEXT; traced: BOOLEAN; target_typename: Name) =
 BEGIN
     (* UNDONE? *)  
 END declare_pointer;
@@ -1133,11 +1133,6 @@ BEGIN
     END;
     RETURN var;
 END declare_param;
-
-PROCEDURE declare_temp (this: T; byte_size: ByteSize; alignment: Alignment; type: Type; in_memory:BOOLEAN): Var =
-BEGIN
-    RETURN declare_local(this, 0, byte_size, alignment, type, -1, in_memory, FALSE, M3CG.Always);
-END declare_temp;
 
 PROCEDURE free_temp (this: T; v: Var) =
 BEGIN

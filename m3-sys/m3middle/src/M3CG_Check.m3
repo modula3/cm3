@@ -407,14 +407,14 @@ PROCEDURE bind_segment (self: U;  seg: Var;  s: ByteSize;  a: Alignment;
   END bind_segment;
 
 PROCEDURE declare_temp   (self: U;  s: ByteSize;  a: Alignment;  t: Type;
-                          in_memory:BOOLEAN): Var =
+                          in_memory:BOOLEAN; typename: Name): Var =
   VAR v: Var;
   BEGIN
 (*
     IF (self.temps = NIL) THEN
       self.temps := NEW (IntIntTbl.Default).init (); END;
 *)
-    v := self.child.declare_temp (s, a, t, in_memory);
+    v := self.child.declare_temp (s, a, t, in_memory, typename);
 (*
     IF self.temps.put (v, self.cur_line) THEN
       PutErr (self, "temporary reused while live!");

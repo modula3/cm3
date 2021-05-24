@@ -432,7 +432,7 @@ PROCEDURE declare_typename (u: U;  type: TypeUID;  n: Name) =
     END
   END declare_typename;
 
-PROCEDURE declare_array (u: U;  type, index, elt: TypeUID;  s: BitSize) =
+PROCEDURE declare_array (u: U;  type, index, elt: TypeUID;  s: BitSize; <*UNUSED*>element_typename: Name) =
   BEGIN
     IF u.debug THEN
       u.wr.Cmd  ("declare_array");
@@ -444,7 +444,7 @@ PROCEDURE declare_array (u: U;  type, index, elt: TypeUID;  s: BitSize) =
     END
   END declare_array;
 
-PROCEDURE declare_open_array (u: U;  type, elt: TypeUID;  s: BitSize) =
+PROCEDURE declare_open_array (u: U;  type, elt: TypeUID;  s: BitSize; <*UNUSED*>element_typename: Name) =
   BEGIN
     IF u.debug THEN
       u.wr.Cmd  ("declare_open_array");
@@ -475,7 +475,7 @@ PROCEDURE declare_enum_elt (u: U;  n: Name) =
     END
   END declare_enum_elt;
 
-PROCEDURE declare_packed  (u: U;  type: TypeUID;  s: BitSize;  base: TypeUID) =
+PROCEDURE declare_packed  (u: U;  type: TypeUID;  s: BitSize;  base: TypeUID; <*UNUSED*>base_typename: Name) =
   BEGIN
     IF u.debug THEN
       u.wr.Cmd  ("declare_packed");
@@ -497,7 +497,7 @@ PROCEDURE declare_record (u: U; type: TypeUID;  s: BitSize; n_fields: INTEGER) =
     END
   END declare_record;
 
-PROCEDURE declare_field (u: U; n: Name; o: BitOffset; s: BitSize; type: TypeUID) =
+PROCEDURE declare_field (u: U; n: Name; o: BitOffset; s: BitSize; type: TypeUID; <*UNUSED*>typename: Name) =
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("declare_field");
@@ -509,7 +509,7 @@ PROCEDURE declare_field (u: U; n: Name; o: BitOffset; s: BitSize; type: TypeUID)
     END
   END declare_field;
 
-PROCEDURE declare_set (u: U;  type, domain: TypeUID;  s: BitSize) =
+PROCEDURE declare_set (u: U;  type, domain: TypeUID;  s: BitSize; <*UNUSED*>domain_typename: Name) =
   BEGIN
     IF u.debug THEN
       u.wr.Cmd  ("declare_set");
@@ -522,7 +522,7 @@ PROCEDURE declare_set (u: U;  type, domain: TypeUID;  s: BitSize) =
 
 PROCEDURE declare_subrange (u: U; type, domain: TypeUID;
                             READONLY min, max: Target.Int;
-                            s: BitSize) =
+                            s: BitSize; <*UNUSED*>domain_typename: Name) =
   BEGIN
     IF u.debug THEN
       u.wr.Cmd  ("declare_subrange");
@@ -535,7 +535,7 @@ PROCEDURE declare_subrange (u: U; type, domain: TypeUID;
     END
   END declare_subrange;
 
-PROCEDURE declare_pointer (u: U; type, target: TypeUID; brand: TEXT; traced: BOOLEAN) =
+PROCEDURE declare_pointer (u: U; type, target: TypeUID; brand: TEXT; traced: BOOLEAN; <*UNUSED*>target_typename: Name) =
   BEGIN
     IF u.debug THEN
       u.wr.Cmd  ("declare_pointer");
@@ -597,7 +597,8 @@ PROCEDURE declare_raises (u: U;  n: Name) =
 PROCEDURE declare_object (u: U;  type, super: TypeUID;
                           brand: TEXT;  traced: BOOLEAN;
                           n_fields, n_methods: INTEGER;
-                          field_size: BitSize) =
+                          field_size: BitSize;
+                          <*UNUSED*>super_typename: Name) =
   BEGIN
     IF u.debug THEN
       u.wr.Cmd  ("declare_object");
@@ -710,7 +711,7 @@ PROCEDURE NewVar (u: U; type: Type; uid: TypeUID; s: ByteSize; a: Alignment;
   END NewVar;
 
 PROCEDURE import_global (u: U;  n: Name;  s: ByteSize;  a: Alignment;
-                         type: Type;  m3t: TypeUID): Var =
+                         type: Type;  m3t: TypeUID; <*UNUSED*>typename: Name): Var =
   VAR v := NewVar(u, type, m3t, s, a, n);
   BEGIN
     v.symbol := u.obj.import_symbol(v.name);
@@ -783,13 +784,13 @@ PROCEDURE bind_segment (u: U;  v: Var;  s: ByteSize;  a: Alignment;
   END bind_segment;
 
 PROCEDURE declare_global (u: U;  n: Name;  s: ByteSize;  a: Alignment;
-                     type: Type;  m3t: TypeUID;  exported, inited: BOOLEAN): Var =
+                     type: Type;  m3t: TypeUID;  exported, inited: BOOLEAN; <*UNUSED*>typename: Name): Var =
   BEGIN
     RETURN DeclareGlobal(u, n, s, a, type, m3t, exported, inited, FALSE);
   END declare_global;
 
 PROCEDURE declare_constant (u: U;  n: Name;  s: ByteSize;  a: Alignment;
-                     type: Type;  m3t: TypeUID;  exported, inited: BOOLEAN): Var =
+                     type: Type;  m3t: TypeUID;  exported, inited: BOOLEAN; <*UNUSED*>typename: Name): Var =
   BEGIN
     RETURN DeclareGlobal(u, n, s, a, type, m3t, exported, inited, TRUE);
   END declare_constant;
@@ -828,7 +829,7 @@ PROCEDURE DeclareGlobal (u: U;  n: Name;  s: ByteSize;  a: Alignment;
 
 PROCEDURE declare_local (u: U;  n: Name;  s: ByteSize;  a: Alignment;
                          type: Type;  m3t: TypeUID;  in_memory, up_level: BOOLEAN;
-                         f: Frequency): Var =
+                         f: Frequency; <*UNUSED*>typename: Name): Var =
   VAR v: x86Var;
   BEGIN
     IF u.in_proc THEN
@@ -931,7 +932,7 @@ PROCEDURE declare_param (u: U;  n: Name;  s: ByteSize;  a: Alignment;
     RETURN v;
   END declare_param;
 
-PROCEDURE declare_temp (u: U; s: ByteSize; a: Alignment; type: Type; in_memory:BOOLEAN): Var =
+PROCEDURE declare_temp (u: U; s: ByteSize; a: Alignment; type: Type; in_memory:BOOLEAN; <*UNUSED*>typename := M3ID.NoID): Var =
   VAR v: x86Var;
   BEGIN
     <* ASSERT u.in_proc *>
