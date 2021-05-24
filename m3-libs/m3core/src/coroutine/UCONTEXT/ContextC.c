@@ -412,29 +412,26 @@ ContextC__GetStackBase(Context *c)
 
 /* in the following functions, we use "auto" to signify that 
    it is essential to the operation of the program that these variables
-   are indeed placed on the stack */
+   are indeed placed on the stack
 
+   However this means nothing to the compiler. volatile is more convincing,
+   but overkill, hurts perf, on non-x86 architectures.
+*/
 #if __cplusplus
 #define AUTO /* nothing */
 #else
 #define AUTO auto
 #endif
 
-static void *
-stack_here(void)
-{
-  AUTO char *top=(char *)&top;
-  return top;
-}
-      
+#include <alloca.h>
+
+__attribute__((noinline))
 static void *
 ContextC__PushContext1(Context *c)
 {
-  AUTO ucontext_t uc=c->uc; /* write it on the stack */
-  void *top;
-
-  top = stack_here();
-  return top;
+  // Write it to stack and return pointer below it.
+  AUTO volatile ucontext_t uc = c->uc;
+  return alloca(1);
 }
 
 #define STACK_GAP 256
@@ -442,15 +439,22 @@ ContextC__PushContext1(Context *c)
 void *
 ContextC__PushContext(Context *c)
 {
-  AUTO char a[STACK_GAP];
+  AUTO volatile unsigned char a[STACK_GAP];
 
   /* the purpose of the gap is to allow other routines to do some small
      amount of work between when we return and the next GC event,
      without clobbering the context we are about to push */
+
+  // But where does "256" come from?
+  // It is meant to be enough to run ThreadPThread.SetCoStack.
+  // Must this function return, or can it continue on to call
+  // "the rest of its caller"?
   
-  (void)memset(a, 0, STACK_GAP);
-  
-  return ContextC__PushContext1(c);
+  void* b;
+  a[0] = 0;
+  b = ContextC__PushContext1(c);
+  a[0];
+  return b;
 }
 
 #endif
