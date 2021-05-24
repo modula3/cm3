@@ -471,8 +471,19 @@ typedef ptrdiff_t INTEGER;
 typedef size_t WORD_T;
 #endif
 
+// Something (m3front?) is indecisive as to if Word__T is INTEGER or INT64.
+// Or rather, if functions like Word__Divide, traffic in INTEGER or
+// Word__T. This could be m3front vs. Word.ig. This combines poorly
+// with Word__T sometimes being INT64. They do not match. As well,
+// between INT64 and INTEGER, INTEGER is preferred for portability.
+// But having actual unsigned types might be good too.
+//typedef INTEGER WORD_T;
+typedef INTEGER Word__T;
+// TODO replace WORD_T with Word__T
+
 #define INTEGER INTEGER /* Support concatenation with m3c output. */
-#define WORD_T WORD_T   /* Support concatenation with m3c output. */
+#define WORD_T  WORD_T  /* Support concatenation with m3c output. */
+#define Word__T Word__T /* Support concatenation with m3c output. */
 
 /* LONGINT is always signed and exactly 64 bits. */
 typedef INT64 LONGINT;
