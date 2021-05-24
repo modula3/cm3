@@ -120,8 +120,6 @@ ContextC__PushContextForCall(void* to, INTEGER* myId, void** me, Context *c)
 
 #else
 
-#include <alloca.h>
-
 BOOLEAN
 __cdecl
 Coroutine__Supported(void)
@@ -454,7 +452,7 @@ ContextC__PushContextForCall(void* to, INTEGER* myId, void** me, Context *c)
     volatile ucontext_t uc;
   } u;
   void* result;
-  
+
   // C++ fails to assign volatile struct.
   memcpy((void*)&u.uc, &c->uc, sizeof(ucontext_t));
   result = Coroutine__CallInternal(to, myId, me);
