@@ -7,7 +7,6 @@ FROM M3CG IMPORT Frequency, CallingConvention, CompareOp, ConvertOp, AtomicOp;
 FROM M3CG IMPORT BitSize, ByteSize, BitOffset, ByteOffset, RuntimeError;
 FROM M3CG IMPORT MemoryOrder;
 FROM M3CG_Binary IMPORT Op;
-FROM M3CG IMPORT QID, NoQID;
 
 TYPE var_t = Var OBJECT tag: INTEGER END;
 TYPE proc_t = Proc OBJECT tag: INTEGER END;
@@ -333,7 +332,7 @@ BEGIN
     RETURN label;
 END next_label;
 
-PROCEDURE import_global(self: T; name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: TypeUID): Var =
+PROCEDURE import_global(self: T; name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: TypeUID; <*UNUSED*>typename: Name): Var =
 VAR var := self.refs.NewVar();
 BEGIN
 self.Add(NEW(import_global_t, op := Op.import_global, name := name, byte_size := byte_size, alignment := alignment, type := type, typeid := typeid, tag := var.tag));
@@ -347,49 +346,49 @@ self.Add(NEW(declare_segment_t, op := Op.declare_segment, name := name, typeid :
 RETURN var;
 END declare_segment;
 
-PROCEDURE declare_global(self: T; name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: TypeUID; exported, inited: BOOLEAN): Var =
+PROCEDURE declare_global(self: T; name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: TypeUID; exported, inited: BOOLEAN; <*UNUSED*>typename: Name): Var =
 VAR var := self.refs.NewVar();
 BEGIN
 self.Add(NEW(declare_global_t, op := Op.declare_global, name := name, byte_size := byte_size, alignment := alignment, type := type, typeid := typeid, exported := exported, inited := inited, tag := var.tag));
 RETURN var;
 END declare_global;
 
-PROCEDURE declare_constant(self: T; name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: TypeUID; exported, inited: BOOLEAN): Var =
+PROCEDURE declare_constant(self: T; name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: TypeUID; exported, inited: BOOLEAN; <*UNUSED*>typename: Name): Var =
 VAR var := self.refs.NewVar();
 BEGIN
 self.Add(NEW(declare_constant_t, op := Op.declare_constant, name := name, byte_size := byte_size, alignment := alignment, type := type, typeid := typeid, exported := exported, inited := inited, tag := var.tag));
 RETURN var;
 END declare_constant;
 
-PROCEDURE declare_local(self: T; name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: TypeUID; in_memory, up_level: BOOLEAN; frequency: Frequency): Var =
+PROCEDURE declare_local(self: T; name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: TypeUID; in_memory, up_level: BOOLEAN; frequency: Frequency; <*UNUSED*>typename: Name): Var =
 VAR var := self.refs.NewVar();
 BEGIN
 self.Add(NEW(declare_local_t, op := Op.declare_local, name := name, byte_size := byte_size, alignment := alignment, type := type, typeid := typeid, in_memory := in_memory, up_level := up_level, frequency := frequency, tag := var.tag));
 RETURN var;
 END declare_local;
 
-PROCEDURE declare_param(self: T; name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: TypeUID; in_memory, up_level: BOOLEAN; frequency: Frequency; typename := NoQID): Var =
+PROCEDURE declare_param(self: T; name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: TypeUID; in_memory, up_level: BOOLEAN; frequency: Frequency; typename: Name): Var =
 VAR var := self.refs.NewVar();
 BEGIN
 self.Add(NEW(declare_param_t, op := Op.declare_param, name := name, byte_size := byte_size, alignment := alignment, type := type, typeid := typeid, in_memory := in_memory, up_level := up_level, frequency := frequency, tag := var.tag, typename := typename));
 RETURN var;
 END declare_param;
 
-PROCEDURE declare_temp(self: T; byte_size: ByteSize; alignment: Alignment; type: Type; in_memory: BOOLEAN): Var =
+PROCEDURE declare_temp(self: T; byte_size: ByteSize; alignment: Alignment; type: Type; in_memory: BOOLEAN; <*UNUSED*>typename: Name): Var =
 VAR var := self.refs.NewVar();
 BEGIN
 self.Add(NEW(declare_temp_t, op := Op.declare_temp, byte_size := byte_size, alignment := alignment, type := type, in_memory := in_memory, tag := var.tag));
 RETURN var;
 END declare_temp;
 
-PROCEDURE import_procedure(self: T; name: Name; n_params: INTEGER; return_type: Type; callingConvention: CallingConvention; return_typeid: TypeUID := 0; return_typename := NoQID): Proc =
+PROCEDURE import_procedure(self: T; name: Name; n_params: INTEGER; return_type: Type; callingConvention: CallingConvention; return_typeid: TypeUID; return_typename: Name): Proc =
 VAR proc := self.refs.NewProc();
 BEGIN
-self.Add(NEW(import_procedure_t, op := Op.import_procedure, name := name, n_params := n_params, return_type := return_type, callingConvention := callingConvention, return_typename := return_typename, tag := proc.tag));
+self.Add(NEW(import_procedure_t, op := Op.import_procedure, name := name, n_params := n_params, return_type := return_type, callingConvention := callingConvention, return_typeid := return_typeid, return_typename := return_typename, tag := proc.tag));
 RETURN proc;
 END import_procedure;
 
-PROCEDURE declare_procedure(self: T; name: Name; n_params: INTEGER; return_type: Type; level: INTEGER; callingConvention: CallingConvention; exported: BOOLEAN; parent: Proc; return_typeid: TypeUID := 0; return_typename := NoQID): Proc =
+PROCEDURE declare_procedure(self: T; name: Name; n_params: INTEGER; return_type: Type; level: INTEGER; callingConvention: CallingConvention; exported: BOOLEAN; parent: Proc; return_typeid: TypeUID; return_typename: Name): Proc =
 VAR proc := self.refs.NewProc();
     parent_tag := 0;
 BEGIN
@@ -445,12 +444,12 @@ BEGIN
 self.Add(NEW(declare_typename_t, op := Op.declare_typename, typeid := typeid, name := name));
 END declare_typename;
 
-PROCEDURE declare_array(self: T; typeid, index_typeid, element_typeid: TypeUID; bit_size: BitSize) =
+PROCEDURE declare_array(self: T; typeid, index_typeid, element_typeid: TypeUID; bit_size: BitSize; <*UNUSED*>element_typename: Name) =
 BEGIN
 self.Add(NEW(declare_array_t, op := Op.declare_array, typeid := typeid, index_typeid := index_typeid, element_typeid := element_typeid, bit_size := bit_size));
 END declare_array;
 
-PROCEDURE declare_open_array(self: T; typeid, element_typeid: TypeUID; bit_size: BitSize) =
+PROCEDURE declare_open_array(self: T; typeid, element_typeid: TypeUID; bit_size: BitSize; <*UNUSED*>element_typename: Name) =
 BEGIN
 self.Add(NEW(declare_open_array_t, op := Op.declare_open_array, typeid := typeid, element_typeid := element_typeid, bit_size := bit_size));
 END declare_open_array;
@@ -465,7 +464,7 @@ BEGIN
 self.Add(NEW(declare_enum_elt_t, op := Op.declare_enum_elt, name := name));
 END declare_enum_elt;
 
-PROCEDURE declare_packed(self: T; typeid: TypeUID; bit_size: BitSize; base: TypeUID) =
+PROCEDURE declare_packed(self: T; typeid: TypeUID; bit_size: BitSize; base: TypeUID; <*UNUSED*>base_typename: Name) =
 BEGIN
 self.Add(NEW(declare_packed_t, op := Op.declare_packed, typeid := typeid, bit_size := bit_size, base := base));
 END declare_packed;
@@ -475,37 +474,37 @@ BEGIN
 self.Add(NEW(declare_record_t, op := Op.declare_record, typeid := typeid, bit_size := bit_size, n_fields := n_fields));
 END declare_record;
 
-PROCEDURE declare_field(self: T; name: Name; bit_offset: BitOffset; bit_size: BitSize; typeid: TypeUID) =
+PROCEDURE declare_field(self: T; name: Name; bit_offset: BitOffset; bit_size: BitSize; typeid: TypeUID; <*UNUSED*>typename: Name) =
 BEGIN
 self.Add(NEW(declare_field_t, op := Op.declare_field, name := name, bit_offset := bit_offset, bit_size := bit_size, typeid := typeid));
 END declare_field;
 
-PROCEDURE declare_set(self: T; typeid, domain_typeid: TypeUID; bit_size: BitSize) =
+PROCEDURE declare_set(self: T; typeid, domain_typeid: TypeUID; bit_size: BitSize; <*UNUSED*>domain_typename: Name) =
 BEGIN
 self.Add(NEW(declare_set_t, op := Op.declare_set, typeid := typeid, domain_typeid := domain_typeid, bit_size := bit_size));
 END declare_set;
 
-PROCEDURE declare_subrange(self: T; typeid, domain_typeid: TypeUID; READONLY min, max: Target.Int; bit_size: BitSize) =
+PROCEDURE declare_subrange(self: T; typeid, domain_typeid: TypeUID; READONLY min, max: Target.Int; bit_size: BitSize; <*UNUSED*>domain_typename: Name) =
 BEGIN
 self.Add(NEW(declare_subrange_t, op := Op.declare_subrange, typeid := typeid, domain_typeid := domain_typeid, min := min, max := max, bit_size := bit_size));
 END declare_subrange;
 
-PROCEDURE declare_pointer(self: T; typeid, target_typeid: TypeUID; brand: TEXT; traced: BOOLEAN) =
+PROCEDURE declare_pointer(self: T; typeid, target_typeid: TypeUID; brand: TEXT; traced: BOOLEAN; <*UNUSED*>target_typename: Name) =
 BEGIN
 self.Add(NEW(declare_pointer_t, op := Op.declare_pointer, typeid := typeid, target_typeid := target_typeid, brand := brand, traced := traced));
 END declare_pointer;
 
-PROCEDURE declare_indirect(self: T; typeid, target_typeid: TypeUID; target_typename: QID) =
+PROCEDURE declare_indirect(self: T; typeid, target_typeid: TypeUID; target_typename: Name) =
 BEGIN
 self.Add(NEW(declare_indirect_t, op := Op.declare_indirect, typeid := typeid, target_typeid := target_typeid, target_typename := target_typename));
 END declare_indirect;
 
-PROCEDURE declare_proctype(self: T; typeid: TypeUID; n_formals: INTEGER; return_typeid: TypeUID; n_raises: INTEGER; callingConvention: CallingConvention; result_typename: QID) =
+PROCEDURE declare_proctype(self: T; typeid: TypeUID; n_formals: INTEGER; return_typeid: TypeUID; n_raises: INTEGER; callingConvention: CallingConvention; result_typename: Name) =
 BEGIN
 self.Add(NEW(declare_proctype_t, op := Op.declare_proctype, typeid := typeid, n_formals := n_formals, return_typeid := return_typeid, n_raises := n_raises, callingConvention := callingConvention, result_typename := result_typename));
 END declare_proctype;
 
-PROCEDURE declare_formal(self: T; name: Name; typeid: TypeUID; typename: QID) =
+PROCEDURE declare_formal(self: T; name: Name; typeid: TypeUID; typename: Name) =
 BEGIN
 self.Add(NEW(declare_formal_t, op := Op.declare_formal, name := name, typeid := typeid, typename := typename));
 END declare_formal;
@@ -515,7 +514,7 @@ BEGIN
 self.Add(NEW(declare_raises_t, op := Op.declare_raises, name := name));
 END declare_raises;
 
-PROCEDURE declare_object(self: T; typeid, super_typeid: TypeUID; brand: TEXT; traced: BOOLEAN; n_fields, n_methods: INTEGER; fields_bit_size: BitSize) =
+PROCEDURE declare_object(self: T; typeid, super_typeid: TypeUID; brand: TEXT; traced: BOOLEAN; n_fields, n_methods: INTEGER; fields_bit_size: BitSize; <*UNUSED*>super_typename: Name) =
 BEGIN
 self.Add(NEW(declare_object_t, op := Op.declare_raises, typeid := typeid, super_typeid := super_typeid, brand := brand, traced := traced, n_fields := n_fields, n_methods := n_methods, fields_bit_size := fields_bit_size));
 END declare_object;

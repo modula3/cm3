@@ -12,7 +12,6 @@ IMPORT M3, M3ID, CG, Expr, Type, TypeRep, Value, Scope, Target;
 IMPORT Formal, UserProc, Token, Ident, CallExpr, Word, Error;
 IMPORT ESet, TipeMap, TipeDesc, ErrType, M3Buf, Variable, OpenArrayType;
 FROM Scanner IMPORT Match, GetToken, cur;
-FROM M3CG IMPORT QID, NoQID;
 
 TYPE
   P = Type.T BRANDED "ProcType.T" OBJECT
@@ -22,7 +21,6 @@ TYPE
         result     : Type.T;
         raises     : ESet.T;
         callConv   : CG.CallingConvention;
-        result_typename := NoQID;
       OVERRIDES
         check      := Check;
         no_straddle:= TypeRep.AddrNoStraddle;
@@ -131,7 +129,7 @@ PROCEDURE ParseFormal (p: P;  ) =
     DEC (Ident.top, n);
   END ParseFormal;
 
-VAR unnamed: M3ID.T := M3ID.NoID;
+VAR unnamed := M3ID.NoID;
 
 PROCEDURE MethodSigAsProcSig (sig, objType: Type.T): Type.T =
   VAR
@@ -228,11 +226,7 @@ PROCEDURE Check (p: P) =
       p.checked := TRUE;
       Scope.TypeCheck (p.formals, cs);
       IF (p.result # NIL) THEN
-        Type.Typename (p.result, p.result_typename);
         result := Type.Check (p.result);
-        IF Target.LowerTypes THEN
-          p.result := result;
-        END;
         IF OpenArrayType.Is (result) THEN
           Error.Msg ("procedures may not return open arrays");
         END;
@@ -362,9 +356,8 @@ PROCEDURE FormalsMatch (a, b: Scope.T;  strict, useFirst: BOOLEAN;
 
 PROCEDURE Reduce (t: Type.T): P =
   BEGIN
-    IF (t = NIL) THEN RETURN NIL END;
-    IF (t.info.class = Type.Class.Named) THEN t := Type.Strip (t) END;
-    IF (t.info.class # Type.Class.Procedure) THEN RETURN NIL END;
+    t := Type.Strip (t); (* StripPacked? *)
+    IF (t = NIL) OR (t.info.class # Type.Class.Procedure) THEN RETURN NIL END;
     RETURN t;
   END Reduce;
 
@@ -382,14 +375,16 @@ PROCEDURE Result (t: Type.T): Type.T =
     END;
   END Result;
 
-PROCEDURE ResultTypename (t: Type.T): QID =
+PROCEDURE ResultTypename (t: Type.T): M3ID.T =
   VAR p := Reduce (t);
+      id: M3ID.T := M3ID.NoID;
   BEGIN
     Type.Compile (t);
-    IF (p # NIL)
-      THEN RETURN p.result_typename;
-      ELSE RETURN NoQID;
+    (* If LargeResult AND standard_structs turned into void, return no type here. *)
+    IF p # NIL AND CGResult (p) # CG.Type.Void
+      THEN Type.Typename (p.result, id);
     END;
+    RETURN id;
   END ResultTypename;
 
 PROCEDURE CGResult (t: Type.T): CG.Type =

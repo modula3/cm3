@@ -8,13 +8,13 @@
 
 INTERFACE Error;
 
-IMPORT M3ID, M3CG;
+IMPORT M3ID, M3;
 
 (* Msg, Int, ID, QID, Txt are all implicitly level 3. *)
 PROCEDURE Msg (msg: TEXT);
 PROCEDURE Int (n: INTEGER;  msg: TEXT);
 PROCEDURE ID  (id: M3ID.T;  msg: TEXT);
-PROCEDURE QID (READONLY q: M3CG.QID;  msg: TEXT);
+PROCEDURE QID (READONLY q: M3.QID;  msg: TEXT);
 PROCEDURE Txt (str, msg: TEXT);
 
 (* Despite the names Warn and WarnId, these can be any level. *)

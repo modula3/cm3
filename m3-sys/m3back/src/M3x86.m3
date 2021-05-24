@@ -17,7 +17,7 @@ FROM TargetMap IMPORT CG_Bytes;
 FROM M3CG IMPORT Name, ByteOffset, TypeUID, CallingConvention;
 FROM M3CG IMPORT BitSize, ByteSize, Alignment, Frequency;
 FROM M3CG IMPORT Var, Proc, Label, No_label, Sign, BitOffset;
-FROM M3CG IMPORT Type, ZType, AType, RType, IType, MType, QID, NoQID;
+FROM M3CG IMPORT Type, ZType, AType, RType, IType, MType;
 FROM M3CG IMPORT CompareOp, ConvertOp, RuntimeError, MemoryOrder, AtomicOp;
 
 FROM M3CG_Ops IMPORT ErrorHandler;
@@ -432,7 +432,7 @@ PROCEDURE declare_typename (u: U;  type: TypeUID;  n: Name) =
     END
   END declare_typename;
 
-PROCEDURE declare_array (u: U;  type, index, elt: TypeUID;  s: BitSize) =
+PROCEDURE declare_array (u: U;  type, index, elt: TypeUID;  s: BitSize; <*UNUSED*>element_typename: Name) =
   BEGIN
     IF u.debug THEN
       u.wr.Cmd  ("declare_array");
@@ -444,7 +444,7 @@ PROCEDURE declare_array (u: U;  type, index, elt: TypeUID;  s: BitSize) =
     END
   END declare_array;
 
-PROCEDURE declare_open_array (u: U;  type, elt: TypeUID;  s: BitSize) =
+PROCEDURE declare_open_array (u: U;  type, elt: TypeUID;  s: BitSize; <*UNUSED*>element_typename: Name) =
   BEGIN
     IF u.debug THEN
       u.wr.Cmd  ("declare_open_array");
@@ -475,7 +475,7 @@ PROCEDURE declare_enum_elt (u: U;  n: Name) =
     END
   END declare_enum_elt;
 
-PROCEDURE declare_packed  (u: U;  type: TypeUID;  s: BitSize;  base: TypeUID) =
+PROCEDURE declare_packed  (u: U;  type: TypeUID;  s: BitSize;  base: TypeUID; <*UNUSED*>base_typename: Name) =
   BEGIN
     IF u.debug THEN
       u.wr.Cmd  ("declare_packed");
@@ -497,7 +497,7 @@ PROCEDURE declare_record (u: U; type: TypeUID;  s: BitSize; n_fields: INTEGER) =
     END
   END declare_record;
 
-PROCEDURE declare_field (u: U; n: Name; o: BitOffset; s: BitSize; type: TypeUID) =
+PROCEDURE declare_field (u: U; n: Name; o: BitOffset; s: BitSize; type: TypeUID; <*UNUSED*>typename: Name) =
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("declare_field");
@@ -509,7 +509,7 @@ PROCEDURE declare_field (u: U; n: Name; o: BitOffset; s: BitSize; type: TypeUID)
     END
   END declare_field;
 
-PROCEDURE declare_set (u: U;  type, domain: TypeUID;  s: BitSize) =
+PROCEDURE declare_set (u: U;  type, domain: TypeUID;  s: BitSize; <*UNUSED*>domain_typename: Name) =
   BEGIN
     IF u.debug THEN
       u.wr.Cmd  ("declare_set");
@@ -522,7 +522,7 @@ PROCEDURE declare_set (u: U;  type, domain: TypeUID;  s: BitSize) =
 
 PROCEDURE declare_subrange (u: U; type, domain: TypeUID;
                             READONLY min, max: Target.Int;
-                            s: BitSize) =
+                            s: BitSize; <*UNUSED*>domain_typename: Name) =
   BEGIN
     IF u.debug THEN
       u.wr.Cmd  ("declare_subrange");
@@ -535,7 +535,7 @@ PROCEDURE declare_subrange (u: U; type, domain: TypeUID;
     END
   END declare_subrange;
 
-PROCEDURE declare_pointer (u: U; type, target: TypeUID; brand: TEXT; traced: BOOLEAN) =
+PROCEDURE declare_pointer (u: U; type, target: TypeUID; brand: TEXT; traced: BOOLEAN; <*UNUSED*>target_typename: Name) =
   BEGIN
     IF u.debug THEN
       u.wr.Cmd  ("declare_pointer");
@@ -547,7 +547,7 @@ PROCEDURE declare_pointer (u: U; type, target: TypeUID; brand: TEXT; traced: BOO
     END
   END declare_pointer;
 
-PROCEDURE declare_indirect (u: U;  type, target: TypeUID; <*UNUSED*>target_typename: QID) =
+PROCEDURE declare_indirect (u: U;  type, target: TypeUID; <*UNUSED*>target_typename: M3ID.T) =
   BEGIN
     IF u.debug THEN
       u.wr.Cmd  ("declare_indirect");
@@ -560,7 +560,7 @@ PROCEDURE declare_indirect (u: U;  type, target: TypeUID; <*UNUSED*>target_typen
 
 PROCEDURE declare_proctype (u: U;  type: TypeUID;  n_formals: INTEGER;
                             result: TypeUID;  n_raises: INTEGER;
-                            cc: CallingConvention; <*UNUSED*>result_typename: QID) =
+                            cc: CallingConvention; <*UNUSED*>result_typename: M3ID.T) =
   BEGIN
     IF u.debug THEN
       u.wr.Cmd  ("declare_proctype");
@@ -574,7 +574,7 @@ PROCEDURE declare_proctype (u: U;  type: TypeUID;  n_formals: INTEGER;
     END
   END declare_proctype;
 
-PROCEDURE declare_formal (u: U;  n: Name;  type: TypeUID; <*UNUSED*>typename: QID) =
+PROCEDURE declare_formal (u: U;  n: Name;  type: TypeUID; <*UNUSED*>typename: M3ID.T) =
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("declare_formal");
@@ -597,7 +597,8 @@ PROCEDURE declare_raises (u: U;  n: Name) =
 PROCEDURE declare_object (u: U;  type, super: TypeUID;
                           brand: TEXT;  traced: BOOLEAN;
                           n_fields, n_methods: INTEGER;
-                          field_size: BitSize) =
+                          field_size: BitSize;
+                          <*UNUSED*>super_typename: Name) =
   BEGIN
     IF u.debug THEN
       u.wr.Cmd  ("declare_object");
@@ -710,7 +711,7 @@ PROCEDURE NewVar (u: U; type: Type; uid: TypeUID; s: ByteSize; a: Alignment;
   END NewVar;
 
 PROCEDURE import_global (u: U;  n: Name;  s: ByteSize;  a: Alignment;
-                         type: Type;  m3t: TypeUID): Var =
+                         type: Type;  m3t: TypeUID; <*UNUSED*>typename: Name): Var =
   VAR v := NewVar(u, type, m3t, s, a, n);
   BEGIN
     v.symbol := u.obj.import_symbol(v.name);
@@ -783,13 +784,13 @@ PROCEDURE bind_segment (u: U;  v: Var;  s: ByteSize;  a: Alignment;
   END bind_segment;
 
 PROCEDURE declare_global (u: U;  n: Name;  s: ByteSize;  a: Alignment;
-                     type: Type;  m3t: TypeUID;  exported, inited: BOOLEAN): Var =
+                     type: Type;  m3t: TypeUID;  exported, inited: BOOLEAN; <*UNUSED*>typename: Name): Var =
   BEGIN
     RETURN DeclareGlobal(u, n, s, a, type, m3t, exported, inited, FALSE);
   END declare_global;
 
 PROCEDURE declare_constant (u: U;  n: Name;  s: ByteSize;  a: Alignment;
-                     type: Type;  m3t: TypeUID;  exported, inited: BOOLEAN): Var =
+                     type: Type;  m3t: TypeUID;  exported, inited: BOOLEAN; <*UNUSED*>typename: Name): Var =
   BEGIN
     RETURN DeclareGlobal(u, n, s, a, type, m3t, exported, inited, TRUE);
   END declare_constant;
@@ -828,7 +829,7 @@ PROCEDURE DeclareGlobal (u: U;  n: Name;  s: ByteSize;  a: Alignment;
 
 PROCEDURE declare_local (u: U;  n: Name;  s: ByteSize;  a: Alignment;
                          type: Type;  m3t: TypeUID;  in_memory, up_level: BOOLEAN;
-                         f: Frequency): Var =
+                         f: Frequency; <*UNUSED*>typename: Name): Var =
   VAR v: x86Var;
   BEGIN
     IF u.in_proc THEN
@@ -879,7 +880,7 @@ PROCEDURE mangle_procname (base: M3ID.T; arg_size: INTEGER;
 
 PROCEDURE declare_param (u: U;  n: Name;  s: ByteSize;  a: Alignment;
                          type: Type;  m3t: TypeUID;  in_memory, up_level: BOOLEAN;
-                         f: Frequency; <*UNUSED*>typename := NoQID): Var =
+                         f: Frequency; <*UNUSED*>typename := M3ID.NoID): Var =
   VAR v := NewVar(u, type, m3t, s, 4, n);
   BEGIN
     (* Assume a = 4 and ESP is dword aligned... *)
@@ -931,7 +932,7 @@ PROCEDURE declare_param (u: U;  n: Name;  s: ByteSize;  a: Alignment;
     RETURN v;
   END declare_param;
 
-PROCEDURE declare_temp (u: U; s: ByteSize; a: Alignment; type: Type; in_memory:BOOLEAN): Var =
+PROCEDURE declare_temp (u: U; s: ByteSize; a: Alignment; type: Type; in_memory:BOOLEAN; <*UNUSED*>typename := M3ID.NoID): Var =
   VAR v: x86Var;
   BEGIN
     <* ASSERT u.in_proc *>
@@ -1283,7 +1284,7 @@ END IsAlloca;
 PROCEDURE import_procedure (u: U;  n: Name;  n_params: INTEGER;
                             ret_type: Type;  cc: CallingConvention;
                             <*UNUSED*>return_typeid: TypeUID := 0;
-                            <*UNUSED*>return_typename := NoQID): Proc =
+                            <*UNUSED*>return_typename := M3ID.NoID): Proc =
   VAR p := NewProc (u, n, n_params, ret_type, cc);
   BEGIN
     p.import := TRUE;
@@ -1321,7 +1322,7 @@ PROCEDURE declare_procedure (u: U;  n: Name;  n_params: INTEGER;
                              cc: CallingConvention; exported: BOOLEAN;
                              parent: Proc;
                              <*UNUSED*>return_typeid: TypeUID;
-                             <*UNUSED*>return_typename: QID): Proc =
+                             <*UNUSED*>return_typename: M3ID.T): Proc =
   VAR p := NewProc (u, n, n_params, return_type, cc);
   BEGIN
     p.exported := exported;

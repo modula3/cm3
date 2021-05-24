@@ -13,7 +13,6 @@ FROM M3CG IMPORT Var, Proc, Label, Sign, BitOffset;
 FROM M3CG IMPORT Type, ZType, AType, RType, IType, MType;
 FROM M3CG IMPORT CompareOp, ConvertOp, AtomicOp, RuntimeError;
 FROM M3CG IMPORT MemoryOrder;
-FROM M3CG IMPORT QID, NoQID;
 
 TYPE Bop    = M3CG_Binary.Op;
 TYPE WrVar  = Var    OBJECT tag: INTEGER END;
@@ -461,7 +460,7 @@ PROCEDURE declare_typename (u: U;  t: TypeUID;  n: Name) =
     ZName (u, n);
   END declare_typename;
 
-PROCEDURE declare_array (u: U;  t, index, elt: TypeUID;  s: BitSize) =
+PROCEDURE declare_array (u: U;  t, index, elt: TypeUID;  s: BitSize; <*UNUSED*>elt_typename: Name) =
   BEGIN
     Cmd  (u, Bop.declare_array);
     Tipe (u, t);
@@ -470,7 +469,7 @@ PROCEDURE declare_array (u: U;  t, index, elt: TypeUID;  s: BitSize) =
     BInt (u, s);
   END declare_array;
 
-PROCEDURE declare_open_array (u: U;  t, elt: TypeUID;  s: BitSize) =
+PROCEDURE declare_open_array (u: U;  t, elt: TypeUID;  s: BitSize; <*UNUSED*>elt_typename: Name) =
   BEGIN
     Cmd  (u, Bop.declare_open_array);
     Tipe (u, t);
@@ -492,7 +491,7 @@ PROCEDURE declare_enum_elt (u: U;  n: Name) =
     ZName (u, n);
   END declare_enum_elt;
 
-PROCEDURE declare_packed  (u: U;  t: TypeUID;  s: BitSize;  base: TypeUID) =
+PROCEDURE declare_packed  (u: U;  t: TypeUID;  s: BitSize;  base: TypeUID; <*UNUSED*>base_typename: Name) =
   BEGIN
     Cmd  (u, Bop.declare_packed);
     Tipe (u, t);
@@ -510,7 +509,7 @@ PROCEDURE declare_record (u: U; t: TypeUID;  s: BitSize;
   END declare_record;
 
 PROCEDURE declare_field (u: U;  n: Name;  o: BitOffset;  s: BitSize;
-                         t: TypeUID)=
+                         t: TypeUID; <*UNUSED*>typename: Name)=
   BEGIN
     Cmd   (u, Bop.declare_field);
     ZName (u, n);
@@ -519,7 +518,7 @@ PROCEDURE declare_field (u: U;  n: Name;  o: BitOffset;  s: BitSize;
     Tipe  (u, t);
   END declare_field;
 
-PROCEDURE declare_set (u: U;  t, domain: TypeUID;  s: BitSize) =
+PROCEDURE declare_set (u: U;  t, domain: TypeUID;  s: BitSize; <*UNUSED*>domain_typename: Name) =
   BEGIN
     Cmd  (u, Bop.declare_set);
     Tipe (u, t);
@@ -529,7 +528,7 @@ PROCEDURE declare_set (u: U;  t, domain: TypeUID;  s: BitSize) =
 
 PROCEDURE declare_subrange (u: U; t, domain: TypeUID;
                             READONLY min, max: Target.Int;
-                            s: BitSize) =
+                            s: BitSize; <*UNUSED*>domain_typename: Name) =
   BEGIN
     Cmd  (u, Bop.declare_subrange);
     Tipe (u, t);
@@ -540,7 +539,7 @@ PROCEDURE declare_subrange (u: U; t, domain: TypeUID;
   END declare_subrange;
 
 PROCEDURE declare_pointer (u: U;  t, target: TypeUID;  brand: TEXT;
-                           traced: BOOLEAN) =
+                           traced: BOOLEAN; <*UNUSED*>target_typename: Name) =
   BEGIN
     Cmd  (u, Bop.declare_pointer);
     Tipe (u, t);
@@ -550,7 +549,7 @@ PROCEDURE declare_pointer (u: U;  t, target: TypeUID;  brand: TEXT;
   END declare_pointer;
 
 
-PROCEDURE declare_indirect (u: U;  t, target: TypeUID; <*UNUSED*>target_typename: QID) =
+PROCEDURE declare_indirect (u: U;  t, target: TypeUID; <*UNUSED*>target_typename: Name) =
   BEGIN
     Cmd  (u, Bop.declare_indirect);
     Tipe (u, t);
@@ -561,7 +560,7 @@ PROCEDURE declare_indirect (u: U;  t, target: TypeUID; <*UNUSED*>target_typename
 
 PROCEDURE declare_proctype (u: U;  t: TypeUID;  n_formals: INTEGER;
                             result: TypeUID;  n_raises: INTEGER;
-                            cc: CallingConvention; <*UNUSED*>result_typename: QID) =
+                            cc: CallingConvention; <*UNUSED*>result_typename: Name) =
   BEGIN
     Cmd  (u, Bop.declare_proctype);
     Tipe (u, t);
@@ -572,7 +571,7 @@ PROCEDURE declare_proctype (u: U;  t: TypeUID;  n_formals: INTEGER;
     (* TODO result_typename but it is not used downstream *)
   END declare_proctype;
 
-PROCEDURE declare_formal (u: U;  n: Name;  t: TypeUID; <*UNUSED*>typename: QID) =
+PROCEDURE declare_formal (u: U;  n: Name;  t: TypeUID; <*UNUSED*>typename: Name) =
   BEGIN
     Cmd   (u, Bop.declare_formal);
     ZName (u, n);
@@ -586,11 +585,10 @@ PROCEDURE declare_raises (u: U;  n: Name) =
     ZName (u, n);
   END declare_raises;
 
-
 PROCEDURE declare_object (u: U;  t, super: TypeUID;
                           brand: TEXT;  traced: BOOLEAN;
                           n_fields, n_methods: INTEGER;
-                          field_size: BitSize) =
+                          field_size: BitSize; <*UNUSED*>super_typename: Name) =
   BEGIN
     Cmd  (u, Bop.declare_object);
     Tipe (u, t);
@@ -673,7 +671,7 @@ PROCEDURE NewVar (u: U): Var =
   END NewVar;
 
 PROCEDURE import_global (u: U;  n: Name;  s: ByteSize;  a: Alignment;
-                         t: Type;  m3t: TypeUID): Var =
+                         t: Type;  m3t: TypeUID; <*UNUSED*>typename: Name): Var =
   VAR v := NewVar (u);
   BEGIN
     Cmd   (u, Bop.import_global);
@@ -710,7 +708,7 @@ PROCEDURE bind_segment (u: U;  seg: Var;  s: ByteSize;  a: Alignment;
   END bind_segment;
 
 PROCEDURE declare_global (u: U;  n: Name;  s: ByteSize;  a: Alignment;
-                     t: Type;  m3t: TypeUID;  exported, inited: BOOLEAN): Var =
+                     t: Type;  m3t: TypeUID;  exported, inited: BOOLEAN; <*UNUSED*>typename: Name): Var =
   VAR v := NewVar (u);
   BEGIN
     Cmd   (u, Bop.declare_global);
@@ -726,7 +724,7 @@ PROCEDURE declare_global (u: U;  n: Name;  s: ByteSize;  a: Alignment;
   END declare_global;
 
 PROCEDURE declare_constant (u: U;  n: Name;  s: ByteSize;  a: Alignment;
-                     t: Type;  m3t: TypeUID;  exported, inited: BOOLEAN): Var =
+                     t: Type;  m3t: TypeUID;  exported, inited: BOOLEAN; <*UNUSED*>typename: Name): Var =
   VAR v := NewVar (u);
   BEGIN
     Cmd   (u, Bop.declare_constant);
@@ -743,7 +741,7 @@ PROCEDURE declare_constant (u: U;  n: Name;  s: ByteSize;  a: Alignment;
 
 PROCEDURE declare_local (u: U;  n: Name;  s: ByteSize;  a: Alignment;
                          t: Type;  m3t: TypeUID;  in_memory, up_level: BOOLEAN;
-                         f: Frequency): Var =
+                         f: Frequency; <*UNUSED*>typename: Name): Var =
   VAR v := NewVar (u);
   BEGIN
     Cmd   (u, Bop.declare_local);
@@ -761,7 +759,7 @@ PROCEDURE declare_local (u: U;  n: Name;  s: ByteSize;  a: Alignment;
 
 PROCEDURE declare_param (u: U;  n: Name;  s: ByteSize;  a: Alignment;
                          t: Type;  m3t: TypeUID;  in_memory, up_level: BOOLEAN;
-                         f: Frequency; <*UNUSED*>typename := NoQID): Var =
+                         f: Frequency; <*UNUSED*>typename: Name): Var =
   VAR v := NewVar (u);
   BEGIN
     Cmd   (u, Bop.declare_param);
@@ -779,7 +777,7 @@ PROCEDURE declare_param (u: U;  n: Name;  s: ByteSize;  a: Alignment;
   END declare_param;
 
 PROCEDURE declare_temp   (u: U;  s: ByteSize;  a: Alignment;  t: Type;
-                          in_memory:BOOLEAN): Var =
+                          in_memory:BOOLEAN; <*UNUSED*>typename: Name): Var =
   VAR v := NewVar (u);
   BEGIN
     Cmd   (u, Bop.declare_temp);
@@ -874,8 +872,8 @@ PROCEDURE NewProc (u: U): Proc =
 
 PROCEDURE import_procedure (u: U;  n: Name;  n_params: INTEGER;
                             ret_type: Type; cc: CallingConvention;
-                            <*UNUSED*>return_typeid: TypeUID := 0;
-                            <*UNUSED*>return_typename := NoQID): Proc =
+                            <*UNUSED*>return_typeid: TypeUID;
+                            <*UNUSED*>return_typename: Name): Proc =
   VAR p := NewProc (u);
   BEGIN
     Cmd   (u, Bop.import_procedure);
@@ -891,8 +889,8 @@ PROCEDURE declare_procedure (u: U;  n: Name;  n_params: INTEGER;
                              return_type: Type;  lev: INTEGER;
                              cc: CallingConvention; exported: BOOLEAN;
                              parent: Proc;
-                             <*UNUSED*>return_typeid: TypeUID := 0;
-                             <*UNUSED*>return_typename := NoQID): Proc =
+                             <*UNUSED*>return_typeid: TypeUID;
+                             <*UNUSED*>return_typename: Name): Proc =
   VAR p := NewProc (u);
   BEGIN
     Cmd   (u, Bop.declare_procedure);

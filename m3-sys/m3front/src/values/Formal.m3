@@ -11,17 +11,15 @@ MODULE Formal;
 IMPORT M3, M3ID, CG, Value, ValueRep, Type, Error, Expr, ProcType;
 IMPORT KeywordExpr, OpenArrayType, RefType, CheckExpr, PackedType;
 IMPORT ArrayType, ArrayExpr, SetType, Host, NarrowExpr, M3Buf, Tracer;
-IMPORT Variable, Procedure, UserProc, Target, M3RT, NamedType;
-FROM M3CG IMPORT NoQID;
+IMPORT Variable, Procedure, UserProc, Target, M3RT;
 
 TYPE
   T = Value.T BRANDED OBJECT 
         offset   : INTEGER    := 0;
-        type     : Type.T     := NIL;
+        type     : Type.T     := NIL; (* only written once, not lowered, to retain NamedType *)
         repType  : Type.T     := NIL;
         dfault   : Expr.T     := NIL;
         refType  : Type.T     := NIL; (* Needed to copy an open array. *)
-        original_type: Type.T := NIL; (* only written once, to retain NamedType *)
         tempCGVal: CG.Val     := NIL;
         cg_type  : CG.TypeUID := 0;
         mode     : Mode       := FIRST (Mode);
@@ -66,7 +64,6 @@ PROCEDURE NewBuiltin (name: TEXT;  offset: INTEGER;  type: Type.T): Value.T =
     t.offset   := offset;
     t.mode     := Mode.mVALUE;
     t.type     := type;
-    t.original_type := type;
     t.unused   := FALSE;
     t.kind     := Type.Class.Error;
     RETURN t;
@@ -81,7 +78,6 @@ PROCEDURE New (READONLY info: Info): Value.T =
     t.offset   := info.offset;
     t.mode     := info.mode;
     t.type     := info.type;
-    t.original_type := info.type;
     t.dfault   := info.dfault;
     t.unused   := info.unused;
     t.kind     := Type.Class.Error;
@@ -96,7 +92,7 @@ PROCEDURE Split (formal: Value.T;  VAR info: Info) =
     info.name   := t.name;
     info.offset := t.offset;
     info.mode   := t.mode;
-    info.type   := OriginalTypeOf (t);
+    info.type   := TypeOf (t);
     info.dfault := t.dfault;
     info.unused := t.unused;
     info.trace  := t.trace;
@@ -111,7 +107,7 @@ PROCEDURE EmitDeclaration (formal: Value.T;  types_only, param: BOOLEAN) =
     size     : CG.Size;
     align    : CG.Alignment;
     info     : Type.Info;
-    typename := NoQID;
+    typename := M3ID.NoID;
   BEGIN
     IF (types_only) THEN
       Compile (t);
@@ -132,7 +128,7 @@ PROCEDURE EmitDeclaration (formal: Value.T;  types_only, param: BOOLEAN) =
         size  := info.size;
         align := info.alignment;
         mtype := info.mem_type;
-        Type.Typename (OriginalTypeOf (t), typename);
+        Type.Typename (TypeOf (t), typename);
       END;
       EVAL CG.Declare_param (t.name, size, align, mtype,
                              t.cg_type, in_memory := FALSE, up_level := FALSE,
@@ -175,30 +171,11 @@ PROCEDURE OpenArrayByVALUE (formal: Value.T;  VAR refType: Type.T): BOOLEAN =
 (* Externally dispatched-to: *)
 PROCEDURE TypeOf (t: T): Type.T =
   BEGIN
-    (* Type and original_type should both transition to non-nil at about
-     * the same time and then never become nil.
-     *)
-    <* ASSERT (t.original_type = NIL) = (t.type = NIL) *>
     IF (t.type = NIL) THEN
       t.type := Expr.TypeOf (t.dfault);
-      t.original_type := t.type;
     END;
-    <* ASSERT t.original_type # NIL AND t.type # NIL *>
     RETURN t.type;
   END TypeOf;
-
-PROCEDURE OriginalTypeOf (t: T): Type.T =
-  BEGIN
-    (* Type and original_type should both transition to non-nil at about
-     * the same time and then never become nil.
-     *)
-    <* ASSERT (t.original_type = NIL) = (t.type = NIL) *>
-    IF t.original_type = NIL THEN
-      EVAL TypeOf (t);
-    END;
-    <* ASSERT t.original_type # NIL AND t.type # NIL *>
-    RETURN t.original_type;
-  END OriginalTypeOf;
 
 (* Externally dispatched-to: *)
 PROCEDURE RepTypeOf (t: T): Type.T =
@@ -214,9 +191,6 @@ PROCEDURE Check (t: T;  VAR cs: Value.CheckState) =
       type: Type.T := NIL;
   BEGIN
     type := Type.CheckInfo (TypeOf (t), info);
-    IF Target.LowerTypes THEN
-      t.type := type;
-    END;
     t.repType := Type.StripPacked (type);
     EVAL Type.Check (t.repType);
     t.kind := info.class;
@@ -281,7 +255,6 @@ PROCEDURE Compile (t: T) =
     Type.Compile (RepTypeOf (t));
     Type.Compile (t.refType);
     Type.Compile (Expr.TypeOf (t.dfault));
-    Type.Compile (OriginalTypeOf (t));
   END Compile;
 
 (* Externally dispatched-to: *)

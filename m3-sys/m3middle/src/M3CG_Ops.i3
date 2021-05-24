@@ -13,13 +13,12 @@
 
 INTERFACE M3CG_Ops;
 
-IMPORT Target, M3CG;
+IMPORT Target, M3CG, M3ID;
 FROM M3CG IMPORT Type, MType, IType, RType, AType, ZType, Sign;
 FROM M3CG IMPORT Name, Var, Proc, Alignment, TypeUID, Label;
 FROM M3CG IMPORT Frequency, CallingConvention, CompareOp, ConvertOp, AtomicOp;
 FROM M3CG IMPORT BitSize, ByteSize, BitOffset, ByteOffset, RuntimeError;
 FROM M3CG IMPORT MemoryOrder;
-FROM M3CG IMPORT NoQID;
 
 TYPE
   ErrorHandler = PROCEDURE (msg: TEXT);
@@ -87,9 +86,9 @@ declare_typename (t: TypeUID;  n: Name);
    'n' can contain a character-coded line number, for an anonymous
    type expression. *)
 
-declare_array (t, index, elt: TypeUID;  s: BitSize);
+declare_array (t, index, elt: TypeUID;  s: BitSize; element_typename := M3ID.NoID);
 
-declare_open_array (t, elt: TypeUID;  s: BitSize);
+declare_open_array (t, elt: TypeUID;  s: BitSize; element_typename := M3ID.NoID);
 (* s describes the dope vector *)
 
 declare_enum (t: TypeUID; n_elts: INTEGER;  s: BitSize);
@@ -99,36 +98,36 @@ declare_enum (t: TypeUID; n_elts: INTEGER;  s: BitSize);
 declare_enum_elt (n: Name);
 (* An element of the most recent declare_enum type, in order. *) 
 
-declare_packed  (t: TypeUID;  s: BitSize;  base: TypeUID);
+declare_packed  (t: TypeUID;  s: BitSize;  base: TypeUID; base_typename := M3ID.NoID);
 
 declare_record (t: TypeUID;  s: BitSize;  n_fields: INTEGER);
 (* Record type.  The subsequent n_fields occurrences of declare_field
    define the fields.  These all preceed the next occurrence of declare_record
    or declare_object. *) 
 
-declare_field (n: Name;  o: BitOffset;  s: BitSize;  t: TypeUID);
+declare_field (n: Name;  o: BitOffset;  s: BitSize;  t: TypeUID; typename := M3ID.NoID);
 (* A field of the most recent declare record or declare_object. *) 
 
-declare_set (t, domain: TypeUID;  s: BitSize);
+declare_set (t, domain: TypeUID;  s: BitSize; domain_typename := M3ID.NoID);
 
-declare_subrange (t,domain: TypeUID; READONLY min,max: Target.Int; s: BitSize);
+declare_subrange (t,domain: TypeUID; READONLY min,max: Target.Int; s: BitSize; domain_typename := M3ID.NoID);
 
-declare_pointer (t, target: TypeUID;  brand: TEXT;  traced: BOOLEAN);
+declare_pointer (t, target: TypeUID;  brand: TEXT;  traced: BOOLEAN; target_typename := M3ID.NoID);
 (* 'brand'=NIL ==> t is unbranded *)
 
-declare_indirect (t, target: TypeUID; target_typename := NoQID);
+declare_indirect (t, target: TypeUID; target_typename := M3ID.NoID);
 (* an automatically dereferenced pointer! (WITH variables, VAR formals, ...) *)
 
 declare_proctype (t: TypeUID;  n_formals: INTEGER;
                   result: TypeUID;  n_raises: INTEGER;
-                  cc: CallingConvention; result_typename := NoQID);
+                  cc: CallingConvention; result_typename := M3ID.NoID);
 (* Procedure type.  The subsequent n_formals occurrences of declare_formal
    define the formal parameters.  The subsequent n_raises occurrences of
    declare_raises are names of raised exceptions.  n_raises < 0 => RAISES ANY.
    These occurrences of declare_formal and declare_raises all preceed the next
    occurrence of declare_proctype.  *)
 
-declare_formal (n: Name;  t: TypeUID; typename := NoQID);
+declare_formal (n: Name;  t: TypeUID; typename := M3ID.NoID);
 (* A formal of the most recent procedure *type*, i.e., introduced by
    declare_proctype. *) 
 
@@ -138,7 +137,7 @@ declare_raises (n: Name);
 
 declare_object (t, super: TypeUID;  brand: TEXT;
                 traced: BOOLEAN;  n_fields, n_methods: INTEGER;
-                field_size: BitSize);
+                field_size: BitSize; super_typename := M3ID.NoID);
 (* Object type.  The subsequent 'n_fields' occurrences of declare_field
    define the fields.  The subsequent 'n_methods' occurrences of declare_method
    define the methods.  These occurrences of declare_field and declare_formal all
@@ -199,11 +198,13 @@ set_runtime_proc (n: Name;  p: Proc);
 |                         nested procedures.
 |    f: Frequency       is the front-end estimate of how frequently the
 |                         variable is accessed.
+|    typename: M3ID     a full contextual typename like Cstddef__size_t or Ctypes__int
+|                       Only passed if Target.Typenames, since most backends do not use them.
 
 *)
 
 import_global (n: Name;  s: ByteSize;  a: Alignment;  t: Type;
-               m3t: TypeUID): Var;
+               m3t: TypeUID; typename := M3ID.NoID): Var;
 (* imports the specified global variable.  Only used for an <*EXTERNAL*>
    variable.  n is its simple external name. *)
 
@@ -217,21 +218,21 @@ bind_segment (seg: Var;  s: ByteSize;  a: Alignment;  t: Type;
    are known.  Every declared segment must be bound exactly once. *)
 
 declare_global (n: Name;  s: ByteSize;  a: Alignment;  t: Type;
-                m3t: TypeUID;  exported, init: BOOLEAN): Var;
+                m3t: TypeUID;  exported, init: BOOLEAN; typename := M3ID.NoID): Var;
 (* Declare a global variable, local to the current unit. *)
 (* 'n' is a mangled linker name. *)
 (* As of 2016-12-7, this is generated only by coverage generation, for a
    statistics block, and that has a null name. *) 
 
 declare_constant (n: Name;  s: ByteSize;  a: Alignment;  t: Type;
-              m3t: TypeUID;  exported, init: BOOLEAN): Var;
+              m3t: TypeUID;  exported, init: BOOLEAN; typename := M3ID.NoID): Var;
 (* Declare a read-only global variable, local to the current unit. *)
 (* 'n' is a mangled linker name. *)
 (* As of 2016-12-07, this is not generated by the front end.  *) 
 
 declare_local (n: Name;  s: ByteSize;  a: Alignment;  t: Type;
                m3t: TypeUID;  in_memory, up_level: BOOLEAN;
-               f: Frequency): Var;
+               f: Frequency; typename := M3ID.NoID): Var;
 (* Declare a local variable.  This can appear either within a
    signature, (i.e., after a declare_procedure but before its
    begin_procedure) or inside the body, (i.e., within a
@@ -254,7 +255,7 @@ declare_local (n: Name;  s: ByteSize;  a: Alignment;  t: Type;
 
 declare_param (n: Name;  s: ByteSize;  a: Alignment;  t: Type;
                m3t: TypeUID;  in_memory, up_level: BOOLEAN;
-               f: Frequency; typename := NoQID): Var;
+               f: Frequency; typename := M3ID.NoID): Var;
 (* Declare a formal parameter, belonging to the most recent
    declare_procedure or import_procedure.  Formals are declared in
    their lexical order, relative to each other, but many other things
@@ -268,7 +269,7 @@ declare_param (n: Name;  s: ByteSize;  a: Alignment;  t: Type;
    VAR parameter used to return the result.  *)
 
 declare_temp (s: ByteSize;  a: Alignment;  t: Type;
-              in_memory: BOOLEAN): Var;
+              in_memory: BOOLEAN; typename := M3ID.NoID): Var;
 (* Declare an anonymous local temporary variable.  Temps are declared
    and freed between their containing procedure's begin_procedure and
    end_procedure calls.  Temps are never referenced by nested procedures. *)
@@ -347,7 +348,7 @@ init_float (o: ByteOffset;  READONLY f: Target.Float);
 import_procedure (n: Name;  n_params: INTEGER;  return: Type;
                   cc: CallingConvention;
                   return_typeid: TypeUID := 0;
-                  return_typename := NoQID): Proc;
+                  return_typename := M3ID.NoID): Proc;
 (* declare and import the external procedure with name 'n' and 'n_params'
    formal parameters.  It must be a top-level (=0) procedure that returns
    values of type 'return'.  'cc' is derived from the procedure's <*EXTERNAL*>
@@ -359,7 +360,7 @@ declare_procedure (n: Name;  n_params: INTEGER;  return: Type;
                    lev: INTEGER;  cc: CallingConvention;
                    exported: BOOLEAN;  parent: Proc;
                    return_typeid: TypeUID := 0;
-                   return_typename := NoQID): Proc;
+                   return_typename := M3ID.NoID): Proc;
 (* Declare a procedure with simple name 'n' within the current scope,
    with 'n_params' formal parameters, at static nesting level 'lev'.
    Set the "current procedure" to this procedure.  If the name n is M3ID.NoID,

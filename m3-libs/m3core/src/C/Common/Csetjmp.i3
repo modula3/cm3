@@ -5,14 +5,11 @@
 UNSAFE INTERFACE Csetjmp;
 FROM Ctypes IMPORT int;
 
-(* temporary for compat, not used; u is for underscore;
- * _longjmp does not save/restore signal mask, saving much time
- *)
-<*EXTERNAL "Csetjmp__ulongjmp" *> PROCEDURE ulongjmp (env: ADDRESS; val: int);
+TYPE jmp_buf = ADDRESS; (* Name for m3core.h to replace. *)
 
 (* Modula-3 exception uses setjmp/longjmp, without signal mask save/restore
  * TODO: Use C++ exceptions or Win32 exceptions or libunwind.
  *)
-<*EXTERNAL "Csetjmp__m3_longjmp" *> PROCEDURE m3_longjmp (env: ADDRESS; val: int);
+<*EXTERNAL "Csetjmp__m3_longjmp" *> PROCEDURE m3_longjmp (env: jmp_buf; val: int);
 
 END Csetjmp.

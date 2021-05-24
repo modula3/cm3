@@ -10,7 +10,7 @@ MODULE ESet;
 IMPORT M3, M3ID, CG, Value, Token, Scope, Scanner, M3Buf;
 IMPORT Error, Word, Exceptionz, Target, Module;
 FROM Scanner IMPORT Match, MatchID, GetToken, cur;
-FROM M3CG IMPORT QID;
+FROM M3 IMPORT QID;
 
 TYPE TList = M3.ExSetList;
 REVEAL

@@ -13,7 +13,6 @@ FROM M3CG IMPORT CompareOp, ConvertOp, RuntimeError, MemoryOrder, AtomicOp;
 FROM Target IMPORT CGType;
 FROM M3CG_Ops IMPORT ErrorHandler;
 IMPORT Wrx86, M3ID, TInt;
-FROM M3CG IMPORT QID;
 (*
 IMPORT Wrx86, M3ID, M3CField, M3CFieldSeq;
 IMPORT SortedIntRefTbl;
@@ -774,7 +773,7 @@ BEGIN
 END TypeIDToText;
 *)
 
-<*NOWARN*>PROCEDURE declare_array (this: T; typeid, index_typeid, element_typeid: TypeUID; total_bit_size: BitSize) =
+<*NOWARN*>PROCEDURE declare_array (this: T; typeid, index_typeid, element_typeid: TypeUID; total_bit_size: BitSize; <*UNUSED*>element_typename: Name) =
 BEGIN
 (*
     WITH index_type = TypeidToType_Get(index_typeid),
@@ -805,7 +804,7 @@ BEGIN
 *)
 END declare_array;
 
-<*NOWARN*>PROCEDURE declare_open_array (this: T; typeid, element_typeid: TypeUID; bit_size: BitSize) =
+<*NOWARN*>PROCEDURE declare_open_array (this: T; typeid, element_typeid: TypeUID; bit_size: BitSize; element_typename: Name) =
 BEGIN
     <* ASSERT bit_size MOD 32 = 0 *>
 (*
@@ -894,12 +893,12 @@ BEGIN
     (* UNDONE? *)  
 END declare_subrange;
 
-<*NOWARN*>PROCEDURE declare_pointer(this: T; typeid, target: TypeUID; brand: TEXT; traced: BOOLEAN) =
+<*NOWARN*>PROCEDURE declare_pointer(this: T; typeid, target: TypeUID; brand: TEXT; traced: BOOLEAN; target_typename: Name) =
 BEGIN
     (* UNDONE? *)  
 END declare_pointer;
 
-<*NOWARN*>PROCEDURE declare_indirect(this: T; typeid, target: TypeUID; <*UNUSED*>target_typename: QID) =
+<*NOWARN*>PROCEDURE declare_indirect(this: T; typeid, target: TypeUID; <*UNUSED*>target_typename: M3ID.T) =
 BEGIN
     (* UNDONE? *)  
 END declare_indirect;
@@ -907,12 +906,12 @@ END declare_indirect;
 <*NOWARN*>PROCEDURE declare_proctype(
     this: T; typeid: TypeUID; n_formals: INTEGER;
     result: TypeUID; n_raises: INTEGER;
-    callingConvention: CallingConvention; result_typename: QID) =
+    callingConvention: CallingConvention; result_typename: M3ID.T) =
 BEGIN
     SuppressLineDirective(this, n_formals + (ORD(n_raises >= 0) * n_raises), "declare_proctype n_formals + n_raises");
 END declare_proctype;
 
-<*NOWARN*>PROCEDURE declare_formal(this: T; name: Name; typeid: TypeUID; typename: QID) =
+<*NOWARN*>PROCEDURE declare_formal(this: T; name: Name; typeid: TypeUID; typename: M3ID.T) =
 BEGIN
     print(this, "/* declare formal: " & M3ID.ToText(name) & " */\n");
     SuppressLineDirective(this, -1, "declare_formal");
@@ -1135,11 +1134,6 @@ BEGIN
     RETURN var;
 END declare_param;
 
-PROCEDURE declare_temp (this: T; byte_size: ByteSize; alignment: Alignment; type: Type; in_memory:BOOLEAN): Var =
-BEGIN
-    RETURN declare_local(this, 0, byte_size, alignment, type, -1, in_memory, FALSE, M3CG.Always);
-END declare_temp;
-
 PROCEDURE free_temp (this: T; v: Var) =
 BEGIN
 END free_temp;
@@ -1327,7 +1321,7 @@ PROCEDURE declare_procedure (this: T; name: Name; n_params: INTEGER;
                              callingConvention: CallingConvention;
                              exported: BOOLEAN; parent: Proc;
                              <*UNUSED*>return_typeid: TypeUID;
-                             <*UNUSED*>return_typename: QID): Proc =
+                             <*UNUSED*>return_typename: M3ID.T): Proc =
 VAR proc := NEW(CProc, name := FixName(name), n_params := n_params,
                 return_type := return_type, level := level,
                 callingConvention := callingConvention, exported := exported,

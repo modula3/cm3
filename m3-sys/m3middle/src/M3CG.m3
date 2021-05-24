@@ -8,7 +8,7 @@
 MODULE M3CG EXPORTS M3CG, M3CG_Ops;
 
 IMPORT Text, Word; 
-IMPORT Target;
+IMPORT Target, M3ID;
 
 REVEAL
   T = Public BRANDED "M3CG.T" OBJECT OVERRIDES
@@ -238,14 +238,14 @@ PROCEDURE declare_typename (xx: T;  t: TypeUID;  n: Name) =
     xx.child.declare_typename (t, n);
   END declare_typename;
 
-PROCEDURE declare_array (xx: T;  t, index, elt: TypeUID;  s: BitSize) =
+PROCEDURE declare_array (xx: T;  t, index, elt: TypeUID;  s: BitSize; element_typename: Name) =
   BEGIN
-    xx.child.declare_array (t, index, elt, s);
+    xx.child.declare_array (t, index, elt, s, element_typename);
   END declare_array;
 
-PROCEDURE declare_open_array (xx: T;  t, elt: TypeUID;  s: BitSize) =
+PROCEDURE declare_open_array (xx: T;  t, elt: TypeUID;  s: BitSize; element_typename: Name) =
   BEGIN
-    xx.child.declare_open_array (t, elt, s);
+    xx.child.declare_open_array (t, elt, s, element_typename);
   END declare_open_array;
 
 PROCEDURE declare_enum (xx: T;  t: TypeUID;  n_elts: INTEGER;  s: BitSize) =
@@ -258,7 +258,7 @@ PROCEDURE declare_enum_elt (xx: T;  n: Name) =
     xx.child.declare_enum_elt (n);
   END declare_enum_elt;
 
-PROCEDURE declare_packed (xx: T;  t: TypeUID;  s: BitSize;  base: TypeUID) =
+PROCEDURE declare_packed (xx: T;  t: TypeUID;  s: BitSize;  base: TypeUID; <*UNUSED*>base_typename: Name) =
   BEGIN
     xx.child.declare_packed (t, s, base);
   END declare_packed;
@@ -270,32 +270,32 @@ PROCEDURE declare_record (xx: T; t: TypeUID;  s: BitSize;
   END declare_record;
 
 PROCEDURE declare_field (xx: T;  n: Name;  o: BitOffset;  s: BitSize;
-                         t: TypeUID)=
+                         t: TypeUID; typename: Name)=
   BEGIN
-    xx.child.declare_field (n, o, s, t);
+    xx.child.declare_field (n, o, s, t, typename);
   END declare_field;
 
-PROCEDURE declare_set (xx: T;  t, domain: TypeUID;  s: BitSize) =
+PROCEDURE declare_set (xx: T;  t, domain: TypeUID;  s: BitSize; <*UNUSED*>domain_typename: Name) =
   BEGIN
     xx.child.declare_set (t, domain, s);
   END declare_set;
 
 PROCEDURE declare_subrange (xx: T; t, domain: TypeUID;
                             READONLY min, max: Target.Int;
-                            s: BitSize) =
+                            s: BitSize; <*UNUSED*>domain_typename: Name) =
   BEGIN
     xx.child.declare_subrange (t, domain, min, max, s);
   END declare_subrange;
 
 
 PROCEDURE declare_pointer (xx: T;  t, target: TypeUID;  brand: TEXT;
-                           traced: BOOLEAN) =
+                           traced: BOOLEAN; target_typename: Name) =
   BEGIN
-    xx.child.declare_pointer (t, target, brand, traced);
+    xx.child.declare_pointer (t, target, brand, traced, target_typename);
   END declare_pointer;
 
 
-PROCEDURE declare_indirect (xx: T;  t, target: TypeUID; target_typename: QID) =
+PROCEDURE declare_indirect (xx: T;  t, target: TypeUID; target_typename: Name) =
   BEGIN
     xx.child.declare_indirect (t, target, target_typename);
   END declare_indirect;
@@ -303,12 +303,12 @@ PROCEDURE declare_indirect (xx: T;  t, target: TypeUID; target_typename: QID) =
 
 PROCEDURE declare_proctype (xx: T; t: TypeUID; n_formals: INTEGER;
                             result: TypeUID;  n_raises: INTEGER;
-                            cc: CallingConvention; result_typename: QID) =
+                            cc: CallingConvention; result_typename: Name) =
   BEGIN
     xx.child.declare_proctype (t, n_formals, result, n_raises, cc, result_typename);
   END declare_proctype;
 
-PROCEDURE declare_formal (xx: T;  n: Name;  t: TypeUID; typename: QID) =
+PROCEDURE declare_formal (xx: T;  n: Name;  t: TypeUID; typename: Name) =
   BEGIN
     xx.child.declare_formal (n, t, typename);
   END declare_formal;
@@ -322,10 +322,10 @@ PROCEDURE declare_raises (xx: T;  n: Name) =
 PROCEDURE declare_object (xx: T; t, super: TypeUID;
                           brand: TEXT;  traced: BOOLEAN;
                           n_fields, n_methods: INTEGER;
-                          field_size: BitSize) =
+                          field_size: BitSize; super_typename: Name) =
   BEGIN
-    xx.child.declare_object (t, super, brand, traced,
-                             n_fields, n_methods, field_size);
+    xx.child.declare_object (t, super, brand, traced, n_fields, n_methods,
+                             field_size, super_typename);
   END declare_object;
 
 PROCEDURE declare_method (xx: T;  n: Name;  signature: TypeUID) =
@@ -364,7 +364,7 @@ PROCEDURE set_runtime_proc (xx: T;  n: Name;  p: Proc) =
 (*------------------------------------------------- variable declarations ---*)
 
 PROCEDURE import_global (xx: T;  n: Name;  s: ByteSize;  a: Alignment;
-                         t: Type;  m3t: TypeUID): Var =
+                         t: Type;  m3t: TypeUID; <*UNUSED*>typename: Name): Var =
   BEGIN
     RETURN xx.child.import_global (n, s, a, t, m3t);
   END import_global;
@@ -381,35 +381,35 @@ PROCEDURE bind_segment (xx: T;  seg: Var;  s: ByteSize;  a: Alignment;
   END bind_segment;
 
 PROCEDURE declare_global (xx: T;  n: Name;  s: ByteSize;  a: Alignment;
-                     t: Type;  m3t: TypeUID;  exported, inited: BOOLEAN): Var =
+                     t: Type;  m3t: TypeUID;  exported, inited: BOOLEAN; <*UNUSED*>typename: Name): Var =
   BEGIN
     RETURN xx.child.declare_global (n, s, a, t, m3t, exported, inited);
   END declare_global;
 
 PROCEDURE declare_constant (xx: T;  n: Name;  s: ByteSize;  a: Alignment;
-                     t: Type;  m3t: TypeUID;  exported, inited: BOOLEAN): Var =
+                     t: Type;  m3t: TypeUID;  exported, inited: BOOLEAN; typename: Name): Var =
   BEGIN
-    RETURN xx.child.declare_constant (n, s, a, t, m3t, exported, inited);
+    RETURN xx.child.declare_constant (n, s, a, t, m3t, exported, inited, typename);
   END declare_constant;
 
 PROCEDURE declare_local (xx: T;  n: Name;  s: ByteSize;  a: Alignment;
                          t: Type;  m3t: TypeUID;  in_memory, up_level: BOOLEAN;
-                         f: Frequency): Var =
+                         f: Frequency; typename: Name): Var =
   BEGIN
-    RETURN xx.child.declare_local (n, s, a, t, m3t, in_memory, up_level, f);
+    RETURN xx.child.declare_local (n, s, a, t, m3t, in_memory, up_level, f, typename);
   END declare_local;
 
 PROCEDURE declare_param (xx: T;  n: Name;  s: ByteSize;  a: Alignment;
                          t: Type;  m3t: TypeUID;  in_memory, up_level: BOOLEAN;
-                         f: Frequency; typename: QID): Var =
+                         f: Frequency; typename: Name): Var =
   BEGIN
     RETURN xx.child.declare_param (n, s, a, t, m3t, in_memory, up_level, f, typename);
   END declare_param;
 
 PROCEDURE declare_temp (xx: T;  s: ByteSize;  a: Alignment;  t: Type;
-                        in_memory:BOOLEAN): Var =
+                        in_memory:BOOLEAN; typename: Name): Var =
   BEGIN
-    RETURN xx.child.declare_temp (s, a, t, in_memory);
+    RETURN xx.child.declare_temp (s, a, t, in_memory, typename);
   END declare_temp;
 
 PROCEDURE free_temp (xx: T;  v: Var) =
@@ -470,7 +470,7 @@ PROCEDURE init_float (xx: T;  o: ByteOffset;  READONLY f: Target.Float) =
 PROCEDURE import_procedure (xx: T;  n: Name;  n_params: INTEGER;
                           ret_type: Type;  cc: CallingConvention;
                           return_typeid: TypeUID;
-                          return_typename: QID): Proc =
+                          return_typename: Name): Proc =
   BEGIN
     RETURN xx.child.import_procedure (n, n_params, ret_type, cc, return_typeid, return_typename);
   END import_procedure;
@@ -480,7 +480,7 @@ PROCEDURE declare_procedure (xx: T;  n: Name;  n_params: INTEGER;
                              cc: CallingConvention;
                              exported: BOOLEAN;  parent: Proc;
                              return_typeid: TypeUID;
-                             return_typename: QID): Proc =
+                             return_typename: Name): Proc =
   BEGIN
     RETURN xx.child.declare_procedure (n, n_params, return_type,
                                        lev, cc, exported, parent,

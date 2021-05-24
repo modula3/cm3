@@ -1071,7 +1071,7 @@ PROCEDURE EvalRecordCons (VAR s: State;  tipe: M3Type.Record;
     rec        := M3RecVal.NewEmpty ();
     next_field := 0;
     by_name    := FALSE;
-    field_name : M3ID.T := 0;
+    field_name := M3ID.NoID;
     v1         : T;
     ch         : NodeIndex;
   BEGIN

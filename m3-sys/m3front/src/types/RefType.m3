@@ -32,7 +32,7 @@ TYPE
         fprint     := FPrinter;
       END;
 
-VAR root: M3ID.T := M3ID.NoID;
+VAR root := M3ID.NoID;
 
 (* EXPORTED *)
 PROCEDURE Parse (): Type.T =
@@ -81,8 +81,8 @@ PROCEDURE New (target: Type.T;  traced: BOOLEAN;  brand: Brand.T): Type.T =
 PROCEDURE Reduce (t: Type.T): P =
   BEGIN
     LOOP
+      t := Type.Strip (t); (* StripPacked? *)
       IF (t = NIL) THEN RETURN NIL END;
-      IF (t.info.class = Type.Class.Named) THEN t := Type.Strip (t) END;
       IF (t.info.class = Type.Class.Ref) THEN RETURN t END;
       IF (t.info.class # Type.Class.Opaque) THEN RETURN NIL END;
       t := Revelation.LookUp (t);

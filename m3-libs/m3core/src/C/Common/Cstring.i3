@@ -7,15 +7,11 @@ INTERFACE Cstring;
 FROM Ctypes IMPORT char_star, const_char_star, const_void_star, int, void_star;
 FROM Cstddef IMPORT size_t;
 
-<*EXTERNAL Cstring__memchr *> PROCEDURE memchr   (s: const_void_star; c: int; n: size_t): void_star;
 <*EXTERNAL Cstring__memcpy *> PROCEDURE memcpy   (s1: void_star; s2: const_void_star; n: size_t): void_star;
 <*EXTERNAL Cstring__memset *> PROCEDURE memset   (s: void_star; c: int; n: size_t): void_star;
 <*EXTERNAL Cstring__memcmp *> PROCEDURE memcmp   (s1: const_void_star; s2: const_void_star; n: size_t): int;
 <*EXTERNAL Cstring__strncpy*> PROCEDURE strncpy  (s1: char_star; s2: const_char_star; n: size_t): char_star;
 <*EXTERNAL Cstring__strncat*> PROCEDURE strncat  (s1: char_star; s2: const_char_star; n: size_t): char_star;
-<*EXTERNAL Cstring__strchr *> PROCEDURE strchr   (s: const_char_star; c: int): char_star;
-<*EXTERNAL Cstring__strrchr*> PROCEDURE strrchr  (s: const_char_star; c: int): char_star;
-<*EXTERNAL Cstring__strpbrk*> PROCEDURE strpbrk  (s1: const_char_star; s2: const_char_star): char_star;
 <*EXTERNAL Cstring__strtok *> PROCEDURE strtok   (s1: char_star; s2: const_char_star): char_star;
 <*EXTERNAL Cstring__strcmp *> PROCEDURE strcmp   (s1: const_char_star; s2: const_char_star): int;
 <*EXTERNAL Cstring__strncmp*> PROCEDURE strncmp  (s1: const_char_star; s2: const_char_star; n: size_t): int;
@@ -25,7 +21,6 @@ FROM Cstddef IMPORT size_t;
 <*EXTERNAL Cstring__memmove*> PROCEDURE memmove  (s1: void_star; s2: const_void_star; n: size_t): void_star;
 <*EXTERNAL Cstring__strcoll*> PROCEDURE strcoll  (s1: const_char_star; s2: const_char_star): int;
 <*EXTERNAL Cstring__strxfrm*> PROCEDURE strxfrm  (s1: char_star; s2: const_char_star; n: size_t): size_t;
-<*EXTERNAL Cstring__strstr *> PROCEDURE strstr   (s1: const_char_star; s2: const_char_star): char_star;
 <*EXTERNAL Cstring__strerror*> PROCEDURE strerror (errnum: int): char_star;
 
 (* These are bad functions, that OpenBSD linker rightfully warns about, so

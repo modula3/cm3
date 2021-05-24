@@ -477,10 +477,8 @@ VAR (*CONST*)
      test for nested procedures passed as parameters must be more
      elaborate (e.g. HPPA). *)
 
-(* LowerTypes = TRUE: m3front behaves the same as historical, stripping away NamedType.
- * LowerTypes = FALSE; m3front passes "original_type".
- *)
-VAR LowerTypes := TRUE;
+(* Backend uses full typenames. These are expensive? to produce so optional. *)
+VAR Typenames := FALSE;
 
 (* Ideally the value 0 would be uninitialized, but it is used publically in Quake? *)
 VAR BackendMode: M3BackendMode_t;

@@ -447,50 +447,6 @@ typedef char* ADDRESS;
 typedef ADDRESS TEXT;
 typedef ADDRESS MUTEX;
 
-// These typenames allow for concatenating the hand written
-// .h/.c files with the m3c output so it can all be compiled at once.
-//
-// The m3c output uses ifndef to guard its own definitions, which
-// can vary subtly. For example "int" is a 32bit signed integer type, possibly long.
-// "long" is signed and the same size as long, but can on some platforms be int instead,
-// if int and long are the same size.
-// Presently const is meaningless in Modula-3 and m3c, so const is ommited there,
-// and could be ommited here as well.
-//
-// The names should match the .i3 files, assuming full qualification and replacing "." with "__".
-#define Cstddef__size_t             Cstddef__size_t             /* inhibit m3c type */
-#define Cstddef__ssize_t            Cstddef__ssize_t            /* inhibit m3c type */
-#define Cstdio__FILE_star           Cstdio__FILE_star           /* inhibit m3c type */
-#define Ctypes__char                Ctypes__char                /* inhibit m3c type */
-#define Ctypes__char_star           Ctypes__char_star           /* inhibit m3c type */
-#define Ctypes__char_star_star      Ctypes__char_star_star      /* inhibit m3c type */
-#define Ctypes__const_char_star     Ctypes__const_char_star     /* inhibit m3c type */
-#define Ctypes__const_int           Ctypes__const_int           /* inhibit m3c type */
-#define Ctypes__const_void_star     Ctypes__const_void_star     /* inhibit m3c type */
-#define Ctypes__int                 Ctypes__int                 /* inhibit m3c type */
-#define Ctypes__long                Ctypes__long                /* inhibit m3c type */
-#define Ctypes__size_t              Ctypes__size_t              /* inhibit m3c type */
-#define Ctypes__unsigned_long       Ctypes__unsigned_long       /* inhibit m3c type */
-#define Ctypes__void_star           Ctypes__void_star           /* inhibit m3c type */
-#define Utypes__size_t              Utypes__size_t              /* inhibit m3c type */
-#define WinBaseTypes__const_UINT32  WinBaseTypes__const_UINT32  /* inhibit m3c type */
-
-typedef size_t        Cstddef__size_t;
-typedef ssize_t       Cstddef__ssize_t;
-typedef FILE*         Cstdio__FILE_star;
-typedef char          Ctypes__char;
-typedef char*         Ctypes__char_star;
-typedef char**        Ctypes__char_star_star;
-typedef const char*   Ctypes__const_char_star;
-typedef int           Ctypes__const_int;
-typedef ADDRESS       Ctypes__const_void_star;    // TODO const void*
-typedef int           Ctypes__int;
-typedef long          Ctypes__long;
-typedef unsigned long Ctypes__unsigned_long;
-typedef ADDRESS       Ctypes__void_star;          // TODO void*
-typedef size_t        Utypes__size_t;             // redundant
-typedef UINT32        WinBaseTypes__const_UINT32;
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -515,8 +471,19 @@ typedef ptrdiff_t INTEGER;
 typedef size_t WORD_T;
 #endif
 
+// Something (m3front?) is indecisive as to if Word__T is INTEGER or INT64.
+// Or rather, if functions like Word__Divide, traffic in INTEGER or
+// Word__T. This could be m3front vs. Word.ig. This combines poorly
+// with Word__T sometimes being INT64. They do not match. As well,
+// between INT64 and INTEGER, INTEGER is preferred for portability.
+// But having actual unsigned types might be good too.
+//typedef INTEGER WORD_T;
+typedef INTEGER Word__T;
+// TODO replace WORD_T with Word__T
+
 #define INTEGER INTEGER /* Support concatenation with m3c output. */
-#define WORD_T WORD_T   /* Support concatenation with m3c output. */
+#define WORD_T  WORD_T  /* Support concatenation with m3c output. */
+#define Word__T Word__T /* Support concatenation with m3c output. */
 
 /* LONGINT is always signed and exactly 64 bits. */
 typedef INT64 LONGINT;
@@ -532,6 +499,78 @@ typedef INTEGER m3_pid_t;
 typedef ADDRESS m3_pthread_t;
 typedef LONGINT m3_off_t;
 typedef INTEGER m3_uid_t;
+
+// These typenames allow for concatenating the hand written
+// .h/.c files with the m3c output so it can all be compiled at once.
+//
+// The m3c output uses ifndef to guard its own definitions, which
+// can vary subtly. For example "int" is a 32bit signed integer type, possibly long.
+// "long" is signed and the same size as long, but can on some platforms be int instead,
+// if int and long are the same size.
+// Presently const is meaningless in Modula-3 and m3c, so const is ommited there,
+// and could be ommited here as well.
+//
+// The names should match the .i3 files, assuming full qualification and replacing "." with "__".
+#define Cstddef__size_t             Cstddef__size_t             /* inhibit m3c type */
+#define Cstddef__ssize_t            Cstddef__ssize_t            /* inhibit m3c type */
+#define Cstdio__FILE_star           Cstdio__FILE_star           /* inhibit m3c type */
+#define Ctypes__char                Ctypes__char                /* inhibit m3c type */
+#define Ctypes__char_star           Ctypes__char_star           /* inhibit m3c type */
+#define Ctypes__char_star_star      Ctypes__char_star_star      /* inhibit m3c type */
+#define Ctypes__const_char_star     Ctypes__const_char_star     /* inhibit m3c type */
+#define Ctypes__const_int           Ctypes__const_int           /* inhibit m3c type */
+#define Ctypes__const_void_star     Ctypes__const_void_star     /* inhibit m3c type */
+#define Ctypes__int                 Ctypes__int                 /* inhibit m3c type */
+#define Ctypes__int_star            Ctypes__int_star            /* inhibit m3c type */
+#define Ctypes__long                Ctypes__long                /* inhibit m3c type */
+#define Ctypes__size_t              Ctypes__size_t              /* inhibit m3c type */
+#define Ctypes__unsigned_long       Ctypes__unsigned_long       /* inhibit m3c type */
+#define Ctypes__void_star           Ctypes__void_star           /* inhibit m3c type */
+#define Utypes__size_t              Utypes__size_t              /* inhibit m3c type */
+#define WinBaseTypes__const_UINT32  WinBaseTypes__const_UINT32  /* inhibit m3c type */
+
+typedef size_t        Cstddef__size_t;
+typedef ssize_t       Cstddef__ssize_t;
+typedef FILE*         Cstdio__FILE_star;
+typedef char          Ctypes__char;
+typedef char*         Ctypes__char_star;
+typedef char**        Ctypes__char_star_star;
+typedef const char*   Ctypes__const_char_star;
+typedef int           Ctypes__const_int;
+typedef const void*   Ctypes__const_void_star;
+typedef int           Ctypes__int;
+typedef int*          Ctypes__int_star;
+typedef long          Ctypes__long;
+typedef unsigned long Ctypes__unsigned_long;
+typedef void*         Ctypes__void_star;
+typedef size_t        Utypes__size_t;             // redundant
+typedef UINT32        WinBaseTypes__const_UINT32;
+
+#define Csignal__Handler Csignal__Handler            /* inhibit m3c type */
+typedef void (__cdecl*   Csignal__Handler)(int s);
+
+#define Csetjmp__jmp_buf            Csetjmp__jmp_buf            /* inhibit m3c type */
+#ifdef __sun /* Messy. See Csetjmp.c. */
+typedef sigjmp_buf    Csetjmp__jmp_buf;
+#else
+typedef jmp_buf       Csetjmp__jmp_buf;
+#endif
+
+#define ContextC__T                    ContextC__T                    /* inhibit m3c type */
+#define CoroutineUcontext__Arg         CoroutineUcontext__Arg         /* inhibit m3c type */
+#define CoroutineUcontext__Entry       CoroutineUcontext__Entry       /* inhibit m3c type */
+#define ContextC__untraced_ref_integer ContextC__untraced_ref_integer /* inhibit m3c type */
+
+// CoroutineUcontext__Arg is a pointer to a struct (CoroutineUcontext.Arg) however,
+// the C code does not derefernce it and the Modula-3 code defines a different name
+// for it (hashed), then casts its address to this. Therefore, the struct
+// does not need to be defined.
+typedef void* CoroutineUcontext__Arg;
+typedef void (__cdecl*CoroutineUcontext__Entry)(CoroutineUcontext__Arg);
+struct ContextC__TValue;
+typedef struct ContextC__TValue ContextC__TValue;
+typedef        ContextC__TValue* ContextC__T;
+typedef INTEGER* ContextC__untraced_ref_integer;
 
 /*
  m3_pthread_t is void*.

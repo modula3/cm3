@@ -9,7 +9,6 @@
 INTERFACE ProcType;
 
 IMPORT M3, M3ID, CG, Type, Value, CallExpr;
-FROM M3CG IMPORT QID;
 
 PROCEDURE Parse          (): Type.T;
 PROCEDURE ParseSignature (name: M3ID.T;  cc: CG.CallingConvention): Type.T;
@@ -20,7 +19,7 @@ PROCEDURE Is        (t: Type.T): BOOLEAN;
 PROCEDURE NFormals  (t: Type.T): INTEGER;
 PROCEDURE Formals   (t: Type.T): Value.T (*list*);
 PROCEDURE Result    (t: Type.T): Type.T;
-PROCEDURE ResultTypename (t: Type.T): QID;
+PROCEDURE ResultTypename (t: Type.T): M3ID.T;
 PROCEDURE CGResult  (t: Type.T): CG.Type;
 PROCEDURE Raises    (t: Type.T): M3.ExSet;
 PROCEDURE Methods   (t: Type.T): CallExpr.MethodList;

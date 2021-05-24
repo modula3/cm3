@@ -10,11 +10,12 @@ MODULE NamedType;
 
 IMPORT M3, M3ID, Token, Type, TypeRep, Scanner, ObjectType;
 IMPORT Error, Scope, Brand, Value, ErrType, Target;
-FROM M3CG IMPORT QID;
+FROM M3 IMPORT QID;
 
 TYPE
   P = Type.T BRANDED "NamedType.T" OBJECT
         scope      : Scope.T := NIL;
+        qid        : QID;
         type       : Type.T := NIL;
         obj        : Value.T := NIL;
       OVERRIDES
@@ -44,12 +45,12 @@ PROCEDURE Parse (): Type.T =
       (* this is a non-reserved ID *)
       p := NEW (P);
       TypeRep.Init (p, Type.Class.Named);
-      p.scope          := Scope.Top ();
-      p.info.name.item := Scanner.MatchID ();
+      p.scope    := Scope.Top ();
+      p.qid.item := Scanner.MatchID ();
       IF (Scanner.cur.token = TK.tDOT) THEN
         Scanner.GetToken (); (* . *)
-        p.info.name.module := p.info.name.item;
-        p.info.name.item   := Scanner.MatchID ();
+        p.qid.module := p.qid.item;
+        p.qid.item   := Scanner.MatchID ();
       END;
       t := p;
     END;
@@ -77,8 +78,8 @@ PROCEDURE Create (module, name: M3ID.T): Type.T =
     p := NEW (P);
     TypeRep.Init (p, Type.Class.Named);
     p.scope        := Scope.Top ();
-    p.info.name.module := module;
-    p.info.name.item   := name;
+    p.qid.module := module;
+    p.qid.item   := name;
     RETURN p;
   END Create;
 
@@ -94,7 +95,7 @@ PROCEDURE Split (t: Type.T;  VAR name: QID): BOOLEAN =
   BEGIN
     IF (p = NIL) THEN RETURN FALSE END;
     Resolve (p);
-    name := p.info.name;
+    name := p.qid;
     RETURN TRUE;
   END Split;
 
@@ -112,20 +113,23 @@ PROCEDURE Resolve (p: P) =
   VAR o: Value.T;  t: Type.T;  save: INTEGER;
   BEGIN
     IF (p.type = NIL) THEN
-      o := Scope.LookUpQID (p.scope, p.info.name);
+      o := Scope.LookUpQID (p.scope, p.qid);
       p.obj := o;
       IF (o = NIL) THEN
         save := Scanner.offset;
         Scanner.offset := p.origin;
-        Error.QID (p.info.name, "undefined");
+        Error.QID (p.qid, "undefined");
         Scanner.offset := save;
         t := ErrType.T;
       ELSIF (Value.ClassOf (o) = Value.Class.Type) THEN
         t := Value.ToType (o);
+        IF Target.Typenames THEN
+          p.info.name := M3ID.Add (Value.GlobalName (o, dots := FALSE (*underscores instead*)));
+        END;
       ELSE
         save := Scanner.offset;
         Scanner.offset := p.origin;
-        Error.QID (p.info.name, "name isn\'t bound to a type");
+        Error.QID (p.qid, "name isn\'t bound to a type");
         Scanner.offset := save;
         t := ErrType.T;
       END;
@@ -142,10 +146,11 @@ PROCEDURE Strip (t: Type.T): Type.T =
 
 PROCEDURE Check (p: P) =
   VAR cs := M3.OuterCheckState;  nErrs, nWarns, nErrsB: INTEGER;
-      name := p.info.name;
+      name := M3ID.NoID;
       type: Type.T := NIL;
   BEGIN
-    Resolve (p);
+    Resolve (p);         (* Resolve can fill in name. *)
+    name := p.info.name; (* Preserve name around Type.CheckInfo. *)
     nErrs := 0;  nErrsB := 0;
     IF (p.obj # NIL) THEN
       Error.Count (nErrs, nWarns);
@@ -155,9 +160,6 @@ PROCEDURE Check (p: P) =
     IF (nErrs = nErrsB) THEN
       (* no errors yet... *)
       type := Type.CheckInfo (p.type, p.info);
-      IF Target.LowerTypes THEN
-        p.type := type;
-      END;
     ELSE (* some sort of error (probably illegal recursion...) *)
       EVAL Type.CheckInfo (ErrType.T, p.info);
     END;
@@ -208,7 +210,7 @@ PROCEDURE GenDesc (p: P) =
 
 PROCEDURE FPrinter (p: P;  VAR x: M3.FPInfo) =
   BEGIN
-    Error.QID (p.info.name, "INTERNAL ERROR: fingerprint of named type");
+    Error.QID (p.qid, "INTERNAL ERROR: fingerprint of named type");
     Resolve (p);
     IF (p.type # NIL) THEN p.type.fprint (x); END;
   END FPrinter;

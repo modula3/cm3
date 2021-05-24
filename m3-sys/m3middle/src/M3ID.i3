@@ -15,7 +15,7 @@ INTERFACE M3ID;
 IMPORT M3Buf;
 
 TYPE  T    = [-16_7fffffff-1 .. 16_7fffffff]; (* a 32-bit integer *)
-CONST NoID = 0;  (* an illegal ID, never returned by Add or FromStr *)
+CONST NoID: T = 0; (* an illegal ID, never returned by Add or FromStr *)
 
 PROCEDURE Add (x: TEXT;  class: [0..255] := 0): T;
 (* Returns the ID representing "x" and sets the class of the ID to "class". *)

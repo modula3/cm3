@@ -15,7 +15,7 @@ IMPORT Value, Module, Host, TypeFP, TypeTbl, WCharr, Brand;
 IMPORT Addr, Bool, Charr, Card, EReel, Int, LInt, LReel, Mutex, Null;
 IMPORT ObjectRef, ObjectAdr, Reel, Reff, Textt, Target, TInt, TFloat;
 IMPORT Text, M3RT, TipeMap, TipeDesc, ErrType, OpenArrayType, M3ID;
-FROM M3CG IMPORT QID;
+FROM M3 IMPORT QID;
 
 CONST
   NOT_CHECKED = -1;
@@ -190,7 +190,7 @@ PROCEDURE CheckInfo (t: T;  VAR x: Info): T =
     RETURN u;
   END CheckInfo;
 
-PROCEDURE Typename (t: T; VAR typename: QID) =
+PROCEDURE Typename (t: T; VAR typename: M3ID.T) =
 BEGIN
   typename := t.info.name;
 END Typename;
@@ -223,6 +223,9 @@ PROCEDURE Strip (t: T): T =
   BEGIN
     IF (u = NIL) THEN RETURN NIL END;
     LOOP
+      (* If there is a cycle, then advancing one at a time
+       * and two at a time will eventually make them equal.
+       *)
       IF StripOne (u) THEN RETURN u END;
       IF StripOne (v) OR StripOne (v) THEN RETURN v END;
       IF (u = v) THEN IllegalRecursion (t); RETURN ErrType.T END;
@@ -233,9 +236,10 @@ PROCEDURE Strip (t: T): T =
 (* Remove typenames and packing. *)
 PROCEDURE StripPackedOne (VAR u: T): BOOLEAN =
   BEGIN
-    IF    (u.info.class = Class.Named)  THEN u := NamedType.Strip (u);
-    ELSIF (u.info.class = Class.Packed) THEN u := PackedType.Base (u);
-    ELSE  RETURN TRUE;
+    CASE u.info.class OF
+    | Class.Named     => u := NamedType.Strip (u);
+    | Class.Packed    => u := PackedType.Base (u);
+    ELSE                 RETURN TRUE;
     END;
     RETURN FALSE;
   END StripPackedOne;
@@ -247,6 +251,9 @@ PROCEDURE StripPacked (t: T): T =
   BEGIN
     IF (u = NIL) THEN RETURN NIL END;
     LOOP
+      (* If there is a cycle, then advancing one at a time
+       * and two at a time will eventually make them equal.
+       *)
       IF StripPackedOne (u) THEN RETURN u; END;
       IF StripPackedOne (v) OR StripPackedOne (v) THEN RETURN v; END;
       IF (u = v) THEN IllegalRecursion (t); RETURN ErrType.T END;
@@ -257,10 +264,11 @@ PROCEDURE StripPacked (t: T): T =
 (* Remove typenames and packing and subrange. *)
 PROCEDURE BaseOne (VAR u: T): BOOLEAN =
   BEGIN
-    IF    (u.info.class = Class.Named)    THEN u := NamedType.Strip (u);
-    ELSIF (u.info.class = Class.Subrange) THEN u := SubrangeType.Base (u);
-    ELSIF (u.info.class = Class.Packed)   THEN u := PackedType.Base (u);
-    ELSE  RETURN TRUE;
+    CASE u.info.class OF
+    | Class.Named     => u := NamedType.Strip (u);
+    | Class.Packed    => u := PackedType.Base (u);
+    | Class.Subrange  => u := SubrangeType.Base (u);
+    ELSE                 RETURN TRUE;
     END;
     RETURN FALSE;
   END BaseOne;
@@ -272,6 +280,9 @@ PROCEDURE Base (t: T): T =
   BEGIN
     IF (u = NIL) THEN RETURN NIL END;
     LOOP
+      (* If there is a cycle, then advancing one at a time
+       * and two at a time will eventually make them equal.
+       *)
       IF BaseOne (u) THEN RETURN u; END;
       IF BaseOne (v) OR BaseOne (v) THEN RETURN v; END;
       IF (u = v) THEN IllegalRecursion (t); RETURN ErrType.T END;
@@ -399,6 +410,7 @@ PROCEDURE InitPredefinedCells () =
 PROCEDURE AddCell (t: T) =
   VAR c := NEW (CellInfo);  size := M3RT.TC_SIZE;  u: T;
   BEGIN
+    t := Strip (t);
     IF (t.info.class = Class.Object) THEN
       size := M3RT.OTC_SIZE;
     ELSIF RefType.Split (t, u) AND OpenArrayType.Is (u) THEN
@@ -413,17 +425,16 @@ PROCEDURE AddCell (t: T) =
 
 (*EXPORTED*)
 PROCEDURE IsOrdinal (t: T): BOOLEAN =
-  VAR u := Check (t);  c := u.info.class;
+  VAR u := StripPacked (Check (t));  c := u.info.class;
   BEGIN
     RETURN (c = Class.Integer) OR (c = Class.Longint) OR (c = Class.Subrange)
-           OR (c = Class.Enum) OR (c = Class.Error)
-           OR ((c = Class.Packed) AND IsOrdinal (StripPacked (t)));
+           OR (c = Class.Enum) OR (c = Class.Error);
   END IsOrdinal;
 
 (*EXPORTED*)
 PROCEDURE Number (t: T): Target.Int =
   VAR
-    u := Check (t);
+    u := StripPacked (Check (t));
     c := u.info.class;
     b: BOOLEAN;
     min, max, tmp: Target.Int;
@@ -441,8 +452,6 @@ PROCEDURE Number (t: T): Target.Int =
       max := Target.Longint.max;
     ELSIF (c = Class.Error) THEN
       RETURN TInt.Zero;
-    ELSIF (c = Class.Packed) THEN
-      RETURN Number (StripPacked (u));
     ELSE
       Error.Msg ("INTERNAL ERROR: Type.Number applied to a non-ordinal type");
       <*ASSERT FALSE*>
@@ -459,7 +468,7 @@ PROCEDURE Number (t: T): Target.Int =
 
 (*EXPORTED*)
 PROCEDURE GetBounds (t: T;  VAR min, max: Target.Int): BOOLEAN =
-  VAR u := Check (t);  c := u.info.class;  b: BOOLEAN;
+  VAR u := StripPacked (Check (t));  c := u.info.class;  b: BOOLEAN;
   BEGIN
     IF (c = Class.Subrange) THEN
       b := SubrangeType.Split (u, min, max);  <*ASSERT b*>
@@ -477,8 +486,6 @@ PROCEDURE GetBounds (t: T;  VAR min, max: Target.Int): BOOLEAN =
       min := Target.Longint.min;
       max := Target.Longint.max;
       RETURN TRUE;
-    ELSIF (c = Class.Packed) THEN
-      RETURN GetBounds (StripPacked (u), min, max);
     ELSE
       min := TInt.Zero;
       max := TInt.MOne;
@@ -511,11 +518,11 @@ PROCEDURE IsEqual (a, b: T;  x: Assumption): BOOLEAN =
     IF (a = NIL) OR (b = NIL) THEN RETURN FALSE END;
     IF (a = b) (*** OR (a = NIL) OR (b = NIL) ***) THEN RETURN TRUE END;
 
+    a := Strip (a);
+    b := Strip (b);
     ac := a.info.class;  bc := b.info.class;
-    IF (ac = Class.Named) THEN a := Strip (a);  ac := a.info.class END;
-    IF (bc = Class.Named) THEN b := Strip (b);  bc := b.info.class END;
     IF (a = b) THEN RETURN TRUE END;
-    IF (ac = Class.Error) OR (bc = Class.Error) THEN RETURN TRUE END;
+    IF (ac = Class.Error) OR (bc = Class.Error) THEN RETURN TRUE END; (*Reduce error cascade.*)
     IF (ac # bc) THEN RETURN FALSE END;
 
     (* try their id's first *)
@@ -556,17 +563,15 @@ PROCEDURE IsEqual (a, b: T;  x: Assumption): BOOLEAN =
 
 (*EXPORTED*)
 PROCEDURE IsSubtype (a, b: T): BOOLEAN =
-  VAR ac, bc: Class;
   BEGIN
     IF (a = NIL) OR (b = NIL) THEN RETURN FALSE END;
     IF (a = b) (*** OR (a = NIL) OR (b = NIL) ***) THEN RETURN TRUE END;
 
-    ac := a.info.class;  bc := b.info.class;
-    IF (ac = Class.Named) THEN a := Strip (a);  ac := a.info.class END;
-    IF (bc = Class.Named) THEN b := Strip (b);  bc := b.info.class END;
-    IF (ac = Class.Error) OR (bc = Class.Error) THEN RETURN TRUE END;
-    IF (ac = Class.Packed) THEN a := StripPacked (a) END;
-    IF (bc = Class.Packed) THEN b := StripPacked (b) END;
+    a := Strip (a);
+    b := Strip (b);
+    IF (a.info.class = Class.Error) OR (b.info.class = Class.Error) THEN RETURN TRUE END; (*Reduce error cascade.*)
+    a := StripPacked (a);
+    b := StripPacked (b);
 
     (* try their id's first *)
     IF (a.uid = NO_UID) OR (b.uid = NO_UID) THEN
