@@ -4,6 +4,7 @@
 
 UNSAFE MODULE CoroutineUcontext EXPORTS Coroutine, CoroutineUcontext;
 IMPORT ContextC;
+FROM Ctypes IMPORT int;
 IMPORT WeakRef;
 IMPORT Thread;
 IMPORT ThreadPThread;
@@ -502,7 +503,7 @@ PROCEDURE Cleanup(<*UNUSED*>READONLY self : WeakRef.T; ref : REFANY) =
 VAR DEBUG := RTParams.IsPresent("debugcoroutines");
 
 PROCEDURE Init() =
-VAR stack: INTEGER;
+VAR stack: int;
 BEGIN
   ContextC.InitC(ADR(stack))
 END Init;

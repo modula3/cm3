@@ -16,19 +16,12 @@
 #include "m3core.h"
 #endif
 
-typedef void* ARG;
-
-struct Closure;
-typedef struct Closure Closure;
-struct Context;
-typedef struct Context Context;
-
 M3EXTERNC_BEGIN
 
 // This code has only been tested on Linux/amd64.
 #if !(defined(__x86_64__) && defined(__linux))
 
-BOOL
+BOOLEAN
 __cdecl
 Coroutine__Supported(void)
 {
@@ -42,11 +35,11 @@ ContextC__SetLink(Context* target, Context* src)
     assert(0);
 }
 
-void*
+Context* // ContextC_T
 __cdecl
-ContextC__MakeContext(void    (*p)(ARG),
+ContextC__MakeContext(void    (*p)(void*),  // CoroutineUcontext__Entry
                       INTEGER words,
-                      void*   arg)
+                      void    *arg)         // CoroutineUcontext__Arg
 {
     assert(0);
     return 0;
@@ -96,7 +89,7 @@ ContextC__InitC(int* stack)
     assert(0);
 }
 
-void*
+ADDRESS
 __cdecl
 ContextC__GetStackBase(Context* c)
 {
@@ -104,7 +97,7 @@ ContextC__GetStackBase(Context* c)
     return 0;
 }
 
-void*
+ADDRESS
 __cdecl
 ContextC__PushContext(Context* c)
 {
@@ -114,7 +107,7 @@ ContextC__PushContext(Context* c)
 
 #else
 
-BOOL
+BOOLEAN
 __cdecl
 Coroutine__Supported(void)
 {
@@ -139,9 +132,14 @@ Coroutine__Supported(void)
 
 static int stack_grows_downward;
 
+/* expand C names */
+#define Closure ContextC__Closure /* This is not Coroutine__Closure, which exists, nearby, is something else. */
+#define Context ContextC__TValue  /* ContextC__T points to ContextC__TValue; see m3core.h */
+
+struct Closure; typedef struct Closure Closure;
 struct Closure
 {
-  void (*p)(ARG);
+  void (*p)(void*);
   void *arg;
 };
 
@@ -223,10 +221,10 @@ cleanup(int lo, int hi)
   setcontext(c->uc.uc_link);
 }
 
-void *
-ContextC__MakeContext(void      (*p)(ARG),
-                      INTEGER     words,
-                      void       *arg)
+Context* // ContextC_T
+ContextC__MakeContext(void    (*p)(void*),   // CoroutineUcontext__Entry
+                      INTEGER words,
+                      void*   arg)           // CoroutineUcontext__Arg
 {
   /* from ThreadPosixC.c */
   Context *c = (Context *)calloc (1, sizeof(*c));
@@ -362,14 +360,15 @@ ContextC__DisposeContext (Context *c)
   free(c);
 }
 
-void *
+Context*
 ContextC__Current(void)
 {
-  Context *context=ContextC__New();
+  Context *context = ContextC__New();
   if (getcontext(&(context->uc))) abort();
   return context;
 }
 
+//TODO C++ [thread_local]
 static pthread_key_t current_coroutine;
 
 void
@@ -404,53 +403,34 @@ ContextC__InitC(int* stack)
   M3_RETRY(pthread_key_create(&current_coroutine, NULL)); assert(r == 0);
 }
 
-void *
+ADDRESS
 ContextC__GetStackBase(Context *c)
 {
-  return c->stackbase;
+  return (ADDRESS)c->stackbase;
 }
-
-/* in the following functions, we use "auto" to signify that 
-   it is essential to the operation of the program that these variables
-   are indeed placed on the stack
-
-   However this means nothing to the compiler. volatile is more convincing,
-   but overkill, hurts perf, on non-x86 architectures.
-*/
-#if __cplusplus
-#define AUTO /* nothing */
-#else
-#define AUTO auto
-#endif
 
 #include <alloca.h>
 
 __attribute__((noinline))
-static void *
+static ADDRESS
 ContextC__PushContext1(Context *c)
 {
   // Write it to stack and return pointer below it.
-  AUTO volatile ucontext_t uc = c->uc;
-  return alloca(1);
+  volatile ucontext_t uc = c->uc;
+  return (ADDRESS)alloca(1);
 }
 
-#define STACK_GAP 256
-
-void *
+ADDRESS
 ContextC__PushContext(Context *c)
 {
-  AUTO volatile unsigned char a[STACK_GAP];
+  volatile unsigned char a[256];
+  ADDRESS b;
 
+  // HACK:
   /* the purpose of the gap is to allow other routines to do some small
-     amount of work between when we return and the next GC event,
-     without clobbering the context we are about to push */
-
-  // But where does "256" come from?
-  // It is meant to be enough to run ThreadPThread.SetCoStack.
-  // Must this function return, or can it continue on to call
-  // "the rest of its caller"?
+     amount of work (ThreadPThread.SetCoStack) between when we return
+     and the next GC event, without clobbering the context we are about to push */
   
-  void* b;
   a[0] = 0;
   b = ContextC__PushContext1(c);
   a[0];
@@ -460,3 +440,6 @@ ContextC__PushContext(Context *c)
 #endif
 
 M3EXTERNC_END
+
+#undef Closure
+#undef Context
