@@ -17,22 +17,22 @@ PROCEDURE CopyTtoS(t: TEXT): Ctypes.char_star;
    but not sharing any storage with "t".  The result should be passed
    to "FreeCopiedS" after it is irrelevant. *)
 
-PROCEDURE FreeCopiedS(s: Ctypes.char_star);
+PROCEDURE FreeCopiedS(s: Ctypes.const_char_star);
 (* Free the storage for "s", which must have been returned from a call
    of "CopyTtoS".  It is an unchecked runtime error to free "s" more
    than once or to use "s" after calling "FreeCopiedS(s)". *)
 
-PROCEDURE SharedTtoS(t: TEXT): Ctypes.char_star;
+PROCEDURE SharedTtoS(t: TEXT): Ctypes.const_char_star;
 (* Return a null-terminated C string with the same contents as "t".
    If possible, the result will share storage with "t".  "FreeSharedS"
    should be called on the value returned by "SharedTtoS". *)
 
-PROCEDURE FreeSharedS(t: TEXT;  s: Ctypes.char_star);
+PROCEDURE FreeSharedS(t: TEXT;  s: Ctypes.const_char_star);
 (* Free the storage for "s", which must have been returned from a call
    of "SharedTtoS(t)".  It is an unchecked runtime error to free "s" more
    than once or to use "s" after calling "FreeSharedS(s)". *)
 
-PROCEDURE FlatTtoS(t: TEXT): Ctypes.char_star;
+PROCEDURE FlatTtoS(t: TEXT): Ctypes.const_char_star;
 (* Return a null-terminated C string with the same contents as "t", where
    the result shares storage with "t".  It is a checked runtime if "t" is
    not a flat text of "CHAR".   The standard "flat" texts are Text8,
@@ -45,12 +45,12 @@ PROCEDURE FlatTtoS(t: TEXT): Ctypes.char_star;
    Alternatively, the collector can be disabled.  See the
    "RTCollector" interface for details. *)
 
-PROCEDURE StoT(s: Ctypes.char_star): TEXT;
+PROCEDURE StoT(s: Ctypes.const_char_star): TEXT;
 (* Return a text with the same contents as the null-terminated C
    string "s" and sharing storage with "t".  The result is invalid
    after "s" is freed. *)
 
-PROCEDURE CopyStoT(s: Ctypes.char_star): TEXT;
+PROCEDURE CopyStoT(s: Ctypes.const_char_star): TEXT;
 (* Return a text with the same contents as the null-terminated C
    string "s". This copies "s", so the result is valid even if "s" is
    later freed. *)
