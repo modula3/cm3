@@ -25,7 +25,6 @@ TYPE
     length : INTEGER;
   END;
 
-
 PROCEDURE CopyTtoS (t: TEXT): Ctypes.char_star =
   VAR info: TextClass.Info;  arr: OpenArray;
   BEGIN
@@ -40,15 +39,14 @@ PROCEDURE CopyTtoS (t: TEXT): Ctypes.char_star =
     RETURN arr.start;
   END CopyTtoS;
 
-PROCEDURE FreeCopiedS (s: Ctypes.char_star) =
+PROCEDURE FreeCopiedS (s: Ctypes.const_char_star) =
   BEGIN
     IF (s # NIL) AND (s # zeroPtr) THEN
       Cstdlib.free (s);
     END;
   END FreeCopiedS;
 
-
-PROCEDURE SharedTtoS (t: TEXT): Ctypes.char_star =
+PROCEDURE SharedTtoS (t: TEXT): Ctypes.const_char_star =
   VAR info: TextClass.Info;
   BEGIN
     IF (t = NIL) THEN RETURN zeroPtr; END;
@@ -62,7 +60,7 @@ PROCEDURE SharedTtoS (t: TEXT): Ctypes.char_star =
     RETURN CopyTtoS (t);
   END SharedTtoS;
 
-PROCEDURE FreeSharedS (t: TEXT;  s: Ctypes.char_star) =
+PROCEDURE FreeSharedS (t: TEXT;  s: Ctypes.const_char_star) =
   VAR info: TextClass.Info;
   BEGIN
     IF (s # NIL) AND (s # zeroPtr) THEN
@@ -73,8 +71,7 @@ PROCEDURE FreeSharedS (t: TEXT;  s: Ctypes.char_star) =
     END;
   END FreeSharedS;
 
-
-PROCEDURE FlatTtoS (t: TEXT): Ctypes.char_star =
+PROCEDURE FlatTtoS (t: TEXT): Ctypes.const_char_star =
   VAR info: TextClass.Info;
   BEGIN
     IF (t = NIL) THEN RETURN zeroPtr; END;
@@ -90,13 +87,12 @@ PROCEDURE FlatTtoS (t: TEXT): Ctypes.char_star =
     RETURN NIL;
   END FlatTtoS;
 
-
-PROCEDURE StoT (s: Ctypes.char_star): TEXT =
+PROCEDURE StoT (s: Ctypes.const_char_star): TEXT =
   BEGIN
     RETURN Text8CString.New (s);
   END StoT;
 
-PROCEDURE CopyStoT (s: Ctypes.char_star): TEXT =
+PROCEDURE CopyStoT (s: Ctypes.const_char_star): TEXT =
   VAR len := Cstring.strlen (s);  t := Text8.Create (len);
   BEGIN
     EVAL Cstring.memcpy (ADR (t.contents[0]), s, len);
