@@ -584,14 +584,6 @@ BEGIN
     RETURN id;
 END ReplaceName;
 
-PROCEDURE TypeTextPointer(typetext: TEXT): TEXT=
-BEGIN
-  IF typetext # NIL THEN
-    RETURN typetext & "*";
-  END;
-  RETURN NIL;
-END TypeTextPointer;
-
 PROCEDURE AnonymousCounter(self: T): INTEGER =
 BEGIN
     INC(self.anonymousCounter, 1 + ORD(self.anonymousCounter = 385)); (* avoid "i386" -- really, it happened *)
@@ -859,64 +851,80 @@ BEGIN
     RETURN FALSE;
 END type_canBeDefined_false;
 
-TYPE Pointer_t = Type_t OBJECT
-    points_to_type: Type_t := NIL;
-    points_to_typeid: TypeUID := 0;
-    brand: TEXT := NIL;
-    traced := FALSE;
-    typename := FALSE;
+TYPE PointerOrTypename_t = Type_t OBJECT
+  refers_to_type: Type_t := NIL;
+  refers_to_typeid: TypeUID := 0;
 OVERRIDES
-    define := pointer_define;
-    canBeDefined := pointer_canBeDefined;
-    (* not used isPointer := type_isType_true; *)
+  canBeDefined := pointerOrTypename_canBeDefined;
 END;
 
-PROCEDURE pointer_define(ref: Pointer_t; self: T) =
+TYPE Pointer_t = PointerOrTypename_t OBJECT
+  target_typename: TEXT := NIL; (* optional *)
+  brand: TEXT := NIL;           (* optional *)
+  traced := FALSE;              (* optional *)
+OVERRIDES
+  define := pointer_define;
+END;
+
+TYPE Typename_t = PointerOrTypename_t OBJECT
+OVERRIDES
+  define := typename_define;
+END;
+
+PROCEDURE pointer_define(type: Pointer_t; self: T) =
 (* Does branding make a difference? *)
 VAR x := self;
-    star_or_space := "";
-    end_of_line := "";
-    typename := ref.typename;
+    target_typename := type.target_typename;
 BEGIN
+    <*ASSERT type.refers_to_type # NIL *> (* canBeDefined should have already set refers_to_type *)
+    type.target_typename := NIL;
+
     (* We have recursive types TYPE FOO = UNTRACED REF FOO. Typos actually. *)
-    IF ref.points_to_typeid = ref.typeid THEN
-      print(x, "typedef void* " & ref.text & ";\n");
+    IF type.refers_to_typeid = type.typeid THEN
+      print(x, "typedef void* " & type.text & ";\n");
       RETURN;
     END;
 
-    IF NOT ResolveType(self, ref.points_to_typeid, ref.points_to_type) THEN
-      Err(x, "internal error: pointer_define(" & ref.text & ") 1");
+    type.refers_to_type.ForwardDeclare(self);
+
+    IF target_typename = NIL THEN
+      (* If no typename given fallback to the existing name, usually a hash.
+       * The cases are for example:
+       * 1. Reference a hash:
+       *    REF RECORD .. END; => *T123...
+       * 2. Reference a name in context:
+       *    REF T => *T;
+       * 3. Reference a hash that has been given a name otherwise coincidentally:
+       *    TYPE T = RECORD .. END;
+       *    REF RECORD .. END; => *T
+       *)
+      target_typename := type.refers_to_type.text;
     END;
+    target_typename := target_typename & "*";
+    (* TODO This typedef is not likely needed, given the subsequent rendering as target*.
+     * And then this replacement can be done immediately without waiting for target
+     * to be defined. *)
+    print(x, "typedef " & target_typename & TypeIDToText(type.typeid) & ";\n");
+    type.text := target_typename; (* with the star *)
+END pointer_define;
 
-    IF ref.points_to_type = NIL THEN
-      Err(x, "internal error: pointer_define(" & ref.text & ") 2");
-      RETURN;
-    END;
+PROCEDURE typename_define(type: Typename_t; self: T) =
+VAR x := self;
+    typetext := type.text;
+BEGIN
+    <*ASSERT type.refers_to_type # NIL *> (* canBeDefined should have already set refers_to_type *)
+    <*ASSERT type.refers_to_typeid # type.typeid *>
 
-    (* TODO m3front duplicates? Don't do that? *)
-    IF typename AND x.typedef_defined.insert(ref.text) THEN
-      RETURN;
-    END;
+    type.refers_to_type.ForwardDeclare(self);
 
-    ref.points_to_type.ForwardDeclare(self);
-
-    IF typename THEN
-      ifndef (self, ref.text);
-      star_or_space := " ";
-      end_of_line := ";"; (* endif includes newline *)
-    ELSE
-      (* Equivalent pointers typedefs can be output multiple times; ignore typedef_defined *)
-      star_or_space := "*";
-      end_of_line := ";\n";
-    END;
-
-    print(x, "typedef " & ref.points_to_type.base_text & star_or_space & ref.text & end_of_line);
-
-    IF typename THEN
-      ref.points_to_type.text := ref.text;
+    IF NOT x.typedef_defined.insert(typetext) THEN
+      ifndef (self, typetext);
+      (* TODO It might be possible to eliminate the hashed names. *)
+      print(x, "typedef " & type.refers_to_type.base_text & " " & typetext & ";");
+      type.refers_to_type.text := typetext;
       endif (self);
     END;
-END pointer_define;
+END typename_define;
 
 TYPE Packed_t = Type_t OBJECT
     base_typeid: TypeUID := 0;
@@ -977,15 +985,15 @@ BEGIN
     RETURN type # NIL;
 END ResolveType;
 
-PROCEDURE pointer_canBeDefined(type: Pointer_t; self: T): BOOLEAN =
+PROCEDURE pointerOrTypename_canBeDefined(type: PointerOrTypename_t; self: T): BOOLEAN =
 BEGIN
     (* We have recursive types TYPE FOO = UNTRACED REF FOO. Typos actually. *)
-    IF type.points_to_typeid = type.typeid THEN
+    IF type.refers_to_typeid = type.typeid THEN
       RETURN TRUE;
     END;
-    RETURN ResolveType(self, type.points_to_typeid, type.points_to_type)
-        AND (type.points_to_type.IsForwardDeclared() OR type.points_to_type.IsDefined() (*OR type.points_to_type.CanBeDefined(self)*));
-END pointer_canBeDefined;
+    RETURN ResolveType(self, type.refers_to_typeid, type.refers_to_type)
+        AND (type.refers_to_type.IsForwardDeclared() OR type.refers_to_type.IsDefined() (*OR type.refers_to_type.CanBeDefined(self)*));
+END pointerOrTypename_canBeDefined;
 
 (* We need "Ordinal_t" as base for: Integer_t, Enum_t, Subrange_t *)
 
@@ -1586,8 +1594,8 @@ TYPE Expr_t = OBJECT
     expr_type := ExprType.Invalid;
     current_proc: Proc_t := NIL;
     points_to_cgtype: CGType := CGType.Void;
-    points_to_typeid: TypeUID := 0;
-    (* TODO points_to_type: Type_t := NIL; *)
+    refers_to_typeid: TypeUID := 0;
+    (* TODO refers_to_type: Type_t := NIL; *)
     (* int_value := TInt.Zero *) (* TODO replace minMax with this *)
     float_value: Target.Float;
     text_value: TEXT := NIL;
@@ -2723,18 +2731,18 @@ VAR nameText := NameT(name);
     self := declareType.self;
 BEGIN
   IF DebugVerbose(self) THEN
-    self.comment("declare_typename typeid:", TypeIDToText(typeid), " name:" & nameText);
+    self.comment("declare_typename typeid:", TypeIDToText(typeid), " name:" & TextOrNIL(nameText));
   ELSE
     self.comment("declare_typename");
   END;
 
-  (* Declare_typename is inferior to and conflicts with the later typename feature. *)
-
-  RETURN;
+  IF name = M3ID.NoID THEN
+    RETURN;
+  END;
 
   TextToId (nameText);
   (* typename is like pointer but without the star and without a hash in the name *)
-  self.Type_Init (NEW (Pointer_t, text := nameText, typename := TRUE, points_to_typeid := typeid));
+  self.Type_Init (NEW (Typename_t, text := nameText, refers_to_typeid := typeid));
 
 END declare_typename;
 
@@ -3124,9 +3132,9 @@ BEGIN
     x.Type_Init(
         NEW(Pointer_t,
             typeid := typeid,
-            points_to_typeid := target,
+            refers_to_typeid := target,
             brand := brand,
-            text := TypeTextPointer(target_typename),
+            text := target_typename,
             traced := traced));
 END declare_pointer_no_trace;
 
@@ -3222,6 +3230,9 @@ BEGIN
     (* SuppressLineDirective(self, -1, "declare_raises"); *)
 END declare_raises;
 
+(* TODO check that objects are really described correctly; I think they are not,
+ * in that base type layout is not always known at compile-time.
+ *)
 PROCEDURE declare_object(self: DeclareTypes_t; typeid, super: TypeUID; brand: TEXT; traced: BOOLEAN; field_count, method_count: INTEGER; field_size: BitSize; <*UNUSED*>super_typename: Name) =
 VAR record: Record_t := NIL;
     x := self.self;
@@ -3256,8 +3267,8 @@ BEGIN
     x.Type_Init(
         NEW(Pointer_t,
             typeid := typeid,
-            points_to_type := record,
-            points_to_typeid := -1,
+            refers_to_type := record,
+            refers_to_typeid := -1,
             brand := brand,
             traced := traced));
 END declare_object;
@@ -5780,8 +5791,8 @@ BEGIN
                expr_type := ExprType.AddressOf,
                cgtype := CGType.Addr,
                points_to_cgtype := expr.cgtype,
-               points_to_typeid := expr.typeid,
-               (* TODO points_to_type := expr.type, *)
+               refers_to_typeid := expr.typeid,
+               (* TODO refers_to_type := expr.type, *)
                left := expr,
                c_unop_text := "&"
                (* TODO c_unop_text := "(void* )&" *)
@@ -5795,7 +5806,7 @@ BEGIN
         NEW(Expr_t,
             expr_type := ExprType.Deref,
             cgtype := expr.points_to_cgtype,
-            typeid := expr.points_to_typeid,
+            typeid := expr.refers_to_typeid,
             left := expr,
             c_unop_text := "*");
 END Deref;
