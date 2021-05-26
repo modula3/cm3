@@ -111,10 +111,16 @@ PROCEDURE EmitDeclaration (formal: Value.T;  types_only, param: BOOLEAN) =
   BEGIN
     IF (types_only) THEN
       Compile (t);
+
       t.cg_type := Type.GlobalUID (TypeOf (t));
+
       IF t.mode # Mode.mVALUE OR t.openArray
       THEN (* lo-level pass by reference. *)
-        t.cg_type := CG.Declare_indirect (t.cg_type);
+        Type.Typename (TypeOf (t), typename);
+        IF typename # M3ID.NoID THEN
+          CG.Declare_typename (t.cg_type, typename);
+        END;
+        t.cg_type := CG.Declare_indirect (t.cg_type, typename);
       END;
     ELSIF (param) THEN
       IF t.mode # Mode.mVALUE OR t.openArray
@@ -122,7 +128,8 @@ PROCEDURE EmitDeclaration (formal: Value.T;  types_only, param: BOOLEAN) =
         size  := Target.Address.size;
         align := Target.Address.align;
         mtype := CG.Type.Addr;
-        (* TODO typename *)
+        (* typename handled above in declare_indirect;
+         * specifying it here would miss the indirection *)
       ELSE (* lo-level pass by value. *)
         EVAL Type.CheckInfo (TypeOf (t), info);
         size  := info.size;
