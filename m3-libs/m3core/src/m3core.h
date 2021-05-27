@@ -511,6 +511,7 @@ typedef INTEGER m3_uid_t;
 // and could be ommited here as well.
 //
 // The names should match the .i3 files, assuming full qualification and replacing "." with "__".
+#define Cstddef__ptrdiff_t          Cstddef__ptrdiff_t          /* inhibit m3c type */
 #define Cstddef__size_t             Cstddef__size_t             /* inhibit m3c type */
 #define Cstddef__ssize_t            Cstddef__ssize_t            /* inhibit m3c type */
 #define Cstdio__FILE_star           Cstdio__FILE_star           /* inhibit m3c type */
@@ -524,13 +525,17 @@ typedef INTEGER m3_uid_t;
 #define Ctypes__int_star            Ctypes__int_star            /* inhibit m3c type */
 #define Ctypes__long                Ctypes__long                /* inhibit m3c type */
 #define Ctypes__size_t              Ctypes__size_t              /* inhibit m3c type */
+#define Ctypes__unsigned            Ctypes__unsigned            /* inhibit m3c type */
+#define Ctypes__unsigned_int        Ctypes__unsigned_int        /* inhibit m3c type */
 #define Ctypes__unsigned_long       Ctypes__unsigned_long       /* inhibit m3c type */
+#define Ctypes__unsigned_long_int   Ctypes__unsigned_long_int   /* inhibit m3c type */
 #define Ctypes__void_star           Ctypes__void_star           /* inhibit m3c type */
 #define Utypes__size_t              Utypes__size_t              /* inhibit m3c type */
 #define WinBaseTypes__const_UINT32  WinBaseTypes__const_UINT32  /* inhibit m3c type */
 
 typedef size_t        Cstddef__size_t;
-typedef ssize_t       Cstddef__ssize_t;
+typedef ssize_t       Cstddef__ssize_t; /* provided above for msc */
+typedef ptrdiff_t     Cstddef__ptrdiff_t;
 typedef FILE*         Cstdio__FILE_star;
 typedef char          Ctypes__char;
 typedef char*         Ctypes__char_star;
@@ -541,7 +546,10 @@ typedef const void*   Ctypes__const_void_star;
 typedef int           Ctypes__int;
 typedef int*          Ctypes__int_star;
 typedef long          Ctypes__long;
+typedef unsigned      Ctypes__unsigned;
+typedef unsigned      Ctypes__unsigned_int;
 typedef unsigned long Ctypes__unsigned_long;
+typedef unsigned long Ctypes__unsigned_long_int;
 typedef void*         Ctypes__void_star;
 typedef size_t        Utypes__size_t;             // redundant
 typedef UINT32        WinBaseTypes__const_UINT32;
