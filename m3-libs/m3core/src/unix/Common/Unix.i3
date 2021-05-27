@@ -90,7 +90,7 @@ PROCEDURE lseek (d: int; offset: off_t; whence: int): off_t;
 PROCEDURE tell (d: int): off_t;
 
 <*EXTERNAL "Unix__mkdir"*>
-PROCEDURE mkdir (path: const_char_star; mode: int(*mode_t*)): int;
+PROCEDURE mkdir (path: const_char_star; mode: mode_t): int;
 
 <*EXTERNAL "Unix__O_RDONLY"*>    VAR O_RDONLY: const_int;
 <*EXTERNAL "Unix__O_RDWR"*>      VAR O_RDWR: const_int;
@@ -103,7 +103,7 @@ PROCEDURE mkdir (path: const_char_star; mode: int(*mode_t*)): int;
 <*EXTERNAL "Unix__M3_NONBLOCK"*> VAR M3_NONBLOCK: const_int; (* compat *)
 
 <*EXTERNAL "Unix__open"*>
-PROCEDURE open (name: const_char_star; flags: int; mode: int(*mode_t*)): int;
+PROCEDURE open (name: const_char_star; flags: int; mode: mode_t): int;
 
 CONST
   readEnd = 0;
@@ -144,7 +144,7 @@ PROCEDURE link (name1, name2: const_char_star): int;
 <*EXTERNAL "Unix__chmod"*>
 PROCEDURE chmod (path: const_char_star; mode: mode_t): int;
 <*EXTERNAL "Unix__fchmod"*>
-PROCEDURE fchmod (fd, mode: int): int;
+PROCEDURE fchmod (fd: int; mode: mode_t): int;
 <*EXTERNAL "Unix__chown"*>
 PROCEDURE chown (path: const_char_star; owner: uid_t; group: gid_t): int;
 <*EXTERNAL "Unix__fchown"*>
