@@ -656,6 +656,8 @@ INTEGER __cdecl Usocket__recvfrom(int s, void* buf, WORD_T len, int flags, M3Soc
 
 #ifndef _WIN32
 DIR* __cdecl Udir__opendir(const char* a);
+#define Udir__DIR_star Udir__DIR_star /* inhibit m3c type */
+typedef DIR*           Udir__DIR_star;
 #endif
 
 // char* (caddr_t) instead of void* for default Solaris
