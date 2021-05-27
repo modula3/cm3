@@ -533,6 +533,9 @@ Cstring.i3 declares strcpy and strcat incorrectly..on purpose.
 (* brk, sbrk deprecated on MacOS X 10.10.4, ok on 10.5.8. *)
 "brk", "sbrk",
 
+(* st_mtime is a macro on Linux and cannot be used along with #include sys/stat.h *)
+"st_mtime",
+
 (* symbols internal to the generated code *)
 "M3_HIGH_BITS",
 "M3_LOW_BITS",
