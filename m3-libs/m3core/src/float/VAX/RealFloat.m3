@@ -10,7 +10,7 @@
 
 UNSAFE MODULE RealFloat;
 
-IMPORT FPU, RealRep, Convert, DragonT, Ctypes, Word;
+IMPORT FPU, RealRep, Convert, DragonT, Ctypes, Word, Cstdlib;
 
 PROCEDURE Scalb(x: T; n: INTEGER): T =
   BEGIN
@@ -117,7 +117,7 @@ PROCEDURE FromDecimal(
     END;
     buf[len] := 0;
 
-    res := FLOAT (DragonT.strtod (ADR(buf[0]), NIL), T);
+    res := FLOAT (Cstdlib.strtod (ADR(buf[0]), NIL), T);
     DISPOSE(buf);
     RETURN res
   END FromDecimal;

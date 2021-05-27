@@ -13,7 +13,7 @@ UNSAFE MODULE LongFloat;
    that do not depend on the operating system. *)
 
 IMPORT LongRealRep AS Rep;
-IMPORT DragonT, FPU, Word, Ctypes, Convert, Grisu;
+IMPORT DragonT, FPU, Word, Ctypes, Convert, Grisu, Cstdlib;
 
 PROCEDURE Scalb (x: T; n: INTEGER): T =
   BEGIN
@@ -207,7 +207,7 @@ PROCEDURE FromDecimal (sign   : [0..1];
     END;
     buf[len] := 0;
 
-    res := FLOAT (DragonT.strtod (ADR(buf[0]), NIL), T);
+    res := FLOAT (Cstdlib.strtod (ADR(buf[0]), NIL), T);
     DISPOSE(buf);
     RETURN res
   END FromDecimal;

@@ -27,12 +27,6 @@ PROCEDURE F (e              : INTEGER;
    For Quad precision EXTENDED
    The 128 mantissa bits are ((f3 & 16_ffffffff) << 96) + (f2 & 16_ffffffff << 64) +                 
                              ((f1 & 16_ffffffff) << 32) + (f0 & 16_ffffffff) *)
-
-
-<*EXTERNAL strtod*>
-PROCEDURE strtod (nptr: Ctypes.char_star; 
-                  eptr: Ctypes.char_star_star): LONGREAL;
-
 END DragonT.
 
 (*
