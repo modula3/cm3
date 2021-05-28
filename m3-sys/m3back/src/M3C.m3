@@ -14,7 +14,7 @@ FROM M3CG_Ops IMPORT ErrorHandler;
 IMPORT M3CG_MultiPass, M3CG_DoNothing, M3CG_Binary, RTIO;
 IMPORT CharSeq, CharSeqRep, RTParams;
 FROM M3CC IMPORT IntToDec, IntToHex, UIntToHex, INT32;
-IMPORT TextSetDef;
+IMPORT TextSetDef, Fmt;
 CONST NameT = M3ID.ToText;
 
 VAR debug := FALSE;               (* command line @M3m3c-debug *)
@@ -61,6 +61,9 @@ T = M3CG_DoNothing.T OBJECT
 
         no_return := FALSE; (* are there any no_return functions -- i.e. #include <sys/cdefs.h on Darwin for __dead2 *)
 
+        char := M3ID.NoID;  (* "CHAR" is problematic with windows.h *)
+        uchar := M3ID.NoID; (* "UCHAR" replaces "CHAR" *)
+        typenames:REF ARRAY OF Typename_t := NIL;
         imported_procs: RefSeq.T := NIL; (*TODO*) (* Proc_t *)
         declared_procs: RefSeq.T := NIL; (*TODO*) (* Proc_t *)
         procs_pending_output: RefSeq.T := NIL; (*TODO*) (* Proc_t *)
@@ -617,7 +620,7 @@ CONST suppressImports = ARRAY OF TEXT{
 VAR replacementNames_Inited := FALSE;
 VAR replacementNames_Table := NEW(IntIntTbl.Default).init(NUMBER(reservedWords));
 
-PROCEDURE ReplaceName(id: Name): Name =
+PROCEDURE ReplaceName (self: T; VAR id: Name) =
 VAR replacement := 0;
 BEGIN
     IF replacementNames_Inited = FALSE THEN
@@ -626,12 +629,12 @@ BEGIN
                 EVAL replacementNames_Table.put(M3ID.Add(text), M3ID.Add("m3_" & text));
             END;
         END;
+        EVAL replacementNames_Table.put(self.char, self.uchar);
         replacementNames_Inited := TRUE;
     END;
     IF replacementNames_Table.get(id, replacement) THEN
-        RETURN replacement;
+      id := replacement;
     END;
-    RETURN id;
 END ReplaceName;
 
 PROCEDURE AnonymousCounter(self: T): INTEGER =
@@ -676,6 +679,9 @@ BEGIN
     IF name = M3ID.NoID THEN
         RETURN GenerateNameGlobal(self);
     END;
+    IF name = self.char THEN
+      RETURN self.uchar;
+    END;
     text := NameT (name);
     IF Text.GetChar (text, 0) = '*' THEN
         Assert(self, Text.Length(text) = 1, "Text.Length(text) = 1");
@@ -683,7 +689,8 @@ BEGIN
         RETURN GenerateNameLocal(self);
     END;
     (* rename C names like int, short, void *)
-    RETURN ReplaceName(name);
+    ReplaceName(self, name);
+    RETURN name;
 END Proc_FixName;
 
 (* segment names are not unique if files are concatenated; this fixes that
@@ -756,14 +763,14 @@ BEGIN
    * lowlevel CG type like Int32, Int64, Address.
    * Gradually all types should be typename and never just CG.
    * Historically the other way around: There was only CG and no typename.
-   *
    *)
-  (* > 4 instead of != NULL, which occurs in elego\m3msh\src\M3MiniShell.m3 *)
-  (* IF typename # NIL AND Text.Length (typename) > 0 AND Text.GetChar (typename, 0) IN ASCII.Letters AND NOT Text.Equal (typename, "NULL") THEN *)
-  IF typename # NIL AND Text.Length (typename) > 4 AND Text.GetChar (typename, 0) IN ASCII.Letters THEN
+  (* NULL occurs in elego\m3msh\src\M3MiniShell.m3 *)
+  IF typename # NIL AND name # self.char AND Text.Length (typename) > 0 AND Text.GetChar (typename, 0) IN ASCII.Letters AND NOT Text.Equal (typename, "NULL") THEN
     IF NOT self.typedef_defined.insert(typename) THEN
-      ifndef(self, typename);
-      print(self, "typedef " & type_text & " " & typename & ";");
+      ifndef(self, typename, "//7");
+      IF type_text # typename THEN (* pointer check is opportunistic, there are duplicates of some sort *)
+        print(self, "typedef " & type_text & " " & typename & ";");
+      END;
       endif(self);
     END;
     RETURN typename;
@@ -773,10 +780,14 @@ BEGIN
 END TypeText;
 
 TYPE Type_t = OBJECT
+    self : T := NIL;
+    class: TEXT := NIL;
+    fmtValue: TEXT := NIL;
     bit_size := 0;  (* FUTURE Target.Int or LONGINT *)
     typeid: TypeUID := 0;
-    text: TEXT := NIL; (* Replaced with typename. Use for params, returns, locals, globals, fields. *)
-    base_text: TEXT := NIL; (* The first value, typically a hash. Use for maybe typedefs and struct definitions. *)
+    text: TEXT := NIL;
+    hash_text: TEXT := NIL;
+    base_text: TEXT := NIL;
     cgtype: CGType := CGType.Addr;
     state := Type_State.None;
 METHODS
@@ -789,6 +800,7 @@ METHODS
     (* GetMinimumBitSize(): INTEGER FUTURE Target.Int := Type_GetMinimumBitSize; *)
 
 (* protected lowercase) *)
+    fmtFields (): TEXT := Type_fmtFields;
     canBeForwardDeclared(self: T): BOOLEAN := type_canBeForwardDeclared_false; (* useful for structs *)
     forwardDeclare(self: T) := type_forwardDeclare; (* useful for structs *)
     define(self: T);
@@ -834,13 +846,21 @@ BEGIN
 END type_isType_false;
 
 PROCEDURE Type_IsForwardDeclared(type: Type_t): BOOLEAN =
+VAR result := type.state = Type_State.Defined OR type.state = Type_State.ForwardDeclared;
 BEGIN
-    RETURN type.state = Type_State.Defined OR type.state = Type_State.ForwardDeclared;
+    IF type.self # NIL AND debug_types THEN
+      comment (type.self, "Type_IsForwardDeclared " & Type_Fmt (type) & " " & Fmt.Int (ORD (result)));
+    END;
+    RETURN result;
 END Type_IsForwardDeclared;
 
-PROCEDURE Type_IsDefined(type: Type_t): BOOLEAN =
+PROCEDURE Type_IsDefined (type: Type_t): BOOLEAN =
+VAR result := type.state = Type_State.Defined;
 BEGIN
-    RETURN type.state = Type_State.Defined;
+    IF type.self # NIL AND debug_types THEN
+      comment (type.self, "Type_IsDefined " & Type_Fmt (type) & " " & Fmt.Int (ORD (result)));
+    END;
+    RETURN result;
 END Type_IsDefined;
 
 PROCEDURE type_canBeForwardDeclared_false(<*UNUSED*>type: Type_t; <*UNUSED*>self: T): BOOLEAN =
@@ -860,14 +880,26 @@ END type_forwardDeclare;
 PROCEDURE Type_CanBeDefined(type: Type_t; self: T): BOOLEAN =
 BEGIN
     IF type.state = Type_State.Defined THEN
-        RETURN FALSE;
+      IF debug_types THEN
+          comment (self, "Type_CanBeDefined1 result:false type:" & Type_Fmt (type));
+      END;
+      RETURN FALSE;
     END;
     IF type.state = Type_State.CanBeDefined THEN
-        RETURN TRUE;
+      IF debug_types THEN
+        comment (self, "Type_CanBeDefined2 result:true type:" & Type_Fmt (type));
+      END;
+      RETURN TRUE;
     END;
     IF type.canBeDefined(self) THEN
-        type.state := Type_State.CanBeDefined;
-        RETURN TRUE;
+      type.state := Type_State.CanBeDefined;
+      IF debug_types THEN
+        comment (self, "Type_CanBeDefined3 result:true type:" & Type_Fmt (type));
+      END;
+      RETURN TRUE;
+    END;
+    IF debug_types THEN
+      comment (self, "Type_CanBeDefined4 result:false type:" & Type_Fmt (type));
     END;
     RETURN FALSE;
 END Type_CanBeDefined;
@@ -875,10 +907,18 @@ END Type_CanBeDefined;
 PROCEDURE Type_Define(type: Type_t; self: T) =
 BEGIN
     IF NOT type.CanBeDefined(self) THEN
-        RETURN;
+      IF debug_types THEN
+        comment (self, "Type_Define1 type:" & Type_Fmt (type));
+      END;
+      RETURN;
     END;
+
     type.define(self);
     type.state := Type_State.Defined;
+
+    IF debug_types THEN
+      comment (self, "Type_Define2 state:=defined type:" & Type_Fmt (type));
+    END;
 END Type_Define;
 
 PROCEDURE Type_ForwardDeclare(type: Type_t; self: T) =
@@ -917,6 +957,7 @@ TYPE PointerOrTypename_t = Type_t OBJECT
   refers_to_type: Type_t := NIL;
   refers_to_typeid: TypeUID := 0;
 OVERRIDES
+  fmtFields := PointerOrTypename_fmtFields;
   canBeDefined := pointerOrTypename_canBeDefined;
 END;
 
@@ -930,6 +971,7 @@ END;
 
 TYPE Typename_t = PointerOrTypename_t OBJECT
   name := M3ID.NoID;
+  replace := FALSE;
 OVERRIDES
   define := typename_define;
 END;
@@ -939,7 +981,7 @@ PROCEDURE pointer_define(type: Pointer_t; self: T) =
 VAR x := self;
     target_typename := type.target_typename;
 BEGIN
-    <*ASSERT type.refers_to_type # NIL *> (* canBeDefined should have already set refers_to_type *)
+    <*ASSERT target_typename # NIL OR type.refers_to_type # NIL *> (* canBeDefined should have already set refers_to_type *)
     type.target_typename := NIL;
 
     (* We have recursive types TYPE FOO = UNTRACED REF FOO. Typos actually. *)
@@ -948,7 +990,9 @@ BEGIN
       RETURN;
     END;
 
-    type.refers_to_type.ForwardDeclare(self);
+    IF type.refers_to_type # NIL THEN
+      type.refers_to_type.ForwardDeclare(self);
+    END;
 
     IF target_typename = NIL THEN
       (* If no typename given fallback to the existing name, usually a hash.
@@ -963,31 +1007,58 @@ BEGIN
        *)
       target_typename := type.refers_to_type.text;
     END;
+
     target_typename := target_typename & "*";
     (* TODO This typedef is not likely needed, given the subsequent rendering as target*.
      * And then this replacement can be done immediately without waiting for target
      * to be defined. *)
     print(x, "typedef " & target_typename & TypeIDToText(type.typeid) & ";\n");
+    IF debug_types THEN
+      x.comment ("1replacing " & type.text & " with " & target_typename);
+    END;
     type.text := target_typename; (* with the star *)
+
 END pointer_define;
 
-PROCEDURE typename_define(type: Typename_t; self: T) =
+PROCEDURE typename_define (typename: Typename_t; self: T) =
 VAR x := self;
-    typetext := type.text;
+    typetext := typename.text;
+    refers_to_type := typename.refers_to_type;
 BEGIN
-    <*ASSERT type.refers_to_type # NIL *> (* canBeDefined should have already set refers_to_type *)
-    <*ASSERT type.refers_to_typeid # type.typeid *>
 
-    type.refers_to_type.ForwardDeclare(self);
+    IF refers_to_type # NIL THEN
+      refers_to_type.ForwardDeclare(self);
+    END;
 
     IF NOT x.typedef_defined.insert(typetext) THEN
-      ifndef (self, typetext);
-      (* TODO It might be possible to eliminate the hashed names. *)
-      print(x, "typedef " & type.refers_to_type.base_text & " " & typetext & ";");
-      IF NOT IsUnsigned (type.name) THEN (* Modula3 unsigned types are a problem. *)
-        type.refers_to_type.text := typetext;
+      IF typename.name # self.char THEN (* avoid typedefing CHAR. *)
+        ifndef (self, typetext, "//8");
+        (* TODO It might be possible to eliminate the hashed names. *)
+        print(x, "typedef " & refers_to_type.base_text & " " & typetext & ";");
+        IF refers_to_type # NIL
+           AND typename.replace
+           AND refers_to_type.text = refers_to_type.hash_text
+           AND NOT IsUnsigned (typename.name) THEN (* Modula3 unsigned types are a problem. *)
+          IF debug_types THEN
+            x.comment ("2replacing " & refers_to_type.text & " with " & typetext);
+          END;
+          refers_to_type.text := typetext;
+        ELSE
+          IF debug_types THEN
+            IF refers_to_type = NIL THEN
+              x.comment ("3replacing-not NIL with " & typetext);
+            ELSE
+              x.comment ("3replacing-not " & refers_to_type.text & " with " & typetext);
+            END;
+            x.comment ("4 " & Fmt.Int(ORD(typename.replace)));
+            IF refers_to_type # NIL THEN
+              x.comment ("5 " & Fmt.Int(ORD(refers_to_type.text = refers_to_type.hash_text)));
+              x.comment ("6 hash_text:" & RTIO.FmtRef(refers_to_type.hash_text) & " text:" & RTIO.FmtRef(refers_to_type.text));
+            END;
+          END;
+        END;
+        endif (self);
       END;
-      endif (self);
     END;
 END typename_define;
 
@@ -1042,10 +1113,10 @@ END packed_isRecord;
 PROCEDURE ResolveType(self: T; typeid: INTEGER; VAR type: Type_t): BOOLEAN =
 BEGIN
     IF type # NIL THEN
-        IF debug_types THEN
-          self.comment("ResolveType1 TRUE typeid:" & TypeIDToText(typeid));
-        END;
-        RETURN TRUE;
+      IF debug_types THEN
+        self.comment("ResolveType1 TRUE typeid:" & TypeIDToText(typeid));
+      END;
+      RETURN TRUE;
     END;
     type := TypeidToType_Get(self, typeid);
     IF debug_types THEN
@@ -1056,12 +1127,56 @@ END ResolveType;
 
 PROCEDURE pointerOrTypename_canBeDefined(type: PointerOrTypename_t; self: T): BOOLEAN =
 BEGIN
-    (* We have recursive types TYPE FOO = UNTRACED REF FOO. Typos actually. *)
-    IF type.refers_to_typeid = type.typeid THEN
-      RETURN TRUE;
+
+  (* We have recursive types TYPE FOO = UNTRACED REF FOO. Typos actually. *)
+  IF type.refers_to_typeid = type.typeid THEN
+    IF type.typeid = 0 THEN
+      Err(self, "1type.typeid = 0"); (* really for the flush *)
     END;
-    RETURN ResolveType(self, type.refers_to_typeid, type.refers_to_type)
-        AND (type.refers_to_type.IsForwardDeclared() OR type.refers_to_type.IsDefined() (*OR type.refers_to_type.CanBeDefined(self)*));
+    <* ASSERT type.typeid # 0 *>
+    IF debug_types THEN
+      self.comment("pointerOrTypename_canBeDefined1 result true " & Type_Fmt (type));
+    END;
+    RETURN TRUE;
+  END;
+
+  <* ASSERT type # type.refers_to_type *>
+
+  (* Resolve typeid to type. *)
+  IF type.refers_to_type = NIL THEN
+    IF type.refers_to_typeid = 0 THEN
+      Err(self, "2type.refers_to_typeid = 0");
+    END;
+
+    IF type.refers_to_typeid = -1 THEN
+      Err(self, "3type.refers_to_typeid = -1");
+    END;
+
+    <* ASSERT type.refers_to_typeid # 0 AND type.refers_to_typeid # -1 *>
+
+    IF NOT ResolveType(self, type.refers_to_typeid, type.refers_to_type) THEN
+      IF debug_types THEN
+        self.comment("pointerOrTypename_canBeDefined2 result false " & Type_Fmt (type) & " refers_to " & TypeIDToText (type.refers_to_typeid) & " " & Type_Fmt (type.refers_to_type));
+      END;
+      RETURN FALSE;
+    END;
+  END;
+
+  <* ASSERT type # type.refers_to_type *>
+
+  IF NOT (type.refers_to_type.IsForwardDeclared() OR type.refers_to_type.IsDefined() (*OR type.refers_to_type.CanBeDefined(self)*)) THEN
+    IF debug_types THEN
+      self.comment("pointerOrTypename_canBeDefined3 false"
+        & " type:" & Type_Fmt (type)
+        & " refers_to:" & Type_Fmt (type.refers_to_type));
+    END;
+    RETURN FALSE;
+  END;
+
+  IF debug_types THEN
+    self.comment("pointerOrTypename_canBeDefined4 result true " & Type_Fmt (type) & " refers_to " & Type_Fmt (type.refers_to_type));
+  END;
+  RETURN TRUE;
 END pointerOrTypename_canBeDefined;
 
 (* We need "Ordinal_t" as base for: Integer_t, Enum_t, Subrange_t *)
@@ -1109,6 +1224,9 @@ BEGIN
         struct foo; typedef struct foo foo, in the presence of C++ namespaces?,
         so use the second form
     *)
+    IF debug THEN
+      comment (self, "record_forwardDeclare " & Type_Fmt (type));
+    END;
     print(self, "/*record_forwardDeclare*/struct " & id & ";typedef struct " & id & " " & id & ";\n");
 END record_forwardDeclare;
 
@@ -1116,6 +1234,9 @@ PROCEDURE record_canBeDefined(type: Record_t; self: T): BOOLEAN =
 VAR field: Field_t := NIL;
     fields := type.fields;
 BEGIN
+    IF debug THEN
+      comment (self, "record_canBeDefined " & Type_Fmt (type));
+    END;
     FOR i := 0 TO fields.size() - 1 DO
         field := NARROW(fields.get(i), Field_t);
         Assert(self, field # NIL, "field # NIL");
@@ -1130,9 +1251,13 @@ BEGIN
 END record_canBeDefined;
 
 (* ifndef so multiple files can be concatenated and compiled at once *)
-PROCEDURE ifndef(self:T; id: TEXT) =
+PROCEDURE ifndef(self:T; id: TEXT; comment := NIL) =
 BEGIN
-  print (self, "\n#ifndef " & id & "\n#define " & id & " " & id & "\n");
+  IF debug_verbose AND comment # NIL THEN
+    print (self, "\n#ifndef " & id & "\n#define " & id & " " & id & comment & "\n");
+  ELSE
+    print (self, "\n#ifndef " & id & "\n#define " & id & " " & id & "\n");
+  END
 END ifndef;
 
 PROCEDURE endif(self: T) =
@@ -1149,13 +1274,21 @@ VAR x := self;
     field: Field_t := NIL;
     name := "";
 BEGIN
+    IF debug THEN
+      comment (self, "record_define " & Type_Fmt (record));
+    END;
+
     FOR j := 0 TO field_count - 1 DO
         NARROW(record.fields.get(j), Field_t).type.Define(self);
     END;
 
     ifndef(x, record.base_text); (* ifdef so multiple files can be concatenated and compiled at once *)
 
-    print(x, "/*record_define*/struct " & record.base_text & "{\n");
+    IF debug THEN
+      print(x, "/*record_define*/struct " & record.base_text & "{\n");
+    ELSE
+      print(x, "struct " & record.base_text & "{\n");
+    END;
 
     FOR j := 0 TO field_count - 1 DO
         field := NARROW(record.fields.get(j), Field_t);
@@ -1371,7 +1504,7 @@ PROCEDURE fixedArray_define(type: FixedArray_t; x: T) =
 BEGIN
     type.element_type.Define(x);
 
-    ifndef(x, type.base_text); (* ifdef so multiple files can be concatenated and compiled at once *)
+    ifndef(x, type.base_text, "//1"); (* ifdef so multiple files can be concatenated and compiled at once *)
 
     print(x, "/*fixedArray_define*/struct " & type.base_text & "{");
     print(x, type.element_type.text);
@@ -1382,8 +1515,12 @@ BEGIN
 END fixedArray_define;
 
 PROCEDURE fixedArray_canBeDefined(type: Array_t; self: T): BOOLEAN =
+VAR result := ResolveType(self, type.element_typeid, type.element_type) AND (type.element_type.IsDefined() (*OR type.element_type.CanBeDefined(self)*));
 BEGIN
-    RETURN ResolveType(self, type.element_typeid, type.element_type) AND (type.element_type.IsDefined() (*OR type.element_type.CanBeDefined(self)*));
+    IF type.self # NIL AND debug_types THEN
+      comment (type.self, "fixedArray_canBeDefined " & Type_Fmt (type) & " " & Fmt.Int(ORD(result)));
+    END;
+    RETURN result;
 END fixedArray_canBeDefined;
 
 TYPE OpenArray_t = Array_t OBJECT
@@ -1418,7 +1555,7 @@ BEGIN
         element_type_text := "char/*TODO*/";
     END;
 
-    ifndef(x, type.base_text); (* ifdef so multiple files can be concatenated and compiled at once *)
+    ifndef(x, type.base_text, "//2"); (* ifdef so multiple files can be concatenated and compiled at once *)
 
     text := "/*openArray_define*/struct " & type.base_text & "{\n" & element_type_text;
     FOR i := 1 TO dimensions DO
@@ -1432,6 +1569,33 @@ BEGIN
     endif(x);
 END openArray_define;
 
+(* TODO libm3 is missing a proper simple generic growable array; this is not quite it *)
+PROCEDURE GetTypename (s: T; index: CARDINAL): Typename_t =
+VAR typenames := s.typenames;
+BEGIN
+  IF typenames # NIL AND index < NUMBER (typenames^) THEN (* likely *)
+    RETURN typenames [index];
+  END;
+  RETURN NIL;
+END GetTypename;
+
+PROCEDURE PutTypename (s: T; index: CARDINAL; typename: Typename_t) =
+VAR n := 0;
+    typenames := s.typenames;
+BEGIN
+  IF typenames # NIL THEN (* likely *)
+    n := NUMBER (typenames^);
+  END;
+  IF index >= n THEN (* unlikely *)
+    typenames := NEW (REF ARRAY OF Typename_t, MAX (index + 1, n + n));
+    IF s.typenames # NIL THEN
+      SUBARRAY (typenames^, 0, n) := s.typenames^;
+    END;
+    s.typenames := typenames;
+  END;
+  typenames [index] := typename;
+END PutTypename;
+
 TYPE ProcType_t = Type_CanBeDefinedTrue_t OBJECT
   index := 0;
   types: REF ARRAY OF Type_t := NIL;
@@ -1444,22 +1608,69 @@ OVERRIDES
 END;
 
 PROCEDURE ProcType_canBeDefined(type: ProcType_t; self: T): BOOLEAN =
+VAR typename: Typename_t;
 BEGIN
   IF type.index # NUMBER(type.types^) THEN
     RETURN FALSE;
   END;
 
   FOR i := 0 TO NUMBER(type.types^) - 1 DO
-    (* TODO make sure the typenames are defined or forward declared? *)
-    IF type.types^[i] = NIL AND type.typeids^[i] # 0 THEN
-      type.types^[i] := TypeidToType_Get(self, type.typeids^[i]);
-      IF type.types^[i] = NIL THEN
+    IF type.typenames [i] # M3ID.NoID THEN
+      typename := GetTypename (self, type.typenames [i]);
+      IF typename = NIL THEN
+        IF debug_types THEN
+          self.comment(Type_Fmt (type) & " 1deferred due to " & NameT (type.typenames [i]));
+        END;
         RETURN FALSE;
+      ELSE
+        IF debug_types THEN
+          self.comment(Type_Fmt (type) & " 2ok with " & NameT (typename.name));
+        END;
       END;
-      IF NOT type.types^[i].IsDefined() THEN
+      IF NOT typename.IsForwardDeclared() AND
+         NOT typename.CanBeDefined(self) AND
+         NOT typename.IsDefined() THEN
+        IF debug_types THEN
+          self.comment(Type_Fmt (type) & " 3deferred due to " & NameT (typename.name));
+        END;
         RETURN FALSE;
+      ELSE
+        IF debug_types THEN
+          self.comment(Type_Fmt (type) & " 4ok with " & NameT (typename.name));
+        END;
       END;
     END;
+
+    (* i = 0 for return type, which can be void *)
+    IF i # 0 AND type.types [i] = NIL AND (type.typeids [i] = -1 OR type.typeids [i] = 0) THEN
+      IF debug_types THEN
+        self.comment(Type_Fmt (type) & " 10deferred due to " & TypeIDToText (type.typeids [i]));
+      END;
+      RETURN FALSE;
+    END;
+
+    IF type.types [i] = NIL AND type.typeids [i] # -1 AND type.typeids [i] # 0 THEN
+      type.types [i] := TypeidToType_Get (self, type.typeids [i]);
+    END;
+
+    (* i = 0 for return type, which can be void *)
+    IF i # 0 AND type.types [i] = NIL THEN
+      IF debug_types THEN
+        self.comment(Type_Fmt (type) & " 5deferred due to " & Type_Fmt (type.types [i]) & " " & TypeIDToText (type.typeids [i]));
+      END;
+      RETURN FALSE;
+    END;
+
+    IF type.types [i] # NIL AND NOT type.types [i].IsDefined() THEN
+      IF debug_types THEN
+        self.comment(Type_Fmt (type) & " 7deferred due to " & Type_Fmt (type.types [i]));
+      END;
+      RETURN FALSE;
+    END;
+  END;
+
+  IF debug_types THEN
+    self.comment("ProcType_canBeDefined result true " & Type_Fmt (type));
   END;
 
   type.typeids := NIL; (* no longer needed *)
@@ -1472,6 +1683,18 @@ VAR return := procType.types [0];
     id := procType.typenames [0];
     text := "void";
 BEGIN
+
+  (* Define all dependent typenames and types. *)
+
+  FOR i := 0 TO NUMBER(procType.types^) - 1 DO
+    IF procType.types [i] # NIL THEN
+      procType.types [i].Define (self);
+    END;
+    IF procType.typenames [i] # M3ID.NoID THEN
+      GetTypename (self, procType.typenames [i]).Define (self);
+    END;
+  END;
+
   print (self, "typedef ");
   IF id # M3ID.NoID THEN
     text := NameT (id);
@@ -1519,9 +1742,69 @@ BEGIN
     RETURN NARROW(type, Type_t);
 END TypeidToType_Get;
 
-PROCEDURE Type_Init(self: T; type: Type_t; type_text_tail := "") =
+PROCEDURE Text_Fmt (text: TEXT): TEXT=
+BEGIN
+  IF text = NIL THEN
+    text := "NIL";
+  END;
+  RETURN text;
+END Text_Fmt;
+
+PROCEDURE Type_fmtFields (type: Type_t): TEXT =
+BEGIN
+  RETURN "typeid:" & TypeIDToText (type.typeid)
+         & " text:" & Text_Fmt (type.text)
+         & " hash_text:" & Text_Fmt (type.hash_text)
+         & " base_text:" & Text_Fmt (type.base_text)
+         & " state:" & Fmt.Int (ORD (type.state))
+END Type_fmtFields;
+
+PROCEDURE PointerOrTypename_fmtFields (type: PointerOrTypename_t): TEXT =
+BEGIN
+  RETURN Type_fmtFields (type)
+         & " refers_to_type:" & RTIO.FmtRef (type.refers_to_type)
+         & " refers_to_typeid:" & TypeIDToText (type.refers_to_typeid);
+END PointerOrTypename_fmtFields;
+
+PROCEDURE Type_fmtUncached (type: Type_t): TEXT =
+BEGIN
+  <* ASSERT type.class # NIL *>
+  RETURN type.class & "{" & RTIO.FmtRef (type) & " " & type.fmtFields () & "}";
+END Type_fmtUncached;
+
+PROCEDURE Type_Fmt (type: Type_t): TEXT =
+VAR fmt := "NIL";
+BEGIN
+  IF type # NIL THEN
+    fmt := type.fmtValue;
+    IF fmt = NIL THEN
+      fmt := Type_fmtUncached (type);
+    END;
+    type.fmtValue := fmt;
+  END;
+  RETURN fmt;
+END Type_Fmt;
+
+PROCEDURE Type_Init (self: T; type: Type_t; type_text_tail := "") =
 VAR cgtype := type.cgtype;
 BEGIN
+
+    <* ASSERT self # NIL *>
+    <* ASSERT type # NIL *>
+    <* ASSERT type.self # NIL *>
+    <* ASSERT type.self = self *>
+    <* ASSERT type.class # NIL *>
+
+    IF type.typeid # -1 AND type.typeid # 0 THEN
+        IF TypeidToType_Get(self, type.typeid) # NIL THEN
+          IF debug_types THEN
+            self.comment ("Type_Init skipping duplicate " & TypeIDToText (type.typeid));
+          END;
+          RETURN;
+        END;
+        EVAL self.typeidToType.put(type.typeid, type);
+    END;
+
     (* TODO require bit_size be set *)
     IF type.bit_size = 0 THEN
         type.bit_size := TargetMap.CG_Size[cgtype];
@@ -1535,19 +1818,41 @@ BEGIN
                 type.text := cgtypeToText[cgtype];
             END;
         ELSE
-            type.text := TypeIDToText(type.typeid) & type_text_tail;
+            IF type.hash_text = NIL THEN
+              type.hash_text := TypeIDToText (type.typeid) & type_text_tail;
+            END;
+            type.text := type.hash_text;
+            IF debug_types THEN
+              self.comment ("Type_Init " & Type_Fmt (type));
+            END;
         END;
     END;
     type.base_text := type.text;
 
-    IF type.typeid # -1 AND type.typeid # 0 THEN
-        EVAL self.typeidToType.put(type.typeid, type);
+    IF debug_types THEN
+      self.comment ("Type_Init1 " & Type_Fmt (type));
     END;
 
+    (* Forward declare right away if type allows. *)
     Type_ForwardDeclare(type, self);
+
+    IF debug_types THEN
+      self.comment ("Type_Init2 " & Type_Fmt (type));
+    END;
+
+    (* Define right away if can. *)
     IF Type_CanBeDefined(type, self) THEN
+        IF debug_types THEN
+          self.comment ("Type_Init3 " & Type_Fmt (type));
+        END;
         type.Define(self);
+        IF debug_types THEN
+          self.comment ("Type_Init4 " & Type_Fmt (type));
+        END;
     ELSE
+        IF debug_types THEN
+          self.comment ("Type_Init5 " & Type_Fmt (type));
+        END;
         self.pendingTypes.addhi(type);
     END;
 END Type_Init;
@@ -2169,6 +2474,7 @@ CONST Prefix = ARRAY OF TEXT {
 "#endif",
 (* TODO ideally these are char* for K&R or ideally absent when strong
    typing and setjmp work done *)
+"#define ADDRESS ADDRESS",
 "typedef char* ADDRESS;",
 "typedef char* STRUCT;",
 "typedef signed char INT8;", (* m3core.h is a bit more portable here, via limits.h; TODO: C99 *)
@@ -2287,7 +2593,7 @@ CONST cgtypeToText = ARRAY CGType OF TEXT {
     Text_uint64, Text_int64,  (* 6 7 *)
     "float",  (* REAL *)        (* 8 *)
     "double", (* LONGREAL *)    (* 9 *)
-    "EXTENDED",                 (* A *)
+    "EXTENDED",                 (* A *) (* TODO change to double *)
     Text_address,               (* B *)
     "STRUCT",                   (* C *)
     "void"                      (* D *)
@@ -2476,6 +2782,10 @@ END print;
 PROCEDURE NewInternal (cfile: Wr.T): T =
 VAR self := NEW (T);
 BEGIN
+    (* The CHAR typename exists to satisfy DeclareTypes dependency walk, but should not be
+     * actually typedefed. It conflicts with windows.h. UCHAR replaces it right after this. *)
+    self.char := M3ID.Add("CHAR");
+    self.uchar := M3ID.Add("UCHAR");
     self.typeidToType := NEW(SortedIntRefTbl.Default).init(); (* FUTURE? *)
     self.multipass := NEW(Multipass_t).Init();
     self.multipass.reuse_refs := TRUE; (* TODO: change them all to integers *)
@@ -2561,54 +2871,90 @@ END;
 PROCEDURE addressType_define(type: AddressType_t; self: T) =
 BEGIN
     print(self, "/*1addressType_define*/typedef ADDRESS " & type.text & ";\n");
-    print(self, "/*2addressType_define*/typedef ADDRESS " & TypeIDToText(type.typeid) & ";\n");
+    IF type.text # type.base_text THEN
+      print(self, "/*2addressType_define*/typedef ADDRESS " & type.base_text & ";\n");
+    END;
 END addressType_define;
 
 (*---------------------------------------------------------------------------*)
 
 PROCEDURE DeclareBuiltinTypes(self: T) =
-VAR widechar_target_type: Target.CGType; 
+VAR widechar_target_type: Target.CGType;
     widechar_last := 0;
     type: Type_t := NIL;
 BEGIN
-
     (* Builtin/base types start out as state := Type_State.CanBeDefined or Defined  *)
 
-    ifndef (self, "INTEGER"); (* m3core.h interop *)
-    type := NEW(Integer_t, state := Type_State.CanBeDefined, cgtype := Target.Integer.cg_type, typeid := UID_INTEGER, text := "INTEGER");
+    (* This will produce either typedef INT32 T1234.. or typedef INT64 T1234...
+     * and then typedef T1234... INTEGER.
+     *)
+    type := NEW (Integer_t, class := "Integer_t", self := self, state := Type_State.CanBeDefined, cgtype := Target.Integer.cg_type, typeid := UID_INTEGER);
     self.Type_Init(type);
-    endif (self);
+    EVAL declare_typename_replace (self, type.typeid, M3ID.Add ("INTEGER"));
+    EVAL declare_typename_no_replace (self, type.typeid, M3ID.Add ("CARDINAL")); (* TODO remove this *)
+    EVAL DeclareTypes_FlushOnce (self);
+    type.base_text := "INTEGER"; (* more readable output (fewer hashes) *)
+    type.text := "INTEGER"; (* more readable output (fewer hashes) *)
 
-    ifndef (self, "WORD_T"); (* m3core.h interop *)
-    type := NEW(Integer_t, state := Type_State.CanBeDefined, cgtype := Target.Word.cg_type, typeid := UID_WORD, text := "WORD_T");
-    self.Type_Init(type);
-    endif (self);
+    type := NEW (Integer_t, class := "Integer_t", self := self, state := Type_State.CanBeDefined, cgtype := Target.Word.cg_type, typeid := UID_WORD);
+    self.Type_Init (type);
+    EVAL declare_typename_no_replace (self, type.typeid, M3ID.Add ("WORD_T")); (* TODO rename this? *)
+    EVAL DeclareTypes_FlushOnce (self);
+    type.base_text := "WORD_T"; (* more readable output (fewer hashes) *)
+    type.text := "WORD_T"; (* more readable output (fewer hashes) *)
 
-    print(self, "typedef WORD_T CARDINAL;\n");
+    type := NEW (Integer_t, class := "Integer_t", self := self, state := Type_State.CanBeDefined, cgtype := Target.Int64.cg_type, typeid := UID_LONGINT);
+    self.Type_Init (type);
+    EVAL declare_typename_no_replace (self, type.typeid, M3ID.Add ("LONGINT")); (* TODO remove this *)
+    EVAL DeclareTypes_FlushOnce (self);
+    type.base_text := "INT64"; (* more readable output (fewer hashes) *)
+    type.text := "INT64"; (* more readable output (fewer hashes) *)
 
-    type := NEW(Integer_t, state := Type_State.Defined, cgtype := Target.Int64.cg_type, typeid := UID_LONGINT, text := "INT64");
-    self.Type_Init(type);
+    type := NEW (Integer_t, class := "Integer_t", self := self, state := Type_State.CanBeDefined, cgtype := Target.Word64.cg_type, typeid := UID_LONGWORD);
+    self.Type_Init (type);
+    EVAL declare_typename_no_replace (self, type.typeid, M3ID.Add ("LONGCARD")); (* TODO remove this *)
+    EVAL DeclareTypes_FlushOnce (self);
+    type.base_text := "UINT64"; (* more readable output (fewer hashes) *)
+    type.text := "UINT64"; (* more readable output (fewer hashes) *)
 
-    type := NEW(Integer_t, state := Type_State.Defined, cgtype := Target.Word64.cg_type, typeid := UID_LONGWORD, text := "UINT64");
-    self.Type_Init(type);
+    type := NEW (Float_t, class := "Float_t", self := self, state := Type_State.CanBeDefined, cgtype := Target.Real.cg_type, typeid := UID_REEL);
+    self.Type_Init (type);
+    EVAL declare_typename_no_replace (self, type.typeid, M3ID.Add ("REAL")); (* TODO remove this *)
+    EVAL DeclareTypes_FlushOnce (self);
+    type.base_text := "float"; (* more readable output (fewer hashes) *)
+    type.text := "float"; (* more readable output (fewer hashes) *)
 
-    type := NEW(Float_t, state := Type_State.CanBeDefined, cgtype := Target.Real.cg_type, typeid := UID_REEL, text := "REAL");
-    self.Type_Init(type);
+    type := NEW(Float_t, class := "Float_t", self := self, state := Type_State.CanBeDefined, cgtype := Target.Longreal.cg_type, typeid := UID_LREEL);
+    self.Type_Init (type);
+    EVAL declare_typename_no_replace (self, type.typeid, M3ID.Add ("LONGREAL")); (* TODO remove this *)
+    EVAL DeclareTypes_FlushOnce (self);
+    type.base_text := "double"; (* more readable output (fewer hashes) *)
+    type.text := "double"; (* more readable output (fewer hashes) *)
 
-    type := NEW(Float_t, state := Type_State.CanBeDefined, cgtype := Target.Longreal.cg_type, typeid := UID_LREEL, text := "LONGREAL");
-    self.Type_Init(type);
-
-    type := NEW(Float_t, state := Type_State.CanBeDefined, cgtype := Target.Extended.cg_type, typeid := UID_XREEL, text := "EXTENDED");
-    self.Type_Init(type);
+    type := NEW(Float_t, class := "Float_t", self := self, state := Type_State.CanBeDefined, cgtype := Target.Extended.cg_type, typeid := UID_XREEL);
+    self.Type_Init (type);
+    EVAL declare_typename_no_replace (self, type.typeid, M3ID.Add ("EXTENDED")); (* TODO remove this *)
+    EVAL DeclareTypes_FlushOnce (self);
+    type.base_text := "double"; (* more readable output (fewer hashes) *)
+    type.text := "double"; (* more readable output (fewer hashes) *)
 
 (* Enum_t? *)
-    type := NEW(Integer_t, state := Type_State.CanBeDefined, cgtype := Target.Word8.cg_type, typeid := UID_BOOLEAN, (* max := IntToTarget(self, 1), *) text := "BOOLEAN");
-    self.Type_Init(type);
+    type := NEW (Integer_t, class := "Integer_t", self := self, state := Type_State.CanBeDefined, cgtype := Target.Word8.cg_type, typeid := UID_BOOLEAN (* ,max := IntToTarget(self, 1), *));
+    self.Type_Init (type);
+    EVAL declare_typename_replace (self, type.typeid, M3ID.Add ("BOOLEAN"));
+    EVAL DeclareTypes_FlushOnce (self);
+    type.base_text := "BOOLEAN"; (* more readable output (fewer hashes) *)
+    type.text := "BOOLEAN"; (* more readable output (fewer hashes) *)
 
-    type := NEW(Integer_t, state := Type_State.CanBeDefined, cgtype := Target.Word8.cg_type, typeid := UID_CHAR, (* max := IntToTarget(self, 16_FF), *) text := "UCHAR");
-    self.Type_Init(type);
+    type := NEW(Integer_t, class := "Integer_t", self := self, state := Type_State.CanBeDefined, cgtype := Target.Word8.cg_type, typeid := UID_CHAR (* ,max := IntToTarget(self, 16_FF), *));
+    self.Type_Init (type);
+    (*EVAL declare_typename_no_replace (self, type.typeid, self.char);*) (* saved m3id to compare elsewhere *)
+    EVAL declare_typename_replace (self, type.typeid, self.uchar);
+    EVAL DeclareTypes_FlushOnce (self);
+    type.base_text := "UCHAR"; (* more readable output (fewer hashes) *)
+    type.text := "UCHAR"; (* more readable output (fewer hashes) *)
 
-    widechar_target_type := Target.Word16.cg_type; 
+    widechar_target_type := Target.Word16.cg_type;
     widechar_last := 16_FFFF; (* The defaults. *) 
     IF self.multipass.op_counts[M3CG_Binary.Op.widechar_size] > 0 THEN 
       WITH op_widechar_size_list = self.multipass.op_data[M3CG_Binary.Op.widechar_size] DO
@@ -2625,9 +2971,9 @@ BEGIN
     END;
 
 (* Enum_t? *)
-    type := NEW(Integer_t, state := Type_State.CanBeDefined, cgtype := widechar_target_type,
-                typeid := UID_WIDECHAR, (* max := IntToTarget(self, widechar_last), *) text := "WIDECHAR");
-    self.Type_Init(type);
+    type := NEW (Integer_t, class := "Integer_t", self := self, state := Type_State.CanBeDefined, cgtype := widechar_target_type,
+                 typeid := UID_WIDECHAR, (* max := IntToTarget(self, widechar_last), *) text := "WIDECHAR");
+    self.Type_Init (type);
 
     (* self.declareTypes.declare_subrange(UID_RANGE_0_31, UID_INTEGER, TInt.Zero, IntToTarget(self, 31), Target.Integer.size); *)
     (* self.declareTypes.declare_subrange(UID_RANGE_0_63, UID_INTEGER, TInt.Zero, IntToTarget(self, 63), Target.Integer.size); *)
@@ -2656,11 +3002,15 @@ BEGIN
     BEGIN
         FOR i := FIRST(addressTypes) TO LAST(addressTypes) DO
             WITH a = addressTypes[i] DO
-                type := NEW(AddressType_t, state := Type_State.CanBeDefined, cgtype := Target.Address.cg_type, typeid := a.typeid, text := a.text);
-                self.Type_Init(type);
+                type := NEW(AddressType_t, class := "AddressType_t", self := self, state := Type_State.CanBeDefined, cgtype := Target.Address.cg_type, typeid := a.typeid);
+                self.Type_Init (type);
+                EVAL declare_typename_replace (self, a.typeid, M3ID.Add (a.text));
+                type.base_text := a.text; (* more readable output (fewer hashes) *)
+                type.text := a.text; (* more readable output (fewer hashes) *)
             END;
         END;
     END;
+
 END DeclareBuiltinTypes;
 
 (*------------------------------------------------ READONLY configuration ---*)
@@ -2720,7 +3070,9 @@ BEGIN
     Prefix_Print(x, self);
 
     (* declare/define types *)
-    DeclareTypes(self);
+    IF NOT DeclareTypes(self) THEN
+      RETURN;
+    END;
 
     HelperFunctions(self);
     GetStructSizes(self); (* TODO remove this when we finish strong typing *)
@@ -2808,29 +3160,83 @@ END set_source_line;
 
 (*------------------------------------------- debugging type declarations ---*)
 
-<*NOWARN*>PROCEDURE declare_typename(declareType: DeclareTypes_t; typeid: TypeUID; name: Name) =
-VAR nameText := NameT(name);
-    self := declareType.self;
+PROCEDURE declare_typename_internal (self: T; typeid: TypeUID; name: Name; replace: BOOLEAN): Typename_t =
+VAR nameText1 := NameT (name);
+    nameText2 := nameText1;
+    typename: Typename_t := NIL;
 BEGIN
-  IF debug_verbose THEN
-    self.comment("declare_typename typeid:", TypeIDToText(typeid), " name:" & TextOrNIL(nameText));
-  ELSIF debug THEN
-    self.comment("declare_typename");
+  IF name = M3ID.NoID THEN RETURN NIL END;
+
+  IF debug_types THEN
+    self.comment("declare_typename_internal typeid:" & TypeIDToText (typeid));
   END;
 
   IF name = M3ID.NoID THEN
-    RETURN;
+    IF debug_types THEN
+      self.comment("declare_typename_internal name = 0, skip");
+    END;
+    RETURN NIL;
   END;
 
-  RETURN; (* TODO temporarily disable typenames *)
+  ReplaceName (self, name);
 
-  TextToId (nameText);
-  (* typename is like pointer but without the star and without a hash in the name *)
-  self.Type_Init (NEW (Typename_t, text := nameText, refers_to_typeid := typeid, name := name));
+  typename := GetTypename (self, name);
+  IF typename # NIL THEN
+    IF debug_types THEN
+      self.comment ("declare_typename_internal skipping duplicate " & NameT (name));
+    END;
+    RETURN typename;
+  END;
 
+  TextToId (nameText2);
+  IF nameText1 # nameText2 THEN
+    name := M3ID.Add (nameText2);
+  END;
+
+  typename := NEW (Typename_t, class := "Typename_t", self := self, text := nameText2, refers_to_typeid := typeid, name := name, replace := replace);
+  IF debug_types THEN
+    self.comment ("NEW Typename_t " & Type_Fmt (typename) &
+                  " nameText1:" & nameText1 &
+                  " nameText2:" & nameText2 &
+                  " refers_to_typeid:" & TypeIDToText (typename.refers_to_typeid));
+  END;
+  self.Type_Init (typename);
+  PutTypename (self, name, typename);
+
+  RETURN typename;
+END declare_typename_internal;
+
+PROCEDURE declare_typename_no_replace (self: T; typeid: TypeUID; name: Name): Typename_t =
+BEGIN
+  IF name = M3ID.NoID THEN RETURN NIL END;
+  IF debug_types THEN
+    self.comment ("declare_typename_no_replace typeid:" & TypeIDToText(typeid));
+  END;
+  RETURN declare_typename_internal (self, typeid, name, replace := FALSE);
+END declare_typename_no_replace;
+
+PROCEDURE declare_typename_replace (self: T; typeid: TypeUID; name: Name): Typename_t =
+BEGIN
+  IF name = M3ID.NoID THEN RETURN NIL END;
+  IF debug_types THEN
+    self.comment ("declare_typename_replace typeid:" & TypeIDToText(typeid));
+  END;
+  RETURN declare_typename_internal (self, typeid, name, replace := TRUE);
+END declare_typename_replace;
+
+PROCEDURE declare_typename (declareTypes: DeclareTypes_t; typeid: TypeUID; name: Name) =
+VAR self := declareTypes.self;
+    nameText1 := NameT (name);
+BEGIN
+  IF debug_verbose THEN
+    self.comment ("declare_typename typeid:", TypeIDToText (typeid), " name:" & TextOrNIL (nameText1));
+  ELSIF debug THEN
+    self.comment ("declare_typename");
+  END;
+  EVAL declare_typename_replace (self, typeid, name);
 END declare_typename;
 
-PROCEDURE TypeIDToText(x: M3CG.TypeUID): TEXT =
+PROCEDURE TypeIDToText (x: TypeUID): TEXT =
 BEGIN
     RETURN "T" & UIntToHex(Word.And(16_FFFFFFFF, x));
 END TypeIDToText;
@@ -2847,7 +3253,7 @@ BEGIN
         x.comment("declare_array");
     END;
 
-    x.Type_Init(NEW(FixedArray_t, typeid := typeid, index_typeid := index_typeid, element_typeid := element_typeid, bit_size := bit_size));
+    x.Type_Init(NEW (FixedArray_t, class := "FixedArray_t", self := x, typeid := typeid, index_typeid := index_typeid, element_typeid := element_typeid, bit_size := bit_size));
   END declare_array;
 
 PROCEDURE declare_open_array(self: DeclareTypes_t; typeid, element_typeid: TypeUID; bit_size: BitSize; <*UNUSED*>element_typename: Name) =
@@ -2861,7 +3267,9 @@ BEGIN
         x.comment("declare_open_array");
     END;
     <* ASSERT bit_size MOD 32 = 0 *>
-    x.Type_Init(NEW(OpenArray_t,
+    x.Type_Init(NEW (OpenArray_t,
+        class := "OpenArray_t",
+        self := x,
         typeid := typeid,
         element_typeid := element_typeid,
         bit_size := bit_size));
@@ -2871,7 +3279,7 @@ BEGIN
             RTIO.PutText("declare_array nil element_type\n");
             RTIO.Flush();
         END;
-        ifndef (self, TypeIDToText (typeid)); (* ifdef so multiple files can be concatenated and compiled at once *)
+        ifndef (self, TypeIDToText (typeid), "//3"); (* ifdef so multiple files can be concatenated and compiled at once *)
         print(self, "/*declare_open_array*/typedef struct {");
         print(self, element_type.text);
         print(self, "* _elts; CARDINAL _size");
@@ -2881,11 +3289,12 @@ BEGIN
             print(self, "]");
         END;
         print(self, ";}" & element_type.text & ";");
-        EVAL typeidToType.put(typeid, NEW(OpenArray_t,
-                                          typeid := typeid,
-                                          bit_size := bit_size,
-                                          element_typeid := element_typeid,
-                                          element_type := element_type));
+        EVAL typeidToType.put(typeid, NEW (OpenArray_t,
+                                           self := x,
+                                           typeid := typeid,
+                                           bit_size := bit_size,
+                                           element_typeid := element_typeid,
+                                           element_type := element_type));
         endif(self); (* ifdef so multiple files can be concatenated and compiled at once *)
     END;
 *)
@@ -2902,18 +3311,24 @@ BEGIN
     ELSIF debug THEN
         x.comment("declare_enum");
     END;
+
     Assert (x, bit_size = 8 OR bit_size = 16 OR bit_size = 32, "bit_size = 8 OR bit_size = 16 OR bit_size = 32");
     Assert (x, element_count > 0, "element_count > 0");
     Assert (x, self.enum = NIL, "self.enum = NIL");
     Assert (x, self.enum_value = -1, "self.enum_value = -1");
 
     enum := NEW(Enum_t,
+                class := "Enum_t",
+                self := x,
                 typeid := typeid,
                 min := TInt.Zero,
                 max := IntToTarget(x, element_count - 1),
                 names := NEW(REF ARRAY OF Name, element_count),
                 cgtype := BitsToCGUInt[bit_size],
-                text := TypeIDToText(typeid));
+                hash_text := TypeIDToText(typeid));
+    IF debug_types THEN
+      self.comment ("new enum " & Type_Fmt (enum));
+    END;
     Assert (x, self.enum = NIL, "self.enum = NIL");
     Assert (x, self.enum_value = -1, "self.enum_value = -1");
     self.enum := enum;
@@ -2940,8 +3355,10 @@ BEGIN
     Assert (x, self.enum # NIL, "self.enum # NIL");
     Assert (x, self.enum.names # NIL, "self.enum.names # NIL");
 
-    x.comment("declare_enum_elt: NUMBER(self.enum.names^):", IntToDec(NUMBER(self.enum.names^)));
-    x.comment("declare_enum_elt: enum_element_count:", IntToDec(enum_element_count));
+    IF debug THEN
+      x.comment("declare_enum_elt: NUMBER(self.enum.names^):", IntToDec(NUMBER(self.enum.names^)));
+      x.comment("declare_enum_elt: enum_element_count:", IntToDec(enum_element_count));
+    END;
     Assert (x, NUMBER(self.enum.names^) = enum_element_count, "NUMBER(self.enum.names^) = enum_element_count");
 
     self.enum.names[enum_value] := name;
@@ -2966,6 +3383,8 @@ BEGIN
         x.comment("declare_packed");
     END;
     x.Type_Init(NEW(Packed_t,
+        class := "Packed_t",
+        self := x,
         typeid := typeid,
         base_typeid := base_typeid,
         bit_size := bit_size));
@@ -2986,6 +3405,7 @@ TYPE DeclareTypes_t = M3CG_DoNothing.T OBJECT
     procType: ProcType_t := NIL;
 
 OVERRIDES
+    import_global := import_global;
     declare_typename := declare_typename;
     declare_enum := declare_enum;
     declare_enum_elt := declare_enum_elt;
@@ -3008,46 +3428,58 @@ OVERRIDES
     declare_subrange := declare_subrange;
 END;
 
-PROCEDURE DeclareTypes_FlushOnce(x: T) =
+PROCEDURE DeclareTypes_FlushOnce(x: T): BOOLEAN =
 VAR size := x.pendingTypes.size();
+    result := FALSE;
 BEGIN
-    FOR i := 1 TO size DO
-        WITH type = NARROW(x.pendingTypes.remlo(), Type_t) DO
-            IF type.IsDefined() THEN
-                (* nothing *)
-                x.comment("DeclareTypes_FlushOnce IsDefined:" & type.text);
-            ELSIF type.CanBeDefined(x) THEN
-                x.comment("DeclareTypes_FlushOnce CanBeDefined:" & type.text);
-                type.Define(x);
-            ELSE
-                x.comment("DeclareTypes_FlushOnce pending:" & type.text);
-                x.pendingTypes.addhi(type);
-            END;
+  x.comment("DeclareTypes_FlushOnce size:" & Fmt.Int (size));
+  FOR i := 1 TO size DO
+    WITH type = NARROW(x.pendingTypes.remlo(), Type_t) DO
+      IF debug_types THEN
+        x.comment("DeclareTypes_FlushOnce try:" & Type_Fmt (type));
+      END;
+      IF type.IsDefined() THEN
+        (* nothing *)
+        IF debug_types THEN
+          x.comment("DeclareTypes_FlushOnce IsDefined:" & Type_Fmt (type));
         END;
+      ELSIF type.CanBeDefined(x) THEN
+        IF debug_types THEN
+          x.comment("DeclareTypes_FlushOnce CanBeDefined:" & Type_Fmt (type));
+        END;
+        type.Define(x);
+        result := TRUE;
+      ELSE
+        IF debug_types THEN
+          x.comment("DeclareTypes_FlushOnce pending:" & Type_Fmt (type));
+        END;
+        x.pendingTypes.addhi(type);
+      END;
     END;
+  END;
+  RETURN result;
 END DeclareTypes_FlushOnce;
 
-PROCEDURE DeclareTypes(multipass: Multipass_t) =
+PROCEDURE DeclareTypes(multipass: Multipass_t): BOOLEAN =
 VAR x := multipass.self;
     self := NEW(DeclareTypes_t, self := x);
     index := 0;
-    size_before, size_after := 0;
+    result := TRUE;
 BEGIN
     x.comment("begin: DeclareTypes");
     DeclareBuiltinTypes(x); (* This must be before replay. *)
     multipass.Replay(self, index);
 
-    size_before := x.pendingTypes.size();
-    WHILE size_before > 0 DO
-        DeclareTypes_FlushOnce(x);
-        size_after := x.pendingTypes.size();
-        IF size_after >= size_before THEN
-            Err(x, "DeclareTypes not progressing");
-        END;
-        size_before := size_after;
+    WHILE DeclareTypes_FlushOnce (x) DO
+    END;
+
+    IF x.pendingTypes.size() > 0 THEN
+      Err (x, "DeclareTypes not progressing");
+      result := FALSE;
     END;
 
     x.comment("end: DeclareTypes");
+    RETURN result;
 END DeclareTypes;
 
 PROCEDURE declare_record(self: DeclareTypes_t; typeid: TypeUID; bit_size: BitSize; field_count: INTEGER) =
@@ -3065,10 +3497,13 @@ BEGIN
         RETURN;
     END;
     record := NEW(Record_t,
-                  text := TypeIDToText(typeid),
+                  class := "Record_t",
+                  self := x,
+                  hash_text := TypeIDToText (typeid),
                   typeid := typeid,
                   bit_size := bit_size,
-                  fields := NEW(RefSeq.T).init(field_count));
+                  fields := NEW (RefSeq.T).init(field_count));
+    self.comment ("new record " & Type_Fmt (record));
     self.previous_field := NIL;
     self.field_count := field_count;
     self.field_index := 0;
@@ -3099,7 +3534,7 @@ BEGIN
         *)
         RETURN;
     END;
-    name := ReplaceName(name);
+    ReplaceName(x, name);
     field := NEW(Field_t, bit_offset := bit_offset, bit_size := bit_size, typeid := typeid, name := name);
     self.record.fields.addhi(field);
     IF previous_field # NIL AND previous_field.bit_offset + previous_field.bit_size > bit_offset THEN
@@ -3139,7 +3574,7 @@ BEGIN
      * Array of any size integer would also make sense.
      *)
     IF bit_size = Target.Integer.size THEN
-        x.Type_Init(NEW(Integer_t, cgtype := Target.Integer.cg_type, typeid := typeid));
+        x.Type_Init(NEW(Integer_t, class := "Integer_t", self := x, cgtype := Target.Integer.cg_type, typeid := typeid));
     ELSIF bit_size > Target.Integer.size THEN
         <* ASSERT (bit_size MOD Target.Integer.size) = 0 *>
         self.declare_array(typeid, UID_WORD, UID_WORD, bit_size);
@@ -3148,7 +3583,7 @@ BEGIN
        *)
       FOR i := FIRST(integers) TO LAST(integers) DO
         IF bit_size <= integers[i].size THEN
-          x.Type_Init(NEW(Integer_t, cgtype := integers[i].cg_type, typeid := typeid));
+          x.Type_Init(NEW(Integer_t, class := "Integer_t", self := x, cgtype := integers[i].cg_type, typeid := typeid));
           RETURN;
         END;
       END;
@@ -3171,7 +3606,7 @@ BEGIN
     RETURN SignedAndBitsToCGType[SubrangeIsSigned(min, max)][bit_size];
 END SubrangeCGType;
 
-PROCEDURE declare_subrange(self: DeclareTypes_t; typeid, domain_typeid: TypeUID; READONLY min, max: Target.Int; bit_size: BitSize; <*UNUSED*>domain_typename: Name) =
+<*NOWARN*>PROCEDURE declare_subrange(self: DeclareTypes_t; typeid, domain_typeid: TypeUID; READONLY min, max: Target.Int; bit_size: BitSize; domain_typename: Name) =
 VAR x := self.self;
 BEGIN
     IF debug_verbose THEN
@@ -3183,9 +3618,12 @@ BEGIN
     ELSIF debug THEN
         x.comment("declare_subrange");
     END;
+
     <* ASSERT bit_size = 8 OR bit_size = 16 OR bit_size = 32 OR bit_size = 64 *>
     <* ASSERT typeid # domain_typeid *>
-    x.Type_Init(NEW(Subrange_t,
+    x.Type_Init(NEW (Subrange_t,
+        class := "Subrange_t",
+        self := x,
         min := min,
         max := max,
         typeid := typeid,
@@ -3211,54 +3649,61 @@ BEGIN
         (*type_text_tail*) "_" & IntToDec(bit_size));
 END declare_subrange;
 
-PROCEDURE declare_pointer_no_trace(x: T; typeid, target: TypeUID; target_typename: TEXT; brand: TEXT := NIL; traced: BOOLEAN := FALSE) =
+PROCEDURE declare_pointer_no_trace (x: T; typeid, target, target_typename: TypeUID; brand: TEXT := NIL; traced: BOOLEAN := FALSE) =
+VAR type: Pointer_t := NIL;
 BEGIN
-    x.Type_Init(
-        NEW(Pointer_t,
-            typeid := typeid,
-            refers_to_typeid := target,
-            brand := brand,
-            text := target_typename,
-            traced := traced));
+  ReplaceName (x, target_typename);
+
+  type := NEW (Pointer_t,
+               class := "Pointer_t",
+               self := x,
+               typeid := typeid,
+               refers_to_typeid := target,
+               refers_to_type := declare_typename_no_replace (x, target, target_typename),
+               brand := brand,
+               target_typename := NameT (target_typename),
+               traced := traced);
+
+  x.Type_Init(type);
+
 END declare_pointer_no_trace;
 
-PROCEDURE declare_pointer(self: DeclareTypes_t; typeid, target: TypeUID; brand: TEXT; traced: BOOLEAN; target_typename: Name) =
+PROCEDURE declare_pointer (self: DeclareTypes_t; typeid, target: TypeUID; brand: TEXT; traced: BOOLEAN; target_typename: Name) =
 VAR x := self.self;
-    target_typename_text := NameT(target_typename);
 BEGIN
-    IF typeid = target OR debug_verbose THEN
-        x.comment("declare_pointer typeid:" & TypeIDToText(typeid)
-            & " target:" & TypeIDToText(target)
-            & " brand:" & TextOrNIL(brand)
-            & " traced:" & BoolToText[traced]
-            & " target_typename:" & TextOrNil(target_typename_text));
-    ELSIF debug THEN
-        x.comment("declare_pointer");
-    END;
-    declare_pointer_no_trace(x, typeid, target, target_typename_text, brand, traced);
+  IF typeid = target OR debug_verbose THEN
+    x.comment("declare_pointer typeid:" & TypeIDToText(typeid)
+              & " target:" & TypeIDToText(target)
+              & " brand:" & TextOrNIL(brand)
+              & " traced:" & BoolToText[traced]
+              & " target_typename:" & TextOrNil (NameT (target_typename)));
+  ELSIF debug THEN
+    x.comment("declare_pointer");
+  END;
+  declare_pointer_no_trace (x, typeid, target, target_typename, brand, traced);
 END declare_pointer;
 
-PROCEDURE declare_indirect(self: DeclareTypes_t; typeid, target: TypeUID; target_typename: Name) =
+PROCEDURE declare_indirect (self: DeclareTypes_t; typeid, target: TypeUID; target_typename: Name) =
 VAR x := self.self;
-    target_typename_text := NameT(target_typename);
 BEGIN
-    IF typeid = target OR debug_verbose THEN
-        x.comment("declare_indirect typeid:", TypeIDToText(typeid),
-            " target:" & TypeIDToText(target),
-            " target_typename:" & TextOrNil(NameT(target_typename)));
-    ELSIF debug THEN
-        x.comment("declare_indirect");
-    END;
-    declare_pointer_no_trace(x, typeid, target, target_typename_text);
+  IF typeid = target OR debug_verbose THEN
+    x.comment("declare_indirect typeid:", TypeIDToText(typeid),
+              " target:" & TypeIDToText(target),
+              " target_typename:" & TextOrNil(NameT(target_typename)));
+  ELSIF debug THEN
+    x.comment("declare_indirect");
+  END;
+  ReplaceName (x, target_typename);
+  declare_pointer_no_trace (x, typeid, target, target_typename);
 END declare_indirect;
 
 PROCEDURE CallingConventionToText(callingConvention: CallingConvention): TEXT =
 BEGIN
-    IF callingConvention = NIL THEN RETURN "<NIL>" END;
-    (* Return underlying __stdcall and __cdecl instead of aliases like WINAPI.
-     * RETURN callingConvention.name;
-     *)
-    RETURN Target.ConventionFromID(callingConvention.m3cg_id).name;
+  IF callingConvention = NIL THEN RETURN "<NIL>" END;
+  (* Return underlying __stdcall and __cdecl instead of aliases like WINAPI.
+   * RETURN callingConvention.name;
+   *)
+  RETURN Target.ConventionFromID(callingConvention.m3cg_id).name;
 END CallingConventionToText;
 
 PROCEDURE declare_proctype (self: DeclareTypes_t; typeid: TypeUID; param_count: INTEGER; result: TypeUID; raise_count: INTEGER; callingConvention: CallingConvention; result_typename: Name) =
@@ -3274,7 +3719,10 @@ BEGIN
   ELSIF debug THEN
     x.comment("declare_proctype");
   END;
+  ReplaceName (x, result_typename);
   self.procType := NEW (ProcType_t,
+                        class := "ProcType_t",
+                        self := x,
                         cgtype := Target.Address.cg_type,
                         index := 1,
                         callingConvention := callingConvention,
@@ -3284,7 +3732,7 @@ BEGIN
                         typeid := typeid);
   self.procType.typeids [0] := result;
   self.procType.typenames [0] := result_typename;
-  x.Type_Init (self.procType);
+  x.Type_Init(self.procType);
 END declare_proctype;
 
 PROCEDURE declare_formal (self: DeclareTypes_t; name: Name; typeid: TypeUID; typename: Name) =
@@ -3299,8 +3747,8 @@ BEGIN
     x.comment ("declare_formal");
   END;
 
-  typename := M3ID.NoID; (* TODO temporarily disable typenames *)
-
+  ReplaceName (x, typename);
+  procType.types [procType.index] := declare_typename_no_replace (x, typeid, typename);
   procType.typeids [procType.index] := typeid;
   procType.typenames [procType.index] := typename;
   INC (procType.index);
@@ -3341,10 +3789,13 @@ BEGIN
     (* SuppressLineDirective(self, field_count + method_count, "declare_object field_count + method_count"); *)
 
     record := NEW(Record_t,
+                  class := "Record_t",
+                  self := x,
                   text := TypeIDToText(typeid) & "_fields",
                   typeid := -1,
                   bit_size := field_size,
                   fields := NEW(RefSeq.T).init(field_count));
+    self.comment ("new record " & Type_Fmt (record));
     self.previous_field := NIL;
     self.field_count := field_count;
     self.field_index := 0;
@@ -3356,6 +3807,8 @@ BEGIN
     END;
     x.Type_Init(
         NEW(Pointer_t,
+            class := "Pointer_t",
+            self := x,
             typeid := typeid,
             refers_to_type := record,
             refers_to_typeid := -1,
@@ -3385,7 +3838,7 @@ BEGIN
         x.comment("declare_opaque");
     END;
     (* TODO Stronger types *)
-    x.Type_Init(NEW(AddressType_t, cgtype := Target.Address.cg_type, typeid := typeid)); (* TODO? *)
+    x.Type_Init(NEW(AddressType_t, class := "AddressType_t", self := x, cgtype := Target.Address.cg_type, typeid := typeid)); (* TODO? *)
 END declare_opaque;
 
 PROCEDURE reveal_opaque(self: DeclareTypes_t; lhs, rhs: TypeUID) =<*NOWARN*>
@@ -3462,36 +3915,49 @@ END set_runtime_proc;
 
 (*------------------------------------------------- variable declarations ---*)
 
-PROCEDURE import_global(self: T; name: Name; byte_size: ByteSize; alignment: Alignment; cgtype: CGType; typeid: TypeUID; <*UNUSED*>typename: Name): M3CG.Var =
-VAR var := NEW(Var_t,
-        self := self,
-        cgtype := cgtype,
-        typeid := typeid,
-        name := name,
-        imported := TRUE).Init();
+PROCEDURE import_global (declareTypes: DeclareTypes_t; name: Name; byte_size: ByteSize; alignment: Alignment; cgtype: CGType; typeid: TypeUID; typename: Name): M3CG.Var =
+(* In this earlier pass, only produce the Typename_t, to be resolved before later use. *)
+VAR self := declareTypes.self;
 BEGIN
+  IF debug_verbose THEN
+    self.comment ("import_global name:" & TextOrNIL (NameT (name))
+                        & " byte_size:" & IntToDec (byte_size)
+                        & " alignment:" & IntToDec (alignment)
+                        &    " cgtype:" & cgtypeToText [cgtype]
+                        &    " typeid:" & TypeIDToText(typeid)
+                        &  " typename:" & TextOrNil (NameT (typename)));
+  ELSIF debug THEN
     self.comment("import_global");
-    <* ASSERT (byte_size MOD alignment) = 0 *>
-    <* ASSERT NOT self.in_proc *>
-    print(self, "extern " & cgtypeToText[cgtype] & " " & NameT(var.name) & ";\n");
-    RETURN var;
+  END;
+  <* ASSERT (byte_size MOD alignment) = 0 *>
+  declare_typename (declareTypes, typeid, typename);
+
+  (* Multipass optionally remembers/reuses refs across passes. NIL means
+   * the Var is unused through this pass, produced in a later one. *)
+  RETURN NIL;
 END import_global;
 
-PROCEDURE Locals_declare_segment(
-    self: Locals_t;
-    name: Name;
-    typeid: TypeUID;
-    const: BOOLEAN): M3CG.Var =
+PROCEDURE Imports_import_global (imports: Imports_t; name: Name; byte_size: ByteSize; alignment: Alignment; cgtype: CGType; typeid: TypeUID; typename: Name): M3CG.Var =
+VAR self := imports.self;
+    var := NEW (Var_t, self := self, cgtype := cgtype, typeid := typeid, name := name, imported := TRUE).Init();
+BEGIN
+  <* ASSERT (byte_size MOD alignment) = 0 *>
+  <* ASSERT NOT self.in_proc *>
+  IF typename # M3ID.NoID THEN
+    print (self, "extern " & NameT (typename) & " " & NameT (var.name) & ";\n");
+  ELSE
+    print (self, "extern " & cgtypeToText [cgtype] & " " & NameT (var.name) & ";\n");
+  END;
+  RETURN var;
+END Imports_import_global;
+
+PROCEDURE Locals_declare_segment(self: Locals_t; name: Name; typeid: TypeUID; const: BOOLEAN): M3CG.Var =
 BEGIN
     RETURN declare_segment(self.self, name, typeid, const);
 END Locals_declare_segment;
 
 PROCEDURE declare_segment(self: T; name: Name; typeid: TypeUID; const: BOOLEAN): M3CG.Var =
-VAR var := NEW(Var_t,
-        self := self,
-        name := name,
-        typeid := typeid,
-        const := const).Init();
+VAR var := NEW (Var_t, self := self, name := name, typeid := typeid, const := const).Init();
     fixed_name := var.name;
     text: TEXT := NIL;
     length := 0;
@@ -3988,7 +4454,7 @@ BEGIN
                 print(x, "typedef WORD_T* SET;\n#define SET_GRAIN (sizeof(WORD_T)*8)\n");
                 setAny := TRUE;
             END;
-            ifndef(x, "m3set" & M3CG_Binary.OpText(setData[i].op));
+            ifndef(x, "m3set" & M3CG_Binary.OpText(setData[i].op), "//4");
             print(x, setData[i].text);
             endif(x);
         END;
@@ -4088,7 +4554,7 @@ BEGIN
 
     (* Print per-type content. Remember what types are printed to avoid duplication. *)
     IF NOT type IN types_already_printed THEN
-        ifndef(self.self, "m3_" & op & "_" & cgtypeToText[type]);
+        ifndef(self.self, "m3_" & op & "_" & cgtypeToText[type], "//5");
         print(self.self, "m3_" & op & "_T(" & cgtypeToText[type] & ")");
         endif(self.self);
         types_already_printed := types_already_printed + SET OF CGType{type};
@@ -4356,7 +4822,7 @@ TYPE Locals_t = M3CG_DoNothing.T OBJECT
     self: T := NIL;
 OVERRIDES
     declare_segment := Locals_declare_segment; (* declare_segment is needed, to get the unit name, to check for exception handlers *)
-    declare_procedure := Locals_declare_procedure;
+    declare_procedure := declare_procedure;
     begin_procedure := Locals_begin_procedure;
     end_procedure := Locals_end_procedure;
     declare_param := Locals_declare_param;
@@ -4501,18 +4967,6 @@ BEGIN
         typename);
 END Imports_declare_param;
 
-PROCEDURE Imports_import_global(
-    self: Imports_t;
-    name: Name;
-    byte_size: ByteSize;
-    alignment: Alignment;
-    type: CGType;
-    typeid: TypeUID;
-    typename: Name): M3CG.Var =
-BEGIN
-    RETURN import_global(self.self, name, byte_size, alignment, type, typeid, typename);
-END Imports_import_global;
-
 TYPE GetStructSizes_t = M3CG_DoNothing.T OBJECT
     sizes: REF ARRAY OF INTEGER := NIL;
     count := 0;
@@ -4580,7 +5034,7 @@ BEGIN
             FOR unit := FIRST(units) TO LAST(units) DO
                 IF (size MOD units[unit]) = 0 THEN
                     sizestr := IntToDec(size);
-                    ifndef(x, "struct_" & sizestr & "_t"); (* see define STRUCT *)
+                    ifndef(x, "struct_" & sizestr & "_t", "//6"); (* see define STRUCT *)
                     print(x, "STRUCT" & IntToDec(units[unit]) & "(" & sizestr & ")");
                     endif(x);
                     EXIT;
@@ -4597,9 +5051,8 @@ BEGIN
     <* ASSERT byte_size >= 0 *>
     <* ASSERT (byte_size MOD alignment) = 0 *>
 
-    byte_size := MAX(byte_size, 1);
     IF type = CGType.Struct THEN
-        self.sizes[self.count] := byte_size;
+        self.sizes[self.count] := MAX(byte_size, 1);
         INC(self.count);
     END;
     RETURN NIL;
@@ -4918,8 +5371,9 @@ BEGIN
         self.comment("internal_declare_param");
     END;
 
-    typename_text := NIL;  (* TODO temporarily disable typenames *)
-    typename := M3ID.NoID; (* TODO temporarily disable typenames *)
+    (* m3front misses a lot declare_typename? *)
+    ReplaceName (self, typename);
+    EVAL declare_typename_no_replace (self, typeid, typename);
 
     type_text := TypeText (self, cgtype, typename_text, typeid, type_text, name);
 
@@ -5436,31 +5890,6 @@ BEGIN
     RETURN proc;
 END import_procedure;
 
-PROCEDURE Locals_declare_procedure(
-    self: Locals_t;
-    name: Name;
-    parameter_count: INTEGER;
-    return_type: CGType;
-    level: INTEGER;
-    callingConvention: CallingConvention;
-    exported: BOOLEAN;
-    parent: M3CG.Proc;
-    return_typeid: TypeUID;
-    return_typename: Name): M3CG.Proc =
-BEGIN
-    RETURN declare_procedure(
-        self.self,
-        name,
-        parameter_count,
-        return_type,
-        level,
-        callingConvention,
-        exported,
-        parent,
-        return_typeid,
-        return_typename);
-END Locals_declare_procedure;
-
 PROCEDURE ProcNameOrNIL(proc: M3CG.Proc): TEXT =
 BEGIN
     IF proc = NIL THEN
@@ -5469,14 +5898,14 @@ BEGIN
     RETURN NameT(NARROW(proc, Proc_t).name);
 END ProcNameOrNIL;
 
-PROCEDURE declare_procedure(
-    self: T; name: Name; parameter_count: INTEGER;
-    return_type: CGType; level: INTEGER;
-    callingConvention: CallingConvention;
-    exported: BOOLEAN; parent: M3CG.Proc;
-    return_typeid: TypeUID;
-    return_typename: Name): M3CG.Proc =
-VAR return_type_text := NameT(return_typename);
+PROCEDURE declare_procedure (
+  locals: Locals_t; name: Name;
+  parameter_count: INTEGER; return_type: CGType;
+  level: INTEGER; callingConvention: CallingConvention;
+  exported: BOOLEAN; parent: M3CG.Proc;
+  return_typeid: TypeUID; return_typename: Name): M3CG.Proc =
+VAR self := locals.self;
+    return_type_text := NameT(return_typename);
     proc := NEW(Proc_t, name := name, parameter_count := parameter_count,
                 return_type := return_type, level := level,
                 return_type_text := TypeText (self, return_type, return_type_text),
@@ -7280,8 +7709,9 @@ END load_static_link;
 
 PROCEDURE Err(self: T; text: TEXT) =
 BEGIN
-    self.comment("ERROR:" & text);
-    self.Err(text);
+    self.comment ("ERROR:" & text);
+    print (self, "#error " & text & "\n");
+    self.Err (text);
     Wr.Flush(self.c);
 END Err;
 
@@ -7298,7 +7728,7 @@ PROCEDURE comment(self: T; a, b, c, d: TEXT := NIL) =
 VAR length := 0;
 BEGIN
     IF NOT debug_comment THEN
-        RETURN;
+      RETURN;
     END;
     comment_1(a, length);
     comment_1(b, length);
@@ -7426,7 +7856,7 @@ BEGIN
     SignedAndBitsToCGType[FALSE] := BitsToCGUInt;
     debug_verbose := RTParams.IsPresent ("m3c-debug-verbose");
     debug_types := RTParams.IsPresent ("m3c-debug-types");
-    debug := RTParams.IsPresent ("m3c-debug");
+    debug := debug_verbose OR debug_types OR RTParams.IsPresent ("m3c-debug");
     debug_comment_stdio := RTParams.IsPresent ("m3c-debug-comment-stdio");
     debug_comment := debug_comment_stdio OR debug_types OR debug OR debug_verbose OR RTParams.IsPresent ("m3c-debug-comment");
 END M3C.
