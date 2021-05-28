@@ -122,14 +122,12 @@ PROCEDURE EmitDeclaration (formal: Value.T;  types_only, param: BOOLEAN) =
     END;
 
     IF (types_only) THEN
-      IF indirect
-      THEN (* lo-level pass by reference. *)
+      IF indirect THEN (* lo-level pass by reference. *)
         CG.Declare_typename (t.cg_type, typename);
         t.cg_type := CG.Declare_indirect (t.cg_type, typename);
       END;
     ELSIF (param) THEN
-      IF indirect
-      THEN (* lo-level pass by reference. *)
+      IF indirect THEN (* lo-level pass by reference. *)
         size  := Target.Address.size;
         align := Target.Address.align;
         mtype := CG.Type.Addr;
