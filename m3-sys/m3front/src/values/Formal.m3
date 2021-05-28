@@ -117,9 +117,7 @@ PROCEDURE EmitDeclaration (formal: Value.T;  types_only, param: BOOLEAN) =
       IF t.mode # Mode.mVALUE OR t.openArray
       THEN (* lo-level pass by reference. *)
         Type.Typename (TypeOf (t), typename);
-        IF typename # M3ID.NoID THEN
-          CG.Declare_typename (t.cg_type, typename);
-        END;
+        CG.Declare_typename (t.cg_type, typename);
         t.cg_type := CG.Declare_indirect (t.cg_type, typename);
       END;
     ELSIF (param) THEN
