@@ -300,6 +300,56 @@ CONST LabelToHex = IntToHex;
 
 CONST BoolToText = ARRAY BOOLEAN OF TEXT{"FALSE", "TRUE"};
 
+(* Unsigned types are handled seemingly unfortunately quite poorly in Modula-3.
+ * In particular we get:
+ * TYPE int = INTEGER;
+ * TYPE unsigned_int = INTEGER;
+ * and more similar. This cannot be correct.
+ * Silently ignore all the unsigned 32bit or 64bit type names.
+ * This is an unfortunate hack. *)
+VAR unsignedMin := LAST(Name);
+VAR unsignedMax := FIRST(Name); (* not really needed, part of unsigned *)
+VAR unsigned: REF ARRAY OF BOOLEAN; (* index from min to max, subtract min *)
+
+PROCEDURE InitializeUnsigned () =
+CONST modules = ARRAY OF TEXT{"BasicCtypes", "Ctypes", "Cstdint", "Cstddef", "Utypes", "WinBaseTypes", "WinNT", "WinDef" };
+
+(* 8 and 16 bit types are ok, they are subranges of integer
+ * and actually do have all the expected values.
+ * 32bit types are ok in 64bit target, but this code is target-independent *)
+CONST types = ARRAY OF TEXT{"UINT32", "UINT64", "SIZE_T", "const_UINT32",
+                            "size_t", "uintptr_t", "uint32_t", "uint64_t", "unsigned", "unsigned_int",
+                            "unsigned_long", "unsigned_long_int", "unsigned_long_long", "unsigned_long_long_int"};
+VAR i := 0;
+    id := 0;
+    ids := ARRAY [0 .. NUMBER (modules) * NUMBER (types) - 1] OF Name {M3ID.NoID, ..};
+BEGIN
+  FOR module := 0 TO LAST (modules) DO
+    FOR type := 0 TO LAST (types) DO
+      id := M3ID.Add (modules [module] & "__" & types [type]);
+      unsignedMin := MIN (unsignedMin, id);
+      unsignedMax := MAX (unsignedMax, id);
+      ids [i] := id;
+      INC (i);
+    END;
+  END;
+  unsigned := NEW (REF ARRAY OF BOOLEAN, unsignedMax - unsignedMin + 1);
+  FOR i := 0 TO LAST (unsigned^) DO
+    <* ASSERT unsigned [i] = FALSE *>
+  END;
+  FOR i := 0 TO LAST (ids) DO
+    unsigned [ids [i] - unsignedMin] := TRUE;
+  END;
+END InitializeUnsigned;
+
+PROCEDURE IsUnsigned (id: Name): BOOLEAN =
+BEGIN
+  IF unsigned = NIL THEN
+    InitializeUnsigned ();
+  END;
+  RETURN id >= unsignedMin AND id <= unsignedMax AND unsigned [id - unsignedMin];
+END IsUnsigned;
+
 CONST reservedWords = ARRAY OF TEXT{
 (* avoid using these identifiers for function names, local variables, parameter names, etc. *)
 "ALPHA",
@@ -870,6 +920,7 @@ OVERRIDES
 END;
 
 TYPE Typename_t = PointerOrTypename_t OBJECT
+  name := M3ID.NoID;
 OVERRIDES
   define := typename_define;
 END;
@@ -897,7 +948,7 @@ BEGIN
        *    REF RECORD .. END; => *T123...
        * 2. Reference a name in context:
        *    REF T => *T;
-       * 3. Reference a hash that has been given a name otherwise coincidentally:
+       * 3. Reference a hash that has been given a name otherwise:
        *    TYPE T = RECORD .. END;
        *    REF RECORD .. END; => *T
        *)
@@ -924,7 +975,9 @@ BEGIN
       ifndef (self, typetext);
       (* TODO It might be possible to eliminate the hashed names. *)
       print(x, "typedef " & type.refers_to_type.base_text & " " & typetext & ";");
-      type.refers_to_type.text := typetext;
+      IF NOT IsUnsigned (type.name) THEN (* Modula3 unsigned types are a problem. *)
+        type.refers_to_type.text := typetext;
+      END;
       endif (self);
     END;
 END typename_define;
@@ -2756,7 +2809,7 @@ BEGIN
 
   TextToId (nameText);
   (* typename is like pointer but without the star and without a hash in the name *)
-  self.Type_Init (NEW (Typename_t, text := nameText, refers_to_typeid := typeid));
+  self.Type_Init (NEW (Typename_t, text := nameText, refers_to_typeid := typeid, name := name));
 
 END declare_typename;
 
@@ -3194,7 +3247,7 @@ END CallingConventionToText;
 PROCEDURE declare_proctype (self: DeclareTypes_t; typeid: TypeUID; param_count: INTEGER; result: TypeUID; raise_count: INTEGER; callingConvention: CallingConvention; result_typename: Name) =
 VAR x := self.self;
 BEGIN
-  IF DebugVerbose(x) THEN
+  IF DebugVerbose (x) THEN
     x.comment ("declare_proctype typeid:" & TypeIDToText (typeid)
       & " param_count:" & IntToDec (param_count)
       & " result:" & TypeIDToText (result)
