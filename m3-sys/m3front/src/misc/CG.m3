@@ -10,7 +10,7 @@ MODULE CG;
 
 IMPORT Text, IntIntTbl, IntRefTbl, Fmt, Word;
 IMPORT Scanner, Error, Module, RunTyme, WebInfo;
-IMPORT M3, M3CG, M3CG_Ops, M3CG_Check;
+IMPORT M3, M3CG, M3CG_Ops, M3CG_Check, M3ID;
 IMPORT Host, Target, TInt, TFloat, TWord, TargetMap, M3RT (**, RTObject **);
 
 CONST
@@ -262,7 +262,9 @@ PROCEDURE Gen_location (here: INTEGER) =
 
 PROCEDURE Declare_typename (t: TypeUID;  n: Name) =
   BEGIN
-    cg.declare_typename (t, n);
+    IF n # M3ID.NoID THEN
+      cg.declare_typename (t, n);
+    END;
   END Declare_typename;
 
 PROCEDURE Declare_array (t: TypeUID;  index, elt: TypeUID;  s: Size) =
