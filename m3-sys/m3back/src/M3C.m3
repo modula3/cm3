@@ -3217,21 +3217,21 @@ BEGIN
   x.Type_Init (self.procType);
 END declare_proctype;
 
-PROCEDURE declare_formal(self: DeclareTypes_t; name: Name; typeid: TypeUID; typename: Name) =
+PROCEDURE declare_formal (self: DeclareTypes_t; name: Name; typeid: TypeUID; typename: Name) =
 VAR x := self.self;
-    type := self.procType;
+    procType := self.procType;
 BEGIN
-  IF DebugVerbose(x) THEN
-    x.comment("declare_formal name:", NameT(name),
-              " typeid:" & TypeIDToText(typeid),
-              " typename:" & TextOrNil(NameT(typename)));
+  IF DebugVerbose (x) THEN
+    x.comment ("declare_formal name:", NameT (name),
+               " typeid:" & TypeIDToText (typeid),
+               " typename:" & TextOrNil (NameT (typename)));
   ELSE
-    x.comment("declare_formal");
+    x.comment ("declare_formal");
   END;
-  type.typeids[type.index] := typeid;
-  type.typenames[type.index] := typename;
-  INC(type.index);
-  IF type.index = NUMBER(type.types^) THEN
+  procType.typeids [procType.index] := typeid;
+  procType.typenames [procType.index] := typename;
+  INC (procType.index);
+  IF procType.index = NUMBER (procType.types^) THEN
     self.procType := NIL;
   END;
 END declare_formal;
