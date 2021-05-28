@@ -570,7 +570,7 @@ CONST suppressImports = ARRAY OF TEXT{
 VAR replacementNames_Inited := FALSE;
 VAR replacementNames_Table := NEW(IntIntTbl.Default).init(NUMBER(reservedWords));
 
-PROCEDURE ReplaceName(id: M3ID.T): M3ID.T =
+PROCEDURE ReplaceName(id: Name): Name =
 VAR replacement := 0;
 BEGIN
     IF replacementNames_Inited = FALSE THEN
@@ -2444,7 +2444,7 @@ BEGIN
 END TextToId;
 
 PROCEDURE New (<*UNUSED*>library (* or program *): TEXT;
-               <*UNUSED*>source (* lacks extension .m3 or .i3 *): M3ID.T;
+               <*UNUSED*>source (* lacks extension .m3 or .i3 *): Name;
                cfile: Wr.T;
                target_name: TEXT): M3CG.T =
 VAR self := NewInternal (cfile);
@@ -3153,7 +3153,7 @@ BEGIN
     declare_pointer_no_trace(x, typeid, target, target_typename_text, brand, traced);
 END declare_pointer;
 
-PROCEDURE declare_indirect(self: DeclareTypes_t; typeid, target: TypeUID; target_typename: M3ID.T) =
+PROCEDURE declare_indirect(self: DeclareTypes_t; typeid, target: TypeUID; target_typename: Name) =
 VAR x := self.self;
     target_typename_text := NameT(target_typename);
 BEGIN
@@ -3176,7 +3176,7 @@ BEGIN
     RETURN Target.ConventionFromID(callingConvention.m3cg_id).name;
 END CallingConventionToText;
 
-PROCEDURE declare_proctype(self: DeclareTypes_t; typeid: TypeUID; param_count: INTEGER; result: TypeUID; raise_count: INTEGER; callingConvention: CallingConvention; result_typename: M3ID.T) =
+PROCEDURE declare_proctype(self: DeclareTypes_t; typeid: TypeUID; param_count: INTEGER; result: TypeUID; raise_count: INTEGER; callingConvention: CallingConvention; result_typename: Name) =
 VAR x := self.self;
 BEGIN
     IF DebugVerbose(x) THEN
@@ -3200,7 +3200,7 @@ BEGIN
     x.Type_Init(self.procType);
 END declare_proctype;
 
-PROCEDURE declare_formal(self: DeclareTypes_t; name: Name; typeid: TypeUID; typename: M3ID.T) =
+PROCEDURE declare_formal(self: DeclareTypes_t; name: Name; typeid: TypeUID; typename: Name) =
 VAR x := self.self;
     type := self.procType;
 BEGIN
@@ -4290,7 +4290,7 @@ PROCEDURE Locals_declare_param(
     <*UNUSED*>in_memory: BOOLEAN;
     up_level: BOOLEAN;
     <*UNUSED*>frequency: Frequency;
-    typename: M3ID.T): M3CG.Var =
+    typename: Name): M3CG.Var =
 BEGIN
     RETURN declare_param(
         self.self,
@@ -4380,7 +4380,7 @@ PROCEDURE Imports_import_procedure(
     return_type: CGType;
     callingConvention: CallingConvention;
     return_typeid: TypeUID;
-    return_typename: M3ID.T): M3CG.Proc =
+    return_typename: Name): M3CG.Proc =
 BEGIN
     RETURN import_procedure(self.self, name, parameter_count, return_type, callingConvention, return_typeid, return_typename);
 END Imports_import_procedure;
@@ -4395,7 +4395,7 @@ PROCEDURE Imports_declare_param(
     <*UNUSED*>in_memory: BOOLEAN;
     up_level: BOOLEAN;
     <*UNUSED*>frequency: Frequency;
-    typename: M3ID.T): M3CG.Var =
+    typename: Name): M3CG.Var =
 BEGIN
     RETURN declare_param(
         self.self,
@@ -4588,7 +4588,7 @@ PROCEDURE GetStructSizes_declare_param(
     <*UNUSED*>in_memory: BOOLEAN;
     <*UNUSED*>up_level: BOOLEAN;
     <*UNUSED*>frequency: Frequency;
-    <*UNUSED*>typename: M3ID.T): M3CG.Var =
+    <*UNUSED*>typename: Name): M3CG.Var =
 BEGIN
     RETURN self.Declare(type, byte_size, alignment);
 END GetStructSizes_declare_param;
@@ -4809,7 +4809,7 @@ PROCEDURE internal_declare_param(
     typeid: TypeUID;
     up_level: BOOLEAN;
     type_text: TEXT;
-    typename: M3ID.T): M3CG.Var =
+    typename: Name): M3CG.Var =
 VAR function := self.param_proc;
     var: Var_t := NIL;
     typename_text := NameT(typename);
@@ -4855,7 +4855,7 @@ declare_param(
     type: CGType;
     typeid: TypeUID;
     up_level: BOOLEAN;
-    typename: M3ID.T): M3CG.Var =
+    typename: Name): M3CG.Var =
 BEGIN
     IF self.param_proc = NIL THEN
         RETURN NIL;
@@ -5310,7 +5310,7 @@ PROCEDURE import_procedure(
     self: T; name: Name; parameter_count: INTEGER;
     return_type: CGType; callingConvention: CallingConvention;
     return_typeid: TypeUID;
-    return_typename: M3ID.T): M3CG.Proc =
+    return_typename: Name): M3CG.Proc =
 VAR return_type_text := NameT(return_typename);
     proc := NEW(Proc_t, name := name, parameter_count := parameter_count,
                 return_type := return_type, imported := TRUE,
@@ -5350,7 +5350,7 @@ PROCEDURE Locals_declare_procedure(
     exported: BOOLEAN;
     parent: M3CG.Proc;
     return_typeid: TypeUID;
-    return_typename: M3ID.T): M3CG.Proc =
+    return_typename: Name): M3CG.Proc =
 BEGIN
     RETURN declare_procedure(
         self.self,
@@ -5379,7 +5379,7 @@ PROCEDURE declare_procedure(
     callingConvention: CallingConvention;
     exported: BOOLEAN; parent: M3CG.Proc;
     return_typeid: TypeUID;
-    return_typename: M3ID.T): M3CG.Proc =
+    return_typename: Name): M3CG.Proc =
 VAR return_type_text := NameT(return_typename);
     proc := NEW(Proc_t, name := name, parameter_count := parameter_count,
                 return_type := return_type, level := level,
