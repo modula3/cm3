@@ -1369,6 +1369,7 @@ END openArray_define;
 TYPE ProcType_t = Type_CanBeDefinedTrue_t OBJECT
   index := 0;
   types: REF ARRAY OF Type_t := NIL;
+  typenames: REF ARRAY OF Name := NIL;
   typeids: REF ARRAY OF TypeUID := NIL;
   callingConvention: CallingConvention;
 OVERRIDES
@@ -1383,6 +1384,7 @@ BEGIN
   END;
 
   FOR i := 0 TO NUMBER(type.types^) - 1 DO
+    (* TODO make sure the typenames are defined or forward declared? *)
     IF type.types^[i] = NIL AND type.typeids^[i] # 0 THEN
       type.types^[i] := TypeidToType_Get(self, type.typeids^[i]);
       IF type.types^[i] = NIL THEN
@@ -1401,10 +1403,13 @@ END ProcType_canBeDefined;
 
 PROCEDURE ProcType_define (procType: ProcType_t; self: T) =
 VAR return := procType.types [0];
+    id := procType.typenames [0];
     text := "void";
 BEGIN
-  print(self, "typedef ");
-  IF return # NIL THEN
+  print (self, "typedef ");
+  IF id # M3ID.NoID THEN
+    text := NameT (id);
+  ELSIF return # NIL THEN
     text := return.text;
   END;
   print (self, text);
@@ -1418,10 +1423,16 @@ BEGIN
   print (self, procType.text);
   print (self, ")(");
   IF NUMBER (procType.types^) = 1 THEN
-    print (self, "void");
+    print (self, "void"); (* empty parameter list, for C and C++ *)
   ELSE
     FOR i := 1 TO NUMBER (procType.types^) - 1 DO
-      print (self, procType.types [i].text);
+      id := procType.typenames [i];
+      IF id # M3ID.NoID THEN
+        text := NameT (id);
+      ELSE
+        text := procType.types [i].text;
+      END;
+      print (self, text);
       IF i # NUMBER (procType.types^) - 1 THEN
         print (self, ",");
       END;
@@ -3198,9 +3209,11 @@ BEGIN
                         index := 1,
                         callingConvention := callingConvention,
                         types := NEW (REF ARRAY OF Type_t, param_count + 1),
+                        typenames := NEW (REF ARRAY OF Name, param_count + 1),
                         typeids := NEW (REF ARRAY OF TypeUID, param_count + 1),
                         typeid := typeid);
   self.procType.typeids [0] := result;
+  self.procType.typenames [0] := result_typename;
   x.Type_Init (self.procType);
 END declare_proctype;
 
