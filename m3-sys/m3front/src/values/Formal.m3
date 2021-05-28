@@ -117,7 +117,7 @@ PROCEDURE EmitDeclaration (formal: Value.T;  types_only, param: BOOLEAN) =
 
     indirect := t.mode # Mode.mVALUE OR t.openArray;
 
-    IF types_only OR NOT indirect
+    IF types_only OR NOT indirect THEN
       Type.Typename (TypeOf (t), typename);
     END;
 
