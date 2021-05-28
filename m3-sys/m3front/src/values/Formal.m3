@@ -108,20 +108,27 @@ PROCEDURE EmitDeclaration (formal: Value.T;  types_only, param: BOOLEAN) =
     align    : CG.Alignment;
     info     : Type.Info;
     typename := M3ID.NoID;
+    indirect := FALSE;
   BEGIN
     IF (types_only) THEN
       Compile (t);
-
       t.cg_type := Type.GlobalUID (TypeOf (t));
+    END;
 
-      IF t.mode # Mode.mVALUE OR t.openArray
+    indirect := t.mode # Mode.mVALUE OR t.openArray;
+
+    IF types_only OR NOT indirect
+      Type.Typename (TypeOf (t), typename);
+    END;
+
+    IF (types_only) THEN
+      IF indirect
       THEN (* lo-level pass by reference. *)
-        Type.Typename (TypeOf (t), typename);
         CG.Declare_typename (t.cg_type, typename);
         t.cg_type := CG.Declare_indirect (t.cg_type, typename);
       END;
     ELSIF (param) THEN
-      IF t.mode # Mode.mVALUE OR t.openArray
+      IF indirect
       THEN (* lo-level pass by reference. *)
         size  := Target.Address.size;
         align := Target.Address.align;
@@ -133,13 +140,12 @@ PROCEDURE EmitDeclaration (formal: Value.T;  types_only, param: BOOLEAN) =
         size  := info.size;
         align := info.alignment;
         mtype := info.mem_type;
-        Type.Typename (TypeOf (t), typename);
       END;
       EVAL CG.Declare_param (t.name, size, align, mtype,
                              t.cg_type, in_memory := FALSE, up_level := FALSE,
                              f := CG.Maybe, typename := typename);
     ELSE (* This is part of debug info for a signature. *)
-      CG.Declare_formal (t.name, t.cg_type);
+      CG.Declare_formal (t.name, t.cg_type, typename);
     END;
   END EmitDeclaration;
 
