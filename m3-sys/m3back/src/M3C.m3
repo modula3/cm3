@@ -1399,35 +1399,35 @@ BEGIN
 
 END ProcType_canBeDefined;
 
-PROCEDURE ProcType_define(type: ProcType_t; self: T) =
-VAR return := type.types[0];
+PROCEDURE ProcType_define (procType: ProcType_t; self: T) =
+VAR return := procType.types [0];
+    text := "void";
 BEGIN
   print(self, "typedef ");
-  IF return = NIL THEN
-    print(self, "void");
-  ELSE
-    print(self, return.text);
+  IF return # NIL THEN
+    text := return.text;
   END;
+  print (self, text);
   (* Ifdef guard might be needed here, but it is also advantageous
    * to omit. If there are duplicates, the C compiler verifies
    * they are equivalent, else errors.
    *)
-  print(self, "(");
-  print(self, CallingConventionToText(type.callingConvention));
-  print(self, "*");
-  print(self, type.text);
-  print(self, ")(");
-  IF NUMBER(type.types^) = 1 THEN
-    print(self, "void");
+  print (self, "(");
+  print (self, CallingConventionToText (procType.callingConvention));
+  print (self, "*");
+  print (self, procType.text);
+  print (self, ")(");
+  IF NUMBER (procType.types^) = 1 THEN
+    print (self, "void");
   ELSE
-    FOR i := 1 TO NUMBER(type.types^) - 1 DO
-      print(self, type.types[i].text);
-      IF i # NUMBER(type.types^) - 1 THEN
-        print(self, ",");
+    FOR i := 1 TO NUMBER (procType.types^) - 1 DO
+      print (self, procType.types [i].text);
+      IF i # NUMBER (procType.types^) - 1 THEN
+        print (self, ",");
       END;
     END;
   END;
-  print(self, ");");
+  print (self, ");");
 END ProcType_define;
 
 PROCEDURE TypeidToType_Get(self: T; typeid: TypeUID): Type_t =
@@ -3180,28 +3180,28 @@ BEGIN
     RETURN Target.ConventionFromID(callingConvention.m3cg_id).name;
 END CallingConventionToText;
 
-PROCEDURE declare_proctype(self: DeclareTypes_t; typeid: TypeUID; param_count: INTEGER; result: TypeUID; raise_count: INTEGER; callingConvention: CallingConvention; result_typename: Name) =
+PROCEDURE declare_proctype (self: DeclareTypes_t; typeid: TypeUID; param_count: INTEGER; result: TypeUID; raise_count: INTEGER; callingConvention: CallingConvention; result_typename: Name) =
 VAR x := self.self;
 BEGIN
-    IF DebugVerbose(x) THEN
-        x.comment("declare_proctype typeid:" & TypeIDToText(typeid)
-            & " param_count:" & IntToDec(param_count)
-            & " result:" & TypeIDToText(result)
-            & " raise_count:" & IntToDec(raise_count)
-            & " callingConvention:" & CallingConventionToText(callingConvention)
-            & " result_typename:" & TextOrNil(NameT(result_typename)));
-    ELSE
-        x.comment("declare_proctype");
-    END;
-    self.procType := NEW(ProcType_t,
-                         cgtype := Target.Address.cg_type,
-                         index := 1,
-                         callingConvention := callingConvention,
-                         types := NEW(REF ARRAY OF Type_t, param_count + 1),
-                         typeids := NEW(REF ARRAY OF TypeUID, param_count + 1),
-                         typeid := typeid);
-    self.procType.typeids[0] := result;
-    x.Type_Init(self.procType);
+  IF DebugVerbose(x) THEN
+    x.comment ("declare_proctype typeid:" & TypeIDToText (typeid)
+      & " param_count:" & IntToDec (param_count)
+      & " result:" & TypeIDToText (result)
+      & " raise_count:" & IntToDec (raise_count)
+      & " callingConvention:" & CallingConventionToText (callingConvention)
+      & " result_typename:" & TextOrNil (NameT (result_typename)));
+  ELSE
+    x.comment("declare_proctype");
+  END;
+  self.procType := NEW (ProcType_t,
+                        cgtype := Target.Address.cg_type,
+                        index := 1,
+                        callingConvention := callingConvention,
+                        types := NEW (REF ARRAY OF Type_t, param_count + 1),
+                        typeids := NEW (REF ARRAY OF TypeUID, param_count + 1),
+                        typeid := typeid);
+  self.procType.typeids [0] := result;
+  x.Type_Init (self.procType);
 END declare_proctype;
 
 PROCEDURE declare_formal(self: DeclareTypes_t; name: Name; typeid: TypeUID; typename: Name) =
