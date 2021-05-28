@@ -3229,6 +3229,7 @@ BEGIN
     x.comment("declare_formal");
   END;
   type.typeids[type.index] := typeid;
+  type.typenames[type.index] := typename;
   INC(type.index);
   IF type.index = NUMBER(type.types^) THEN
     self.procType := NIL;
