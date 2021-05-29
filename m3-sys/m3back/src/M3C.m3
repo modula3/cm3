@@ -2807,6 +2807,8 @@ BEGIN
     RETURN;
   END;
 
+  RETURN; (* TODO temporarily disable typenames *)
+
   TextToId (nameText);
   (* typename is like pointer but without the star and without a hash in the name *)
   self.Type_Init (NEW (Typename_t, text := nameText, refers_to_typeid := typeid, name := name));
@@ -3281,6 +3283,9 @@ BEGIN
   ELSE
     x.comment ("declare_formal");
   END;
+
+  typename := M3ID.NoID; (* TODO temporarily disable typenames *)
+
   procType.typeids [procType.index] := typeid;
   procType.typenames [procType.index] := typename;
   INC (procType.index);
@@ -4895,6 +4900,9 @@ BEGIN
     ELSE
         self.comment("internal_declare_param");
     END;
+
+    typename_text := NIL;  (* TODO temporarily disable typenames *)
+    typename := M3ID.NoID; (* TODO temporarily disable typenames *)
 
     type_text := TypeText (self, cgtype, typename_text, typeid, type_text, name);
 
