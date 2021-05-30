@@ -170,12 +170,13 @@ PROCEDURE Compiler (p: P) =
   BEGIN
     Type.Compile (p.target);
     typeid := Type.GlobalUID (p);
-    CG.Declare_pointer (typeid, Type.GlobalUID (p.target),
-                        Brand.ToText (p.brand), p.isTraced);
     user_name := p.user_name;
+    (* declare_typename before declare_pointer helps C backend render indirect better *)
     IF user_name # NIL THEN
       CG.Declare_typename (typeid, M3ID.Add (user_name));
     END;
+    CG.Declare_pointer (typeid, Type.GlobalUID (p.target),
+                        Brand.ToText (p.brand), p.isTraced);
   END Compiler;
 
 (* EXPORTED *)
