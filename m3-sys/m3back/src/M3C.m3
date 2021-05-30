@@ -594,7 +594,6 @@ Cstring.i3 declares strcpy and strcat incorrectly..on purpose.
 "m3_set_sym_difference",
 "m3_set_union",
 "WORD_T",
-"CARDINAL",
 "DOTDOTDOT",
 "STRUCT",
 "INT8", "UINT8", "INT16", "UINT16", "INT32", "UINT32", "INT64", "UINT64",
