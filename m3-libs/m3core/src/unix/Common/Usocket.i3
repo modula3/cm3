@@ -4,12 +4,10 @@
 
 INTERFACE Usocket;
 
-FROM Ctypes IMPORT int, void_star, const_void_star, const_char_star;
+FROM Ctypes IMPORT const_int, int, void_star, const_void_star, const_char_star;
 FROM Cstddef IMPORT size_t;
 FROM Uin IMPORT struct_sockaddr_in;
 IMPORT Utypes, Uin;
-
-(* CONST *)
 
 (* not all constants are necessarily available on all platforms
  ones marked * portable * are perhaps more portable
@@ -22,99 +20,99 @@ IMPORT Utypes, Uin;
 *)
 
 (* ai_protocol *)
-<*EXTERNAL "Usocket__IPPROTO_TCP"*> VAR IPPROTO_TCP: int; (* portable *)
-<*EXTERNAL "Usocket__IPPROTO_UDP"*> VAR IPPROTO_UDP: int;
-<*EXTERNAL "Usocket__IPPROTO_RM"*>  VAR IPPROTO_RM: int;
-<*EXTERNAL "Usocket__IPPROTO_PGM"*> VAR IPPROTO_PGM: int; (* synonym for previous? *)
-<*EXTERNAL "Usocket__IPPROTO_IGMP"*>VAR IPPROTO_IGMP: int;
+<*EXTERNAL "Usocket__IPPROTO_TCP"*> VAR IPPROTO_TCP: const_int; (* portable *)
+<*EXTERNAL "Usocket__IPPROTO_UDP"*> VAR IPPROTO_UDP: const_int;
+<*EXTERNAL "Usocket__IPPROTO_RM"*>  VAR IPPROTO_RM: const_int;
+<*EXTERNAL "Usocket__IPPROTO_PGM"*> VAR IPPROTO_PGM: const_int; (* synonym for previous? *)
+<*EXTERNAL "Usocket__IPPROTO_IGMP"*>VAR IPPROTO_IGMP: const_int;
 
 (* ai_socktype *)
-<*EXTERNAL "Usocket__SOCK_STREAM"*> VAR SOCK_STREAM: int; (* portable *)
-<*EXTERNAL "Usocket__SOCK_DGRAM"*>  VAR SOCK_DGRAM: int;
-<*EXTERNAL "Usocket__SOCK_RAW"*>    VAR SOCK_RAW: int;
-<*EXTERNAL "Usocket__SOCK_RDM"*>    VAR SOCK_RDM: int; (* reliable message datagram *)
-<*EXTERNAL "Usocket__SOCK_SEQPACKET"*> VAR SOCK_SEQPACKET: int; (* reliable message datagram *)
+<*EXTERNAL "Usocket__SOCK_STREAM"*> VAR SOCK_STREAM: const_int; (* portable *)
+<*EXTERNAL "Usocket__SOCK_DGRAM"*>  VAR SOCK_DGRAM: const_int;
+<*EXTERNAL "Usocket__SOCK_RAW"*>    VAR SOCK_RAW: const_int;
+<*EXTERNAL "Usocket__SOCK_RDM"*>    VAR SOCK_RDM: const_int; (* reliable message datagram *)
+<*EXTERNAL "Usocket__SOCK_SEQPACKET"*> VAR SOCK_SEQPACKET: const_int; (* reliable message datagram *)
 
 (* ai_family *)
-<*EXTERNAL "Usocket__AF_UNSPEC"*>   VAR AF_UNSPEC: int; (* unspecified *)
-<*EXTERNAL "Usocket__AF_INET"*>     VAR AF_INET: int; (* IPv4 *) (* portable *) (* internetwork: UDP, TCP, etc. *)
-<*EXTERNAL "Usocket__AF_INET6"*>    VAR AF_INET6: int; (* IPv6 *)
-<*EXTERNAL "Usocket__AF_NETBIOS"*>  VAR AF_NETBIOS: int;
-<*EXTERNAL "Usocket__AF_IRDA"*>     VAR AF_IRDA: int; (* infrared data association *)
-<*EXTERNAL "Usocket__AF_BTH"*>      VAR AF_BTH: int; (* Bluetooth *)
-<*EXTERNAL "Usocket__AF_UNIX"*>     VAR AF_UNIX: int;(* local to host (pipes, portals) *)
-<*EXTERNAL "Usocket__AF_LOCAL"*>    VAR AF_LOCAL: int;
-<*EXTERNAL "Usocket__AF_IPX"*>      VAR AF_IPX: int; (* Novell IPX *)
-<*EXTERNAL "Usocket__AF_AX25"*>     VAR AF_AX25: int; (* Amateur Radio AX.25 *)
-<*EXTERNAL "Usocket__AF_NETROM"*>   VAR AF_NETROM: int; (* Amateur radio NetROM *)
-<*EXTERNAL "Usocket__AF_BRIDGE"*>   VAR AF_BRIDGE: int; (* Multiprotocol bridge *)
-<*EXTERNAL "Usocket__AF_AAL5"*>     VAR AF_AAL5: int; (* Reserved for Werner's ATM *)
-<*EXTERNAL "Usocket__AF_X25"*>      VAR AF_X25: int; (* X.25 *)
-<*EXTERNAL "Usocket__AF_IMPLINK"*>  VAR AF_IMPLINK: int; (* arpanet imp addresses *)
-<*EXTERNAL "Usocket__AF_PUP"*>      VAR AF_PUP: int; (* pup protocols: e.g. BSP *)
-<*EXTERNAL "Usocket__AF_CHAOS"*>    VAR AF_CHAOS: int; (* mit CHAOS protocols *)
-<*EXTERNAL "Usocket__AF_NS"*>       VAR AF_NS: int; (* XEROX NS protocols *)
-<*EXTERNAL "Usocket__AF_NBS"*>      VAR AF_NBS: int; (* nbs protocols *)
-<*EXTERNAL "Usocket__AF_ECMA"*>     VAR AF_ECMA: int; (* european computer manufacturers *)
-<*EXTERNAL "Usocket__AF_DATAKIT"*>  VAR AF_DATAKIT: int; (* datakit protocols *)
-<*EXTERNAL "Usocket__AF_CCITT"*>    VAR AF_CCITT: int; (* CCITT protocols, X.25 etc *)
-<*EXTERNAL "Usocket__AF_SNA"*>      VAR AF_SNA: int; (* IBM SNA *)
-<*EXTERNAL "Usocket__AF_DECnet"*>   VAR AF_DECnet: int; (* DECnet *)
-<*EXTERNAL "Usocket__AF_DLI"*>      VAR AF_DLI: int; (* Direct data link interface *)
-<*EXTERNAL "Usocket__AF_LAT"*>      VAR AF_LAT: int; (* LAT *)
-<*EXTERNAL "Usocket__AF_HYLINK"*>   VAR AF_HYLINK: int; (* NSC Hyperchannel *)
-<*EXTERNAL "Usocket__AF_APPLETALK"*>VAR AF_APPLETALK: int; (* Apple talk *)
-<*EXTERNAL "Usocket__AF_BSC"*>      VAR AF_BSC: int; (* BISYNC 2780/3780 *)
-<*EXTERNAL "Usocket__AF_DSS"*>      VAR AF_DSS: int; (* Distributed system services *)
+<*EXTERNAL "Usocket__AF_UNSPEC"*>   VAR AF_UNSPEC: const_int; (* unspecified *)
+<*EXTERNAL "Usocket__AF_INET"*>     VAR AF_INET: const_int; (* IPv4 *) (* portable *) (* internetwork: UDP, TCP, etc. *)
+<*EXTERNAL "Usocket__AF_INET6"*>    VAR AF_INET6: const_int; (* IPv6 *)
+<*EXTERNAL "Usocket__AF_NETBIOS"*>  VAR AF_NETBIOS: const_int;
+<*EXTERNAL "Usocket__AF_IRDA"*>     VAR AF_IRDA: const_int; (* infrared data association *)
+<*EXTERNAL "Usocket__AF_BTH"*>      VAR AF_BTH: const_int; (* Bluetooth *)
+<*EXTERNAL "Usocket__AF_UNIX"*>     VAR AF_UNIX: const_int;(* local to host (pipes, portals) *)
+<*EXTERNAL "Usocket__AF_LOCAL"*>    VAR AF_LOCAL: const_int;
+<*EXTERNAL "Usocket__AF_IPX"*>      VAR AF_IPX: const_int; (* Novell IPX *)
+<*EXTERNAL "Usocket__AF_AX25"*>     VAR AF_AX25: const_int; (* Amateur Radio AX.25 *)
+<*EXTERNAL "Usocket__AF_NETROM"*>   VAR AF_NETROM: const_int; (* Amateur radio NetROM *)
+<*EXTERNAL "Usocket__AF_BRIDGE"*>   VAR AF_BRIDGE: const_int; (* Multiprotocol bridge *)
+<*EXTERNAL "Usocket__AF_AAL5"*>     VAR AF_AAL5: const_int; (* Reserved for Werner's ATM *)
+<*EXTERNAL "Usocket__AF_X25"*>      VAR AF_X25: const_int; (* X.25 *)
+<*EXTERNAL "Usocket__AF_IMPLINK"*>  VAR AF_IMPLINK: const_int; (* arpanet imp addresses *)
+<*EXTERNAL "Usocket__AF_PUP"*>      VAR AF_PUP: const_int; (* pup protocols: e.g. BSP *)
+<*EXTERNAL "Usocket__AF_CHAOS"*>    VAR AF_CHAOS: const_int; (* mit CHAOS protocols *)
+<*EXTERNAL "Usocket__AF_NS"*>       VAR AF_NS: const_int; (* XEROX NS protocols *)
+<*EXTERNAL "Usocket__AF_NBS"*>      VAR AF_NBS: const_int; (* nbs protocols *)
+<*EXTERNAL "Usocket__AF_ECMA"*>     VAR AF_ECMA: const_int; (* european computer manufacturers *)
+<*EXTERNAL "Usocket__AF_DATAKIT"*>  VAR AF_DATAKIT: const_int; (* datakit protocols *)
+<*EXTERNAL "Usocket__AF_CCITT"*>    VAR AF_CCITT: const_int; (* CCITT protocols, X.25 etc *)
+<*EXTERNAL "Usocket__AF_SNA"*>      VAR AF_SNA: const_int; (* IBM SNA *)
+<*EXTERNAL "Usocket__AF_DECnet"*>   VAR AF_DECnet: const_int; (* DECnet *)
+<*EXTERNAL "Usocket__AF_DLI"*>      VAR AF_DLI: const_int; (* Direct data link interface *)
+<*EXTERNAL "Usocket__AF_LAT"*>      VAR AF_LAT: const_int; (* LAT *)
+<*EXTERNAL "Usocket__AF_HYLINK"*>   VAR AF_HYLINK: const_int; (* NSC Hyperchannel *)
+<*EXTERNAL "Usocket__AF_APPLETALK"*>VAR AF_APPLETALK: const_int; (* Apple talk *)
+<*EXTERNAL "Usocket__AF_BSC"*>      VAR AF_BSC: const_int; (* BISYNC 2780/3780 *)
+<*EXTERNAL "Usocket__AF_DSS"*>      VAR AF_DSS: const_int; (* Distributed system services *)
 
 
 (* ai_flags *)
-<*EXTERNAL "Usocket__AI_PASSIVE"*>           VAR AI_PASSIVE: int;
-<*EXTERNAL "Usocket__AI_CANONNAME"*>         VAR AI_CANONNAME: int;
-<*EXTERNAL "Usocket__AI_NUMERIC_HOST"*>      VAR AI_NUMERIC_HOST: int;
-<*EXTERNAL "Usocket__AI_ADDRCONFIG"*>        VAR AI_ADDRCONFIG: int;
-<*EXTERNAL "Usocket__AI_NON_AUTHORITATIVE"*> VAR AI_NON_AUTHORITATIVE: int;
-<*EXTERNAL "Usocket__AI_SECURE"*>            VAR AI_SECURE: int;
-<*EXTERNAL "Usocket__AI_RETURN_PREFERRED_NAMES"*> VAR AI_RETURN_PREFERRED_NAMES: int;
+<*EXTERNAL "Usocket__AI_PASSIVE"*>           VAR AI_PASSIVE: const_int;
+<*EXTERNAL "Usocket__AI_CANONNAME"*>         VAR AI_CANONNAME: const_int;
+<*EXTERNAL "Usocket__AI_NUMERIC_HOST"*>      VAR AI_NUMERIC_HOST: const_int;
+<*EXTERNAL "Usocket__AI_ADDRCONFIG"*>        VAR AI_ADDRCONFIG: const_int;
+<*EXTERNAL "Usocket__AI_NON_AUTHORITATIVE"*> VAR AI_NON_AUTHORITATIVE: const_int;
+<*EXTERNAL "Usocket__AI_SECURE"*>            VAR AI_SECURE: const_int;
+<*EXTERNAL "Usocket__AI_RETURN_PREFERRED_NAMES"*> VAR AI_RETURN_PREFERRED_NAMES: const_int;
 
-<*EXTERNAL "Usocket__SO_REUSEADDR"*> VAR SO_REUSEADDR: int; (* portable *)
-<*EXTERNAL "Usocket__SO_KEEPALIVE"*> VAR SO_KEEPALIVE: int; (* portable *)
-<*EXTERNAL "Usocket__SO_LINGER"*>    VAR SO_LINGER: int; (* portable *)
+<*EXTERNAL "Usocket__SO_REUSEADDR"*> VAR SO_REUSEADDR: const_int; (* portable *)
+<*EXTERNAL "Usocket__SO_KEEPALIVE"*> VAR SO_KEEPALIVE: const_int; (* portable *)
+<*EXTERNAL "Usocket__SO_LINGER"*>    VAR SO_LINGER: const_int; (* portable *)
 
-<*EXTERNAL "Usocket__SO_TYPE"*>      VAR SO_TYPE: int;
-<*EXTERNAL "Usocket__SO_ERROR"*>     VAR SO_ERROR: int;
-<*EXTERNAL "Usocket__SO_DONTROUTE"*> VAR SO_DONTROUTE: int;
-<*EXTERNAL "Usocket__SO_BROADCAST"*> VAR SO_BROADCAST: int;
-<*EXTERNAL "Usocket__SO_SNDBUF"*>    VAR SO_SNDBUF: int;
-<*EXTERNAL "Usocket__SO_RCVBUF"*>    VAR SO_RCVBUF: int;
-<*EXTERNAL "Usocket__SO_OOBINLINE"*> VAR SO_OOBINLINE: int;
-<*EXTERNAL "Usocket__SO_NO_CHECK"*>  VAR SO_NO_CHECK: int;
-<*EXTERNAL "Usocket__SO_PRIORITY"*>  VAR SO_PRIORITY: int;
-<*EXTERNAL "Usocket__SO_BSDCOMPAT"*> VAR SO_BSDCOMPAT: int;
-<*EXTERNAL "Usocket__SO_ACCEPTCON"*> VAR SO_ACCEPTCON: int;
-<*EXTERNAL "Usocket__SO_CONDITIONAL_ACCEPT"*> VAR SO_CONDITIONAL_ACCEPT: int;
-<*EXTERNAL "Usocket__SO_EXCLUSIVEADDRUSE"*> VAR SO_EXCLUSIVEADDRUSE: int;
-<*EXTERNAL "Usocket__SO_PORT_SCALABILITY"*> VAR SO_PORT_SCALABILITY: int;
-<*EXTERNAL "Usocket__SO_PASSCRED"*> VAR SO_PASSCRED: int;
-<*EXTERNAL "Usocket__SO_PEERCRED"*> VAR SO_PEERCRED: int;
-<*EXTERNAL "Usocket__SO_RCVLOWAT"*> VAR SO_RCVLOWAT: int;
-<*EXTERNAL "Usocket__SO_SNDLOWAT"*> VAR SO_SNDLOWAT: int;
-<*EXTERNAL "Usocket__SO_REUSEPORT"*> VAR SO_REUSEPORT: int;
-<*EXTERNAL "Usocket__SO_RCVTIMEO"*> VAR SO_RCVTIMEO: int;
-<*EXTERNAL "Usocket__SO_SNDTIMEO"*> VAR SO_SNDTIMEO: int;
-<*EXTERNAL "Usocket__SO_SECURITY_AUTHENTICATION"*> VAR SO_SECURITY_AUTHENTICATION: int;
-<*EXTERNAL "Usocket__SO_SECURITY_ENCRYPTION_TRANSPORT"*> VAR SO_SECURITY_ENCRYPTION_TRANSPORT: int;
-<*EXTERNAL "Usocket__SO_SECURITY_ENCRYPTION_NETWORK"*> VAR SO_SECURITY_ENCRYPTION_NETWORK: int;
+<*EXTERNAL "Usocket__SO_TYPE"*>      VAR SO_TYPE: const_int;
+<*EXTERNAL "Usocket__SO_ERROR"*>     VAR SO_ERROR: const_int;
+<*EXTERNAL "Usocket__SO_DONTROUTE"*> VAR SO_DONTROUTE: const_int;
+<*EXTERNAL "Usocket__SO_BROADCAST"*> VAR SO_BROADCAST: const_int;
+<*EXTERNAL "Usocket__SO_SNDBUF"*>    VAR SO_SNDBUF: const_int;
+<*EXTERNAL "Usocket__SO_RCVBUF"*>    VAR SO_RCVBUF: const_int;
+<*EXTERNAL "Usocket__SO_OOBINLINE"*> VAR SO_OOBINLINE: const_int;
+<*EXTERNAL "Usocket__SO_NO_CHECK"*>  VAR SO_NO_CHECK: const_int;
+<*EXTERNAL "Usocket__SO_PRIORITY"*>  VAR SO_PRIORITY: const_int;
+<*EXTERNAL "Usocket__SO_BSDCOMPAT"*> VAR SO_BSDCOMPAT: const_int;
+<*EXTERNAL "Usocket__SO_ACCEPTCON"*> VAR SO_ACCEPTCON: const_int;
+<*EXTERNAL "Usocket__SO_CONDITIONAL_ACCEPT"*> VAR SO_CONDITIONAL_ACCEPT: const_int;
+<*EXTERNAL "Usocket__SO_EXCLUSIVEADDRUSE"*> VAR SO_EXCLUSIVEADDRUSE: const_int;
+<*EXTERNAL "Usocket__SO_PORT_SCALABILITY"*> VAR SO_PORT_SCALABILITY: const_int;
+<*EXTERNAL "Usocket__SO_PASSCRED"*> VAR SO_PASSCRED: const_int;
+<*EXTERNAL "Usocket__SO_PEERCRED"*> VAR SO_PEERCRED: const_int;
+<*EXTERNAL "Usocket__SO_RCVLOWAT"*> VAR SO_RCVLOWAT: const_int;
+<*EXTERNAL "Usocket__SO_SNDLOWAT"*> VAR SO_SNDLOWAT: const_int;
+<*EXTERNAL "Usocket__SO_REUSEPORT"*> VAR SO_REUSEPORT: const_int;
+<*EXTERNAL "Usocket__SO_RCVTIMEO"*> VAR SO_RCVTIMEO: const_int;
+<*EXTERNAL "Usocket__SO_SNDTIMEO"*> VAR SO_SNDTIMEO: const_int;
+<*EXTERNAL "Usocket__SO_SECURITY_AUTHENTICATION"*> VAR SO_SECURITY_AUTHENTICATION: const_int;
+<*EXTERNAL "Usocket__SO_SECURITY_ENCRYPTION_TRANSPORT"*> VAR SO_SECURITY_ENCRYPTION_TRANSPORT: const_int;
+<*EXTERNAL "Usocket__SO_SECURITY_ENCRYPTION_NETWORK"*> VAR SO_SECURITY_ENCRYPTION_NETWORK: const_int;
 
-<*EXTERNAL "Usocket__SOL_SOCKET"*>   VAR SOL_SOCKET: int; (* portable *)
+<*EXTERNAL "Usocket__SOL_SOCKET"*>   VAR SOL_SOCKET: const_int; (* portable *)
 
-<*EXTERNAL "Usocket__MSG_OOB"*>     VAR MSG_OOB: int;    (* process out-of-band data *)
-<*EXTERNAL "Usocket__MSG_PEEK"*>    VAR MSG_PEEK: int;   (* portable *) (* peek at incoming message *)
-<*EXTERNAL "Usocket__MSG_DONTROUTE"*> VAR MSG_DONTROUTE : int;(* send without using routing tables *)
-<*EXTERNAL "Usocket__MSG_CTRUNC"*>  VAR MSG_CTRUNC: int; (* Control data lost before delivery *)
-<*EXTERNAL "Usocket__MSG_PROXY"*>   VAR MSG_PROXY: int;
+<*EXTERNAL "Usocket__MSG_OOB"*>     VAR MSG_OOB: const_int;    (* process out-of-band data *)
+<*EXTERNAL "Usocket__MSG_PEEK"*>    VAR MSG_PEEK: const_int;   (* portable *) (* peek at incoming message *)
+<*EXTERNAL "Usocket__MSG_DONTROUTE"*> VAR MSG_DONTROUTE : const_int;(* send without using routing tables *)
+<*EXTERNAL "Usocket__MSG_CTRUNC"*>  VAR MSG_CTRUNC: const_int; (* Control data lost before delivery *)
+<*EXTERNAL "Usocket__MSG_PROXY"*>   VAR MSG_PROXY: const_int;
 
-<*EXTERNAL "Usocket__SOMAXCONN"*>   VAR SOMAXCONN: int; (* Maximum queue length specifiable by listen. *)
+<*EXTERNAL "Usocket__SOMAXCONN"*>   VAR SOMAXCONN: const_int; (* Maximum queue length specifiable by listen. *)
 
 TYPE
   socklen_t = Utypes.socklen_t; (* size_t *)
