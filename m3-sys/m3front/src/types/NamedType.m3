@@ -10,7 +10,7 @@ MODULE NamedType;
 
 IMPORT M3, M3ID, Token, Type, TypeRep, Scanner, ObjectType;
 IMPORT Error, Scope, Brand, Value, ErrType, Target;
-IMPORT RTParams;
+IMPORT RTIO, RTParams;
 FROM M3 IMPORT QID;
 
 VAR debug := FALSE;
@@ -37,6 +37,7 @@ TYPE
 PROCEDURE Parse (): Type.T =
   TYPE TK = Token.T;
   VAR p: P;  t: Type.T;
+      case := 0;
   BEGIN
     IF (Scanner.cur.token = TK.tIDENT)
       AND (Scanner.cur.defn # NIL)
@@ -44,7 +45,9 @@ PROCEDURE Parse (): Type.T =
       (* this identifier is reserved! *)
       t := Value.ToType (Scanner.cur.defn);
       Scanner.GetToken (); (* IDENT *)
+      case := 1;
     ELSE
+      case := 2;
       (* this is a non-reserved ID *)
       p := NEW (P);
       TypeRep.Init (p, Type.Class.Named);
@@ -57,12 +60,36 @@ PROCEDURE Parse (): Type.T =
       END;
       t := p;
     END;
+
+    case := case * 10;
  
     IF (Scanner.cur.token = TK.tBRANDED) THEN
+      case := case + 1;
       t := ObjectType.Parse (t, FALSE, Brand.Parse ());
     ELSIF (Scanner.cur.token = TK.tOBJECT) THEN
+      case := case + 2;
       t := ObjectType.Parse (t, FALSE, NIL);
     END;
+
+    IF debug THEN
+      RTIO.PutText ("NamedType.Parse t:");
+      RTIO.PutRef (t);
+      RTIO.PutText (" p:");
+      RTIO.PutRef (p);
+      RTIO.PutText (" ");
+      RTIO.PutInt (case);
+      RTIO.PutText (" ");
+      IF p # NIL AND p.qid.module # 0 THEN
+        RTIO.PutText (M3ID.ToText (p.qid.module));
+        RTIO.PutText ("__");
+      END;
+      IF p # NIL AND p.qid.item # 0 THEN
+        RTIO.PutText (M3ID.ToText (p.qid.item));
+      END;
+      RTIO.PutText ("\n");
+      RTIO.Flush ();
+    END;
+
     RETURN t;
   END Parse;
 

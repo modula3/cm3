@@ -15,7 +15,7 @@ IMPORT Value, Module, Host, TypeFP, TypeTbl, WCharr, Brand;
 IMPORT Addr, Bool, Charr, Card, EReel, Int, LInt, LReel, Mutex, Null;
 IMPORT ObjectRef, ObjectAdr, Reel, Reff, Textt, Target, TInt, TFloat;
 IMPORT Text, M3RT, TipeMap, TipeDesc, ErrType, OpenArrayType, M3ID;
-IMPORT RTParams;
+IMPORT RTIO, RTParams;
 FROM M3 IMPORT QID;
 
 VAR debug := FALSE;
@@ -88,33 +88,45 @@ PROCEDURE Reset () =
 PROCEDURE Parse (): T =
   TYPE TK = Token.T;
   VAR t: T;
+      case := "";
   BEGIN
     CASE Scanner.cur.token OF
-    | TK.tIDENT     => t := NamedType.Parse ();
-    | TK.tARRAY     => t := ArrayType.Parse ();
-    | TK.tBITS      => t := PackedType.Parse ();
-    | TK.tBRANDED   => t := RefType.Parse ();
-    | TK.tLBRACE    => t := EnumType.Parse ();
-    | TK.tUNTRACED  => t := RefType.Parse ();
-    | TK.tOBJECT    => t := ObjectType.Parse (NIL, TRUE, NIL);
-    | TK.tCALLCONV  => t := ProcType.Parse ();
-    | TK.tPROCEDURE => t := ProcType.Parse ();
-    | TK.tRECORD    => t := RecordType.Parse ();
-    | TK.tREF       => t := RefType.Parse ();
-    | TK.tSET       => t := SetType.Parse ();
-    | TK.tLBRACKET  => t := SubrangeType.Parse ();
+    | TK.tIDENT     => case := "NamedType"; t := NamedType.Parse ();
+    | TK.tARRAY     => case := "ArrayType"; t := ArrayType.Parse ();
+    | TK.tBITS      => case := "PackedType"; t := PackedType.Parse ();
+    | TK.tBRANDED   => case := "RefType"; t := RefType.Parse ();
+    | TK.tLBRACE    => case := "EnumType"; t := EnumType.Parse ();
+    | TK.tUNTRACED  => case := "RefType"; t := RefType.Parse ();
+    | TK.tOBJECT    => case := "ObjectType"; t := ObjectType.Parse (NIL, TRUE, NIL);
+    | TK.tCALLCONV  => case := "ProcType1"; t := ProcType.Parse ();
+    | TK.tPROCEDURE => case := "ProcType2"; t := ProcType.Parse ();
+    | TK.tRECORD    => case := "RecordType"; t := RecordType.Parse ();
+    | TK.tREF       => case := "RefType"; t := RefType.Parse ();
+    | TK.tSET       => case := "SetType"; t := SetType.Parse ();
+    | TK.tLBRACKET  => case := "SubrangeType"; t := SubrangeType.Parse ();
     | TK.tLPAREN =>
+        case := "(";
         Scanner.GetToken (); (* ( *)
         t := Parse ();
         Scanner.Match (TK.tRPAREN);
         IF (Scanner.cur.token = TK.tBRANDED) THEN
+          case := "(branded";
           t := ObjectType.Parse (t, FALSE, Brand.Parse ());
         ELSIF (Scanner.cur.token = TK.tOBJECT) THEN
+          case := "(object";
           t := ObjectType.Parse (t, FALSE, NIL);
         END;
     ELSE
         Scanner.Fail ("bad type expression");
         t := NIL;
+    END;
+    IF debug THEN
+      RTIO.PutText ("Type.Parse ");
+      RTIO.PutText (case);
+      RTIO.PutText (" ");
+      RTIO.PutRef (t);
+      RTIO.PutText ("\n");
+      RTIO.Flush ();
     END;
     RETURN t;
   END Parse;

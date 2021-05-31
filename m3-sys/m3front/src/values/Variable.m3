@@ -16,7 +16,7 @@ IMPORT Target, TInt, Token, Ident, Module, CallExpr;
 IMPORT Decl, Null, Int, LInt, Fmt, Procedure, Tracer;
 IMPORT Expr, IntegerExpr, ArrayExpr, TextExpr, NamedExpr;
 IMPORT Type, OpenArrayType, ErrType, TipeMap;
-IMPORT RTParams;
+IMPORT RTIO, RTParams;
 FROM Scanner IMPORT GetToken, Match, cur;
 
 VAR debug := FALSE;
@@ -204,6 +204,18 @@ PROCEDURE NewFormal (formal: Value.T;  name: M3ID.T): T =
     IF (NOT t.indirect) AND (OpenArrayType.Is (t.type)) THEN
       t.indirect := TRUE;
     END;
+
+    IF debug THEN
+      RTIO.PutText ("NewFormal type:");
+      RTIO.PutRef (t.type);
+      RTIO.PutText (" name:");
+      IF name # 0 THEN
+        RTIO.PutText (M3ID.ToText (name));
+      END;
+      RTIO.PutText ("\n");
+      RTIO.Flush ();
+    END;
+
     t.trace := NIL;  (* the caller must call BindTrace after the variable
                         is inserted into a scope *)
     RETURN t;
@@ -572,6 +584,17 @@ PROCEDURE Declare (t: T): BOOLEAN =
       t.nextTWACGVar := TsWCGVars;  TsWCGVars := t;
       Type.Typename (t.type, typename);
 
+      IF debug THEN
+        RTIO.PutText ("Variable.Declare t:");
+        RTIO.PutRef (t);
+        RTIO.PutText (" t.type:");
+        RTIO.PutRef (t.type);
+        RTIO.PutText (" typename:");
+        RTIO.PutInt (typename);
+        RTIO.PutText ("\n");
+        RTIO.Flush ();
+      END;
+
       t.cg_var := CG.Import_global (externM3ID, size, align, mtype, 0(*no mangling*), typename);
       t.cg_align := align;
 
@@ -611,6 +634,20 @@ PROCEDURE Declare (t: T): BOOLEAN =
       t.cg_align := t.align;
       t.nextTWACGVar := TsWCGVars;  TsWCGVars := t;
       (* TODO typename *)
+
+      IF debug THEN
+        RTIO.PutText ("Variable.Declare indirect param type:");
+        RTIO.PutRef (t.type);
+        RTIO.PutText (" name:");
+        IF t.name # 0 THEN
+          RTIO.PutText (M3ID.ToText (t.name));
+        END;
+        RTIO.PutText (" typename:");
+        RTIO.PutInt (typename);
+        RTIO.PutText ("\n");
+        RTIO.Flush ();
+      END;
+
       t.cg_var := CG.Declare_param (t.name, size, align, mtype, typeUID,
                                     t.need_addr, t.up_level, CG.Maybe);
     ELSE
@@ -619,6 +656,20 @@ PROCEDURE Declare (t: T): BOOLEAN =
       t.cg_align := align;
       t.nextTWACGVar := TsWCGVars;  TsWCGVars := t;
       Type.Typename (TypeOf (t), typename);
+
+      IF debug THEN
+        RTIO.PutText ("Variable.Declare param type:");
+        RTIO.PutRef (t.type);
+        RTIO.PutText (" name:");
+        IF t.name # 0 THEN
+          RTIO.PutText (M3ID.ToText (t.name));
+        END;
+        RTIO.PutText (" typename:");
+        RTIO.PutInt (typename);
+        RTIO.PutText ("\n");
+        RTIO.Flush ();
+      END;
+
       t.cg_var := CG.Declare_param (t.name, size, align, mtype, typeUID,
                                     t.need_addr, t.up_level, CG.Maybe, typename);
     END;

@@ -10,7 +10,7 @@ MODULE CG;
 
 IMPORT Text, IntIntTbl, IntRefTbl, Fmt, Word;
 IMPORT Scanner, Error, Module, RunTyme, WebInfo;
-IMPORT M3, M3CG, M3CG_Ops, M3CG_Check, M3ID, RTParams;
+IMPORT M3, M3CG, M3CG_Ops, M3CG_Check, M3ID, RTIO, RTParams;
 IMPORT Host, Target, TInt, TFloat, TWord, TargetMap, M3RT (**, RTObject **);
 
 VAR debug := FALSE;
@@ -449,6 +449,14 @@ PROCEDURE Import_global (n: Name;  s: Size;  a: Alignment;  t: Type;
                          m3t: TypeUID; typename: Name): Var =
   VAR ref: REFANY;  v: Var;
   BEGIN
+    IF debug THEN
+      RTIO.PutText ("Import_global n:");
+      RTIO.PutText (M3ID.ToText (n));
+      RTIO.PutText (" typename:");
+      RTIO.PutInt (typename);
+      RTIO.PutText ("\n");
+      RTIO.Flush ();
+    END;
     IF (variables = NIL) THEN variables := NewNameTbl () END;
     IF variables.get (n, ref) THEN RETURN ref END;
     v := cg.import_global (n, ToVarSize (s, a), ByteAlign (a), t, m3t, typename);
