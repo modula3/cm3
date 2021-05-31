@@ -15,7 +15,10 @@ IMPORT Value, Module, Host, TypeFP, TypeTbl, WCharr, Brand;
 IMPORT Addr, Bool, Charr, Card, EReel, Int, LInt, LReel, Mutex, Null;
 IMPORT ObjectRef, ObjectAdr, Reel, Reff, Textt, Target, TInt, TFloat;
 IMPORT Text, M3RT, TipeMap, TipeDesc, ErrType, OpenArrayType, M3ID;
+IMPORT RTParams;
 FROM M3 IMPORT QID;
+
+VAR debug := FALSE;
 
 CONST
   NOT_CHECKED = -1;
@@ -1009,4 +1012,5 @@ PROCEDURE AddrNoStraddle
   END AddrNoStraddle;
 
 BEGIN
+  debug := RTParams.IsPresent ("m3front-debug-type");
 END Type.

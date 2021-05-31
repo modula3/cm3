@@ -10,8 +10,10 @@ MODULE CG;
 
 IMPORT Text, IntIntTbl, IntRefTbl, Fmt, Word;
 IMPORT Scanner, Error, Module, RunTyme, WebInfo;
-IMPORT M3, M3CG, M3CG_Ops, M3CG_Check, M3ID;
+IMPORT M3, M3CG, M3CG_Ops, M3CG_Check, M3ID, RTParams;
 IMPORT Host, Target, TInt, TFloat, TWord, TargetMap, M3RT (**, RTObject **);
+
+VAR debug := FALSE;
 
 CONST
   Max_init_chars = 256; (* max size of a single init_chars string *)
@@ -4236,5 +4238,6 @@ VAR Log2OfByte : INTEGER := 3;
 
 BEGIN
   <* ASSERT Word.LeftShift (1,Log2OfByte) = Target.Byte *>
+  debug := RTParams.IsPresent ("m3front-debug-cg");
 END CG.
 

@@ -11,7 +11,10 @@ MODULE ProcType;
 IMPORT M3, M3ID, CG, Expr, Type, TypeRep, Value, Scope, Target;
 IMPORT Formal, UserProc, Token, Ident, CallExpr, Word, Error;
 IMPORT ESet, TipeMap, TipeDesc, ErrType, M3Buf, Variable, OpenArrayType;
+IMPORT RTParams;
 FROM Scanner IMPORT Match, GetToken, cur;
+
+VAR debug := FALSE;
 
 TYPE
   P = Type.T BRANDED "ProcType.T" OBJECT
@@ -528,4 +531,5 @@ PROCEDURE FPrinter (p: P;  VAR x: M3.FPInfo) =
   END FPrinter;
 
 BEGIN
+  debug := RTParams.IsPresent ("m3front-debug-proctype");
 END ProcType.

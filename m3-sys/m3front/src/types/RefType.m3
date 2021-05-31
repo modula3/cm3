@@ -12,6 +12,9 @@ IMPORT M3, M3ID, CG, Token, Type, TypeRep, Scanner, ObjectType, Target;
 IMPORT Null, Reff, Addr, Error, Module, M3Buf, Brand;
 IMPORT Revelation, OpenArrayType, TipeMap, TipeDesc, TypeFP;
 IMPORT ProcType, ObjectAdr, Word, M3RT;
+IMPORT RTParams;
+
+VAR debug := FALSE;
 
 TYPE
   P = Type.T BRANDED "RefType.T"OBJECT
@@ -403,4 +406,5 @@ PROCEDURE FPrinter (p: P;  VAR x: M3.FPInfo) =
   END FPrinter;
 
 BEGIN
+  debug := RTParams.IsPresent ("m3front-debug-reftype");
 END RefType.

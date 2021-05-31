@@ -10,7 +10,10 @@ MODULE NamedType;
 
 IMPORT M3, M3ID, Token, Type, TypeRep, Scanner, ObjectType;
 IMPORT Error, Scope, Brand, Value, ErrType, Target;
+IMPORT RTParams;
 FROM M3 IMPORT QID;
+
+VAR debug := FALSE;
 
 TYPE
   P = Type.T BRANDED "NamedType.T" OBJECT
@@ -216,4 +219,5 @@ PROCEDURE FPrinter (p: P;  VAR x: M3.FPInfo) =
   END FPrinter;
 
 BEGIN
+  debug := RTParams.IsPresent ("m3front-debug-namedtype");
 END NamedType.
