@@ -49,6 +49,21 @@ PROCEDURE PutInt (i: INTEGER;  width: INTEGER) =
     PutChars (ADR (num[0]), len);
   END PutInt;
 
+PROCEDURE FmtHex (i: INTEGER): TEXT =
+(* copied from PutHex; PutHex may not call this,
+ * as it violates the no-allocation contract
+ * of most of this interface *)
+  VAR
+    width := 0;
+    num : ARRAY [0..30] OF CHAR;
+    len := FromUnsigned (ADR (num[2]), i, 16) + 2;
+  BEGIN
+    FOR i := 1 TO width - len DO PutChar (' ') END;
+    num[0] := '0';
+    num[1] := 'x';
+    RETURN Text.FromChars (SUBARRAY (num, 0, len));
+  END FmtHex;
+
 PROCEDURE PutHex (i: INTEGER;  width: INTEGER) = 
   VAR
     num : ARRAY [0..30] OF CHAR;
@@ -60,10 +75,20 @@ PROCEDURE PutHex (i: INTEGER;  width: INTEGER) =
     PutChars (ADR (num[0]), len);
   END PutHex;
 
+PROCEDURE FmtAddr (a: ADDRESS): TEXT =
+  BEGIN
+    RETURN FmtHex (LOOPHOLE (a, INTEGER));
+  END FmtAddr;
+
 PROCEDURE PutAddr (a: ADDRESS;  width: INTEGER) =
   BEGIN
     PutHex (LOOPHOLE (a, INTEGER), width);
   END PutAddr;
+
+PROCEDURE FmtRef (r: REFANY): TEXT =
+  BEGIN
+    RETURN FmtAddr (LOOPHOLE (r, ADDRESS));
+  END FmtRef;
 
 PROCEDURE PutRef (r: REFANY) =
   BEGIN
