@@ -31,6 +31,6 @@ TYPE caddr_t = ADDRESS;
 
 <*EXTERNAL Umman__mprotect*>PROCEDURE mprotect (addr: caddr_t; len: size_t; prot:int): int;
 <*EXTERNAL Umman__mmap*>    PROCEDURE mmap     (addr: caddr_t; len: size_t; prot, flags, fd: int; off: off_t): void_star;
-<*EXTERNAL Umman__munmap*>  PROCEDURE munmap  ( addr: caddr_t; len: size_t): int;
+<*EXTERNAL Umman__munmap*>  PROCEDURE munmap   (addr: caddr_t; len: size_t): int;
 
 END Umman.
