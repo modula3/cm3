@@ -572,7 +572,9 @@ PROCEDURE Declare (t: T): BOOLEAN =
     IF (is_struct) THEN mtype := CG.Type.Struct; END;
 
     IF (t.indirect) THEN
-      typeUID := CG.Declare_indirect (typeUID);
+      Type.Typename (t.type, typename);
+      typeUID := CG.Declare_indirect (typeUID, typename);
+      typename := M3ID.NoID;
       size := Target.Address.size;
       align := Target.Address.align;
       mtype := CG.Type.Addr;
@@ -629,13 +631,12 @@ PROCEDURE Declare (t: T): BOOLEAN =
       t.nextTWACGVar := TsWCGVars;  TsWCGVars := t;
       t.cg_var := CG.Declare_local (t.name, size, align, mtype, typeUID,
                                     t.need_addr, t.up_level, CG.Maybe);
-
     ELSE
       (* parameter *)
       IF (t.indirect) THEN
         (* formal passed by reference => param is an address *)
-        (* TODO typename *)
         indirect_text := " indirect "
+        (* typename is earlier in this function, for the target of the indirect *)
       ELSE
         (* simple parameter *)
         (** align := FindAlignment (align, size); **)
