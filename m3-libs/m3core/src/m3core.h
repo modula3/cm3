@@ -668,8 +668,8 @@ int __cdecl Umman__mprotect(caddr_t addr, WORD_T len, int prot);
 void* __cdecl Umman__mmap(caddr_t addr, WORD_T len, int prot, int flags, int fd, m3_off_t off);
 int __cdecl Umman__munmap(caddr_t addr, WORD_T len);
 
-ssize_t __cdecl Uuio__read(int, void*, WORD_T);
-ssize_t __cdecl Uuio__write(int, const void*, WORD_T);
+ssize_t __cdecl Uuio__read(int, void*, size_t);
+ssize_t __cdecl Uuio__write(int, const void*, size_t);
 
 typedef INT64 m3_time64_t;
 
