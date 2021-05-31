@@ -562,6 +562,7 @@ PROCEDURE Declare (t: T): BOOLEAN =
     externName :TEXT := NIL;
     externM3ID := M3ID.NoID;
     typename   := M3ID.NoID;
+    indirect_text := " ";
   BEGIN
     Type.Compile (t.type);
 
@@ -629,36 +630,21 @@ PROCEDURE Declare (t: T): BOOLEAN =
       t.cg_var := CG.Declare_local (t.name, size, align, mtype, typeUID,
                                     t.need_addr, t.up_level, CG.Maybe);
 
-    ELSIF (t.indirect) THEN
-      (* formal passed by reference => param is an address *)
-      t.cg_align := t.align;
-      t.nextTWACGVar := TsWCGVars;  TsWCGVars := t;
-      (* TODO typename *)
-
-      IF debug THEN
-        RTIO.PutText ("Variable.Declare indirect param type:");
-        RTIO.PutRef (t.type);
-        RTIO.PutText (" name:");
-        IF t.name # 0 THEN
-          RTIO.PutText (M3ID.ToText (t.name));
-        END;
-        RTIO.PutText (" typename:");
-        RTIO.PutInt (typename);
-        RTIO.PutText ("\n");
-        RTIO.Flush ();
-      END;
-
-      t.cg_var := CG.Declare_param (t.name, size, align, mtype, typeUID,
-                                    t.need_addr, t.up_level, CG.Maybe);
     ELSE
-      (* simple parameter *)
-      (** align := FindAlignment (align, size); **)
-      t.cg_align := align;
-      t.nextTWACGVar := TsWCGVars;  TsWCGVars := t;
-      Type.Typename (TypeOf (t), typename);
+      (* parameter *)
+      IF (t.indirect) THEN
+        (* formal passed by reference => param is an address *)
+        t.cg_align := t.align;
+        (* TODO typename *)
+        indirect_text := " indirect "
+      ELSE
+        (* simple parameter *)
+        (** align := FindAlignment (align, size); **)
+        Type.Typename (TypeOf (t), typename);
+      END;
 
       IF debug THEN
-        RTIO.PutText ("Variable.Declare param type:");
+        RTIO.PutText ("Variable.Declare" & indirect_text & "param type:");
         RTIO.PutRef (t.type);
         RTIO.PutText (" name:");
         IF t.name # 0 THEN
@@ -670,8 +656,7 @@ PROCEDURE Declare (t: T): BOOLEAN =
         RTIO.Flush ();
       END;
 
-      t.cg_var := CG.Declare_param (t.name, size, align, mtype, typeUID,
-                                    t.need_addr, t.up_level, CG.Maybe, typename);
+      t.cg_var := CG.Declare_param (t.name, size, align, mtype, typeUID, t.need_addr, t.up_level, CG.Maybe, typename);
     END;
 
     RETURN TRUE;
