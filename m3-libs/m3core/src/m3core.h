@@ -673,9 +673,12 @@ ssize_t __cdecl Uuio__write(int, const void*, WORD_T);
 
 typedef INT64 m3_time64_t;
 
+#define Utime__time_t Utime__time_t /* inhibit m3c type */
+typedef /*const*/ m3_time64_t Utime__time_t; /* TODO READONLY should imply const */
+
 #ifndef _WIN32
 m3_time64_t __cdecl Utime__time(m3_time64_t* tloc);
-char* __cdecl Utime__ctime(const m3_time64_t* m);
+char* __cdecl Utime__ctime(/*TODO const*/ m3_time64_t* m);
 #endif
 void __cdecl Utime__tzset(void);
 
