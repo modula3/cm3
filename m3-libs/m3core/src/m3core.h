@@ -550,7 +550,7 @@ typedef char          Ctypes__char;
 typedef char*         Ctypes__char_star;
 typedef char**        Ctypes__char_star_star;
 typedef const char*   Ctypes__const_char_star;
-typedef int           Ctypes__const_int;
+typedef const int     Ctypes__const_int;
 typedef const void*   Ctypes__const_void_star;
 typedef int           Ctypes__int;
 typedef int*          Ctypes__int_star;
