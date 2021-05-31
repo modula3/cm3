@@ -16,7 +16,10 @@ IMPORT Target, TInt, Token, Ident, Module, CallExpr;
 IMPORT Decl, Null, Int, LInt, Fmt, Procedure, Tracer;
 IMPORT Expr, IntegerExpr, ArrayExpr, TextExpr, NamedExpr;
 IMPORT Type, OpenArrayType, ErrType, TipeMap;
+IMPORT RTParams;
 FROM Scanner IMPORT GetToken, Match, cur;
+
+VAR debug := FALSE;
 
 CONST
   Big_Local = 8192; (* x Target.Char.size *)
@@ -1040,4 +1043,5 @@ PROCEDURE ScheduleTrace (t: T) =
   END ScheduleTrace;
 
 BEGIN
+  debug := RTParams.IsPresent ("m3front-debug-variable");
 END Variable.

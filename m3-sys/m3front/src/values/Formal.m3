@@ -12,6 +12,9 @@ IMPORT M3, M3ID, CG, Value, ValueRep, Type, Error, Expr, ProcType;
 IMPORT KeywordExpr, OpenArrayType, RefType, CheckExpr, PackedType;
 IMPORT ArrayType, ArrayExpr, SetType, Host, NarrowExpr, M3Buf, Tracer;
 IMPORT Variable, Procedure, UserProc, Target, M3RT;
+IMPORT RTParams;
+
+VAR debug := FALSE;
 
 TYPE
   T = Value.T BRANDED OBJECT 
@@ -1177,4 +1180,5 @@ PROCEDURE GenCopy (type: Type.T) =
   END GenCopy;
 
 BEGIN
+  debug := RTParams.IsPresent ("m3front-debug-formal");
 END Formal.
