@@ -31,6 +31,11 @@ PROCEDURE PutInt (i: INTEGER;  width := 0);
 (* Convert integer "i" to decimal digits and write it right-justified
    in a field of "width" characters. *)
 
+(* These violate the comment about no allocation. *)
+PROCEDURE FmtHex (i: INTEGER): TEXT;
+PROCEDURE FmtRef (a: REFANY): TEXT;
+PROCEDURE FmtAddr (a: ADDRESS): TEXT;
+
 PROCEDURE PutHex (i: INTEGER;  width := 0);
 (* Convert unsigned integer "i" to hexidecimal digits with a "0x" prefix
    and write it right-justified in a field of "width" characters. *)
