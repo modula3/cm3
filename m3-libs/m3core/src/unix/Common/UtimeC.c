@@ -31,7 +31,7 @@ Utime__time(m3_time64_t* tloc)
 M3_DLL_EXPORT
 char*
 __cdecl
-Utime__ctime(const m3_time64_t* m)
+Utime__ctime(/*TODO const*/ m3_time64_t* m)
 {
     m3_time_t t = m ? (m3_time_t)*m : 0;
 #ifdef _TIME64_T
