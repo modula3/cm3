@@ -530,7 +530,16 @@ typedef INTEGER m3_uid_t;
 #define Ctypes__unsigned_long       Ctypes__unsigned_long       /* inhibit m3c type */
 #define Ctypes__unsigned_long_int   Ctypes__unsigned_long_int   /* inhibit m3c type */
 #define Ctypes__void_star           Ctypes__void_star           /* inhibit m3c type */
+#define Utypes__dev_t               Utypes__dev_t               /* inhibit m3c type */
+#define Utypes__gid_t               Utypes__gid_t               /* inhibit m3c type */
+#define Utypes__ino_t               Utypes__ino_t               /* inhibit m3c type */
+#define Utypes__mode_t              Utypes__mode_t              /* inhibit m3c type */
+#define Utypes__nlink_t             Utypes__nlink_t             /* inhibit m3c type */
+#define Utypes__pid_t               Utypes__pid_t               /* inhibit m3c type */
+#define Utypes__pthread_t           Utypes__pthread_t           /* inhibit m3c type */
+#define Utypes__off_t               Utypes__off_t               /* inhibit m3c type */
 #define Utypes__size_t              Utypes__size_t              /* inhibit m3c type */
+#define Utypes__uid_t               Utypes__uid_t               /* inhibit m3c type */
 #define WinBaseTypes__const_UINT32  WinBaseTypes__const_UINT32  /* inhibit m3c type */
 
 typedef size_t        Cstddef__size_t;
@@ -551,7 +560,16 @@ typedef unsigned      Ctypes__unsigned_int;
 typedef unsigned long Ctypes__unsigned_long;
 typedef unsigned long Ctypes__unsigned_long_int;
 typedef void*         Ctypes__void_star;
+typedef m3_dev_t      Utypes__dev_t;
+typedef m3_gid_t      Utypes__gid_t;
+typedef m3_ino_t      Utypes__ino_t;
+typedef m3_mode_t     Utypes__mode_t;
+typedef m3_nlink_t    Utypes__nlink_t;
+typedef m3_pid_t      Utypes__pid_t;
+typedef m3_pthread_t  Utypes__pthread_t;
+typedef m3_off_t      Utypes__off_t;
 typedef size_t        Utypes__size_t;             // redundant
+typedef m3_uid_t      Utypes__uid_t;
 typedef UINT32        WinBaseTypes__const_UINT32;
 
 #define Csignal__Handler Csignal__Handler            /* inhibit m3c type */
