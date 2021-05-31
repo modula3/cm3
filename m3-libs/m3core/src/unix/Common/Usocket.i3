@@ -118,6 +118,9 @@ TYPE
   socklen_t = Utypes.socklen_t; (* size_t *)
   socklen_t_star = UNTRACED REF socklen_t;
 
+        struct_sockaddr_in_star = UNTRACED REF struct_sockaddr_in;
+  const_struct_sockaddr_in_star =              struct_sockaddr_in_star;
+
   struct_linger = RECORD
 (* Structure used for manipulating linger option.
    This is the same on all platforms, except Cygwin (and NT).
@@ -128,19 +131,19 @@ TYPE
   END;
 
 <*EXTERNAL "Usocket__accept"*>
-PROCEDURE accept(s: int; addr: UNTRACED REF struct_sockaddr_in; addrlen: socklen_t_star) : int RAISES {};
+PROCEDURE accept(s: int; addr: struct_sockaddr_in_star; addrlen: socklen_t_star) : int RAISES {};
 
 <*EXTERNAL "Usocket__bind"*>
-PROCEDURE bind(s: int; name: (*const*) UNTRACED REF struct_sockaddr_in; namelen: socklen_t) : int RAISES {};
+PROCEDURE bind(s: int; name: const_struct_sockaddr_in_star; namelen: socklen_t) : int RAISES {};
 
 <*EXTERNAL "Usocket__connect"*>
-PROCEDURE connect(s: int; name: (*const*) UNTRACED REF struct_sockaddr_in; namelen: socklen_t) : int RAISES {};
+PROCEDURE connect(s: int; name: const_struct_sockaddr_in_star; namelen: socklen_t) : int RAISES {};
 
 <*EXTERNAL "Usocket__getpeername"*>
-PROCEDURE getpeername(s: int; name: UNTRACED REF struct_sockaddr_in; namelen: socklen_t_star) : int RAISES {};
+PROCEDURE getpeername(s: int; name: struct_sockaddr_in_star; namelen: socklen_t_star) : int RAISES {};
 
 <*EXTERNAL "Usocket__getsockname"*>
-PROCEDURE getsockname(s: int; name: UNTRACED REF struct_sockaddr_in; namelen: socklen_t_star) : int RAISES {};
+PROCEDURE getsockname(s: int; name: struct_sockaddr_in_star; namelen: socklen_t_star) : int RAISES {};
 
 <*EXTERNAL "Usocket__getsockopt"*>
 PROCEDURE getsockopt(s, level, optname: int; optval: void_star; optlen: socklen_t_star) : int RAISES {};
@@ -149,10 +152,10 @@ PROCEDURE getsockopt(s, level, optname: int; optval: void_star; optlen: socklen_
 PROCEDURE listen(s, backlog: int): int RAISES {};
 
 <*EXTERNAL "Usocket__recvfrom"*>
-PROCEDURE recvfrom(s: int; buf: void_star; len: size_t; flags: int; from: UNTRACED REF struct_sockaddr_in; fromlen: socklen_t_star) : INTEGER RAISES {};
+PROCEDURE recvfrom(s: int; buf: void_star; len: size_t; flags: int; from: struct_sockaddr_in_star; fromlen: socklen_t_star) : INTEGER RAISES {};
 
 <*EXTERNAL "Usocket__sendto"*>
-PROCEDURE sendto(s: int; msg: const_void_star; len: size_t; flags: int; to: UNTRACED REF struct_sockaddr_in; tolen: socklen_t) : INTEGER RAISES {};
+PROCEDURE sendto(s: int; msg: const_void_star; len: size_t; flags: int; to: struct_sockaddr_in_star; tolen: socklen_t) : INTEGER RAISES {};
 
 <*EXTERNAL "Usocket__send"*>
 PROCEDURE send(s: int; buf: const_void_star; len: size_t; flags: int): INTEGER;
