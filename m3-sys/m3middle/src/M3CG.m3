@@ -364,9 +364,9 @@ PROCEDURE set_runtime_proc (xx: T;  n: Name;  p: Proc) =
 (*------------------------------------------------- variable declarations ---*)
 
 PROCEDURE import_global (xx: T;  n: Name;  s: ByteSize;  a: Alignment;
-                         t: Type;  m3t: TypeUID; <*UNUSED*>typename: Name): Var =
+                         t: Type;  m3t: TypeUID; typename: Name): Var =
   BEGIN
-    RETURN xx.child.import_global (n, s, a, t, m3t);
+    RETURN xx.child.import_global (n, s, a, t, m3t, typename);
   END import_global;
 
 PROCEDURE declare_segment (xx: T;  n: Name;  m3t: TypeUID; is_const: BOOLEAN): Var =
