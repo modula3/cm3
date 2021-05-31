@@ -65,7 +65,7 @@ TYPE declare_constant_t = op_tag_t OBJECT name: Name; byte_size: ByteSize; align
 TYPE declare_local_t = op_tag_t OBJECT name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: typeid_t; in_memory, up_level: BOOLEAN; frequency: Frequency; OVERRIDES replay := replay_declare_local END;
 TYPE declare_param_t = op_tag_t OBJECT name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: typeid_t; in_memory, up_level: BOOLEAN; frequency: Frequency; typename := M3ID.NoID; OVERRIDES replay := replay_declare_param END;
 TYPE declare_temp_t = op_tag_t OBJECT byte_size: ByteSize; alignment: Alignment; type: Type; in_memory: BOOLEAN; OVERRIDES replay := replay_declare_temp END;
-TYPE import_global_t = op_tag_t OBJECT name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: typeid_t; OVERRIDES replay := replay_import_global END;
+TYPE import_global_t = op_tag_t OBJECT name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: typeid_t; typename := M3ID.NoID; OVERRIDES replay := replay_import_global END;
 
 TYPE set_error_handler_t = op_t OBJECT proc: PROCEDURE(msg: TEXT); OVERRIDES replay := replay_set_error_handler END;
 TYPE begin_procedure_t = op_t OBJECT proc: INTEGER(*proc_t*); OVERRIDES replay := replay_begin_procedure END;

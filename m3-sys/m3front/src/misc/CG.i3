@@ -171,7 +171,7 @@ PROCEDURE Set_runtime_proc (n: Name;  p: Proc);
 *)
 
 PROCEDURE Import_global (n: Name;  s: Size;  a: Alignment;
-                         t: Type;  m3t: TypeUID): Var;
+                         t: Type;  m3t: TypeUID; typename := M3ID.NoID): Var;
 (* imports the specified global variable. *)
 
 PROCEDURE Declare_segment (n: Name;  m3t: TypeUID;  is_const: BOOLEAN): Var;

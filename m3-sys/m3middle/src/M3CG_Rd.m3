@@ -835,6 +835,7 @@ PROCEDURE import_global (VAR s: State) =
       type  := Scan_type (s);
       m3t   := Scan_tipe (s);
       v     := Scan_varName (s);
+      (* TODO typename *)
   BEGIN
     AddVar (s, v, s.cg.import_global (name, size, align, type, m3t));
   END import_global;

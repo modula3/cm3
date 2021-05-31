@@ -570,8 +570,9 @@ PROCEDURE Declare (t: T): BOOLEAN =
       externName := Value.GlobalName (t, dots := FALSE, with_module := FALSE);
       externM3ID := M3ID.Add (externName);
       t.nextTWACGVar := TsWCGVars;  TsWCGVars := t;
-      t.cg_var
-        := CG.Import_global (externM3ID, size, align, mtype, 0(*no mangling*));
+      Type.Typename (t.type, typename);
+
+      t.cg_var := CG.Import_global (externM3ID, size, align, mtype, 0(*no mangling*), typename);
       t.cg_align := align;
 
     ELSIF (t.imported) THEN

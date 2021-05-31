@@ -681,6 +681,7 @@ PROCEDURE import_global (u: U;  n: Name;  s: ByteSize;  a: Alignment;
     TName (u, t);
     Tipe  (u, m3t);
     VName (u, v);
+    (* TODO typename *)
     RETURN v;
   END import_global;
 

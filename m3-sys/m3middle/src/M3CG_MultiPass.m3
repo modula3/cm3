@@ -332,10 +332,10 @@ BEGIN
     RETURN label;
 END next_label;
 
-PROCEDURE import_global(self: T; name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: TypeUID; <*UNUSED*>typename: Name): Var =
+PROCEDURE import_global(self: T; name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: TypeUID; typename: Name): Var =
 VAR var := self.refs.NewVar();
 BEGIN
-self.Add(NEW(import_global_t, op := Op.import_global, name := name, byte_size := byte_size, alignment := alignment, type := type, typeid := typeid, tag := var.tag));
+self.Add(NEW(import_global_t, op := Op.import_global, name := name, byte_size := byte_size, alignment := alignment, type := type, typeid := typeid, typename := typename, tag := var.tag));
 RETURN var;
 END import_global;
 
@@ -1105,7 +1105,7 @@ END replay_declare_procedure;
 
 PROCEDURE replay_import_global(self: import_global_t; replay: Replay_t; cg: cg_t) =
 BEGIN
-    replay.PutRef(self.tag, cg.import_global(self.name, self.byte_size, self.alignment, self.type, self.typeid));
+    replay.PutRef(self.tag, cg.import_global(self.name, self.byte_size, self.alignment, self.type, self.typeid, self.typename));
 END replay_import_global;
 
 PROCEDURE replay_begin_procedure(self: begin_procedure_t; replay: Replay_t; cg: cg_t) =

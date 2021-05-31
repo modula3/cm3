@@ -446,12 +446,12 @@ PROCEDURE Set_runtime_proc (n: Name;  p: Proc) =
 (*------------------------------------------------- variable declarations ---*)
 
 PROCEDURE Import_global (n: Name;  s: Size;  a: Alignment;  t: Type;
-                         m3t: TypeUID): Var =
+                         m3t: TypeUID; typename: Name): Var =
   VAR ref: REFANY;  v: Var;
   BEGIN
     IF (variables = NIL) THEN variables := NewNameTbl () END;
     IF variables.get (n, ref) THEN RETURN ref END;
-    v := cg.import_global (n, ToVarSize (s, a), ByteAlign (a), t, m3t);
+    v := cg.import_global (n, ToVarSize (s, a), ByteAlign (a), t, m3t, typename);
     EVAL variables.put (n, v);
     RETURN v;
   END Import_global;
