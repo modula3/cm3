@@ -12,7 +12,7 @@ IMPORT M3, M3ID, CG, Token, Type, TypeRep, Scanner, ObjectType, Target;
 IMPORT Null, Reff, Addr, Error, Module, M3Buf, Brand;
 IMPORT Revelation, OpenArrayType, TipeMap, TipeDesc, TypeFP;
 IMPORT ProcType, ObjectAdr, Word, M3RT;
-IMPORT RTParams;
+IMPORT RTIO, RTParams;
 
 VAR debug := FALSE;
 
@@ -78,6 +78,16 @@ PROCEDURE New (target: Type.T;  traced: BOOLEAN;  brand: Brand.T): Type.T =
     p.brand      := brand;
     p.target     := target;
     p.user_name  := NIL;
+
+    IF debug THEN
+      RTIO.PutText ("RefType.New:");
+      RTIO.PutRef (p);
+      RTIO.PutText (" target:");
+      RTIO.PutRef (target);
+      RTIO.PutText ("\n");
+      RTIO.Flush ();
+    END;
+
     RETURN p;
   END New;
 

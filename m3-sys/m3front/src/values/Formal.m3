@@ -12,7 +12,7 @@ IMPORT M3, M3ID, CG, Value, ValueRep, Type, Error, Expr, ProcType;
 IMPORT KeywordExpr, OpenArrayType, RefType, CheckExpr, PackedType;
 IMPORT ArrayType, ArrayExpr, SetType, Host, NarrowExpr, M3Buf, Tracer;
 IMPORT Variable, Procedure, UserProc, Target, M3RT;
-IMPORT RTParams;
+IMPORT RTIO, RTParams;
 
 VAR debug := FALSE;
 
@@ -85,13 +85,29 @@ PROCEDURE New (READONLY info: Info): Value.T =
     t.unused   := info.unused;
     t.kind     := Type.Class.Error;
     t.trace    := info.trace;
+
+    IF debug THEN
+      RTIO.PutText ("Formal.New:");
+      RTIO.PutRef (t);
+      RTIO.PutText (" type:");
+      RTIO.PutRef(t.type);
+      RTIO.PutText (" name:");
+      IF t.name # 0 THEN
+        RTIO.PutText (M3ID.ToText (t.name));
+      END;
+      RTIO.PutText ("\n");
+      RTIO.Flush ();
+    END;
+
     RETURN t;
   END New;
 
 (*EXPORTED*)
 PROCEDURE Split (formal: Value.T;  VAR info: Info) =
   VAR t: T := formal;
+      type1 := t.type;
   BEGIN
+
     info.name   := t.name;
     info.offset := t.offset;
     info.mode   := t.mode;
@@ -99,6 +115,26 @@ PROCEDURE Split (formal: Value.T;  VAR info: Info) =
     info.dfault := t.dfault;
     info.unused := t.unused;
     info.trace  := t.trace;
+
+    IF debug THEN
+      RTIO.PutText ("Formal.Split:");
+      RTIO.PutRef (t);
+      RTIO.PutText (" name:");
+      IF t.name # 0 THEN
+        RTIO.PutText (M3ID.ToText (t.name));
+      END;
+      RTIO.PutText (" type1:");
+      RTIO.PutRef (type1);
+      RTIO.PutText (" type2:");
+      RTIO.PutRef (info.type);
+      RTIO.PutText (" typename:");
+      IF info.name # 0 THEN
+        RTIO.PutText (M3ID.ToText (info.name));
+      END;
+      RTIO.PutText ("\n");
+      RTIO.Flush ();
+    END;
+
   END Split;
 
 (*EXPORTED*)
@@ -112,8 +148,10 @@ PROCEDURE EmitDeclaration (formal: Value.T;  types_only, param: BOOLEAN) =
     info     : Type.Info;
     typename := M3ID.NoID;
     indirect := FALSE;
+    trace    := 0;
   BEGIN
     IF (types_only) THEN
+      trace := trace * 10 + 1;
       Compile (t);
       t.cg_type := Type.GlobalUID (TypeOf (t));
     END;
@@ -130,22 +168,34 @@ PROCEDURE EmitDeclaration (formal: Value.T;  types_only, param: BOOLEAN) =
         t.cg_type := CG.Declare_indirect (t.cg_type, typename);
       END;
     ELSIF (param) THEN
+      trace := trace * 10 + 2;
       IF indirect THEN (* lo-level pass by reference. *)
+        trace := trace * 10 + 3;
         size  := Target.Address.size;
         align := Target.Address.align;
         mtype := CG.Type.Addr;
         (* typename handled above in declare_indirect;
          * specifying it here would miss the indirection *)
       ELSE (* lo-level pass by value. *)
+        trace := trace * 10 + 4;
         EVAL Type.CheckInfo (TypeOf (t), info);
         size  := info.size;
         align := info.alignment;
         mtype := info.mem_type;
       END;
+
       EVAL CG.Declare_param (t.name, size, align, mtype,
                              t.cg_type, in_memory := FALSE, up_level := FALSE,
                              f := CG.Maybe, typename := typename);
     ELSE (* This is part of debug info for a signature. *)
+
+      IF debug THEN
+        RTIO.PutText ("Formal.EmitDeclaration Declare_formal name:");
+        RTIO.PutText (M3ID.ToText (t.name));
+        RTIO.PutText ("\n");
+        RTIO.Flush ();
+      END;
+
       CG.Declare_formal (t.name, t.cg_type, typename);
     END;
   END EmitDeclaration;

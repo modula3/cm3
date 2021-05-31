@@ -10,7 +10,7 @@ MODULE ProcType;
 
 IMPORT M3, M3ID, CG, Expr, Type, TypeRep, Value, Scope, Target;
 IMPORT Formal, UserProc, Token, Ident, CallExpr, Word, Error;
-IMPORT ESet, TipeMap, TipeDesc, ErrType, M3Buf, Variable, OpenArrayType;
+IMPORT ESet, TipeMap, TipeDesc, ErrType, M3Buf, Variable, OpenArrayType, RTIO;
 IMPORT RTParams;
 FROM Scanner IMPORT Match, GetToken, cur;
 
@@ -56,6 +56,14 @@ PROCEDURE ParseSignature (name: M3ID.T;  cc: CG.CallingConvention): Type.T =
   TYPE  TK = Token.T;
   VAR   p: P;
   BEGIN
+    IF debug THEN
+      RTIO.PutText ("ParseSignature ");
+      IF name # 0 THEN
+        RTIO.PutText (M3ID.ToText (name));
+      END;
+      RTIO.PutText ("\n");
+      RTIO.Flush ();
+    END;
     p := Create (Scope.PushNew (FALSE, name));
     p.callConv := cc;
     Match (TK.tLPAREN);
@@ -106,6 +114,14 @@ PROCEDURE ParseFormal (p: P;  ) =
     IF (cur.token = TK.tCOLON) THEN
       GetToken (); (* : *)
       formal.type := Type.Parse ();
+      IF debug THEN
+        RTIO.PutText ("formal.type.info.name formal.type:");
+        RTIO.PutRef (formal.type);
+        RTIO.PutText (" ");
+        RTIO.PutInt (formal.type.info.name);
+        RTIO.PutText ("\n");
+        RTIO.Flush ();
+      END;
     END;
     IF (cur.token = TK.tEQUAL) THEN
       Error.Msg ("default value must begin with \':=\'");
@@ -155,6 +171,14 @@ PROCEDURE MethodSigAsProcSig (sig, objType: Type.T): Type.T =
     formal.offset := 0;
     formal.mode   := Formal.Mode.mVALUE;
     formal.type   := objType;
+
+    IF debug THEN
+      RTIO.PutText ("MethodSigAsProcSig:");
+      RTIO.PutRef (objType);
+      RTIO.PutText ("\n");
+      RTIO.Flush ();
+    END;
+
     formal.dfault := NIL;
     formal.trace  := NIL;
     formal.unused := FALSE;
