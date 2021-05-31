@@ -155,7 +155,7 @@ PROCEDURE listen(s, backlog: int): int RAISES {};
 PROCEDURE recvfrom(s: int; buf: void_star; len: size_t; flags: int; from: struct_sockaddr_in_star; fromlen: socklen_t_star) : INTEGER RAISES {};
 
 <*EXTERNAL "Usocket__sendto"*>
-PROCEDURE sendto(s: int; msg: const_void_star; len: size_t; flags: int; to: struct_sockaddr_in_star; tolen: socklen_t) : INTEGER RAISES {};
+PROCEDURE sendto(s: int; msg: const_void_star; len: size_t; flags: int; to: const_struct_sockaddr_in_star; tolen: socklen_t) : INTEGER RAISES {};
 
 <*EXTERNAL "Usocket__send"*>
 PROCEDURE send(s: int; buf: const_void_star; len: size_t; flags: int): INTEGER;
