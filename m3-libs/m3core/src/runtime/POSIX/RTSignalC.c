@@ -62,8 +62,8 @@ static void Shutdown SIGNAL_HANDLER_SIGNATURE;
 static void Interrupt SIGNAL_HANDLER_SIGNATURE;
 static void Quit SIGNAL_HANDLER_SIGNATURE;
 
-static void InstallOneHandler(WORD_T i);
-static void RestoreOneHandler(WORD_T i);
+static void InstallOneHandler(size_t i);
+static void RestoreOneHandler(size_t i);
 
 #if defined(__CYGWIN__) || defined(__INTERIX) || defined(__vms)
 
@@ -110,7 +110,7 @@ Handlers[] =
 
 static struct sigaction InitialHandlers[NUMBER_OF(Handlers)];
 
-static void InstallOneHandler(WORD_T i)
+static void InstallOneHandler(size_t i)
 {
     struct sigaction New;
     int r;
@@ -142,7 +142,7 @@ static void InstallOneHandler(WORD_T i)
 
 void InstallHandlers(void)
 {
-    WORD_T i = { 0 };
+    size_t i = { 0 };
 
     for (; i < NUMBER_OF(Handlers); ++i)
     {
@@ -150,7 +150,7 @@ void InstallHandlers(void)
     }
 }
 
-static void RestoreOneHandler(WORD_T i)
+static void RestoreOneHandler(size_t i)
 {
     int Signal = Handlers[i].Signal;
 
@@ -159,7 +159,7 @@ static void RestoreOneHandler(WORD_T i)
 
 void RestoreHandlers(void)
 {
-    WORD_T i = { 0 };
+    size_t i = { 0 };
 
     for (; i < NUMBER_OF(Handlers); ++i)
     {

@@ -11,8 +11,8 @@
 #ifndef _WIN32
 
 // char* (caddr_t) instead of void* for default Solaris
-M3WRAP3(int, mprotect, caddr_t, WORD_T, int)
-M3WRAP6(void*, mmap, caddr_t, WORD_T, int, int, int, m3_off_t)
-M3WRAP2(int, munmap, caddr_t, WORD_T)
+M3WRAP3(int, mprotect, caddr_t, size_t, int)
+M3WRAP6(void*, mmap, caddr_t, size_t, int, int, int, m3_off_t)
+M3WRAP2(int, munmap, caddr_t, size_t)
 
 #endif

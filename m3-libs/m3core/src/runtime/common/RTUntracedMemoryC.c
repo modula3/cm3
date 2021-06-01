@@ -29,6 +29,10 @@ reducing C runtime dependency.
 extern "C" {
 #endif
 
+// WORD_T is:
+// unsigned, INTEGER-sized, pointer-sized
+// There is no such type in Modula3.
+
 void* __cdecl RTUntracedMemory__AllocZ(WORD_T count)
 /* Z = zeroed = calloc */
 {

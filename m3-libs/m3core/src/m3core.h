@@ -664,13 +664,13 @@ int __cdecl Usocket__shutdown(int s, int how);
 int __cdecl Usocket__socket(int af, int type, int protocol);
 int __cdecl Usocket__bind(int s, const M3SockAddrUnionAll*, m3_socklen_t);
 int __cdecl Usocket__connect(int s, const M3SockAddrUnionAll*, m3_socklen_t);
-INTEGER __cdecl Usocket__sendto(int s, void* msg, WORD_T length, int flags, const M3SockAddrUnionAll*, m3_socklen_t);
+INTEGER __cdecl Usocket__sendto(int s, void* msg, size_t length, int flags, const M3SockAddrUnionAll*, m3_socklen_t);
 int __cdecl Usocket__setsockopt(int s, int level, int optname, void* optval, m3_socklen_t len);
 int __cdecl Usocket__getpeername(int s, M3SockAddrUnionAll*, m3_socklen_t*);
 int __cdecl Usocket__getsockname(int s, M3SockAddrUnionAll*, m3_socklen_t*);
 int __cdecl Usocket__accept(int s, M3SockAddrUnionAll*, m3_socklen_t*);
 int __cdecl Usocket__getsockopt(int s, int level, int optname, void* optval, m3_socklen_t*);
-INTEGER __cdecl Usocket__recvfrom(int s, void* buf, WORD_T len, int flags, M3SockAddrUnionAll*, m3_socklen_t*);
+ssize_t __cdecl Usocket__recvfrom(int s, void* buf, size_t len, int flags, M3SockAddrUnionAll*, m3_socklen_t*);
 
 #ifndef _WIN32
 DIR* __cdecl Udir__opendir(const char* a);
@@ -682,9 +682,9 @@ typedef DIR*           Udir__DIR_star;
 typedef char* caddr_t;
 typedef caddr_t Umman__caddr_t;
 #define Umman__caddr_t Umman__caddr_t /* inhibit m3c type */
-int __cdecl Umman__mprotect(caddr_t addr, WORD_T len, int prot);
-void* __cdecl Umman__mmap(caddr_t addr, WORD_T len, int prot, int flags, int fd, m3_off_t off);
-int __cdecl Umman__munmap(caddr_t addr, WORD_T len);
+int __cdecl Umman__mprotect(caddr_t addr, size_t len, int prot);
+void* __cdecl Umman__mmap(caddr_t addr, size_t len, int prot, int flags, int fd, m3_off_t off);
+int __cdecl Umman__munmap(caddr_t addr, size_t len);
 
 ssize_t __cdecl Uuio__read(int, void*, size_t);
 ssize_t __cdecl Uuio__write(int, const void*, size_t);
