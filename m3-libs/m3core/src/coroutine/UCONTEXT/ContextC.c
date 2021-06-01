@@ -18,6 +18,9 @@
 
 M3EXTERNC_BEGIN
 
+/* expand C names */
+#define Context ContextC__TValue  /* ContextC__T points to ContextC__TValue; see m3core.h */
+
 // This code has only been tested on Linux/amd64.
 #if !(defined(__x86_64__) && defined(__linux))
 
@@ -134,7 +137,6 @@ static int stack_grows_downward;
 
 /* expand C names */
 #define Closure ContextC__Closure /* This is not Coroutine__Closure, which exists, nearby, is something else. */
-#define Context ContextC__TValue  /* ContextC__T points to ContextC__TValue; see m3core.h */
 
 struct Closure; typedef struct Closure Closure;
 struct Closure
