@@ -304,12 +304,13 @@ DisposeContext(Context **c)
   *c = NULL;
 }
 
+// Do not inline to help ensure stack range is understandable.
+M3_NO_INLINE
 void
 __cdecl
 ProcessContext(Context *c, char *bottom, char *top,
                void (*p) (void *start, void *limit))
 {
-  char xx = 0;
   if (top == NULL)
   {
     /* live thread */
@@ -319,7 +320,7 @@ ProcessContext(Context *c, char *bottom, char *top,
 #else
     if (getcontext(&(c->uc))) abort();
 #endif
-    top = &xx;
+    top = (char*)alloca(1);
   }
   if (bottom < top)
     p(bottom, top);
