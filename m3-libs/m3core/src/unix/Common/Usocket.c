@@ -330,8 +330,8 @@ Usocket__Assertions(void)
 M3WRAP2(int, listen, int, int)
 M3WRAP2(int, shutdown, int, int)
 M3WRAP3(int, socket, int, int, int)
-M3WRAP4(ssize_t, send, int, const void*, WORD_T, int)
-M3WRAP4(ssize_t, recv, int, void*, WORD_T, int)
+M3WRAP4(ssize_t, send, int, const void*, size_t, int)
+M3WRAP4(ssize_t, recv, int, void*, size_t, int)
 
 // wrap everything taking input socklen_t or sockaddr
 #define WRAP_SOCKADDR_INPUT1                    \
@@ -395,7 +395,7 @@ Usocket__connect(int s, const M3SockAddrUnionAll* pm3_sockaddr, m3_socklen_t len
 }
 
 M3_DLL_EXPORT ssize_t __cdecl
-Usocket__sendto(int s, void* msg, WORD_T length, int flags, const M3SockAddrUnionAll* pm3_sockaddr, m3_socklen_t len)
+Usocket__sendto(int s, void* msg, size_t length, int flags, const M3SockAddrUnionAll* pm3_sockaddr, m3_socklen_t len)
 {
     WRAP_SOCKADDR_INPUT1
 
@@ -501,7 +501,7 @@ the same order. This is checked in Usocket__Assertions.
 }
 
 M3_DLL_EXPORT ssize_t __cdecl
-Usocket__recvfrom(int s, void* buf, WORD_T length, int flags, M3SockAddrUnionAll* pm3_sockaddr, m3_socklen_t* plen)
+Usocket__recvfrom(int s, void* buf, size_t length, int flags, M3SockAddrUnionAll* pm3_sockaddr, m3_socklen_t* plen)
 {
     WRAP_SOCKADDR_OUTPUT1
 

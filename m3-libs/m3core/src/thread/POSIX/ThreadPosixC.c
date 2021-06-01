@@ -309,7 +309,7 @@ __cdecl
 ProcessContext(Context *c, char *bottom, char *top,
                void (*p) (void *start, void *limit))
 {
-  WORD_T xx = { 0 };
+  char xx = 0;
   if (top == NULL)
   {
     /* live thread */
@@ -319,7 +319,7 @@ ProcessContext(Context *c, char *bottom, char *top,
 #else
     if (getcontext(&(c->uc))) abort();
 #endif
-    top = (char *)&xx;
+    top = &xx;
   }
   if (bottom < top)
     p(bottom, top);
