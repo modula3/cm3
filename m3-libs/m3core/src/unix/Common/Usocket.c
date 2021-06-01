@@ -330,12 +330,12 @@ Usocket__Assertions(void)
 M3WRAP2(int, listen, int, int)
 M3WRAP2(int, shutdown, int, int)
 M3WRAP3(int, socket, int, int, int)
-M3WRAP4(INTEGER, send, int, const void*, WORD_T, int)
-M3WRAP4(INTEGER, recv, int, void*, WORD_T, int)
+M3WRAP4(ssize_t, send, int, const void*, WORD_T, int)
+M3WRAP4(ssize_t, recv, int, void*, WORD_T, int)
 
 // wrap everything taking input socklen_t or sockaddr
 #define WRAP_SOCKADDR_INPUT1                    \
-    INTEGER result = {0};                       \
+    ssize_t result = {0};                       \
     NativeSockAddrUnionAll native;              \
     M3SockAddrUnionAll m3;                      \
                                                 \
@@ -353,7 +353,7 @@ M3WRAP4(INTEGER, recv, int, void*, WORD_T, int)
     return result;                              \
 
 #define WRAP_SOCKADDR_OUTPUT1                   \
-    INTEGER result = {0};                       \
+    ssize_t result = {0};                       \
     NativeSockAddrUnionAll native;              \
     M3SockAddrUnionAll m3;                      \
     socklen_t len = {0};                        \
@@ -394,7 +394,7 @@ Usocket__connect(int s, const M3SockAddrUnionAll* pm3_sockaddr, m3_socklen_t len
     WRAP_SOCKADDR_INPUT2
 }
 
-M3_DLL_EXPORT INTEGER __cdecl
+M3_DLL_EXPORT ssize_t __cdecl
 Usocket__sendto(int s, void* msg, WORD_T length, int flags, const M3SockAddrUnionAll* pm3_sockaddr, m3_socklen_t len)
 {
     WRAP_SOCKADDR_INPUT1
@@ -500,7 +500,7 @@ the same order. This is checked in Usocket__Assertions.
     }
 }
 
-M3_DLL_EXPORT INTEGER __cdecl
+M3_DLL_EXPORT ssize_t __cdecl
 Usocket__recvfrom(int s, void* buf, WORD_T length, int flags, M3SockAddrUnionAll* pm3_sockaddr, m3_socklen_t* plen)
 {
     WRAP_SOCKADDR_OUTPUT1
@@ -513,7 +513,7 @@ Usocket__recvfrom(int s, void* buf, WORD_T length, int flags, M3SockAddrUnionAll
 #ifdef AF_UNIX
 
 static
-INTEGER
+int
 Usocket__un(
     sockaddr_un* addr,
     const char* path)
@@ -538,7 +538,7 @@ Usocket__un(
 }
 
 M3_DLL_EXPORT
-INTEGER
+int
 __cdecl
 Usocket_accept_un(int fd)
 {
@@ -550,7 +550,7 @@ Usocket_accept_un(int fd)
 }
 
 M3_DLL_EXPORT
-INTEGER
+int
 __cdecl
 Usocket__bind_un(
     int fd,
@@ -561,7 +561,7 @@ Usocket__bind_un(
 }
 
 M3_DLL_EXPORT
-INTEGER
+int
 __cdecl
 Usocket__connect_un(
     int fd,
