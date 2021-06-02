@@ -169,10 +169,12 @@ struct Context
 */
 
 static void
-trampoline(int lo, int hi)
+trampoline(unsigned low32, unsigned high32)
 {
-  /* take two 32-bit pointers as ints and turn them into a 64-bit pointer */
-  Closure *cl = (Closure *)(((size_t)(unsigned)hi << 32UL) | (size_t)(unsigned)lo);
+  // make a pointer from two integers
+  uintptr_t const low = low32;
+  uintptr_t const high = high32;
+  Closure* const cl = (Closure*)((high << 32) | low);
   
   cl->p(cl->arg);
 }
@@ -192,12 +194,14 @@ ContextC__SetLink(Context *tgt, Context *src)
 }
 
 static void
-cleanup(int lo, int hi)
+cleanup(unsigned low32, unsigned high32)
 {
+  uintptr_t const low = low32;
+  uintptr_t const high = high32;
   /* this is the cleanup routine
      it is called when a context falls off the end (apply ends) 
   */
-  Context *c = (Context *)(((size_t)(unsigned)hi << 32UL) | (size_t)(unsigned)lo);
+  Context* const c = (Context*)((high << 32) | low);
 
   c->alive = 0;
 
@@ -236,7 +240,7 @@ ContextC__MakeContext(void    (*p)(void*),   // CoroutineUcontext__Entry
   INTEGER pages = { 0 };
   int er = { 0 };
   Closure *cl = (Closure *)calloc(1, sizeof(*cl));
-  int lo, hi;
+  unsigned low, high;
   char *slim, *sbeg; /* limits of stack, for bookkeeping */
   
   if (c == NULL || cl == NULL)
@@ -325,13 +329,13 @@ ContextC__MakeContext(void    (*p)(void*),   // CoroutineUcontext__Entry
   
   c->uc.uc_link = &(c->pc);        /* set up cleanup linkage */
 
-  lo = (int)(size_t)c;
-  hi = (int)(((size_t)c) >> 32UL);
-  makecontext(&(c->pc), (void (*)())cleanup, 2, lo, hi);
+  low = (unsigned)(uintptr_t)c;
+  high = (unsigned)(((uintptr_t)c) >> 32);
+  makecontext(&(c->pc), (void (*)())cleanup, 2, low, high);
   
-  lo = (int)(size_t)cl;
-  hi = (int)(((size_t)cl) >> 32UL);
-  makecontext(&(c->uc), (void (*)())trampoline, 2, lo, hi);
+  low = (unsigned)(uintptr_t)cl;
+  high = (unsigned)(((uintptr_t)cl) >> 32);
+  makecontext(&(c->uc), (void (*)())trampoline, 2, low, high);
 
   return c;
 Error:
