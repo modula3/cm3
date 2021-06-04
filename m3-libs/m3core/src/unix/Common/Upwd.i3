@@ -18,7 +18,7 @@ TYPE
     provide the pointer type and not the value type. *)
   END;
 
-<*EXTERNAL "Upwd__getpwuid"*>PROCEDURE getpwuid (uid: int): struct_passwd_star;
+<*EXTERNAL "Upwd__getpwuid"*>PROCEDURE getpwuid (uid: uid_t): struct_passwd_star;
 <*EXTERNAL "Upwd__getpwnam"*>PROCEDURE getpwnam (name: char_star): struct_passwd_star;
 
 END Upwd.
