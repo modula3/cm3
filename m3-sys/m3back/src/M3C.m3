@@ -1698,7 +1698,8 @@ BEGIN
     END;
   END;
 
-  print (self, "typedef ");
+  print (self, "\n#if 0 /* avoid type hash collions */\ntypedef ");
+
   IF id # M3ID.NoID THEN
     text := NameT (id);
   ELSIF return # NIL THEN
@@ -1731,6 +1732,9 @@ BEGIN
     END;
   END;
   print (self, ");");
+
+  print (self, "\n#else\ntypedef ADDRESS " & procType.text & ";\n#endif\n");
+
 END ProcType_define;
 
 PROCEDURE TypeidToType_Get(self: T; typeid: TypeUID): Type_t =
