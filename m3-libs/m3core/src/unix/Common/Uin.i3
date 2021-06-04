@@ -4,9 +4,9 @@
 
 INTERFACE Uin;
 
-FROM Ctypes IMPORT char, unsigned_short, unsigned, int;
+FROM Ctypes IMPORT char, unsigned_short, unsigned, const_int;
 
-<*EXTERNAL "Usocket__IPPROTO_TCP"*> VAR IPPROTO_TCP: int; (* portable *)
+<*EXTERNAL "Usocket__IPPROTO_TCP"*> VAR IPPROTO_TCP: const_int; (* portable *)
 
 TYPE
   struct_in_addr = RECORD
