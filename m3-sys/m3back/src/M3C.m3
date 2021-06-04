@@ -1251,7 +1251,7 @@ BEGIN
 END record_canBeDefined;
 
 (* ifndef so multiple files can be concatenated and compiled at once *)
-PROCEDURE ifndef(self:T; id: TEXT; comment := NIL) =
+PROCEDURE ifndef(self:T; id: TEXT; comment: TEXT := NIL) =
 BEGIN
   IF debug_verbose AND comment # NIL THEN
     print (self, "\n#ifndef " & id & "\n#define " & id & " " & id & comment & "\n");
