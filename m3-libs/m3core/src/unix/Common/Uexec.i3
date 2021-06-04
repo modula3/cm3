@@ -4,7 +4,7 @@
 
 INTERFACE Uexec;
 
-FROM Ctypes IMPORT int, const_char_star, char_star_star;
+FROM Ctypes IMPORT const_int, int, const_char_star, char_star_star;
 FROM Utypes IMPORT pid_t;
 
 <*EXTERNAL "Uexec__execv"*>PROCEDURE execv (name: const_char_star; argv: char_star_star): int RAISES {};
@@ -14,7 +14,7 @@ FROM Utypes IMPORT pid_t;
 (* compat with Usem usage *)
 TYPE wait_queue_star = ADDRESS;
 
-<*EXTERNAL "Uexec__WNOHANG"*> VAR WNOHANG: int; (* do not hang in wait *)
+<*EXTERNAL "Uexec__WNOHANG"*> VAR WNOHANG: const_int; (* do not hang in wait *)
 
 <*EXTERNAL "Uexec__waitpid"*>PROCEDURE waitpid (pid: pid_t; status: UNTRACED REF int; options: int): pid_t;
 
