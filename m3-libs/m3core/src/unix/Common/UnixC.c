@@ -41,7 +41,7 @@ extern "C"
 {
 #endif
 
-M3_DLL_LOCAL void __cdecl
+void __cdecl
 Unix__Assertions(void)
 {
     /* make sure things are normal */
