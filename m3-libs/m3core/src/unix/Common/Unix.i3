@@ -129,9 +129,12 @@ PROCEDURE unlink (path: const_char_star): int;
   see RTProcess.Fork *)
 
 (* Do not wrap vfork in C; doing so violates the Posix standard, because
- callers of vfork cannot return without calling exec or _exit. *)
+ * callers of vfork cannot return without calling exec or _exit.
+ * vfork must return int, not pid_t. C compilation will fail
+ * otherwise when combining m3c output with hand written C (m3core.h).
+ *)
 <*EXTERNAL*>
-PROCEDURE vfork (): pid_t;
+PROCEDURE vfork (): int;
 
 <*EXTERNAL "Unix__mknod"*>
 PROCEDURE mknod (path: const_char_star; mode: mode_t; dev: dev_t): int;
