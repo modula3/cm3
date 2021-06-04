@@ -598,6 +598,9 @@ PROCEDURE Declare (t: T): BOOLEAN =
         RTIO.Flush ();
       END;
 
+      IF Target.BackendMode # Target.M3BackendMode_t.C THEN
+        typeUID := 0(*no mangling*);
+      END;
       t.cg_var := CG.Import_global (externM3ID, size, align, mtype, typeUID, typename);
       t.cg_align := align;
 
