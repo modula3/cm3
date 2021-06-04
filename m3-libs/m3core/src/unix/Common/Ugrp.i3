@@ -9,7 +9,7 @@
 
 INTERFACE Ugrp;
 
-FROM Ctypes IMPORT char_star,char_star_star;
+FROM Ctypes IMPORT const_char_star, char_star,char_star_star;
 FROM Utypes IMPORT gid_t;
 
 (*** <grp.h> ***)
@@ -29,7 +29,7 @@ TYPE
 
 <*EXTERNAL Ugrp__getgrent*> PROCEDURE getgrent(a: struct_group_star): struct_group_star;
 <*EXTERNAL Ugrp__getgrgid*> PROCEDURE getgrgid(a: struct_group_star; gid: gid_t): struct_group_star;
-<*EXTERNAL Ugrp__getgrnam*> PROCEDURE getgrnam(a: struct_group_star; name: char_star): struct_group_star;
+<*EXTERNAL Ugrp__getgrnam*> PROCEDURE getgrnam(a: struct_group_star; name: const_char_star): struct_group_star;
 <*EXTERNAL Ugrp__setgrent*> PROCEDURE setgrent();
 <*EXTERNAL Ugrp__endgrent*> PROCEDURE endgrent();
 
