@@ -730,12 +730,24 @@ BEGIN
 
   IF type_text = NIL THEN
     IF type # NIL THEN
-      type_text := type.text & " /* TypeText1 */ ";
+      IF debug THEN
+        type_text := type.text & " /*TypeText1*/ ";
+      ELSE
+        type_text := type.text & " ";
+      END;
       IF cgtype = CGType.Addr AND NOT PassStructsByValue AND (type.isRecord() OR type.isArray()) THEN (* TODO remove this *)
-        type_text := type_text & " * " & " /* TypeText2 */ ";
+        IF debug THEN
+          type_text := type_text & " * /*TypeText2*/ ";
+        ELSE
+          type_text := type_text & "* ";
+        END;
       END;
     ELSE
-      type_text := cgtypeToText[cgtype] & " /* TypeText3 */ ";
+      IF debug THEN
+        type_text := cgtypeToText[cgtype] & " /*TypeText3*/ ";
+      ELSE
+        type_text := cgtypeToText[cgtype] & " ";
+      END;
     END;
   END;
 
@@ -2035,7 +2047,9 @@ BEGIN
                     RETURN FALSE;
                 END;
             END;
-            comment(self, "IsNameExceptionHandler:" & name);
+            IF debug THEN
+              comment(self, "IsNameExceptionHandler:" & name);
+            END;
             RETURN TRUE;
         END;
     END;
@@ -3500,7 +3514,9 @@ BEGIN
             self.unit_name := text;
             FOR i := FIRST(HandlerNamePieces) TO LAST(HandlerNamePieces) DO
                 self.handler_name_prefixes[i] := text & HandlerNamePieces[i];
+              IF debug THEN
                 comment(self, "handler_name_prefixes:" & self.handler_name_prefixes[i]);
+              END;
             END;
         END;
     END;
@@ -6821,7 +6837,11 @@ BEGIN
     END;
     self.store(t, 0, CGType.Addr, CGType.Addr);
     self.load(t, 0, CGType.Addr, CGType.Addr);
-    print(self, "/*check_nil*/if(!" & get(self).CText() & ")");
+    IF debug THEN
+      print(self, "/*check_nil*/if(!" & get(self).CText() & ")");
+    ELSE
+      print(self, "if(!" & get(self).CText() & ")");
+    END;
     reportfault(self, code);
 END check_nil;
 
@@ -6834,7 +6854,11 @@ BEGIN
     END;
     self.store(t, 0, type, type);
     self.load(t, 0, type, type);
-    print(self, "/*check_lo*/if(" & get(self).CText() & "<" & self.TIntLiteral(type, i) & ")");
+    IF debug THEN
+      print(self, "/*check_lo*/if(" & get(self).CText() & "<" & self.TIntLiteral(type, i) & ")");
+    ELSE
+      print(self, "if(" & get(self).CText() & "<" & self.TIntLiteral(type, i) & ")");
+    END;
     reportfault(self, code);
 END check_lo;
 
@@ -6847,7 +6871,11 @@ BEGIN
     END;
     self.store(t, 0, type, type);
     self.load(t, 0, type, type);
-    print(self, "/*check_hi*/if(" & self.TIntLiteral(type, i) & "<" & get(self).CText() & ")");
+    IF debug THEN
+      print(self, "/*check_hi*/if(" & self.TIntLiteral(type, i) & "<" & get(self).CText() & ")");
+    ELSE
+      print(self, "if(" & self.TIntLiteral(type, i) & "<" & get(self).CText() & ")");
+    END;
     reportfault(self, code);
 END check_hi;
 
@@ -6889,7 +6917,11 @@ BEGIN
     self.swap(type, type);
     s0 := cast(get(self, 0), Target.Word.cg_type);
     s1 := cast(get(self, 1), Target.Word.cg_type);
-    print(self, "/*check_index*/if(" & s0.CText() & "<=" & s1.CText() & ")");
+    IF debug THEN
+      print(self, "/*check_index*/if(" & s0.CText() & "<=" & s1.CText() & ")");
+    ELSE
+      print(self, "if(" & s0.CText() & "<=" & s1.CText() & ")");
+    END;
     reportfault(self, code);
     pop(self);
 END check_index;
@@ -6903,8 +6935,10 @@ VAR s0 := cast(get(self, 0), type);
 BEGIN
     IF debug THEN
       self.comment("check_eq");
+      print(self, "/*check_eq*/if(" & s0.CText() & "!=" & s1.CText() & ")");
+    ELSE
+      print(self, "if(" & s0.CText() & "!=" & s1.CText() & ")");
     END;
-    print(self, "/*check_eq*/if(" & s0.CText() & "!=" & s1.CText() & ")");
     reportfault(self, code);
     pop(self, 2);
 END check_eq;
