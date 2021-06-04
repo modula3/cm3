@@ -395,7 +395,7 @@ Usocket__connect(int s, const M3SockAddrUnionAll* pm3_sockaddr, m3_socklen_t len
 }
 
 M3_DLL_EXPORT ssize_t __cdecl
-Usocket__sendto(int s, void* msg, size_t length, int flags, const M3SockAddrUnionAll* pm3_sockaddr, m3_socklen_t len)
+Usocket__sendto(int s, const void* msg, size_t length, int flags, const M3SockAddrUnionAll* pm3_sockaddr, m3_socklen_t len)
 {
     WRAP_SOCKADDR_INPUT1
 
@@ -405,7 +405,7 @@ Usocket__sendto(int s, void* msg, size_t length, int flags, const M3SockAddrUnio
 }
 
 M3_DLL_EXPORT int __cdecl
-Usocket__setsockopt(int s, int level, int optname, void* optval, m3_socklen_t len)
+Usocket__setsockopt(int s, int level, int optname, const void* optval, m3_socklen_t len)
 {
     ASSERT_LEN
 #if defined(__CYGWIN__) || defined(_WIN32)
@@ -417,10 +417,10 @@ Usocket__setsockopt(int s, int level, int optname, void* optval, m3_socklen_t le
         ZeroMemory(&b, sizeof(b));
         b.l_onoff = a->onoff;
         b.l_linger = a->linger;
-        return setsockopt(s, level, optname, (void*)&b, sizeof(b));
+        return setsockopt(s, level, optname, (char*)&b, sizeof(b));
     }
 #endif
-    return setsockopt(s, level, optname, optval, len);
+    return setsockopt(s, level, optname, (char*)optval, len);
 }
 
 /* wrap everything taking input/output socklen_t */

@@ -219,27 +219,28 @@ typedef int BOOL;
 #define M3_EXTERNC_END      /* nothing */
 #endif
 
-#define STRUCT_AND_TYPEDEF(x) struct x; typedef struct x x;
+#define AGGREGATE_TYPEDEF(aggr, x) aggr x; typedef aggr x x;
+#define STRUCT_TYPEDEF(x) AGGREGATE_TYPEDEF (struct, x)
+#define UNION_TYPEDEF(x)  AGGREGATE_TYPEDEF (union, x)
 
-STRUCT_AND_TYPEDEF(linger)
-STRUCT_AND_TYPEDEF(sockaddr)
-STRUCT_AND_TYPEDEF(sockaddr_storage)
-STRUCT_AND_TYPEDEF(sockaddr_un)
-STRUCT_AND_TYPEDEF(sockaddr_in)
-STRUCT_AND_TYPEDEF(sockaddr_in6)
-STRUCT_AND_TYPEDEF(in6_addr)
-STRUCT_AND_TYPEDEF(in_addr)
+STRUCT_TYPEDEF(linger)
+STRUCT_TYPEDEF(sockaddr)
+STRUCT_TYPEDEF(sockaddr_storage)
+STRUCT_TYPEDEF(sockaddr_un)  // unix fifo socket address
+STRUCT_TYPEDEF(sockaddr_in)  // internet ipv4 socket address
+STRUCT_TYPEDEF(sockaddr_in6) // internet ipv6 socket address
+STRUCT_TYPEDEF(in_addr)      // 4 bytes within sockaddr_in
+STRUCT_TYPEDEF(in6_addr)     // 16 bytes within sockaddr_in
 
-STRUCT_AND_TYPEDEF(m3_sockaddr_un)
-STRUCT_AND_TYPEDEF(m3_sockaddr_in)
-STRUCT_AND_TYPEDEF(m3_sockaddr_in6)
-STRUCT_AND_TYPEDEF(m3_in_addr)
-//STRUCT_AND_TYPEDEF(m3_in6_addr); // use in6_addr instead
+// Idealized m3 forms.
+STRUCT_TYPEDEF(m3_sockaddr_un)  // idealized m3_sockaddr_un, does not necessarily match native
+STRUCT_TYPEDEF(m3_sockaddr_in)  // idealized m3_sockaddr_in, does not necessarily match native
+STRUCT_TYPEDEF(m3_sockaddr_in6) // idealized m3_sockaddr_in6, does not necessarily match native
+STRUCT_TYPEDEF(m3_in_addr)      // idealized m3_in_addr, does not necessarily match native
+//STRUCT_TYPEDEF(m3_in6_addr);  // use in6_addr instead
 
-union M3SockAddrUnionAll;
-union NativeSockAddrUnionAll;
-typedef union M3SockAddrUnionAll M3SockAddrUnionAll;
-typedef union NativeSockAddrUnionAll NativeSockAddrUnionAll;
+UNION_TYPEDEF(M3SockAddrUnionAll)
+UNION_TYPEDEF(NativeSockAddrUnionAll)
 
 /* m3name vs. cname is structured carefully to deal with identifiers
    being #defined in headers, such as on NetBSD. For example, given:
@@ -659,13 +660,31 @@ typedef struct {
     int linger;
 } m3_linger_t;
 
+// This is very unusual. Maybe it should be changed.
+// The C functions take a union. The .i3 files claim
+// a pointer to one specific variant.
+//
+// Alternatively the C functions could also take the member
+// and cast it back to the union.
+//
+// More alternatively, there should be separate C functions for each union
+// variant and Modula-3 should chose.
+#define       Usocket__struct_sockaddr_in_star Usocket__struct_sockaddr_in_star       /* inhibit m3c type */
+#define Usocket__const_struct_sockaddr_in_star Usocket__const_struct_sockaddr_in_star /* inhibit m3c type */
+#define Usocket__socklen_t_star                Usocket__socklen_t_star                /* inhibit m3c type */
+#define Usocket__socklen_t                     Usocket__socklen_t                     /* inhibit m3c type */
+typedef       M3SockAddrUnionAll*              Usocket__struct_sockaddr_in_star;
+typedef const M3SockAddrUnionAll*              Usocket__const_struct_sockaddr_in_star;
+typedef m3_socklen_t                           Usocket__socklen_t;
+typedef m3_socklen_t*                          Usocket__socklen_t_star;
+
 int __cdecl Usocket__listen(int s, int backlog);
 int __cdecl Usocket__shutdown(int s, int how);
 int __cdecl Usocket__socket(int af, int type, int protocol);
 int __cdecl Usocket__bind(int s, const M3SockAddrUnionAll*, m3_socklen_t);
 int __cdecl Usocket__connect(int s, const M3SockAddrUnionAll*, m3_socklen_t);
-INTEGER __cdecl Usocket__sendto(int s, void* msg, size_t length, int flags, const M3SockAddrUnionAll*, m3_socklen_t);
-int __cdecl Usocket__setsockopt(int s, int level, int optname, void* optval, m3_socklen_t len);
+INTEGER __cdecl Usocket__sendto(int s, const void* msg, size_t length, int flags, const M3SockAddrUnionAll*, m3_socklen_t);
+int __cdecl Usocket__setsockopt(int s, int level, int optname, const void* optval, m3_socklen_t len);
 int __cdecl Usocket__getpeername(int s, M3SockAddrUnionAll*, m3_socklen_t*);
 int __cdecl Usocket__getsockname(int s, M3SockAddrUnionAll*, m3_socklen_t*);
 int __cdecl Usocket__accept(int s, M3SockAddrUnionAll*, m3_socklen_t*);
