@@ -1797,9 +1797,7 @@ BEGIN
 
     IF type.typeid # -1 AND type.typeid # 0 THEN
         IF TypeidToType_Get(self, type.typeid) # NIL THEN
-          IF debug_types THEN
-            self.comment ("Type_Init skipping duplicate " & TypeIDToText (type.typeid));
-          END;
+          Err (self, "Type_Init skipping duplicate " & Type_Fmt (type));
           RETURN;
         END;
         EVAL self.typeidToType.put(type.typeid, type);
