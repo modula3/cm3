@@ -13,9 +13,6 @@ extern "C" {
 #undef M3MODULE /* Support concatenating multiple .c files. */
 #define M3MODULE Cstdlib
 
-typedef void (__cdecl*AtExitFunction)(void);
-
-M3WRAP1(int, atexit, AtExitFunction)
 M3WRAP1(char*, getenv, const char*)
 M3WRAP1(int, system, const char*)
 M3WRAP2(double, strtod, const char*, char**)

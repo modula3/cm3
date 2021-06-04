@@ -13,7 +13,6 @@ FROM Ctypes IMPORT int, char_star, const_char_star, char_star_star, double,
 FROM Cstddef IMPORT size_t;
 
 <*EXTERNAL Cstdlib__abort*>  PROCEDURE abort ();
-<*EXTERNAL Cstdlib__atexit*> PROCEDURE atexit (func: PROCEDURE ()): int;
 <*EXTERNAL Cstdlib__exit*>   PROCEDURE exit (status: int);
 <*EXTERNAL Cstdlib__getenv*> PROCEDURE getenv (name: const_char_star): char_star;
 <*EXTERNAL Cstdlib__system*> PROCEDURE system (string: const_char_star): int;
