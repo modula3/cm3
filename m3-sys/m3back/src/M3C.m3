@@ -6046,7 +6046,9 @@ END store_indirect;
 PROCEDURE load_nil(self: T) =
 (* push; s0.A := NIL *)
 BEGIN
-    self.comment("load_nil");
+    IF debug THEN
+      self.comment("load_nil");
+    END;
     push(self, CGType.Addr, CTextToExpr("0")); (* UNDONE NULL or (ADDRESS)0? *)
 END load_nil;
 
@@ -6088,7 +6090,9 @@ VAR i := readonly_i;
     signed   := cgtypeIsSignedInt[type];
     unsigned := cgtypeIsUnsignedInt[type];
 BEGIN
-    self.comment("load_integer");
+    IF debug THEN
+      self.comment("load_integer");
+    END;
     <* ASSERT signed OR unsigned *>
     expr.minmax_valid[Min] := TRUE;
     expr.minmax_valid[Max] := TRUE;
@@ -6107,7 +6111,9 @@ END load_target_integer;
 PROCEDURE load_float(self: T; type: RType; READONLY float: Target.Float) =
 (* push; s0.type := float *)
 BEGIN
-    self.comment("load_float");
+    IF debug THEN
+      self.comment("load_float");
+    END;
     (* FloatLiteral includes suffixes like "F" for float, "" for double, "L" for long double *)
     push(self, type, cast(CTextToExpr(FloatLiteral(float)), type));
 END load_float;
@@ -6297,7 +6303,9 @@ PROCEDURE div(self: T; type: IType; a, b: Sign) =
 VAR s0 := cast(get(self, 0), type);
     s1 := cast(get(self, 1), type);
 BEGIN
-    self.comment("div");
+    IF debug THEN
+      self.comment("div");
+    END;
     pop(self, 2);
     IF ((a = b) AND (a # Sign.Unknown)) OR cgtypeIsUnsignedInt[type] THEN
         push(self, type, cast(CTextToExpr(s1.CText() & "/" & s0.CText()), type));
@@ -6311,7 +6319,9 @@ PROCEDURE mod(self: T; type: IType; a, b: Sign) =
 VAR s0 := cast(get(self, 0), type);
     s1 := cast(get(self, 1), type);
 BEGIN
-    self.comment("mod");
+    IF debug THEN
+      self.comment("mod");
+    END;
     pop(self, 2);
     IF ((a = b) AND (a # Sign.Unknown)) OR cgtypeIsUnsignedInt[type] THEN
         push(self, type, cast(CTextToExpr(s1.CText() & "%" & s0.CText()), type));
@@ -6330,7 +6340,9 @@ PROCEDURE abs(self: T; type: AType) =
 (* s0.type := ABS (s0.type) (noop on Words) *)
 VAR s0 := cast(get(self, 0), type);
 BEGIN
-    self.comment("abs");
+    IF debug THEN
+      self.comment("abs");
+    END;
     pop(self);
     push(self, type, CTextToExpr("m3_abs_" & cgtypeToText[type] & "(\n " & s0.CText() & ")"));
 END abs;
@@ -6340,7 +6352,9 @@ PROCEDURE max(self: T; type: ZType) =
 VAR s0 := cast(get(self, 0), type);
     s1 := cast(get(self, 1), type);
 BEGIN
-    self.comment("max");
+    IF debug THEN
+      self.comment("max");
+    END;
     pop(self, 2);
     push(self, type, CTextToExpr("m3_max_" & cgtypeToText[type] & "(\n " & s0.CText() & ",\n " & s1.CText() & ")"));
 END max;
@@ -6350,7 +6364,9 @@ PROCEDURE min(self: T; type: ZType) =
 VAR s0 := cast(get(self, 0), type);
     s1 := cast(get(self, 1), type);
 BEGIN
-    self.comment("min");
+    IF debug THEN
+      self.comment("min");
+    END;
     pop(self, 2);
     push(self, type, CTextToExpr("m3_min_" & cgtypeToText[type] & "(\n " & s0.CText() & ",\n " & s1.CText() & ")"));
 END min;
@@ -6359,7 +6375,9 @@ PROCEDURE cvt_int(self: T; from_float_type: RType; to_integer_type: IType; op: C
 (* s0.itype := ROUND(s0.rtype) *)
 VAR s0 := cast(get(self, 0), from_float_type);
 BEGIN
-    self.comment("cvt_int");
+    IF debug THEN
+      self.comment("cvt_int");
+    END;
     pop(self);
     push(self, to_integer_type, cast(CTextToExpr("m3_" & ConvertOpName[op] & "(\n " & s0.CText() & ")"), to_integer_type));
 END cvt_int;
@@ -6368,7 +6386,9 @@ PROCEDURE cvt_float(self: T; from_arithmetic_type: AType; to_float_type: RType) 
 (* s0.rtype := ROUND(s0.atype) *)
 VAR s0 := cast(get(self, 0), from_arithmetic_type);
 BEGIN
-    self.comment("cvt_float");
+    IF debug THEN
+      self.comment("cvt_float");
+    END;
     (* UNDONE is this correct? *)
     pop(self);
     push(self, to_float_type, cast(s0, to_float_type));
@@ -6418,7 +6438,9 @@ PROCEDURE set_member(self: T; <*UNUSED*>byte_size: ByteSize; type: IType) =
 VAR s0 := cast(get(self, 0), type);
     s1 := cast(get(self, 1), CGType.Void, "SET");
 BEGIN
-    self.comment("set_member");
+    IF debug THEN
+      self.comment("set_member");
+    END;
     pop(self, 2);
     push(self, type, cast(CTextToExpr("m3_set_member(" & s0.CText() & ",\n " & s1.CText() & ")"), type));
 END set_member;
@@ -6431,7 +6453,9 @@ VAR swap := (op IN SET OF CompareOp{CompareOp.GT, CompareOp.GE});
     target_word_bytes := Target.Word.bytes;
     eq := ARRAY BOOLEAN OF TEXT{"==0", "!=0"}[op = CompareOp.EQ];
 BEGIN
-    self.comment("set_compare");
+    IF debug THEN
+      self.comment("set_compare");
+    END;
     <* ASSERT (byte_size MOD target_word_bytes) = 0 *>
     pop(self, 2);
     IF swap THEN
@@ -6456,7 +6480,9 @@ VAR s0 := cast(get(self, 0), type);
     s1 := cast(get(self, 1), type);
     s2 := cast(get(self, 2), CGType.Void, "SET");
 BEGIN
-    self.comment("set_range");
+    IF debug THEN
+      self.comment("set_range");
+    END;
     pop(self, 3);
     print(self, "m3_set_range(" & s0.CText() & ",\n " & s1.CText() & ",\n " & s2.CText() & ");\n");
 END set_range;
@@ -6466,7 +6492,9 @@ PROCEDURE set_singleton(self: T; <*UNUSED*>byte_size: ByteSize; type: IType) =
 VAR s0 := cast(get(self, 0), type);
     s1 := cast(get(self, 1), CGType.Void, "SET");
 BEGIN
-    self.comment("set_singleton");
+    IF debug THEN
+      self.comment("set_singleton");
+    END;
     pop(self, 2);
     print(self, "m3_set_singleton(" & s0.CText() & ",\n " & s1.CText() & ");\n");
 END set_singleton;
@@ -6524,7 +6552,9 @@ PROCEDURE casted_shift_left(self: T; type: IType) =
 VAR s0 := cast(get(self, 0), Target.Word.cg_type);
     s1 := cast(cast(get(self, 1), type), typeToUnsigned[type]);
 BEGIN
-    self.comment("shift_lexft");
+    IF debug THEN
+      self.comment("shift_left");
+    END;
     pop(self, 2);
     push(self, type, cast(CTextToExpr(s1.CText() & "<<" & s0.CText()), type));
 END casted_shift_left;
@@ -6603,7 +6633,9 @@ VAR count := cast(get(self, 0), Target.Word.cg_type);
     offset := cast(get(self, 1), Target.Word.cg_type);
     value := cast(get(self, 2), type);
 BEGIN
-    self.comment("extract");
+    IF debug THEN
+      self.comment("extract");
+    END;
     <* ASSERT sign_extend = FALSE *>
     pop(self, 3);
     IF inline_extract THEN
@@ -6617,7 +6649,9 @@ PROCEDURE extract_n(self: T; type: IType; sign_extend: BOOLEAN; count: CARDINAL)
 (* s1.type := Word.Extract(s1.type, s0.type, count);
    IF sign_extend THEN SignExtend s1 END; pop(1) *)
 BEGIN
-    self.comment("extract_n");
+    IF debug THEN
+      self.comment("extract_n");
+    END;
     load_host_integer(self, Target.Word.cg_type, count);
     self.extract(type, sign_extend);
 END extract_n;
@@ -6634,7 +6668,9 @@ PROCEDURE extract_mn(self: T; type: IType; sign_extend: BOOLEAN; offset, count: 
 (* s0.type := Word.Extract(s0.type, offset, count);
     IF sign_extend THEN SignExtend s0 END; *)
 BEGIN
-    self.comment("extract_mn");
+    IF debug THEN
+      self.comment("extract_mn");
+    END;
     load_host_integer(self, Target.Word.cg_type, offset);
     load_host_integer(self, Target.Word.cg_type, count);
     self.extract(type, FALSE);
@@ -6651,7 +6687,9 @@ VAR count := cast(get(self, 0), Target.Word.cg_type);
     from := cast(get(self, 2), type);
     to := cast(get(self, 3), type);
 BEGIN
-    self.comment("insert");
+    IF debug THEN
+      self.comment("insert");
+    END;
     pop(self, 4);
     push(self, type, CTextToExpr("m3_insert_" & cgtypeToText[type] & "(\n " & to.CText() & ",\n " & from.CText() & ",\n " & offset.CText() & ",\n " & count.CText() & ")"));
 END insert;
@@ -6659,7 +6697,9 @@ END insert;
 PROCEDURE insert_n(self: T; type: IType; count: CARDINAL) =
 (* s2.type := Word.Insert (s2.type, s1.type, s0.type, count); pop(2) *)
 BEGIN
-    self.comment("insert_n");
+    IF debug THEN
+      self.comment("insert_n");
+    END;
     load_host_integer(self, Target.Word.cg_type, count);
     self.insert(type);
 END insert_n;
@@ -6667,7 +6707,9 @@ END insert_n;
 PROCEDURE insert_mn(self: T; type: IType; offset, count: CARDINAL) =
 (* s1.type := Word.Insert (s1.type, s0.type, offset, count); pop(2) *)
 BEGIN
-    self.comment("insert_mn");
+    IF debug THEN
+      self.comment("insert_mn");
+    END;
     load_host_integer(self, Target.Word.cg_type, offset);
     load_host_integer(self, Target.Word.cg_type, count);
     self.insert(type);
@@ -6679,7 +6721,9 @@ PROCEDURE swap(self: T; <*UNUSED*>a, b: CGType) =
 (* tmp := s1; s1 := s0; s0 := tmp *)
 VAR temp := get(self, 1);
 BEGIN
-    self.comment("swap");
+    IF debug THEN
+      self.comment("swap");
+    END;
     self.stack.put(1, get(self, 0));
     self.stack.put(0, temp);
 END swap;
@@ -6688,7 +6732,9 @@ PROCEDURE cg_pop(self: T; type: CGType) =
 (* pop(1) (i.e. discard s0) *)
 VAR s0 := cast(get(self, 0), type);
 BEGIN
-    self.comment("pop");
+    IF debug THEN
+      self.comment("pop");
+    END;
     pop(self);
     print(self, "m3_pop_" & cgtypeToText[type] & "(" & s0.CText() & ");\n");
 END cg_pop;
@@ -6701,7 +6747,9 @@ VAR s0 := cast(get(self, 0), itype);
     s1 := get(self, 1);
     s2 := get(self, 2);
 BEGIN
-    self.comment("copy_n");
+    IF debug THEN
+      self.comment("copy_n");
+    END;
     pop(self, 3);
     print(self, MemCopyOrMove[ORD(overlap)] & "(\n " & s2.CText() & ",\n " & s1.CText() & ",\n " & IntToDec(CG_Bytes[mtype]) & "*(size_t)" & s0.CText() & ");\n");
 END copy_n;
@@ -6711,7 +6759,9 @@ PROCEDURE copy(self: T; n: INTEGER; mtype: MType; overlap: BOOLEAN) =
 VAR s0 := get(self, 0);
     s1 := get(self, 1);
 BEGIN
-    self.comment("copy");
+    IF debug THEN
+      self.comment("copy");
+    END;
     pop(self, 2);
     print(self, MemCopyOrMove[ORD(overlap)] & "(\n " & s1.CText() & ",\n " & s0.CText() & ",\n " & IntToDec(CG_Bytes[mtype] * n) & ");\n");
 END copy;
@@ -6719,7 +6769,9 @@ END copy;
 <*NOWARN*>PROCEDURE zero_n(self: T; itype: IType; mtype: MType) =
 (* Mem[s1.A:s0.itype] := 0; pop(2) *)
 BEGIN
-    self.comment("zero_n");
+    IF debug THEN
+      self.comment("zero_n");
+    END;
 
     <* ASSERT FALSE *>
 
@@ -6732,7 +6784,9 @@ PROCEDURE zero(self: T; n: INTEGER; type: MType) =
 (* Mem[s0.A:sz] := 0; pop(1) *)
 VAR s0 := get(self, 0);
 BEGIN
-    self.comment("zero");
+    IF debug THEN
+      self.comment("zero");
+    END;
     pop(self);
     print(self, "memset(" & s0.CText() & ",0," & IntToDec(n) & "*(size_t)" & IntToDec(CG_Bytes[type]) & ");\n");
 END zero;
@@ -6751,7 +6805,9 @@ END loophole;
 
 PROCEDURE abort(self: T; code: RuntimeError) =
 BEGIN
-    self.comment("abort");
+    IF debug THEN
+      self.comment("abort");
+    END;
     reportfault(self, code);
     self.abort_in_call := self.in_proc_call;
 END abort;
@@ -6760,7 +6816,9 @@ PROCEDURE check_nil(self: T; code: RuntimeError) =
 (* IF (s0.A = NIL) THEN abort(code) *)
 VAR t := self.temp_vars[self.op_index];
 BEGIN
-    self.comment("check_nil");
+    IF debug THEN
+      self.comment("check_nil");
+    END;
     self.store(t, 0, CGType.Addr, CGType.Addr);
     self.load(t, 0, CGType.Addr, CGType.Addr);
     print(self, "/*check_nil*/if(!" & get(self).CText() & ")");
@@ -6771,7 +6829,9 @@ PROCEDURE check_lo(self: T; type: IType; READONLY i: Target.Int; code: RuntimeEr
 (* IF (s0.type < i) THEN abort(code) *)
 VAR t := self.temp_vars[self.op_index];
 BEGIN
-    self.comment("check_lo");
+    IF debug THEN
+      self.comment("check_lo");
+    END;
     self.store(t, 0, type, type);
     self.load(t, 0, type, type);
     print(self, "/*check_lo*/if(" & get(self).CText() & "<" & self.TIntLiteral(type, i) & ")");
@@ -6782,7 +6842,9 @@ PROCEDURE check_hi(self: T; type: IType; READONLY i: Target.Int; code: RuntimeEr
 (* IF (i < s0.type) THEN abort(code) *)
 VAR t := self.temp_vars[self.op_index];
 BEGIN
-    self.comment("check_hi");
+    IF debug THEN
+      self.comment("check_hi");
+    END;
     self.store(t, 0, type, type);
     self.load(t, 0, type, type);
     print(self, "/*check_hi*/if(" & self.TIntLiteral(type, i) & "<" & get(self).CText() & ")");
@@ -6795,7 +6857,9 @@ VAR t := self.temp_vars[self.op_index];
     low_expr := CTextToExpr(self.TIntLiteral(type, low));
     high_expr := CTextToExpr(self.TIntLiteral(type, high));
 BEGIN
-    self.comment("check_range");
+    IF debug THEN
+      self.comment("check_range");
+    END;
     self.store(t, 0, type, type);
     self.load(t, 0, type, type);
     print(self, "if(m3_check_range(" & cgtypeToText[type] & ",\n" & get(self).CText() & ",\n " & low_expr.CText() & ",\n " & high_expr.CText() & "))");
@@ -6813,7 +6877,9 @@ VAR s0: Expr_t;
     s1: Expr_t;
     t := self.temp_vars[self.op_index];
 BEGIN
-    self.comment("check_index");
+    IF debug THEN
+      self.comment("check_index");
+    END;
     <* ASSERT type = Target.Integer.cg_type *>
     (* ASSERT (NOT s0.is_const) OR TInt.GE(s0.int_value, TInt.Zero) *)
 
@@ -6835,7 +6901,9 @@ PROCEDURE check_eq(self: T; type: IType; code: RuntimeError) =
 VAR s0 := cast(get(self, 0), type);
     s1 := cast(get(self, 1), type);
 BEGIN
-    self.comment("check_eq");
+    IF debug THEN
+      self.comment("check_eq");
+    END;
     print(self, "/*check_eq*/if(" & s0.CText() & "!=" & s1.CText() & ")");
     reportfault(self, code);
     pop(self, 2);
@@ -6856,7 +6924,9 @@ PROCEDURE add_offset(self: T; offset: INTEGER) =
 (* s0.A := s0.A + offset *)
 VAR s0 := cast(get(self, 0), CGType.Addr);
 BEGIN
-    self.comment("add_offset");
+    IF debug THEN
+      self.comment("add_offset");
+    END;
     pop(self);
     push(self, CGType.Addr, address_plus_offset(s0.CText(), offset));
 END add_offset;
@@ -6866,7 +6936,9 @@ PROCEDURE index_address(self: T; type: IType; size: INTEGER) =
 VAR s0 := cast(get(self, 0), type);
     s1 := cast(get(self, 1), CGType.Addr);
 BEGIN
-    self.comment("index_address");
+    IF debug THEN
+      self.comment("index_address");
+    END;
     IF size = 0 THEN
         pop(self);
         <* ASSERT FALSE *>
@@ -6900,7 +6972,9 @@ PROCEDURE start_call_direct(self: T; p: M3CG.Proc; <*UNUSED*>level: INTEGER; <*U
 (* begin a procedure call to a procedure at static level 'level'. *)
 VAR proc := NARROW(p, Proc_t);
 BEGIN
-    self.comment("start_call_direct");
+    IF debug THEN
+      self.comment("start_call_direct");
+    END;
     start_call_helper(self);
     self.in_call_indirect := FALSE;
     self.proc_being_called := proc;
@@ -6915,7 +6989,9 @@ END start_call_direct;
 PROCEDURE start_call_indirect(self: T; <*UNUSED*>type: CGType; <*UNUSED*>callingConvention: CallingConvention) =
 (* begin a procedure call to a procedure at static level 'level'. *)
 BEGIN
-    self.comment("start_call_indirect");
+    IF debug THEN
+      self.comment("start_call_indirect");
+    END;
     start_call_helper(self);
     self.in_call_indirect := TRUE;
 END start_call_indirect;
@@ -6932,7 +7008,9 @@ PROCEDURE pop_param(self: T; type: MType) =
 (* TODO try to remove cast *)
 VAR s0 := cast(get(self, 0), type);
 BEGIN
-    self.comment("pop_param");
+    IF debug THEN
+      self.comment("pop_param");
+    END;
     pop_parameter_helper(self, s0.CText());
 END pop_param;
 
@@ -6967,7 +7045,9 @@ END pop_struct;
 PROCEDURE pop_static_link(self: T) =
 VAR var := self.temp_vars[self.op_index];
 BEGIN
-    self.comment("pop_static_link");
+    IF debug THEN
+      self.comment("pop_static_link");
+    END;
     <* ASSERT self.in_proc_call *>
     self.static_link := var;
     self.store(var, 0, CGType.Addr, CGType.Addr);
@@ -7064,7 +7144,9 @@ VAR target_level := target.level;
     current_level := current.level;
     static_link := "";
 BEGIN
-    self.comment("get_static_link");
+    IF debug THEN
+      self.comment("get_static_link");
+    END;
     IF target_level = 0 THEN
         RETURN "((ADDRESS)0)";
     END;
@@ -7087,7 +7169,9 @@ PROCEDURE call_direct(self: T; p: M3CG.Proc; type: CGType) =
    returns a value of type type. *)
 VAR proc := NARROW(p, Proc_t);
 BEGIN
-    self.comment("call_direct");
+    IF debug THEN
+      self.comment("call_direct");
+    END;
 
     <* ASSERT self.in_proc_call *>
 
@@ -7104,7 +7188,9 @@ PROCEDURE call_indirect(self: T; type: CGType; <*UNUSED*>callingConvention: Call
 VAR s0 := get(self, 0);
     static_link := self.static_link;
 BEGIN
-    self.comment("call_indirect");
+    IF debug THEN
+      self.comment("call_indirect");
+    END;
 
     pop(self);
 
@@ -7135,7 +7221,9 @@ PROCEDURE load_procedure(self: T; p: M3CG.Proc) =
 (* push; s0.A := ADDR (proc's body) *)
 VAR proc := NARROW(p, Proc_t);
 BEGIN
-    self.comment("load_procedure");
+    IF debug THEN
+      self.comment("load_procedure");
+    END;
     (* UNDONE? typeing? *)
     push(self, CGType.Addr, CTextToExpr(NameT(proc.name)));
 END load_procedure;
@@ -7144,7 +7232,9 @@ PROCEDURE load_static_link(self: T; p: M3CG.Proc) =
 (* push; s0.A := (static link needed to call proc, NIL for top-level procs) *)
 VAR target := NARROW(p, Proc_t);
 BEGIN
-    self.comment("load_static_link");
+    IF debug THEN
+      self.comment("load_static_link");
+    END;
     IF target.level = 0 THEN
         self.load_nil();
         RETURN;
@@ -7199,14 +7289,18 @@ PROCEDURE store_ordered(self: T; ztype: ZType; mtype: MType; <*UNUSED*>order: Me
 VAR s0 := get(self, 0);
     s1 := get(self, 1);
 BEGIN
-    self.comment("store_ordered => store_helper");
+    IF debug THEN
+      self.comment("store_ordered => store_helper");
+    END;
     store_helper(self, s0.CText(), ztype, s1.CText(), 0, mtype);
 END store_ordered;
 
 PROCEDURE load_ordered(self: T; mtype: MType; ztype: ZType; <*UNUSED*>order: MemoryOrder) =
 (* s0.ztype := Mem [s0.A].mtype  *)
 BEGIN
-    self.comment("load_ordered");
+    IF debug THEN
+      self.comment("load_ordered");
+    END;
     load_indirect(self, 0, mtype, ztype);
 END load_ordered;
 
@@ -7216,7 +7310,9 @@ END load_ordered;
    s0.ztype := tmp;
    pop *)
 BEGIN
-    self.comment("exchange");
+    IF debug THEN
+      self.comment("exchange");
+    END;
 END exchange;
 
 <*NOWARN*>PROCEDURE compare_exchange(self: T; mtype: MType; ztype: ZType; result_type: IType;
@@ -7236,7 +7332,9 @@ END exchange;
      still go down the then branch.
 *)
 BEGIN
-    self.comment("compare_exchange");
+    IF debug THEN
+      self.comment("compare_exchange");
+    END;
 END compare_exchange;
 
 PROCEDURE fence(self: T; <*UNUSED*>order: MemoryOrder) =
@@ -7244,7 +7342,9 @@ PROCEDURE fence(self: T; <*UNUSED*>order: MemoryOrder) =
  * x86: Exchanging any memory with any register is a serializing instruction.
  *)
 BEGIN
-    self.comment("fence");
+    IF debug THEN
+      self.comment("fence");
+    END;
     <* ASSERT self.in_proc *>
     <* ASSERT self.current_proc # NIL *>
     print(self, "m3_fence();\n");
@@ -7265,7 +7365,9 @@ Generally we use interlocked compare exchange loop.
 Some operations can be done better though.
 *)
 BEGIN
-    self.comment("fetch_and_op");
+    IF debug THEN
+      self.comment("fetch_and_op");
+    END;
     <* ASSERT CG_Bytes[ztype] >= CG_Bytes[mtype] *>
 END fetch_and_op;
 
