@@ -270,7 +270,7 @@ Unix__fcntl(int fd, INTEGER request, INTEGER m3_arg)
 }
 
 M3_DLL_EXPORT int __cdecl
-Unix__ioctl(int fd, INTEGER request, void* argp)
+Unix__ioctl(int fd, INTEGER request, ADDRESS argp)
 /* ioctl is varargs. See fcntl. */
 {
 /* Errno preservation for success:
