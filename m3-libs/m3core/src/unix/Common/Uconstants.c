@@ -80,9 +80,9 @@ typedef const INTEGER const_INTEGER;
 // This is messy, see CsetjmpC.c.
 extern const_INTEGER m3_jmpbuf_size; // declare to avoid gcc warning
 #if defined(__sun)
-extern const_INTEGER m3_jmpbuf_size = sizeof(sigjmp_buf);
+const_INTEGER m3_jmpbuf_size = sizeof(sigjmp_buf);
 #else
-extern const_INTEGER m3_jmpbuf_size = sizeof(jmp_buf);
+const_INTEGER m3_jmpbuf_size = sizeof(jmp_buf);
 #endif
 
 #ifndef _WIN32
