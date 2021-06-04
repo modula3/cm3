@@ -1005,6 +1005,15 @@ typedef time64_t m3_time_t;
 typedef time_t m3_time_t;
 #endif
 
+// Is this portable?
+STRUCT_TYPEDEF(passwd)
+
+#define Upwd__struct_passwd_star Upwd__struct_passwd_star /* inhibit m3c type */
+typedef passwd* Upwd__struct_passwd_star;
+
+passwd* __cdecl Upwd__getpwuid(m3_uid_t);
+passwd* __cdecl Upwd__getpwnam(char*);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

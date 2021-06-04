@@ -8,6 +8,7 @@ FROM Ctypes IMPORT char_star, int;
 FROM Utypes IMPORT uid_t;
 
 TYPE
+  (* Is this portable? *)
   struct_passwd_star = UNTRACED REF RECORD
     pw_name : char_star;
     unused_pw_passwd : char_star;
