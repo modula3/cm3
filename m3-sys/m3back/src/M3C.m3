@@ -1054,7 +1054,9 @@ BEGIN
             x.comment ("4 " & Fmt.Int(ORD(typename.replace)));
             IF refers_to_type # NIL THEN
               x.comment ("5 " & Fmt.Int(ORD(refers_to_type.text = refers_to_type.hash_text)));
+              (* wait for m3core upate
               x.comment ("6 hash_text:" & RTIO.FmtRef(refers_to_type.hash_text) & " text:" & RTIO.FmtRef(refers_to_type.text));
+              *)
             END;
           END;
         END;
@@ -1763,14 +1765,21 @@ END Type_fmtFields;
 PROCEDURE PointerOrTypename_fmtFields (type: PointerOrTypename_t): TEXT =
 BEGIN
   RETURN Type_fmtFields (type)
-         & " refers_to_type:" & RTIO.FmtRef (type.refers_to_type)
+         & " refers_to_type:"
+         (* wait for m3core upate
+         & RTIO.FmtRef (type.refers_to_type)
+         *)
          & " refers_to_typeid:" & TypeIDToText (type.refers_to_typeid);
 END PointerOrTypename_fmtFields;
 
 PROCEDURE Type_fmtUncached (type: Type_t): TEXT =
 BEGIN
   <* ASSERT type.class # NIL *>
-  RETURN type.class & "{" & RTIO.FmtRef (type) & " " & type.fmtFields () & "}";
+  RETURN type.class & "{"
+  (* wait for m3core upate
+  & RTIO.FmtRef (type)
+  *)
+  & " " & type.fmtFields () & "}";
 END Type_fmtUncached;
 
 PROCEDURE Type_Fmt (type: Type_t): TEXT =
