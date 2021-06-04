@@ -1886,7 +1886,7 @@ CONST IntegerToTypeid = SignExtend32;
 CONST UID_INTEGER = 16_195C2A74; (* INTEGER *)
 CONST UID_LONGINT = 16_05562176; (* LONGINT *)
 VAR UID_WORD := IntegerToTypeid(16_97E237E2); (* CARDINAL *)
-VAR UID_LONGWORD := IntegerToTypeid(16_9CED36E7); (* LONGCARD *)
+(*VAR UID_LONGWORD := IntegerToTypeid(16_9CED36E7); LONGCARD *)
 CONST UID_REEL = 16_48E16572; (* REAL *)
 VAR UID_LREEL := IntegerToTypeid(16_94FE32F6); (* LONGREAL *)
 VAR UID_XREEL := IntegerToTypeid(16_9EE024E3); (* EXTENDED *)
@@ -2909,13 +2909,6 @@ BEGIN
     EVAL DeclareTypes_FlushOnce (self);
     type.base_text := "INT64"; (* more readable output (fewer hashes) *)
     type.text := "INT64"; (* more readable output (fewer hashes) *)
-
-    type := NEW (Integer_t, class := "Integer_t", self := self, state := Type_State.CanBeDefined, cgtype := Target.Word64.cg_type, typeid := UID_LONGWORD);
-    self.Type_Init (type);
-    EVAL declare_typename_no_replace (self, type.typeid, M3ID.Add ("LONGCARD")); (* TODO remove this *)
-    EVAL DeclareTypes_FlushOnce (self);
-    type.base_text := "UINT64"; (* more readable output (fewer hashes) *)
-    type.text := "UINT64"; (* more readable output (fewer hashes) *)
 
     type := NEW (Float_t, class := "Float_t", self := self, state := Type_State.CanBeDefined, cgtype := Target.Real.cg_type, typeid := UID_REEL);
     self.Type_Init (type);
