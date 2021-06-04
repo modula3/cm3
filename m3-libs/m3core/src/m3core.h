@@ -846,10 +846,6 @@ int
 __cdecl
 ThreadInternal__StackGrowsDown (void);
 
-void
-__cdecl
-Process__RegisterExitor(void (__cdecl*)(void));
-
 // GET_PC returns approximately size_t.
 // Broadly speaking, try to keep most platform specific code here.
 

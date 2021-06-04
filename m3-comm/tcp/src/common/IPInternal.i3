@@ -31,7 +31,10 @@ PROCEDURE InterpretError(err: int) RAISES {IP.Error};
 (* The rest is C code so Modula3 does not interact directly with /usr/include. *)
 
 <*EXTERNAL "IPInternal__Init"*>
-PROCEDURE Init();
+PROCEDURE Init(): BOOLEAN; (* true for success and register exiter *)
+
+<*EXTERNAL "IPInternal__Exitor"*>
+PROCEDURE Exitor();
 
 (* return hostent=NIL for error to mimic old patterns *)
 <*EXTERNAL "IPInternal__GetHostByName"*>
