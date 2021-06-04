@@ -1,5 +1,6 @@
 c_source ("UtimeC")
 c_source ("UnixC")
+interface("UnixC")
 c_source ("UnixLink")
 Interface("Uexec")
 c_source("Uexec")

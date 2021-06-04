@@ -122,7 +122,6 @@ M3WRAP3(int, execve, const char*, char**, char**)
 M3WRAP1(unsigned, sleep, unsigned)
 M3WRAP3(m3_off_t, lseek, int, m3_off_t, int)
 M3WRAP2(int, mkdir, const char*, m3_mode_t)
-M3WRAP1(int, pipe, int*)
 M3WRAP2(int, gethostname, char*, size_t)
 M3WRAP2(char*, getcwd, char*, size_t)
 
@@ -188,7 +187,7 @@ Unix__mkdir(const char* path, m3_mode_t mode)
 }
 
 M3_DLL_EXPORT int __cdecl
-Unix__pipe(int* files)
+UnixC__pipe (int* files)
 {
     return _pipe(files, 0, _O_BINARY);
 }
@@ -287,6 +286,25 @@ Unix__ioctl(int fd, INTEGER request, void* argp)
     return r;
 }
 
+#endif
+
+#ifndef _WIN32
+#undef M3MODULE /* Support concatenating multiple .c files. */
+#define M3MODULE UnixC
+
+#if 0 // This would be nice, but structural type equivalence gets
+      // in the way. There are other equivalent types
+      // and the names clash.
+int __cdecl Unix__pipe (Unix__PipeArray* files)
+{
+    return pipe (files->files);
+}
+
+#else
+
+M3WRAP1(int, pipe, int*)
+
+#endif
 #endif
 
 #ifdef __cplusplus

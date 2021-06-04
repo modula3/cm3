@@ -1019,6 +1019,24 @@ passwd* __cdecl Upwd__getpwnam(char*);
 
 m3_pid_t __cdecl Uprocess__getpid (void);
 
+#if 0 // This would be nice, but structural type equivalence gets
+      // in the way. There are other equivalent types
+      // and the names clash.
+#define Unix__PipeArray Unix__PipeArray /* inhibit m3c type */
+STRUCT_TYPEDEF(Unix__PipeArray)
+struct Unix__PipeArray
+{
+    int files [2];
+};
+
+int __cdecl Unix__pipe (Unix__PipeArray* files);
+
+#else
+
+int __cdecl UnixC__pipe (int* files);
+
+#endif
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

@@ -108,7 +108,7 @@ PROCEDURE open (name: const_char_star; flags: int; mode: mode_t): int;
 CONST
   readEnd = 0;
   writeEnd = 1;
-<*EXTERNAL "Unix__pipe"*>PROCEDURE pipe (VAR fildes: ARRAY [0..1] OF int): int;
+PROCEDURE pipe (VAR fildes: ARRAY [0..1] OF int): int;
 
 <*EXTERNAL "Unix__readlink"*>
 PROCEDURE readlink (path: const_char_star; buf: ADDRESS; bufsize: INTEGER): INTEGER;
