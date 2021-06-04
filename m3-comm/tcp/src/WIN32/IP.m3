@@ -103,5 +103,7 @@ PROCEDURE GetHostAddr(): Address =
   END GetHostAddr;
 
 BEGIN
-  IPInternal.Init();
+  IF IPInternal.Init() THEN
+    Process.RegisterExitor(IPInternal.Exitor);
+  END;
 END IP.
