@@ -57,7 +57,7 @@ void
 __cdecl
 IPInternal__CopyStoT(const char* name, TEXT* text);
 
-void
+BOOLEAN
 __cdecl
 IPInternal__Init(void);
 
