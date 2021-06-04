@@ -598,7 +598,7 @@ PROCEDURE Declare (t: T): BOOLEAN =
         RTIO.Flush ();
       END;
 
-      t.cg_var := CG.Import_global (externM3ID, size, align, mtype, 0(*no mangling*), typename);
+      t.cg_var := CG.Import_global (externM3ID, size, align, mtype, typeUID, typename);
       t.cg_align := align;
 
     ELSIF (t.imported) THEN
