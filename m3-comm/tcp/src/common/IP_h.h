@@ -4,16 +4,16 @@
 extern "C" {
 #endif
 
-STRUCT_AND_TYPEDEF(addrinfo)
-STRUCT_AND_TYPEDEF(hostent)
-STRUCT_AND_TYPEDEF(sockaddr)
-STRUCT_AND_TYPEDEF(sockaddr_storage)
-STRUCT_AND_TYPEDEF(sockaddr_un)
-STRUCT_AND_TYPEDEF(sockaddr_in)
-STRUCT_AND_TYPEDEF(sockaddr_in6)
-STRUCT_AND_TYPEDEF(in_addr)
-STRUCT_AND_TYPEDEF(in6_addr)
-STRUCT_AND_TYPEDEF(IP__Endpoint)
+STRUCT_TYPEDEF(addrinfo)
+STRUCT_TYPEDEF(hostent)
+STRUCT_TYPEDEF(sockaddr)
+STRUCT_TYPEDEF(sockaddr_storage)
+STRUCT_TYPEDEF(sockaddr_un)
+STRUCT_TYPEDEF(sockaddr_in)
+STRUCT_TYPEDEF(sockaddr_in6)
+STRUCT_TYPEDEF(in_addr)
+STRUCT_TYPEDEF(in6_addr)
+STRUCT_TYPEDEF(IP__Endpoint)
 
 /* functions */
 #define GetAddress          IPInternal__GetAddress
