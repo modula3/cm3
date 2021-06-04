@@ -61,6 +61,7 @@ T = M3CG_DoNothing.T OBJECT
 
         no_return := FALSE; (* are there any no_return functions -- i.e. #include <sys/cdefs.h on Darwin for __dead2 *)
 
+        const_INTEGER := M3ID.NoID; (* special case *)
         char := M3ID.NoID;  (* "CHAR" is problematic with windows.h *)
         uchar := M3ID.NoID; (* "UCHAR" replaces "CHAR" *)
         typenames:REF ARRAY OF Typename_t := NIL;
@@ -2782,6 +2783,7 @@ VAR self := NEW (T);
 BEGIN
     (* The CHAR typename exists to satisfy DeclareTypes dependency walk, but should not be
      * actually typedefed. It conflicts with windows.h. UCHAR replaces it right after this. *)
+    self.const_INTEGER := M3ID.Add("const_INTEGER"); (* special case *)
     self.char := M3ID.Add("CHAR");
     self.uchar := M3ID.Add("UCHAR");
     self.typeidToType := NEW(SortedIntRefTbl.Default).init(); (* FUTURE? *)
@@ -3910,6 +3912,9 @@ PROCEDURE import_global (declareTypes: DeclareTypes_t; name: Name; byte_size: By
 (* In this earlier pass, only produce the Typename_t, to be resolved before later use. *)
 VAR self := declareTypes.self;
 BEGIN
+  IF typename # 0 AND typename = self.const_INTEGER AND typeid = 0 THEN
+    typeid := UID_INTEGER; (* hack *)
+  END;
   IF debug_verbose THEN
     self.comment ("import_global name:" & TextOrNIL (NameT (name))
                         & " byte_size:" & IntToDec (byte_size)

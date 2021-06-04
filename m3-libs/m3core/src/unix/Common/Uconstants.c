@@ -74,11 +74,15 @@ typedef union {
 // If it is less or equal to M3_UERROR_MAX, this typedef is illegal, due to zero- or negative-sized array.
 typedef int M3UerrorCheckMax[M3_UERROR_MAX - sizeof(M3UerrorCheckMax_t)];
 
+#define const_INTEGER const_INTEGER /* inhibit m3c type that lacks const */
+typedef const INTEGER const_INTEGER;
+
 // This is messy, see CsetjmpC.c.
+extern const_INTEGER m3_jmpbuf_size; // declare to avoid gcc warning
 #if defined(__sun)
-EXTERN_CONST INTEGER m3_jmpbuf_size = sizeof(sigjmp_buf);
+extern const_INTEGER m3_jmpbuf_size = sizeof(sigjmp_buf);
 #else
-EXTERN_CONST INTEGER m3_jmpbuf_size = sizeof(jmp_buf);
+extern const_INTEGER m3_jmpbuf_size = sizeof(jmp_buf);
 #endif
 
 #ifndef _WIN32
