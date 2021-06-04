@@ -11,7 +11,7 @@
 
 UNSAFE MODULE IP;
 
-IMPORT IPError, M3toC, IPInternal, Ctypes;
+IMPORT IPError, M3toC, IPInternal, Ctypes, Process;
 TYPE int = Ctypes.int;
 
 (************
