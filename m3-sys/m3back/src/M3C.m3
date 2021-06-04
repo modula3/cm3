@@ -12,10 +12,16 @@ FROM M3CG IMPORT CompareOp, ConvertOp, RuntimeError, MemoryOrder, AtomicOp;
 FROM Target IMPORT CGType;
 FROM M3CG_Ops IMPORT ErrorHandler;
 IMPORT M3CG_MultiPass, M3CG_DoNothing, M3CG_Binary, RTIO;
-IMPORT CharSeq, CharSeqRep;
+IMPORT CharSeq, CharSeqRep, RTParams;
 FROM M3CC IMPORT IntToDec, IntToHex, UIntToHex, INT32;
 IMPORT TextSetDef;
 CONST NameT = M3ID.ToText;
+
+VAR debug := FALSE;               (* command line @M3m3c-debug *)
+VAR debug_verbose := FALSE;       (* command line @M3m3c-debug-verbose *)
+VAR debug_comment := FALSE;       (* command line @M3m3c-debug-comment or the rest *)
+VAR debug_comment_stdio := FALSE; (* command line @M3m3c-debug-comment-stdio *)
+VAR debug_types := FALSE;         (* command line @M3m3c-debug-types *)
 
 (* 
 Something like:
@@ -68,7 +74,6 @@ T = M3CG_DoNothing.T OBJECT
         anonymousCounter := -1;
         unique := "L_"; (* changed later *)
         c      : Wr.T := NIL;
-        debug := 2; (* 1-5 >4 is to stdio *)
         stack  : RefSeq.T := NIL;
         params : TextSeq.T := NIL;
         op_index := 0;
@@ -231,13 +236,6 @@ T = M3CG_DoNothing.T OBJECT
         fence := fence;
         fetch_and_op := fetch_and_op;
     END;
-
-(*---------------------------------------------------------------------------*)
-
-PROCEDURE DebugVerbose(self:T): BOOLEAN =
-BEGIN
-    RETURN self.debug > 1;
-END DebugVerbose;
 
 (*---------------------------------------------------------------------------*)
 
@@ -1032,11 +1030,15 @@ END packed_isRecord;
 PROCEDURE ResolveType(self: T; typeid: INTEGER; VAR type: Type_t): BOOLEAN =
 BEGIN
     IF type # NIL THEN
-        (* self.comment("ResolveType1 TRUE typeid:" & TypeIDToText(typeid)); *)
+        IF debug_types THEN
+          self.comment("ResolveType1 TRUE typeid:" & TypeIDToText(typeid));
+        END;
         RETURN TRUE;
     END;
     type := TypeidToType_Get(self, typeid);
-    (* self.comment("ResolveType2 " & BoolToText[type # NIL] & " typeid:" & TypeIDToText(typeid)); *)
+    IF debug_types THEN
+      self.comment("ResolveType2 " & BoolToText[type # NIL] & " typeid:" & TypeIDToText(typeid));
+    END;
     RETURN type # NIL;
 END ResolveType;
 
@@ -2768,9 +2770,9 @@ BEGIN
     file := TextUtils.SubstChar(file, '\\', '/');
     file := Target.CleanupSourcePath(file);
 
-    IF DebugVerbose(self) THEN
+    IF debug_verbose THEN
         self.comment("set_source_file file:", file);
-    ELSE
+    ELSIF debug THEN
         self.comment("set_source_file");
     END;
     self.file := file;
@@ -2781,9 +2783,9 @@ PROCEDURE set_source_line(self: T; line: INTEGER) =
 (* Sets the current source line number. Subsequent statements
 and expressions are associated with this source location. *)
 BEGIN
-    IF self.debug > 3 THEN
+    IF debug_verbose THEN
         self.comment("set_source_line ", IntToDec(line));
-    ELSIF self.debug > 2 THEN
+    ELSIF debug THEN
         self.comment("set_source_line");
     END;
     self.line := line;
@@ -2796,9 +2798,9 @@ END set_source_line;
 VAR nameText := NameT(name);
     self := declareType.self;
 BEGIN
-  IF DebugVerbose(self) THEN
+  IF debug_verbose THEN
     self.comment("declare_typename typeid:", TypeIDToText(typeid), " name:" & TextOrNIL(nameText));
-  ELSE
+  ELSIF debug THEN
     self.comment("declare_typename");
   END;
 
@@ -2822,12 +2824,12 @@ END TypeIDToText;
 PROCEDURE declare_array(self: DeclareTypes_t; typeid, index_typeid, element_typeid: TypeUID; bit_size: BitSize; <*UNUSED*>element_typename: Name) =
 VAR x := self.self;
 BEGIN
-    IF DebugVerbose(x) THEN
+    IF debug_verbose THEN
         x.comment("declare_array typeid:" & TypeIDToText(typeid)
             & " index_typeid:" & TypeIDToText(index_typeid)
             & " element_typeid:" & TypeIDToText(element_typeid)
             & " bit_size:" & IntToDec(bit_size));
-    ELSE
+    ELSIF debug THEN
         x.comment("declare_array");
     END;
 
@@ -2837,11 +2839,11 @@ BEGIN
 PROCEDURE declare_open_array(self: DeclareTypes_t; typeid, element_typeid: TypeUID; bit_size: BitSize; <*UNUSED*>element_typename: Name) =
 VAR x := self.self;
 BEGIN
-    IF TRUE OR DebugVerbose(x) THEN
+    IF debug_verbose THEN
         x.comment("declare_open_array typeid:" & TypeIDToText(typeid)
             & " element_typeid:" & TypeIDToText(element_typeid)
             & " bit_size:" & IntToDec(bit_size));
-    ELSE
+    ELSIF debug THEN
         x.comment("declare_open_array");
     END;
     <* ASSERT bit_size MOD 32 = 0 *>
@@ -2879,11 +2881,11 @@ PROCEDURE declare_enum(self: DeclareTypes_t; typeid: TypeUID; element_count: INT
 VAR x := self.self;
     enum: Enum_t := NIL;
 BEGIN
-    IF DebugVerbose(x) THEN
+    IF debug_verbose THEN
         x.comment("declare_enum typeid:" & TypeIDToText(typeid)
             & " bit_size:" & IntToDec(bit_size)
             & " element_count:" & IntToDec(element_count));
-    ELSE
+    ELSIF debug THEN
         x.comment("declare_enum");
     END;
     Assert (x, bit_size = 8 OR bit_size = 16 OR bit_size = 32, "bit_size = 8 OR bit_size = 16 OR bit_size = 32");
@@ -2910,9 +2912,9 @@ VAR enum_value := self.enum_value;
     enum_element_count := self.enum_element_count;
     x := self.self;
 BEGIN
-    IF DebugVerbose(x) THEN
+    IF debug_verbose THEN
         x.comment("declare_enum_elt name:", NameT(name), "=", IntToDec(self.enum_value));
-    ELSE
+    ELSIF debug THEN
         x.comment("declare_enum_elt");
     END;
 
@@ -2942,11 +2944,11 @@ BEGIN
 PROCEDURE declare_packed(self: DeclareTypes_t; typeid: TypeUID; bit_size: BitSize; base_typeid: TypeUID; <*UNUSED*>base_typename: Name) =
 VAR x := self.self;
 BEGIN
-    IF DebugVerbose(x) THEN
+    IF debug_verbose THEN
         x.comment("declare_packed typeid:" & TypeIDToText(typeid)
             & " bit_size:" & IntToDec(bit_size)
             & " base:" & TypeIDToText(base_typeid));
-    ELSE
+    ELSIF debug THEN
         x.comment("declare_packed");
     END;
     x.Type_Init(NEW(Packed_t,
@@ -3038,11 +3040,11 @@ PROCEDURE declare_record(self: DeclareTypes_t; typeid: TypeUID; bit_size: BitSiz
 VAR record: Record_t := NIL;
     x := self.self;
 BEGIN
-    IF DebugVerbose(x) THEN
+    IF debug_verbose THEN
         x.comment("declare_record typeid:" & TypeIDToText(typeid)
             & " bit_size:" & IntToDec(bit_size)
             & " field_count:" & IntToDec(field_count));
-    ELSE
+    ELSIF debug THEN
         x.comment("declare_record");
     END;
     IF typeid = -1 THEN
@@ -3069,12 +3071,12 @@ VAR field: Field_t := NIL;
     previous_field := self.previous_field;
     x := self.self;
 BEGIN
-    IF DebugVerbose(x) THEN
+    IF debug_verbose THEN
         x.comment("declare_field " & NameT(name)
             & " bit_size:" & IntToDec(bit_size)
             & " bit_offset:" & IntToDec(bit_offset)
             & " typeid:" & TypeIDToText(typeid));
-    ELSE
+    ELSIF debug THEN
         x.comment("declare_field");
     END;
     IF self.field_index < 0 OR self.field_index >= self.field_count OR self.record = NIL THEN
@@ -3110,11 +3112,11 @@ VAR x := self.self;
                                                   Target.Word32,
                                                   Target.Word64 };
 BEGIN
-    IF DebugVerbose(x) THEN
+    IF debug_verbose THEN
         x.comment("declare_set typeid:" & TypeIDToText(typeid)
             & " domain_type:" & TypeIDToText(domain_type)
             & " bit_size:" & IntToDec(bit_size));
-    ELSE
+    ELSIF debug THEN
         x.comment("declare_set");
     END;
 
@@ -3158,13 +3160,13 @@ END SubrangeCGType;
 PROCEDURE declare_subrange(self: DeclareTypes_t; typeid, domain_typeid: TypeUID; READONLY min, max: Target.Int; bit_size: BitSize; <*UNUSED*>domain_typename: Name) =
 VAR x := self.self;
 BEGIN
-    IF DebugVerbose(x) THEN
+    IF debug_verbose THEN
         x.comment("declare_subrange typeid:" & TypeIDToText(typeid)
             & " domain_type:" & TypeIDToText(domain_typeid)
             & " min:" & TInt.ToText(min)
             & " max:" & TInt.ToText(max)
             & " bit_size:" & IntToDec(bit_size));
-    ELSE
+    ELSIF debug THEN
         x.comment("declare_subrange");
     END;
     <* ASSERT bit_size = 8 OR bit_size = 16 OR bit_size = 32 OR bit_size = 64 *>
@@ -3210,13 +3212,13 @@ PROCEDURE declare_pointer(self: DeclareTypes_t; typeid, target: TypeUID; brand: 
 VAR x := self.self;
     target_typename_text := NameT(target_typename);
 BEGIN
-    IF typeid = target OR DebugVerbose(x) THEN
+    IF typeid = target OR debug_verbose THEN
         x.comment("declare_pointer typeid:" & TypeIDToText(typeid)
             & " target:" & TypeIDToText(target)
             & " brand:" & TextOrNIL(brand)
             & " traced:" & BoolToText[traced]
             & " target_typename:" & TextOrNil(target_typename_text));
-    ELSE
+    ELSIF debug THEN
         x.comment("declare_pointer");
     END;
     declare_pointer_no_trace(x, typeid, target, target_typename_text, brand, traced);
@@ -3226,11 +3228,11 @@ PROCEDURE declare_indirect(self: DeclareTypes_t; typeid, target: TypeUID; target
 VAR x := self.self;
     target_typename_text := NameT(target_typename);
 BEGIN
-    IF typeid = target OR DebugVerbose(x) THEN
+    IF typeid = target OR debug_verbose THEN
         x.comment("declare_indirect typeid:", TypeIDToText(typeid),
             " target:" & TypeIDToText(target),
             " target_typename:" & TextOrNil(NameT(target_typename)));
-    ELSE
+    ELSIF debug THEN
         x.comment("declare_indirect");
     END;
     declare_pointer_no_trace(x, typeid, target, target_typename_text);
@@ -3248,14 +3250,14 @@ END CallingConventionToText;
 PROCEDURE declare_proctype (self: DeclareTypes_t; typeid: TypeUID; param_count: INTEGER; result: TypeUID; raise_count: INTEGER; callingConvention: CallingConvention; result_typename: Name) =
 VAR x := self.self;
 BEGIN
-  IF DebugVerbose (x) THEN
+  IF debug_verbose THEN
     x.comment ("declare_proctype typeid:" & TypeIDToText (typeid)
       & " param_count:" & IntToDec (param_count)
       & " result:" & TypeIDToText (result)
       & " raise_count:" & IntToDec (raise_count)
       & " callingConvention:" & CallingConventionToText (callingConvention)
       & " result_typename:" & TextOrNil (NameT (result_typename)));
-  ELSE
+  ELSIF debug THEN
     x.comment("declare_proctype");
   END;
   self.procType := NEW (ProcType_t,
@@ -3275,11 +3277,11 @@ PROCEDURE declare_formal (self: DeclareTypes_t; name: Name; typeid: TypeUID; typ
 VAR x := self.self;
     procType := self.procType;
 BEGIN
-  IF DebugVerbose (x) THEN
+  IF debug_verbose THEN
     x.comment ("declare_formal name:", NameT (name),
                " typeid:" & TypeIDToText (typeid),
                " typename:" & TextOrNil (NameT (typename)));
-  ELSE
+  ELSIF debug THEN
     x.comment ("declare_formal");
   END;
 
@@ -3296,9 +3298,9 @@ END declare_formal;
 PROCEDURE declare_raises(self: DeclareTypes_t; name: Name) =
 VAR x := self.self;
 BEGIN
-    IF DebugVerbose(x) THEN
+    IF debug_verbose THEN
         x.comment("declare_raises name:", NameT(name));
-    ELSE
+    ELSIF debug THEN
         x.comment("declare_raises");
     END
     (* SuppressLineDirective(self, -1, "declare_raises"); *)
@@ -3311,7 +3313,7 @@ PROCEDURE declare_object(self: DeclareTypes_t; typeid, super: TypeUID; brand: TE
 VAR record: Record_t := NIL;
     x := self.self;
 BEGIN
-    IF DebugVerbose(x) THEN
+    IF debug_verbose THEN
         x.comment("declare_object typeid:" & TypeIDToText(typeid)
             & " super:" & TypeIDToText(super)
             & " brand:" & TextOrNIL(brand)
@@ -3319,7 +3321,7 @@ BEGIN
             & " field_count:" & IntToDec(field_count)
             & " method_count:" & IntToDec(method_count)
             & " field_size:" & IntToDec(field_size));
-    ELSE
+    ELSIF debug THEN
         x.comment("declare_object");
     END;
     (* SuppressLineDirective(self, field_count + method_count, "declare_object field_count + method_count"); *)
@@ -3350,10 +3352,10 @@ END declare_object;
 PROCEDURE declare_method(self: DeclareTypes_t; name: Name; signature: TypeUID) =
 VAR x := self.self;
 BEGIN
-    IF DebugVerbose(x) THEN
+    IF debug_verbose THEN
         x.comment("declare_method name:", NameT(name),
             " signature:", TypeIDToText(signature));
-    ELSE
+    ELSIF debug THEN
         x.comment("declare_method");
     END;
     SuppressLineDirective(x, -1, "declare_method");
@@ -3362,10 +3364,10 @@ END declare_method;
 PROCEDURE declare_opaque(self: DeclareTypes_t; typeid, super: TypeUID) =
 VAR x := self.self;
 BEGIN
-    IF DebugVerbose(x) THEN
+    IF debug_verbose THEN
         x.comment("declare_opaque typeid:", TypeIDToText(typeid),
             " super:", TypeIDToText(super));
-    ELSE
+    ELSIF debug THEN
         x.comment("declare_opaque");
     END;
     (* TODO Stronger types *)
@@ -3379,10 +3381,10 @@ BEGIN
      * damaging ability to diff output. So do not output the comment.
      * This needs further attention.
      *
-     * IF DebugVerbose(x) THEN
+     * IF debug_verbose THEN
      *  x.comment("reveal_opaque lhs:", TypeIDToText(lhs),
      *      " rhs:" & TypeIDToText(rhs));
-     * ELSE
+     * ELSIF debug THEN
      *  x.comment("reveal_opaque");
      * END;
      *)
@@ -3391,13 +3393,13 @@ END reveal_opaque;
 PROCEDURE declare_exception(self: DeclareTypes_t; name: Name; arg_type: TypeUID; raise_proc: BOOLEAN; base: M3CG.Var; offset: INTEGER) =
 VAR x := self.self;
 BEGIN
-    IF DebugVerbose(x) THEN
+    IF debug_verbose THEN
         x.comment("declare_exception name:" & NameT(name)
             & " arg_type:" & TypeIDToText(arg_type)
             & " raise_proc:" & BoolToText[raise_proc]
             & " base:" & VarNameT(base)
             & " offset:" & IntToDec(offset));
-    ELSE
+    ELSIF debug THEN
         x.comment("declare_exception");
     END;
 END declare_exception;
@@ -3437,9 +3439,9 @@ END include_setjmp_h;
 PROCEDURE set_runtime_proc(multipass: Multipass_t; name: Name; <*UNUSED*>p: M3CG.Proc) =
 VAR self := multipass.self;
 BEGIN
-    IF DebugVerbose(self) THEN
+    IF debug_verbose THEN
         self.comment("set_runtime_proc name:", NameT(name));
-    ELSE
+    ELSIF debug THEN
         self.comment("set_runtime_proc");
     END
 END set_runtime_proc;
@@ -3518,13 +3520,13 @@ PROCEDURE bind_segment(
     inited: BOOLEAN) =
 VAR var := NARROW(v, Var_t);
 BEGIN
-    IF DebugVerbose(self) THEN
+    IF debug_verbose THEN
         self.comment("bind_segment var:" & Var_Name(var)
             & " byte_size:" & IntToDec(byte_size)
             & " cgtype:" & cgtypeToText[cgtype]
             & " exported:" & BoolToText[exported]
             & " inited:" & BoolToText[inited]);
-    ELSE
+    ELSIF debug THEN
         self.comment("bind_segment");
     END;
 
@@ -3555,14 +3557,14 @@ PROCEDURE declare_global(
     inited: BOOLEAN;
     typename: Name): M3CG.Var =
 BEGIN
-    IF DebugVerbose(self) THEN
+    IF debug_verbose THEN
         self.comment("declare_global name:" & TextOrNIL(NameT(name))
             & " byte_size:" & IntToDec(byte_size)
             & " cgtype:" & cgtypeToText[cgtype]
             & " typeid:" & TypeIDToText(typeid)
             & " exported:" & BoolToText[exported]
             & " inited:" & BoolToText[inited]);
-    ELSE
+    ELSIF debug THEN
         self.comment("declare_global");
     END;
     RETURN DeclareGlobal(self, name, byte_size, alignment, cgtype, typeid, exported, inited, FALSE, typename);
@@ -3593,14 +3595,14 @@ PROCEDURE declare_constant(
     inited: BOOLEAN;
     typename: Name): M3CG.Var =
 BEGIN
-    IF DebugVerbose(self) THEN
+    IF debug_verbose THEN
         self.comment("declare_global name:" & NameT(name)
             & " byte_size:" & IntToDec(byte_size)
             & " cgtype:" & cgtypeToText[cgtype]
             & " typeid:" & TypeIDToText(typeid)
             & " exported:" & BoolToText[exported]
             & " inited:" & BoolToText[inited]);
-    ELSE
+    ELSIF debug THEN
         self.comment("declare_constant");
     END;
     RETURN DeclareGlobal(self, name, byte_size, alignment, cgtype, typeid, exported, inited, TRUE, typename);
@@ -4752,13 +4754,13 @@ VAR var := NEW(Var_t,
         proc := self.current_proc).Init();
     type: Type_t := NIL;
 BEGIN
-    IF DebugVerbose(self) THEN
+    IF debug_verbose THEN
         self.comment("declare_local name:" & NameT(var.name)
             & " typeid:" & TypeIDToText(typeid)
             & " cgtype:" & cgtypeToText[cgtype]
             & " up_level:" & BoolToText[up_level]
             & " byte_size:" & IntToDec(byte_size));
-    ELSE
+    ELSIF debug THEN
         self.comment("declare_local");
     END;
 
@@ -4889,14 +4891,14 @@ VAR function := self.param_proc;
     var: Var_t := NIL;
     typename_text := NameT(typename);
 BEGIN
-    IF DebugVerbose(self) THEN
+    IF debug_verbose THEN
         self.comment("internal_declare_param name:" & TextOrNIL(NameT(name))
             & " cgtype:" & cgtypeToText[cgtype]
             & " typeid:" & TypeIDToText(typeid)
             & " up_level:" & BoolToText[up_level]
             & " type_text:" & TextOrNIL(type_text)
             & " typename:" & TextOrNil(typename_text));
-    ELSE
+    ELSIF debug THEN
         self.comment("internal_declare_param");
     END;
 
@@ -4958,10 +4960,10 @@ internal_declare_temp(
     alignment: Alignment;
     type: CGType): Var_t =
 BEGIN
-    IF DebugVerbose(self) THEN
+    IF debug_verbose THEN
         self.comment("declare_temp byte_size:", IntToDec(byte_size),
             " cgtype:", cgtypeToText[type]);
-    ELSE
+    ELSIF debug THEN
         self.comment("declare_temp");
     END;
     RETURN declare_local(self, 0, byte_size, alignment, type, -1, FALSE);
@@ -5086,10 +5088,10 @@ END end_init_helper;
 PROCEDURE init_helper(self: T; offset: ByteOffset; type: CGType) =
 BEGIN
 (*
-    IF DebugVerbose(self) THEN
+    IF debug_verbose THEN
       self.comment("init_helper offset:" & IntToDec(offset) & " type:"
         & cgtypeToText[type]);
-    ELSE
+    ELSIF debug THEN
       self.comment("init_helper");
     END;
 *)
@@ -5110,10 +5112,10 @@ PROCEDURE init_int(
     READONLY value: Target.Int;
     type: CGType) =
 BEGIN
-    IF DebugVerbose(self) THEN
+    IF debug_verbose THEN
       self.comment("init_int offset:" & IntToDec(offset)
         & " value:" & TInt.ToText(value) & " type:" & cgtypeToText[type]);
-    ELSE
+    ELSIF debug THEN
       self.comment("init_int");
     END;
     init_helper(self, offset, type);
@@ -5133,9 +5135,9 @@ END Segments_init_int;
 PROCEDURE init_proc(self: T; offset: ByteOffset; p: M3CG.Proc) =
 VAR proc := NARROW(p, Proc_t);
 BEGIN
-    IF DebugVerbose(self) THEN
+    IF debug_verbose THEN
       self.comment("init_proc offset:" & IntToDec(offset));
-    ELSE
+    ELSIF debug THEN
       self.comment("init_proc");
     END;
     init_helper(self, offset, CGType.Addr); (* FUTURE: better typing *)
@@ -5182,9 +5184,9 @@ PROCEDURE init_var(self: T; offset: ByteOffset; v: M3CG.Var; bias: ByteOffset) =
 VAR var := NARROW(v, Var_t);
     bias_text := "";
 BEGIN
-    IF DebugVerbose(self) THEN
+    IF debug_verbose THEN
       self.comment("init_var offset:" & IntToDec(offset));
-    ELSE
+    ELSIF debug THEN
       self.comment("init_var");
     END;
     init_helper(self, offset, CGType.Addr); (* FUTURE: better typing *)
@@ -5244,11 +5246,11 @@ BEGIN
       END;
     END;
 
-    IF DebugVerbose(self) THEN
+    IF debug_verbose THEN
       self.comment("init_chars offset:" & IntToDec(offset) &
         " length:" & IntToDec(length) &
         " value:" &  Text.FromChars(SUBARRAY(debug_initializer.elem^, 0, debug_initializer.sz)));
-    ELSE
+    ELSIF debug THEN
       self.comment("init_chars");
     END;
 
@@ -5366,10 +5368,10 @@ END FloatLiteral;
 PROCEDURE init_float(self: T; offset: ByteOffset; READONLY float: Target.Float) =
 VAR cg_type := TargetMap.Float_types[TFloat.Prec(float)].cg_type;
 BEGIN
-    IF DebugVerbose(self) THEN
+    IF debug_verbose THEN
       self.comment("init_float offset:" & IntToDec(offset) & " type:"
         & cgtypeToText[cg_type]);
-    ELSE
+    ELSIF debug THEN
       self.comment("init_float");
     END;
     init_helper(self, offset, cg_type);
@@ -5395,13 +5397,13 @@ VAR return_type_text := NameT(return_typename);
                 return_type_text := TypeText (self, return_type, return_type_text),
                 callingConvention := callingConvention).Init(self);
 BEGIN
-    IF DebugVerbose(self) THEN
+    IF debug_verbose THEN
         self.comment("import_procedure name:" & NameT(name)
             & " parameter_count:" & IntToDec(parameter_count)
             & " return_type:" & cgtypeToText[return_type]
             & " return_typeid:" & TypeIDToText(return_typeid)
             & " return_typename:" & TextOrNil(return_type_text));
-    ELSE
+    ELSIF debug THEN
         self.comment("import_procedure");
     END;
     IF name = self.RTHooks_ReportFault_id THEN
@@ -5465,7 +5467,7 @@ VAR return_type_text := NameT(return_typename);
                 callingConvention := callingConvention, exported := exported,
                 parent := parent).Init(self);
 BEGIN
-    IF DebugVerbose(self) THEN
+    IF debug_verbose THEN
         self.comment("declare_procedure name:" & NameT(name)
             & " parameter_count:" & IntToDec(parameter_count)
             & " return_type:" & cgtypeToText[return_type]
@@ -5474,7 +5476,7 @@ BEGIN
             & " parent:" & ProcNameOrNIL(parent)
             & " return_typeid:" & TypeIDToText(return_typeid)
             & " return_typename:" & TextOrNil(return_type_text));
-    ELSE
+    ELSIF debug THEN
         self.comment("declare_procedure");
     END;
     IF name = self.RTHooks_ReportFault_id THEN
@@ -5527,9 +5529,9 @@ END Locals_end_block;
 PROCEDURE internal_begin_procedure(self: T; p: M3CG.Proc) =
 VAR proc := NARROW(p, Proc_t);
 BEGIN
-    IF DebugVerbose(self) THEN
+    IF debug_verbose THEN
         self.comment("internal_begin_procedure:", NameT(proc.name));
-    ELSE
+    ELSIF debug THEN
         self.comment("internal_begin_procedure");
     END;
     IF self.in_proc THEN (* TODO don't require this *)
@@ -5561,9 +5563,9 @@ VAR proc := NARROW(p, Proc_t);
     params := proc.params;
     struct := "";
 BEGIN
-    IF DebugVerbose(self) THEN
+    IF debug_verbose THEN
         self.comment("begin_procedure:", NameT(proc.name));
-    ELSE
+    ELSIF debug THEN
         self.comment("begin_procedure");
     END;
 
@@ -5756,9 +5758,9 @@ PROCEDURE if_true_or_false(self: T; itype: IType; label: Label; frequency: Frequ
 *)
 VAR s0 := cast(get(self, 0), itype);
 BEGIN
-    IF DebugVerbose(self) THEN
+    IF debug_verbose THEN
         self.comment("if_true_or_false " & BoolToText[value] & " type:" & cgtypeToText[itype]);
-    ELSE
+    ELSIF debug THEN
         self.comment("if_true_or_false");
     END;
     IF TRUE (* AvoidGccTypeRangeWarnings  *) THEN
@@ -5775,9 +5777,9 @@ PROCEDURE if_compare(self: T; ztype: ZType; op: CompareOp; label: Label; <*UNUSE
 VAR s0 := cast(get(self, 0), ztype);
     s1 := cast(get(self, 1), ztype);
 BEGIN
-    IF DebugVerbose(self) THEN
+    IF debug_verbose THEN
         self.comment("if_compare " & "op:" & CompareOpName[op] & " type:" & cgtypeToText[ztype]);
-    ELSE
+    ELSIF debug THEN
         self.comment("if_compare");
     END;
     pop(self, 2);
@@ -5922,12 +5924,12 @@ PROCEDURE load(self: T; v: M3CG.Var; offset: ByteOffset; in_mtype: MType; out_zt
 VAR var := NARROW(v, Var_t);
     expr := Variable(self, var);
 BEGIN
-    IF DebugVerbose(self) THEN
+    IF debug_verbose THEN
       self.comment("load var:", Var_Name(var),
         " offset:" & IntToDec(offset),
         " in_mtype:" & cgtypeToText[in_mtype] &
         " out_ztype:" & cgtypeToText[out_ztype]);
-    ELSE
+    ELSIF debug THEN
       self.comment("load");
     END;
 
@@ -5964,12 +5966,12 @@ PROCEDURE store(self: T; v: M3CG.Var; offset: ByteOffset; ztype: ZType; mtype: M
 VAR var := NARROW(v, Var_t);
     s0 := cast(get(self, 0), ztype);
 BEGIN
-    IF DebugVerbose(self) THEN
+    IF debug_verbose THEN
       self.comment("store var:", Var_Name(var),
         " offset:" & IntToDec(offset),
         " ztype:" & cgtypeToText[ztype] &
         " mtype:" & cgtypeToText[mtype]);
-    ELSE
+    ELSIF debug THEN
       self.comment("store");
     END;
     pop(self);
@@ -5981,10 +5983,10 @@ PROCEDURE load_address(self: T; v: M3CG.Var; offset: ByteOffset) =
 VAR var := NARROW(v, Var_t);
     expr: Expr_t := NIL;
 BEGIN
-    IF DebugVerbose(self) THEN
+    IF debug_verbose THEN
         self.comment("load_address var:", Var_Name(var),
             " offset:", IntToDec(offset));
-    ELSE
+    ELSIF debug THEN
         self.comment("load_address");
     END;
     expr := AddressOf(Variable(self, var));
@@ -5999,12 +6001,12 @@ PROCEDURE load_indirect(self: T; offset: ByteOffset; mtype: MType; ztype: ZType)
 (* s0.ztype := Mem [s0.A + offset].mtype  *)
 VAR expr := get(self);
 BEGIN
-    IF DebugVerbose(self) THEN
+    IF debug_verbose THEN
       self.comment("load_indirect",
         " offset:" & IntToDec(offset),
         " mtype:" & cgtypeToText[mtype] &
         " ztype:" & cgtypeToText[ztype]);
-    ELSE
+    ELSIF debug THEN
       self.comment("load_indirect");
     END;
     <* ASSERT CG_Bytes[ztype] >= CG_Bytes[mtype] *>
@@ -6026,12 +6028,12 @@ PROCEDURE store_indirect(self: T; offset: ByteOffset; ztype: ZType; mtype: MType
 VAR s0 := cast(get(self, 0), ztype);
     s1 := get(self, 1);
 BEGIN
-    IF DebugVerbose(self) THEN
+    IF debug_verbose THEN
       self.comment("store_indirect ",
         " offset:" & IntToDec(offset),
         " ztype:" & cgtypeToText[ztype],
         " mtype:" & cgtypeToText[mtype]);
-    ELSE
+    ELSIF debug THEN
       self.comment("store_indirect");
     END;
 
@@ -6070,9 +6072,9 @@ END IntToTarget;
 
 PROCEDURE load_host_integer(self: T; type: IType; i: INTEGER) =
 BEGIN
-    IF DebugVerbose(self) THEN
+    IF debug_verbose THEN
         comment(self, "load_host_integer:", IntToDec(i));
-    ELSE
+    ELSIF debug THEN
         comment(self, "load_host_integer");
     END;
     self.load_integer(type, IntToTarget(self, i));
@@ -6249,9 +6251,9 @@ VAR s0 := get(self, 0);
     cast1 := "";
     cast2 := "";
 BEGIN
-    IF DebugVerbose(self) THEN
+    IF debug_verbose THEN
         self.comment("compare " & "op:" & CompareOpName[op] & " type:" & cgtypeToText[ztype]);
-    ELSE
+    ELSIF debug THEN
         self.comment("compare");
     END;
     pop(self, 2);
@@ -6494,9 +6496,9 @@ PROCEDURE xor(self: T; type: IType) =
 VAR s0 := cast(get(self, 0), type);
     s1 := cast(get(self, 1), type);
 BEGIN
-    IF DebugVerbose(self) THEN
+    IF debug_verbose THEN
         self.comment("xor type:" & cgtypeToText[type]);
-    ELSE
+    ELSIF debug THEN
         self.comment("xor");
     END;
     pop(self, 2);
@@ -6941,10 +6943,10 @@ VAR s0 := get(self, 0);
     type: Type_t := NIL;
     type_text: TEXT := NIL;
 BEGIN
-    IF DebugVerbose(self) THEN
+    IF debug_verbose THEN
         self.comment("pop_struct typeid:" & TypeIDToText(typeid),
             " byte_size:", IntToDec(byte_size));
-    ELSE
+    ELSIF debug THEN
         self.comment("pop_struct");
     END;
     <* ASSERT (byte_size MOD alignment) = 0 *>
@@ -7171,7 +7173,7 @@ END comment_1;
 PROCEDURE comment(self: T; a, b, c, d: TEXT := NIL) =
 VAR length := 0;
 BEGIN
-    IF self.debug < 1 THEN
+    IF NOT debug_comment THEN
         RETURN;
     END;
     comment_1(a, length);
@@ -7183,7 +7185,7 @@ BEGIN
     END;
     a := " /* " & a & b & c & d & " */\n";
     print(self, a);
-    IF self.debug > 4 THEN
+    IF debug_comment_stdio THEN
         RTIO.PutText(a);
         RTIO.Flush();
     END;
@@ -7286,4 +7288,9 @@ BEGIN
     BitsToUInt[64] := Text_uint64;
     SignedAndBitsToCGType[TRUE] := BitsToCGInt;
     SignedAndBitsToCGType[FALSE] := BitsToCGUInt;
+    debug_verbose := RTParams.IsPresent ("m3c-debug-verbose");
+    debug_types := RTParams.IsPresent ("m3c-debug-types");
+    debug := RTParams.IsPresent ("m3c-debug");
+    debug_comment_stdio := RTParams.IsPresent ("m3c-debug-comment-stdio");
+    debug_comment := debug_comment_stdio OR debug_types OR debug OR debug_verbose OR RTParams.IsPresent ("m3c-debug-comment");
 END M3C.
