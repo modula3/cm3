@@ -3910,6 +3910,9 @@ PROCEDURE import_global (declareTypes: DeclareTypes_t; name: Name; byte_size: By
 (* In this earlier pass, only produce the Typename_t, to be resolved before later use. *)
 VAR self := declareTypes.self;
 BEGIN
+  IF typename # 0 AND typename = self.const_INTEGER AND typeid = 0 THEN
+    typeid := UID_INTEGER; (* hack *)
+  END;
   IF debug_verbose THEN
     self.comment ("import_global name:" & TextOrNIL (NameT (name))
                         & " byte_size:" & IntToDec (byte_size)

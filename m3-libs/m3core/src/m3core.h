@@ -472,6 +472,9 @@ typedef ptrdiff_t INTEGER;
 typedef size_t WORD_T;
 #endif
 
+#define const_INTEGER const_INTEGER /* inhibit m3c type that lacks const */
+typedef const INTEGER const_INTEGER;
+
 // Something (m3front?) is indecisive as to if Word__T is INTEGER or INT64.
 // Or rather, if functions like Word__Divide, traffic in INTEGER or
 // Word__T. This could be m3front vs. Word.ig. This combines poorly

@@ -140,7 +140,8 @@ BEGIN
   (* m3_jmpbuf_size is a "constant variable" initialized in
      C via:
         #include <setjmp.h>
-        extern const m3_jmpbuf_size = sizeof(jmp_buf);
+        typedef const INTEGER const_INTEGER;
+        extern const_INTEGER m3_jmpbuf_size = sizeof(jmp_buf);
      As an optimization, and to avoid any matters involving dynamically
      importing data on Win32, Uconstants is always statically linked.
 
@@ -149,7 +150,7 @@ BEGIN
   IF t.jmpbuf_size = NIL THEN
     t.jmpbuf_size := CG.Import_global (M3ID.Add ("m3_jmpbuf_size"),
                                        Target.Word.size, Target.Word.align,
-                                       Target.Word.cg_type, 0);
+                                       Target.Word.cg_type, 0, M3ID.Add ("const_INTEGER"));
   END;
   RETURN t.jmpbuf_size;
 END GetJmpbufSize;
