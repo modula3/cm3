@@ -7854,9 +7854,9 @@ BEGIN
     BitsToUInt[64] := Text_uint64;
     SignedAndBitsToCGType[TRUE] := BitsToCGInt;
     SignedAndBitsToCGType[FALSE] := BitsToCGUInt;
-    debug_verbose := RTParams.IsPresent ("m3c-debug-verbose");
-    debug_types := RTParams.IsPresent ("m3c-debug-types");
-    debug := debug_verbose OR debug_types OR RTParams.IsPresent ("m3c-debug");
-    debug_comment_stdio := RTParams.IsPresent ("m3c-debug-comment-stdio");
-    debug_comment := debug_comment_stdio OR debug_types OR debug OR debug_verbose OR RTParams.IsPresent ("m3c-debug-comment");
+    debug_verbose := debug_verbose OR RTParams.IsPresent ("m3c-debug-verbose");
+    debug_types := debug_types OR RTParams.IsPresent ("m3c-debug-types");
+    debug := debug OR debug_verbose OR debug_types OR RTParams.IsPresent ("m3c-debug");
+    debug_comment_stdio := debug_comment_stdio OR RTParams.IsPresent ("m3c-debug-comment-stdio");
+    debug_comment := debug_comment OR debug_comment_stdio OR debug_types OR debug OR debug_verbose OR RTParams.IsPresent ("m3c-debug-comment");
 END M3C.
