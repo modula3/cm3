@@ -1014,6 +1014,8 @@ typedef passwd* Upwd__struct_passwd_star;
 passwd* __cdecl Upwd__getpwuid(m3_uid_t);
 passwd* __cdecl Upwd__getpwnam(char*);
 
+m3_pid_t __cdecl Uprocess__getpid (void);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

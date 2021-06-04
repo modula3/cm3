@@ -4,8 +4,8 @@
 
 INTERFACE Uprocess;
 
-FROM Ctypes IMPORT int;
+FROM Utypes IMPORT pid_t;
 
-<*EXTERNAL "Uprocess__getpid"*>PROCEDURE getpid (): int;
+<*EXTERNAL "Uprocess__getpid"*>PROCEDURE getpid (): pid_t;
 
 END Uprocess.
