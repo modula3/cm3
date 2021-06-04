@@ -698,6 +698,9 @@ ssize_t __cdecl Usocket__recvfrom(int s, void* buf, size_t len, int flags, M3Soc
 DIR* __cdecl Udir__opendir(const char* a);
 #define Udir__DIR_star Udir__DIR_star /* inhibit m3c type */
 typedef DIR*           Udir__DIR_star;
+#define Udir__struct_dirent_star Udir__struct_dirent_star /* inhibit m3c type */
+STRUCT_TYPEDEF(dirent)
+typedef dirent* Udir__struct_dirent_star;
 #endif
 
 // char* (caddr_t) instead of void* for default Solaris
