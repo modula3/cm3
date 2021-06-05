@@ -393,14 +393,15 @@ PROCEDURE LoadStaticLink (t: T) =
  END LoadStaticLink;
 
 PROCEDURE ImportProc (p: T;  name: TEXT;  n_formals: INTEGER;
-                      cg_result: CG.Type; return_typename: M3ID.T;
+                      cg_result: CG.Type; return_typeid: CG.TypeUID;
+                      return_typename: M3ID.T;
                       cc: CG.CallingConvention) =
   VAR zz: Scope.T;  new: BOOLEAN;
   BEGIN
     <*ASSERT p.cg_proc = NIL*>
     p.next_cg_proc := cg_procs;  cg_procs := p;
     p.cg_proc := CG.Import_procedure (M3ID.Add (name), n_formals,
-                                      cg_result, cc, new, return_typename := return_typename);
+                                      cg_result, cc, new, return_typeid, return_typename);
     IF (new) THEN
       (* declare the formals *)
       IF (p.syms # NIL) THEN
@@ -453,12 +454,13 @@ PROCEDURE Declarer (p: T): BOOLEAN =
     zz: Scope.T;
     parent: CG.Proc := NIL;
     cg_result: CG.Type;
+    result: Type.T := NIL;
     name := Value.GlobalName (p, dots := FALSE);
-    type: CG.TypeUID;
-    sig := p.signature;
     n_formals: INTEGER;
     cconv: CG.CallingConvention;
+    result_typeid := 0;
   BEGIN
+
     IF p.predefined AND p.body = NIL AND NOT p.assignable THEN
       (* Don't bother importing procedures that can't be assigned
          or passed, or declaring their signatures, but do generate 
@@ -467,14 +469,18 @@ PROCEDURE Declarer (p: T): BOOLEAN =
     END;
 
     IF (p.intf_peer # NIL) THEN
-      sig := p.intf_peer.signature;
-      Type.Compile (sig);
+      Type.Compile (p.intf_peer.signature);
     END;
+
     Type.Compile (p.signature);
-    type := Type.GlobalUID (p.signature);
+    result := ProcType.Result (p.signature);
+    EVAL Type.GlobalUID (p.signature);
     (* try to compile the imported type first... *)
 
     cg_result := ProcType.CGResult (p.signature);
+    IF cg_result # CG.Type.Void THEN
+      result_typeid := Type.GlobalUID (result);
+    END;
     n_formals := ProcType.NFormals (p.signature);
     cconv     := ProcType.CallConv (p.signature);
 
@@ -486,7 +492,10 @@ PROCEDURE Declarer (p: T): BOOLEAN =
         RETURN FALSE;
       ELSE
         (* it's an imported procedure *)
-        ImportProc (p, name, n_formals, cg_result, ProcType.ResultTypename (p.signature), cconv);
+        ImportProc (p, name, n_formals, cg_result,
+                    result_typeid,
+                    ProcType.ResultTypename (p.signature),
+                    cconv);
         RETURN TRUE;
       END;
     END;
@@ -497,7 +506,9 @@ PROCEDURE Declarer (p: T): BOOLEAN =
     p.cg_proc := CG.Declare_procedure (M3ID.Add (name),
                     n_formals, cg_result, p.body.level,  cconv,
                     exported := (p.exported OR p.imported),
-                    parent := parent, return_typename := ProcType.ResultTypename (p.signature));
+                    parent := parent,
+                    return_typeid := result_typeid,
+                    return_typename := ProcType.ResultTypename (p.signature));
     p.body.cg_proc := p.cg_proc;
     Scanner.offset := p.origin;
     IF (p.syms # NIL) THEN

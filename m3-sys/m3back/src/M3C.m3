@@ -61,9 +61,9 @@ T = M3CG_DoNothing.T OBJECT
 
         no_return := FALSE; (* are there any no_return functions -- i.e. #include <sys/cdefs.h on Darwin for __dead2 *)
 
+        replacementNames_Inited := FALSE;
+        replacementNames_Table:  IntIntTbl.Default := NIL;
         const_INTEGER := M3ID.NoID; (* special case *)
-        char := M3ID.NoID;  (* "CHAR" is problematic with windows.h *)
-        uchar := M3ID.NoID; (* "UCHAR" replaces "CHAR" *)
         typenames:REF ARRAY OF Typename_t := NIL;
         imported_procs: RefSeq.T := NIL; (*TODO*) (* Proc_t *)
         declared_procs: RefSeq.T := NIL; (*TODO*) (* Proc_t *)
@@ -354,14 +354,16 @@ END IsUnsigned;
 
 CONST reservedWords = ARRAY OF TEXT{
 (* avoid using these identifiers for function names, local variables, parameter names, etc. *)
+"assert",
 "ALPHA",
 "AMD64",
 "ARM",
 "ARM32",
 "ARM64",
+"CHAR", (* conflicts with windows.h *)
 "DBG",
 "NDEBUG",
-"NULL",
+"NULL", (* NULL occurs in elego\m3msh\src\M3MiniShell.m3 *)
 "RISCV",
 "RISCV32",
 "RISCV64",
@@ -485,6 +487,7 @@ so i.e. they can be used for parameter, local, field names *)
 "_unaligned",
 "_uptr",
 "_w64",
+"sun",
 *)
 "and",
 "and_eq",
@@ -618,24 +621,22 @@ CONST suppressImports = ARRAY OF TEXT{
 };
 *)
 
-VAR replacementNames_Inited := FALSE;
-VAR replacementNames_Table := NEW(IntIntTbl.Default).init(NUMBER(reservedWords));
-
 PROCEDURE ReplaceName (self: T; VAR id: Name) =
 VAR replacement := 0;
+    replacementNames_Table := self.replacementNames_Table;
 BEGIN
-    IF replacementNames_Inited = FALSE THEN
-        FOR i := FIRST(reservedWords) TO LAST(reservedWords) DO
-            WITH text = reservedWords[i] DO
-                EVAL replacementNames_Table.put(M3ID.Add(text), M3ID.Add("m3_" & text));
-            END;
-        END;
-        EVAL replacementNames_Table.put(self.char, self.uchar);
-        replacementNames_Inited := TRUE;
+  IF replacementNames_Table = NIL THEN
+    replacementNames_Table := NEW(IntIntTbl.Default).init(NUMBER(reservedWords));
+    self.replacementNames_Table := replacementNames_Table;
+    FOR i := FIRST(reservedWords) TO LAST(reservedWords) DO
+      WITH text = reservedWords[i] DO
+        EVAL replacementNames_Table.put(M3ID.Add(text), M3ID.Add("m3_" & text));
+      END;
     END;
-    IF replacementNames_Table.get(id, replacement) THEN
-      id := replacement;
-    END;
+  END;
+  IF replacementNames_Table.get(id, replacement) THEN
+    id := replacement;
+  END;
 END ReplaceName;
 
 PROCEDURE AnonymousCounter(self: T): INTEGER =
@@ -680,17 +681,12 @@ BEGIN
     IF name = M3ID.NoID THEN
         RETURN GenerateNameGlobal(self);
     END;
-    IF name = self.char THEN
-      RETURN self.uchar;
-    END;
     text := NameT (name);
     IF Text.GetChar (text, 0) = '*' THEN
         Assert(self, Text.Length(text) = 1, "Text.Length(text) = 1");
         Err(self, "almost unnamed function");
         RETURN GenerateNameLocal(self);
     END;
-    (* rename C names like int, short, void *)
-    ReplaceName(self, name);
     RETURN name;
 END Proc_FixName;
 
@@ -725,10 +721,13 @@ END Var_FixName;
 
 TYPE Type_State = {None, ForwardDeclared, CanBeDefined, Defined};
 
-PROCEDURE TypeText (self: T; cgtype: CGType; typename: TEXT; typeid: TypeUID := 0; type_text: TEXT := NIL; name := M3ID.NoID): TEXT =
+PROCEDURE TypeText (self: T; cgtype: CGType; typeid: TypeUID; name: M3ID.T; type_text: TEXT := NIL): TEXT =
 VAR type: Type_t := NIL;
+    typename_text: TEXT := NIL;
 BEGIN
-  (* All typeids must be known, though this is maybe overkill. *)
+  (* All typeids must be known, though this is maybe overkill.
+   * Resolve typeid to type, which must succeed.
+   *)
   IF typeid # -1 AND typeid # 0 AND NOT ResolveType(self, typeid, type) THEN
     Err(self, "TypeText:"
               & " unknown typeid:" & TypeIDToText(typeid)
@@ -736,6 +735,13 @@ BEGIN
               & " name:" & TextOrNil(NameT(name)) & "\n");
   END;
 
+  (* cgtype, typeid, name, type_text are all redundant and mostly optional
+   * order of preference:
+   *  type_text (very rare, for internal calls, not from m3front)
+   *  name (somewhat common)
+   *  typeid (very common; almost required, except not with type_text)
+   *  cgtype (required, but could be merely "struct")
+   *)
   IF type_text = NIL THEN
     IF type # NIL THEN
       IF debug THEN
@@ -761,20 +767,20 @@ BEGIN
 
   (* If typename is already defined, such as from m3core.h, use that.
    * Else typedef it to be type_text, which is the resolved
-   * lowlevel CG type like Int32, Int64, Address.
-   * Gradually all types should be typename and never just CG.
-   * Historically the other way around: There was only CG and no typename.
+   * lowlevel CG type like Int32, Int64, Address, or type_text.
+   *
+   * TODO Create a Typename_t here and let it resolve.
    *)
-  (* NULL occurs in elego\m3msh\src\M3MiniShell.m3 *)
-  IF typename # NIL AND name # self.char AND Text.Length (typename) > 0 AND Text.GetChar (typename, 0) IN ASCII.Letters AND NOT Text.Equal (typename, "NULL") THEN
-    IF NOT self.typedef_defined.insert(typename) THEN
-      ifndef(self, typename, "//7");
-      IF type_text # typename THEN (* pointer check is opportunistic, there are duplicates of some sort *)
-        print(self, "typedef " & type_text & " " & typename & ";");
+  IF name # 0 THEN
+    typename_text := NameT (name);
+    IF NOT self.typedef_defined.insert(typename_text) THEN
+      ifndef(self, typename_text, "//7");
+      IF type_text # typename_text THEN (* pointer check is opportunistic, there are duplicates of some sort *)
+        print(self, "typedef " & type_text & " " & typename_text & ";");
       END;
       endif(self);
     END;
-    RETURN typename;
+    RETURN typename_text;
   END;
 
   RETURN type_text;
@@ -1032,36 +1038,34 @@ BEGIN
     END;
 
     IF NOT x.typedef_defined.insert(typetext) THEN
-      IF typename.name # self.char THEN (* avoid typedefing CHAR. *)
-        ifndef (self, typetext, "//8");
-        (* TODO It might be possible to eliminate the hashed names. *)
-        print(x, "typedef " & refers_to_type.base_text & " " & typetext & ";");
-        IF refers_to_type # NIL
-           AND typename.replace
-           AND refers_to_type.text = refers_to_type.hash_text
-           AND NOT IsUnsigned (typename.name) THEN (* Modula3 unsigned types are a problem. *)
-          IF debug_types THEN
-            x.comment ("2replacing " & refers_to_type.text & " with " & typetext);
+      ifndef (self, typetext, "//8");
+      (* TODO It might be possible to eliminate the hashed names. *)
+      print(x, "typedef " & refers_to_type.base_text & " " & typetext & ";");
+      IF refers_to_type # NIL
+         AND typename.replace
+         AND refers_to_type.text = refers_to_type.hash_text
+         AND NOT IsUnsigned (typename.name) THEN (* Modula3 unsigned types are a problem. *)
+        IF debug_types THEN
+          x.comment ("2replacing " & refers_to_type.text & " with " & typetext);
+        END;
+        refers_to_type.text := typetext;
+      ELSE
+        IF debug_types THEN
+          IF refers_to_type = NIL THEN
+            x.comment ("3replacing-not NIL with " & typetext);
+          ELSE
+            x.comment ("3replacing-not " & refers_to_type.text & " with " & typetext);
           END;
-          refers_to_type.text := typetext;
-        ELSE
-          IF debug_types THEN
-            IF refers_to_type = NIL THEN
-              x.comment ("3replacing-not NIL with " & typetext);
-            ELSE
-              x.comment ("3replacing-not " & refers_to_type.text & " with " & typetext);
-            END;
-            x.comment ("4 " & Fmt.Int(ORD(typename.replace)));
-            IF refers_to_type # NIL THEN
-              x.comment ("5 " & Fmt.Int(ORD(refers_to_type.text = refers_to_type.hash_text)));
-              (* wait for m3core upate
-              x.comment ("6 hash_text:" & RTIO.FmtRef(refers_to_type.hash_text) & " text:" & RTIO.FmtRef(refers_to_type.text));
-              *)
-            END;
+          x.comment ("4 " & Fmt.Int(ORD(typename.replace)));
+          IF refers_to_type # NIL THEN
+            x.comment ("5 " & Fmt.Int(ORD(refers_to_type.text = refers_to_type.hash_text)));
+            (* wait for m3core upate
+            x.comment ("6 hash_text:" & RTIO.FmtRef(refers_to_type.hash_text) & " text:" & RTIO.FmtRef(refers_to_type.text));
+            *)
           END;
         END;
-        endif (self);
       END;
+      endif (self);
     END;
 END typename_define;
 
@@ -2797,8 +2801,6 @@ BEGIN
     (* The CHAR typename exists to satisfy DeclareTypes dependency walk, but should not be
      * actually typedefed. It conflicts with windows.h. UCHAR replaces it right after this. *)
     self.const_INTEGER := M3ID.Add("const_INTEGER"); (* special case *)
-    self.char := M3ID.Add("CHAR");
-    self.uchar := M3ID.Add("UCHAR");
     self.typeidToType := NEW(SortedIntRefTbl.Default).init(); (* FUTURE? *)
     self.multipass := NEW(Multipass_t).Init();
     self.multipass.reuse_refs := TRUE; (* TODO: change them all to integers *)
@@ -2954,8 +2956,7 @@ BEGIN
 
     type := NEW(Integer_t, class := "Integer_t", self := self, state := Type_State.CanBeDefined, cgtype := Target.Word8.cg_type, typeid := UID_CHAR (* ,max := IntToTarget(self, 16_FF), *));
     self.Type_Init (type);
-    (*EVAL declare_typename_no_replace (self, type.typeid, self.char);*) (* saved m3id to compare elsewhere *)
-    EVAL declare_typename_replace (self, type.typeid, self.uchar);
+    EVAL declare_typename_replace (self, type.typeid, M3ID.Add("UCHAR"));
     EVAL DeclareTypes_FlushOnce (self);
     type.base_text := "UCHAR"; (* more readable output (fewer hashes) *)
     type.text := "UCHAR"; (* more readable output (fewer hashes) *)
@@ -3166,41 +3167,36 @@ END set_source_line;
 
 (*------------------------------------------- debugging type declarations ---*)
 
-PROCEDURE declare_typename_internal (self: T; typeid: TypeUID; name: Name; replace: BOOLEAN): Typename_t =
-VAR nameText1 := NameT (name);
-    nameText2 := nameText1;
+PROCEDURE declare_typename_common (self: T; typeid: TypeUID; name: Name; replace: BOOLEAN): Typename_t =
+VAR nameText1: TEXT := NIL;
+    nameText2: TEXT := NIL;
     typename: Typename_t := NIL;
 BEGIN
-  IF name = M3ID.NoID THEN RETURN NIL END;
-
-  IF debug_types THEN
-    self.comment("declare_typename_internal typeid:" & TypeIDToText (typeid));
-  END;
-
   IF name = M3ID.NoID THEN
-    IF debug_types THEN
-      self.comment("declare_typename_internal name = 0, skip");
-    END;
     RETURN NIL;
   END;
 
-  ReplaceName (self, name);
+  IF debug_types THEN
+    self.comment("declare_typename_common typeid:" & TypeIDToText (typeid));
+  END;
 
   typename := GetTypename (self, name);
   IF typename # NIL THEN
     IF debug_types THEN
-      self.comment ("declare_typename_internal skipping duplicate " & NameT (name));
+      self.comment ("declare_typename_common skipping duplicate " & NameT (name));
     END;
     RETURN typename;
   END;
 
+  nameText1 := NameT (name);
+  nameText2 := nameText1;
   TextToId (nameText2);
   IF nameText1 # nameText2 THEN
     name := M3ID.Add (nameText2);
   END;
 
   typename := NEW (Typename_t, class := "Typename_t", self := self, text := nameText2, refers_to_typeid := typeid, name := name, replace := replace);
-  IF debug_types THEN
+  IF debug_verbose THEN
     self.comment ("NEW Typename_t " & Type_Fmt (typename) &
                   " nameText1:" & nameText1 &
                   " nameText2:" & nameText2 &
@@ -3208,37 +3204,38 @@ BEGIN
   END;
   self.Type_Init (typename);
   PutTypename (self, name, typename);
-
   RETURN typename;
-END declare_typename_internal;
+END declare_typename_common;
 
 PROCEDURE declare_typename_no_replace (self: T; typeid: TypeUID; name: Name): Typename_t =
 BEGIN
   IF name = M3ID.NoID THEN RETURN NIL END;
-  IF debug_types THEN
-    self.comment ("declare_typename_no_replace typeid:" & TypeIDToText(typeid));
+  IF debug_verbose THEN
+    self.comment ("declare_typename_no_replace typeid:" & TypeIDToText(typeid)
+                  & " name:" & NameT(name));
   END;
-  RETURN declare_typename_internal (self, typeid, name, replace := FALSE);
+  RETURN declare_typename_common (self, typeid, name, replace := FALSE);
 END declare_typename_no_replace;
 
 PROCEDURE declare_typename_replace (self: T; typeid: TypeUID; name: Name): Typename_t =
 BEGIN
   IF name = M3ID.NoID THEN RETURN NIL END;
-  IF debug_types THEN
-    self.comment ("declare_typename_replace typeid:" & TypeIDToText(typeid));
+  IF debug_verbose THEN
+    self.comment ("declare_typename_replace typeid:" & TypeIDToText(typeid)
+                  & " name:" & NameT(name));
   END;
-  RETURN declare_typename_internal (self, typeid, name, replace := TRUE);
+  RETURN declare_typename_common (self, typeid, name, replace := TRUE);
 END declare_typename_replace;
 
 PROCEDURE declare_typename (declareTypes: DeclareTypes_t; typeid: TypeUID; name: Name) =
 VAR self := declareTypes.self;
-    nameText1 := NameT (name);
 BEGIN
   IF debug_verbose THEN
-    self.comment ("declare_typename typeid:", TypeIDToText (typeid), " name:" & TextOrNIL (nameText1));
+    self.comment ("declare_typename typeid:", TypeIDToText (typeid), " name:" & TextOrNIL (NameT(name)));
   ELSIF debug THEN
     self.comment ("declare_typename");
   END;
+  ReplaceName (self, name);
   EVAL declare_typename_replace (self, typeid, name);
 END declare_typename;
 
@@ -3366,6 +3363,8 @@ BEGIN
       x.comment("declare_enum_elt: enum_element_count:", IntToDec(enum_element_count));
     END;
     Assert (x, NUMBER(self.enum.names^) = enum_element_count, "NUMBER(self.enum.names^) = enum_element_count");
+
+    ReplaceName (x, name);
 
     self.enum.names[enum_value] := name;
     INC(enum_value);
@@ -3540,7 +3539,9 @@ BEGIN
         *)
         RETURN;
     END;
+
     ReplaceName(x, name);
+
     field := NEW(Field_t, bit_offset := bit_offset, bit_size := bit_size, typeid := typeid, name := name);
     self.record.fields.addhi(field);
     IF previous_field # NIL AND previous_field.bit_offset + previous_field.bit_size > bit_offset THEN
@@ -3655,11 +3656,9 @@ BEGIN
         (*type_text_tail*) "_" & IntToDec(bit_size));
 END declare_subrange;
 
-PROCEDURE declare_pointer_no_trace (x: T; typeid, target, target_typename: TypeUID; brand: TEXT := NIL; traced: BOOLEAN := FALSE) =
+PROCEDURE declare_pointer_no_trace (x: T; typeid, target: TypeUID; target_typename: Name; brand: TEXT := NIL; traced: BOOLEAN := FALSE) =
 VAR type: Pointer_t := NIL;
 BEGIN
-  ReplaceName (x, target_typename);
-
   type := NEW (Pointer_t,
                class := "Pointer_t",
                self := x,
@@ -3678,6 +3677,7 @@ PROCEDURE declare_pointer (self: DeclareTypes_t; typeid, target: TypeUID; brand:
 VAR x := self.self;
 BEGIN
   IF typeid = target OR debug_verbose THEN
+    debug_comment := TRUE; (* for typeid = target case *)
     x.comment("declare_pointer typeid:" & TypeIDToText(typeid)
               & " target:" & TypeIDToText(target)
               & " brand:" & TextOrNIL(brand)
@@ -3686,6 +3686,7 @@ BEGIN
   ELSIF debug THEN
     x.comment("declare_pointer");
   END;
+  ReplaceName (x, target_typename);
   declare_pointer_no_trace (x, typeid, target, target_typename, brand, traced);
 END declare_pointer;
 
@@ -3693,6 +3694,7 @@ PROCEDURE declare_indirect (self: DeclareTypes_t; typeid, target: TypeUID; targe
 VAR x := self.self;
 BEGIN
   IF typeid = target OR debug_verbose THEN
+    debug_comment := TRUE; (* for typeid = target case *)
     x.comment("declare_indirect typeid:", TypeIDToText(typeid),
               " target:" & TypeIDToText(target),
               " target_typename:" & TextOrNil(NameT(target_typename)));
@@ -4001,15 +4003,16 @@ BEGIN
     RETURN var;
   END declare_segment;
 
-PROCEDURE bind_segment(
-    self: T;
+PROCEDURE Segments_bind_segment(
+    segments: Segments_t;
     v: M3CG.Var;
     byte_size: ByteSize;
     alignment: Alignment;
     cgtype: CGType;
     exported: BOOLEAN;
     inited: BOOLEAN) =
-VAR var := NARROW(v, Var_t);
+VAR self := segments.self;
+    var := NARROW(v, Var_t);
 BEGIN
     IF debug_verbose THEN
         self.comment("bind_segment var:" & Var_Name(var)
@@ -4023,22 +4026,10 @@ BEGIN
 
     <* ASSERT (byte_size MOD alignment) = 0 *>
     var.byte_size := byte_size;
-END bind_segment;
-
-PROCEDURE Segments_bind_segment(
-    self: Segments_t;
-    var: M3CG.Var;
-    byte_size: ByteSize;
-    alignment: Alignment;
-    type: CGType;
-    exported: BOOLEAN;
-    inited: BOOLEAN) =
-BEGIN
-    bind_segment(self.self, var, byte_size, alignment, type, exported, inited);
 END Segments_bind_segment;
 
-PROCEDURE declare_global(
-    self: T;
+PROCEDURE Segments_declare_global(
+    segments: Segments_t;
     name: Name;
     byte_size: ByteSize;
     alignment: Alignment;
@@ -4047,6 +4038,7 @@ PROCEDURE declare_global(
     exported: BOOLEAN;
     inited: BOOLEAN;
     typename: Name): M3CG.Var =
+VAR self := segments.self;
 BEGIN
     IF debug_verbose THEN
         self.comment("declare_global name:" & TextOrNIL(NameT(name))
@@ -4058,21 +4050,9 @@ BEGIN
     ELSIF debug THEN
         self.comment("declare_global");
     END;
+    ReplaceName (self, name);
+    ReplaceName (self, typename);
     RETURN DeclareGlobal(self, name, byte_size, alignment, cgtype, typeid, exported, inited, FALSE, typename);
-END declare_global;
-
-PROCEDURE Segments_declare_global(
-    self: Segments_t;
-    name: Name;
-    byte_size: ByteSize;
-    alignment: Alignment;
-    cgtype: CGType;
-    typeid: TypeUID;
-    exported: BOOLEAN;
-    inited: BOOLEAN;
-    typename: Name): M3CG.Var =
-BEGIN
-    RETURN declare_global(self.self, name, byte_size, alignment, cgtype, typeid, exported, inited, typename);
 END Segments_declare_global;
 
 PROCEDURE declare_constant(
@@ -4096,6 +4076,8 @@ BEGIN
     ELSIF debug THEN
         self.comment("declare_constant");
     END;
+    ReplaceName (self, name);
+    ReplaceName (self, typename);
     RETURN DeclareGlobal(self, name, byte_size, alignment, cgtype, typeid, exported, inited, TRUE, typename);
 END declare_constant;
 
@@ -4860,6 +4842,8 @@ PROCEDURE Locals_declare_param(
     <*UNUSED*>frequency: Frequency;
     typename: Name): M3CG.Var =
 BEGIN
+    ReplaceName (self.self, name);
+    ReplaceName (self.self, typename);
     RETURN declare_param(
         self.self,
         name,
@@ -4883,6 +4867,8 @@ PROCEDURE Locals_declare_local(
     <*UNUSED*>frequency: Frequency;
     typename: Name): M3CG.Var =
 BEGIN
+    ReplaceName (self.self, name);
+    ReplaceName (self.self, typename);
     RETURN declare_local(self.self, name, byte_size, alignment, type, typeid, up_level, typename);
 END Locals_declare_local;
 
@@ -4950,6 +4936,8 @@ PROCEDURE Imports_import_procedure(
     return_typeid: TypeUID;
     return_typename: Name): M3CG.Proc =
 BEGIN
+    ReplaceName (self.self, name);
+    ReplaceName (self.self, return_typename);
     RETURN import_procedure(self.self, name, parameter_count, return_type, callingConvention, return_typeid, return_typename);
 END Imports_import_procedure;
 
@@ -4965,6 +4953,8 @@ PROCEDURE Imports_declare_param(
     <*UNUSED*>frequency: Frequency;
     typename: Name): M3CG.Var =
 BEGIN
+    ReplaceName (self.self, name);
+    ReplaceName (self.self, typename);
     RETURN declare_param(
         self.self,
         name,
@@ -5221,19 +5211,12 @@ PROCEDURE declare_local(
     cgtype: CGType;
     typeid: TypeUID;
     up_level: BOOLEAN;
-    <*UNUSED*>typename := M3ID.NoID): Var_t =
-VAR var := NEW(Var_t,
-        self := self,
-        cgtype := cgtype,
-        name := name,
-        up_level := up_level,
-        byte_size := byte_size,
-        typeid := typeid,
-        proc := self.current_proc).Init();
+    typename := M3ID.NoID): Var_t =
+VAR var: Var_t := NIL;
     type: Type_t := NIL;
 BEGIN
     IF debug_verbose THEN
-        self.comment("declare_local name:" & NameT(var.name)
+        self.comment("declare_local name:" & TextOrNil(NameT(name))
             & " typeid:" & TypeIDToText(typeid)
             & " cgtype:" & cgtypeToText[cgtype]
             & " up_level:" & BoolToText[up_level]
@@ -5241,6 +5224,11 @@ BEGIN
     ELSIF debug THEN
         self.comment("declare_local");
     END;
+
+    ReplaceName (self, name);
+    ReplaceName (self, typename);
+    var := NEW(Var_t, self := self, cgtype := cgtype, name := name, up_level := up_level,
+               byte_size := byte_size, typeid := typeid, proc := self.current_proc).Init();
 
     <* ASSERT self.current_proc # NIL *>
     <* ASSERT self.current_proc.locals # NIL *>
@@ -5367,7 +5355,6 @@ PROCEDURE internal_declare_param(
     typename: Name): M3CG.Var =
 VAR function := self.param_proc;
     var: Var_t := NIL;
-    typename_text := NameT(typename);
 BEGIN
     IF debug_verbose THEN
         self.comment("internal_declare_param name:" & TextOrNIL(NameT(name))
@@ -5375,16 +5362,18 @@ BEGIN
             & " typeid:" & TypeIDToText(typeid)
             & " up_level:" & BoolToText[up_level]
             & " type_text:" & TextOrNIL(type_text)
-            & " typename:" & TextOrNil(typename_text));
+            & " typename:" & TextOrNil(NameT(typename)));
     ELSIF debug THEN
         self.comment("internal_declare_param");
     END;
 
-    (* m3front misses a lot declare_typename? *)
+    ReplaceName (self, name);
     ReplaceName (self, typename);
+
+    (* m3front misses a lot declare_typename? *)
     EVAL declare_typename_no_replace (self, typeid, typename);
 
-    type_text := TypeText (self, cgtype, typename_text, typeid, type_text, name);
+    type_text := TypeText (self, cgtype, typeid, typename, type_text);
 
     var := NEW(Param_t,
         self := self,
@@ -5416,6 +5405,8 @@ declare_param(
     up_level: BOOLEAN;
     typename: Name): M3CG.Var =
 BEGIN
+    ReplaceName (self, name);
+    ReplaceName (self, typename);
     IF self.param_proc = NIL THEN
         RETURN NIL;
     END;
@@ -5454,8 +5445,9 @@ PROCEDURE Locals_declare_temp(
     alignment: Alignment;
     type: CGType;
     <*UNUSED*>in_memory:BOOLEAN;
-    <*UNUSED*>typename: Name): M3CG.Var =
+    typename: Name): M3CG.Var =
 BEGIN
+    ReplaceName (self.self, typename);
     RETURN internal_declare_temp(self.self, byte_size, alignment, type);
 END Locals_declare_temp;
 
@@ -5870,21 +5862,26 @@ PROCEDURE import_procedure(
     return_type: CGType; callingConvention: CallingConvention;
     return_typeid: TypeUID;
     return_typename: Name): M3CG.Proc =
-VAR return_type_text := NameT(return_typename);
-    proc := NEW(Proc_t, name := name, parameter_count := parameter_count,
-                return_type := return_type, imported := TRUE,
-                return_type_text := TypeText (self, return_type, return_type_text),
-                callingConvention := callingConvention).Init(self);
+VAR proc: Proc_t := NIL;
 BEGIN
     IF debug_verbose THEN
         self.comment("import_procedure name:" & NameT(name)
             & " parameter_count:" & IntToDec(parameter_count)
             & " return_type:" & cgtypeToText[return_type]
             & " return_typeid:" & TypeIDToText(return_typeid)
-            & " return_typename:" & TextOrNil(return_type_text));
+            & " return_typename:" & TextOrNil(NameT(return_typename)));
     ELSIF debug THEN
         self.comment("import_procedure");
     END;
+
+    ReplaceName (self, name);
+    ReplaceName (self, return_typename);
+
+    proc := NEW(Proc_t, name := name, parameter_count := parameter_count,
+                return_type := return_type, imported := TRUE,
+                return_type_text := TypeText (self, return_type, return_typeid, return_typename),
+                callingConvention := callingConvention).Init(self);
+
     IF name = self.RTHooks_ReportFault_id THEN
         self.RTHooks_ReportFault_imported_or_declared := TRUE;
         no_return(self);
@@ -5914,12 +5911,7 @@ PROCEDURE declare_procedure (
   exported: BOOLEAN; parent: M3CG.Proc;
   return_typeid: TypeUID; return_typename: Name): M3CG.Proc =
 VAR self := locals.self;
-    return_type_text := NameT(return_typename);
-    proc := NEW(Proc_t, name := name, parameter_count := parameter_count,
-                return_type := return_type, level := level,
-                return_type_text := TypeText (self, return_type, return_type_text),
-                callingConvention := callingConvention, exported := exported,
-                parent := parent).Init(self);
+    proc: Proc_t := NIL;
 BEGIN
     IF debug_verbose THEN
         self.comment("declare_procedure name:" & NameT(name)
@@ -5929,10 +5921,20 @@ BEGIN
             & " level:" & IntToDec(level)
             & " parent:" & ProcNameOrNIL(parent)
             & " return_typeid:" & TypeIDToText(return_typeid)
-            & " return_typename:" & TextOrNil(return_type_text));
+            & " return_typename:" & TextOrNil(NameT(return_typename)));
     ELSIF debug THEN
         self.comment("declare_procedure");
     END;
+
+    ReplaceName (self, name);
+    ReplaceName (self, return_typename);
+
+    proc := NEW(Proc_t, name := name, parameter_count := parameter_count,
+                return_type := return_type, level := level,
+                return_type_text := TypeText (self, return_type, return_typeid, return_typename),
+                callingConvention := callingConvention, exported := exported,
+                parent := parent).Init(self);
+
     IF name = self.RTHooks_ReportFault_id THEN
         self.RTHooks_ReportFault_imported_or_declared := TRUE;
     END;
