@@ -219,7 +219,7 @@ typedef void *(*start_routine_t)(void *);
 
 int
 __cdecl
-ThreadPThread__thread_create(WORD_T stackSize,
+ThreadPThread__thread_create(size_t stackSize,
                              start_routine_t start_routine,
                              void *arg)
 {

@@ -33,16 +33,19 @@ extern "C" {
 // unsigned, INTEGER-sized, pointer-sized
 // There is no such type in Modula3.
 
-void* __cdecl RTUntracedMemory__AllocZ(WORD_T count)
+void* __cdecl RTUntracedMemory__AllocZ(INTEGER icount)
 /* Z = zeroed = calloc */
 {
+    WORD_T const count = (WORD_T)icount; // Modula-3 lacks unsigned types, pass as signed and cast.
     return WIN(HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, count))
            POSIX(calloc(count, 1));
 }
 
-void* __cdecl RTUntracedMemory__AllocZV(WORD_T count, WORD_T size)
+void* __cdecl RTUntracedMemory__AllocZV(INTEGER icount, INTEGER isize)
 /* ZV = zeroed vector = calloc */
 {
+    WORD_T const count = (WORD_T)icount; // Modula-3 lacks unsigned types, pass as signed and cast.
+    WORD_T const size = (WORD_T)isize; // Modula-3 lacks unsigned types, pass as signed and cast.
     WORD_T max = ~(WORD_T)0;
     if (count > 1 && size > 1 && count > (max / size)) /* implies count * size > max */
         return 0;

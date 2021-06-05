@@ -22,8 +22,8 @@
 extern "C" {
 #endif
 
-void CConvert__Acquire(WORD_T);
-void CConvert__Release(WORD_T);
+void CConvert__Acquire(INTEGER);
+void CConvert__Release(INTEGER);
 
 #ifdef __cplusplus
 } /* extern C */

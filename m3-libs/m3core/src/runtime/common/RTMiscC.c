@@ -10,29 +10,27 @@
 extern "C" {
 #endif
 
-#if !defined(_MSC_VER) && !defined(__cdecl)
-#define __cdecl /* nothing */
-#endif
-
 /*------------------------------- byte copying ------------------------------*/
 
-void __cdecl RTMisc__Copy(const void* src, void* dest, WORD_T len)
+void __cdecl RTMisc__Copy(ADDRESS src, ADDRESS dest, INTEGER ilen)
 {
+    WORD_T const len = (WORD_T)ilen; // Modula-3 lacks unsigned types, pass as signed and cast.
     memmove(dest, src, len);
 }
 
-void __cdecl RTMisc__Zero(void* dest, WORD_T len)
+void __cdecl RTMisc__Zero(ADDRESS dest, INTEGER ilen)
 {
+    WORD_T const len = (WORD_T)ilen; // Modula-3 lacks unsigned types, pass as signed and cast.
     memset(dest, 0, len);
 }
 
 /*------------------------------- rounded arithmetic ------------------------*/
 
-WORD_T __cdecl RTMisc__Upper(WORD_T a, WORD_T y);
+INTEGER __cdecl RTMisc__Upper(INTEGER a, INTEGER y);
 
-void* __cdecl RTMisc__Align(void* a, WORD_T y)
+ADDRESS __cdecl RTMisc__Align(ADDRESS a, INTEGER y)
 {
-    return (void*)RTMisc__Upper((WORD_T)a, y);
+    return (ADDRESS)RTMisc__Upper((INTEGER)a, y);
 }
 
 #ifdef __cplusplus
