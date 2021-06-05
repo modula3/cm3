@@ -529,6 +529,7 @@ typedef INTEGER m3_uid_t;
 #define Ctypes__int_star            Ctypes__int_star            /* inhibit m3c type */
 #define Ctypes__long                Ctypes__long                /* inhibit m3c type */
 #define Ctypes__size_t              Ctypes__size_t              /* inhibit m3c type */
+#define Ctypes__unsigned_char_star  Ctypes__unsigned_char_star  /* inhibit m3c type */
 #define Ctypes__unsigned            Ctypes__unsigned            /* inhibit m3c type */
 #define Ctypes__unsigned_int        Ctypes__unsigned_int        /* inhibit m3c type */
 #define Ctypes__unsigned_long       Ctypes__unsigned_long       /* inhibit m3c type */
@@ -559,6 +560,7 @@ typedef const void*   Ctypes__const_void_star;
 typedef int           Ctypes__int;
 typedef int*          Ctypes__int_star;
 typedef long          Ctypes__long;
+typedef unsigned char* Ctypes__unsigned_char_star;
 typedef unsigned      Ctypes__unsigned;
 typedef unsigned      Ctypes__unsigned_int;
 typedef unsigned long Ctypes__unsigned_long;
