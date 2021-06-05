@@ -96,6 +96,7 @@ VAR
   visit_age   : INTEGER  := 0;
   visit_proc  : Visitor  := NIL;
   compile_age := 0;
+  m3id_RT0_ModulePtr := 0; (* M3.Add ("RT0__ModulePtr") *)
 
 CONST
   ModuleTypeUID = -1;  (* special CG.TypeUID used for all interface records *)
@@ -109,6 +110,16 @@ CONST
   UnitKindRW = ARRAY (*t.interface*)BOOLEAN OF TEXT { "MODULE ", "INTERFACE " };
   UnitKindText = ARRAY (*t.interface*)BOOLEAN OF TEXT { "module", "interface" };
   UnitKindSuffix = ARRAY (*t.interface*)BOOLEAN OF TEXT { ".mg", ".ig" };
+
+PROCEDURE M3ID_RT0_ModulePtr (): M3ID.T =
+VAR id := m3id_RT0_ModulePtr;
+BEGIN
+  IF id = 0 THEN
+    id := M3ID.Add ("RT0__ModulePtr");
+    m3id_RT0_ModulePtr := id;
+  END;
+  RETURN id;
+END M3ID_RT0_ModulePtr;
 
 PROCEDURE Reset () =
   BEGIN
@@ -1053,8 +1064,12 @@ PROCEDURE BuildImportLink (nm: M3ID.T;  binder: TEXT): INTEGER =
     prev_link : INTEGER;
     offset    := Allocate (M3RT.II_SIZE, Target.Address.align, FALSE,
                            "import ", nm);
+    (* return_typename is needed, in order to get it correct/consistent everywhere,
+     * because RTLinkerX.i3 declares some of these functions this way.
+     *)
     proc      := CG.Import_procedure (M3ID.Add (binder), 1, CG.Type.Addr,
-                                       Target.DefaultCall, new_proc);
+                                      Target.DefaultCall, new_proc,
+                                      return_typename := M3ID_RT0_ModulePtr ());
   BEGIN
     EVAL BinderDeclareParam ();
     IF (curModule.last_import = 0)
@@ -1085,8 +1100,12 @@ PROCEDURE EmitDecl (x: InitBody) =
     IF (x.cg_proc # NIL) THEN RETURN END;
     Scanner.offset := t.body_origin;
     CG.Gen_location (t.body_origin);
+    (* return_typename is needed, in order to get it correct/consistent everywhere,
+     * because RTLinkerX.i3 declares some of these functions this way.
+     *)
     x.cg_proc := CG.Declare_procedure (M3ID.Add (x.name), 1, CG.Type.Addr,
-       lev := 0, cc := Target.DefaultCall, exported := TRUE, parent := NIL);
+       lev := 0, cc := Target.DefaultCall, exported := TRUE, parent := NIL,
+       return_typename := M3ID_RT0_ModulePtr ());
     x.arg := BinderDeclareParam ();
   END EmitDecl;
 
