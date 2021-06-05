@@ -41,7 +41,7 @@ ToUpper(char* a)
     }
 }
 
-char*
+const char*
 __cdecl
 MxConfigC__HOST(void)
 {
