@@ -46,7 +46,12 @@ typedef int BOOL;
 #define TRUE 1
 #define FALSE 0
 
-#if __GNUC__ >= 4 && !defined(__osf__) && !defined(__CYGWIN__)
+// This is disabled.
+// There are warnings about inconsistencies.
+// There is not all that much code that it affects.
+// We should be more worried the m3c output than the hand written C.
+// It is not clearly worth the platform-specificity.
+#if 0 /* __GNUC__ >= 4 && !defined(__osf__) && !defined(__CYGWIN__) */
 #define M3_HAS_VISIBILITY 1
 #else
 #define M3_HAS_VISIBILITY 0
