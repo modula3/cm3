@@ -35,18 +35,18 @@ extern "C" {
 //
 // Wrapper for longjmp / siglongjmp specifically for use by Modula-3 exception handling.
 #ifdef __sun
-void __cdecl Csetjmp__m3_longjmp(sigjmp_buf env, int val)
+void __cdecl Csetjmp__m3_longjmp(Csetjmp__jmp_buf env, int val)
 {
-    siglongjmp(env, val);
+    siglongjmp(*env, val);
 }
 #else
-void __cdecl Csetjmp__m3_longjmp(jmp_buf env, int val)
+void __cdecl Csetjmp__m3_longjmp(Csetjmp__jmp_buf env, int val)
 {
 #if defined(_WIN32) || defined(__CYGWIN__) || defined(__MINGW__)
     // No signal mask to save/restore, longjmp is the only longjmp.
-    longjmp(env, val);
+    longjmp(*env, val);
 #else
-    _longjmp(env, val);
+    _longjmp(*env, val);
 #endif
 }
 #endif

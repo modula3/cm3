@@ -68,17 +68,17 @@ void __cdecl RTIO__PutBytes(ADDRESS addr, INTEGER icount)
     fflush(NULL);
 }
 
-void __cdecl RTIO__PutLong(INT64 i)
+void __cdecl RTIO__PutLong(LONGINT i)
 {
     RTIO__Flush();
     printf("%" I64 "d", i);
     fflush(NULL);
 }
 
-void __cdecl RTIO__PutLongHex(UINT64 i)
+void __cdecl RTIO__PutLongHex(LONGINT i)
 {
     RTIO__Flush();
-    printf("0x%" I64 "x", i);
+    printf("0x%" I64 "x", (UINT64)i);
     fflush(NULL);
 }
 

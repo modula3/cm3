@@ -2,6 +2,10 @@
 #include "m3core.h"
 #endif
 
+#ifndef _WIN32 /* Do not accidentally export printf. */
+#include <stdio.h>
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -28,16 +32,14 @@ RTLinker__GetEnvironmentStrings (ADDRESS EnvFromMain)
 
 #ifndef _WIN32 /* Do not accidentally export printf. */
 
-#if 1 /* debugging code */
-
-#include <stdio.h>
+#if 0 /* debugging code */
 
 #if 0
-STRUCT_TYPEDEF(RT0__TypeLink)
+STRUCT_TYPEDEF(Text_t)
 struct Text_t
 {
     void* Functions;
-    ptrdiff_t Length;
+    INTEGER Length;
     char Chars[1];
 };
 
@@ -47,23 +49,13 @@ enum Trace_t
     Trace_M3,
     Trace_C,
 };
-size_t RTLinker__traceInit /* = Trace_C */;
 
-void
-__cdecl
-RTIO__PutString(const char* a);
+static int RTLinker__traceInit /* = Trace_C */;
 
-void
-__cdecl
-RTIO__PutText(Text_t* a);
-
-void
-__cdecl
-RTIO__PutInt(int a);
-
-void
-__cdecl
-RTIO__Flush(void);
+void __cdecl RTIO__PutString(const char*);
+void __cdecl RTIO__PutText(Text_t*);
+void __cdecl RTIO__PutInt(INTEGER i, INTEGER width /* = 0 */);
+void __cdecl RTIO__Flush(void);
 
 static
 void
@@ -106,24 +98,24 @@ RTLinker__PrintText(Text_t* a)
         RTIO__PutText(a);
         break;
     case Trace_C:
-        printf("%.*s", ((int)a->Length), a->Chars);
+        printf("%.*s", (int)a->Length, a->Chars);
         break;
     }
 }
 
 static
 void
-RTLinker__PrintInt(int a)
+RTLinker__PrintInt(INTEGER a)
 {
     switch (RTLinker__traceInit)
     {
     case Trace_None:
         break;
     case Trace_M3:
-        RTIO__PutInt(a);
+        RTIO__PutInt(a, 0);
         break;
     case Trace_C:
-        printf("%X", a);
+        printf("%X", (int)a);
         break;
     }
 }
@@ -134,7 +126,7 @@ void
 __cdecl
 RTLinker__PrintModule(RT0__Module* module)
 {
-    RT0__Import* imports = { 0 };
+    RT0__Import* imports;
 
     if (module == NULL)
         return;
@@ -142,7 +134,7 @@ RTLinker__PrintModule(RT0__Module* module)
     imports = module->imports;
     while (imports)
     {
-        printf("module %p %s imports %p{import %p, binder %p, next %p}",
+        printf("module %p %s imports %p{import %p binder %p next %p}",
                (void*)module,
                module->file,
                (void*)imports,
