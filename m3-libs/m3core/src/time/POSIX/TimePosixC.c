@@ -20,6 +20,8 @@ extern "C" {
 #endif
 
 #undef THOUSAND /* Support concatenating multiple .c files. */
+#undef MILLION  /* Support concatenating multiple .c files. */
+#undef BILLION  /* Support concatenating multiple .c files. */
 #define THOUSAND ((UINT64)1000)
 #define MILLION (THOUSAND * THOUSAND)
 #define BILLION (THOUSAND * MILLION)
