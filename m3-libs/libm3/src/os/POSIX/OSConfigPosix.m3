@@ -6,7 +6,7 @@ UNSAFE MODULE OSConfigPosix EXPORTS OSConfig, OSConfigPosixC;
 IMPORT Env, OSError, Process, OSConfigPosixC, M3toC, Ctypes;
 (* IMPORT OSConfigPosix_DefaultOSName, OSConfigPosix_DefaultArch; *)
 
-TYPE char_star = Ctypes.char_star;
+TYPE const_char_star = Ctypes.const_char_star;
 
 VAR
   host_name  : TEXT := NIL;
@@ -54,7 +54,7 @@ PROCEDURE UserHome (): TEXT =
 
 (*---------------------------------------------------------- internal ---*)
 
-PROCEDURE CopyStoT (c: char_star; VAR text: TEXT) =
+PROCEDURE CopyStoT (c: const_char_star; VAR text: TEXT) =
 BEGIN
   IF text = NIL THEN
     text := M3toC.CopyStoT(c);
@@ -62,7 +62,7 @@ BEGIN
 END CopyStoT;
 
 (* Callback from C to Modula3 so that C does not traffic in traced references. *)
-PROCEDURE InitFromC (c_host_name, c_host_arch, c_os_name, c_os_version: char_star) =
+PROCEDURE InitFromC (c_host_name, c_host_arch, c_os_name, c_os_version: const_char_star) =
 BEGIN
   CopyStoT(c_host_name, host_name);
   CopyStoT(c_host_arch, host_arch);

@@ -43,12 +43,14 @@ PROCEDURE RunMainBody (m: RT0.ModulePtr);
    Note: this procedure is only exported so that stack walkers
    can know when to quit looking at frames. *)
 
-<*EXTERNAL RTLinker__PrintString*> PROCEDURE PrintString (a : ADDRESS);
+(*
+<*EXTERNAL RTLinker__PrintString*> PROCEDURE PrintString (a : Ctypes.const_char_star);
 <*EXTERNAL RTLinker__PrintText*> PROCEDURE PrintText(a : TEXT);
 <*EXTERNAL RTLinker__PrintInt*> PROCEDURE PrintInt(a : INTEGER);
-<*EXTERNAL RTLinker__PrintModule*> PROCEDURE PrintModule(a : ADDRESS);
+<*EXTERNAL RTLinker__PrintModule*> PROCEDURE PrintModule(a : RT0.ModulePtr);
 (* TYPE Trace_t = { None, M3, C };
 <*EXTERNAL RTLinker__traceInit*> VAR traceInit : Trace_t; *)
+*)
 
 END RTLinker.
 

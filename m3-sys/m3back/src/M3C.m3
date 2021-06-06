@@ -17,9 +17,9 @@ FROM M3CC IMPORT IntToDec, IntToHex, UIntToHex, INT32;
 IMPORT TextSetDef, Fmt;
 CONST NameT = M3ID.ToText;
 
-VAR debug := FALSE;               (* command line @M3m3c-debug *)
-VAR debug_verbose := FALSE;       (* command line @M3m3c-debug-verbose *)
-VAR debug_comment := FALSE;       (* command line @M3m3c-debug-comment or the rest *)
+VAR debug := TRUE;                (* command line @M3m3c-debug *)
+VAR debug_verbose := TRUE;        (* command line @M3m3c-debug-verbose *)
+VAR debug_comment := TRUE;        (* command line @M3m3c-debug-comment or the rest *)
 VAR debug_comment_stdio := FALSE; (* command line @M3m3c-debug-comment-stdio *)
 VAR debug_types := FALSE;         (* command line @M3m3c-debug-types *)
 
@@ -1737,7 +1737,11 @@ BEGIN
   END;
   print (self, ");");
 
-  print (self, "\n#else\ntypedef ADDRESS " & procType.text & ";\n#endif\n");
+(* print (self, "\n#else\ntypedef ADDRESS " & procType.text & ";\n#endif\n");
+ * void ( * )(void) seems pretty common for function pointers so see how
+ * far that gets us. This is a bit of a hack.
+ *)
+  print (self, "\n#else\ntypedef void (__cdecl*" & procType.text & ")(void);\n#endif\n");
 
 END ProcType_define;
 
@@ -7442,11 +7446,13 @@ BEGIN
     MarkUsed_proc(self.self, p);
 END MarkUsed_start_call_direct;
 
-PROCEDURE start_call_direct(self: T; p: M3CG.Proc; <*UNUSED*>level: INTEGER; <*UNUSED*>type: CGType) =
+PROCEDURE start_call_direct(self: T; p: M3CG.Proc; <*UNUSED*>level: INTEGER; type: CGType) =
 (* begin a procedure call to a procedure at static level 'level'. *)
 VAR proc := NARROW(p, Proc_t);
 BEGIN
-    IF debug THEN
+    IF debug_verbose THEN
+        self.comment("start_call_direct type:", cgtypeToText [type]);
+    ELSIF debug THEN
       self.comment("start_call_direct");
     END;
     start_call_helper(self);
@@ -7643,7 +7649,9 @@ PROCEDURE call_direct(self: T; p: M3CG.Proc; type: CGType) =
    returns a value of type type. *)
 VAR proc := NARROW(p, Proc_t);
 BEGIN
-    IF debug THEN
+    IF debug_verbose THEN
+        self.comment("call_direct type:", cgtypeToText [type]);
+    ELSIF debug THEN
       self.comment("call_direct");
     END;
 
@@ -7662,7 +7670,9 @@ PROCEDURE call_indirect(self: T; type: CGType; <*UNUSED*>callingConvention: Call
 VAR s0 := get(self, 0);
     static_link := self.static_link;
 BEGIN
-    IF debug THEN
+    IF debug_verbose THEN
+        self.comment("call_indirect type:", cgtypeToText [type]);
+    ELSIF debug THEN
       self.comment("call_indirect");
     END;
 

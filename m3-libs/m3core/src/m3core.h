@@ -583,9 +583,9 @@ typedef void (__cdecl*   Csignal__Handler)(int s);
 
 #define Csetjmp__jmp_buf            Csetjmp__jmp_buf            /* inhibit m3c type */
 #ifdef __sun /* Messy. See Csetjmp.c. */
-typedef sigjmp_buf    Csetjmp__jmp_buf;
+typedef sigjmp_buf*   Csetjmp__jmp_buf;
 #else
-typedef jmp_buf       Csetjmp__jmp_buf;
+typedef jmp_buf*      Csetjmp__jmp_buf;
 #endif
 
 #define ContextC__T                    ContextC__T                    /* inhibit m3c type */
@@ -1038,8 +1038,26 @@ int __cdecl UnixC__pipe (int* files);
 
 #endif
 
-// see RT0.i3 for the types here
-// It would be good for the Modula-3 compiler to generate C headers.
+// See RTMachine.i3, RTStack.i3, RTStackC.c
+// TYPE Frame = RECORD pc, sp: ADDRESS END;
+#define RTStack__Frame RTStack__Frame /* inhibit m3c type */
+STRUCT_TYPEDEF(RTStack__Frame)
+struct RTStack__Frame
+{
+  ADDRESS pc; // program counter, instruction pointer, etc.
+  ADDRESS sp; // stack pointer
+};
+
+#if 0
+
+#define RT0__Binder       RT0__Binder       /* inhibit m3c type */
+#define RT0__Fingerprint  RT0__Fingerprint  /* inhibit m3c type */
+#define RT0__TypeInitProc RT0__TypeInitProc /* inhibit m3c type */
+#define RT0__Revelation   RT0__Revelation   /* inhibit m3c type */
+#define RT0__Typecell     RT0__Typecell     /* inhibit m3c type */
+#define RT0__TypeInitProc RT0__TypeInitProc /* inhibit m3c type */
+#define RT0__TypeLink     RT0__TypeLink     /* inhibit m3c type */
+#define RT0__ModulePtr    RT0__ModulePtr    /* inhibit m3c type */
 STRUCT_TYPEDEF(RT0__Module)
 STRUCT_TYPEDEF(RT0__Import)
 STRUCT_TYPEDEF(RT0__Revelation)
@@ -1049,9 +1067,11 @@ STRUCT_TYPEDEF(RT0__TypeLink)
 STRUCT_TYPEDEF(RT0__Proc)
 
 typedef unsigned char    RT0__Fingerprint[8]; // 64 bits, no alignment (but actually 2pointer aligned)
-
 typedef RT0__Module* (__cdecl*RT0__Binder)(INTEGER mode);
 typedef         void (__cdecl*RT0__TypeInitProc)(ADDRESS);
+typedef RT0__Module* RT0__ModulePtr;
+
+void __cdecl RTLinker__PrintModule(RT0__Module* module);
 
 struct RT0__Proc // one of these is generated for each top-level procedure
 {
@@ -1121,6 +1141,8 @@ struct RT0__Module
     RT0__Binder      binder;         // 44 88
     INTEGER          gc_flags;       // 48 96
 };
+
+#endif
 
 #ifdef __cplusplus
 } /* extern "C" */

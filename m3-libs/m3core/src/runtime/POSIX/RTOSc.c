@@ -10,7 +10,7 @@ extern "C" {
 #define MAP_ANON MAP_ANONYMOUS
 #endif
 
-void*
+ADDRESS
 __cdecl
 RTOS__GetMemory(INTEGER isize)
 {
@@ -37,11 +37,11 @@ RTOS__GetMemory(INTEGER isize)
     // Anecdotal evidence:
     // https://github.com/modula3/cm3/commit/518f93e67ed8f3291a5cd5cf0a39d1fefbc79969
     // https://github.com/modula3/cm3/commit/384b3cc05fcedf4307f077f49cde3d6675b039c6
-    return sbrk(size);
+    return (ADDRESS)sbrk(size);
 
 #else
 
-    return mmap(0, size, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0);
+    return (ADDRESS)mmap(0, size, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0);
 
 #endif
 }

@@ -21,19 +21,11 @@
 extern "C" {
 #endif
 
-/* TYPE Frame = RECORD pc, sp: ADDRESS END; */
-typedef struct {
-  unsigned long pc;
-  unsigned long sp;
-} Frame;
-
-
 /*---------------------------------------------------------------------------*/
 /* PROCEDURE GetThreadFrame (VAR f: Frame;  start: ADDRESS;  len: INTEGER);
    Return in "f" the frame of the thread whose machine state is in bytes
    [start .. start+len).  Returns with f.pc=NIL on failure. */
-
-void __cdecl RTStack__GetThreadFrame (Frame *f, char *start, int len)
+void __cdecl RTStack__GetThreadFrame (RTStack__Frame* f, ADDRESS start, INTEGER len)
 {
   abort ();
 }
@@ -42,7 +34,7 @@ void __cdecl RTStack__GetThreadFrame (Frame *f, char *start, int len)
 /* PROCEDURE CurrentFrame (VAR(*OUT*) f: Frame);
    Return in "f" the frame of its caller.  Returns with pc = NIL on failure. */
 
-void __cdecl RTStack__CurFrame (Frame *f)
+void __cdecl RTStack__CurFrame (RTStack__Frame* f)
 {
   abort ();
 }
@@ -51,8 +43,7 @@ void __cdecl RTStack__CurFrame (Frame *f)
 /* PROCEDURE PreviousFrame (READONLY f: Frame): Frame;
    Return the stack frame that called "f".  Returns with pc = NIL if
    "f" is the first frame on the stack or its predecessor is ill-formed. */
-
-void __cdecl RTStack__PrevFrame (Frame *callee, Frame *caller)
+void __cdecl RTStack__PrevFrame (RTStack__Frame* callee, RTStack__Frame* caller)
 {
   abort ();
 }
@@ -62,8 +53,7 @@ void __cdecl RTStack__PrevFrame (Frame *callee, Frame *caller)
    Restore the machine state back to the frame "f".  All callee-saved
    registers must be restored to the state they were in when frame "f"
    made its last call. */
-
-void __cdecl RTStack__Unwind (Frame *target)
+void __cdecl RTStack__Unwind (RTStack__Frame* target)
 {
   abort ();
 }
@@ -73,8 +63,7 @@ void __cdecl RTStack__Unwind (Frame *target)
    Return the null-terminated constant string that names the procedure
    corresponding to the stack frame "f".  Returns NIL if no name is
    known. */
-
-ADDRESS __cdecl RTStack__ProcName (Frame *f)
+ADDRESS __cdecl RTStack__ProcName (RTStack__Frame* f)
 {
   return 0;
 }
