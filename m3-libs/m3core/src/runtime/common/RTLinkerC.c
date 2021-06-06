@@ -177,12 +177,12 @@ RTLinker__PrintModule(ModuleInfo_t* Module)
     while (Imports != NULL)
     {
         printf("Module %p %s Imports %p{Import %p, Binder %p, Next %p}",
-               Module,
+               (void*)Module,
                Module->File,
-               Imports,
-               (Imports ? Imports->Import : NULL),
-               (Imports ? Imports->Binder : NULL),
-               (Imports ? Imports->Next : NULL));
+               (void*)Imports,
+               (void*)(Imports ? Imports->Import : NULL),
+               (void*)(Imports ? *(void**)&Imports->Binder : NULL),
+               (void*)(Imports ? Imports->Next : NULL));
         fflush(0);
         printf(" %p ", Imports && Imports->Import ? Imports->Import->File : "");
         fflush(0);
