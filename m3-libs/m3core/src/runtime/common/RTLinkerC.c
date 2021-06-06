@@ -87,16 +87,19 @@ enum Trace_t
 size_t traceInit /* = Trace_C */;
 
 void
+__cdecl
 RTIO__PutString(const char* a);
 
 void
+__cdecl
 RTIO__PutText(Text_t* a);
 
 void
+__cdecl
 RTIO__PutInt(int a);
 
-static
 void
+__cdecl
 RTIO__Flush(void);
 
 static
@@ -165,6 +168,7 @@ RTLinker__PrintInt(int a)
 #endif
 
 void
+__cdecl
 RTLinker__PrintModule(ModuleInfo_t* Module)
 {
     ImportInfo_t* Imports = { 0 };
