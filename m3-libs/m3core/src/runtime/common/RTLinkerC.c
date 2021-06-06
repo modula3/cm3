@@ -75,14 +75,13 @@ struct Text_t
     char Chars[1];
 };
 
-#define traceInit RTLinker__traceInit
 enum Trace_t
 {
     Trace_None,
     Trace_M3,
     Trace_C,
 };
-size_t traceInit /* = Trace_C */;
+size_t RTLinker__traceInit /* = Trace_C */;
 
 void
 __cdecl
@@ -104,7 +103,7 @@ static
 void
 RTLinker__PrintFlush(void)
 {
-    if (traceInit == Trace_M3)
+    if (RTLinker__traceInit == Trace_M3)
         RTIO__Flush();
 }
 
@@ -114,7 +113,7 @@ RTLinker__PrintString(const char* a)
 {
     if (a == NULL || a[0] == 0)
         return;
-    switch (traceInit)
+    switch (RTLinker__traceInit)
     {
     case Trace_None:
         break;
@@ -133,7 +132,7 @@ RTLinker__PrintText(Text_t* a)
 {
     if (a == NULL || a->Length < 1)
         return;
-    switch (traceInit)
+    switch (RTLinker__traceInit)
     {
     case Trace_None:
         break;
@@ -150,7 +149,7 @@ static
 void
 RTLinker__PrintInt(int a)
 {
-    switch (traceInit)
+    switch (RTLinker__traceInit)
     {
     case Trace_None:
         break;
