@@ -35,39 +35,95 @@ RTLinker__GetEnvironmentStrings (ADDRESS EnvFromMain)
   It would be good for the Modula-3 compiler to generate C headers.
 */
 
+STRUCT_TYPEDEF(RT0__Module)
+STRUCT_TYPEDEF(RT0__Import)
+STRUCT_TYPEDEF(RT0__Revelation)
+STRUCT_TYPEDEF(RT0__Typecell)
+STRUCT_TYPEDEF(RT0__Brand)
+STRUCT_TYPEDEF(RT0__TypeLink)
+STRUCT_TYPEDEF(RT0__Proc)
+
+typedef unsigned char    RT0__Fingerprint[8]; // 64 bits, no alignment (but actually 2pointer aligned)
+typedef const char*      RT0__String;
+
+typedef RT0__Module* (__cdecl*RT0__Binder)(INTEGER mode);
+typedef         void (__cdecl*RT0__TypeInitProc)(ADDRESS);
+
+struct RT0__Proc // one of these is generated for each top-level procedure
+{
+    ADDRESS     proc;
+    const char* name;
+};
+
+struct RT0__TypeLink
+{
+    RT0__Typecell* defn;     // initially a pointer to the next TypeLink
+    INTEGER        typecode; // initially the compile-time UID of the type
+};
+
+struct RT0__Brand
+{
+    INTEGER length;
+    char chars [1 /* length */];
+};
+
+struct RT0__Revelation
+{
+    INTEGER lhs_id;
+    INTEGER rhs_id;
+};
+
+struct RT0__Import
+// Keep this in sync with RT0.i3
+// one of these is generated for each imported interface reference
+{
+    RT0__Module* import;
+    RT0__Binder  binder; // returns "import" pointer
+    RT0__Import* next;
+};
+
+struct RT0__Typecell
+{
+    INTEGER           typecode;       // Typecode
+    INTEGER           selfID;
+    RT0__Fingerprint  fp;
+    BOOLEAN           traced;
+    UINT8             kind;           // == ORD (TypeKind = { Unknown, Ref, Obj, Array })
+    UINT8             link_state;
+    UINT8             dataAlignment;
+    INTEGER           dataSize;
+    ADDRESS           type_map;       // RTTypeMap.T
+    ADDRESS           gc_map;         // reduced RTTypeMap.T for collector
+    ADDRESS           type_desc;      // enhanced RTTipe map for new pickles
+    RT0__TypeInitProc initProc;       // called by NEW
+    RT0__Brand*       brand_ptr;
+    const char*       name;
+    RT0__Typecell*    next;
+};
+
+struct RT0__Module
+// Keep this in sync with RT0.i3
+// allocated at offset 0 of each compilation unit's global data
+{
+    const char*      file;           //  0
+    RT0__Typecell*   type_cells;     //  4  8
+    RT0__TypeLink*   type_cell_ptrs; //  8 16
+    RT0__Revelation* full_rev;       // 12 24
+    RT0__Revelation* partial_rev;    // 16 32
+    RT0__Proc*       proc_info;      // 20 40
+    ADDRESS          try_scopes;     // 24 48
+    ADDRESS          var_map;        // 28 56
+    ADDRESS          gc_map;         // 32 64
+    RT0__Import*     imports;        // 36 72
+    INTEGER          link_state;     // 40 80
+    RT0__Binder      binder;         // 44 88
+    INTEGER          gc_flags;       // 48 96
+};
+
 #include <stdio.h>
 
-struct ModuleInfo_t; typedef struct ModuleInfo_t ModuleInfo_t;
-struct ImportInfo_t; typedef struct ImportInfo_t ImportInfo_t;
 #if 0
-struct Text_t; typedef struct Text_t Text_t;
-#endif
-
-struct ImportInfo_t
-{
-    ModuleInfo_t* Import;
-    void* Binder; /* returns "import" pointer */
-    ImportInfo_t* Next;
-};
-
-struct ModuleInfo_t
-{
-    const char* File;               /* 0 */
-    void* TypeCells;                /* 4 8 */
-    void* TypeCellPointers;         /* 8 16 */
-    void* FullRevelation;           /* 12 24 */
-    void* PartialRevelation;        /* 16 32 */
-    void* ProcedureInformation;     /* 20 40 */
-    void* TryScopes;                /* 24 48 */
-    void* VariableMap;              /* 28 56 */
-    void* GarbageCollectionMap;     /* 32 64 */
-    ImportInfo_t* Imports;          /* 36 72 */
-    size_t LinkState;               /* 40 80 */
-    void* Binder;                   /* 44 88 */
-    size_t GarbageCollectionFlags;  /* 48 96 */
-};
-
-#if 0
+STRUCT_TYPEDEF(RT0__TypeLink)
 struct Text_t
 {
     void* Functions;
@@ -166,28 +222,28 @@ RTLinker__PrintInt(int a)
 
 void
 __cdecl
-RTLinker__PrintModule(ModuleInfo_t* Module)
+RTLinker__PrintModule(RT0__Module* module)
 {
-    ImportInfo_t* Imports = { 0 };
+    RT0__Import* imports = { 0 };
 
-    if (Module == NULL)
+    if (module == NULL)
         return;
 
-    Imports = Module->Imports;
-    while (Imports != NULL)
+    imports = module->imports;
+    while (imports)
     {
-        printf("Module %p %s Imports %p{Import %p, Binder %p, Next %p}",
-               (void*)Module,
-               Module->File,
-               (void*)Imports,
-               (void*)(Imports ? Imports->Import : NULL),
-               (void*)(Imports ? *(void**)&Imports->Binder : NULL),
-               (void*)(Imports ? Imports->Next : NULL));
+        printf("module %p %s imports %p{import %p, binder %p, next %p}",
+               (void*)module,
+               module->file,
+               (void*)imports,
+               (void*)(imports ? imports->import : NULL),
+               (void*)(imports ? *(void**)&imports->binder : NULL),
+               (void*)(imports ? imports->next : NULL));
         fflush(0);
-        printf(" %p ", Imports && Imports->Import ? Imports->Import->File : "");
+        printf(" %p ", imports && imports->import ? imports->import->file : "");
         fflush(0);
-        printf(" %s\n", Imports && Imports->Import ? Imports->Import->File : "");
-        Imports = Imports->Next;
+        printf(" %s\n", imports && imports->import ? imports->import->file : "");
+        imports = imports->next;
     }
     printf("\n");
 }
