@@ -74,9 +74,7 @@ struct Text_t
     ptrdiff_t Length;
     char Chars[1];
 };
-#endif
 
-#if 0
 #define traceInit RTLinker__traceInit
 enum Trace_t
 {
