@@ -1,21 +1,11 @@
-/* Do not accidentally export printf.
-   This will break p227/p228. */
-#ifndef _WIN32
+#ifdef _WIN32 /* Do not accidentally export printf. This will break p227/p228. */
+
+char RTIOc_avoid_empty_file_warning_unique_0671f719f3a74ea2b7ba81b160caa215;
+
+#else
 
 #ifndef INCLUDED_M3CORE_H
 #include "m3core.h"
-#endif
-
-#if !defined(_MSC_VER) && !defined(__cdecl)
-#define __cdecl /* nothing */
-#endif
-
-#ifdef _MSC_VER
-typedef __int64 int64;
-typedef unsigned __int64 uint64;
-#else
-typedef long long int64;
-typedef unsigned long long uint64;
 #endif
 
 #ifdef _WIN32
@@ -28,38 +18,30 @@ typedef unsigned long long uint64;
 extern "C" {
 #endif
 
-#define Flush       RTIO__Flush
-#define PutE        RTIO__PutE
-#define PutF        RTIO__PutF
-#define PutG        RTIO__PutG
-#define PutBytes    RTIO__PutBytes
-#define PutLong     RTIO__PutLong
-#define PutLongHex  RTIO__PutLongHex
+void __cdecl RTIO__Flush(void);
 
-void __cdecl Flush(void);
-
-void __cdecl PutE(double a)
+void __cdecl RTIO__PutE(double a)
 {
-    Flush();
+    RTIO__Flush();
     printf("%e", a);
     fflush(NULL);
 }
 
-void __cdecl PutF(double a)
+void __cdecl RTIO__PutF(double a)
 {
-    Flush();
+    RTIO__Flush();
     printf("%f", a);
     fflush(NULL);
 }
 
-void __cdecl PutG(double a)
+void __cdecl RTIO__PutG(double a)
 {
-    Flush();
+    RTIO__Flush();
     printf("%g", a);
     fflush(NULL);
 }
 
-void __cdecl PutBytes(ADDRESS addr, INTEGER icount)
+void __cdecl RTIO__PutBytes(ADDRESS addr, INTEGER icount)
 {
     WORD_T const count = (WORD_T)icount; // Modula-3 lacks unsigned types, pass as signed and cast.
     unsigned char const * const p = (const unsigned char*)addr;
@@ -68,7 +50,7 @@ void __cdecl PutBytes(ADDRESS addr, INTEGER icount)
     WORD_T i = { 0 };
     WORD_T j = { 0 };
     
-    Flush();
+    RTIO__Flush();
     for (i = 0; i < count; ++i)
     {
         unsigned char c = p[i];
@@ -86,16 +68,16 @@ void __cdecl PutBytes(ADDRESS addr, INTEGER icount)
     fflush(NULL);
 }
 
-void __cdecl RTIO__PutLong(int64 i)
+void __cdecl RTIO__PutLong(INT64 i)
 {
-    Flush();
+    RTIO__Flush();
     printf("%" I64 "d", i);
     fflush(NULL);
 }
 
-void __cdecl RTIO__PutLongHex(uint64 i)
+void __cdecl RTIO__PutLongHex(UINT64 i)
 {
-    Flush();
+    RTIO__Flush();
     printf("0x%" I64 "x", i);
     fflush(NULL);
 }
