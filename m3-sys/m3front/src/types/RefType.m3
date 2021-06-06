@@ -180,14 +180,18 @@ PROCEDURE Check (p: P) =
 PROCEDURE Compiler (p: P) =
   VAR typeid: CG.TypeUID;
       user_name: TEXT;
+      target_typename := M3ID.NoID;
   BEGIN
     Type.Compile (p.target);
     typeid := Type.GlobalUID (p);
-    CG.Declare_pointer (typeid, Type.GlobalUID (p.target),
-                        Brand.ToText (p.brand), p.isTraced);
     user_name := p.user_name;
     IF user_name # NIL THEN
-      CG.Declare_typename (typeid, M3ID.Add (user_name));
+      target_typename := M3ID.Add (user_name);
+    END;
+    CG.Declare_pointer (typeid, Type.GlobalUID (p.target),
+                        Brand.ToText (p.brand), p.isTraced, target_typename);
+    IF user_name # NIL THEN
+      CG.Declare_typename (typeid, target_typename);
     END;
   END Compiler;
 
