@@ -9,23 +9,26 @@ extern "C" {
 
 #if 0
 
-void* __cdecl RTOS__GetMemory(WORD_T Size)
+ADDRESS __cdecl RTOS__GetMemory(INTEGER isize)
 {
-    return calloc(Size, 1);
+    WORD_T const Size = (WORD_T)isize; // Modula-3 lacks unsigned types, pass as signed and cast.
+    return (ADDRESS)calloc(Size, 1);
 }
 
 #elif 0
 
-void* __cdecl RTOS__GetMemory(WORD_T Size)
+ADDRESS __cdecl RTOS__GetMemory(INTEGER isize)
 {
-    return HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, Size);
+    WORD_T const Size = (WORD_T)isize; // Modula-3 lacks unsigned types, pass as signed and cast.
+    return (ADDRESS)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, Size);
 }
 
 #elif 1
 
-void* __cdecl RTOS__GetMemory(WORD_T Size)
+ADDRESS __cdecl RTOS__GetMemory(INTEGER isize)
 {
-    return VirtualAlloc(NULL, Size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+    WORD_T const Size = (WORD_T)isize; // Modula-3 lacks unsigned types, pass as signed and cast.
+    return (ADDRESS)VirtualAlloc(NULL, Size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
 }
 
 #elif 0
@@ -43,8 +46,9 @@ RTOSMemoryLogEntry_t RTOSMemoryLog[128];
 WORD_T RTOSMemoryLogIndex;
 #define NUMBER_OF(a) (sizeof(a)/sizeof((a)[0]))
 
-void* __cdecl RTOS__GetMemory(WORD_T Size)
+ADDRESS __cdecl RTOS__GetMemory(INTEGER isize)
 {
+    WORD_T const Size = (WORD_T)isize; // Modula-3 lacks unsigned types, pass as signed and cast.
     RTOSMemoryLogEntry_t LogEntry;
     
     LogEntry.Size = Size;
@@ -54,7 +58,7 @@ void* __cdecl RTOS__GetMemory(WORD_T Size)
 
     RTOSMemoryLog[(RTOSMemoryLogIndex++) % NUMBER_OF(RTOSMemoryLog)] = LogEntry;
 
-    return LogEntry.Result;
+    return (ADDRESS)LogEntry.Result;
 }
 
 #endif

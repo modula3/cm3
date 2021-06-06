@@ -14,6 +14,8 @@ TYPE
                        READONLY msg: ARRAY OF TEXT) RAISES ANY;
 
 PROCEDURE Init();
+
+(* These functions are like Windows functions of the same name. *)
 <*EXTERNAL RTDebug__IsDebuggerPresent*>PROCEDURE IsDebuggerPresent():BOOLEAN;
 <*EXTERNAL RTDebug__DebugBreak*>PROCEDURE DebugBreak();
 

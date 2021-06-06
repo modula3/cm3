@@ -28,8 +28,8 @@ void RestoreHandlers(void);
 /* FROM RTSignalPrivate IMPORT MsgSegV, MsgAbort */
 #define MsgPCSegV RTSignalPrivate__MsgPCSegV
 #define MsgPCAbort RTSignalPrivate__MsgPCAbort
-void MsgPCSegV (WORD_T);
-void MsgPCAbort (WORD_T);
+void MsgPCSegV (INTEGER);
+void MsgPCAbort (INTEGER);
 
 /* FROM RTProcess IMPORT OnInterrupt, InterruptHandler, InvokeExitors */
 #define OnInterrupt RTProcess__OnInterrupt
@@ -74,7 +74,7 @@ static void RestoreOneHandler(size_t i);
 #else
 
 static
-WORD_T
+INTEGER
 __cdecl
 GetPC(void* xcontext)
 /* PC: program counter aka instruction pointer, etc. */

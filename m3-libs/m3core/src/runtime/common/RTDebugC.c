@@ -1,11 +1,12 @@
+#ifndef INCLUDED_M3CORE_H
+#include "m3core.h"
+#endif
+
 #ifdef _WIN32
 
-__declspec(dllimport) int __stdcall IsDebuggerPresent(void);
-__declspec(dllimport) void __stdcall DebugBreak(void);
-
-int __cdecl RTDebug__IsDebuggerPresent(void)
+BOOLEAN __cdecl RTDebug__IsDebuggerPresent(void)
 {
-  return IsDebuggerPresent();
+  return !!IsDebuggerPresent();
 }
 
 void __cdecl RTDebug__DebugBreak(void)
@@ -42,13 +43,13 @@ static void init(void)
   inited = 1;
 }
 
-int RTDebug__IsDebuggerPresent(void)
+BOOLEAN __cdecl RTDebug__IsDebuggerPresent(void)
 {
   init();
-  return is_debugger_present;
+  return !!is_debugger_present;
 }
 
-void RTDebug__DebugBreak(void)
+void __cdecl RTDebug__DebugBreak(void)
 /* todo: this is so big/slow compared to Win32! */
 {
   struct sigaction sa;

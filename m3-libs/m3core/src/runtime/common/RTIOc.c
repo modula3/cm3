@@ -59,8 +59,10 @@ void __cdecl PutG(double a)
     fflush(NULL);
 }
 
-void __cdecl PutBytes(const unsigned char* p, WORD_T count)
+void __cdecl PutBytes(ADDRESS addr, INTEGER icount)
 {
+    WORD_T const count = (WORD_T)icount; // Modula-3 lacks unsigned types, pass as signed and cast.
+    unsigned char const * const p = (const unsigned char*)addr;
     char buffer[33]; /* size must be odd */
     const static char hex[] = "0123456789ABCDEF";
     WORD_T i = { 0 };

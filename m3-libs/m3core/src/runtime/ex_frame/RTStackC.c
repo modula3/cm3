@@ -86,10 +86,10 @@ void __cdecl RTStack__Unwind ANSI((Frame *target))
    corresponding to the stack frame "f".  Returns NIL if no name is
    known. */
 
-char* __cdecl RTStack__ProcName ANSI((Frame *f))
+ADDRESS __cdecl RTStack__ProcName ANSI((Frame *f))
     KR((f) Frame *f;)
 {
-  return (char*)0;
+  return 0;
 }
 
 #ifdef __cplusplus
