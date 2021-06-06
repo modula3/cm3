@@ -1046,9 +1046,12 @@ BEGIN
          AND refers_to_type.text = refers_to_type.hash_text
          AND NOT IsUnsigned (typename.name) THEN (* Modula3 unsigned types are a problem. *)
         IF debug_types THEN
-          x.comment ("2replacing " & refers_to_type.text & " with " & typetext);
+          x.comment ("2replacing-not " & refers_to_type.text & " with " & typetext);
         END;
+        (* A problem with type replacement is inconsistencies across files.
+         * For example, sometimes Tunderlying is replaced with int, sometimes const_int.
         refers_to_type.text := typetext;
+         *)
       ELSE
         IF debug_types THEN
           IF refers_to_type = NIL THEN
