@@ -1,7 +1,7 @@
 MODULE M3CG_AssertFalse;
 
 IMPORT M3CG, M3CG_Ops;
-IMPORT Target, M3ID;
+IMPORT Target;
 FROM M3CG IMPORT Name, ByteOffset, TypeUID, CallingConvention;
 FROM M3CG IMPORT BitSize, ByteSize, Alignment, Frequency;
 FROM M3CG IMPORT Var, Proc, Label, Sign, BitOffset;
