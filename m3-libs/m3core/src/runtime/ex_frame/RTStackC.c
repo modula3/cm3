@@ -21,14 +21,6 @@
 extern "C" {
 #endif
 
-#if 1 /* defined(__STDC__) || defined(__cplusplus) || defined(_MSC_VER) || defined(__GNUC__) */
-#define ANSI(x) x
-#define KR(x)
-#else
-#define ANSI(x)
-#define KR(x) x
-#endif
-
 /* TYPE Frame = RECORD pc, sp: ADDRESS END; */
 typedef struct {
   unsigned long pc;
@@ -41,8 +33,7 @@ typedef struct {
    Return in "f" the frame of the thread whose machine state is in bytes
    [start .. start+len).  Returns with f.pc=NIL on failure. */
 
-void __cdecl RTStack__GetThreadFrame ANSI((Frame *f, char *start, int len))
-      KR((f, start, len) Frame *f; char *start; int len;)
+void __cdecl RTStack__GetThreadFrame (Frame *f, char *start, int len)
 {
   abort ();
 }
@@ -51,8 +42,7 @@ void __cdecl RTStack__GetThreadFrame ANSI((Frame *f, char *start, int len))
 /* PROCEDURE CurrentFrame (VAR(*OUT*) f: Frame);
    Return in "f" the frame of its caller.  Returns with pc = NIL on failure. */
 
-void __cdecl RTStack__CurFrame ANSI((Frame *f))
-     KR((f) Frame *f;)
+void __cdecl RTStack__CurFrame (Frame *f)
 {
   abort ();
 }
@@ -62,8 +52,7 @@ void __cdecl RTStack__CurFrame ANSI((Frame *f))
    Return the stack frame that called "f".  Returns with pc = NIL if
    "f" is the first frame on the stack or its predecessor is ill-formed. */
 
-void __cdecl RTStack__PrevFrame ANSI((Frame *callee, Frame *caller))
-    KR((callee, caller) Frame *callee; Frame *caller;)
+void __cdecl RTStack__PrevFrame (Frame *callee, Frame *caller)
 {
   abort ();
 }
@@ -74,8 +63,7 @@ void __cdecl RTStack__PrevFrame ANSI((Frame *callee, Frame *caller))
    registers must be restored to the state they were in when frame "f"
    made its last call. */
 
-void __cdecl RTStack__Unwind ANSI((Frame *target))
-    KR((target) Frame *target;)
+void __cdecl RTStack__Unwind (Frame *target)
 {
   abort ();
 }
@@ -86,8 +74,7 @@ void __cdecl RTStack__Unwind ANSI((Frame *target))
    corresponding to the stack frame "f".  Returns NIL if no name is
    known. */
 
-ADDRESS __cdecl RTStack__ProcName ANSI((Frame *f))
-    KR((f) Frame *f;)
+ADDRESS __cdecl RTStack__ProcName (Frame *f)
 {
   return 0;
 }
