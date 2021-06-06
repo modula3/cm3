@@ -80,9 +80,9 @@ struct Text_t
 #define traceInit RTLinker__traceInit
 enum Trace_t
 {
-	Trace_None,
-	Trace_M3,
-	Trace_C,
+    Trace_None,
+    Trace_M3,
+    Trace_C,
 };
 size_t traceInit /* = Trace_C */;
 
@@ -103,8 +103,8 @@ static
 void
 RTLinker__PrintFlush(void)
 {
-	if (traceInit == Trace_M3)
-		RTIO__Flush();
+    if (traceInit == Trace_M3)
+        RTIO__Flush();
 }
 
 static
@@ -113,17 +113,17 @@ RTLinker__PrintString(const char* a)
 {
     if (a == NULL || a[0] == 0)
         return;
-	switch (traceInit)
-	{
-	case Trace_None:
-		break;
-	case Trace_M3:
-		RTIO__PutString(a);
-		break;
-	case Trace_C:
-		printf("%s", a);
-		break;
-	}
+    switch (traceInit)
+    {
+    case Trace_None:
+        break;
+    case Trace_M3:
+        RTIO__PutString(a);
+        break;
+    case Trace_C:
+        printf("%s", a);
+        break;
+    }
 }
 
 static
@@ -132,34 +132,34 @@ RTLinker__PrintText(Text_t* a)
 {
     if (a == NULL || a->Length < 1)
         return;
-	switch (traceInit)
-	{
-	case Trace_None:
-		break;
-	case Trace_M3:
-		RTIO__PutText(a);
-		break;
-	case Trace_C:
-		printf("%.*s", ((int)a->Length), a->Chars);
-		break;
-	}
+    switch (traceInit)
+    {
+    case Trace_None:
+        break;
+    case Trace_M3:
+        RTIO__PutText(a);
+        break;
+    case Trace_C:
+        printf("%.*s", ((int)a->Length), a->Chars);
+        break;
+    }
 }
 
 static
 void
 RTLinker__PrintInt(int a)
 {
-	switch (traceInit)
-	{
-	case Trace_None:
-		break;
-	case Trace_M3:
-		RTIO__PutInt(a);
-		break;
-	case Trace_C:
-		printf("%X", a);
-		break;
-	}
+    switch (traceInit)
+    {
+    case Trace_None:
+        break;
+    case Trace_M3:
+        RTIO__PutInt(a);
+        break;
+    case Trace_C:
+        printf("%X", a);
+        break;
+    }
 }
 
 #endif
