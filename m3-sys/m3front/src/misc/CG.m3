@@ -324,9 +324,9 @@ PROCEDURE Declare_subrange (t, domain: TypeUID;  READONLY min, max: Target.Int;
     WebInfo.Declare_subrange (t, domain, min, max, s);
   END Declare_subrange;
 
-PROCEDURE Declare_pointer (t, target: TypeUID;  brand: TEXT;  traced: BOOLEAN)=
+PROCEDURE Declare_pointer (t, target: TypeUID;  brand: TEXT;  traced: BOOLEAN; target_typename: M3ID.T) =
   BEGIN
-    cg.declare_pointer (t, target, brand, traced);
+    cg.declare_pointer (t, target, brand, traced, target_typename);
     WebInfo.Declare_pointer (t, target, brand, traced);
   END Declare_pointer;
 

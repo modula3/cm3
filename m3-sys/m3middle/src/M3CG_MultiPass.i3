@@ -87,7 +87,7 @@ TYPE declare_record_t = op_t OBJECT typeid: typeid_t; bit_size: BitSize; n_field
 TYPE declare_field_t = op_t OBJECT name: Name; bit_offset: BitOffset; bit_size: BitSize; typeid: typeid_t; OVERRIDES replay := replay_declare_field END;
 TYPE declare_set_t = op_t OBJECT typeid, domain_typeid: typeid_t; bit_size: BitSize; OVERRIDES replay := replay_declare_set END;
 TYPE declare_subrange_t = op_t OBJECT typeid, domain_typeid: typeid_t; min, max: Target.Int; bit_size: BitSize; OVERRIDES replay := replay_declare_subrange END;
-TYPE declare_pointer_t = op_t OBJECT typeid, target_typeid: typeid_t; brand: TEXT; traced: BOOLEAN; OVERRIDES replay := replay_declare_pointer END;
+TYPE declare_pointer_t = op_t OBJECT typeid, target_typeid: typeid_t; brand: TEXT; traced: BOOLEAN; target_typename := M3ID.NoID; OVERRIDES replay := replay_declare_pointer END;
 TYPE declare_indirect_t = op_t OBJECT typeid, target_typeid: typeid_t; target_typename := M3ID.NoID; OVERRIDES replay := replay_declare_indirect END;
 TYPE declare_proctype_t = op_t OBJECT typeid: typeid_t; n_formals: INTEGER; return_typeid: typeid_t; n_raises: INTEGER; callingConvention: CallingConvention; result_typename := M3ID.NoID; OVERRIDES replay := replay_declare_proctype END;
 TYPE declare_formal_t = op_t OBJECT name: Name; typeid: typeid_t; typename := M3ID.NoID; OVERRIDES replay := replay_declare_formal END;
