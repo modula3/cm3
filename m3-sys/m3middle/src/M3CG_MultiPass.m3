@@ -489,9 +489,9 @@ BEGIN
 self.Add(NEW(declare_subrange_t, op := Op.declare_subrange, typeid := typeid, domain_typeid := domain_typeid, min := min, max := max, bit_size := bit_size));
 END declare_subrange;
 
-PROCEDURE declare_pointer(self: T; typeid, target_typeid: TypeUID; brand: TEXT; traced: BOOLEAN; <*UNUSED*>target_typename: Name) =
+PROCEDURE declare_pointer(self: T; typeid, target_typeid: TypeUID; brand: TEXT; traced: BOOLEAN; target_typename: Name) =
 BEGIN
-self.Add(NEW(declare_pointer_t, op := Op.declare_pointer, typeid := typeid, target_typeid := target_typeid, brand := brand, traced := traced));
+self.Add(NEW(declare_pointer_t, op := Op.declare_pointer, typeid := typeid, target_typeid := target_typeid, brand := brand, traced := traced, target_typename := target_typename));
 END declare_pointer;
 
 PROCEDURE declare_indirect(self: T; typeid, target_typeid: TypeUID; target_typename: Name) =
