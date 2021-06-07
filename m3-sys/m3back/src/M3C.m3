@@ -4454,7 +4454,7 @@ BEGIN
     FOR i := FIRST(setData) TO LAST(setData) DO
         IF self.op_counts[setData[i].op] > 0 THEN
             IF NOT setAny THEN
-                print(x, "typedef WORD_T* SET;\n#define SET_GRAIN (sizeof(WORD_T)*8)\n");
+                print(x, "typedef WORD_T* SET;\n#define SET_GRAIN (sizeof(WORD_T) * 8)\n"); (* in M3C.m3 and hand.c *)
                 setAny := TRUE;
             END;
             ifndef(x, "m3set" & M3CG_Binary.OpText(setData[i].op), "//4");

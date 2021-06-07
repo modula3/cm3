@@ -426,7 +426,6 @@ CONST Prefix = ARRAY OF TEXT {
 "m3_extract_T(UINT64)",
 "m3_insert_T(UINT32)",
 "m3_insert_T(UINT64)",
-"#define SET_GRAIN (sizeof(WORD_T)*8)",
 (*
 "static WORD_T m3_strlen(const char* s) { const char* t = s; while ( *t++) { /* nothing */ } return (WORD_T)(t - s - 1); }",
 "static WORD_T m3_uint_to_dec_length(WORD_T i) { WORD_T length = 0; do { length += 1; i /= 10; } while (i); return length; }",
