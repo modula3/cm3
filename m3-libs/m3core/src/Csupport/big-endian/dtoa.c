@@ -22,8 +22,8 @@
 extern "C" {
 #endif
 
-void CConvert__Acquire(INTEGER);
-void CConvert__Release(INTEGER);
+void __cdecl CConvert__Acquire(INTEGER);
+void __cdecl CConvert__Release(INTEGER);
 
 #ifdef __cplusplus
 } /* extern C */
@@ -32,3 +32,5 @@ void CConvert__Release(INTEGER);
 #endif /* STDC || C++ */
 
 #include "dtoa.h"
+
+#undef Bias
