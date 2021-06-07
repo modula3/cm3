@@ -91,12 +91,18 @@ PROCEDURE GenerateMain (base: Mx.LinkSet;  c_output: Wr.T;  cg_output: M3CG.T;
       Out (s, "extern \"C\" {", EOL);
       Out (s, "#endif", EOL, EOL);
 
-      Out (s, "void __cdecl RTLinker__InitRuntime(INTEGER, char**, char**, void*);", EOL);
-      Out (s, "void __cdecl RTProcess__Exit(INTEGER);", EOL);
+      Out (s, "typedef char* ADDRESS;\n");
+      Out (s, "typedef void (__cdecl*M3PROC)(void);\n");
+      Out (s, "//void __cdecl RTLinker__InitRuntime(INTEGER argc, char** argv, char** envp, void* hinstance);\n");
+      Out (s, "void __cdecl RTLinker__InitRuntime(INTEGER argc, ADDRESS argv, ADDRESS envp, ADDRESS hinstance);\n");
+      Out (s, "void __cdecl RTProcess__Exit(INTEGER);\n");
       IF NOT s.lazyInit THEN
-        Out (s, "void __cdecl RTLinker__AddUnitImports(void* (__cdecl*)(void));", EOL);
+        Out (s, "//correct, but workaround hash collisions in ProcType\n");
+        Out (s, "//void __cdecl RTLinker__AddUnitImports(void* (__cdecl*)(void));\n");
+        Out (s, "void __cdecl RTLinker__AddUnitImports(M3PROC);\n");
       END;
-      Out (s, "void __cdecl RTLinker__AddUnit(void* (__cdecl*)(void));", EOL, EOL);
+      Out (s, "//correct, but void __cdecl RTLinker__AddUnit(void* (__cdecl*)(void));\n\n");
+      Out (s, "void __cdecl RTLinker__AddUnit(M3PROC);\n\n");
     ELSE
       GenCGTypeDecls (s);
     END;
@@ -322,7 +328,7 @@ PROCEDURE GenerateCEntry (VAR s: State) =
   PROCEDURE GenAddUnits(ui: UnitInfo) =
     BEGIN
       WHILE (ui # NIL) DO
-        Out (s, "  RTLinker__AddUnit (", ui.binder, ");", EOL);
+        Out (s, "  RTLinker__AddUnit ((M3PROC)(", ui.binder, "));", EOL);
         ui := ui.next;
       END;
     END GenAddUnits;
@@ -331,7 +337,7 @@ PROCEDURE GenerateCEntry (VAR s: State) =
     BEGIN
       IF s.lazyInit THEN RETURN END;
       WHILE (ui # NIL) DO
-        Out (s, "  RTLinker__AddUnitImports (", ui.binder, ");", EOL);
+        Out (s, "  RTLinker__AddUnitImports ((M3PROC)", ui.binder, ");\n");
         ui := ui.next;
       END;
     END GenAddUnitImports;
@@ -342,11 +348,11 @@ PROCEDURE GenerateCEntry (VAR s: State) =
       Out (s, "int WINAPI ");
       Out (s, "WinMain (HINSTANCE self, HINSTANCE prev, PSTR args, int mode)", EOL);
       Out (s, "{", EOL);
-      Out (s, "  RTLinker__InitRuntime (-1, args, GetEnvironmentStringsA(), self);", EOL);
+      Out (s, "  RTLinker__InitRuntime (-1/*argc*/, (ADDRESS)args, (ADDRESS)GetEnvironmentStringsA(), (ADDRESS)self);\n");
     ELSE
       Out (s, "int main (int argc, char** argv, char** envp)", EOL);
       Out (s, "{", EOL);
-      Out (s, "  RTLinker__InitRuntime (argc, argv, envp, 0);", EOL);
+      Out (s, "  RTLinker__InitRuntime (argc, (ADDRESS)argv, (ADDRESS)envp, 0);\n");
     END;
 
     GenAddUnitImports(s.main_units);
