@@ -77,6 +77,7 @@ PROCEDURE GenerateMain (base: Mx.LinkSet;  c_output: Wr.T;  cg_output: M3CG.T;
         Out (s, "#include <windows.h>", EOL);
       END;
 
+      (* This content should match m3c output so the files can be concatenated. *)
       Out (s, EOL, "#if __INITIAL_POINTER_SIZE == 64", EOL);
       Out (s, "typedef __int64 INTEGER;", EOL);
       Out (s, "#else", EOL);
@@ -87,12 +88,18 @@ PROCEDURE GenerateMain (base: Mx.LinkSet;  c_output: Wr.T;  cg_output: M3CG.T;
       Out (s, "#define __cdecl /* nothing */", EOL);
       Out (s, "#endif", EOL, EOL);
 
+      Out (s, "typedef char* ADDRESS;\n");
+      Out (s, "typedef void (__cdecl*M3PROC)(void);\n");
+
+      Out (s, "#ifndef RT0__ModulePtr\n");
+      Out (s, "#define RT0__ModulePtr RT0__ModulePtr\n");
+      Out (s, "typedef ADDRESS RT0__ModulePtr;\n");
+      Out (s, "#endif\n\n");
+
       Out (s, "#ifdef __cplusplus", EOL);
       Out (s, "extern \"C\" {", EOL);
       Out (s, "#endif", EOL, EOL);
 
-      Out (s, "typedef char* ADDRESS;\n");
-      Out (s, "typedef void (__cdecl*M3PROC)(void);\n");
       Out (s, "//void __cdecl RTLinker__InitRuntime(INTEGER argc, char** argv, char** envp, void* hinstance);\n");
       Out (s, "void __cdecl RTLinker__InitRuntime(INTEGER argc, ADDRESS argv, ADDRESS envp, ADDRESS hinstance);\n");
       Out (s, "void __cdecl RTProcess__Exit(INTEGER);\n");
@@ -289,7 +296,8 @@ PROCEDURE ImportUnit (VAR s: State;  ui: UnitInfo) =
   BEGIN
     ui.binder := UnitName (u);
     IF s.genC THEN
-      Out (s, "void* __cdecl ", ui.binder, "(void);", EOL);
+      (* This content should match m3c output so the files can be concatenated. *)
+      Out (s, "RT0__ModulePtr __cdecl ", ui.binder, "(INTEGER mode);\n");
     ELSE
       ui.cg_proc := s.cg.import_procedure (M3ID.Add (ui.binder), 1,
                                           Target.CGType.Addr,
@@ -328,7 +336,7 @@ PROCEDURE GenerateCEntry (VAR s: State) =
   PROCEDURE GenAddUnits(ui: UnitInfo) =
     BEGIN
       WHILE (ui # NIL) DO
-        Out (s, "  RTLinker__AddUnit ((M3PROC)(", ui.binder, "));", EOL);
+        Out (s, "  RTLinker__AddUnit ((M3PROC)", ui.binder, ");", EOL);
         ui := ui.next;
       END;
     END GenAddUnits;
