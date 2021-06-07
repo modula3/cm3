@@ -156,3 +156,7 @@ ThreadPThread__ProcessStopped (m3_pthread_t mt, void *bottom, void *context,
 #endif /* Apple */
 
 M3_EXTERNC_END
+
+#if M3_HAS_VISIBILITY
+#pragma GCC visibility pop
+#endif

@@ -11,7 +11,7 @@ We use gettimeofday() which returns seconds and microseconds.
 #include "m3core.h"
 #endif
 
-#if __GNUC__ >= 4
+#if M3_HAS_VISIBILITY
 #pragma GCC visibility push(hidden)
 #endif
 
@@ -137,4 +137,8 @@ TimePosix__ComputeGrain(void)
 
 #ifdef __cplusplus
 } /* extern C */
+#endif
+
+#if M3_HAS_VISIBILITY
+#pragma GCC visibility pop
 #endif
