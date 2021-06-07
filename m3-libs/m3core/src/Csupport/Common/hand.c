@@ -124,6 +124,7 @@ m3_mod64(INT64 b, INT64 a)
   }
 }
 
+// in M3C.m3 and hand.c
 #define SET_GRAIN (sizeof(WORD_T) * 8)
 
 WORD_T
