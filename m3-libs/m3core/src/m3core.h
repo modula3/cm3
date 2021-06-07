@@ -398,6 +398,7 @@ typedef ptrdiff_t ssize_t;
 #include <arpa/inet.h>
 #include <netinet/tcp.h>
 #include <sys/un.h>
+#include <sys/select.h>
 #endif /* Win32 vs. Posix */
 
 #define ZERO_MEMORY(a) (ZeroMemory(&(a), sizeof(a)))
@@ -451,6 +452,7 @@ typedef char* ADDRESS;
 typedef char* ADDRESS;
 #endif
 typedef ADDRESS TEXT;
+#define MUTEX MUTEX
 typedef ADDRESS MUTEX;
 
 #ifdef __cplusplus
@@ -540,13 +542,14 @@ typedef INTEGER m3_uid_t;
 #define Ctypes__unsigned_long       Ctypes__unsigned_long       /* inhibit m3c type */
 #define Ctypes__unsigned_long_int   Ctypes__unsigned_long_int   /* inhibit m3c type */
 #define Ctypes__void_star           Ctypes__void_star           /* inhibit m3c type */
+#define OSConfigPosix__const_char_star OSConfigPosix__const_char_star /* inhibit m3c type */
+#define ThreadPThread__pthread_t    ThreadPThread__pthread_t    /* inhibit m3c type */
 #define Utypes__dev_t               Utypes__dev_t               /* inhibit m3c type */
 #define Utypes__gid_t               Utypes__gid_t               /* inhibit m3c type */
 #define Utypes__ino_t               Utypes__ino_t               /* inhibit m3c type */
 #define Utypes__mode_t              Utypes__mode_t              /* inhibit m3c type */
 #define Utypes__nlink_t             Utypes__nlink_t             /* inhibit m3c type */
 #define Utypes__pid_t               Utypes__pid_t               /* inhibit m3c type */
-#define Utypes__pthread_t           Utypes__pthread_t           /* inhibit m3c type */
 #define Utypes__off_t               Utypes__off_t               /* inhibit m3c type */
 #define Utypes__size_t              Utypes__size_t              /* inhibit m3c type */
 #define Utypes__uid_t               Utypes__uid_t               /* inhibit m3c type */
@@ -560,6 +563,7 @@ typedef char          Ctypes__char;
 typedef char*         Ctypes__char_star;
 typedef char**        Ctypes__char_star_star;
 typedef const char*   Ctypes__const_char_star;
+typedef const char*   OSConfigPosix__const_char_star; // TODO remove redundancy
 typedef const int     Ctypes__const_int;
 typedef const void*   Ctypes__const_void_star;
 typedef int           Ctypes__int;
@@ -577,7 +581,7 @@ typedef m3_ino_t      Utypes__ino_t;
 typedef m3_mode_t     Utypes__mode_t;
 typedef m3_nlink_t    Utypes__nlink_t;
 typedef m3_pid_t      Utypes__pid_t;
-typedef m3_pthread_t  Utypes__pthread_t;
+typedef m3_pthread_t  ThreadPThread__pthread_t;
 typedef m3_off_t      Utypes__off_t;
 typedef size_t        Utypes__size_t;             // redundant
 typedef m3_uid_t      Utypes__uid_t;
@@ -1148,6 +1152,38 @@ struct RT0__Module
 };
 
 #endif
+
+#ifndef _WIN32
+// TODO Do we need single and double underscores?
+#define ThreadPThread_pthread_mutex_t  ThreadPThread_pthread_mutex_t  /* inhibit m3c type */
+#define ThreadPThread_pthread_cond_t   ThreadPThread_pthread_cond_t   /* inhibit m3c type */
+#define ThreadPThread__pthread_mutex_t ThreadPThread__pthread_mutex_t /* inhibit m3c type */
+#define ThreadPThread__pthread_cond_t  ThreadPThread__pthread_cond_t  /* inhibit m3c type */
+#define ThreadPThread__const_pthread_mutex_t ThreadPThread__const_pthread_mutex_t /* inhibit m3c type */
+#define ThreadPThread__const_pthread_cond_t  ThreadPThread__const_pthread_cond_t  /* inhibit m3c type */
+typedef               pthread_mutex_t* ThreadPThread_pthread_mutex_t;
+typedef               pthread_cond_t*  ThreadPThread_pthread_cond_t;
+typedef               pthread_mutex_t* ThreadPThread__pthread_mutex_t;
+typedef               pthread_cond_t*  ThreadPThread__pthread_cond_t;
+typedef               pthread_mutex_t* const ThreadPThread__const_pthread_mutex_t;
+typedef               pthread_cond_t*  const ThreadPThread__const_pthread_cond_t;
+
+#define ThreadInternal__FDSet ThreadInternal__FDSet /* inhibit m3c type */
+typedef                fd_set ThreadInternal__FDSet;
+
+#define ThreadPThread__siginfo_t ThreadPThread__siginfo_t /* inhibit m3c type */
+typedef siginfo_t ThreadPThread__siginfo_t;
+#endif
+
+#define ThreadPThread__Activation ThreadPThread__Activation /* inhibit m3c type */
+typedef void* ThreadPThread__Activation;
+
+#define ThreadPThread__start_routine_t ThreadPThread__start_routine_t /* inhibit m3c type */
+typedef void* (__cdecl*ThreadPThread__start_routine_t)(void*);
+
+#define ThreadPThread__ProcessThreadStack ThreadPThread__ProcessThreadStack
+typedef void (__cdecl*ThreadPThread__ProcessThreadStack)(void* start, void* limit);
+
 
 #ifdef __cplusplus
 } /* extern "C" */

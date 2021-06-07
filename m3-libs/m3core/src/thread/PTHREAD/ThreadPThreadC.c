@@ -39,7 +39,7 @@ M3_EXTERNC_BEGIN
 #define sizeof_pthread_cond_t   ThreadPThread__sizeof_pthread_cond_t
 #define SIG_SUSPEND             ThreadPThread__SIG_SUSPEND
 
-void __cdecl SignalHandler(int signo, siginfo_t *info, void *context);
+void __cdecl SignalHandler(int signo, ADDRESS context);
 
 #if M3_HAS_VISIBILITY
 #pragma GCC visibility push(hidden)
@@ -88,7 +88,7 @@ static void __cdecl SignalHandlerC(int signo, siginfo_t *info, void *context)
    /usr/bin/ld: ThreadPThreadC.o: gp-relative relocation against dynamic symbol ThreadPThread__SignalHandler
    http://gcc.gnu.org/bugzilla/show_bug.cgi?id=46861 */
 {
-  SignalHandler(signo, info, context);
+  SignalHandler(signo, (ADDRESS)context);
 }
 
 int __cdecl ThreadPThread__sem_wait(void)           { return sem_wait(&ackSem); }
@@ -113,18 +113,20 @@ ThreadPThread__sigsuspend(void)
     sigsuspend(&mask);
 }
 
-void
+BOOLEAN
 __cdecl
 ThreadPThread__SuspendThread (m3_pthread_t mt)
 {
   abort();
+  return FALSE;
 }
 
-void
+BOOLEAN
 __cdecl
 ThreadPThread__RestartThread (m3_pthread_t mt)
 {
   abort();
+  return FALSE;
 }
 
 void
@@ -159,7 +161,7 @@ void __cdecl ThreadPThread__sigsuspend(void)    { M3_DIRECT_SUSPEND_ASSERT_FALSE
 
 void
 __cdecl
-ThreadPThread__ProcessLive(char *bottom, void (*p)(void *start, void *limit))
+ThreadPThread__ProcessLive(ADDRESS bottom, void (*p)(void *start, void *limit))
 {
 /*
 cc: Warning: ThreadPThreadC.c, line 170: In this statement, & before array "jb" is ignored. (addrarray)
@@ -184,7 +186,7 @@ jb may or may not be an array, & is necessary, wrap it in struct.
 #endif
   {
     /* capture top after longjmp because longjmp can clobber non-volatile locals */
-    char *top = (char*)&top;
+    char *top = (char*)alloca(1);
     assert(bottom);
     if (stack_grows_down)
     {
@@ -193,7 +195,7 @@ jb may or may not be an array, & is necessary, wrap it in struct.
     }
     else
     {
-      assert(bottom < top);
+      assert((char*)bottom < top);
       p(bottom, top);
     }
     p(&s, sizeof(s) + (char *)&s);
@@ -272,8 +274,8 @@ ThreadPThread__thread_create(size_t stackSize,
   return r;
 }
 
-
-#define MUTEX(name) \
+// Macro MUTEX is already taken.
+#define MUTEX2(name) \
 static pthread_mutex_t name##Mu = PTHREAD_MUTEX_INITIALIZER; \
 extern pthread_mutex_t * const ThreadPThread__##name##Mu; \
 pthread_mutex_t * const ThreadPThread__##name##Mu = &name##Mu; \
@@ -285,11 +287,11 @@ pthread_cond_t * const ThreadPThread__##name##Cond = &name##Cond; \
 
 /* activeMu slotMu initMu perfMu heapMu heapCond */
 
-MUTEX(active)                   /* global lock for list of active threads */
-MUTEX(slots)                    /* global lock for thread slots table */
-MUTEX(init)                     /* global lock for initializers */
-MUTEX(perf)                     /* global lock for thread state tracing */
-MUTEX(heap)                     /* global lock for heap atomicity */
+MUTEX2(active)                  /* global lock for list of active threads */
+MUTEX2(slots)                   /* global lock for thread slots table */
+MUTEX2(init)                    /* global lock for initializers */
+MUTEX2(perf)                    /* global lock for thread state tracing */
+MUTEX2(heap)                    /* global lock for heap atomicity */
 CONDITION_VARIABLE(heap)        /* CV for heap waiters */
 
 /*
@@ -377,18 +379,18 @@ Error:
     typedef int (*init_t)(T *, const attr_t *);                         \
     /* make sure the type matches */                                    \
     init_t init = pthread_##type##_init;                                \
-    return ThreadPThread_pthread_generic_new(sizeof(T),                 \
+    return (T*)ThreadPThread_pthread_generic_new(sizeof(T),             \
                                              (generic_init_t)init);     \
   }
 
-void *
+pthread_mutex_t*
 __cdecl
 ThreadPThread__pthread_mutex_new(void)
 {
   THREADPTHREAD__PTHREAD_GENERIC_NEW(mutex);
 }
 
-void *
+pthread_cond_t*
 __cdecl
 ThreadPThread__pthread_cond_new(void)
 {
@@ -542,9 +544,11 @@ ThreadPThread__pthread_mutex_unlock(pthread_mutex_t* mutex)
   return a;
 }
 
+// Do not inline to help ensure stack range is understandable.
+M3_NO_INLINE
 void
 __cdecl
-InitC(int *bottom)
+InitC(ADDRESS bottom)
 {
   int r = { 0 };
 
@@ -553,7 +557,7 @@ InitC(int *bottom)
   ZERO_MEMORY(act);
 #endif
 
-  stack_grows_down = (bottom > &r);
+  stack_grows_down = ((char*)bottom > (char*)alloca(1));
 #if defined(__APPLE__) || defined(__INTERIX)
   assert(stack_grows_down); /* See ThreadApple.c */
 #endif
@@ -580,7 +584,7 @@ InitC(int *bottom)
 #endif
 }
 
-INTEGER
+BOOLEAN
 __cdecl
 ThreadPThread__Solaris(void)
 {
