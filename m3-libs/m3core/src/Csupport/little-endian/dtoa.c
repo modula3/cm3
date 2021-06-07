@@ -20,11 +20,13 @@
 extern "C" {
 #endif
 
-void CConvert__Acquire(WORD_T);
-void CConvert__Release(WORD_T);
+void __cdecl CConvert__Acquire(INTEGER);
+void __cdecl CConvert__Release(INTEGER);
 
 #ifdef __cplusplus
 } /* extern C */
 #endif
 
 #include "dtoa.h"
+
+#undef Bias
