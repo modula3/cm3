@@ -84,3 +84,7 @@ ThreadPThread__ProcessStopped (m3_pthread_t mt, char *bottom, char *context,
 #endif // 0
 
 M3_EXTERNC_END
+
+#if M3_HAS_VISIBILITY
+#pragma GCC visibility pop
+#endif

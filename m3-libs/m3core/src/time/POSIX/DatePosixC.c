@@ -3,7 +3,7 @@
 #include "m3core.h"
 #endif
 
-#if __GNUC__ >= 4
+#if M3_HAS_VISIBILITY
 #pragma GCC visibility push(hidden)
 #endif
 

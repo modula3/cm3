@@ -350,3 +350,7 @@ ThreadPosix__SetVirtualTimer(void)
 }
 
 M3_EXTERNC_END
+
+#if M3_HAS_VISIBILITY
+#pragma GCC visibility pop
+#endif

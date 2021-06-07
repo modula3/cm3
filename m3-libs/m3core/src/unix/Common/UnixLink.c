@@ -9,7 +9,7 @@
 #include <windows.h>
 #endif
 
-#if __GNUC__ >= 4
+#if M3_HAS_VISIBILITY
 #ifdef __APPLE__
 #pragma GCC visibility push(default)
 #else
@@ -39,4 +39,8 @@ Error:
 
 #ifdef __cplusplus
 } /* extern C */
+#endif
+
+#if M3_HAS_VISIBILITY
+#pragma GCC visibility pop
 #endif

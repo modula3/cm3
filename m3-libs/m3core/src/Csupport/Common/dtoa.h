@@ -259,7 +259,18 @@ static double private_mem[PRIVATE_mem], *pmem_next = private_mem;
 #include <float.h>
 #endif /* Bad_float_h */
 
-#if __GNUC__ >= 4
+// This is disabled.
+// There are warnings about inconsistencies.
+// There is not all that much code that it affects.
+// We should be more worried the m3c output than the hand written C.
+// It is not clearly worth the platform-specificity.
+#if 0 /* __GNUC__ >= 4 && !defined(__osf__) && !defined(__CYGWIN__) */
+#define M3_HAS_VISIBILITY 1
+#else
+#define M3_HAS_VISIBILITY 0
+#endif
+
+#if M3_HAS_VISIBILITY
 #ifdef __APPLE__
 #pragma GCC visibility push(default)
 #else
@@ -3342,4 +3353,8 @@ m3_dtoa
 	}
 #ifdef __cplusplus
 }
+#endif
+
+#if M3_HAS_VISIBILITY
+#pragma GCC visibility pop
 #endif
