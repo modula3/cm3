@@ -2892,9 +2892,14 @@ END;
 
 PROCEDURE addressType_define(type: AddressType_t; self: T) =
 BEGIN
+    ifndef (self, type.text);
     print(self, "/*1addressType_define*/typedef ADDRESS " & type.text & ";\n");
+    endif (self);
+
     IF type.text # type.base_text THEN
+      ifndef (self, type.base_text);
       print(self, "/*2addressType_define*/typedef ADDRESS " & type.base_text & ";\n");
+      endif (self);
     END;
 END addressType_define;
 

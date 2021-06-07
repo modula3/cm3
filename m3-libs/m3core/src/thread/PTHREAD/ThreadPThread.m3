@@ -1258,7 +1258,7 @@ PROCEDURE StartWorld () =
     END;
   END StartWorld;
 
-PROCEDURE SignalHandler (sig: int; <*UNUSED*>info: ADDRESS; context: ADDRESS) =
+PROCEDURE SignalHandler (sig: int; context: ADDRESS) =
   VAR
     errno := Cerrno.GetErrno();
     me := GetActivation();

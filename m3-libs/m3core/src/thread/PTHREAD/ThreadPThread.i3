@@ -6,7 +6,7 @@
 
 UNSAFE INTERFACE ThreadPThread;
 
-FROM Ctypes IMPORT const_int, int;
+FROM Ctypes IMPORT const_int, int, void_star;
 FROM Cstddef IMPORT size_t;
 
 TYPE
@@ -15,10 +15,12 @@ TYPE
   pthread_mutex_t = UNTRACED BRANDED REF ADDRESS;
   pthread_cond_t = UNTRACED BRANDED REF ADDRESS;
   Activation <: ADDRESS; (* untraced thread stated stored in thread local *)
+  const_pthread_mutex_t = pthread_mutex_t;
+  const_pthread_cond_t = pthread_cond_t;
 
 (*---------------------------------------------------------------------------*)
 
-PROCEDURE SignalHandler(sig: int; info, uap: ADDRESS);
+PROCEDURE SignalHandler (sig: int; context: ADDRESS);
 
 (*---------------------------------------------------------------------------*)
 
@@ -53,9 +55,10 @@ PROCEDURE sigsuspend ();
 
 (* pthread_create but replace attr with stackSize so that attr need not be known to Modula-3 *)
 
+TYPE start_routine_t = PROCEDURE(arg: ADDRESS): ADDRESS;
+
 <*EXTERNAL "ThreadPThread__thread_create"*>
-PROCEDURE thread_create(stackSize: size_t;
-                        start_routine: PROCEDURE(arg: ADDRESS): ADDRESS; arg: ADDRESS): int;
+PROCEDURE thread_create(stackSize: size_t; start_routine: start_routine_t; arg: void_star): int;
 
 <*EXTERNAL ThreadPThread__pthread_detach_self*>
 PROCEDURE pthread_detach_self(t: pthread_t): int;
@@ -70,12 +73,12 @@ PROCEDURE pthread_kill(t: pthread_t; sig: int): int;
 
 (* static mutexes and conditions *)
 
-<*EXTERNAL "ThreadPThread__activeMu"*> VAR activeMu: pthread_mutex_t;
-<*EXTERNAL "ThreadPThread__slotsMu"*>  VAR slotsMu: pthread_mutex_t;
-<*EXTERNAL "ThreadPThread__initMu"*>   VAR initMu: pthread_mutex_t;
-<*EXTERNAL "ThreadPThread__perfMu"*>   VAR perfMu: pthread_mutex_t;
-<*EXTERNAL "ThreadPThread__heapMu"*>   VAR heapMu: pthread_mutex_t;
-<*EXTERNAL "ThreadPThread__heapCond"*> VAR heapCond: pthread_cond_t;
+<*EXTERNAL "ThreadPThread__activeMu"*> VAR activeMu: const_pthread_mutex_t;
+<*EXTERNAL "ThreadPThread__slotsMu"*>  VAR slotsMu: const_pthread_mutex_t;
+<*EXTERNAL "ThreadPThread__initMu"*>   VAR initMu: const_pthread_mutex_t;
+<*EXTERNAL "ThreadPThread__perfMu"*>   VAR perfMu: const_pthread_mutex_t;
+<*EXTERNAL "ThreadPThread__heapMu"*>   VAR heapMu: const_pthread_mutex_t;
+<*EXTERNAL "ThreadPThread__heapCond"*> VAR heapCond: const_pthread_cond_t;
 
 (* thread local "activation" *)
 
@@ -134,13 +137,13 @@ PROCEDURE SuspendThread (t: pthread_t): BOOLEAN;
 <*EXTERNAL "ThreadPThread__RestartThread"*>
 PROCEDURE RestartThread (t: pthread_t): BOOLEAN;
 
+TYPE ProcessThreadStack = PROCEDURE(start, limit: ADDRESS);
+
 <*EXTERNAL "ThreadPThread__ProcessLive"*>
-PROCEDURE ProcessLive
-  (bottom: ADDRESS; p: PROCEDURE(start, limit: ADDRESS));
+PROCEDURE ProcessLive (bottom: ADDRESS; p: ProcessThreadStack);
 
 <*EXTERNAL "ThreadPThread__ProcessStopped"*>
-PROCEDURE ProcessStopped
-  (t: pthread_t; bottom, context: ADDRESS; p: PROCEDURE(start, limit: ADDRESS));
+PROCEDURE ProcessStopped (t: pthread_t; bottom, context: ADDRESS; p: ProcessThreadStack);
 (*---------------------------------------------------------------------------*)
 (* coroutine support *)
 
