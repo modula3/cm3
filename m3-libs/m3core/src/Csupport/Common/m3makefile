@@ -2,5 +2,5 @@
 % All rights reserved.
 % See the file COPYRIGHT for a full description.
 
-h_source ("dtoa")
+c_source ("dtoa")
 c_source ("hand")
