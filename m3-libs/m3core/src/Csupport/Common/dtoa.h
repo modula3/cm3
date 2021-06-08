@@ -2,9 +2,7 @@
 #include "m3core.h"
 #endif
 
-#ifndef __cplusplus
-#define KR_headers
-#endif
+#undef KR_headers
 
 #define MULTIPLE_THREADS
 #define ACQUIRE_DTOA_LOCK(n) CConvert__Acquire(n)
