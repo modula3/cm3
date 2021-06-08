@@ -11,10 +11,10 @@
 
 INTERFACE CConvert;
 
-FROM Ctypes IMPORT double, int, int_star, char_star, char_star_star; 
+FROM Ctypes IMPORT double, int, int_star, char_star, char_star_star, const_char_star;
 
 <* EXTERNAL m3_strtod *>
-PROCEDURE strtod (nptr: ADDRESS; VAR eptr: ADDRESS): LONGREAL;
+PROCEDURE strtod (str: const_char_star; ptr: char_star_star): double;
 (* Returns a nearest machine number to the input decimal string
    (or sets errno to ERANGE).  With IEEE arithmetic, ties are broken
    by the IEEE round-even rule.  Otherwise ties are broken by biased

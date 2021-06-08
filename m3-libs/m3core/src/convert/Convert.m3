@@ -810,7 +810,7 @@ PROCEDURE ToBinary (
          VAR tmp        : Buffer;
          VAR used       : INTEGER;
          VAR value      : LONGREAL): BOOLEAN =
-  VAR ch: CHAR;  eptr: ADDRESS;  nchars: INTEGER := NUMBER (source);
+  VAR ch: CHAR;  eptr: Ctypes.char_star := NIL;  nchars: INTEGER := NUMBER (source);
   BEGIN
     (* copy source to tmp, fix the exponent character and null terminate *)
     FOR i := 0 TO nchars -1 DO
@@ -821,8 +821,8 @@ PROCEDURE ToBinary (
     tmp [nchars] := '\000';
 
     (* finally, do the conversion *)
-    value := strtod (ADR (tmp [0]), eptr);
-    IF eptr = LOOPHOLE (0, ADDRESS)
+    value := strtod (ADR (tmp [0]), ADR (eptr));
+    IF eptr = NIL
       THEN RETURN FALSE;
       ELSE used := eptr - ADR (tmp [0]); RETURN TRUE;
     END;
