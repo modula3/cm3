@@ -1,3 +1,26 @@
+#ifndef INCLUDED_M3CORE_H
+#include "m3core.h"
+#endif
+
+#ifndef __cplusplus
+#define KR_headers
+#endif
+
+#define MULTIPLE_THREADS
+#define ACQUIRE_DTOA_LOCK(n) CConvert__Acquire(n)
+#define FREE_DTOA_LOCK(n) CConvert__Release(n)
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+void __cdecl CConvert__Acquire(INTEGER);
+void __cdecl CConvert__Release(INTEGER);
+
+#ifdef __cplusplus
+} /* extern C */
+#endif
+
 #ifdef _MSC_VER
 #pragma warning(disable:4514) /* unused inline function removed */
 #pragma warning(disable:4242) /* possible loss of data */
@@ -3358,3 +3381,5 @@ m3_dtoa
 #if M3_HAS_VISIBILITY
 #pragma GCC visibility pop
 #endif
+
+#undef Bias
