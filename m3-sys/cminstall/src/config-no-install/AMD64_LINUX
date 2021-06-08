@@ -1,10 +1,14 @@
 readonly TARGET = "AMD64_LINUX" % code generation target
 readonly GNU_PLATFORM = "amd64-linux" % "cpu-os" string for GNU
 
-SYSTEM_CC = "gcc -g -m64 -fPIC" % C compiler
-SYSTEM_CXXC = "g++ -g -m64 -fPIC" % C++ compiler
+SYSTEM_CC = "gcc -gdwarf-2 -gstrict-dwarf -m64 -fPIC" % C compiler
+SYSTEM_CXXC = "g++ -gdwarf-2 -gstrict-dwarf -m64 -fPIC" % C++ compiler
 
 readonly SYSTEM_ASM = "as --64" % Assembler
+
+% PIE debugging requires gdb 7.1 or newer, even for C
+% see http://www.gnu.org/software/gdb/download/ANNOUNCEMENT
+readonly POSITION_INDEPENDENT_EXECUTABLE = "-no-pie"
 
 include("AMD64.common")
 include("Linux.common")
