@@ -96,10 +96,6 @@ void __cdecl CConvert__Release(INTEGER);
  */
 
 /*
- * #define IEEE_8087 for IEEE-arithmetic machines where the least
- *	significant byte has the lowest address.
- * #define IEEE_MC68k for IEEE-arithmetic machines where the most
- *	significant byte has the lowest address.
  * #define Long int on machines with 32-bit ints and 64-bit longs.
  * #define IBM for IBM mainframe-style floating-point arithmetic.
  * #define VAX for VAX-style floating-point arithmetic (D_floating).
@@ -231,12 +227,8 @@ static double private_mem[PRIVATE_mem], *pmem_next = private_mem;
 
 #undef IEEE_Arith
 #undef Avoid_Underflow
-#ifdef IEEE_MC68k
+
 #define IEEE_Arith
-#endif
-#ifdef IEEE_8087
-#define IEEE_Arith
-#endif
 
 #ifdef IEEE_Arith
 #ifndef NO_INFNAN_CHECK
@@ -311,44 +303,34 @@ extern "C" {
 #endif
 #endif
 
-#if defined(IEEE_8087) + defined(IEEE_MC68k) + defined(VAX) + defined(IBM) != 1
-#error Exactly one of IEEE_8087, IEEE_MC68k, VAX, or IBM should be defined.
-Exactly one of IEEE_8087, IEEE_MC68k, VAX, or IBM should be defined.
-#endif
-
 typedef union { double d; ULong L[2]; } U;
+
+// runtime endian switch
+// on big endian DTOA_0 == 0, DTOA_1 == 1
+// on little endian DTOA_0 == 1, DTOA_1 == 0
+static const union {
+    unsigned short i;
+    unsigned char b[2];
+} DtoaIndices = { 1 };
+#define DTOA_0 (DtoaIndices.b[0])
+#define DTOA_1 (DtoaIndices.b[1])
 
 #ifdef YES_ALIAS
 #define dval(x) x
-#ifdef IEEE_8087
-#define word0(x) ((ULong *)&x)[1]
-#define word1(x) ((ULong *)&x)[0]
+#define word0(x) ((ULong *)&x)[DTOA_0]
+#define word1(x) ((ULong *)&x)[DTOA_1]
 #else
-#define word0(x) ((ULong *)&x)[0]
-#define word1(x) ((ULong *)&x)[1]
-#endif
-#else
-#ifdef IEEE_8087
-#define word0(x) ((U*)&x)->L[1]
-#define word1(x) ((U*)&x)->L[0]
-#else
-#define word0(x) ((U*)&x)->L[0]
-#define word1(x) ((U*)&x)->L[1]
-#endif
+#define word0(x) ((U*)&x)->L[DTOA_0]
+#define word1(x) ((U*)&x)->L[DTOA_1]
 #define dval(x) ((U*)&x)->d
 #endif
 
-/* The following definition of Storeinc is appropriate for MIPS processors.
- * An alternative that might be better on some machines is
- * #define Storeinc(a,b,c) (*a++ = b << 16 | c & 0xffff)
- */
-#if defined(IEEE_8087) + defined(VAX)
-#define Storeinc(a,b,c) (((unsigned short *)a)[1] = (unsigned short)b, \
-((unsigned short *)a)[0] = (unsigned short)c, a++)
-#else
-#define Storeinc(a,b,c) (((unsigned short *)a)[0] = (unsigned short)b, \
-((unsigned short *)a)[1] = (unsigned short)c, a++)
-#endif
+static void StoreincFunction (ULong** a, ULong hi, ULong lo)
+{
+    *((*a)++) = (((hi & 0xFFFF) << 16) | (lo & 0xFFFF));
+}
+
+#define Storeinc(a, hi, lo) (StoreincFunction(&(a), (hi), (lo)))
 
 /* #define P DBL_MANT_DIG */
 /* Ten_pmax = floor(P*log(2)/log(5)) */
