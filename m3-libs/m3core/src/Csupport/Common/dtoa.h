@@ -121,9 +121,6 @@ void __cdecl CConvert__Release(INTEGER);
  *	and if "unsigned Llong" does not work as an unsigned version of
  *	Llong, #define #ULLong to be the corresponding unsigned type.
  * #define KR_headers for old-style C function headers.
- * #define Bad_float_h if your system lacks a float.h or if it does not
- *	define some or all of DBL_DIG, DBL_MAX_10_EXP, DBL_MAX_EXP,
- *	FLT_RADIX, FLT_ROUNDS, and DBL_MAX.
  * #define MALLOC your_malloc, where your_malloc(n) acts like malloc(n)
  *	if memory is available and otherwise does something you deem
  *	appropriate.  If MALLOC is undefined, malloc will be invoked
@@ -239,38 +236,7 @@ static double private_mem[PRIVATE_mem], *pmem_next = private_mem;
 #undef INFNAN_CHECK
 #endif
 
-#ifdef Bad_float_h
-
-#ifdef IEEE_Arith
-#define DBL_DIG 15
-#define DBL_MAX_10_EXP 308
-#define DBL_MAX_EXP 1024
-#define FLT_RADIX 2
-#endif /*IEEE_Arith*/
-
-#ifdef IBM
-#define DBL_DIG 16
-#define DBL_MAX_10_EXP 75
-#define DBL_MAX_EXP 63
-#define FLT_RADIX 16
-#define DBL_MAX 7.2370055773322621e+75
-#endif
-
-#ifdef VAX
-#define DBL_DIG 16
-#define DBL_MAX_10_EXP 38
-#define DBL_MAX_EXP 127
-#define FLT_RADIX 2
-#define DBL_MAX 1.7014118346046923e+38
-#endif
-
-#ifndef LONG_MAX
-#define LONG_MAX 2147483647
-#endif
-
-#else /* ifndef Bad_float_h */
 #include <float.h>
-#endif /* Bad_float_h */
 
 // This is disabled.
 // There are warnings about inconsistencies.
