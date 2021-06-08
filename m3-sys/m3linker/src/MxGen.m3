@@ -100,6 +100,7 @@ PROCEDURE GenerateMain (base: Mx.LinkSet;  c_output: Wr.T;  cg_output: M3CG.T;
       Out (s, "extern \"C\" {", EOL);
       Out (s, "#endif", EOL, EOL);
 
+      Out (s, "//correct, but match preexisting m3core\n");
       Out (s, "//void __cdecl RTLinker__InitRuntime(INTEGER argc, char** argv, char** envp, void* hinstance);\n");
       Out (s, "void __cdecl RTLinker__InitRuntime(INTEGER argc, ADDRESS argv, ADDRESS envp, ADDRESS hinstance);\n");
       Out (s, "void __cdecl RTProcess__Exit(INTEGER);\n");
@@ -108,7 +109,7 @@ PROCEDURE GenerateMain (base: Mx.LinkSet;  c_output: Wr.T;  cg_output: M3CG.T;
         Out (s, "//void __cdecl RTLinker__AddUnitImports(void* (__cdecl*)(void));\n");
         Out (s, "void __cdecl RTLinker__AddUnitImports(M3PROC);\n");
       END;
-      Out (s, "//correct, but void __cdecl RTLinker__AddUnit(void* (__cdecl*)(void));\n\n");
+      Out (s, "//correct, but void __cdecl RTLinker__AddUnit(void* (__cdecl*)(void));\n");
       Out (s, "void __cdecl RTLinker__AddUnit(M3PROC);\n\n");
     ELSE
       GenCGTypeDecls (s);
