@@ -2586,6 +2586,11 @@ CONST Prefix = ARRAY OF TEXT {
 "#define DOTDOTDOT",
 "#endif",
 
+"void __cdecl m3_memcpy(void* dest, const void* source, size_t n);",
+"void __cdecl m3_memmove(void* dest, const void* source, size_t n);",
+"void __cdecl m3_memset(void* dest, int fill, size_t count);",
+"int  __cdecl m3_memcmp(const void* a, const void* b, size_t n);",
+
 ""};
 
 <*NOWARN*>CONST Suffix = ARRAY OF TEXT {
@@ -4481,7 +4486,7 @@ END HelperFunctions;
 TYPE HelperFunctions_t = M3CG_DoNothing.T OBJECT
     self: T := NIL;
     data: RECORD
-        pos, memcmp, memcpy, memmove, memset, floor, ceil, fence,
+        pos, floor, ceil, fence,
         set_le, set_lt, extract_inline := FALSE;
         cvt_int := ARRAY ConvertOp OF BOOLEAN{FALSE, ..};
         shift, rotate, rotate_left, rotate_right, div, mod, min, max, abs,
@@ -4509,9 +4514,6 @@ OVERRIDES
     insert_n := HelperFunctions_insert_n;
     insert_mn := HelperFunctions_insert_mn;
     pop := HelperFunctions_pop;
-    copy := HelperFunctions_copy;
-    copy_n := HelperFunctions_copy_n;
-    zero := HelperFunctions_zero;
     fence := HelperFunctions_fence;
 END;
 
@@ -4569,31 +4571,6 @@ PROCEDURE HelperFunctions_helper_with_type(self: HelperFunctions_t; op: TEXT; ty
 BEGIN
     HelperFunctions_helper_with_type_and_array(self, op, type, types_already_printed, ARRAY OF TEXT{first});
 END HelperFunctions_helper_with_type;
-
-(* TODO give up and #include <string.h>? *)
-PROCEDURE HelperFunctions_memset(self: HelperFunctions_t) =
-CONST text = "void* __cdecl memset(void*, int, size_t); /* string.h */";
-BEGIN
-    HelperFunctions_helper_with_boolean(self, self.data.memset, text);
-END HelperFunctions_memset;
-
-PROCEDURE HelperFunctions_memmove(self: HelperFunctions_t) =
-CONST text = "void* __cdecl memmove(void*, const void*, size_t); /* string.h */";
-BEGIN
-    HelperFunctions_helper_with_boolean(self, self.data.memmove, text);
-END HelperFunctions_memmove;
-
-PROCEDURE HelperFunctions_memcpy(self: HelperFunctions_t) =
-CONST text = "void* __cdecl memcpy(void*, const void*, size_t); /* string.h */";
-BEGIN
-    HelperFunctions_helper_with_boolean(self, self.data.memcpy, text);
-END HelperFunctions_memcpy;
-
-PROCEDURE HelperFunctions_memcmp(self: HelperFunctions_t) =
-CONST text = "int __cdecl memcmp(const void*, const void*, size_t); /* string.h */";
-BEGIN
-    HelperFunctions_helper_with_boolean(self, self.data.memcmp, text);
-END HelperFunctions_memcmp;
 
 PROCEDURE HelperFunctions_pos(self: HelperFunctions_t) =
 CONST text = ARRAY OF TEXT{
@@ -4698,8 +4675,7 @@ CONST text_le = "static WORD_T __stdcall m3_set_le(WORD_T n_words,WORD_T*b,WORD_
 CONST text_lt = "static WORD_T __stdcall m3_set_lt(WORD_T n_words,WORD_T*b,WORD_T*a){WORD_T i=0,eq=0;for(;i<n_words;++i)if(a[i]&(~b[i]))return 0;else eq|=(a[i]^b[i]);return(eq!=0);}";
 BEGIN
     CASE op OF
-        | CompareOp.EQ, CompareOp.NE =>
-            HelperFunctions_memcmp(self);
+        | CompareOp.EQ, CompareOp.NE => (* nothing *)
         | CompareOp.GE, CompareOp.LE =>
             HelperFunctions_helper_with_boolean(self, self.data.set_le, text_le);
         | CompareOp.GT, CompareOp.LT =>
@@ -4779,30 +4755,6 @@ CONST text = "#define m3_pop_T(T) static void __stdcall m3_pop_##T(volatile T a)
 BEGIN
     HelperFunctions_helper_with_type(self, "pop", type, self.data.pop, text);
 END HelperFunctions_pop;
-
-PROCEDURE HelperFunctions_copy_common(self: HelperFunctions_t; overlap: BOOLEAN) =
-BEGIN
-    IF overlap THEN
-        HelperFunctions_memmove(self);
-    ELSE
-        HelperFunctions_memcpy(self);
-    END
-END HelperFunctions_copy_common;
-
-PROCEDURE HelperFunctions_copy_n(self: HelperFunctions_t; <*UNUSED*>itype: IType; <*UNUSED*>mtype: MType; overlap: BOOLEAN) =
-BEGIN
-    HelperFunctions_copy_common(self, overlap);
-END HelperFunctions_copy_n;
-
-PROCEDURE HelperFunctions_copy(self: HelperFunctions_t; <*UNUSED*>n: INTEGER; <*UNUSED*>mtype: MType; overlap: BOOLEAN) =
-BEGIN
-    HelperFunctions_copy_common(self, overlap);
-END HelperFunctions_copy;
-
-PROCEDURE HelperFunctions_zero(self: HelperFunctions_t; <*UNUSED*>n: INTEGER; <*UNUSED*>type: MType) =
-BEGIN
-    HelperFunctions_memset(self);
-END HelperFunctions_zero;
 
 PROCEDURE HelperFunctions_fence(self: HelperFunctions_t; <*UNUSED*>order: MemoryOrder) =
 CONST text = ARRAY OF TEXT{
@@ -6939,7 +6891,7 @@ BEGIN
         push(self, type, cast(CTextToExpr("m3_set_" & CompareOpName[op] & "(\n " & IntLiteral(self, Target.Word.cg_type, byte_size) & ",\n " & s1.CText() & ",\n " & s0.CText() & ")"), type));
     ELSE
         <* ASSERT op IN SET OF CompareOp{CompareOp.EQ, CompareOp.NE} *>
-        push(self, type, cast(CTextToExpr("memcmp(" & s1.CText() & ",\n " & s0.CText() & ",\n " & IntLiteral(self, Target.Word.cg_type, byte_size) & ")" & eq), type));
+        push(self, type, cast(CTextToExpr("m3_memcmp(" & s1.CText() & ",\n " & s0.CText() & ",\n " & IntLiteral(self, Target.Word.cg_type, byte_size) & ")" & eq), type));
     END;
 END set_compare;
 
@@ -7208,7 +7160,7 @@ BEGIN
     print(self, "m3_pop_" & cgtypeToText[type] & "(" & s0.CText() & ");\n");
 END cg_pop;
 
-CONST MemCopyOrMove = ARRAY OF TEXT{"memcpy", "memmove"};
+CONST MemCopyOrMove = ARRAY OF TEXT{"m3_memcpy", "m3_memmove"};
 
 PROCEDURE copy_n(self: T; itype: IType; mtype: MType; overlap: BOOLEAN) =
 (* Mem[s2.A:s0.ztype] := Mem[s1.A:s0.ztype]; pop(3)*)
@@ -7257,7 +7209,7 @@ BEGIN
       self.comment("zero");
     END;
     pop(self);
-    print(self, "memset(" & s0.CText() & ",0," & IntToDec(n) & "*(size_t)" & IntToDec(CG_Bytes[type]) & ");\n");
+    print(self, "m3_memset(" & s0.CText() & ",0," & IntToDec(n) & "*(size_t)" & IntToDec(CG_Bytes[type]) & ");\n");
 END zero;
 
 (*----------------------------------------------------------- conversions ---*)
