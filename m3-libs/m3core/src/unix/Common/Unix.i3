@@ -132,9 +132,15 @@ PROCEDURE unlink (path: const_char_star): int;
  * callers of vfork cannot return without calling exec or _exit.
  * vfork must return int, not pid_t. C compilation will fail
  * otherwise when combining m3c output with hand written C (m3core.h).
- *)
+ *
+ * Do not declare vfork. The type is not always int (sometimes long on Solaris)
+ * and there are errors if it is wrong. And the documentation is extremely caveat filled.
+ *
+ * If you must call vfork, do it from C.
+ *
 <*EXTERNAL*>
 PROCEDURE vfork (): int;
+ *)
 
 <*EXTERNAL "Unix__mknod"*>
 PROCEDURE mknod (path: const_char_star; mode: mode_t; dev: dev_t): int;
