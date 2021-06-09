@@ -958,8 +958,11 @@ ThreadInternal__StackGrowsDown (void);
 #elif defined(__powerpc)
 // ambiguous endian and wordsize; use uname
 #define GET_PC(context) ((context)->uc_mcontext.uc_regs->gregs[PT_NIP])
+#elif defined(__aarch64__)
+#define M3_HOST "ARM64_LINUX"
+#define GET_PC(context) ((context)->uc_mcontext.pc)
 #elif defined(__arm__)
-// ambiguous endian and wordsize; use uname
+#define M3_HOST "ARM32_LINUX"
 #define GET_PC(context) ((context)->uc_mcontext.arm_pc)
 #elif defined(__alpha__)
 #define M3_HOST "ALPHA_LINUX"
