@@ -62,7 +62,7 @@ ContextC__DisposeContext(Context* c)
     assert(0);
 }
 
-void*
+Context*
 __cdecl
 ContextC__Current(void)
 {
