@@ -518,5 +518,5 @@ if not defined("M3_SHARED_LIB_ARG")
 end
 % --- pass "-R" flags to the linker too.
 
-M3_MAIN_IN_C = TRUE
+%M3_MAIN_IN_C = TRUE
 % --- generate the Modula-3 main program as C code
