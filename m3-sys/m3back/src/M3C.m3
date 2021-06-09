@@ -544,6 +544,7 @@ so i.e. they can be used for parameter, local, field names *)
 "register",
 "reinterpret_cast",
 "return",
+"s_addr", (* a macro on Solaris *)
 "short",
 "signed",
 "size_t",
