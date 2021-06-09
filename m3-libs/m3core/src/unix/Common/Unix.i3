@@ -6,7 +6,7 @@ INTERFACE Unix;
 
 FROM Cstddef IMPORT size_t;
 FROM Ctypes IMPORT const_int, int, const_char_star, char_star, char_star_star, unsigned;
-FROM Utypes IMPORT off_t, mode_t, dev_t, uid_t, gid_t, pid_t;
+FROM Utypes IMPORT off_t, mode_t, dev_t, uid_t, gid_t;
 
 CONST
   MaxPathLen = 1024; (* 4096 on Irix? *)
