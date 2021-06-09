@@ -1140,6 +1140,8 @@ m3_ascertain_compiler_kind ( void )
            }
 
         m3_compiler_kind_value = m3_ck_not_m3;
+        m3_compiler_kind_value = m3_ck_cm3;
+        /* ^Temp, while stabs is undermined for _m3main.c */
       }
   } /* m3_ascertain_compiler_kind */
 
