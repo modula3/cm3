@@ -16,6 +16,8 @@
 #include "m3core.h"
 #endif
 
+#include <string.h>
+
 #if M3_HAS_VISIBILITY
 #ifdef __APPLE__
 #pragma GCC visibility push(default)
@@ -329,6 +331,26 @@ m3_rotate64(UINT64 value, int shift)
 }
 
 #endif /* WIN32 */
+
+void __cdecl m3_memcpy(void* dest, const void* source, size_t n)
+{
+    memmove(dest, source, n); // memmove is more conservative than memcpy
+}
+
+void __cdecl m3_memmove(void* dest, const void* source, size_t n)
+{
+    memmove(dest, source, n);
+}
+
+void __cdecl m3_memset(void* dest, int fill, size_t count)
+{
+    memset(dest, fill, count);
+}
+
+int __cdecl m3_memcmp(const void* a, const void* b, size_t n)
+{
+    return memcmp(a, b, n);
+}
 
 #ifdef __cplusplus
 } /* extern "C" */
