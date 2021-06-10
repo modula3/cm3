@@ -16,3 +16,9 @@ include("ARM64.common")
 include("Darwin.common")
 
 M3_PARALLEL_BACK = 20
+
+% Homebrew.
+SYSTEM_LIBS{"ODBC"} = ["-L/opt/homebrew/lib", "-liodbc", "-liodbcinst"]
+SYSTEM_LIBS{"X11"} = ["-L/opt/X11/lib", "-lXft", "-lfontconfig", "-lXaw", "-lXmu", "-lXext", "-lXt", "-lSM", "-lICE", "-lX11" ]
+SYSTEM_LIBS{"OPENGL"} = [ "-Wl,-dylib_file," & LIBGL_DYLIB & ":" & LIBGL_DYLIB,
+						  "-L/opt/X11/lib", "-lGLU", "-lGL", "-lXext" ]
