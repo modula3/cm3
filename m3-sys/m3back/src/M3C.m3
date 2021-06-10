@@ -79,7 +79,7 @@ T = M3CG_DoNothing.T OBJECT
         unique := "L_"; (* changed later *)
         c      : Wr.T := NIL;
         stack  : RefSeq.T := NIL;
-        params : TextSeq.T := NIL;
+        params : RefSeq.T := NIL;
         op_index := 0;
 
         unit_name := "L_";
@@ -123,7 +123,7 @@ T = M3CG_DoNothing.T OBJECT
         last_char_was_newline := FALSE;
         suppress_line_directive := 0;
 
-        static_link     : Var_t := NIL; (* based on M3x86 *)
+        static_link     : Expr_Variable_t := NIL; (* based on M3x86 *)
         current_proc    : Proc_t := NIL; (* based on M3x86 *)
         param_proc      : Proc_t := NIL; (* based on M3x86 *)
         dummy_proc      : Proc_t := NIL; (* avoid null derefs for indirect calls *)
@@ -377,7 +377,7 @@ CONST reservedWords = ARRAY OF TEXT{
 "UINT16",
 "UINT32",
 "UINT64",
-(* TODO fill in more strings here like INT8, STRUCT, DOTDOTDOT that we use,
+(* TODO fill in more strings here like INT8, STRUCT that we use,
 so i.e. they can be used for parameter, local, field names *)
 (*
 "_ANSI_SOURCE",
@@ -600,7 +600,6 @@ Cstring.i3 declares strcpy and strcat incorrectly..on purpose.
 "m3_set_sym_difference",
 "m3_set_union",
 "WORD_T",
-"DOTDOTDOT",
 "STRUCT",
 "INT8", "UINT8", "INT16", "UINT16", "INT32", "UINT32", "INT64", "UINT64",
 "m3_eq",
@@ -668,7 +667,7 @@ BEGIN
   IF NOT value THEN
     RTIO.PutText("Assertion failure: " & message);
     RTIO.Flush();
-    IF self.c # NIL THEN
+    IF self # NIL AND self.c # NIL THEN
       Wr.Flush(self.c);
     END;
   END;
@@ -2071,7 +2070,7 @@ VAR type_text := self.type_text; (* TODO self.type.text *)
     lparen := "";
     rparen := "";
 BEGIN
-    <* ASSERT (cgtype = CGType.Void) # (self.type_text = NIL) *> (* TODO type_text *)
+    Assert (self.self, cgtype # CGType.Void, "cgtype # CGType.Void");
     IF NOT force THEN
         (* We might need "force_cast":
         INT16 a, b, c = a + b;
@@ -2106,7 +2105,7 @@ VAR type_text := self.type_text;
     left_text := left.CText();
     remove := 0;
 BEGIN
-    <* ASSERT (cgtype = CGType.Void) # (self.type_text = NIL) *>
+    Assert (self.self, cgtype # CGType.Void, "cgtype # CGType.Void");
     IF NOT force THEN
         (* We might need "force_cast":
         INT16 a, b, c = a + b;
@@ -2139,6 +2138,7 @@ PROCEDURE Expr_Subtract_CText(self: Expr_Subtract_t): TEXT = BEGIN RETURN self.l
 TYPE Expr_Negate_t = Expr_Unary_t OBJECT OVERRIDES CText := Expr_Negate_CText; END;
 PROCEDURE Expr_Negate_CText(self: Expr_Negate_t): TEXT = BEGIN RETURN "-" & self.left.CText(); END Expr_Negate_CText;
 
+(* TODO reduce uses of CTextToExpr, it is bridge to older ways *)
 PROCEDURE CTextToExpr(c_text: TEXT): Expr_t =
 BEGIN
     RETURN NEW(Expr_t, c_text := c_text);
@@ -2580,11 +2580,11 @@ CONST Prefix = ARRAY OF TEXT {
 "#define STRUCT2(n) typedef struct { volatile short a[n/2]; }  STRUCT(n);", (* TODO prune if not used *)
 "#define STRUCT4(n) typedef struct { volatile int a[n/4]; }    STRUCT(n);", (* TODO prune if not used *)
 "#define STRUCT8(n) typedef struct { volatile UINT64 a[n/8]; } STRUCT(n);", (* TODO prune if not used *)
-"#ifdef __cplusplus",
-"#define DOTDOTDOT ...",
-"#else",
-"#define DOTDOTDOT",
-"#endif",
+
+"void __cdecl m3_memcpy(void* dest, const void* source, size_t n);",
+"void __cdecl m3_memmove(void* dest, const void* source, size_t n);",
+"void __cdecl m3_memset(void* dest, int fill, size_t count);",
+"int  __cdecl m3_memcmp(const void* a, const void* b, size_t n);",
 
 ""};
 
@@ -2622,6 +2622,18 @@ CONST cgtypeToText = ARRAY CGType OF TEXT {
     "STRUCT",                   (* C *)
     "void"                      (* D *)
 };
+
+(* Mainly ADDRESS -> void* to avoid warnings but also cleanups *)
+CONST cgtypeToParamText = ARRAY CGType OF TEXT {
+    "unsigned char",  "signed char",
+    "unsigned short", "short",
+    "unsigned", "int",
+    "UINT64", "INT64",
+    "float", "double", "double",
+    "void*",
+    NIL,
+    NIL
+ };
 
 TYPE IntegerTypes = [CGType.Word8 .. CGType.Int64];
 
@@ -2708,7 +2720,31 @@ CONST CompareOpName = ARRAY CompareOp OF TEXT { "eq", "ne", "gt", "ge", "lt", "l
 
 (*---------------------------------------------------------------------------*)
 
+PROCEDURE ExprClone (e: Expr_t): Expr_t =
+BEGIN
+  RETURN NEW (Expr_t,
+              self := e.self,
+              expr_type := e.expr_type,
+              current_proc := e.current_proc,
+              points_to_cgtype := e.points_to_cgtype,
+              refers_to_typeid := e.refers_to_typeid,
+              float_value := e.float_value,
+              text_value := e.text_value,
+              minmax_valid := e.minmax_valid,
+              minmax := e.minmax,
+              cgtype := e.cgtype,
+              typeid := e.typeid,
+              type := e.type,
+              c_text := e.c_text,
+              c_unop_text := e.c_unop_text,
+              c_binop_text := e.c_binop_text,
+              left := e.left,
+              right := e.right,
+              type_text := e.type_text);
+END ExprClone;
+
 PROCEDURE paren(expr: Expr_t): Expr_t =
+VAR e2 := ExprClone (expr);
 BEGIN
 (* It is possible we can reduce parens, but it is not as simple as it seems.
 e.g. naive approach:
@@ -2718,7 +2754,8 @@ e.g. naive approach:
 oops
 The correct approach requires verifying the parens match.
 *)
-    RETURN CTextToExpr("(" & expr.CText() & ")");
+  e2.c_text := "(" & expr.CText() & ")";
+  RETURN e2;
 END paren;
 
 PROCEDURE pop(self: T; n: CARDINAL := 1) =
@@ -2818,7 +2855,7 @@ BEGIN
     self.initializer := NEW(TextSeq.T).init();
     self.debug_initializer := NEW(CharSeq.T).init();
     self.stack := NEW(RefSeq.T).init(); (* Expr_t *)
-    self.params := NEW(TextSeq.T).init(); (* TODO Expr_t *)
+    self.params := NEW(RefSeq.T).init(); (* TODO Expr_t *)
     self.pendingTypes := NEW(RefSeq.T).init();
     self.dummy_proc := NEW(Proc_t);             (* avoid null derefs for indirect calls *)
     self.proc_being_called := self.dummy_proc;  (* avoid null derefs for indirect calls *)
@@ -4481,7 +4518,7 @@ END HelperFunctions;
 TYPE HelperFunctions_t = M3CG_DoNothing.T OBJECT
     self: T := NIL;
     data: RECORD
-        pos, memcmp, memcpy, memmove, memset, floor, ceil, fence,
+        pos, floor, ceil, fence,
         set_le, set_lt, extract_inline := FALSE;
         cvt_int := ARRAY ConvertOp OF BOOLEAN{FALSE, ..};
         shift, rotate, rotate_left, rotate_right, div, mod, min, max, abs,
@@ -4509,9 +4546,6 @@ OVERRIDES
     insert_n := HelperFunctions_insert_n;
     insert_mn := HelperFunctions_insert_mn;
     pop := HelperFunctions_pop;
-    copy := HelperFunctions_copy;
-    copy_n := HelperFunctions_copy_n;
-    zero := HelperFunctions_zero;
     fence := HelperFunctions_fence;
 END;
 
@@ -4569,31 +4603,6 @@ PROCEDURE HelperFunctions_helper_with_type(self: HelperFunctions_t; op: TEXT; ty
 BEGIN
     HelperFunctions_helper_with_type_and_array(self, op, type, types_already_printed, ARRAY OF TEXT{first});
 END HelperFunctions_helper_with_type;
-
-(* TODO give up and #include <string.h>? *)
-PROCEDURE HelperFunctions_memset(self: HelperFunctions_t) =
-CONST text = "void* __cdecl memset(void*, int, size_t); /* string.h */";
-BEGIN
-    HelperFunctions_helper_with_boolean(self, self.data.memset, text);
-END HelperFunctions_memset;
-
-PROCEDURE HelperFunctions_memmove(self: HelperFunctions_t) =
-CONST text = "void* __cdecl memmove(void*, const void*, size_t); /* string.h */";
-BEGIN
-    HelperFunctions_helper_with_boolean(self, self.data.memmove, text);
-END HelperFunctions_memmove;
-
-PROCEDURE HelperFunctions_memcpy(self: HelperFunctions_t) =
-CONST text = "void* __cdecl memcpy(void*, const void*, size_t); /* string.h */";
-BEGIN
-    HelperFunctions_helper_with_boolean(self, self.data.memcpy, text);
-END HelperFunctions_memcpy;
-
-PROCEDURE HelperFunctions_memcmp(self: HelperFunctions_t) =
-CONST text = "int __cdecl memcmp(const void*, const void*, size_t); /* string.h */";
-BEGIN
-    HelperFunctions_helper_with_boolean(self, self.data.memcmp, text);
-END HelperFunctions_memcmp;
 
 PROCEDURE HelperFunctions_pos(self: HelperFunctions_t) =
 CONST text = ARRAY OF TEXT{
@@ -4698,8 +4707,7 @@ CONST text_le = "static WORD_T __stdcall m3_set_le(WORD_T n_words,WORD_T*b,WORD_
 CONST text_lt = "static WORD_T __stdcall m3_set_lt(WORD_T n_words,WORD_T*b,WORD_T*a){WORD_T i=0,eq=0;for(;i<n_words;++i)if(a[i]&(~b[i]))return 0;else eq|=(a[i]^b[i]);return(eq!=0);}";
 BEGIN
     CASE op OF
-        | CompareOp.EQ, CompareOp.NE =>
-            HelperFunctions_memcmp(self);
+        | CompareOp.EQ, CompareOp.NE => (* nothing *)
         | CompareOp.GE, CompareOp.LE =>
             HelperFunctions_helper_with_boolean(self, self.data.set_le, text_le);
         | CompareOp.GT, CompareOp.LT =>
@@ -4779,30 +4787,6 @@ CONST text = "#define m3_pop_T(T) static void __stdcall m3_pop_##T(volatile T a)
 BEGIN
     HelperFunctions_helper_with_type(self, "pop", type, self.data.pop, text);
 END HelperFunctions_pop;
-
-PROCEDURE HelperFunctions_copy_common(self: HelperFunctions_t; overlap: BOOLEAN) =
-BEGIN
-    IF overlap THEN
-        HelperFunctions_memmove(self);
-    ELSE
-        HelperFunctions_memcpy(self);
-    END
-END HelperFunctions_copy_common;
-
-PROCEDURE HelperFunctions_copy_n(self: HelperFunctions_t; <*UNUSED*>itype: IType; <*UNUSED*>mtype: MType; overlap: BOOLEAN) =
-BEGIN
-    HelperFunctions_copy_common(self, overlap);
-END HelperFunctions_copy_n;
-
-PROCEDURE HelperFunctions_copy(self: HelperFunctions_t; <*UNUSED*>n: INTEGER; <*UNUSED*>mtype: MType; overlap: BOOLEAN) =
-BEGIN
-    HelperFunctions_copy_common(self, overlap);
-END HelperFunctions_copy;
-
-PROCEDURE HelperFunctions_zero(self: HelperFunctions_t; <*UNUSED*>n: INTEGER; <*UNUSED*>type: MType) =
-BEGIN
-    HelperFunctions_memset(self);
-END HelperFunctions_zero;
 
 PROCEDURE HelperFunctions_fence(self: HelperFunctions_t; <*UNUSED*>order: MemoryOrder) =
 CONST text = ARRAY OF TEXT{
@@ -6415,7 +6399,7 @@ BEGIN
             expr := cast(expr, type := CGType.Addr);
             expr := NEW(Expr_t, right := expr, left := IntToExpr(self, offset), c_binop_text := "+");
         END;
-        expr := cast(expr, type_text := cgtypeToText[in_mtype] & "*");
+        expr := cast(expr, type := CGType.Addr, type_text := cgtypeToText[in_mtype] & "*");
         expr := Deref(expr);
     END;
     IF in_mtype # out_ztype THEN
@@ -6484,7 +6468,7 @@ BEGIN
         expr := cast(expr, type := CGType.Addr); (* might be redundant *)
         expr := NEW(Expr_t, right := expr, left := IntToExpr(self, offset), c_binop_text := "+");
     END;
-    expr := CastAndDeref(expr, type_text := cgtypeToText[mtype] & "*"); (* cast might be redundant *)
+    expr := CastAndDeref(expr, type := CGType.Addr, type_text := cgtypeToText[mtype] & "*"); (* cast might be redundant *)
     IF mtype # ztype THEN
         expr := cast(expr, ztype);
     END;
@@ -6656,7 +6640,8 @@ END TransferMinMax;
 PROCEDURE cast(expr: Expr_t; type: CGType := CGType.Void; type_text: TEXT := NIL): Expr_t =
 VAR e := NEW(Expr_Cast_t, cgtype := type, type_text := type_text, left := expr);
 BEGIN
-    <* ASSERT (type = CGType.Void) # (type_text = NIL) *>
+    <* ASSERT type # CGType.Void *>
+    (* ASSERT (type = CGType.Void) # (type_text = NIL) *)
     (* casts are either truncating or sign extending or zero extending *)
     TransferMinMax(expr, e);
     RETURN e;
@@ -6670,6 +6655,7 @@ END old_Cast;
 
 PROCEDURE CastAndDeref(expr: Expr_t; type: CGType := CGType.Void; type_text: TEXT := NIL): Expr_t =
 BEGIN
+    <* ASSERT type # CGType.Void *>
     RETURN Deref(cast(expr, type, type_text));
 END CastAndDeref;
 
@@ -6677,6 +6663,7 @@ PROCEDURE op1(self: T; type: CGType; name, op: TEXT) =
 (* unary operation *)
 VAR s0 := cast(get(self, 0), type);
 BEGIN
+    <* ASSERT type # CGType.Void *>
     self.comment(name);
     pop(self, 1);
     push(self, type, cast(NEW(Expr_t, left := s0, c_unop_text := op), type));
@@ -6710,6 +6697,7 @@ VAR s0 := cast(get(self, 0), type);
     s1 := cast(get(self, 1), type);
     expr: Expr_t;
 BEGIN
+    <* ASSERT type # CGType.Void *>
     self.comment(name);
     pop(self, 2);
     expr := NEW(Expr_t, left := s1, right := s0, c_binop_text := op);
@@ -6726,6 +6714,7 @@ VAR s0 := get(self, 0);
     cast1 := "";
     cast2 := "";
 BEGIN
+    <* ASSERT ztype # CGType.Void *>
     IF debug_verbose THEN
         self.comment("compare " & "op:" & CompareOpName[op] & " type:" & cgtypeToText[ztype]);
     ELSIF debug THEN
@@ -6746,6 +6735,7 @@ END compare;
 PROCEDURE add(self: T; type: AType) =
 (* s1.type := s1.type + s0.type; pop *)
 BEGIN
+    <* ASSERT type # CGType.Void *>
     op2(self, type, "add", "+", TInt.Add, TFloat.Add);
 END add;
 
@@ -6905,7 +6895,7 @@ END set_sym_difference;
 PROCEDURE set_member(self: T; <*UNUSED*>byte_size: ByteSize; type: IType) =
 (* s1.type := (s0.type IN s1.B); pop *)
 VAR s0 := cast(get(self, 0), type);
-    s1 := cast(get(self, 1), CGType.Void, "SET");
+    s1 := cast(get(self, 1), CGType.Addr, "SET");
 BEGIN
     IF debug THEN
       self.comment("set_member");
@@ -6917,8 +6907,8 @@ END set_member;
 PROCEDURE set_compare(self: T; byte_size: ByteSize; op: CompareOp; type: IType) =
 (* s1.type := (s1.B op s0.B); pop *)
 VAR swap := (op IN SET OF CompareOp{CompareOp.GT, CompareOp.GE});
-    s0 := cast(get(self, ORD(swap)), CGType.Void, "SET");
-    s1 := cast(get(self, ORD(NOT swap)), CGType.Void, "SET");
+    s0 := cast(get(self, ORD(swap)), CGType.Addr, "SET");
+    s1 := cast(get(self, ORD(NOT swap)), CGType.Addr, "SET");
     target_word_bytes := Target.Word.bytes;
     eq := ARRAY BOOLEAN OF TEXT{"==0", "!=0"}[op = CompareOp.EQ];
 BEGIN
@@ -6939,7 +6929,7 @@ BEGIN
         push(self, type, cast(CTextToExpr("m3_set_" & CompareOpName[op] & "(\n " & IntLiteral(self, Target.Word.cg_type, byte_size) & ",\n " & s1.CText() & ",\n " & s0.CText() & ")"), type));
     ELSE
         <* ASSERT op IN SET OF CompareOp{CompareOp.EQ, CompareOp.NE} *>
-        push(self, type, cast(CTextToExpr("memcmp(" & s1.CText() & ",\n " & s0.CText() & ",\n " & IntLiteral(self, Target.Word.cg_type, byte_size) & ")" & eq), type));
+        push(self, type, cast(CTextToExpr("m3_memcmp(" & s1.CText() & ",\n " & s0.CText() & ",\n " & IntLiteral(self, Target.Word.cg_type, byte_size) & ")" & eq), type));
     END;
 END set_compare;
 
@@ -6947,7 +6937,7 @@ PROCEDURE set_range(self: T; <*UNUSED*>byte_size: ByteSize; type: IType) =
 (* s2.A [s1.type .. s0.type] := 1's; pop(3) *)
 VAR s0 := cast(get(self, 0), type);
     s1 := cast(get(self, 1), type);
-    s2 := cast(get(self, 2), CGType.Void, "SET");
+    s2 := cast(get(self, 2), CGType.Addr, "SET");
 BEGIN
     IF debug THEN
       self.comment("set_range");
@@ -6959,7 +6949,7 @@ END set_range;
 PROCEDURE set_singleton(self: T; <*UNUSED*>byte_size: ByteSize; type: IType) =
 (* s1.A [s0.type] := 1; pop(2) *)
 VAR s0 := cast(get(self, 0), type);
-    s1 := cast(get(self, 1), CGType.Void, "SET");
+    s1 := cast(get(self, 1), CGType.Addr, "SET");
 BEGIN
     IF debug THEN
       self.comment("set_singleton");
@@ -7208,7 +7198,7 @@ BEGIN
     print(self, "m3_pop_" & cgtypeToText[type] & "(" & s0.CText() & ");\n");
 END cg_pop;
 
-CONST MemCopyOrMove = ARRAY OF TEXT{"memcpy", "memmove"};
+CONST MemCopyOrMove = ARRAY OF TEXT{"m3_memcpy", "m3_memmove"};
 
 PROCEDURE copy_n(self: T; itype: IType; mtype: MType; overlap: BOOLEAN) =
 (* Mem[s2.A:s0.ztype] := Mem[s1.A:s0.ztype]; pop(3)*)
@@ -7257,7 +7247,7 @@ BEGIN
       self.comment("zero");
     END;
     pop(self);
-    print(self, "memset(" & s0.CText() & ",0," & IntToDec(n) & "*(size_t)" & IntToDec(CG_Bytes[type]) & ");\n");
+    print(self, "m3_memset(" & s0.CText() & ",0," & IntToDec(n) & "*(size_t)" & IntToDec(CG_Bytes[type]) & ");\n");
 END zero;
 
 (*----------------------------------------------------------- conversions ---*)
@@ -7470,8 +7460,8 @@ BEGIN
 
     (* workaround frontend bug? *)
     IF proc.is_exception_handler THEN
-        push(self, CGType.Addr, CTextToExpr("0"));
-        pop_parameter_helper(self, "0");
+        load_nil (self);
+        pop_param (self, CGType.Addr);
     END;
 END start_call_direct;
 
@@ -7485,7 +7475,7 @@ BEGIN
     self.in_call_indirect := TRUE;
 END start_call_indirect;
 
-PROCEDURE pop_parameter_helper(self: T; param: TEXT) =
+PROCEDURE pop_parameter_helper(self: T; param: Expr_t) =
 BEGIN
     <* ASSERT self.in_proc_call *>
     self.params.addhi(param);
@@ -7497,10 +7487,12 @@ PROCEDURE pop_param(self: T; type: MType) =
 (* TODO try to remove cast *)
 VAR s0 := cast(get(self, 0), type);
 BEGIN
-    IF debug THEN
+    IF debug_verbose THEN
+        self.comment("pop_param type:" & cgtypeToText [type]);
+    ELSIF debug THEN
       self.comment("pop_param");
     END;
-    pop_parameter_helper(self, s0.CText());
+    pop_parameter_helper(self, s0);
 END pop_param;
 
 PROCEDURE pop_struct(self: T; typeid: TypeUID; byte_size: ByteSize; alignment: Alignment) =
@@ -7524,11 +7516,17 @@ BEGIN
     IF NOT ResolveType(self, typeid, type) THEN
         Err(self, "pop_struct: unknown typeid:" & type_text);
     END;
-    s0 := cast(s0, type_text := type_text);
+
+    s0 := cast(s0, type := CGType.Addr, type_text := type_text);
+
+    <* ASSERT NOT PassStructsByValue *> (* needs work *)
     IF PassStructsByValue THEN
         s0 := Deref(s0);
+    ELSE
+      s0.cgtype := CGType.Addr; (* set type for indirect call function pointer cast *)
     END;
-    pop_parameter_helper(self, s0.CText());
+
+    pop_parameter_helper(self, s0);
 END pop_struct;
 
 PROCEDURE pop_static_link(self: T) =
@@ -7538,7 +7536,7 @@ BEGIN
       self.comment("pop_static_link");
     END;
     <* ASSERT self.in_proc_call *>
-    self.static_link := var;
+    self.static_link := Variable (self, var);
     self.store(var, 0, CGType.Addr, CGType.Addr);
 END pop_static_link;
 
@@ -7609,7 +7607,7 @@ BEGIN
       END;
       INC(index);
     END;
-    proc := proc & comma & t1 & t2 & t3 & values.remlo() & t4;
+    proc := proc & comma & t1 & t2 & t3 & NARROW (values.remlo(), Expr_t).CText () & t4;
     IF abort_in_call THEN
       comma := ";\n ";
     ELSE
@@ -7627,30 +7625,33 @@ BEGIN
   END;
 END call_helper;
 
-PROCEDURE get_static_link(self: T; target: Proc_t): TEXT =
+PROCEDURE get_static_link(self: T; target: Proc_t): Expr_t =
 VAR target_level := target.level;
     current := self.current_proc;
     current_level := current.level;
     static_link := "";
+    e: Expr_t := NIL;
 BEGIN
     IF debug THEN
       self.comment("get_static_link");
     END;
     IF target_level = 0 THEN
-        RETURN "((ADDRESS)0)";
+        RETURN CTextToExpr ("((ADDRESS)0)");
     END;
     IF current_level = target_level THEN
-        RETURN "_static_link";
+        RETURN CTextToExpr ("_static_link");
     END;
     IF current_level < target_level THEN
-        RETURN "&_frame";
+        RETURN CTextToExpr ("&_frame");
     END;
     static_link := "_frame._static_link";
     WHILE current_level > target_level DO
         static_link := static_link & "->_static_link";
         DEC(current_level);
     END;
-    RETURN static_link;
+    e := CTextToExpr(static_link);
+    e.cgtype := CGType.Addr; (* TODO better typing *)
+    RETURN e;
 END get_static_link;
 
 PROCEDURE call_direct(self: T; p: M3CG.Proc; type: CGType) =
@@ -7678,6 +7679,7 @@ PROCEDURE call_indirect(self: T; type: CGType; <*UNUSED*>callingConvention: Call
    procedure returns a value of type type. *)
 VAR s0 := get(self, 0);
     static_link := self.static_link;
+    param_types: TEXT := NIL;
 BEGIN
     IF debug_verbose THEN
         self.comment("call_indirect type:", cgtypeToText [type]);
@@ -7690,16 +7692,52 @@ BEGIN
     <* ASSERT self.in_proc_call *>
 
     IF static_link # NIL THEN
-        self.params.addhi(NameT(static_link.name));
-        free_temp(self, static_link);
+        self.params.addhi(static_link);
+        free_temp(self, static_link.var);
         self.static_link := NIL;
     END;
 
-    (* UNDONE: cast to more accurate function type *)
-    call_helper(
-        self,
-        type,
-        "((" & cgtypeToText[type] & " (__cdecl*)(DOTDOTDOT))" & s0.CText() & ")");
+    (* Casting to a semi-accurate function type is "new" here,
+     * and required to target Mac/arm64 from C++.
+     *
+     * e.g. this fails only on that platform:
+     *
+     * #ifdef __cplusplus
+     * #define DOTDOTDOT ...
+     * #else
+     * #define DOTDOTDOT
+     * #endif
+     *
+     * #include <stdio.h>
+     *
+     * void f1(long a) { printf("%lx", a); }
+     *
+     * int main()
+     * {
+     * 	void *p1 = ( void* )f1;
+     * 	typedef void ( *T )(DOTDOTDOT);
+     * 	T p2 = (T)p1;
+     * 	p2((long)0);
+     * }
+     *)
+    IF self.params.size () = 0 THEN
+      param_types := "void";
+    ELSE
+      (* This not super well typed, using just cgtype, but
+      * at least pointer vs. integer vs. float.
+      * Considering that DOTDOTDOT used to work this should suffice.
+      * Longer term: assert expr.type # NIL
+      *)
+      FOR i := 0 TO self.params.size () - 1 DO
+        IF param_types = NIL THEN
+          param_types := cgtypeToParamText [NARROW(self.params.get (i), Expr_t).cgtype];
+        ELSE
+          param_types := param_types & "," & cgtypeToParamText [NARROW(self.params.get(i), Expr_t).cgtype];
+        END;
+      END;
+    END;
+
+    call_helper (self, type, "((" & cgtypeToText[type] & " (__cdecl*)(" & param_types & "))" & s0.CText() & ")");
 
 END call_indirect;
 
@@ -7732,7 +7770,7 @@ BEGIN
         self.load_nil();
         RETURN;
     END;
-    push(self, CGType.Addr, CTextToExpr(get_static_link(self, target)));
+    push(self, CGType.Addr, get_static_link(self, target));
 END load_static_link;
 
 (*----------------------------------------------------------------- misc. ---*)
