@@ -335,15 +335,12 @@ PROCEDURE CompileUnits (main     : TEXT;
     s.has_loader     := GetConfigBool (s, "SYS_HAS_LOADER");
     s.skip_link      := GetConfigBool (s, "M3_SKIP_LINK");
     s.keep_resolved  := NOT GetConfigBool (s, "M3_SPLIT_LIBNAMES");
-    s.m3main_m3cc    := GetConfigBool (s, "M3_MAIN_M3CC");
     IF s.m3backend_mode IN Target.BackendIntegratedSet 
        OR s.m3backend_mode IN Target.BackendM3ccSet
-    THEN (* OK *)
+    THEN
+      s.m3main_m3cc  := GetConfigBool (s, "M3_MAIN_M3CC");
     ELSE
-      s.m3main_m3cc := FALSE;
-      Msg.Out
-        ("M3_MAIN_M3CC ignored for backend mode "
-          & Target.BackendModeStrings [s.m3backend_mode]) 
+      s.m3main_m3cc  := FALSE;
     END;
     s.gui            := GetConfigBool (s, "M3_WINDOWS_GUI");
     s.do_coverage    := GetConfigBool (s, "M3_COVERAGE");
@@ -2507,9 +2504,9 @@ PROCEDURE GenerateCMain (s: State;  Main_O: TEXT) =
     Main_C   := M3Path.Join (NIL, M3Main, UK.C);
     Main_XX  := M3Main & ".new";
     init_code: TEXT := NIL;
-    time_O   : INTEGER;
-    time_C   : INTEGER;
-    wr       : Wr.T;
+    time_O   := 0;
+    time_C   := 0;
+    wr       : Wr.T := NIL;
   BEGIN
     (* check for an up-to-date Main_O *)
     time_O := Utils.LocalModTime (Main_O);
@@ -2559,20 +2556,26 @@ PROCEDURE GenerateCGMain (s: State;  Main_O: TEXT) =
     Main_MS  := M3Path.Join (NIL, M3Main, UK.MS);
     Main_XX  := M3Main & ".new";
     init_code: TEXT := NIL;
-    time_O   : INTEGER;
-    time_MC  : INTEGER;
-    plan     : [0..3] := 0;
+    time_O   := 0;
+    time_MC  := 0;
+    mode     := s.m3backend_mode;
   BEGIN
-(* TODO: Review this for llvm modes and bootstrap. *)
-    CASE s.m3backend_mode OF
-    | Mode_t.IntegratedObject
+(* TODO: Review this for llvm modes. *)
+
+    (* ASSERT mode # Mode_t.ExternalObject *)     (* mostly nonexistant, untested, but for m3cgcat *)
+    <* ASSERT mode # Mode_t.IntegratedAssembly *> (* nonexistant, untested *)
+    <* ASSERT mode # Mode_t.C *>                  (* calls GenerateCMain instead *)
+    <* ASSERT NOT s.bootstrap_mode *>             (* BuildPgm => BuildBootProgram => never here *)
+
+    CASE mode OF
+    | Mode_t.IntegratedObject (* M3x86 *)
     =>  (* -m3back, -asm => cg produces object code *)
         GenCGMain (s, Main_O);
         Utils.NoteNewFile (Main_O);
 
-    | Mode_t.IntegratedAssembly
+    | Mode_t.IntegratedAssembly (* nonexistant *)
     =>  (* -m3back, +asm => cg produces assembly code *)
-        (* don't mess with a file comparison, just build the stupid thing... *)
+        (* don't do the file comparison, make the file unconditionally. *)
         GenCGMain (s, Main_MS);
         ETimer.Pop ();
 
@@ -2581,9 +2584,9 @@ PROCEDURE GenerateCGMain (s: State;  Main_O: TEXT) =
         IF (NOT s.keep_files) THEN Utils.Remove (Main_MS); END;
         Utils.NoteNewFile (Main_O);
 
-    | Mode_t.ExternalObject,
+    | Mode_t.ExternalObject,   (* mostly nonexistant, untested, but for m3cgcat *)
         (* +m3back, -asm => cg produces il, m3back produces object *)
-      Mode_t.ExternalAssembly
+      Mode_t.ExternalAssembly (* m3cc *)
           (* +m3back, +asm => cg produces il, m3back produces assembly *)
     =>  (* check for an up-to-date Main_O *)
         time_O  := Utils.LocalModTime (Main_O);
@@ -2608,7 +2611,7 @@ PROCEDURE GenerateCGMain (s: State;  Main_O: TEXT) =
             Utils.Remove (Main_XX);
           END;
           Msg.Debug ("compiling ", Main_MC, " ...", Wr.EOL);
-          IF (plan = 2) THEN
+          IF mode = Mode_t.ExternalObject THEN
             EVAL RunM3Back (s, Main_MC, Main_O, debug := TRUE, optimize := FALSE);
           ELSE
             IF  RunM3Back (s, Main_MC, Main_MS, debug := TRUE, optimize := FALSE)
@@ -2620,7 +2623,7 @@ PROCEDURE GenerateCGMain (s: State;  Main_O: TEXT) =
           Utils.NoteNewFile (Main_MC);
         END;
     ELSE 
-    END; (* CASE plan *)
+    END; (* CASE mode *)
   END GenerateCGMain;
 
 PROCEDURE GenCGMain (s: State;  object: TEXT) =
