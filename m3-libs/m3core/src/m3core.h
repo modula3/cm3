@@ -1207,4 +1207,20 @@ typedef M3PROC RT0__Binder;
 } /* extern "C" */
 #endif
 
+// from m3c
+// http://c.knowcoding.com/view/23699-portable-alloca.html
+// Find a good version of alloca.
+#ifndef alloca
+# ifdef __GNUC__
+#  define alloca __builtin_alloca
+# elif defined(__DECC) || defined(__DECCXX)
+#  define alloca(x) __ALLOCA(x)
+# elif defined(_MSC_VER)
+   void * __cdecl _alloca(size_t size);
+#  define alloca _alloca
+# else
+#  include <alloca.h>
+# endif
+#endif
+
 #endif
