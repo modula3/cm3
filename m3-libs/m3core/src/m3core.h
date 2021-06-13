@@ -1187,6 +1187,17 @@ typedef void* (__cdecl*ThreadPThread__start_routine_t)(void*);
 #define ThreadPThread__ProcessThreadStack ThreadPThread__ProcessThreadStack
 typedef void (__cdecl*ThreadPThread__ProcessThreadStack)(void* start, void* limit);
 
+#define RT0__Binder RT0__Binder /* inhibit m3c type */
+// The correct type for RT0__Binder is:
+// typedef RT0__Module* (__cdecl*RT0__Binder)(INTEGER mode);
+// but we cannot use that due to type collision hashes,
+// until/unless significant m3c changes.
+// This works:
+typedef void (__cdecl*M3PROC)(void); // from MxGen.m3
+typedef M3PROC RT0__Binder;
+// The actual use and pass casts and so getting the type correct here does
+// not really matter. What matters is that it is the same in all function
+// declarations/definitions.
 
 #ifdef __cplusplus
 } /* extern "C" */
