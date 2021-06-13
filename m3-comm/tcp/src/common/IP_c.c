@@ -269,16 +269,19 @@ IPInternal__GetNameInfo(int family, int port, const void* addr, TEXT* hostText, 
     return err;
 }
 
+#ifdef _WIN32
+
+static
 void
 __cdecl
 IPInternal__Exitor(void)
 {
-#ifdef _WIN32
     WSACleanup();
-#endif
 }
 
-BOOLEAN
+#endif
+
+void
 __cdecl
 IPInternal__Init(void)
 {
@@ -289,13 +292,10 @@ IPInternal__Init(void)
     WSADATA data;
     ZeroMemory(&data, sizeof(data));
     if (WSAStartup(WinSockVersion, &data))
-    {
         IPError__Die();
-        return FALSE;
-    }
-    return TRUE; // Process__RegisterExitor(IPInternal__Exitor);
+    else
+        Process__RegisterExitor(IPInternal__Exitor);
 #endif
-    return FALSE;
 }
 
 #ifndef _WIN32

@@ -11,7 +11,7 @@
 
 UNSAFE MODULE IP;
 
-IMPORT IPError, M3toC, IPInternal, Ctypes, Process;
+IMPORT IPError, M3toC, IPInternal, Ctypes;
 TYPE int = Ctypes.int;
 
 (************
@@ -103,7 +103,5 @@ PROCEDURE GetHostAddr(): Address =
   END GetHostAddr;
 
 BEGIN
-  IF IPInternal.Init() THEN
-    Process.RegisterExitor(IPInternal.Exitor);
-  END;
+  IPInternal.Init();
 END IP.
