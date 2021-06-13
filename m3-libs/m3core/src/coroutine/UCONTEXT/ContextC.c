@@ -415,8 +415,6 @@ ContextC__GetStackBase(Context *c)
   return (ADDRESS)c->stackbase;
 }
 
-#include <alloca.h>
-
 __attribute__((noinline))
 static ADDRESS
 ContextC__PushContext1(Context *c)
