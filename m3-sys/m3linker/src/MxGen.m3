@@ -77,6 +77,15 @@ PROCEDURE GenerateMain (base: Mx.LinkSet;  c_output: Wr.T;  cg_output: M3CG.T;
         Out (s, "#include <windows.h>", EOL);
       END;
 
+      (* Put types inside extern C because some compilers (Sun) consider
+       * such linkage as part of the type and error upon conflicts,
+       * between m3core.h and _m3main.c when they are concatenated.
+       * At least for function pointer types.
+       *)
+      Out (s, "#ifdef __cplusplus", EOL);
+      Out (s, "extern \"C\" {", EOL);
+      Out (s, "#endif", EOL, EOL);
+
       (* This content should match m3c output so the files can be concatenated. *)
       Out (s, EOL, "#if __INITIAL_POINTER_SIZE == 64", EOL);
       Out (s, "typedef __int64 INTEGER;", EOL);
@@ -95,10 +104,6 @@ PROCEDURE GenerateMain (base: Mx.LinkSet;  c_output: Wr.T;  cg_output: M3CG.T;
       Out (s, "#define RT0__ModulePtr RT0__ModulePtr\n");
       Out (s, "typedef ADDRESS RT0__ModulePtr;\n");
       Out (s, "#endif\n\n");
-
-      Out (s, "#ifdef __cplusplus", EOL);
-      Out (s, "extern \"C\" {", EOL);
-      Out (s, "#endif", EOL, EOL);
 
       Out (s, "//correct, but match preexisting m3core\n");
       Out (s, "//void __cdecl RTLinker__InitRuntime(INTEGER argc, char** argv, char** envp, void* hinstance);\n");
