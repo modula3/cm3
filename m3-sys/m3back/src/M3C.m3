@@ -2475,8 +2475,8 @@ CONST Prefix = ARRAY OF TEXT {
 "#define m3_xor(T, x, y) (((T)(x)) ^ ((T)(y)))",
 
 "#ifdef _MSC_VER",
-"#define _CRT_SECURE_NO_DEPRECATE",
-"#define _CRT_NONSTDC_NO_DEPRECATE",
+"#define _CRT_SECURE_NO_DEPRECATE 1",
+"#define _CRT_NONSTDC_NO_DEPRECATE 1",
 "#pragma warning(disable:4616) /* there is no warning x (unavoidable if targeting multiple compiler versions) */",
 "#pragma warning(disable:4619) /* there is no warning x (unavoidable if targeting multiple compiler versions) */",
 "#pragma warning(disable:4100) /* unused parameter */",
