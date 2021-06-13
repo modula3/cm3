@@ -1,5 +1,3 @@
-typedef void (*ForkHandler)(void);
-
 #ifndef INCLUDED_M3CORE_H
 #include "m3core.h"
 #endif
@@ -7,6 +5,8 @@ typedef void (*ForkHandler)(void);
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+typedef void (*ForkHandler)(void);
 
 #ifdef M3_USER_THREADS
 
