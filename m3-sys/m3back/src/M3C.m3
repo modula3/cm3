@@ -2320,6 +2320,7 @@ TYPE Proc_t = M3CG.Proc OBJECT
     blocks: RefSeq.T := NIL; (* Block_t *)
     block_stack: RefSeq.T := NIL; (* Block_t *)
     current_block: Block_t := NIL;
+    needs_return := FALSE; (* Is this a non-void function without a return yet? *)
 
     METHODS
         Locals_Size(): INTEGER := Proc_Locals_Size;
@@ -6120,15 +6121,23 @@ BEGIN
             END;
         END;
     END;
+
+    (* Some Modula-3 functions with a return type contain infinite loops and no return.
+     * Some compilers (Sun) error about this (not merely warn).
+     *)
+    proc.needs_return := (proc.return_type # CGType.Void);
 END begin_procedure;
 
-PROCEDURE end_procedure(self: T; <*UNUSED*>p: M3CG.Proc) =
-(*VAR proc := NARROW(p, Proc_t);*)
+PROCEDURE end_procedure(self: T; p: M3CG.Proc) =
+VAR proc := NARROW(p, Proc_t);
 BEGIN
     self.comment("end_procedure");
     (*self.comment("end_procedure " & NameT(proc.name));*)
     self.in_proc := FALSE;
     self.current_proc := NIL;
+    IF proc.needs_return THEN
+      print(self, "return 0;\n"); (* 0 casts quietly to int, float, pointer, not struct *)
+    END;
     print(self, "}");
 END end_procedure;
 
@@ -6136,7 +6145,7 @@ PROCEDURE begin_block(self: T) =
 (* marks the beginning of a nested anonymous block *)
 BEGIN
     self.comment("begin_block");
-(* pending import_procedure all moved up to global scope
+(* pending import_procedure all moved up to global scope (and attaching locals to blocks instead of procs)
     print(self, "{");
 *)
 END begin_block;
@@ -6272,6 +6281,7 @@ BEGIN
         INC(proc.exit_proc_skipped);
         RETURN;
     END;
+    proc.needs_return := FALSE;
     IF type = CGType.Void THEN
         IF NOT proc.is_RTHooks_Raise THEN
             print(self, "return;\n");
