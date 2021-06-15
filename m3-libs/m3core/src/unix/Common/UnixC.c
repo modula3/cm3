@@ -52,7 +52,7 @@ Unix__Assertions(void)
     M3_STATIC_ASSERT((sizeof(void*) == 4) || (sizeof(void*) == 8));
     M3_STATIC_ASSERT((sizeof(size_t) == 4) || (sizeof(size_t) == 8));
     M3_STATIC_ASSERT(sizeof(ptrdiff_t) == sizeof(size_t));
-    M3_STATIC_ASSERT(sizeof(void*) == sizeof(WORD_T));
+    M3_STATIC_ASSERT(sizeof(void*) <= sizeof(WORD_T)); // C backend can have 64bit word and 32bit pointer
 #if !defined(_WIN64) && !defined(__vms)
     M3_STATIC_ASSERT(sizeof(void*) == sizeof(long));
     M3_STATIC_ASSERT(sizeof(size_t) == sizeof(long));
@@ -122,8 +122,8 @@ M3WRAP3(int, execve, const char*, char**, char**)
 M3WRAP1(unsigned, sleep, unsigned)
 M3WRAP3(m3_off_t, lseek, int, m3_off_t, int)
 M3WRAP2(int, mkdir, const char*, m3_mode_t)
-M3WRAP2(int, gethostname, char*, size_t)
-M3WRAP2(char*, getcwd, char*, size_t)
+M3WRAP2(int, gethostname, char*, WORD_T)
+M3WRAP2(char*, getcwd, char*, WORD_T)
 
 #ifndef __vms
 
@@ -166,14 +166,14 @@ Unix__exit(int i)
 
 #if 0
 M3_DLL_EXPORT char* __cdecl
-Unix__getcwd(char* name, size_t len)
+Unix__getcwd(char* name, WORD_T len)
 {
     assert(len < INT_MAX);
     return _getcwd(name, (int)len);
 }
 
 M3_DLL_EXPORT int __cdecl
-Unix__gethostname(char* name, size_t len)
+Unix__gethostname(char* name, WORD_T len)
 {
     assert(len < INT_MAX);
     return gethostname(name, (int)len);

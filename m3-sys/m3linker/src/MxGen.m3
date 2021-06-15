@@ -65,12 +65,20 @@ CONST Prefix = ARRAY OF TEXT {
 "// between m3core.h and _m3main.c when they are concatenated.",
 "// At least for function pointer types.",
 "",
-"#ifdef __cplusplus",
-"extern \"C\" {",
+"#ifndef M3_TARGET64", (* see M3_TARGET64 in Target and config *)
+"#define M3_TARGET64 0",
 "#endif",
 "",
-"#if __INITIAL_POINTER_SIZE == 64",
-"typedef __int64 INTEGER;",
+"#if defined(_MSC_VER) || defined(__DECC) || defined(__DECCXX) || defined(__int64)",
+"typedef          __int64    INT64;",
+"typedef unsigned __int64   UINT64;",
+"#else",
+"typedef          long long  INT64;",
+"typedef unsigned long long UINT64;",
+"#endif",
+"",
+"#if __INITIAL_POINTER_SIZE == 64 || M3_TARGET64 /* __INITIAL_POINTER_SIZE is VMS-ism */",
+"typedef INT64 INTEGER;",
 "#else",
 "typedef ptrdiff_t INTEGER;",
 "#endif",
@@ -79,7 +87,42 @@ CONST Prefix = ARRAY OF TEXT {
 "#define __cdecl /* nothing */",
 "#endif",
 "",
-"typedef char* ADDRESS;",
+"#if M3_TARGET64",
+"",
+"template <typename T>",
+"union M3Ptr",
+"{",
+"  UINT64 i; // first to aid initialization M3Ptr<T> x = {0};",
+"  T* p;",
+"",
+"  operator T*() { return p; }",
+"  T& operator*() { return *p; }",
+"  bool operator!=(T* q) { return p != q; }",
+"  bool operator==(T* q) { return p == q; }",
+"  bool operator!=(M3Ptr q) { return p != q.p; }",
+"  bool operator==(M3Ptr q) { return p == q.p; }",
+"  M3Ptr& operator=(T* q) { p = q; return *this; }",
+"  explicit operator bool() const { return !!p; }",
+"  friend M3Ptr operator+(M3Ptr a, size_t b) { M3Ptr result = {a.i + b}; return result; }",
+"};",
+"",
+"#define M3_PTR(T) M3Ptr<T>",
+"",
+"#else",
+"#define M3_PTR(T) T*",
+"#endif",
+"",
+"#ifdef ADDRESS",
+"#error ADDRESS should not be defined before m3core.h",
+"#endif",
+"",
+"#define ADDRESS ADDRESS",
+"typedef M3_PTR(char) ADDRESS; /* void* might be nice, but char* allows math */",
+"",
+"#ifdef __cplusplus",
+"extern \"C\" {",
+"#endif",
+"",
 "typedef void (__cdecl*M3PROC)(void);",
 "",
 "#ifndef RT0__ModulePtr",
@@ -95,12 +138,11 @@ CONST Prefix = ARRAY OF TEXT {
 "//if not s.lazyInit",
 "//correct, but workaround hash collisions in ProcType",
 "//void __cdecl RTLinker__AddUnitImports(void* (__cdecl*)(void));",
-"void __cdecl RTLinker__AddUnitImports(M3PROC);",
 "",
+"void __cdecl RTLinker__AddUnitImports(M3PROC);",
 "//correct, but void __cdecl RTLinker__AddUnit(void* (__cdecl*)(void));",
 "void __cdecl RTLinker__AddUnit(M3PROC);",
 ""};
-
   VAR s: State;
   BEGIN
     <*ASSERT  (c_output = NIL) # (cg_output = NIL) *>
@@ -124,7 +166,7 @@ CONST Prefix = ARRAY OF TEXT {
       END;
 
       FOR i := FIRST(Prefix) TO LAST(Prefix) DO
-        Out (s, Prefix [i]);
+        Out (s, Prefix[i]);
         Out (s, "\n");
       END;
 

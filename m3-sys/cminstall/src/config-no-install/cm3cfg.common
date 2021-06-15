@@ -36,6 +36,16 @@ end
 
 %------------------------------------------------------------------------------
 
+% Configure a 32bit target to have 64bit INTEGER and pointer-size,
+% while still running on 32bit systems and dereferencing 32bit pointers.
+% This also halves the redistributed bootstrap matrix.
+%
+% This is *not* needed for normal 32bit or 64bit targets.
+%
+if not defined ("M3_TARGET64") M3_TARGET64 = FALSE end
+
+%------------------------------------------------------------------------------
+
 if not defined ("M3_BACKEND_MODE")
     M3_BACKEND_MODE = "3"
     % -- defines how the frontend, backend, and assembler interact

@@ -43,12 +43,12 @@ void __cdecl RTIO__PutG(double a)
 
 void __cdecl RTIO__PutBytes(ADDRESS addr, INTEGER icount)
 {
-    WORD_T const count = (WORD_T)icount; // Modula-3 lacks unsigned types, pass as signed and cast.
+    size_t const count = (size_t)icount; // Modula-3 lacks unsigned types, pass as signed and cast.
     unsigned char const * const p = (const unsigned char*)addr;
     char buffer[33]; /* size must be odd */
     const static char hex[] = "0123456789ABCDEF";
-    WORD_T i = { 0 };
-    WORD_T j = { 0 };
+    size_t i = { 0 };
+    size_t j = { 0 };
     
     RTIO__Flush();
     for (i = 0; i < count; ++i)

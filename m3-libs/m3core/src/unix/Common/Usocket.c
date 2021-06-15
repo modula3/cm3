@@ -331,10 +331,10 @@ M3WRAP2(int, listen, int, int)
 M3WRAP2(int, shutdown, int, int)
 M3WRAP3(int, socket, int, int, int)
 
-M3_DLL_EXPORT ssize_t __cdecl
-Usocket__send (int a, const void* b, size_t c, int d)
+M3_DLL_EXPORT INTEGER __cdecl
+Usocket__send (int a, const void* b, WORD_T c, int d)
 {
-    ssize_t r;
+    INTEGER r;
     Scheduler__DisableSwitching();
 
     r = send (a, (char*)b, c, d); // cast for Windows
@@ -343,10 +343,10 @@ Usocket__send (int a, const void* b, size_t c, int d)
     return r;
 }
 
-M3_DLL_EXPORT ssize_t __cdecl
-Usocket__recv (int a, void* b, size_t c, int d)
+M3_DLL_EXPORT INTEGER __cdecl
+Usocket__recv (int a, void* b, WORD_T c, int d)
 {
-    ssize_t r;
+    INTEGER r;
     Scheduler__DisableSwitching();
 
     r = recv (a, (char*)b, c, d); // cast for Windows
@@ -357,7 +357,7 @@ Usocket__recv (int a, void* b, size_t c, int d)
 
 // wrap everything taking input socklen_t or sockaddr
 #define WRAP_SOCKADDR_INPUT1                    \
-    ssize_t result = {0};                       \
+    INTEGER result = {0};                       \
     NativeSockAddrUnionAll native;              \
     M3SockAddrUnionAll m3;                      \
                                                 \
@@ -375,7 +375,7 @@ Usocket__recv (int a, void* b, size_t c, int d)
     return result;                              \
 
 #define WRAP_SOCKADDR_OUTPUT1                   \
-    ssize_t result = {0};                       \
+    INTEGER result = {0};                       \
     NativeSockAddrUnionAll native;              \
     M3SockAddrUnionAll m3;                      \
     socklen_t len = {0};                        \
@@ -416,13 +416,12 @@ Usocket__connect(int s, const M3SockAddrUnionAll* pm3_sockaddr, m3_socklen_t len
     WRAP_SOCKADDR_INPUT2
 }
 
-M3_DLL_EXPORT ssize_t __cdecl
-Usocket__sendto(int s, const void* msg, size_t length, int flags, const M3SockAddrUnionAll* pm3_sockaddr, m3_socklen_t len)
+M3_DLL_EXPORT INTEGER __cdecl
+Usocket__sendto(int s, const void* msg, WORD_T length, int flags, const M3SockAddrUnionAll* pm3_sockaddr, m3_socklen_t len)
 {
     WRAP_SOCKADDR_INPUT1
 
-    // cast for Windows
-    sendto(s, (char*)msg, length, flags, &native.sa, len);
+    sendto(s, (char*)msg, length, flags, &native.sa, len); // cast for Windows
 
     WRAP_SOCKADDR_INPUT2
 }
@@ -523,8 +522,8 @@ the same order. This is checked in Usocket__Assertions.
     }
 }
 
-M3_DLL_EXPORT ssize_t __cdecl
-Usocket__recvfrom(int s, void* buf, size_t length, int flags, M3SockAddrUnionAll* pm3_sockaddr, m3_socklen_t* plen)
+M3_DLL_EXPORT INTEGER __cdecl
+Usocket__recvfrom(int s, void* buf, WORD_T length, int flags, M3SockAddrUnionAll* pm3_sockaddr, m3_socklen_t* plen)
 {
     WRAP_SOCKADDR_OUTPUT1
 

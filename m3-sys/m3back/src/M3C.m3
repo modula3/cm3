@@ -7,7 +7,7 @@ FROM TargetMap IMPORT CG_Bytes;
 FROM M3CG IMPORT Name, ByteOffset, CallingConvention;
 FROM M3CG IMPORT BitSize, ByteSize, Alignment, Frequency;
 FROM M3CG IMPORT Label, Sign, BitOffset, TypeUID;
-FROM M3CG IMPORT Type, ZType, AType, RType, IType, MType;
+FROM M3CG IMPORT ZType, AType, RType, IType, MType;
 FROM M3CG IMPORT CompareOp, ConvertOp, RuntimeError, MemoryOrder, AtomicOp;
 FROM Target IMPORT CGType;
 FROM M3CG_Ops IMPORT ErrorHandler;
@@ -18,8 +18,8 @@ IMPORT TextSetDef, Fmt;
 CONST NameT = M3ID.ToText;
 
 VAR debug := TRUE;                (* command line @M3m3c-debug *)
-VAR debug_verbose := TRUE;        (* command line @M3m3c-debug-verbose *)
-VAR debug_comment := TRUE;        (* command line @M3m3c-debug-comment or the rest *)
+VAR debug_verbose := FALSE;       (* command line @M3m3c-debug-verbose *)
+VAR debug_comment := FALSE;       (* command line @M3m3c-debug-comment or the rest *)
 VAR debug_comment_stdio := FALSE; (* command line @M3m3c-debug-comment-stdio *)
 VAR debug_types := FALSE;         (* command line @M3m3c-debug-types *)
 
@@ -102,18 +102,12 @@ T = M3CG_DoNothing.T OBJECT
         labels: REF ARRAY (*Label=INTEGER*) OF BOOLEAN := NIL;
 
         (* initialization and record declaration support *)
-
         fields: TextSeq.T := NIL;
         current_offset := 0;
         initializer: TextSeq.T := NIL;
         debug_initializer: CharSeq.T := NIL;
         initializer_comma := "";
-
-        (* initializers are aggregated into arrays to avoid
-        redeclaring the types and generating new field names *)
-
-        init_type := Type.Void;
-        init_type_count := 0;
+        init_type_count := 0; (* TODO somewhat vestigial *)
 
         (* line directive support *)
         file: TEXT := NIL;
@@ -245,7 +239,8 @@ T = M3CG_DoNothing.T OBJECT
 
 CONST HandlerNamePieces = ARRAY OF TEXT { "_M3_LINE_", "_I3_LINE_" };
 
-CONST Text_left_brace = "{";
+CONST Text_left_brace = "{";  (* use this when the matches are far apart and damage editing *)
+CONST Text_right_brace = "}"; (* use this when the matches are far apart and damage editing *)
 CONST Text_address = "ADDRESS";
 CONST Text_int8 = "INT8";
 CONST Text_uint8 = "UINT8";
@@ -1015,7 +1010,9 @@ BEGIN
       target_typename := type.refers_to_type.text;
     END;
 
-    target_typename := target_typename & "*";
+    (* target_typename := target_typename & "*"; *)
+    target_typename := "M3_PTR(" & target_typename & ")";
+
     (* TODO This typedef is not likely needed, given the subsequent rendering as target*.
      * And then this replacement can be done immediately without waiting for target
      * to be defined. *)
@@ -1569,7 +1566,8 @@ BEGIN
 
     text := "/*openArray_define*/struct " & type.base_text & "{\n" & element_type_text;
     FOR i := 1 TO dimensions DO
-        text := text & "*";
+        (* text := text & "*"; *)
+        text := "M3_PTR(" & text & ")";
     END;
     text := text & "_elts;\nCARDINAL _size";
     IF dimensions > 1 THEN
@@ -2037,10 +2035,15 @@ TYPE Expr_Variable_t = Expr_t OBJECT
     OVERRIDES
         CText := Expr_Variable_CText;
 END;
-PROCEDURE Expr_Variable_CText(self: Expr_Variable_t): TEXT =
-VAR var := self.var;
+
+PROCEDURE Variable_CText(current_proc: Proc_t; var: Var_t): TEXT =
 BEGIN
-    RETURN follow_static_link(self.current_proc, var) & NameT(var.name);
+    RETURN "(" & follow_static_link(current_proc, var) & NameT(var.name) & target64_index0(var) & ")";
+END Variable_CText;
+
+PROCEDURE Expr_Variable_CText(self: Expr_Variable_t): TEXT =
+BEGIN
+    RETURN Variable_CText(self.current_proc, self.var);
 END Expr_Variable_CText;
 
 TYPE Expr_Unary_t  = Expr_t OBJECT (* x: ARRAY [0..0] OF Expr_t; *) END;
@@ -2264,6 +2267,7 @@ END;
 
 PROCEDURE Var_Init(var: Var_t): Var_t =
 BEGIN
+    var.up_level := var.up_level OR Target.Target64;
     var.is_static_link := (var.name = var.self.static_link_id);
     var.name := Var_FixName(var.self, var.name, var.exported OR var.imported);
     RETURN var;
@@ -2499,8 +2503,6 @@ CONST Prefix = ARRAY OF TEXT {
 "#endif",
 (* TODO ideally these are char* for K&R or ideally absent when strong
    typing and setjmp work done *)
-"#define ADDRESS ADDRESS",
-"typedef char* ADDRESS;",
 "typedef char* STRUCT;",
 "typedef signed char INT8;", (* m3core.h is a bit more portable here, via limits.h; TODO: C99 *)
 "typedef unsigned char UINT8;",
@@ -2508,6 +2510,28 @@ CONST Prefix = ARRAY OF TEXT {
 "typedef unsigned short UINT16;",
 "typedef int INT32;",
 "typedef unsigned int UINT32;",
+"",
+
+"typedef float REAL;",
+"typedef double LONGREAL;",
+"typedef double EXTENDED;",
+"",
+
+(* Setting M3_TARGET64 to 1 forces integers to be 64bits
+ * and pointers to occupy 64bits. 64bits must be allocated
+ * for pointers because integers can overwrite them.
+ *
+ * M3_TARGET64 enlarges 32bit targets to have 64bit data,
+ * and cuts the build matrix sort of in half, esp.
+ * for bootstrap production. It also shields the backend
+ * from m3front regressions.
+ *)
+"#ifndef M3_TARGET64",
+"#define M3_TARGET64 0",
+"#endif",
+"",
+
+(* TODO Around here is duplicated by m3core.h, M3C.m3 and MxGen.m3 *)
 "#if defined(_MSC_VER) || defined(__DECC) || defined(__DECCXX) || defined(__int64)", (* matches m3core.h *)
 "typedef __int64 INT64;",
 "typedef unsigned __int64 UINT64;",
@@ -2533,14 +2557,33 @@ CONST Prefix = ARRAY OF TEXT {
 "typedef UINT64 size_t;",
 "#elif defined(_WIN32)",
 "typedef unsigned size_t;",
-"#elif defined(__SIZE_TYPE__)", (* gcc, clang *)
+"#elif defined(__SIZE_TYPE__) /* This is gcc and clang and should be the vast majority non-Windows case */",
 "typedef __SIZE_TYPE__ size_t;",
-"#elif defined(__APPLE__) /*|| defined(_LP64) || defined(__LP64__)*/",
-"typedef unsigned long size_t;",
 "#else",
-(*"typedef unsigned int size_t;",*)
 "#include <stddef.h>", (* try to remove this, it is slow -- need size_t *)
 "#endif",
+
+"#if M3_TARGET64",
+"#if defined(_WIN32)",
+"typedef size_t uintptr_t;",
+"#elif defined(__UINTPTR_TYPE__) /* This is gcc and clang and should be the vast majority non-Windows case */",
+"typedef __UINTPTR_TYPE__ uintptr_t;",
+"#else",
+"#include <stdint.h>",
+"#endif",
+"#endif",
+"",
+
+"#if M3_TARGET64",
+"#define M3_TARGET64_ARRAY2 [sizeof(char*)/4] /* so writing 64bit INTEGER on top of 32bit pointer is safe */",
+"#define M3_TARGET64_INDEX0 [0] /* access first element of 2 element array */",
+"#define M3_TARGET64_INIT0  ={0} /* zero the explicit padding */",
+"#else",
+"#define M3_TARGET64_ARRAY2 /* nothing */",
+"#define M3_TARGET64_INDEX0 /* nothing */",
+"#define M3_TARGET64_INIT0  /* nothing */ /* not a bad idea to use ={0} here too */",
+"#endif",
+"",
 
 "/* http://c.knowcoding.com/view/23699-portable-alloca.html */",
 "/* Find a good version of alloca. */",
@@ -2567,22 +2610,7 @@ CONST Prefix = ARRAY OF TEXT {
 "#  include <alloca.h>",
 "# endif",
 "#endif",
-
-"typedef float REAL;",
-"typedef double LONGREAL;",
-"typedef /*long*/ double EXTENDED;",
-
-"#ifdef __cplusplus",
-"extern \"C\" {",
-"#endif",
-
-"#if !defined(_MSC_VER) && !defined(__cdecl)",
-"#define __cdecl /* nothing */",
-"#endif",
-"#if !defined(_MSC_VER) && !defined(__stdcall)",
-"#define __stdcall /* nothing */",
-"#endif",
-
+"",
 "#define STRUCT(n) struct_##n##_t", (* TODO prune if not used *)
 (* TODO struct1 and struct2 should not be needed.
    struct4 and struct8 can go away when we make open arrays and jmpbufs
@@ -2591,13 +2619,72 @@ CONST Prefix = ARRAY OF TEXT {
 "#define STRUCT2(n) typedef struct { volatile short a[n/2]; }  STRUCT(n);", (* TODO prune if not used *)
 "#define STRUCT4(n) typedef struct { volatile int a[n/4]; }    STRUCT(n);", (* TODO prune if not used *)
 "#define STRUCT8(n) typedef struct { volatile UINT64 a[n/8]; } STRUCT(n);", (* TODO prune if not used *)
+"",
+"#if !defined(_MSC_VER) && !defined(__cdecl)",
+"#define __cdecl /* nothing */",
+"#endif",
+"",
+"#if !defined(_MSC_VER) && !defined(__stdcall)",
+"#define __stdcall /* nothing */",
+"#endif",
+"",
+"#ifndef M3_TARGET64", (* see M3_TARGET64 in Target and config *)
+"#define M3_TARGET64 0",
+"#endif",
+"",
+"#if defined(_MSC_VER) || defined(__DECC) || defined(__DECCXX) || defined(__int64)",
+"typedef          __int64    INT64;",
+"typedef unsigned __int64   UINT64;",
+"#else",
+"typedef          long long  INT64;",
+"typedef unsigned long long UINT64;",
+"#endif",
+"",
+"#if __INITIAL_POINTER_SIZE == 64 || M3_TARGET64 /* __INITIAL_POINTER_SIZE is VMS-ism */",
+"typedef INT64 INTEGER;",
+"#else",
+"typedef ptrdiff_t INTEGER;",
+"#endif",
+"",
+"#if M3_TARGET64",
+"",
+"#ifdef M3Ptr",
+"#define M3Ptr M3Ptr",
+"",
+"#include <stdint.h>",
+""
+"template <typename T>",
+"union M3Ptr",
+"{",
+"  UINT64 i;
+"  T* p; // just for debugging, never reference",
 
+"  operator char*() { return (char*)(uintptr_t)i; }",
+"  T& operator *() { return *(T*)(uintptr_t)i; }",
+"};",
+"",
+"#endif",
+"",
+"#define M3_PTR(T) M3Ptr<T>",
+"",
+"#else",
+"#define M3_PTR(T) T*",
+"#endif",
+"",
+"//trouble",
+"//typedef M3_PTR(char) ADDRESS; /* void* might be nice, but char* allows math */",
+"typedef char* ADDRESS; /* void* might be nice, but char* allows math */",
+"",
+"#ifdef __cplusplus",
+"extern \"C\" {",
+"#endif",
+"",
 "void __cdecl m3_memcpy(void* dest, const void* source, size_t n);",
 "void __cdecl m3_memmove(void* dest, const void* source, size_t n);",
 "void __cdecl m3_memset(void* dest, int fill, size_t count);",
 "int  __cdecl m3_memcmp(const void* a, const void* b, size_t n);",
-
-""};
+""
+};
 
 <*NOWARN*>CONST Suffix = ARRAY OF TEXT {
 "\n#ifdef __cplusplus",
@@ -2606,11 +2693,11 @@ CONST Prefix = ARRAY OF TEXT {
 };
 
 CONST intLiteralPrefix = ARRAY CGType OF TEXT {
-    "",  "((INT8)",             (* 0 1 *)
-    "",  "((INT16)",            (* 2 2 *)
-    "", "",                     (* 4 3 *)
-    "UINT64_(", "INT64_(",      (* 6 7 *)
-    NIL, ..  (* 8 REAL 9 LONGREAL A EXTENDED B ADDRESS C STRUCT D void *)
+    "",  "((INT8)",         (* 0 1 *)
+    "",  "((INT16)",        (* 2 2 *)
+    "", "",                 (* 4 3 *)
+    "UINT64_(", "INT64_(",  (* 6 7 *)
+    NIL, ..                 (* 8 REAL 9 LONGREAL A EXTENDED B ADDRESS C STRUCT D void *)
 };
 
 CONST intLiteralSuffix = ARRAY CGType OF TEXT {
@@ -2636,15 +2723,15 @@ CONST cgtypeToText = ARRAY CGType OF TEXT {
 
 (* Mainly ADDRESS -> void* to avoid warnings but also cleanups *)
 CONST cgtypeToParamText = ARRAY CGType OF TEXT {
-    "unsigned char",  "signed char",
-    "unsigned short", "short",
-    "unsigned", "int",
-    "UINT64", "INT64",
-    "float", "double", "double",
-    "void*",
-    NIL,
-    NIL
- };
+  "unsigned char",  "signed char",
+  "unsigned short", "short",
+  "unsigned", "int",
+  "UINT64", "INT64",
+  "float", "double", "double",
+  "void*",
+  NIL,
+  NIL
+};
 
 TYPE IntegerTypes = [CGType.Word8 .. CGType.Int64];
 
@@ -2718,6 +2805,12 @@ CONST typeMinMax = ARRAY CGType OF MinMaxInt_t {
     MinMaxInt_t{ TInt.Zero,  TInt.Zero   }, (* address  *)
     MinMaxInt_t{ TInt.Zero,  TInt.Zero   }, (* struct  *)
     MinMaxInt_t{ TInt.Zero,  TInt.Zero   }  (* void  *)
+};
+CONST type64To32 = ARRAY IntegerTypes OF IntegerTypes {
+    CGType.Word8, CGType.Int8,
+    CGType.Word16, CGType.Int16,
+    CGType.Word32, CGType.Int32,
+    CGType.Word32, CGType.Int32
 };
 CONST typeToUnsigned = ARRAY IntegerTypes OF IntegerTypes {
     CGType.Word8, CGType.Word8,
@@ -5507,7 +5600,11 @@ VAR var := NARROW(v, Var_t);
     const := ARRAY BOOLEAN OF TEXT{"", " const "}[var.const];
 BEGIN
     self.comment("end_init");
-    init_to_offset(self, var.byte_size);
+    IF Target.Target64 THEN
+      init_to_offset(self, var.byte_size + 8);
+    ELSE
+      init_to_offset(self, var.byte_size);
+    END;
     end_init_helper(self);
 
     print(self, "struct " & var_name & "_t{");
@@ -5516,7 +5613,7 @@ BEGIN
     END;
     print(self, "};\n");
 
-    print(self, "static " & const & var_name & "_t " & var_name & "={");
+    print(self, "static " & const & var_name & "_t " & var_name & "={\n");
     WHILE initializer.size() > 0 DO
         print(self, initializer.remlo());
     END;
@@ -5557,16 +5654,17 @@ BEGIN
         self.fields.addhi("char " & GenerateNameLocalText(self) & "[" & IntToDec(pad) & "];\n");
         initializer_addhi(self, Text_left_brace);
         FOR i := 1 TO pad DO
-            initializer_addhi(self, "0 /* " & IntToDec(i) & " */ ");
+            initializer_addhi(self, "0");
         END;
         initializer_addhi(self, "}");
     END;
+
 END init_to_offset;
 
 PROCEDURE end_init_helper(self: T) =
 BEGIN
     IF self.init_type_count > 0 THEN
-        self.fields.addhi("[" & IntToDec(self.init_type_count) & "];\n");
+      (*  self.fields.addhi("[" & IntToDec(self.init_type_count) & "];\n"); *)
         self.initializer.addhi("}");
     END;
     self.init_type_count := 0;
@@ -5582,14 +5680,23 @@ BEGIN
       self.comment("init_helper");
     END;
 *)
+    IF offset = 0 THEN
+      self.fields.addhi("\n");
+    END;
     init_to_offset(self, offset);
-    IF offset = 0 OR self.init_type # type OR offset # self.current_offset THEN
-        end_init_helper(self);
-        self.fields.addhi(cgtypeToText[type] & " " & GenerateNameLocalText(self));
-        initializer_addhi(self, Text_left_brace);
+    (* TODO backend needs to optionally do layout and frontend needs to optionally reference named fields
+     * TODO remove this, and offset computation in frontend
+     *)
+    IF TRUE (* offset = 0 OR self.init_type # type OR offset # self.current_offset *) THEN
+      end_init_helper(self);
+      IF type = CGType.Addr AND Target.Target64 THEN
+        self.fields.addhi(cgtypeToText[type] & " " & GenerateNameLocalText(self) & "[1 + (sizeof(char*) == 4)];\n"); (* 1 or 2 *)
+      ELSE
+        self.fields.addhi(cgtypeToText[type] & " " & GenerateNameLocalText(self) & "[1];\n");
+      END;
+      initializer_addhi(self, Text_left_brace);
     END;
     INC(self.init_type_count);
-    self.init_type := type;
     self.current_offset := offset + TargetMap.CG_Bytes[type];
 END init_helper;
 
@@ -6052,7 +6159,7 @@ BEGIN
         FOR i := 0 TO proc.Locals_Size() - 1 DO
             WITH var = proc.Locals(i) DO
                 IF var.up_level AND var.used THEN
-                    print(self, var.InFrameDeclare() & ";\n");
+                    print(self, var.InFrameDeclare() & " M3_TARGET64_ARRAY2;\n");
                 END;
             END;
         END;
@@ -6062,14 +6169,14 @@ BEGIN
         FOR i := FIRST(params^) TO LAST(params^) DO
             WITH param = params[i] DO
                 IF param.up_level AND param.used THEN
-                    print(self, param.InFrameDeclare() & ";\n");
+                  print(self, param.InFrameDeclare() & " M3_TARGET64_ARRAY2;\n");
                 END;
             END;
         END;
         print(self, "};\n");
     END;
 
-    print(self, function_prototype(proc, FunctionPrototype_t.Define) & "\n{\n");
+    print(self, function_prototype(proc, FunctionPrototype_t.Define) & "\n" & Text_left_brace & "\n");
 
     (* declare and zero non-uplevel locals (including temporaries) *)
 
@@ -6096,7 +6203,7 @@ BEGIN
     (* declare frame of uplevels *)
 
     IF proc.forward_declared_frame_type THEN
-        print(self, frame_type & " " & frame_name & ";\n");
+      print(self, frame_type & " " & frame_name & " M3_TARGET64_INIT0;\n");
     END;
 
     (* init/capture uplevel parameters and static_link (including struct values) *)
@@ -6107,13 +6214,14 @@ BEGIN
                 IF param.up_level AND param.used THEN
                     struct := "";
                     IF param.cgtype = CGType.Struct THEN
+                        <* ASSERT NOT PassStructsByValue *> (* TODO *)
                         IF PassStructsByValue THEN
                             struct := "&";
                         ELSE
                             struct := "*";
                         END;
                     END;
-                    print(self, frame_name & "." & Var_Name(param) & "=" & struct & Param_Name(param) & ";\n");
+                    print(self, "(" & frame_name & "." & Var_Name(param) & " M3_TARGET64_INDEX0)=" & struct & Param_Name(param) & ";\n");
                 END;
             END;
         END;
@@ -6148,7 +6256,7 @@ BEGIN
     IF proc.needs_return THEN
       print(self, "return 0;\n"); (* 0 casts quietly to int, float, pointer, not struct *)
     END;
-    print(self, "}");
+    print(self, Text_right_brace);
 END end_procedure;
 
 PROCEDURE begin_block(self: T) =
@@ -6156,7 +6264,7 @@ PROCEDURE begin_block(self: T) =
 BEGIN
     self.comment("begin_block");
 (* pending import_procedure all moved up to global scope (and attaching locals to blocks instead of procs)
-    print(self, "{");
+    print(self, Text_left_brace);
 *)
 END begin_block;
 
@@ -6165,7 +6273,7 @@ PROCEDURE end_block(self: T) =
 BEGIN
     self.comment("end_block");
 (* pending import_procedure all moved up to global scope
-    print(self, "}");
+    print(self, Text_right_brace);
 *)
 END end_block;
 
@@ -6236,7 +6344,7 @@ BEGIN
         self.comment("if_true_or_false");
     END;
     IF TRUE (* AvoidGccTypeRangeWarnings  *) THEN
-        load_host_integer(self, itype, 0);
+        load_host_integer(self, type64To32[itype], 0);
         self.if_compare(itype, ARRAY BOOLEAN OF CompareOp{CompareOp.EQ, CompareOp.NE}[value], label, frequency);
     ELSE
         pop(self);
@@ -6304,6 +6412,7 @@ BEGIN
             cast3 := ")(";
             cast4 := ")";
         END;
+        (* TODO target64? *)
         print(self, "return " & cast1 & cast2 & cast3 & get(self).CText() & cast4 & ";\n");
         pop(self);
     END;
@@ -6362,6 +6471,14 @@ BEGIN
             left := expr,
             c_unop_text := "*");
 END Deref;
+
+PROCEDURE target64_index0(var: Var_t): TEXT =
+BEGIN
+    IF var.proc = NIL OR var.up_level = FALSE (*OR var.is_static_link*) THEN
+        RETURN "";
+    END;
+    RETURN " M3_TARGET64_INDEX0";
+END target64_index0;
 
 PROCEDURE follow_static_link(current_proc: Proc_t; var: Var_t): TEXT =
 VAR current_level := 0;
@@ -6448,7 +6565,7 @@ BEGIN
       self.comment("store");
     END;
     pop(self);
-    store_helper(self, s0.CText(), ztype, "&" & follow_static_link(self.current_proc, var) & NameT(var.name), offset, mtype);
+    store_helper(self, s0.CText(), ztype, "&" & Variable_CText(self.current_proc, var), offset, mtype);
 END store;
 
 PROCEDURE load_address(self: T; v: M3CG.Var; offset: ByteOffset) =
@@ -6676,7 +6793,11 @@ END old_Cast;
 PROCEDURE CastAndDeref(expr: Expr_t; type: CGType := CGType.Void; type_text: TEXT := NIL): Expr_t =
 BEGIN
     <* ASSERT type # CGType.Void *>
-    RETURN Deref(cast(expr, type, type_text));
+    IF Target.Target64 THEN (* TODO controllable with #if *)
+      RETURN Deref(cast(cast(expr, type, type_text := "uintptr_t"), type, type_text));
+    ELSE
+      RETURN Deref(cast(expr, type, type_text));
+    END;
 END CastAndDeref;
 
 PROCEDURE op1(self: T; type: CGType; name, op: TEXT) =
@@ -7442,7 +7563,7 @@ BEGIN
     ELSE
         pop(self, 2);
         IF size # 1 THEN
-            s0 := CTextToExpr(IntToDec(size) & "*" & paren(s0).CText());
+            s0 := CTextToExpr(IntToDec(size) & "*" & paren(s0).CText()); (* multiplication, not dereference *)
         END;
         push(self, CGType.Addr, paren(CTextToExpr(s1.CText() & "+" & paren(s0).CText())));
     END;

@@ -5,7 +5,7 @@
 INTERFACE Usocket;
 
 FROM Ctypes IMPORT const_int, int, void_star, const_void_star, const_char_star;
-FROM Cstddef IMPORT size_t;
+FROM Cstddef IMPORT size_t, ssize_t;
 FROM Uin IMPORT struct_sockaddr_in;
 IMPORT Utypes, Uin;
 
@@ -152,10 +152,10 @@ PROCEDURE getsockopt(s, level, optname: int; optval: void_star; optlen: socklen_
 PROCEDURE listen(s, backlog: int): int RAISES {};
 
 <*EXTERNAL "Usocket__recvfrom"*>
-PROCEDURE recvfrom(s: int; buf: void_star; len: size_t; flags: int; from: struct_sockaddr_in_star; fromlen: socklen_t_star) : INTEGER RAISES {};
+PROCEDURE recvfrom(s: int; buf: void_star; len: size_t; flags: int; from: struct_sockaddr_in_star; fromlen: socklen_t_star) : ssize_t RAISES {};
 
 <*EXTERNAL "Usocket__sendto"*>
-PROCEDURE sendto(s: int; msg: const_void_star; len: size_t; flags: int; to: const_struct_sockaddr_in_star; tolen: socklen_t) : INTEGER RAISES {};
+PROCEDURE sendto(s: int; msg: const_void_star; len: size_t; flags: int; to: const_struct_sockaddr_in_star; tolen: socklen_t) : ssize_t RAISES {};
 
 <*EXTERNAL "Usocket__send"*>
 PROCEDURE send(s: int; buf: const_void_star; len: size_t; flags: int): INTEGER;

@@ -129,12 +129,11 @@ CONST
 
 (*-------------------------------------------------------- initialization ---*)
 
-PROCEDURE Init 
-  (system: TEXT; osname := "POSIX"; backend_mode := M3BackendMode_t.ExternalAssembly)
-: BOOLEAN;
+PROCEDURE Init (system: TEXT; osname := "POSIX"; backend_mode := M3BackendMode_t.ExternalAssembly;
+                target64 := FALSE) : BOOLEAN;
 (* Initialize the variables of this interface to reflect the architecture
    of "system".  Returns TRUE iff the "system" was known and the initialization
-   was successful.  *)
+   was successful (always).  *)
 
 VAR (*CONST*)
   System_name: TEXT := NIL; (* initialized by "Init" *)
@@ -498,5 +497,10 @@ PROCEDURE IsWideChar32 (): BOOLEAN; (* WideCharSize() = 32 *)
 PROCEDURE WideCharSize (): INTEGER;
 PROCEDURE WideCharMax (): INTEGER;
 PROCEDURE WideCharNumber (): INTEGER; (* WideCharMax() + 1 *)
+
+(* is a 32bit target being compiled with 64bit sizes
+* This is NOT for normal 64bit targets
+*)
+VAR Target64 := FALSE;
 
 END Target.

@@ -221,12 +221,12 @@ typedef void *(*start_routine_t)(void *);
 
 int
 __cdecl
-ThreadPThread__thread_create(size_t stackSize,
+ThreadPThread__thread_create(WORD_T stackSize,
                              start_routine_t start_routine,
                              void *arg)
 {
   int r = { 0 };
-  WORD_T bytes = { 0 };
+  size_t bytes = { 0 };
   pthread_attr_t attr;
   pthread_t pthread;
 
@@ -350,7 +350,7 @@ typedef int (*generic_init_t)(void *, const void *);
 
 void *
 __cdecl
-ThreadPThread_pthread_generic_new(WORD_T size, generic_init_t init)
+ThreadPThread_pthread_generic_new(size_t size, generic_init_t init)
 {
   int r = ENOMEM;
   void *p = calloc(1, size);

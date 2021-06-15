@@ -430,6 +430,20 @@ typedef unsigned long      UINT32;
 #error unable to find 32bit integer
 #endif
 
+typedef unsigned char BOOLEAN;
+typedef float REAL;
+typedef double LONGREAL;
+typedef double EXTENDED;
+
+// Force 64-ish target. This cuts the bootstrap matrix and works around m3front bugs.
+// This is only useful for 32bit targets and only tested with the C backend.
+// It can also be used for testing 64bit targets as stand-in for 32bit, i.e
+// to test the various typedefs and macros.
+#ifndef M3_TARGET64
+#define M3_TARGET64 0
+#endif
+
+// TODO Around here is duplicated by m3core.h, M3C.m3 and MxGen.m3
 // Support pre-C99 for Windows and VMS and any system with an __int64 macro.
 #if defined(_MSC_VER) || defined(__DECC) || defined(__DECCXX) || defined(__int64)
 typedef          __int64    INT64;
@@ -439,25 +453,17 @@ typedef          long long  INT64;
 typedef unsigned long long UINT64;
 #endif
 
-typedef unsigned char BOOLEAN;
-typedef float REAL;
-typedef double LONGREAL;
-typedef double EXTENDED;
-#if defined(__cplusplus) || __STDC__
-//Match m3c, so all the files can be concatenated.
-// TODO change m3c to cast to char* and not depend on ADDRESS being either.
-// Maybe caddr_t.
-//typedef void* ADDRESS;
-typedef char* ADDRESS;
+#if defined(_WIN64)
+typedef  INT64 ptrdiff_t, intptr_t;
+typedef UINT64    size_t, uintptr_t;
+#elif defined(_WIN32)
+typedef      int         ptrdiff_t, intptr_t;
+typedef unsigned            size_t, uintptr_t;
 #else
-typedef char* ADDRESS;
+#include <stddef.h>
+#if M3_TARGET64
+#include <stdint.h>
 #endif
-typedef ADDRESS TEXT;
-#define MUTEX MUTEX
-typedef ADDRESS MUTEX;
-
-#ifdef __cplusplus
-extern "C" {
 #endif
 
 // On all known systems, sizeof(size_t) == sizeof(intptr_t) == sizeof(void*).
@@ -472,14 +478,68 @@ extern "C" {
 //  while still changing instruction set.
 /* commented out is correct, but so is the #else */
 /*#if defined(_WIN64) || __INITIAL_POINTER_SIZE == 64 || defined(__LP64__) || defined(_LP64) || __WORDSIZE == 64*/
-#if __INITIAL_POINTER_SIZE == 64
+#if __INITIAL_POINTER_SIZE == 64 || M3_TARGET64 /* __INITIAL_POINTER_SIZE is VMS-ism */
 typedef INT64 INTEGER;
 typedef UINT64 WORD_T;
 #else
 typedef ptrdiff_t INTEGER;
 typedef size_t WORD_T;
 #endif
+// WORD_T is an unsigned type with the same size as a pointer.
+// It is confusing because it has no corresponding type in Modula-3.
+// In Modula-3, Word.T is signed INTEGER, but is *intended* (without
+// enforcement!) to only be used with the Word interface functions,
+// which interpret it as unsigned).
 
+#if M3_TARGET64
+
+#ifdef M3Ptr
+#error M3Ptr should not be defined before m3core.h.
+#define M3Ptr M3Ptr
+#endif
+
+#include <stdint.h>
+
+template <typename T>
+union M3Ptr
+{
+  UINT64 i;
+  T* p; // just for debugging, never reference
+
+  operator char*() { return (char*)(size_t)i; }
+  T& operator *() { return *(T*)(uintptr_t)i; }
+};
+
+#define M3_PTR(T) M3Ptr<T>
+
+#else
+#define M3_PTR(T) T*
+#endif
+
+//trouble
+//typedef M3_PTR(char) ADDRESS; /* void* might be nice, but char* allows math */
+typedef char* ADDRESS; /* void* might be nice, but char* allows math */
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+// TODO This could be better. Text is an object. TEXT conflicts with windows.h.
+// Replace with M3_TEXT, M3Text, M3TextObject, etc. Provide functions callable
+// from debugger to print them.
+//#define TEXT TEXT
+typedef ADDRESS TEXT;
+
+// TODO This could be better. Mutex is an object. Provide functions callable
+// from debugger to print them.
+#define MUTEX MUTEX
+typedef ADDRESS MUTEX;
+
+// const_INTEGER is used for "variables" that are const and initialized in C.
+// This is to avoid duplicating /usr/include. const means "place in read only
+// memory", which is backed by original executable instead of pagefile and
+// suffers no copy-on-write faults (except for rare case of edit in debugger).
+// It is a nice easy optimization.
 #define const_INTEGER const_INTEGER /* inhibit m3c type that lacks const */
 typedef const INTEGER const_INTEGER;
 
@@ -491,7 +551,7 @@ typedef const INTEGER const_INTEGER;
 // But having actual unsigned types might be good too.
 //typedef INTEGER WORD_T;
 typedef INTEGER Word__T;
-// TODO replace WORD_T with Word__T
+// TODO replace WORD_T with Word__T or remove Word__T entirely.
 
 #define INTEGER INTEGER /* Support concatenation with m3c output. */
 #define WORD_T  WORD_T  /* Support concatenation with m3c output. */
@@ -556,9 +616,30 @@ typedef INTEGER m3_uid_t;
 #define Utypes__uid_t               Utypes__uid_t               /* inhibit m3c type */
 #define WinBaseTypes__const_UINT32  WinBaseTypes__const_UINT32  /* inhibit m3c type */
 
-typedef size_t        Cstddef__size_t;
-typedef ssize_t       Cstddef__ssize_t; /* provided above for msc */
+#if M3_TARGET64 /* Special target64 hardcodes types as 64bit. */
+typedef INT64        Cstddef__ptrdiff_t;
+typedef UINT64       Cstddef__size_t;
+typedef INT64        Cstddef__ssize_t;   // provided above for msc
+typedef UINT64       Utypes__size_t;     // redundant
+
+#ifdef _WIN32
+typedef unsigned long Ctypes__unsigned_long;
+typedef unsigned long Ctypes__unsigned_long_int;
+#else
+typedef UINT64        Ctypes__unsigned_long;
+typedef UINT64        Ctypes__unsigned_long_int;
+#endif
+
+#else /* Non-target64 targets are fairly tautological Module__typefoo == typefoo. */
 typedef ptrdiff_t     Cstddef__ptrdiff_t;
+typedef size_t        Cstddef__size_t;
+typedef ssize_t       Cstddef__ssize_t;   // provided above for msc
+typedef size_t        Utypes__size_t;     // redundant
+typedef unsigned long Ctypes__unsigned_long;
+typedef unsigned long Ctypes__unsigned_long_int;
+
+#endif
+
 typedef FILE*         Cstdio__FILE_star;
 typedef char          Ctypes__char;
 typedef char*         Ctypes__char_star;
@@ -573,8 +654,6 @@ typedef long          Ctypes__long;
 typedef unsigned char* Ctypes__unsigned_char_star;
 typedef unsigned      Ctypes__unsigned;
 typedef unsigned      Ctypes__unsigned_int;
-typedef unsigned long Ctypes__unsigned_long;
-typedef unsigned long Ctypes__unsigned_long_int;
 typedef void*         Ctypes__void_star;
 typedef m3_dev_t      Utypes__dev_t;
 typedef m3_gid_t      Utypes__gid_t;
@@ -584,7 +663,6 @@ typedef m3_nlink_t    Utypes__nlink_t;
 typedef m3_pid_t      Utypes__pid_t;
 typedef m3_pthread_t  ThreadPThread__pthread_t;
 typedef m3_off_t      Utypes__off_t;
-typedef size_t        Utypes__size_t;             // redundant
 typedef m3_uid_t      Utypes__uid_t;
 typedef UINT32        WinBaseTypes__const_UINT32;
 
@@ -698,13 +776,13 @@ int __cdecl Usocket__shutdown(int s, int how);
 int __cdecl Usocket__socket(int af, int type, int protocol);
 int __cdecl Usocket__bind(int s, const M3SockAddrUnionAll*, m3_socklen_t);
 int __cdecl Usocket__connect(int s, const M3SockAddrUnionAll*, m3_socklen_t);
-ssize_t __cdecl Usocket__sendto(int s, const void* msg, size_t length, int flags, const M3SockAddrUnionAll*, m3_socklen_t);
+INTEGER __cdecl Usocket__sendto(int s, const void* msg, WORD_T length, int flags, const M3SockAddrUnionAll*, m3_socklen_t);
 int __cdecl Usocket__setsockopt(int s, int level, int optname, const void* optval, m3_socklen_t len);
 int __cdecl Usocket__getpeername(int s, M3SockAddrUnionAll*, m3_socklen_t*);
 int __cdecl Usocket__getsockname(int s, M3SockAddrUnionAll*, m3_socklen_t*);
 int __cdecl Usocket__accept(int s, M3SockAddrUnionAll*, m3_socklen_t*);
 int __cdecl Usocket__getsockopt(int s, int level, int optname, void* optval, m3_socklen_t*);
-ssize_t __cdecl Usocket__recvfrom(int s, void* buf, size_t len, int flags, M3SockAddrUnionAll*, m3_socklen_t*);
+INTEGER __cdecl Usocket__recvfrom(int s, void* buf, WORD_T len, int flags, M3SockAddrUnionAll*, m3_socklen_t*);
 
 #ifndef _WIN32
 DIR* __cdecl Udir__opendir(const char* a);
@@ -719,12 +797,12 @@ typedef dirent* Udir__struct_dirent_star;
 typedef char* caddr_t;
 typedef caddr_t Umman__caddr_t;
 #define Umman__caddr_t Umman__caddr_t /* inhibit m3c type */
-int __cdecl Umman__mprotect(caddr_t addr, size_t len, int prot);
-void* __cdecl Umman__mmap(caddr_t addr, size_t len, int prot, int flags, int fd, m3_off_t off);
-int __cdecl Umman__munmap(caddr_t addr, size_t len);
+int __cdecl Umman__mprotect(caddr_t addr, WORD_T len, int prot);
+void* __cdecl Umman__mmap(caddr_t addr, WORD_T len, int prot, int flags, int fd, m3_off_t off);
+int __cdecl Umman__munmap(caddr_t addr, WORD_T len);
 
-ssize_t __cdecl Uuio__read(int, void*, size_t);
-ssize_t __cdecl Uuio__write(int, const void*, size_t);
+INTEGER __cdecl Uuio__read(int, void*, WORD_T);
+INTEGER __cdecl Uuio__write(int, const void*, WORD_T);
 
 typedef INT64 m3_time64_t;
 

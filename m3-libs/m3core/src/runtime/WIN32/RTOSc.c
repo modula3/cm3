@@ -11,7 +11,7 @@ extern "C" {
 
 ADDRESS __cdecl RTOS__GetMemory(INTEGER isize)
 {
-    WORD_T const Size = (WORD_T)isize; // Modula-3 lacks unsigned types, pass as signed and cast.
+    size_t const Size = (size_t)isize; // Modula-3 lacks unsigned types, pass as signed and cast.
     return (ADDRESS)calloc(Size, 1);
 }
 
@@ -19,7 +19,7 @@ ADDRESS __cdecl RTOS__GetMemory(INTEGER isize)
 
 ADDRESS __cdecl RTOS__GetMemory(INTEGER isize)
 {
-    WORD_T const Size = (WORD_T)isize; // Modula-3 lacks unsigned types, pass as signed and cast.
+    size_t const Size = (size_t)isize; // Modula-3 lacks unsigned types, pass as signed and cast.
     return (ADDRESS)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, Size);
 }
 
@@ -27,7 +27,7 @@ ADDRESS __cdecl RTOS__GetMemory(INTEGER isize)
 
 ADDRESS __cdecl RTOS__GetMemory(INTEGER isize)
 {
-    WORD_T const Size = (WORD_T)isize; // Modula-3 lacks unsigned types, pass as signed and cast.
+    size_t const Size = (size_t)isize; // Modula-3 lacks unsigned types, pass as signed and cast.
     return (ADDRESS)VirtualAlloc(NULL, Size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
 }
 
@@ -38,17 +38,17 @@ reveals the lossage that results from using VirtualAlloc with RTMachine.PageSize
 */
 typedef struct _RTOSMemoryLogEntry_t
 {
-    WORD_T Size;
+    size_t Size;
     void* Result;
 } RTOSMemoryLogEntry_t;
 
 RTOSMemoryLogEntry_t RTOSMemoryLog[128];
-WORD_T RTOSMemoryLogIndex;
+size_t RTOSMemoryLogIndex;
 #define NUMBER_OF(a) (sizeof(a)/sizeof((a)[0]))
 
 ADDRESS __cdecl RTOS__GetMemory(INTEGER isize)
 {
-    WORD_T const Size = (WORD_T)isize; // Modula-3 lacks unsigned types, pass as signed and cast.
+    size_t const Size = (size_t)isize; // Modula-3 lacks unsigned types, pass as signed and cast.
     RTOSMemoryLogEntry_t LogEntry;
     
     LogEntry.Size = Size;

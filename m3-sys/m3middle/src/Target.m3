@@ -116,10 +116,13 @@ CONST start = ARRAY OF TEXT{"AMD64", "86",
     RETURN FALSE;
   END IsX86orAmd64;
 
-PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): BOOLEAN =
+PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t; target64: BOOLEAN): BOOLEAN =
   VAR sys := 0;  max_align := 64;
       casePreservedSystem := system;
   BEGIN
+
+    Target64 := target64;
+
     (* lookup the system -- linear search *)
     IF (system = NIL) THEN RETURN FALSE END;
     system := TextUtils.Upper(system); (* Uppercase for case insensitivity. *)
@@ -176,9 +179,27 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
     (* 64bit *)
 
     IF TextUtils.StartsWith(system, "ALPHA_")       (* But not ALPHA32_. *)
-        OR TextUtils.Contains(system, "64") THEN
+        OR TextUtils.Contains(system, "64")
+        (* To halve the matrix, the C backend is always like 64bit.
+        *
+        * This has significant advantages and disadvantages.
+        *
+        * Con: Memory savings of 32bit targets are generally lost.
+        * Con: Arrays of INTEGER and pointers are larger.
+        * Pro/neutral: 32bit targets do work, i.e. on 32bit hardware and
+        *      interoperating mostly with 32bit libraries.
+        * Pro: There are fewer variations and one m3c output (bootstrap)
+        *      works on 32bit and 64bit targets.
+        * Con: As this is C backend only, not m3cc backend,
+        *      m3core becomes modal and requires define M3_TARGET64
+        *      to adjust the typedef of INTEGER. m3cc / m3c ABI
+        *      further bifurcates (previously was only for closures).
+        * Pro: Long term alignment-related regressions in m3front are side-stepped.
+        *)
+        OR target64
+        THEN
       Init64();
-    ELSIF backend_mode # M3BackendMode_t.C THEN
+    ELSE
       (* Change only alignment.  Size is always 64:
        * Aligning these types to 32 is incorrect on many but not all 32bit targets.
        * C backend cannot portably reduce alignment but it can portably increase
