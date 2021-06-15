@@ -291,12 +291,12 @@ static const union {
 #define dval(x) ((U*)&x)->d
 #endif
 
-static void StoreincFunction (ULong** a, ULong hi, ULong lo)
+void M3DtoaStoreincFunction (ULong** a, ULong hi, ULong lo)
 {
     *((*a)++) = (((hi & 0xFFFF) << 16) | (lo & 0xFFFF));
 }
 
-#define Storeinc(a, hi, lo) (StoreincFunction(&(a), (hi), (lo)))
+#define Storeinc(a, hi, lo) (M3DtoaStoreincFunction(&(a), (hi), (lo)))
 
 /* #define P DBL_MANT_DIG */
 /* Ten_pmax = floor(P*log(2)/log(5)) */
