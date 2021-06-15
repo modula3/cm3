@@ -62,11 +62,11 @@ MxConfigC__HOST(void)
     //   Debian puts endian in uname_machine so just use that instead of
     //   manually formating "el", "eb", etc.
 #if defined(_WIN64) || __INITIAL_POINTER_SIZE == 64 || defined(__LP64__) || defined(_LP64) || __WORDSIZE == 64
-    const BOOL size64 = TRUE;
+    /*const but clang warns/errors*/ BOOL size64 = TRUE;
 #else
-    const BOOL size64 = (sizeof(void*) == 8 || sizeof(size_t) == 8 || sizeof(long) == 8);
+    /*const but clang warns/errors*/ BOOL size64 = (sizeof(void*) == 8 || sizeof(size_t) == 8 || sizeof(long) == 8);
 #endif
-    const BOOL size32 = !size64;
+    /*const but clang warns/errors*/ BOOL size32 = !size64;
     char* result = 0;
     int length = 0;
     // Sometimes word_size is implied, sometimes not.
