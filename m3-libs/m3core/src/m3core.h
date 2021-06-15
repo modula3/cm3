@@ -430,6 +430,20 @@ typedef unsigned long      UINT32;
 #error unable to find 32bit integer
 #endif
 
+typedef unsigned char BOOLEAN;
+typedef float REAL;
+typedef double LONGREAL;
+typedef double EXTENDED;
+
+// Force 64-ish target. This cuts the bootstrap matrix and works around m3front bugs.
+// This is only useful for 32bit targets and only tested with the C backend.
+// It can also be used for testing 64bit targets as stand-in for 32bit, i.e
+// to test the various typedefs and macros.
+#ifndef M3_TARGET64
+#define M3_TARGET64 0
+#endif
+
+// TODO Around here is duplicated by m3core.h, M3C.m3 and MxGen.m3
 // Support pre-C99 for Windows and VMS and any system with an __int64 macro.
 #if defined(_MSC_VER) || defined(__DECC) || defined(__DECCXX) || defined(__int64)
 typedef          __int64    INT64;
@@ -439,22 +453,18 @@ typedef          long long  INT64;
 typedef unsigned long long UINT64;
 #endif
 
-typedef unsigned char BOOLEAN;
-typedef float REAL;
-typedef double LONGREAL;
-typedef double EXTENDED;
-#if defined(__cplusplus) || __STDC__
-//Match m3c, so all the files can be concatenated.
-// TODO change m3c to cast to char* and not depend on ADDRESS being either.
-// Maybe caddr_t.
-//typedef void* ADDRESS;
-typedef char* ADDRESS;
+#if defined(_WIN64)
+typedef  INT64 ptrdiff_t, intptr_t;
+typedef UINT64    size_t, uintptr_t;
+#elif defined(_WIN32)
+typedef      int         ptrdiff_t, intptr_t;
+typedef unsigned            size_t, uintptr_t;
 #else
-typedef char* ADDRESS;
+#include <stddef.h>
+#if M3_TARGET64
+#include <stdint.h>
 #endif
-typedef ADDRESS TEXT;
-#define MUTEX MUTEX
-typedef ADDRESS MUTEX;
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -472,13 +482,28 @@ extern "C" {
 //  while still changing instruction set.
 /* commented out is correct, but so is the #else */
 /*#if defined(_WIN64) || __INITIAL_POINTER_SIZE == 64 || defined(__LP64__) || defined(_LP64) || __WORDSIZE == 64*/
-#if __INITIAL_POINTER_SIZE == 64
+#if __INITIAL_POINTER_SIZE == 64 || M3_TARGET64
 typedef INT64 INTEGER;
-typedef UINT64 WORD_T;
+typedef UINT64 WORD_T; // Use this type sparingly. It is confusing.
 #else
 typedef ptrdiff_t INTEGER;
-typedef size_t WORD_T;
+typedef size_t WORD_T; // Use this type sparingly. It is confusing.
 #endif
+
+#ifdef ADDRESS
+#error ADDRESS should not be defined before m3core.h
+#endif
+
+#define ADDRESS ADDRESS
+typedef char* ADDRESS; /* void* might be nice, but char* allows math */
+
+// TODO This could be better.
+//#define TEXT TEXT
+typedef ADDRESS TEXT;
+
+// TODO This could be better.
+#define MUTEX MUTEX
+typedef ADDRESS MUTEX;
 
 #define const_INTEGER const_INTEGER /* inhibit m3c type that lacks const */
 typedef const INTEGER const_INTEGER;

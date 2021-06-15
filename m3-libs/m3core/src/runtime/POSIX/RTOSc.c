@@ -14,7 +14,7 @@ ADDRESS
 __cdecl
 RTOS__GetMemory(INTEGER isize)
 {
-    WORD_T const size = (WORD_T)isize; // Modula-3 lacks unsigned types, pass as signed and cast.
+    size_t const size = (size_t)isize; // Modula-3 lacks unsigned types, pass as signed and cast.
     // TODO autoconf/make HAVE_MMAP
 #if defined(ULTRIX)                           || \
     defined(ultrix)                           || \

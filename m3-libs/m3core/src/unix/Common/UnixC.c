@@ -52,7 +52,7 @@ Unix__Assertions(void)
     M3_STATIC_ASSERT((sizeof(void*) == 4) || (sizeof(void*) == 8));
     M3_STATIC_ASSERT((sizeof(size_t) == 4) || (sizeof(size_t) == 8));
     M3_STATIC_ASSERT(sizeof(ptrdiff_t) == sizeof(size_t));
-    M3_STATIC_ASSERT(sizeof(void*) == sizeof(WORD_T));
+    M3_STATIC_ASSERT(sizeof(void*) <= sizeof(WORD_T)); // C backend can have 64bit word and 32bit pointer
 #if !defined(_WIN64) && !defined(__vms)
     M3_STATIC_ASSERT(sizeof(void*) == sizeof(long));
     M3_STATIC_ASSERT(sizeof(size_t) == sizeof(long));

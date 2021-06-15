@@ -18,8 +18,8 @@ IMPORT TextSetDef, Fmt;
 CONST NameT = M3ID.ToText;
 
 VAR debug := TRUE;                (* command line @M3m3c-debug *)
-VAR debug_verbose := TRUE;        (* command line @M3m3c-debug-verbose *)
-VAR debug_comment := TRUE;        (* command line @M3m3c-debug-comment or the rest *)
+VAR debug_verbose := FALSE;       (* command line @M3m3c-debug-verbose *)
+VAR debug_comment := FALSE;       (* command line @M3m3c-debug-comment or the rest *)
 VAR debug_comment_stdio := FALSE; (* command line @M3m3c-debug-comment-stdio *)
 VAR debug_types := FALSE;         (* command line @M3m3c-debug-types *)
 
@@ -2037,10 +2037,15 @@ TYPE Expr_Variable_t = Expr_t OBJECT
     OVERRIDES
         CText := Expr_Variable_CText;
 END;
-PROCEDURE Expr_Variable_CText(self: Expr_Variable_t): TEXT =
-VAR var := self.var;
+
+PROCEDURE Variable_CText(current_proc: Proc_t; var: Var_t): TEXT =
 BEGIN
-    RETURN follow_static_link(self.current_proc, var) & NameT(var.name);
+    RETURN follow_static_link(current_proc, var) & NameT(var.name) & target64_index0(var);
+END Variable_CText;
+
+PROCEDURE Expr_Variable_CText(self: Expr_Variable_t): TEXT =
+BEGIN
+    RETURN Variable_CText(self.current_proc, self.var);
 END Expr_Variable_CText;
 
 TYPE Expr_Unary_t  = Expr_t OBJECT (* x: ARRAY [0..0] OF Expr_t; *) END;
@@ -2264,6 +2269,7 @@ END;
 
 PROCEDURE Var_Init(var: Var_t): Var_t =
 BEGIN
+    var.up_level := var.up_level OR Target.Target64;
     var.is_static_link := (var.name = var.self.static_link_id);
     var.name := Var_FixName(var.self, var.name, var.exported OR var.imported);
     RETURN var;
@@ -2508,6 +2514,28 @@ CONST Prefix = ARRAY OF TEXT {
 "typedef unsigned short UINT16;",
 "typedef int INT32;",
 "typedef unsigned int UINT32;",
+"",
+
+"typedef float REAL;",
+"typedef double LONGREAL;",
+"typedef double EXTENDED;",
+"",
+
+(* Setting M3_TARGET64 to 1 forces integers to be 64bits
+ * and pointers to occupy 64bits. 64bits must be allocated
+ * for pointers because integers can overwrite them.
+ *
+ * M3_TARGET64 enlarges 32bit targets to have 64bit data,
+ * and cuts the build matrix sort of in half, esp.
+ * for bootstrap production. It also shields the backend
+ * from m3front regressions.
+ *)
+"#ifndef M3_TARGET64",
+"#define M3_TARGET64 0",
+"#endif",
+"",
+
+(* TODO Around here is duplicated by m3core.h, M3C.m3 and MxGen.m3 *)
 "#if defined(_MSC_VER) || defined(__DECC) || defined(__DECCXX) || defined(__int64)", (* matches m3core.h *)
 "typedef __int64 INT64;",
 "typedef unsigned __int64 UINT64;",
@@ -2533,14 +2561,33 @@ CONST Prefix = ARRAY OF TEXT {
 "typedef UINT64 size_t;",
 "#elif defined(_WIN32)",
 "typedef unsigned size_t;",
-"#elif defined(__SIZE_TYPE__)", (* gcc, clang *)
+"#elif defined(__SIZE_TYPE__) /* This is gcc and clang and should be the vast majority non-Windows case */",
 "typedef __SIZE_TYPE__ size_t;",
-"#elif defined(__APPLE__) /*|| defined(_LP64) || defined(__LP64__)*/",
-"typedef unsigned long size_t;",
 "#else",
-(*"typedef unsigned int size_t;",*)
 "#include <stddef.h>", (* try to remove this, it is slow -- need size_t *)
 "#endif",
+
+"#if M3_TARGET64",
+"#if defined(_WIN32)",
+"typedef size_t uintptr_t;",
+"#elif defined(__UINTPTR_TYPE__) /* This is gcc and clang and should be the vast majority non-Windows case */",
+"typedef __UINTPTR_TYPE__ uintptr_t;",
+"#else",
+"#include <stdint.h>",
+"#endif",
+"#endif",
+"",
+
+"#if M3_TARGET64",
+"#define M3_TARGET64_ARRAY2 [2] /* so writing 64bit INTEGER on top of 32bit pointer is safe */",
+"#define M3_TARGET64_INDEX0 [0] /* access first element of 2 element array */",
+"#define M3_TARGET64_INIT0  ={0} /* zero the explicit padding */",
+"#else",
+"#define M3_TARGET64_ARRAY2 /* nothing */",
+"#define M3_TARGET64_INDEX0 /* nothing */",
+"#define M3_TARGET64_INIT0  /* nothing */ /* not a bad idea to use ={0} here too */",
+"#endif",
+"",
 
 "/* http://c.knowcoding.com/view/23699-portable-alloca.html */",
 "/* Find a good version of alloca. */",
@@ -2557,22 +2604,16 @@ CONST Prefix = ARRAY OF TEXT {
 "#  include <alloca.h>",
 "# endif",
 "#endif",
-
-"typedef float REAL;",
-"typedef double LONGREAL;",
-"typedef /*long*/ double EXTENDED;",
-
-"#ifdef __cplusplus",
-"extern \"C\" {",
-"#endif",
+"",
 
 "#if !defined(_MSC_VER) && !defined(__cdecl)",
 "#define __cdecl /* nothing */",
 "#endif",
+"",
 "#if !defined(_MSC_VER) && !defined(__stdcall)",
 "#define __stdcall /* nothing */",
 "#endif",
-
+"",
 "#define STRUCT(n) struct_##n##_t", (* TODO prune if not used *)
 (* TODO struct1 and struct2 should not be needed.
    struct4 and struct8 can go away when we make open arrays and jmpbufs
@@ -2581,13 +2622,17 @@ CONST Prefix = ARRAY OF TEXT {
 "#define STRUCT2(n) typedef struct { volatile short a[n/2]; }  STRUCT(n);", (* TODO prune if not used *)
 "#define STRUCT4(n) typedef struct { volatile int a[n/4]; }    STRUCT(n);", (* TODO prune if not used *)
 "#define STRUCT8(n) typedef struct { volatile UINT64 a[n/8]; } STRUCT(n);", (* TODO prune if not used *)
-
-"void __cdecl m3_memcpy(void* dest, const void* source, size_t n);",
-"void __cdecl m3_memmove(void* dest, const void* source, size_t n);",
+"",
+"#ifdef __cplusplus",
+"extern \"C\" {",
+"#endif",
+"",
+"void __cdecl m3_memcpy(void* dest, void* source, size_t n);",
+"void __cdecl m3_memmove(void* dest, void* source, size_t n);",
 "void __cdecl m3_memset(void* dest, int fill, size_t count);",
 "int  __cdecl m3_memcmp(const void* a, const void* b, size_t n);",
-
-""};
+""
+};
 
 <*NOWARN*>CONST Suffix = ARRAY OF TEXT {
 "\n#ifdef __cplusplus",
@@ -2624,17 +2669,17 @@ CONST cgtypeToText = ARRAY CGType OF TEXT {
     "void"                      (* D *)
 };
 
-(* Mainly ADDRESS -> void* to avoid warnings but also cleanups *)
+(* Mainly ADDRESS -> void* but also cleanups *)
 CONST cgtypeToParamText = ARRAY CGType OF TEXT {
-    "unsigned char",  "signed char",
-    "unsigned short", "short",
-    "unsigned", "int",
-    "UINT64", "INT64",
-    "float", "double", "double",
-    "void*",
-    NIL,
-    NIL
- };
+   "unsigned char",  "signed char",
+   "unsigned short", "short",
+   "unsigned", "int",
+   "UINT64", "INT64",
+   "float", "double", "double",
+   "void*",
+   NIL,
+   NIL
+};
 
 TYPE IntegerTypes = [CGType.Word8 .. CGType.Int64];
 
@@ -6034,7 +6079,7 @@ BEGIN
         FOR i := 0 TO proc.Locals_Size() - 1 DO
             WITH var = proc.Locals(i) DO
                 IF var.up_level AND var.used THEN
-                    print(self, var.InFrameDeclare() & ";\n");
+                    print(self, var.InFrameDeclare() & " M3_TARGET64_ARRAY2;\n");
                 END;
             END;
         END;
@@ -6044,7 +6089,7 @@ BEGIN
         FOR i := FIRST(params^) TO LAST(params^) DO
             WITH param = params[i] DO
                 IF param.up_level AND param.used THEN
-                    print(self, param.InFrameDeclare() & ";\n");
+                  print(self, param.InFrameDeclare() & " M3_TARGET64_ARRAY2;\n");
                 END;
             END;
         END;
@@ -6078,7 +6123,7 @@ BEGIN
     (* declare frame of uplevels *)
 
     IF proc.forward_declared_frame_type THEN
-        print(self, frame_type & " " & frame_name & ";\n");
+      print(self, frame_type & " " & frame_name & " M3_TARGET64_INIT0;\n");
     END;
 
     (* init/capture uplevel parameters and static_link (including struct values) *)
@@ -6089,13 +6134,14 @@ BEGIN
                 IF param.up_level AND param.used THEN
                     struct := "";
                     IF param.cgtype = CGType.Struct THEN
+                        <* ASSERT NOT PassStructsByValue *> (* TODO *)
                         IF PassStructsByValue THEN
                             struct := "&";
                         ELSE
                             struct := "*";
                         END;
                     END;
-                    print(self, frame_name & "." & Var_Name(param) & "=" & struct & Param_Name(param) & ";\n");
+                    print(self, frame_name & "." & Var_Name(param) & " M3_TARGET64_INDEX0=" & struct & Param_Name(param) & ";\n");
                 END;
             END;
         END;
@@ -6286,6 +6332,7 @@ BEGIN
             cast3 := ")(";
             cast4 := ")";
         END;
+        (* TODO target64? *)
         print(self, "return " & cast1 & cast2 & cast3 & get(self).CText() & cast4 & ";\n");
         pop(self);
     END;
@@ -6344,6 +6391,14 @@ BEGIN
             left := expr,
             c_unop_text := "*");
 END Deref;
+
+PROCEDURE target64_index0(var: Var_t): TEXT =
+BEGIN
+    IF var.proc = NIL OR var.up_level = FALSE (*OR var.is_static_link*) THEN
+        RETURN "";
+    END;
+    RETURN " M3_TARGET64_INDEX0";
+END target64_index0;
 
 PROCEDURE follow_static_link(current_proc: Proc_t; var: Var_t): TEXT =
 VAR current_level := 0;
@@ -6430,7 +6485,7 @@ BEGIN
       self.comment("store");
     END;
     pop(self);
-    store_helper(self, s0.CText(), ztype, "&" & follow_static_link(self.current_proc, var) & NameT(var.name), offset, mtype);
+    store_helper(self, s0.CText(), ztype, "&" & Variable_CText(self.current_proc, var), offset, mtype);
 END store;
 
 PROCEDURE load_address(self: T; v: M3CG.Var; offset: ByteOffset) =
@@ -6658,7 +6713,11 @@ END old_Cast;
 PROCEDURE CastAndDeref(expr: Expr_t; type: CGType := CGType.Void; type_text: TEXT := NIL): Expr_t =
 BEGIN
     <* ASSERT type # CGType.Void *>
-    RETURN Deref(cast(expr, type, type_text));
+    IF Target.Target64 THEN (* TODO controllable with #if *)
+      RETURN Deref(cast(cast(expr, type, type_text := "uintptr_t"), type, type_text));
+    ELSE
+      RETURN Deref(cast(expr, type, type_text));
+    END;
 END CastAndDeref;
 
 PROCEDURE op1(self: T; type: CGType; name, op: TEXT) =

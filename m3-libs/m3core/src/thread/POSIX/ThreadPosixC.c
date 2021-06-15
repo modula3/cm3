@@ -128,7 +128,7 @@ disallow_signals(void) /* disallow all, really */
 
 typedef struct {
   void *stackaddr;
-  WORD_T stacksize;
+  INTEGER stacksize;
   void *sp;
 #ifdef M3_USE_SIGALTSTACK
   sigjmp_buf jb;
@@ -181,7 +181,7 @@ xMakeContext(
     Context *context, 
     void (*function)(void),
     void *stack,
-    WORD_T stack_size) 
+    INTEGER stack_size)
 {
     struct sigaction sa;
     struct sigaction osa;

@@ -388,7 +388,7 @@ def TargetOnlyHasCBackend(a):
     return (a.endswith("_nt") or a.startswith("arm64") or a.startswith("riscv") or
         a.endswith("solaris") or a.startswith("sol"))
 
-_PossibleCm3Flags = ["boot", "keep", "override", "commands", "verbose", "why", "debug", "trace"]
+_PossibleCm3Flags = ["boot", "keep", "override", "commands", "verbose", "why", "debug", "trace", "target64"]
 _SkipGccFlags = ["nogcc", "skipgcc", "omitgcc"]
 _PossiblePylibFlags = ["noclean", "nocleangcc", "c", "C", "+c", "+C"] + _SkipGccFlags + _PossibleCm3Flags
 
@@ -397,10 +397,16 @@ for a in _SkipGccFlags:
     if a in sys.argv:
         skipgcc = True
 
+_target64 = False
+
 CM3_FLAGS = ""
 for a in _PossibleCm3Flags:
     if a in sys.argv:
-        CM3_FLAGS = CM3_FLAGS + " -" + a
+        if a.lower() == "target64":
+            _target64 = True
+            CM3_FLAGS = CM3_FLAGS + " -DM3_TARGET64=1" # all but empty string is true
+        else:
+            CM3_FLAGS = CM3_FLAGS + " -" + a
 
 def PassThroughDefines():
     result = " "
@@ -1177,20 +1183,22 @@ def Boot():
     CCompilerFlags = " "
     CCompilerOut = ""
 
+    if _target64:
+      CCompilerFlags += " -DM3_TARGET64=1 "
+
     if alpha32vms:
         CCompiler = "c++"
-        CCompilerFlags = " "
     elif alpha64vms:
         CCompiler = "c++"
-        CCompilerFlags = "/pointer_size=64 "
+        CCompilerFlags += "/pointer_size=64 "
     elif solaris or solsun:
         #CCompiler = "/usr/bin/c++"
-        #CCompilerFlags = " -g -mt -xldscope=symbolic "
+        #CCompilerFlags += " -g -mt -xldscope=symbolic "
         CCompiler = "./c_compiler"
         CopyFile("./c_compiler", BootDir)
     elif osf:
         CCompiler = "/usr/bin/c++"
-        CCompilerFlags = " -g -pthread "
+        CCompilerFlags += " -g -pthread "
     else:
         # gcc and other platforms
         CCompiler = {
@@ -1200,7 +1208,7 @@ def Boot():
 
         # For now, bootstrap does not build any shared libraries and -fPIC is not needed.
         # -fPIC breaks Interix and is not needed on Cygwin/Mingw.
-        CCompilerFlags = {
+        CCompilerFlags += {
             "I386_INTERIX"  : " -g ", # gcc -fPIC generates incorrect code on Interix
             #"AMD64_NT"      : " -Zi -MD -Gy ",
             "AMD64_NT"      : " -Zi -Gy ", # hack some problem with exception handling and alignment otherwise

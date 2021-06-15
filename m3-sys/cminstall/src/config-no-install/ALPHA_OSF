@@ -71,6 +71,7 @@ m3back_optimize = ""
 
 proc compile_c (source, object, options, optimize, debug) is
   configure_c_compiler()
+  if M3_TARGET64 args += "-DM3_TARGET64=1" end
   return try_exec ("@" & SYSTEM_CC, options, "-c", source)
 end
 

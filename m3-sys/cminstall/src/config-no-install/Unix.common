@@ -239,6 +239,8 @@ proc compile_c(source, object, options, optimize, debug) is
     configure_c_compiler()
 
     local args = options
+
+    if M3_TARGET64 args += "-DM3_TARGET64=1" end
     if M3_PROFILING args += "-pg" end
     if debug args += "-g" end
 

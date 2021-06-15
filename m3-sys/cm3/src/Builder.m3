@@ -308,7 +308,7 @@ PROCEDURE CompileUnits (main     : TEXT;
       END;
     END;
 
-    IF NOT Target.Init (s.target, GetConfigItem (s, "OS_TYPE", "POSIX"), s.m3backend_mode) THEN
+    IF NOT Target.Init (s.target, GetConfigItem (s, "OS_TYPE", "POSIX"), s.m3backend_mode, GetConfigBool (s, "M3_TARGET64")) THEN
       Msg.FatalError (NIL, "unrecognized target machine: TARGET = ", s.target);
     END;
 
