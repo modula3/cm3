@@ -5949,16 +5949,6 @@ BEGIN
     RETURN proc;
 END declare_procedure;
 
-PROCEDURE Locals_begin_procedure(self: Locals_t; p: M3CG.Proc) =
-BEGIN
-    internal_begin_procedure(self.self, p);
-END Locals_begin_procedure;
-
-PROCEDURE Locals_end_procedure(self: Locals_t; p: M3CG.Proc) =
-BEGIN
-    internal_end_procedure(self.self, p);
-END Locals_end_procedure;
-
 PROCEDURE Locals_begin_block(self: Locals_t) =
 VAR proc := self.self.current_proc;
     (*block := NEW(Block_t, parent_block := proc.current_block);*)
@@ -5980,8 +5970,9 @@ BEGIN
     END;
 END Locals_end_block;
 
-PROCEDURE internal_begin_procedure(self: T; p: M3CG.Proc) =
-VAR proc := NARROW(p, Proc_t);
+PROCEDURE Locals_begin_procedure (locals: Locals_t; p: M3CG.Proc) =
+VAR self := locals.self;
+    proc := NARROW(p, Proc_t);
 BEGIN
     IF debug_verbose THEN
         self.comment("internal_begin_procedure:", NameT(proc.name));
@@ -5998,17 +5989,18 @@ BEGIN
     <* ASSERT proc # NIL *>
     <* ASSERT p # NIL *>
     <* ASSERT self.current_proc = proc *>
-END internal_begin_procedure;
+END Locals_begin_procedure;
 
-PROCEDURE internal_end_procedure(self: T; p: M3CG.Proc) =
+PROCEDURE Locals_end_procedure (locals: Locals_t; p: M3CG.Proc) =
+VAR self := locals.self;
 BEGIN
-    self.comment("internal_end_procedure");
+    self.comment("Locals_end_procedure");
     <* ASSERT self.in_proc *>
     <* ASSERT self.current_proc = p *>
     self.end_block();
     self.in_proc := FALSE;
     self.current_proc := NIL;
-END internal_end_procedure;
+END Locals_end_procedure;
 
 PROCEDURE begin_procedure(self: T; p: M3CG.Proc) =
 VAR proc := NARROW(p, Proc_t);
