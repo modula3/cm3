@@ -5975,12 +5975,12 @@ VAR self := locals.self;
     proc := NARROW(p, Proc_t);
 BEGIN
     IF debug_verbose THEN
-        self.comment("internal_begin_procedure:", NameT(proc.name));
+        self.comment("Locals_begin_procedure:", NameT(proc.name));
     ELSIF debug THEN
-        self.comment("internal_begin_procedure");
+        self.comment("Locals_begin_procedure");
     END;
     IF self.in_proc THEN (* TODO don't require this *)
-        Err(self, "internal_begin_procedure: in_proc; C backend requires "
+        Err(self, "Locals_begin_procedure: in_proc; C backend requires "
             & "M3_FRONT_FLAGS = [\"-unfold_nested_procs\"] in config file");
     END;
     self.in_proc := TRUE;
