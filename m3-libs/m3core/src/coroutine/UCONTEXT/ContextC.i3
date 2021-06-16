@@ -3,7 +3,7 @@
 (* see the file COPYRIGHT-INTEL for more information *)
 
 UNSAFE INTERFACE ContextC;
-IMPORT Ctypes;
+IMPORT Ctypes, Coroutine;
 FROM CoroutineUcontext IMPORT Arg, Entry;
 
 TYPE T = ADDRESS;
@@ -39,8 +39,14 @@ PROCEDURE SetLink(tgt, src : T); (* set return link of tgt to be src *)
 
 <*EXTERNAL ContextC__GetStackBase*>
 PROCEDURE GetStackBase(t : T) : ADDRESS;
+
+<*EXTERNAL ContextC__PushContextForRun*>
+PROCEDURE PushContextForRun(inhibit: Coroutine.T; t: T);
   
-<*EXTERNAL ContextC__PushContext*>
-PROCEDURE PushContext(t : T) : ADDRESS;
+<*EXTERNAL ContextC__PushContextForCall*>
+PROCEDURE PushContextForCall(to: Coroutine.T; myId: UNTRACED REF INTEGER; VAR me: Coroutine.T; t: T): Coroutine.T;
+
+<*EXTERNAL ContextC__Stack*>
+PROCEDURE Stack() : ADDRESS;
 
 END ContextC.

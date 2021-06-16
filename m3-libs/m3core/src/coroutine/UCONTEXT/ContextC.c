@@ -21,6 +21,9 @@ M3EXTERNC_BEGIN
 /* expand C names */
 #define Context ContextC__TValue  /* ContextC__T points to ContextC__TValue; see m3core.h */
 
+void __cdecl Coroutine__RunInternal(void* inhibit);
+void* __cdecl Coroutine__CallInternal(void* to, INTEGER* myId, void** me);
+
 // This code has only been tested on Linux/amd64.
 #if !(defined(__x86_64__) && defined(__linux))
 
@@ -100,9 +103,16 @@ ContextC__GetStackBase(Context* c)
     return 0;
 }
 
-ADDRESS
+void
 __cdecl
-ContextC__PushContext(Context* c)
+ContextC__PushContextForRun(void* inhibit, Context *c)
+{
+    assert(0);
+}
+
+void*
+__cdecl
+ContextC__PushContextForCall(void* to, INTEGER* myId, void** me, Context *c)
 {
     assert(0);
     return 0;
@@ -415,30 +425,47 @@ ContextC__GetStackBase(Context *c)
   return (ADDRESS)c->stackbase;
 }
 
-__attribute__((noinline))
-static ADDRESS
-ContextC__PushContext1(Context *c)
+M3_NO_INLINE
+void
+__cdecl
+ContextC__PushContextForRun(void* inhibit, Context *c)
 {
-  // Write it to stack and return pointer below it.
-  volatile ucontext_t uc = c->uc;
-  return (ADDRESS)alloca(1);
+  // Store context in stack and continue.
+  union {
+    volatile unsigned char a[sizeof(ucontext_t)];
+    volatile ucontext_t uc;
+  } u;
+
+  // C++ fails to assign volatile struct.
+  memcpy((void*)&u.uc, &c->uc, sizeof(ucontext_t));
+  Coroutine__RunInternal(inhibit);
+  u.a[0]; // Keep uc around.
 }
 
-ADDRESS
-ContextC__PushContext(Context *c)
+M3_NO_INLINE
+void*
+ContextC__PushContextForCall(void* to, INTEGER* myId, void** me, Context *c)
 {
-  volatile unsigned char a[256];
-  ADDRESS b;
+  // Store context in stack and continue.
+  union {
+    volatile unsigned char a[sizeof(ucontext_t)];
+    volatile ucontext_t uc;
+  } u;
+  void* result;
 
-  // HACK:
-  /* the purpose of the gap is to allow other routines to do some small
-     amount of work (ThreadPThread.SetCoStack) between when we return
-     and the next GC event, without clobbering the context we are about to push */
-  
-  a[0] = 0;
-  b = ContextC__PushContext1(c);
-  a[0];
-  return b;
+  // C++ fails to assign volatile struct.
+  memcpy((void*)&u.uc, &c->uc, sizeof(ucontext_t));
+  result = Coroutine__CallInternal(to, myId, me);
+  u.a[0]; // Keep uc around.
+  return result;
+}
+
+void*
+__cdecl
+ContextC__Stack(void)
+// Return roughly current stack pointer.
+{
+    return alloca(1);
 }
 
 #endif
