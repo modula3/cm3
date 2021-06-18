@@ -1,5 +1,5 @@
 readonly TARGET_OS = "VMS"
-M3_MAIN_IN_C = TRUE
+%M3_MAIN_IN_C = TRUE
 
 include("cm3cfg.common")
 

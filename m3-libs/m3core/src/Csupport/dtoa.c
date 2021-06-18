@@ -29,6 +29,7 @@ void __cdecl CConvert__Release(INTEGER);
 #pragma warning(disable:4127) /* conditional expression is constant */
 #pragma warning(disable:4706) /* assignment within conditional */
 #pragma warning(disable:4701) /* possibly uninitialized local used */
+#pragma warning(disable:4711) /* function selected for automatic inline expansion */
 #pragma warning(disable:4255) /* () changed to (void) */
 #endif
 
@@ -96,10 +97,6 @@ void __cdecl CConvert__Release(INTEGER);
  */
 
 /*
- * #define IEEE_8087 for IEEE-arithmetic machines where the least
- *	significant byte has the lowest address.
- * #define IEEE_MC68k for IEEE-arithmetic machines where the most
- *	significant byte has the lowest address.
  * #define Long int on machines with 32-bit ints and 64-bit longs.
  * #define IBM for IBM mainframe-style floating-point arithmetic.
  * #define VAX for VAX-style floating-point arithmetic (D_floating).
@@ -125,9 +122,6 @@ void __cdecl CConvert__Release(INTEGER);
  *	and if "unsigned Llong" does not work as an unsigned version of
  *	Llong, #define #ULLong to be the corresponding unsigned type.
  * #define KR_headers for old-style C function headers.
- * #define Bad_float_h if your system lacks a float.h or if it does not
- *	define some or all of DBL_DIG, DBL_MAX_10_EXP, DBL_MAX_EXP,
- *	FLT_RADIX, FLT_ROUNDS, and DBL_MAX.
  * #define MALLOC your_malloc, where your_malloc(n) acts like malloc(n)
  *	if memory is available and otherwise does something you deem
  *	appropriate.  If MALLOC is undefined, malloc will be invoked
@@ -231,12 +225,8 @@ static double private_mem[PRIVATE_mem], *pmem_next = private_mem;
 
 #undef IEEE_Arith
 #undef Avoid_Underflow
-#ifdef IEEE_MC68k
+
 #define IEEE_Arith
-#endif
-#ifdef IEEE_8087
-#define IEEE_Arith
-#endif
 
 #ifdef IEEE_Arith
 #ifndef NO_INFNAN_CHECK
@@ -247,38 +237,7 @@ static double private_mem[PRIVATE_mem], *pmem_next = private_mem;
 #undef INFNAN_CHECK
 #endif
 
-#ifdef Bad_float_h
-
-#ifdef IEEE_Arith
-#define DBL_DIG 15
-#define DBL_MAX_10_EXP 308
-#define DBL_MAX_EXP 1024
-#define FLT_RADIX 2
-#endif /*IEEE_Arith*/
-
-#ifdef IBM
-#define DBL_DIG 16
-#define DBL_MAX_10_EXP 75
-#define DBL_MAX_EXP 63
-#define FLT_RADIX 16
-#define DBL_MAX 7.2370055773322621e+75
-#endif
-
-#ifdef VAX
-#define DBL_DIG 16
-#define DBL_MAX_10_EXP 38
-#define DBL_MAX_EXP 127
-#define FLT_RADIX 2
-#define DBL_MAX 1.7014118346046923e+38
-#endif
-
-#ifndef LONG_MAX
-#define LONG_MAX 2147483647
-#endif
-
-#else /* ifndef Bad_float_h */
 #include <float.h>
-#endif /* Bad_float_h */
 
 // This is disabled.
 // There are warnings about inconsistencies.
@@ -311,44 +270,34 @@ extern "C" {
 #endif
 #endif
 
-#if defined(IEEE_8087) + defined(IEEE_MC68k) + defined(VAX) + defined(IBM) != 1
-#error Exactly one of IEEE_8087, IEEE_MC68k, VAX, or IBM should be defined.
-Exactly one of IEEE_8087, IEEE_MC68k, VAX, or IBM should be defined.
-#endif
-
 typedef union { double d; ULong L[2]; } U;
+
+// runtime endian switch
+// on big endian DTOA_0 == 0, DTOA_1 == 1
+// on little endian DTOA_0 == 1, DTOA_1 == 0
+static const union {
+    unsigned short i;
+    unsigned char b[2];
+} DtoaIndices = { 1 };
+#define DTOA_0 (DtoaIndices.b[0])
+#define DTOA_1 (DtoaIndices.b[1])
 
 #ifdef YES_ALIAS
 #define dval(x) x
-#ifdef IEEE_8087
-#define word0(x) ((ULong *)&x)[1]
-#define word1(x) ((ULong *)&x)[0]
+#define word0(x) ((ULong *)&x)[DTOA_0]
+#define word1(x) ((ULong *)&x)[DTOA_1]
 #else
-#define word0(x) ((ULong *)&x)[0]
-#define word1(x) ((ULong *)&x)[1]
-#endif
-#else
-#ifdef IEEE_8087
-#define word0(x) ((U*)&x)->L[1]
-#define word1(x) ((U*)&x)->L[0]
-#else
-#define word0(x) ((U*)&x)->L[0]
-#define word1(x) ((U*)&x)->L[1]
-#endif
+#define word0(x) ((U*)&x)->L[DTOA_0]
+#define word1(x) ((U*)&x)->L[DTOA_1]
 #define dval(x) ((U*)&x)->d
 #endif
 
-/* The following definition of Storeinc is appropriate for MIPS processors.
- * An alternative that might be better on some machines is
- * #define Storeinc(a,b,c) (*a++ = b << 16 | c & 0xffff)
- */
-#if defined(IEEE_8087) + defined(VAX)
-#define Storeinc(a,b,c) (((unsigned short *)a)[1] = (unsigned short)b, \
-((unsigned short *)a)[0] = (unsigned short)c, a++)
-#else
-#define Storeinc(a,b,c) (((unsigned short *)a)[0] = (unsigned short)b, \
-((unsigned short *)a)[1] = (unsigned short)c, a++)
-#endif
+void M3DtoaStoreincFunction (ULong** a, ULong hi, ULong lo)
+{
+    *((*a)++) = (((hi & 0xFFFF) << 16) | (lo & 0xFFFF));
+}
+
+#define Storeinc(a, hi, lo) (M3DtoaStoreincFunction(&(a), (hi), (lo)))
 
 /* #define P DBL_MANT_DIG */
 /* Ten_pmax = floor(P*log(2)/log(5)) */

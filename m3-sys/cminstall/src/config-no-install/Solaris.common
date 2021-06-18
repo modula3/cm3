@@ -289,4 +289,4 @@ M3_SHARED_LIB_ARG = ""
 
 include ("Unix.common")
 
-M3_MAIN_IN_C = TRUE
+%M3_MAIN_IN_C = TRUE

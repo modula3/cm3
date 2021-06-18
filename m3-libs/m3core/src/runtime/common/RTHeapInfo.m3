@@ -53,7 +53,6 @@ PROCEDURE Producer (<*UNUSED*> self: Thread.Closure): REFANY =
 
       Thread.Pause (update);
     END;
-    RETURN NIL; <*NOWARN*>(* not reachable but needed by some backends *)
   END Producer;
 
 PROCEDURE SendTypes (nTypes: INTEGER) =

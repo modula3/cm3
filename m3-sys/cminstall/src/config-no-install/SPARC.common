@@ -5,4 +5,4 @@ m3back_flags = "-m32 -mcpu=v9 -mno-app-regs"
 % -mno-app-regs for ABI compatibility
 % -mcpu=v9 for atomics
 
-M3_MAIN_IN_C = TRUE
+%M3_MAIN_IN_C = TRUE

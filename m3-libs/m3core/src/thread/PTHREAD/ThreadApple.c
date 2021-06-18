@@ -25,7 +25,7 @@ void __cdecl ThreadApple__Dummy(void) { } /* avoid empty file */
 
 #else /* Apple */
 
-int
+BOOLEAN
 __cdecl
 ThreadPThread__SuspendThread (m3_pthread_t mt)
 {
@@ -36,7 +36,7 @@ ThreadPThread__SuspendThread (m3_pthread_t mt)
   {
     fprintf(stderr, "thread_suspend returned %d instead of %d\n",
             (int)status, (int)KERN_SUCCESS);
-    return 0;
+    return FALSE;
   }
   status = thread_abort_safely(mach_thread);
   if (status != KERN_SUCCESS)
@@ -50,12 +50,12 @@ ThreadPThread__SuspendThread (m3_pthread_t mt)
               (int)status, (int)KERN_SUCCESS);
       abort();
     }
-    return 0;
+    return FALSE;
   }
-  return 1;
+  return TRUE;
 }
 
-int
+BOOLEAN
 __cdecl
 ThreadPThread__RestartThread (m3_pthread_t mt)
 {
@@ -112,7 +112,7 @@ typedef _STRUCT_ARM_THREAD_STATE64 m3_thread_state_t;
 
 void
 __cdecl
-ThreadPThread__ProcessStopped (m3_pthread_t mt, void *bottom, void *context,
+ThreadPThread__ProcessStopped (m3_pthread_t mt, ADDRESS bottom, ADDRESS context,
                                void (*p)(void *start, void *limit))
 {
   char *sp = { 0 };

@@ -2,8 +2,6 @@
 % All rights reserved.
 % See the file COPYRIGHT for a full description.
 
-include_dir ("Common")
-
-include_dir({ "LITTLE":"little-endian", "BIG":"big-endian"}{TARGET_ENDIAN})
-
-include_dir ("libgcc")
+c_source ("dtoa")
+c_source ("hand")
+c_source ("libgcc")

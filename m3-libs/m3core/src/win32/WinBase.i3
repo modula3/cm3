@@ -176,6 +176,7 @@ TYPE
 (* File System time stamps are represented with the following structure: *)
 
   PFILETIME = UNTRACED REF FILETIME;
+  const_FILETIME_star = PFILETIME; (* name for m3core.h to replace with actual const *)
   LPFILETIME = PFILETIME; (* compat *)
   FILETIME = RECORD
     dwLowDateTime : UINT32;
@@ -186,6 +187,7 @@ TYPE
 
 TYPE
   PSYSTEMTIME = UNTRACED REF SYSTEMTIME;
+  const_SYSTEMTIME_star = PSYSTEMTIME; (* name for m3core.h to replace with actual const *)
   LPSYSTEMTIME = PSYSTEMTIME; (* compat *)
   SYSTEMTIME = RECORD
     wYear        : UINT16;
@@ -1660,9 +1662,9 @@ PROCEDURE GetFileTime (hFile           : HANDLE;
 
 <*EXTERNAL SetFileTime:WINAPI*>
 PROCEDURE SetFileTime (hFile           : HANDLE;
-                       lpCreationTime  : PFILETIME;
-                       lpLastAccessTime: PFILETIME;
-                       lpLastWriteTime : PFILETIME  ): BOOL;
+                       lpCreationTime  : const_FILETIME_star;
+                       lpLastAccessTime: const_FILETIME_star;
+                       lpLastWriteTime : const_FILETIME_star): BOOL;
 
 <*EXTERNAL CloseHandle:WINAPI*>
 PROCEDURE CloseHandle (hObject: HANDLE): BOOL;
@@ -1865,7 +1867,7 @@ PROCEDURE GetSystemTime (lpSystemTime: PSYSTEMTIME);
 PROCEDURE GetSystemTimeAsFileTime(VAR FileTime : FILETIME);
 
 <*EXTERNAL SetSystemTime:WINAPI*>
-PROCEDURE SetSystemTime (lpSystemTime: PSYSTEMTIME): BOOL;
+PROCEDURE SetSystemTime (lpSystemTime: const_SYSTEMTIME_star): BOOL;
 
 <*EXTERNAL GetLocalTime:WINAPI*>
 PROCEDURE GetLocalTime (lpSystemTime: PSYSTEMTIME);
@@ -1878,6 +1880,7 @@ PROCEDURE GetSystemInfo (lpSystemInfo: PSYSTEM_INFO);
 
 TYPE
   PTIME_ZONE_INFORMATION = UNTRACED REF TIME_ZONE_INFORMATION;
+  const_TIME_ZONE_INFORMATION_star = PTIME_ZONE_INFORMATION;
   LPTIME_ZONE_INFORMATION = PTIME_ZONE_INFORMATION; (* compat *)
   TIME_ZONE_INFORMATION = RECORD
     Bias        : INT32;
@@ -1895,40 +1898,40 @@ PROCEDURE GetTimeZoneInformation
 
 <*EXTERNAL SetTimeZoneInformation:WINAPI*>
 PROCEDURE SetTimeZoneInformation
-            (lpTimeZoneInformation: PTIME_ZONE_INFORMATION): BOOL;
+            (lpTimeZoneInformation: const_TIME_ZONE_INFORMATION_star): BOOL;
 
 (* Routines to convert back and forth between system time and file time *)
 
 <*EXTERNAL SystemTimeToFileTime:WINAPI*>
-PROCEDURE SystemTimeToFileTime (lpSystemTime: PSYSTEMTIME;
+PROCEDURE SystemTimeToFileTime (lpSystemTime: const_SYSTEMTIME_star;
                                 lpFileTime  : PFILETIME    ): BOOL;
 
 (* Note: As of 14-May-97, the following routine is implemented on
    Windows/NT, but not on Windows 95. -CAH *)
 <*EXTERNAL SystemTimeToTzSpecificLocalTime:WINAPI*>
 PROCEDURE SystemTimeToTzSpecificLocalTime (
-            lpTimeZoneInformation: PTIME_ZONE_INFORMATION;
-            lpUniversalTime      : PSYSTEMTIME;
+            lpTimeZoneInformation: const_TIME_ZONE_INFORMATION_star;
+            lpUniversalTime      : const_SYSTEMTIME_star;
             lpLocalTime          : PSYSTEMTIME            ): BOOL;
 
 <*EXTERNAL FileTimeToLocalFileTime:WINAPI*>
-PROCEDURE FileTimeToLocalFileTime (lpFileTime     : PFILETIME;
+PROCEDURE FileTimeToLocalFileTime (lpFileTime     : const_FILETIME_star;
                                    lpLocalFileTime: PFILETIME  ): BOOL;
 
 <*EXTERNAL LocalFileTimeToFileTime:WINAPI*>
-PROCEDURE LocalFileTimeToFileTime (lpLocalFileTime: PFILETIME;
+PROCEDURE LocalFileTimeToFileTime (lpLocalFileTime: const_FILETIME_star;
                                    lpFileTime     : PFILETIME  ): BOOL;
 
 <*EXTERNAL FileTimeToSystemTime:WINAPI*>
-PROCEDURE FileTimeToSystemTime (lpFileTime  : PFILETIME;
+PROCEDURE FileTimeToSystemTime (lpFileTime  : const_FILETIME_star;
                                 lpSystemTime: PSYSTEMTIME): BOOL;
 
 <*EXTERNAL CompareFileTime:WINAPI*>
-PROCEDURE CompareFileTime (lpFileTime1: PFILETIME;
-                           lpFileTime2: PFILETIME  ): INT32;
+PROCEDURE CompareFileTime (lpFileTime1: const_FILETIME_star;
+                           lpFileTime2: const_FILETIME_star): INT32;
 
 <*EXTERNAL FileTimeToDosDateTime:WINAPI*>
-PROCEDURE FileTimeToDosDateTime (lpFileTime: PFILETIME;
+PROCEDURE FileTimeToDosDateTime (lpFileTime: const_FILETIME_star;
                                  lpFatDate : PUINT16;
                                  lpFatTime : PUINT16      ): BOOL;
 

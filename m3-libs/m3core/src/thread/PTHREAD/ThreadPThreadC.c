@@ -131,7 +131,7 @@ ThreadPThread__RestartThread (m3_pthread_t mt)
 
 void
 __cdecl
-ThreadPThread__ProcessStopped (m3_pthread_t mt, char *bottom, char *context,
+ThreadPThread__ProcessStopped (m3_pthread_t mt, ADDRESS bottom, ADDRESS context,
                                void (*p)(void *start, void *limit))
 {
   /* process stack */
@@ -152,10 +152,10 @@ ThreadPThread__ProcessStopped (m3_pthread_t mt, char *bottom, char *context,
 
 #else /* M3_DIRECT_SUSPEND */
 
-void __cdecl ThreadPThread__sem_wait(void)      { M3_DIRECT_SUSPEND_ASSERT_FALSE }
-void __cdecl ThreadPThread__sem_post(void)      { M3_DIRECT_SUSPEND_ASSERT_FALSE }
-void __cdecl ThreadPThread__sem_getvalue(void)  { M3_DIRECT_SUSPEND_ASSERT_FALSE }
-void __cdecl ThreadPThread__sigsuspend(void)    { M3_DIRECT_SUSPEND_ASSERT_FALSE }
+int __cdecl ThreadPThread__sem_wait(void)           { M3_DIRECT_SUSPEND_ASSERT_FALSE return -1; }
+int __cdecl ThreadPThread__sem_post(void)           { M3_DIRECT_SUSPEND_ASSERT_FALSE return -1; }
+int __cdecl ThreadPThread__sem_getvalue(int* value) { M3_DIRECT_SUSPEND_ASSERT_FALSE return -1; }
+void __cdecl ThreadPThread__sigsuspend(void)        { M3_DIRECT_SUSPEND_ASSERT_FALSE }
 
 #endif /* M3_DIRECT_SUSPEND */
 

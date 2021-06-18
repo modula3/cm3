@@ -24,7 +24,9 @@ WinGDI__PointsToLParam(const POINTS* points) // s is for 16bit signed short, not
     {
         POINTS points;
         LPARAM lParam;
-    } u = {*points};
+    } u;
+    ZeroMemory(&u, sizeof(u));
+    u.points = *points;
     return u.lParam;
 }
 

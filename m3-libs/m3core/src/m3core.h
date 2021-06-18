@@ -15,6 +15,7 @@
 #define _CRT_SECURE_NO_DEPRECATE 1
 #define _CRT_NONSTDC_NO_DEPRECATE 1
 #define _WINSOCK_DEPRECATED_NO_WARNINGS 1
+#define _KERNEL32_ 1 /* inhibit declspec(dllimport) for consistency; it is not needed on functions */
 #ifdef _MSC_VER
 // These two must come first.
 #pragma warning(disable:4616) /* there is no warning x (unavoidable if targeting multiple compiler versions) */
@@ -857,6 +858,10 @@ int
 __cdecl
 ThreadInternal__StackGrowsDown (void);
 
+void
+__cdecl
+Process__RegisterExitor(void (__cdecl*)(void));
+
 // GET_PC returns approximately size_t.
 // Broadly speaking, try to keep most platform specific code here.
 
@@ -958,8 +963,11 @@ ThreadInternal__StackGrowsDown (void);
 #elif defined(__powerpc)
 // ambiguous endian and wordsize; use uname
 #define GET_PC(context) ((context)->uc_mcontext.uc_regs->gregs[PT_NIP])
+#elif defined(__aarch64__)
+#define M3_HOST "ARM64_LINUX"
+#define GET_PC(context) ((context)->uc_mcontext.pc)
 #elif defined(__arm__)
-// ambiguous endian and wordsize; use uname
+#define M3_HOST "ARM32_LINUX"
 #define GET_PC(context) ((context)->uc_mcontext.arm_pc)
 #elif defined(__alpha__)
 #define M3_HOST "ALPHA_LINUX"
@@ -1184,9 +1192,82 @@ typedef void* (__cdecl*ThreadPThread__start_routine_t)(void*);
 #define ThreadPThread__ProcessThreadStack ThreadPThread__ProcessThreadStack
 typedef void (__cdecl*ThreadPThread__ProcessThreadStack)(void* start, void* limit);
 
+#define RT0__Binder RT0__Binder /* inhibit m3c type */
+// The correct type for RT0__Binder is:
+// typedef RT0__Module* (__cdecl*RT0__Binder)(INTEGER mode);
+// but we cannot use that due to type collision hashes,
+// until/unless significant m3c changes.
+// This works:
+typedef void (__cdecl*M3PROC)(void); // from MxGen.m3
+typedef M3PROC RT0__Binder;
+// The actual use and pass casts and so getting the type correct here does
+// not really matter. What matters is that it is the same in all function
+// declarations/definitions.
+
+struct _BY_HANDLE_FILE_INFORMATION;
+struct _FILETIME;
+struct _OVERLAPPED;
+struct _SYSTEMTIME;
+struct _TIME_ZONE_INFORMATION;
+
+#define WinBase__const_FILETIME_star                WinBase__const_FILETIME_star                /* inhibit m3c type */
+#define WinBase__const_SYSTEMTIME_star              WinBase__const_SYSTEMTIME_star              /* inhibit m3c type */
+#define WinBase__const_TIME_ZONE_INFORMATION_star   WinBase__const_TIME_ZONE_INFORMATION_star   /* inhibit m3c type */
+#define WinBase__LPSYSTEMTIME                       WinBase__LPSYSTEMTIME                       /* inhibit m3c type */
+#define WinBase__PBY_HANDLE_FILE_INFORMATION        WinBase__PBY_HANDLE_FILE_INFORMATION        /* inhibit m3c type */
+#define WinBase__PFILETIME                          WinBase__PFILETIME                          /* inhibit m3c type */
+#define WinBase__POVERLAPPED                        WinBase__POVERLAPPED                        /* inhibit m3c type */
+#define WinBase__PSYSTEMTIME                        WinBase__PSYSTEMTIME                        /* inhibit m3c type */
+#define WinBase__PTIME_ZONE_INFORMATION             WinBase__PTIME_ZONE_INFORMATION             /* inhibit m3c type */
+#define WinBaseTypes__BOOL                          WinBaseTypes__BOOL                          /* inhibit m3c type */
+#define WinBaseTypes__PCSTR                         WinBaseTypes__PCSTR                         /* inhibit m3c type */
+#define WinBaseTypes__PSTR                          WinBaseTypes__PSTR                          /* inhibit m3c type */
+#define WinBaseTypes__PUINT32                       WinBaseTypes__PUINT32                       /* inhibit m3c type */
+#define WinBaseTypes__UINT32                        WinBaseTypes__UINT32                        /* inhibit m3c type */
+#define WinNT__SECURITY_INFORMATION                 WinNT__SECURITY_INFORMATION                 /* inhibit m3c type */
+#define WinNT__PSECURITY_DESCRIPTOR                 WinNT__PSECURITY_DESCRIPTOR                 /* inhibit m3c type */
+
+typedef const struct _FILETIME*                 WinBase__const_FILETIME_star;
+typedef const struct _SYSTEMTIME*               WinBase__const_SYSTEMTIME_star;
+typedef const struct _TIME_ZONE_INFORMATION*    WinBase__const_TIME_ZONE_INFORMATION_star;
+typedef struct _SYSTEMTIME*                     WinBase__LPSYSTEMTIME;
+typedef struct _FILETIME*                       WinBase__PFILETIME;
+typedef struct _SYSTEMTIME*                     WinBase__PSYSTEMTIME;
+typedef struct _TIME_ZONE_INFORMATION*          WinBase__PTIME_ZONE_INFORMATION;
+typedef struct _BY_HANDLE_FILE_INFORMATION*     WinBase__PBY_HANDLE_FILE_INFORMATION;
+typedef struct _OVERLAPPED*                     WinBase__POVERLAPPED;
+typedef int                                     WinBaseTypes__BOOL;
+typedef char*                                   WinBaseTypes__PSTR;
+typedef const char*                             WinBaseTypes__PCSTR;
+typedef unsigned long*                          WinBaseTypes__PUINT32; // even on 64bit Windows
+typedef unsigned long                           WinBaseTypes__UINT32;  // even on 64bit Windows
+typedef void*                                   WinNT__PSECURITY_DESCRIPTOR;
+typedef unsigned long                           WinNT__SECURITY_INFORMATION;
 
 #ifdef __cplusplus
 } /* extern "C" */
+#endif
+
+// from m3c
+// http://c.knowcoding.com/view/23699-portable-alloca.html
+// Find a good version of alloca.
+#ifndef alloca
+# ifdef __GNUC__
+#  define alloca __builtin_alloca
+# elif defined(__DECC) || defined(__DECCXX)
+#  define alloca(x) __ALLOCA(x)
+# elif defined(_MSC_VER)
+#ifdef __cplusplus
+extern "C" {
+#endif
+   void * __cdecl _alloca(size_t size);
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
+#  define alloca _alloca
+# else
+#  include <alloca.h>
+# endif
 #endif
 
 #endif

@@ -5,6 +5,8 @@
 
 readonly TARGET_OS = "LINUX"
 
+M3_MAIN_M3CC = TRUE
+
 if not defined ("SYSTEM_CXXXC")
    SYSTEM_CXXXC = SYSTEM_CC
 end

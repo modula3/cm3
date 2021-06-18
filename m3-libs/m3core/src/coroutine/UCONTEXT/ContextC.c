@@ -62,7 +62,7 @@ ContextC__DisposeContext(Context* c)
     assert(0);
 }
 
-void*
+Context*
 __cdecl
 ContextC__Current(void)
 {
@@ -414,8 +414,6 @@ ContextC__GetStackBase(Context *c)
 {
   return (ADDRESS)c->stackbase;
 }
-
-#include <alloca.h>
 
 __attribute__((noinline))
 static ADDRESS

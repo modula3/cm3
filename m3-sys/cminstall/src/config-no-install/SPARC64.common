@@ -16,4 +16,4 @@ m3back_flags = " -mno-app-regs "
 %  return FALSE
 %end
 
-M3_MAIN_IN_C = TRUE
+%M3_MAIN_IN_C = TRUE
