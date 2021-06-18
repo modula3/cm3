@@ -275,6 +275,8 @@ PROCEDURE Scan_text (VAR s: State): TEXT =
       FOR i := 0 TO len-1 DO buf[i] := VAL (GetByte (s), CHAR); END;
       txt := txt & Text.FromChars (SUBARRAY (buf, 0, len));
     END;
+    (* consume terminal nul *)
+    EVAL GetByte (s);
     RETURN txt;
   END Scan_text;
 

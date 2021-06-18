@@ -6,7 +6,7 @@ M3CG (SET_SOURCE_FILE, STRING (name, name_length))
 M3CG (SET_SOURCE_LINE, UNSIGNED_INTEGER (i))
 M3CG (DECLARE_TYPENAME,
       TYPEID (my_id)
-      STRING (name, name_length))
+      STRING (fullname, fullname_length))
 M3CG (DECLARE_ARRAY,
       TYPEID (my_id)
       TYPEID (index_id)

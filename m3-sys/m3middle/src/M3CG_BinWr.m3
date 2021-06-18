@@ -273,7 +273,8 @@ PROCEDURE Txt (u: U;  t: TEXT) =
       OutI (u, len);
       M3Buf.PutText (u.buf, t);
       INC (u.buf_len, len);
-      IF (u.buf_len >= 16_F000) THEN Flush (u) END;
+      OutB (u, 0);
+      (* OutB flushes *)
     END;
   END Txt;
 

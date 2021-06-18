@@ -2372,11 +2372,11 @@ trace_typeid (PCSTR name, UINT32 val)
 
 static PCSTR
 scan_string (long length)
-/* NOTE: these are not null terminated */
+/* NOTE: these are null terminated */
 {
   PCSTR result = { 0 };
   if (length > 0)
-    result = (PCSTR)get_bytes_direct (long_to_sizet (length));
+    result = (PCSTR)get_bytes_direct (long_to_sizet (length + 1));
   return result;
 }
 
@@ -3761,13 +3761,7 @@ M3CG_HANDLER (SET_SOURCE_LINE)
 
 M3CG_HANDLER (DECLARE_TYPENAME)
 {
-  size_t fullname_length =
-    sizet_add (current_unit_name_length, sizet_add (long_to_sizet (name_length), 1));
-  PSTR fullname = (PSTR)alloca (fullname_length);
-  gcc_assert (name_length > 0);
-  memcpy(fullname, current_unit_name, current_unit_name_length);
-  fullname[current_unit_name_length] = '.';
-  memcpy(&fullname[current_unit_name_length + 1], name, name_length);
+  gcc_assert (fullname_length > 0);
 
   debug_tag ('N', my_id, "");
   debug_field_name_length (fullname, fullname_length);
