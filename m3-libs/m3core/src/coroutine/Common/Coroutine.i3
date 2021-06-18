@@ -43,6 +43,10 @@ PROCEDURE Call(c : T) : T;
      list of stacks to another thread's list in ThreadPThread.m3) 
   *)
 
+(* Internal implementation details, between Modula3 and C. *)
+PROCEDURE CallInternal(to : T; myId: UNTRACED REF INTEGER; VAR me : T): T;
+PROCEDURE RunInternal(inhibit : T);
+
 PROCEDURE Retval(c : T) : REFANY;
   (* returns NIL if coroutine c is still active, returns return value
      of apply if c is done executing *)
