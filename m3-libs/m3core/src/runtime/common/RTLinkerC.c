@@ -151,9 +151,7 @@ RTLinker__PrintModule(RT0__Module* module)
 }
 
 #endif
-
+#endif
 #ifdef __cplusplus
 } /* extern "C" */
-#endif
-
 #endif
