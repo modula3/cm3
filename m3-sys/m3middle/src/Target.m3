@@ -151,12 +151,6 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
       Sigsetjmp := FALSE;
     END;
 
-    IF backend_mode = M3BackendMode_t.C THEN
-      Typenames := TRUE;          (* on declare_param, etc. *)
-      TypenameWithModule := TRUE; (* Type vs. Module.Type *)
-      TypenameDots := FALSE;      (* Module.Type vs. Module__Type *)
-    END;
-
     (* There is no portable stack walker, and therefore few systems have one.
        Having a stack walker theoretically speeds up everything nicely.  If
        you are familiar with NT exception handling, all but x86 have a stack
