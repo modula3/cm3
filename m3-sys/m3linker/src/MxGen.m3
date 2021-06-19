@@ -55,6 +55,52 @@ PROCEDURE ContainsUnit (ui: UnitInfo; u: Mx.Unit): BOOLEAN =
 PROCEDURE GenerateMain (base: Mx.LinkSet;  c_output: Wr.T;  cg_output: M3CG.T;
                         verbose: BOOLEAN;  windowsGUI: BOOLEAN;
                         lazy := FALSE) =
+(* TODO Around here is duplicated by m3core.h, M3C.m3 and MxGen.m3; at
+ * least consolidate to two copies by moving to m3middle
+ *)
+CONST Prefix = ARRAY OF TEXT {
+"",
+"// Put types inside extern C because some compilers (Sun) consider",
+"// such linkage as part of the type and error upon conflicts,",
+"// between m3core.h and _m3main.c when they are concatenated.",
+"// At least for function pointer types.",
+"",
+"#ifdef __cplusplus",
+"extern \"C\" {",
+"#endif",
+"",
+"#if __INITIAL_POINTER_SIZE == 64",
+"typedef __int64 INTEGER;",
+"#else",
+"typedef ptrdiff_t INTEGER;",
+"#endif",
+"",
+"#if !defined(_MSC_VER) && !defined(__cdecl)",
+"#define __cdecl /* nothing */",
+"#endif",
+"",
+"typedef char* ADDRESS;",
+"typedef void (__cdecl*M3PROC)(void);",
+"",
+"#ifndef RT0__ModulePtr",
+"#define RT0__ModulePtr RT0__ModulePtr",
+"typedef ADDRESS RT0__ModulePtr;",
+"#endif",
+"",
+"//correct, but match preexisting m3core",
+"//void __cdecl RTLinker__InitRuntime(INTEGER argc, char** argv, char** envp, void* hinstance);",
+"void __cdecl RTLinker__InitRuntime(INTEGER argc, ADDRESS argv, ADDRESS envp, ADDRESS hinstance);",
+"void __cdecl RTProcess__Exit(INTEGER);",
+"",
+"//if not s.lazyInit",
+"//correct, but workaround hash collisions in ProcType",
+"//void __cdecl RTLinker__AddUnitImports(void* (__cdecl*)(void));",
+"void __cdecl RTLinker__AddUnitImports(M3PROC);",
+"",
+"//correct, but void __cdecl RTLinker__AddUnit(void* (__cdecl*)(void));",
+"void __cdecl RTLinker__AddUnit(M3PROC);",
+""};
+
   VAR s: State;
   BEGIN
     <*ASSERT  (c_output = NIL) # (cg_output = NIL) *>
@@ -77,45 +123,11 @@ PROCEDURE GenerateMain (base: Mx.LinkSet;  c_output: Wr.T;  cg_output: M3CG.T;
         Out (s, "#include <windows.h>", EOL);
       END;
 
-      (* Put types inside extern C because some compilers (Sun) consider
-       * such linkage as part of the type and error upon conflicts,
-       * between m3core.h and _m3main.c when they are concatenated.
-       * At least for function pointer types.
-       *)
-      Out (s, "#ifdef __cplusplus", EOL);
-      Out (s, "extern \"C\" {", EOL);
-      Out (s, "#endif", EOL, EOL);
-
-      (* This content should match m3c output so the files can be concatenated. *)
-      Out (s, EOL, "#if __INITIAL_POINTER_SIZE == 64", EOL);
-      Out (s, "typedef __int64 INTEGER;", EOL);
-      Out (s, "#else", EOL);
-      Out (s, "typedef ptrdiff_t INTEGER;", EOL);
-      Out (s, "#endif", EOL, EOL);
-
-      Out (s, "#if !defined(_MSC_VER) && !defined(__cdecl)", EOL);
-      Out (s, "#define __cdecl /* nothing */", EOL);
-      Out (s, "#endif", EOL, EOL);
-
-      Out (s, "typedef char* ADDRESS;\n");
-      Out (s, "typedef void (__cdecl*M3PROC)(void);\n");
-
-      Out (s, "#ifndef RT0__ModulePtr\n");
-      Out (s, "#define RT0__ModulePtr RT0__ModulePtr\n");
-      Out (s, "typedef ADDRESS RT0__ModulePtr;\n");
-      Out (s, "#endif\n\n");
-
-      Out (s, "//correct, but match preexisting m3core\n");
-      Out (s, "//void __cdecl RTLinker__InitRuntime(INTEGER argc, char** argv, char** envp, void* hinstance);\n");
-      Out (s, "void __cdecl RTLinker__InitRuntime(INTEGER argc, ADDRESS argv, ADDRESS envp, ADDRESS hinstance);\n");
-      Out (s, "void __cdecl RTProcess__Exit(INTEGER);\n");
-      IF NOT s.lazyInit THEN
-        Out (s, "//correct, but workaround hash collisions in ProcType\n");
-        Out (s, "//void __cdecl RTLinker__AddUnitImports(void* (__cdecl*)(void));\n");
-        Out (s, "void __cdecl RTLinker__AddUnitImports(M3PROC);\n");
+      FOR i := FIRST(Prefix) TO LAST(Prefix) DO
+        Out (s, Prefix [i]);
+        Out (s, "\n");
       END;
-      Out (s, "//correct, but void __cdecl RTLinker__AddUnit(void* (__cdecl*)(void));\n");
-      Out (s, "void __cdecl RTLinker__AddUnit(M3PROC);\n\n");
+
     ELSE
       GenCGTypeDecls (s);
     END;
