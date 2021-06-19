@@ -698,7 +698,7 @@ int __cdecl Usocket__shutdown(int s, int how);
 int __cdecl Usocket__socket(int af, int type, int protocol);
 int __cdecl Usocket__bind(int s, const M3SockAddrUnionAll*, m3_socklen_t);
 int __cdecl Usocket__connect(int s, const M3SockAddrUnionAll*, m3_socklen_t);
-INTEGER __cdecl Usocket__sendto(int s, const void* msg, size_t length, int flags, const M3SockAddrUnionAll*, m3_socklen_t);
+ssize_t __cdecl Usocket__sendto(int s, const void* msg, size_t length, int flags, const M3SockAddrUnionAll*, m3_socklen_t);
 int __cdecl Usocket__setsockopt(int s, int level, int optname, const void* optval, m3_socklen_t len);
 int __cdecl Usocket__getpeername(int s, M3SockAddrUnionAll*, m3_socklen_t*);
 int __cdecl Usocket__getsockname(int s, M3SockAddrUnionAll*, m3_socklen_t*);

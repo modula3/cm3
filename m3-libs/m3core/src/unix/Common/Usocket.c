@@ -330,8 +330,30 @@ Usocket__Assertions(void)
 M3WRAP2(int, listen, int, int)
 M3WRAP2(int, shutdown, int, int)
 M3WRAP3(int, socket, int, int, int)
-M3WRAP4(ssize_t, send, int, const void*, size_t, int)
-M3WRAP4(ssize_t, recv, int, void*, size_t, int)
+
+M3_DLL_EXPORT ssize_t __cdecl
+Usocket__send (int a, const void* b, size_t c, int d)
+{
+    ssize_t r;
+    Scheduler__DisableSwitching();
+
+    r = send (a, (char*)b, c, d); // cast for Windows
+
+    Scheduler__EnableSwitching();
+    return r;
+}
+
+M3_DLL_EXPORT ssize_t __cdecl
+Usocket__recv (int a, void* b, size_t c, int d)
+{
+    ssize_t r;
+    Scheduler__DisableSwitching();
+
+    r = recv (a, (char*)b, c, d); // cast for Windows
+
+    Scheduler__EnableSwitching();
+    return r;
+}
 
 // wrap everything taking input socklen_t or sockaddr
 #define WRAP_SOCKADDR_INPUT1                    \
@@ -399,7 +421,8 @@ Usocket__sendto(int s, const void* msg, size_t length, int flags, const M3SockAd
 {
     WRAP_SOCKADDR_INPUT1
 
-    sendto(s, msg, length, flags, &native.sa, len);
+    // cast for Windows
+    sendto(s, (char*)msg, length, flags, &native.sa, len);
 
     WRAP_SOCKADDR_INPUT2
 }
@@ -417,10 +440,10 @@ Usocket__setsockopt(int s, int level, int optname, const void* optval, m3_sockle
         ZeroMemory(&b, sizeof(b));
         b.l_onoff = a->onoff;
         b.l_linger = a->linger;
-        return setsockopt(s, level, optname, (char*)&b, sizeof(b));
+        return setsockopt(s, level, optname, (char*)&b, sizeof(b)); // cast for Windows
     }
 #endif
-    return setsockopt(s, level, optname, (char*)optval, len);
+    return setsockopt(s, level, optname, (char*)optval, len); // cast for Windows
 }
 
 /* wrap everything taking input/output socklen_t */
@@ -484,7 +507,7 @@ the same order. This is checked in Usocket__Assertions.
             len = sizeof(b);
         }
 #endif
-        r = getsockopt(s, level, optname, optval, plen ? &len : 0);
+        r = getsockopt(s, level, optname, (char*)optval, plen ? &len : 0); // cast for Windows
         PLEN_OUT
 
 #if defined(__CYGWIN__) || defined(_WIN32)
@@ -505,7 +528,7 @@ Usocket__recvfrom(int s, void* buf, size_t length, int flags, M3SockAddrUnionAll
 {
     WRAP_SOCKADDR_OUTPUT1
 
-    recvfrom(s, buf, length, flags, &native.sa, &len);
+    recvfrom(s, (char*)buf, length, flags, &native.sa, &len); // cast for Windows
 
     WRAP_SOCKADDR_OUTPUT2
 }
