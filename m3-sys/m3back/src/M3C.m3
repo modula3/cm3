@@ -2550,7 +2550,17 @@ CONST Prefix = ARRAY OF TEXT {
 "# elif defined(__DECC) || defined(__DECCXX)",
 "#  define alloca(x) __ALLOCA(x)",
 "# elif defined(_MSC_VER)",
+
+"#ifdef __cplusplus",
+"extern \"C\" {",
+"#endif",
+
 "   void * __cdecl _alloca(size_t size);",
+
+"#ifdef __cplusplus",
+"} /* extern \"C\" */",
+"#endif",
+
 "#  define alloca _alloca",
 "# else",
 (* This is verified correct for Solaris, documented correct for AIX. TODO: Irix, HP-UX, etc. *)
