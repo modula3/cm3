@@ -3278,16 +3278,24 @@ BEGIN
   RETURN declare_typename_common (self, typeid, name, replace := TRUE);
 END declare_typename_replace;
 
-PROCEDURE declare_typename (declareTypes: DeclareTypes_t; typeid: TypeUID; name: Name) =
-VAR self := declareTypes.self;
+PROCEDURE declare_typename_internal (self: T; typeid: TypeUID; name: Name) =
 BEGIN
+  ReplaceName (self, name);
+  EVAL declare_typename_replace (self, typeid, name);
+END declare_typename_internal;
+
+<*NOWARN*>PROCEDURE declare_typename (declareTypes: DeclareTypes_t; typeid: TypeUID; name: Name) =
+(*VAR self := declareTypes.self;*)
+BEGIN
+(* Global typenames turn out to not be useful.
+
   IF debug_verbose THEN
     self.comment ("declare_typename typeid:", TypeIDToText (typeid), " name:" & TextOrNIL (NameT(name)));
   ELSIF debug THEN
-    self.comment ("declare_typename");
+    self.comment ("declare_typename (ignored)");
   END;
-  ReplaceName (self, name);
-  EVAL declare_typename_replace (self, typeid, name);
+  declare_typename_internal (self, typeid, name);
+*)
 END declare_typename;
 
 PROCEDURE TypeIDToText (x: TypeUID): TEXT =
@@ -3785,9 +3793,9 @@ BEGIN
                         cgtype := Target.Address.cg_type,
                         index := 1,
                         callingConvention := callingConvention,
-                        types := NEW (REF ARRAY OF Type_t, param_count + 1),
-                        typenames := NEW (REF ARRAY OF Name, param_count + 1),
-                        typeids := NEW (REF ARRAY OF TypeUID, param_count + 1),
+                        types := NEW (REF ARRAY OF Type_t, param_count + 1),    (* +1 because first is return type *)
+                        typenames := NEW (REF ARRAY OF Name, param_count + 1),  (* +1 because first is return type *)
+                        typeids := NEW (REF ARRAY OF TypeUID, param_count + 1), (* +1 because first is return type *)
                         typeid := typeid);
   self.procType.typeids [0] := result;
   self.procType.typenames [0] := result_typename;
@@ -3992,7 +4000,7 @@ BEGIN
     self.comment("import_global");
   END;
   <* ASSERT (byte_size MOD alignment) = 0 *>
-  declare_typename (declareTypes, typeid, typename);
+  declare_typename_internal (self, typeid, typename); (* TODO change to declare_typename_no_replace? *)
 
   (* Multipass optionally remembers/reuses refs across passes. NIL means
    * the Var is unused through this pass, produced in a later one. *)

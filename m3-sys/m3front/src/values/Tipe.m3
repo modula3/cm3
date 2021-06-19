@@ -134,7 +134,7 @@ PROCEDURE Compile (t: T): BOOLEAN =
     Type.Compile (t.value);
     (*IF NOT t.imported THEN*)
       uid  := Type.GlobalUID (t.value);
-      name := Value.GlobalName (t, dots := Target.TypenameDots, with_module := Target.TypenameWithModule);
+      name := Value.GlobalName (t, dots := TRUE, with_module := FALSE); (* Type, not Module.Type, not Module__Type *)
       CG.Declare_typename (uid, M3ID.Add (name));
       WebInfo.Declare_typename (uid, t);
     (*END;*)
