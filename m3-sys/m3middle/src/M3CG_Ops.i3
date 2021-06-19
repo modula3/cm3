@@ -199,6 +199,7 @@ set_runtime_proc (n: Name;  p: Proc);
 |    f: Frequency       is the front-end estimate of how frequently the
 |                         variable is accessed.
 |    typename: M3ID     a full contextual typename like Cstddef__size_t or Ctypes__int
+|                       for parameter types, return types, etc.
 |                       Only passed if Target.Typenames, since most backends do not use them.
 
 *)
