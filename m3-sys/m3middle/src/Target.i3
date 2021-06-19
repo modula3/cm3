@@ -477,8 +477,19 @@ VAR (*CONST*)
      test for nested procedures passed as parameters must be more
      elaborate (e.g. HPPA). *)
 
-(* Backend uses full typenames. These are expensive? to produce so optional. *)
+(* Backend uses contextual typenames. i.e. on declare_param, etc.
+ * These are expensive? to produce so optional. *)
 VAR Typenames := FALSE;
+
+(* Type vs. Module.Type. And something for typenames in procedures and blocks
+ * and nested procedures. m3c wants global names, m3cc does not, it forms them itself.
+ *)
+VAR TypenameWithModule := FALSE;
+
+(* Module.Type vs. Module__Type; m3c wants underscores, m3cc is unclear due
+ * to TypenameWithModule = FALSE but preserve historical parameter.
+ *)
+VAR TypenameDots := TRUE;
 
 (* Ideally the value 0 would be uninitialized, but it is used publically in Quake? *)
 VAR BackendMode: M3BackendMode_t;

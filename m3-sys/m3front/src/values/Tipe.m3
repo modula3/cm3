@@ -9,7 +9,7 @@
 MODULE Tipe;
 
 IMPORT M3, M3ID, CG, Value, ValueRep, Scope, OpaqueType, WebInfo, TypeRep;
-IMPORT Token, Type, Decl, Scanner, NamedType, RefType, ObjectType, Module;
+IMPORT Token, Type, Decl, Scanner, NamedType, RefType, ObjectType, Module, Target;
 FROM Scanner IMPORT GetToken, Fail, Match, MatchID, cur;
 FROM M3 IMPORT QID;
 
@@ -134,7 +134,7 @@ PROCEDURE Compile (t: T): BOOLEAN =
     Type.Compile (t.value);
     (*IF NOT t.imported THEN*)
       uid  := Type.GlobalUID (t.value);
-      name := Value.GlobalName (t, dots := FALSE);
+      name := Value.GlobalName (t, dots := Target.TypenameDots, with_module := Target.TypenameWithModule);
       CG.Declare_typename (uid, M3ID.Add (name));
       WebInfo.Declare_typename (uid, t);
     (*END;*)
