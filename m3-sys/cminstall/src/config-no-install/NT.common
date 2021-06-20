@@ -649,6 +649,8 @@ proc compile_c_ms(source, object, options, optimize, debug) is
     %
     args += ["-Z7"]
 
+    args += ["-TP"] % compile as C++
+
     if USE_MSVCRT
         % Use msvcrt.lib and define _MT and _DLL.
         %
