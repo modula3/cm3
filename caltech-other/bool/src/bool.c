@@ -1180,7 +1180,7 @@ void bool_print (bool_t *b)
 void bool_info (BOOL_T *B)
 {
   printf ("memory per node: %d\n", (int)sizeof(bool_t));
-  printf ("max. num. of vars: %ld\n", (1UL<<(sizeof(bool_var_t)*8-1)));
+  printf ("max. num. of vars: %ld\n", (((bool_var_t)1)<<(sizeof(bool_var_t)*8-1)));
   printf ("init. hashtable size: %d\n", HASH_BLOCK);
   printf ("var. block size: %d\n", VAR_BLOCK);
   printf ("num. of vars in use: %ld\n", B->nvar);
