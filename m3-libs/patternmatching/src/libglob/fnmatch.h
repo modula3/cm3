@@ -53,6 +53,14 @@
 #define const	/* empty */
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 int	 fnmatch(const char *, const char *, int);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* !_FNMATCH_H_ */
