@@ -2102,9 +2102,9 @@ __yy_bcopy (from, to, count)
      char *to;
      int count;
 {
-  register char *f = from;
-  register char *t = to;
-  register int i = count;
+  char *f = from;
+  char *t = to;
+  int i = count;
 
   while (i-- > 0)
     *t++ = *f++;
@@ -2117,9 +2117,9 @@ __yy_bcopy (from, to, count)
 static void
 __yy_bcopy (char *from, char *to, int count)
 {
-  register char *f = from;
-  register char *t = to;
-  register int i = count;
+  char *f = from;
+  char *t = to;
+  int i = count;
 
   while (i-- > 0)
     *t++ = *f++;
@@ -2132,10 +2132,10 @@ __yy_bcopy (char *from, char *to, int count)
 int
 yyparse()
 {
-  register int yystate;
-  register int yyn;
-  register short *yyssp;
-  register YYSTYPE *yyvsp;
+  int yystate;
+  int yyn;
+  short *yyssp;
+  YYSTYPE *yyvsp;
   int yyerrstatus;	/*  number of tokens to shift before error messages enabled */
   int yychar1 = 0;		/*  lookahead token as an internal (translated) token number */
 
@@ -3273,10 +3273,10 @@ static char *builtins[] = {
     
 
 PRID(s)
-    register char *s;
+    char *s;
 {
-    register int i;
-    register char *b;
+    int i;
+    char *b;
 
     for (i = 0; (b = builtins[i]) != NULL; ++i) {
 	if (*b == *s && strcmp(b, s) == 0) {
@@ -3514,7 +3514,7 @@ HandleComments(firstTime, initNPS, doBreak)
     int doBreak;		/* is a Break about to happen? */
 {
     int i;
-    register char *s, c;
+    char *s, c;
     int startCol, ws;
     int needEnd = 0;
 

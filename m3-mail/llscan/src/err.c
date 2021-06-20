@@ -81,8 +81,8 @@ void error(string msg, ...)
 static void preprocess(msg)
 string msg;
 {
-    register char *src, *dst;
-    register const char *cp;
+    char *src, *dst;
+    const char *cp;
     char c;
 
     src = msg;

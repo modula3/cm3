@@ -226,7 +226,7 @@ static EndComment()
 static int IsWhite(char c)
 #else
 static int IsWhite(c)
-    register char c;
+    char c;
 #endif
 {
     return c == ' ' || c == '\t' || c == '\f' || c == '\n' || c == '\r';
@@ -306,7 +306,7 @@ int HandleCommentPragma ()
 {
     /* use 'int' instead of 'char' for distinguishing between end of file
        and characters above 127 */
-    register int c, c2;
+    int c, c2;
 
     StartNPS();
     /* Now deal with the main loop. */

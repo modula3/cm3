@@ -391,7 +391,7 @@ static void ErrorHelp()
 /***************************************************************/
 
 static void ScanSwitch(cp)
-register char *cp;
+char *cp;
 {
     char c;
 
@@ -615,7 +615,7 @@ madechanges = TRUE;
 
 static void DumpCache()
 {
-    register int i;
+    int i;
     static char iQuaStr[20];
     stream cachefile, headerfile;
     hashentryptr hp;
@@ -849,8 +849,8 @@ if ((subject == NULL) || subject[0] == 0) return NULL;
 if ((pattern == NULL) || pattern[0] == 0) return subject;
 while (*subject) {
   if (*subject++ == *pattern) {
-    register char *stmp = subject;
-    register char *ptmp = pattern + 1;
+    char *stmp = subject;
+    char *ptmp = pattern + 1;
     while ((*ptmp) && (*stmp++ == *ptmp++)) ;
     if (*ptmp == '\0') return(subject-1);
   } /*if*/
@@ -1141,7 +1141,7 @@ static void ReadScan()
 	  while(fgets(linebuf, MAXLINE, ef) != NULL) {
 	    nonempty++;
 	    { 
-	      register char *s;
+	      char *s;
 	      s = linebuf;
 	      while (*s != 0) { *s = tolower(*s); s++; }
             }
@@ -1553,8 +1553,8 @@ static void SetMinMsg()
 
 static void SetBBoardName()
 {
-    register char *src, *dst;
-    register int len;
+    char *src, *dst;
+    int len;
     string bbpath;
     stream bbfile;
     bool fullpath;
@@ -1752,7 +1752,7 @@ string name;
 static bool IsAMessage(name)
 string name;
 {
-    register char *cp;
+    char *cp;
     char c;
 
     cp = name;

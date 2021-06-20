@@ -13,11 +13,11 @@ rowop(len, target, src, factor)
   float *target, *src;
   float factor;
 {
-    register int i, i2;
-    register float maxAbs = 0.0;
-    register float abs;
-    register float t0, t1, t2, t3;
-    register int maxCol = -1;
+    int i, i2;
+    float maxAbs = 0.0;
+    float abs;
+    float t0, t1, t2, t3;
+    int maxCol = -1;
 
     for (i=0; i<len-2; i+=2) {
         t0 = src[i];
