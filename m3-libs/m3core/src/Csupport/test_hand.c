@@ -5,8 +5,8 @@ __fastcall
 test_set_member(WORD_T elt, WORD_T* set)
 /* never used by current backend */
 {
-  register WORD_T word = elt / SET_GRAIN;
-  register WORD_T bit  = elt % SET_GRAIN;
+  WORD_T word = elt / SET_GRAIN;
+  WORD_T bit  = elt % SET_GRAIN;
   return (set[word] & (1UL << bit)) != 0;
 }
 

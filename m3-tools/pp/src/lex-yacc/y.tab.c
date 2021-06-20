@@ -502,7 +502,7 @@ union yyalloc
 #   define YYCOPY(To, From, Count)		\
       do					\
 	{					\
-	  register size_t yyi;		\
+	  size_t yyi;				\
 	  for (yyi = 0; yyi < (Count); yyi++)	\
 	    (To)[yyi] = (From)[yyi];		\
 	}					\
@@ -3690,7 +3690,7 @@ yystrlen (yystr)
      const char *yystr;
 #   endif
 {
-  register const char *yys = yystr;
+  const char *yys = yystr;
 
   while (*yys++ != '\0')
     continue;
@@ -3715,8 +3715,8 @@ yystpcpy (yydest, yysrc)
      const char *yysrc;
 #   endif
 {
-  register char *yyd = yydest;
-  register const char *yys = yysrc;
+  char *yyd = yydest;
+  const char *yys = yysrc;
 
   while ((*yyd++ = *yys++) != '\0')
     continue;
@@ -3851,8 +3851,8 @@ yyparse ()
 #endif
 {
   
-  register int yystate;
-  register int yyn;
+  int yystate;
+  int yyn;
   int yyresult;
   /* Number of tokens to shift before error messages enabled.  */
   int yyerrstatus;
@@ -3870,12 +3870,12 @@ yyparse ()
   /* The state stack.  */
   short int yyssa[YYINITDEPTH];
   short int *yyss = yyssa;
-  register short int *yyssp;
+  short int *yyssp;
 
   /* The semantic value stack.  */
   YYSTYPE yyvsa[YYINITDEPTH];
   YYSTYPE *yyvs = yyvsa;
-  register YYSTYPE *yyvsp;
+  YYSTYPE *yyvsp;
 
 
 
@@ -5295,10 +5295,10 @@ static char *builtins[] = {
     
 
 PRID(s)
-    register char *s;
+    char *s;
 {
-    register int i;
-    register char *b;
+    int i;
+    char *b;
 
     for (i = 0; (b = builtins[i]) != NULL; ++i) {
 	if (*b == *s && strcmp(b, s) == 0) {
@@ -5546,7 +5546,7 @@ HandleComments(firstTime, initNPS, doBreak)
     int doBreak;		/* is a Break about to happen? */
 {
     int i;
-    register char *s, c;
+    char *s, c;
     int startCol, ws;
     int needEnd = 0;
 

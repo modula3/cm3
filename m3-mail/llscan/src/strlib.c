@@ -147,7 +147,7 @@ int p1, p2;
 int findstr(text, pat)
 string text, pat;
 {
-    register string s;
+    string s;
     int nch;
 
     nch = strlen(pat);

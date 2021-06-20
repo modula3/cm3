@@ -112,7 +112,7 @@ string filename;
 string defext(filename, ext)
 string filename, ext;
 {
-    register char c, *cp;
+    char c, *cp;
     char *xp;
     bool forceext;
 
@@ -248,7 +248,7 @@ string _mappath(fn, path, filename, arg)
 strfn fn;
 string path, filename, arg;
 {
-    register char *cp;
+    char *cp;
     char c;
     string start, finish, localpath, tempname, result;
 
