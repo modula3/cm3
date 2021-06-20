@@ -48,7 +48,7 @@ extern "C"
 INTEGER m3_div(INTEGER b, INTEGER a)
 {
   typedef  INTEGER ST; /* signed type */
-  register ST c;
+  ST c;
   if ((a == 0) && (b != 0))  {  c = 0;
   } else if (a > 0)  {  c = (b >= 0) ? (a) / (b) : -1 - (a-1) / (-b);
   } else /* a < 0 */ {  c = (b >= 0) ? -1 - (-1-a) / (b) : (-a) / (-b);
@@ -59,7 +59,7 @@ INTEGER m3_div(INTEGER b, INTEGER a)
 INTEGER m3_mod(INTEGER b, INTEGER a)
 {
   typedef  INTEGER ST; /* signed type */
-  register ST c;
+  ST c;
   if ((a == 0) && (b != 0)) {  c = 0;
   } else if (a > 0)  {  c = (b >= 0) ? a % b : b + 1 + (a-1) % (-b);
   } else /* a < 0 */ {  c = (b >= 0) ? b - 1 - (-1-a) % (b) : - ((-a) % (-b));
@@ -71,7 +71,7 @@ INT64 m3_div64(INT64 b, INT64 a)
 {
   typedef  INT64 ST; /* signed type */
   typedef UINT64 UT; /* unsigned type */
-  register ST c;
+  ST c;
   if ((a == 0) && (b != 0))  {  c = 0;
   } else if (a > 0)  {  c = (b >= 0) ? (a) / (b) : -1 - (a-1) / (-b);
   } else /* a < 0 */ {  c = (b >= 0) ? -1 - (-1-a) / (b) : (-a) / (-b);
@@ -82,7 +82,7 @@ INT64 m3_div64(INT64 b, INT64 a)
 INT64 m3_mod64(INT64 b, INT64 a)
 {
   typedef  INT64 ST; /* signed type */
-  register ST c;
+  ST c;
   if ((a == 0) && (b != 0)) {  c = 0;
   } else if (a > 0)  {  c = (b >= 0) ? a % b : b + 1 + (a-1) % (-b);
   } else /* a < 0 */ {  c = (b >= 0) ? b - 1 - (-1-a) % (b) : - ((-a) % (-b));

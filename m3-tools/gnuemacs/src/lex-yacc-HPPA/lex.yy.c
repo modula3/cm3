@@ -745,8 +745,8 @@ int *yyfnd;
 extern struct yysvf *yyestate;
 int yyprevious = YYNEWLINE;
 yylook(){
-	register struct yysvf *yystate, **lsp;
-	register struct yywork *yyt;
+	struct yysvf *yystate, **lsp;
+	struct yywork *yyt;
 	struct yysvf *yyz;
 	int yych, yyfirst;
 	struct yywork *yyr;

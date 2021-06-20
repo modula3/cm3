@@ -5384,11 +5384,11 @@ static const char *builtins[] = {
 void PRID(const char *s)
 #else
 PRID(s)
-    register char *s;
+    char *s;
 #endif
 {
-    register int i;
-    register const char *b;
+    int i;
+    const char *b;
 
     for (i = 0; (b = builtins[i]) != NULL; ++i) {
 	if (*b == *s && strcmp(b, s) == 0) {
@@ -5775,7 +5775,7 @@ HandleComments(firstTime, initNPS, doBreak)
 /* Comment and newline handling code. */
 {
     int i;
-    register char *s, c;
+    char *s, c;
     int startCol, ws;
     int needEnd = 0;
 
