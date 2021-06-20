@@ -42,17 +42,17 @@ struct bool_t {
 
 #define HIBIT_OFFSET (sizeof(bool_var_t)*8-1)
 
-#define BOOL_MAXVAR  (1UL<<HIBIT_OFFSET)
+#define BOOL_MAXVAR  (((bool_var_t)1)<<HIBIT_OFFSET)
 
-#define SET_HIBIT(v) (v |= 1UL << HIBIT_OFFSET)
+#define SET_HIBIT(v) (v |= ((bool_var_t)1) << HIBIT_OFFSET)
 
 #define REFMAX  ((1<<14)-1)
  /* max value of "ref" */
 
-#define ISLEAF(b)      (((b)->id & (1UL << HIBIT_OFFSET)) ? 1 : 0)
+#define ISLEAF(b)      (((b)->id & (((bool_var_t)1) << HIBIT_OFFSET)) ? 1 : 0)
  /* True if "b" is a leaf */
 
-#define ASSIGN_LEAF(b,n) ((b)->id = ((b)->id & ~(1UL<<HIBIT_OFFSET))|(((size_t)n) << HIBIT_OFFSET))
+#define ASSIGN_LEAF(b,n) ((b)->id = ((b)->id & ~(((bool_var_t)1)<<HIBIT_OFFSET))|(((size_t)n) << HIBIT_OFFSET))
  /* assign to the "leaf" bit. */
 
 #define REF(b)         ((b)->ref)
