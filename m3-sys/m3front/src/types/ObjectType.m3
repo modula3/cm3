@@ -1059,8 +1059,10 @@ PROCEDURE GetSizes (p: P) =
       p.fieldAlign   := Target.Address.align;
     ELSE
       (* compute the field sizes and alignments *)
-      RecordType.SizeAndAlignment (p.fields, p.info.lazyAligned, min_size,
-                                   p.fieldSize, p.fieldAlign, solid);
+      RecordType.SizeAndAlignment
+        ( p.fields, p.info.lazyAligned, (*OUT*) min_size, (*OUT*) p.fieldSize,
+          (*OUT*)p.fieldAlign, (*OUT*) solid
+        );
 
       (* round the object's size up to at least the size of a heap header *)
       p.fieldSize := RecordType.RoundUp (p.fieldSize, Target.Address.size);

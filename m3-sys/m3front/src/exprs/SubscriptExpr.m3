@@ -278,7 +278,7 @@ PROCEDURE SubscriptExprAlign (p: P): Type.BitAlignT =
   VAR ta, ti, te, targetType: Type.T;
   VAR minb, maxb: Target.Int;
   BEGIN
-    arrayAlign := MIN (Expr.Alignment(p.a), Target.Word.align);
+    arrayAlign := Expr.Alignment(p.a);
     ta := Type.Base (Expr.TypeOf(p.a));
     IF RefType.Split (ta, (*OUT*)targetType) THEN (* Implicit dereference. *)
        ta := Type.Base (targetType)

@@ -27,7 +27,7 @@ PROCEDURE Init (t: T) =
   BEGIN
     t.origin               := Scanner.offset;
     t.type                 := NIL;
-    t.align                := Target.Word.align+1 (* => uncached. *);
+    t.align                := Target.UnknownAlign (* => uncached. *);
     t.checked              := FALSE;
     t.directAssignableType := FALSE;
     t.doDirectAssign       := FALSE;
@@ -263,8 +263,8 @@ PROCEDURE Alignment (t: T): Type.BitAlignT =
 *)
 
   BEGIN
-    IF t = NIL THEN RETURN Target.Word.align; END;
-    IF t.align > Target.Word.align THEN
+    IF t = NIL THEN RETURN Target.MaxAlign; END;
+    IF t.align = Target.UnknownAlign THEN
       (* Uninitialized. Compute and cache it. *)
       t.align := t.exprAlign()
     END; 
@@ -284,7 +284,7 @@ PROCEDURE ExprAlignDefault (e: T): Type.BitAlignT =
       EVAL Type.CheckInfo (type, info);
       RETURN info.alignment;
     END; 
-    RETURN Target.Word.align; 
+    RETURN Target.MaxAlign; 
   END ExprAlignDefault;
 
 PROCEDURE ExprAddrAlign (<*UNUSED*> e: T): Type.BitAlignT =
