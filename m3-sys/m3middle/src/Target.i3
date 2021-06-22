@@ -23,6 +23,14 @@ INTERFACE Target;
 
 IMPORT TInt, TWord;
 
+CONST MaxAlign = 64;
+  (* We 64-bit align certain 64-bit operands (e.g. LONGINT, LONGREAL, EXTENDED),
+     even on 32-bit targets.  To ensure this, the compiler has to be able
+     to assume that the constant and global areas, the stack area, and
+     heap-allocated objects are provided with this alignment.
+  *)
+CONST UnknownAlign = MaxAlign + 1;
+
 CONST
   OSNames = ARRAY OF TEXT { "POSIX", "WIN32" };
   EndianNames = ARRAY OF TEXT { "LITTLE", "BIG" }; 

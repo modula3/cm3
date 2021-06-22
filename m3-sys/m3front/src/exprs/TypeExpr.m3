@@ -81,7 +81,7 @@ PROCEDURE TypeExprAlign (p: P): Type.BitAlignT =
       EVAL Type.CheckInfo (type, typeInfo);
       RETURN typeInfo.alignment;
     END;
-    RETURN Target.Word.align;
+    RETURN Target.MaxAlign;
   END TypeExprAlign;
 
 PROCEDURE EqCheck (a: P;  e: Expr.T;  x: M3.EqAssumption): BOOLEAN =

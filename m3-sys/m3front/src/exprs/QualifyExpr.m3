@@ -264,15 +264,19 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
 
 PROCEDURE QualifyExprAlign (p: P): Type.BitAlignT =
   VAR fieldInfo: Field.Info;
-  VAR offset: INTEGER;
   VAR objType: Type.T;
   VAR objTypeInfo: Type.Info;
   BEGIN
     CASE p.class
-    OF Class.cFIELD, Class.cOBJFIELD =>
+    OF Class.cFIELD =>
         Field.Split (p.obj, fieldInfo);
-        offset := fieldInfo.offset MOD Target.Word.size;
-        RETURN CG.GCD (Expr.Alignment (p.expr), offset); 
+        RETURN CG.GCD (Expr.Alignment (p.expr), fieldInfo.offset); 
+    | Class.cOBJFIELD =>
+        Field.Split (p.obj, fieldInfo);
+        RETURN CG.GCD (Target.MaxAlign, fieldInfo.offset);
+        (* ^Expr.Alignment (p.expr) will be the alignment of the implicit
+           pointer to the heap object, which may be 32 on 32-bit target.
+           We need the alignment of the allocated object here. *) 
     | Class.cMETHOD => RETURN Target.Address.align;
     ELSE
       objType := Value.TypeOf (p.obj);
