@@ -385,8 +385,9 @@ def TargetOnlyHasCBackend(a):
     a = a.lower()
     if a == "i386_nt":
         return false
-    return (a.endswith("_nt") or a.startswith("arm64") or a.startswith("riscv") or
-        a.endswith("solaris") or a.startswith("sol"))
+    return (a.endswith("_nt") or a.startswith("arm") or a.find("riscv") != -1
+        or a.find("solaris") != -1 or a.startswith("sol")
+        or a.find("mingw") != -1 or a.find("cygwin") != -1)
 
 _PossibleCm3Flags = ["boot", "keep", "override", "commands", "verbose", "why", "debug", "trace"]
 _SkipGccFlags = ["nogcc", "skipgcc", "omitgcc"]
@@ -656,9 +657,6 @@ Target = Target or getenv("CM3_TARGET") or Host
 # It probably does not work because cm3 does not implement it.
 #
 _CBackend = "c" in LowercaseArgv or "+c" in LowercaseArgv or TargetOnlyHasCBackend(Target)
-
-if TargetOnlyHasCBackend(Target):
-    _CBackend = true
 
 if _CBackend:
     CM3_FLAGS = CM3_FLAGS + " -DM3_BACKEND_MODE=C"
@@ -1174,6 +1172,8 @@ def Boot():
 
     CBackend = _CBackend
 
+    print("CBackend = " + str(CBackend))
+
     CCompilerFlags = " "
     CCompilerOut = ""
 
@@ -1452,6 +1452,8 @@ def Boot():
         for a in os.listdir(os.path.join(Root, dir, BuildDir)):
             main_leaf = a
             ext = GetPathExtension(a)
+            ext_o = (ext == "o")
+            ext_obj = (ext == "obj")
             ext_c = (ext == "c")
             ext_cpp = (ext == "cpp")
             ext_h = (ext == "h")
@@ -1460,6 +1462,10 @@ def Boot():
             ext_is = (ext == "is")
             ext_io = (ext == "io")
             ext_mo = (ext == "mo")
+
+            if CBackend and (ext_mo or ext_io or ext_is or ext_ms or ext_obj or ext_o):
+                continue
+
             if not (ext_c or ext_cpp or ext_h or ext_s or ext_ms or ext_is or ext_io or ext_mo):
                 continue
             leaf = GetLastPathElement(a)
