@@ -3047,6 +3047,9 @@ X(GWLP_USERDATA)
 #ifdef GWLP_WNDPROC
 X(GWLP_WNDPROC)
 #endif
+
+#if 0 /* these are HBITMAP */
+
 #ifdef HBMMENU_CALLBACK
 X(HBMMENU_CALLBACK)
 #endif
@@ -3080,6 +3083,9 @@ X(HBMMENU_POPUP_RESTORE)
 #ifdef HBMMENU_SYSTEM
 X(HBMMENU_SYSTEM)
 #endif
+
+#endif
+
 #ifdef HC_ACTION
 X(HC_ACTION)
 #endif
