@@ -29,8 +29,33 @@ M3WRAP1(long, ftell, FILE*)
 M3WRAP4(size_t, fwrite, const void*, size_t, size_t, FILE*)
 M3WRAP1(int, getc, FILE*)
 M3WRAP0(int, getchar)
-M3WRAP1_(int, pclose, FILE*) /* close pipe */
-M3WRAP2_(FILE*, popen, const char*, const char*) /* open pipe */
+
+int __cdecl Cstdio__pclose (FILE* a) /* close pipe */
+{
+    int r;
+    Scheduler__DisableSwitching ();
+#ifdef _WIN32
+    r = _pclose (a);
+#else
+    r = pclose (a);
+#endif
+    Scheduler__EnableSwitching ();
+    return r;
+}
+
+FILE* __cdecl Cstdio__popen (const char* a, const char* b) /* open pipe */
+{
+    FILE* r;
+    Scheduler__DisableSwitching ();
+#ifdef _WIN32
+    r = _popen (a, b);
+#else
+    r = popen (a, b);
+#endif
+    Scheduler__EnableSwitching ();
+    return r;
+}
+
 M3WRAP2(int, putc, int, FILE*)
 M3WRAP1(int, putchar, int)
 M3WRAP1(int, puts, const char*) /* put string + "\n" to stdout, atomically */
