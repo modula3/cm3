@@ -1195,6 +1195,7 @@ def Boot():
         # gcc and other platforms
         CCompiler = {
             "SOLgnu" : "/usr/sfw/bin/g++",
+            "AMD64_MINGW"   : "x86_64-w64-mingw32-g++",
             "AMD64_NT"      : "cl",
             }.get(Config) or "g++"
 
@@ -1202,6 +1203,7 @@ def Boot():
         # -fPIC breaks Interix and is not needed on Cygwin/Mingw.
         CCompilerFlags = {
             "I386_INTERIX"  : " -g ", # gcc -fPIC generates incorrect code on Interix
+            "AMD64_MINGW"   : " -g ", # No need for -pthread
             #"AMD64_NT"      : " -Zi -MD -Gy ",
             "AMD64_NT"      : " -Zi -Gy ", # hack some problem with exception handling and alignment otherwise
             }.get(Config) or " -pthread -g "
@@ -1248,7 +1250,7 @@ def Boot():
     if darwin:
         pass
     elif mingw:
-        pass
+        Link = Link  +  " -liphlpapi -lrpcrt4 -lcomctl32 -lws2_32 -lgdi32 -luser32 -ladvapi32 "
     elif solaris or sol:
         Link = Link  +  " -lpthread -lrt -lm -lnsl -lsocket -lc -pthread "
     elif hpux:
