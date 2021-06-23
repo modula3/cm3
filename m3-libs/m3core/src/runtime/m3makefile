@@ -13,27 +13,27 @@ readonly HAS_STACK_WALKER = {
 }
 
 include_dir ("common")
-include_dir (OS_TYPE)
+include_dir (OS_TYPE) % Win32 or Posix
 
-proc FileExists(a) is
-    return not stale (a, a)
-end
-
-if (equal(TARGET, "NT386")
-    or equal(TARGET, "I386_NT")
-    or equal(TARGET, "AMD64_NT")
-    or equal(TARGET, "IA64_NT")
-    or equal(TARGET, "ARM_NT")
-    or equal(TARGET, "ARM64_NT")
-    ) and equal(OS_TYPE, "POSIX")
-  % nothing -- no user thread support (Cygwin?)
-else
-    if FileExists(path() & "/" & TARGET & "/m3makefile")
-        include_dir (TARGET)
-    else
-        % nothing -- no user thread support
-    end
-end
+%proc FileExists(a) is
+%    return not stale (a, a)
+%end
+%
+%if (equal(TARGET, "NT386")
+%    or equal(TARGET, "I386_NT")
+%    or equal(TARGET, "AMD64_NT")
+%    or equal(TARGET, "IA64_NT")
+%    or equal(TARGET, "ARM_NT")
+%    or equal(TARGET, "ARM64_NT")
+%    ) and equal(OS_TYPE, "POSIX")
+%  % nothing -- no user thread support (Cygwin?)
+%else
+%    if FileExists(path() & "/" & TARGET & "/m3makefile")
+%        include_dir (TARGET)
+%    else
+%        % nothing -- no user thread support
+%    end
+%end
 
 if defined("M3_USE_STACK_WALKER")
   if M3_USE_STACK_WALKER and HAS_STACK_WALKER contains TARGET
