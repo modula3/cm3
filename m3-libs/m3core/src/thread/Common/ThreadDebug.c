@@ -101,11 +101,11 @@ ThreadDebug__LogEntry(const char* function, void* c, void* m, void* t, void* eve
 #define LOG(f) do { ThreadDebug__LogEntry(f, c, m, t, event, timeout); } while(0)
 
 /* scope-based trick to log NULL for functions that don't have the corresponding parameter */
-static void* const c;
-static void* const m;
-static void* const t;
-static void* const event;
-static unsigned long const timeout;
+static void* const c = 0;
+static void* const m = 0;
+static void* const t = 0;
+static void* const event = 0;
+static unsigned long const timeout = 0;
 
 #else
 
