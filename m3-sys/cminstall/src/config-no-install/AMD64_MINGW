@@ -1,0 +1,58 @@
+% Use GNU minimally, instead of Visual C++
+%   Use g++ to compile and link, targeting Windows.
+%   This could be hypothetically any host (Linux, Msys, Cygwin).
+%   use native Windows threads, gui, C runtime
+%
+%-------------------------------------------------------------------
+
+M3_BACKEND_MODE = "C"
+
+% Some of this seems redundant: AMD64 implies 64bits+little.
+% AMD64_MINGW implies AMD64 and NT.
+% WIN32 implies NT
+readonly TARGET_ENDIAN = "LITTLE"  % { "BIG" OR "LITTLE" }
+readonly TARGET_ARCH = "AMD64"
+readonly WORD_SIZE = "64BITS"      % { "32BITS" or "64BITS" }
+readonly TARGET_OS = "NT"
+readonly OS_TYPE = "WIN32"         % host vs. target confusion?
+readonly TARGET = "AMD64_MINGW"    % host vs. target confusion?
+
+M3_PARALLEL_BACK = 20              % host vs. target confusion
+
+include ("cm3cfg.common")
+
+SYSTEM_LIBS =
+{
+  "LIBC" : [ "-liphlpapi", "-lrpcrt4", "-lcomctl32", "-lws2_32", "-lgdi32", "-luser32", "-ladvapi32" ],
+  "TCP" : [ ],
+}
+
+SYSTEM_LIBORDER = [ "LIBC" ]
+
+proc compile_c(source, object, options, optimize, debug) is
+  % clang probably works too
+  exec ("@x86_64-w64-mingw32-g++", "-g", "-xc++", "-c", options, source, "-o", object)
+  return 0
+end
+
+proc m3_link(prog, options, objects, imported_libs, shared) is
+  imported_libs = ConvertLibsToStandalone(imported_libs, shared)
+  % clang probably works too
+  exec ("x86_64-w64-mingw32-g++", "-o", prog, options, arglist("@", [objects, imported_libs]))
+  return 0
+end
+
+proc skip_lib(lib, shared) is
+  % TODO (see NT.common etc.)
+  deriveds ("", [lib & ".lib"])
+  return 0
+end
+
+proc make_lib(lib, options, objects, imported_libs, shared) is
+  % TODO shared support (see NT.common etc.)
+  % arglist is to make a response file -- command line in file,
+  % which really is required due to restrictive command line length limits
+  deriveds ("", [lib & ".lib"])
+  exec("ar", "cr", lib & ".lib", arglist("@", objects))
+  return 0
+end
