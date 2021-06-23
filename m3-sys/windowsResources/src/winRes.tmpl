@@ -22,10 +22,12 @@ readonly proc WindowsResource (file) is
    if equal (OS_TYPE, "WIN32")
       if defined ("_all")
          if stale (res, src)
-            if equal (M3_BACKEND_MODE, "0") or equal (M3_BACKEND_MODE, "C")
+            % Next line is all wrong, confusing mode and host and target. This
+            % entire function should probably be in config files.
+            if (equal (M3_BACKEND_MODE, "0") or equal (M3_BACKEND_MODE, "C")) and not equal (TARGET, "AMD64_MINGW")
               exec ("rc -DWIN32 -i", path_of(""), "-fo", res, src)
             else
-              exec ("windres -DWIN32 -I", path_of(""), "-o", res, "-i", src)
+              exec ("windres -DWIN32 -I", path_of(""), "-o", res, "-i", subst_chars(src, "\\", "/"))
             end
          end
       end
