@@ -11,9 +11,11 @@ MODULE Procedure;
 
 IMPORT M3, M3ID, CG, Value, ValueRep, Type, Scope, Error, Host;
 IMPORT ProcType, Stmt, BlockStmt, Marker, Coverage, M3RT;
-IMPORT CallExpr, Token, Variable, ProcExpr, Tracer;
+IMPORT CallExpr, Token, Variable, ProcExpr, Tracer, RTIO, RTParams;
 IMPORT Scanner, Decl, ESet, ProcBody, Target, Expr, Formal, Jmpbufs;
 FROM Scanner IMPORT GetToken, Match, MatchID, cur;
+
+VAR debug := FALSE;
 
 REVEAL
   T = Value.T BRANDED OBJECT
@@ -119,6 +121,18 @@ PROCEDURE ParseDecl (READONLY att: Decl.Attributes;
     END;
     IF (cc = NIL) THEN cc := Target.DefaultCall; END;
     t.signature := ProcType.ParseSignature (id, cc);
+
+    IF debug THEN
+      RTIO.PutText ("ParseDecl id:");
+      RTIO.PutText (M3ID.ToText (id));
+      RTIO.PutText (" t:");
+      RTIO.PutRef (t);
+      RTIO.PutText (" signature:");
+      RTIO.PutRef (t.signature);
+      RTIO.PutText ("\n");
+      RTIO.Flush ();
+    END;
+
     Scope.Insert (t);
     IF (cur.token = TK.tEQUAL) THEN
       t.body := NEW (Body, self := t);
@@ -233,6 +247,18 @@ PROCEDURE DefinePredefined
     t.builtin    := (signature = NIL);
     t.assignable := assignable; 
     t.predefined := TRUE;
+
+    IF debug THEN
+      RTIO.PutText ("DefinePredefined name:");
+      RTIO.PutText (name);
+      RTIO.PutText (" t:");
+      RTIO.PutRef (t);
+      RTIO.PutText (" signature:");
+      RTIO.PutRef (t.signature);
+      RTIO.PutText ("\n");
+      RTIO.Flush ();
+    END;
+
     Scope.Insert (t);
     IF (reserved) THEN Scanner.NoteReserved (s, t) END;
   END DefinePredefined;
@@ -396,11 +422,25 @@ PROCEDURE ImportProc (p: T;  name: TEXT;  n_formals: INTEGER;
                       cg_result: CG.Type; return_typeid: CG.TypeUID;
                       return_typename: M3ID.T;
                       cc: CG.CallingConvention) =
-  VAR zz: Scope.T;  new: BOOLEAN;
+  VAR zz: Scope.T;  new: BOOLEAN; id := M3ID.Add (name);
   BEGIN
+
+    IF debug THEN
+      RTIO.PutText ("ImportProc:");
+      RTIO.PutRef (p);
+      RTIO.PutText (" name:");
+      RTIO.PutText (name);
+      RTIO.PutText (":");
+      RTIO.PutInt (id);
+      RTIO.PutText (" return_typename:");
+      RTIO.PutInt (return_typename);
+      RTIO.PutText ("\n");
+      RTIO.Flush ();
+    END;
+
     <*ASSERT p.cg_proc = NIL*>
     p.next_cg_proc := cg_procs;  cg_procs := p;
-    p.cg_proc := CG.Import_procedure (M3ID.Add (name), n_formals,
+    p.cg_proc := CG.Import_procedure (id, n_formals,
                                       cg_result, cc, new, return_typeid, return_typename);
     IF (new) THEN
       (* declare the formals *)
@@ -483,6 +523,20 @@ PROCEDURE Declarer (p: T): BOOLEAN =
     END;
     n_formals := ProcType.NFormals (p.signature);
     cconv     := ProcType.CallConv (p.signature);
+
+
+    IF debug THEN
+      RTIO.PutText ("Procedure.Declarer p:");
+      RTIO.PutRef (p);
+      RTIO.PutText (" name:");
+      RTIO.PutText (name);
+      RTIO.PutText (" p.signature:");
+      RTIO.PutRef (p.signature);
+      RTIO.PutText (" result:");
+      RTIO.PutRef (result);
+      RTIO.PutText ("\n");
+      RTIO.Flush ();
+    END;
 
     IF (p.body = NIL) THEN
       (* it's not a local procedure *)
@@ -746,4 +800,5 @@ PROCEDURE FPType (t: T): Type.T =
   END FPType;
 
 BEGIN
+  debug := RTParams.IsPresent ("m3front-debug-procedure");
 END Procedure.

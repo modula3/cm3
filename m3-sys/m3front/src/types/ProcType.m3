@@ -54,18 +54,28 @@ CONST FormalStart = Token.Set {Token.T.tVALUE, Token.T.tVAR, Token.T.tREADONLY,
 
 PROCEDURE ParseSignature (name: M3ID.T;  cc: CG.CallingConvention): Type.T =
   TYPE  TK = Token.T;
-  VAR   p: P;
+  VAR   p: P := NIL;
+
+  PROCEDURE Debug(mark: TEXT) =
   BEGIN
-    IF debug THEN
-      RTIO.PutText ("ParseSignature ");
-      IF name # 0 THEN
-        RTIO.PutText (M3ID.ToText (name));
-      END;
-      RTIO.PutText ("\n");
-      RTIO.Flush ();
+    RTIO.PutText ("ParseSignature" & mark & " name:");
+    IF name # 0 THEN
+      RTIO.PutText (M3ID.ToText (name));
+      RTIO.PutText (":");
+      RTIO.PutInt (name);
     END;
+    RTIO.PutText (" p:");
+    RTIO.PutRef (p);
+    RTIO.PutText ("\n");
+    RTIO.Flush ();
+  END Debug;
+
+  BEGIN
     p := Create (Scope.PushNew (FALSE, name));
     p.callConv := cc;
+
+    IF debug THEN Debug(":"); END;
+
     Match (TK.tLPAREN);
     WHILE (cur.token IN FormalStart) DO
       ParseFormal (p);
@@ -81,6 +91,9 @@ PROCEDURE ParseSignature (name: M3ID.T;  cc: CG.CallingConvention): Type.T =
       p.raises := ESet.ParseRaises ();
     END;
     Scope.PopNew ();
+
+    IF debug THEN Debug("^"); END;
+
     RETURN p;
   END ParseSignature;
 
@@ -411,6 +424,26 @@ PROCEDURE ResultTypename (t: Type.T): M3ID.T =
     IF p # NIL AND CGResult (p) # CG.Type.Void
       THEN Type.Typename (p.result, id);
     END;
+
+    IF debug THEN
+      RTIO.PutText ("ProcType.ResultTypename t:");
+      RTIO.PutRef (t);
+      RTIO.PutText (" p:");
+      RTIO.PutRef (p);
+      RTIO.PutText (" id:");
+      RTIO.PutInt (id);
+      IF p # NIL THEN
+        RTIO.PutText (" p.result:");
+        RTIO.PutRef (p.result);
+        RTIO.PutText (" CGResult (p):");
+        RTIO.PutInt (ORD (CGResult (p)));
+        RTIO.PutText (" void:");
+        RTIO.PutInt (ORD (CG.Type.Void));
+      END;
+      RTIO.PutText ("\n");
+      RTIO.Flush ();
+    END;
+
     RETURN id;
   END ResultTypename;
 
