@@ -1529,25 +1529,7 @@ PROCEDURE BuildProgram (t: T;  nm: M3ID.T)
     InitGlobals (t);  (* forget about the accumulated sources... *)
   END BuildProgram;
 
-PROCEDURE DoCProgram (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
-  RAISES {Quake.Error} =
-  VAR t := Self (m);  name := PopText (t);
-  BEGIN
-    IF (t.mode = MM.Build) THEN
-      Builder.BuildCPgm (name, t.units, SysLibs (t), t.build_shared, t);
-    END;
-    IF (t.mode = MM.Find) THEN FindUnits (t); END;
-    IF (t.mode = MM.Depend) THEN
-      Msg.Out (M3ID.ToText(t.build_pkg), ":");
-      Builder.EmitPkgImports (t.units);
-      done := TRUE;
-    END;
-    DeleteDeriveds (t, M3Path.ProgramName (name), NoExtension);
-    InitGlobals (t);  (* forget about the accumulated sources... *)
-  END DoCProgram;
-
-PROCEDURE DoCProgramX (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
-  RAISES {Quake.Error} =
+PROCEDURE DoCProgramCommon (m: QMachine.T; bindExport: BOOLEAN) RAISES {Quake.Error} =
   VAR t := Self (m);  name := PopText (t);  prog: TEXT;
   BEGIN
     IF (t.mode = MM.Build) THEN
@@ -1560,9 +1542,20 @@ PROCEDURE DoCProgramX (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
       done := TRUE;
     END;
     prog := M3Path.ProgramName (name);
-    BindExport (t, prog);
+    IF bindExport THEN BindExport (t, prog); END;
     DeleteDeriveds (t, prog, NoExtension);
     InitGlobals (t);  (* forget about the accumulated sources... *)
+  END DoCProgramCommon;
+
+PROCEDURE DoCProgram (m: QMachine.T;  <*UNUSED*> n_args: INTEGER) RAISES {Quake.Error} =
+  BEGIN
+    DoCProgramCommon (m, FALSE);
+  END DoCProgram;
+
+(* DoCProgram and BindExport (program) *)
+PROCEDURE DoCProgramX (m: QMachine.T;  <*UNUSED*> n_args: INTEGER) RAISES {Quake.Error} =
+  BEGIN
+    DoCProgramCommon (m, TRUE);
   END DoCProgramX;
 
 (*-------------------------------------------------------------- man pages --*)
