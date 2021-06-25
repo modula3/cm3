@@ -1481,26 +1481,28 @@ PROCEDURE DoLibrary (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
 
 (*------------------------------------------------------- program building --*)
 
-PROCEDURE DoProgram (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
-  RAISES {Quake.Error} =
+PROCEDURE DoProgramCommon (m: QMachine.T; bindExport: BOOLEAN) RAISES {Quake.Error} =
   VAR
     t    := Self (m);
     nm   := PopID (t);
     prog := M3Path.ProgramName (M3ID.ToText (nm));
   BEGIN
     BuildProgram (t, nm);
-    IF (t.mode = MM.Build) THEN  InstallDerived (t, prog);  END;
+    IF bindExport THEN
+      BindExport (t, prog);
+    ELSIF (t.mode = MM.Build) THEN
+      InstallDerived (t, prog);
+    END;
+  END DoProgramCommon;
+
+PROCEDURE DoProgram (m: QMachine.T;  <*UNUSED*> n_args: INTEGER) RAISES {Quake.Error} =
+  BEGIN
+    DoProgramCommon (m, FALSE);
   END DoProgram;
 
-PROCEDURE DoProgramX (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
-  RAISES {Quake.Error} =
-  VAR
-    t    := Self (m);
-    nm   := PopID (t);
-    prog := M3Path.ProgramName (M3ID.ToText (nm));
+PROCEDURE DoProgramX (m: QMachine.T;  <*UNUSED*> n_args: INTEGER) RAISES {Quake.Error} =
   BEGIN
-    BuildProgram (t, nm);
-    BindExport (t, prog);
+    DoProgramCommon (m, TRUE);
   END DoProgramX;
 
 PROCEDURE BuildProgram (t: T;  nm: M3ID.T)
