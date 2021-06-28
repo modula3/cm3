@@ -5942,6 +5942,8 @@ BEGIN
         self.comment("declare_procedure");
     END;
 
+    <* ASSERT level = 0 OR NOT exported *> (* nested functions cannot be exported *)
+
     ReplaceName (self, name);
     ReplaceName (self, return_typename);
 
