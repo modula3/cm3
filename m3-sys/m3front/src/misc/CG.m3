@@ -1391,6 +1391,9 @@ PROCEDURE Declare_procedure (n: Name;  n_params: INTEGER;  ret_type: Type;
   VAR p: Proc;
   BEGIN
     IF (procedures = NIL) THEN procedures := NewNameTbl() END;
+
+    <* ASSERT lev = 0 OR NOT exported *> (* nested functions cannot be exported *)
+
     p := cg.declare_procedure (n, n_params, ret_type,
                                lev, cc, exported, parent,
                                return_typeid, return_typename);
