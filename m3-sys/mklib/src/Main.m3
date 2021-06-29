@@ -77,6 +77,7 @@ TYPE
     next   : ExportDesc;
     symbol : TEXT;
     file   : FileDesc;
+    export := FALSE; (* Put in .def file or not, or only static lib. *)
   END;
 
 VAR
@@ -404,21 +405,31 @@ PROCEDURE ScanExports (f: FileDesc) =
 
     sym := o.symtab;
     WHILE (sym < o.stringtab) DO
-      IF sym.StorageClass = WinNT.IMAGE_SYM_CLASS_EXTERNAL THEN
-        IF sym.SectionNumber # WinNT.IMAGE_SYM_UNDEFINED THEN
-          V ("symbol section number: ", Fmt.Int(sym.SectionNumber));
-          AddExport (GetSymbolName (o, sym), f);
-        ELSIF sym.Value > 0 THEN
-          (* this is a BSS or COMMON symbol *)
-          V ("symbol value: ", Fmt.Int(sym.Value));
-          AddExport (GetSymbolName (o, sym), f);
-        END;
+    (* Only export functions, that are defined and external.
+     * Modula-3 codegen does not access imported data correctly.
+     * e.g
+     * link /dump /symbols C:\s\cm3\m3-libs\m3core\AMD64_NT\m3core.lib.sa | findstr _M3
+     * 007 00000000 UNDEF  notype ()    External     | RT0_M3
+     *              ^^^^^ no not defined
+     * 012 00000000 SECT3  notype ()    External     | RTHooks_M3
+     *                            ^^ yes function
+     * 03D 00000000 SECTF  notype       Static       | $unwind$RTHooks_M3
+     *                                  ^^^^^^ no not external
+     * 040 00000000 SECT10 notype       Static       | $pdata$RTHooks_M3
+     * 006 00000000 UNDEF  notype ()    External     | RTHooks_M3
+     * 007 00000000 UNDEF  notype ()    External     | RTAllocator_M3
+     *
+     * We are building a .def file and a static lib.
+     * Function-only is for .def file.
+     *)
+      IF sym.StorageClass = WinNT.IMAGE_SYM_CLASS_EXTERNAL AND sym.SectionNumber # WinNT.IMAGE_SYM_UNDEFINED THEN
+        AddExport (GetSymbolName (o, sym), f, WinNT.ISFCN (sym.Type));
       END;
       sym := sym + WinNT.IMAGE_SIZEOF_SYMBOL * (1 + sym.NumberOfAuxSymbols);
     END;
   END ScanExports;
 
-PROCEDURE AddExport (sym: TEXT;  f: FileDesc) =
+PROCEDURE AddExport (sym: TEXT;  f: FileDesc; export: BOOLEAN) =
   VAR ref: REFANY; f2: FileDesc;
   BEGIN
     IF NOT IsKeeper(CleanName(sym)) THEN
@@ -446,7 +457,7 @@ PROCEDURE AddExport (sym: TEXT;  f: FileDesc) =
       END;
       (* a new symbol *)
       EVAL export_tbl.put (sym, f);
-      exports := NEW (ExportDesc, next := exports, symbol := sym, file := f);
+      exports := NEW (ExportDesc, next := exports, symbol := sym, file := f, export := export);
       INC (n_exports);
       INC (export_len, Text.Length (sym) + 1);
     END;
@@ -779,7 +790,8 @@ PROCEDURE WriteDef () =
       FOR i := 0 TO n_exports-1 DO
         e := export_vec [export_map [i]];
         sym := CleanName (e.symbol);
-        IF IsKeeper (sym) THEN
+        <* ASSERT IsKeeper (sym) *> (* should already be checked *)
+        IF IsKeeper (sym) AND e.export THEN
           Wr.PutText (def_wr, "  ");
           Wr.PutText (def_wr, sym);
           Wr.PutText (def_wr, Wr.EOL);
