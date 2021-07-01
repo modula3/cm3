@@ -52,8 +52,10 @@ Interface  ("TlHelp32")
 % New interfaces added March 2003 by darkov
 Interface  ("WinMidi")
 Interface  ("WinCommCtrl")
-Interface  ("WinTabCon")
-Interface  ("WinListView")
+if equal(WORD_SIZE, "32BITS") % temporary hack
+  Interface ("WinTabCon")
+  Interface ("WinListView")
+end
 Interface  ("WinImageList")
 
 if IsTargetNT() or IsTargetCygwin()
