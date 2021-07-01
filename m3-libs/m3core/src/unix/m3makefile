@@ -33,6 +33,7 @@ readonly _UnixPieces = {
 % "OPENBSD" : [ "uin-len" ],
 }
 
+include_dir (OS_TYPE)
 include_dir ("Common")
 
 if _UnixPieces contains TARGET
