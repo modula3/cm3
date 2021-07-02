@@ -50,10 +50,13 @@ struct m3_sockaddr_in6
     unsigned short family;
     unsigned short port;
     unsigned int   flowinfo;
-    in6_addr       addr;
     unsigned int   scope_id;
+    // in6_addr is 16 bytes. On OSF/1 it is 8-aligned.
+    // Ideally the largest elements are first, but keep family/port first to fit other protocols.
+    unsigned int   padding_for_alignment; // 4 more bytes so addr is 8-aligned.
+    in6_addr       addr;
 };
-M3_STATIC_ASSERT(sizeof(m3_sockaddr_in6) == 28);
+M3_STATIC_ASSERT(sizeof(m3_sockaddr_in6) == 32);
 
 // Idealized Modula3 Unix socket address.
 // This is likely slightly larger than all native forms.
