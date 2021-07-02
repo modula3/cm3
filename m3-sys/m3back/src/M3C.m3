@@ -2508,7 +2508,7 @@ CONST Prefix = ARRAY OF TEXT {
 "typedef unsigned short UINT16;",
 "typedef int INT32;",
 "typedef unsigned int UINT32;",
-"#if defined(_MSC_VER) || defined(__DECC) || defined(__DECCXX) || defined(__int64)", (* matches m3core.h *)
+"#if !defined(_LONGLONG) && (defined(_MSC_VER) || defined(__DECC) || defined(__DECCXX) || defined(__int64))", (* matches m3core.h *)
 "typedef __int64 INT64;",
 "typedef unsigned __int64 UINT64;",
 "#define  INT64_(x) x##I64",
