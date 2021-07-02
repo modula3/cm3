@@ -15,7 +15,8 @@ TYPE
     kind : Kind;
   END;
 
-CONST SlashText = ARRAY Compiler.OS OF TEXT{"/", "\\"}[Compiler.ThisOS];
+(*CONST SlashText = ARRAY Compiler.OS OF TEXT{"/", "\\"}[Compiler.ThisOS];*)
+CONST SlashText = "/";
 
 TYPE
   Kind = { Unknown, 
