@@ -2568,6 +2568,10 @@ CONST Prefix = ARRAY OF TEXT {
 "# endif",
 "#endif",
 
+"#define REAL REAL",
+"#define LONGREAL LONGREAL",
+"#define EXTENDED EXTENDED",
+
 "typedef float REAL;",
 "typedef double LONGREAL;",
 "typedef /*long*/ double EXTENDED;",
