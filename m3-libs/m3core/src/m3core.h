@@ -431,7 +431,7 @@ typedef unsigned long      UINT32;
 #endif
 
 // Support pre-C99 for Windows and VMS and any system with an __int64 macro.
-#if defined(_MSC_VER) || defined(__DECC) || defined(__DECCXX) || defined(__int64)
+#if !defined(_LONGLONG) && (defined(_MSC_VER) || defined(__DECC) || defined(__DECCXX) || defined(__int64))
 typedef          __int64    INT64;
 typedef unsigned __int64   UINT64;
 #else
