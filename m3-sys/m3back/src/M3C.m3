@@ -947,7 +947,11 @@ END;
 PROCEDURE type_typedef(type: Type_t; self: T) =
 (* A reusable value for Type_Define. *)
 BEGIN
+  IF NOT self.typedef_defined.insert(type.text) THEN
+    ifndef (self, type.text);
     print(self, "/*type_typedef*/typedef " & cgtypeToText[type.cgtype] & " " & type.text & ";\n");
+    endif (self);
+  END;
 END type_typedef;
 
 PROCEDURE type_canBeDefined_true(<*UNUSED*>type: Type_CanBeDefinedTrue_t; <*UNUSED*>self: T): BOOLEAN =
