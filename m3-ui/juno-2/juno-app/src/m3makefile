@@ -55,7 +55,10 @@ end
 % Why doesn't the pkl-fonts package do this itself?
 % Why not use the shipped PklFonts? Maybe due to not shipping?
 %
-exec (".." & SL & "pkl-fonts" & SL & HOST_BUILDDIR & SL & "PklFonts > .." & SL & "pkl-fonts" & SL & BUILD_DIR & SL & "FontData.pkl")
+local command =  (".." & SL & "pkl-fonts" & SL & HOST_BUILDDIR & SL & "PklFonts > .." & SL & "pkl-fonts" & SL & BUILD_DIR & SL & "FontData.pkl")
+write (command, "\n")
+% q_exec handles forward slashes better on Windows.
+eval = q_exec (command)
 
 /* private interfaces */
 interface       ("EditorUI")
