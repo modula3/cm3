@@ -18,8 +18,11 @@ _FloatPieces = {
 
 % C99 might require Solaris 2.10 or newer for {I386,SPARC32,SPARC64}_SOLARIS.
 % AMD64_SOLARIS presumably requires Solaris 2.10.
+%
+% OSF/1 C99 support appears incomplete, but maybe can be built upon, later
 _FloatPiecesNoC99 = {
     "NT",
+    "OSF",
 }
 
 _FloatPiecesC99 = {
@@ -32,7 +35,6 @@ _FloatPiecesC99 = {
     "MINGW",
     "NETBSD",
     "OPENBSD",
-    "OSF",
     "SOLARIS",
     "VMS",
 }
