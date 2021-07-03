@@ -1,3 +1,1 @@
-override ("libm3", ROOT & "/m3-libs")
-override ("m3tk", ROOT & "/m3-tools")
-override ("mtex", ROOT & "/m3-tools")
+include(ROOT & "/m3overrides")
