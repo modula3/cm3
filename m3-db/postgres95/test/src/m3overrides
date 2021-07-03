@@ -1,2 +1,1 @@
-%override ("libm3", ROOT & "/m3-libs")
-override ("postgres95", PACKAGE_DIR & SL & ".." & SL & "..")
+include(ROOT & "/m3overrides")
