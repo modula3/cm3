@@ -920,6 +920,10 @@ Process__RegisterExitor(void (__cdecl*)(void));
 
 #define GET_PC(context) ((context)->uc_mcontext.sc_pc)
 
+#if defined(__alpha__)
+#define M3_HOST "ALPHA_OSF"
+#endif
+
 #elif defined(__OpenBSD__)
 
 #if defined(__amd64)
