@@ -190,6 +190,9 @@ MxConfigC__HOST(void)
     if (solaris)
         uname_system = "SOLARIS";
 
+    else if (osf)
+        uname_system = "OSF"; // instead of OSF1 with the 1
+
     // AMD64_SOLARIS is i86pc; we must use local sizeof(void*).
     if (x86 && size32) // x86 => i386
     {

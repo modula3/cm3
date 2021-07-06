@@ -71,7 +71,7 @@ m3back_optimize = ""
 
 proc compile_c (source, object, options, optimize, debug) is
   configure_c_compiler()
-  return try_exec ("@" & SYSTEM_CC, options, "-c", source)
+  return try_exec ("@" & SYSTEM_CC, options, "-c", source, "-o", object)
 end
 
 %---------------------------------------------------------------- assembler ---
