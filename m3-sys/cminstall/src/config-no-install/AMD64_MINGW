@@ -37,6 +37,8 @@ end
 
 proc m3_link(prog, options, objects, imported_libs, shared) is
   imported_libs = ConvertLibsToStandalone(imported_libs, shared)
+  imported_libs = escape(subst_chars(imported_libs, "\\", "/"))
+  objects       = escape(subst_chars(objects, "\\", "/"))
   % clang probably works too
   exec ("x86_64-w64-mingw32-g++", "-o", prog, options, arglist("@", [objects, imported_libs]))
   return 0
