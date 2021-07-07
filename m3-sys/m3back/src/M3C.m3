@@ -2551,8 +2551,10 @@ CONST Prefix = ARRAY OF TEXT {
 "#ifndef alloca",
 "# ifdef __GNUC__",
 "#  define alloca __builtin_alloca",
-"# elif defined(__DECC) || defined(__DECCXX)",
-"#  define alloca(x) __ALLOCA(x)",
+(* This was thought to handle VMS but has never been tested.
+"# elif !defined(__osf__) && (defined(__DECC) || defined(__DECCXX))",
+"#  define alloca(x) __ALLOCA(x)", VMS?
+*)
 "# elif defined(_MSC_VER)",
 
 "#ifdef __cplusplus",
@@ -2567,7 +2569,7 @@ CONST Prefix = ARRAY OF TEXT {
 
 "#  define alloca _alloca",
 "# else",
-(* This is verified correct for Solaris, documented correct for AIX. TODO: Irix, HP-UX, etc. *)
+(* This is verified correct for Solaris, Tru64/OSF1, documented correct for AIX. TODO: Irix, HP-UX, etc. *)
 "#  include <alloca.h>",
 "# endif",
 "#endif",
