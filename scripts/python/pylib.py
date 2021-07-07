@@ -386,7 +386,8 @@ def TargetOnlyHasCBackend(a):
     if a == "i386_nt":
         return false
     return (a.endswith("_nt") or a.startswith("arm") or a.find("riscv") != -1
-        or a.find("solaris") != -1 or a.startswith("sol")
+        or a.find("solaris") != -1 or a.startswith("sol") # gcc backend does work
+        or a.find("alpha") or a.find("osf") # gcc backend does work
         or a.find("mingw") != -1 or a.find("cygwin") != -1)
 
 _PossibleCm3Flags = ["boot", "keep", "override", "commands", "verbose", "why", "debug", "trace"]
@@ -1189,7 +1190,7 @@ def Boot():
         CCompiler = "./c_compiler"
         CopyFile("./c_compiler", BootDir)
     elif osf:
-        CCompiler = "/usr/bin/c++"
+        CCompiler = "cc" # cxx, gcc, g++ all work
         CCompilerFlags = " -g -pthread "
     else:
         # gcc and other platforms

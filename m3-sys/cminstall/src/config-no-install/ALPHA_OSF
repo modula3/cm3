@@ -13,6 +13,8 @@ readonly WORD_SIZE    = "64BITS"
 readonly TARGET_ENDIAN = "LITTLE" % { "BIG" OR "LITTLE" }
 readonly GNU_PLATFORM = "alpha-dec-osf5.1"
 
+M3_BACKEND_MODE = "C" % Gcc backend does work but default to C.
+
 %------------------------------------------------ external system libraries ---
 % SYSTEM_LIBS provides a mapping from Modula-3 names for the common
 % external libraries to site-dependent information about how they
