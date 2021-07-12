@@ -1190,8 +1190,13 @@ def Boot():
         CCompiler = "./c_compiler"
         CopyFile("./c_compiler", BootDir)
     elif osf:
-        CCompiler = "cc" # cxx, gcc, g++ all work
-        CCompilerFlags = " -g -pthread "
+        # There is a problem on my install such that linking with cxx fails, unless I use oldcxx.
+        # This really should be fixed otherwise.
+        # TODO separate compile from link
+        CCompiler = "/usr/bin/cxx" # g++ should also work all work, but change -ieee to -mieee
+        CCompilerFlags = " -g -pthread -x cxx -c99 -fprm d "
+        #CCompiler = "g++"
+        #CCompilerFlags = " -g -pthread -mfp-rounding-mode=d "
     else:
         # gcc and other platforms
         CCompiler = {
@@ -1248,6 +1253,8 @@ def Boot():
     # http://www.openldap.org/lists/openldap-bugs/200006/msg00070.html
     # http://www.gnu.org/software/autoconf-archive/ax_pthread.html#ax_pthread
 
+    # TODO: All this logic should be in the Makefile so we can make one distribution.
+
     if darwin:
         pass
     elif mingw:
@@ -1257,7 +1264,9 @@ def Boot():
     elif hpux:
         Link = Link + " -lrt -lm -lpthread -pthread "
     elif osf:
-        Link = Link + " -lrt -lm -pthread "
+        # There is a problem on my install such that linking with cxx fails, unless I use oldcxx.
+        # This really should be fixed otherwise.
+        Link = Link + " -lrt -lm -pthread -oldcxx "
     elif interix:
         Link = Link + " -lm -pthread "
     elif nt:

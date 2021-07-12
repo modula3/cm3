@@ -45,8 +45,12 @@ SYSTEM_LIBORDER = [ "OPENGL", "DECPEX", "MOTIF", "X11", "TCP", "ODBC",
 %---------------------------------------------------------- system programs ---
 
 % -fprm d: floating point rounding mode dynamic
-SYSTEM_CC = "/usr/bin/cc -fprm d -O3 -g3 -c99 -pthread -readonly_strings -ieee_with_no_inexact -error_unresolved "
-% gcc near equivalent: SYSTEM_CC = "gcc -mieee -mfp-rounding-mode=d -pthread "
+SYSTEM_CC = "/usr/bin/cxx -x cxx -fprm d -O3 -g3 -c99 -pthread -readonly_strings -ieee_with_no_inexact -error_unresolved "
+% gcc near equivalent: SYSTEM_CC = "g++ -xc++ -mieee -mfp-rounding-mode=d -pthread "
+
+% There is a problem on my install such that linking with cxx fails, unless I use oldcxx.
+% This really should be fixed otherwise.
+LINK_OLDCXX = " -oldcxx "
 
 readonly SYSTEM_AR  = "/usr/bin/ar"
 readonly SYSTEM_ASM = "/usr/bin/as -nocpp -g -oldas -c -O0" % same as gcc
@@ -93,7 +97,7 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
 
   if shared
     % then, build the shared library
-    ret_code = try_exec ("@" & SYSTEM_CC, "-shared -o",
+    ret_code = try_exec ("@" & SYSTEM_CC, LINK_OLDCXX, "-shared -o",
                          lib_so, "-all", lib_a, "-none", imported_libs)
     if not equal (ret_code, 0) return ret_code end
   end
@@ -129,7 +133,7 @@ end
 
 proc m3_link (prog, options, objects, imported_libs, shared) is
   local linker = [ "@" & SYSTEM_CC ]
-  local args = [ "-o", prog, options, objects, imported_libs ]  
+  local args = [ LINK_OLDCXX, "-o", prog, options, objects, imported_libs ]
   if equal($M3_PORTABLE_RUN_PATH, "")
     args += [ "-rpath", LIB_USE ]
   end
