@@ -44,13 +44,7 @@ SYSTEM_LIBORDER = [ "OPENGL", "DECPEX", "MOTIF", "X11", "TCP", "ODBC",
 
 %---------------------------------------------------------- system programs ---
 
-proc configure_c_compiler() is
-  if defined("SYSTEM_CC")
-    return
-  end
-  SYSTEM_CC = "/usr/bin/cc -O3 -g3 -pthread -readonly_strings"
-            & " -ieee_with_no_inexact -error_unresolved "
-end
+SYSTEM_CC = "/usr/bin/cc -O3 -g3 -pthread -readonly_strings -ieee_with_no_inexact -error_unresolved "
 readonly SYSTEM_AR  = "/usr/bin/ar"
 readonly SYSTEM_ASM = "/usr/bin/as -nocpp -g -oldas -c -O0" % same as gcc
 
@@ -67,7 +61,6 @@ m3back_optimize = ""
 % "compile_c" is called to compile C source files.
 
 proc compile_c (source, object, options, optimize, debug) is
-  configure_c_compiler()
   return try_exec ("@" & SYSTEM_CC, options, "-c", source, "-o", object)
 end
 
@@ -97,7 +90,6 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
 
   if shared
     % then, build the shared library
-    configure_c_compiler()
     ret_code = try_exec ("@" & SYSTEM_CC, "-shared -o",
                          lib_so, "-all", lib_a, "-none", imported_libs)
     if not equal (ret_code, 0) return ret_code end
@@ -133,7 +125,6 @@ end
 % "m3_link" is called to produce a final executable.
 
 proc m3_link (prog, options, objects, imported_libs, shared) is
-  configure_c_compiler()
   local linker = [ "@" & SYSTEM_CC ]
   local args = [ "-o", prog, options, objects, imported_libs ]  
   if equal($M3_PORTABLE_RUN_PATH, "")
