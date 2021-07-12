@@ -50,11 +50,6 @@ proc configure_c_compiler() is
   end
   SYSTEM_CC = "/usr/bin/cc -O3 -g3 -pthread -readonly_strings"
             & " -ieee_with_no_inexact -error_unresolved "
-  if IsTargetOSF1v4()
-    SYSTEM_CC = SYSTEM_CC & "-Wl,-B,symbolic"
-  else
-    SYSTEM_CC = SYSTEM_CC & "-B symbolic"
-  end
 end
 readonly SYSTEM_AR  = "/usr/bin/ar"
 readonly SYSTEM_ASM = "/usr/bin/as -nocpp -g -oldas -c -O0" % same as gcc
