@@ -45,7 +45,8 @@ SYSTEM_LIBORDER = [ "OPENGL", "DECPEX", "MOTIF", "X11", "TCP", "ODBC",
 %---------------------------------------------------------- system programs ---
 
 % -fprm d: floating point rounding mode dynamic
-SYSTEM_CC = "/usr/bin/cxx -x cxx -fprm d -O3 -g3 -c99 -pthread -readonly_strings -ieee_with_no_inexact -error_unresolved "
+% -msg_display_tag: display the short strings used to disable warnings
+SYSTEM_CC = "/usr/bin/cxx -x cxx -fprm d -O3 -g3 -c99 -pthread -readonly_strings -ieee_with_no_inexact -error_unresolved -msg_display_tag"
 % gcc near equivalent: SYSTEM_CC = "g++ -xc++ -mieee -mfp-rounding-mode=d -pthread "
 
 % There is a problem on my install such that linking with cxx fails, unless I use oldcxx.
