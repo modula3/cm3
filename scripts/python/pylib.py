@@ -1189,14 +1189,15 @@ def Boot():
         #CCompilerFlags = " -g -mt -xldscope=symbolic "
         CCompiler = "./c_compiler"
         CopyFile("./c_compiler", BootDir)
+        CCompilerOut = " -o $@ "
     elif osf:
         # There is a problem on my install such that linking with cxx fails, unless I use oldcxx.
         # This really should be fixed otherwise.
-        # TODO separate compile from link
         CCompiler = "/usr/bin/cxx" # g++ should also work all work, but change -ieee to -mieee
         CCompilerFlags = " -g -pthread -x cxx -c99 -fprm d "
         #CCompiler = "g++"
         #CCompilerFlags = " -g -pthread -mfp-rounding-mode=d "
+        CCompilerOut = " -o $@ "
     else:
         # gcc and other platforms
         CCompiler = {
@@ -1216,6 +1217,9 @@ def Boot():
 
         CCompilerOut = {
             "AMD64_NT"      : "-Fo./",
+            "I386_NT"       : "-Fo./",
+            "ARM32_NT"      : "-Fo./",
+            "ARM64_NT"      : "-Fo./",
             }.get(Config) or "-o $@"
 
     CCompilerFlags = CCompilerFlags + ({
@@ -1538,7 +1542,7 @@ def Boot():
 
     maino_ext = "o"
     if CBackend:
-        maino_ext = "m3.c"
+        maino_ext = "m3.o"
     elif AssembleOnTarget:
         for pkg in main_packages:
             Makefile.write(pkg + ".d/Main.o: " + pkg + ".d/" + mainS + NL)
