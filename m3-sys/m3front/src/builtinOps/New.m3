@@ -286,9 +286,13 @@ PROCEDURE GenOpenArray (t: Type.T;  traced: BOOLEAN;
                                                 RunTyme.Hook.NewTracedArray };
   VAR
     n := LAST (ce.args^); (* number of open dimensions *)
+    sizesAlign := MAX(Target.Address.align, Target.Integer.align);
     sizes := CG.Declare_temp (Target.Address.pack + (n+1)*Target.Integer.pack,
-                              Target.Address.align, CG.Type.Struct,
-                              in_memory := TRUE);
+(*TODO:                       ^RefType.InitTypecell and possibly other places
+                               handle possible alignment padding between the
+                               elements-address and the shape, in case Integer
+                               has higher alignment than Address. *)
+                              sizesAlign, CG.Type.Struct, in_memory := TRUE);
     offset: INTEGER;
     proc := RunTyme.LookUpProc (PHook [traced]);
   BEGIN
@@ -314,10 +318,10 @@ PROCEDURE GenOpenArray (t: Type.T;  traced: BOOLEAN;
     IF Target.DefaultCall.args_left_to_right THEN
       Type.LoadInfo (t, -1);
       CG.Pop_param (CG.Type.Addr);
-      CG.Load_addr_of (sizes, 0, Target.Integer.align);
+      CG.Load_addr_of (sizes, 0, sizesAlign);
       CG.Pop_param (CG.Type.Addr);
     ELSE
-      CG.Load_addr_of (sizes, 0, Target.Integer.align);
+      CG.Load_addr_of (sizes, 0, sizesAlign);
       CG.Pop_param (CG.Type.Addr);
       Type.LoadInfo (t, -1);
       CG.Pop_param (CG.Type.Addr);
@@ -394,7 +398,7 @@ PROCEDURE GenObject (t: Type.T;  ce: CallExpr.T) =
         Field.Split (v, field);
         AssignStmt.PrepForEmit (field.type, value, initializing := TRUE);
         CG.Push (ce.tmp);
-        ObjectType.GetFieldOffset (visible, obj_offset, obj_align);
+        ObjectType.GetFieldsOffsetAndAlign (visible, obj_offset, obj_align);
         IF (obj_offset >= 0) THEN
           INC (field.offset, obj_offset);
         ELSE

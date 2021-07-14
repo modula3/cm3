@@ -263,7 +263,7 @@ PROCEDURE Alignment (t: T): Type.BitAlignT =
 *)
 
   BEGIN
-    IF t = NIL THEN RETURN Target.MaxAlign; END;
+    IF t = NIL THEN RETURN Target.Word8.align; END;
     IF t.align = Target.UnknownAlign THEN
       (* Uninitialized. Compute and cache it. *)
       t.align := t.exprAlign()
@@ -284,7 +284,7 @@ PROCEDURE ExprAlignDefault (e: T): Type.BitAlignT =
       EVAL Type.CheckInfo (type, info);
       RETURN info.alignment;
     END; 
-    RETURN Target.MaxAlign; 
+    RETURN Target.Word8.align; 
   END ExprAlignDefault;
 
 PROCEDURE ExprAddrAlign (<*UNUSED*> e: T): Type.BitAlignT =

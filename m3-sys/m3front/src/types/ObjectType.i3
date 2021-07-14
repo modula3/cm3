@@ -17,6 +17,7 @@ PROCEDURE New   (super: Type.T;  traced: BOOLEAN;  brand: Brand.T;
                                         fields, methods: Scope.T): Type.T;
 
 PROCEDURE Is (t: Type.T): BOOLEAN;
+(* Including (opaque type or revelation) of an object type. *)
 
 PROCEDURE IsBranded (t: Type.T): BOOLEAN;
 
@@ -27,7 +28,7 @@ PROCEDURE MethodOffset (t: Type.T): INTEGER;
 (* Returns the bit offset of the methods defined in object type t if
    all of its parents are visible, otherwise returns -1 *)
 
-PROCEDURE GetFieldOffset (t: Type.T;  VAR offset, align: INTEGER);
+PROCEDURE GetFieldsOffsetAndAlign (t: Type.T;  VAR offset, align: INTEGER);
 (* Sets 'align' to the alignment of 't's fields.  If all the parents of 't'
    are visible, sets 'offset' to the bit offset of 't's fields,
    otherwise sets 'offset' to -1. *)
