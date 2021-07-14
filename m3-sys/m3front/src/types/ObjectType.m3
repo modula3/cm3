@@ -55,6 +55,7 @@ VAR
   ROOT_ID: INTEGER := 0;
   UROOT_ID: INTEGER := 0;
 
+(*EXPORTED*)
 PROCEDURE Parse (sup: Type.T;  traced: BOOLEAN;  brand: Brand.T): Type.T =
   TYPE TK = Token.T;
   VAR p: P;
@@ -119,13 +120,16 @@ PROCEDURE ParseMethodList (p: P;  overrides := FALSE): INTEGER =
 
       IF overrides THEN
         IF info.signature # NIL THEN
-          Error.ID (info.name, "overrides cannot have a signature");
+          Error.ID
+            (info.name, "overrides cannot have a signature (2.2.9).");
         ELSIF info.dfault = NIL THEN
-          Error.ID (info.name, "missing default value in method override");
+          Error.ID
+            (info.name, "missing default value in method override (2.2.9).");
         END;
       ELSE 
         IF info.signature = NIL THEN
-          Error.ID (info.name, "missing method signature");
+          Error.ID
+            (info.name, "missing method signature (2.2.9).");
         END;
       END;
       
@@ -139,6 +143,7 @@ PROCEDURE ParseMethodList (p: P;  overrides := FALSE): INTEGER =
     RETURN info.offset;
   END ParseMethodList;
 
+(*EXPORTED*)
 PROCEDURE New (super: Type.T;  traced: BOOLEAN;  brand: Brand.T;
                                             fields, methods: Scope.T): Type.T =
   VAR p: P;
@@ -168,7 +173,10 @@ PROCEDURE New (super: Type.T;  traced: BOOLEAN;  brand: Brand.T;
     RETURN p;
   END New;
 
+(*EXPORTED*)
 PROCEDURE Is (t: Type.T): BOOLEAN =
+(* Including (opaque type or revelation) of an object type. *)
+
   VAR m: Revelation.TypeList;  u: Type.T;  x: Revelation.TypeSet;
   BEGIN
     IF (t = NIL) THEN RETURN FALSE END;
@@ -217,6 +225,7 @@ PROCEDURE Is (t: Type.T): BOOLEAN =
     RETURN FALSE;
   END Is;
 
+(*EXPORTED*)
 PROCEDURE IsBranded (t: Type.T): BOOLEAN =
   VAR info: Type.Info;
   BEGIN
@@ -242,6 +251,7 @@ PROCEDURE IsBranded (t: Type.T): BOOLEAN =
     RETURN FALSE;
   END IsBranded;
 
+(*EXPORTED*)
 PROCEDURE Super (t: Type.T): Type.T =
   VAR info: Type.Info;
   BEGIN
@@ -251,6 +261,7 @@ PROCEDURE Super (t: Type.T): Type.T =
     RETURN NARROW (t, P).superType;
   END Super;
 
+(*EXPORTED*)
 PROCEDURE LookUp (t: Type.T; id: M3ID.T;
                            VAR value: Value.T;  VAR visible: Type.T): BOOLEAN =
   VAR p: P;  v: Value.T;  z: Type.T;  info: Type.Info;  x: Revelation.TypeSet;
@@ -315,7 +326,7 @@ PROCEDURE PrimaryMethodDeclaration (p: P;  v: Value.T): P =
     Method.SplitX (v, method);
     IF NOT method.override THEN RETURN p END;
     IF p.inPrimLookUp THEN
-      Error.Msg ("illegal recursive supertype");
+      Error.Msg ("illegal recursive supertype (2.4.8).");
     ELSE
       p.inPrimLookUp := TRUE;
       IF LookUp (p.superType, method.name, obj, visible) THEN
@@ -327,6 +338,7 @@ PROCEDURE PrimaryMethodDeclaration (p: P;  v: Value.T): P =
     RETURN NIL;
   END PrimaryMethodDeclaration;
 
+(*Externally dispatched-to.*)
 PROCEDURE Check (p: P) =
   VAR
     super    : Type.T;
@@ -340,29 +352,42 @@ PROCEDURE Check (p: P) =
     super_info : Type.Info;
   BEGIN
     hash := 0;
+    p.info.size      := Target.Address.size;
+    p.info.min_size  := Target.Address.size;
+    p.info.alignment := Target.Address.align;
+    p.info.addr_align:= Target.Word8.align;
+    p.info.mem_type  := CG.Type.Addr;
+    p.info.stk_type  := CG.Type.Addr;
+    p.info.class     := Type.Class.Object;
+    p.info.isEmpty   := FALSE;
+    p.info.isSolid   := TRUE;
+    p.info.hash      := hash;
 
     (* check out my super type *)
     super := p.superType;
-    IF (super # NIL) THEN
-      (* some super type specified *)
+    IF super = NIL THEN (* p is ROOT or UNTRACED ROOT *)
+      p.info.addr_align := Target.Address.align;
+    ELSE (* some super type specified *)
       super := Type.CheckInfo (super, super_info);
       p.superType := super;
       IF Is (super) THEN
         (* super type is an object type *)
         p.isTraced := super_info.isTraced;
+        p.info.addr_align := super_info.addr_align;
         hash := Word.Times (super_info.hash, 37);
         IF (super = p) THEN
-          Error.Msg ("illegal recursive supertype");
+          Error.Msg ("illegal recursive supertype (2.4.8).");
           super := NIL;
           p.superType := NIL;
         END;
       ELSE
         (* super type isn't an object! *)
-        Error.Msg ("super type must be an object type");
+        Error.Msg ("super type must be an object type (2.2.9).");
         p.superType := NIL;
         p.isTraced  := super_info.isTraced;
       END;
     END;
+    p.info.isTraced  := p.isTraced;
 
     Brand.Check (p.brand, p, hash, cs);
 
@@ -373,7 +398,7 @@ PROCEDURE Check (p: P) =
       hash := Word.Plus (Word.Times (hash, 23), M3ID.Hash (name));
       hash := Word.Plus (Word.Times (hash, 23), n);
       IF (Scope.LookUp (p.methods, name, TRUE) # NIL) THEN
-        Error.ID (name, "field and method with the same name");
+        Error.ID (name, "field and method with the same name (2.2.9).");
       END;
       o := o.next;  INC (n);
     END;
@@ -386,18 +411,6 @@ PROCEDURE Check (p: P) =
       hash := Word.Plus (Word.Times (hash, 23), 617);
       o := o.next;
     END;
-
-    p.info.size      := Target.Address.size;
-    p.info.min_size  := Target.Address.size;
-    p.info.alignment := Target.Address.align;
-    p.info.addr_align:= Target.Address.align;
-    p.info.mem_type  := CG.Type.Addr;
-    p.info.stk_type  := CG.Type.Addr;
-    p.info.class     := Type.Class.Object;
-    p.info.isTraced  := p.isTraced;
-    p.info.isEmpty   := FALSE;
-    p.info.isSolid   := TRUE;
-    p.info.hash      := hash;
 
     INC (Type.recursionDepth); (*------------------------------------*)
     p.checked := TRUE;
@@ -412,7 +425,8 @@ PROCEDURE Check (p: P) =
             Method.NoteOverride (o, v);
           ELSE
             Scanner.offset := o.origin;
-            Error.ID (method.name, "no method to override in supertype");
+            Error.ID
+              (method.name, "no method to override in supertype (2.2.9).");
           END;
         END;
         o := o.next;
@@ -443,6 +457,7 @@ PROCEDURE CheckTracedFields (p: P) =
     END;
   END CheckTracedFields;
 
+(*Externally dispatched-to.*)
 PROCEDURE Compiler (p: P) =
   VAR
     fields, methods, v: Value.T;
@@ -514,6 +529,7 @@ PROCEDURE GenOverrides (methods: Value.T;  declare: BOOLEAN) =
     END;
   END GenOverrides;
 
+(*EXPORTED*)
 PROCEDURE NoteOffsets (t: Type.T;  pp: Type.T) =
   VAR p := Confirm (pp);
   BEGIN
@@ -524,12 +540,14 @@ PROCEDURE NoteOffsets (t: Type.T;  pp: Type.T) =
                                 p.fieldSize, p.fieldAlign, p.methodSize);
   END NoteOffsets;
 
+(*EXPORTED*)
 PROCEDURE NoteRefName (t: Type.T;  name: TEXT) =
   VAR p := Confirm (t);
   BEGIN
     IF (p # NIL) THEN p.user_name := name; END;
   END NoteRefName;
 
+(*EXPORTED*)
 PROCEDURE InitTypecell (t: Type.T;  offset, prev: INTEGER) =
   VAR
     p         : P := t;
@@ -561,8 +579,12 @@ PROCEDURE InitTypecell (t: Type.T;  offset, prev: INTEGER) =
     END;
     CG.Init_intt (offset + M3RT.TC_traced, 8, ORD (p.isTraced), FALSE);
     CG.Init_intt (offset + M3RT.TC_kind, 8, ORD (M3RT.TypeKind.Obj), FALSE);
-    CG.Init_intt (offset + M3RT.TC_dataAlignment, 8, p.fieldAlign DIV Target.Byte, FALSE);
-    CG.Init_intt (offset + M3RT.TC_dataSize, isz, p.fieldSize DIV Target.Byte, FALSE);
+    CG.Init_intt
+      (offset + M3RT.TC_dataAlignment, 8, p.info.addr_align DIV Target.Byte, FALSE);
+    (* ^V See comments in RT0.i3, regarding dataAlignment and dataSize. *)
+
+    CG.Init_intt
+      (offset + M3RT.TC_dataSize, isz, p.fieldSize DIV Target.Byte, FALSE);
     IF (type_map >= 0) THEN
       CG.Init_var (offset + M3RT.TC_type_map, consts, type_map, FALSE);
     END;
@@ -600,7 +622,7 @@ PROCEDURE InitTypecell (t: Type.T;  offset, prev: INTEGER) =
   END InitTypecell;
 
 PROCEDURE GenTypeMap (p: P;  fields: Value.T;  refs_only: BOOLEAN): INTEGER =
-  (* generate my "TypeMap" (called by the garbage collector) *)
+  (* generate my "TypeMap" (used by the garbage collector) *)
   VAR field: Field.Info;
   BEGIN
     TipeMap.Start ();
@@ -615,7 +637,7 @@ PROCEDURE GenTypeMap (p: P;  fields: Value.T;  refs_only: BOOLEAN): INTEGER =
   END GenTypeMap;
 
 PROCEDURE GenTypeDesc (p: P;  fields: Value.T): INTEGER =
-  (* generate my "TypeDesc" (called by the pickle machinery) *)
+  (* generate my "TypeDesc" (used by the pickle machinery) *)
   VAR field: Field.Info;  nFields := 0;  v := fields;
   BEGIN
     IF NOT p.isTraced THEN RETURN -1 END;
@@ -824,7 +846,7 @@ PROCEDURE GenInitProc (p: P): CG.Proc =
         CG.Push (ptr);
         CG.Boost_addr_alignment (p.fieldAlign);
         CG.Add_offset (field.offset);
-        fieldExprAlign := CG.GCD (p.fieldAlign, field.offset MOD Target.Word.size);
+        fieldExprAlign := CG.GCD (p.fieldAlign, field.offset);
         AssignStmt.DoEmit (field.type, field.dfault, fieldExprAlign, initializing := TRUE);
       END;
       v := v.next;
@@ -916,6 +938,7 @@ PROCEDURE GenLinkProc (p: P;  defaults: INTEGER): CG.Proc =
     RETURN proc;
   END GenLinkProc;
 
+(*Externally dispatched-to.*)
 PROCEDURE EqualChk (a: P;  t: Type.T;  x: Type.Assumption): BOOLEAN =
   (* Note: it is important to do the surface syntax checks before
      checking the types of the fields and methods.  Otherwise, we will
@@ -955,6 +978,7 @@ PROCEDURE EqualChk (a: P;  t: Type.T;  x: Type.Assumption): BOOLEAN =
     RETURN TRUE;
   END EqualChk;
 
+(*Externally dispatched-to.*)
 PROCEDURE Subtyper (a: P;  t: Type.T): BOOLEAN =
   VAR root := Reff.T;
   BEGIN
@@ -964,11 +988,13 @@ PROCEDURE Subtyper (a: P;  t: Type.T): BOOLEAN =
         OR ((a.superType # NIL) AND Type.IsSubtype (a.superType, t));
   END Subtyper;
 
+(*Externally dispatched-to.*)
 PROCEDURE InitCoster (<*UNUSED*> p: P;  zeroed: BOOLEAN): INTEGER =
   BEGIN
     IF (zeroed) THEN RETURN 0 ELSE RETURN 1 END;
   END InitCoster;
 
+(*Externally dispatched-to.*)
 PROCEDURE FPrinter (p: P;  VAR x: M3.FPInfo) =
   VAR v: Value.T;  n: INTEGER;
   BEGIN
@@ -1008,6 +1034,7 @@ PROCEDURE FPrinter (p: P;  VAR x: M3.FPInfo) =
     END;
   END FPrinter;
 
+(*EXPORTED*)
 PROCEDURE MethodOffset (t: Type.T): INTEGER =
   VAR p := Confirm (t);
   BEGIN
@@ -1016,7 +1043,8 @@ PROCEDURE MethodOffset (t: Type.T): INTEGER =
     RETURN p.methodOffset;
   END MethodOffset;
 
-PROCEDURE GetFieldOffset (t: Type.T;  VAR offset, align: INTEGER) =
+(*EXPORTED*)
+PROCEDURE GetFieldsOffsetAndAlign (t: Type.T;  VAR offset, align: INTEGER) =
   VAR p := Confirm (t);
   BEGIN
     IF (p = NIL) THEN
@@ -1027,8 +1055,9 @@ PROCEDURE GetFieldOffset (t: Type.T;  VAR offset, align: INTEGER) =
       offset := p.fieldOffset;
       align  := p.fieldAlign;
     END;
-  END GetFieldOffset;
+  END GetFieldsOffsetAndAlign;
 
+(*EXPORTED*)
 PROCEDURE FieldAlignment (t: Type.T): INTEGER =
   VAR p := Confirm (t);
   BEGIN
@@ -1054,15 +1083,16 @@ PROCEDURE GetSizes (p: P) =
   BEGIN
     IF (p.fieldSize >= 0) THEN (* already done *) RETURN END;
 
-    IF (p.superType = NIL) THEN  (* p is ROOT or UNTRACED ROOT *)
+    IF (p.superType = NIL) THEN (* p is ROOT or UNTRACED ROOT *)
       p.fieldSize    := 0;
       p.fieldAlign   := Target.Address.align;
     ELSE
       (* compute the field sizes and alignments *)
       RecordType.SizeAndAlignment
         ( p.fields, p.info.lazyAligned, (*OUT*) min_size, (*OUT*) p.fieldSize,
-          (*OUT*)p.fieldAlign, (*OUT*) solid
+          (*OUT*) p.fieldAlign, (*OUT*) solid
         );
+      p.info.addr_align := MAX (p.info.addr_align, p.fieldAlign);
 
       (* round the object's size up to at least the size of a heap header *)
       p.fieldSize := RecordType.RoundUp (p.fieldSize, Target.Address.size);

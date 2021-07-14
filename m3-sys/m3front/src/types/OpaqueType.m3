@@ -91,6 +91,9 @@ PROCEDURE Check (p: P) =
     p.info.min_size  := Target.Address.size;
     p.info.alignment := Target.Address.align;
     p.info.addr_align:= Target.Address.align;
+      (* ^The revelations are not generally available in this compilation.
+         One of them could require MaxAlign, which would exceed Address.align
+         on a 32-bit target, but we can't assume that.*)
     p.info.mem_type  := CG.Type.Addr;
     p.info.stk_type  := CG.Type.Addr;
     p.info.class     := Type.Class.Opaque;

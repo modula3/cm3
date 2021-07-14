@@ -128,9 +128,11 @@ PROCEDURE Split (t: Type.T;  VAR target: Type.T): BOOLEAN =
 PROCEDURE Check (p: P) =
   VAR
     targetType: Type.T;
+    targetAlign : INTEGER;
     hash: INTEGER := 839;
-    info: Type.Info;
+    targetInfo: Type.Info;
     cs := M3.OuterCheckState;
+    targetIsTraced : BOOLEAN;
   BEGIN
     Brand.Check (p.brand, p, hash, cs);
 
@@ -153,20 +155,24 @@ PROCEDURE Check (p: P) =
     p.info.isSolid   := TRUE;
     p.info.hash      := hash;
 
+    targetAlign := Target.Word8.align;
+    targetIsTraced := FALSE;
     INC (Type.recursionDepth); (*------------------------------------*)
       p.checked := TRUE;
       IF (p.target # NIL) THEN
-        p.target := Type.CheckInfo (p.target, info);
+        p.target := Type.CheckInfo (p.target, targetInfo);
+        targetAlign := targetInfo.alignment;
+        targetIsTraced := targetInfo.isTraced;
       END;
     DEC (Type.recursionDepth); (*------------------------------------*)
 
-    IF p.target = NIL THEN p.info.addr_align := Target.Word8.align;
-    ELSE 
-      p.info.addr_align:= p.target.info.alignment;
-    END;
+    p.info.addr_align := MAX (targetAlign, Target.Word8.align);
+      (* ^Target's type-alignment could be < 8, if the target has
+          packed elements or fields, but a pointer can point only
+          to a whole byte. *)
     
-    IF (NOT p.isTraced) AND (info.isTraced) AND Module.IsSafe() THEN
-      Error.Msg ("unsafe: untraced ref type to a traced type");
+    IF (NOT p.isTraced) AND (targetIsTraced) AND Module.IsSafe() THEN
+      Error.Msg ("Unsafe: untraced ref type to a traced type (2.2.7).");
     END;
  (* EVAL Type.StraddleFreeScalars (p.target, 0, IsEltOrField := FALSE); *)
 (* CHECK: ^Why is this here? rodney.m.bates@acm.org.
@@ -207,57 +213,53 @@ PROCEDURE InitTypecell (t: Type.T;  offset, prev: INTEGER) =
   TYPE TKind = M3RT.TypeKind;
   CONST Kind = ARRAY BOOLEAN OF TKind { TKind.Ref, TKind.Array};
   VAR
-    p         : P := t;
-    brand     := Brand.Compile (p.brand);
-    type_map  := GenTypeMap (p, refs_only := FALSE);
-    gc_map    := GenTypeMap (p, refs_only := TRUE);
-    type_desc := GenTypeDesc (p);
-    initProc  := GenInitProc (p);
-    dims      : INTEGER;
-    objSize   : INTEGER;
-    objAlign  : INTEGER;
-    elemSize  : INTEGER;
-    ta        : Type.T;
-    isz       : INTEGER := Target.Integer.size;
-    name_offs : INTEGER := 0;
-    fp        := TypeFP.FromType (p);
-    globals   := Module.GlobalData (is_const := FALSE);
-    consts    := Module.GlobalData (is_const := TRUE);
-    objInfo   : Type.Info;
+    p           : P := t;
+    brand       := Brand.Compile (p.brand);
+    type_map    := GenTypeMap (p, refs_only := FALSE);
+    gc_map      := GenTypeMap (p, refs_only := TRUE);
+    type_desc   := GenTypeDesc (p);
+    initProc    := GenInitProc (p);
+    dims        : INTEGER;
+    targetSize  : INTEGER;
+    elemSize    : INTEGER;
+    ta          : Type.T;
+    isz         : INTEGER := Target.Integer.size;
+    name_offs   : INTEGER := 0;
+    fp          := TypeFP.FromType (p);
+    globals     := Module.GlobalData (is_const := FALSE);
+    consts      := Module.GlobalData (is_const := TRUE);
+    targetInfo  : Type.Info;
   BEGIN
-    EVAL Type.CheckInfo (p.target, objInfo);
+    EVAL Type.CheckInfo (p.target, targetInfo);
     ta := Type.Base (p.target);
+
     dims := OpenArrayType.OpenDepth (ta);
-    IF (dims = 0) THEN
-      (* not an open array *)
-      objSize := objInfo.size;
-      elemSize := 0 (* Properly bytes, but it's zero and won't be used. *);
-    ELSE (* target is an open array *)
-      WITH ai = Target.Integer.align DO
-        objSize := Target.Address.size (* Size of elements pointer. *);
-        objSize := ((objSize + ai - 1) DIV ai) * ai (* Padding, for shape *);
-        INC (objSize, Target.Integer.size * dims) (* The shapes. *);
+    IF (dims = 0) THEN (* Not an open array. *)
+      targetSize := targetInfo.size;
+      elemSize := 8 (*Dead*);
+    ELSE (* target is an open array.  targetSize := dope size. *)
+      targetSize := Target.Address.size (* Size of elements pointer. *);
+      WITH ia = Target.Integer.align DO
+        targetSize
+          := ((targetSize + ia - 1) DIV ia) * ia (* Padding, ahead of shape *);
+        INC (targetSize, Target.Integer.size * dims) (* The shape words. *);
       END;
-      WITH ae = objInfo.alignment DO
-        objSize := ((objSize + ae - 1) DIV ae) * ae (* Padding. for elements *);
+      WITH aa = p.info.addr_align DO
+        targetSize
+          := ((targetSize + aa - 1) DIV aa) * aa (* Padding, ahead of elements *);
       END;
-      elemSize := OpenArrayType.EltPack (ta) (* Bits, for now.*);
+      elemSize := OpenArrayType.EltPack (ta);
       IF elemSize < Target.Byte THEN (* Sub-byte elements, 1, 2, or 4 bits. *)
         <* ASSERT Target.Byte MOD elemSize = 0 *>
-        elemSize := 1 (*Byte*);
+        elemSize := Target.Byte;
 (* FIXME: This is a quick hack for open arrays of element bitsize 1, 2, or 4.
           The RTS only knows byte counts for element sizes.  Until RTS can be
           fixed to understand bit sizes, this will at least make things work,
           at the cost of over-allocating a full byte for every element. *)
       ELSE
         <* ASSERT elemSize MOD Target.Byte = 0 *>
-        elemSize := elemSize DIV Target.Byte (*Bytes, now.*);
       END;
     END;
-
-    objSize := MAX (objSize DIV Target.Byte, 1) (*Bytes, now.*);
-    objAlign := objInfo.alignment (*Bits.*);
-    objAlign := MAX (objAlign DIV Target.Byte, 1) (*Bytes, now.*);
 
     IF (p.user_name # NIL) THEN
       name_offs := CG.EmitText (p.user_name, is_const := TRUE);
@@ -270,8 +272,12 @@ PROCEDURE InitTypecell (t: Type.T;  offset, prev: INTEGER) =
     END;
     CG.Init_intt (offset + M3RT.TC_traced, 8, ORD (p.isTraced), FALSE);
     CG.Init_intt (offset + M3RT.TC_kind, 8, ORD (Kind[dims > 0]), FALSE);
-    CG.Init_intt (offset + M3RT.TC_dataAlignment, 8, objAlign, FALSE);
-    CG.Init_intt (offset + M3RT.TC_dataSize, isz, objSize, FALSE);
+    CG.Init_intt
+      (offset + M3RT.TC_dataAlignment, 8, p.info.addr_align DIV Target.Byte, FALSE);
+   (* ^VSee comments in RT0.i3, regarding dataAlignment and dataSize. *)
+
+    CG.Init_intt
+      (offset + M3RT.TC_dataSize, isz, targetSize DIV Target.Byte, FALSE);
     IF (type_map >= 0) THEN
       CG.Init_var (offset + M3RT.TC_type_map, consts, type_map, FALSE);
     END;
@@ -297,7 +303,8 @@ PROCEDURE InitTypecell (t: Type.T;  offset, prev: INTEGER) =
     IF (dims > 0) THEN
       (* REF ARRAY specific extensions to the typecell *)
       CG.Init_intt (offset + M3RT.ATC_nDimensions, isz, dims, FALSE);
-      CG.Init_intt (offset + M3RT.ATC_elementSize, isz, elemSize, FALSE);
+      CG.Init_intt
+        (offset + M3RT.ATC_elementSize, isz, elemSize DIV Target.Byte, FALSE);
     END;
 
   END InitTypecell;
@@ -320,7 +327,7 @@ PROCEDURE GenTypeDesc (p: P): INTEGER =
   END GenTypeDesc;
 
 PROCEDURE GenInitProc (p: P): CG.Proc =
-  VAR name: TEXT;  proc: CG.Proc;  ref: CG.Var;  targetInfo: Type.Info;
+  VAR name: TEXT;  proc: CG.Proc;  ref: CG.Var;
   BEGIN
     IF Type.InitCost (p.target, TRUE) <= 0 THEN RETURN NIL END;
 
@@ -343,8 +350,7 @@ PROCEDURE GenInitProc (p: P): CG.Proc =
     
 
     (* initialize the referent *)
-    EVAL Type.CheckInfo (p.target, targetInfo);
-    CG.Load_addr (ref, 0, targetInfo.alignment);
+    CG.Load_addr (ref, 0, p.info.addr_align);
     Type.InitValue (p.target, TRUE);
 
     CG.Exit_proc (CG.Type.Void);
