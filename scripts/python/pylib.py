@@ -1214,9 +1214,9 @@ def Boot():
             "AMD64_NT"      : " -Zi -Gy ", # hack some problem with exception handling and alignment otherwise
             }.get(Config) or " -pthread -g "
 
-        #CCompilerOut = {
-        #    "AMD64_NT"      : "-Fo./",
-        #    }.get(Config) or "-o $@"
+        CCompilerOut = {
+            "AMD64_NT"      : "-Fo./",
+            }.get(Config) or "-o $@"
 
     CCompilerFlags = CCompilerFlags + ({
         "AMD64_LINUX"     : " -m64 ",
