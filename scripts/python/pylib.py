@@ -32,7 +32,7 @@ class Tee:
         if self.b != None and self.a != self.b:
             self.b.flush()
 
-LowercaseArgv = map(lambda(a): a.lower(), sys.argv)
+LowercaseArgv = map(lambda a: a.lower(), sys.argv)
 
 sys.stdout = Tee(sys.stdout, open(sys.argv[0] + ".log", "a"))
 
@@ -591,7 +591,7 @@ def GetVersion(Key):
     # not defined in the environment)
     #
     MissingKey = None
-    for Item in Versions.iteritems():
+    for Item in Versions.items():
         #print(Item)
         if Item[1] is None:
             MissingKey = Item[0]
@@ -1000,7 +1000,7 @@ PackageDB = None
 def ReadPackageDB():
     MakePackageDB()
     global PackageDB
-    PackageDB = (PackageDB or map(lambda(a): a.replace("\n", "").replace('\\', '/').replace("\r", ""), open(PKGSDB)))
+    PackageDB = (PackageDB or map(lambda a: a.replace("\n", "").replace('\\', '/').replace("\r", ""), open(PKGSDB)))
 
 #-----------------------------------------------------------------------------
 
@@ -1044,7 +1044,7 @@ def ListPackages(pkgs):
                     break
     else:
         Result = PackageDB
-    return map(lambda(a): (Root + '/' + a), Result)
+    return map(lambda a: (Root + '/' + a), Result)
 
 #-----------------------------------------------------------------------------
 
@@ -1840,7 +1840,7 @@ def DoPackage(args, PackagesFromCaller = None):
 
     SetupEnvironment()
 
-    args = filter(lambda(a): not a.startswith(os.path.dirname(__file__)) and a != "" and not a.endswith(".py"), args)
+    args = filter(lambda a: not a.startswith(os.path.dirname(__file__)) and a != "" and not a.endswith(".py"), args)
 
     # print("args is " + str(args))
     # sys.stdout.flush()
@@ -2007,7 +2007,7 @@ def DeleteFile(a):
     else:
         print("del /f /a " + a)
     if isfile(a):
-        os.chmod(ConvertPathForPython(a), 0700)
+        os.chmod(ConvertPathForPython(a), 0o700)
         os.remove(ConvertPathForPython(a))
     if isfile(a):
         FatalError("failed to delete " + a)
