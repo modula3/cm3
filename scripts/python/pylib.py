@@ -1000,7 +1000,7 @@ PackageDB = None
 def ReadPackageDB():
     MakePackageDB()
     global PackageDB
-    PackageDB = (PackageDB or map(lambda a: a.replace("\n", "").replace('\\', '/').replace("\r", ""), open(PKGSDB)))
+    PackageDB = PackageDB or list(map(lambda a: a.replace("\n", "").replace('\\', '/').replace("\r", ""), open(PKGSDB)))
 
 #-----------------------------------------------------------------------------
 
