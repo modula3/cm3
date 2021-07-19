@@ -23,8 +23,16 @@ VAR
   clientID := ID.Add ("clients");
 
 CONST
-  IsM3 = ARRAY Kind OF BOOLEAN { TRUE, TRUE, TRUE, TRUE,
-                                 FALSE, FALSE, FALSE, FALSE };
+  Kind = { I3, M3, IG, MG, C, CPP, H, Quake, Other };
+  IsM3 = ARRAY Kind OF BOOLEAN { TRUE,  (* i3 *)
+                                 TRUE,  (* m3 *)
+                                 TRUE,  (* ig *)
+                                 TRUE,  (* mg )
+                                 FALSE, (* c *)
+                                 FALSE, (* cpp *)
+                                 FALSE, (* h *)
+                                 FALSE, (* quake *)
+                                 FALSE  (* other *) };
 
 PROCEDURE Class (t: T): Node.Class =
   BEGIN
