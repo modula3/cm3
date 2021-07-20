@@ -122,10 +122,10 @@ TYPE
   END;
 
 CONST
-  IntfExtensions = ARRAY OF TEXT { ".ic", ".is", ".io", "_i.o" };
-  ImplExtensions = ARRAY OF TEXT { ".mc", ".ms", ".mo", "_m.o" };
-  CExtensions    = ARRAY OF TEXT { ".s", ".o", ".obj" };
-  SExtensions    = ARRAY OF TEXT { ".o", ".obj" };
+  IntfExtensions = ARRAY OF TEXT { ".ic", ".is", ".io", "_i.o" }; (* derived from .i3 *)
+  ImplExtensions = ARRAY OF TEXT { ".mc", ".ms", ".mo", "_m.o" }; (* derived from .m3 *)
+  CExtensions    = ARRAY OF TEXT { ".s", ".o", ".obj" };          (* derived from .c, .cpp *)
+  SExtensions    = ARRAY OF TEXT { ".o", ".obj" };                (* derived from .s *)
   NoExtension    = ARRAY OF TEXT { "" };
 
 (*-------------------------------------------------- external entry points --*)
@@ -323,7 +323,7 @@ PROCEDURE DeleteObjects (t: T;  nm: M3ID.T;  kind: UK) =
     CASE kind OF
     | UK.I3 => DeleteDeriveds (t, name, IntfExtensions);
     | UK.M3 => DeleteDeriveds (t, name, ImplExtensions);
-    | UK.C  => DeleteDeriveds (t, name, CExtensions);
+    | UK.C, UK.CPP => DeleteDeriveds (t, name, CExtensions);
     | UK.S  => DeleteDeriveds (t, name, SExtensions);
     ELSE (* skip *)
     END;
@@ -388,6 +388,7 @@ CONST
     Builtin {"_map_add_module",               DoMapModule,       4, FALSE},
     Builtin {"_map_add_generic_module",       DoMapGenImpl,      4, FALSE},
     Builtin {"_map_add_c",                    DoMapCSource,      4, FALSE},
+    Builtin {"_map_add_cpp",                  DoMapCPPSource,    4, FALSE},
     Builtin {"_map_add_h",                    DoMapHSource,      4, FALSE},
     Builtin {"_map_add_s",                    DoMapSSource,      4, FALSE},
     
@@ -862,6 +863,12 @@ PROCEDURE DoMapCSource (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
   BEGIN
     MapSource (Self (m), UK.C);
   END DoMapCSource;
+
+PROCEDURE DoMapCPPSource (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
+  RAISES {Quake.Error} =
+  BEGIN
+    MapSource (Self (m), UK.CPP);
+  END DoMapCPPSource;
 
 PROCEDURE DoMapHSource (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
   RAISES {Quake.Error} =
@@ -1702,7 +1709,7 @@ PROCEDURE DoInstallSources (m: QMachine.T;  <*UNUSED*> n_args: INTEGER) =
   END DoInstallSources;
 
 PROCEDURE InstallSources (t: T) =
-  CONST UKSourceSet = SET OF UK { UK.I3, UK.M3, UK.IG, UK.MG, UK.C, UK.H, UK.TMPL }; 
+  CONST UKSourceSet = SET OF UK { UK.I3, UK.M3, UK.IG, UK.MG, UK.C, UK.CPP, UK.H, UK.TMPL };
 
   VAR
     n_local := 0;
@@ -2260,7 +2267,7 @@ PROCEDURE GenM3Exports (t: T;  header: TEXT)
      "_map_add_interface", NIL, NIL, NIL, NIL,
      "_map_add_module", NIL, NIL, NIL, NIL, 
      "_map_add_generic_interface", "_map_add_generic_module",
-     "_map_add_c", "_map_add_h", NIL, "_map_add_s", NIL,
+     "_map_add_c", "_map_add_cpp", "_map_add_h", NIL, "_map_add_s", NIL,
      "_import_m3lib", "_import_otherlib", NIL, NIL, NIL, "template" } ;
 
   VAR fail_msg: TEXT := NIL;
@@ -2295,7 +2302,7 @@ PROCEDURE GenM3Exports (t: T;  header: TEXT)
             | UK.Unknown, UK.IB, UK.IC, UK.IS, UK.MB, UK.MC, UK.MS, UK.PGM, UK.LIBX,
               UK.PGMX, UK.IO, UK.MO, UK.O, UK.B =>
                 <*ASSERT KindTag[u.kind] = NIL *>
-            | UK.I3, UK.M3, UK.IG, UK.MG, UK.C, UK.H, UK.S =>
+            | UK.I3, UK.M3, UK.IG, UK.MG, UK.C, UK.CPP, UK.H, UK.S =>
                 <*ASSERT KindTag[u.kind] # NIL *>
                 Out (wr, KindTag[u.kind], "(\"");
                 Out (wr, M3Path.Convert (M3Unit.FileName (u)), QCQ);
