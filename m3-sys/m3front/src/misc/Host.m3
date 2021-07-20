@@ -105,6 +105,7 @@ PROCEDURE ProcessArg (t: TEXT): BOOLEAN =
       doNilChk    := FALSE;
       doRaisesChk := FALSE;
       doDebugs    := FALSE;
+      doProcChk   := FALSE;
     ELSIF (Text.Equal (t, "-NoIncGC")) THEN
       doIncGC := FALSE;
     ELSIF (Text.Equal (t, "-NoGenGC")) THEN
