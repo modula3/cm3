@@ -489,7 +489,9 @@ PROCEDURE Compile (p: P) =
         IF (obj_offset >= 0) THEN
           INC (fieldInfo.offset, obj_offset);
         ELSE
-          CG.Check_nil (CG.RuntimeError.BadMemoryReference);
+          IF Host.doNilChk THEN
+            CG.Check_nil (CG.RuntimeError.BadMemoryReference);
+          END;
           Type.LoadInfo (p.holder, M3RT.OTC_dataOffset);
           CG.Index_bytes (Target.Byte);
         END;
@@ -580,7 +582,9 @@ PROCEDURE CompileLV (p: P;  traced: BOOLEAN) =
         IF (obj_offset >= 0) THEN
           INC (field.offset, obj_offset);
         ELSE
-          CG.Check_nil (CG.RuntimeError.BadMemoryReference);
+          IF Host.doNilChk THEN
+            CG.Check_nil (CG.RuntimeError.BadMemoryReference);
+          END;
           Type.LoadInfo (p.holder, M3RT.OTC_dataOffset);
           CG.Index_bytes (Target.Byte);
         END;
