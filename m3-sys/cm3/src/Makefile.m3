@@ -410,7 +410,7 @@ CONST
     "interface", NIL, NIL, NIL, "import_obj",              (* i3, ib, ic, is, io *)
     "implementation", NIL, NIL, NIL, "import_obj",         (* m3, mb, mc, ms, mo *)
     "generic_interface", "generic_implementation",         (* ig, mg *)
-    "c_source", "h_source", NIL, "s_source", "import_obj", (* c, h, b, s, o *)
+    "c_source", "cpp_source", "h_source", NIL, "s_source", "import_obj", (* c, cpp, h, b, s, o *)
     "import_lib", "import_lib", NIL,                       (* m3lib, lib, m3x *)
     NIL, NIL, NIL                                          (* pgm, mx, tmpl *)
   };

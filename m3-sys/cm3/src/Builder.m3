@@ -507,7 +507,7 @@ PROCEDURE BuildSearchPaths (s: State) =
   VAR u := s.units.head;  seen := NEW (IntRefTbl.Default).init ();
   BEGIN
     WHILE (u # NIL) DO
-      IF (u.kind = UK.C) OR (u.kind = UK.H) THEN
+      IF u.kind IN SET OF UK {UK.C, UK.CPP, UK.H} THEN
         IF NOT seen.put (M3ID.Add (u.loc.path), NIL) THEN
           Arg.Append (s.include_path, "-I" & u.loc.path);
         END;
@@ -836,10 +836,10 @@ TYPE SourceList = REF ARRAY OF M3Unit.T;
 CONST
   OrderMatters = ARRAY UK OF BOOLEAN {
     FALSE (*Unknown*),
-     TRUE (*I3*),     TRUE (*IB*),   TRUE (*IC*),    TRUE (*IS*),    TRUE (*IO*),
-     TRUE (*M3*),     TRUE (*MB*),   TRUE (*MC*),    TRUE (*MS*),    TRUE (*MO*),
+     TRUE (*I3*),     TRUE (*IB*),   TRUE (*IC*),    TRUE (*IS*),   TRUE (*IO*),
+     TRUE (*M3*),     TRUE (*MB*),   TRUE (*MC*),    TRUE (*MS*),   TRUE (*MO*),
     FALSE (*IG*),    FALSE (*MG*),
-    FALSE (*C*),     FALSE (*H*),   FALSE (*B*),    FALSE (*S*),     FALSE (*O*),
+    FALSE (*C*),     FALSE (*CPP*), FALSE (*H*),    FALSE (*B*),   FALSE (*S*), FALSE (*O*),
     FALSE (*M3LIB*), FALSE (*LIB*),  TRUE (*LIBX*), FALSE (*PGM*),
      TRUE (*PGMX*),  FALSE (*TMPL*) };
 
@@ -1128,7 +1128,7 @@ PROCEDURE CompileOne (s: State;  u: M3Unit.T) =
            THEN CompileM3llvm (s, u); 
            ELSE CompileM3cc (s, u); 
            END; 
-      | UK.C               => CompileC (s, u); 
+      | UK.C, UK.CPP       => CompileC (s, u);
       | UK.IS, UK.MS, UK.S => CompileS (s, u);
       | UK.IO, UK.MO, UK.O => CompileO (s, u);
       | UK.H               => CompileH (s, u);
@@ -1223,7 +1223,7 @@ PROCEDURE CompileS (s: State; u: M3Unit.T) =
   END CompileS;
 
 PROCEDURE CompileC (s: State; u: M3Unit.T) = 
-(* PRE: u.kind = UK.C *) 
+(* PRE: u.kind IN SET OF UK{UK.C, UK.CPP} *)
   BEGIN
     IF (u.object = NIL) OR Text.Equal (u.object, UnitPath (u)) THEN
       (* already done *)
@@ -1570,7 +1570,7 @@ PROCEDURE PushOneM3 (s: State;  u: M3Unit.T): BOOLEAN =
         DoRunM3cc := TRUE; 
         DoRunAsm := NOT boot; 
     | Mode_t.C => 
-        CCodeName := M3Unit.FileName (u) & ".c"; (* ?FUTURE: .cpp *)
+        CCodeName := M3Unit.FileName (u) & ".cpp";
         cm3OutName := CCodeName;
         DoRunC := NOT boot;
         (* C compiler takes care of assembling. *) 
@@ -2501,7 +2501,7 @@ VAR M3MainId: M3ID.T; (* CONST after init. *)
 
 PROCEDURE GenerateCMain (s: State;  Main_O: TEXT) =
   VAR
-    Main_C   := M3Path.Join (NIL, M3Main, UK.C);
+    Main_CPP := M3Path.Join (NIL, M3Main, UK.CPP);
     Main_XX  := M3Main & ".new";
     init_code: TEXT := NIL;
     time_O   := 0;
@@ -2510,10 +2510,10 @@ PROCEDURE GenerateCMain (s: State;  Main_O: TEXT) =
   BEGIN
     (* check for an up-to-date Main_O *)
     time_O := Utils.LocalModTime (Main_O);
-    time_C := Utils.LocalModTime (Main_C);
+    time_C := Utils.LocalModTime (Main_CPP);
     IF (time_O < time_C) OR (time_C = Utils.NO_TIME) THEN
       (* we must compile the linker generated code *)
-      init_code := Main_C;
+      init_code := Main_CPP;
     ELSE
       init_code := Main_XX;
       Utils.NoteTempFile (Main_XX);
@@ -2531,21 +2531,21 @@ PROCEDURE GenerateCMain (s: State;  Main_O: TEXT) =
     Utils.CloseWriter (wr, init_code);
     ETimer.Pop ();
 
-    IF (init_code = Main_XX) AND Utils.IsEqual (Main_XX, Main_C) THEN
+    IF (init_code = Main_XX) AND Utils.IsEqual (Main_XX, Main_CPP) THEN
       (* we don't need to compile! *)
       Utils.Remove (Main_XX);
     ELSE
       IF (init_code = Main_XX) THEN
-        Utils.Copy (Main_XX, Main_C);
+        Utils.Copy (Main_XX, Main_CPP);
         Utils.Remove (Main_XX);
       END;
-      Msg.Debug ("compiling ", Main_C, " ...", Wr.EOL);
-      EVAL RunCC (s, Main_C, Main_O, debug := TRUE, optimize := FALSE, include_path := s.include_path_empty);
+      Msg.Debug ("compiling ", Main_CPP, " ...", Wr.EOL);
+      EVAL RunCC (s, Main_CPP, Main_O, debug := TRUE, optimize := FALSE, include_path := s.include_path_empty);
       IF (s.compile_failed) THEN
-        Msg.FatalError (NIL, "cc ", Main_C, " failed!!");
+        Msg.FatalError (NIL, "cc ", Main_CPP, " failed!!");
       END;
       Utils.NoteNewFile (Main_O);
-      Utils.NoteNewFile (Main_C);
+      Utils.NoteNewFile (Main_CPP);
     END;
   END GenerateCMain;
 
@@ -3015,7 +3015,7 @@ PROCEDURE WriteProgramDesc (s: State;  desc_file, main_o: TEXT) =
   END WriteProgramDesc;
 
 PROCEDURE BuildBootProgram (s: State) =
-  VAR Main_C: TEXT;  makefile := "make." & s.result_name;
+  VAR Main_CPP: TEXT;  makefile := "make." & s.result_name;
 
   PROCEDURE Emit (wr: Wr.T) RAISES {Wr.Failure, Thread.Alerted} =
     BEGIN
@@ -3059,9 +3059,9 @@ PROCEDURE BuildBootProgram (s: State) =
 
     (* produce the module init list *)
     ETimer.Push (M3Timers.genMain);
-    Main_C := M3Path.Join (NIL, "_m3main", UK.C);
-    Msg.Commands ("generate ", Main_C);
-    Utils.WriteFile (Main_C, EmitMain, append := FALSE);
+    Main_CPP := M3Path.Join (NIL, "_m3main", UK.CPP);
+    Msg.Commands ("generate ", Main_CPP);
+    Utils.WriteFile (Main_CPP, EmitMain, append := FALSE);
     ETimer.Pop ();
 
     Msg.Explain ("building makefile -> ", makefile);
@@ -3495,7 +3495,7 @@ PROCEDURE FinalNameForUnitInternal (s: State; u: M3Unit.T; boot: BOOLEAN): TEXT 
       CASE ext OF 
       | UK.I3, UK.IC, UK.IB, UK.IS => ext :=  UK.IO;
       | UK.M3, UK.MC, UK.MB, UK.MS => ext :=  UK.MO;
-      | UK.C, UK.S                 => ext :=  UK.O;
+      | UK.C, UK.CPP, UK.S         => ext :=  UK.O;
       | UK.IO, UK.MO, UK.O         => RETURN M3Unit.FileName (u);
       ELSE RETURN NIL;
       END;
@@ -3506,7 +3506,7 @@ PROCEDURE FinalNameForUnitInternal (s: State; u: M3Unit.T; boot: BOOLEAN): TEXT 
       | UK.I3, UK.M3 => RETURN M3Unit.FileName (u) & ".c"; (* ?FUTURE: .cpp *)
       | UK.IO, UK.IB, 
         UK.MO, UK.MB, 
-        UK.C, UK.H, UK.S, UK.O => RETURN M3Unit.FileName (u);
+        UK.C, UK.CPP, UK.H, UK.S, UK.O => RETURN M3Unit.FileName (u);
       ELSE RETURN NIL;
       END;
 
@@ -3518,7 +3518,7 @@ PROCEDURE FinalNameForUnitInternal (s: State; u: M3Unit.T; boot: BOOLEAN): TEXT 
       | UK.B                       =>  ext :=  UK.MS;
       | UK.IS, UK.IO, 
         UK.MS, UK.MO, 
-        UK.H, UK.S, UK.O, UK.C     => RETURN M3Unit.FileName (u);
+        UK.H, UK.S, UK.O, UK.C, UK.CPP => RETURN M3Unit.FileName (u);
       ELSE RETURN NIL;
       END;
 
@@ -3526,7 +3526,7 @@ PROCEDURE FinalNameForUnitInternal (s: State; u: M3Unit.T; boot: BOOLEAN): TEXT 
       CASE ext OF 
       | UK.I3, UK.IC, UK.IB, UK.IS => ext :=  UK.IO;
       | UK.M3, UK.MC, UK.MB, UK.MS => ext :=  UK.MO;
-      | UK.C, UK.S, UK.H,
+      | UK.C, UK.CPP, UK.S, UK.H,
         UK.IO, UK.MO, UK.O         => RETURN M3Unit.FileName (u);
       ELSE RETURN NIL;
       END;
@@ -3538,7 +3538,7 @@ PROCEDURE FinalNameForUnitInternal (s: State; u: M3Unit.T; boot: BOOLEAN): TEXT 
       | UK.M3                       =>  ext :=  UK.MC;
       | UK.IC, UK.IB, UK.IS, UK.IO, 
         UK.MC, UK.MB, UK.MS, UK.MO,
-        UK.C, UK.H, UK.S, UK.O      => RETURN M3Unit.FileName (u); 
+        UK.C, UK.CPP, UK.H, UK.S, UK.O => RETURN M3Unit.FileName (u);
       ELSE RETURN NIL;
       END;
 
@@ -3549,7 +3549,7 @@ PROCEDURE FinalNameForUnitInternal (s: State; u: M3Unit.T; boot: BOOLEAN): TEXT 
       | UK.M3                      =>  ext :=  UK.MB;
       | UK.IC, UK.IB, UK.IS, UK.IO, 
         UK.MC, UK.MB, UK.MS, UK.MO,
-        UK.C, UK.H, UK.S, UK.O     => RETURN M3Unit.FileName (u); 
+        UK.C, UK.CPP, UK.H, UK.S, UK.O => RETURN M3Unit.FileName (u);
       ELSE RETURN NIL;
       END;
     END;

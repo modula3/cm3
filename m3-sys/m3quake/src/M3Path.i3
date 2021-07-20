@@ -6,7 +6,7 @@
 
 INTERFACE M3Path;
 
-IMPORT Compiler;
+(*IMPORT Compiler;*)
 
 TYPE
   T = RECORD
@@ -33,6 +33,7 @@ TYPE
            IG,     (* M3 source for a generic interface. *) 
            MG,     (* M3 source for a generic module. *) 
            C,      (* C source file. *) 
+           CPP,    (* C++ source *)
            H,      (* C header file. *) 
            B,      (* llvm bitcode, not from M3 code. *) 
            S,      (* Assembly code for non-M3 source. *) 
@@ -42,7 +43,7 @@ TYPE
            LIBX,   (* m3linker data for a M3 library. *) 
            PGM,    (* Executable. *) 
            PGMX,   (* m3linker data for a M3 program. *) 
-           TMPL    (* Quake template code. *) 
+           TMPL    (* Quake template code. *)
            };
 
   OSKind = { Unix, GrumpyUnix, Win32 };
