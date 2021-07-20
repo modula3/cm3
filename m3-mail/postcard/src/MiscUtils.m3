@@ -4,7 +4,7 @@ only by permission.  *) (* OSUtils.mod *) (* Last modified on Tue Aug
 
 MODULE MiscUtils;
 
-IMPORT ASCII, Rd, Text, (*TextF (* REVEAL Text = BRANDED REF ARRAY OF CHAR *),*)
+IMPORT ASCII, Rd, Text,
        TextExtras, TextUtils, Thread, Wr;
 
 (* *)
@@ -58,16 +58,13 @@ PROCEDURE Replace(dest: TEXT; offset, length: CARDINAL; source: TEXT): TEXT =
 PROCEDURE PutTextSub(wr: Wr.T; t: TEXT; start: CARDINAL;
                      length: CARDINAL := LAST(CARDINAL))
         RAISES { Wr.Failure, Thread.Alerted } =
-VAR
-  t1 : TEXT;
-      c : REF ARRAY OF CHAR;
+  VAR
+    txt : TEXT;
+    c : REF ARRAY OF CHAR;
   BEGIN
     c := NEW(REF ARRAY OF CHAR, Text.Length(t));
-    t1 := Text.Sub(t,start,MIN(length,Text.Length(t)));
-    Text.SetChars(c^,t1);
-(*
-    Wr.PutString(wr, SUBARRAY(t^, start, MIN(length, NUMBER(t^)-start)));
-*)
+    txt := Text.Sub(t,start,MIN(length,Text.Length(t)));
+    Text.SetChars(c^,txt);
     Wr.PutString(wr, c^);
   END PutTextSub;
 
