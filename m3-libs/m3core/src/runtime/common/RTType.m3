@@ -307,6 +307,8 @@ PROCEDURE FinishTypecell (def: RT0.TypeDefn;  m: RT0.ModulePtr) =
     END;
 
     (* everybody gets a size that's a multiple of a header word *)
+    (* See comments in RT0.i3, regarding dataAlignment. *)
+
     def.dataSize := RTMisc.Upper (def.dataSize, BYTESIZE (RTHeapRep.Header));
 
     (* check that all data alignments are small powers of two so that

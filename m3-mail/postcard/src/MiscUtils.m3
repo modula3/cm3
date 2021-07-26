@@ -4,8 +4,8 @@ only by permission.  *) (* OSUtils.mod *) (* Last modified on Tue Aug
 
 MODULE MiscUtils;
 
-IMPORT ASCII, Rd, Text, TextF (* REVEAL Text = BRANDED REF ARRAY OF CHAR *),
-       Thread, Wr;
+IMPORT ASCII, Rd, Text,
+       TextExtras, TextUtils, Thread, Wr;
 
 (* *)
 (* Operations on TEXT, Rd.T and Wr.T *)
@@ -13,30 +13,33 @@ IMPORT ASCII, Rd, Text, TextF (* REVEAL Text = BRANDED REF ARRAY OF CHAR *),
 
 PROCEDURE ToInt(t: TEXT): INTEGER RAISES { BadFormat } =
   VAR i := 0; pos := 0; len := Text.Length(t); neg := FALSE;
+      c : REF ARRAY OF CHAR;
   CONST White = SET OF CHAR{' ', '\n', '\t'};
   BEGIN
+    c := NEW(REF ARRAY OF CHAR, len);
+    Text.SetChars(c^,t);
     LOOP
       IF pos >= len THEN RAISE BadFormat END;
-      IF NOT (t[pos] IN White) THEN EXIT END;
+      IF NOT (c^[pos] IN White) THEN EXIT END;
       INC(pos);
     END;
-    IF t[pos] = '+' THEN INC(pos)
-    ELSIF t[pos] = '-' THEN neg := TRUE; INC(pos)
+    IF c^[pos] = '+' THEN INC(pos)
+    ELSIF c^[pos] = '-' THEN neg := TRUE; INC(pos)
     END;
     LOOP
       IF pos >= len THEN RAISE BadFormat END;
-      IF NOT (t[pos] IN White) THEN EXIT END;
+      IF NOT (c^[pos] IN White) THEN EXIT END;
       INC(pos);
     END;
     LOOP
-      IF t[pos] >= '0' AND t[pos] <= '9' THEN
+      IF c^[pos] >= '0' AND c^[pos] <= '9' THEN
         IF neg THEN (* get most-negative integer correct *)
-          i := i * 10 - (ORD(t[pos]) - ORD('0'));
+          i := i * 10 - (ORD(c^[pos]) - ORD('0'));
         ELSE
-          i := i * 10 + (ORD(t[pos]) - ORD('0'));
+          i := i * 10 + (ORD(c^[pos]) - ORD('0'));
         END;
         INC(pos);
-      ELSIF t[pos] IN White THEN
+      ELSIF c^[pos] IN White THEN
         EXIT
       ELSE
         RAISE BadFormat
@@ -55,26 +58,23 @@ PROCEDURE Replace(dest: TEXT; offset, length: CARDINAL; source: TEXT): TEXT =
 PROCEDURE PutTextSub(wr: Wr.T; t: TEXT; start: CARDINAL;
                      length: CARDINAL := LAST(CARDINAL))
         RAISES { Wr.Failure, Thread.Alerted } =
+  VAR
+    txt : TEXT;
+    c : REF ARRAY OF CHAR;
   BEGIN
-    Wr.PutString(wr, SUBARRAY(t^, start, MIN(length, NUMBER(t^)-start)));
+    c := NEW(REF ARRAY OF CHAR, Text.Length(t));
+    txt := Text.Sub(t,start,MIN(length,Text.Length(t)));
+    Text.SetChars(c^,txt);
+    Wr.PutString(wr, c^);
   END PutTextSub;
 
 PROCEDURE Equal(t, u: TEXT; ignoreCase: BOOLEAN := FALSE): BOOLEAN =
 (* Return TRUE iff t and u have the same length and would have the same
    contents if all their upper case letters were mapped to lower case by
    indexing ASCII.Lower *)
-  VAR len: CARDINAL;
   BEGIN
     IF ignoreCase THEN
-      len := Text.Length(t);
-      IF len # Text.Length(u) THEN
-        RETURN FALSE
-      ELSE
-        FOR i := 0 TO len DO
-          IF ASCII.Lower[t[i]] # ASCII.Lower[u[i]] THEN RETURN FALSE END;
-        END;
-        RETURN TRUE
-      END
+      RETURN TextExtras.Compare(t,u) # 0;
     ELSE
       RETURN Text.Equal(t, u)
     END;
@@ -82,51 +82,19 @@ PROCEDURE Equal(t, u: TEXT; ignoreCase: BOOLEAN := FALSE): BOOLEAN =
 
 PROCEDURE Find(txt: TEXT; start: CARDINAL; pat: TEXT;
                ignoreCase: BOOLEAN := FALSE): INTEGER =
-  VAR found: INTEGER;
   BEGIN
-    found := FindInSub(SUBARRAY(txt^, start, MAX(0,Text.Length(txt)-start)),
-                     pat, ignoreCase);
-    IF found < 0 THEN RETURN found ELSE RETURN found + start END;
+    IF start > 0 THEN
+      txt := Text.Sub(txt,start);
+    END;
+    RETURN TextUtils.Pos(txt,pat,NOT ignoreCase);
   END Find;
 
 PROCEDURE FindInSub(READONLY sub: ARRAY OF CHAR; pat: TEXT;
                     ignoreCase: BOOLEAN := FALSE): INTEGER =
-  VAR
-    len := Text.Length(pat);
-    txtlen := NUMBER(sub);
-    tbl := ARRAY CHAR OF INTEGER{len, ..};
-    p := len-1;
+  VAR t : TEXT;
   BEGIN
-    IF len = 0 THEN RETURN 0 END;
-    FOR i := 0 TO len-1 DO
-      IF ignoreCase THEN
-        tbl[ASCII.Lower[pat[i]]] := len - i - 1;
-        tbl[ASCII.Upper[pat[i]]] := len - i - 1;
-      ELSE
-        tbl[pat[i]] := len - i - 1;
-      END;
-    END;
-    WHILE p < txtlen DO
-      VAR m := tbl[sub[p]]; BEGIN
-        IF m = 0 THEN
-          (* test for match ending at sub[p] *)
-          VAR j := 0; startOfMatch := p-(len-1); BEGIN
-            IF ignoreCase THEN
-              WHILE j # len AND
-                  ASCII.Lower[pat[j]] = ASCII.Lower[sub[startOfMatch+j]] DO
-                INC(j);
-              END;
-            ELSE
-              WHILE j # len AND pat[j] = sub[startOfMatch+j] DO INC(j) END;
-            END;
-            IF j = len THEN RETURN startOfMatch ELSE INC(p) END
-          END
-        ELSE
-          INC(p, m)
-        END
-      END
-    END;
-    RETURN -1
+    t := Text.FromChars(sub);
+    RETURN TextUtils.Pos(t,pat, NOT ignoreCase);
   END FindInSub;
 
 PROCEDURE RdFindChar(rd: Rd.T; pat: CHAR;

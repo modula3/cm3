@@ -143,6 +143,28 @@ TYPE (* and REF open array types have this additional goo *)
      for refs, the alignment of the referent;
      for open arrays, the alignment of the full array, including the header
 *)
+(* NOTE WELL:
+   The above descriptions of dataSize and dataAligment are correct as
+   the compiler front end initializes them, with the note that neither
+   accounts for the heap object header word.  They can describe a heap
+   object with any byte size and alignment. 
+
+   The runtime allocation (RTAllocator.m3, AllocTraced) Assumes the
+   next available address can have any byte alignment and pads it up
+   to ensure dataAlignment.  It adds to the size to account for the
+   size of the header, but does not account for the alignment of the
+   header.
+
+   This would lead to alignment faults, but for the fact that, in between,
+   startup code in RTType.m3 alters the values.  However, not by adjusting
+   dataAlignment, but by rounding up dataSize for every type to a multiple
+   of the header alignment.  Thus, the previously allocated object will
+   have left the next available address aligned for a header. 
+
+   Since the header is a native word, the only time the padding in
+   AllocTraced would do anything is on a 32-bit target, for an object
+   containing a 64-bit aligned component, e.g. LONGINT or LONGREAL. 
+*) 
 
 TYPE
   TypeInitProc  = PROCEDURE (ref: ADDRESS);

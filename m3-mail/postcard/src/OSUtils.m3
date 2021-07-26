@@ -10,8 +10,8 @@
 UNSAFE MODULE OSUtils EXPORTS OSUtils, UtimeExtra;
 
 IMPORT Atom, FileRd, FileWr, Fmt, OSError, OSErrorPosix, Pipe, Process, Rd,
-       TextList, Text, Thread, Time, Word, Wr;
-IMPORT Cerrno, Cstring, M3toC, Uerror, Unix, Ustat, Utime;
+       TextList, Text, Thread, Time, Word, Wr, FmtTime;
+IMPORT Cerrno, Cstring, M3toC, Uerror, Unix, Ustat;
 
 FROM Ctypes IMPORT char_star, int, long;
 
@@ -27,10 +27,12 @@ TYPE
 
 PROCEDURE ClassifyError (ec: EC): ErrorClass =
   BEGIN
-    CASE ec OF
-    | Uerror.ENOENT, Uerror.ENOTDIR => RETURN ErrorClass.LookupError;
-    | Uerror.EACCES, Uerror.EEXIST => RETURN ErrorClass.ProtectionError;
-    ELSE RETURN ErrorClass.OtherError;
+    IF ec = Uerror.ENOENT OR ec = Uerror.ENOTDIR THEN
+      RETURN ErrorClass.LookupError;
+    ELSIF ec = Uerror.EACCES OR ec = Uerror.EEXIST THEN
+      RETURN ErrorClass.ProtectionError;
+    ELSE
+       RETURN ErrorClass.OtherError;
     END;
   END ClassifyError;
 
@@ -73,6 +75,7 @@ PROCEDURE GetInfo(path: TEXT; VAR (*OUT*) mtime: Time.T): FileType
     p := M3toC.SharedTtoS(path);
     statBuf: Ustat.struct_stat;
     status: int;
+    stat : INTEGER;
   BEGIN
     status := Ustat.stat(ConvertPath(p), ADR(statBuf));
     M3toC.FreeSharedS(path, p);
@@ -86,13 +89,11 @@ PROCEDURE GetInfo(path: TEXT; VAR (*OUT*) mtime: Time.T): FileType
       END
     END;
     mtime := FLOAT(statBuf.st_mtime, LONGREAL);
-    CASE Word.And(statBuf.st_mode, Ustat.S_IFMT) OF
-      | Ustat.S_IFDIR => RETURN FileType.Dir;
-      | Ustat.S_IFREG => RETURN FileType.Normal;
-      | Ustat.S_IFLNK => RETURN FileType.SLink;
-    ELSE
-      RETURN FileType.Other;
-    END;
+    stat := Word.And(statBuf.st_mode, Ustat.S_IFMT);
+    IF stat = Ustat.S_IFDIR THEN RETURN FileType.Dir; END;
+    IF stat = Ustat.S_IFREG THEN RETURN FileType.Normal; END;
+    IF stat = Ustat.S_IFLNK THEN RETURN FileType.SLink; END;
+    RETURN FileType.Other;
   END GetInfo;
 
 PROCEDURE CheckFile(path: TEXT) RAISES { FileNotFound, FileError } =
@@ -204,16 +205,8 @@ PROCEDURE Enumerate(path: TEXT): TextList.T RAISES { FileError } =
 VAR timeLock := NEW(MUTEX);
 
 PROCEDURE TimeLocalToText(time: Time.T): TEXT =
-  VAR
-    secs: long;
-    c: ARRAY [0..25] OF CHAR;
   BEGIN
-    secs := ROUND(time);
-    LOCK timeLock DO
-      c := LOOPHOLE(Utime.ctime(ADR(secs)),
-                    UNTRACED REF ARRAY [0..25] OF CHAR)^
-    END;
-    RETURN Text.FromChars(SUBARRAY(c, 0, 24))
+    RETURN FmtTime.Long(time);
   END TimeLocalToText;
 
 PROCEDURE FromTimeLocal(time: Time.T; VAR (*OUT*) t: CalendarTime) =

@@ -350,6 +350,9 @@ PROCEDURE ArraySize (def: RT0.ArrayTypeDefn;  READONLY s: Shape): CARDINAL =
 
 PROCEDURE AllocTraced (dataSize, dataAlignment: CARDINAL;
                        VAR thread: ThreadState): ADDRESS =
+
+(* See comments in RT0.i3, regarding dataSize and dataAlignment. *)
+
   VAR
     res       := thread.pool.next + ADRSIZE(Header);
     cur_align := Word.And(LOOPHOLE(res, INTEGER), MaxAlignMask);

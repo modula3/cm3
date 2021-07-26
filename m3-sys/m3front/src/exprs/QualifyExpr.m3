@@ -9,26 +9,34 @@
 MODULE QualifyExpr;
 
 IMPORT M3, M3ID, CG, Expr, ExprRep, Value, Type, Module;
-IMPORT RecordType, ObjectType, Variable, VarExpr, Scope;
+IMPORT RecordType, ObjectType, OpaqueType, Variable, VarExpr, Scope;
 IMPORT EnumType, RefType, DerefExpr, NamedExpr, Error, ProcType;
 IMPORT ErrType, RecordExpr, TypeExpr, MethodExpr, ProcExpr;
 IMPORT Method, Field, Target, M3RT, Host, RunTyme;
 
 TYPE
-  Class = { cMODULE, cENUM, cOBJTYPE, cFIELD, cOBJFIELD, cMETHOD, cUNKNOWN };
+  Class = { importDecl    (* <importedInterface>.<anyId> *),
+            enumLit       (* <enumType>.<Id> *),
+            objTypeMethod (* <objectType>.<methodId> *),
+            recField      (* <recordExpr>.<fieldId> *),
+            objField      (* <objectExpr>.<fieldId> *),
+            objMethod     (* <objectExpr>.<methodId> *),
+            unknown };
 
 TYPE
   VC = Value.Class;
 
 TYPE
   P = Expr.T BRANDED "QualifyExpr.T" OBJECT
-        expr        : Expr.T;
-        obj         : Value.T;
+        lhsExpr     : Expr.T;
+        rhsValue    : Value.T;
         holder      : Type.T; (* Visible supertype of the Q-expr. *) 
         objType     : Type.T;
         temp        : CG.Val;
         name        : M3ID.T;
         class       : Class;
+        addr_align  : INTEGER := Target.Word8.align;
+        (* ^For lhsExpr with object type, alignment of the referent. *)
         inFold      : BOOLEAN;
         inIsZeroes  : BOOLEAN;
         inGetBounds : BOOLEAN;
@@ -62,10 +70,10 @@ PROCEDURE New (a: Expr.T;  id: M3ID.T): Expr.T =
   BEGIN
     p := NEW (P);
     ExprRep.Init (p);
-    p.expr        := a;
+    p.lhsExpr        := a;
     p.name        := id;
-    p.obj         := NIL;
-    p.class       := Class.cUNKNOWN;
+    p.rhsValue         := NIL;
+    p.class       := Class.unknown;
     p.holder      := NIL;
     p.objType     := NIL;
     p.inFold      := FALSE;
@@ -75,11 +83,11 @@ PROCEDURE New (a: Expr.T;  id: M3ID.T): Expr.T =
     RETURN p;
   END New;
 
-PROCEDURE Split (e: Expr.T; VAR obj: Value.T): BOOLEAN =
+PROCEDURE Split (e: Expr.T; VAR rhsValue: Value.T): BOOLEAN =
   BEGIN
     TYPECASE e OF
     | NULL => RETURN FALSE;
-    | P(p) => Resolve (p); obj := p.obj; RETURN TRUE;
+    | P(p) => Resolve (p); rhsValue := p.rhsValue; RETURN TRUE;
     ELSE      RETURN FALSE;
     END;
   END Split;
@@ -88,7 +96,7 @@ PROCEDURE SplitQID (e: Expr.T;  VAR module, item: M3ID.T): BOOLEAN =
   BEGIN
     TYPECASE e OF
     | NULL => RETURN FALSE;
-    | P(p) => IF NamedExpr.SplitName (p.expr, module)
+    | P(p) => IF NamedExpr.SplitName (p.lhsExpr, module)
                  THEN item := p.name; RETURN TRUE;
                  ELSE RETURN FALSE;
               END;
@@ -100,7 +108,7 @@ PROCEDURE PassObject (e: Expr.T): BOOLEAN =
   BEGIN
     TYPECASE e OF
     | NULL => (* nothing *)
-    | P(p) => IF (p.class = Class.cMETHOD) THEN
+    | P(p) => IF (p.class = Class.objMethod) THEN
                 CG.Push (p.temp);
                 CG.Pop_param (CG.Type.Addr);
                 CG.Free (p.temp);
@@ -117,7 +125,7 @@ PROCEDURE MethodType (e: Expr.T): Type.T =
     TYPECASE e OF
     | NULL => (* nothing *)
     | P(p) => Resolve (p);
-              IF (p.class = Class.cMETHOD) THEN RETURN Value.TypeOf(p.obj) END;
+              IF (p.class = Class.objMethod) THEN RETURN Value.TypeOf(p.rhsValue) END;
     ELSE      (* nothing *)
     END;
     RETURN NIL;
@@ -126,11 +134,11 @@ PROCEDURE MethodType (e: Expr.T): Type.T =
 PROCEDURE Bounder (p: P;  VAR min, max: Target.Int) =
   BEGIN
     Resolve (p);
-    IF (p.inGetBounds) THEN Value.IllegalRecursion (p.obj) END;
+    IF (p.inGetBounds) THEN Value.IllegalRecursion (p.rhsValue) END;
     p.inGetBounds := TRUE;
-    CASE Value.ClassOf (p.obj) OF
-    | Value.Class.Expr => Expr.GetBounds (Value.ToExpr (p.obj), min, max);
-    | Value.Class.Var  => Variable.GetBounds (p.obj, min, max);
+    CASE Value.ClassOf (p.rhsValue) OF
+    | Value.Class.Expr => Expr.GetBounds (Value.ToExpr (p.rhsValue), min, max);
+    | Value.Class.Var  => Variable.GetBounds (p.rhsValue, min, max);
     ELSE                  EVAL Type.GetBounds (p.type, min, max);
     END;
     p.inGetBounds := FALSE;
@@ -138,32 +146,33 @@ PROCEDURE Bounder (p: P;  VAR min, max: Target.Int) =
 
 PROCEDURE MakeDummy (p: P) =
   BEGIN
-    p.class := Class.cMODULE;
-    p.obj   := VarExpr.Obj (VarExpr.New (ErrType.T, p.name));
+    p.class := Class.importDecl;
+    p.rhsValue   := VarExpr.Obj (VarExpr.New (ErrType.T, p.name));
   END MakeDummy;
 
 PROCEDURE Resolve (p: P) =
   VAR
-    t      : Type.T;
-    base_t : Type.T;
-    s      : Scope.T;
-    obj    : Value.T;
-    name   : M3ID.T;
+    t            : Type.T;
+    baseType     : Type.T;
+    s            : Scope.T;
+    rhsValue     : Value.T;
+    name         : M3ID.T;
+    baseTypeInfo : Type.Info;
   BEGIN
-    IF (p.class # Class.cUNKNOWN) THEN RETURN END;
+    IF (p.class # Class.unknown) THEN RETURN END;
 
-    t := Expr.TypeOf (p.expr);
+    t := Expr.TypeOf (p.lhsExpr);
 
     IF RefType.Is (t) THEN
       (* auto-magic dereference *)
-      p.expr := DerefExpr.New (p.expr);
-      p.expr.origin := p.origin;
-      t := Expr.TypeOf (p.expr);
+      p.lhsExpr := DerefExpr.New (p.lhsExpr);
+      p.lhsExpr.origin := p.origin;
+      t := Expr.TypeOf (p.lhsExpr);
     END;
 
     p.holder := t;
-    p.obj := NIL;
-    base_t := Type.Base (t);
+    p.rhsValue := NIL;
+    baseType := Type.Base (t);
 
     IF (t = ErrType.T) THEN
       (* the lhs already contains an error => silently make it look like
@@ -171,51 +180,55 @@ PROCEDURE Resolve (p: P) =
       MakeDummy (p);
 
     ELSIF (t = NIL) THEN
-      (* a module or type *)
-      IF TypeExpr.Split (p.expr, t) THEN
-        IF EnumType.LookUp (t, p.name, p.obj) THEN
-          p.class := Class.cENUM;
-        ELSIF ObjectType.LookUp (t, p.name, p.obj, p.holder) THEN
-          p.objType := t;
-          p.class := Class.cOBJTYPE;
+      (* p.lhsExpr *has* no type, so it *is* either a module or type *)
+      IF TypeExpr.Split (p.lhsExpr, t) THEN
+        IF EnumType.LookUp (t, p.name, p.rhsValue) THEN
+          p.class := Class.enumLit;
+        ELSIF ObjectType.LookUp (t, p.name, p.rhsValue, p.holder) THEN
+          p.objType := t (* Used? *);
+          p.class := Class.objTypeMethod;
         END;
-      ELSIF NamedExpr.Split (p.expr, name, obj) THEN
-        IF (Value.ClassOf (obj) = VC.Module) THEN
-          p.class := Class.cMODULE;
-          s := Module.ExportScope (Value.Base (obj));
-          p.obj := Scope.LookUp (s, p.name, TRUE);
+      ELSIF NamedExpr.Split (p.lhsExpr, name, rhsValue) THEN
+        IF (Value.ClassOf (rhsValue) = VC.Module) THEN
+          p.class := Class.importDecl;
+          s := Module.ExportScope (Value.Base (rhsValue));
+          p.rhsValue := Scope.LookUp (s, p.name, TRUE);
         END;
       END;
 
-    ELSIF RecordType.LookUp (base_t, p.name, p.obj) THEN
-      p.class := Class.cFIELD;
+    ELSIF RecordType.LookUp (baseType, p.name, p.rhsValue) THEN
+      p.class := Class.recField;
 
-    ELSIF ObjectType.LookUp (base_t, p.name, p.obj, p.holder) THEN
-      IF (Value.ClassOf (p.obj) = VC.Field)
-        THEN p.class := Class.cOBJFIELD;
-        ELSE p.class := Class.cMETHOD;
+    ELSIF ObjectType.LookUp (baseType, p.name, p.rhsValue, p.holder) THEN
+      EVAL Type.CheckInfo (baseType, baseTypeInfo);
+      p.addr_align := baseTypeInfo.addr_align;
+      IF (Value.ClassOf (p.rhsValue) = VC.Field)
+      THEN p.class := Class.objField;
+      ELSE p.class := Class.objMethod;
       END;
     END;
   END Resolve;
 
 PROCEDURE ResolveTypes (p: P) =
+  VAR objType: Type.T;
   BEGIN
     Resolve (p);
     IF (p.inTypeOf) THEN
-      Value.IllegalRecursion (p.obj);
+      Value.IllegalRecursion (p.rhsValue);
       p.type := ErrType.T;
       p.repType := p.type;
     ELSE
       p.inTypeOf := TRUE;
-      p.type := Value.TypeOf (p.obj);
+      p.type := Value.TypeOf (p.rhsValue);
       IF p.type = ErrType.T THEN p.repType := ErrType.T;
-      ELSIF p.class = Class.cMETHOD THEN
+      ELSIF p.class = Class.objMethod THEN
         p.type := NIL;
         p.repType := NIL;
-      ELSIF p.class = Class.cOBJTYPE THEN
-        p.type := ProcType.MethodSigAsProcSig (p.type, p.objType);
+      ELSIF p.class = Class.objTypeMethod THEN 
+        WITH b = TypeExpr.Split (p.lhsExpr, objType) DO <*ASSERT b*> END;
+        p.type := ProcType.MethodSigAsProcSig (p.type, objType);
         p.repType := p.type;
-      ELSE p.repType := Value.RepTypeOf (p.obj);
+      ELSE p.repType := Value.RepTypeOf (p.rhsValue);
       END;
     END;
     p.inTypeOf := FALSE;
@@ -237,25 +250,25 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
   VAR nErrs0, nErrs1, nWarns: INTEGER;  info: Type.Info;
   BEGIN
     Error.Count (nErrs0, nWarns);
-      Expr.TypeCheck (p.expr, cs);
+      Expr.TypeCheck (p.lhsExpr, cs);
       Resolve (p);
-      Expr.TypeCheck (p.expr, cs);
+      Expr.TypeCheck (p.lhsExpr, cs);
     Error.Count (nErrs1, nWarns);
 
-    IF (p.obj = NIL) THEN
+    IF (p.rhsValue = NIL) THEN
       IF (nErrs0 = nErrs1) THEN
         Error.ID (p.name, "unknown qualification \'.\'");
       END;
       MakeDummy (p);
-    ELSIF (p.class = Class.cFIELD) THEN
+    ELSIF (p.class = Class.recField) THEN
       EVAL Type.CheckInfo (p.holder, info);
-      DerefExpr.SetOffset (p.expr, info.size);
-    ELSIF (p.class = Class.cOBJTYPE)
-      AND (Value.ClassOf (p.obj) # VC.Method) THEN
+      DerefExpr.SetOffset (p.lhsExpr, info.size);
+    ELSIF (p.class = Class.objTypeMethod)
+      AND (Value.ClassOf (p.rhsValue) # VC.Method) THEN
       Error.ID (p.name, "doesn\'t name a method");
     END;
 
-    Value.TypeCheck (p.obj, cs);
+    Value.TypeCheck (p.rhsValue, cs);
     EVAL TypeOf (p);
     IF (p.type # NIL) THEN
       p.type := Type.Check (p.type);
@@ -264,24 +277,53 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
 
 PROCEDURE QualifyExprAlign (p: P): Type.BitAlignT =
   VAR fieldInfo: Field.Info;
-  VAR objType: Type.T;
-  VAR objTypeInfo: Type.Info;
+  VAR rhsRepType, lhsRepType: Type.T;
+  VAR typeInfo: Type.Info;
+  VAR fieldTypeAlign, fieldsAlign, result: Type.BitAlignT;
   BEGIN
     CASE p.class
-    OF Class.cFIELD =>
-        Field.Split (p.obj, fieldInfo);
-        RETURN CG.GCD (Expr.Alignment (p.expr), fieldInfo.offset); 
-    | Class.cOBJFIELD =>
-        Field.Split (p.obj, fieldInfo);
-        RETURN CG.GCD (Target.MaxAlign, fieldInfo.offset);
-        (* ^Expr.Alignment (p.expr) will be the alignment of the implicit
-           pointer to the heap object, which may be 32 on 32-bit target.
-           We need the alignment of the allocated object here. *) 
-    | Class.cMETHOD => RETURN Target.Address.align;
+    OF Class.objMethod => RETURN Target.Address.align;
+    | Class.importDecl
+    , Class.enumLit
+    , Class.objTypeMethod
+      => rhsRepType := Value.TypeOf (p.rhsValue);
+         EVAL Type.CheckInfo (rhsRepType, typeInfo);
+         RETURN typeInfo.alignment;
     ELSE
-      objType := Value.TypeOf (p.obj);
-      EVAL Type.CheckInfo (objType, objTypeInfo);
-      RETURN objTypeInfo.alignment; 
+    END (*CASE*);
+
+    (* It's a field.  get its alignment from its type, respecting packing. *)
+    rhsRepType := Type.Strip (Value.TypeOf (p.rhsValue)); (* Remove named. *)
+    rhsRepType := Type.CheckInfo (rhsRepType, (*OUT*) typeInfo);
+    IF typeInfo.class = Type.Class.Packed
+    THEN fieldTypeAlign := 1;
+    ELSE fieldTypeAlign := typeInfo.alignment;
+    END;
+    Field.Split (p.rhsValue, fieldInfo);
+    
+    CASE p.class <*NOWARN*>
+    OF Class.recField =>
+        result := CG.GCD (Expr.Alignment (p.lhsExpr), fieldInfo.offset);
+        <*ASSERT result MOD fieldTypeAlign = 0 *>
+        RETURN result;
+    | Class.objField =>
+        fieldsAlign := Target.Address.align;
+        (* ^Will be alignment of the whole block of fields. *)
+        IF fieldsAlign < Target.MaxAlign
+        THEN (* It's possible on a 32-bit target, that the heap referent's
+                alignment is 64.  Does the object type indicate so? *)
+          lhsRepType := Expr.RepTypeOf (p.lhsExpr);
+          WHILE OpaqueType.Is (lhsRepType) DO
+            (* This could have a revelation with MaxAlign, but we won't
+               know that now.  So conservatively assume not. *)
+            lhsRepType := OpaqueType.Super (lhsRepType)
+          END; 
+          fieldsAlign
+            := MAX (fieldsAlign, ObjectType.FieldAlignment (lhsRepType) );
+        END;
+        result := CG.GCD (fieldsAlign, fieldInfo.offset);
+        <*ASSERT result MOD fieldTypeAlign = 0 *>
+        RETURN result;
     END (*CASE*)
   END QualifyExprAlign; 
 
@@ -290,9 +332,9 @@ PROCEDURE EqCheck (a: P;  e: Expr.T;  x: M3.EqAssumption): BOOLEAN =
     TYPECASE e OF
     | NULL => RETURN FALSE;
     | P(b) => Resolve (a);  Resolve (b);
-              RETURN (a.obj = b.obj)
+              RETURN (a.rhsValue = b.rhsValue)
                  AND (a.class = b.class)
-                 AND Expr.IsEqual (a.expr, b.expr, x);
+                 AND Expr.IsEqual (a.lhsExpr, b.lhsExpr, x);
     ELSE      RETURN FALSE;
     END;
   END EqCheck;
@@ -301,21 +343,21 @@ PROCEDURE NeedsAddress (p: P) =
   VAR c: Value.Class;
   BEGIN
     CASE p.class OF
-    | Class.cMODULE =>
-        c := Value.ClassOf (p.obj);
+    | Class.importDecl =>
+        c := Value.ClassOf (p.rhsValue);
         IF (c = Value.Class.Var) THEN
-          Variable.NeedsAddress (p.obj);
+          Variable.NeedsAddress (p.rhsValue);
         ELSIF (c = Value.Class.Expr) THEN
-          Expr.NeedsAddress (Value.ToExpr (p.obj));
+          Expr.NeedsAddress (Value.ToExpr (p.rhsValue));
         END;
-    | Class.cFIELD =>
-        Expr.NeedsAddress (p.expr);
-    | Class.cOBJFIELD =>
+    | Class.recField =>
+        Expr.NeedsAddress (p.lhsExpr);
+    | Class.objField =>
         (* ok, all objects have addresses *)
-    | Class.cENUM,
-      Class.cOBJTYPE,
-      Class.cMETHOD,
-      Class.cUNKNOWN =>
+    | Class.enumLit,
+      Class.objTypeMethod,
+      Class.objMethod,
+      Class.unknown =>
         <* ASSERT FALSE *>
     END;
   END NeedsAddress;
@@ -326,13 +368,13 @@ PROCEDURE Prep (p: P) =
     info: Type.Info;
   BEGIN
     CASE p.class OF
-    | Class.cMODULE =>
-        IF Host.doIncGC AND Value.ClassOf (p.obj) = Value.Class.Var THEN
+    | Class.importDecl =>
+        IF Host.doIncGC AND Value.ClassOf (p.rhsValue) = Value.Class.Var THEN
           EVAL Type.CheckInfo (p.type, info);
           IF info.isTraced THEN
             CASE info.class OF 
             | Type.Class.Object, Type.Class.Opaque, Type.Class.Ref =>
-              Variable.Load (p.obj);
+              Variable.Load (p.rhsValue);
               RunTyme.EmitCheckLoadTracedRef ();
               p.temp := CG.Pop ();
             ELSE
@@ -340,18 +382,18 @@ PROCEDURE Prep (p: P) =
             END
           END
         END
-    | Class.cENUM =>
+    | Class.enumLit =>
         (* skip *)
-    | Class.cOBJTYPE =>
+    | Class.objTypeMethod =>
         (* skip *)
-    | Class.cFIELD =>
-        IF Expr.IsDesignator (p.expr)
-        THEN Expr.PrepLValue (p.expr, traced := FALSE);
+    | Class.recField =>
+        IF Expr.IsDesignator (p.lhsExpr)
+        THEN Expr.PrepLValue (p.lhsExpr, traced := FALSE);
         ELSE
-          EVAL Expr.CheckUseFailure (p.expr);
-          Expr.Prep (p.expr);
+          EVAL Expr.CheckUseFailure (p.lhsExpr);
+          Expr.Prep (p.lhsExpr);
         END;
-        Field.Split (p.obj, field);
+        Field.Split (p.rhsValue, field);
         EVAL Type.CheckInfo (field.type, info);
         IF Host.doIncGC AND info.isTraced THEN
           CASE info.class OF
@@ -363,9 +405,9 @@ PROCEDURE Prep (p: P) =
             (* no check *)
           END
         END
-    | Class.cOBJFIELD =>
-        Expr.Prep (p.expr);
-        Field.Split (p.obj, field);
+    | Class.objField =>
+        Expr.Prep (p.lhsExpr);
+        Field.Split (p.rhsValue, field);
         EVAL Type.CheckInfo (field.type, info);
         IF Host.doIncGC AND info.isTraced THEN
           CASE info.class OF
@@ -377,11 +419,11 @@ PROCEDURE Prep (p: P) =
             (* no check *)
           END
         END
-    | Class.cMETHOD =>
-        Expr.Prep (p.expr);
-        Expr.Compile (p.expr);
+    | Class.objMethod =>
+        Expr.Prep (p.lhsExpr);
+        Expr.Compile (p.lhsExpr);
         p.temp := CG.Pop ();
-    | Class.cUNKNOWN =>
+    | Class.unknown =>
         <* ASSERT FALSE *>
     END;
   END Prep;
@@ -389,25 +431,25 @@ PROCEDURE Prep (p: P) =
 PROCEDURE Compile (p: P) =
   VAR
     obj_offset, obj_align: INTEGER;
-    field: Field.Info;
+    fieldInfo: Field.Info;
     method: Method.Info;
   BEGIN
     CASE p.class OF
-    | Class.cMODULE =>
+    | Class.importDecl =>
         IF p.temp # NIL THEN
           CG.Push (p.temp);
           CG.Free (p.temp);
           p.temp := NIL;
           RETURN;
         END;
-        (* Do we need to Compile p.obj, if it is a constant? *)
-        Value.Load (p.obj);
-    | Class.cENUM =>
-        Value.Load (p.obj);
-    | Class.cOBJTYPE =>
+        (* Do we need to Compile p.rhsValue, if it is a constant? *)
+        Value.Load (p.rhsValue);
+    | Class.enumLit =>
+        Value.Load (p.rhsValue);
+    | Class.objTypeMethod =>
         Type.Compile (p.holder);
         Type.Compile (p.objType);
-        Method.SplitX (p.obj, method);
+        Method.SplitX (p.rhsValue, method);
         Type.LoadInfo (p.objType, M3RT.OTC_defaultMethods, addr := TRUE);
         obj_offset := ObjectType.MethodOffset (p.holder);
         IF (obj_offset >= 0) THEN
@@ -419,43 +461,45 @@ PROCEDURE Compile (p: P) =
         CG.Boost_addr_alignment (Target.Address.align);
         CG.Load_indirect (CG.Type.Addr, method.offset, Target.Address.size);
         CG.Boost_addr_alignment (Target.Address.align);
-    | Class.cFIELD =>
+    | Class.recField =>
         IF p.temp # NIL THEN
           CG.Push (p.temp);
           CG.Free (p.temp);
           p.temp := NIL;
           RETURN;
         END;
-        Field.Split (p.obj, field);
-        IF Expr.IsDesignator (p.expr)
-          THEN Expr.CompileLValue (p.expr, traced := FALSE);
-          ELSE Expr.Compile (p.expr);
+        Field.Split (p.rhsValue, fieldInfo);
+        IF Expr.IsDesignator (p.lhsExpr)
+          THEN Expr.CompileLValue (p.lhsExpr, traced := FALSE);
+          ELSE Expr.Compile (p.lhsExpr);
         END;
-        CG.Add_offset (field.offset);
-        Type.LoadScalar (field.type);
-    | Class.cOBJFIELD =>
+        CG.Add_offset (fieldInfo.offset);
+        Type.LoadScalar (fieldInfo.type);
+    | Class.objField =>
         IF p.temp # NIL THEN
           CG.Push (p.temp);
           CG.Free (p.temp);
           p.temp := NIL;
           RETURN;
         END;
-        Field.Split (p.obj, field);
-        Expr.Compile (p.expr);
-        CG.Boost_addr_alignment (Target.Address.align);
-        ObjectType.GetFieldOffset (p.holder, obj_offset, obj_align);
+        Field.Split (p.rhsValue, fieldInfo);
+        Expr.Compile (p.lhsExpr);
+        CG.Boost_addr_alignment (p.addr_align);
+        ObjectType.GetFieldsOffsetAndAlign (p.holder, obj_offset, obj_align);
         IF (obj_offset >= 0) THEN
-          INC (field.offset, obj_offset);
+          INC (fieldInfo.offset, obj_offset);
         ELSE
-          CG.Check_nil (CG.RuntimeError.BadMemoryReference);
+          IF Host.doNilChk THEN
+            CG.Check_nil (CG.RuntimeError.BadMemoryReference);
+          END;
           Type.LoadInfo (p.holder, M3RT.OTC_dataOffset);
           CG.Index_bytes (Target.Byte);
         END;
-        CG.Add_offset (field.offset);
+        CG.Add_offset (fieldInfo.offset);
         CG.Boost_addr_alignment (obj_align);
-        Type.LoadScalar (field.type);
-    | Class.cMETHOD =>
-        Method.SplitX (p.obj, method);
+        Type.LoadScalar (fieldInfo.type);
+    | Class.objMethod =>
+        Method.SplitX (p.rhsValue, method);
         CG.Push (p.temp);
         CG.Boost_addr_alignment (Target.Address.align);
         CG.Load_indirect (CG.Type.Addr, 0, Target.Address.size);
@@ -470,7 +514,7 @@ PROCEDURE Compile (p: P) =
         CG.Boost_addr_alignment (Target.Address.align);
         CG.Load_indirect (CG.Type.Addr, method.offset, Target.Address.size);
         CG.Boost_addr_alignment (Target.Address.align);
-    | Class.cUNKNOWN =>
+    | Class.unknown =>
         <* ASSERT FALSE *>
     END;
  END Compile;
@@ -479,33 +523,33 @@ PROCEDURE PrepLV (p: P; traced: BOOLEAN) =
   VAR info: Type.Info;
   BEGIN
     CASE p.class OF
-    | Class.cMODULE, Class.cENUM =>
+    | Class.importDecl, Class.enumLit =>
         (* skip *)
-    | Class.cOBJTYPE =>
+    | Class.objTypeMethod =>
         (* skip *)
-    | Class.cFIELD =>
-        IF Expr.IsDesignator (p.expr)
-        THEN Expr.PrepLValue (p.expr, traced);
+    | Class.recField =>
+        IF Expr.IsDesignator (p.lhsExpr)
+        THEN Expr.PrepLValue (p.lhsExpr, traced);
         ELSE
-          EVAL Expr.CheckUseFailure (p.expr);
-          Expr.Prep (p.expr);
+          EVAL Expr.CheckUseFailure (p.lhsExpr);
+          Expr.Prep (p.lhsExpr);
         END;
-    | Class.cOBJFIELD =>
-        Expr.Prep (p.expr);
+    | Class.objField =>
+        Expr.Prep (p.lhsExpr);
         IF traced AND Host.doGenGC THEN
           EVAL Type.CheckInfo (p.type, info);
           IF NOT info.isTraced THEN RETURN END;
-          EVAL Type.CheckInfo (Expr.TypeOf (p.expr), info);
+          EVAL Type.CheckInfo (Expr.TypeOf (p.lhsExpr), info);
           IF NOT info.isTraced THEN RETURN END;
-          Expr.Compile (p.expr);
+          Expr.Compile (p.lhsExpr);
           RunTyme.EmitCheckStoreTraced ();
           p.temp := CG.Pop ();
         END;
-    | Class.cMETHOD =>
-        Expr.Prep (p.expr);
-        Expr.Compile (p.expr);
+    | Class.objMethod =>
+        Expr.Prep (p.lhsExpr);
+        Expr.Compile (p.lhsExpr);
         p.temp := CG.Pop ();
-    | Class.cUNKNOWN =>
+    | Class.unknown =>
         <* ASSERT FALSE *>
     END;
   END PrepLV;
@@ -514,40 +558,42 @@ PROCEDURE CompileLV (p: P;  traced: BOOLEAN) =
   VAR obj_offset, obj_align: INTEGER;  field: Field.Info;
   BEGIN
     CASE p.class OF
-    | Class.cMODULE =>
-        CASE Value.ClassOf (p.obj) OF
-        | Value.Class.Expr => Value.Load (p.obj);
-        | Value.Class.Var  => Variable.LoadLValue (p.obj);
+    | Class.importDecl =>
+        CASE Value.ClassOf (p.rhsValue) OF
+        | Value.Class.Expr => Value.Load (p.rhsValue);
+        | Value.Class.Var  => Variable.LoadLValue (p.rhsValue);
         ELSE <*ASSERT FALSE*>
         END;
-    | Class.cFIELD =>
-        Field.Split (p.obj, field);
-        Expr.CompileLValue (p.expr, traced);
+    | Class.recField =>
+        Field.Split (p.rhsValue, field);
+        Expr.CompileLValue (p.lhsExpr, traced);
         CG.Add_offset (field.offset);
-    | Class.cOBJFIELD =>
-        Field.Split (p.obj, field);
+    | Class.objField =>
+        Field.Split (p.rhsValue, field);
         IF p.temp # NIL THEN
           <*ASSERT traced*>
           CG.Push (p.temp);
           CG.Free (p.temp);
           p.temp := NIL;
         ELSE
-          Expr.Compile (p.expr);
+          Expr.Compile (p.lhsExpr);
         END;
-        ObjectType.GetFieldOffset (p.holder, obj_offset, obj_align);
+        ObjectType.GetFieldsOffsetAndAlign (p.holder, obj_offset, obj_align);
         IF (obj_offset >= 0) THEN
           INC (field.offset, obj_offset);
         ELSE
-          CG.Check_nil (CG.RuntimeError.BadMemoryReference);
+          IF Host.doNilChk THEN
+            CG.Check_nil (CG.RuntimeError.BadMemoryReference);
+          END;
           Type.LoadInfo (p.holder, M3RT.OTC_dataOffset);
           CG.Index_bytes (Target.Byte);
         END;
         CG.Add_offset (field.offset);
         CG.Boost_addr_alignment (obj_align);
-    | Class.cENUM,
-      Class.cOBJTYPE,
-      Class.cMETHOD,
-      Class.cUNKNOWN =>
+    | Class.enumLit,
+      Class.objTypeMethod,
+      Class.objMethod,
+      Class.unknown =>
         <* ASSERT FALSE *>
     END;
  END CompileLV;
@@ -564,12 +610,12 @@ TYPE
 PROCEDURE Fold (p: P): Expr.T =
   VAR lhs: LHS;  e: Expr.T;
   BEGIN
-    IF (p.inFold) THEN Value.IllegalRecursion (p.obj); RETURN NIL END;
+    IF (p.inFold) THEN Value.IllegalRecursion (p.rhsValue); RETURN NIL END;
     p.inFold := TRUE;
 
     (* evaluate the qualified expression *)
     lhs.kind := Kind.Expr;
-    lhs.expr := p.expr;
+    lhs.expr := p.lhsExpr;
     DoQualify (lhs, p.name);
 
     (* finally, simplify the result to an Expr.T if possible *)
@@ -616,7 +662,7 @@ PROCEDURE DoQualify (VAR lhs: LHS;  name: M3ID.T) =
         ELSIF (TYPECODE (lhs.expr) = TYPECODE (P)) THEN
           p := lhs.expr;
           lhs.kind  := Kind.Expr;
-          lhs.expr  := p.expr;
+          lhs.expr  := p.lhsExpr;
           DoQualify (lhs, p.name);
           DoQualify (lhs, name);
         ELSIF TypeExpr.Split (lhs.expr, t) THEN
@@ -676,38 +722,38 @@ PROCEDURE DoQualify (VAR lhs: LHS;  name: M3ID.T) =
 PROCEDURE IsDesignator (p: P;  <*UNUSED*> lhs: BOOLEAN): BOOLEAN =
   BEGIN
     CASE p.class OF
-    | Class.cMODULE   => RETURN (Value.ClassOf (p.obj) = VC.Var);
-    | Class.cENUM     => RETURN FALSE;
-    | Class.cOBJTYPE  => RETURN FALSE;
-    | Class.cFIELD    => RETURN Expr.IsDesignator (p.expr);
-    | Class.cOBJFIELD => RETURN TRUE;
-    | Class.cMETHOD   => RETURN FALSE;
-    | Class.cUNKNOWN  => RETURN FALSE;
+    | Class.importDecl   => RETURN (Value.ClassOf (p.rhsValue) = VC.Var);
+    | Class.enumLit     => RETURN FALSE;
+    | Class.objTypeMethod  => RETURN FALSE;
+    | Class.recField    => RETURN Expr.IsDesignator (p.lhsExpr);
+    | Class.objField => RETURN TRUE;
+    | Class.objMethod   => RETURN FALSE;
+    | Class.unknown  => RETURN FALSE;
     END;
   END IsDesignator;
 
 PROCEDURE IsWritable (p: P;  lhs: BOOLEAN): BOOLEAN =
   BEGIN
     CASE p.class OF
-    | Class.cMODULE   => RETURN Value.IsWritable (p.obj, lhs);
-    | Class.cENUM     => RETURN FALSE;
-    | Class.cOBJTYPE  => RETURN FALSE;
-    | Class.cFIELD    => RETURN Expr.IsWritable (p.expr, lhs);
-    | Class.cOBJFIELD => RETURN TRUE;
-    | Class.cMETHOD   => RETURN FALSE;
-    | Class.cUNKNOWN  => RETURN FALSE;
+    | Class.importDecl   => RETURN Value.IsWritable (p.rhsValue, lhs);
+    | Class.enumLit     => RETURN FALSE;
+    | Class.objTypeMethod  => RETURN FALSE;
+    | Class.recField    => RETURN Expr.IsWritable (p.lhsExpr, lhs);
+    | Class.objField => RETURN TRUE;
+    | Class.objMethod   => RETURN FALSE;
+    | Class.unknown  => RETURN FALSE;
     END;
   END IsWritable;
 
 PROCEDURE IsZeroes (p: P;  <*UNUSED*> l: BOOLEAN): BOOLEAN =
   VAR lhs: LHS;  b: BOOLEAN;
   BEGIN
-    IF (p.inIsZeroes) THEN Value.IllegalRecursion (p.obj); RETURN FALSE END;
+    IF (p.inIsZeroes) THEN Value.IllegalRecursion (p.rhsValue); RETURN FALSE END;
     p.inIsZeroes := TRUE;
 
     (* evaluate the qualified expression *)
     lhs.kind := Kind.Expr;
-    lhs.expr := p.expr;
+    lhs.expr := p.lhsExpr;
     DoQualify (lhs, p.name);
 
     (* finally, simplify the result to an Expr.T if possible *)
@@ -730,14 +776,14 @@ PROCEDURE IsZeroes (p: P;  <*UNUSED*> l: BOOLEAN): BOOLEAN =
 PROCEDURE NoteWrites (p: P) =
   BEGIN
     CASE p.class OF
-    | Class.cENUM     => (*skip*)
-    | Class.cOBJTYPE  => (*skip*)
-    | Class.cMETHOD   => (*skip*)
-    | Class.cUNKNOWN  => (*skip*)
-    | Class.cFIELD    => Expr.NoteWrite (p.expr);
-    | Class.cOBJFIELD => Expr.NoteWrite (p.expr);
-    | Class.cMODULE   => IF (Value.ClassOf (p.obj) = VC.Var) THEN
-                           Variable.ScheduleTrace (Value.Base (p.obj));
+    | Class.enumLit     => (*skip*)
+    | Class.objTypeMethod  => (*skip*)
+    | Class.objMethod   => (*skip*)
+    | Class.unknown  => (*skip*)
+    | Class.recField    => Expr.NoteWrite (p.lhsExpr);
+    | Class.objField => Expr.NoteWrite (p.lhsExpr);
+    | Class.importDecl   => IF (Value.ClassOf (p.rhsValue) = VC.Var) THEN
+                           Variable.ScheduleTrace (Value.Base (p.rhsValue));
                          END;
     END;
   END NoteWrites;

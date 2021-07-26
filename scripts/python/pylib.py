@@ -32,7 +32,7 @@ class Tee:
         if self.b != None and self.a != self.b:
             self.b.flush()
 
-LowercaseArgv = map(lambda(a): a.lower(), sys.argv)
+LowercaseArgv = map(lambda a: a.lower(), sys.argv)
 
 sys.stdout = Tee(sys.stdout, open(sys.argv[0] + ".log", "a"))
 
@@ -387,7 +387,7 @@ def TargetOnlyHasCBackend(a):
         return false
     return (a.endswith("_nt") or a.startswith("arm") or a.find("riscv") != -1
         or a.find("solaris") != -1 or a.startswith("sol") # gcc backend does work
-        or a.find("alpha") or a.find("osf") # gcc backend does work
+        or a.find("alpha") != -1 or a.find("osf") != -1 # gcc backend does work
         or a.find("mingw") != -1 or a.find("cygwin") != -1)
 
 _PossibleCm3Flags = ["boot", "keep", "override", "commands", "verbose", "why", "debug", "trace"]
@@ -591,7 +591,7 @@ def GetVersion(Key):
     # not defined in the environment)
     #
     MissingKey = None
-    for Item in Versions.iteritems():
+    for Item in Versions.items():
         #print(Item)
         if Item[1] is None:
             MissingKey = Item[0]
@@ -1000,7 +1000,7 @@ PackageDB = None
 def ReadPackageDB():
     MakePackageDB()
     global PackageDB
-    PackageDB = (PackageDB or map(lambda(a): a.replace("\n", "").replace('\\', '/').replace("\r", ""), open(PKGSDB)))
+    PackageDB = PackageDB or list(map(lambda a: a.replace("\n", "").replace('\\', '/').replace("\r", ""), open(PKGSDB)))
 
 #-----------------------------------------------------------------------------
 
@@ -1044,7 +1044,7 @@ def ListPackages(pkgs):
                     break
     else:
         Result = PackageDB
-    return map(lambda(a): (Root + '/' + a), Result)
+    return map(lambda a: (Root + '/' + a), Result)
 
 #-----------------------------------------------------------------------------
 
@@ -1189,9 +1189,15 @@ def Boot():
         #CCompilerFlags = " -g -mt -xldscope=symbolic "
         CCompiler = "./c_compiler"
         CopyFile("./c_compiler", BootDir)
+        CCompilerOut = " -o $@ "
     elif osf:
-        CCompiler = "cc" # cxx, gcc, g++ all work
-        CCompilerFlags = " -g -pthread "
+        # There is a problem on my install such that linking with cxx fails, unless I use oldcxx.
+        # This really should be fixed otherwise.
+        CCompiler = "/usr/bin/cxx" # g++ should also work all work, but change -ieee to -mieee
+        CCompilerFlags = " -g -pthread -x cxx -c99 -fprm d "
+        #CCompiler = "g++"
+        #CCompilerFlags = " -g -pthread -mfp-rounding-mode=d "
+        CCompilerOut = " -o $@ "
     else:
         # gcc and other platforms
         CCompiler = {
@@ -1209,9 +1215,12 @@ def Boot():
             "AMD64_NT"      : " -Zi -Gy ", # hack some problem with exception handling and alignment otherwise
             }.get(Config) or " -pthread -g "
 
-        #CCompilerOut = {
-        #    "AMD64_NT"      : "-Fo./",
-        #    }.get(Config) or "-o $@"
+        CCompilerOut = {
+            "AMD64_NT"      : "-Fo./",
+            "I386_NT"       : "-Fo./",
+            "ARM32_NT"      : "-Fo./",
+            "ARM64_NT"      : "-Fo./",
+            }.get(Config) or "-o $@"
 
     CCompilerFlags = CCompilerFlags + ({
         "AMD64_LINUX"     : " -m64 ",
@@ -1248,6 +1257,8 @@ def Boot():
     # http://www.openldap.org/lists/openldap-bugs/200006/msg00070.html
     # http://www.gnu.org/software/autoconf-archive/ax_pthread.html#ax_pthread
 
+    # TODO: All this logic should be in the Makefile so we can make one distribution.
+
     if darwin:
         pass
     elif mingw:
@@ -1257,7 +1268,9 @@ def Boot():
     elif hpux:
         Link = Link + " -lrt -lm -lpthread -pthread "
     elif osf:
-        Link = Link + " -lrt -lm -pthread "
+        # There is a problem on my install such that linking with cxx fails, unless I use oldcxx.
+        # This really should be fixed otherwise.
+        Link = Link + " -lrt -lm -pthread -oldcxx "
     elif interix:
         Link = Link + " -lm -pthread "
     elif nt:
@@ -1529,7 +1542,7 @@ def Boot():
 
     maino_ext = "o"
     if CBackend:
-        maino_ext = "m3.c"
+        maino_ext = "m3.o"
     elif AssembleOnTarget:
         for pkg in main_packages:
             Makefile.write(pkg + ".d/Main.o: " + pkg + ".d/" + mainS + NL)
@@ -1827,7 +1840,7 @@ def DoPackage(args, PackagesFromCaller = None):
 
     SetupEnvironment()
 
-    args = filter(lambda(a): not a.startswith(os.path.dirname(__file__)) and a != "" and not a.endswith(".py"), args)
+    args = filter(lambda a: not a.startswith(os.path.dirname(__file__)) and a != "" and not a.endswith(".py"), args)
 
     # print("args is " + str(args))
     # sys.stdout.flush()
@@ -1994,7 +2007,7 @@ def DeleteFile(a):
     else:
         print("del /f /a " + a)
     if isfile(a):
-        os.chmod(ConvertPathForPython(a), 0700)
+        os.chmod(ConvertPathForPython(a), 0o700)
         os.remove(ConvertPathForPython(a))
     if isfile(a):
         FatalError("failed to delete " + a)
