@@ -146,7 +146,7 @@ def RemovePathExtension(a):
     return a[:a.rfind(".")]
 
 def _GetObjectName(a, obj):
-    return GetPathBaseName(a) + "." + {"c" : obj, "s" : obj, "ms" : "mo", "is" : "io"}[GetPathExtension(a)]
+    return GetPathBaseName(a) + "." + {"cpp" : obj, "c" : obj, "s" : obj, "ms" : "mo", "is" : "io"}[GetPathExtension(a)]
 
 def GetPathBaseName(a):
     a = GetLastPathElement(a)
