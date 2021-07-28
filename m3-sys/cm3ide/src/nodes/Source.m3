@@ -23,11 +23,10 @@ VAR
   clientID := ID.Add ("clients");
 
 CONST
-  Kind = { I3, M3, IG, MG, C, CPP, H, Quake, Other };
   IsM3 = ARRAY Kind OF BOOLEAN { TRUE,  (* i3 *)
                                  TRUE,  (* m3 *)
                                  TRUE,  (* ig *)
-                                 TRUE,  (* mg )
+                                 TRUE,  (* mg *)
                                  FALSE, (* c *)
                                  FALSE, (* cpp *)
                                  FALSE, (* h *)
