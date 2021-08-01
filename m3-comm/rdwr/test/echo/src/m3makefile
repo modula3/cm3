@@ -6,15 +6,15 @@
 % Last modified on Mon Dec 20 14:14:04 PST 1993 by kalsow
 %      modified on Tue Aug 24 17:03:14 PDT 1993 by wobber
 
-import(libm3)
-import(anim3D)
-import(rdwr)
+import("libm3")
+import("anim3D")
+import("rdwr")
 
 % m3_option("-commands")
 
-interface(EchoRW)
+interface("EchoRW")
 
-implementation(Echo)
-netobj(EchoRW,T)
+implementation("Echo")
+netobj("EchoRW","T")
 
-program(echotest)
+program("echotest")
