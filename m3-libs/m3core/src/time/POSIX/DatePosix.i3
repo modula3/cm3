@@ -6,7 +6,7 @@
 (*      modified on Thu Jan 28 10:00:32 PST 1993 by mjordan *)
 
 INTERFACE DatePosix;
-IMPORT Date, Time, Ctypes;
+IMPORT Time, Ctypes;
 
 (* This MUST match m3core.h
  * The fields are ordered by size and alphabetically.

@@ -7,8 +7,6 @@
 
 INTERFACE DragonT;
 
-IMPORT Ctypes;
-
 TYPE 
   CutoffMode = {normal, absolute, relative};
   Digit = [0 .. 9];
