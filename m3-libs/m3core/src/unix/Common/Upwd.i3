@@ -4,7 +4,7 @@
 
 INTERFACE Upwd;
 
-FROM Ctypes IMPORT char_star, int;
+FROM Ctypes IMPORT char_star;
 FROM Utypes IMPORT uid_t;
 
 TYPE
