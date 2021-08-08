@@ -561,7 +561,6 @@ readonly proc e_test (group, uid, comment) is
 end
 
 % Recently added tests...
-
 p_test ("p2", "p268", "Record constructors with statically inevitable RT errors.")
 p_test ("p2", "p269", "Nested array constructors.")
 p_test ("p2", "p270", "Array constructors with statically inevitable RT errors.")
@@ -580,6 +579,7 @@ p_test ("p2", "p282", "grisuc")
 
 % This fails an assert in integrated backend.
 p_test ("p2", "p283", "Long.LT")
+p_test ("p2", "p286", "Order of compilation error with array constructor parameter.")
 
 % Some recently fixed tests in the packedVars branch: 
 
