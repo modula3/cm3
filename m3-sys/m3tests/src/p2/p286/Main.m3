@@ -12,7 +12,8 @@ MODULE Main;
   once by T1 and then by T2.
   However, on my machine the output is 0N where N is some random number.
   If one touches T2.m3 and recompiles. The correct answer is output.
-  ( the T2_m.o object file is unchanged but the executable is different )
+  ( the T2_m.o object file is changed and the executable is different
+    even though no change is made to the source. )
   If one deletes the target directory and changes the order of T1 and T2
   in the m3makefile and builds, the correct answer is output.
 
