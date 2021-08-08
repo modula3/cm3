@@ -1,0 +1,5 @@
+INTERFACE T2;
+
+PROCEDURE Proc();
+
+END T2.

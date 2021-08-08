@@ -1,0 +1,11 @@
+MODULE T2;
+
+IMPORT R;
+
+PROCEDURE Proc() =
+  BEGIN
+    R.DoIt();
+  END Proc;
+
+BEGIN
+END T2.

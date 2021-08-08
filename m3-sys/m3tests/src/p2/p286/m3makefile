@@ -1,0 +1,10 @@
+import("libm3")
+
+Module("R")
+Module("T1")
+Module("T2")
+
+implementation("Main")
+include("../../Test.common")
+%program("pgm")
+
