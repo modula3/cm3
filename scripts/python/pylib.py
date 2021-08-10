@@ -1427,7 +1427,7 @@ def Boot():
 
     if True: #not CBackend:
         Makefile.write(".SUFFIXES:" + NL
-                       + ".SUFFIXES: .c .is .ms .s .o .obj .io .mo" + NL2)
+                       + ".SUFFIXES: .cpp .c .is .ms .s .o .obj .io .mo" + NL2)
 
     Makefile.write("all: ")
     for pkg in main_packages:
@@ -1564,8 +1564,8 @@ def Boot():
         # are over the limits.
 
         if nt:
-            Makefile.write(pkg + """.exe: $(OBJECTS) $(@R).d/Main.m3.c
-	$(Compile) $(@R).d/Main.m3.c /Fo$(@R).d/Main.m3.obj
+            Makefile.write(pkg + """.exe: $(OBJECTS) $(@R).d/Main.m3.cpp
+	$(Compile) $(@R).d/Main.m3.cpp /Fo$(@R).d/Main.m3.obj
     $(Link) -out:$@ @<<$(@).responseFile
 $(@R).d/Main.m3.obj
 $(OBJECTS: =
