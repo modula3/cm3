@@ -1,0 +1,8 @@
+INTERFACE R;
+
+TYPE
+  Rec = RECORD a,b : INTEGER; END;
+
+PROCEDURE DoIt(READONLY dl := ARRAY OF Rec{});
+
+END R.
