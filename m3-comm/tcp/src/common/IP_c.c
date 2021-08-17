@@ -134,12 +134,12 @@ int
 __cdecl
 GetCanonicalByAddr(const int* addr, TEXT* result, hostent** h)
 {
-    sockaddr_in ua;
+    struct in_addr ua;
     M3_STATIC_ASSERT(sizeof(*addr) == 4);
-    M3_STATIC_ASSERT(sizeof(ua.sin_addr) == 4);
+    M3_STATIC_ASSERT(sizeof(ua.s_addr) == 4);
 
     ZeroMemory(&ua, sizeof(ua));
-    memcpy(&ua.sin_addr, addr, 4);
+    memcpy(&ua.s_addr, addr, 4);
 
     *h = gethostbyaddr((char*)&ua, sizeof(ua), AF_INET);
     if (*h)

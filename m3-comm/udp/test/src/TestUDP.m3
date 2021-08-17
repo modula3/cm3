@@ -47,9 +47,22 @@ PROCEDURE PrintIPError(arg: AtomList.T) =
     END
   END PrintIPError;
 
+(* GetHostByAddr is obslolete
 PROCEDURE HostPort(READONLY end: IP.Endpoint): TEXT RAISES {IP.Error} =
   BEGIN
     RETURN IP.GetCanonicalByAddr(end.addr) & ":" & Fmt.Int(end.port)
+  END HostPort;
+*)
+
+PROCEDURE HostPort(READONLY end: IP.Endpoint): TEXT RAISES {IP.Error} =
+  VAR
+    ep := NEW(IP.Endpoint4);
+    host,service : TEXT := "";
+  BEGIN
+    ep.adr := end.addr;
+    ep.port := end.port;
+    IP.GetNameInfo(ep,host,service);
+    RETURN host & ":" & Fmt.Int(ep.port); 
   END HostPort;
 
 PROCEDURE PickleInt(i: INTEGER; VAR (*INOUT*) bytes: ARRAY OF CHAR) =
@@ -95,7 +108,7 @@ PROCEDURE Server() RAISES {IP.Error} =
         INC(n);
         VAR i := UnpickleInt(d.bytes^); BEGIN
           Wr.PutText(stdout, "Received packet " & Fmt.Int(i)
-            & " from " & HostPort(d.other) & "; sending ACK...\n");
+            & " from " & HostPort(d.other) &  "; sending ACK...\n");
           Wr.Flush(stdout);
         END;
         sent := conn.sendText(d.other, Ack);
