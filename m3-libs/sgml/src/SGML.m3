@@ -1026,6 +1026,9 @@ PROCEDURE CopyDefinitions(READONLY from: Definitions; VAR to: Definitions) =
     to.publics := CopyTextTextTbl(from.publics);
   END CopyDefinitions;
 
+PROCEDURE DumpDefinitions(this: Parser) =
+  BEGIN
+  END DumpDefinitions;
 
 BEGIN
   (* Preallocated values to indicate the type of marked section. *)
