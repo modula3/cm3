@@ -205,7 +205,7 @@ PROCEDURE ScanNumber (t: Default) =
 
     IF (ch = '.') THEN
       (* scan a floating point number *)
-      INC (offset);  (*ch := t.buffer [offset];*)
+      INC (offset);
       ch := t.getCh(offset);
       t.token := TK_Real_const;
 
@@ -218,30 +218,29 @@ PROCEDURE ScanNumber (t: Default) =
       END;
     END;
 
-      (* check for the exponent *)
-      IF (ch = 'e') OR (ch = 'E') THEN
-        t.token := TK_Real_const;
-      ELSE (* real constant with no exponent *)
-        t.token := TK_Real_const;
-        t.next_offset := offset;
-        t.length := offset - t.offset;
-        RETURN;
-      END;
-      INC (offset);
-      ch := t.getCh(offset); (* eat the e/E *)
+    (* check for the exponent *)
+    IF (ch = 'e') OR (ch = 'E') THEN
+      t.token := TK_Real_const;
+    ELSE (* it was an int constant *)
+      t.next_offset := offset;
+      t.length := offset - t.offset;
+      RETURN;
+    END;
+    INC (offset);
+    ch := t.getCh(offset); (* eat the e/E *)
 
-      (* get the exponent sign *)
-      IF (ch = '+') OR (ch = '-') THEN
-        INC (offset); 
-        ch := t.getCh(offset);
-      END;
+    (* get the exponent sign *)
+    IF (ch = '+') OR (ch = '-') THEN
+      INC (offset); 
+      ch := t.getCh(offset);
+    END;
 
-      (* finally, get the exponent digits *)
-      IF Digits[ch] THEN
-        WHILE Digits[ch] DO  INC (offset); ch := t.getCh(offset); END;
-      ELSE
-        Err (t, offset, "missing digits in real exponent");
-      END;
+    (* finally, get the exponent digits *)
+    IF Digits[ch] THEN
+      WHILE Digits[ch] DO  INC (offset); ch := t.getCh(offset); END;
+    ELSE
+      Err (t, offset, "missing digits in real exponent");
+    END;
 
     t.length := offset - t.offset;
     t.next_offset := offset;
@@ -298,13 +297,13 @@ PROCEDURE ScanEscape (t: Default;  VAR offset: CARDINAL): BOOLEAN =
     END;
     IF (ch = 'u') THEN
       ch := t.getCh(offset); INC (offset);
-    IF NOT HexDigits [ch] THEN RETURN FALSE END;
-    ch := t.getCh(offset); INC (offset);
-    IF NOT HexDigits [ch] THEN RETURN FALSE END;
-    ch := t.getCh(offset); INC (offset);
-    IF NOT HexDigits [ch] THEN RETURN FALSE END;
-    ch := t.getCh(offset); INC (offset);
-    RETURN HexDigits [ch];
+      IF NOT HexDigits [ch] THEN RETURN FALSE END;
+      ch := t.getCh(offset); INC (offset);
+      IF NOT HexDigits [ch] THEN RETURN FALSE END;
+      ch := t.getCh(offset); INC (offset);
+      IF NOT HexDigits [ch] THEN RETURN FALSE END;
+      ch := t.getCh(offset); INC (offset);
+      RETURN HexDigits [ch];
     ELSE
       RETURN FALSE;
     END;

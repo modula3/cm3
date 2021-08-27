@@ -116,8 +116,4 @@ comment at offset zero.
 If "skip_comments" is "TRUE", outer-level comments will be returned
 as tokens.  Otherwise, comments are ignored.
 
-If "split_pragmas" is "TRUE", the contents of pragmas will be scanned
-and returned as a stream of tokens between "Begin_pragma" and
-"End_pragma" tokens.  If "split_pragmas" is false, the entire pragma
-is returned in a single "Begin_pragma" token.
 *)
