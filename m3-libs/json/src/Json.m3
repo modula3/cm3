@@ -1,3 +1,6 @@
+(* Copyright (C) 2021 Peter McKinna. All rights reserved. *)
+(* See file COPYRIGHT-BSD for details. *)
+
 UNSAFE MODULE Json;
 
 IMPORT IO, Fmt, Rd, Text, Thread;
@@ -5,13 +8,12 @@ IMPORT SortedTextRefTbl AS Tbl;
 IMPORT Scanner AS SK;
 IMPORT TextUtils,TextSeq,ASCII;
 
-EXCEPTION E;
-
 CONST
    MaxDepth = 1000;
    Root = "root";
-   Obj = "_obj_";
-   Arr = "_Arr_";
+   Obj  = "_Obj_";
+   Arr  = "_Arr_";
+   Null = "null";
 
 CONST
   E_Comma  = 1;
@@ -28,9 +30,9 @@ REVEAL
     Public BRANDED OBJECT
       depth: INTEGER := 0;
       tok  : SK.T;
-      name  : TEXT;
-      nodeKind  : NodeKind;
+      nodeName  : TEXT;
       nodeValue : REFANY;
+      nodeKind  : NodeKind;
       parent: T;
       list  : Tbl.Default := NIL;
     METHODS
@@ -40,8 +42,11 @@ REVEAL
       parseValues (node: T; name : TEXT): BOOLEAN RAISES {E} := ParseValues;
       addNode(parent : T; type : NodeKind; name,value : TEXT): T RAISES{E} := AddNode;
       error (n: INTEGER) RAISES {E} := Error;
+      struct (): BOOLEAN := StructNode;
+      update (name,value : TEXT; nodeKind : NodeKind) := Update;
       doFormat(node : T; indent: TEXT): TEXT := DoFormat;
     OVERRIDES
+      name       := Name;
       value      := Value;
       kind       := Kind;
       format     := Format;
@@ -57,19 +62,30 @@ REVEAL
       updateInt  := UpdateInt;
       updateBool := UpdateBool;
       updateFloat:= UpdateFloat;
+      updateArrObj := UpdateArrObj;
       delete     := Delete;
       clear      := Clear;
+      iterate    := Iterate;
       root       := GetRoot;
     END;
+
+TYPE
+  DefaultIterator = Iterator BRANDED OBJECT
+    iter : Tbl.Iterator;
+  OVERRIDES
+    next := Next;
+  END;
 
 PROCEDURE Error (self: T; n: INTEGER) RAISES {E} =
   BEGIN
     IO.Put("Error " & Fmt.Int(n) & " ");
-    IF self.tok.token = SK.TK_Error THEN
-      IO.Put(" : token error " & self.tok.msg & " ");
-    END;
-    IO.Put(" - line " & Fmt.Int(self.tok.line) & " offset "
+    IF self.tok # NIL THEN
+      IF self.tok.token = SK.TK_Error THEN
+        IO.Put(" : token error " & self.tok.msg & " ");
+      END;
+      IO.Put(" - line " & Fmt.Int(self.tok.line) & " offset "
              & Fmt.Int(self.tok.offset) & "\n");
+    END;
     RAISE E;
   END Error;
 
@@ -79,8 +95,7 @@ PROCEDURE AddNode(self : T; parent : T; type : NodeKind; name,value : TEXT): T R
     nodeName : TEXT;
     size : CARDINAL;
   BEGIN
-    IF parent.nodeKind = NodeKind.nkObject OR
-       parent.nodeKind = NodeKind.nkArray THEN
+    IF parent.struct() THEN 
       IF parent.list = NIL THEN
         parent.list := NEW(Tbl.Default).init();
       END;
@@ -93,7 +108,7 @@ PROCEDURE AddNode(self : T; parent : T; type : NodeKind; name,value : TEXT): T R
 
       node := NEW(T);
       node.nodeKind := type;
-      node.name := nodeName;
+      node.nodeName := nodeName;
       node.nodeValue := value;
       node.parent := parent;
       EVAL parent.list.put(nodeName, node);
@@ -204,14 +219,14 @@ PROCEDURE ParseArray (self: T; parent : T) RAISES {E} =
 PROCEDURE Parse (self: T) RAISES {E} =
   BEGIN
     self.tok.next();
-    self.name := Root;
+    self.nodeName := Root;
     self.nodeKind := NodeKind.nkRoot;
     IF NOT self.parseValues(self,Root) THEN self.error(E_Parse); END;
     self.tok.next();
     IF self.tok.token # SK.TK_EOF THEN self.error(E_Eof); END;
   END Parse;
 
-PROCEDURE ParseBuf (buf: TEXT) : T =
+PROCEDURE ParseBuf (buf: TEXT) : T RAISES{E} =
   VAR
     s    : SK.Default;
     chars: SK.Buf;
@@ -224,11 +239,11 @@ PROCEDURE ParseBuf (buf: TEXT) : T =
     chars[len] := '\000';
     s := NEW(SK.Default);
     node.tok := s.initFromBuf(chars);
-    TRY node.parse(); EXCEPT | E => END;
+    node.parse();
     RETURN node;
   END ParseBuf;
 
-PROCEDURE ParseFile (f: TEXT) : T =
+PROCEDURE ParseFile (f: TEXT) : T RAISES{E} =
   VAR rd : Rd.T;
       node : T;
   BEGIN
@@ -242,7 +257,7 @@ PROCEDURE ParseFile (f: TEXT) : T =
     RETURN node;
   END ParseFile;
 
-PROCEDURE ParseStream (rd : Rd.T) : T =
+PROCEDURE ParseStream (rd : Rd.T) : T RAISES{E} =
   VAR
     s : SK.Default;
     node : T;
@@ -250,11 +265,7 @@ PROCEDURE ParseStream (rd : Rd.T) : T =
     node := NEW(T);
     s := NEW(SK.Default);
     node.tok := s.initFromRd(rd);
-    TRY
-      node.parse();
-    EXCEPT
-    | E =>
-    END;
+    node.parse();
     RETURN node;
   END ParseStream;
 
@@ -300,7 +311,7 @@ PROCEDURE DoFormat(self : T; node : T; indent: TEXT): TEXT =
     res := "";
     IF node.parent # NIL AND
        node.parent.nodeKind = NodeKind.nkObject THEN
-      prefix := "\"" & node.name & "\"" & ": ";
+      prefix := "\"" & node.nodeName & "\"" & ": ";
     ELSE
       prefix := "";
     END;
@@ -314,11 +325,17 @@ PROCEDURE DoFormat(self : T; node : T; indent: TEXT): TEXT =
     RETURN res;
   END DoFormat;
 
+PROCEDURE Name(self : T) : TEXT =
+  BEGIN
+    RETURN self.nodeName;
+  END Name;
+
 PROCEDURE Value(self : T) : TEXT =
   BEGIN
-    IF (self.nodeKind = NodeKind.nkArray OR
-        self.nodeKind = NodeKind.nkObject) THEN
-      RETURN "";
+    IF self.nodeKind = NodeKind.nkArray THEN
+      RETURN Arr;
+    ELSIF self.nodeKind = NodeKind.nkObject THEN
+      RETURN Obj;
     ELSE
       RETURN self.nodeValue;
     END;
@@ -338,8 +355,7 @@ PROCEDURE Match(VAR node : T; item : TEXT) : BOOLEAN =
     iter := node.list.iterateOrdered(TRUE);
     WHILE iter.next(key,value) DO
       IF Text.Equal(item,key) THEN
-        IF node.nodeKind = NodeKind.nkArray OR
-           node.nodeKind = NodeKind.nkObject THEN
+        IF node.struct() THEN
           node := value;
         END;
         RETURN TRUE;
@@ -356,7 +372,10 @@ PROCEDURE Find(self : T; path : TEXT) : T =
     node : T := self;
   BEGIN
     seq := TextUtils.Tokenize(path,ASCII.Set{'/'});
-    IF seq.size() = 0 THEN RETURN NIL; END;
+    IF seq.size() = 0 THEN 
+      IF Text.Equal(path,"/") THEN RETURN self.root(); END;
+      RETURN NIL;
+    END;
     FOR i := 0 TO seq.size() - 1 DO
       item := seq.get(i);
       IF NOT Match(node,item) THEN
@@ -364,127 +383,132 @@ PROCEDURE Find(self : T; path : TEXT) : T =
         EXIT;
       END;
     END;
-    IF res THEN
-     IO.Put("path found\n" & node.name & " " & node.nodeValue);
-     RETURN node;
-    ELSE
-      IO.Put("path not found\n");
-      RETURN NIL;
-    END;
+    IF res THEN RETURN node; ELSE RETURN NIL; END;
   END Find;
+
+PROCEDURE StructNode(self : T) : BOOLEAN =
+  BEGIN
+    IF (self.nodeKind = NodeKind.nkArray OR
+        self.nodeKind = NodeKind.nkObject) THEN
+     RETURN TRUE;
+   ELSE
+     RETURN FALSE;
+   END;
+  END StructNode;
 
 PROCEDURE AddText(self : T; name,value : TEXT) : T =
   BEGIN
-    RETURN self.addNode(self, NodeKind.nkText, name, value );
+    IF NOT self.struct() THEN RETURN NIL; END;
+    RETURN self.addNode(self, NodeKind.nkText, name, value ); <*NOWARN*> 
   END AddText;
 
 PROCEDURE AddInt(self : T; name : TEXT; value : INTEGER) : T =
   VAR val : TEXT;
   BEGIN
+    IF NOT self.struct() THEN RETURN NIL; END;
     val := Fmt.Int(value);
-    RETURN self.addNode(self, NodeKind.nkInt, name, val);
+    RETURN self.addNode(self, NodeKind.nkInt, name, val); <*NOWARN*>
   END AddInt;
 
 PROCEDURE AddFloat(self : T; name : TEXT; value : LONGREAL) : T =
   VAR val : TEXT;
   BEGIN
+    IF NOT self.struct() THEN RETURN NIL; END;
     val := Fmt.LongReal(value);
-    RETURN self.addNode(self, NodeKind.nkFloat, name, val);
+    RETURN self.addNode(self, NodeKind.nkFloat, name, val); <*NOWARN*>
   END AddFloat;
 
 PROCEDURE AddBool(self : T; name : TEXT; value : BOOLEAN) : T =
   VAR val : TEXT;
   BEGIN
+    IF NOT self.struct() THEN RETURN NIL; END;
     val := Fmt.Bool(value);
-    RETURN self.addNode(self, NodeKind.nkBool, name, val);
+    RETURN self.addNode(self, NodeKind.nkBool, name, val); <*NOWARN*>
   END AddBool;
 
 PROCEDURE AddNull(self : T; name : TEXT) : T =
   BEGIN
-    RETURN self.addNode(self, NodeKind.nkNull, name,"null");
+    IF NOT self.struct() THEN RETURN NIL; END;
+    RETURN self.addNode(self, NodeKind.nkNull, name, Null); <*NOWARN*>
   END AddNull;
-
-(* think some confusion between adding an object and adding a node i
-add an object can only be object parm and has to be added to 
-obj or array adding a node can be any type but has to be to 
-object or array maybe call it addnode. Also this should be a copy
-since if added twice is problem *)
 
 PROCEDURE AddObj(self : T; name : TEXT; obj : T := NIL) : T =
   BEGIN
+    IF NOT self.struct() THEN RETURN NIL; END; 
     IF obj = NIL THEN
-      RETURN self.addNode(self, NodeKind.nkObject, name, Obj);
+      (* just add an empty obj *)
+      RETURN self.addNode(self, NodeKind.nkObject, name, Obj); <*NOWARN*>
     ELSE
-      IF (self.nodeKind = NodeKind.nkArray OR
-          self.nodeKind = NodeKind.nkObject) AND 
-        self.list # NIL AND obj.nodeKind = NodeKind.nkObject THEN
-        IF self.list.put(name,obj) THEN
+      IF self.list # NIL AND obj.nodeKind = NodeKind.nkObject THEN
+        IF NOT self.list.put(name,obj) THEN
           RETURN obj;
-        ELSE
-          RETURN NIL;
         END;
       END;
       RETURN NIL;
     END;
   END AddObj;
 
-PROCEDURE AddArr(self : T; name : TEXT) : T =
+PROCEDURE AddArr(self : T; name : TEXT; arr : T := NIL) : T =
   BEGIN
-    RETURN self.addNode(self, NodeKind.nkArray, name, Arr);
+    IF NOT self.struct() THEN RETURN NIL; END; 
+    IF arr = NIL THEN
+      (* just add an empty array *)
+      RETURN self.addNode(self, NodeKind.nkArray, name, Arr); <*NOWARN*>
+    ELSE
+      IF self.list # NIL AND arr.nodeKind = NodeKind.nkArray THEN
+        IF NOT self.list.put(name,arr) THEN
+          RETURN arr;
+        END;
+      END;
+      RETURN NIL;
+    END;
   END AddArr;
 
-(* this needs think since can update node to anything ?? *)
-PROCEDURE UpdateText(self : T; name,value : TEXT) =
+PROCEDURE Update(self : T; name,value : TEXT; nodeKind : NodeKind) =
   VAR 
     node : T;
     val : REFANY;
   BEGIN
     IF self.list.get(name,val) THEN
       node := NARROW(val,T);
-      IF node.nodeKind = NodeKind.nkText THEN
+      IF node.nodeKind = nodeKind THEN
         node.nodeValue := value;
       END;
     END;
+  END Update;
+
+PROCEDURE UpdateText(self : T; name,value : TEXT) =
+  BEGIN
+    self.update(name,value,NodeKind.nkText);
   END UpdateText;
 
 PROCEDURE UpdateInt(self : T; name : TEXT; value : INTEGER) =
-  VAR 
-    node : T;
-    val : REFANY;
   BEGIN
-    IF self.list.get(name,val) THEN
-      node := NARROW(val,T);
-      IF node.nodeKind = NodeKind.nkInt THEN
-        node.nodeValue := Fmt.Int(value);
-      END;
-    END;
+    self.update(name,Fmt.Int(value),NodeKind.nkInt);
   END UpdateInt;
 
 PROCEDURE UpdateBool(self : T; name : TEXT; value : BOOLEAN) =
-  VAR 
-    node : T;
-    val : REFANY;
   BEGIN
-    IF self.list.get(name,val) THEN
-      node := NARROW(val,T);
-      IF node.nodeKind = NodeKind.nkInt THEN
-        node.nodeValue := Fmt.Bool(value);
-      END;
-    END;
+    self.update(name,Fmt.Bool(value),NodeKind.nkBool);
   END UpdateBool;
 
 PROCEDURE UpdateFloat(self : T; name : TEXT; value : LONGREAL) =
+  BEGIN
+    self.update(name,Fmt.LongReal(value),NodeKind.nkFloat);
+  END UpdateFloat;
+
+PROCEDURE UpdateArrObj(self : T; name : TEXT; value : T) =
   VAR 
-    node : T;
     val : REFANY;
   BEGIN
-    IF self.list.get(name,val) THEN
-      node := NARROW(val,T);
-      IF node.nodeKind = NodeKind.nkInt THEN
-        node.nodeValue := Fmt.LongReal(value);
+    IF value = NIL THEN RETURN; END;
+    IF NOT (self.struct() AND value.struct()) THEN RETURN; END; 
+    IF self.list # NIL THEN
+      IF self.list.get(name,val) THEN
+        EVAL self.list.put(name,value);
       END;
     END;
-  END UpdateFloat;
+  END UpdateArrObj;
 
 PROCEDURE Delete(self : T; name : TEXT) : T =
   VAR 
@@ -492,8 +516,7 @@ PROCEDURE Delete(self : T; name : TEXT) : T =
     node : T := NIL;
     res : BOOLEAN;
   BEGIN
-    IF (* (self.nodeKind = NodeKind.nkArray OR
-        self.nodeKind = NodeKind.nkObject) AND*) self.list # NIL THEN
+    IF self.list # NIL THEN
       res := self.list.delete(name,value);
       IF res THEN
         node := NARROW(value,T);
@@ -504,8 +527,7 @@ PROCEDURE Delete(self : T; name : TEXT) : T =
 
 PROCEDURE Clear(self : T) =
   BEGIN
-    IF (self.nodeKind = NodeKind.nkArray OR
-        self.nodeKind = NodeKind.nkObject) THEN
+    IF self.struct() THEN 
       self.list := NIL;
     END;
   END Clear;
@@ -518,6 +540,27 @@ PROCEDURE GetRoot(self : T) : T =
     END;
     RETURN node;
   END GetRoot;
+
+PROCEDURE Iterate(self : T) : Iterator =
+  VAR
+    iter : DefaultIterator;
+    s : Tbl.Iterator;
+  BEGIN
+    (* only iterate over obj or array *)
+    IF NOT self.struct() THEN RETURN NIL; END;
+    s := self.list.iterateOrdered(TRUE);
+    iter := NEW(DefaultIterator, iter := s);
+    RETURN iter;
+  END Iterate;
+
+PROCEDURE Next(self : DefaultIterator; VAR name : TEXT; VAR value : T) : BOOLEAN =
+  VAR node : REFANY;
+  res : BOOLEAN;
+  BEGIN
+    res := self.iter.next(name,node);
+    value := node;
+    RETURN res;
+  END Next;
 
 BEGIN
 END Json.
