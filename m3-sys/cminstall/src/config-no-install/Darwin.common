@@ -260,15 +260,9 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
         "-compatibility_version", vmaj,
         "-current_version", version,
 
-        % full path on local system -- system specific
-        %"-install_name", lib_pn
-
-        % leaf only path -- does it work? And require environment varilable?
-        %"-install_name", lib_sox,
-
-        % relative to the executable, computed at runtime,
-        % can still be override with environment for uninstalled binaries
-        "-install_name", "@executable_path/../lib/" & lib_sox,
+        % Since MacOS 10.5 (2007) rpath is the preferred mechanism for
+        % locating shared libraries across PowerPC, Intel, and ARM.
+        "-install_name", "@rpath/" & lib_sox,
 
         % allow user to run install_name_tool with maximum flexibility
         "-headerpad_max_install_names",
@@ -349,7 +343,9 @@ proc m3_link (prog, options, objects, imported_libs, shared) is
     "-dead_strip",
     % "-dead_strip_dylibs", % requires 10.5
     % allow user to run install_name_tool with maximum flexibility
-    "-headerpad_max_install_names" ]
+    "-headerpad_max_install_names",
+    % Give executable an rpath to search for shared libraries.
+    "-Wl,-rpath," & LIB_USE ]
   if M3_PROFILING args += "-pg" end
   configure_c_compiler()
   return try_exec ("@" & SYSTEM_CC_LD, args)
