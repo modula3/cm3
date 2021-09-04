@@ -1,0 +1,35 @@
+---
+name: Buildship integration
+on: [push, pull_request]
+jobs:
+  do-cm3-all:
+    runs-on: ubuntu-20.04
+    env:
+      CM3VER: d5.11.1-20210610
+      CM3INST: /home/runner/cm3
+    steps:
+    - name: Install prerequisites
+      run: |
+        sudo apt-get update --quiet
+        sudo apt-get install --quiet --assume-yes libglu1-mesa-dev libmariadbclient-dev xorg-dev
+    - name: Create install directory
+      run: |
+        mkdir --parents "${CM3INST}/bin"
+        echo "${CM3INST}/bin" >> $GITHUB_PATH
+    - name: Install bootstrap compiler
+      run: |
+        curl "https://github.com/modula3/cm3/releases/download/unix64le-${CM3VER}/cm3-boot-unix64le-${CM3VER}.cpp.gz" --location --remote-name --silent
+        gunzip "cm3-boot-unix64le-${CM3VER}.cpp.gz"
+        g++ -g -pthread -o "${CM3INST}/bin/cm3" "cm3-boot-unix64le-${CM3VER}.cpp"
+    - name: Fetch sources
+      uses: actions/checkout@v2
+    - name: Run bootstrap
+      run: |
+        cd scripts/python
+        ./boot2min.py c
+    - name: Build all the things
+      run: |
+        cd scripts/python
+        ./do-cm3-all.py buildship c
+
+# vim: expandtab
