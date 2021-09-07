@@ -37,9 +37,9 @@ if(debug)
 void
 out_ep(Edge *e)
 {
-if(!triangulate & plot) 
+if(!triangulate && plot)
 	clip_line(e);
-if(!triangulate & !plot)
+if(!triangulate && !plot)
 {	printf("e %d", e->edgenbr);
 	printf(" %d ", e->ep[le] != NULL ? e->ep[le]->sitenbr : -1);
 	printf("%d\n", e->ep[re] != NULL ? e->ep[re]->sitenbr : -1);
@@ -58,9 +58,9 @@ if(debug)
 void
 out_site(Site *s)
 {
-if(!triangulate & plot & !debug)
+if(!triangulate && plot && !debug)
 	circle (s->coord.x, s->coord.y, cradius);
-if(!triangulate & !plot & !debug)
+if(!triangulate && !plot && !debug)
 	printf("s %f %f\n", s->coord.x, s->coord.y);
 if(debug)
 	printf("site (%d) at %f %f\n", s->sitenbr, s->coord.x, s->coord.y);
