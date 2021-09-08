@@ -327,7 +327,7 @@ PROCEDURE Construct(digest : Digest) : TEXT =
   VAR result : TEXT := "";
   BEGIN
     FOR i := 0 TO WordLen - 1 DO
-      result := result & Fmt.Pad(Fmt.Int(digest[i],16),2,'0');
+      result := result & Fmt.Pad(Fmt.Unsigned(digest[i],16),2,'0');
     END;
     RETURN result;
   END Construct;

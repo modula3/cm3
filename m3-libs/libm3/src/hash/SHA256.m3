@@ -137,7 +137,7 @@ PROCEDURE Init (): RefCtl =
     RETURN ctx;
   END Init;
 
-PROCEDURE Transform (ctx: RefCtl; data: BufArr) =
+PROCEDURE Transform (ctx: RefCtl; READONLY data: BufArr) =
   VAR
     a, b, c, d, e, f, g, h, t1, t2: Uint32;
     m                             : HashArr := HashArr{0, ..};
@@ -207,17 +207,13 @@ PROCEDURE Final (ctx: RefCtl): StateType =
   BEGIN
     len := ctx.dataLen;
     (* Pad whatever data is left in the buffer.*)
+    ctx.data[len] := 16_80;
+    INC(len);
     IF ctx.dataLen < 56 THEN
-      ctx.data[len] := 16_80;
-      INC(len);
       WHILE len < 56 DO ctx.data[len] := 0; INC(len); END;
     ELSE
-      ctx.data[len] := 16_80;
-      INC(len);
       WHILE len < BlockLen DO ctx.data[len] := 0; INC(len); END;
-
       Transform(ctx, ctx.data);
-
       FOR i := 0 TO 55 DO ctx.data[i] := 0; END;
     END;
 
@@ -278,7 +274,7 @@ PROCEDURE Construct (digest: StateType): TEXT =
   VAR result: TEXT := "";
   BEGIN
     FOR i := 0 TO WordLen - 1 DO
-      result := result & Fmt.Pad(Fmt.Int(digest[i], 16), 2, '0');
+      result := result & Fmt.Pad(Fmt.Unsigned(digest[i], 16), 2, '0');
     END;
     RETURN result;
   END Construct;
