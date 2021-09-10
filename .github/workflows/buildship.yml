@@ -3,10 +3,14 @@ name: Buildship integration
 on: [push, pull_request]
 jobs:
   do-cm3-all:
+    strategy:
+      matrix:
+        backend: ["c", ""]
     runs-on: ubuntu-20.04
     env:
-      CM3VER: d5.11.1-20210610
+      BACKEND: ${{ matrix.backend }}
       CM3INST: /home/runner/cm3
+      CM3VER: d5.11.1-20210610
     steps:
     - name: Install prerequisites
       run: |
@@ -26,10 +30,10 @@ jobs:
     - name: Run bootstrap
       run: |
         cd scripts/python
-        ./boot2min.py c
+        ./boot2min.py "${BACKEND}"
     - name: Build all the things
       run: |
         cd scripts/python
-        ./do-cm3-all.py buildship c
+        ./do-cm3-all.py buildship "${BACKEND}"
 
 # vim: expandtab
