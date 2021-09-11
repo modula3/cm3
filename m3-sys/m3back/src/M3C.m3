@@ -5603,6 +5603,39 @@ BEGIN
     self.current_offset := offset + TargetMap.CG_Bytes[type];
 END init_helper;
 
+PROCEDURE adapt_c_init_type(READONLY value: Target.Int; VAR type: CGType) =
+(* Ensure `type' is compatible with `value' when passed to the C compiler
+
+The integer types supplied in calls to `init_int' are only intended to specify
+the number of bytes necessary to hold the value.  The higher-level code does not
+take into account the sign of the value, because it is not relevant to most
+backends.  But the sign is relevant to the C compiler, so we have to account for
+that here. *)
+BEGIN
+    (* If the value is outside the range of a given signed type, use the
+     corresponding unsigned type instead. *)
+    CASE type OF
+    | CGType.Int8  =>
+        IF TInt.GT(value, TInt.Max8) THEN
+            type := CGType.Word8
+        END
+    | CGType.Int16 =>
+        IF TInt.GT(value, TInt.Max16) THEN
+            type := CGType.Word16
+        END
+    | CGType.Int32 =>
+        IF TInt.GT(value, TInt.Max32) THEN
+            type := CGType.Word32
+        END
+    | CGType.Int64 =>
+        IF TInt.GT(value, TInt.Max64) THEN
+            type := CGType.Word64
+        END
+    ELSE
+        (* SKIP *)
+    END
+END adapt_c_init_type;
+
 PROCEDURE init_int(
     self: T;
     offset: ByteOffset;
@@ -5615,6 +5648,7 @@ BEGIN
     ELSIF debug THEN
       self.comment("init_int");
     END;
+    adapt_c_init_type(value, type);
     init_helper(self, offset, type);
     (* TIntLiteral includes suffixes like T, ULL, UI64, etc. *)
     initializer_addhi(self, self.TIntLiteral(type, value));
