@@ -5603,7 +5603,7 @@ BEGIN
     self.current_offset := offset + TargetMap.CG_Bytes[type];
 END init_helper;
 
-PROCEDURE adapt_c_init_type(READONLY value: Target.Int; VAR type: CGType) =
+PROCEDURE adapt_c_init_type(READONLY value: Target.Int; type: CGType): CGType =
 (* Ensure `type' is compatible with `value' when passed to the C compiler
 
 The integer types supplied in calls to `init_int' are only intended to specify
@@ -5613,27 +5613,33 @@ backends.  But the sign is relevant to the C compiler, so we have to account for
 that here. *)
 BEGIN
     (* If the value is outside the range of a given signed type, use the
-     corresponding unsigned type instead. *)
+    corresponding unsigned type instead.  Assert value is in range of the
+    unsigned type. *)
     CASE type OF
     | CGType.Int8  =>
         IF TInt.GT(value, TInt.Max8) THEN
+            <* ASSERT TInt.LE(value, TInt.Max8U) *>
             type := CGType.Word8
         END
     | CGType.Int16 =>
         IF TInt.GT(value, TInt.Max16) THEN
+            <* ASSERT TInt.LE(value, TInt.Max16U) *>
             type := CGType.Word16
         END
     | CGType.Int32 =>
         IF TInt.GT(value, TInt.Max32) THEN
+            <* ASSERT TInt.LE(value, TInt.Max32U) *>
             type := CGType.Word32
         END
     | CGType.Int64 =>
         IF TInt.GT(value, TInt.Max64) THEN
+            <* ASSERT TInt.LE(value, TInt.Max64U) *>
             type := CGType.Word64
         END
     ELSE
         (* SKIP *)
-    END
+    END;
+    RETURN type
 END adapt_c_init_type;
 
 PROCEDURE init_int(
@@ -5648,7 +5654,7 @@ BEGIN
     ELSIF debug THEN
       self.comment("init_int");
     END;
-    adapt_c_init_type(value, type);
+    type := adapt_c_init_type(value, type);
     init_helper(self, offset, type);
     (* TIntLiteral includes suffixes like T, ULL, UI64, etc. *)
     initializer_addhi(self, self.TIntLiteral(type, value));
