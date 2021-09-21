@@ -1,0 +1,13 @@
+import("libm3")
+
+Module("Crypto_Hash")
+Module("Crypto_Hmac")
+Module("Crypto_Pbkdf2")
+Module("Crypto_Scram")
+
+module("Crypto_HashImpl")
+module("Crypto_Md5")
+module("Crypto_Sha1")
+module("Crypto_Sha2")
+
+Library("m3crypto")
