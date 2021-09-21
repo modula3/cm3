@@ -1,0 +1,12 @@
+override("m3crypto", PACKAGE_DIR & SL & ".." & SL & "..")
+import("m3crypto")
+
+implementation("TestCrypto")
+
+build_standalone()
+program("test-crypto")
+
+if defined("RUN")
+  r = q_exec("." & SL & "test-crypto")
+  write(CR, "program returned ", r, CR)
+end
