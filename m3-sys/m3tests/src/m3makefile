@@ -276,7 +276,7 @@ proc cmp_file (dir, file, ignoreLinesWith, ignoreTexts, probeForTargetSpecificFi
   if equal(OutputContents, ExpectedContents)
     if defined ("LOG_CMPS")
       ComparisonLogData += "--> TRUE\n"
-      >> ComparisonLogFilePath in 
+      >> ComparisonLogFilePath in
         write (ComparisonLogData)
       end
     end
@@ -284,27 +284,35 @@ proc cmp_file (dir, file, ignoreLinesWith, ignoreTexts, probeForTargetSpecificFi
   end
   if defined ("LOG_CMPS")
     ComparisonLogData += "--> FALSE\n"
-    >> ComparisonLogFilePath in 
+    >> ComparisonLogFilePath in
       write (ComparisonLogData)
     end
   end
   return FALSE
 end
 
-%NOW = "-" & datetime()
-report = PACKAGE_DIR & "/m3tests.html"
-jureport = PACKAGE_DIR & "/m3tests-results.xml.new"
-juxreport = PACKAGE_DIR & "/m3tests-results.xml"
 
+% Write test results in HTML to `report`.
+report     = PACKAGE_DIR & "/m3tests.html"
+
+% "JUX" is "JUnit XML", a more-or-less standard reporting format.
+%
+% We accumulate test results in `juxworking` before writing the summary
+% report to `juxreport`.
+juxworking = PACKAGE_DIR & "/m3tests-results.xml.working"
+juxreport  = PACKAGE_DIR & "/m3tests-results.xml"
+
+% Truncate report files.
 if defined("HTML")
   > report in
     write( "" )
   end
-  > jureport in
+  > juxworking in
     write( "" )
   end
 end
 
+% Append to the HTML test report.
 proc html (args) is
   if defined("HTML")
     >> report in
@@ -313,9 +321,10 @@ proc html (args) is
   end
 end
 
+% Append to the JUnit XML test report.
 proc jux (args) is
   if defined("HTML")
-    >> jureport in
+    >> juxworking in
       write( args )
     end
   end
@@ -328,9 +337,13 @@ proc quote_xml (arg) is
   return ret
 end
 
-> "res.ok" in write("") end
-> "res.ko" in write("") end
+% Initialize success/failure counts.  These are used to produce the final `juxreport`.
+success = "res.ok"
+failure = "res.ko"
+> success in write("") end
+> failure in write("") end
 
+% Initialize HTML report.
 html(["<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\">", CR])
 html(["<html>", CR])
 html(["  <head>", CR])
@@ -361,7 +374,6 @@ html(["", CR])
 html(["    <p>", CR])
 html(["      report generated at ", datetime(), "on ", hostname(), CR])
 html(["    </p>", CR])
-
 html(["    <table border=\"2\" cellspacing=\"1\" cellpadding=\"4\">", CR])
 html(["      <thead>", CR])
 html(["        <tr class=\"bgblue white\">", CR])
@@ -378,6 +390,7 @@ html(["          </td>", CR])
 html(["        </tr>", CR])
 html(["      </thead>", CR])
 html(["      <tbody>", CR])
+
 
 %------------------------------------------------------------------------------
 % run a test case
@@ -480,7 +493,7 @@ readonly proc run_test (class, group, uid, comment, should_run, cm3opts, runopts
              "</td><td class=\"small\" width=\"45%\">", comment])
       jux (["<testcase time=\"" & ttime & "\" name=\"" & uid & ": " &
              quote_xml( comment ) & "\">", CR])
-      >> "res.ok" in
+      >> success in
         write (uid, CR)
       end
     else
@@ -492,7 +505,7 @@ readonly proc run_test (class, group, uid, comment, should_run, cm3opts, runopts
       if not ok2 msg = "output of program run differs" end
       if not ok3 msg = "code differs" end
       jux (["<error message=\"", msg, "\">", CR])
-      >> "res.ko" in
+      >> failure in
         write (uid, CR)
       end
     end
@@ -1067,6 +1080,8 @@ c_test ("c0", "c002", "empty unsafe program")
 c_test ("c0", "c001", "empty program")
 
 
+
+% Finalize HTML report.
 html(["      </tbody>", CR])
 html(["    </table>", CR])
 html(["", CR])
@@ -1075,16 +1090,18 @@ html(["    <address><a href=\"mailto:m3-support{at}elego.de\">m3-support{at}eleg
 html(["  </body>", CR])
 html(["</html>", CR])
 
+% Finalize JUnit XML report.
 if defined("HTML")
-  nok = GetFileLineCount("res.ok")
-  nko = GetFileLineCount("res.ko")
-  nall = GetFileLineCount2("res.ok", "res.ko")
+  nok  = GetFileLineCount(success)
+  nko  = GetFileLineCount(failure)
+  nall = GetFileLineCount2(success, failure)
   > juxreport in
     write ("<testsuite name=\"m3tests\" ")
     write ("tests=\"" & nall & "\" ")
     write ("errors=\"" & nko & "\">", CR)
-    write(fs_contents(jureport))
+    write(fs_contents(juxworking))
     write ("</testsuite>", CR)
   end
+  fs_rmfile (juxworking)
 end
 end % NOT LIB_ONLY

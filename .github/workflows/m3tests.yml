@@ -1,0 +1,20 @@
+---
+name: m3tests results
+on:
+  workflow_run:
+    workflows: ["buildship integration"]
+    type: [completed]
+jobs:
+  report:
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: dorny/test-reporter@v1
+      with:
+        artifact: /m3tests-(.*)-(.*)/
+        fail-on-error: false
+        max-annotations: 49
+        name: "m3tests ($1, $2)"
+        path: m3tests-results.xml
+        reporter: java-junit
+
+# vim: expandtab
