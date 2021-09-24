@@ -5,17 +5,24 @@ jobs:
   do-cm3-all:
     strategy:
       matrix:
-        backend: ["c", ""]
-    runs-on: ubuntu-20.04
+        os: ["ubuntu-20.04", "ubuntu-18.04"]
+        backend: ["", "c"]
+    runs-on: ${{ matrix.os }}
     env:
       BACKEND: ${{ matrix.backend }}
       CM3INST: /home/runner/cm3
       CM3VER: d5.11.1-20210610
     steps:
     - name: Install prerequisites
+      if: ${{ matrix.os == 'ubuntu-20.04' }}
       run: |
         sudo apt-get update --quiet
         sudo apt-get install --quiet --assume-yes libglu1-mesa-dev libmariadbclient-dev xorg-dev
+    - name: Install prerequisites
+      if: ${{ matrix.os == 'ubuntu-18.04' }}
+      run: |
+        sudo apt-get update --quiet
+        sudo apt-get install --quiet --assume-yes libglu1-mesa-dev xorg-dev
     - name: Create install directory
       run: |
         mkdir --parents "${CM3INST}/bin"
