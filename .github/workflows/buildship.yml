@@ -1,28 +1,29 @@
 ---
-name: Buildship integration
+name: buildship integration
 on: [push, pull_request]
 jobs:
   do-cm3-all:
     strategy:
+      fail-fast: false
       matrix:
-        os: ["ubuntu-20.04", "ubuntu-18.04"]
-        backend: ["", "c"]
+        os: ["ubuntu-18.04", "ubuntu-20.04"]
+        backend: ["c", "gcc"]
     runs-on: ${{ matrix.os }}
     env:
-      BACKEND: ${{ matrix.backend }}
       CM3INST: /home/runner/cm3
       CM3VER: d5.11.1-20210610
+      M3_BACKEND_MODE: ${{ (matrix.backend != 'gcc') && matrix.backend || '' }}
     steps:
     - name: Install prerequisites
-      if: ${{ matrix.os == 'ubuntu-20.04' }}
-      run: |
-        sudo apt-get update --quiet
-        sudo apt-get install --quiet --assume-yes libglu1-mesa-dev libmariadbclient-dev xorg-dev
-    - name: Install prerequisites
-      if: ${{ matrix.os == 'ubuntu-18.04' }}
+      if: matrix.os == 'ubuntu-18.04'
       run: |
         sudo apt-get update --quiet
         sudo apt-get install --quiet --assume-yes libglu1-mesa-dev xorg-dev
+    - name: Install prerequisites
+      if: matrix.os == 'ubuntu-20.04'
+      run: |
+        sudo apt-get update --quiet
+        sudo apt-get install --quiet --assume-yes libglu1-mesa-dev libmariadbclient-dev xorg-dev
     - name: Create install directory
       run: |
         mkdir --parents "${CM3INST}/bin"
@@ -37,10 +38,27 @@ jobs:
     - name: Run bootstrap
       run: |
         cd scripts/python
-        ./boot2min.py "${BACKEND}"
+        ./boot2min.py "${M3_BACKEND_MODE}"
     - name: Build all the things
       run: |
         cd scripts/python
-        ./do-cm3-all.py buildship "${BACKEND}"
+        ./do-cm3-all.py buildship "${M3_BACKEND_MODE}"
+    - name: Configure M3_BACKEND_MODE
+      if: matrix.backend == 'c'
+      run: |
+        sed -e '1ireadonly M3_BACKEND_MODE = "C"' -i "${CM3INST}/bin/cm3.cfg"
+    - name: Run compiler validation suite
+      continue-on-error: true
+      run: |
+        cd m3-sys/m3tests
+        cm3 -DHTML
+    - name: Save compiler validation report
+      uses: actions/upload-artifact@v2
+      with:
+        name: ${{ format('m3tests-{0}-{1}', matrix.os, matrix.backend) }}
+        path: |
+          m3-sys/m3tests/m3tests.html
+          m3-sys/m3tests/m3tests-results.xml
+        if-no-files-found: error
 
 # vim: expandtab
