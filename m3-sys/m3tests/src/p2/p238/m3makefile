@@ -1,5 +1,4 @@
 import("m3core")
 import("libm3")
 implementation("Main")
-build_standalone()
-program("a")
+include("../../Test.common")

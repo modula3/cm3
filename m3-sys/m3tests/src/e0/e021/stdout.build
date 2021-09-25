@@ -1,5 +1,5 @@
 "../Main.m3", line 10: illegal recursive type declaration
 "../Main.m3", line 10: illegal recursive declaration (v)
-"../Main.m3", line 12: too many values specified
+"../Main.m3", line 12: Too many values specified in fixed array constructor (2.6.8). (1)
 3 errors encountered
 Fatal Error: package build failed

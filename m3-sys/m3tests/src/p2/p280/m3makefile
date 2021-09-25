@@ -123,5 +123,4 @@ implementation ("TestArrayMO_3_3")
 
 
 implementation ("Main")
-program ("pgm")
-
+include ("../../Test.common")
