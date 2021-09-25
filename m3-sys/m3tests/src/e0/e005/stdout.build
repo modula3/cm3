@@ -1,5 +1,5 @@
 "../Main.m3", line 10: illegal operand(s) for '/'
-"../Main.m3", line 10: value is not constant
+"../Main.m3", line 10: Value of CONST is not constant (2.4.2, 2.6.15).
 "../Main.m3", line 13: subrange upper bound is not constant
 "../Main.m3", line 14: subrange upper bound is not constant
 4 errors encountered

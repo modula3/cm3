@@ -1,4 +1,4 @@
 "../Main.m3", line 8: illegal recursive declaration (X)
-"../Main.m3", line 8: illegal recursive supertype
+"../Main.m3", line 8: illegal recursive supertype (2.4.8).
 2 errors encountered
 Fatal Error: package build failed
