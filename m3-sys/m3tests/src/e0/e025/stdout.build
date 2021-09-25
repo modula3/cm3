@@ -1,4 +1,4 @@
-"../Main.m3", line 9: warning: open array passed by value (chars)
-"../Main.m3", line 17: incompatible types (chars)
+"../Main.m3", line 9: warning: Open array passed by value. (chars)
+"../Main.m3", line 17: actual not assignable to VALUE formal (2.3.2)  (chars)
 1 error and 1 warning encountered
 Fatal Error: package build failed

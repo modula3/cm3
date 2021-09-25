@@ -1,6 +1,6 @@
-"../Main.m3", line 15: types are not assignable
-"../Main.m3", line 16: types are not assignable
-"../Main.m3", line 17: types are not assignable
-"../Main.m3", line 18: types are not assignable
+"../Main.m3", line 15: Types are not assignable in assignment (2.3.1).
+"../Main.m3", line 16: Types are not assignable in assignment (2.3.1).
+"../Main.m3", line 17: Types are not assignable in assignment (2.3.1).
+"../Main.m3", line 18: Types are not assignable in assignment (2.3.1).
 4 errors encountered
 Fatal Error: package build failed

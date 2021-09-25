@@ -113,6 +113,4 @@ module ("Constants")
 module ("Dynamic")
 
 implementation ("Main")
-%build_standalone
-program ("pgm")
-%include ("../../Test.common")
+include ("../../Test.common")
