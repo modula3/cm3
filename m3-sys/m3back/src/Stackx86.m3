@@ -2334,6 +2334,7 @@ PROCEDURE doloophole (t: T; from, to: ZType) =
           stop0.mvar.mvar_type := from;
           t.cg.fstack_pop(stop0.mvar);
           stop0.mvar.mvar_type := to;
+          stop0.optype := to;
 
         ELSE
           <* ASSERT NOT fromFloat *>
