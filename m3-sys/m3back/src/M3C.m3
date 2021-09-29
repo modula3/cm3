@@ -2478,6 +2478,10 @@ CONST Prefix = ARRAY OF TEXT {
 "#define m3_check_range(T, value, low, high) (((T)(value)) < ((T)(low)) || ((T)(high)) < ((T)(value)))",
 "#define m3_xor(T, x, y) (((T)(x)) ^ ((T)(y)))",
 
+(* Helper needed by `loophole` because m3front does not guarantee that
+`u` will be an rvalue. *)
+"template<typename T, typename U> inline T m3_loophole(U u) { return *reinterpret_cast<T*>(&u); }",
+
 "#ifdef _MSC_VER",
 "#define _CRT_SECURE_NO_DEPRECATE 1",
 "#define _CRT_NONSTDC_NO_DEPRECATE 1",
@@ -7323,13 +7327,65 @@ END zero;
 
 (*----------------------------------------------------------- conversions ---*)
 
-PROCEDURE loophole(self: T; from, to: ZType) =
-(* s0.to := LOOPHOLE(s0.from, to) *)
-VAR s0 := cast(cast(get(self, 0), from), to);
-BEGIN
+PROCEDURE loophole(self: T; from: ZType; to: ZType) =
+  (* Copied from M3CG_Ops...
+     This used to say: "s0.to := LOOPHOLE(s0.from, to)"
+     But CG requires and various backends provide more cases:
+
+     s0.to := LH(s0.from, to),
+
+     where LH includes truncation, zero extension, or sign extension,
+     as needed for size matching, in addition to LOOPHOLE.  The exact
+     semantics can only be inferred by extensive vetting of CG and all
+     the back ends, which will probably be ambiguous, calling for
+     further design decisions. *)
+  VAR
+    cast, s0: Expr_t;
+  BEGIN
+    (* As noted in the documentation from M3CG_Ops, this is a
+    general-purpose conversion routine having little to do with the
+    similarly named `LOOPHOLE` in section 2.7 of the language
+    definition.
+
+    It is called to implement one specific `LOOPHOLE` conversion, to
+    reinterpret the bits between equally-sized word or real types, and
+    we handle that case specifically.
+
+    Otherwise it's a poorly defined value-preserving, or sometimes
+    value-approximating, conversion, where possible.  Because it is
+    poorly defined, and because this is the C backend, you get C
+    semantics. *)
+
     self.comment("loophole");
-    self.stack.put(0, s0);
-END loophole;
+
+    s0 := get(self);
+    pop(self);
+
+    IF
+      Target.FloatType[to] # Target.FloatType[from] AND
+      CG_Size[to] = CG_Size[from]
+    THEN
+      (* If the source and destination are not both word types and not
+      both real types, and each have the same number of bits, then
+      this is the special case where we're actually implementing a
+      small part of `LOOPHOLE`.
+
+      We would like to implement this simply as "*(to* )&from", but
+      the frontend does not allocate a temporary for this conversion,
+      and the source cannot be relied upon to be an lvalue.
+
+      Further, because this is called in an expression context, we
+      can't allocate a temporary here, so instead we rely on a helper
+      function to perform the conversion. *)
+      cast := NEW(Expr_t, c_text := "m3_loophole<" & cgtypeToText[to] & ">(" & s0.CText() & ")")
+
+    ELSE
+      (* But usually we want to cast, preserving the value in some form. *)
+      cast := NEW(Expr_t, left := s0, c_unop_text := "(" & cgtypeToText[to] & ")")
+    END;
+
+    push(self, to, cast)
+  END loophole;
 
 (*------------------------------------------------ traps & runtime checks ---*)
 
