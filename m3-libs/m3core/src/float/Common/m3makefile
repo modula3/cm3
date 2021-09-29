@@ -6,9 +6,9 @@
 %      modified on Thu Sep  2 15:08:45 PDT 1993 by mcjones
 %      modified on Fri May  7 14:59:36 PDT 1993 by muller
 
-% temporarily disable Grisu for Win32 and C backend until problems investigated
-% NT386 fails to compile, C fails at runtime
-if equal (OS_TYPE, "WIN32") or equal (M3_BACKEND_MODE, "C")
+% temporarily disable Grisu for C backend until problems investigated
+% C fails at runtime
+if equal (M3_BACKEND_MODE, "C")
   include_dir("no_grisu")
 else
   include_dir("grisu")
