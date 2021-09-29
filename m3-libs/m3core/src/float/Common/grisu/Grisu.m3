@@ -173,7 +173,7 @@ PROCEDURE RoundWeedCounted(VAR buffer : DigitArr;
                            VAR kappa : INTEGER) : BOOLEAN =
   VAR buf : BufType;
   BEGIN
-    <*ASSERT rest < tenKappa *>
+    <*ASSERT Long.LT(rest, tenKappa) *>
     (* The following tests are done in a specific order to avoid overflows. They
        will work correctly with any uint64 values of rest < tenKappa and unit.
     
@@ -233,7 +233,7 @@ PROCEDURE BiggestPowerTen(number : Uint32;
   VAR
     expPlusOneGuess : INTEGER;
   BEGIN
-    <*ASSERT number < Word.LeftShift(1, (numBits + 1)) *>
+    <*ASSERT Word.LT(number, Word.LeftShift(1, (numBits + 1))) *>
     (* 1233/4096 is approximately 1/lg(10). *)
     expPlusOneGuess := Word.RightShift((numBits + 1) * 1233, 12);
     (* We increment to skip over the first entry in the SmallPowersOf10 table.
@@ -376,8 +376,8 @@ PROCEDURE DigitGen(low,w,high : GFP;
        Note that the multiplication by 10 does not overflow, because w.e >= -60
        and thus one.e >= -60. *)
     <*ASSERT one.e() >= -60 *>
-    <*ASSERT fractionals < one.f() *>
-    <*ASSERT Long.Divide(16_FFFFFFFFFFFFFFFFL, 10L) >= one.f() *>
+    <*ASSERT Long.LT(fractionals, one.f()) *>
+    <*ASSERT Long.GE(Long.Divide(16_FFFFFFFFFFFFFFFFL, 10L), one.f()) *>
     
     LOOP
       fractionals := fractionals * 10L;
@@ -491,8 +491,8 @@ PROCEDURE DigitGenCounted(w : GFP;
        Note that the multiplication by 10 does not overflow, because w.e >= -60
        and thus one.e >= -60. *)
     <*ASSERT one.e() >= -60*>
-    <*ASSERT fractionals < one.f()*>
-    <*ASSERT Long.Divide(16_FFFFFFFFFFFFFFFFL, 10L) >= one.f()*>
+    <*ASSERT Long.LT(fractionals, one.f()) *>
+    <*ASSERT Long.GE(Long.Divide(16_FFFFFFFFFFFFFFFFL, 10L) , one.f()) *>
     
     WHILE requestedDigits > 0 AND Long.GT(fractionals, error) DO
       fractionals := fractionals * 10L;
