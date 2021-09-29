@@ -3,7 +3,7 @@ MODULE M3C;
 IMPORT RefSeq, TextSeq, Wr, Text, IntRefTbl, SortedIntRefTbl, TIntN, IntIntTbl;
 IMPORT M3CG, M3CG_Ops, Target, TFloat, TargetMap, IntArraySort, Process;
 IMPORT M3ID, TInt, TWord, ASCII, Thread, Stdio, Word, TextUtils;
-FROM TargetMap IMPORT CG_Bytes;
+FROM TargetMap IMPORT CG_Bytes, CG_Size;
 FROM M3CG IMPORT Name, ByteOffset, CallingConvention;
 FROM M3CG IMPORT BitSize, ByteSize, Alignment, Frequency;
 FROM M3CG IMPORT Label, Sign, BitOffset, TypeUID;
@@ -23,7 +23,7 @@ VAR debug_comment := TRUE;        (* command line @M3m3c-debug-comment or the re
 VAR debug_comment_stdio := FALSE; (* command line @M3m3c-debug-comment-stdio *)
 VAR debug_types := FALSE;         (* command line @M3m3c-debug-types *)
 
-(* 
+(*
 Something like:
 int F(unsigned i) { return i < 0; }
 gets a warning with gcc.
@@ -260,7 +260,6 @@ TYPE BitSizeRange_t = [8..64];
 (*TYPE BitSizeEnum_t = [8,16,32,64];*)
 VAR BitsToCGInt := ARRAY BitSizeRange_t OF CGType { CGType.Void, .. };
 VAR BitsToCGUInt := ARRAY BitSizeRange_t OF CGType { CGType.Void, .. };
-VAR BitsToInt := ARRAY BitSizeRange_t OF TEXT {NIL, ..};    (* "INT8", "INT16", "INT32", "INT64" *)
 VAR BitsToUInt := ARRAY BitSizeRange_t OF TEXT {NIL, ..};   (* "UINT8", "UINT16", "UINT32", "UINT64" *)
 VAR SignedAndBitsToCGType: ARRAY BOOLEAN, BitSizeRange_t OF CGType;
 
@@ -663,6 +662,7 @@ BEGIN
 END GenerateNameLocalText;
 
 PROCEDURE Assert(self: T; value: BOOLEAN; message: TEXT) =
+<*FATAL Wr.Failure, Thread.Alerted*>
 BEGIN
   IF NOT value THEN
     RTIO.PutText("Assertion failure: " & message);
@@ -1834,7 +1834,7 @@ BEGIN
 
     (* TODO require bit_size be set *)
     IF type.bit_size = 0 THEN
-        type.bit_size := TargetMap.CG_Size[cgtype];
+        type.bit_size := CG_Size[cgtype];
     END;
 
     IF type.text = NIL THEN
@@ -2658,14 +2658,6 @@ CONST cgtypeToParamText = ARRAY CGType OF TEXT {
 
 TYPE IntegerTypes = [CGType.Word8 .. CGType.Int64];
 
-CONST cgtypeIsInteger = ARRAY CGType OF BOOLEAN {
-    TRUE, TRUE, (* 8 *)
-    TRUE, TRUE, (* 16 *)
-    TRUE, TRUE, (* 32 *)
-    TRUE, TRUE, (* 64 *)
-    FALSE, FALSE, FALSE, (* real, longreal, extended *)
-    FALSE, FALSE, FALSE (* address, struct, void *)
-};
 CONST minMaxPossiblyValidForType = ARRAY CGType OF MinMaxBool_t {
     minMaxTrue, minMaxTrue, (* 8 *)
     minMaxTrue, minMaxTrue, (* 16 *)
@@ -3033,13 +3025,13 @@ BEGIN
     type.text := "UCHAR"; (* more readable output (fewer hashes) *)
 
     widechar_target_type := Target.Word16.cg_type;
-    widechar_last := 16_FFFF; (* The defaults. *) 
-    IF self.multipass.op_counts[M3CG_Binary.Op.widechar_size] > 0 THEN 
+    widechar_last := 16_FFFF; (* The defaults. *)
+    IF self.multipass.op_counts[M3CG_Binary.Op.widechar_size] > 0 THEN
       WITH op_widechar_size_list = self.multipass.op_data[M3CG_Binary.Op.widechar_size] DO
-        TYPECASE op_widechar_size_list[LAST(op_widechar_size_list^)] 
-        OF NULL => 
-        | M3CG_MultiPass.widechar_size_t (op_widechar_size) => 
-          IF op_widechar_size.size = 32 THEN 
+        TYPECASE op_widechar_size_list[LAST(op_widechar_size_list^)]
+        OF NULL =>
+        | M3CG_MultiPass.widechar_size_t (op_widechar_size) =>
+          IF op_widechar_size.size = 32 THEN
             widechar_target_type := Target.Word32.cg_type;
             widechar_last := 16_10FFFF;
           END;
@@ -3055,7 +3047,7 @@ BEGIN
 
     (* self.declareTypes.declare_subrange(UID_RANGE_0_31, UID_INTEGER, TInt.Zero, IntToTarget(self, 31), Target.Integer.size); *)
     (* self.declareTypes.declare_subrange(UID_RANGE_0_63, UID_INTEGER, TInt.Zero, IntToTarget(self, 63), Target.Integer.size); *)
-    
+
     TYPE AddressTypeInit_t = RECORD
         typeid: TypeUID := 0;
         text: TEXT := NIL;
@@ -4374,7 +4366,7 @@ BEGIN
             x.labels[pass.labels[i] - pass.labels_min] := TRUE;
         END;
     END;
-    
+
     index := 0;
     FOR i := FIRST(VarProcOps) TO LAST(VarProcOps) DO
         self.Replay(pass, index, self.op_data[VarProcOps[i]]);
@@ -5819,6 +5811,7 @@ BEGIN
 END IntToExpr;
 
 PROCEDURE TIntLiteral(self: T; type: CGType; READONLY i: Target.Int): TEXT =
+<*FATAL Wr.Failure, Thread.Alerted*>
 VAR ok1 := TRUE;
     ok2 := TRUE;
 BEGIN
@@ -6645,6 +6638,7 @@ END load_float;
 
 (*------------------------------------------------------------ arithmetic ---*)
 
+(*
 PROCEDURE InternalTransferMinMax2(
     from: Expr_t;
     from_valid: BOOLEAN;
@@ -6676,7 +6670,9 @@ BEGIN
         RETURN TRUE;
     END;
 END InternalTransferMinMax2;
+*)
 
+(*
 PROCEDURE InternalTransferMinMax1(from, to: Expr_t; minOrMax: MinOrMax): BOOLEAN =
 BEGIN
     RETURN FALSE;
@@ -6688,11 +6684,13 @@ BEGIN
         to.minmax_valid[minOrMax],
         to.minmax[minOrMax]);
 END InternalTransferMinMax1;
+*)
 
-PROCEDURE TransferMinMax(from, to: Expr_t) =
+PROCEDURE TransferMinMax(<* UNUSED *> from: Expr_t; to: Expr_t) =
 BEGIN
     to.minmax_valid := minMaxFalse;
     RETURN;
+(*
     IF NOT cgtypeIsInteger[to.cgtype] THEN
         to.minmax_valid := minMaxFalse;
         RETURN;
@@ -6707,6 +6705,7 @@ BEGIN
         (* punt and extend range arbitrarily; this could be better *)
         to.minmax := typeMinMax[to.cgtype];
     END;
+*)
 END TransferMinMax;
 
 PROCEDURE cast(expr: Expr_t; type: CGType := CGType.Void; type_text: TEXT := NIL): Expr_t =
@@ -6746,8 +6745,8 @@ TYPE TFloatOp2_t = PROCEDURE (READONLY a, b: Target.Float; VAR f: Target.Float):
 
 TYPE TIntExtendOrTruncate_t = PROCEDURE (READONLY in: Target.Int; byte_size: CARDINAL; VAR out: Target.Int): BOOLEAN;
 
-PROCEDURE TIntExtendOrTruncate(READONLY in: Target.Int; type: CGType; VAR out: Target.Int): BOOLEAN =
-VAR size := cgtypeSizeBytes[type];
+<* UNUSED *> PROCEDURE TIntExtendOrTruncate(READONLY in: Target.Int; type: CGType; VAR out: Target.Int): BOOLEAN =
+VAR size := CG_Bytes[type];
     signed   := cgtypeIsSignedInt[type];
     unsigned := cgtypeIsUnsignedInt[type];
 BEGIN
@@ -7848,6 +7847,7 @@ END load_static_link;
 (*----------------------------------------------------------------- misc. ---*)
 
 PROCEDURE Err(self: T; text: TEXT) =
+<*FATAL Wr.Failure, Thread.Alerted*>
 BEGIN
     self.comment ("ERROR:" & text);
     print (self, "#error " & text & "\n");
@@ -7984,10 +7984,6 @@ BEGIN
     BitsToCGInt[16] := CGType.Int16;
     BitsToCGInt[32] := CGType.Int32;
     BitsToCGInt[64] := CGType.Int64;
-    BitsToInt[8] := Text_int8;
-    BitsToInt[16] := Text_int16;
-    BitsToInt[32] := Text_int32;
-    BitsToInt[64] := Text_int64;
     BitsToUInt[8] := Text_uint8;
     BitsToUInt[16] := Text_uint16;
     BitsToUInt[32] := Text_uint32;
