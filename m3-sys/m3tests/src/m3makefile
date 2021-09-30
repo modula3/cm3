@@ -104,14 +104,12 @@ proc ProbeForTargetSpecificFile(Dir, Leaf, Default) is
   local endian =   {"BIG":"-big","LITTLE":"-little"}{TARGET_ENDIAN} & "_endian"
   foreach a in [wordSize, endian, endian & wordSize, "-" & TARGET]
     local b = Dir & "/" & Leaf & a
-    %write("checking " & b, CR)
     if FileExists (b)
       return b
     end
   end
   foreach a in ["/expected/" & TARGET & "/"]
     local b = Dir & a & Leaf
-    %write("checking " & b, CR)
     if FileExists (b)
       return b
     end
@@ -125,13 +123,10 @@ if not defined ("LIB_ONLY")
 %
 
 proc compare_file (dir, Leaf, probeForTargetSpecificFile) is
-  %write("compare_file" & dir & Leaf, CR)
   local ExpectedPath = dir & "/" & Leaf
   local OutputPath = dir & "/" & BUILD_DIR & "/" & Leaf
 
-  %write ("compare OutputPath=" & OutputPath, ", ExpectedPath=" & ExpectedPath, CR)
   if not FileExists (OutputPath)
-    %write (OutputPath & " is missing (1)" & CR)
     html ([OutputPath, "missing"])
     jux ([OutputPath, "missing", CR])
     return
@@ -142,15 +137,11 @@ proc compare_file (dir, Leaf, probeForTargetSpecificFile) is
     % missing file compares equal to zero length file, ok
 
     if equal(GetFileSize(OutputPath), 0)
-      %write (ExpectedPath, " is missing (2), compares equal to zero size ", OutputPath, CR)
       return
-    else
-      %write (ExpectedPath, " is missing (4), compares unequal to nonzero size ", OutputPath, CR)
     end
 
     if probeForTargetSpecificFile
       ExpectedPath = ProbeForTargetSpecificFile(dir, Leaf, ExpectedPath)
-      %write("comparing to ", ExpectedPath, CR)
     end
     if not FileExists (ExpectedPath)
       write (ExpectedPath, " is missing (3)", CR)
@@ -165,7 +156,6 @@ proc compare_file (dir, Leaf, probeForTargetSpecificFile) is
 
   if probeForTargetSpecificFile
     ExpectedPath = ProbeForTargetSpecificFile(dir, Leaf, ExpectedPath)
-    %write("comparing to ", ExpectedPath, CR)
   end
 
   exec (diff, ExpectedPath, OutputPath, head)
@@ -188,7 +178,6 @@ proc FileExists(x) is
 end
 
 proc cmp_file (dir, file, ignoreLinesWith, ignoreTexts, probeForTargetSpecificFile) is
-  %write("cmp_file" & dir & file, CR)
   local ExpectedPath = dir & "/" & file
   local OutputPath = dir & "/" & BUILD_DIR & "/" & file
 
@@ -196,7 +185,6 @@ proc cmp_file (dir, file, ignoreLinesWith, ignoreTexts, probeForTargetSpecificFi
     ExpectedPath = ProbeForTargetSpecificFile(dir, file, ExpectedPath)
   end
 
-  %write ("cmp OutputPath=" & OutputPath, ", ExpectedPath=" & ExpectedPath, CR)
   if not FileExists (OutputPath)
     return FALSE
   end
@@ -224,7 +212,6 @@ proc cmp_file (dir, file, ignoreLinesWith, ignoreTexts, probeForTargetSpecificFi
 
   if not empty (ignoreLinesWith)
     local ocLines = split (OutputContents, "\n")
-    %write ("OutputContents(1):\n" & OutputContents)
     OutputContents = ""
     foreach line in ocLines
       local found = FALSE
@@ -237,9 +224,7 @@ proc cmp_file (dir, file, ignoreLinesWith, ignoreTexts, probeForTargetSpecificFi
         OutputContents = OutputContents & line & "\n"
       end
     end
-    %write ("OutputContents(2):\n" & OutputContents)
     local ecLines = split (ExpectedContents, "\n")
-    %write ("ExpectedContents(1):\n" & ExpectedContents)
     ExpectedContents = ""
     foreach line in ecLines
       local found = FALSE
@@ -252,7 +237,6 @@ proc cmp_file (dir, file, ignoreLinesWith, ignoreTexts, probeForTargetSpecificFi
         ExpectedContents = ExpectedContents & line & "\n"
       end
     end
-    %write ("ExpectedContents(2):\n" & ExpectedContents)
   end
   if not empty (ignoreTexts)
     res = OutputContents
@@ -409,7 +393,6 @@ readonly proc run_test (class, group, uid, comment, should_run, cm3opts, runopts
   FileRemoveRecursive(dir & "/" & BUILD_DIR)
   if DATE
     tstart = compress (q_exec_get (DATE & " '+%s'")[1]) % second resolution only
-    %write (tstart, CR)
   end
 
   if defined ("_all") or defined (class) or defined ("_" & uid)
@@ -478,7 +461,6 @@ readonly proc run_test (class, group, uid, comment, should_run, cm3opts, runopts
 
     if DATE and BC
       tstop = compress (q_exec_get (DATE & " '+%s'")[1])
-      %write (tstop, CR)
       ttime = ""
       if BcOk
         ret = q_exec ("echo " & tstop & "-" & tstart & " | " & BC & " > ttime")
