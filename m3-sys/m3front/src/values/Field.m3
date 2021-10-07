@@ -109,8 +109,8 @@ PROCEDURE IsEqual (va, vb: Value.T;  x: Type.Assumption;
 
     (* now, we'll do the harder type-based checks... *)
     RETURN Type.IsEqual (TypeOf (a), TypeOf (b), x)
-       AND Expr.IsEqual (Expr.ConstValue (a.dfault),
-                         Expr.ConstValue (b.dfault), x);
+       (* AND Expr.IsEqual (Expr.ConstValue (a.dfault),
+                         Expr.ConstValue (b.dfault), x)*);
   END IsEqual;
 
 (*Externally dispatched-to:*)
@@ -169,10 +169,12 @@ PROCEDURE SetGlobals (<*UNUSED*> t: T) =
 PROCEDURE AddFPTag  (t: T;  VAR x: M3.FPInfo): CARDINAL =
   BEGIN
     ValueRep.FPStart (t, x, "FIELD ", 0, global := FALSE);
+  (* No, a default value does not contribute to the type.
     IF (t.dfault # NIL) THEN
       M3Buf.PutText (x.buf, " := ");
       Expr.GenFPLiteral (t.dfault, x.buf);
     END;
+  *)
     RETURN 1;
   END AddFPTag;
 
