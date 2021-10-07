@@ -1,0 +1,72 @@
+Defaults named in interface imported by First.m3:
+  Global variable:
+    1, 6, 11
+    2, 7, 12
+    16, 96, 128
+  Local variable:
+    1, 6, 11
+    2, 7, 12
+    16, 96, 128
+Defaults named in interface exported by First.m3:
+  Global variable:
+    1, 8, 15
+    2, 9, 16
+    18, 98, 130
+  Local variable:
+    1, 8, 15
+    2, 9, 16
+    18, 98, 130
+Defaults named locally in module Named:
+  Global variable:
+    1, 14, 27
+    2, 15, 28
+    20, 100, 132
+  Local variable:
+    1, 14, 27
+    2, 15, 28
+    20, 100, 132
+Defaults anonymous in Named.m3:
+  Global variable:
+    1, 10, 19
+    2, 11, 20
+    17, 97, 129
+  Local variable:
+    1, 10, 19
+    2, 11, 20
+    17, 97, 129
+Defaults named locally in interface Named:
+  Global variable:
+    1, 4, 7
+    2, 5, 8
+    19, 99, 131
+  Local variable:
+    1, 4, 7
+    2, 5, 8
+    19, 99, 131
+Defaults named in interface Named, 2nd time:
+  Global variable:
+    1, 4, 7
+    2, 5, 8
+    19, 99, 131
+  Local variable:
+    1, 4, 7
+    2, 5, 8
+    19, 99, 131
+Defaults named in interface imported by First.m3, second time:
+  Global variable:
+    1, 6, 11
+    2, 7, 12
+    16, 96, 128
+  Local variable:
+    1, 6, 11
+    2, 7, 12
+    16, 96, 128
+Defaults named in interface exported by First.m3, second time:
+  Global variable:
+    1, 8, 15
+    2, 9, 16
+    18, 98, 130
+  Local variable:
+    1, 8, 15
+    2, 9, 16
+    18, 98, 130
