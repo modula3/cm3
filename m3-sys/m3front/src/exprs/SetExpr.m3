@@ -685,14 +685,14 @@ PROCEDURE PrepBig (p: P;  VAR info: Type.Info): CG.Var =
         the range of host INTEGER. *)
 (* Leave result in p.tmp. *)
   VAR
-    loWordNo, hiWordNo       : INTEGER;
+    loWordNo, hiWordNo     : INTEGER;
     loBitNo, hiBitNo       : INTEGER;
     minExpr      : Expr.T;
     maxExpr      : Expr.T;
     e            : Expr.T;
     t1           : CG.Var;
     nWords       : INTEGER;
-    curWordNo      : INTEGER;
+    curWordNo    : INTEGER;
     curMask      : Target.Int;
     n            : Node;
     tmp          : Target.Int;

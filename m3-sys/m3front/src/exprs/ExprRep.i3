@@ -34,6 +34,8 @@ REVEAL
     genFPLiteral (mbuf: M3Buf.T)                   := NoFPLiteral;
     prepLiteral  (type: M3.Type;  is_const: BOOLEAN) := NoPrepLiteral;
     genLiteral   (offset: INTEGER;  type: M3.Type;  is_const: BOOLEAN) := NoLiteral;
+    (* ^Puts literal value in global area of current unit, if it's constant and
+       structured.  Does not leave address on CG stack.  *)
     prep         ()                                := NoCompile;
     compile      ()                                := NoCompile;
     prepLV       (traced: BOOLEAN)                 := NotLValue;

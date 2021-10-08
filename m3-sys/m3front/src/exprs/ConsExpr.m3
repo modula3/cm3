@@ -146,7 +146,7 @@ PROCEDURE InnerSeal (p: P) =
 
 PROCEDURE CheckRecurse
   (consExpr: P; parentKind: Kind; VAR cs: Expr.CheckState) =
-(* Recurses only on a Cons/Array pair directly inside a Cons/Array pair
+(* Recurses only on a Cons/Array pair directly inside a Cons/Array pair,
    especially, no named expresson in between. *)
   BEGIN
     InnerSeal (consExpr);

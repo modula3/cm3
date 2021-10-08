@@ -33,6 +33,7 @@ PROCEDURE SetLazyAlignment (on: BOOLEAN);
 PROCEDURE ExportScope (t: T): Scope.T;
 
 PROCEDURE Current (): T;
+(* The current module. *)
 
 PROCEDURE Name (t: T): M3ID.T;
 (* t = NIL => use Current *)

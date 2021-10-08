@@ -15,7 +15,7 @@ PROCEDURE Initialize () =
     T := RefType.New (NIL, FALSE, Brand.New ("$null$"));
     Nil := AddressExpr.New (TInt.Zero);
     Tipe.Define ("NULL", T, TRUE);
-    Constant.Declare ("NIL", Nil, TRUE);
+    EVAL Constant.Declare ("NIL", Nil, TRUE);
   END Initialize;
 
 BEGIN
