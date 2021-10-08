@@ -17,6 +17,8 @@ TYPE
     name   : M3ID.T   := M3ID.NoID;
     mode   : Mode     := FIRST (Mode);
     offset : INTEGER  := 0;
+    (* NOTE WELL, lest thou be deceived.  'offset' is not an offset,
+       it is the zero-origin sequence *number* of the formal. *)
     type   : Type.T   := NIL;
     dfault : Expr.T   := NIL;
     unused : BOOLEAN  := FALSE;
@@ -24,6 +26,11 @@ TYPE
   END;
 
 PROCEDURE New (READONLY info: Info): Value.T;
+
+PROCEDURE NameDefaultConstructors
+  (sig: Type.T; id:M3ID.T; VAR cs: Value.CheckState);
+(* An anonymous array constructor as a parameter default, in an interface,
+   can be referred-to from another unit.  So give it a name. *)
 
 PROCEDURE NewBuiltin (name: TEXT;  offset: INTEGER;  type: Type.T): Value.T;
 

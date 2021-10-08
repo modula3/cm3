@@ -27,7 +27,11 @@ PROCEDURE Push (t: T): T;
 PROCEDURE Pop  (old: T);
 PROCEDURE Top  (): T;
 
+PROCEDURE InsertScope (o: Value.T; t: T);
+(* Insert o into t. *)
+
 PROCEDURE Insert (o: Value.T);
+(* Insert o into Top(). *)
 
 PROCEDURE LookUp    (t: T;  name: M3ID.T;  strict: BOOLEAN): Value.T;
 PROCEDURE LookUpQID (t: T;  READONLY q: QID): Value.T;

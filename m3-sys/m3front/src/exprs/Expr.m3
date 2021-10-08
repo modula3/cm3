@@ -14,6 +14,7 @@ IMPORT Target, TInt, ErrType, Error;
 IMPORT NamedExpr, ConsExpr, OpenArrayType, ArrayType, Value;
 IMPORT Bool, Int;
 IMPORT CallExpr, SetExpr, RecordExpr, ArrayExpr;
+IMPORT Constant;
 
 (********************************************************************)
 
@@ -246,6 +247,45 @@ PROCEDURE IsAnonConstructor (t: T): BOOLEAN =
     IF SetExpr.Is (locExpr) THEN RETURN TRUE; END;
     RETURN FALSE;
   END IsAnonConstructor;
+
+PROCEDURE IdToNonNilText (Id: M3ID.T): TEXT =
+  VAR Result: TEXT;
+  BEGIN
+    Result := M3ID.ToText (Id);
+    IF Result = NIL THEN Result := "NIL" END;
+    RETURN Result;
+  END IdToNonNilText;
+
+(* EXPORTED: *)
+PROCEDURE NameAnonConstr
+  (VAR (*IN OUT*) Constr: T; unitId, constId: M3ID.T; VAR cs: Value.CheckState) =
+(* If Constr is an anonymous constructor expression, change it to a named
+   expression, already resolved to a constant value.  This so it can be
+   referenced from a different compilation unit.  Give it a concocted,
+   non-Modula3 name, for IR information only. *)
+
+(* To use the value of an anonymous constructor from a different unit,
+   we need a Constant.T ahead of the constructor expression to
+   provide mechanism for that, and a NamedExpr.T ahead of the
+   Constant.T to turn it back into an expression.  This will look
+   like a named constant with a non-Modula3 name. *)
+
+  VAR name: TEXT;
+  VAR namedConst: Constant.T;
+  VAR newExpr: T;
+  BEGIN
+    IF ArrayExpr.IsAnon (Constr)
+    THEN
+      <* ASSERT Constr.checked *>
+      name
+        := "%Anon%" & IdToNonNilText (unitId) & "%" & IdToNonNilText (constId);
+      namedConst := Constant.DeclareGlobal (name, Constr);
+      newExpr := NamedExpr.FromValue (namedConst);
+      TypeCheck (newExpr, cs);
+      Constr := newExpr;
+    END;
+  END NameAnonConstr;
+
 
 (******************************************** Alignments ************)
 

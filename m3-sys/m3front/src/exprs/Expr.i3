@@ -7,7 +7,7 @@
 
 INTERFACE Expr;
 
-IMPORT M3, M3Buf, CG, Target, Type;
+IMPORT M3, M3Buf, M3ID, CG, Target, Type, Value;
 
 TYPE
   T    = M3.Expr;
@@ -86,6 +86,13 @@ PROCEDURE IsMarkedForDirectAssignment (t: T): BOOLEAN;
 
 PROCEDURE IsAnonConstructor (t: T): BOOLEAN;
 (* t is a non-named array, record, or set constructor. *)
+
+PROCEDURE NameAnonConstr
+  (VAR (*IN OUT*) Constr: T; unitId, constId: M3ID.T; VAR cs: Value.CheckState);
+(* If Constr is an anonymous constructor expression, change it to a named
+   expression, already resolved to a constant value.  This so it can be
+   referenced from a different compilation unit.  Give it a concocted,
+   non-Modula3 name, for IR information only. *)
 
 PROCEDURE Alignment (t: T): Type.BitAlignT;
 (* A bit alignment that t is guaranteed to have.  Hopefully maximum, or
