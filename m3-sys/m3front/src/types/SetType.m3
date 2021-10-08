@@ -83,10 +83,15 @@ PROCEDURE Check (p: P) =
         Error.Txt
           (TInt.ToText (domNumT),
            "Domain cardinality of SET type exceeds LAST(INTEGER) (2.2.6).");
+        domNumT := TInt.One;
+        domMinT := TInt.Zero;
+        domMaxT := TInt.Zero;
         p.broken := TRUE;
+      ELSE
+        b := Type.GetBounds (p.domType, domMinT, domMaxT);
+        <* ASSERT b *>
       END;
-      b := Type.GetBounds (p.domType, domMinT, domMaxT);
-      <* ASSERT b *>
+
       IF TInt.GT (domMaxT, Target.Integer.max) THEN
         Error.Txt
           (TInt.ToText (domMaxT),
@@ -99,6 +104,7 @@ PROCEDURE Check (p: P) =
            "Lower bound of SET domain type less that FIRST(INTEGER) (2.2.6).");
         p.broken := TRUE;
       END;
+
 
       (* Checks against CM3 limits, specifically, all within host Word or Int. *)
 (* TODO: Code below will handle a target Word, if we only had a TWord.ToWord. *)
