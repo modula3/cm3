@@ -7,10 +7,10 @@
 
 import("libm3")
 
-Interface("Named")
-Module("Def")
-Module("Display")
-Module("Second")
+interface("Named")
+module("Def")
+module("Display")
+module("Second")
 
 build_standalone ()
 
