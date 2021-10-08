@@ -47,6 +47,9 @@ PROCEDURE ShapeCheckNeeded (expr: Expr.T): BOOLEAN;
 PROCEDURE Is (expr: Expr.T): BOOLEAN;
 (* Purely syntactic. Will not look through a ConsExpr. *)
 
+PROCEDURE IsAnon (expr: Expr.T): BOOLEAN;
+(* expr is an anonymous array constructor. Will look thru' a ConsExpr. *)
+
 PROCEDURE StaticSize (expr: Expr.T): INTEGER;
 (* < 0, if nonstatic.  Can be static, even if open array repType.
    Does not include dope. *)

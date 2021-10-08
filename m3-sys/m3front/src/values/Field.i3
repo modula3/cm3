@@ -29,6 +29,8 @@ PROCEDURE Is (v: Value.T): BOOLEAN;
 
 PROCEDURE Split (field: Value.T;  VAR info: Info);
 
+PROCEDURE NameAnonConstr (VAR (*IN OUT*) o: Value.T; VAR cs: Value.CheckState);
+
 PROCEDURE Compile (field: T);
 (* compile, i.e. declare, the underlying type *)
 

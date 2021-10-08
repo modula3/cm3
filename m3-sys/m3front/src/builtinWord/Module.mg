@@ -38,7 +38,7 @@ PROCEDURE Initialize (name: TEXT) =
 
     zz := Scope.Push (Module.ExportScope (M));
     Tipe.Define ("T", NamedType.New (T), FALSE);
-    Constant.Declare ("Size", IntegerExpr.New (Int.T, size), FALSE);
+    EVAL Constant.Declare ("Size", IntegerExpr.New (Int.T, size), FALSE);
     Plus.Initialize (rep);
     Times.Initialize (rep);
     Minus.Initialize (rep);
