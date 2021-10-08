@@ -320,13 +320,13 @@ PROCEDURE IsStructured (t: T): BOOLEAN =
 (* PRE: t need not be checked. *) 
   BEGIN
     IF t = NIL THEN RETURN FALSE END;
-    CASE t.info.class OF
+    CASE Check(t).info.class OF
     | Class.Named,
       Class.Packed    => RETURN IsStructured (Base (t));
     | Class.Record,
       Class.Array,
       Class.OpenArray => RETURN TRUE;
-    | Class.Set       => RETURN (Check(t).info.size > Target.Word.size);
+    | Class.Set       => RETURN (t.info.size > Target.Word.size);
     ELSE                 RETURN FALSE;
     END;
   END IsStructured;
@@ -562,6 +562,8 @@ PROCEDURE IsEqual (a, b: T;  x: Assumption): BOOLEAN =
     assume.a := a;
     assume.b := b;
     y := LOOPHOLE (ADR (assume), Assumption);
+    (* Pretty edgy:  Building a linked list whose nodes are instances of
+       local variable 'assume' of procedures on the call chain! *)
 
     IF NOT a.isEqual (b, y) THEN RETURN FALSE END;
 

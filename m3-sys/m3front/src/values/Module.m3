@@ -1040,10 +1040,12 @@ PROCEDURE LoadGlobalAddr (t: T;  offset: INTEGER;  is_const: BOOLEAN) =
     IF (t = curModule) THEN
       CG.Load_addr_of (t.globals[is_const].seg, offset, CG.Max_alignment);
     ELSE
-      <*ASSERT NOT is_const*>
+      (* is_const can happen when accessing an anonymous constructor that is the
+         default value of a formal or field, thus in the signature's/record's
+         module, but called or initialized from some different module. *)
       ImportInterface (t);
       CG.Load_addr
-        (curModule.globals[FALSE].seg, t.import_offs + M3RT.II_import,
+        (curModule.globals[is_const].seg, t.import_offs + M3RT.II_import,
          CG.Max_alignment);
       CG.Add_offset (offset);
     END;

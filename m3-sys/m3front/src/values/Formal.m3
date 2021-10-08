@@ -11,7 +11,7 @@ MODULE Formal;
 IMPORT M3, M3ID, CG, Value, ValueRep, Type, Error, Expr, ProcType;
 IMPORT KeywordExpr, OpenArrayType, RefType, CheckExpr, PackedType;
 IMPORT ArrayType, ArrayExpr, SetType, Host, NarrowExpr, M3Buf, Tracer;
-IMPORT Variable, Procedure, UserProc, Target, M3RT;
+IMPORT Module, Variable, Procedure, UserProc, Target, M3RT;
 IMPORT RTIO, RTParams;
 
 VAR debug := FALSE;
@@ -101,6 +101,23 @@ PROCEDURE New (READONLY info: Info): Value.T =
 
     RETURN t;
   END New;
+
+(*EXPORTED*)
+PROCEDURE NameDefaultConstructors
+  (sig: Type.T; id: M3ID.T; VAR cs: Value.CheckState) =
+(* An anonymous array constructor as a parameter default, in an interface,
+   can be referred-to from another unit.  So give it a name. *)
+
+  BEGIN
+    TYPECASE ProcType.Formals (sig)
+    OF T(formal) (*Head of linked list*)
+    => WHILE formal # NIL DO
+         Expr.NameAnonConstr (formal.dfault, id, formal.name, cs);
+         formal := formal.next;
+       END;
+    ELSE
+    END;
+  END NameDefaultConstructors;
 
 (*EXPORTED*)
 PROCEDURE Split (formal: Value.T;  VAR info: Info) =
@@ -312,11 +329,23 @@ PROCEDURE Load (t: T) =
 
 (* Externally dispatched-to: *)
 PROCEDURE Compile (t: T) =
+  VAR dfaultTyp: Type.T;
   BEGIN
     Type.Compile (TypeOf (t));
     Type.Compile (RepTypeOf (t));
     Type.Compile (t.refType);
-    Type.Compile (Expr.TypeOf (t.dfault));
+    dfaultTyp := Expr.TypeOf (t.dfault);
+    Type.Compile (dfaultTyp);
+    IF ArrayType.Is (dfaultTyp) AND Module.IsInterface () THEN
+      (* Get the static value into this interface, while we are in it,
+         so it can be referred-to from other units. *)
+      Expr.Prep (t.dfault);
+      Expr.Compile (t.dfault);
+(* TODO: Rework so we can get Prep and Compile to do their work, except
+         without generating unnecessary RT code to push the address
+         of the constant default expression, which then must be discarded. *)
+      CG.Discard (Type.CGType (dfaultTyp, in_memory := FALSE));
+    END;
   END Compile;
 
 (* Externally dispatched-to: *)
@@ -794,7 +823,7 @@ PROCEDURE GenReference (formVal: T;  actExpr: Expr.T) =
           THEN (* Pass by reference, lo-level too. *)
             Expr.CompileAddress (actExpr, traced := FALSE);
             CG.Pop_param (CG.Type.Addr);
-          ELSE (* Pass by value.  Lo-level, copy and pass the copy by ref. *)
+          ELSE (* Pass by value.  Lo-level: copy and pass the copy by ref. *)
             Expr.Compile (actExpr);
             (* A reference actual could be a NARROW, which, by language
                definition, produces a non-designator, but Expr.Compile
