@@ -86,7 +86,7 @@ jobs:
       run: |
         curl "https://github.com/modula3/cm3/archive/refs/tags/${TAG}.tar.gz" --location --remote-name --silent
         tar zxf "${TAG}.tar.gz"
-    - name: FIXME: Current release still tries to build mariadb
+    - name: FIXME Current release still tries to build mariadb
       if: startsWith(matrix.os, 'ubuntu')
       run: |
         sed -e /MYSQL/d -i "cm3-${TAG}/m3-sys/cminstall/src/config-no-install/Linux.common"
