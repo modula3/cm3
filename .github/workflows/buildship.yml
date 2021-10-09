@@ -11,7 +11,6 @@ jobs:
     runs-on: ${{ matrix.os }}
     env:
       CM3INST: ${{ format('/{0}/runner/cm3', startsWith(matrix.os, 'macOS') && 'Users' || 'home') }}
-      CM3VER: d5.11.1-20210610
       M3_BACKEND_MODE: ${{ (matrix.backend != 'gcc') && matrix.backend || '' }}
     steps:
     - name: Install prerequisites (macOS)
@@ -24,19 +23,15 @@ jobs:
       run: |
         sudo apt-get update --quiet
         sudo apt-get install --quiet --assume-yes libglu1-mesa-dev xorg-dev
-    - name: Install mariadb prerequisite (ubuntu-20.04)
-      if: matrix.os == 'ubuntu-20.04'
-      run: |
-        sudo apt-get install --quiet --assume-yes libmariadbclient-dev
     - name: Create install directory
       run: |
         mkdir -p "${CM3INST}/bin"
         echo "${CM3INST}/bin" >> $GITHUB_PATH
     - name: Install bootstrap compiler
       run: |
-        curl "https://github.com/modula3/cm3/releases/download/unix64le-${CM3VER}/cm3-boot-unix64le-${CM3VER}.cpp.gz" --location --remote-name --silent
-        gunzip "cm3-boot-unix64le-${CM3VER}.cpp.gz"
-        g++ -g -pthread -o "${CM3INST}/bin/cm3" "cm3-boot-unix64le-${CM3VER}.cpp"
+        curl "https://github.com/modula3/cm3/releases/download/d5.11.3/cm3-boot-unix64le-d5.11.3-20211007.cpp.gz" --location --remote-name --silent
+        gunzip "cm3-boot-unix64le-d5.11.3-20211007.cpp.gz"
+        g++ -g -pthread -o "${CM3INST}/bin/cm3" "cm3-boot-unix64le-d5.11.3-20211007.cpp"
     - name: Fetch sources
       uses: actions/checkout@v2
     - name: Run bootstrap
