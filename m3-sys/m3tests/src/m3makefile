@@ -526,6 +526,8 @@ readonly proc p_test (group, uid, comment) is
   run_test ("_ptests", group, uid, comment, "run", cm3opts, runopts, "probeForTargetSpecificFiles")
 end
 
+p_test ("p2", "p288", "field default constant constructors")
+p_test ("p2", "p287", "constant constructors")
 p_test ("p2", "p286", "Order of compilation error with array constructor parameter.")
 p_test ("p2", "p283", "Long.LT") % This fails an assert in integrated backend.
 p_test ("p2", "p282", "grisuc") % This fails in Grisu when using C backend.
