@@ -21,7 +21,7 @@ TYPE
         prep         := Prep;
         compile      := Compile;
         prepLV       := ExprRep.NotLValue;
-        compileLV    := ExprRep.NotLValue;
+        compileLV    := ExprRep.NotLValueBool;
         prepBR       := PrepBR;
         compileBR    := ExprRep.NoBranch;
         evaluate     := Fold;
@@ -73,8 +73,9 @@ PROCEDURE Prep (p: P) =
     CG.Set_label (false);
   END Prep;
 
-PROCEDURE Compile (p: P) =
+PROCEDURE Compile (p: P; StaticOnly: BOOLEAN) =
   BEGIN
+    <* ASSERT NOT StaticOnly *>
     CG.Push (p.tmp);
     CG.Free (p.tmp);
     p.tmp := NIL;

@@ -77,13 +77,15 @@ PROCEDURE NeedsAddress (p: P) =
     Variable.NeedsAddress (p.v);
   END NeedsAddress;
 
-PROCEDURE Compile (p: P) =
+PROCEDURE Compile (p: P; StaticOnly: BOOLEAN) =
   BEGIN
+    <* ASSERT NOT StaticOnly *>
     Variable.Load (p.v);
   END Compile;
 
-PROCEDURE CompileLV (p: P; <*UNUSED*> traced: BOOLEAN) =
+PROCEDURE CompileLV (p: P; <*UNUSED*> traced: BOOLEAN; StaticOnly: BOOLEAN) =
   BEGIN
+    <* ASSERT NOT StaticOnly *>
     Variable.LoadLValue (p.v);
   END CompileLV;
 

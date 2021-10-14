@@ -265,7 +265,7 @@ PROCEDURE CastExprAlign (p: P): Type.BitAlignT =
     RETURN typeInfo.alignment;
   END CastExprAlign;
 
-PROCEDURE Compile (p: P) =
+PROCEDURE Compile (p: P; <*UNUSED*> StaticOnly: BOOLEAN) =
   VAR
     e  := p.expr;
     u  := Expr.TypeOf (e);
@@ -407,7 +407,7 @@ PROCEDURE PrepLV (p: P; traced: BOOLEAN) =
     END;
   END PrepLV;
 
-PROCEDURE CompileLV (p: P; traced: BOOLEAN) =
+PROCEDURE CompileLV (p: P; traced: BOOLEAN; <*UNUSED*> StaticOnly: BOOLEAN) =
   VAR
     e  := p.expr;
     u  := Expr.TypeOf (e);

@@ -197,14 +197,16 @@ PROCEDURE Prep (p: P) =
     END
   END Prep;
 
-PROCEDURE Compile (p: P) =
+PROCEDURE Compile (p: P; StaticOnly: BOOLEAN) =
   BEGIN
-    IF p.tmp = NIL THEN
-      Value.Load (p.value);
-    ELSE
-      CG.Push (p.tmp);
-      CG.Free (p.tmp);
-      p.tmp := NIL;
+    IF NOT StaticOnly THEN
+      IF p.tmp = NIL THEN
+        Value.Load (p.value);
+      ELSE
+        CG.Push (p.tmp);
+        CG.Free (p.tmp);
+        p.tmp := NIL;
+      END
     END
   END Compile;
 
@@ -213,8 +215,9 @@ PROCEDURE PrepLV (p: P; <*UNUSED*> traced: BOOLEAN) =
     IF (p.value = NIL) THEN Resolve (p) END;
   END PrepLV;
 
-PROCEDURE CompileLV (p: P; <*UNUSED*> traced: BOOLEAN) =
+PROCEDURE CompileLV (p: P; <*UNUSED*> traced: BOOLEAN; StaticOnly: BOOLEAN) =
   BEGIN
+    IF StaticOnly THEN RETURN END;
     IF p.tmp = NIL THEN
       CASE Value.ClassOf (p.value) OF
       | Value.Class.Expr => Value.Load (p.value);
