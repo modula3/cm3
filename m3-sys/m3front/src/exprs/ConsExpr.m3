@@ -36,7 +36,7 @@ TYPE
         prep         := Prep;
         compile      := Compile;
         prepLV       := ExprRep.NotLValue;
-        compileLV    := ExprRep.NotLValue;
+        compileLV    := ExprRep.NotLValueBool;
         prepBR       := ExprRep.NotBoolean;
         compileBR    := ExprRep.NotBoolean;
         evaluate     := Evaluate;
@@ -215,9 +215,9 @@ PROCEDURE Prep (p: P) =
   END Prep;
 
 (* Externally dispatched-to: *)
-PROCEDURE Compile (p: P) =
+PROCEDURE Compile (p: P; StaticOnly: BOOLEAN) =
   BEGIN
-    Expr.Compile (p.base);
+    Expr.Compile (p.base, StaticOnly);
   END Compile;
 
 (* Externally dispatched-to: *)
