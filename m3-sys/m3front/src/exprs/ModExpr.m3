@@ -31,7 +31,7 @@ TYPE
         prep         := Prep;
         compile      := Compile;
         prepLV       := ExprRep.NotLValue;
-        compileLV    := ExprRep.NotLValue;
+        compileLV    := ExprRep.NotLValueBool;
         prepBR       := ExprRep.NotBoolean;
         compileBR    := ExprRep.NotBoolean;
         evaluate     := Fold;
@@ -116,7 +116,7 @@ PROCEDURE Prep (p: P) =
     END;
   END Prep;
 
-PROCEDURE Compile (p: P) =
+PROCEDURE Compile (p: P; StaticOnly: BOOLEAN) =
   VAR
     cg_type: CG.Type;
     info: Type.Info;
@@ -126,6 +126,7 @@ PROCEDURE Compile (p: P) =
     log: INTEGER;
     t: Type.T;
   BEGIN
+    <* ASSERT NOT StaticOnly *>
     IF (p.class = Class.cINT) OR (p.class = Class.cLINT) THEN
       cg_type := Type.CGType (p.type);
       e1 := Expr.ConstValue (p.a);

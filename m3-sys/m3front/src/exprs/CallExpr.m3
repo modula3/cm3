@@ -204,7 +204,7 @@ PROCEDURE NotBoolean (<*UNUSED*> t: T;
 PROCEDURE PrepNoBranch (t: T;  true, false: CG.Label;  freq: CG.Frequency) =
   BEGIN
     t.prep ();
-    t.compile ();
+    t.compile (StaticOnly := FALSE);
     IF (true # CG.No_label)
       THEN CG.If_true (true, freq);
       ELSE CG.If_false (false, freq);
@@ -374,7 +374,7 @@ PROCEDURE Prep (p: T) =
     p.methods.prep (p);
   END Prep;
 
-PROCEDURE Compile (p: T) =
+PROCEDURE Compile (p: T; <*UNUSED*> StaticOnly: BOOLEAN) =
   BEGIN
     p.methods.compiler (p);
   END Compile;
@@ -384,7 +384,7 @@ PROCEDURE PrepLV (p: T; traced: BOOLEAN) =
     p.methods.prepLV (p, traced);
   END PrepLV;
 
-PROCEDURE CompileLV (p: T; traced: BOOLEAN) =
+PROCEDURE CompileLV (p: T; traced: BOOLEAN; <*UNUSED*> StaticOnly: BOOLEAN) =
   BEGIN
     p.methods.compilerLV (p, traced);
   END CompileLV;
