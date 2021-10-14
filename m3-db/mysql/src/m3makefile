@@ -1,13 +1,8 @@
-import("libm3")
-
 if SYSTEM_LIBS contains "MYSQL"
+  import("libm3")
   import_sys_lib("MYSQL")
-
-Module("MySQLRaw")
-Module("MySQL")
-c_source("mysql_wrap")
-
-Library("m3mysql")
-
+  Module("MySQLRaw")
+  Module("MySQL")
+  c_source("mysql_wrap")
+  Library("m3mysql")
 end
-

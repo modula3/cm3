@@ -1,0 +1,10 @@
+readonly TARGET = "ARM64_LINUX" % code generation target
+readonly GNU_PLATFORM = "arm64-linux" % "cpu-os" string for GNU
+
+SYSTEM_CC = "gcc -g -fPIC" % C compiler
+SYSTEM_CXXC = "g++ -g -fPIC" % C++ compiler
+
+readonly SYSTEM_ASM = "as" % Assembler
+
+include("ARM64.common")
+include("Linux.common")
