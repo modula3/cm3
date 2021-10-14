@@ -31,7 +31,7 @@ TYPE
         prep         := Prep;
         compile      := Compile;
         prepLV       := ExprRep.NotLValue;
-        compileLV    := ExprRep.NotLValue;
+        compileLV    := ExprRep.NotLValueBool;
         prepBR       := ExprRep.NotBoolean;
         compileBR    := ExprRep.NotBoolean;
         evaluate     := Fold;
@@ -129,9 +129,10 @@ PROCEDURE Prep (p: P) =
     END;
   END Prep;
 
-PROCEDURE Compile (p: P) =
+PROCEDURE Compile (p: P; StaticOnly: BOOLEAN) =
   VAR info: Type.Info;
   BEGIN
+    <* ASSERT NOT StaticOnly *>
     CASE p.class OF
     | Class.cSET =>
         EVAL Type.CheckInfo (p.type, info);

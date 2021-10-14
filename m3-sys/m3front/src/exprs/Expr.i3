@@ -115,19 +115,21 @@ PROCEDURE Alignment (t: T): Type.BitAlignT;
 *)
 
 PROCEDURE Prep (t: T);
-PROCEDURE Compile (t: T);
+PROCEDURE Compile (t: T; StaticOnly := FALSE);
 (* Emit code to evaluate the expression onto the top of stack. For some
-   types, this could be an address (arrays, records, bit sets). *)
+   types, this could be an address (arrays, records, bit sets).
+   StaticOnly means construct static data but do not evaluate. *)
 
 PROCEDURE PrepLValue (t: T; traced: BOOLEAN);
-PROCEDURE CompileLValue (t: T; traced: BOOLEAN);
-(* Emit code to evaluate 't's L-value into s0.A. 't' must be a designator. *)
+PROCEDURE CompileLValue (t: T; traced: BOOLEAN; StaticOnly := FALSE);
+(* Emit code to evaluate 't's L-value into s0.A. 't' must be a designator.
+   StaticOnly means construct static data but do not evaluate. *)
 
-PROCEDURE CompileAddress (t: T; traced: BOOLEAN);
+PROCEDURE CompileAddress (t: T; traced: BOOLEAN; StaticOnly := FALSE);
 (* emits code to evaluate 't's byte address onto the top of stack.
    Equivalent to CompileLValue, followed by a runtime check that it
-   is byte aligned.
-   Use PrepLValue to prep these expressions. *)
+   is byte aligned.  Use PrepLValue to prep these expressions.
+   StaticOnly means construct static data but do not evaluate. *)
 
 PROCEDURE PrepBranch (t: T;  true, false: CG.Label;  freq: CG.Frequency);
 PROCEDURE CompileBranch (t: T;  true, false: CG.Label;  freq: CG.Frequency);

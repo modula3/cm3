@@ -362,11 +362,12 @@ PROCEDURE Prep (t: T) =
   END Prep;
 
 (* EXPORTED: *)
-PROCEDURE Compile (t: T) =
+PROCEDURE Compile (t: T; StaticOnly := FALSE) =
   BEGIN
     IF (t = NIL) THEN RETURN END;
+    <* ASSERT CG.IsInsideProc () OR StaticOnly *>
     <* ASSERT t.checked *>
-    t.compile ();
+    t.compile (StaticOnly);
   END Compile;
 
 (* EXPORTED: *)
@@ -379,19 +380,21 @@ PROCEDURE PrepLValue (t: T; traced: BOOLEAN) =
   END PrepLValue;
 
 (* EXPORTED: *)
-PROCEDURE CompileLValue (t: T; traced: BOOLEAN) =
+PROCEDURE CompileLValue (t: T; traced: BOOLEAN; StaticOnly := FALSE) =
   BEGIN
     IF (t = NIL) THEN RETURN END;
+    <* ASSERT CG.IsInsideProc () OR StaticOnly *>
     <* ASSERT t.checked *>
-    t.compileLV (traced);
+    t.compileLV (traced, StaticOnly);
   END CompileLValue;
 
 (* EXPORTED: *)
-PROCEDURE CompileAddress (t: T; traced: BOOLEAN) =
+PROCEDURE CompileAddress (t: T; traced: BOOLEAN; StaticOnly := FALSE) =
   BEGIN
     IF (t = NIL) THEN RETURN END;
+    <* ASSERT CG.IsInsideProc () OR StaticOnly *>
     <* ASSERT t.checked *>
-    t.compileLV (traced);
+    t.compileLV (traced, StaticOnly);
     CG.Check_byte_aligned ();
   END CompileAddress;
 
@@ -535,7 +538,7 @@ PROCEDURE NoPrep (<*UNUSED*> t: T) =
   BEGIN
   END NoPrep;
 
-PROCEDURE NoCompile (<*UNUSED*> t: T) =
+PROCEDURE NoCompile (<*UNUSED*> t: T; <*UNUSED*> StaticOnly: BOOLEAN) =
   BEGIN
     <*ASSERT FALSE*>
   END NoCompile;
@@ -544,6 +547,12 @@ PROCEDURE NotLValue (<*UNUSED*> t: T; <*UNUSED*> traced: BOOLEAN) =
   BEGIN
     <* ASSERT FALSE *>
   END NotLValue;
+
+PROCEDURE NotLValueBool
+  (<*UNUSED*> t: T; <*UNUSED*> traced, StaticOnly: BOOLEAN) =
+  BEGIN
+    <* ASSERT FALSE *>
+  END NotLValueBool;
 
 PROCEDURE NotBoolean (<*UNUSED*> t: T;
                       <*UNUSED*> true, false: CG.Label;
@@ -555,7 +564,7 @@ PROCEDURE NotBoolean (<*UNUSED*> t: T;
 PROCEDURE PrepNoBranch (t: T;  true, false: CG.Label;  freq: CG.Frequency) =
   BEGIN
     t.prep ();
-    t.compile ();
+    t.compile (StaticOnly := FALSE);
     IF (true = CG.No_label)
       THEN CG.If_false (false, freq);
       ELSE CG.If_true (true, freq);

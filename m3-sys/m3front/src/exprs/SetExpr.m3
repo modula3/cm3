@@ -46,7 +46,7 @@ TYPE
         prep         := Prep;
         compile      := Compile;
         prepLV       := ExprRep.NotLValue;
-        compileLV    := ExprRep.NotLValue;
+        compileLV    := ExprRep.NotLValueBool;
         prepBR       := ExprRep.NotBoolean;
         compileBR    := ExprRep.NotBoolean;
         evaluate     := Evaluate;
@@ -659,9 +659,12 @@ PROCEDURE Prep (p: P) =
   END Prep;
 
 (* Externally dispatched-to: *)
-PROCEDURE Compile (p: P) =
+PROCEDURE Compile (p: P; StaticOnly: BOOLEAN) =
   VAR info: Type.Info;
   BEGIN
+    <* ASSERT NOT StaticOnly *>
+(* NOTE^ If ever duplicate static sets are removed as for arrays, this
+    will need to change. *)
     IF p.broken THEN RETURN; END;
     EVAL Type.CheckInfo (p.tipe, info);
     IF info.size <= Target.Word.size THEN

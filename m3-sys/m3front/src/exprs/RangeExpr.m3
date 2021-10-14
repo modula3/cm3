@@ -21,7 +21,7 @@ TYPE
         prep         := Prep;
         compile      := Compile;
         prepLV       := ExprRep.NotLValue;
-        compileLV    := ExprRep.NotLValue;
+        compileLV    := ExprRep.NotLValueBool;
         prepBR       := ExprRep.NotBoolean;
         compileBR    := ExprRep.NotBoolean;
         evaluate     := Fold;
@@ -84,7 +84,7 @@ PROCEDURE Prep (p: P) =
     Expr.Prep (p.b);
   END Prep;
 
-PROCEDURE Compile (<*UNUSED*> p: P) =
+PROCEDURE Compile (<*UNUSED*> p: P; <*UNUSED*> StaticOnly: BOOLEAN) =
   BEGIN
     Error.Msg ("INTERNAL ERROR: cannot compile a range expression");
     <* ASSERT FALSE *>

@@ -2072,13 +2072,14 @@ PROCEDURE InitLiteralDope
   END InitLiteralDope;
 
 (* Externally dispatched-to: *)
-PROCEDURE CompileLV (top: T; <*UNUSED*>traced: BOOLEAN) =
+PROCEDURE CompileLV
+  (top: T; <*UNUSED*>traced: BOOLEAN; StaticOnly: BOOLEAN) =
   BEGIN
-    Compile (top);
+    Compile (top, StaticOnly);
   END CompileLV;
 
 (* Externally dispatched-to: *)
-PROCEDURE Compile (top: T) =
+PROCEDURE Compile (top: T; <*UNUSED*> StaticOnly: BOOLEAN) =
 (* PRE: top.depth = 0 *)
 (* PRE: LHS addr is on CG stack IFF UsesAssignProtocol. *)
   BEGIN
@@ -2106,7 +2107,7 @@ PROCEDURE Compile (top: T) =
       END;
     END;
     InnerPrep (top);
-    InnerCompile (top);
+    InnerCompile (top, StaticOnly);
     EVAL CheckUseFailure (top);
   END Compile;
 
@@ -2188,11 +2189,13 @@ PROCEDURE CompileGeneratedTypes (top: T) =
     Type.Compile (top.refType);
    END CompileGeneratedTypes;
 
-PROCEDURE InnerCompile (top: T) =
+PROCEDURE InnerCompile (top: T; StaticOnly: BOOLEAN) =
 (* PRE: top.depth = 0 *)
   BEGIN
     IF top.broken THEN
-      CG.Load_nil ();
+      IF NOT StaticOnly THEN
+        CG.Load_nil ();
+      END;
       top.state := StateTyp.Compiled;
       RETURN
     END;
@@ -2202,20 +2205,25 @@ PROCEDURE InnerCompile (top: T) =
     | RKTyp.RKUnknown => <* ASSERT FALSE *>
 
     | RKTyp.RKGlobal
-     => Module.LoadGlobalAddr
-          (top.containingUnit, offset := top.globalOffset,
-            is_const := top.inConstArea);
+     => IF NOT StaticOnly THEN
+           Module.LoadGlobalAddr
+             (top.containingUnit, offset := top.globalOffset,
+              is_const := top.inConstArea)
+        END;
 
     | RKTyp.RKDirectElts
-    => CG.Push (top.buildEltsAddrVal);
+    => <* ASSERT NOT StaticOnly *>
+      CG.Push (top.buildEltsAddrVal);
       CG.Free (top.buildEltsAddrVal);
 
     | RKTyp.RKDirectDoped
-    => CG.Push (top.buildAddrVal);
+    => <* ASSERT NOT StaticOnly *>
+      CG.Push (top.buildAddrVal);
       CG.Free (top.buildAddrVal);
 
     | RKTyp.RKTempElts, RKTyp.RKTempStatic
     => (* We built into a static-sized temp Var. *) 
+      <* ASSERT NOT StaticOnly *>
       <* ASSERT top.buildTempVar # NIL *>
       <* ASSERT (top.finalVal = NIL) = (NOT UsesAssignProtocol (top)) *>
       IF top.finalVal = NIL THEN
@@ -2233,6 +2241,7 @@ PROCEDURE InnerCompile (top: T) =
     | RKTyp.RKTempDyn
     => (* We built into a heap-allocated, dynamic-sized, contiguous
           dope-and-elements temp. *)
+      <* ASSERT NOT StaticOnly *>
       <* ASSERT (top.finalVal = NIL) = (NOT UsesAssignProtocol (top)) *>
       IF top.finalVal = NIL THEN
         CG.Push (top.buildAddrVal) (* Return the temp. *)
@@ -2246,7 +2255,7 @@ PROCEDURE InnerCompile (top: T) =
           CG.Push (top.finalVal);
           CG.Push (top.buildAddrVal);
           CG.Load_intt (top.levels^[0].staticFlatEltCt);
-(* TODO ^Elliminate multply by one. *)
+(* TODO ^Eliminate multiply by one. *)
           <* ASSERT top.shallowestDynDepth >= 0 *>
           CG.Push (top.levels^[top.shallowestDynDepth].eltBytepackVal);
           CG.Multiply (Target.Integer.cg_type);
