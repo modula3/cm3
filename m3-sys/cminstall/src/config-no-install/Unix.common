@@ -185,7 +185,11 @@ if not defined("llvm_backend")
 %llvm 8 changed option for frame pointer.
 %      local args = [ "-disable-fp-elim"]
 
-      args += "-filetype=" & filetype
+%for some reason llvm people default to split .file
+%directives in the assembler causing as to crash. Have
+%to add dwarf-directory=0 to fix it. What a kludge.
+
+      args += "--dwarf-directory=0 -filetype=" & filetype
       args += llvmback_pic
 
       if optimize
