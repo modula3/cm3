@@ -19,10 +19,10 @@ TYPE
         repTypeOf    := TypeOf;
         check        := Check;
         need_addr    := ExprRep.NotAddressable;
-        prep         := Compile;
-        compile      := Compile;
+        prep         := ExprRep.NoPrep;
+        compile      := ExprRep.NoCompile;
         prepLV       := ExprRep.NotLValue;
-        compileLV    := ExprRep.NotLValue;
+        compileLV    := ExprRep.NotLValueBool;
         prepBR       := ExprRep.NotBoolean;
         compileBR    := ExprRep.NotBoolean;
         evaluate     := ExprRep.Self;
@@ -92,11 +92,6 @@ PROCEDURE EqCheck (a: P;  e: Expr.T;  x: M3.EqAssumption): BOOLEAN =
     ELSE      RETURN FALSE;
     END;
   END EqCheck;
-
-PROCEDURE Compile (<*UNUSED*> p: P) =
-  BEGIN
-    <*ASSERT FALSE*>
-  END Compile;
 
 BEGIN
 END TypeExpr.

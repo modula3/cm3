@@ -336,15 +336,11 @@ PROCEDURE Compile (t: T) =
     Type.Compile (t.refType);
     dfaultTyp := Expr.TypeOf (t.dfault);
     Type.Compile (dfaultTyp);
-    IF ArrayType.Is (dfaultTyp) AND Module.IsInterface () THEN
+    IF ArrayExpr.IsAnon (t.dfault) AND Module.IsInterface () THEN
       (* Get the static value into this interface, while we are in it,
          so it can be referred-to from other units. *)
       Expr.Prep (t.dfault);
-      Expr.Compile (t.dfault);
-(* TODO: Rework so we can get Prep and Compile to do their work, except
-         without generating unnecessary RT code to push the address
-         of the constant default expression, which then must be discarded. *)
-      CG.Discard (Type.CGType (dfaultTyp, in_memory := FALSE));
+      Expr.Compile (t.dfault, StaticOnly := TRUE);
     END;
   END Compile;
 

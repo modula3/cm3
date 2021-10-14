@@ -113,7 +113,7 @@ PROCEDURE Prep (p: P) =
       IF info.isTraced THEN
         CASE info.class OF
         | Type.Class.Object, Type.Class.Opaque, Type.Class.Ref =>
-          Compile (p);
+          Compile (p, StaticOnly := FALSE);
           RunTyme.EmitCheckLoadTracedRef ();
           p.tmp := CG.Pop ();
         ELSE
@@ -123,16 +123,17 @@ PROCEDURE Prep (p: P) =
     END
   END Prep;
 
-PROCEDURE Compile (p: P) =
+PROCEDURE Compile (p: P; StaticOnly: BOOLEAN) =
   VAR t := p.type;  info: Type.Info;
   BEGIN
+    <* ASSERT NOT StaticOnly *>
     IF p.tmp # NIL THEN
       CG.Push (p.tmp);
       CG.Free (p.tmp);
       p.tmp := NIL;
       RETURN;
     END;
-    Expr.Compile (p.a);
+    Expr.Compile (p.a, StaticOnly);
     EVAL Type.CheckInfo (t, info);
     CG.ForceStacked ();
     (* ^'cause alignment applies to the referent, not the pointer*)
@@ -155,9 +156,10 @@ PROCEDURE PrepLV (p: P; traced: BOOLEAN) =
     END
   END PrepLV;
 
-PROCEDURE CompileLV (p: P; traced: BOOLEAN) =
+PROCEDURE CompileLV (p: P; traced: BOOLEAN; StaticOnly: BOOLEAN) =
   VAR info: Type.Info;
   BEGIN
+    <* ASSERT NOT StaticOnly *>
     IF p.tmp # NIL THEN
       <*ASSERT traced*>
       CG.Push (p.tmp);

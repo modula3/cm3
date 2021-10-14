@@ -350,6 +350,8 @@ PROCEDURE End_procedure (p: Proc);
 (* marks the end of the code for procedure 'p'.  Sets "current procedure"
    to NIL. *)
 
+PROCEDURE IsInsideProc () : BOOLEAN;
+
 PROCEDURE Begin_block ();
 PROCEDURE End_block ();
 (* marks the beginning and ending of nested anonymous blocks *)
