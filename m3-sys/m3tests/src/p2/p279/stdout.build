@@ -1,1 +1,0 @@
-./pgm >stdout.pgm.raw 2>stderr.pgm.raw
