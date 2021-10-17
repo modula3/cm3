@@ -153,6 +153,9 @@ if not defined("m3llvm")
         args += "-g"
       end
 
+      % add the target to the m3llvm call.
+      args += "-t " & TARGET
+
       %args += "-d" %While m3llvm is under development.
 
       return try_exec (m3llvmname, args, "-o", outfile, source )
@@ -184,10 +187,6 @@ if not defined("llvm_backend")
       local args = [ "-frame-pointer=all"]
 %llvm 8 changed option for frame pointer.
 %      local args = [ "-disable-fp-elim"]
-
-%for some reason llvm people default to split .file
-%directives in the assembler causing as to crash. Have
-%to add dwarf-directory=0 to fix it. What a kludge.
 
       args += "--dwarf-directory=0 -filetype=" & filetype
       args += llvmback_pic

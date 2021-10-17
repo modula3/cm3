@@ -554,6 +554,9 @@ if not defined("m3llvm")
         args += "-g" 
       end
 
+      % add the target to the m3llvm call.
+      args += "-t " & TARGET
+
       %args += "-d" %While m3llvm is under development.  
 
       return try_exec (m3llvmname, args, "-o", outfile, source )
