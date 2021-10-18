@@ -32,7 +32,7 @@ TYPE
         prep         := Prep;
         compile      := Compile;
         prepLV       := ExprRep.NotLValue;
-        compileLV    := ExprRep.NotLValueBool;
+        compileLV    := ExprRep.NotLValue;
         prepBR       := ExprRep.PrepNoBranch;
         compileBR    := ExprRep.NoBranch;
         evaluate     := Fold;
@@ -149,10 +149,9 @@ PROCEDURE Prep (p: P) =
     END;
   END Prep;
 
-PROCEDURE Compile (p: P; StaticOnly: BOOLEAN) =
+PROCEDURE Compile (p: P) =
   VAR size: INTEGER;  info: Type.Info;
   BEGIN
-    <* ASSERT NOT StaticOnly *>
     CASE p.class OF
     | Class.cINT, Class.cENUM =>
         Expr.Compile (p.a);

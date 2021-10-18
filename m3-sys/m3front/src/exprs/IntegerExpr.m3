@@ -22,7 +22,7 @@ TYPE
         prep         := ExprRep.NoPrep;
         compile      := Compile;
         prepLV       := ExprRep.NotLValue;
-        compileLV    := ExprRep.NotLValueBool;
+        compileLV    := ExprRep.NotLValue;
         prepBR       := ExprRep.NotBoolean;
         compileBR    := ExprRep.NotBoolean;
         evaluate     := ExprRep.Self;
@@ -76,9 +76,8 @@ PROCEDURE EqCheck (a: P;  e: Expr.T;  <*UNUSED*> x: M3.EqAssumption): BOOLEAN =
     END;
   END EqCheck;
 
-PROCEDURE Compile (p: P; StaticOnly: BOOLEAN) =
+PROCEDURE Compile (p: P) =
   BEGIN
-    <* ASSERT NOT StaticOnly *>
     CG.Load_integer (Type.CGType (p.type), p.value);
   END Compile;
 

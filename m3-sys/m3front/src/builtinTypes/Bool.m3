@@ -30,8 +30,8 @@ PROCEDURE Initialize () =
     false := EnumExpr.New (T, TInt.Zero);
     true  := EnumExpr.New (T, TInt.One);
 
-    EVAL Constant.Declare ("FALSE", false, TRUE);
-    EVAL Constant.Declare ("TRUE", true, TRUE);
+    Constant.Declare ("FALSE", false, TRUE);
+    Constant.Declare ("TRUE", true, TRUE);
 
     Map[FALSE] := false;
     Map[TRUE] := true;

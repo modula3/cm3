@@ -366,18 +366,15 @@ PROCEDURE InnerPrepLV (p: P;  traced: BOOLEAN; usesAssignProtocol: BOOLEAN) =
   END InnerPrepLV;
 
 (* Externally dispatched-to: *)
-PROCEDURE Compile (p: P; StaticOnly: BOOLEAN) =
+PROCEDURE Compile (p: P) =
   BEGIN
-    CompileLV (p, traced := FALSE, StaticOnly := StaticOnly);
+    CompileLV (p, traced := FALSE);
   END Compile;
 
 (* Externally dispatched-to: *)
-PROCEDURE CompileLV (p: P; traced: BOOLEAN; StaticOnly: BOOLEAN) =
+PROCEDURE CompileLV (p: P; traced: BOOLEAN) =
   VAR info: Type.Info;
   BEGIN
-    <* ASSERT NOT StaticOnly *>
-(* NOTE^ If ever duplicate static records are removed as for arrays, this
-    will need to change. *)
     IF UsesAssignProtocol (p)
     THEN (* InnerPrep was postponed until now. *)
       InnerPrepLV (p, traced, usesAssignProtocol := TRUE)

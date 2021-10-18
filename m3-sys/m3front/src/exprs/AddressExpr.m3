@@ -23,7 +23,7 @@ TYPE
         prep         := ExprRep.NoPrep;
         compile      := Compile;
         prepLV       := ExprRep.NotLValue;
-        compileLV    := ExprRep.NotLValueBool;
+        compileLV    := ExprRep.NotLValue;
         prepBR       := ExprRep.NotBoolean;
         compileBR    := ExprRep.NotBoolean;
         evaluate     := ExprRep.Self;
@@ -146,7 +146,7 @@ PROCEDURE EqCheck (a: P;  e: Expr.T;  <*UNUSED*> x: M3.EqAssumption): BOOLEAN =
     END;
   END EqCheck;
 
-PROCEDURE Compile (p: P; <*UNUSED*> StaticOnly: BOOLEAN) =
+PROCEDURE Compile (p: P) =
   VAR val: INTEGER;  b := TInt.ToInt (p.value, val);
   BEGIN
     <*ASSERT b*>

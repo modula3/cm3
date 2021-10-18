@@ -181,11 +181,7 @@ PROCEDURE Rehash (t: T) =
   END Rehash;
 
 PROCEDURE Insert (o: Value.T) =
-  BEGIN
-    InsertScope (o, top);
-  END Insert;
-
-PROCEDURE InsertScope (o: Value.T; t: T) =
+  VAR t := top;
   BEGIN
     (* check for a reserved word *)
     IF (t # Initial) AND (LookUp (Initial, o.name, TRUE) # NIL) THEN
@@ -205,7 +201,7 @@ PROCEDURE InsertScope (o: Value.T; t: T) =
     END;
     t.tail := o;
     INC (t.n_elts);
-  END InsertScope;
+  END Insert;
 
 PROCEDURE ToList (t: T): Value.T =
   BEGIN

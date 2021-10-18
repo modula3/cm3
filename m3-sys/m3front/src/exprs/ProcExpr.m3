@@ -23,7 +23,7 @@ TYPE
         prep         := ExprRep.NoPrep;
         compile      := Compile;
         prepLV       := ExprRep.NotLValue;
-        compileLV    := ExprRep.NotLValueBool;
+        compileLV    := ExprRep.NotLValue;
         prepBR       := ExprRep.NotBoolean;
         compileBR    := ExprRep.NotBoolean;
         evaluate     := ExprRep.Self;
@@ -93,11 +93,9 @@ PROCEDURE EqCheck (a: P;  e: Expr.T;  <*UNUSED*> x: M3.EqAssumption): BOOLEAN =
     END;
   END EqCheck;
 
-PROCEDURE Compile (p: P; StaticOnly: BOOLEAN) =
+PROCEDURE Compile (p: P) =
   BEGIN
-    IF NOT StaticOnly THEN
-      Value.Load (p.proc);
-    END;
+    Value.Load (p.proc);
   END Compile;
 
 PROCEDURE GenFPLiteral (p: P;  buf: M3Buf.T) =

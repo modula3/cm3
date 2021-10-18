@@ -21,7 +21,7 @@ TYPE
         prep         := Prep;
         compile      := Compile;
         prepLV       := ExprRep.NotLValue;
-        compileLV    := ExprRep.NotLValueBool;
+        compileLV    := ExprRep.NotLValue;
         prepBR       := ExprRep.NotBoolean;
         compileBR    := ExprRep.NotBoolean;
         evaluate     := Fold;
@@ -80,11 +80,10 @@ PROCEDURE Prep (p: P) =
     Expr.Prep (p.b);
   END Prep;
 
-PROCEDURE Compile (p: P; StaticOnly: BOOLEAN) =
+PROCEDURE Compile (p: P) =
   VAR e1, e2, e3: Expr.T;  divisor: Target.Int;  log: INTEGER;
       t: Type.T;  cg_type: CG.Type;
   BEGIN
-    <* ASSERT NOT StaticOnly *>
     e1 := Expr.ConstValue (p.a);
     e2 := Expr.ConstValue (p.b);
     e3 := NIL;

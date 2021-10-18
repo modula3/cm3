@@ -14,7 +14,6 @@ IMPORT Target, TInt, ErrType, Error;
 IMPORT NamedExpr, ConsExpr, OpenArrayType, ArrayType, Value;
 IMPORT Bool, Int;
 IMPORT CallExpr, SetExpr, RecordExpr, ArrayExpr;
-IMPORT Constant;
 
 (********************************************************************)
 
@@ -248,45 +247,6 @@ PROCEDURE IsAnonConstructor (t: T): BOOLEAN =
     RETURN FALSE;
   END IsAnonConstructor;
 
-PROCEDURE IdToNonNilText (Id: M3ID.T): TEXT =
-  VAR Result: TEXT;
-  BEGIN
-    Result := M3ID.ToText (Id);
-    IF Result = NIL THEN Result := "NIL" END;
-    RETURN Result;
-  END IdToNonNilText;
-
-(* EXPORTED: *)
-PROCEDURE NameAnonConstr
-  (VAR (*IN OUT*) Constr: T; unitId, constId: M3ID.T; VAR cs: Value.CheckState) =
-(* If Constr is an anonymous constructor expression, change it to a named
-   expression, already resolved to a constant value.  This so it can be
-   referenced from a different compilation unit.  Give it a concocted,
-   non-Modula3 name, for IR information only. *)
-
-(* To use the value of an anonymous constructor from a different unit,
-   we need a Constant.T ahead of the constructor expression to
-   provide mechanism for that, and a NamedExpr.T ahead of the
-   Constant.T to turn it back into an expression.  This will look
-   like a named constant with a non-Modula3 name. *)
-
-  VAR name: TEXT;
-  VAR namedConst: Constant.T;
-  VAR newExpr: T;
-  BEGIN
-    IF ArrayExpr.IsAnon (Constr)
-    THEN
-      <* ASSERT Constr.checked *>
-      name
-        := "%Anon%" & IdToNonNilText (unitId) & "%" & IdToNonNilText (constId);
-      namedConst := Constant.DeclareGlobal (name, Constr);
-      newExpr := NamedExpr.FromValue (namedConst);
-      TypeCheck (newExpr, cs);
-      Constr := newExpr;
-    END;
-  END NameAnonConstr;
-
-
 (******************************************** Alignments ************)
 
 (* EXPORTED: *)
@@ -362,12 +322,11 @@ PROCEDURE Prep (t: T) =
   END Prep;
 
 (* EXPORTED: *)
-PROCEDURE Compile (t: T; StaticOnly := FALSE) =
+PROCEDURE Compile (t: T) =
   BEGIN
     IF (t = NIL) THEN RETURN END;
-    <* ASSERT CG.IsInsideProc () OR StaticOnly *>
     <* ASSERT t.checked *>
-    t.compile (StaticOnly);
+    t.compile ();
   END Compile;
 
 (* EXPORTED: *)
@@ -380,21 +339,19 @@ PROCEDURE PrepLValue (t: T; traced: BOOLEAN) =
   END PrepLValue;
 
 (* EXPORTED: *)
-PROCEDURE CompileLValue (t: T; traced: BOOLEAN; StaticOnly := FALSE) =
+PROCEDURE CompileLValue (t: T; traced: BOOLEAN) =
   BEGIN
     IF (t = NIL) THEN RETURN END;
-    <* ASSERT CG.IsInsideProc () OR StaticOnly *>
     <* ASSERT t.checked *>
-    t.compileLV (traced, StaticOnly);
+    t.compileLV (traced);
   END CompileLValue;
 
 (* EXPORTED: *)
-PROCEDURE CompileAddress (t: T; traced: BOOLEAN; StaticOnly := FALSE) =
+PROCEDURE CompileAddress (t: T; traced: BOOLEAN) =
   BEGIN
     IF (t = NIL) THEN RETURN END;
-    <* ASSERT CG.IsInsideProc () OR StaticOnly *>
     <* ASSERT t.checked *>
-    t.compileLV (traced, StaticOnly);
+    t.compileLV (traced);
     CG.Check_byte_aligned ();
   END CompileAddress;
 
@@ -538,7 +495,7 @@ PROCEDURE NoPrep (<*UNUSED*> t: T) =
   BEGIN
   END NoPrep;
 
-PROCEDURE NoCompile (<*UNUSED*> t: T; <*UNUSED*> StaticOnly: BOOLEAN) =
+PROCEDURE NoCompile (<*UNUSED*> t: T) =
   BEGIN
     <*ASSERT FALSE*>
   END NoCompile;
@@ -547,12 +504,6 @@ PROCEDURE NotLValue (<*UNUSED*> t: T; <*UNUSED*> traced: BOOLEAN) =
   BEGIN
     <* ASSERT FALSE *>
   END NotLValue;
-
-PROCEDURE NotLValueBool
-  (<*UNUSED*> t: T; <*UNUSED*> traced, StaticOnly: BOOLEAN) =
-  BEGIN
-    <* ASSERT FALSE *>
-  END NotLValueBool;
 
 PROCEDURE NotBoolean (<*UNUSED*> t: T;
                       <*UNUSED*> true, false: CG.Label;
@@ -564,7 +515,7 @@ PROCEDURE NotBoolean (<*UNUSED*> t: T;
 PROCEDURE PrepNoBranch (t: T;  true, false: CG.Label;  freq: CG.Frequency) =
   BEGIN
     t.prep ();
-    t.compile (StaticOnly := FALSE);
+    t.compile ();
     IF (true = CG.No_label)
       THEN CG.If_false (false, freq);
       ELSE CG.If_true (true, freq);

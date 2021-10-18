@@ -223,11 +223,6 @@ PROCEDURE End_unit () =
     cg.end_unit ();
   END End_unit;
 
-PROCEDURE IsInsideProc () : BOOLEAN =
-  BEGIN
-    RETURN ProcStackRoot # NIL
-  END IsInsideProc;
-
 PROCEDURE Import_unit (n: Name) =
   BEGIN
     cg.import_unit (n);

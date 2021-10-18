@@ -13,7 +13,6 @@ IMPORT M3, M3ID, CG, Value, ValueRep, Type, Scope, Error, Host;
 IMPORT ProcType, Stmt, BlockStmt, Marker, Coverage, M3RT;
 IMPORT CallExpr, Token, Variable, ProcExpr, Tracer, RTIO, RTParams;
 IMPORT Scanner, Decl, ESet, ProcBody, Target, Expr, Formal, Jmpbufs;
-IMPORT Module;
 FROM Scanner IMPORT GetToken, Match, MatchID, cur;
 
 VAR debug := FALSE;
@@ -111,7 +110,6 @@ PROCEDURE ParseDecl (READONLY att: Decl.Attributes;
     Match (TK.tPROCEDURE);
     id := MatchID ();
     t := Create (id);
-    t.name := id;
     t.unused    := att.isUnused;
     t.obsolete  := att.isObsolete;
     IF (att.isExternal) THEN
@@ -293,10 +291,6 @@ PROCEDURE Check (p: T;  VAR cs: Value.CheckState) =
     (* NOTE: don't save the signature returned by Type.Check cause if
        you do, the formals will be reused by procedures with the
        same signature. *)
-
-    IF Module.IsInterface () THEN
-      Formal.NameDefaultConstructors (p.signature, p.name, cs);
-    END;
 
     Value.TypeCheck (p.intf_peer, cs);
 

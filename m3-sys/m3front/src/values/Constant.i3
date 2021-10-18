@@ -15,10 +15,6 @@ TYPE
 
 PROCEDURE ParseDecl (READONLY att: Decl.Attributes);
 
-PROCEDURE Declare (name: TEXT;  value: Expr.T;  reserved: BOOLEAN): T;
-(* Declare in the current scope. *)
-
-PROCEDURE DeclareGlobal (name: TEXT;  valExpr: Expr.T;  reserved := FALSE): T;
-(* Declare in the global scope. *)
+PROCEDURE Declare (name: TEXT;  value: Expr.T;  reserved: BOOLEAN);
 
 END Constant.
