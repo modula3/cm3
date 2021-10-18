@@ -34,12 +34,10 @@ REVEAL
     genFPLiteral (mbuf: M3Buf.T)                   := NoFPLiteral;
     prepLiteral  (type: M3.Type;  is_const: BOOLEAN) := NoPrepLiteral;
     genLiteral   (offset: INTEGER;  type: M3.Type;  is_const: BOOLEAN) := NoLiteral;
-    (* ^Puts literal value in global area of current unit, if it's constant and
-       structured.  Does not leave address on CG stack.  *)
-    prep         ()                                := NoPrep;
-    compile      (StaticOnly: BOOLEAN)             := NoCompile;
+    prep         ()                                := NoCompile;
+    compile      ()                                := NoCompile;
     prepLV       (traced: BOOLEAN)                 := NotLValue;
-    compileLV    (traced, StaticOnly: BOOLEAN)     := NotLValueBool;
+    compileLV    (traced: BOOLEAN)                 := NotLValue;
     prepBR       (true, false: CG.Label;  freq: CG.Frequency) := NotBoolean;
     compileBR    (true, false: CG.Label;  freq: CG.Frequency) := NotBoolean;
     note_write   ()                                := NotWritable;
@@ -70,9 +68,8 @@ PROCEDURE NoFPLiteral    (e: M3.Expr;  mbuf: M3Buf.T);
 PROCEDURE NoPrepLiteral  (e: M3.Expr;  type: M3.Type;  is_const: BOOLEAN);
 PROCEDURE NoLiteral      (e: M3.Expr;  offset: INTEGER;  type: M3.Type;  is_const: BOOLEAN);
 PROCEDURE NoPrep         (e: M3.Expr);
-PROCEDURE NoCompile      (e: M3.Expr; StaticOnly: BOOLEAN);
+PROCEDURE NoCompile      (e: M3.Expr);
 PROCEDURE NotLValue      (e: M3.Expr; traced: BOOLEAN);
-PROCEDURE NotLValueBool  (e: M3.Expr; traced, StaticOnly: BOOLEAN);
 PROCEDURE NotBoolean     (e: M3.Expr; t,f: CG.Label; freq: CG.Frequency);
 PROCEDURE PrepNoBranch   (e: M3.Expr; t,f: CG.Label; freq: CG.Frequency);
 PROCEDURE NoBranch       (e: M3.Expr; t,f: CG.Label; freq: CG.Frequency);

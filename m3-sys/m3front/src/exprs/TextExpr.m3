@@ -23,7 +23,7 @@ TYPE
         prep         := ExprRep.NoPrep;
         compile      := Compile;
         prepLV       := ExprRep.NotLValue;
-        compileLV    := ExprRep.NotLValueBool;
+        compileLV    := ExprRep.NotLValue;
         prepBR       := ExprRep.NotBoolean;
         compileBR    := ExprRep.NotBoolean;
         evaluate     := ExprRep.Self;
@@ -191,12 +191,9 @@ PROCEDURE ExpandLiterals () =
     literals := new;
   END ExpandLiterals;
 
-PROCEDURE Compile (p: P; StaticOnly: BOOLEAN) =
+PROCEDURE Compile (p: P) =
   VAR uid := SetUID (p);
   BEGIN
-    <* ASSERT NOT StaticOnly *>
-(* NOTE^ If ever duplicate text constants are removed as for arrays, this
-    will need to change. *)
     CG.Load_addr_of (globalConstsCGVar, literals[uid] + Target.Address.pack,
                      Target.Address.align);
   END Compile;

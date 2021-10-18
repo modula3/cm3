@@ -22,7 +22,7 @@ TYPE
         prep         := Prep;
         compile      := Compile;
         prepLV       := ExprRep.NotLValue;
-        compileLV    := ExprRep.NotLValueBool;
+        compileLV    := ExprRep.NotLValue;
         prepBR       := ExprRep.NotBoolean;
         compileBR    := ExprRep.NotBoolean;
         evaluate     := Fold;
@@ -81,9 +81,9 @@ PROCEDURE Prep (p: P) =
     Expr.Prep (p.a);
   END Prep;
 
-PROCEDURE Compile (p: P; StaticOnly: BOOLEAN) =
+PROCEDURE Compile (p: P) =
   BEGIN
-    Expr.Compile (p.a, StaticOnly);
+    Expr.Compile (p.a);
   END Compile;
 
 PROCEDURE Fold (p: P): Expr.T =

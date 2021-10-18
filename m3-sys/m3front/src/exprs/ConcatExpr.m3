@@ -23,7 +23,7 @@ TYPE
         prep         := Prep;
         compile      := Compile;
         prepLV       := ExprRep.NotLValue;
-        compileLV    := ExprRep.NotLValueBool;
+        compileLV    := ExprRep.NotLValue;
         prepBR       := ExprRep.NotBoolean;
         compileBR    := ExprRep.NotBoolean;
         evaluate     := Fold;
@@ -114,11 +114,10 @@ PROCEDURE Prep (p: P) =
     END;
   END Prep;
 
-PROCEDURE Compile (p: P; StaticOnly: BOOLEAN) =
+PROCEDURE Compile (p: P) =
   BEGIN
-    <* ASSERT NOT StaticOnly *>
     IF (p.folded # NIL) THEN
-      Expr.Compile (p.folded, StaticOnly);
+      Expr.Compile (p.folded);
     ELSE
       CG.Push (p.tmp);
       CG.Boost_addr_alignment (Target.Address.align);

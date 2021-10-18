@@ -60,8 +60,8 @@ REVEAL
         initDone    : M3.Flag   := FALSE;
         initZero    : M3.Flag   := FALSE; (* Initial value is all binary zeros. *)
         initPending : M3.Flag   := FALSE; (* Initialization is postponed. *)
-        initStatic  : M3.Flag   := FALSE; (* Needs RT initialization to a value
-                                             from the static constant area. *)
+        initStatic  : M3.Flag   := FALSE; (* Needs RT initialization with a value from
+                                             the static constant area. *)
         allocated     : M3.Flag := FALSE;
           (* ^Has allocated space in the global variable area. *)
         initAllocated : M3.Flag := FALSE;
@@ -717,8 +717,7 @@ PROCEDURE ConstInit (t: T) =
 
         IF initDepth > 0 THEN (* initial value is an open array *)
           (* Allocate space for the dope only. *)
-          (* See ArrayExpr.GenLiteral, where element space will
-             be allocated. *)
+          (* See ArrayExpr.GenLiteral, where element space will be allocated. *)
           initSize := Target.Address.pack + initDepth * Target.Integer.pack;
           initAlign := MAX (Target.Address.align, Target.Integer.align);
           initName := t.qualName & "_INIT_DOPE_";
@@ -729,14 +728,12 @@ PROCEDURE ConstInit (t: T) =
         END;
       END;
       initM3ID := M3ID.Add (initName);
-(* TODO: Eliminate duplicate copies of same value, including reused,
-         named constant. *)
+(* TODO: Eliminate duplicate copies of same value, including reused, named constant. *) 
       t.initValOffset
         := Module.Allocate
              (initSize, initAlign, TRUE, "init value for ", initM3ID);
       t.initAllocated := TRUE;
-      CG.Declare_global_field
-        (t.name, t.initValOffset, initSize, typeUID, TRUE);
+      CG.Declare_global_field (t.name, t.initValOffset, initSize, typeUID, TRUE);
       CG.Comment
         (t.initValOffset, TRUE, "init value for ", initName);
       Expr.PrepLiteral (constInitExpr, initRepType, TRUE);
@@ -753,16 +750,14 @@ PROCEDURE ConstInit (t: T) =
       IF (constInitExpr # NIL) THEN
         IF NOT Expr.CheckUseFailure (t.initExpr) THEN
          (* NOTE: Modula3 defines this as a checked runtime error, but in a
-            global variable, as in this case, execution of the assignment is
-            inevitable, thus it can't fail to fail at runtime.  Also,
+            global variable, execution of the assignment is inevitable.  Also,
             portions of the runtime system are executed before their module's
             initialization (the only place the compiler could put a runtime
-            abort) and depend instead on variables being statically initialized.
+            abort) and depend instead on variables statically initialized.
             So we make this a compile time error.
           *)
           Error.Msg
-            ("Variable's initial value contains runtime assignability "
-             & "failure(s).");
+            ("Variable's initial value contains runtime assignability failure(s).");
         END;
         Expr.PrepLiteral (constInitExpr, t.type, FALSE);
         Expr.GenLiteral (constInitExpr, t.offset, t.type, FALSE);

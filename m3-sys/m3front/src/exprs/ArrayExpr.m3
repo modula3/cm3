@@ -3,7 +3,7 @@
 (* Modula-3 source code.                                                     *)
 (* Copyright 2020, 2021, Rodney M. Bates.                                    *)
 (* rodney.m.bates@acm.org                                                    *)
-(* Licensed under the MIT License.                                           *)
+(* Licensed under the MIT License.                                           *) 
 (* -----------------------------------------------------------------------2- *)
 
 MODULE ArrayExpr;
@@ -24,8 +24,8 @@ MODULE ArrayExpr;
 IMPORT Fmt;
 
 IMPORT M3, M3ID, CG, Expr, ExprRep, Error, Type, ArrayType, PackedType;
-IMPORT KeywordExpr, RangeExpr, NamedExpr, OpenArrayType, Module;
-IMPORT IntegerExpr, EnumExpr, ConsExpr, SubrangeType, Target, TInt, Int, M3Buf;
+IMPORT KeywordExpr, RangeExpr, OpenArrayType, Module;
+IMPORT IntegerExpr, EnumExpr, SubrangeType, Target, TInt, Int, M3Buf;
 IMPORT AssignStmt, RefType, M3RT, Procedure, RunTyme, ErrType;
 
 (* Monitor sequencing of operations: *)
@@ -70,8 +70,8 @@ TYPE LevelsTyp = REF ARRAY OF LevelInfoTyp;
 TYPE ResultKindTyp
   = { RKUnknown      (* Initial value. *)
     , RKGlobal       (* One of the global data areas. *)
-                       (* Uses top.containingUnit, top.globalOffset,
-                          top.globalEltsOffset, and top.inConstArea. *)
+                       (* Uses top.globalOffset, top.globalEltsOffset,
+                          and top.inConstArea. *)
     , RKDirectElts   (* Caller-provided area, elements only. *)
                        (* Uses top.buildEltsAddrVal. *)
     , RKDirectDoped  (* Caller-provided area, doped. *)
@@ -89,8 +89,8 @@ TYPE RKTyp = ResultKindTyp;
 TYPE RKTypSet = SET OF RKTyp;
 CONST RKTypSetInitializing = RKTypSet
   { RKTyp.RKGlobal, RKTyp.RKTempElts, RKTyp.RKTempStatic, RKTyp.RKTempDyn};
-  (* ^For these result kinds, we are building into a previously uninitialized
-     area whose preexisting contents will never be accessed. *)
+  (* ^We are building into a previously uninitialized area whose preexisting
+     contents will never be accessed. *)
 
 (* Properties of an array constructor: *)
 REVEAL 
@@ -113,8 +113,8 @@ REVEAL
                                     top-level array constructor. *)
     eltCt             : INTEGER := Expr.lengthInvalid;
     state             : StateTyp;
-    isNested          : BOOLEAN; (* Inside another ArrayExpr/ConsExpr pair, with
-                                    no NamedExpr intervening. *)
+    isNested          : BOOLEAN; (* Inside another ArrayExpr/ConsExpr pair, with no
+                                    NamedExpr intervening. *)
     dots              : BOOLEAN;
     evalAttempted     : BOOLEAN; (* TRUE even if Evaluate was called unsuccessfully. *) 
     is_const          : BOOLEAN; (* Meaningless if NOT evalAttempted.
@@ -123,9 +123,7 @@ REVEAL
     
     (* Only used in top constructor: *)
     targetType        : Type.T; (* Requested by user of the constructor. *)
-    repOpenDepth      : INTEGER;
-    containingUnit    : Module.T; (* For RKGlobal, the unit containing this
-                                     array constructor constant. *)
+    repOpenDepth      : INTEGER; 
     globalOffset      : INTEGER := FIRST (INTEGER) (* Means uninitialized. *);
     globalEltsOffset  : INTEGER := FIRST (INTEGER) (* Means uninitialized. *);
     refType           : Type.T; (* If needed, type REF repType. *)
@@ -253,21 +251,6 @@ PROCEDURE Is (expr: Expr.T): BOOLEAN =
     ELSE      RETURN FALSE;
     END;
   END Is;
-
-(* EXPORTED: *)
-PROCEDURE IsAnon (expr: Expr.T): BOOLEAN =
-(* expr is an anonymous array constructor. Will look thru' a ConsExpr. *)
-
-  VAR strippedExpr: Expr.T;
-  BEGIN
-    IF NamedExpr.Is (expr) THEN RETURN FALSE END;
-    IF ConsExpr.Is (expr) THEN
-      ConsExpr.Seal (expr);
-      strippedExpr := ConsExpr.Base (expr);
-    ELSE strippedExpr := expr;
-    END;
-    RETURN Is (strippedExpr);
-  END IsAnon;
 
 PROCEDURE StaticSize (expr: Expr.T): INTEGER =
 (* < 0, if nonstatic.  Can be static, even if open array repType.
@@ -1507,8 +1490,7 @@ PROCEDURE InnerPrep (top: T) =
     (* Set up result location info. *)
     CASE top.resultKind OF
     | RKTyp.RKUnknown => <* ASSERT FALSE *>
-    | RKTyp.RKGlobal
-      => <* ASSERT top.globalOffset >= 0 *> (* Already allocated. *)
+    | RKTyp.RKGlobal => <* ASSERT top.globalOffset >= 0 *>
 
     | RKTyp.RKDirectElts => (* LHS elements address is atop the CG stack. *)
       CG.Boost_addr_alignment (top.topRepAlign);
@@ -2057,7 +2039,6 @@ PROCEDURE InitLiteralDope
     <* ASSERT top.depth = 0 *>
     <* ASSERT top.resultKind = RKTyp.RKGlobal *>
     <* ASSERT top.repOpenDepth > 0 *>
-    <* ASSERT top.containingUnit = Module.Current () *>
     CG.Init_var
       (top.globalOffset + M3RT.OA_elt_ptr,
        Module.GlobalData (inConstArea), top.globalEltsOffset, inConstArea);
@@ -2071,14 +2052,13 @@ PROCEDURE InitLiteralDope
   END InitLiteralDope;
 
 (* Externally dispatched-to: *)
-PROCEDURE CompileLV
-  (top: T; <*UNUSED*>traced: BOOLEAN; StaticOnly: BOOLEAN) =
+PROCEDURE CompileLV (top: T; <*UNUSED*>traced: BOOLEAN) =
   BEGIN
-    Compile (top, StaticOnly);
+    Compile (top);
   END CompileLV;
 
 (* Externally dispatched-to: *)
-PROCEDURE Compile (top: T; <*UNUSED*> StaticOnly: BOOLEAN) =
+PROCEDURE Compile (top: T) =
 (* PRE: top.depth = 0 *)
 (* PRE: LHS addr is on CG stack IFF UsesAssignProtocol. *)
   BEGIN
@@ -2093,7 +2073,6 @@ PROCEDURE Compile (top: T; <*UNUSED*> StaticOnly: BOOLEAN) =
     
     (* Allocate static space if needed. *)
     IF top.resultKind = RKTyp.RKGlobal AND top.globalOffset < 0 THEN
-      top.containingUnit := Module.Current ();
       top.globalOffset 
         := Module.Allocate
              (top.totalSize, top.topRepAlign, top.inConstArea,
@@ -2106,7 +2085,7 @@ PROCEDURE Compile (top: T; <*UNUSED*> StaticOnly: BOOLEAN) =
       END;
     END;
     InnerPrep (top);
-    InnerCompile (top, StaticOnly);
+    InnerCompile (top);
     EVAL CheckUseFailure (top);
   END Compile;
 
@@ -2131,13 +2110,9 @@ PROCEDURE GenLiteral
     IF top.broken THEN
       top.state := StateTyp.Compiled;
       RETURN;
-    END;
-    Classify (top);
-    <* ASSERT top.resultKind = RKTyp.RKGlobal *>
-    CompileGeneratedTypes (top);
-    IF TRUE OR top.globalOffset < 0 (* Not yet computed. *)
-    THEN
-      top.containingUnit := Module.Current ();
+    ELSE
+      Classify (top);
+      <* ASSERT top.resultKind = RKTyp.RKGlobal *>
       top.globalOffset := globalOffset;
       IF top.repOpenDepth <= 0
       THEN (* No dope.  globalOffset leads to space in a static area that our
@@ -2163,9 +2138,9 @@ PROCEDURE GenLiteral
         InitLiteralDope (top, inConstArea);
       END;
 
-      top.state := StateTyp.Prepping;
       PrepRecurse (top, top, selfFlatOffset := 0, depth := 0);
-      top.state := StateTyp.Prepped;
+      InnerCompile (top);
+      CG.Discard (Target.Address.cg_type);
     END;
   END GenLiteral;
 
@@ -2188,13 +2163,11 @@ PROCEDURE CompileGeneratedTypes (top: T) =
     Type.Compile (top.refType);
    END CompileGeneratedTypes;
 
-PROCEDURE InnerCompile (top: T; StaticOnly: BOOLEAN) =
+PROCEDURE InnerCompile (top: T) =
 (* PRE: top.depth = 0 *)
   BEGIN
     IF top.broken THEN
-      IF NOT StaticOnly THEN
-        CG.Load_nil ();
-      END;
+      CG.Load_nil ();
       top.state := StateTyp.Compiled;
       RETURN
     END;
@@ -2204,25 +2177,20 @@ PROCEDURE InnerCompile (top: T; StaticOnly: BOOLEAN) =
     | RKTyp.RKUnknown => <* ASSERT FALSE *>
 
     | RKTyp.RKGlobal
-     => IF NOT StaticOnly THEN
-           Module.LoadGlobalAddr
-             (top.containingUnit, offset := top.globalOffset,
-              is_const := top.inConstArea)
-        END;
+    => Module.LoadGlobalAddr
+         (Module.Current (), offset := top.globalOffset,
+          is_const := top.inConstArea);
 
     | RKTyp.RKDirectElts
-    => <* ASSERT NOT StaticOnly *>
-      CG.Push (top.buildEltsAddrVal);
+    => CG.Push (top.buildEltsAddrVal);
       CG.Free (top.buildEltsAddrVal);
 
     | RKTyp.RKDirectDoped
-    => <* ASSERT NOT StaticOnly *>
-      CG.Push (top.buildAddrVal);
+    => CG.Push (top.buildAddrVal);
       CG.Free (top.buildAddrVal);
 
     | RKTyp.RKTempElts, RKTyp.RKTempStatic
     => (* We built into a static-sized temp Var. *) 
-      <* ASSERT NOT StaticOnly *>
       <* ASSERT top.buildTempVar # NIL *>
       <* ASSERT (top.finalVal = NIL) = (NOT UsesAssignProtocol (top)) *>
       IF top.finalVal = NIL THEN
@@ -2240,7 +2208,6 @@ PROCEDURE InnerCompile (top: T; StaticOnly: BOOLEAN) =
     | RKTyp.RKTempDyn
     => (* We built into a heap-allocated, dynamic-sized, contiguous
           dope-and-elements temp. *)
-      <* ASSERT NOT StaticOnly *>
       <* ASSERT (top.finalVal = NIL) = (NOT UsesAssignProtocol (top)) *>
       IF top.finalVal = NIL THEN
         CG.Push (top.buildAddrVal) (* Return the temp. *)
@@ -2254,7 +2221,7 @@ PROCEDURE InnerCompile (top: T; StaticOnly: BOOLEAN) =
           CG.Push (top.finalVal);
           CG.Push (top.buildAddrVal);
           CG.Load_intt (top.levels^[0].staticFlatEltCt);
-(* TODO ^Eliminate multiply by one. *)
+(* TODO ^Elliminate multply by one. *)
           <* ASSERT top.shallowestDynDepth >= 0 *>
           CG.Push (top.levels^[top.shallowestDynDepth].eltBytepackVal);
           CG.Multiply (Target.Integer.cg_type);
@@ -2274,7 +2241,7 @@ PROCEDURE InnerCompile (top: T; StaticOnly: BOOLEAN) =
     END (*CASE*);
     
     top.state := StateTyp.Compiled;
-  END InnerCompile ;
+  END InnerCompile;
 
 (*EXPORTED:*)
 PROCEDURE CheckStaticRTErrEval

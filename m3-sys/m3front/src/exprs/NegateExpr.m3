@@ -22,7 +22,7 @@ TYPE
         prep         := Prep;
         compile      := Compile;
         prepLV       := ExprRep.NotLValue;
-        compileLV    := ExprRep.NotLValueBool;
+        compileLV    := ExprRep.NotLValue;
         prepBR       := ExprRep.NotBoolean;
         compileBR    := ExprRep.NotBoolean;
         evaluate     := Fold;
@@ -81,10 +81,9 @@ PROCEDURE Prep (p: P) =
     END;
   END Prep;
 
-PROCEDURE Compile (p: P; StaticOnly: BOOLEAN) =
+PROCEDURE Compile (p: P) =
   VAR e := p.folded;
   BEGIN
-    <* ASSERT NOT StaticOnly *>
     IF (e = NIL) THEN
       Expr.Compile (p.a);
       CG.Negate (Type.CGType (p.type));

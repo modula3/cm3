@@ -40,7 +40,7 @@ PROCEDURE Initialize () =
       Error.Txt (nm, "Unknown Compiler.OS value");
       <*ASSERT FALSE*>
     END;
-    EVAL Constant.Declare ("ThisOS", Value.ToExpr (enum), FALSE);
+    Constant.Declare ("ThisOS", Value.ToExpr (enum), FALSE);
 
 (*
     platform_type := EnumType.Build (Platform_names);
@@ -51,14 +51,14 @@ PROCEDURE Initialize () =
       Error.Txt (nm, "Unknown Compiler.Platform value"); 
       <*ASSERT FALSE*>
     END;
-    EVAL Constant.Declare ("ThisPlatform", Value.ToExpr (enum), FALSE);
+    Constant.Declare ("ThisPlatform", Value.ToExpr (enum), FALSE);
 *)
     IF Target.endian = Target.Endian.Little THEN nm := "LITTLE" ELSE nm := "BIG" END;
     IF NOT EnumType.LookUp (endian, M3ID.Add (nm), enum) THEN
       Error.Txt (nm, "Unknown Compiler.ENDIAN value");
       <*ASSERT FALSE*>
     END;
-    EVAL Constant.Declare ("ThisEndian", Value.ToExpr (enum), FALSE);
+    Constant.Declare ("ThisEndian", Value.ToExpr (enum), FALSE);
 
     InfoThisFile.Initialize ();
     InfoThisPath.Initialize ();

@@ -35,7 +35,7 @@ TYPE
         prep         := Prep;
         compile      := Compile;
         prepLV       := ExprRep.NotLValue;
-        compileLV    := ExprRep.NotLValueBool;
+        compileLV    := ExprRep.NotLValue;
         prepBR       := ExprRep.PrepNoBranch;
         compileBR    := ExprRep.NoBranch;
         evaluate     := Fold;
@@ -122,15 +122,14 @@ PROCEDURE Prep (p: P) =
     Expr.Prep (p.expr);
   END Prep;
 
-PROCEDURE Compile (p: P; StaticOnly: BOOLEAN) =
+PROCEDURE Compile (p: P) =
   VAR t := Expr.TypeOf (p.expr);  cg_type: CG.Type;
   BEGIN
-    <* ASSERT NOT StaticOnly *>
     IF Type.IsSubtype (t, LInt.T)
       THEN cg_type := Target.Longint.cg_type;
       ELSE cg_type := Target.Integer.cg_type;
     END;
-    Expr.Compile (p.expr, StaticOnly);
+    Expr.Compile (p.expr);
     CASE p.class OF
     | Class.cLOWER => CG.Check_lo (cg_type, p.min, p.err);
     | Class.cUPPER => CG.Check_hi (cg_type, p.max, p.err);

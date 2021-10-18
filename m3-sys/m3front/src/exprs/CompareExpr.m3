@@ -53,7 +53,7 @@ TYPE
         prep         := Prep;
         compile      := Compile;
         prepLV       := ExprRep.NotLValue;
-        compileLV    := ExprRep.NotLValueBool;
+        compileLV    := ExprRep.NotLValue;
         prepBR       := PrepBR;
         compileBR    := ExprRep.NoBranch;
         evaluate     := Fold;
@@ -136,7 +136,7 @@ PROCEDURE Prep (p: P) =
     Expr.Prep (p.b);
   END Prep;
 
-PROCEDURE Compile (p: P; <*UNUSED*> StaticOnly: BOOLEAN) =
+PROCEDURE Compile (p: P) =
   VAR type: CG.Type;  ta, tb, tmp: CG.Val;  info: Type.Info;
   BEGIN
     IF (p.class # cSET) THEN
