@@ -1,0 +1,21 @@
+---
+name: Check latest
+# Build and test starting from latest binary release.
+
+on: [push, pull_request]
+
+jobs:
+  linux-integration:
+    uses: coder5506/cm3/.github/workflows/linux-integration-from-binary.yml@ci
+    with:
+      os: ubuntu-latest
+
+  macos-integration:
+    uses: coder5506/cm3/.github/workflows/macos-integration-from-binary.yml@ci
+    with:
+      os: macos-latest
+
+  windows-integration:
+    uses: coder5506/cm3/.github/workflows/windows-integration-from-binary.yml@ci
+    with:
+      os: windows-latest
