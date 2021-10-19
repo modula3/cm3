@@ -6,7 +6,12 @@ on:
   workflow_call:
     inputs:
       os:
-        required: true
+        default: ubuntu-latest
+        required: false
+        type: string
+      cm3build:
+        default: cm3-min-AMD64_LINUX-d5.11.3-Linux5.4.0-20211008.tar.gz
+        required: false
         type: string
 
 jobs:
@@ -19,7 +24,7 @@ jobs:
         backend: [c, gcc]
 
     env:
-      CM3RELEASE: https://github.com/modula3/cm3/releases/download/d5.11.3/cm3-min-AMD64_LINUX-d5.11.3-Linux5.4.0-20211008.tar.gz
+      CM3RELEASE: ${{ format('https://github.com/modula3/cm3/releases/download/d5.11.3/{0}', inputs.cm3build) }}
 
     steps:
     - name: Define target parameters

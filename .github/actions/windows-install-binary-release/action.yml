@@ -1,6 +1,6 @@
 ---
 name: Windows install binary release
-description: Install a binary release on a Windows system
+description: Install a binary release on a Windows system.
 
 inputs:
   cm3inst:
