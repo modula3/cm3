@@ -1,6 +1,6 @@
 ---
 name: Unix install binary release
-description: Install a binary release on a Unix-like system
+description: Install a binary release on a Unix-like system.
 
 inputs:
   cm3inst:

@@ -6,7 +6,8 @@ on:
   workflow_call:
     inputs:
       os:
-        required: true
+        default: windows-latest
+        required: false
         type: string
 
 jobs:

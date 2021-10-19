@@ -6,12 +6,13 @@ on:
   workflow_call:
     inputs:
       os:
-        required: true
+        default: macos-latest
+        required: false
         type: string
 
 jobs:
   build-and-test:
-    runs-on: $(( inputs.os }}
+    runs-on: ${{ inputs.os }}
 
     strategy:
       fail-fast: false

@@ -1,6 +1,6 @@
 ---
 name: Unix upgrade release
-description: Upgrade a binary release on a Unix-like system
+description: Upgrade a binary release on a Unix-like system.
 
 inputs:
   m3backendmode:
