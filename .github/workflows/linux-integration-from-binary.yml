@@ -2,11 +2,16 @@
 name: Linux integration from binary
 # Build and test on Linux starting from latest binary release
 
-on: [push, workflow_dispatch]
+on:
+  workflow_call:
+    inputs:
+      os:
+        required: true
+        type: string
 
 jobs:
   build-and-test:
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.os }}
 
     strategy:
       fail-fast: false
