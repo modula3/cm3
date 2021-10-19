@@ -1,0 +1,64 @@
+---
+name: Linux integration from binary
+# Build and test on Linux starting from latest binary release
+
+on: [push, workflow_dispatch]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        backend: [c, gcc]
+
+    env:
+      CM3RELEASE: https://github.com/modula3/cm3/releases/download/d5.11.3/cm3-min-AMD64_LINUX-d5.11.3-Linux5.4.0-20211008.tar.gz
+
+    steps:
+    - name: Define target parameters
+      run: |
+        echo CM3INST="$(pwd)/../build/cm3" >> $GITHUB_ENV
+
+    - name: Install prerequisites
+      run: |
+        sudo apt-get update --quiet
+        sudo apt-get install --quiet --assume-yes libglu1-mesa-dev xorg-dev
+
+    - name: Enable local actions
+      uses: actions/checkout@v2
+
+    - name: Install latest release
+      uses: ./.github/actions/unix-install-binary-release
+      with:
+        cm3inst: ${{ env.CM3INST }}
+        cm3release: ${{ env.CM3RELEASE }}
+
+    - name: Fetch sources
+      uses: actions/checkout@v2
+
+    - name: Build all the things
+      uses: ./.github/actions/unix-upgrade-release
+      with:
+        m3backendmode: ${{ (matrix.backend != 'gcc') && matrix.backend || '' }}
+
+    - name: Configure backend mode
+      if: matrix.backend == 'c'
+      run: |
+        sed -e '1ireadonly M3_BACKEND_MODE = "C"' -i "${CM3INST}/bin/cm3.cfg"
+
+    - name: Run compiler validation suite
+      continue-on-error: true
+      run: |
+        cm3 -DHTML
+      working-directory: m3-sys/m3tests
+
+    - name: Generate test report
+      uses: dorny/test-reporter@v1
+      with:
+        name: ${{ format('m3tests (AMD64_LINUX, {0})', matrix.backend) }}
+        fail-on-error: false
+        max-annotations: 49
+        path: m3-sys/m3tests/m3tests-results.xml
+        reporter: java-junit
