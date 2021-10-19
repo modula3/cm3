@@ -1840,7 +1840,9 @@ def DoPackage(args, PackagesFromCaller = None):
 
     SetupEnvironment()
 
-    args = filter(lambda a: not a.startswith(os.path.dirname(__file__)) and a != "" and not a.endswith(".py"), args)
+    args = filter(lambda a: a != "" and not a.endswith(".py"), args)
+    if os.path.dirname(__file__) != "":
+        args = filter(lambda a: not a.startswith(os.path.dirname(__file__)), args)
 
     # print("args is " + str(args))
     # sys.stdout.flush()
