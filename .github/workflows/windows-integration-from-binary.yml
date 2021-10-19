@@ -14,7 +14,7 @@ jobs:
         target: [AMD64_NT, I386_NT]
 
     env:
-      CM3_RELEASE: https://github.com/VictorMiasnikov/cm3/releases/download/d5.11.3_8a842be
+      CM3RELEASE: https://github.com/VictorMiasnikov/cm3/releases/download/d5.11.3_8a842be
 
     defaults:
       run:
@@ -25,22 +25,19 @@ jobs:
       if: matrix.target == 'AMD64_NT'
       run: |
         echo ARCH=x64>>%GITHUB_ENV%
-        echo CM3_BUILD=cm3-min-AMD64_NT-d5.11.3-VC142.2019.-2021-07-20_07-26.FIXed.by.VVM.2021-08-02.13-05.non.Unicode.AMD64_NT.Target.cm3-8a842be10f0e5d1f1acf73597d13765aea305573.7z>>%GITHUB_ENV%
+        echo CM3BUILD=cm3-min-AMD64_NT-d5.11.3-VC142.2019.-2021-07-20_07-26.FIXed.by.VVM.2021-08-02.13-05.non.Unicode.AMD64_NT.Target.cm3-8a842be10f0e5d1f1acf73597d13765aea305573.7z>>%GITHUB_ENV%
       # N.B., no spaces around ">>"
 
     - name: Define target parameters (I386_NT)
       if: matrix.target == 'I386_NT'
       run: |
         echo ARCH=x86>>%GITHUB_ENV%
-        echo CM3_BUILD=cm3-min-I386_NT-d5.11.3-VC142.2019.-2021-07-20_07-26.FIXed.by.VVM.20210804_16-20.non.Unicode.I386_NT.Target.cm3-8a842be10f0e5d1f1acf73597d13765aea305573.7z>>%GITHUB_ENV%
-
-    - name: Fetch sources
-      uses: actions/checkout@v2
+        echo CM3BUILD=cm3-min-I386_NT-d5.11.3-VC142.2019.-2021-07-20_07-26.FIXed.by.VVM.20210804_16-20.non.Unicode.I386_NT.Target.cm3-8a842be10f0e5d1f1acf73597d13765aea305573.7z>>%GITHUB_ENV%
 
     - name: Install command-line tools
       uses: msys2/setup-msys2@v2
       with:
-        install: |
+        install: >-
           p7zip
           wget
 
@@ -49,35 +46,36 @@ jobs:
       with:
         arch: ${{ env.ARCH }}
 
+    - name: Enable local actions
+      uses: actions/checkout@v2
+
+    - name: Define install location
+      run: |
+        echo CM3INST=%CD%\..\build>>%GITHUB_ENV%
+
     - name: Install latest release
-      shell: msys2 {0}
-      run: |
-        mkdir ../build
-        cd ../build
-        wget "${CM3_RELEASE}/${CM3_BUILD}"
-        p7zip -d "${CM3_BUILD}"
+      uses: ./.github/actions/windows-install-binary-release
+      with:
+        cm3inst: ${{ env.CM3INST }}
+        cm3release: ${{ env.CM3RELEASE }}
+        cm3build: ${{ env.CM3BUILD }}
 
-    - name: Add release binary to path
-      run: |
-        echo %CD%\..\build\cm3\bin>>%GITHUB_PATH%
+    - name: Fetch sources
+      uses: actions/checkout@v2
 
-    - name: Build sources
-      run: |
-        cd scripts\python
-        python2 upgrade.py
-        python2 do-cm3-all.py realclean skipgcc
-        python2 do-cm3-all.py buildship
+    - name: Build all the things
+      uses: ./.github/actions/windows-upgrade-release
 
     - name: Run compiler validation suite
       continue-on-error: true
       run: |
-        cd m3-sys/m3tests
         cm3 -DHTML
+      working-directory: m3-sys/m3tests
 
     - name: Generate test report
       uses: dorny/test-reporter@v1
       with:
-        name: ${{ format('m3tests {0}', matrix.target) }}
+        name: ${{ format('m3tests ({0}, native?)', matrix.target) }}
         fail-on-error: false
         max-annotations: 49
         path: m3-sys/m3tests/m3tests-results.xml
