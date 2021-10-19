@@ -6,17 +6,17 @@ on: [push, pull_request]
 
 jobs:
   linux-integration:
-    uses: coder5506/cm3/.github/workflows/linux-integration-from-binary.yml@ci
+    uses: modula3/cm3/.github/workflows/linux-integration-from-binary.yml@master
     with:
       os: ubuntu-latest
       cm3build: cm3-min-AMD64_LINUX-d5.11.3-Linux5.4.0-20211008.tar.gz
 
   macos-integration:
-    uses: coder5506/cm3/.github/workflows/macos-integration-from-binary.yml@ci
+    uses: modula3/cm3/.github/workflows/macos-integration-from-binary.yml@master
     with:
       os: macos-latest
 
   windows-integration:
-    uses: coder5506/cm3/.github/workflows/windows-integration-from-binary.yml@ci
+    uses: modula3/cm3/.github/workflows/windows-integration-from-binary.yml@master
     with:
       os: windows-latest
