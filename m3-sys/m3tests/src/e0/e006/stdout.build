@@ -5,10 +5,8 @@
 "../Main.m3", line 21: undefined (Wr.Failure)
 "../Main.m3", line 21: undefined (Rd.Failure)
 "../Main.m3", line 20: exception(s) don't have a return argument
-"../Main.m3", line 20: variable has no type (reason)
-"../Main.m3", line 20: incompatible types (x)
+"../Main.m3", line 20: Variable has no type. (reason)
 "../Main.m3", line 21: exception(s) don't have a return argument
-"../Main.m3", line 21: variable has no type (reason)
-"../Main.m3", line 21: incompatible types (x)
-12 errors encountered
+"../Main.m3", line 21: Variable has no type. (reason)
+10 errors encountered
 Fatal Error: package build failed
