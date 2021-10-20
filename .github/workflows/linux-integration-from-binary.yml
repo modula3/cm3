@@ -1,6 +1,6 @@
 ---
 name: Linux integration from binary
-# Build and test on Linux starting from latest binary release
+# Build and test on Linux starting from latest binary release.
 
 on:
   workflow_call:
