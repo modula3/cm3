@@ -2,8 +2,8 @@
 "../Main.m3", line 9: warning: exception is never raised: <ANY>
 "../Main.m3", line 59: warning: unreachable statement
 "../Main.m3", line 64: warning: unreachable statement
-"../Main.m3", line 68: warning: unreachable statement
 "../Main.m3", line 71: warning: unreachable statement
 "../Main.m3", line 82: warning: unreachable statement
 "../Main.m3", line 86: warning: unreachable statement
+"../Main.m3", line 68: warning: unreachable statement
 8 warnings encountered
