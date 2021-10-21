@@ -69,6 +69,7 @@ VAR (*CONST*)
   Build_dir_length: INTEGER;
 
 PROCEDURE Init64 () =
+  (* Override default primitive sizes for 64-bit architectures *)
   BEGIN
     Integer := Int64;
     Word := Word64;

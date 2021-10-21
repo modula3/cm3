@@ -75,7 +75,7 @@ Halfedge *curr;
 void
 PQinitialize(void)
 {
-int i; Point *s;
+int i;
 
 	PQcount = 0;
 	PQmin = 0;

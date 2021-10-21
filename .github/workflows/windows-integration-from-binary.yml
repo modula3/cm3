@@ -1,0 +1,88 @@
+---
+name: Windows integration from binary
+# Build and test on Windows starting from latest binary release
+
+on:
+  workflow_call:
+    inputs:
+      os:
+        default: windows-latest
+        required: false
+        type: string
+
+jobs:
+  build-and-test:
+    runs-on: ${{ inputs.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [AMD64_NT, I386_NT]
+
+    env:
+      CM3RELEASE: https://github.com/VictorMiasnikov/cm3/releases/download/d5.11.3_8a842be
+
+    defaults:
+      run:
+        shell: cmd
+
+    steps:
+    - name: Define target parameters (AMD64_NT)
+      if: matrix.target == 'AMD64_NT'
+      run: |
+        echo ARCH=x64>>%GITHUB_ENV%
+        echo CM3BUILD=cm3-min-AMD64_NT-d5.11.3-VC142.2019.-2021-07-20_07-26.FIXed.by.VVM.2021-08-02.13-05.non.Unicode.AMD64_NT.Target.cm3-8a842be10f0e5d1f1acf73597d13765aea305573.7z>>%GITHUB_ENV%
+      # N.B., no spaces around ">>"
+
+    - name: Define target parameters (I386_NT)
+      if: matrix.target == 'I386_NT'
+      run: |
+        echo ARCH=x86>>%GITHUB_ENV%
+        echo CM3BUILD=cm3-min-I386_NT-d5.11.3-VC142.2019.-2021-07-20_07-26.FIXed.by.VVM.20210804_16-20.non.Unicode.I386_NT.Target.cm3-8a842be10f0e5d1f1acf73597d13765aea305573.7z>>%GITHUB_ENV%
+
+    - name: Install command-line tools
+      uses: msys2/setup-msys2@v2
+      with:
+        install: >-
+          p7zip
+          wget
+
+    - name: Setup SDK environment
+      uses: egor-tensin/vs-shell@v2
+      with:
+        arch: ${{ env.ARCH }}
+
+    - name: Enable local actions
+      uses: actions/checkout@v2
+
+    - name: Define install location
+      run: |
+        echo CM3INST=%CD%\..\build>>%GITHUB_ENV%
+
+    - name: Install latest release
+      uses: ./.github/actions/windows-install-binary-release
+      with:
+        cm3inst: ${{ env.CM3INST }}
+        cm3release: ${{ env.CM3RELEASE }}
+        cm3build: ${{ env.CM3BUILD }}
+
+    - name: Fetch sources
+      uses: actions/checkout@v2
+
+    - name: Build all the things
+      uses: ./.github/actions/windows-upgrade-release
+
+    - name: Run compiler validation suite
+      continue-on-error: true
+      run: |
+        cm3 -DHTML
+      working-directory: m3-sys/m3tests
+
+    - name: Generate test report
+      uses: dorny/test-reporter@v1
+      with:
+        name: ${{ format('m3tests ({0}, native?)', matrix.target) }}
+        fail-on-error: false
+        max-annotations: 49
+        path: m3-sys/m3tests/m3tests-results.xml
+        reporter: java-junit

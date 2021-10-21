@@ -1,0 +1,69 @@
+---
+name: buildship integration
+on: workflow_dispatch
+jobs:
+  do-cm3-all:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ["macOS-10.15", "macOS-11", "ubuntu-18.04", "ubuntu-20.04"]
+        backend: ["c", "gcc"]
+    runs-on: ${{ matrix.os }}
+    env:
+      CM3INST: ${{ format('/{0}/runner/cm3', startsWith(matrix.os, 'macOS') && 'Users' || 'home') }}
+      M3_BACKEND_MODE: ${{ (matrix.backend != 'gcc') && matrix.backend || '' }}
+    steps:
+    - name: Install prerequisites (macOS)
+      if: startsWith(matrix.os, 'macOS')
+      run: |
+        brew update
+        brew install xquartz libxaw libxft
+    - name: Install prerequisites (ubuntu)
+      if: startsWith(matrix.os, 'ubuntu')
+      run: |
+        sudo apt-get update --quiet
+        sudo apt-get install --quiet --assume-yes libglu1-mesa-dev xorg-dev
+    - name: Create install directory
+      run: |
+        mkdir -p "${CM3INST}/bin"
+        echo "${CM3INST}/bin" >> $GITHUB_PATH
+    - name: Install bootstrap compiler
+      run: |
+        curl "https://github.com/modula3/cm3/releases/download/d5.11.3/cm3-boot-unix64le-d5.11.3-20211007.cpp.gz" --location --remote-name --silent
+        gunzip "cm3-boot-unix64le-d5.11.3-20211007.cpp.gz"
+        g++ -g -pthread -o "${CM3INST}/bin/cm3" "cm3-boot-unix64le-d5.11.3-20211007.cpp"
+    - name: Fetch sources
+      uses: actions/checkout@v2
+    - name: Run bootstrap
+      run: |
+        cd scripts/python
+        ./boot2min.py "${M3_BACKEND_MODE}"
+    - name: Build all the things
+      run: |
+        cd scripts/python
+        ./do-cm3-all.py buildship "${M3_BACKEND_MODE}"
+    - name: Configure M3_BACKEND_MODE (macOS)
+      if: matrix.backend == 'c' && startsWith(matrix.os, 'macOS')
+      run: |
+        sed -e '1i\
+        readonly M3_BACKEND_MODE = "C"
+        ' -i '' "${CM3INST}/bin/cm3.cfg"
+    - name: Configure M3_BACKEND_MODE (ubuntu)
+      if: matrix.backend == 'c' && startsWith(matrix.os, 'ubuntu')
+      run: |
+        sed -e '1ireadonly M3_BACKEND_MODE = "C"' -i "${CM3INST}/bin/cm3.cfg"
+    - name: Run compiler validation suite
+      continue-on-error: true
+      run: |
+        cd m3-sys/m3tests
+        cm3 -DHTML
+    - name: Generate test report
+      uses: dorny/test-reporter@v1
+      with:
+        name: ${{ format('m3tests ({0}, {1})', matrix.os, matrix.backend) }}
+        fail-on-error: false
+        max-annotations: 49
+        path: m3-sys/m3tests/m3tests-results.xml
+        reporter: java-junit
+
+# vim: expandtab

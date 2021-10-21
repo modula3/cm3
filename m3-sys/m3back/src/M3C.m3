@@ -3,7 +3,7 @@ MODULE M3C;
 IMPORT RefSeq, TextSeq, Wr, Text, IntRefTbl, SortedIntRefTbl, TIntN, IntIntTbl;
 IMPORT M3CG, M3CG_Ops, Target, TFloat, TargetMap, IntArraySort, Process;
 IMPORT M3ID, TInt, TWord, ASCII, Thread, Stdio, Word, TextUtils;
-FROM TargetMap IMPORT CG_Bytes;
+FROM TargetMap IMPORT CG_Bytes, CG_Size;
 FROM M3CG IMPORT Name, ByteOffset, CallingConvention;
 FROM M3CG IMPORT BitSize, ByteSize, Alignment, Frequency;
 FROM M3CG IMPORT Label, Sign, BitOffset, TypeUID;
@@ -23,7 +23,7 @@ VAR debug_comment := TRUE;        (* command line @M3m3c-debug-comment or the re
 VAR debug_comment_stdio := FALSE; (* command line @M3m3c-debug-comment-stdio *)
 VAR debug_types := FALSE;         (* command line @M3m3c-debug-types *)
 
-(* 
+(*
 Something like:
 int F(unsigned i) { return i < 0; }
 gets a warning with gcc.
@@ -260,7 +260,6 @@ TYPE BitSizeRange_t = [8..64];
 (*TYPE BitSizeEnum_t = [8,16,32,64];*)
 VAR BitsToCGInt := ARRAY BitSizeRange_t OF CGType { CGType.Void, .. };
 VAR BitsToCGUInt := ARRAY BitSizeRange_t OF CGType { CGType.Void, .. };
-VAR BitsToInt := ARRAY BitSizeRange_t OF TEXT {NIL, ..};    (* "INT8", "INT16", "INT32", "INT64" *)
 VAR BitsToUInt := ARRAY BitSizeRange_t OF TEXT {NIL, ..};   (* "UINT8", "UINT16", "UINT32", "UINT64" *)
 VAR SignedAndBitsToCGType: ARRAY BOOLEAN, BitSizeRange_t OF CGType;
 
@@ -663,6 +662,7 @@ BEGIN
 END GenerateNameLocalText;
 
 PROCEDURE Assert(self: T; value: BOOLEAN; message: TEXT) =
+<*FATAL Wr.Failure, Thread.Alerted*>
 BEGIN
   IF NOT value THEN
     RTIO.PutText("Assertion failure: " & message);
@@ -1834,7 +1834,7 @@ BEGIN
 
     (* TODO require bit_size be set *)
     IF type.bit_size = 0 THEN
-        type.bit_size := TargetMap.CG_Size[cgtype];
+        type.bit_size := CG_Size[cgtype];
     END;
 
     IF type.text = NIL THEN
@@ -2478,6 +2478,10 @@ CONST Prefix = ARRAY OF TEXT {
 "#define m3_check_range(T, value, low, high) (((T)(value)) < ((T)(low)) || ((T)(high)) < ((T)(value)))",
 "#define m3_xor(T, x, y) (((T)(x)) ^ ((T)(y)))",
 
+(* Helper needed by `loophole` because m3front does not guarantee that
+`u` will be an rvalue. *)
+"template<typename T, typename U> inline T m3_loophole(U u) { return *reinterpret_cast<T*>(&u); }",
+
 "#ifdef _MSC_VER",
 "#define _CRT_SECURE_NO_DEPRECATE 1",
 "#define _CRT_NONSTDC_NO_DEPRECATE 1",
@@ -2658,14 +2662,6 @@ CONST cgtypeToParamText = ARRAY CGType OF TEXT {
 
 TYPE IntegerTypes = [CGType.Word8 .. CGType.Int64];
 
-CONST cgtypeIsInteger = ARRAY CGType OF BOOLEAN {
-    TRUE, TRUE, (* 8 *)
-    TRUE, TRUE, (* 16 *)
-    TRUE, TRUE, (* 32 *)
-    TRUE, TRUE, (* 64 *)
-    FALSE, FALSE, FALSE, (* real, longreal, extended *)
-    FALSE, FALSE, FALSE (* address, struct, void *)
-};
 CONST minMaxPossiblyValidForType = ARRAY CGType OF MinMaxBool_t {
     minMaxTrue, minMaxTrue, (* 8 *)
     minMaxTrue, minMaxTrue, (* 16 *)
@@ -3033,13 +3029,13 @@ BEGIN
     type.text := "UCHAR"; (* more readable output (fewer hashes) *)
 
     widechar_target_type := Target.Word16.cg_type;
-    widechar_last := 16_FFFF; (* The defaults. *) 
-    IF self.multipass.op_counts[M3CG_Binary.Op.widechar_size] > 0 THEN 
+    widechar_last := 16_FFFF; (* The defaults. *)
+    IF self.multipass.op_counts[M3CG_Binary.Op.widechar_size] > 0 THEN
       WITH op_widechar_size_list = self.multipass.op_data[M3CG_Binary.Op.widechar_size] DO
-        TYPECASE op_widechar_size_list[LAST(op_widechar_size_list^)] 
-        OF NULL => 
-        | M3CG_MultiPass.widechar_size_t (op_widechar_size) => 
-          IF op_widechar_size.size = 32 THEN 
+        TYPECASE op_widechar_size_list[LAST(op_widechar_size_list^)]
+        OF NULL =>
+        | M3CG_MultiPass.widechar_size_t (op_widechar_size) =>
+          IF op_widechar_size.size = 32 THEN
             widechar_target_type := Target.Word32.cg_type;
             widechar_last := 16_10FFFF;
           END;
@@ -3055,7 +3051,7 @@ BEGIN
 
     (* self.declareTypes.declare_subrange(UID_RANGE_0_31, UID_INTEGER, TInt.Zero, IntToTarget(self, 31), Target.Integer.size); *)
     (* self.declareTypes.declare_subrange(UID_RANGE_0_63, UID_INTEGER, TInt.Zero, IntToTarget(self, 63), Target.Integer.size); *)
-    
+
     TYPE AddressTypeInit_t = RECORD
         typeid: TypeUID := 0;
         text: TEXT := NIL;
@@ -4374,7 +4370,7 @@ BEGIN
             x.labels[pass.labels[i] - pass.labels_min] := TRUE;
         END;
     END;
-    
+
     index := 0;
     FOR i := FIRST(VarProcOps) TO LAST(VarProcOps) DO
         self.Replay(pass, index, self.op_data[VarProcOps[i]]);
@@ -5603,6 +5599,45 @@ BEGIN
     self.current_offset := offset + TargetMap.CG_Bytes[type];
 END init_helper;
 
+PROCEDURE adapt_c_init_type(READONLY value: Target.Int; type: CGType): CGType =
+(* Ensure `type' is compatible with `value' when passed to the C compiler
+
+The integer types supplied in calls to `init_int' are only intended to specify
+the number of bytes necessary to hold the value.  The higher-level code does not
+take into account the sign of the value, because it is not relevant to most
+backends.  But the sign is relevant to the C compiler, so we have to account for
+that here. *)
+BEGIN
+    (* If the value is outside the range of a given signed type, use the
+    corresponding unsigned type instead.  Assert value is in range of the
+    unsigned type. *)
+    CASE type OF
+    | CGType.Int8  =>
+        IF TInt.GT(value, TInt.Max8) THEN
+            <* ASSERT TInt.LE(value, TInt.Max8U) *>
+            type := CGType.Word8
+        END
+    | CGType.Int16 =>
+        IF TInt.GT(value, TInt.Max16) THEN
+            <* ASSERT TInt.LE(value, TInt.Max16U) *>
+            type := CGType.Word16
+        END
+    | CGType.Int32 =>
+        IF TInt.GT(value, TInt.Max32) THEN
+            <* ASSERT TInt.LE(value, TInt.Max32U) *>
+            type := CGType.Word32
+        END
+    | CGType.Int64 =>
+        IF TInt.GT(value, TInt.Max64) THEN
+            <* ASSERT TInt.LE(value, TInt.Max64U) *>
+            type := CGType.Word64
+        END
+    ELSE
+        (* SKIP *)
+    END;
+    RETURN type
+END adapt_c_init_type;
+
 PROCEDURE init_int(
     self: T;
     offset: ByteOffset;
@@ -5615,6 +5650,7 @@ BEGIN
     ELSIF debug THEN
       self.comment("init_int");
     END;
+    type := adapt_c_init_type(value, type);
     init_helper(self, offset, type);
     (* TIntLiteral includes suffixes like T, ULL, UI64, etc. *)
     initializer_addhi(self, self.TIntLiteral(type, value));
@@ -5779,6 +5815,7 @@ BEGIN
 END IntToExpr;
 
 PROCEDURE TIntLiteral(self: T; type: CGType; READONLY i: Target.Int): TEXT =
+<*FATAL Wr.Failure, Thread.Alerted*>
 VAR ok1 := TRUE;
     ok2 := TRUE;
 BEGIN
@@ -6605,6 +6642,7 @@ END load_float;
 
 (*------------------------------------------------------------ arithmetic ---*)
 
+(*
 PROCEDURE InternalTransferMinMax2(
     from: Expr_t;
     from_valid: BOOLEAN;
@@ -6636,7 +6674,9 @@ BEGIN
         RETURN TRUE;
     END;
 END InternalTransferMinMax2;
+*)
 
+(*
 PROCEDURE InternalTransferMinMax1(from, to: Expr_t; minOrMax: MinOrMax): BOOLEAN =
 BEGIN
     RETURN FALSE;
@@ -6648,11 +6688,13 @@ BEGIN
         to.minmax_valid[minOrMax],
         to.minmax[minOrMax]);
 END InternalTransferMinMax1;
+*)
 
-PROCEDURE TransferMinMax(from, to: Expr_t) =
+PROCEDURE TransferMinMax(<* UNUSED *> from: Expr_t; to: Expr_t) =
 BEGIN
     to.minmax_valid := minMaxFalse;
     RETURN;
+(*
     IF NOT cgtypeIsInteger[to.cgtype] THEN
         to.minmax_valid := minMaxFalse;
         RETURN;
@@ -6667,6 +6709,7 @@ BEGIN
         (* punt and extend range arbitrarily; this could be better *)
         to.minmax := typeMinMax[to.cgtype];
     END;
+*)
 END TransferMinMax;
 
 PROCEDURE cast(expr: Expr_t; type: CGType := CGType.Void; type_text: TEXT := NIL): Expr_t =
@@ -6706,8 +6749,8 @@ TYPE TFloatOp2_t = PROCEDURE (READONLY a, b: Target.Float; VAR f: Target.Float):
 
 TYPE TIntExtendOrTruncate_t = PROCEDURE (READONLY in: Target.Int; byte_size: CARDINAL; VAR out: Target.Int): BOOLEAN;
 
-PROCEDURE TIntExtendOrTruncate(READONLY in: Target.Int; type: CGType; VAR out: Target.Int): BOOLEAN =
-VAR size := cgtypeSizeBytes[type];
+<* UNUSED *> PROCEDURE TIntExtendOrTruncate(READONLY in: Target.Int; type: CGType; VAR out: Target.Int): BOOLEAN =
+VAR size := CG_Bytes[type];
     signed   := cgtypeIsSignedInt[type];
     unsigned := cgtypeIsUnsignedInt[type];
 BEGIN
@@ -7284,13 +7327,65 @@ END zero;
 
 (*----------------------------------------------------------- conversions ---*)
 
-PROCEDURE loophole(self: T; from, to: ZType) =
-(* s0.to := LOOPHOLE(s0.from, to) *)
-VAR s0 := cast(cast(get(self, 0), from), to);
-BEGIN
+PROCEDURE loophole(self: T; from: ZType; to: ZType) =
+  (* Copied from M3CG_Ops...
+     This used to say: "s0.to := LOOPHOLE(s0.from, to)"
+     But CG requires and various backends provide more cases:
+
+     s0.to := LH(s0.from, to),
+
+     where LH includes truncation, zero extension, or sign extension,
+     as needed for size matching, in addition to LOOPHOLE.  The exact
+     semantics can only be inferred by extensive vetting of CG and all
+     the back ends, which will probably be ambiguous, calling for
+     further design decisions. *)
+  VAR
+    cast, s0: Expr_t;
+  BEGIN
+    (* As noted in the documentation from M3CG_Ops, this is a
+    general-purpose conversion routine having little to do with the
+    similarly named `LOOPHOLE` in section 2.7 of the language
+    definition.
+
+    It is called to implement one specific `LOOPHOLE` conversion, to
+    reinterpret the bits between equally-sized word or real types, and
+    we handle that case specifically.
+
+    Otherwise it's a poorly defined value-preserving, or sometimes
+    value-approximating, conversion, where possible.  Because it is
+    poorly defined, and because this is the C backend, you get C
+    semantics. *)
+
     self.comment("loophole");
-    self.stack.put(0, s0);
-END loophole;
+
+    s0 := get(self);
+    pop(self);
+
+    IF
+      Target.FloatType[to] # Target.FloatType[from] AND
+      CG_Size[to] = CG_Size[from]
+    THEN
+      (* If the source and destination are not both word types and not
+      both real types, and each have the same number of bits, then
+      this is the special case where we're actually implementing a
+      small part of `LOOPHOLE`.
+
+      We would like to implement this simply as "*(to* )&from", but
+      the frontend does not allocate a temporary for this conversion,
+      and the source cannot be relied upon to be an lvalue.
+
+      Further, because this is called in an expression context, we
+      can't allocate a temporary here, so instead we rely on a helper
+      function to perform the conversion. *)
+      cast := NEW(Expr_t, c_text := "m3_loophole<" & cgtypeToText[to] & ">(" & s0.CText() & ")")
+
+    ELSE
+      (* But usually we want to cast, preserving the value in some form. *)
+      cast := NEW(Expr_t, left := s0, c_unop_text := "(" & cgtypeToText[to] & ")")
+    END;
+
+    push(self, to, cast)
+  END loophole;
 
 (*------------------------------------------------ traps & runtime checks ---*)
 
@@ -7808,6 +7903,7 @@ END load_static_link;
 (*----------------------------------------------------------------- misc. ---*)
 
 PROCEDURE Err(self: T; text: TEXT) =
+<*FATAL Wr.Failure, Thread.Alerted*>
 BEGIN
     self.comment ("ERROR:" & text);
     print (self, "#error " & text & "\n");
@@ -7944,10 +8040,6 @@ BEGIN
     BitsToCGInt[16] := CGType.Int16;
     BitsToCGInt[32] := CGType.Int32;
     BitsToCGInt[64] := CGType.Int64;
-    BitsToInt[8] := Text_int8;
-    BitsToInt[16] := Text_int16;
-    BitsToInt[32] := Text_int32;
-    BitsToInt[64] := Text_int64;
     BitsToUInt[8] := Text_uint8;
     BitsToUInt[16] := Text_uint16;
     BitsToUInt[32] := Text_uint32;

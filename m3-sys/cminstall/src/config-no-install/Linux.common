@@ -30,18 +30,21 @@ SYSTEM_LD = SYSTEM_CXXXC
 include("Unix.common")
 include("gnuld.common")
 
-%assume the mariadb installed. Undefine to use real mysql.
-MARIADB = "TRUE"
+% Look for MariaDB in the location expected by the SWIG wrappers.
+MARIADB = fs_exists("/usr/include/mariadb/mysql.h")
 
-if defined("MARIADB")
-  MYSQLDB = "-lmariadbclient"
+if MARIADB
   MYSQLLIB = "-L/usr/lib"
-else
-  MYSQLDB = "-lmysqlclient"
-  MYSQLLIB = "-L/usr/local/mysql/lib"
+  MYSQLDB  = "-lmariadbclient"
+% The MySQL library currently only builds for MariaDB.
+%else
+%  MYSQLLIB = "-L/usr/local/mysql/lib"
+%  MYSQLDB  = "-lmysqlclient"
 end
 
-%SYSTEM_LIBS{"ODBC"}        = [ "-lodbc" ]
-%SYSTEM_LIBS{"POSTGRES95"} = [ "-L/usr/local/pgsql/lib", "-lpq" ]
-SYSTEM_LIBS{"MYSQL"}       = [ MYSQLLIB, MYSQLDB ]
+if defined("MYSQLLIB")
+  SYSTEM_LIBS{"MYSQL"} = [ MYSQLLIB, MYSQLDB ]
+end
 
+%SYSTEM_LIBS{"ODBC"}       = [ "-lodbc" ]
+%SYSTEM_LIBS{"POSTGRES95"} = [ "-L/usr/local/pgsql/lib", "-lpq" ]

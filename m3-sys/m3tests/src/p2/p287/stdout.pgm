@@ -1,0 +1,60 @@
+Calls from Main.m3
+  Default value named in exported interface Def, fixed array:
+    1, 4, 7
+  Default value named in imported interface Named, fixed array:
+    1, 14, 27
+  Default value named in imported interface Named, open array:
+    NUMBER=[6], 1, 16, 31, 46, 61, 76
+  Default value named in imported interface Named, record:
+    2, 9, 16
+  Default value named in imported interface Named, set:
+    18, 98, 130
+  Default value in module, fixed array:
+    1, 6, 11
+  Default value in module, open array:
+    NUMBER=[4], 1, 8, 15, 22
+  Default value in module, record:
+    2, 5, 8
+  Default value in module, set:
+    16, 96, 128
+
+Calls from Second.m3
+  Default value named in exported interface Def, fixed array:
+    1, 4, 7
+  Default value named in imported interface Named, fixed array:
+    1, 14, 27
+  Default value named in imported interface Named, open array:
+    NUMBER=[6], 1, 16, 31, 46, 61, 76
+  Default value named in imported interface Named, record:
+    2, 9, 16
+  Default value named in imported interface Named, set:
+    18, 98, 130
+  Default value in module, fixed array:
+    1, 6, 11
+  Default value in module, open array:
+    NUMBER=[4], 1, 8, 15, 22
+  Default value in module, record:
+    2, 5, 8
+  Default value in module, set:
+    16, 96, 128
+
+Calls from Def.m3
+  Default value named in exported interface Def, fixed array:
+    1, 4, 7
+  Default value named in imported interface Named, fixed array:
+    1, 14, 27
+  Default value named in imported interface Named, open array:
+    NUMBER=[6], 1, 16, 31, 46, 61, 76
+  Default value named in imported interface Named, record:
+    2, 9, 16
+  Default value named in imported interface Named, set:
+    18, 98, 130
+  Default value in module, fixed array:
+    1, 10, 19
+  Default value in module, open array:
+    NUMBER=[5], 1, 12, 23, 34, 45
+  Default value in module, record:
+    2, 7, 12
+  Default value in module, set:
+    17, 97, 129
+

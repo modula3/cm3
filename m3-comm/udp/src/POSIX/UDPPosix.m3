@@ -83,7 +83,7 @@ PROCEDURE Send(self: T; READONLY d: Datagram): INTEGER RAISES {IP.Error} =
 PROCEDURE Len(cstr: Ctypes.char_star) : INTEGER =
   VAR l := 0;
   BEGIN
-    WHILE LOOPHOLE(cstr^, CHAR) # '\000' DO INC(l) END;
+    WHILE LOOPHOLE(cstr^, CHAR) # '\000' DO INC(l);INC(cstr) END;
     RETURN l;
   END Len;
 

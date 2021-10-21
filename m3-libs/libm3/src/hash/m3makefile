@@ -1,2 +1,3 @@
 Module("MD5")
+Module("SHA256")
 

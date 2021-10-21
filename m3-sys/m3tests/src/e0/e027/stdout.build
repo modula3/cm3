@@ -1,3 +1,3 @@
-"../Main.m3", line 10: variable has empty type (z)
+"../Main.m3", line 10: Variable cannot have empty type. (z)
 1 error encountered
 Fatal Error: package build failed

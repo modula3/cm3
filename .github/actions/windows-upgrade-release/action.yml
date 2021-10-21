@@ -1,0 +1,15 @@
+---
+name: Windows upgrade release
+description: Upgrade a binary release on a Windows system.
+
+runs:
+  using: composite
+
+  steps:
+  - name: Build all the things
+    run: |
+      python2 upgrade.py
+      python2 do-cm3-all.py realclean skipgcc
+      python2 do-cm3-all.py buildship
+    shell: cmd
+    working-directory: scripts/python

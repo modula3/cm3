@@ -1,11 +1,9 @@
-"../Main.m3", line 5: warning: open array passed by value (QF)
-"../Main.m3", line 14: SUBARRAY: first argument must be an array
-"../Main.m3", line 14: actual not assignable to VALUE formal (QF)
-"../Main.m3", line 15: SUBARRAY: second argument must be assignable to CARDINAL
-"../Main.m3", line 16: SUBARRAY: third argument must be assignable to CARDINAL
-"../Main.m3", line 17: SUBARRAY: first argument must be an array
-"../Main.m3", line 17: SUBARRAY: second argument must be assignable to CARDINAL
-"../Main.m3", line 17: SUBARRAY: third argument must be assignable to CARDINAL
-"../Main.m3", line 17: actual not assignable to VALUE formal (QF)
-8 errors and 1 warning encountered
+"../Main.m3", line 5: warning: Open array passed by value. (QF)
+"../Main.m3", line 14: SUBARRAY: first argument must be an array (2.6.3).
+"../Main.m3", line 15: SUBARRAY: second argument must be assignable to CARDINAL (2.6.3).
+"../Main.m3", line 16: SUBARRAY: third argument must be assignable to CARDINAL (2.6.3).
+"../Main.m3", line 17: SUBARRAY: first argument must be an array (2.6.3).
+"../Main.m3", line 17: SUBARRAY: second argument must be assignable to CARDINAL (2.6.3).
+"../Main.m3", line 17: SUBARRAY: third argument must be assignable to CARDINAL (2.6.3).
+6 errors and 1 warning encountered
 Fatal Error: package build failed

@@ -1,3 +1,3 @@
-"../Main.m3", line 14: incompatible types (x)
+"../Main.m3", line 14: Actual's type must equal VAR formal's (2.3.2):  (x)
 1 error encountered
 Fatal Error: package build failed

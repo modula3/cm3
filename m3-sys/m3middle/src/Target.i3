@@ -278,6 +278,7 @@ VAR
   Extended  := Float_type{CGType.XReel, Precision.Extended, 64, 64, 8, Float{Precision.Extended, 0, -1.79769313486231570x+308}, Float{Precision.Extended, 0, 1.79769313486231570x+308}};
 
 CONST
+  (*                   cg_type, size, align, pack, bytes, min, max *)
   Addr32    = Int_type{CGType.Addr,   32, 32, 32, 4, TInt.Zero, TWord.Max32};
   Addr64    = Int_type{CGType.Addr,   64, 64, 64, 8, TInt.Zero, TWord.Max64};
   Int8      = Int_type{CGType.Int8,    8,  8,  8, 1, TInt.Min8, TInt.Max8};

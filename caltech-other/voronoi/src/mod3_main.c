@@ -102,9 +102,7 @@ ymax = sites[nsites-1].coord.y;
 
 void
 mod3_delaunay(void)
-{	
-int c;
- int i;
+{
 Site *(*next)(void);
 
  assert(setup); 
@@ -127,7 +125,6 @@ clear_triples(void)
   triples=NULL;
 
   while (t!=NULL) {
-    Triple *u=t;
     t=t->next;
   }
 
@@ -151,8 +148,7 @@ int mod3_gettriple(TripleArg *t)
 
 void
 mod3_voronoi(void)
-{	
-int c;
+{
 Site *(*next)(void);
 
  assert(setup); 
