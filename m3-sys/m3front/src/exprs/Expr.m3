@@ -559,24 +559,30 @@ PROCEDURE EqCheckAB (a: Tab;  e: T;  x: M3.EqAssumption): BOOLEAN =
   END EqCheckAB;
 
 PROCEDURE StripNamedCons (expr: T): T =
-(* Look through a NamedExpr and then a ConsExpr, for an Expr.T.  NIL if not. *)
+(* Remove any NamedExpr.T and ConsExpr.T nodes from an Expr.T.
+   NIL, if this is or leads to a non-expression. *)
 
   VAR ident: M3ID.T;
   VAR val: Value.T;
-  VAR unnamedExpr, resultExpr: T;
+  VAR lExpr: T;
   BEGIN
-    IF NamedExpr.Split (expr, ident, val) THEN
-      IF Value.ClassOf (val) # Value.Class.Expr THEN RETURN NIL END;
-      unnamedExpr := Value.ToExpr (val);
-    ELSE unnamedExpr := expr
+    IF expr = NIL THEN RETURN NIL END;
+    lExpr := expr;
+    LOOP
+      IF NamedExpr.Split (lExpr, ident, val) THEN
+        IF Value.ClassOf (val) # Value.Class.Expr THEN RETURN NIL;
+        ELSE lExpr := Value.ToExpr (val); (*And loop.*)
+        END;
+      ELSIF ConsExpr.Is (lExpr) THEN
+        ConsExpr.Seal (lExpr);
+        (* DO NOT allow ConsExpr to Check lExpr.  That could make a
+           (should only be top-level) call to ArrayExpr.Check on a nested array
+            constructor.  But it's OK if ConsExpr previously checked
+            namedExpr. *)
+        lExpr := ConsExpr.Base (lExpr); (*And loop.*)
+      ELSE RETURN lExpr;
+      END;
     END;
-    ConsExpr.Seal (unnamedExpr);
-    (* DO NOT allow ConsExpr to Check unnamedExpr.  That could make a (should be
-       top-level) call to ArrayExpr.Check on a nested array constructor.
-       But it's OK if ConsExpr previously checked unnamedExpr. *)
-    resultExpr := ConsExpr.Base (unnamedExpr);
-    IF resultExpr = NIL THEN resultExpr := unnamedExpr END;
-    RETURN resultExpr
   END StripNamedCons;
 
 PROCEDURE StaticSize (expr: T): INTEGER =

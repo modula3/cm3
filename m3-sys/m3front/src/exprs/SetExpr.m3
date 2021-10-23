@@ -963,13 +963,11 @@ PROCEDURE CheckStaticRTErrEval
   BEGIN
     IF Code # CG.RuntimeError.Unknown THEN RETURN END;
     constrExpr := SetConstrExpr (expr);
-    TYPECASE constrExpr OF
-    | NULL =>
-    | P(p) =>
-      <* ASSERT p.checked *>
-      IF p.RTErrorCode # CG.RuntimeError.Unknown THEN
-        Code := p.RTErrorCode;
-        Msg := p.RTErrorMsg;
+    IF constrExpr # NIL THEN
+      <* ASSERT constrExpr.checked *>
+      IF constrExpr.RTErrorCode # CG.RuntimeError.Unknown THEN
+        Code := constrExpr.RTErrorCode;
+        Msg := constrExpr.RTErrorMsg;
       END;
     END;
   END CheckStaticRTErrEval;
