@@ -107,19 +107,19 @@ PROCEDURE Prep (p: P) =
     Expr.Prep (p.expr);
   END Prep;
 
-PROCEDURE Compile (p: P; StaticOnly: BOOLEAN) =
+PROCEDURE Compile (p: P) =
   BEGIN
-    Expr.Compile (p.expr, StaticOnly);
+    Expr.Compile (p.expr);
   END Compile;
 
-PROCEDURE PrepLV (p: P; traced: BOOLEAN) =
+PROCEDURE PrepLV (p: P;  traced: BOOLEAN) =
   BEGIN
     Expr.PrepLValue (p.expr, traced);
   END PrepLV;
 
-PROCEDURE CompileLV (p: P; traced: BOOLEAN; StaticOnly: BOOLEAN) =
+PROCEDURE CompileLV (p: P;  traced: BOOLEAN) =
   BEGIN
-    Expr.CompileLValue (p.expr, traced, StaticOnly);
+    Expr.CompileLValue (p.expr, traced);
   END CompileLV;
 
 PROCEDURE Bounder (p: P;  VAR min, max: Target.Int) =

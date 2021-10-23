@@ -22,11 +22,10 @@ REVEAL
         size       : INTEGER;
         offset     : INTEGER;
         (* ^ Of a pointer, located within the static variable area, to the
-             constant's value, which is located in the static constant area. *)
+             constant's value, located in the static constant area. *)
         coffset    : INTEGER;
-        (* ^ Of space in the static constant area for the constant's value.
-             If constant has open array representation, this will be
-             for dope only. *)
+        (* ^ Of a place in the static constant area for the constant's value.
+             Dope only, if constant has open array representation. *)
         calign     : INTEGER;
         structured : BOOLEAN;
         gen_init   : BOOLEAN;
@@ -87,9 +86,7 @@ PROCEDURE Create (name: M3ID.T): T =
   END Create;
 
 (* EXPORTED: *)
-PROCEDURE
-  Declare (name: TEXT;  valExpr: Expr.T;  reserved: BOOLEAN): T =
-(* Declare in the current scope. *)
+PROCEDURE Declare (name: TEXT;  valExpr: Expr.T;  reserved: BOOLEAN) =
   VAR t: T;
   BEGIN
     t := Create (M3ID.Add (name));
@@ -97,23 +94,7 @@ PROCEDURE
     t.valExpr := valExpr;
     Scope.Insert (t);
     IF (reserved) THEN Scanner.NoteReserved (t.name, t) END;
-    RETURN t;
   END Declare;
-
-(* EXPORTED: *)
-PROCEDURE DeclareGlobal
-  (name: TEXT;  valExpr: Expr.T;  reserved := FALSE): T =
-(* Declare in the global scope. *)
-  VAR t: T;
-  VAR oldScope: Scope.T;
-  BEGIN
-    t := Create (M3ID.Add (name));
-    t.tipe := Expr.TypeOf (valExpr);
-    t.valExpr := valExpr;
-    Scope.InsertScope (t, Module.ExportScope (Module.Current ()));
-    IF (reserved) THEN Scanner.NoteReserved (t.name, t) END;
-    RETURN t;
-  END DeclareGlobal;
 
 (* Externally dispatched-to: *)
 PROCEDURE TypeOf
@@ -188,9 +169,9 @@ PROCEDURE SetGlobals (t: T) =
     align := info.alignment;
     depth := OpenArrayType.OpenDepth (repType);
 
-    IF (depth > 0) THEN (* repType is an open array *)
-      (* Set up to allocate space below for the dope only. *)
-      (* See ArrayExpr.GenLiteral for allocation of elements' space. *)
+    IF (depth > 0) THEN (* t.tipe is an open array *)
+      (* Allocate space for the dope only. *)
+      (* See ArrayExpr.GenLiteral. *)
       t.size := Target.Address.pack + depth * Target.Integer.pack;
       align := MAX (Target.Address.align, Target.Integer.align);
     END;

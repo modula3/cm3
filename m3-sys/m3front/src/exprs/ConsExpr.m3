@@ -36,7 +36,7 @@ TYPE
         prep         := Prep;
         compile      := Compile;
         prepLV       := ExprRep.NotLValue;
-        compileLV    := ExprRep.NotLValueBool;
+        compileLV    := ExprRep.NotLValue;
         prepBR       := ExprRep.NotBoolean;
         compileBR    := ExprRep.NotBoolean;
         evaluate     := Evaluate;
@@ -146,7 +146,7 @@ PROCEDURE InnerSeal (p: P) =
 
 PROCEDURE CheckRecurse
   (consExpr: P; parentKind: Kind; VAR cs: Expr.CheckState) =
-(* Recurses only on a Cons/Array pair directly inside a Cons/Array pair,
+(* Recurses only on a Cons/Array pair directly inside a Cons/Array pair
    especially, no named expresson in between. *)
   BEGIN
     InnerSeal (consExpr);
@@ -215,9 +215,9 @@ PROCEDURE Prep (p: P) =
   END Prep;
 
 (* Externally dispatched-to: *)
-PROCEDURE Compile (p: P; StaticOnly: BOOLEAN) =
+PROCEDURE Compile (p: P) =
   BEGIN
-    Expr.Compile (p.base, StaticOnly);
+    Expr.Compile (p.base);
   END Compile;
 
 (* Externally dispatched-to: *)

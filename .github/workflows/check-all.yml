@@ -1,0 +1,35 @@
+---
+name: Check all
+# Build and test everything.
+
+on: workflow_dispatch
+
+jobs:
+  linux-integration:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-20.04, ubuntu-18.04]
+        include:
+        - {os: ubuntu-20.04, kernel: Linux5.4.0}
+        - {os: ubuntu-18.04, kernel: Linux4.15.0}
+    uses: modula3/cm3/.github/workflows/linux-integration-from-binary.yml@master
+    with:
+      os: ${{ matrix.os }}
+      cm3build: ${{ format('cm3-min-AMD64_LINUX-d5.11.3-{0}-20211008-tar.gz', matrix.kernel) }}
+
+  macos-integration:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-11, macos-10.15]
+    uses: modula3/cm3/.github/workflows/macos-integration-from-binary.yml@master
+    with:
+      os: ${{ matrix.os }}
+
+  windows-integration:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-2019, windows-2016]
+    uses: modula3/cm3/.github/workflows/windows-integration-from-binary.yml@master

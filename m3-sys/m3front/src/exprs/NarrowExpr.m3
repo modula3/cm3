@@ -18,7 +18,7 @@ TYPE
         prep         := Prep;
         compile      := Compile;
         prepLV       := ExprRep.NotLValue;
-        compileLV    := ExprRep.NotLValueBool;
+        compileLV    := ExprRep.NotLValue;
         prepBR       := ExprRep.PrepNoBranch;
         compileBR    := ExprRep.NoBranch;
         evaluate     := Fold;
@@ -84,10 +84,9 @@ PROCEDURE Prep (p: P) =
     p.tmp := CG.Pop ();
   END Prep;
 
-PROCEDURE Compile (p: P; StaticOnly: BOOLEAN) =
+PROCEDURE Compile (p: P) =
   (* all the work was done by "Prep" *)
   BEGIN
-    <* ASSERT NOT StaticOnly *>
     CG.Push (p.tmp);
     CG.Boost_addr_alignment (Target.Address.align);
     CG.Free (p.tmp);

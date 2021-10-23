@@ -22,7 +22,7 @@ TYPE
         prep         := Prep;
         compile      := Compile;
         prepLV       := ExprRep.NotLValue;
-        compileLV    := ExprRep.NotLValueBool;
+        compileLV    := ExprRep.NotLValue;
         prepBR       := ExprRep.NotBoolean;
         compileBR    := ExprRep.NotBoolean;
         evaluate     := Fold;
@@ -87,10 +87,9 @@ PROCEDURE Prep (p: P) =
     Expr.Prep (p.a);
   END Prep;
 
-PROCEDURE Compile (p: P; StaticOnly: BOOLEAN) =
+PROCEDURE Compile (p: P) =
   VAR EasyCheck := Target.First_readable_addr * Target.Char.size;
   BEGIN
-    <* ASSERT NOT StaticOnly *>
     Expr.Compile (p.a);
     IF (p.offset < 0) OR (EasyCheck <= p.offset) THEN
       CG.Check_nil (CG.RuntimeError.BadMemoryReference);

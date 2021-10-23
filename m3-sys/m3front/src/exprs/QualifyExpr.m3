@@ -398,7 +398,7 @@ PROCEDURE Prep (p: P) =
         IF Host.doIncGC AND info.isTraced THEN
           CASE info.class OF
           | Type.Class.Object, Type.Class.Opaque, Type.Class.Ref =>
-            Compile (p, StaticOnly := FALSE);
+            Compile (p);
             RunTyme.EmitCheckLoadTracedRef ();
             p.temp := CG.Pop ();
           ELSE
@@ -412,7 +412,7 @@ PROCEDURE Prep (p: P) =
         IF Host.doIncGC AND info.isTraced THEN
           CASE info.class OF
           | Type.Class.Object, Type.Class.Opaque, Type.Class.Ref =>
-            Compile (p, StaticOnly := FALSE);
+            Compile (p);
             RunTyme.EmitCheckLoadTracedRef ();
             p.temp := CG.Pop ();
           ELSE
@@ -428,13 +428,12 @@ PROCEDURE Prep (p: P) =
     END;
   END Prep;
 
-PROCEDURE Compile (p: P; StaticOnly: BOOLEAN) =
+PROCEDURE Compile (p: P) =
   VAR
     obj_offset, obj_align: INTEGER;
     fieldInfo: Field.Info;
     method: Method.Info;
   BEGIN
-    IF StaticOnly THEN RETURN END;
     CASE p.class OF
     | Class.importDecl =>
         IF p.temp # NIL THEN
@@ -555,10 +554,9 @@ PROCEDURE PrepLV (p: P; traced: BOOLEAN) =
     END;
   END PrepLV;
 
-PROCEDURE CompileLV (p: P;  traced: BOOLEAN; StaticOnly: BOOLEAN) =
+PROCEDURE CompileLV (p: P;  traced: BOOLEAN) =
   VAR obj_offset, obj_align: INTEGER;  field: Field.Info;
   BEGIN
-    <* ASSERT NOT StaticOnly *>
     CASE p.class OF
     | Class.importDecl =>
         CASE Value.ClassOf (p.rhsValue) OF

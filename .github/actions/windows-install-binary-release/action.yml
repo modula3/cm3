@@ -1,0 +1,31 @@
+---
+name: Windows install binary release
+description: Install a binary release on a Windows system.
+
+inputs:
+  cm3inst:
+    description: Target location for install
+    required: true
+  cm3release:
+    description: Location of release tarball
+    required: true
+  cm3build:
+    description: Release tarball to install
+    required: true
+
+runs:
+  using: composite
+
+  steps:
+  - name: Install binary release
+    run: |
+      mkdir "${{ inputs.cm3inst }}"
+      cd "${{ inputs.cm3inst }}"
+      wget "${{ inputs.cm3release }}/${{ inputs.cm3build }}"
+      p7zip -d "${{ inputs.cm3build }}"
+    shell: msys2 {0}
+
+  - name: Add release binary to path
+    run: |
+      echo ${{ inputs.cm3inst }}\cm3\bin>>%GITHUB_PATH%
+    shell: cmd

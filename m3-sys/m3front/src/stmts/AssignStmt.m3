@@ -429,7 +429,7 @@ PROCEDURE AssignSet
   END AssignSet;
 
 PROCEDURE CompileStruct (expr: Expr.T) =
-(* This also works for a record, set, or array that is a packed component
+(* This works for a record, set, or array that is a packed component
    of something. *)
   BEGIN
     IF Expr.IsDesignator (expr)

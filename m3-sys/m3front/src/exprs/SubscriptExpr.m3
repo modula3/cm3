@@ -305,7 +305,7 @@ PROCEDURE Prep (p: P) =
     IF Host.doIncGC AND info.isTraced THEN
       CASE info.class OF
       | Type.Class.Object, Type.Class.Opaque, Type.Class.Ref =>
-        Compile (p, StaticOnly := FALSE);
+        Compile (p);
         RunTyme.EmitCheckLoadTracedRef ();
         p.tmp := CG.Pop ();
       ELSE
@@ -328,11 +328,10 @@ PROCEDURE PrepLV (p: P; traced: BOOLEAN) =
   END PrepLV;
 
 (* Externally dispatched-to: *) 
-PROCEDURE Compile (p: P; StaticOnly: BOOLEAN) =
+PROCEDURE Compile (p: P) =
   BEGIN
-    <* ASSERT NOT StaticOnly *>
     IF p.tmp = NIL THEN
-      CompileLV (p, StaticOnly := StaticOnly);
+      CompileLV (p);
       Type.LoadScalar (p.type) (* Loads only if not a struct. *);
     ELSE
       CG.Push (p.tmp);
@@ -358,7 +357,7 @@ PROCEDURE StaticSs (p: P; VAR subscript: INTEGER): BOOLEAN (* It's static *) =
   END StaticSs; 
 
 (* Externally dispatched-to: *) 
-PROCEDURE CompileLV (p: P; traced := FALSE; StaticOnly: BOOLEAN) =
+PROCEDURE CompileLV (p: P; traced := FALSE) =
   VAR
     ti, te      : Type.T;
     subscript   : INTEGER;
@@ -369,7 +368,6 @@ PROCEDURE CompileLV (p: P; traced := FALSE; StaticOnly: BOOLEAN) =
     newDopeVar  : CG.Var;
     b             := ArrayType.Split (ta, ti, te);
   BEGIN
-    <* ASSERT NOT StaticOnly *>
     <* ASSERT b *>
 
     IF Expr.IsDesignator (p.a)

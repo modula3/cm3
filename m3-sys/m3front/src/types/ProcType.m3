@@ -100,9 +100,9 @@ PROCEDURE ParseSignature (name: M3ID.T;  cc: CG.CallingConvention): Type.T =
 PROCEDURE ParseFormal (p: P;  ) =
   TYPE TK = Token.T;
   VAR
-    j, n      : INTEGER;
-    obj       : Value.T;
-    formal    : Formal.Info;
+    j, n    : INTEGER;
+    obj     : Value.T;
+    formal  : Formal.Info;
   BEGIN
     formal.mode   := Formal.Mode.mVALUE;
     formal.type   := NIL;

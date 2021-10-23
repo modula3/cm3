@@ -11,7 +11,7 @@ MODULE RecordType;
 
 IMPORT M3, M3ID, CG, Type, TypeRep, Scope, Expr, Value, Token;
 IMPORT Error, Field, Ident, PackedType, Target, TipeDesc;
-IMPORT Module, Word, AssignStmt, M3Buf;
+IMPORT Word, AssignStmt, M3Buf;
 FROM Scanner IMPORT Match, GetToken, cur;
 
 VAR MaxBitSize := LAST (INTEGER);
@@ -51,9 +51,8 @@ PROCEDURE ParseFieldList () =
   TYPE TK = Token.T;
   VAR
     j, n    : INTEGER;
-    nFields := 0;
-    name    : M3ID.T;
     info    : Field.Info;
+    nFields := 0;
   BEGIN
     info.offset := 0;
     WHILE (cur.token = TK.tIDENT) DO
@@ -132,8 +131,8 @@ PROCEDURE Create (fields: Scope.T): P =
 PROCEDURE Check (p: P) =
   VAR
     o        : Value.T;
-    fieldInfo: Field.Info;
-    typeInfo : Type.Info;
+    field    : Field.Info;
+    info     : Type.Info;
     cs       := M3.OuterCheckState;
     min_size : INTEGER;
     hash     : INTEGER;
@@ -154,13 +153,12 @@ PROCEDURE Check (p: P) =
     hash := Word.Plus (Word.Times (943, p.recSize), p.align);
     o := Scope.ToList (p.fields);
     WHILE (o # NIL) DO
-      Field.Split (o, fieldInfo);
-      EVAL Type.CheckInfo (fieldInfo.type, typeInfo);
-      p.info.isTraced := p.info.isTraced OR typeInfo.isTraced;
-      p.info.isEmpty  := p.info.isEmpty  OR typeInfo.isEmpty;
-      hash := Word.Plus (Word.Times (hash, 41), M3ID.Hash (fieldInfo.name));
-      hash := Word.Plus (Word.Times (hash, 37), typeInfo.size);
-      Field.NameAnonConstr ((*IN OUT*) o, cs);
+      Field.Split (o, field);
+      EVAL Type.CheckInfo (field.type, info);
+      p.info.isTraced := p.info.isTraced OR info.isTraced;
+      p.info.isEmpty  := p.info.isEmpty  OR info.isEmpty;
+      hash := Word.Plus (Word.Times (hash, 41), M3ID.Hash (field.name));
+      hash := Word.Plus (Word.Times (hash, 37), info.size);
       o := o.next;
     END;
 

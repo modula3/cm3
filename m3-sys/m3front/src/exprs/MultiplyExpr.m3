@@ -34,7 +34,7 @@ TYPE
         prep         := Prep;
         compile      := Compile;
         prepLV       := ExprRep.NotLValue;
-        compileLV    := ExprRep.NotLValueBool;
+        compileLV    := ExprRep.NotLValue;
         prepBR       := ExprRep.NotBoolean;
         compileBR    := ExprRep.NotBoolean;
         evaluate     := Fold;
@@ -119,10 +119,9 @@ PROCEDURE Prep (p: P) =
     END;
   END Prep;
 
-PROCEDURE Compile (p: P; StaticOnly: BOOLEAN) =
+PROCEDURE Compile (p: P) =
   VAR size: INTEGER;  info: Type.Info;
   BEGIN
-    <* ASSERT NOT StaticOnly *>
     IF (p.class = cINT) THEN
       Expr.Compile (p.a);
       Expr.Compile (p.b);

@@ -7,7 +7,7 @@
 
 INTERFACE Expr;
 
-IMPORT M3, M3Buf, M3ID, CG, Target, Type, Value;
+IMPORT M3, M3Buf, CG, Target, Type;
 
 TYPE
   T    = M3.Expr;
@@ -87,13 +87,6 @@ PROCEDURE IsMarkedForDirectAssignment (t: T): BOOLEAN;
 PROCEDURE IsAnonConstructor (t: T): BOOLEAN;
 (* t is a non-named array, record, or set constructor. *)
 
-PROCEDURE NameAnonConstr
-  (VAR (*IN OUT*) Constr: T; unitId, constId: M3ID.T; VAR cs: Value.CheckState);
-(* If Constr is an anonymous constructor expression, change it to a named
-   expression, already resolved to a constant value.  This so it can be
-   referenced from a different compilation unit.  Give it a concocted,
-   non-Modula3 name, for IR information only. *)
-
 PROCEDURE Alignment (t: T): Type.BitAlignT;
 (* A bit alignment that t is guaranteed to have.  Hopefully maximum, or
    nearly so.  Always a true alignment, possibly as small as 1 bit. 
@@ -115,21 +108,19 @@ PROCEDURE Alignment (t: T): Type.BitAlignT;
 *)
 
 PROCEDURE Prep (t: T);
-PROCEDURE Compile (t: T; StaticOnly := FALSE);
+PROCEDURE Compile (t: T);
 (* Emit code to evaluate the expression onto the top of stack. For some
-   types, this could be an address (arrays, records, bit sets).
-   StaticOnly means construct static data but do not evaluate. *)
+   types, this could be an address (arrays, records, bit sets). *)
 
 PROCEDURE PrepLValue (t: T; traced: BOOLEAN);
-PROCEDURE CompileLValue (t: T; traced: BOOLEAN; StaticOnly := FALSE);
-(* Emit code to evaluate 't's L-value into s0.A. 't' must be a designator.
-   StaticOnly means construct static data but do not evaluate. *)
+PROCEDURE CompileLValue (t: T; traced: BOOLEAN);
+(* Emit code to evaluate 't's L-value into s0.A. 't' must be a designator. *)
 
-PROCEDURE CompileAddress (t: T; traced: BOOLEAN; StaticOnly := FALSE);
+PROCEDURE CompileAddress (t: T; traced: BOOLEAN);
 (* emits code to evaluate 't's byte address onto the top of stack.
    Equivalent to CompileLValue, followed by a runtime check that it
-   is byte aligned.  Use PrepLValue to prep these expressions.
-   StaticOnly means construct static data but do not evaluate. *)
+   is byte aligned.
+   Use PrepLValue to prep these expressions. *)
 
 PROCEDURE PrepBranch (t: T;  true, false: CG.Label;  freq: CG.Frequency);
 PROCEDURE CompileBranch (t: T;  true, false: CG.Label;  freq: CG.Frequency);

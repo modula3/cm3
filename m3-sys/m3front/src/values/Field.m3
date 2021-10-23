@@ -9,7 +9,7 @@
 MODULE Field;
 
 IMPORT M3, CG, Value, ValueRep, Type, Expr, Error;
-IMPORT AssignStmt, Module;
+IMPORT AssignStmt, M3Buf;
 
 REVEAL
   T = Value.T BRANDED OBJECT
@@ -133,10 +133,10 @@ PROCEDURE TypeCheck (t: T;  VAR cs: Value.CheckState) =
   BEGIN
     t.tipe := Type.CheckInfo (TypeOf (t), info);
     IF (info.isEmpty) THEN
-      Error.ID (t.name, "A field's type may not be empty (2.2.4).");
+      Error.ID (t.name, "empty field type");
     END;
     IF (info.class = Type.Class.OpenArray) THEN
-      Error.ID (t.name, "A field's type may not be open array (2.2.3).");
+      Error.ID (t.name, "fields may not be open arrays");
     END;
     t.checked := TRUE;
 
@@ -145,28 +145,17 @@ PROCEDURE TypeCheck (t: T;  VAR cs: Value.CheckState) =
       AssignStmt.Check (t.tipe, t.dfault, cs);
       Expr.TypeCheck (t.dfault, cs);
       IF (Expr.ConstValue (t.dfault) = NIL) THEN
-        Error.ID (t.name, "Default value of a field must be constant (2.2.4).");
+        Error.ID (t.name, "default value of a field must be constant");
       END;
       (* NOTE: we don't save the constant-folded version of the default,
-         otherwise we'd lose references to large named constants. *)
+         otherwise we'd loose references to large named constants. *)
     END;
   END TypeCheck;
-
-(*EXPORTED:*)
-PROCEDURE NameAnonConstr (VAR (*IN OUT*) o: Value.T; VAR cs: Value.CheckState) =
-  VAR field: T := o;
-  BEGIN
-    IF field.dfault # NIL AND Module.IsInterface () THEN
-      Expr.NameAnonConstr
-        (field.dfault, Module.Name (NIL (*current*)), field.name, cs);
-    END;
-  END NameAnonConstr;
 
 (*EXPORTED, Externally dispatched-to:*)
 PROCEDURE Compile (t: T) =
   BEGIN
     Type.Compile (t.tipe);
- (* Expr.Compile (t.dfault); *)
   END Compile;
 
 (*Externally dispatched-to:*)
@@ -180,12 +169,12 @@ PROCEDURE SetGlobals (<*UNUSED*> t: T) =
 PROCEDURE AddFPTag  (t: T;  VAR x: M3.FPInfo): CARDINAL =
   BEGIN
     ValueRep.FPStart (t, x, "FIELD ", 0, global := FALSE);
- (* No, a default value does not contribute to the type.
+  (* No, a default value does not contribute to the type.
     IF (t.dfault # NIL) THEN
       M3Buf.PutText (x.buf, " := ");
       Expr.GenFPLiteral (t.dfault, x.buf);
     END;
- *)
+  *)
     RETURN 1;
   END AddFPTag;
 

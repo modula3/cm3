@@ -22,7 +22,7 @@ TYPE
         prep         := Prep;
         compile      := Compile;
         prepLV       := ExprRep.NotLValue;
-        compileLV    := ExprRep.NotLValueBool;
+        compileLV    := ExprRep.NotLValue;
         prepBR       := ExprRep.PrepNoBranch;
         compileBR    := ExprRep.NoBranch;
         evaluate     := Fold;
@@ -112,7 +112,7 @@ PROCEDURE Prep (p: P) =
     END;
   END Prep;
 
-PROCEDURE Compile (p: P; StaticOnly: BOOLEAN) =
+PROCEDURE Compile (p: P) =
   VAR
     set, range: Type.T;
     b: BOOLEAN;
@@ -120,7 +120,6 @@ PROCEDURE Compile (p: P; StaticOnly: BOOLEAN) =
     info: Type.Info;
     cg_type: CG.Type;
   BEGIN
-    <* ASSERT NOT StaticOnly *>
     set := Type.Base (Type.CheckInfo (Expr.TypeOf (p.b), info));
     b := SetType.Split (set, range);  <*ASSERT b*>
     b := Type.GetBounds (range, min, max);  <*ASSERT b*>
