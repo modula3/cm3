@@ -16,11 +16,11 @@ IMPORT Expr, ExprRep, KeywordExpr, RangeExpr, ArrayExpr;
 
 TYPE
   Info = RECORD
-    field : Value.T;
-    type  : Type.T;
-    expr  : Expr.T;
-    name  : M3ID.T;
-    done  : BOOLEAN;
+    field     : Value.T;
+    type      : Type.T;
+    fieldExpr : Expr.T;
+    name      : M3ID.T;
+    done      : BOOLEAN;
   END;
 
 TYPE
@@ -142,7 +142,8 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
   VAR
     fieldCt   : INTEGER;
     fieldNo   : INTEGER;
-    splitExpr, e : Expr.T;
+    splitExpr : Expr.T;
+    argExpr   : Expr.T;
     dfault    : Expr.T;
     fieldList : Value.T;
     v         : Value.T;
@@ -178,27 +179,27 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
         z.field := v;
         z.name  := fieldInfo.name;
         z.type  := fieldInfo.type;
-        z.expr  := fieldInfo.dfault;
+        z.fieldExpr  := fieldInfo.dfault;
         z.done  := FALSE;
       END;
       v := v.next;
       INC (fieldNo);
     END;
     posOK := TRUE;
-    EVAL Evaluate (p); (* Fold all foldable arguments. *)
+    EVAL Evaluate (p); (*Compute is_const.*)
 
     FOR i := 0 TO LAST (p.args^) DO
-      e := p.args[i];
-      IF RangeExpr.Split (e, splitExpr, dfault) THEN
+      argExpr := p.args[i];
+      IF RangeExpr.Split (argExpr, splitExpr, dfault) THEN
         Error.Msg
           ("Range expressions not allowed in record constructors (2.6.8).");
         p.broken := TRUE;
       END;
 
-      IF KeywordExpr.Split (e, Id, splitExpr) THEN
+      IF KeywordExpr.Split (argExpr, Id, splitExpr) THEN
         posOK := FALSE;
         fieldNo := 0;
-        e := splitExpr;
+        argExpr := splitExpr;
         LOOP
           IF (fieldNo >= fieldCt) THEN
             Error.ID (Id, "Unknown field name in record constructor (2.6.8).");
@@ -228,19 +229,19 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
               (z.name, "Record constructor field previously specified (2.6.8).");
           END;
           z.done := TRUE;
-          IF NOT Type.IsAssignable (z.type, Expr.TypeOf (e)) THEN
+          IF NOT Type.IsAssignable (z.type, Expr.TypeOf (argExpr)) THEN
             Error.ID
               (z.name,
                "Expression is not assignable to record constructor field  (2.6.8).");
           ELSE
-            ArrayExpr.NoteUseTargetVar (e);
+            ArrayExpr.NoteUseTargetVar (argExpr);
 
             AssignStmt.CheckStaticRTErrExec
-              (z.type, e, cs,
+              (z.type, argExpr, cs,
                (*VAR*)Code := RTErrorCode, (*VAR*)Msg := RTErrorMsg
               );
             MergeRTError (p, RTErrorCode, RTErrorMsg);
-            z.expr := e;
+            z.fieldExpr := argExpr;
           END;
         END;
       ELSE
@@ -250,7 +251,7 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
 
     FOR fieldNo := 0 TO fieldCt - 1 DO
       WITH z = p.map^[fieldNo] DO
-        IF (NOT z.done) AND (z.expr = NIL) THEN
+        IF (NOT z.done) AND (z.fieldExpr = NIL) THEN
           Error.ID
             (z.name, "No value specified for record constructor field (2.6.8).");
         END;
@@ -318,7 +319,7 @@ PROCEDURE InnerPrepLV (p: P;  traced: BOOLEAN; usesAssignProtocol: BOOLEAN) =
           CG stack, for us to use. *)
   VAR
     info: Type.Info;
-    field: Field.Info;
+    fieldInfo: Field.Info;
     resultVar: CG.Var;
   BEGIN
     INC (p.finalValUseCt);
@@ -344,15 +345,16 @@ PROCEDURE InnerPrepLV (p: P;  traced: BOOLEAN; usesAssignProtocol: BOOLEAN) =
 
     FOR i := 0 TO LAST (p.map^) DO
       WITH z = p.map^[i] DO
-        Field.Split (z.field, field);
-        AssignStmt.PrepForEmit (field.type, z.expr, initializing := TRUE);
+        Field.Split (z.field, fieldInfo);
+        AssignStmt.PrepForEmit
+          (fieldInfo.type, z.fieldExpr, initializing := TRUE);
         IF usesAssignProtocol THEN
           CG.Push (p.finalVal);
-          IF (field.offset # 0) THEN  CG.Add_offset (field.offset);  END;
+          IF (fieldInfo.offset # 0) THEN  CG.Add_offset (fieldInfo.offset);  END;
         ELSE
-          CG.Load_addr_of (resultVar, field.offset, info.alignment);
+          CG.Load_addr_of (resultVar, fieldInfo.offset, info.alignment);
         END;
-        AssignStmt.DoEmit (field.type, z.expr, initializing := TRUE);
+        AssignStmt.DoEmit (fieldInfo.type, z.fieldExpr, initializing := TRUE);
       END;
     END;
 
@@ -401,21 +403,40 @@ PROCEDURE CompileLV (p: P; traced: BOOLEAN) =
 (* Externally dispatched-to: *)
 PROCEDURE Evaluate (p: P): Expr.T =
 (* Return a constant expr if p is constant, otherwise NIL. *)
-(* NOTE: This will fold any constant argument in place, even if the
-         whole constructor is not constant. *)
+(* NOTE: DO NOT fold any constant argument in place unless the
+         entire constructor is constant. *)
   VAR e: Expr.T;
+  VAR i: INTEGER;
   BEGIN
     IF (NOT p.evalAttempted) THEN
       p.evalAttempted   := TRUE;
-      p.is_const := TRUE;
-      FOR i := 0 TO LAST (p.args^) DO
-        e := Expr.ConstValue (p.args[i]);
-        IF (e = NIL) THEN p.is_const := FALSE; ELSE p.args[i] := e; END;
+      i := 0;
+      LOOP
+        IF i > LAST (p.args^) (* All args are constant. *)
+           (* And any field default values are always constant. *)
+        THEN
+          p.is_const := TRUE;
+          (* Compile(p) will will use [Prep|Gen]Literal on each arg,
+             so no RT code will be generated that accesses an arg value
+             remotely.  So go ahead and evaluate the args. *)
+          FOR j := 0 TO LAST (p.args^) DO
+            e := Expr.ConstValue (p.args[j]);
+            IF e # NIL THEN p.args[j] := e; END;
+          END;
+          (* Don't evaluate the args, because that would strip away any
+             named constants on top of them and undermine RT code to
+             access them remotely. *)
+          EXIT
+        ELSIF Expr.ConstValue (p.args[i]) = NIL THEN
+          p.is_const := FALSE;
+          EXIT;
+        ELSE INC (i);
+        END;
       END;
     END;
     IF p.is_const
-      THEN RETURN p;
-      ELSE RETURN NIL;
+    THEN RETURN p;
+    ELSE RETURN NIL;
     END;
   END Evaluate;
 
@@ -424,7 +445,9 @@ PROCEDURE IsZeroes (p: P;  <*UNUSED*> lhs: BOOLEAN): BOOLEAN =
   BEGIN
     <* ASSERT p.map # NIL *> (* must already be checked *)
     FOR i := 0 TO LAST (p.map^) DO
-      IF NOT Expr.IsZeroes (p.map^[i].expr) THEN RETURN FALSE END;
+      IF NOT Expr.IsZeroes (Expr.StripNamedCons(p.map^[i].fieldExpr))
+      THEN RETURN FALSE
+      END;
     END;
     RETURN TRUE;
   END IsZeroes;
@@ -435,7 +458,7 @@ PROCEDURE GenFPLiteral (p: P;  buf: M3Buf.T) =
     M3Buf.PutText (buf, "RECORD<");
     FOR i := 0 TO LAST (p.map^) DO
       IF (i > 0) THEN M3Buf.PutChar (buf, ',') END;
-      Expr.GenFPLiteral (p.map^[i].expr, buf);
+      Expr.GenFPLiteral (Expr.StripNamedCons(p.map^[i].fieldExpr), buf);
     END;
     M3Buf.PutChar (buf, '>');
   END GenFPLiteral;
@@ -447,7 +470,7 @@ PROCEDURE PrepLiteral (p: P;   <*UNUSED*> type: Type.T;  is_const: BOOLEAN) =
     <* ASSERT p.map # NIL *> (* must already be checked *)
     FOR i := 0 TO LAST (p.map^) DO
       WITH z = p.map^[i] DO
-        e := Expr.ConstValue (z.expr);  <* ASSERT e # NIL *>
+        e := Expr.ConstValue (z.fieldExpr);  <* ASSERT e # NIL *>
         IF NOT Expr.IsZeroes (e) THEN
           Field.Split (z.field, fieldInfo);
           ArrayExpr.NoteTargetType (e, fieldInfo.type);
@@ -465,7 +488,7 @@ PROCEDURE GenLiteral (p: P;  offset: INTEGER;  <*UNUSED*> type: Type.T;
     <* ASSERT p.map # NIL *> (* must already be checked *)
     FOR i := 0 TO LAST (p.map^) DO
       WITH z = p.map^[i] DO
-        e := Expr.ConstValue (z.expr);  <* ASSERT e # NIL *>
+        e := Expr.ConstValue (z.fieldExpr);  <* ASSERT e # NIL *>
         IF NOT Expr.IsZeroes (e) THEN
           Field.Split (z.field, fieldInfo);
           Expr.GenLiteral

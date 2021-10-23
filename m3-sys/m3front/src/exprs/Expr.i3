@@ -151,7 +151,8 @@ PROCEDURE BadOperands (op: TEXT;  a, b: M3.Type := NIL): M3.Type;
    is the contagious error type and return the error type *)
 
 PROCEDURE StripNamedCons (expr: T): T;
-(* Look through a NamedExpr and then a ConsExpr, for an Expr.T.  NIL if not. *)
+(* Remove any NamedExpr.T and ConsExpr.T nodes from an Expr.T.
+   NIL, if this is or leads to a non-expression. *)
 
 PROCEDURE StaticSize (expr: T): INTEGER;
 (* < 0, if nonstatic.  Can be static, even if repType is open array.

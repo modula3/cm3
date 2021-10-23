@@ -217,7 +217,8 @@ PROCEDURE New (type: Type.T; args: Expr.List; dots: BOOLEAN): Expr.T =
 
 (* EXPORTED: *) 
 PROCEDURE ArrayConstrExpr (expr: Expr.T): T =
-(* Look through a NamedExpr and then a ConsExpr, for an ArrayExpr.  NIL if not. *)
+(* Look through a NamedExpr and then a ConsExpr, for an ArrayExpr.  NIL if not
+   an array constuctor. *)
 
   VAR strippedExpr: Expr.T;
   BEGIN
@@ -1270,7 +1271,7 @@ PROCEDURE RepTypeOf (constr: T): Type.T =
 
 (* EXPORTED: *)
 PROCEDURE NoteUseTargetVar (expr: Expr.T) =
-(* NOOP if expr is not an array constructor.  Otherwise: *)
+(* NOOP if expr is not a (possibly named) array constructor.  Otherwise: *)
 (* PRE: expr is top-level *)
 (* Arrange to use LHS from the CG stack to set nonstatic shape components. *)
 (* Will look through a ConsExpr. *)
