@@ -47,6 +47,7 @@ binIO devlib
 commandrw devlib
 tapi base comm devlib
 serial base comm devlib
+m3crypto
 m3tk comm devlib
 mtex core
 m3totex m3devtool
