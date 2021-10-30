@@ -677,6 +677,26 @@ class Ship(PackageAction):
             self.run(package_path, ["-ship"] + self.ship_args())
 
 
+class BuildShip(PackageAction):
+    "Build package *without* overrides and install it"
+
+    def __init__(self, cm3, options):
+        super(BuildShip, self).__init__(cm3, options)
+        self._buildglobal = BuildGlobal(cm3, options)
+        self._ship = Ship(cm3, options)
+
+    def execute_path(self, package_path):
+        # These have to be done in lockstep.  Because of various
+        # unclear dependencies, building everything before shipping
+        # anything yields a broken system.
+        self._buildglobal.execute_path(package_path)
+        self._ship.execute_path(package_path)
+
+    def keep_going(self):
+        "If the build fails, we don't ship"
+        return False
+
+
 class CompositeAction(PackageAction):
     "Executes sequential package actions"
 
@@ -694,22 +714,6 @@ class CompositeAction(PackageAction):
                 self._success = False
                 if not self.keep_going():
                     raise
-
-
-class BuildShip(CompositeAction):
-    "Build package *without* overrides and install it"
-
-    def __init__(self, cm3, options):
-        super(BuildShip, self).__init__(
-            cm3,
-            [ BuildGlobal(cm3, options),
-              Ship(cm3, options)
-             ]
-        )
-
-    def keep_going(self):
-        "If the build fails, we don't ship"
-        return False
 
 
 class WithPackageDb(WithCm3):
@@ -862,7 +866,7 @@ class PackageCommand(ConciergeCommand):
     "Clean, build, and/or ship packages"
 
     def execute(self):
-        packages = self.packages()
+        packages = self.get_package_paths(self.packages())
 
         if self.option("list_only"):
             self.list_packages(packages)
@@ -887,11 +891,9 @@ class PackageCommand(ConciergeCommand):
 
     def packages(self):
         "Return the packages requested on the command-line"
-        packages = self.get_package_paths(self._packages)
-        if not packages:
+        if not self._packages:
             raise Exception("no packages specified")
-
-        return packages
+        return self._packages
 
     def parse_args(self, args):
         "Parse arguments to the package command"
@@ -909,38 +911,38 @@ class UpgradeCommand(ConciergeCommand):
     "Upgrade the cm3 compiler and core system"
 
     def execute(self):
+        base_packages = ["+front", "+m3bundle", "-m3cc"]
+
         # Some things must be cleaned up before an upgrade can begin.
         self._clean()
 
         # Build the compiler using the installed version of the system.
-        self._run_pass(["+front", "+m3bundle", "-m3cc", "-m3core", "-libm3"])
+        self._run_pass(base_packages)
 
         # Use the new compiler to build the core system.  There is no
         # need to rebuild GCC in the second pass.
         self._install_config()
-        self._run_pass(["+front", "+m3bundle", "-m3cc"], build_gcc = False)
+        self._run_pass(base_packages, build_gcc = False)
 
     def _clean(self):
-        "Delete lingering cm3cg so old compiler may not use it"
+        "Delete lingering cm3cg so old compiler can't use it"
         for exe in ["cm3cg", "gcc/m3cgc1"]:
-            file = self.build("m3-sys/m3ccc") / exe
+            file = self.build("m3-sys/m3cc") / exe
             self.rm(file)
             self.rm(file.with_suffix(".exe"))
 
     def _run_pass(self, packages, build_gcc = True):
         "Perform one build/iteration within the system upgrade"
 
-        # Clean everything.
-        self.realclean(["+front", "+m3bundle", "-m3cc"])
-
         # Build the compiler.
+        self.realclean(packages)
         self.buildship(packages)
 
-        # Continue with the backend.
+        # Continue with GCC.
         build_gcc = not self._skip_gcc and build_gcc and self.target().has_gcc_backend()
         if build_gcc:
-            self.realclean(["+m3cc"])
-            self.buildship(["+m3cc"])
+            self.realclean(["m3cc"])
+            self.buildship(["m3cc"])
 
         # Install the binaries.
         if build_gcc:
@@ -972,23 +974,19 @@ class UpgradeCommand(ConciergeCommand):
         # Ensure destination directory exists.
         self.mkdir(dst)
 
-        # Copy compiler executables.
+        # Copy executables on Posix.
+        for exe in executables:
+            item = src / exe
+            self.cp(item, dst)
+
+        # Copy executables on Win32.
         if os.environ.get("PATHEXT"):
-            # Copy executables on Windows.
             extensions = os.environ["PATHEXT"].split(";")
             for exe in executables:
                 for ext in extensions:
                     item = (src / exe).with_suffix(ext)
                     self.cp(item, dst)
-        else:
-            # Copy executables on Posix.
-            for exe in executables:
-                item = src / exe
-                self.cp(item, dst)
-
-        # Copy debug info (Windows only).
-        if os.environ.get("PATHEXT"):
-            for exe in executables:
+                # Copy debug info.
                 item = (src / exe).with_suffix(".pdb")
                 self.cp(item, dst)
 
@@ -1066,11 +1064,7 @@ class FullUpgradeCommand(UpgradeCommand):
         if not self._packages or self._packages[0].startswith("-"):
             self._packages.insert(0, ALL)
 
-        packages = self.get_package_paths(self._packages)
-        if not packages:
-            raise Exception("no packages specified")
-
-        return packages
+        return self._packages
 
 
 class ConciergeParser(WithPackageDb):
@@ -1112,7 +1106,8 @@ class Concierge:
 
     def __init__(self, args = None):
         # Capture command-line arguments.
-        self._args = (args or sys.argv)[:]
+        args = (args or sys.argv)[:]
+        self._args = [arg for arg in args if arg]
         self._parse_args()
 
         # Setup cm3 build environment.
