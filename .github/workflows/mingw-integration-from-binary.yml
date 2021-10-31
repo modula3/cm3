@@ -1,0 +1,71 @@
+---
+name: Mingw integration from binary
+# Build and test on Mingw starting from binary release.
+
+on:
+  workflow_call:
+    inputs:
+      os:
+        default: windows-latest
+        required: false
+        type: string
+
+jobs:
+  build-and-test:
+    runs-on: ${{ inputs.os }}
+
+    defaults:
+      run: {shell: cmd}
+
+    env:
+      CM3RELEASE: https://github.com/VictorMiasnikov/cm3/releases/download/d5.11.3_8a842be
+      CM3BUILD: cm3-min-AMD64_MINGW-d5.11.3-MINGW64.git-sdk-64@53940e3_and_.mingw-w64-x86_64-gcc-10.3.0-2.-2021-07-20_07-26.FIXed.by.VVM.20210803_14-02.non.Unicode.AMD64_MINGW.Target.cm3-8a842be10f0e5d1f1acf73597d13765aea305573.7z
+
+    steps:
+    - name: Install command-line tools
+      uses: msys2/setup-msys2@v2
+      with:
+        install: >-
+          mingw-w64-x86_64-toolchain
+          p7zip
+          wget
+
+    - name: Define install location
+      run: |
+        echo CM3INST=%CD%\..\build>>%GITHUB_ENV%
+
+    - name: Install binary release
+      run: |
+        mkdir "${CM3INST}"
+        cd "${CM3INST}"
+        wget "${CM3RELEASE}/${CM3BUILD}"
+        p7zip -d "${CM3BUILD}"
+      shell: msys2 {0}
+
+    - name: Add release binary to path
+      run: |
+        echo %CM3INST%\cm3\bin>>%GITHUB_PATH%
+
+    - name: Fetch sources
+      uses: actions/checkout@v2
+
+    - name: Build all the things
+      run: |
+        scripts/concierge.py full-upgrade
+      shell: msys2 {0}
+
+    - name: Run compiler validation suite
+      continue-on-error: true
+      run: |
+        cm3 -DHTML
+      working-directory: m3-sys/m3tests
+      shell: msys2 {0}
+
+    - name: Generate test report
+      uses: dorny/test-reporter@v1
+      with:
+        name: m3tests (AMD64_MINGW, c)
+        fail-on-error: false
+        max-annotations: 49
+        path: m3-sys/m3tests/m3tests-results.xml
+        reporter: java-junit

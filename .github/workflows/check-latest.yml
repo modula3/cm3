@@ -2,7 +2,11 @@
 name: Check latest
 # Build and test starting from latest binary release.
 
-on: [push, pull_request]
+on:
+  pull_request: {branches: master}
+  push:
+
+concurrency: ci
 
 jobs:
   linux-integration:
@@ -16,7 +20,12 @@ jobs:
     with:
       os: macos-latest
 
-  windows-integration:
-    uses: modula3/cm3/.github/workflows/windows-integration-from-binary.yml@master
+#  mingw-integration:
+#    uses: modula3/cm3/.github/workflows/mingw-integration-from-binary.yml@master
+#    with:
+#      os: windows-latest
+
+  win32-integration:
+    uses: modula3/cm3/.github/workflows/win32-integration-from-binary.yml@master
     with:
       os: windows-latest

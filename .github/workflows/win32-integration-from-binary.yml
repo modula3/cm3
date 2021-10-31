@@ -1,6 +1,6 @@
 ---
-name: Windows integration from binary
-# Build and test on Windows starting from latest binary release.
+name: Win32 integration from binary
+# Build and test on Win32 starting from binary release.
 
 on:
   workflow_call:
@@ -17,14 +17,17 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target: [AMD64_NT, I386_NT]
+        include:
+        - {target: AMD64_NT, backend: c}
+        - {target: AMD64_NT, backend: integrated}
+        - {target: I386_NT,  backend: c}
+        - {target: I386_NT,  backend: integrated}
+
+    defaults:
+      run: {shell: cmd}
 
     env:
       CM3RELEASE: https://github.com/VictorMiasnikov/cm3/releases/download/d5.11.3_8a842be
-
-    defaults:
-      run:
-        shell: cmd
 
     steps:
     - name: Define target parameters (AMD64_NT)
@@ -52,25 +55,27 @@ jobs:
       with:
         arch: ${{ env.ARCH }}
 
-    - name: Enable local actions
-      uses: actions/checkout@v2
-
     - name: Define install location
       run: |
         echo CM3INST=%CD%\..\build>>%GITHUB_ENV%
 
-    - name: Install latest release
-      uses: ./.github/actions/windows-install-binary-release
-      with:
-        cm3inst: ${{ env.CM3INST }}
-        cm3release: ${{ env.CM3RELEASE }}
-        cm3build: ${{ env.CM3BUILD }}
+    - name: Install binary release
+      run: |
+        mkdir -p "${CM3INST}"
+        cd "${CM3INST}"
+        wget "${CM3RELEASE}/${CM3BUILD}"
+        p7zip -d "${CM3BUILD}"
+      shell: msys2 {0}
+
+    - name: Add release binary to path
+      run: |
+        echo %CM3INST%\cm3\bin>>%GITHUB_PATH%
 
     - name: Fetch sources
       uses: actions/checkout@v2
 
-    - name: Build a few of the things
-      # Limited because of memory restrictions in CI environment.
-      uses: ./.github/actions/windows-upgrade-release
-
-    # No tests.  The m3tests suite does not run under Windows.
+    - name: Build all the things
+      env:
+        M3_BACKEND_MODE: ${{ (matrix.backend == 'c') && matrix.backend || '' }}
+      run: |
+        python3 scripts/concierge.py full-upgrade -caltech-other -caltech-parser -m3-scheme "${M3_BACKEND_MODE}"

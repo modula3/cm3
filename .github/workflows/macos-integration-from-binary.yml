@@ -1,6 +1,6 @@
 ---
 name: MacOS integration from binary
-# Build and test on MacOS starting from latest binary release.
+# Build and test on MacOS starting from binary release.
 
 on:
   workflow_call:
@@ -23,35 +23,35 @@ jobs:
       CM3RELEASE: https://github.com/modula3/cm3/releases/download/d5.11.3/cm3-min-AMD64_DARWIN-d5.11.3-Darwin20.6.0-20211007.tar.gz
 
     steps:
-    - name: Define target parameters
-      run: |
-        echo CM3INST="$(pwd)/../build/cm3" >> $GITHUB_ENV
-
     - name: Install prerequisites
       run: |
         brew update
         brew install xquartz libxaw libxft
 
-    - name: Enable local actions
-      uses: actions/checkout@v2
+    - name: Define install location
+      run: |
+        echo CM3INST="$(pwd)/../build/cm3" >> $GITHUB_ENV
 
-    - name: Install latest release
-      uses: ./.github/actions/unix-install-binary-release
-      with:
-        cm3inst: ${{ env.CM3INST }}
-        cm3release: ${{ env.CM3RELEASE }}
+    - name: Install binary release
+      run: |
+        mkdir -p "${CM3INST}"
+        curl --location --silent "${CM3RELEASE}" | tar zxf - --directory="${CM3INST}" --strip-components=1
+
+    - name: Add release binary to path
+      run: |
+        echo "${CM3INST}/bin" >> $GITHUB_PATH
 
     - name: Fetch sources
       uses: actions/checkout@v2
 
     - name: Build all the things
-      uses: ./.github/actions/unix-upgrade-release
-      with:
-        m3backendmode: ${{ (matrix.backend != 'gcc') && matrix.backend || '' }}
+      env:
+        M3_BACKEND_MODE: ${{ (matrix.backend == 'c') && matrix.backend || '' }}
+      run: |
+        scripts/concierge.py full-upgrade "${M3_BACKEND_MODE}"
 
     - name: Configure backend mode
       if: matrix.backend == 'c'
-      shell: bash
       run: |
         sed -e '1i\
         readonly M3_BACKEND_MODE = "C"

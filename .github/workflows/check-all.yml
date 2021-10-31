@@ -27,9 +27,9 @@ jobs:
     with:
       os: ${{ matrix.os }}
 
-  windows-integration:
+  win32-integration:
     strategy:
       fail-fast: false
       matrix:
         os: [windows-2019, windows-2016]
-    uses: modula3/cm3/.github/workflows/windows-integration-from-binary.yml@master
+    uses: modula3/cm3/.github/workflows/win32-integration-from-binary.yml@master
