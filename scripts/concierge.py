@@ -105,7 +105,10 @@ class Platform:
 
     def has_integrated_backend(self):
         "The integrated backend supports only 32-bit Windows"
-        return self.name() is ["NT386", "I386_NT"]
+
+        # The AMD64_NT here is correct so far as this script is
+        # concerned.  The target is named incorrectly.
+        return self.name() in ["AMD64_NT", "I386_NT", "NT386"]
 
     def has_only_c_backend(self):
         "Not supported by either GCC or the integrated backend"
@@ -169,7 +172,7 @@ class Cm3:
 
         try:
             # Ask cm3.
-            proc = subprocess.run([self.exe(), "-version"], stdout=subprocess.PIPE, errors="ignore")
+            proc = subprocess.run([str(self.exe()), "-version"], stdout=subprocess.PIPE, errors="ignore")
             proc.check_returncode()
             for line in proc.stdout.splitlines():
                 # Check for legacy platforms.
@@ -194,7 +197,7 @@ class Cm3:
 
         try:
             # Ask cm3.
-            proc = subprocess.run([self.exe(), "-version"], stdout=subprocess.PIPE, errors="ignore")
+            proc = subprocess.run([str(self.exe()), "-version"], stdout=subprocess.PIPE, errors="ignore")
             proc.check_returncode()
             for line in proc.stdout.splitlines():
                 target = line.find("target: ")
@@ -225,8 +228,8 @@ class Cm3:
         "Execution environment for cm3 child processes"
         return dict(
             os.environ,
-            CM3_INSTALL=self.install(),
-            CM3_ROOT=self.source(),
+            CM3_INSTALL=str(self.install()),
+            CM3_ROOT=str(self.source()),
             CM3_TARGET=self.target().name()
         )
 
@@ -271,7 +274,7 @@ class Cm3:
             extensions = os.environ["PATHEXT"].split(";")
             for dir in os.get_exec_path():
                 for ext in extensions:
-                    candidate = Path(dir, f"{basename}.{ext}")
+                    candidate = Path(dir, basename).with_suffix(ext)
                     if candidate.is_file():
                         return candidate
         else:
@@ -545,7 +548,7 @@ class PackageAction(WithCm3):
     def run(self, package_path, args):
         "Execute a cm3 child process"
         cwd  = self.source(package_path)
-        args = [self.exe()] + args + self.defines() + self.flags()
+        args = [str(self.exe())] + args + self.defines() + self.flags()
         print("cd", cwd)
         print(*args)
 
