@@ -1,5 +1,30 @@
 #!/usr/bin/env python3
 
+# The concierge utility is a basic package manager for cm3.
+#
+# The concierge has partial knowledge of package dependencies, as
+# encoded in the file `scripts/pkginfo.txt` which topologically sorts
+# all known packages in dependency order.  Given a request to operate
+# on (build, clean, or install) a collection of packages, the
+# concierge searches the source tree to find the requested packages
+# and uses the available information to ensure the operations are
+# carried-out in a consistent order.
+#
+# Unfortunately the concierge does not have full knowledge of package
+# dependencies, so it is not able to ensure that all required
+# dependencies for a package are either up-to-date or installed.  For
+# some operations, such as upgrades, those requirements are hard-coded
+# in this script.
+#
+# The concierge is also unable to invalidate packages whose
+# dependencies have changed incompatibly.  Such functionality properly
+# belongs to cm3 itself but is not implemented.
+#
+# The ability of the concierge to locate packages and--at least
+# partially--manage their dependencies is the primary reason to
+# contribute new libraries to the cm3 repo, instead of distributing
+# them separately.
+
 import os
 import platform
 import re
@@ -799,7 +824,7 @@ class WithPackageActions(WithPackageDb):
 
 
 class ConciergeCommand(WithPackageActions):
-    "Any top-level command made to the concierge"
+    "A top-level command made to the concierge"
 
     def parse_args(self, args):
         "Parse arguments common to all concierge commands"
