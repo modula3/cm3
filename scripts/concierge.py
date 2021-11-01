@@ -105,10 +105,7 @@ class Platform:
 
     def has_integrated_backend(self):
         "The integrated backend supports only 32-bit Windows"
-
-        # The AMD64_NT here is correct so far as this script is
-        # concerned.  The target is named incorrectly.
-        return self.name() in ["AMD64_NT", "I386_NT", "NT386"]
+        return self.name() in ["I386_NT", "NT386"]
 
     def has_only_c_backend(self):
         "Not supported by either GCC or the integrated backend"

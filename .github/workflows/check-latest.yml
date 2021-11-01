@@ -25,7 +25,7 @@ jobs:
 #    with:
 #      os: windows-latest
 
-  win32-integration:
-    uses: modula3/cm3/.github/workflows/win32-integration-from-binary.yml@master
+  windows-integration:
+    uses: modula3/cm3/.github/workflows/windows-integration-from-binary.yml@master
     with:
       os: windows-latest

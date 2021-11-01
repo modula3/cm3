@@ -1,6 +1,6 @@
 ---
-name: Win32 integration from binary
-# Build and test on Win32 starting from binary release.
+name: Windows integration from binary
+# Build and test on Windows starting from binary release.
 
 on:
   workflow_call:
@@ -19,7 +19,6 @@ jobs:
       matrix:
         include:
         - {target: AMD64_NT, backend: c}
-        - {target: AMD64_NT, backend: integrated}
         - {target: I386_NT,  backend: c}
         - {target: I386_NT,  backend: integrated}
 
