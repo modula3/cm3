@@ -242,18 +242,22 @@ class Cm3:
         # If the environment specified a path, it should work as-is.
         candidate = Path(basename)
         if len(candidate.parents) > 1:
-            if candidate.is_file() and os.access(candidate, os.X_OK):
+            if candidate.is_file():
                 return candidate.resolve()
             else:
                 fail()
 
         # Environment may also override search path.
         if os.environ.get("CM3_INSTALL"):
-            candidate = Path(os.environ["CM3_INSTALL"], basename)
+            # Posix
+            candidate = Path(os.environ["CM3_INSTALL"], "bin", basename)
             if candidate.is_file() and os.access(candidate, os.X_OK):
                 return candidate
-            else:
-                fail()
+            # Windows
+            candidate = candidate.with_suffix(".exe")
+            if candidate.is_file():
+                return candidate
+            fail()
 
         # With no overrides, we search PATH.
         candidate = self.find_exe(basename)
@@ -265,21 +269,16 @@ class Cm3:
     def find_exe(self, basename):
         "Look for an executable in PATH"
 
-        if os.environ.get("PATHEXT"):
-            # Search PATH on Windows.  There is no separate check for
-            # executable access, that is determined by the extension.
-            extensions = os.environ["PATHEXT"].split(";")
-            for dir in os.get_exec_path():
-                for ext in extensions:
-                    candidate = Path(dir, basename).with_suffix(ext)
-                    if candidate.is_file():
-                        return candidate
-        else:
-            # Search PATH on Posix.
-            for dir in os.get_exec_path():
-                candidate = Path(dir, basename)
-                if candidate.is_file() and os.access(candidate, os.X_OK):
-                    return candidate
+        # Search PATH.
+        for dir in os.get_exec_path():
+            # Posix
+            candidate = Path(dir, basename)
+            if candidate.is_file() and os.access(candidate, os.X_OK):
+                return candidate
+            # Windows
+            candidate = candidate.with_suffix(".exe")
+            if candidate.is_file():
+                return candidate
 
         # Not found.
         return None
@@ -999,20 +998,18 @@ class UpgradeCommand(ConciergeCommand):
         # Ensure destination directory exists.
         self.mkdir(dst)
 
-        # Copy executables on Posix.
+        # Copy executables.
         for exe in executables:
             item = src / exe
-            self.cp(item, dst)
-
-        # Copy executables on Win32.
-        if os.environ.get("PATHEXT"):
-            extensions = os.environ["PATHEXT"].split(";")
-            for exe in executables:
-                for ext in extensions:
-                    item = (src / exe).with_suffix(ext)
-                    self.cp(item, dst)
+            if item.is_file():
+                # Posix
+                self.cp(item, dst)
+            else:
+                # Windows
+                item = item.with_suffix(".exe")
+                self.cp(item, dst)
                 # Copy debug info.
-                item = (src / exe).with_suffix(".pdb")
+                item = item.with_suffix(".pdb")
                 self.cp(item, dst)
 
     def _install_config(self):

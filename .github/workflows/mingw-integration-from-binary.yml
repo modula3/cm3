@@ -11,11 +11,12 @@ on:
         type: string
 
 jobs:
-  build-and-test:
+  build:
     runs-on: ${{ inputs.os }}
 
     defaults:
-      run: {shell: cmd}
+      run:
+        shell: msys2 {0}
 
     env:
       CM3RELEASE: https://github.com/VictorMiasnikov/cm3/releases/download/d15.11.4_5.11.4-ZZYYXX-20211101_22-02_66914fc
@@ -32,40 +33,18 @@ jobs:
 
     - name: Define install location
       run: |
-        echo CM3INST=%CD%\..\build>>%GITHUB_ENV%
+        echo CM3_INSTALL="$(pwd)/../build/cm3" >> $GITHUB_ENV
 
     - name: Install binary release
       run: |
-        mkdir "${CM3INST}"
-        cd "${CM3INST}"
+        mkdir -p "${CM3_INSTALL}"
+        cd "${CM3_INSTALL}"
         wget "${CM3RELEASE}/${CM3BUILD}"
         p7zip -d "${CM3BUILD}"
-      shell: msys2 {0}
-
-    - name: Add release binary to path
-      run: |
-        echo %CM3INST%\cm3\bin>>%GITHUB_PATH%
 
     - name: Fetch sources
       uses: actions/checkout@v2
 
     - name: Build all the things
       run: |
-        scripts/concierge.py full-upgrade
-      shell: msys2 {0}
-
-    - name: Run compiler validation suite
-      continue-on-error: true
-      run: |
-        cm3 -DHTML
-      working-directory: m3-sys/m3tests
-      shell: msys2 {0}
-
-    - name: Generate test report
-      uses: dorny/test-reporter@v1
-      with:
-        name: m3tests (AMD64_MINGW, c)
-        fail-on-error: false
-        max-annotations: 49
-        path: m3-sys/m3tests/m3tests-results.xml
-        reporter: java-junit
+        scripts/concierge.py full-upgrade -caltech-other -caltech-parser -m3-scheme
