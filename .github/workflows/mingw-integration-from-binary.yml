@@ -18,8 +18,8 @@ jobs:
       run: {shell: cmd}
 
     env:
-      CM3RELEASE: https://github.com/VictorMiasnikov/cm3/releases/download/d5.11.3_8a842be
-      CM3BUILD: cm3-min-AMD64_MINGW-d5.11.3-MINGW64.git-sdk-64@53940e3_and_.mingw-w64-x86_64-gcc-10.3.0-2.-2021-07-20_07-26.FIXed.by.VVM.20210803_14-02.non.Unicode.AMD64_MINGW.Target.cm3-8a842be10f0e5d1f1acf73597d13765aea305573.7z
+      CM3RELEASE: https://github.com/VictorMiasnikov/cm3/releases/download/d15.11.4_5.11.4-ZZYYXX-20211101_22-02_66914fc
+      CM3BUILD: cm3-min-AMD64_MINGW-d5.11.4-MINGW64.git-sdk-64@53940e3_and_.mingw-w64-x86_64-gcc-10.3.0-2.-2021-11-01_22-02__FIXed__by__VVM__2021-11-02_14-16__16bit__Unicode__AMD64_MINGW__Target__cm3-66914fc.7z
 
     steps:
     - name: Install command-line tools
