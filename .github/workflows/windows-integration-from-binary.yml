@@ -9,18 +9,21 @@ on:
         default: windows-latest
         required: false
         type: string
+      target:
+        required: true
+        type: string
+      backend:
+        required: true
+        type: string
 
 jobs:
-  build-and-test:
-    runs-on: ${{ inputs.os }}
-
+  build:
     strategy:
       fail-fast: false
       matrix:
-        include:
-        - {target: AMD64_NT, backend: c}
-        - {target: I386_NT,  backend: c}
-        - {target: I386_NT,  backend: integrated}
+        backend: ${{ fromJSON(inputs.backend) }}
+
+    runs-on: ${{ inputs.os }}
 
     defaults:
       run: {shell: cmd}
@@ -30,14 +33,14 @@ jobs:
 
     steps:
     - name: Define target parameters (AMD64_NT)
-      if: matrix.target == 'AMD64_NT'
+      if: inputs.target == 'AMD64_NT'
       run: |
         echo ARCH=x64>>%GITHUB_ENV%
         echo CM3BUILD=cm3-min-AMD64_NT-d5.11.3-VC142.2019.-2021-07-20_07-26.FIXed.by.VVM.2021-08-02.13-05.non.Unicode.AMD64_NT.Target.cm3-8a842be10f0e5d1f1acf73597d13765aea305573.7z>>%GITHUB_ENV%
       # N.B., no spaces around ">>"
 
     - name: Define target parameters (I386_NT)
-      if: matrix.target == 'I386_NT'
+      if: inputs.target == 'I386_NT'
       run: |
         echo ARCH=x86>>%GITHUB_ENV%
         echo CM3BUILD=cm3-min-I386_NT-d5.11.3-VC142.2019.-2021-07-20_07-26.FIXed.by.VVM.20210804_16-20.non.Unicode.I386_NT.Target.cm3-8a842be10f0e5d1f1acf73597d13765aea305573.7z>>%GITHUB_ENV%

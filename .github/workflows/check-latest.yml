@@ -25,7 +25,18 @@ jobs:
 #    with:
 #      os: windows-latest
 
-  windows-integration:
+  win32-integration:
     uses: modula3/cm3/.github/workflows/windows-integration-from-binary.yml@master
     with:
       os: windows-latest
+      target: I386_NT
+      backend: >-
+        ["c", "integrated"]
+
+  win64-integration:
+    uses: modula3/cm3/.github/workflows/windows-integration-from-binary.yml@master
+    with:
+      os: windows-latest
+      target: AMD64_NT
+      backend: >-
+        ["c"]
