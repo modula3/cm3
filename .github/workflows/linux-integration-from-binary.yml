@@ -17,6 +17,7 @@ on:
 jobs:
   build-and-test:
     runs-on: ${{ inputs.os }}
+    timeout-minutes: 45
 
     strategy:
       fail-fast: false
