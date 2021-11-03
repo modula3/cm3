@@ -1,0 +1,50 @@
+---
+name: Mingw integration from binary
+# Build and test on Mingw starting from binary release.
+
+on:
+  workflow_call:
+    inputs:
+      os:
+        default: windows-latest
+        required: false
+        type: string
+
+jobs:
+  build:
+    runs-on: ${{ inputs.os }}
+
+    defaults:
+      run:
+        shell: msys2 {0}
+
+    env:
+      CM3RELEASE: https://github.com/VictorMiasnikov/cm3/releases/download/d15.11.4_5.11.4-ZZYYXX-20211101_22-02_66914fc
+      CM3BUILD: cm3-min-AMD64_MINGW-d5.11.4-MINGW64.git-sdk-64@53940e3_and_.mingw-w64-x86_64-gcc-10.3.0-2.-2021-11-01_22-02__FIXed__by__VVM__2021-11-02_14-16__16bit__Unicode__AMD64_MINGW__Target__cm3-66914fc.7z
+
+    steps:
+    - name: Install command-line tools
+      uses: msys2/setup-msys2@v2
+      with:
+        install: >-
+          mingw-w64-x86_64-toolchain
+          p7zip
+          wget
+
+    - name: Define install location
+      run: |
+        echo CM3_INSTALL="$(pwd)/../build/cm3" >> $GITHUB_ENV
+
+    - name: Install binary release
+      run: |
+        mkdir -p "${CM3_INSTALL}"
+        cd "${CM3_INSTALL}"
+        wget "${CM3RELEASE}/${CM3BUILD}"
+        p7zip -d "${CM3BUILD}"
+
+    - name: Fetch sources
+      uses: actions/checkout@v2
+
+    - name: Build all the things
+      run: |
+        scripts/concierge.py full-upgrade -caltech-other -caltech-parser -m3-scheme

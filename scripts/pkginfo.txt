@@ -47,6 +47,7 @@ binIO devlib
 commandrw devlib
 tapi base comm devlib
 serial base comm devlib
+m3crypto
 m3tk comm devlib
 mtex core
 m3totex m3devtool
@@ -74,7 +75,7 @@ stablegen m3devtool
 stable m3devtool
 X11R4 gui
 ui gui
-PEX 
+PEX
 vbtkit gui
 cmvbt gui
 jvideo gui
@@ -231,5 +232,3 @@ mscheme-threads m3-scheme
 
 cm3 core front unicode
 m3cc core front unicode m3gnudevtool
-
-

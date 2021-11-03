@@ -153,6 +153,9 @@ if not defined("m3llvm")
         args += "-g"
       end
 
+      % add the target to the m3llvm call.
+      args += "-t " & TARGET
+
       %args += "-d" %While m3llvm is under development.
 
       return try_exec (m3llvmname, args, "-o", outfile, source )
@@ -185,7 +188,7 @@ if not defined("llvm_backend")
 %llvm 8 changed option for frame pointer.
 %      local args = [ "-disable-fp-elim"]
 
-      args += "-filetype=" & filetype
+      args += "--dwarf-directory=0 -filetype=" & filetype
       args += llvmback_pic
 
       if optimize

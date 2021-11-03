@@ -1788,10 +1788,11 @@ PackageSets = None
 def GetPackageSets():
     if PackageSets:
         return PackageSets
-    #print("reading pkginfo.txt")
     result = { }
     for line in open(os.path.join(Scripts, "pkginfo.txt")):
-        line = line.replace("\n", "").replace("\r", "")
+        line = line.rstrip()
+        if not line:
+            continue
         fields = line.split(" ")
         name1 = fields[0]
         name2 = name1.split("/")[-1]
@@ -1801,8 +1802,6 @@ def GetPackageSets():
             result[group] += [name1]
             if name1 != name2:
                 result[group] += [name2]
-    #print("all:" + str(result["all"]))
-    #sys.exit(1)
     result["std"] = result["all"]
     return result
 
@@ -2131,13 +2130,12 @@ def CopyConfigForDevelopment():
 #-----------------------------------------------------------------------------
 
 def CopyConfigForDistribution(To):
-    Bin  = os.path.join(To, "bin")
+    Bin = os.path.join(To, "bin")
     dir = os.path.join(Bin, "config")
     DeleteConfig(To)
     CreateDirectory(dir)
     for File in glob.glob(os.path.join(Root, "m3-sys", "cminstall", "src", "config-no-install", "*")):
         if isfile(File):
-            #print(File + " => " + dir + "\n")
             CopyFile(File, dir)
     open(os.path.join(Bin, "cm3.cfg"), "w").write("\
 if not defined(\"SL\") SL = \"/\" end\n\

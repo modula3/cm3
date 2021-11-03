@@ -1,6 +1,6 @@
 ---
 name: Linux integration from binary
-# Build and test on Linux starting from latest binary release
+# Build and test on Linux starting from binary release.
 
 on:
   workflow_call:
@@ -27,31 +27,32 @@ jobs:
       CM3RELEASE: ${{ format('https://github.com/modula3/cm3/releases/download/d5.11.3/{0}', inputs.cm3build) }}
 
     steps:
-    - name: Define target parameters
-      run: |
-        echo CM3INST="$(pwd)/../build/cm3" >> $GITHUB_ENV
-
     - name: Install prerequisites
       run: |
         sudo apt-get update --quiet
         sudo apt-get install --quiet --assume-yes libglu1-mesa-dev xorg-dev
 
-    - name: Enable local actions
-      uses: actions/checkout@v2
+    - name: Define install location
+      run: |
+        echo CM3INST="$(pwd)/../build/cm3" >> $GITHUB_ENV
 
-    - name: Install latest release
-      uses: ./.github/actions/unix-install-binary-release
-      with:
-        cm3inst: ${{ env.CM3INST }}
-        cm3release: ${{ env.CM3RELEASE }}
+    - name: Install binary release
+      run: |
+        mkdir -p "${CM3INST}"
+        curl --location --silent "${CM3RELEASE}" | tar zxf - --directory="${CM3INST}" --strip-components=1
+
+    - name: Add release binary to path
+      run: |
+        echo "${CM3INST}/bin" >> $GITHUB_PATH
 
     - name: Fetch sources
       uses: actions/checkout@v2
 
     - name: Build all the things
-      uses: ./.github/actions/unix-upgrade-release
-      with:
-        m3backendmode: ${{ (matrix.backend != 'gcc') && matrix.backend || '' }}
+      env:
+        M3_BACKEND_MODE: ${{ (matrix.backend == 'c') && matrix.backend || '' }}
+      run: |
+        scripts/concierge.py full-upgrade "${M3_BACKEND_MODE}"
 
     - name: Configure backend mode
       if: matrix.backend == 'c'
