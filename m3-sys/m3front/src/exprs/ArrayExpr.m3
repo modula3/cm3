@@ -24,6 +24,7 @@ MODULE ArrayExpr;
 IMPORT Fmt;
 
 IMPORT M3, M3ID, CG, Expr, ExprRep, Error, Type, ArrayType, PackedType;
+
 IMPORT KeywordExpr, RangeExpr, NamedExpr, OpenArrayType, Module;
 IMPORT IntegerExpr, EnumExpr, ConsExpr, SubrangeType, Target, TInt, Int, M3Buf;
 IMPORT AssignStmt, RefType, M3RT, Procedure, RunTyme, ErrType;
@@ -2204,11 +2205,11 @@ PROCEDURE InnerCompile (top: T; StaticOnly: BOOLEAN) =
     | RKTyp.RKUnknown => <* ASSERT FALSE *>
 
     | RKTyp.RKGlobal
-     => IF NOT StaticOnly THEN
-           Module.LoadGlobalAddr
-             (top.containingUnit, offset := top.globalOffset,
-              is_const := top.inConstArea)
-        END;
+    => IF NOT StaticOnly THEN
+          Module.LoadGlobalAddr
+            (top.containingUnit, offset := top.globalOffset,
+             is_const := top.inConstArea)
+       END;
 
     | RKTyp.RKDirectElts
     => <* ASSERT NOT StaticOnly *>
@@ -2274,7 +2275,7 @@ PROCEDURE InnerCompile (top: T; StaticOnly: BOOLEAN) =
     END (*CASE*);
     
     top.state := StateTyp.Compiled;
-  END InnerCompile ;
+  END InnerCompile;
 
 (*EXPORTED:*)
 PROCEDURE CheckStaticRTErrEval
