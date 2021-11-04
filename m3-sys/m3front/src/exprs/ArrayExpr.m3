@@ -24,7 +24,6 @@ MODULE ArrayExpr;
 IMPORT Fmt;
 
 IMPORT M3, M3ID, CG, Expr, ExprRep, Error, Type, ArrayType, PackedType;
-
 IMPORT KeywordExpr, RangeExpr, NamedExpr, OpenArrayType, Module;
 IMPORT IntegerExpr, EnumExpr, ConsExpr, SubrangeType, Target, TInt, Int, M3Buf;
 IMPORT AssignStmt, RefType, M3RT, Procedure, RunTyme, ErrType;
