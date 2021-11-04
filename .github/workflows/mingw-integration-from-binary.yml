@@ -48,4 +48,4 @@ jobs:
 
     - name: Build all the things
       run: |
-        scripts/concierge.py full-upgrade -caltech-other -caltech-parser -m3-scheme
+        python3 scripts/concierge.py full-upgrade -caltech-other -caltech-parser -m3-scheme
