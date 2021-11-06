@@ -1,5 +1,0 @@
-"../Main.m3", line 35: LOOPHOLE: expression's size (64) differs from type's (32) (2.7).
-"../Main.m3", line 66: LOOPHOLE: expression's size (32) differs from type's (64) (2.7).
-"../Main.m3", line 66: warning: LOOPHOLE: expression's alignment may differ from type's
-2 errors and 1 warning encountered
-Fatal Error: package build failed
