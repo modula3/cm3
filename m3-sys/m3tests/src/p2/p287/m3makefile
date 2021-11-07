@@ -12,7 +12,5 @@ module("Def")
 module("Display")
 module("Second")
 
-build_standalone ()
-
 implementation ("Main")
-program ("pgm")
+include("../../Test.common")

@@ -2,5 +2,4 @@
 % an assert in the integrated backend.
 
 implementation("Main")
-build_standalone()
 include ("../../Test.common")

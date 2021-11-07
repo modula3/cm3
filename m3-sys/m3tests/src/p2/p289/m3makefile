@@ -8,7 +8,6 @@
 import("libm3")
 
 interface("Remote")
-build_standalone ()
 
 implementation ("Main")
-program ("pgm")
+include("../../Test.common")
