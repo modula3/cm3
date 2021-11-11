@@ -1,0 +1,48 @@
+<html>
+<head>
+   <title>Modula-3 - Record Constructor</title>
+   <meta name="GENERATOR" content="Mozilla/2.0GoldB2 (Win32)">
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+<body>
+<!-- This HTML file has been created by texi2html 1.31
+     from /home/jove/stu/ss0005/m3/info/m3.texi on 8 March 1995 -->Go
+to the <a href="m3_1.html">first</a>, <a href="m3_54.html">previous</a>,
+<a href="m3_56.html">next</a>, <a href="m3_83.html">last</a> section, <a href="m3_toc.html">table
+of contents</a>. 
+<hr>
+<h4><a name="SEC55"></a><a name="SEC55"></a><a href="m3_toc.html#SEC55" NAME="SEC55">Record
+Constructor</a></h4>
+
+<ul>
+<pre><i>record-type</i> &quot;{&quot; <i>expr-1</i> &quot;,&quot; ... &quot;,&quot; <i>expr-n</i> &quot;}&quot;
+</pre>
+</ul>
+
+<p>A record constructor is a record-valued expression. <i><tt>record-type</tt></i>
+must be a record type (see section <a href="m3_19.html#SEC19">Record Types</a>).
+Each <i><tt>expr </tt></i>must evaluate to the type of the field in the
+record whose position it corresponds with. For greater clarity, each <i><tt>expr
+</tt></i>can be specified in a &quot;keyword assignment-style&quot;. Every
+field must be provided with a value for the constructor to be valid. </p>
+
+<p>
+<hr width="100%" ></p>
+
+<h4>Example</h4>
+
+<ul>
+<pre>TYPE
+  Rec = RECORD x, y: INTEGER; s: TEXT; END;
+VAR
+  r1: Rec := Rec{5, 10, &quot;Hello&quot;};
+  r2 := Rec{x := -5, y := 25, s := &quot;Greetings&quot;};
+</pre>
+</ul>
+
+<p>
+<hr>Go to the <a href="m3_1.html">first</a>, <a href="m3_54.html">previous</a>,
+<a href="m3_56.html">next</a>, <a href="m3_83.html">last</a> section, <a href="m3_toc.html">table
+of contents</a>. </p>
+
+</body>
+</html>

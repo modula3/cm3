@@ -1,0 +1,110 @@
+<HTML>
+<HEAD>
+<TITLE>Modula-3: Text interface</TITLE>
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+<body>
+
+<P>
+<A HREF="m3.html">[top]</A>
+<A HREF="intfs.html">[prev]</A>
+<A HREF="thread-intf.html">[next]</A>
+<P>
+
+<H2>The Text interface</H2>
+<P>
+
+<PRE>
+INTERFACE Text;
+
+TYPE
+  T = TEXT;
+</PRE>
+A non-nil <TT>TEXT</TT> represents a zero-based sequence of characters.
+<TT>NIL</TT> does not represent any sequence of characters, it will not
+be returned from any procedure in the interface, and it is a checked
+runtime error to pass it to any procedure in the interface.
+<P>
+
+<PRE>
+PROCEDURE Cat(t, u: T): T;
+</PRE>
+The concatenation of <TT>t</TT> and <TT>u</TT>.
+<P>
+
+<PRE>
+PROCEDURE Equal(t, u: T): BOOLEAN;
+</PRE>
+<TT>TRUE</TT> if <TT>t</TT> and <TT>u</TT> have the same length
+and (case-sensitive) contents. 
+<P>
+
+<PRE>
+PROCEDURE GetChar(t: T; i: CARDINAL): CHAR;
+</PRE>
+Character <TT>i</TT> of <TT>t</TT>.  A checked runtime error
+if <TT>i >= Length(t)</TT>. 
+<P>
+
+<PRE>
+PROCEDURE Length(t: T): CARDINAL;
+</PRE>
+The number of characters in <TT>t</TT>. 
+<P>
+
+<PRE>
+PROCEDURE Empty(t: T): BOOLEAN;
+</PRE>
+<TT>TRUE</TT> if <TT>Length(t) = 0</TT>. 
+<P>
+
+<PRE>
+PROCEDURE Sub(t: T; start, length: CARDINAL): T;
+</PRE>
+Return a subsequence of <TT>t</TT>: empty if <TT>start >= Length(t)</TT> 
+or <TT>length = 0</TT>; otherwise the subsequence ranging from
+<TT>start</TT> to the minimum of <TT>start+length-1</TT> and
+<TT>Length(t)-1</TT>. 
+<P>
+
+<PRE>
+PROCEDURE SetChars(VAR a: ARRAY OF CHAR; t: T);
+</PRE>
+For each <TT>i</TT> from <TT>0</TT> to <TT>MIN(LAST(a),
+Length(t)-1)</TT>, set <TT>a[i]</TT> to
+<TT>GetChar(t, i)</TT>. 
+<P>
+
+<PRE>
+PROCEDURE FromChar(ch: CHAR): T;
+</PRE>
+A text containing the single character <TT>ch</TT>. 
+<P>
+
+<PRE>
+PROCEDURE FromChars(READONLY a: ARRAY OF CHAR): T;
+</PRE>
+A text containing the characters of <TT>a</TT>. 
+<P>
+
+<PRE>
+PROCEDURE Hash(t: T): INTEGER;
+</PRE>
+Return a hash function of the contents of <TT>t</TT>. 
+<P>
+
+<PRE>
+END Text.
+</PRE>
+<P>
+
+The
+<A HREF="/public/m3core/src/Text.i3">
+CM Modula-3 version of Text</A>
+is here.
+
+<P>
+<A HREF="m3.html">[top]</A>
+<A HREF="intfs.html">[prev]</A>
+<A HREF="thread-intf.html">[next]</A>
+</BODY>
+</HTML>

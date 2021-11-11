@@ -1,0 +1,70 @@
+<html><head>
+<title>Trestle by Example:  Checkboxes</title>
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+
+<body>
+
+<ul>
+  <li> Root of document: <a href="../tutorial.html">Trestle by Example</a>
+  <li> Previous section: <a href="../switches/tut-switches.html">Guarded, quick and trill switches</a>
+<!--  <li> Previous section: <a href="../drag/tut-drag.html">Dragging the mouse</a>-->
+  <li> Next section: <a href="../radio/tut-radio.html">Radio buttons</a>
+  <li> Cross listing: <a href="../cross/tut-cross.html">Cross listing by module</a>
+</ul>
+
+<hr>
+
+<h3>Checkboxes</h3>
+
+The VBTKit buttons (switches)
+<code>Quick</code>, <code>Trill</code> and <code>Drag</code>
+all detect different kinds of user actions.
+The visual feedback of these buttons can be controlled
+by using different kinds of <code>FeedbackVBT</code>'s.
+<p>
+
+The program
+<a href="./Checkbox.m3">Checkbox.m3</a>
+shows how to implement a check box using <code>BooleanVBT</code> and 
+<code>MarginFeedbackVBT</code>. 
+There are three kinds of margin feedback,
+so there are three constructors
+<code>NewBox</code>, <code>NewCheck</code>, and <code>NewBullet</code>.
+The first one will cause a check box to be displayed, the second one
+will display a check mark,
+and the third will display a bullet.
+Their children are usually a TextVBT that displays a label for the item.
+In <code>Checkbox</code> a checkbox is created using <code>NewBox</code>.
+Its child is a <code>ShadowedFeedbackVBT</code>.
+And its child is the text for the label.
+The checkbox is a child of a <code>BiFeedbackVBT</code>
+which in turn is a child of a switch VBT,
+which in turn is  a child of <code>BooleanVBT</code>.
+The boolean VBT maintains the on/off state of the switch.
+When the state is changed (by pressing the button)
+a callback is invoked.
+In the program
+<a href="./Checkbox.m3">Checkbox.m3</a>
+the subprocedure <code>Check</code> is called
+which changes the label of the button for ``Check'' to ``Uncheck''
+and back.
+
+Four views of the application are shown in the following images:
+<ul>
+  <li> <img src="../checkbox/check1.gif">Checkbox 1
+  <li> <img src="../checkbox/check2.gif">Checkbox 2
+  <li> <img src="../checkbox/check3.gif">Checkbox 3
+  <li> <img src="../checkbox/check4.gif">Checkbox 4
+</ul>
+
+<hr>
+
+<ul>
+  <li> Root of document: <a href="../tutorial.html">Trestle by Example</a>
+  <li> Previous section: <a href="../drag/tut-drag.html">Dragging the mouse</a>
+  <li> Next section: <a href="../radio/tut-radio.html">Radio buttons</a>
+  <li> Cross listing: <a href="../cross/tut-cross.html">Cross listing by module</a>
+</ul>
+
+</body>
+</html>

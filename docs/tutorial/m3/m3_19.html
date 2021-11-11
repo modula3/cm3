@@ -1,0 +1,56 @@
+<html>
+<head>
+   <title>Modula-3 - Record Types</title>
+   <meta name="GENERATOR" content="Mozilla/2.0GoldB2 (Win32)">
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+<body>
+<!-- This HTML file has been created by texi2html 1.31
+     from /home/jove/stu/ss0005/m3/info/m3.texi on 8 March 1995 -->Go
+to the <a href="m3_1.html">first</a>, <a href="m3_18.html">previous</a>,
+<a href="m3_20.html">next</a>, <a href="m3_83.html">last</a> section, <a href="m3_toc.html">table
+of contents</a>. 
+<hr>
+<h4><a name="SEC19"></a><a name="SEC19"></a><a name="SEC19"></a><a name="SEC19"></a><a href="m3_toc.html#SEC19" NAME="SEC19">Record
+Types</a></h4>
+
+<ul>
+<pre><b>RECORD </b>fieldDecl { &quot;;&quot; fieldDecl ... } <b>END </b>&quot;;&quot;</pre>
+
+<p><i>where <tt>field-decl</tt></i><tt> = <i>id </i>[ &quot;:&quot; <i>type
+</i>] [ &quot;:=&quot;<i> constant-expr</i> ]</tt> 
+<br></p>
+</ul>
+
+<p>Record types group related data items together in a unified data structure.
+Each data item, or field, has a name, a type, and an optional constant
+initializer. If you supply the constant initializer, you can omit the type;
+it will be inferred from the constant. </p>
+
+<p>
+<hr width="100%" ></p>
+
+<h4>Example</h4>
+
+<ul>
+<pre><b>TYPE
+  </b>(* Record type with uninitialized fields *)
+  Rec1 = <b>RECORD
+    </b>x, y: INTEGER;
+    name: TEXT
+<b>  END</b>;  
+
+  (* Record type with initialized fields *)
+  Rec2 = <b>RECORD
+    </b>x, y := 0; (* Type is INTEGER *)
+    name := &quot;&quot; (* Type is TEXT *)
+  <b>END</b>; 
+</pre>
+</ul>
+
+<p>
+<hr>Go to the <a href="m3_1.html">first</a>, <a href="m3_18.html">previous</a>,
+<a href="m3_20.html">next</a>, <a href="m3_83.html">last</a> section, <a href="m3_toc.html">table
+of contents</a>. </p>
+
+</body>
+</html>

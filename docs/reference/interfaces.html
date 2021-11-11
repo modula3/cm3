@@ -1,0 +1,36 @@
+<HTML>
+<HEAD>
+<TITLE>Modula-3: Interfaces</TITLE>
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+<body>
+
+<P>
+<A HREF="m3.html">[top]</A>
+<A HREF="imports.html">[prev]</A>
+<A HREF="modules.html">[next]</A>
+<P>
+
+<H2>Interfaces</H2>
+<P>
+
+An interface has the form:
+<PRE>
+    INTERFACE id;
+      Imports;
+      Decls
+    END id.
+</PRE>	
+where <TT>id</TT> is an identifier that names the interface, <TT>
+Imports</TT> is a sequence of import statements, and <TT>Decls</TT> is 
+a sequence of declarations that contains no procedure bodies or 
+non-constant variable initializations.  The names declared in <TT>
+Decls</TT> and the visible imported names must be distinct. It is a static 
+error for two or more interfaces to form an import cycle.
+<P>
+
+<P>
+<A HREF="m3.html">[top]</A>
+<A HREF="imports.html">[prev]</A>
+<A HREF="modules.html">[next]</A>
+</BODY>
+</HTML>

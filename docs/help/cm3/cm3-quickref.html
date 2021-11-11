@@ -1,0 +1,102 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+  <head>
+    <META HTTP-EQUIV="Content-Type" CONTENT="text/html">
+    <META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+    <META HTTP-EQUIV="Resource-type" CONTENT="document"> 
+    <META HTTP-EQUIV="Description" CONTENT="Modula-3 Resource Page"> 
+    <META HTTP-EQUIV="Distribution" CONTENT="global"> 
+    <META HTTP-EQUIV="Keywords" CONTENT="m3, modula-3, modula3, M3, Modula-3, modula-3, cm3, CM3, FreeCM3">
+    <META HTTP-EQUIV="Reply-to" CONTENT="m3-support@elego.de"> 
+    <LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css">
+    <title>CM3 Quick Reference</title>
+  </head>
+
+  <body class="stdbgnav">
+    <h3>CM3 Quick Reference</h3>
+    <pre>
+Critical Mass Modula-3 version d5.8.1
+  last updated: 2009-05-16
+  compiled: 2009-06-17 10:04:22
+  configuration: /usr/local/cm3/bin/cm3.cfg
+
+command line options:
+
+modes:  (default: -build)
+  -build         compile and link
+  -ship          install package
+  -clean         delete derived files
+  -realclean     delete derived target directory
+  -find          locate source files
+  -depend        output package dependencies
+
+compile options:  (default: -g -w1)
+  -g             produce symbol table information for debugger
+  -O             optimize code
+  -A             disable code generation for assertions
+  -once          don't recompile to improve opaque object code
+  -w0 .. -w3     limit compiler warning messages
+  -Z             generate coverage analysis code
+  -profile       generate profiling code
+  -lazy          generate lazy module initialization code
+                 (main module and imports only) This is the default.
+  -linkall       generate module initialization code for all modules,
+                 even those that are not imported directly or indirectly
+                 by Main. This is currently experimental and does not
+                 always work as expected.
+
+program and library options:  (default: -o prog)
+  -c             compile only, produce no program or library
+  -a &lt;foo&gt;       build library &lt;foo&gt;
+  -o &lt;foo&gt;       build program &lt;foo&gt;
+  -skiplink      skip the final link step
+
+messages:  (default: -why)
+  -silent        produce no diagnostic output
+  -why           explain why code is being recompiled
+  -commands      list system commands as they are performed
+  -verbose       list internal steps as they are performed
+  -debug         dump internal debugging information
+  -trace         trace quake code execution
+
+information and help:
+  -help          print this help message
+  -?             print this help message
+  -version       print the version number header
+  -config        print the version number header
+
+misc:
+  --             end of options
+  -keep          preserve intermediate and temporary files
+  -times         produce a dump of elapsed times
+  -override      include the "m3overrides" file
+  -x             include the "m3overrides" file
+  -D&lt;symbol&gt;     define &lt;symbol&gt; with the value TRUE
+  -D&lt;sym&gt;=&lt;val&gt;  define &lt;sym&gt; with the value &lt;val&gt;
+  -F &lt;fn&gt;        prepend the quake code of file &lt;fn&gt;
+  -FP &lt;fn&gt;        "
+  -prepend &lt;fn&gt;   "
+  -FA &lt;fn&gt;       append the quake code of file &lt;fn&gt;
+  -append &lt;fn&gt;    "
+  -console       produce a Windows CONSOLE subsystem program
+  -gui           produce a Windows GUI subsystem program
+  -windows       produce a Windows GUI subsystem program
+  -pretend &lt;val&gt; pretend to run as CM3_Version &lt;val&gt;
+  -gw            install group writable files
+  -group-writable "
+  -no-m3ship-resolution use quake variables in .M3SHIP (experimental)
+
+environment variables:
+  M3CONFIG       platform dependent configuration file to use (cm3.cfg)
+                 used if no suitable file is found in the local package
+  QUAKE_SHELL    shell to be used by the quake interpreter for exec()
+  QUAKE_SHELL_OPTION command option for quake shell (-c, /c)
+  QUAKE_TMPDIR   directory for temporary files used by quake
+  
+  CM3_INSTALL_PREFIX path prefix to prepend to filenames being installed,
+                 "make DESTDIR=" behaviour for cm3
+  
+  </pre>
+  </body>
+</html>
+

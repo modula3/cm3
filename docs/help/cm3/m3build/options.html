@@ -1,0 +1,92 @@
+<html>
+<head>
+   <title>CM Modula-3: cm3 options</title>
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+<body>
+
+<h2><tt>cm3</tt> command line options</h2>
+
+<p>Here are options that are available from the command line:</p>
+<ul>
+<li>        modes:  (default: -build)
+<pre>
+      -build         compile and link
+      -ship          install package
+      -clean         delete derived files
+      -find          locate source files
+      -depend        output package dependencies
+</pre>
+
+<li>        compile options:  (default: -g -w1)
+<pre>
+      -g             produce symbol table information for debugger
+      -O             optimize code
+      -A             disable code generation for assertions
+      -once          don't recompile to improve opaque object code
+      -w0 .. -w3     limit compiler warning messages
+      -Z             generate coverage analysis code
+      -profile       generate profiling code
+      -lazy          generate lazy module initialization code
+                     (main module and imports only) This is the default.
+      -linkall       generate module initialization code for all modules,
+                     even those that are not imported directly or indirectly
+                     by Main. This is currently experimental and does not
+                     always work as expected.
+</pre>
+
+<li>        program and library options:  (default: -o prog)
+<pre>
+      -c             compile only, produce no program or library
+      -a <I>foo</I>         build library <I>foo</I>
+      -o <I>foo</I>         build program <I>foo</I>
+      -skiplink      skip the final link step
+</pre>
+
+<li>        messages:  (default: -why)
+<pre>
+      -silent        produce no diagnostic output
+      -why           explain why code is being recompiled
+      -commands      list system commands as they are performed
+      -verbose       list internal steps as they are performed
+      -debug         dump internal debugging information
+</pre>
+
+<li>        information and help:
+<pre>
+      -help          print this help message
+      -?             print this help message
+      -version       print the version number header
+      -config        print the version number header
+</pre>
+
+<li>        misc:
+<pre>
+      -keep          preserve intermediate and temporary files
+      -times         produce a dump of elapsed times
+      -override      include the ".m3overrides" file
+      -x             include the ".m3overrides" file
+      -D<I>symbol</I>       define <I>symbol</I> with the value TRUE
+      -D<I>sym</I>=<I>val</I>      define <I>sym</I> with the value <I>val</I>
+      -F <I>fn</I>        prepend the quake code of file <I>fn</I>
+      -FP <I>fn</I>        "
+      -prepend <I>fn</I>   "
+      -FA <I>fn</I>       append the quake code of file <I>fn</I>
+      -append <I>fn</I>    "
+      -console       produce a Windows CONSOLE subsystem program
+      -gui           produce a Windows GUI subsystem program
+      -windows       produce a Windows GUI subsystem program
+      -pretend <I>val</I>   pretend to run as CM3_Version <I>val</I>
+</pre>
+</ul>
+<p>Option listing source: "cm3 -?"<br>
+Critical Mass Modula-3 version 5.2.3
+  last updated: 2003-03-09
+</p>
+
+<p>See also the <a href="../../../tutorial/index.html">Introductory
+Tutorial</a> for more information.
+</p>
+
+<p>
+</body>
+</html>

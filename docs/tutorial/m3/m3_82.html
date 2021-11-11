@@ -1,0 +1,36 @@
+<HTML>
+<HEAD>
+<!-- This HTML file has been created by texi2html 1.31
+     from /home/jove/stu/ss0005/m3/info/m3.texi on 8 March 1995 -->
+
+<TITLE>Modula-3 - Env Interface</TITLE>
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+<body>
+Go to the <A HREF="m3_1.html">first</A>, <A HREF="m3_81.html">previous</A>, <A HREF="m3_83.html">next</A>, <A HREF="m3_83.html">last</A> section, <A HREF="m3_toc.html">table of contents</A>.
+<HR>
+<H3><A NAME="SEC82" HREF="m3_toc.html#SEC82">Env Interface</A></H3>
+<P>
+The Env interface allows you to access the values of environment variables.
+<P>
+<PRE>
+INTERFACE Env;
+
+PROCEDURE Get(nm: TEXT): TEXT;
+(* Return the value of the environment variable whose name is equal to
+   "nm", or "NIL" if there is no such variable. *)
+
+VAR (*CONST*) Count: CARDINAL;
+(* Environment variables are indexed from "0" to "Count-1". *)
+
+PROCEDURE GetNth(n: CARDINAL; VAR (*OUT*) nm, val: TEXT);
+(* Set "nm" and "val" to the name and value of the environment
+   variable with index "n".  It is a checked runtime error if "n &#62;=
+   Count".  *)
+
+END Env.
+</PRE>
+<P>
+<HR>
+Go to the <A HREF="m3_1.html">first</A>, <A HREF="m3_81.html">previous</A>, <A HREF="m3_83.html">next</A>, <A HREF="m3_83.html">last</A> section, <A HREF="m3_toc.html">table of contents</A>.
+</BODY>
+</HTML>

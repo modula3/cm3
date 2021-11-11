@@ -1,0 +1,89 @@
+<HTML>
+<HEAD>
+<TITLE>Modula-3: Relations</TITLE>
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+<body>
+
+<P>
+<A HREF="m3.html">[top]</A>
+<A HREF="arithmetic.html">[prev]</A>
+<A HREF="boolops.html">[next]</A>
+<P>
+
+<H2>Relations</H2>
+<P>
+
+<PRE>
+     infix    =, #  (x, y: Any): BOOLEAN
+</PRE>
+The operator <TT>=</TT> returns <TT>TRUE</TT> if <TT>x</TT> and <TT>y</TT> 
+are equal.  The operator <TT>#</TT> returns <TT>TRUE</TT> 
+if <TT>x</TT> and <TT>y</TT> are not equal.
+It is a static error if the type of <TT>x</TT> is not
+assignable to the type of <TT>y</TT> or vice versa.
+<P>
+
+Ordinals are equal if they have the same value.  Floats are equal
+if the underlying implementation defines them to be; for example,
+on an IEEE implementation, <TT>+0</TT> equals <TT>-0</TT> and
+<TT>NaN</TT> does not equal itself.
+References are equal if they address the same location.
+Procedures are equal if they agree as closures; that
+is, if they refer to the same procedure body and environment.
+Sets are equal if they have the same elements.
+Arrays are equal if they have the same length and corresponding
+elements are equal.
+Records are equal if they have the same fields and corresponding fields
+are equal.
+<P>
+
+<A NAME=idx.194>
+<PRE>
+     infix    <=, >=  (x,y: Ordinal) : BOOLEAN
+                      (x,y: Float)   : BOOLEAN
+                      (x,y: ADDRESS) : BOOLEAN
+                      (x,y: Set)     : BOOLEAN
+</PRE>
+</A>
+In the first three cases, <TT><=</TT> returns <TT>TRUE</TT> if <TT>x</TT> 
+is at most as large as <TT>y</TT>.  In the last case, <TT><=</TT> returns 
+<TT>TRUE</TT> if every element of <TT>x</TT> is an element of <TT>y</TT>.  
+In all cases, it is a static error if the type of <TT>x</TT> is 
+not assignable to the type of <TT>y</TT>, or vice versa.
+The expression <TT>x >= y</TT> is equivalent to <TT>y <= x</TT>.
+<P>
+
+<PRE>
+     infix    >, <    (x,y: Ordinal) : BOOLEAN
+                      (x,y: Float)   : BOOLEAN
+                      (x,y: ADDRESS) : BOOLEAN
+                      (x,y: Set)     : BOOLEAN
+</PRE>
+In all cases, <TT>x < y</TT> means <TT>(x <= y) AND (x # y)</TT>,
+and <TT>x > y</TT> means <TT>y < x</TT>.
+It is a static error if the type of <TT>x</TT> is not assignable
+to the type of <TT>y</TT>, or vice versa.
+<P>
+
+Warning: with IEEE floating-point, <TT>x <= y</TT>
+is not the same as <TT>NOT x > y</TT>.
+<P>
+
+<A NAME=idx.195>
+<PRE>
+     infix    IN (e: Ordinal; s: Set): BOOLEAN
+</PRE>
+</A>
+Returns <TT>TRUE</TT> if <TT>e</TT> is an element of the set <TT>s</TT>.
+It is a static error if the type of <TT>e</TT> is not assignable to
+the element type of <TT>s</TT>.
+If the value of <TT>e</TT> is not a member of the element type,
+no error occurs, but <TT>IN</TT> returns <TT>FALSE</TT>.
+<P>
+
+<P>
+<A HREF="m3.html">[top]</A>
+<A HREF="arithmetic.html">[prev]</A>
+<A HREF="boolops.html">[next]</A>
+</BODY>
+</HTML>

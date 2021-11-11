@@ -1,0 +1,86 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<!--Converted with LaTeX2HTML 2008 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>2.8.9 Type productions</TITLE>
+<META NAME="description" CONTENT="2.8.9 Type productions">
+<META NAME="keywords" CONTENT="m3-defn-complete">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2008">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="/cm3/normal.css">
+
+<LINK REL="next" HREF="2_8_10Expression_production.html">
+<LINK REL="previous" HREF="2_8_8Statement_productions.html">
+<LINK REL="up" HREF="2_8Syntax.html">
+<LINK REL="next" HREF="2_8_10Expression_production.html">
+</HEAD>
+
+<BODY >
+
+<DIV CLASS="navigation"><!--Navigation Panel-->
+<A NAME="tex2html1038"
+  HREF="2_8_10Expression_production.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html1036"
+  HREF="2_8Syntax.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html1030"
+  HREF="2_8_8Statement_productions.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A>   
+<BR>
+<B> Next:</B> <A NAME="tex2html1039"
+  HREF="2_8_10Expression_production.html">2.8.10 Expression productions</A>
+<B> Up:</B> <A NAME="tex2html1037"
+  HREF="2_8Syntax.html">2.8 Syntax</A>
+<B> Previous:</B> <A NAME="tex2html1031"
+  HREF="2_8_8Statement_productions.html">2.8.8 Statement productions</A>
+<BR>
+<BR></DIV>
+<!--End of Navigation Panel-->
+
+<H3><A NAME="SECTION000111900000000000000">
+2.8.9 Type productions</A>
+</H3>
+
+<P>
+<PRE>
+Type = TypeName | ArrayType | PackedType | EnumType | ObjectType
+     | ProcedureType | RecordType | RefType | SetType | SubrangeType
+     | "(" Type ")".
+
+ArrayType     = ARRAY [Type {"," Type}] OF Type.
+PackedType    = BITS ConstExpr FOR Type.
+EnumType      = "{" [IdList] "}".
+ObjectType    = [TypeName | ObjectType] [Brand] OBJECT Fields
+                 [METHODS Methods] [OVERRIDES Overrides] END.
+ProcedureType = PROCEDURE Signature.
+RecordType    = RECORD Fields END.
+RefType       = [UNTRACED] [Brand] REF Type.
+SetType       = SET OF Type.
+SubrangeType  = "[" ConstExpr ".." ConstExpr "]".
+
+Brand     = BRANDED [ConstExpr].
+Fields    = [ Field {";" Field} [";"] ].
+Field     = IdList (":" Type &amp; ":=" ConstExpr).
+Methods   = [ Method {";" Method} [";"] ].
+Method    = Id Signature [":=" ConstExpr].
+Overrides = [ Override {";" Override} [";"] ].
+Override  = Id ":=" ConstExpr .
+</PRE>
+
+<P>
+<BR><HR>
+<ADDRESS>
+m3-support@elego.de
+</ADDRESS>
+</BODY>
+</HTML>

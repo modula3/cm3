@@ -1,0 +1,65 @@
+<html>
+<head>
+   <title>Modula-3 - Interface</title>
+   <meta name="GENERATOR" content="Mozilla/2.0GoldB2 (Win32)">
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+<body>
+Go to the <a href="m3_1.html">first</a>, <a href="m3_8.html">previous</a>,
+<a href="m3_10.html">next</a>, <a href="m3_83.html">last</a> section, <a href="m3_toc.html">table
+of contents</a>. 
+<hr>
+<h3><a name="SEC9"></a><a name="SEC9"></a><a name="SEC9"></a><a href="m3_toc.html#SEC9" NAME="SEC9">Interface</a></h3>
+
+<p>An interface reveals portions of a module to the outside world so that
+clients can access functionality of modules. All declarations in an interface
+are visible to clients of a module. </p>
+
+<p>Each interface usually takes the form of a file with a &quot;<b><tt>.i3&quot;</tt></b>
+extension, and have the following format: </p>
+
+<ul>
+<pre><tt><b>INTERFACE </b><i>interface-name;
+
+</i></tt><b>IMPORT&nbsp;</b><i><tt><a href="m3_11.html#SEC11">imported-interfaces</a>;
+
+</tt></i><a href="m3_13.html#SEC13">  Declarations;
+     ...
+  Declarations;
+
+</a><b>END </b><i>interface-name</i>.
+</pre>
+</ul>
+
+<p>Generally, <i><tt>interface-name </tt></i>is the same as the name of
+the module that exports this interface. For example, a <tt>CDROM </tt>module
+exports a <tt>CDROM&nbsp;</tt>interface.</p>
+
+<h4>
+<hr width="100%" ></h4>
+
+<h4>Example</h4>
+
+<p>Here is an example of an interface for a module <tt><b>Thing</b> </tt>contained
+in a file called <b><tt>Thing.i3</tt></b>: </p>
+
+<ul>
+<pre><b>INTERFACE </b><tt>Thing</tt>;
+(*&nbsp;Thing does not need to import any other interfaces, hence no IMPORT&nbsp;clause.&nbsp;*)</pre>
+
+<pre>CONST MaxEntries = 53;
+TYPE T = RECORD name: TEXT; size: INTEGER END;
+
+PROCEDURE Print(r: T);
+PROCEDURE Make(n: TEXT; s: INTEGER): T;
+
+<b>END</b> Thing.
+</pre>
+</ul>
+
+<p>
+<hr>Go to the <a href="m3_1.html">first</a>, <a href="m3_8.html">previous</a>,
+<a href="m3_10.html">next</a>, <a href="m3_83.html">last</a> section, <a href="m3_toc.html">table
+of contents</a>. </p>
+
+</body>
+</html>

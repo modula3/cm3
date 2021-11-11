@@ -1,0 +1,67 @@
+<HTML>
+<HEAD>
+<TITLE>Modula-3: Import statements</TITLE>
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+<body>
+
+<P>
+<A HREF="m3.html">[top]</A>
+<A HREF="units.html">[prev]</A>
+<A HREF="interfaces.html">[next]</A>
+<P>
+
+<H2>Import statements</H2>
+<P>
+
+There are two forms of import statements.  All imports of both forms
+are interpreted simultaneously: their order doesn't matter.
+<P>
+
+<A NAME=idx.139>
+The first form is
+</A>
+<PRE>
+    IMPORT I AS J
+</PRE>
+which imports the interface whose global name is <TT>I</TT> and gives
+it the local name <TT>J</TT>. The entities and revelations declared in
+<TT>I</TT> become accessible in the importing module or interface, but
+the entities and revelations imported into <TT>I</TT> do not.  To refer
+to the entity declared with name <TT>N</TT> in the interface <TT>I</TT>,
+the importer must use the <EM>qualified identifier</EM> <TT>J.N</TT>.
+<P>
+
+The statement <TT>IMPORT I</TT> is short for <TT>IMPORT I AS I</TT>.
+<P>
+
+<A NAME=idx.140>The</A>
+second form is
+<PRE>
+    FROM I IMPORT N
+</PRE>
+which introduces <TT>N</TT> as the local name for the entity declared
+as <TT>N</TT> in the interface <TT>I</TT>.
+A local binding for <TT>I</TT> takes
+precedence over a global binding.
+For example,
+<PRE>
+    IMPORT I AS J, J AS I; FROM I IMPORT N
+</PRE>
+simultaneously introduces local names <TT>J</TT>, <TT>I</TT>, and <TT>N</TT>
+for the entities whose global names are <TT>I</TT>, <TT>J</TT>,
+and <TT>J.N</TT>, respectively.
+<P>
+
+It is illegal to use the same local name twice:
+<PRE>
+    IMPORT J AS I, K AS I;
+</PRE>
+is a static error, even if <TT>J</TT> and <TT>K</TT> are the same.
+<P>
+
+<P>
+<A HREF="m3.html">[top]</A>
+<A HREF="units.html">[prev]</A>
+<A HREF="interfaces.html">[next]</A>
+</BODY>
+</HTML>

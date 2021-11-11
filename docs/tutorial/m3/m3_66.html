@@ -1,0 +1,84 @@
+<html>
+<head>
+   <title>Modula-3 - Simple Compile Example</title>
+   <meta name="GENERATOR" content="Mozilla/2.0GoldB2 (Win32)">
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+<body>
+<!-- This HTML file has been created by texi2html 1.31
+
+     from /home/jove/stu/ss0005/m3/info/m3.texi on 8 March 1995 -->Go
+to the <a href="m3_1.html">first</a>, <a href="m3_65.html">previous</a>,
+<a href="m3_67.html">next</a>, <a href="m3_83.html">last</a> section, <a href="m3_toc.html">table
+of contents</a>. 
+<hr>
+<h2><a name="SEC66"></a><a name="SEC66"></a><a name="SEC66"></a><a href="m3_toc.html#SEC66" NAME="SEC66">Simple
+Compile Example</a></h2>
+
+<p>Here we describe how you can compile a simple program using &quot;<tt>cm3</tt>&quot;.
+
+<p> The easiest way to build packages is using CM3-IDE. Visit the
+<a href=/form/new-pkg><strong>Create Package</strong></a> form to
+create a new package within the CM3-IDE environment. CM3-IDE will
+allow you to select a package root (where your package will reside),
+package name, and package kind, before creating the package. Once you
+have created a package, you may use the <b>Build</b> button to compile
+its sources.
+
+<p>You can also create and compile sources without using
+   the CM3-IDE environment.  The instructions in this tutorial will
+guide you through creating and compiling a package by hand, from a
+Unix command-line shell. Creating a package by hand on a DOS
+command-line shell on Win32 platforms is also similar.
+
+<h4>
+<hr width="100%" >Using the Command&nbsp;Line Interface</h4>
+
+<p>What if I you wanted to use the command line interface?&nbsp;Here we
+describe how to build a simple program that we presented earlier in <a href="m3_1.html#SEC1">Writing
+Programs</a>. First, you need to create a package directory for this program.
+Let's say you create a directory <tt>~/proj/simple</tt> for this purpose.
+Then you need to create a subdirectory called '<tt>src</tt>' in that directory
+to hold the m3makefile and source code file Main.m3. (You don't have to
+create an &quot;src&quot; directory, but most Modula-3 packages do so as
+a convention.)&nbsp;</p>
+
+<p>So you should have the following two files in the given directories:
+</p>
+
+<ul>
+<li><tt>~/proj/simple/src/Main.m3 </tt></li>
+
+<li><tt>~/proj/simple/src/m3makefile </tt><i>(optional)</i></li>
+</ul>
+
+<p><tt>While in ~/proj/simple</tt> directory, issue the "<code>cm3</code>" command
+to build your program. If your <code>m3makefile</code> is correctly formatted and the
+<code>Main.m3</code> is correct, the compiler will create a build directory <tt>~/proj/simple/TARGET&nbsp;</tt>(where
+<tt>TARGET&nbsp;</tt>is the name of your platform, e.g., <tt>SPARC</tt>
+or <tt>NT386</tt>) and place in it the executable file <tt>myprog</tt>.
+To execute the program, enter the command <tt>SPARC/myprog</tt> at the
+command prompt. </p>
+
+<h4>
+<hr width="100%" >Tools for Building Small and Large Programs</h4>
+
+<p>For very simple program such as this one, you could have easily created
+an Main.m3 file, and just typed:</p>
+
+<ul>
+<pre>$ cm3 Main.m3</pre>
+</ul>
+
+<p>at the command line, even without an m3makefile.</p>
+
+<p>For large programs, however, you will find that the structuring tools
+available with Modula-3 will help you easily create very sophisticated
+multi-platform programs.</p>
+
+<p>
+<hr>Go to the <a href="m3_1.html">first</a>, <a href="m3_65.html">previous</a>,
+<a href="m3_67.html">next</a>, <a href="m3_83.html">last</a> section, <a href="m3_toc.html">table
+of contents</a>. </p>
+
+</body>
+</html>

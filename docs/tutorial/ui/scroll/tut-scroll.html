@@ -1,0 +1,72 @@
+<html>
+
+<head>
+<title>Trestle by Example:  Numeric scrollers</title>
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+
+<body>
+
+<ul>
+  <li> Root of document: <a href="../tutorial.html">Trestle by Example</a>
+  <li> Previous section: <a href="../numeric/tut-numeric.html">Numeric fields</a>
+  <li> Next section: <a href="../script/tut-script.html">Text windows</a>
+  <li> Cross listing: <a href="../cross/tut-cross.html">Cross listing by module</a>
+</ul>
+
+<hr>
+
+<h3>Numeric scrollers</h3>
+
+VBTkit contains a VBT that can be used to change a numeric value.
+It is similar to <code>NumericVBT</code> in that
+the value can be restricted to some minimum and maximum.
+But instead of a type-in field,
+the value is changed by dragging an indicator (called a
+<em>stripe</em>)
+toward one extreme or the other.
+Clicking the left or right mouse button moves the stripe one step.
+Holding the mouse button down causes continuous scrolling.
+Clicking the middle mouse button causes the top of the stripe to move to the
+position of the cursor (this is called <em>thumbing</em>).
+Holding the middle button down causes continuous thumbing.
+<p>
+
+A <code>ScrollerVBT</code> can be created as follows:
+<pre>
+NEW(ScrollerVBT.T).init(axis, min, max, colors, step, thumb)
+</pre>
+where <code>axis</code> makes the scroller either horizontal or vertical,
+<code>min</code> and <code>max</code>
+re the extreme integer values of the scroller,
+<code>colors</code> is a <code>PaintOp.ColorQuad</code>,
+<code>step</code> is the amount to change while continuously scrolling,
+and <code>thumb</code> governs the size of the stripe
+(the default size of 0 is usually the right choice).
+
+The program
+<a href="./Scroll.m3">Scroll.m3</a>
+uses three numeric scrollers to
+keep track of degrees, minutes, and seconds in the range
+from -180 to 180 degrees.
+Actually,
+since the three scrollers are independent, the maximum
+value is 180 degrees 59 minutes and 59 seconds.
+Likewise the minimum value is less than $-180$.
+The following images
+<ul>
+  <li> <img src="../scroll/scroll1.gif">Scroll 1
+  <li> <img src="../scroll/scroll2.gif">Scroll 2
+</ul>
+shows two views of the application.
+
+<hr>
+
+<ul>
+  <li> Root of document: <a href="../tutorial.html">Trestle by Example</a>
+  <li> Previous section: <a href="../numeric/tut-numeric.html">Numeric fields</a>
+  <li> Next section: <a href="../script/tut-script.html">Text windows</a>
+  <li> Cross listing: <a href="../cross/tut-cross.html">Cross listing by module</a>
+</ul>
+
+</body>
+</html>

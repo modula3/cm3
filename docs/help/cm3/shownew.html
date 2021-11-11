@@ -1,0 +1,37 @@
+<HTML>
+<HEAD>
+<TITLE>CM Modula-3: Shownew</TITLE>
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+<body>
+
+<H2>shownew</H2>
+<P>
+
+The shownew program displays a running record of the heap allocations
+in a Modula-3 program.
+<P>
+
+Normally, you should not start shownew directly.  Rather, the runtime
+will start shownew and feed it with the proper data when the argument
+<A HREF="m3args.html"><B>@M3shownew</B></A> is given to a Modula-3
+program; for example, to
+run the program foo and see the allocations of that process, type:
+<PRE>
+    foo @M3shownew
+</PRE>
+A Trestle window will appear; when you
+click the start option in the control menu, the program foo will
+actually start.
+<P>
+
+To set the interval between updates to X seconds, add the argument
+<A HREF="m3args.html"><B>@M3update=X</B></A> to the command line.
+X must be an integer.  For example:
+<PRE>
+    foo @M3shownew @M3update=5
+</PRE>
+<P>
+
+<hr>
+</BODY>
+</HTML>

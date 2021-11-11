@@ -1,0 +1,164 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<!--Converted with LaTeX2HTML 2008 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>2.2.3 Arrays</TITLE>
+<META NAME="description" CONTENT="2.2.3 Arrays">
+<META NAME="keywords" CONTENT="m3-defn-complete">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2008">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="/cm3/normal.css">
+
+<LINK REL="next" HREF="2_2_4Records.html">
+<LINK REL="previous" HREF="2_2_2Floating_point_types.html">
+<LINK REL="up" HREF="2_2Types.html">
+<LINK REL="next" HREF="2_2_4Records.html">
+</HEAD>
+
+<BODY >
+
+<DIV CLASS="navigation"><!--Navigation Panel-->
+<A NAME="tex2html256"
+  HREF="2_2_4Records.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html254"
+  HREF="2_2Types.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html248"
+  HREF="2_2_2Floating_point_types.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A>   
+<BR>
+<B> Next:</B> <A NAME="tex2html257"
+  HREF="2_2_4Records.html">2.2.4 Records</A>
+<B> Up:</B> <A NAME="tex2html255"
+  HREF="2_2Types.html">2.2 Types</A>
+<B> Previous:</B> <A NAME="tex2html249"
+  HREF="2_2_2Floating_point_types.html">2.2.2 Floating-point types</A>
+<BR>
+<BR></DIV>
+<!--End of Navigation Panel-->
+
+<H3><A NAME="SECTION00015300000000000000">
+2.2.3 Arrays</A>
+</H3>
+
+<P>
+An <SPAN  CLASS="textit">array</SPAN> is an indexed collection of component variables, called the
+<SPAN  CLASS="textit">elements</SPAN> of the array.  The indexes are the values of an ordinal type,
+called the <SPAN  CLASS="textit">index type</SPAN> of the array.  The elements all have the same
+size and the same type, called the <SPAN  CLASS="textit">element type</SPAN> of the array.
+
+<P>
+There are two kinds of array types, <SPAN  CLASS="textit">fixed</SPAN> and <SPAN  CLASS="textit">open</SPAN>.  The length
+of a fixed array is determined at compile time.  The length of an open array
+type is determined at runtime, when it is allocated or bound.  The length
+cannot be changed thereafter.
+
+<P>
+The <SPAN  CLASS="textit">shape</SPAN> of a multi-dimensional array is the sequence of its lengths
+in each dimension.  More precisely, the shape of an array is its length
+followed by the shape of any of its elements; the shape of a non-array is the
+empty sequence.
+
+<P>
+Arrays are assignable if they have the same element type and shape.  If either
+the source or target of the assignment is an open array, a runtime shape check
+is required.
+
+<P>
+A fixed array type declaration has the form:
+<PRE>
+    TYPE T = ARRAY Index OF Element
+</PRE>
+where <code>Index</code> is an ordinal type and <code>Element</code> is any type other
+than an open array type.  The values of type <code>T</code> are arrays whose element
+type is <code>Element</code> and whose length is the number of elements of the type
+<code>Index</code>.  If <code>Element</code> is an empty type, then so is <code>T</code>.
+
+<P>
+If <code>a</code> has type <code>T</code>, then <code>a[i]</code> designates the element of
+<code>a</code> whose position corresponds to the position of <code>i</code> in
+<code>Index</code>.  For example, consider the declarations:
+<PRE>
+    VAR a := ARRAY [1..3] OF REAL {1.0, 2.0, 3.0};
+    VAR b: ARRAY [-1..1] OF REAL := a;
+</PRE>
+Now <code>a = b</code> is <code>TRUE</code>; yet <code>a[1] = 1.0</code> while
+<code>b[1] = 3.0</code>.  The interpretation of indexes is determined by an array's
+type, not its value; the assignment <code>b := a</code> changes <code>b</code>'s value,
+not its type.  (This example uses variable initialization, and array
+constructors.)
+
+<P>
+An expression of the form:
+<PRE>
+    ARRAY Index_1, ..., Index_n OF Element
+</PRE>
+is shorthand for:
+<PRE>
+    ARRAY Index_1 OF ... OF ARRAY Index_n OF Element
+</PRE>
+This shorthand is eliminated from the expanded type definition used to define
+structural equivalence.  An expression of the form <code>a[i_1, ..., i_n]</code> is
+shorthand for <code>a[i_1]...[i_n]</code>.
+
+<P>
+An open array type declaration has the form:
+<PRE>
+    TYPE T = ARRAY OF Element
+</PRE>
+where <code>Element</code> is any type.  The values of <code>T</code> are arrays whose
+element type is <code>Element</code> and whose length is arbitrary.  The index type
+of an open array is the integer subrange <code>[0..n-1]</code>, where <code>n</code> is
+the length of the array.   If <code>Element</code> is an empty type, then so 
+is <code>T</code>.
+
+<P>
+An open array type can be used only as the type of a formal parameter, the
+referent of a reference type, the element type of another open array type, or
+as the type in an array constructor.
+
+<P>
+Examples of array types:
+<PRE>
+    TYPE
+       Transform = ARRAY [1..3], [1..3] OF REAL;
+       Vector    = ARRAY OF REAL;
+       SkipTable = ARRAY CHAR OF INTEGER
+</PRE>
+
+<P>
+
+<DIV CLASS="navigation"><HR>
+<!--Navigation Panel-->
+<A NAME="tex2html256"
+  HREF="2_2_4Records.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html254"
+  HREF="2_2Types.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html248"
+  HREF="2_2_2Floating_point_types.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A>   
+<BR>
+<B> Next:</B> <A NAME="tex2html257"
+  HREF="2_2_4Records.html">2.2.4 Records</A>
+<B> Up:</B> <A NAME="tex2html255"
+  HREF="2_2Types.html">2.2 Types</A>
+<B> Previous:</B> <A NAME="tex2html249"
+  HREF="2_2_2Floating_point_types.html">2.2.2 Floating-point types</A></DIV>
+<!--End of Navigation Panel-->
+<ADDRESS>
+m3-support@elego.de
+</ADDRESS>
+</BODY>
+</HTML>

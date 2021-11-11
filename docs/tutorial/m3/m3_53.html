@@ -1,0 +1,47 @@
+<html>
+<head>
+   <title>Modula-3 - Set Constructor</title>
+   <meta name="GENERATOR" content="Mozilla/2.0GoldB2 (Win32)">
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+<body>
+<!-- This HTML file has been created by texi2html 1.31
+     from /home/jove/stu/ss0005/m3/info/m3.texi on 8 March 1995 -->Go
+to the <a href="m3_1.html">first</a>, <a href="m3_52.html">previous</a>,
+<a href="m3_54.html">next</a>, <a href="m3_83.html">last</a> section, <a href="m3_toc.html">table
+of contents</a>. 
+<hr>
+<h4><a name="SEC53"></a><a name="SEC53"></a><a href="m3_toc.html#SEC53" NAME="SEC53">Set
+Constructor</a></h4>
+
+<ul>
+<pre><i><tt>set-type</tt></i> &quot;{&quot; <i><tt>expr-1 </tt></i>&quot;,&quot; ... &quot;,&quot;<i><tt> expr-n</tt></i> &quot;}&quot;
+</pre>
+</ul>
+
+<p>A set constructor is an set-valued expression. <i><tt>set-type</tt></i>
+ may be any set type (see section <a href="m3_21.html#SEC21">Set Types</a>).
+The expressions <i><tt>expr-1</tt></i>.. <i><tt>expr-n</tt></i> must be
+expressions that evaluate to elements of the set's base type. An <i><tt>expr
+</tt></i>may also be of the form <i>lo</i>..<i><tt>hi</tt></i>, as a shortcut
+for including several values. </p>
+
+<p>
+<hr width="100%" ></p>
+
+<h4>Example</h4>
+
+<ul>
+<pre>CONST 
+  Letters = SET OF CHAR {'A'..'Z', 'a'..'z'};
+VAR
+  punctuation: SET OF CHAR := SET OF CHAR {'.', '!', ',', ';', '?'};
+</pre>
+</ul>
+
+<p>
+<hr>Go to the <a href="m3_1.html">first</a>, <a href="m3_52.html">previous</a>,
+<a href="m3_54.html">next</a>, <a href="m3_83.html">last</a> section, <a href="m3_toc.html">table
+of contents</a>. </p>
+
+</body>
+</html>

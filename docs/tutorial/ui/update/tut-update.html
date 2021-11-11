@@ -1,0 +1,76 @@
+<html>
+
+<head>
+<title>Trestle by Example:  Updating a text window</title>
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+
+<body>
+
+<ul>
+  <li> Root of document: <a href="../tutorial.html">Trestle by Example</a>
+  <li> Previous section: <a href="../push/tut-push.html">Push buttons</a>
+  <li> Next section: <a href="../menu1/tut-menu1.html">Menu</a>
+  <li> Cross listing: <a href="../cross/tut-cross.html">Cross listing by module</a>
+</ul>
+
+<hr>
+
+<h3>Updating a text window</h3>
+
+A text VBT does not have to display an unchanging string
+like the label in a button.
+Using the subprocedure <code>TextVBT.Put</code> it is possible to
+update the window so that it displays different text.
+Program
+<a href="./Update.m3">Update.m3</a>
+illustrates this.
+Everytime the <code>Inc</code> button is pushed
+a global variable is incremented.
+The new value is displayed in the main window.
+Converting an integer to a string requires
+the procedure <code>Int</code>
+from the standard library module <code>Fmt</code>.
+
+In the horizontal bar across the top of the window are two
+buttons.
+Besides the <code>Inc</code> button there is the <code>Exit</code> button
+which terminates the program.
+The two VBT's are joined horizontally into a split VBT.
+Unlike a text VBT
+a split VBT has other VBT's as subordinate pieces.
+The function <code>Cons</code> in the <code>HVSplit</code> interface joins
+several VBT's into a horizontal or vertical unit.
+
+A <code>TextureVBT</code>, a leaf VBT, is used to make a long, thin VBT
+of a particular texture and color,
+In this case, a solid VBT of the background color is used to
+divide the button bar from the main window showing the text.
+All three VBTs are aligned vertically and a border is drawn
+around them.
+
+The following images
+<ul>
+  <li> <img src="../update/update1.gif">Update 1
+  <li> <img src="../update/update2.gif">Update 2
+</ul>
+contain two views of the screen during the running of the program.
+In the first we see what is displayed when the
+program is first executed.
+The initial value of the variable <code>num</code> is 97.
+In the second we see the situation
+after the <code>Inc</code> button has been pressed several times.
+The current value of the variable <code>num</code>, 102, is displayed
+in the window.
+
+
+<hr>
+
+<ul>
+  <li> Root of document: <a href="../tutorial.html">Trestle by Example</a>
+  <li> Previous section: <a href="../push/tut-push.html">Push buttons</a>
+  <li> Next section: <a href="../menu1/tut-menu1.html">Menu</a>
+  <li> Cross listing: <a href="../cross/tut-cross.html">Cross listing by module</a>
+</ul>
+
+</body>
+</html>

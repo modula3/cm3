@@ -1,0 +1,78 @@
+<html><head>
+<title>Trestle by Example:  Dialog window to confirm an action</title>
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+
+<body>
+
+<ul>
+  <li> Root of document: <a href="../tutorial.html">Trestle by Example</a>
+  <li> Previous section: <a href="../mouse/tut-mouse.html">Catching mouse events</a>
+  <li> Next section: <a href="../rubber/tut-rubber.html">Rubber banding</a>
+  <li> Cross listing: <a href="../cross/tut-cross.html">Cross listing by module</a>
+</ul>
+
+<hr>
+
+<h3>Dialog window to confirm an action</h3>
+
+The program
+<a href="./Confirm.m3">Confirm.m3</a>
+implements a simple dialog box.
+It is implemented by defining a new VBT in its own Modula-3 module.
+A module consists of two files, one for the interface description
+<a href="./ConfirmVBT.i3">ConfirmVBT.i3</a>
+and another for the implementation
+<a href="./ConfirmVBT.m3">ConfirmVBT.m3</a>.
+This modular approach would be quite natural for most substantial programs,
+but the programs in this paper are purposely quite small, so this
+is the only time we use it.
+<p>
+
+The <code>ConfirmVBT</code> module defines a dialog box 
+that displays a message and two buttons.
+By default the two buttons are labeled ``Yes'' and ``Cancel''
+(this cannot be changed in this rudimentary program).
+By default the action taken when either button is pressed
+is to delete the dialog box.
+These actions can be supplied when the confirm VBT is created.
+The message must be supplied in any case.
+<p>
+
+The intended scenario is that some client program is about to
+take some critical action, like quitting,
+and wants the user to confirm the action.
+The client program creates the confirm VBT
+with the appropriate message and actions associated
+and installs the VBT.
+The dialog pops up and the user can chose between cancelling
+the action or performing it.
+This sequence is depicted in the following two images:
+<ul>
+  <li> <img src="../confirm/confirm1.gif">Confirm 1
+  <li> <img src="../confirm/confirm2.gif">Confirm 2
+</ul>
+<p>
+
+The main program
+<a href="./Confirm.m3">Confirm.m3</a>
+is a simple
+application with one button, a ``quit'' button.
+When pressed, a confirm VBT is popped up.
+The ``yes'' action exits the whole application.
+The ``cancel'' action invokes the default cancel action
+which is just to destroy the pop-up dialog.
+The main program has two subwindows with
+borders of different colors and textures.
+
+
+<hr>
+
+<ul>
+  <li> Root of document: <a href="../tutorial.html">Trestle by Example</a>
+  <li> Previous section: <a href="../mouse/tut-mouse.html">Catching mouse events</a>
+  <li> Next section: <a href="../rubber/tut-rubber.html">Rubber banding</a>
+  <li> Cross listing: <a href="../cross/tut-cross.html">Cross listing by module</a>
+</ul>
+
+</body>
+</html>

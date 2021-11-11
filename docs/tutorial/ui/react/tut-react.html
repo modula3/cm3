@@ -1,0 +1,72 @@
+<html><head>
+<title>Trestle by Example:  Enabling and disabling buttons</title>
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+
+<body>
+
+<ul>
+  <li> Root of document: <a href="../tutorial.html">Trestle by Example</a>
+  <li> Previous section: <a href="../radio/tut-radio.html">Radio buttons</a>
+  <li> Next section: <a href="../source/tut-source.html">Drag and drop</a>
+  <li> Cross listing: <a href="../cross/tut-cross.html">Cross listing by module</a>
+</ul>
+
+<hr>
+
+<h3>Enabling and disabling buttons</h3>
+
+The program
+<a href="./React.m3">React.m3</a>
+illustrates how to use the <code>ReactivityVBT</code> to disable and enable buttons.
+The structure of the program <code>React</code> is quite
+similar to the program
+<a href="./RadioButtons.m3">RadioButtons.m3</a>
+in the section <a href="../radio/tut-radio.html">Radio buttons</a>.
+The <code>RadioButtons</code> program changed the text
+of a text VBT whenever a button was pressed.
+The program <code>React</code> controls the function and appearance
+of a button.
+<p>
+
+
+The application
+displays a single button at the bottom of the application's window
+and four other buttons corresponding to active, passive, dormant and vanished states
+of the <code>ReactivityVBT</code>.
+The button to be controlled is a child of the
+<code>ReactivityVBT</code>.
+It is at the bottom of the application.
+Initially the <code>ReactivityVBT</code> will be in the ``active'' state.
+Its state is changed
+using <code>ReactivityVBT.Set</code>.
+In the active state, the mouse events will be normally relayed to the button.
+Passive, dormant and vanish states do not allow the keyboard or mouse 
+events to go to the button.
+These states differ in their effect on the appearance of the
+child of the <code>ReactivityVBT</code> (usually a button).
+In the passive state the visual appearance of the button is not changed,
+but clicking in the button has no effect.
+In the
+dormant state the button is grayed out.
+In the vanish state the button is invisible.
+<p>
+
+Four views of the application are shown in the following images:
+<ul>
+  <li> <img src="../react/react1.gif">Reactivity 1
+  <li> <img src="../react/react2.gif">Reactivity 2
+  <li> <img src="../react/react3.gif">Reactivity 3
+  <li> <img src="../react/react4.gif">Reactivity 4
+</ul>
+
+<hr>
+
+<ul>
+  <li> Root of document: <a href="../tutorial.html">Trestle by Example</a>
+  <li> Previous section: <a href="../radio/tut-radio.html">Radio buttons</a>
+  <li> Next section: <a href="../source/tut-source.html">Drag and drop</a>
+  <li> Cross listing: <a href="../cross/tut-cross.html">Cross listing by module</a>
+</ul>
+
+</body>
+</html>

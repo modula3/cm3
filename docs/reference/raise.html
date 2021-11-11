@@ -1,0 +1,36 @@
+<HTML>
+<HEAD>
+<TITLE>Modula-3: Raise statements</TITLE>
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+<body>
+
+<P>
+<A HREF="m3.html">[top]</A>
+<A HREF="sequence.html">[prev]</A>
+<A HREF="tryexcept.html">[next]</A>
+<P>
+
+<H2>Raise</H2>
+<P>
+
+A <TT>RAISE</TT> statement without an argument has the form:
+<PRE>
+    RAISE e
+</PRE>
+where <TT>e</TT> is an exception that takes no argument.  The outcome 
+of the statement is the exception <TT>e</TT>.  A <TT>RAISE</TT> statement 
+with an argument has the form:
+<PRE>
+    RAISE e(x)
+</PRE>
+where <TT>e</TT> is an exception that takes an argument and <TT>x</TT> is
+an expression assignable to <TT>e</TT>'s argument type.  The outcome is
+the exception <TT>e</TT> paired with the argument <TT>x</TT>.
+<P>
+
+<P>
+<A HREF="m3.html">[top]</A>
+<A HREF="sequence.html">[prev]</A>
+<A HREF="tryexcept.html">[next]</A>
+</BODY>
+</HTML>

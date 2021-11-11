@@ -1,0 +1,32 @@
+<HTML>
+<HEAD>
+<TITLE>CM Modula-3: builder support for literate programming</TITLE>
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+<body>
+
+<H2>Literate programming</H2>
+<P>
+
+The following procedures support literate programming with
+Norman Ramsey's "noweb" system.
+<P>
+
+<B> noweb(f,r,d) </B>  
+          The file <TT>f.nw</TT> is a noweb source file.  The file <TT>d</TT>
+          is a Modula-3 source file (including its extension) which should
+          be created by extracting from the root <TT>r</TT> in the noweb file.
+<P>
+
+<B> Noweb(f,r,d) </B>  
+          Similar to <TT>noweb</TT>, but also exports the file <TT>d</TT>
+          to <TT>/pub</TT>.
+<P>
+
+<B> noweb_doc(f,d) </B>  
+          The source file <TT>d/f.nw</TT> is to be processed by notangle
+          to produce the TeX source file <TT>f.tex</TT>.  It will be added
+          to the makefile dependencies for <TT>doc.dvi</TT>.
+<P>
+
+</BODY>
+</HTML>

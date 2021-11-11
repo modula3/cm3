@@ -1,0 +1,141 @@
+<HTML>
+<HEAD>
+<TITLE>Modula-3: Designators</TITLE>
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+<body>
+
+<P>
+<A HREF="m3.html">[top]</A>
+<A HREF="opsyntax.html">[prev]</A>
+<A HREF="numbers.html">[next]</A>
+<P>
+
+<H2>Designators</H2>
+<P>
+
+An identifier is a <EM>writable designator</EM>
+if it is declared as a variable, 
+is a <TT>VAR</TT> or <TT>VALUE</TT> parameter,
+is a local of a <TT>TYPECASE</TT> 
+or <TT>TRY EXCEPT</TT> statement,
+or is a <TT>WITH</TT> local that is bound to a writable designator.
+An identifier is a <EM>readonly designator</EM> if it is
+a <TT>READONLY</TT> parameter,
+a local of a <TT>FOR</TT> statement,
+or a <TT>WITH</TT> local bound to a non-designator or 
+readonly designator.
+<P>
+
+<A NAME=idx.156>The</A>
+only operations that produce designators are dereferencing, 
+subscripting, selection, and <TT>SUBARRAY</TT>.
+This section defines these operations and specifies the conditions 
+under which they produce designators.
+In unsafe modules,
+<A HREF="unsafe.html"><TT>LOOPHOLE</TT></A>
+can also produce a designator.
+<P>
+
+<A NAME=idx.157><TT>r^</TT></A>
+<BLOCKQUOTE>
+    denotes the the referent of 
+    <TT>r</TT>; this operation is called <EM>dereferencing</EM>.  The
+    expression <TT>r^</TT> is always a writable designator.  It is a
+    static error if the type of <TT>r</TT> is <TT>REFANY</TT>,
+    <TT>ADDRESS</TT>, <TT>NULL</TT>, an object type, or an opaque type,
+    and a checked runtime error if <TT>r</TT> is <TT>NIL</TT>.
+    The type of <TT>r^</TT> is the referent type of <TT>r</TT>.
+</BLOCKQUOTE>
+<P>
+
+<A NAME=idx.158><TT>a[i]</TT></A>
+<BLOCKQUOTE>
+    denotes the <TT>(i + 1 - FIRST(a))</TT>-th element of the 
+    array <TT>a</TT>.  The expression <TT>a[i]</TT> is a designator
+    if <TT>a</TT> is, and is writable if <TT>a</TT> is.
+    The expression <TT>i</TT>
+    must be assignable to the index type of <TT>a</TT>.  The type of
+    <TT>a[i]</TT> is the element type of <TT>a</TT>.
+    <P>
+
+    An expression of the form <TT>a[i_1, ..., i_n]</TT> is
+    shorthand for <TT>a[i_1]...[i_n]</TT>.  If <TT>a</TT> is a reference
+    to an array, then <TT>a[i]</TT> is shorthand for <TT>a^[i]</TT>.
+</BLOCKQUOTE>
+<P>
+
+<A NAME=idx.159><TT>r.f, o.f, I.x, T.m, E.id</TT></A>
+<BLOCKQUOTE>
+    If <TT>r</TT> denotes a record,
+    <TT>r.f</TT> denotes its <TT>f</TT> field.  In
+    this case <TT>r.f</TT> is a designator if <TT>r</TT> is,
+    and is writable if <TT>r</TT> is.
+    The type of <TT>r.f</TT> is the declared type of the field.
+    <P>
+
+    <A NAME=idx.160>If</A> <TT>r</TT> is a reference to a record,
+    then <TT>r.f</TT> is shorthand for <TT>r^.f</TT>.
+    <P>
+
+    <A NAME=idx.161>If</A> <TT>o</TT> denotes an object and <TT>f</TT>
+    names a data field specified
+    in the type of <TT>o</TT>, then <TT>o.f</TT> denotes
+    that data field of <TT>o</TT>.  In this case <TT>o.f</TT> is a writable
+    designator whose type is the declared type of the field.
+    <P>
+
+    If <TT>I</TT> denotes an imported interface, then <TT>I.x</TT> denotes 
+    the entity named <TT>x</TT> in the interface <TT>I</TT>.  In this case 
+    <TT>I.x</TT> is a designator if <TT>x</TT> is declared as a variable; 
+    such a designator is always writable.
+    <P>
+
+    <A NAME=idx.162>If</A> <TT>T</TT> is an object type and <TT>m</TT>
+    is the name of one of 
+    <TT>T</TT>'s methods, then <TT>T.m</TT> denotes the <TT>m</TT> method of
+    type <TT>T</TT>. In this case <TT>T.m</TT> is not a designator.  Its type
+    is the procedure type whose first argument has mode <TT>VALUE</TT>
+    and type <TT>T</TT>, and whose remaining arguments are determined by
+    the method declaration for <TT>m</TT> in <TT>T</TT>. The name of the first
+    argument is unspecified; thus in calls to <TT>T.m</TT>, this argument
+    must be given positionally, not by keyword.  <TT>T.m</TT> is a
+    procedure constant.
+    <P>
+
+    <A NAME=idx.163>If</A> <TT>E</TT> is an enumerated type,
+    then <TT>E.id</TT> denotes its
+    value named <TT>id</TT>.  In this case <TT>E.id</TT> is not a designator.
+    The type of <TT>E.id</TT> is <TT>E</TT>.
+</BLOCKQUOTE>
+<P>
+
+<A NAME=idx.164>
+<TT>SUBARRAY(a: Array; from, for: CARDINAL): ARRAY OF ElemType(a)</TT>
+</A>
+<BLOCKQUOTE>
+    <TT>SUBARRAY</TT> produces a subarray of <TT>a</TT>.  It does not copy the
+    array; it is a designator if <TT>a</TT> is, and is writable if <TT>a</TT>
+    is.  If <TT>a</TT> is a multi-dimensional array, <TT>SUBARRAY</TT> applies
+    only to the top-level array.
+    <P>
+
+    <A NAME=idx.165>The</A> operation returns the subarray that skips the
+    first <TT>from</TT>
+    elements of <TT>a</TT> and contains the next <TT>for</TT> elements.  Note
+    that if <TT>from</TT> is zero, the subarray is a prefix of <TT>a</TT>,
+    whether the type of <TT>a</TT> is zero-based or not.  It is a checked
+    runtime error if <TT>from+for</TT> exceeds <TT>NUMBER(a)</TT>.
+    <P>
+
+    <A NAME=idx.166>Implementations</A> may restrict
+    or prohibit the <TT>SUBARRAY</TT> operation for arrays with packed
+    element types.
+</BLOCKQUOTE>
+<P>
+
+<P>
+<A HREF="m3.html">[top]</A>
+<A HREF="opsyntax.html">[prev]</A>
+<A HREF="numbers.html">[next]</A>
+</BODY>
+</HTML>

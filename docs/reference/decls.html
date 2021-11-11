@@ -1,0 +1,63 @@
+<HTML>
+<HEAD>
+<TITLE>Modula-3: Declarations</TITLE>
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+<body>
+
+<P>
+<A HREF="m3.html">[top]</A>
+<A HREF="incdec.html">[prev]</A>
+<A HREF="type-decl.html">[next]</A>
+<P>
+
+<H2>Declarations</H2>
+<P>
+
+<BLOCKQUOTE><EM>
+There are two basic methods of declaring high or low before the showdown
+in all High-Low Poker games.  They are (1) simultaneous declarations,
+and (2) consecutive declarations <TT>....</TT>  It is a sad but true fact that
+the consecutive method spoils the game.                               
+---John Scarne's Guide to Modern Poker
+</EM></BLOCKQUOTE>
+<P>
+
+<A NAME=idx.119>A</A>
+declaration introduces a name for a constant, type, variable, exception,
+or procedure.  The scope of the name is the block containing the
+declaration.  A block has the form:
+<PRE>
+    Decls BEGIN S END
+</PRE>
+<A NAME=idx.120>where</A>
+<TT>Decls</TT> is a sequence of declarations and <TT>S</TT> is a
+statement, the executable part of the block.  A block can appear as
+a statement or as the body of a module or procedure.  The declarations
+of a block can introduce a name at most once, though a name can be
+redeclared in nested blocks, and a procedure declared in an interface
+can be redeclared in a
+<A HREF="units.html">module</A>
+exporting the interface.
+The order of declarations
+in a block does not matter, except to determine the order of
+initialization of variables.
+<P>
+
+Each type of declaration is described below
+<UL>
+<LI><A HREF="type-decl.html">Types</A>
+<LI><A HREF="constants.html">Constants</A>
+<LI><A HREF="variables.html">Variables</A>
+<LI><A HREF="procedures.html">Procedures</A>
+<LI><A HREF="exceptions.html">Exceptions</A>
+<LI><A HREF="opaques.html">Opaque types</A>
+<LI><A HREF="revelations.html">Revelations</A>
+<LI><A HREF="recursion.html">Recursive declarations</A>
+</UL>
+
+<P>
+<A HREF="m3.html">[top]</A>
+<A HREF="incdec.html">[prev]</A>
+<A HREF="type-decl.html">[next]</A>
+</BODY>
+</HTML>

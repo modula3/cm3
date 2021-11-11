@@ -1,0 +1,80 @@
+<html>
+
+<head>
+<title>Trestle by Example:  Catching keyboard events</title>
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+
+<body>
+
+<ul>
+  <li> Root of document: <a href="../tutorial.html">Trestle by Example</a>
+  <li> Previous section: <a href="../menu1/tut-menu1.html">Menus</a>
+  <li> Next section: <a href="../mouse/tut-mouse.html">Catching mouse events</a>
+  <li> Cross listing: <a href="../cross/tut-cross.html">Cross listing by module</a>
+</ul>
+
+<hr>
+
+<h3>Catching keyboard events</h3>
+
+The program
+<a href="./Key.m3">Key.m3</a>
+demonstrates catching keyboard events.
+The program defines a new VBT that acquires keyboard
+events whenever the mouse moves into the VBT.
+If a key is pressed and released while the mouse
+is in the window and if it is a printable character,
+then the character is displayed in the window.
+<p>
+
+We have named the new VBT <code>KeyVBT</code>.
+It is a subtype
+of <code>TextVBT.T</code> which itself is a subtype of <code>VBT.T</code>.
+The type <code>KeyVBT</code>
+overrides the <code>position</code> and <code>key</code> methods
+of <code>VBT.T</code>.
+For convenience we have written an <code>init</code> procedure
+which hides the <code>init</code> procedure of <code>TextVBT.T</code>.
+However the <code>init</code> procedure of the superclass does all the work
+in the line
+<pre>
+EVAL TextVBT.T.init (v, t, fnt:=f);
+</pre>
+of the program.
+<p>
+
+Handling the keyboard events requires two main parts.
+These are accomplished in the procedures <code>Position</code> and <code>Key</code>
+of program <code>Key</code>.
+The procedure <code>Position</code> acquires the keyboard focus
+for the application,
+if the mouse pointer moves into the application's <code>KeyVBT</code>.
+Then if a key is pressed in the VBT
+and this key is a printable character,
+the subprocedure <code>Key</code> sets the text to the appropriate character.
+<p>
+
+The situation is depicted in a series of snapshots of the
+application
+<ul>
+  <li> <img src="../key/key1.gif">Key 1
+  <li> <img src="../key/key2.gif">Key 2
+  <li> <img src="../key/key3.gif">Key 3
+</ul>
+The initial text is the string <code>[uninitialized]</code>.
+After the key ``F'' is pressed in the <code>KeyVBT</code>,
+the text is changed to <code>character 'F'</code>.
+After the key ``%'' is pressed,
+the text is changed to the <code>character '%'</code>.
+
+<hr>
+
+<ul>
+  <li> Root of document: <a href="../tutorial.html">Trestle by Example</a>
+  <li> Previous section: <a href="../menu1/tut-menu1.html">Menus</a>
+  <li> Next section: <a href="../mouse/tut-mouse.html">Catching mouse events</a>
+  <li> Cross listing: <a href="../cross/tut-cross.html">Cross listing by module</a>
+</ul>
+
+</body>
+</html>

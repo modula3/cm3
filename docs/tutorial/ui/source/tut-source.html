@@ -1,0 +1,66 @@
+<html><head>
+<title>Trestle by Example:  Drag and drop</title>
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+
+<body>
+
+<ul>
+  <li> Root of document: <a href="../tutorial.html">Trestle by Example</a>
+  <li> Previous section: <a href="../react/tut-react.html">Enabling and disabling buttons</a>
+  <li> Next section: <a href="../overlap/tut-overlap.html">Overlapping subwindows</a>
+  <li> Cross listing: <a href="../cross/tut-cross.html">Cross listing by module</a>
+</ul>
+
+<hr>
+
+<h3>Drag and drop</h3>
+
+It is possible use dragging to connect sources and targets.
+A source is a button that looks for special VBTs marked as targets.
+When the mouse button remains down and mouse is over a target,
+the source's <code>hit</code> method
+is called to see if the target is acceptable to the source.
+If so, the <code>excited</code>
+method of the target VBT is called to give provide feedback.
+When the mouse button is released or the mouse leaves the domain of the target,
+the target's <code>normal</code> method is called.
+<p>
+
+
+The program
+<a href="./Source.m3">Source.m3</a>
+uses <code>SourceVBT</code> to place random numbers in one of two boxes.
+A random number appears in the top box.
+Pressing a mouse button in the top box and dragging the
+cursor to one of the two lower boxes
+causes the number to appear in the selected box.
+Then another random number appears in the top box.
+<p>
+
+
+The action is depicted in a series of four images:
+<ul>
+<li> <img src="../source/source1.gif">Source 1
+<li> <img src="../source/source2.gif">Source 2
+<li> <img src="../source/source3.gif">Source 3
+<li> <img src="../source/source4.gif">Source 4
+</ul>
+In the first picture,
+the application has just started and has selected the first random number.
+In the next picture the user
+has dragged the number to the lower right box,
+and a new random number has been generated.
+The next number is dragged to the lower left box.
+In the fourth picture the number has been dragged again to the lower left.
+
+<hr>
+
+<ul>
+  <li> Root of document: <a href="../tutorial.html">Trestle by Example</a>
+  <li> Previous section: <a href="../react/tut-react.html">Enabling and disabling buttons</a>
+  <li> Next section: <a href="../overlap/tut-overlap.html">Overlapping subwindows</a>
+  <li> Cross listing: <a href="../cross/tut-cross.html">Cross listing by module</a>
+</ul>
+
+</body>
+</html>

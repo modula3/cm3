@@ -1,0 +1,1040 @@
+<HTML>
+<HEAD>
+<TITLE>Modula-3: Annotated Bibliography</TITLE>
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+<body>
+<H1>Modula-3 Annotated Bibliography</H1>
+
+<P> Here is a bibliography of books, papers and articles related to
+Modula-3. A more <A HREF="concise-bib.html">concise bibliography</A>
+organized by topic is also available.
+
+<OL>
+
+<LI><A NAME="BabyM3">Martin Abadi</A>,
+<A HREF="https://www.hpl.hp.com/techreports/Compaq-DEC/SRC-RR-95.html">Baby Modula-3 and a Theory of Object</A>
+(<A HREF="https://www.hpl.hp.com/techreports/Compaq-DEC/SRC-RR-95.pdf">pdf</A>),
+Research Report 95,
+Systems Research Center, Digital Equipment Corporation,
+Palo Alto,
+February, 1993.
+<P>
+This report describes a theoretical treatment of the semantics of objects.
+<P>
+
+<LI><A NAME="TeachingM3">Spencer Allain and Farshad Nayeri</A>,
+<A HREF="http://modula3.org/threads/2/#academia">Teaching
+Computer Science with Modula-3</A>,
+<A HREF="http://modula3.org/threads/">Threads: A Modula-3 Newsletter</A>
+(<A HREF="https://web.archive.org/web/20070601211231/http://www.m3.org/threads/">archive</A>),
+<A HREF="http://modula3.org/threads/2/">Issue 2</A>
+(<A HREF="https://web.archive.org/web/20070516094859/http://www.m3.org/threads/2/">archive</A>),
+(<A HREF="http://modula3.org/threads/2/threads2.pdf">pdf</A>,
+<A HREF="https://web.archive.org/web/20060924083709/http://www.m3.org/threads/2/threads2.pdf">archive</A>),
+Fall 1996.
+<P>
+This article describes the advantages of using a safe
+programming language like Modula-3 in the instruction of
+computer science. It also lists some of the schools that
+have used Modula-3 as an instructional language, and summarizes
+their experiences.
+<P>
+
+<LI><A NAME="m3-Bar88">Joel F. Bartlett</A>,
+<A HREF="https://www.hpl.hp.com/techreports/Compaq-DEC/WRL-88-2.html">Compacting Garbage Collection with Ambiguous Roots</A>
+(<A HREF="https://www.hpl.hp.com/techreports/Compaq-DEC/WRL-88-2.pdf">pdf</A>),
+Research Report 88/2,
+Western Research Laboratory, Digital Equipment Corporation,
+Palo Alto,
+February, 1988.
+<P>
+This report describes an algorithm used as the basis for SRC Modula-3
+garbage collector.
+<P>
+
+<LI><A NAME="m3-BGH*87">A. D. Birrell, J. V. Guttag,
+J. J. Horning, R. Levin</A>,
+<A HREF="https://www.hpl.hp.com/techreports/Compaq-DEC/SRC-RR-20.html">Synchronization Primitives for a Multiprocessor: A Formal Specification</A>
+(<A HREF="https://www.hpl.hp.com/techreports/Compaq-DEC/SRC-RR-20.pdf">pdf</A>),
+Research Report 20,
+Systems Research Center, Digital Equipment Corporation,
+Palo Alto,
+August, 1987.
+<P>
+Presents a formal specification of the Threads synchronization
+primitives used in the Modula-2+ programming language. These
+primitives were quite similar to the ones defined in Modula-3.
+A revised version of this paper also appears as Chapter 5 of
+<A HREF="#SPwM3"><I>Systems Programming with Modula-3</I></A>.
+<P>
+
+<LI><A NAME="m3-Bir89">Andrew D. Birrell</A>,
+<A HREF="https://www.hpl.hp.com/techreports/Compaq-DEC/SRC-RR-35.html">An Introduction to Programming with Threads</A>
+(<A HREF="https://www.hpl.hp.com/techreports/Compaq-DEC/SRC-RR-35.pdf">pdf</A>),
+Research Report 35,
+Systems Research Center, Digital Equipment Corporation,
+Palo Alto,
+January, 1989.
+<P>
+A highly-recommended guide to effectively writing multi-threaded
+programs. It uses the <a href="#m3-BGH*87">Modula-2+ threads
+library</a> for the examples, but these are quite similar to
+the ones used in Modula-3. A revised version also appears as
+Chapter 4 of <A HREF="#SPwM3"><I>Systems Programming with
+Modula-3</I></A>.
+<P>
+
+<LI><A NAME="NetobjGC">Andrew Birrell, David Evers, Greg Nelson, Susan
+Owicki, Edward Wobber</A>,
+<A HREF="https://www.hpl.hp.com/techreports/Compaq-DEC/SRC-RR-116.html">Distributed Garbage Collection for Network Objects</A>
+(<A HREF="https://www.hpl.hp.com/techreports/Compaq-DEC/SRC-RR-116.pdf">pdf</A>),
+Research Report 116,
+Systems Research Center, Digital Equipment Corporation,
+Palo Alto,
+December, 1993.
+<P>
+This report describes a fault-tolerant and efficient garbage
+collection algorithm for distributed systems. It is the algorithm used
+to garbage collect <A HREF="#Netobj">Network Objects</A>.
+<P>
+
+<LI><A NAME="Netobj">Andrew Birrell, Greg Nelson,
+Susan Owicki, Edward Wobber</A>,
+<A HREF="https://www.hpl.hp.com/techreports/Compaq-DEC/SRC-RR-115.html">Network Objects</A>
+(<A HREF="https://www.hpl.hp.com/techreports/Compaq-DEC/SRC-RR-115.pdf">pdf</A>,
+<A HREF="../src_reports/src-115.pdf">mirror</A>),
+Research Report 115,
+Systems Research Center, Digital Equipment Corporation,
+Palo Alto,
+February, 1994.
+<P>
+This report describes the design and implementation of a network
+objects system, which allows you to write programs that communicate
+over a network, while hiding the messy details of network programming.
+Network objects provide functionality similar to remote procedure call (RPC),
+but they are more general and easier to use.  The system is implemented
+in Modula-3.
+<P>
+
+<LI><A NAME="birtwistle">Graham M. Birtwistle, Ole-Johan Dahl, Bjorn
+Myhrhaug, and Kristen Nygaard</A>,
+<I>Simula Begin</I>,
+Auerbach,
+Philadelphia PA, 1973.
+<P>
+
+<LI><A NAME="M3-vs-Oberon2">Laszlo Boeszoermenyi</A>,
+A Comparison of Modula-3 and Oberon-2 (extended version),
+<I>Structured Programming</I>,
+Springer-Verlag,
+1993.
+Pgs 15-22.
+<P>
+
+<LI><A NAME="Prog-With-M3">Laszlo Boeszoermenyi and Carsten Weich</A>,
+<I>Programming with Modula-3: An Introduction to Programming with
+Style</I>,
+Springer-Verlag,
+ISBN 3-540-57912-5 (English version),
+ISBN 3-540-57911-7 (German version),
+1995.
+577 pgs, including index.
+<P>
+Available through Library Genesis.
+<P>
+This book is an introductory programming text that uses Modula-3
+for its examples. The authors say, "The main concern of the book is to
+give a clean and comprehensive introduction to programming for
+beginners of a computer science study. We start with more traditional
+programming concepts and move toward advanced topics such as
+object-oriented programming, parallel & concurrent programming,
+exception handling, and persistent data techniques. The book also
+presents a large number of complete examples written in Modula-3."
+<P>
+
+<LI><A NAME="Klagenfurt">Laszlo Boeszoermenyi and Carsten Weich</A>,
+<A
+HREF="http://modula3.org/threads/1/#academia">Modula-3 in Academia: University of Klagenfurt, Austria</A>,
+<A HREF="http://modula3.org/threads/">Threads: A Modula-3 Newsletter</A>,
+<A HREF="http://modula3.org/threads/1/">Issue 1</A>
+(<A HREF="https://web.archive.org/web/20070516094944/http://www.m3.org/threads/1/">archive</A>)
+(<A HREF="http://modula3.org/threads/1/threads1.pdf">pdf</A>,
+<A HREF="https://web.archive.org/web/20060924083700/http://www.m3.org/threads/1/threads1.pdf">archive</A>),
+Fall 1995.
+<P>
+This article describes the teaching and research efforts centered
+around Modula-3 at the University of Klagenfurt in Austria.
+<P>
+
+<LI><A NAME="m3-BC90">Gilad Bracha and William Cook</A>,
+Mixin-based Inheritance (<A HREF="https://bracha.org/oopsla90.pdf">pdf</A>),
+<I>Proceedings of the Conference on Object-Oriented
+Programming: Systems, Languages, and Applications;
+European Conference on Object-Oriented Programming</I>,
+Pages 303-311,
+October, 1990.
+<P>
+
+<LI><A NAME="color">Marc H. Brown and John Hershberger</A>,
+<A HREF="https://www.hpl.hp.com/techreports/Compaq-DEC/SRC-RR-76A.html">Color and Sound in Algorithm Animation</A>
+(<A HREF="https://www.hpl.hp.com/techreports/Compaq-DEC/SRC-RR-76A.pdf">pdf</A>),
+Research Report 76a,
+Systems Research Center, Digital Equipment Corporation,
+Palo Alto,
+August 30, 1991.
+<P>
+
+<LI><A NAME="zeus">Marc H. Brown</A>,
+<A HREF="https://www.hpl.hp.com/techreports/Compaq-DEC/SRC-RR-75.html">Zeus: A System for Algorithm Animation and Multi-View Editing</A>
+(<A HREF="https://www.hpl.hp.com/techreports/Compaq-DEC/SRC-RR-75.pdf">pdf</A>),
+Research Report 75,
+Systems Research Center, Digital Equipment Corporation,
+Palo Alto,
+February 28, 1992.
+Also appeared in <i>Visual Languages '91</i>, October 1991.
+<P>
+This report describes Zeus, an algorithm animation system written
+in Modula-3.
+<P>
+
+<LI><A NAME="anim-fest">Marc H. Brown</A>,
+<A HREF="https://www.hpl.hp.com/techreports/Compaq-DEC/SRC-RR-98.html">The 1992 SRC Algorithm Animation Festival</A>
+(<A HREF="https://www.hpl.hp.com/techreports/Compaq-DEC/SRC-RR-98.pdf">pdf</A>),
+Research Report 98,
+Systems Research Center, Digital Equipment Corporation,
+Palo Alto,
+March 27, 1993.
+<P>
+This report describes the algorithm animations produced during
+SRC's first algorithm animation festival. The algorithm animation
+systems were developed using the <a href="#zeus">Zeus</a> algorithm
+animation system.
+<P>
+
+<LI><A NAME="anim-fest93">Marc H. Brown</A>,
+<A HREF="https://www.hpl.hp.com/techreports/Compaq-DEC/SRC-RR-126.html">The 1993 SRC Algorithm Animation Festival</A>
+(<A HREF="https://www.hpl.hp.com/techreports/Compaq-DEC/SRC-RR-126.pdf">pdf</A>),
+Research Report 126,
+Systems Research Center, Digital Equipment Corporation,
+Palo Alto,
+July 29, 1994.
+<P>
+This report describes the algorithm animations produced during
+SRC's second algorithm animation festival. The algorithm animation
+systems were developed using the <a href="#zeus">Zeus</a> algorithm
+animation system.
+<P>
+
+<LI><A NAME="VBTkit">Marc H. Brown and James R. Meehan (editors)</A>,
+<A HREF="../src_reports/vbtkit.pdf">VBTkit Reference Manual: A Toolkit for Trestle</A>,
+Systems Research Center, Digital Equipment Corporation,
+Palo Alto.
+<P>
+This report is the working definition of the VBTkit toolkit. VBTkit
+is a collection of widgets for building graphical user interfaces in
+Modula-3. See the <A HREF="#FormsVBT">FormsVBT Reference Manual</A>
+below, which describes a system for easily composing these widgets.
+<P>
+It's also available in the <tt>vbtkit</tt> archive of the SRC Modula-3
+distribution.
+<P>
+
+<LI><A NAME="FormsVBT">Marc H. Brown and James R. Meehan</A>,
+<A HREF="../src_reports/formsvbt.pdf">The FormsVBT Reference Manual</A>,
+Systems Research Center, Digital Equipment Corporation,
+Palo Alto.
+<P>
+This report is the working definition of the FormsVBT toolkit.
+FormsVBT is a system for constructing graphical user interfaces
+(GUI's) in Modula-3.
+<P>
+It's available in the <tt>formsvbt</tt> archive of the SRC Modula-3
+distribution. A draft version is available
+via anonymous FTP from <tt>gatekeeper.research.compaq.com</tt> in
+<A HREF="ftp://gatekeeper.research.compaq.com/pub/DEC/Modula-3/contrib/formsvbt.25Mar93.ps.Z"><tt>pub/DEC/Modula-3/contrib/formsvbt.25Mar93.ps.Z</tt></A>
+and
+<A HREF="ftp://gatekeeper.research.compaq.com/pub/DEC/Modula-3/contrib/formsvbt.AppC.26Mar93.ps.Z">
+<tt>pub/DEC/Modula-3/contrib/formsvbt.AppC.26Mar93.ps.Z</tt></A>.
+<P>
+
+<LI><A NAME="m3-BN89">Mark R. Brown and Greg Nelson</A>,
+<A HREF="https://www.hpl.hp.com/techreports/Compaq-DEC/SRC-RR-53.html">IO Streams: Abstract Types, Real Programs</A>
+(<A HREF="https://www.hpl.hp.com/techreports/Compaq-DEC/SRC-RR-53.pdf">pdf</A>),
+Research Report 53,
+Systems Research Center, Digital Equipment Corporation,
+Palo Alto,
+November, 1989.
+<P>
+This report shows how to use objects in a real program. Also
+defines the de facto standard input/output functions. These
+interfaces give an especially good example of partially
+opaque types. A revised version of this report also appears as Chapter
+6 of <A HREF="#SPwM3"><I>Systems Programming with Modula-3</I></A>.
+<P>
+
+<LI><A NAME="m3-CDG*88">Luca Cardelli, James Donahue, Lucille
+Glassman, Mick Jordan, Bill Kalsow, Greg Nelson</A>,
+<A HREF="ftp://gatekeeper.research.compaq.com/pub/DEC/SRC/research-reports/abstracts/src-rr-031.html">Modula-3 Report</A>,
+Research Report 31,
+Systems Research Center, Digital Equipment Corporation,
+Palo Alto,
+August 15, 1988.
+<P>
+The report contains the original definition of the language,
+superseded by <A HREF="#m3-CDG*89">Research Report 52</A>.
+<P>
+
+<LI><A NAME="m3-popl">Luca Cardelli, James Donahue, Mick Jordan, Bill
+Kalsow, Greg Nelson</A>,
+The Modula-3 Type System (<A HREF="http://lucacardelli.name/Papers/Modula3TypeSystem.US.pdf">pdf</A>),
+<I>Conference Record of the Sixteenth Annual ACM
+Symposium on Principles of Programming Languages (POPL)</I>,
+Pages 202-212,
+January 11-13, 1989.
+<P>
+
+<LI><A NAME="m3-CDG*89">Luca Cardelli, James Donahue, Lucille
+Glassman, Mick Jordan, Bill Kalsow, Greg Nelson</A>,
+<A HREF="https://www.hpl.hp.com/techreports/Compaq-DEC/SRC-RR-52.html">Modula-3 Report (revised)</A>
+(<A HREF="https://www.hpl.hp.com/techreports/Compaq-DEC/SRC-RR-52.pdf">pdf</A>,
+<A HREF="http://lucacardelli.name/Papers/SRC-052.pdf">mirror</A>),
+Research Report 52,
+Systems Research Center, Digital Equipment Corporation,
+Palo Alto,
+November, 1989.
+<P>
+This report is the definition of the Modula-3 language.
+The complete language definition, Chapter 2 of
+<A HREF="#SPwM3"><I>Systems Programming with
+Modula-3</I></A>, is also available
+<A HREF="../reference/m3.html">on-line</A>.
+<P>
+
+<LI><A name="sigplan">Luca Cardelli, James Donahue, Lucille Glassman,
+Mick Jordan, Bill Kalsow, Greg Nelson</A>,
+Modula-3 Language Definition
+(<A HREF="../reference/complete/m3-defn-complete.pdf">pdf</a>),
+<I>Sigplan Notices</I>
+27(8):15-42,
+August 1992.
+<P>
+This article defines the Modula-3 programming language; it is
+identical to Chapters 2 and 3 of <A HREF="#SPwM3">SPwM3</A>.
+A more up-to-date
+<A HREF="../reference/m3.html">on-line version</A> is also available.
+<P>
+
+<LI><A NAME="Dagenais-OO">Michel R. Dagenais</A>,
+<A HREF="http://www.vlsi.polymtl.ca/dagenais/if515/main/main.html">Building Distributed OO Applications: Modula-3 Objects at Work</A>,
+Draft Version,
+March 8, 1995.
+<P>
+A draft of a book describing "the latest object-oriented techniques for
+developing large interactive distributed applications". The focus is on
+the Modula-3 libraries and Network Objects, but the first two chapters
+give an introduction to object-oriented programming in general, and
+the object methodologies of C++ and Obliq in particular.
+<P>
+
+<LI><A NAME="Whole-Optimizer">Amer Diwan</A>,
+<A HREF="http://modula3.org/threads/1/#advanced">The
+Whole Program Optimizer</A>,
+<A HREF="http://modula3.org/threads/">Threads: A Modula-3 Newsletter</A>,
+<A HREF="http://modula3.org/threads/1/">Issue 1</A>
+(<A HREF="http://modula3.org/threads/1/threads1.pdf">pdf</A>),
+Fall 1995.
+<P>
+This article motivates and describes an optimizer for Modula-3
+programs based on whole-program analysis. An optimizer that looks at
+an entire program can do better than one that uses only the
+information imported when compiling a single module. Preliminary
+results are promising: on benchmark programs, up to 50% of method
+invocations can be converted to direct calls. The optimizer is itself
+written in Modula-3.
+<P>
+
+<LI><A NAME="Fernandez-PLDI">Mary Fernandez</A>,
+<I>Simple and Effective Link-time Optimization of Modula-3 Programs</I>
+(<A HREF="https://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.53.9839">CiteSeerx</A>),
+SIGPLAN '95,
+Conference on Programming Language Design and Implementation (PLDI),
+June, 1995,
+pgs. 103-115.
+<P>
+This paper shows how the overhead introduced by Modula-3's opaque
+types can be reduced at link time. The optimizations described in the
+paper are shown to be effective: they reduce the total number of
+instructions by up to 14% and convert as many as 79% of indirect calls
+to direct calls.
+<P>
+
+<LI><A NAME="Fernandez-Thesis">Mary Fernandez</A>,
+<A HREF="http://www.cs.princeton.edu/~mff/mld"
+><I>A Retargetable, Optimizing Linker</I></A>,
+PhD Thesis,
+Department of Computer Science,
+Princeton University,
+January, 1996.
+<P>
+This thesis describes <B>mld</B>, a retargetable, optimizing linker,
+for the MIPS, SPARC, and Intel 486 architectures. The linker optimizes
+away some of the costs of late binding. In particular, <B>mld</B>'s
+optimizations permit efficient implementation of Modula-3's
+module-encapsulation and data-abstraction features. The thesis
+presents the results of applying <B>mld</B>'s simple optimization
+techniques to several Modula-3 programs and reports their execution
+times on the MIPS and Intel 486 architectures.
+<P>
+
+<LI><A NAME="Fernandez-Threads">Mary Fernandez</A>,
+<A HREF="http://modula3.org/threads/2/#linkTimeOptimization">Link-Time Optimization for Modula-3</A>,
+<A HREF="http://modula3.org/threads/">Threads: A Modula-3 Newsletter</A>,
+<A HREF="http://modula3.org/threads/2/">Issue 2</A>
+(<A HREF="http://modula3.org/threads/2/threads2.pdf">pdf</A>),
+Fall 1996.
+<P>
+This article summarizes the author's work on <i>mld</i>, a link-time
+optimizer for Modula-3. For even more information, see her
+<a href="#Fernandez-PLDI">PLDI paper</a> or her
+<a href="#Fernandez-Thesis">Ph.D. thesis</a>.
+<P>
+
+<LI><A NAME="Threads-SPIN">Marc E. Fiuczynski, Wilson C. Hsieh,
+Emin Gun Sirer, Przemyslaw Pardyak, and Brian N. Bershad</A>,
+<A HREF="http://modula3.org/threads/3/#advancedTopic">Low-Level Systems Programming with Modula-3</A>,
+<A HREF="http://modula3.org/threads/">Threads: A Modula-3 Newsletter</A>,
+<A HREF="http://modula3.org/threads/3/">Issue 3</A>
+(<A HREF="https://web.archive.org/web/20070516094749/http://www.m3.org/threads/3/">archive</A>)
+(<A HREF="http://modula3.org/threads/3/threads3.pdf">pdf</A>,
+(<A HREF="https://web.archive.org/web/20060924083637/http://www.m3.org/threads/3/threads3.pdf">archive</A>),
+Fall 1997.
+<P>
+The SPIN group at the University of Washington has been using Modula-3 since
+1995 as both the kernel and extension language for the SPIN operating system.
+In this article, they describe the set of additions they have made to extend
+Modula-3's support for low-level systems programming.
+<P>
+
+<LI><A NAME="m3-Fre95DDJ">Steve Freeman</A>,
+<A HREF="http://www.research.compaq.com/SRC/modula-3/html/partial-rev/index.html">Partial Revelation and Modula-3</A>,
+<A HREF="http://www.ddj.com/"><I>Dr. Dobb's Journal</I></A>,
+20(10):36-42,
+October, 1995.
+<P>
+This article describes how Modula-3's partial revelations promote
+encapsulation and code reuse. The article is one of five on
+"object-oriented programming" contained in the same issue (the other
+four languages are C++, Ada 95, S, and Cobol '97).
+<P>
+
+<LI><A NAME="m3fp">David Goldberg</A>,
+The Design of Floating-Point Data Types,
+<I>ACM Letters on Programming Languages and Systems</I> (LOPLAS),
+1(2):138-151,
+June 1992.
+<P>
+This article describes the Modula-3 treatment of floating-point values.
+<P>
+
+<LI><A NAME="GroenerMoral">Markus K. Gröner, I. Utku Moral</A>,
+<A HREF="http://ei.cs.vt.edu/~cs5204/projects/groener/bfsm3.html">Concurrent
+Breadth-First Search using Modula-3</A>.
+<P>
+This page describes the authors' experience installing Modula-3 on a
+PC and using the language to implement a concurrent breadth-first
+search algorithm. The authors were trying to install
+<A HREF="ex32.html">M3forDOS</A>, an implementation of Modula-3 that runs
+on DOS PC's. They found this installation to be quite
+difficult. They eventually ended up using a version of
+<A HREF="http://www.research.digital.com/SRC/modula-3/html/srcm3.html">SRC
+Modula-3</A> that had already been installed on a Unix box at their site.
+<P>
+
+<LI><A NAME="m3-Har90">Sam Harbison</A>,
+Modula-3,
+<I>Byte</I>,
+15(12):385-392,
+November, 1990.
+<P>
+This article is a survey of the Modula-3 language. It gives a brief
+history of the language and describes the language's major features,
+including modules, exceptions, objects, threads and other support for
+concurrent programming, safety, and garbage collection. It also
+discusses the basis for some of the more contentious language design
+decisions.
+<P>
+
+<LI><A NAME="m3-Har92DDJ">Sam Harbison</A>,
+Safe Programming with Modula-3,
+<A HREF="http://www.ddj.com/"><I>Dr. Dobb's Journal</I></A>,
+17(10):88-96,
+October, 1992.
+<P>
+This article is a survey of the Modula-3 language.
+<P>
+
+<LI><A name="m3-Har92">Samuel P. Harbison</A>,
+<I>Modula-3</I>,
+Prentice Hall,
+ISBN 0-13-596396-6,
+1992.
+<P>
+A complete Modula-3 textbook covering the full
+language, with examples and exercises.  Includes a
+style manual and a user's guide for SRC Modula-3.
+<P>
+The first edition of the book contains many typos. A
+<A HREF="ftp://gatekeeper.research.compaq.com/pub/DEC/Modula-3/errata/">list
+of errata</A> is available on-line for anonymous FTP (in TeX,
+compressed PostScript, or DVI format) from <TT>gatekeeper.research.compaq.com</TT>
+in the directory <TT>pub/DEC/Modula-3/errata/</TT>.
+<P>
+
+<LI><A NAME="m3s:jspp93">Ernst A. Heinz</A>,
+<A HREF="ftp://i41s10.ira.uka.de/pub/m3s/jspp93.ps.gz">Modula-3*: An
+efficiently compilable extension of Modula-3 for problem-oriented
+explicitly parallel programming</A>,
+<I>Proceedings of the Joint Symposium on Parallel Processing 1993</I>,
+Pages 269-276,
+May 17-19, 1993,
+Tokyo, Japan.
+<P>
+Available from <tt>i41s10.ira.uka.de [129.13.13.110]</tt> by anonymous ftp
+in directory <tt>pub/m3s</tt>
+as <A HREF="ftp://i41s10.ira.uka.de/pub/m3s/jspp93.ps"><tt>jspp93.ps</tt></A>
+or <A HREF="ftp://i41s10.ira.uka.de/pub/m3s/jspp93.ps.gz"><tt>jspp93.ps.gz</tt></A>.
+<P>
+
+<LI><A NAME="m3s:jmlc94">Ernst A. Heinz</A>,
+<A HREF="ftp://i41s10.ira.uka.de/pub/m3s/jmlc94.ps.gz">Sequential and
+parallel exception handling in Modula-3*: A unifying semantics
+specification</A>,
+<I>Advances in Modular Languages: Proceedings of the Joint Modular
+Languages Conference</I>,
+P. Schulthess (editor),
+Pages 31-49,
+September 28-30, 1994,
+Ulm, Germany.
+<P>
+Available from Universitatsverlag Ulm GmbH or from <tt>i41s10.ira.uka.de</tt>
+<tt>[129.13.13.110]</tt> by anonymous ftp in directory <tt>pub/m3s</tt>
+as <A HREF="ftp://i41s10.ira.uka.de/pub/m3s/jmlc94.ps"><tt>jmlc94.ps</tt></A>
+or <A HREF="ftp://i41s10.ira.uka.de/pub/m3s/jmlc94.ps.gz"><tt>jmlc94.ps.gz</tt></A>.
+<P>
+
+<LI><A NAME="OO-Comparison">Robert Henderson and Benjamin Zorn</A>,
+<A HREF="ftp://ftp.cs.colorado.edu/pub/cs/techreports/zorn/CU-CS-641-93.ps.Z">A Comparison of Object-Oriented Programming in Four Modern Languages</A>,
+Technical Report CU-CS-641-93,
+Department of Computer Science,
+University of Colorado,
+Boulder, Colorado,
+1993.
+<P>
+The paper evaluates Oberon, Modula-3, Sather, and Self in the context
+of object-oriented programming. While each of these programming
+languages provide support for classes with inheritance, dynamic
+dispatch, code reuse, and information hiding, they do so in very
+different ways and with varying levels of efficiency and simplicity. A
+single application was coded in each language and the experience
+gained forms the foundation on which the subjective critique is based.
+By comparing the actual run-times of the various implementations it is
+also possible to present an objective analysis of the efficiency of
+the languages. Furthermore, by coding the application using both
+explicit dynamic dispatch and static method binding, it is possible to
+evaluate the cost of dynamic dispatch in each language. The
+application was also coded in C++, thereby providing a well-known
+baseline against which the execution times can be compared.
+<P>
+
+<LI><A NAME="Juno2">Allan Heydon and Greg Nelson</A>,
+<A HREF="https://www.hpl.hp.com/techreports/Compaq-DEC/SRC-RR-131A.html">The Juno-2 Constraint-Based Drawing Editor</A>
+(<A HREF="https://www.hpl.hp.com/techreports/Compaq-DEC/SRC-RR-131A.pdf">pdf</A>),
+Research Report 131a,
+Systems Research Center, Digital Equipment Corporation,
+Palo Alto,
+December, 1994.
+<P>
+This report describes Juno-2, a powerful constraint-based drawing editor
+implemented in Modula-3. For more information, see the
+<A HREF="../../m3-ui/juno-2/docs/juno-langdef.pdf">Juno-2 Language Definition</A>.
+<P>
+
+<LI><A NAME="Juno2UI">Allan Heydon</A>,
+<A HREF="http://modula3.org/threads/1/#feature">Implementing Juno-2: The User Interface</A>,
+<A HREF="http://modula3.org/threads/">Threads: A Modula-3 Newsletter</A>,
+<A HREF="http://modula3.org/threads/1/">Issue 1</A>
+(<A HREF="http://modula3.org/threads/1/threads1.pdf">pdf</A>),
+Fall 1995.
+<P>
+<A HREF="http://www.research.digital.com/SRC/juno-2">Juno-2</A> is a
+constraint-based drawing program. This article describes how Modula-3's
+<a href="#FormsVBT">FormsVBT</a>, <a href="#VBTkit">VBTkit</a>, and
+<a href="#Trestle">Trestle</a> libraries were used to
+implement the Juno-2 user interface.
+<P>
+
+<LI><A NAME="Juno2DblBuffer">Allan Heydon and Greg Nelson</A>,
+<A HREF="http://modula3.org/threads/2/#DblBufferVBT">DblBufferVBT: A Reusable Software Double Buffer</A>,
+<A HREF="http://modula3.org/threads/">Threads: A Modula-3 Newsletter</A>,
+<A HREF="http://modula3.org/threads/2/">Issue 2</A>
+(<A HREF="http://modula3.org/threads/2/threads2.pdf">pdf</A>),
+Fall 1996.
+<P>
+This article describes the design and implementation of
+<code>DblBufferVBT.T</code>, a software double-buffer that we used in
+the <A HREF="http://www.research.digital.com/SRC/juno-2">Juno-2</A>
+constraint-based drawing editor to produce smooth graphics and animations.
+<P>
+
+<LI><A NAME="Juno2Unification">Allan Heydon</A>,
+<A HREF="http://modula3.org/threads/3/#continuingThread">An Object Oriented Implementation of Unification Closure</A>,
+<A HREF="http://modula3.org/threads/">Threads: A Modula-3 Newsletter</A>,
+<A HREF="http://modula3.org/threads/3/">Issue 3</A>
+(<A HREF="http://modula3.org/threads/3/threads3.pdf">pdf</A>),
+Fall 1997.
+<P>
+This article describes the design of three object types used in
+the <A HREF="http://www.research.digital.com/SRC/juno-2">Juno-2</A>
+constraint solver. It illustrates the use of objects,
+subclassing, method overriding, and partial revelation in Modula-3.
+In particular, it describes the implementation of the unification
+closure algorithm used to solve pair constraints in the constraint
+solver.
+<P>
+
+<LI><A NAME="StableTable">Allan Heydon</A>,
+<A HREF="http://www.research.compaq.com/SRC/modula-3/html/tutorials/stabletable/index.html"
+>Stabletable: An Example Client of the SmallDB Interface</A>,
+September, 1996.
+<P>
+The sources of an example use of the
+<a href="http://www.research.digital.com/SRC/m3sources/html/smalldb/src/SmallDB.i3.html"
+>SmallDB</a> interface.
+In particular, the example defines a generic interface called
+"StableTbl". A "StableTbl.T" is like a
+"<a href="http://www.research.compaq.com/SRC/m3sources/html/table/src/Table.ig.html">Table</a>.Default", except that
+all updates to the table are written to stable storage for
+reliability. To write the table's data-structures to disk, the library
+uses SRC Modula-3's
+<a href="http://www.research.digital.com/SRC/m3sources/html/pickle/src/Pickle.i3.html"
+>Pickle interface</a>. It also includes an example of a
+<a href="http://www.research.compaq.com/SRC/modula-3/html/quake/index.html"
+>quake</a> template that defines procedures for instantiating generic
+data types. A
+<A HREF="http://www.research.compaq.com/SRC/modula-3/html/tutorials/stabletable/stabletable.tar.gz">gzipped tar archive</A>
+of the sources and web page is also available.
+<P>
+
+<LI><A NAME="SortedTableExample">Allan Heydon</A>,
+<A HREF="http://www.research.compaq.com/SRC/modula-3/html/tutorials/sortedtbl/index.html"
+>SortedTable Example</A>,
+November, 1997.
+<P>
+The sources of an example demonstrating the use of the SortedTable
+generic interface. It includes a test program that instantiates the
+generic SortedTable with a custom domain type named IntIntvl and REAL
+for the range type. An IntIntvl.T is simply an integer interval. A
+<a href="http://www.research.compaq.com/SRC/modula-3/html/tutorials/sortedtbl/sortedtbl.tar.gz"
+>gzipped tar archive</a>
+of the sources and web page is also available.
+<P>
+
+<LI><a name="SortedTableImpls">Allan Heydon</a>,
+Alternative Implementations of the SortedTable Interface</a>
+(<a href="http://www.research.compaq.com/SRC/personal/heydon/papers/SortedTableExtras.pdf"
+>PDF</a>,
+<a href="http://www.research.digital.com/SRC/personal/heydon/papers/SortedTableExtras.ps"
+>PostScript</a>),
+Draft,
+January 26, 1998.
+<p>
+This draft paper describes three Modula-3 implementations of the generic
+<a href="http://www.research.compaq.com/SRC/m3sources/html/sortedtable/src/SortedTable.ig.html"
+>SortedTable</a> interface, and compares their time and space
+performance. The three algorithms compared are the default
+<code>SortedTable.Default</code> implementation bundled with
+the Modula-3 libraries, a red-black tree implementation, and a
+skip list implementation.
+The complete sources for the two non-standard implementations
+are available in a
+<a href="http://www.research.digital.com/SRC/personal/heydon/ftp/sortedtableextras.tar"
+>tar archive</a>.
+<p>
+
+<LI><a name="UDP">Allan Heydon</a>,
+<a href="http://modula3.org/dev/udp/udp.pdf">A UDP Interface</a>,
+Draft,
+December 11, 1998.
+<p>
+This draft paper describes a Modula-3 interface for the User
+Datagram Protocol (UDP). The Modula-3 sources of an implementation
+that works on all POSIX platforms is also available as a
+<a href="http://www.research.compaq.com/SRC/modula-3/patches-3.6/common/udp.tar.gz"
+>gzipped tar archive</a>. Thanks to Jonathan Gutherie for writing the
+first implementation on which this one was based.
+<p>
+
+<LI><A NAME="hoare">C.A.R. Hoare</A>,
+Monitors: An operating system structuring concept
+(<A HREF="https://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.24.6394">CiteSeerx</A>),
+<I>Communications of the ACM</I>,
+17(10),
+October 1974.
+<P>
+
+<LI><A NAME="UsefulM3">Jim Horning, Bill Kalsow, Paul McJones, Greg Nelson</A>,
+<A HREF="https://www.hpl.hp.com/techreports/Compaq-DEC/SRC-RR-113.html">Some Useful Modula-3 Interfaces</A>
+(<A HREF="https://www.hpl.hp.com/techreports/Compaq-DEC/SRC-RR-113.pdf">pdf</A>,
+<A HREF="../src_reports/src-113.pdf">mirror</A>),
+Research Report 113,
+Systems Research Center, Digital Equipment Corporation,
+Palo Alto,
+December, 1993.
+<P>
+This report is a description of the SRC standard Modula-3 library interfaces.
+It's an essential reference for every Modula-3 programmer!
+<P>
+
+<LI><A NAME="SPIN-Modula-3">Wilson C. Hsieh, Marc E. Fiuczynski,
+Charles Garrett, Stefan Savage, David Becker, and Brian N. Bershad</A>,
+<A HREF="http://www.cs.washington.edu:80/research/projects/spin/www/papers/WCS/language.ps">Language Support for Extensible Operating Systems</A>,
+November, 1996.
+<P>
+Describes the extensions made by the SPIN group at the University of
+Washington to the Modula-3 language for use in their SPIN extensible
+operating system.
+<P>
+
+<LI><A NAME="Klein94">Peter Klein</A>,
+<A HREF="ftp://ftp.informatik.rwth-aachen.de/pub/reports/1994/94-16.ps.gz"
+>Designing Software with Modula-3</A>,
+Technical Report 94-16,
+Department of Computer Science III,
+Aachen University of Technology.
+1994.
+<P>
+
+<LI><A NAME="Threads3-Klein">Peter Klein</A>,
+<A HREF="http://modula3.org/threads/3/#academia">Modula-3 in Academia: Department of Computer Science III,
+Aachen University of Technology, Germany</A>,
+<A HREF="http://modula3.org/threads/">Threads: A Modula-3 Newsletter</A>,
+<A HREF="http://modula3.org/threads/3/">Issue 3</A>
+(<A HREF="http://modula3.org/threads/3/threads3.pdf">pdf</A>),
+Fall 1997.
+<P>
+Aachen University of Technology, in Aachen, Germany has been using
+Modula-3 successfully for a number of academic and research projects
+since 1993. Peter Klein, a member of the CS Department III, reports on
+some of their experiences.
+<P>
+
+<LI><A NAME="lampson80">Butler W. Lampson and David D. Redell</A>,
+<A HREF="https://bwlampson.site/23-ProcessesInMesa/WebPage.html">Experience with processes and monitors in Mesa</A>
+(<A HREF="https://bwlampson.site/23-ProcessesInMesa/Acrobat.pdf">pdf</A>),
+<I>Communications of the ACM</I>,
+23(2),
+February 1980.
+<P>
+
+<LI><A NAME="Trestle">Mark S. Manasse and Greg Nelson</A>,
+<A HREF="https://www.hpl.hp.com/techreports/Compaq-DEC/SRC-RR-68.html">Trestle Reference Manual</A>
+(<A HREF="https://www.hpl.hp.com/techreports/Compaq-DEC/SRC-RR-68.pdf">pdf</A>,
+<A HREF="../src_reports/src-068.pdf">mirror</A>),
+Research Report 68,
+Systems Research Center, Digital Equipment Corporation,
+Palo Alto,
+December, 1991.
+<P>
+This report is the working definition of the Trestle toolkit for
+doing graphics in Modula-3.
+<P>
+
+<LI><A NAME="TrestleTutorial">Mark S. Manasse and Greg Nelson</A>,
+<A HREF="https://www.hpl.hp.com/techreports/Compaq-DEC/SRC-RR-69.html">Trestle Tutorial</A>
+(<A HREF="https://www.hpl.hp.com/techreports/Compaq-DEC/SRC-RR-69.pdf">pdf</A>,
+<A HREF="../src_reports/src-069.pdf">mirror</A>),
+Research Report 69,
+Systems Research Center, Digital Equipment Corporation,
+Palo Alto,
+May, 1992.
+<P>
+This report is a tutorial introduction to the
+<a href="#Trestle">Trestle toolkit</a>.
+<P>
+
+<LI><A NAME="mcjones89">Paul McJones and Garret Swart</A>,
+Evolving the UNIX system interface to support multi-threaded programs,
+<I>Proceedings of the Winter 1989 USENIX Conference</I>,
+February 1989.
+<P>
+
+<LI><A NAME="Obliq3D">Marc Najork</A>,
+<A HREF="https://www.hpl.hp.com/techreports/Compaq-DEC/SRC-RR-129.html">Obliq-3D Tutorial and Reference Manual</A>
+(<A HREF="https://www.hpl.hp.com/techreports/Compaq-DEC/SRC-RR-129.pdf">pdf</A>),
+Research Report 129,
+Systems Research Center, Digital Equipment Corporation,
+Palo Alto,
+December, 1994,
+110 pages.
+<P>
+This report describes Obliq-3D, an interpreted language based on the
+Anim3D library for building 3D animations quickly and easily.
+<P>
+
+<LI><A NAME="Nayeri96">Farshad Nayeri</A>,
+<A HREF="nayeri-4-96.html">SRC Modula-3: An Elegant, Free, Open,
+Mature, High-Quality, Clean & Modest Programming Language, System,
+Library & Tool for Building Robust, Large-Scale, Multi-Threaded &
+Distributed Programs</A>,
+March, 1996.
+<P>
+A happy user promotes SRC Modula-3. The article begins:
+<BLOCKQUOTE>
+<I>Despite its length and buzzword density, the subtitle above is one
+the shortest phrases that characterize the virtues of SRC Modula-3.
+The language designers' stated goal of "consolidation, not innovation"
+is a modest understatement for their wise, elegant, and inventive
+combination of features that are greatly needed by the modern
+programmer.</I>
+</BLOCKQUOTE>
+<P>
+
+<LI><A NAME="NayeriNetObj">Farshad Nayeri</A>,
+<A HREF="http://www.research.compaq.com/SRC/modula-3/html/tutorials/net-balance/index.html"
+>Net Balance: A Network Objects Example</A>,
+March, 1996.
+<P>
+The sources of a simple client and server that use network objects. A
+<A HREF="http://www.research.compaq.com/SRC/modula-3/html/tutorials/net-balance/net-balance.tar.gz">gzipped tar archive</A>
+of the sources and web page is also available.
+<P>
+
+<LI><A NAME="Reactor">Farshad Nayeri</A>,
+<A HREF="http://modula3.org/threads/2/#featureArticle">Reactor Goes On-Line!</A>,
+<A HREF="http://modula3.org/threads/">Threads: A Modula-3 Newsletter</A>,
+<A HREF="http://modula3.org/threads/2/">Issue 2</A>
+(<A HREF="http://modula3.org/threads/2/threads2.pdf">pdf</A>),
+Fall 1996.
+<P>
+This article describes Reactor, a Modula-3 integrated development
+environment (IDE) that is now <a href="http://m3.org/cm3/">freely
+available</a>.
+<P>
+
+<LI><A NAME="CM3JVM">Farshad Nayeri and Blair MacIntyre</A>,
+<A HREF="http://modula3.org/threads/3/#featureArticle">Critical Mass JVM: Modula-3 Befriends Java</A>
+<A HREF="http://modula3.org/threads/">Threads: A Modula-3 Newsletter</A>,
+<A HREF="http://modula3.org/threads/3/">Issue 3</A>
+(<A HREF="http://modula3.org/threads/3/threads3.pdf">pdf</A>),
+Fall 1997.
+<P>
+JVM, Critical Mass's implementation of the Java Virtual Machine, is written
+entirely in Modula-3. This article describe the JVM was used to build
+an industrial, Java-extensible serial port controller in Modula-3.
+<P>
+
+<LI><A name="SPwM3">Greg Nelson (editor)</A>,
+<I>System Programming with Modula-3</I>,
+Prentice Hall Series in Innovative Technology,
+ISBN 0-13-590464-1,
+L.C. QA76.66.S87,
+1991.
+<P>
+This book is the definitive language reference. It includes the
+language reference manual and papers on the I/O library,
+threads, and the Trestle window system. It is also known as "SPwM3".
+<P>
+Here is its table of contents:
+<P>
+<OL>
+<LI>Introduction
+<LI><A HREF="../reference/m3.html">Language Definition</A>
+<LI>Standard Interfaces
+<LI>An Introduction to Programming with Threads
+<LI>Thread Synchronization: A Formal Specification
+<LI>I/O Streams: Abstract Types, Real Programs
+<LI>Trestle Window System Tutorial
+<LI>How the Language Got its Spots
+</OL>
+<P>
+These <A HREF="bookstores.html">online bookstores</A>
+claim to carry SPwM3.
+<P>
+
+<LI><A NAME="ObjectInit">Greg Nelson</A>,
+<A HREF="http://modula3.org/threads/1/#design">Initialization
+of Object Types</A>,
+<A HREF="http://modula3.org/threads/">Threads: A Modula-3 Newsletter</A>,
+<A HREF="http://modula3.org/threads/1/">Issue 1</A>
+(<A HREF="http://modula3.org/threads/1/threads1.pdf">pdf</A>),
+Fall 1995.
+<P>
+This article describes the rationale for the way object types are
+initialized in Modula-3. Modula-3 doesn't have type
+<I>constructors</I>, but you can specify default values for object
+fields in the type definition. The article also describes the
+<CODE>init</CODE> method convention.
+<P>
+
+<LI><A NAME="CheckedRTErrors">Greg Nelson</A>,
+<A HREF="http://modula3.org/threads/2/#checkedRuntime">Why Checked Run-Time Errors are Not Exceptions</A>,
+<A HREF="http://modula3.org/threads/">Threads: A Modula-3 Newsletter</A>,
+<A HREF="http://modula3.org/threads/2/">Issue 2</A>
+(<A HREF="http://modula3.org/threads/2/threads2.pdf">pdf</A>),
+Fall 1996.
+<P>
+This brief article argues why checked run-time errors, such as
+indexing off the end of array, are not mapped to exceptions in
+Modula-3. How checked run-time errors are handled is
+implementation-dependent.
+<P>
+
+<LI><A NAME="rovner85">Paul Rovner, Roy Levin, and John Wick</A>,
+<a href="https://www.hpl.hp.com/techreports/Compaq-DEC/SRC-RR-3.html">On Extending Modula-2 for Building Large, Integrated Systems</a>
+(<a href="https://www.hpl.hp.com/techreports/Compaq-DEC/SRC-RR-3.pdf">pdf</a>),
+Research Report 3,
+Systems Research Center, Digital Equipment Corporation,
+Palo Alto,
+January, 1985.
+<P>
+Before Modula-3 there was Modula-2+. This report describes
+how the authors extended Wirth's Modula-2 programming language
+to include support for many language features that have become
+commonplace in modern programming languages, including support
+for threads, synchronization primitives, exceptions, safe
+memory management, and garbage collection. All of these features
+lived on in Modula-3.
+<P>
+
+<LI><A NAME="rovner86">Paul Rovner</A>,
+Extending Modula-2 to build large, integrated systems,
+<I>IEEE Software</I>,
+3(6),
+November 1986.
+<P>
+A journal version of <a href="#rovner85">SRC Research Report 3</a>.
+<P>
+
+<LI><A NAME="Alg-Sed93">Robert Sedgewick</A>,
+<I>Algorithms in Modula-3</I>,
+Addison-Wesley,
+ISBN 0-201-53351-0,
+L.C. QA76.73.M63S43,
+1993.
+<P>
+Sedgewick's classic text on basic algorithms and data structures.
+The examples in this edition are written in Modula-3.
+<P>
+
+<LI><A NAME="Schaub-Tutorial">Stephen Schaub</A>,
+<A HREF="../tutorial/m3/m3_toc.html">Modula-3 Reference and Tutorial</A>.
+<P>
+An on-line reference and tutorial, available in three formats: HTML,
+Texinfo source, and GNU Info files. All three formats are available as a
+<A HREF="http://www.cs.columbia.edu/graphics/modula3/tutorial/m3info.tar.gz">gzipped tar file</A> as well.
+<P>
+
+<LI><A NAME="Modula-3-Myths">Emin G&uumln Sirer, Stefan Savage, Przemyslaw
+Pardyak, Greg P. DeFouw, and Brian Bershad</A>,
+<A HREF="https://cseweb.ucsd.edu/~savage/papers/Wcsss96m3os.pdf">Writing an Operating System with Modula-3</A>,
+November, 1995.
+<P>
+Describes the experiences of the SPIN group at the University of
+Washington using Modula-3 to build a high performance extensible
+operating system. Debunks some of the myths surrounding Modula-3 by
+arguing that the SRC reference implementation introduces
+inefficiencies that are not imposed by the Modula-3 language itself.
+<P>
+
+<LI><A NAME="Photon">Lauren Schmitt</A>,
+<A HREF="http://modula3.org/threads/1/#industry">Photon:
+An Environment for Building Distributed Applications</A>,
+<A HREF="http://modula3.org/threads/">Threads: A Modula-3 Newsletter</A>,
+<A HREF="http://modula3.org/threads/1/">Issue 1</A>
+(<A HREF="http://modula3.org/threads/1/threads1.pdf">pdf</A>),
+Fall 1995.
+<P>
+This brief article announces Photon, a commercially supported
+development environment based on SRC Modula-3. The first official
+release is scheduled for the first quarter of 1996. The first target
+platform is Linux PC's. Photon is a product of
+<A HREF="http://www.cmass.com">Critical Mass, Inc.</A>.
+<P>
+
+<LI><A NAME="Stansifer-Tutorial">Ryan Stansifer</A>,
+<A HREF="http://www.research.digital.com/SRC/trestle_by_example/html/tutorial.html">Trestle by Example</A>,
+October, 1994.
+<P>
+An on-line introduction to the Trestle window system. This tutorial
+was written to conform with SRC Modula-3 version 2.11. Some of
+the interfaces called in this tutorial are obsolete.
+A <A HREF="http://www.research.digital.com/SRC/trestle_by_example/TrestleByExample.tar.gz">gzip'ed tar archive</A>
+of the entire tutorial is available.
+<P>
+
+<LI><A NAME="M3forOS2">Carsten Whimster</A>
+<A HREF="http://www.edm2.com/0403/modula3.html">Using Modula-3 Under OS/2</A>,
+<A HREF="http://www.edm2.com/indexold.html">Electronic Development
+Magazine, OS/2 edition (EDM/2)</A>,
+March, 1996.
+<P>
+See also <A HREF="http://www.edm2.com/index.php/Main_Page">EDM/2 wiki</A> and
+<A HREF="http://www.edm2.com/indexold.html">Modula-3 resources</A>.
+<P>
+
+<LI><A NAME="Intro-Wyant">Geoff Wyant</A>,
+<A HREF="https://www.linuxjournal.com/article/9">Introducing Modula-3</A>,
+<A HREF="https://www.linuxjournal.com/"><I>Linux Journal</I></A>,
+December 1994.
+<P>
+A good summary article on the Modula-3 programming language,
+libraries, and system.
+<P>
+
+<LI>John Kominek,
+<A HREF="https://www.linuxjournal.com/article/2690">Building a Distributed Spreadsheet in Modula-3</A>,
+<A HREF="https://www.linuxjournal.com/"><I>Linux Journal</I></A>,
+May 1998.
+<P>
+
+<LI><A NAME="M3Vixie1992">Paul Vixie</A>,
+<A HREF="http://www.redbarn.org/node/20">Modula-3</A>,
+<I>Usenix ;login:</I></A>,
+November/December 1992.
+<P>
+An overview of Modula-3 republished April 2014 by Paul Vixie in his blog
+<P>
+
+<LI>Joseph Bergin
+<A HREF="https://csis.pace.edu/~bergin/M3text/">Object-Oriented Data Abstraction in Modula-3</A>
+<P>
+
+</OL>
+<P>
+
+<HR>
+<P>
+You can order SRC Research Reports and videotapes
+<A HREF="http://www.research.digital.com/SRC/publications/src-rr.html">on-line</A>
+through the World-Wide Web. All reports and videotapes are <I>free</I>.
+<P>
+
+You can also order reports and videos by contacting:
+<BLOCKQUOTE>
+<ADDRESS>
+SRC Report Distribution<BR>
+Digital Equipment Corporation<BR>
+130 Lytton Avenue<BR>
+Palo Alto, CA 94301-1044<BR>
+</ADDRESS><P>
+<TT>src-report@src.dec.com</TT>
+</BLOCKQUOTE>
+
+<P>
+<HR>
+<font size=-1>
+Copyright &copy; 1992, 1996, Digital Equipment Corporation. All rights reserved. See <a href=/rsrc/digital-license.html>license</a> for full description.
+</font>
+
+</BODY>
+</HTML>

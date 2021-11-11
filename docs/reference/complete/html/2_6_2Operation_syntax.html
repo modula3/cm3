@@ -1,0 +1,168 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<!--Converted with LaTeX2HTML 2008 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>2.6.2 Operation syntax</TITLE>
+<META NAME="description" CONTENT="2.6.2 Operation syntax">
+<META NAME="keywords" CONTENT="m3-defn-complete">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2008">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="/cm3/normal.css">
+
+<LINK REL="next" HREF="2_6_3Designators.html">
+<LINK REL="previous" HREF="2_6_1Conventions_describing.html">
+<LINK REL="up" HREF="2_6Expressions.html">
+<LINK REL="next" HREF="2_6_3Designators.html">
+</HEAD>
+
+<BODY >
+
+<DIV CLASS="navigation"><!--Navigation Panel-->
+<A NAME="tex2html788"
+  HREF="2_6_3Designators.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html786"
+  HREF="2_6Expressions.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html780"
+  HREF="2_6_1Conventions_describing.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A>   
+<BR>
+<B> Next:</B> <A NAME="tex2html789"
+  HREF="2_6_3Designators.html">2.6.3 Designators</A>
+<B> Up:</B> <A NAME="tex2html787"
+  HREF="2_6Expressions.html">2.6 Expressions</A>
+<B> Previous:</B> <A NAME="tex2html781"
+  HREF="2_6_1Conventions_describing.html">2.6.1 Conventions for describing</A>
+<BR>
+<BR></DIV>
+<!--End of Navigation Panel-->
+
+<H3><A NAME="SECTION00019200000000000000">
+2.6.2 Operation syntax</A>
+</H3>
+
+<P>
+The operators that have special syntax are classified and listed in order of
+decreasing binding power in the following table:
+<BLOCKQUOTE>
+<TABLE CELLPADDING=3>
+<TR><TD ALIGN="LEFT"><code>x.a</code></TD>
+<TD ALIGN="LEFT">infix dot</TD>
+</TR>
+<TR><TD ALIGN="LEFT"><code>f(x) a[i] T{x}</code></TD>
+<TD ALIGN="LEFT">applicative <code>(</code>, <code>[</code>, <code>{</code></TD>
+</TR>
+<TR><TD ALIGN="LEFT"><code>p^</code></TD>
+<TD ALIGN="LEFT">postfix <code>^</code></TD>
+</TR>
+<TR><TD ALIGN="LEFT"><code>+  -</code></TD>
+<TD ALIGN="LEFT">prefix arithmetics</TD>
+</TR>
+<TR><TD ALIGN="LEFT"><code>* / DIV MOD</code></TD>
+<TD ALIGN="LEFT">infix arithmetics</TD>
+</TR>
+<TR><TD ALIGN="LEFT"><code>+ - &amp;</code></TD>
+<TD ALIGN="LEFT">infix arithmetics</TD>
+</TR>
+<TR><TD ALIGN="LEFT"><code>= # &lt; &lt;= &gt;= &gt; IN</code></TD>
+<TD ALIGN="LEFT">infix relations</TD>
+</TR>
+<TR><TD ALIGN="LEFT"><code>NOT</code></TD>
+<TD ALIGN="LEFT">prefix <code>NOT</code></TD>
+</TR>
+<TR><TD ALIGN="LEFT"><code>AND</code></TD>
+<TD ALIGN="LEFT">infix <code>AND</code></TD>
+</TR>
+<TR><TD ALIGN="LEFT"><code>OR</code></TD>
+<TD ALIGN="LEFT">infix <code>OR</code></TD>
+</TR>
+</TABLE>
+</BLOCKQUOTE>
+
+<P>
+All infix operators are left associative.  Parentheses can be used to override
+the precedence rules.  Here are some examples of expressions together with
+their fully parenthesized forms:
+<BLOCKQUOTE>
+<TABLE CELLPADDING=3>
+<TR><TD ALIGN="LEFT"><code>M.F(x)</code></TD>
+<TD ALIGN="LEFT"><code>(M.F)(x)</code></TD>
+<TD ALIGN="LEFT">dot before application</TD>
+</TR>
+<TR><TD ALIGN="LEFT"><code>Q(x)^</code></TD>
+<TD ALIGN="LEFT"><code>(Q(x))^</code></TD>
+<TD ALIGN="LEFT">application before <code>^</code></TD>
+</TR>
+<TR><TD ALIGN="LEFT"><code>- p^</code></TD>
+<TD ALIGN="LEFT"><code>- (p^)</code></TD>
+<TD ALIGN="LEFT"><code>^</code> before prefix <code>-</code></TD>
+</TR>
+<TR><TD ALIGN="LEFT"><code>- a * b</code></TD>
+<TD ALIGN="LEFT"><code>(- a) * b</code></TD>
+<TD ALIGN="LEFT">prefix <code>-</code> before <code>*</code></TD>
+</TR>
+<TR><TD ALIGN="LEFT"><code>a * b - c</code></TD>
+<TD ALIGN="LEFT"><code>(a * b) - c</code></TD>
+<TD ALIGN="LEFT"><code>*</code> before infix <code>-</code></TD>
+</TR>
+<TR><TD ALIGN="LEFT"><code>x IN s - t</code></TD>
+<TD ALIGN="LEFT"><code>x IN (s - t)</code></TD>
+<TD ALIGN="LEFT">infix <code>-</code> before <code>IN</code></TD>
+</TR>
+<TR><TD ALIGN="LEFT"><code>NOT x IN s</code></TD>
+<TD ALIGN="LEFT"><code>NOT (x IN s)</code></TD>
+<TD ALIGN="LEFT"><code>IN</code> before <code>NOT</code></TD>
+</TR>
+<TR><TD ALIGN="LEFT"><code>NOT p AND q</code></TD>
+<TD ALIGN="LEFT"><code>(NOT p) AND q</code></TD>
+<TD ALIGN="LEFT"><code>NOT</code> before <code>AND</code></TD>
+</TR>
+<TR><TD ALIGN="LEFT"><code>A OR B AND C</code></TD>
+<TD ALIGN="LEFT"><code>A OR (B AND C)</code></TD>
+<TD ALIGN="LEFT"><code>AND</code> before <code>OR</code></TD>
+</TR>
+</TABLE>
+</BLOCKQUOTE>
+
+<P>
+Operators without special syntax are <SPAN  CLASS="textit">procedural</SPAN>.  An application of a
+procedural operator has the form <code>op(args)</code>, where <code>op</code> is the
+operation and <code>args</code> is the list of argument expressions.  For example,
+<code>MAX</code> and <code>MIN</code> are procedural operators.
+
+<P>
+
+<DIV CLASS="navigation"><HR>
+<!--Navigation Panel-->
+<A NAME="tex2html788"
+  HREF="2_6_3Designators.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html786"
+  HREF="2_6Expressions.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html780"
+  HREF="2_6_1Conventions_describing.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A>   
+<BR>
+<B> Next:</B> <A NAME="tex2html789"
+  HREF="2_6_3Designators.html">2.6.3 Designators</A>
+<B> Up:</B> <A NAME="tex2html787"
+  HREF="2_6Expressions.html">2.6 Expressions</A>
+<B> Previous:</B> <A NAME="tex2html781"
+  HREF="2_6_1Conventions_describing.html">2.6.1 Conventions for describing</A></DIV>
+<!--End of Navigation Panel-->
+<ADDRESS>
+m3-support@elego.de
+</ADDRESS>
+</BODY>
+</HTML>

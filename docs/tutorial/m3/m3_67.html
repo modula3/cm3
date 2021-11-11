@@ -1,0 +1,83 @@
+<html>
+<head>
+   <title>Modula-3 - Multiple-Package Example</title>
+   <meta name="GENERATOR" content="Mozilla/2.0GoldB2 (Win32)">
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+<body>
+<!-- This HTML file has been created by texi2html 1.31
+     from /home/jove/stu/ss0005/m3/info/m3.texi on 8 March 1995 -->Go
+to the <a href="m3_1.html">first</a>, <a href="m3_66.html">previous</a>,
+<a href="m3_68.html">next</a>, <a href="m3_83.html">last</a> section, <a href="m3_toc.html">table
+of contents</a>. 
+<hr>
+<h2><a name="SEC67"></a><a name="SEC67"></a><a name="SEC67"></a><a href="m3_toc.html#SEC67" NAME="SEC67">Multiple-Package
+Example</a></h2>
+
+<p>Consider a program <tt>Prog</tt>, which makes use of two custom Modula-3
+libraries, <tt>LibA </tt>and <tt>LibB</tt>. Let's say that these packages
+are all located in your personal ~/m3 directory, so you have <tt>~/proj/Prog/src</tt>,
+<tt>~/proj/LibA/src</tt>, and <tt>~/m3/LibB/src</tt> directories, each
+with its own collection of modules and an <tt>m3makefile</tt>. </p>
+
+<p>The library <tt>m3makefiles </tt>would look something like this: </p>
+
+<ul>
+<pre>Module(&quot;PublicModule1&quot;)   % this module gets exported to clients
+module(&quot;PrivateModule1&quot;)  % this module doesn't get exported
+Library(&quot;LibA&quot;)           %&nbsp;make the library exportable.</pre>
+</ul>
+
+<p>And similarly, <tt>PublicModule2</tt>, and <tt>PrivateModule2 </tt>for
+<tt>LibB</tt>.</p>
+
+<p><tt>The m3makefile </tt>for the main program <tt>Prog </tt>might look
+like this: </p>
+
+<ul>
+<pre>import(&quot;libm3&quot;)
+import(&quot;LibA&quot;)            % import LibA and LibB
+import(&quot;LibB&quot;)
+implementation(&quot;Main&quot;)
+program(&quot;Myprog&quot;)</pre>
+</ul>
+
+<h4>
+<hr width="100%" >How to Build a Program</h4>
+
+<p>First you need to compile each directory:</p>
+
+<ul>
+<pre>$&nbsp;cd LibA
+$&nbsp;cm3 
+$&nbsp;cm3 -ship</pre>
+
+<pre>$&nbsp;cd LibB
+$&nbsp;cm3
+$ cm3 -ship</pre>
+</ul>
+
+<p>Finally, you need to compile your main program</p>
+
+<ul>
+<pre>$ cd Prog
+$&nbsp;cm3 </pre>
+</ul>
+
+<p>If there are no errors in the compilation, you should be able to find
+an executable in your <tt>TARGET</tt>&nbsp;diretory.</p>
+
+<h4>
+<hr width="100%" >Hints</h4>
+
+<p>You can use the &quot;<a href="../..//help/cm3/m3build/overrides.html">override</a>&quot;
+command in your m3makefile in order to use a library that has not been
+shipped to the public repository. This comes handy when you'd like to test
+an existing library before shipping it to the public repository.</p>
+
+<p>
+<hr>Go to the <a href="m3_1.html">first</a>, <a href="m3_66.html">previous</a>,
+<a href="m3_68.html">next</a>, <a href="m3_83.html">last</a> section, <a href="m3_toc.html">table
+of contents</a>. </p>
+
+</body>
+</html>

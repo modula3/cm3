@@ -1,0 +1,546 @@
+<HTML>
+<HEAD>
+<TITLE>Modula-3: Introduction</TITLE>
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+<body>
+
+<P>
+<A HREF="m3.html">[top]</A>
+<A HREF="m3.html">[prev]</A>
+<A HREF="defns.html">[next]</A>
+<P>
+
+<H2>Introduction</H2>
+
+<BLOCKQUOTE><EM>
+He that will not apply new remedies must expect new evils: for time is the greatest  
+innovator, and if time of course alter things to the worse, and wisdom and   
+counsel shall not alter them to the better, what shall be the end?  
+---Francis Bacon
+</EM></BLOCKQUOTE>
+<P>
+
+<H3>History</H3>
+<P>
+
+On November 6th, 1986, Maurice Wilkes wrote to Niklaus Wirth proposing
+that the Modula-2+ language be revised and standardized as a successor
+to Modula-2.  Wirth gave this project his blessing, and the Modula-3
+committee was born.
+<P>
+
+At the first meeting, the committee unanimously agreed to be true to
+the spirit of Modula-2 by selecting simple, safe, proven features rather
+than experimenting with our own untried ideas.  We found that unanimity
+was harder to achieve when we got to the details.
+<P>
+
+<A NAME=idx.1>Modula-3</A>
+supports interfaces, objects, generics, lightweight threads
+of control, the isolation of unsafe code, garbage collection,
+exceptions, and subtyping.  Some of the more problematical features
+of Modula-2 have been removed, like variant records and the built-in
+unsigned numeric data type.  Modula-3 is substantially simpler than other
+languages with comparable power.
+<P>
+
+<A NAME=idx.2>Modula-3</A>
+is closely based on Modula-2+, which was designed at the
+Digital Equipment Corporation Systems Research Center and used to build
+the Topaz system
+[<A HREF="../help/bib.html#mcjones89">McJones89</A>,
+<A HREF="../help/bib.html#rovner86">Rovner86</A>].
+The Modula-3 design was
+a joint project by Digital and Olivetti.  The language definition was
+published in August 1988, and immediately followed by implementation
+efforts at both companies.  In January 1989, the committee revised
+the language to reflect the experiences of these implementation teams.
+A few final revisions were made for the publication of this book.
+<P>
+
+<!--<A NAME=idx.3>SRC Modula-3</A>
+is distributed by the DEC Systems Research Center under a liberal license.
+The
+<A HREF="../../modula-3/html/install.html">distribution</A>
+includes a compiler for
+Modula-3, the Modula-3 Abstract Syntax Tree toolkit developed
+at Olivetti, and a runtime system with configuration files for DEC,
+IBM, HP, and Sun workstations.
+<P>-->
+
+<A NAME=idx.4>
+<H3>Perspective</H3>
+</A>
+<P>
+
+Most systems programming today is done in the BCPL family of languages,
+which includes B, Bliss, and C. The beauty of these languages is the
+modest cost with which they were able to take a great leap
+forward from assembly language.  To fully appreciate them, you must
+consider the engineering constraints of machines in the 1960s.  What
+language designed in the 1980s has a compiler that fits into four
+thousand 18-bit words, like Ken Thompson's B compiler for the PDP-7?
+The most successful of these languages was C, which by the early 1970s
+had almost completely displaced assembly language in the Unix system.
+<P>
+
+<A NAME=idx.5>The</A>
+BCPL-like languages are easy
+to implement efficiently for the same reason they are attractive to
+skeptical assembly language programmers: they present a programming
+model that is close to the target machine.  Pointers are identified
+with arrays, and address arithmetic is ubiquitous.  Unfortunately, this
+low-level programming model is inherently dangerous.  Many errors are
+as disastrous as they would be in machine language.  The type system
+is scanty, and reveals enough quirks of the target machine that even
+experienced and disciplined programmers sometimes write unportable
+code simply by accident.  The most modern language in this family,
+C++, has enriched C by adding objects; but it has also given up C's
+best virtue---simplicity---without relieving C's worst drawback---its
+low-level programming model. 
+<P>
+
+<A NAME=idx.6>At</A>
+the other extreme are languages like Lisp, ML, Smalltalk, and CLU,
+whose programming models originate from mathematics.  Lisp is the hybrid
+of the lambda calculus and the theory of a pairing function; ML stems
+from polymorphic type theory; Smalltalk from a theory of objects and
+inheritance; CLU from a theory of abstract data types.  These languages
+have beautiful programming models, but they tend to be difficult to
+implement efficiently, because the uniform treatment of values in the
+programming model invites a runtime system in which values are uniformly
+represented by pointers.  If the implementer doesn't take steps to
+avoid it, as simple a statement as <TT>n := n + 1</TT> could require an
+allocation, a method lookup, or both.  Good implementations avoid
+most of the cost, and languages in this family have been used
+successfully for systems programming.  But their general disposition
+towards heap allocation rather than stack allocation remains, and they
+have not become popular with systems programmers.  The runtime systems
+required to make these languages efficient often isolate them in closed
+environments that cannot accommodate programs written in other
+languages.  If you are a fan of these languages you may find Modula-3
+overly pragmatic; but read on anyway, and give us a chance to show
+that pragmatic constraints do not exclude attractive solutions.
+<P>
+
+<A NAME=idx.7>Between</A>
+the extremes of BCPL and Lisp is the Algol family of languages,
+whose modern representatives include Pascal, Ada, Modula-2, and
+Modula-3.  These languages have programming models that reflect the
+engineering constraints of random-access machines but conceal the
+details of any particular machine.  They give up the beauty and
+mathematical symmetry of the Lisp family in order to make efficient
+implementations possible without special tricks; they also have strong
+type systems that avoid most of the dangerous and machine-dependent
+features of the BCPL family.
+<P>
+
+<A NAME=idx.8>In</A>
+the 1960s, the trend in the Algol family was toward features for
+control flow and data structuring.  In the 1970s, the trend was toward
+information-hiding features like interfaces, opaque types, and generics.
+More recently, the trend in the Algol family has been to adopt a careful
+selection of techniques from the Lisp and BCPL families.  This trend
+is demonstrated by Modula-3, Oberon, and Cedar, to name three languages
+that have floated portable implementations in the last few years.
+<P>
+
+Modula-3, Oberon, and Cedar all provide garbage collection, previously
+viewed as a luxury available only in the closed runtime systems of
+the Lisp family.  But the world is starting to understand that garbage
+collection is the only way to achieve an adequate level of safety,
+and that modern garbage collectors can work in open runtime
+environments.
+<P>
+
+At the same time, these three languages allow a small set of unsafe,
+machine-dependent operations of the sort usually associated with the
+BCPL family.  In Modula-3, unsafe operations are allowed only in modules
+explicitly labeled unsafe.  The combination of garbage collection with
+the explicit isolation of unsafe features produces a language suitable
+for programming entire systems from the highest-level applications
+down to the lowest-level device drivers.
+<P>
+
+<H3>Features</H3>
+<P>
+
+The remainder of the introduction is an overview of the most important
+features of Modula-3.  
+<P>
+
+<A NAME=idx.9>
+<H4>Interfaces</H4>
+</A>
+<P>
+
+One of Modula-2's most successful features is the provision for explicit
+interfaces between modules.  Interfaces are retained with essentially
+no changes in Modula-3.  An interface to a module is a collection of
+declarations that reveal the public parts of a module; things in the
+module that are not declared in the interface are private.  A module
+<EM>imports</EM> the interfaces it depends on and <EM>exports</EM> the
+interface (or, in Modula-3, the interfaces) that it implements.
+<P>
+
+Interfaces make separate compilation type-safe; but it does them an
+injustice to look at them in such a limited way.  Interfaces make it
+possible to think about large systems without holding the whole system
+in your head at once.
+<P>
+
+Programmers who have never used Modula-style interfaces tend to
+underestimate them, observing, for example, that anything that can
+be done with interfaces can also be done with C-style include files.
+This misses the point: many things can be done with include files that
+cannot be done with interfaces.  For example, the meaning of an include
+file can be changed by defining macros in the environment into which
+it is included.  Include files tempt programmers into shortcuts across
+abstraction boundaries.  To keep large programs well structured, you
+either need super-human will power, or proper language support for
+interfaces.
+<P>
+
+<A NAME=idx.10>
+<H4>Objects</H4>
+</A>
+<P>
+
+THe better we understand our programs, the bigger the building blocks
+we use to structure them.  After the instruction came the statement,
+after the statement came the procedure, after the procedure came the
+interface.  The next step seems to be the <EM>abstract type</EM>.
+<P>
+
+<A NAME=idx.11>At</A>
+the theoretical level, an abstract type is a type defined by the
+specifications of its operations instead of by the representation of
+its data.  As realized in modern programming languages, a value of
+an abstract type is represented by an "object" whose operations are
+implemented by a suite of procedure values called the object's
+"methods".  A new object type can be defined as a <EM>subtype</EM> of
+an existing type, in which case the new type has all the methods of
+the old type, and possibly new ones as well (inheritance).  The new
+type can provide new implementations for the old methods (overriding).
+<P>
+
+Objects were invented in the mid-sixties by the farsighted designers
+of Simula
+[<A HREF="../help/bib.html#birtwistle">Birtwistle</A>].
+Objects in Modula-3 are very much like
+objects in Simula: they are always references, they have both data
+fields and methods, and they have single inheritance but not multiple
+inheritance.
+<P>
+
+Small examples are often used to get across the basic idea: truck as
+a subtype of vehicle; rectangle as a subtype of polygon.  Modula-3
+aims at larger systems that illustrate how object types provide
+structure for large programs.  In Modula-3 the main design
+effort is concentrated into specifying the properties of a single
+abstract type---a stream of characters, a window on the screen.  Then
+dozens of interfaces and modules are coded that provide useful subtypes
+of the central abstraction.  The abstract type provides the blueprint
+for a whole family of interfaces and modules.  If the central
+abstraction is well-designed then useful subtypes can be produced
+easily, and the original design cost will be repaid with interest.
+<P>
+
+<A NAME=idx.12>The</A>
+combination of object types with Modula-2 opaque types produces
+something new: the <EM>partially opaque type</EM>, where some of an
+object's fields are visible in a scope and others are hidden.  Because
+the committee had no experience with partially opaque types, the first
+version of Modula-3 restricted them severely; but after a year of
+experience it was clear that they were a good thing, and the language
+was revised to remove the restrictions.
+<P>
+
+It is possible to use object-oriented techniques even in languages
+that were not designed to support them, by explicitly allocating the
+data records and method suites.  This approach works reasonably smoothly
+when there are no subtypes; however it is through subtyping that
+object-oriented techniques offer the most leverage.  The approach works
+badly when subtyping is needed: either you allocate the data records
+for the different parts of the object individually (which is expensive
+and notationally cumbersome) or you must rely on unchecked type
+transfers, which is unsafe.  Whichever approach is taken, the subtype
+relations are all in the programmer's head: only with an object-oriented
+language is it possible to get object-oriented static typechecking.
+<P>
+
+<A NAME=idx.13>
+<H4>Generics</H4>
+</A>
+<P>
+
+A generic module is a template in which some of the imported interfaces
+are regarded as formal parameters, to be bound to actual interfaces
+when the generic is instantiated.  For example, a generic hash table
+module could be instantiated to produce tables of integers, tables
+of text strings, or tables of any desired type.  The different generic
+instances are compiled independently: the source program is reused,
+but the compiled code will generally be different for different
+instances.
+<P>
+
+To keep Modula-3 generics simple, they are confined to the module level:
+generic procedures and types do not exist in isolation, and generic
+parameters must be entire interfaces.
+<P>
+
+In the same spirit of simplicity, there is no separate typechecking
+associated with generics.  Implementations are expected to expand the
+generic and typecheck the result.  The alternative would be to invent
+a polymorphic type system flexible enough to express the constraints
+on the parameter interfaces that are necessary in order for the generic
+body to compile.  This has been achieved for ML and CLU, but it has
+not yet been achieved satisfactorily in the Algol family of languages,
+where the type systems are less uniform.  (The rules associated with
+Ada generics are too complicated for our taste.)
+<P>
+
+<A NAME=idx.14>
+<H4>Threads</H4>
+</A>
+<P>
+
+Dividing a computation into concurrent processes (or threads of control)
+is a fundamental method of separating concerns.  For example, suppose
+you are programming a terminal emulator with a blinking cursor: the
+most satisfactory way to separate the cursor blinking code from the
+rest of the program is to make it a separate thread.  Or suppose you
+are augmenting a program with a new module that communicates over a
+buffered channel.  Without threads, the rest of the program will be
+blocked whenever the new module blocks on its buffer, and conversely,
+the new module will be unable to service the buffer whenever any other
+part of the program blocks.  If this is unacceptable (as it almost
+always is) there is no way to add the new module without finding and
+modifying every statement of the program that might block.  These
+modifications destroy the structure of the program by introducing
+undesirable dependencies between what would otherwise be independent
+modules.
+<P>
+
+<A NAME=idx.15>The</A>
+provisions for threads in Modula-2 are weak, amounting essentially
+to coroutines.  Hoare's monitors
+[<A HREF="../help/bib.html#hoare">Hoare</A>]
+are a sounder basis for
+concurrent programming.  Monitors were used in Mesa, where they worked
+well; except that the requirement that a monitored data structure be
+an entire module was irksome.  For example, it is often useful for
+a monitored data structure to be an object instead of a module.  Mesa
+relaxed this requirement, made a slight change in the details of the
+semantics of Hoare's <TT>Signal</TT> primitive, and introduced the
+<TT>Broadcast</TT> primitive as a convenience
+[<A HREF="../help/bib.html#lampson80">Lampson</A>].
+The Mesa primitives were simplified in the Modula-2+ design, and the result
+was successful enough to be incorporated with no substantial changes
+in Modula-3.
+<P>
+
+<A NAME=idx.16>A</A>
+threads package is a tool with a very sharp edge.  A common
+programming error is to access a shared variable without obtaining
+the necessary lock.  This introduces a race condition that can lie
+dormant throughout testing and strike after the program is shipped.
+Theoretical work on process algebra has raised hopes that the rendezvous
+model of concurrency may be safer than the shared memory model, but
+the experience with Ada, which adopted the rendezvous, lends at best
+equivocal support for this hope---Ada still allows shared variables,
+and apparently they are widely used.
+<P>
+
+<H4>Safety</H4>
+<P>
+
+<A NAME=idx.17>A</A>
+language feature is <EM>unsafe</EM> if its misuse can corrupt the runtime
+system so that further execution of the program is not faithful to
+the language semantics.  An example of an unsafe feature is array
+assignment without bounds checking: if the index is out of bounds,
+then an arbitrary location can be clobbered and the address space can
+become fatally corrupted.  An error in a safe program can cause the
+computation to abort with a run-time error message or to give the wrong
+answer, but it can't cause the computation to crash in a rubble of
+bits.
+<P>
+
+Safe programs can share the same address space, each safe from
+corruption by errors in the others.  To get similar protection for
+unsafe programs requires placing them in separate address spaces.  As
+large address spaces become available, and programmers use them to
+produce tightly-coupled applications, safety becomes more and more
+important.
+<P>
+
+Unfortunately, it is generally impossible to program the lowest levels of
+a system with complete safety.  Neither the compiler nor the runtime
+system can check the validity of a bus address for an I/O controller,
+nor can they limit the ensuing havoc if it is invalid.  This presents
+the language designer with a dilemma.  If he holds out for safety,
+then low level code will have to be programmed in another language.
+But if he adopts unsafe features, then his safety guarantee becomes
+void everywhere.  
+<P>
+
+The languages of the BCPL family are full of unsafe features;
+the languages of the Lisp family generally have none (or none that
+are documented).  In this area Modula-3 follows the lead of Cedar by
+adopting a small number of <A HREF="unsafe.html">unsafe features</A>
+that are allowed only in
+modules explicitly labeled unsafe.  In a safe module, the compiler
+prevents any errors that could corrupt the runtime system; in an unsafe
+module, it is the programmer's responsibility to avoid them.
+<P>
+
+<H4>Garbage Collection</H4>
+<P>
+
+<A NAME=idx.18>A</A>
+classic unsafe runtime error is to free a data structure that is
+still reachable by active references (or "dangling pointers").  The
+error plants a time bomb that explodes later, when the storage is
+reused.  If on the other hand the programmer fails to free records
+that have become unreachable, the result will be a "storage leak"
+and the computation space will grow without bound.  Problems due to
+dangling pointers and storage leaks tend to persist long after other
+errors have been found and removed.  The only sure way to avoid
+these problems is the automatic freeing of unreachable storage, or
+garbage collection.
+<P>
+
+Modula-3 therefore provides "traced references", which are like
+Modula-2 pointers except that the storage they point to is kept in
+the "traced heap" where it will be freed automatically when all
+references to it are gone.
+<P>
+
+Another great benefit of garbage collection is that it simplifies
+interfaces.  Without garbage collection, an interface must specify
+whether the client or the implementation has the responsibility for
+freeing each allocated reference, and the conditions under which it
+is safe to do so.  This can swamp the interface in complexity.  For
+example, Modula-3 supports text strings by a simple required interface
+<TT>Text</TT>, rather than with a built-in type.  Without garbage
+collection, this approach would not be nearly as attractive.
+<P>
+
+New refinements in garbage collection have appeared continually for
+more than twenty years, but it is still difficult to implement
+efficiently.  For many programs, the programming time saved by
+simplifying interfaces and eliminating storage leaks and dangling
+pointers makes garbage collection a bargain, but the lowest levels
+of a system may not be able to afford it.  For example, in SRC's Topaz
+system, the part of the operating system that manages files and
+heavy-weight processes relies on garbage collection, but the inner
+"nub" that implements virtual memory and thread context switching
+does not.  Essentially all Topaz application programs rely on garbage
+collection.
+<P>
+
+For programs that cannot afford garbage collection, Modula-3 provides
+a set of reference types that are not traced by the garbage collector.
+In most other respects, traced and untraced references behave
+identically.
+<P>
+
+<H4>Exceptions</H4>
+<P>
+
+<A NAME=idx.19>An</A>
+exception is a control construct that exits many scopes at once.
+Raising an exception exits active scopes repeatedly until a handler
+is found for the exception, and transfers control to the handler.  If
+there is no handler, the computation terminates in some system-dependent
+way---for example, by entering the debugger.
+<P>
+
+There are many arguments for and against exceptions, most of which
+revolve around inconclusive issues of style and taste.  One argument
+in their favor that has the weight of experience behind it is that
+exceptions are a good way to handle any runtime error that is usually,
+but not necessarily, fatal.  If exceptions are not available, each
+procedure that might encounter a runtime error must return an additional
+code to the caller to identify whether an error has occurred.  This
+can be clumsy, and has the practical drawback that even careful
+programmers may inadvertently omit the test for the error return code.
+The frequency with which returned error codes are ignored has become
+something of a standing joke in the Unix/C world.  Raising an exception
+is more robust, since it stops the program unless there is an explicit
+handler for it.
+<P>
+
+<H4>Type system</H4>
+<P>
+
+Like all languages in the Algol family, Modula-3 is strongly typed.
+The basic idea of strong typing is to partition the value space into
+types, restrict variables to hold values of a single type, and restrict
+operations to apply to operands of fixed types.  In actuality, strong
+typing is rarely so simple.  For example, each of the following
+complications is present in at least one language of the Algol family:
+a variable of type <TT>[0..9]</TT> may be safely assigned to an
+<TT>INTEGER</TT>, but not vice-versa (subtyping).  Operations like absolute
+value may apply both to <TT>REAL</TT>s and to <TT>INTEGER</TT>s instead of
+to a single type (overloading).  The types of literals (for example,
+<TT>NIL</TT>) can be ambiguous.  The type of an expression may be
+determined by how it is used (target-typing).  Type mismatches may
+cause automatic conversions instead of errors (as when a fractional
+real is rounded upon assignment to an integer).
+<P>
+
+We adopted several principles in order to make Modula-3's type system
+as uniform as possible.  First, there are no ambiguous types or
+target-typing: the type of every expression is determined by its
+subexpressions, not by its use.  Second, there are no automatic
+conversions.  In some cases the <EM>representation</EM> of a value changes
+when it is assigned (for example, when assigning to a packed field
+of a record type) but the abstract value itself is transferred without
+change.  Third, the rules for type compatibility are defined in terms
+of a single subtype relation.  The subtype relation is required for
+treating objects with inheritance, but it is also useful for defining
+the type compatibility rules for conventional types.
+<P>
+
+<H4>Simplicity</H4>
+<P>
+
+<A NAME=idx.20>In</A>
+the early days of the Ada project, a general in the Ada Program
+Office opined that "obviously the Department of Defense is not
+interested in an artificially simplified language such as Pascal".
+Modula-3 represents the opposite point of view.  We used every artifice
+that we could find or invent to make the language simple.
+<P>
+
+C. A. R. Hoare has suggested that as a rule of thumb a language is
+too complicated if it can't be described precisely and readably in
+fifty pages.  The Modula-3 committee elevated this to a design
+principle: we gave ourselves a "complexity budget" of fifty pages,
+and chose the most useful features that we could accommodate within
+this budget.  In the end, we were over budget by six lines plus the
+syntax equations.  This policy is a bit arbitrary, but there are so
+many good ideas in programming language design that some kind of
+arbitrary budget seems necessary to keep a language from getting too
+complicated.
+<P>
+
+In retrospect, the features that made the cut were directed toward
+two main goals.  Interfaces, objects, generics, and threads provide
+fundamental patterns of abstraction that help to structure large
+programs.  The isolation of unsafe code, garbage collection, and
+exceptions help make programs safer and more robust.  Of the techniques
+that we used to keep the language internally consistent, the most
+important was the definition of a clean type system based on a subtype
+relation.  There is no special novelty in any one of these features
+individually, but there is simplicity and power in their combination.
+<P>
+
+<P>
+<A HREF="m3.html">[top]</A>
+<A HREF="m3.html">[prev]</A>
+<A HREF="defns.html">[next]</A>
+</BODY>
+</HTML>

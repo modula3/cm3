@@ -1,0 +1,156 @@
+<HTML>
+<HEAD>
+<TITLE>Modula-3: Type operations</TITLE>
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+<body>
+
+<P>
+<A HREF="m3.html">[top]</A>
+<A HREF="boolops.html">[prev]</A>
+<A HREF="textops.html">[next]</A>
+<P>
+
+<H2>Type operations</H2>
+<P>
+
+<A NAME=idx.197>
+<PRE>
+              ISTYPE  (x: Reference; T: RefType) : BOOLEAN
+</PRE>
+</A>
+<TT>ISTYPE(x, T)</TT> is <TT>TRUE</TT> if and only if <TT>x</TT> is a member 
+of <TT>T</TT>. <TT>T</TT> must be an object type or traced reference 
+type, and <TT>x</TT> must be assignable to <TT>T</TT>.
+
+<A NAME=idx.198>
+<PRE>
+              NARROW  (x: Reference; T: RefType): T
+</PRE>
+</A>
+<TT>NARROW(x, T)</TT> returns <TT>x</TT> after checking that <TT>x</TT> is 
+a member of <TT>T</TT>.  If the check fails, a runtime error occurs. 
+<TT>T</TT> must be an object type or traced reference type,
+and <TT>x</TT> must be assignable to <TT>T</TT>.
+<P>
+
+<A NAME=idx.199>
+<PRE>
+              TYPECODE (T: RefType)       : CARDINAL
+                       (r: REFANY)        : CARDINAL
+                       (r: UNTRACED ROOT) : CARDINAL
+</PRE>
+</A>
+Every object type or traced reference type (including <TT>NULL</TT>) 
+has an associated integer code.  Different types have different 
+codes.  The code for a type is constant for any single execution 
+of a program, but may differ for different executions.
+<TT>TYPECODE(T)</TT> returns the code for the type <TT>T</TT> and
+<TT>TYPECODE(r)</TT> returns the code for the allocated type of <TT>r</TT>. 
+It is a static error if <TT>T</TT> is <TT>REFANY</TT> or is not an object 
+type or traced reference type.
+<P>
+
+<A NAME=idx.200>
+<PRE>
+              ORD  (element: Ordinal): Integer
+              VAL  (i: Integer; T: OrdinalType): T
+</PRE>
+</A>
+<TT>ORD</TT> converts an element of an enumeration to the integer that
+represents its position in the enumeration order.  The first value
+in any enumeration is represented by zero.  If the type
+of <TT>element</TT> is a subrange of an enumeration <TT>T</TT>, the result
+is the position of the element within <TT>T</TT>, not within the subrange.
+<P>
+
+<TT>VAL</TT> is the inverse of <TT>ORD</TT>; it converts from a numeric
+position <TT>i</TT> into the element that occupies that position in
+an enumeration.  If <TT>T</TT> is a subrange, <TT>VAL</TT> returns the
+element with the position <TT>i</TT> in the original enumeration type,
+not the subrange.  It is a checked runtime error for the value
+of <TT>i</TT> to be out of range for <TT>T</TT>.  
+<P>
+
+If <TT>n</TT> is an integer of type <TT>T</TT>, <TT>ORD(n) = VAL(n, T) = n</TT>.
+<P>
+
+<A NAME=idx.201>
+<PRE>
+              NUMBER (T: OrdinalType)    : CARDINAL
+                     (A: FixedArrayType) : CARDINAL
+                     (a: Array)          : CARDINAL
+</PRE>
+</A>
+For an ordinal type <TT>T</TT>, <TT>NUMBER(T)</TT> returns the number of
+elements in <TT>T</TT>.
+For a fixed array type <TT>A</TT>, <TT>NUMBER(A)</TT> is defined by 
+<TT>NUMBER(IndexType(A))</TT>.  Similarly, for an array <TT>a</TT>, 
+<TT>NUMBER(a)</TT> is defined by <TT>NUMBER(IndexType(a))</TT>.  In 
+this case, the expression <TT>a</TT> will be evaluated only if it 
+denotes an open array.
+<P>
+
+<A NAME=idx.202>
+<PRE>
+              FIRST (T: OrdinalType)    : BaseType(T)
+                    (T: FloatType)      : T
+                    (A: FixedArrayType) : BaseType(IndexType(A))
+                    (a: Array)          : BaseType(IndexType(a))
+
+              LAST  (T: OrdinalType)    : BaseType(T)
+                    (T: FloatType)      : T
+                    (A: FixedArrayType) : BaseType(IndexType(A))
+                    (a: Array)          : BaseType(IndexType(a))
+</PRE>
+</A>
+For a non-empty ordinal type <TT>T</TT>, <TT>FIRST</TT> returns the 
+smallest value of <TT>T</TT> and <TT>LAST</TT> returns the largest 
+value.  If <TT>T</TT> is the empty enumeration, <TT>FIRST(T)</TT> and 
+<TT>LAST(T)</TT> are static errors.  If <TT>T</TT> is any other empty 
+ordinal type, the values returned are implementation-dependent, 
+but they satisfy <TT>FIRST(T) > LAST(T)</TT>.
+<P>
+
+For a floating-point type <TT>T</TT>, <TT>FIRST(T)</TT> and <TT>LAST(T)</TT>
+are the smallest and largest values of the type, respectively.
+On IEEE implementations, these are minus and plus infinity.
+<P>
+
+For a fixed array type <TT>A</TT>, <TT>FIRST(A)</TT> is defined by 
+<TT>FIRST(IndexType(A))</TT> and <TT>LAST(A)</TT> by
+<TT>LAST(IndexType(A))</TT>.
+Similarly, for an array <TT>a</TT>,
+<TT>FIRST(a)</TT> and <TT>LAST(a)</TT> are defined by
+<TT>FIRST(IndexType(a))</TT> and <TT>LAST(IndexType(a))</TT>.
+The expression  <TT>a</TT> will be evaluated only if it is an open array.
+Note that if <TT>a</TT> is an open array,
+<TT>FIRST(a)</TT> and <TT>LAST(a)</TT> 
+have type <TT>INTEGER</TT>.
+<P>
+
+<A NAME=idx.203>
+<PRE>
+              BITSIZE  (x: Any)  : CARDINAL
+                       (T: Type) : CARDINAL
+
+              BYTESIZE (x: Any)  : CARDINAL
+                       (T: Type) : CARDINAL
+
+              ADRSIZE  (x: Any)  : CARDINAL
+                       (T: Type) : CARDINAL
+</PRE>
+</A>
+These operations return the size of the variable <TT>x</TT> or of 
+variables of type <TT>T</TT>.  <TT>BITSIZE</TT> returns the number of bits, 
+<TT>BYTESIZE</TT> the number of 8-bit bytes, and <TT>ADRSIZE</TT> the number 
+of addressable locations. In all cases, <TT>x</TT> must be a designator 
+and <TT>T</TT> must not be an open array type.  A designator <TT>x</TT> 
+will be evaluated only if its type is an open array type.
+<P>
+
+<P>
+<A HREF="m3.html">[top]</A>
+<A HREF="boolops.html">[prev]</A>
+<A HREF="textops.html">[next]</A>
+</BODY>
+</HTML>

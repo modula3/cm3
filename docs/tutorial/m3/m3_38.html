@@ -1,0 +1,54 @@
+<html>
+<head>
+   <title>Modula-3 - LOOP Stmt</title>
+   <meta name="GENERATOR" content="Mozilla/2.0GoldB2 (Win32)">
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+<body>
+<!-- This HTML file has been created by texi2html 1.31
+     from /home/jove/stu/ss0005/m3/info/m3.texi on 8 March 1995 -->Go
+to the <a href="m3_1.html">first</a>, <a href="m3_37.html">previous</a>,
+<a href="m3_39.html">next</a>, <a href="m3_83.html">last</a> section, <a href="m3_toc.html">table
+of contents</a>. 
+<hr>
+<h4><a name="SEC38"></a><a name="SEC38"></a><a name="SEC38"></a><a href="m3_toc.html#SEC38" NAME="SEC38">LOOP
+Statement</a></h4>
+
+<ul>
+<pre><b>LOOP </b><i><tt>stmts </tt></i><b>END</b>
+</pre>
+</ul>
+
+<p>The <tt>LOOP </tt>statement executes <i><tt>stmts </tt></i>repeatedly
+in an infinite loop. Normally an <b><tt>EXIT </tt></b>statement appears
+in some <tt>IF </tt>statement in <i><tt>stmts </tt></i>to exit the loop
+when some condition becomes <tt>TRUE</tt>. </p>
+
+<p>
+<hr width="100%" ></p>
+
+<h4>Example</h4>
+
+<p>The following example prints <tt>&quot;Hello&quot;</tt> forever. </p>
+
+<ul>
+<pre><b>LOOP
+  </b>IO.Put(&quot;Hello\n&quot;);
+<b>END </b>(* LOOP *)</pre>
+</ul>
+
+<pre>The following code reads from standard input until there is an eof.</pre>
+
+<ul>
+<pre><b>LOOP
+  </b>IF&nbsp;IO.EOF() <b>EXIT </b>END;
+  EVAL&nbsp;IO.GetLine();
+<b>END</b>;</pre>
+</ul>
+
+<p>
+<hr>Go to the <a href="m3_1.html">first</a>, <a href="m3_37.html">previous</a>,
+<a href="m3_39.html">next</a>, <a href="m3_83.html">last</a> section, <a href="m3_toc.html">table
+of contents</a>. </p>
+
+</body>
+</html>

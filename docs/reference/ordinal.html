@@ -1,0 +1,111 @@
+<HTML>
+<HEAD>
+<TITLE>Modula-3: Ordinal types</TITLE>
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+<body>
+
+<P>
+<A HREF="m3.html">[top]</A>
+<A HREF="types.html">[prev]</A>
+<A HREF="floats.html">[next]</A>
+<P>
+
+<H2>Ordinal types</H2>
+<P>
+
+There are three kinds of ordinal types: enumerations, subranges,
+and integers.
+<P>
+
+There are two integer types, which in order of increasing range
+and precision are <TT>INTEGER</TT> and <TT>LONGINT</TT>.
+<P>
+
+An enumeration type is declared like this:
+<PRE>
+    TYPE T = {id_1, id_2, ..., id_n}
+</PRE>
+where the <TT>id</TT>'s are distinct identifiers.  The type <TT>T</TT> is an
+ordered set of <TT>n</TT> values; the expression <TT>T.id_i</TT> denotes
+the <TT>i</TT>'th value of the type in increasing order.  The empty enumeration
+<TT>{ }</TT> is allowed.
+<P>
+
+<A NAME=idx.32>Integers</A>
+and enumeration elements are collectively called <EM>ordinal values</EM>.
+The <EM>base type</EM> of an ordinal value <TT>v</TT> is
+<TT>INTEGER</TT> (or <TT>LONGINT</TT>) if <TT>v</TT> is an integer (or
+extended precision integer, respectively), otherwise it is the unique
+enumeration type that contains <TT>v</TT>.
+<P>
+
+<A NAME=idx.33>A</A>
+subrange type is declared like this:
+<PRE>
+    TYPE T = [Lo..Hi]
+</PRE>
+where <TT>Lo</TT> and <TT>Hi</TT> are two ordinal values with the same 
+base type, called the base type of the subrange. The values of <TT>T</TT>
+are all the values from <TT>Lo</TT> to <TT>Hi</TT> inclusive.
+<TT>Lo</TT> and <TT>Hi</TT> must be
+<A HREF="constexpr.html#idx.205">constant expressions</A>.
+If <TT>Lo</TT> exceeds <TT>Hi</TT>, the subrange is empty.
+<P>
+
+The operators
+<A HREF="typeops.html#idx.200"><TT>ORD</TT> and <TT>VAL</TT></A>
+convert between enumerations and integers.
+The operators
+<A HREF="typeops.html#idx.202"><TT>FIRST</TT></A>,
+<A HREF="typeops.html#idx.202"><TT>LAST</TT></A>,
+and
+<A HREF="typeops.html#idx.201"><TT>NUMBER</TT></A> 
+applied to an ordinal type return the first element, last element, 
+and number of elements, respectively.
+<P>
+
+<A NAME=idx.34>Here</A>
+are the predeclared ordinal types:
+<PRE>
+    INTEGER   All integers naturally represented by the implementation
+    LONGINT   Extended precision integers, at least as precise as <TT>INTEGER</TT>
+    CARDINAL  Behaves just like the subrange <TT>[0..LAST(INTEGER)]</TT>
+    BOOLEAN   The enumeration <TT>{FALSE, TRUE}</TT>
+    CHAR      An enumeration containing at least 256 elements
+</PRE>
+The first 256 elements of type <TT>CHAR</TT> represent characters in the
+ISO-Latin-1 code, which is an extension of ASCII.  The language does
+not specify the names of the elements of the <TT>CHAR</TT> enumeration.
+The syntax for character literals is specified in the section on
+<A HREF="texts.html">literals</A>.
+<TT>FALSE</TT> and <TT>TRUE</TT> are predeclared
+synonyms for <TT>BOOLEAN.FALSE</TT> and <TT>BOOLEAN.TRUE</TT>.
+<P>
+
+Each distinct enumeration type introduces a new collection of values,
+but a subrange type reuses the values from the underlying type.  For
+example:
+<PRE>
+    TYPE
+       T1 = {A, B, C}; 
+       T2 = {A, B, C}; 
+       U1 = [T1.A..T1.C]; 
+       U2 = [T1.A..T2.C];  (* sic *) 
+       V =   {A, B}
+</PRE>
+<TT>T1</TT> and <TT>T2</TT> are the same type, since they have the same 
+expanded definition.  In particular, <TT>T1.C = T2.C</TT> and therefore
+<TT>U1</TT> and <TT>U2</TT> are also the same type.  But the types <TT>T1</TT> 
+and <TT>U1</TT> are distinct, although they contain the same values, 
+because the expanded definition of <TT>T1</TT> is an enumeration while the 
+expanded definition of <TT>U1</TT> is a subrange.
+The type <TT>V</TT> is a third type whose values <TT>V.A</TT> and <TT>V.B</TT>
+are not related to the values <TT>T1.A</TT> and <TT>T1.B</TT>.
+<P>
+
+<P>
+<A HREF="m3.html">[top]</A>
+<A HREF="types.html">[prev]</A>
+<A HREF="floats.html">[next]</A>
+</BODY>
+</HTML>

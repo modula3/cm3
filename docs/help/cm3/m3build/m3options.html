@@ -1,0 +1,43 @@
+<HTML>
+<HEAD>
+<TITLE>CM Modula-3: Changing compiler options</TITLE>
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+<body>
+
+<H2>Changing compiler options</H2>
+<P>
+
+<B> m3_option(x) </B>  
+    adds option <TT>x</TT> to the set of arguments passed to the compiler.
+ 
+<P>
+Specifically, <TT>m3_option</TT> adds <TT>x</TT> to the <TT>M3OPTIONS</TT>
+<!-- <A HREF="variables.html"> FIXME: There's no page explaining quake
+  variables in the CM3 documentation currently, though there should be
+  one.
+-->
+variable
+<!--</A>-->.
+<TT>x</TT> should be a single string preceded
+with a hyphen, e.g. <TT>m3_option("-O")</TT>.
+<P>
+
+Some of the more useful
+<A HREF="options.html">compiler options</A> include:
+<PRE>
+-why        Explain why each compilation is needed (default).
+-commands   Print the compilation commands as they are started.
+-verbose    Print what happens to each file.
+-times      Print a breakdown of elapsed time.
+-g          Generate debugging symbols (default).
+-O          Optimize code.
+-keep       Preserve intermediate files.
+-once       Don't recompile modules with new opaque info.
+</PRE>
+<P>
+
+All the <A HREF="options.html">compiler options</A> may also be
+specified on the command line.
+
+</BODY>
+</HTML>

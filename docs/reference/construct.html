@@ -1,0 +1,72 @@
+<HTML>
+<HEAD>
+<TITLE>Modula-3: Set, array, and record constructors</TITLE>
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+<body>
+
+<P>
+<A HREF="m3.html">[top]</A>
+<A HREF="apply.html">[prev]</A>
+<A HREF="new.html">[next]</A>
+<P>
+
+<H2>Set, array, and record constructors</H2>
+<P>
+
+A set constructor has the form:
+<PRE>
+    S{e_1, ..., e_n}
+</PRE>
+where <TT>S</TT> is a set type and the <TT>e</TT>'s are expressions or ranges
+of the form <TT>lo..hi</TT>.  The constructor denotes a value of type
+<TT>S</TT> containing the listed values and the values in the listed ranges.
+The <TT>e</TT>'s, <TT>lo</TT>'s, and <TT>hi</TT>'s must be assignable
+to the element type of <TT>S</TT>.
+<P>
+
+<A NAME=idx.177>An</A>
+array constructor has the form:
+<PRE>
+    A{e_1, ..., e_n}
+</PRE>
+where <TT>A</TT> is an array type and the <TT>e</TT>'s are expressions.  
+The constructor denotes a value of type <TT>A</TT> containing the listed 
+elements in the listed order.  The <TT>e</TT>'s must be assignable to 
+the element type of <TT>A</TT>.  This means that if <TT>A</TT> is a 
+multi-dimensional array, the <TT>e</TT>'s must themselves be array-valued 
+expressions.
+<P>
+
+If <TT>A</TT> is a fixed array type and <TT>n</TT> is at least 1, then 
+<TT>e_n</TT> can be followed by "<TT>, ..</TT>" to indicate that the 
+value of <TT>e_n</TT> will be replicated as many times as necessary 
+to fill out the array. It is a static error to provide too many or 
+too few elements for a fixed array type.
+<P>
+
+<A NAME=idx.178>A</A>
+record constructor has the form:
+<PRE>
+    R{Bindings}
+</PRE>
+where <TT>R</TT> is a record type and <TT>Bindings</TT> is a list of keyword
+or positional bindings, exactly as in a
+<A HREF="calls.html#idx.84">procedure call</A>.
+The list of bindings is rewritten to fit the list of fields and defaults
+of <TT>R</TT>, exactly as for a procedure call; the record field names
+play the role of the procedure formal parameters.  The expression
+denotes a value of type <TT>R</TT> whose field values are specified by
+the rewritten binding.
+<P>
+
+The rewritten binding must bind only field names and must bind each field 
+name exactly once.  Each expression in the binding must be assignable
+to the type of the corresponding record field.
+<P>
+
+<P>
+<A HREF="m3.html">[top]</A>
+<A HREF="apply.html">[prev]</A>
+<A HREF="new.html">[next]</A>
+</BODY>
+</HTML>

@@ -1,0 +1,46 @@
+<HTML>
+<HEAD>
+<TITLE>CM Modula-3: Hiding and exporting</TITLE>
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+<body>
+
+<H2>Hiding and exporting</H2>
+<P>
+
+The following procedures can be used in two ways.  First to provide a
+clearer indication of visibility than is given by the capitalization
+convention (which exists partly to support old style <TT>m3makefile</TT>s).
+Second, to change the visibility of imported components.
+Generally, it's much better to convince the owners of the exporting
+package to give their sources the correct visibility rather than
+overriding their initial decision.
+<P>
+
+<B> hide_interface(X) </B>  
+          sets the visibility of interface <TT>X.i3</TT> to hidden.
+ 
+<P>
+
+<B> export_interface(X) </B>  
+          sets the visibility of interface <TT>X.i3</TT> to visible.
+ 
+<P>
+
+<P>
+
+There are also variants that hide or export programs and generics,
+<TT>hide_program</TT>,
+<TT>hide_generic_interface</TT>,
+<TT>hide_generic_implementation</TT>,
+<TT>export_program</TT>,
+<TT>export_generic_interface</TT>,
+and
+<TT>export_generic_implementation</TT>.
+<P>
+
+Hidden program are not copied to the <TT>/bin</TT>
+directory, exported ones are.
+<P>
+
+</BODY>
+</HTML>

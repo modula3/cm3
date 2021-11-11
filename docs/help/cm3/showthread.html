@@ -1,0 +1,53 @@
+<HTML>
+<HEAD>
+<TITLE>CM Modula-3: Showthread</TITLE>
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+<body>
+
+<H2>showthread</H2>
+<P>
+
+The showthread program displays the thread activity of a Modula-3 program.
+<P>
+
+Normally, you should not start showthread directly.  Rather, the
+runtime will start showthread and feed it with the proper
+data when the argument
+<A HREF="m3args.html"><B>@M3showthread</B></A>
+is given to a Modula-3 program;
+for example, to run the program foo and see the threads of that
+process, type:
+<PRE>
+    foo @M3showthread
+</PRE>
+A Trestle window
+will appear; when you click the start button, the program foo
+will actually start.
+<P>
+
+Each thread in the program will be given a vertical track in the 
+showthread window, in which the successive states of the thread will
+be displayed, using color patches.  After the thread dies, the track can
+be reused for another thread.
+<P>
+
+Each time the scheduler decides to stop the currently running thread and
+makes a decision about what to do next, showthread will add a new row
+of color patches to show the state of all the threads.
+<P>
+
+The legend in the showthread window indicates which color is used for which
+state:
+<PRE>
+   - running:  currently running
+   - alive:    can run, but is not currently running
+   - waiting:  waiting for a condition to be signaled
+   - locking:  waiting for a mutex to be released
+   - pausing:  pausing for some time (via <A HREF="../../help/gen_html/m3core/src/thread/Common/Thread.i3.html">Thread.Pause</A>)
+   - blocking: waiting for I/O activity (via <A HREF="../../help/gen_html/m3core/src/thread/POSIX/SchedulerPosix.i3.html">SchedulerPosix.IOWait</A>)
+   - dying:    the thread returned, but nobody joined it yet
+</PRE>
+
+<hr>
+</BODY>
+</HTML>

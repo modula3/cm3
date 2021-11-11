@@ -1,0 +1,86 @@
+<HTML>
+<HEAD>
+<TITLE>CM Modula-3: Thread scheduling</TITLE>
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+<body>
+
+<H2>Thread scheduling</H2>
+<P>
+
+CM Modula-3 has a flexible scheduling algorithm.
+Here is a rough explanation of its behaviour.
+<P>
+
+All threads are kept in a circular list. This list is
+modified only when new threads are created or when they exit; that
+is, the relative order of threads in this list is never modified.
+<P>
+
+When the scheduler comes into action, the list of threads is scanned
+starting with the thread following the one currently running, until
+a thread that can execute is found:
+<UL>
+<LI> if it was preempted by the scheduler or called
+<A href="../gen_html/m3core/src/thread/Common/Scheduler.i3.html"><TT>Scheduler.Yield</TT></A>,
+it can execute
+
+<LI> if it is waiting for a condition or a mutex that is now free,
+it can execute
+
+<LI> if it has blocked because of a call to
+<A HREF="../gen_html/m3core/src/thread/Common/Thread.i3.html"><TT>Thread.Pause</TT></A>
+(or a similar procedure), it can execute iff the timeout has expired
+
+<LI> if it has blocked because of a call to
+<A HREF="../gen_html/m3core/src/thread/POSIX/SchedulerPosix.i3.html"><TT>SchedulerPosix.IOWait</TT></A>,
+(or a similar procedure), it can execute iff the timeout is now expired 
+or a polling <TT>select(2)</TT> returns a non-zero value.
+</UL>
+<P>
+
+If such a thread is found, it becomes active. 
+<P>
+
+If no thread can execute, and there are no threads blocked in a
+<A HREF="../gen_html/m3core/src/thread/Common/Thread.i3.html"><TT>Thread.Pause</TT></A>
+or a
+<A HREF="../gen_html/m3core/src/thread/POSIX/SchedulerPosix.i3.html"><TT>SchedulerPosix.IOWait</TT></A>,
+a deadlock situation is detected
+and reported. Otherwise, a combination of the file descriptors sets
+(OR of all the file descriptors sets) and timeouts (MIN of all the
+timeouts) is formed, <TT>select(2)</TT> is called with those arguments
+and the whole process of searching for an executable thread is redone.
+This ensures that the Unix process does not consume CPU resources while
+waiting.
+<P>
+
+The scheduler is activated when the running thread tries to acquire a
+mutex which is locked, waits for a condition, calls
+<A HREF="../gen_html/m3core/src/thread/Common/Thread.i3.html"><TT>Thread.Pause</TT></A>
+(or a similar procedure) with a future time, calls
+<A HREF="../gen_html/m3core/src/thread/POSIX/SchedulerPosix.i3.html"><TT>SchedulerPosix.IOWait</TT></A>,
+(or a similar procedure) with a non-zero valued timeout and no files
+are ready at the time of the call, or the time allocated to the thread
+has expired (preemption).
+<P>
+
+Preemption is implemented using the Unix virtual interval timer.
+CM Modula-3 does not use the real time interval
+timer nor the profiling interval timer for thread scheduling; these
+are available to the program.
+<P>
+
+Because of the preemption implementation, Unix kernel calls
+will block the process (i.e. the Unix process sleeps even though
+some threads could run).  However,
+<A HREF="../gen_html/m3core/src/thread/Common/Thread.i3.html"><TT>Thread.Pause</TT></A>
+and
+<A HREF="../gen_html/m3core/src/thread/POSIX/SchedulerPosix.i3.html"><TT>SchedulerPosix.IOWait</TT></A>
+provide functional equivalents of
+<TT>sigpause(2)</TT> and
+<TT>select(2)</TT> that do not cause the process to block.
+<P>
+
+<HR>
+</BODY>
+</HTML>

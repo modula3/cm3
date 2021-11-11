@@ -1,0 +1,29 @@
+<html>
+<head>
+   <title>CM Modula-3: Building programs and libraries</title>
+   <meta name="GENERATOR" content="Mozilla/2.0GoldB2 (Win32)">
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+<body>
+
+<h2>Building programs and libraries </h2>
+
+<p><b>library(X) </b>compile the sources accumulated so far and build a
+library, <tt>X</tt>, from the resulting compiled object files. The visibility
+of the library is hidden. </p>
+
+<p><b>Library(X) </b>The same as <tt>library</tt>. </p>
+
+<p><b>program(X) </b>constructs an executable program named <tt>X</tt>
+from the given sources. </p>
+
+<p><b>Program(X) </b>like <tt>program</tt>, but <tt>X</tt> is exported
+to <tt>/bin</tt>. </p>
+
+<p><b>build_standalone() </b>ensures that the program being built does
+not depend on dynamic linking and shared libraries. To have an effect,
+this procedure must be called before <tt>program</tt> or <tt>Program</tt>
+is called. </p>
+
+<p>
+</body>
+</html>

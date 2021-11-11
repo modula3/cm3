@@ -1,0 +1,95 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<!--Converted with LaTeX2HTML 2008 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>2.3.15 With</TITLE>
+<META NAME="description" CONTENT="2.3.15 With">
+<META NAME="keywords" CONTENT="m3-defn-complete">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2008">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="/cm3/normal.css">
+
+<LINK REL="next" HREF="2_3_16For.html">
+<LINK REL="previous" HREF="2_3_14Repeat.html">
+<LINK REL="up" HREF="2_3Statements.html">
+<LINK REL="next" HREF="2_3_16For.html">
+</HEAD>
+
+<BODY >
+
+<DIV CLASS="navigation"><!--Navigation Panel-->
+<A NAME="tex2html514"
+  HREF="2_3_16For.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html512"
+  HREF="2_3Statements.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html506"
+  HREF="2_3_14Repeat.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A>   
+<BR>
+<B> Next:</B> <A NAME="tex2html515"
+  HREF="2_3_16For.html">2.3.16 For</A>
+<B> Up:</B> <A NAME="tex2html513"
+  HREF="2_3Statements.html">2.3 Statements</A>
+<B> Previous:</B> <A NAME="tex2html507"
+  HREF="2_3_14Repeat.html">2.3.14 Repeat</A>
+<BR>
+<BR></DIV>
+<!--End of Navigation Panel-->
+
+<H3><A NAME="SECTION000161500000000000000">
+2.3.15 With</A>
+</H3>
+
+<P>
+A <code>WITH</code> statement has the form:
+<PRE>
+    WITH id = e DO S END
+</PRE>
+where <code>id</code> is an identifier, <code>e</code> an expression, and <code>S</code> a
+statement.  The statement declares <code>id</code> with scope <code>S</code> as an alias
+for the variable <code>e</code> or as a readonly name for the value <code>e</code>.  The
+expression <code>e</code> is evaluated once, at entry to the <code>WITH</code> statement.
+
+<P>
+The statement is like the procedure call <code>P(e)</code>, where <code>P</code> is
+declared as:
+<PRE>
+    PROCEDURE P(mode id: type of e) = BEGIN S END P;
+</PRE>
+If <code>e</code> is a writable designator, mode is <code>VAR</code>; otherwise, mode is
+<code>READONLY</code>.  The only difference between the <code>WITH</code> statement and
+the call <code>P(e)</code> is that free variables, <code>RETURN</code>s, and <code>EXIT</code>s
+that occur in the <code>WITH</code> statement are interpreted in the context of the
+<code>WITH</code> statement, not in the context of <code>P</code> (see the section on
+designators).
+
+<P>
+A single <code>WITH</code> can contain multiple bindings, which are evaluated
+sequentially.  That is:
+<PRE>
+    WITH id_1 = e_1, id_2 = e_2, ...
+</PRE>
+is equivalent to:
+<PRE>
+    WITH id_1 = e_1 DO
+      WITH id_2 = e_2 DO ...
+</PRE>
+
+<P>
+<BR><HR>
+<ADDRESS>
+m3-support@elego.de
+</ADDRESS>
+</BODY>
+</HTML>

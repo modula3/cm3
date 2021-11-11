@@ -1,0 +1,141 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<!--Converted with LaTeX2HTML 2008 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>2.6.9 New</TITLE>
+<META NAME="description" CONTENT="2.6.9 New">
+<META NAME="keywords" CONTENT="m3-defn-complete">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2008">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="/cm3/normal.css">
+
+<LINK REL="next" HREF="2_6_10Arithmetic_operations.html">
+<LINK REL="previous" HREF="2_6_8Set_array.html">
+<LINK REL="up" HREF="2_6Expressions.html">
+<LINK REL="next" HREF="2_6_10Arithmetic_operations.html">
+</HEAD>
+
+<BODY >
+
+<DIV CLASS="navigation"><!--Navigation Panel-->
+<A NAME="tex2html858"
+  HREF="2_6_10Arithmetic_operations.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html856"
+  HREF="2_6Expressions.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html850"
+  HREF="2_6_8Set_array.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A>   
+<BR>
+<B> Next:</B> <A NAME="tex2html859"
+  HREF="2_6_10Arithmetic_operations.html">2.6.10 Arithmetic operations</A>
+<B> Up:</B> <A NAME="tex2html857"
+  HREF="2_6Expressions.html">2.6 Expressions</A>
+<B> Previous:</B> <A NAME="tex2html851"
+  HREF="2_6_8Set_array.html">2.6.8 Set, array, and</A>
+<BR>
+<BR></DIV>
+<!--End of Navigation Panel-->
+
+<H3><A NAME="SECTION00019900000000000000">
+2.6.9 New</A>
+</H3>
+
+<P>
+An allocation operation has the form:
+<PRE>
+    NEW(T, ...)
+</PRE>
+where <code>T</code> is a reference type other than <code>REFANY</code>, <code>ADDRESS</code>,
+or <code>NULL</code>.  The operation returns the address of a newly-allocated
+variable of <code>T</code>'s referent type; or if <code>T</code> is an object type, a
+newly-allocated data record paired with a method suite.  The reference
+returned by <code>NEW</code> is distinct from all existing references.  The
+allocated type of the new reference is <code>T</code>.
+
+<P>
+It is a static error if <code>T</code>'s referent type is empty.  If <code>T</code> is
+declared as an opaque type, <code>NEW(T)</code> is legal only in scopes where
+<code>T</code>'s concrete type is known completely, or is known to be an object
+type.
+
+<P>
+The initial state of the referent generally represents an arbitrary value of
+its type.  If <code>T</code> is an object type or a reference to a record or open
+array then <code>NEW</code> takes additional arguments to control the initial state
+of the new variable.
+
+<P>
+If <code>T</code> is a reference to an array with <code>k</code> open dimensions, the
+<code>NEW</code> operation has the form:
+<PRE>
+    NEW(T, n_1, ..., n_k)
+</PRE>
+where the <code>n</code>'s are integer-valued expressions that specify the lengths
+of the new array in its first <code>k</code> dimensions.  The values in the array
+will be arbitrary values of their type.
+
+<P>
+If <code>T</code> is an object type or a reference to a record, the <code>NEW</code>
+operation has the form:
+<PRE>
+    NEW(T, Bindings)
+</PRE>
+where <code>Bindings</code> is a list of keyword bindings used to initialize the new
+fields.  Positional bindings are not allowed.
+
+<P>
+Each binding <code>f := v</code> initializes the field <code>f</code> to the value
+<code>v</code>.  Fields for which no binding is supplied will be initialized to
+their defaults if they have defaults; otherwise they will be initialized to
+arbitrary values of their types.
+
+<P>
+The order of the field bindings makes no difference.
+
+<P>
+If <code>T</code> is an object type then <code>Bindings</code> can also include method
+overrides of the form <code>m := P</code>, where <code>m</code> is a method of <code>T</code>
+and <code>P</code> is a top-level procedure constant.  This is syntactic sugar for
+the allocation of a subtype of <code>T</code> that includes the given overrides, in
+the given order.  For example, <code>NEW(T, m := P)</code> is sugar for
+<PRE>
+    NEW(T OBJECT OVERRIDES m := P END).
+</PRE>
+
+<P>
+
+<DIV CLASS="navigation"><HR>
+<!--Navigation Panel-->
+<A NAME="tex2html858"
+  HREF="2_6_10Arithmetic_operations.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html856"
+  HREF="2_6Expressions.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html850"
+  HREF="2_6_8Set_array.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A>   
+<BR>
+<B> Next:</B> <A NAME="tex2html859"
+  HREF="2_6_10Arithmetic_operations.html">2.6.10 Arithmetic operations</A>
+<B> Up:</B> <A NAME="tex2html857"
+  HREF="2_6Expressions.html">2.6 Expressions</A>
+<B> Previous:</B> <A NAME="tex2html851"
+  HREF="2_6_8Set_array.html">2.6.8 Set, array, and</A></DIV>
+<!--End of Navigation Panel-->
+<ADDRESS>
+m3-support@elego.de
+</ADDRESS>
+</BODY>
+</HTML>

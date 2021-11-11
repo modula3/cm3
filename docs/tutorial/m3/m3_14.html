@@ -1,0 +1,79 @@
+<html>
+<head>
+   <title>Modula-3 - Decl Examples</title>
+   <meta name="GENERATOR" content="Mozilla/2.0GoldB2 (Win32)">
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+<body>
+Go to the <a href="m3_1.html">first</a>, <a href="m3_13.html">previous</a>,
+<a href="m3_15.html">next</a>, <a href="m3_83.html">last</a> section, <a href="m3_toc.html">table
+of contents</a>. 
+<hr>
+<h3><a name="SEC14"></a><a name="SEC14"></a><a href="m3_toc.html#SEC14" NAME="SEC14">Declarations
+Examples</a></h3>
+
+<ul>
+<pre><b>CONST
+</b>        Pi = 3.14;              (* REAL *)
+        Maxsize = 30;           (* INTEGER *)
+        Space = ' ';            (* CHAR *)
+
+<b>TYPE
+</b>        Index = [1..Maxsize];                   (* Subrange *)
+        Letters = ['a'..'z'];                   (* Subrange *)
+        Colors = {Red, Green, Blue, Yellow};    (* Enumerated *)
+        ArrType = ARRAY Colors OF INTEGER;      (* ARRAY *)
+        ArrType2 = ARRAY [1..5] OF CHAR;        (* ARRAY *)
+        SetType = SET OF Letters;               (* SET *)
+        Ptr = REF Student;                      (* Pointer *)
+        Student = RECORD                        (* RECORD *)
+           name : TEXT;
+           id   : INTEGER;
+           gpa  : REAL;
+           next : Ptr;
+        END;
+
+<b>VAR
+</b>        n       : INTEGER       := -15;                 (* INTEGER *)
+        nonneg  : CARDINAL      := 5;                   (* CARDINAL *)
+        x       : REAL          := 3.0;                 (* REAL *)
+        ch      : CHAR          := 'Q';                 (* CHAR *)
+        done    : BOOLEAN       := TRUE;                (* BOOLEAN *)
+        str     : TEXT          := &quot;Test&quot;;              (* TEXT *)
+        arr     : ArrType       := ArrType{0,1,2,3};    (* ARRAY *)
+        arr2    : ArrType2      := ArrType2{' ', ..};   (* ARRAY *)
+        inFile  : Rd.T;                                 (* Reader *)
+        outFile : Wr.T;                                 (* Writer *)
+        ltrSet  : SetType := SetType{'a'..'d','z'};     (* SET *)
+        head    : Ptr           := NIL    <b>              </b>(* Pointer *)
+        st      : Student                               (* RECORD *)
+                                := Student{&quot;Joe&quot;, 15426, 3.35, NIL};
+
+<b>PROCEDURE </b>One (y: REAL; VAR c: ArrType; x: INTEGER := 5) =
+(* Sample procedure definition.  y is a value parameter;
+   c is a variable parameter; x is a value parameter with
+   a default value *)
+<b>VAR </b>i: INTEGER; (* local var *)
+BEGIN           (* procedure body *)
+  statement-1;
+     ... 
+  statement-n;
+END One;
+
+<b>PROCEDURE </b>Max(a, b: INTEGER): INTEGER =
+(* Sample function definition. *)
+<b>VAR </b>max: INTEGER;
+BEGIN
+   max := a;
+   IF a &lt; b THEN max := b END;
+   RETURN max;
+END Max;
+</pre>
+</ul>
+
+<p>
+<hr>Go to the <a href="m3_1.html">first</a>, <a href="m3_13.html">previous</a>,
+<a href="m3_15.html">next</a>, <a href="m3_83.html">last</a> section, <a href="m3_toc.html">table
+of contents</a>. </p>
+
+</body>
+</html>

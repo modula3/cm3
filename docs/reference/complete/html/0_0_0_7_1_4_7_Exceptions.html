@@ -1,0 +1,100 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<!--Converted with LaTeX2HTML 2008 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>0.0.0.7 1.4.7 Exceptions.</TITLE>
+<META NAME="description" CONTENT="0.0.0.7 1.4.7 Exceptions.">
+<META NAME="keywords" CONTENT="m3-defn-complete">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2008">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="/cm3/normal.css">
+
+<LINK REL="next" HREF="0_0_0_8_1_4_8_Type.html">
+<LINK REL="previous" HREF="0_0_0_6_1_4_6_Garbage.html">
+<LINK REL="up" HREF="1_4Features.html">
+<LINK REL="next" HREF="0_0_0_8_1_4_8_Type.html">
+</HEAD>
+
+<BODY >
+
+<DIV CLASS="navigation"><!--Navigation Panel-->
+<A NAME="tex2html177"
+  HREF="0_0_0_8_1_4_8_Type.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html175"
+  HREF="1_4Features.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html169"
+  HREF="0_0_0_6_1_4_6_Garbage.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A>   
+<BR>
+<B> Next:</B> <A NAME="tex2html178"
+  HREF="0_0_0_8_1_4_8_Type.html">0.0.0.8 1.4.8 Type system.</A>
+<B> Up:</B> <A NAME="tex2html176"
+  HREF="1_4Features.html">1.4 Features</A>
+<B> Previous:</B> <A NAME="tex2html170"
+  HREF="0_0_0_6_1_4_6_Garbage.html">0.0.0.6 1.4.6 Garbage collection.</A>
+<BR>
+<BR></DIV>
+<!--End of Navigation Panel-->
+
+<H4><A NAME="SECTION00013470000000000000">
+<SPAN CLASS="arabic">0</SPAN>.<SPAN CLASS="arabic">0</SPAN>.<SPAN CLASS="arabic">0</SPAN>.<SPAN CLASS="arabic">7</SPAN> 1.4.7 Exceptions.</A>
+</H4>
+
+<P>
+An exception is a control construct that exits many scopes at once.  Raising
+an exception exits active scopes repeatedly until a handler is found for the
+exception, and transfers control to the handler.  If there is no handler, the
+computation terminates in some system-dependent way--for example, by entering
+the debugger.
+
+<P>
+There are many arguments for and against exceptions, most of which revolve
+around inconclusive issues of style and taste.  One argument in their favor
+that has the weight of experience behind it is that exceptions are a good way
+to handle any runtime error that is usually, but not necessarily, fatal.  If
+exceptions are not available, each procedure that might encounter a runtime
+error must return an additional code to the caller to identify whether an
+error has occurred.  This can be clumsy, and has the practical drawback that
+even careful programmers may inadvertently omit the test for the error return
+code.  The frequency with which returned error codes are ignored has become
+something of a standing joke in the Unix/C world.  Raising an exception is
+more robust, since it stops the program unless there is an explicit handler
+for it.
+
+<P>
+
+<DIV CLASS="navigation"><HR>
+<!--Navigation Panel-->
+<A NAME="tex2html177"
+  HREF="0_0_0_8_1_4_8_Type.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html175"
+  HREF="1_4Features.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html169"
+  HREF="0_0_0_6_1_4_6_Garbage.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A>   
+<BR>
+<B> Next:</B> <A NAME="tex2html178"
+  HREF="0_0_0_8_1_4_8_Type.html">0.0.0.8 1.4.8 Type system.</A>
+<B> Up:</B> <A NAME="tex2html176"
+  HREF="1_4Features.html">1.4 Features</A>
+<B> Previous:</B> <A NAME="tex2html170"
+  HREF="0_0_0_6_1_4_6_Garbage.html">0.0.0.6 1.4.6 Garbage collection.</A></DIV>
+<!--End of Navigation Panel-->
+<ADDRESS>
+m3-support@elego.de
+</ADDRESS>
+</BODY>
+</HTML>

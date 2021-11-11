@@ -1,0 +1,156 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<!--Converted with LaTeX2HTML 2008 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>2.6.5 Text and character literals</TITLE>
+<META NAME="description" CONTENT="2.6.5 Text and character literals">
+<META NAME="keywords" CONTENT="m3-defn-complete">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2008">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="/cm3/normal.css">
+
+<LINK REL="next" HREF="2_6_6Nil.html">
+<LINK REL="previous" HREF="2_6_4Numeric_literals.html">
+<LINK REL="up" HREF="2_6Expressions.html">
+<LINK REL="next" HREF="2_6_6Nil.html">
+</HEAD>
+
+<BODY >
+
+<DIV CLASS="navigation"><!--Navigation Panel-->
+<A NAME="tex2html818"
+  HREF="2_6_6Nil.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html816"
+  HREF="2_6Expressions.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html810"
+  HREF="2_6_4Numeric_literals.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A>   
+<BR>
+<B> Next:</B> <A NAME="tex2html819"
+  HREF="2_6_6Nil.html">2.6.6 Nil</A>
+<B> Up:</B> <A NAME="tex2html817"
+  HREF="2_6Expressions.html">2.6 Expressions</A>
+<B> Previous:</B> <A NAME="tex2html811"
+  HREF="2_6_4Numeric_literals.html">2.6.4 Numeric literals</A>
+<BR>
+<BR></DIV>
+<!--End of Navigation Panel-->
+
+<H3><A NAME="SECTION00019500000000000000">
+2.6.5 Text and character literals</A>
+</H3>
+
+<P>
+A character literal is a pair of single quotes enclosing either a single
+ISO-Latin-1 printing character (excluding single quote) or an escape sequence.
+The type of a character literal is <code>CHAR</code>.
+
+<P>
+A text literal is a pair of double quotes enclosing a sequence of ISO-Latin-1
+printing characters (excluding double quote) and escape sequences.  The type
+of a text literal is <code>TEXT</code>.
+
+<P>
+Here are are the legal escape sequences and the characters they denote:
+<BLOCKQUOTE>
+<TABLE CELLPADDING=3>
+<TR><TD ALIGN="LEFT"><code>\n</code></TD>
+<TD ALIGN="LEFT">newline (linefeed)</TD>
+<TD ALIGN="LEFT"><code>\f</code></TD>
+<TD ALIGN="LEFT">form feed</TD>
+</TR>
+<TR><TD ALIGN="LEFT"><code>\t</code></TD>
+<TD ALIGN="LEFT">tab</TD>
+<TD ALIGN="LEFT"><code>\\</code></TD>
+<TD ALIGN="LEFT">backslash</TD>
+</TR>
+<TR><TD ALIGN="LEFT"><code>\r</code></TD>
+<TD ALIGN="LEFT">carriage return</TD>
+<TD ALIGN="LEFT"><code>\"</code></TD>
+<TD ALIGN="LEFT">double quote</TD>
+</TR>
+<TR><TD ALIGN="LEFT"><code>\'</code></TD>
+<TD ALIGN="LEFT">single quote</TD>
+<TD ALIGN="LEFT"><code>\nnn</code></TD>
+<TD ALIGN="LEFT">char with code <code>8_nnn</code></TD>
+</TR>
+<TR><TD ALIGN="LEFT">&nbsp;</TD>
+<TD ALIGN="LEFT">&nbsp;</TD>
+<TD ALIGN="LEFT"><code>\Xnn</code></TD>
+<TD ALIGN="LEFT">char with code <code>16_nn</code></TD>
+</TR>
+</TABLE>
+</BLOCKQUOTE>
+A <code>\</code> followed by exactly three octal digits specifies the character
+whose code is that octal value.  
+A <code>\X</code> followed by exactly two hexadecimal digits specifies the character
+whose code is that hexadecimal value.  
+The hexadecimal digits are case-insensitive. 
+The 'X' in a hexadecimal escape sequence is case-insensitive.  
+A <code>\</code> that is not a part of one of these
+escape sequences is a static error.
+
+<P>
+A wide character literal has the form <code>W charlit</code>, where <code>charlit</code>
+is like a character literal, except that an octal escape sequence
+within must have exactly six octal digits, a hexadecimal escape sequence 
+within must have exactly four hexadecimal digits. and the escape 
+sequence <code>\U</code> followed by exactly six hexadecimal digits is allowed and
+specifies the Unicode character whose code point has that hexadecimal value.  
+It is a static error if that value lies outside the Unicode code point range. 
+The 'U' in a Unicode escape sequence is case-insensitive.  
+The type of a wide character literal is <code>WIDECHAR</code>.
+The leading 'W' is case-insensitive. 
+
+<P>
+Similarly, a wide text literal has the form <code>W textlit</code>, 
+where <code>textlit</code> is like a text literal, except any octal or hexadecimal
+escape sequences within must have exactly six octal or four hexadecimal 
+digits, respectively, and Unicode escape sequences are allowed.  
+Unlike character literals, ordinary text literals and wide text literals 
+both have the type <code>TEXT</code>, differing only in the method of specifying 
+the literal's value. 
+The leading 'W' is case-insensitive. 
+
+<P>
+For example, <code>'a'</code> and <code>'\''</code> are valid character literals,
+<code>'''</code> is not; <code>""</code> and <code>"Don't\n"</code> are valid text literals,
+<code>"""</code> is not.
+
+<P>
+
+<DIV CLASS="navigation"><HR>
+<!--Navigation Panel-->
+<A NAME="tex2html818"
+  HREF="2_6_6Nil.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html816"
+  HREF="2_6Expressions.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html810"
+  HREF="2_6_4Numeric_literals.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A>   
+<BR>
+<B> Next:</B> <A NAME="tex2html819"
+  HREF="2_6_6Nil.html">2.6.6 Nil</A>
+<B> Up:</B> <A NAME="tex2html817"
+  HREF="2_6Expressions.html">2.6 Expressions</A>
+<B> Previous:</B> <A NAME="tex2html811"
+  HREF="2_6_4Numeric_literals.html">2.6.4 Numeric literals</A></DIV>
+<!--End of Navigation Panel-->
+<ADDRESS>
+m3-support@elego.de
+</ADDRESS>
+</BODY>
+</HTML>

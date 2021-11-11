@@ -1,0 +1,164 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<!--Converted with LaTeX2HTML 2008 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>2.3.18 Typecase</TITLE>
+<META NAME="description" CONTENT="2.3.18 Typecase">
+<META NAME="keywords" CONTENT="m3-defn-complete">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2008">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="/cm3/normal.css">
+
+<LINK REL="next" HREF="2_3_19Lock.html">
+<LINK REL="previous" HREF="2_3_17Case.html">
+<LINK REL="up" HREF="2_3Statements.html">
+<LINK REL="next" HREF="2_3_19Lock.html">
+</HEAD>
+
+<BODY >
+
+<DIV CLASS="navigation"><!--Navigation Panel-->
+<A NAME="tex2html544"
+  HREF="2_3_19Lock.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html542"
+  HREF="2_3Statements.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html536"
+  HREF="2_3_17Case.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A>   
+<BR>
+<B> Next:</B> <A NAME="tex2html545"
+  HREF="2_3_19Lock.html">2.3.19 Lock</A>
+<B> Up:</B> <A NAME="tex2html543"
+  HREF="2_3Statements.html">2.3 Statements</A>
+<B> Previous:</B> <A NAME="tex2html537"
+  HREF="2_3_17Case.html">2.3.17 Case</A>
+<BR>
+<BR></DIV>
+<!--End of Navigation Panel-->
+
+<H3><A NAME="SECTION000161800000000000000">
+2.3.18 Typecase</A>
+</H3>
+
+<P>
+A <code>TYPECASE</code> statement has the form:
+<PRE>
+    TYPECASE Expr OF
+      T_1 (v_1) =&gt; S_1
+    | ...
+    | T_n (v_n) =&gt; S_n
+    ELSE S_0
+    END
+</PRE>
+where <code>Expr</code> is an expression whose type is a reference type, the
+<code>S</code>'s are statements, the <code>T</code>'s are reference types, and the
+<code>v</code>'s are identifiers.  It is a static error if <code>Expr</code> has type
+<code>ADDRESS</code> or if any <code>T</code> is not a subtype of the type of <code>Expr</code>.
+The ``<code>ELSE S_0</code>'' and each ``<code>(v)</code>'' are optional.
+
+<P>
+The statement evaluates <code>Expr</code>.  If the resulting reference value is a
+member of any listed type <code>T_</code><SPAN CLASS="MATH"><IMG
+ WIDTH="9" HEIGHT="17" ALIGN="BOTTOM" BORDER="0"
+ SRC="img1.png"
+ ALT="$i$"></SPAN>, then <code>S_</code><SPAN CLASS="MATH"><IMG
+ WIDTH="9" HEIGHT="17" ALIGN="BOTTOM" BORDER="0"
+ SRC="img1.png"
+ ALT="$i$"></SPAN> is executed, for the
+minimum such <SPAN CLASS="MATH"><IMG
+ WIDTH="9" HEIGHT="17" ALIGN="BOTTOM" BORDER="0"
+ SRC="img1.png"
+ ALT="$i$"></SPAN>.  (Thus a <code>NULL</code> case is useful only if it comes first.)
+If the value is a member of no listed type and ``<code>ELSE S_0</code>'' is present,
+then it is executed.  If the value is a member of no listed type and
+``<code>ELSE S_0</code>'' is absent, a checked runtime error occurs.
+
+<P>
+Each <code>(v_</code><SPAN CLASS="MATH"><IMG
+ WIDTH="9" HEIGHT="17" ALIGN="BOTTOM" BORDER="0"
+ SRC="img1.png"
+ ALT="$i$"></SPAN><code>)</code> declares a variable whose type is <code>T_</code><SPAN CLASS="MATH"><IMG
+ WIDTH="9" HEIGHT="17" ALIGN="BOTTOM" BORDER="0"
+ SRC="img1.png"
+ ALT="$i$"></SPAN> and
+whose scope is <code>S_</code><SPAN CLASS="MATH"><IMG
+ WIDTH="9" HEIGHT="17" ALIGN="BOTTOM" BORDER="0"
+ SRC="img1.png"
+ ALT="$i$"></SPAN>.  If <code>v_</code><SPAN CLASS="MATH"><IMG
+ WIDTH="9" HEIGHT="17" ALIGN="BOTTOM" BORDER="0"
+ SRC="img1.png"
+ ALT="$i$"></SPAN> is present, it is initialized to
+the value of <code>Expr</code> before <code>S_</code><SPAN CLASS="MATH"><IMG
+ WIDTH="9" HEIGHT="17" ALIGN="BOTTOM" BORDER="0"
+ SRC="img1.png"
+ ALT="$i$"></SPAN> is executed.
+
+<P>
+If <code>(v_</code><SPAN CLASS="MATH"><IMG
+ WIDTH="9" HEIGHT="17" ALIGN="BOTTOM" BORDER="0"
+ SRC="img1.png"
+ ALT="$i$"></SPAN><code>)</code> is absent, then <code>T_</code><SPAN CLASS="MATH"><IMG
+ WIDTH="9" HEIGHT="17" ALIGN="BOTTOM" BORDER="0"
+ SRC="img1.png"
+ ALT="$i$"></SPAN> can be a list of type
+expressions separated by commas, as shorthand for a list in which the rest of
+the branch is repeated for each type expression.  That is:
+<PRE>
+    T_1, ..., T_n =&gt; S
+</PRE>
+is shorthand for:
+<PRE>
+    T_1 =&gt; S | ... | T_n =&gt; S
+</PRE>
+
+<P>
+For example:
+<PRE>
+    PROCEDURE ToText(r: REFANY): TEXT =
+      (* Assume r = NIL or r^ is a BOOLEAN or INTEGER. *)
+      BEGIN
+        TYPECASE r OF
+          NULL =&gt; RETURN "NIL"
+        | REF BOOLEAN (rb) =&gt; RETURN Fmt.Bool(rb^)
+        | REF INTEGER (ri) =&gt; RETURN Fmt.Int(ri^)
+        END
+      END ToText;
+</PRE>
+
+<P>
+
+<DIV CLASS="navigation"><HR>
+<!--Navigation Panel-->
+<A NAME="tex2html544"
+  HREF="2_3_19Lock.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html542"
+  HREF="2_3Statements.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html536"
+  HREF="2_3_17Case.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A>   
+<BR>
+<B> Next:</B> <A NAME="tex2html545"
+  HREF="2_3_19Lock.html">2.3.19 Lock</A>
+<B> Up:</B> <A NAME="tex2html543"
+  HREF="2_3Statements.html">2.3 Statements</A>
+<B> Previous:</B> <A NAME="tex2html537"
+  HREF="2_3_17Case.html">2.3.17 Case</A></DIV>
+<!--End of Navigation Panel-->
+<ADDRESS>
+m3-support@elego.de
+</ADDRESS>
+</BODY>
+</HTML>

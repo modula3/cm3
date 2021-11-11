@@ -1,0 +1,63 @@
+<HTML>
+<HEAD>
+<TITLE>Modula-3: Operation syntax</TITLE>
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+<body>
+
+<P>
+<A HREF="m3.html">[top]</A>
+<A HREF="conventions.html">[prev]</A>
+<A HREF="designators.html">[next]</A>
+<P>
+
+<A NAME=idx.153>
+<H2>Operation syntax</H2>
+</A>
+<P>
+
+The operators that have special syntax are classified and listed in order of 
+decreasing binding power in the following table:
+<PRE>
+    x.a                   infix dot
+    f(x) a[i] T{x}        applicative <TT>(</TT>, <TT>[</TT>, <TT>{</TT>
+    p^                    postfix <TT>^</TT>
+    +  -                  prefix arithmetics
+    * / DIV MOD           infix arithmetics
+    + - &amp;                 infix arithmetics
+    = # < <= >= > IN      infix relations
+    NOT                   prefix <TT>NOT</TT>
+    AND                   infix <TT>AND</TT>
+    OR                    infix <TT>OR</TT>
+</PRE>
+<P>
+
+All infix operators are left associative.  Parentheses can be used 
+to override the precedence rules.  Here are some examples of expressions 
+together with their fully parenthesized forms:
+<PRE>
+    M.F(x)           (M.F)(x)           dot before application
+    Q(x)^            (Q(x))^            application before <TT>^</TT>
+    - p^             - (p^)             <TT>^</TT> before prefix <TT>-</TT>
+    - a * b          (- a) * b          prefix <TT>-</TT> before <TT>*</TT> 
+    a * b - c        (a * b) - c        <TT>*</TT> before infix <TT>-</TT>
+    x IN s - t       x IN (s - t)       infix <TT>-</TT> before <TT>IN</TT>
+    NOT x IN s       NOT (x IN s)       <TT>IN</TT> before <TT>NOT</TT>
+    NOT p AND q      (NOT p) AND q      <TT>NOT</TT> before <TT>AND</TT>
+    A OR B AND C     A OR (B AND C)     <TT>AND</TT> before <TT>OR</TT>
+</PRE>
+<P>
+
+<A NAME=idx.154>Operators</A>
+without special syntax are <EM>procedural</EM>. An application 
+of a procedural operator has the form <TT>op(args)</TT>,
+where <TT>op</TT> is the operation 
+and <TT>args</TT> is the list of argument expressions.  For example, 
+<TT>MAX</TT> and <TT>MIN</TT> are procedural operators.
+<P>
+
+<P>
+<A HREF="m3.html">[top]</A>
+<A HREF="conventions.html">[prev]</A>
+<A HREF="designators.html">[next]</A>
+</BODY>
+</HTML>

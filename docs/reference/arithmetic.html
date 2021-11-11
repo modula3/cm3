@@ -1,0 +1,207 @@
+<HTML>
+<HEAD>
+<TITLE>Modula-3: Arithmetic operations</TITLE>
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+<body>
+
+<P>
+<A HREF="m3.html">[top]</A>
+<A HREF="new.html">[prev]</A>
+<A HREF="relations.html">[next]</A>
+<P>
+
+<H2>Arithmetic operations</H2>
+<P>
+
+The basic arithmetic operations are built into the language;
+additional operations are provided by the required
+<A HREF="intfs.html">floating-point interfaces</A>.
+<P>
+
+To test or set the implementation's behavior for overflow, underflow,
+rounding, and division by zero, see the required interface
+<A HREF="floatmode.html"><TT>FloatMode</TT></A>.
+Modula-3 arithmetic was designed
+to support the
+<A href=../help/bib.html#m3fp">IEEE floating-point</A>
+standard, but not to require it.
+<P>
+
+To perform arithmetic operations modulo the word size, programs should
+use the routines in the required interface
+<A HREF="word-intf.html"><TT>Word</TT></A>.
+<P>
+
+Implementations must not rearrange the computation of expressions in
+a way that could affect the result.  For example, <TT>(x+y)+z</TT>
+generally cannot be computed as <TT>x+(y+z)</TT>, since addition is not
+associative either for bounded integers or for floating-point values.
+<P>
+
+<A NAME=idx.183>
+<PRE>
+    prefix    +  (x: Integer)    : Integer
+              +  (x: Float)      : Float
+
+
+     infix    +  (x,y: Integer)  : Integer
+                 (x,y: Float)    : Float
+                 (x,y: Set)      : Set
+</PRE>
+</A>
+As a prefix operator, <TT>+x</TT> returns <TT>x</TT>.  
+As an infix operator on numeric arguments,
+<TT>+</TT> denotes addition. On sets, <TT>+</TT> denotes set union.
+That is,
+<TT>e IN (x + y)</TT> if and only if <TT>(e IN x) OR (e IN y)</TT>.
+The types of <TT>x</TT> and <TT>y</TT> must be the same, and the result 
+is the same type as both. 
+In unsafe modules, <TT>+</TT> is extended to <TT>ADDRESS</TT>.
+<P>
+
+<A NAME=idx.184>
+<PRE>
+    prefix    -  (x: Integer)    : Integer
+                 (x: Float)      : Float
+
+     infix    -  (x,y: Integer)  : Integer
+                 (x,y: Float)    : Float
+                 (x,y: Set)      : Set
+</PRE>
+</A>
+As a prefix operator, <TT>-x</TT> is the negative of <TT>x</TT>. 
+As an infix operator on numeric arguments, <TT>-</TT> denotes subtraction.
+On sets, <TT>-</TT> denotes set difference.
+That is, <TT>e IN (x - y)</TT> if and only if
+<TT>(e IN x) AND NOT (e IN y)</TT>.
+The types of <TT>x</TT> and <TT>y</TT> must be the same, and the result 
+is the same type as both. 
+In unsafe modules, <TT>-</TT> is extended to <TT>ADDRESS</TT>.
+<P>
+
+<A NAME=idx.185>
+<PRE>
+    infix     *  (x,y: Integer)  : Integer
+                 (x,y: Float)    : Float
+                 (x,y: Set)      : Set
+</PRE>
+</A>
+On numeric arguments, <TT>*</TT> denotes multiplication.  
+On sets, <TT>*</TT> denotes intersection.
+That is, <TT>e IN (x * y)</TT> if and only if <TT>(e IN x) AND (e IN y)</TT>.
+The types of <TT>x</TT> and <TT>y</TT> must be the same, and the result 
+is the same type as both. 
+<P>
+
+<A NAME=idx.186>
+<PRE>
+    infix     /  (x,y: Float)    : Float
+                 (x,y: Set)      : Set
+</PRE>
+</A>
+On reals, <TT>/</TT> denotes division. On sets, <TT>/</TT>  denotes
+symmetric difference.
+That is, <TT>e IN (x / y)</TT> if and only if <TT>(e IN x) # (e IN y)</TT>.
+The types of <TT>x</TT> and <TT>y</TT> must be the same, and the result 
+is the same type as both.
+<P>
+
+<A NAME=idx.187>
+<PRE>
+    infix    DIV (x,y: Integer) : Integer
+    infix    MOD (x,y: Integer) : Integer
+             MOD (x, y: Float)  : Float
+</PRE>
+</A>
+The value <TT>x DIV y</TT> is the floor of 
+the quotient of <TT>x</TT> and <TT>y</TT>; that is, the maximum integer 
+not exceeding the real number <TT>z</TT> such that <TT>z * y = x</TT>.
+For integers <TT>x</TT> and <TT>y</TT>, the value of <TT>x MOD y</TT> is 
+defined to be <TT>x - y * (x DIV y)</TT>.
+<P>
+
+This means that for positive <TT>y</TT>, the value of <TT>x MOD y</TT>
+lies in the interval <TT>[0 .. y-1]</TT>, regardless of 
+the sign of <TT>x</TT>.  For negative <TT>y</TT>, the value of
+<TT>x MOD y</TT> lies in the interval <TT>[y+1 .. 0]</TT>, regardless 
+of the sign of <TT>x</TT>.
+<P>
+
+If <TT>x</TT> and <TT>y</TT> are floats, the value of <TT>x MOD y</TT> is 
+<TT>x - y * FLOOR(x / y)</TT>.  This may be computed as a Modula-3
+expression, or by a method that avoids overflow if <TT>x</TT> is much
+greater than <TT>y</TT>.  The types of <TT>x</TT> and <TT>y</TT> must
+be the same, and the result is the same type as both.
+<P>
+
+<A NAME=idx.188>
+<PRE>
+             ABS (x: Integer) : Integer
+                 (x: Float)   : Float
+</PRE>
+</A>
+<TT>ABS(x)</TT> is the absolute value of <TT>x</TT>.
+The type of <TT>ABS(x)</TT> is the same as the type of <TT>x</TT>.
+<P>
+
+<A NAME=idx.189>
+<PRE>
+           FLOAT (x: Integer; T: Type := REAL): T
+                 (x: Float;   T: Type := REAL): T
+</PRE>
+</A>
+<TT>FLOAT(x, T)</TT> is a floating-point value of type <TT>T</TT>
+that is equal to or very near <TT>x</TT>.
+The type <TT>T</TT> must be a floating-point type;
+it defaults to <TT>REAL</TT>.  The exact semantics depend on the
+thread's current rounding mode, as defined in the required interface
+<A HREF="floatmode.html"><TT>FloatMode</TT></A>.
+<P>
+
+<A NAME=idx.190>
+<PRE>
+           FLOOR   (x: Float; T: Type := INTEGER): T
+
+           CEILING (x: Float; T: Type := INTEGER): T
+</PRE>
+</A>
+<TT>FLOOR(x)</TT> is the greatest integer not exceeding <TT>x</TT>.  
+<TT>CEILING(x)</TT> is the least integer not less than <TT>x</TT>.
+The type <TT>T</TT> must be an integer type; it defaults to <TT>INTEGER</TT>.
+<P>
+
+<A NAME=idx.191>
+<PRE>
+           ROUND (r: Float; T: Type := INTEGER): T
+
+           TRUNC (r: Float; T: Type := INTEGER): T
+</PRE>
+</A>
+<TT>ROUND(r)</TT> is the nearest integer to <TT>r</TT>; ties are broken 
+according to the constant <TT>RoundDefault</TT> in the required interface
+<A HREF="floatmode.html"><TT>FloatMode</TT></A>.
+<TT>TRUNC(r)</TT> rounds <TT>r</TT> toward zero; it equals 
+<TT>FLOOR(r)</TT> for positive <TT>r</TT> and <TT>CEILING(r)</TT> for 
+negative <TT>r</TT>.
+The type <TT>T</TT> must be an integer type; it defaults to <TT>INTEGER</TT>.
+<P>
+
+<A NAME=idx.192>
+<PRE>
+       MAX, MIN (x,y: Ordinal) : Ordinal
+                (x,y: Float)   : Float
+</PRE>
+</A>
+<TT>MAX</TT> returns the greater of the two values <TT>x</TT> and <TT>y</TT>;
+<TT>MIN</TT> returns the lesser.  If <TT>x</TT> and <TT>y</TT> are ordinals,
+they must have the same base type, which is the type of the result.
+If <TT>x</TT> and <TT>y</TT> are floats, they must have the same type, and
+the result is the same type as both.
+<P>
+
+<P>
+<A HREF="m3.html">[top]</A>
+<A HREF="new.html">[prev]</A>
+<A HREF="relations.html">[next]</A>
+</BODY>
+</HTML>

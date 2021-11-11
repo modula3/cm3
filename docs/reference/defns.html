@@ -1,0 +1,73 @@
+<HTML>
+<HEAD>
+<TITLE>Modula-3: Definitions</TITLE>
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+<body>
+
+<P>
+<A HREF="m3.html">[top]</A>
+<A HREF="intro.html">[prev]</A>
+<A HREF="types.html">[next]</A>
+<P>
+
+<H2>Definitions</H2>
+<P>
+
+<A NAME=idx.22>A</A>
+Modula-3 program specifies a computation that acts on a sequence 
+of digital components called <EM>locations</EM>.  A <EM>variable</EM> is a set 
+of locations that represents a mathematical value according to a 
+convention determined by the variable's <EM>type</EM>.  If a value can 
+be represented by some variable of type <TT>T</TT>, then we say that 
+the value is a <EM>member</EM> of <TT>T</TT> and <TT>T</TT> <EM>contains</EM> 
+the value.
+<P>
+
+<A NAME=idx.23>An</A>
+<EM>identifier</EM> is a symbol declared as a name for a variable, type,
+procedure, etc.  The region of the program over which a declaration
+applies is called the <EM>scope</EM> of the declaration.  Scopes can be
+nested.  The meaning of an identifier is determined by the smallest
+enclosing scope in which the identifier is declared.
+<P>
+
+<A NAME=idx.24>An</A>
+<EM>expression</EM> specifies a computation that produces a value 
+or variable.  Expressions that produce variables are called 
+<EM>designators</EM>.  A designator can denote either a variable or the value 
+of that variable, depending on the context.  Some designators are 
+<EM>readonly</EM>, which means that they cannot be used in contexts that might 
+change the value of the variable.  A designator that is not readonly 
+is called <EM>writable</EM>. Expressions 
+whose values can be determined statically are called <EM>constant 
+expressions</EM>; they are never designators.
+<P>
+
+<A NAME=idx.25>A</A>
+<EM>static error</EM> is an error that the implementation must detect 
+before program execution.  Violations of the language definition 
+are static errors unless they are explicitly classified as runtime 
+errors.
+<P>
+
+<A NAME=idx.26>A</A>
+<EM>checked runtime error</EM> is an error that the implementation 
+must detect and report at runtime.  The method for reporting such 
+errors is implementation-dependent.  (If the implementation maps 
+them into exceptions, then a program could handle these exceptions 
+and continue.)
+<P>
+
+<A NAME=idx.27>An</A>
+<EM>unchecked runtime error</EM> is an error that is not guaranteed 
+to be detected, and can cause the subsequent behavior of the 
+computation to be arbitrary.  Unchecked runtime errors can occur 
+only in unsafe modules.
+<P>
+
+<P>
+<A HREF="m3.html">[top]</A>
+<A HREF="intro.html">[prev]</A>
+<A HREF="types.html">[next]</A>
+</BODY>
+</HTML>

@@ -1,0 +1,44 @@
+<html>
+<head>
+   <title>Modula-3 - Imports</title>
+   <meta name="GENERATOR" content="Mozilla/2.0GoldB2 (Win32)">
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+<body>
+Go to the <a href="m3_1.html">first</a>, <a href="m3_10.html">previous</a>,
+<a href="m3_12.html">next</a>, <a href="m3_83.html">last</a> section, <a href="m3_toc.html">table
+of contents</a>. 
+<hr>
+<h3><a name="SEC11"></a><a name="SEC11"></a><a name="SEC11"></a><a name="SEC11"></a><a href="m3_toc.html#SEC11" NAME="SEC11">Imports</a></h3>
+
+<p>Modules gain access to declarations and functionality of other modules
+using the <i>import </i>statement. For example, a main module cannot use
+types or procedures defined in the <tt><a href="../../help/gen_html/libm3/src/rw/IO.i3.html">IO i</a></tt>nterface
+until it explicitly imports the definitions using the <tt>IMPORT </tt>statement
+like this: </p>
+
+<ul>
+<pre><b>IMPORT </b>IO;</pre>
+</ul>
+
+<p>Once you import an interface this way, you can refer to an individual
+item in that interface using a <i><tt>Module<b>.</b>Declaration</tt></i>
+syntax. (That is, you prefix the name of an identifier with its interface
+and a period in between the two.) In our example, we can access <tt>
+<a href="../../help/gen_html/libm3/src/rw/IO.i3.html#IO.Put">IO.Put</a></tt>
+procedure via: </p>
+
+<ul>
+<pre>IO.Put (&quot;Hello, world.&quot;);</pre>
+</ul>
+
+<ul>
+<li><a href="m3_12.html#SEC12"><tt>IMPORT</tt> Statement</a></li>
+</ul>
+
+<p>
+<hr>Go to the <a href="m3_1.html">first</a>, <a href="m3_10.html">previous</a>,
+<a href="m3_12.html">next</a>, <a href="m3_83.html">last</a> section, <a href="m3_toc.html">table
+of contents</a>. </p>
+
+</body>
+</html>

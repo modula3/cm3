@@ -1,0 +1,1254 @@
+<HTML>
+<HEAD>
+<TITLE>Modula-3 Interface Index</TITLE>
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+<body>
+<!-- <img src="/rsrc/man.gif"> --> 
+<H3>CM3 Interface Index</H3>
+
+<p>
+CM3 includes many interfaces. Finding 
+the right one for a particular task is not always easy. This index provides
+an overview of some of the most frequently used interfaces available in
+CM3. The interfaces can be loosely broken into the following categories:
+<BLOCKQUOTE>
+<TABLE>
+<TR>
+  <TD WIDTH="33%"><A HREF="#texts">Datatypes, Text Strings</A></TD>
+  <TD WIDTH="33%"><A HREF="#collections">Collections, Lists, Tables, Sets</A></TD>
+  <TD WIDTH="33%"><A HREF="#sort">Sorting</A></TD>
+</TR>
+<TR>
+  <TD WIDTH="33%"><A HREF="#math">Math, Geometry</A></TD>
+  <TD WIDTH="33%"><A HREF="#math">Statistics, Random numbers</A></TD>
+  <TD WIDTH="33%"><A HREF="#float">Floating point</A></TD>
+</TR>
+<TR>
+  <TD WIDTH="33%"><A HREF="#io">I/O Streams</A></TD>
+  <TD WIDTH="50%"><A HREF="#format">Formatting, I/O conversions</A></TD>
+  <TD WIDTH="33%"><A HREF="#collections">Generic types</A></TD>
+</TR>
+<TR>
+  <TD WIDTH="33%"><A HREF="#threads">Threads</A></TD>
+  <TD WIDTH="33%"><A HREF="#distributed">Distributed Computing</A></TD>
+  <TD WIDTH="33%"><A HREF="#distributed">Network Objects</A></TD>
+</TR>
+<TR>
+  <TD WIDTH="33%"><A HREF="#os">Operating System</A></TD>
+  <TD WIDTH="33%"><A HREF="#database">Database</A></TD>
+  <TD WIDTH="33%"><A HREF="#stable">Persistent Storage</A></TD>
+</TR>
+<TR>
+  <TD WIDTH="33%"><A HREF="#os">Files, Directories</A></TD>
+  <TD WIDTH="33%"><A HREF="#os">Processes</A></TD>
+  <TD WIDTH="33%"><A HREF="#os">Time, Date, Tick</A></TD>
+</TR>
+<TR>
+  <TD WIDTH="33%"><A HREF="#env">Environment Variables</A></TD>
+  <TD WIDTH="33%"><A HREF="#env">Command-line Parameters</A></TD>
+  <TD WIDTH="33%"><A HREF="#distributed">TCP/IP</A></TD>
+</TR>
+<TR>
+  <TD WIDTH="33%"><A HREF="#chooks">Standard C Interfaces</A></TD>
+  <TD WIDTH="33%"><A HREF="#runtime">Low-level Run-time</A></TD>
+  <TD WIDTH="33%"><A HREF="#misc">Other, Miscellaneous</A></TD>
+</TR>
+</TABLE>
+</BLOCKQUOTE>
+
+<p>
+  There is also a 
+  <a href="gen_html/INDEX.html">complete alphabetical index</a>.
+</p>
+<P>
+<HR><!-- ------------------------------------------------------------- -->
+<H3>Data Types, Data Structures, and Algorithms</H3>
+
+<H4><A NAME="texts">Basic Datatypes, Text strings</A></H4>
+
+There is a collection of interfaces that
+correspond to Modula-3's built-in datatypes.
+These interfaces add functions not defined in the
+language and make it easy to instantitate
+<a href=#collections>generic collections</a>.
+The following table gives the correspondence 
+from Modula-3 built-in datatypes to library interfaces:
+
+<BLOCKQUOTE>
+<TABLE>
+<TR>
+  <TD><STRONG>Datatype </STRONG></TD>
+  <TD><STRONG> Interface</STRONG></TD>
+</TR>
+<TR>
+  <TD><CODE>INTEGER</CODE></TD>
+  <TD><A HREF="gen_html/libm3/src/types/Integer.i3.html">Integer</A>,
+      <A HREF="gen_html/libm3/src/types/Int32.i3.html">Int32</A></TD>
+</TR>
+<TR>
+ <TD><CODE>BOOLEAN</CODE></TD>
+ <TD><A HREF="gen_html/libm3/src/types/Boolean.i3.html">Boolean</A></TD>
+</TR>
+<TR>
+  <TD><CODE>CHAR</CODE></TD>
+  <TD><A HREF="gen_html/libm3/src/types/Char.i3.html">Char</A></TD>
+</TR>
+<TR>
+  <TD><CODE>REFANY</CODE></TD>
+  <TD><A HREF="gen_html/libm3/src/types/Refany.i3.html">Refany</A></TD>
+</TR>
+<TR>
+  <TD><CODE>REAL</CODE></TD>
+  <TD><A HREF="gen_html/libm3/src/types/RealType.i3.html">RealType</A>,
+      <A HREF="gen_html/m3core/src/float/IEEE/Real.i3.html">Real</A></TD>
+</TR>
+<TR>
+  <TD><CODE>LONGREAL</CODE></TD>
+  <TD><A HREF="gen_html/libm3/src/types/LongrealType.i3.html">LongrealType</A>,
+      <A
+      HREF="gen_html/m3core/src/float/IEEE/LongReal.i3.html">LongReal</A></TD> 
+</TR>
+<TR>
+  <TD><CODE>EXTENDED</CODE></TD>
+  <TD><A
+  HREF="gen_html/m3core/src/float/IEEE/Extended.i3.html">Extended</A></TD> 
+</TR>
+<TR>
+  <TD><CODE>TEXT</CODE></TD>
+  <TD> <A HREF="gen_html/m3core/src/text/Text.i3.html">Text</A></TD>
+</TR>
+</TABLE>
+</BLOCKQUOTE>
+
+<P>
+<STRONG>Text strings.</STRONG>
+Strings are represented as values of type
+<CODE>TEXT</CODE>. Text strings are immutable; they are
+automatically garbage collected.
+
+<P>
+The <code>TEXT</code> type is used extensively throughout the Modula-3
+libraries.  The 
+<A HREF="gen_html/m3core/src/text/Text.i3.html">Text</A> interface 
+defines the basic operations on this type.  Operations to convert
+between other encodings of text strings are available in the
+<A HREF="gen_html/m3core/src/text/TextConv.i3.html">TextConv</A> interface.
+The internal representation of text strings is exposed in then
+<A HREF="gen_html/m3core/src/text/TextClass.i3.html">TextClass</A> interface.
+More specific interfaces for 8 bit (ISO charsets) and 16 bit (Unicode)
+characters can be found in
+<A HREF="gen_html/m3core/src/text/Text8.i3.html">Text8</a>,
+<A HREF="gen_html/m3core/src/text/Text8Short.i3.html">Text8Short</a>,
+<A HREF="gen_html/m3core/src/text/Text8CString.i3.html">Text8CString</a>,
+<A HREF="gen_html/m3core/src/text/Text16.i3.html">Text16</a>, and
+<A HREF="gen_html/m3core/src/text/Text16Short.i3.html">Text16Short</a>.
+
+The <b>TextF</b> interface from previous releases is no more supported.
+
+<P>
+<STRONG>ASCII characters.</STRONG>
+<A HREF="gen_html/libm3/src/types/ASCII.i3.html">ASCII</A> includes constant
+definitions for the character codes of non-printable characters, such
+as <CODE>ASCII.NL</CODE> for new-line.  It classifies characters into groups,
+like digits or punctuation; each group is represented as a set
+of characters.  Finally, it provides mapping tables that translate
+lower-case letters into upper-case and vice versa.
+
+<P>
+<STRONG>Machine Words and Bit Manipulation.</STRONG>
+The <A HREF="gen_html/m3core/src/word/Word.i3.html">Word</A> interface defines
+bit-level operations on machine words.
+The <A HREF="gen_html/libm3/src/uid/Common/Swap.i3.html">Swap</A> interface is
+useful for writing code that
+must deal explicitly with byte ordering and/or word length issues.
+
+<P>
+<STRONG>Atoms.</STRONG>
+While not built-in types, atoms are handy for
+efficient comparison of text strings.
+The <A HREF="gen_html/libm3/src/atom/Atom.i3.html">Atom</a> interface
+describes the set of operations available for atoms.
+
+<P>
+<STRONG>Symbolic Expressions.</STRONG>
+The <A HREF="gen_html/libm3/src/sx/Sx.i3.html">Sx</A> interface
+provides symbolic 
+expressions represented as a recursive
+linked-list structures, similar to those found in Lisp systems.
+It includes routines for reading and printing symbolic expressions, as well as
+some convenience procedures for manipulating them.
+
+<P>
+<STRONG><EM>See also</EM></STRONG> <A HREF="#format">Formatting &amp;
+I/O Conversions</A> for interfaces that produce or parse text representations
+of the built-in types.
+
+
+<H4><A NAME="collections">Collections, Lists, Tables, Sets</A></H4>
+
+<P>
+The CM3 libraries contain interfaces supporting the following
+data structures:
+<A HREF="#linked-list">linked lists</A>,
+<A HREF="#sorted-linked-list">sorted linked lists</A>,
+<A HREF="#prop-list">Lisp-like property lists</A>,
+<A HREF="#table">tables</A>,
+<A HREF="#sorted-table">sorted tables</A>,
+<A HREF="#sequence">sequences</A>,
+<A HREF="#pqueue">priority queues</A>,
+and
+<A HREF="#sets">sets</A>.
+
+<P>
+Many of these data structures are available as generic
+interfaces.  They can be instantiated with whatever types are needed.
+For most of the generic data structures,
+the libraries already include instances
+for text strings, integers, atoms, and arbitrary references.
+Many of the generics are packaged with makefile functions that
+make it simply a matter of writing a line in your makefile
+to instantiate them.
+
+<H4><A NAME="linked-list">Linked Lists</A></H4>
+
+<P>
+A generic implementation of singly-linked lists is available in the
+<A HREF="gen_html/libm3/src/list/List.ig.html">List</A> interface</A> and
+<A HREF="gen_html/libm3/src/list/List.mg.html">implementation</A>.
+It includes predefined instances for
+<A HREF="gen_html/libm3/derived/AtomList.i3.html">atoms</A>,
+<A HREF="gen_html/libm3/derived/IntList.i3.html">integers</A>,
+<A HREF="gen_html/libm3/derived/RefList.i3.html">references</A>,
+and
+<A HREF="gen_html/libm3/derived/TextList.i3.html">text strings</A>.
+The package includes
+<A HREF="gen_html/libm3/src/list/list.tmpl.html">makefile functions</A>
+to create custom lists.
+
+<H4><A NAME="sorted-linked-list">Sorted Linked Lists</A></H4>
+
+<P>
+Lists may be sorted by using the generic
+<A HREF="gen_html/libm3/src/list/ListSort.ig.html">ListSort</A> interface and
+<A HREF="gen_html/libm3/src/list/ListSort.mg.html">implementation</A>.
+Like the <A HREF="gen_html/libm3/src/list/List.ig.html">List</A> interfaces,
+there are predefined instances for 
+<A HREF="gen_html/libm3/derived/AtomListSort.i3.html">atoms</A>,
+<A HREF="gen_html/libm3/derived/IntListSort.i3.html">integers</A>,
+<A HREF="gen_html/libm3/derived/RefListSort.i3.html">references</A>,
+and
+<A HREF="gen_html/libm3/derived/TextListSort.i3.html">text strings</A>.
+
+<H4><A NAME="prop-list">Property lists</A></H4>
+
+<P>
+Property lists, simple linked lists of (name, value) pairs, are
+available from the
+<A HREF="gen_html/libm3/src/property/Property.i3.html">Property</A> interface.
+The related interfaces,
+<A HREF="gen_html/libm3/src/property/PropertyV.i3.html">PropertyV</A>,
+<A HREF="gen_html/libm3/src/property/MProperty.i3.html">MProperty</A>,
+<A HREF="gen_html/libm3/src/property/PropertyF.i3.html">PropertyF</A>,
+and
+<A HREF="gen_html/libm3/src/property/MPropertyF.i3.html">MPropertyF</A>
+provide more features.
+
+<H4><A NAME="table">Tables</A></H4>
+
+<P>
+A flexible and highly-reusable generic 
+<A HREF="gen_html/libm3/src/table/Table.ig.html">Table</A> interface and
+<A HREF="gen_html/libm3/src/table/Table.mg.html">implementation</A>
+are available. 
+Tables provide efficient mappings from values of
+one type to values of another.
+Like the list interfaces, the table interfaces are
+provided with predefined instances for the full
+cross product of the four basic types:
+<BLOCKQUOTE>
+<TABLE>
+<TR>
+<TD WIDTH="20%"><STRONG>From \ To</STRONG></TD>
+<TD WIDTH="20%">atoms</TD>
+<TD WIDTH="20%">integers</TD>
+<TD WIDTH="20%">references</TD>
+<TD WIDTH="20%">texts</TD>
+</TR>
+<TR>
+<TD WIDTH="20%">atoms</TD>
+<TD WIDTH="20%"><A HREF="gen_html/libm3/derived/AtomAtomTbl.i3.html">AtomAtomTbl</A></TD>
+<TD WIDTH="20%"><A HREF="gen_html/libm3/derived/AtomIntTbl.i3.html">AtomIntTbl</A></TD>
+<TD WIDTH="20%"><A HREF="gen_html/libm3/derived/AtomRefTbl.i3.html">AtomRefTbl</A></TD>
+<TD WIDTH="20%"><A HREF="gen_html/libm3/derived/AtomTextTbl.i3.html">AtomTextTbl</A></TD>
+</TR>
+<TR>
+<TD WIDTH="20%">integers</TD>
+<TD WIDTH="20%"><A HREF="gen_html/libm3/derived/IntAtomTbl.i3.html">IntAtomTbl</A></TD>
+<TD WIDTH="20%"><A HREF="gen_html/libm3/derived/IntIntTbl.i3.html">IntIntTbl</A></TD>
+<TD WIDTH="20%"><A HREF="gen_html/libm3/derived/IntRefTbl.i3.html">IntRefTbl</A></TD>
+<TD WIDTH="20%"><A HREF="gen_html/libm3/derived/IntTextTbl.i3.html">IntTextTbl</A></TD>
+</TR>
+<TR>
+<TD WIDTH="20%">references</TD>
+<TD WIDTH="20%"><A HREF="gen_html/libm3/derived/RefAtomTbl.i3.html">RefAtomTbl</A></TD>
+<TD WIDTH="20%"><A HREF="gen_html/libm3/derived/RefIntTbl.i3.html">RefIntTbl</A></TD>
+<TD WIDTH="20%"><A HREF="gen_html/libm3/derived/RefRefTbl.i3.html">RefRefTbl</A></TD>
+<TD WIDTH="20%"><A HREF="gen_html/libm3/derived/RefTextTbl.i3.html">RefTextTbl</A></TD>
+</TR>
+<TR>
+<TD WIDTH="20%">texts</TD>
+<TD WIDTH="20%"><A HREF="gen_html/libm3/derived/TextAtomTbl.i3.html">TextAtomTbl</A></TD>
+<TD WIDTH="20%"><A HREF="gen_html/libm3/derived/TextIntTbl.i3.html">TextIntTbl</A></TD>
+<TD WIDTH="20%"><A HREF="gen_html/libm3/derived/TextRefTbl.i3.html">TextRefTbl</A></TD>
+<TD WIDTH="20%"><A HREF="gen_html/libm3/derived/TextTextTbl.i3.html">TextTextTbl</A></TD>
+</TR>
+</TABLE>
+</BLOCKQUOTE>
+
+<P>
+Like the other generic data structures, predefined
+<A HREF="gen_html/libm3/src/table/table.tmpl.html">makefile functions</A>
+are available to create custom tables.
+
+<H4><A NAME="sorted-table">Sorted tables</A></H4>
+
+<P>
+Sorted tables are like tables with the added feature that it is
+possible to iterate through the elements of the table in a sorted order.
+The generic  <A
+HREF="gen_html/libm3/src/sortedtable/SortedTable.ig.html">SortedTable</A>
+interface and 
+<A
+HREF="gen_html/libm3/src/sortedtable/SortedTable.mg.html">implementation</A>
+are available. 
+Like the other table interfaces, the sorted table interfaces are
+provided with predefined instances for the full
+cross product of the four basic types:
+<BLOCKQUOTE>
+<TABLE>
+<TR>
+<TD WIDTH="20%"><STRONG>From \ To</STRONG></TD>
+<TD WIDTH="20%">atoms</TD>
+<TD WIDTH="20%">integers</TD>
+<TD WIDTH="20%">references</TD>
+<TD WIDTH="20%">texts</TD>
+</TR>
+<TR>
+<TD WIDTH="20%">atoms</TD>
+<TD WIDTH="20%"><A HREF="gen_html/libm3/derived/SortedAtomAtomTbl.i3.html">SortedAtomAtomTbl</A></TD>
+<TD WIDTH="20%"><A HREF="gen_html/libm3/derived/SortedAtomIntTbl.i3.html">SortedAtomIntTbl</A></TD>
+<TD WIDTH="20%"><A HREF="gen_html/libm3/derived/SortedAtomRefTbl.i3.html">SortedAtomRefTbl</A></TD>
+<TD WIDTH="20%"><A HREF="gen_html/libm3/derived/SortedAtomTextTbl.i3.html">SortedAtomTextTbl</A></TD>
+</TR>
+<TR>
+<TD WIDTH="20%">integers</TD>
+<TD WIDTH="20%"><A HREF="gen_html/libm3/derived/SortedIntAtomTbl.i3.html">SortedIntAtomTbl</A></TD>
+<TD WIDTH="20%"><A HREF="gen_html/libm3/derived/SortedIntIntTbl.i3.html">SortedIntIntTbl</A></TD>
+<TD WIDTH="20%"><A HREF="gen_html/libm3/derived/SortedIntRefTbl.i3.html">SortedIntRefTbl</A></TD>
+<TD WIDTH="20%"><A HREF="gen_html/libm3/derived/SortedIntTextTbl.i3.html">SortedIntTextTbl</A></TD>
+</TR>
+<TR>
+<TD WIDTH="20%">references</TD>
+<TD WIDTH="20%"><A HREF="gen_html/libm3/derived/SortedRefAtomTbl.i3.html">SortedRefAtomTbl</A></TD>
+<TD WIDTH="20%"><A HREF="gen_html/libm3/derived/SortedRefIntTbl.i3.html">SortedRefIntTbl</A></TD>
+<TD WIDTH="20%"><A HREF="gen_html/libm3/derived/SortedRefRefTbl.i3.html">SortedRefRefTbl</A></TD>
+<TD WIDTH="20%"><A HREF="gen_html/libm3/derived/SortedRefTextTbl.i3.html">SortedRefTextTbl</A></TD>
+</TR>
+<TR>
+<TD WIDTH="20%">texts</TD>
+<TD WIDTH="20%"><A HREF="gen_html/libm3/derived/SortedTextAtomTbl.i3.html">SortedTextAtomTbl</A></TD>
+<TD WIDTH="20%"><A HREF="gen_html/libm3/derived/SortedTextIntTbl.i3.html">SortedTextIntTbl</A></TD>
+<TD WIDTH="20%"><A HREF="gen_html/libm3/derived/SortedTextRefTbl.i3.html">SortedTextRefTbl</A></TD>
+<TD WIDTH="20%"><A HREF="gen_html/libm3/derived/SortedTextTextTbl.i3.html">SortedTextTextTbl</A></TD>
+</TR>
+</TABLE>
+</BLOCKQUOTE>
+
+
+<P>
+Like the other generic data structures, predefined
+<A HREF="gen_html/libm3/src/sortedtable/sortedtable.tmpl.html">makefile functions</A>
+are available to create custom sorted tables.
+
+<H4><A NAME="sequence">Sequences</A></H4>
+
+<P>
+The <A HREF="gen_html/libm3/src/sequence/Sequence.ig.html">Sequence</A> interface
+and <A HREF="gen_html/libm3/src/sequence/Sequence.mg.html">implementation</A>
+provide generic extensible arrays.  Elements can be added or
+removed from either end or directly indexed.
+The standard predefined instances for
+<A HREF="gen_html/libm3/derived/AtomSeq.i3.html">atoms</A>,
+<A HREF="gen_html/libm3/derived/IntSeq.i3.html">integers</A>,
+<A HREF="gen_html/libm3/derived/RefSeq.i3.html">references</A>, and
+<A HREF="gen_html/libm3/derived/TextSeq.i3.html">text strings</A> are available.
+
+<P>
+The <A HREF="gen_html/libm3/src/sequence/SequenceRep.ig.html">SequenceRep</A>
+interface exposes the full details of the underlying 
+representation of sequences.
+&quot;<TT>Rep</TT>&quot; is for &quot;Representation&quot;.
+For maximum portability and implementation independence,
+programs should avoid using this interface.
+The standard predefined instances for
+<A HREF="gen_html/libm3/derived/AtomSeqRep.i3.html">atoms</A>,
+<A HREF="gen_html/libm3/derived/IntSeqRep.i3.html">integers</A>,
+<A HREF="gen_html/libm3/derived/RefSeqRep.i3.html">references</A>, and
+<A HREF="gen_html/libm3/derived/TextSeqRep.i3.html">text strings</A> are available.
+
+<P>
+Predefined
+<A HREF="gen_html/libm3/src/sequence/sequence.tmpl.html">makefile functions</A>
+are available to create custom sequences.
+
+<H4><A NAME="pqueue">Priority queues</A></H4>
+
+Priority queues, or sequences that keep their elements sorted,
+are available in the generic
+<A HREF="gen_html/libm3/src/pqueue/PQueue.ig.html">PQueue</A> interface
+and <A HREF="gen_html/libm3/src/pqueue/PQueue.mg.html">implementation</A>.
+The standard predefined instances for
+<A HREF="gen_html/libm3/derived/AtomPQ.i3.html">atoms</A>,
+<A HREF="gen_html/libm3/derived/IntPQ.i3.html">integers</A>,
+<A HREF="gen_html/libm3/derived/RefPQ.i3.html">references</A>, and
+<A HREF="gen_html/libm3/derived/TextPQ.i3.html">text strings</A> are available.
+
+<P>
+When it is necessary to access the underlying implementation, the
+<A HREF="gen_html/libm3/src/pqueue/PQueueRep.ig.html">PQueueRep</A>
+interface defines the full details.
+For maximum portability and implementation independence,
+programs should avoid using this interface.
+The standard predefined instances for
+<A HREF="gen_html/libm3/derived/AtomPQRep.i3.html">atoms</A>,
+<A HREF="gen_html/libm3/derived/IntPQRep.i3.html">integers</A>,
+<A HREF="gen_html/libm3/derived/RefPQRep.i3.html">references</A>, and
+<A HREF="gen_html/libm3/derived/TextPQRep.i3.html">text strings</A> are available.
+
+<P>
+Predefined
+<A HREF="gen_html/libm3/src/pqueue/pqueue.tmpl.html">makefile functions</A>
+are available to create custom priority queues.
+
+<H4><A NAME="sets">Sets</A></H4>
+
+Sets are collections of values without duplicates.
+A generic
+<A HREF="gen_html/set/src/Set.ig.html">Set</A> interface and
+<A HREF="gen_html/set/src/Set.mg.html">implementation</A> are available.
+Sets are implemented using two implementation strategies:
+<a HREF="gen_html/set/src/SetDef.ig.html">SetDef</a> uses a hash-table, 
+and <a HREF="gen_html/set/src/SetList.ig.html">SetList</a> uses a list
+representation for the set.
+
+<BLOCKQUOTE>
+<TABLE>
+<TR>
+  <TD WIDTH="20%"><B>Kind \ Type</B>&nbsp;&nbsp;</TD>
+  <TD WIDTH="20%">integers</TD>
+  <TD WIDTH="20%">texts</TD>
+  <TD WIDTH="20%">references</TD>
+  <TD WIDTH="20%">atoms</TD>
+</TR>
+<TR>
+  <TD WIDTH="20%">Set</TD>
+  <TD WIDTH="20%"><A HREF="gen_html/set/derived/IntSet.i3.html">IntSet</A></TD>
+  <TD WIDTH="20%"><A HREF="gen_html/set/derived/TextSet.i3.html">TextSet</A></TD>
+  <TD WIDTH="20%"><A HREF="gen_html/set/derived/RefSet.i3.html">RefSet</A></TD>
+  <TD WIDTH="20%"><A HREF="gen_html/set/derived/AtomSet.i3.html">AtomSet</A></TD>
+</TR>
+<TR>
+  <TD WIDTH="20%">SetDef</A></TD>
+  <TD WIDTH="20%"><A HREF="gen_html/set/derived/IntSetDef.i3.html">IntSetDef</A></TD>
+  <TD WIDTH="20%"><A HREF="gen_html/set/derived/TextSetDef.i3.html">TextSetDef</A></TD>
+  <TD WIDTH="20%"> </TD>
+  <TD WIDTH="20%"><A HREF="gen_html/set/derived/AtomSetDef.i3.html">AtomSetDef</A></TD>
+</TR>
+<TR>
+  <TD WIDTH="20%">SetList</TD>
+  <TD WIDTH="20%"><A HREF="gen_html/set/derived/IntSetList.i3.html">IntSetList</A></TD>
+  <TD WIDTH="20%"><A HREF="gen_html/set/derived/TextSetList.i3.html">TextSetList</A></TD>
+  <TD WIDTH="20%"><A HREF="gen_html/set/derived/RefSetList.i3.html">RefSetList</A></TD>
+  <TD WIDTH="20%"><A HREF="gen_html/set/derived/AtomSetList.i3.html">AtomSetList</A></TD>
+</TR>
+</TABLE>
+</BLOCKQUOTE>
+
+<P>
+Predefined <a HREF="gen_html/set/src/set.tmpl.html">makefile
+functions</A> are available to create custom sets.
+
+<P>
+<STRONG><EM>See also</EM></STRONG> the
+<A HREF="gen_html/libm3/src/atom/Atom.i3.html">Atom</A> interface,
+which provides a unique value for all equal text strings.
+
+<H4><A name="sort">Sorting Lists, Tables, and Arrays</A></H4>
+
+<P>
+Sorted generic lists, tables, and arrays allow iteration in a sorted order.
+
+<P>
+<STRONG>Sorted Lists.</STRONG>
+The generic
+<A HREF="gen_html/libm3/src/list/ListSort.ig.html">ListSort</A> interface
+and its <A HREF="gen_html/libm3/src/list/ListSort.mg.html">implementation</A>
+add sorting to functions to those available in the
+<A HREF="gen_html/libm3/src/list/List.ig.html">List</A> interface.
+As usual, there are instantiations
+<A HREF="gen_html/libm3/derived/AtomListSort.i3.html">AtomListSort</A>, 
+<A HREF="gen_html/libm3/derived/IntListSort.i3.html">IntListSort</A>, 
+<A HREF="gen_html/libm3/derived/RefListSort.i3.html">RefListSort</A>,
+and <A HREF="gen_html/libm3/derived/TextListSort.i3.html">TextListSort</A>.
+
+<P>
+<STRONG>Sorted Tables.</STRONG>
+The generic <A
+HREF="gen_html/libm3/src/sortedtable/SortedTable.ig.html">SortedTable</A>
+interface and its 
+<A HREF="gen_html/libm3/src/sortedtable/SortedTable.mg.html">implementation</A>
+allow you to build tables where you can iterate through their elements
+in a sorted order.
+
+<P>
+<STRONG>Sorted Arrays.</STRONG>
+The generic
+<A HREF="gen_html/libm3/src/sort/ArraySort.ig.html">ArraySort</A>
+interface 
+and its <A HREF="gen_html/libm3/src/sort/ArraySort.mg.html">implementation</A>
+allow you to sort arrays.
+They are already instantiated as
+<A HREF="gen_html/libm3/derived/IntArraySort.i3.html">IntArraySort</A> and
+<A HREF="gen_html/libm3/derived/TextArraySort.i3.html">TextArraySort</A>.
+
+<P>
+<HR>
+<!-- ------------------------------------------------------------- -->
+<H3>Standard Libraries</H3>
+
+<H4><A name="math">Math, Geometry, Statistics, Random numbers</a></H4>
+
+<P>
+Modula-3 provides a rich set of interfaces for mathematical and statistical
+programming.
+The <A HREF="gen_html/libm3/src/arith/POSIX/Math.i3.html">Math</A> interface provides access to
+the C math libraries.
+Many geometric abstractions are also available:
+<A HREF="gen_html/libm3/src/geometry/Axis.i3.html">Axis</A>, 
+<A HREF="gen_html/libm3/src/geometry/Interval.i3.html">Interval</A>, 
+<A HREF="gen_html/libm3/src/geometry/Point.i3.html">Point</A>, 
+<A HREF="gen_html/libm3/src/geometry/Rect.i3.html">Rect</A>, 
+<A HREF="gen_html/libm3/src/geometry/Transform.i3.html">Transform</A>, 
+<A HREF="gen_html/libm3/src/geometry/Path.i3.html">Path</A>, 
+<A HREF="gen_html/libm3/src/geometry/Region.i3.html">Region</A>, 
+<A HREF="gen_html/libm3/src/geometry/PolyRegion.i3.html">PolyRegion</A>, 
+and
+<A HREF="gen_html/libm3/src/geometry/Trapezoid.i3.html">Trapezoid</A>.
+
+<P>
+The generic
+<A HREF="gen_html/libm3/src/sqrt/Sqrt.ig.html">Sqrt</A> interface and its
+<A HREF="gen_html/libm3/src/sqrt/Sqrt.mg.html">implementation</A>
+define a square root operation, instantiated as 
+<A HREF="gen_html/libm3/derived/RealSqrt.i3.html">RealSqrt</A> and
+<A HREF="gen_html/libm3/derived/LongSqrt.i3.html">LongSqrt</A> for 
+<code>REAL</code>s and <code>LONGREAL</code>s, respectively.
+The <A HREF="gen_html/libm3/src/statistics/Stat.i3.html">Stat</A>
+interface defines a set of tools for collecting elementary statistics
+of a sequence of real-valued quantities. 
+
+<P>
+The interfaces
+<A HREF="gen_html/libm3/src/random/Common/Random.i3.html">Random</A> and 
+<A HREF="gen_html/libm3/src/random/Common/RandomPerm.i3.html">RandomPerm</A>
+provide random numbers and random permutations of numbers, respectively. 
+<A HREF="gen_html/libm3/src/random/Common/RandomReal.i3.html">RandomReal</A>
+includes machine specific algorithms for generating random
+floating-point values. 
+
+<H4><A NAME="float">Floating point</A></H4>
+
+<P>
+<A HREF="gen_html/m3core/src/float/IEEE/Real.i3.html">Real</A>, 
+<A HREF="gen_html/m3core/src/float/IEEE/LongReal.i3.html">LongReal</A>, and
+<A HREF="gen_html/m3core/src/float/IEEE/Extended.i3.html">Extended</A> are
+interfaces corresponding to the built-in floating-point types; their 
+representations are available in
+<A HREF="gen_html/m3core/src/float/IEEE-le/RealRep.i3.html">RealRep</A> and
+<A HREF="gen_html/m3core/src/float/IEEE-le/LongRealRep.i3.html">LongRealRep</A>.
+
+
+<P>
+The interface <A
+HREF="gen_html/m3core/src/float/IEEE-default/FloatMode.i3.html">FloatMode</A>
+allows you to test the behavior of floating-point
+rounding and of numerical exceptions.  On some platforms it
+also allows you to change the behavior, on a per-thread basis.
+
+<P>
+The interface
+<A HREF="gen_html/libm3/src/sqrt/FloatExtras.ig.html">FloatExtras</A>,
+<A HREF="gen_html/libm3/derived/RealFloatExtras.i3.html">RealFloatExtras</A>,
+and 
+<A HREF="gen_html/libm3/derived/LongFloatExtras.i3.html">LongFloatExtras</A>
+contain miscellaneous functions useful for floating point arithmetic.
+
+The generic interface
+<A HREF="gen_html/m3core/src/float/Common/Float.ig.html">Float</A> and
+its instantiations 
+<A HREF="gen_html/m3core/src/float/Common/RealFloat.i3.html">RealFloat</A>, 
+<A HREF="gen_html/m3core/src/float/Common/LongFloat.i3.html">LongFloat</A>,
+and  
+<A HREF="gen_html/m3core/src/float/Common/ExtendedFloat.i3.html">ExtendedFloat</A>
+provide interfaces to floating-point arithmetic.
+
+<P>
+<A HREF="gen_html/m3core/src/float/Common/IEEESpecial.i3.html">IEEESpecial</A>
+defines variables for the IEEE floating-point values
+<CODE>-infinity</CODE>, <CODE>+infinity</CODE>,
+and <CODE>NaN</CODE> (not a number) for each of the three
+floating-point types.
+
+<H4><A NAME="env">Environment, Command line parameters</A></H4>
+
+<P>
+The
+<A HREF="gen_html/libm3/src/params/Env.i3.html">Env</A> and 
+<A HREF="gen_html/libm3/src/params/Params.i3.html">Params</A> interfaces 
+provide access to the environment variables and command-line 
+parameters given to a process when it is started. 
+
+<P>
+<STRONG><EM>See also</EM></STRONG> the
+<A HREF="gen_html/libm3/src/os/Common/Process.i3.html">Process</a> interface.
+
+<H4><A NAME="io">I/O streams, Reading and Writing, Files</A></H4>
+
+<P>
+I/O Streams allow you to read and write streams of bytes to
+disks, network connections, other threads or processes, etc. 
+
+<P>
+<STRONG>Basic Input and Output.</STRONG>
+The <A HREF="gen_html/libm3/src/rw/IO.i3.html">IO</A> interface is a simple,
+high-level I/O interface.
+The <A HREF="gen_html/libm3/src/rw/Stdio.i3.html">Stdio</A> interface declares the
+standard input, output, and error streams.
+
+<P>
+<STRONG>Input and Output Streams.</STRONG>
+The <A HREF="gen_html/libm3/src/rw/Rd.i3.html">Rd</A> interface defines input streams,
+known as &quot;readers&quot;.
+The <A HREF="gen_html/libm3/src/rw/RdClass.i3.html">RdClass</A> interface allows you to define
+new kinds of readers.
+<A HREF="gen_html/libm3/src/rw/UnsafeRd.i3.html">UnsafeRd</A> is an internal interface,
+providing non-serialized access to readers.
+
+<P>
+The <A HREF="gen_html/libm3/src/rw/Wr.i3.html">Wr</A> interface defines output
+streams, or &quot;writers&quot;.
+The <A HREF="gen_html/libm3/src/rw/WrClass.i3.html">WrClass</A> interface can be used
+to define new kinds of writers.
+<A HREF="gen_html/libm3/src/rw/UnsafeWr.i3.html">UnsafeWr</A> allows 
+non-serialized access to a writer.
+
+<P>
+<STRONG>File Streams.</STRONG>
+<A HREF="gen_html/libm3/src/rw/FileRd.i3.html">FileRd</A> and
+<A HREF="gen_html/libm3/src/rw/FileWr.i3.html">FileWr</A> read from and
+write to files.
+
+<P>
+<STRONG>Text Streams.</STRONG>
+<A HREF="gen_html/libm3/src/rw/TextRd.i3.html">TextRd</A> and
+<A HREF="gen_html/libm3/src/rw/TextWr.i3.html">TextWr</A> read from and 
+write to <CODE>TEXT</CODE> strings.
+They make it easy to apply string procedures
+to streams or stream operations to strings.
+
+<P>
+<STRONG>Empty Streams.</STRONG>
+<A HREF="gen_html/libm3/src/rw/NullRd.i3.html">NullRd</A> and
+<A HREF="gen_html/libm3/src/rw/NullWr.i3.html">NullWr</A> represent empty streams.
+
+<P>
+<STRONG>Message Streams.</STRONG>
+<A HREF="gen_html/libm3/src/rw/MsgRd.i3.html">MsgRd</A> and
+<A HREF="gen_html/libm3/src/rw/MsgWr.i3.html">MsgWr</A> define message
+stream abstractions. A message is a sequence of bytes terminated 
+by an end-of-message marker.  
+
+<P>
+<STRONG>Stream Utilities.</STRONG>
+<A HREF="gen_html/libm3/src/rw/RdCopy.i3.html">RdCopy</A> copies bytes from 
+readers to writers efficiently. 
+<A HREF="gen_html/libm3/src/rw/AutoFlushWr.i3.html">AutoFlushWr</A> automatically flushes
+its output in the background.
+<A HREF="gen_html/libm3/src/rw/RdUtils.i3.html">RdUtils</A> adds a few
+utilities for searching and manipulating readers.
+
+<H4><A NAME="format">Formatting, I/O Conversion</A></H4>
+
+<P>
+Most formatting interfaces in CM3 work with strings,
+readers, and writers.
+
+<P>
+<A HREF="gen_html/libm3/src/fmtlex/Fmt.i3.html">Fmt</A> formats basic
+data types as strings.
+<A HREF="gen_html/m3core/src/time/Common/FmtTime.i3.html">FmtTime</A>
+converts times and dates to strings.
+<A HREF="gen_html/libm3/src/fmtlex/FmtBuf.i3.html">FmtBuf</A> is similar
+to <A HREF="gen_html/libm3/src/fmtlex/Fmt.i3.html">Fmt</A>, with the exception that it leaves
+its results in character buffers instead of TEXT strings.
+<A HREF="gen_html/libm3/src/fmtlex/FmtBufF.i3.html">FmtBufF</A> exposes
+some of the internal routines used by
+<A HREF="gen_html/libm3/src/fmtlex/FmtBuf.i3.html">FmtBuf</A>.
+
+<P>
+<A HREF="gen_html/libm3/src/fmtlex/Scan.i3.html">Scan</A> converts
+strings back into basic datatypes.  
+<A HREF="gen_html/libm3/src/fmtlex/Lex.i3.html">Lex</A> provides
+lexical operations for reading tokens, parsing the basic datatypes,
+and matching and skipping blanks from a reader.
+
+<P>
+<A HREF="gen_html/libm3/src/formatter/Formatter.i3.html">Formatter</A>
+performs pretty-printing, the printing of structured objects with
+appropriate line breaks and indentation. 
+
+<P>
+<A HREF="gen_html/m3core/src/convert/Convert.i3.html">Convert</A> converts
+between binary and ASCII representation of basic values.
+<A HREF="gen_html/m3core/src/convert/CConvert.i3.html">CConvert</A>
+provides access to the lower-level conversion functions in C.
+
+<!--<A HREF="gen_html/libm3/src/OldFmt.i3.html">OldFmt</A>-->
+<!--<A HREF="gen_html/libm3/src/OldLex.i3.html">OldLex</A>-->
+<!--<A HREF="gen_html/libm3/src/OldScan.i3.html">OldScan</A>-->
+
+<H4><A NAME="threads">Threads</A></H4>
+
+<P>
+CM3 provides language-level support for multi-threaded applications. 
+CM3's standard libraries and its runtime are multi-threaded.
+The <A
+HREF="gen_html/m3core/src/thread/Common/Thread.i3.html">Thread</A>
+interface describes 
+the basic portable interface for creating new threads (often called
+<EM>light-weight processes</EM>.)
+The interfaces 
+<A HREF="gen_html/m3core/src/thread/Common/Scheduler.i3.html">Scheduler</A>,
+<A HREF="gen_html/m3core/src/thread/POSIX/ThreadF.i3.html">ThreadF</A>, and 
+<A HREF="gen_html/m3core/src/thread/POSIX/ThreadEvent.i3.html">ThreadEvent</A>
+provide access to the internal representation of threads and
+some control over the thread scheduler.
+
+<P>
+<HR>
+<!-- ------------------------------------------------------------- -->
+<H3>Systems Development</H3>
+
+<H4><A NAME="distributed">Distributed &amp; Client/Server Development</H4>
+
+<P>
+<STRONG>Network Objects.</STRONG>
+CM3's Network Objects system allows an object to be handed to 
+another process in such a way that the process
+receiving the object can operate on it as if it were local. 
+The holder of a remote object can invoke
+operations on that object just as if it had created the
+object locally. It can even pass the object to other
+processes. 
+
+<P>
+<A HREF="gen_html/netobj/src/netobjrt/NetObj.i3.html">NetObj</A> is the basic
+interface for defining network objects.  A few
+<A HREF="gen_html/netobj/src/netobj.tmpl.html">makefile commands</A>
+make it easy to generate the code required to
+integrate network objects in your programs.
+The <A
+HREF="gen_html/netobj/src/netobjrt/NetObjNotifier.i3.html">NetObjNotifier</A>
+interface notifies a server if its clients die. 
+And <A HREF="gen_html/netobj/src/netobjrt/StubLib.i3.html">StubLib</A>
+contains procedures  
+to be used by stub code for invoking remote object methods 
+and servicing remote invocations.
+
+<P>
+The current implementation of Network Objects uses <A HREF="#tcp">TCP/IP</A>
+as its transport layer.
+<A HREF="gen_html/netobj/src/tcpnetobj/TCPNetObj.i3.html">TCPNetObj</A> 
+provides the low-level hooks needed to implement
+network objects on TCP/IP.  Network Objects are
+designed to make adaption to specialized network protocols easy.
+
+<P>
+<STRONG>Network Streams.</STRONG>
+Network Streams provide a set of high-level abstractions 
+for sending and receiving messages
+across the network. <A HREF="gen_html/tcp/src/common/ConnRW.i3.html">ConnRW</A>
+creates reader and writer streams from a connection; 
+<A HREF="gen_html/tcp/src/common/ConnMsgRW.i3.html">ConnMsgRW</A> creates message
+streams from a connection.
+
+<P>
+<STRONG><A NAME="tcp">TCP/IP Socket Interfaces.</A></STRONG>
+Using the TCP/IP interfaces, you can write safe, multi-threaded
+clients and servers for client/server computing. The same programs
+work whether you use Unix sockets or Windows winsock.
+The interface <A HREF="gen_html/tcp/src/common/IP.i3.html">IP</A> defines 
+the addresses used for communicating with the internet protocol family.  
+<A HREF="gen_html/tcp/src/common/TCP.i3.html">TCP</A> provides
+bidirectional byte streams between IP sockets,
+implemented using standard Internet protocols.
+<A HREF="gen_html/tcp/src/common/TCPSpecial.i3.html">TCPSpecial</A> is a
+lower-level utility interface for some TCP operations.
+
+<H4><A NAME="database"><A NAME="stable">Databases and Persistence</A></H4>
+
+<P>
+<STRONG>Databases, Persistent Storage.</STRONG>
+CM3 includes several facilities for saving data in persistent
+forms: Relational Databases, Pickles, Simple Snapshot Persistence,
+Stable Objects, and Bundles.
+
+<P>
+<STRONG>Relational Database Interface.</STRONG>
+The <A href="gen_html/db/src/DB.i3.html">DB</A> interface provides serialized
+access to relational databases.  It allows multiple connections 
+within one application and each may be used concurrently by multiple threads.
+An <A href="gen_html/db/src/odbc/DB.m3.html">implementation</A> based on Microsoft's
+<A href="gen_html/odbc/src/WIN32/SQL.i3.html">ODBC</A> is available
+for both Windows and Unix;
+a sample <a href="gen_html/db/src/postgres95/DB.m3.html">implementation</A> for
+<A href="gen_html/postgres95/src/Postgres.i3.html">Postgres'95</A> on Unix
+is also included. You can modify the implementation
+to suit any relational database.
+
+<P>
+<STRONG><A NAME="pickle">Pickles: Object Transcription
+(or "Serialization").</A></STRONG>
+The <A HREF="gen_html/libm3/src/pickle/ver1/Pickle.i3.html">Pickle</A>
+interface provides operations for reading and writing arbitrary
+values as a streams of bytes.
+Writing a value as a pickle and 
+then reading it back produces a value equivalent to the 
+original value.
+You can write pickles for values that have cyclic references (such as 
+doubly-linked lists), or that are arbitrary graph structures.
+The process preserves the values, shapes (ie. internal pointers)
+and sharing (ie. multiple pointers to a single value)
+of the original values.
+
+<P>
+Two implementations of the <A
+HREF="gen_html/libm3/src/pickle/ver1/Pickle.i3.html">Pickle</A> 
+interface are available.
+<A HREF="gen_html/libm3/src/pickle/ver2/Pickle2.i3.html">Pickle2</A> is
+an implementation geared toward heterogeneous platforms; it 
+works across platforms, reconciling machine word encoding, 
+little-endian, big-endian and size differences.
+<A HREF="gen_html/libm3/src/pickle/ver1/Pickle.i3.html">Pickle</A> is a more
+efficient implementation for homogeneous setups. 
+Pickles are used by <a href="#distributed">Network Objects</a>
+for transferring objects across processes.
+
+<P>
+<STRONG><A NAME="smalldb">SmallDB: Simple Snapshot Persistence.</A></STRONG>
+<A HREF="gen_html/smalldb/src/SmallDB.i3.html">SmallDB</A> stores objects
+in a file in a recoverable fashion. If a crash occurs while the 
+objects are being written to disk, their state
+can be restored from the latest consistent snapshot the next time they are
+used. For binary snapshots, use the combination of
+<A HREF="gen_html/smalldb/src/SmallDB.i3.html">SmallDB</A> and 
+<a HREF=#pickle>Pickle</a>.
+
+<P>
+<STRONG><A NAME="stable">Stable Objects.</A></STRONG>
+Stable Objects extends the lightweight object storage provided by
+<A HREF="#pickle">Pickles</A> and <A HREF="#smalldb">SmallDB</A> to allow 
+for recoverable storage of objects via logging and check-pointing. 
+Updates to objects are logged to stable storage
+automatically. When the state of an object is restored from disk, the
+restoration process checks to see if a crash occurred before the entire
+state of the object was written to disk. If so, the state of the object is
+recovered from the log of modifications to the object. 
+
+<P>
+The generic interface <A HREF="gen_html/stable/src/Stable.ig.html">Stable</A>
+defines a subtype of a given object type that is just like that
+object type, but stable.
+<A HREF="gen_html/stable/src/stableobj.tmpl.html">Makefile operations</A>
+are provided to create stable versions of arbitrary
+object types.
+<A HREF="gen_html/stable/src/LogManager.i3.html">LogManager</A> manages 
+readers and writers for the log and checkpoint files used by 
+stable objects. 
+<A HREF="gen_html/stable/src/StableRep.ig.html">StableRep</A>
+defines the representation of stable objects. 
+<A HREF="gen_html/stable/src/Log.i3.html">Log</A> provides debugging
+operations for the log. 
+<A HREF="gen_html/stable/src/StableLog.i3.html">StableLog</A> contains 
+procedures for reading and writing logs for stable objects. 
+<A HREF="gen_html/stable/src/StableError.i3.html">StableError</A>
+defines the various error scenarios and corresponding exceptions.
+
+<P>
+<STRONG>Bundles.</STRONG>
+Bundles package arbitrary files at compile-time
+so that their contents can be retrieved by a program at run-time
+without accessing the file system. The
+<A HREF="gen_html/libm3/src/bundleintf/Bundle.i3.html">Bundle</A>
+interface allows runtime access to the stored data. 
+<A HREF="gen_html/libm3/src/bundleintf/BundleRep.i3.html">BundleRep</A>
+exposes the representation of bundles.
+You can bundle files with your programs by using the provided
+<A HREF="gen_html/libm3/src/bundleintf/bundle.tmpl.html">makefile functions</A>.
+
+
+<H4><A NAME="os">Operating System, Files, Processes, Time</A></H4>
+
+<P>
+CM3 provides a set of high-level, portable interfaces to the
+underlying OS facilities such as files, processes, directories, terminals, and
+keyboards. The interfaces to these operating system functions are identical
+whether you are running on Windows or Unix. 
+
+<P>
+<B><E>See also:</E></B> <A HREF="#windows">Microsoft Windows</A> 
+and <A HREF="#unix">Unix</A> for lower-level, platform-specific interfaces 
+to operating system services.
+
+<P>
+<STRONG>File-system Interfaces.</STRONG>
+The <A HREF="gen_html/libm3/src/os/Common/File.i3.html">File</A>
+interface defines a type 
+that can be a source or sink of bytes. File handles provide an
+operating-system independent way to perform raw I/O.  For buffered I/O, use the 
+<a href="gen_html/libm3/src/rw/FileRd.i3.html">FileRd</a> and 
+<a href="gen_html/libm3/src/rw/FileWr.i3.html">FileWr</a> interfaces.
+
+<P>
+<A HREF="gen_html/libm3/src/os/Common/Pathname.i3.html">Pathname</A>
+defines procedures for manipulating pathnames in a
+portable fashion.
+The <A HREF="gen_html/libm3/src/os/Common/FS.i3.html">FS</A> interface
+provides access to persistent storage (files) and naming (directories).
+
+<P>
+<A HREF="gen_html/libm3/src/os/Common/RegularFile.i3.html">RegularFile</A>
+defines regular file handles which provide access to
+persistent extensible sequence of bytes, usually disks.
+A <A HREF="gen_html/libm3/src/os/Common/Terminal.i3.html">Terminal</A>
+handle is a file handle that provides access to a duplex communication
+channel usually connected to a user terminal.
+
+<P>
+<A HREF="gen_html/tempfiles/src/TempFiles.i3.html">TempFiles</A>
+creates temporary files which get deleted automatically 
+upon termination of the process.
+
+<P>
+<STRONG>Processes, Pipes, O/S Errors.</STRONG>
+The <A HREF="gen_html/libm3/src/os/Common/Process.i3.html">Process</A>
+interface manages operating-system processes (e.g., creating processes
+and awaiting their exit). 
+A <A HREF="gen_html/libm3/src/os/Common/Pipe.i3.html">Pipe</A> is a file 
+handle that can be used to communicate between a parent
+and a child process or two sibling processes.
+
+<P>
+<A HREF="gen_html/libm3/src/os/Common/OSError.i3.html">OSError</A>
+defines the exception raised by many of the operating system interfaces.
+  
+<P>
+<STRONG>Time, Date, Ticks.</STRONG>
+<A HREF="gen_html/m3core/src/time/Common/Time.i3.html">Time</A> defines
+a moment in time, reckoned as the number of
+seconds since some epoch or starting point.
+<A HREF="gen_html/m3core/src/time/Common/Date.i3.html">Date</A>
+defines a moment in time, expressed according to the standard (Gregorian)
+calendar, as observed in some time zone.
+<A HREF="gen_html/m3core/src/time/Common/Tick.i3.html">Tick</A> defines
+a value of a clock with sub-second resolution,
+typically one sixtieth of a second or smaller.
+
+<P>
+<STRONG>Timestamps, Capabilities, Fingerprints.</STRONG>
+Timestamps provided by the 
+<A HREF="gen_html/libm3/src/uid/Common/TimeStamp.i3.html">TimeStamp</A>
+interface 
+are totally ordered in a relation that approximates the real 
+time when the value was generated.  If two timestamps are 
+generated in the same process then the ordering of the 
+timestamps is consistent with the order that <CODE>TimeStamp.New</CODE>
+was called.
+The <A HREF="gen_html/libm3/src/uid/Common/Capability.i3.html">Capability</A>
+interface defines unique global identifiers that are extremely difficult for
+an adversary to guess.
+The <A
+ HREF="gen_html/m3core/src/fingerprint/Fingerprint.i3.html">Fingerprint</A>
+interface allows efficient comparison of large strings, and 
+more general data structures such as graphs.
+<A HREF="gen_html/libm3/src/uid/Common/MachineID.i3.html">MachineID</A>
+returns a unique number for the machine running the Modula-3 program.
+
+<P>
+<STRONG>Platform-Specific Interfaces.</STRONG>
+Not all programs are portable. CM3 allows access to lower-level
+interfaces available from the host operating system.
+Most of these interfaces are unsafe.
+
+<P>
+<STRONG><A NAME="windows">Microsoft Windows</A>.</STRONG>
+The Windows releases of CM3 include interfaces for
+accessing many of the calls from the <b>Win32 API</b>:
+<BLOCKQUOTE>
+<A HREF="gen_html/m3core/src/win32/WinBaseTypes.i3.html">WinBaseTypes</A>,
+<A HREF="gen_html/m3core/src/win32/WinDef.i3.html">WinDef</A>,
+<A HREF="gen_html/m3core/src/win32/WinError.i3.html">WinError</A>,
+<A HREF="gen_html/m3core/src/win32/WinNT.i3.html">WinNT</A>,
+<A HREF="gen_html/m3core/src/win32/WinBase.i3.html">WinBase</A>,
+<A HREF="gen_html/m3core/src/win32/WinCon.i3.html">WinCon</A>,
+<A HREF="gen_html/m3core/src/win32/WinGDI.i3.html">WinGDI</A>,
+<A HREF="gen_html/m3core/src/win32/WinIoctl.i3.html">WinIoctl</A>,
+<A HREF="gen_html/m3core/src/win32/WinNetwk.i3.html">WinNetwk</A>,
+<A HREF="gen_html/m3core/src/win32/WinReg.i3.html">WinReg</A>,
+<A HREF="gen_html/tcp/src/WIN32/WinSock.i3.html">WinSock</A>,
+<A HREF="gen_html/m3core/src/win32/WinUser.i3.html">WinUser</A>,
+<A HREF="gen_html/m3core/src/win32/WinVer.i3.html">WinVer</A>,
+<A HREF="gen_html/m3core/src/win32/NB30.i3.html">NB30</A>,
+<A HREF="gen_html/m3core/src/win32/CDErr.i3.html">CDErr</A>,
+<A HREF="gen_html/m3core/src/win32/CommDlg.i3.html">CommDlg</A>,
+<A HREF="gen_html/m3core/src/win32/TlHelp32.i3.html">TlHelp32</A>.
+</BLOCKQUOTE>
+
+<P>
+Intermediate interfaces that provide access
+to the middle layers of the Modula-3 libraries
+are also available on Win32 platforms:
+<BLOCKQUOTE>
+<A HREF="gen_html/libm3/src/os/WIN32/FileWin32.i3.html">FileWin32</A>,
+<A HREF="gen_html/m3core/src/time/WIN32/TimeWin32.i3.html">TimeWin32</A>,
+<A HREF="gen_html/libm3/src/os/WIN32/OSWin32.i3.html">OSWin32</A>,
+<A HREF="gen_html/tcp/src/WIN32/TCPWin32.i3.html">TCPWin32</A>, 
+<A HREF="gen_html/libm3/src/os/WIN32/OSErrorWin32.i3.html">OSErrorWin32</A>.
+</BLOCKQUOTE>
+
+<P>
+<STRONG><A NAME="unix">Unix</A>.</STRONG>
+The Unix releases of CM3 include interfaces for accessing
+many of the calls from common <b>Unix APIs</b>:
+<BLOCKQUOTE>
+   <A HREF="gen_html/m3core/src/unix/freebsd-3/Udir.i3.html">Udir</A>,
+   <A HREF="gen_html/m3core/src/unix/freebsd-3/Uipc.i3.html">Uipc</A>,
+   <A HREF="gen_html/m3core/src/unix/freebsd-3/Uprocess.i3.html">Uprocess</A>,
+   <A HREF="gen_html/m3core/src/unix/freebsd-3/Usignal.i3.html">Usignal</A>,
+   <A HREF="gen_html/m3core/src/unix/freebsd-3/Uugid.i3.html">Uugid</A>,
+   <A HREF="gen_html/m3core/src/unix/freebsd-3/Uerror.i3.html">Uerror</A>,
+   <A HREF="gen_html/m3core/src/unix/freebsd-3/Umman.i3.html">Umman</A>,
+   <A HREF="gen_html/m3core/src/unix/freebsd-3/Upwd.i3.html">Upwd</A>,
+   <A HREF="gen_html/m3core/src/unix/freebsd-3/Usocket.i3.html">Usocket</A>,
+   <A HREF="gen_html/m3core/src/unix/freebsd-3/Uuio.i3.html">Uuio</A>,
+   <A HREF="gen_html/m3core/src/unix/freebsd-3/Uexec.i3.html">Uexec</A>,
+   <A HREF="gen_html/m3core/src/unix/freebsd-3/Umsg.i3.html">Umsg</A>,
+   <A HREF="gen_html/m3core/src/unix/freebsd-3/Uresource.i3.html">Uresource</A>,
+   <A HREF="gen_html/m3core/src/unix/freebsd-3/Ustat.i3.html">Ustat</A>,
+   <A HREF="gen_html/m3core/src/unix/freebsd-3/Uutmp.i3.html">Uutmp</A>,
+   <A HREF="gen_html/m3core/src/unix/freebsd-3/Ugrp.i3.html">Ugrp</A>,
+   <A HREF="gen_html/m3core/src/unix/freebsd-3/Unetdb.i3.html">Unetdb</A>,
+   <A HREF="gen_html/m3core/src/unix/freebsd-3/Usem.i3.html">Usem</A>,
+   <A HREF="gen_html/m3core/src/unix/freebsd-3/Utime.i3.html">Utime</A>,
+   <A HREF="gen_html/m3core/src/unix/freebsd-3/Uin.i3.html">Uin</A>,
+   <A HREF="gen_html/m3core/src/unix/freebsd-3/Unix.i3.html">Unix</A>,
+   <A HREF="gen_html/m3core/src/unix/freebsd-3/Ushm.i3.html">Ushm</A>,
+   <A HREF="gen_html/m3core/src/unix/freebsd-3/Utypes.i3.html">Utypes</A>.        
+</BLOCKQUOTE>
+
+<P>
+Intermediate interfaces that provide access
+to the middle layers of the Modula-3 libraries
+are also available on Unix platforms:
+<BLOCKQUOTE>
+<A HREF="gen_html/libm3/src/os/POSIX/FilePosix.i3.html">FilePosix</A>,
+<A HREF="gen_html/m3core/src/time/POSIX/TimePosix.i3.html">TimePosix</A>,
+<A HREF="gen_html/libm3/src/os/POSIX/OSConfig.i3.html">OSConfig</A>,
+<A HREF="gen_html/tcp/src/POSIX/TCPPosix.i3.html">TCPPosix</A>, 
+<A HREF="gen_html/libm3/src/os/POSIX/OSErrorPosix.i3.html">OSErrorPosix</A>.
+</BLOCKQUOTE>
+
+<H4><A NAME="chooks">Interoperabillity with C</A></H3>
+
+<P>
+Several standard C libraries are available from CM3.
+<A HREF="gen_html/m3core/src/C/Common/Cerrno.i3.html">Cerrno</A>, 
+<A HREF="gen_html/m3core/src/C/Common/Cstddef.i3.html">Cstddef</A>,
+<A HREF="gen_html/m3core/src/C/Common/Cstdlib.i3.html">Cstdlib</A>,
+<A HREF="gen_html/m3core/src/C/Common/Ctypes.i3.html">Ctypes</A>,
+<A HREF="gen_html/m3core/src/C/Common/Cstdarg.i3.html">Cstdarg</A>,
+<A HREF="gen_html/m3core/src/C/FreeBSD3/Csetjmp.i3.html">Csetjmp</A>,
+<A HREF="gen_html/m3core/src/C/FreeBSD3/Csignal.i3.html">Csetjmp</A>,
+<A HREF="gen_html/m3core/src/C/FreeBSD3/Cstdio.i3.html">Cstdio</A>, and
+<A HREF="gen_html/m3core/src/C/FreeBSD3/Cstring.i3.html">Cstring</A>
+are Modula-3 interfaces for standard C libraries.
+<A HREF="gen_html/m3core/src/C/Common/M3toC.i3.html">M3toC</A> converts between
+C strings and Modula-3 <tt>TEXT</tt> types.
+
+<H4><A NAME="runtime">Low-level Run-time Interfaces</A></H4>
+
+<P>
+Several run-time interfaces provide low-level access to the
+<b>Modula-3 run-time</b>:
+
+<BLOCKQUOTE>
+<TABLE>
+<TR>
+<TD>
+  Allocator
+</TD>
+<TD>
+  <A HREF="gen_html/m3core/src/runtime/common/RTAllocator.i3.html">RTAllocator</A>,
+  <A HREF="gen_html/m3core/src/runtime/common/RTAllocStats.i3.html">RTAllocStats</A>.
+</TD>
+</TR>
+<TR>
+<TD>
+  Heap Management
+</TD>
+<TD>
+  <A HREF="gen_html/m3core/src/runtime/common/RTHeap.i3.html">RTHeap</A>,
+  <A HREF="gen_html/m3core/src/runtime/common/RTHeapDep.i3.html">RTHeapDep</A>,
+  <A HREF="gen_html/m3core/src/runtime/common/RTHeapInfo.i3.html">RTHeapInfo</A>,
+  <A HREF="gen_html/m3core/src/runtime/common/RTHeapMap.i3.html">RTHeapMap</A>,
+  <BR>
+  <A HREF="gen_html/m3core/src/runtime/common/RTHeapRep.i3.html">RTHeapRep</A>,
+  <A HREF="gen_html/m3core/src/runtime/common/RTHeapDebug.i3.html">RTHeapDebug</A>,
+  <A HREF="gen_html/m3core/src/runtime/common/RTHeapStats.i3.html">RTHeapStats</A>,
+  <A HREF="gen_html/m3core/src/runtime/common/RTHeapEvent.i3.html">RTHeapEvent</A>.
+</TD>
+</TR>
+<TR>
+<TD>
+  Garbage Collector
+</TD>
+<TD>
+  <A HREF="gen_html/m3core/src/runtime/common/RTCollector.i3.html">RTCollector</A>,
+  <A HREF="gen_html/m3core/src/runtime/common/RTCollectorSRC.i3.html">RTCollectorSRC</A>.
+</TD>
+</TR>
+<TR>
+<TD>
+  Type Management
+</TD>
+<TD>
+  <A HREF="gen_html/m3core/src/runtime/common/RTTipe.i3.html">RTTipe</A>,
+  <A HREF="gen_html/m3core/src/runtime/common/RTType.i3.html">RTType</A>,
+  <A HREF="gen_html/m3core/src/runtime/common/RTMapOp.i3.html">RTMapOp</A>,
+  <A HREF="gen_html/m3core/src/runtime/common/RTTypeFP.i3.html">RTTypeFP</A>,
+  <BR>
+  <A HREF="gen_html/m3core/src/runtime/common/RTTypeMap.i3.html">RTTypeMap</A>, 
+  <A HREF="gen_html/m3core/src/runtime/common/RTutils.i3.html">RTutils</A>,
+  <A HREF="gen_html/m3core/src/runtime/common/RTTypeSRC.i3.html">RTTypeSRC</A>.
+</TD>
+</TR>
+<TR>
+<TD>
+  Code and Execution
+</TD>
+<TD>
+  <A HREF="gen_html/m3core/src/runtime/common/RTLinker.i3.html">RTLinker</A>,
+  <A HREF="gen_html/m3core/src/runtime/common/RTProcedureSRC.i3.html">RTProcedureSRC</A>, 
+  <A HREF="gen_html/m3core/src/runtime/common/RTModule.i3.html">RTModule</A>,
+  <BR>
+  <A HREF="gen_html/m3core/src/runtime/common/RTProcedure.i3.html">RTProcedure</A>,
+  <A HREF="gen_html/m3core/src/runtime/common/RTException.i3.html">RTException</A>.
+</TD>
+</TR>
+<TR>
+<TD>
+  System Interface
+</TD>
+<TD>
+  <A HREF="gen_html/m3core/src/runtime/common/RTParams.i3.html">RTParams</A>,
+  <A HREF="gen_html/m3core/src/runtime/common/RTArgs.i3.html">RTArgs</A>,
+  <A HREF="gen_html/m3core/src/runtime/common/RTProcess.i3.html">RTProcess</A>
+  <A HREF="gen_html/m3core/src/runtime/common/RTSignal.i3.html">RTSignal</A>,
+  <BR>
+  <A HREF="gen_html/m3core/src/runtime/common/RTStack.i3.html">RTStack</A>, 
+  <A HREF="gen_html/m3core/src/runtime/FreeBSD3/RTMachine.i3.html">RTMachine</A>.
+</TD>
+</TR>
+<TR>
+<TD>
+  Low-level
+</TD>
+<TD>
+  <A HREF="gen_html/m3core/src/runtime/common/RTHooks.i3.html">RTHooks</A>, 
+  <A HREF="gen_html/m3core/src/runtime/common/RT0.i3.html">RT0</A>.
+</TD>
+</TR>
+<TR>
+<TD>
+  Miscellaneous
+</TD>
+<TD>
+  <A HREF="gen_html/m3core/src/runtime/common/RTIO.i3.html">RTIO</A>,
+  <A HREF="gen_html/m3core/src/runtime/common/RTPacking.i3.html">RTPacking</A>,
+  <A HREF="gen_html/m3core/src/runtime/common/RTMisc.i3.html">RTMisc</A>.
+</TD>
+</TR>
+</TABLE>
+</BLOCKQUOTE>
+
+<P>
+<HR>
+<!-- ------------------------------------------------------------- -->
+<H3><A NAME="misc">Miscellaneous</A></H3>
+
+<P>
+<STRONG>Main interface.</STRONG>
+The <A HREF="gen_html/m3core/src/main/Main.i3.html">Main</A> interface is the entry point
+for executable programs. All programs must include a module that exports
+this interface.
+
+<!-- <A HREF="gen_html/m3core/src/Poly.i3.html">Poly</A> -->
+
+<P>
+<STRONG>Weak References.</STRONG>
+Using the 
+<A HREF="gen_html/m3core/src/weakref/WeakRef.i3.html">WeakRef</A> interface, you can register
+cleanup procedures to be run when the garbage collector is about to collect
+an object.
+
+<P>
+<STRONG>Performance Tuning.</STRONG>
+<A HREF="gen_html/libm3/src/etimer/ETimer.i3.html">ETimer</A> keeps track
+of elapsed time. It can be used for performance measurements. 
+<A HREF="gen_html/libm3/src/perftool/Common/PerfTool.i3.html">PerfTool</A> and
+<A 
+HREF="gen_html/libm3/src/perftool/Common/LowPerfTool.i3.html">LowPerfTool</A>
+control access to performance monitoring tools.
+
+<P>
+<STRONG>Configuration.</STRONG>
+The <A HREF="gen_html/libm3/derived/M3Config.i3.html">M3Config</A> 
+interface exports the configuration constants
+defined when the system was built.
+
+<P>
+<HR>
+<!-- ------------------------------------------------------------- -->
+<H3>More Interfaces, Where to Go Next?</H3>
+
+<P>
+There are many more Modula-3 interfaces than are described in this 
+index. You can continue learning about Modula-3 interfaces 
+by browsing the list of <a href="gen_html/INDEX.html">interfaces 
+available in your CM3 system</a>.
+
+<P>
+Good Luck!
+
+</BODY>
+</HTML>

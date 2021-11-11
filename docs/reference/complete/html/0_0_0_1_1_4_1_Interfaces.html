@@ -1,0 +1,104 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<!--Converted with LaTeX2HTML 2008 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>0.0.0.1 1.4.1 Interfaces.</TITLE>
+<META NAME="description" CONTENT="0.0.0.1 1.4.1 Interfaces.">
+<META NAME="keywords" CONTENT="m3-defn-complete">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2008">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="/cm3/normal.css">
+
+<LINK REL="next" HREF="0_0_0_2_1_4_2_Objects.html">
+<LINK REL="previous" HREF="1_4Features.html">
+<LINK REL="up" HREF="1_4Features.html">
+<LINK REL="next" HREF="0_0_0_2_1_4_2_Objects.html">
+</HEAD>
+
+<BODY >
+
+<DIV CLASS="navigation"><!--Navigation Panel-->
+<A NAME="tex2html117"
+  HREF="0_0_0_2_1_4_2_Objects.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html115"
+  HREF="1_4Features.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html109"
+  HREF="1_4Features.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A>   
+<BR>
+<B> Next:</B> <A NAME="tex2html118"
+  HREF="0_0_0_2_1_4_2_Objects.html">0.0.0.2 1.4.2 Objects.</A>
+<B> Up:</B> <A NAME="tex2html116"
+  HREF="1_4Features.html">1.4 Features</A>
+<B> Previous:</B> <A NAME="tex2html110"
+  HREF="1_4Features.html">1.4 Features</A>
+<BR>
+<BR></DIV>
+<!--End of Navigation Panel-->
+
+<H4><A NAME="SECTION00013410000000000000">
+<SPAN CLASS="arabic">0</SPAN>.<SPAN CLASS="arabic">0</SPAN>.<SPAN CLASS="arabic">0</SPAN>.<SPAN CLASS="arabic">1</SPAN> 1.4.1 Interfaces.</A>
+</H4>
+
+<P>
+One of Modula-2's most successful features is the provision for explicit
+interfaces between modules.  Interfaces are retained with essentially no
+changes in Modula-3.  An interface to a module is a collection of declarations
+that reveal the public parts of a module; things in the module that are not
+declared in the interface are private.  A module <SPAN  CLASS="textit">imports</SPAN> the interfaces
+it depends on and <SPAN  CLASS="textit">exports</SPAN> the interface (or, in Modula-3, the
+interfaces) that it implements.
+
+<P>
+Interfaces make separate compilation type-safe; but it does them an injustice
+to look at them in such a limited way.  Interfaces make it possible to think
+about large systems without holding the whole system in your head at once.
+
+<P>
+Programmers who have never used Modula-style interfaces tend to underestimate
+them, observing, for example, that anything that can be done with interfaces
+can also be done with C-style include files.  This misses the point: many
+things can be done with include files that cannot be done with interfaces.
+For example, the meaning of an include file can be changed by defining macros
+in the environment into which it is included.  Include files tempt programmers
+into shortcuts across abstraction boundaries.  To keep large programs well
+structured, you either need super-human will power, or proper language support
+for interfaces.
+
+<P>
+
+<DIV CLASS="navigation"><HR>
+<!--Navigation Panel-->
+<A NAME="tex2html117"
+  HREF="0_0_0_2_1_4_2_Objects.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html115"
+  HREF="1_4Features.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html109"
+  HREF="1_4Features.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A>   
+<BR>
+<B> Next:</B> <A NAME="tex2html118"
+  HREF="0_0_0_2_1_4_2_Objects.html">0.0.0.2 1.4.2 Objects.</A>
+<B> Up:</B> <A NAME="tex2html116"
+  HREF="1_4Features.html">1.4 Features</A>
+<B> Previous:</B> <A NAME="tex2html110"
+  HREF="1_4Features.html">1.4 Features</A></DIV>
+<!--End of Navigation Panel-->
+<ADDRESS>
+m3-support@elego.de
+</ADDRESS>
+</BODY>
+</HTML>

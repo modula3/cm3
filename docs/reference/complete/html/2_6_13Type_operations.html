@@ -1,0 +1,183 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<!--Converted with LaTeX2HTML 2008 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>2.6.13 Type operations</TITLE>
+<META NAME="description" CONTENT="2.6.13 Type operations">
+<META NAME="keywords" CONTENT="m3-defn-complete">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2008">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="/cm3/normal.css">
+
+<LINK REL="next" HREF="2_6_14Text_operations.html">
+<LINK REL="previous" HREF="2_6_12Boolean_operations.html">
+<LINK REL="up" HREF="2_6Expressions.html">
+<LINK REL="next" HREF="2_6_14Text_operations.html">
+</HEAD>
+
+<BODY >
+
+<DIV CLASS="navigation"><!--Navigation Panel-->
+<A NAME="tex2html898"
+  HREF="2_6_14Text_operations.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html896"
+  HREF="2_6Expressions.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html890"
+  HREF="2_6_12Boolean_operations.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A>   
+<BR>
+<B> Next:</B> <A NAME="tex2html899"
+  HREF="2_6_14Text_operations.html">2.6.14 Text operations</A>
+<B> Up:</B> <A NAME="tex2html897"
+  HREF="2_6Expressions.html">2.6 Expressions</A>
+<B> Previous:</B> <A NAME="tex2html891"
+  HREF="2_6_12Boolean_operations.html">2.6.12 Boolean operations</A>
+<BR>
+<BR></DIV>
+<!--End of Navigation Panel-->
+
+<H3><A NAME="SECTION000191300000000000000">
+2.6.13 Type operations</A>
+</H3>
+
+<P><PRE><TT>
+ 		 		 <code>ISTYPE</code> 		 <code>(x: Reference; T: RefType) : BOOLEAN</code>  
+</TT></PRE>
+<code>ISTYPE(x, T)</code> is <code>TRUE</code> if and only if <code>x</code> is a member of
+<code>T</code>.  <code>T</code> must be an object type or traced reference type, and
+<code>x</code> must be assignable to <code>T</code>.<PRE><TT>
+ 		 		 <code>NARROW</code> 		 <code>(x: Reference; T: RefType): T</code>  
+</TT></PRE>
+<code>NARROW(x, T)</code> returns <code>x</code> after checking that <code>x</code> is a member
+of <code>T</code>.  If the check fails, a runtime error occurs.  <code>T</code> must be an
+object type or traced reference type, and <code>x</code> must be assignable to
+<code>T</code>.
+
+<P><PRE><TT>
+ 		 		 <code>TYPECODE</code> 		 <code>(T: RefType)       : CARDINAL</code> 
+<BR><code>(r: REFANY)        : CARDINAL</code> 
+<BR><code>(r: UNTRACED ROOT) : CARDINAL</code>  
+</TT></PRE>
+Every object type or traced reference type (including NULL) has an associated
+integer code.  Different types have different codes.  The code for a type is
+constant for any single execution of a program, but may differ for different
+executions.  TYPECODE(T) returns the code for the type T and TYPECODE(r)
+returns the code for the allocated type of r.  It is a static error if T is
+REFANY or is not an object type or traced reference type.
+
+<P><PRE><TT>
+ 		 		 <code>ORD</code> 		 <code>(element: Ordinal): INTEGER</code> 
+<BR><code>VAL</code> 		 <code>(i: INTEGER; T: OrdinalType): T</code>  
+</TT></PRE>
+<code>ORD</code> converts an element of an enumeration to the integer that
+represents its position in the enumeration order.  The first value in any
+enumeration is represented by zero.  If the type of <code>element</code> is a
+subrange of an enumeration <code>T</code>, the result is the position of the element
+within <code>T</code>, not within the subrange.
+
+<P>
+<code>VAL</code> is the inverse of <code>ORD</code>; it converts from a numeric position
+<code>i</code> into the element that occupies that position in an enumeration.  If
+<code>T</code> is a subrange, <code>VAL</code> returns the element with the position
+<code>i</code> in the original enumeration type, not the subrange.  It is a checked
+runtime error for the value of <code>i</code> to be out of range for <code>T</code>.
+
+<P>
+If <code>n</code> is an integer of type <code>T</code>, <code>ORD(n) = VAL(n, T) = n</code>.
+
+<P><PRE><TT>
+ 		 <code>NUMBER</code> 		 <code>(T: OrdinalType)    : CARDINAL</code> 
+<BR><code>(A: FixedArrayType) : CARDINAL</code> 
+<BR><code>(a: Array)          : CARDINAL</code>  
+</TT></PRE>
+For an ordinal type <code>T</code>, <code>NUMBER(T)</code> returns the number of elements
+in <code>T</code>.  For a fixed array type <code>A</code>, <code>NUMBER(A)</code> is defined by
+<code>NUMBER(IndexType(A))</code>.  Similarly, for an array <code>a</code>,
+<code>NUMBER(a)</code> is defined by <code>NUMBER(IndexType(a))</code>.  In this case, the
+expression <code>a</code> will be evaluated only if it denotes an open array.
+
+<P><PRE><TT>
+ 		 <code>FIRST</code> 		 <code>(T: OrdinalType)    : BaseType(T)</code> 
+<BR><code>(T: FloatType)      : T</code> 
+<BR><code>(A: FixedArrayType) : BaseType(IndexType(A))</code> 
+<BR><code>(a: Array)          : BaseType(IndexType(a))</code> 
+<BR>
+<BR><code>LAST</code> 		 <code>(T: OrdinalType)    : BaseType(T)</code> 
+<BR><code>(T: FloatType)      : T</code> 
+<BR><code>(A: FixedArrayType) : BaseType(IndexType(A))</code> 
+<BR><code>(a: Array)          : BaseType(IndexType(a))</code>  
+</TT></PRE>
+For a non-empty ordinal type <code>T</code>, <code>FIRST</code> returns the smallest value
+of <code>T</code> and <code>LAST</code> returns the largest value.  If <code>T</code> is the
+empty enumeration, <code>FIRST(T)</code> and <code>LAST(T)</code> are static errors.  If
+<code>T</code> is any other empty ordinal type, the values returned are
+implementation-dependent, but they satisfy <code>FIRST(T) &gt; LAST(T)</code>.
+
+<P>
+For a floating-point type <code>T</code>, <code>FIRST(T)</code> and <code>LAST(T)</code> are the
+smallest and largest values of the type, respectively.  On IEEE
+implementations, these are minus and plus infinity.
+
+<P>
+For a fixed array type <code>A</code>, <code>FIRST(A)</code> is defined by
+<code>FIRST(IndexType(A))</code> and <code>LAST(A)</code> by <code>LAST(IndexType(A))</code>.
+Similarly, for an array <code>a</code>, <code>FIRST(a)</code> and <code>LAST(a)</code> are
+defined by <code>FIRST(IndexType(a))</code> and <code>LAST(IndexType(a))</code>.  The
+expression <code>a</code> will be evaluated only if it is an open array.  Note that
+if <code>a</code> is an open array, <code>FIRST(a)</code> and <code>LAST(a)</code> have type
+<code>INTEGER</code>.
+
+<P><PRE><TT>
+ 		 <code>BITSIZE</code> 		 <code>(x: Any)  : CARDINAL</code> 
+<BR><code>(T: Type) : CARDINAL</code> 
+<BR>
+<BR><code>BYTESIZE</code> 		 <code>(x: Any)  : CARDINAL</code> 
+<BR><code>(T: Type) : CARDINAL</code> 
+<BR>
+<BR><code>ADRSIZE</code> 		 <code>(x: Any)  : CARDINAL</code> 
+<BR><code>(T: Type) : CARDINAL</code>  
+</TT></PRE>
+These operations return the size of the variable <code>x</code> or of variables of
+type <code>T</code>.  <code>BITSIZE</code> returns the number of bits, <code>BYTESIZE</code> the
+number of 8-bit bytes, and <code>ADRSIZE</code> the number of addressable locations.
+In all cases, <code>x</code> must be a designator and <code>T</code> must not be an open
+array type.  A designator <code>x</code> will be evaluated only if its type is an
+open array type.
+
+<P>
+
+<DIV CLASS="navigation"><HR>
+<!--Navigation Panel-->
+<A NAME="tex2html898"
+  HREF="2_6_14Text_operations.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html896"
+  HREF="2_6Expressions.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html890"
+  HREF="2_6_12Boolean_operations.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A>   
+<BR>
+<B> Next:</B> <A NAME="tex2html899"
+  HREF="2_6_14Text_operations.html">2.6.14 Text operations</A>
+<B> Up:</B> <A NAME="tex2html897"
+  HREF="2_6Expressions.html">2.6 Expressions</A>
+<B> Previous:</B> <A NAME="tex2html891"
+  HREF="2_6_12Boolean_operations.html">2.6.12 Boolean operations</A></DIV>
+<!--End of Navigation Panel-->
+<ADDRESS>
+m3-support@elego.de
+</ADDRESS>
+</BODY>
+</HTML>

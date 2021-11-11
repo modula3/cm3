@@ -1,0 +1,217 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<!--Converted with LaTeX2HTML 2008 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>2.6.10 Arithmetic operations</TITLE>
+<META NAME="description" CONTENT="2.6.10 Arithmetic operations">
+<META NAME="keywords" CONTENT="m3-defn-complete">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2008">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="/cm3/normal.css">
+
+<LINK REL="next" HREF="2_6_11Relations.html">
+<LINK REL="previous" HREF="2_6_9New.html">
+<LINK REL="up" HREF="2_6Expressions.html">
+<LINK REL="next" HREF="2_6_11Relations.html">
+</HEAD>
+
+<BODY >
+
+<DIV CLASS="navigation"><!--Navigation Panel-->
+<A NAME="tex2html868"
+  HREF="2_6_11Relations.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html866"
+  HREF="2_6Expressions.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html860"
+  HREF="2_6_9New.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A>   
+<BR>
+<B> Next:</B> <A NAME="tex2html869"
+  HREF="2_6_11Relations.html">2.6.11 Relations</A>
+<B> Up:</B> <A NAME="tex2html867"
+  HREF="2_6Expressions.html">2.6 Expressions</A>
+<B> Previous:</B> <A NAME="tex2html861"
+  HREF="2_6_9New.html">2.6.9 New</A>
+<BR>
+<BR></DIV>
+<!--End of Navigation Panel-->
+
+<H3><A NAME="SECTION000191000000000000000">
+2.6.10 Arithmetic operations</A>
+</H3>
+
+<P>
+The basic arithmetic operations are built into the language; additional
+operations are provided by the required floating-point interfaces.
+
+<P>
+To test or set the implementation's behavior for overflow, underflow,
+rounding, and division by zero, see the required interface <code>FloatMode</code>.
+Modula-3 arithmetic was designed to support the IEEE floating-point standard,
+but not to require it.
+
+<P>
+To perform arithmetic operations modulo the word size, programs should use the
+routines in the required interface <code>Word</code>.
+
+<P>
+Implementations must not rearrange the computation of expressions in a way
+that could affect the result.  For example, <code>(x+y)+z</code> generally cannot be
+computed as <code>x+(y+z)</code>, since addition is not associative either for
+bounded integers or for floating-point values.
+
+<P><PRE><TT>
+ 		prefix 		 <code>+</code> 		 <code>(x: Integer)    : Integer</code> 
+<BR><code>(x: Float)      : Float</code> 
+<BR>
+infix 		 <code>+</code> 		 <code>(x,y: Integer)  : Integer</code> 
+<BR><code>(x,y: Float)    : Float</code> 
+<BR><code>(x,y: Set)      : Set</code>  
+</TT></PRE>
+As a prefix operator, <code>+x</code> returns <code>x</code>.  As an infix operator on
+numeric arguments, <code>+</code> denotes addition.  On sets, <code>+</code> denotes set
+union.  That is, <code>e IN (x + y)</code> if and only if
+<code>(e IN x) OR (e IN y)</code>.  The types of <code>x</code> and <code>y</code> must be the
+same, and the result is the same type as both.  In unsafe modules, <code>+</code> is
+extended to <code>ADDRESS</code>.
+
+<P><PRE><TT>
+ 		prefix 		 <code>-</code> 		 <code>(x: Integer)    : Integer</code> 
+<BR><code>(x: Float)      : Float</code> 
+<BR>
+infix 		 <code>-</code> 		 <code>(x,y: Integer)  : Integer</code> 
+<BR><code>(x,y: Float)    : Float</code> 
+<BR><code>(x,y: Set)      : Set</code>  
+</TT></PRE>
+As a prefix operator, <code>-x</code> is the negative of <code>x</code>.  As an infix
+operator on numeric arguments, <code>-</code> denotes subtraction.  On sets,
+<code>-</code> denotes set difference.  That is, <code>e IN (x - y)</code> if and only if
+<code>(e IN x) AND NOT (e IN y)</code>.  The types of <code>x</code> and <code>y</code> must be
+the same, and the result is the same type as both.  In unsafe modules,
+<code>-</code> is extended to <code>ADDRESS</code>.
+
+<P><PRE><TT>
+ 		infix 		 <code>*</code> 		 <code>(x,y: Integer)  : Integer</code> 
+<BR><code>(x,y: Float)    : Float</code> 
+<BR><code>(x,y: Set)      : Set</code>  
+</TT></PRE>
+On numeric arguments, <code>*</code> denotes multiplication.  On sets, <code>*</code>
+denotes intersection.  That is, <code>e IN (x * y)</code> if and only if
+<code>(e IN x) AND (e IN y)</code>.  The types of <code>x</code> and <code>y</code> must be the
+same, and the result is the same type as both.
+
+<P><PRE><TT>
+ 		infix 		 <code>/</code> 		 <code>(x,y: Float)    : Float</code> 
+<BR><code>(x,y: Set)      : Set</code>  
+</TT></PRE>
+On reals, <code>/</code> denotes division.  On sets, <code>/</code> denotes symmetric
+difference.  That is, <code>e IN (x / y)</code> if and only if
+<code>(e IN x) # (e IN y)</code>.  The types of <code>x</code> and <code>y</code> must be the
+same, and the result is the same type as both.
+
+<P><PRE><TT>
+ 		infix 		 <code>DIV</code> 		 <code>(x,y: Integer) : Integer</code> 
+<BR>
+infix 		 <code>MOD</code> 		 <code>(x,y: Integer) : Integer</code> 
+<BR><code>(x,y: Float)   : Float</code>  
+</TT></PRE>
+The value <code>x DIV y</code> is the floor of the quotient of <code>x</code> and
+<code>y</code>; that is, the maximum integer not exceeding the real number <code>z</code>
+such that <code>z * y = x</code>.  For integers <code>x</code> and <code>y</code>, the value of
+<code>x MOD y</code> is defined to be <code>x - y * (x DIV y)</code>.
+
+<P>
+This means that for positive <code>y</code>, the value of <code>x MOD y</code> lies in the
+interval <code>[0 ..  y-1]</code>, regardless of the sign of <code>x</code>.  For negative
+<code>y</code>, the value of <code>x MOD y</code> lies in the interval <code>[y+1 ..  0]</code>,
+regardless of the sign of <code>x</code>.
+
+<P>
+If <code>x</code> and <code>y</code> are floats, the value of <code>x MOD y</code> is
+<code>x - y * FLOOR(x / y)</code>.  This may be computed as a Modula-3 expression,
+or by a method that avoids overflow if <code>x</code> is much greater than y.  The
+types of <code>x</code> and <code>y</code> must be the same, and the result is the same
+type as both.
+
+<P><PRE><TT>
+ 		 <code>ABS</code> 		 <code>(x: Integer) : Integer</code> 
+<BR><code>(x: Float)   : Float</code>  
+</TT></PRE>
+<code>ABS(x)</code> is the absolute value of <code>x</code>.  The type of <code>ABS(x)</code> is
+the same as the type of <code>x</code>.
+
+<P><PRE><TT>
+ 		 <code>FLOAT</code> 		 <code>(x: Integer; T: Type := REAL): T</code> 
+<BR><code>(x: Float;   T: Type := REAL): T</code>  
+</TT></PRE>
+<code>FLOAT(x, T)</code> is a floating-point value of type <code>T</code> that is equal to
+or very near <code>x</code>.  The type <code>T</code> must be a floating-point type; it
+defaults to <code>REAL</code>.  The exact semantics depend on the thread's current
+rounding mode, as explained in the required interface <code>FloatMode</code>.
+
+<P><PRE><TT>
+ 		 <code>FLOOR</code> 		 <code>(x: Float; T: Type := INTEGER): T</code> 
+<BR><code>CEILING</code> 		 <code>(x: Float; T: Type := INTEGER): T</code>  
+</TT></PRE>
+<code>FLOOR(x)</code> is the greatest integer not exceeding <code>x</code>.
+<code>CEILING(x)</code> is the least integer not less than <code>x</code>.
+The type <code>T</code> must be an integer type; it defaults to <code>INTEGER</code>.
+
+<P><PRE><TT>
+ 		 <code>ROUND</code> 		 <code>(r: Float; T: Type := INTEGER): T</code> 
+<BR><code>TRUNC</code> 		 <code>(r: Float; T: Type := INTEGER): T</code>  
+</TT></PRE>
+<code>ROUND(r)</code> is the nearest integer to <code>r</code>; ties are broken according
+to the constant <code>RoundDefault</code> in the required interface
+<code>FloatMode</code>.  <code>TRUNC(r)</code> rounds <code>r</code> toward zero; it equals
+<code>FLOOR(r)</code> for positive <code>r</code> and <code>CEILING(r)</code> for negative
+<code>r</code>.
+The type <code>T</code> must be an integer type; it defaults to <code>INTEGER</code>.
+
+<P><PRE><TT>
+ 		 <code>MAX</code>, <code>MIN</code> 		 <code>(x,y: Ordinal) : Ordinal</code> 
+<BR><code>(x,y: Float)   : Float</code>  
+</TT></PRE>
+<code>MAX</code> returns the greater of the two values <code>x</code> and <code>y</code>;
+<code>MIN</code> returns the lesser.  If <code>x</code> and <code>y</code> are ordinals, they
+must have the same base type, which is the type of the result.  If <code>x</code>
+and <code>y</code> are floats, they must have the same type, and the result is the
+same type as both.
+
+<P>
+
+<DIV CLASS="navigation"><HR>
+<!--Navigation Panel-->
+<A NAME="tex2html868"
+  HREF="2_6_11Relations.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html866"
+  HREF="2_6Expressions.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html860"
+  HREF="2_6_9New.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A>   
+<BR>
+<B> Next:</B> <A NAME="tex2html869"
+  HREF="2_6_11Relations.html">2.6.11 Relations</A>
+<B> Up:</B> <A NAME="tex2html867"
+  HREF="2_6Expressions.html">2.6 Expressions</A>
+<B> Previous:</B> <A NAME="tex2html861"
+  HREF="2_6_9New.html">2.6.9 New</A></DIV>
+<!--End of Navigation Panel-->
+<ADDRESS>
+m3-support@elego.de
+</ADDRESS>
+</BODY>
+</HTML>

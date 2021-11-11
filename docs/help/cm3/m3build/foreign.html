@@ -1,0 +1,27 @@
+<HTML>
+<HEAD>
+<TITLE>CM Modula-3: Importing foreign object files and libraries</TITLE>
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+<body>
+
+<H2>Importing foreign object files and libraries</H2>
+<P>
+
+These procedures allow foreign objects and/or libraries to be included
+in a Modula-3 program.
+<P>
+
+<B> import_lib(X, P) </B>  
+           If <TT>P/libX.a</TT> is a library, includes <TT>-LP -lX</TT>
+           in the final link command.  Otherwise, includes <TT>-lX</TT>
+           in the final link command.
+<P>
+
+<B> import_obj(X) </B>  
+          Include <TT>X</TT> in the final link command.
+<P>
+
+<P>
+
+</BODY>
+</HTML>

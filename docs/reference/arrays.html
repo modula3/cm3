@@ -1,0 +1,119 @@
+<HTML>
+<HEAD>
+<TITLE>Modula-3: Array types</TITLE>
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+<body>
+
+<P>
+<A HREF="m3.html">[top]</A>
+<A HREF="floats.html">[prev]</A>
+<A HREF="records.html">[next]</A>
+<P>
+
+<H2>Array types</H2>
+<P>
+
+An <EM>array</EM> is an indexed collection of component variables,
+called the <EM>elements</EM> of the array.  The indexes are the values of
+an ordinal type, called the <EM>index type</EM> of the array.  The elements
+all have the same size and the same type, called the <EM>element type</EM>
+of the array.
+<P>
+
+<A NAME=idx.37>There</A>
+are two kinds of array types, <EM>fixed</EM> and <EM>open</EM>.  The
+length of a fixed array is determined at compile time.  The length
+of an open array type is determined at runtime, when it is allocated
+or bound.  The length cannot be changed thereafter.
+<P>
+
+<A NAME=idx.38>The</A>
+<EM>shape</EM> of a multi-dimensional array is the sequence of its 
+lengths in each dimension.  More precisely, the shape of an array 
+is its length followed by the shape of any of its elements; the shape 
+of a non-array is the empty sequence.  
+<P>
+
+<A NAME=idx.39>Arrays</A>
+are assignable if they have the same element type and shape. 
+If either the source or target of the assignment is an open array, 
+a runtime shape check is required.
+<P>
+
+<A NAME=idx.40>A</A>
+fixed array type declaration has the form:
+<PRE>
+    TYPE T = ARRAY Index OF Element
+</PRE>
+where <TT>Index</TT> is an ordinal type and <TT>Element</TT> is any type other
+than an open array type.  The values of type <TT>T</TT> are arrays whose
+element type is <TT>Element</TT> and whose length is the number of elements
+of the type <TT>Index</TT>.  
+<P>
+
+<A NAME=idx.41>If</A>
+<TT>a</TT> has type <TT>T</TT>, then <TT>a[i]</TT> designates the element 
+of <TT>a</TT> whose position corresponds to the position of <TT>i</TT> 
+in <TT>Index</TT>.  For example, consider the declarations:
+<PRE>
+    VAR a := ARRAY [1..3] OF REAL {1.0, 2.0, 3.0};
+    VAR b: ARRAY [-1..1] OF REAL := a;
+</PRE>
+Now <TT>a = b</TT> is <TT>TRUE</TT>;
+yet <TT>a[1] = 1.0</TT> while <TT>b[1] = 3.0</TT>.
+The interpretation of indexes is determined by an array's
+type, not its value; the assignment <TT>b := a</TT> changes <TT>b</TT>'s
+value, not its type.  (This example uses
+<A HREF="variables.html">variable initialization</A>,
+and
+<A HREF="construct.html#176a">array constructors</A>.)
+<P>
+
+<A NAME=idx.42>An</A>
+expression of the form:
+<PRE>
+    ARRAY Index_1, ..., Index_n OF Element
+</PRE>
+is shorthand for:
+<PRE>
+    ARRAY Index_1 OF ... OF ARRAY Index_n OF Element
+</PRE>
+<P>
+
+This shorthand is eliminated from the expanded type definition
+used to define structural equivalence.  An expression of the form
+<TT>a[i_1</TT>, <TT>...</TT>, <TT>i_n]</TT>
+is shorthand for <TT>a[i_1]...[i_n]</TT>.
+<P>
+
+<A NAME=idx.43>An</A>
+open array type declaration has the form:
+<PRE>
+    TYPE T = ARRAY OF Element
+</PRE>
+where <TT>Element</TT> is any type.  The values of <TT>T</TT> are arrays 
+whose element type is <TT>Element</TT> and whose length is arbitrary.  
+The index type of an open array is the <TT>INTEGER</TT> subrange
+<TT>[0..n-1]</TT>, where <TT>n</TT> is the length of the array.  
+<P>
+
+An open array type can be used only as the type of a formal parameter,
+the referent of a reference type, the element type of another open
+array type, or as the type in an array constructor.
+<P>
+
+Examples of array types:
+<PRE>
+    TYPE
+       Transform = ARRAY [1..3], [1..3] OF REAL;
+       Vector    = ARRAY OF REAL;
+       SkipTable = ARRAY CHAR OF INTEGER
+</PRE>
+<P>
+
+<P>
+<A HREF="m3.html">[top]</A>
+<A HREF="floats.html">[prev]</A>
+<A HREF="records.html">[next]</A>
+</BODY>
+</HTML>

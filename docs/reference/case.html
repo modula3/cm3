@@ -1,0 +1,48 @@
+<HTML>
+<HEAD>
+<TITLE>Modula-3: Case statements</TITLE>
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+<body>
+
+<P>
+<A HREF="m3.html">[top]</A>
+<A HREF="for.html">[prev]</A>
+<A HREF="typecase.html">[next]</A>
+<P>
+
+<H2>Case</H2>
+<P>
+
+A <TT>CASE</TT> statement has the form:
+<PRE>
+    CASE Expr OF  
+      L_1 => S_1 
+    | ...
+    | L_n => S_n
+    ELSE S_0 
+    END
+</PRE>
+where <TT>Expr</TT> is an expression whose type is an ordinal type and 
+each <TT>L</TT> is a list of constant expressions or ranges of constant 
+expressions denoted by "<TT>e_1..e_2</TT>", which represent 
+the values from <TT>e_1</TT> to <TT>e_2</TT> inclusive.  If <TT>
+e_1</TT> exceeds <TT>e_2</TT>, the range is empty.  It is a static 
+error if the sets represented by any two <TT>L</TT>'s overlap or if 
+the value of any of the constant expressions is not a member of the 
+type of <TT>Expr</TT>.  The "<TT>ELSE S_0</TT>" is optional.
+<P>
+
+<A NAME=idx.114>The</A>
+statement evaluates <TT>Expr</TT>.  If the resulting value is in any
+<TT>L_i</TT>, then <TT>S_i</TT> is executed.  If the value is
+in no <TT>L_i</TT> and "<TT>ELSE S_0</TT>" is present, then it is executed.
+If the value is in no <TT>L_i</TT> and "<TT>ELSE S_0</TT>" is absent,
+a checked runtime error occurs.
+<P>
+
+<P>
+<A HREF="m3.html">[top]</A>
+<A HREF="for.html">[prev]</A>
+<A HREF="typecase.html">[next]</A>
+</BODY>
+</HTML>

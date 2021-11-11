@@ -1,0 +1,171 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<!--Converted with LaTeX2HTML 2008 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>2.3.2 Procedure call</TITLE>
+<META NAME="description" CONTENT="2.3.2 Procedure call">
+<META NAME="keywords" CONTENT="m3-defn-complete">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2008">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="/cm3/normal.css">
+
+<LINK REL="next" HREF="2_3_3Eval.html">
+<LINK REL="previous" HREF="2_3_1Assignment.html">
+<LINK REL="up" HREF="2_3Statements.html">
+<LINK REL="next" HREF="2_3_3Eval.html">
+</HEAD>
+
+<BODY >
+
+<DIV CLASS="navigation"><!--Navigation Panel-->
+<A NAME="tex2html384"
+  HREF="2_3_3Eval.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html382"
+  HREF="2_3Statements.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html376"
+  HREF="2_3_1Assignment.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A>   
+<BR>
+<B> Next:</B> <A NAME="tex2html385"
+  HREF="2_3_3Eval.html">2.3.3 Eval</A>
+<B> Up:</B> <A NAME="tex2html383"
+  HREF="2_3Statements.html">2.3 Statements</A>
+<B> Previous:</B> <A NAME="tex2html377"
+  HREF="2_3_1Assignment.html">2.3.1 Assignment</A>
+<BR>
+<BR></DIV>
+<!--End of Navigation Panel-->
+
+<H3><A NAME="SECTION00016200000000000000">
+2.3.2 Procedure call</A>
+</H3>
+
+<P>
+A procedure call has the form:
+<PRE>
+    P(Bindings)
+</PRE>
+where <code>P</code> is a procedure-valued expression and <code>Bindings</code> is a list
+of <SPAN  CLASS="textit">keyword</SPAN> or <SPAN  CLASS="textit">positional</SPAN> bindings.  A keyword binding has the
+form <code>name := actual</code>, where <code>actual</code> is an expression and
+<code>name</code> is an identifier.  A positional binding has the form
+<code>actual</code>, where <code>actual</code> is an expression.  When keyword and
+positional bindings are mixed in a call, the positional bindings must precede
+the keyword bindings.  If the list of bindings is empty, the parentheses are
+still required.
+
+<P>
+The list of bindings is rewritten to fit the signature of <code>P</code>'s type as
+follows: First, each positional binding <code>actual</code> is converted and added
+to the list of keyword bindings by supplying the name of the <SPAN CLASS="MATH"><IMG
+ WIDTH="9" HEIGHT="17" ALIGN="BOTTOM" BORDER="0"
+ SRC="img1.png"
+ ALT="$i$"></SPAN>'th formal
+parameter, where <code>actual</code> is the i'th binding in <code>Bindings</code>.
+Second, for each parameter that has a default and is not bound after the first
+step, the binding <code>name := default</code> is added to the list of bindings,
+where <code>name</code> is the name of the parameter and <code>default</code> is its
+default value.  The rewritten list of bindings must bind only formal
+parameters and must bind each formal parameter exactly once.  For example,
+suppose that the type of <code>P</code> is
+<PRE>
+    PROCEDURE(ch: CHAR; n: INTEGER := 0)
+</PRE>
+Then the following calls are all equivalent:
+<PRE>
+    P('a', 0)
+    P('a')
+    P(ch := 'a')
+    P(n := 0, ch := 'a')
+    P('a', n := 0)
+</PRE>
+The call <code>P()</code> is illegal, since it doesn't bind <code>ch</code>.  The call
+<code>P(n := 0, 'a')</code> is illegal, since it has a keyword parameter before a
+positional parameter.
+
+<P>
+For a <code>READONLY</code> or <code>VALUE</code> parameter, the actual can be any
+expression assignable to the type of the formal (except that the prohibition
+against assigning local procedures is relaxed).  For a <code>VAR</code> parameter,
+the actual must be a writable designator whose type is the same as that of the
+formal, or, in case of a <code>VAR</code> array parameter, assignable to that of the
+formal (see the section on designators).
+
+<P>
+A <code>VAR</code> formal is bound to the variable designated by the corresponding
+actual; that is, it is aliased.  A <code>VALUE</code> formal is bound to a variable
+with an unused location and initialized to the value of the corresponding
+actual.  A <code>READONLY</code> formal is treated as a <code>VAR</code> formal if the
+actual is a designator and the type of the actual is the same as the type of
+the formal (or an array type that is assignable to the type of the formal);
+otherwise it is treated as a <code>VALUE</code> formal.
+
+<P>
+Implementations are allowed to forbid <code>VAR</code> or <code>READONLY</code> parameters
+of packed types.
+
+<P>
+To execute the call, the procedure <code>P</code> and its arguments are evaluated,
+the formal parameters are bound, and the body of the procedure is executed.
+The order of evaluation of <code>P</code> and its actual arguments is undefined.  It
+is a checked runtime error to call an undefined or <code>NIL</code> procedure.
+
+<P>
+It is a checked runtime error for a procedure to raise an exception not
+included in its raises set (If an implementation maps this runtime error into
+an exception, the exception is implicitly included in all RAISES clauses.) or
+for a function procedure to fail to return a result.
+
+<P>
+A procedure call is a statement only if the procedure is proper.  To call a
+function procedure and discard its result, use <code>EVAL</code>.
+
+<P>
+A procedure call can also have the form:
+<PRE>
+    o.m(Bindings)
+</PRE>
+where <code>o</code> is an object and <code>m</code> names one of <code>o</code>'s methods.
+This is equivalent to:
+<BLOCKQUOTE>
+(<code>o</code>'s <code>m</code> method)<code>(o, Bindings)</code>
+
+</BLOCKQUOTE>
+
+<P>
+
+<DIV CLASS="navigation"><HR>
+<!--Navigation Panel-->
+<A NAME="tex2html384"
+  HREF="2_3_3Eval.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html382"
+  HREF="2_3Statements.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html376"
+  HREF="2_3_1Assignment.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A>   
+<BR>
+<B> Next:</B> <A NAME="tex2html385"
+  HREF="2_3_3Eval.html">2.3.3 Eval</A>
+<B> Up:</B> <A NAME="tex2html383"
+  HREF="2_3Statements.html">2.3 Statements</A>
+<B> Previous:</B> <A NAME="tex2html377"
+  HREF="2_3_1Assignment.html">2.3.1 Assignment</A></DIV>
+<!--End of Navigation Panel-->
+<ADDRESS>
+m3-support@elego.de
+</ADDRESS>
+</BODY>
+</HTML>

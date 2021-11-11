@@ -1,0 +1,77 @@
+<html>
+<head>
+   <title>Modula-3 - Call and Return Stmts</title>
+   <meta name="GENERATOR" content="Mozilla/2.0GoldB2 (Win32)">
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+<body>
+Go to the <a href="m3_1.html">first</a>,
+<a href="m3_28.html">previous</a>, <a href="m3_30.html">next</a>, <a href="m3_83.html">last</a>
+section, <a href="m3_toc.html">table of contents</a>. 
+<hr>
+<h3><a name="SEC29"></a><a name="SEC29"></a><a name="SEC29"></a><a href="m3_toc.html#SEC29" NAME="SEC29">Procedure
+Call and Return Statements</a></h3>
+
+<p>To call a procedure, use one of the following two forms: </p>
+
+<ul>
+<p><tt><i>procedure-expression</i> &quot;(&quot; { <i>argument </i>&quot;,&quot;
+... } &quot;)&quot; 
+<br></tt><i>where&nbsp;</i><tt>argument = [ argument-name &quot;:=&quot;]
+expression 
+<br>
+<br><b>EVAL </b><i>expression</i></tt> 
+<br></p>
+</ul>
+
+<p>The first form is used to call a <i>proper procedure</i> (one that does
+not specify a return type and thus has no return value). The second is
+used to call a function procedure when you want to throw away the return
+value. For example: </p>
+
+<ul>
+<pre>IO.Put(&quot;Hello&quot;);        (* Call a proper procedure *)
+<b>EVAL </b>IO.GetLine();      (* Call a function procedure and throw away result *)
+</pre>
+</ul>
+
+<p>To return from a procedure, use the following statement: </p>
+
+<ul>
+<pre><b>RETURN </b>[ <i><tt>expression </tt></i>]
+</pre>
+</ul>
+
+<p>The <tt>RETURN</tt> statement is used inside procedures only to return
+control to the caller. A return value must be supplied if the procedure
+is a function procedure, but may not appear if the procedure is a proper
+procedure. </p>
+
+<h4>
+<hr width="100%" >Example</h4>
+
+<pre>PROCEDURE&nbsp;Warning (msg:&nbsp;TEXT) =
+  BEGIN
+&nbsp;&nbsp;&nbsp;&nbsp;IO.Put (&quot;warning:&nbsp;&quot; &amp;&nbsp;msg&nbsp;&amp;&nbsp;&quot;\n&quot;);
+  END&nbsp;Warning;
+
+PROCEDURE&nbsp;FindIndex (name:&nbsp;TEXT):&nbsp;INTEGER =</pre>
+
+<pre>PROCEDURE&nbsp;FindAddress (name:&nbsp;TEXT):&nbsp;TEXT =
+  VAR
+&nbsp;&nbsp;&nbsp;&nbsp;index := FindIndex(name);
+  BEGIN
+ &nbsp;  IF&nbsp;index&nbsp;= -1 THEN
+&nbsp;     (*&nbsp;Call the &quot;Warning&quot; procedure *)
+&nbsp;&nbsp;&nbsp;&nbsp;  Warning&nbsp;(&quot;could not find an address for &quot;&nbsp;&amp;&nbsp;name &amp;&nbsp;&quot;.&nbsp;Defaults used.\n&quot;)
+&nbsp;&nbsp;&nbsp;&nbsp;  <b>RETURN&nbsp;</b>&quot;123 Main&nbsp;Street USA&quot;;
+    END;
+    RETURN&nbsp;Address[i];
+  END FindAddress;</pre>
+
+<p>
+<hr>Go to the <a href="m3_1.html">first</a>, <a href="m3_28.html">previous</a>,
+<a href="m3_30.html">next</a>, <a href="m3_83.html">last</a> section, <a href="m3_toc.html">table
+of contents</a>. </p>
+
+</body>
+</html>

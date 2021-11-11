@@ -1,0 +1,136 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<!--Converted with LaTeX2HTML 2008 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>0.0.0.2 1.4.2 Objects.</TITLE>
+<META NAME="description" CONTENT="0.0.0.2 1.4.2 Objects.">
+<META NAME="keywords" CONTENT="m3-defn-complete">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2008">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="/cm3/normal.css">
+
+<LINK REL="next" HREF="0_0_0_3_1_4_3_Generics.html">
+<LINK REL="previous" HREF="0_0_0_1_1_4_1_Interfaces.html">
+<LINK REL="up" HREF="1_4Features.html">
+<LINK REL="next" HREF="0_0_0_3_1_4_3_Generics.html">
+</HEAD>
+
+<BODY >
+
+<DIV CLASS="navigation"><!--Navigation Panel-->
+<A NAME="tex2html127"
+  HREF="0_0_0_3_1_4_3_Generics.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html125"
+  HREF="1_4Features.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html119"
+  HREF="0_0_0_1_1_4_1_Interfaces.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A>   
+<BR>
+<B> Next:</B> <A NAME="tex2html128"
+  HREF="0_0_0_3_1_4_3_Generics.html">0.0.0.3 1.4.3 Generics.</A>
+<B> Up:</B> <A NAME="tex2html126"
+  HREF="1_4Features.html">1.4 Features</A>
+<B> Previous:</B> <A NAME="tex2html120"
+  HREF="0_0_0_1_1_4_1_Interfaces.html">0.0.0.1 1.4.1 Interfaces.</A>
+<BR>
+<BR></DIV>
+<!--End of Navigation Panel-->
+
+<H4><A NAME="SECTION00013420000000000000">
+<SPAN CLASS="arabic">0</SPAN>.<SPAN CLASS="arabic">0</SPAN>.<SPAN CLASS="arabic">0</SPAN>.<SPAN CLASS="arabic">2</SPAN> 1.4.2 Objects.</A>
+</H4>
+
+<P>
+The better we understand our programs, the bigger the building blocks we use
+to structure them.  After the instruction came the statement, after the
+statement came the procedure, after the procedure came the interface.  The
+next step seems to be the <SPAN  CLASS="textit">abstract type</SPAN>.
+
+<P>
+At the theoretical level, an abstract type is a type defined by the
+specifications of its operations instead of by the representation of its data.
+As realized in modern programming languages, a value of an abstract type is
+represented by an ``object'' whose operations are implemented by a suite of
+procedure values called the object's ``methods''.  A new object type can be
+defined as a <SPAN  CLASS="textit">subtype</SPAN> of an existing type, in which case the new type
+has all the methods of the old type, and possibly new ones as well
+(inheritance).  The new type can provide new implementations for the old
+methods (overriding).
+
+<P>
+Objects were invented in the mid-sixties by the farsighted designers of Simula
+[Birtwistle].  Objects in Modula-3 are very much like objects in Simula: they
+are always references, they have both data fields and methods, and they have
+single inheritance but not multiple inheritance.
+
+<P>
+Small examples are often used to get across the basic idea: truck as a subtype
+of vehicle; rectangle as a subtype of polygon.  Modula-3 aims at larger
+systems that illustrate how object types provide structure for large programs.
+In Modula-3 the main design effort is concentrated into specifying the
+properties of a single abstract type--a stream of characters, a window on the
+screen.  Then dozens of interfaces and modules are coded that provide useful
+subtypes of the central abstraction.  The abstract type provides the blueprint
+for a whole family of interfaces and modules.  If the central abstraction is
+well-designed then useful subtypes can be produced easily, and the original
+design cost will be repaid with interest.
+
+<P>
+The combination of object types with Modula-2 opaque types produces something
+new: the <SPAN  CLASS="textit">partially opaque type</SPAN>, where some of an object's fields are
+visible in a scope and others are hidden.  Because the committee had no
+experience with partially opaque types, the first version of Modula-3
+restricted them severely; but after a year of experience it was clear that
+they were a good thing, and the language was revised to remove the
+restrictions.
+
+<P>
+It is possible to use object-oriented techniques even in languages that were
+not designed to support them, by explicitly allocating the data records and
+method suites.  This approach works reasonably smoothly when there are no
+subtypes; however it is through subtyping that object-oriented techniques
+offer the most leverage.  The approach works badly when subtyping is needed:
+either you allocate the data records for the different parts of the object
+individually (which is expensive and notationally cumbersome) or you must rely
+on unchecked type transfers, which is unsafe.  Whichever approach is taken,
+the subtype relations are all in the programmer's head: only with an
+object-oriented language is it possible to get object-oriented static
+typechecking.
+
+<P>
+
+<DIV CLASS="navigation"><HR>
+<!--Navigation Panel-->
+<A NAME="tex2html127"
+  HREF="0_0_0_3_1_4_3_Generics.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html125"
+  HREF="1_4Features.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html119"
+  HREF="0_0_0_1_1_4_1_Interfaces.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A>   
+<BR>
+<B> Next:</B> <A NAME="tex2html128"
+  HREF="0_0_0_3_1_4_3_Generics.html">0.0.0.3 1.4.3 Generics.</A>
+<B> Up:</B> <A NAME="tex2html126"
+  HREF="1_4Features.html">1.4 Features</A>
+<B> Previous:</B> <A NAME="tex2html120"
+  HREF="0_0_0_1_1_4_1_Interfaces.html">0.0.0.1 1.4.1 Interfaces.</A></DIV>
+<!--End of Navigation Panel-->
+<ADDRESS>
+m3-support@elego.de
+</ADDRESS>
+</BODY>
+</HTML>

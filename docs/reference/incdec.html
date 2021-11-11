@@ -1,0 +1,44 @@
+<HTML>
+<HEAD>
+<TITLE>Modula-3: Inc and Dec statements</TITLE>
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+<body>
+
+<P>
+<A HREF="m3.html">[top]</A>
+<A HREF="lock.html">[prev]</A>
+<A HREF="decls.html">[next]</A>
+<P>
+
+<H2>Inc and Dec</H2>
+<P>
+
+<TT>INC</TT> and <TT>DEC</TT> statements have the form:
+<PRE>
+    INC(v, n)
+    DEC(v, n)
+</PRE>
+where <TT>v</TT> designates a variable of an ordinal type
+and <TT>n</TT> is an optional integer-valued argument.  If omitted, 
+<TT>n</TT> defaults to 1.  The statements increment and decrement
+<TT>v</TT> by <TT>n</TT>, respectively.
+The statements are equivalent to:
+<PRE>
+    WITH x = v DO x := VAL(ORD(x) + n, T) END
+    WITH x = v DO x := VAL(ORD(x) - n, T) END
+</PRE>
+where <TT>T</TT> is the type of <TT>v</TT> and <TT>x</TT> stands for
+a variable that does not appear in <TT>n</TT>.  As a 
+consequence, the statements check for range errors.
+<P>
+
+In <A HREF="unsafe.html">unsafe modules</A>,
+<TT>INC</TT> and <TT>DEC</TT> are extended to <TT>ADDRESS</TT>.
+<P>
+
+<P>
+<A HREF="m3.html">[top]</A>
+<A HREF="lock.html">[prev]</A>
+<A HREF="decls.html">[next]</A>
+</BODY>
+</HTML>

@@ -1,0 +1,150 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<!--Converted with LaTeX2HTML 2008 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>2.5 Modules and interfaces</TITLE>
+<META NAME="description" CONTENT="2.5 Modules and interfaces">
+<META NAME="keywords" CONTENT="m3-defn-complete">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2008">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="/cm3/normal.css">
+
+<LINK REL="next" HREF="2_6Expressions.html">
+<LINK REL="previous" HREF="2_4Declarations.html">
+<LINK REL="up" HREF="Modula_3_Language_definitio.html">
+<LINK REL="next" HREF="2_5_1Import_statements.html">
+</HEAD>
+
+<BODY >
+
+<DIV CLASS="navigation"><!--Navigation Panel-->
+<A NAME="tex2html668"
+  HREF="2_5_1Import_statements.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html666"
+  HREF="Modula_3_Language_definitio.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html660"
+  HREF="2_4_8Recursive_declarations.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A>   
+<BR>
+<B> Next:</B> <A NAME="tex2html669"
+  HREF="2_5_1Import_statements.html">2.5.1 Import statements</A>
+<B> Up:</B> <A NAME="tex2html667"
+  HREF="Modula_3_Language_definitio.html">Modula-3: Language definition</A>
+<B> Previous:</B> <A NAME="tex2html661"
+  HREF="2_4_8Recursive_declarations.html">2.4.8 Recursive declarations</A>
+<BR>
+<BR></DIV>
+<!--End of Navigation Panel-->
+
+<H2><A NAME="SECTION00018000000000000000">
+2.5 Modules and interfaces</A>
+</H2>
+
+<P>
+<BLOCKQUOTE>
+<SPAN  CLASS="textit">Art, it seems to me, should simplify.  That, indeed, is very nearly
+    the whole of the higher artistic process; finding what conventions of form
+    and what detail one can do without and yet preserve the spirit of the
+    whole.  --Willa Cather</SPAN>
+
+</BLOCKQUOTE>
+
+<P>
+A <SPAN  CLASS="textit">module</SPAN> is like a block, except for the visibility of names.  An entity
+is visible in a block if it is declared in the block or in some enclosing
+block; an entity is visible in a module if it is declared in the module or in
+an interface that is imported or exported by the module.
+
+<P>
+An <SPAN  CLASS="textit">interface</SPAN> is a group of declarations.  Declarations in interfaces
+are the same as in blocks, except that any variable initializations must be
+constant, and procedure declarations must specify only the signature, not the
+body.
+
+<P>
+A module <code>X</code> <SPAN  CLASS="textit">exports</SPAN> an interface <code>I</code> to supply bodies for
+one or more of the procedures declared in the interface.  A module or
+interface <code>X</code> <SPAN  CLASS="textit">imports</SPAN> an interface <code>I</code> to make the entities
+declared in <code>I</code> visible in <code>X</code>.
+
+<P>
+A <SPAN  CLASS="textit">program</SPAN> is a collection of modules and interfaces that contains every
+interface imported or exported by any of its modules or interfaces, and in
+which no procedure, module, or interface is multiply defined.  The effect of
+executing a program is to execute the bodies of each of its modules.  The
+order of execution of the modules is constrained by the initialization rule.
+
+<P>
+The module whose body is executed last is called the <SPAN  CLASS="textit">main module</SPAN>.
+Implementations are expected to provide a way to specify the main module, in
+case the initialization rule does not determine it uniquely.  The recommended
+rule is that the main module be the one that exports the interface
+<code>Main</code>, whose contents are implementation-dependent.
+
+<P>
+Program execution terminates when the body of the main module terminates, even
+if concurrent threads of control are still executing.
+
+<P>
+The names of the modules and interfaces of a program are called <SPAN  CLASS="textit">global</SPAN>
+names.  The method for looking up global names--for example, by file system
+search paths--is implementation-dependent.
+
+<P>
+<BR><HR>
+<!--Table of Child-Links-->
+<A NAME="CHILD_LINKS"><STRONG>Subsections</STRONG></A>
+
+<UL CLASS="ChildLinks">
+<LI><A NAME="tex2html670"
+  HREF="2_5_1Import_statements.html">2.5.1 Import statements</A>
+<LI><A NAME="tex2html671"
+  HREF="2_5_2Interfaces.html">2.5.2 Interfaces</A>
+<LI><A NAME="tex2html672"
+  HREF="2_5_3Modules.html">2.5.3 Modules</A>
+<LI><A NAME="tex2html673"
+  HREF="2_5_4Example_module.html">2.5.4 Example module and interface</A>
+<LI><A NAME="tex2html674"
+  HREF="2_5_5Generics.html">2.5.5 Generics</A>
+<LI><A NAME="tex2html675"
+  HREF="2_5_6Initialization.html">2.5.6 Initialization</A>
+<LI><A NAME="tex2html676"
+  HREF="2_5_7Safety.html">2.5.7 Safety</A>
+</UL>
+<!--End of Table of Child-Links-->
+
+<DIV CLASS="navigation"><HR>
+<!--Navigation Panel-->
+<A NAME="tex2html668"
+  HREF="2_5_1Import_statements.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html666"
+  HREF="Modula_3_Language_definitio.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html660"
+  HREF="2_4_8Recursive_declarations.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A>   
+<BR>
+<B> Next:</B> <A NAME="tex2html669"
+  HREF="2_5_1Import_statements.html">2.5.1 Import statements</A>
+<B> Up:</B> <A NAME="tex2html667"
+  HREF="Modula_3_Language_definitio.html">Modula-3: Language definition</A>
+<B> Previous:</B> <A NAME="tex2html661"
+  HREF="2_4_8Recursive_declarations.html">2.4.8 Recursive declarations</A></DIV>
+<!--End of Navigation Panel-->
+<ADDRESS>
+m3-support@elego.de
+</ADDRESS>
+</BODY>
+</HTML>

@@ -1,0 +1,94 @@
+<html>
+<head>
+   <title>CM Modula-3: Implementation restrictions</title>
+   <meta name="GENERATOR" content="Mozilla/2.0GoldB2 (Win32)">
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+<body>
+
+<h2>Implementation restrictions</h2>
+
+<p>With a few exceptions, CM Modula-3 implements the Modula-3 language
+as defined in ``<a href="../../help/bib.html#SPwM3">Systems Programming with
+Modula-3</a>''. </p>
+
+<h3>Arithmetic checking</h3>
+
+<p>CM Modula-3 does not generate any special checking for integer arithmetic
+overflow or underflow. You get whatever checking <tt>gcc</tt> gives you.
+Depending on your machine, the <tt><a href="../../help/gen_html/m3core/src/float/IEEE-default/FloatMode.i3.html">FloatMode</a></tt>
+interface may be used to control floating point exceptions. </p>
+
+<h3>Packed types</h3>
+
+<p>Packed types are restricted. The compiler enforces the rule that every
+scalar field (packed or unpacked) can be loaded by a simple ``load, shift,
+and mask'' sequence on the machine. So, for example, its not possible to
+have a 32-bit integer that crosses a 32-bit alignment boundary on a machine
+which only supports aligned 32-bit loads. </p>
+
+<h3>Stack overflow checking</h3>
+
+<p>CM Modula-3 does not reliably detect thread stack overflows. Stacks
+are only checked for overflow on procedure entry. No checking is done on
+external procedures. Thread stacks are allocated in fixed size chunks.
+The required<a href="../../help/gen_html/m3core/src/thread/Common/Thread.i3.html"> <tt>Thread</tt></a> interface has
+been augmented with the <tt>SizedClosure</tt> type to allow arbitrary sized
+stacks. The default size can be adjusted with <tt>Thread.MinDefaultStackSize</tt>
+and <tt>Thread.IncDefaultStackSize</tt>. </p>
+
+<h3>Exception semantics</h3>
+
+<p>On some platforms (<tt>ALPHA_OSF</tt> and <tt>DS3100</tt>), exceptions
+scopes are delimited by tables of PCs and exceptions are dispatched by
+a runtime routine that's able to unwind the stack. If you can implement
+a stack walker for your machine, send us the code. (See <tt>libm3/src/runtime/*/RTExceptionC.c</tt>
+for examples.) </p>
+
+<p>On all other platforms, CM Modula-3 uses C's <tt>setjmp</tt>/<tt>longjmp</tt>
+mechanism to unwind the stack when raising an exception. A problem can
+occur: assignments may appear to be undone. For example, consider </p>
+
+<pre>    TRY
+      i := 3;
+      P ();
+    EXCEPT E:
+      j := i;
+    END;
+</pre>
+
+<p>where <tt>P</tt> raises exception <tt>E</tt>. The compiler generates
+a <tt>setjmp</tt> at the beginning of the try statement. If the C compiler
+allocates variable <tt>i</tt> to a register, the assignment of <tt>3</tt>
+may be lost during the <tt>longjmp</tt> and branch that gets to the handler.
+</p>
+
+<h3>Method constants</h3>
+
+<p>The language definition says that if <tt>T</tt> is an object type and
+<tt>m</tt> one of its methods, <tt>T.m</tt> denotes the procedure value
+that implements that method and that this value is a constant. In CM Modula-3,
+<tt>T.m</tt> denotes the correct procedure constant, but since the compiler
+generates runtime code to locate the method, some uses of the constant
+that the <tt>C</tt> compiler must resolve at link time will cause <tt>C</tt>
+errors. For example, </p>
+
+<pre>    CONST P = T.m;  BEGIN P (...) ...
+</pre>
+
+<p>will work, since no initialized <tt>C</tt> storage is allocated for
+<tt>P</tt>. But the following generates initialized storage and will fail
+</p>
+
+<pre>    CONST X = ARRAY [0..2] OF Proc { T.m, ..};
+</pre>
+
+<p>Similarly, although Modula-3 allows it, the following cannot be evaluated
+at compile time </p>
+
+<pre>    CONST X = (T.m = MyProcedure);
+</pre>
+
+<p>
+<hr>
+</body>
+</html>

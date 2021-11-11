@@ -1,0 +1,45 @@
+<HTML>
+<HEAD>
+<TITLE>Modula-3: Initialization</TITLE>
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+<body>
+
+<P>
+<A HREF="m3.html">[top]</A>
+<A HREF="generics.html">[prev]</A>
+<A HREF="safety.html">[next]</A>
+<P>
+
+<A NAME=idx.148>
+<H2>Initialization</H2>
+</A>
+<P>
+
+The order of execution of the modules in a program is constrained by
+the following rule:
+<P>
+
+If module <TT>M</TT> depends on module <TT>N</TT> and <TT>N</TT>
+does not depend on <TT>M</TT>, then <TT>N</TT>'s body will be
+executed before <TT>M</TT>'s body,
+where:
+<UL>
+<LI> A module <TT>M</TT> <EM>depends on</EM> a module <TT>N</TT> if <TT>M</TT>
+     uses an interface that <TT>N</TT> exports or if <TT>M</TT> depends on a
+     module that depends on <TT>N</TT>.
+<LI> A module <TT>M</TT> <EM>uses</EM> an interface <TT>I</TT> if <TT>M</TT>
+     imports or exports <TT>I</TT> or if <TT>M</TT> uses an interface that
+     imports <TT>I</TT>.
+</UL>
+<P>
+
+Except for this constraint, the order of execution is
+implementation-dependent.
+<P>
+
+<P>
+<A HREF="m3.html">[top]</A>
+<A HREF="generics.html">[prev]</A>
+<A HREF="safety.html">[next]</A>
+</BODY>
+</HTML>

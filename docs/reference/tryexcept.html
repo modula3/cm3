@@ -1,0 +1,80 @@
+<HTML>
+<HEAD>
+<TITLE>Modula-3: Try except statements</TITLE>
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+<body>
+
+<P>
+<A HREF="m3.html">[top]</A>
+<A HREF="raise.html">[prev]</A>
+<A HREF="tryfinally.html">[next]</A>
+<P>
+
+<H2>Try Except</H2>
+<P>
+
+A <TT>TRY-EXCEPT</TT> statement has the form:
+<PRE>
+    TRY
+      Body
+    EXCEPT 
+      id_1 (v_1) => Handler_1
+    | ... 
+    | id_n (v_n) => Handler_n
+    ELSE Handler_0 
+    END
+</PRE>
+where <TT>Body</TT> and each <TT>Handler</TT> are statements,
+each <TT>id</TT> names an exception, and each <TT>v_i</TT> is an identifier.
+The "<TT>ELSE Handler_0</TT>" and each "<TT>(v_i)</TT>" are optional.  
+It is a static error for an exception to be named more than once 
+in the list of <TT>id</TT>'s.
+<P>
+
+<A NAME=idx.97>The</A>
+statement executes <TT>Body</TT>.  If the outcome is normal, the 
+except clause is ignored.  If <TT>Body</TT> raises any listed exception 
+<TT>id_i</TT>, then <TT>Handler_i</TT> is executed.  If <TT>Body</TT> 
+raises any other exception and "<TT>ELSE Handler_0</TT>" is present, 
+then it is executed.  In either case, the outcome of the <TT>TRY</TT> 
+statement is the outcome of the selected handler.  If <TT>Body</TT> 
+raises an unlisted exception and "<TT>ELSE Handler_0</TT>" is 
+absent, then the outcome of the <TT>TRY</TT> statement is the exception 
+raised by <TT>Body</TT>.
+<P>
+
+<A NAME=idx.98>Each</A>
+<TT>(v_i)</TT> declares a variable whose type is the argument 
+type of the exception <TT>id_i</TT> and whose scope is
+<TT>Handler_i</TT>. When an exception <TT>id_i</TT> paired with an 
+argument <TT>x</TT> is handled, <TT>v_i</TT> is initialized to
+<TT>x</TT> before <TT>Handler_i</TT> is executed.  It is a static error 
+to include <TT>(v_i)</TT> if exception <TT>id_i</TT> does not take 
+an argument.  
+<P>
+
+If <TT>(v_i)</TT> is absent, then <TT>id_i</TT> can be a list of 
+exceptions separated by commas, as shorthand for a list in 
+which the rest of the handler is repeated for each exception.
+That is:
+<PRE>
+    id_1, ..., id_n => Handler
+</PRE>
+is shorthand for:
+<PRE>
+    id_1 => Handler; ...; id_n => Handler
+</PRE>
+<P>
+
+<A NAME=idx.99>It</A>
+is a checked runtime error to raise an exception outside the dynamic 
+scope of a handler for that exception.  A "<TT>TRY EXCEPT ELSE</TT>"
+counts as a handler for all exceptions.
+<P>
+
+<P>
+<A HREF="m3.html">[top]</A>
+<A HREF="raise.html">[prev]</A>
+<A HREF="tryfinally.html">[next]</A>
+</BODY>
+</HTML>

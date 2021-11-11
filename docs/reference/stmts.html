@@ -1,0 +1,84 @@
+<HTML>
+<HEAD>
+<TITLE>Modula-3: Statements</TITLE>
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+<body>
+
+<P>
+<A HREF="m3.html">[top]</A>
+<A HREF="builtin.html">[prev]</A>
+<A HREF="assign.html">[next]</A>
+<P>
+
+<H2>Statements</H2>
+<P>
+
+<BLOCKQUOTE><EM>
+Look into any carpenter's tool-bag and see how many different  
+hammers, chisels, planes and screw-drivers he keeps there---not for  
+ostentation or luxury, but for different sorts of jobs.  
+---Robert Graves and Alan Hodge
+</EM></BLOCKQUOTE>
+<P>
+
+<A NAME=idx.77>Executing</A>
+a statement produces a computation that can halt (normal
+outcome), raise an exception, cause a checked runtime error, or
+loop forever.  If the outcome is an exception, it can optionally 
+be paired with an argument.
+<P>
+
+<A NAME=idx.78>We</A>
+define the semantics of <TT>EXIT</TT> and <TT>RETURN</TT> with exceptions 
+called the <EM>exit-exception</EM> and the <EM>return-exception</EM>.  
+The exit-exception takes no argument; the return-exception takes 
+an argument of arbitrary type.  Programs cannot name these exceptions 
+explicitly.
+<P>
+
+Implementations should speed up normal outcomes at the expense of 
+exceptions (except for the return-exception and exit-exception). 
+Expending a thousand instructions per exception raised to save 
+one instruction per procedure call would be reasonable.
+<P>
+
+If an expression is evaluated as part of the execution of a statement,
+and the evaluation raises an exception, then the exception becomes
+the outcome of the statement.  
+<P>
+
+The empty statement is a no-op.  In this report, empty statements
+are written <TT>(*skip*)</TT>.
+<P>
+
+Each of the statments is described below
+<UL>
+<LI><A HREF="assign.html">Assignment</A>
+<LI><A HREF="calls.html">Procedure call</A>
+<LI><A HREF="eval.html">Eval</A>
+<LI><A HREF="block.html">Block statement</A>
+<LI><A HREF="sequence.html">Sequential composition</A>
+<LI><A HREF="raise.html">Raise</A>
+<LI><A HREF="tryexcept.html">Try Except</A>
+<LI><A HREF="tryfinally.html">Try Finally</A>
+<LI><A HREF="loop.html">Loop</A>
+<LI><A HREF="exit.html">Exit</A>
+<LI><A HREF="return.html">Return</A>
+<LI><A HREF="if.html">If</A>
+<LI><A HREF="while.html">While</A>
+<LI><A HREF="repeat.html">Repeat</A>
+<LI><A HREF="with.html">With</A>
+<LI><A HREF="for.html">For</A>
+<LI><A HREF="case.html">Case</A>
+<LI><A HREF="typecase.html">Typecase</A>
+<LI><A HREF="lock.html">Lock</A>
+<LI><A HREF="incdec.html">Inc and Dec</A>
+</UL>
+<P>
+
+<P>
+<A HREF="m3.html">[top]</A>
+<A HREF="builtin.html">[prev]</A>
+<A HREF="assign.html">[next]</A>
+</BODY>
+</HTML>

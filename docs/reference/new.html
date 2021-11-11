@@ -1,0 +1,89 @@
+<HTML>
+<HEAD>
+<TITLE>Modula-3: New</TITLE>
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+<body>
+
+<P>
+<A HREF="m3.html">[top]</A>
+<A HREF="construct.html">[prev]</A>
+<A HREF="arithmetic.html">[next]</A>
+<P>
+
+<H2>New</H2>
+<P>
+
+An allocation operation has the form:
+<PRE>
+    NEW(T, ...)
+</PRE>
+where <TT>T</TT> is a reference type other than <TT>REFANY</TT>,
+<TT>ADDRESS</TT>, or <TT>NULL</TT>.  The operation returns the address of a
+newly-allocated variable of <TT>T</TT>'s referent type; or if <TT>T</TT>
+is an object type, a newly-allocated data record paired with a method
+suite.  The reference returned by <TT>NEW</TT> is distinct from all
+existing references.  The allocated type of the new reference is <TT>T</TT>.
+<P>
+
+It is a static error if <TT>T</TT>'s referent type is empty.
+If <TT>T</TT> is declared as an opaque type,
+<TT>NEW(T)</TT> is legal only in scopes
+where <TT>T</TT>'s concrete type is known completely,
+or is known to be an object type.
+<P>
+
+The initial state of the referent generally represents an arbitrary 
+value of its type.  If <TT>T</TT> is an object type or a reference to 
+a record or open array then <TT>NEW</TT> takes additional arguments 
+to control the initial state of the new variable.
+<P>
+
+<A NAME=idx.180>If</A>
+<TT>T</TT> is a reference to an array with k open dimensions, the 
+<TT>NEW</TT> operation has the form:
+<PRE>
+    NEW(T, n_1, ..., n_k)
+</PRE>
+where the <TT>n</TT>'s are integer-valued expressions that specify the 
+lengths of the new array in its first k dimensions.  The values in 
+the array will be arbitrary values of their type.
+<P>
+
+<A NAME=idx.181>If</A>
+<TT>T</TT> is an object type or a reference to a record, the <TT>NEW</TT> 
+operation has the form:
+<PRE>
+    NEW(T, Bindings)
+</PRE>
+where <TT>Bindings</TT> is a list of keyword bindings used to initialize
+the new fields.  Positional bindings are not allowed.
+<P>
+
+Each binding <TT>f := v</TT> initializes the field <TT>f</TT> to the value
+<TT>v</TT>.  Fields for which no binding is supplied will be initialized
+to their
+<A HREF="records.html#idx.45">defaults</A>
+if they have defaults; otherwise they will be
+initialized to arbitrary values of their types.
+<P>
+
+The order of the field bindings makes no difference.
+<P>
+
+If <TT>T</TT> is an object type then <TT>Bindings</TT> can also include
+method overrides of the form <TT>m := P</TT>, where <TT>m</TT> is a method
+of <TT>T</TT> and <TT>P</TT> is a top-level procedure constant.  This is
+syntactic sugar for the allocation of a subtype of <TT>T</TT> that includes
+the given overrides, in the given order.
+For example, <TT>NEW(T, m := P)</TT> is sugar for
+<PRE>
+    NEW(T OBJECT OVERRIDES m := P END).
+</PRE>
+<P>
+
+<P>
+<A HREF="m3.html">[top]</A>
+<A HREF="construct.html">[prev]</A>
+<A HREF="arithmetic.html">[next]</A>
+</BODY>
+</HTML>

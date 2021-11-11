@@ -1,0 +1,84 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<!--Converted with LaTeX2HTML 2008 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>2.3.10 Exit</TITLE>
+<META NAME="description" CONTENT="2.3.10 Exit">
+<META NAME="keywords" CONTENT="m3-defn-complete">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2008">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="/cm3/normal.css">
+
+<LINK REL="next" HREF="2_3_11Return.html">
+<LINK REL="previous" HREF="2_3_9Loop.html">
+<LINK REL="up" HREF="2_3Statements.html">
+<LINK REL="next" HREF="2_3_11Return.html">
+</HEAD>
+
+<BODY >
+
+<DIV CLASS="navigation"><!--Navigation Panel-->
+<A NAME="tex2html464"
+  HREF="2_3_11Return.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html462"
+  HREF="2_3Statements.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html456"
+  HREF="2_3_9Loop.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A>   
+<BR>
+<B> Next:</B> <A NAME="tex2html465"
+  HREF="2_3_11Return.html">2.3.11 Return</A>
+<B> Up:</B> <A NAME="tex2html463"
+  HREF="2_3Statements.html">2.3 Statements</A>
+<B> Previous:</B> <A NAME="tex2html457"
+  HREF="2_3_9Loop.html">2.3.9 Loop</A>
+<BR>
+<BR></DIV>
+<!--End of Navigation Panel-->
+
+<H3><A NAME="SECTION000161000000000000000">
+2.3.10 Exit</A>
+</H3>
+
+<P>
+The statement
+<PRE>
+    EXIT
+</PRE>
+raises the exit-exception.  An <code>EXIT</code> statement must be textually
+enclosed by a <code>LOOP</code>, <code>WHILE</code>, <code>REPEAT</code>, or <code>FOR</code>
+statement.
+
+<P>
+We define <code>EXIT</code> and <code>RETURN</code> in terms of exceptions in order to
+specify their interaction with the exception handling statements.  As a
+pathological example, consider the following code, which is an elaborate
+infinite loop:
+<PRE>
+    LOOP
+      TRY
+        TRY EXIT FINALLY RAISE E END
+      EXCEPT
+        E =&gt; (*skip*)
+      END
+    END
+</PRE>
+
+<P>
+<BR><HR>
+<ADDRESS>
+m3-support@elego.de
+</ADDRESS>
+</BODY>
+</HTML>

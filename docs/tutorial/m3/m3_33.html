@@ -1,0 +1,52 @@
+<html>
+<head>
+   <title>Modula-3 - TYPECASE Stmt</title>
+   <meta name="GENERATOR" content="Mozilla/2.0GoldB2 (Win32)">
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+<body>
+<!-- This HTML file has been created by texi2html 1.31
+     from /home/jove/stu/ss0005/m3/info/m3.texi on 8 March 1995 -->Go
+to the <a href="m3_1.html">first</a>, <a href="m3_32.html">previous</a>,
+<a href="m3_34.html">next</a>, <a href="m3_83.html">last</a> section, <a href="m3_toc.html">table
+of contents</a>. 
+<hr>
+<h4><a name="SEC33"></a><a name="SEC33"></a><a name="SEC33"></a><a href="m3_toc.html#SEC33" NAME="SEC33">TYPECASE
+Statement</a></h4>
+
+<ul>
+<pre><b>TYPECASE </b><i><tt>ref-expr</tt></i> <b>OF </b>{ &quot;|&quot; <i><tt>case</tt></i> ... } [ <b>ELSE</b> <i>stmts</i> ] <b>END
+</b>  where
+    <i><tt>case</tt></i> = { <i><tt>type</tt></i> &quot;,&quot; ... } { &quot;(&quot; <i>id</i> &quot;)&quot; } &quot;=&gt;&quot; <i>stmts</i>
+</pre>
+</ul>
+
+<p><i><tt>ref-expr </tt></i>is a pointer of some sort, and <i><tt>id </tt></i>is
+bound to the value of the reference if specified. Typecase allows your
+code to distinguish references based on their run-time type.</p>
+
+<p>
+<hr width="100%" ></p>
+
+<h4>Example</h4>
+
+<ul>
+<pre>VAR ref: REFANY;
+
+<b>TYPECASE </b>ref <b>OF
+</b>| NULL =&gt;  (* <i>ref </i>is NIL *)
+| REF CHAR =&gt;  (* <i>ref </i>is a pointer to a character *)
+| REF INTEGER(iref) =&gt;  (* <i><tt>ref </tt></i>is a pointer to an integer, and
+                             <i><tt>iref</tt> </i>gets bound to that pointer value *)
+<b>ELSE
+  </b>(* <i>ref </i>points to something else *)
+<b>END</b>;
+</pre>
+</ul>
+
+<p>
+<hr>Go to the <a href="m3_1.html">first</a>, <a href="m3_32.html">previous</a>,
+<a href="m3_34.html">next</a>, <a href="m3_83.html">last</a> section, <a href="m3_toc.html">table
+of contents</a>. </p>
+
+</body>
+</html>

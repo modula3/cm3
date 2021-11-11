@@ -1,0 +1,65 @@
+<HTML>
+<HEAD>
+<TITLE>Modula-3: Return statements</TITLE>
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+<body>
+
+<P>
+<A HREF="m3.html">[top]</A>
+<A HREF="exit.html">[prev]</A>
+<A HREF="if.html">[next]</A>
+<P>
+
+<H2>Return</H2>
+<P>
+
+A <TT>RETURN</TT> statement for a
+<A HREF="procs.html#idx.55">proper procedure</A>
+has the form:
+<PRE>
+    RETURN
+</PRE>
+The statement raises the return-exception without an argument.  It 
+is allowed only in the body of a proper procedure.
+<P>
+
+<A NAME=idx.105>A</A>
+<TT>RETURN</TT> statement for a
+<A HREF="procs.html#idx.55">function procedure</A>
+has the form:
+<PRE>
+    RETURN Expr
+</PRE>
+where <TT>Expr</TT> is an expression assignable to the result type of 
+the procedure.  The statement raises the return-exception with the 
+argument <TT>Expr</TT>.  It is allowed only in the body of a function 
+procedure.
+<P>
+
+<A NAME=idx.106>Failure</A>
+to return a value from a function procedure is a checked runtime
+error.
+<P>
+
+The effect of raising the return exception is to terminate the current
+procedure activation.  To be precise, a call on a proper procedure
+with body <TT>B</TT> is equivalent (after binding the arguments) to:
+<PRE>
+    TRY B EXCEPT return-exception => (*skip*) END
+</PRE>
+A call on a function procedure with body <TT>B</TT> is equivalent to:
+<PRE>
+    TRY 
+      B;  (error: no returned value)  
+    EXCEPT 
+      return-exception (v) => (the result becomes v)  
+    END
+</PRE>
+<P>
+
+<P>
+<A HREF="m3.html">[top]</A>
+<A HREF="exit.html">[prev]</A>
+<A HREF="if.html">[next]</A>
+</BODY>
+</HTML>

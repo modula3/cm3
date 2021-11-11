@@ -1,0 +1,99 @@
+<HTML>
+<HEAD>
+<TITLE>Modula-3: Reference types</TITLE>
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+<body>
+
+<P>
+<A HREF="m3.html">[top]</A>
+<A HREF="sets.html">[prev]</A>
+<A HREF="procs.html">[next]</A>
+<P>
+
+<H2>Reference types</H2>
+<P>
+
+A <EM>reference</EM> value is either <TT>NIL</TT> or the address of
+a variable, called the referent.  
+<P>
+
+<A NAME=idx.49>A</A>
+reference type is either <EM>traced</EM> or <EM>untraced</EM>.  When 
+all traced references to a piece of allocated storage are gone, the 
+implementation reclaims the storage. Two reference types are of the 
+same <EM>reference class</EM> if they are both traced or both untraced.
+A general type is traced if it is a traced reference type, 
+a record type any of whose field types is traced, an array type whose 
+element type is traced, or a packed type whose underlying unpacked 
+type is traced.
+<P>
+
+<A NAME=idx.50>A</A>
+declaration for a traced reference type has the form:
+<PRE>
+    TYPE T = REF Type
+</PRE>
+where <TT>Type</TT> is any type.  The values of <TT>T</TT> are traced 
+references to variables of type <TT>Type</TT>, which is called 
+the <EM>referent type</EM> of <TT>T</TT>.  
+<P>
+
+<A NAME=idx.51>A</A>
+declaration for an untraced reference type has the form:
+<PRE>
+    TYPE T = UNTRACED REF Type
+</PRE>
+where <TT>Type</TT> is any untraced type.
+(This restriction is lifted in <A HREF="unsafe.html">unsafe modules</A>.)
+The values of <TT>T</TT> are the untraced references 
+to variables of type <TT>Type</TT>.    
+<P>
+
+<A NAME=idx.52>In</A>
+both the traced and untraced cases, the keyword <TT>REF</TT> can 
+optionally be preceded by "<TT>BRANDED b</TT>" where <TT>b</TT> is 
+a text constant called the <EM>brand</EM>.  Brands distinguish types 
+that would otherwise be the same; they have no other semantic effect. 
+All brands in a program must be distinct. If <TT>BRANDED</TT> is present 
+and <TT>b</TT> is absent, the implementation automatically supplies 
+a unique value for <TT>b</TT>.  Explicit brands are useful for persistent
+data storage.
+<P>
+
+<A NAME=idx.53>The</A>
+following reference types are predeclared:
+<PRE>
+    REFANY    Contains all traced references
+    ADDRESS   Contains all untraced references
+    NULL      Contains only <TT>NIL</TT>
+</PRE>
+The <A HREF="typecase.html"><TT>TYPECASE</TT></A> statement
+can be used to test the referent type 
+of a <TT>REFANY</TT> or object, but there is 
+no such test for an <TT>ADDRESS</TT>.
+<P>
+
+Examples of reference types:
+<PRE>
+    TYPE TextLine = REF ARRAY OF CHAR;
+
+    ControllerHandle = UNTRACED REF RECORD
+      status: BITS 8 FOR [0..255];
+      filler: BITS 12 FOR [0..0];
+      pc: BITS 12 FOR [0..4095]
+    END;
+
+    T = BRANDED "ANSI-M3-040776" REF INTEGER;
+
+    Apple  = BRANDED REF INTEGER;
+    Orange = BRANDED REF INTEGER;
+</PRE>
+<P>
+
+
+<P>
+<A HREF="m3.html">[top]</A>
+<A HREF="sets.html">[prev]</A>
+<A HREF="procs.html">[next]</A>
+</BODY>
+</HTML>

@@ -1,0 +1,45 @@
+<html>
+<head>
+   <title>Modula-3 - Reference Types</title>
+   <meta name="GENERATOR" content="Mozilla/2.0GoldB2 (Win32)">
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+<body>
+Go to the <a href="m3_1.html">first</a>, <a href="m3_21.html">previous</a>,
+<a href="m3_23.html">next</a>, <a href="m3_83.html">last</a> section, <a href="m3_toc.html">table
+of contents</a>. 
+<hr>
+<h4><a name="SEC22"></a><a name="SEC22"></a><a name="SEC22"></a><a href="m3_toc.html#SEC22" NAME="SEC22">Reference
+Types</a></h4>
+
+<ul>
+<pre><b>REF </b><i>type</i>
+</pre>
+</ul>
+
+<p><i><tt>Type </tt></i>can be any type, even a reference type. This specifies
+a reference (pointer) to a value of type<i><tt> type</tt></i>.</p>
+
+<h4>
+<hr width="100%" >Example</h4>
+
+<ul>
+<pre><b>TYPE
+  </b>IntPtrType = <b>REF </b>INTEGER;                 (* A pointer to an integer *)
+  ArrPtrType = <b>REF </b>ARRAY [1..5] OF CHAR;    (* A pointer to an array *)
+
+VAR
+  p&nbsp;:=&nbsp;NEW(IntPtrType);
+
+BEGIN
+  p^&nbsp;:= 10;
+END;
+</pre>
+</ul>
+
+<p>
+<hr>Go to the <a href="m3_1.html">first</a>, <a href="m3_21.html">previous</a>,
+<a href="m3_23.html">next</a>, <a href="m3_83.html">last</a> section, <a href="m3_toc.html">table
+of contents</a>. </p>
+
+</body>
+</html>

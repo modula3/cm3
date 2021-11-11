@@ -1,0 +1,71 @@
+<html><head>
+<title>Trestle by Example:  Overlaying VBT's</title>
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+
+<body>
+
+<ul>
+  <li> Root of document: <a href="../tutorial.html">Trestle by Example</a>
+  <li> Previous section: <a href="../draw/tut-draw.html">Drawing lines on a window</a>
+  <li> Next section: <a href="../edit/tut-edit.html">Editing single and multiple lines of text</a>
+  <li> Cross listing: <a href="../cross/tut-cross.html">Cross listing by module</a>
+</ul>
+
+<hr>
+
+<h3>Overlaying VBT's</h3>
+
+
+The program
+<a href="./Overlay.m3">Overlay.m3</a>
+illustrates the usage of a TSplit.
+A TSplit is a container window that
+gives its entire screen to one child at a time.
+The program
+constructs a Tsplit
+with 2 children and displays it along with a button
+labeled <code>Next</code>.
+Initially one of the
+two children will be displayed.
+Each time <code>Next</code> button is clicked,
+the other child will occupy whole of the Tsplit's window.
+<p>
+
+The current child can be obtained by calling:
+<pre>
+Tsplit.GetCurrent
+</pre>
+and a child can be set as TSplit's current child by calling:
+<pre>
+Tsplit.SetCurrent
+</pre>
+<p>
+
+
+
+Two views of the application while it is running are shown in
+the following images:
+<ul>
+  <li> <img src="../overlay/overlay1.gif">Overlay 1
+  <li> <img src="../overlay/overlay2.gif">Overlay 2
+</ul>
+The TSplit has two children, each a color picture.
+One picture is rare stamp, other other a windmill.
+The images are from files in the portable bitmap (pbm) format.
+A VBT can be made from a pbm file using the code given in the
+appendices.
+The module <code>Picture</code> prepares two VBTs
+<code>stampVBT</code> and <code>wind_millVBT</code>
+for easy inclusion into a Modula-3 program.
+
+<hr>
+
+<ul>
+  <li> Root of document: <a href="../tutorial.html">Trestle by Example</a>
+  <li> Previous section: <a href="../draw/tut-draw.html">Drawing lines on a window</a>
+  <li> Next section: <a href="../edit/tut-edit.html">Editing single and multiple lines of text</a>
+  <li> Cross listing: <a href="../cross/tut-cross.html">Cross listing by module</a>
+</ul>
+
+</body>
+</html>

@@ -1,0 +1,70 @@
+<html>
+<head>
+   <title>CM Modula-3: support for generics</title>
+   <meta name="GENERATOR" content="Mozilla/2.0GoldB2 (Win32)">
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+<body>
+
+<h2>Generic support</h2>
+
+<p>Many of the packages that export generic interfaces and modules also
+define m3makefile procedures that will instantiate the generic source and
+add it to the list of Modula-3 sources to be compiled. The instantiated
+interfaces and modules are created in the derived directory, so they won't
+clutter up your source directory. </p>
+
+<p><b>array_sort(nm, elt) </b>instantiates the <tt><a href="/generic/interface/ArraySort/">ArraySort</a></tt>
+generics to produce <tt>nmArraySort.i3</tt> and <tt>nmArraySort.m3</tt>
+which implement a sort for arrays of <tt>elt.T</tt> values. </p>
+
+<p><b>Array_sort(nm, elt) </b>like <tt>array_sort</tt>, but also makes
+the interface available to importers outside the current package. </p>
+
+<p><b>list(nm, elt) </b>instantiates the <tt><a href="/generic-interface/List/">List</a></tt>
+generics to produce <tt>nmList.i3</tt> and <tt>nmList.m3</tt> which implement
+linked lists of <tt>elt.T</tt> values. </p>
+
+<p><b>List(nm, elt) </b>like <tt>list</tt>, but also makes the interface
+available to importers outside the current package. </p>
+
+<p><b>list_sort(nm, elt) </b>instantiates the <tt><a href="/generic-interface/ListSort/">ListSort</a></tt>
+generics to produce <tt>nmListSort.i3</tt> and <tt>nmListSort.m3</tt> which
+implement a sorting procedure for lists of <tt>elt.T</tt> values. This
+procedure assumes that <tt>list(nm,elt)</tt> has been called. </p>
+
+<p><b>List_sort(nm, elt) </b>like <tt>list_sort</tt>, but also makes the
+interface available to importers outside the current package. </p>
+
+<p><b>pqueue(nm, elt) </b>instantiates the <tt><a href="/generic-interface/PQueue/">PQueue</a></tt>
+generics to produce <tt>nmPQ.i3</tt> and <tt>nmPQ.m3</tt> which implement
+a priority queue of <tt>elt.T</tt> values. </p>
+
+<p><b>Pqueue(nm, elt) </b>like <tt>pqueue</tt>, but also makes the interface
+available to importers outside the current package. </p>
+
+<p><b>sequence(nm, elt) </b>instantiates the <tt><a href="/generic-interface/Sequence/">Sequence</a></tt>
+generics to produce <tt>nmSeq.i3</tt>, <tt>nmSeqRep.i3</tt> and <tt>nmSeq.m3</tt>
+which implement a sequence of <tt>elt.T</tt> values. </p>
+
+<p><b>Sequence(nm, elt) </b>like <tt>sequence</tt>, but also makes the
+interfaces available to importers outside the current package. </p>
+
+<p><b>sorted_table(nm, key, value) </b>instantiates the <tt><a href="/generic-interface/SortedTable/">SortedTable</a></tt>
+generics to produce <tt>nmSortedTbl.i3</tt> and <tt>nmSortedTbl.m3</tt>
+which implement a sorted table mapping from type <tt>key.T</tt> to <tt>value.T</tt>.
+</p>
+
+<p><b>Sorted_table(nm, key, value) </b>like <tt>sorted_table</tt>, but
+also makes the interface available to importers outside the current package.
+</p>
+
+<p><b>table(nm, key, value) </b>instantiates the <tt><a href="/generic-interface/Table.ig/">Table</a></tt>
+generics to produce <tt>nmTbl.i3</tt> and <tt>nmTbl.m3</tt> which implement
+a table mapping from type <tt>key.T</tt> to <tt>value.T</tt>. </p>
+
+<p><b>Table(nm, key, value) </b>like <tt>table</tt>, but also makes the
+interface available to importers outside the current package. </p>
+
+<p>
+</body>
+</html>

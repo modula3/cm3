@@ -1,0 +1,44 @@
+<html>
+<head>
+   <title>Modula-3 - Main Module</title>
+   <meta name="GENERATOR" content="Mozilla/2.0GoldB2 (Win32)">
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+<body>
+<!-- This HTML file has been created by texi2html 1.31
+     from /home/jove/stu/ss0005/m3/info/m3.texi on 8 March 1995 -->Go
+to the <a href="m3_1.html">first</a>, <a href="m3_1.html">previous</a>,
+<a href="m3_3.html">next</a>, <a href="m3_83.html">last</a> section, <a href="m3_toc.html">table
+of contents</a>. 
+<hr>
+<h2><a name="SEC2"></a><a name="SEC2"></a><a name="SEC2"></a><a href="m3_toc.html#SEC2" NAME="SEC2">The
+Main Module</a></h2>
+
+<p>Every Modula-3 program must have a single main module. Typically, the
+body of the main module contains the &quot;driver&quot; portion of your
+program; for small programs, the main module may be the only module. Here
+is a short example:</p>
+
+<ul>
+<pre>MODULE <a href="../../help/gen_html/m3core/src/main/Main.i3.html">Main</a>;
+
+IMPORT <a href="../../help/gen_html/libm3/src/rw/IO.i3.html">IO</a>;       (* So we can print things *)
+
+VAR name: TEXT;  (* a string variable called &quot;name&quot; *)
+
+BEGIN
+  IO.Put(&quot;Enter your name: &quot;);
+  name:=IO.GetLine();
+  IO.Put(&quot;Your name is: &quot; &amp; name &amp; &quot;\n&quot;);
+END Main.</pre>
+</ul>
+
+<p>As you may have noticed, comments are enclosed in <tt>(*&nbsp;*)</tt>.
+<br></p>
+
+<p>
+<hr>Go to the <a href="m3_1.html">first</a>, <a href="m3_1.html">previous</a>,
+<a href="m3_3.html">next</a>, <a href="m3_83.html">last</a> section, <a href="m3_toc.html">table
+of contents</a>. </p>
+
+</body>
+</html>

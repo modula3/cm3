@@ -1,0 +1,115 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<!--Converted with LaTeX2HTML 2008 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>2.8.12 Token productions</TITLE>
+<META NAME="description" CONTENT="2.8.12 Token productions">
+<META NAME="keywords" CONTENT="m3-defn-complete">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2008">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="/cm3/normal.css">
+
+<LINK REL="previous" HREF="2_8_11Miscellaneous_product.html">
+<LINK REL="up" HREF="2_8Syntax.html">
+<LINK REL="next" HREF="About_authors.html">
+</HEAD>
+
+<BODY >
+
+<DIV CLASS="navigation"><!--Navigation Panel-->
+<A NAME="tex2html1066"
+  HREF="About_authors.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html1064"
+  HREF="2_8Syntax.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html1060"
+  HREF="2_8_11Miscellaneous_product.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A>   
+<BR>
+<B> Next:</B> <A NAME="tex2html1067"
+  HREF="About_authors.html">About the authors</A>
+<B> Up:</B> <A NAME="tex2html1065"
+  HREF="2_8Syntax.html">2.8 Syntax</A>
+<B> Previous:</B> <A NAME="tex2html1061"
+  HREF="2_8_11Miscellaneous_product.html">2.8.11 Miscellaneous productions</A>
+<BR>
+<BR></DIV>
+<!--End of Navigation Panel-->
+
+<H3><A NAME="SECTION0001111200000000000000">
+2.8.12 Token productions</A>
+</H3>
+
+<P>
+To read a token, first skip all blanks, tabs, newlines, carriage returns,
+vertical tabs, form feeds, comments, and pragmas.  Then read the longest
+sequence of characters that forms an operator or an <code>Id</code> or
+<code>Literal</code>.
+
+<P>
+An <code>Id</code> is a case-significant sequence of letters, digits, and
+underscores that begins with a letter.  An <code>Id</code> is a keyword if it
+appears in the list of keywords, a reserved identifier if it appears in the
+list of reserved identifiers, and an ordinary identifier otherwise.
+
+<P>
+In the following grammar, terminals are characters surrounded by double-quotes
+and the special terminal <code>DQUOTE</code> represents double-quote itself.
+
+<P>
+<PRE>
+Id = Letter {Letter | Digit | "_"}.
+
+Literal = Number | CharLiteral | TextLiteral.
+
+CharLiteral = "'"  (PrintingChar | Escape | DQUOTE) "'".
+
+TextLiteral = DQUOTE {PrintingChar | Escape | "'"} DQUOTE.
+
+Escape = "\" "n"   | "\" "t"     | "\" "r"     | "\" "f"
+       | "\" "\"   | "\" "'"     | "\" DQUOTE
+       | "\" OctalDigit OctalDigit OctalDigit.
+
+Number = Digit {Digit}
+       | Digit {Digit} "_" HexDigit {HexDigit}
+       | Digit {Digit} "." Digit {Digit} [Exp].
+
+Exp = ("E" | "e" | "D" | "d" | "X" | "x") ["+" | "-"] Digit {Digit}.
+
+PrintingChar = Letter | Digit | OtherChar.
+
+HexDigit = Digit | "A" | "B" | "C" | "D" | "E" | "F"
+                 | "a" | "b" | "c" | "d" | "e" | "f".
+
+Digit = "0" | "1" | ... | "9".
+
+OctalDigit = "0" | "1" | ... | "7".
+
+Letter = "A"  | "B"  | ... | "Z"  | "a"  | "b"  | ... | "z".
+
+OtherChar = " " | "!" | "#" | "$" | "%" | "&amp;" | "(" | ")"
+          | "*" | "+" | "," | "-" | "." | "/" | ":" | ";"
+          | "&lt;" | "=" | "&gt;" | "?" | "@" | "[" | "]" | "^"
+          | "_" | "`" | "{" | "|" | "}" | "~"
+          | ExtendedChar
+
+ExtendedChar = any char with ISO-Latin-1 code in [8_240..8_377].
+</PRE>
+
+<P>
+<BR><HR>
+<ADDRESS>
+m3-support@elego.de
+</ADDRESS>
+</BODY>
+</HTML>

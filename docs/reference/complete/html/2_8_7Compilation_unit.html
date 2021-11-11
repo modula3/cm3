@@ -1,0 +1,99 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<!--Converted with LaTeX2HTML 2008 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>2.8.7 Compilation unit productions</TITLE>
+<META NAME="description" CONTENT="2.8.7 Compilation unit productions">
+<META NAME="keywords" CONTENT="m3-defn-complete">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2008">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="/cm3/normal.css">
+
+<LINK REL="next" HREF="2_8_8Statement_productions.html">
+<LINK REL="previous" HREF="2_8_6Conventions_syntax.html">
+<LINK REL="up" HREF="2_8Syntax.html">
+<LINK REL="next" HREF="2_8_8Statement_productions.html">
+</HEAD>
+
+<BODY >
+
+<DIV CLASS="navigation"><!--Navigation Panel-->
+<A NAME="tex2html1018"
+  HREF="2_8_8Statement_productions.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html1016"
+  HREF="2_8Syntax.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html1010"
+  HREF="2_8_6Conventions_syntax.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A>   
+<BR>
+<B> Next:</B> <A NAME="tex2html1019"
+  HREF="2_8_8Statement_productions.html">2.8.8 Statement productions</A>
+<B> Up:</B> <A NAME="tex2html1017"
+  HREF="2_8Syntax.html">2.8 Syntax</A>
+<B> Previous:</B> <A NAME="tex2html1011"
+  HREF="2_8_6Conventions_syntax.html">2.8.6 Conventions for syntax</A>
+<BR>
+<BR></DIV>
+<!--End of Navigation Panel-->
+
+<H3><A NAME="SECTION000111700000000000000">
+2.8.7 Compilation unit productions</A>
+</H3>
+
+<P>
+<PRE>
+Compilation = [UNSAFE] (Interface | Module) | GenInf | GenMod.
+
+Interface   = INTERFACE Id ";" {Import} {Decl} END Id "."
+            | INTERFACE Id "=" Id GenActls END Id ".".
+Module      = MODULE Id [EXPORTS IdList] ";" {Import} Block Id "."
+            | MODULE Id [EXPORTS IdList] "=" Id GenActls END Id ".".
+
+GenInf = GENERIC INTERFACE Id GenFmls ";" {Import} {Decl} END Id ".".
+GenMod = GENERIC MODULE Id GenFmls ";" {Import} Block Id ".".
+
+Import      = AsImport | FromImport.
+AsImport    = IMPORT ImportItem {"," ImportItem} ";".
+FromImport  = FROM Id IMPORT IdList ";".
+Block       = {Decl} BEGIN S END.
+Decl = CONST {ConstDecl ";"}
+     | TYPE {TypeDecl ";"}
+     | EXCEPTION {ExceptionDecl ";"}
+     | VAR {VariableDecl ";"}
+     | ProcedureHead ["=" Block Id] ";"
+     | REVEAL {QualId ("=" | "&lt;:") Type ";"}.
+
+GenFmls        = "(" [IdList] ")".
+GenActls       = "(" [IdList] ")".
+ImportItem     = Id | Id AS Id.
+ConstDecl      = Id [":" Type] "=" ConstExpr.
+TypeDecl       = Id ("=" | "&lt;:") Type.
+ExceptionDecl  = Id ["(" Type ")"].
+VariableDecl   = IdList (":" Type &amp; ":=" Expr).
+ProcedureHead  = PROCEDURE Id Signature.
+
+Signature      = "(" Formals ")" [":" Type] [RAISES Raises].
+Formals        = [ Formal {";" Formal} [";"] ].
+Formal         = [Mode] IdList (":" Type &amp; ":=" ConstExpr).
+Mode           = VALUE | VAR | READONLY.
+Raises         = "{" [ QualId {"," QualId} ] "}" | ANY.
+</PRE>
+
+<P>
+<BR><HR>
+<ADDRESS>
+m3-support@elego.de
+</ADDRESS>
+</BODY>
+</HTML>

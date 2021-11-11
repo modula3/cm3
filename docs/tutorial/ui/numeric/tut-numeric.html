@@ -1,0 +1,80 @@
+<html>
+
+<head>
+<title>Trestle by Example:  Numeric fields</title>
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+
+<body>
+
+<ul>
+  <li> Root of document: <a href="../tutorial.html">Trestle by Example</a>
+  <li> Previous section: <a href="../browser/tut-browser.html">File browser</a>
+  <li> Next section: <a href="../scroll/tut-scroll.html">Numeric scrollers</a>
+  <li> Cross listing: <a href="../cross/tut-cross.html">Cross listing by module</a>
+</ul>
+
+<hr>
+
+<h3>Numeric fields</h3>
+
+A <code>NumericVBT</code> is a VBT class for displaying and changing an integer
+in some range.
+It has a type-in field which is restricted to a given range of integers.
+It also has two buttons that step up and down the value.
+It has a callback method which is called each time the value
+in the type-in field is changed, either by typing in and pressing carriage 
+return, or by clicking on the plus and minus buttons.
+By subclassing the callback method it is possible to do something
+in response to any user change to the numeric value.
+<p>
+
+The program
+<a href="./Numeric.m3">Numeric.m3</a>
+illustrates
+the use of a <code>NumericVBT</code>.
+This program displays a <code>NumericVBT</code> along with three additional
+buttons that set the
+type-in field to be empty, set the minimum value and the maximum values.
+It also uses a text field along the bottom of the window
+which is used to display whether the callback 
+has been called in response to a mouse click in the ``+'' button
+or the ``-'' button, or to a carriage return.
+
+
+The images
+<ul>
+  <li> <img src="../numeric/numeric1.gif">Numeric 1
+  <li> <img src="../numeric/numeric2.gif">Numeric 2
+  <li> <img src="../numeric/numeric3.gif">Numeric 3
+  <li> <img src="../numeric/numeric4.gif">Numeric 4
+</ul>
+depict the program <code>Numeric</code> in action.
+Initially, the <code>NumericVBT</code> has no value
+and will accept any value between the smallest integer and the largest integer.
+Clicking the mouse in empty, middle field results in the blinking cursor
+indicating that the a value can be entered.
+The user then enters a number.
+Only digits are acceptable to the numeric field.
+After entering 345 the user presses the return key.
+The current value of the <code>NumericVBT</code> can be changed by pressing
+the box with the ``+'' or the ``-'' in it.
+Holding down the mouse button while in the ``+'' box will increase
+the value until the button is released or the maximum is reached.
+The current value in the <code>NumericVBT</code> can be made the maximum
+value by pressing the ``Set Max'' button.
+The ``Set Empty'' button sets the current numeric value to be undefined.
+The function call <code>NumericVBT.IsEmpty</code>
+returns true if the current value is undefined;
+if the current value is a valid integer, then it returns false.
+
+<hr>
+
+<ul>
+  <li> Root of document: <a href="../tutorial.html">Trestle by Example</a>
+  <li> Previous section: <a href="../browser/tut-browser.html">File browser</a>
+  <li> Next section: <a href="../scroll/tut-scroll.html">Numeric scrollers</a>
+  <li> Cross listing: <a href="../cross/tut-cross.html">Cross listing by module</a>
+</ul>
+
+</body>
+</html>

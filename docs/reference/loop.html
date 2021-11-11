@@ -1,0 +1,32 @@
+<HTML>
+<HEAD>
+<TITLE>Modula-3: Loop statements</TITLE>
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+<body>
+
+<P>
+<A HREF="m3.html">[top]</A>
+<A HREF="tryfinally.html">[prev]</A>
+<A HREF="exit.html">[next]</A>
+<P>
+
+<H2>Loop</H2>
+<P>
+
+A statement of the form:
+<PRE>
+    LOOP S END
+</PRE>
+repeatedly executes <TT>S</TT> until it raises the exit-exception.
+Informally it is like:
+<PRE>
+    TRY S; S; S; ... EXCEPT  exit-exception  => (*skip*)  END
+</PRE>
+<P>
+
+<P>
+<A HREF="m3.html">[top]</A>
+<A HREF="tryfinally.html">[prev]</A>
+<A HREF="exit.html">[next]</A>
+</BODY>
+</HTML>

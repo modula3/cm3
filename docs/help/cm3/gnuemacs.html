@@ -1,0 +1,126 @@
+<html>
+<head>
+   <title>CM Modula-3: GNUemacs support</title>
+   <meta name="GENERATOR" content="Mozilla/2.0GoldB2 (Win32)">
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+<body>
+
+<h2>GNU Emacs support</h2>
+
+<p>CM Modula-3 comes with a mode for editing Modula-3 programs under <tt>gnuemacs</tt>.
+The work on the mode is in progress, here we present some documentation
+on the current snapshot. Here is a list of the key things this mode provides:
+</p>
+
+<ul>
+<li>Indenting/pretty-printing </li>
+
+<p>of formatting code, one ``batch'' and one ``interactive.'' The batch
+method invokes the program <tt><a href="pprint.html">m3pp</a></tt>, which
+takes a program unit such as a procedure and formats it completely. The
+<tt>gnuemacs</tt> commands that invoke <tt><a href="pprint.html">m3pp</a></tt>
+are <tt>M-x m3::pp-buffer</tt> which pretty prints the current buffer,
+<tt>M-x m3::pp-region</tt> which pretty-prints the code between mark and
+point, and <tt>M-x m3::pp-unit</tt> which pretty-prints the ``unit'' containing
+the cursor. (A unit is a top-level construct such as <tt>CONST</tt>, <tt>TYPE</tt>,
+<tt>VAR</tt>, or <tt>PROCEDURE</tt>.) <tt>m3::pp-buffer</tt>, <tt>m3::pp-region</tt>
+and <tt>m3::pp-unit</tt> are bound to the keys <tt>C-c b</tt>, <tt>C-c
+r</tt> and <tt>C-c u</tt>, respectively. </p>
+
+<p>The other method of formatting text is a more traditional one for <tt>gnuemacs</tt>,
+in which there the language mode provides a key that indents the current
+line appropriately. In keeping with the convention used in modes for other
+languages such as Lisp and C, the key used is <tt>TAB</tt>. Typing <tt>TAB</tt>
+on a line indents the current line in a way that is (we hope) appropriate
+given the lines that precede it. </p>
+
+<p>The two formatting methods are not mutually exclusive; perhaps you like
+the way <tt>m3pp</tt> lines up columns in declarations, but you also like
+to keep things indented while you type. You can use the electric mode to
+get things close, then invoke <tt><a href="pprint.html">m3pp</a></tt> when
+you're done. </p>
+
+<li>Avoidance of typing: </li>
+
+<p>Modula-3 mode offers some aid if you don't like typing a lot of uppercase
+keywords. The <tt>TAB</tt> actually serves double duty; it not only indents
+the current line, but when invoked at the end of a word, it attempts to
+complete the current word as a keyword. For example <tt>b TAB</tt> expands
+the <tt>b</tt> to <tt>BEGIN</tt>, provided the <tt>b</tt> appears in a
+context where <tt>BEGIN</tt> may be a valid keyword. There are some fairly
+extensive rules governing the contexts in which a given keyword is a valid
+completion; the net result is that it is seldom necessary to type more
+than one letter to get the correct completion. If you specify a non-unique
+prefix of a set of keywords, it chooses the first in an ordering intended
+to capture frequency of use; it also presents the other choices, and typing
+<tt>TAB</tt> repeatedly cycles through these choices. </p>
+
+<p>A pair of related features are ``<tt>END</tt>-completion'' and ``<tt>END</tt>-matching.''
+If the elisp variable <tt>m3::electric-end</tt> is set to <tt>'all</tt>,
+completing the keyword <tt>END</tt> has the additional effect of finding
+the construct that the <tt>END</tt> completes. If that construct is a an
+interface, module, or procedure, it fills in the name of the completed
+construct after the <tt>END</tt>; otherwise, it inserts a comment containing
+the keyword of the completed construct. If <tt>m3::electric-end</tt> is
+<tt>'proc-mod</tt>, it only fills in real names, never keyword comments.
+Independently, a non-<tt>nil</tt> value of the elisp variable <tt>m3::blink-end-matchers</tt>
+causes completion of <tt>END</tt> to blink the cursor briefly at the beginning
+of the completed construct. </p>
+
+<li>Finding files. </li>
+
+<p>The key <tt>C-c i</tt> is bound to <tt>m3::show-interface</tt>, which
+expects the point to be in an interface name, and attempts to find that
+interface and display it in another window. It uses a built-in list of
+directories. You may consider changing the default value of this list.
+</p>
+
+<p>The key <tt>C-c m</tt> is bound to <tt>m3::show-implementation</tt>.
+This attempts to find the module that implements the interface in the current
+buffer. As distributed, this function relies on Modula-3 coding conventions.
+It may not work for you, in which case it may need to be re-implemented
+or abandoned. </p>
+</ul>
+
+<p>To have the Modula-3 mode automatically invoked when visiting a Modula-3
+source file, you should put in your <tt>.emacs</tt>: </p>
+
+<pre>    (autoload 'modula-3-mode &quot;modula3&quot;)
+    (setq auto-mode-alist 
+         (append '((&quot;\\.ig$&quot; . modula-3-mode)
+                   (&quot;\\.mg$&quot; . modula-3-mode)
+                   (&quot;\\.i3$&quot; . modula-3-mode)
+                   (&quot;\\.m3$&quot; . modula-3-mode))
+                   auto-mode-alist))    
+</pre>
+
+<p>It is also convenient to have the lines: </p>
+
+<pre>    (setq completion-ignored-extensions
+       (append '(&quot;.mo&quot; &quot;.mx&quot; &quot;.mc&quot; &quot;.io&quot; &quot;.ix&quot;) completion-ignored-extensions))
+</pre>
+
+<p>so that you don't get the files with those extensions offered as possible
+completions. </p>
+
+<p>Your system administrator may have inserted these lines in the default
+macro files for your system. </p>
+
+<h3>Tags</h3>
+
+<p>There is also a program to build tags file for Modula-3 programs: <tt>m3tags</tt>;
+see the manpage for the details. When the system is installed, a tag file
+for the public interfaces is built. To access it, you need in your <tt>.emacs</tt>
+(or in the system initialization file) the line: </p>
+
+<pre>    (visit-tags-table &quot;LIB_USE/FTAGS&quot;)
+</pre>
+
+<p>where <tt>LIB_USE</tt> is the place where the Modula-3 libraries have
+been installed. </p>
+
+<p>
+<hr></p>
+
+</body>
+</html>

@@ -1,0 +1,105 @@
+<html>
+<head>
+   <title>Modula-3 - Basic Makefile Commands</title>
+   <meta name="GENERATOR" content="Mozilla/2.0GoldB2 (Win32)">
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+<body>
+Go to the <a href="m3_1.html">first</a>,
+<a href="m3_4.html">previous</a>, <a href="m3_6.html">next</a>, <a href="m3_83.html">last</a>
+section, <a href="m3_toc.html">table of contents</a>. 
+<hr>
+<h3><a name="SEC5"></a><a name="SEC5"></a><a href="m3_toc.html#SEC5">Basic
+Makefile Commands</a></h3>
+
+<p>Here are some of the commands that may be used in an <tt>m3makefile.
+</tt>You will probably find the import command on top of most m3makefiles.</p>
+
+<dl COMPACT>
+<dl COMPACT>
+<p><tt>import( package<i>-name </i>)</tt> </p>
+
+<p>Most packages are built on top of other packages in the system. The
+<tt>import </tt>command specifies a package to be imported in the build
+process. It is quite common for most programs to import the <a href="../../help/gen_html/libm3/"><tt>libm3</tt>
+</a>package or the standard Modula-3 library via the instruction: <tt>import&nbsp;(&quot;libm3&quot;)</tt></p>
+</dl>
+
+<dt>
+<hr width="100%" ></dt>
+
+<p>Here are some commands that allow you to declare different kinds of
+units in your package to be included in the build:</p>
+
+<dl COMPACT>
+<p><tt>interface( &quot;<i>I&quot;</i> ) 
+<br>generic_interface( &quot;<i>I&quot; </i>)</tt></p>
+
+<dl COMPACT>
+<p>Declares that the file <tt><i>I</i>.i3</tt> (or <tt><i>I</i>.ig</tt>
+for generics) contains an interface. All interface files that you want
+to include in your build must appear in <tt>interface </tt>commands. Don't
+forget to leave the <tt>.i3</tt>/<tt>.ig</tt> extension off. </p>
+</dl>
+
+<p><tt>implementation( &quot;<i>M&quot; </i>) 
+<br>generic_implementation( &quot;<i>M&quot; </i>)</tt> </p>
+
+<dl COMPACT>
+<p>Declares that the file <tt><i>M</i>.m3</tt> (or <tt><i>M</i>.mg</tt>
+for generics) contains a module. All module files that you want to include
+in your build must appear in an <tt>implementation </tt>command. Leave
+the <tt>.m3</tt>/<tt>.mg</tt> extension off. </p>
+</dl>
+
+<p><tt>module( &quot;<i>X&quot;</i> ) 
+<br>generic_module( &quot;<i>X&quot;</i> )</tt> </p>
+
+<dl COMPACT>
+<p>Declares <tt><i>X</i>.i3</tt> and <tt><i>X</i>.m3</tt> with one command
+(<tt><i>X</i>.ig</tt> and <tt><i>X</i>.mg</tt> for generics).</p>
+
+<p>The module command is really a short-hand for doing both an interface
+and an implementation. This is probably the command used most often, as
+many Modula-3 modules consist of just one interface and one implementation.</p>
+</dl>
+</dl>
+
+<p>All the above calls declare their arguments to be built as <i>private</i>,
+i.e., they are visible only within the current package. To declare an interface
+or module as <i>public</i>, so that other people can access it, you can
+use the capitalized version of the same command, for example: <tt>Interface()</tt>
+and <tt>Implementation()</tt>. </p>
+
+<p>
+<hr width="100%" ></p>
+
+<p>Most packages either build an executable or a library to be used by
+other executables.&nbsp;Here are the basic commands that allow you to build
+either a program or a library.</p>
+
+<dl COMPACT>
+<p><tt>program( &quot;<i>executable-name&quot; </i>)</tt> </p>
+
+<dl COMPACT>
+<p>An <tt>m3makefile </tt>generally has one program command. This specifies
+what to name the program executable, which happens to be the result of
+the build.</p>
+</dl>
+
+<p><tt>library( &quot;<i>library-name&quot; </i>)</tt> </p>
+
+<dl COMPACT>
+<p>If the <tt>m3makefile</tt> is describing a collection of interfaces
+and modules that are designed to be a library instead of an executable
+program, use this command instead of <tt>program()</tt>. </p>
+</dl>
+</dl>
+</dl>
+
+<p>
+<hr>Go to the <a href="m3_1.html">first</a>, <a href="m3_4.html">previous</a>,
+<a href="m3_6.html">next</a>, <a href="m3_83.html">last</a> section, <a href="m3_toc.html">table
+of contents</a>. </p>
+
+</body>
+</html>

@@ -1,0 +1,80 @@
+<html>
+<head>
+   <title>Modula-3 - Word Interface</title>
+   <meta name="GENERATOR" content="Mozilla/2.0GoldB2 (Win32)">
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+<body>
+<!-- This HTML file has been created by texi2html 1.31
+     from /home/jove/stu/ss0005/m3/info/m3.texi on 8 March 1995 -->Go
+to the <a href="m3_1.html">first</a>, <a href="m3_82.html">previous</a>,
+next, last section, <a href="m3_toc.html">table of contents</a>. 
+<hr>
+<h3><a name="SEC83"></a><a href="m3_toc.html#SEC83" NAME="SEC83">Word Interface</a></h3>
+
+<p>The Word interface defines the unsigned numeric type <tt>Word.T</tt>
+and arithmetic and bitwise operations on unsigned numbers. Note that because
+<tt>Word.T</tt> = <tt>INTEGER</tt>, these routines can take <tt>INTEGER
+</tt>arguments as well. </p>
+
+<pre>INTERFACE Word;
+
+TYPE
+  T = INTEGER;
+
+CONST
+  Size : INTEGER = BITSIZE (T);  (* implementation-dependent;
+                                    probably at least 32      *)
+
+PROCEDURE Plus (x, y: T): T;         (* (x + y) MOD 2^[Word.Size] *)
+PROCEDURE Times (x, y: T): T;        (* (x * y) MOD 2^[Word.Size] *)
+PROCEDURE Minus (x, y: T): T;        (* (x - y) MOD 2^[Word.Size] *)
+PROCEDURE Divide (x, y: T): T;       (* x divided by y *)
+PROCEDURE Mod (x, y: T): T;          (* x MOD y *)
+PROCEDURE LT (x, y: T): BOOLEAN;     (* x &lt; y *)
+PROCEDURE LE (x, y: T): BOOLEAN;     (* x &lt;= y *)
+PROCEDURE GT (x, y: T): BOOLEAN;     (* x &gt; y *)
+PROCEDURE GE (x, y: T): BOOLEAN;     (* x &gt;= y *)
+PROCEDURE And (x, y: T): T;          (* Bitwise AND of x and y *)
+PROCEDURE Or (x, y: T): T;           (* Bitwise OR of x and y *)
+PROCEDURE Xor (x, y: T): T;          (* Bitwise XOR of x and y *)
+PROCEDURE Not (x: T): T;             (* Bitwise complement of x *)
+
+PROCEDURE Shift (x: T; n: INTEGER): T;
+(* For all i such that both i and i - n are in the range [0 .. Word.Size - 1],
+   bit i of the result equals bit i - n of x. The other bits of the result are
+   0. Thus, shifting by n &gt; 0 is like multiplying by 2^(n) *)
+
+PROCEDURE LeftShift (x: T; n: [0..Size-1]): T;
+(* = Shift (x, n) *)
+
+PROCEDURE RightShift (x: T; n: [0..Size-1]): T;
+(* = Shift (x, -n) *)
+
+PROCEDURE Rotate (x: T; n: INTEGER): T;
+(* Bit i of the result equals bit (i - n) MOD Word.Size of x. *)
+
+PROCEDURE LeftRotate (x: T; n: [0..Size-1]): T;
+(* = Rotate (x, n) *)
+
+PROCEDURE RightRotate (x: T; n: [0..Size-1]): T;
+(* = Rotate (x, -n) *)
+ 
+PROCEDURE Extract (x: T; i, n: CARDINAL): T;
+(* Take n bits from x, with bit i as the least significant bit, and return them
+   as the least significant n bits of a word whose other bits are 0. A checked
+   runtime error if n + i &gt; Word.Size. *)
+
+PROCEDURE Insert (x, y: T; i, n: CARDINAL): T;
+(* Return x with n bits replaced, with bit i as the least significant bit, by
+   the least significant n bits of y. The other bits of x are unchanged. A
+   checked runtime error if n + i &gt; Word.Size. *)
+
+END Word.
+</pre>
+
+<p>
+<hr>Go to the <a href="m3_1.html">first</a>, <a href="m3_82.html">previous</a>,
+next, last section, <a href="m3_toc.html">table of contents</a>. </p>
+
+</body>
+</html>

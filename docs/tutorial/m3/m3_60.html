@@ -1,0 +1,83 @@
+<html>
+<head>
+   <title>Modula-3 - TRACE Pragma</title>
+   <meta name="GENERATOR" content="Mozilla/2.0GoldB2 (Win32)">
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+<body>
+<!-- This HTML file has been created by texi2html 1.31
+     from /home/jove/stu/ss0005/m3/info/m3.texi on 8 March 1995 -->Go
+to the <a href="m3_1.html">first</a>, <a href="m3_59.html">previous</a>,
+<a href="m3_61.html">next</a>, <a href="m3_83.html">last</a> section, <a href="m3_toc.html">table
+of contents</a>. 
+<hr>
+<h3><a name="SEC60"></a><a name="SEC60"></a><a name="SEC60"></a><a name="SEC60"></a><a name="SEC60"></a><a name="SEC60"></a><a href="m3_toc.html#SEC60"><b><tt>TRACE</tt></b>
+Pragma</a></h3>
+
+<ul>
+<pre>&lt;* <b>TRACE </b><i>trace-pro<tt>c<b> </b></tt></i><tt>*&gt;</tt>
+</pre>
+</ul>
+
+<p>The <tt>TRACE&nbsp;</tt>pragma may appear at the end of any variable
+or formal declaration. This pragma will generate tracing calls whenever
+the declared variable is modified. The <i><tt>trace-proc</tt></i> must
+evaluate to a procedure of two arguments. The first argument is the name
+of the traced variable, a <tt>TEXT</tt>. The second argument is the traced
+variable. Note that any of the formal passing modes may be used with the
+second argument. </p>
+
+<p>The pragma <tt>&lt;*TRACE <i>stmt-list</i>*&gt;</tt> may appear immediately
+after any <tt>BEGIN</tt>. The specified &quot;stmt-list&quot; will be inserted
+after each statement of the block started by the <tt>BEGIN</tt>.</p>
+
+<p>
+<hr width="100%" ></p>
+
+<h4>Example</h4>
+
+<ul>
+<pre>MODULE M;
+VAR x: Foo &lt;* <b>TRACE </b>MyTrace.FooChanged *&gt;;
+</pre>
+</ul>
+
+<p>will cause </p>
+
+<ul>
+<pre>MyTrace.FooChanged (&quot;M.x&quot;, x)
+</pre>
+</ul>
+
+<p>to be generated after each statement that modifies x. Variable aliasing
+is not tracked, so </p>
+
+<ul>
+<pre>WITH  alias = x DO  INC(alias) END
+</pre>
+</ul>
+
+<p>will not generate any tracing. </p>
+
+<p>
+<hr width="100%" ></p>
+
+<h4>Example</h4>
+
+<p>The fragment:</p>
+
+<ul>
+<pre><b>BEGIN </b>&lt;* <b>TRACE  </b>INC(cnt); MyTrace(cnt) *&gt;
+  i := j;
+  j := i;
+END;
+</pre>
+</ul>
+
+<p>will generate <tt>INC(cnt); MyTrace(cnt)</tt> after each of the assignment
+statements. 
+<hr>Go to the <a href="m3_1.html">first</a>, <a href="m3_59.html">previous</a>,
+<a href="./m3_61.html">next</a>, <a href="m3_83.html">last</a> section,
+<a href="m3_toc.html">table of contents</a>. </p>
+
+</body>
+</html>

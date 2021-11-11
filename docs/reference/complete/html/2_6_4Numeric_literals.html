@@ -1,0 +1,130 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<!--Converted with LaTeX2HTML 2008 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>2.6.4 Numeric literals</TITLE>
+<META NAME="description" CONTENT="2.6.4 Numeric literals">
+<META NAME="keywords" CONTENT="m3-defn-complete">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2008">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="/cm3/normal.css">
+
+<LINK REL="next" HREF="2_6_5Text_character.html">
+<LINK REL="previous" HREF="2_6_3Designators.html">
+<LINK REL="up" HREF="2_6Expressions.html">
+<LINK REL="next" HREF="2_6_5Text_character.html">
+</HEAD>
+
+<BODY >
+
+<DIV CLASS="navigation"><!--Navigation Panel-->
+<A NAME="tex2html808"
+  HREF="2_6_5Text_character.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html806"
+  HREF="2_6Expressions.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html800"
+  HREF="2_6_3Designators.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A>   
+<BR>
+<B> Next:</B> <A NAME="tex2html809"
+  HREF="2_6_5Text_character.html">2.6.5 Text and character</A>
+<B> Up:</B> <A NAME="tex2html807"
+  HREF="2_6Expressions.html">2.6 Expressions</A>
+<B> Previous:</B> <A NAME="tex2html801"
+  HREF="2_6_3Designators.html">2.6.3 Designators</A>
+<BR>
+<BR></DIV>
+<!--End of Navigation Panel-->
+
+<H3><A NAME="SECTION00019400000000000000">
+2.6.4 Numeric literals</A>
+</H3>
+
+<P>
+Numeric literals denote constant non-negative integers or reals.  The types of
+these literals are <code>INTEGER</code>, <code>LONGINT</code>, <code>REAL</code>,
+<code>LONGREAL</code>, and <code>EXTENDED</code>.
+
+<P>
+A literal <code>INTEGER</code> has the form <code>base_digits</code>, where <code>base</code> is
+one of ``<code>2</code>'', ``<code>3</code>'', ..., ``<code>16</code>'', and <code>digits</code> is a
+non-empty sequence of the decimal digits <code>0</code> through <code>9</code> plus the
+hexadecimal digits <code>A</code> through <code>F</code>.  The ``<code>base_</code>'' can be
+omitted, in which case <code>base</code> defaults to <code>10</code>.  The digits are
+interpreted in the given base.  Each digit must be less than <code>base</code>.  For
+example, <code>16_FF</code> and <code>255</code> are equivalent integer literals.
+
+<P>
+If no explicit base is present, the value of the literal must be at most
+<code>LAST(INTEGER)</code>.  If an explicit base is present, the value of the
+literal must be less than <code>2^Word.Size</code>, and its interpretation uses the
+convention of the <code>Word</code> interface.  For example, on a 32-bit two's
+complement machine, <code>16_FFFFFFFF</code> and <code>-1</code> represent the same value.
+
+<P>
+A literal <code>LONGINT</code> has the form <code>integer L</code>, where <code>integer</code>
+has the same form as a literal <code>INTEGER</code>.  If no explicit base is
+present, the value of the literal must be at most <code>LAST(LONGINT)</code>.  If an
+explicit base is present, the value of the literal must be less than
+<code>2^Long.Size</code>, and its interpretation uses the convention of the
+<code>Long</code> interface.  For example, the <code>LONGINT</code> having the value zero
+would be written <code>0L</code>.
+
+<P>
+A literal <code>REAL</code> has the form <code>decimal E exponent</code>, where
+<code>decimal</code> is a non-empty sequence of decimal digits followed by a decimal
+point followed by a non-empty sequence of decimal digits, and <code>exponent</code>
+is a non-empty sequence of decimal digits optionally beginning with a <code>+</code>
+or <code>-</code>.  The literal denotes <code>decimal</code> times <code>10^exponent</code>.  If
+``<code>E exponent</code>'' is omitted, <code>exponent</code> defaults to <code>0</code>.
+
+<P>
+<code>LONGREAL</code> and <code>EXTENDED</code> literals are like <code>REAL</code> literals,
+but instead of <code>E</code> they use <code>D</code> and <code>X</code> respectively.
+
+<P>
+Case is not significant in any letter in a numeric literal.  
+Embedded spaces are not allowed in a numeric literal.
+
+<P>
+For example, <code>1.0</code> and <code>0.5</code> are valid, <code>1.</code> and <code>.5</code> are
+not; <code>6.624E-27</code> is a <code>REAL</code>, and <code>3.1415926535d0</code> a
+<code>LONGREAL</code>.
+
+<P>
+
+<DIV CLASS="navigation"><HR>
+<!--Navigation Panel-->
+<A NAME="tex2html808"
+  HREF="2_6_5Text_character.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html806"
+  HREF="2_6Expressions.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html800"
+  HREF="2_6_3Designators.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A>   
+<BR>
+<B> Next:</B> <A NAME="tex2html809"
+  HREF="2_6_5Text_character.html">2.6.5 Text and character</A>
+<B> Up:</B> <A NAME="tex2html807"
+  HREF="2_6Expressions.html">2.6 Expressions</A>
+<B> Previous:</B> <A NAME="tex2html801"
+  HREF="2_6_3Designators.html">2.6.3 Designators</A></DIV>
+<!--End of Navigation Panel-->
+<ADDRESS>
+m3-support@elego.de
+</ADDRESS>
+</BODY>
+</HTML>

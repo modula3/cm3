@@ -1,0 +1,94 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<!--Converted with LaTeX2HTML 2008 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>2.8.8 Statement productions</TITLE>
+<META NAME="description" CONTENT="2.8.8 Statement productions">
+<META NAME="keywords" CONTENT="m3-defn-complete">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2008">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="/cm3/normal.css">
+
+<LINK REL="next" HREF="2_8_9Type_productions.html">
+<LINK REL="previous" HREF="2_8_7Compilation_unit.html">
+<LINK REL="up" HREF="2_8Syntax.html">
+<LINK REL="next" HREF="2_8_9Type_productions.html">
+</HEAD>
+
+<BODY >
+
+<DIV CLASS="navigation"><!--Navigation Panel-->
+<A NAME="tex2html1028"
+  HREF="2_8_9Type_productions.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html1026"
+  HREF="2_8Syntax.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html1020"
+  HREF="2_8_7Compilation_unit.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A>   
+<BR>
+<B> Next:</B> <A NAME="tex2html1029"
+  HREF="2_8_9Type_productions.html">2.8.9 Type productions</A>
+<B> Up:</B> <A NAME="tex2html1027"
+  HREF="2_8Syntax.html">2.8 Syntax</A>
+<B> Previous:</B> <A NAME="tex2html1021"
+  HREF="2_8_7Compilation_unit.html">2.8.7 Compilation unit productions</A>
+<BR>
+<BR></DIV>
+<!--End of Navigation Panel-->
+
+<H3><A NAME="SECTION000111800000000000000">
+2.8.8 Statement productions</A>
+</H3>
+
+<P>
+<PRE>
+Stmt = AssignSt | Block | CallSt | CaseSt | ExitSt | EvalSt | ForSt
+     | IfSt | LockSt | LoopSt | RaiseSt | RepeatSt | ReturnSt
+     | TCaseSt | TryXptSt | TryFinSt | WhileSt | WithSt.
+
+S =  [ Stmt {";" Stmt} [";"] ].
+
+AssignSt = Expr ":=" Expr.
+CallSt   = Expr "(" [Actual {"," Actual}] ")".
+CaseSt   = CASE Expr OF [Case] {"|" Case} [ELSE S] END.
+ExitSt   = EXIT.
+EvalSt   = EVAL Expr.
+ForSt    = FOR Id ":=" Expr TO Expr [BY Expr] DO S END.
+IfSt     = IF Expr THEN S {ELSIF Expr THEN S} [ELSE S] END.
+LockSt   = LOCK Expr DO S END.
+LoopSt   = LOOP S END.
+RaiseSt  = RAISE QualId ["(" Expr ")"].
+RepeatSt = REPEAT S UNTIL Expr.
+ReturnSt = RETURN [Expr].
+TCaseSt  = TYPECASE Expr OF [TCase] {"|" TCase} [ELSE S] END.
+TryXptSt = TRY S EXCEPT [Handler] {"|" Handler} [ELSE S] END.
+TryFinSt = TRY S FINALLY S END.
+WhileSt  = WHILE Expr DO S END.
+WithSt   = WITH Binding {"," Binding} DO S END.
+
+Case    = Labels {"," Labels} "=&gt;" S.
+Labels  = ConstExpr [".." ConstExpr].
+Handler = QualId {"," QualId} ["(" Id ")"] "=&gt;" S.
+TCase   = Type {"," Type} ["(" Id ")"] "=&gt;" S.
+Binding = Id "=" Expr.
+Actual  = Type | [Id ":="] Expr .
+</PRE>
+
+<P>
+<BR><HR>
+<ADDRESS>
+m3-support@elego.de
+</ADDRESS>
+</BODY>
+</HTML>

@@ -1,0 +1,59 @@
+<html>
+<head>
+   <title>Modula-3 - TRY-FINALLY Stmt</title>
+   <meta name="GENERATOR" content="Mozilla/2.0GoldB2 (Win32)">
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+<body>
+<!-- This HTML file has been created by texi2html 1.31
+     from /home/jove/stu/ss0005/m3/info/m3.texi on 8 March 1995 -->Go
+to the <a href="m3_1.html">first</a>, <a href="m3_45.html">previous</a>,
+<a href="m3_47.html">next</a>, <a href="m3_83.html">last</a> section, <a href="m3_toc.html">table
+of contents</a>. 
+<hr>
+<h4><a name="SEC46"></a><a name="SEC46"></a><a name="SEC46"></a><a name="SEC46"></a><a href="m3_toc.html#SEC46" NAME="SEC46">TRY-FINALLY
+Statement</a></h4>
+
+<ul>
+<pre><b>TRY
+  </b><i><tt>guarded-statements
+</tt></i><b>FINALLY
+  </b><i><tt>cleanup-statements
+</tt></i><b>END</b>
+</pre>
+</ul>
+
+<p>The <tt>TRY-FINALLY</tt>&nbsp;statement guarantees that cleanup-statements
+are called, no matter what happens in the <i><tt>guarded-statements</tt></i>.
+If there was an exception raised in the <i><tt>guarded-statements</tt></i>,
+then the same exception is re-raised by <tt>TRY-FINALLY</tt>.</p>
+
+<p><b><i>Note:</i></b> The <tt>TRY-FINALLY</tt> statement catches internal
+exceptions raised by all <tt>EXIT</tt> and <tt>RETURN</tt> statements.
+</p>
+
+<p>
+<hr width="100%" ></p>
+
+<h4>Example</h4>
+
+<p><tt>TRY-FINALLY</tt>&nbsp;is quite useful for clean-up activities, like
+closing file handles:</p>
+
+<ul>
+<pre>rd&nbsp;:= IO.OpenRead(&quot;myfile&quot;);
+<b>TRY
+  </b>WHILE&nbsp;NOT&nbsp;EOF(rd)&nbsp;DO
+    IO.PutLine&nbsp;(IO.GetLine(rd));
+  END;
+<b>FINALLY
+  </b>Rd.Close(rd);
+<b>END</b>;</pre>
+</ul>
+
+<p>
+<hr>Go to the <a href="m3_1.html">first</a>, <a href="m3_45.html">previous</a>,
+<a href="m3_47.html">next</a>, <a href="m3_83.html">last</a> section, <a href="m3_toc.html">table
+of contents</a>. </p>
+
+</body>
+</html>

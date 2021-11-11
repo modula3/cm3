@@ -1,0 +1,68 @@
+<HTML>
+<HEAD>
+<TITLE>Modula-3: Conventions for describing operations</TITLE>
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+<body>
+
+<P>
+<A HREF="m3.html">[top]</A>
+<A HREF="exprs.html">[prev]</A>
+<A HREF="opsyntax.html">[next]</A>
+<P>
+
+<H2>Conventions for describing operations</H2>
+<P>
+
+To describe the argument and result types of operations,
+we use a notation like procedure signatures.  But since most operations
+are too general to be described by a true procedure signature, we
+extend the notation in several ways.
+<P>
+
+The argument to an operation can be required to have a type in a particular
+class, such as an ordinal type, set type, etc.  In this case the formal
+specifies a type class instead of a type.  For example:
+<PRE>
+    ORD (x: Ordinal): Integer
+</PRE>
+The formal type <TT>Any</TT> specifies an argument of any type.
+<P>
+
+<A NAME=idx.152>A</A>
+single operation name can be overloaded, which means that it denotes
+more than one operation.  In this case, we write a separate signature
+for each of the operations.  For example:
+<PRE>
+    ABS (x: Integer) : Integer
+        (x: Float)   : Float
+</PRE>
+The particular operation will be selected so that each actual argument
+type is a subtype of the corresponding formal type or a member
+of the corresponding formal type class.  
+<P>
+
+The argument to an operation can be an expression denoting a type.
+In this case, we write <TT>Type</TT> as the argument type.  For example:
+<PRE>
+    BYTESIZE (T: Type): CARDINAL
+</PRE>
+The result type of an operation can depend on its argument values
+(although the result type can always be determined statically).  In
+this case, the expression for the result type contains the
+appropriate arguments.
+For example:
+<PRE>
+    FIRST (T: FixedArrayType): IndexType(T)
+</PRE>
+<TT>IndexType(T)</TT> denotes the index type of the array type <TT>
+T</TT> and <TT>IndexType(a)</TT> denotes the index type of the array <TT>
+a</TT>. The definitions of <TT>ElemType(T)</TT> and <TT>ElemType(a)</TT> 
+are similar.
+<P>
+
+<P>
+<A HREF="m3.html">[top]</A>
+<A HREF="exprs.html">[prev]</A>
+<A HREF="opsyntax.html">[next]</A>
+</BODY>
+</HTML>

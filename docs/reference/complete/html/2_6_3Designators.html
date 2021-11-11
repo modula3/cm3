@@ -1,0 +1,176 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<!--Converted with LaTeX2HTML 2008 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>2.6.3 Designators</TITLE>
+<META NAME="description" CONTENT="2.6.3 Designators">
+<META NAME="keywords" CONTENT="m3-defn-complete">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2008">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="/cm3/normal.css">
+
+<LINK REL="next" HREF="2_6_4Numeric_literals.html">
+<LINK REL="previous" HREF="2_6_2Operation_syntax.html">
+<LINK REL="up" HREF="2_6Expressions.html">
+<LINK REL="next" HREF="2_6_4Numeric_literals.html">
+</HEAD>
+
+<BODY >
+
+<DIV CLASS="navigation"><!--Navigation Panel-->
+<A NAME="tex2html798"
+  HREF="2_6_4Numeric_literals.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html796"
+  HREF="2_6Expressions.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html790"
+  HREF="2_6_2Operation_syntax.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A>   
+<BR>
+<B> Next:</B> <A NAME="tex2html799"
+  HREF="2_6_4Numeric_literals.html">2.6.4 Numeric literals</A>
+<B> Up:</B> <A NAME="tex2html797"
+  HREF="2_6Expressions.html">2.6 Expressions</A>
+<B> Previous:</B> <A NAME="tex2html791"
+  HREF="2_6_2Operation_syntax.html">2.6.2 Operation syntax</A>
+<BR>
+<BR></DIV>
+<!--End of Navigation Panel-->
+
+<H3><A NAME="SECTION00019300000000000000">
+2.6.3 Designators</A>
+</H3>
+
+<P>
+An identifier is a <SPAN  CLASS="textit">writable designator</SPAN> if it is declared as a variable,
+is a <code>VAR</code> or <code>VALUE</code> parameter, is a local of a <code>TYPECASE</code> or
+<code>TRY</code>-<code>EXCEPT</code> statement, or is a <code>WITH</code> local that is bound to a
+writable designator.  An identifier is a <SPAN  CLASS="textit">readonly designator</SPAN> if it is a
+<code>READONLY</code> parameter, a local of a <code>FOR</code> statement, or a <code>WITH</code>
+local bound to a non-designator or readonly designator.
+
+<P>
+The only operations that produce designators are dereferencing, subscripting,
+selection, and <code>SUBARRAY</code>.  This section defines these operations and
+specifies the conditions under which they produce designators.  In unsafe
+modules, <code>LOOPHOLE</code> can also produce a designator.
+
+<P>
+<DL>
+<DT></DT>
+<DD><code>r^</code> 
+<BR>
+denotes the the referent of <code>r</code>; this operation is called
+  <SPAN  CLASS="textit">dereferencing</SPAN>.  The expression <code>r^</code> is always a writable
+  designator.  It is a static error if the type of <code>r</code> is <code>REFANY</code>,
+  <code>ADDRESS</code>, <code>NULL</code>, an object type, or an opaque type, and a
+  checked runtime error if <code>r</code> is <code>NIL</code>.  The type of <code>r^</code> is
+  the referent type of <code>r</code>.
+</DD>
+<DT></DT>
+<DD><code>a[i]</code> 
+<BR>
+denotes the <code>(i + 1 - FIRST(a))</code>-th element of the array <code>a</code>.  The
+  expression <code>a[i]</code> is a designator if <code>a</code> is, and is writable if
+  <code>a</code> is.  The expression <code>i</code> must be assignable to the index type
+  of <code>a</code>.  The type of <code>a[i]</code> is the element type of <code>a</code>.
+
+<P>
+An expression of the form <code>a[i_1, ..., i_n]</code> is shorthand for
+  <code>a[i_1]...[i_n]</code>.  If <code>a</code> is a reference to an array, then
+  <code>a[i]</code> is shorthand for <code>a^[i]</code>.
+</DD>
+<DT></DT>
+<DD><code>r.f</code>, <code>o.f</code>, <code>I.x</code>, <code>T.m</code>, <code>E.id</code> 
+<BR>
+If <code>r</code> denotes a record, <code>r.f</code> denotes its <code>f</code> field.  In
+  this case <code>r.f</code> is a designator if <code>r</code> is, and is writable if
+  <code>r</code> is.  The type of <code>r.f</code> is the declared type of the field.
+
+<P>
+If <code>r</code> is a reference to a record, then <code>r.f</code> is shorthand for
+  <code>r^.f</code>.
+
+<P>
+If <code>o</code> denotes an object and <code>f</code> names a data field specified in
+  the type of <code>o</code>, then <code>o.f</code> denotes that data field of <code>o</code>.
+  In this case <code>o.f</code> is a writable designator whose type is the declared
+  type of the field.
+
+<P>
+If <code>I</code> denotes an imported interface, then <code>I.x</code> denotes the
+  entity named <code>x</code> in the interface <code>I</code>.  In this case <code>I.x</code> is
+  a designator if <code>x</code> is declared as a variable; such a designator is
+  always writable.
+
+<P>
+If <code>T</code> is an object type and <code>m</code> is the name of one of <code>T</code>'s
+  methods, then <code>T.m</code> denotes the m method of type <code>T</code>.  In this
+  case <code>T.m</code> is not a designator.  Its type is the procedure type whose
+  first argument has mode <code>VALUE</code> and type <code>T</code>, and whose remaining
+  arguments are determined by the method declaration for <code>m</code> in <code>T</code>.
+  The name of the first argument is unspecified; thus in calls to <code>T.m</code>,
+  this argument must be given positionally, not by keyword.  <code>T.m</code> is a
+  procedure constant.
+
+<P>
+If <code>E</code> is an enumerated type, then <code>E.id</code> denotes its value named
+  <code>id</code>.  In this case <code>E.id</code> is not a designator.  The type of
+  <code>E.id</code> is <code>E</code>.
+</DD>
+<DT></DT>
+<DD><code>SUBARRAY(a: Array; from, for: CARDINAL): ARRAY OF ElemType(a)</code> 
+<BR>  <code>SUBARRAY</code> produces a subarray of <code>a</code>.  It does not copy the
+  array; it is a designator if <code>a</code> is, and is writable if <code>a</code> is.
+  If <code>a</code> is a multi-dimensional array, <code>SUBARRAY</code> applies only to
+  the top-level array.
+
+<P>
+The operation returns the subarray that skips the first <code>from</code> elements
+  of <code>a</code> and contains the next <code>for</code> elements.  Note that if
+  <code>from</code> is zero, the subarray is a prefix of <code>a</code>, whether the type
+  of <code>a</code> is zero-based or not.  It is a checked runtime error if
+  <code>from+for</code> exceeds <code>NUMBER(a)</code>.
+
+<P>
+Implementations may restrict or prohibit the <code>SUBARRAY</code> operation for
+  arrays with packed element types.
+</DD>
+</DL>
+
+<P>
+
+<DIV CLASS="navigation"><HR>
+<!--Navigation Panel-->
+<A NAME="tex2html798"
+  HREF="2_6_4Numeric_literals.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html796"
+  HREF="2_6Expressions.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html790"
+  HREF="2_6_2Operation_syntax.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A>   
+<BR>
+<B> Next:</B> <A NAME="tex2html799"
+  HREF="2_6_4Numeric_literals.html">2.6.4 Numeric literals</A>
+<B> Up:</B> <A NAME="tex2html797"
+  HREF="2_6Expressions.html">2.6 Expressions</A>
+<B> Previous:</B> <A NAME="tex2html791"
+  HREF="2_6_2Operation_syntax.html">2.6.2 Operation syntax</A></DIV>
+<!--End of Navigation Panel-->
+<ADDRESS>
+m3-support@elego.de
+</ADDRESS>
+</BODY>
+</HTML>

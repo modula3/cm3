@@ -1,0 +1,26 @@
+<HTML>
+<HEAD>
+<TITLE>CM Modula-3: builder support for network objects</TITLE>
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+<body>
+
+<H2>Network object support</H2>
+<P>
+
+The following procedures are used to build programs using
+network objects.
+<P>
+
+<B> netobj(X,T) </B>
+      runs the network objects stub generator on the interface <TT>X.i3</TT>
+      to produce the network object glue needed to manipulate objects
+      of type <TT>X.T</TT>.  The resulting source files are included
+      in the current build.
+<P>
+
+<B> Netobj(X,T) </B>
+      Like <TT>netobj</TT>, but also exports the resulting interface.
+<P>
+
+</BODY>
+</HTML>

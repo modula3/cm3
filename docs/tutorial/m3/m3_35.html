@@ -1,0 +1,70 @@
+<html>
+<head>
+   <title>Modula-3 - FOR Stmt</title>
+   <meta name="GENERATOR" content="Mozilla/2.0GoldB2 (Win32)">
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+<body>
+<!-- This HTML file has been created by texi2html 1.31
+     from /home/jove/stu/ss0005/m3/info/m3.texi on 8 March 1995 -->Go
+to the <a href="m3_1.html">first</a>, <a href="m3_34.html">previous</a>,
+<a href="m3_36.html">next</a>, <a href="m3_83.html">last</a> section, <a href="m3_toc.html">table
+of contents</a>. 
+<hr>
+<h4><a name="SEC35"></a><a name="SEC35"></a><a name="SEC35"></a><a href="m3_toc.html#SEC35" NAME="SEC35">FOR
+Statement</a></h4>
+
+<ul>
+<pre><b>FOR </b><i>id</i> &quot;:=&quot; <i>expr1</i> <b>TO </b><i>expr2</i> [ <b>BY </b><i>stepval</i> ] <b>DO </b><i>stmts </i><b>END</b>
+</pre>
+</ul>
+
+<p>Initializes <i><tt>id </tt></i>to <i><tt>expr1</tt></i>, evaluates <i><tt>expr1
+</tt></i>and <i><tt>expr2</tt></i>, then executes <i><tt>stmts</tt></i>,
+increments <i><tt>id</tt></i> by <i><tt>stepval</tt></i> (by 1 if <i><tt>stepval
+</tt></i>is not specified), and loops if <i><tt>id </tt></i>&lt;= <i><tt>expr2</tt></i>.
+If <i><tt>stepval</tt></i> is negative, then loops while <i><tt>id </tt></i>&gt;=
+<i><tt>expr2</tt></i>. </p>
+
+<p><i><tt>expr1 </tt></i>and <i><tt>expr2 </tt></i>must both be of the
+same ordinal type (see section <a href="m3_17.html#SEC17">Ordinal Types</a>).
+<i><tt>id </tt></i>is defined locally by the <tt>FOR </tt>loop as a <tt>READONLY</tt>
+variable, and its type is the type common to <i><tt>expr1 </tt></i>and
+<i><tt>expr2</tt></i>. </p>
+
+<p>
+<hr width="100%" ></p>
+
+<h4>Example</h4>
+
+<ul>
+<pre>VAR i: INTEGER := 5;
+    x: INTEGER;
+BEGIN
+  <b>FOR </b>i := 1 TO 10 <b>DO  </b>x := i  <b>END</b>; (* FOR *)
+  IO.PutInt(i);   (* Puts '5', because the 'i' in the FOR loop isn't the same 
+                     as this 'i' *)
+  IO.PutInt(x);   (* Puts '10' because 'x' was assigned the value of the 'i'
+                     in the FOR loop *)
+END</pre>
+</ul>
+
+<pre>
+<hr width="100%" ></pre>
+
+<h4>Example</h4>
+
+<p>Print the letters <tt>'A'..'E'</tt> using the <tt>CHAR </tt>ordinal
+type for the <tt>FOR </tt>limits: </p>
+
+<ul>
+<pre><b>FOR </b>i := 'A' TO 'E' <b>DO </b>IO.PutChar(i) <b>END  </b>(* 'i' is of type CHAR *)
+</pre>
+</ul>
+
+<p>
+<hr>Go to the <a href="m3_1.html">first</a>, <a href="m3_34.html">previous</a>,
+<a href="m3_36.html">next</a>, <a href="m3_83.html">last</a> section, <a href="m3_toc.html">table
+of contents</a>. </p>
+
+</body>
+</html>

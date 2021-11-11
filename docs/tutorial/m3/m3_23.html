@@ -1,0 +1,98 @@
+<html>
+<head>
+   <title>Modula-3 - Procedure Types</title>
+   <meta name="GENERATOR" content="Mozilla/2.0GoldB2 (Win32)">
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+<body>
+Go to the <a href="m3_1.html">first</a>, <a href="m3_22.html">previous</a>,
+<a href="m3_24.html">next</a>, <a href="m3_83.html">last</a> section, <a href="m3_toc.html">table
+of contents</a>. 
+<hr>
+<h4><a name="SEC23"></a><a name="SEC23"></a><a name="SEC23"></a><a name="SEC23"></a><a href="m3_toc.html#SEC23" NAME="SEC23">Procedure
+Types</a></h4>
+
+<ul>
+<pre><b>PROCEDURE </b><i><tt>signature
+signature </tt></i>= &quot;(&quot; { <i><tt>formal-parameter</tt></i> &quot;;&quot; ... } &quot;)&quot; 
+           [ &quot;:&quot; <i>result-type</i> ]
+           [ <b>RAISES </b>( <b>ANY </b>| &quot;{&quot; { <i><tt>exception</tt></i> &quot;,&quot; ... } &quot;}&quot; ) ] 
+ 
+<i><tt>formal-parameter</tt></i> = [ <b>VAR </b>| <b>READONLY </b>| <b>VALUE </b>]  { &quot;,&quot; <i>parameter-name</i> ... } 
+           [ &quot;:&quot; <i><tt>parameter-type</tt></i> ] [ &quot;:=&quot; <i>constant-expression</i> ]
+</pre>
+</ul>
+
+<p>If a <i><tt>result-type</tt></i> for the procedure is specified, then
+the procedure must return a value of that type using a <tt>RETURN </tt>statement.
+</p>
+
+<p>If a <i><tt>constant-expression</tt></i> is supplied as a default value
+for a <i><tt>formal-parameter</tt></i>, the type for the parameter may
+be omitted. When the procedure is called, if an argument is not supplied
+for a formal parameter with a default value, the default value is used
+instead</p>
+
+<p>The <tt>RAISES </tt>section specifies which exceptions the procedure
+may raise. Any exceptions that occur in the procedure---possibly as the
+result of a call to another procedure---that are not handled by the procedure
+and that do not appear in the <tt>RAISES </tt>clause cause a checked run-time
+error. If the <tt>RAISES </tt>section is omitted, then any exceptions raised
+cause a checked run-time error. </p>
+
+<p>The <tt>VAR</tt>, <tt>VALUE</tt>, and <tt>READONLY </tt>parameter modes
+determine how the actual argument is associated with the formal parameter:
+</p>
+
+<dl COMPACT>
+<p><b><tt>VALUE</tt></b></p>
+
+<dl COMPACT>
+<p>This is the default mode, and means &quot;call by value.&quot; The formal
+parameter contains a copy of the value of the actual argument. Changes
+to the formal parameter do not affect the actual argument. </p>
+</dl>
+</dl>
+
+<p><b><tt>VAR </tt></b></p>
+
+<dl COMPACT>
+<dl COMPACT>
+<p>This means &quot;call by reference.&quot; The formal parameter is linked
+to the actual argument. Changes to the formal parameter are reflected in
+the actual argument. In general, the actual argument must be a variable.
+No default value may be specified. </p>
+</dl>
+</dl>
+
+<p><b><tt>READONLY</tt></b></p>
+
+<ul>
+<p>This means generally &quot;call by reference,&quot; but the procedure
+may not modify the formal parameter. This provides the protection of call
+by value with the efficiency of call by reference, and should be used when
+large arrays or records need to be passed as parameters but should not
+be changed. </p>
+</ul>
+
+<p>
+<hr width="100%" ></p>
+
+<h4>Example</h4>
+
+<p>Here we declare a new procedure type <tt>Handler </tt>which use used
+by the RegisterHandler routine.</p>
+
+<ul>
+<pre><b>TYPE 
+</b>  Handler = <b>PROCEDURE&nbsp;</b>(win:&nbsp;Window.T; time:&nbsp;Time.T):&nbsp;BOOLEAN&nbsp;<b>RAISES&nbsp;ANY</b>;
+
+PROCEDURE&nbsp;RegisterHandler (win:&nbsp;Window.T; h:&nbsp;Handler);</pre>
+</ul>
+
+<p>
+<hr>Go to the <a href="m3_1.html">first</a>, <a href="m3_22.html">previous</a>,
+<a href="m3_24.html">next</a>, <a href="m3_83.html">last</a> section, <a href="m3_toc.html">table
+of contents</a>. </p>
+
+</body>
+</html>

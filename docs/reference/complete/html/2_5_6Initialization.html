@@ -1,0 +1,83 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<!--Converted with LaTeX2HTML 2008 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>2.5.6 Initialization</TITLE>
+<META NAME="description" CONTENT="2.5.6 Initialization">
+<META NAME="keywords" CONTENT="m3-defn-complete">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2008">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="/cm3/normal.css">
+
+<LINK REL="next" HREF="2_5_7Safety.html">
+<LINK REL="previous" HREF="2_5_5Generics.html">
+<LINK REL="up" HREF="2_5Modules_interfaces.html">
+<LINK REL="next" HREF="2_5_7Safety.html">
+</HEAD>
+
+<BODY >
+
+<DIV CLASS="navigation"><!--Navigation Panel-->
+<A NAME="tex2html735"
+  HREF="2_5_7Safety.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html733"
+  HREF="2_5Modules_interfaces.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html727"
+  HREF="2_5_5Generics.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A>   
+<BR>
+<B> Next:</B> <A NAME="tex2html736"
+  HREF="2_5_7Safety.html">2.5.7 Safety</A>
+<B> Up:</B> <A NAME="tex2html734"
+  HREF="2_5Modules_interfaces.html">2.5 Modules and interfaces</A>
+<B> Previous:</B> <A NAME="tex2html728"
+  HREF="2_5_5Generics.html">2.5.5 Generics</A>
+<BR>
+<BR></DIV>
+<!--End of Navigation Panel-->
+
+<H3><A NAME="SECTION00018600000000000000">
+2.5.6 Initialization</A>
+</H3>
+
+<P>
+The order of execution of the modules in a program is constrained by the
+following rule:
+
+<P>
+If module <code>M</code> depends on module <code>N</code> and <code>N</code> does not depend on
+<code>M</code>, then <code>N</code>'s body will be executed before <code>M</code>'s body, where:
+
+<UL>
+<LI>A module <code>M</code> <SPAN  CLASS="textit">depends on</SPAN> a module <code>N</code> if <code>M</code> uses
+  an interface that <code>N</code> exports or if <code>M</code> depends on a module that
+  depends on <code>N</code>.
+</LI>
+<LI>A module <code>M</code> <SPAN  CLASS="textit">uses</SPAN> an interface <code>I</code> if <code>M</code> imports
+  or exports <code>I</code> or if <code>M</code> uses an interface that (directly or
+  indirectly) imports <code>I</code>.
+</LI>
+</UL>
+
+<P>
+Except for this constraint, the order of execution is
+implementation-dependent.
+
+<P>
+<BR><HR>
+<ADDRESS>
+m3-support@elego.de
+</ADDRESS>
+</BODY>
+</HTML>

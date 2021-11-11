@@ -1,0 +1,122 @@
+<html>
+<head>
+   <title>Modula-3 - Other Makefile Commands</title>
+   <meta name="GENERATOR" content="Mozilla/2.0GoldB2 (Win32)">
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+<body>
+Go to the <a href="m3_1.html">first</a>,
+<a href="m3_5.html">previous</a>, <a href="m3_7.html">next</a>, <a href="m3_83.html">last</a>
+section, <a href="m3_toc.html">table of contents</a>. 
+<hr>
+<h3><a name="SEC6"></a><a name="SEC6"></a><a name="SEC6"></a><a name="SEC6"></a><a name="SEC6"></a><a name="SEC6"></a><a name="SEC6"></a><a name="SEC6"></a><a name="SEC6"></a><a href="m3_toc.html#SEC6" NAME="SEC6">Other
+Makefile Commands</a></h3>
+
+<dl COMPACT>
+<p>Here we describe some of the more sophisticated m3makefile commands
+for reference. You won't need most of these commands for normal use of
+<tt>m3makefiles</tt>.</p>
+
+<dl COMPACT>
+<p><tt>override( &quot;<i>pkg&quot; </i>, &quot;<i>dir&quot; </i>)</tt>
+</p>
+
+<dl COMPACT>
+<p>Look in directory <tt><i>dir</i>/<i>pkg</i></tt> for the package <i><tt>pkg
+</tt></i>instead of looking in the public repository. Use this command
+in conjunction with the <tt>import(P)</tt> when you want to import from
+a private library instead of the publicly shipped package.</p>
+</dl>
+
+<p><tt>c_source( &quot;file&quot; )</tt> </p>
+
+<dl COMPACT>
+<p>Declares that the file <tt>file.c</tt> contains C source code. </p>
+</dl>
+
+<p><tt>import_lib( &quot;<i>name&quot; </i>, &quot;<i>dir&quot; </i>)</tt>
+</p>
+
+<dl COMPACT>
+<p>If <tt><i>dir</i>/lib<i>name</i>.a</tt> is a library, includes <tt>-L<i>dir</i></tt>
+<tt>-l<i>name</i></tt> in the final link command. Otherwise, includes <tt>-l<i>name</i></tt>
+in the final link command. This command is quite useful in importing foreign
+libraries, like Win32, or X11.</p>
+</dl>
+
+<p><tt>import_obj( &quot;<i>libname&quot; </i>)</tt></p>
+
+<dl COMPACT>
+<p>Include <i><tt>libname </tt></i>in the final link command. </p>
+</dl>
+
+<p><tt>m3_option( &quot;<i>option&quot; </i>) 
+<br>remove_m3_option( &quot;<i>option&quot; </i>)</tt> </p>
+
+<dl COMPACT>
+<p>Add or remove option <i><tt>option </tt></i>to or from list of compiler
+options. <i><tt>Option </tt>must be enclosed in quotes; </i>it can contain:</p>
+
+<p><tt>-why</tt><i> </i></p>
+
+<dl COMPACT>
+<p>Explain why each compilation is needed (default). </p>
+</dl>
+
+<p><tt>-commands</tt> </p>
+
+<dl COMPACT>
+<p>Print the compilation commands as they are started. </p>
+</dl>
+
+<p><tt>-verbose</tt> </p>
+
+<dl COMPACT>
+<p>Print what happens to each file. </p>
+</dl>
+
+<p><tt>-times</tt> </p>
+
+<dl COMPACT>
+<p>Print a breakdown of elapsed time. </p>
+</dl>
+
+<p><tt>-g</tt> </p>
+
+<dl COMPACT>
+<p>Generate debugging symbols (default). </p>
+</dl>
+
+<p><tt>-O</tt> </p>
+
+<dl COMPACT>
+<p>Optimize code. </p>
+</dl>
+
+<p><tt>-a</tt> </p>
+
+<dl COMPACT>
+<p>Turn off <tt>&lt;*ASSERT*&gt;</tt> checking. </p>
+</dl>
+
+<p><tt>-keep</tt> </p>
+
+<dl COMPACT>
+<p>Preserve intermediate files. </p>
+</dl>
+
+<p><tt>-once</tt> </p>
+
+<dl COMPACT>
+<p>Don't recompile modules with new opaque info. </p>
+</dl>
+</dl>
+</dl>
+</dl>
+
+<p>
+<hr>Go to the <a href="m3_1.html">first</a>, <a href="m3_5.html">previous</a>,
+<a href="m3_7.html">next</a>, <a href="m3_83.html">last</a> section, <a href="m3_toc.html">table
+of contents</a>. </p>
+
+</body>
+</html>

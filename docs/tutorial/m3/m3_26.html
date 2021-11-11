@@ -1,0 +1,43 @@
+<html>
+<head>
+   <title>Modula-3 - Exceptions</title>
+   <meta name="GENERATOR" content="Mozilla/2.0GoldB2 (Win32)">
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+<body>
+<!-- This HTML file has been created by texi2html 1.31
+     from /home/jove/stu/ss0005/m3/info/m3.texi on 8 March 1995 -->Go
+to the <a href="m3_1.html">first</a>, <a href="m3_25.html">previous</a>,
+<a href="m3_27.html">next</a>, <a href="m3_83.html">last</a> section, <a href="m3_toc.html">table
+of contents</a>. 
+<hr>
+<h3><a name="SEC26"></a><a name="SEC26"></a><a href="m3_toc.html#SEC26" NAME="SEC26">Exceptions</a></h3>
+
+<ul>
+<pre><b>EXCEPTION </b><i><tt>exception-name</tt></i> [ &quot;(&quot; <i><tt>parameter-type</tt></i> &quot;)&quot; ] &quot;;&quot;
+</pre>
+</ul>
+
+<p>Exceptions can only be declared at the top-level of a module or interface.
+If they will take an argument, a parameter type <i><tt>parameter-type</tt></i>
+must be specified in parentheses. </p>
+
+<h4>
+<hr width="100%" ></h4>
+
+<h4>Example</h4>
+
+<ul>
+<pre><b>EXCEPTION
+  </b>UserAbort(TEXT);
+  EndOfFile;
+
+PROCEDURE&nbsp;GetInformation RAISES&nbsp;{&nbsp;UserAbort };</pre>
+</ul>
+
+<p>
+<hr>Go to the <a href="m3_1.html">first</a>, <a href="m3_25.html">previous</a>,
+<a href="m3_27.html">next</a>, <a href="m3_83.html">last</a> section, <a href="m3_toc.html">table
+of contents</a>. </p>
+
+</body>
+</html>

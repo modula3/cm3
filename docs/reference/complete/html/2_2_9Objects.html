@@ -1,0 +1,296 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<!--Converted with LaTeX2HTML 2008 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>2.2.9 Objects</TITLE>
+<META NAME="description" CONTENT="2.2.9 Objects">
+<META NAME="keywords" CONTENT="m3-defn-complete">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2008">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="/cm3/normal.css">
+
+<LINK REL="next" HREF="2_2_10Subtyping_rules.html">
+<LINK REL="previous" HREF="2_2_8Procedures.html">
+<LINK REL="up" HREF="2_2Types.html">
+<LINK REL="next" HREF="2_2_10Subtyping_rules.html">
+</HEAD>
+
+<BODY >
+
+<DIV CLASS="navigation"><!--Navigation Panel-->
+<A NAME="tex2html316"
+  HREF="2_2_10Subtyping_rules.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html314"
+  HREF="2_2Types.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html308"
+  HREF="2_2_8Procedures.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A>   
+<BR>
+<B> Next:</B> <A NAME="tex2html317"
+  HREF="2_2_10Subtyping_rules.html">2.2.10 Subtyping rules</A>
+<B> Up:</B> <A NAME="tex2html315"
+  HREF="2_2Types.html">2.2 Types</A>
+<B> Previous:</B> <A NAME="tex2html309"
+  HREF="2_2_8Procedures.html">2.2.8 Procedures</A>
+<BR>
+<BR></DIV>
+<!--End of Navigation Panel-->
+
+<H3><A NAME="SECTION00015900000000000000">
+2.2.9 Objects</A>
+</H3>
+
+<P>
+An <SPAN  CLASS="textit">object</SPAN> is either <code>NIL</code> or a reference to a data record paired
+with a method suite, which is a record of procedures that will accept the
+object as a first argument.
+
+<P>
+An object type determines the types of a prefix of the fields of the data
+record, as if ``<code>OBJECT</code>'' were ``<code>REF RECORD</code>''.  But in the case
+of an object type, the data record can contain additional fields introduced by
+subtypes of the object type.  Similarly, the object type determines a prefix
+of the method suite, but the suite can contain additional methods introduced
+by subtypes.
+
+<P>
+If <code>o</code> is an object, then <code>o.f</code> designates the data field named
+<code>f</code> in <code>o</code>'s data record.  If <code>m</code> is one of <code>o</code>'s methods,
+an invocation of the form <code>o.m(...)</code> denotes an execution of <code>o</code>'s
+<code>m</code> method.  An object's methods can be invoked, but not read or written.
+
+<P>
+If <code>T</code> is an object type and <code>m</code> is the name of one of <code>T</code>'s
+methods, then <code>T.m</code> denotes <code>T</code>'s <code>m</code> method.  This notation
+makes it convenient for a subtype method to invoke the corresponding method of
+one of its supertypes.
+
+<P>
+A field or method in a subtype masks any field or method with the same name in
+the supertype.  To access such a masked field, use <code>NARROW</code> to view the
+subtype variable as a member of the supertype, as illustrated below.
+
+<P>
+Object assignment is reference assignment.  Objects cannot be dereferenced,
+since the static type of an object variable does not determine the type of its
+data record.  To copy the data record of one object into another, the fields
+must be assigned individually.
+
+<P>
+There are two predeclared object types:
+<BLOCKQUOTE>
+<TABLE CELLPADDING=3>
+<TR><TD ALIGN="LEFT"><code>ROOT</code></TD>
+<TD ALIGN="LEFT">The traced object type with no fields or methods</TD>
+</TR>
+<TR><TD ALIGN="LEFT"><code>UNTRACED ROOT</code></TD>
+<TD ALIGN="LEFT">The untraced object type with no fields or methods</TD>
+</TR>
+</TABLE>
+</BLOCKQUOTE>
+
+<P>
+The declaration of an object type has the form:
+<PRE>
+    TYPE T = ST OBJECT
+               Fields
+             METHODS
+               Methods
+             OVERRIDES
+               Overrides
+             END
+</PRE>
+where <code>ST</code> is an optional supertype, <code>Fields</code> is a list of field
+declarations, exactly as in a record type, <code>Methods</code> is a list of
+<SPAN  CLASS="textit">method declarations</SPAN> and <code>Overrides</code> is a list of <SPAN  CLASS="textit">method
+  overrides</SPAN>.  The fields of <code>T</code> consist of the fields of <code>ST</code>
+followed by the fields declared in <code>Fields</code>.  The methods of <code>T</code>
+consist of the methods of <code>ST</code> modified by <code>Overrides</code> and followed
+by the methods declared in <code>Methods</code>.  <code>T</code> has the same reference
+class as <code>ST</code>.
+
+<P>
+The names introduced in <code>Fields</code> and <code>Methods</code> must be distinct from
+one another and from the names overridden in <code>Overrides</code>.  If <code>ST</code>
+is omitted, it defaults to <code>ROOT</code>.  If <code>ST</code> is untraced, then the
+fields must not include traced types.  (This restriction is lifted in unsafe
+modules.)  If <code>ST</code> is declared as an opaque type, the declaration of
+<code>T</code> is legal only in scopes where <code>ST</code>'s concrete type is known to
+be an object type.
+
+<P>
+The keyword <code>OBJECT</code> can optionally be preceded by ``<code>BRANDED</code>'' or
+by ``<code>BRANDED b</code>'', where <code>b</code> is a text constant.  The meaning is
+the same as in non-object reference types.
+
+<P>
+A method declaration has the form:
+<PRE>
+    m sig := proc
+</PRE>
+where <code>m</code> is an identifier, <code>sig</code> is a procedure signature, and
+<code>proc</code> is a top-level procedure constant.  It specifies that <code>T</code>'s
+<code>m</code> method has signature <code>sig</code> and value <code>proc</code>.  If
+``<code>:= proc</code>'' is omitted, ``<code>:= NIL</code>'' is assumed.  If <code>proc</code>
+is non-nil, its first parameter must have mode <code>VALUE</code> and type some
+supertype of <code>T</code>, and dropping its first parameter must result in a
+signature that is covered by <code>sig</code>.
+
+<P>
+A method override has the form:
+<PRE>
+    m := proc
+</PRE>
+where <code>m</code> is the name of a method of the supertype <code>ST</code> and
+<code>proc</code> is a top-level procedure constant.  It specifies that the <code>m</code>
+method for <code>T</code> is <code>proc</code>, rather than <code>ST.m</code>.  If <code>proc</code>
+is non-nil, its first parameter must have mode <code>VALUE</code> and type some
+supertype of <code>T</code>, and dropping its first parameter must result in a
+signature that is covered by the signature of <code>ST</code>'s <code>m</code> method.
+
+<P>
+<SPAN  CLASS="textbf">Examples.</SPAN>  Consider the following declarations:
+<PRE>
+    TYPE
+      A  = OBJECT a: INTEGER; METHODS p() END;
+      AB = A OBJECT b: INTEGER END;
+
+    PROCEDURE Pa(self: A) = ... ;
+    PROCEDURE Pab(self: AB) = ... ;
+</PRE>
+The procedures <code>Pa</code> and <code>Pab</code> are candidate values for the <code>p</code>
+methods of objects of types <code>A</code> and <code>AB.</code> For example:
+<PRE>
+    TYPE T1 = AB OBJECT OVERRIDES p := Pab END
+</PRE>
+declares a type with an <code>AB</code> data record and a <code>p</code> method that
+expects an <code>AB</code>.  <code>T1</code> is a valid subtype of <code>AB</code>.  Similarly,
+<PRE>
+    TYPE T2 = A OBJECT OVERRIDES p := Pa END
+</PRE>
+declares a type with an <code>A</code> data record and a method that expects an
+<code>A</code>.  <code>T2</code> is a valid subtype of <code>A</code>.  A more interesting
+example is:
+<PRE>
+    TYPE T3 = AB OBJECT OVERRIDES p := Pa END
+</PRE>
+which declares a type with an <code>AB</code> data record and a <code>p</code> method that
+expects an <code>A</code>.  Since every <code>AB</code> is an <code>A</code>, the method is not
+too choosy for the objects in which it will be placed.  <code>T3</code> is a valid
+subtype of <code>AB</code>.  In contrast,
+<PRE>
+    TYPE T4 = A OBJECT OVERRIDES p := Pab END
+</PRE>
+attempts to declare a type with an <code>A</code> data record and a method that
+expects an <code>AB</code>; since not every <code>A</code> is an <code>AB</code>, the method is
+too choosy for the objects in which it would be placed.  The declaration of
+<code>T4</code> is a static error.
+
+<P>
+The following example illustrates the difference between declaring a new
+method and overriding an existing method.  After the declarations
+<PRE>
+    TYPE
+      A = OBJECT METHODS m() := P END;
+      B = A OBJECT OVERRIDES m := Q END;
+      C = A OBJECT METHODS m() := Q END;
+
+    VAR
+      a := NEW(A); b := NEW(B); c := NEW(C);
+</PRE>
+we have that
+<PRE>
+    a.m()  activates  P(a)
+    b.m()  activates  Q(b)
+    c.m()  activates  Q(c)
+</PRE>
+So far there is no difference between overriding and extending.  But
+<code>c</code>'s method suite has two methods, while <code>b</code>'s has only one, as can
+be revealed if <code>b</code> and <code>c</code> are viewed as members of type <code>A</code>:
+<BLOCKQUOTE>
+<TABLE CELLPADDING=3>
+<TR><TD ALIGN="LEFT"><code>NARROW(b, A).m()</code>   activates  <code>Q(b)</code></TD>
+</TR>
+<TR><TD ALIGN="LEFT"><code>NARROW(c, A).m()</code>   activates  <code>P(c)</code></TD>
+</TR>
+</TABLE>
+</BLOCKQUOTE>
+Here <code>NARROW</code> is used to view a variable of a subtype as a value of its
+supertype.  It is more often used for the opposite purpose, when it requires a
+runtime check.
+
+<P>
+The last example uses object subtyping to define reusable queues.  First the
+interface:
+<PRE>
+    TYPE
+      Queue = RECORD head, tail: QueueElem END;
+      QueueElem = OBJECT link: QueueElem END;
+
+    PROCEDURE Insert (VAR q: Queue; x: QueueElem);
+    PROCEDURE Delete (VAR q: Queue): QueueElem;
+    PROCEDURE Clear  (VAR q: Queue);
+</PRE>
+
+<P>
+Then an example client:
+<PRE>
+    TYPE
+      IntQueueElem = QueueElem OBJECT val: INTEGER END;
+    VAR
+      q: Queue;
+      x: IntQueueElem;
+      ...
+      Clear(q);
+      x := NEW(IntQueueElem, val := 6);
+      Insert(q, x);
+      ...
+      x := Delete(q)
+</PRE>
+
+<P>
+Passing <code>x</code> to <code>Insert</code> is safe, since every <code>IntQueueElem</code> is
+a <code>QueueElem</code>.  Assigning the result of <code>Delete</code> to <code>x</code> cannot
+be guaranteed valid at compile-time, since other subtypes of <code>QueueElem</code>
+can be inserted into <code>q</code>, but the assignment will produce a checked
+runtime error if the source value is not a member of the target type.  Thus
+<code>IntQueueElem</code> bears the same relation to <code>QueueElem</code> as
+<code>[0..9]</code> bears to <code>INTEGER</code>.
+
+<P>
+
+<DIV CLASS="navigation"><HR>
+<!--Navigation Panel-->
+<A NAME="tex2html316"
+  HREF="2_2_10Subtyping_rules.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html314"
+  HREF="2_2Types.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html308"
+  HREF="2_2_8Procedures.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A>   
+<BR>
+<B> Next:</B> <A NAME="tex2html317"
+  HREF="2_2_10Subtyping_rules.html">2.2.10 Subtyping rules</A>
+<B> Up:</B> <A NAME="tex2html315"
+  HREF="2_2Types.html">2.2 Types</A>
+<B> Previous:</B> <A NAME="tex2html309"
+  HREF="2_2_8Procedures.html">2.2.8 Procedures</A></DIV>
+<!--End of Navigation Panel-->
+<ADDRESS>
+m3-support@elego.de
+</ADDRESS>
+</BODY>
+</HTML>

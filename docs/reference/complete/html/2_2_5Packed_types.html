@@ -1,0 +1,81 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<!--Converted with LaTeX2HTML 2008 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>2.2.5 Packed types</TITLE>
+<META NAME="description" CONTENT="2.2.5 Packed types">
+<META NAME="keywords" CONTENT="m3-defn-complete">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2008">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="/cm3/normal.css">
+
+<LINK REL="next" HREF="2_2_6Sets.html">
+<LINK REL="previous" HREF="2_2_4Records.html">
+<LINK REL="up" HREF="2_2Types.html">
+<LINK REL="next" HREF="2_2_6Sets.html">
+</HEAD>
+
+<BODY >
+
+<DIV CLASS="navigation"><!--Navigation Panel-->
+<A NAME="tex2html276"
+  HREF="2_2_6Sets.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html274"
+  HREF="2_2Types.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html268"
+  HREF="2_2_4Records.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A>   
+<BR>
+<B> Next:</B> <A NAME="tex2html277"
+  HREF="2_2_6Sets.html">2.2.6 Sets</A>
+<B> Up:</B> <A NAME="tex2html275"
+  HREF="2_2Types.html">2.2 Types</A>
+<B> Previous:</B> <A NAME="tex2html269"
+  HREF="2_2_4Records.html">2.2.4 Records</A>
+<BR>
+<BR></DIV>
+<!--End of Navigation Panel-->
+
+<H3><A NAME="SECTION00015500000000000000">
+2.2.5 Packed types</A>
+</H3>
+
+<P>
+A declaration of a packed type has the form:
+<PRE>
+    TYPE T = BITS n FOR Base
+</PRE>
+where <code>Base</code> is a type and <code>n</code> is an integer-valued constant
+expression.  The values of type <code>T</code> are the same as the values of type
+<code>Base</code>, but variables of type <code>T</code> that occur in records, objects, or
+arrays will occupy exactly <code>n</code> bits and be packed adjacent to the
+preceding field or element.  For example, a variable of type
+<PRE>
+    ARRAY [0..255] OF BITS 1 FOR BOOLEAN
+</PRE>
+is an array of 256 booleans, each of which occupies one bit of storage.
+
+<P>
+The values allowed for <code>n</code> are implementation-dependent.  An illegal
+value for <code>n</code> is a static error.  The legality of a packed type can
+depend on its context; for example, an implementation could prohibit packed
+integers from spanning word boundaries.
+
+<P>
+<BR><HR>
+<ADDRESS>
+m3-support@elego.de
+</ADDRESS>
+</BODY>
+</HTML>

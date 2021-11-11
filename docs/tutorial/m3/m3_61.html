@@ -1,0 +1,69 @@
+<html>
+<head>
+   <title>Modula-3 - FATAL Pragma</title>
+   <meta name="GENERATOR" content="Mozilla/2.0GoldB2 (Win32)">
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+<body>
+<!-- This HTML file has been created by texi2html 1.31
+     from /home/jove/stu/ss0005/m3/info/m3.texi on 8 March 1995 -->Go
+to the <a href="m3_1.html">first</a>, <a href="m3_60.html">previous</a>,
+<a href="m3_62.html">next</a>, <a href="m3_83.html">last</a> section, <a href="m3_toc.html">table
+of contents</a>. 
+<hr>
+<h3><a name="SEC61"></a><a name="SEC61"></a><a name="SEC61"></a><a name="SEC61"></a><a name="SEC61"></a><a name="SEC61"></a><a name="SEC61"></a><a href="m3_toc.html#SEC61">FATAL
+Pragma</a></h3>
+
+<ul>
+<pre>&lt;* <b>FATAL</b> exception-list *&gt;</pre>
+
+<p><i>or</i></p>
+
+<pre>&lt;*&nbsp;<b>FATAL&nbsp;ANY</b>&nbsp;*&gt;
+</pre>
+</ul>
+
+<p>The <tt>FATAL&nbsp;</tt>pragma may appear anywhere a declaration may
+appear. It asserts that the exceptions named in <i><tt>exception-list</tt></i>
+may be raised, but unhandled in the containing scope. If they are, it's
+fatal and the program should crash. </p>
+
+<p>Effectively, the <tt>&lt;*FATAL*&gt;</tt> pragma disables &quot;potentially
+unhandled exception&quot; warnings. If the <tt>ANY</tt> parameter is used,
+the pragma applies to all exceptions. As such, you should avoid using the
+<tt>FATAL&nbsp;</tt>pragma for code that is not meant to be thrown away.</p>
+
+<p>The effects of the <tt>&lt;*FATAL*&gt;</tt> pragma are limited to its
+containing scope. For example: </p>
+
+<ul>
+<pre>MODULE&nbsp;M;
+
+EXCEPTION InternalError;
+&lt;*<b>FATAL</b> InternalError*&gt;
+</pre>
+</ul>
+
+<p>at the top-level of a module <tt>M </tt>means that no warnings will
+be generated for procedures in <tt>M </tt>that raise but don't list <tt>InternalError
+</tt>in their <tt>RAISES </tt>clauses. Similarly, </p>
+
+<ul>
+<pre>PROCEDURE X() RAISES {} =
+  BEGIN
+    ...
+    &lt;*<b>FATAL ANY</b>*&gt; BEGIN
+       List.Walk (list, proc);
+    END;
+    ...
+  END X;
+</pre>
+</ul>
+
+<p>specifies that although <tt>X</tt> raises no exceptions and <tt>List.Walk</tt>
+may, no warnings should be generated. 
+<hr>Go to the <a href="m3_1.html">first</a>, <a href="m3_60.html">previous</a>,
+<a href="m3_62.html">next</a>, <a href="m3_83.html">last</a> section, <a href="m3_toc.html">table
+of contents</a>. </p>
+
+</body>
+</html>

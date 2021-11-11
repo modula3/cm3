@@ -1,0 +1,189 @@
+<HTML>
+<HEAD>
+<TITLE>Modula-3: FloatMode interface</TITLE>
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+<body>
+
+<P>
+<A HREF="m3.html">[top]</A>
+<A HREF="float-intf.html">[prev]</A>
+<A HREF="syntax.html">[next]</A>
+<P>
+
+<H2> The FloatMode interface </H2>
+<P>
+
+The <TT>FloatMode</TT> interface allows you to test the behavior
+of rounding and of numerical exceptions.  On some implementations it
+also allows you to change the behavior, on a per-thread basis.
+<P>
+
+For definitions of the terms used in this interface, see the ANSI/IEEE
+Standard 754-1985 for floating-point arithmetic.
+<P>
+
+<PRE>
+INTERFACE FloatMode;
+
+CONST IEEE: BOOLEAN = ...;
+</PRE>
+<TT>TRUE</TT> for fully-compliant IEEE implementations.
+<P>
+
+<PRE>
+EXCEPTION Failure;
+</PRE>
+Raised by attempts to set modes that are not supported by
+the implementation.
+<P>
+
+<PRE>
+TYPE RoundingMode = 
+  {NearestElseEven, TowardMinusInfinity, TowardPlusInfinity,
+   TowardZero, NearestElseAwayFromZero, IBM370, Other};
+</PRE>
+Rounding modes.  The first four are the IEEE modes.
+<P>
+
+<PRE>
+CONST RoundDefault: RoundingMode = ...;
+</PRE>
+Implementation-dependent: the default mode for rounding arithmetic
+operations, used by a newly forked thread.  This also specifies
+the behavior of the <TT>ROUND</TT> operation in half-way cases.
+<P>
+
+<PRE>
+PROCEDURE SetRounding(md: RoundingMode) RAISES {Failure};
+</PRE>
+Change the rounding mode for the calling thread to <TT>md</TT>, or raise
+the exception if this cannot be done.  This affects the implicit
+rounding in floating-point operations; it does not affect the
+<TT>ROUND</TT> operation.  Generally this can be done only on IEEE
+implementations and only if <TT>md</TT> is an IEEE mode.
+<P>
+
+<PRE>
+PROCEDURE GetRounding(): RoundingMode;
+</PRE>
+ Return the rounding mode for the calling thread. 
+<P>
+
+<PRE>
+TYPE Flag = 
+     {Invalid, Inexact, Overflow, Underflow,
+      DivByZero, IntOverflow, IntDivByZero};
+</PRE>
+Associated with each thread is a set of boolean status flags recording
+whether the condition represented by the flag has occurred in the
+thread since the flag was last reset.  The meaning of the first
+five flags is defined precisely in the IEEE floating point standard;
+roughly they mean:
+<BLOCKQUOTE>
+    <TT>Invalid</TT> = invalid argument to an operation.  
+    <P>
+
+    <TT>Inexact</TT> = an operation produced an inexact result.
+    <P>
+
+    <TT>Overflow</TT> = a floating-point operation produced a result whose
+    absolute value is too large to be represented.
+    <P>
+
+    <TT>Underflow</TT> = a floating-point operation produced a result whose
+    absolute value is too small to be represented.
+    <P>
+
+    <TT>DivByZero</TT> = floating-point division by zero.
+</BLOCKQUOTE>
+<P>
+
+
+The meaning of the last two flags is:
+<BLOCKQUOTE>
+    <TT>IntOverflow</TT> = an integer operation produced a result whose
+    absolute value is too large to be represented.
+    <P>
+
+    <TT>IntDivByZero</TT> = integer <TT>DIV</TT> or <TT>MOD</TT> by zero.
+</BLOCKQUOTE>
+<P>
+
+<PRE>
+CONST NoFlags = SET OF Flags {};
+</PRE>
+<P>
+
+<PRE>
+PROCEDURE GetFlags(): SET OF Flag;
+</PRE>
+Return the set of flags for the current thread.
+<P>
+
+<PRE>
+PROCEDURE SetFlags(s: SET OF Flag): SET OF Flag RAISES{Failure};
+</PRE>
+Set the flags for the current thread to <TT>s</TT>, and return their previous
+values. 
+<P>
+
+<PRE>
+PROCEDURE ClearFlag(f: Flag);
+</PRE>
+Turn off the flag <TT>f</TT> for the current thread. 
+<P>
+
+<PRE>
+EXCEPTION
+  Trap(Flag);
+
+TYPE
+  Behavior = {Trap, SetFlag, Ignore};
+</PRE>
+The behavior of an operation that causes one of the flag conditions is either
+<BLOCKQUOTE>
+    <TT>Ignore</TT> = return some result and do nothing.
+    <P>
+
+    <TT>SetFlag</TT> = return some result and set the condition
+    flag.  For IEEE implementations, the result of the operation is defined
+    by the standard.
+    <P>
+
+
+    <TT>Trap</TT> = possibly set the condition flag; in any case
+    raise the <TT>Trap</TT> exception with the appropriate flag as the
+    argument.
+</BLOCKQUOTE>
+<P>
+
+<PRE>
+PROCEDURE SetBehavior(f: Flag; b: Behavior) RAISES {Failure};
+</PRE>
+Set the behavior of the current thread for the flag <TT>f</TT>
+to be <TT>b</TT>, or raise <TT>Failure</TT> if this cannot be done.  
+<P>
+
+<PRE>
+PROCEDURE GetBehavior(f: Flag): Behavior;
+</PRE>
+Return the behavior of the current thread for the flag <TT>f</TT>. 
+<P>
+
+<PRE>
+END FloatMode.
+</PRE>
+<P>
+
+The
+<A HREF="/public/m3core/FloatMode.i3">
+CM Modula-3 version of FloatMode</A>
+is here.
+<P>
+
+<P>
+<A HREF="m3.html">[top]</A>
+<A HREF="float-intf.html">[prev]</A>
+<A HREF="syntax.html">[next]</A>
+</BODY>
+</HTML>

@@ -1,0 +1,109 @@
+<HTML>
+<HEAD>
+<TITLE>Modula-3: Assignment statements</TITLE>
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+<body>
+
+<P>
+<A HREF="m3.html">[top]</A>
+<A HREF="stmts.html">[prev]</A>
+<A HREF="calls.html">[next]</A>
+<P>
+
+<H2>Assignment</H2>
+<P>
+
+To specify the typechecking of assignment statements we need to define 
+"assignable", which is a relation between types and types, between 
+expressions and variables, and between expressions and types.
+<P>
+
+A type <TT>T</TT> is <EM>assignable</EM> to a type <TT>U</TT> if:
+<UL>
+<LI> <TT>T <: U</TT>, or
+<LI> <TT>U <: T</TT> and <TT>T</TT> is an array or a reference type other 
+     than <TT>ADDRESS</TT>
+     (This restriction is lifted in
+     <A HREF="unsafe.html">unsafe modules</A>.), or
+<LI> <TT>T</TT> and <TT>U</TT> are ordinal types with at least one member 
+     in common. 
+</UL>
+<P>
+
+<A NAME=idx.80>An</A>
+expression <TT>e</TT> is <EM>assignable</EM> to a variable <TT>v</TT> if:
+<UL>
+<LI> the type of <TT>e</TT> is assignable to the type of <TT>v</TT>, and
+<LI> the value of <TT>e</TT> is a member of the type of <TT>v</TT>, is 
+     not a local procedure, and if it is an array, then it has the same 
+     shape as <TT>v</TT>.
+</UL>
+<P>
+
+<A NAME=idx.81>The</A>
+first point can be checked statically; the others generally require 
+runtime checks. Since there is no way to determine statically whether 
+the value of a procedure parameter is local or global, assigning 
+a local procedure is a runtime rather than a static error.
+<P>
+
+An expression <TT>e</TT> is <EM>assignable</EM> to a type <TT>T</TT>
+if <TT>e</TT> is assignable to some variable of type <TT>T</TT>.
+(If <TT>T</TT> is not an open array type, this is the same as saying
+that <TT>e</TT> is assignable to any variable of type <TT>T</TT>.)
+<P>
+
+<A NAME=idx.82>An</A>
+assignment statement has the form:
+<PRE>
+    v := e
+</PRE>
+where <TT>v</TT> is a writable designator and <TT>e</TT> is an expression
+assignable to the variable designated by <TT>v</TT>.  The statement sets
+<TT>v</TT> to the value of <TT>e</TT>.  The order of evaluation of
+<TT>v</TT> and <TT>e</TT> is undefined, but <TT>e</TT> will be evaluated before
+<TT>v</TT> is updated.
+In particular, if <TT>v</TT> and <TT>e</TT> are overlapping
+<A HREF="designators.html#idx.164">subarrays</A>,
+the assignment is performed in such a way that no element is used
+as a target before it is used as a source.
+<P>
+
+Examples of assignments:
+<PRE>
+    VAR
+      x: REFANY;
+      a: REF INTEGER;
+      b: REF BOOLEAN;
+
+    a := b;  (* static error *)
+    x := a;  (* no possible error *)
+    a := x   (* possible checked runtime error *)
+</PRE>
+<P>
+
+<A NAME=idx.83>The</A>
+same comments would apply if <TT>x</TT> had an ordinal type with 
+non-overlapping subranges <TT>a</TT> and <TT>b</TT>, or if <TT>x</TT> had 
+an object type and <TT>a</TT> and <TT>b</TT> had incompatible subtypes.  
+The type <TT>ADDRESS</TT> is treated differently from other reference 
+types, since a runtime check cannot be performed on the assignment 
+of raw addresses.  For example:
+<PRE>
+    VAR
+      x: ADDRESS;
+      a: UNTRACED REF INTEGER;
+      b: UNTRACED REF BOOLEAN;
+
+    a := b;  (* static error *)
+    x := a;  (* no possible error *)
+    a := x   (* static error in safe modules *)
+</PRE>
+<P>
+
+<P>
+<A HREF="m3.html">[top]</A>
+<A HREF="stmts.html">[prev]</A>
+<A HREF="calls.html">[next]</A>
+</BODY>
+</HTML>

@@ -1,0 +1,142 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<!--Converted with LaTeX2HTML 2008 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>2.4.7 Revelations</TITLE>
+<META NAME="description" CONTENT="2.4.7 Revelations">
+<META NAME="keywords" CONTENT="m3-defn-complete">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2008">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="/cm3/normal.css">
+
+<LINK REL="next" HREF="2_4_8Recursive_declarations.html">
+<LINK REL="previous" HREF="2_4_6Opaque_types.html">
+<LINK REL="up" HREF="2_4Declarations.html">
+<LINK REL="next" HREF="2_4_8Recursive_declarations.html">
+</HEAD>
+
+<BODY >
+
+<DIV CLASS="navigation"><!--Navigation Panel-->
+<A NAME="tex2html650"
+  HREF="2_4_8Recursive_declarations.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html648"
+  HREF="2_4Declarations.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html642"
+  HREF="2_4_6Opaque_types.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A>   
+<BR>
+<B> Next:</B> <A NAME="tex2html651"
+  HREF="2_4_8Recursive_declarations.html">2.4.8 Recursive declarations</A>
+<B> Up:</B> <A NAME="tex2html649"
+  HREF="2_4Declarations.html">2.4 Declarations</A>
+<B> Previous:</B> <A NAME="tex2html643"
+  HREF="2_4_6Opaque_types.html">2.4.6 Opaque types</A>
+<BR>
+<BR></DIV>
+<!--End of Navigation Panel-->
+
+<H3><A NAME="SECTION00017700000000000000">
+2.4.7 Revelations</A>
+</H3>
+
+<P>
+A <SPAN  CLASS="textit">revelation</SPAN> introduces information about an opaque type into a scope.
+Unlike other declarations, revelations introduce no new names.
+
+<P>
+There are two kinds of revelations, <SPAN  CLASS="textit">partial</SPAN> and <SPAN  CLASS="textit">complete</SPAN>.  A
+program can contain any number of partial revelations for an opaque type; it
+must contain exactly one complete revelation.
+
+<P>
+A partial revelation has the form:
+<PRE>
+    REVEAL T &lt;: V
+</PRE>
+where <code>V</code> is a type expression (possibly just a name) and <code>T</code> is an
+identifier (possibly qualified) declared as an opaque type.  It reveals that
+<code>V</code> is a supertype of <code>T</code>.
+
+<P>
+In any scope, the revealed supertypes of an opaque type must be linearly
+ordered by the subtype relation.  That is, if it is revealed that
+<code>T &lt;: U1</code> and <code>T &lt;: U2</code>, it must also be revealed either that
+<code>U1 &lt;: U2</code> or that <code>U2 &lt;: U1</code>.
+
+<P>
+A complete revelation has the form:
+<PRE>
+    REVEAL T = V
+</PRE>
+where <code>V</code> is a type expression (not just a name) whose outermost type
+constructor is a branded reference or object type and <code>T</code> is an
+identifier (possibly qualified) that has been declared as an opaque type.  The
+revelation specifies that <code>V</code> is the concrete type for <code>T</code>.  It is a
+static error if any type revealed in any scope as a supertype of <code>T</code> is
+not a supertype of <code>V</code>.  Generally this error is detected at link time.
+
+<P>
+Distinct opaque types have distinct concrete types, since <code>V</code> includes a
+brand and all brands in a program are distinct.
+
+<P>
+A revelation is allowed only in an interface or in the outermost scope of a
+module.  A revelation in an interface can be imported into any scope where it
+is required, as illustrated by the stack example.
+
+<P>
+For example, consider:
+<PRE>
+    INTERFACE I; TYPE T &lt;: ROOT; PROCEDURE P(x:T): T; END I.
+
+    INTERFACE IClass; IMPORT I; REVEAL I.T &lt;: MUTEX; END IClass.
+
+    INTERFACE IRep; IMPORT I;
+      REVEAL I.T = MUTEX BRANDED OBJECT count: INTEGER END;
+    END IRep.
+</PRE>
+An importer of <code>I</code> sees <code>I.T</code> as an opaque subtype of <code>ROOT</code>,
+and is limited to allocating objects of type <code>I.T</code>, passing them to
+<code>I.P</code>, or declaring subtypes of <code>I.T</code>.  An importer of <code>IClass</code>
+sees that every <code>I.T</code> is a <code>MUTEX</code>, and can therefore lock objects
+of type <code>I.T</code>.  Finally, an importer of <code>IRep</code> sees the concrete
+type, and can access the <code>count</code> field.
+
+<P>
+
+<DIV CLASS="navigation"><HR>
+<!--Navigation Panel-->
+<A NAME="tex2html650"
+  HREF="2_4_8Recursive_declarations.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html648"
+  HREF="2_4Declarations.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html642"
+  HREF="2_4_6Opaque_types.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A>   
+<BR>
+<B> Next:</B> <A NAME="tex2html651"
+  HREF="2_4_8Recursive_declarations.html">2.4.8 Recursive declarations</A>
+<B> Up:</B> <A NAME="tex2html649"
+  HREF="2_4Declarations.html">2.4 Declarations</A>
+<B> Previous:</B> <A NAME="tex2html643"
+  HREF="2_4_6Opaque_types.html">2.4.6 Opaque types</A></DIV>
+<!--End of Navigation Panel-->
+<ADDRESS>
+m3-support@elego.de
+</ADDRESS>
+</BODY>
+</HTML>

@@ -1,0 +1,90 @@
+<html><head>
+<title>Trestle by Example:  Catching mouse events</title>
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+
+<body>
+
+<ul>
+  <li> Root of document: <a href="../tutorial.html">Trestle by Example</a>
+  <li> Previous section: <a href="../key/tut-key.html">Catching keyboard events</a>
+  <li> Next section: <a href="../confirm/tut-confirm.html">Dialog window to confirm an action</a>
+  <li> Cross listing: <a href="../cross/tut-cross.html">Cross listing by module</a>
+</ul>
+
+<hr>
+
+<h3>Catching mouse events</h3>
+
+The program
+<a href="../mouse/Mouse.m3-elided">Mouse.m3</a>
+illustrates different kinds of mouse events.
+The application displays a blank area on the left
+where you can click with the mouse.
+The event is analyzed and displayed
+in the five fields on the right. They are:
+<dl>
+  <dt>what changed </dt>
+  <dd>
+       which button was involved in the event (left, right or middle).
+  </dd>
+  <dt>time</dt>
+  <dd>
+       the Trestle time stamp at which the event was generated.
+  </dd>
+  <dt>cp</dt>
+  <dd>
+       the current cursor position in the VBT's coordinate system.
+  </dd>
+  <dt>modifiers</dt>
+  <dd>
+       which keys from among the option, shift, lock, and control keys
+       that were pressed down when the event was generated.
+  </dd>
+  <dt>click type</dt>
+  <dd>
+       what kind of mouse click: <code>FirstDown</code>, <code>OtherDown</code>,
+       <code>FirstUp</code> or LastUp.
+  </dd>
+  <dt>click count</dt>
+  <dd>
+       the number of times the mouse button was clicked rapidly in row just before this event was generated.
+  </dd>
+</dl>
+<p>
+
+The blank area in the window
+that catches the mouse events
+is created by a subtype of <code>LeafVBT</code>.
+A <code>LeafVBT</code> is so primitive that it does not even redraw itself.
+So we override the <code>repaint</code> method with one that does the repainting.
+In this case there is nothing important to do,
+just fill in with the background color.
+The mouse events are caught by supplying our own <code>mouse</code> method
+which does much more than the default <code>mouse</code> method
+(which does nothing).
+<p>
+
+Our <code>mouse</code> method, called <code>MouseEvent</code> is in
+<a href="../mouse/Event.m3-sep">Event.m3</a>.
+It receives a data structure called <code>MouseRec</code>.
+The method extracts the various pieces of the structure and
+displays them in the appropriate text fields of the main application.
+<p>
+
+Two views of the application while it is running are show in:
+<ul>
+  <li> <img src="../mouse/mouse1.gif">Mouse 1
+  <li> <img src="../mouse/mouse2.gif">Mouse 2
+</ul>
+
+<hr>
+
+<ul>
+  <li> Root of document: <a href="../tutorial.html">Trestle by Example</a>
+  <li> Previous section: <a href="../key/tut-key.html">Catching keyboard events</a>
+  <li> Next section: <a href="../confirm/tut-confirm.html">Dialog window to confirm an action</a>
+  <li> Cross listing: <a href="../cross/tut-cross.html">Cross listing by module</a>
+</ul>
+
+</body>
+</html>

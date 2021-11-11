@@ -1,0 +1,114 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<!--Converted with LaTeX2HTML 2008 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>0.0.0.5 1.4.5 Safety.</TITLE>
+<META NAME="description" CONTENT="0.0.0.5 1.4.5 Safety.">
+<META NAME="keywords" CONTENT="m3-defn-complete">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2008">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="/cm3/normal.css">
+
+<LINK REL="next" HREF="0_0_0_6_1_4_6_Garbage.html">
+<LINK REL="previous" HREF="0_0_0_4_1_4_4_Threads.html">
+<LINK REL="up" HREF="1_4Features.html">
+<LINK REL="next" HREF="0_0_0_6_1_4_6_Garbage.html">
+</HEAD>
+
+<BODY >
+
+<DIV CLASS="navigation"><!--Navigation Panel-->
+<A NAME="tex2html157"
+  HREF="0_0_0_6_1_4_6_Garbage.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html155"
+  HREF="1_4Features.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html149"
+  HREF="0_0_0_4_1_4_4_Threads.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A>   
+<BR>
+<B> Next:</B> <A NAME="tex2html158"
+  HREF="0_0_0_6_1_4_6_Garbage.html">0.0.0.6 1.4.6 Garbage collection.</A>
+<B> Up:</B> <A NAME="tex2html156"
+  HREF="1_4Features.html">1.4 Features</A>
+<B> Previous:</B> <A NAME="tex2html150"
+  HREF="0_0_0_4_1_4_4_Threads.html">0.0.0.4 1.4.4 Threads.</A>
+<BR>
+<BR></DIV>
+<!--End of Navigation Panel-->
+
+<H4><A NAME="SECTION00013450000000000000">
+<SPAN CLASS="arabic">0</SPAN>.<SPAN CLASS="arabic">0</SPAN>.<SPAN CLASS="arabic">0</SPAN>.<SPAN CLASS="arabic">5</SPAN> 1.4.5 Safety.</A>
+</H4>
+
+<P>
+A language feature is <SPAN  CLASS="textit">unsafe</SPAN> if its misuse can corrupt the runtime
+system so that further execution of the program is not faithful to the
+language semantics.  An example of an unsafe feature is array assignment
+without bounds checking: if the index is out of bounds, then an arbitrary
+location can be clobbered and the address space can become fatally corrupted.
+An error in a safe program can cause the computation to abort with a run-time
+error message or to give the wrong answer, but it can't cause the computation
+to crash in a rubble of bits.
+
+<P>
+Safe programs can share the same address space, each safe from corruption by
+errors in the others.  To get similar protection for unsafe programs requires
+placing them in separate address spaces.  As large address spaces become
+available, and programmers use them to produce tightly-coupled applications,
+safety becomes more and more important.
+
+<P>
+Unfortunately, it is generally impossible to program the lowest levels of a
+system with complete safety.  Neither the compiler nor the runtime system can
+check the validity of a bus address for an I/O controller, nor can they limit
+the ensuing havoc if it is invalid.  This presents the language designer with
+a dilemma.  If he holds out for safety, then low level code will have to be
+programmed in another language.  But if he adopts unsafe features, then his
+safety guarantee becomes void everywhere.
+
+<P>
+The languages of the BCPL family are full of unsafe features; the languages of
+the Lisp family generally have none (or none that are documented).  In this
+area Modula-3 follows the lead of Cedar by adopting a small number of unsafe
+features that are allowed only in modules explicitly labeled unsafe.  In a
+safe module, the compiler prevents any errors that could corrupt the runtime
+system; in an unsafe module, it is the programmer's responsibility to avoid
+them.
+
+<P>
+
+<DIV CLASS="navigation"><HR>
+<!--Navigation Panel-->
+<A NAME="tex2html157"
+  HREF="0_0_0_6_1_4_6_Garbage.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html155"
+  HREF="1_4Features.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html149"
+  HREF="0_0_0_4_1_4_4_Threads.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A>   
+<BR>
+<B> Next:</B> <A NAME="tex2html158"
+  HREF="0_0_0_6_1_4_6_Garbage.html">0.0.0.6 1.4.6 Garbage collection.</A>
+<B> Up:</B> <A NAME="tex2html156"
+  HREF="1_4Features.html">1.4 Features</A>
+<B> Previous:</B> <A NAME="tex2html150"
+  HREF="0_0_0_4_1_4_4_Threads.html">0.0.0.4 1.4.4 Threads.</A></DIV>
+<!--End of Navigation Panel-->
+<ADDRESS>
+m3-support@elego.de
+</ADDRESS>
+</BODY>
+</HTML>

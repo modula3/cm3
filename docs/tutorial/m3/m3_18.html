@@ -1,0 +1,51 @@
+<html>
+<head>
+   <title>Modula-3 - Array Types</title>
+   <meta name="GENERATOR" content="Mozilla/2.0GoldB2 (Win32)">
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+<body>
+<!-- This HTML file has been created by texi2html 1.31
+     from /home/jove/stu/ss0005/m3/info/m3.texi on 8 March 1995 -->Go
+to the <a href="m3_1.html">first</a>, <a href="m3_17.html">previous</a>,
+<a href="m3_19.html">next</a>, <a href="m3_83.html">last</a> section, <a href="m3_toc.html">table
+of contents</a>. 
+<hr>
+<h4><a name="SEC18"></a><a name="SEC18"></a><a name="SEC18"></a><a name="SEC18"></a><a href="m3_toc.html#SEC18" NAME="SEC18">Array
+Types</a></h4>
+
+<ul>
+<pre><b>ARRAY </b>{ <i>index-type</i> &quot;,&quot; ... } OF <i>slot-type &quot;</i>;&quot;
+</pre>
+</ul>
+
+<p><i><tt>index-type</tt></i> must be an ordinal type (see section <a href="m3_17.html#SEC17">Ordinal
+Types</a>). The common case is an integer subrange such as <tt>[1..<i>num-slots</i>]</tt>,
+though many programmers prefer user-defined enumeration types. </p>
+
+<p><i><tt>slot-type</tt></i> can be any type; it could even be another
+array. </p>
+
+<h4>
+<hr width="100%" >Example</h4>
+
+<ul>
+<pre><b>TYPE
+  </b>OneDimArray  = <b><tt>ARRAY </tt></b>[1..20] <b>OF </b><tt>REAL</tt>;
+  OneDimArray2 = <b>ARRAY </b>['A'..'Z'] <b>OF </b>INTEGER;
+  TwoDimArray  = <b>ARRAY </b>[1..20], [1..40] <b>OF </b>BOOLEAN;
+  TwoDimArray2 = <b>ARRAY </b>[1..20] <b>OF ARRAY </b>[1..40] <b>OF </b>BOOLEAN;
+</pre>
+</ul>
+
+<p>The built-in functions <tt>FIRST</tt>, <tt>LAST</tt>, and <tt>NUMBER</tt>
+can be used with array types and variables to return the index of the first
+and last slot and number of slots, respectively. For example, <tt>FIRST(OneDimArray)</tt>
+is 1; <tt>NUMBER(OneDimArray2)</tt> is 26. </p>
+
+<p>
+<hr>Go to the <a href="m3_1.html">first</a>, <a href="m3_17.html">previous</a>,
+<a href="m3_19.html">next</a>, <a href="m3_83.html">last</a> section, <a href="m3_toc.html">table
+of contents</a>. </p>
+
+</body>
+</html>

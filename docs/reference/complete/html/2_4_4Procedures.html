@@ -1,0 +1,86 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<!--Converted with LaTeX2HTML 2008 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>2.4.4 Procedures</TITLE>
+<META NAME="description" CONTENT="2.4.4 Procedures">
+<META NAME="keywords" CONTENT="m3-defn-complete">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2008">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="/cm3/normal.css">
+
+<LINK REL="next" HREF="2_4_5Exceptions.html">
+<LINK REL="previous" HREF="2_4_3Variables.html">
+<LINK REL="up" HREF="2_4Declarations.html">
+<LINK REL="next" HREF="2_4_5Exceptions.html">
+</HEAD>
+
+<BODY >
+
+<DIV CLASS="navigation"><!--Navigation Panel-->
+<A NAME="tex2html620"
+  HREF="2_4_5Exceptions.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html618"
+  HREF="2_4Declarations.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html612"
+  HREF="2_4_3Variables.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A>   
+<BR>
+<B> Next:</B> <A NAME="tex2html621"
+  HREF="2_4_5Exceptions.html">2.4.5 Exceptions</A>
+<B> Up:</B> <A NAME="tex2html619"
+  HREF="2_4Declarations.html">2.4 Declarations</A>
+<B> Previous:</B> <A NAME="tex2html613"
+  HREF="2_4_3Variables.html">2.4.3 Variables</A>
+<BR>
+<BR></DIV>
+<!--End of Navigation Panel-->
+
+<H3><A NAME="SECTION00017400000000000000">
+2.4.4 Procedures</A>
+</H3>
+
+<P>
+There are two forms of procedure declaration:
+<PRE>
+    PROCEDURE id sig = B id
+
+    PROCEDURE id sig
+</PRE>
+where <code>id</code> is an identifier, <code>sig</code> is a procedure signature, and
+<code>B</code> is a block.  In both cases, the type of <code>id</code> is the procedure
+type determined by <code>sig</code>.  The first form is allowed only in modules; the
+second form is allowed only in interfaces.
+
+<P>
+The first form declares <code>id</code> as a procedure constant whose signature is
+<code>sig</code>, whose body is <code>B</code>, and whose environment is the scope
+containing the declaration.  The parameter names are treated as if they were
+declared at the outer level of <code>B</code>; the parameter types and default
+values are evaluated in the scope containing the procedure declaration.  The
+procedure name <code>id</code> must be repeated after the <code>END</code> that terminates
+the body.
+
+<P>
+The second form declares <code>id</code> to be a procedure constant whose signature
+is <code>sig</code>.  The procedure body is specified in a module exporting the
+interface, by a declaration of the first form.
+
+<P>
+<BR><HR>
+<ADDRESS>
+m3-support@elego.de
+</ADDRESS>
+</BODY>
+</HTML>

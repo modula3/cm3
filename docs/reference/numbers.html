@@ -1,0 +1,86 @@
+<HTML>
+<HEAD>
+<TITLE>Modula-3: Numeric literals</TITLE>
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+<body>
+
+<P>
+<A HREF="m3.html">[top]</A>
+<A HREF="designators.html">[prev]</A>
+<A HREF="texts.html">[next]</A>
+<P>
+
+<H2>Numeric literals</H2>
+<P>
+
+Numeric literals denote constant non-negative integers or reals.  
+The types of these literals are <TT>INTEGER</TT>, <TT>LONGINT</TT>,
+<TT>REAL</TT>, <TT>LONGREAL</TT>, and <TT>EXTENDED</TT>.
+<P>
+
+A literal <TT>INTEGER</TT> has the form <TT>base_digits</TT>,
+where <TT>base</TT> 
+is one of "<TT>2</TT>", "<TT>3</TT>", ..., "<TT>16</TT>", and <TT>digits</TT> 
+is a non-empty sequence of the decimal digits <TT>0</TT> through
+<TT>9</TT> plus the hexadecimal digits <TT>A</TT> through <TT>F</TT>.
+The "<TT>base_</TT>" can be omitted,
+in which case <TT>base</TT> defaults to <TT>10</TT>.
+The digits are interpreted in the given base.
+Each digit must be less than <TT>base</TT>.
+For example, <TT>16_FF</TT> and <TT>255</TT> 
+are equivalent integer literals.
+<P>
+
+If no explicit base is present, the value of the literal must be at
+most <TT>LAST(INTEGER)</TT>.  If an explicit base is present, the value
+of the literal must be less than <TT>2^Word.Size</TT>,
+and its interpretation uses the convention of the
+<A HREF="word-intf.html"><TT>Word</TT></A> interface.
+For example, on a sixteen-bit two's complement machine,
+<TT>16_FFFF</TT> and <TT>-1</TT> represent the same value.
+<P>
+
+A literal <TT>LONGINT</TT> has the form <TT>integer L</TT>, where
+<TT>integer</TT> has the same form as a literal <TT>INTEGER</TT>.  If no
+explicit base is present, the value of the literal must be at most
+<TT>LAST(LONGINT)</TT>.  If an explicit base is present, the value of the
+literal must be less than <TT>2^Long.Size</TT>, and its interpretation uses
+the convention of the <A HREF="word-intf.html"><TT>Long</TT></A> interface.
+For example, the <TT>LONGINT</TT> having the value zero would be
+written <TT>0L</TT>.
+<P>
+
+<A NAME=idx.168>A</A>
+literal <TT>REAL</TT> has the form <TT>decimal E exponent</TT>, where 
+<TT>decimal</TT> is a non-empty sequence of decimal digits followed 
+by a decimal point followed by a non-empty sequence of decimal digits, and 
+<TT>exponent</TT> is a non-empty sequence of decimal digits optionally 
+beginning with a <TT>+</TT> or <TT>-</TT>.
+The literal denotes <TT>decimal</TT> 
+times <TT>10^exponent</TT>.
+If "<TT>E exponent</TT>" is omitted,
+<TT>exponent</TT> defaults to <TT>0</TT>.
+<P>
+
+<A NAME=idx.169><TT>LONGREAL</TT></A> and <TT>EXTENDED</TT>
+literals are like <TT>REAL</TT> literals,
+but instead of <TT>E</TT> they use <TT>D</TT> and <TT>X</TT> respectively.
+<P>
+
+<A NAME=idx.170>Case</A>
+is not significant in digits, prefixes or scale factors.  Embedded
+spaces are not allowed.  
+<P>
+
+For example, <TT>1.0</TT> and <TT>0.5</TT> are valid, <TT>1.</TT>
+and <TT>.5</TT> are not;
+<TT>6.624E-27</TT> is a <TT>REAL</TT>,
+and <TT>3.1415926535d0</TT> a <TT>LONGREAL</TT>.
+<P>
+
+<P>
+<A HREF="m3.html">[top]</A>
+<A HREF="designators.html">[prev]</A>
+<A HREF="texts.html">[next]</A>
+</BODY>
+</HTML>

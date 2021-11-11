@@ -1,0 +1,72 @@
+<html>
+<head>
+   <title>CM Modula-3: Specifying sources in m3makefiles</title>
+   <meta name="GENERATOR" content="Mozilla/2.0GoldB2 (Win32)">
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+<body>
+
+<h2>Specifying sources</h2>
+
+<p>The most primitive declarations in an <tt>m3makefile</tt> are those
+that identify source files. They can be Modula-3, C or assembler files.
+A source file has three attributes: a package, the subdirectory within
+the package where the declaration occurs, and a visibility. The visibility
+has two values, <i>visible</i> and <i>hidden</i>. When a package A imports
+a package B, only the visible sources in B are available to compilations
+that occur in A. By default all sources are visible. However, it is possible
+to explicitly control the visibility of Modula-3 interfaces. </p>
+
+<p>Source files are named relative to the <tt>m3makefile</tt> that mentions
+them. </p>
+
+<p>The following calls define source files: </p>
+
+<p><b>interface(X) </b>declares that the file <tt>X.i3</tt> contains an
+interface. </p>
+
+<p><b>implementation(X) </b>declares that the file <tt>X.m3</tt> contains
+a module. </p>
+
+<p><b>module(X) </b>declares both the interface <tt>X.i3</tt> and the module
+<tt>X.m3</tt>. </p>
+
+<p><b>generic_interface(X) </b>declares that the file <tt>X.ig</tt> contains
+a generic interface. </p>
+
+<p><b>generic_implementation(X) </b>declares that the file <tt>X.mg</tt>
+contains a generic module. </p>
+
+<p><b>generic_module(X) </b>declares both a generic interface and module.
+</p>
+
+<p><b>h_source(X) </b>declares that the file <tt>X.h</tt> contains a C
+include file. </p>
+
+<p><b>c_source(X) </b>declares that the file <tt>X.c</tt> contains a C
+module. </p>
+
+<p><b>s_source(X) </b>declares that the file <tt>X.s</tt> contains an assembly
+module. </p>
+
+<p><b>pgm_source(X) </b>declares that the file <tt>X</tt> contains compilable
+source (e.g. <tt>.ic</tt>, <tt>.mc</tt>, <tt>.is</tt> or <tt>.ms</tt> files).
+</p>
+
+<p>With the exception of <tt>h_source</tt>, each of the procedures above
+defines a hidden source file. There are capitalized variants <tt>Interface</tt>,
+<tt>Module</tt>, <tt>Generic_interface</tt>, <tt>Generic_implementation</tt>,
+and <tt>Generic_module</tt> that identify their sources as visible. Remember,
+only those interfaces that are marked as visible will be available to importers
+of your library or package. </p>
+
+<p><b>template(X) </b>declares that the file <tt>X.tmpl</tt> contains quake
+code that is to be included in this build, and in all builds that import
+this package. </p>
+
+<p>The <tt>template</tt> call is used to extend the set of available procedures.
+For example, the table package includes a template that defines the <tt>table</tt>
+procedure which instantiates the generic table module. </p>
+
+<p>
+</body>
+</html>

@@ -13,6 +13,7 @@ on:
 jobs:
   build-and-test:
     runs-on: ${{ inputs.os }}
+    timeout-minutes: 60
 
     strategy:
       fail-fast: false
@@ -30,16 +31,16 @@ jobs:
 
     - name: Define install location
       run: |
-        echo CM3INST="$(pwd)/../build/cm3" >> $GITHUB_ENV
+        echo CM3_INSTALL="$(pwd)/../build/cm3" >> $GITHUB_ENV
 
     - name: Install binary release
       run: |
-        mkdir -p "${CM3INST}"
-        curl --location --silent "${CM3RELEASE}" | tar zxf - --directory="${CM3INST}" --strip-components=1
+        mkdir -p "${CM3_INSTALL}"
+        curl --location --silent "${CM3RELEASE}" | tar zxf - --directory="${CM3_INSTALL}" --strip-components=1
 
     - name: Add release binary to path
       run: |
-        echo "${CM3INST}/bin" >> $GITHUB_PATH
+        echo "${CM3_INSTALL}/bin" >> $GITHUB_PATH
 
     - name: Fetch sources
       uses: actions/checkout@v2
@@ -55,7 +56,7 @@ jobs:
       run: |
         sed -e '1i\
         readonly M3_BACKEND_MODE = "C"
-        ' -i '' "${CM3INST}/bin/cm3.cfg"
+        ' -i '' "${CM3_INSTALL}/bin/cm3.cfg"
 
     - name: Run compiler validation suite
       continue-on-error: true

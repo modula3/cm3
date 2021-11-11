@@ -1,0 +1,71 @@
+<html>
+<head>
+   <title>Modula-3 - Implementation</title>
+   <meta name="GENERATOR" content="Mozilla/2.0GoldB2 (Win32)">
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+<body>
+Go to the <a href="m3_1.html">first</a>, <a href="m3_9.html">previous</a>,
+<a href="m3_11.html">next</a>, <a href="m3_83.html">last</a> section, <a href="m3_toc.html">table
+of contents</a>. 
+<hr>
+<h3><a name="SEC10"></a><a name="SEC10"></a><a name="SEC10"></a><a name="SEC10"></a><a name="SEC10"></a><a name="SEC10"></a><a name="SEC10"></a><a href="m3_toc.html#SEC10" NAME="SEC10">Modules
+or Implementations</a></h3>
+
+<p>The implementation is the private portion of a module. Implementation
+files have the name of the module with an &quot;<b><tt>.m3&quot;</tt></b>
+extension, and have the following format: </p>
+
+<ul>
+<pre><b>MODULE </b><i>module-name</i> [ <b>EXPORTS </b><i>interface </i>{ &quot;,&quot; <i><tt>interface </tt></i>... } ];
+<b>IMPORT&nbsp;</b>i<i><tt><a href="m3_11.html#SEC11">mported-interfaces</a>;
+
+</tt></i><a href="m3_13.html#SEC13">  Declarations;
+     ...
+  Declarations;</a></pre>
+</ul>
+
+<ul>
+<pre><b>BEGIN
+</b><i>  ...Module start-up code...
+</i><b>END </b><i>module-name</i>.
+</pre>
+</ul>
+
+<p>Generally, <i><tt>module-name</tt> </i>is the same as the name of the
+interface being implemented, but if not, the <b><tt>EXPORTS</tt></b> clause
+can be used to specify the interfaces exported by this module. </p>
+
+<p>
+<hr width="100%" ></p>
+
+<h4>Example</h4>
+
+<p>Here is the implementation of the previous interface:</p>
+
+<ul>
+<pre><b>MODULE </b>Thing;
+<b>IMPORT </b>IO;
+
+PROCEDURE Print(READONLY r: T) = 
+  BEGIN
+    IO.Put (r.name &amp; &quot;\t&quot;);
+    IO.PutInt (r.size);
+    IO.Put (&quot;\n&quot;);
+  END Print;
+
+PROCEDURE Make(n: TEXT; s: INTEGER): T =
+  BEGIN
+    RETURN T{n, s};
+  END Make;
+
+<b>END </b>Thing.
+</pre>
+</ul>
+
+<p>
+<hr>Go to the <a href="m3_1.html">first</a>, <a href="m3_9.html">previous</a>,
+<a href="m3_11.html">next</a>, <a href="m3_83.html">last</a> section, <a href="m3_toc.html">table
+of contents</a>. </p>
+
+</body>
+</html>

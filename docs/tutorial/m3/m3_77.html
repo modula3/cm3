@@ -1,0 +1,127 @@
+<html>
+<head>
+   <title>Modula-3 - Rd Interface</title>
+   <meta name="GENERATOR" content="Mozilla/2.0GoldB2 (Win32)">
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+<body>
+<!-- This HTML file has been created by texi2html 1.31
+     from /home/jove/stu/ss0005/m3/info/m3.texi on 8 March 1995 -->Go
+to the <a href="m3_1.html">first</a>, <a href="m3_76.html">previous</a>,
+<a href="m3_78.html">next</a>, <a href="m3_83.html">last</a> section, <a href="m3_toc.html">table
+of contents</a>. 
+<hr>
+<h3><a name="SEC77"></a><a href="m3_toc.html#SEC77" NAME="SEC77">Rd Interface</a></h3>
+
+<p>An <tt>Rd.T</tt> (or &quot;reader&quot;) is a character input stream.
+The basic operation on a reader is &quot;GetChar&quot;, which returns the
+source character at the current position and advances the current position
+by one. Some readers are <i>seekable</i>, which means that they also allow
+setting the current position anywhere in the source. For example, readers
+from random access files are seekable; readers from terminals and sequential
+files are not. </p>
+
+<pre>EXCEPTION EndOfFile; Failure(AtomList.T); 
+</pre>
+
+<p>Since there are many classes of readers, there are many ways that a
+reader can break--for example, the connection to a terminal can be broken,
+the disk can signal a read error, etc. All problems of this sort are reported
+by raising the exception &quot;Failure&quot;. The documentation of a reader
+class should specify what failures the class can raise and how they are
+encoded in the argument to &quot;Failure&quot;. </p>
+
+<p>Illegal operations cause a checked runtime error. </p>
+
+<dl COMPACT>
+<dt><tt>PROCEDURE GetChar(rd: T): CHAR RAISES {EndOfFile, Failure, Alerted};</tt>
+</dt>
+
+<dd>Return the next character from &quot;rd&quot;. </dd>
+
+<dt><tt>PROCEDURE EOF(rd: T): BOOLEAN RAISES {Failure, Alerted};</tt> </dt>
+
+<dd>Return &quot;TRUE&quot; iff &quot;rd&quot; is at end-of-file. </dd>
+
+<dt><tt>PROCEDURE UnGetChar(rd: T);</tt> </dt>
+
+<dd>&quot;Push back&quot; the last character read from &quot;rd&quot;,
+so that the next call to &quot;GetChar&quot; will read it again. &quot;UnGetChar(rd)&quot;
+is guaranteed to work only if &quot;GetChar(rd)&quot; was the last operation
+on &quot;rd&quot;. Thus &quot;UnGetChar&quot; cannot be called twice in
+a row, or after &quot;Seek&quot; or &quot;EOF&quot;. If this rule is violated,
+a checked runtime error may result. </dd>
+
+<dt><tt>PROCEDURE CharsReady(rd: T): CARDINAL RAISES {Failure};</tt> </dt>
+
+<dd>Return some number of characters that can be read without indefinite
+waiting. The &quot;end of file marker&quot; counts as one character for
+this purpose, so &quot;CharsReady&quot; will return 1, not 0, if &quot;EOF(rd)&quot;
+is true. </dd>
+
+<dt><tt>PROCEDURE GetSub(rd: T; VAR (*OUT*) str: ARRAY OF CHAR)
+<br>: CARDINAL RAISES {Failure, Alerted};</tt> </dt>
+
+<dd>Read from &quot;rd&quot; into &quot;str&quot; until &quot;rd&quot;
+is exhausted or &quot;str&quot; is filled. </dd>
+
+<dt><tt>PROCEDURE GetSubLine(rd: T; VAR (*OUT*) str: ARRAY OF CHAR)
+<br>: CARDINAL RAISES {Failure, Alerted};</tt> </dt>
+
+<dd>Read from &quot;rd&quot; into &quot;str&quot; until a newline is read,
+&quot;rd&quot; is exhausted, or &quot;str&quot; is filled. The newline
+character is not stripped out. </dd>
+
+<dt><tt>PROCEDURE GetText(rd: T; len: CARDINAL): TEXT RAISES {Failure,
+Alerted};</tt> </dt>
+
+<dd>Read from &quot;rd&quot; until it is exhausted or &quot;len&quot; characters
+have been read, and return the result as a &quot;TEXT&quot;. </dd>
+
+<dt><tt>PROCEDURE GetLine(rd: T): TEXT RAISES {EndOfFile, Failure, Alerted};</tt>
+</dt>
+
+<dd>If &quot;EOF(rd)&quot; then raise &quot;EndOfFile&quot;. Otherwise,
+read characters until a line break is read or &quot;rd&quot; is exhausted,
+and return the result as a &quot;TEXT&quot;---but discard the line break
+if it is present. </dd>
+
+<dt><tt>PROCEDURE Seek(rd: T; n: CARDINAL) RAISES {Failure, Alerted};</tt>
+</dt>
+
+<dd>If &quot;rd&quot; is seekable, makes the current position := MIN(n,
+len(rd)). </dd>
+
+<dt><tt>PROCEDURE Close(rd: T) RAISES {Failure, Alerted};</tt> </dt>
+
+<dd>If &quot;rd&quot; is not already closed, release any resources associated
+with &quot;rd&quot; and set &quot;closed(rd) := TRUE&quot;. </dd>
+
+<dt><tt>PROCEDURE Index(rd: T): CARDINAL;</tt> </dt>
+
+<dd>Returns the current position of &quot;rd&quot;. </dd>
+
+<dt><tt>PROCEDURE Length(rd: T): INTEGER RAISES {Failure, Alerted};</tt>
+</dt>
+
+<dd>Returns the total number of characters in &quot;rd&quot;. If &quot;len(rd)&quot;
+is unknown to the implementation of an intermittent reader, &quot;Length(rd)&quot;
+returns -1. </dd>
+
+<dt><tt>PROCEDURE Intermittent(rd: T): BOOLEAN;</tt> </dt>
+
+<dt><tt>PROCEDURE Seekable(rd: T): BOOLEAN;</tt> </dt>
+
+<dt><tt>PROCEDURE Closed(rd: T): BOOLEAN;</tt> </dt>
+
+<dd>Return &quot;intermittent(rd)&quot;, &quot;seekable(rd)&quot;, and
+&quot;closed(rd)&quot;, respectively. These can be applied to closed readers.
+</dd>
+</dl>
+
+<p>
+<hr>Go to the <a href="m3_1.html">first</a>, <a href="m3_76.html">previous</a>,
+<a href="m3_78.html">next</a>, <a href="m3_83.html">last</a> section, <a href="m3_toc.html">table
+of contents</a>. </p>
+
+</body>
+</html>

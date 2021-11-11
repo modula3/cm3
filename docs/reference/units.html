@@ -1,0 +1,89 @@
+<HTML>
+<HEAD>
+<TITLE>Modula-3: Modules and interfaces</TITLE>
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+<body>
+
+<P>
+<A HREF="m3.html">[top]</A>
+<A HREF="recursion.html">[prev]</A>
+<A HREF="imports.html">[next]</A>
+<P>
+
+<H2>Modules and interfaces</H2>
+<P>
+
+<BLOCKQUOTE><EM>
+Art, it seems to me, should simplify.  That, indeed, is very nearly
+the whole of the higher artistic process; finding what conventions
+of form and what detail one can do without and yet preserve the spirit
+of the whole.  
+---Willa Cather
+</EM></BLOCKQUOTE>
+<P>
+
+<A NAME=idx.134>A</A>
+<EM>module</EM> is like a block, except for the visibility of names.  
+An entity is visible in a block if it is declared in the block 
+or in some enclosing block; an entity is visible in a module if 
+it is declared in the module or in an interface that is imported 
+or exported by the module.  
+<P>
+
+<A NAME=idx.135>An</A>
+<EM>interface</EM> is a group of declarations.  Declarations in
+interfaces are the same as in blocks, except that any variable
+initializations must be constant, and procedure declarations must specify
+only the signature, not the body.
+<P>
+
+A module <TT>X</TT> <EM>exports</EM> an interface <TT>I</TT> to supply bodies
+for one or more of the procedures declared in the interface.  A module
+or interface <TT>X</TT> <EM>imports</EM> an interface <TT>I</TT> to make the
+entities declared in <TT>I</TT> visible in <TT>X</TT>.
+<P>
+
+<A NAME=idx.136>A</A>
+<EM>program</EM> is a collection of modules and interfaces that contains
+every interface imported or exported by any of its modules or
+interfaces, and in which no procedure, module, or interface is multiply
+defined.  The effect of executing a program is to execute the bodies
+of each of its modules.  The order of execution of the modules is
+constrained by the <A HREF="init.html#idx.148">initialization rule</A>.
+<P>
+
+<A NAME=idx.137>The</A>
+module whose body is executed last is called the <EM>main module</EM>.
+Implementations are expected to provide a way to specify the main
+module, in case the initialization rule does not determine it uniquely.
+The recommended rule is that the main module be the one that exports
+the interface <TT>Main</TT>, whose contents are implementation-dependent.
+<P>
+
+<A NAME=idx.138>Program</A>
+execution terminates when the body of the main module
+terminates, even if concurrent threads of control are still executing.
+<P>
+
+The names of the modules and interfaces of a program are called
+<EM>global</EM> names.  The method for looking up global names---for example,
+by file system search paths---is implementation-dependent.
+<P>
+
+The following topics are discussed below
+<UL>
+<LI><A HREF="imports.html">Import statements</A>
+<LI><A HREF="interfaces.html">Interfaces</A>
+<LI><A HREF="modules.html">Modules</A>
+<LI><A HREF="example.html">An example interface and module</A>
+<LI><A HREF="generics.html">Generics</A>
+<LI><A HREF="init.html">Initialization</A>
+<LI><A HREF="safety.html">Safety</A>
+</UL>
+
+<P>
+<A HREF="m3.html">[top]</A>
+<A HREF="recursion.html">[prev]</A>
+<A HREF="imports.html">[next]</A>
+</BODY>
+</HTML>

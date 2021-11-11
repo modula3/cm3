@@ -1,0 +1,86 @@
+<html>
+<head>
+   <title>Modula-3 - Relational Expressions</title>
+   <meta name="GENERATOR" content="Mozilla/2.0GoldB2 (Win32)">
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+<body>
+<!-- This HTML file has been created by texi2html 1.31
+     from /home/jove/stu/ss0005/m3/info/m3.texi on 8 March 1995 -->Go
+to the <a href="m3_1.html">first</a>, <a href="m3_50.html">previous</a>,
+<a href="m3_52.html">next</a>, <a href="m3_83.html">last</a> section, <a href="m3_toc.html">table
+of contents</a>. 
+<hr>
+<h3><a name="SEC51"></a><a name="SEC51"></a><a name="SEC51"></a><a href="m3_toc.html#SEC51" NAME="SEC51">Relational
+Expressions</a></h3>
+
+<p>Comparisons between two types are done with the following binary operators
+(see caution about comparing TEXTs below): </p>
+
+<dl COMPACT>
+<dl COMPACT>
+<dt><tt>=</tt> (Equal), <tt># </tt>(Not Equal) </dt>
+
+<dd>These operators can be used with any Modula-3 type: </dd>
+
+<dl COMPACT>
+<dl COMPACT>
+<dt>Ordinals are equal if they have the same value </dt>
+
+<dt>Floats are equal if the underlying implementation defines them to be
+</dt>
+
+<dt>References are equal if they address the same location </dt>
+
+<dt>Procedures are equal if they refer to the same procedure body and environment
+</dt>
+
+<dt>Sets are equal if they have the same elements </dt>
+
+<dt>Arrays are equal if they have the same length and corresponding elements
+are equal </dt>
+
+<dt>Records are equal if they have the same fields and corresponding fields
+are equal 
+<br></dt>
+</dl>
+</dl>
+
+<dt><tt>&lt;</tt> (Less Than), <tt>&lt;=</tt> (Less Than or Equal To) </dt>
+
+<dd>Ordinal types: the usual meaning. For sets, proper subset and subset,
+respectively. </dd>
+
+<dd></dd>
+
+<dt><tt>&gt;</tt> (Greater Than), <tt>&gt;=</tt> (Greater Than or Equal
+To) </dt>
+
+<dd>Ordinal types: the usual meaning. For sets, proper superset and superset,
+respectively. </dd>
+
+<dd></dd>
+
+<dt><tt>IN</tt> </dt>
+
+<dd></dd>
+
+<dd>For sets only, the expression (<tt><i>element </i>IN <i>set</i></tt>)
+is <tt>TRUE </tt>iff <i><tt>element </tt></i>is an element of the set <i><tt>set</tt></i>.
+</dd>
+</dl>
+</dl>
+
+<p><b><i>Note</i></b>: These operators should not be used to compare <tt>TEXT
+</tt>values. Use <tt>Text.Equal</tt> and <tt>Text.Compare</tt> to compare
+two <tt>TEXT</tt>s (see section <a href="m3_71.html#SEC71">Text Interface</a>).
+The compiler will allow = and # with <tt>TEXT</tt>s, but it is the addresses
+at which the <tt>TEXT</tt>s are stored that are compared, not the contents
+of the <tt>TEXT</tt>s. </p>
+
+<p>
+<hr>Go to the <a href="m3_1.html">first</a>, <a href="m3_50.html">previous</a>,
+<a href="m3_52.html">next</a>, <a href="m3_83.html">last</a> section, <a href="m3_toc.html">table
+of contents</a>. </p>
+
+</body>
+</html>

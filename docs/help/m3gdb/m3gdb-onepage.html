@@ -1,0 +1,872 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>m3gdb, the Modula-3-enhanced version of gdb</title><meta name="generator" content="DocBook XSL Stylesheets V1.75.2"><LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div lang="en" class="article" title="m3gdb, the Modula-3-enhanced version of gdb"><div class="titlepage"><div><div><h1 class="title"><a name="id355398"></a> m3gdb, the Modula-3-enhanced version of gdb </h1></div><div><div class="author"><h3 class="author"><span class="firstname">Rodney</span> <span class="surname">Bates</span></h3></div></div></div><hr></div><div class="toc"><p><b>Table of Contents</b></p><dl><dt><span class="sect1"><a href="#intro"> Introduction</a></span></dt><dt><span class="sect1"><a href="#building"> Building (m3)gdb </a></span></dt><dd><dl><dt><span class="sect2"><a href="#id325090">Build Dependencies</a></span></dt></dl></dd><dt><span class="sect1"><a href="#compiling"> Compiling Modula-3 Code for Debugging </a></span></dt><dt><span class="sect1"><a href="#commands">Commands in m3gdb</a></span></dt><dd><dl><dt><span class="sect2"><a href="#printcmd">The <span class="command"><strong>print</strong></span> Command</a></span></dt><dt><span class="sect2"><a href="#startcmd">The <span class="command"><strong>start</strong></span> command</a></span></dt></dl></dd><dt><span class="sect1"><a href="#linespecs">Linespecs</a></span></dt><dd><dl><dt><span class="sect2"><a href="#id371538">Linespecs using a file name and line number</a></span></dt><dt><span class="sect2"><a href="#id371563">Linespecs that are qualified references</a></span></dt><dt><span class="sect2"><a href="#id371651">Linespecs using mangled names</a></span></dt></dl></dd><dt><span class="sect1"><a href="#expressions">Expressions</a></span></dt><dd><dl><dt><span class="sect2"><a href="#identifiers">Identifiers</a></span></dt><dt><span class="sect2"><a href="#id372173">Procedures</a></span></dt><dt><span class="sect2"><a href="#id372207">Types</a></span></dt><dt><span class="sect2"><a href="#id372249">TEXT values</a></span></dt><dt><span class="sect2"><a href="#id372425"> Modula-3 References</a></span></dt><dt><span class="sect2"><a href="#id372460">Arrays</a></span></dt><dt><span class="sect2"><a href="#calls">Calls</a></span></dt><dt><span class="sect2"><a href="#arith">Arithmetic operators</a></span></dt><dt><span class="sect2"><a href="#relops">Relational operators</a></span></dt><dt><span class="sect2"><a href="#id372679">Builtin functions</a></span></dt></dl></dd><dt><span class="sect1"><a href="#implementations">m3gdb Support of Alternate Modula-3 Implementations</a></span></dt><dd><dl><dt><span class="sect2"><a href="#id372899">The <span class="command"><strong>Info Modula-3</strong></span> command</a></span></dt><dt><span class="sect2"><a href="#id372937">m3gdb and Garbage Collection</a></span></dt><dt><span class="sect2"><a href="#id372973">m3gdb and thread support</a></span></dt></dl></dd><dt><span class="sect1"><a href="#initialization">Debugging and Runtime Initialization</a></span></dt><dd><dl><dt><span class="sect2"><a href="#dot1modulebodies">Module Body execution in CM3</a></span></dt></dl></dd><dt><span class="sect1"><a href="#runtime">Using the Modula-3 Runtime System to Aid Debugging</a></span></dt><dt><span class="sect1"><a href="#misc">Miscellaneous</a></span></dt><dd><dl><dt><span class="sect2"><a href="#othernonlocal">Nonlocal variable problems in CM3</a></span></dt></dl></dd><dt><span class="sect1"><a href="#history"> History and Acknowledgements</a></span></dt></dl></div><div class="sect1" title="Introduction"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="intro"></a> Introduction</h2></div></div></div><p> m3gdb is a modified version of the well-known gdb debugger,
+      with added support for the Modula-3 programming language. 
+      Much of the function of m3gdb is the same as gdb, and this
+      article makes no attempt to duplicate information found in existing
+      <a class="ulink" href="http://www.gnu.org/software/gdb/documentation/" target="_top"> 
+              gdb documentation </a>. 
+      Instead, it documents properties of m3gdb that add to or differ
+      from gdb.  The reader is assumed to be familiar the gdb 
+      documentation, or able to consult it as necessary.  Most of the
+      commands, command line options, environment variables, etc. of
+      m3gdb are the same as for gdb.  The differences lie in the
+      syntax and semantics of <a class="link" href="#expressions" title="Expressions">expression</a>s, <a class="link" href="#linespecs" title="Linespecs">linespec</a>s, etc. and in the
+      output m3gdb produces, when Modula-3 code is involved.    
+    </p><p>
+      Throughout, the term "gdb" will be used in statements 
+      that apply only to unmodified gdb.  
+      The term "m3gdb" will be used in statements 
+      that are specific to m3gdb.  
+      The term "(m3)gdb" will be used to 
+      state properties that m3gdb inherits from gdb,
+      and thus are the same in both debuggers.   
+    </p><p>
+      gdb is a multi-language debugger.  In deriving (m3)gdb from gdb,
+      none of gdb's function is removed.  Only new support for 
+      Modula-3 is added.  Thus, (m3)gdb is also a multi-language debugger,
+      with one additional supported programming language.  (m3)gdb further
+      supports debugging mixed-language programs, where modules written
+      in different languages are linked together.       
+    </p><p>
+      m3gdb supports code compiled by the SRC, PM3, EZM3, and CM3
+      Modula-3 compilers.  A single m3gdb executable dynamically detects and 
+      adapts to code compiled by any of these compilers.  The SRC, PM3, 
+      and EZM3 compilers differ very little, as far as m3gdb is 
+      concerned, so the phrase "PM3 et. al." will be used in statements
+      that apply equally to any of these three Modula-3 compilers.  
+      More information on the various compilers and other language
+      implementation alternatives and be found in
+      <a class="link" href="#implementations" title="m3gdb Support of Alternate Modula-3 Implementations">this section</a>. 
+    </p></div><div class="sect1" title="Building (m3)gdb"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="building"></a> Building (m3)gdb </h2></div></div></div><p>
+      Despite its support for all four Modula-3 compilers, the current, maintained
+      version of m3gdb is kept only in the CM3 source repositories.  
+      Within the repository it is found at 
+      <code class="filename">cm3/m3-sys/m3gdb</code>.  
+      It is entirely written in C, so a working Modula-3 compiler is not 
+      required to build it.  
+      However, it is integrated into CM3, 
+      and this integration uses <code class="filename">m3makefile</code>s 
+      and the Modula-3 build system.   
+      Thus, the easiest way to build it is, with a working installed CM3,
+      go into subdirectory <code class="filename">cm3/scripts</code> and execute 
+      <span class="command"><strong>./do-cm3-m3gdb.sh buildship</strong></span>.  
+      This will build and install m3gdb in the normal CM3 
+      <code class="filename">bin</code> directory, usually 
+      <code class="filename">/usr/local/cm3/bin</code>, where 
+      the installed executable will be named <code class="filename">m3gdb</code>.
+    </p><p>
+      This will go through the usual configure process, which will build
+      a debugger that both executes on and debugs programs on the machine
+      the build process executes on.  
+      Building by this method will always repeat the configuration
+      process, which can be annoyingly time-consuming if you are doing
+      development work on m3gdb and have only modified a source
+      file or two.  
+      Once the configure step has been done on a given machine, 
+      it is safe to disable it for future recompiles on the same machine.  
+      You can do this by uncommenting the line
+      <code class="literal">%quick = 1</code>, found near the top of 
+      <code class="filename">cm3/m3-sys/m3gdb/src/m3makefile</code>.  
+      Note that this is <span class="command"><strong>quake</strong></span> code, where the
+      "%" is the comment-start character.  
+    </p><p>
+      To build m3gdb without using a Modula-3 compiler, go in to 
+      <code class="filename">cm3/m3-sys/m3gdb/gdb</code> and execute  
+      <span class="command"><strong>./configure</strong></span> and <span class="command"><strong>make</strong></span>.
+      This is the usual C build process.  The compiled executable
+      will then be found in <code class="filename">cm3/m3-sys/m3gdb/gdb/gdb</code>,
+      from whence you can move or copy it as desired.
+    </p><p>
+      (m3)gdb has a source file <code class="filename">ada-lex.c</code>,
+      that is mechanically generated from <code class="filename">ada-lex.l</code>,
+      by <span class="command"><strong>flex</strong></span>.  
+      Normally, the CM3 distribution will contain an up-to-date 
+      <code class="filename">ada-lex.c</code>, but if not, you may need to 
+      have <span class="command"><strong>flex</strong></span> installed to build m3gdb.  
+      There are also several <code class="filename">*.y</code>
+      files that need <span class="command"><strong>bison</strong></span> to regenerate their
+      corresponding <code class="filename">*.c</code> files, following the same
+      pattern.    
+    </p><p>
+      In order to be able to debug variables of Modula-3 types 
+      <code class="literal">INTEGER</code> and <code class="literal">LONGINT</code>,
+      m3gdb needs to be compiled by a C compiler that has an
+      integer size at least as wide as each of these Modula-3 types. 
+    </p><div class="sect2" title="Build Dependencies"><div class="titlepage"><div><div><h3 class="title"><a name="id325090"></a>Build Dependencies</h3></div></div></div><p>
+        (m3)gdb needs the development files for 
+        <code class="filename">libncurses</code>.  
+        In Ubuntu, this is in package <code class="filename">libncurses5-dev</code>.
+      </p></div></div><div class="sect1" title="Compiling Modula-3 Code for Debugging"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="compiling"></a> Compiling Modula-3 Code for Debugging </h2></div></div></div><p>
+      As with all debuggers, (m3)gdb requires that code to be debugged
+      be compiled with certain options that ask the compiler to insert 
+      debug information in the object modules and executable.  
+      (m3)gdb needs this information to 
+      know things like the names, memory locations, and types of variables.
+      Without such information, (m3)gdb can still function, but only
+      at the machine  instruction level,
+      or in very limited ways at the source code level. 
+      m3gdb recognizes only the 
+      <code class="literal">stabs</code> or <code class="literal">stabs+</code> debug
+      information format.  In CM3, the latter is required for full
+      m3gdb function.     
+    </p><p>
+      To check whether an object or executable file has the right
+      kind of debug information,
+      execute <span class="command"><strong>objdump -G &lt;filename&gt;|head</strong></span>.  
+      The file contains the needed debug information iff you
+      see the line <code class="literal">"Contents of .stab section:"</code>. 
+    </p><p>
+      By default, the CM3 distribution is set up to compile with 
+      debug information, at least on some platforms.  
+      There are mechanisms for specifying either on the <span class="command"><strong>cm3</strong></span>
+      command line or in the <code class="filename">m3makefile</code>, that it should
+      be produced, but these default to on, and there does not seem
+      to be a way to turn them off.  
+    </p><p>
+      However, debug information can be turned off or on in 
+      another way by omitting or adding the line 
+      <code class="literal">if debug     args += "-gstabs+"  end</code>  
+      in the <span class="command"><strong>quake</strong></span>
+      procedure named <code class="function">m3_backend</code>.  
+      This is found in the CM3 configuration file, usually located at 
+      <code class="filename">/usr/local/cm3/bin/cm3.cfg</code>.
+    </p><p>
+      For example, to enable debug information, it should look someting like: 
+      </p><pre class="programlisting">
+        proc m3_backend (source, object, optimize, debug) is
+          local args = [ "-quiet", source, "-o", object, "-fPIC", "-m32", "-fno-reorder-blocks" ]
+          if optimize  args += "-O3"  end
+          if debug     args += "-gstabs+"  end
+          if M3_PROFILING args += "-p" end
+          return try_exec (m3back, args)
+        end
+      </pre><p> 
+      This line has been missing in the distributed configuration file
+      for some targets, at some times in the past few years.  
+    </p><p>
+      By default, PM3 et. al. produce debug information.
+      If your installation is not giving debug information, add the line
+      <code class="literal">option("debuginfo","T")</code> to your 
+      <code class="filename">m3makefile</code>.  
+      To suppress generation of debug information, add the line
+      <code class="literal">option("debuginfo","")</code> to your 
+      <code class="filename">m3makefile</code>.  
+    </p></div><div class="sect1" title="Commands in m3gdb"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="commands"></a>Commands in m3gdb</h2></div></div></div><div class="sect2" title="The print Command"><div class="titlepage"><div><div><h3 class="title"><a name="printcmd"></a>The <span class="command"><strong>print</strong></span> Command</h3></div></div></div><p>
+        In C, every expression is also a statement and may return a
+        result and/or have side-effects.  
+        These semantics are reflected in gdb, which was first a C debugger.  
+        In particular, the <span class="command"><strong>print</strong></span> command accepts an argument that is an 
+        <a class="link" href="#expressions" title="Expressions">expression</a>, which it both evaluates, printing the result, and carries out 
+        its side-effects on the debugee program.  
+        The expression could have no result,
+        if its type is <span class="type">void</span>, in which case, the 
+        <span class="command"><strong>print</strong></span> command displays <code class="literal">(void)</code>.
+        The user can execute a C assignment or call by typing it as
+        the argument to the <span class="command"><strong>print</strong></span> command. 
+        This facility is, in effect, an interpreter for a significant
+        subset of the language, implemented by gdb.    
+      </p><p>
+        Many of the Modula-3-specific extensions that m3gdb provides are
+        interpretation capabilities for Modula-3. 
+        m3gdb follows the C-like pattern for the <span class="command"><strong>print</strong></span>
+        command by allowing its argument to be either an <a class="link" href="#expressions" title="Expressions">expression</a>, an
+        assignment statement, or a call statement.  
+        Note that an expression could also be a call on a function 
+        procedure or method.  
+        If the argument is a Modula-3 expression, the <span class="command"><strong>print</strong></span> command
+        evaluates it and prints the result.  
+        If the expression contains a function call, there could also 
+        be side-effects as well.  
+        If the argument is a statement, the command executes the statement and
+        displays <code class="literal">(void)</code>.  
+        Section <a class="link" href="#expressions" title="Expressions">Expressions</a> describes 
+        the expressions m3gdb can evaluate.  
+      </p></div><div class="sect2" title="The start command"><div class="titlepage"><div><div><h3 class="title"><a name="startcmd"></a>The <span class="command"><strong>start</strong></span> command</h3></div></div></div><p>
+        When the main program is written in Modula-3, 
+        the m3gdb <span class="command"><strong>start</strong></span> command will
+        execute all compiler-generated initializations and all
+        module initialization bodies in the 
+        <a class="link" href="#initialization" title="Debugging and Runtime Initialization">runtime system</a>, which
+        is in library <code class="filename">libm3core</code> 
+        and always used when there is Modula-3 code.  
+        <a class="link" href="#globaloffsettable">(but see this note).</a>   
+        Execution will stop before any of the other module initialization
+        blocks. 
+      </p><p><a name="breakcmd"></a>
+        For code compiled by PM3 et. al., m3gdb accomplishes this by setting 
+        a breakpoint in procedure <code class="literal">RunMainBodies</code>, 
+        and the stop after the <span class="command"><strong>start</strong></span> command will
+        appear as hitting this breakpoint. 
+        <code class="literal">RunMainBodies</code> is located in library 
+        <code class="filename">libm3core</code>, and if it is dynamically linked, 
+        it may not have been loaded at the time you type the 
+        <span class="command"><strong>start</strong></span> command, thus requiring you to go 
+        through the usual ritual of allowing the breakpoint to be made pending,
+        until the containing library is loaded.  
+        Answer <code class="literal">y</code> to the question.
+        The breakpoint will be resolved automatically.   
+      </p><p>
+        For CM3-compiled code, m3gdb accomplishes this by setting 
+        a breakpoint in <code class="filename">Main.i3</code>, and the stop 
+        after the <code class="literal">start</code> command will
+        appear as hitting this breakpoint. 
+      </p></div></div><div class="sect1" title="Linespecs"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="linespecs"></a>Linespecs</h2></div></div></div><p>
+      (m3)gdb has commands, e.g., the <span class="command"><strong><a class="link" href="#breakcmd">break</a></strong></span> command,
+      that take an argument called a 
+      <span class="emphasis"><em><a class="link" href="#linespecs" title="Linespecs">linespec</a></em></span>. 
+      A linespec is used to denote an executable place in the code.  
+      There is overlap beween an <a class="link" href="#expressions" title="Expressions">expression</a> and a linespec, 
+      because either can refer to a module, interface, procedure, 
+      or (anonymous) block.  
+      In a linespec, a procedure or block directly denotes its first 
+      executable statement, while any of the four can be used as qualifier in
+      path eventually leading to a procedure or block.
+      In an <a class="link" href="#expressions" title="Expressions">expression</a>, a procedure can be named in a call, actual
+      parameter, or as a procedure constant, an interface or module
+      can similarly be used as a qualifier, leading to a procedure.
+    </p><p><a name="exprlinespec"></a>
+      However, there are significant differences in (m3)gdb's syntax 
+      and semantics of <a class="link" href="#linespecs" title="Linespecs">linespec</a>s and <a class="link" href="#expressions" title="Expressions">expression</a>s.  An expression is 
+      more general in one respect in that it can denote a variable, 
+      formal parameter, type, field, method, or procedure.  But an
+      expression needs to have a context where the debugee program is
+      stopped, in order to get, e.g., values of variables, and,
+      more fundamentally, to imply which language the expression
+      is to be interpreted in.  
+    </p><p>
+      In contrast, a complete linespec can only denote an 
+      executable location.  
+      While this cannot be a variable, formal, type, field, or
+      method, it must be possible to make sense of it independent of
+      any execution context.  
+      This means it could be a specification in the syntax of any of the 
+      languages supported by (m3)gdb.  
+      It could also have the form 
+      <code class="literal">&lt;sourceFileName&gt;:&lt;lineNumber&gt;</code>, 
+      where <code class="literal">&lt;sourceFileName&gt;</code> could contain dots.  
+      So (m3)gdb's parsing and analysis of <a class="link" href="#expressions" title="Expressions">expression</a>s and <a class="link" href="#linespecs" title="Linespecs">linespec</a>s 
+      is quite different.
+      Nonetheless, m3gdb attempts to make them behave the same, for
+      cases that can occur in either kind of denotation.  
+    </p><div class="sect2" title="Linespecs using a file name and line number"><div class="titlepage"><div><div><h3 class="title"><a name="id371538"></a>Linespecs using a file name and line number</h3></div></div></div><p>
+        A <a class="link" href="#linespecs" title="Linespecs">linespec</a> with the form 
+          <code class="literal">&lt;sourceFileName&gt;:&lt;lineNumber&gt;</code>
+        denotes the specified line number of the source file.  This
+        is no different from other gdb-supported languages.
+        If this line is not an executable place, (m3)gdb will use
+        a nearby line that is.   
+      </p></div><div class="sect2" title="Linespecs that are qualified references"><div class="titlepage"><div><div><h3 class="title"><a name="id371563"></a>Linespecs that are qualified references</h3></div></div></div><p>
+        A <a class="link" href="#linespecs" title="Linespecs">linespec</a> can take the form of a list of components, 
+        each of which is an identifier or a decimal number, separated 
+        by dots, with embedded white space allowed between the tokens.  
+        This is a kind of fully-qualified path to a procedure or block.  
+        The first component must be an identifier and must denote an 
+        interface, module, or procedure.   A subsequent identifier
+        denotes a procedure by that name, declared local to the unit
+        denoted by the prefix.  A number <span class="emphasis"><em>n</em></span> denotes 
+        the n-th anonymous block nested immediately inside the unit
+        denoted by the prefix.  This system allows specification of any 
+        procedure or block.          
+      </p><p> 
+        If the debugee program is running but stopped, and thus has an 
+        execution context, m3gdb first tries to interpret the first 
+        identifier in that context, using the scope rules of Modula-3.   
+        If that fails, m3gdb next tries to interpret the first 
+        identifier as an interface name, looking in the entire link 
+        closure of the program.  
+        If that fails, m3gdb finally tries to interpret the first 
+        identifier as a module name, again looking in the entire link 
+        closure of the program.  
+        If the first identifier refers to a module in a not-yet-loaded, 
+        dynamically linked library, this will fail, and (m3)gdb 
+        will try to find another way to interpret the <a class="link" href="#linespecs" title="Linespecs">linespec</a>.   
+      </p><p>
+        A subsequent identifier that denotes anything other than a 
+        procedure is a failed attempt at interpreting the linespec.
+        Likewise, a block number that would denote a nonexistent
+        block is a failure.  
+        Although a procedure can be referred to using an interface 
+        as prefix, any further components of the linespec are 
+        interpreted relative to the body of the procedure, 
+        i.e., within the module that exports the procedure.  
+        A procedure within a module will be found if it is either 
+        explicitly declared in the module or in an exported interface
+        of the module.  
+        This means that, when the exporting module has
+        a different name from an interface, a procedure can usually
+        be referenced using either the interface name or the module 
+        name as prefix.  
+      </p><p>
+        The initialization block of a module can
+        be specified as either the module name alone, or with the form
+        <code class="literal">&lt;moduleName&gt;.1</code>, i.e., the first 
+        (and only, in this case) block inside the module.  
+        As a prefix of a longer linespec (i.e., to specify some 
+        procedure or block inside the module initialization block), 
+        the latter form is required, because, for example, 
+        <code class="literal">&lt;moduleName&gt;.&lt;procedureName&gt;;</code>
+        denotes a procedure declared local to the module, not to 
+        the module's initialization block.    
+        See this <a class="link" href="#dot1modulebodies" title="Module Body execution in CM3">note</a> about
+        hitting breakpoints specified in this way.
+      </p><p>
+        m3gdb is inconsistent about what it does when an interpretation
+        attempt fails.  Sometimes it tries the next way of looking up
+        the first identifier as Modula-3 code.  This usually happens when the 
+        failure occurs within the first two components. 
+        Sometimes it abandons trying to interpret the entire <a class="link" href="#linespecs" title="Linespecs">linespec</a> as
+        Modula-3 code, but allows gdb to try other ways to interpret it,
+        in other languages.  
+        This usually happens when the first identifier can't be found
+        and when the component list is ill-formed. 
+        Sometimes it displays an error message and gives up altogether. 
+        This happens for bad components after the second.    
+        This inconsistency is considered a bug, but it is not obvious
+        what the best semantics are.  
+      </p></div><div class="sect2" title="Linespecs using mangled names"><div class="titlepage"><div><div><h3 class="title"><a name="id371651"></a>Linespecs using mangled names</h3></div></div></div><p>
+        All the Modula-3 compilers emit mangled linker names for
+        procedures, and such a name can be used in a <a class="link" href="#linespecs" title="Linespecs">linespec</a>
+        as an alternative way to identify a procedure.  
+        The mangled name for any procedure is similar to the component list
+        linespecs above, with each dot replaced by two underscores.
+        The entire name is a single linker name, so no embedded 
+        white space is allowed.  
+        The first component is always the <span class="emphasis"><em>module</em></span> 
+        the procedure's body is declared in.  
+        The block numbers have no leading zeros.
+        It is possible for a programmer to spoof such a name by
+        an identifier with double underscores, causing confusion
+        to m3gdb.  
+      </p></div></div><div class="sect1" title="Expressions"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="expressions"></a>Expressions</h2></div></div></div><p>
+      The following list gives Modula-3 code constructs that are supported, 
+      to at least some degree, in m3gdb expressions. 
+      Where m3gdb semantics are not identical to Modula-3
+      semantics, subsequent subsections describe the differences.
+      All of these constructs are treated as expressions by m3gdb.
+      but some are statements in Modula-3. 
+    </p><p>
+      </p><div class="itemizedlist"><ul class="itemizedlist" type="disc"><li class="listitem"><p>
+          <a class="link" href="#calls" title="Calls">Procedure and method calls</a>.
+        </p></li><li class="listitem"><p>
+          <a class="link" href="#subscripts">Array subscripting</a>.
+        </p></li><li class="listitem"><p>
+          <a class="link" href="#deref">Dereferencing with <code class="literal">^</code></a>.
+        </p></li><li class="listitem"><p>
+          <a class="link" href="#binarith">
+            <code class="literal">DIV</code>, <code class="literal">MOD</code>, 
+            <code class="literal">*</code>, <code class="literal">/</code>, 
+            binary <code class="literal">+</code>, and binary <code class="literal">-</code>
+          </a> operators.
+        </p></li><li class="listitem"><p>
+          <a class="link" href="#unarith">
+            <code class="literal">ABS</code>, 
+            unary <code class="literal">+</code>, and unary <code class="literal">-</code>
+          </a> operators.
+        </p></li><li class="listitem"><p>
+          <a class="link" href="#relops" title="Relational operators">
+            Relational operators
+            <code class="literal">=</code>, <code class="literal">#</code>, 
+            <code class="literal">&lt;</code>, <code class="literal">&lt;=</code>, 
+            <code class="literal">&gt;</code>, and <code class="literal">&gt;=</code>
+          </a>.
+        </p></li><li class="listitem"><p>
+          Boolean operators 
+          <code class="literal">AND</code>, <code class="literal">OR</code>, and
+          <code class="literal">NOT</code>.
+        </p></li><li class="listitem"><p>
+          The <code class="literal">MIN</code> and <code class="literal">MAX</code> functions.
+        </p></li><li class="listitem"><p>
+          The <a class="link" href="#debugeetext">
+            concatenation operator <code class="literal">&amp;</code>
+          </a>.
+        </p></li><li class="listitem"><p>
+          The assignment statement <code class="literal">:=</code>.
+          See notes on assignability of
+          <a class="link" href="#arrayassignability">arrays</a> and
+          <a class="link" href="#procassignability">procedures</a>.  
+        </p></li><li class="listitem"><p>
+          The <code class="literal">ORD</code> and <code class="literal">VAL</code> functions.
+        </p></li><li class="listitem"><p>
+          The <code class="literal">CIELING</code>, <code class="literal">FLOOR</code>, 
+          <code class="literal">ROUND</code> and <code class="literal">FLOAT</code> functions. 
+        </p></li><li class="listitem"><p>
+          The <a class="link" href="#firstlastnumber">
+            <code class="literal">FIRST</code>, <code class="literal">LAST</code>, 
+            and <code class="literal">NUMBER</code>
+          </a> functions.
+        </p></li><li class="listitem"><p>
+          The <a class="link" href="#typecode"><code class="literal">TYPECODE</code></a> 
+          function.
+        </p></li><li class="listitem"><p>
+          The <a class="link" href="#loophole"><code class="literal">LOOPHOLE</code>.</a>
+          function.
+        </p></li><li class="listitem"><p>
+          The <a class="link" href="#sizes">
+            <code class="literal">ADRSIZE</code>, <code class="literal">BITSIZE</code>, 
+            and <code class="literal">BYTESIZE</code>
+          </a> functions.
+        </p></li><li class="listitem"><p>
+          The <a class="link" href="#adr"><code class="literal">ADR</code></a> function. 
+        </p></li></ul></div><p>
+    </p><div class="sect2" title="Identifiers"><div class="titlepage"><div><div><h3 class="title"><a name="identifiers"></a>Identifiers</h3></div></div></div><div class="sect3" title="Unqualified Identifiers"><div class="titlepage"><div><div><h4 class="title"><a name="id372041"></a>Unqualified Identifiers</h4></div></div></div><p>
+          m3gdb generally follows Modula-3's rules for looking up an unqualified
+          identifier, with some exceptions.  
+        </p><p>
+          The debug symbol data emitted by the compilers contains no information
+          about identifiers declared in a <code class="literal">CONST</code>
+          or <code class="literal">EXCEPTION</code> declaration, so you can't refer to
+          these in an m3gdb <a class="link" href="#expressions" title="Expressions">expression</a>.  
+          (But you can refer to 
+           <a class="link" href="#enumconst">values of enumeration types</a>.)   
+          This can further change the semantics of identifier lookup.  
+          For example, in true Modula-3 code, there could be a reference to a 
+          named constant that is declared in some inner scope.  
+          In an m3gdb expression, the same identifier might end up denoting 
+          an entirely different declaration by the same name, in some outer 
+          scope.
+          Since m3gdb doesn't know the constant exists, it will
+          find the identifier in the outer scope. 
+        </p><p>
+          When a normal Modula-3 scope lookup of an identifier fails, m3gdb looks 
+          for an interface or module by that name, in the entire link closure 
+          of the program, excluding any not-yet-loaded dynamically linked 
+          libraries.  
+          The name of an interface or module, by itself, has no meaning in an
+          m3gdb expression, but it can be followed by a dot and used to name
+          a procedure, variable, or type declared in the interface or module.
+          Identifiers known in a module via exported interfaces can be named
+          in this way, in addition to those declared directly in the module. 
+          If there is both an interface and a module by the same name, the
+          interface is searched first, but a procedure named in that way is 
+          treated as referring to the procedure body.  
+        </p><p>
+          If, perversely, there were a module that did not export
+          a same-named interface and both contained different declarations
+          of the same identifier, this lookup order would mean you could
+          not name the meaning declared in the module, unless the program
+          context were somewhere inside the module. 
+        </p></div><div class="sect3" title="References to nonlocal variables"><div class="titlepage"><div><div><h4 class="title"><a name="nonlocalvars"></a>References to nonlocal variables</h4></div></div></div><p>
+          For PM3 et. al., m3gdb fully supports references to
+          variables that are declared in some scope outer to
+          the referencing context.  
+        </p><p>
+          For CM3, the debug information for following static
+          links is inadequate. 
+          So long as nested procedures are called only as procedure
+          constants, it should work correctly.  
+          If a nested procedure is called through a formal parameter, m3gdb 
+          might find the wrong instance of a statically containing
+          procedure, when accessing the containing procedure's
+          variables nonlocally.  
+          For now, m3gdb warns whenever accessing variables nonlocally.
+          Also, see <a class="link" href="#othernonlocal" title="Nonlocal variable problems in CM3">this note.</a>
+        </p><p>
+          This problem does not apply to fully global variables, since they
+          do not require the static link mechanism to address them. 
+        </p></div><div class="sect3" title="Qualified Identifiers"><div class="titlepage"><div><div><h4 class="title"><a name="id372129"></a>Qualified Identifiers</h4></div></div></div><p>
+          Dot selections in m3gdb follow most of Modula-3's rules.
+          You can select:
+          </p><div class="itemizedlist"><ul class="itemizedlist" type="disc"><li class="listitem"><p>
+              A procedure, type, or variable of an interface or module.
+            </p></li><li class="listitem"><p>A field of a record value.</p></li><li class="listitem"><p>
+              A field or method of an object value.
+            </p></li><li class="listitem"><p>
+              <a name="enumconst"></a>
+              One of the named values of an enumeration type.
+            </p></li></ul></div><p>
+          You can not select a constant or exception of an interface or module.
+          You can not select a method name of an 
+          object <span class="emphasis"><em>type</em></span>.
+        </p></div></div><div class="sect2" title="Procedures"><div class="titlepage"><div><div><h3 class="title"><a name="id372173"></a>Procedures</h3></div></div></div><p>
+        m3gdb displays the value of a procedure in both of two ways: 
+        a qualified path as in a <a class="link" href="#linespecs" title="Linespecs">linespec</a>, and a source file 
+        and line number.  
+      </p><p>
+        A procedure can be referred to in an m3gdb <a class="link" href="#expressions" title="Expressions">expression</a>, either
+        as part of a call, to pass the procedure (constant) as an
+        actual parameter, or to assign it to a variable. 
+      </p><p><a name="procassignability"></a>
+        m3gdb does not check assignability of two procedure types.
+        This is relevant for assignments and passing parameters.   
+        If both are procedure types, it assumes they are assignable.  
+        It warns when it makes this liberal assumption.  
+        Bad things will almost certainly happen if you abuse this.   
+      </p></div><div class="sect2" title="Types"><div class="titlepage"><div><div><h3 class="title"><a name="id372207"></a>Types</h3></div></div></div><p>
+        A type can be referred to in an m3gdb <a class="link" href="#expressions" title="Expressions">expression</a>.  
+        The primary use is as parameter to builtin functions such as 
+        <code class="literal">LOOPHOLE</code>, <code class="literal">VAL</code>, etc.
+        Only named types work, either builtin or declared in a 
+        <code class="literal">TYPE</code> declaration.
+        m3gdb does not recognize Modula-3 type constructors. 
+      </p><p>
+        m3gdb displays the value of a named type as a qualified
+        path, as in a <a class="link" href="#linespecs" title="Linespecs">linespec</a>, but ending with a type name.  
+      </p></div><div class="sect2" title="TEXT values"><div class="titlepage"><div><div><h3 class="title"><a name="id372249"></a>TEXT values</h3></div></div></div><p>
+        m3gdb displays values of type <code class="literal">TEXT</code> 
+        and accepts them in <a class="link" href="#expressions" title="Expressions">expression</a>s.  
+        It supports both the form used in PM3 et. al. and the form used in CM3.
+        If the program was compiled by CM3, it will handle wide 
+        <code class="literal">TEXT</code> literals and also the type 
+        <code class="literal">WIDECHAR</code> and its literals.  
+      </p><p>
+        Normally, m3gdb displays <code class="literal">TEXT</code>
+        values in Modula-3 lexical syntax, with double
+        quotes, escape sequences, and, if appropriate, a leading 
+        <code class="literal">'W'</code>. 
+        However, the <span class="command"><strong>/k</strong></span> option in a <span class="command"><strong><a class="link" href="#printcmd" title="The print Command">print</a></strong></span> command will 
+        cause it instead to display the <code class="literal">TEXT</code> 
+        value's internal data structure.  
+        For PM3 et. al., this is a traced reference to an open array of 
+        characters.
+        For CM3, this will be one of the several object subtypes of 
+        <code class="literal">TEXT</code>.  
+        m3gdb properly recognizes and displays values of CM3 type 
+        <code class="literal">TextLiteral.T</code>.
+        Here, it takes the length of the text from the appropriate field, 
+        instead of from the declared type, which contains a fixed array whose
+        length is almost always far too long. 
+      </p><p>
+        Even without specifying the <span class="command"><strong>/k</strong></span> option, if you
+        happen to know what the internal representation is, you can apply
+        appropriate operators to it, e.g., dereferencing, field selection,
+        subscripting, or even method calls.  
+      </p><p><a name="debugeetext"></a>
+        There are some cases where, in order to evaluate/execute a user-typed
+        <a class="link" href="#expressions" title="Expressions">expression</a>, m3gdb has to actually allocate an object in the heap
+        of the debugee program.  
+        Examples are assigning a user-typed <code class="literal">TEXT</code> value
+        to a variable or passing it as an actual parameter.
+        This can happen unexpectedly if the expression in the m3gdb command
+        contains the Modula-3 concatenation operator <code class="literal">&amp;</code>, 
+        which m3gdb evaluates by calling <code class="literal">Text.Cat</code> 
+        in the debugee process.
+        This will alter the debugee's execution environment it a subtle way.  
+        Usually this will not matter, and the garbage collector will eventually 
+        collect such objects after they become inaccessible.  
+        Such operations will not work if you are only debugging a 
+        <code class="filename">core</code> file and don't have an executing 
+        debugee program.    
+      </p><p>
+        If you type <span class="command"><strong>print "ABC" &amp; "DEF"</strong></span>, 
+        m3gdb will execute three calls in the target program.  
+        Two on <code class="literal">Text.FromChars</code> to get the 
+        <code class="literal">TEXT</code> values allocated and one on 
+        <code class="literal">Text.Cat</code> to do the concatenation.
+        All three <code class="literal">TEXT</code> strings will be allocated
+        in the debugee program's traced heap, 
+        but will immediately become garbage, available for collection.
+      </p></div><div class="sect2" title="Modula-3 References"><div class="titlepage"><div><div><h3 class="title"><a name="id372425"></a> Modula-3 References</h3></div></div></div><p><a name="deref"></a>
+        m3gdb tolerates application of a redundant dereferencing operator
+        <code class="literal">^</code> to a value of an object type,
+        with a warning. 
+      </p><p>
+        m3gdb always treats a heap object as having its 
+        <span class="emphasis"><em>allocated </em></span>type, not the static 
+        type of the expression used to refer to it.  
+        This allows you to select fields, etc. of the actual object. 
+      </p><p>
+        A <code class="literal">LOOPHOLE</code> applied to a heap object is an
+        exception.  
+        This would allow you to access a field or method of a supertype
+        that was hidden by a different but same-named field or method
+        in the allocated type. 
+      </p></div><div class="sect2" title="Arrays"><div class="titlepage"><div><div><h3 class="title"><a name="id372460"></a>Arrays</h3></div></div></div><p><a name="subscripts"></a>
+        m3gdb does not support subscripting on non-byte-aligned, 
+        bitpacked arrays.
+      </p><p>
+        m3gdb does not support array constructors.
+      </p><p><a name="arrayassignability"></a>
+        m3gdb does not allow assignability of references to non-equal 
+        array types. 
+        This is relevant for assignments and passing parameters.
+        In Modula-3, some such combinations are assignable.
+        Sorry.  
+      </p></div><div class="sect2" title="Calls"><div class="titlepage"><div><div><h3 class="title"><a name="calls"></a>Calls</h3></div></div></div><p>
+        For ordinal types, m3gdb can't distinguish a <code class="literal">VAR</code>
+        parameter from a <code class="literal">READONLY</code> parameter, given the
+        information available from any of the compilers.  
+        In this case, it assumes <code class="literal">VAR</code>, and requires 
+        the actual and formal to have identical types.  
+        This assumption makes <code class="literal">VAR</code> mode
+        work (i.e., the actual can be changed by the called procedure), but
+        means m3gdb's type rule is overly strict for 
+        <code class="literal">READONLY</code>.  
+      </p><p>
+        In the latter case, if the actual is
+        assignable but not identical and you really need to pass it, you 
+        will have to use a <code class="literal">LOOPHOLE</code> on the actual 
+        parameter in the call.  
+        On the other hand, if you use the <code class="literal">LOOPHOLE</code> 
+        and the mode is really <code class="literal">VAR</code>, bad things could happen. 
+      </p><p>
+        For all other classes of types, either m3gdb has a way to 
+        distinguish <code class="literal">VAR</code> from <code class="literal">READONLY</code>, 
+        or it doesn't matter. 
+      </p></div><div class="sect2" title="Arithmetic operators"><div class="titlepage"><div><div><h3 class="title"><a name="arith"></a>Arithmetic operators</h3></div></div></div><p><a name="binarith"></a>
+        m3gdb's liberal type rules allow the integer binary 
+        (i.e., two-operand) arithmetic operations
+        to be performed on any subrange type and any reference type,
+        as well as <code class="literal">INTEGER</code>, <code class="literal">LONGINT</code>, 
+        <code class="literal">CARDINAL</code>, <code class="literal">LONGCARD</code>, 
+        and mixtures thereof. 
+      </p><p><a name="unarith"></a>
+        <code class="literal">ABS</code> and unary <code class="literal">-</code> 
+        can only be applied to an <code class="literal">INTEGER</code>, 
+        <code class="literal">LONGINT</code>, or floating operand.
+        They won't even work on a <code class="literal">PACKED</code>
+        or a formal parameter passed by reference.   
+        Since it is semantically an identity, m3gdb just ignores 
+        unary <code class="literal">+</code> without even bothering to type check it. 
+      </p></div><div class="sect2" title="Relational operators"><div class="titlepage"><div><div><h3 class="title"><a name="relops"></a>Relational operators</h3></div></div></div><p>
+        The relational operators 
+            <code class="literal">=</code>, <code class="literal">#</code>, 
+            <code class="literal">&lt;</code>, <code class="literal">&lt;=</code>, 
+            <code class="literal">&gt;</code>, and <code class="literal">&gt;=</code>
+        do no type checking at all.  
+      </p></div><div class="sect2" title="Builtin functions"><div class="titlepage"><div><div><h3 class="title"><a name="id372679"></a>Builtin functions</h3></div></div></div><p><a name="firstlastnumber"></a>
+        Builtin functions 
+        <code class="literal">FIRST</code>, <code class="literal">LAST</code>, 
+        and <code class="literal">NUMBER</code>
+        work on ordinal and array <span class="emphasis"><em>types</em></span> only. 
+        They do not work on array <span class="emphasis"><em>values</em></span>
+        or on floating types or values.
+      </p><p><a name="typecode"></a>
+        <code class="literal">TYPECODE</code> works on non-<code class="literal">NIL</code>
+        <span class="emphasis"><em>values</em></span> that have traced reference types.
+        It does not work on <span class="emphasis"><em>types</em></span>, 
+        nor on the value <code class="literal">NIL</code>. 
+      </p><p><a name="loophole"></a>
+        <code class="literal">LOOPHOLE</code> works as in Modula-3, except it cannot be
+        used to convert to an open array type.
+      </p><p><a name="sizes"></a>
+        <code class="literal">ADRSIZE</code>, <code class="literal">BITSIZE</code>, 
+        and <code class="literal">BYTESIZE</code> work as in Modula-3, except they
+        cannot be applied to an open array <span class="emphasis"><em>value</em></span>. 
+      </p><p><a name="adr"></a>
+        <code class="literal">ADR</code> can be applied to any value. 
+      </p></div></div><div class="sect1" title="m3gdb Support of Alternate Modula-3 Implementations"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="implementations"></a>m3gdb Support of Alternate Modula-3 Implementations</h2></div></div></div><p>
+      m3gdb supports code compiled by the SRC, PM3, EZM3, and CM3
+      Modula-3 compilers.  A single m3gdb executable dynamically detects and 
+      adapts to code compiled by any of these compilers.  
+    </p><p><a name="mixed"></a>
+      Programs that link together Modula-3 code produced by a mixture of 
+      CM3 and PM3 et. al. compilers are likely to confuse m3gdb's
+      detection of what compiler was used.
+      These compilers have significant differences in their runtime
+      organization, and m3gdb assumes there is not a mixture.  
+      Any such problem behaviour can even depend on the order in which
+      dynamically-linked libraries are brought in.  
+      In fact, mixing code like this is likely to cause other problems,
+      even without m3gdb's involvement.  
+    </p><p>
+      There are two different code generators in use by the various
+      compilers.  
+      One is derived from the well-known <span class="command"><strong>gcc</strong></span> compiler, 
+      with modest modifications to support Modula-3.  
+      It inherits much of <span class="command"><strong>gcc</strong></span>'s repertoire 
+      of supported targets and its range of optimization options.  
+      For PM3 et. al., it is derived from <span class="command"><strong>gcc</strong></span> 2.7.2.
+      For CM3, it is derived from <span class="command"><strong>gcc</strong></span> 4.3.0.
+      The other code generator is an i386-specific code generator,
+      written in Modula-3 and designed for fast compilation.   
+    </p><p>
+      There are three different thread implementations for Modula-3 threads. 
+      One uses <code class="literal">setjmp</code> and <code class="literal">longjmp</code>
+      and is implemented entirely within the runtime library 
+      <code class="filename">libm3core</code>.
+      It subschedules the process thread that is provided by the 
+      operating system, among the Modula-3 threads.  
+      In recent years, it has been undermined by security-motivated changes
+      in <code class="literal">setjmp</code> and <code class="literal">longjmp</code>.  
+      Only a few platforms have an updated version.  
+      The second is much newer and uses the library 
+      <code class="filename">libpthread</code>.
+      It integrates scheduling of Modula-3 threads with other threads.  
+      It also is adapted to multi-core and multi-chip SMP systems. 
+      The third uses Windows native threads and is used only on
+      Windows platforms. 
+    </p><p><a name="collectors"></a>
+      There are two different garbage collectors.  
+      Both are capable of incremental collection, i.e., running
+      collection activity in a parallel thread to the running
+      program, thus avoiding unexpected pauses in execution.  
+      The older, <a class="link" href="#vmsync">virtual-memory-synchronized</a> 
+      collector uses virtual memory to detect heap changes that 
+      would otherwise undermine the correctness of the collector.
+      The newer, compiler-assisted collector 
+      uses compiler-inserted notifications for the same purpose.
+    </p><div class="sect2" title="The Info Modula-3 command"><div class="titlepage"><div><div><h3 class="title"><a name="id372899"></a>The <span class="command"><strong>Info Modula-3</strong></span> command</h3></div></div></div><p>
+        m3gdb has a new command "<span class="command"><strong>Info Modula-3</strong></span>".
+        This will tell you which compiler and which code generator
+        were used to compile the debugee program and which threads 
+        implementation and which garbage collector are in use.
+        In case you have trouble remembering which spelling of the
+        language name to use, it accepts the cartesian product of
+        "Modula" spelled out or abbreviated with a 
+        single "M", lowercase/uppercase "M", 
+        and with/without the hyphen.
+        A <a class="link" href="#mixed">mixture</a> of implementations 
+        will confuse it.  It may be unable to get some of the 
+        information before the <a class="link" href="#initialization" title="Debugging and Runtime Initialization"> 
+        runtime system has been initialized</a>.  
+      </p></div><div class="sect2" title="m3gdb and Garbage Collection"><div class="titlepage"><div><div><h3 class="title"><a name="id372937"></a>m3gdb and Garbage Collection</h3></div></div></div><p><a name="vmsync"></a> 
+        The virtual-memory-synchronized garbage collector works by
+        asking the operating system to artificially hardware-protect certain
+        memory areas from access and to notify it when such and access occurs.
+        The notification is through a segment fault that the garbage
+        collector catches and handles.  
+        Unfortunately, m3gdb can't distinguish this artificial segment
+        fault from a normal one, resulting in numerous false stops of 
+        the debugee program.
+        m3gdb prevents this by automatically disabling incremental
+        collection when debugging with this collector.  
+        This is the equivalent of manually adding <code class="literal">@M3novm</code> 
+        to the command line arguments, which you can also do redundantly 
+        and harmlessly.
+        You can reenable incremental collection by typing the command
+        "<span class="command"><strong>print RTCollectorSRC.EnableVM()</strong></span>", 
+        after the <a class="link" href="#initialization" title="Debugging and Runtime Initialization"> 
+        runtime system has been initialized</a>.
+      </p></div><div class="sect2" title="m3gdb and thread support"><div class="titlepage"><div><div><h3 class="title"><a name="id372973"></a>m3gdb and thread support</h3></div></div></div><p><a name="pthread"></a>
+        The <code class="literal">libpthread</code> thread implementation uses 
+        signal <code class="literal">SIG64</code> internally.  
+        By default, (m3)gdb stops when this signal is received,
+        resulting in numerous false stops.  
+        When this thread implementation is in use, m3gdb automatically 
+        executes the command
+        "<span class="command"><strong>handle SIG64 nostop noprint pass</strong></span>", 
+        before the debugee program starts to run.   
+        This causes m3gdb to silently pass this signal to the program,
+        preventing the false stops.  
+        If you want to reverse this, for example, to debug this thread
+        implementation, type the command 
+        "<span class="command"><strong>handle SIG64 stop print pass</strong></span>".
+      </p></div></div><div class="sect1" title="Debugging and Runtime Initialization"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="initialization"></a>Debugging and Runtime Initialization</h2></div></div></div><p>
+      Some debugging commands can fail if executed too early, before
+      certain initializations have happened. 
+      Understanding initialization can matter to you if you want
+      to debug module body code or the runtime system itself, 
+      or try to execute calls in m3gdb commands before everything 
+      has been initialized.  
+    </p><p>
+      m3gdb uses addresses found in debug information in
+      executable files to address global variables and procedures.
+      On some targets, executable code uses a different mechanism
+      that addresses global variables and procedures indirectly,
+      using pointers that are also stored in global locations.
+      These pointers are initialized by compiler/linker-generated
+      machine code, and this happens during program startup.  
+    </p><p>
+      You can access a global variable with an m3gdb command
+      any time, although its value may not yet be initialized.
+      However, if you call a global procedure using an m3gdb
+      command, and it or any other procedure it calls, directly or 
+      indirectly, accesses a global variable, it may use 
+      one of these pointers.
+      If the pointer has not yet been initialized,  
+      this will almost certainly cause your program to suffer 
+      a segment fault that would never happen if you only executed
+      compiler-generated code. 
+    </p><p> 
+      Other problems of more varied nature can also occur if the
+      module body code, written by the Modula-3 programmer, has not been
+      executed when you use an m3gdb command to call a procedure
+      too early.  
+    </p><p> 
+      Using the m3gdb 
+      <a class="link" href="#startcmd" title="The start command"><span class="command"><strong>start</strong></span></a> command 
+      will ensure that the runtime system has been initialized.
+      After that, m3gdb calls on procedures that are in 
+      <code class="filename">libm3core</code> and in the closure should be safe. 
+      To use m3gdb safely to make calls in your own code, you need
+      to be sure execution has proceeded at least through the first
+      line of the body of the module that exports <code class="literal">Main</code>.
+    </p><p><a name="globaloffsettable"></a>
+      If you link in a library, all the code of the entire library is loaded
+      into your address space, and all the debug data is available to m3gdb,
+      even for modules that are in the library but not in the 
+      <code class="literal">IMPORT/EXPORT</code> closure of the main program.  
+      This means you can call procedures in such modules and access their
+      global variables from m3gdb commands.
+      However, the compilers take care of initialization 
+      only for modules in the closure, so such modules will
+      never be initialized.  Similarly, only certain modules in   
+      <code class="filename">libm3core</code> are initialized as part of
+      the runtime system. 
+    </p><p><a name="FromFingerprint"></a>
+      As an example, you can always call 
+      <code class="literal">RTTypeFP.FromFingerprint</code>, because it
+      is in <code class="filename">libm3core</code>.  
+      And this could be a useful thing to want to do during
+      a debug session (e.g., when debugging something involving pickles). 
+      But <code class="literal">RTTypeFP</code> is not initialized as part
+      of the runtime system and is usually not named in any 
+      <code class="literal">IMPORT</code> or <code class="literal">EXPORT</code>
+      in a typical program, and therefore is not in the closure.
+    </p><p>
+      So this call, in an m3gdb command, will result in a
+      segment fault while trying allocate a heap object of a type 
+      declared in <code class="literal">RTTypeFP</code>.
+      Even the needed type definition is present in memory, 
+      but the needed pointer to it is not set up.
+      To make this work, you have to put 
+      <code class="literal">IMPORT RTTypeFP;</code> somewhere in your
+      program and recompile and also postpone the m3gdb call
+      until the necessary initialization has taken place.  
+    </p><div class="sect2" title="Module Body execution in CM3"><div class="titlepage"><div><div><h3 class="title"><a name="dot1modulebodies"></a>Module Body execution in CM3</h3></div></div></div><p>
+        In CM3-compiled code, if you put a breakpoint at, e.g., 
+        <code class="literal">Mod.1</code> rather than using a
+        source code line number, you will see somewhat strange behaviour.
+        The CM3 runtime system invokes module bodies multiple times.
+        The compiler translates them so they do different things
+        on different invocations.  
+        The compiler also gives them a parameter named 
+        <code class="literal">mode</code>, whose value, in part, determines what
+        the module body code will do.   
+      </p><p>
+        If execution stops at a breakpoint such as 
+        <code class="literal">Mod.1</code>, and <code class="literal">mode</code> 
+        has value <code class="literal">0</code>, the programmer-written 
+        Modula-3 code of the module body will not be executed during this
+        invocation, and the initialization of the runtime system 
+        might not have been done either.  
+        This can happen more than once.   
+        When <code class="literal">mode</code> has value <code class="literal">1</code>,
+        then the Modula-3 code itself is about to be executed.  
+      </p><p>
+        You can work around this by using a <a class="link" href="#linespecs" title="Linespecs">linespec</a> with a source 
+        code line number in your <span class="command"><strong>break</strong></span> command.
+      </p></div></div><div class="sect1" title="Using the Modula-3 Runtime System to Aid Debugging"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="runtime"></a>Using the Modula-3 Runtime System to Aid Debugging</h2></div></div></div><p>
+    There are many things you can do to aid debugging, just by
+    using m3gdb commands to print and set variables and to call 
+    procedures in the runtime system.  
+  </p><p>
+    As an example, RTTypeFP.FromFingerprint 
+    could be useful when debugging pickles themselves, or a program
+    that uses them. 
+    However, see <a class="link" href="#globaloffsettable">here</a> for
+    a caveat on how to use it. 
+  </p></div><div class="sect1" title="Miscellaneous"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="misc"></a>Miscellaneous</h2></div></div></div><div class="sect2" title="Nonlocal variable problems in CM3"><div class="titlepage"><div><div><h3 class="title"><a name="othernonlocal"></a>Nonlocal variable problems in CM3</h3></div></div></div><p>
+        In CM3, there are problems in displaying variables and formal
+        parameters that are nonlocally accessed somewhere in the Modula-3 code,  
+        (in addition to <a class="link" href="#nonlocalvars" title="References to nonlocal variables">this problem</a>.)
+        If a formal parameter is accessed nonlocally anywhere in the program,
+        accessing it locally in m3gdb by the commands
+        <span class="command"><strong>info arg</strong></span>, <span class="command"><strong>frame</strong></span>, 
+        or <span class="command"><strong>backtrace</strong></span> will display an incorrect value, 
+        while <span class="command"><strong>info loc</strong></span> will give two values for 
+        such a parameter, only one of which is correct.  
+        The <span class="command"><strong><span class="command"><strong><a class="link" href="#printcmd" title="The print Command">print</a></strong></span></strong></span> command appears to be correct in 
+        such cases, as far as tested to date.  
+      </p></div></div><div class="sect1" title="History and Acknowledgements"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="history"></a> History and Acknowledgements</h2></div></div></div><p> 
+      m3gdb was originally developed as a modification to
+      gdb, version 4.17, done at DEC's Stanford Research
+      Center, by unknown authors.  
+      Over the years, the modifications have been moved to
+      gdb versions 4.0.1.0, 5.3, 6.3, and 6.4, along with
+      many enhancements, by Antony Hosking and Rodney Bates. 
+      Any additional information about history or contributors
+      would be welcomed.  
+    </p><p>
+      This document was originally written in October of 
+      2008 by Rodney M. Bates, rodney.bates@wichita.edu.
+    </p></div></div></body></html>

@@ -1,0 +1,42 @@
+<HTML>
+<HEAD>
+<TITLE>Modula-3: Safety</TITLE>
+<LINK HREF="/cm3/normal.css" REL="stylesheet" TYPE="text/css"></head>
+<body>
+
+<P>
+<A HREF="m3.html">[top]</A>
+<A HREF="init.html">[prev]</A>
+<A HREF="exprs.html">[next]</A>
+<P>
+
+<H2>Safety</H2>
+<P>
+
+The keyword <TT>UNSAFE</TT> can precede the declaration of any interface
+or module to indicate that it is <EM>unsafe</EM>; that is, uses the
+<A HREF="unsafe.html">unsafe features</A>
+of the language.
+An interface or module not explicitly labeled
+<TT>UNSAFE</TT> is called <EM>safe</EM>.
+<P>
+
+<A NAME=idx.150>An</A>
+interface is <EM>intrinsically safe</EM> if there is no way to produce
+an unchecked runtime error by using the interface in a safe module.
+If all modules that export a safe interface are safe, the compiler
+guarantees the intrinsic safety of the interface.  If any of the modules
+that export a safe interface are unsafe, it is the programmer, rather
+than the compiler, who makes the guarantee.
+<P>
+
+It is a static error for a safe interface to import an unsafe one
+or for a safe module to import or export an unsafe interface.
+<P>
+
+<P>
+<A HREF="m3.html">[top]</A>
+<A HREF="init.html">[prev]</A>
+<A HREF="exprs.html">[next]</A>
+</BODY>
+</HTML>

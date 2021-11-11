@@ -1,0 +1,77 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<!--Converted with LaTeX2HTML 2008 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>2.5.7 Safety</TITLE>
+<META NAME="description" CONTENT="2.5.7 Safety">
+<META NAME="keywords" CONTENT="m3-defn-complete">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2008">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="/cm3/normal.css">
+
+<LINK REL="previous" HREF="2_5_6Initialization.html">
+<LINK REL="up" HREF="2_5Modules_interfaces.html">
+<LINK REL="next" HREF="2_6Expressions.html">
+</HEAD>
+
+<BODY >
+
+<DIV CLASS="navigation"><!--Navigation Panel-->
+<A NAME="tex2html743"
+  HREF="2_6Expressions.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.png"></A> 
+<A NAME="tex2html741"
+  HREF="2_5Modules_interfaces.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.png"></A> 
+<A NAME="tex2html737"
+  HREF="2_5_6Initialization.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.png"></A>   
+<BR>
+<B> Next:</B> <A NAME="tex2html744"
+  HREF="2_6Expressions.html">2.6 Expressions</A>
+<B> Up:</B> <A NAME="tex2html742"
+  HREF="2_5Modules_interfaces.html">2.5 Modules and interfaces</A>
+<B> Previous:</B> <A NAME="tex2html738"
+  HREF="2_5_6Initialization.html">2.5.6 Initialization</A>
+<BR>
+<BR></DIV>
+<!--End of Navigation Panel-->
+
+<H3><A NAME="SECTION00018700000000000000">
+2.5.7 Safety</A>
+</H3>
+
+<P>
+The keyword <code>UNSAFE</code> can precede the declaration of any interface or
+module to indicate that it is <SPAN  CLASS="textit">unsafe</SPAN>; that is, uses the unsafe features
+of the language.  An interface or module not explicitly labeled <code>UNSAFE</code>
+is called <SPAN  CLASS="textit">safe</SPAN>.
+
+<P>
+An interface is <SPAN  CLASS="textit">intrinsically safe</SPAN> if there is no way to produce an
+unchecked runtime error by using the interface in a safe module.  If all
+modules that export a safe interface are safe, the compiler guarantees the
+intrinsic safety of the interface.  If any of the modules that export a safe
+interface are unsafe, it is the programmer, rather than the compiler, who
+makes the guarantee.
+
+<P>
+It is a static error for a safe interface to import an unsafe one or for a
+safe module to import or export an unsafe interface.
+
+<P>
+<BR><HR>
+<ADDRESS>
+m3-support@elego.de
+</ADDRESS>
+</BODY>
+</HTML>
