@@ -81,7 +81,7 @@ jobs:
       env:
         M3_BACKEND_MODE: ${{ (matrix.backend == 'c') && matrix.backend || '' }}
       run: |
-        python3 scripts/concierge.py full-upgrade -caltech-other -caltech-parser -m3-scheme "${M3_BACKEND_MODE}"
+        python3 scripts/concierge.py full-upgrade -caltech-other -caltech-parser -m3-scheme %M3_BACKEND_MODE%
 
     - name: Configure backend mode
       if: matrix.backend == 'c'
