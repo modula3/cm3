@@ -1,0 +1,95 @@
+
+% File: m3-sys/llvm13bindings/src/m3makefile
+
+% Copyright 2015, Rodney M. Bates.
+% rodney.m.bates@acm.org
+% Licensed under the Gnu Public License, version 2 or later.
+
+% This package contains Modula-3 bindings to the llvm infrastructure,
+% You should have installed the llvm libraries in the appropriate place
+% for this version of the bindings ie llvm version 13
+
+import ("m3core")
+
+Interface ("LLVM") 
+Interface ("LLVMTypes") 
+Interface ("DwarfConst") 
+Module    ("M3DebugInfoRaw") 
+Module    ("M3DebugInfo") 
+
+if equal (OS_TYPE, "POSIX")
+% set the location of posix libraries llvm depends on
+  LIB_DIR = "/usr/local/lib"
+% set the location of the llvm libraries
+  LLVM_LIB_DIR = LIB_DIR
+
+  import_lib("curses",LIB_DIR) 
+  import_lib("dl",LIB_DIR)
+  import_lib("stdc++",LIB_DIR)
+  import_lib("z",LIB_DIR)
+else
+
+% Windows
+
+% set the location of windows system libraries llvm depends on
+  LIB_DIR = ""
+% set the location of the llvm libraries
+  LLVM_LIB_DIR = LIB_DIR
+
+  import_lib("shell32"      ,LIB_DIR)
+  import_lib("ole32"        ,LIB_DIR)
+  import_lib("msvcprt"      ,LIB_DIR)
+  import_lib("oldnames"     ,LIB_DIR)
+ 
+% may need these in future
+%  import_lib("psapi"        ,LIB_DIR)
+%  import_lib("oleaut32"     ,LIB_DIR)
+%  import_lib("uuid"         ,LIB_DIR)  
+%  import_lib("libvcruntime" ,LIB_DIR)
+%  import_lib("libcmt"       ,LIB_DIR)  
+end
+
+/* 
+  LLVM library order is important and hard to get correct with
+  such a large number of libs and new libraries added with
+  each new version. Using llvm-config --libnames takes the guesswork out.
+  We get the list of libraries in the order they are needed in the link.
+  Then reverse the order.
+*/
+
+proc llvmlibs() is
+
+      local libnames = q_exec_get ("llvm-config --libnames")
+      local lib_arr = split(skipr(libnames[1])," ")
+      
+      local lib_tab = {}
+      local key = "x"
+      foreach lib in lib_arr
+          lib_tab{key} = lib
+          key = key & "x"
+      end
+
+      %reverse extraction
+      local lib = ""
+      foreach name in lib_arr
+        %lets hope there are no more than 500 libs
+        key = sub(key,1,500)
+        lib = lib_tab{key}
+        if equal (OS_TYPE, "POSIX")
+          lib = sub(lib,3,len(lib)) %remove lib prefix
+	end
+        if equal(OS, "Windows_NT")	
+          lib = subst(lib,".lib","",1) %remove suffix
+	else
+          lib = subst(lib,".a","",1) %remove suffix
+	end
+        %write("key: " & key & " val " & lib & "\n")
+        import_lib(lib,LLVM_LIB_DIR)
+      end
+end
+
+llvmlibs()
+
+%build_standalone ()
+Library ("llvm13bindings")
+

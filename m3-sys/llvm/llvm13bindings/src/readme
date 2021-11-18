@@ -1,0 +1,45 @@
+This creates the library llvm13bindings corresponding to llvm version 13.
+To use it you will have to have llvm installed. You can install the
+binary only libs available on
+
+ https://github.com/llvm/llvm-project/releases/tag/llvmorg-13.0.0
+(the windows binary release is somewhat lacking so download the x86 msvc
+ release from
+ https://github.com/vovkos/llvm-package-windows )
+
+or build the libraries youself from scratch.
+Building llvm is very resource intensive and time consuming.
+ 
+This version lacks proper debug support for subranges, sets and dynamic arrays.
+They will appear in a future version.
+
+ Posix
+
+  After you install the release check the LIB_DIR and LLVM_LIB_DIR in 
+  the m3makefile point to the directories where both the posix libs and
+  llvm libs live respectively.
+ 
+ Windows
+
+ Dont have to copy windows libs to some random directory if you use the correct
+ LIB path as setup by using the approved cmd prompt from Visual Studio
+ which will point to the x86 or x64 version depending on the one you choose.
+ You can check if you have the correct one by typing
+  SET > temp.txt and examine the LIB and LIBPATH vars which
+ should end in x64 or x86.
+
+ Place the libs in in c:/program files (x86)/llvm
+ and, - most importantly -
+ setup the environment - in system variables -
+   have to add the llvm/bin directory to the PATH
+   and the llvm/lib directory to the LIB variable which probably wont exist
+
+
+This binding uses the swig output for llvm-c/DebugInfo.h
+for creating the debug bindings. This is the C version of DIBuilder.h in
+the C++ dir. As such it is easier to swig but may not be as up to date
+as the DIBuilder.h file.
+
+There are sure to be problems. If so post to the list or raise an issue on
+github.
+
