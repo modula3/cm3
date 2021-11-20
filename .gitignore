@@ -1,3 +1,4 @@
+*.tar.xz
 ALPHA32_VMS
 ALPHA64_VMS
 ALPHA_LINUX
@@ -84,6 +85,7 @@ SPARC64_OPENBSD
 SPARC64_SOLARIS
 SPARC_LINUX
 SPARC_SOLARIS
+bootstrap/
 concierge.log
 m3-sys/m3cc/gcc-4.7/gcc/m3cg/
 scripts/PKGS

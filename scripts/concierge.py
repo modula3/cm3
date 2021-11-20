@@ -25,6 +25,61 @@
 # contribute new libraries to the cm3 repo, instead of distributing
 # them separately.
 
+
+# Concierge features:
+#
+# * Package management
+#   The primary purpose of the concierge is to build and install
+#   packages, respecting their dependency order.  Specify packages on
+#   either by individual name (i.e., `m3tohtml`) or set name (i.e.,
+#   `m3devtool`).  Construct more complex requests using an add (`+`)
+#   and remove (`-`) syntax, i.e., `+m3devtool -m3tohtml`.
+#
+# * Compiler upgrades
+#   The concierge additionally knows what packages to rebuild and in
+#   what order to upgrade the compiler from source.  This is primarily
+#   useful to developers working from git.
+#
+# * System upgrades
+#   After upgrading the compiler, the concierge can optionally rebuild
+#   all libraries and applications to upgrade the entire CM3 system.
+#
+# * New system installs
+#   On a new system without a pre-existing CM3 compiler, the concierge
+#   can build and install a bootstrap compiler (from C) then build and
+#   install a new compiler.  Optionally, it can build and install all
+#   libraries and applications to construct a full system.
+#
+# * Boostrap creation
+#   For developers the concierge can produce sources for a bootstrap
+#   compiler by compiling the required sources to C.
+#
+# * Distribution creation
+#   Finally, the concierge can produce a distribution tarball
+#   including a bootstrap compiler that can be installed on a fresh
+#   system.
+
+
+# A note on CM3 backends:
+#
+# CM3 properly considers the integrated backend (Win32) and GCC
+# backend (some systems) to be the default, most mature code
+# generators where they are available.
+#
+# The concierge considers these defaults to be obsolete (integrated)
+# and unmaintainable (GCC), and instead prefers the C backend.  Unless
+# otherwise instructed the concierge will build only the C and
+# integrated backends (only on I386_NT) and will not build GCC.
+#
+# Developers can specify `-gcc` or `--backend gcc` the build the GCC
+# backend.
+#
+# GCC is not included in the distribution tarball and is not available
+# on new system installs, it must be built from source using
+#
+#   scripts/concierge.py upgrade -gcc
+
+
 import os
 import platform
 import re
@@ -32,6 +87,7 @@ import shlex
 import shutil
 import subprocess
 import sys
+import tempfile
 
 from pathlib import Path
 
@@ -43,6 +99,8 @@ ALL = "all"
 POSIX = "POSIX"
 WIN32 = "WIN32"
 
+
+# Setup logging to `concierge.log`
 
 class Tee:
     "Utility for capturing all output to logfile"
@@ -71,14 +129,43 @@ print(*sys.argv)
 
 
 class Platform:
-    "Describes compilation host or target"
+    """Describes compilation host or target
+
+    Given a CM3 platform name, this class provides knowledge of what
+    backends and features CM3 supports on that platform.
+    """
+
+    @staticmethod
+    def normalize_platform(name):
+        "Error if name does not match a known platform"
+        for target in Platform._all_platforms():
+            if name.upper() == target.upper():
+                return target
+        raise Exception("invalid platform name")
+
+    @staticmethod
+    def _all_platforms():
+        "Not all named platforms are actually supported"
+        machines = [
+            "ALPHA", "ALPHA32", "ALPHA64", "AMD64", "ARM", "ARMEL", "ARM64",
+            "IA64", "I386", "PPC", "PPC32", "PPC64", "SPARC", "SPARC32",
+            "SPARC64", "MIPS32", "MIPS64EL", "MIPS64", "PA32", "PA64",
+            "RISCV64", "SH"
+        ]
+        systems = [
+            "AIX",  "CE", "CYGWIN", "DARWIN", "FREEBSD", "HPUX", "INTERIX",
+            "IRIX", "LINUX", "MINGW", "NETBSD", "NT", "OPENBSD", "OSF",
+            "SOLARIS", "VMS"
+        ]
+        legacy_platforms = ["NT386", "LINUXLIBC6", "SOLsun", "SOLgnu", "FreeBSD4"]
+        return [f"{arch}_{os}" for arch in machines for os in systems] + legacy_platforms
 
     def __init__(self, name = None):
-        self._name = name
-        if not self._name:
+        if not name:
             arch = self._map_arch(platform.machine())
             os = platform.system()
-            self._name = f"{arch}_{os}".upper()
+            name = f"{arch}_{os}".upper()
+        self._name = Platform.normalize_platform(name)
 
     def has_gcc_backend(self):
         "Supported by GCC backend"
@@ -105,11 +192,7 @@ class Platform:
 
     def has_integrated_backend(self):
         "The integrated backend supports only 32-bit Windows"
-        return self.name() in ["I386_NT", "NT386"]
-
-    def has_only_c_backend(self):
-        "Not supported by either GCC or the integrated backend"
-        return not self.has_gcc_backend() and not self.has_integrated_backend()
+        return self.name() in ["NT386", "I386_NT"]
 
     def has_serial(self):
         return self.is_win32()
@@ -127,84 +210,61 @@ class Platform:
     def os(self):
         "As recognized by cm3"
         name = self.name()
-
-        if (name == "NT386"      or
-            name.endswith("_NT") or
-            name.endswith("_MINGW")):
+        if name == "NT386" or name.endswith("_NT") or name.endswith("_MINGW"):
             return WIN32
         else:
             return POSIX
 
     def _map_arch(self, arch):
+        "Map Python's architecture name to CM3's architecture name"
         return "amd64" if arch == "x86_64" else arch
 
 
 class Cm3:
-    "Describes cm3 build environment"
+    """CM3 build environment
 
-    def __init__(self, script = None, target = None):
-        # Used to find location of source directory.
-        self._script = script or sys.argv[0]
+    This class is primarily responsible for running the CM3 compiler.
+    It locates the compiler and the CM3 source and install
+    directories.  It tracks requested compiler options (flags and
+    defines) and the current compilation target.
+    """
 
-        # Compiling *on* host
-        self._host = self._sniff_host()
+    def __init__(self, script, backend="c", defines=None, flags=None, target=None):
+        # The script is used to locate the source directory.
+        self._script  = script
 
-        # Compiling *for* target
+        # Defines the backend to use when compiling packages.
+        self._backend = backend
+
+        # Various CM3 compiler options requested by the user.
+        self._defines = defines or []
+        self._flags   = flags or []
+
+        # Compilation host and target platforms.
+        self._host    = None
+        self._target  = None
         if target:
             self._target = target if isinstance(target, Platform) else Platform(target)
-        else:
-            self._target = self._sniff_target()
 
-        # True to use the C backend.
-        self._cbackend = False
+        # Misc. options to direct the overall behavior of the
+        # concierge script.
+        self._keep_going = False
+        self._list_only  = False
+        self._no_action  = False
 
-        # Captures "-D" command-line defines intended for cm3.
-        self._defines = []
+    def backend(self):
+        "The compiler backend to use when building packages"
 
-        # Captures any other command-line arguments intended for cm3.
-        self._flags = []
+        # Don't try to use GCC when not available.
+        if self._backend == "gcc" and not self.target().has_gcc_backend():
+            self._backend = "c"
 
-    def _sniff_host(self):
-        "Guess the host platform.  We always guess, it cannot be overriden."
+        # Don't try to use the integrated backend when not available.
+        if self._backend == "integrated" and not self.target().has_integrated_backend():
+            self._backend = "c"
 
-        try:
-            # Ask cm3.
-            proc = subprocess.run([str(self.exe()), "-version"], stdout=subprocess.PIPE, errors="ignore")
-            proc.check_returncode()
-            for line in proc.stdout.splitlines():
-                # Check for legacy platforms.
-                if platform.system() == "Windows":
-                    if (line.startswith("Critical Mass Modula-3 version 5.1.") or
-                        line.startswith("Critical Mass Modula-3 version 5.2.") or
-                        line.startswith("Critical Mass Modula-3 version d5.5.")):
-                        return Platform("NT386")
-
-                # Otherwise let cm3 say what the host is.
-                host = line.find("host: ")
-                if host >= 0:
-                    return Platform(line[host + 6:].rstrip())
-        except:
-            pass
-
-        # If there's a problem, we'll make our best guess.
-        return Platform()
-
-    def _sniff_target(self):
-        "Guess the target platform"
-
-        try:
-            # Ask cm3.
-            proc = subprocess.run([str(self.exe()), "-version"], stdout=subprocess.PIPE, errors="ignore")
-            proc.check_returncode()
-            for line in proc.stdout.splitlines():
-                target = line.find("target: ")
-                if target >= 0:
-                    return Platform(line[target + 8:].rstrip())
-        except:
-            pass
-
-        # If there's a problem, assume we're compiling for the host machine.
-        return self.host()
+        assert self._backend in ["c", "gcc", "integrated"]
+        return self._backend
 
     def build(self, *paths):
         "Relative to root of current build directory"
@@ -215,6 +275,7 @@ class Cm3:
         return self.config()
 
     def config(self):
+        "Used as an alias of target name"
         return self.target().name()
 
     def defines(self):
@@ -223,6 +284,11 @@ class Cm3:
 
     def env(self):
         "Execution environment for cm3 child processes"
+
+        # TODO it is not clear if some or all of these are redundant,
+        # given the defines passed to cm3 on the command-line (in
+        # `PackageAction.run`).  These may simply have been an
+        # out-of-band communication mechanism for the legacy scripts.
         return dict(
             os.environ,
             CM3_INSTALL=str(self.install()),
@@ -260,13 +326,13 @@ class Cm3:
             fail()
 
         # With no overrides, we search PATH.
-        candidate = self.find_exe(basename)
+        candidate = self._find_exe(basename)
         if candidate is None:
             fail()
 
         return candidate
 
-    def find_exe(self, basename):
+    def _find_exe(self, basename):
         "Look for an executable in PATH"
 
         # Search PATH.
@@ -288,43 +354,88 @@ class Cm3:
         return self._flags
 
     def host(self):
+        "Compilation host, only used as default for target"
+        if not self._host:
+            self._host = self._sniff_host()
         return self._host
+
+    def _sniff_host(self):
+        "Guess the host platform"
+        try:
+            # Ask cm3.
+            output = subprocess.check_output([str(self.exe()), "-version"], errors="ignore")
+            for line in output.splitlines():
+                host = line.find("host: ")
+                if host >= 0:
+                    return Platform(line[host + 6:].rstrip())
+        except:
+            pass
+
+        # If there's a problem, we'll make our best guess.
+        return Platform()
 
     def install(self, *paths):
         "Relative to root of current installation directory"
-        exe_path = self.exe();
-        bin_dir = exe_path.parent
+        exe_path    = self.exe();
+        bin_dir     = exe_path.parent
         install_dir = bin_dir.parent
         return install_dir.joinpath(*paths)
 
+    def keep_going(self):
+        "Continue running the concierge script in event of errors"
+        return self._keep_going
+
+    def list_only(self):
+        "List packages selected by current command-line"
+        return self._list_only
+
+    def no_action(self):
+        "Perform a dry-run, do not make any changes to the system"
+        return self._no_action
+
+    def script(self):
+        "The script is used to locate the source directory"
+        return Path(self._script).resolve()
+
+    def set_options(self, namespace):
+        "Inform CM3 of options detected in argument parsing"
+        for attr in ["_keep_going", "_list_only", "_no_action"]:
+            if hasattr(namespace, attr):
+                setattr(self, attr, getattr(namespace, attr))
+
     def source(self, *paths):
         "Relative to root of current source directory"
-        script_path = Path(self._script).resolve()
-        script_dir = script_path.parent
-        source_dir = script_dir.parent
+        script_path = self.script()
+        script_dir  = script_path.parent
+        source_dir  = script_dir.parent
         return source_dir.joinpath(*paths)
 
-    def set_cbackend(self, cbackend):
-        "True to use the C backend"
-        self._cbackend = cbackend
-
-    def set_defines(self, defines):
-        "List of defines for cm3"
-        self._defines = defines
-
-    def set_flags(self, flags):
-        "List of compiler switches for cm3"
-        self._flags = flags
-
     def target(self):
-        "Current platform target"
+        "Compilation target, passed to CM3"
+        if not self._target:
+            self._target = self._sniff_target()
         return self._target
 
+    def _sniff_target(self):
+        "Guess the target platform"
+        try:
+            # Ask cm3.
+            output = subprocess.check_output([str(self.exe()), "-version"], errors="ignore")
+            for line in output.splitlines():
+                target = line.find("target: ")
+                if target >= 0:
+                    return Platform(line[target + 8:].rstrip())
+        except:
+            pass
+
+        # If there's a problem, assume we're compiling for the host machine.
+        return self.host()
+
     def use_c_backend(self):
-        return self._cbackend or self.target().has_only_c_backend()
+        return self.backend() == "c"
 
     def use_gcc_backend(self):
-        return not self.use_c_backend() and self.target().has_gcc_backend()
+        return self.backend() == "gcc"
 
 
 class WithCm3:
@@ -333,45 +444,50 @@ class WithCm3:
     def __init__(self, cm3):
         self._cm3 = cm3
 
-    def build(self, *paths):
-        "Relative to root of current build directory"
-        return self.cm3().build(*paths)
-
-    def build_dir(self):
-        "Basename of build directory"
-        return self.cm3().build_dir()
+    def __getattr__(self, method_name):
+        "Delegate some requests to CM3"
+        forwards = [
+            "build",
+            "build_dir",
+            "config",
+            "defines",
+            "env",
+            "exe",
+            "flags",
+            "install",
+            "keep_going",
+            "list_only",
+            "no_action",
+            "source",
+            "target",
+            "use_c_backend",
+            "use_gcc_backend"
+        ]
+        if method_name not in forwards:
+            raise AttributeError
+        return getattr(self.cm3(), method_name)
 
     def cm3(self):
         return self._cm3
 
-    def config(self):
-        return self.cm3().config()
-
-    def env(self):
-        "Execution environment for cm3 child processes"
-        return self.cm3().env()
-
-    def exe(self):
-        "Full path to cm3 executable"
-        return self.cm3().exe()
-
-    def install(self, *paths):
-        "Relative to root of current installation directory"
-        return self.cm3().install(*paths)
-
-    def source(self, *paths):
-        "Relative to root of current source directory"
-        return self.cm3().source(*paths)
-
-    def target(self):
-        "Current platform target"
-        return self.cm3().target()
+    def rmdir(self, dir):
+        "Recursively remove a directory"
+        if dir.is_dir():
+            print("rm", "-Rf", dir)
+            if not self.no_action():
+                shutil.rmtree(dir)
 
 
 class PackageDatabase(WithCm3):
+    """Knows what packages are available and their dependency order
+
+    Whereas `Cm3` knows *how* to run the compiler, the package
+    database knows *where* and *when* (in what order) to run the
+    compiler to build a set of requested packages.
+    """
 
     def __init__(self, cm3):
-        super(PackageDatabase, self).__init__(cm3)
+        super().__init__(cm3)
 
         # There is an order dependency here, sets must be loaded
         # before the index.
@@ -380,10 +496,15 @@ class PackageDatabase(WithCm3):
 
     def all_packages(self):
         "Canonical list of packages, in dependency order, as defined in pkginfo.txt"
+
+        # This is a superset of the packages available on the system.
         return self._package_sets[ALL]
 
     def get_package_paths(self, names):
-        "Locations of all requested packages"
+        """Locations of all requested packages, where `names` is a mixed list
+        of individual packages and package sets"""
+
+        # These packages will be present on the system.
         return [self.get_package_path(pkg) for pkg in self.get_packages(names)]
 
     def get_package_path(self, name):
@@ -394,10 +515,23 @@ class PackageDatabase(WithCm3):
             raise Exception(f"package {name} not found")
 
     def get_packages(self, names):
-        "List of requested packages, in dependency order"
+        """List of requested packages, in dependency order
+
+        Here `names` is a mixed list of packages and package sets, and
+        may use the add/remove syntax (`+` or `-`) to make specific
+        requests.
+
+        The returned packages may be a subset of those requested,
+        limited by what is available on the system.  For example, a
+        request to build the GCC backend (`m3cc`) may come up empty
+        when GCC is not included in the distribution.
+        """
+
+        # First determine what packages are requested, then later we
+        # will work-out the bulid order.
+        requested = set()
 
         # Incorporate each listed package or set into requested.
-        requested = set()
         for name in names:
             remove = name.startswith("-")
             if name.startswith("+") or name.startswith("-"):
@@ -421,12 +555,13 @@ class PackageDatabase(WithCm3):
                 else:
                     requested.add(package)
 
-        # Return the requested packages in canonical order.
+        # Determine the canonical order for all requested packages.
         packages = []
         for package in self.all_packages():
-            if package in requested:
+            if package in requested and package in self._package_index:
                 packages.append(package)
 
+        # Finally, omit anything not available to the current target.
         return self._filter_packages(packages)
 
     def is_package(self, name):
@@ -441,21 +576,24 @@ class PackageDatabase(WithCm3):
 
     def _include_package(self, name):
         "Do we try to build this package?"
-
         if os.environ.get("CM3_ALL"):
             return True
 
         if name == "X11R4":  return self.target().is_posix()
-        if name == "m3cc":   return self.target().has_gcc_backend()
-        if name == "m3gdb":  return os.environ.get("M3GDB") and self.target().has_gdb()
-        if name == "serial": return os.environ.get("HAVE_SERIAL") or self.target().has_serial()
+        if name == "m3cc":   return self.use_gcc_backend()
+        if name == "m3gdb":  return self.use_gcc_backend() and self.target().has_gdb()
+        if name == "serial": return self.target().has_serial() or  os.environ.get("HAVE_SERIAL")
         if name == "tapi":   return self.target().is_win32()
         if name == "tcl":    return os.environ.get("HAVE_TCL")
-
         return True
 
     def _load_package_index(self):
-        "Scan the source directory for available packages"
+        """Scan the source directory for available packages
+
+        Importantly, the package index reflects what packages actually
+        exist and can be installed.  The packages listed in
+        pkginfo.txt are a superset of what is actually available.
+        """
 
         # Find all the fully-qualified package paths.
         package_paths = []
@@ -466,7 +604,7 @@ class PackageDatabase(WithCm3):
 
             # src may be a package directory
             if dir.name == "src" and "m3makefile" in files:
-                package_dir = dir.parent
+                package_dir  = dir.parent
                 package_path = package_dir.relative_to(root).as_posix()
                 package_paths.append(package_path)
 
@@ -485,17 +623,26 @@ class PackageDatabase(WithCm3):
 
         package_list = self.all_packages()
         for package_path in package_paths:
-            # Find the canonical name of the package.
+            # Find the canonical name of the package.  The canonical
+            # name is some sub-path of the relative directory that
+            # uniquely identifies the package in `pkginfo.txt`.
             package_name = str(package_path)
             while package_name not in package_list and package_name.find("/") >= 0:
+                # Keep stripping off leading directories until we find
+                # a match.
                 package_name = package_name[package_name.find("/")+1:]
 
-            # Index the package by its canonical name.
+            # Index the package by its canonical name, if found.
             if package_name in package_list:
                 self._package_index[package_name] = package_path
 
     def _load_package_sets(self):
-        "Read package definitions from pkginfo.txt"
+        """Read package definitions from pkginfo.txt
+
+        pkginfo.txt defines the canonical names of all known packages
+        and their relative dependency order.  This is separate from
+        the information about what packages are actually available.
+        """
 
         self._package_sets = dict()
         with open(self.source("scripts/pkginfo.txt"), "r") as pkginfo:
@@ -512,9 +659,8 @@ class PackageDatabase(WithCm3):
 class PackageAction(WithCm3):
     "Runs cm3 on a list of packages identified by relative paths"
 
-    def __init__(self, cm3, options = None):
-        super(PackageAction, self).__init__(cm3)
-        self._options = options or dict()
+    def __init__(self, cm3):
+        super().__init__(cm3)
         self._success = False
 
     def execute(self, package_paths):
@@ -527,19 +673,6 @@ class PackageAction(WithCm3):
                 self._success = False
                 if not self.keep_going():
                     raise
-
-    def keep_going(self):
-        "Ignore errors and forge ahead, i.e., '-k'"
-        return self.option("keep_going")
-
-    def option(self, name):
-        return self.options().get(name, False)
-
-    def options(self):
-        return self._options
-
-    def no_action(self):
-        return self.option("no_action")
 
     def run(self, package_path, args):
         "Execute a cm3 child process"
@@ -562,68 +695,28 @@ class PackageAction(WithCm3):
         sys.stdout.write(proc.stdout)
         proc.check_returncode()
 
-    def run_env(self, package_path, vars):
-        "Execute a command defined in environment"
-        for var in vars:
-            cmd = os.environ.get(var)
-            if cmd:
-                cwd = self.source(package_path)
-                print("cd", cwd)
-                print(cmd)
-                if not self.no_action():
-                    proc = subprocess.run(
-                        cmd,
-                        cwd=cwd,
-                        env=self.env(),
-                        stdout=subprocess.PIPE,
-                        stderr=subprocess.STDOUT,
-                        errors="ignore"
-                    )
-                    sys.stdout.write(proc.stdout)
-                    proc.check_returncode()
-                return True
-        return False
-
     def success(self):
+        "The last action was fully successful, with no failures"
         return self._success
 
     def defines(self):
         "List of '-D' arguments to pass to cm3"
 
+        # TODO see comment in `Cm3.env`
         defines = [
             f"-DBUILD_DIR={self.build_dir()}",
             f"-DROOT={self.source()}",
             f"-DTARGET={self.target().name()}"
         ]
 
+        # Where the gcc or integrated backends are available, they are
+        # the default for their respective platforms and do not need
+        # to be specified.
         if self.use_c_backend():
             defines.append(f"-DM3_BACKEND_MODE=C")
 
+        # Include any defines given on the command-line.
         return defines + self.cm3().defines()
-
-    def flags(self):
-        "Pass-through compilation flags for cm3"
-        return self.cm3().flags()
-
-    def use_c_backend(self):
-        "Tell cm3 to use the C backend?"
-        return self.cm3().use_c_backend()
-
-    def build_args(self):
-        "Any arguments for bulid commands passed in the environment"
-        return self.split_env("BUILDARGS")
-
-    def clean_args(self):
-        "Any arguments for clean commands passed in the environment"
-        return self.split_env("CLEANARGS")
-
-    def ship_args(self):
-        "Any arguments for ship commands passed in the environment"
-        return self.split_env("SHIPARGS")
-
-    def split_env(self, var_name):
-        "Split environment arguments on whitespace allowing for quoting as in the shell"
-        return shlex.split(os.environ.get(var_name, ""))
 
 
 class CleanAction(PackageAction):
@@ -649,65 +742,51 @@ class BuildGlobal(PackageAction):
     "Build package without overrides"
 
     def execute_path(self, package_path):
-        if not self.run_env(package_path, ["CM3_BUILDGLOBAL", "BUILDGLOBAL"]):
-            self.run(package_path, ["-build"] + self.build_args())
+        self.run(package_path, ["-build"])
 
 
 class BuildLocal(PackageAction):
     "Build package with local overrides"
 
     def execute_path(self, package_path):
-        if not self.run_env(package_path, ["CM3_BUILDLOCAL", "BUILDLOCAL"]):
-            self.run(package_path, ["-build", "-override"] + self.build_args())
+        self.run(package_path, ["-build", "-override"])
 
 
 class CleanGlobal(CleanAction):
     "Clean package without overrides"
 
     def execute_path(self, package_path):
-        if not self.run_env(package_path, ["CM3_CLEANGLOBAL", "CLEANGLOBAL"]):
-            self.run(package_path, ["-clean"] + self.clean_args())
+        self.run(package_path, ["-clean"])
 
 
 class CleanLocal(CleanAction):
     "Clean package with local overrides"
 
     def execute_path(self, package_path):
-        if not self.run_env(package_path, ["CM3_CLEANLOCAL", "CLEANLOCAL"]):
-            self.run(package_path, ["-clean", "-override"] + self.clean_args())
+        self.run(package_path, ["-clean", "-override"])
 
 
 class RealClean(CleanAction):
     "Remove target directory of package"
 
     def execute_path(self, package_path):
-        if self.run_env(package_path, ["CM3_REALCLEAN", "REALCLEAN"]):
-            return
-
-        build_dir = self.build(package_path)
-        print("rm", "-Rf", build_dir)
-        if self.no_action():
-            return
-
-        if build_dir.is_dir():
-            shutil.rmtree(build_dir)
+        self.rmdir(self.build(package_path))
 
 
 class Ship(PackageAction):
     "Install package"
 
     def execute_path(self, package_path):
-        if not self.run_env(package_path, ["CM3_SHIP", "SHIP"]):
-            self.run(package_path, ["-ship"] + self.ship_args())
+        self.run(package_path, ["-ship"])
 
 
 class BuildShip(PackageAction):
     "Build package *without* overrides and install it"
 
-    def __init__(self, cm3, options):
-        super(BuildShip, self).__init__(cm3, options)
-        self._buildglobal = BuildGlobal(cm3, options)
-        self._ship = Ship(cm3, options)
+    def __init__(self, cm3):
+        super(BuildShip, self).__init__(cm3)
+        self._buildglobal = BuildGlobal(cm3)
+        self._ship = Ship(cm3)
 
     def execute_path(self, package_path):
         # These have to be done in lockstep.  Because of various
@@ -725,7 +804,7 @@ class CompositeAction(PackageAction):
     "Executes sequential package actions"
 
     def __init__(self, cm3, actions):
-        super(CompositeAction, self).__init__(cm3)
+        super().__init__(cm3)
         self._actions = actions
 
     def execute(self, package_paths):
@@ -744,7 +823,7 @@ class WithPackageDb(WithCm3):
     "Provides access to package database"
 
     def __init__(self, cm3, package_db):
-        super(WithPackageDb, self).__init__(cm3)
+        super().__init__(cm3)
         self._package_db = package_db
 
     def get_package_paths(self, names):
@@ -759,6 +838,8 @@ class WithPackageDb(WithCm3):
         return self._package_db
 
 
+# Maps action names to command objects, but also provides a canonical
+# list of available package actions.
 PACKAGE_ACTIONS = dict(
     # By default, "build" means "build with local overrides".
     build=BuildLocal,
@@ -793,151 +874,260 @@ PACKAGE_ACTIONS = dict(
 class WithPackageActions(WithPackageDb):
     "Conveniences for executing package actions"
 
-    def __init__(self, cm3, package_db, options = None):
-        super(WithPackageActions, self).__init__(cm3, package_db)
-        self._options = options or dict()
+    def __init__(self, cm3, package_db):
+        super().__init__(cm3, package_db)
 
     # Note that this won't generate a "build" method, because that is
     # already defined in WithCm3 with an entirely different meanning.
     # It is better to be specific with "buildglobal" or "buildlocal"
     # if that is what is needed.
     def __getattr__(self, method_name):
+        # Defer first to the methods defined in `WithCm3`.
+        try:
+            return super().__getattr__(method_name)
+        except AttributeError:
+            pass
+
+        # Only if that fails, look for a named package action.
         try:
             constructor = PACKAGE_ACTIONS[method_name]
-            action = constructor(self.cm3(), self.options())
-
+            action = constructor(self.cm3())
             def executor(packages):
                 paths = self.get_package_paths(packages)
                 print(method_name, *paths)
                 action.execute(paths)
-
             return executor
         except KeyError:
             raise AttributeError
-
-    def option(self, name):
-        return self.options().get(name, False)
-
-    def options(self):
-        return self._options
 
 
 class ConciergeCommand(WithPackageActions):
     "A top-level command made to the concierge"
 
-    def parse_args(self, args):
-        "Parse arguments common to all concierge commands"
-        self._parse_cbackend(args)
-        self._parse_cm3defines(args)
-        self._parse_cm3flags(args)
-        self._parse_options(args)
-        self._parse_packages(args)
+    @classmethod
+    def parse_args(cls, args, namespace):
+        "Interpret arguments common to all commands"
+        cls._parse_compiler_options(args, namespace)
+        cls._parse_options(args, namespace)
 
-    def _parse_cbackend(self, args):
-        "Look for argument to request use of C backend"
-        cbackend = False
-        for flag in ["C", "c"]:
-            if flag in args:
-                cbackend = True
-                args.remove(flag)
-        self.cm3().set_cbackend(cbackend)
+    @classmethod
+    def parse_packages(cls, args, namespace):
+        "After parsing all arguments, assume anything left is a package specification"
+        packages = args[:]
+        args.clear()
+        setattr(namespace, "_packages", packages)
 
-    def _parse_cm3defines(self, args):
+    @classmethod
+    def _parse_options(cls, args, namespace):
+        "Global options that direct concierge behavior"
+
+        keep_going = False
+        list_only  = False
+        no_action  = False
+
+        for option in ["-k", "--keep-going"]:
+            while option in args:
+                args.remove(option)
+                keep_going = True
+
+        for option in ["-l", "--list-only"]:
+            while option in args:
+                args.remove(option)
+                list_only = True
+
+        for option in ["-n", "--no-action"]:
+            while option in args:
+                args.remove(option)
+                no_action = True
+
+        setattr(namespace, "_keep_going", keep_going)
+        setattr(namespace, "_list_only",  list_only)
+        setattr(namespace, "_no_action",  no_action)
+
+    @classmethod
+    def _parse_compiler_options(cls, args, namespace):
+        "Any arguments that define how we call-out to the compiler"
+        cls._parse_backend(args, namespace)
+        cls._parse_defines(args, namespace)
+        cls._parse_flags(args, namespace)
+        cls._parse_target(args, namespace)
+
+    @classmethod
+    def _parse_backend(cls, args, namespace):
+        "Look for any command-line argument specifying a backend"
+
+        # Default.
+        backend = "c"
+
+        tail = args[:]
+        args.clear()
+        while tail:
+            head = tail.pop(0)
+            if head == "--backend":
+                if not tail:
+                    raise Exception("invalid backend")
+                backend = tail.pop(0)
+            elif head.startswith("--backend="):
+                backend = head[10:]
+            elif head in ["-c", "-gcc", "-integrated"]:
+                backend = head[1:]
+            else:
+                args.append(head)
+
+        if backend not in ["c", "gcc", "integrated"]:
+            raise Exception("invalid backend")
+
+        setattr(namespace, "_backend", backend)
+
+    @classmethod
+    def _parse_defines(cls, args, namespace):
         "Look for defines that need to be passed-through to cm3"
-        cm3defines = [arg for arg in args if arg.startswith("-D")]
-        args[:] = [arg for arg in args if arg not in cm3defines]
-        self.cm3().set_defines(cm3defines)
+        defines = [arg for arg in args if arg.startswith("-D") and not arg.startswith("-DCMAKE_")]
+        args[:] = [arg for arg in args if arg not in defines]
+        setattr(namespace, "_defines", defines)
 
-    def _parse_cm3flags(self, args):
+    @classmethod
+    def _parse_flags(cls, args, namespace):
         "Look for flags that need to be passed-through to cm3"
-        flags = [
-            "boot",
-            "commands",   # list system commands as they are performed
-            "debug",      # dump internal debugging information
-            "keep",       # preserve intermediate and temporary files
-            "override",   # include the "m3overrides" file
-            "silent",     # produce no diagnostic output
-            "times",      # produce a dump of elapsed times
-            "trace",      # trace quake code execution
-            "verbose",    # list internal steps as they are performed
-            "why"         # explain why code is being recompiled
+        cm3flags = [
+            "-boot",
+            "-commands",   # list system commands as they are performed
+            "-debug",      # dump internal debugging information
+            "-keep",       # preserve intermediate and temporary files
+            "-override",   # include the "m3overrides" file
+            "-silent",     # produce no diagnostic output
+            "-times",      # produce a dump of elapsed times
+            "-trace",      # trace quake code execution
+            "-verbose",    # list internal steps as they are performed
+            "-why"         # explain why code is being recompiled
         ]
+        flags   = [arg for arg in args if arg in cm3flags]
+        args[:] = [arg for arg in args if arg not in flags]
+        setattr(namespace, "_flags", flags)
 
-        cm3flags = [arg for arg in args if arg[0] == "-" and arg[1:] in flags]
-        args[:] = [arg for arg in args if arg not in cm3flags]
-        self.cm3().set_flags(cm3flags)
+    @classmethod
+    def _parse_target(cls, args, namespace):
+        target = None
 
-    def _parse_options(self, args):
-        if "-k" in args:
-            self._options["keep_going"] = True
-            args.remove("-k")
+        tail = args[:]
+        args.clear()
+        while tail:
+            head = tail.pop(0)
+            if head == "--target":
+                if not tail:
+                    raise Exception("invalid target")
+                target = tail.pop(0)
+            elif head.startswith("--target="):
+                target = head[9:]
+            else:
+                args.append(head)
 
-        if "-l" in args:
-            self._options["list_only"] = True
-            args.remove("-l")
+        if target:
+            target = Platform.normalize_platform(target)
 
-        if "-n" in args:
-            self._options["no_action"] = True
-            args.remove("-n")
+        setattr(namespace, "_target", target)
 
-    def _parse_packages(self, args):
-        "Look for package arguments in the command-line"
-        self._packages = [arg for arg in args if self.is_package(arg)]
-        args[:] = [arg for arg in args if arg not in self._packages]
+    def set_options(self, namespace):
+        "Inform command of options detected in argument parsing"
+        for attr in ["_actions", "_cmake_args", "_packages", "_prefix"]:
+            if hasattr(namespace, attr):
+                setattr(self, attr, getattr(namespace, attr))
+
+    def actions(self):
+        "List of package actions given on command-line"
+        return self._actions
+
+    def packages(self):
+        "List of packages requested on the command-line"
+        return [pkg for pkg in self._packages if self.is_package(pkg)]
+
+    def cp(self, src, dst):
+        "Copy a file"
+        if src.is_file():
+            print("cp", "-P", src, dst)
+            if not self.no_action():
+                shutil.copy(src, dst)
+
+    def mkdir(self, dir):
+        "Create a directory"
+        print("mkdir", "-p", dir)
+        if not self.no_action():
+            dir.mkdir(parents=True, exist_ok=True)
+
+    def rm(self, file):
+        "Remove a file"
+        if file.is_file():
+            print("rm", "-f", file)
+            if not self.no_action():
+                file.unlink()
 
 
 class PackageCommand(ConciergeCommand):
     "Clean, build, and/or ship packages"
 
-    def execute(self):
-        packages = self.get_package_paths(self.packages())
+    @classmethod
+    def parse_args(cls, args, namespace):
+        super().parse_args(args, namespace)
+        cls._parse_actions(args, namespace)
+        super().parse_packages(args, namespace)
 
-        if self.option("list_only"):
-            self.list_packages(packages)
-            return
-
-        self.action().execute(packages)
-
-    def action(self):
-        "Return the action requested on the command-line"
-        actions = []
-        for arg in self._actions:
-            actions.append(PACKAGE_ACTIONS[arg](self.cm3(), self.options()))
+    @classmethod
+    def _parse_actions(cls, args, namespace):
+        "Read list of package action from command-line"
+        actions = [arg for arg in args if arg in PACKAGE_ACTIONS]
+        args[:] = [arg for arg in args if arg not in actions]
 
         if len(actions) == 0:
             raise Exception("no actions specified")
 
-        return CompositeAction(self.cm3(), actions)
+        setattr(namespace, "_actions", actions)
+
+    def execute(self):
+        "Apply requested actions to requested packages"
+        packages = self.get_package_paths(self.packages())
+        if self.list_only():
+            self.list_packages(packages)
+            return
+        self.action().execute(packages)
 
     def list_packages(self, packages):
         for package in packages:
             print(package)
 
+    def action(self):
+        "Return the action requested on the command-line"
+
+        # This will be a composite action, executing all requested
+        # actions in sequence.
+        actions = []
+        for arg in self.actions():
+            actions.append(PACKAGE_ACTIONS[arg](self.cm3()))
+        return CompositeAction(self.cm3(), actions)
+
     def packages(self):
         "Return the packages requested on the command-line"
-        if not self._packages:
-            raise Exception("no packages specified")
-        return self._packages
-
-    def parse_args(self, args):
-        "Parse arguments to the package command"
-        super(PackageCommand, self).parse_args(args)
-        self._parse_actions(args)
-
-    def _parse_actions(self, args):
-        "Look for action argumens in the command-line"
-        self._actions = []
-        while args and args[0] in PACKAGE_ACTIONS:
-            self._actions.append(args.pop(0))
+        pkgs = super().packages()
+        if not pkgs or pkgs[0].startswith("-"):
+            pkgs.insert(0, ALL)
+        return pkgs
 
 
 class UpgradeCommand(ConciergeCommand):
-    "Upgrade the cm3 compiler and core system"
+    "Upgrade compiler and core system"
 
     def execute(self):
         base_packages = ["+front", "+m3bundle", "-m3cc"]
 
-        # Some things must be cleaned up before an upgrade can begin.
+        # Guarantee a basic config if we're on a clean system.
+        if not self.install("bin/cm3.cfg").is_file():
+            self._install_config()
+
+        # Build GCC first if we will need it.
+        if self.use_gcc_backend() and not self.install("bin/cm3cg").is_file():
+            self.buildship(["m3cc"])
+            self._ship_back()
+
+        # Then ensure we don't use an outdated GCC.
         self._clean()
 
         # Build the compiler using the installed version of the system.
@@ -949,7 +1139,7 @@ class UpgradeCommand(ConciergeCommand):
         self._run_pass(base_packages, build_gcc = False)
 
     def _clean(self):
-        "Delete lingering cm3cg so old compiler can't use it"
+        "Delete lingering cm3cg so we can't accidentally use an old version"
         for exe in ["cm3cg", "gcc/m3cgc1"]:
             file = self.build("m3-sys/m3cc") / exe
             self.rm(file)
@@ -963,7 +1153,7 @@ class UpgradeCommand(ConciergeCommand):
         self.buildship(packages)
 
         # Continue with GCC.
-        build_gcc = not self._skip_gcc and build_gcc and self.target().has_gcc_backend()
+        build_gcc = build_gcc and self.use_gcc_backend()
         if build_gcc:
             self.realclean(["m3cc"])
             self.buildship(["m3cc"])
@@ -973,21 +1163,12 @@ class UpgradeCommand(ConciergeCommand):
             self._ship_back()
         self._ship_front()
 
-    def parse_args(self, args):
-        "Parse arguments to the upgrade command"
-        super(UpgradeCommand, self).parse_args(args)
-
-        # Look for a flag to ignore gcc backend.
-        self._skip_gcc = os.environ.get("OMIT_GCC")
-        for flag in ["nogcc", "omitgcc", "skipgcc"]:
-            if flag in args:
-                self._skip_gcc = True
-                args.remove(flag)
-
     def _ship_back(self):
+        "Ship the compiler 'backend', i.e., GCC"
         self._copy_compiler(self.build("m3-sys/m3cc"), self.install("bin"))
 
     def _ship_front(self):
+        "Ship the comiler 'frontent', i.e., cm3"
         self._copy_compiler(self.build("m3-sys/cm3"), self.install("bin"))
 
     def _copy_compiler(self, src, dst):
@@ -1032,8 +1213,12 @@ class UpgradeCommand(ConciergeCommand):
         if self.no_action():
             return
 
+        backend = ""
+        if self.use_c_backend():
+            backend = 'readonly M3_BACKEND_MODE = "C"\n'
+
         self.install("bin/cm3.cfg").write_text(
-            f"""if not defined("SL") SL = "/" end
+            f"""{backend}if not defined("SL") SL = "/" end
 if not defined("HOST") HOST = "{self.config()}" end
 if not defined("TARGET") TARGET = HOST end
 INSTALL_ROOT = (path() & SL & "..")
@@ -1041,41 +1226,20 @@ include(path() & SL & "config" & SL & TARGET)
 """
         )
 
-    def cp(self, src, dst):
-        if src.is_file():
-            print("cp", "-P", src, dst)
-            if not self.no_action():
-                shutil.copy(src, dst)
-
-    def mkdir(self, dir):
-        print("mkdir", "-p", dir)
-        if not self.no_action():
-            dir.mkdir(parents=True, exist_ok=True)
-
-    def no_action(self):
-        return self.option("no_action")
-
-    def rm(self, file):
-        if file.is_file():
-            print("rm", "-f", file)
-            if not self.no_action():
-                file.unlink()
-
-    def rmdir(self, dir):
-        if dir.is_dir():
-            print("rm", "-Rf", dir)
-            if not self.no_action():
-                shutil.rmtree(dir)
-
 
 class FullUpgradeCommand(UpgradeCommand):
-    "Upgrade the system and reinstall all packages"
+    "Upgrade system and reinstall packages"
+
+    @classmethod
+    def parse_args(cls, args, namespace):
+        super().parse_args(args, namespace)
+        super().parse_packages(args, namespace)
 
     def execute(self):
         # Upgrade the compiler.
-        super(FullUpgradeCommand, self).execute()
+        super().execute()
 
-        # Clean, but there is no point in rebuilding GCC.
+        # Clean, but again there is no point in rebuilding GCC.
         self.realclean([ALL, "-m3cc"])
 
         # Reinstall all packages.
@@ -1083,21 +1247,304 @@ class FullUpgradeCommand(UpgradeCommand):
 
     def packages(self):
         "Return the packages requested on the command-line"
-        if not self._packages or self._packages[0].startswith("-"):
-            self._packages.insert(0, ALL)
+        pkgs = super().packages()
+        if not pkgs or pkgs[0].startswith("-"):
+            pkgs.insert(0, ALL)
+        return pkgs
 
-        return self._packages
+
+class InstallCommand(ConciergeCommand):
+    "Bootstrap followed by full upgrade"
+
+    @classmethod
+    def parse_args(cls, args, namespace):
+        super().parse_args(args, namespace)
+        cls._parse_cmake_args(args, namespace)
+        cls._parse_prefix(args, namespace)
+        super().parse_packages(args, namespace)
+
+    @classmethod
+    def _parse_cmake_args(cls, args, namespace):
+        "Look for arguments that should be passed directly to cmake"
+
+        cmake_args = [arg for arg in args if arg.startswith("-DCMAKE_")]
+        args[:] = [arg for arg in args if arg not in cmake_args]
+
+        tail = [arg for arg in args if arg not in cmake_args]
+        args.clear()
+        while tail:
+            head = tail.pop(0)
+            if head == "-G":
+                cmake_args.append(head)
+                cmake_args.append(tail.pop(0))
+            else:
+                args.append(head)
+
+        setattr(namespace, "_cmake_args", cmake_args)
+
+    @classmethod
+    def _parse_prefix(cls, args, namespace):
+        "Specify the desired install location with --prefix"
+        prefix = None
+
+        tail = args[:]
+        args.clear()
+        while tail:
+            head = tail.pop(0)
+            if head == "--prefix":
+                if not tail:
+                    raise Exception("invalid target")
+                prefix = tail.pop(0)
+            elif head.startswith("--prefix="):
+                prefix = head[9:]
+            else:
+                args.append(head)
+
+        setattr(namespace, "_prefix", prefix)
+
+    def __init__(self, cm3, package_db):
+        super().__init__(cm3, package_db)
+
+        # We'll hand-off to `full-upgrade` after performing the
+        # bootstrap.
+        self._upgrade = FullUpgradeCommand(cm3, package_db)
+
+    def set_options(self, namespace):
+        super().set_options(namespace)
+        self._upgrade.set_options(namespace)
+
+    def execute(self):
+        "Build the bootstrap compiler, then perform a system upgrade"
+        self.bootstrap()
+        self.full_upgrade()
+
+    def bootstrap(self):
+        "Build the bootstrap compiler"
+
+        # Check that bootstrap sources are available.
+        bootstrap_dir = self.source("bootstrap")
+        if not (bootstrap_dir / "CMakeLists.txt").is_file():
+            raise Exception("no bootstrap")
+
+        # Run an out-of-tree build with cmake.
+        with tempfile.TemporaryDirectory() as build_dir:
+            setup = ["cmake", "-S", str(bootstrap_dir), "-B", build_dir] + self._cmake_args
+            setup.append(f"-DCMAKE_INSTALL_PREFIX={self.prefix()}")
+            self.rmdir(Path(self.prefix()))
+
+            build = ["cmake", "--build", build_dir]
+            install = ["cmake", "--install", build_dir]
+
+            for command in [setup, build, install]:
+                print(*command)
+                if not self.no_action():
+                    proc = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, errors="ignore")
+                    sys.stdout.write(proc.stdout)
+                    proc.check_returncode()
+
+    def full_upgrade(self):
+        "Perform a system upgrade"
+        self._upgrade.execute()
+
+    def prefix(self):
+        "If not otherwise specified, replace the existing compiler"
+        if not self._prefix:
+            self._prefix = self.install()
+        return self._prefix
 
 
-class ConciergeParser(WithPackageDb):
-    "Parse command-line arguments for the concierge"
+class MakeBootstrapCommand(ConciergeCommand):
+    "Generate sources for a bootstrap compiler"
 
-    def parse_command(self, args):
-        "Identify the requested command and parse its arguments"
+    @classmethod
+    def parse_args(cls, args, namespace):
+        super().parse_args(args, namespace)
+
+        # Override compiler configuration.
+        setattr(namespace, "_backend", "c")
+        setattr(namespace, "_flags", ["-boot", "-keep", "-no-m3ship-resolution"])
+
+    def execute(self):
+        # Compile cm3 and its dependencies to C.
+        packages = ["+front", "-m3cc", "-m3cgcat", "-m3cggen", "-mklib"]
+        self.realclean(packages)
+        self.buildlocal(packages)
+
+        # Create bootstrap directory.
+        bootstrap_dir = self.source("bootstrap")
+        self.rmdir(bootstrap_dir)
+        self.mkdir(bootstrap_dir)
+
+        # Copy generated C files to bootstrap.
+        sources  = []
+        if not self.no_action():
+            for package_path in self.get_package_paths(packages):
+                for file in self.build(package_path).iterdir():
+                    if file.suffix in [".c", ".cpp", ".h"]:
+                        self.cp(file, bootstrap_dir)
+                        sources.append(file.name)
+
+        # Generate CMakeLists.txt
+        cmake_install_prefix = f"/opt/cm3-{self.tag()}" if self.tag() else "/opt/cm3"
+        cmake_header = f"""cmake_minimum_required(VERSION 3.10)
+project(cm3 LANGUAGES C CXX)
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+   set(CMAKE_INSTALL_PREFIX "{cmake_install_prefix}" CACHE PATH "..." FORCE)
+endif()
+include(GNUInstallDirs)
+find_program(CCACHE_PROGRAM ccache)
+if(CCACHE_PROGRAM)
+   set(CMAKE_C_COMPILER_LAUNCHER "${{CCACHE_PROGRAM}}")
+   set(CMAKE_CXX_COMPILER_LAUNCHER "${{CCACHE_PROGRAM}}")
+endif()
+add_executable(cm3)
+install(TARGETS cm3)
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+target_link_libraries(cm3 Threads::Threads)
+target_sources(cm3 PRIVATE
+"""
+        cmake_footer = """)
+"""
+        if not self.no_action():
+            with open(bootstrap_dir / "CMakeLists.txt", "w") as cmake:
+                cmake.write(cmake_header)
+                for filename in sorted(sources):
+                    cmake.write(f"{filename}\n")
+                cmake.write(cmake_footer)
+
+        # Generate tarball.
+        distname = f"cm3-boot-{self.tag()}" if self.tag else "cm3-boot"
+        tarfile  = f"{distname}.tar.xz"
+
+        command = [
+            "--directory", str(self.source()),
+            f"--transform=s!^bootstrap/!{distname}/!",
+            "bootstrap"]
+
+        self.tar(tarfile, command)
+
+    def tar(self, tarfile, args):
+        self.rm(Path(tarfile))
+        command = ["tar", "acf", tarfile, "--warning=no-file-changed"] + args
+
+        print(*command)
+        if not self.no_action():
+            proc = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, errors="ignore")
+            sys.stdout.write(proc.stdout)
+
+    def tag(self):
+        "Get the version from the current tag"
+        try:
+            return subprocess.check_output(["git", "describe", "--abbrev=0"], errors="ignore").rstrip()
+        except:
+            return None
+
+
+class MakeDistributionCommand(MakeBootstrapCommand):
+
+    def execute(self):
+        # Prepare bootstrap.
+        super().execute()
+
+        # Clean.
+        self.realclean([ALL])
+
+        # Generate tarball.
+        distname = f"cm3-{self.tag()}"
+        tarfile  = f"{distname}.tar.xz"
+
+        parent = str(self.source().parent)
+        source = self.source().name
+
+        command = [
+            "--directory", parent,
+            f"--exclude=*.tar.xz",
+            f"--transform=s!^{source}/!{distname}/!",
+            f"{source}/bootstrap",
+            f"{source}/m3-sys/cminstall/src/config-no-install",
+            "--exclude-vcs",          # Don't include .git
+            "--exclude-vcs-ignores",  # Don't include things ignored by git
+            "--exclude=m3-sys/m3cc",  # Don't include GCC
+            "--exclude=m3-sys/m3gdb",
+            source]
+
+        self.tar(tarfile, command)
+
+
+class Concierge:
+    "aka, main"
+
+    def __init__(self, args = None):
+        # Context defaults.
+        self._cm3        = None
+        self._command    = None
+        self._package_db = None
+        self._script     = None
+
+        # Bootstrap defaults.
+        self._cmake_args = []
+        self._prefix     = None
+
+        # Compiler defaults.
+        self._backend = "c"
+        self._defines = []
+        self._flags   = []
+
+        # Option defaults.
+        self._keep_going = False
+        self._list_only  = False
+        self._no_action  = False
+
+        # Package defaults.
+        self._actions  = []
+        self._packages = []
+
+        # Target defaults.
+        self._target = None
+
+        # Capture command-line arguments.
+        args = (args or sys.argv)[:]
+        args = [arg for arg in args if arg]
+        self._parse_args(args)
+
+    def main(self):
+        "Carry-out the requested command"
+        command = self._command(self.cm3(), self.package_db())
+        command.set_options(self)
+        command.execute()
+
+    def cm3(self):
+        if not self._cm3:
+            self._cm3 = Cm3(
+                script=self._script,
+                backend=self._backend,
+                defines=self._defines,
+                flags=self._flags,
+                target=self._target
+            )
+            self._cm3.set_options(self)
+        return self._cm3
+
+    def package_db(self):
+        if not self._package_db:
+            self._package_db = PackageDatabase(self.cm3())
+        return self._package_db
+
+    def _parse_args(self, args):
+        "Try to make sense of command-line arguments"
+        self._script = args.pop(0)
+        self._parse_command(args)
+
+    def _parse_command(self, args):
+        "Identify requested command and parse arguments"
 
         commands = {
-            "full-upgrade": FullUpgradeCommand,
-            "upgrade":      UpgradeCommand
+            "full-upgrade":   FullUpgradeCommand,
+            "install":        InstallCommand,
+            "make-bootstrap": MakeBootstrapCommand,
+            "make-dist":      MakeDistributionCommand,
+            "upgrade":        UpgradeCommand
         }
 
         constructor = None
@@ -1108,7 +1555,7 @@ class ConciergeParser(WithPackageDb):
                 break
 
         if not constructor:
-            # Default to package operations if nothing specified.
+            # Default to package operations of nothing specified.
             for arg in args:
                 if arg in PACKAGE_ACTIONS:
                     constructor = PackageCommand
@@ -1117,67 +1564,10 @@ class ConciergeParser(WithPackageDb):
         if not constructor:
             raise Exception("no command given")
 
-        command = constructor(self.cm3(), self.package_db())
-        command.parse_args(args)
-
-        return command
+        self._command = constructor
+        self._command.parse_args(args, self)
 
 
-class Concierge:
-    "aka, main"
-
-    def __init__(self, args = None):
-        # Capture command-line arguments.
-        args = (args or sys.argv)[:]
-        self._args = [arg for arg in args if arg]
-        self._parse_args()
-
-        # Setup cm3 build environment.
-        self._cm3 = Cm3(self._script, self._target)
-
-        # Load package database.
-        self._package_db = PackageDatabase(self._cm3)
-
-    def main(self):
-        "Carry-out the requested command"
-        command = self._parse_command()
-        command.execute()
-
-    def _parse_args(self):
-        # Script location is used to find cm3 source directory.
-        self._script = self._args.pop(0)
-
-        # Scan for any command-line parameter that names a platform
-        self._target = os.environ.get("CM3_TARGET")
-        all_targets = self._all_platforms()
-        for arg in self._args:
-            for case_arg in [arg, arg.upper()]:
-                if case_arg in all_targets:
-                    self._target = case_arg
-                    self._args.remove(arg)
-                    return
-
-    def _parse_command(self):
-        "Try to make sense of the command-line arguments"
-        parser = ConciergeParser(self._cm3, self._package_db)
-        return parser.parse_command(self._args)
-
-    def _all_platforms(self):
-        machines = [
-            "ALPHA", "ALPHA32", "ALPHA64", "AMD64", "ARM", "ARMEL", "ARM64",
-            "IA64", "I386", "PPC", "PPC32", "PPC64", "SPARC", "SPARC32",
-            "SPARC64", "MIPS32", "MIPS64EL", "MIPS64", "PA32", "PA64",
-            "RISCV64", "SH"
-        ]
-        systems = [
-            "AIX",  "CE", "CYGWIN", "DARWIN", "FREEBSD", "HPUX", "INTERIX",
-            "IRIX", "LINUX", "MINGW", "NETBSD", "NT", "OPENBSD", "OSF",
-            "SOLARIS", "VMS"
-        ]
-        legacy_platforms = ["NT386", "LINUXLIBC6", "SOLsun", "SOLgnu", "FreeBSD4"]
-
-        return [f"{arch}_{os}" for arch in machines for os in systems] + legacy_platforms
-
-
+# Start here.
 if __name__ == "__main__":
     Concierge().main()
