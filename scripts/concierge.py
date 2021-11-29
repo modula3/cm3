@@ -128,6 +128,153 @@ sys.stderr = sys.stdout
 print(*sys.argv)
 
 
+def show_usage():
+    print(f"""usage:
+{sys.argv[0]} (COMMAND | PACKAGE_ACTIONS) {{GENERAL_OPTION}} [COMPILER_OPTIONS] [PACKAGE_SELECTION]
+
+Specify a command or a sequence of one-or-more package actions.  All
+commands and package actions accept both general options and compiler
+options, and most commands accept a package selection.
+
+The available commands are
+
+COMMAND = install [INSTALL_OPTIONS] | upgrade | full-upgrade | make-bootstrap | make-dist
+
+  * install :: install a new system from a distribution
+  * upgrade :: upgrade the compiler
+  * full-upgrade :: upgrade the compiler and all libraries
+  * make-bootstrap :: prepare a bootsrap compiler
+  * make-dist :: prepare a distribution
+
+"install" can take additional arguments
+
+INSTALL_OPTIONS = [INSTALL_PREFIX] [CMAKE_OPTIONS]
+
+The prefix specifies where to install the new system.  By default,
+install will overwrite any existing cm3 installation.
+
+INSTALL_PREFIX = --prefix <path>
+
+Other options are passed directly to cmake when building the bootstrap
+compiler.
+
+CMAKE_OPTIONS = [GENERATOR_OPTION] {{CMAKE_DEFINE}}
+
+GENERATOR_OPTION = -G <cmake_generator>
+
+CMAKE_DEFINE = -DCMAKE_<name> | -DCMAKE_<name>=<value>
+
+After building the bootstrap compiler, "install" finishes by
+performing a "full-upgrade".  Both "install" and "full-upgrade" accept
+a PACKAGE_SELECTION which defaults to "all".
+
+
+Lacking a command, the default behavior is to execute one-or-more
+package actions.  Any number of package actions can be requested, and
+they are applied in sequence (i.e., "realclean buildship").
+
+PACKAGE_ACTIONS = PACKAGE_ACTION {{PACKAGE_ACTION}}
+
+PACKAGE_ACTION = build | buildglobal | buildlocal | buildship | clean | cleanglobal | cleanlocal | realclean | ship
+
+  * build :: alias for buildlocal
+  * buildglobal :: build without local overrides
+  * buildlocal :: build with local overrides (i.e, "-override")
+  * buildship :: build without local overrides then install
+  * clean :: alias for cleanlocal
+  * cleanglobal :: clean without local overrides
+  * cleanlocal :: clean with local override
+  * realclean :: "rm -R" all build directories
+  * ship :: install packages
+
+
+Options can be applied to all commands and package actions.
+
+GENERAL_OPTION = -k | --keep-going | -l | --list-only | -n | --no-action
+
+  * -k | --keep-going :: ignore errors and continue with commands
+  * -l | --list-only :: list packages that would be affected
+  * -n | --no-action :: print commands that would be executed, but make no changes
+
+
+Compiler options are passed through to cm3.
+
+COMPILER_OPTIONS = {{COMPILER_FLAG}} {{COMPILER_DEFINE}} [BACKEND_OPTION] [TARGET_OPTION]
+
+The various flags are exactly those accepted by cm3.
+
+COMPILER_FLAG = -boot | -commands | -debug | -keep | -override | -silent | -times | -trace | -verbose | -why
+
+  * -commands :: list system commands as they are performed
+  * -debug :: dump internal debugging information
+  * -keep :: preserve intermediate and temporary files
+  * -override :: include the "m3overrides" file
+  * -silent :: produce no diagnostic output
+  * -times :: produce a dump of elapsed times
+  * -trace :: trace quake code execution
+  * -verbose :: list internal steps as they are performed
+  * -why :: explain why code is being recompiled
+
+Defines are passed verbatim to cm3.
+
+COMPILER_DEFINE = -D<name> | -D<name>=<value>
+
+Select the backend to use for compliation.  Breaking from tradition,
+the "c" backend is used as the default if nothing is specified, and
+the gcc backend is only built when explicitly requested.
+
+BACKEND_OPTION = --backend (c|gcc|integrated) | -c | -gcc | -integrated
+
+Select the compile target.  The command-line "--target" takes
+precedence over the "CM3_TARGET" environment variable, which takes
+precedence over the default (usually matching the host).
+
+TARGET_OPTION = --target <name>
+
+
+Packages are specified using either package sets or individual
+packages names (scripts/pkginfo.txt lists known packages and their
+containing sets), and can optionally be specified using a subtractive
+notation.
+
+PACKAGE_SELECTION = {{<name> | +<name> | -<name>}}
+
+Examples
+  * "database -mysql" selects "odbc postgres95 db smalldb"
+  * "-mysql database" selects "odbc mysql postgres95 db smalldb"
+
+Package selections are processed in-order.  An empty package selection
+is always interpreted to mean "all", and any selection that begins
+with a subtraction is subtracted from an implicit "all".
+
+Examples
+  * "buildship" builds and installs everything
+  * "buildship -gui" builds and installs everything except the gui libraries
+
+ENVIRONMENT VARIABLES
+  * CM3 :: provide the name of the cm3 executable, if it is other than "cm3"
+  * CM3_ALL :: define to build all packages without considering the target environment
+  * CM3_INSTALL :: provide the root of an existing cm3 installation, if not in path
+  * CM3_TARGET :: another way to specify "--target"
+  * HAVE_SERIAL :: define to build the serial libraries on Posix systems
+  * HAVE_TCL :: define to build the tcl integration
+""")
+
+
+class Error(Exception):
+    pass
+
+
+class FatalError(Error):
+    def __init__(self, message):
+        self.message = message
+
+
+class UsageError(Error):
+    def __init__(self, message):
+        self.message = message
+
+
 class Platform:
     """Describes compilation host or target
 
@@ -141,7 +288,7 @@ class Platform:
         for target in Platform._all_platforms():
             if name.upper() == target.upper():
                 return target
-        raise Exception("invalid platform name")
+        raise UsageError(f"{name} is not a recognized target")
 
     @staticmethod
     def _all_platforms():
@@ -197,6 +344,9 @@ class Platform:
     def has_serial(self):
         return self.is_win32()
 
+    def is_mingw(self):
+        return self.name().endswith("_MINGW")
+
     def is_nt(self):
         return self.name() == "NT386" or self.name().endswith("_NT")
 
@@ -204,7 +354,7 @@ class Platform:
         return not self.is_win32()
 
     def is_win32(self):
-        return self.is_nt() or self.name().endswith("_MINGW")
+        return self.is_mingw() or self.is_nt()
 
     def name(self):
         "As recognized by cm3"
@@ -292,14 +442,14 @@ class Cm3:
             os.environ,
             CM3_INSTALL=str(self.install()),
             CM3_ROOT=str(self.source()),
-            CM3_TARGET=self.target().name()
+            CM3_TARGET=self.config()
         )
 
     def exe(self):
         "Full path to cm3 executable"
 
         def fail():
-            raise Exception("environment variable CM3_INSTALL not set AND cm3 not found in PATH; please fix")
+            raise FatalError("environment variable CM3_INSTALL not set AND cm3 not found in PATH")
 
         # Environment may override name of executable.
         basename = os.environ.get("CM3", "cm3")
@@ -511,7 +661,7 @@ class PackageDatabase(WithCm3):
         try:
             return self._package_index[name]
         except:
-            raise Exception(f"package {name} not found")
+            raise FatalError(f"package {name} requested but not found")
 
     def get_packages(self, names):
         """List of requested packages, in dependency order
@@ -705,7 +855,7 @@ class PackageAction(WithCm3):
         defines = [
             f"-DBUILD_DIR={self.build_dir()}",
             f"-DROOT={self.source()}",
-            f"-DTARGET={self.target().name()}"
+            f"-DTARGET={self.config()}"
         ]
 
         # Where the gcc or integrated backends are available, they are
@@ -964,7 +1114,7 @@ class ConciergeCommand(WithPackageActions):
             head = tail.pop(0)
             if head == "--backend":
                 if not tail:
-                    raise Exception("invalid backend")
+                    raise UsageError("missing backend selection")
                 backend = tail.pop(0)
             elif head.startswith("--backend="):
                 backend = head[10:]
@@ -974,7 +1124,7 @@ class ConciergeCommand(WithPackageActions):
                 args.append(head)
 
         if backend not in ["c", "gcc", "integrated"]:
-            raise Exception("invalid backend")
+            raise UsageError(f"{backend} is not a recognized backend")
 
         setattr(namespace, "_backend", backend)
 
@@ -1006,7 +1156,7 @@ class ConciergeCommand(WithPackageActions):
 
     @classmethod
     def _parse_target(cls, args, namespace):
-        target = None
+        target = os.environ.get("CM3_TARGET")
 
         tail = args[:]
         args.clear()
@@ -1014,7 +1164,7 @@ class ConciergeCommand(WithPackageActions):
             head = tail.pop(0)
             if head == "--target":
                 if not tail:
-                    raise Exception("invalid target")
+                    raise UsageError("missing target selection")
                 target = tail.pop(0)
             elif head.startswith("--target="):
                 target = head[9:]
@@ -1077,7 +1227,7 @@ class PackageCommand(ConciergeCommand):
         args[:] = [arg for arg in args if arg not in actions]
 
         if len(actions) == 0:
-            raise Exception("no actions specified")
+            raise UsageError("no package actions specified")
 
         setattr(namespace, "_actions", actions)
 
@@ -1292,7 +1442,7 @@ class InstallCommand(ConciergeCommand):
             head = tail.pop(0)
             if head == "--prefix":
                 if not tail:
-                    raise Exception("invalid target")
+                    raise UsageError("missing install prefix")
                 prefix = tail.pop(0)
             elif head.startswith("--prefix="):
                 prefix = head[9:]
@@ -1323,12 +1473,15 @@ class InstallCommand(ConciergeCommand):
         # Check that bootstrap sources are available.
         bootstrap_dir = self.source("bootstrap")
         if not (bootstrap_dir / "CMakeLists.txt").is_file():
-            raise Exception("no bootstrap")
+            raise FatalError("missing bootstrap directory")
 
         # Run an out-of-tree build with cmake.
         with tempfile.TemporaryDirectory() as build_dir:
             setup = ["cmake", "-S", str(bootstrap_dir), "-B", build_dir] + self._cmake_args
             setup.append(f"-DCMAKE_INSTALL_PREFIX={self.prefix()}")
+            if self.target().is_mingw():
+                # At least for now, mingw/cmake can't seem to find its own libraries.
+                setup.append("-DCMAKE_LIBRARY_PATH=/mingw64/x86_64-w64-mingw32/lib")
             self.rmdir(Path(self.prefix()))
 
             build = ["cmake", "--build", build_dir]
@@ -1461,7 +1614,7 @@ class MakeDistributionCommand(MakeBootstrapCommand):
         self.realclean([ALL])
 
         # Generate tarball.
-        distname = f"cm3-{self.tag()}"
+        distname = f"cm3-dist{self.config()}-{self.version()}"
         tarfile  = f"{distname}.tar.xz"
 
         parent = str(self.source().parent)
@@ -1469,7 +1622,8 @@ class MakeDistributionCommand(MakeBootstrapCommand):
 
         command = [
             "--directory", parent,
-            f"--exclude=*.tar.xz",
+            "--exclude=*.7z",
+            "--exclude=*.tar.xz",
             f"--transform=s!^{source}/!{distname}/!",
             f"{source}/bootstrap",
             f"{source}/m3-sys/cminstall/src/config-no-install",
@@ -1511,7 +1665,7 @@ class Concierge:
         self._packages = []
 
         # Target defaults.
-        self._target = None
+        self._target = os.environ.get("CM3_TARGET")
 
         # Capture command-line arguments.
         args = (args or sys.argv)[:]
@@ -1543,6 +1697,13 @@ class Concierge:
 
     def _parse_args(self, args):
         "Try to make sense of command-line arguments"
+
+        help = ["-?", "-h", "--help"]
+        for item in help:
+            if item in args:
+                show_usage()
+                sys.exit(0)
+
         self._script = args.pop(0)
         self._parse_command(args)
 
@@ -1572,7 +1733,7 @@ class Concierge:
                     break
 
         if not constructor:
-            raise Exception("no command given")
+            raise UsageError("no command specified")
 
         self._command = constructor
         self._command.parse_args(args, self)
@@ -1580,4 +1741,10 @@ class Concierge:
 
 # Start here.
 if __name__ == "__main__":
-    Concierge().main()
+    try:
+        Concierge().main()
+    except FatalError as err:
+        print(f"{err.message}")
+    except UsageError as err:
+        print(f"{err.message}\n")
+        show_usage()
