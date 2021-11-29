@@ -197,11 +197,14 @@ class Platform:
     def has_serial(self):
         return self.is_win32()
 
+    def is_nt(self):
+        return self.name() == "NT386" or self.name().endswith("_NT")
+
     def is_posix(self):
-        return self.os() == POSIX
+        return not self.is_win32()
 
     def is_win32(self):
-        return self.os() == WIN32
+        return self.is_nt() or self.name().endswith("_MINGW")
 
     def name(self):
         "As recognized by cm3"
@@ -209,11 +212,7 @@ class Platform:
 
     def os(self):
         "As recognized by cm3"
-        name = self.name()
-        if name == "NT386" or name.endswith("_NT") or name.endswith("_MINGW"):
-            return WIN32
-        else:
-            return POSIX
+        return WIN32 if self.is_win32() else POSIX
 
     def _map_arch(self, arch):
         "Map Python's architecture name to CM3's architecture name"
@@ -1366,7 +1365,7 @@ class MakeBootstrapCommand(ConciergeCommand):
 
     def execute(self):
         # Compile cm3 and its dependencies to C.
-        packages = ["+front", "-m3cc", "-m3cgcat", "-m3cggen", "-mklib"]
+        packages = ["+front", "-m3cc", "-m3cgcat", "-m3cggen"]
         self.realclean(packages)
         self.buildlocal(packages)
 
@@ -1376,53 +1375,61 @@ class MakeBootstrapCommand(ConciergeCommand):
         self.mkdir(bootstrap_dir)
 
         # Copy generated C files to bootstrap.
-        sources  = []
-        if not self.no_action():
-            for package_path in self.get_package_paths(packages):
+        package_dirs = []
+        for package_path in self.get_package_paths(packages):
+            cmakelists = Path(package_path) / "CMakeLists.txt"
+            if not cmakelists.is_file():
+                continue
+            package_dir = bootstrap_dir / Path(package_path).name
+            self.mkdir(package_dir)
+            self.cp(cmakelists, package_dir)
+            package_dirs.append(package_dir.name)
+
+            package_sources = []
+            if not self.no_action():
                 for file in self.build(package_path).iterdir():
                     if file.suffix in [".c", ".cpp", ".h"]:
-                        self.cp(file, bootstrap_dir)
-                        sources.append(file.name)
+                        self.cp(file, package_dir)
+                        package_sources.append(file.name)
+
+                with open(package_dir / "sources.lst", "w") as sources:
+                    sources.write("set(cm3_SOURCES\n")
+                    for filename in sorted(package_sources):
+                        sources.write(f"{filename}\n")
+                    sources.write(")\n")
 
         # Generate CMakeLists.txt
-        cmake_install_prefix = f"/opt/cm3-{self.tag()}" if self.tag() else "/opt/cm3"
+        cmake_install_prefix = f"/opt/cm3-{self.version()}" if self.version() else "/opt/cm3"
         cmake_header = f"""cmake_minimum_required(VERSION 3.10)
 project(cm3 LANGUAGES C CXX)
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
    set(CMAKE_INSTALL_PREFIX "{cmake_install_prefix}" CACHE PATH "..." FORCE)
 endif()
 include(GNUInstallDirs)
-find_program(CCACHE_PROGRAM ccache)
-if(CCACHE_PROGRAM)
-   set(CMAKE_C_COMPILER_LAUNCHER "${{CCACHE_PROGRAM}}")
-   set(CMAKE_CXX_COMPILER_LAUNCHER "${{CCACHE_PROGRAM}}")
-endif()
-add_executable(cm3)
-install(TARGETS cm3)
-set(THREADS_PREFER_PTHREAD_FLAG ON)
-find_package(Threads REQUIRED)
-target_link_libraries(cm3 Threads::Threads)
-target_sources(cm3 PRIVATE
-"""
-        cmake_footer = """)
+include(bootstrap.cmake)
 """
         if not self.no_action():
             with open(bootstrap_dir / "CMakeLists.txt", "w") as cmake:
                 cmake.write(cmake_header)
-                for filename in sorted(sources):
-                    cmake.write(f"{filename}\n")
-                cmake.write(cmake_footer)
+                for dir in sorted(package_dirs):
+                    cmake.write(f"add_subdirectory({dir})\n")
+        self.cp(self.source("scripts/bootstrap.cmake"), bootstrap_dir)
 
-        # Generate tarball.
-        distname = f"cm3-boot-{self.tag()}" if self.tag else "cm3-boot"
-        tarfile  = f"{distname}.tar.xz"
+        # Generate tarballs.
+        distname = f"cm3-boot-{self.config()}-{self.version()}"
+        if self.target().is_win32():
+            self.zip(f"{distname}.7z", ["bootstrap"])
+        else:
+            self.tar(f"{distname}.tar.xz", ["-C", str(self.source()), "bootstrap"])
 
-        command = [
-            "--directory", str(self.source()),
-            f"--transform=s!^bootstrap/!{distname}/!",
-            "bootstrap"]
-
-        self.tar(tarfile, command)
+    def zip(self, zipfile, args):
+        self.rm(Path(zipfile))
+        command = ["7z", "a", zipfile] + args
+        print(*command)
+        if not self.no_action():
+            proc = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, errors="ignore")
+            proc.check_returncode()
+            sys.stdout.write(proc.stdout)
 
     def tar(self, tarfile, args):
         self.rm(Path(tarfile))
@@ -1432,6 +1439,9 @@ target_sources(cm3 PRIVATE
         if not self.no_action():
             proc = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, errors="ignore")
             sys.stdout.write(proc.stdout)
+
+    def version(self):
+        return self.tag()
 
     def tag(self):
         "Get the version from the current tag"
