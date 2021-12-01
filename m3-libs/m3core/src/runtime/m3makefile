@@ -10,7 +10,9 @@ readonly HAS_STACK_WALKER = {
 % "DS3100"     : TRUE,
 % "SOLgnu"     : TRUE,
 % "SOLsun"     : TRUE,
+  "AMD64_LINUX"     : TRUE,
 }
+include_dir ("AMD64_LINUX")
 
 include_dir ("common")
 include_dir (OS_TYPE) % Win32 or Posix

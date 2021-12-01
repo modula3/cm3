@@ -1,0 +1,9 @@
+% Copyright (C) 1994, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+
+interface      ("RTMachine")
+c_source       ("RTStackC")
+import_lib("unwind","/usr/lib")
+import_lib("unwind-x86_64","/usr/lib")
+

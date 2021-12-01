@@ -179,12 +179,17 @@ PROCEDURE ResumeRaise (VAR a: RaiseActivation) RAISES ANY =
     END;
   END ResumeRaise;
 
-PROCEDURE InvokeHandler (s: Scope;  READONLY f: RTStack.Frame;
+PROCEDURE InvokeHandler (s: Scope;  VAR f: RTStack.Frame;
                          READONLY prev: RaiseActivation) RAISES ANY =
   VAR next: RT0.ActivationPtr := f.sp + s.offset;
   BEGIN
     IF DEBUG THEN
       PutExcept ("INVOKE HANLDER", prev);
+RTIO.PutText (" ++++ "); RTIO.PutInt (s.offset);
+RTIO.PutText (" ++++ "); RTIO.PutAddr (f.sp);
+RTIO.PutText (" ++++ "); RTIO.PutAddr (next);
+RTIO.PutText (" ++++ "); RTIO.PutAddr (prev.exception);
+
       PutFrame (f, next);
       RTIO.PutText ("\n");
       RTIO.Flush ();
@@ -436,7 +441,7 @@ PROCEDURE InsertionSort (VAR a: ARRAY OF MapEntry;  lo, hi: INTEGER) =
 VAR NoName := ARRAY [0..15] OF CHAR {'s','t','a','t','i','c',' ',
                                      'p','r','o','c','e','d','u','r','e'};
 PROCEDURE DumpStack () =
-  CONST CallInstructionSize = 4;
+  CONST CallInstructionSize = 8; (* was 4 - should be gotten from Target *)
   VAR
     here, f: RTStack.Frame;
     s: Scope;
