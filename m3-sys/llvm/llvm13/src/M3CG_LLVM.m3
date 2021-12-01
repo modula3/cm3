@@ -682,10 +682,6 @@ VAR
      It will use 128 bit quad precision floating point if target upgrades*)
   ExtendedType : LLVM.TypeRef;
 
-(* cannot set this to true before llvm provides api to specify the
-byval type. The definition now looks like define func(%struct.0* byval %parm)
-but it should look like define func(%struct.0* byval(%struct.0) %parm)
-*)
   llvmByval := TRUE; (* whether we do the copy ourselves or add the 'byval'
                         attribute to functions so that llvm does the copy.
                         If we do it ourselves we sidestep the standard abi
@@ -1908,6 +1904,7 @@ PROCEDURE AllocVar(self : U; v : LvVar) =
 
    (* calc the offset from the stack pointer for the unwinder *)
    INC(self.curProc.localOfs, VAL(LLVM.LLVMStoreSizeOfType(targetData,v.lvType),INTEGER));
+(*^ CHECK is this the best way to calc offset *)
    (* this is negative for stacks growing down - what about other way *)
    v.ofs := -self.curProc.localOfs;
   END AllocVar;
@@ -2611,6 +2608,8 @@ PROCEDURE end_procedure (self: U;  p: Proc) =
 
       LLVM.LLVMReplaceAllUsesWith (proc.outgoingDisplayLv, newDisplayLv);
       linkSize := BuildDisplay(self, newDisplayLv);
+      (* inc the local offset for the unwinder *)
+      INC(proc.localOfs, VAL(LLVM.LLVMStoreSizeOfType(targetData,proc.displayLty),INTEGER));
       DebugLine(self); (* resume debugging *)
     END;
     (* Remove the temporary proc.outgoingDisplayLv. *)
@@ -5180,9 +5179,9 @@ PROCEDURE pop_struct
   VAR
     s0 := Get(self.exprStack,0);
     expr : LvExpr;
+    copyRef : LvVar;
     structTy, refTy : LLVM.TypeRef;
-    origRef_lVal, copyRef_lVal, len_lVal : LLVM.ValueRef;
-    curBB : LLVM.BasicBlockRef;
+    origRef_lVal, len_lVal : LLVM.ValueRef;
   BEGIN
     expr := NARROW(s0,LvExpr);
 
@@ -5197,22 +5196,13 @@ PROCEDURE pop_struct
 
     IF NOT llvmByval THEN
       (* Allocate a temp for the copy in the entry BB *)
-      curBB := LLVM.LLVMGetInsertBlock(builderIR);
-      LLVM.LLVMPositionBuilderAtEnd(builderIR, self.curProc.entryBB);
-      copyRef_lVal := LLVM.LLVMBuildAlloca(builderIR, structTy, LT("ValueFormalCopyRef"));
-(* Maybe Not needed - Check ! *)
-      LLVM.LLVMSetAlignment
-      (copyRef_lVal, LLVM.LLVMPreferredAlignmentOfType(targetData, refTy));
-
-      LLVM.LLVMPositionBuilderAtEnd(builderIR, curBB);
-(* CHECK ^Is this really necessary? *)
-
+      copyRef := self.declare_temp (s, s, Type.Struct, TRUE);
       (* Generate the copy. *)
       len_lVal := LLVM.LLVMConstInt(IntPtrTy, VAL(s,LONGINT), TRUE);
-      DoMemCopy(expr.lVal,copyRef_lVal,len_lVal,align:=1,overlap:=FALSE);
+      DoMemCopy(expr.lVal,copyRef.lv,len_lVal,align:=1,overlap:=FALSE);
 
       (* Update things. *)
-      expr.lVal := copyRef_lVal;
+      expr.lVal := copyRef.lv;
     ELSE
       expr.lVal := origRef_lVal;
     END;
@@ -6494,16 +6484,19 @@ PROCEDURE DebugObject(self : U; o : ObjectDebug) : MetadataRef =
       INC(nextMemberNo);
     END;
 
+(* this works
    M3DIB.LLVMReplaceArrays(self.debugRef,
       T        := ADR(heapObjectDIT),
       Elements := paramsMetadata.Data,
       NumElements := nextMemberNo);
+*)
 
-(* this should work but no
+(* this should work but no.
     M3DIB.LLVMMetadataReplaceAllUsesWith(
       TempTargetMetadata := heapObjectDIT,
       Replacement        := resClassDIT);
 *)
+
     RETURN ptrDIT;
   END DebugObject;
 
