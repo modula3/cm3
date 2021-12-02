@@ -688,6 +688,7 @@ PROCEDURE CreateEnumerationType (Builder    : BuilderRef;
  * @param BaseTy         The base type of the set.
  *)
 
+(* 2021-11-26: temporary disabled
 PROCEDURE CreateSetType (Builder    : BuilderRef;
                          Scope      : MetadataRef;
                          Name       : TEXT;
@@ -697,7 +698,7 @@ PROCEDURE CreateSetType (Builder    : BuilderRef;
                          SizeInBits : uint64_t;
                          AlignInBits: uint32_t;
                          BaseTy     : MetadataRef; ): MetadataRef;
-
+*)
 
 (**
  * Create a descriptor for a subrange with constant bounds.<br>
@@ -711,13 +712,14 @@ PROCEDURE CreateSetType (Builder    : BuilderRef;
  * @param Count      Count of elements in the subrange.
  *)
 
+(* VVM
 PROCEDURE GetSubrangeConst (Builder          : BuilderRef;
                             Scope            : MetadataRef;
                             Name             : TEXT;
                             NameLen          : uint32_t;
                             File, BaseTy     : MetadataRef;
                             LowerBound, Count: int64_t;     ): MetadataRef;
-
+*)
 
 (**
  * Create a descriptor for a subrange with dynamic bounds.<br>
@@ -731,13 +733,14 @@ PROCEDURE GetSubrangeConst (Builder          : BuilderRef;
  * @param Count      Count of elements in the subrange.
  *)
 
+(* 2021-11-26: temporary disabled
 PROCEDURE GetSubrangeExpr (Builder                        : BuilderRef;
                            Scope                          : MetadataRef;
                            Name                           : TEXT;
                            NameLen                        : uint32_t;
                            File, BaseTy, LowerBound, Count: MetadataRef; ):
   MetadataRef;
-
+*)
 
 (**
  * Create debugging information entry for a union.<br>
@@ -806,6 +809,7 @@ PROCEDURE CreateArrayType (Builder      : BuilderRef;
  * @param Rank         Rank.
  *)
 
+(* 2021-11-26: temporary disabled
 PROCEDURE CreateDynamicArrayType
   (Builder                                  : BuilderRef;
    Size                                     : uint64_t;
@@ -815,7 +819,7 @@ PROCEDURE CreateDynamicArrayType
    NumSubscripts                            : uint;
    DataLocation, Associated, Allocated, Rank: MetadataRef;              ):
   MetadataRef;
-
+*)
 
 (**
  * Create debugging information entry for a vector type.<br>
@@ -1723,9 +1727,10 @@ PROCEDURE LLVMInstructionSetDebugLoc (Inst: ValueRef; Loc: MetadataRef; );
 
 PROCEDURE LLVMGetMetadataKind (Metadata: MetadataRef; ): CARDINAL;
 
+(* 2021-11-26: temporary disabled
 PROCEDURE LLVMReplaceArrays (Builder    : BuilderRef;
                              T, Elements: UNTRACED REF MetadataRef;
                              NumElements: uint;                     );
-
+*)
 
 END M3DebugInfo.
