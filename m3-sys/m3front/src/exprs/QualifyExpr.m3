@@ -321,7 +321,7 @@ PROCEDURE QualifyExprAlign (p: P): Type.BitAlignT =
           fieldsAlign
             := MAX (fieldsAlign, ObjectType.FieldAlignment (lhsRepType) );
         END;
-        result := CG.GCD (fieldsAlign, fieldInfo.offset);
+        result := CG.GCD (MAX (fieldsAlign, fieldTypeAlign), fieldInfo.offset);
         <*ASSERT result MOD fieldTypeAlign = 0 *>
         RETURN result;
     END (*CASE*)
