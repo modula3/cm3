@@ -1,27 +1,27 @@
 ---
-name: MacOS integration from bootstrap
-# Build and test on MacOS starting from bootstrap release.
+name: Posix integration from bootstrap
+# Build and test on Posix starting from bootstrap release.
 
 on:
   workflow_call:
     inputs:
-      cm3build:
-        default: cm3-boot-AMD64_LINUX-d5.11.3.tar.xz
+      os:
+        default: ubuntu-latest
         required: false
         type: string
-      cm3release:
+      release:
         default: https://github.com/coder5506/cm3/releases/download/bootstrap-devel
         required: false
         type: string
-      os:
-        default: macos-latest
+      bootstrap:
+        default: cm3-boot-AMD64_LINUX-d5.11.3.tar.xz
         required: false
         type: string
 
 jobs:
   build-and-test:
     runs-on: ${{ inputs.os }}
-    timeout-minutes: 60
+    timeout-minutes: 45
 
     strategy:
       fail-fast: false
@@ -29,10 +29,17 @@ jobs:
         backend: [c, gcc]
 
     env:
-      CM3_TARGET: AMD64_DARWIN
+      CM3_TARGET: ${{ startsWith(inputs.os, 'macos') && 'AMD64_DARWIN' || 'AMD64_LINUX' }}
 
     steps:
     - name: Install prerequisites
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt-get update --quiet
+        sudo apt-get install --quiet --assume-yes libglu1-mesa-dev ninja-build xorg-dev
+
+    - name: Install prerequisites
+      if: runner.os == 'macOS'
       run: |
         brew update
         brew install libxaw libxft ninja xquartz
@@ -44,7 +51,7 @@ jobs:
     - name: Install bootstrap release
       run: |
         mkdir ../bootstrap ../build
-        curl --location --silent "${{ inputs.cm3release }}/${{ inputs.cm3build }}" | tar Jxf - --directory=../bootstrap --strip-components=1
+        curl --location --silent "${{ inputs.release }}/${{ inputs.bootstrap }}" | tar Jxf - --directory=../bootstrap --strip-components=1
         cmake -S ../bootstrap -B ../build -G Ninja -DCMAKE_INSTALL_PREFIX="${CM3_INSTALL}"
         cmake --build ../build
         cmake --install ../build

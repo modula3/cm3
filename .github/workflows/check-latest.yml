@@ -10,21 +10,17 @@ concurrency: ci
 
 jobs:
   linux-integration:
-    uses: modula3/cm3/.github/workflows/linux-integration-from-bootstrap.yml@master
+    uses: modula3/cm3/.github/workflows/posix-integration-from-bootstrap.yml@master
+    with:
+      os: ubuntu-latest
 
   macos-integration:
-    uses: modula3/cm3/.github/workflows/macos-integration-from-bootstrap.yml@master
+    uses: modula3/cm3/.github/workflows/posix-integration-from-bootstrap.yml@master
+    with:
+      os: macos-latest
 
   mingw-integration:
     uses: modula3/cm3/.github/workflows/mingw-integration-from-bootstrap.yml@master
 
-  win32-integration:
-    uses: modula3/cm3/.github/workflows/windows-integration-from-binary.yml@master
-    with:
-      os: windows-latest
-      target: I386_NT
-      backend: >-
-        ["c", "integrated"]
-
-  win64-integration:
-    uses: modula3/cm3/.github/workflows/win64-integration-from-bootstrap.yml@master
+  windows-integration:
+    uses: modula3/cm3/.github/workflows/windows-integration-from-bootstrap.yml@master
