@@ -1045,7 +1045,7 @@ PROCEDURE LoadGlobalAddr (t: T;  offset: INTEGER;  is_const: BOOLEAN) =
          module, but called or initialized from some different module. *)
       ImportInterface (t);
       CG.Load_addr
-        (curModule.globals[is_const].seg, t.import_offs + M3RT.II_import,
+        (curModule.globals[FALSE].seg, t.import_offs + M3RT.II_import,
          CG.Max_alignment);
       CG.Add_offset (offset);
     END;
