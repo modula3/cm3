@@ -1,0 +1,51 @@
+---
+version: 2.1
+
+jobs:
+  build-and-test:
+    machine:
+      image: ubuntu-2004:202101-01
+    resource_class: arm.medium
+
+    environment:
+      RELEASE: https://github.com/coder5506/cm3/releases/download/bootstrap-devel/cm3-boot-AMD64_LINUX-d5.11.3.tar.xz
+      CM3_TARGET: ARM64_LINUX
+
+    steps:
+    - run:
+        name: Install prerequisites
+        command: |
+          sudo apt-get update --quiet
+          sudo apt-get install --quiet --assume-yes cmake libglu1-mesa-dev ninja-build xorg-dev
+
+    - run:
+        name: Install bootstrap release
+        command: |
+          mkdir "${HOME}/bootstrap" "${HOME}/build"
+          curl --location --silent "${RELEASE}" | tar Jxf - --directory="${HOME}/bootstrap" --strip-components=1
+          cmake -S "${HOME}/bootstrap" -B "${HOME}/build" -G Ninja -DCMAKE_INSTALL_PREFIX="${HOME}/install"
+          cmake --build "${HOME}/build"
+          cmake --install "${HOME}/build"
+
+    - checkout
+
+    - run:
+        name: Build all the things
+        command: |
+          PATH="${HOME}/install/bin:${PATH}"
+          scripts/concierge.py full-upgrade
+
+    - run:
+        name: Run compiler validation suite
+        command: |
+          PATH="${HOME}/install/bin:${PATH}"
+          cm3 -DHTML
+        working_directory: m3-sys/m3tests
+
+    - store_test_results:
+        path: m3-sys/m3tests/m3tests-results.xml
+
+workflows:
+  build-and-test:
+    jobs:
+    - build-and-test
