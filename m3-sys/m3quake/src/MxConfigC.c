@@ -146,7 +146,8 @@ MxConfigC__HOST(void)
     (alpha = !! strstr(uname_machine, "ALPHA")) ||
 
     // "x86" only means amd64 if there is "64" somewhere like "x86-64" or "x86_64".
-    (amd64 = (uname64 && (strstr(uname_machine, "AMD64") || strstr(uname_machine, "X86")))) || // TODO: x32?
+    // A later check against size32/size64 will try to isolate x32 platforms.
+    (amd64 = (uname64 && (strstr(uname_machine, "AMD64") || strstr(uname_machine, "X86")))) ||
 
     (s390x = !! strstr(uname_machine, "S390X")) ||                                 // before plain s390
     (s390 = !! strstr(uname_machine, "S390")) ||
@@ -194,13 +195,13 @@ MxConfigC__HOST(void)
         uname_system = "OSF"; // instead of OSF1 with the 1
 
     // AMD64_SOLARIS is i86pc; we must use local sizeof(void*).
-    if (x86 && size32) // x86 => i386
+    if (size32 && (amd64 || x86)) // x86 => i386
     {
         uname_machine = "I386";
         x86 = TRUE;
         amd64 = FALSE;
     }
-    else if (x86 || amd64)  // x86-64 => amd64; this might mistreat x32
+    else if (size64 && (amd64 || x86)) // x86-64 => amd64; prior clause should catch x32
     {
         x86 = FALSE;
         amd64 = TRUE;
