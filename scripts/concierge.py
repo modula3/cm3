@@ -1575,9 +1575,11 @@ include(bootstrap.cmake)
         else:
             self.tar(f"{distname}.tar.xz", ["-C", str(self.source()), "bootstrap"])
 
-    def zip(self, zipfile, args):
-        self.rm(Path(zipfile))
+    def zip(self, zipfile, args, noclean = False):
+        if not noclean:
+            self.rm(Path(zipfile))
         command = ["7z", "a", zipfile] + args
+
         print(*command)
         if not self.no_action():
             proc = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, errors="ignore")
@@ -1614,26 +1616,27 @@ class MakeDistributionCommand(MakeBootstrapCommand):
         self.realclean([ALL])
 
         # Generate tarball.
-        distname = f"cm3-dist{self.config()}-{self.version()}"
-        tarfile  = f"{distname}.tar.xz"
+        distname = f"cm3-dist-{self.config()}-{self.version()}"
+        source   = self.source().name
 
-        parent = str(self.source().parent)
-        source = self.source().name
-
-        command = [
-            "--directory", parent,
-            "--exclude=*.7z",
-            "--exclude=*.tar.xz",
-            f"--transform=s!^{source}/!{distname}/!",
-            f"{source}/bootstrap",
-            f"{source}/m3-sys/cminstall/src/config-no-install",
-            "--exclude-vcs",          # Don't include .git
-            "--exclude-vcs-ignores",  # Don't include things ignored by git
-            "--exclude=m3-sys/m3cc",  # Don't include GCC
-            "--exclude=m3-sys/m3gdb",
-            source]
-
-        self.tar(tarfile, command)
+        if self.target().is_win32():
+            self.zip(f"{distname}.7z", ["-xr@.gitignore", "-xr@scripts/7z.exclude", f"../{source}"])
+            self.zip(f"{distname}.7z", [f"../{source}/bootstrap"], noclean=True)
+        else:
+            parent  = str(self.source().parent)
+            command = [
+                "--directory", parent,
+                "--exclude=*.7z",
+                "--exclude=*.tar.xz",
+                f"--transform=s!^{source}!{distname}!",
+                f"{source}/bootstrap",
+                f"{source}/m3-sys/cminstall/src/config-no-install",
+                "--exclude-vcs",          # Don't include .git
+                "--exclude-vcs-ignores",  # Don't include things ignored by git
+                "--exclude=m3-sys/m3cc",  # Don't include GCC
+                "--exclude=m3-sys/m3gdb",
+                source]
+            self.tar(f"{distname}.tar.xz", command)
 
 
 class Concierge:
