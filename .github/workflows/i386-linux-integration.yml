@@ -1,26 +1,22 @@
 ---
-name: Posix integration from bootstrap
-# Build and test on Posix starting from bootstrap release.
+name: I386_LINUX integration from bootstrap
+# Cross-compile for i686-linux-gnu on x86_64 host
 
 on:
   workflow_call:
     inputs:
-      os:
-        default: ubuntu-latest
-        required: false
-        type: string
       release:
         default: https://github.com/coder5506/cm3/releases/download/bootstrap-devel
         required: false
         type: string
       bootstrap:
-        default: cm3-boot-AMD64_LINUX-d5.11.3.tar.xz
+        default: cm3-boot-I386_LINUX-d5.11.3.tar.xz
         required: false
         type: string
 
 jobs:
   build-and-test:
-    runs-on: ${{ inputs.os }}
+    runs-on: ubuntu-latest
     timeout-minutes: 45
 
     strategy:
@@ -29,40 +25,41 @@ jobs:
         backend: [c, gcc]
 
     env:
-      CM3_TARGET: ${{ startsWith(inputs.os, 'macos') && 'AMD64_DARWIN' || 'AMD64_LINUX' }}
+      CM3_TARGET: I386_LINUX
 
     steps:
     - name: Install prerequisites
-      if: runner.os == 'Linux'
       run: |
         sudo apt-get update --quiet
-        sudo apt-get install --quiet --assume-yes libglu1-mesa-dev ninja-build xorg-dev
-
-    - name: Install prerequisites
-      if: runner.os == 'macOS'
-      run: |
-        brew update
-        brew install libxaw libxft ninja xquartz
+        sudo apt-get install --quiet --assume-yes g++-multilib
+        sudo apt-get install --quiet --assume-yes g++-multilib-i686-linux-gnu
+        sudo apt-get install --quiet --assume-yes cmake ccache ninja-build
+        dpkg -l | grep multilib
 
     - name: Define install location
       run: |
         echo CM3_INSTALL="$(pwd)/../install" >> $GITHUB_ENV
 
+    - name: Fetch sources
+      uses: actions/checkout@v2
+
     - name: Install bootstrap release
+      env:
+        CMAKE_TOOLCHAIN_FILE: scripts/i686-linux-gnu.toolchain.cmake
       run: |
+        ls -al scripts
+        ls -al /usr/i686-linux-gnu
         mkdir ../bootstrap ../build
         curl --location --silent "${{ inputs.release }}/${{ inputs.bootstrap }}" | tar Jxf - --directory=../bootstrap --strip-components=1
-        cmake -S ../bootstrap -B ../build -G Ninja -DCMAKE_INSTALL_PREFIX="${CM3_INSTALL}"
+        cmake -S ../bootstrap -B ../build -G Ninja -DCMAKE_INSTALL_PREFIX="${CM3_INSTALL}" -DCMAKE_TOOLCHAIN_FILE="$(pwd)/${CMAKE_TOOLCHAIN_FILE}"
         cmake --build ../build
         cmake --install ../build
         echo "${CM3_INSTALL}/bin" >> $GITHUB_PATH
 
-    - name: Fetch sources
-      uses: actions/checkout@v2
-
     - name: Build all the things
       run: |
-        scripts/concierge.py full-upgrade --backend "${{ matrix.backend }}"
+        cm3 -version
+        scripts/concierge.py full-upgrade --backend "${{ matrix.backend }}" -DM3CC_TARGET=I386_LINUX headless
 
     - name: Run compiler validation suite
       continue-on-error: true

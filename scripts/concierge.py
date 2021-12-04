@@ -603,6 +603,7 @@ class WithCm3:
             "env",
             "exe",
             "flags",
+            "host",
             "install",
             "keep_going",
             "list_only",
@@ -1362,9 +1363,13 @@ class UpgradeCommand(ConciergeCommand):
         if self.no_action():
             return
 
-        backend = ""
+        backend = ''
         if self.use_c_backend():
             backend = 'readonly M3_BACKEND_MODE = "C"\n'
+
+        cross_compile = ''
+        if self.config() == "I386_LINUX":
+            cross_compile = 'SYSTEM_CC = SYSTEM_CC & " -I/usr/i686-linux-gnu/include"\n'
 
         self.install("bin/cm3.cfg").write_text(
             f"""{backend}if not defined("SL") SL = "/" end
@@ -1372,7 +1377,7 @@ if not defined("HOST") HOST = "{self.config()}" end
 if not defined("TARGET") TARGET = HOST end
 INSTALL_ROOT = (path() & SL & "..")
 include(path() & SL & "config" & SL & TARGET)
-"""
+{cross_compile}"""
         )
 
 
