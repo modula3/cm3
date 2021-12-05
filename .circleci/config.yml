@@ -32,20 +32,18 @@ jobs:
     - run:
         name: Build all the things
         command: |
-          PATH="${HOME}/install/bin:${PATH}"
-          scripts/concierge.py full-upgrade
+          PATH="${HOME}/install/bin:${PATH}" scripts/concierge.py full-upgrade
 
     - run:
         name: Run compiler validation suite
         command: |
-          PATH="${HOME}/install/bin:${PATH}"
-          cm3 -DHTML
+          PATH="${HOME}/install/bin:${PATH}" cm3 -DHTML
         working_directory: m3-sys/m3tests
 
     - store_test_results:
         path: m3-sys/m3tests/m3tests-results.xml
 
 workflows:
-  build-and-test:
+  ARM64_LINUX:
     jobs:
     - build-and-test

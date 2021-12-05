@@ -1,12 +1,11 @@
 ---
-name: Posix integration from bootstrap
-# Build and test on Posix starting from bootstrap release.
+name: AMD64_DARWIN
 
 on:
   workflow_call:
     inputs:
       os:
-        default: ubuntu-latest
+        default: macos-latest
         required: false
         type: string
       release:
@@ -29,17 +28,10 @@ jobs:
         backend: [c, gcc]
 
     env:
-      CM3_TARGET: ${{ startsWith(inputs.os, 'macos') && 'AMD64_DARWIN' || 'AMD64_LINUX' }}
+      CM3_TARGET: AMD64_DARWIN
 
     steps:
     - name: Install prerequisites
-      if: runner.os == 'Linux'
-      run: |
-        sudo apt-get update --quiet
-        sudo apt-get install --quiet --assume-yes libglu1-mesa-dev ninja-build xorg-dev
-
-    - name: Install prerequisites
-      if: runner.os == 'macOS'
       run: |
         brew update
         brew install libxaw libxft ninja xquartz

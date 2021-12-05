@@ -1,6 +1,5 @@
 ---
-name: Windows integration from bootstrap
-# Build and test on Windows starting from bootstrap release.
+name: I386_NT
 
 on:
   workflow_call:
@@ -13,6 +12,10 @@ on:
         default: https://github.com/coder5506/cm3/releases/download/bootstrap-devel
         required: false
         type: string
+      bootstrap:
+        default: cm3-boot-I386_NT-d5.11.3.7z
+        required: false
+        type: string
 
 jobs:
   build:
@@ -22,16 +25,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-        - { target: AMD64_NT, bootstrap: cm3-boot-AMD64_NT-d5.11.3.7z, arch: x64, backend: c }
-        - { target: I386_NT,  bootstrap: cm3-boot-I386_NT-d5.11.3.7z,  arch: x86, backend: c }
-        - { target: I386_NT,  bootstrap: cm3-boot-I386_NT-d5.11.3.7z,  arch: x86, backend: integrated }
+        backend: [c, integrated]
 
     defaults:
       run: {shell: cmd}
 
     env:
-      CM3_TARGET: ${{ matrix.target }}
+      CM3_TARGET: I386_NT
 
     steps:
     - name: Install command-line tools
@@ -41,21 +41,19 @@ jobs:
     - name: Setup SDK environment
       uses: egor-tensin/vs-shell@v2
       with:
-        arch: ${{ matrix.arch }}
+        arch: x86
 
     - name: Define install location
       run: |
         echo CM3_INSTALL=%CD%\..\install\cm3>>%GITHUB_ENV%
 
     - name: Install bootstrap release
-      env:
-        CMAKE_GENERATOR_PLATFORM: ${{ matrix.arch == 'x86' && 'Win32' || 'x64' }}
       run: |
         mkdir ..\build ..\install
         cd ..\install
-        wget --quiet "${{ inputs.release }}/${{ matrix.bootstrap }}"
-        7z x -o.. "${{ matrix.bootstrap }}"
-        cmake -S ..\bootstrap -B ..\build -DCMAKE_INSTALL_PREFIX=%CM3_INSTALL% -A %CMAKE_GENERATOR_PLATFORM%
+        wget --quiet "${{ inputs.release }}/${{ inputs.bootstrap }}"
+        7z x -o.. "${{ inputs.bootstrap }}"
+        cmake -S ..\bootstrap -B ..\build -DCMAKE_INSTALL_PREFIX=%CM3_INSTALL% -A Win32
         cmake --build ..\build
         cmake --install ..\build --config Debug
         echo %CM3_INSTALL%\bin>>%GITHUB_PATH%

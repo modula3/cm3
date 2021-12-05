@@ -1,0 +1,67 @@
+---
+name: AMD64_NT
+
+on:
+  workflow_call:
+    inputs:
+      os:
+        default: windows-latest
+        required: false
+        type: string
+      release:
+        default: https://github.com/coder5506/cm3/releases/download/bootstrap-devel
+        required: false
+        type: string
+      bootstrap:
+        default: cm3-boot-AMD64_NT-d5.11.3.7z
+        required: false
+        type: string
+
+jobs:
+  build:
+    runs-on: ${{ inputs.os }}
+    timeout-minutes: 35
+
+    defaults:
+      run: {shell: cmd}
+
+    env:
+      CM3_TARGET: AMD64_NT
+
+    steps:
+    - name: Install command-line tools
+      run: |
+        choco install wget
+
+    - name: Setup SDK environment
+      uses: egor-tensin/vs-shell@v2
+      with:
+        arch: x64
+
+    - name: Define install location
+      run: |
+        echo CM3_INSTALL=%CD%\..\install\cm3>>%GITHUB_ENV%
+
+    - name: Install bootstrap release
+      run: |
+        mkdir ..\build ..\install
+        cd ..\install
+        wget --quiet "${{ inputs.release }}/${{ inputs.bootstrap }}"
+        7z x -o.. "${{ inputs.bootstrap }}"
+        cmake -S ..\bootstrap -B ..\build -DCMAKE_INSTALL_PREFIX=%CM3_INSTALL% -A x64
+        cmake --build ..\build
+        cmake --install ..\build --config Debug
+        echo %CM3_INSTALL%\bin>>%GITHUB_PATH%
+
+    - name: Fetch sources
+      uses: actions/checkout@v2
+
+    - name: Build all the things
+      run: |
+        python3 scripts\concierge.py full-upgrade -caltech-other -caltech-parser -m3-scheme
+
+    - name: Run compiler validation suite
+      continue-on-error: true
+      run: |
+        cm3 -DHTML
+      working-directory: m3-sys\m3tests

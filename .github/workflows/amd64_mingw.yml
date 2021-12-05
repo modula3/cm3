@@ -1,6 +1,5 @@
 ---
-name: Mingw integration from bootstrap
-# Build and test on Mingw starting from bootstrap release.
+name: AMD64_MINGW
 
 on:
   workflow_call:
@@ -13,34 +12,32 @@ on:
         default: https://github.com/coder5506/cm3/releases/download/bootstrap-devel
         required: false
         type: string
+      bootstrap:
+        default: cm3-boot-AMD64_NT-d5.11.3.7z
+        required: false
+        type: string
 
 jobs:
   build:
     runs-on: ${{ inputs.os }}
     timeout-minutes: 35
 
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-        - { target: AMD64_MINGW, bootstrap: cm3-boot-AMD64_NT-d5.11.3.7z, sys: mingw64, env: x86_64 }
-
     defaults:
       run:
         shell: msys2 {0}
 
     env:
-      CM3_TARGET: ${{ matrix.target }}
+      CM3_TARGET: AMD64_MINGW
 
     steps:
     - name: Install command-line tools
       uses: msys2/setup-msys2@v2
       with:
-        msystem: ${{ matrix.sys }}
+        msystem: mingw64
         install: >-
-          mingw-w64-${{ matrix.env }}-cmake
-          mingw-w64-${{ matrix.env }}-ninja
-          mingw-w64-${{ matrix.env }}-toolchain
+          mingw-w64-x86_64-cmake
+          mingw-w64-x86_64-ninja
+          mingw-w64-x86_64-toolchain
           p7zip
           wget
 
@@ -50,12 +47,12 @@ jobs:
 
     - name: Install bootstrap release
       env:
-        CMAKE_LIBRARY_PATH: ${{ format('/{0}/{1}-w64-mingw32/lib', matrix.sys, matrix.env) }}
+        CMAKE_LIBRARY_PATH: /mingw64/x86_64-w64-mingw32/lib
       run: |
         mkdir ../build ../install
         cd ../install
-        wget --quiet "${{ inputs.release }}/${{ matrix.bootstrap }}"
-        7z x -o.. "${{ matrix.bootstrap }}"
+        wget --quiet "${{ inputs.release }}/${{ inputs.bootstrap }}"
+        7z x -o.. "${{ inputs.bootstrap }}"
         cmake -S ../bootstrap -B ../build -G Ninja -DCMAKE_INSTALL_PREFIX="${CM3_INSTALL}" -DCMAKE_LIBRARY_PATH="${CMAKE_LIBRARY_PATH}"
         cmake --build ../build
         cmake --install ../build
