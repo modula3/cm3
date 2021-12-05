@@ -11,7 +11,7 @@ IMPORT M3CG_LLVM;
 CONST DefaultBinOutFileName = "m3test.ll";
 CONST DefaultExecutableName = "m3llvm";
 
-CONST MaxTargets = 42;
+CONST MaxTargets = 43;
 
 TYPE
   (*
@@ -49,6 +49,7 @@ VAR
     DT{"AMD64_FREEBSD",      "i686-pc-windows-msvc", "e-m:x-p:32:32-i64:64-f80:32-n8:16:32-a:0:32-S32",FALSE},
     DT{"AMD64_MINGW",        "i686-pc-windows-msvc", "e-m:x-p:32:32-i64:64-f80:32-n8:16:32-a:0:32-S32",FALSE},
     DT{"AMD64_NETBSD",       "i686-pc-windows-msvc", "e-m:x-p:32:32-i64:64-f80:32-n8:16:32-a:0:32-S32",FALSE},
+    DT{"AMD64_NT",           "x86_64-pc-windows-msvc", "e-m:w-i64:64-f80:128-n8:16:32:64-S128",TRUE},
     DT{"AMD64_OPENBSD",      "i686-pc-windows-msvc", "e-m:x-p:32:32-i64:64-f80:32-n8:16:32-a:0:32-S32",FALSE},
     DT{"AMD64_SOLARIS",      "i686-pc-windows-msvc", "e-m:x-p:32:32-i64:64-f80:32-n8:16:32-a:0:32-S32",FALSE},
     DT{"ARM64_DARWIN",       "i686-pc-windows-msvc", "e-m:x-p:32:32-i64:64-f80:32-n8:16:32-a:0:32-S32",FALSE},
