@@ -310,7 +310,8 @@ class Platform:
     def __init__(self, name = None):
         if not name:
             arch = self._map_arch(platform.machine())
-            os = platform.system()
+            # `sys.platform` better matches our naming scheme than does `platform.system()`
+            os   = self._map_os(sys.platform)
             name = f"{arch}_{os}".upper()
         self._name = Platform.normalize_platform(name)
 
@@ -367,6 +368,9 @@ class Platform:
     def _map_arch(self, arch):
         "Map Python's architecture name to CM3's architecture name"
         return "amd64" if arch == "x86_64" else arch
+
+    def _map_os(self, os):
+        return "nt" if os == "win32" else os
 
 
 class Cm3:
@@ -1475,7 +1479,19 @@ class InstallCommand(ConciergeCommand):
 
     def execute(self):
         "Build the bootstrap compiler, then perform a system upgrade"
+
         self.bootstrap()
+
+        # Ensure new install is in PATH.
+        path = os.environ["PATH"]
+        if self.target().is_nt():
+            path=f"{str(self.prefix())}/bin;{path}"
+        else:
+            path=f"{str(self.prefix())}/bin:{path}"
+
+        os.environ["CM3_INSTALL"] = str(self.prefix())
+        os.environ["PATH"] = path
+
         self.full_upgrade()
 
     def bootstrap(self):
@@ -1486,24 +1502,35 @@ class InstallCommand(ConciergeCommand):
         if not (bootstrap_dir / "CMakeLists.txt").is_file():
             raise FatalError("missing bootstrap directory")
 
-        # Run an out-of-tree build with cmake.
-        with tempfile.TemporaryDirectory() as build_dir:
-            setup = ["cmake", "-S", str(bootstrap_dir), "-B", build_dir] + self._cmake_args
-            setup.append(f"-DCMAKE_INSTALL_PREFIX={self.prefix()}")
-            if self.target().is_mingw():
-                # At least for now, mingw/cmake can't seem to find its own libraries.
-                setup.append("-DCMAKE_LIBRARY_PATH=/mingw64/x86_64-w64-mingw32/lib")
-            self.rmdir(Path(self.prefix()))
+        if self._out_of_tree():
+            self._build_with_cmake(bootstrap_dir, build_dir=os.getcwd())
+        else:
+            # Run an out-of-tree build with cmake.
+            with tempfile.TemporaryDirectory() as build_dir:
+                self._build_with_cmake(bootstrap_dir, build_dir)
 
-            build = ["cmake", "--build", build_dir]
-            install = ["cmake", "--install", build_dir]
+    def _out_of_tree(self):
+        return self.source() not in Path(os.getcwd()).parents
 
-            for command in [setup, build, install]:
-                print(*command)
-                if not self.no_action():
-                    proc = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, errors="ignore")
-                    sys.stdout.write(proc.stdout)
-                    proc.check_returncode()
+    def _build_with_cmake(self, bootstrap_dir, build_dir):
+        setup = ["cmake", "-S", str(bootstrap_dir), "-B", build_dir] + self._cmake_args
+        setup.append(f"-DCMAKE_INSTALL_PREFIX={str(self.prefix())}")
+        if self.target().is_mingw():
+            # At least for now, mingw/cmake can't seem to find its own libraries.
+            setup.append("-DCMAKE_LIBRARY_PATH=/mingw64/x86_64-w64-mingw32/lib")
+        self.rmdir(self.prefix())
+
+        build = ["cmake", "--build", build_dir]
+        install = ["cmake", "--install", build_dir]
+        if self.target().is_nt():
+            install = install + ["--config", "Debug"]
+
+        for command in [setup, build, install]:
+            print(*command)
+            if not self.no_action():
+                proc = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, errors="ignore")
+                sys.stdout.write(proc.stdout)
+                proc.check_returncode()
 
     def full_upgrade(self):
         "Perform a system upgrade"
@@ -1582,18 +1609,21 @@ include(bootstrap.cmake)
         # Generate tarballs.
         distname = f"cm3-boot-{self.config()}-{self.version()}"
         if self.target().is_win32():
-            self.zip(f"{distname}.7z", ["bootstrap"])
+            self.zip(f"{distname}.7z", ["bootstrap"], cwd=str(self.source()))
         else:
             self.tar(f"{distname}.tar.xz", ["-C", str(self.source()), "bootstrap"])
 
-    def zip(self, zipfile, args, noclean = False):
+    def zip(self, zipfile, args, cwd=None, noclean = False):
         if not noclean:
             self.rm(Path(zipfile))
+
         command = ["7z", "a", zipfile] + args
+        if not cwd:
+            cwd = os.getcwd()
 
         print(*command)
         if not self.no_action():
-            proc = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, errors="ignore")
+            proc = subprocess.run(command, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, errors="ignore")
             proc.check_returncode()
             sys.stdout.write(proc.stdout)
 
@@ -1628,11 +1658,12 @@ class MakeDistributionCommand(MakeBootstrapCommand):
 
         # Generate tarball.
         distname = f"cm3-dist-{self.config()}-{self.version()}"
+        parent   = str(self.source().parent)
         source   = self.source().name
 
         if self.target().is_win32():
-            self.zip(f"{distname}.7z", ["-xr@.gitignore", "-xr@scripts/7z.exclude", f"../{source}"])
-            self.zip(f"{distname}.7z", [f"../{source}/bootstrap"], noclean=True)
+            self.zip(f"{source}/{distname}.7z", [f"-xr@{source}/.gitignore", f"-xr@{source}/scripts/7z.exclude", f"{source}"], cwd=parent)
+            self.zip(f"{source}/{distname}.7z", [f"{source}/bootstrap"], cwd=parent, noclean=True)
         else:
             parent  = str(self.source().parent)
             command = [
