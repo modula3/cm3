@@ -1,3 +1,5 @@
+# Needed to cross-compile i686-linux-gnu target on x86_64-linux-gnu host.
+
 set(CMAKE_SYSTEM_NAME Linux)
 set(CMAKE_SYSTEM_PROCESSOR i686)
 

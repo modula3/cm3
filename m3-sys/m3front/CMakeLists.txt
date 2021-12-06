@@ -1,3 +1,4 @@
+# Needed to compile bootstrap.
 add_library(m3front STATIC)
 target_link_libraries(m3front PUBLIC m3)
 include(sources.lst)

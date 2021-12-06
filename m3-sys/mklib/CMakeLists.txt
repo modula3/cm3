@@ -1,3 +1,4 @@
+# Needed to compile bootstrap.
 add_executable(mklib)
 install(TARGETS mklib)
 

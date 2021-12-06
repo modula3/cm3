@@ -1,3 +1,4 @@
+# Needed to compile bootstrap.
 add_executable(cm3)
 install(TARGETS cm3)
 
