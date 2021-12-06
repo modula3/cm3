@@ -1,31 +1,31 @@
-m3core base core front unicode min headless
-libm3 base core front unicode min headless
+m3core base core front headless min unicode
+libm3 base core front headless min unicode
 set base core front headless
 windowsResources core headless
 parseparams base core headless
 patternmatching core headless
 sysutils core front headless
 unittest core headless
-m3middle base core front unicode headless
-m3objfile core front unicode headless
-m3linker core front unicode headless
-m3back core front unicode headless
+m3middle base core front headless unicode
+m3objfile core front headless unicode
+m3linker core front headless unicode
+m3back core front headless unicode
 m3cggen base core front headless
-m3staloneback tool headless
-m3quake base core front unicode headless
-m3front core front unicode headless
+m3staloneback headless tool
+m3quake base core front headless unicode
+m3front core front headless unicode
 m3scanner base core headless
 m3tools base core headless
-m3cgcat base core front unicode tool headless
-libunicode unicode headless
-m3gdb m3gnudevtool m3gdb headless
+m3cgcat base core front headless tool unicode
+libunicode headless unicode
+m3gdb headless m3gdb m3gnudevtool
 m3bundle base core headless
 mklib base core front headless
-fix_nl tool headless
-libdump tool headless
+fix_nl headless tool
+libdump headless tool
 tempfiles base core headless
-arithmetic math headless
-unittest-numeric math headless
+arithmetic headless math
+unittest-numeric headless math
 bitvector base core headless
 digraph base core headless
 realgeometry base core headless
@@ -33,7 +33,7 @@ slisp base core headless
 sortedtableextras base core headless
 table-list base core headless
 tcl headless
-tcp base core comm headless
+tcp base comm core headless
 cm3ide core headless
 udp comm devlib headless
 libsio devlib headless
@@ -55,10 +55,10 @@ m3tohtml m3devtool
 m3scan devlib headless
 m3markup devlib headless
 m3browser m3devtool
-cmpdir tool headless
-cmpfp tool headless
-dirfp tool headless
-uniq tool headless
+cmpdir headless tool
+cmpfp headless tool
+dirfp headless tool
+uniq headless tool
 netobj comm devlib headless
 netobjd comm m3devtool
 stubgen comm m3devtool
@@ -230,5 +230,5 @@ mscheme-interactive m3-scheme
 mscheme-interactive_r m3-scheme
 mscheme-threads m3-scheme
 
-cm3 core front unicode headless
-m3cc core front unicode m3gnudevtool headless
+cm3 core front headless unicode
+m3cc core front headless m3gnudevtool unicode
