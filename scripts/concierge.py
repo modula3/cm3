@@ -467,11 +467,11 @@ class Cm3:
             # Posix
             candidate = Path(os.environ["CM3_INSTALL"], "bin", basename)
             if candidate.is_file() and os.access(candidate, os.X_OK):
-                return candidate
+                return candidate.resolve()
             # Windows
             candidate = candidate.with_suffix(".exe")
             if candidate.is_file():
-                return candidate
+                return candidate.resolve()
             fail()
 
         # With no overrides, we search PATH.
@@ -489,11 +489,11 @@ class Cm3:
             # Posix
             candidate = Path(dir, basename)
             if candidate.is_file() and os.access(candidate, os.X_OK):
-                return candidate
+                return candidate.resolve()
             # Windows
             candidate = candidate.with_suffix(".exe")
             if candidate.is_file():
-                return candidate
+                return candidate.resolve()
 
         # Not found.
         return None
@@ -1513,7 +1513,7 @@ class InstallCommand(ConciergeCommand):
         "If not otherwise specified, replace the existing compiler"
         if not self._prefix:
             self._prefix = self.install()
-        return self._prefix
+        return Path(self._prefix).resolve()
 
 
 class MakeBootstrapCommand(ConciergeCommand):
