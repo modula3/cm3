@@ -525,9 +525,15 @@ class Cm3:
 
     def install(self, *paths):
         "Relative to root of current installation directory"
-        exe_path    = self.exe();
-        bin_dir     = exe_path.parent
-        install_dir = bin_dir.parent
+
+        install_dir = None
+        if os.environ.get("CM3_INSTALL"):
+            install_dir = Path(os.environ["CM3_INSTALL"]).resolve()
+        else:
+            exe_path    = self.exe();
+            bin_dir     = exe_path.parent
+            install_dir = bin_dir.parent
+
         return install_dir.joinpath(*paths)
 
     def keep_going(self):
