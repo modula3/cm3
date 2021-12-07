@@ -19,9 +19,18 @@ The code is also portable and could be used for ThreadPThread.m3 if desired.
 #ifndef INCLUDED_M3CORE_H
 #include "m3core.h"
 #endif
+
 #ifdef _WIN32
 #include <windows.h>
 #endif
+
+#if defined(__GNUC__)
+#include <x86intrin.h>
+#elif defined(_MSC_VER)
+#include <intrin.h>
+#pragma intrinsic(__rdtsc)
+#endif
+
 
 #ifdef __cplusplus
 extern "C" {
@@ -59,10 +68,7 @@ static unsigned __int64
 __cdecl
 ReadTimeStampCounter(void)
 {
-    __asm {
-        _emit 0xF
-        _emit 0x31
-    }
+   return __rdtsc();
 }
 #else
 static unsigned BogusTimeStampCounter;
