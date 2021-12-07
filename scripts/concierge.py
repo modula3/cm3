@@ -309,10 +309,15 @@ class Platform:
 
     def __init__(self, name = None):
         if not name:
+            # Some attempts to disambiguate _MINGW and _NT.
+            if os.environ.get("MINGW_CHOST", "").startswith("x86_64"): name = "AMD64_MINGW"
+            elif os.environ.get("MSYSTEM") == "MINGW64":               name = "AMD64_MINGW"
+            elif os.environ.get("MINGW_CHOST", "").startswith("i686"): name = "I386_MINGW"
+            elif os.environ.get("MSYSTEM") == "MINGW32":               name = "I386_MINGW"
+        if not name:
             arch = self._map_arch(platform.machine())
-            # `sys.platform` better matches our naming scheme than does `platform.system()`
-            os   = self._map_os(sys.platform)
-            name = f"{arch}_{os}".upper()
+            plat = self._map_os(sys.platform) # better matches our naming scheme than does `platform.system()`
+            name = f"{arch}_{plat}".upper()
         self._name = Platform.normalize_platform(name)
 
     def has_gcc_backend(self):
