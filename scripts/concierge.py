@@ -1437,7 +1437,6 @@ class InstallCommand(ConciergeCommand):
         "Look for arguments that should be passed directly to cmake"
 
         cmake_args = [arg for arg in args if arg.startswith("-DCMAKE_")]
-        args[:] = [arg for arg in args if arg not in cmake_args]
 
         tail = [arg for arg in args if arg not in cmake_args]
         args.clear()
@@ -1507,29 +1506,48 @@ class InstallCommand(ConciergeCommand):
         if not (bootstrap_dir / "CMakeLists.txt").is_file():
             raise FatalError("missing bootstrap directory")
 
+        # Run an out-of-tree build with cmake.
         if self._out_of_tree():
+            # User has already created a build directory, so use it.
             self._build_with_cmake(bootstrap_dir, build_dir=os.getcwd())
         else:
-            # Run an out-of-tree build with cmake.
+            # Otherwise try building in /tmp.
             with tempfile.TemporaryDirectory() as build_dir:
                 self._build_with_cmake(bootstrap_dir, build_dir)
 
     def _out_of_tree(self):
+        "Working directory is not under inside the source tree"
         return self.source() not in Path(os.getcwd()).parents
 
     def _build_with_cmake(self, bootstrap_dir, build_dir):
+        # Configure and generate.
         setup = ["cmake", "-S", str(bootstrap_dir), "-B", build_dir] + self._cmake_args
+
+        # Define install location.
         setup.append(f"-DCMAKE_INSTALL_PREFIX={str(self.prefix())}")
-        if self.target().is_mingw():
-            # At least for now, mingw/cmake can't seem to find its own libraries.
+
+        # Special considerations for MINGW.
+        if self.config() == "AMD64_MINGW":
             setup.append("-DCMAKE_LIBRARY_PATH=/mingw64/x86_64-w64-mingw32/lib")
+        elif self.config() == "I386_MINGW":
+            setup.append("-DCMAKE_LIBRARY_PATH=/mingw32/i686-w64-mingw32/lib")
+
+        # Special considerations for NT.
+        if self.config() == "AMD64_NT":
+            setup = setup + ["-A", "x64"]
+        elif self.config() == "I386_NT":
+            setup = setup + ["-A", "Win32"]
+
         self.rmdir(self.prefix())
 
-        build = ["cmake", "--build", build_dir]
+        # Build and install.
+        build   = ["cmake", "--build",   build_dir]
         install = ["cmake", "--install", build_dir]
         if self.target().is_nt():
+            build   = build + ["--config", "Debug"]
             install = install + ["--config", "Debug"]
 
+        # Execute cmake steps.
         for command in [setup, build, install]:
             print(*command)
             if not self.no_action():
