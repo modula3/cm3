@@ -37,10 +37,12 @@ readonly OS_TYPE = "WIN32"
 
 %-------------------------------------------------------------------
 
-if M3_PROFILING
-    readonly PROFILING_P = "p"
-else
-    readonly PROFILING_P = ""
+if not defined("PROFILING_P")
+    if M3_PROFILING
+        readonly PROFILING_P = "p"
+    else
+        readonly PROFILING_P = ""
+    end
 end
 
 if not defined("BUILD_DIR")
@@ -53,12 +55,16 @@ readonly NAMING_CONVENTIONS = "2"
 % "MS" cl
 % "GNU" gcc
 
-readonly C_COMPILER = "MS"
+if not defined("C_COMPILER")
+    readonly C_COMPILER = "MS"
+end
 
 % "MS" link
 % "GNU" gcc/ld
 
-readonly LINKER = "MS"
+if not defined("LINKER")
+    readonly LINKER = "MS"
+end
 
 % "MS" Win32 kernel threads
 % "PTHREADS" Cygwin pthreads
@@ -539,25 +545,25 @@ proc m3_backend(source, object, optimize, debug) is
 end
 
 %--------------------------------------------------------- m3llvm ------------
-% Optionally, "m3llvm" is called to translate cm3 IR to llvm IR. 
+% Optionally, "m3llvm" is called to translate cm3 IR to llvm IR.
 
 if not defined("m3llvm")
 
   proc m3llvm(source, outfile, optimize, debug) is
-  % will we ever need optimize and/or debug? 
+  % will we ever need optimize and/or debug?
 
       local m3llvmname = "@m3llvm"
 
-      local args = [ "-b" ] 
+      local args = [ "-b" ]
 
       if debug
-        args += "-g" 
+        args += "-g"
       end
 
       % add the target to the m3llvm call.
       args += "-t " & TARGET
 
-      %args += "-d" %While m3llvm is under development.  
+      %args += "-d" %While m3llvm is under development.
 
       return try_exec (m3llvmname, args, "-o", outfile, source )
   end % proc m3llvm
@@ -567,7 +573,7 @@ end % if not defined("m3llvm")
 %--------------------------------------------------------- llvm backend ---
 % Optionally, "llvm_backend" is called to translate llvm bitcode to object code.
 
-% Some default options: 
+% Some default options:
 
 if not defined("llvmback_debug")
   llvmback_debug = ""

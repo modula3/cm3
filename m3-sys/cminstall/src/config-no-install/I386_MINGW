@@ -1,6 +1,5 @@
 % Copyright 1996-2000 Critical Mass, Inc. All rights reserved.
 % See file COPYRIGHT-CMASS for details.
-% Really?
 %
 % Use GNU minimally.
 %   gcc and ld are from MinGWin
@@ -11,9 +10,7 @@
 %-------------------------------------------------------------------
 
 readonly TARGET = "I386_MINGW"  % code generation target
-readonly TARGET_OS = "NT"
 readonly GNU_PLATFORM = "i686-mingw" % "cpu-os" string for GNU
-readonly OS_TYPE = "WIN32"
 
 %-------------------------------------------------------------------
 % defined by cm3, but not the other MxConfig users
@@ -34,11 +31,7 @@ if not defined("BUILD_DIR")
 end
 
 % see the NT386 file for information
-readonly M3_BACKEND_MODE = "3" % other values are 0, 1, 2
 readonly C_COMPILER = "GNU" % other values are MS
 readonly LINKER = "GNU" % other values are MS
-readonly NAMING_CONVENTIONS = "2"
-readonly THREAD_LIBRARY = "MS"
-readonly WINDOW_LIBRARY = "MS"
 
 include("NT386.common")
