@@ -30,6 +30,7 @@ TYPE
         origArgs      : Expr.List := NIL;
         foldedArgs    : Expr.List := NIL; (* Non-NIL only if is_const. *)
         map           : REF ARRAY OF Info := NIL;
+        constExpr     : Expr.T;
         finalVal      : CG.Val := NIL;
         finalValUseCt : INTEGER := 0;
         globalOffset  : INTEGER := FIRST (INTEGER) (* Means uninitialized. *);
@@ -81,6 +82,7 @@ PROCEDURE New (type: Type.T;  args: Expr.List): Expr.T =
     p.origArgs       := args;
     p.foldedArgs     := NIL;
     p.map            := NIL;
+    p.constExpr      := NIL;
     p.finalVal       := NIL;
     p.finalValUseCt  := 0;
     p.evalAttempted  := FALSE;
@@ -91,6 +93,41 @@ PROCEDURE New (type: Type.T;  args: Expr.List): Expr.T =
     p.RTErrorMsg     := NIL;
     RETURN p;
   END New;
+
+PROCEDURE Copy (p: P): Expr.T =
+  VAR new: P;
+  BEGIN
+    new := NEW (P);
+
+    (* Fields inherited from Expr.T: *)
+    new.origin := p.origin;
+    new.type := p.type;
+    new.align := p.align;
+    new.checked := p.checked;
+    new.directAssignableType := p.directAssignableType;
+    new.doDirectAssign := p.doDirectAssign;
+    new.isNamedConst := p.isNamedConst;
+
+    (* Fields of P: *)
+    new.directAssignableType := p.directAssignableType;
+    new.type := p.type;
+    new.repType := p.repType;
+    new.tipe := p.tipe;
+    new.args := p.args;
+    new.map := p.map;
+    new.constExpr := p.constExpr;
+    new.finalVal := p.finalVal;
+    new.finalValUseCt := p.finalValUseCt;
+    new.evalAttempted := p.evalAttempted;
+    new.is_const := p.is_const;
+    new.prepped := p.prepped;
+    new.checked := p.checked;
+    new.RTErrorCode := p.RTErrorCode;
+    new.RTErrorMsg := p.RTErrorMsg;
+    new.broken := p.broken;
+    new.globalOffset := p.globalOffset;
+    RETURN p;
+  END Copy;
 
 (* EXPORTED: *)
 PROCEDURE Is (e: Expr.T): BOOLEAN =
@@ -411,28 +448,40 @@ PROCEDURE CompileLV (p: P; traced: BOOLEAN; StaticOnly: BOOLEAN) =
 PROCEDURE Evaluate (p: P): Expr.T =
 (* Return a constant expr if p is constant, otherwise NIL. *)
 
+  VAR new: P;
   VAR constArgs: Expr.List := NIL;
+  VAR anArgFolded: BOOLEAN;
   BEGIN
     IF p.evalAttempted
-    THEN
-      IF p.is_const THEN RETURN p ELSE RETURN NIL END;
+    THEN RETURN p.constExpr;
     ELSE
       p.evalAttempted   := TRUE;
-      constArgs := NEW(Expr.List, NUMBER(p.origArgs^));
+      constArgs := NEW(Expr.List, NUMBER(p.args^));
       p.is_const := TRUE;
-      FOR i := 0 TO LAST (p.origArgs^) DO
-        WITH constArgi = constArgs^[i]
+      anArgFolded := FALSE;
+      FOR i := 0 TO LAST (p.args^) DO
+        WITH origArgi = p.args^[i], constArgi = constArgs^[i]
         DO
-          constArgi := Expr.ConstValue (p.origArgs^[i]);
+          constArgi := Expr.ConstValue (origArgi);
           IF constArgi = NIL
-          THEN (* p is not constant either. *)
+          THEN
+            p.constExpr := NIL;
             p.is_const := FALSE;
             RETURN NIL;
+          ELSIF constArgi # origArgi
+          THEN anArgFolded := TRUE;
           END;
         END (*WITH*);
       END;
-      p.foldedArgs := constArgs;
-      RETURN p;
+      IF anArgFolded THEN
+        new := Copy (p);
+        new.args := constArgs;
+        p.constExpr := new;
+        RETURN new;
+      ELSE
+        p.constExpr := p;
+        RETURN p;
+      END;
     END;
   END Evaluate;
 
