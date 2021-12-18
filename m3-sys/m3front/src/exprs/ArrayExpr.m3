@@ -530,8 +530,8 @@ PROCEDURE CheckRecurse
                      & " constructor's element type (2.6.8).");
                   argExpr := NIL;
                   constr.broken := TRUE;
-                (* And to top constructor, if different. *)
                 END;
+                (* And to top constructor, if different. *)
                 IF constr # top 
                    AND NOT Type.IsAssignable (argLevelInfo.semType, argSemType)
                 THEN

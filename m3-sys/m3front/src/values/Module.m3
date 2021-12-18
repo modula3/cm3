@@ -1035,14 +1035,14 @@ PROCEDURE GlobalData (is_const: BOOLEAN): CG.Var =
   END GlobalData;
 
 PROCEDURE LoadGlobalAddr (t: T;  offset: INTEGER;  is_const: BOOLEAN) =
+(* PRE: t = Current () OR NOT is_const. *)
+
   BEGIN
     <*ASSERT t.compile_age >= compile_age*>
     IF (t = curModule) THEN
       CG.Load_addr_of (t.globals[is_const].seg, offset, CG.Max_alignment);
     ELSE
-      (* is_const can happen when accessing an anonymous constructor that is the
-         default value of a formal or field, thus in the signature's/record's
-         module, but called or initialized from some different module. *)
+      <*ASSERT NOT is_const *>
       ImportInterface (t);
       CG.Load_addr
         (curModule.globals[FALSE].seg, t.import_offs + M3RT.II_import,
