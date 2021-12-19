@@ -27,9 +27,9 @@ TYPE
   P = Expr.T OBJECT
         tipe          : Type.T;
 (* TODO: Eliminate p.type/p.tipe redundancy. *)
-        args          : Expr.List := NIL;
+        origArgs      : Expr.List := NIL;
+        foldedArgs    : Expr.List := NIL; (* Non-NIL only if is_const. *)
         map           : REF ARRAY OF Info := NIL;
-        constExpr     : Expr.T;
         finalVal      : CG.Val := NIL;
         finalValUseCt : INTEGER := 0;
         globalOffset  : INTEGER := FIRST (INTEGER) (* Means uninitialized. *);
@@ -77,9 +77,10 @@ PROCEDURE New (type: Type.T;  args: Expr.List): Expr.T =
     p.type           := type;
     p.repType        := Type.StripPacked (type);
     p.tipe           := type;
-    p.args           := args;
+    p.foldedArgs     := NIL;
+    p.origArgs       := args;
+    p.foldedArgs     := NIL;
     p.map            := NIL;
-    p.constExpr      := NIL;
     p.finalVal       := NIL;
     p.finalValUseCt  := 0;
     p.evalAttempted  := FALSE;
@@ -90,41 +91,6 @@ PROCEDURE New (type: Type.T;  args: Expr.List): Expr.T =
     p.RTErrorMsg     := NIL;
     RETURN p;
   END New;
-
-PROCEDURE Copy (p: P): Expr.T =
-  VAR new: P;
-  BEGIN
-    new := NEW (P);
-    
-    (* Fields inherited from Expr.T: *)
-    new.origin := p.origin;
-    new.type := p.type;
-    new.align := p.align;
-    new.checked := p.checked;
-    new.directAssignableType := p.directAssignableType;
-    new.doDirectAssign := p.doDirectAssign;
-    new.isNamedConst := p.isNamedConst;
-
-    (* Fields of P: *)
-    new.directAssignableType := p.directAssignableType;
-    new.type := p.type;
-    new.repType := p.repType;
-    new.tipe := p.tipe;    
-    new.args := p.args;
-    new.map := p.map;
-    new.constExpr := p.constExpr;
-    new.finalVal := p.finalVal;
-    new.finalValUseCt := p.finalValUseCt;
-    new.evalAttempted := p.evalAttempted;
-    new.is_const := p.is_const;
-    new.prepped := p.prepped;
-    new.checked := p.checked;
-    new.RTErrorCode := p.RTErrorCode;
-    new.RTErrorMsg := p.RTErrorMsg;
-    new.broken := p.broken;
-    new.globalOffset := p.globalOffset;
-    RETURN p;
-  END Copy;
 
 (* EXPORTED: *)
 PROCEDURE Is (e: Expr.T): BOOLEAN =
@@ -150,8 +116,8 @@ PROCEDURE Qualify (e: Expr.T;  id: M3ID.T;  VAR result: Expr.T): BOOLEAN =
     END;
     IF NOT RecordType.LookUp (p.tipe, id, val) THEN RETURN FALSE END;
     Field.Split (val, fieldInfo);
-    FOR i := 0 TO LAST (p.args^) DO
-      argExpr := p.args[i];
+    FOR i := 0 TO LAST (p.origArgs^) DO
+      argExpr := p.origArgs[i]; (* Don't use a folded value of field. *)
       IF (KeywordExpr.Split (argExpr, argId, splitExpr)) THEN
         IF (argId = id) THEN result := splitExpr; RETURN TRUE END;
       ELSIF (i = fieldInfo.index) THEN
@@ -190,7 +156,7 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
     RTErrorMsg: TEXT;
   BEGIN
     p.tipe := Type.Check (p.tipe);
-    FOR i := 0 TO LAST (p.args^) DO Expr.TypeCheck (p.args[i], cs) END;
+    FOR i := 0 TO LAST (p.origArgs^) DO Expr.TypeCheck (p.origArgs[i], cs) END;
     p.type := p.tipe;
     IF NOT RecordType.Split (p.tipe, fieldList) THEN
 (* CHECK: Can't we ASSERT FALSE here? *)
@@ -222,10 +188,10 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
       INC (fieldNo);
     END;
     posOK := TRUE;
-    EVAL Evaluate (p); (* Fold all foldable arguments. *)
+    EVAL Evaluate (p); (* Fold arguments, if p is constant. *)
 
-    FOR i := 0 TO LAST (p.args^) DO
-      e := p.args[i];
+    FOR i := 0 TO LAST (p.origArgs^) DO
+      e := p.origArgs[i];
       IF RangeExpr.Split (e, splitExpr, dfault) THEN
         Error.Msg
           ("Range expressions not allowed in record constructors (2.6.8).");
@@ -308,12 +274,15 @@ PROCEDURE EqCheck (a: P;  e: Expr.T;  x: M3.EqAssumption): BOOLEAN =
     ELSE      RETURN FALSE;
     END;
     IF (NOT Type.IsEqual (a.tipe, b.tipe, x))
-      OR ((a.args = NIL) # (b.args = NIL))
-      OR ((a.args # NIL) AND (NUMBER (a.args^) # NUMBER (b.args^))) THEN
+      OR ((a.origArgs = NIL) # (b.origArgs = NIL))
+      OR ((a.origArgs # NIL) AND (NUMBER (a.origArgs^) # NUMBER (b.origArgs^)))
+    THEN
       RETURN FALSE;
     END;
-    FOR i := 0 TO LAST (a.args^) DO
-      IF NOT Expr.IsEqual (a.args[i], b.args[i], x) THEN RETURN FALSE END;
+    FOR i := 0 TO LAST (a.origArgs^) DO
+      IF NOT Expr.IsEqual (a.origArgs[i], b.origArgs[i], x)
+      THEN RETURN FALSE
+      END;
     END;
     RETURN TRUE;
   END EqCheck;
@@ -442,40 +411,28 @@ PROCEDURE CompileLV (p: P; traced: BOOLEAN; StaticOnly: BOOLEAN) =
 PROCEDURE Evaluate (p: P): Expr.T =
 (* Return a constant expr if p is constant, otherwise NIL. *)
 
-  VAR new: P;
   VAR constArgs: Expr.List := NIL;
-  VAR anArgFolded: BOOLEAN;
   BEGIN
     IF p.evalAttempted
-    THEN RETURN p.constExpr;
+    THEN
+      IF p.is_const THEN RETURN p ELSE RETURN NIL END;
     ELSE
       p.evalAttempted   := TRUE;
-      constArgs := NEW(Expr.List, NUMBER(p.args^));
+      constArgs := NEW(Expr.List, NUMBER(p.origArgs^));
       p.is_const := TRUE;
-      anArgFolded := FALSE;
-      FOR i := 0 TO LAST (p.args^) DO
-        WITH origArgi = p.args^[i], constArgi = constArgs^[i]
+      FOR i := 0 TO LAST (p.origArgs^) DO
+        WITH constArgi = constArgs^[i]
         DO
-          constArgi := Expr.ConstValue (origArgi);
+          constArgi := Expr.ConstValue (p.origArgs^[i]);
           IF constArgi = NIL
-          THEN
-            p.constExpr := NIL;
+          THEN (* p is not constant either. *)
             p.is_const := FALSE;
             RETURN NIL;
-          ELSIF constArgi # origArgi
-          THEN anArgFolded := TRUE;
           END;
         END (*WITH*);
       END;
-      IF anArgFolded THEN
-        new := Copy (p);
-        new.args := constArgs;
-        p.constExpr := new;
-        RETURN new;
-      ELSE
-        p.constExpr := p;
-        RETURN p;
-      END;
+      p.foldedArgs := constArgs;
+      RETURN p;
     END;
   END Evaluate;
 
