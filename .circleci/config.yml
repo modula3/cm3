@@ -32,7 +32,7 @@ jobs:
     - run:
         name: Build all the things
         command: |
-          PATH="${HOME}/install/bin:${PATH}" scripts/concierge.py full-upgrade
+          PATH="${HOME}/install/bin:${PATH}" scripts/concierge.py full-upgrade all
 
     - run:
         name: Run compiler validation suite

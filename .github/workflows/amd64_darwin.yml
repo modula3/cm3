@@ -54,7 +54,7 @@ jobs:
 
     - name: Build all the things
       run: |
-        scripts/concierge.py full-upgrade --backend "${{ matrix.backend }}"
+        scripts/concierge.py full-upgrade --backend "${{ matrix.backend }}" all
 
     - name: Run compiler validation suite
       continue-on-error: true

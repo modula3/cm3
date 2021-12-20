@@ -1,5 +1,5 @@
 ---
-name: integration check
+name: integration
 # Build and test starting from latest bootstrap release.
 
 on:
