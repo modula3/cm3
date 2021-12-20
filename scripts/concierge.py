@@ -95,6 +95,9 @@ from pathlib import Path
 # The canonical package set defined in pkginfo.txt.
 ALL = "all"
 
+# Packages without UI dependencies.
+HEADLESS = "headless"
+
 # Operating system classifications.
 POSIX = "POSIX"
 WIN32 = "WIN32"
@@ -166,7 +169,7 @@ CMAKE_DEFINE = -DCMAKE_<name> | -DCMAKE_<name>=<value>
 
 After building the bootstrap compiler, "install" finishes by
 performing a "full-upgrade".  Both "install" and "full-upgrade" accept
-a PACKAGE_SELECTION which defaults to "all".
+a PACKAGE_SELECTION which defaults to "headless".
 
 
 Lacking a command, the default behavior is to execute one-or-more
@@ -244,8 +247,8 @@ Examples
   * "-mysql database" selects "odbc mysql postgres95 db smalldb"
 
 Package selections are processed in-order.  An empty package selection
-is always interpreted to mean "all", and any selection that begins
-with a subtraction is subtracted from an implicit "all".
+is always interpreted to mean "headless", and any selection that
+begins with a subtraction is subtracted from an implicit "headless".
 
 Examples
   * "buildship" builds and installs everything
@@ -1273,7 +1276,7 @@ class PackageCommand(ConciergeCommand):
         "Return the packages requested on the command-line"
         pkgs = super().packages()
         if not pkgs or pkgs[0].startswith("-"):
-            pkgs.insert(0, ALL)
+            pkgs.insert(0, HEADLESS)
         return pkgs
 
 
@@ -1418,7 +1421,7 @@ class FullUpgradeCommand(UpgradeCommand):
         "Return the packages requested on the command-line"
         pkgs = super().packages()
         if not pkgs or pkgs[0].startswith("-"):
-            pkgs.insert(0, ALL)
+            pkgs.insert(0, HEADLESS)
         return pkgs
 
 
