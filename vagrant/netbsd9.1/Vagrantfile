@@ -1,0 +1,18 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "NetBSD/NetBSD-9.1"
+  config.vm.box_version = "1.0.0"
+
+  config.vm.provider("virtualbox")  do |vb|
+    vb.gui = false
+    vb.memory = "2048"
+  end
+
+  config.vm.synced_folder(".", "/vagrant", disabled: true)
+
+  config.vm.provision "shell", inline: <<-SHELL
+    pkgin -y install cmake gtar python38 unixodbc
+  SHELL
+end
