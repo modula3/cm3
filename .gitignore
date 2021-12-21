@@ -1,5 +1,6 @@
 *.7z
 *.tar.xz
+.vagrant/
 ALPHA32_VMS/
 ALPHA64_VMS/
 ALPHA_LINUX/
