@@ -9,11 +9,11 @@ on:
         required: false
         type: string
       release:
-        default: https://github.com/coder5506/cm3/releases/download/bootstrap-devel
+        default: https://github.com/modula3/cm3/releases/download/d5.11.4
         required: false
         type: string
       bootstrap:
-        default: cm3-boot-I386_NT-d5.11.3.7z
+        default: cm3-boot-I386_NT-d5.11.4.7z
         required: false
         type: string
 

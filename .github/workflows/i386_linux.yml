@@ -10,11 +10,11 @@ on:
         required: false
         type: string
       release:
-        default: https://github.com/coder5506/cm3/releases/download/bootstrap-devel
+        default: https://github.com/modula3/cm3/releases/download/d5.11.4
         required: false
         type: string
       bootstrap:
-        default: cm3-boot-I386_LINUX-d5.11.3.tar.xz
+        default: cm3-boot-I386_LINUX-d5.11.4.tar.xz
         required: false
         type: string
 

@@ -8,7 +8,7 @@ jobs:
     resource_class: arm.medium
 
     environment:
-      RELEASE: https://github.com/coder5506/cm3/releases/download/bootstrap-devel/cm3-boot-AMD64_LINUX-d5.11.3.tar.xz
+      RELEASE: https://github.com/modula3/cm3/releases/download/d5.11.4/cm3-boot-AMD64_LINUX-d5.11.4.tar.xz
       CM3_TARGET: ARM64_LINUX
 
     steps:
