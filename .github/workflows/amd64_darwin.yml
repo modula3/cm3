@@ -43,7 +43,7 @@ jobs:
     - name: Install bootstrap release
       run: |
         mkdir ../bootstrap ../build
-        curl --location --silent "${{ inputs.release }}/${{ inputs.bootstrap }}" | tar Jxf - --directory=../bootstrap --strip-components=1
+        curl --location --silent "${{ inputs.release }}/${{ inputs.bootstrap }}" | gtar Jxf - --directory=../bootstrap --strip-components=1
         cmake -S ../bootstrap -B ../build -G Ninja -DCMAKE_INSTALL_PREFIX="${CM3_INSTALL}"
         cmake --build ../build
         cmake --install ../build

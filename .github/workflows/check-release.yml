@@ -1,0 +1,90 @@
+---
+name: check release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag
+        required: true
+
+env:
+  CM3RELEASE: https://github.com/modula3/cm3/releases/download/${{ github.event.inputs.tag }}
+
+jobs:
+  AMD64_DARWIN:
+    runs-on: macos-latest
+    env:
+      CM3DIST: cm3-dist-AMD64_LINUX-${{ github.event.inputs.tag }}.tar.xz
+    steps:
+    - run: |
+        mkdir ../build ../dist
+        curl --location --silent "${CM3RELEASE}/${CM3DIST}" | gtar Jxf - --directory=../dist --strip-components=1
+        cd ../build
+        ../dist/scripts/concierge.py install --prefix ../install
+
+  AMD64_LINUX:
+    runs-on: ubuntu-latest
+    env:
+      CM3DIST: cm3-dist-AMD64_LINUX-${{ github.event.inputs.tag }}.tar.xz
+    steps:
+    - run: |
+        mkdir ../build ../dist
+        curl --location --silent "${CM3RELEASE}/${CM3DIST}" | tar Jxf - --directory=../dist --strip-components=1
+        cd ../build
+        ../dist/scripts/concierge.py install --prefix ../install
+
+  AMD64_MINGW:
+    runs-on: windows-latest
+    env:
+      CM3DIST: cm3-dist-AMD64_NT-${{ github.event.inputs.tag }}.7z
+    steps:
+    - uses: msys2/setup-msys2@v2
+      with:
+        msystem: mingw64
+        install: >-
+          mingw-w64-x86_64-cmake
+          mingw-w64-x86_64-ninja
+          mingw-w64-x86_64-toolchain
+          p7zip
+          wget
+    - run: |
+        mkdir ../build
+        wget --quiet "${CM3RELEASE}/${CM3DIST}"
+        7z x -o.. "${CM3DIST}"
+        cd ../build
+        cmake -S ../cm3/bootstrap -B . -DCMAKE_INSTALL_PREFIX=../cm3/install -DCMAKE_LIBRARY_PATH=/mingw64/x86_64-w64-mingw32/lib
+        ../cm3/scripts/concierge.py install --prefix ../install
+      shell: msys2 {0}
+
+  AMD64_NT:
+    runs-on: windows-latest
+    env:
+      CM3DIST: cm3-dist-AMD64_NT-${{ github.event.inputs.tag }}.7z
+    steps:
+    - run: choco install wget
+    - uses: egor-tensin/vs-shell@v2
+      with: {arch: x64}
+    - run: |
+        mkdir ..\build
+        wget --quiet "${{ env.CM3RELEASE }}/${{ env.CM3DIST }}"
+        7z x -o.. "${{ env.CM3DIST }}"
+        cd ..\build
+        python3 ..\cm3\scripts\concierge.py install --prefix ..\install
+      shell: cmd
+
+  I386_NT:
+    runs-on: windows-latest
+    env:
+      CM3DIST: cm3-dist-I386_NT-${{ github.event.inputs.tag }}.7z
+    steps:
+    - run: choco install wget
+    - uses: egor-tensin/vs-shell@v2
+      with: {arch: x86}
+    - run: |
+        mkdir ..\build
+        wget --quiet "${{ env.CM3RELEASE }}/${{ env.CM3DIST }}"
+        7z x -o.. "${{ env.CM3DIST }}"
+        cd ..\build
+        python3 ..\cm3\scripts\concierge.py install --prefix ..\install --target I386_NT
+      shell: cmd
