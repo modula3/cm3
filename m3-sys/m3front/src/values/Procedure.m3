@@ -154,7 +154,7 @@ PROCEDURE ParseDecl (READONLY att: Decl.Attributes;
       t.end_origin := Scanner.offset;
       final_id := MatchID ();
       IF (final_id # id) THEN
-        Error.ID (id, "Initial name doesn\'t match final name");
+        Error.ID (id, "Final procedure name must match Initial name (2.4.4).");
       END;
       Scope.PopNew ();
       ProcBody.Pop ();

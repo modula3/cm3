@@ -10,6 +10,7 @@ MODULE Method;
 
 IMPORT M3, Value, ValueRep, Type, Scope, Expr, UserProc;
 IMPORT Error, ProcType, Procedure, Null, M3Buf;
+IMPORT Module, Formal;
 
 TYPE
   T = Value.T BRANDED OBJECT
@@ -95,9 +96,9 @@ PROCEDURE ResolveDefault (t: T) =
     IF Type.IsEqual (default_type, Null.T, NIL) THEN
       RETURN; (* ok *)
     ELSIF NOT ProcType.Is (default_type) THEN
-      Error.ID (t.name, "default is not a procedure");
+      Error.ID (t.name, "Method default must be a procedure (2.2.9).");
     ELSE
-      Error.ID (t.name, "default is not a procedure constant");
+      Error.ID (t.name, "Method default must be a procedure constant (2.2.9).");
     END;
   END ResolveDefault;
 
@@ -131,6 +132,9 @@ PROCEDURE Check (t: T;  VAR cs: Value.CheckState) =
   BEGIN
     IF (t.signature # NIL) THEN
       t.signature := Type.Check (t.signature);
+      IF Module.IsInterface () THEN
+        Formal.NameDefaultConstructors (t.signature, t.name, cs);
+      END;
     END;
 
     IF (t.dfaultE # NIL) THEN
@@ -145,11 +149,13 @@ PROCEDURE Check (t: T;  VAR cs: Value.CheckState) =
       IF (procType = Null.T) THEN
         t.dfault := NIL;
       ELSIF (Value.ClassOf (proc) # Value.Class.Procedure) THEN
-        Error.ID (t.name, "default is not a procedure");
+        Error.ID (t.name, "Method default must be a procedure (2.2.9).");
       ELSIF Procedure.IsNested (proc) THEN
-        Error.ID (t.name, "default is a nested procedure");
+        Error.ID
+          (t.name, "Method default must not be a nested procedure (2.2.9).");
       ELSIF NOT ProcType.IsCompatible (procType, t.parent, t.signature) THEN
-        Error.ID (t.name, "default is incompatible with method type");
+        Error.ID
+          (t.name, "Method default must be compatible with method signature  (2.2.9).");
       END;
     END;
   END Check;
