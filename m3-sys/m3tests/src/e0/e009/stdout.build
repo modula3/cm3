@@ -1,5 +1,5 @@
 "../Main.m3", line 13: warning: exception is never raised: <ANY>
-"../Main.m3", line 17: default is incompatible with method type (apply)
+"../Main.m3", line 17: Method default must be compatible with method signature  (2.2.9). (apply)
 "../Main.m3", line 17: procedure is not compatible with method (apply)
 2 errors and 1 warning encountered
 Fatal Error: package build failed
