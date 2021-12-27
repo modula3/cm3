@@ -1898,15 +1898,20 @@ PROCEDURE VName(v : LvVar; debug := FALSE) : TEXT =
 
 (* Generate llvm code to allocate v in the current basic block. *)
 PROCEDURE AllocVar(self : U; v : LvVar) =
+  VAR size : INTEGER;
   BEGIN
     v.lv := LLVM.LLVMBuildAlloca(builderIR, v.lvType, LT(VName(v)));
     LLVM.LLVMSetAlignment(v.lv,v.align);
 
    (* calc the offset from the stack pointer for the unwinder *)
-   INC(self.curProc.localOfs, VAL(LLVM.LLVMStoreSizeOfType(targetData,v.lvType),INTEGER));
+   size := VAL(LLVM.LLVMStoreSizeOfType(targetData,v.lvType),INTEGER);
+   INC(size,7);
+   size := size - (size MOD 8);
+   INC(self.curProc.localOfs, size);
 (*^ CHECK is this the best way to calc offset *)
    (* this is negative for stacks growing down - what about other way *)
    v.ofs := -self.curProc.localOfs;
+   IO.PutInt(v.ofs); IO.Put("\n");
   END AllocVar;
 
 (* PRE: We are inside a procedure body, possibly deeply inside nested blocks. *)
@@ -2737,6 +2742,7 @@ PROCEDURE set_label (self: U;  lab: Label;  barrier: BOOLEAN) =
          but this is the correct branch - so delete the old one*)
       terminator := LLVM.LLVMGetBasicBlockTerminator(branch.branchBB);
       IF terminator # NIL THEN
+IO.Put("Erasing terminator\n");
         LLVM.LLVMInstructionEraseFromParent(terminator);
       END;
       LLVM.LLVMPositionBuilderAtEnd(builderIR,branch.branchBB);
