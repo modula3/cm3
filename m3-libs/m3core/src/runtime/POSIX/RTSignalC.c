@@ -10,7 +10,12 @@
 #ifndef INCLUDED_M3CORE_H
 #include "m3core.h"
 #endif
-
+#if defined(__hpux) && defined(__ia64)
+#include <sys/types.h>
+#include <machine/sys/reg_struct.h>
+#include <signal.h>
+#include <sys/uc_access.h>
+#endif
 #if !defined(__INTERIX) && !defined(__vms) && !defined(SA_SIGINFO)
 #define SA_SIGINFO SA_SIGINFO
 #endif
@@ -80,11 +85,15 @@ GetPC(void* xcontext)
 /* PC: program counter aka instruction pointer, etc. */
 {
     ucontext_t* context = (ucontext_t*)xcontext;
-
     if (context == NULL)
         return 0;
-
+#if defined(__hpux) && defined(__ia64)
+    uint64_t ip = 0;
+    __uc_get_ip(context, &ip);
+    return ip;
+#else
     return GET_PC(context);
+#endif
 }
 
 #endif

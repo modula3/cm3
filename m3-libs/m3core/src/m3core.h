@@ -658,13 +658,25 @@ The values involved are all small and positive, and we convert carefully.
 Note that socklen_t should be declared by system headers, but isn't always.
 
 TODO: Consider changing m3_socklen_t to int.
+
+HP-UX socklen_t is always size_t, but depending on defines, socklen_t or int are used.
 */
+typedef WORD_T m3_socklen_t;
+#ifndef __hpux
 #if defined(__INTERIX) || (defined(__vms) && defined(_DECC_V4_SOURCE)) || defined(_WIN32)
 typedef int socklen_t;
 #elif defined(__vms)
 typedef size_t socklen_t;
 #endif
-typedef WORD_T m3_socklen_t;
+#define m3c_socklen_t socklen_t
+
+#else /* hpux */
+#ifdef _XOPEN_SOURCE_EXTENDED
+typedef size_t/*socklen_t*/ m3c_socklen_t;
+#else
+typedef int/*not socklen_t*/ m3c_socklen_t;
+#endif
+#endif
 
 #define Usocket__socklen_t Usocket__socklen_t /* inhibit m3c type */
 typedef m3_socklen_t Usocket__socklen_t;
@@ -1010,6 +1022,14 @@ Process__RegisterExitor(void (__cdecl*)(void));
 #define GET_PC(context) ((context)->uc_mcontext.mc_pc)
 #endif
 
+#elif defined(__hpux) && defined(__ia64) && (defined(_LP64) || defined(__LP64__))
+#define M3_HOST "IA64_HPUX64"
+// GET_PC does not fit, see RTSignalC.c
+
+#elif defined(__hpux) && defined(__ia64) && defined(_ILP32)
+#define M3_HOST "IA64_HPUX32"
+// GET_PC does not fit, see RTSignalC.c
+
 #elif defined(__mips)
 #define GET_PC(context) ((context)->uc_mcontext.scp_pc.lo)
 #elif defined(__hppa)
@@ -1271,7 +1291,7 @@ extern "C" {
 #endif
 #  define alloca _alloca
 # else
-/* This is verified correct for Solaris, Tru64/OSF1, documented correct for AIX. TODO: Irix, HP-UX, etc. */
+/* This is verified correct for Solaris, Tru64/OSF1, HP-UX, documented correct for AIX. TODO: Irix, etc. */
 #  include <alloca.h>
 # endif
 #endif

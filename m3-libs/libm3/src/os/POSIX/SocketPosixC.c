@@ -270,7 +270,7 @@ SocketPosixC__Accept(int server, EndPoint* ep)
 
     while (1)
     {
-        socklen_t len = sizeof(name);
+        m3c_socklen_t len = sizeof(name);
         ZERO_MEMORY(name);
         client = accept(server, (struct sockaddr *)&name, &len);
         if (client >= 0)
@@ -393,7 +393,7 @@ SocketPosixC__ReceiveFrom(int fd,
     ZERO_MEMORY(name);
     while (1)
     {
-        socklen_t nameLen = sizeof(name);
+        m3c_socklen_t nameLen = sizeof(name);
         INTEGER len = recvfrom(fd, b, nb, 0, (struct sockaddr *)&name, &nameLen);
         if (len >= 0)
         {
@@ -467,7 +467,7 @@ __cdecl
 SocketPosixC__Peek(int fd, EndPoint* ep)
 {
     SockAddrIn name;
-    socklen_t len = sizeof(name);
+    m3c_socklen_t len = sizeof(name);
 
     ZERO_MEMORY(name);
     if (recvfrom(fd, NULL, 0, MSG_PEEK, (struct sockaddr *)&name, &len) < 0)
@@ -490,7 +490,7 @@ SocketPosixC__ThisEnd(int fd, EndPoint* ep)
     if (ep->port == NullPort)
     {
         SockAddrIn name;
-        socklen_t len = sizeof(name);
+        m3c_socklen_t len = sizeof(name);
 
         ZERO_MEMORY(name);
         if (getsockname(fd, (struct sockaddr *)&name, &len) != 0)
@@ -529,7 +529,7 @@ __cdecl
 SocketPosixC__OtherEnd(int fd, EndPoint* ep)
 {
     SockAddrIn addr;
-    socklen_t len = sizeof(addr);
+    m3c_socklen_t len = sizeof(addr);
 
     ZERO_MEMORY(addr);
     if (getpeername(fd, (struct sockaddr *)&addr, &len) < 0)

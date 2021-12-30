@@ -33,7 +33,7 @@ end
 if not defined ("SYSTEM_LIBS")
 
 % This is for Linux and partly for FreeBSD, OpenBSD, NetBSD.
-% Other systems replace it entirely: Solaris, Interix, Cygwin, Darwin.
+% Other systems replace it entirely: Solaris, Interix, Cygwin, Darwin, HPUX.
 
 SYSTEM_LIBS =
 {

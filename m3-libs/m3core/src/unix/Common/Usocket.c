@@ -262,7 +262,7 @@ SockAddrNativeToM3(const NativeSockAddrUnionAll* native, M3SockAddrUnionAll* m3)
  * Typical values are quite small.
  */
 
-#define LOSSLESS_SOCKLEN (TYPES_MATCH(socklen_t, m3_socklen_t))
+#define LOSSLESS_SOCKLEN (TYPES_MATCH(m3c_socklen_t, m3_socklen_t))
 
 static void __cdecl
 Usocket__assert_plen_in(m3_socklen_t* plen)
@@ -281,7 +281,7 @@ Usocket__assert_plen_in(m3_socklen_t* plen)
 }
 
 static void __cdecl
-Usocket__plen_out(m3_socklen_t* plen, socklen_t len)
+Usocket__plen_out(m3_socklen_t* plen, m3c_socklen_t len)
 {
     assert(LOSSLESS_SOCKLEN || plen == NULL || len <= (1UL << 30));
     if (plen)
@@ -358,7 +358,7 @@ Usocket__recv (int a, void* b, size_t c, int d)
     return r;
 }
 
-// wrap everything taking input socklen_t or sockaddr
+// wrap everything taking input m3c_socklen_t or sockaddr
 #define WRAP_SOCKADDR_INPUT1                    \
     ssize_t result = {0};                       \
     NativeSockAddrUnionAll native;              \
@@ -381,7 +381,7 @@ Usocket__recv (int a, void* b, size_t c, int d)
     ssize_t result = {0};                       \
     NativeSockAddrUnionAll native;              \
     M3SockAddrUnionAll m3;                      \
-    socklen_t len = {0};                        \
+    m3c_socklen_t len = {0};                    \
     ZERO_MEMORY(native);                        \
     ZERO_MEMORY(m3);                            \
     ASSERT_PLEN_IN                              \
@@ -449,7 +449,7 @@ Usocket__setsockopt(int s, int level, int optname, const void* optval, m3_sockle
     return setsockopt(s, level, optname, (char*)optval, len); // cast for Windows
 }
 
-/* wrap everything taking input/output socklen_t */
+/* wrap everything taking input/output m3c_socklen_t */
 
 M3_DLL_EXPORT int __cdecl
 Usocket__getpeername(int s, M3SockAddrUnionAll* pm3_sockaddr, m3_socklen_t* plen)
@@ -493,7 +493,7 @@ the same order. This is checked in Usocket__Assertions.
     ASSERT_PLEN_IN
     {
         int r = { 0 };
-        socklen_t len = plen ? *plen : 0;
+        m3c_socklen_t len = plen ? *plen : 0;
 
 #if defined(__CYGWIN__) || defined(_WIN32)
         m3_linger_t* a = { 0 };
@@ -569,7 +569,7 @@ __cdecl
 Usocket_accept_un(int fd)
 {
     sockaddr_un addr;
-    socklen_t socklen = sizeof(addr);
+    m3c_socklen_t socklen = sizeof(addr);
     addr.sun_family = AF_UNIX;
     addr.sun_path[0] = 0;
     return accept(fd, (sockaddr*)&addr, &socklen);

@@ -15,7 +15,12 @@ readonly SYSTEM_AR = "ar"
 %   and therefore catch any missing ones early
 %
 SYSTEM_LD = SYSTEM_CC
-  & " -static-libgcc -Wl,+s,+vnoshlibunsats,+Oprocelim -B direct -B immediate"
+  & " -Wl,+s,+vnoshlibunsats,+Oprocelim,-B,direct,-B,immediate"
+
+include ("Unix.common")
+
+% TODO: -static-libgcc for gcc
+% TODO: +s maybe not a good idea. Is there $ORIGIN support? Drop dynamic linking?
 
 SYSTEM_LIBS = {
     %
@@ -26,7 +31,10 @@ SYSTEM_LIBS = {
     % with unbundled compiler but doesn't mention it for bundled.
     % Should be tried when system back online.
     %
-    "LIBC"       : ["-lrt", "-lm", "-lpthread"],
+    % -ldcekt is for uuid_create in MachineIDPosixC.c
+    % -luca is for getting IP from context in RTSignalC.c
+    %
+    "LIBC"       : ["-lrt", "-lm", "-lpthread", "-ldcekt", "-luca"],
     "LEX-YACC"   : ["-ll" ],
     "FLEX-BISON" : [ ],
     "OPENGL"     : ["-L/opt/graphics/OpenGL/lib", "-lGLU", "-lGL", "-lXext"],
@@ -36,7 +44,5 @@ SYSTEM_LIBS = {
 }
 
 SYSTEM_LIBORDER = ["OPENGL", "MOTIF", "X11", "TCP", "LEX-YACC", "LIBC"]
-
-include ("Unix.common")
 
 M3_SHARED_LIB_ARG = ""

@@ -303,9 +303,10 @@ class Platform:
             "RISCV64", "SH"
         ]
         systems = [
-            "AIX",  "CE", "CYGWIN", "DARWIN", "FREEBSD", "HPUX", "INTERIX",
-            "IRIX", "LINUX", "MINGW", "NETBSD", "NT", "OPENBSD", "OSF",
-            "SOLARIS", "VMS"
+            "AIX",  "CE", "CYGWIN", "DARWIN", "FREEBSD", "HPUX", "HPUX32",
+            "HPUX64", "INTERIX", "IRIX", "LINUX", "MINGW", "NETBSD", "NT",
+            "NT32", "NT64",
+            "OPENBSD", "OSF", "SOLARIS", "VMS", "VMS32", "VMS64"
         ]
         legacy_platforms = ["NT386", "LINUXLIBC6", "SOLsun", "SOLgnu", "FreeBSD4"]
         return [f"{arch}_{os}" for arch in machines for os in systems] + legacy_platforms
@@ -335,8 +336,9 @@ class Platform:
         if re.match(r"ARM|SOL", name):
             return False
 
-        # Many platforms only work on the C backend.
-        if re.search(r"ALPHA|CYGWIN|MINGW|OSF|RISCV|SOLARIS", name):
+        # Many platforms only work on the C backend, or at least
+        # there are no protesting users.
+        if re.search(r"ALPHA|CYGWIN|MINGW|OSF|RISCV|SOLARIS|HPUX|IA64", name):
             return False
 
         return True
