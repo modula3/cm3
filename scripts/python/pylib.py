@@ -353,11 +353,14 @@ def _GetAllTargets():
 
     # systematic naming
 
-    for proc in ["ALPHA", "ALPHA32", "ALPHA64", "AMD64", "ARM", "ARMEL", "ARM64",
-                 "IA64", "I386", "PPC", "PPC32", "PPC64", "SPARC", "SPARC32",
-                 "SPARC64", "MIPS32", "MIPS64EL", "MIPS64", "PA32", "PA64", "RISCV64", "SH"]:
-        for os in ["AIX",  "CE", "CYGWIN", "DARWIN",  "FREEBSD", "HPUX", "INTERIX", "IRIX",
-                   "LINUX", "MINGW", "NETBSD", "NT", "OPENBSD", "OSF", "SOLARIS", "VMS"]:
+    for proc in ["ALPHA", "ALPHA32", "ALPHA64", "AMD64", "ARM", "ARMEL",
+                 "ARM64", "IA64", "I386", "PPC", "PPC32", "PPC64", "SPARC",
+                 "SPARC32", "SPARC64", "MIPS32", "MIPS64EL", "MIPS64", "PA32",
+                 "PA64", "RISCV64", "SH"]:
+        for os in ["AIX",  "CE", "CYGWIN", "DARWIN",  "FREEBSD", "HPUX",
+                   "HPUX32", "HPUX64", "INTERIX", "IRIX", "LINUX", "MINGW",
+                   "NETBSD", "NT", "NT32", "NT64", "OPENBSD", "OSF", "SOLARIS",
+                   "VMS", "VMS32", "VMS64"]:
                    # "BEOS", "MSDOS" (DJGPP), "OS2" (EMX), "PLAN9"
             target = proc + "_" + os
             Targets[target] = target
@@ -388,7 +391,8 @@ def TargetOnlyHasCBackend(a):
     return (a.endswith("_nt") or a.startswith("arm") or a.find("riscv") != -1
         or a.find("solaris") != -1 or a.startswith("sol") # gcc backend does work
         or a.find("alpha") != -1 or a.find("osf") != -1 # gcc backend does work
-        or a.find("mingw") != -1 or a.find("cygwin") != -1)
+        or a.find("mingw") != -1 or a.find("cygwin") != -1
+        or a.find("ia64") != -1 or a.find("hpux") != -1) # HPPA_HPUX gcc backend does work, IA64 maybe too
 
 _PossibleCm3Flags = ["boot", "keep", "override", "commands", "verbose", "why", "debug", "trace"]
 _SkipGccFlags = ["nogcc", "skipgcc", "omitgcc"]
@@ -1176,7 +1180,9 @@ def Boot():
     print("CBackend = " + str(CBackend))
 
     CCompilerFlags = " "
-    CCompilerOut = ""
+
+    # TODO: This is all misplaced. It belongs in autotools, or cmake, or
+    # worst case, our own code at bootstrap runtime, not in bootstrap formation.
 
     if alpha32vms:
         CCompiler = "c++"
@@ -1184,12 +1190,13 @@ def Boot():
     elif alpha64vms:
         CCompiler = "c++"
         CCompilerFlags = "/pointer_size=64 "
+    elif hpux:
+        CCompiler = "/opt/aCC/bin/aCC"
     elif solaris or solsun:
         #CCompiler = "/usr/bin/c++"
         #CCompilerFlags = " -g -mt -xldscope=symbolic "
         CCompiler = "./c_compiler"
         CopyFile("./c_compiler", BootDir)
-        CCompilerOut = " -o $@ "
     elif osf:
         # There is a problem on my install such that linking with cxx fails, unless I use oldcxx.
         # This really should be fixed otherwise.
@@ -1197,7 +1204,6 @@ def Boot():
         CCompilerFlags = " -g -pthread -x cxx -c99 -fprm d "
         #CCompiler = "g++"
         #CCompilerFlags = " -g -pthread -mfp-rounding-mode=d "
-        CCompilerOut = " -o $@ "
     else:
         # gcc and other platforms
         CCompiler = {
@@ -1213,14 +1219,16 @@ def Boot():
             "AMD64_MINGW"   : " -g ", # No need for -pthread
             #"AMD64_NT"      : " -Zi -MD -Gy ",
             "AMD64_NT"      : " -Zi -Gy ", # hack some problem with exception handling and alignment otherwise
+            "IA64_HPUX32"   : " -g ", # -pthread is not allowed
+            "IA64_HPUX64"   : " -g ", # -pthread is not allowed
             }.get(Config) or " -pthread -g "
 
-        CCompilerOut = {
-            "AMD64_NT"      : "-Fo./",
-            "I386_NT"       : "-Fo./",
-            "ARM32_NT"      : "-Fo./",
-            "ARM64_NT"      : "-Fo./",
-            }.get(Config) or "-o $@"
+    CCompilerOut = {
+        "AMD64_NT"      : "-Fo./",
+        "I386_NT"       : "-Fo./",
+        "ARM32_NT"      : "-Fo./",
+        "ARM64_NT"      : "-Fo./",
+        }.get(Config) or " -o $@ "
 
     CCompilerFlags = CCompilerFlags + ({
         "AMD64_LINUX"     : " -m64 ",
@@ -1234,6 +1242,8 @@ def Boot():
         "ARM_DARWIN"      : " -march=armv6 -mcpu=arm1176jzf-s ",
         "LINUXLIBC6"      : " -m32 ",
         "I386_LINUX"      : " -m32 ",
+        "IA64_HPUX32"     : " +DD32 -mt -z ",
+        "IA64_HPUX64"     : " +DD64 -mt -z ",
         "MIPS64_OPENBSD"  : " -mabi=64 ",
         "I386_SOLARIS"    : " -xarch=pentium_pro -Kpic ",
         "AMD64_SOLARIS"   : " -xarch=amd64       -Kpic ",
@@ -1266,7 +1276,10 @@ def Boot():
     elif solaris or sol:
         Link = Link  +  " -lpthread -lrt -lm -lnsl -lsocket -lc -pthread "
     elif hpux:
-        Link = Link + " -lrt -lm -lpthread -pthread "
+        # -ldcekt is for uuid_create in MachineIDPosixC.c
+        # -luca is for getting IP from context in RTSignalC.c
+        # -pthread is not allowed
+        Link = Link + " -lrt -lm -lpthread -ldcekt -luca "
     elif osf:
         # There is a problem on my install such that linking with cxx fails, unless I use oldcxx.
         # This really should be fixed otherwise.

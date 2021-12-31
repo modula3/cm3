@@ -1,0 +1,14 @@
+readonly TARGET = "IA64_HPUX32"
+readonly M3_BACKEND_MODE = "C"
+M3_PARALLEL_BACK = 20
+
+% +DD32 : 32bit (default)
+% -mt   : multithreaded
+% -z    : null dereference fails (sigsegv)
+SYSTEM_CC = "/opt/aCC/bin/aCC +DD32 -mt -z" % C and C++ compiler
+
+readonly TARGET_ARCH = "IA64"
+readonly TARGET_ENDIAN = "BIG" % { "BIG" OR "LITTLE" }
+readonly WORD_SIZE = "32BITS"  % { "32BITS" or "64BITS" }
+
+include("HPUX.common")

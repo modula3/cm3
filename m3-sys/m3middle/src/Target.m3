@@ -178,10 +178,9 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
 
     (* add the system-specific customization *)
 
-    (* 64bit *)
-
-    IF TextUtils.StartsWith(system, "ALPHA_")       (* But not ALPHA32_. *)
-        OR TextUtils.Contains(system, "64") THEN
+    (* 32bit or 64bit *)
+	IF (TextUtils.StartsWith(system, "ALPHA") OR TextUtils.Contains(system, "64"))
+		AND NOT TextUtils.Contains(system, "32") THEN (* possibly IA64, Alpha *)
       Init64();
     ELSIF backend_mode # M3BackendMode_t.C THEN
       (* Change only alignment.  Size is always 64:
@@ -205,11 +204,13 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
           AND NOT TextUtils.StartsWith(system, "MIPS64EL"))
         OR TextUtils.StartsWith(system, "PPC")  (* ambiguous *)
         OR TextUtils.StartsWith(system, "SPARC")
-        OR TextUtils.StartsWith(system, "SOL") THEN
+        OR TextUtils.StartsWith(system, "SOL")
+        OR TextUtils.StartsWith(system, "IA64_HPUX") THEN
       endian := Endian.Big;
     END;
 
     (* x86 and AMD64 allow unaligned loads/stores but converge C *)
+
     IF backend_mode # M3BackendMode_t.C THEN
       IF IsX86orAmd64(system) THEN
         Allow_packed_byte_aligned := TRUE;

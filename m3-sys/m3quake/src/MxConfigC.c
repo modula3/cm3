@@ -3,9 +3,22 @@
 // word sizes other than 32 or 64, etc.
 //
 // Code should avoid depending on this stuff though too.
+#if 0 /*for testing purposes*/
+#ifndef _MSC_VER
+#define __cdecl /* nothing */
+typedef unsigned char BOOLEAN;
+typedef int BOOL;
+#define TRUE 1
+#define FALSE 0
+#endif
+#else
 #ifndef INCLUDED_M3CORE_H
 #include "m3core.h"
 #endif
+#endif
+
+#include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include <ctype.h>
 #ifdef _WIN32
@@ -41,6 +54,35 @@ ToUpper(char* a)
     }
 }
 
+static
+char*
+Concat(const char* a0,
+       const char* a1,
+       const char* a2,
+       const char* a3,
+       const char* a4)
+{
+    size_t n0 = strlen(a0);
+    size_t n1 = strlen(a1);
+    size_t n2 = strlen(a2);
+    size_t n3 = strlen(a3);
+    size_t n4 = strlen(a4);
+    if (n0 > 0xFFF || n1 > 0xFFF || n2 > 0xFFF || n3 > 0xFFF || n4 > 0xFFF) // crudely avoid overflow
+        return 0;
+    char* result = (char*)malloc(n0 + n1 + n2 + n3 + n4 + 1);
+    char* p = result;
+    if (result)
+    {
+        memcpy(p, a0, n0); p += n0;
+        memcpy(p, a1, n1); p += n1;
+        memcpy(p, a2, n2); p += n2;
+        memcpy(p, a3, n3); p += n3;
+        memcpy(p, a4, n4); p += n4;
+        *p++ = 0;
+    }
+    return result;
+}
+
 const char*
 __cdecl
 MxConfigC__HOST(void)
@@ -68,15 +110,13 @@ MxConfigC__HOST(void)
 #endif
     /*const but clang warns/errors*/ BOOL size32 = !size64;
     char* result = 0;
-    int length = 0;
     // Sometimes word_size is implied, sometimes not.
-    const char* word_size = "";
+    // Usually CPU{32,64}_OS but sometimes CPU_OS{32,64} e.g. for IA64.
+    const char* cpu_word_size = "";
+    const char* os_word_size = "";
     struct utsname u;
     const char* uname_machine = u.machine;
     const char* uname_system = u.sysname;
-    size_t uname_machine_size = 0;
-    size_t uname_system_size = 0;
-    size_t word_size_size = 0;
     BOOL uname32 = FALSE;
     BOOL uname64 = FALSE;
     BOOL aix = FALSE;
@@ -112,14 +152,8 @@ MxConfigC__HOST(void)
     // dragonflybsd, illumos, smartos, ultrix, etc.
 
     // Some systems do not nul terminate (old WSL1 bug).
-    ZeroMemory(&u, sizeof(u));
+    memset(&u, 0, sizeof(u));
     uname(&u);
-
-    uname_system_size = strlen(u.sysname);
-    uname_machine_size = strlen(u.machine);
-
-    if (uname_system_size > 0x1000 || uname_machine_size > 0x1000) // Avoid overflow later.
-        return 0;
 
     ToUpper(u.sysname);
     ToUpper(u.machine);
@@ -149,8 +183,8 @@ MxConfigC__HOST(void)
     // A later check against size32/size64 will try to isolate x32 platforms.
     (amd64 = (uname64 && (strstr(uname_machine, "AMD64") || strstr(uname_machine, "X86")))) ||
 
-    (s390x = !! strstr(uname_machine, "S390X")) ||                                 // before plain s390
-    (s390 = !! strstr(uname_machine, "S390")) ||
+    (s390x = !! strstr(uname_machine, "S390X")) || // 64bit, before plain s390
+    (s390 = !! strstr(uname_machine, "S390")) ||   // 32bit
     (m68k = !! strstr(uname_machine, "M68K")) ||
     (hppa = (strstr(uname_machine, "HPPA") || strstr(uname_machine, "PARISC"))) ||
     (mips = !! strstr(uname_machine, "MIPS")) ||                                   // 32 or 64, big or little endian
@@ -169,6 +203,9 @@ MxConfigC__HOST(void)
     (x86 = !! strstr(uname_machine, "86")) // Solaris: i86pc
     ;
 
+    // Note the break here.
+    // Short circuiting of processor is separate from OS.
+
     // Most of these are not used.
     // However there is short circuiting.
     (linux_ = !! strstr(uname_system, "LINUX")) ||
@@ -178,6 +215,7 @@ MxConfigC__HOST(void)
     (netbsd = !! strstr(uname_system, "NETBSD")) ||
     (openbsd = !! strstr(uname_system, "OPENBSD")) ||
     (hpux = !! strstr(uname_system, "HPUX")) ||
+    (hpux = !! strstr(uname_system, "HP-UX")) ||
     (osf = !! strstr(uname_system, "OSF")) || // TODO: Test.
     (osf = !! strstr(uname_system, "TRU64")) || // TODO: Test.
     (osf = !! strstr(uname_system, "DIGITAL UNIX")) || // TODO: Test.
@@ -188,9 +226,10 @@ MxConfigC__HOST(void)
     (vms = !! strstr(uname_system, "VMS")) // TODO: Test. OpenVMS?
     ;
 
-    if (solaris)
-        uname_system = "SOLARIS";
-
+    if (hpux)
+        uname_system = "HPUX"; // instead of HP-UX with the dash
+    else if (solaris)
+        uname_system = "SOLARIS"; // instead of SunOS
     else if (osf)
         uname_system = "OSF"; // instead of OSF1 with the 1
 
@@ -214,42 +253,59 @@ MxConfigC__HOST(void)
     else if (hppa) // hppa/parisc => pa (too short?)
         uname_machine = "PA";
 
-    if (vms && ia64)
-        word_size = size64 ? "_64" : "_32"; // IA64 and ALPHA can be 32 or 64. Vax is always 32.
-    else if (vms && !vax)
-        word_size = size64 ? "64" : "32"; // IA64 and ALPHA can be 32 or 64. Vax is always 32.
-    else if ((darwin && powerpc && size32) || x86 || m68k || s390 || alpha || ia64 || uname32 || amd64 || uname64)
+    // Alpha and IA64 are not always 64bits.
+    // VMS, HPUX, NT offer 32bit variations, NT/Alpha64 never shipped.
+    if (ia64 && (vms || hpux))
+    {
+        // IA64_VMS32
+        // IA64_VMS64
+        // IA64_HPUX32
+        // IA64_HPUX64
+        os_word_size = size32 ? "32" : "64";
+        cpu_word_size = "";
+    }
+    else if (alpha && (vms /*|| nt*/))
+    {
+        // ALPHA32_VMS
+        // ALPHA64_VMS
+        // ALPHA32_NT
+        // ALPHA64_NT (unreleased)
+        cpu_word_size = size32 ? "32" : "64";
+        os_word_size = "";
+    }
+    else if ((darwin && powerpc && size32) || x86 || m68k || s390 || alpha || ia64 || uname32 || amd64 || uname64 || vax || s390x)
     {
         // implicitly 32 or 64 because it is obvious and/or it is in the name,
         // Or historical names like PPC_DARWIN
-        word_size = "";
+        os_word_size = "";
+        cpu_word_size = "";
     }
     else
-        word_size = size64 ? "64" : "32"; // sparc32 ppc32 arm32 pa32 pa64 ppc64 mips32 mips64 etc.
+    {
+        os_word_size = "";
+        cpu_word_size = size64 ? "64" : "32"; // {sparc,ppc,arm,pa,mips}{32,64} except PPC_DARWIN
+    }
 
-    uname_system_size = strlen(uname_system);
-    uname_machine_size = strlen(uname_machine);
-    word_size_size = strlen(word_size);
-
-    length = uname_system_size + uname_machine_size + word_size_size + 2;
-    result = (char*)malloc(length);
+    result = Concat(uname_machine, cpu_word_size, "_", uname_system, os_word_size);
+#ifdef M3_HOST
     if (result)
     {
-        char* p = result;
-        memcpy(p, uname_machine, uname_machine_size);
-        p += uname_machine_size;
-        memcpy(p, word_size, word_size_size);
-        p += word_size_size;
-        *p++ = '_';
-        memcpy(p, uname_system, uname_system_size + 1);
-#ifdef M3_HOST
+        if (strcmp(M3_HOST, result))
+            printf("%s %s\n", M3_HOST, result);
         assert(strcmp(M3_HOST, result) == 0); // Check against m3core.h
-#endif
     }
+#endif
     return result;
 #endif
 }
 
 #ifdef __cplusplus
 } // extern "C"
+#endif
+
+#if 0 /*for testing purposes*/
+int main()
+{
+    printf("%s\n", MxConfigC__HOST());
+}
 #endif

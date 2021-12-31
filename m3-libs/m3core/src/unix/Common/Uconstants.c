@@ -36,12 +36,14 @@ extern "C" {
 #endif
 #endif
 
-// Check that Uerror.Max=248 is enough; if you get an error here, raise it in Uerror.i3 and here.
+// Check that Uerror.Max=255 is enough; if you get an error here, raise it in Uerror.i3 and here.
 //
 // FreeBSD (12.2/amd64) compiling with clang++ has some numbers between 9000 and 10000.
 // Skip these. The actual user of Uerror.Max is ok with this.
 //
-#define M3_UERROR_MAX 248
+// HP-UX does not quite fit in historical 248 so raised to 255.
+//
+#define M3_UERROR_MAX 255
 
 #ifdef _LIBCPP_ERRNO_H // e.g. __cplusplus && __clang__ && __FreeBSD__
 #if ENODATA > 9900 && ENODATA < 9999
