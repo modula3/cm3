@@ -1198,7 +1198,7 @@ def Boot():
         CCompiler = "/opt/aCC/bin/aCC"
     elif solaris or solsun:
         #CCompiler = "/usr/bin/c++"
-        #CCompilerFlags = " -g -mt -xldscope=symbolic "
+        #CCompilerFlags = " -g -mt -xldscope=symbolic " # TODO: consider -xldscope=hidden
         CCompiler = "./c_compiler"
         CopyFile("./c_compiler", BootDir)
     elif osf:
@@ -1308,54 +1308,6 @@ def Boot():
 
     Compile = "$(CC) $(CFLAGS) " + [" -c ", ""][vms]
 
-    AssembleOnTarget = not vms
-    AssembleOnHost = not AssembleOnTarget
-
-    # pick assembler
-
-    if vms and AssembleOnTarget:
-        Assembler = "macro" # not right, come back to it later
-        AssemblerFlags = "/alpha " # not right, come back to it later
-    elif Target == "AMD64_SOLARIS":
-        # see http://gcc.gnu.org/ml/gcc/2010-05/msg00155.html
-        Assembler = "/usr/ccs/bin/as"
-    elif solaris or sol:
-        # see http://gcc.gnu.org/ml/gcc/2010-05/msg00155.html
-        Assembler = "./assembler"
-        CopyFile("./assembler", BootDir)
-    elif osf:
-        Assembler = "/usr/bin/as"
-    else:
-        Assembler = "as"
-
-    # set assembler flags
-
-    AssemblerFlags = " "
-
-    if not Target in ["PPC32_OPENBSD", "PPC_LINUX", "ARM_LINUX", "ARMEL_LINUX", "ALPHA_LINUX", "ALPHA_OPENBSD"]:
-        if linux or bsd:
-            if sixtyfour or (alpha and not alpha32):
-                AssemblerFlags = AssemblerFlags + " --64"
-            else:
-                AssemblerFlags = AssemblerFlags + " --32"
-
-    AssemblerFlags = (AssemblerFlags + ({
-        "ALPHA_OSF"         : " -nocpp ",
-        "I386_DARWIN"       : " -arch i386 -g ",
-        "AMD64_DARWIN"      : " -arch x86_64 -g ",
-        "PPC64_DARWIN"      : " -arch ppc64 -g ",
-        "PPC_DARWIN"        : " -arch ppc -g ",
-        "ARM_DARWIN"        : " -arch armv6 -g ",
-        "I386_SOLARIS"      : " -Qy -s ",
-        "AMD64_SOLARIS"     : " -Qy -s        -xarch=generic64 ",
-        "SOLgnu"            : " -Qy -s -K PIC -xarch=v8plus ", # Sun assembler
-        "SOLsun"            : " -Qy -s -K PIC -xarch=v8plus ",
-        "SPARC32_SOLARIS"   : " -Qy -s -K PIC -xarch=v8plus ",
-        "SPARC64_SOLARIS"   : " -Qy -s -K PIC -xarch=v9 ",
-        "SPARC32_LINUX"     : " -Qy -s -KPIC -Av9a -32 -relax ",
-        "SPARC64_LINUX"     : " -Qy -s -KPIC -Av9a -64 -no-undeclared-regs -relax ",
-        }.get(Target) or ""))
-
     GnuPlatformPrefix = {
         "ARM_DARWIN"    : "arm-apple-darwin8-",
         # "ARMEL_LINUX" : "arm-linux-gnueabihf-",
@@ -1369,8 +1321,6 @@ def Boot():
 
     if not vms:
         CCompiler = GnuPlatformPrefix + CCompiler
-    if (not vms) or AssembleOnHost:
-        Assembler = GnuPlatformPrefix + Assembler
 
     P = FilterPackages([ "m3cc", "m3core", "libm3", "sysutils", "set",
           "m3middle", "m3quake", "m3objfile", "m3linker", "m3back",
@@ -1407,8 +1357,6 @@ def Boot():
     Compile = _SqueezeSpaces(Compile)
     CCompilerFlags = _SqueezeSpaces(CCompilerFlags)
     Link = _SqueezeSpaces(Link)
-    Assembler = _SqueezeSpaces(Assembler)
-    AssemblerFlags = _SqueezeSpaces(AssemblerFlags)
 
     NL = ["\n", "\r\n"][nt]
     NL2 = NL + NL
@@ -1421,9 +1369,6 @@ def Boot():
     Objects = { }
     ObjectsExceptMain = { }
 
-    # main_m.s or main.ms, depending on what we see
-    mainS = ""
-
     for pkg in main_packages:
         CreateDirectory(os.path.join(BootDir, pkg + ".d"))
 
@@ -1432,19 +1377,12 @@ def Boot():
                 + "CC=" + CCompiler + NL
                 + "CFLAGS=" + CCompilerFlags + NL)
         a.write("Compile=" + Compile + NL)
-        if not CBackend:
-            a.write("Assemble=" + Assembler + " " + AssemblerFlags + NL)
         a.write("Link=" + Link + NL
                 + NL + "# no more editing should be needed" + NL2)
 
-    #Makefile.write("#AssembleOnTarget:" + str(AssembleOnTarget) + NL)
-    #Makefile.write("#CBackend:" + str(CBackend) + NL)
-    #Makefile.write("#BuildDir:" + BuildDir + NL)
-    #Makefile.write("#vms:" + str(vms) + NL)
-
     if True: #not CBackend:
         Makefile.write(".SUFFIXES:" + NL
-                       + ".SUFFIXES: .cpp .c .is .ms .s .o .obj .io .mo" + NL2)
+                       + ".SUFFIXES: .cpp .c .o .obj .io .mo" + NL2)
 
     Makefile.write("all: ")
     for pkg in main_packages:
@@ -1454,11 +1392,6 @@ def Boot():
     obj_suffixes = ["o", "mo", "io", "obj"]
 
     Makefile.write("clean:" + NL)
-    if AssembleOnTarget:
-        for o in obj_suffixes:
-            Makefile.write("\t-" +  DeleteCommand + " *." + o + NL)
-        for pkg in main_packages:
-            Makefile.write("\t-" + DeleteCommand + " " + pkg + ".d/*." + o+ NL)
     for pkg in main_packages:
         Makefile.write("\t-" + DeleteCommand + " " + pkg + " " + pkg + ".exe" + NL)
     Makefile.write(NL)
@@ -1473,8 +1406,6 @@ def Boot():
                 + "CC=${CC:-" + CCompiler + "}\n"
                 + "CFLAGS=${CFLAGS:-" + CCompilerFlags + "}\n"
                 + "Compile=" + Compile + "\n")
-        if not CBackend:
-            a.write("Assemble=" + Assembler + " " + AssemblerFlags + "\n")
         a.write("Link=" + Link + "\n"
                 + "\n# no more editing should be needed\n\n")
 
@@ -1500,11 +1431,9 @@ def Boot():
             if not (ext_c or ext_cpp or ext_h or ext_s or ext_ms or ext_is or ext_io or ext_mo):
                 continue
             leaf = GetLastPathElement(a)
-            if leaf.startswith("Main.m") or leaf.startswith("Main_m."):
-                mainS = leaf
             is_main = (not vms) and (leaf.startswith("Main.m") or leaf.startswith("Main_m.")) # TODO vms cleanup
             fullpath = os.path.join(Root, dir, BuildDir, a)
-            if ext_h or ext_c or not vms or AssembleOnTarget or ext_io or ext_mo:
+            if ext_h or ext_c or not vms or ext_io or ext_mo:
                 CopyFile(fullpath, os.path.join(BootDir, [".", q + ".d"][is_main], main_leaf))
             if ext_h or ext_io or ext_mo:
                 continue
@@ -1516,14 +1445,6 @@ def Boot():
                 ObjectsExceptMain[Object] = 1
             if ext_c:
                 VmsMake.write("$ " + Compile + " " + a + "\n")
-            else:
-                if AssembleOnHost:
-                    # must have cross assembler
-                    a = Assembler + " " + fullpath + " -o " + BootDir + "/" + Object
-                    print(a)
-                    os.system(a)
-                else:
-                    VmsMake.write("$ " + Assembler + " " + a + "\n")
             VmsLink.write(Object + "/SELECTIVE_SEARCH\n")
 
     # double colon batches and is much faster
@@ -1534,13 +1455,6 @@ def Boot():
         for c in ["c", "cpp"]:
             for o in ["o", "obj"]:
                 Makefile.write("." + c + "." + o + colon + NL + "\t$(Compile) " + CCompilerOut + " $<" + NL2)
-
-        # write inference rules: .is => .io, .s => .o, .ms => .mo
-        if not CBackend:
-            for source_obj in [["is", "io"], ["s", "o"], ["ms", "mo"]]:
-                source = source_obj[0]
-                obj = source_obj[1]
-                Makefile.write("." + source + "." + obj + ":" + NL + "\t$(Assemble) -o $@ $<" + NL2)
 
     Makefile.write("OBJECTS=")
     Objects = ObjectsExceptMain.keys()
@@ -1560,12 +1474,6 @@ def Boot():
     maino_ext = "o"
     if CBackend:
         maino_ext = "m3.o"
-    elif AssembleOnTarget:
-        for pkg in main_packages:
-            Makefile.write(pkg + ".d/Main.o: " + pkg + ".d/" + mainS + NL)
-            #Makefile.write("\t-mkdir $(@D)" + NL)
-            Makefile.write("\t$(Assemble) -o $@ " + pkg + ".d/" + mainS + NL)
-            Makefile.write(NL)
 
     # To make it look better, replace double space with single space.
     if nt:

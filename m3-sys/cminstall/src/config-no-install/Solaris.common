@@ -129,7 +129,7 @@ proc configure_c_compiler() is
     % We presumably can't just always use the new syntax, in case
     % we are using older tools that don't understand it.
 
-    local cc = sun_cc & " -g -mt -xldscope=symbolic " & SunXRegs & " "
+    local cc = sun_cc & " -g -mt -xldscope=symbolic " & SunXRegs & " " % TODO: consider -xldscope=hidden
     local old = "-xarch=" & SunXArch
     local new = "-m" & WordSize
     if equal(WORD_SIZE, "32BITS") and not equal(TARGET, "I386_SOLARIS")
