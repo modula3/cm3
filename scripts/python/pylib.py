@@ -1350,7 +1350,6 @@ def Boot():
     NL = ["\n", "\r\n"][nt]
     NL2 = NL + NL
     EXE = ["", ".exe"][nt]
-    Make = open(os.path.join(BootDir, "make.sh"), "wb")
     VmsMake  = open(os.path.join(BootDir, "vmsmake.com"), "wb")
     VmsLink  = open(os.path.join(BootDir, "vmslink.opt"), "wb")
     Makefile = open(os.path.join(BootDir, "Makefile"), "wb")
@@ -1383,19 +1382,6 @@ def Boot():
     for pkg in main_packages:
         Makefile.write("\t-" + DeleteCommand + " " + pkg + " " + pkg + ".exe" + NL)
     Makefile.write(NL)
-
-    for a in [Make]: # unfinished
-        a.write("#!/bin/sh\n\n"
-                + "set -e\n"
-                + "set -x\n\n")
-
-    for a in [Make]: # unfinished
-        a.write("# edit up here\n\n"
-                + "CC=${CC:-" + CCompiler + "}\n"
-                + "CFLAGS=${CFLAGS:-" + CCompilerFlags + "}\n"
-                + "Compile=" + Compile + "\n")
-        a.write("Link=" + Link + "\n"
-                + "\n# no more editing should be needed\n\n")
 
     for q in P:
         dir = GetPackagePath(q)
@@ -1497,11 +1483,7 @@ $(OBJECTS: =
         VmsMake.write("$ set file/attr=(rfm=var,rat=none) *." + o + "\n")
     VmsMake.write("$ link /executable=cm3.exe vmslink/options\n")
 
-    # TODO
-    for a in [Make]:
-        a.write("$(Link) " + LinkOut + "$@" + NL)
-
-    for a in [Make, Makefile, VmsMake, VmsLink]:
+    for a in [Makefile, VmsMake, VmsLink]:
         a.close()
 
     # write entirely new custom makefile for NT
@@ -1509,7 +1491,6 @@ $(OBJECTS: =
     # NOTE: This is quite crude/slow/inefficient. Needs work.
 
     if nt:
-        DeleteFile("make.sh")
         if not CBackend:
             Makefile = open(os.path.join(BootDir, "Makefile"), "wb")
             Makefile.write("all: cm3.exe mklib.exe\r\n\r\n")
