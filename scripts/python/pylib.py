@@ -1354,7 +1354,6 @@ def Boot():
     VmsMake  = open(os.path.join(BootDir, "vmsmake.com"), "wb")
     VmsLink  = open(os.path.join(BootDir, "vmslink.opt"), "wb")
     Makefile = open(os.path.join(BootDir, "Makefile"), "wb")
-    UpdateSource = open(os.path.join(BootDir, "updatesource.sh"), "wb")
     Objects = { }
     ObjectsExceptMain = { }
 
@@ -1385,7 +1384,7 @@ def Boot():
         Makefile.write("\t-" + DeleteCommand + " " + pkg + " " + pkg + ".exe" + NL)
     Makefile.write(NL)
 
-    for a in [UpdateSource, Make]: # unfinished
+    for a in [Make]: # unfinished
         a.write("#!/bin/sh\n\n"
                 + "set -e\n"
                 + "set -x\n\n")
@@ -1502,92 +1501,7 @@ $(OBJECTS: =
     for a in [Make]:
         a.write("$(Link) " + LinkOut + "$@" + NL)
 
-    if False:
-        for a in [
-            #
-            # Add to this list as needed.
-            # Adding more than necessary is ok -- assume the target system has no changes,
-            # so we can replace whatever is there.
-            #
-            "m3-libs/libm3/src/os/POSIX/OSConfigPosix.m3",
-            "m3-libs/libm3/src/random/m3makefile",
-            "m3-libs/m3core/src/m3makefile",
-            "m3-libs/m3core/src/Uwaitpid.quake",
-            "m3-libs/m3core/src/thread.quake",
-            "m3-libs/m3core/src/C/m3makefile",
-            "m3-libs/m3core/src/C/" + Target + "/m3makefile",
-            "m3-libs/m3core/src/C/Common/m3makefile",
-            "m3-libs/m3core/src/Csupport/m3makefile",
-            "m3-libs/m3core/src/float/m3makefile",
-            "m3-libs/m3core/src/runtime/m3makefile",
-            "m3-libs/m3core/src/runtime/common/m3makefile",
-            "m3-libs/m3core/src/runtime/common/Compiler.tmpl",
-            "m3-libs/m3core/src/runtime/common/m3text.h",
-            "m3-libs/m3core/src/runtime/common/RTError.h",
-            "m3-libs/m3core/src/runtime/common/RTMachine.i3",
-            "m3-libs/m3core/src/runtime/common/RTProcess.h",
-            "m3-libs/m3core/src/runtime/common/RTSignalC.c",
-            "m3-libs/m3core/src/runtime/common/RTSignalC.h",
-            "m3-libs/m3core/src/runtime/common/RTSignalC.i3",
-            "m3-libs/m3core/src/runtime/common/RTSignal.i3",
-            "m3-libs/m3core/src/runtime/common/RTSignal.m3",
-            "m3-libs/m3core/src/runtime/" + Target + "/m3makefile",
-            "m3-libs/m3core/src/runtime/" + Target + "/RTMachine.m3",
-            "m3-libs/m3core/src/runtime/" + Target + "/RTSignal.m3",
-            "m3-libs/m3core/src/runtime/" + Target + "/RTThread.m3",
-            "m3-libs/m3core/src/text/TextLiteral.i3",
-            "m3-libs/m3core/src/thread/m3makefile",
-            "m3-libs/m3core/src/thread/PTHREAD/m3makefile",
-            "m3-libs/m3core/src/thread/PTHREAD/ThreadPThread.m3",
-            "m3-libs/m3core/src/thread/PTHREAD/ThreadPThreadC.i3",
-            "m3-libs/m3core/src/thread/PTHREAD/ThreadPThreadC.c",
-            "m3-libs/m3core/src/time/POSIX/m3makefile",
-            "m3-libs/m3core/src/unix/m3makefile",
-            "m3-libs/m3core/src/unix/Common/m3makefile",
-            "m3-libs/m3core/src/unix/Common/m3unix.h",
-            "m3-libs/m3core/src/unix/Common/Udir.i3",
-            "m3-libs/m3core/src/unix/Common/UdirC.c",
-            "m3-libs/m3core/src/unix/Common/Usignal.i3",
-            "m3-libs/m3core/src/unix/Common/Ustat.i3",
-            "m3-libs/m3core/src/unix/Common/UstatC.c",
-            "m3-libs/m3core/src/unix/Common/UtimeC.c",
-            "m3-libs/m3core/src/unix/Common/Uucontext.i3",
-            "m3-sys/cminstall/src/config-no-install/SOLgnu",
-            "m3-sys/cminstall/src/config-no-install/SOLsun",
-            "m3-sys/cminstall/src/config-no-install/Solaris.common",
-            "m3-sys/cminstall/src/config-no-install/Unix.common",
-            "m3-sys/cminstall/src/config-no-install/cm3cfg.common",
-            "m3-sys/cminstall/src/config-no-install/" + Target,
-            "m3-sys/m3cc/src/m3makefile",
-            "m3-sys/m3cc/src/gcc/m3cg/parse.c",
-            "m3-sys/m3middle/src/Target.i3",
-            "m3-sys/m3middle/src/Target.m3",
-            "scripts/python/pylib.py",
-            "m3-libs/m3core/src/C/" + Target + "/Csetjmp.i3",
-            "m3-libs/m3core/src/C/" + Target + "/m3makefile",
-            "m3-libs/m3core/src/C/Common/Csetjmp.i3",
-            "m3-libs/m3core/src/C/Common/Csignal.i3",
-            "m3-libs/m3core/src/C/Common/Cstdio.i3",
-            "m3-libs/m3core/src/C/Common/Cstring.i3",
-            "m3-libs/m3core/src/C/Common/m3makefile",
-            ]:
-            source = os.path.join(Root, a)
-            if FileExists(source):
-                name = GetLastPathElement(a)
-                reldir = RemoveLastPathElement(a)
-                destdir = os.path.join(BootDir, reldir)
-                dest = os.path.join(destdir, name)
-                try:
-                    os.makedirs(destdir)
-                except:
-                    pass
-                CopyFile(source, dest)
-
-                for b in [UpdateSource, Make]:
-                    b.write("mkdir -p /dev2/cm3/" + reldir + "\n")
-                    b.write("cp " + a + " /dev2/cm3/" + a + "\n")
-
-    for a in [UpdateSource, Make, Makefile, VmsMake, VmsLink]:
+    for a in [Make, Makefile, VmsMake, VmsLink]:
         a.close()
 
     # write entirely new custom makefile for NT
@@ -1595,7 +1509,6 @@ $(OBJECTS: =
     # NOTE: This is quite crude/slow/inefficient. Needs work.
 
     if nt:
-        DeleteFile("updatesource.sh")
         DeleteFile("make.sh")
         if not CBackend:
             Makefile = open(os.path.join(BootDir, "Makefile"), "wb")
