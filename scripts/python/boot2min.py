@@ -52,9 +52,7 @@ if _CBackend:
 pyexe = ""
 
 if env_OS == "Windows_NT" and not IsInterix():
-    pyexe = "python2.exe "
-    if not pylib.SearchPath("python2.exe"):
-        pyexe = "py.exe "
+    pyexe = (pylib.SearchPath("python.exe") or pylib.SearchPath("python3.exe") or pylib.SearchPath("py.exe") or pylib.SearchPath("python2.exe")) + " "
 
 Run(pyexe + "./make-dist-cfg.py")
 
