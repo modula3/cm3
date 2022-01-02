@@ -284,10 +284,12 @@ proc : Procedure.T;
     info := CG.Declare_local (M3ID.NoID, M3RT.EA_SIZE, Target.Address.align,
                               CG.Type.Struct, 0, in_memory := TRUE,
                               up_level := FALSE, f := CG.Never);
-(*peter dont need inits *)
+*)
+(*peter still need inits since still need exception test otherwise
+the handler bb has no predecessors *)
     CG.Load_nil ();
     CG.Store_addr (info, M3RT.EA_exception);
-*)
+
     (* compile the body *)
     l := CG.Next_label (3);
     CG.Set_label (l, barrier := TRUE);
@@ -298,7 +300,9 @@ proc : Procedure.T;
     Marker.SaveFrame ();
       oc := Stmt.Compile (p.body);
     Marker.Pop ();
-    CG.Jump (l+2);
+    IF (Stmt.Outcome.FallThrough IN oc) THEN
+      CG.Jump (l+2);
+    END;
 
     IF (p.hasElse) THEN
       (* EXITs and RETURNs from the body are caught by the ELSE clause *)

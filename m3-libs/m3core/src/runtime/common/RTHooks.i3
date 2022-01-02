@@ -50,6 +50,8 @@ PROCEDURE PushEFrame (frame: ADDRESS);
 PROCEDURE PopEFrame (frame: ADDRESS);
 (* called by the compiler to pop an exception frame. *)
 
+PROCEDURE LatchEHReg () : ADDRESS;
+
 (*----------------------------------------------- builtin TEXT operations ---*)
 
 PROCEDURE Concat (a, b: TEXT): TEXT;

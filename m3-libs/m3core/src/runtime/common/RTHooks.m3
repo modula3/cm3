@@ -84,6 +84,12 @@ PROCEDURE ResumeRaise (info: ADDRESS) RAISES ANY =
     RTException.ResumeRaise (LOOPHOLE (info, UNTRACED REF RT0.RaiseActivation)^);
   END ResumeRaise;
 
+(* peter temp implementation to get link to work *)
+PROCEDURE LatchEHReg () : ADDRESS =
+  BEGIN
+    RETURN NIL;
+  END LatchEHReg;
+
 (*-------------------------------------------------------- runtime errors ---*)
 
 CONST
