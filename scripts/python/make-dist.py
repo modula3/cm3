@@ -266,7 +266,7 @@ def Setup(ExistingCompilerRoot, NewRoot):
 
     CopyConfigForDistribution(NewRoot) or sys.exit(1)
 
-    os.environ["CM3_INSTALL"] = ConvertToCygwinPath(NewRoot)
+    os.environ["CM3_INSTALL"] = NewRoot
 
 Setup(InstallRoot, InstallRoot_CompilerWithPrevious)
 RealClean(Packages) or FatalError()

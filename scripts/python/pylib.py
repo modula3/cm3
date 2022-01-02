@@ -69,21 +69,11 @@ env_OS = getenv("OS")
 
 DevNull = "/dev/null"
 
-if env_OS == "Windows_NT" and not IsInterix():
+if env_OS == "Windows_NT":
     DevNull = "nul:"
     def uname():
         PROCESSOR_ARCHITECTURE = getenv("PROCESSOR_ARCHITECTURE")
         return (env_OS, "", PROCESSOR_ARCHITECTURE, "", PROCESSOR_ARCHITECTURE)
-    #
-    # cmd can run extensionless executables if this code is enabled.
-    # This can be useful for example with I386_CYGWIN following more Posix-ish
-    # naming styles than even Cygwin usually does.
-    #
-    #pathext = getenv("PATHEXT")
-    #if pathext and not "." in pathext.split(";"):
-    #    pathext = ".;" + pathext
-    #    os.environ["PATHEXT"] = pathext
-    #    print("set PATHEXT=.;%PATHEXT%")
 else:
     from os import uname
 
@@ -166,31 +156,7 @@ def GetPathBaseName(a):
 # print("4:" + GetPathBaseName("a.b/c"))
 # sys.exit(1)
 
-
 #-----------------------------------------------------------------------------
-
-def ConvertToCygwinPath(a):
-    if IsInterix() or env_OS != "Windows_NT" or a == None:
-        return a
-    if (a.find('\\') == -1) and (a.find(':') == -1):
-        return a
-    a = a.replace("\\", "/")
-    if a.find(":/") == 1:
-        a = "/cygdrive/" + a[0:1] + a[2:]
-    return a
-
-#-----------------------------------------------------------------------------
-
-def ConvertFromCygwinPath(a):
-    if IsInterix() or env_OS != "Windows_NT" or a == None:
-        return a
-    a = a.replace("/", "\\")
-    #a = a.replace("\\", "/")
-    if a.startswith("\\cygdrive\\"):
-        a = a[10] + ":" + a[11:]
-    elif a.startswith("\\home\\elego\\"):
-        a = "c:\\cygwin\\" + a
-    return a
 
 def GetFullPath(a):
     # find what separator it as (might be ambiguous)
@@ -205,23 +171,13 @@ def GetFullPath(a):
     a = a.replace(os.path.sep, sep) # put back the original separators
     return a
 
-def ConvertPathForWin32(a):
-    return ConvertFromCygwinPath(a)
-
-if os.name == "posix":
-    def ConvertPathForPython(a):
-        return ConvertToCygwinPath(a)
-else:
-    def ConvertPathForPython(a):
-        return ConvertFromCygwinPath(a)
-
 #-----------------------------------------------------------------------------
 
 def isfile(a):
-    return os.path.isfile(ConvertPathForPython(a))
+    return os.path.isfile(a)
 
 def isdir(a):
-    return os.path.isdir(ConvertPathForPython(a))
+    return os.path.isdir(a)
 
 def FileExists(a):
     return isfile(a)
@@ -421,7 +377,7 @@ def PassThroughDefines():
 
 CM3_FLAGS += PassThroughDefines()
 
-CM3 = ConvertPathForPython(getenv("CM3")) or "cm3"
+CM3 = getenv("CM3") or "cm3"
 CM3 = SearchPath(CM3)
 
 #-----------------------------------------------------------------------------
@@ -430,7 +386,7 @@ CM3 = SearchPath(CM3)
 # if the defaults contain a cm3.
 #
 
-InstallRoot = ConvertPathForPython(getenv("CM3_INSTALL"))
+InstallRoot = getenv("CM3_INSTALL")
 # print("InstallRoot is " + InstallRoot)
 
 if not CM3 and not InstallRoot:
@@ -775,34 +731,6 @@ def SetEnvironmentVariable(Name, Value):
             print("set " + Name + "=" + Value)
 
 #-----------------------------------------------------------------------------
-
-def IsCygwinBinary(a):
-    if IsInterix() or env_OS != "Windows_NT":
-        return False
-    if not isfile(a):
-        FatalError(a + " does not exist")
-    a = a.replace("/cygdrive/c/", "c:\\")
-    a = a.replace("/cygdrive/d/", "d:\\")
-    a = a.replace("/", "\\")
-    a = ConvertFromCygwinPath(a)
-    #print("a is " + a)
-    return (os.system("findstr 2>&1 >" + os.devnull + " /m cygwin1.dll \"" + a + "\"") == 0)
-
-#-----------------------------------------------------------------------------
-
-if _Program != "make-msi.py":
-# general problem of way too much stuff at global scope
-# workaround some of it
-    if IsCygwinBinary(CM3):
-        CM3IsCygwin = True
-        def ConvertPathForCM3(a):
-            return ConvertToCygwinPath(a)
-    else:
-        CM3IsCygwin = False
-        def ConvertPathForCM3(a):
-            return ConvertFromCygwinPath(a)
-
-#-----------------------------------------------------------------------------
 #
 # reflect what we decided back into the environment
 #
@@ -811,10 +739,10 @@ if _Program != "make-msi.py":
 # general problem of way too much stuff at global scope
 # workaround some of it
     SetEnvironmentVariable("CM3_TARGET", Target)
-    SetEnvironmentVariable("CM3_INSTALL", ConvertPathForCM3(InstallRoot))
-    #SetEnvironmentVariable("M3CONFIG", ConvertPathForCM3(os.environ.get("M3CONFIG") or GetConfigForDistribution(Config)))
-    #SetEnvironmentVariable("CM3_ROOT", ConvertPathForCM3(Root).replace("\\", "\\\\"))
-    SetEnvironmentVariable("CM3_ROOT", ConvertPathForCM3(Root).replace("\\", "/"))
+    SetEnvironmentVariable("CM3_INSTALL", InstallRoot)
+    #SetEnvironmentVariable("M3CONFIG", os.environ.get("M3CONFIG") or GetConfigForDistribution(Config))
+    #SetEnvironmentVariable("CM3_ROOT", Root.replace("\\", "\\\\"))
+    SetEnvironmentVariable("CM3_ROOT", Root.replace("\\", "/"))
 
 # sys.exit(1)
 
@@ -828,8 +756,8 @@ if _Program != "make-msi.py":
     DEFS = "-DROOT=%(Q)s%(Root)s%(Q)s -DTARGET=%(Target)s"
 
     NativeRoot = Root
-    #Root = ConvertPathForCM3(Root).replace("\\", "\\\\")
-    Root = ConvertPathForCM3(Root).replace("\\", "/")
+    #Root = Root.replace("\\", "\\\\")
+    Root = Root.replace("\\", "/")
     DEFS = (DEFS % vars())
     Root = NativeRoot
 
@@ -1742,8 +1670,8 @@ def DeleteFile(a):
     else:
         print("del /f /a " + a)
     if isfile(a):
-        os.chmod(ConvertPathForPython(a), 0o700)
-        os.remove(ConvertPathForPython(a))
+        os.chmod(a, 0o700)
+        os.remove(a)
     if isfile(a):
         FatalError("failed to delete " + a)
 
@@ -1752,7 +1680,7 @@ def MoveFile(a, b):
         print("mv " + a + " " + b)
     else:
         print("move " + a + " " + b)
-    shutil.move(ConvertPathForPython(a), ConvertPathForPython(b))
+    shutil.move(a, b)
 
 #-----------------------------------------------------------------------------
 
@@ -1797,17 +1725,17 @@ def CopyFile(From, To):
     # Cygwin says foo exists when only foo.exe exists, and then remove fails.
     if isfile(To):
         try:
-            os.remove(ConvertPathForPython(To))
+            os.remove(To)
         except:
             pass
     CopyCommand = "copy"
     if os.name != "nt":
         CopyCommand = "cp -Pv"
     print(CopyCommand + " " + From + " " + To)
-    if os.path.islink(ConvertPathForPython(From)):
-        os.symlink(os.readlink(ConvertPathForPython(From)), ConvertPathForPython(To))
+    if os.path.islink(From):
+        os.symlink(os.readlink(From), To)
     else:
-        shutil.copy(ConvertPathForPython(From), ConvertPathForPython(To))
+        shutil.copy(From, To)
     return True
 
 #-----------------------------------------------------------------------------
@@ -2056,16 +1984,6 @@ def SetupEnvironment():
     SystemDrive = os.environ.get("SYSTEMDRIVE")
     if SystemDrive:
         SystemDrive += os.path.sep
-
-    # Do this earlier so that its link isn't a problem.
-    # Looking in the registry HKEY_LOCAL_MACHINE\SOFTWARE\Cygnus Solutions\Cygwin\mounts v2
-    # would be reasonable here.
-
-    if CM3IsCygwin:
-        _SetupEnvironmentVariableAll(
-            "PATH",
-            ["cygwin1.dll"],
-            os.path.join(SystemDrive, "cygwin", "bin"))
 
     # some host/target confusion here..
 
@@ -2400,7 +2318,7 @@ of this software.
 
 def GetStage():
     global STAGE
-    STAGE = ConvertPathForPython(getenv("STAGE"))
+    STAGE = getenv("STAGE")
 
     if (not STAGE):
         #tempfile.tempdir = os.path.join(tempfile.gettempdir(), "cm3", "make-dist")
@@ -2446,7 +2364,7 @@ def TryAddWixToPath():
         if wixFound:
             return wixFound
         for wixCandidate in WixCandidates:
-            b = os.path.join(ConvertPathForPython(a), wixCandidate, "bin")
+            b = os.path.join(a, wixCandidate, "bin")
             #print("a:" + a)
             #print("b:" + b)
             if isdir(b):
@@ -2494,7 +2412,7 @@ def MakeMSIWithWix(input):
         for a in os.listdir(dir):
             b = os.path.join(dir, a)
             if isdir(b):
-                wix.write("""<Directory Id='d%d' Name='%s'>\n""" % (state.dirID, ConvertPathForWin32(a)))
+                wix.write("""<Directory Id='d%d' Name='%s'>\n""" % (state.dirID, a))
                 state.dirID += 1
                 HandleDir(state, b) # recursion!
                 wix.write("</Directory>\n")
@@ -2504,7 +2422,7 @@ def MakeMSIWithWix(input):
                 if state.componentID == 1:
                     wix.write("""<Environment Id="envPath" Action="set" Name="PATH" Part="last" Permanent="no" Separator=";" Value='[INSTALLDIR]bin'/>\n""")
 
-                wix.write("""<File Id='f%d' Name='%s' Source='%s'/>\n""" % (state.fileID, a, ConvertPathForWin32(b)))
+                wix.write("""<File Id='f%d' Name='%s' Source='%s'/>\n""" % (state.fileID, a, b))
                 state.fileID += 1
                 wix.write("</Component>\n")
 
@@ -2535,7 +2453,7 @@ def MakeMSIWithWix(input):
 
     wix.close()
 
-    command = "candle " + ConvertPathForWin32(input) + ".wxs -out " + ConvertPathForWin32(input) + ".wixobj" + " 2>&1"
+    command = "candle " + input + ".wxs -out " + input + ".wixobj" + " 2>&1"
     if os.name == "posix":
         command = command.replace("\\", "\\\\")
     print(command)
@@ -2555,7 +2473,7 @@ placed. Please read the files found in the license directory."""
 {\\*\\generator Msftedit 5.41.15.1515;}\\viewkind4\\uc1\\pard\\lang1033\\f0\\fs20""" + licenseText.replace("\n", " ")
 + "}")
 
-    command = "light -out " + ConvertPathForWin32(input) + ".msi " + ConvertPathForWin32(input) + ".wixobj -ext WixUIExtension -cultures:en-us -dWixUILicenseRtf=" + ConvertPathForWin32(license) + " 2>&1"
+    command = "light -out " + input + ".msi " + input + ".wixobj -ext WixUIExtension -cultures:en-us -dWixUILicenseRtf=" + license + " 2>&1"
     if os.name == "posix":
         command = command.replace("\\", "\\\\")
     print(command)
@@ -2585,8 +2503,8 @@ def BreakHardLinks(links):
         first = links[inode][0]
         for other in links[inode][1:]:
             print("breaking link " + other + " <=> " + first)
-            os.remove(ConvertPathForPython(other))
-            open(ConvertPathForPython(other), "w")
+            os.remove(other)
+            open(other, "w")
 
 def RestoreHardLinks(links):
 #
@@ -2596,8 +2514,8 @@ def RestoreHardLinks(links):
         first = links[inode][0]
         for other in links[inode][1:]:
             print("restoring link " + other + " <=> " + first)
-            os.remove(ConvertPathForPython(other))
-            os.link(ConvertPathForPython(first), ConvertPathForPython(other))
+            os.remove(other)
+            os.link(first, other)
 
 def MoveSkel(prefix):
 #
@@ -2764,23 +2682,7 @@ if __name__ == "__main__":
         print("GetLastPathElement(%s):%s" % (a, GetLastPathElement(a)))
     sys.exit(1)
 
-    print(ConvertFromCygwinPath("\\cygdrive/c/foo"))
-    print(ConvertFromCygwinPath("//foo"))
-    sys.exit(1)
-
     print(SearchPath("juno"))
-    sys.exit(1)
-
-    print(ConvertToCygwinPath("a"))
-    print(ConvertToCygwinPath("a\\b"))
-    print(ConvertToCygwinPath("//a\\b"))
-    print(ConvertToCygwinPath("c:\\b"))
-    print(ConvertToCygwinPath("c:/b"))
-    print(ConvertToCygwinPath("/b"))
-    print(ConvertToCygwinPath("\\b"))
-    sys.exit(1)
-    print(IsCygwinBinary("c:\\cygwin\\bin\\gcc.exe"))
-    print(IsCygwinBinary("c:\\bin\\cdb.exe"))
     sys.exit(1)
 
     print("\n\ncore: " + str(OrderPackages(PackageSets["core"])))
