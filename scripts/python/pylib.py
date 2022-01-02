@@ -1308,19 +1308,8 @@ def Boot():
 
     Compile = "$(CC) $(CFLAGS) " + [" -c ", ""][vms]
 
-    GnuPlatformPrefix = {
-        "ARM_DARWIN"    : "arm-apple-darwin8-",
-        # "ARMEL_LINUX" : "arm-linux-gnueabihf-",
-        # "ARM_LINUX"   : "arm-linux-gnueabihf-",
-        "ALPHA32_VMS"   : "alpha-dec-vms-",
-        "ALPHA64_VMS"   : "alpha64-dec-vms-",
-        }.get(Target) or ""
-
     DeleteRecursiveCommand = ["rm -rf", "rmdir /q/s"][nt]
     DeleteCommand = ["rm -f", "del /f"][nt]
-
-    if not vms:
-        CCompiler = GnuPlatformPrefix + CCompiler
 
     P = FilterPackages([ "m3cc", "m3core", "libm3", "sysutils", "set",
           "m3middle", "m3quake", "m3objfile", "m3linker", "m3back",
