@@ -1,4 +1,4 @@
-#! /usr/bin/env python2
+#! /usr/bin/env python
 
 import sys, os.path, os, shutil, pylib, uuid
 from os.path import isfile, isdir
