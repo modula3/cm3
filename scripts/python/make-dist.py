@@ -266,8 +266,6 @@ def Setup(ExistingCompilerRoot, NewRoot):
 
     CopyConfigForDistribution(NewRoot) or sys.exit(1)
 
-    reload(pylib) or FatalError()
-
     os.environ["CM3_INSTALL"] = ConvertToCygwinPath(NewRoot)
 
 Setup(InstallRoot, InstallRoot_CompilerWithPrevious)
