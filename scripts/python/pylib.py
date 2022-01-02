@@ -1167,14 +1167,8 @@ def Boot():
     alpha32vms = vms and alpha32
     alpha64vms = vms and alpha64
     solsun = Config == "SOLsun"
-    freebsd = StringContainsI(Target, "FreeBSD")
-    netbsd = StringContainsI(Target, "NetBSD")
-    openbsd = StringContainsI(Target, "OpenBSD")
     cygwin = StringContainsI(Target, "Cygwin")
     linux = StringContainsI(Target, "Linux")
-    alpha = StringContainsI(Target, "ALPHA")
-    thirtytwo = StringContainsI(Target, "32")
-    sixtyfour = StringContainsI(Target, "64")
     bsd = StringContainsI(Target, "BSD")
 
     # pick the compiler
@@ -1292,15 +1286,10 @@ def Boot():
         Link = Link + " -lm -pthread "
     elif nt:
         if CBackend:
-            #Link = "link /incremental:no /debug /pdb:$(@R).pdb *." + obj + " "
             Link = "link /incremental:no /debug /pdb:$(@R).pdb "
-            # be sure to get a .pdb out
-            #open("empty.c", "w")
-            #Link = CCompiler + CCompilerFlags + "empty.c /" + Link
         Link = Link + " user32.lib kernel32.lib ws2_32.lib comctl32.lib gdi32.lib advapi32.lib netapi32.lib iphlpapi.lib "
-    # not all of these tested esp. Cygwin, NetBSD
-    elif freebsd or netbsd or openbsd or cygwin or linux:
-        Link = Link  +  " -lm -pthread "
+    elif bsd or cygwin or linux:
+        Link = Link  +  " -lm -pthread " # TODO: combine with next?
     else:
         Link = Link + " -lm -lpthread -pthread "
 
