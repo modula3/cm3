@@ -9,15 +9,6 @@ clean = not ("noclean" in sys.argv)
 argv_RealClean = [sys.argv[0], "realclean"] + sys.argv[1:]
 argv_BuildShip = [sys.argv[0], "buildship"] + sys.argv[1:]
 
-def _CleanupEnvironment():
-    # pylib.py figures these out correctly and in particular
-    # their forms have to change if we upgrade from NT386
-    # to I386_CYGWIN or vice versa; reloading pylib.py
-    # handles that
-    for a in ["M3CONFIG", "CM3_INSTALL", "CM3_ROOT"]:
-        if os.environ.get(a):
-            del(os.environ[a])
-
 SetupEnvironment()
 
 # delete lingering cm3cg in case old compiler/config uses it
@@ -74,9 +65,8 @@ ShipCompiler() or sys.exit(1)
 # Now try the new compiler but building the core system (without
 # m3cc, as this is written in C) from scratch with it.
 #
+OMIT_GCC = True
 os.environ["OMIT_GCC"] = "yes"
-_CleanupEnvironment();
-reload(pylib) # compiler host type may have changed and need to recompute stuff
 CopyConfigForDistribution(InstallRoot) or sys.exit(1)
 
 # once more
