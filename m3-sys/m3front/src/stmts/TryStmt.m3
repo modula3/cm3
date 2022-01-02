@@ -9,7 +9,7 @@
 MODULE TryStmt;
 
 IMPORT M3ID, CG, Variable, Scope, Exceptionz, Value, Error, Marker;
-IMPORT Type, Stmt, StmtRep, TryFinStmt, Token;
+IMPORT Type, Stmt, StmtRep, TryFinStmt, Token, Procedure, RunTyme;
 IMPORT Scanner, ESet, Target, M3RT, Tracer, Jmpbufs;
 FROM Scanner IMPORT Match, MatchID, GetToken, Fail, cur;
 FROM M3 IMPORT QID;
@@ -273,14 +273,21 @@ PROCEDURE Compile1 (p: P): Stmt.Outcomes =
     next_handler: CG.Label;
     another: BOOLEAN;
     next_info: CG.Var;
+proc : Procedure.T;
   BEGIN
     (* declare and initialize the info record *)
+(*peter the exc reg is address *)
+    info := CG.Declare_local (M3ID.NoID, Target.Address.size, Target.Address.align,
+                              CG.Type.Addr, 0, in_memory := TRUE,
+                              up_level := FALSE, f := CG.Never);
+(*
     info := CG.Declare_local (M3ID.NoID, M3RT.EA_SIZE, Target.Address.align,
                               CG.Type.Struct, 0, in_memory := TRUE,
                               up_level := FALSE, f := CG.Never);
+(*peter dont need inits *)
     CG.Load_nil ();
     CG.Store_addr (info, M3RT.EA_exception);
-
+*)
     (* compile the body *)
     l := CG.Next_label (3);
     CG.Set_label (l, barrier := TRUE);
@@ -291,9 +298,7 @@ PROCEDURE Compile1 (p: P): Stmt.Outcomes =
     Marker.SaveFrame ();
       oc := Stmt.Compile (p.body);
     Marker.Pop ();
-    IF (Stmt.Outcome.FallThrough IN oc) THEN
-      CG.Jump (l+2);
-    END;
+    CG.Jump (l+2);
 
     IF (p.hasElse) THEN
       (* EXITs and RETURNs from the body are caught by the ELSE clause *)
@@ -310,6 +315,13 @@ PROCEDURE Compile1 (p: P): Stmt.Outcomes =
     CG.Set_label (l+1, barrier := TRUE);
     Scanner.offset := p.h_origin;
     CG.Gen_location (p.h_origin);
+
+(*peter get the exc from the builtin reg *)
+proc := RunTyme.LookUpProc (RunTyme.Hook.LatchEHReg);
+Procedure.StartCall (proc);
+Procedure.EmitCall (proc);
+CG.Store_addr (info);
+
     h := p.handles;
     WHILE (h # NIL) DO
       oc := oc + CompileHandler1 (h, info, l+2,
@@ -323,6 +335,7 @@ PROCEDURE Compile1 (p: P): Stmt.Outcomes =
       (* we didn't eat this exception => mark and invoke the next handler *)
       CG.Load_addr_of (next_info, 0, Target.Address.align);
       CG.Load_addr_of (info, 0, Target.Address.align);
+(*peter check this copy *)
       CG.Copy (M3RT.EA_SIZE, overlap := FALSE);
       CG.Jump (next_handler);
     END;
@@ -349,11 +362,13 @@ PROCEDURE CompileHandler1 (h: Handler;  info: CG.Var;
 
     CG.Gen_location (h.origin);
 
+
     IF (NOT last) THEN
       (* check for a match *)
       e := h.tags;
       <*ASSERT e # NIL*>
       WHILE (e # NIL) DO
+
         CG.Load_addr (info, M3RT.EA_exception, Target.Address.align);
         CG.Boost_addr_alignment (Target.Integer.align);
         CG.Load_indirect (Target.Integer.cg_type, 0, Target.Integer.size);

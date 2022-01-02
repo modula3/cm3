@@ -21,6 +21,8 @@ TYPE
     TextLitInfo, TextLitGetChar, TextLitGetWideChar,
     TextLitGetChars, TextLitGetWideChars,
     CheckLoadTracedRef, CheckStoreTraced
+(*peter*)
+    ,LatchEHReg
   };
 
 PROCEDURE Import ();
