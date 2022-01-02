@@ -408,6 +408,10 @@ for a in _PossibleCm3Flags:
     if a in sys.argv:
         CM3_FLAGS = CM3_FLAGS + " -" + a
 
+for a in sys.argv:
+    if a.startswith("@M3"):
+        CM3_FLAGS = CM3_FLAGS + " " + a
+
 def PassThroughDefines():
     result = " "
     for a in sys.argv:
@@ -1912,6 +1916,7 @@ GenericCommand:
         if ((arg == "")
             or (arg.lower() in _AllTargets)
             or (arg in _PossiblePylibFlags)
+            or (arg.startswith("@M3"))
             ):
             continue
         if arg.startswith("-"):
