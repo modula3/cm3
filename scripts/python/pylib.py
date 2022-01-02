@@ -2041,9 +2041,6 @@ def SetVisualCPlusPlus2015OrNewer():
             os.environ["CM3_VS2015_OR_NEWER"] = "0"
         #sys.exit(3)
 
-def IsCygwinHostTarget(): # confused
-    return Host!= None and (Host.endswith("_CYGWIN") or (Host == "NT386" and GCC_BACKEND and TargetOS == "POSIX"))
-
 def IsMinGWHostTarget():
     return (Target == "NT386" and GCC_BACKEND and TargetOS == "WIN32") or Target.endswith("_MINGW")
 
@@ -2313,24 +2310,6 @@ def SetupEnvironment():
             "PATH",
             ["sh", "sed", "gawk", "make"],
             os.path.join(SystemDrive, "msys", "1.0", "bin"))
-
-    # some host/target confusion here..
-
-    if IsCygwinHostTarget():
-
-        #_ClearEnvironmentVariable("LIB")
-        #_ClearEnvironmentVariable("INCLUDE")
-
-        #if _HostIsNT:
-        #    _SetupEnvironmentVariableAll(
-        #        "PATH",
-        #        ["cygX11-6.dll"],
-        #        os.path.join(SystemDrive, "cygwin", "usr", "X11R6", "bin"))
-
-        _SetupEnvironmentVariableAll(
-            "PATH",
-            ["gcc", "as", "ld"],
-            os.path.join(SystemDrive, "cygwin", "bin"))
 
 #-----------------------------------------------------------------------------
 
