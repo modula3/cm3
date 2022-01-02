@@ -1171,11 +1171,9 @@ def Boot():
     linux = StringContainsI(Target, "Linux")
     bsd = StringContainsI(Target, "BSD")
 
+    CBackend = True
+
     # pick the compiler
-
-    CBackend = _CBackend
-
-    print("CBackend = " + str(CBackend))
 
     CCompilerFlags = " "
 
@@ -1253,8 +1251,6 @@ def Boot():
         "SPARC64_LINUX"   : " -m64 -mno-app-regs ",
         }.get(Config) or " ")
 
-    LinkExts = { }
-
     obj = ["o", "obj"][nt]
     Link = "$(CC) $(CFLAGS) *." + obj + " "
     #Link = "$(CC) $(CFLAGS)"
@@ -1285,8 +1281,7 @@ def Boot():
     elif interix:
         Link = Link + " -lm -pthread "
     elif nt:
-        if CBackend:
-            Link = "link /incremental:no /debug /pdb:$(@R).pdb "
+        Link = "link /incremental:no /debug /pdb:$(@R).pdb "
         Link = Link + " user32.lib kernel32.lib ws2_32.lib comctl32.lib gdi32.lib advapi32.lib netapi32.lib iphlpapi.lib "
     elif bsd or cygwin or linux:
         Link = Link  +  " -lm -pthread " # TODO: combine with next?
@@ -1300,9 +1295,8 @@ def Boot():
     DeleteRecursiveCommand = ["rm -rf", "rmdir /q/s"][nt]
     DeleteCommand = ["rm -f", "del /f"][nt]
 
-    P = FilterPackages([ "m3cc", "m3core", "libm3", "sysutils", "set",
-          "m3middle", "m3quake", "m3objfile", "m3linker", "m3back",
-          "m3front" ])
+    P = FilterPackages([ "m3core", "libm3", "sysutils", "set", "m3middle",
+          "m3quake", "m3objfile", "m3linker", "m3back", "m3front" ])
     main_packages = ["cm3"]
 
     # TODO: mklib = TRUE, something is wrong with the Makefile and it is not really needed,
@@ -1314,22 +1308,6 @@ def Boot():
 
     #DoPackage(["", "realclean"] + P) or sys.exit(1)
     DoPackage(["", "buildlocal"] + P) or sys.exit(1)
-
-    link_ext_mo = False
-    link_ext_io = False
-
-    for q in P:
-        dir = GetPackagePath(q)
-        for a in os.listdir(os.path.join(Root, dir, BuildDir)):
-            ext = GetPathExtension(a)
-            ext_io = (ext == "io")
-            ext_mo = (ext == "mo")
-            if ext_mo and not link_ext_mo and not CBackend:
-                link_ext_im = True
-                Link += " *.mo"
-            if ext_io and not link_ext_io and not CBackend:
-                link_ext_io = True
-                Link += " *.io "
 
     # squeeze runs of spaces and spaces at ends
     Compile = _SqueezeSpaces(Compile)
@@ -1348,28 +1326,27 @@ def Boot():
     for pkg in main_packages:
         CreateDirectory(os.path.join(BootDir, pkg + ".d"))
 
-    for a in [Makefile]:
-        a.write("# edit up here" + NL2
-                + "CC=" + CCompiler + NL
-                + "CFLAGS=" + CCompilerFlags + NL)
-        a.write("Compile=" + Compile + NL)
-        a.write("Link=" + Link + NL
-                + NL + "# no more editing should be needed" + NL2)
+    Makefile.write("# edit up here" + NL2
+            + "CC=" + CCompiler + NL
+            + "CFLAGS=" + CCompilerFlags + NL
+            + "Compile=" + Compile + NL
+            + "Link=" + Link + NL2
+            + "# no more editing should be needed" + NL2
+            + ".SUFFIXES:" + NL + ".SUFFIXES: .cpp .c .o .obj" + NL2
+            + "all: ")
 
-    if True: #not CBackend:
-        Makefile.write(".SUFFIXES:" + NL
-                       + ".SUFFIXES: .cpp .c .o .obj .io .mo" + NL2)
-
-    Makefile.write("all: ")
     for pkg in main_packages:
         Makefile.write(pkg + EXE + " ")
+
     Makefile.write(NL2)
 
-    obj_suffixes = ["o", "mo", "io", "obj"]
+    obj_suffixes = ["o", "obj"]
 
     Makefile.write("clean:" + NL)
+
     for pkg in main_packages:
         Makefile.write("\t-" + DeleteCommand + " " + pkg + " " + pkg + ".exe" + NL)
+
     Makefile.write(NL)
 
     for q in P:
@@ -1377,28 +1354,17 @@ def Boot():
         for a in os.listdir(os.path.join(Root, dir, BuildDir)):
             main_leaf = a
             ext = GetPathExtension(a)
-            ext_o = (ext == "o")
-            ext_obj = (ext == "obj")
             ext_c = (ext == "c")
             ext_cpp = (ext == "cpp")
             ext_h = (ext == "h")
-            ext_s = (ext == "s")
-            ext_ms = (ext == "ms")
-            ext_is = (ext == "is")
-            ext_io = (ext == "io")
-            ext_mo = (ext == "mo")
 
-            if CBackend and (ext_mo or ext_io or ext_is or ext_ms or ext_obj or ext_o):
-                continue
-
-            if not (ext_c or ext_cpp or ext_h or ext_s or ext_ms or ext_is or ext_io or ext_mo):
+            if not (ext_c or ext_cpp or ext_h):
                 continue
             leaf = GetLastPathElement(a)
             is_main = (not vms) and (leaf.startswith("Main.m") or leaf.startswith("Main_m.")) # TODO vms cleanup
             fullpath = os.path.join(Root, dir, BuildDir, a)
-            if ext_h or ext_c or not vms or ext_io or ext_mo:
-                CopyFile(fullpath, os.path.join(BootDir, [".", q + ".d"][is_main], main_leaf))
-            if ext_h or ext_io or ext_mo:
+            CopyFile(fullpath, os.path.join(BootDir, [".", q + ".d"][is_main], main_leaf))
+            if ext_h:
                 continue
             Object = _GetObjectName(a, obj)
             if Objects.get(Object):
@@ -1410,19 +1376,17 @@ def Boot():
                 VmsMake.write("$ " + Compile + " " + a + "\n")
             VmsLink.write(Object + "/SELECTIVE_SEARCH\n")
 
-    # double colon batches and is much faster
-    colon = [":", "::"][nt]
+    colon = [":", "::"][nt] # double colon batches and is much faster
 
-    if CBackend or not nt:
-        # write inference rules: .c => .o, .c => .obj, .cpp => .o, .cpp => .obj
-        for c in ["c", "cpp"]:
-            for o in ["o", "obj"]:
-                Makefile.write("." + c + "." + o + colon + NL + "\t$(Compile) " + CCompilerOut + " $<" + NL2)
+    # write inference rules: .c => .o, .c => .obj, .cpp => .o, .cpp => .obj
+    for c in ["c", "cpp"]:
+        for o in ["o", "obj"]:
+            Makefile.write("." + c + "." + o + colon + NL + "\t$(Compile) " + CCompilerOut + " $<" + NL2)
 
     Makefile.write("OBJECTS=")
     Objects = ObjectsExceptMain.keys()
     Objects.sort()
-    k = 8
+    k = 8 # worst case tab render
     for a in Objects:
         k = k + 1 + len(a)
         if k > 76: # line wrap
@@ -1433,10 +1397,6 @@ def Boot():
     Makefile.write(NL2)
 
     LinkOut = [" -o ", " -out:"][nt]
-
-    maino_ext = "o"
-    if CBackend:
-        maino_ext = "m3.o"
 
     # To make it look better, replace double space with single space.
     if nt:
@@ -1450,7 +1410,6 @@ def Boot():
         #
         # Use response files at least for Visual C++ linking as we
         # are over the limits.
-
         if nt:
             Makefile.write(pkg + """.exe: $(OBJECTS) $(@R).d/Main.m3.cpp
 	$(Compile) $(@R).d/Main.m3.cpp /Fo$(@R).d/Main.m3.obj
@@ -1464,9 +1423,9 @@ $(OBJECTS: =
         else:
             Makefile.write(pkg + EXE + ":")
             Makefile.write(" " + "$(OBJECTS) ")
-            Makefile.write(pkg + ".d/Main." + maino_ext)
+            Makefile.write(pkg + ".d/Main.m3.o")
             Makefile.write(NL)
-            Makefile.write("\t$(Link) " + pkg + ".d/Main." + maino_ext + LinkOut + "$@" + NL2)
+            Makefile.write("\t$(Link) " + pkg + ".d/Main.m3.o" + LinkOut + "$@" + NL2)
 
     for o in obj_suffixes:
         VmsMake.write("$ set file/attr=(rfm=var,rat=none) *." + o + "\n")
@@ -1474,29 +1433,6 @@ $(OBJECTS: =
 
     for a in [Makefile, VmsMake, VmsLink]:
         a.close()
-
-    # write entirely new custom makefile for NT
-    # We always have object files so just compile and link in one fell swoop.
-    # NOTE: This is quite crude/slow/inefficient. Needs work.
-
-    if nt:
-        if not CBackend:
-            Makefile = open(os.path.join(BootDir, "Makefile"), "wb")
-            Makefile.write("all: cm3.exe mklib.exe\r\n\r\n")
-            Makefile.write("clean:\r\n del cm3.exe mklib.exe\r\n\r\n")
-
-            # -MT is used instead of -MD for the sake of some older toolsets
-            # and this Makefile not handling manifests with mt.exe.
-            #
-            # The larger cm3 config/quake files do handle that.
-
-            Makefile.write("cm3.exe: *.io *.mo *.c cm3.d\\Main.mo\r\n"
-            + " cl -Zi -MT *.c -link *.mo *.io cm3.d\\Main.mo -out:$@ user32.lib kernel32.lib ws2_32.lib comctl32.lib gdi32.lib advapi32.lib netapi32.lib iphlpapi.lib\r\n\r\n")
-
-            Makefile.write("mklib.exe: *.io *.mo *.c mklib.d\\Main.mo\r\n"
-            + " cl -Zi -MT *.c -link *.mo *.io mklib.d\\Main.mo -out:$@ user32.lib kernel32.lib ws2_32.lib comctl32.lib gdi32.lib advapi32.lib netapi32.lib iphlpapi.lib\r\n\r\n")
-
-            Makefile.close()
 
     if vms or nt:
         _MakeZip(BootDir[2:])
