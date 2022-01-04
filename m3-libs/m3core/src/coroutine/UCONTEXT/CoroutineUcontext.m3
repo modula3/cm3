@@ -313,11 +313,17 @@ PROCEDURE Run(arg : Arg) =
     inhibit.succ.dead := inhibit.id; (* tell successor I am dead *)
 
     ThreadPThread.IncInCritical();
-    WITH top = ContextC.PushContext(inhibit.context) DO
-      ThreadPThread.SetCoStack(inhibit.succ.gcstack, top)
-    END;
+    ContextC.PushContextForRun(inhibit, inhibit.context);
     (* holding inCritical *)
   END Run;
+
+(* Run => PushContextForRun => RunInternal *)
+PROCEDURE RunInternal(inhibit : T) =
+  BEGIN
+    (* holding inCritical *)
+    ThreadPThread.SetCoStack(inhibit.succ.gcstack, ContextC.Stack());
+    (* holding inCritical *)
+  END RunInternal;
 
   (* "conservation of call flows":
 
@@ -346,7 +352,6 @@ PROCEDURE Run(arg : Arg) =
      stack pointer!
 
     *)
-  
 PROCEDURE Call(to : T) : T =
   VAR
     myId: UNTRACED REF INTEGER;
@@ -381,33 +386,26 @@ PROCEDURE Call(to : T) : T =
 
     IF DEBUG THEN DbgStackInfo("Call before swap") END;
 
+    ThreadPThread.IncInCritical();
+
+    RETURN ContextC.PushContextForCall(to, myId, me, me.context);
+  END Call;
+
+(* Call => PushContextForCall => CallInternal *)
+PROCEDURE CallInternal(to: T; myId: UNTRACED REF INTEGER; VAR me: T): T =
+  BEGIN
     (* mention to ThreadPThread that we are about to swap stacks.
-       
        when the stack disagrees with the execution context is a 
        critical section for GC.
-       
-       There is another dirty trick here: when PushContext has 
-       returned, it leaves the context ABOVE the top of stack.
-       The "top" that is returned by PushContext goes beyond the
-       end of stack, and it is assumed that the pop of PushContext
-       does not destroy what was there 
-       
-       Therefore, no code may intervene between ContextC.PushContext and
-       ThreadPThread.SetCoStack.  Not sure if this is safe enough...
-       ContextC leaves an extra 256B just to make sure.
     *)
-
-    ThreadPThread.IncInCritical();
-    WITH top = ContextC.PushContext(me.context) DO
-      ThreadPThread.SetCoStack(to.gcstack, top)
-    END;
+    ThreadPThread.SetCoStack(to.gcstack, ContextC.Stack());
     
     (* turn off gc inhibition of myself *)
     WITH myCtx = me.context,
          tgCtx = to.context DO
       IF me.inPtr # NIL THEN LOOPHOLE(me.inPtr, T) := NIL END;
       me := NIL;
-      (* no stack references to me, stack is clean! *)
+      (* no stack references to me, stack is clean! Well, probably in context. *)
 
       (* THIS IS IT >>>>> *)
       ContextC.SwapContext(myCtx, tgCtx) (* might never return *)
@@ -434,7 +432,7 @@ PROCEDURE Call(to : T) : T =
     IF DEBUG THEN DbgStackInfo("Call after swap") END;
     
     RETURN to.from (* in callee context *)
-  END Call;
+  END CallInternal;
 
 PROCEDURE Reap(id : INTEGER) =
   (* note that we still need to have the GC-driven cleanup because
