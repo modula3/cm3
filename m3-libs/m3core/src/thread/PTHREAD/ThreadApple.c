@@ -144,9 +144,6 @@ ThreadPThread__ProcessStopped (m3_pthread_t mt, ADDRESS bottom, ADDRESS context,
 #endif
   sp -= M3_STACK_ADJUST;
   /* process the stack */
-#if 0
-  assert(stack_grows_down); /* See ThreadPThreadC.c */
-#endif
   assert(context == 0);
   p(sp, bottom);
   /* process the registers */
