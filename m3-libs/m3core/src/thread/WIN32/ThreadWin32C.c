@@ -156,20 +156,23 @@ void __cdecl ThreadWin32__ProcessStopped(
 
 void __cdecl ThreadWin32__ProcessLive(char *bottom, void (*p)(void *start, void *limit))
 {
-  jmp_buf jb;
+  struct {
+    jmp_buf jb;
+  } s;
 
-  if (setjmp(jb) == 0) /* save registers to stack */
+  if (setjmp(s.jb) == 0) /* save registers to stack */
 #ifdef _IA64_
-    longjmp(jb, 1); /* flush register windows */
+    longjmp(s.jb, 1); /* flush register windows */
   else
 #endif
   {
-    char *top = (char*)&top;
+    char* top = (char*)_alloca(1);
     assert(bottom);
-    /* assert(stack_grows_down); */
-    assert(top < bottom);
-    p(top, bottom);
-    p(&jb, ((char *)&jb) + sizeof(jb));
+    if (top < bottom)
+        p(top, bottom);
+    else if (top > bottom)
+        p(bottom, top);
+    p(&s, 1 + &s);
 #ifdef _IA64_
 #error ia64?
     p(bottom, __getReg(?)); /* bsp? bspstore? try numbers until we find it? */

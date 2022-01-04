@@ -414,7 +414,7 @@ void
 ContextC__InitC(int* stack)
 {
   int r = { 0 };
-  stack_grows_downward = (stack > &r);
+  stack_grows_downward = (stack > (int*)alloca(sizeof(int)));
 #if defined(__APPLE__)   || \
     defined(__FreeBSD__) || \
     defined(__INTERIX)   || \

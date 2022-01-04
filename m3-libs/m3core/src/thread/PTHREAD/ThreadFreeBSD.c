@@ -68,9 +68,6 @@ ThreadPThread__ProcessStopped (m3_pthread_t mt, char *bottom, char *context,
   ThreadFreeBSD__Fatal(pthread_attr_get_np(PTHREAD_FROM_M3(mt), &attr), "pthread_attr_get_np");
   ThreadFreeBSD__Fatal(pthread_attr_getstack(&attr, (void **)&stackaddr, &stacksize), "pthread_attr_getstack");
   ThreadFreeBSD__Fatal(pthread_attr_destroy(&attr), "pthread_attr_destroy");
-#if 0
-  assert(stack_grows_down); /* See ThreadPThreadC.c */
-#endif
   assert(context == 0);
   assert(bottom >= stackaddr);
   assert(bottom <= (stackaddr + stacksize));

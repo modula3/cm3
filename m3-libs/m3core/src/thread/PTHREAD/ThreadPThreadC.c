@@ -74,8 +74,6 @@ EXTERN_CONST int SIG_SUSPEND = SIGUSR2;
 #error Unable to determine SIG_SUSPEND.
 #endif
 
-static int stack_grows_down;
-
 #ifndef M3_DIRECT_SUSPEND
 
 static sigset_t mask;
@@ -103,7 +101,7 @@ ThreadPThread__sigsuspend(void)
     sigjmp_buf jb;
   } s;
 
-  ZERO_MEMORY(s);
+  memset(&s, 0, sizeof(s));
 
   if (sigsetjmp(s.jb, 0) == 0) /* save registers to stack */
 #ifdef M3_REGISTER_WINDOWS
@@ -134,20 +132,14 @@ __cdecl
 ThreadPThread__ProcessStopped (m3_pthread_t mt, ADDRESS bottom, ADDRESS context,
                                void (*p)(void *start, void *limit))
 {
-  /* process stack */
+  // process stack and registers
   if (!bottom) return;
-  if (stack_grows_down)
-  {
-    assert(context <= bottom);  /* is it not OK to have an empty stack? */
+
+  if (context < bottom)
     p(context, bottom);
-  }
-  else
-  {
-    assert(bottom <= context);
+  else if (context > bottom)
     p(bottom, context);
-  }
-  /* process register context */
-  /*p(context, context + sizeof(ucontext_t));*/ /* cant be right */
+  p(context, 1 + (ucontext_t*)context);
 }
 
 #else /* M3_DIRECT_SUSPEND */
@@ -177,7 +169,7 @@ jb may or may not be an array, & is necessary, wrap it in struct.
     sigjmp_buf jb;
   } s;
 
-  ZERO_MEMORY(s);
+  memset(&s, 0, sizeof(s));
 
   if (sigsetjmp(s.jb, 0) == 0) /* save registers to stack */
 #ifdef M3_REGISTER_WINDOWS
@@ -188,17 +180,11 @@ jb may or may not be an array, & is necessary, wrap it in struct.
     /* capture top after longjmp because longjmp can clobber non-volatile locals */
     char *top = (char*)alloca(1);
     assert(bottom);
-    if (stack_grows_down)
-    {
-      assert(top < bottom);
+    if (top < bottom)
       p(top, bottom);
-    }
-    else
-    {
-      assert((char*)bottom < top);
+    else if (bottom < top)
       p(bottom, top);
-    }
-    p(&s, sizeof(s) + (char *)&s);
+    p(&s, 1 + &s);
   }
 }
 
@@ -557,10 +543,6 @@ InitC(ADDRESS bottom)
   ZERO_MEMORY(act);
 #endif
 
-  stack_grows_down = ((char*)bottom > (char*)alloca(1));
-#if defined(__APPLE__) || defined(__INTERIX)
-  assert(stack_grows_down); /* See ThreadApple.c */
-#endif
 #ifndef M3_COMPILER_THREAD_LOCAL
   M3_RETRY(pthread_key_create(&activations, NULL)); assert(r == 0);
 #endif
