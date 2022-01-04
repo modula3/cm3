@@ -118,6 +118,14 @@ ContextC__PushContextForCall(void* to, INTEGER* myId, void** me, Context *c)
     return 0;
 }
 
+void*
+__cdecl
+ContextC__Stack(void)
+{
+    assert(0);
+    return 0;
+}
+
 #else
 
 BOOLEAN

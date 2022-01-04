@@ -75,16 +75,24 @@ case "$host" in
     powerpc*darwin*) CXXFLAGS="$CXXFLAGS -arch ppc";;
     mips64*) CXXFLAGS="$CXXFLAGS -mabi=64";;
     i?86-*-solaris2*) CXXFLAGS="$CXXFLAGS -xarch=""" + solaris86_arch + """ -Kpic";;
-    sparc64*solaris2* | sparcv9*solaris2*) CXXFLAGS="$CXXFLAGS -xarch=v9 -xcode=pic32 -xregs=no%appl";;
-    sparc*solaris2*) CXXFLAGS="$CXXFLAGS -xarch=v8plus -xcode=pic32 -xregs=no%appl";;
-    sparc64* | sparcv9*) CXXFLAGS="$CXXFLAGS -m64 -mno-app-regs";;
-    sparc*) CXXFLAGS="$CXXFLAGS -m32 -mcpu=v9 -mno-app-regs";;
     x86_64-* | amd64-*) CXXFLAGS="$CXXFLAGS -m64";;
     i?86-*) CXXFLAGS="$CXXFLAGS -m32";;
     aarch64*darwin*_ilp32) CXXFLAGS="$CXXFLAGS -m32";;
     aarch64*darwin* | arm64*darwin*) CXXFLAGS="$CXXFLAGS -m64";;
     # Old unfinished 32bit iPhone support
     arm*-darwin*) CXXFLAGS="$CXXFLAGS -march=armv6 -mcpu=arm1176jzf-s";;
+    sparc64* | sparcv9*)
+      if test "$GXX" = yes; then
+        CXXFLAGS="$CXXFLAGS -m64 -mno-app-regs -pthread"
+      else
+        CXXFLAGS="$CXXFLAGS -xarch=v9 -xcode=pic32 -xregs=no%appl -mt"
+      fi;;
+    sparc*)
+      if test "$GXX" = yes; then
+        CXXFLAGS="$CXXFLAGS -m32 -mcpu=v9 -mno-app-regs -pthread"
+      else
+         CXXFLAGS="$CXXFLAGS -xarch=v8plus -xcode=pic32 -xregs=no%appl -mt"
+      fi;;
 esac
 
 # Specify likely required compiler/linker flags where defaults
@@ -131,7 +139,7 @@ case "$host" in
 
         # TODO: Make one bootstrap for 32bits and 64bits.
 
-        if test "$GCC" = yes; then
+        if test "$GXX" = yes; then
             CXXFLAGS="$CXXFLAGS """ + hpux_gcc_wordsize + """ "
         else
             CXXFLAGS="$CXXFLAGS """ + hpux_cc_bits + """ "
