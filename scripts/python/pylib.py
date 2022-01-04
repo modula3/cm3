@@ -1122,8 +1122,10 @@ def Boot():
         CCompiler = "./c_compiler"
         CopyFile("./c_compiler", BootDir)
     elif osf:
-        # There is a problem on my install such that linking with cxx fails, unless I use oldcxx.
-        # This really should be fixed otherwise.
+        # There is a problem on some installs such that linking with cxx fails, unless oldcxx is used.
+        # This really should be fixed otherwise. Compiling with oldcxx fails due to
+        # integer constants from INT64_ with trailing i64 or ui64.
+        # Not-oldcxx defines _LONGLONG to skip that.
         CCompiler = "/usr/bin/cxx" # g++ should also work all work, but change -ieee to -mieee
         CCompilerFlags = " -g -pthread -x cxx -c99 -fprm d "
         #CCompiler = "g++"
@@ -1190,6 +1192,7 @@ def Boot():
     # http://www.gnu.org/software/autoconf-archive/ax_pthread.html#ax_pthread
 
     # TODO: All this logic should be in the Makefile so we can make one distribution.
+    # See BootAutoTools.
 
     if darwin:
         pass
@@ -1203,8 +1206,10 @@ def Boot():
         # -pthread is not allowed
         Link = Link + " -lrt -lm -lpthread -ldcekt -luca "
     elif osf:
-        # There is a problem on my install such that linking with cxx fails, unless I use oldcxx.
+        # There is a problem on some installs such that linking with cxx fails, unless oldcxx is used.
         # This really should be fixed otherwise.
+        # Compiling with oldcxx fails, because it does not
+        # define _LONGLONG and then INT64_ appends i64 or ui64 and that fails.
         Link = Link + " -lrt -lm -pthread -oldcxx "
     elif interix:
         Link = Link + " -lm -pthread "
