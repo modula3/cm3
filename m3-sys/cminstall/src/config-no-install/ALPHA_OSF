@@ -53,7 +53,8 @@ SYSTEM_LIBORDER = [ "OPENGL", "DECPEX", "MOTIF", "X11", "TCP", "ODBC",
 % labelnotreach: code can never be executed at label
 % missingreturn: missing return statement at end of non-void function
 % underflow: underflow occurs in evaluating this expression
-SYSTEM_CC = "/usr/bin/cxx -x cxx -fprm d -O3 -g3 -c99 -pthread -readonly_strings -ieee_with_no_inexact -error_unresolved -msg_display_tag -msg_disable badansialias1,badansialias2,codeunreachable,fprldonot,labelnotreach,missingreturn,underflow"
+% foundcr: carriage return
+SYSTEM_CC = "/usr/bin/cxx -x cxx -fprm d -O3 -g3 -c99 -pthread -readonly_strings -ieee_with_no_inexact -error_unresolved -msg_display_tag -msg_disable badansialias1,badansialias2,codeunreachable,fprldonot,labelnotreach,missingreturn,underflow,foundcr"
 % gcc near equivalent: SYSTEM_CC = "g++ -xc++ -mieee -mfp-rounding-mode=d -pthread "
 
 % There is a problem on my install such that linking with cxx fails, unless I use oldcxx.
