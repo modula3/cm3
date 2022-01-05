@@ -865,11 +865,6 @@ void
 __cdecl
 Scheduler__EnableScheduling(void);
 
-M3_DLL_LOCAL
-int
-__cdecl
-ThreadInternal__StackGrowsDown (void);
-
 void
 __cdecl
 Process__RegisterExitor(void (__cdecl*)(void));

@@ -68,15 +68,13 @@ ThreadPThread__ProcessStopped (m3_pthread_t mt, char *bottom, char *context,
   stacksize = stack.ss_size;
 
   assert(context == 0);
-  if (ThreadInternal__StackGrowsDown ())
+  if (stackaddr < bottom)
   {
-    assert(stackaddr <= bottom);
     assert(stackaddr >= (bottom - stacksize));
     p(stackaddr, bottom);
   }
-  else
+  else if (stackaddr > bottom)
   {
-    assert(stackaddr >= bottom);
     assert(stackaddr <= (bottom + stacksize));
     p(bottom, stackaddr);
   }
