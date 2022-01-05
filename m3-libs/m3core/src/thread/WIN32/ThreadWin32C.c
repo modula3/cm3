@@ -30,11 +30,12 @@
 #endif
 #endif
 
-#include <windows.h>
 #include <assert.h>
+#include <malloc.h>
 #include <setjmp.h>
 #include <stddef.h>
 #include <string.h>
+#include <windows.h>
 
 #if 0
 //#include <stdio.h>
@@ -51,8 +52,6 @@ void ThreadWin32_AssertFailed(const char* file, unsigned long line, const char* 
 	abort();
 }
 #endif
-
-#define M3_FIELD_SIZE(type, field) (sizeof((type*)0)->field)
 
 /* const is extern const in C, but static const in C++,
  * but gcc gives a warning for the correct portable form "extern const" */
