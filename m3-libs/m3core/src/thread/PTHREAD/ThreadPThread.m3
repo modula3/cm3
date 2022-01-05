@@ -1488,7 +1488,7 @@ PROCEDURE InitWithStackBase (stackbase: ADDRESS) =
     self: T;
     me: Activation;
   BEGIN
-    InitC(stackbase);
+    InitC();
 
     me := NEW(Activation,
               mutex := pthread_mutex_new(),
