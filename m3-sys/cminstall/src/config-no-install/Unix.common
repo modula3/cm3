@@ -303,8 +303,10 @@ proc AdjustShared(shared) is
     % we changed the directory layout. Older compilers combined
     % with this config file need only support building a static compiler,
     % so this is ok.
-
     and defined("install_symbolic_link")
+
+    % HPUX switches not correct for non-gcc linker driver.
+    and not equal (TARGET_OS, "HPUX")
 end
 
 end

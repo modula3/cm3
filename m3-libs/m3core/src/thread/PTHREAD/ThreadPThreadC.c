@@ -6,6 +6,7 @@
 #include "m3core.h"
 #endif
 
+// TODO: HPUX has direct suspend also.
 #if defined(__APPLE__)
 /* See ThreadApple.c. */
 #define M3_DIRECT_SUSPEND
@@ -15,13 +16,28 @@
 #include <mach/mach_port.h>
 #include <mach/mach_init.h>
 #endif
+#if defined(__hpux) && defined(__ia64)
+#include "ia64/sys/kern_inline.h"
+
+// Missing in the headers.
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+int pthread_attr_setsuspendstate_np(pthread_attr_t*, int);
+#ifdef __cplusplus
+} // extern "C"
+#endif
+#endif
 
 #undef M3MODULE /* Support concatenating multiple .c files. */
 #define M3MODULE ThreadPThread
 
-#if defined(__sparc) || defined(__ia64__)
-#define M3_REGISTER_WINDOWS
-#endif
+// Wrap jmpbuf in a struct to avoid warnings from some compilers
+// about taking address of array. i.e. on OSF.
+// cc: Warning: ThreadPThreadC.c, line 170: In this statement, & before array "jb" is ignored. (addrarray)
+//     p(&jb, ((char *)&jb) + sizeof(jb));
+typedef struct { sigjmp_buf jb; } M3SigJmpBuf;
 
 #ifdef M3_DIRECT_SUSPEND
 #define M3_DIRECT_SUSPEND_ASSERT_FALSE do {            \
@@ -74,6 +90,43 @@ EXTERN_CONST int SIG_SUSPEND = SIGUSR2;
 #error Unable to determine SIG_SUSPEND.
 #endif
 
+ADDRESS
+ThreadPThread__FlushRegisterWindows1 (M3SigJmpBuf* pbuf)
+{
+#if defined(__ia64)
+#if defined(__GNUC___) && defined(__ia64)
+  __builtin_ia64_flushrs();
+  return (ADDRESS)(long)__builtin_ia64_bsp();
+#elif defined(__hpux) && defined(__ia64)
+  _FLUSHRS();
+  return (ADDRESS)(long)_MOV_FROM_AR(AR_BSP);
+#else
+#error Unknown IA64 configuration. (VMS?)
+#endif
+#elif defined(__sparc)
+  // Caller either captured and wants to flush or only flush.
+  M3SigJmpBuf buf;
+  if (!pbuf)
+  {
+      if (sigsetjmp(buf.jb, 0) == 1)
+          return 0;
+      pbuf = &buf;
+  }
+  else
+  {
+    siglongjmp(pbuf->jb, 1); // flush register windows
+  }
+#else
+  return 0;
+#endif
+}
+
+ADDRESS
+ThreadPThread__FlushRegisterWindows0 (void)
+{
+  return ThreadPThread__FlushRegisterWindows1 (0);
+}
+
 #ifndef M3_DIRECT_SUSPEND
 
 static sigset_t mask;
@@ -97,17 +150,6 @@ void
 __cdecl
 ThreadPThread__sigsuspend(void)
 {
-  struct {
-    sigjmp_buf jb;
-  } s;
-
-  memset(&s, 0, sizeof(s));
-
-  if (sigsetjmp(s.jb, 0) == 0) /* save registers to stack */
-#ifdef M3_REGISTER_WINDOWS
-    siglongjmp(s.jb, 1); /* flush register windows */
-  else
-#endif
     sigsuspend(&mask);
 }
 
@@ -130,7 +172,7 @@ ThreadPThread__RestartThread (m3_pthread_t mt)
 void
 __cdecl
 ThreadPThread__ProcessStopped (m3_pthread_t mt, ADDRESS top, ADDRESS context,
-                               void (*p)(void *start, void *limit))
+                               ADDRESS regbottom, ADDRESS bsp, void (*p)(void *start, void *limit))
 {
   // process stack and registers
   if (!top) return;
@@ -139,6 +181,9 @@ ThreadPThread__ProcessStopped (m3_pthread_t mt, ADDRESS top, ADDRESS context,
     p(context, top);
   else if (context > top) // unusual growup stack, e.g. hppa
     p(top, 1 + (ucontext_t*)context);
+
+  if (regbottom && bsp)
+      p(regbottom, bsp);
 }
 
 #else /* M3_DIRECT_SUSPEND */
@@ -152,39 +197,41 @@ void __cdecl ThreadPThread__sigsuspend(void)        { M3_DIRECT_SUSPEND_ASSERT_F
 
 void
 __cdecl
-ThreadPThread__ProcessLive(ADDRESS top, void (*p)(void *start, void *limit))
+ThreadPThread__ProcessLive(ADDRESS top, ADDRESS regbottom, void (*p)(void *start, void *limit))
 {
-/*
-cc: Warning: ThreadPThreadC.c, line 170: In this statement, & before array "jb" is ignored. (addrarray)
-    p(&jb, ((char *)&jb) + sizeof(jb));
-------^
-cc: Warning: ThreadPThreadC.c, line 170: In this statement, & before array "jb" is ignored. (addrarray)
-    p(&jb, ((char *)&jb) + sizeof(jb));
---------------------^
+  char* bottom;
+  void* bsp;
+  M3SigJmpBuf jb;
 
-jb may or may not be an array, & is necessary, wrap it in struct.
-*/
-  struct {
-    sigjmp_buf jb;
-  } s;
+  if (sigsetjmp (jb.jb, 0) == 0) // save registers to stack (TODO: Posix getcontext)
+    bsp = ThreadPThread__FlushRegisterWindows1 (&jb);
 
-  memset(&s, 0, sizeof(s));
+  // capture bottom after longjmp because longjmp can clobber non-volatile locals,
+  // and so jb is in stack
+  bottom = (char*)alloca (1);
 
-  if (sigsetjmp(s.jb, 0) == 0) /* save registers to stack */
-#ifdef M3_REGISTER_WINDOWS
-    siglongjmp(s.jb, 1); /* flush register windows */
-  else
-#endif
+  assert (top);
+  assert (bottom);
+
+  if (bottom < top) // typical growdown stack
   {
-    /* capture bottom after longjmp because longjmp can clobber non-volatile locals */
-    char *bottom = (char*)alloca(1);
-    assert(top);
-    if (bottom < top) // typical growdown stack, registers in s
-      p(bottom, top);
-    else if (top < bottom) // unusual growup stack, e.g. hppa
-      p(top, bottom);
-    p(&s, 1 + &s);
+    assert ((char*)top >= (char*)(1 + &jb));
+    assert (bottom < (char*)&jb);
+    p (bottom, top);
   }
+  else if (top < bottom) // unusual growup stack, e.g. hppa
+  {
+    assert ((char*)top < (char*)&jb);
+    assert (bottom >= (char*)(1 + &jb));
+    p (top, bottom);
+  }
+
+#if defined(__hpux) && defined(__ia64) // TODO: Linux VMS etc.
+  assert (regbottom);
+  assert (bsp);
+  assert ((char*)regbottom < bsp);
+  p (regbottom, bsp);
+#endif
 }
 
 #define M3_MAX(x, y) (((x) > (y)) ? (x) : (y))
@@ -206,9 +253,11 @@ typedef void *(*start_routine_t)(void *);
 
 int
 __cdecl
-ThreadPThread__thread_create(size_t stackSize,
-                             start_routine_t start_routine,
-                             void *arg)
+ThreadPThread__thread_create(
+    size_t stackSize,
+    start_routine_t start_routine,
+    void* arg,
+    void** regbottom)
 {
   int r = { 0 };
   WORD_T bytes = { 0 };
@@ -217,6 +266,7 @@ ThreadPThread__thread_create(size_t stackSize,
 
   ZERO_MEMORY(pthread);
   ZERO_MEMORY(attr);
+  assert(regbottom);
   
   M3_RETRY(pthread_attr_init(&attr));
 #ifdef __hpux
@@ -225,15 +275,24 @@ ThreadPThread__thread_create(size_t stackSize,
       fprintf(stderr,
               "You got the nonfunctional pthread stubs on HP-UX. You need to"
               " adjust your build commands, such as to link to -lpthread or"
-              " use -pthread, and not link explicitly to -lc.\n");
+              " use -pthread or -mt, and not link explicitly to -lc.\n");
     }
 #endif
   assert(r == 0);
 
   r = pthread_attr_getstacksize(&attr, &bytes); assert(r == 0);
+  assert(r == 0);
 
   bytes = M3_MAX(bytes, stackSize);
   pthread_attr_setstacksize(&attr, bytes);
+
+#if defined(__hpux) && defined(__ia64) // TODO: Linux VMS etc.
+  // Start the thread suspended so we can get its register stack base.
+  // _pthread_stack_info_np requires a suspended thread.
+  _pthread_stack_info_t stack_info = {0};
+  r = pthread_attr_setsuspendstate_np(&attr, PTHREAD_CREATE_SUSPENDED);
+  assert(r == 0);
+#endif
 
   M3_RETRY(pthread_create(&pthread, &attr, start_routine, arg));
 #ifdef __sun
@@ -253,6 +312,22 @@ ThreadPThread__thread_create(size_t stackSize,
             (unsigned)r,
             (unsigned)errno);
   }
+
+#if defined(__hpux) && defined(__ia64) // TODO: Linux VMS etc.
+  r = _pthread_stack_info_np(pthread, &stack_info);
+  assert(r == 0);
+
+  assert(stack_info.stk_rse_base);
+  *regbottom = stack_info.stk_rse_base;
+  // Also useful: stack_info.stk_stack_base
+  // If we use direct suspend, all useful: stk_sp stk_bsp stk_stack_base stk_rse_base
+
+  // Resume the thread after getting its stack information.
+  // PTHREAD_COUNT_RESUME_NP means decrement suspend count by one toward zero,
+  // instead of set it to zero, which PTHREAD_FORCE_RESUME_NP or pthread_continue() does.
+  r = pthread_resume_np(pthread, PTHREAD_COUNT_RESUME_NP);
+  assert(r == 0);
+#endif
 
   pthread_attr_destroy(&attr);
 
@@ -568,6 +643,15 @@ __cdecl
 ThreadPThread__Solaris(void)
 {
 #ifdef __sun
+    return TRUE;
+#else
+    return FALSE;
+#endif
+}
+
+BOOLEAN ThreadPThread__IA64 (void)
+{
+#ifdef __ia64
     return TRUE;
 #else
     return FALSE;

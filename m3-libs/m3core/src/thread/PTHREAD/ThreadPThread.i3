@@ -58,7 +58,7 @@ PROCEDURE sigsuspend ();
 TYPE start_routine_t = PROCEDURE(arg: ADDRESS): ADDRESS;
 
 <*EXTERNAL "ThreadPThread__thread_create"*>
-PROCEDURE thread_create(stackSize: size_t; start_routine: start_routine_t; arg: void_star): int;
+PROCEDURE thread_create(stackSize: size_t; start_routine: start_routine_t; arg: void_star; VAR regbottom: ADDRESS): int;
 
 <*EXTERNAL ThreadPThread__pthread_detach_self*>
 PROCEDURE pthread_detach_self(t: pthread_t): int;
@@ -140,10 +140,10 @@ PROCEDURE RestartThread (t: pthread_t): BOOLEAN;
 TYPE ProcessThreadStack = PROCEDURE(start, limit: ADDRESS);
 
 <*EXTERNAL "ThreadPThread__ProcessLive"*>
-PROCEDURE ProcessLive (bottom: ADDRESS; p: ProcessThreadStack);
+PROCEDURE ProcessLive (top, regbottom: ADDRESS; p: ProcessThreadStack);
 
 <*EXTERNAL "ThreadPThread__ProcessStopped"*>
-PROCEDURE ProcessStopped (t: pthread_t; bottom, context: ADDRESS; p: ProcessThreadStack);
+PROCEDURE ProcessStopped (t: pthread_t; top, context, regbottom, bsp: ADDRESS; p: ProcessThreadStack);
 (*---------------------------------------------------------------------------*)
 (* coroutine support *)
 
@@ -196,7 +196,18 @@ PROCEDURE DecInCritical();
 <*EXTERNAL "ThreadPThread__Solaris"*>
 PROCEDURE Solaris(): BOOLEAN;
 
+<*EXTERNAL "ThreadPThread__IA64"*>
+PROCEDURE IA64 () : BOOLEAN;
+
 PROCEDURE AtForkPrepareOutsideFork(); (* called from C *)
+
+(* On the current thread, flush register windows to memory
+ * on SPARC or IA64 and on IA64 return the current backing store pointer.
+ * On other systems, do nothing and return NIL.
+ * IA64 is only implemented on HPUX, not Linux, VMS, etc.
+ *)
+<*EXTERNAL "ThreadPThread__FlushRegisterWindows0"*>
+PROCEDURE FlushRegisterWindows0 () : ADDRESS;
 
 (*---------------------------------------------------------------------------*)
 

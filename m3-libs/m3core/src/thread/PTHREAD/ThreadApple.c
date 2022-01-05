@@ -113,7 +113,7 @@ typedef _STRUCT_ARM_THREAD_STATE64 m3_thread_state_t;
 void
 __cdecl
 ThreadPThread__ProcessStopped (m3_pthread_t mt, ADDRESS top, ADDRESS context,
-                               void (*p)(void *start, void *limit))
+                               ADDRESS regbottom, ADDRESS bsp, void (*p)(void *start, void *limit))
 {
   char *sp = { 0 };
   m3_thread_state_t state = { 0 };
