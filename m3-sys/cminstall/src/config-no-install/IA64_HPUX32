@@ -12,3 +12,7 @@ readonly TARGET_ENDIAN = "BIG" % { "BIG" OR "LITTLE" }
 readonly WORD_SIZE = "32BITS"  % { "32BITS" or "64BITS" }
 
 include("HPUX.common")
+
+% linker only looks for .so, not .so.1, so use full paths, which gets a warning.
+
+SYSTEM_LIBS{"X11"} = ["/usr/lib/hpux32/libXext.so.1", "/usr/lib/hpux32/libXt.so.1", "/usr/lib/hpux32/libX11.so.1"]
