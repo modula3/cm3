@@ -2479,8 +2479,12 @@ CONST Prefix = ARRAY OF TEXT {
 "#define m3_xor(T, x, y) (((T)(x)) ^ ((T)(y)))",
 
 (* Helper needed by `loophole` because m3front does not guarantee that
-`u` will be an rvalue. *)
-"template<typename T, typename U> inline T m3_loophole(U u) { return *reinterpret_cast<T*>(&u); }",
+ * `u` will be an rvalue.
+ * Class vs. typename, C-style cast vs. reinterpret_cast to cater
+ * to older compilers. (The main value of targeting C++ instead of C
+ * is portable optimized exception handling.)
+ *)
+"template<class T, class U> inline T m3_loophole(U u) { return *(T*)&u; }",
 
 "#ifdef _MSC_VER",
 "#define _CRT_SECURE_NO_DEPRECATE 1",
