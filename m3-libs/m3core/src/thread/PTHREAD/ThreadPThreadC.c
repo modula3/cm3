@@ -105,6 +105,7 @@ ThreadPThread__FlushRegisterWindows1 (M3SigJmpBuf* pbuf)
 #endif
 #elif defined(__sparc)
   // Caller either captured and wants to flush or only flush.
+  // By providing pbuf or not.
   M3SigJmpBuf buf;
   if (!pbuf)
   {
@@ -112,10 +113,8 @@ ThreadPThread__FlushRegisterWindows1 (M3SigJmpBuf* pbuf)
           return 0;
       pbuf = &buf;
   }
-  else
-  {
-    siglongjmp(pbuf->jb, 1); // flush register windows
-  }
+  siglongjmp(pbuf->jb, 1); // flush register windows
+  // unreachable
 #else
   return 0;
 #endif
