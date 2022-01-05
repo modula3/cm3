@@ -67,7 +67,7 @@ UDPInternal__Receive(
 // addr is array of char so we cannot assume alignment.
 {
     sockaddr_in sa = {0};
-    socklen_t addr_len = sizeof(sa);
+    m3c_socklen_t addr_len = sizeof(sa);
 
     ZERO_MEMORY(sa);
 

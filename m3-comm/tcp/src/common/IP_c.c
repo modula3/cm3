@@ -225,7 +225,7 @@ IPInternal__GetNameInfo(int family, int port, const void* addr, TEXT* hostText, 
     char host[NI_MAXHOST];
     char service[NI_MAXSERV];
     SockAddrUnionAll sa = {0};
-    socklen_t size = sizeof(sa.sa4);
+    m3c_socklen_t size = sizeof(sa.sa4);
     int err = {0};
 
     M3_STATIC_ASSERT(sizeof(in_addr) == 4);
@@ -306,7 +306,7 @@ IPInternal__getsockname_in(INTEGER fd, char* address, INTEGER* port)
 {
     INTEGER err;
     struct sockaddr_in sa;
-    socklen_t size = sizeof(sa);
+    m3c_socklen_t size = sizeof(sa);
 
     ZERO_MEMORY(sa);
     err = getsockname(fd, (struct sockaddr*)&sa, &size);
