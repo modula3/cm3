@@ -44,7 +44,7 @@ FROM WinBaseTypes IMPORT const_UINT32;
 (*---------------------------------------------------------------------------*)
 
 <*EXTERNAL "ThreadWin32__ProcessLive"*>
-PROCEDURE ProcessLive(bottom: ADDRESS; p: PROCEDURE(start, limit: ADDRESS));
+PROCEDURE ProcessLive(top: ADDRESS; p: PROCEDURE(start, limit: ADDRESS));
 
 <*EXTERNAL "ThreadWin32__ProcessStopped"*>
 PROCEDURE ProcessStopped(stackStart, stackEnd: ADDRESS; context: PCONTEXT;

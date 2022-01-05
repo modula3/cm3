@@ -155,6 +155,7 @@ void __cdecl ThreadWin32__ProcessStopped(
 
 void __cdecl ThreadWin32__ProcessLive(char *bottom, void (*p)(void *start, void *limit))
 {
+  // Wrap in struct to avoid warning about taking address of array.
   struct {
     jmp_buf jb;
   } s;

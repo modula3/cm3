@@ -77,7 +77,9 @@ REVEAL
 TYPE
   StackState = UNTRACED BRANDED REF RECORD
     stackbase: ADDRESS := NIL;          (* LL = activeMu; stack base for GC *)
+    regbottom: ADDRESS := NIL;          (* IA64 register stack bottom *)
     context: ADDRESS := NIL;            (* LL = activeMu *)
+    bsp:     ADDRESS := NIL;            (* IA64 register stack current for suspended thread (backing store pointer) *)
     next : StackState := NIL;
   END;
   (* older versions of CM3 had stackbase and context within the Activation.
@@ -575,6 +577,8 @@ PROCEDURE ThreadBase (param: ADDRESS): ADDRESS =
     me: Activation := param;
   BEGIN
     SetActivation(me);
+
+    <* ASSERT NOT IA64 () OR me.stacks.regbottom # NIL *>
     me.stacks.stackbase := ADR(me); (* enable GC scanning of this stack *)
     me.handle := pthread_self();
 
@@ -593,6 +597,7 @@ PROCEDURE ThreadBase (param: ADDRESS): ADDRESS =
     WITH r = pthread_mutex_lock(activeMu) DO <*ASSERT r=0*> END;
       <*ASSERT allThreads # me*>
       me.stacks.stackbase := NIL; (* disable GC scanning of my stack *)
+      me.stacks.regbottom := NIL; (* disable GC scanning of my stack *)
       me.next.prev := me.prev;
       me.prev.next := me.next;
       WITH r = pthread_detach_self(me.handle) DO <*ASSERT r=0*> END;
@@ -666,9 +671,10 @@ PROCEDURE Fork (closure: Closure): T =
     | SizedClosure (scl) => size := scl.stackSize;
     ELSE (*skip*)
     END;
-    WITH r = thread_create(size * ADRSIZE(Word.T), ThreadBase, act) DO
+    WITH r = thread_create(size * ADRSIZE(Word.T), ThreadBase, act, act.stacks.regbottom) DO
       IF r # 0 THEN DieI(ThisLine(), r) END;
     END;
+    (* regbottom cannot be asserted here as the thread can already exit *)
     RETURN t;
   END Fork;
 
@@ -1038,10 +1044,10 @@ PROCEDURE ProcessMe (me: Activation;  p: PROCEDURE (start, limit: ADDRESS)) =
         RTIO.PutText("q.stackbase="); RTIO.PutAddr(q.stackbase); RTIO.PutText("\n");
         RTIO.Flush();
       END;
-      ProcessLive(q.stackbase, p);
+      ProcessLive(q.stackbase, q.regbottom, p);
       q := q.next;
       WHILE q # NIL DO
-        ProcessStopped(me.handle, q.stackbase, q.context, p);
+        ProcessStopped(me.handle, q.stackbase, q.context, q.regbottom, q.bsp, p);
         q := q.next
       END
     END
@@ -1060,7 +1066,7 @@ PROCEDURE ProcessOther (act: Activation;  p: PROCEDURE (start, stop: ADDRESS)) =
     BEGIN
       WHILE q # NIL DO
         IF q.stackbase # NIL THEN
-          ProcessStopped(act.handle, q.stackbase, q.context, p);
+          ProcessStopped(act.handle, q.stackbase, q.context, q.regbottom, q.bsp, p);
         END;
         q := q.next;
       END;
@@ -1272,6 +1278,7 @@ PROCEDURE SignalHandler (sig: int; context: ADDRESS) =
       me.state := ActState.Stopped;
       <*ASSERT me.stacks.context = NIL*>
       me.stacks.context := context;
+      me.stacks.bsp := FlushRegisterWindows0 ();
       WITH r = sem_post() DO <*ASSERT r=0*> END;
       REPEAT sigsuspend() UNTIL me.state = ActState.Starting;
       me.stacks.context := NIL;
@@ -1325,6 +1332,7 @@ PROCEDURE CreateStackState(base : ADDRESS; context : ADDRESS) : ADDRESS =
     s := NEW(StackState, stackbase := base, context := context);
     me := GetActivation();
   BEGIN
+    <* ASSERT NOT IA64 () *> (* regbottom not initialized *)
     INC(me.heapState.inCritical);
     s.next := me.stacks.next;
     me.stacks.next := s;
@@ -1484,6 +1492,9 @@ PROCEDURE PerfRunning () =
 (*-------------------------------------------------------- Initialization ---*)
 
 PROCEDURE InitWithStackBase (stackbase: ADDRESS) =
+(* Initialize the first thread, that is not created by ThreadPThread.Fork
+ * Other threads are initialized otherwise.
+ *)
   VAR
     self: T;
     me: Activation;
@@ -1495,6 +1506,7 @@ PROCEDURE InitWithStackBase (stackbase: ADDRESS) =
               cond := pthread_cond_new(),
               stacks := NEW(StackState));
     InitActivations(me);
+    me.stacks.regbottom := FlushRegisterWindows0 (); (* bottom of IA64 register growup stack *)
     me.stacks.stackbase := stackbase;
     IF me.mutex = NIL OR me.cond = NIL THEN
       Die(ThisLine(), "Thread initialization failed.");
