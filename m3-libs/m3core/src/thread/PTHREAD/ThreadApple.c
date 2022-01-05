@@ -145,7 +145,10 @@ ThreadPThread__ProcessStopped (m3_pthread_t mt, ADDRESS top, ADDRESS context,
   sp -= M3_STACK_ADJUST;
   /* process the stack */
   assert(context == 0);
-  p(sp, top);
+  if (sp < top)
+      p(sp, top);
+  else if (sp > top)
+      p(top, sp);
   /* process the registers */
   p(&state, &state + 1);
 }
