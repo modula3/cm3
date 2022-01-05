@@ -129,16 +129,16 @@ ThreadPThread__RestartThread (m3_pthread_t mt)
 
 void
 __cdecl
-ThreadPThread__ProcessStopped (m3_pthread_t mt, ADDRESS bottom, ADDRESS context,
+ThreadPThread__ProcessStopped (m3_pthread_t mt, ADDRESS top, ADDRESS context,
                                void (*p)(void *start, void *limit))
 {
   // process stack and registers
-  if (!bottom) return;
+  if (!top) return;
 
-  if (context < bottom)
-    p(context, bottom);
-  else if (context > bottom)
-    p(bottom, 1 + (ucontext_t*)context);
+  if (context < top) // typical growdown stack, context in stack
+    p(context, top);
+  else if (context > top) // unusual growup stack, e.g. hppa
+    p(top, 1 + (ucontext_t*)context);
 }
 
 #else /* M3_DIRECT_SUSPEND */
@@ -152,7 +152,7 @@ void __cdecl ThreadPThread__sigsuspend(void)        { M3_DIRECT_SUSPEND_ASSERT_F
 
 void
 __cdecl
-ThreadPThread__ProcessLive(ADDRESS bottom, void (*p)(void *start, void *limit))
+ThreadPThread__ProcessLive(ADDRESS top, void (*p)(void *start, void *limit))
 {
 /*
 cc: Warning: ThreadPThreadC.c, line 170: In this statement, & before array "jb" is ignored. (addrarray)
@@ -176,13 +176,13 @@ jb may or may not be an array, & is necessary, wrap it in struct.
   else
 #endif
   {
-    /* capture top after longjmp because longjmp can clobber non-volatile locals */
-    char *top = (char*)alloca(1);
-    assert(bottom);
-    if (top < bottom)
-      p(top, bottom);
-    else if (bottom < top)
+    /* capture bottom after longjmp because longjmp can clobber non-volatile locals */
+    char *bottom = (char*)alloca(1);
+    assert(top);
+    if (bottom < top) // typical growdown stack, registers in s
       p(bottom, top);
+    else if (top < bottom) // unusual growup stack, e.g. hppa
+      p(top, bottom);
     p(&s, 1 + &s);
   }
 }
@@ -533,7 +533,7 @@ ThreadPThread__pthread_mutex_unlock(pthread_mutex_t* mutex)
 M3_NO_INLINE
 void
 __cdecl
-InitC(ADDRESS bottom)
+InitC(ADDRESS top)
 {
   int r = { 0 };
 
