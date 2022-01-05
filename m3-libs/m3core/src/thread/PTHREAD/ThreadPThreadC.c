@@ -143,19 +143,12 @@ static void __cdecl SignalHandlerC(int signo, siginfo_t *info, void *context)
 }
 
 int __cdecl ThreadPThread__sem_wait(void)           { return sem_wait(&ackSem); }
+int __cdecl ThreadPThread__sem_post(void)           { return sem_post(&ackSem); }
 int __cdecl ThreadPThread__sem_getvalue(int *value) { return sem_getvalue(&ackSem, value); }
-
-int __cdecl
-ThreadPThread__sem_post (void)
-// Acknowledge that current thread is suspended or resuming for garbage collection.
-{
-  return sem_post(&ackSem);
-}
 
 void
 __cdecl
 ThreadPThread__sigsuspend(void)
-// Block most signals and wait for one of a few signals.
 {
     sigsuspend(&mask);
 }
