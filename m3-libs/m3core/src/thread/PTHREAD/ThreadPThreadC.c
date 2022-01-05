@@ -138,8 +138,7 @@ ThreadPThread__ProcessStopped (m3_pthread_t mt, ADDRESS bottom, ADDRESS context,
   if (context < bottom)
     p(context, bottom);
   else if (context > bottom)
-    p(bottom, context);
-  p(context, 1 + (ucontext_t*)context);
+    p(bottom, 1 + (ucontext_t*)context);
 }
 
 #else /* M3_DIRECT_SUSPEND */
