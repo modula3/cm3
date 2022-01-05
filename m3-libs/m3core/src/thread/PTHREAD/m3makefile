@@ -22,14 +22,6 @@ if defined("TARGET_OS") and not defined("M3_BOOTSTRAP") and not equal(M3_BACKEND
   if equal(TARGET_OS, "DARWIN")
     c_source ("ThreadApple")
   end
-  if equal(TARGET_OS, "FREEBSD")
-    %c_source ("ThreadFreeBSD")
-  end
-  if equal(TARGET_OS, "OPENBSD")
-    %c_source ("ThreadOpenBSD")
-  end
 else
   c_source ("ThreadApple")
-  %c_source ("ThreadFreeBSD")
-  %c_source ("ThreadOpenBSD")
 end

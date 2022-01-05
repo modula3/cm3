@@ -30,7 +30,7 @@ VAR SIG_SUSPEND: const_int;
 (*---------------------------------------------------------------------------*)
 
 <*EXTERNAL "ThreadPThread__InitC"*>
-PROCEDURE InitC(bottom: ADDRESS);
+PROCEDURE InitC(top: ADDRESS);
 
 (*---------------------------------------------------------------------------*)
 

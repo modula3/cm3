@@ -28,10 +28,4 @@ PROCEDURE Select(nfds: int; VAR read, write, except: FDSet;
 
 (*---------------------------------------------------------------------------*)
 
-<* EXTERNAL ThreadInternal__StackGrowsDown *>
-PROCEDURE StackGrowsDown(): int;
-
-(*---------------------------------------------------------------------------*)
-
-
 END ThreadInternal.

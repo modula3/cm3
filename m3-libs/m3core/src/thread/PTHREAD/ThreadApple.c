@@ -112,7 +112,7 @@ typedef _STRUCT_ARM_THREAD_STATE64 m3_thread_state_t;
 
 void
 __cdecl
-ThreadPThread__ProcessStopped (m3_pthread_t mt, ADDRESS bottom, ADDRESS context,
+ThreadPThread__ProcessStopped (m3_pthread_t mt, ADDRESS top, ADDRESS context,
                                void (*p)(void *start, void *limit))
 {
   char *sp = { 0 };
@@ -120,7 +120,7 @@ ThreadPThread__ProcessStopped (m3_pthread_t mt, ADDRESS bottom, ADDRESS context,
   kern_return_t status = { 0 };
   mach_msg_type_number_t thread_state_count = M3_THREAD_STATE_COUNT;
 
-  if (!bottom) return;
+  if (!top) return;
   status = thread_get_state(PTHREAD_FROM_M3(mt),
                             M3_THREAD_STATE, (thread_state_t)&state,
                             &thread_state_count);
@@ -145,7 +145,10 @@ ThreadPThread__ProcessStopped (m3_pthread_t mt, ADDRESS bottom, ADDRESS context,
   sp -= M3_STACK_ADJUST;
   /* process the stack */
   assert(context == 0);
-  p(sp, bottom);
+  if (sp < top)
+      p(sp, top);
+  else if (sp > top)
+      p(top, sp);
   /* process the registers */
   p(&state, &state + 1);
 }
