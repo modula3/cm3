@@ -49,14 +49,14 @@ ThreadPThread__RestartThread (m3_pthread_t mt)
 
 void
 __cdecl
-ThreadPThread__ProcessStopped (m3_pthread_t mt, char *bottom, char *context,
+ThreadPThread__ProcessStopped (m3_pthread_t mt, char *top, char *context,
                               void (*p)(void *start, void *limit))
 {
   pthread_attr_t attr = { 0 };
   char *stackaddr = { 0 };
   size_t stacksize = { 0 };
 
-  if (!bottom) return;
+  if (!top) return;
 
   /*
      NOTE: This will scan the entire allocated stack,
@@ -69,9 +69,9 @@ ThreadPThread__ProcessStopped (m3_pthread_t mt, char *bottom, char *context,
   ThreadFreeBSD__Fatal(pthread_attr_getstack(&attr, (void **)&stackaddr, &stacksize), "pthread_attr_getstack");
   ThreadFreeBSD__Fatal(pthread_attr_destroy(&attr), "pthread_attr_destroy");
   assert(context == 0);
-  assert(bottom >= stackaddr);
-  assert(bottom <= (stackaddr + stacksize));
-  p(stackaddr, bottom);
+  assert(top >= stackaddr);
+  assert(top <= (stackaddr + stacksize));
+  p(stackaddr, top);
   /* assume registers are stored in the stack */
   /* but call p to simulate processing registers: see RTHeapStats.m3 */
   p(0, 0);
