@@ -529,11 +529,9 @@ ThreadPThread__pthread_mutex_unlock(pthread_mutex_t* mutex)
   return a;
 }
 
-// Do not inline to help ensure stack range is understandable.
-M3_NO_INLINE
 void
 __cdecl
-InitC(ADDRESS top)
+InitC(void)
 {
   int r = { 0 };
 
