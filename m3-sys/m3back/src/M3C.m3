@@ -2491,6 +2491,7 @@ CONST Prefix = ARRAY OF TEXT {
 "#pragma warning(disable:4209) /* nonstandard extension: benign re-typedef */",
 "#pragma warning(disable:4226) /* nonstandard extension: __export */",
 "#pragma warning(disable:4242) /* 'return': conversion from '' to '', possible loss of data */",
+"#pragma warning(disable:4244) /* 'return': conversion from '' to '', possible loss of data */",
 "#pragma warning(disable:4255) /* () change to (void) */",
 "#pragma warning(disable:4310) /* cast truncates constant value */", (* TODO fix these UINT64/INT64 confusion *)
 "#pragma warning(disable:4514) /* unused inline function removed */",
