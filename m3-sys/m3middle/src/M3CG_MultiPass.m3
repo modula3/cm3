@@ -7,6 +7,8 @@ FROM M3CG IMPORT Frequency, CallingConvention, CompareOp, ConvertOp, AtomicOp;
 FROM M3CG IMPORT BitSize, ByteSize, BitOffset, ByteOffset, RuntimeError;
 FROM M3CG IMPORT MemoryOrder;
 FROM M3CG_Binary IMPORT Op;
+FROM Target IMPORT CGType;
+FROM TargetMap IMPORT CG_Bytes;
 
 TYPE var_t = Var OBJECT tag: INTEGER END;
 TYPE proc_t = Proc OBJECT tag: INTEGER END;
@@ -360,9 +362,30 @@ self.Add(NEW(declare_constant_t, op := Op.declare_constant, name := name, byte_s
 RETURN var;
 END declare_constant;
 
+PROCEDURE TypeVersusSize (VAR cgtype: CGType; byte_size: ByteSize) =
+BEGIN
+  (* m3front asks for pointers of size 8, on 32bit platforms,
+   * leading to variable overflows. For example in MD5.m3.
+   *
+   * Possibly this generalizes to asking for pointers of arbitrary size
+   * leading to arbitrary overflows.
+   *
+   * This manifests at least sometimes as a warning from Visual C++.
+   *   void* foo;
+   *   * ( __int64* )&foo = 0; // warning C4739: reference to variable exceeds its storage space
+   *
+   * When type and size disagree, use the size.
+   * This a non-contradictory alternative to https://github.com/modula3/cm3/pull/836.
+   *)
+  IF cgtype # CGType.Struct AND byte_size # CG_Bytes [cgtype] THEN
+    cgtype := CGType.Struct;
+  END;
+END TypeVersusSize;
+
 PROCEDURE declare_local(self: T; name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: TypeUID; in_memory, up_level: BOOLEAN; frequency: Frequency; <*UNUSED*>typename: Name): Var =
 VAR var := self.refs.NewVar();
 BEGIN
+TypeVersusSize (type, byte_size);
 self.Add(NEW(declare_local_t, op := Op.declare_local, name := name, byte_size := byte_size, alignment := alignment, type := type, typeid := typeid, in_memory := in_memory, up_level := up_level, frequency := frequency, tag := var.tag));
 RETURN var;
 END declare_local;
@@ -377,6 +400,7 @@ END declare_param;
 PROCEDURE declare_temp(self: T; byte_size: ByteSize; alignment: Alignment; type: Type; in_memory: BOOLEAN; <*UNUSED*>typename: Name): Var =
 VAR var := self.refs.NewVar();
 BEGIN
+TypeVersusSize (type, byte_size);
 self.Add(NEW(declare_temp_t, op := Op.declare_temp, byte_size := byte_size, alignment := alignment, type := type, in_memory := in_memory, tag := var.tag));
 RETURN var;
 END declare_temp;
