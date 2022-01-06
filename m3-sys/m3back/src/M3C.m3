@@ -7407,7 +7407,7 @@ PROCEDURE loophole(self: T; from: ZType; to: ZType) =
       store_helper (self, s0.CText(), from, NIL, 0, from, self.temp_vars[self.op_index]);
       s0 := get(self);
       pop (self);
-      cast := NEW(Expr_t, c_unop_text := " /*LH1*/ (" & s0.CText() & ",*(" & cgtypeToText[to] & "*) & " & NameT(self.temp_vars[self.op_index].name) & ")");
+      cast := NEW(Expr_t, left := s0, c_unop_text := " /*LH1*/ (" & s0.CText() & ",*(" & cgtypeToText[to] & "*) & " & NameT(self.temp_vars[self.op_index].name) & ")");
     ELSE
       (* But usually we want to cast, preserving the value in some form.
          (to_type)(from_expr)
