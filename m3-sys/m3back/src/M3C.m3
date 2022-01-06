@@ -2494,6 +2494,7 @@ CONST Prefix = ARRAY OF TEXT {
 "#pragma warning(disable:4100) /* unused parameter */",
 "#pragma warning(disable:4115) /* named type definition in parentheses */",
 "#pragma warning(disable:4127) /* conditional expression is constant */",
+"#pragma warning(disable:4146) /* unary minus operator applied to unsigned type, result still unsigned */",
 "#pragma warning(disable:4201) /* nonstandard extension: nameless struct/union */",
 "#pragma warning(disable:4214) /* nonstandard extension: bitfield other than int */",
 "#pragma warning(disable:4209) /* nonstandard extension: benign re-typedef */",
