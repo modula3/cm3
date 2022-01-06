@@ -2478,14 +2478,6 @@ CONST Prefix = ARRAY OF TEXT {
 "#define m3_check_range(T, value, low, high) (((T)(value)) < ((T)(low)) || ((T)(high)) < ((T)(value)))",
 "#define m3_xor(T, x, y) (((T)(x)) ^ ((T)(y)))",
 
-(* Helper needed by `loophole` because m3front does not guarantee that
- * `u` will be an rvalue.
- * Class vs. typename, C-style cast vs. reinterpret_cast to cater
- * to older compilers. (The main value of targeting C++ instead of C
- * is portable optimized exception handling.)
- *)
-"template<class T, class U> inline T m3_loophole(U u) { return *(T*)&u; }",
-
 "#ifdef _MSC_VER",
 "#define _CRT_SECURE_NO_DEPRECATE 1",
 "#define _CRT_NONSTDC_NO_DEPRECATE 1",
@@ -4849,6 +4841,7 @@ OVERRIDES
     end_block := Locals_end_block;       (* FUTURE: for unions in frame struct *)
     pop_static_link := Locals_pop_static_link;  (* pop_static_link is needed because it calls declare_temp *)
 
+    loophole := AllocateTemps_loophole;
     check_lo := AllocateTemps_check_lo;
     check_hi := AllocateTemps_check_hi;
     check_index := AllocateTemps_check_index;
@@ -4916,6 +4909,16 @@ BEGIN
     x.comment("AllocateTemps_check_nil");
     AllocateTemps_common(self, CGType.Addr);
 END AllocateTemps_check_nil;
+
+PROCEDURE AllocateTemps_loophole(self: AllocateTemps_t; from: ZType; to: ZType) =
+VAR x := self.self;
+BEGIN
+    x.comment("AllocateTemps_loophole");
+    IF Target.FloatType[to] # Target.FloatType[from] AND CG_Size[to] = CG_Size[from]
+    THEN
+      AllocateTemps_common(self, from);
+    END;
+END AllocateTemps_loophole;
 
 PROCEDURE AllocateTemps_check_lo(self: AllocateTemps_t; type: IType; <*UNUSED*>READONLY i: Target.Int; <*UNUSED*>code: RuntimeError) =
 VAR x := self.self;
@@ -6481,10 +6484,32 @@ BEGIN
     push(self, out_ztype, expr);
 END load;
 
-PROCEDURE store_helper(self: T; in: TEXT; in_ztype: ZType; out_address: TEXT; out_offset: INTEGER; out_mtype: MType) =
+PROCEDURE eval (self: T) =
+BEGIN
+  print (self, get (self).CText () & ";\n");
+  pop (self);
+END eval;
+
+PROCEDURE store_helper (self: T; in: TEXT; in_ztype: ZType; out_address: TEXT; out_offset: INTEGER; out_mtype: MType; var: Var_t := NIL) =
 BEGIN
     <* ASSERT CG_Bytes[in_ztype] >= CG_Bytes[out_mtype] *>
-    print(self, "(*(" & cgtypeToText[out_mtype] & "*)" & address_plus_offset(out_address, out_offset).CText() & ")=(" & cgtypeToText[in_ztype] & ")(" & in & ");\n");
+    <* ASSERT (var = NIL) # (out_address = NIL) *>
+
+    (* casts are needed because cgtype is too low level, we have different
+       pointer types, still fewer casts should be ok *)
+
+    IF var # NIL THEN
+      out_address := follow_static_link(self.current_proc, var) & NameT(var.name);
+(*
+      IF in_ztype = out_mtype AND in_ztype = var.cgtype AND out_offset = 0 THEN
+        push(self, out_mtype, CTextToExpr ("((" & out_address & ")=(" & in & "))"));
+        RETURN;
+      END;
+*)
+      out_address := "&" & out_address; (* TODO: reduce address of *)
+    END;
+    (* TODO: less casting, i.e. if types equal but e.g. offset # 0 *)
+    push(self, out_mtype, CTextToExpr ("((*(" & cgtypeToText[out_mtype] & "*)" & address_plus_offset(out_address, out_offset).CText() & ")=(" & cgtypeToText[in_ztype] & ")(" & in & "))"));
 END store_helper;
 
 PROCEDURE store(self: T; v: M3CG.Var; offset: ByteOffset; ztype: ZType; mtype: MType) =
@@ -6501,7 +6526,8 @@ BEGIN
       self.comment("store");
     END;
     pop(self);
-    store_helper(self, s0.CText(), ztype, "&" & follow_static_link(self.current_proc, var) & NameT(var.name), offset, mtype);
+    store_helper(self, s0.CText(), ztype, NIL, offset, mtype, var);
+    eval (self);
 END store;
 
 PROCEDURE load_address(self: T; v: M3CG.Var; offset: ByteOffset) =
@@ -6565,6 +6591,7 @@ BEGIN
 
     pop(self, 2);
     store_helper(self, s0.CText(), ztype, s1.CText(), offset, mtype);
+    eval (self);
 END store_indirect;
 
 (*-------------------------------------------------------------- literals ---*)
@@ -7344,7 +7371,8 @@ PROCEDURE loophole(self: T; from: ZType; to: ZType) =
      the back ends, which will probably be ambiguous, calling for
      further design decisions. *)
   VAR
-    cast, s0: Expr_t;
+    cast: Expr_t;
+    s0 := get(self);
   BEGIN
     (* As noted in the documentation from M3CG_Ops, this is a
     general-purpose conversion routine having little to do with the
@@ -7362,9 +7390,6 @@ PROCEDURE loophole(self: T; from: ZType; to: ZType) =
 
     self.comment("loophole");
 
-    s0 := get(self);
-    pop(self);
-
     IF
       Target.FloatType[to] # Target.FloatType[from] AND
       CG_Size[to] = CG_Size[from]
@@ -7373,21 +7398,23 @@ PROCEDURE loophole(self: T; from: ZType; to: ZType) =
       both real types, and each have the same number of bits, then
       this is the special case where we're actually implementing a
       small part of `LOOPHOLE`.
+      This is called in an expression context.
 
-      We would like to implement this simply as "*(to* )&from", but
-      the frontend does not allocate a temporary for this conversion,
-      and the source cannot be relied upon to be an lvalue.
-
-      Further, because this is called in an expression context, we
-      can't allocate a temporary here, so instead we rely on a helper
-      function to perform the conversion. *)
-      cast := NEW(Expr_t, c_text := "m3_loophole<" & cgtypeToText[to] & ">(" & s0.CText() & ")")
-
+           from_type from_temp;                                          // earlier
+           C++: ( *( to_type* )&(from_temp = (from_expr)))
+           C  : ((from_temp = (from_expr)), *(( to_type* )&from_temp))
+      *)
+      store_helper (self, s0.CText(), from, NIL, 0, from, self.temp_vars[self.op_index]);
+      s0 := get(self);
+      pop (self);
+      cast := NEW(Expr_t, c_unop_text := " /*LH1*/ (" & s0.CText() & ",*(" & cgtypeToText[to] & "*) & " & NameT(self.temp_vars[self.op_index].name) & ")");
     ELSE
-      (* But usually we want to cast, preserving the value in some form. *)
-      cast := NEW(Expr_t, left := s0, c_unop_text := "(" & cgtypeToText[to] & ")")
+      (* But usually we want to cast, preserving the value in some form.
+         (to_type)(from_expr)
+      *)
+      cast := NEW(Expr_t, left := s0, c_unop_text := " /*LH2*/ (" & cgtypeToText[to] & ")");
     END;
-
+    pop(self);
     push(self, to, cast)
   END loophole;
 
@@ -7957,6 +7984,7 @@ BEGIN
       self.comment("store_ordered => store_helper");
     END;
     store_helper(self, s0.CText(), ztype, s1.CText(), 0, mtype);
+    eval (self);
 END store_ordered;
 
 PROCEDURE load_ordered(self: T; mtype: MType; ztype: ZType; <*UNUSED*>order: MemoryOrder) =
