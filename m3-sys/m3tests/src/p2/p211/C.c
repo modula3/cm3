@@ -100,7 +100,7 @@ void Check(unsigned Type, void* Float, void* Text)
             return;
         }
     }
-    printf("string not found %s\n", (Type ? "double" : "float", String));
+    printf("%s string not found %s\n", Type ? "double" : "float", String);
     exit(EXIT_FAILURE);
 }
 
