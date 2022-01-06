@@ -498,8 +498,12 @@ X(F_GETFL) /* Get fd status flags */
 X(F_SETFL) /* Set fd status flags */
 X(F_DUPFD)  /* Duplicate fd */
 X(F_GETFD)  /* Get close-on-exec flag */
-X(F_GETOWN) /* Set owner */
-X(F_SETOWN) /* Get owner */
+#ifdef F_GETOWN // e.g. Not defined on Haiku and not used in cm3 tree.
+X(F_GETOWN)     // Set owner
+#endif          //
+#ifdef F_SETOWN // e.g. Not defined on Haiku and not used in cm3 tree.
+X(F_SETOWN)     // Get owner
+#endif          //
 X(F_GETLK)  /* Get file lock */
 X(F_SETLK)  /* Set file lock */
 X(F_SETLKW) /* Set file lock and wait */
