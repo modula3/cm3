@@ -1130,31 +1130,23 @@ def Boot():
         CCompilerFlags = " -g -pthread -x cxx -c99 -fprm d "
         #CCompiler = "g++"
         #CCompilerFlags = " -g -pthread -mfp-rounding-mode=d "
-    else:
-        # gcc and other platforms
+    elif nt:
+        CCompiler = "cl"
+    else: # gcc and other platforms
         CCompiler = {
             "SOLgnu" : "/usr/sfw/bin/g++",
             "AMD64_MINGW"   : "x86_64-w64-mingw32-g++",
-            "AMD64_NT"      : "cl",
             }.get(Config) or "g++"
 
         # For now, bootstrap does not build any shared libraries and -fPIC is not needed.
         # -fPIC breaks Interix and is not needed on Cygwin/Mingw.
-        CCompilerFlags = {
-            "I386_INTERIX"  : " -g ", # gcc -fPIC generates incorrect code on Interix
-            "AMD64_MINGW"   : " -g ", # No need for -pthread
-            #"AMD64_NT"      : " -Zi -MD -Gy ",
-            "AMD64_NT"      : " -Zi -Gy ", # hack some problem with exception handling and alignment otherwise
-            "IA64_HPUX32"   : " -g ", # -pthread is not allowed
-            "IA64_HPUX64"   : " -g ", # -pthread is not allowed
-            }.get(Config) or " -pthread -g "
-
-    CCompilerOut = {
-        "AMD64_NT"      : "-Fo./",
-        "I386_NT"       : "-Fo./",
-        "ARM32_NT"      : "-Fo./",
-        "ARM64_NT"      : "-Fo./",
-        }.get(Config) or " -o $@ "
+        if not nt:
+            CCompilerFlags = {
+                "I386_INTERIX"  : " -g ", # gcc -fPIC generates incorrect code on Interix
+                "AMD64_MINGW"   : " -g ", # No need for -pthread
+                "IA64_HPUX32"   : " -g ", # -pthread is not allowed
+                "IA64_HPUX64"   : " -g ", # -pthread is not allowed
+                }.get(Config) or " -pthread -g "
 
     CCompilerFlags = CCompilerFlags + ({
         "AMD64_LINUX"     : " -m64 ",
@@ -1214,8 +1206,11 @@ def Boot():
     elif interix:
         Link = Link + " -lm -pthread "
     elif nt:
+        CCompilerFlags = " -Z7 -MD -Gy -O2 -GL "
         Link = "link /incremental:no /debug /pdb:$(@R).pdb "
         Link = Link + " user32.lib kernel32.lib ws2_32.lib comctl32.lib gdi32.lib advapi32.lib netapi32.lib iphlpapi.lib "
+        Link = Link + " -delayload:gdi32.dll -delayload:user32.dll -delayload:iphlpapi.dll -delayload:advapi32.dll -delayload:ws2_32.dll "
+        Link = Link + " delayimp.lib -opt:ref,icf "
     elif bsd or cygwin or linux:
         Link = Link  +  " -lm -pthread " # TODO: combine with next?
     else:
@@ -1309,12 +1304,13 @@ def Boot():
                 VmsMake.write("$ " + Compile + " " + a + "\n")
             VmsLink.write(Object + "/SELECTIVE_SEARCH\n")
 
-    colon = [":", "::"][nt] # double colon batches and is much faster
-
-    # write inference rules: .c => .o, .c => .obj, .cpp => .o, .cpp => .obj
+    # write inference rules: {c,cpp} => {o,obj}
     for c in ["c", "cpp"]:
-        for o in ["o", "obj"]:
-            Makefile.write("." + c + "." + o + colon + NL + "\t$(Compile) " + CCompilerOut + " $<" + NL2)
+        if nt:
+            # double colon batches and is much faster, requires circa Visual C++ 5.0 or newer
+            Makefile.write("." + c + ".obj::\n\t$(Compile) @<<\n$<\n<<\n\n")
+        else:
+            Makefile.write("." + c + ".o:\n\t$(Compile) -o $@ $<\n\n")
 
     Makefile.write("OBJECTS=")
     Objects = ObjectsExceptMain.keys()
