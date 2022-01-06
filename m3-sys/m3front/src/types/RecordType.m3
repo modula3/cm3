@@ -169,7 +169,7 @@ PROCEDURE Check (p: P) =
     p.info.min_size  := min_size;
     p.info.alignment := p.align;
     p.info.mem_type  := CG.Type.Struct;
-    p.info.stk_type  := CG.Type.Addr;
+    p.info.stk_type  := CG.Type.Struct;
     p.info.class     := Type.Class.Record;
   END Check;
 
