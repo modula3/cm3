@@ -112,6 +112,6 @@ FROM Ctypes IMPORT const_int;
 <*EXTERNAL "Uerror__EWOULDBLOCK"*>   VAR EWOULDBLOCK: const_int;
 
 CONST
-  Max = 255; (* approx, verified to be adequate in Uconstants.c *)
+  Max = 255; (* Just an arbitrary number. See Uconstants.c *)
 
 END Uerror.

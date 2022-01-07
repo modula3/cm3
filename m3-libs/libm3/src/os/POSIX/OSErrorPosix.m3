@@ -11,14 +11,14 @@ IMPORT Atom, AtomList, Cerrno, Fmt, OSError, Text, Uerror;
 VAR cache := ARRAY [0..Uerror.Max] OF Atom.T {NIL, ..};
 (* The table is initialized lazily. *)
 
-PROCEDURE NewAtom (n: CARDINAL): Atom.T =
+PROCEDURE NewAtom (n: INTEGER): Atom.T =
   BEGIN
     RETURN Atom.FromText("errno=" & Fmt.Int(n));
   END NewAtom;
 
-PROCEDURE ErrnoAtom(n: CARDINAL): Atom.T =
+PROCEDURE ErrnoAtom(n: INTEGER): Atom.T =
   BEGIN
-    IF (n < NUMBER (cache)) THEN
+    IF n >= 0 AND n < NUMBER (cache) THEN
       IF cache[n] = NIL THEN cache[n] := NewAtom(n) END;
       RETURN cache[n]
     ELSE
@@ -28,8 +28,9 @@ PROCEDURE ErrnoAtom(n: CARDINAL): Atom.T =
 
 EXCEPTION CheckedRuntimeError; <*FATAL CheckedRuntimeError*>
 
-PROCEDURE AtomToErrno(a: Atom.T): CARDINAL =
+PROCEDURE AtomToErrno(a: Atom.T): INTEGER =
   VAR t := Atom.ToText(a); n := 0; c: CHAR;
+      sign := 1;
   BEGIN
     IF NOT Text.Equal(Text.Sub(t, 0, 6), "errno=") THEN
       RAISE CheckedRuntimeError
@@ -38,11 +39,13 @@ PROCEDURE AtomToErrno(a: Atom.T): CARDINAL =
       c := Text.GetChar(t, i);
       IF '0' <= c AND c <= '9' THEN
         n := n * 10 + (ORD(c) - ORD('0'))
+      ELSIF c = '-' AND sign = 1 THEN
+        sign := -1;
       ELSE
         RAISE CheckedRuntimeError
       END
     END;
-    RETURN n
+    RETURN n * sign
   END AtomToErrno;
 
 PROCEDURE Raise0(errno: INTEGER) RAISES {OSError.E} =

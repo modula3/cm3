@@ -39,27 +39,26 @@ extern "C" {
 // Check that Uerror.Max=255 is enough; if you get an error here, raise it in Uerror.i3 and here.
 //
 // FreeBSD (12.2/amd64) compiling with clang++ has some numbers between 9000 and 10000.
-// Skip these. The actual user of Uerror.Max is ok with this.
-//
 // HP-UX does not quite fit in historical 248 so raised to 255.
+// Haiku has large and/or negative values.
 //
 #define M3_UERROR_MAX 255
 
 #ifdef _LIBCPP_ERRNO_H // e.g. __cplusplus && __clang__ && __FreeBSD__
 #if ENODATA > 9900 && ENODATA < 9999
-#undef ENODATA
+//#undef ENODATA
 #endif
 
 #if ENOSR > 9900 && ENOSR < 9999
-#undef ENOSR
+//#undef ENOSR
 #endif
 
 #if ENOSTR > 9900 && ENOSTR < 9999
-#undef ENOSTR
+//#undef ENOSTR
 #endif
 
 #if ETIME > 9900 && ETIME < 9999
-#undef ETIME
+//#undef ETIME
 #endif
 #endif // FreeBSD/clang++
 
@@ -74,7 +73,11 @@ extern "C" {
 //typedef int M3UerrorCheckMax[M3_UERROR_MAX - sizeof(M3UerrorCheckMax_t)];
 
 #undef X
-#define X(x) M3_STATIC_ASSERT (x < M3_UERROR_MAX); EXTERN_CONST int Uerror__##x = x;
+#if defined(__HAIKU__) || defined(_LIBCPP_ERRNO_H) // _LIBCPP_ERRNO_H e.g. __cplusplus && __clang__ && __FreeBSD__
+#define X(x) EXTERN_CONST int Uerror__##x = x;
+#else
+#define X(x) /* M3_STATIC_ASSERT (x < M3_UERROR_MAX); */ EXTERN_CONST int Uerror__##x = x;
+#endif
 
 #ifndef _WIN32
 /* These do exist but

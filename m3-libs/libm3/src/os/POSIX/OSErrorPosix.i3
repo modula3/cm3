@@ -9,7 +9,7 @@ INTERFACE OSErrorPosix;
 
 IMPORT Atom, OSError;
 
-PROCEDURE ErrnoAtom(n: CARDINAL): Atom.T;
+PROCEDURE ErrnoAtom(n: INTEGER): Atom.T;
 (* Return an atom for "errno" value "n". *)
 
 PROCEDURE Raise() RAISES {OSError.E};
@@ -18,7 +18,7 @@ PROCEDURE Raise() RAISES {OSError.E};
 PROCEDURE Raise0(errno: INTEGER) RAISES {OSError.E};
 (* == RAISE OSError.E(AtomList.List1(ErrnoAtom(errno))) *)
 
-PROCEDURE AtomToErrno(a: Atom.T): CARDINAL;
+PROCEDURE AtomToErrno(a: Atom.T): INTEGER;
 (* Return "n" such that "ErrnoAtom(n) = a", or cause a checked runtime
    error. *)
 

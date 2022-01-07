@@ -20,7 +20,7 @@ FROM Ctypes IMPORT char_star, int, long;
 (* *)
 
 TYPE
-  EC = CARDINAL;
+  EC = INTEGER;
 
 TYPE
   ErrorClass = {LookupError, ProtectionError, OtherError};
