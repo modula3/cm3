@@ -1912,7 +1912,6 @@ CONST IntegerToTypeid = SignExtend32;
 CONST UID_INTEGER = 16_195C2A74; (* INTEGER *)
 CONST UID_LONGINT = 16_05562176; (* LONGINT *)
 VAR UID_WORD := IntegerToTypeid(16_97E237E2); (* CARDINAL *)
-(*VAR UID_LONGWORD := IntegerToTypeid(16_9CED36E7); LONGCARD *)
 CONST UID_REEL = 16_48E16572; (* REAL *)
 VAR UID_LREEL := IntegerToTypeid(16_94FE32F6); (* LONGREAL *)
 VAR UID_XREEL := IntegerToTypeid(16_9EE024E3); (* EXTENDED *)
@@ -1925,27 +1924,7 @@ VAR UID_UNTRACED_ROOT := IntegerToTypeid(16_898EA789); (* UNTRACED ROOT *)
 VAR UID_ROOT := IntegerToTypeid(16_9D8FB489); (* ROOT *)
 CONST UID_REFANY = 16_1C1C45E6; (* REFANY *)
 CONST UID_ADDR = 16_08402063; (* ADDRESS *)
-(*VAR UID_RANGE_0_31 := 16_2DA6581D; [0..31] *)
-(*VAR UID_RANGE_0_63 := 16_2FA3581D; [0..63] *)
-VAR UID_PROC1 := IntegerToTypeid(16_9C9DE465); (* PROCEDURE (x, y: INTEGER): INTEGER *)
-CONST UID_PROC2 = 16_20AD399F; (* PROCEDURE (x, y: INTEGER): BOOLEAN *)
-(*CONST UID_PROC3 = 16_3CE4D13B;*) (* PROCEDURE (x: INTEGER): INTEGER *)
-VAR UID_PROC4 :=  IntegerToTypeid(16_FA03E372); (* PROCEDURE (x, n: INTEGER): INTEGER *)
-CONST UID_PROC5 = 16_509E4C68; (* PROCEDURE (x: INTEGER;  n: [0..31]): INTEGER *)
-VAR UID_PROC6 := IntegerToTypeid(16_DC1B3625); (* PROCEDURE (x: INTEGER;  n: [0..63]): INTEGER *)
-VAR UID_PROC7 := IntegerToTypeid(16_EE17DF2C); (* PROCEDURE (x: INTEGER;  i, n: CARDINAL): INTEGER *)
-VAR UID_PROC8 := IntegerToTypeid(16_B740EFD0); (* PROCEDURE (x, y: INTEGER;  i, n: CARDINAL): INTEGER *)
 CONST UID_NULL = 16_48EC756E; (* NULL *) (* Occurs in elego/graphicutils/src/RsrcFilter.m3 *)
-
-(* Ctypes.i3.c suggests:
-CONST UID_INT8   = 16_66A2A904;
-CONST UID_INT16  = 16_7300E1E8;
- VAR UID_INT32  := IntegerToTypeid(16_ADC6066D);
- VAR UID_INT64  := IntegerToTypeid(16_839F750E);
-CONST UID_UINT8  = 16_B5B30AA;
- VAR UID_UINT16 := IntegerToTypeid(16_A4B285DE);
-CONST UID_UINT32 = 16_6FA2E87D; only on 64bit system, else use UID_INT32 or UID_WORD
-*)
 
 TYPE ExprType = {
     Invalid,
@@ -2986,6 +2965,10 @@ BEGIN
     type.base_text := "INTEGER"; (* more readable output (fewer hashes) *)
     type.text := "INTEGER"; (* more readable output (fewer hashes) *)
 
+    (* TODO: We do not have to define UID_WORD ourselves. m3front describes
+     * it as a subrange of INTEGER. But we rename it or readability,
+     * and maybe we have the signedness wrong.
+     *)
     type := NEW (Integer_t, class := "Integer_t", self := self, state := Type_State.CanBeDefined, cgtype := Target.Word.cg_type, typeid := UID_WORD);
     self.Type_Init (type);
     EVAL declare_typename_no_replace (self, type.typeid, M3ID.Add ("WORD_T")); (* TODO rename this? *)
@@ -3021,7 +3004,10 @@ BEGIN
     type.base_text := "double"; (* more readable output (fewer hashes) *)
     type.text := "double"; (* more readable output (fewer hashes) *)
 
-(* Enum_t? *)
+    (* TODO: We do not have to predeclare BOOLEAN, m3front provides it.
+     * But after it is declared, we should find it and rename it.
+     * We might need to rename the members, or do not let them be defined.
+     *)
     type := NEW (Integer_t, class := "Integer_t", self := self, state := Type_State.CanBeDefined, cgtype := Target.Word8.cg_type, typeid := UID_BOOLEAN (* ,max := IntToTarget(self, 1), *));
     self.Type_Init (type);
     EVAL declare_typename_replace (self, type.typeid, M3ID.Add ("BOOLEAN"));
@@ -3029,6 +3015,10 @@ BEGIN
     type.base_text := "BOOLEAN"; (* more readable output (fewer hashes) *)
     type.text := "BOOLEAN"; (* more readable output (fewer hashes) *)
 
+    (* TODO: We do not have to predeclare CHAR, m3front provides it.
+     * We should tolerate enums that get no elements defined.
+     * But after it is declared, we should find it and rename it.
+     *)
     type := NEW(Integer_t, class := "Integer_t", self := self, state := Type_State.CanBeDefined, cgtype := Target.Word8.cg_type, typeid := UID_CHAR (* ,max := IntToTarget(self, 16_FF), *));
     self.Type_Init (type);
     EVAL declare_typename_replace (self, type.typeid, M3ID.Add("UCHAR"));
@@ -3052,33 +3042,25 @@ BEGIN
       END;
     END;
 
-(* Enum_t? *)
+    (* TODO: We do not have to predeclare WIDECHAR, m3front provides it.
+     * We should tolerate enums that get no elements defined.
+     * But after it is declared, we should find it and rename it.
+     *)
     type := NEW (Integer_t, class := "Integer_t", self := self, state := Type_State.CanBeDefined, cgtype := widechar_target_type,
                  typeid := UID_WIDECHAR, (* max := IntToTarget(self, widechar_last), *) text := "WIDECHAR");
     self.Type_Init (type);
-
-    (* self.declareTypes.declare_subrange(UID_RANGE_0_31, UID_INTEGER, TInt.Zero, IntToTarget(self, 31), Target.Integer.size); *)
-    (* self.declareTypes.declare_subrange(UID_RANGE_0_63, UID_INTEGER, TInt.Zero, IntToTarget(self, 63), Target.Integer.size); *)
 
     TYPE AddressTypeInit_t = RECORD
         typeid: TypeUID := 0;
         text: TEXT := NIL;
     END;
-    VAR addressTypes := ARRAY [0..13] OF AddressTypeInit_t {
+    VAR addressTypes := ARRAY [0..6] OF AddressTypeInit_t {
         AddressTypeInit_t {UID_MUTEX, "MUTEX"},
         AddressTypeInit_t {UID_TEXT, "TEXT"},
         AddressTypeInit_t {UID_ROOT, "ROOT"},
         AddressTypeInit_t {UID_UNTRACED_ROOT, "UNTRACED_ROOT"},
         AddressTypeInit_t {UID_REFANY, "REFANY"},
         AddressTypeInit_t {UID_ADDR, Text_address},
-        AddressTypeInit_t {UID_PROC1, "PROC1"},
-        AddressTypeInit_t {UID_PROC2, "PROC2"},
-        (*AddressTypeInit_t {UID_PROC3, "PROC3"},*)
-        AddressTypeInit_t {UID_PROC4, "PROC4"},
-        AddressTypeInit_t {UID_PROC5, "PROC5"},
-        AddressTypeInit_t {UID_PROC6, "PROC6"},
-        AddressTypeInit_t {UID_PROC7, "PROC7"},
-        AddressTypeInit_t {UID_PROC8, "PROC8"},
         AddressTypeInit_t {UID_NULL, "M3_NULL_T"}
     };
     BEGIN
