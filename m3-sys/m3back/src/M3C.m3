@@ -39,7 +39,6 @@ VAR CaseDefaultAssertFalse := FALSE;
    C and the error messages reference C line numbers *)
   CONST output_line_directives = TRUE;
   CONST output_extra_newlines = FALSE;
-  CONST inline_extract = FALSE;
 
 (* ztype: zero extended type -- a "larger" type that is a multiple of 32 bits in size
  *                              a type to store in registers, a type
@@ -4553,10 +4552,10 @@ TYPE HelperFunctions_t = M3CG_DoNothing.T OBJECT
     self: T := NIL;
     data: RECORD
         pos, floor, ceil, fence,
-        set_le, set_lt, extract_inline := FALSE;
+        set_le, set_lt, extract := FALSE;
         cvt_int := ARRAY ConvertOp OF BOOLEAN{FALSE, ..};
         shift, rotate, rotate_left, rotate_right, div, mod, min, max, abs,
-        extract, insert, sign_extend, pop, check_range, xor := SET OF CGType{};
+        insert, sign_extend, pop, check_range, xor := SET OF CGType{};
         compare := ARRAY CompareOp OF SET OF CGType{ SET OF CGType{}, .. };
     END;
 METHODS
@@ -4776,15 +4775,10 @@ BEGIN
 END HelperFunctions_rotate_right;
 
 PROCEDURE HelperFunctions_extract(self: HelperFunctions_t; type: IType; sign_extend: BOOLEAN) =
-CONST text = "#define m3_extract_T(T) static T __stdcall m3_extract_##T(T value,WORD_T offset,WORD_T count){return((value>>offset)&~(((~(T)0))<<count));}";
-CONST text_inline = "#define m3_extract(T, value, offset, count) ((((T)value)>>((WORD_T)offset))&~(((~(T)0))<<((WORD_T)count)))";
+CONST text = "#define m3_extract(T, value, offset, count) ((((T)(value))>>((WORD_T)(offset)))&~(((~(T)0))<<((WORD_T)(count))))";
 CONST text_sign_extend = "#define m3_sign_extend_T(T) static T __stdcall m3_sign_extend_##T(T value,WORD_T count){return(value|((value&(((T)-1)<<(count-1)))?(((T)-1)<<(count-1)):0));}";
 BEGIN
-    IF inline_extract THEN
-        HelperFunctions_helper_with_boolean(self, self.data.extract_inline, text_inline);
-    ELSE
-        HelperFunctions_helper_with_type(self, "extract", typeToUnsigned[type], self.data.extract, text);
-    END;
+    HelperFunctions_helper_with_boolean(self, self.data.extract, text);
     IF sign_extend THEN
         HelperFunctions_helper_with_type(self, "sign_extend", type, self.data.sign_extend, text_sign_extend);
     END;
@@ -7181,11 +7175,7 @@ BEGIN
     END;
     <* ASSERT sign_extend = FALSE *>
     pop(self, 3);
-    IF inline_extract THEN
-        push(self, type, CTextToExpr("m3_extract(\n " & cgtypeToText[typeToUnsigned[type]] & ",\n " & value.CText() & ",\n " & offset.CText() & ",\n " & count.CText() & ")"));
-    ELSE
-        push(self, type, CTextToExpr("m3_extract_" & cgtypeToText[typeToUnsigned[type]] & "(\n " & value.CText() & ",\n " & offset.CText() & ",\n " & count.CText() & ")"));
-    END;
+    push(self, type, CTextToExpr("m3_extract(\n " & cgtypeToText[typeToUnsigned[type]] & ",\n " & value.CText() & ",\n " & offset.CText() & ",\n " & count.CText() & ")"));
 END extract;
 
 PROCEDURE extract_n(self: T; type: IType; sign_extend: BOOLEAN; count: CARDINAL) =
