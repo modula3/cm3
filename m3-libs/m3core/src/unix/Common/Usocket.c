@@ -114,9 +114,9 @@ M3_STATIC_ASSERT(M3_FIELD_SIZE(m3_sockaddr_in6, scope_id) == M3_FIELD_SIZE(socka
 
 #ifdef AF_UNIX
 M3_STATIC_ASSERT(M3_FIELD_SIZE(m3_sockaddr_un, family) >= M3_FIELD_SIZE(sockaddr_un, sun_family));
-// m3 path must be larger than native; we always copy native size
-M3_STATIC_ASSERT(M3_FIELD_SIZE(m3_sockaddr_un, path) > M3_FIELD_SIZE(sockaddr_un, sun_path));
-// sun_path is expected to be an array not a pointer
+// m3 path must be larger than or the same size as native; we always copy native size
+M3_STATIC_ASSERT(M3_FIELD_SIZE(m3_sockaddr_un, path) >= M3_FIELD_SIZE(sockaddr_un, sun_path));
+// sun_path must be an array not a pointer because we copy its size
 M3_STATIC_ASSERT(4 != M3_FIELD_SIZE(sockaddr_un, sun_path));
 M3_STATIC_ASSERT(8 != M3_FIELD_SIZE(sockaddr_un, sun_path));
 M3_STATIC_ASSERT(sizeof(void*) != M3_FIELD_SIZE(sockaddr_un, sun_path));
@@ -186,7 +186,7 @@ SockAddrM3ToNativeUn(const m3_sockaddr_un* m3, sockaddr_un* native)
 {
     M3_STATIC_ASSERT(sizeof(native->sun_path) != 4);
     M3_STATIC_ASSERT(sizeof(native->sun_path) != 8);
-    M3_STATIC_ASSERT(sizeof(native->sun_path) < sizeof(m3->path));
+    M3_STATIC_ASSERT(sizeof(native->sun_path) <= sizeof(m3->path));
     assert(m3 != (void*)native);
     native->sun_family = m3->family;
     // TODO ensure it fits without truncation
@@ -201,7 +201,7 @@ SockAddrNativeToM3Un(const sockaddr_un* native, m3_sockaddr_un* m3)
 {
     M3_STATIC_ASSERT(sizeof(native->sun_path) != 4);
     M3_STATIC_ASSERT(sizeof(native->sun_path) != 8);
-    M3_STATIC_ASSERT(sizeof(native->sun_path) < sizeof(m3->path));
+    M3_STATIC_ASSERT(sizeof(native->sun_path) <= sizeof(m3->path));
     assert(m3 != (void*)native);
     m3->family = native->sun_family;
     assert(strlen(native->sun_path) < sizeof(m3->path));
