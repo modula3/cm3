@@ -28,14 +28,6 @@
 extern "C" {
 #endif
 
-#if M3_HAS_VISIBILITY
-#ifdef __APPLE__
-#pragma GCC visibility push(default)
-#else
-#pragma GCC visibility push(protected)
-#endif
-#endif
-
 // Check that Uerror.Max=255 is enough; if you get an error here, raise it in Uerror.i3 and here.
 //
 // FreeBSD (12.2/amd64) compiling with clang++ has some numbers between 9000 and 10000.
@@ -1745,8 +1737,4 @@ X(XTABS)
 
 #ifdef __cplusplus
 }
-#endif
-
-#if M3_HAS_VISIBILITY
-#pragma GCC visibility pop
 #endif

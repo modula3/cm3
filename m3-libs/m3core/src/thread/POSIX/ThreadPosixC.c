@@ -44,10 +44,6 @@
 #endif
 #include <ucontext.h>
 
-#if M3_HAS_VISIBILITY
-#pragma GCC visibility push(hidden)
-#endif
-
 M3_EXTERNC_BEGIN
 
 typedef void (*SignalHandler1)(int signo);
@@ -350,7 +346,3 @@ ThreadPosix__SetVirtualTimer(void)
 }
 
 M3_EXTERNC_END
-
-#if M3_HAS_VISIBILITY
-#pragma GCC visibility pop
-#endif

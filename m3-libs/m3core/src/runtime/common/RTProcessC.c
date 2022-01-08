@@ -25,7 +25,6 @@ typedef struct _vector_t {
 #define fork_handlers RTProcess__fork_handlers
 static vector_t fork_handlers;
 
-M3_DLL_EXPORT
 INTEGER
 __cdecl
 RTProcess__RegisterForkHandlers(ForkHandler prepare,
@@ -75,7 +74,6 @@ Exit:
 
 #else /* M3_USER_THREADS */
 
-M3_DLL_EXPORT
 INTEGER
 __cdecl
 RTProcess__RegisterForkHandlers(ForkHandler prepare,
@@ -113,7 +111,6 @@ void
 __cdecl
 ThreadPThread__AtForkPrepareOutsideFork(void);
 
-M3_DLL_EXPORT
 INTEGER
 __cdecl
 RTProcess__Fork(void)

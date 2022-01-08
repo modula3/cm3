@@ -15,10 +15,10 @@ extern "C" {
 
 /* ntohl are sometimes macros (FreeBSD 4) so we don't use M3WRAP1 */
 
-M3_DLL_EXPORT UINT32 __cdecl Uin__ntohl(UINT32 x) { return ntohl(x); }
-M3_DLL_EXPORT UINT16 __cdecl Uin__ntohs(UINT16 x) { return ntohs(x); }
-M3_DLL_EXPORT UINT32 __cdecl Uin__htonl(UINT32 x) { return htonl(x); }
-M3_DLL_EXPORT UINT16 __cdecl Uin__htons(UINT16 x) { return htons(x); }
+UINT32 __cdecl Uin__ntohl(UINT32 x) { return ntohl(x); }
+UINT16 __cdecl Uin__ntohs(UINT16 x) { return ntohs(x); }
+UINT32 __cdecl Uin__htonl(UINT32 x) { return htonl(x); }
+UINT16 __cdecl Uin__htons(UINT16 x) { return htons(x); }
 
 #ifdef __cplusplus
 } /* extern "C" */

@@ -47,17 +47,6 @@ typedef int BOOL;
 #define TRUE 1
 #define FALSE 0
 
-// This is disabled.
-// There are warnings about inconsistencies.
-// There is not all that much code that it affects.
-// We should be more worried the m3c output than the hand written C.
-// It is not clearly worth the platform-specificity.
-#if 0 /* __GNUC__ >= 4 && !defined(__osf__) && !defined(__CYGWIN__) */
-#define M3_HAS_VISIBILITY 1
-#else
-#define M3_HAS_VISIBILITY 0
-#endif
-
 /* __DARWIN_UNIX03 defaults to 1 on older and newer headers,
  * but older headers still have context "ss" instead of "__ss"
  * and such, so we have to force 0.
@@ -99,20 +88,6 @@ typedef int BOOL;
 #define _TIME64_T
 #endif
 #endif /* osf */
-
-/* http://gcc.gnu.org/wiki/Visibility */
-/* Helpers for shared library support */
-#if M3_HAS_VISIBILITY
-#ifdef __APPLE__
-#define M3_DLL_EXPORT __attribute__ ((visibility("default")))
-#else
-#define M3_DLL_EXPORT __attribute__ ((visibility("protected")))
-#endif
-#define M3_DLL_LOCAL  __attribute__ ((visibility("hidden")))
-#else
-#define M3_DLL_EXPORT /* nothing */
-#define M3_DLL_LOCAL  /* nothing */
-#endif
 
 /* Autoconf: AC_SYS_LARGEFILE
  */
@@ -280,7 +255,7 @@ M3EXTERNC_END
 #define M3PASTE3(a, b, c) M3PASTE3_(a, b, c)
 
 #define M3WRAP(ret, m3name, cname, in, out)                                 \
-    M3EXTERNC_BEGIN M3_DLL_EXPORT ret __cdecl M3PASTE(M3MODULE, m3name) in  \
+    M3EXTERNC_BEGIN ret __cdecl M3PASTE(M3MODULE, m3name) in                \
     {                                                                       \
         ret return_value;                                                   \
         return_value = cname out;                                           \
@@ -288,7 +263,7 @@ M3EXTERNC_END
     } M3EXTERNC_END
 
 #define M3WRAP_NO_SWITCHING(ret, m3name, cname, in, out) \
-    M3EXTERNC_BEGIN M3_DLL_EXPORT ret __cdecl m3name in  \
+    M3EXTERNC_BEGIN ret __cdecl m3name in                \
     {                                                    \
         ret return_value;                                \
         Scheduler__DisableSwitching ();                  \
@@ -298,13 +273,13 @@ M3EXTERNC_END
     } M3EXTERNC_END
 
 #define M3WRAP_RETURN_VOID(m3name, cname, in, out)       \
-    M3EXTERNC_BEGIN M3_DLL_EXPORT void __cdecl m3name in \
+    M3EXTERNC_BEGIN void __cdecl m3name in               \
     {                                                    \
         cname out;                                       \
     } M3EXTERNC_END
 
 #define M3WRAP_RETURN_VOID_NO_SWITCHING(m3name, cname, in, out) \
-    M3EXTERNC_BEGIN M3_DLL_EXPORT void __cdecl m3name in        \
+    M3EXTERNC_BEGIN void __cdecl m3name in                      \
     {                                                           \
         Scheduler__DisableSwitching ();                         \
         cname out;                                              \
