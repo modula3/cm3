@@ -3,10 +3,6 @@
 #include "m3core.h"
 #endif
 
-#if M3_HAS_VISIBILITY
-#pragma GCC visibility push(hidden)
-#endif
-
 #ifdef __cplusplus
 extern "C" {
 #endif

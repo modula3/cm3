@@ -9,20 +9,12 @@
 #include <windows.h>
 #endif
 
-#if M3_HAS_VISIBILITY
-#ifdef __APPLE__
-#pragma GCC visibility push(default)
-#else
-#pragma GCC visibility push(protected)
-#endif
-#endif
-
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
-M3_DLL_EXPORT int __cdecl
+int __cdecl
 Unix__link(const char* ExistingFile, const char* NewLink)
 {
 #ifdef _WIN32
@@ -39,8 +31,4 @@ Error:
 
 #ifdef __cplusplus
 } /* extern C */
-#endif
-
-#if M3_HAS_VISIBILITY
-#pragma GCC visibility pop
 #endif

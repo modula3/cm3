@@ -299,7 +299,7 @@ Usocket__plen_out(m3_socklen_t* plen, m3c_socklen_t len)
 #define ASSERT_LEN \
     assert(len <= (1UL << 30));
 
-M3_DLL_LOCAL void __cdecl
+void __cdecl
 Usocket__Assertions(void)
 {
     /* assert that struct linger is literally { int l_onoff, l_linger },
@@ -339,7 +339,7 @@ M3WRAP2(int, listen, int, int)
 M3WRAP2(int, shutdown, int, int)
 M3WRAP3(int, socket, int, int, int)
 
-M3_DLL_EXPORT ssize_t __cdecl
+ssize_t __cdecl
 Usocket__send (int a, const void* b, size_t c, int d)
 {
     ssize_t r;
@@ -351,7 +351,7 @@ Usocket__send (int a, const void* b, size_t c, int d)
     return r;
 }
 
-M3_DLL_EXPORT ssize_t __cdecl
+ssize_t __cdecl
 Usocket__recv (int a, void* b, size_t c, int d)
 {
     ssize_t r;
@@ -404,7 +404,7 @@ Usocket__recv (int a, void* b, size_t c, int d)
     }                                                       \
     return result;
 
-M3_DLL_EXPORT int __cdecl
+int __cdecl
 Usocket__bind(int s, const M3SockAddrUnionAll* pm3_sockaddr, m3_socklen_t len)
 {
     WRAP_SOCKADDR_INPUT1
@@ -414,7 +414,7 @@ Usocket__bind(int s, const M3SockAddrUnionAll* pm3_sockaddr, m3_socklen_t len)
     WRAP_SOCKADDR_INPUT2
 }
 
-M3_DLL_EXPORT int __cdecl
+int __cdecl
 Usocket__connect(int s, const M3SockAddrUnionAll* pm3_sockaddr, m3_socklen_t len)
 {
     WRAP_SOCKADDR_INPUT1
@@ -424,7 +424,7 @@ Usocket__connect(int s, const M3SockAddrUnionAll* pm3_sockaddr, m3_socklen_t len
     WRAP_SOCKADDR_INPUT2
 }
 
-M3_DLL_EXPORT ssize_t __cdecl
+ssize_t __cdecl
 Usocket__sendto(int s, const void* msg, size_t length, int flags, const M3SockAddrUnionAll* pm3_sockaddr, m3_socklen_t len)
 {
     WRAP_SOCKADDR_INPUT1
@@ -435,7 +435,7 @@ Usocket__sendto(int s, const void* msg, size_t length, int flags, const M3SockAd
     WRAP_SOCKADDR_INPUT2
 }
 
-M3_DLL_EXPORT int __cdecl
+int __cdecl
 Usocket__setsockopt(int s, int level, int optname, const void* optval, m3_socklen_t len)
 {
     ASSERT_LEN
@@ -456,7 +456,7 @@ Usocket__setsockopt(int s, int level, int optname, const void* optval, m3_sockle
 
 /* wrap everything taking input/output m3c_socklen_t */
 
-M3_DLL_EXPORT int __cdecl
+int __cdecl
 Usocket__getpeername(int s, M3SockAddrUnionAll* pm3_sockaddr, m3_socklen_t* plen)
 {
     WRAP_SOCKADDR_OUTPUT1
@@ -466,7 +466,7 @@ Usocket__getpeername(int s, M3SockAddrUnionAll* pm3_sockaddr, m3_socklen_t* plen
     WRAP_SOCKADDR_OUTPUT2
 }
 
-M3_DLL_EXPORT int __cdecl
+int __cdecl
 Usocket__getsockname(int s, M3SockAddrUnionAll* pm3_sockaddr, m3_socklen_t* plen)
 {
     WRAP_SOCKADDR_OUTPUT1
@@ -476,7 +476,7 @@ Usocket__getsockname(int s, M3SockAddrUnionAll* pm3_sockaddr, m3_socklen_t* plen
     WRAP_SOCKADDR_OUTPUT2
 }
 
-M3_DLL_EXPORT int __cdecl
+int __cdecl
 Usocket__accept(int s, M3SockAddrUnionAll* pm3_sockaddr, m3_socklen_t* plen)
 {
     WRAP_SOCKADDR_OUTPUT1
@@ -486,7 +486,7 @@ Usocket__accept(int s, M3SockAddrUnionAll* pm3_sockaddr, m3_socklen_t* plen)
     WRAP_SOCKADDR_OUTPUT2
 }
 
-M3_DLL_EXPORT int __cdecl
+int __cdecl
 Usocket__getsockopt(int s, int level, int optname, void* optval, m3_socklen_t* plen)
 /*
 Posix says l_onoff and l_linger are int, but they aren't on Cygwin.
@@ -531,7 +531,7 @@ the same order. This is checked in Usocket__Assertions.
     }
 }
 
-M3_DLL_EXPORT ssize_t __cdecl
+ssize_t __cdecl
 Usocket__recvfrom(int s, void* buf, size_t length, int flags, M3SockAddrUnionAll* pm3_sockaddr, m3_socklen_t* plen)
 {
     WRAP_SOCKADDR_OUTPUT1
@@ -568,7 +568,6 @@ Usocket__un(
     return err;
 }
 
-M3_DLL_EXPORT
 int
 __cdecl
 Usocket_accept_un(int fd)
@@ -580,7 +579,6 @@ Usocket_accept_un(int fd)
     return accept(fd, (sockaddr*)&addr, &socklen);
 }
 
-M3_DLL_EXPORT
 int
 __cdecl
 Usocket__bind_un(
@@ -591,7 +589,6 @@ Usocket__bind_un(
     return Usocket__un(&addr, path) ? -1 : bind(fd, (sockaddr*)&addr, sizeof(addr));
 }
 
-M3_DLL_EXPORT
 int
 __cdecl
 Usocket__connect_un(

@@ -13,7 +13,6 @@ extern "C" {
  */
 M3_STATIC_ASSERT(sizeof(m3_time_t) <= sizeof(m3_time64_t));
 
-M3_DLL_EXPORT
 m3_time64_t
 __cdecl
 Utime__time(m3_time64_t* tloc)
@@ -28,7 +27,6 @@ Utime__time(m3_time64_t* tloc)
     return a;
 }
 
-M3_DLL_EXPORT
 char*
 __cdecl
 Utime__ctime(/*TODO const*/ m3_time64_t* m)
@@ -41,7 +39,6 @@ Utime__ctime(/*TODO const*/ m3_time64_t* m)
 #endif
 }
 
-M3_DLL_EXPORT
 void
 __cdecl
 Utime__tzset(void)

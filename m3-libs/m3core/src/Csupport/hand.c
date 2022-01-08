@@ -18,14 +18,6 @@
 
 #include <string.h>
 
-#if M3_HAS_VISIBILITY
-#ifdef __APPLE__
-#pragma GCC visibility push(default)
-#else
-#pragma GCC visibility push(protected)
-#endif
-#endif
-
 #ifdef __cplusplus
 extern "C"
 {
@@ -354,8 +346,4 @@ int __cdecl m3_memcmp(const void* a, const void* b, size_t n)
 
 #ifdef __cplusplus
 } /* extern "C" */
-#endif
-
-#if M3_HAS_VISIBILITY
-#pragma GCC visibility pop
 #endif

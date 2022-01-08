@@ -2,14 +2,6 @@
 #include "m3core.h"
 #endif
 
-#if M3_HAS_VISIBILITY
-#ifdef __APPLE__
-#pragma GCC visibility push(default)
-#else
-#pragma GCC visibility push(protected)
-#endif
-#endif
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -71,7 +63,6 @@ static int __cdecl m3stat_from_stat(int result, m3_stat_t* m3st, struct stat* st
     return result;
 }
 
-M3_DLL_EXPORT
 int
 __cdecl
 Ustat__stat(const char* path, m3_stat_t* m3st)
@@ -80,7 +71,6 @@ Ustat__stat(const char* path, m3_stat_t* m3st)
     return m3stat_from_stat(stat(path, &st), m3st, &st);
 }
 
-M3_DLL_EXPORT
 int
 __cdecl
 Ustat__lstat(const char* path, m3_stat_t* m3st)
@@ -89,7 +79,6 @@ Ustat__lstat(const char* path, m3_stat_t* m3st)
     return m3stat_from_stat(lstat(path, &st), m3st, &st);
 }
 
-M3_DLL_EXPORT
 int
 __cdecl
 Ustat__fstat(int fd, m3_stat_t* m3st)
@@ -107,8 +96,4 @@ M3WRAP2(int, fchflags, int, unsigned long)
 
 #ifdef __cplusplus
 } /* extern "C" */
-#endif
-
-#if M3_HAS_VISIBILITY
-#pragma GCC visibility pop
 #endif

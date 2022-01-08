@@ -9,10 +9,6 @@
 
 M3_EXTERNC_BEGIN
 
-#if M3_HAS_VISIBILITY
-#pragma GCC visibility push(hidden)
-#endif
-
 #ifndef _WIN32
 
 enum {WaitResult_Ready, WaitResult_Error, WaitResult_FDError, WaitResult_Timeout};
@@ -23,7 +19,6 @@ enum {WaitResult_Ready, WaitResult_Error, WaitResult_FDError, WaitResult_Timeout
 #define THOUSAND (1000)
 #define MILLION (1000 * 1000)
 
-M3_DLL_LOCAL
 int
 __cdecl
 ThreadInternal__Poll(int fd,
@@ -49,7 +44,6 @@ ThreadInternal__Poll(int fd,
         return WaitResult_FDError;
 }
 
-M3_DLL_LOCAL
 int
 __cdecl
 ThreadInternal__Select(int nfds,
@@ -73,7 +67,3 @@ ThreadInternal__Select(int nfds,
 #endif
 
 M3_EXTERNC_END
-
-#if M3_HAS_VISIBILITY
-#pragma GCC visibility pop
-#endif

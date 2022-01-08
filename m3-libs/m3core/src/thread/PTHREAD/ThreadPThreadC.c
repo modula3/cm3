@@ -57,10 +57,6 @@ M3_EXTERNC_BEGIN
 
 void __cdecl SignalHandler(int signo, ADDRESS context);
 
-#if M3_HAS_VISIBILITY
-#pragma GCC visibility push(hidden)
-#endif
-
 /* expected values for compat, if compat matters:
     Solaris: 17 (at least 32bit SPARC?)
     Cygwin: 19 -- er, but maybe that's wrong
@@ -658,7 +654,3 @@ BOOLEAN ThreadPThread__IA64 (void)
 }
 
 M3_EXTERNC_END
-
-#if M3_HAS_VISIBILITY
-#pragma GCC visibility pop
-#endif

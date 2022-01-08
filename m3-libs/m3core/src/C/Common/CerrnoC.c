@@ -10,7 +10,6 @@
 extern "C" {
 #endif
 
-M3_DLL_EXPORT
 int
 __cdecl
 Cerrno__GetErrno(void)
@@ -18,7 +17,6 @@ Cerrno__GetErrno(void)
     return errno;
 }
 
-M3_DLL_EXPORT
 void
 __cdecl
 Cerrno__SetErrno(int e)

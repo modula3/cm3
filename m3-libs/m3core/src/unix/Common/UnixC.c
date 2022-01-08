@@ -131,7 +131,7 @@ M3WRAP2(int, fchmod, int, m3_mode_t)
 M3WRAP3(int, mknod, const char*, m3_mode_t, m3_dev_t)
 
 #if 0 /* See RTProcess.Fork. */
-M3_DLL_EXPORT m3_pid_t __cdecl
+m3_pid_t __cdecl
 Unix__fork(void)
 {
 #ifdef __sun
@@ -150,13 +150,13 @@ Unix__fork(void)
 #endif /* vms */
 #endif /* win32 */
 
-M3_DLL_EXPORT void __cdecl
+void __cdecl
 Unix__underscore_exit(int exit_code)
 {
     _exit(exit_code);
 }
 
-M3_DLL_EXPORT void __cdecl
+void __cdecl
 Unix__exit(int i)
 {
     exit(i);
@@ -165,14 +165,14 @@ Unix__exit(int i)
 #ifdef _WIN32
 
 #if 0
-M3_DLL_EXPORT char* __cdecl
+char* __cdecl
 Unix__getcwd(char* name, size_t len)
 {
     assert(len < INT_MAX);
     return _getcwd(name, (int)len);
 }
 
-M3_DLL_EXPORT int __cdecl
+int __cdecl
 Unix__gethostname(char* name, size_t len)
 {
     assert(len < INT_MAX);
@@ -180,13 +180,13 @@ Unix__gethostname(char* name, size_t len)
 }
 #endif
 
-M3_DLL_EXPORT int __cdecl
+int __cdecl
 Unix__mkdir(const char* path, m3_mode_t mode)
 {
     return _mkdir(path);
 }
 
-M3_DLL_EXPORT int __cdecl
+int __cdecl
 UnixC__pipe (int* files)
 {
     return _pipe(files, 0, _O_BINARY);
@@ -194,13 +194,13 @@ UnixC__pipe (int* files)
 
 #if _MSC_VER >= 1000
 
-M3_DLL_EXPORT m3_off_t __cdecl
+m3_off_t __cdecl
 Unix__lseek(int fd, m3_off_t offset, int whence)
 {
     return _lseeki64(fd, offset, whence);
 }
 
-M3_DLL_EXPORT m3_off_t __cdecl
+m3_off_t __cdecl
 Unix__tell(int fd)
 {
     return _telli64(fd);
@@ -220,7 +220,7 @@ typedef struct m3_flock_t {
   INTEGER whence;
 } m3_flock_t;
 
-M3_DLL_EXPORT int __cdecl
+int __cdecl
 Unix__fcntl(int fd, INTEGER request, INTEGER m3_arg)
 /* fcntl is actually fcntl(fd, request, ...).
  * Wrapper is needed on some systems to handle varargs.
@@ -269,7 +269,7 @@ Unix__fcntl(int fd, INTEGER request, INTEGER m3_arg)
     return r;
 }
 
-M3_DLL_EXPORT int __cdecl
+int __cdecl
 Unix__ioctl(int fd, INTEGER request, ADDRESS argp)
 /* ioctl is varargs. See fcntl. */
 {
