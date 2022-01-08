@@ -173,9 +173,40 @@ typedef int BOOL;
 #endif
 #endif
 
-#if !defined(_MSC_VER) && !defined(__cdecl)
+// Explicit __cdecl supports building Windows/x86 code
+// with non-default calling convention (cl /Gz /Gr /Gv),
+// while retaining constant meaning for Modula-3 m3core and
+// m3c output. This is messy and causes many warnings on Haiku/amd64.
+//
+// Explicit __stdcall is for a few helper functions on Windows/x86.
+// This also produces warnings on Haiku/amd64 but not as many as __cdecl.
+//
+// cdecl/stdcall have essentially no meaning outside
+// of Windows/x86. They might have meaning on Windows/amd64
+// compiled with /Gv for default vector call. (Or only for certain parameter lists?)
+// Do not do that?
+// They might have meaning on Haiku/x86?
+// They are correctly placed for Haiku/gcc, for functions
+// but maybe not function pointers. The warnings are
+// that Haiku/amd64 ignores them and/or they are misplaced for function pointers.
+//
+// We should probably change the helpers to cdecl.
+// Explicit stdcall would remain in use then only for
+// imported Windows functions (unless we wrap them all as we do for Posix).
+//
+#if defined(_WIN32) && !defined(_WIN64)
+#undef __cdecl
+#undef __stdcall
 #define __cdecl /* nothing */
+#define __stdcall /* nothing */
 #endif
+// Prior definition that is good but produces many warnings on Haiku.
+//#if !defined(_MSC_VER) && !defined(__cdecl)
+//#define __cdecl /* nothing */
+//#endif
+//#if !defined(_MSC_VER) && !defined(__stdcall)
+//#define __stdcall /* nothing */
+//#endif
 
 #ifndef _MSC_VER
 #define __try /* nothing */
@@ -353,7 +384,7 @@ typedef ptrdiff_t ssize_t;
 #include <unistd.h>
 #include <pwd.h>
 #include <semaphore.h>
-#if !(defined(__OpenBSD__) || defined(__CYGWIN__) || defined(__vms))
+#if !(defined(__OpenBSD__) || defined(__CYGWIN__) || defined(__vms) || defined(__HAIKU__))
 #include <sys/ucontext.h>
 #ifndef __APPLE__
 /* OpenBSD 4.3, 4.7: ucontext.h doesn't exist, ucontext_t is in signal.h
@@ -896,6 +927,14 @@ Process__RegisterExitor(void (__cdecl*)(void));
 #endif
 #else
 #error Unknown __APPLE__ target
+#endif
+
+#elif defined(__HAIKU__)
+#ifdef __amd64
+#define GET_PC(context) ((context)->uc_mcontext.rip)
+#define M3_HOST "AMD64_HAIKU"
+#else
+#error Unsupported Haiku
 #endif
 
 #elif defined(__osf__)
