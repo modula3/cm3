@@ -6,6 +6,9 @@
 #include "m3core.h"
 #endif
 
+// Most of the (static)asserts in this file are not likely needed.
+// Strongly consider significantly trimming them.
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -32,7 +35,7 @@ struct m3_sockaddr_in
     unsigned int   addr;
     unsigned char zero[8];
 };
-M3_STATIC_ASSERT(sizeof(sockaddr_in) == 16); // if this fails, ok, remove it
+M3_STATIC_ASSERT(sizeof(sockaddr_in) >= 16); // if this fails, ok, remove it
 M3_STATIC_ASSERT(sizeof(m3_sockaddr_in) == 16);
 
 // Idealized Modula3 IPv6 socket address.
@@ -90,13 +93,15 @@ M3_STATIC_ASSERT(offsetof(sockaddr_in, sin_family) == offsetof(sockaddr_in6, sin
 M3_STATIC_ASSERT(offsetof(sockaddr_in, sin_family) == offsetof(sockaddr_un, sun_family));
 #endif
 
-// Modula-3 forms are same size as native or larger.
-// This does mean exactly the same, as Modula-3 never has "len"
+// Modula-3 forms are usually same size as native or larger.
+// This does not mean exactly the same, as Modula-3 never has "len"
 // field and native sometimes does.
-M3_STATIC_ASSERT(sizeof(m3_sockaddr_in) == sizeof(sockaddr_in));
+// Haiku sockaddr_in is larger.
+M3_STATIC_ASSERT(sizeof(m3_sockaddr_in) <= sizeof(sockaddr_in));
 #ifdef AF_UNIX
 M3_STATIC_ASSERT(sizeof(m3_sockaddr_un) >= sizeof(sockaddr_un));
 #endif
+// Native family is 8 or 16 bits.
 M3_STATIC_ASSERT(M3_FIELD_SIZE(m3_sockaddr_in, family) >= M3_FIELD_SIZE(sockaddr_in, sin_family));
 M3_STATIC_ASSERT(M3_FIELD_SIZE(m3_sockaddr_in, port) == M3_FIELD_SIZE(sockaddr_in, sin_port));
 M3_STATIC_ASSERT(M3_FIELD_SIZE(m3_sockaddr_in, addr) == M3_FIELD_SIZE(sockaddr_in, sin_addr));
