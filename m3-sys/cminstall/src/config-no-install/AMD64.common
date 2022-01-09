@@ -1,5 +1,5 @@
 readonly TARGET_ARCH = "AMD64"
 readonly TARGET_ENDIAN = "LITTLE"   % { "BIG" OR "LITTLE" }
 readonly WORD_SIZE = "64BITS"       % { "32BITS" or "64BITS" }
-
-M3_PARALLEL_BACK = 20 % AMD64 machines usually have lots of cores
+gcc_m3264 = "-m64"
+M3_PARALLEL_BACK = 20 % modern machines usually have many cores

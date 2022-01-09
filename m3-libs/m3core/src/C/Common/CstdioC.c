@@ -64,8 +64,10 @@ M3WRAP2(int, rename, const char*, const char*)
 M3WRAP4(int, setvbuf, FILE*, char*, int, size_t)
 M3WRAP0(FILE*, tmpfile)
 M3WRAP2(int, ungetc, int, FILE*)
+#ifndef __HAIKU__
 M3WRAP1_(int, getw, FILE*)
 M3WRAP2_(int, putw, int, FILE*)
+#endif
 
 M3WRAP1_RETURN_VOID(clearerr, FILE*)
 M3WRAP1_RETURN_VOID(perror, const char*) /* print error */

@@ -50,7 +50,11 @@ def BootAutoTools():
     readme.write("""
 tar xf xx.tgz
 cd xx
-chmod +x *                                 # permissions are wrong on some files
+# chmod +x * is sometimes needed as sometimes the tar used
+# does not save permissions e.g. on configure
+# Specifically Windows native tar does not work, and
+# wsl tar against Windows filesystem is slow.
+chmod +x *
 mkdir build
 cd build
 ../configure --disable-dependency-tracking # dependency tracking is sometimes slow
@@ -86,8 +90,10 @@ CC="$PTHREAD_CXX" # .c files are C++
 CXX="$PTHREAD_CXX"
 
 # Carry forward historical CFLAGS, but this is probably entirely over-specified.
+# TODO: -fPIC everywhere.
 case "$host" in
     x86_64*haiku) CXXFLAGS="$CXXFLAGS -m64 -fPIC";;
+    i?86*haiku) CXXFLAGS="$CXXFLAGS -fPIC";;              # -m32 works with gcc-x86 but not old gcc
     x86_64*darwin*) CXXFLAGS="$CXXFLAGS -arch x86_64";;
     i?86*darwin*) CXXFLAGS="$CXXFLAGS -arch i386";;
     powerpc64*darwin*) CXXFLAGS="$CXXFLAGS -arch ppc64";;
@@ -224,7 +230,7 @@ AC_OUTPUT
             "autoconf -f",
             "automake --add-missing --copy --foreign",
             "rm -rf autom4te.cache",
-            "chmod +x *",      # does not work
+            #"chmod +x *",     # does not work
             "rm Makefile.am",  # combat clock skew
             "rm configure.ac", # combat clock skew
             ]:

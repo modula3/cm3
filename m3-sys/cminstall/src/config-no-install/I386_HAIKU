@@ -1,0 +1,4 @@
+readonly TARGET = "I386_HAIKU"
+readonly gxx = "g++-x86"
+include("I386.common")
+include("Haiku.common")
