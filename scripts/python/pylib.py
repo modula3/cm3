@@ -1040,7 +1040,11 @@ def _RealCleanFunction(NoAction, PackageDirectory):
 def _MakeTGZ(a):
     out = a + ".tgz"
     DeleteFile(out)
-    Tar = SearchPath("gtar") or SearchPath("tar")
+    if SearchPath("wsl"):
+        #Tar = "wsl tar"
+        Tar = SearchPath("gtar") or SearchPath("tar")
+    else:
+        Tar = SearchPath("gtar") or SearchPath("tar")
     b = Tar + " cfz " + out + " " + a
     print(b + "\n")
     os.system(b)

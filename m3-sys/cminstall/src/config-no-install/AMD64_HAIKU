@@ -1,40 +1,4 @@
-M3_BACKEND_MODE = "C"
-
-readonly TARGET_ENDIAN = "LITTLE" % { "BIG" OR "LITTLE" }
-readonly TARGET_ARCH = "AMD64"    %
-readonly WORD_SIZE = "64BITS"     % { "32BITS" or "64BITS" }
-readonly TARGET_OS = "HAIKU"      %
-readonly OS_TYPE = "POSIX"        % { "WIN32" or "POSIX" }
-readonly TARGET = "AMD64_HAIKU"   %
-
-M3_PARALLEL_BACK = 20
-
-include ("cm3cfg.common")
-
-SYSTEM_LIBS =
-{
-  "LIBC" : [ "-lnetwork" ],
-  "TCP" : [ ],
-}
-
-SYSTEM_LIBORDER = ["TCP", "LIBC"]
-
-proc compile_c(source, object, options, optimize, debug) is
-  exec ("@g++ -g -fPIC -m64 -xc++ -c", options, source, "-o", object)
-  return 0
-end
-
-proc m3_link(prog, options, objects, imported_libs, shared) is
-  exec ("g++ -o", prog, options, objects, imported_libs)
-  return 0
-end
-
-proc skip_lib(lib, shared) is
-  deriveds ("", format("lib%s.a", lib))
-  return 0
-end
-
-proc make_lib(lib, options, objects, imported_libs, shared) is
-  exec("ar", "cs", format("lib%s.a", lib), objects)
-  return 0
-end
+readonly TARGET = "AMD64_HAIKU"
+readonly gxx = "g++"
+include("AMD64.common")
+include("Haiku.common")

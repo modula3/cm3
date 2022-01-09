@@ -933,6 +933,9 @@ Process__RegisterExitor(void (__cdecl*)(void));
 #ifdef __amd64
 #define GET_PC(context) ((context)->uc_mcontext.rip)
 #define M3_HOST "AMD64_HAIKU"
+#elif defined(__i386__)
+#define GET_PC(context) ((context)->uc_mcontext.eip)
+#define M3_HOST "I386_HAIKU"
 #else
 #error Unsupported Haiku
 #endif
