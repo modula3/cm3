@@ -87,7 +87,9 @@ const char*
 __cdecl
 MxConfigC__HOST(void)
 {
-#if defined(_WIN32) && !defined(__CYGWIN__)
+#ifdef M3_HOST_SKIP_UNAME
+    return strdup(M3_HOST);
+#elif defined(_WIN32) && !defined(__CYGWIN__)
     char name[256];
 
     if (GetEnvironmentVariableA("PROCESSOR_ARCHITECTURE", name, sizeof(name) - 10) > 200)
