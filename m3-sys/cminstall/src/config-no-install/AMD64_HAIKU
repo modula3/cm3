@@ -17,8 +17,10 @@ SYSTEM_LIBS =
   "TCP" : [ ],
 }
 
+SYSTEM_LIBORDER = ["TCP", "LIBC"]
+
 proc compile_c(source, object, options, optimize, debug) is
-  exec ("g++ -g -fPIC -m64 -xc++ -c", options, source, "-o", object)
+  exec ("@g++ -g -fPIC -m64 -xc++ -c", options, source, "-o", object)
   return 0
 end
 

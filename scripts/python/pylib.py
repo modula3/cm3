@@ -313,10 +313,10 @@ def _GetAllTargets():
                  "ARM64", "IA64", "I386", "PPC", "PPC32", "PPC64", "SPARC",
                  "SPARC32", "SPARC64", "MIPS32", "MIPS64EL", "MIPS64", "PA32",
                  "PA64", "RISCV64", "SH"]:
-        for os in ["AIX",  "CE", "CYGWIN", "DARWIN",  "FREEBSD", "HPUX",
-                   "HPUX32", "HPUX64", "INTERIX", "IRIX", "LINUX", "MINGW",
-                   "NETBSD", "NT", "NT32", "NT64", "OPENBSD", "OSF", "SOLARIS",
-                   "VMS", "VMS32", "VMS64"]:
+        for os in ["AIX",  "CE", "CYGWIN", "DARWIN",  "FREEBSD", "HAIKU",
+                   "HPUX", "HPUX32", "HPUX64", "INTERIX", "IRIX", "LINUX",
+                   "MINGW", "NETBSD", "NT", "NT32", "NT64", "OPENBSD", "OSF",
+                   "SOLARIS", "VMS", "VMS32", "VMS64"]:
                    # "BEOS", "MSDOS" (DJGPP), "OS2" (EMX), "PLAN9"
             target = proc + "_" + os
             Targets[target] = target
