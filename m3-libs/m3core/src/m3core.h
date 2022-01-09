@@ -936,6 +936,8 @@ Process__RegisterExitor(void (__cdecl*)(void));
 #elif defined(__i386__)
 #define GET_PC(context) ((context)->uc_mcontext.eip)
 #define M3_HOST "I386_HAIKU"
+// uname says the architecture is "BePC", skip it
+#define M3_HOST_SKIP_UNAME 1
 #else
 #error Unsupported Haiku
 #endif
