@@ -303,9 +303,9 @@ class Platform:
             "RISCV64", "SH"
         ]
         systems = [
-            "AIX",  "CE", "CYGWIN", "DARWIN", "FREEBSD", "HPUX", "HPUX32",
-            "HPUX64", "INTERIX", "IRIX", "LINUX", "MINGW", "NETBSD", "NT",
-            "NT32", "NT64",
+            "AIX",  "CE", "CYGWIN", "DARWIN", "FREEBSD", "HAIKU",
+            "HPUX", "HPUX32", "HPUX64", "INTERIX", "IRIX", "LINUX",
+            "MINGW", "NETBSD", "NT", "NT32", "NT64",
             "OPENBSD", "OSF", "SOLARIS", "VMS", "VMS32", "VMS64"
         ]
         legacy_platforms = ["NT386", "LINUXLIBC6", "SOLsun", "SOLgnu", "FreeBSD4"]
@@ -338,7 +338,7 @@ class Platform:
 
         # Many platforms only work on the C backend, or at least
         # there are no protesting users.
-        if re.search(r"ALPHA|CYGWIN|MINGW|OSF|RISCV|SOLARIS|HPUX|IA64", name):
+        if re.search(r"ALPHA|CYGWIN|MINGW|OSF|RISCV|SOLARIS|HPUX|IA64|HAIKU", name):
             return False
 
         return True
