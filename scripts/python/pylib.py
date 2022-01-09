@@ -1098,6 +1098,7 @@ def Boot():
     cygwin = StringContainsI(Target, "Cygwin")
     linux = StringContainsI(Target, "Linux")
     bsd = StringContainsI(Target, "BSD")
+    haiku = StringContainsI(Target, "haiku")
 
     CBackend = True
 
@@ -1132,6 +1133,9 @@ def Boot():
         #CCompilerFlags = " -g -pthread -mfp-rounding-mode=d "
     elif nt:
         CCompiler = "cl"
+    elif haiku:
+        CCompiler = "g++"
+        CCompilerFlags = "-g -m64 -fPIC" # -pthread not allowed
     else: # gcc and other platforms
         CCompiler = {
             "SOLgnu" : "/usr/sfw/bin/g++",
@@ -1177,7 +1181,7 @@ def Boot():
     Link = "$(CC) $(CFLAGS) *." + obj + " "
     #Link = "$(CC) $(CFLAGS)"
 
-    # link flags
+    # link flags TODO merge compile and link sections
 
     # TBD: add more and retest, e.g. Irix, AIX, HPUX, Android
     # http://www.openldap.org/lists/openldap-bugs/200006/msg00070.html
@@ -1188,6 +1192,8 @@ def Boot():
 
     if darwin:
         pass
+    elif haiku:
+        Link = Link + " -lnetwork "
     elif mingw:
         Link = Link  +  " -liphlpapi -lrpcrt4 -lcomctl32 -lws2_32 -lgdi32 -luser32 -ladvapi32 "
     elif solaris or sol:

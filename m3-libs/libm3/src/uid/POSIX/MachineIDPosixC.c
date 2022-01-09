@@ -21,7 +21,9 @@ typedef unsigned UINT32;
 #include <limits.h>
 #include <math.h>
 #include <net/if.h>
+#ifndef __HAIKU__
 #include <net/if_arp.h>
+#endif
 #include <net/if_dl.h>
 #include <netdb.h>
 #include <netinet/in.h>
@@ -54,7 +56,9 @@ typedef unsigned UINT32;
 #endif
 #ifndef __CYGWIN__
 #include <net/if.h>
+#ifndef __HAIKU__
 #include <net/if_arp.h>
+#endif
 #endif
 #ifdef __hpux
 #include "dce/uuid.h"
@@ -62,6 +66,7 @@ typedef unsigned UINT32;
 
 #if !(defined(__APPLE__)    \
    || defined(__CYGWIN__)   \
+   || defined(__HAIKU__)    \
    || defined(__FreeBSD__)  \
    || defined(__linux__)    \
    || defined(__NetBSD__)   \
@@ -72,7 +77,7 @@ typedef unsigned UINT32;
 #error Please test/port this.
 #endif
 
-#if defined(__OpenBSD__) || defined(__NetBSD__) || defined(__FreeBSD__) || defined(__APPLE__)
+#if defined(__OpenBSD__) || defined(__NetBSD__) || defined(__FreeBSD__) || defined(__APPLE__) || defined(__HAIKU__)
 #define HAS_GETIFADDRS
 #endif
 
@@ -345,6 +350,7 @@ int main()
     system("/sbin/ifconfig -a | grep addr");
     system("/sbin/ifconfig -a | grep ether");
 #endif
+    system("python3 -c \"import uuid;print(\\\"%x\\\" % uuid.getnode())\"");
     return 0;
 }
 

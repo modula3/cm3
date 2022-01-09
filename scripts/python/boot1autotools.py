@@ -8,16 +8,17 @@ from pylib import *
 # usage: ./boot1autotools.py target
 #
 # tar xf xx.tgz
-# chmod +x xx/*
+# cd xx
+# chmod +x *                                 # permissions are wrong on some files
 # mkdir build
 # cd build
-# ../xx/configure
-# make
+# ../configure --disable-dependency-tracking # dependency tracking is sometimes slow
+# make -j11
 # mkdir -p $HOME/cm3/bin
 # mv cm3 $HOME/cm3/bin
-# PATH=$HOME/cm3/bin/bin:$PATH
-# cd ..
-# ../boot2.py
+# PATH=$HOME/cm3/bin:$PATH
+# cd ../..
+# ./boot2.py
 #
 # Target need not be precise, only word size and endian matter.
 # In future hopefully they will not.
@@ -45,6 +46,22 @@ def BootAutoTools():
     Am = open(os.path.join(BootDir, "Makefile.am"), "wb")
     Ac = open(os.path.join(BootDir, "configure.ac"), "wb")
 
+    readme = open(os.path.join(BootDir, "README"), "wb");
+    readme.write("""
+tar xf xx.tgz
+cd xx
+chmod +x *                                 # permissions are wrong on some files
+mkdir build
+cd build
+../configure --disable-dependency-tracking # dependency tracking is sometimes slow
+make -j22                                  # make up a number for parallelism
+mkdir -p $HOME/cm3/bin
+mv cm3 $HOME/cm3/bin
+PATH=$HOME/cm3/bin:$PATH
+cd ../..
+./boot2.py # or boot2min.py
+""")
+    readme.close()
     # TODO: Make one bootstrap for 32bits and 64bits.
 
     if Config.find("32") != -1:
@@ -60,15 +77,17 @@ def BootAutoTools():
 AC_INIT(cm3,1.0)
 AC_CANONICAL_HOST
 AM_INIT_AUTOMAKE([-Wportability -Wall -Werror foreign])
+AM_MAINTAINER_MODE # to have it disabled by default due to clock skew
 AC_PROG_CXX
 AX_PTHREAD
 LIBS="$PTHREAD_LIBS $LIBS"
 CXXFLAGS="$CXXFLAGS $PTHREAD_CFLAGS"
-CC="$PTHREAD_CXX"
+CC="$PTHREAD_CXX" # .c files are C++
 CXX="$PTHREAD_CXX"
 
 # Carry forward historical CFLAGS, but this is probably entirely over-specified.
 case "$host" in
+    x86_64*haiku) CXXFLAGS="$CXXFLAGS -m64 -fPIC";;
     x86_64*darwin*) CXXFLAGS="$CXXFLAGS -arch x86_64";;
     i?86*darwin*) CXXFLAGS="$CXXFLAGS -arch i386";;
     powerpc64*darwin*) CXXFLAGS="$CXXFLAGS -arch ppc64";;
@@ -113,6 +132,7 @@ esac
 case "$host" in
     *-*-darwin*);;
     # TODO Higher level syntax for libraries?
+    *haiku) CXXFLAGS="$CXXFLAGS -lnetwork";;
     *-*-linux* | *-*-*bsd* | *-*-cygwin*) CXXFLAGS="$CXXFLAGS -lm -pthread";;
     *-*-mingw*) CXXFLAGS="$CXXFLAGS -liphlpapi -lrpcrt4 -lcomctl32 -lws2_32 -lgdi32 -luser32 -ladvapi32";;
     *-*-solaris*) CXXFLAGS="$CXXFLAGS -lpthread -lrt -lm -lnsl -lsocket -lc -pthread";;
@@ -152,13 +172,13 @@ case "$host" in
                   CXXFLAGS="$CXXFLAGS -luca";;
 esac
 
-CFLAGS="$CFLAGS $CXXFLAGS"
+CFLAGS="$CFLAGS $CXXFLAGS" # .c files are C++
 
 # Compile as C++.
 # This is not very important now that C++ backend outputs .cpp files,
 # but it does affect m3core, etc.
 if test "$GCC" = yes; then
-    CFLAGS="$CFLAGS -x c++"
+    CFLAGS="$CFLAGS -x c++" # .c files are C++
 fi
 
 AC_CONFIG_FILES([Makefile])
@@ -204,7 +224,10 @@ AC_OUTPUT
             "autoconf -f",
             "automake --add-missing --copy --foreign",
             "rm -rf autom4te.cache",
-            "chmod +x *"]:
+            "chmod +x *",      # does not work
+            "rm Makefile.am",  # combat clock skew
+            "rm configure.ac", # combat clock skew
+            ]:
         print(a)
         os.system(a)
         a = "wsl " + a

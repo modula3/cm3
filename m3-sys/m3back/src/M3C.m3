@@ -2577,13 +2577,13 @@ CONST Prefix = ARRAY OF TEXT {
 "extern \"C\" {",
 "#endif",
 
-"#if !defined(_MSC_VER) && !defined(__cdecl)",
+(* see m3core.h for more about cdecl/stdcall *)
+"#if defined(_WIN32) && !defined(_WIN64)",
+"#undef __cdecl",
+"#undef __stdcall",
 "#define __cdecl /* nothing */",
-"#endif",
-"#if !defined(_MSC_VER) && !defined(__stdcall)",
 "#define __stdcall /* nothing */",
 "#endif",
-
 "#define STRUCT(n) struct_##n##_t", (* TODO prune if not used *)
 (* TODO struct1 and struct2 should not be needed.
    struct4 and struct8 can go away when we make open arrays and jmpbufs
