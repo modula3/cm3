@@ -5,7 +5,7 @@
 # This produces an archive that can be copied to the target,
 # extract, run make, producing a cm3.
 #
-# Copy that into place and proceed with boot2.py or boot2min.
+# Copy that into place and proceed with boot2.py or boot2min.py.
 #
 # The source trees on the two systems must be "compatible",
 # essentially cm3/m3core/m3middle/etc. have to match.
@@ -32,7 +32,6 @@ def Boot():
 # TODO build a directory tree, one directory per package
 # TODO as a result, support building separate libraries and possibly shared libraries
 # TODO and out-of-tree builds
-# Maybe something autotools or cmake-laden
 
     global BuildLocal
     BuildLocal += " -boot -no-m3ship-resolution -group-writable -keep -DM3CC_TARGET=" + Config
