@@ -24,12 +24,14 @@ proc m3_link(prog, options, objects, imported_libs, shared) is
 end
 
 proc skip_lib(lib, shared) is
-  deriveds ("", format("lib%s.a", lib))
+  deriveds ("", [format("lib%s.a", lib)])
   return 0
 end
 
 proc make_lib(lib, options, objects, imported_libs, shared) is
-  exec("ar", "cs", format("lib%s.a", lib), objects)
+  local a = format("lib%s.a", lib)
+  delete_file (a)
+  exec ("ar rs", a, objects)
   return 0
 end
 
