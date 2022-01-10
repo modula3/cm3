@@ -972,35 +972,47 @@ proc make_lib(lib, options, objects, imported_libs, shared) is
     DeleteFiles(Outputs)
     deriveds("", Outputs)
 
-    local m3_lib_flags = [ ]
-    if equal(LINKER, "MS")
-        % m3_lib_flags = ["-debugtype:cv", "-machine:i386"]
-        m3_lib_flags = ["-ign:__real"]
-    end
-
-    % build the static library
-
-    ret_code = try_exec(
-        "@mklib",
-        WriteResponseFile(
-            LibResponseFile,
-            " ",
-            [
-                m3_lib_flags,
-                "-out:" & lib_file,
-                options,
-                objects,
-            ]))
-    if not equal(ret_code, 0) or not FileExists(lib_file)
-        error("library creation failed" & EOL)
-        if not equal(ret_code, 0)
-            return ret_code
-        end
-        return 1
-    end
+    % build a static library and .def
+    % The static library here is historical and unused.
+    % mklib is transitioning away: write the .def file elsewhere
+    % if dynamic linking is supported
 
     if shared
 
+        local m3_lib_flags = [ ]
+        if equal(LINKER, "MS")
+            % m3_lib_flags = ["-debugtype:cv", "-machine:i386"]
+            m3_lib_flags = ["-ign:__real"]
+        end
+
+        ret_code = try_exec(
+            "@mklib",
+            WriteResponseFile(
+                LibResponseFile,
+                " ",
+                [
+                    m3_lib_flags,
+                    "-out:" & lib_file,
+                    options,
+                    objects,
+                ]))
+        if not equal(ret_code, 0) or not FileExists(lib_file)
+            error("library creation failed" & EOL)
+            if not equal(ret_code, 0)
+                return ret_code
+            end
+            return 1
+        end
+    end
+
+    % build static library without mklib
+
+    delete_file (lib_file)
+    exec("link /lib /out:" & lib_file, arglist("@", [options, objects]))
+
+    if not shared
+        return 0
+    else
         % build an import library & DLL
 
         MoveFile(lib_file, lib0_file)
