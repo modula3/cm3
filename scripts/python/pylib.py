@@ -902,24 +902,20 @@ def ShowUsage(args, Usage, P):
 
 def MakePackageDB():
     if not isfile(PKGSDB) or os.path.getmtime(PKGSDB) < os.path.getmtime(os.path.join(Scripts, "pkginfo.txt")):
-        #
         # Look for all files src/m3makefile in the CM3 source
         # and write their relative paths from Root to PKGSDB.
         #
-        def Callback(Result, Directory, Names):
-            if (os.path.basename(Directory) != "src"
-                or Directory.find("_darcs") != -1
-                or Directory.find("examples/web") != -1
-                or Directory.find("examples\\web") != -1
-                or (not "m3makefile" in Names)
-                or (not isfile(os.path.join(Directory, "m3makefile")))):
-                return
-            Result.append(Directory[len(Root) + 1:-4].replace('\\', "/") + "\n")
-
         print("making " + PKGSDB + ".. (slow but rare)")
         Result = [ ]
 
-        os.path.walk(Root, Callback, Result)
+        for dir, children, files in os.walk(Root):
+            if (os.path.basename(dir) == "src"
+                and dir.find("_darcs") == -1
+                and dir.find("examples/web") == -1
+                and dir.find("examples\\web") == -1
+                and ("m3makefile" in files)
+                and (isfile(os.path.join(dir, "m3makefile")))):
+                Result.append(dir[len(Root) + 1:-4].replace('\\', "/") + "\n")
 
         Result.sort()
         open(PKGSDB, "w").writelines(Result)
@@ -2658,6 +2654,10 @@ if __name__ == "__main__":
     #
     # run test code if module run directly
     #
+    print("1\n")
+    MakePackageDB()
+    print("2\n")
+    sys.exit(1)
 
     TryAddWixToPath()
     sys.exit(1)
