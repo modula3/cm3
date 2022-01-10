@@ -83,6 +83,7 @@ RTProcess__RegisterForkHandlers(ForkHandler prepare,
 /* FreeBSD < 6 lacks pthread_atfork. Would be good to use autoconf.
  * VMS lacks pthread_atfork? Would be good to use autoconf.
  * Win32 lacks pthread_atfork and fork. OK.
+ * Haiku pthread_atfork does not seem to work, pthread_mutex_unlock fails with EPERM.
  *
  * As well, for all Posix systems, we could implement
  * atfork ourselves, as long as we provide a fork()
@@ -90,6 +91,7 @@ RTProcess__RegisterForkHandlers(ForkHandler prepare,
  */
 #if defined(_WIN32) \
         || defined(__vms) \
+        || defined(__HAIKU__) \
         || (defined(__FreeBSD__) && (__FreeBSD__ < 6))
     return 0;
 #else
