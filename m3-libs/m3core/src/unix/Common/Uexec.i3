@@ -11,6 +11,9 @@ FROM Utypes IMPORT pid_t;
 <*EXTERNAL "Uexec__execvp"*>PROCEDURE execvp(name: const_char_star; argv: char_star_star): int RAISES {};
 <*EXTERNAL "Uexec__execve"*>PROCEDURE execve(name: const_char_star; argv: char_star_star; envp: char_star_star): int;
 
+<*EXTERNAL "Uexec__P_NOWAIT"*> VAR P_NOWAIT: const_int; (* Cygwin spawnve mode *)
+<*EXTERNAL "Uexec__spawnve"*>PROCEDURE spawnve(mode: int; path: const_char_star; argv: char_star_star; envp: char_star_star): int; (* Cygwin *)
+
 (* compat with Usem usage *)
 TYPE wait_queue_star = ADDRESS;
 

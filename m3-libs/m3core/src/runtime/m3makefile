@@ -13,7 +13,12 @@ readonly HAS_STACK_WALKER = {
 }
 
 include_dir ("common")
-include_dir (OS_TYPE) % Win32 or Posix
+
+if equal (TARGET_OS, "CYGWIN")
+  include_dir ("WIN32")
+else
+  include_dir (OS_TYPE) % Win32 or Posix
+end
 
 %proc FileExists(a) is
 %    return not stale (a, a)

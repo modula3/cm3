@@ -182,7 +182,9 @@ def Boot():
         Link = Link + " user32.lib kernel32.lib ws2_32.lib comctl32.lib gdi32.lib advapi32.lib netapi32.lib iphlpapi.lib "
         Link = Link + " -delayload:gdi32.dll -delayload:user32.dll -delayload:iphlpapi.dll -delayload:advapi32.dll -delayload:ws2_32.dll "
         Link = Link + " delayimp.lib -opt:ref,icf "
-    elif bsd or cygwin or linux:
+    elif cygwin:
+        Link = Link + " -luser32 -lkernel32 -lws2_32 -lcomctl32 -lgdi32 -ladvapi32 -lnetapi32 -liphlpapi"
+    elif bsd or linux:
         Link = Link  +  " -lm -pthread " # TODO: combine with next?
     else:
         Link = Link + " -lm -lpthread -pthread "

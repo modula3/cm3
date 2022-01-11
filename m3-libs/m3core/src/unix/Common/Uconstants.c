@@ -1032,9 +1032,9 @@ X(PROT_WRITE)
 #ifdef __CYGWIN__
 
 #undef X
-#define X(x) EXTERN_CONST int Usysdep__##x = x;
+#define X(x) EXTERN_CONST int Uexec__##x = x;
 #undef Y
-#define Y(x, y) EXTERN_CONST int Usysdep__##x = y;
+#define Y(x, y) EXTERN_CONST int Uexec__##x = y;
 
 Y(P_NOWAIT, _P_NOWAIT)
 

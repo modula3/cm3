@@ -14,7 +14,8 @@ if equal (OS_TYPE, "POSIX")
     Interface ("SchedulerPosix")
     interface("ThreadInternal")
     c_source("ThreadInternal")
-else
+end
+if not equal (OS_TYPE, "POSIX") or equal (TARGET_OS, "CYGWIN")
     interface ("ThreadDebug")
     c_source("ThreadDebug")
 end

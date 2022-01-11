@@ -166,7 +166,11 @@ void __cdecl ThreadWin32__ProcessLive(char *bottom, void (*p)(void *start, void 
   else
 #endif
   {
+#ifdef __GNUC__
+    char* top = (char*)__builtin_alloca(1);
+#else
     char* top = (char*)_alloca(1);
+#endif
     assert(bottom);
     if (top < bottom)
         p(top, bottom);

@@ -5,6 +5,9 @@
 #ifndef INCLUDED_M3CORE_H
 #include "m3core.h"
 #endif
+#ifdef __CYGWIN__
+#include "process.h"
+#endif
 #undef M3MODULE /* Support concatenating multiple .c files. */
 #define M3MODULE Uexec
 
@@ -71,6 +74,9 @@ M3WRAP3(m3_pid_t, waitpid, m3_pid_t, int*, int)
 M3WRAP2(m3_exec_t, execv, const char*, char**)
 M3WRAP2(m3_exec_t, execvp, const char*, char**)
 M3WRAP3(m3_exec_t, execve, const char*, char**, char**)
+#endif
+#ifdef __CYGWIN__
+M3WRAP4(int, spawnve, int, const char*, const char**, const char * const *)
 #endif
 
 #ifdef __cplusplus

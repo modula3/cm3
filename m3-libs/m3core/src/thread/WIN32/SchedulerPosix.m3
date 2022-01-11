@@ -8,7 +8,7 @@ UNSAFE MODULE SchedulerPosix;
 
 FROM ThreadWin32 IMPORT PerfChanged, PerfRunning, XTestAlert, perfOn;
 FROM ThreadF IMPORT State, MyId;
-FROM Thread IMPORT Alerted, Self, T;
+FROM Thread IMPORT Alerted, Self, T, TestAlert;
 IMPORT Cerrno, Time, Uerror, Uexec;
 FROM Ctypes IMPORT int;
 FROM ThreadInternal IMPORT Poll;
@@ -22,7 +22,7 @@ PROCEDURE IOWait (fd: CARDINAL; read: BOOLEAN;
       IF perfOn THEN PerfChanged(State.blocking) END;
       RETURN XIOWait(self, fd, read, timeoutInterval, alertable := FALSE);
     FINALLY
-      IF perfOn THEN PerfRunning(MyId()) END;
+      IF perfOn THEN PerfRunning() END;
     END;
   END IOWait;
 
@@ -35,7 +35,7 @@ PROCEDURE IOAlertWait (fd: CARDINAL; read: BOOLEAN;
       IF perfOn THEN PerfChanged(State.blocking) END;
       RETURN XIOWait(self, fd, read, timeoutInterval, alertable := TRUE);
     FINALLY
-      IF perfOn THEN PerfRunning(MyId()) END;
+      IF perfOn THEN PerfRunning() END;
     END;
   END IOAlertWait;
 

@@ -22,7 +22,7 @@ implementation("SocketPosix")
 implementation("OSConfigPosix")
 
 module("ProcessPosixCommon")
-if equal (TARGET, "NT386")
+if equal (TARGET_OS, "CYGWIN")
     implementation("ProcessCygwin")
 else
     implementation("ProcessPosix")
