@@ -85,4 +85,7 @@ PROCEDURE PerfChanged (s: State);
 PROCEDURE PerfRunning ();
 VAR perfOn: BOOLEAN := FALSE;		 (* LL = perfLock *)
 
+TYPE Activation <: ADDRESS; (* untraced thread stated stored in thread local *)
+PROCEDURE XTestAlert (self: Activation): BOOLEAN;
+
 END ThreadWin32.

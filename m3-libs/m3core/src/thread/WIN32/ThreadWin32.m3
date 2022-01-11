@@ -55,7 +55,7 @@ REVEAL
     END;
 
   TYPE ActState = { Starting, Started, Stopping, Stopped };
-  TYPE Activation = UNTRACED BRANDED REF RECORD
+REVEAL Activation = UNTRACED BRANDED REF RECORD
       frame: ADDRESS := NIL;            (* exception handling support; this field is accessed MANY times
                                          * so perhaps therefore should be first *)
       next, prev: Activation := NIL;    (* LL = activeLock; global doubly-linked, circular list of all active threads *)

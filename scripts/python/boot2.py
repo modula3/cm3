@@ -20,15 +20,19 @@ argv = sys.argv
 
 env_OS = getenv("OS")
 
-def IsInterix():
-    return os.name == "posix" and os.uname()[0].lower().startswith("interix")
+def Posix():
+    return os.name == "posix"
 
-if env_OS == "Windows_NT" and not IsInterix():
+if Posix():
+    from os import uname
+elif env_OS == "Windows_NT":
+    DevNull = "nul:"
     def uname():
         PROCESSOR_ARCHITECTURE = getenv("PROCESSOR_ARCHITECTURE")
         return (env_OS, "", PROCESSOR_ARCHITECTURE, "", PROCESSOR_ARCHITECTURE)
 else:
-    from os import uname
+    print("fatal error: unknown host")
+    sys.exit(1)
 
 def RemoveTrailingSpaces(a):
     while len(a) > 0 and a[-1] == ' ':
@@ -51,7 +55,12 @@ if _CBackend:
 
 pyexe = ""
 
-if env_OS == "Windows_NT" and not IsInterix():
+def Posix():
+    return os.name == "posix"
+
+if Posix():
+    pass
+elif env_OS == "Windows_NT":
     pyexe = (pylib.SearchPath("python.exe") or pylib.SearchPath("python3.exe") or pylib.SearchPath("py.exe") or pylib.SearchPath("python2.exe")) + " "
 
 Run(pyexe + "./make-dist-cfg.py")

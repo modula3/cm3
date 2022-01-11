@@ -24,7 +24,8 @@ proc m3_link(prog, options, objects, imported_libs, shared) is
 end
 
 proc skip_lib(lib, shared) is
-  deriveds ("", [format("lib%s.a", lib)])
+  local a = format("lib%s.a", lib)
+  deriveds ("", [a])
   return 0
 end
 

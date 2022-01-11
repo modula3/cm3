@@ -929,6 +929,16 @@ Process__RegisterExitor(void (__cdecl*)(void));
 #error Unknown __APPLE__ target
 #endif
 
+#elif defined(__CYGWIN__)
+#define M3_HOST_SKIP_UNAME 1
+#if defined(__amd64)
+#define M3_HOST "AMD64_CYGWIN"
+#elif defined(__i386)
+#define M3_HOST "I386_CYGWIN"
+#else
+#error Unknown Cygwin
+#endif
+
 #elif defined(__HAIKU__)
 #ifdef __amd64
 #define GET_PC(context) ((context)->uc_mcontext.rip)

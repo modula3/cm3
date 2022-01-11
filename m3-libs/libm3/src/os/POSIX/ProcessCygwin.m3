@@ -9,7 +9,7 @@ UNSAFE MODULE ProcessCygwin EXPORTS Process;
 
 IMPORT Cerrno, Ctypes, File, FilePosix, OSError, OSErrorPosix,
   Pathname, RTLinker, Unix, Uerror, ProcessPosixCommon, Process;
-IMPORT Usysdep;
+IMPORT Uexec;
 
 FROM ProcessPosixCommon IMPORT ArrCStr, GetPathToExec, AllocArgs,
     AllocEnv, FreeArgs, FreeEnv, stdin_g, stdout_g, stderr_g,
@@ -75,7 +75,7 @@ PROCEDURE ExecChild_Spawn(
   RAISES {} =
   VAR res : INTEGER; t: Ctypes.char_star;
   BEGIN
-    res := Usysdep.spawnve(Usysdep.P_NOWAIT, (*path*)argx[0], ADR(argx[2]), envp);
+    res := Uexec.spawnve(Uexec.P_NOWAIT, (*path*)argx[0], ADR(argx[2]), envp);
     IF res < 0 THEN
       IF Cerrno.GetErrno() = Uerror.ENOEXEC THEN
         t := argx[0]; argx[0] := argx[2]; argx[2] := t;

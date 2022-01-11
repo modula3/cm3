@@ -1,0 +1,6 @@
+readonly TARGET_ENDIAN = "LITTLE"  % { "BIG" OR "LITTLE" }
+readonly TARGET_ARCH = "I386"
+readonly WORD_SIZE = "32BITS"      % { "32BITS" or "64BITS" }
+readonly TARGET = "I386_CYGWIN"
+
+include ("Cygwin.common")

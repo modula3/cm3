@@ -83,68 +83,69 @@ AC_CANONICAL_HOST
 AM_INIT_AUTOMAKE([-Wportability -Wall -Werror foreign])
 AM_MAINTAINER_MODE # to have it disabled by default due to clock skew
 AC_PROG_CXX
-AX_PTHREAD
-LIBS="$PTHREAD_LIBS $LIBS"
-CXXFLAGS="$CXXFLAGS $PTHREAD_CFLAGS"
-CC="$PTHREAD_CXX" # .c files are C++
-CXX="$PTHREAD_CXX"
+
+AS_CASE([$host],
+    [*-*-mingw* | *-*-cygwin*], [ # optimize configure
+     CC="$CXX" # .c files are C++
+    ],
+    [AX_PTHREAD
+     LIBS="$PTHREAD_LIBS $LIBS"
+     CXXFLAGS="$CXXFLAGS $PTHREAD_CFLAGS"
+     CC="$PTHREAD_CXX" # .c files are C++
+     CXX="$PTHREAD_CXX"
+    ])
 
 # Carry forward historical CFLAGS, but this is probably entirely over-specified.
 # TODO: -fPIC everywhere.
-case "$host" in
-    x86_64*haiku) CXXFLAGS="$CXXFLAGS -m64 -fPIC";;
-    i?86*haiku) CXXFLAGS="$CXXFLAGS -fPIC";;              # -m32 works with gcc-x86 but not old gcc
-    x86_64*darwin*) CXXFLAGS="$CXXFLAGS -arch x86_64";;
-    i?86*darwin*) CXXFLAGS="$CXXFLAGS -arch i386";;
-    powerpc64*darwin*) CXXFLAGS="$CXXFLAGS -arch ppc64";;
-    powerpc*darwin*) CXXFLAGS="$CXXFLAGS -arch ppc";;
-    mips64*) CXXFLAGS="$CXXFLAGS -mabi=64";;
-    i?86-*-solaris2*) CXXFLAGS="$CXXFLAGS -xarch=""" + solaris86_arch + """ -Kpic";;
-    x86_64-* | amd64-*) CXXFLAGS="$CXXFLAGS -m64";;
-    i?86-*) CXXFLAGS="$CXXFLAGS -m32";;
-    aarch64*darwin*_ilp32) CXXFLAGS="$CXXFLAGS -m32";;
-    aarch64*darwin* | arm64*darwin*) CXXFLAGS="$CXXFLAGS -m64";;
-    # Old unfinished 32bit iPhone support
-    arm*-darwin*) CXXFLAGS="$CXXFLAGS -march=armv6 -mcpu=arm1176jzf-s";;
-    sparc64* | sparcv9*)
-      if test "$GXX" = yes; then
-        CXXFLAGS="$CXXFLAGS -m64 -mno-app-regs -pthread"
-      else
-        CXXFLAGS="$CXXFLAGS -xarch=v9 -xcode=pic32 -xregs=no%appl -mt"
-      fi;;
-    sparc*)
-      if test "$GXX" = yes; then
-        CXXFLAGS="$CXXFLAGS -m32 -mcpu=v9 -mno-app-regs -pthread"
-      else
-         CXXFLAGS="$CXXFLAGS -xarch=v8plus -xcode=pic32 -xregs=no%appl -mt"
-      fi;;
-esac
+AS_CASE([$host],
+    [x86_64*haiku],             [CXXFLAGS="$CXXFLAGS -m64 -fPIC"],
+    [i?86*haiku],               [CXXFLAGS="$CXXFLAGS -fPIC"],           # -m32 works with gcc-x86 but not old gcc
+    [x86_64*darwin*],           [CXXFLAGS="$CXXFLAGS -arch x86_64"],
+    [i?86*darwin*],             [CXXFLAGS="$CXXFLAGS -arch i386"],
+    [powerpc64*darwin*],        [CXXFLAGS="$CXXFLAGS -arch ppc64"],
+    [powerpc*darwin*],          [CXXFLAGS="$CXXFLAGS -arch ppc"],
+    [mips64*],                  [CXXFLAGS="$CXXFLAGS -mabi=64"],
+    [i?86-*-solaris2*],         [CXXFLAGS="$CXXFLAGS -xarch=""" + solaris86_arch + """ -Kpic"],
+    [x86_64-* | amd64-*],       [CXXFLAGS="$CXXFLAGS -m64"],
+    [i?86-*],                   [CXXFLAGS="$CXXFLAGS -m32"],
+    [aarch64*darwin*_ilp32],    [CXXFLAGS="$CXXFLAGS -m32"],
+    [aarch64*darwin*],          [CXXFLAGS="$CXXFLAGS -m64"],
+    [arm*-darwin*],             [CXXFLAGS="$CXXFLAGS -march=armv6 -mcpu=arm1176jzf-s"], # Old unfinished 32bit iPhone support
+    [sparc64* | sparcv9*],      [AS_IF([test x$GXX = xyes],
+                                       [CXXFLAGS="$CXXFLAGS -m64 -mno-app-regs -pthread"],
+                                       [CXXFLAGS="$CXXFLAGS -xarch=v9 -xcode=pic32 -xregs=no%appl -mt"])],
+    [sparc*],                   [AS_IF([test x$GXX = xyes],
+                                       [CXXFLAGS="$CXXFLAGS -m32 -mcpu=v9 -mno-app-regs -pthread"],
+                                       [CXXFLAGS="$CXXFLAGS -xarch=v8plus -xcode=pic32 -xregs=no%appl -mt"])])
 
 # Specify likely required compiler/linker flags where defaults
 # do not likely suffice or really are not great (e.g. HPUX null deref, Alpha arounding mode).
-case "$host" in
-    *-*-osf*)
-        # Set rounding mode.
-        # TODO loop over the choices and chose which works.
-        if test "$GXX" = yes; then
-            CXXFLAGS="$CXXFLAGS -mfp-rounding-mode=d -pthread -mieee"
-        else
-            CXXFLAGS="$CXXFLAGS -fprm d -pthread -readonly_strings -ieee_with_no_inexact"
-        fi
-        ;;
-    # Must be gcc or compatible. TODO: probe
-    alpha*) CXXFLAGS="$CXXFLAGS -mfp-rounding-mode=d";;
-esac
-case "$host" in
-    *-*-darwin*);;
-    # TODO Higher level syntax for libraries?
-    *haiku) CXXFLAGS="$CXXFLAGS -lnetwork";;
-    *-*-linux* | *-*-*bsd* | *-*-cygwin*) CXXFLAGS="$CXXFLAGS -lm -pthread";;
-    *-*-mingw*) CXXFLAGS="$CXXFLAGS -liphlpapi -lrpcrt4 -lcomctl32 -lws2_32 -lgdi32 -luser32 -ladvapi32";;
-    *-*-solaris*) CXXFLAGS="$CXXFLAGS -lpthread -lrt -lm -lnsl -lsocket -lc -pthread";;
-    *-*-osf*)
-        CXXFLAGS="$CXXFLAGS -lrt -lm -pthread"
 
+AS_CASE([$host],
+    [alpha*], # Set Alpha rounding mode etc.
+    [AS_IF([test x$GXX = xyes],
+           [CXXFLAGS="$CXXFLAGS -mfp-rounding-mode=d -mieee"],
+           [CXXFLAGS="$CXXFLAGS -fprm d -readonly_strings -ieee_with_no_inexact"])])
+
+# AS_CASE can mostly be removed, but it speeds up configure
+AS_CASE([$host],
+    [*-*-darwin*], [ ],
+    [*haiku], [
+        LIBS="$LIBS -lnetwork"
+        ],
+    [*-*-linux* | *-*-*bsd*], [
+        LIBS="$LIBS -lm"
+        ],
+    # For Cygwin we must use LIBS here, not CXXFLAGS.
+    # -lfoo bar.o does not work, but bar.o -lfoo does.
+    [*-*-mingw* | *-*-cygwin*], [
+        LIBS="$LIBS -liphlpapi -lrpcrt4 -lcomctl32 -lws2_32 -lgdi32 -luser32 -ladvapi32"
+        ],
+    [*-*-solaris*], [
+        LIBS="$LIBS -lrt -lm -lnsl -lsocket -lc"
+        ],
+    [*-*-osf*], [
+        LIBS="$LIBS -lrt -lm"
         # There is a problem on some installs such that linking with cxx fails, unless oldcxx is used.
         # One of the startup .o files is missing.
         # This really should be fixed otherwise.
@@ -152,40 +153,30 @@ case "$host" in
         # define _LONGLONG and then INT64_ appends i64 or ui64 and that fails.
         # Fix the installs. Autoconf to detect problem.
         # and only workaround if needed (and remove gcc check).
-        if test "$GXX" != yes; then
-            LDFLAGS="$LDFLAGS -oldcxx"
-            CXXFLAGS="$CXXFLAGS -x cxx" # when applied to .c files
-        fi
-        ;;
-    *-*-hpux*)
-        # -ldcekt is for uuid_create in MachineIDPosixC.c
-        # -pthread is not allowed
-        # -z so null derefence fails (vs. returns zero).
-        CXXFLAGS="$CXXFLAGS -mt -z -lrt -lm -lpthread -ldcekt"
-
+        AS_IF([test x$GXX != xyes],
+              [LDFLAGS="$LDFLAGS -oldcxx"
+               CXXFLAGS="$CXXFLAGS -x cxx" # when applied to .c files
+              ])],
+    [*-*-hpux*], [
+        # dcekt: uuid_create in MachineIDPosixC.c
+        LIBS="$LIBS -lrt -lm -ldcekt -lc"
+        CXXFLAGS="$CXXFLAGS -z" # -z so null derefence fails (vs. returns zero).
         # TODO: Make one bootstrap for 32bits and 64bits.
+        AS_IF([test x$GXX = xyes],
+              [CXXFLAGS="$CXXFLAGS """ + hpux_gcc_wordsize + """ "],
+              [CXXFLAGS="$CXXFLAGS """ + hpux_cc_bits + """ "])],
+    [LIBS="$LIBS -lm"] # default
+    )
 
-        if test "$GXX" = yes; then
-            CXXFLAGS="$CXXFLAGS """ + hpux_gcc_wordsize + """ "
-        else
-            CXXFLAGS="$CXXFLAGS """ + hpux_cc_bits + """ "
-        fi
-        ;;
-    *)  CXXFLAGS="$CXXFLAGS -lm";;
-esac
-case "$host" in
-    ia64-*-hpux*) # -luca is for getting IP from context in RTSignalC.c
-                  CXXFLAGS="$CXXFLAGS -luca";;
-esac
+# user context access for getting IP from context in RTSignalC.c
+AS_CASE([$host], [ia64-*-hpux*], [LIBS="$LIBS -luca"])
 
 CFLAGS="$CFLAGS $CXXFLAGS" # .c files are C++
 
-# Compile as C++.
+# Compile .c as C++.
 # This is not very important now that C++ backend outputs .cpp files,
-# but it does affect m3core, etc.
-if test "$GCC" = yes; then
-    CFLAGS="$CFLAGS -x c++" # .c files are C++
-fi
+# but it affects m3core, etc.
+AS_IF([test x$GCC = xyes],[CFLAGS="$CFLAGS -x c++"])
 
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT
@@ -198,7 +189,7 @@ AC_OUTPUT
 
     Am.write("noinst_PROGRAMS = cm3\n")
     Am.write("cm3_SOURCES = ")
- 
+
     for q in P:
         dir = GetPackagePath(q)
         for a in os.listdir(os.path.join(Root, dir, BuildDir)):

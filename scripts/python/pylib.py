@@ -62,20 +62,29 @@ if os.environ.get("M3CONFIG", "").lower().find("m3-syscminstallsrcconfig") != -1
     print("backslash problem; environment variable M3CONFIG is " + getenv("M3CONFIG"))
     sys.exit(1)
 
+def Posix():
+    return os.name == "posix"
+
 def IsInterix():
-    return os.name == "posix" and os.uname()[0].lower().startswith("interix")
+    return Posix() and os.uname()[0].lower().startswith("interix")
+
+def Cygwin():
+    return Posix() and os.uname()[0].lower().startswith("cygwin")
 
 env_OS = getenv("OS")
 
 DevNull = "/dev/null"
 
-if env_OS == "Windows_NT":
+if Posix():
+    from os import uname
+elif env_OS == "Windows_NT":
     DevNull = "nul:"
     def uname():
         PROCESSOR_ARCHITECTURE = getenv("PROCESSOR_ARCHITECTURE")
         return (env_OS, "", PROCESSOR_ARCHITECTURE, "", PROCESSOR_ARCHITECTURE)
 else:
-    from os import uname
+    print("fatal error: unknown host")
+    sys.exit(1)
 
 #-----------------------------------------------------------------------------
 
@@ -199,7 +208,7 @@ def SearchPath(name, paths = getenv("PATH")):
         print("SearchPath returning None 1")
         return None
     (base, exts) = os.path.splitext(name)
-    if not exts and not IsInterix():
+    if not exts and not IsInterix(): # Posix? Cygwin?
         exts = (getenv("PATHEXT") or "").lower()
     for ext in exts.split(";"):
         if ext == ".":
