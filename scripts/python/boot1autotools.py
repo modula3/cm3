@@ -126,6 +126,10 @@ AS_CASE([$host],
            [CXXFLAGS="$CXXFLAGS -mfp-rounding-mode=d -mieee"],
            [CXXFLAGS="$CXXFLAGS -fprm d -readonly_strings -ieee_with_no_inexact"])])
 
+<<<<<<< HEAD
+=======
+# AS_CASE can mostly be removed, but it speeds up configure
+>>>>>>> 02d99512d (Cygwin support.)
 AS_CASE([$host],
     [*-*-darwin*], [ ],
     [*haiku], [
