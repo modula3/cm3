@@ -2578,7 +2578,7 @@ CONST Prefix = ARRAY OF TEXT {
 "#endif",
 
 (* see m3core.h for more about cdecl/stdcall *)
-"#ifndef _WIN32",
+"#if !defined(_WIN32) && !defined(__CYGWIN__)",
 "#undef __cdecl",
 "#undef __stdcall",
 "#define __cdecl /* nothing */",

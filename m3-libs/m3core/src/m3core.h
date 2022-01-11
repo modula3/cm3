@@ -194,7 +194,7 @@ typedef int BOOL;
 // Explicit stdcall would remain in use then only for
 // imported Windows functions (unless we wrap them all as we do for Posix).
 //
-#ifndef _WIN32
+#if !defined(_WIN32) && !defined(__CYGWIN__)
 #undef __cdecl
 #undef __stdcall
 #define __cdecl /* nothing */
