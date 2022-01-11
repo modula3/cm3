@@ -35,5 +35,5 @@ proc make_lib(lib, options, objects, imported_libs, shared) is
   return 0
 end
 
-%M3_PARALLEL_BACK = 20 % This fails.
+%M3_PARALLEL_BACK = 20 % This fails. Try to switch fork/exec/spawn to system()
 M3_PARALLEL_BACK = 1
