@@ -33,7 +33,11 @@ CONST
   (* Win32 *)      SMap { "", ".i3", ".ib", ".ic", ".is", ".io",
                           ".m3", ".mb", ".mc", ".ms", ".mo",
                           ".ig", ".mg", ".c", ".cpp", ".h", ".bc", ".s",
-                          ".obj",".lib",".lib",".m3x",".exe",".mx",".tmpl" }
+                          ".obj",".lib",".lib",".m3x",".exe",".mx",".tmpl" },
+  (* C++BackendWithAutomake *) SMap { "", ".i3", ".ib", ".ic", ".i3.s", ".i3.o",
+                          ".m3", ".mb", ".mc", ".m3.s", ".m3.o",
+                          ".ig", ".mg", ".c", ".cpp", ".h", ".bc", ".s",
+                          ".o", ".a", ".a", ".m3x", "", ".mx", ".tmpl" }
   };
 
   Prefix = ARRAY OSKind OF SMap {
@@ -48,10 +52,14 @@ CONST
   (* Win32 *)      SMap { "", "", "", "", "", "",
                           "", "", "", "", "",
                           "", "", "", "", "", "", "",
-                          "", "", "", "", "", "","" }
+                          "", "", "", "", "", "","" },
+  (* C++BackendWithAutomake *) SMap { "", "", "", "", "", "",
+                          "", "", "", "", "",
+                          "", "", "", "", "", "", "",
+                          "", "lib", "lib", "lib", "", "", "" }
   };
 
-  Default_pgm = ARRAY OSKind OF TEXT { "a.out", "a.out", "NONAME.EXE" };
+  Default_pgm = ARRAY OSKind OF TEXT { "a.out", "a.out", "NONAME.EXE", "a.out" };
 
 VAR target_os := ARRAY Compiler.OS OF OSKind{OSKind.Unix, OSKind.Win32}[Compiler.ThisOS];
 CONST d_sep = ARRAY Compiler.OS OF CHAR{Slash, BackSlash}[Compiler.ThisOS];

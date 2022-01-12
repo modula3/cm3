@@ -46,13 +46,14 @@ TYPE
            TMPL    (* Quake template code. *)
            };
 
-  OSKind = { Unix, GrumpyUnix, Win32 };
+  OSKind = { Unix, GrumpyUnix, Win32, CxxBackendWithAutomake };
 
 CONST
   OSKindStrings = ARRAY OSKind OF TEXT
   { "Unix",
     "GrumpyUnix",
-    "Win32" };
+    "Win32",
+    "C++BackendWithAutomake" };
 
 PROCEDURE SetTargetOS (os: OSKind);
 (* Set the conventions for the target platform *)

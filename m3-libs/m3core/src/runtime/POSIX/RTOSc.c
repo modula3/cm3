@@ -6,6 +6,18 @@
 extern "C" {
 #endif
 
+// TODO: Consolidate RTOSs.c
+BOOLEAN __cdecl RTOS__Cygwin(void)
+{
+#ifdef __CYGWIN__
+    return TRUE;
+#else
+    return FALSE;
+#endif
+}
+
+#ifndef _WIN32
+
 #if !defined(MAP_ANON) && defined(MAP_ANONYMOUS)
 #define MAP_ANON MAP_ANONYMOUS
 #endif
@@ -45,6 +57,8 @@ RTOS__GetMemory(INTEGER isize)
 
 #endif
 }
+
+#endif
 
 #ifdef __cplusplus
 } // extern "C"

@@ -59,6 +59,9 @@ PROCEDURE Create(
     stdin, stdout, stderr: File.T := NIL)
   : Process.T RAISES {OSError.E} =
   BEGIN
+    (* If the generality of fork/exec is not needed, call much faster spawn instead.
+     * Caller should consider calling spawn directly, or system().
+     *)
     IF (wd # NIL)
         OR (stdin # NIL AND stdin.fd # stdin_g.fd)
         OR (stdout # NIL AND stdout.fd # stdout_g.fd)
@@ -69,6 +72,7 @@ PROCEDURE Create(
     END;
   END Create;
 
+(* If caller is going to wait right away, caller should use system() instead. *)
 PROCEDURE ExecChild_Spawn(
     argx: ArrCStr; (* see "AllocArgs" for layout *)
     envp: Ctypes.char_star_star) : INTEGER

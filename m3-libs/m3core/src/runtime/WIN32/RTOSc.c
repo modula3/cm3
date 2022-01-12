@@ -1,11 +1,26 @@
 #ifndef INCLUDED_M3CORE_H
 #include "m3core.h"
 #endif
+
+#if defined (_WIN32) || defined (__CYGWIN__)
 #include <windows.h>
+#endif
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+// TODO: Consolidate RTOSs.c
+BOOLEAN __cdecl RTOS__Cygwin (void)
+{
+#ifdef __CYGWIN__
+    return TRUE;
+#else
+    return FALSE;
+#endif
+}
+
+#if defined (_WIN32) || defined (__CYGWIN__)
 
 #if 0
 
@@ -60,6 +75,8 @@ ADDRESS __cdecl RTOS__GetMemory(INTEGER isize)
 
     return (ADDRESS)LogEntry.Result;
 }
+
+#endif
 
 #endif
 

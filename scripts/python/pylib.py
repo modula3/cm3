@@ -1454,6 +1454,12 @@ def DeleteConfig(To):
     a = os.path.join(Root, "m3-sys", "cminstall", "src")
     Bin  = os.path.join(To, "bin")
     RemoveDirectoryRecursive(os.path.join(Bin, "config"))
+
+    # TODO: Remove plain "config" here.
+    # This is to migrate very old installs.
+    # Or rename config to config.old and config-no-install to config.
+    # Or move config to m3-sys/config
+    #
     for b in ["config", "config-no-install"]:
         for File in glob.glob(os.path.join(a, b, "*")):
             if isfile(File):
@@ -1461,6 +1467,7 @@ def DeleteConfig(To):
 
 #-----------------------------------------------------------------------------
 
+# TODO: Remove this. It was convenient but it is not really needed.
 def CopyConfigForDevelopment():
     #
     # The development environment is easily reconfigured
@@ -1684,6 +1691,8 @@ def IsNativeNTHostTarget(): # confused
             and (not GCC_BACKEND) and TargetOS == "WIN32")
 
 def SetupEnvironment():
+    # TODO: Most/all of this function should be removed.
+    #
     SystemDrive = os.environ.get("SYSTEMDRIVE")
     if SystemDrive:
         SystemDrive += os.path.sep

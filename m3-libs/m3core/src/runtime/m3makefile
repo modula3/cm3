@@ -14,7 +14,7 @@ readonly HAS_STACK_WALKER = {
 
 include_dir ("common")
 
-if equal (TARGET_OS, "CYGWIN")
+if equal (OS_TYPE, "WIN32") or equal (TARGET_OS, "CYGWIN")
   include_dir ("WIN32")
 else
   include_dir (OS_TYPE) % Win32 or Posix

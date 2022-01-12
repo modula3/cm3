@@ -20,6 +20,9 @@ PROCEDURE Crash ();
 PROCEDURE GetMemory (size: INTEGER): ADDRESS;
 (* Return the address of "size" bytes of unused storage *)
 
+<* EXTERNAL "RTOS__Cygwin"*>
+PROCEDURE Cygwin (): BOOLEAN;
+
 PROCEDURE LockHeap ();
 (* Enters an allocator/collector critical section; the same thread may
    enter the critical section multiple times.  *)

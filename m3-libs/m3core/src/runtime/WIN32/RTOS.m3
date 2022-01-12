@@ -7,13 +7,20 @@
 UNSAFE MODULE RTOS;
 
 IMPORT RTMachInfo, RTSignal, RTThread;
-IMPORT WinBase, WinCon, WinDef;
+IMPORT WinBase, WinCon, WinDef, Cstdlib;
 
 (*--------------------------------------------------- process termination ---*)
 
 PROCEDURE Exit (n: INTEGER) =
   BEGIN
-    WinBase.ExitProcess (n);
+    (* ExitProcess is buggy under Cygwin.
+     * https://cygwin.com/pipermail/cygwin/2022-January/250489.html
+     *)
+    IF Cygwin () THEN
+      Cstdlib.exit (n);
+    ELSE
+      WinBase.ExitProcess (n);
+    END;
   END Exit;
 
 PROCEDURE Crash () =
