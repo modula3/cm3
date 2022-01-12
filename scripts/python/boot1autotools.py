@@ -66,19 +66,24 @@ cd ../..
 ./boot2.py # or boot2min.py
 """)
     readme.close()
+
     # TODO: Make one bootstrap for 32bits and 64bits.
 
+    hpux_gcc_wordsize = "-mlp64"
+    hpux_cc_wordsize = "+DD64"
+    solaris86_arch = "amd64"
     if Config.find("32") != -1:
         hpux_gcc_wordsize = "-milp32"
-        hpux_cc_bits = "+DD32"
+        hpux_cc_wordsize = "+DD32"
         solaris86_arch = "pentium_pro"
-    else:
-        hpux_gcc_wordsize = "-mlp64"
-        hpux_cc_bits = "+DD64"
-        solaris86_arch = "amd64"
 
     Ac.write("""
 AC_INIT(cm3,1.0)
+
+hpux_gcc_wordsize = """ + hpux_gcc_wordsize + """
+hpux_cc_wordsize = """ + hpux_cc_wordsize + """
+solaris86_arch = """ + solaris86_arch + """
+
 AC_CANONICAL_HOST
 AM_INIT_AUTOMAKE([-Wportability -Wall -Werror foreign])
 AM_MAINTAINER_MODE # to have it disabled by default due to clock skew
@@ -105,7 +110,7 @@ AS_CASE([$host],
     [powerpc64*darwin*],        [CXXFLAGS="$CXXFLAGS -arch ppc64"],
     [powerpc*darwin*],          [CXXFLAGS="$CXXFLAGS -arch ppc"],
     [mips64*],                  [CXXFLAGS="$CXXFLAGS -mabi=64"],
-    [i?86-*-solaris2*],         [CXXFLAGS="$CXXFLAGS -xarch=""" + solaris86_arch + """ -Kpic"],
+    [i?86-*-solaris2*],         [CXXFLAGS="$CXXFLAGS -xarch=$solaris86_arch -Kpic"],
     [i?86-* | *ilp32],          [CXXFLAGS="$CXXFLAGS -m32"],
     [x86_64* | amd64* | arm64*
      | aarch64*],               [CXXFLAGS="$CXXFLAGS -m64"],
@@ -161,8 +166,8 @@ AS_CASE([$host],
         CXXFLAGS="$CXXFLAGS -z" # -z so null derefence fails (vs. returns zero).
         # TODO: Make one bootstrap for 32bits and 64bits.
         AS_IF([test x$GXX = xyes],
-              [CXXFLAGS="$CXXFLAGS """ + hpux_gcc_wordsize + """ "],
-              [CXXFLAGS="$CXXFLAGS """ + hpux_cc_bits + """ "])],
+              [CXXFLAGS="$CXXFLAGS $hpux_gcc_wordsize"],
+              [CXXFLAGS="$CXXFLAGS $hpux_cc_wordsize"])],
     [LIBS="$LIBS -lm"] # default
     )
 
@@ -219,9 +224,9 @@ AC_OUTPUT
             "autoconf -f",
             "automake --add-missing --copy --foreign",
             "rm -rf autom4te.cache",
-            #"chmod +x *",     # does not work
-            "rm Makefile.am",  # combat clock skew
-            "rm configure.ac", # combat clock skew
+            #"chmod +x *",      # does not work
+            #"rm Makefile.am",  # combat clock skew, but ugly
+            #"rm configure.ac", # combat clock skew, but ugly
             ]:
         print(a)
         os.system(a)
