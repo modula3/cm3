@@ -4,11 +4,11 @@
 (*                                                             *)
 (* Last modified on Tue Feb 28 15:59:51 PST 1995 by kalsow     *)
 
-MODULE QMachine;
+UNSAFE MODULE QMachine;
 
 IMPORT ASCII, Atom, AtomList, IntRefTbl, Env, Fmt, Text, TextConv, FileWr;
-IMPORT Pipe, Rd, Wr, Thread, Stdio, OSError, TextSeq, TextClass;
-IMPORT Pathname, Process, File, FS, RTParams;
+IMPORT Rd, Wr, Thread, Stdio, OSError, TextSeq, TextClass, M3toC;
+IMPORT Pathname, Process, File, FS, RTParams, Cstdlib, Ctypes;
 IMPORT M3Buf, M3File, M3ID, M3Process;
 IMPORT QIdent, QValue, QVal, QCode, QCompiler, QVTbl, QVSeq, QScanner;
 FROM Quake IMPORT Error, ID, IDMap, NoID;
@@ -43,11 +43,10 @@ REVEAL
     bindings  : QValue.Binding := NIL;
     buffers   : BufStack;
     default_wr: Wr.T;
-    shell     : TEXT         := NIL;
-    sh_option : TEXT         := NIL;
+    (*shell     : TEXT       := NIL;*)
+    (*sh_option : TEXT       := NIL;*)
     tmp_dir   : TEXT         := NIL;
-
-    doRecord := FALSE;
+    doRecord  := FALSE;
   OVERRIDES
     init      := Init;
     evaluate  := Evaluate;
@@ -75,7 +74,9 @@ REVEAL
   END;
 
 PROCEDURE Record(t : T; on : BOOLEAN) = 
-  BEGIN t.doRecord := on END Record;
+BEGIN
+  t.doRecord := on;
+END Record;
 
 TYPE
   Registers = RECORD
@@ -1081,18 +1082,18 @@ PROCEDURE PopInclude (t: T) =
 
 PROCEDURE InitOSEnv (t: T) =
   BEGIN
-    t.shell := GetEnv(NIL, "QUAKE_SHELL");
-    t.sh_option := GetEnv(NIL, "QUAKE_SHELL_OPTION");
+    (*t.shell := GetEnv(NIL, "QUAKE_SHELL");*)
+    (*t.sh_option := GetEnv(NIL, "QUAKE_SHELL_OPTION");*)
     t.tmp_dir := GetEnv(NIL, "QUAKE_TMPDIR");
     IF OnUnix THEN
-      IF t.shell = NIL THEN t.shell := "/bin/sh" END;
-      IF t.sh_option = NIL THEN t.sh_option := "-c" END;
+      (*IF t.shell = NIL THEN t.shell := "/bin/sh" END;*)
+      (*IF t.sh_option = NIL THEN t.sh_option := "-c" END;*)
       IF t.tmp_dir = NIL THEN 
         t.tmp_dir := GetEnv ("/tmp", "TMPDIR", "TMP", "TEMP");
       END;
     ELSE
-      IF t.shell = NIL THEN t.shell := GetEnv ("COMMAND.COM", "COMSPEC") END;
-      IF t.sh_option = NIL THEN t.sh_option := "/c" END;
+      (*IF t.shell = NIL THEN t.shell := GetEnv ("COMMAND.COM", "COMSPEC") END;*)
+      (*IF t.sh_option = NIL THEN t.sh_option := "/c" END;*)
       IF t.tmp_dir = NIL THEN
         t.tmp_dir   := GetEnv ("C:\\TEMP", "TMPDIR", "TMP", "TEMP");
       END;
@@ -1498,20 +1499,15 @@ PROCEDURE ExecCommand (t: T;  n_args: INTEGER;
   VAR
     echo         := TRUE;
     first        := TRUE;
-    n            : INTEGER;
-    handle       : Process.T;
-    stdin, stdout, stderr: File.T;
-    args         : ARRAY [0..1] OF TEXT;
-    buf          : M3Buf.T;
-    n_shell_args : INTEGER;
+    n            := 0;
+    buf          : M3Buf.T := NIL;
     wr           : Wr.T := CurWr (t);
-    quake_in     : Pipe.T;
-    process_out  : Pipe.T;
-    inbuf        : ARRAY [0..255] OF CHAR;
     command      := "";
     exit_code    := 0;
     ignore_errors := FALSE;
-    len          : INTEGER;
+    len          := 0;
+    wrx          : Wr.T := NIL;
+    ccommand     : Ctypes.char_star := NIL;
   BEGIN
     IF n_args > 0 THEN
 
@@ -1525,6 +1521,10 @@ PROCEDURE ExecCommand (t: T;  n_args: INTEGER;
       t.reg.sp := t.reg.sp - n_args;
       command := M3Buf.ToText (buf);
       FreeBuf (t,  buf);
+
+      IF mergeStdoutStderr THEN
+        command := command & " 2>&1";
+      END;
 
       (* strip the leading magic characters *)
       n := 0;
@@ -1541,93 +1541,35 @@ PROCEDURE ExecCommand (t: T;  n_args: INTEGER;
         command := Text.Sub (command, n);
       END;
 
-      (* echo the command & flush any pending output *)
       TRY
+        (* echo the command & flush any pending output *)
         IF echo OR t.do_echo THEN
           Wr.PutText (wr, command);
           Wr.PutText (wr, Wr.EOL);
         END;
+
         FlushIO ();
-      EXCEPT Wr.Failure (ec) =>
-        Err (t, "write failed" & OSErr (ec));
-      END;
 
-      args [0] := t.sh_option;
-      args [1] := command;
-      n_shell_args := 2;
-
-      (* finally, execute the command *)
-      TRY
-        
-        (* guideline for future cleanup: turn the IF clause below into
-           a promise that can be forced or delayed depending on the 
-           doRecord variable, same as the ELSE clause *)
-        
-        IF mergeStdoutStderr THEN
-          Process.GetStandardFileHandles (stdin, stdout, stderr);
-          Pipe.Open (hr := quake_in, hw := process_out);
-          TRY
-            (* fire up the subprocess *)
-            handle := Process.Create (t.shell, SUBARRAY (args, 0, n_shell_args),
-                                      stdin := stdin, stdout := process_out,
-                                      stderr := process_out);
-            (* close our copy of the writing end of the output pipe *)
-            process_out.close ();
-            LOOP 
-              (* send anything coming through the pipe to the quake output file *)
-              n := M3File.Read (quake_in, inbuf, NUMBER (inbuf));
-              IF (n <= 0) THEN EXIT; END;
-              Wr.PutString (wr, SUBARRAY (inbuf, 0, n));
-            END;
-          FINALLY
-            quake_in.close ();
-            FlushIO ();
-          END;
-        ELSE
+        IF NOT t.doRecord THEN
+          (* run the process *)
+          ccommand := M3toC.SharedTtoS (command);
+          exit_code := Cstdlib.system (ccommand);
+          M3toC.FreeSharedS (command, ccommand);
           FlushIO ();
-          handle := NIL;
-          exit_code := 0;
-          WITH a = NEW(REF ARRAY OF TEXT, n_shell_args) DO
-            a^ := SUBARRAY(args,0,n_shell_args);
-            VAR wrx : Wr.T; BEGIN
-              IF echo OR t.do_echo THEN
-                wrx := wr
-              ELSE
-                wrx := NIL
-              END;
-              WITH promise = NEW(ExecPromise,
-                                     cmd := t.shell,
-                                     wr := wrx,
-                                     args := a,
-                                     t := t,
-                                     timer := t.timer,
-                                     doRecord := t.doRecord,
-                                     ignore_errors := ignore_errors OR onlyTry) DO
-                IF t.doRecord THEN
-                  t.promises.addhi(promise)
-                ELSE
-                  promise.wr := NIL; (* no extra output *)
-                  exit_code := promise.fulfil()
-                END
-              END
-            END
-          END
+        ELSE
+          IF echo OR t.do_echo THEN
+            wrx := wr
+          END;
+          t.promises.addhi (NEW (ExecPromise,
+                                 cmd := command,
+                                 wr := wrx,
+                                 t := t,
+                                 timer := t.timer,
+                                 ignore_errors := ignore_errors OR onlyTry));
         END;
-      EXCEPT
-      | Thread.Alerted =>
-          KillProcess (handle);
-          RAISE Thread.Alerted;
-      | Wr.Failure (ec) =>
-          KillProcess (handle);
-          Err (t, "write failed" & OSErr (ec));
-      | OSError.E (ec) =>
-          KillProcess (handle);
-          Err (t, Fmt.F ("exec failed%s *** %s", OSErr (ec), command));
-      END;
-
-      (* wait for everything to shutdown... *)
-      IF handle # NIL THEN
-        exit_code := Process.Wait (handle);
+        EXCEPT (* unfortunately this code is duplicated *)
+        | Wr.Failure (ec) =>
+            Err (t, "write failed" & OSErr (ec));
       END;
     END;
 
@@ -1647,10 +1589,8 @@ PROCEDURE ExecCommand (t: T;  n_args: INTEGER;
 TYPE 
   ExecPromise = QPromise.T OBJECT
     cmd : TEXT;
-    args : REF ARRAY OF TEXT;
     t : T;
     timer : ETimer.T;
-    doRecord : BOOLEAN;
     wr : Wr.T;
     ignore_errors : BOOLEAN;
   OVERRIDES
@@ -1660,53 +1600,45 @@ TYPE
 PROCEDURE FulfilExecPromise(ep : ExecPromise) : QPromise.ExitCode
   RAISES { Error, Thread.Alerted } = 
   VAR
-    stdin, stdout, stderr: File.T;
-    handle : Process.T;
     start : Time.T;
+    exit_code := 0;
+    ccommand  : Ctypes.char_star := NIL;
   BEGIN
-    IF ep.doRecord AND ep.timer # NIL THEN
+    IF ep.timer # NIL THEN
       (* this records wall clock for the thread (and process).
          We could possibly use rusage to get cpu time *)
       start := Time.Now();
     END;
 
-    Process.GetStandardFileHandles (stdin, stdout, stderr);
     TRY
       IF ep.wr # NIL THEN
-        Wr.PutText (ep.wr, ep.args[1]);
+        Wr.PutText (ep.wr, ep.cmd);
         Wr.PutText (ep.wr, Wr.EOL);
         FlushIO ();
       END;
-      handle := Process.Create (ep.cmd, ep.args^,
-                                stdin := stdin, stdout := stdout, stderr := stderr);
-
-      WITH  exit_code = Process.Wait(handle) DO
-        IF exit_code # 0 AND NOT ep.ignore_errors THEN
-          Err (ep.t, Fmt.F("exit %s: %s", Fmt.Int(exit_code), ep.args[1]));
-          <*ASSERT FALSE*>
-        ELSE
-          IF ep.doRecord AND ep.timer # NIL THEN
-            ETimer.Append(ep.timer, Time.Now() - start);
-          END;
-          RETURN exit_code
-        END
+      ccommand := M3toC.SharedTtoS (ep.cmd);
+      exit_code := Cstdlib.system (ccommand);
+      M3toC.FreeSharedS (ep.cmd, ccommand);
+      FlushIO ();
+      IF exit_code # 0 AND NOT ep.ignore_errors THEN
+        Err (ep.t, Fmt.F("exit %s: %s", Fmt.Int(exit_code), ep.cmd));
+        <*ASSERT FALSE*>
+      ELSE
+        IF ep.timer # NIL THEN
+          ETimer.Append(ep.timer, Time.Now() - start);
+        END;
+        RETURN exit_code
       END
     EXCEPT (* unfortunately this code is duplicated *)
     | Thread.Alerted =>
-        KillProcess (handle);
         RAISE Thread.Alerted;
     | Wr.Failure (ec) =>
-        KillProcess (handle);
         Err (ep.t, "write failed" & OSErr (ec));
-        <*ASSERT FALSE*>
-    | OSError.E (ec) =>
-        KillProcess (handle);
-        Err (ep.t, Fmt.F ("exec failed%s *** %s", OSErr (ec), ep.args[1]));
         <*ASSERT FALSE*>
     END
   END FulfilExecPromise;
 
-PROCEDURE KillProcess (handle: Process.T) =
+<*UNUSED*>PROCEDURE KillProcess (handle: Process.T) =
   BEGIN
     IF (handle # NIL) THEN
       TRY
