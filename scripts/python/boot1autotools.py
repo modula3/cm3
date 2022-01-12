@@ -106,10 +106,9 @@ AS_CASE([$host],
     [powerpc*darwin*],          [CXXFLAGS="$CXXFLAGS -arch ppc"],
     [mips64*],                  [CXXFLAGS="$CXXFLAGS -mabi=64"],
     [i?86-*-solaris2*],         [CXXFLAGS="$CXXFLAGS -xarch=""" + solaris86_arch + """ -Kpic"],
-    [x86_64-* | amd64-*],       [CXXFLAGS="$CXXFLAGS -m64"],
-    [i?86-*],                   [CXXFLAGS="$CXXFLAGS -m32"],
-    [aarch64*darwin*_ilp32],    [CXXFLAGS="$CXXFLAGS -m32"],
-    [aarch64*darwin*],          [CXXFLAGS="$CXXFLAGS -m64"],
+    [i?86-* | *ilp32],          [CXXFLAGS="$CXXFLAGS -m32"],
+    [x86_64* | amd64* | arm64*
+     | aarch64*],               [CXXFLAGS="$CXXFLAGS -m64"],
     [arm*-darwin*],             [CXXFLAGS="$CXXFLAGS -march=armv6 -mcpu=arm1176jzf-s"], # Old unfinished 32bit iPhone support
     [sparc64* | sparcv9*],      [AS_IF([test x$GXX = xyes],
                                        [CXXFLAGS="$CXXFLAGS -m64 -mno-app-regs -pthread"],
