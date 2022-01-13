@@ -2,7 +2,7 @@ TARGET_OS = "CYGWIN"
 
 % Cygwin can be considered as Win32 or Posix.
 % Cygwin programs can include windows.h and call Windows functions.
-% However some things do not quite work.
+% However some things do not work.
 %
 % - CreateThread + system() seriously, or CreateThread + spawn
 %   https://cygwin.com/pipermail/cygwin/2022-January/250471.html
@@ -13,15 +13,14 @@ TARGET_OS = "CYGWIN"
 %
 %   unsigned __stdcall thread(void* p)
 %   {
-%       unsigned i;
-%       for (i = 0; i < 100; ++i)
+%       for (int i = 0; i < 100; ++i)
 %           system("./a.exe");
 %       return 0;
 %   }
 %
 %   int main()
 %   {
-%       unsigned i;
+%       int i;
 %       HANDLE threads[100] = {0};
 %       FILE* f = fopen("a.c", "w");
 %       fprintf(f, "int main() { return 0; }\n");
@@ -34,7 +33,6 @@ TARGET_OS = "CYGWIN"
 %
 %       for (i = 0; i < 100; ++i)
 %           WaitForSingleObject(threads[i], -1);
-%
 %   }
 %
 % This program reports various severe problems in Cygwin internals.
@@ -53,10 +51,11 @@ TARGET_OS = "CYGWIN"
 % exit() works. "Pure" Win32 programs work. But ExitProcess from
 % a Cygwin program does not.
 %
+% Modula3 workarounds:
+%  Cstdlib.exit instead of ExitProcess.
+%  system(make -j) instead of running gcc from threads.
+%
 OS_TYPE = "POSIX" % "WIN32" or "POSIX"
-
-% WIN32 mostly works, but encounters the above bugs.
-CYGWIN_OS_TYPE = "POSIX" % "WIN32" or "POSIX"
 
 SYSTEM_LIBS =
 {

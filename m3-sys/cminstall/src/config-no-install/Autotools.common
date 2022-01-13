@@ -2,8 +2,7 @@ M3_PARALLEL_BACK   = 20
 M3_BACKEND_MODE    = "C"
 NAMING_CONVENTIONS = "C++BackendWithAutomake"
 
-% Intermediate .cpp files are needed for make.
-M3_KEEP_FILES = TRUE
+M3_KEEP_FILES = TRUE % Intermediate .cpp files are needed for make.
 
 include ("cm3cfg.common")
 
@@ -92,12 +91,12 @@ proc compile_c(source, object, options, optimize, debug) is
   % This is not many files, just hand written C++.
   % Take this opportunity to change extension also.
   %
+  local cpp = pn_lastbase (source) & ".cpp"
   if not equal (source, pn_last (source))
     %symbolic_link_file (source, pn_last (source))
-    cp_if (source, pn_lastbase (source) & ".cpp")
+    cp_if (source, cpp)
   end
-  source = pn_lastbase (source) & ".cpp"
-  sources {source} = source
+  sources {cpp} = cpp
   if not equal (options, [ ])
       local a = "\nCXXFLAGS=\"$CXXFLAGS " & options & "\"\n"
       compile_options {a} = a
