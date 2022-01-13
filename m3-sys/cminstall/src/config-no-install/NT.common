@@ -292,6 +292,7 @@ readonly TARGET_NAMING = {"WIN32" : "2", "POSIX" : "0" }{OS_TYPE}
 %  0=Unix                          =>  .o   .io    .mo       libXX.a
 %  1=Unix with a grumpy C compiler =>  .o   _i.o   _m.o      libXX.a
 %  2=Windows NT or Windows 95      =>  .obj .io    .mo       XX.lib
+%  3=C++ backend with Automake     =>  .o   .i3.io .m3.o     libXX.a
 
 readonly LibOutPrefix = { "WIN32" : "",     "POSIX" : "lib" }{OS_TYPE} % aka TARGET_NAMING
 readonly LibOutSuffix = { "WIN32" : ".lib", "POSIX" : ".a"  }{OS_TYPE} % aka TARGET_NAMING
@@ -309,6 +310,7 @@ readonly TARGET_NAMING = "2"
 %  0=Unix                          =>  .o   .io    .mo       libXX.a
 %  1=Unix with a grumpy C compiler =>  .o   _i.o   _m.o      libXX.a
 %  2=Windows NT or Windows 95      =>  .obj .io    .mo       XX.lib
+%  3=C++ backend with Automake     =>  .o   .i3.io .m3.o     libXX.a
 
 readonly LibOutPrefix = ""
 readonly LibOutSuffix = ".lib"

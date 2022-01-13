@@ -1,0 +1,124 @@
+M3_PARALLEL_BACK   = 20
+M3_BACKEND_MODE    = "C"
+NAMING_CONVENTIONS = "C++BackendWithAutomake"
+
+% Intermediate .cpp files are needed for make.
+M3_KEEP_FILES = TRUE
+
+include ("cm3cfg.common")
+
+sources = { } % hash is needed to dedup e.g. Utils.i3 in cm3
+compile_options = { } % hash to dedup
+g_optimize = FALSE
+
+proc get_config_file(a) is
+    local b = ""
+    if defined("ROOT")
+        b = ROOT & "/m3-sys/cminstall/src/config-no-install/" & a
+        if FileExists(a)
+            return b
+        end
+    end
+    return INSTALL_ROOT & "/bin/config/" & a
+end
+
+proc automake(type, dotname, undername, compile_options, imported_libs) is
+    local a = ""
+
+    % setting CXXFLAGS early will prevent the defaults i.e. -O2 deliberately,
+    % -g as collateral damage, which is mitigated elsewhere
+    %
+    > "early.m4" in
+        if not g_optimize
+          write(compile_options)
+        end
+        write("enable_dependency_tracking=no\n")
+    end
+
+    % setting CXXFLAGS late will allow the defaults i.e. -O2 deliberately,
+    % -g as collateral damage, which is mitigated elsewhere
+    %
+    > "late.m4" in
+        if g_optimize
+          write(compile_options)
+        else
+          write("")
+        end
+    end
+
+    > "Makefile.am.tmp" in
+        write(imported_libs)
+        write("noinst_", type, "=", dotname, "\n", undername,  "_SOURCES=")
+        foreach b in sources
+            write("\\\n", b)
+        end
+    end
+    cp_if("Makefile.am.tmp", "Makefile.am")
+
+    if equal (WORD_SIZE, "64BITS")
+        a = get_config_file("configure64.ac")
+    else
+        a = get_config_file("configure32.ac")
+    end
+
+    cp_if(a, "configure.ac")
+
+    % Wsl seems promising here, but
+    % - It would be Linux autoconf not Cygwin, which should work,
+    %   but was producing warnings.
+    % - $OS == Windows_NT for Cygwin, and we should avoid wsl for that host.
+    %
+    local wsl = ""
+    if equal ($OS, "Windows_NT")
+      %wsl = "wsl"
+    end
+
+    if not FileExists("Makefile") or not FileExists("configure")
+        exec(wsl, "autoreconf -i ")
+    end
+    if not FileExists("Makefile")
+        exec(wsl, "./configure --disable-dependency-tracking")
+    end
+    exec(wsl, "make -j", M3_PARALLEL_BACK)
+end
+
+proc compile_c(source, object, options, optimize, debug) is
+
+  % TODO: Use AM_CXXFLAGS instead of CXXFLAGS.
+
+  g_optimize = optimize
+
+  % symbolic_link not quite working?
+  % This is not many files, just hand written C++.
+  % Take this opportunity to change extension also.
+  %
+  if not equal (source, pn_last (source))
+    %symbolic_link_file (source, pn_last (source))
+    cp_if (source, pn_lastbase (source) & ".cpp")
+  end
+  source = pn_lastbase (source) & ".cpp"
+  sources {source} = source
+  if not equal (options, [ ])
+      local a = "\nCXXFLAGS=\"$CXXFLAGS " & options & "\"\n"
+      compile_options {a} = a
+      a = "\nCFLAGS=\"$CFLAGS " & options & "\"\n"
+      compile_options {a} = a
+  end
+  return 0
+end
+
+proc m3_link(prog, options, objects, imported_libs, shared) is
+  automake ("PROGRAMS", prog, prog, compile_options, "\nLIBS=" & imported_libs & "\n")
+  return 0
+end
+
+proc skip_lib(lib, shared) is
+  local a = format("lib%s.a", lib)
+  deriveds ("", [a])
+  return 0
+end
+
+proc make_lib(lib, options, objects, imported_libs, shared) is
+  automake ("LIBRARIES", "lib" & lib & ".a", "lib" & lib & "_a", compile_options, "")
+  return 0
+end

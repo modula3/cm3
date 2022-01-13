@@ -15,7 +15,7 @@ if equal (OS_TYPE, "POSIX")
     interface("ThreadInternal")
     c_source("ThreadInternal")
 end
-if not equal (OS_TYPE, "POSIX") or equal (TARGET_OS, "CYGWIN")
+if equal (OS_TYPE, "WIN32") or equal (TARGET_OS, "CYGWIN")
     interface ("ThreadDebug")
     c_source("ThreadDebug")
 end

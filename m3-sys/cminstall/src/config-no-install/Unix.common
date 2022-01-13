@@ -14,6 +14,7 @@ readonly NAMING_CONVENTIONS = "0"
 %  0=Unix                          =>  .o   .io    .mo       libXX.a
 %  1=Unix with a grumpy C compiler =>  .o   _i.o   _m.o      libXX.a
 %  2=Windows NT or Windows 95      =>  .obj .io    .mo       XX.lib
+%  3=C++ backend with Automake     =>  .o   .i3.io .m3.o     libXX.a
 %
 
 %------------------------------------------------ external system libraries ---

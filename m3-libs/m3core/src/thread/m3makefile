@@ -9,12 +9,10 @@ include_dir ("Common")
 % FreeBSD 4 or earlier might not have a viable pthreads,
 % in which case make a separate config file and set NOPTHREAD = TRUE or such.
 %
-% Cygwin might want to use Win32 threads.
-
-if equal (OS_TYPE, "WIN32") or ({"CYGWIN"} contains TARGET_OS)
+if equal (OS_TYPE, "WIN32") or equal (TARGET_OS, "CYGWIN")
   include_dir ("WIN32")
 else
-  if not defined("NOPTHREAD")
+  if not defined ("NOPTHREAD")
     include_dir("PTHREAD")
   else
     include_dir (OS_TYPE)

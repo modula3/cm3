@@ -22,6 +22,8 @@ implementation("SocketPosix")
 implementation("OSConfigPosix")
 
 module("ProcessPosixCommon")
+
+% Cygwin can use faster spawn sometimes instead of fork/exec.
 if equal (TARGET_OS, "CYGWIN")
     implementation("ProcessCygwin")
 else

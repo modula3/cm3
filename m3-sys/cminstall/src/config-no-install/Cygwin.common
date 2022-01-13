@@ -1,8 +1,62 @@
-M3_BACKEND_MODE = "C"
-readonly TARGET_OS = "CYGWIN"
-readonly OS_TYPE   = "POSIX"       % { "WIN32" or "POSIX" }
+TARGET_OS = "CYGWIN"
 
-include ("cm3cfg.common")
+% Cygwin can be considered as Win32 or Posix.
+% Cygwin programs can include windows.h and call Windows functions.
+% However some things do not quite work.
+%
+% - CreateThread + system() seriously, or CreateThread + spawn
+%   https://cygwin.com/pipermail/cygwin/2022-January/250471.html
+%
+%   #include <stdlib.h>
+%   #include <stdio.h>
+%   #include <windows.h>
+%
+%   unsigned __stdcall thread(void* p)
+%   {
+%       unsigned i;
+%       for (i = 0; i < 100; ++i)
+%           system("./a.exe");
+%       return 0;
+%   }
+%
+%   int main()
+%   {
+%       unsigned i;
+%       HANDLE threads[100] = {0};
+%       FILE* f = fopen("a.c", "w");
+%       fprintf(f, "int main() { return 0; }\n");
+%       fclose(f);
+%
+%       system("g++ a.c");
+%
+%       for (i = 0; i < 100; ++i)
+%           threads[i] = CreateThread(0, 0, thread, 0, 0, 0);
+%
+%       for (i = 0; i < 100; ++i)
+%           WaitForSingleObject(threads[i], -1);
+%
+%   }
+%
+% This program reports various severe problems in Cygwin internals.
+%
+% - ExitProcess (seriously)
+%   https://cygwin.com/pipermail/cygwin/2022-January/250489.html
+%
+%   #include <windows.h>
+%
+%   int main()
+%   {
+%       ExitProcess(1);
+%   }
+%
+% If you run this program from Cygwin bash, $? is 0 after it exits.
+% exit() works. "Pure" Win32 programs work. But ExitProcess from
+% a Cygwin program does not.
+%
+OS_TYPE = "POSIX" % "WIN32" or "POSIX"
+
+% WIN32 mostly works, but encounters the above bugs.
+CYGWIN_OS_TYPE = "POSIX" % "WIN32" or "POSIX"
 
 SYSTEM_LIBS =
 {
@@ -12,28 +66,4 @@ SYSTEM_LIBS =
 
 SYSTEM_LIBORDER = [ "LIBC" ]
 
-proc compile_c(source, object, options, optimize, debug) is
-  exec ("@g++", "-g", "-xc++", "-c", options, source, "-o", object)
-  return 0
-end
-
-proc m3_link(prog, options, objects, imported_libs, shared) is
-  exec ("g++", "-o", prog, options, arglist("@", [objects, imported_libs]))
-  return 0
-end
-
-proc skip_lib(lib, shared) is
-  local a = format("lib%s.a", lib)
-  deriveds ("", [a])
-  return 0
-end
-
-proc make_lib(lib, options, objects, imported_libs, shared) is
-  local a = format("lib%s.a", lib)
-  delete_file (a)
-  exec("ar", "cr", a, arglist("@", objects))
-  return 0
-end
-
-%M3_PARALLEL_BACK = 20 % This fails. Try to switch fork/exec/spawn to system()
-M3_PARALLEL_BACK = 1
+include("Autotools.common")
