@@ -94,3 +94,4 @@ bootstrap/
 concierge.log
 m3-sys/m3cc/gcc-4.7/gcc/m3cg/
 scripts/PKGS
+scripts/python/cm3-boot-
