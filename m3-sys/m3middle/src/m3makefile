@@ -30,6 +30,7 @@ Module ("M3CG")
 Interface ("M3CG_Ops")
 
 Module ("M3CG_Check")
+Module ("M3CG_Tee")
 %% Module ("M3CG_Clean")
 Module ("M3CG_Rd")
 Module ("M3CG_Wr")
