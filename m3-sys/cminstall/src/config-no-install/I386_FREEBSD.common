@@ -1,8 +1,3 @@
-% uncomment one of these to force
-% e.g. for cross building to FreeBSD4
-% proc IsTargetFreeBSD4() is return FALSE end
-% proc IsTargetFreeBSD4() is return TRUE end
-
 readonly GNU_PLATFORM = "i686-freebsd7" % "cpu-os" string for GNU
 readonly SYSTEM_ASM = "as -32"
 GNU_LD_APPEND = ""
