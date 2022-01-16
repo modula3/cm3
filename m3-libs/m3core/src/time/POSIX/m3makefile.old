@@ -51,7 +51,6 @@ readonly _DateImpls = {
   "I386_DARWIN": "DateBsd",
   "PPC_DARWIN" : "DateBsd",
   "PPC_LINUX"  : "DateBsd",
-  "NetBSD2_i386"  : "DateBsd",
 
   "I386_OPENBSD" : "DateBsd",
   "MIPS64_OPENBSD" : "DateBsd",

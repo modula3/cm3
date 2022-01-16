@@ -547,10 +547,6 @@ Jumpbuf_size := 16_280 * Char.size; TBD
     |  Systems.PPC32_OPENBSD =&gt;
                  Jumpbuf_size              := 16_190 * Char.size;
                  Jumpbuf_align             := Word64.align; (* ? *)
-
-    | Systems.NetBSD2_i386 =&gt;
-                 max_align                 := 32;
-                 Jumpbuf_size              := 14 * Address.size;
 </PRE>    <PRE>
       Systems.I386_MSDOS =&gt;
                  </PRE>

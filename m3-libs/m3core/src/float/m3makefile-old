@@ -59,8 +59,7 @@ _FloatPieces = {
   "I386_OPENBSD": _float_le,
   "PPC_DARWIN" : _float_be,
   "PPC_LINUX"  : _float_be,
-  "PPC32_OPENBSD" : _float_be,
-  "NetBSD2_i386"   : _float_le
+  "PPC32_OPENBSD" : _float_be
 }
 
 if not _FloatPieces contains TARGET
