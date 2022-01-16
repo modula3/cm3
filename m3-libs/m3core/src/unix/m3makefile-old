@@ -39,7 +39,6 @@ readonly _UnixPieces = {
 % "NEXT"            : [ "ultrix-3-1.generic", "ultrix-3-1.NEXT",   "uin-common" ],
   "NT386"           : [ "cygwin",                                  "uin-common" ],
   "NT386GNU"        : [ "cygwin",                                  "uin-common" ],
-  "NetBSD2_i386"    : [ "netbsd-common", "netbsd2-i386",           "uin-common" ],
 % "OKI"             : [ "sysv-4.0",                                "uin-common" ],
 % "OS2"             : [ "os2",                                     "uin-common" ],
   "PA32_HPUX"       : [ "hpux-common",                             "uin-common" ],
