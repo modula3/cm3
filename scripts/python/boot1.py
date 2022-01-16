@@ -35,6 +35,7 @@ def Boot():
 
     global BuildLocal
     BuildLocal += " -boot -no-m3ship-resolution -group-writable -keep -DM3CC_TARGET=" + Config
+    BuildLocal += " -DM3_BACKEND_MODE=C"
 
     Version = CM3VERSION + "-" + time.strftime("%Y%m%d")
     BootDir = "./cm3-boot-" + BuildDir + "-" + Version
