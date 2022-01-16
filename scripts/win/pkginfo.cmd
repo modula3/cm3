@@ -63,4 +63,5 @@ goto :eof
     if /i "%TARGET%" == "FreeBSD4" exit /b 0
     if /i "%TARGET%" == "LINUXLIBC6" exit /b 0
     if /i "%TARGET%" == "SOLgnu" exit /b 0
+    if /i "%TARGET%" == "I386_NETBSD" exit /b 0
     exit /b 1
