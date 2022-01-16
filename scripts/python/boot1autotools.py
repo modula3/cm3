@@ -75,7 +75,7 @@ cd ../..
     # and the bootstrap is one flat directory.
 
     configure = "configure64.ac"
-    cminstall = path.join(Root, "m3-sys","cminstall","src","config-no-install")
+    cminstall = path.join(Root, "m3-sys","cminstall","src","config")
     if Config.find("32") != -1:
         configure = "configure32.ac"
     CopyFile(os.path.join(cminstall, configure), os.path.join(BootDir, "configure.ac"))

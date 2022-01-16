@@ -1,3 +1,13 @@
-% stub file for code that enumerates files in this directory
-% to get a list of targets
-% the real file is in config-no-install
+%-------------------------------------------------------------------
+% Copyright 1996-2000 Critical Mass, Inc. All rights reserved.
+% See file COPYRIGHT-CMASS for details.
+%
+% Standard configuration file for an x86 machine running Windows NT or perhaps Windows 95,
+% uses the integrated backend, Win32 threads, Win32 gui, Microsoft C library.
+%-------------------------------------------------------------------
+
+readonly TARGET = "NT386"   % code generation target
+
+%-------------------------------------------------------------------
+
+include("NT386.common")

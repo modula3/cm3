@@ -199,7 +199,7 @@ show_usage() {
 
 install_config() {
   CFG="${INSTALLROOT}/bin/cm3.cfg"
-  CFGS="${ROOT}/m3-sys/cminstall/src/config-no-install"
+  CFGS="${ROOT}/m3-sys/cminstall/src/config"
   CFGD="${INSTALLROOT}/bin/config"
   echo "create config directory ${CFGD}"
   rm -rf "${CFGD}" || exit 1

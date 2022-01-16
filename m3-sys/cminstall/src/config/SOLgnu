@@ -1,3 +1,15 @@
-% stub file for code that enumerates files in this directory
-% to get a list of targets
-% the real file is in config-no-install
+% Copyright 1996-2000 Critical Mass, Inc. All rights reserved.
+% See file COPYRIGHT-CMASS for details.
+%
+% Standard configuration file for SOLgnu (Solaris 2.x w/gcc)
+
+readonly TARGET = "SOLgnu"
+
+% Solaris common will look for several compilers.
+% If you favor a specific compiler, set SYSTEM_CC here.
+% If you favor GNU (g++) or SUN compiler, set C_COMPILER = "SUN" or "GNU"
+% to guide the search.
+% readonly C_COMPILER = "SUN" % favor Sun CC
+readonly C_COMPILER = "GNU" % favor g++
+
+include("SPARC32_SOLARIS.common")

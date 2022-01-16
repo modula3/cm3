@@ -86,7 +86,7 @@ m3back = \"@\" & INSTALL_ROOT & \"/bin/cm3cg\"
 include(path() & \"/config/$TARGET\")
 " > $INSTALL/bin/cm3.cfg
 
-for a in $LATEST_SOURCE/m3-sys/cminstall/src/config-no-install/*; do
+for a in $LATEST_SOURCE/m3-sys/cminstall/src/config/*; do
   if [ -f $a ]; then
     cp $a $INSTALL/bin/config
   fi

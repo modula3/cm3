@@ -7,13 +7,9 @@ import ("patternmatching")
 import ("sysutils")
 %import ("cmkey")
 
+% This does not work with the modular config files.
 configfn = ".." & SL & "src" & SL & "config" & SL & TARGET
-if not stale(configfn, configfn)
-  resource_named ("config", configfn)
-else
-  configfn = ".." & SL & "src" & SL & "config-no-install" & SL & TARGET
-  resource_named ("config", configfn)
-end
+resource_named ("config", configfn)
 bundle ("Setup")
 
 module ("Msg")

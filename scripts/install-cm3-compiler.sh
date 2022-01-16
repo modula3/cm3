@@ -23,7 +23,7 @@ FRONTEND="${INSTALLROOT}/bin/cm3"
 BACKEND="${INSTALLROOT}/bin/cm3cg"
 FRONTEND_SRC="${ROOT}/m3-sys/cm3/${TARGET}/cm3"
 BACKEND_SRC="${ROOT}/m3-sys/m3cc/${TARGET}/cm3cg"
-CONFIG_SRC="${ROOT}/m3-sys/cminstall/src/config-no-install"
+CONFIG_SRC="${ROOT}/m3-sys/cminstall/src/config"
 
 usage()
 {

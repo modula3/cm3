@@ -181,7 +181,7 @@ At a high level, what we will do is:
         m3-libs/m3core/src/runtime/POSIX/m3makefile
         m3-libs/m3core/src/unix/m3makefile
         m3-libs/m3core/src/unix/Common/m3makefile
-        m3-sys/cminstall/src/config-no-install/AMD64_LINUX
+        m3-sys/cminstall/src/config/AMD64_LINUX
         m3-sys/m3cc/src/platforms.quake -- necessary for cross builds
         m3-sys/m3gdb/src/platforms.quake
 
@@ -195,7 +195,7 @@ At a high level, what we will do is:
     Make some good guesses for them.
 
 
- - cd m3-sys/cminstall/src/config-no-install
+ - cd m3-sys/cminstall/src/config
    Get a feel for some of the files here.
    Copy one of them and edit it appropriately.
    This includes:
@@ -227,7 +227,7 @@ At a high level, what we will do is:
    We won't be using these, but go ahead and update them.
 
  - Look in scripts/python/pylib.py for platform names, in the function def Boot():
-   This is basically unfortunately duplicated from cminstall/src/config-no-install.
+   This is basically unfortunately duplicated from cminstall/src/config.
    This part is used to construct the Makefile (or Bourne script) we use on the target to build cm3.
 
  - Make sure the function _GetAllTargets in scripts/python/pylib.py includes your target in its list.
@@ -281,8 +281,8 @@ At a high level, what we will do is:
   mv cm3 /cm3/bin
   PATH=/cm3/bin:$PATH
   export PATH
-  cp $CM3_ROOT/m3-sys/cminstall/src/config-no-install/cm3.cfg /cm3/bin
-  This cm3.cfg delegates to $CM3_ROOT/m3-sys/cminstall/src/config-no-install/TARGET.
+  cp $CM3_ROOT/m3-sys/cminstall/src/config/cm3.cfg /cm3/bin
+  This cm3.cfg delegates to $CM3_ROOT/m3-sys/cminstall/src/config/TARGET.
   cd scripts/python
   ./do-pkg.py m3cc buildship
   ./do-pkg.py m3core libm3 buildship

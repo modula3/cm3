@@ -13,7 +13,7 @@ g_optimize = FALSE
 proc get_config_file(a) is
     local b = ""
     if defined("ROOT")
-        b = ROOT & "/m3-sys/cminstall/src/config-no-install/" & a
+        b = ROOT & "/m3-sys/cminstall/src/config/" & a
         if FileExists(a)
             return b
         end
