@@ -33,9 +33,8 @@ def Boot():
 # TODO as a result, support building separate libraries and possibly shared libraries
 # TODO and out-of-tree builds
 
-    global BuildLocal
-    BuildLocal += " -boot -no-m3ship-resolution -group-writable -keep -DM3CC_TARGET=" + Config
-    BuildLocal += " -DM3_BACKEND_MODE=C"
+    pylib.BuildLocal += " -boot -no-m3ship-resolution -group-writable -keep -DM3CC_TARGET=" + Config
+    pylib.BuildLocal += " -DM3_BACKEND_MODE=C"
 
     Version = CM3VERSION + "-" + time.strftime("%Y%m%d")
     BootDir = "./cm3-boot-" + BuildDir + "-" + Version
