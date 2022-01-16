@@ -633,26 +633,6 @@ GCC_BACKEND = not _CBackend
 
 #-----------------------------------------------------------------------------
 #
-# Append c to BuildDir (i.e. Target) if +c in command line.
-# Previously this was if plain C in argv but this is perhaps a separate factor,
-# least for targets that have other backends. i.e. so NT386 and NT386c build
-# directories can coexist.
-#
-# But not if target only has C backend.
-#
-# TODO
-#
-#_BuildDirC = ["", "c"]["c" in LowercaseArgv]
-#_BuildDirC = ["", "c"]["+c" in LowercaseArgv]
-#_BuildDirC = ["", "c"]["+c" in LowercaseArgv and not TargetOnlyHasCBackend(Target)]
-#_BuildDirC = ["", "c"][_CBackend and not TargetOnlyHasCBackend(Target)]
-#_BuildDirC = ""
-
-# It is confusing as to when c is appended or not, so do it never.
-_BuildDirC = ""
-
-#-----------------------------------------------------------------------------
-#
 # TargetOS is almost always POSIX, the user cannot set it, it is changed to WIN32 sometimes later
 #
 
@@ -703,8 +683,7 @@ if Host != None and (Host.endswith("_NT") or Host == "NT386"):
 
 #-----------------------------------------------------------------------------
 
-BuildDir = ("%(Config)s%(_BuildDirC)s" % vars())
-#BuildDir = Config
+BuildDir = Config
 M3GDB = (M3GDB or CM3_GDB)
 Scripts = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PKGSDB = os.path.join(Scripts, "PKGS")
