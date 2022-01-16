@@ -356,7 +356,7 @@ def TargetOnlyHasCBackend(a):
     return (a.endswith("_nt") or a.startswith("arm") or a.find("riscv") != -1
         or a.find("solaris") != -1 or a.startswith("sol") # gcc backend does work
         or a.find("alpha") != -1 or a.find("osf") != -1 # gcc backend does work
-        or a.find("mingw") != -1 or a.find("cygwin") != -1
+        or a.find("mingw") != -1 or a.find("cygwin") != -1 or a.find("haiku") != -1
         or a.find("ia64") != -1 or a.find("hpux") != -1) # HPPA_HPUX gcc backend does work, IA64 maybe too
 
 _PossibleCm3Flags = ["boot", "keep", "override", "commands", "verbose", "why", "debug", "trace"]
