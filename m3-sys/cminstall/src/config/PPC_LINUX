@@ -1,3 +1,12 @@
-% stub file for code that enumerates files in this directory
-% to get a list of targets
-% the real file is in config-no-install
+readonly TARGET = "PPC_LINUX"     % code generation target
+readonly GNU_PLATFORM = "powerpc-linuxelf" % "cpu-os" string for GNU
+
+SYSTEM_CC = "@g++ -g -m32 -fPIC" % C compiler
+readonly SYSTEM_ASM = "@as" % Assembler
+
+% PIE debugging requires gdb 7.1 or newer, even for C
+% see http://www.gnu.org/software/gdb/download/ANNOUNCEMENT
+%readonly POSITION_INDEPENDENT_EXECUTABLE = "-pie"
+
+include("PPC.common")
+include("Linux.common")

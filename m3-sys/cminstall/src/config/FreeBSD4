@@ -1,3 +1,2 @@
-% stub file for code that enumerates files in this directory
-% to get a list of targets
-% the real file is in config-no-install
+readonly TARGET = "FreeBSD4"
+include("I386_FREEBSD.common")

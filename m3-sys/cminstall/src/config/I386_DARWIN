@@ -1,3 +1,9 @@
-% stub file for code that enumerates files in this directory
-% to get a list of targets
-% the real file is in config-no-install
+% Copyright 1996-2000 Critical Mass, Inc. All rights reserved.
+% See file COPYRIGHT-CMASS for details.
+
+readonly TARGET = "I386_DARWIN"
+readonly GNU_PLATFORM = "i686-darwin8" % "cpu-os" string for GNU
+DarwinArch = "i386"
+
+include("I386.common")
+include("Darwin.common")

@@ -725,7 +725,7 @@ CM3_FLAGS = CM3_FLAGS + " -DBUILD_DIR=" + BuildDir
 #-----------------------------------------------------------------------------
 
 def GetConfigForDistribution(Target):
-    b = os.path.join(Root, "m3-sys", "cminstall", "src", "config-no-install", Target)
+    b = os.path.join(Root, "m3-sys", "cminstall", "src", "config", Target)
     # print("GetConfigForDistribution:" + b)
     return b
 
@@ -1455,12 +1455,7 @@ def DeleteConfig(To):
     Bin  = os.path.join(To, "bin")
     RemoveDirectoryRecursive(os.path.join(Bin, "config"))
 
-    # TODO: Remove plain "config" here.
-    # This is to migrate very old installs.
-    # Or rename config to config.old and config-no-install to config.
-    # Or move config to m3-sys/config
-    #
-    for b in ["config", "config-no-install"]:
+    for b in ["config"]:
         for File in glob.glob(os.path.join(a, b, "*")):
             if isfile(File):
                 DeleteFile(os.path.join(Bin, os.path.basename(File)))
@@ -1485,8 +1480,7 @@ def CopyConfigForDevelopment():
     #
     DeleteConfig(InstallRoot)
 
-    # CopyFile(os.path.join(Root, a, "config", "cm3.cfg"), To) or FatalError()
-    CopyFile(os.path.join(Root, a, "config-no-install", "cm3.cfg"), To) or FatalError()
+    CopyFile(os.path.join(Root, a, "config", "cm3.cfg"), To) or FatalError()
     return True
 
 #-----------------------------------------------------------------------------
@@ -1506,7 +1500,7 @@ def CopyConfigForDistribution(To):
     dir = os.path.join(Bin, "config")
     DeleteConfig(To)
     CreateDirectory(dir)
-    for File in glob.glob(os.path.join(Root, "m3-sys", "cminstall", "src", "config-no-install", "*")):
+    for File in glob.glob(os.path.join(Root, "m3-sys", "cminstall", "src", "config", "*")):
         if isfile(File):
             CopyFile(File, dir)
     open(os.path.join(Bin, "cm3.cfg"), "w").write("\

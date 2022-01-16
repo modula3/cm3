@@ -232,13 +232,13 @@ if /I not "%_cm3_CfgDone%"=="TRUE" call :FN_UpdateConfig
 echo Creating config ...
 if not exist "%CM3_ROOT%\bin\config" mkdir %CM3_ROOT%\bin\config
 if not exist "%CM3_ROOT%\bin\config" echo ERROR:  Unable to create folder "%CM3_ROOT%\bin\config" & (set _cm3_ExitCode=5) & goto END
-copy /y %_cm3_PkgTree%m3-sys\cminstall\src\config-no-install\* %CM3_ROOT%\bin\config
+copy /y %_cm3_PkgTree%m3-sys\cminstall\src\config\* %CM3_ROOT%\bin\config
 if errorlevel 1 echo ERROR:  Problem copying files. & (set _cm3_ExitCode=5) & goto END
 echo Creating "%CM3_ROOT%\bin\cm3.cfg" ...
 if exist "%CM3_ROOT%\bin\cm3.cfg" del /f %CM3_ROOT%\bin\cm3.cfg
 REM OLD: echo INSTALL_ROOT = path() ^& "/..">%CM3_ROOT%\bin\cm3.cfg
 REM OLD: echo include(path() ^& "/config/NT386")>>%CM3_ROOT%\bin\cm3.cfg
-copy /y %_cm3_PkgTree%m3-sys\cminstall\src\config-no-install\cm3.cfg %CM3_ROOT%\bin\cm3.cfg
+copy /y %_cm3_PkgTree%m3-sys\cminstall\src\config\cm3.cfg %CM3_ROOT%\bin\cm3.cfg
 if errorlevel 1 echo ERROR:  Problem copying files. & (set _cm3_ExitCode=5) & goto END
 if not exist "%CM3_ROOT%\bin\cm3.cfg" echo ERROR:  Problem copying files. & (set _cm3_ExitCode=5) & goto END
 if not "%_cm3_Verbose%"=="TRUE" goto SkipCFGlist
@@ -307,7 +307,6 @@ goto :EOF
 :FN_UpdateConfig
 :---------------
 echo Removing obsolete configuration files from %CM3_ROOT%\bin ...
-for %%f in (%_cm3_PkgTree%m3-sys\cminstall\src\config-no-install\*) do call :Zap %%f %CM3_ROOT%\bin
 for %%f in (%_cm3_PkgTree%m3-sys\cminstall\src\config\*) do call :Zap %%f %CM3_ROOT%\bin
 echo.
 set _cm3_CfgDone=TRUE

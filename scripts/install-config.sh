@@ -23,11 +23,11 @@ fi
 set -e
 set -x
 
-for f in ${ROOT}/m3-sys/cminstall/src/config-no-install/*; do
+for f in ${ROOT}/m3-sys/cminstall/src/config/*; do
   rm -f "${INSTALLROOT}/bin/`basename ${f}`" > /dev/null
 done
 mkdir -p "${INSTALLROOT}/bin/config"
-for f in ${ROOT}/m3-sys/cminstall/src/config-no-install/*; do
+for f in ${ROOT}/m3-sys/cminstall/src/config/*; do
   [ -f ${f} ] && cp "${f}" "${INSTALLROOT}/bin/config"
 done
 (

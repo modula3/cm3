@@ -22,7 +22,7 @@ Install it, like so:
  mkdir -p ~/work/cm3-inst/prev-ok/bin/config
  mkdir -p ~/work/cm3-inst/current/bin/config
  copy cm3 and cm3cg to the bin directories
- copy cvsroot/m3-sys/cminstall/src/config-no-install to the config directories
+ copy cvsroot/m3-sys/cminstall/src/config to the config directories
  create cm3.cfg in the bin directories with this content:
    INSTALL_ROOT = path() & "/.."
    include(path() & "/config/" & HOST)

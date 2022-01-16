@@ -1366,7 +1366,7 @@ class UpgradeCommand(ConciergeCommand):
     def _install_config(self):
         "Copy config for distribution"
 
-        src = self.source("m3-sys/cminstall/src/config-no-install")
+        src = self.source("m3-sys/cminstall/src/config")
         dst = self.install("bin/config")
 
         # Delete the old config files.
@@ -1700,7 +1700,7 @@ class MakeDistributionCommand(MakeBootstrapCommand):
                 "--exclude=*.tar.xz",
                 f"--transform=s!^{source}!{distname}!",
                 f"{source}/bootstrap",
-                f"{source}/m3-sys/cminstall/src/config-no-install",
+                f"{source}/m3-sys/cminstall/src/config",
                 "--exclude-vcs",          # Don't include .git
                 "--exclude-vcs-ignores",  # Don't include things ignored by git
                 "--exclude=m3-sys/m3cc",  # Don't include GCC
