@@ -600,12 +600,6 @@ Host = None
 print("A working cm3 is required. Checking.")
 print(CM3 + " -version | fgrep host:")
 for a in os.popen(CM3 + " -version 2>" + DevNull):
-    if (StringContains(a, "Critical Mass Modula-3 version 5.1.")
-     or StringContains(a, "Critical Mass Modula-3 version 5.2.")
-     or StringContains(a, "Critical Mass Modula-3 version d5.5.")):
-        if env_OS == "Windows_NT":
-            Host = "NT386"
-            break
     if StringContains(a, "host:"):
         print(a)
         Host = a.replace("\r", "").replace("\n", "").replace(" ", "").replace("host:", "")
