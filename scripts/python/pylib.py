@@ -308,15 +308,7 @@ def _ClearEnvironmentVariable(Name):
 
 def _GetAllTargets():
 
-    # legacy naming
-
     Targets = { }
-    for target in [ "NT386", "LINUXLIBC6", "SOLsun", "SOLgnu", "FreeBSD4" ]:
-        Targets[target] = target
-        Targets[target.lower()] = target
-        Targets[target.upper()] = target
-
-    # systematic naming
 
     for proc in ["ALPHA", "ALPHA32", "ALPHA64", "AMD64", "ARM", "ARMEL",
                  "ARM64", "IA64", "I386", "PPC", "PPC32", "PPC64", "SPARC",
@@ -2252,9 +2244,6 @@ def RestoreSkel(prefix):
 # see http://www.debian.org/doc/debian-policy/footnotes.html#f73
 
 DebianArchitecture = {
-  "LINUXLIBC6" : "i386",
-  "FreeBSD4" : "i386",
-  "NT386" : "i386",
   "I386" : "i386",
   "IA64" : "ia64",
   "ALPHA" : "alpha",
@@ -2268,8 +2257,6 @@ DebianArchitecture = {
   "PPC" : "powerpc",
   "PPC32" : "powerpc",
   "PPC64" : "ppc",
-  "SOLsun" : "sparc",
-  "SOLgnu" : "sparc",
   "SPARC" : "sparc",
   "SPARC32" : "sparc",
   "SPARC64" : "sparc",
