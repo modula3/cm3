@@ -100,7 +100,7 @@ X(ETIMEDOUT)
 
 #if !defined (__DJGPP__) || defined (EWOULDBLOCK)
 X(EWOULDBLOCK)
-M3_STATIC_ASSERT (EWOULDBLOCK != 0)
+M3_STATIC_ASSERT (EWOULDBLOCK != 0);
 #else
 Y(EWOULDBLOCK, 0)
 #endif
@@ -360,7 +360,7 @@ X(SIGKILL)
 
 #if !defined (__DJGPP__) || defined (SIGCHLD)
 X(SIGCHLD)
-M3_STATIC_ASSERT (SIGCHLD != 0)
+M3_STATIC_ASSERT (SIGCHLD != 0);
 #else
 Y(SIGCHLD, 0)
 #endif
@@ -535,7 +535,7 @@ Y(MSETGID, S_ISGID) /* set group id on execution */
 
 #if !defined (__DJGPP__) || defined (S_ISVTX)
 Y(MSTICKY, S_ISVTX) /* save swapped text even after use */
-M3_STATIC_ASSERT (S_ISVTX != 0)
+M3_STATIC_ASSERT (S_ISVTX != 0);
 #else
 Y(MSTICKY, 0)
 #endif
@@ -899,7 +899,6 @@ X(MSG_PROXY)
 X(SOMAXCONN)
 #endif
 
-
 #undef X
 #define X(x) EXTERN_CONST int Ustat__##x = x;
 #undef Y
@@ -913,7 +912,7 @@ X(S_IFCHR)
 X(S_IFIFO)
 #if !defined (__DJGPP__) || defined (S_IFSOCK)
 X(S_IFSOCK)
-M3_STATIC_ASSERT (S_IFSOCK != 0)
+M3_STATIC_ASSERT (S_IFSOCK != 0);
 #else
 Y(S_IFSOCK, 0)
 #endif
