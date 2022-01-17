@@ -339,7 +339,8 @@ CG.Store_addr (info);
       (* we didn't eat this exception => mark and invoke the next handler *)
       CG.Load_addr_of (next_info, 0, Target.Address.align);
       CG.Load_addr_of (info, 0, Target.Address.align);
-(*peter check this copy *)
+(*peter check this copy since this is a struct copy of the old local and now 
+we have just an address so could just do load and store *)
       CG.Copy (M3RT.EA_SIZE, overlap := FALSE);
       CG.Jump (next_handler);
     END;
@@ -375,6 +376,8 @@ PROCEDURE CompileHandler1 (h: Handler;  info: CG.Var;
 
         CG.Load_addr (info, M3RT.EA_exception, Target.Address.align);
         CG.Boost_addr_alignment (Target.Integer.align);
+(*peter need another indirect - need a boost as well ? *)
+CG.Load_indirect (CG.Type.Addr, 0, Target.Address.size); 
         CG.Load_indirect (Target.Integer.cg_type, 0, Target.Integer.size);
         CG.Load_intt (Exceptionz.UID (e.obj));  (** Value.Load (e.obj);  **)
         e := e.next;
@@ -394,6 +397,7 @@ PROCEDURE CompileHandler1 (h: Handler;  info: CG.Var;
         Scope.InitValues (h.scope);
         Variable.LoadLValue (h.var);
         EVAL Type.CheckInfo (h.type, t_info);
+(* peter these prob need an extr load indirect - check *)
         IF Exceptionz.ArgByReference (h.type) THEN
           CG.Load_addr (info, M3RT.EA_arg, Target.Address.align);
           CG.Boost_addr_alignment (t_info.alignment);
