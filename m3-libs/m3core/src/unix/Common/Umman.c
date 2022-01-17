@@ -12,7 +12,10 @@
 
 // char* (caddr_t) instead of void* for default Solaris
 M3WRAP3(int, mprotect, caddr_t, size_t, int)
+
+#ifndef __DJGPP__
 M3WRAP6(void*, mmap, caddr_t, size_t, int, int, int, m3_off_t)
 M3WRAP2(int, munmap, caddr_t, size_t)
+#endif
 
 #endif

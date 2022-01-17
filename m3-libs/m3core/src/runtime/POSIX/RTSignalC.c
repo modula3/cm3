@@ -16,7 +16,7 @@
 #include <signal.h>
 #include <sys/uc_access.h>
 #endif
-#if !defined(__INTERIX) && !defined(__vms) && !defined(SA_SIGINFO)
+#if !(defined(__INTERIX) || defined(__vms) || defined(__DJGPP)) && !defined(SA_SIGINFO)
 #define SA_SIGINFO SA_SIGINFO
 #endif
 
@@ -70,7 +70,7 @@ static void Quit SIGNAL_HANDLER_SIGNATURE;
 static void InstallOneHandler(size_t i);
 static void RestoreOneHandler(size_t i);
 
-#if defined(__CYGWIN__) || defined(__INTERIX) || defined(__vms)
+#if defined(__CYGWIN__) || defined(__INTERIX) || defined(__vms) || defined (__DJGPP__)
 
 /* Revisit VMS */
 
@@ -114,7 +114,9 @@ Handlers[] =
     { SIGSEGV, SegV }, /* threading library may override this */
     { SIGPIPE, IgnoreSignal },
     { SIGTERM, Shutdown },
+#if !defined (__DJGPP__) || defined (SIGBUS)
     { SIGBUS,  SegV },
+#endif
 };
 
 static struct sigaction InitialHandlers[NUMBER_OF(Handlers)];

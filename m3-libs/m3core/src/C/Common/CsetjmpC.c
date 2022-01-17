@@ -42,7 +42,7 @@ void __cdecl Csetjmp__m3_longjmp(Csetjmp__jmp_buf env, int val)
 #else
 void __cdecl Csetjmp__m3_longjmp(Csetjmp__jmp_buf env, int val)
 {
-#if defined(_WIN32) || defined(__CYGWIN__) || defined(__MINGW__)
+#if defined(_WIN32) || defined(__CYGWIN__) || defined(__MINGW__) || defined(__DJGPP__)
     // No signal mask to save/restore, longjmp is the only longjmp.
     longjmp(*env, val);
 #else

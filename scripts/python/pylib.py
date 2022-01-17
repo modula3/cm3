@@ -317,7 +317,9 @@ def _GetAllTargets():
         for os in ["AIX",  "CE", "CYGWIN", "DARWIN",  "FREEBSD", "HAIKU",
                    "HPUX", "HPUX32", "HPUX64", "INTERIX", "IRIX", "LINUX",
                    "MINGW", "NETBSD", "NT", "NT32", "NT64", "OPENBSD", "OSF",
-                   "SOLARIS", "VMS", "VMS32", "VMS64"]:
+                   "SOLARIS", "VMS", "VMS32", "VMS64",
+                   "DJGPP" # MSDOS
+                   ]:
                    # "BEOS", "MSDOS" (DJGPP), "OS2" (EMX), "PLAN9"
             target = proc + "_" + os
             Targets[target] = target
@@ -349,6 +351,7 @@ def TargetOnlyHasCBackend(a):
         or a.find("solaris") != -1 or a.startswith("sol") # gcc backend does work
         or a.find("alpha") != -1 or a.find("osf") != -1 # gcc backend does work
         or a.find("mingw") != -1 or a.find("cygwin") != -1 or a.find("haiku") != -1
+        or a.find("djgpp") != -1
         or a.find("ia64") != -1 or a.find("hpux") != -1) # HPPA_HPUX gcc backend does work, IA64 maybe too
 
 _PossibleCm3Flags = ["boot", "keep", "override", "commands", "verbose", "why", "debug", "trace"]

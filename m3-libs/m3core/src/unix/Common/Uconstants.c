@@ -5,7 +5,7 @@
 #ifndef INCLUDED_M3CORE_H
 #include "m3core.h"
 #endif
-#ifndef _WIN32
+#if !(defined (_WIN32) || defined (__DJGPP__))
 #include <netinet/tcp.h>
 #include <netinet/in.h>
 #endif
@@ -16,7 +16,7 @@
 #include <process.h>
 #include <sys/termios.h>
 #endif
-#if !defined(__INTERIX) && !defined(_WIN32)
+#if !(defined(__INTERIX) || defined(_WIN32) || defined (__DJGPP__))
 #include <net/if.h>
 #endif
 #ifdef __APPLE__
@@ -71,11 +71,15 @@ extern "C" {
 #define X(x) /* M3_STATIC_ASSERT (x < M3_UERROR_MAX); */ EXTERN_CONST int Uerror__##x = x;
 #endif
 
-#ifndef _WIN32
-/* These do exist but
- - They have "WSA" in front of them.
- - They are large (10000+).
-*/
+#undef Y
+#define Y(x, y) EXTERN_CONST int Uerror__##x = y;
+
+#if !(defined(_WIN32) || defined (__DJGPP__))
+// Windows: These do exist but
+//  - They have "WSA" in front of them.
+//  - They are large (10000+), which used to matter.
+// Djgpp: No network stack yet.
+//
 X(EADDRINUSE)
 X(EADDRNOTAVAIL)
 X(EALREADY)
@@ -92,7 +96,13 @@ X(ENETUNREACH)
 X(ENOBUFS)
 X(ENOTSOCK)
 X(ETIMEDOUT)
+#endif
+
+#if !defined (__DJGPP__) || defined (EWOULDBLOCK)
 X(EWOULDBLOCK)
+M3_STATIC_ASSERT (EWOULDBLOCK != 0)
+#else
+Y(EWOULDBLOCK, 0)
 #endif
 
 X(EACCES)
@@ -340,14 +350,28 @@ X(WNOHANG)
 
 #undef X
 #define X(x) EXTERN_CONST int Usignal__##x = x;
+#undef Y
+#define Y(x, y) EXTERN_CONST int Usignal__##x = y;
+
 X(SIGINT)
 X(SIGTERM)
 #ifndef _WIN32
 X(SIGKILL)
+
+#if !defined (__DJGPP__) || defined (SIGCHLD)
 X(SIGCHLD)
+M3_STATIC_ASSERT (SIGCHLD != 0)
+#else
+Y(SIGCHLD, 0)
+#endif
+
 X(SIGALRM)
 X(SIGHUP)
+
+#if !defined (__DJGPP__) || defined (SIGSTOP)
 X(SIGSTOP)
+#endif
+
 #endif
 
 #ifdef SIGQUIT
@@ -459,7 +483,9 @@ X(SIG_SETMASK)
 #undef Y
 #define Y(x, y) EXTERN_CONST int Unix__##x = y;
 
+#if !defined (__DJGPP__) || defined (FIONREAD)
 X(FIONREAD)
+#endif
 
 X(O_RDONLY)
 X(O_RDWR)
@@ -506,7 +532,14 @@ X(FD_CLOEXEC)   /* Close file descriptor on exec() */
 
 Y(MSETUID, S_ISUID) /* set user id on execution */
 Y(MSETGID, S_ISGID) /* set group id on execution */
+
+#if !defined (__DJGPP__) || defined (S_ISVTX)
 Y(MSTICKY, S_ISVTX) /* save swapped text even after use */
+M3_STATIC_ASSERT (S_ISVTX != 0)
+#else
+Y(MSTICKY, 0)
+#endif
+
 Y(MROWNER, S_IRUSR) /* readable by owner */
 Y(MWOWNER, S_IWUSR) /* writable by owner */
 Y(MXOWNER, S_IXUSR) /* executable by owner */
@@ -527,17 +560,37 @@ Y(Mrwrwrw, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH)
 
 /* core Usocket that m3core/libm3 use */
 
+#if !defined (__DJGPP__) || defined (SOCK_STREAM)
 X(SOCK_STREAM)
+#endif
+
+#if !defined (__DJGPP__) || defined (SOCK_DGRAM)
 X(SOCK_DGRAM)
+#endif
 
+#if !defined (__DJGPP__) || defined (SO_REUSEADDR)
 X(SO_REUSEADDR)
+#endif
+
+#if !defined (__DJGPP__) || defined (SO_KEEPALIVE)
 X(SO_KEEPALIVE)
+#endif
+
+#if !defined (__DJGPP__) || defined (SO_LINGER)
 X(SO_LINGER)
+#endif
 
+#if !defined (__DJGPP__) || defined (SOL_SOCKET)
 X(SOL_SOCKET)
-X(MSG_PEEK)
+#endif
 
+#if !defined (__DJGPP__) || defined (MSG_PEEK)
+X(MSG_PEEK)
+#endif
+
+#if !defined (__DJGPP__) || defined (AF_INET)
 X(AF_INET)
+#endif
 
 #ifdef AF_LOCAL
 X(AF_LOCAL)
@@ -730,7 +783,9 @@ X(AI_SECURE)
 X(AI_RETURN_PREFERRED_NAMES)
 #endif
 
+#if !defined (__DJGPP__) || defined (IPPROTO_TCP)
 X(IPPROTO_TCP)
+#endif
 #ifdef IPPROTO_UDP
 X(IPPROTO_UDP)
 #endif
@@ -856,12 +911,21 @@ X(S_IFDIR)
 X(S_IFCHR)
 #ifndef _WIN32
 X(S_IFIFO)
+#if !defined (__DJGPP__) || defined (S_IFSOCK)
 X(S_IFSOCK)
+M3_STATIC_ASSERT (S_IFSOCK != 0)
+#else
+Y(S_IFSOCK, 0)
+#endif
 X(S_IFLNK)
 X(S_IFBLK)
 X(S_ISUID)
 X(S_ISGID)
+
+#if !defined (__DJGPP__) || defined (S_ISVTX)
 X(S_ISVTX)
+#endif
+
 #endif
 
 X(S_IREAD)
@@ -974,19 +1038,30 @@ Y(SF_SNAPSHOT, 0)
 
 #undef X
 #define X(x) M3_STATIC_ASSERT(x); EXTERN_CONST int Unetdb__##x = x;
+
+#if !defined (__DJGPP__) || defined (TRY_AGAIN)
 X(TRY_AGAIN)
+#endif
+
+#if !defined (__DJGPP__) || defined (NO_RECOVERY)
 X(NO_RECOVERY)
+#endif
+
+#if !defined (__DJGPP__) || defined (NO_ADDRESS)
 X(NO_ADDRESS)
+#endif
 
 #undef X
 #define X(x) EXTERN_CONST int Uin__##x = x;
-X(IPPROTO_TCP)
 
+#if !defined (__DJGPP__) || defined (IPPROTO_TCP)
+X(IPPROTO_TCP)
+#endif
 
 #undef X
 #define X(x) EXTERN_CONST int Umman__##x = x;
 
-#ifndef _WIN32
+#if !(defined (_WIN32) || defined (__DJGPP__))
 X(PROT_NONE)
 X(PROT_READ)
 X(PROT_WRITE)

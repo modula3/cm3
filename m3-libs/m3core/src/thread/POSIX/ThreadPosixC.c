@@ -42,7 +42,9 @@
 #ifndef INCLUDED_M3CORE_H
 #include "m3core.h"
 #endif
+#ifndef __DJGPP__
 #include <ucontext.h>
+#endif
 
 M3_EXTERNC_BEGIN
 
@@ -60,12 +62,23 @@ typedef void (*SignalHandler1)(int signo);
 
 static sigset_t ThreadSwitchSignal;
 static sigset_t OtherSignals;
+static sigset_t AllSignals;
 
-#ifdef __CYGWIN__
-#define SIG_TIMESLICE SIGALRM
-#else
+#if !(defined (__CYGWIN__) || defined (__DJGPP__)) || defined (SIGVTALRM)
 #define SIG_TIMESLICE SIGVTALRM
+#else
+#define SIG_TIMESLICE SIGALRM
 #endif
+
+#define Context ThreadPosix__Context
+#define Stack ThreadPosix__Stack
+
+struct Context;
+typedef struct Context Context;
+
+void
+__cdecl
+DisposeContext(Context** c);
 
 void
 __cdecl
@@ -76,23 +89,33 @@ setup_sigvtalrm(SignalHandler1 handler)
 
   ZERO_MEMORY(act);
   ZERO_MEMORY(oct);
+
   sigemptyset(&OtherSignals);
-  sigaddset(&OtherSignals, SIGCHLD);
-  sigaddset(&OtherSignals, SIGSEGV);
-
-  ZERO_MEMORY(act);
   sigemptyset(&ThreadSwitchSignal);
-  sigaddset(&ThreadSwitchSignal, SIG_TIMESLICE);
-
-  oct.sa_handler = handler;
-  oct.sa_flags = SA_RESTART;
-
-  act.sa_handler = handler;
-  act.sa_flags = SA_RESTART;
+  sigemptyset(&AllSignals);
   sigemptyset(&act.sa_mask);
   sigemptyset(&oct.sa_mask);
+
+  sigaddset(&OtherSignals, SIGSEGV);
+  sigaddset(&AllSignals, SIGSEGV);
+  sigaddset(&ThreadSwitchSignal, SIG_TIMESLICE);
+  sigaddset(&AllSignals, SIG_TIMESLICE);
+#if !defined (__DJGPP__) || defined (SIGCHLD)
+  sigaddset(&OtherSignals, SIGCHLD);
+  sigaddset(&AllSignals, SIGCHLD);
+#endif
+
+  oct.sa_handler = handler;
+  act.sa_handler = handler;
+
+#if !defined (__DJGPP__) || defined (SA_RESTART)
+  oct.sa_flags = SA_RESTART;
+  act.sa_flags = SA_RESTART;
+#endif
   if (sigaction(SIG_TIMESLICE, &act, NULL)) abort();
+#if !defined (__DJGPP__) || defined (SIGCHLD)
   if (sigaction(SIGCHLD, &oct, NULL)) abort();
+#endif
   if (sigaction(SIGSEGV, &oct, NULL)) abort();
 }
 
@@ -116,32 +139,38 @@ void
 __cdecl
 disallow_signals(void) /* disallow all, really */
 {
-    int i = sigprocmask(SIG_BLOCK, &ThreadSwitchSignal, NULL);
-    assert(i == 0);
-    i = sigprocmask(SIG_BLOCK, &OtherSignals, NULL);
+    int i = sigprocmask(SIG_BLOCK, &AllSignals, NULL);
     assert(i == 0);
 }
 
-typedef struct {
-  void *stackaddr;
-  WORD_T stacksize;
-  void *sp;
-#ifdef M3_USE_SIGALTSTACK
-  sigjmp_buf jb;
+struct Context {
+    // Stack; storage here is overkill, but ok.
+    char* free;
+    char* map;
+    size_t map_size;
+    size_t pagesize;
+    char* mprotect[2];
+
+#if defined (__DJGPP__) || defined (M3_USE_SIGALTSTACK)
+    sigjmp_buf jb;
 #else
-  ucontext_t uc;
+    ucontext_t uc;
 #endif
-} Context;
+};
 
-#ifdef M3_USE_SIGALTSTACK
+#if defined (__DJGPP__) || defined (M3_USE_SIGALTSTACK)
 
-#define xMakeContext ThreadPosix__xMakeContext
-
-#define SWAP_CONTEXT(oldc, newc)       \
+#define M3_SWAP_CONTEXT(oldc, newc)    \
 do {                                   \
     if (sigsetjmp((oldc)->jb, 1) == 0) \
         siglongjmp((newc)->jb, 1);     \
 } while (0)
+
+#endif
+
+#ifdef M3_USE_SIGALTSTACK
+
+#define xMakeContext ThreadPosix__xMakeContext
 
 static Context mctx_caller;
 static sig_atomic_t volatile mctx_called;
@@ -155,7 +184,7 @@ static void __cdecl mctx_create_boot(void)
     
     sigprocmask(SIG_SETMASK, &mctx_create_sigs, NULL);
     mctx_start_func = mctx_create_func;
-    SWAP_CONTEXT(mctx_create, &mctx_caller);
+    M3_SWAP_CONTEXT(mctx_create, &mctx_caller);
     mctx_start_func();
     abort(); /* not reached */
 }
@@ -225,26 +254,42 @@ xMakeContext(
     sigaction(SIGUSR1, &osa, NULL);
     sigprocmask(SIG_SETMASK, &osigs, NULL);
     
-    SWAP_CONTEXT(&mctx_caller, context);
+    M3_SWAP_CONTEXT(&mctx_caller, context);
 }
 
 #endif /* M3_USE_SIGALTSTACK */
+
+#ifdef __DJGPP__
+extern const unsigned _stklen;
+//const unsigned _stklen = 1UL << 20; // 1MB todo verify this works for initial stack (stub is supposed to use this)
+#endif
 
 void *
 __cdecl
 MakeContext(void (*p)(void), INTEGER words)
 {
-  Context *c = (Context *)calloc (1, sizeof(*c));
-  INTEGER size = sizeof(void *) * words;
-  INTEGER pagesize = getpagesize();
-  char *sp = { 0 };
-  INTEGER pages = { 0 };
-  int er = { 0 };
+  Context* c = (Context*)calloc (1, sizeof(*c));
+  size_t size = sizeof(void *) * words;
+  size_t pagesize = getpagesize();
+  char* aligned_start = 0;
+  char* aligned_end = 0;
+  char* unaligned_start = 0;
+  char* unaligned_end = 0;
+  size_t pages = 0;
+#ifdef __DJGPP__
+  size_t align = 0;
+#endif
 
   if (c == NULL)
     goto Error;
-  if (size <= 0) return c;
+
+  c->pagesize = pagesize;
+
+#if !defined (__DJGPP__) || defined (MINSIGSTKSZ)
   if (size < MINSIGSTKSZ) size = MINSIGSTKSZ;
+#else
+  if (size < _stklen) size = _stklen; // 1MB
+#endif
 
   /* Round up to a whole number of pages, and
    * allocate two extra pages, one at the start
@@ -252,20 +297,66 @@ MakeContext(void (*p)(void), INTEGER words)
    * either one (catch stack overflow and underflow).
    */
   pages = (size + pagesize - 1) / pagesize + 2;
+  // For djgpp we do not have an aligned allocator.
+  // memalign and valloc fail. Therefore add two more pages.
+  // We need a page at each end to align and a page at each
+  // end to protect.
+#ifdef __DJGPP__
+  pages += 2;
+#endif
   size = pages * pagesize;
-  sp = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0);
-  if (sp == NULL)
-    goto Error;
-  c->stackaddr = sp;
-  c->stacksize = size;
-  if (mprotect(sp, pagesize, PROT_NONE)) abort();
-  if (mprotect(sp + size - pagesize, pagesize, PROT_NONE)) abort();
 
-#ifdef M3_USE_SIGALTSTACK
-  xMakeContext(c, p, sp + pagesize, size - 2 * pagesize);
+  if (size <= 0)
+    goto Error;
+
+#ifdef __DJGPP__
+  c->free = unaligned_start = (char*)malloc (size);
+#else
+  c->map = unaligned_start = aligned_start = (char*)mmap (NULL, size, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0);
+  c->map_size = size;
+#endif
+  if (unaligned_start == NULL)
+    goto Error;
+
+#ifdef __DJGPP__
+  align = ((size_t)unaligned_start) % pagesize;
+  aligned_start = unaligned_start + pagesize - align;
+  unaligned_end = unaligned_start + size;
+  aligned_end =  unaligned_end - align;
+#else
+  align = ((size_t)unaligned_start) % pagesize;
+  assert (align == 0);
+  aligned_start = unaligned_start;
+  aligned_end = unaligned_end = unaligned_start + size;
+#endif
+
+  assert ((((size_t)aligned_start) % pagesize) == 0);
+  assert ((((size_t)aligned_end) % pagesize) == 0);
+
+  if (mprotect(aligned_start, pagesize, PROT_NONE)) abort();
+  if (mprotect(aligned_end - pagesize, pagesize, PROT_NONE)) abort();
+
+  c->mprotect[0] = aligned_start;
+  c->mprotect[1] = aligned_end - pagesize;
+
+#ifdef __DJGPP__
+    {
+        // Set stack pointer to malloc result via alloca
+        // from current stack to malloc result.
+        char volatile * volatile sp2 = (char*)alloca ((char*)alloca(1) - (aligned_end - pagesize));
+        sp2[0];
+        if (sigsetjmp((c)->jb, 1))
+        {
+            // Longjmp back to here will run thread on its stack.
+            p ();
+            abort ();
+        }
+    }
+#elif defined(M3_USE_SIGALTSTACK)
+  xMakeContext(c, p, aligned_start + pagesize, size - 2 * pagesize);
 #else
   if (getcontext(&(c->uc))) abort();
-  c->uc.uc_stack.ss_sp = sp + pagesize;
+  c->uc.uc_stack.ss_sp = aligned_start + pagesize;
   c->uc.uc_stack.ss_size = size - 2 * pagesize;
   c->uc.uc_link = 0;
   makecontext(&(c->uc), p, 0);
@@ -273,10 +364,7 @@ MakeContext(void (*p)(void), INTEGER words)
 
   return c;
 Error:
-  er = errno;
-  if (c) free(c);
-  if (sp) munmap(sp, size);
-  errno = er;
+  DisposeContext (&c);
   return NULL;
 }
 
@@ -284,8 +372,8 @@ void
 __cdecl
 SwapContext(Context *from, Context *to)
 {
-#ifdef M3_USE_SIGALTSTACK
-  SWAP_CONTEXT(from, to);
+#ifdef M3_SWAP_CONTEXT
+  M3_SWAP_CONTEXT(from, to);
 #else
   if (swapcontext(&(from->uc), &(to->uc))) abort();
 #endif
@@ -293,11 +381,27 @@ SwapContext(Context *from, Context *to)
 
 void
 __cdecl
-DisposeContext(Context **c)
+DisposeContext(Context** pc)
 {
-  if (munmap((*c)->stackaddr, (*c)->stacksize)) abort();
-  free(*c);
-  *c = NULL;
+    Context* c = *pc;
+    if (c)
+    {
+        int i;
+        int er = errno;
+        *pc = 0;
+        for (i = 0; i <= 1; ++i)
+        {
+            if (c->mprotect[i])
+                mprotect(c->mprotect[i], c->pagesize, PROT_READ | PROT_WRITE);
+        }
+        free(c->free);
+#ifndef __DJGPP__
+        if (c->map)
+            if (munmap(c->map, c->map_size)) abort();
+#endif
+        free(c);
+        errno = er;
+    }
 }
 
 // Do not inline to help ensure stack range is understandable.
@@ -311,7 +415,7 @@ ProcessContext(Context *c, char *bottom, char *top,
   {
     /* live thread */
     /* do we need to flush register windows too? */
-#ifdef M3_USE_SIGALTSTACK
+#if defined (M3_USE_SIGALTSTACK) || defined (__DJGPP__)
     sigsetjmp(c->jb, 0);
 #else
     if (getcontext(&(c->uc))) abort();
@@ -342,7 +446,11 @@ ThreadPosix__SetVirtualTimer(void)
     selected_interval.tv_usec = 100 * 1000;
     it.it_interval = selected_interval;
     it.it_value    = selected_interval;
+#if !defined (__DJGPP__) || defined (ITIMER_VIRTUAL)
     return setitimer(ITIMER_VIRTUAL, &it, NULL);
+#else
+    return setitimer(ITIMER_REAL, &it, NULL);
+#endif
 }
 
 M3_EXTERNC_END

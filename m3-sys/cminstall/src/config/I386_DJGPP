@@ -1,0 +1,22 @@
+TARGET_ENDIAN = "LITTLE"  % { "BIG" OR "LITTLE" }
+TARGET_ARCH = "I386"
+WORD_SIZE = "32BITS"      % { "32BITS" or "64BITS" }
+
+% This is MS-DOS but probably worth giving it this more specific name.
+TARGET = "I386_DJGPP"
+TARGET_OS = "DJGPP"
+NOPTHREAD = 1 % user threads
+
+OS_TYPE = "POSIX" % "WIN32" or "POSIX"
+
+SYSTEM_LIBS =
+{
+  "LIBC" : [ ],
+}
+
+SYSTEM_LIBORDER = [ "LIBC" ]
+
+include("Autotools.common")
+
+% TODO config for cross
+% SYSTEM_CC = "/usr/bin/i586-pc-msdosdjgpp-g++.exe"
