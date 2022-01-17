@@ -20,8 +20,10 @@ typedef unsigned UINT32;
 #include <grp.h>
 #include <limits.h>
 #include <math.h>
+#ifndef __DJGPP__
 #include <net/if.h>
-#ifndef __HAIKU__
+#endif
+#if !(defined (__HAIKU__) || defined (__DJGPP__))
 #include <net/if_arp.h>
 #endif
 #include <net/if_dl.h>
@@ -38,7 +40,9 @@ typedef unsigned UINT32;
 #include <string.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
+#ifndef __DJGPP__
 #include <sys/socket.h>
+#endif
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/types.h>
@@ -54,11 +58,11 @@ typedef unsigned UINT32;
 #ifdef __sun
 #include <sys/sockio.h>
 #endif
-#ifndef __CYGWIN__
+#if !(defined(__CYGWIN__) || defined (__DJGPP__))
 #include <net/if.h>
-#ifndef __HAIKU__
-#include <net/if_arp.h>
 #endif
+#if !(defined (__HAIKU__) || defined (__DJGPP__))
+#include <net/if_arp.h>
 #endif
 #ifdef __hpux
 #include "dce/uuid.h"
@@ -73,6 +77,7 @@ typedef unsigned UINT32;
    || defined(__OpenBSD__)  \
    || defined(__osf__)      \
    || defined(__hpux)       \
+   || defined(__DJGPP__)    \
    || defined(__sun))
 #error Please test/port this.
 #endif
@@ -141,7 +146,7 @@ HexDump(void* a, size_t n)
 
 #endif
 
-#ifndef __hpux
+#if !(defined(__DJGPP__) || defined(__hpux))
 static
 UINT32
 get_ipv4_address(void)
@@ -164,7 +169,10 @@ int/*boolean*/
 __cdecl
 MachineIDC__CanGet(unsigned char *id)
 {
-#ifdef __hpux
+#if defined (__DJGPP__)
+    memset(id, 0, 6);
+    return 0;
+#elif defined(__hpux)
     /* last 6 bytes of uuid */
     uuid_t u;
     assert(sizeof(uuid_t) == 16);

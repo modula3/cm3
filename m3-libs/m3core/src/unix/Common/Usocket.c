@@ -13,6 +13,15 @@
 extern "C" {
 #endif
 
+#ifdef __DJGPP__
+
+void __cdecl
+Usocket__Assertions(void)
+{
+}
+
+#else
+
 M3_STATIC_ASSERT(AF_INET > 0);
 M3_STATIC_ASSERT(AF_INET6 > 0);
 #ifdef AF_UNIX
@@ -598,6 +607,8 @@ Usocket__connect_un(
     sockaddr_un addr;
     return Usocket__un(&addr, path) ? -1 : connect(fd, (sockaddr*)&addr, sizeof(addr));
 }
+
+#endif
 
 #endif
 

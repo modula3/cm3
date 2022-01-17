@@ -5,7 +5,9 @@
 #ifndef INCLUDED_M3CORE_H
 #include "m3core.h"
 #endif
+#ifndef __DJGPP__
 #include <poll.h>
+#endif
 
 M3_EXTERNC_BEGIN
 
@@ -18,6 +20,8 @@ enum {WaitResult_Ready, WaitResult_Error, WaitResult_FDError, WaitResult_Timeout
 #undef MILLION  /* Support concatenating multiple .c files. */
 #define THOUSAND (1000)
 #define MILLION (1000 * 1000)
+
+#ifndef __DJGPP__
 
 int
 __cdecl
@@ -43,6 +47,8 @@ ThreadInternal__Poll(int fd,
     else
         return WaitResult_FDError;
 }
+
+#endif
 
 int
 __cdecl

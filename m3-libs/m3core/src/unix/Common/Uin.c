@@ -1,3 +1,4 @@
+#ifndef __DJGPP__
 #ifndef INCLUDED_M3CORE_H
 #include "m3core.h"
 #endif
@@ -22,4 +23,5 @@ UINT16 __cdecl Uin__htons(UINT16 x) { return htons(x); }
 
 #ifdef __cplusplus
 } /* extern "C" */
+#endif
 #endif

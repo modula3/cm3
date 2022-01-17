@@ -78,7 +78,9 @@ Unix__Assertions(void)
     CHECK_M3_TYPE_SIZE(nlink_t);
     CHECK_M3_TYPE_SIZE(off_t);
     CHECK_M3_TYPE_SIZE(pid_t);
+#ifndef __DJGPP__
     CHECK_M3_TYPE_SIZE(pthread_t);
+#endif
     CHECK_M3_TYPE_SIZE(uid_t);
 
     M3_STATIC_ASSERT(IS_TYPE_SIGNED(pid_t));

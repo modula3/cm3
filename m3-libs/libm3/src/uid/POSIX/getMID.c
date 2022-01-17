@@ -6,9 +6,13 @@
 /*      modified on Thu Jul 15 16:23:08 PDT 1993 by swart      */
 
 #include <sys/types.h>
+#ifndef __DJGPP__
 #include <sys/socket.h>
+#endif
 #include <sys/ioctl.h>
+#ifndef __DJGPP__
 #include <net/if.h>
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

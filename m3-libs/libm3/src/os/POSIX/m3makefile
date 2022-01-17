@@ -18,7 +18,13 @@ Module("FilePosix")
 implementation("FSPosix")
 implementation("PipePosix")
 implementation("PathnamePosix")
-implementation("SocketPosix")
+
+if equal (TARGET, "I386_DJGPP")
+  implementation("SocketNone")
+else
+  implementation("SocketPosix")
+end
+
 implementation("OSConfigPosix")
 
 module("ProcessPosixCommon")

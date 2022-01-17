@@ -2,6 +2,10 @@
 #include "m3core.h"
 #endif
 
+#ifdef __DJGPP__
+#define M3_USER_THREADS 1
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -125,7 +129,7 @@ RTProcess__Fork(void)
   int err = { 0 };
 #endif
 
-#if !defined(__CYGWIN__)
+#if !(defined(__CYGWIN__) || defined(__DJGPP__))
   // Run fork handlers outside of fork instead of in fork,
   // on Solaris, because on Solaris they run with signals deferred/disbled
   // and fork therefore deadlocks with collector.

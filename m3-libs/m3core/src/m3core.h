@@ -370,7 +370,9 @@ typedef ptrdiff_t ssize_t;
 #else
 #include <sys/ioctl.h>
 #include <sys/mman.h>
+#ifndef __DJGPP__
 #include <sys/socket.h>
+#endif
 #include <sys/time.h>
 /* Check if this system really supports _TIME64_T, i.e. Tru64 v5.1 or later. */
 #if defined(_TIME64_T) && !defined(TIMEVAL64TO32) && !defined(TIMEVAL32TO64)
@@ -379,12 +381,18 @@ typedef ptrdiff_t ssize_t;
 #include <sys/wait.h>
 #include <dirent.h>
 #include <grp.h>
+#ifndef __DJGPP__
 #include <netdb.h>
+#endif
+#ifndef __DJGPP__
 #include <pthread.h>
+#endif
 #include <unistd.h>
 #include <pwd.h>
+#ifndef __DJGPP__
 #include <semaphore.h>
-#if !(defined(__OpenBSD__) || defined(__CYGWIN__) || defined(__vms) || defined(__HAIKU__))
+#endif
+#if !(defined (__OpenBSD__) || defined (__CYGWIN__) || defined (__vms) || defined (__HAIKU__) || defined (__DJGPP__))
 #include <sys/ucontext.h>
 #ifndef __APPLE__
 /* OpenBSD 4.3, 4.7: ucontext.h doesn't exist, ucontext_t is in signal.h
@@ -402,10 +410,12 @@ typedef ptrdiff_t ssize_t;
 // Posix says include <arpa/inet.h>, but FreeBSD 4 inet.h
 // requires netinet/in.h
 #include <netinet/in.h>
+#ifndef __DJGPP__
 #include <arpa/inet.h>
 #include <netinet/tcp.h>
 #include <sys/un.h>
 #include <sys/select.h>
+#endif
 #endif /* Win32 vs. Posix */
 
 #define ZERO_MEMORY(a) (ZeroMemory(&(a), sizeof(a)))
@@ -939,6 +949,15 @@ Process__RegisterExitor(void (__cdecl*)(void));
 #error Unknown Cygwin
 #endif
 
+#elif defined(__DJGPP__)
+
+#ifdef __i386__
+#define M3_HOST_SKIP_UNAME 1 // uname yields I386_MS-DOS
+#define M3_HOST "I386_DJGPP"
+#else
+#error Unsupported Djgpp
+#endif
+
 #elif defined(__HAIKU__)
 #ifdef __amd64
 #define GET_PC(context) ((context)->uc_mcontext.rip)
@@ -1217,18 +1236,22 @@ struct RT0__Module
 #define ThreadPThread__pthread_cond_t  ThreadPThread__pthread_cond_t  /* inhibit m3c type */
 #define ThreadPThread__const_pthread_mutex_t ThreadPThread__const_pthread_mutex_t /* inhibit m3c type */
 #define ThreadPThread__const_pthread_cond_t  ThreadPThread__const_pthread_cond_t  /* inhibit m3c type */
+#ifndef __DJGPP__
 typedef               pthread_mutex_t* ThreadPThread_pthread_mutex_t;
 typedef               pthread_cond_t*  ThreadPThread_pthread_cond_t;
 typedef               pthread_mutex_t* ThreadPThread__pthread_mutex_t;
 typedef               pthread_cond_t*  ThreadPThread__pthread_cond_t;
 typedef               pthread_mutex_t* const ThreadPThread__const_pthread_mutex_t;
 typedef               pthread_cond_t*  const ThreadPThread__const_pthread_cond_t;
+#endif
 
 #define ThreadInternal__FDSet ThreadInternal__FDSet /* inhibit m3c type */
 typedef                fd_set ThreadInternal__FDSet;
 
 #define ThreadPThread__siginfo_t ThreadPThread__siginfo_t /* inhibit m3c type */
+#ifndef __DJGPP__
 typedef siginfo_t ThreadPThread__siginfo_t;
+#endif
 #endif
 
 #define ThreadPThread__Activation ThreadPThread__Activation /* inhibit m3c type */

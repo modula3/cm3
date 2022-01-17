@@ -64,6 +64,7 @@ def Boot():
     linux = StringContainsI(Target, "Linux")
     bsd = StringContainsI(Target, "BSD")
     haiku = StringContainsI(Target, "haiku")
+    djgpp = StringContainsI(Target, "djgpp")
 
     CBackend = True
 
@@ -77,6 +78,9 @@ def Boot():
     if alpha32vms:
         CCompiler = "c++"
         CCompilerFlags = " "
+    elif djgpp:
+        CCompiler = "gxx"
+        CCompilerFlags = " -g "
     elif alpha64vms:
         CCompiler = "c++"
         CCompilerFlags = "/pointer_size=64 "
@@ -157,6 +161,8 @@ def Boot():
 
     if darwin:
         pass
+    elif djgpp:
+        pass
     elif haiku:
         Link = Link + " -lnetwork "
     elif mingw:
@@ -228,7 +234,7 @@ def Boot():
         CreateDirectory(os.path.join(BootDir, pkg + ".d"))
 
     Makefile.write("# edit up here" + NL2
-            + "CC=" + CCompiler + NL
+            + "CC?=" + CCompiler + NL
             + "CFLAGS=" + CCompilerFlags + NL
             + "Compile=" + Compile + NL
             + "Link=" + Link + NL2

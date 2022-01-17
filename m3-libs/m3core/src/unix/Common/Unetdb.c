@@ -2,6 +2,7 @@
 /* All rights reserved.                                       */
 /* See the file COPYRIGHT for a full description.             */
 
+#ifndef __DJGPP__
 #ifndef INCLUDED_M3CORE_H
 #include "m3core.h"
 #endif
@@ -58,3 +59,4 @@ Unetdb__gethostbyaddr(const char* addr, int len, int type, m3_hostent_t* m3)
 }
 
 M3EXTERNC_END
+#endif

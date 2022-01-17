@@ -1130,7 +1130,9 @@ PROCEDURE WaitProcess (pid: int; VAR status: int): int =
       WITH r = Uexec.waitpid(pid, ADR(status), Uexec.WNOHANG) DO
         IF r # 0 THEN RETURN r END;
       END;
-      SigPause(Delay, SIGCHLD);
+      IF SIGCHLD # 0 THEN
+        SigPause(Delay, SIGCHLD);
+      END;
     END;
   END WaitProcess;
 

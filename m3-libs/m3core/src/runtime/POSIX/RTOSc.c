@@ -32,6 +32,7 @@ RTOS__GetMemory(INTEGER isize)
     defined(ultrix)                           || \
     defined(__ultrix)                         || \
     defined(__ultrix__)                       || \
+    defined(__DJGPP__)                        || \
     /* AIX386    */                              \
     /* IBMR2     */                              \
     /* IBMRT     */                              \
