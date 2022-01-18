@@ -3963,9 +3963,9 @@ BEGIN
   IF NOT self.done_include_setjmp_h THEN
     print(self,
         "#include <setjmp.h>\n" &
-        "#if defined(_WIN32) || defined(__CYGWIN__) || defined(__MINGW__) || defined(__DJGPP__)\n" &
+        "#if defined(_WIN32) || defined(__CYGWIN__) || defined(__MINGW__)\n" &
         "#define m3_setjmp(env) (setjmp(env))\n" &
-        "#elif defined(__sun)\n" &
+        "#elif defined(__sun) || defined(__DJGPP__)\n" &
         "#define m3_setjmp(env) (sigsetjmp((env), 0))\n" &
         "#else\n" &
         "#define m3_setjmp(env) (_setjmp(env))\n" &
