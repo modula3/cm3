@@ -42,7 +42,10 @@
 #ifndef INCLUDED_M3CORE_H
 #include "m3core.h"
 #endif
-#ifndef __DJGPP__
+#ifdef __DJGPP__
+#include <sys/exceptn.h>
+#include <dpmi.h>
+#else
 #include <ucontext.h>
 #endif
 
@@ -158,7 +161,7 @@ struct Context {
 #endif
 };
 
-#if defined (__DJGPP__) || defined (M3_USE_SIGALTSTACK)
+#ifdef M3_USE_SIGALTSTACK
 
 #define M3_SWAP_CONTEXT(oldc, newc)    \
 do {                                   \
@@ -320,7 +323,7 @@ MakeContext(void (*p)(void), INTEGER words)
 
 #ifdef __DJGPP__
   align = ((size_t)unaligned_start) % pagesize;
-  aligned_start = unaligned_start + pagesize - align;
+  aligned_start = unaligned_start + (align ? pagesize : 0) - align;
   unaligned_end = unaligned_start + size;
   aligned_end =  unaligned_end - align;
 #else
@@ -340,17 +343,17 @@ MakeContext(void (*p)(void), INTEGER words)
   c->mprotect[1] = aligned_end - pagesize;
 
 #ifdef __DJGPP__
+    // Get a reasonable context from current thread and set eip/esp manually.
+    // TODO signal mask? It is easy to capture here, but we do not set it.
+    if (sigsetjmp(c->jb, 0) == 0)
     {
-        // Set stack pointer to malloc result via alloca
-        // from current stack to malloc result.
-        char volatile * volatile sp2 = (char*)alloca ((char*)alloca(1) - (aligned_end - pagesize));
-        sp2[0];
-        if (sigsetjmp((c)->jb, 1))
-        {
-            // Longjmp back to here will run thread on its stack.
-            p ();
-            abort ();
-        }
+        c->jb->__esp = (size_t)(aligned_end - pagesize);
+        c->jb->__eip = (size_t)p;
+        //*(size_t*)(c->jb->__esp -= sizeof(size_t)) = (size_t)arg;
+        *(size_t*)(c->jb->__esp -= sizeof(size_t)) = 0; // return addres and alignment
+        *(size_t*)(c->jb->__esp -= sizeof(size_t)) = 0; // return addres and alignment
+        *(size_t*)(c->jb->__esp -= sizeof(size_t)) = 0; // return addres and alignment
+        *(size_t*)(c->jb->__esp -= sizeof(size_t)) = 0; // return addres and alignment
     }
 #elif defined(M3_USE_SIGALTSTACK)
   xMakeContext(c, p, aligned_start + pagesize, size - 2 * pagesize);
@@ -368,11 +371,38 @@ Error:
   return NULL;
 }
 
+#ifdef __DJGPP__
+static void CopyContext (jmp_buf to, jmp_buf from)
+{
+    // This is based on setjmp/longjmp.
+    assert(from->__eip);
+    to->__eip = from->__eip;
+    to->__ebx = from->__ebx;
+    to->__ecx = from->__ecx;
+    to->__edx = from->__edx;
+    to->__ebp = from->__ebp;
+    to->__esi = from->__esi;
+    to->__edi = from->__edi;
+    to->__esp = from->__esp;
+    to->__eflags = from->__eflags;
+}
+#endif
+
 void
 __cdecl
 SwapContext(Context *from, Context *to)
 {
-#ifdef M3_SWAP_CONTEXT
+#ifdef __DJGPP__
+    // If we are in a exception handler, swap with its resume context.
+    // longjmp out of exception handler does not work.
+    if (__djgpp_exception_state_ptr)
+    {
+        CopyContext (from->jb, *__djgpp_exception_state_ptr);
+        CopyContext (*__djgpp_exception_state_ptr, to->jb);
+    }
+    else if (sigsetjmp (from->jb, 1) == 0)
+        siglongjmp (to->jb, 1);
+#elif defined (M3_SWAP_CONTEXT)
   M3_SWAP_CONTEXT(from, to);
 #else
   if (swapcontext(&(from->uc), &(to->uc))) abort();
@@ -450,6 +480,22 @@ ThreadPosix__SetVirtualTimer(void)
     return setitimer(ITIMER_VIRTUAL, &it, NULL);
 #else
     return setitimer(ITIMER_REAL, &it, NULL);
+#endif
+}
+
+int ThreadPosix__DisableInterrupts (void)
+{
+#ifdef __DJGPP__
+    return __dpmi_get_and_disable_virtual_interrupt_state ();
+#else
+    return 0;
+#endif
+}
+
+void ThreadPosix__EnableInterrupts (int state)
+{
+#ifdef __DJGPP__
+    (void)__dpmi_get_and_set_virtual_interrupt_state (state);
 #endif
 }
 

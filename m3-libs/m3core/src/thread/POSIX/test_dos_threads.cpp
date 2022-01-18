@@ -85,10 +85,12 @@ Thread* create_thread(P p, void* arg, size_t size = 2 << 20)
 
     if (setjmp(thread->jb) == 0)
     {
-        thread->jb->__esp = (long)(aligned_end - pagesize);
-        thread->jb->__eip = (long)p;
-        *(long*)(thread->jb->__esp -= 4) = (long)arg;
-        *(long*)(thread->jb->__esp -= 4) = 0; // return addres
+        thread->jb->__esp = (size_t)(aligned_end - pagesize);
+        thread->jb->__eip = (size_t)p;
+        *(size_t*)(thread->jb->__esp -= sizeof(size_t)) = (size_t)arg;
+        *(size_t*)(thread->jb->__esp -= sizeof(size_t)) = 0; // return addres and alignment
+        *(size_t*)(thread->jb->__esp -= sizeof(size_t)) = 0; // return addres and alignment
+        *(size_t*)(thread->jb->__esp -= sizeof(size_t)) = 0; // return addres and alignment
     }
     --g_Critical;
     return thread;
@@ -96,6 +98,7 @@ Thread* create_thread(P p, void* arg, size_t size = 2 << 20)
 
 void CopyContext (jmp_buf to, jmp_buf from)
 {
+    // This is based on setjmp/longjmp.
     assert(from->__eip);
     to->__eip = from->__eip;
     to->__ebx = from->__ebx;

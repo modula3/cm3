@@ -40,6 +40,14 @@ PROCEDURE ProcessContext(c, bottom, top: ADDRESS;
 PROCEDURE SetVirtualTimer(): int;
 (* Thin wrapper around setitimer. *)
 
+(* return previous state; this is paranoia just from reading headers *)
+<*EXTERNAL ThreadPosix__DisableInterrupts*>
+PROCEDURE DisableInterrupts(): int;
+
+(* return previous state; this is paranoia just from reading headers *)
+<*EXTERNAL ThreadPosix__EnableInterrupts*>
+PROCEDURE EnableInterrupts (old_state: int);
+
 (*---------------------------------------------------------------------------*)
 
 END ThreadPosix.
