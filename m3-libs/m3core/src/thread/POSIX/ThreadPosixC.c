@@ -137,7 +137,7 @@ allow_othersigs(void)
 
 void
 __cdecl
-disallow_signals(void) /* disallow all, really */
+disallow_signals(void)
 {
     int i = sigprocmask(SIG_BLOCK, &AllSignals, NULL);
     assert(i == 0);
