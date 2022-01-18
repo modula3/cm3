@@ -843,6 +843,7 @@ VAR
     gotSigs := SET OF Sig { };
 
 PROCEDURE switch_thread (sig: int) RAISES {Alerted} =
+  VAR state := DisableInterrupts ();
   BEGIN
     allow_sigvtalrm ();
 
@@ -860,6 +861,9 @@ PROCEDURE switch_thread (sig: int) RAISES {Alerted} =
     IF inCritical = 0 AND heapState.inCritical = 0 THEN
       InternalYield ()
     END;
+
+    EnableInterrupts (state);
+
   END switch_thread;
 
 (*------------------------------------------------------------- scheduler ---*)
