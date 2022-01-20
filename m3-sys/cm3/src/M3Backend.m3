@@ -6,57 +6,91 @@
 
 MODULE M3Backend;
 
-IMPORT Wr, Thread, M3C;
+IMPORT Text, Thread, Wr;
+
+IMPORT M3C;
 IMPORT LLGen; (* Could be a dummy.  See the m3makefile. *) 
 IMPORT M3CG, Msg, Utils, NTObjFile, M3x86, M3ObjFile;
-IMPORT M3CG_BinWr, M3CG_Ops, M3ID;
+IMPORT M3CG_BinWr, M3CG_Ops, M3CG_Tee, M3ID;
 IMPORT Target; 
 
 VAR
   obj_file : M3ObjFile.T := NIL;
   obj_wr   : Wr.T        := NIL;
   obj_name : TEXT        := NIL;
-  log      : Wr.T        := NIL;
+VAR
+  log_wr   : Wr.T        := NIL;
   log_name : TEXT        := NIL;
+VAR
+  ir_wr    : Wr.T        := NIL;
+  ir_name  : TEXT        := NIL;
 
-PROCEDURE Open (library (* or program *): TEXT; source: M3ID.T; target: Wr.T; target_name: TEXT; backend_mode: Target.M3BackendMode_t): M3CG.T =
+PROCEDURE TeeBinWr (cg: M3CG_Ops.Public; f_ir_name: TEXT): M3CG_Ops.Public =
+  VAR result: M3CG_Ops.Public;
+  BEGIN
+    ir_name := f_ir_name;
+    IF ir_name = NIL THEN RETURN cg END;
+    IF Text.Equal (ir_name, "") THEN ir_name := NIL; RETURN cg END;
+    ir_wr := Utils.OpenWriter (ir_name, fatal := FALSE);
+    IF ir_wr = NIL THEN ir_name := NIL; RETURN cg END;
+    result := M3CG_Tee.New (cg, M3CG_BinWr.New (ir_wr));
+    RETURN result;
+  END TeeBinWr;
+
+(* EXPORTED: *)
+PROCEDURE Open (library (* or program *): TEXT;
+                source_base_name (* lacks .m3 or .i3 *): M3ID.T;
+                target_wr: Wr.T;
+                target_name (* Has suffix. *): TEXT;
+                f_ir_name (* Has suffix .ic or .mc *): TEXT;
+                backend_mode: Target.M3BackendMode_t
+               ): M3CG.T =
   VAR cg: M3CG_Ops.Public := NIL;
   BEGIN
+
+    (* C backend: *)
     IF backend_mode = Target.M3BackendMode_t.C THEN
-      cg := M3C.New (library, source, target, target_name);
+      cg := M3C.New (library, source_base_name, target_wr, target_name);
       (* cg.comment would not appear at the top because
        * earlier passes ignore it
        *)
-      Wr.PutText(target, "// library:");
-      Wr.PutText(target, library);
-      Wr.PutText(target, "\n// source:");
-      Wr.PutText(target, M3ID.ToText(source));
-      Wr.PutText(target, "\n// target_name:");
-      Wr.PutText(target, target_name);
-      Wr.PutText(target, "\n");
-      RETURN cg;
+      Wr.PutText(target_wr, "// library:");
+      Wr.PutText(target_wr, library);
+      Wr.PutText(target_wr, "\n// source_base_name:");
+      Wr.PutText(target_wr, M3ID.ToText(source_base_name));
+      Wr.PutText(target_wr, "\n// target_name:");
+      Wr.PutText(target_wr, target_name);
+      Wr.PutText(target_wr, "\n");
+      RETURN TeeBinWr (cg, f_ir_name);
     END;
+
+    (* LLVM backend: *)
     IF backend_mode IN Target.BackendLlvmSet THEN
       IF (Msg.level >= Msg.Level.Verbose) THEN
         log_name := target_name & "log";
-        log := Utils.OpenWriter (log_name, fatal := TRUE);
+        log_wr := Utils.OpenWriter (log_name, fatal := TRUE);
       END;
-      RETURN LLGen.New (log,backend_mode);
+      RETURN TeeBinWr (LLGen.New (log_wr,backend_mode), f_ir_name);
     END;
-    IF NOT backend_mode IN Target.BackendIntegratedSet THEN 
-      RETURN M3CG_BinWr.New (target);
+
+    (* Integrated backend: *)
+    IF backend_mode IN Target.BackendIntegratedSet THEN 
+      <*ASSERT obj_file = NIL *>
+      obj_file := NTObjFile.New ();
+      obj_wr   := target_wr;
+      obj_name := target_name;
+      IF (Msg.level >= Msg.Level.Verbose) THEN
+        log_name := target_name & "log";
+        log_wr := Utils.OpenWriter (log_name, fatal := TRUE);
+      END;
+      RETURN TeeBinWr (M3x86.New (log_wr, obj_file), f_ir_name);
     END;
-    <*ASSERT obj_file = NIL *>
-    obj_file := NTObjFile.New ();
-    obj_wr   := target;
-    obj_name := target_name;
-    IF (Msg.level >= Msg.Level.Verbose) THEN
-      log_name := target_name & "log";
-      log := Utils.OpenWriter (log_name, fatal := TRUE);
-    END;
-    RETURN M3x86.New (log, obj_file);
+
+    (* m3cc backend: *)
+    RETURN M3CG_BinWr.New (target_wr);
   END Open;
 
+(* EXPORTED: *)
 PROCEDURE Close (<*UNUSED*> cg: M3CG.T) =
   BEGIN
     IF obj_file # NIL THEN
@@ -65,13 +99,16 @@ PROCEDURE Close (<*UNUSED*> cg: M3CG.T) =
       EXCEPT Wr.Failure, Thread.Alerted =>
         Msg.FatalError (NIL, "problem writing object file: ", obj_name);
       END;
-      Utils.CloseWriter (log, log_name);
       obj_file := NIL;
       obj_wr   := NIL;
       obj_name := NIL;
-      log      := NIL;
-      log_name := NIL;
     END;
+    Utils.CloseWriter (log_wr, log_name);
+    log_wr := NIL;
+    log_name := NIL;
+    Utils.CloseWriter (ir_wr, ir_name);
+    ir_wr := NIL;
+    ir_name := NIL;
   END Close;
 
 BEGIN

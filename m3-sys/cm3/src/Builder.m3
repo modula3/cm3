@@ -1585,7 +1585,7 @@ PROCEDURE PushOneM3 (s: State;  u: M3Unit.T): BOOLEAN =
         llvmIRName := LlvmIRNameForUnit (u);
         llvmIROptName := LlvmIROptNameForUnit (u);
         cm3OutName := llvmIRName; 
-        codeGenOutName := u.object; 
+        codeGenOutName := u.object;
         DoRunLlc := TRUE; 
         (* boot has no effect on this mode. *) 
     | Mode_t.ExtLlvmAsm =>  
@@ -1618,7 +1618,9 @@ PROCEDURE PushOneM3 (s: State;  u: M3Unit.T): BOOLEAN =
     (* External code generators always consume cm3IR. *)
     IF codeGenOutName # NIL THEN
       cm3IRName := Cm3IRNameForUnit (u);
-      cm3OutName := cm3IRName; 
+      cm3OutName := cm3IRName;
+    ELSIF s.keep_files THEN
+      s.m3env.sideIRName := Cm3IRNameForUnit (u);
     END;
     
     (* IR is currently always temporary.
@@ -1878,7 +1880,9 @@ TYPE
     source_unit       : M3Unit.T;
     source            : TEXT;
     object            : TEXT;
-    output            : Wr.T;
+    ir_name           : TEXT;
+    target_wr         : Wr.T;
+    sideIRName        : TEXT;
     cg                : M3CG.T;
     unit              : Mx.Unit;
     imports           : IntSet.T;
@@ -1926,7 +1930,8 @@ PROCEDURE ResetEnv (s: State;  u: M3Unit.T;  source, object: TEXT) =
     env.source_unit           := u;
     env.source                := source;
     env.object                := object;
-    env.output                := NIL;
+    env.target_wr             := NIL;
+    env.sideIRName            := NIL;
     env.cg                    := NIL;
     env.unit                  := NIL;
     env.imports               := NIL;
@@ -2011,7 +2016,7 @@ PROCEDURE RunM3Front (s: State;  u: M3Unit.T;  object: TEXT)
 
     (* flush and close the files *)
     Utils.CloseReader (input, UnitPath (u));
-    Utils.CloseWriter (s.m3env.output, s.m3env.object);
+    Utils.CloseWriter (s.m3env.target_wr, s.m3env.object);
     ResetEnv (s, NIL, NIL, NIL);
 
     IF NOT ok THEN
@@ -2026,13 +2031,14 @@ PROCEDURE RunM3Front (s: State;  u: M3Unit.T;  object: TEXT)
 PROCEDURE Pass0_InitCodeGenerator (env: Env): M3CG.T =
   BEGIN
     env.cg     := NIL;
-    env.output := Utils.OpenWriter (env.object, fatal := FALSE);
-    IF (env.output # NIL) THEN
+    env.target_wr := Utils.OpenWriter (env.object, fatal := FALSE);
+    IF (env.target_wr # NIL) THEN
       env.cg := M3Backend.Open (
         env.globals.result_name,
         env.source_unit.name,
-        env.output,
+        env.target_wr,
         env.object,
+        env.sideIRName,
         env.globals.m3backend_mode);
     END;
     RETURN env.cg;
@@ -2640,6 +2646,7 @@ PROCEDURE GenCGMain (s: State;  object: TEXT) =
         M3MainId, (*Only used by M3C, which won't happen here. *)
         wr,
         object,
+        s.m3env.sideIRName,
         s.m3backend_mode);
     END;
     IF cg # NIL THEN

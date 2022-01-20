@@ -9,7 +9,14 @@ INTERFACE M3Backend;
 IMPORT Wr, M3CG, M3ID;
 IMPORT Target;
 
-PROCEDURE Open (library (* or program *): TEXT; source (* lacks .m3 or .i3 *): M3ID.T; target: Wr.T; target_name: TEXT; backend_mode: Target.M3BackendMode_t): M3CG.T;
+PROCEDURE Open (library (* or program *): TEXT;
+                source_base_name (* lacks .m3 or .i3 *): M3ID.T;
+                target_wr: Wr.T;
+                target_base_name (* Has suffix*): TEXT;
+                f_ir_name (* Has suffix .ic or .mc *): TEXT;
+                backend_mode: Target.M3BackendMode_t
+               ): M3CG.T;
+
 PROCEDURE Close (cg: M3CG.T);
 
 END M3Backend.
