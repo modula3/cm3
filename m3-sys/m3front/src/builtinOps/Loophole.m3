@@ -8,7 +8,7 @@
 
 MODULE Loophole;
 
-IMPORT CallExpr, Expr, ExprRep, Type, Procedure, CastExpr;
+IMPORT CallExpr, Expr, ExprRep, Type, Procedure, LoopholeExpr;
 IMPORT Int, Module, TypeExpr, Error;
 
 VAR Z: CallExpr.MethodList;
@@ -34,7 +34,7 @@ PROCEDURE Check (ce: CallExpr.T;  VAR cs: Expr.CheckState) =
       Error.Msg ("LOOPHOLE: second argument must be a type");
       t := Int.T;
     END;
-    ce.args[0] := CastExpr.New (ce.args[0], t);
+    ce.args[0] := LoopholeExpr.New (ce.args[0], t);
     IF Module.IsSafe () THEN Error.Msg ("LOOPHOLE: unsafe operation") END;
     Expr.TypeCheck (ce.args[0], cs);
     ce.type := t;
