@@ -116,7 +116,7 @@ static pairhash_t *hash_new (size_t sz)
 
 static size_t hash (size_t sz, bool_t *v1, bool_t *v2)
 {
-  int i;
+  unsigned int i;
   unsigned char h1, h2, h3, h4;
   size_t val;
   unsigned char *c;
@@ -383,7 +383,7 @@ bool_t *bool_newvar (BOOL_T *B)
     return NULL;
   }
   if (B->nvar == B->totvar) {
-    int i;
+    unsigned int i;
     B->totvar += VAR_BLOCK;
     REALLOC(B->H, pairhash_t *, B->totvar);
     for (i=B->totvar-VAR_BLOCK; i < B->totvar; i++)
@@ -956,7 +956,7 @@ bool_list_t *bool_qlist (BOOL_T *B, size_t n, bool_var_t *v)
 
 
 static bool_t *_bool_substitute (BOOL_T *B, bool_list_t *l1, bool_list_t *l2,
-				 bool_t *b, int loc)
+				 bool_t *b, unsigned int loc)
 {
   bool_t *b1;
   bool_t *l, *r;
@@ -1031,7 +1031,7 @@ bool_t *bool_substitute (BOOL_T *B, bool_list_t *l1, bool_list_t *l2,
 
 /*========================================================================*/  
 
-static bool_t *_bool_exists (BOOL_T *B, bool_list_t *l1, bool_t *b, int loc)
+static bool_t *_bool_exists (BOOL_T *B, bool_list_t *l1, bool_t *b, unsigned int loc)
 {
   bool_t *b1, *l, *r;
   static triplehash_t *tmp;
