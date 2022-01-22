@@ -1,0 +1,1303 @@
+%
+% Copyright 1996-2000 Critical Mass, Inc. All rights reserved.
+% See file COPYRIGHT-CMASS for details.
+%
+% Common parameterized configuration file for Windows NT or perhaps Windows 95,
+%% uses the integrated backend, Win32 threads, Win32 gui, Microsoft C library.
+%
+% Most of the variables in this file are independent of each other and
+% arbitrary configurations can be produced by changing them.
+%
+
+M3_PARALLEL_BACK = 20 % AMD64 machines usually have lots of cores
+
+%-------------------------------------------------------------------
+% defined by cm3, but not the other MxConfig users
+if not defined("CR") CR = "\n" end
+if not defined("EOL") EOL = "\n" end
+if not defined("M3_PROFILING") M3_PROFILING = FALSE end
+if not defined("SL") SL = "/" end
+
+%-------------------------------------------------- compilation environment ---
+
+if not defined("M3_BACKEND_MODE")
+  M3_BACKEND_MODE = "0"
+end
+% -- defines how the frontend, backend, and assembler interact
+%  "0"  -- don't call m3_backend, M3CG produces object code
+%  "1"  -- don't call m3_backend, M3CG produces assembly code
+%  "2"  -- call m3_backend, it produces object code
+%  "3"  -- call m3_backend, it produces assembly code
+%  "C"  -- generate C, then call C compiler
+
+%-------------------------------------------------------------------
+
+readonly TARGET_OS = "NT"
+readonly OS_TYPE = "WIN32"
+
+%-------------------------------------------------------------------
+
+if not defined("PROFILING_P")
+    if M3_PROFILING
+        readonly PROFILING_P = "p"
+    else
+        readonly PROFILING_P = ""
+    end
+end
+
+if not defined("BUILD_DIR")
+    readonly BUILD_DIR = TARGET & PROFILING_P
+end
+
+% for bootstrapping from older tools
+readonly NAMING_CONVENTIONS = "2"
+
+% "MS" cl
+% "GNU" gcc
+
+if not defined("C_COMPILER")
+    readonly C_COMPILER = "MS"
+end
+
+% "MS" link
+% "GNU" gcc/ld
+
+if not defined("LINKER")
+    readonly LINKER = "MS"
+end
+
+% "MS" Win32 kernel threads
+% "PTHREADS" Cygwin pthreads
+%
+% This is currently ignored, but a reasonable idea.
+
+readonly THREAD_LIBRARY = "MS"
+
+% "MS"
+% "X"
+
+readonly WINDOW_LIBRARY = "MS"
+
+%-------------------------------------------------------------------
+
+% Do a good job of setting up Visual C++ environment.
+% This is only for native builds.
+
+proc SetupEnvironment() is
+
+    local SystemDrive = $SystemDrive
+    local HostIsNT = equal($OS, "Windows_NT")
+
+    if HostIsNT and not equal(SystemDrive, "")
+        SystemDrive = SystemDrive & "\\"
+
+      % Do this earlier so that its link isn't a problem.
+      % Looking in the registry HKEY_LOCAL_MACHINE\SOFTWARE\Cygnus Solutions\Cygwin\mounts v2
+      % would be reasonable here.
+
+%     if HostIsCygwin:
+%         _SetupEnvironmentVariableAll(
+%             "PATH",
+%             ["cygwin1.dll"],
+%             os.path.join(SystemDrive, "cygwin", "bin"))
+
+        local VCBin = ""
+        local VCInc = ""
+        local VCLib = ""
+        local MspdbDir = ""
+
+        % 4.0 e:\MSDEV
+        % 5.0 E:\Program Files\DevStudio\SharedIDE
+        local MSDevDir = $MSDevDir
+
+        % 5.0
+        local MSVCDir = $MSVCDir % E:\Program Files\DevStudio\VC
+
+        % 7.1 Express
+        local VCToolkitInstallDir = $VCToolkitInstallDir % E:\Program Files\Microsoft Visual C++ Toolkit 2003 (not set by vcvars32)
+
+        % 8.0 Express
+        % E:\Program Files\Microsoft Visual Studio 8\VC
+        % E:\Program Files\Microsoft Visual Studio 8\Common7\Tools
+
+        local DevEnvDir = $DevEnvDir % E:\Program Files\Microsoft Visual Studio 8\Common7\IDE
+        local VSInstallDir = $VSINSTALLDIR % E:\Program Files\Microsoft Visual Studio 8
+        local VS80CommonTools = $VS80COMNTOOLS % E:\Program Files\Microsoft Visual Studio 8\Common7\Tools
+        local VCInstallDir = $VCINSTALLDIR % E:\Program Files\Microsoft Visual Studio 8\VC
+
+        % 9.0 Express
+        % always, global
+        %VS90COMNTOOLS=D:\msdev\90\Common7\Tools\
+        % after running the shortcut
+        %VCINSTALLDIR=D:\msdev\90\VC
+        %VSINSTALLDIR=D:\msdev\90
+        %
+        % The Windows SDK is carried with the express edition and tricky to find.
+        % Best if folks just run the installed shortcut probably.
+
+        % This is not yet finished.
+        %
+        % Probe the partly version-specific less-polluting environment variables,
+        % from newest to oldest.
+        % That is, having setup alter PATH, INCLUDE, and LIB system-wide is not
+        % a great idea, but having setup set DevEnvDir, VSINSTALLDIR, VS80COMNTOOLS, etc.
+        % isn't so bad and we can temporarily establish the first set from the second
+        % set.
+
+        if VSInstallDir
+
+            % Visual C++ 2005/8.0, at least the Express Edition, free download
+
+            if not VCInstallDir
+                VCInstallDir = VSInstallDir & "\\VC"
+            end
+
+            if not DevEnvDir
+                DevEnvDir = VSInstallDir & "\\Common7\\IDE"
+            end
+
+            MspdbDir = DevEnvDir
+
+        else if VCToolkitInstallDir
+
+            % free download Visual C++ 2003; no longer available
+
+            VCInstallDir = VCToolkitInstallDir
+
+        else if MSVCDir and MSDevDir
+
+            % Visual C++ 5.0
+            %
+            % do more research
+            % VCInstallDir = MSVCDir
+
+        else if MSDevDir
+
+            % Visual C++ 4.0, 5.0
+            %
+            % do more research
+            % VCInstallDir = MSDevDir
+
+        else
+
+            % This is what really happens on my machine, for 8.0.
+            % It might be good to guide pylib.py to other versions,
+            % however setting things up manually suffices and I have, um,
+            % well automated.
+
+            Msdev = SystemDrive & "\\msdev\\80"
+            VCInstallDir = Msdev & "\\VC"
+            DevEnvDir = Msdev & "\\Common7\\\IDE"
+
+        end end end end
+
+        if VCInstallDir
+            VCBin = VCInstallDir & "\\bin"
+            VCLib = VCInstallDir & "\\lib"
+            VCInc = VCInstallDir & "\\include"
+        end
+
+        if DevEnvDir
+            MspdbDir = DevEnvDir
+        %else if VCBin
+        %    MspdbDir = VCBin
+        end
+
+%         if _CheckSetupEnvironmentVariableAll("INCLUDE", ["errno.h", "windows.h"], VCInc)
+%             a = os.path.join(SystemDrive, "Program Files")
+%             b = os.path.join(a, "Microsoft Platform SDK for Windows Server 2003 R2", "Include")
+%             c = os.path.join(a, "Microsoft SDKs", "Windows", "v6.0A", "Include")
+%             _SetupEnvironmentVariableAll("INCLUDE", ["errno.h", "windows.h"], VCInc + ";" + c + ";" + b)
+
+%         _SetupEnvironmentVariableAll(
+%             "LIB",
+%             ["kernel32.lib", "libcmt.lib"],
+%             VCLib + os.path.pathsep + os.path.join(InstallRoot, "lib"))
+
+%         # Do this before mspdb*dll because it sometimes gets it in the path.
+
+%         _SetupEnvironmentVariableAll("PATH", ["cl", "link"], VCBin)
+
+%         _SetupEnvironmentVariableAny(
+%             "PATH",
+%             ["mspdb80.dll", "mspdb71.dll", "mspdb70.dll", "mspdb60.dll", "mspdb50.dll", "mspdb41.dll", "mspdb40.dll", "dbi.dll"],
+%             MspdbDir)
+
+%         _SetupEnvironmentVariableAny(
+%             "PATH",
+%             ["msobj80.dll", "msobj71.dll", "msobj10.dll", "msobj10.dll", "mspdb50.dll", "mspdb41.dll", "mspdb40.dll", "dbi.dll"],
+%             MspdbDir)
+
+%         # The free Visual C++ 2003 has no msvcrt.lib.
+%         # The Quake config file checks this environment variables.
+
+%         Lib = os.environ.get("LIB")
+%         if not SearchPath("msvcrt.lib", Lib)
+%             os.environ["USE_MSVCRT"] = "0"
+%             print("set USE_MSVCRT=0")
+%         end
+    end
+end
+
+SetupEnvironment()
+
+%------------------------------------------------------------------------------
+
+include("cm3cfg.common")
+
+%------------------------------------------------------------------------------
+
+proc Path_GetLastElement (a) is
+  local b = pos (a, "/")
+  if equal (b, "-1")
+    b = pos (a, "\\")
+  end
+  if not equal (b, "-1")
+    a = sub (a, b, len (a))
+    a = sub (a, 1, len (a))
+    return Path_GetLastElement (a)
+  end
+  return a
+end
+
+proc Path_GetBase (a) is
+  a = Path_GetLastElement (a)
+  local b = pos (a, ".")
+  if not equal (b, "-1")
+    a = sub (a, 0, b)
+  end
+  return a
+end
+
+%------------------------------------------------------------------------------
+
+% SYSTEM_LIBS provides a mapping from Modula-3 names for the common
+% external libraries to site-dependent information about how they
+% are accessed. If SYSTEM_LIBS{x} is defined it should be a list
+% of linker arguments that are used when linking against that library.
+% If SYSTEM_LIBS{x} is not defined, the Modula-3 system will assume
+% that the library is not available.
+
+%
+% These are for the .libs that ship with the tools and thus not our choice.
+%
+readonly LibInPrefix  = { "MS" : "",          "GNU" : "-l"  }{LINKER} % aka TARGET_NAMING or OS_TYPE
+readonly LibInSuffix  = { "MS" : ".lib",      "GNU" : ""    }{LINKER} % aka TARGET_NAMING or OS_TYPE
+readonly LibPath      = { "MS" : "-libpath:", "GNU" : "-L"  }{LINKER}
+
+if FALSE % If you want a Unixy file names for Cygwin
+
+readonly TARGET_NAMING = {"WIN32" : "2", "POSIX" : "0" }{OS_TYPE}
+%                                        object files       libraries
+%  0=Unix                          =>  .o   .io    .mo       libXX.a
+%  1=Unix with a grumpy C compiler =>  .o   _i.o   _m.o      libXX.a
+%  2=Windows NT or Windows 95      =>  .obj .io    .mo       XX.lib
+%  3=C++ backend with Automake     =>  .o   .i3.io .m3.o     libXX.a
+
+readonly LibOutPrefix = { "WIN32" : "",     "POSIX" : "lib" }{OS_TYPE} % aka TARGET_NAMING
+readonly LibOutSuffix = { "WIN32" : ".lib", "POSIX" : ".a"  }{OS_TYPE} % aka TARGET_NAMING
+readonly Obj          = { "WIN32" : ".obj", "POSIX" : ".o"  }{OS_TYPE} % aka TARGET_NAMING
+
+FormatExe = { "WIN32" : "%s.exe", "POSIX" : "%s"      }{OS_TYPE} % aka TARGET_NAMING
+readonly FormatLib = { "WIN32" : "%s.lib", "POSIX" : "lib%s.a" }{OS_TYPE} % aka TARGET_NAMING
+readonly FormatDll = { "WIN32" : "%s.dll", "POSIX" : "lib%s.so"}{OS_TYPE} % aka TARGET_NAMING
+% readonly FormatStandaloneLib = { "WIN32" : "%s.lib.sa", "POSIX" : "lib%s.a"}{OS_TYPE} % aka TARGET_NAMING
+
+end
+
+readonly TARGET_NAMING = "2"
+%                                        object files       libraries
+%  0=Unix                          =>  .o   .io    .mo       libXX.a
+%  1=Unix with a grumpy C compiler =>  .o   _i.o   _m.o      libXX.a
+%  2=Windows NT or Windows 95      =>  .obj .io    .mo       XX.lib
+%  3=C++ backend with Automake     =>  .o   .i3.io .m3.o     libXX.a
+
+readonly LibOutPrefix = ""
+readonly LibOutSuffix = ".lib"
+readonly Obj          = ".obj"
+
+FormatExe = "%s.exe"
+readonly FormatLib = "%s.lib"
+readonly FormatDll = "%s.dll"
+% readonly FormatStandaloneLib = { "WIN32" : "%s.lib.sa", "POSIX" : "lib%s.a"}{OS_TYPE} % aka TARGET_NAMING
+
+%------------------------------------------------------------------------------
+
+local readonly proc LibOut(a) is
+    return LibOutPrefix & a & LibOutSuffix
+end
+
+%------------------------------------------------------------------------------
+
+local readonly proc LibIn(a) is
+    return LibInPrefix & a & LibInSuffix
+end
+
+%------------------------------------------------------------------------------
+
+%
+% more unification is desirable here
+%
+SYSTEM_LIBS_MS =
+{
+    "LIBC" :
+    [
+        LibIn("iphlpapi"),
+        LibIn("rpcrt4"),
+        LibIn("winspool"),
+        LibIn("comctl32"),
+
+        LibIn("ws2_32"),
+        LibIn("comdlg32"),
+        LibIn("netapi32"),
+        LibIn("gdi32"),
+        LibIn("user32"),
+        LibIn("advapi32"),
+        LibIn("kernel32"),
+    ],
+    "ODBC" : [LibIn("odbc32")],
+    "OPENGL" : [LibIn("opengl32"), LibIn("glu32")],
+    "TCP" : [ ],
+}
+
+%------------------------------------------------------------------------------
+
+SYSTEM_LIBS_GNU =
+{
+% be sure to see what empty strings do here to fold this down
+    "LIBC" :
+    [
+%       LibIn("winspool"),
+        LibIn("comctl32"),
+        LibIn("ws2_32"),
+%       LibIn("comdlg32"),
+        LibIn("netapi32"),
+        LibIn("gdi32"),
+        LibIn("user32"),
+%       LibIn("advapi32"),
+%       LibIn("kernel32"),
+    ],
+
+    "FLEX-BISON" : [ "-lfl" ],
+
+    "ODBC" : [LibIn("odbc32")], %  -lodbccp32 ?
+    % for MS Windows
+    % "OPENGL" : [LibIn("glu32"), LibIn("opengl32")], % -lglut32 ?
+    % for X Windows
+    "OPENGL" : [ LibPath & "/usr/X11R6/lib",
+                 LibIn("GLU"),
+                 LibIn("GL"),
+                 LibIn("Xext") ],
+    "TCP" : [ ],
+
+    "MOTIF" : [ LibPath & "/usr/X11R6/lib",
+                LibIn("Xm"),
+                LibIn("Mrm"),
+                LibIn("UIl") ],
+
+    "X11" : [ LibPath & "/usr/X11R6/lib",
+              LibIn("Xaw"),
+              LibIn("Xmu"),
+              LibIn("Xext"),
+              LibIn("Xt"),
+              LibIn("SM"),
+              LibIn("ICE"),
+              LibIn("X11") ],
+
+   "Z" : [ "-lz" ],
+}
+
+SYSTEM_LIBS = { "WIN32" : SYSTEM_LIBS_MS, "POSIX" : SYSTEM_LIBS_GNU }{OS_TYPE}
+
+%------------------------------------------------------------------------------
+
+if equal(OS_TYPE, "WIN32")
+%
+% We must explicitly specify libcmt.lib or msvcrt.lib
+% in our link command because many links contain no C code and
+% no /defaultlib directives. The Modula-3 backend should perhaps
+% output those directives.
+%
+% Cutting the C runtime dependency from Modula-3 may be desirable.
+%
+% If variable USE_MSVCRT is not defined, then the environment variable
+% USE_MSVCRT must be 0, 1, or not defined.
+% Not defined is treated as 1. This is a safe default for the
+% vast majority of toolsets, but not all.
+%
+    if not defined("USE_MSVCRT")
+        if not equal($USE_MSVCRT, "0")
+            if not equal($USE_MSVCRT, "1")
+                if not equal($USE_MSVCRT, "")
+                    error("The environment variable USE_MSVCRT should be 0, 1, or not defined, but it is " & $USE_MSVCRT & "." & EOL)
+                end
+            end
+        end
+
+        % Translate $USE_MSVCRT to USE_MSVCRT.
+        %
+        if equal($USE_MSVCRT, "0")
+            % explicit 0
+            USE_MSVCRT = FALSE
+        else
+            % 1 or empty (default)
+            USE_MSVCRT = TRUE
+        end
+    end
+
+% If variable VS2015_OR_NEWER is not defined, then the environment variable
+% CM3_VS2015_OR_NEWER must be 0, 1, or not defined.
+% Not defined is treated as 1. There is no safe default here. It is required
+% for newer toolsets and breaks older toolsets.
+% TODO: Can we autodetect? Provide empty vcruntime.lib/ucrt.lib later
+% in $LIB? include stdio.h and reference stdout and look for certain symbols?
+% Inlude stdio.h and preprocess?
+%
+% cl usage or preprocess _MSC_VER and look at version.
+%
+    if not defined("VS2015_OR_NEWER")
+        if not equal($CM3_VS2015_OR_NEWER, "0")
+            if not equal($CM3_VS2015_OR_NEWER, "1")
+                if not equal($CM3_VS2015_OR_NEWER, "")
+                    error("The environment variable CM3_VS2015_OR_NEWER should be 0, 1, or not defined, but it is " & $CM3_VS2015_OR_NEWER & "." & EOL)
+                end
+            end
+        end
+
+        % Translate $CM3_VS2015_OR_NEWER to VS2015_OR_NEWER.
+        %
+        if equal($CM3_VS2015_OR_NEWER, "0")
+            % explicit 0
+            VS2015_OR_NEWER = FALSE
+        else
+            % 1 or empty (default)
+            VS2015_OR_NEWER = TRUE
+        end
+    end
+
+    if USE_MSVCRT
+        SYSTEM_LIBS{"LIBC"} += [LibIn("msvcrt")]
+        if VS2015_OR_NEWER
+            SYSTEM_LIBS{"LIBC"} += [LibIn("vcruntime")]
+            SYSTEM_LIBS{"LIBC"} += [LibIn("ucrt")]
+        end
+    else
+        SYSTEM_LIBS{"LIBC"} += [LibIn("libcmt")]
+        if VS2015_OR_NEWER
+            SYSTEM_LIBS{"LIBC"} += [LibIn("libvcruntime")]
+            SYSTEM_LIBS{"LIBC"} += [LibIn("libucrt")]
+        end
+    end
+end
+
+% SYSTEM_LIBORDER defines the order in which SYSTEM_LIBS should be
+% scanned by the linker.
+
+if equal (WINDOW_LIBRARY, "X")
+    SYSTEM_LIBORDER = ["OPENGL", "MOTIF", "X11", "TCP", "ODBC", "LIBC"]
+else
+    SYSTEM_LIBORDER = ["OPENGL",                 "TCP", "ODBC", "LIBC"]
+end
+
+if equal(OS_TYPE, "POSIX")
+    SYSTEM_LIBORDER += ["Z", "FLEX-BISON"]
+end
+
+%--------------------------------------------------------- Modula-3 backend ---
+% For platforms without an integrated backend, "m3_backend" is called to
+% translate Modula-3 intermediate code to object code.
+
+%
+% i586 is needed for atomics
+%
+m3back_flags = ["-march=i586"]
+
+%
+% always generate information for debugging
+%
+m3back_flags += "-gstabs+"
+
+%
+% Don't depend on cygwin1.dll.
+%
+if equal(OS_TYPE, "WIN32")
+    m3back_flags += "-mno-cygwin"
+end
+
+m3back_optimize = [ ]
+m3back_optimize += "-O"
+
+%
+% This requires -O.
+%
+m3back_optimize += "-Wuninitialized"
+
+%------------------------------------------------------------------------------
+
+proc m3_backend(source, object, optimize, debug) is
+    local args = [ "-quiet", "-fno-reorder-blocks", source, "-o", object]
+    if optimize
+        args += m3back_optimize
+    end
+    if M3_PROFILING
+        args += "-p"
+    end
+    local m3back = GetM3Back()
+    return try_exec(m3back, args)
+end
+
+%--------------------------------------------------------- m3llvm ------------
+% Optionally, "m3llvm" is called to translate cm3 IR to llvm IR.
+
+if not defined("m3llvm")
+
+  proc m3llvm(source, outfile, optimize, debug) is
+  % will we ever need optimize and/or debug?
+
+      local m3llvmname = "@m3llvm"
+
+      local args = [ "-b" ]
+
+      if debug
+        args += "-g"
+      end
+
+      % add the target to the m3llvm call.
+      args += "-t " & TARGET
+
+      %args += "-d" %While m3llvm is under development.
+
+      return try_exec (m3llvmname, args, "-o", outfile, source )
+  end % proc m3llvm
+
+end % if not defined("m3llvm")
+
+%--------------------------------------------------------- llvm backend ---
+% Optionally, "llvm_backend" is called to translate llvm bitcode to object code.
+
+% Some default options:
+
+if not defined("llvmback_debug")
+  llvmback_debug = ""
+end
+
+if not defined("llvmback_optimize")
+  llvmback_optimize = "-O2"
+end
+
+if not defined("llvmback_pic")
+  llvmback_pic = "-relocation-model=pic"
+end
+
+if not defined("llvm_backend")
+
+  proc llvm_backend(source, outfile, optimize, debug, filetype) is
+      local llcname = "@llc"
+      local args = [ "-frame-pointer=all"]
+%llvm 8 changed option for frame pointer.
+%      local args = [ "-disable-fp-elim"]
+
+      args += "-filetype=" & filetype
+      args += llvmback_pic
+
+      if optimize
+          args += llvmback_optimize
+      else
+          args += "-O0"
+      end
+      if debug
+          args += llvmback_debug
+      end
+
+      local llc_ret = try_exec (llcname, args, source, "-o", outfile )
+
+      return llc_ret
+  end % proc llvm_backend
+
+end % if not defined("llvm_backend")
+
+% Optionally call the llvm optimiser
+
+if not defined("llvm_opt")
+
+  proc llvm_opt(source, outfile) is
+
+      local opt_ret = try_exec ("@opt", llvmback_optimize, source, "-o", outfile )
+
+      return opt_ret
+  end % proc llvm_opt
+
+end % if not defined("llvm_opt")
+
+%--------------------------------------------------------------- C compiler ---
+% "compile_c" is called to compile C source files. Note that this function
+% is only called if your program or library explicitly includes C source
+% code, the system distributed by Critical Mass does not.
+
+proc compile_c_ms(source, object, options, optimize, debug) is
+    local args =
+    [
+% Be quiet. Remove this if response file are used, since it
+% inhibits the compiler dumping the response file, which is useful
+% in any log.
+%
+        "-nologo",
+
+% Don't put any default library names in .objs.
+%
+        "-Zl",
+
+% Let the linker remove unused functions. Most build systems do this most of the time.
+%
+        "-Gy",
+        options
+    ]
+
+    % Put type information in .objs/.libs instead of shared in vc80.pdb, etc.
+    % vc80.pdb can be renamed with /Fd, we'd need the target name.
+    % This is bigger/slower but has advantages too.
+    % Debug information does not inhibit optimization so always generate it.
+    %
+    args += ["-Z7"]
+
+    args += ["-TP"] % compile as C++
+
+    if USE_MSVCRT
+        % Use msvcrt.lib and define _MT and _DLL.
+        %
+        args += ["-MD"]
+    else
+        % Use libcmt.lib and define _MT.
+        %
+        args += ["-MT"]
+    end
+    if optimize
+        args += "-Ox"
+    end
+    args += "-Oi"
+
+    local readonly Command = ["cl.exe", escape(subst_chars(args, "\\", "/")), "-c", escape(source), "-Fo" & object]
+    local ret = try_exec("@" & Command)
+
+    if not equal(ret, 0) and equal(source, "_m3main.c")
+        % for _m3main.c, try also as C instead of C++ for older cm3
+        ret = try_exec("@" & Command, "-TC")
+    end
+
+    return ret
+end
+
+%------------------------------------------------------------------------------
+
+proc compile_c_gnu(source, object, options, optimize, debug) is
+    local args = options
+    %
+    % There's very little C in the system, and dtoa.h is crashing,
+    % when compiling m3core Real*, LongReal*, Extended* (not every one).
+    %
+    %if optimize
+    %    args += "-O"
+    %end
+    %args += "-Os"
+    if M3_PROFILING
+        args += "-pg"
+    end
+    return try_exec("@g++", "-g", escape(subst_chars(args, "\\", "/")), "-c", subst_chars(source, "\\", "/"), "-o", object)
+end
+
+proc compile_c(source, object, options, optimize, debug) is
+    if equal(C_COMPILER, "MS")
+        return compile_c_ms(source, object, options, optimize, debug)
+    end
+    return compile_c_gnu(source, object, options, optimize, debug)
+end
+
+%---------------------------------------------------------------- assembler ---
+% "assemble" is called to assemble .s or .asm files. Note that this function
+% is only called if your program or library explicitly includes assembly source
+% code, the system distributed by Critical Mass does not.
+
+%
+% not used
+%
+proc assemble_ms(source, object) is
+    local args = arglist("@", ["-Ml", "-t", "-z", source & "," & object & ";"])
+    return q_exec("masm386", args)
+end
+
+proc assemble_gnu(source, object) is
+    return q_exec(["as", source, "-o", object])
+end
+
+proc assemble(source, object) is
+    return assemble_gnu(source, object)
+end
+
+%------------------------------------------------------------------------------
+
+%
+% Quake can't do math, or generate unique temp files,
+% at least not that it cleans up.
+%
+% Uniqueness is not critical here, it is merely useful
+% while debugging to go back and see the temp files.
+%
+% It is also good to put files in a place where they
+% will reliably get deleted -- not TEMP.
+%
+% It is open question as to if carry over to two digits
+% can be implemented in Quake. :)
+%
+
+ResponseFileCounter = "0"
+
+readonly proc GetResponseFileName() is
+    local readonly Result = "_m3responsefile" & ResponseFileCounter & ".txt"
+    ResponseFileCounter =
+        { "0":"1","1":"2","2":"3","3":"4","4":"5",
+          "5":"6","6":"7","7":"8","8":"9","9":"0", }{ResponseFileCounter}
+    return Result
+end
+
+%
+% mklib wants newlines, so a direct write doesn't work
+% I couldn't get anything with write to work, nothing would handle
+% plain parameters and lists
+%
+readonly proc WriteResponseFile(File, Divider, Args) is
+    local readonly Temp = arglist("", Args)
+    if equal(Temp, Args)
+        if equal(Divider, " ")
+            return Temp
+        end
+        %
+        % Quake has a fixed size limit on strings, after which it crashes.
+        % Hopefully that our parameter list is too short to be in a response
+        % file implies it is short enough to fit in a string.
+        %
+        local Result = ""
+        foreach Arg in Args
+            if Result
+                Result = Result & Divider
+            end
+            Result = Result & Arg
+        end
+        return Result
+    end
+    MoveFile(Temp, File)
+    DeleteFile(Temp)
+    return "@" & File
+end
+
+%------------------------------------------------------------------------------
+
+readonly proc ManifestTool(DllOrExe, ManifestFile, ResourceId) is
+    local ret = 0
+    %
+    % http://msdn2.microsoft.com/en-us/library/ms235591.aspx
+    %
+    if FileExists(ManifestFile)
+        local Command = "@mt /nologo /manifest " & ManifestFile & " /outputresource:" & DllOrExe & ";" & ResourceId
+        if equal (SL, "/")
+            % Posix exec through sh treats the semicolon as a command delimiter, so quote
+            % the whole command and send it to cmd.
+            Command = "cmd /c \"" & Command & "\""
+        end
+        ret = try_exec(Command)
+        DeleteFile(ManifestFile)
+    end
+    return ret
+end
+
+%------------------------------------------------------------------------------
+
+%
+% Modula-3 has fixed sized buffers and fails assertions if we try
+% to give it more than 1k. This is lame.
+%
+readonly proc EscapeList(List) is
+    local Result = [ ]
+    foreach Element in List
+        Result += escape(Element)
+    end
+    return Result
+end
+
+%------------------------------------------------------------------------------
+
+%readonly proc JoinPath(a, b) is
+%    if a and b return a & SL & b end
+%    if b return b end
+%    if a return a end
+%end
+
+%readonly proc FileInDirOrParent(a) is
+% a is foo/i386/bar
+% chose it or foo/bar, whichever exists
+    %local leaf = GetLastPathElement(a)
+    %local other = JoinPath(RemoveLastPathElement(RemoveLastPathElement(a)), leaf)
+    %return ChoseFile([a, other])
+%end
+
+UseHand = LIB_INSTALL & SL & "hand" & Obj
+if not FileExists (UseHand)
+  % for bootstrapping
+  UseHand = ""
+end
+
+UseUconstants = LIB_INSTALL & SL & "Uconstants" & Obj
+if not FileExists (UseUconstants)
+  % for bootstrapping
+  UseUconstants = ""
+end
+
+UseWinConstants = LIB_INSTALL & SL & "WinConstants" & Obj
+if not FileExists (UseWinConstants)
+  % for bootstrapping
+  UseWinConstants = ""
+end
+
+%--------------------------------------------------------- library creation ---
+% "make_lib" is called to combine a collection of object modules into
+% a library.
+
+%% NOTE: we should set the "base" load address of the various DLLs
+%%  to avoid relocating them every time they are loaded.
+
+%
+% make_lib and m3_link need to share code!
+%
+
+proc make_dll_ms(options, objects, imported_libs, lib_file, def_file, dll_file, LinkResponseFile) is
+    return try_exec(
+        "@link.exe",
+        WriteResponseFile(
+            LinkResponseFile,
+            " ",
+            [
+                m3_link_flags,
+% Put this in to "bootstrap backwards" -- build with newer toolsets
+% such that you can subsequently build with older toolsets.
+%               "-link50compat",
+                "-def:" & def_file,
+                "-dll",
+                "-out:" & dll_file,
+                 options,
+                 objects,
+                 subst_chars(imported_libs, "/", "\\"),
+                 subst_chars(UseHand, "/", "\\"),
+                 subst_chars(UseUconstants, "/", "\\"),
+                 subst_chars(UseWinConstants, "/", "\\"),
+            ]))
+end
+
+%------------------------------------------------------------------------------
+
+proc make_dll_gnu(options, objects, imported_libs, lib_file, def_file, dll_file, LinkResponseFile) is
+    if M3_PROFILING
+        objects += "-pg"
+    end
+
+    return try_exec(
+            "@g++",
+            "-g",
+            %"-v",
+            "-shared", % must be visible to compiler
+            "-Wl,"
+                & WriteResponseFile(
+                    LinkResponseFile,
+                    ",",
+                    [
+                        "--output",
+                        dll_file,
+                        "--out-implib",
+                        lib_file,
+                        %"--export-all-symbols",
+                        "--enable-auto-image-base",
+                        "--warn-duplicate-exports",
+                        "--disable-auto-import",
+                        "--disable-runtime-pseudo-reloc",
+                        "--large-address-aware",
+                        objects,
+                        EscapeList(imported_libs),
+                        escape(UseUconstants),
+                        escape(UseWinConstants),
+                        %escape(UseHand),
+                    ]))
+end
+
+%------------------------------------------------------------------------------
+
+proc make_lib(lib, options, objects, imported_libs, shared) is
+    local ret_code = 0
+
+    local readonly lib_file = format(FormatLib, lib)
+    local readonly lib0_file = lib_file & ".sa"
+    local readonly def_file = lib & ".def"
+    local readonly dll_file = format(FormatDll, lib)
+    local readonly manifest_file  = dll_file & ".manifest"
+    local readonly pdb_file = lib & ".pdb"
+    local readonly LibResponseFile = GetResponseFileName()
+    local LinkResponseFile = LibResponseFile
+    local ShipHand = equal (lib, "m3core") and FileExists("hand" & Obj)
+    local ShipUconstants = equal (lib, "m3core") and FileExists("Uconstants" & Obj)
+    local ShipWinConstants = equal (lib, "m3core") and FileExists("WinConstants" & Obj)
+
+    if ShipHand or not shared
+        UseHand = ""
+    end
+
+    if ShipUconstants or not shared
+        UseUconstants = ""
+    end
+
+    if ShipWinConstants or not shared
+        UseWinConstants = ""
+    end
+
+    if shared
+        LinkResponseFile = GetResponseFileName()
+    end
+
+    local readonly Outputs = [
+        lib_file,
+        lib0_file,
+        dll_file,
+        def_file,
+        manifest_file,
+        pdb_file,
+        LibResponseFile,
+        LinkResponseFile,
+        lib & ".ilk"]
+
+    % make sure files get cleaned up
+    DeleteFiles(Outputs)
+    deriveds("", Outputs)
+
+    % build a static library and .def
+    % The static library here is historical and unused.
+    % mklib is transitioning away: write the .def file elsewhere
+    % if dynamic linking is supported
+
+    if shared
+
+        local m3_lib_flags = [ ]
+        if equal(LINKER, "MS")
+            % m3_lib_flags = ["-debugtype:cv", "-machine:i386"]
+            m3_lib_flags = ["-ign:__real"]
+        end
+
+        ret_code = try_exec(
+            "@mklib",
+            WriteResponseFile(
+                LibResponseFile,
+                " ",
+                [
+                    m3_lib_flags,
+                    "-out:" & lib_file,
+                    options,
+                    objects,
+                ]))
+        if not equal(ret_code, 0) or not FileExists(lib_file)
+            error("library creation failed" & EOL)
+            if not equal(ret_code, 0)
+                return ret_code
+            end
+            return 1
+        end
+    end
+
+    % build static library without mklib
+
+    delete_file (lib_file)
+    exec("link /lib /out:" & lib_file, arglist("@", [options, objects]))
+
+    if not shared
+        return 0
+    else
+        % build an import library & DLL
+
+        MoveFile(lib_file, lib0_file)
+
+        if equal(LINKER, "MS")
+            ret_code =
+                make_dll_ms(
+                    options,
+                    objects,
+                    subst_chars(imported_libs, "/", "\\"),
+                    lib_file,
+                    def_file,
+                    dll_file,
+                    LinkResponseFile)
+        else
+            ret_code =
+                make_dll_gnu(
+                    options,
+                    objects,
+                    imported_libs,
+                    lib_file,
+                    def_file,
+                    dll_file,
+                    LinkResponseFile)
+        end
+
+        if not equal(ret_code, 0) or not FileExists(dll_file)
+            error("dynamic link library creation failed" & EOL)
+            if not equal(ret_code, 0)
+                return ret_code
+            end
+            return 1
+        end
+
+        ret_code = ManifestTool(dll_file, manifest_file, "2")
+        if not equal(ret_code, 0)
+            return ret_code
+        end
+
+        BindExport(dll_file)
+        PdbExport(pdb_file)
+        install_derived(lib0_file)
+        if ShipHand
+            LibdExport("hand" & Obj)
+        end
+        if ShipUconstants
+            LibdExport("Uconstants" & Obj)
+        end
+        if ShipWinConstants
+            LibdExport("WinConstants" & Obj)
+        end
+    end
+    return ret_code
+end
+
+%-------------------------------------------------------------------
+% "skip_lib" is called when the compiler decides it doesn't need to
+% call "make_lib", but it wants to discover the names of the derived
+% files that should be deleted or shipped.
+
+proc skip_lib(lib, shared) is
+    local readonly lib_file = format(FormatLib, lib)
+    local readonly lib0_file = lib_file & ".sa"
+    local def_file  = lib & ".def"
+    local readonly dll_file = format(FormatDll, lib)
+    local manifest_file  = dll_file & ".manifest"
+    local pdb_file  = lib & ".pdb"
+
+    local readonly Outputs = [
+        lib_file,
+        lib0_file,
+        dll_file,
+        def_file,
+        manifest_file,
+        pdb_file,
+        lib & ".ilk"]
+
+    % make sure files get cleaned up
+    deriveds("", Outputs)
+
+    if shared
+        % would have built an import library & DLL
+        BindExport(dll_file)
+        DeleteFile(manifest_file)
+        PdbExport(pdb_file)
+        install_derived(lib0_file)
+    else
+        DeleteFiles([lib0_file, dll_file, manifest_file, pdb_file])
+    end
+
+    return 0
+end
+
+%------------------------------------------------------------------- linker ---
+% "m3_link" is called to produce a final executable.
+
+m3_link_flags =
+[
+%
+% Ignore that some .libs think they want libc.lib.
+% This should not needed in a full coherent build, however
+% existing distributions, such as 5.2.6, have C code built
+% without /MD or /MT and bootstrapping uses their files,
+% such as m3core.lib.sa(hand.obj).
+%
+% Cutting the C runtime dependency from Modula-3 may be desirable.
+%
+    "-nodefaultlib",
+%
+% Generate a .pdb for debugging.
+%
+    "-debug",
+%
+% Spend a little longer producing a slightly smaller/faster .dll/.exe and
+% avoid some warnings.
+%
+    "-incremental:no",
+%
+% Remove unused code/data.
+%
+    "-opt:ref",
+%
+% With newer linkers, combine identical code/data.
+%
+%   "-opt:icf",
+]
+
+%------------------------------------------------------------------------------
+
+proc m3_link_ms(prog, options, objects, imported_libs, shared, pgm_file, LinkResponseFile) is
+    local entry = ["-subsystem:console", "-entry:mainCRTStartup"]
+    if defined("M3_WINDOWS_GUI")
+        if M3_WINDOWS_GUI
+            entry = ["-subsystem:windows", "-entry:WinMainCRTStartup"]
+        end
+    end
+
+    return try_exec(
+        "@link",
+        WriteResponseFile(
+            LinkResponseFile,
+            " ",
+            [
+                "-out:" & pgm_file,
+                entry,
+                m3_link_flags,
+                options,
+                objects,
+                subst_chars(imported_libs, "/", "\\"),
+                subst_chars(UseHand, "/", "\\"),
+                subst_chars(UseWinConstants, "/", "\\"),
+                subst_chars(UseUconstants, "/", "\\"),
+            ]))
+end
+
+%------------------------------------------------------------------------------
+
+proc m3_link_gnu(prog, options, objects, imported_libs, shared, pgm_file, LinkResponseFile) is
+    if not shared
+        %options += "-static"
+    end
+    if M3_PROFILING
+        options += "-pg"
+    end
+
+    % not tested
+    % if not defined("M3_WINDOWS_GUI")
+    %   M3_WINDOWS_GUI = FALSE
+    % end
+    % if M3_WINDOWS_GUI
+    %   options += "-mwindows"
+    % else
+    %   options += "-mconsole"
+    % end
+
+    return try_exec(
+            "@g++",
+            "-g",
+            %"-v",
+            "-Wl,"
+                & WriteResponseFile(
+                    LinkResponseFile,
+                    ",",
+                    [
+                        "--output",
+                        pgm_file,
+                        "--disable-auto-import",
+                        "--disable-runtime-pseudo-reloc",
+                        "--large-address-aware",
+                        options,
+                        objects,
+                        EscapeList(imported_libs),
+                        escape(UseUconstants),
+                        escape(UseWinConstants),
+                        %escape(UseHand),
+                    ]))
+end
+
+%------------------------------------------------------------------------------
+
+proc m3_link(prog, options, objects, imported_libs, shared) is
+    local ret_code = 0
+    local readonly pgm_file = format(FormatExe, prog)
+    local readonly manifest_file = pgm_file & ".manifest"
+    local readonly pdb_file = prog & ".pdb"
+    local readonly LinkResponseFile = GetResponseFileName()
+
+    local readonly Outputs = [
+        pgm_file,
+        manifest_file,
+        pdb_file,
+        LinkResponseFile,
+        prog & ".ilk"]
+
+    % make sure files get cleaned up
+    DeleteFiles(Outputs)
+    deriveds("", Outputs)
+
+    if not shared
+      UseHand = ""
+      UseUconstants = ""
+      UseWinConstants = ""
+    end
+
+    imported_libs = ConvertLibsToStandalone(imported_libs, shared)
+
+    if equal(LINKER, "MS")
+        ret_code = m3_link_ms(
+            prog,
+            options,
+            objects,
+            imported_libs,
+            shared,
+            pgm_file,
+            LinkResponseFile)
+    else
+        ret_code = m3_link_gnu(
+            prog,
+            options,
+            objects,
+            imported_libs,
+            shared,
+            pgm_file,
+            LinkResponseFile)
+    end
+
+    if not equal(ret_code, 0) or not FileExists(pgm_file)
+        error("link failed" & EOL)
+        if not equal(ret_code, 0)
+            return ret_code
+        end
+        return 1
+    end
+
+    ret_code = ManifestTool(pgm_file, manifest_file, "1")
+    if not equal(ret_code, 0)
+        return ret_code
+    end
+
+    PdbExport(pdb_file)
+
+    return ret_code
+end
+
+%------------------------------------------------------------ misc. options ---
+% Note, most of these options can be set from the command line. Otherwise,
+% they can be set "permanently" here in the config file or in as needed
+% in user's m3makefiles.
+
+% M3_WINDOWS_GUI = TRUE
+% --- generate a Windows GUI subsystem program instead of a console one.
+
+% M3_COVERAGE = TRUE
+% --- compile & link with coverage options
+
+M3_COVERAGE_LIB = "report_coverage" & Obj
+% --- library linked in programs compiled with "-Z" coverage option
+
+M3_SPLIT_LIBNAMES = FALSE
+% --- split library names and pass -L/-l arguments to the linker
+
+% M3_SHARED_LIB_ARG = ""
+% --- pass "-R" flags to the linker too.
+
+% M3_MAIN_IN_C = TRUE
+% --- generate the Modula-3 main program as C code
