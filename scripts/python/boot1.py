@@ -159,6 +159,8 @@ def Boot():
     # TODO: All this logic should be in the Makefile so we can make one distribution.
     # See BootAutoTools.
 
+    LinkFlags = ""
+
     if darwin:
         pass
     elif djgpp:
@@ -183,11 +185,26 @@ def Boot():
     elif interix:
         Link = Link + " -lm -pthread "
     elif nt:
-        CCompilerFlags = " -Z7 -MD -Gy -O2 -GL "
+        # ARM32_NT build environment has many problems,
+        # ARM64_NT maybe a few
+        # LTCG, C runtime .dlls and perhaps optimization. ARM32 is especially
+        # troublesome and is why we put libs at the end.
+        # -O1, -O2, -Gy, -GL, -Z7, -MT all fail on ARM32_NT (19.28.29913)
+        # ARM64_NT maybe has problems too. Testing every combination is tedious and
+        # time consuming.
+        if Target == "ARM32_NT":
+            CCompilerFlags = " -MT "
+        elif Target == "ARM64_NT":
+            CCompilerFlags = " -Z7 -MT -Gy -O1 "
+        else:
+             CCompilerFlags = " -Z7 -MD -Gy -O2 -GL "
         Link = "link /incremental:no /debug /pdb:$(@R).pdb "
-        Link = Link + " user32.lib kernel32.lib ws2_32.lib comctl32.lib gdi32.lib advapi32.lib netapi32.lib iphlpapi.lib "
-        Link = Link + " -delayload:gdi32.dll -delayload:user32.dll -delayload:iphlpapi.dll -delayload:advapi32.dll -delayload:ws2_32.dll "
-        Link = Link + " delayimp.lib -opt:ref,icf "
+        # LinkFlags esp. .libs go at the end to avoid ARM32 link crash
+        LinkFlags = "LinkFlags=-delayload:gdi32.dll -delayload:user32.dll -delayload:iphlpapi.dll -delayload:advapi32.dll -delayload:ws2_32.dll "
+        LinkFlags = LinkFlags + " delayimp.lib "
+        if Target != "ARM32_NT":
+            LinkFlags = LinkFlags + " -opt:ref,icf "
+        LinkFlags = LinkFlags + " user32.lib kernel32.lib ws2_32.lib comctl32.lib gdi32.lib advapi32.lib netapi32.lib iphlpapi.lib"
     elif cygwin:
         Link = Link + " -luser32 -lkernel32 -lws2_32 -lcomctl32 -lgdi32 -ladvapi32 -lnetapi32 -liphlpapi"
     elif bsd or linux:
@@ -233,11 +250,16 @@ def Boot():
     for pkg in main_packages:
         CreateDirectory(os.path.join(BootDir, pkg + ".d"))
 
+    question_equals = "?="
+    if nt:
+        question_equals = "="
+
     Makefile.write("# edit up here" + NL2
-            + "CC?=" + CCompiler + NL
+            + "CC" + question_equals + CCompiler + NL
             + "CFLAGS=" + CCompilerFlags + NL
             + "Compile=" + Compile + NL
-            + "Link=" + Link + NL2
+            + "Link=" + Link + NL
+            + LinkFlags + NL2
             + "# no more editing should be needed" + NL2
             + ".SUFFIXES:" + NL + ".SUFFIXES: .cpp .c .o .obj" + NL2
             + "all: ")
@@ -324,6 +346,8 @@ def Boot():
     $(Link) -out:$@ @<<$(@).responseFile
 $(@R).d/Main.m3.obj
 $(OBJECTS: =
+)
+$(LinkFlags: =
 )
 <<keep
 
