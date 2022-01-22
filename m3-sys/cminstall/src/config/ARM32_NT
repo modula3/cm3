@@ -1,0 +1,14 @@
+readonly TARGET_ENDIAN = "LITTLE"   % { "BIG" OR "LITTLE" }
+readonly TARGET_ARCH = "ARM32"
+readonly WORD_SIZE = "32BITS"       % { "32BITS" or "64BITS" }
+
+USE_MSVCRT = FALSE % Some problem with ARM C runtime .dlls?
+
+M3_BACKEND_MODE = "C"
+
+% ARM32_NT linker tends to crash with /Gy
+SeparateFunctions = ""
+
+include("NT.common")
+
+build_standalone() % some problem with dynamic linking?

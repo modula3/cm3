@@ -99,6 +99,8 @@ MxConfigC__HOST(void)
 
     if (strcmp(name, "X86") == 0)
         strcpy(name, "I386");
+    else if (strcmp(name, "ARM") == 0)
+        strcpy(name, "ARM32");
     strcat(name, "_NT");
     return _strdup(name);
 #else

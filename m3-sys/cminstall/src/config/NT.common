@@ -20,6 +20,11 @@ if not defined("SL") SL = "/" end
 
 %-------------------------------------------------- compilation environment ---
 
+% ARM32_NT linker tends to crash with /Gy
+if not defined ("SeparateFunctions")
+  SeparateFunctions = "-Gy"
+end
+
 if not defined("M3_BACKEND_MODE")
   M3_BACKEND_MODE = "0"
 end
@@ -649,7 +654,7 @@ proc compile_c_ms(source, object, options, optimize, debug) is
 
 % Let the linker remove unused functions. Most build systems do this most of the time.
 %
-        "-Gy",
+        SeparateFunctions,
         options
     ]
 

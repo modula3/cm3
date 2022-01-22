@@ -28,9 +28,10 @@ The code is also portable and could be used for ThreadPThread.m3 if desired.
 #include <x86intrin.h>
 #elif defined(_MSC_VER)
 #include <intrin.h>
+#if (defined(_X86_) || defined(_AMD64_)) && !defined(_ARM64EC_)
 #pragma intrinsic(__rdtsc)
 #endif
-
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -62,7 +63,9 @@ static volatile long ThreadDebug__LogCounter;
 
 #define NUMBER_OF(a) (sizeof(a)/sizeof((a)[0]))
 
-#ifndef ReadTimeStampCounter
+// Sometimes ReadTimeStampCounter is a macro, sometimes an inline function,
+// sometimes a declared but unimplemented function.
+#if !(defined(ReadTimeStampCounter) || defined(_ARM_) || defined(_ARM64_) || defined(_ARM64EC_))
 #ifdef _M_IX86
 static unsigned __int64
 __cdecl
@@ -92,7 +95,10 @@ ThreadDebug__LogEntry(const char* function, void* c, void* m, void* t, void* eve
         if (Counter > Skip)
         {
             ThreadDebug__LogEntry_t* entry = &ThreadDebug__Log[(Counter - Skip) % NUMBER_OF(ThreadDebug__Log)];
+            // Windows declares ReadTimeStampCounter for ARM but does not implement it.
+#ifndef _ARM_
             entry->tm = (unsigned)ReadTimeStampCounter();
+#endif
             entry->tid = GetCurrentThreadId();
             entry->f = function;
             entry->c = c;

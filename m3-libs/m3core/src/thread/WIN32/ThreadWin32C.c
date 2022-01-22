@@ -68,7 +68,9 @@ extern "C" {
 /*-------------------------------------------------------------------------*/
 /* context */
 
-#if defined(_AMD64_)
+#if defined(_ARM_) || defined(_ARM64_) || defined(_ARM64EC_)
+#define STACK_REGISTER Sp
+#elif defined(_AMD64_)
 #define STACK_REGISTER Rsp
 #elif defined(_X86_)
 #define STACK_REGISTER Esp
