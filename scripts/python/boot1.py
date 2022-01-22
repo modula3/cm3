@@ -219,8 +219,8 @@ def Boot():
     DeleteRecursiveCommand = ["rm -rf", "rmdir /q/s"][nt]
     DeleteCommand = ["rm -f", "del /f"][nt]
 
-    P = FilterPackages([ "m3core", "libm3", "sysutils", "set", "m3middle",
-          "m3quake", "m3objfile", "m3linker", "m3back", "m3front" ])
+    P = list(FilterPackages([ "m3core", "libm3", "sysutils", "set", "m3middle",
+          "m3quake", "m3objfile", "m3linker", "m3back", "m3front" ]))
     main_packages = ["cm3"]
 
     # TODO: mklib = TRUE, something is wrong with the Makefile and it is not really needed,
@@ -238,12 +238,12 @@ def Boot():
     CCompilerFlags = pylib._SqueezeSpaces(CCompilerFlags)
     Link = pylib._SqueezeSpaces(Link)
 
-    NL = ["\n", "\r\n"][nt]
+    NL = "\n"
     NL2 = NL + NL
     EXE = ["", ".exe"][nt]
-    VmsMake  = open(os.path.join(BootDir, "vmsmake.com"), "wb")
-    VmsLink  = open(os.path.join(BootDir, "vmslink.opt"), "wb")
-    Makefile = open(os.path.join(BootDir, "Makefile"), "wb")
+    VmsMake  = open(os.path.join(BootDir, "vmsmake.com"), "w")
+    VmsLink  = open(os.path.join(BootDir, "vmslink.opt"), "w")
+    Makefile = open(os.path.join(BootDir, "Makefile"), "w")
     Objects = { }
     ObjectsExceptMain = { }
 
@@ -314,7 +314,7 @@ def Boot():
             Makefile.write("." + c + ".o:\n\t$(Compile) -o $@ $<\n\n")
 
     Makefile.write("OBJECTS=")
-    Objects = ObjectsExceptMain.keys()
+    Objects = list(ObjectsExceptMain.keys())
     Objects.sort()
     k = 8 # worst case tab render
     for a in Objects:
