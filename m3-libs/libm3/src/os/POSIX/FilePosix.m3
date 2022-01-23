@@ -44,7 +44,8 @@ PROCEDURE FileTypeFromStatbuf(READONLY statbuf: Ustat.struct_stat)
           THEN RETURN RegularFile.FileType
           ELSE RETURN Terminal.FileType
         END;
-      ELSIF (type = Ustat.S_IFIFO) OR (type = Ustat.S_IFSOCK) THEN
+      (* S_IFSOCK can be zero on systems without socket support *)
+      ELSIF (type = Ustat.S_IFIFO) OR (Ustat.S_IFSOCK # 0 AND type = Ustat.S_IFSOCK) THEN
         RETURN Pipe.FileType;
       ELSIF type = Ustat.S_IFDIR THEN
         RETURN FS.DirectoryFileType
