@@ -91,9 +91,17 @@ Unix__Assertions(void)
     Usocket__Assertions();
 }
 
+#ifdef __DJGPP__
+int _fmode = O_BINARY; // Does this work? We do not depend on it. See open/creat.
+#endif
+
 int Unix__open (const char* path, int flags, m3_mode_t mode)
 {
     int result;
+
+#ifdef __DJGPP__
+    flags |= O_BINARY;
+#endif
 
     Scheduler__DisableSwitching ();
 #ifdef _WIN32
@@ -113,6 +121,10 @@ int Unix__open (const char* path, int flags, m3_mode_t mode)
 
 int Unix__creat (const char* path, m3_mode_t mode)
 {
+#ifdef __DJGPP__
+    // cannot add O_BINARY otherwise except maybe via _fmode
+    return Unix__open (path, O_WRONLY|O_CREAT|O_TRUNC, mode);
+#else
   int result;
 
     Scheduler__DisableSwitching ();
@@ -129,6 +141,7 @@ int Unix__creat (const char* path, m3_mode_t mode)
 #endif
     Scheduler__EnableSwitching ();
     return result;
+#endif
 }
 
 int Unix__close (int a)
