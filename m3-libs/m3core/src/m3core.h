@@ -1315,6 +1315,22 @@ typedef unsigned long                           WinBaseTypes__UINT32;  // even o
 typedef void*                                   WinNT__PSECURITY_DESCRIPTOR;
 typedef unsigned long                           WinNT__SECURITY_INFORMATION;
 
+typedef union m3core_trace_t
+{
+    int all;
+    struct
+    {
+        unsigned close : 1;
+        unsigned creat : 1;
+        unsigned open : 1;
+        unsigned readdir : 1;
+        unsigned stat : 1;
+        unsigned write : 1;
+    };
+} m3core_trace_t;
+
+extern m3core_trace_t m3core_trace;
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
