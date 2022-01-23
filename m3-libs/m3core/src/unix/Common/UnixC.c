@@ -95,7 +95,7 @@ Unix__Assertions(void)
 int _fmode = O_BINARY; // Does this work? We do not depend on it. See open/creat.
 #endif
 
-int Unix__open (const char* path, int flags, m3_mode_t mode)
+int __cdecl Unix__open (const char* path, int flags, m3_mode_t mode)
 {
     int result;
 
@@ -119,7 +119,7 @@ int Unix__open (const char* path, int flags, m3_mode_t mode)
     return result;
 }
 
-int Unix__creat (const char* path, m3_mode_t mode)
+int __cdecl Unix__creat (const char* path, m3_mode_t mode)
 {
 #ifdef __DJGPP__
     // cannot add O_BINARY otherwise except maybe via _fmode
@@ -144,7 +144,7 @@ int Unix__creat (const char* path, m3_mode_t mode)
 #endif
 }
 
-int Unix__close (int a)
+int __cdecl Unix__close (int a)
 {
     int result;
 
@@ -164,7 +164,7 @@ int Unix__close (int a)
     return result;
 }
 
-int Unix__chdir (const char* path)
+int __cdecl Unix__chdir (const char* path)
 {
     int result;
 
