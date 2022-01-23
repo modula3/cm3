@@ -1320,6 +1320,7 @@ typedef union m3core_trace_t
     int all;
     struct
     {
+        unsigned chdir : 1;
         unsigned close : 1;
         unsigned creat : 1;
         unsigned open : 1;
