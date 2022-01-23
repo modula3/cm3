@@ -7,7 +7,7 @@
 MODULE OSErrorPosix EXPORTS OSError, OSErrorPosix;
 
 IMPORT Atom, AtomList, Cerrno, Fmt, OSError, Text, Uerror;
-IMPORT RTIO, RTParams;
+IMPORT RTIO, <*NOWARN*>RTParams;
 
 VAR debug: BOOLEAN;
 VAR cache := ARRAY [0..Uerror.Max] OF Atom.T {NIL, ..};
