@@ -41,6 +41,9 @@ extern "C"
 {
 #endif
 
+//m3core_trace_t m3core_trace = {-1};
+m3core_trace_t m3core_trace;
+
 void __cdecl
 Unix__Assertions(void)
 {
@@ -88,10 +91,67 @@ Unix__Assertions(void)
     Usocket__Assertions();
 }
 
-M3WRAP3_(int, open, const char*, int, m3_mode_t)
+int Unix__open (const char* path, int flags, m3_mode_t mode)
+{
+    int result;
+
+    Scheduler__DisableSwitching ();
+#ifdef _WIN32
+    result = _open (path, flags, mode);
+#else
+    result = open (path, flags, mode);
+    if (m3core_trace.open)
+    {
+        char* buf = (char*)alloca (256 + strlen (path));
+        int len = sprintf (buf, "open (%s):%d\n", path, result);
+        write (1, buf, len);
+    }
+#endif
+    Scheduler__EnableSwitching ();
+    return result;
+}
+
+int Unix__creat (const char* path, m3_mode_t mode)
+{
+  int result;
+
+    Scheduler__DisableSwitching ();
+#ifdef _WIN32
+    result = _creat (path, mode);
+#else
+    result = creat (path, mode);
+    if (m3core_trace.creat)
+    {
+        char* buf = (char*)alloca (256 + strlen (path));
+        int len = sprintf (buf, "creat (%s):%d\n", path, result);
+        write (1, buf, len);
+    }
+#endif
+    Scheduler__EnableSwitching ();
+    return result;
+}
+
+int Unix__close (int a)
+{
+    int result;
+
+    Scheduler__DisableSwitching ();
+#ifdef _WIN32
+    result = _close (a);
+#else
+    result = close (a);
+    if (m3core_trace.close)
+    {
+        char* buf = (char*)alloca (256);
+        int len = sprintf (buf, "close (%d):%d\n", a, result);
+        write (1, buf, len);
+    }
+#endif
+    Scheduler__EnableSwitching ();
+    return result;
+}
+
 M3WRAP1_(m3_mode_t, umask, m3_mode_t)
-M3WRAP2_(int, chmod, const char*, m3_mode_t)
-M3WRAP2_(int, creat, const char*, m3_mode_t)
 M3WRAP1_(int, dup, int)
 M3WRAP1(int, system, const char*)
 M3WRAP1_(int, isatty, int)
@@ -100,7 +160,6 @@ M3WRAP1_(int, rmdir, const char*)
 M3WRAP1_(int, unlink, const char*)
 M3WRAP2_(int, access, const char*, int)
 M3WRAP1_(int, chdir, const char*)
-M3WRAP1_(int, close, int)
 M3WRAP2_(int, dup2, int, int)
 
 #ifdef __sun

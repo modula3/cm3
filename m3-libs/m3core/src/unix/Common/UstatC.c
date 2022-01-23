@@ -60,6 +60,7 @@ static int __cdecl m3stat_from_stat(int result, m3_stat_t* m3st, struct stat* st
         m3st->flags = 0;
 #endif
     }
+    Scheduler__EnableSwitching ();
     return result;
 }
 
@@ -67,8 +68,21 @@ int
 __cdecl
 Ustat__stat(const char* path, m3_stat_t* m3st)
 {
+    int result;
     struct stat st;
-    return m3stat_from_stat(stat(path, &st), m3st, &st);
+
+    Scheduler__DisableSwitching ();
+    result = stat (path, &st);
+#ifndef _WIN32
+    if (m3core_trace.stat)
+    {
+        char* buf = (char*)alloca (256 + strlen (path));
+        int len = sprintf (buf, "stat (%s):%d\n", path, result);
+        write (1, buf, len);
+    }
+#endif
+    result = m3stat_from_stat(result, m3st, &st);
+    return result;
 }
 
 int
@@ -76,6 +90,7 @@ __cdecl
 Ustat__lstat(const char* path, m3_stat_t* m3st)
 {
     struct stat st;
+    Scheduler__DisableSwitching ();
     return m3stat_from_stat(lstat(path, &st), m3st, &st);
 }
 
@@ -84,6 +99,7 @@ __cdecl
 Ustat__fstat(int fd, m3_stat_t* m3st)
 {
     struct stat st;
+    Scheduler__DisableSwitching ();
     return m3stat_from_stat(fstat(fd, &st), m3st, &st);
 }
 
