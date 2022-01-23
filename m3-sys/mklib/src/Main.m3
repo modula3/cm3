@@ -535,7 +535,7 @@ PROCEDURE WriteLib () =
     TRY
       Wr.Close (lib_wr);
     EXCEPT Wr.Failure, Thread.Alerted =>
-      Die ("unable to close \"", lib_name, "\".");
+      Die ("mklib.WriteLib unable to close \"", lib_name, "\".");
     END;
   END WriteLib;
 
@@ -807,7 +807,7 @@ PROCEDURE WriteDef () =
     TRY
       Wr.Close (def_wr);
     EXCEPT Wr.Failure, Thread.Alerted =>
-      Die ("unable to close \"", def_name, "\".");
+      Die ("mklib.WriteDef unable to close \"", def_name, "\".");
     END;
   END WriteDef;
 

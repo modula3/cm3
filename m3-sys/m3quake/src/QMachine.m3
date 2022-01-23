@@ -962,7 +962,7 @@ PROCEDURE PopOutput (t: T)
         o.wr := NIL;
         o.name := NIL;
       EXCEPT Wr.Failure(ec) =>
-        Err (t, Fmt.F ("unable to close \"%s\"%s", o.name, OSErr(ec)));
+        Err (t, Fmt.F ("QMachine.PopOutput unable to close \"%s\"%s", o.name, OSErr(ec)));
       END;
     END;
   END PopOutput;
