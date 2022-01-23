@@ -286,7 +286,8 @@ Sequence("LongReal", "LongrealType")
 
 Module("LongrealSort")
 
-Module("Chmod")
+% Chmod is not used and does not link on Windows.
+%Module("Chmod")
 
 template("sharedseq")
 generic_module("SharedSequence")
