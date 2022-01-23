@@ -64,9 +64,9 @@ PROCEDURE CloseWriter (wr: Wr.T;  name: TEXT) =
       Wr.Close (wr);
     EXCEPT
     | Wr.Failure (args) =>
-        Msg.FatalError (args, "unable to close output file: ", name);
+        Msg.FatalError (args, "Utils.CloseWriter Wr.Failure unable to close output file: ", name);
     | Thread.Alerted =>
-        Msg.FatalError (NIL, "unable to close output file: ", name);
+        Msg.FatalError (NIL, "Utils.CloseWriter Thread.Alerted unable to close output file: ", name);
     END;
   END CloseWriter;
 
@@ -114,7 +114,7 @@ PROCEDURE CloseReader (rd: File.T;  name: TEXT) =
     TRY
       rd.close ();
     EXCEPT OSError.E (args) =>
-      Msg.FatalError (args, "unable to close input file: ", name);
+      Msg.FatalError (args, "Utils.CloseReader OSError unable to close input file: ", name);
     END;
   END CloseReader;
 
@@ -413,7 +413,7 @@ PROCEDURE CloseStdout (wr: File.T;  name: TEXT) =
     TRY
       wr.close ();
     EXCEPT OSError.E (args) =>
-      Msg.FatalError (args, "unable to close listing file: ", name);
+      Msg.FatalError (args, "Utils.CloseStdout OSError unable to close listing file: ", name);
     END;
   END CloseStdout;
 

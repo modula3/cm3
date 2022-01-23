@@ -209,7 +209,7 @@ PROCEDURE WriteLib (VAR s: State) =
     TRY
       Wr.Close (s.lib_wr);
     EXCEPT Wr.Failure, Thread.Alerted =>
-      Die (s, "unable to close \"", s.lib_name, "\".");
+      Die (s, "LibFile.WriteLib unable to close \"", s.lib_name, "\".");
     END;
   END WriteLib;
 
