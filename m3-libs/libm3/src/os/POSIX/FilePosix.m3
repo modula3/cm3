@@ -196,14 +196,14 @@ PROCEDURE IntermittentRead(
          at creation/close time, because this may leave the file in an
          unexpected state in the case of a core dump elsewhere. *)
 
-      IF Unix.fcntl(h.fd, Unix.F_SETFL, new_mode) # 0 THEN
+      IF Unix.fcntl(h.fd, Unix.F_SETFL, new_mode) = -1 THEN
         OSErrorPosix.Raise()
       END;
 
       status := Uuio.read(h.fd, p_b, NUMBER(b));
       errno := Cerrno.GetErrno();
 
-      IF Unix.fcntl(h.fd, Unix.F_SETFL, old_mode) # 0 THEN
+      IF Unix.fcntl(h.fd, Unix.F_SETFL, old_mode) = -1 THEN
         OSErrorPosix.Raise()
       END;
 
@@ -237,14 +237,14 @@ PROCEDURE IntermittentWrite(h: File.T; READONLY b: ARRAY OF File.Byte)
          at creation/close time, because this may leave the file in an
          unexpected state in the case of a core dump elsewhere. *)
 
-      IF Unix.fcntl(h.fd, Unix.F_SETFL, new_mode) # 0 THEN
+      IF Unix.fcntl(h.fd, Unix.F_SETFL, new_mode) = -1 THEN
         OSErrorPosix.Raise()
       END;
 
       status := Uuio.write(h.fd, p, n);
       errno := Cerrno.GetErrno();
 
-      IF Unix.fcntl(h.fd, Unix.F_SETFL, old_mode) # 0 THEN
+      IF Unix.fcntl(h.fd, Unix.F_SETFL, old_mode) = -1 THEN
         OSErrorPosix.Raise()
       END;
 
