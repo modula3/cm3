@@ -219,7 +219,7 @@ PROCEDURE Rename(pn0, pn1: Pathname.T) RAISES {OSError.E}=
       err := Cerrno.GetErrno();
       M3toC.FreeSharedS(pn0, f0);
       M3toC.FreeSharedS(pn1, f1);
-      OSErrorPosix.Raise0(err)
+      OSErrorPosix.Raise0T (err, "FSPosix.Rename")
     END;
     M3toC.FreeSharedS(pn0, f0);
     M3toC.FreeSharedS(pn1, f1);
@@ -356,7 +356,7 @@ PROCEDURE Fail(p: Pathname.T;  f: Ctypes.char_star) RAISES {OSError.E} =
   VAR err := Cerrno.GetErrno();
   BEGIN
     M3toC.FreeSharedS(p, f);
-    OSErrorPosix.Raise0(err);
+    OSErrorPosix.Raise0T (err, "FSPosix.Fail");
   END Fail;
 
 BEGIN
