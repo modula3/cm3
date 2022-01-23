@@ -11,7 +11,9 @@ IMPORT Ctypes, FilePosix, OSError, OSErrorPosix, Unix;
 PROCEDURE Open(VAR hr, hw: T) RAISES {OSError.E} =
   VAR fd: ARRAY [0..1] OF Ctypes.int;
   BEGIN
-    IF Unix.pipe(fd) < 0 THEN OSErrorPosix.Raise() END;
+    IF Unix.pipe(fd) < 0 THEN
+      OSErrorPosix.RaiseT ("pipe<0");
+    END;
     hr := FilePosix.NewPipe(fd := fd[Unix.readEnd], ds := FilePosix.Read);
     hw := FilePosix.NewPipe(fd := fd[Unix.writeEnd], ds := FilePosix.Write)
   END Open;

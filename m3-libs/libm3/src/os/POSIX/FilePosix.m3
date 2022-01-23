@@ -57,7 +57,9 @@ PROCEDURE FileTypeFromStatbuf(READONLY statbuf: Ustat.struct_stat)
 PROCEDURE New(fd: INTEGER; ds: DirectionSet): File.T RAISES {OSError.E} =
   VAR statbuf: Ustat.struct_stat; type: File.Type;
   BEGIN
-    IF Ustat.fstat(fd, ADR(statbuf)) # 0 THEN OSErrorPosix.Raise() END;
+    IF Ustat.fstat(fd, ADR(statbuf)) # 0 THEN
+      OSErrorPosix.RaiseT ("FilePosix.New.fstat");
+    END;
     type := FileTypeFromStatbuf(statbuf);
     IF type = RegularFile.FileType THEN
       RETURN NEW(RegularFile.T, fd := fd, ds := ds)
@@ -69,7 +71,7 @@ PROCEDURE New(fd: INTEGER; ds: DirectionSet): File.T RAISES {OSError.E} =
       RETURN NEW(Pipe.T, fd := fd, ds := ds)
     END;
     IF type = FS.DirectoryFileType THEN
-      OSErrorPosix.Raise0(Uerror.EISDIR)
+      OSErrorPosix.Raise0T (Uerror.EISDIR, "FilePosix.New.IsDir");
     END;
     (* Other... *)
     RETURN NEW(RegularFile.T, fd := fd, ds := ds)
@@ -84,14 +86,18 @@ PROCEDURE NewPipe(fd: INTEGER; ds: DirectionSet): Pipe.T =
 
 PROCEDURE FileClose(h: File.T) RAISES {OSError.E} =
   BEGIN
-    IF Unix.close(h.fd) < 0 THEN OSErrorPosix.Raise() END
+    IF Unix.close(h.fd) < 0 THEN
+      OSErrorPosix.RaiseT ("FilePosix.FileClose");
+    END
   END FileClose;
 
 PROCEDURE FileStatus(h: File.T): File.Status RAISES {OSError.E} =
   VAR statBuf: Ustat.struct_stat;
     status: File.Status;
   BEGIN
-    IF Ustat.fstat(h.fd, ADR(statBuf)) < 0 THEN OSErrorPosix.Raise() END;
+    IF Ustat.fstat(h.fd, ADR(statBuf)) < 0 THEN
+      OSErrorPosix.RaiseT ("FilePosix.FileStatus fstat<0");
+    END;
     TYPECASE h OF
     | RegularFile.T => status.type := RegularFile.FileType
     | Pipe.T => status.type := Pipe.FileType
@@ -100,7 +106,9 @@ PROCEDURE FileStatus(h: File.T): File.Status RAISES {OSError.E} =
     END;
     status.modificationTime := FLOAT(statBuf.st_mtime, LONGREAL);
     WITH size = statBuf.st_size DO
-      IF size < 0L THEN OSErrorPosix.Raise() END;
+      IF size < 0L THEN
+        OSErrorPosix.RaiseT ("FilePosix.FileStatus<0");
+      END;
       status.size := size;
     END;
     RETURN status
@@ -117,7 +125,9 @@ PROCEDURE RegularFileRead(
   BEGIN
     IF NOT(Direction.Read IN h.ds) THEN BadDirection(); END;
     WITH bytesRead = Uuio.read(h.fd, p_b, NUMBER(b)) DO
-      IF bytesRead < 0 THEN OSErrorPosix.Raise() END;
+      IF bytesRead < 0 THEN
+        OSErrorPosix.RaiseT ("read<0");
+      END;
       RETURN bytesRead
     END
   END RegularFileRead;
@@ -133,7 +143,9 @@ PROCEDURE RegularFileWrite(
     IF NOT(Direction.Write IN h.ds) THEN BadDirection(); END;
     LOOP
       bytesWritten := Uuio.write(h.fd, p_b, bytes);
-      IF bytesWritten < 0 THEN OSErrorPosix.Raise() END;
+      IF bytesWritten < 0 THEN
+        OSErrorPosix.RaiseT ("write<0");
+      END;
       (* Partial write if media is full, quota exceeded, etc. *)
       IF bytesWritten = bytes THEN EXIT END;
       <* ASSERT bytesWritten > 0 *>
@@ -147,14 +159,18 @@ PROCEDURE RegularFileSeek(
   : INTEGER RAISES {OSError.E} =
   BEGIN
     WITH result = Unix.lseek(h.fd, VAL(offset, Utypes.off_t), ORD(origin)) DO
-      IF result < VAL(0, Utypes.off_t) THEN OSErrorPosix.Raise() END;
+      IF result < VAL(0, Utypes.off_t) THEN
+        OSErrorPosix.RaiseT ("seek<0");
+      END;
       RETURN VAL(result, INTEGER)
     END
   END RegularFileSeek;
 
 PROCEDURE RegularFileFlush(h: RegularFile.T) RAISES {OSError.E} =
   BEGIN
-    IF Unix.fsync(h.fd) < 0 THEN OSErrorPosix.Raise() END
+    IF Unix.fsync(h.fd) < 0 THEN
+      OSErrorPosix.RaiseT ("fsync<0")
+    END
   END RegularFileFlush;
 
 PROCEDURE RegularFileLock(h: RegularFile.T): BOOLEAN RAISES {OSError.E} =
@@ -162,7 +178,7 @@ PROCEDURE RegularFileLock(h: RegularFile.T): BOOLEAN RAISES {OSError.E} =
   BEGIN
     i := FilePosixC.RegularFileLock(h.fd);
     IF i < 0 THEN
-      OSErrorPosix.Raise();
+      OSErrorPosix.RaiseT ("lock<0");
     END;
     RETURN (i # 0);
   END RegularFileLock;
@@ -172,7 +188,7 @@ PROCEDURE RegularFileUnlock(h: RegularFile.T) RAISES {OSError.E} =
   BEGIN
     i := FilePosixC.RegularFileUnlock(h.fd);
     IF i < 0 THEN
-      OSErrorPosix.Raise();
+      OSErrorPosix.RaiseT ("unlock<0");
     END;
   END RegularFileUnlock;
 
@@ -197,14 +213,14 @@ PROCEDURE IntermittentRead(
          unexpected state in the case of a core dump elsewhere. *)
 
       IF Unix.fcntl(h.fd, Unix.F_SETFL, new_mode) = -1 THEN
-        OSErrorPosix.Raise()
+        OSErrorPosix.RaiseT ("ReadFcntlNew");
       END;
 
       status := Uuio.read(h.fd, p_b, NUMBER(b));
       errno := Cerrno.GetErrno();
 
       IF Unix.fcntl(h.fd, Unix.F_SETFL, old_mode) = -1 THEN
-        OSErrorPosix.Raise()
+        OSErrorPosix.RaiseT ("ReadFcntlOld");
       END;
 
       IF status >= 0 THEN
@@ -212,7 +228,7 @@ PROCEDURE IntermittentRead(
       ELSIF (status = -1)
          AND (errno # Uerror.EWOULDBLOCK)
          AND (errno # Uerror.EAGAIN) THEN
-        OSErrorPosix.Raise0(errno)
+        OSErrorPosix.Raise0T (errno, "ReadWouldblockAgain");
       ELSIF NOT mayBlock THEN
         RETURN -1
       END;
@@ -238,14 +254,14 @@ PROCEDURE IntermittentWrite(h: File.T; READONLY b: ARRAY OF File.Byte)
          unexpected state in the case of a core dump elsewhere. *)
 
       IF Unix.fcntl(h.fd, Unix.F_SETFL, new_mode) = -1 THEN
-        OSErrorPosix.Raise()
+        OSErrorPosix.RaiseT ("FilePosixIntermittentWriteFcntlNew");
       END;
 
       status := Uuio.write(h.fd, p, n);
       errno := Cerrno.GetErrno();
 
       IF Unix.fcntl(h.fd, Unix.F_SETFL, old_mode) = -1 THEN
-        OSErrorPosix.Raise()
+        OSErrorPosix.RaiseT ("FilePosixIntermittentWriteFcntlOld");
       END;
 
       IF status >= 0 THEN
@@ -255,7 +271,7 @@ PROCEDURE IntermittentWrite(h: File.T; READONLY b: ARRAY OF File.Byte)
       ELSIF (status = -1)
          AND (errno # Uerror.EWOULDBLOCK)
          AND (errno # Uerror.EAGAIN) THEN
-        OSErrorPosix.Raise0(errno)
+        OSErrorPosix.Raise0T (errno, "FilePosixIntermittentWrite!Block!Again");
       END;
 
       EVAL SchedulerPosix.IOWait(h.fd, FALSE)
