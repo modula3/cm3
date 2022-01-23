@@ -144,19 +144,19 @@ int __cdecl Unix__creat (const char* path, m3_mode_t mode)
 #endif
 }
 
-int __cdecl Unix__close (int a)
+int __cdecl Unix__close (int fd)
 {
     int result;
 
     Scheduler__DisableSwitching ();
 #ifdef _WIN32
-    result = _close (a);
+    result = _close (fd);
 #else
-    result = close (a);
+    result = close (fd);
     if (m3core_trace.close)
     {
         char* buf = (char*)alloca (256);
-        int len = sprintf (buf, "close (%d):%d\n", a, result);
+        int len = sprintf (buf, "close (%d):%d\n", fd, result);
         write (1, buf, len);
     }
 #endif
