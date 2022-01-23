@@ -2210,6 +2210,7 @@ TYPE Var_t = M3CG.Var OBJECT
     name: Name := 0;
     name_in_frame: Name := 0; (* if up_level, e.g. ".block1.foo" *)
     cgtype: CGType;
+    type: Type_t := NIL;
     typeid: TypeUID := -1;
     points_to_cgtype: CGType; (* future *)
     type_text: TEXT := NIL; (* TODO replace with type:Type_t.text *)
@@ -2223,6 +2224,9 @@ TYPE Var_t = M3CG.Var OBJECT
     next_in_block: Var_t := NIL;
     proc: Proc_t := NIL;
     block: Block_t := NIL;
+    initAll := FALSE;
+    store   := FALSE; (* has a store been seen, i.e. before a load? *)
+    loadBeforeStore := FALSE;
 
     METHODS
         Declare(): TEXT := Var_Declare;
@@ -2491,6 +2495,9 @@ CONST Prefix = ARRAY OF TEXT {
 "#pragma warning(disable:4716) /* must return a value */",
 "#pragma warning(disable:4820) /* padding inserted */",
 "#pragma warning(disable:5045) /* Compiler will insert Spectre mitigation for memory load if /Qspectre switch specified */", (* TODO fix *)
+"",
+"#pragma warning(error:4700)   // unitialized local variable used",
+"",
 "#endif",
 (* TODO ideally these are char* for K&R or ideally absent when strong
    typing and setjmp work done *)
@@ -4191,9 +4198,59 @@ BEGIN
     RETURN var;
 END DeclareGlobal;
 
-PROCEDURE MarkUsed_var(var: M3CG.Var) =
+(* pass: MarkUsed
+ *
+ * frontend creates unreferenced labels, that gcc -Wall complains about;
+ * the point of this pass is to mark which labels are actually used,
+ * so that later set_label ignores unused labels
+ *
+ * frontend creates unreferenced variables, that gcc -Wall complains about;
+ * the point of this pass is to mark which variables are actually used,
+ * so that later code ignores unused variables
+ *
+ * pass: ReadBeforeWrite, merged with MarkUsed
+ *
+ * Some variables are read before they are written.
+ * This is not as bad as it sounds. It is related to bitfields.
+ * Entire variable is read, bits inserted, and then later
+ * only those bits are read. So at the bit level, there
+ * is no use of uninitialized data.
+ *
+ * For now, we initialize such variables to avoid warning/error
+ * from C++ compiler.
+ *
+ * In future we should model Modula3 bitfields as C++ bitfields.
+ *
+ * i.e.
+ * prior:
+ *   const unsigned width = 20;
+ *   const unsigned offset = 0;
+ *   unsigned foo;
+ *   foo = insert(other, foo, width, offset);
+ *   extract(foo, width, offset)
+ *
+ * currently:
+ *   unsigned foo={0}; //workaround
+ *   foo = insert(other, foo, width, offset); //same
+ *   extract(foo, width, offset) // same
+ *
+ * later:
+ *   struct {
+ *     unsigned value:width;
+ *   } foo;
+ *
+ *   foo.value = other;
+ *   foo;
+ *
+ * TODO: Doing this only for packed types would make sense but did not work.
+ * This knowingly imagines the IR runs in order, without branches around.
+ *)
+PROCEDURE MarkUsed_var(var: Var_t) =
 BEGIN
-    NARROW(var, Var_t).used := TRUE;
+    var.used := TRUE;
+    IF NOT var.store THEN
+      var.loadBeforeStore := TRUE;
+    END;
 END MarkUsed_var;
 
 PROCEDURE MarkUsed_load(
@@ -4211,16 +4268,23 @@ PROCEDURE MarkUsed_load_address(
     var: M3CG.Var;
     <*UNUSED*>offset: ByteOffset) =
 BEGIN
+    (* LoadAddress is ambiguous as to if heading for load or a store.
+     * We unfortunately conservatively assume load.
+     * TODO: IR should have load_address_for_store and load_address_for_load.
+     * though really loadBeforeStore should be removed.
+     *)
     MarkUsed_var(var);
 END MarkUsed_load_address;
 
 PROCEDURE MarkUsed_store(
     <*UNUSED*>self: MarkUsed_t;
-    var: M3CG.Var;
+    v: M3CG.Var;
     <*UNUSED*>offset: ByteOffset;
     <*UNUSED*>ztype: ZType;
     <*UNUSED*>mtype: MType) =
+VAR var := NARROW(v, Var_t);
 BEGIN
+    var.store := TRUE;
     MarkUsed_var(var);
 END MarkUsed_store;
 
@@ -4237,20 +4301,11 @@ TYPE MarkUsed_t = M3CG_DoNothing.T OBJECT
     labels_min := LAST(Label);
     labels_max := FIRST(Label);
 OVERRIDES
-(* frontend creates unreferenced labels, that gcc -Wall complains about;
-   the point of this pass is to mark which labels are actually used,
-   so that later set_label ignores unused labels
-*)
     jump := MarkUsed_label;
     if_true := MarkUsed_if_true;
     if_false := MarkUsed_if_true;
     if_compare := MarkUsed_if_compare;
     case_jump := MarkUsed_case_jump;
-
-(* frontend creates unreferenced variables, that gcc -Wall complains about;
-   the point of this pass is to mark which variables are actually used,
-   so that later code ignores unused variables
-*)
     load := MarkUsed_load;
     load_address := MarkUsed_load_address;
     store := MarkUsed_store;
@@ -4368,6 +4423,8 @@ BEGIN
 
    x.comment("end: mark used");
 END MarkUsed;
+
+(* endpass: MarkUsed *)
 
 TYPE Segments_t = M3CG_DoNothing.T OBJECT
 (* The goal of this pass is to build up segments/globals before they are used.
@@ -4529,7 +4586,7 @@ BEGIN
 END HelperFunctions;
 
 (* Helper functions are only output if needed, to avoid warnings about unused functions.
- * This pass determines which helper functions are neded and outputs them. *)
+ * This pass determines which helper functions are needed and outputs them. *)
 TYPE HelperFunctions_t = M3CG_DoNothing.T OBJECT
     self: T := NIL;
     data: RECORD
@@ -4886,6 +4943,9 @@ VAR x := self.self;
 BEGIN
     x.comment("AllocateTemps_common");
     WITH t = internal_declare_temp(x, CG_Bytes[type], CG_Bytes[type], type) DO
+        (* backend generated temporaries do not get initialized by m3front. Be conservative
+           and always initialize them. *)
+        t.initAll := TRUE;
         t.used := TRUE;
         x.temp_vars[x.op_index] := t;
     END;
@@ -5220,7 +5280,6 @@ PROCEDURE declare_local(
     up_level: BOOLEAN;
     typename := M3ID.NoID): Var_t =
 VAR var: Var_t := NIL;
-    type: Type_t := NIL;
 BEGIN
     IF debug_verbose THEN
         self.comment("declare_local name:" & TextOrNil(NameT(name))
@@ -5243,14 +5302,16 @@ BEGIN
     IF up_level THEN
         self.current_proc.uplevels := TRUE;
     END;
-    IF ResolveType(self, typeid, type) AND type # NIL AND type.text # NIL THEN
-        var.type_text := type.text;
+
+    (* TODO: This belongs in var.init *)
+    IF ResolveType(self, typeid, var.type) AND var.type # NIL AND var.type.text # NIL THEN
+        var.type_text := var.type.text;
     ELSE
         IF typeid # -1 AND typeid # 0 THEN
             Err(self, "declare_local: unknown typeid:" & TypeIDToText(typeid) & " type:" & cgtypeToText[cgtype] & "\n");
         ELSE
             (* RTIO.PutText("warning: declare_local: unknown typeid:" & TypeIDToText(typeid) & " type:" & cgtypeToText[cgtype] & "\n");
-            RTIO.Flush(); *) (* this occurs frequently *)
+            RTIO.Flush(); *) (* TODO: this occurs frequently *)
         END;
     END;
     self.current_proc.locals.addhi(var);
@@ -6105,12 +6166,31 @@ BEGIN
 
     print(self, function_prototype(proc, FunctionPrototype_t.Define) & "\n{\n");
 
-    (* declare and zero non-uplevel locals (including temporaries) *)
+    (* declare and sometimes zero non-uplevel locals (including temporaries) *)
 
     FOR i := 0 TO proc.Locals_Size() - 1 DO
         WITH local = proc.Locals(i) DO
+
+            (* ASSERT local.type # NIL *) (* TODO: unfortunately not *)
+
             IF (NOT local.up_level) AND local.used THEN
-                print(self, local.Declare() & " = { 0 };\n");
+                (* backend generated locals need to be initialized
+                 * Temporarily maybe, TODO:? structs too.
+                 * TODO:? packed types need be initialized because
+                 * m3fronts reads before write.
+                 *)
+                print(self, local.Declare());
+                IF local.initAll THEN
+                  print(self, "={0};//initAll\n");
+                ELSIF local.cgtype = CGType.Struct THEN
+                  print(self, "={0};//struct\n");
+                ELSIF local.type # NIL AND local.type.isPacked() THEN
+                  print(self, "={0};//packed\n");
+                ELSIF local.loadBeforeStore THEN
+                  print(self, "={0};//loadBeforeStore\n");
+                ELSE
+                  print(self, ";\n"); (* ideal *)
+                END;
             END;
         END;
     END;
