@@ -164,6 +164,26 @@ int Unix__close (int a)
     return result;
 }
 
+int Unix__chdir (const char* path)
+{
+    int result;
+
+    Scheduler__DisableSwitching ();
+#ifdef _WIN32
+    result = _chdir (path);
+#else
+    result = chdir (path);
+    if (1)
+    {
+        char* buf = (char*)alloca (256 + strlen (path));
+        int len = sprintf (buf, "chdir (%s):%d\n", path, result);
+        write (1, buf, len);
+    }
+#endif
+    Scheduler__EnableSwitching ();
+    return result;
+}
+
 M3WRAP1_(m3_mode_t, umask, m3_mode_t)
 M3WRAP1_(int, dup, int)
 M3WRAP1(int, system, const char*)
@@ -172,7 +192,6 @@ M3WRAP2(int, rename, const char*, const char*)
 M3WRAP1_(int, rmdir, const char*)
 M3WRAP1_(int, unlink, const char*)
 M3WRAP2_(int, access, const char*, int)
-M3WRAP1_(int, chdir, const char*)
 M3WRAP2_(int, dup2, int, int)
 
 #ifdef __sun
