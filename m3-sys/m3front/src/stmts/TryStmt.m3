@@ -337,11 +337,18 @@ CG.Store_addr (info);
       oc := oc + Stmt.Compile (p.elseBody);
     ELSIF another THEN
       (* we didn't eat this exception => mark and invoke the next handler *)
-      CG.Load_addr_of (next_info, 0, Target.Address.align);
-      CG.Load_addr_of (info, 0, Target.Address.align);
 (*peter check this copy since this is a struct copy of the old local and now 
 we have just an address so could just do load and store *)
+CG.Load_addr (next_info, 0, Target.Address.align);
+CG.Store_addr (info, Target.Address.align);
+(* put these in to see if generated *)
+CG.Swap();
+CG.Swap();
+(*
+      CG.Load_addr_of (next_info, 0, Target.Address.align);
+      CG.Load_addr_of (info, 0, Target.Address.align);
       CG.Copy (M3RT.EA_SIZE, overlap := FALSE);
+*)
       CG.Jump (next_handler);
     END;
 
@@ -375,9 +382,10 @@ PROCEDURE CompileHandler1 (h: Handler;  info: CG.Var;
       WHILE (e # NIL) DO
 
         CG.Load_addr (info, M3RT.EA_exception, Target.Address.align);
-        CG.Boost_addr_alignment (Target.Integer.align);
-(*peter need another indirect - need a boost as well ? *)
+(*peter need another indirect - need a boost as well *)
+CG.Boost_addr_alignment (Target.Address.align);
 CG.Load_indirect (CG.Type.Addr, 0, Target.Address.size); 
+        CG.Boost_addr_alignment (Target.Integer.align);
         CG.Load_indirect (Target.Integer.cg_type, 0, Target.Integer.size);
         CG.Load_intt (Exceptionz.UID (e.obj));  (** Value.Load (e.obj);  **)
         e := e.next;
@@ -397,13 +405,23 @@ CG.Load_indirect (CG.Type.Addr, 0, Target.Address.size);
         Scope.InitValues (h.scope);
         Variable.LoadLValue (h.var);
         EVAL Type.CheckInfo (h.type, t_info);
-(* peter these prob need an extr load indirect - check *)
+(* peter these  need an extr load indirect  *)
         IF Exceptionz.ArgByReference (h.type) THEN
+CG.Load_addr (info, M3RT.EA_exception, Target.Address.align);
+CG.Boost_addr_alignment (Target.Address.align);
+CG.Load_indirect (CG.Type.Addr, M3RT.EA_arg, Target.Address.size); 
+(*
           CG.Load_addr (info, M3RT.EA_arg, Target.Address.align);
+*)
           CG.Boost_addr_alignment (t_info.alignment);
           CG.Copy (t_info.size, overlap := FALSE);
         ELSE
+CG.Load_addr (info, M3RT.EA_exception, Target.Address.align);
+CG.Boost_addr_alignment (Target.Address.align);
+CG.Load_indirect (CG.Type.Addr, M3RT.EA_arg, Target.Address.size); 
+(*
           CG.Load_addr (info, M3RT.EA_arg, Target.Address.align);
+*)
           CG.Loophole (CG.Type.Addr, t_info.stk_type);
           CG.Store_indirect (t_info.stk_type, 0, t_info.size);
         END;
@@ -417,7 +435,6 @@ CG.Load_indirect (CG.Type.Addr, 0, Target.Address.size);
       oc := Stmt.Compile (h.body);
       IF (Stmt.Outcome.FallThrough IN oc) THEN CG.Jump (resume) END;
     END;
-
 
     CG.Set_label (top+1);
     RETURN oc;

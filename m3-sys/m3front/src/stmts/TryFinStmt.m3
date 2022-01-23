@@ -204,9 +204,15 @@ PROCEDURE Compile1 (p: P): Stmt.Outcomes =
     proc: Procedure.T;
   BEGIN
     (* declare and initialize the info record *)
+(*peter now its an address *)
+    info := CG.Declare_local (M3ID.NoID, Target.Address.size, Target.Address.align,
+                              CG.Type.Addr, 0, in_memory := TRUE,
+                              up_level := FALSE, f := CG.Never);
+(*
     info := CG.Declare_local (M3ID.NoID, M3RT.EA_SIZE, Target.Address.align,
                               CG.Type.Struct, 0, in_memory := TRUE,
                               up_level := FALSE, f := CG.Never);
+*)
     CG.Load_nil ();
     CG.Store_addr (info, M3RT.EA_exception);
 
@@ -231,13 +237,19 @@ PROCEDURE Compile1 (p: P): Stmt.Outcomes =
       (* generate the bizzare end-tests *)
 
       (* exceptional outcome? *)
+(*peter check is this a load? not addr of - assuming the Try Stmt handled
+the exception and the info has been saved after the latch ?? *)
       CG.Load_addr (info, M3RT.EA_exception, Target.Address.align);
       CG.Load_nil ();
       CG.If_compare (CG.Type.Addr, CG.Cmp.EQ, lab+2, CG.Always);
 
       IF (exitSeen) THEN
         xx := CG.Next_label ();
+(*
         CG.Load_int (Target.Integer.cg_type, info, M3RT.EA_exception);
+*)
+CG.Load_addr (info, M3RT.EA_exception, Target.Address.align);
+CG.Loophole (CG.Type.Addr, Target.Integer.cg_type );
         CG.Load_intt (Marker.Exit_exception);
         CG.If_compare (Target.Integer.cg_type, CG.Cmp.NE, xx, CG.Always);
         Marker.EmitExit ();
@@ -246,7 +258,11 @@ PROCEDURE Compile1 (p: P): Stmt.Outcomes =
 
       IF (returnSeen) THEN
         xx := CG.Next_label ();
+(*
         CG.Load_int (Target.Integer.cg_type, info, M3RT.EA_exception);
+*)
+CG.Load_addr (info, M3RT.EA_exception, Target.Address.align);
+CG.Loophole (CG.Type.Addr, Target.Integer.cg_type );
         CG.Load_intt (Marker.Return_exception);
         CG.If_compare (Target.Integer.cg_type, CG.Cmp.NE, xx, CG.Always);
         Marker.EmitReturn (NIL, fromFinally := TRUE);
@@ -256,6 +272,7 @@ PROCEDURE Compile1 (p: P): Stmt.Outcomes =
       (* resume the exception *)
       proc := RunTyme.LookUpProc (RunTyme.Hook.ResumeRaiseEx);
       Procedure.StartCall (proc);
+(*peter check is this a simple load not address of ?*)
       CG.Load_addr_of (info, 0, Target.Address.align);
       CG.Pop_param (CG.Type.Addr);
       Procedure.EmitCall (proc);
