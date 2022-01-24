@@ -78,7 +78,7 @@ PROCEDURE NewPipe(handle: WinNT.HANDLE; ds: DirectionSet): Pipe.T =
 
 PROCEDURE FileWrite(h: File.T; READONLY b: ARRAY OF File.Byte)
   RAISES {OSError.E} =
-  VAR nWritten: INTEGER;
+  VAR nWritten: INTEGER := 0;
   BEGIN
     IF NOT(Direction.Write IN h.ds) THEN BadDirection(); END;
     IF WinBase.WriteFile(h.handle, ADR(b[0]), NUMBER(b),
@@ -99,6 +99,9 @@ PROCEDURE FileStatus(h: File.T): File.Status  RAISES {OSError.E}=
     status: File.Status;
     ft := WinBase.GetFileType(h.handle);
   BEGIN
+    ffd.nFileSizeHigh := 0;
+    ffd.nFileSizeLow := 0;
+    ffd.ftLastWriteTime := WinBase.FILETIME {0, 0};
     CASE ft OF
     | WinBase.FILE_TYPE_DISK =>
         IF WinBase.GetFileInformationByHandle(h.handle, ADR(ffd)) = 0 THEN
