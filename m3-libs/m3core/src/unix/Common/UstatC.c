@@ -81,8 +81,7 @@ Ustat__stat(const char* path, m3_stat_t* m3st)
         write (1, buf, len);
     }
 #endif
-    result = m3stat_from_stat(result, m3st, &st);
-    return result;
+    return m3stat_from_stat(result, m3st, &st);
 }
 
 int
@@ -111,7 +110,7 @@ Ustat__fstat(int fd, m3_stat_t* m3st)
         write (1, buf, len);
     }
 #endif
-    result = m3stat_from_stat(result, m3st, &st);
+    return m3stat_from_stat(result, m3st, &st);
 }
 
 #ifdef HAS_STAT_FLAGS
