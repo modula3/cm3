@@ -185,6 +185,7 @@ int __cdecl Unix__chdir (const char* path)
 }
 
 M3WRAP1_(m3_mode_t, umask, m3_mode_t)
+M3WRAP2_(int, chmod, const char*, m3_mode_t)
 M3WRAP1_(int, dup, int)
 M3WRAP1(int, system, const char*)
 M3WRAP1_(int, isatty, int)
