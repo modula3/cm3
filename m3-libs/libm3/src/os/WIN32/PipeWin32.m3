@@ -8,7 +8,7 @@ UNSAFE MODULE PipeWin32 EXPORTS Pipe;
 IMPORT FileWin32, OSError, OSErrorWin32, WinBase, WinNT;
 
 PROCEDURE Open(VAR hr, hw: T) RAISES {OSError.E} =
-  VAR handleRead, handleWrite: WinNT.HANDLE;
+  VAR handleRead, handleWrite: WinNT.HANDLE := NIL;
   BEGIN
     IF WinBase.CreatePipe(
       hReadPipe := ADR(handleRead),

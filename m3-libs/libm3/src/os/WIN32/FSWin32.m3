@@ -180,6 +180,7 @@ PROCEDURE GetFileAttributes(handle: WinNT.HANDLE): WinDef.DWORD
   RAISES {OSError.E} =
   VAR info: WinBase.BY_HANDLE_FILE_INFORMATION;
   BEGIN
+    info.dwFileAttributes := 0;
     IF WinBase.GetFileInformationByHandle(handle, ADR(info)) = False THEN
       OSErrorWin32.Raise()
     END;

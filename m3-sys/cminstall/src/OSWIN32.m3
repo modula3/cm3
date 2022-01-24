@@ -11,7 +11,7 @@ PROCEDURE GetDiskSpace (dir: TEXT): INTEGER =
   VAR
     path, parent: TEXT;
     sectorsPerCluster, bytesPerSector, freeClusters, 
-    totalClusters: WinDef.DWORD;
+    totalClusters: WinDef.DWORD := 0;
   BEGIN
     TRY
       path := FS.GetAbsolutePathname (dir);

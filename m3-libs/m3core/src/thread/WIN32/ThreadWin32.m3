@@ -412,7 +412,7 @@ PROCEDURE Alert(t: T) =
   END Alert;
 
 PROCEDURE XTestAlert(self: Activation): BOOLEAN =
-  VAR wait: DWORD;
+  VAR wait: DWORD := 0;
   BEGIN
     IF self = NIL THEN
       (* Not created by Fork; not alertable *)
@@ -454,7 +454,7 @@ PROCEDURE Self (): T =
 
 PROCEDURE AssignSlot (t: T) =
   (* LL = 0, cause we allocate stuff with NEW! *)
-  VAR n: CARDINAL;  old_slots, new_slots: REF ARRAY OF T;
+  VAR n: CARDINAL := 0;  old_slots, new_slots: REF ARRAY OF T := NIL;
       retry := TRUE;
   BEGIN
     EnterCriticalSection(ADR(slotLock));
@@ -544,7 +544,7 @@ PROCEDURE CreateT (act: Activation): T =
   END CreateT;
 
 PROCEDURE CleanThread(r: REFANY) =
-  VAR t: T;
+  VAR t: T := NIL;
   BEGIN
     IF r # NIL THEN
       t := NARROW(r, T);
@@ -714,8 +714,8 @@ PROCEDURE AlertPause(n: LONGREAL) RAISES {Alerted} =
 
 PROCEDURE XPause(self: Activation; n: LONGREAL; alertable: BOOLEAN) RAISES {Alerted} =
   VAR amount := n;
-      thisTime: LONGREAL;
-      wait: DWORD;
+      thisTime: LONGREAL := 0.0d0;
+      wait: DWORD := 0;
       alerted := FALSE;
   CONST LAST_CARDINAL32 = 16_7FFFFFFF;
         Limit = FLOAT(LAST_CARDINAL32, LONGREAL) / 1000.0D0 - 1.0D0;
@@ -789,9 +789,9 @@ VAR suspend_cnt: CARDINAL := 0; (* LL = activeLock *)
 
 PROCEDURE SuspendOthers () =
   (* LL=0. Always bracketed with ResumeOthers which releases "activeLock". *)
-  VAR me: Activation;
-      act: Activation;
-      retry: BOOLEAN;
+  VAR me: Activation := NIL;
+      act: Activation := NIL;
+      retry: BOOLEAN := FALSE;
   BEGIN
     EnterCriticalSection(ADR(activeLock));
 
@@ -838,8 +838,8 @@ PROCEDURE SuspendOthers () =
 
 PROCEDURE ResumeOthers () =
   (* LL=activeLock.  Always preceded by SuspendOthers. *)
-  VAR act: Activation;
-      me: Activation;
+  VAR act: Activation := NIL;
+      me: Activation := NIL;
   BEGIN
     <* ASSERT suspend_cnt = 1 *>
     DEC (suspend_cnt);
@@ -1019,7 +1019,7 @@ PROCEDURE Init() =
  *       Assertion failures depend on some of Init having run. (e.g. SetActivation)
  *       Test by making the ASSERT fail.
  *)
-  VAR self: T;
+  VAR self: T := NIL;
       me := NEW(Activation);
   BEGIN
     WinBase.InitializeCriticalSection(ADR(activeLock));

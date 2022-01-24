@@ -43,12 +43,12 @@ PROCEDURE FromTimeLocal(<*UNUSED*> z: TimeZone; t: Time.T): T =
     a date in a different year. *)
   CONST SecsPerMin = 60;
   VAR
-    ft, lft: WinBase.FILETIME;
-    st, lst: WinBase.SYSTEMTIME;
+    ft, lft := WinBase.FILETIME {0,0};
+    st, lst := WinBase.SYSTEMTIME {0,0,0,0,0,0,0,0};
     d: T;
     tz: WinBase.TIME_ZONE_INFORMATION;
-    tzrc: WinDef.DWORD;
-    status: INTEGER;
+    tzrc: WinDef.DWORD := 0;
+    status: INTEGER := 0;
     firstDayOfEpoch := FALSE;
   BEGIN
     (* If the time given is before the PC epoch (less than the time
@@ -132,7 +132,10 @@ PROCEDURE CopyTimeZoneName(
 *****)
       
 PROCEDURE FromTimeUTC(<*UNUSED*> z: TimeZone; t: Time.T): T =
-  VAR d: T; st: WinBase.SYSTEMTIME; ft: WinBase.FILETIME;  status: INTEGER;
+  VAR d: T;
+      st := WinBase.SYSTEMTIME {0,0,0,0,0,0,0,0};
+      ft := WinBase.FILETIME {0,0};
+      status: INTEGER := 0;
   BEGIN
     TimeWin32.ToFileTime(t, ft);
     status := WinBase.FileTimeToSystemTime(ADR(ft), ADR(st));
@@ -165,8 +168,8 @@ PROCEDURE FromTime(t: Time.T; z: TimeZone := NIL): T =
 
 PROCEDURE ToTime(READONLY d: T): Time.T =
   VAR
-    st: WinBase.SYSTEMTIME;
-    ft: WinBase.FILETIME;
+    st := WinBase.SYSTEMTIME{0,0,0,0,0,0,0,0};
+    ft := WinBase.FILETIME{0,0};
     t: Time.T;
     status: INTEGER;
   BEGIN

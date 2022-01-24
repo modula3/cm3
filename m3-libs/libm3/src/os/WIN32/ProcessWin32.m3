@@ -84,7 +84,7 @@ PROCEDURE Create(
 
 PROCEDURE PrepHandle (f: File.T): WinNT.HANDLE
   RAISES {OSError.E} =
-  VAR h, self: WinNT.HANDLE;
+  VAR h, self: WinNT.HANDLE := NIL;
   BEGIN
     IF (f = NIL) THEN RETURN NIL; END;
     self := WinBase.GetCurrentProcess ();
