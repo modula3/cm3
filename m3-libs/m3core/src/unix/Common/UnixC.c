@@ -173,7 +173,7 @@ int __cdecl Unix__chdir (const char* path)
     result = _chdir (path);
 #else
     result = chdir (path);
-    if (1)
+    if (m3core_trace.chdir)
     {
         char* buf = (char*)alloca (256 + strlen (path));
         int len = sprintf (buf, "chdir (%s):%d\n", path, result);
