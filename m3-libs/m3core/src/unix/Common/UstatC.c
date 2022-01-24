@@ -98,9 +98,20 @@ int
 __cdecl
 Ustat__fstat(int fd, m3_stat_t* m3st)
 {
+    int result;
     struct stat st;
+
     Scheduler__DisableSwitching ();
-    return m3stat_from_stat(fstat(fd, &st), m3st, &st);
+    result = fstat (fd, &st);
+#ifndef _WIN32
+    if (m3core_trace.fstat)
+    {
+        char* buf = (char*)alloca (256);
+        int len = sprintf (buf, "fstat (%d):mode:%X,%d\n", fd, (unsigned)st.st_mode, result);
+        write (1, buf, len);
+    }
+#endif
+    result = m3stat_from_stat(result, m3st, &st);
 }
 
 #ifdef HAS_STAT_FLAGS

@@ -1323,6 +1323,7 @@ typedef union m3core_trace_t
         unsigned chdir : 1;
         unsigned close : 1;
         unsigned creat : 1;
+        unsigned fstat : 1;
         unsigned open : 1;
         unsigned readdir : 1;
         unsigned stat : 1;
