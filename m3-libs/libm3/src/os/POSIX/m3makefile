@@ -17,12 +17,13 @@ Module("FilePosix")
 
 implementation("FSPosix")
 implementation("PipePosix")
-implementation("PathnamePosix")
 
-if equal (TARGET, "I386_DJGPP")
+if equal (TARGET_OS, "DJGPP")
+  % Path is like c:/foo so use ../Win32/PathnameWin32
   implementation("SocketNone")
 else
   implementation("SocketPosix")
+  implementation("PathnamePosix")
 end
 
 implementation("OSConfigPosix")
