@@ -9,11 +9,10 @@
 
 MODULE M3Path;
 
-IMPORT Pathname, Text, ASCII, Compiler;
+IMPORT Pathname, Text, ASCII, Compiler, MxConfigC;
 
 CONST
   Null      = '\000';
-  Colon     = ':';
   Slash     = '/';
   BackSlash = '\\';
 
@@ -62,8 +61,8 @@ CONST
   Default_pgm = ARRAY OSKind OF TEXT { "a.out", "a.out", "NONAME.EXE", "a.out" };
 
 VAR target_os := ARRAY Compiler.OS OF OSKind{OSKind.Unix, OSKind.Win32}[Compiler.ThisOS];
-CONST d_sep = ARRAY Compiler.OS OF CHAR{Slash, BackSlash}[Compiler.ThisOS];
-CONST v_sep = ARRAY Compiler.OS OF CHAR{Null, Colon}[Compiler.ThisOS];
+VAR d_sep := MxConfigC.DirectorySeparator (); (* forward or backward slash *)
+VAR v_sep := MxConfigC.DeviceSeparator (); (* zero or colon *)
 (*CONST DirSepText = ARRAY Compiler.OS OF TEXT{"/", "\\"}[Compiler.ThisOS];*)
 
 PROCEDURE SetTargetOS (kind: OSKind) =
@@ -248,8 +247,8 @@ PROCEDURE RegionMatch (a: TEXT;  start_a: CARDINAL;
                        b: TEXT;  start_b: CARDINAL;
                        len: CARDINAL): BOOLEAN =
   CONST N = 128;
-        ignore_case = (Compiler.ThisOS = Compiler.OS.WIN32);
   VAR
+    ignore_case := MxConfigC.CaseInsensitive ();
     len_a : CARDINAL;
     len_b : CARDINAL;
     buf_a, buf_b : ARRAY [0..N-1] OF CHAR;

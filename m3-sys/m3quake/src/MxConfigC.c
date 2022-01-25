@@ -303,6 +303,40 @@ MxConfigC__HOST(void)
 #endif
 }
 
+BOOLEAN
+__cdecl
+MxConfigC__CaseInsensitive(void)
+{
+#if defined(_WIN32) || defined(__MSDOS) || defined(__CYGWIN__)
+	return TRUE;
+#else
+	return FALSE;
+#endif
+}
+
+char
+__cdecl
+MxConfigC__DeviceSeparator(void)
+{
+#if defined(_WIN32) || defined(__MSDOS)
+	return ':';
+#else
+	return 0;
+#endif
+}
+
+char
+__cdecl
+MxConfigC__DirectorySeparator(void)
+{
+#if defined(_WIN32) || defined(__MSDOS)
+	// Caller can and does also accept '/'.
+	return '\\';
+#else
+	return '/';
+#endif
+}
+
 #ifdef __cplusplus
 } // extern "C"
 #endif

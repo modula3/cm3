@@ -14,10 +14,7 @@ IMPORT QIdent, QValue, QVal, QCode, QCompiler, QVTbl, QVSeq, QScanner;
 FROM Quake IMPORT Error, ID, IDMap, NoID;
 IMPORT Date, Time;
 IMPORT TextUtils, FSUtils, System, DirStack; (* sysutils *)
-IMPORT Compiler;
-IMPORT M3Path;
-IMPORT QPromise, QPromiseSeq;
-IMPORT ETimer;
+IMPORT Compiler, M3Path, MxConfigC, QPromise, QPromiseSeq, ETimer;
 
 CONST
   OnUnix = (Compiler.ThisOS = Compiler.OS.POSIX);
@@ -3064,15 +3061,11 @@ PROCEDURE StripPrefix (t: T;  prefix, path: Pathname.Arcs): Pathname.Arcs
   END StripPrefix;
 
 PROCEDURE PathEqual (a, b: TEXT): BOOLEAN =
-  VAR len: CARDINAL;
+  VAR len := Text.Length (a);
   BEGIN
-    len := Text.Length (a);
-    IF len # Text.Length (b) THEN
-      RETURN FALSE;
-    END;
-    IF Text.Equal (a, b) THEN RETURN TRUE; END;
-    IF OnUnix THEN RETURN FALSE; END;
-    RETURN CIEqual (a, b, len);  
+    RETURN len = Text.Length (b)
+        AND (Text.Equal (a, b)
+             OR (MxConfigC.CaseInsensitive () AND CIEqual (a, b, len)));
   END PathEqual;
 
 PROCEDURE CIEqual (a, b: TEXT; len: CARDINAL): BOOLEAN =
