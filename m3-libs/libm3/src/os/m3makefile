@@ -6,5 +6,5 @@
 %      modified on Tue May  4 10:15:15 PDT 1993 by mjordan
 
 include_dir ("Common")
-include_dir (OS_TYPE)
+include_dir ("WIN32")
 include_dir ("POSIX")

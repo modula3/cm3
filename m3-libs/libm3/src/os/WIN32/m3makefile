@@ -6,11 +6,15 @@
 %      modified on Thu Nov 10 15:17:04 PST 1994 by kalsow
 %      modified on Tue May  4 10:15:15 PDT 1993 by mjordan
 
-Module("OSErrorWin32")
-
-if not equal (OS_TYPE, "POSIX")
+if equal (TARGET_OS, "DJGPP") or equal (OS_TYPE, "WIN32")
 
 implementation("PathnameWin32")
+
+end
+
+if equal (OS_TYPE, "WIN32")
+
+Module("OSErrorWin32")
 
 import_sys_lib ("TCP")
 
