@@ -1,15 +1,15 @@
-TARGET_ENDIAN = "LITTLE"  % { "BIG" OR "LITTLE" }
-TARGET_ARCH = "I386"
-WORD_SIZE = "32BITS"      % { "32BITS" or "64BITS" }
+readonly TARGET_ENDIAN = "LITTLE"  % { "BIG" OR "LITTLE" }
+readonly TARGET_ARCH = "I386"
+readonly WORD_SIZE = "32BITS"      % { "32BITS" or "64BITS" }
+readonly OS_TYPE = "POSIX" % "WIN32" or "POSIX"
 
 % This is MS-DOS but probably worth giving it this more specific name.
-TARGET = "I386_DJGPP"
-TARGET_OS = "DJGPP"
+readonly TARGET_OS = "DJGPP"
+readonly TARGET = "I386_DJGPP"
 
-NOPTHREAD = 1 % user threads
+readonly NOPTHREAD = 1 % user threads
 
-OS_TYPE = "POSIX" % "WIN32" or "POSIX"
-
+% No networking, no gui.
 SYSTEM_LIBS =
 {
   "LIBC" : [ ],
@@ -26,13 +26,6 @@ SYSTEM_LIBORDER = [ "LIBC" ]
 
 M3_BACKEND_MODE = "C"
 
-readonly TARGET_ENDIAN = "LITTLE"  % { "BIG" OR "LITTLE" }
-readonly TARGET_ARCH = "I386"
-readonly WORD_SIZE = "32BITS"      % { "32BITS" or "64BITS" }
-readonly TARGET_OS = "DJGPP"
-readonly OS_TYPE = "POSIX"
-readonly TARGET = "I386_DJGPP"
-
 % This should work, but does not.
 % It would not provide any performance gain,
 % as DJGPP is both single-threaded and single-processed.
@@ -44,9 +37,15 @@ include ("cm3cfg.common")
 
 proc compile_c(source, object, options, optimize, debug) is
 % driver has problems, skip it
-% i.e. it does not run a specific version, and many fail, or learn more flags?
-% copy files locally to ease specifying output, there are not many
+% i.e. it does not run a specific version, and many fail, or learn more flags to specify version?
+%
+% copy files locally to ease specifying output and language, there are not many
+% This way we can say gxx or cc1plus foo.x.cpp and get C++ compilation and output foo.x.o
+% without switches for either. This only affects hand written C++ in m3core,
+% not C++ backend output. Granted, by running cc1plus we are also affecting language choice.
+%
 % base(foo.m3.cpp) should be foo.m3 but is foo (https://github.com/modula3/cm3/issues/937)
+% This is ok since it is only a temorary file, single threaded, collisions are ok.
   base = pn_lastbase (source)
   local cpp = base & ".cpp"
   if not equal (source, pn_last (source))
@@ -56,15 +55,17 @@ proc compile_c(source, object, options, optimize, debug) is
   end
   % -remap handles filenames like c++config vs. cxxconfig
   % User might want to edit these paths.
-  exec ("/libexec/gcc/djgpp/10/cc1plus.exe", "-remap -quiet -g", options, source, "-o", base & ".s")
-  exec ("as", base & ".s", "-o", object)
+  % 4.94 usually works, i.e. for C++ backend output, and sometimes fails.
+  % 10 usually works, but sometimes runs out of memory
+  local a = try_exec ("/libexec/gcc/djgpp/4.94/cc1plus.exe", "-remap -quiet -g -o", base & ".s", options, source)
+  if not equal (a, 0)
+    exec ("@/libexec/gcc/djgpp/10/cc1plus.exe", "-remap -quiet -g -o", base & ".s", options, source)
+  end
+  exec ("@as", base & ".s", "-o", object)
   return 0
 end
 
 proc m3_link(prog, options, objects, imported_libs, shared) is
-  imported_libs = escape(subst_chars(imported_libs, "\\", "/"))
-  objects       = escape(subst_chars(objects, "\\", "/"))
-  % TODO probably run ld directly
   exec ("gxx", "-o", prog, options, arglist("@", [objects, imported_libs]))
   return 0
 end
