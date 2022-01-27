@@ -27,8 +27,7 @@ TYPE
   P = Expr.T OBJECT
         tipe          : Type.T;
 (* TODO: Eliminate p.type/p.tipe redundancy. *)
-        origArgs      : Expr.List := NIL;
-        foldedArgs    : Expr.List := NIL; (* Non-NIL only if is_const. *)
+        args          : Expr.List := NIL;
         map           : REF ARRAY OF Info := NIL;
         constExpr     : Expr.T;
         finalVal      : CG.Val := NIL;
@@ -78,9 +77,7 @@ PROCEDURE New (type: Type.T;  args: Expr.List): Expr.T =
     p.type           := type;
     p.repType        := Type.StripPacked (type);
     p.tipe           := type;
-    p.foldedArgs     := NIL;
-    p.origArgs       := args;
-    p.foldedArgs     := NIL;
+    p.args       := args;
     p.map            := NIL;
     p.constExpr      := NIL;
     p.finalVal       := NIL;
@@ -153,8 +150,8 @@ PROCEDURE Qualify (e: Expr.T;  id: M3ID.T;  VAR result: Expr.T): BOOLEAN =
     END;
     IF NOT RecordType.LookUp (p.tipe, id, val) THEN RETURN FALSE END;
     Field.Split (val, fieldInfo);
-    FOR i := 0 TO LAST (p.origArgs^) DO
-      argExpr := p.origArgs[i]; (* Don't use a folded value of field. *)
+    FOR i := 0 TO LAST (p.args^) DO
+      argExpr := p.args[i]; (* Don't use a folded value of field. *)
       IF (KeywordExpr.Split (argExpr, argId, splitExpr)) THEN
         IF (argId = id) THEN result := splitExpr; RETURN TRUE END;
       ELSIF (i = fieldInfo.index) THEN
@@ -193,7 +190,7 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
     RTErrorMsg: TEXT;
   BEGIN
     p.tipe := Type.Check (p.tipe);
-    FOR i := 0 TO LAST (p.origArgs^) DO Expr.TypeCheck (p.origArgs[i], cs) END;
+    FOR i := 0 TO LAST (p.args^) DO Expr.TypeCheck (p.args[i], cs) END;
     p.type := p.tipe;
     IF NOT RecordType.Split (p.tipe, fieldList) THEN
 (* CHECK: Can't we ASSERT FALSE here? *)
@@ -227,8 +224,8 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
     posOK := TRUE;
     EVAL Evaluate (p); (* Fold arguments, if p is constant. *)
 
-    FOR i := 0 TO LAST (p.origArgs^) DO
-      e := p.origArgs[i];
+    FOR i := 0 TO LAST (p.args^) DO
+      e := p.args[i];
       IF RangeExpr.Split (e, splitExpr, dfault) THEN
         Error.Msg
           ("Range expressions not allowed in record constructors (2.6.8).");
@@ -311,13 +308,13 @@ PROCEDURE EqCheck (a: P;  e: Expr.T;  x: M3.EqAssumption): BOOLEAN =
     ELSE      RETURN FALSE;
     END;
     IF (NOT Type.IsEqual (a.tipe, b.tipe, x))
-      OR ((a.origArgs = NIL) # (b.origArgs = NIL))
-      OR ((a.origArgs # NIL) AND (NUMBER (a.origArgs^) # NUMBER (b.origArgs^)))
+      OR ((a.args = NIL) # (b.args = NIL))
+      OR ((a.args # NIL) AND (NUMBER (a.args^) # NUMBER (b.args^)))
     THEN
       RETURN FALSE;
     END;
-    FOR i := 0 TO LAST (a.origArgs^) DO
-      IF NOT Expr.IsEqual (a.origArgs[i], b.origArgs[i], x)
+    FOR i := 0 TO LAST (a.args^) DO
+      IF NOT Expr.IsEqual (a.args[i], b.args[i], x)
       THEN RETURN FALSE
       END;
     END;
