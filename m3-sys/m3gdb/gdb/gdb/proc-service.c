@@ -21,6 +21,8 @@
 
 #include "defs.h"
 
+typedef unsigned long paddr_t;
+
 #include "gdb_proc_service.h"
 #include <sys/procfs.h>
 

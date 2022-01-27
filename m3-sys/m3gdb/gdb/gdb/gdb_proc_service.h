@@ -23,6 +23,7 @@
 
 #include <sys/types.h>
 
+#undef HAVE_PROC_SERVICE_H
 #ifdef HAVE_PROC_SERVICE_H
 #include <proc_service.h>
 #else

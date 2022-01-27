@@ -115,7 +115,7 @@ init_m3_constants (void)
     if (!rt0_tc)
       {
         error ("Can't find RT0.Typecell. Maybe M3 libraries are compiled "
-               "without debug info, or not stabs.\n"
+               "without debug info, or not stabs+.\n"
               );
         return; /* without setting m3_constant_init_done. */
       }
