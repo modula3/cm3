@@ -5,6 +5,7 @@ WORD_SIZE = "32BITS"      % { "32BITS" or "64BITS" }
 % This is MS-DOS but probably worth giving it this more specific name.
 TARGET = "I386_DJGPP"
 TARGET_OS = "DJGPP"
+
 NOPTHREAD = 1 % user threads
 
 OS_TYPE = "POSIX" % "WIN32" or "POSIX"
@@ -16,7 +17,66 @@ SYSTEM_LIBS =
 
 SYSTEM_LIBORDER = [ "LIBC" ]
 
-include("Autotools.common")
+% Autotools did not work and has not been debugged.
+%
+% include("Autotools.common")
 
 % TODO config for cross
 % SYSTEM_CC = "/usr/bin/i586-pc-msdosdjgpp-g++.exe"
+
+M3_BACKEND_MODE = "C"
+
+readonly TARGET_ENDIAN = "LITTLE"  % { "BIG" OR "LITTLE" }
+readonly TARGET_ARCH = "I386"
+readonly WORD_SIZE = "32BITS"      % { "32BITS" or "64BITS" }
+readonly TARGET_OS = "DJGPP"
+readonly OS_TYPE = "POSIX"
+readonly TARGET = "I386_DJGPP"
+
+% This should work, but does not.
+% It would not provide any performance gain,
+% as DJGPP is both single-threaded and single-processed.
+% https://github.com/modula3/cm3/issues/936
+%
+% M3_PARALLEL_BACK = 20              % host vs. target confusion
+
+include ("cm3cfg.common")
+
+proc compile_c(source, object, options, optimize, debug) is
+% driver has problems, skip it
+% i.e. it does not run a specific version, and many fail, or learn more flags?
+% copy files locally to ease specifying output, there are not many
+% base(foo.m3.cpp) should be foo.m3 but is foo (https://github.com/modula3/cm3/issues/937)
+  base = pn_lastbase (source)
+  local cpp = base & ".cpp"
+  if not equal (source, pn_last (source))
+    %symbolic_link_file (source, pn_last (source))
+    cp_if (source, cpp)
+    source = cpp
+  end
+  % -remap handles filenames like c++config vs. cxxconfig
+  % User might want to edit these paths.
+  exec ("/libexec/gcc/djgpp/10/cc1plus.exe", "-remap -quiet -g", options, source, "-o", base & ".s")
+  exec ("as", base & ".s", "-o", object)
+  return 0
+end
+
+proc m3_link(prog, options, objects, imported_libs, shared) is
+  imported_libs = escape(subst_chars(imported_libs, "\\", "/"))
+  objects       = escape(subst_chars(objects, "\\", "/"))
+  % TODO probably run ld directly
+  exec ("gxx", "-o", prog, options, arglist("@", [objects, imported_libs]))
+  return 0
+end
+
+proc skip_lib(lib, shared) is
+  deriveds ("", [lib & ".lib"])
+  return 0
+end
+
+proc make_lib(lib, options, objects, imported_libs, shared) is
+  lib = "lib" & lib & ".a"
+  deriveds ("", [lib])
+  exec("ar", "cr", lib, arglist("@", objects))
+  return 0
+end
