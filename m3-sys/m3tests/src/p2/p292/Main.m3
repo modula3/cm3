@@ -1,6 +1,6 @@
 (* ----------------------------------------------------------------------1- *)
-(* File Main.m3 for Modula3 compiler test p291                              *)
-(* Copyright 2021, Rodney M. Bates.                                         *)
+(* File Main.m3 for Modula3 compiler test p292                              *)
+(* Copyright 2022, Rodney M. Bates.                                         *)
 (* rodney.m.bates@acm.org                                                   *)
 (* Licensed under the MIT license.                                          *)
 (* ----------------------------------------------------------------------2- *)
@@ -30,8 +30,8 @@ TYPE
 TYPE
   Int64On32 = RECORD a, b: Int32;  END;
 
-CONST A = 16_76543210;
-CONST B = 16_0EDCBA98;
+CONST A = 16_01234567;
+CONST B = 16_0ECA8642;
 
 TYPE
   Byte = [0..16_FF];
