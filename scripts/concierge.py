@@ -377,7 +377,9 @@ class Platform:
 
     def _map_arch(self, arch):
         "Map Python's architecture name to CM3's architecture name"
-        return "amd64" if arch == "x86_64" else arch
+        if arch == "x86_64": arch = "amd64"
+        if arch == "x86": arch = "i386"
+        return arch
 
     def _map_os(self, os):
         return "nt" if os == "win32" else os
