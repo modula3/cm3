@@ -271,6 +271,8 @@ void *
 __cdecl
 MakeContext(void (*p)(void), INTEGER words)
 {
+  int err1 = 0;
+  int err2 = 0;
   Context* c = (Context*)calloc (1, sizeof(*c));
   size_t size = sizeof(void *) * words;
   size_t pagesize = getpagesize();
@@ -279,9 +281,7 @@ MakeContext(void (*p)(void), INTEGER words)
   char* unaligned_start = 0;
   char* unaligned_end = 0;
   size_t pages = 0;
-#ifdef __DJGPP__
   size_t align = 0;
-#endif
 
   if (c == NULL)
     goto Error;
@@ -321,26 +321,34 @@ MakeContext(void (*p)(void), INTEGER words)
   if (unaligned_start == NULL)
     goto Error;
 
-#ifdef __DJGPP__
   align = ((size_t)unaligned_start) % pagesize;
+#ifndef __DJGPP__
+  assert (align == 0);
+#endif
   aligned_start = unaligned_start + (align ? pagesize : 0) - align;
   unaligned_end = unaligned_start + size;
   aligned_end =  unaligned_end - align;
-#else
-  align = ((size_t)unaligned_start) % pagesize;
-  assert (align == 0);
-  aligned_start = unaligned_start;
-  aligned_end = unaligned_end = unaligned_start + size;
-#endif
 
   assert ((((size_t)aligned_start) % pagesize) == 0);
   assert ((((size_t)aligned_end) % pagesize) == 0);
 
-  if (mprotect(aligned_start, pagesize, PROT_NONE)) abort();
-  if (mprotect(aligned_end - pagesize, pagesize, PROT_NONE)) abort();
-
-  c->mprotect[0] = aligned_start;
-  c->mprotect[1] = aligned_end - pagesize;
+  err1 = mprotect(aligned_start, pagesize, PROT_NONE);
+  if (!err1)
+    c->mprotect[0] = aligned_start;
+  err2 = mprotect(aligned_end - pagesize, pagesize, PROT_NONE);
+  if (!err2)
+    c->mprotect[1] = aligned_end - pagesize;
+  // mprotect is DPMI 1.0 and therefore often fails.
+  // e.g. it works under MS-DOS (cwsdpmi) but not Windows 98.
+#ifndef __DJGPP__
+  if (err1 | err2)
+  {
+    DisposeContext (&c);
+    c = NULL;
+    abort();
+    goto Error;
+  }
+#endif
 
 #ifdef __DJGPP__
     // Get a reasonable context from current thread and set eip/esp manually.
