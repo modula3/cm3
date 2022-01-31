@@ -43,7 +43,11 @@ ADDRESS __cdecl RTOS__GetMemory(INTEGER isize)
 ADDRESS __cdecl RTOS__GetMemory(INTEGER isize)
 {
     WORD_T const Size = (WORD_T)isize; // Modula-3 lacks unsigned types, pass as signed and cast.
-    return (ADDRESS)VirtualAlloc(NULL, Size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+    void* p;
+    Scheduler__DisableSwitching ();
+    p = VirtualAlloc(NULL, Size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+    Scheduler__EnableSwitching ();
+    return (ADDRESS)p;
 }
 
 #elif 0
@@ -67,7 +71,9 @@ ADDRESS __cdecl RTOS__GetMemory(INTEGER isize)
     RTOSMemoryLogEntry_t LogEntry;
     
     LogEntry.Size = Size;
+    Scheduler__DisableSwitching ();
     LogEntry.Result = VirtualAlloc(NULL, Size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+    Scheduler__EnableSwitching ();
 
     /* It does not matter if this is thread safe or not. */
 
