@@ -53,20 +53,31 @@ proc compile_c(source, object, options, optimize, debug) is
     cp_if (source, cpp)
     source = cpp
   end
+
+% return try_exec ("gpp -c", source, "-o", object)
+
   % -remap handles filenames like c++config vs. cxxconfig
   % User might want to edit these paths.
-  % 4.94 usually works, i.e. for C++ backend output, and sometimes fails.
-  % 10 usually works, but sometimes runs out of memory
-  local a = try_exec ("/libexec/gcc/djgpp/4.94/cc1plus.exe", "-remap -quiet -g -o", base & ".s", options, source)
-  if not equal (a, 0)
-    exec ("@/libexec/gcc/djgpp/10/cc1plus.exe", "-remap -quiet -g -o", base & ".s", options, source)
+  local proc gcc (options, source, base) is
+    local gcc_versions = ["3.46", "4.74", "4.85", "4.94",
+       "5.50", "6.50", 7, 8, 9, 10]
+    foreach gccver in gcc_versions
+      local a = try_exec ("/libexec/gcc/djgpp/" & gccver & "/cc1plus -remap -quiet -g -o", base & ".s", options, source)
+      if equal (a, 0)
+        return a
+      end
+    end
+    return 1
   end
-  exec ("@as", base & ".s", "-o", object)
-  return 0
+  local a = gcc (options, source, base)
+  if not equal (a, 0)
+    return a
+  end
+  return try_exec ("as", base & ".s", "-o", object)
 end
 
 proc m3_link(prog, options, objects, imported_libs, shared) is
-  exec ("gxx", "-o", prog, options, arglist("@", [objects, imported_libs]))
+  exec ("gpp", "-v -o", prog, options, arglist("@", [objects, imported_libs]))
   return 0
 end
 
