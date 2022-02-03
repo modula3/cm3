@@ -10,8 +10,8 @@ VAR
         a: BITS 2 FOR [0..3];
         b: BITS 2 FOR [0..3];
         c: BITS 16 FOR [0..65535];
-        d: BITS 4 FOR [0..15];
-        e: BITS 14 FOR [0..16383];
+        d: BITS 5 FOR [0..15];
+        e: BITS 7 FOR [0..127];
        END;
 
 BEGIN
@@ -31,12 +31,12 @@ BEGIN
     x.b := 3;
     x.c := 65535;
     x.d := 15;
-    x.e := 16383;
+    x.e := 127;
     Test.checkI (x.a, 3);
     Test.checkI (x.b, 3);
     Test.checkI (x.c, 65535);
     Test.checkI (x.d, 15);
-    Test.checkI (x.e, 16383);
+    Test.checkI (x.e, 127);
 
     x.a := 2;
     x.b := 2;
@@ -48,6 +48,27 @@ BEGIN
     Test.checkI (x.c, 5);
     Test.checkI (x.d, 5);
     Test.checkI (x.e, 5);
+
+    x.a := 1;
+    x.b := 1;
+    x.c := 32767;
+    x.d := 7;
+    x.e := 63;
+    Test.checkI (x.a, 1);
+    Test.checkI (x.b, 1);
+    Test.checkI (x.c, 32767);
+    Test.checkI (x.d, 7);
+    Test.checkI (x.e, 63);
+
+    x.c := 1;
+    x.d := 1;
+    x.e := 1;
+    Test.checkI (x.a, 1);
+    Test.checkI (x.b, 1);
+    Test.checkI (x.c, 1);
+    Test.checkI (x.d, 1);
+    Test.checkI (x.e, 1);
+
   END;
   Test.done ();
 END Main.
