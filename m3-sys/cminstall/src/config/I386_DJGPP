@@ -44,8 +44,6 @@ proc compile_c(source, object, options, optimize, debug) is
 % without switches for either. This only affects hand written C++ in m3core,
 % not C++ backend output. Granted, by running cc1plus we are also affecting language choice.
 %
-% base(foo.m3.cpp) should be foo.m3 but is foo (https://github.com/modula3/cm3/issues/937)
-% This is ok since it is only a temorary file, single threaded, collisions are ok.
   base = pn_lastbase (source)
   local cpp = base & ".cpp"
   if not equal (source, pn_last (source))
