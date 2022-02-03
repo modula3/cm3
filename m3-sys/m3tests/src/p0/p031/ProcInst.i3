@@ -8,7 +8,7 @@
 INTERFACE ProcInst
 
 ; TYPE ParamTyp1 = PROCEDURE ( ) RAISES ANY 
-; CONST ParamBits = 64
+; CONST ParamBits = BITSIZE ( ParamTyp1 )
 ; TYPE ParamTyp2 = BITS ParamBits FOR ParamTyp1 
 ; CONST Name = "Procedure" 
 ; PROCEDURE Val1 ( ) RAISES ANY 
