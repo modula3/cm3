@@ -248,7 +248,7 @@ PROCEDURE NameSections(
              of the last component of pn, or Length(pn) if there is no
              extension;
   extUpb  := Length(pn) *)
-  VAR pos: CARDINAL; ch: CHAR;
+  VAR pos: CARDINAL; ch: CHAR; extSepSeen := FALSE;
   BEGIN
     extUpb := Text.Length(pn);
     pos := extUpb;
@@ -261,7 +261,9 @@ PROCEDURE NameSections(
           baseLwb := pos + 1;
           EXIT
         ELSIF ch = ExtSepChar THEN
-          baseUpb := pos
+          IF NOT extSepSeen THEN
+            baseUpb := pos; extSepSeen := TRUE
+          END
         END
       ELSE
         baseLwb := 0;
