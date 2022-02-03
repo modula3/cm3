@@ -7,6 +7,8 @@
 
 GENERIC MODULE Dim6 ( InnerDim )
 
+; <*UNUSED*> CONST UseDim = InnerDim . FullShape (* Suppress compile warning. *)
+
 (* EXPORTED*) 
 ; PROCEDURE EltVal ( READONLY A : OpenTyp ; Subs : DimSubsTyp ) : EltTyp
   

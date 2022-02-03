@@ -7,6 +7,10 @@
 
 GENERIC MODULE Dim0 ( Elts , Shape )
 
+; <*UNUSED*> TYPE UseElts = Elts . EltTyp (* Suppress compile warning. *)
+
+; <*UNUSED*> CONST UseShape = Shape . FullShape (* Suppress compile warning. *)
+
 (* EXPORTED*) 
 ; PROCEDURE EltVal
     ( <*UNUSED*> READONLY A : OpenTyp ; <*UNUSED*> Subs : DimSubsTyp ) : EltTyp
