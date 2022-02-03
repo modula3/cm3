@@ -59,8 +59,16 @@ proc compile_c(source, object, options, optimize, debug) is
   % -remap handles filenames like c++config vs. cxxconfig
   % User might want to edit these paths.
   local proc gcc (options, source, base) is
-    local gcc_versions = ["3.46", "4.74", "4.85", "4.94",
-       "5.50", "6.50", 7, 8, 9, 10]
+    local gcc_versions = [10,
+                          9,
+                          8,
+                          7,
+                          "6.50",
+                          "5.50",
+                          "4.94",
+                          "4.85",
+                          "4.74",
+                          "3.46"]
     foreach gccver in gcc_versions
       local a = try_exec ("/libexec/gcc/djgpp/" & gccver & "/cc1plus -remap -quiet -g -o", base & ".s", options, source)
       if equal (a, 0)
