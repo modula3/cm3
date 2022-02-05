@@ -4,4 +4,4 @@ import sys
 import pylib
 from pylib import *
 
-CopyConfigForDistribution() or sys.exit(1)
+CopyConfigForDistribution(InstallRoot) or sys.exit(1)

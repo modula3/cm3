@@ -23,7 +23,7 @@ from pylib import *
 # Target need not be precise, only word size and endian matter.
 # In future hopefully they will not.
 #
-CopyConfigForDistribution() or sys.exit(1)
+CopyConfigForDistribution(InstallRoot) or sys.exit(1)
 
 def BootAutoTools():
 
