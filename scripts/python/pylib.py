@@ -1422,14 +1422,7 @@ def CopyFileIfExist(From, To):
 #-----------------------------------------------------------------------------
 
 def DeleteConfig(To):
-    a = os.path.join(Root, "m3-sys", "cminstall", "src")
-    Bin  = os.path.join(To, "bin")
-    RemoveDirectoryRecursive(os.path.join(Bin, "config"))
-
-    for b in ["config"]:
-        for File in glob.glob(os.path.join(a, b, "*")):
-            if isfile(File):
-                DeleteFile(os.path.join(Bin, os.path.basename(File)))
+    RemoveDirectoryRecursive(os.path.join(os.path.join(To, "bin"), "config"))
 
 #-----------------------------------------------------------------------------
 
