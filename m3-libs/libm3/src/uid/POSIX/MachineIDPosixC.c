@@ -7,7 +7,9 @@
 
 #if 0 /*for testing purposes*/
 #ifndef _MSC_VER
+#ifndef __cdecl
 #define __cdecl /* nothing */
+#endif
 typedef unsigned char BOOLEAN;
 typedef int BOOL;
 #define TRUE 1
@@ -26,7 +28,9 @@ typedef unsigned UINT32;
 #if !(defined (__HAIKU__) || defined (__DJGPP__) || defined(__CYGWIN__))
 #include <net/if_arp.h>
 #endif
+#ifndef __CYGWIN__
 #include <net/if_dl.h>
+#endif
 #include <netdb.h>
 #include <netinet/in.h>
 #include <pthread.h>
