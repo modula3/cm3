@@ -371,6 +371,6 @@ $(LinkFlags: =
     else:
         pylib._MakeTGZ(BootDir[2:])
 
-CopyConfigForDevelopment() or sys.exit(1)
+CopyConfigForDistribution() or sys.exit(1)
 
 Boot()
