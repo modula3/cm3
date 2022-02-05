@@ -1521,12 +1521,6 @@ def PickBuildDir(a):
     #FatalError("no BuildDir:" + a)
     return a
 
-def ShipBack():
-    if  not GCC_BACKEND:
-        return True
-    return _CopyCompiler(os.path.join(Root, "m3-sys", "m3cc", PickBuildDir(BuildDir)),
-                         os.path.join(InstallRoot, "bin"))
-
 #-----------------------------------------------------------------------------
 
 def ShipFront():
@@ -1536,7 +1530,7 @@ def ShipFront():
 #-----------------------------------------------------------------------------
 
 def ShipCompiler():
-    return (skipgcc or ShipBack()) and ShipFront()
+    return ShipFront()
 
 #-----------------------------------------------------------------------------
 
