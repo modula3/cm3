@@ -4,4 +4,4 @@ import sys
 from pylib import *
 
 ShipFront() or sys.exit(1)
-CopyConfigForDistribution() or sys.exit(1)
+CopyConfigForDistribution(InstallRoot) or sys.exit(1)

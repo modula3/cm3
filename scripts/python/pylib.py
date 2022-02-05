@@ -1445,13 +1445,13 @@ def CopyConfigForDistribution(To):
         if isfile(File):
             CopyFile(File, dir)
     open(os.path.join(Bin, "cm3.cfg"), "w").write("\
-%-------------------------------------------------------------------
+%-------------------------------------------------------------------\n\
 % defined by cm3, but not the other MxConfig users\n\
 if not defined(\"CR\") CR = \"\\n\" end\n\
 if not defined(\"EOL\") EOL = \"\\n\" end\n\
 if not defined(\"M3_PROFILING\") M3_PROFILING = FALSE end\n\
 if not defined(\"SL\") SL = \"/\" end\n\
-%-------------------------------------------------------------------
+%-------------------------------------------------------------------\n\
 if not defined(\"HOST\") HOST = \"" + Config + "\" end\n\
 if not defined(\"TARGET\") TARGET = HOST end\n\
 INSTALL_ROOT = (path() & SL & \"..\")\n\
@@ -2307,7 +2307,7 @@ if __name__ == "__main__":
     #os.system("set")
     sys.exit(1)
 
-    CopyConfigForDistribution()
+    CopyConfigForDistribution(InstallRoot)
     sys.exit(1)
 
     CheckForLinkSwitch("DELAYLOAD")
