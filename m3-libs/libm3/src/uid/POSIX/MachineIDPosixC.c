@@ -23,7 +23,7 @@ typedef unsigned UINT32;
 #ifndef __DJGPP__
 #include <net/if.h>
 #endif
-#if !(defined (__HAIKU__) || defined (__DJGPP__))
+#if !(defined (__HAIKU__) || defined (__DJGPP__) || defined(__CYGWIN__))
 #include <net/if_arp.h>
 #endif
 #include <net/if_dl.h>
@@ -61,7 +61,7 @@ typedef unsigned UINT32;
 #if !(defined(__CYGWIN__) || defined (__DJGPP__))
 #include <net/if.h>
 #endif
-#if !(defined (__HAIKU__) || defined (__DJGPP__))
+#if !(defined (__HAIKU__) || defined (__DJGPP__) || defined(__CYGWIN__))
 #include <net/if_arp.h>
 #endif
 #ifdef __hpux
