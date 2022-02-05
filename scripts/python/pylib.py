@@ -1426,29 +1426,6 @@ def DeleteConfig(To):
 
 #-----------------------------------------------------------------------------
 
-# TODO: Remove this. It was convenient but it is not really needed.
-def CopyConfigForDevelopment():
-    #
-    # The development environment is easily reconfigured
-    # for different targets based on environment variables and `uname`.
-    # The use of `uname` is not fully fleshed out (yet).
-    #
-    # The development environment depends on having a source tree, at least the cminstall\src\config directory.
-    #
-
-    To = os.path.join(InstallRoot, "bin")
-    a = os.path.join(Root, "m3-sys", "cminstall", "src")
-
-    #
-    # First delete all the config files.
-    #
-    DeleteConfig(InstallRoot)
-
-    CopyFile(os.path.join(Root, a, "config", "cm3.cfg"), To) or FatalError()
-    return True
-
-#-----------------------------------------------------------------------------
-
 #def CopyDirectoryNonRecursive(From, To):
 #    CreateDirectory(To)
 #    for File in glob.glob(os.path.join(From, "*")):
@@ -2330,7 +2307,7 @@ if __name__ == "__main__":
     #os.system("set")
     sys.exit(1)
 
-    CopyConfigForDevelopment()
+    CopyConfigForDistribution()
     sys.exit(1)
 
     CheckForLinkSwitch("DELAYLOAD")

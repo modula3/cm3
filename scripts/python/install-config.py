@@ -4,4 +4,4 @@ import sys
 import pylib
 from pylib import *
 
-CopyConfigForDevelopment() or sys.exit(1)
+CopyConfigForDistribution() or sys.exit(1)
