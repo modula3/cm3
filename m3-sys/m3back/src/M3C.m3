@@ -4757,7 +4757,7 @@ PROCEDURE HelperFunctions_cvt_int(self: HelperFunctions_t; <*UNUSED*>rtype: RTyp
 CONST text = ARRAY ConvertOp OF TEXT{
 
     "#ifndef m3_round\n#define m3_round m3_round\n"
-    & "#ifdef _WIN64 /* temporary workaround */\n"
+    & "#ifdef _WIN32 /* temporary workaround */\n"
     & "static INT64 __stdcall m3_round(EXTENDED f) { return (INT64)f; }\n"
     & "#else\n"
     & "INT64 __cdecl llroundl(long double);\nstatic INT64 __stdcall m3_round(EXTENDED f) { return (INT64)llroundl(f); }\n"
