@@ -105,9 +105,9 @@ int __cdecl Unix__open (const char* path, int flags, m3_mode_t mode)
 
     Scheduler__DisableSwitching ();
 #ifdef _WIN32
-    result = _open (path, flags, mode);
+    result = _open (path, flags, (int)mode);
 #else
-    result = open (path, flags, mode);
+    result = open (path, flags, (mode_t)mode);
     if (m3core_trace.open)
     {
         char* buf = (char*)alloca (256 + strlen (path));
