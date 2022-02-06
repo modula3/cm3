@@ -62,6 +62,8 @@ Concat(const char* a0,
        const char* a3,
        const char* a4)
 {
+    char* result = 0;
+    char* p = 0;
     size_t n0 = strlen(a0);
     size_t n1 = strlen(a1);
     size_t n2 = strlen(a2);
@@ -69,8 +71,8 @@ Concat(const char* a0,
     size_t n4 = strlen(a4);
     if (n0 > 0xFFF || n1 > 0xFFF || n2 > 0xFFF || n3 > 0xFFF || n4 > 0xFFF) // crudely avoid overflow
         return 0;
-    char* result = (char*)malloc(n0 + n1 + n2 + n3 + n4 + 1);
-    char* p = result;
+    result = (char*)malloc(n0 + n1 + n2 + n3 + n4 + 1);
+    p = result;
     if (result)
     {
         memcpy(p, a0, n0); p += n0;
