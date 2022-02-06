@@ -98,7 +98,7 @@ X(ENOTSOCK)
 X(ETIMEDOUT)
 #endif
 
-#if !defined (__DJGPP__) || defined (EWOULDBLOCK)
+#if !(defined (__DJGPP__) || defined(_WIN32)) || defined (EWOULDBLOCK)
 X(EWOULDBLOCK)
 M3_STATIC_ASSERT (EWOULDBLOCK != 0);
 #else
