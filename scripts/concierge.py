@@ -382,7 +382,9 @@ class Platform:
         return arch
 
     def _map_os(self, os):
-        return "nt" if os == "win32" else os
+        if os == "win32": os = "nt"
+        if os.startswith("openbsd"): os = "openbsd" # e.g. openbsd7
+        return os
 
 
 class Cm3:
