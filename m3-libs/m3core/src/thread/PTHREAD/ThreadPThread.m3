@@ -1321,6 +1321,7 @@ PROCEDURE SignalHandler (sig: int; context: ADDRESS) =
         me.stacks.context := context;
         me.stacks.bsp := FlushRegisterWindows0 ();
       ELSE
+        <*ASSERT me.stack.context = NIL*>
         me.stack.context := context;
         me.stack.bsp := FlushRegisterWindows0 ();
       END;
