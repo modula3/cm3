@@ -9,6 +9,7 @@
 #undef M3MODULE /* Support concatenating multiple .c files. */
 #define M3MODULE Uuio
 
+M3_NO_INLINE // because alloca
 ssize_t
 __cdecl
 Uuio__write (int fd, const void* buf, size_t n)

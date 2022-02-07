@@ -11,6 +11,7 @@
 #undef M3MODULE /* Support concatenating multiple .c files. */
 #define M3MODULE Udir
 
+M3_NO_INLINE // because alloca
 dirent* Udir__readdir (DIR* d)
 {
     dirent* result;

@@ -198,6 +198,7 @@ void __cdecl ThreadPThread__sigsuspend(void)        { M3_DIRECT_SUSPEND_ASSERT_F
 
 #endif /* M3_DIRECT_SUSPEND */
 
+M3_NO_INLINE // because alloca
 void
 __cdecl
 ThreadPThread__ProcessLive(ADDRESS top, ADDRESS regbottom, void (*p)(void *start, void *limit))

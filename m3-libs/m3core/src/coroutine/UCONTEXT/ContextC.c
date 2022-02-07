@@ -410,6 +410,7 @@ ContextC__GetCurrentCoroutine(void)
   return res;
 }
 
+M3_NO_INLINE // because alloca
 void
 ContextC__InitC(int* stack)
 {
@@ -468,6 +469,7 @@ ContextC__PushContextForCall(void* to, INTEGER* myId, void** me, Context *c)
   return result;
 }
 
+M3_NO_INLINE // because alloca
 void*
 __cdecl
 ContextC__Stack(void)
