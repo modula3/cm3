@@ -1316,8 +1316,8 @@ PROCEDURE SignalHandler (sig: int; context: ADDRESS) =
         RETURN;
       END;
       me.state := ActState.Stopped;
-      <*ASSERT me.stacks.context = NIL*>
       IF coroutine THEN
+        <*ASSERT me.stacks.context = NIL*>
         me.stacks.context := context;
         me.stacks.bsp := FlushRegisterWindows0 ();
       ELSE
