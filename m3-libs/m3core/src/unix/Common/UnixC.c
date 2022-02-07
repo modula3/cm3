@@ -95,6 +95,7 @@ Unix__Assertions(void)
 int _fmode = O_BINARY; // Does this work? We do not depend on it. See open/creat.
 #endif
 
+M3_NO_INLINE // because alloca
 int __cdecl Unix__open (const char* path, int flags, m3_mode_t mode)
 {
     int result;
@@ -119,6 +120,7 @@ int __cdecl Unix__open (const char* path, int flags, m3_mode_t mode)
     return result;
 }
 
+M3_NO_INLINE // because alloca
 int __cdecl Unix__creat (const char* path, m3_mode_t mode)
 {
 #ifdef __DJGPP__
@@ -144,6 +146,7 @@ int __cdecl Unix__creat (const char* path, m3_mode_t mode)
 #endif
 }
 
+M3_NO_INLINE // because alloca
 int __cdecl Unix__close (int fd)
 {
     int result;
@@ -164,6 +167,7 @@ int __cdecl Unix__close (int fd)
     return result;
 }
 
+M3_NO_INLINE // because alloca
 int __cdecl Unix__chdir (const char* path)
 {
     int result;

@@ -442,8 +442,7 @@ DisposeContext(Context** pc)
     }
 }
 
-// Do not inline to help ensure stack range is understandable.
-M3_NO_INLINE
+M3_NO_INLINE // because alloca
 void
 __cdecl
 ProcessContext(Context *c, char *bottom, char *top,
