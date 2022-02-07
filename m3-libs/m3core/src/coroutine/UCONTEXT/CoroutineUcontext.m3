@@ -56,9 +56,9 @@ PROCEDURE Retval(t : T) : REFANY =
   END Retval;
   
 VAR
-  Empty := NEW(T);                         (* dummy object, cant use NIL *)
-  coArr := NEW(REF ARRAY OF WeakRef.T, 1); (* entry 0 not used *)
-  coMu  := NEW(MUTEX);                     (* protect coArr and coId *)
+  Empty: T;                      (* dummy object, cannot use NIL *)
+  coArr: REF ARRAY OF WeakRef.T; (* entry 0 not used *)
+  coMu:  MUTEX;                  (* protect coArr and coId *)
 
   (* notes on garbage collection:
 
@@ -498,11 +498,15 @@ PROCEDURE Cleanup(<*UNUSED*>READONLY self : WeakRef.T; ref : REFANY) =
        NIL, so we do not need to do anything special about it *)
   END Cleanup;
 
-VAR DEBUG := RTParams.IsPresent("debugcoroutines");
+VAR DEBUG: BOOLEAN;
 
 PROCEDURE Init() =
 VAR stack: int;
 BEGIN
+  DEBUG := RTParams.IsPresent("debugcoroutines");
+  Empty := NEW(T);                         (* dummy object, cannot use NIL *)
+  coArr := NEW(REF ARRAY OF WeakRef.T, 1); (* entry 0 not used *)
+  coMu  := NEW(MUTEX);                     (* protect coArr and coId *)
   ContextC.InitC(ADR(stack))
 END Init;
 
