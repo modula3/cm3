@@ -1100,15 +1100,19 @@ PROCEDURE ProcessOther (act: Activation;  p: PROCEDURE (start, stop: ADDRESS)) =
       RTIO.PutText("Processing act="); RTIO.PutAddr(act); RTIO.PutText("\n"); RTIO.Flush();
     END;
     RTHeapRep.FlushThreadState(act.heapState);
-    VAR
-      q := act.stacks;
-    BEGIN
-      WHILE q # NIL DO
-        IF q.stackbase # NIL THEN
-          ProcessStopped(act.handle, q.stackbase, q.context, q.regbottom, q.bsp, p);
+    IF Coroutine.Supported () THEN
+      VAR
+        q := act.stacks;
+      BEGIN
+        WHILE q # NIL DO
+          IF q.stackbase # NIL THEN
+            ProcessStopped(act.handle, q.stackbase, q.context, q.regbottom, q.bsp, p);
+          END;
+          q := q.next;
         END;
-        q := q.next;
       END;
+    ELSE
+      ProcessStopped (act.handle, act.stack.stackbase, act.stack.context, act.stack.regbottom, act.stack.bsp, p);
     END;
   END ProcessOther;
 
@@ -1358,7 +1362,8 @@ PROCEDURE DisposeStack(stack : ADDRESS) =
     p : StackState := me.stacks;
     q : StackState;
   BEGIN
-    (* cant delete the active stack so no need to check the head *)
+    IF NOT Coroutine.Supported () THEN RETURN END;
+    (* cannot delete the active stack so no need to check the head *)
     q := p;
     p := p.next;
     WHILE p # NIL DO
