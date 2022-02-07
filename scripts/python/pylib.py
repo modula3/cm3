@@ -331,28 +331,16 @@ def _GetAllTargets():
 #-----------------------------------------------------------------------------
 
 def TargetOnlyHasCBackend(a):
-    # Many targets have a gcc backend.
-    # NT386 etc. have the integrated backend.
-    # Many targets only have the C backend.
+    # Basically all Unix x86, amd64, mips{32,64}, ppc{32,64}, hppa{32,64},
+    # ia64{32,64}, alpha{32,64}, sparc{32,64}, m68k, arm32 targets
+    # are supported in our old fork of gcc.
     #
-    # The C backend ABI is not the same as the others,
-    # therefore, likely, BuildDir should have "C" appended,
-    # for targets that have C backend and another backend.
+    # The only really missing ones are:
+    #   arm64 riscv {arm,amd64}_nt.
     #
-    # Todo: arm32 is unclear barely existant
-    # Historical targets probably should should gcc backend.
-    # All targets probably should drop gcc backend.
-    # Even NT386 integrated backend is not super interesting.
+    # Nevertheless:
     #
-    a = a.lower()
-    if a == "i386_nt":
-        return false
-    return (a.endswith("_nt") or a.startswith("arm") or a.find("riscv") != -1
-        or a.find("solaris") != -1 or a.startswith("sol") # gcc backend does work
-        or a.find("alpha") != -1 or a.find("osf") != -1 # gcc backend does work
-        or a.find("mingw") != -1 or a.find("cygwin") != -1 or a.find("haiku") != -1
-        or a.find("djgpp") != -1
-        or a.find("ia64") != -1 or a.find("hpux") != -1) # HPPA_HPUX gcc backend does work, IA64 maybe too
+    return true
 
 _PossibleCm3Flags = ["boot", "keep", "override", "commands", "verbose", "why", "debug", "trace"]
 _SkipGccFlags = ["nogcc", "skipgcc", "omitgcc"]
