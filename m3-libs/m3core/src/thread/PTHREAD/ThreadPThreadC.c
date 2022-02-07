@@ -72,7 +72,9 @@ EXTERN_CONST int SIG_SUSPEND = 0;
 #elif defined(__sun) || defined(__CYGWIN__)
 EXTERN_CONST int SIG_SUSPEND = SIGUSR2;
 #elif defined(__linux)
-EXTERN_CONST int SIG_SUSPEND = NSIG - 1;
+// This is not constant. Under valgrind, initialization
+// fails, and we decrement it one and retry once.
+int SIG_SUSPEND = NSIG - 1;
 #elif defined(__hpux)
 EXTERN_CONST int SIG_SUSPEND = _SIGRTMAX;
 #elif defined(SIGRTMAX) && !defined(__osf__)
@@ -631,7 +633,18 @@ InitC(void)
   act.sa_flags = SA_RESTART | SA_SIGINFO;
   act.sa_sigaction = SignalHandlerC;
   r = sigfillset(&act.sa_mask); assert(r == 0);
-  r = sigaction(SIG_SUSPEND, &act, NULL); assert(r == 0);
+  r = sigaction(SIG_SUSPEND, &act, NULL);
+  // If that fails, try again off by one, to work with Valgrind.
+#ifdef __linux
+  if (r)
+  {
+    r = sigaddset(&mask, SIG_SUSPEND); assert(r == 0);
+    --SIG_SUSPEND;
+    r = sigdelset(&mask, SIG_SUSPEND); assert(r == 0);
+    r = sigaction(SIG_SUSPEND, &act, NULL);
+  }
+#endif
+  assert(r == 0);
 #endif
 }
 
