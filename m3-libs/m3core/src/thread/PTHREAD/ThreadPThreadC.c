@@ -88,6 +88,7 @@ EXTERN_CONST int SIG_SUSPEND = SIGUSR2;
 
 ADDRESS
 ThreadPThread__FlushRegisterWindows1 (M3SigJmpBuf* pbuf)
+// 1: takes 1 parameter
 {
 #if defined(__ia64)
 #if defined(__GNUC___) && defined(__ia64)
@@ -118,6 +119,7 @@ ThreadPThread__FlushRegisterWindows1 (M3SigJmpBuf* pbuf)
 
 ADDRESS
 ThreadPThread__FlushRegisterWindows0 (void)
+// 0: takes 0 parameters
 {
   return ThreadPThread__FlushRegisterWindows1 (0);
 }
@@ -169,16 +171,22 @@ __cdecl
 ThreadPThread__ProcessStopped (m3_pthread_t mt, ADDRESS top, ADDRESS context,
                                ADDRESS regbottom, ADDRESS bsp, void (*p)(void *start, void *limit))
 {
-  // process stack and registers
-  if (!top) return;
-
-  if (context < top) // typical growdown stack, context in stack
-    p(context, top);
-  else if (context > top) // unusual growup stack, e.g. hppa
-    p(top, 1 + (ucontext_t*)context);
+  // process stack and registers and second ia64 stack
+  if (top && context)
+  {
+    if ((char*)context < (char*)top) // typical growdown stack, context in stack
+      p(context, top);
+    else // unusual growup stack, e.g. hppa
+      p(top, 1 + (ucontext_t*)context);
+  }
 
   if (regbottom && bsp)
-      p(regbottom, bsp);
+  {
+    if ((char*)regbottom < (char*)bsp)
+      p (regbottom, bsp);
+    else
+      p (bsp, regbottom);
+  }
 }
 
 #else /* M3_DIRECT_SUSPEND */
@@ -194,39 +202,32 @@ void
 __cdecl
 ThreadPThread__ProcessLive(ADDRESS top, ADDRESS regbottom, void (*p)(void *start, void *limit))
 {
-  char* bottom;
-  void* bsp;
+  char* bsp = 0;
   M3SigJmpBuf jb;
 
   if (sigsetjmp (jb.jb, 0) == 0) // save registers to stack (TODO: Posix getcontext)
-    bsp = ThreadPThread__FlushRegisterWindows1 (&jb);
+    bsp = (char*)ThreadPThread__FlushRegisterWindows1 (&jb);
 
   // capture bottom after longjmp because longjmp can clobber non-volatile locals,
-  // and so jb is in stack
-  bottom = (char*)alloca (1);
-
-  assert (top);
-  assert (bottom);
-
-  if (bottom < top) // typical growdown stack
+  // and so jb is in stack (address of local would not work)
+  if (top)
   {
-    assert ((char*)top >= (char*)(1 + &jb));
-    assert (bottom < (char*)&jb);
-    p (bottom, top);
-  }
-  else if (top < bottom) // unusual growup stack, e.g. hppa
-  {
-    assert ((char*)top < (char*)&jb);
-    assert (bottom >= (char*)(1 + &jb));
-    p (top, bottom);
+    char* bottom = (char*)alloca (1);
+
+    if (bottom < top) // typical growdown stack
+      p (bottom, top);
+    else // unusual growup stack, e.g. hppa
+      p (top, bottom);
   }
 
-#if defined(__hpux) && defined(__ia64) // TODO: Linux VMS etc.
-  assert (regbottom);
-  assert (bsp);
-  assert ((char*)regbottom < bsp);
-  p (regbottom, bsp);
-#endif
+  // regbottom-bsp is essentially a second stack, i.e. for IA64
+  if (regbottom && bsp)
+  {
+    if ((char*)regbottom < bsp)
+      p (regbottom, bsp);
+    else
+      p (bsp, regbottom);
+  }
 }
 
 #define M3_MAX(x, y) (((x) > (y)) ? (x) : (y))
