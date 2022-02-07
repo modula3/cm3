@@ -7,7 +7,7 @@ SchedulerPosix, RTOS, RTHooks, ThreadPThread;
 
 IMPORT Cerrno, FloatMode, MutexRep, RTCollectorSRC, RTError, RTHeapRep, RTIO,
        RTParams, RTPerfTool, RTProcess, ThreadEvent, Time,
-       Word, Usched, Uerror, Uexec;
+       Word, Usched, Uerror, Uexec, Coroutine;
 FROM Compiler IMPORT ThisFile, ThisLine;
 FROM Ctypes IMPORT int;
 IMPORT RuntimeError AS RTE;
@@ -67,7 +67,9 @@ REVEAL
        points to its tail, which is most recently added, i.e., last out). *)
     next, prev: Activation := NIL;      (* LL = activeMu; global doubly-linked, circular list of all active threads *)
     handle: pthread_t := NIL;           (* LL = activeMu; thread handle *)
-    stacks : StackState := NIL;
+
+    stack  : Stack;                     (* non-coroutine stack state not heap allocated *)
+    stacks : StackState := NIL;         (* multiple stack states if using coroutines *)
     state := ActState.Started;          (* LL = activeMu *)
     slot: CARDINAL := 0;                (* LL = slotMu; index in slots *)
     floatState : FloatMode.ThreadState; (* per-thread floating point state *)
@@ -75,6 +77,14 @@ REVEAL
   END;
 
 TYPE
+
+  Stack = RECORD
+    stackbase: ADDRESS := NIL;          (* LL = activeMu; stack base for GC *)
+    regbottom: ADDRESS := NIL;          (* IA64 register stack bottom *)
+    context: ADDRESS := NIL;            (* LL = activeMu *)
+    bsp:     ADDRESS := NIL;            (* IA64 register stack current for suspended thread (backing store pointer) *)
+  END;
+
   StackState = UNTRACED BRANDED REF RECORD
     stackbase: ADDRESS := NIL;          (* LL = activeMu; stack base for GC *)
     regbottom: ADDRESS := NIL;          (* IA64 register stack bottom *)
@@ -82,7 +92,7 @@ TYPE
     bsp:     ADDRESS := NIL;            (* IA64 register stack current for suspended thread (backing store pointer) *)
     next : StackState := NIL;
   END;
-  (* older versions of CM3 had stackbase and context within the Activation.
+  (* older versions of CM3 had stackbase and context only within the Activation.
      we add it as a separate structure (alloc and dealloc with Activation)
      to allow having multiple contexts per thread (coroutines).
 
@@ -508,6 +518,8 @@ PROCEDURE DumpThread (t: Activation) =
     RTIO.PutText("  next:       "); RTIO.PutAddr(t.next);        RTIO.PutChar('\n');
     RTIO.PutText("  prev:       "); RTIO.PutAddr(t.prev);        RTIO.PutChar('\n');
     RTIO.PutText("  handle:     "); RTIO.PutAddr(t.handle);      RTIO.PutChar('\n');
+    RTIO.PutText("  stackbase0: "); RTIO.PutAddr(t.stack.stackbase); RTIO.PutChar('\n');
+    RTIO.PutText("  context0:   "); RTIO.PutAddr(t.stack.context);   RTIO.PutChar('\n');
     VAR
       q := t.stacks;
       first := TRUE;
@@ -551,6 +563,7 @@ PROCEDURE DisposeStacks(act : Activation) =
   VAR
     p := act.stacks;
   BEGIN
+    IF NOT Coroutine.Supported () THEN RETURN END;
     WHILE p # NIL DO
       WITH nxt = p.next DO
         DISPOSE(p);
@@ -575,11 +588,17 @@ PROCEDURE CleanThread (r: REFANY) =
 PROCEDURE ThreadBase (param: ADDRESS): ADDRESS =
   VAR
     me: Activation := param;
+    coroutine := Coroutine.Supported ();
   BEGIN
     SetActivation(me);
 
-    <* ASSERT NOT IA64 () OR me.stacks.regbottom # NIL *>
-    me.stacks.stackbase := ADR(me); (* enable GC scanning of this stack *)
+    IF coroutine THEN
+      <* ASSERT NOT IA64 () OR me.stacks.regbottom # NIL *>
+      me.stacks.stackbase := ADR(me); (* enable GC scanning of this stack *)
+    ELSE
+      <* ASSERT NOT IA64 () OR me.stack.regbottom # NIL *>
+      me.stack.stackbase := ADR(me); (* enable GC scanning of this stack *)
+    END;
     me.handle := pthread_self();
 
     (* add to the list of active threads *)
@@ -596,8 +615,13 @@ PROCEDURE ThreadBase (param: ADDRESS): ADDRESS =
     (* remove from the list of active threads *)
     WITH r = pthread_mutex_lock(activeMu) DO <*ASSERT r=0*> END;
       <*ASSERT allThreads # me*>
-      me.stacks.stackbase := NIL; (* disable GC scanning of my stack *)
-      me.stacks.regbottom := NIL; (* disable GC scanning of my stack *)
+      IF coroutine THEN
+        me.stacks.stackbase := NIL; (* disable GC scanning of my stack *)
+        me.stacks.regbottom := NIL; (* disable GC scanning of my stack *)
+      ELSE
+        me.stack.stackbase := NIL; (* disable GC scanning of my stack *)
+        me.stack.regbottom := NIL; (* disable GC scanning of my stack *)
+      END;
       me.next.prev := me.prev;
       me.prev.next := me.next;
       WITH r = pthread_detach_self(me.handle) DO <*ASSERT r=0*> END;
@@ -645,13 +669,16 @@ PROCEDURE Fork (closure: Closure): T =
   VAR
     act := NEW(Activation,
                mutex := pthread_mutex_new(),
-               cond := pthread_cond_new(),
-               stacks := NEW(StackState));
+               cond := pthread_cond_new());
     size := defaultStackSize;
     t: T := NIL;
+    coroutine := Coroutine.Supported ();
   BEGIN
+    IF coroutine THEN
+      act.stacks := NEW (StackState);
+    END;
     TRY
-      IF act.mutex = NIL OR act.cond = NIL OR act.stacks = NIL THEN
+      IF act.mutex = NIL OR act.cond = NIL OR (coroutine AND act.stacks = NIL) THEN
         RTE.Raise(RTE.T.OutOfMemory);
       END;
       t := NEW(T, act := act, closure := closure, join := NEW(Condition));
@@ -671,8 +698,14 @@ PROCEDURE Fork (closure: Closure): T =
     | SizedClosure (scl) => size := scl.stackSize;
     ELSE (*skip*)
     END;
-    WITH r = thread_create(size * ADRSIZE(Word.T), ThreadBase, act, act.stacks.regbottom) DO
-      IF r # 0 THEN DieI(ThisLine(), r) END;
+    IF coroutine THEN
+      WITH r = thread_create(size * ADRSIZE(Word.T), ThreadBase, act, act.stacks.regbottom) DO
+        IF r # 0 THEN DieI(ThisLine(), r) END;
+      END;
+    ELSE
+      WITH r = thread_create(size * ADRSIZE(Word.T), ThreadBase, act, act.stack.regbottom) DO
+        IF r # 0 THEN DieI(ThisLine(), r) END;
+      END;
     END;
     (* regbottom cannot be asserted here as the thread can already exit *)
     RETURN t;
@@ -1030,27 +1063,33 @@ PROCEDURE ProcessEachStack (p: PROCEDURE (start, limit: ADDRESS)) =
 
 PROCEDURE ProcessMe (me: Activation;  p: PROCEDURE (start, limit: ADDRESS)) =
   (* LL=activeMu *)
+  VAR coroutine := Coroutine.Supported ();
   BEGIN
     <*ASSERT me.state # ActState.Stopped*>
     IF DEBUG THEN
       RTIO.PutText("Processing act="); RTIO.PutAddr(me); RTIO.PutText("\n"); RTIO.Flush();
     END;
     RTHeapRep.FlushThreadState(me.heapState);
-    VAR
-      q := me.stacks;
-    BEGIN
-      IF MSDEBUG THEN
-        RTIO.PutText("ProcessMe: ADR(q)="); RTIO.PutAddr(ADR(q)); RTIO.PutText("\n");
-        RTIO.PutText("q.stackbase="); RTIO.PutAddr(q.stackbase); RTIO.PutText("\n");
-        RTIO.Flush();
-      END;
-      ProcessLive(q.stackbase, q.regbottom, p);
-      q := q.next;
-      WHILE q # NIL DO
-        ProcessStopped(me.handle, q.stackbase, q.context, q.regbottom, q.bsp, p);
-        q := q.next
+
+    IF coroutine THEN
+      VAR
+        q := me.stacks;
+      BEGIN
+        IF MSDEBUG THEN
+          RTIO.PutText("ProcessMe: ADR(q)="); RTIO.PutAddr(ADR(q)); RTIO.PutText("\n");
+          RTIO.PutText("q.stackbase="); RTIO.PutAddr(q.stackbase); RTIO.PutText("\n");
+          RTIO.Flush();
+        END;
+        ProcessLive(q.stackbase, q.regbottom, p);
+        q := q.next;
+        WHILE q # NIL DO
+          ProcessStopped(me.handle, q.stackbase, q.context, q.regbottom, q.bsp, p);
+          q := q.next
+        END
       END
-    END
+    ELSE
+      ProcessLive(me.stack.stackbase, me.stack.regbottom, p);
+    END;
   END ProcessMe;
 
 PROCEDURE ProcessOther (act: Activation;  p: PROCEDURE (start, stop: ADDRESS)) =
@@ -1268,6 +1307,7 @@ PROCEDURE SignalHandler (sig: int; context: ADDRESS) =
   VAR
     errno := Cerrno.GetErrno();
     me := GetActivation();
+    coroutine := Coroutine.Supported ();
   BEGIN
     <*ASSERT sig = SIG_SUSPEND*>
     IF me.state = ActState.Stopping THEN
@@ -1277,11 +1317,20 @@ PROCEDURE SignalHandler (sig: int; context: ADDRESS) =
       END;
       me.state := ActState.Stopped;
       <*ASSERT me.stacks.context = NIL*>
-      me.stacks.context := context;
-      me.stacks.bsp := FlushRegisterWindows0 ();
+      IF coroutine THEN
+        me.stacks.context := context;
+        me.stacks.bsp := FlushRegisterWindows0 ();
+      ELSE
+        me.stack.context := context;
+        me.stack.bsp := FlushRegisterWindows0 ();
+      END;
       WITH r = sem_post() DO <*ASSERT r=0*> END;
       REPEAT sigsuspend() UNTIL me.state = ActState.Starting;
-      me.stacks.context := NIL;
+      IF coroutine THEN
+        me.stacks.context := NIL;
+      ELSE
+        me.stack.context := NIL;
+      END;
       me.state := ActState.Started;
       WITH r = sem_post() DO <*ASSERT r=0*> END;
     END;
@@ -1332,6 +1381,7 @@ PROCEDURE CreateStackState(base : ADDRESS; context : ADDRESS) : ADDRESS =
     s := NEW(StackState, stackbase := base, context := context);
     me := GetActivation();
   BEGIN
+    <* ASSERT Coroutine.Supported () *>
     <* ASSERT NOT IA64 () *> (* regbottom not initialized *)
     INC(me.heapState.inCritical);
     s.next := me.stacks.next;
@@ -1352,6 +1402,9 @@ PROCEDURE SetCoStack(toStackP    : ADDRESS;
     q : StackState := NIL;
     toStack := LOOPHOLE(toStackP,StackState);
   BEGIN
+
+    <* ASSERT Coroutine.Supported () *>
+
     IF MSDEBUG THEN
       RTIO.PutText("SetCoStack toStack="); RTIO.PutAddr(toStack);
       RTIO.PutText(" me="); RTIO.PutAddr(me.stacks);
@@ -1498,16 +1551,24 @@ PROCEDURE InitWithStackBase (stackbase: ADDRESS) =
   VAR
     self: T;
     me: Activation;
+    coroutine := Coroutine.Supported ();
   BEGIN
     InitC();
 
     me := NEW(Activation,
               mutex := pthread_mutex_new(),
-              cond := pthread_cond_new(),
-              stacks := NEW(StackState));
+              cond := pthread_cond_new());
+    IF coroutine THEN
+      me.stacks := NEW (StackState);
+    END;
     InitActivations(me);
-    me.stacks.regbottom := FlushRegisterWindows0 (); (* bottom of IA64 register growup stack *)
-    me.stacks.stackbase := stackbase;
+    IF coroutine THEN
+      me.stacks.regbottom := FlushRegisterWindows0 (); (* bottom of IA64 register growup stack *)
+      me.stacks.stackbase := stackbase;
+    ELSE
+      me.stack.regbottom := FlushRegisterWindows0 (); (* bottom of IA64 register growup stack *)
+      me.stack.stackbase := stackbase;
+    END;
     IF me.mutex = NIL OR me.cond = NIL THEN
       Die(ThisLine(), "Thread initialization failed.");
     END;
