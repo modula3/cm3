@@ -7,7 +7,7 @@ SchedulerPosix, RTOS, RTHooks, ThreadPThread;
 
 IMPORT Cerrno, FloatMode, MutexRep, RTCollectorSRC, RTError, RTHeapRep, RTIO,
        RTParams, RTPerfTool, RTProcess, ThreadEvent, Time,
-       Word, Usched, Uerror, Uexec, Coroutine;
+       Word, Usched, Uerror, Uexec;
 FROM Compiler IMPORT ThisFile, ThisLine;
 FROM Ctypes IMPORT int;
 IMPORT RuntimeError AS RTE;
@@ -563,7 +563,7 @@ PROCEDURE DisposeStacks(act : Activation) =
   VAR
     p := act.stacks;
   BEGIN
-    IF NOT Coroutine.Supported () THEN RETURN END;
+    IF NOT CoroutineSupported () THEN RETURN END;
     WHILE p # NIL DO
       WITH nxt = p.next DO
         DISPOSE(p);
@@ -588,7 +588,7 @@ PROCEDURE CleanThread (r: REFANY) =
 PROCEDURE ThreadBase (param: ADDRESS): ADDRESS =
   VAR
     me: Activation := param;
-    coroutine := Coroutine.Supported ();
+    coroutine := CoroutineSupported ();
   BEGIN
     SetActivation(me);
 
@@ -672,7 +672,7 @@ PROCEDURE Fork (closure: Closure): T =
                cond := pthread_cond_new());
     size := defaultStackSize;
     t: T := NIL;
-    coroutine := Coroutine.Supported ();
+    coroutine := CoroutineSupported ();
   BEGIN
     IF coroutine THEN
       act.stacks := NEW (StackState);
@@ -1063,7 +1063,7 @@ PROCEDURE ProcessEachStack (p: PROCEDURE (start, limit: ADDRESS)) =
 
 PROCEDURE ProcessMe (me: Activation;  p: PROCEDURE (start, limit: ADDRESS)) =
   (* LL=activeMu *)
-  VAR coroutine := Coroutine.Supported ();
+  VAR coroutine := CoroutineSupported ();
   BEGIN
     <*ASSERT me.state # ActState.Stopped*>
     IF DEBUG THEN
@@ -1100,7 +1100,7 @@ PROCEDURE ProcessOther (act: Activation;  p: PROCEDURE (start, stop: ADDRESS)) =
       RTIO.PutText("Processing act="); RTIO.PutAddr(act); RTIO.PutText("\n"); RTIO.Flush();
     END;
     RTHeapRep.FlushThreadState(act.heapState);
-    IF Coroutine.Supported () THEN
+    IF CoroutineSupported () THEN
       VAR
         q := act.stacks;
       BEGIN
@@ -1311,7 +1311,7 @@ PROCEDURE SignalHandler (sig: int; context: ADDRESS) =
   VAR
     errno := Cerrno.GetErrno();
     me := GetActivation();
-    coroutine := Coroutine.Supported ();
+    coroutine := CoroutineSupported ();
   BEGIN
     <*ASSERT sig = SIG_SUSPEND*>
     IF me.state = ActState.Stopping THEN
@@ -1362,7 +1362,7 @@ PROCEDURE DisposeStack(stack : ADDRESS) =
     p : StackState := me.stacks;
     q : StackState;
   BEGIN
-    IF NOT Coroutine.Supported () THEN RETURN END;
+    IF NOT CoroutineSupported () THEN RETURN END;
     (* cannot delete the active stack so no need to check the head *)
     q := p;
     p := p.next;
@@ -1387,7 +1387,7 @@ PROCEDURE CreateStackState(base : ADDRESS; context : ADDRESS) : ADDRESS =
     s := NEW(StackState, stackbase := base, context := context);
     me := GetActivation();
   BEGIN
-    <* ASSERT Coroutine.Supported () *>
+    <* ASSERT CoroutineSupported () *>
     <* ASSERT NOT IA64 () *> (* regbottom not initialized *)
     INC(me.heapState.inCritical);
     s.next := me.stacks.next;
@@ -1409,7 +1409,7 @@ PROCEDURE SetCoStack(toStackP    : ADDRESS;
     toStack := LOOPHOLE(toStackP,StackState);
   BEGIN
 
-    <* ASSERT Coroutine.Supported () *>
+    <* ASSERT CoroutineSupported () *>
 
     IF MSDEBUG THEN
       RTIO.PutText("SetCoStack toStack="); RTIO.PutAddr(toStack);
@@ -1557,7 +1557,7 @@ PROCEDURE InitWithStackBase (stackbase: ADDRESS) =
   VAR
     self: T;
     me: Activation;
-    coroutine := Coroutine.Supported ();
+    coroutine := CoroutineSupported ();
   BEGIN
     InitC();
 

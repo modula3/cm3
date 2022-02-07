@@ -209,6 +209,12 @@ PROCEDURE AtForkPrepareOutsideFork(); (* called from C *)
 <*EXTERNAL "ThreadPThread__FlushRegisterWindows0"*>
 PROCEDURE FlushRegisterWindows0 () : ADDRESS;
 
+(* This cannot be imported from Coroutine, due its effects on initialization order.
+ * That is, ThreadPThread must initialize before Coroutine.
+ *)
+<* EXTERNAL Coroutine__Supported *>
+PROCEDURE CoroutineSupported(): BOOLEAN;
+
 (*---------------------------------------------------------------------------*)
 
 END ThreadPThread.
