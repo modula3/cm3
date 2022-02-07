@@ -13,7 +13,7 @@
 
 #include <stdlib.h>
 
-#if !defined(__FreeBSD__) && !defined(__APPLE__)
+#if !(defined(__APPLE__) || defined(__FreeBSD__) || defined(__OpenBSD__))
 #include <malloc.h>
 #endif
 
