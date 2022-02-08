@@ -311,7 +311,7 @@ PROCEDURE Walk (v    : Visitor;
         IF (zz.sites = NIL) THEN zz.sites := NEW (StatList, n_sites+1); END;
         addr := LOOPHOLE (ref, ADDRESS);
         hdr  := LOOPHOLE (addr - BYTESIZE(RT0.RefHeader), RTHeapRep.RefHeader);
-        site := hdr.spare;
+        site := RT0.Spare (hdr);
         INC (zz.sites[site].count);
         INC (zz.sites[site].size, size);
       END;

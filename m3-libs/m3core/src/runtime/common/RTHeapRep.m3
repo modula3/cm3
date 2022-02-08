@@ -107,4 +107,6 @@ PROCEDURE Noop (<*UNUSED*> cl: MonitorClosure) =
   END Noop;
 
 BEGIN
+  FillHeader1 := RT0.Pack (typecode := Fill_1_type, dirty := FALSE);
+  FillHeaderN := RT0.Pack (typecode := Fill_N_type, dirty := FALSE);
 END RTHeapRep.
