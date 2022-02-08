@@ -340,7 +340,7 @@ def TargetOnlyHasCBackend(a):
     #
     # Nevertheless:
     #
-    return true
+    return a.lower() != "i386_nt"
 
 _PossibleCm3Flags = ["boot", "keep", "override", "commands", "verbose", "why", "debug", "trace"]
 _SkipGccFlags = ["nogcc", "skipgcc", "omitgcc"]
