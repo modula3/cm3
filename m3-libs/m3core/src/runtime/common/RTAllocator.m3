@@ -77,14 +77,14 @@ PROCEDURE Clone (ref: REFANY): REFANY
     IF Word.And(LOOPHOLE(ref, Word.T), 1) # 0 THEN RETURN ref; END;
 
     hdr := LOOPHOLE(ref, ADDRESS) - ADRSIZE(Header);
-    def := RTType.Get(hdr.typecode);
+    def := RTType.Get (RT0.GetTypecode (hdr));
     dataSize := ReferentSize(hdr);
 
     INC(thread.inCritical);
     res := AllocTraced(dataSize, def.dataAlignment, thread^);
     IF res = NIL THEN DEC(thread.inCritical); RAISE OutOfMemory; END;
     LOOPHOLE(res - ADRSIZE(Header), RefHeader)^ :=
-        Header{typecode := def.typecode, dirty := TRUE};
+        RT0.Pack (typecode := def.typecode, dirty := TRUE);
     RTMisc.Copy(LOOPHOLE(ref, ADDRESS), res, dataSize);
     IF def.kind = ORD (TK.Array) THEN
       (* open array: update the internal pointer *)
@@ -202,7 +202,7 @@ PROCEDURE GetTracedRef (def: RT0.TypeDefn): REFANY =
     res := AllocTraced(def.dataSize, def.dataAlignment, thread^);
     IF res = NIL THEN DEC(thread.inCritical); RETURN NIL; END;
     LOOPHOLE(res - ADRSIZE(Header), RefHeader)^ :=
-        Header{typecode := def.typecode, dirty := TRUE};
+        RT0.Pack (typecode := def.typecode, dirty := TRUE);
     IF def.initProc # NIL THEN def.initProc(res) END;
     DEC(thread.inCritical);
 
@@ -224,7 +224,7 @@ PROCEDURE GetTracedObj (def: RT0.TypeDefn): ROOT =
     res := AllocTraced(def.dataSize, def.dataAlignment, thread^);
     IF res = NIL THEN DEC(thread.inCritical); RETURN NIL; END;
     LOOPHOLE(res - ADRSIZE(Header), RefHeader)^ :=
-        Header{typecode := def.typecode, dirty := TRUE};
+        RT0.Pack (typecode := def.typecode, dirty := TRUE);
     InitObj (res, LOOPHOLE(def, RT0.ObjectTypeDefn));
     DEC(thread.inCritical);
 
@@ -265,7 +265,7 @@ PROCEDURE GetUntracedObj (def: RT0.TypeDefn): UNTRACED ROOT =
     IF res = NIL THEN RETURN NIL END;
     res := res + hdrSize;
     LOOPHOLE(res - ADRSIZE(Header), RefHeader)^ :=
-        Header{typecode := def.typecode};
+        RT0.Pack (typecode := def.typecode);
     InitObj (res, LOOPHOLE(def, RT0.ObjectTypeDefn));
     IF countsOn THEN BumpCnt (def.typecode) END;
     RETURN res;
@@ -296,7 +296,7 @@ PROCEDURE GetOpenArray (def: RT0.TypeDefn; READONLY s: Shape): REFANY =
     res := AllocTraced(dataSize, def.dataAlignment, thread^);
     IF res = NIL THEN DEC(thread.inCritical); RETURN NIL; END;
     LOOPHOLE(res - ADRSIZE(Header), RefHeader)^ :=
-        Header{typecode := def.typecode, dirty := TRUE};
+        RT0.Pack (typecode := def.typecode, dirty := TRUE);
     InitArray (res, LOOPHOLE(def, RT0.ArrayTypeDefn), s);
     DEC(thread.inCritical);
 

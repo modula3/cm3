@@ -201,7 +201,7 @@ PROCEDURE InnerVisit (<*UNUSED*> self: RTHeapMap.Visitor;  loc: ADDRESS) =
     header := ref - ADRSIZE (RT0.RefHeader);
     IF (heap_min <= ref) AND (ref < heap_max)
       AND (Word.And (LOOPHOLE(ref, INTEGER), Mask) = 0) THEN
-      typecode := header.typecode;
+      typecode := RT0.GetTypecode (header);
       IF (0 < typecode) AND (typecode < n_types) THEN
         cell := (ref - heap_min) DIV MapGrain;
         word := cell DIV BITSIZE (Word.T);
@@ -232,7 +232,7 @@ PROCEDURE TypeName (ref: ADDRESS): TEXT =
     header := ref - ADRSIZE (RT0.RefHeader);
     IF (Word.And (LOOPHOLE (header, INTEGER), Mask) = 0) (* => aligned *)
       AND (heap_min <= ref) AND (ref < heap_max) THEN
-      typecode := header.typecode;
+      typecode := RT0.GetTypecode (header);
       IF (0 < typecode) AND (typecode <= n_types) THEN
         RETURN RTTypeSRC.TypecodeName (typecode);
       END;

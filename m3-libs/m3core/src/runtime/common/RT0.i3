@@ -197,8 +197,10 @@ CONST (* Type UIDs for the builtin types *)
 CONST
   SB = BITSIZE (ADDRESS) - 26;  (* # spare bits in a ref header *)
 
+(* This is the conceptual definition. *)
+
 TYPE
-  RefHeader = RECORD
+  RefHeaderBits = RECORD
     forwarded : BITS  1 FOR BOOLEAN    := FALSE; (* used during collection *)
     typecode  : BITS 20 FOR Typecode   := 0;     (* the typecode *)
     dirty     : BITS  1 FOR BOOLEAN    := FALSE; (* used during collection *)
@@ -208,6 +210,31 @@ TYPE
     markb     : BITS  1 FOR BOOLEAN    := FALSE; (* used during collection *)
     spare     : BITS SB FOR [0 .. 63]  := 0;     (* for future expansion *)
   END;
+
+(* This is used so that C++ bootstraps are endian neutral. *)
+
+  RefHeader = RECORD
+    word := 0;
+  END;
+
+PROCEDURE Forwarded (header: UNTRACED REF RefHeader): BOOLEAN;
+PROCEDURE GetTypecode (header: UNTRACED REF RefHeader): Typecode;
+PROCEDURE Dirty (header: UNTRACED REF RefHeader): BOOLEAN;
+PROCEDURE Gray (header: UNTRACED REF RefHeader): BOOLEAN;
+PROCEDURE Weak (header: UNTRACED REF RefHeader): BOOLEAN;
+PROCEDURE MarkA (header: UNTRACED REF RefHeader): BOOLEAN;
+PROCEDURE MarkB (header: UNTRACED REF RefHeader): BOOLEAN;
+PROCEDURE Spare (header: UNTRACED REF RefHeader): [0..63];
+
+PROCEDURE SetForwarded (header: UNTRACED REF RefHeader; value : BOOLEAN);
+PROCEDURE SetDirty (header: UNTRACED REF RefHeader; value: BOOLEAN);
+PROCEDURE SetGray (header: UNTRACED REF RefHeader; value: BOOLEAN);
+PROCEDURE SetWeak (header: UNTRACED REF RefHeader; value: BOOLEAN);
+PROCEDURE SetMarkA (header: UNTRACED REF RefHeader; value: BOOLEAN);
+PROCEDURE SetMarkB (header: UNTRACED REF RefHeader; value: BOOLEAN);
+PROCEDURE SetSpare (header: UNTRACED REF RefHeader; value: [0..63]);
+
+PROCEDURE Pack (typecode: Typecode; dirty: BOOLEAN := FALSE): RefHeader;
 
 (*--------------------------------- compiler generated procedure closures ---*)
 

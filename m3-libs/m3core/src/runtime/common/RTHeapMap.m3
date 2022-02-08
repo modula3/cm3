@@ -28,7 +28,7 @@ REVEAL
 
 PROCEDURE WalkRef (h: ObjectPtr;  v: Visitor) =
   VAR
-    tc: RT0.Typecode := h.typecode;
+    tc: RT0.Typecode := RT0.GetTypecode (h);
     t: RT0.TypeDefn;
   BEGIN
     IF (tc # RTHeapRep.Fill_1_type) AND (tc # RTHeapRep.Fill_N_type) THEN
