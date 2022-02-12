@@ -19,7 +19,7 @@ dirent* Udir__readdir (DIR* d)
     Scheduler__DisableSwitching ();
     result = readdir (d);
 #ifndef _WIN32
-    if (result && m3core_trace.readdir)
+    if (result && m3core_trace.s.readdir)
     {
         char* buf = (char*)alloca (256 + strlen (result->d_name));
         int len = sprintf (buf, "readdir:%s\n", result->d_name);

@@ -109,7 +109,7 @@ int __cdecl Unix__open (const char* path, int flags, m3_mode_t mode)
     result = _open (path, flags, (int)mode);
 #else
     result = open (path, flags, (mode_t)mode);
-    if (m3core_trace.open)
+    if (m3core_trace.s.open)
     {
         char* buf = (char*)alloca (256 + strlen (path));
         int len = sprintf (buf, "open (%s):%d\n", path, result);
@@ -134,7 +134,7 @@ int __cdecl Unix__creat (const char* path, m3_mode_t mode)
     result = _creat (path, mode);
 #else
     result = creat (path, mode);
-    if (m3core_trace.creat)
+    if (m3core_trace.s.creat)
     {
         char* buf = (char*)alloca (256 + strlen (path));
         int len = sprintf (buf, "creat (%s):%d\n", path, result);
@@ -156,7 +156,7 @@ int __cdecl Unix__close (int fd)
     result = _close (fd);
 #else
     result = close (fd);
-    if (m3core_trace.close)
+    if (m3core_trace.s.close)
     {
         char* buf = (char*)alloca (256);
         int len = sprintf (buf, "close (%d):%d\n", fd, result);
@@ -177,7 +177,7 @@ int __cdecl Unix__chdir (const char* path)
     result = _chdir (path);
 #else
     result = chdir (path);
-    if (m3core_trace.chdir)
+    if (m3core_trace.s.chdir)
     {
         char* buf = (char*)alloca (256 + strlen (path));
         int len = sprintf (buf, "chdir (%s):%d\n", path, result);
