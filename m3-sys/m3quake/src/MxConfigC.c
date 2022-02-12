@@ -256,6 +256,9 @@ MxConfigC__HOST(void)
     {
         uname_machine = "ARM64";
     }
+    else if (xsparc) // sun4 => sparc
+        uname_machine = "SPARC";
+
     else if (hppa) // hppa/parisc => pa (too short?)
         uname_machine = "PA";
 
