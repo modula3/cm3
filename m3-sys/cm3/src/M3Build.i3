@@ -3,7 +3,7 @@
 
 INTERFACE M3Build;
 
-IMPORT Quake, Thread, QVTbl, QVSeq;
+IMPORT Quake, Thread;
 
 TYPE T <: Quake.Machine;
 
@@ -18,9 +18,6 @@ PROCEDURE Run (t: T;  makefile: TEXT) RAISES {Quake.Error, Thread.Alerted};
 
 PROCEDURE RealClean ();
 (* Remove the complete target directory for derived files *)
-
-PROCEDURE SystemLibs (t: T) : QVTbl.T; (* Available system libraries *)
-PROCEDURE SystemLibOrder (t: T) : QVSeq.T; (* link order for the system libraries *)
 
 VAR
   done := FALSE;

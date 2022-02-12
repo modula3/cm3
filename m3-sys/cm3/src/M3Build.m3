@@ -46,6 +46,8 @@ REVEAL
 
     have_pkgtools     : BOOLEAN;  (* Using the SRC package tools ? *)
     at_SRC            : BOOLEAN;  (* include SRC-only packages ? *)
+    system_libs       : QVTbl.T;  (* Available system libraries *)
+    system_liborder   : QVSeq.T;  (* link order for the system libraries *)
 
     (* major mode, fixed at the beginning of the run *)
     mode              : MM;
@@ -137,16 +139,6 @@ PROCEDURE NewMachine (): T =
     RETURN t;
   END NewMachine;
 
-PROCEDURE SystemLibs (t: T) : QVTbl.T = (* Available system libraries *)
-BEGIN
-  RETURN QVal.ToTable (t, ConfigDefn (t, "SYSTEM_LIBS").value);
-END SystemLibs;
-
-PROCEDURE SystemLibOrder (t: T) : QVSeq.T = (* link order for the system libraries *)
-BEGIN
-  RETURN QVal.ToArray (t, ConfigDefn (t, "SYSTEM_LIBORDER").value);
-END SystemLibOrder;
-
 PROCEDURE SetUp (t: T;  pkg, to_pkg, build_dir: TEXT)
   RAISES {Quake.Error} =
   BEGIN
@@ -172,6 +164,8 @@ PROCEDURE SetUp (t: T;  pkg, to_pkg, build_dir: TEXT)
     t.html_install    := GetConfigPath (t, "HTML_INSTALL");
     t.have_pkgtools   := GetConfigBool (t, "HAVE_PKGTOOLS");
     t.at_SRC          := GetConfigBool (t, "AT_SRC");
+    t.system_liborder := QVal.ToArray (t, ConfigDefn (t, "SYSTEM_LIBORDER").value);
+    t.system_libs     := QVal.ToTable (t, ConfigDefn (t, "SYSTEM_LIBS").value);
 
     (* alternate path form for noM3ShipResolution
      * Multiple options here:
@@ -969,9 +963,8 @@ PROCEDURE DoFinishUp (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
 PROCEDURE DoImportSysLib (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
   RAISES {Quake.Error} =
   VAR t := Self (m);  nm := PopID (t);  val: QValue.T;
-    system_libs := SystemLibs (t);
   BEGIN
-    IF NOT system_libs.get (nm, val) THEN
+    IF NOT t.system_libs.get (nm, val) THEN
       ConfigErr (t, "SYSTEM_LIBS", "does not define a value for \""
                    & M3ID.ToText (nm) & "\"");
     END;
@@ -988,12 +981,10 @@ PROCEDURE SysLibs (t: T): Arg.List
     val  : QValue.T;
     args : QVSeq.T;
     nm   : M3ID.T;
-    system_libs     := SystemLibs (t);
-    system_liborder := SystemLibOrder (t);
   BEGIN
-    FOR i := 0 TO system_liborder.size() - 1 DO
-      nm := M3ID.Add (QVal.ToText (t, system_liborder.get (i)));
-      IF t.sys_libs.get (nm, ref) AND system_libs.get (nm, val) THEN
+    FOR i := 0 TO t.system_liborder.size() - 1 DO
+      nm := M3ID.Add (QVal.ToText (t, t.system_liborder.get (i)));
+      IF t.sys_libs.get (nm, ref) AND t.system_libs.get (nm, val) THEN
         args := QVal.ToArray (t, val);
         FOR i := 0 TO args.size() - 1 DO
           Arg.Append (libs, QVal.ToText (t, args.get (i)));
