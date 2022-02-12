@@ -1328,7 +1328,7 @@ typedef union m3core_trace_t
         unsigned readdir : 1;
         unsigned stat : 1;
         unsigned write : 1;
-    };
+    } s;
 } m3core_trace_t;
 
 extern m3core_trace_t m3core_trace;

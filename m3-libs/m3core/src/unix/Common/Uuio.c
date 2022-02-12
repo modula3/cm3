@@ -21,7 +21,7 @@ Uuio__write (int fd, const void* buf, size_t n)
     result = _write (fd, buf, n);
 #else
     result = write (fd, buf, n);
-    if (m3core_trace.write)
+    if (m3core_trace.s.write)
     {
         char* buf = (char*)alloca (256);
         int len = sprintf (buf, "write (fd:%d, buf:%p, n:%ld):%ld\n", fd, buf, (long)n, (long)result);
