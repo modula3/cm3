@@ -151,7 +151,7 @@ MxConfigC__HOST(void)
     BOOL s390 = FALSE;
     BOOL s390x = FALSE;
     BOOL solaris = FALSE;
-    BOOL sparc = FALSE;
+    BOOL xsparc = FALSE; // sparc is a macro
     BOOL vax = FALSE;
     BOOL vms = FALSE;
     BOOL x86 = FALSE;
@@ -200,7 +200,7 @@ MxConfigC__HOST(void)
     (arm = (strstr(uname_machine, "AARCH") || strstr(uname_machine, "ARM"))) ||
     (riscv64 = (uname64 && strstr(uname_machine, "RISCV64"))) ||
     (riscv32 = !! strstr(uname_machine, "RISCV32")) ||
-    (sparc = (strstr(uname_machine, "SPARC") || strstr(uname_machine, "SUN4"))) ||
+    (xsparc = (strstr(uname_machine, "SPARC") || strstr(uname_machine, "SUN4"))) || // sparc is a macro
     (m68k = (strstr(uname_machine, "M68K") || strstr(uname_machine, "SUN3"))) ||
     (vax = !! strstr(uname_machine, "VAX")) ||
     (ia64 = (uname64 && (strstr(uname_machine, "IA64")))) ||
