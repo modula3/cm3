@@ -59,6 +59,7 @@ proc configure_c_compiler() is
     "/opt/solstudio12.2/bin/CC",
     "/opt/studio/SOS12/SUNWspro/bin/CC",
     "/opt/studio/SOS11/SUNWspro/bin/CC",
+    "/opt/SUNWspro/bin/CC",
     ]
 
   readonly possible_gnu_cc = [
@@ -71,6 +72,8 @@ proc configure_c_compiler() is
     %"/usr/bin/clang++",
     % clang can work but let's stick to C++.
     "/usr/sfw/bin/g++",
+    "/opt/csw/gcc5/bin/g++",
+    "/opt/csw/bin/g++",
     ]
 
   local proc find_sun_cc() is
