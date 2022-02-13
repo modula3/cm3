@@ -12,6 +12,8 @@ readonly WordSize = {"32BITS" : "32", "64BITS" : "64"}{WORD_SIZE}
 
 M3_BACKEND_MODE = "C"
 
+M3_PARALLEL_BACK = 20 % modern machines usually have many cores
+
 proc configure_c_compiler() is
 end
 
