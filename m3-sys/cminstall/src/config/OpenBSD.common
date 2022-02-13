@@ -2,6 +2,8 @@
 
 readonly TARGET_OS = "OPENBSD"
 
+readonly M3_BACKEND_MODE = "C"
+
 SYSTEM_LD = SYSTEM_CC
   & " -Wl,-z,now"
   & " -Wl,-z,origin"
