@@ -16,8 +16,12 @@ REVEAL
     extName    : M3ID.T;
     scope      : M3.Scope;
     vnext      : M3.Value; (* linked list of all values in the same module *)
+    (* endian neutrality
     checkDepth : BITS 12 FOR [-2048..2047];
     class      : BITS 4 FOR Value.Class;
+    *)
+    checkDepth : [-2048..2047];
+    class      : Value.Class;
     checked    : M3.Flag;
     readonly   : M3.Flag;
     traced     : M3.Flag; (* assigned a traced value *)
