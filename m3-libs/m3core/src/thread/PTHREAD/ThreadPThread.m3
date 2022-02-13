@@ -83,6 +83,7 @@ TYPE
     regbottom: ADDRESS := NIL;          (* IA64 register stack bottom *)
     context: ADDRESS := NIL;            (* LL = activeMu *)
     bsp:     ADDRESS := NIL;            (* IA64 register stack current for suspended thread (backing store pointer) *)
+    next:    ADDRESS := NIL;
   END;
 
   StackState = UNTRACED BRANDED REF RECORD
@@ -92,9 +93,10 @@ TYPE
     bsp:     ADDRESS := NIL;            (* IA64 register stack current for suspended thread (backing store pointer) *)
     next : StackState := NIL;
   END;
-  (* older versions of CM3 had stackbase and context only within the Activation.
-     we add it as a separate structure (alloc and dealloc with Activation)
-     to allow having multiple contexts per thread (coroutines).
+  (* older versions of CM3 had stackbase and context within the Activation.
+     we add it as a separate structure (alloc and dealloc with Activation,
+     or interior pointer back to stack) to allow having multiple contexts
+     per thread (coroutines).
 
      Since there is always at least one context, we can use efficient list
      routines without allocating a sentinel.  (It is an invariant that the
@@ -588,17 +590,11 @@ PROCEDURE CleanThread (r: REFANY) =
 PROCEDURE ThreadBase (param: ADDRESS): ADDRESS =
   VAR
     me: Activation := param;
-    coroutine := CoroutineSupported ();
   BEGIN
     SetActivation(me);
 
-    IF coroutine THEN
-      <* ASSERT NOT IA64 () OR me.stacks.regbottom # NIL *>
-      me.stacks.stackbase := ADR(me); (* enable GC scanning of this stack *)
-    ELSE
-      <* ASSERT NOT IA64 () OR me.stack.regbottom # NIL *>
-      me.stack.stackbase := ADR(me); (* enable GC scanning of this stack *)
-    END;
+    <* ASSERT NOT IA64 () OR me.stacks.regbottom # NIL *>
+    me.stacks.stackbase := ADR(me); (* enable GC scanning of this stack *)
     me.handle := pthread_self();
 
     (* add to the list of active threads *)
@@ -615,13 +611,8 @@ PROCEDURE ThreadBase (param: ADDRESS): ADDRESS =
     (* remove from the list of active threads *)
     WITH r = pthread_mutex_lock(activeMu) DO <*ASSERT r=0*> END;
       <*ASSERT allThreads # me*>
-      IF coroutine THEN
-        me.stacks.stackbase := NIL; (* disable GC scanning of my stack *)
-        me.stacks.regbottom := NIL; (* disable GC scanning of my stack *)
-      ELSE
-        me.stack.stackbase := NIL; (* disable GC scanning of my stack *)
-        me.stack.regbottom := NIL; (* disable GC scanning of my stack *)
-      END;
+      me.stacks.stackbase := NIL; (* disable GC scanning of my stack *)
+      me.stacks.regbottom := NIL; (* disable GC scanning of my stack *)
       me.next.prev := me.prev;
       me.prev.next := me.next;
       WITH r = pthread_detach_self(me.handle) DO <*ASSERT r=0*> END;
@@ -672,13 +663,14 @@ PROCEDURE Fork (closure: Closure): T =
                cond := pthread_cond_new());
     size := defaultStackSize;
     t: T := NIL;
-    coroutine := CoroutineSupported ();
   BEGIN
-    IF coroutine THEN
+    IF CoroutineSupported () THEN
       act.stacks := NEW (StackState);
+    ELSE
+      act.stacks := ADR (act.stack); (* avoid checking CoroutineSupported repeatedly *)
     END;
     TRY
-      IF act.mutex = NIL OR act.cond = NIL OR (coroutine AND act.stacks = NIL) THEN
+      IF act.mutex = NIL OR act.cond = NIL OR act.stacks = NIL THEN
         RTE.Raise(RTE.T.OutOfMemory);
       END;
       t := NEW(T, act := act, closure := closure, join := NEW(Condition));
@@ -698,14 +690,8 @@ PROCEDURE Fork (closure: Closure): T =
     | SizedClosure (scl) => size := scl.stackSize;
     ELSE (*skip*)
     END;
-    IF coroutine THEN
-      WITH r = thread_create(size * ADRSIZE(Word.T), ThreadBase, act, act.stacks.regbottom) DO
-        IF r # 0 THEN DieI(ThisLine(), r) END;
-      END;
-    ELSE
-      WITH r = thread_create(size * ADRSIZE(Word.T), ThreadBase, act, act.stack.regbottom) DO
-        IF r # 0 THEN DieI(ThisLine(), r) END;
-      END;
+    WITH r = thread_create(size * ADRSIZE(Word.T), ThreadBase, act, act.stacks.regbottom) DO
+      IF r # 0 THEN DieI(ThisLine(), r) END;
     END;
     (* regbottom cannot be asserted here as the thread can already exit *)
     RETURN t;
@@ -1063,7 +1049,6 @@ PROCEDURE ProcessEachStack (p: PROCEDURE (start, limit: ADDRESS)) =
 
 PROCEDURE ProcessMe (me: Activation;  p: PROCEDURE (start, limit: ADDRESS)) =
   (* LL=activeMu *)
-  VAR coroutine := CoroutineSupported ();
   BEGIN
     <*ASSERT me.state # ActState.Stopped*>
     IF DEBUG THEN
@@ -1071,25 +1056,21 @@ PROCEDURE ProcessMe (me: Activation;  p: PROCEDURE (start, limit: ADDRESS)) =
     END;
     RTHeapRep.FlushThreadState(me.heapState);
 
-    IF coroutine THEN
-      VAR
-        q := me.stacks;
-      BEGIN
-        IF MSDEBUG THEN
-          RTIO.PutText("ProcessMe: ADR(q)="); RTIO.PutAddr(ADR(q)); RTIO.PutText("\n");
-          RTIO.PutText("q.stackbase="); RTIO.PutAddr(q.stackbase); RTIO.PutText("\n");
-          RTIO.Flush();
-        END;
-        ProcessLive(q.stackbase, q.regbottom, p);
-        q := q.next;
-        WHILE q # NIL DO
-          ProcessStopped(me.handle, q.stackbase, q.context, q.regbottom, q.bsp, p);
-          q := q.next
-        END
+    VAR
+      q := me.stacks;
+    BEGIN
+      IF MSDEBUG THEN
+        RTIO.PutText("ProcessMe: ADR(q)="); RTIO.PutAddr(ADR(q)); RTIO.PutText("\n");
+        RTIO.PutText("q.stackbase="); RTIO.PutAddr(q.stackbase); RTIO.PutText("\n");
+        RTIO.Flush();
+      END;
+      ProcessLive(q.stackbase, q.regbottom, p);
+      q := q.next;
+      WHILE q # NIL DO
+        ProcessStopped(me.handle, q.stackbase, q.context, q.regbottom, q.bsp, p);
+        q := q.next
       END
-    ELSE
-      ProcessLive(me.stack.stackbase, me.stack.regbottom, p);
-    END;
+    END
   END ProcessMe;
 
 PROCEDURE ProcessOther (act: Activation;  p: PROCEDURE (start, stop: ADDRESS)) =
@@ -1100,19 +1081,15 @@ PROCEDURE ProcessOther (act: Activation;  p: PROCEDURE (start, stop: ADDRESS)) =
       RTIO.PutText("Processing act="); RTIO.PutAddr(act); RTIO.PutText("\n"); RTIO.Flush();
     END;
     RTHeapRep.FlushThreadState(act.heapState);
-    IF CoroutineSupported () THEN
-      VAR
-        q := act.stacks;
-      BEGIN
-        WHILE q # NIL DO
-          IF q.stackbase # NIL THEN
-            ProcessStopped(act.handle, q.stackbase, q.context, q.regbottom, q.bsp, p);
-          END;
-          q := q.next;
+    VAR
+      q := act.stacks;
+    BEGIN
+      WHILE q # NIL DO
+        IF q.stackbase # NIL THEN
+          ProcessStopped(act.handle, q.stackbase, q.context, q.regbottom, q.bsp, p);
         END;
+        q := q.next;
       END;
-    ELSE
-      ProcessStopped (act.handle, act.stack.stackbase, act.stack.context, act.stack.regbottom, act.stack.bsp, p);
     END;
   END ProcessOther;
 
@@ -1311,7 +1288,6 @@ PROCEDURE SignalHandler (sig: int; context: ADDRESS) =
   VAR
     errno := Cerrno.GetErrno();
     me := GetActivation();
-    coroutine := CoroutineSupported ();
   BEGIN
     <*ASSERT sig = SIG_SUSPEND*>
     IF me.state = ActState.Stopping THEN
@@ -1320,22 +1296,12 @@ PROCEDURE SignalHandler (sig: int; context: ADDRESS) =
         RETURN;
       END;
       me.state := ActState.Stopped;
-      IF coroutine THEN
-        <*ASSERT me.stacks.context = NIL*>
-        me.stacks.context := context;
-        me.stacks.bsp := FlushRegisterWindows0 ();
-      ELSE
-        <*ASSERT me.stack.context = NIL*>
-        me.stack.context := context;
-        me.stack.bsp := FlushRegisterWindows0 ();
-      END;
+      <*ASSERT me.stacks.context = NIL*>
+      me.stacks.context := context;
+      me.stacks.bsp := FlushRegisterWindows0 ();
       WITH r = sem_post() DO <*ASSERT r=0*> END;
       REPEAT sigsuspend() UNTIL me.state = ActState.Starting;
-      IF coroutine THEN
-        me.stacks.context := NIL;
-      ELSE
-        me.stack.context := NIL;
-      END;
+      me.stacks.context := NIL;
       me.state := ActState.Started;
       WITH r = sem_post() DO <*ASSERT r=0*> END;
     END;
@@ -1557,24 +1523,20 @@ PROCEDURE InitWithStackBase (stackbase: ADDRESS) =
   VAR
     self: T;
     me: Activation;
-    coroutine := CoroutineSupported ();
   BEGIN
     InitC();
 
     me := NEW(Activation,
               mutex := pthread_mutex_new(),
               cond := pthread_cond_new());
-    IF coroutine THEN
+    IF CoroutineSupported () THEN
       me.stacks := NEW (StackState);
+    ELSE
+      me.stacks := ADR (me.stack);
     END;
     InitActivations(me);
-    IF coroutine THEN
-      me.stacks.regbottom := FlushRegisterWindows0 (); (* bottom of IA64 register growup stack *)
-      me.stacks.stackbase := stackbase;
-    ELSE
-      me.stack.regbottom := FlushRegisterWindows0 (); (* bottom of IA64 register growup stack *)
-      me.stack.stackbase := stackbase;
-    END;
+    me.stacks.regbottom := FlushRegisterWindows0 (); (* bottom of IA64 register growup stack *)
+    me.stacks.stackbase := stackbase;
     IF me.mutex = NIL OR me.cond = NIL THEN
       Die(ThisLine(), "Thread initialization failed.");
     END;
