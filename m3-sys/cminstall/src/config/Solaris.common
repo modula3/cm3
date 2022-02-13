@@ -39,6 +39,12 @@ proc configure_assembler() is
     error("unable to find assembler among " & possible)
 end
 
+libcxx = [ ]
+
+proc set_sun_libcxx() is
+  libcxx = ["-lCstd", "-lCrun"]
+end
+
 proc configure_c_compiler() is
   if defined("SYSTEM_CC")
     return
@@ -93,6 +99,7 @@ proc configure_c_compiler() is
     sun_cc = find_sun_cc ()
     if sun_cc
       C_COMPILER = "SUN"
+      set_sun_libcxx ()
     else
       gnu_cc = find_gnu_cc ()
       if gnu_cc
@@ -129,6 +136,7 @@ proc configure_c_compiler() is
     % We presumably can't just always use the new syntax, in case
     % we are using older tools that don't understand it.
 
+    set_sun_libcxx ()
     local cc = sun_cc & " -g -mt -xldscope=symbolic " & SunXRegs & " " % TODO: consider -xldscope=hidden
     local old = "-xarch=" & SunXArch
     local new = "-m" & WordSize
@@ -252,9 +260,10 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
         else
             shared_option = "-G"
         end
+        configure_c_compiler ()
         ret_code = try_exec ("@" & SYSTEM_LD, shared_option, "-o",
                              lib_sox, "-h", lib_sox, objects,
-                             imported_libs)
+                             libcxx, imported_libs)
         if not equal (ret_code, 0)
             make_lib_delete_outputs(lib)
             return ret_code
@@ -276,7 +285,8 @@ proc m3_link (prog, options, objects, imported_libs, shared) is
     if M3_PROFILING
         args += "-pg"
     end
-    args += [ "-o", prog, options, objects, imported_libs ]
+    configure_c_compiler ()
+    args += [ "-o", prog, options, objects, libcxx, imported_libs ]
     if shared or equal (C_COMPILER, "SUN")
         return try_exec (linker, args)
     else
