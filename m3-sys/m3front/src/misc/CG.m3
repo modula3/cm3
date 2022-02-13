@@ -3704,7 +3704,7 @@ PROCEDURE Hdr_to_info (offset, size: INTEGER) =
   VAR base: INTEGER;
   BEGIN
     ForceStacked ();
-    IF Target.endian = Target.Endian.Little
+    IF TRUE (* endian neutrality Target.endian = Target.Endian.Little *)
       THEN base := offset;
       ELSE base := Target.Integer.size - offset - size;
     END;

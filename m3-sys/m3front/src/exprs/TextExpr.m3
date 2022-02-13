@@ -9,7 +9,7 @@
 MODULE TextExpr;
 
 IMPORT M3, CG, Expr, ExprRep, M3String, Textt, Type, M3Buf;
-IMPORT Target, Module, M3RT, M3WString, RunTyme, Procedure;
+IMPORT Target, Module, M3RT, M3WString, RunTyme, Procedure, Word;
 
 TYPE
   P = Expr.T OBJECT
@@ -148,8 +148,15 @@ PROCEDURE SetUID (p: P): INTEGER =
     literals[uid] := x;
 
     (* initialize the variable *)
-    CG.Init_intt (x+Header_offset + M3RT.RH_typecode_offset,
-                  M3RT.RH_typecode_size, M3RT.TEXT_typecode, is_const := TRUE);
+    (*
+     * CG.Init_intt (x+Header_offset + M3RT.RH_typecode_offset,
+     *               M3RT.RH_typecode_size, M3RT.TEXT_typecode, is_const := TRUE);
+     * Write an entire word instead for endian neutrality
+     *)
+    CG.Init_intt (x+Header_offset,
+                  Target.Integer.pack,
+                  Word.Shift (M3RT.TEXT_typecode, M3RT.RH_typecode_offset),
+                  is_const := TRUE);
     CG.Init_var
       (x+Method_offset, globalConstsCGVar, methodListOffset, is_const := TRUE);
     CG.Init_intt (x+Length_offset, Target.Integer.size, cnt, is_const := TRUE);
