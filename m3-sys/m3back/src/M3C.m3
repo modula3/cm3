@@ -1,6 +1,6 @@
 MODULE M3C;
 
-IMPORT RefSeq, TextSeq, Wr, Text, IntRefTbl, SortedIntRefTbl, TIntN, IntIntTbl;
+IMPORT RefSeq, TextSeq, Wr, Text, IntRefTbl, TIntN, IntIntTbl;
 IMPORT M3CG, M3CG_Ops, Target, TFloat, TargetMap, IntArraySort, Process;
 IMPORT M3ID, TInt, TWord, ASCII, Thread, Stdio, Word, TextUtils;
 FROM TargetMap IMPORT CG_Bytes, CG_Size;
@@ -2857,7 +2857,7 @@ BEGIN
     (* The CHAR typename exists to satisfy DeclareTypes dependency walk, but should not be
      * actually typedefed. It conflicts with windows.h. UCHAR replaces it right after this. *)
     self.const_INTEGER := M3ID.Add("const_INTEGER"); (* special case *)
-    self.typeidToType := NEW(SortedIntRefTbl.Default).init(); (* FUTURE? *)
+    self.typeidToType := NEW(IntRefTbl.Default).init(); (* FUTURE? *)
     self.multipass := NEW(Multipass_t).Init();
     self.multipass.reuse_refs := TRUE; (* TODO: change them all to integers *)
     self.multipass.self := self;
