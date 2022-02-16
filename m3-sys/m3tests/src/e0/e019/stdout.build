@@ -1,5 +1,3 @@
-"../Main.m3", line 9: illegal recursive declaration (N)
-"../Main.m3", line 9: unsafe '+'
-"../Main.m3", line 9: value is not constant
-3 errors encountered
+"../Main.m3", line 9: Illegal recursive declaration (2.4.8). (N)
+1 error encountered
 Fatal Error: package build failed
