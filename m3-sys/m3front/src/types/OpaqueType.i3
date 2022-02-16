@@ -14,6 +14,7 @@ PROCEDURE New (super: Type.T;  decl: Value.T): Type.T;
 PROCEDURE Is (t: Type.T): BOOLEAN;
 
 PROCEDURE Super (t: Type.T): Type.T;
+  (* RHS of <: *)
 
 PROCEDURE IsSubtype (a, b: Type.T): BOOLEAN;
 
