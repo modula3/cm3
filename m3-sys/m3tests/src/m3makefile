@@ -840,6 +840,7 @@ readonly proc e_test (group, uid, comment) is
   run_test ("_etests", group, uid, comment, "", cm3opts, runopts, "probeForTargetSpecificFiles")
 end
 
+e_test ("e0", "e041", "Illegal mutually recursive revealed opaque types in separate units")
 e_test ("e0", "e040", "Bad SUBARRAY actuals")
 e_test ("e0", "e035", "illegal recursive declaration")
 e_test ("e0", "e034", "structural equivalence of records")
