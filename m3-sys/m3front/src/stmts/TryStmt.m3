@@ -342,8 +342,10 @@ we have just an address so could just do load and store *)
 CG.Load_addr (next_info, 0, Target.Address.align);
 CG.Store_addr (info, Target.Address.align);
 (* put these in to see if generated *)
+(* they are generated line 74 in p004 Main.m3 but CG error stack prob
 CG.Swap();
 CG.Swap();
+*)
 (*
       CG.Load_addr_of (next_info, 0, Target.Address.align);
       CG.Load_addr_of (info, 0, Target.Address.align);

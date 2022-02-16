@@ -223,7 +223,17 @@ PROCEDURE Compile1 (p: P): Stmt.Outcomes =
     Marker.SaveFrame ();
       oc := Stmt.Compile (p.body);
     Marker.PopFinally (returnSeen, exitSeen);
+(* peter Need to jump over the exc handling reg latch  seems to work *)
+xx := CG.Next_label ();
+CG.Jump (xx);
     CG.Set_label (lab+1, barrier := TRUE);
+
+(*peter get the exc from the builtin reg  seems to work *)
+proc := RunTyme.LookUpProc (RunTyme.Hook.LatchEHReg);
+Procedure.StartCall (proc);
+Procedure.EmitCall (proc);
+CG.Store_addr (info);
+CG.Set_label (xx, barrier := TRUE);
 
     (* set the "Compiler.ThisException()" globals *)
     TryStmt.PushHandler (info, 0, direct := TRUE);
@@ -237,6 +247,7 @@ PROCEDURE Compile1 (p: P): Stmt.Outcomes =
       (* generate the bizzare end-tests *)
 
       (* exceptional outcome? *)
+(* not checked *)
 (*peter check is this a load? not addr of - assuming the Try Stmt handled
 the exception and the info has been saved after the latch ?? *)
       CG.Load_addr (info, M3RT.EA_exception, Target.Address.align);
@@ -248,6 +259,7 @@ the exception and the info has been saved after the latch ?? *)
 (*
         CG.Load_int (Target.Integer.cg_type, info, M3RT.EA_exception);
 *)
+(* not checked *)
 CG.Load_addr (info, M3RT.EA_exception, Target.Address.align);
 CG.Loophole (CG.Type.Addr, Target.Integer.cg_type );
         CG.Load_intt (Marker.Exit_exception);
@@ -261,6 +273,7 @@ CG.Loophole (CG.Type.Addr, Target.Integer.cg_type );
 (*
         CG.Load_int (Target.Integer.cg_type, info, M3RT.EA_exception);
 *)
+(* not checked *)
 CG.Load_addr (info, M3RT.EA_exception, Target.Address.align);
 CG.Loophole (CG.Type.Addr, Target.Integer.cg_type );
         CG.Load_intt (Marker.Return_exception);
@@ -272,8 +285,11 @@ CG.Loophole (CG.Type.Addr, Target.Integer.cg_type );
       (* resume the exception *)
       proc := RunTyme.LookUpProc (RunTyme.Hook.ResumeRaiseEx);
       Procedure.StartCall (proc);
-(*peter check is this a simple load not address of ?*)
+(*peter check  this a simple load not address of  this seems to work *)
+CG.Load_addr (info, 0, Target.Address.align);
+(*
       CG.Load_addr_of (info, 0, Target.Address.align);
+*)
       CG.Pop_param (CG.Type.Addr);
       Procedure.EmitCall (proc);
 
