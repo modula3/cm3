@@ -51,9 +51,13 @@ else
         _FloatPieces{TARGET} = ["IEEE-default"]
         _FloatPieces{"IEEE-default"} = 1 % indicator to m3-sys/m3tests
     end
-    _FloatPieces{TARGET} =
+    if defined ("M3_BOOTSTRAP") % endian neutrality: avoid bitfields
+      _FloatPieces{TARGET} = [ _FloatPieces{TARGET}, "IEEE" ]
+    else
+      _FloatPieces{TARGET} =
         { "LITTLE"  : [ _FloatPieces{TARGET}, "IEEE", "IEEE-le" ],
           "BIG"     : [ _FloatPieces{TARGET}, "IEEE", "IEEE-be" ] }{TARGET_ENDIAN}
+   end
 end
 
 if not defined ("M3TESTS")
