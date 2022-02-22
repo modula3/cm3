@@ -1,4 +1,9 @@
-module ("Grisu")
-module ("CachedPowers")
+% temporarily disable Grisu for C backend until problems investigated
+% C fails at runtime
+if not equal (M3_BACKEND_MODE, "C")
+  module ("Grisu")
+  module ("CachedPowers")
+end
+
 module ("SimFP")
 module ("IEEE")
