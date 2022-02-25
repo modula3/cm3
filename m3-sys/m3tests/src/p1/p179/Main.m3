@@ -7,9 +7,12 @@ MODULE Main;
 IMPORT Test, Wr, Stdio, Fmt;
 <*FATAL ANY*>
 
+CONST Last32 = 16_7FFFFFFF;
+CONST First32 = - Last32 - 1;
+
 TYPE
-  Int32A = BITS 32 FOR [-16_7fffffff-1..16_7FFFFFFF];
-  Int32B = (*BITS 32 FOR*) [-16_7fffffff-1..16_7FFFFFFF];
+  Int32A = BITS 32 FOR [First32 .. Last32];
+  Int32B = (*BITS 32 FOR*) [First32 .. Last32];
 
   EventIDA = ARRAY [0..1] OF Int32A; (* lsw..msw *)
   EventIDB = ARRAY [0..1] OF Int32B; (* lsw..msw *)
@@ -45,6 +48,8 @@ TYPE
   Buckets = REF ARRAY OF EntryA;
 *)
 
+VAR BucketsVal := NEW (Buckets, 1);
+
 PROCEDURE Out (tag: TEXT;  val: INTEGER) =
   BEGIN
     Wr.PutText (Stdio.stderr, tag);
@@ -64,8 +69,7 @@ BEGIN
   Test.checkI (BITSIZE (ValueA), BITSIZE (ValueB));
   Out ("Entry", BITSIZE (EntryA));
   Test.checkI (BITSIZE (EntryA), BITSIZE (EntryB));
-(* outputs 32 or 64 depending on arch
-  Out ("Buckets", BITSIZE (Buckets));
-*)
+  Test.checkI (BITSIZE (BucketsVal^), BITSIZE (EntryA));
+  Out ("BucketsVal^", BITSIZE (BucketsVal^));
   Test.done ();
 END Main.
