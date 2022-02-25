@@ -7,10 +7,13 @@
 
 GENERIC MODULE ArrayModes (Actuals , Formals )
 
-(* Types declares:
-   Label: TEXT (* used to identify what is tested. *)
-   Types . MainType: a type to be passed.
-   PackedType: BITS n FOR Types . MainType,
+(* Actuals and Formals each declare:
+   Label:     TEXT (* used to identify what is tested. *)
+   MainType:  a type to be passed,m with possibly some open dimensions.
+   FixedType: MainType, but all dimensions fixed.
+   InnerType: Element type of MainType
+   NewRef:    Procedure that allocates a REF MainTyp
+   Val1, Val2: Two unequal values of MainType
 *)
 
 ; IMPORT Common 
