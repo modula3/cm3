@@ -14,6 +14,7 @@ PROCEDURE Parse (): Type.T;
 PROCEDURE New (size: INTEGER;  base: Type.T): Type.T;
 
 PROCEDURE Is (t:Type.T): BOOLEAN;
+(* Including named packed type. *)
 
 PROCEDURE Split (t: Type.T;  VAR size: INTEGER;  VAR base: Type.T);
 

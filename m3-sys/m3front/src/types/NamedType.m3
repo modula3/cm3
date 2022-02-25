@@ -168,8 +168,10 @@ PROCEDURE Resolve (p: P) =
   END Resolve;
 
 PROCEDURE Strip (t: Type.T): Type.T =
-  VAR p: P := t;
+  (* Identity, if t is not a named type. *)
+  VAR p: P := Reduce (t);
   BEGIN
+    IF p = NIL THEN RETURN t END;
     Resolve (p);
     RETURN p.type;
   END Strip;
