@@ -411,7 +411,7 @@ GENERIC MODULE Modes (Types)
       ; TestROByValue
           ( CallMisalignedDesigROVal , "misaligned BITS FOR field, array type, designator" ) 
       ; TestROByValue
-          ( CallShortTypeDesigROVal , "BITS FOR field, array type, designator"
+          ( CallShortTypeDesigROVal , "BITS FOR field, array type, designator" )
       ELSE
         TestROByValue
           ( CallDiffTypeDesigROVal , "different type, designator" ) 
