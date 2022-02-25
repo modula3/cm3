@@ -3,7 +3,7 @@ NegativeUInt8 254
 NegativeInt16 -3
 NegativeUInt16 65532
 NegativeInt32 -5
-NegativeUInt32 -6
+NegativeUInt32 4294967290
 NegativeInt64 -7
 NegativeUInt64 -8
 
@@ -12,7 +12,7 @@ NegativeUInt8 => LONGINT 254
 NegativeInt16 => LONGINT -3
 NegativeUInt16 => LONGINT 65532
 NegativeInt32 => LONGINT -5
-NegativeUInt32 => LONGINT -6
+NegativeUInt32 => LONGINT 4294967290
 NegativeInt64 => LONGINT -7
 NegativeUInt64 => LONGINT -8
 
