@@ -182,7 +182,7 @@ GENERIC MODULE Modes (Types)
         THEN
           Failure
             ( Types . Label & ", READONLY by ref, " & Msg
-              & " , formal and actual at different locations."
+              & ", formal and actual at different locations."
             )
         END (* IF *)
       END (* IF *)
@@ -265,7 +265,7 @@ GENERIC MODULE Modes (Types)
     ; ROByRef ( MakeAnon ( LocVal ) , Types . Val1 , NIL , Msg ) 
     END CallSameUnpackedTypeAnonRORef  
 
-; PROCEDURE CallDiffTypeDesigRORef ( Msg : TEXT ) 
+; <* UNUSED *> PROCEDURE CallDiffTypeDesigRORef ( Msg : TEXT )
   = VAR LocVal : Types . BytesType
   ; BEGIN
       LocVal := Types . Val1
@@ -397,8 +397,8 @@ GENERIC MODULE Modes (Types)
     ; IF Types . IsArray
       THEN
       (* Compiler will have ensured these are assignable and byte-addressable: *)
-        TestROByRef
-          ( CallDiffTypeDesigRORef , "different array type, designator" )
+        TestROByValue
+          ( CallDiffTypeDesigROVal , "different array type, designator" )
       ; TestROByValue
           ( CallPackedTypeDesigROVal , "packed array type, designator" )
       (* The following two cases verify compiler exception to Modula3.
@@ -411,7 +411,7 @@ GENERIC MODULE Modes (Types)
       ; TestROByValue
           ( CallMisalignedDesigROVal , "misaligned BITS FOR field, array type, designator" ) 
       ; TestROByValue
-          ( CallShortTypeDesigROVal , "BITS FOR field, arrray type, designator" ) 
+          ( CallShortTypeDesigROVal , "BITS FOR field, array type, designator"
       ELSE
         TestROByValue
           ( CallDiffTypeDesigROVal , "different type, designator" ) 
