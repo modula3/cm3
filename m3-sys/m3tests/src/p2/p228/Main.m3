@@ -27,6 +27,8 @@ BEGIN
   PutT("NegativeUInt16 "); PutI(NegativeUInt16()); NL();
   PutT("NegativeInt32 "); PutI(NegativeInt32()); NL();
   PutT("NegativeUInt32 "); PutI(NegativeUInt32()); NL();
+  (* The unsigned value is 16_FFFFFFFA = 10_4294967290, but on a 32-bit target,
+     PutI applies signed interpretation to the bits, giving -6. *)
   PutT("NegativeInt64 "); PutL(NegativeInt64()); NL();
   PutT("NegativeUInt64 "); PutL(NegativeUInt64()); NL();
   NL();
@@ -37,6 +39,9 @@ BEGIN
   PutT("NegativeUInt16 => LONGINT "); PutL(VAL(NegativeUInt16(), LONGINT)); NL();
   PutT("NegativeInt32 => LONGINT "); PutL(VAL(NegativeInt32(), LONGINT)); NL();
   PutT("NegativeUInt32 => LONGINT "); PutL(VAL(NegativeUInt32(), LONGINT)); NL();
+  (* The unsigned value is 16_FFFFFFFA = 10_4294967290, but on a 32-bit target,
+     VAL-LONGINT treats it as signed and sign-extends it, then PutL applies
+     signed interpretation to the bits, giving -6. *)
   PutT("NegativeInt64 => LONGINT "); PutL(VAL(NegativeInt64(), LONGINT)); NL();
   PutT("NegativeUInt64 => LONGINT "); PutL(VAL(NegativeUInt64(), LONGINT)); NL();
   NL();
