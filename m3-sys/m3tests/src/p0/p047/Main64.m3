@@ -6,7 +6,7 @@
 
 UNSAFE MODULE Main64 EXPORTS Main;
 
-FROM Test IMPORT checkI,checkR,checkL,checkN,done;
+FROM Test IMPORT checkI,checkN,checkR,checkL,checkX,done;
 
 TYPE
   Int32 = [0..16_7FFFFFFF];
@@ -16,7 +16,6 @@ TYPE
 
 PROCEDURE Test() =
   VAR
-    i : INTEGER;
     l : LONGINT;
     a : ADDRESS;
     r1 : REAL;
@@ -48,13 +47,11 @@ PROCEDURE Test() =
     (* LONGREAL *)
     
     l1 := 1.234D0;
-    i := LOOPHOLE(l1,INTEGER);
-    checkI(4608236261112822104,i);
     
     l := LOOPHOLE(l1,LONGINT);
     checkN(4608236261112822104L,l);
 
-    l1 := LOOPHOLE(i,LONGREAL);
+    l1 := LOOPHOLE(l,LONGREAL);
     checkL(1.234D0,l1);
 
     (* EXTENDED *)
