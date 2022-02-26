@@ -27,6 +27,7 @@ TYPE
     info       : CG.Var;
     start      : CG.Label;
     stop       : CG.Label;
+    nextStop   : CG.Label;
     type       : Type.T;     (* kind = PROC *)
     variable   : Variable.T; (* kind = PROC *)
     tmp_result : CG.Var;     (* kind = PROC *)
@@ -86,9 +87,12 @@ PROCEDURE SaveFrame () =
     <*ASSERT save_depth >= 0*>
   END Pop;
 
-PROCEDURE PushFinally (l_start, l_stop: CG.Label;  info: CG.Var) =
+PROCEDURE PushFinally (l_start, l_stop, l_nextstop: CG.Label;  info: CG.Var) =
   BEGIN
     Push (Kind.zFINALLY, l_start, l_stop, info);
+    WITH z = stack[tos - 1] DO
+      z.nextStop := l_nextstop
+    END;
   END PushFinally;
 
 PROCEDURE PushFinallyProc (l_start, l_stop: CG.Label;  info: CG.Var;
@@ -347,16 +351,23 @@ PROCEDURE EmitExit1 () =
         | Kind.zTRYELSE =>
             CG.Load_intt (Exit_exception);
             CG.Store_int (Target.Integer.cg_type, z.info);
+CG.Jump (z.nextStop);
+(*
             CG.Jump (z.stop);
+*)
             EXIT;
         | Kind.zFINALLY, Kind.zFINALLYPROC =>
             CG.Load_intt (Exit_exception);
             CG.Store_int (Target.Integer.cg_type, z.info);
+CG.Jump (z.nextStop);
+(*
             CG.Jump (z.stop);
+*)
             EXIT;
         | Kind.zLOCK =>
             SetLock (FALSE, z.info, 0);
         | Kind.zEXIT =>
+(* what about this one ? *)
             CG.Jump (z.stop);
             EXIT;
         | Kind.zTRY =>
@@ -578,12 +589,18 @@ PROCEDURE EmitReturn1 (): INTEGER =
         | Kind.zTRYELSE =>
             CG.Load_intt (Return_exception);
             CG.Store_int (Target.Integer.cg_type, z.info);
+CG.Jump (z.nextStop);
+(*
             CG.Jump (z.stop);
+*)
             EXIT;
         | Kind.zFINALLY, Kind.zFINALLYPROC =>
             CG.Load_intt (Return_exception);
             CG.Store_int (Target.Integer.cg_type, z.info);
+CG.Jump (z.nextStop);
+(*
             CG.Jump (z.stop);
+*)
             EXIT;
         | Kind.zLOCK =>
             SetLock (FALSE, z.info, 0);

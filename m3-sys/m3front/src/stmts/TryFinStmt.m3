@@ -70,7 +70,7 @@ PROCEDURE Check (p: P;  VAR cs: Stmt.CheckState) =
   VAR zz: Scope.T;  oc: Stmt.Outcomes;  name: INTEGER;
   BEGIN
     Jmpbufs.CheckTry (cs.jmpbufs, p.jmpbufs);
-    Marker.PushFinally (CG.No_label, CG.No_label, NIL);
+    Marker.PushFinally (CG.No_label, CG.No_label, CG.No_label, NIL);
     Stmt.TypeCheck (p.body, cs);
     Marker.Pop ();
     TryStmt.PushHandler (NIL, 0, FALSE);
@@ -219,13 +219,27 @@ PROCEDURE Compile1 (p: P): Stmt.Outcomes =
     (* compile the body *)
     lab := CG.Next_label (3);
     CG.Set_label (lab, barrier := TRUE);
-    Marker.PushFinally (lab, lab+1, info);
+xx := CG.Next_label ();
+    Marker.PushFinally (lab, lab+1, xx, info);
     Marker.SaveFrame ();
       oc := Stmt.Compile (p.body);
     Marker.PopFinally (returnSeen, exitSeen);
 (* peter Need to jump over the exc handling reg latch  seems to work *)
-xx := CG.Next_label ();
+(* also need to rejig this we prob should use labs and get 4 to start with
+and the pushfinally would be lab lab+2 so that the stop is the lab
+after the one to latch the exc handler so the labs go
+lab start try
+lab + 1 latch exc ie the handler
+lab + 2 the label after ie the real handler
+lab + 3 end finally
+but just to test it could put the next_label stmt up before the pushfinally
+and change pushfinally(lab, xx, info)
+ this is all to fix the exits and return exceptions which Marker.EmitExit 
+uses
+*)
+IF NOT (returnSeen OR exitSeen) THEN
 CG.Jump (xx);
+END;
     CG.Set_label (lab+1, barrier := TRUE);
 
 (*peter get the exc from the builtin reg  seems to work *)
@@ -247,7 +261,7 @@ CG.Set_label (xx, barrier := TRUE);
       (* generate the bizzare end-tests *)
 
       (* exceptional outcome? *)
-(* not checked *)
+(* checked *)
 (*peter check is this a load? not addr of - assuming the Try Stmt handled
 the exception and the info has been saved after the latch ?? *)
       CG.Load_addr (info, M3RT.EA_exception, Target.Address.align);
@@ -259,7 +273,7 @@ the exception and the info has been saved after the latch ?? *)
 (*
         CG.Load_int (Target.Integer.cg_type, info, M3RT.EA_exception);
 *)
-(* not checked *)
+(* checked *)
 CG.Load_addr (info, M3RT.EA_exception, Target.Address.align);
 CG.Loophole (CG.Type.Addr, Target.Integer.cg_type );
         CG.Load_intt (Marker.Exit_exception);
@@ -273,7 +287,7 @@ CG.Loophole (CG.Type.Addr, Target.Integer.cg_type );
 (*
         CG.Load_int (Target.Integer.cg_type, info, M3RT.EA_exception);
 *)
-(* not checked *)
+(* checked *)
 CG.Load_addr (info, M3RT.EA_exception, Target.Address.align);
 CG.Loophole (CG.Type.Addr, Target.Integer.cg_type );
         CG.Load_intt (Marker.Return_exception);
@@ -427,7 +441,7 @@ PROCEDURE Compile3 (p: P): Stmt.Outcomes =
     Marker.CaptureState (frame, Jmpbufs.CompileTryGetJmpbuf (p.jmpbufs), lab+1);
 
     (* compile the body *)
-    Marker.PushFinally (lab, lab+1, frame);
+    Marker.PushFinally (lab, lab+1, CG.No_label, frame);
       oc := Stmt.Compile (p.body);
     Marker.PopFinally (returnSeen, exitSeen);
     IF (Outcome.FallThrough IN oc) THEN
