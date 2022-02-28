@@ -54,6 +54,11 @@ PROCEDURE Test() =
     l1 := LOOPHOLE(l,LONGREAL);
     checkL(1.234D0,l1);
 
+    l := LOOPHOLE(l1,LONGINT);
+
+ (* a := LOOPHOLE(l1,ADDRESS);
+    Making this 32/64-bit adaptable won't test much anyway. *)
+
     (* EXTENDED *)
 (* these fail with 128 bit extended    
     l1 := 1.234D0;
