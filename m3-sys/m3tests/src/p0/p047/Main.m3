@@ -9,7 +9,7 @@ UNSAFE MODULE  Main;
 FROM Test IMPORT checkI,checkN,checkR,checkL,checkX,done;
 
 TYPE
-  Int32 = [0..16_FFFFFFFF];
+  Int32 = [0..16_7FFFFFFF];
   Rec32 = RECORD
             xx : BITS 32 FOR Int32;
           END;
@@ -59,7 +59,8 @@ PROCEDURE Test() =
 
     l := LOOPHOLE(l1,LONGINT);
 
-    a := LOOPHOLE(l1,ADDRESS);
+ (* a := LOOPHOLE(l1,ADDRESS);
+    Making this 32/64-bit adaptable won't test much anyway. *)
 
     (* EXTENDED *)
     
