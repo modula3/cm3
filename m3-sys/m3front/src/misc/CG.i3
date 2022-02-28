@@ -746,6 +746,11 @@ PROCEDURE Comment (offset: INTEGER;  is_const: BOOLEAN;  a, b, c, d: TEXT := NIL
 
 (*--------------------------------------------------------------- atomics ---*)
 
+(* REVIEW: These need verification that s0.x = StackType[t].
+           Otherwise, s0.x needs to be passed in as an additional
+           parameter and used in place of StackType[t].
+           If neither, CG errors will fly. *)
+
 PROCEDURE Store_ordered (t: MType;  order: MemoryOrder);
 PROCEDURE Load_ordered (t: MType;  order: MemoryOrder);
 PROCEDURE Exchange (t: MType;  order: MemoryOrder); (* s2.A must be forced *)

@@ -2260,17 +2260,17 @@ PROCEDURE Store_indirect (t: Type; addedOffset: Offset;  s: Size) =
 
       IF s = t_size AND (x.addr_align MOD t_align) = 0 THEN
         (* A full t_size'd and t_align'ed store. *)
-        SimpleIndirectStore (x, t);
+        SimpleIndirectStore (x, t, t);
       ELSIF s = t_size
             AND (x.addr_align MOD Target.Byte) = 0
             AND Target.Allow_packed_byte_aligned THEN
         (* A full t_size'd and byte-aligned store, supported by the processor.
            This is used by structures containing packed components. *)
-        SimpleIndirectStore (x, t);
+        SimpleIndirectStore (x, t, t);
 
       ELSIF s > t_size THEN
         Err ("In Store_indirect, memory size exceeds stack size.");
-        SimpleIndirectStore (x, t);
+        SimpleIndirectStore (x, t, t);
 
       ELSIF (t = Target.Word.cg_type) OR (t = Target.Integer.cg_type)
         OR  (t = Target.Long.cg_type) OR (t = Target.Longint.cg_type) THEN
@@ -2281,7 +2281,7 @@ PROCEDURE Store_indirect (t: Type; addedOffset: Offset;  s: Size) =
           oddStaticBitCt := x.offset MOD best_align;
           IF (oddStaticBitCt = 0) AND (s = best_size) AND (x.bits = NIL) THEN
             (* A full best_size'd and best_align'ed store. *)
-            SimpleIndirectStore (x, best_type);
+            SimpleIndirectStore (x, t, best_type);
           ELSIF (oddStaticBitCt = 0) AND (x.bits = NIL) THEN
             (* A best_align'ed but only partial best_size'd store. *)
             Swap (); (* Address on top *)
@@ -2303,7 +2303,7 @@ PROCEDURE Store_indirect (t: Type; addedOffset: Offset;  s: Size) =
             Push (tmp);
             ForceAddr2SAP (0);
             Swap (); (* Value on top. *) 
-            SimpleIndirectStore (x, best_type);
+            SimpleIndirectStore (x, t, best_type);
             Free (tmp);
           ELSIF (x.bits = NIL) THEN
             (* Unaligned, partial best_size'd store. *)
@@ -2329,7 +2329,7 @@ PROCEDURE Store_indirect (t: Type; addedOffset: Offset;  s: Size) =
             Push (tmp);
             ForceAddr2SAP (0);
             Swap (); (* Stuffed word on top, address below. *) 
-            SimpleIndirectStore (x, best_type);
+            SimpleIndirectStore (x, t, best_type);
             Free (tmp);
           ELSE (* bits # NIL *)
             (* Unaligned, partial best_size'd store with RT variable offset. *)
@@ -2396,7 +2396,7 @@ PROCEDURE Store_indirect (t: Type; addedOffset: Offset;  s: Size) =
             Push (tmp);
             ForceAddr2SAP (0);
             Swap (); (* Stuffed word on top, address below. *) 
-            SimpleIndirectStore (x, best_type);
+            SimpleIndirectStore (x, t, best_type);
 
             Free (tmp);
             Free_temp (oddRTBits);
@@ -2408,30 +2408,30 @@ PROCEDURE Store_indirect (t: Type; addedOffset: Offset;  s: Size) =
         ELSE
           Err ("unaligned word-straddling store_indirect, type="& Target.TypeNames[t]
               & "  s/a=" & Fmt.Int (s) & "/" & Fmt.Int (x.addr_align));
-          SimpleIndirectStore (x, t);
+          SimpleIndirectStore (x, t, t);
           END 
       ELSE
         Err ("unaligned partial-word store_indirect, type="& Target.TypeNames[t]
             & "  s/a=" & Fmt.Int (s) & "/" & Fmt.Int (x.addr_align));
-        SimpleIndirectStore (x, t);
+        SimpleIndirectStore (x, t, t);
       END;
 
     END;
     SPop (2, "Store_indirect");
   END Store_indirect;
 
-PROCEDURE SimpleIndirectStore (READONLY x: ValRec;  t: MType)=
+PROCEDURE SimpleIndirectStore (READONLY x: ValRec; t: ZType; u:MType)=
 (* PRE: x.kind IN {Stacked, Absolute, Pointer}. *)
-(* Store full t-size'd and t-align'ed. *)
+(* Store full t-size'd and t-align'ed into u. *)
   BEGIN
     CASE x.kind OF
     | VKind.Absolute =>
-      cg.store (x.base, AsBytes (x.offset), StackType [t], t);
+      cg.store (x.base, AsBytes (x.offset), t, u);
     | VKind.Pointer, VKind.Stacked =>
-      cg.store_indirect (AsBytes (x.offset), StackType [t], t);
+      cg.store_indirect (AsBytes (x.offset), t, u);
     ELSE (* ?? *)
       ErrI (ORD (x.kind), "bad VKind in SimpleIndirectStore");
-      cg.store_indirect (AsBytes (x.offset), StackType[t], t);
+      cg.store_indirect (AsBytes (x.offset), t, u);
     END;
   END SimpleIndirectStore;
 
