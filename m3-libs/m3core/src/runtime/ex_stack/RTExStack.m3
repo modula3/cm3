@@ -34,6 +34,21 @@ TYPE
   END;
 
   ExceptionList = UNTRACED REF (*ARRAY OF*) RT0.ExceptionUID;
+  FinallyProc = PROCEDURE (VAR a : RT0.RaiseActivation) RAISES ANY;
+
+TYPE (* RaiesNone *)
+  Frame = UNTRACED REF RECORD (* EF *)
+    next  : Frame;
+    class : INTEGER;   (* ORD(ScopeKind) *)
+  END;
+
+TYPE  (* FinallyProc *)
+  PF2 = UNTRACED REF RECORD (* EF2 *)
+    next    : Frame;
+    class   : INTEGER;    (* ORD(ScopeKind) *)
+    handler : ADDRESS;    (* the procedure *)
+    frame   : ADDRESS;    (* static link for the handler *)
+  END;
 
 (*---------------------------------------------------------------------------*)
 
@@ -49,6 +64,8 @@ PROCEDURE Raise (VAR act: RaiseActivation) RAISES ANY =
     here, f: RTStack.Frame;
     s: Scope;
     ex: ExceptionList;
+(* test alloc an activation and pass to handler via ResumeRaise *)
+excRef : REF RaiseActivation;
   BEGIN
     IF DEBUG THEN
       PutExcept ("RAISE", act);
@@ -71,12 +88,24 @@ PROCEDURE Raise (VAR act: RaiseActivation) RAISES ANY =
             | ORD (ScopeKind.Except) =>
                 ex := s.excepts;
                 WHILE (ex^ # 0) DO
+IF (ex^ = act.exception.uid) THEN 
+  excRef := NEW(REF RaiseActivation);
+  excRef^ := act;
+  ResumeRaise (excRef^)
+END;
+(*
                   IF (ex^ = act.exception.uid) THEN ResumeRaise (act) END;
+*)
                   INC (ex, ADRSIZE (ex^));
                 END;
             | ORD (ScopeKind.ExceptElse) =>
                 (* 's' is a TRY-EXCEPT-ELSE frame => go for it *)
+excRef := NEW(REF RaiseActivation);
+excRef^ := act;
+ResumeRaise (excRef^);
+(*
                 ResumeRaise (act);
+*)
             | ORD (ScopeKind.Finally),
               ORD (ScopeKind.FinallyProc),
               ORD (ScopeKind.Lock) =>
@@ -147,14 +176,21 @@ PROCEDURE ResumeRaise (VAR a: RaiseActivation) RAISES ANY =
                   IF (ex^ = a.exception.uid) THEN InvokeHandler (s, f, a) END;
                   INC (ex, ADRSIZE (ex^));
                 END;
+(* commenting this out to check segv bug in new version
+plus its not clear what it is trying to achieve
                 MarkHandler (s, f, a);
+*)
                 (* we need to mark every frame so that no matter where
                    we unwind to, it sees a marked frame => exception *)
             | ORD (ScopeKind.ExceptElse) =>
                 (* 's' is a TRY-EXCEPT-ELSE frame => go for it *)
                 InvokeHandler (s, f, a);
-            | ORD (ScopeKind.Finally),
-              ORD (ScopeKind.FinallyProc) =>
+            | ORD (ScopeKind.Finally) =>
+                InvokeHandler (s, f, a);
+            | ORD (ScopeKind.FinallyProc) =>
+(* should invoke this but f is of wrong type
+                InvokeFinallyHandler (f, a);
+*)
                 InvokeHandler (s, f, a);
             | ORD (ScopeKind.Lock) =>
                 ReleaseLock (s, f);
@@ -179,22 +215,44 @@ PROCEDURE ResumeRaise (VAR a: RaiseActivation) RAISES ANY =
     END;
   END ResumeRaise;
 
+PROCEDURE LatchEHReg() : ADDRESS =
+  BEGIN
+    RETURN RTStack.LatchEHReg();
+  END LatchEHReg;
+
 PROCEDURE InvokeHandler (s: Scope;  VAR f: RTStack.Frame;
                          READONLY prev: RaiseActivation) RAISES ANY =
   VAR next: RT0.ActivationPtr := f.sp + s.offset;
+(* test alloc an activation and pass to handler *)
+(*
+    excRef : REF RaiseActivation;
+*)
   BEGIN
     IF DEBUG THEN
       PutExcept ("INVOKE HANLDER", prev);
-RTIO.PutText (" ++++ "); RTIO.PutInt (s.offset);
-RTIO.PutText (" ++++ "); RTIO.PutAddr (f.sp);
-RTIO.PutText (" ++++ "); RTIO.PutAddr (next);
-RTIO.PutText (" ++++ "); RTIO.PutAddr (prev.exception);
-
       PutFrame (f, next);
       RTIO.PutText ("\n");
       RTIO.Flush ();
     END;
+(* lets not copy the old one while we test the heap alloc version *)
+(*
     next^ := prev;
+*)
+
+(* s.stop the address of the label for the exception handler *)
+
+f.handlerIP := s.stop;
+(* prob should do this alloc and init in Raise and pass the pointer to
+ResumeRaise. That way we just pass the pointer arround and dont
+alloc a new exception each time in ResumeRaise *)
+
+(*
+excRef := NEW(REF RaiseActivation);
+excRef^ := prev;
+f.excRef := LOOPHOLE(excRef,ADDRESS);
+*)
+f.excRef := ADR(prev);
+
     RTStack.Unwind (f);
     RTError.MsgPC (LOOPHOLE (f.pc, INTEGER), "Unwind returned!");
     RAISE OUCH;
@@ -212,6 +270,37 @@ PROCEDURE MarkHandler (s: Scope;  READONLY f: RTStack.Frame;
     END;
     next^ := prev;
   END MarkHandler;
+
+PROCEDURE InvokeFinallyHandler (f: Frame;  VAR a: RT0.RaiseActivation) RAISES ANY =
+  VAR
+    p := LOOPHOLE (f, PF2);
+    cl: RT0.ProcedureClosure;
+  BEGIN
+    IF DEBUG THEN
+      PutExcept ("INVOKE FINALLY HANDLER", a);
+      RTIO.PutText ("  frame=");  RTIO.PutAddr (f);
+      RTIO.PutText ("  class=");  RTIO.PutInt (f.class);
+      RTIO.PutText ("\n");
+      RTIO.Flush ();
+    END;
+
+    (* build a nested procedure closure  *)
+    cl.marker := RT0.ClosureMarker;
+    cl.proc   := p.handler;
+    cl.frame  := p.frame;
+    
+(* what does this do and do we need it ?
+    RTThread.SetCurrentHandlers (f.next); (* cut to the new handler *)
+*)
+    CallProc (LOOPHOLE (ADR (cl), FinallyProc), a);
+  END InvokeFinallyHandler;
+
+PROCEDURE CallProc (p : FinallyProc; VAR a : RT0.RaiseActivation) RAISES ANY =
+  (* we need to fool the compiler into generating a call
+     to a nested procedure... *)
+  BEGIN
+    p(a);
+  END CallProc;
 
 PROCEDURE ReleaseLock (s: Scope;  READONLY f: RTStack.Frame) =
   VAR p : UNTRACED REF MUTEX := f.sp + s.offset;

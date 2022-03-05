@@ -9,33 +9,49 @@
    the RTStack interface. */
 
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include <setjmp.h>
 #include <signal.h>
 
 #include <libunwind.h>
 
-//del this when tested
-#include <stdio.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+//fixme - this reg name and number needs to be gotten from
+//an include file generated at build time. Here it is hardcoded to
+//rdx since using rax is problematic with cm3cg which inits eax before
+//calls to functions without paramaters thus clobbering the very register
+//we are trying to get.
+//#define EHRegNo 0
+//#define REG "rax"
+#define EHRegNo 1
+#define REG "rdx"
+
+char * RTStackMem__AllocArr(long size);
 
 /* TYPE Frame = RECORD pc, sp: ADDRESS;  
+ *                     handlerIP : ADDRESS;
+ *                     exceptionRef : ADDRESS;
  *                     cursor : ADDRESS;
  *                     lock : INTEGER; END; */
 typedef struct {
   unsigned long pc;
   unsigned long sp;
+  unsigned long handlerIP;
+  unsigned long exceptionRef;
   unw_cursor_t *cursor;
   long lock;
 } Frame;
 
 #define FrameLock 0x1234567890
 
-//just a test
+/*
+//just a test of generating a backtrace with libunwind.
+//
 void show_backtrace (void) {
   unw_cursor_t cursor; unw_context_t uc;
   unw_word_t ip, sp;
@@ -56,6 +72,8 @@ void show_backtrace (void) {
     printf("name %s\n",name);
   }
 }
+*/
+
 
 /*---------------------------------------------------------------------------*/
 /* PROCEDURE ProcName (READONLY f: Frame): ADDRESS;
@@ -67,14 +85,15 @@ char* RTStack__ProcName (Frame *f)
 {
   int ret;
   char *name;
-  size_t name_len = 50;
+  long name_len = 50;
   unw_word_t ofp;
 
   name = (char *) malloc(name_len);
-//fix this - mem leak if alloced here. should do it in m3
+  //there is a small mem leak here but as it is only called
+  //during debugex of the stack unwinder it should be fine.
+
   ret = unw_get_proc_name(f->cursor, name, name_len, &ofp);
   if (ret == 0) {
-printf("ProcName %s\n",name);
     return name;
   } else {
     return 0;
@@ -88,11 +107,8 @@ printf("ProcName %s\n",name);
 
 void RTStack__GetThreadFrame (Frame *f, char *start, int len)
 {
-
-// not sure we need this. dont think its called and its
-// intel specific regs ??
-printf("Err GetThreadFrame\n");
-
+  // not used 
+  abort();
 }
 
 /*---------------------------------------------------------------------------*/
@@ -105,24 +121,24 @@ void RTStack__CurFrame (Frame *f)
   unw_cursor_t *cursor;
   unw_word_t ip, sp;
 
-  //callback to m3 to do the alloc on the traced heap ??
+  //should we alloc in m3 maybe otherwise how are these destroyed 
   uc = (unw_context_t *) malloc(sizeof(unw_context_t));
   cursor = (unw_cursor_t *) malloc(sizeof(unw_cursor_t));
 
-//  printf("CurFrame size context %d size cursor %d\n",sizeof(unw_context_t), sizeof(unw_cursor_t));
+  //printf("CurFrame size context %d size cursor %d\n",sizeof(unw_context_t), sizeof(unw_cursor_t));
 
   f->lock = FrameLock;
   unw_getcontext(uc);
   unw_init_local(cursor, uc);
   unw_get_reg(cursor, UNW_REG_IP, &ip);
   unw_get_reg(cursor, UNW_REG_SP, &sp);
-  //test using bp for stack pointer
-  unw_get_reg(cursor, UNW_X86_64_RBP, &sp);
+  
+  //using bp for stack pointer must be used for copy version
+  //unw_get_reg(cursor, UNW_X86_64_RBP, &sp);
+
   f->pc = ip;
   f->sp = sp;
   f->cursor = cursor;
-
-//printf ("ip = %lx, sp = %lx\n", (long) ip, (long) sp);
 
   if (f->lock != FrameLock) abort ();
 }
@@ -139,9 +155,7 @@ void RTStack__PrevFrame (Frame* callee, Frame* caller)
   int ret;
   char *str;
 
-//printf("PrevFrame \n");
-
-if (!callee->cursor) printf("no cursor\n");
+  if (!callee->cursor) abort();
 
   if (callee->lock != FrameLock) abort ();
   *caller = *callee;
@@ -150,13 +164,13 @@ if (!callee->cursor) printf("no cursor\n");
   if (ret > 0) {
     unw_get_reg(caller->cursor, UNW_REG_IP, &ip);
     unw_get_reg(caller->cursor, UNW_REG_SP, &sp);
-  //test using bp for stack pointer
-  unw_get_reg(caller->cursor, UNW_X86_64_RBP, &sp);
+    
+    //temp using bp for stack pointer must be used for the copy version
+    //unw_get_reg(caller->cursor, UNW_X86_64_RBP, &sp);
+
     caller->pc = ip;
     caller->sp = sp;
-//printf ("cip = %lx, csp = %lx\n", (long) ip, (long) sp);
   } else {
-//printf("PrevFrame ret err\n");
     caller->pc = 0;
     caller->sp = 0;
   }
@@ -174,13 +188,34 @@ void RTStack__Unwind (Frame *target)
 {
   int ret;
 
-//printf("Unwind \n");
-if (!target->cursor) printf("no cursor\n");
-
+  if (!target->cursor) abort();
   if (target->lock != FrameLock) abort ();
+  
+// for the copy exc we have to disable the 2 set regs below
+  //set ip to handler ip
+  unw_set_reg(target->cursor, UNW_REG_IP, target->handlerIP);
+  
+  //set the eh register to return the exception object
+  unw_set_reg(target->cursor,
+	      __builtin_eh_return_data_regno(EHRegNo),
+	      target->exceptionRef);
+//
   ret = unw_resume(target->cursor);
   //success means unreachable from here
-if (ret < 0) printf("unwind error\n");
+  if (ret < 0) {
+    printf("unwind error\n");
+    abort();
+  }
+}
+
+/*
+ * Latch the exception pointer from the builtin eh reg
+ * This is defined as int* but we are just returning a pointer
+ * of size address.
+ */
+int *RTStack__LatchEHReg() {
+  register int *ehReg asm(REG);
+  return ehReg;
 }
 
 /*

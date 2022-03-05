@@ -22,6 +22,8 @@ TYPE
   FrameInfo = RECORD
     pc  : ADDRESS;
     sp  : ADDRESS;
+    handlerIP  : ADDRESS; (* instruction pointer of the handler *)
+    excRef  : ADDRESS; (* ref to the exception activation *)
     cursor : ADDRESS; (* libunwind cursor to cur frame *)
     lock: INTEGER;  (* to ensure that cxt isn't overrun!! *)
   END;

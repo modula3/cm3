@@ -18,6 +18,8 @@ PROCEDURE ResumeRaise (VAR a: RT0.RaiseActivation) RAISES ANY;
 (* after a TRY-FINALLY handler has been executed, restart the processing
    of the execption. It is assumed that there is a handler for this exception *)
 
+PROCEDURE LatchEHReg () : ADDRESS;
+
 PROCEDURE SetBackstop (h: Backstop): Backstop;
 (* Sets the current backstop to "h" and returns the previous handler. *)
 
