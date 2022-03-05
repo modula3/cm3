@@ -285,13 +285,19 @@ proc : Procedure.T;
                               CG.Type.Struct, 0, in_memory := TRUE,
                               up_level := FALSE, f := CG.Never);
 *)
-(*peter still need inits since still need exception test otherwise
-the handler bb has no predecessors *)
     CG.Load_nil ();
     CG.Store_addr (info, M3RT.EA_exception);
 
     (* compile the body *)
     l := CG.Next_label (3);
+
+(* peter quick check if we can bypass the no predecessors thing *)
+(* this works but optimisation still fails
+CG.Load_addr (info, M3RT.EA_exception, Target.Address.align);
+CG.Load_nil ();
+CG.If_compare (CG.Type.Addr, CG.Cmp.NE, l+1, CG.Never);
+*)
+
     CG.Set_label (l, barrier := TRUE);
     IF (p.hasElse)
       THEN Marker.PushTryElse (l, l+1, info);
@@ -341,11 +347,6 @@ CG.Store_addr (info);
 we have just an address so could just do load and store *)
 CG.Load_addr (next_info, 0, Target.Address.align);
 CG.Store_addr (info, Target.Address.align);
-(* put these in to see if generated *)
-(* they are generated line 74 in p004 Main.m3 but CG error stack prob
-CG.Swap();
-CG.Swap();
-*)
 (*
       CG.Load_addr_of (next_info, 0, Target.Address.align);
       CG.Load_addr_of (info, 0, Target.Address.align);

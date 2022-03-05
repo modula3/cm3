@@ -748,10 +748,12 @@ PROCEDURE EmitExceptionTest (signature: Type.T;  need_value: BOOLEAN): CG.Val =
     END;
 
     (* generate the conditional branch to the handler *)
+(* dont really need this code after every call to check if exc
+raised it only works with the old copy exception model
+*) 
     CG.Load_addr (stack[i].info, M3RT.EA_exception, Target.Address.align);
     CG.Load_nil ();
     CG.If_compare (CG.Type.Addr, CG.Cmp.NE, stack[i].stop, CG.Never);
-
     IF NOT need_value AND (value # NIL) THEN
       CG.Push (value);
       CG.Free (value);
