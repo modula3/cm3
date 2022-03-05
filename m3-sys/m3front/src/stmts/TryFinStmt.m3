@@ -70,7 +70,7 @@ PROCEDURE Check (p: P;  VAR cs: Stmt.CheckState) =
   VAR zz: Scope.T;  oc: Stmt.Outcomes;  name: INTEGER;
   BEGIN
     Jmpbufs.CheckTry (cs.jmpbufs, p.jmpbufs);
-    Marker.PushFinally (CG.No_label, CG.No_label, NIL);
+    Marker.PushFinally (CG.No_label, CG.No_label, CG.No_label, NIL);
     Stmt.TypeCheck (p.body, cs);
     Marker.Pop ();
     TryStmt.PushHandler (NIL, 0, FALSE);
@@ -120,6 +120,7 @@ PROCEDURE Compile (p: P): Stmt.Outcomes =
     END;
   END Compile;
 
+(*
 PROCEDURE Compile1 (p: P): Stmt.Outcomes =
   VAR
     oc, xc, o: Stmt.Outcomes;
@@ -182,6 +183,132 @@ PROCEDURE Compile1 (p: P): Stmt.Outcomes =
     CG.Pop_param (CG.Type.Addr);
     Procedure.EmitCall (proc);
     CG.Set_label (lab);
+
+    (* restore the "Compiler.ThisException()" globals *)
+    TryStmt.PopHandler ();
+
+    o := Stmt.Outcomes {};
+    IF Outcome.FallThrough IN xc THEN o := oc END;
+    IF Outcome.Exits IN xc   THEN o := o + Stmt.Outcomes {Outcome.Exits} END;
+    IF Outcome.Returns IN xc THEN o := o + Stmt.Outcomes {Outcome.Returns} END;
+    RETURN o;
+  END Compile1;
+*)
+
+PROCEDURE Compile1 (p: P): Stmt.Outcomes =
+  VAR
+    oc, xc, o: Stmt.Outcomes;
+    lab, xx: CG.Label;
+    info: CG.Var;
+    returnSeen, exitSeen : BOOLEAN;
+    proc: Procedure.T;
+  BEGIN
+    (* declare and initialize the info record *)
+(*peter now its an address *)
+    info := CG.Declare_local (M3ID.NoID, Target.Address.size, Target.Address.align,
+                              CG.Type.Addr, 0, in_memory := TRUE,
+                              up_level := FALSE, f := CG.Never);
+(*
+    info := CG.Declare_local (M3ID.NoID, M3RT.EA_SIZE, Target.Address.align,
+                              CG.Type.Struct, 0, in_memory := TRUE,
+                              up_level := FALSE, f := CG.Never);
+*)
+    CG.Load_nil ();
+    CG.Store_addr (info, M3RT.EA_exception);
+
+    (* compile the body *)
+    lab := CG.Next_label (3);
+    CG.Set_label (lab, barrier := TRUE);
+xx := CG.Next_label ();
+    Marker.PushFinally (lab, lab+1, xx, info);
+    Marker.SaveFrame ();
+      oc := Stmt.Compile (p.body);
+    Marker.PopFinally (returnSeen, exitSeen);
+(* peter Need to jump over the exc handling reg latch  seems to work *)
+(* also need to rejig this we prob should use labs and get 4 to start with
+and the pushfinally would be lab lab+2 so that the stop is the lab
+after the one to latch the exc handler so the labs go
+lab start try
+lab + 1 latch exc ie the handler
+lab + 2 the label after ie the real handler
+lab + 3 end finally
+but just to test it could put the next_label stmt up before the pushfinally
+and change pushfinally(lab, xx, info)
+ this is all to fix the exits and return exceptions which Marker.EmitExit 
+uses
+*)
+IF NOT (returnSeen OR exitSeen) THEN
+CG.Jump (xx);
+END;
+    CG.Set_label (lab+1, barrier := TRUE);
+
+(*peter get the exc from the builtin reg  seems to work *)
+proc := RunTyme.LookUpProc (RunTyme.Hook.LatchEHReg);
+Procedure.StartCall (proc);
+Procedure.EmitCall (proc);
+CG.Store_addr (info);
+CG.Set_label (xx, barrier := TRUE);
+
+    (* set the "Compiler.ThisException()" globals *)
+    TryStmt.PushHandler (info, 0, direct := TRUE);
+
+    (* compile the handler *)
+    Scanner.offset := p.forigin;
+    CG.Gen_location (p.forigin);
+      xc := Stmt.Compile (p.finally);
+
+    IF (Outcome.FallThrough IN xc) THEN
+      (* generate the bizzare end-tests *)
+
+      (* exceptional outcome? *)
+(* checked *)
+(*peter check is this a load? not addr of - assuming the Try Stmt handled
+the exception and the info has been saved after the latch ?? *)
+      CG.Load_addr (info, M3RT.EA_exception, Target.Address.align);
+      CG.Load_nil ();
+      CG.If_compare (CG.Type.Addr, CG.Cmp.EQ, lab+2, CG.Always);
+
+      IF (exitSeen) THEN
+        xx := CG.Next_label ();
+(*
+        CG.Load_int (Target.Integer.cg_type, info, M3RT.EA_exception);
+*)
+(* checked *)
+CG.Load_addr (info, M3RT.EA_exception, Target.Address.align);
+CG.Loophole (CG.Type.Addr, Target.Integer.cg_type );
+        CG.Load_intt (Marker.Exit_exception);
+        CG.If_compare (Target.Integer.cg_type, CG.Cmp.NE, xx, CG.Always);
+        Marker.EmitExit ();
+        CG.Set_label (xx);
+      END;
+
+      IF (returnSeen) THEN
+        xx := CG.Next_label ();
+(*
+        CG.Load_int (Target.Integer.cg_type, info, M3RT.EA_exception);
+*)
+(* checked *)
+CG.Load_addr (info, M3RT.EA_exception, Target.Address.align);
+CG.Loophole (CG.Type.Addr, Target.Integer.cg_type );
+        CG.Load_intt (Marker.Return_exception);
+        CG.If_compare (Target.Integer.cg_type, CG.Cmp.NE, xx, CG.Always);
+        Marker.EmitReturn (NIL, fromFinally := TRUE);
+        CG.Set_label (xx);
+      END;
+
+      (* resume the exception *)
+      proc := RunTyme.LookUpProc (RunTyme.Hook.ResumeRaiseEx);
+      Procedure.StartCall (proc);
+(*peter check  this a simple load not address of  this seems to work *)
+CG.Load_addr (info, 0, Target.Address.align);
+(*
+      CG.Load_addr_of (info, 0, Target.Address.align);
+*)
+      CG.Pop_param (CG.Type.Addr);
+      Procedure.EmitCall (proc);
+
+      CG.Set_label (lab+2, barrier := TRUE);
+    END;
 
     (* restore the "Compiler.ThisException()" globals *)
     TryStmt.PopHandler ();
@@ -314,7 +441,7 @@ PROCEDURE Compile3 (p: P): Stmt.Outcomes =
     Marker.CaptureState (frame, Jmpbufs.CompileTryGetJmpbuf (p.jmpbufs), lab+1);
 
     (* compile the body *)
-    Marker.PushFinally (lab, lab+1, frame);
+    Marker.PushFinally (lab, lab+1, CG.No_label, frame);
       oc := Stmt.Compile (p.body);
     Marker.PopFinally (returnSeen, exitSeen);
     IF (Outcome.FallThrough IN oc) THEN

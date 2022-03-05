@@ -9,7 +9,7 @@
 MODULE TryStmt;
 
 IMPORT M3ID, CG, Variable, Scope, Exceptionz, Value, Error, Marker;
-IMPORT Type, Stmt, StmtRep, TryFinStmt, Token;
+IMPORT Type, Stmt, StmtRep, TryFinStmt, Token, Procedure, RunTyme;
 IMPORT Scanner, ESet, Target, M3RT, Tracer, Jmpbufs;
 FROM Scanner IMPORT Match, MatchID, GetToken, Fail, cur;
 FROM M3 IMPORT QID;
@@ -273,16 +273,31 @@ PROCEDURE Compile1 (p: P): Stmt.Outcomes =
     next_handler: CG.Label;
     another: BOOLEAN;
     next_info: CG.Var;
+proc : Procedure.T;
   BEGIN
     (* declare and initialize the info record *)
+(*peter the exc reg is address *)
+    info := CG.Declare_local (M3ID.NoID, Target.Address.size, Target.Address.align,
+                              CG.Type.Addr, 0, in_memory := TRUE,
+                              up_level := FALSE, f := CG.Never);
+(*
     info := CG.Declare_local (M3ID.NoID, M3RT.EA_SIZE, Target.Address.align,
                               CG.Type.Struct, 0, in_memory := TRUE,
                               up_level := FALSE, f := CG.Never);
+*)
     CG.Load_nil ();
     CG.Store_addr (info, M3RT.EA_exception);
 
     (* compile the body *)
     l := CG.Next_label (3);
+
+(* peter quick check if we can bypass the no predecessors thing *)
+(* this works but optimisation still fails
+CG.Load_addr (info, M3RT.EA_exception, Target.Address.align);
+CG.Load_nil ();
+CG.If_compare (CG.Type.Addr, CG.Cmp.NE, l+1, CG.Never);
+*)
+
     CG.Set_label (l, barrier := TRUE);
     IF (p.hasElse)
       THEN Marker.PushTryElse (l, l+1, info);
@@ -291,7 +306,9 @@ PROCEDURE Compile1 (p: P): Stmt.Outcomes =
     Marker.SaveFrame ();
       oc := Stmt.Compile (p.body);
     Marker.Pop ();
-    CG.Jump (l+2);
+    IF (Stmt.Outcome.FallThrough IN oc) THEN
+      CG.Jump (l+2);
+    END;
 
     IF (p.hasElse) THEN
       (* EXITs and RETURNs from the body are caught by the ELSE clause *)
@@ -308,6 +325,13 @@ PROCEDURE Compile1 (p: P): Stmt.Outcomes =
     CG.Set_label (l+1, barrier := TRUE);
     Scanner.offset := p.h_origin;
     CG.Gen_location (p.h_origin);
+
+(*peter get the exc from the builtin reg *)
+proc := RunTyme.LookUpProc (RunTyme.Hook.LatchEHReg);
+Procedure.StartCall (proc);
+Procedure.EmitCall (proc);
+CG.Store_addr (info);
+
     h := p.handles;
     WHILE (h # NIL) DO
       oc := oc + CompileHandler1 (h, info, l+2,
@@ -319,9 +343,15 @@ PROCEDURE Compile1 (p: P): Stmt.Outcomes =
       oc := oc + Stmt.Compile (p.elseBody);
     ELSIF another THEN
       (* we didn't eat this exception => mark and invoke the next handler *)
+(*peter check this copy since this is a struct copy of the old local and now 
+we have just an address so could just do load and store *)
+CG.Load_addr (next_info, 0, Target.Address.align);
+CG.Store_addr (info, Target.Address.align);
+(*
       CG.Load_addr_of (next_info, 0, Target.Address.align);
       CG.Load_addr_of (info, 0, Target.Address.align);
       CG.Copy (M3RT.EA_SIZE, overlap := FALSE);
+*)
       CG.Jump (next_handler);
     END;
 
@@ -347,12 +377,17 @@ PROCEDURE CompileHandler1 (h: Handler;  info: CG.Var;
 
     CG.Gen_location (h.origin);
 
+
     IF (NOT last) THEN
       (* check for a match *)
       e := h.tags;
       <*ASSERT e # NIL*>
       WHILE (e # NIL) DO
+
         CG.Load_addr (info, M3RT.EA_exception, Target.Address.align);
+(*peter need another indirect - need a boost as well *)
+CG.Boost_addr_alignment (Target.Address.align);
+CG.Load_indirect (CG.Type.Addr, 0, Target.Address.size); 
         CG.Boost_addr_alignment (Target.Integer.align);
         CG.Load_indirect (Target.Integer.cg_type, 0, Target.Integer.size);
         CG.Load_intt (Exceptionz.UID (e.obj));  (** Value.Load (e.obj);  **)
@@ -373,12 +408,23 @@ PROCEDURE CompileHandler1 (h: Handler;  info: CG.Var;
         Scope.InitValues (h.scope);
         Variable.LoadLValue (h.var);
         EVAL Type.CheckInfo (h.type, t_info);
+(* peter these  need an extr load indirect  *)
         IF Exceptionz.ArgByReference (h.type) THEN
+CG.Load_addr (info, M3RT.EA_exception, Target.Address.align);
+CG.Boost_addr_alignment (Target.Address.align);
+CG.Load_indirect (CG.Type.Addr, M3RT.EA_arg, Target.Address.size); 
+(*
           CG.Load_addr (info, M3RT.EA_arg, Target.Address.align);
+*)
           CG.Boost_addr_alignment (t_info.alignment);
           CG.Copy (t_info.size, overlap := FALSE);
         ELSE
+CG.Load_addr (info, M3RT.EA_exception, Target.Address.align);
+CG.Boost_addr_alignment (Target.Address.align);
+CG.Load_indirect (CG.Type.Addr, M3RT.EA_arg, Target.Address.size); 
+(*
           CG.Load_addr (info, M3RT.EA_arg, Target.Address.align);
+*)
           CG.Loophole (CG.Type.Addr, t_info.stk_type);
           CG.Store_indirect (t_info.stk_type, 0, t_info.size);
         END;
@@ -392,7 +438,6 @@ PROCEDURE CompileHandler1 (h: Handler;  info: CG.Var;
       oc := Stmt.Compile (h.body);
       IF (Stmt.Outcome.FallThrough IN oc) THEN CG.Jump (resume) END;
     END;
-
 
     CG.Set_label (top+1);
     RETURN oc;

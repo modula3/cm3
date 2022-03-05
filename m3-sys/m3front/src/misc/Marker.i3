@@ -27,7 +27,7 @@ PROCEDURE PushTry     (l_start, l_stop: CG.Label;  info: CG.Var;  ex: ESet.T);
 PROCEDURE PushTryElse (l_start, l_stop: CG.Label;  info: CG.Var);
 
 (* TRY-FINALLY *)
-PROCEDURE PushFinally     (l_start, l_stop: CG.Label;  info: CG.Var);
+PROCEDURE PushFinally     (l_start, l_stop, l_nextstop: CG.Label;  info: CG.Var);
 PROCEDURE PushFinallyProc (l_start, l_stop: CG.Label;  info: CG.Var;
                            handler: CG.Proc;  h_level: INTEGER);
 PROCEDURE PopFinally      (VAR(*OUT*) returnSeen, exitSeen: BOOLEAN);

@@ -24,6 +24,7 @@ CONST
     "TextLitInfo", "TextLitGetChar", "TextLitGetWideChar",
     "TextLitGetChars", "TextLitGetWideChars",
     "CheckLoadTracedRef", "CheckStoreTraced"
+(*peter*) , "LatchEHReg"
   };
 
 VAR
