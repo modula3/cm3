@@ -82,7 +82,7 @@ TYPE
   CharByte  = CHAR ;  (* essentiall ARRAY [0..0] OF CHAR *) (* 8 bits *)
 
 PROCEDURE NeedsSwapping(endian: Endian) : BOOLEAN =
-VAR endian := Swap.GetEndian ();
+VAR native_endian := Swap.GetEndian ();
   BEGIN
     IF endian # Endian.Native THEN
       (* If explicit endian value not equal to native value then swap *)
