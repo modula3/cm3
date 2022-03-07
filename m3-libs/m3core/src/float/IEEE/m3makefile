@@ -9,16 +9,6 @@ Interface ("Real")
 Interface ("LongReal")
 Interface ("Extended")
 
-if defined ("M3_BOOTSTRAP") % endian neutrality: avoid bitfields
-
-implementation ("RealFloatBoot")
-implementation ("LongFloatBoot")
-
-else
-
 implementation ("RealFloat")
 implementation ("LongFloat")
-
-end
-
 implementation ("ExtendedFloat")

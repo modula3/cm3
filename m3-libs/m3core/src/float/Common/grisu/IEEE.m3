@@ -1,12 +1,10 @@
 (* Copyright (C) 2016 Peter McKinna. All rights reserved. *)
-(* jay.krell@cornell.edu                                  *)
 (* See file COPYRIGHT-BSD for details. *)
 
 UNSAFE MODULE IEEE;
 
-IMPORT Word, Long;
+IMPORT Word,Long;
 FROM SimFP IMPORT GFP,Uint64,Uint32,SignificandSize;
-FROM Cstdint IMPORT uint32_t, uint64_t;
 
 CONST
   (* Double constants *)
@@ -488,61 +486,6 @@ PROCEDURE LowerBoundaryIsCloser_S(self : Single) : BOOLEAN =
     physSignificandIsZero := Word.And(self.asUint32(), fSignificandMask) = 0;
     RETURN physSignificandIsZero AND (self.exponent() # fDenormalExponent);
   END LowerBoundaryIsCloser_S;
-
-PROCEDURE Unpack32 (r:REAL): Float32 =
-VAR i := LOOPHOLE (r, uint32_t);
-BEGIN
-  RETURN Float32 {sign        := Word.Extract (i, 31, 1),
-                  exponent    := Word.Extract (i, 23, 8),
-                  significand := Word.Extract (i, 0, 23)};
-END Unpack32;
-
-PROCEDURE Unpack64OnePartSignificand (r:LONGREAL): Float64OnePartSignificand =
-VAR i := LOOPHOLE (r, uint64_t);
-BEGIN
-  RETURN Float64OnePartSignificand {
-    sign        := VAL (Long.Extract (i, 63,  1), INTEGER),
-    exponent    := VAL (Long.Extract (i, 52, 11), INTEGER),
-    significand :=      Long.Extract (i,  0, 52)};
-END Unpack64OnePartSignificand;
-
-PROCEDURE Unpack64TwoPartSignificand (r:LONGREAL): Float64TwoPartSignificand =
-VAR i := LOOPHOLE (r, uint64_t);
-BEGIN
-  RETURN Float64TwoPartSignificand {
-    sign         := VAL (Long.Extract (i, 63,  1), INTEGER),
-    exponent     := VAL (Long.Extract (i, 52, 11), INTEGER),
-    significand0 := VAL (Long.Extract (i, 32, 20), INTEGER),
-    significand1 := VAL (Long.Extract (i,  0, 32), INTEGER)};
-END Unpack64TwoPartSignificand;
-
-PROCEDURE Pack32 (READONLY r:Float32): REAL =
-VAR result: uint32_t := 0;
-BEGIN
-  result := Word.Insert (result, r.sign,        31,  1);
-  result := Word.Insert (result, r.exponent,    23,  8);
-  result := Word.Insert (result, r.significand,  0, 23);
-  RETURN LOOPHOLE (result, REAL);
-END Pack32;
-
-PROCEDURE Pack64TwoPartSignificand (READONLY r:Float64TwoPartSignificand): LONGREAL =
-VAR result: uint64_t := 0L;
-BEGIN
-  result := Long.Insert (result, VAL (r.sign, uint64_t),         63, 1);
-  result := Long.Insert (result, VAL (r.exponent, uint64_t),     52, 11);
-  result := Long.Insert (result, VAL (r.significand0, uint64_t), 32, 20);
-  result := Long.Insert (result, VAL (r.significand1, uint64_t),  0, 32);
-  RETURN LOOPHOLE (result, LONGREAL);
-END Pack64TwoPartSignificand;
-
-PROCEDURE Pack64OnePartSignificand (READONLY r:Float64OnePartSignificand): LONGREAL =
-VAR result: uint64_t := 0L;
-BEGIN
-  result := Long.Insert (result, VAL (r.sign, uint64_t),     63,  1);
-  result := Long.Insert (result, VAL (r.exponent, uint64_t), 52, 11);
-  result := Long.Insert (result,      r.significand,         0, 52);
-  RETURN LOOPHOLE (result, LONGREAL);
-END Pack64OnePartSignificand;
-
+  
 BEGIN
 END IEEE.
