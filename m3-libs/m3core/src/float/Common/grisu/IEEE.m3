@@ -6,7 +6,6 @@ UNSAFE MODULE IEEE;
 
 IMPORT Word, Long;
 FROM SimFP IMPORT GFP,Uint64,Uint32,SignificandSize;
-FROM Cstdint IMPORT uint32_t, uint64_t;
 
 CONST
   (* Double constants *)
@@ -490,7 +489,7 @@ PROCEDURE LowerBoundaryIsCloser_S(self : Single) : BOOLEAN =
   END LowerBoundaryIsCloser_S;
 
 PROCEDURE Unpack32 (r:REAL): Float32 =
-VAR i := LOOPHOLE (r, uint32_t);
+VAR i := LOOPHOLE (r, Uint32);
 BEGIN
   RETURN Float32 {sign        := Word.Extract (i, 31, 1),
                   exponent    := Word.Extract (i, 23, 8),
@@ -498,7 +497,7 @@ BEGIN
 END Unpack32;
 
 PROCEDURE Unpack64OnePartSignificand (r:LONGREAL): Float64OnePartSignificand =
-VAR i := LOOPHOLE (r, uint64_t);
+VAR i := LOOPHOLE (r, Uint64);
 BEGIN
   RETURN Float64OnePartSignificand {
     sign        := VAL (Long.Extract (i, 63,  1), INTEGER),
@@ -507,7 +506,7 @@ BEGIN
 END Unpack64OnePartSignificand;
 
 PROCEDURE Unpack64TwoPartSignificand (r:LONGREAL): Float64TwoPartSignificand =
-VAR i := LOOPHOLE (r, uint64_t);
+VAR i := LOOPHOLE (r, Uint64);
 BEGIN
   RETURN Float64TwoPartSignificand {
     sign         := VAL (Long.Extract (i, 63,  1), INTEGER),
@@ -517,7 +516,7 @@ BEGIN
 END Unpack64TwoPartSignificand;
 
 PROCEDURE Pack32 (READONLY r:Float32): REAL =
-VAR result: uint32_t := 0;
+VAR result: Uint32 := 0;
 BEGIN
   result := Word.Insert (result, r.sign,        31,  1);
   result := Word.Insert (result, r.exponent,    23,  8);
@@ -526,21 +525,21 @@ BEGIN
 END Pack32;
 
 PROCEDURE Pack64TwoPartSignificand (READONLY r:Float64TwoPartSignificand): LONGREAL =
-VAR result: uint64_t := 0L;
+VAR result: Uint64 := 0L;
 BEGIN
-  result := Long.Insert (result, VAL (r.sign, uint64_t),         63, 1);
-  result := Long.Insert (result, VAL (r.exponent, uint64_t),     52, 11);
-  result := Long.Insert (result, VAL (r.significand0, uint64_t), 32, 20);
-  result := Long.Insert (result, VAL (r.significand1, uint64_t),  0, 32);
+  result := Long.Insert (result, VAL (r.sign, Uint64),         63, 1);
+  result := Long.Insert (result, VAL (r.exponent, Uint64),     52, 11);
+  result := Long.Insert (result, VAL (r.significand0, Uint64), 32, 20);
+  result := Long.Insert (result, VAL (r.significand1, Uint64),  0, 32);
   RETURN LOOPHOLE (result, LONGREAL);
 END Pack64TwoPartSignificand;
 
 PROCEDURE Pack64OnePartSignificand (READONLY r:Float64OnePartSignificand): LONGREAL =
-VAR result: uint64_t := 0L;
+VAR result: Uint64 := 0L;
 BEGIN
-  result := Long.Insert (result, VAL (r.sign, uint64_t),     63,  1);
-  result := Long.Insert (result, VAL (r.exponent, uint64_t), 52, 11);
-  result := Long.Insert (result,      r.significand,         0, 52);
+  result := Long.Insert (result, VAL (r.sign, Uint64),     63,  1);
+  result := Long.Insert (result, VAL (r.exponent, Uint64), 52, 11);
+  result := Long.Insert (result,      r.significand,        0, 52);
   RETURN LOOPHOLE (result, LONGREAL);
 END Pack64OnePartSignificand;
 
