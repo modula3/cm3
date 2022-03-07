@@ -11,5 +11,4 @@ Interface ("Extended")
 
 implementation ("RealFloat")
 implementation ("LongFloat")
-
 implementation ("ExtendedFloat")

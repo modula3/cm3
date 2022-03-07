@@ -12,41 +12,37 @@ UNSAFE MODULE LongFloat;
 (* This module implements the operations on IEEE double precision reals 
    that do not depend on the operating system. *)
 
-IMPORT IEEE;
+IMPORT LongRealRep AS Rep;
 IMPORT DragonT, FPU, Word, Ctypes, Convert, Grisu, Cstdlib;
-
-TYPE Float64 = IEEE.Float64TwoPartSignificand;
-CONST Pack = IEEE.Pack64TwoPartSignificand;
-CONST Unpack = IEEE.Unpack64TwoPartSignificand;
 
 PROCEDURE Scalb (x: T; n: INTEGER): T =
   BEGIN
     RETURN FLOAT (FPU.scalb (FLOAT (x, LONGREAL), n), T);
   END Scalb;
 
-VAR Log_of_zero := Pack (Float64 {sign := 1, exponent := 16_7ff,
-                                    significand0 := 0, significand1 := 0});
 PROCEDURE Logb (x: T): T =
-  VAR xx := Unpack (x);
+  CONST Log_of_zero = Rep.T {sign := 1, exponent := 16_7ff,
+                        significand0 := 0, significand1 := 0};
+  VAR ans: T;
   BEGIN
     CASE Class (x) OF
-    | IEEEClass.SignalingNaN,
+    | IEEEClass.SignalingNaN, 
       IEEEClass.QuietNaN =>
         RETURN x;
-    | IEEEClass.Infinity =>
+    | IEEEClass.Infinity => 
         RETURN ABS (x);
     | IEEEClass.Zero =>
-        RETURN Log_of_zero;
+        LOOPHOLE (ans, Rep.T) := Log_of_zero;
+        RETURN ans;
     | IEEEClass.Normal =>
-        xx.exponent := xx.exponent - 1023;
-        RETURN Pack (xx);
+        RETURN FLOAT (LOOPHOLE (x, Rep.T).exponent - 1023, T);
     | IEEEClass.Denormal =>
         RETURN -1022.0d0;
     END;
   END Logb;
 
 PROCEDURE ILogb (x: T): INTEGER =
-  VAR xx := Unpack (x);  v, w: Word.T;  n: INTEGER;
+  VAR xx := LOOPHOLE (x, Rep.T);  v, w: Word.T;  n: INTEGER;
   BEGIN
     CASE Class (x) OF
     | IEEEClass.SignalingNaN,
@@ -75,23 +71,20 @@ PROCEDURE ILogb (x: T): INTEGER =
 PROCEDURE NextAfter (x, y: T): T =
   CONST Ones0 = 16_fffff; (* BITSIZE (significand0) 1's *)
         Ones1 = -1; (* all 1's *)
-  VAR xx := Unpack (x);
-      yy := Unpack (y);
-      zz := Float64 {};
+  VAR xx := LOOPHOLE (x, Rep.T);  yy := LOOPHOLE (y, Rep.T);  z: T;
   BEGIN
     IF x = y                       THEN RETURN x; END;
     IF IsNaN (x) OR NOT Finite (x) THEN RETURN x; END;
     IF IsNaN (y)                   THEN RETURN y; END;
 
     IF x = 0.0d0   THEN
-      zz.sign         := yy.sign;
-      zz.exponent     := 0;
-      zz.significand0 := 0;
-      zz.significand1 := 1;
-      RETURN Pack (zz);
-    END;
-
-    IF (x > 0.0d0 AND x > y) OR (x < 0.0d0 AND x < y) THEN
+      LOOPHOLE(z, Rep.T).sign         := yy.sign;
+      LOOPHOLE(z, Rep.T).exponent     := 0;
+      LOOPHOLE(z, Rep.T).significand0 := 0;
+      LOOPHOLE(z, Rep.T).significand1 := 1;
+      RETURN z; END;
+ 
+    IF (x > 0.0d0 AND x > y) OR (x < 0.0d0 AND x < y) THEN 
       IF xx.significand0 = 0 AND xx.significand1 = 0 THEN
         xx.significand0 := Ones0;
         xx.significand1 := Ones1;
@@ -116,31 +109,32 @@ PROCEDURE NextAfter (x, y: T): T =
       ELSE
         INC (xx.significand1); END; END;
 
-    RETURN Pack (xx);
+    LOOPHOLE (z, Rep.T) := xx;
+    RETURN z;
   END NextAfter;
 
 PROCEDURE CopySign (x, y: T): T =
-  VAR res := Unpack (x);
+  VAR res := x;
   BEGIN
-    res.sign := Unpack (y).sign;
-    RETURN Pack (res);
+    LOOPHOLE (res, Rep.T).sign := LOOPHOLE (y, Rep.T).sign;
+    RETURN res;
   END CopySign;
 
 PROCEDURE Finite (x: T): BOOLEAN =
-  VAR xx := Unpack (x);
+  VAR xx := LOOPHOLE (x, Rep.T);
   BEGIN
-    RETURN xx.exponent # 16_7ff;
+    RETURN xx.exponent # 16_7ff; 
   END Finite;
 
 PROCEDURE IsNaN (x: T): BOOLEAN =
-  VAR xx := Unpack (x);
+  VAR xx := LOOPHOLE (x, Rep.T);
   BEGIN
-    RETURN xx.exponent = 16_7ff
+    RETURN xx.exponent = 16_7ff 
        AND (xx.significand0 # 0 OR xx.significand1 # 0);
   END IsNaN;
 
 PROCEDURE Sign (x: T): [0..1] =
-  VAR xx := Unpack (x);
+  VAR xx := LOOPHOLE (x, Rep.T);
   BEGIN
     RETURN xx.sign;
   END Sign;
@@ -156,7 +150,7 @@ PROCEDURE Unordered (x, y: T): BOOLEAN =
   END Unordered;
 
 PROCEDURE Class (x: T): IEEEClass =
-  VAR xx := Unpack (x);
+  VAR xx := LOOPHOLE (x, Rep.T);
   BEGIN
     IF xx.exponent = 0 THEN
       IF xx.significand0 = 0 AND xx.significand1 = 0
@@ -169,7 +163,7 @@ PROCEDURE Class (x: T): IEEEClass =
       RETURN IEEEClass.Infinity;
     ELSIF Word.And (16_00080000, xx.significand0) # 0 THEN
       RETURN IEEEClass.QuietNaN;
-    ELSE
+    ELSE 
       RETURN IEEEClass.SignalingNaN;
     END;
   END Class;
@@ -219,7 +213,8 @@ PROCEDURE FromDecimal (sign   : [0..1];
   END FromDecimal;
 
 PROCEDURE ToDecimal(x: T): DecimalApprox =
-  VAR xx := Unpack (x);
+  VAR
+    xx := LOOPHOLE (x, Rep.T);
     res: DecimalApprox;
     exp, sig0, sig1: INTEGER;
     count: CARDINAL;
@@ -234,7 +229,7 @@ PROCEDURE ToDecimal(x: T): DecimalApprox =
 
     IF NOT Grisu.FastDtoa(ABS(x), grisuMode, 0, res.digits, count, res.exp) THEN
       (* fallback on Dragon *)
-
+      
       (* we have the lower 32 bits in significand1, the upper 20 bits in
          significand0 and may be a bit to set at the top (if bits = 53) *)
 
@@ -248,7 +243,7 @@ PROCEDURE ToDecimal(x: T): DecimalApprox =
         sig0 := Word.Or (sig0, 16_100000);  (* add the implied 53rd bit *)
       END;
 
-      DragonT.F (exp, 0, 0, sig0, sig1, 53, DragonT.CutoffMode.normal, 0,
+      DragonT.F (exp, 0, 0, sig0, sig1, 53, DragonT.CutoffMode.normal, 0, 
                 res.digits, count, res.exp);
     END;
     res.len := count;

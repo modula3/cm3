@@ -8,12 +8,11 @@
 
 % temporarily disable Grisu for C backend until problems investigated
 % C fails at runtime
-
 if equal (M3_BACKEND_MODE, "C")
   include_dir("no_grisu")
+else
+  include_dir("grisu")
 end
-
-include_dir("grisu")
 
 Interface ("FPU")
 
@@ -30,11 +29,8 @@ implementation ("Extended")
 
 module ("DragonInt")
 module ("DragonT")
-
-if not defined ("M3_BOOTSTRAP") % endian neutrality: avoid bitfields
-  module ("FloatUtils")
-  module ("TextToFloat")
-end
+module ("FloatUtils")
+module ("TextToFloat")
 
 % FloatMode.i3.template is not compilable.  Its purpose is to appear
 % in the "Some Useful Modula-3 Interfaces" manual.  It should be
