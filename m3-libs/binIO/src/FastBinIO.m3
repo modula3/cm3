@@ -36,6 +36,7 @@ EXCEPTION Fatal ;
 
 PROCEDURE UInt32ToInt32(i : UInt32) : Int32 =
   VAR
+    native_endian := Swap.GetEndian ();
     j : Int32 := 0 ;
   BEGIN
     IF BYTESIZE(UInt32) = 4 THEN
@@ -55,6 +56,7 @@ PROCEDURE UInt32ToInt32(i : UInt32) : Int32 =
 
 PROCEDURE Int32ToUInt32(i : Int32) : UInt32 =
   VAR
+    native_endian := Swap.GetEndian ();
     j : UInt32 := 0 ;
   BEGIN
     IF BYTESIZE(UInt32) = 4 THEN
@@ -79,10 +81,8 @@ TYPE
   CharInt16 = ARRAY [0..1] OF CHAR ;  (* 16 bits *)
   CharByte  = CHAR ;  (* essentiall ARRAY [0..0] OF CHAR *) (* 8 bits *)
 
-VAR
-  native_endian := Swap.endian ; (* Endianess of this machine *)
-
 PROCEDURE NeedsSwapping(endian: Endian) : BOOLEAN =
+VAR endian := Swap.GetEndian ();
   BEGIN
     IF endian # Endian.Native THEN
       (* If explicit endian value not equal to native value then swap *)

@@ -49,6 +49,7 @@ PROCEDURE Init () =
 
 PROCEDURE New (): T =
   VAR
+    endian     := Swap.GetEndian ();
     fineTime   : INTEGER;
     fineCounter: [0 .. 255];
     time       : [0 .. LAST(Swap.Int32)];
@@ -83,7 +84,7 @@ PROCEDURE New (): T =
         END;
       END;
     END;
-    IF Swap.endian = Swap.Endian.Big
+    IF endian = Swap.Endian.Big
       THEN ts.time := time;
       ELSE ts.time := Swap.Swap4(time);
     END;
@@ -126,11 +127,12 @@ PROCEDURE Min(READONLY t1, t2: T): T =
 
 PROCEDURE Hash (READONLY t: T): INTEGER =
   VAR i: INTEGER;
+      endian := Swap.GetEndian ();
   BEGIN
     WITH a = LOOPHOLE(t, ARRAY [0 .. 3] OF Swap.Int32) DO
       i := Word.Xor(Word.Xor(a[0], a[1]), Word.Xor(a[2], a[3]));
     END;
-    IF Swap.endian = Swap.Endian.Big THEN i := Swap.Swap4 (i) END;
+    IF endian = Swap.Endian.Big THEN i := Swap.Swap4 (i) END;
     RETURN i;
   END Hash;
 
@@ -138,9 +140,10 @@ PROCEDURE ToTime (READONLY t: T): Time.T =
   VAR
     frac := FLOAT(LOOPHOLE(t, TimeStampRep.T).fineTime, LONGREAL) / 256.0D0;
     time := LOOPHOLE(t, TimeStampRep.T).time;
+    endian := Swap.GetEndian ();
   BEGIN
     IF NOT init_done THEN Init () END;
-    IF Swap.endian = Swap.Endian.Little THEN time := Swap.Swap4 (time); END;
+    IF endian = Swap.Endian.Little THEN time := Swap.Swap4 (time); END;
     RETURN FLOAT(time, LONGREAL) + epoch + frac;
   END ToTime;
 

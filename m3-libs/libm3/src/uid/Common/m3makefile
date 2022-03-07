@@ -9,7 +9,6 @@
 
 Module    ("TimeStamp")
 Module    ("Capability")
-Module    ("Swap")
 Module    ("MachineID")
 interface ("MachineIDC")
 interface ("TimeStampRep")

@@ -192,6 +192,7 @@ PROCEDURE RdSeek(rd: RdT; <*UNUSED*> n: CARDINAL;
   RAISES {Rd.Failure, Thread.Alerted} =
   VAR
     nb: CARDINAL;
+    endian := Swap.GetEndian ();
   BEGIN
     IF dontBlock THEN RETURN RdClass.SeekResult.WouldBlock; END;
     REPEAT
@@ -221,7 +222,7 @@ PROCEDURE RdSeek(rd: RdT; <*UNUSED*> n: CARDINAL;
           (* careful, this is endian dependent *)
           rd.hdr :=
             LOOPHOLE(ADR(rd.buff[rd.st]), UNTRACED REF FragmentHeader)^;
-          IF Swap.endian = Swap.Endian.Big THEN
+          IF endian = Swap.Endian.Big THEN
             rd.hdr.nb := Swap.Swap4(rd.hdr.nb);
           END;
           IF rd.hdr.nb < 0 THEN RAISE Rd.Failure(ProtocolErrorNB); END;
@@ -346,10 +347,11 @@ PROCEDURE WrNextMsg(wr: WrT) RAISES {Wr.Failure, Thread.Alerted} =
   
 PROCEDURE PutFrag(wr: WrT; eom: BOOLEAN) RAISES {Wr.Failure, Thread.Alerted} =
   VAR len := wr.cur - wr.lo;
+      endian := Swap.GetEndian ();
   BEGIN
     WITH hdr = LOOPHOLE(ADR(wr.buff[0]), UNTRACED REF FragmentHeader) DO
       hdr^ := FragmentHeader{eom := ORD(eom), nb := len};
-      IF Swap.endian = Swap.Endian.Big THEN
+      IF endian = Swap.Endian.Big THEN
         hdr.nb := Swap.Swap4(hdr.nb);
       END;
     END;
