@@ -1324,20 +1324,22 @@ PROCEDURE SwapLongReal(i: LONGREAL) : LONGREAL =
   END SwapLongReal;
 
 PROCEDURE NativeEndian(rep: DataRep) : BOOLEAN =
+  VAR endian := Swap.GetEndian ();
   BEGIN
-    RETURN (rep.intFmt >= BigEndianFmt) = (Swap.endian = Swap.Endian.Big);
+    RETURN (rep.intFmt >= BigEndianFmt) = (endian = Swap.Endian.Big);
   END NativeEndian;
 
 PROCEDURE ChooseIntFmt(): Byte8 =
+  VAR endian := Swap.GetEndian ();
   BEGIN
     IF BYTESIZE(INTEGER) = 8 THEN
-      IF Swap.endian = Swap.Endian.Little THEN
+      IF endian = Swap.Endian.Little THEN
         RETURN IntFmt64Little;
       ELSE
         RETURN IntFmt64Big;
       END;
     ELSE
-      IF Swap.endian = Swap.Endian.Little THEN
+      IF endian = Swap.Endian.Little THEN
         RETURN IntFmt32Little;
       ELSE
         RETURN IntFmt32Big;

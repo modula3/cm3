@@ -38,9 +38,10 @@ PROCEDURE Equal(READONLY t1, t2: T): BOOLEAN =
 
 PROCEDURE Hash (READONLY t: T): INTEGER =
   VAR i: Swap.Int64On32;
+      endian := Swap.GetEndian ();
   BEGIN
     LOOPHOLE(i, ARRAY [0 .. 7] OF BITS 8 FOR [0 .. 255]) := t.random;
-    IF Swap.endian = Swap.Endian.Little THEN
+    IF endian = Swap.Endian.Little THEN
       RETURN Swap.Swap4(i.a);
     ELSE
       RETURN i.a;

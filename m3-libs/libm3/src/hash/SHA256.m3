@@ -3,9 +3,9 @@
 
 UNSAFE MODULE SHA256;
 
-IMPORT Text, Fmt, Rd, Ctypes;
+IMPORT Text, Fmt, Rd, Ctypes, Swap;
 FROM Word IMPORT Plus, And, Or, Xor, Not, LeftShift, RightShift;
-FROM Swap IMPORT Swap8, Int64On32, Endian, endian;
+FROM Swap IMPORT Swap8, Int64On32, Endian;
 
 <*FATAL ANY*>
 
@@ -67,6 +67,7 @@ PROCEDURE LengthBlock(ctrl : RefCtl) : IntArr =
   VAR
     len64 : Int64On32;
     buf : IntArr;
+    endian := Swap.GetEndian ();
   BEGIN
     len64 := LOOPHOLE(VAL(ctrl.bitLen,LONGINT),Int64On32);
     IF endian = Endian.Little THEN

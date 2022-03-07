@@ -32,6 +32,7 @@ PROCEDURE Send(t: TCP.T; op: Op; hisEP, myEP: TEXT := NIL)
     RAISES {Wr.Failure, Thread.Alerted} =
   VAR hdr: Header;
       length: CARDINAL;
+      endian := Swap.GetEndian ();
   BEGIN
     hdr.fx.version := CurrentVersion;
     hdr.fx.opCode := ORD(op);
@@ -41,7 +42,7 @@ PROCEDURE Send(t: TCP.T; op: Op; hisEP, myEP: TEXT := NIL)
       StuffText(hdr, myEP);
     END;
     length := hdr.fx.length;
-    IF Swap.endian = Swap.Endian.Big THEN
+    IF endian = Swap.Endian.Big THEN
       hdr.fx.length := Swap.Swap2U(length);
     END;
     t.put(SUBARRAY(LOOPHOLE(ADR(hdr), HeaderAlias)^,
@@ -68,9 +69,10 @@ PROCEDURE Receive(
     END RaiseProtocolError;
     VAR hdr: Header;
       x, pos: INTEGER;
+      endian := Swap.GetEndian ();
   BEGIN
     x := t.get(LOOPHOLE(ADR(hdr.fx), FixedAlias)^, timeout);
-    IF Swap.endian = Swap.Endian.Big THEN
+    IF endian = Swap.Endian.Big THEN
       hdr.fx.length := Swap.Swap2U(hdr.fx.length);
     END;
     IF x # BYTESIZE(hdr.fx) OR

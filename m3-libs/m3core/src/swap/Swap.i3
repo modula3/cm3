@@ -11,10 +11,7 @@ INTERFACE Swap;
 
 TYPE Endian = {Big, Little};
 
-VAR endian: Endian;
-  (* This variable is set at initialization.  If the endian is not
-     one of Big or Little, initialization will generate a checked runtime
-     error. *)
+PROCEDURE GetEndian(): Endian;
 
 CONST
   FirstInt32 = -1 - 16_7FFFFFFF;

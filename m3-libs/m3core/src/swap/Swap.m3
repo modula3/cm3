@@ -29,6 +29,16 @@ CONST
 
 CONST SignExt32 = ARRAY [0..1] OF Word.T {0, Not(16_FFFFFFFF)};
 
+VAR endian: Endian;
+  (* This variable is set at initialization.  If the endian is not
+     one of Big or Little, initialization will generate a checked runtime
+     error. *)
+
+PROCEDURE GetEndian(): Endian =
+BEGIN
+ RETURN endian;
+END GetEndian;
+
 (* Swaps the lower 4 bytes of i *)
 PROCEDURE Swap4 (i: Int32): Int32 =
   BEGIN
