@@ -232,6 +232,11 @@ PROCEDURE BadStack () =
     RTError.Msg (NIL, 0, "corrupt exception stack");
   END BadStack;
 
+PROCEDURE LatchEHReg() : ADDRESS =
+  BEGIN
+    RETURN NIL;
+  END LatchEHReg;
+
 (*----------------------------------------------------------- diagnostics ---*)
 
 PROCEDURE SanityCheck () =
