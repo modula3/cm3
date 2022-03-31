@@ -10,9 +10,8 @@ readonly HAS_STACK_WALKER = {
 % "DS3100"     : TRUE,
 % "SOLgnu"     : TRUE,
 % "SOLsun"     : TRUE,
-  "AMD64_LINUX"     : TRUE,
+ "AMD64_LINUX" : TRUE,
 }
-include_dir ("AMD64_LINUX")
 
 include_dir ("common")
 include_dir (OS_TYPE) % Win32 or Posix
@@ -41,6 +40,7 @@ if defined("M3_USE_STACK_WALKER")
   if M3_USE_STACK_WALKER and HAS_STACK_WALKER contains TARGET
     if HAS_STACK_WALKER{TARGET}
       include_dir("ex_stack")
+      include_dir(TARGET)
     else
       include_dir("ex_frame")
     end
