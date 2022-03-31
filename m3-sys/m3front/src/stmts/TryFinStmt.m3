@@ -237,9 +237,8 @@ and change pushfinally(lab, xx, info)
  this is all to fix the exits and return exceptions which Marker.EmitExit 
 uses
 *)
-IF NOT (returnSeen OR exitSeen) THEN
 CG.Jump (xx);
-END;
+
     CG.Set_label (lab+1, barrier := TRUE);
 
 (*peter get the exc from the builtin reg  seems to work *)
