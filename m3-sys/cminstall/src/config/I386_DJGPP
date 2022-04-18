@@ -36,6 +36,7 @@ M3_BACKEND_MODE = "C"
 include ("cm3cfg.common")
 
 proc compile_c(source, object, options, optimize, debug) is
+  options       = escape(subst_chars(options, "\\", "/"))
 % driver has problems, skip it
 % i.e. it does not run a specific version, and many fail, or learn more flags to specify version?
 %
@@ -83,6 +84,8 @@ proc compile_c(source, object, options, optimize, debug) is
 end
 
 proc m3_link(prog, options, objects, imported_libs, shared) is
+  imported_libs = escape(subst_chars(imported_libs, "\\", "/"))
+  objects       = escape(subst_chars(objects, "\\", "/"))
   exec ("gpp", "-v -o", prog, options, arglist("@", [objects, imported_libs]))
   return 0
 end
