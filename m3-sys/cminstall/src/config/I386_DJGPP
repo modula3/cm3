@@ -83,6 +83,9 @@ proc compile_c(source, object, options, optimize, debug) is
 end
 
 proc m3_link(prog, options, objects, imported_libs, shared) is
+  % Something elsewhere is forming the paths incorrectly.
+  imported_libs = subst_chars(imported_libs, "\\", "/")
+  objects       = subst_chars(objects, "\\", "/")
   exec ("gpp", "-v -o", prog, options, arglist("@", [objects, imported_libs]))
   return 0
 end
