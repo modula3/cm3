@@ -8,7 +8,7 @@ to be written.  The code is changing quickly enough that we
 haven't bothered yet.
 
 @findex bfd_elf_find_section
-@subsubsection @code{bfd_elf_find_section}
+@subsection @code{bfd_elf_find_section}
 @strong{Synopsis}
 @example
 struct elf_internal_shdr *bfd_elf_find_section (bfd *abfd, char *name);
