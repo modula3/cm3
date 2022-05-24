@@ -1,6 +1,10 @@
 import("libm3")
 import("m3middle")
 import("m3quake")
+if equal (OS_TYPE, "POSIX")
+  LIB_DIR = ""
+  import_lib("LLVM-13",LIB_DIR) 
+end
 import("llvm13bindings")
 
 include("version.quake")
