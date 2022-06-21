@@ -1,37 +1,55 @@
-% Copyright 1996-2000 Critical Mass, Inc. All rights reserved.
-% See file COPYRIGHT-CMASS for details.
-%
-% Use GNU minimally.
-%   gcc and ld are from MinGWin
-%   msys is needed to build m3cg
+% Use GNU minimally, instead of Visual C++
+%   Use g++ to compile and link, targeting Windows.
+%   This could be hypothetically any host (Linux, Msys, Cygwin).
 %   use native Windows threads, gui, C runtime
 %
-
 %-------------------------------------------------------------------
 
-readonly TARGET = "I386_MINGW"  % code generation target
-readonly GNU_PLATFORM = "i686-mingw" % "cpu-os" string for GNU
+M3_BACKEND_MODE = "C"
 
-%-------------------------------------------------------------------
-% defined by cm3, but not the other MxConfig users
-if not defined("CR") CR = "\n" end
-if not defined("EOL") EOL = "\n" end
-if not defined("M3_PROFILING") M3_PROFILING = FALSE end
-if not defined("SL") SL = "/" end
-%-------------------------------------------------------------------
+% Some of this seems redundant: I386 implies 32bits+little.
+% I386_MINGW implies I386 and NT.
+% WIN32 implies NT
+readonly TARGET = "I386_MINGW"    % host vs. target confusion?
 
-if M3_PROFILING
-    readonly PROFILING_P = "p"
-else
-    readonly PROFILING_P = ""
+M3_PARALLEL_BACK = 20              % host vs. target confusion
+
+include ("NT386.common")
+
+SYSTEM_LIBS =
+{
+  "LIBC" : [ "-lntdll", "-lntoskrnl", "-liphlpapi", "-lrpcrt4", "-lcomctl32", "-lws2_32", "-lgdi32", "-luser32", "-ladvapi32" ],
+  "TCP" : [ ],
+}
+
+SYSTEM_LIBORDER = [ "LIBC" ]
+
+proc compile_c(source, object, options, optimize, debug) is
+  % clang probably works too
+  exec ("@i686-w64-mingw32-g++", "-g", "-xc++", "-c", options, source, "-o", object)
+  return 0
 end
 
-if not defined("BUILD_DIR")
-    readonly BUILD_DIR = TARGET & PROFILING_P
+proc m3_link(prog, options, objects, imported_libs, shared) is
+  imported_libs = ConvertLibsToStandalone(imported_libs, shared)
+  imported_libs = escape(subst_chars(imported_libs, "\\", "/"))
+  objects       = escape(subst_chars(objects, "\\", "/"))
+  % clang probably works too
+  exec ("i686-w64-mingw32-g++", "-o", prog, options, arglist("@", [objects, imported_libs]))
+  return 0
 end
 
-% see the NT386 file for information
-readonly C_COMPILER = "GNU" % other values are MS
-readonly LINKER = "GNU" % other values are MS
+proc skip_lib(lib, shared) is
+  % TODO (see NT.common etc.)
+  deriveds ("", [lib & ".lib"])
+  return 0
+end
 
-include("NT386.common")
+proc make_lib(lib, options, objects, imported_libs, shared) is
+  % TODO shared support (see NT.common etc.)
+  % arglist is to make a response file -- command line in file,
+  % which really is required due to restrictive command line length limits
+  deriveds ("", [lib & ".lib"])
+  exec("ar", "cr", lib & ".lib", arglist("@", objects))
+  return 0
+end
