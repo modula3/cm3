@@ -77,7 +77,15 @@ proc version_impl(name) is
 
         % TODO: Out of tree builds.
 
-        if (equal(0, try_exec("@git rev-parse --verify HEAD >", nul))) % or git rev-list -n 1 HEAD
+        % TODO: try_exec uses system and q_exec does not.
+        % On Cygwin we see a significant divergence
+        % and builds fail, because try_exec succeeds and q_exec does not.
+        % The right fix is to either better unify them in quake,
+        % or in sysutils (System.RdExecute) / libm3 (Process.Create),
+        % or at least here in version.quake use a probe that matches the execution.
+
+        if  not equal (TARGET_OS, "CYGWIN") and
+            equal (0, try_exec("@git rev-parse --verify HEAD >", nul)) % or git rev-list -n 1 HEAD
           local revision = compress(q_exec_get("git rev-parse --verify HEAD")[1])
           local branch = compress(q_exec_get("git symbolic-ref -q --short HEAD")[1])
           local remote_name = compress(q_exec_get("git config branch." & branch & ".remote")[1])
