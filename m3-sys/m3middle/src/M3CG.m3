@@ -153,6 +153,9 @@ REVEAL
     compare_exchange := compare_exchange;
     fence := fence;
     fetch_and_op := fetch_and_op;
+    invoke_direct := invoke_direct;
+    invoke_indirect := invoke_indirect;
+    landing_pad := landing_pad;
   END;
 
 (*----------------------------------------------------------- UIDs ----------*)
@@ -921,6 +924,21 @@ PROCEDURE call_indirect (xx: T;  t: Type;  cc: CallingConvention) =
   BEGIN
     xx.child.call_indirect (t, cc);
   END call_indirect;
+
+PROCEDURE invoke_direct (xx: T; p: Proc;  t: Type; next,handler : Label) =
+  BEGIN
+    xx.child.invoke_direct (p, t, next, handler);
+  END invoke_direct;
+
+PROCEDURE invoke_indirect (xx: T; t: Type; cc : CallingConvention; next,handler : Label) =
+  BEGIN
+    xx.child.invoke_indirect (t, cc, next, handler);
+  END invoke_indirect;
+
+PROCEDURE landing_pad (xx: T; t: ZType; handler : Label; READONLY catches : ARRAY OF TypeUID) =
+  BEGIN
+    xx.child.landing_pad (t, handler, catches);
+  END landing_pad;
 
 (*------------------------------------------- procedure and closure types ---*)
 

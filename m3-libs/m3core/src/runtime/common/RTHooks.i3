@@ -50,9 +50,6 @@ PROCEDURE PushEFrame (frame: ADDRESS);
 PROCEDURE PopEFrame (frame: ADDRESS);
 (* called by the compiler to pop an exception frame. *)
 
-PROCEDURE LatchEHReg () : ADDRESS;
-(* called by the compiler to latch the exception pointer. *)
-
 (*----------------------------------------------- builtin TEXT operations ---*)
 
 PROCEDURE Concat (a, b: TEXT): TEXT;
@@ -108,6 +105,10 @@ PROCEDURE DisposeUntracedObj (VAR a: UNTRACED ROOT);
 PROCEDURE CheckLoadTracedRef (ref: REFANY);
 
 PROCEDURE CheckStoreTraced (ref: REFANY);
+
+PROCEDURE NoOp ();
+(* Used to guarantee a landingpad is reachable in cases of try blocks
+   having no invokeable procedures. Does nothing. *)
 
 (*-------------------------------------------------------- runtime errors ---*)
 

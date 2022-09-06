@@ -91,6 +91,7 @@ REVEAL
 
     labelTable    : IntRefTbl.T := NIL;
     structTable   : IntRefTbl.T := NIL;
+    exceptsTable  : IntRefTbl.T := NIL;
 
     next_label_id := 1;
     next_var      := 1;
@@ -116,6 +117,8 @@ REVEAL
     callResultType : Type; (* Meaningful when inside a call. *)
     indirCallCC    : CallingConvention; (* Meaningful when inside an indirect call. *)
     staticLinkBB   : LLVM.BasicBlockRef; (* BB that contains a pop_static_link. *)
+    persFn         : LLVM.ValueRef; (* personality function not used *)
+    catchId        : INTEGER := 0;
 
    (* external set functions *)
     setUnion, setIntersection, setDifference, setSymDifference,
@@ -155,9 +158,11 @@ METHODS
     structType(size : ByteSize) : LLVM.TypeRef := StructType;
     divMod(t : IType; isDiv : BOOLEAN) : LLVM.ValueRef := DivMod;
     doCheck(a,b : LLVM.ValueRef; pred : LLVM.IntPredicate; code : RuntimeError) := DoCheck;
-    innerCallIndirect(proc: LLVM.ValueRef; t: Type; cc: CallingConvention; Nested: BOOLEAN) : LLVM.ValueRef := InnerCallIndirect;
     declSet(name : TEXT; fn : LLVM.ValueRef; numParams : INTEGER; hasReturn : BOOLEAN; setRange : BOOLEAN := FALSE) : LLVM.ValueRef := DeclSet;
     setCall(fn : LLVM.ValueRef; numParams : INTEGER; p1,p2,p3,p4 : LLVM.ValueRef := NIL) : LLVM.ValueRef := SetCall;
+    call_invoke_direct (p: Proc; t: Type; next,handler : Label;  call : BOOLEAN) := call_invoke_direct;
+    innerCallIndirect(proc: LLVM.ValueRef; t: Type; cc: CallingConvention; next,handler : Label; call : BOOLEAN; Nested: BOOLEAN; merge: LLVM.BasicBlockRef:=NIL) : LLVM.ValueRef := InnerCallIndirect;
+    call_invoke_indirect (t: Type; cc: CallingConvention; next,handler : Label;  call : BOOLEAN) := call_invoke_indirect;
 
 OVERRIDES
     next_label := next_label;
@@ -289,6 +294,9 @@ OVERRIDES
     call_direct := call_direct;
     start_call_indirect := start_call_indirect;
     call_indirect := call_indirect;
+    invoke_direct := invoke_direct;
+    invoke_indirect := invoke_indirect;
+    landing_pad := landing_pad;
     pop_param := pop_param;
     pop_struct := pop_struct;
     pop_static_link := pop_static_link;
@@ -469,6 +477,8 @@ TYPE
   LabelObj = OBJECT
     id : Label;
     barrier : BOOLEAN := FALSE;  (* set an exception handling scope *)
+    handler : BOOLEAN := FALSE;  (* this label is an exception handler *)
+    set : BOOLEAN := FALSE;      (* this label has been set *)
     function : LvProc;
     labBB : LLVM.BasicBlockRef;  (* jmps goto this bb *)
     elseBB : LLVM.BasicBlockRef; (* else bb for compares *)
@@ -745,7 +755,6 @@ PROCEDURE GetBBLastInstruction ( BB: LLVM.BasicBlockRef; expectedOp: LLVM.Opcode
 
 (*-------------------------simplify all the untraced array allocs for llvm ---*)
 
-(* simplify all the untraced array allocs for llvm *)
 TYPE
   ValueArrType = UNTRACED REF ARRAY OF LLVM.ValueRef;
   ValueRefType = UNTRACED REF LLVM.ValueRef;
@@ -829,6 +838,7 @@ PROCEDURE New
                 structTable := NEW (IntRefTbl.Default).init (20),
                 debugTable := NEW (IntRefTbl.Default).init (20),
                 labelTable := NEW (IntRefTbl.Default).init (20),
+                exceptsTable := NEW (IntRefTbl.Default).init (20),
                 globalTable := NEW (TextRefTbl.Default).init (20),
                 exprStack := NEW(RefSeq.T).init(),
                 callStack := NEW(RefSeq.T).init(),
@@ -1247,6 +1257,11 @@ PROCEDURE BuildFunc(self : U; p : Proc) =
     (* create the llvm function *)
     mlProc.lvProc := LLVM.LLVMAddFunction(modRef, LT(procTextName), mlProc.procTy);
 
+    (* add the dso_local attr  check this since this sets thread_local
+       not dso
+    LLVM.LLVMSetThreadLocal(mlProc.lvProc,TRUE);
+    *)
+
     (* c funcs seem to have these attrs  - fix this *)
     LLVM.LLVMAddAttributeAtIndex(mlProc.lvProc, LLVM.AttributeFunctionIndex, EnumAttr("uwtable"));
 
@@ -1390,7 +1405,9 @@ PROCEDURE SetBBVolatile(bb : LLVM.BasicBlockRef) =
       opCode := LLVM.LLVMGetInstructionOpcode(instr);
       IF opCode = LLVM.Opcode.Store OR
          opCode = LLVM.Opcode.Load THEN
+(* temp disable volatiles to test optimising
         LLVM.LLVMSetVolatile(instr, TRUE);
+*)
       END;
       instr := LLVM.LLVMGetNextInstruction(instr);
     END;
@@ -1452,6 +1469,7 @@ PROCEDURE end_unit (self: U) =
 (*------------------------------------------------ debugging line numbers ---*)
 
 PROCEDURE set_source_file (self: U;  file: TEXT) =
+  VAR procTy : LLVM.TypeRef;
   BEGIN
     IF modRef = NIL THEN
       self.curFile := file;
@@ -1459,6 +1477,11 @@ PROCEDURE set_source_file (self: U;  file: TEXT) =
       modRef := LLVM.LLVMModuleCreateWithNameInContext(moduleID,globContext);
       LLVM.LLVMSetDataLayout(modRef,LT(self.dataRep));
       LLVM.LLVMSetTarget(modRef,LT(self.targetTriple));
+
+      (* build a personality function. Not used but needed *)
+      procTy := LLVM.LLVMFunctionType(AdrTy, NIL, 0, FALSE);
+      self.persFn := LLVM.LLVMAddFunction(modRef, LT("__m3_personality_v0"), procTy);
+
       EmbedVersion();
       DebugInit(self);
     END;
@@ -1863,6 +1886,9 @@ PROCEDURE declare_global (self: U;  n: Name;  s: ByteSize;  a: Alignment; t: Typ
     v.lv := LLVM.LLVMAddGlobal(modRef, v.lvType, LT(globName));
     LLVM.LLVMSetInitializer(v.lv, LLVM.LLVMConstNull(v.lvType));
     LLVM.LLVMSetAlignment(v.lv, v.align);
+    (* maybe set dso_local check this its not dso_local whatever that is
+    LLVM.LLVMSetThreadLocal(v.lv,TRUE);
+    *)
 
     IF exported THEN
       LLVM.LLVMSetLinkage(v.lv,LLVM.Linkage.External);
@@ -1904,6 +1930,7 @@ PROCEDURE AllocVar(self : U; v : LvVar) =
     LLVM.LLVMSetAlignment(v.lv,v.align);
 
    (* calc the offset from the stack pointer for the unwinder *)
+   (* can delete this stuff if landing pad design works. *)
    size := VAL(LLVM.LLVMStoreSizeOfType(targetData,v.lvType),INTEGER);
    INC(size,7);
    size := size - (size MOD 8);
@@ -1911,7 +1938,6 @@ PROCEDURE AllocVar(self : U; v : LvVar) =
 (*^ CHECK is this the best way to calc offset *)
    (* this is negative for stacks growing down - what about other way *)
    v.ofs := -self.curProc.localOfs;
-   IO.PutInt(v.ofs); IO.Put("\n");
   END AllocVar;
 
 (* PRE: We are inside a procedure body, possibly deeply inside nested blocks. *)
@@ -2169,7 +2195,7 @@ PROCEDURE end_init (self: U;  v: Var) =
       | FloatVar(v) =>
           v.lvVal := ConvertFloat(v.prec, v.value);
       | LabelVar(v) =>
-          label := self.getLabel(v.value,"lab");
+          label := self.getLabel(v.value,"lab_" & ItoT(v.value));
           v.lvVal := LLVM.LLVMBlockAddress(label.function.lvProc,label.labBB);
       | OfsVar(v) =>
           var := NARROW(v.value,LvVar);
@@ -2718,11 +2744,13 @@ PROCEDURE set_label (self: U;  lab: Label;  barrier: BOOLEAN) =
   BEGIN
     DumpExprStack(self,"set_label");
 
-    curBB := LLVM.LLVMGetInsertBlock(builderIR);
-    label := self.getLabel(lab,"label_");
+    label := self.getLabel(lab,"label_" & ItoT(lab) & "_");
+    IF label.set THEN RETURN END; (* only set a label once *)
+    label.set := TRUE;
     label.barrier := barrier;
+    curBB := LLVM.LLVMGetInsertBlock(builderIR);
 
-    IF label.cmpInstr # NIL THEN
+    IF label.cmpInstr # NIL OR label.handler THEN
       LLVM.LLVMMoveBasicBlockAfter(label.labBB,curBB);
     END;
 
@@ -2730,7 +2758,12 @@ PROCEDURE set_label (self: U;  lab: Label;  barrier: BOOLEAN) =
     terminator := LLVM.LLVMGetBasicBlockTerminator(curBB);
     IF terminator = NIL THEN
       LLVM.LLVMPositionBuilderAtEnd(builderIR,curBB);
-      EVAL LLVM.LLVMBuildBr(builderIR,label.labBB);
+      (* if label is a landingpad then build unreachable instead *)
+      IF label.handler THEN
+        EVAL LLVM.LLVMBuildUnreachable(builderIR);
+      ELSE
+        EVAL LLVM.LLVMBuildBr(builderIR,label.labBB);
+      END;
       LLVM.LLVMPositionBuilderAtEnd(builderIR,label.labBB);
     END;
 
@@ -2742,7 +2775,6 @@ PROCEDURE set_label (self: U;  lab: Label;  barrier: BOOLEAN) =
          but this is the correct branch - so delete the old one*)
       terminator := LLVM.LLVMGetBasicBlockTerminator(branch.branchBB);
       IF terminator # NIL THEN
-IO.Put("Erasing terminator\n");
         LLVM.LLVMInstructionEraseFromParent(terminator);
       END;
       LLVM.LLVMPositionBuilderAtEnd(builderIR,branch.branchBB);
@@ -2787,7 +2819,7 @@ PROCEDURE BuildCmp(self: U; a,b : LLVM.ValueRef; t: ZType; op : CompareOp; l: La
   BEGIN
     cmpVal := CompareVal(a,b,op,t);
 
-    label := self.getLabel(l,"if_");
+    label := self.getLabel(l,"if_" & ItoT(l));
 
     label.cmpInstr := cmpVal;
     label.elseBB := LLVM.LLVMAppendBasicBlock(self.curProc.lvProc, LT("else_" & ItoT(l)));
@@ -2854,7 +2886,7 @@ PROCEDURE GetLabel(self : U; l : Label; name : TEXT) : LabelObj =
       EVAL self.labelTable.put(l,label);
     END;
     IF label.labBB = NIL THEN
-      label.labBB := LLVM.LLVMAppendBasicBlock(self.curProc.lvProc, LT(name & ItoT(l)));
+      label.labBB := LLVM.LLVMAppendBasicBlock(self.curProc.lvProc, LT(name));
     END;
     RETURN label;
   END GetLabel;
@@ -2912,7 +2944,7 @@ PROCEDURE exit_proc (self: U;  t: Type) =
         stackVal := LLVM.LLVMBuildBitCast(builderIR, stackVal, AdrTy, LT("exit_toadr"));
       END;
 
-      retRef := LLVM.LLVMBuildRet(builderIR,stackVal);
+      retRef := LLVM.LLVMBuildRet(builderIR, stackVal);
       (* need it to keep expression stack at 0 for labels calls and jmp *)
       Pop(self.exprStack);
     END;
@@ -3037,7 +3069,6 @@ PROCEDURE LoadExtend(val : LLVM.ValueRef; t : MType; u : ZType) : LLVM.ValueRef 
     RETURN val;
   END LoadExtend;
 
-(* consider adding range metadata if subrange - from debug info *)
 PROCEDURE load (self: U;  v: Var;  o: ByteOffset;  t: MType;  u: ZType) =
 (* push; s0.u := Mem [ ADR(v) + o ].t ; *)
   VAR
@@ -3183,7 +3214,7 @@ PROCEDURE load_address (self: U;  v: Var;  o: ByteOffset) =
     END;
 
     IF o # 0 THEN
-      srcVal := BuildGep(srcVal,o);
+      srcVal := BuildGep(srcVal,o,"load_adr");
     END;
 
     Push(self.exprStack,NEW(LvExpr,lVal := srcVal));
@@ -3202,7 +3233,7 @@ PROCEDURE load_indirect (self: U;  o: ByteOffset;  t: MType;  u: ZType) =
     srcTy := LLVM.LLVMPointerType(srcTy);
 
     IF o # 0 THEN
-      srcVal := BuildGep(srcVal,o);
+      srcVal := BuildGep(srcVal,o,"load_ind");
     END;
 
     srcVal := LLVM.LLVMBuildBitCast(builderIR, srcVal, srcTy, LT("loadind_ptr"));
@@ -3232,7 +3263,7 @@ PROCEDURE store_indirect (self: U;  o: ByteOffset;  t: ZType;  u: MType) =
     destPtrTy := LLVM.LLVMPointerType(destTy);
 
     IF o # 0 THEN
-      destVal := BuildGep(destVal,o);
+      destVal := BuildGep(destVal,o,"store_ind");
     END;
 
     IF TypeSize(u) < TypeSize(t) THEN
@@ -4818,8 +4849,8 @@ PROCEDURE ExtendScalar(v : LLVM.ValueRef; t : Type) : LLVM.ValueRef =
     RETURN v;
   END ExtendScalar;
 
-PROCEDURE call_direct (self: U; p: Proc; <*UNUSED*> t: Type) =
-  (* call the procedure 'p'.  It returns a value of type t. *)
+(* a common method for building a call or invoke *)
+PROCEDURE call_invoke_direct (self : U; p: Proc; <*UNUSED*> t: Type; next,handler : Label;  call : BOOLEAN) =
   VAR
     calleeProc : LvProc;
     fn, lVal, staticLinkActualLv (* i8* *) : LLVM.ValueRef;
@@ -4829,6 +4860,8 @@ PROCEDURE call_direct (self: U; p: Proc; <*UNUSED*> t: Type) =
     returnName : TEXT := NIL;
     passedParamsCt, codedActualsCt : INTEGER := 0;
     staticLinkCount : [0..1]  := 0;
+    catchLab : LabelObj;
+    then,then_tmp : LLVM.BasicBlockRef;
   BEGIN
     DumpExprStack(self,"call_direct");
 
@@ -4903,8 +4936,27 @@ PROCEDURE call_direct (self: U; p: Proc; <*UNUSED*> t: Type) =
     END;
     (* else void returns need null string *)
 
-    lVal := LLVM.LLVMBuildCall
-              (builderIR, fn, paramsRef, passedParamsCt, LT(returnName));
+    IF call THEN
+      lVal := LLVM.LLVMBuildCall
+                (builderIR, fn, paramsRef, passedParamsCt, LT(returnName));
+    ELSE
+      then_tmp := LLVM.LLVMCreateBasicBlockInContext(globContext, LT("invoke_tmp"));
+      catchLab := self.getLabel(handler,"catch_" & ItoT(handler));
+      (* tag the catch label so that no jumps can be made to it. See set_label
+         try raise e except pattern needs this flag *)
+      catchLab.handler := TRUE;
+
+      lVal := LLVM.LLVMBuildInvoke
+                (builderIR, fn, paramsRef, passedParamsCt,
+                 then_tmp, catchLab.labBB, LT(returnName));
+      (* the front end issues a set_label after invoke but we preempt it here
+         to avoid the extendscaler being generated between the invoke
+         and the set_label. *)
+      self.set_label(next,FALSE);
+      then := self.getLabel(next,"").labBB;
+      LLVM.LLVMReplaceAllUsesWith (LLVM.LLVMBasicBlockAsValue(then_tmp),
+                                   LLVM.LLVMBasicBlockAsValue(then));
+    END;
 
     IF calleeProc.returnType # Type.Void THEN
       lVal := ExtendScalar(lVal,calleeProc.returnType);
@@ -4912,8 +4964,71 @@ PROCEDURE call_direct (self: U; p: Proc; <*UNUSED*> t: Type) =
       Push(self.exprStack,NEW(LvExpr,lVal := lVal));
     END;
     self.callState := callStateTyp.outside;
-  END call_direct;
+  END call_invoke_direct;
 
+PROCEDURE call_direct (self : U; p: Proc; t: Type) =
+  BEGIN
+    self.call_invoke_direct(p, t, 0, 0, TRUE);
+ END call_direct;
+
+PROCEDURE invoke_direct (self : U; p: Proc; t: Type; next,handler : Label) =
+  BEGIN
+    self.call_invoke_direct(p, t, next, handler, FALSE);
+  END invoke_direct;
+
+PROCEDURE landing_pad (self : U; t: ZType; handler : Label;
+                       READONLY catches : ARRAY OF TypeUID) =
+  VAR
+    landingVal,catchVal,clauseVal,excPtrVal,uidVal : LLVM.ValueRef;
+    curBB,catchBB : LLVM.BasicBlockRef;
+    landingTy : LLVM.TypeRef;
+    typesArr : TypeArrType;
+    typesRef : TypeRefType;
+    name : TEXT;
+    defaultCatch := ARRAY[0..0] OF TypeUID{0}; 
+    excepts : REF ARRAY OF TypeUID;
+    exc : REFANY;
+    nn,mm : INTEGER;
+  BEGIN
+    curBB := LLVM.LLVMGetInsertBlock(builderIR);
+    catchBB := self.getLabel(handler,"").labBB;
+    <*ASSERT curBB = catchBB *>
+    (* landing pad type *)
+    typesRef := NewTypeArr(typesArr,2);
+    (* this should always be i8* ie address *)
+    typesArr[0] := LLvmType(t);
+    typesArr[1] := LLVM.LLVMInt32Type();
+    landingTy := LLVM.LLVMStructType(typesRef, 2, FALSE);
+
+    landingVal := LLVM.LLVMBuildLandingPad (builderIR, landingTy, self.persFn, 1, LT("lpad"));
+
+    nn := NUMBER(catches);
+    IF nn = 0 THEN mm := 1 ELSE mm := nn; END;
+    excepts := NEW(REF ARRAY OF TypeUID, mm);
+    IF nn = 0 THEN excepts^ := defaultCatch; ELSE excepts^ := catches; END;
+
+    FOR i := FIRST(excepts^) TO LAST(excepts^) DO
+      IF NOT self.exceptsTable.get(excepts[i], exc) THEN
+        INC(self.catchId);
+        name := "__" & Pathname.LastBase(self.curFile) & "_Exc_" & ItoT(self.catchId);
+        catchVal := LLVM.LLVMAddGlobal(modRef, LLVM.LLVMInt64Type(), LT(name));
+        uidVal := LLVM.LLVMConstInt(LLVM.LLVMInt64Type(), VAL(excepts[i],LONGINT), TRUE);
+        LLVM.LLVMSetInitializer(catchVal, uidVal);
+        LLVM.LLVMSetGlobalConstant(catchVal, TRUE);
+        LLVM.LLVMSetLinkage(catchVal, LLVM.Linkage.Internal);
+        EVAL self.exceptsTable.put(excepts[i], NEW(LvExpr, lVal := catchVal));
+      ELSE
+        catchVal := NARROW(exc, LvExpr).lVal;
+      END;
+      clauseVal := LLVM.LLVMBuildBitCast (builderIR, catchVal, AdrTy, LT("clausecast"));
+      LLVM.LLVMAddClause(landingVal, clauseVal);
+    END;
+
+    excPtrVal := LLVM.LLVMBuildExtractValue(builderIR, landingVal, 0, LT("exc_ptr"));
+    Push(self.exprStack, NEW(LvExpr,lVal := excPtrVal));
+  END landing_pad;
+
+(* consider adding range metadata if subrange - from debug info *)
 PROCEDURE start_call_indirect
   (self: U; t: Type; cc: CallingConvention) =
   (* begin an indirect procedure call that will return a value of type 't'. *)
@@ -4952,8 +5067,8 @@ PROCEDURE IndirectFuncType
 
 PROCEDURE InnerCallIndirect
   (self: U; proc: LLVM.ValueRef; t: Type; <*UNUSED*> cc: CallingConvention;
-   Nested: BOOLEAN)
-  : LLVM.ValueRef =
+   next, handler : Label; call : BOOLEAN; Nested: BOOLEAN;
+   merge : LLVM.BasicBlockRef := NIL) : LLVM.ValueRef =
   (* Call the procedure whose llvm address is proc.
      The procedure returns a value of CG type t.
      Use the actual parameters on self.callStack (which will include a
@@ -4966,6 +5081,8 @@ PROCEDURE InnerCallIndirect
     paramsRef : ValueRefType := NIL;
     actual : LvExpr;
     funcTy, funcPtrTy : LLVM.TypeRef;
+    then,then_tmp : LLVM.BasicBlockRef;
+    catchLab : LabelObj;
     numFormals : INTEGER;
     returnName : TEXT := "";
     byvals : REF ARRAY OF BOOLEAN := NIL;
@@ -5003,8 +5120,32 @@ PROCEDURE InnerCallIndirect
     (* Need a pointer to function type for the call. *)
     funcPtrTy := LLVM.LLVMPointerType(funcTy);
     callVal := LLVM.LLVMBuildBitCast(builderIR, proc, funcPtrTy, LT("call_ind"));
-    resultVal := LLVM.LLVMBuildCall
-      (builderIR, callVal, paramsRef, numFormals, LT(returnName));
+    IF call THEN
+      resultVal := LLVM.LLVMBuildCall
+        (builderIR, callVal, paramsRef, numFormals, LT(returnName));
+    ELSE
+      catchLab := self.getLabel(handler,"catch_" & ItoT(handler));
+      (* tag the catch label so that no jumps can be made to it.
+          See set_label *)
+      catchLab.handler := TRUE;
+      IF merge # NIL THEN
+        resultVal := LLVM.LLVMBuildInvoke
+                      (builderIR, callVal, paramsRef, numFormals,
+                       merge, catchLab.labBB, LT(returnName));
+      ELSE
+        then_tmp := LLVM.LLVMCreateBasicBlockInContext(globContext, LT("invoke_tmp"));
+        resultVal := LLVM.LLVMBuildInvoke
+                      (builderIR, callVal, paramsRef, numFormals,
+                       then_tmp, catchLab.labBB, LT(returnName));
+        (* the front end issues a set_label after invoke but we preempt it here
+           to avoid the extendscaler being generated between the invoke
+           and the set_label. *)
+        self.set_label(next,FALSE);
+        then := self.getLabel(next,"").labBB;
+        LLVM.LLVMReplaceAllUsesWith (LLVM.LLVMBasicBlockAsValue(then_tmp),
+                                     LLVM.LLVMBasicBlockAsValue(then));
+      END;
+    END;
 
     (* Set 'nest' attribute of static link formal. *)
     IF Nested THEN
@@ -5036,7 +5177,7 @@ PROCEDURE InnerCallIndirect
     RETURN resultVal;
   END InnerCallIndirect;
 
-PROCEDURE call_indirect (self: U;  t: Type; cc: CallingConvention) =
+PROCEDURE call_invoke_indirect (self: U;  t: Type; cc: CallingConvention; next,handler : Label; call : BOOLEAN) =
   (* call the procedure whose address is in s0.A and pop s0.  The
      procedure returns a value of type t. *)
   VAR
@@ -5056,14 +5197,16 @@ PROCEDURE call_indirect (self: U;  t: Type; cc: CallingConvention) =
     currentBB := LLVM.LLVMGetInsertBlock (builderIR); (* Save. *)
     IF self.callState = callStateTyp . insideIndirect THEN
       (* ^There was no pop_static_link => statically known to call a global proc. *)
-      resultVal3 := self.innerCallIndirect (procExpr.lVal, t, cc, Nested:=FALSE);
+      resultVal3 := self.innerCallIndirect (procExpr.lVal, t, cc, next, handler,
+                                            call, Nested:=FALSE);
       IF t # Type.Void THEN (* push the return val onto exprStack*)
         resultVal3 := ExtendScalar(resultVal3,t);
         Push(self.exprStack,NEW(LvExpr,lVal := resultVal3));
       END
     ELSIF self.staticLinkBB = currentBB THEN
       (* same BB as the pop_static_link => statically known to call a nested proc. *)
-      resultVal3 := self.innerCallIndirect (procExpr.lVal, t, cc, Nested:=TRUE);
+      resultVal3 := self.innerCallIndirect (procExpr.lVal, t, cc, next, handler,
+                                            call, Nested:=TRUE);
       IF t # Type.Void THEN (* push the return val onto exprStack*)
         resultVal3 := ExtendScalar(resultVal3,t);
         Push(self.exprStack,NEW(LvExpr,lVal := resultVal3));
@@ -5113,9 +5256,11 @@ PROCEDURE call_indirect (self: U;  t: Type; cc: CallingConvention) =
             duplicates the earlier check, in the non-closure case, on the same
             pointer.  But it is needed in that case, because only it does an
             abort when it fails.  The CG code could really be reviewed here. *)
-      resultVal1 := self.innerCallIndirect (loadInst, t, cc, Nested:=TRUE);
-      EVAL LLVM.LLVMBuildBr(builderIR, mergeBB);
-
+      resultVal1 := self.innerCallIndirect (loadInst, t, cc, next, handler,
+                                            call, Nested:=TRUE, merge:=mergeBB);
+      IF call THEN
+        EVAL LLVM.LLVMBuildBr(builderIR, mergeBB);
+      END;
       (* If it has a result, prepare for a Phi at the top of the mergedBB. *)
       IF t # Type.Void THEN
         resultsRef := NewValueArr (resultsArr, 2);
@@ -5128,12 +5273,13 @@ PROCEDURE call_indirect (self: U;  t: Type; cc: CallingConvention) =
          of the no-SL version. *)
       LLVM.LLVMPositionBuilderAtEnd (builderIR, currentBB);
       Pop(self.callStack); (* Remove SL from left of actual param list. *)
-      (* PopRev(self.callStack); If the SL were on the right of actual param list this,
-                                 is how we would remove it. *)
       (* But leave the rest of the params on self.call_stack.
          They will be needed by InnerCallIndirect. *)
-      resultVal2 := self.innerCallIndirect (procExpr.lVal, t, cc, Nested:=FALSE);
-      EVAL LLVM.LLVMBuildBr(builderIR, mergeBB);
+      resultVal2 := self.innerCallIndirect (procExpr.lVal, t, cc, next, handler,
+                                            call, Nested:=FALSE, merge:=mergeBB);
+      IF call THEN
+        EVAL LLVM.LLVMBuildBr(builderIR, mergeBB);
+      END;
       LLVM.LLVMPositionBuilderAtEnd (builderIR, mergeBB);
 
       (* If it has a result, complete the Phi. *)
@@ -5153,7 +5299,17 @@ PROCEDURE call_indirect (self: U;  t: Type; cc: CallingConvention) =
     <*ASSERT self.callStack.size() = 0 *>
 
     self.callState := callStateTyp.outside;
+  END call_invoke_indirect;
+
+PROCEDURE call_indirect (self: U;  t: Type; cc: CallingConvention) =
+  BEGIN
+    self.call_invoke_indirect(t, cc, 0, 0, TRUE);
   END call_indirect;
+
+PROCEDURE invoke_indirect (self : U; t: Type; cc : CallingConvention; next,handler : Label) =
+  BEGIN
+    self.call_invoke_indirect(t, cc, next, handler, FALSE);
+  END invoke_indirect;
 
 PROCEDURE pop_param (self: U;  t: MType) =
   (* pop s0.t and make it the "next" parameter in the current call. *)
@@ -5224,8 +5380,6 @@ PROCEDURE pop_static_link (self: U) =
   BEGIN
     <* ASSERT self.callState = callStateTyp . insideIndirect *>
     Push(self.callStack,s0); (* Make SL the leftmost actual. *)
- (* PushRev(self.callStack,s0);  If we ever want to make SL rightmost, this is how. *)
-
     Pop(self.exprStack);
     self.staticLinkBB := LLVM.LLVMGetInsertBlock (builderIR);
     (* ^So can see if it changes by the time we see the call_indirect. *)
@@ -5442,7 +5596,7 @@ PROCEDURE fence (<*UNUSED*> self: U;  order: MemoryOrder) =
      MemoryOrder.AcquireRelease, MemoryOrder.Sequential} *)
     ordering := GetOrder(order);
     EVAL LLVM.LLVMBuildFence(builderIR, ordering, TRUE, LT(""));
-(* CHECK ^ is singlethreaded significant *)
+    (* CHECK ^ is singlethreaded significant *)
   END fence;
 
 PROCEDURE fetch_and_op (self: U;  op: AtomicOp; <*UNUSED*> t: MType; u: ZType; order: MemoryOrder) =
@@ -5488,7 +5642,7 @@ PROCEDURE fetch_and_op (self: U;  op: AtomicOp; <*UNUSED*> t: MType; u: ZType; o
   refs work
   recursive types partly work except for proc parms and p : ref p etc
   packed records work
-  dynamic arrays sort of work with 1 dim but cause gdb crash greater than 1
+  dynamic arrays sort of work 
   they also need llvm update for subranges
   set types work with llvm updates but need lang printer support. set lang m2 works
   segment and large global variables work
@@ -5987,7 +6141,7 @@ PROCEDURE DebugSubrange(self : U; subrange : SubrangeDebug)
     MLBase : BaseDebug;
     baseName,srName : TEXT;
     card : BOOLEAN := FALSE;
-v13test : BOOLEAN := TRUE;
+v13test : BOOLEAN := FALSE;
   BEGIN
     srName := M3ID.ToText(subrange.typeName);
     IF Text.Length(srName) = 0 THEN srName := "AnonSR"; END;
@@ -6040,7 +6194,7 @@ END;
       END;
     END;
 
-(* not in debuginfo yet
+(* not in debuginfo yet *)
     Result := M3DIB.GetSubrangeConst (self.debugRef,
                  Scope := DebugScope(self,subrange),
                  Name  := srName,
@@ -6049,7 +6203,7 @@ END;
                  BaseTy := baseType,
                  LowerBound := TIntToint64_t(subrange.min),
                  Count := TIntToint64_t(subrange.count));
-*)
+
 
 (* REVIEW: How does llvm handle subranges for different signedness? *)
 (* FIXME: Someday, when llvm supports it, put MLBase into the subrange. *)
@@ -6116,7 +6270,7 @@ PROCEDURE DebugOpenArray(self : U; a : OpenArrayDebug; ofs : CARDINAL := 0) : Me
     elts : MetadataRef;
     typeName : TEXT;
     srBaseType : MetadataRef;
-v13test : BOOLEAN := TRUE; (* temp until debuginfo has open array support *)
+v13test : BOOLEAN := FALSE; (* temp until debuginfo has open array support *)
   BEGIN
     (* data location only really meaningful for outermost dimension *)
     IF ofs = 0 THEN
@@ -6147,7 +6301,7 @@ IF v13test THEN
 ELSE
     typeName := M3ID.ToText(a.typeName) & "_rng";
 (* not in v13 *)
-(*
+
     subrange := M3DIB.GetSubrangeExpr (self.debugRef,
                  Scope := DebugScope(self,a),
                  Name  := typeName,
@@ -6156,7 +6310,7 @@ ELSE
                  BaseTy := srBaseType,
                  LowerBound := low,
                  Count := cnt);
-*)
+
 END;
 
     NewArrayRefOfMetadataRef(1, (*OUT*)paramsArr, (*OUT*)paramsMetadata);
@@ -6170,8 +6324,8 @@ IF v13test THEN
         Subscripts  := paramsMetadata.Data,
         NumSubscripts := 1);
 ELSE
-(* not in v13 actually not in DebugInfo since the guy who did
-the fortran updates didnt do the C interface.
+(* not in v13 actually not in DebugInfo since the guy who did 
+the fortran updates didnt do the C interface.*)
 
     oarrDIT := M3DIB.CreateDynamicArrayType(self.debugRef,
         Size         := 0L, (* we dont know the size *)
@@ -6183,7 +6337,7 @@ the fortran updates didnt do the C interface.
         Associated   := NIL,
         Allocated    := NIL,
         Rank         := NIL); (* rank needed if genericsubrange used *)
-*)
+
 END;
 
     a.diType := oarrDIT;
@@ -6196,7 +6350,7 @@ PROCEDURE DebugSet(self : U; s : SetDebug) : MetadataRef =
     baseType : MetadataRef;
     setDIT : MetadataRef;
     typeName : TEXT;
-v13test : BOOLEAN := TRUE; (* temp until set in debuginfo *)
+v13test : BOOLEAN := FALSE; (* temp until set in debuginfo *)
   BEGIN
     baseType := DebugLookupLL(self,s.domain);
 
@@ -6205,7 +6359,7 @@ IF v13test THEN
     setDIT := baseType;
 ELSE
     typeName := M3ID.ToText(s.typeName);
-(* not in debuginfo yet
+(* not in debuginfo yet *)
     setDIT := M3DIB.CreateSetType(self.debugRef,
                Scope       := DebugScope(self,s),
                Name        := typeName,
@@ -6215,7 +6369,7 @@ ELSE
                SizeInBits  := VAL(s.bitSize,uint64_t),
                AlignInBits := VAL(s.align,uint32_t),
                BaseTy      := baseType);
-*)
+
 END;
     RETURN setDIT;
   END DebugSet;
@@ -6490,12 +6644,11 @@ PROCEDURE DebugObject(self : U; o : ObjectDebug) : MetadataRef =
       INC(nextMemberNo);
     END;
 
-(* this works
+(* this works *)
    M3DIB.LLVMReplaceArrays(self.debugRef,
       T        := ADR(heapObjectDIT),
       Elements := paramsMetadata.Data,
       NumElements := nextMemberNo);
-*)
 
 (* this should work but no.
     M3DIB.LLVMMetadataReplaceAllUsesWith(

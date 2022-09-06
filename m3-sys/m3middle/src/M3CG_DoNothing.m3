@@ -141,6 +141,7 @@ OVERRIDES
     call_direct := call_direct;
     start_call_indirect := start_call_indirect;
     call_indirect := call_indirect;
+    landing_pad := landing_pad;
     pop_param := pop_param;
     pop_struct := pop_struct;
     pop_static_link := pop_static_link;
@@ -287,6 +288,9 @@ END;
 <*NOWARN*>PROCEDURE pop_static_link(self: T) = BEGIN END pop_static_link;
 <*NOWARN*>PROCEDURE call_direct(self: T; proc: Proc; type: Type) = BEGIN END call_direct;
 <*NOWARN*>PROCEDURE call_indirect(self: T; type: Type; callingConvention: CallingConvention) = BEGIN END call_indirect;
+<*NOWARN*>PROCEDURE invoke_direct(self: T; proc: Proc; type: Type; next,handler : Label) = BEGIN END invoke_direct;
+<*NOWARN*>PROCEDURE invoke_indirect(self: T; type: Type; callingConvention: CallingConvention; next,handler : Label) = BEGIN END invoke_indirect;
+<*NOWARN*>PROCEDURE landing_pad(self: T; type: ZType; handler: Label; READONLY catches : ARRAY OF TypeUID) = BEGIN END landing_pad;
 <*NOWARN*>PROCEDURE load_procedure(self: T; proc: Proc) = BEGIN END load_procedure;
 <*NOWARN*>PROCEDURE load_static_link(self: T; proc: Proc) = BEGIN END load_static_link;
 <*NOWARN*>PROCEDURE comment(self: T; a, b, c, d: TEXT := NIL) = BEGIN END comment;

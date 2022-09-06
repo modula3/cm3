@@ -1,7 +1,0 @@
-import ("m3core")
-import ("libm3")
-import ("tcp")
-
-build_standalone ()
-implementation ("Main")
-program ("test")

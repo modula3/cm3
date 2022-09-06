@@ -22,10 +22,15 @@ TYPE
   FrameInfo = RECORD
     pc  : ADDRESS;
     sp  : ADDRESS;
-    handlerIP  : ADDRESS; (* instruction pointer of the handler *)
-    excRef  : ADDRESS; (* ref to the exception activation *)
-    cursor : ADDRESS; (* libunwind cursor to cur frame *)
-    lock: INTEGER;  (* to ensure that cxt isn't overrun!! *)
+    bp  : ADDRESS;        (* base pointer *)
+    lock: INTEGER;        (* to ensure that cxt isn't overrun!! *)
+    excRef  : ADDRESS;    (* ref to the exception activation *)
+    cursor : ADDRESS;     (* libunwind cursor to cur frame *)
+    startIP : ADDRESS;    (* libunwind start ip of current proc *)
+    endIP : ADDRESS;      (* libunwind end ip of current proc *)
+    lsda : ADDRESS;       (* libunwind lsda *)
+    persFn : ADDRESS;     (* libunwind handler pers fn *)
+    landingPad : ADDRESS; (* libunwind landing pad - the IP of the handler *)
   END;
 
 END RTMachine.

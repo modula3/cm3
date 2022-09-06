@@ -50,10 +50,5 @@ PROCEDURE ProcName (READONLY f: Frame): ADDRESS;
    corresponding to the stack frame "f".  Returns NIL if no name is
    known. *)
 
-<*EXTERNAL "RTStack__LatchEHReg" *>
-PROCEDURE LatchEHReg (): ADDRESS;
-(* Return the contents of the builtin_eh_data_reg which is set in the
-   resume handler. *)
-
 END RTStack.
 

@@ -5,7 +5,7 @@
 UNSAFE MODULE RTExStack EXPORTS RTException;
 
 IMPORT RT0, RTError, RTProcedureSRC, RTIO, RTModule, RTOS, RTStack;
-IMPORT Thread, Cstring, RTProcedure, RTParams;
+IMPORT (*Thread,*) Cstring, RTProcedure, RTParams, RTEHScan;
 FROM RT0 IMPORT RaiseActivation;
 
 (*----------------------------------------- compiler generated descriptors --*)
@@ -34,21 +34,6 @@ TYPE
   END;
 
   ExceptionList = UNTRACED REF (*ARRAY OF*) RT0.ExceptionUID;
-  FinallyProc = PROCEDURE (VAR a : RT0.RaiseActivation) RAISES ANY;
-
-TYPE (* RaiesNone *)
-  Frame = UNTRACED REF RECORD (* EF *)
-    next  : Frame;
-    class : INTEGER;   (* ORD(ScopeKind) *)
-  END;
-
-TYPE  (* FinallyProc *)
-  PF2 = UNTRACED REF RECORD (* EF2 *)
-    next    : Frame;
-    class   : INTEGER;    (* ORD(ScopeKind) *)
-    handler : ADDRESS;    (* the procedure *)
-    frame   : ADDRESS;    (* static link for the handler *)
-  END;
 
 (*---------------------------------------------------------------------------*)
 
@@ -62,10 +47,8 @@ EXCEPTION
 PROCEDURE Raise (VAR act: RaiseActivation) RAISES ANY =
   VAR
     here, f: RTStack.Frame;
-    s: Scope;
-    ex: ExceptionList;
-(* test alloc an activation and pass to handler via ResumeRaise *)
-excRef : REF RaiseActivation;
+    excRef : REF RaiseActivation;
+    scan : BOOLEAN;
   BEGIN
     IF DEBUG THEN
       PutExcept ("RAISE", act);
@@ -80,7 +63,222 @@ excRef : REF RaiseActivation;
         InvokeBackstop (act, raises := FALSE);
       END;
 
+      IF f.lsda # NIL THEN
+        (* scan the dwarf eh scopes found by the unwinder *)
+        scan := RTEHScan.ScanEHTable(f, act.exception.uid);
+        IF scan THEN
+          excRef := NEW(REF RaiseActivation);
+          excRef^ := act;
+          ResumeRaise (excRef^)
+        END;
+      END;
+
+      (* try the previous frame *)
+      RTStack.PreviousFrame (f, f);
+    END; (* loop *)
+  END Raise;
+
+PROCEDURE ResumeRaise (VAR a: RaiseActivation) RAISES ANY =
+  VAR
+    here, f: RTStack.Frame;
+    scan : BOOLEAN;
+  BEGIN
+    IF DEBUG THEN
+      PutExcept ("RERAISE", a);
+      DumpStack ();
+    END;
+
+    RTStack.CurrentFrame (here);
+    RTStack.PreviousFrame (here, f); (* skip self *)
+    LOOP
+      IF (f.pc = NIL) THEN
+        (* we're at the end of the stack (most likely unhandled exception) *)
+        InvokeBackstop (a, raises := FALSE);
+      END;
+
+      IF f.lsda # NIL THEN
+        (* scan the dwarf eh scopes found by the unwinder *)
+        scan := RTEHScan.ScanEHTable(f, a.exception.uid);
+        IF scan THEN
+          (* landingpad set in scan *)
+          f.excRef := ADR(a);
+          RTStack.Unwind (f);
+          RTError.MsgPC (LOOPHOLE (f.pc, INTEGER), "Unwind returned!");
+          RAISE OUCH;
+        END;
+      END;
+
+      (* try the previous frame *)
+      RTStack.PreviousFrame (f, f);
+    END;
+  END ResumeRaise;
+
+PROCEDURE Raise1 (VAR act: RaiseActivation) RAISES ANY =
+  VAR
+    here, f: RTStack.Frame;
+    excRef : REF RaiseActivation;
+    scope : Scope;
+    ex: ExceptionList;
+    scan : BOOLEAN;
+  BEGIN
+
+    RTStack.CurrentFrame (here);
+    RTStack.PreviousFrame (here, f); (* skip self *)
+    LOOP
+      IF (f.pc = NIL) THEN
+        (* we're at the end of the stack (or we got lost along the way!) *)
+        InvokeBackstop (act, raises := FALSE);
+      END;
+
+      (* scan the dwarf eh scopes found by the unwinder *)
+      scan := RTEHScan.ScanEHTable(f,act.exception.uid);
+      IF scan THEN
+(* no good calling this if scan is false or landingpad is nil *)
+        scope := FindScope2(f.pc, f.landingPad);
+        IF scope # NIL THEN
+  RTIO.PutText ("SUCCESS scope eh table found\n");
+  RTIO.Flush ();
+        ELSE
+          BadStack();
+        END;
+        CASE ORD (scope.kind) OF
+        | ORD (ScopeKind.Except), ORD (ScopeKind.ExceptElse) =>
+            excRef := NEW(REF RaiseActivation);
+            excRef^ := act;
+            ResumeRaise1 (excRef^)
+        | ORD (ScopeKind.Finally),
+          ORD (ScopeKind.FinallyProc),
+          ORD (ScopeKind.Lock) =>
+            (* ignore for this pass *)
+        | ORD (ScopeKind.RaisesNone) =>
+            IF (act.exception.implicit = 0) THEN
+              InvokeBackstop (act, raises := TRUE);
+            END;
+        | ORD (ScopeKind.Raises) =>
+            IF (act.exception.implicit = 0) THEN
+              (* check that this procedure does indeed raise 'ex' *)
+              ex := scope.excepts;
+              IF ex = NIL THEN InvokeBackstop (act, raises := TRUE); END;
+              LOOP
+                IF (ex^ = 0) THEN InvokeBackstop (act, raises := TRUE); END;
+                IF (ex^ = act.exception.uid) THEN
+                  (* ok, it passes *) EXIT;
+                END;
+                INC (ex, ADRSIZE (ex^));
+              END;
+            END;
+        ELSE
+          BadStack();
+        END;
+      END;
+
+      (* try the previous frame *)
+      RTStack.PreviousFrame (f, f);
+    END;
+  END Raise1;
+
+PROCEDURE ResumeRaise1 (VAR a: RaiseActivation) RAISES ANY =
+  VAR
+    here, f: RTStack.Frame;
+(* not used *)
+scope : Scope;
+    scan : BOOLEAN;
+  BEGIN
+
+    RTStack.CurrentFrame (here);
+    RTStack.PreviousFrame (here, f); (* skip self *)
+    LOOP
+      IF (f.pc = NIL) THEN
+        (* we're at the end of the stack (or we got lost along the way!) *)
+        InvokeBackstop (a, raises := FALSE);
+      END;
+
+      (* scan the dwarf eh scopes found by the unwinder *)
+      scan := RTEHScan.ScanEHTable(f,a.exception.uid);
+      IF scan THEN
+(*
+        InvokeHandler (scope, f, a);
+*)
+(* landingpad and handlerIP are the same function *)
+(*
+        f.handlerIP := f.landingPad;
+*)
+        f.excRef := ADR(a);
+        RTStack.Unwind (f);
+        RTError.MsgPC (LOOPHOLE (f.pc, INTEGER), "Unwind returned!");
+        RAISE OUCH;
+      END;
+
+      (* try the previous frame *)
+      RTStack.PreviousFrame (f, f);
+    END;
+  END ResumeRaise1;
+
+(**************************** orig **********************)
+
+PROCEDURE Raise3 (VAR act: RaiseActivation) RAISES ANY =
+  VAR
+    here, f: RTStack.Frame;
+    s: Scope;
+    ex: ExceptionList;
+    (* alloc an activation and pass to handler via ResumeRaise *)
+    excRef : REF RaiseActivation;
+    scan : BOOLEAN;
+ss : Scope;
+  BEGIN
+    IF DEBUG THEN
+      PutExcept ("RAISE", act);
+      DumpStack ();
+    END;
+
+    RTStack.CurrentFrame (here);
+    RTStack.PreviousFrame (here, f); (* skip self *)
+    LOOP
+      IF (f.pc = NIL) THEN
+        (* we're at the end of the stack (or we got lost along the way!) *)
+        InvokeBackstop (act, raises := FALSE);
+      END;
       s := FindScope (f.pc);
+      scan := RTEHScan.ScanEHTable(f,act.exception.uid);
+
+IF s = NIL THEN
+  RTIO.PutText ("s is NIL\n");
+ELSE
+  RTIO.PutText ("s is OK\n");
+END;
+IF scan = FALSE THEN
+  RTIO.PutText ("scan is FALSE\n");
+ELSE
+  RTIO.PutText ("scan is OK\n");
+END;
+IF s # NIL AND scan THEN
+  IF s.stop # f.landingPad THEN
+    RTIO.PutText ("PROB stop # landingpad\n");
+  END;
+END;
+RTIO.Flush ();
+
+(* no good calling this if scan is false or landingpad is nil *)
+IF scan THEN 
+  ss := FindScope2(f.pc, f.landingPad);
+  IF ss # NIL THEN
+    RTIO.PutText ("SUCCESS scope eh table found\n");
+    IF ss # s THEN
+      RTIO.PutText ("PROBLEM scope ss # s\n");
+    END;
+    RTIO.Flush ();
+  ELSE
+(* this can happen see p004 optimised. it means that the landingpad
+   has been changed from the orig stop since the label has been moved
+   when the bb was moved. The thing is has the landing pad been moved out
+   of the range of start to stop. ?? is that the problem ??
+   would be nice if the ehtables had scope which contains kind
+   and the exc list  *)
+    RTIO.PutText ("FAILURE scope eh table NOT found\n");
+    RTIO.Flush ();
+  END;
+END;
+
       IF (s # NIL) THEN
         LOOP
           IF (s.start <= f.pc) AND (f.pc <= s.stop) THEN
@@ -88,26 +286,30 @@ excRef : REF RaiseActivation;
             | ORD (ScopeKind.Except) =>
                 ex := s.excepts;
                 WHILE (ex^ # 0) DO
-IF (ex^ = act.exception.uid) THEN 
-  excRef := NEW(REF RaiseActivation);
-  excRef^ := act;
-  ResumeRaise (excRef^)
-END;
-(*
-                  IF (ex^ = act.exception.uid) THEN ResumeRaise (act) END;
-*)
+                  IF (ex^ = act.exception.uid) THEN
+                    excRef := NEW(REF RaiseActivation);
+                    excRef^ := act;
+                    ResumeRaise (excRef^)
+                  END;
                   INC (ex, ADRSIZE (ex^));
                 END;
             | ORD (ScopeKind.ExceptElse) =>
                 (* 's' is a TRY-EXCEPT-ELSE frame => go for it *)
-excRef := NEW(REF RaiseActivation);
-excRef^ := act;
-ResumeRaise (excRef^);
-(*
-                ResumeRaise (act);
-*)
-            | ORD (ScopeKind.Finally),
-              ORD (ScopeKind.FinallyProc),
+                excRef := NEW(REF RaiseActivation);
+                excRef^ := act;
+                ResumeRaise (excRef^);
+            | ORD (ScopeKind.Finally) =>
+(* peter test if this works *)
+(* this fixes p12 but whether it passes all other tests especially
+if there is no handler for exception after finally ie next out
+on stack *)
+
+                excRef := NEW(REF RaiseActivation);
+                excRef^ := act;
+                ResumeRaise (excRef^);
+
+            | ORD (ScopeKind.FinallyProc),
+              (* FinallyProc is only for SJLJ exceptions the ex_frame *)
               ORD (ScopeKind.Lock) =>
                 (* ignore for this pass *)
             | ORD (ScopeKind.RaisesNone) =>
@@ -144,13 +346,14 @@ ResumeRaise (excRef^);
       (* try the previous frame *)
       RTStack.PreviousFrame (f, f);
     END;
-  END Raise;
+  END Raise3;
 
-PROCEDURE ResumeRaise (VAR a: RaiseActivation) RAISES ANY =
+PROCEDURE ResumeRaise3 (VAR a: RaiseActivation) RAISES ANY =
   VAR
     here, f: RTStack.Frame;
     s: Scope;
     ex: ExceptionList;
+    scan : BOOLEAN;
   BEGIN
     IF DEBUG THEN
       PutExcept ("RERAISE", a);
@@ -166,7 +369,16 @@ PROCEDURE ResumeRaise (VAR a: RaiseActivation) RAISES ANY =
       END;
 
       s := FindScope (f.pc);
+      (* scan the dwarf eh scopes found by the unwinder *)
+      scan := RTEHScan.ScanEHTable(f,a.exception.uid);
+(*
+RTIO.PutAddr(s.stop); RTIO.PutText("\n"); RTIO.Flush();
+RTIO.PutAddr(f.landingPad); RTIO.PutText("\n"); RTIO.Flush();
+*)
+(*
       IF (s # NIL) THEN
+*)
+      IF scan THEN
         LOOP
           IF (s.start <= f.pc) AND (f.pc <= s.stop) THEN
             CASE ORD (s.kind) OF
@@ -176,24 +388,18 @@ PROCEDURE ResumeRaise (VAR a: RaiseActivation) RAISES ANY =
                   IF (ex^ = a.exception.uid) THEN InvokeHandler (s, f, a) END;
                   INC (ex, ADRSIZE (ex^));
                 END;
-(* commenting this out to check segv bug in new version
-plus its not clear what it is trying to achieve
-                MarkHandler (s, f, a);
-*)
-                (* we need to mark every frame so that no matter where
-                   we unwind to, it sees a marked frame => exception *)
             | ORD (ScopeKind.ExceptElse) =>
                 (* 's' is a TRY-EXCEPT-ELSE frame => go for it *)
                 InvokeHandler (s, f, a);
             | ORD (ScopeKind.Finally) =>
                 InvokeHandler (s, f, a);
             | ORD (ScopeKind.FinallyProc) =>
-(* should invoke this but f is of wrong type
-                InvokeFinallyHandler (f, a);
-*)
+                (* never called with the stack walker *)
                 InvokeHandler (s, f, a);
             | ORD (ScopeKind.Lock) =>
+                (* unlock will be done in code
                 ReleaseLock (s, f);
+                *)
             | ORD (ScopeKind.Raises), ORD (ScopeKind.RaisesNone) =>
                 (* already checked during the first pass *)
             ELSE
@@ -213,97 +419,38 @@ plus its not clear what it is trying to achieve
       (* try the previous frame *)
       RTStack.PreviousFrame (f, f);
     END;
-  END ResumeRaise;
-
-PROCEDURE LatchEHReg() : ADDRESS =
-  BEGIN
-    RETURN RTStack.LatchEHReg();
-  END LatchEHReg;
+  END ResumeRaise3;
 
 PROCEDURE InvokeHandler (s: Scope;  VAR f: RTStack.Frame;
                          READONLY prev: RaiseActivation) RAISES ANY =
-  VAR next: RT0.ActivationPtr := f.sp + s.offset;
-(* test alloc an activation and pass to handler *)
-(*
-    excRef : REF RaiseActivation;
-*)
   BEGIN
     IF DEBUG THEN
       PutExcept ("INVOKE HANLDER", prev);
-      PutFrame (f, next);
       RTIO.PutText ("\n");
       RTIO.Flush ();
     END;
-(* lets not copy the old one while we test the heap alloc version *)
+
+    (* s.stop is the address of the exception handler as set in the scope
+       table. It can disagree with the landingpad that dwarf generates
+       but dwarf is more accurate when optimisations enabled  *)
 (*
-    next^ := prev;
+    f.landingPad := s.stop;
 *)
-
-(* s.stop the address of the label for the exception handler *)
-
-f.handlerIP := s.stop;
-(* prob should do this alloc and init in Raise and pass the pointer to
-ResumeRaise. That way we just pass the pointer arround and dont
-alloc a new exception each time in ResumeRaise *)
-
-(*
-excRef := NEW(REF RaiseActivation);
-excRef^ := prev;
-f.excRef := LOOPHOLE(excRef,ADDRESS);
-*)
-f.excRef := ADR(prev);
+    (* f.landingPad already set in ScanEHTable; *)
+    f.excRef := ADR(prev);
 
     RTStack.Unwind (f);
     RTError.MsgPC (LOOPHOLE (f.pc, INTEGER), "Unwind returned!");
     RAISE OUCH;
   END InvokeHandler;
 
-PROCEDURE MarkHandler (s: Scope;  READONLY f: RTStack.Frame;
-                       READONLY prev: RaiseActivation) =
-  VAR next: RT0.ActivationPtr := f.sp + s.offset;
-  BEGIN
-    IF DEBUG THEN
-      PutExcept ("MARK HANDLER", prev);
-      PutFrame (f, next);
-      RTIO.PutText ("\n");
-      RTIO.Flush ();
-    END;
-    next^ := prev;
-  END MarkHandler;
-
-PROCEDURE InvokeFinallyHandler (f: Frame;  VAR a: RT0.RaiseActivation) RAISES ANY =
-  VAR
-    p := LOOPHOLE (f, PF2);
-    cl: RT0.ProcedureClosure;
-  BEGIN
-    IF DEBUG THEN
-      PutExcept ("INVOKE FINALLY HANDLER", a);
-      RTIO.PutText ("  frame=");  RTIO.PutAddr (f);
-      RTIO.PutText ("  class=");  RTIO.PutInt (f.class);
-      RTIO.PutText ("\n");
-      RTIO.Flush ();
-    END;
-
-    (* build a nested procedure closure  *)
-    cl.marker := RT0.ClosureMarker;
-    cl.proc   := p.handler;
-    cl.frame  := p.frame;
-    
-(* what does this do and do we need it ?
-    RTThread.SetCurrentHandlers (f.next); (* cut to the new handler *)
-*)
-    CallProc (LOOPHOLE (ADR (cl), FinallyProc), a);
-  END InvokeFinallyHandler;
-
-PROCEDURE CallProc (p : FinallyProc; VAR a : RT0.RaiseActivation) RAISES ANY =
-  (* we need to fool the compiler into generating a call
-     to a nested procedure... *)
-  BEGIN
-    p(a);
-  END CallProc;
+(* problem here with new version.
+   Optimisations will likely stuff up the offset. Also now its not portable
+   using the bp reg
+   So now lock releases are built into lock statement
 
 PROCEDURE ReleaseLock (s: Scope;  READONLY f: RTStack.Frame) =
-  VAR p : UNTRACED REF MUTEX := f.sp + s.offset;
+  VAR p : UNTRACED REF MUTEX := (*f.sp*) f.bp + s.offset;
   BEGIN
     IF DEBUG THEN
       RTIO.PutText ("--> UNLOCK:");
@@ -315,11 +462,25 @@ PROCEDURE ReleaseLock (s: Scope;  READONLY f: RTStack.Frame) =
     <*ASSERT p^ # NIL *>
     Thread.Release (p^);
   END ReleaseLock;
+*)
 
 PROCEDURE BadStack () =
   BEGIN
     RTError.Msg (NIL, 0, "corrupt exception stack");
   END BadStack;
+
+TYPE
+  CharArr = REF ARRAY OF CHAR;
+
+(* The unwinder needs to alloc buffers for the context and the cursor.
+   Marked unused to appease compiler but called from unwinder. *)
+<*UNUSED*> PROCEDURE AllocBuf(size : INTEGER) : ADDRESS =
+  VAR arr : CharArr;
+  BEGIN
+    arr := NEW(CharArr,size);
+    RETURN ADR(arr[0]);
+  END AllocBuf;
+
 
 (*------------------------------------------------------- scope searching ---*)
 (* Note: we assume that the text of a single compilation unit is contiguous
@@ -334,6 +495,55 @@ TYPE
   END;
 
 VAR pc_map: PCMap := NIL;
+
+PROCEDURE FindScope2 (pc,lpad: ADDRESS) :  Scope =
+  VAR
+    base: ADDRESS;
+    lo, hi, mid, limit: CARDINAL;
+    p: UNTRACED REF MapEntry;
+    s: Scope;
+  BEGIN
+    IF (pc_map = NIL) THEN
+      RTOS.LockHeap ();
+        BuildPCMap ();
+      RTOS.UnlockHeap ();
+    END;
+
+    (* binary search of the sorted table *)
+    limit:= NUMBER (pc_map^);
+    base := ADR (pc_map[0]);
+    lo   := 0;
+    hi   := limit;
+    WHILE (lo < hi) DO
+      mid := (lo + hi) DIV 2;
+      p := base + mid * ADRSIZE (p^);
+      IF (pc < p.base)
+        THEN hi := mid;
+        ELSE lo := mid + 1;
+      END;
+    END;
+    IF (lo > 0) THEN DEC (lo) END;
+
+    (* linear search of the modules that might contain lpad *)
+    LOOP
+      IF (lo >= limit) THEN RETURN NIL END;
+      p := base + lo * ADRSIZE (p^);
+      IF (p.base > pc) THEN RETURN NIL END;
+      IF FindScopeInModule2 (lpad, p.module.try_scopes, s) THEN RETURN s END;
+      INC (lo);
+    END;
+  END FindScope2;
+
+PROCEDURE FindScopeInModule2 (lpad: ADDRESS;  s: Scope; VAR x: Scope): BOOLEAN =
+  BEGIN
+    x := NIL;
+    IF (s = NIL) THEN RETURN FALSE END;
+    LOOP
+      IF lpad = s.stop THEN x := s; RETURN TRUE; END;
+      IF (s.end_of_list # '\000') THEN RETURN FALSE END;
+      INC (s, ADRSIZE (s^));
+    END;
+  END FindScopeInModule2;
 
 PROCEDURE FindScope (pc: ADDRESS): Scope =
   VAR
@@ -562,6 +772,7 @@ PROCEDURE DumpStack () =
             RTIO.PutText ("..");
             RTIO.PutAddr (s.stop);
             RTIO.PutText ("]  ");
+(* problem here with offset *)
             info := f.sp + s.offset;
             CASE ORD (s.kind) OF
             | ORD (ScopeKind.Finally),
@@ -607,6 +818,7 @@ PROCEDURE DumpStack () =
       RTIO.PutAddr (f.pc-CallInstructionSize, 10);
       RTIO.PutText ("  ");
       RTIO.PutAddr (f.sp, 10);
+      (*
       RTProcedureSRC.FromPC (f.pc, proc, file, name);
       IF (name # NIL) THEN
         offset := f.pc - proc;
@@ -616,6 +828,7 @@ PROCEDURE DumpStack () =
           IF (file # NIL) THEN RTIO.PutText(" in "); RTIO.PutString(file); END;
         END;
       END;
+      *)
       name := RTStack.ProcName (f);
       IF (name # NIL)
         AND Cstring.memcmp (name, ADR(NoName), NUMBER(NoName)) # 0 THEN

@@ -23,8 +23,7 @@ CONST
     "ReportFault", "AssertFailed", "DebugMsg",
     "TextLitInfo", "TextLitGetChar", "TextLitGetWideChar",
     "TextLitGetChars", "TextLitGetWideChars",
-    "CheckLoadTracedRef", "CheckStoreTraced"
-(*peter*) , "LatchEHReg"
+    "CheckLoadTracedRef", "CheckStoreTraced", "NoOp"
   };
 
 VAR

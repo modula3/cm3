@@ -20,9 +20,7 @@ TYPE
     Abort, AssertFailed, DebugMsg,
     TextLitInfo, TextLitGetChar, TextLitGetWideChar,
     TextLitGetChars, TextLitGetWideChars,
-    CheckLoadTracedRef, CheckStoreTraced
-(*peter*)
-    ,LatchEHReg
+    CheckLoadTracedRef, CheckStoreTraced, NoOp
   };
 
 PROCEDURE Import ();

@@ -84,11 +84,6 @@ PROCEDURE ResumeRaise (info: ADDRESS) RAISES ANY =
     RTException.ResumeRaise (LOOPHOLE (info, UNTRACED REF RT0.RaiseActivation)^);
   END ResumeRaise;
 
-PROCEDURE LatchEHReg () : ADDRESS =
-  BEGIN
-    RETURN RTException.LatchEHReg();
-  END LatchEHReg;
-
 (*-------------------------------------------------------- runtime errors ---*)
 
 CONST
@@ -132,6 +127,10 @@ PROCEDURE AssertFailed (module: ADDRESS(*RT0.ModulePtr*);  line: INTEGER;
     a.un_arg      := NIL;
     RTException.Raise (a);
   END AssertFailed;
+
+PROCEDURE NoOp() =
+  BEGIN
+  END NoOp;
 
 BEGIN
 END RTHooks.

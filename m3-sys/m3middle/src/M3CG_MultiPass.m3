@@ -194,6 +194,9 @@ OVERRIDES
     call_direct := call_direct;
     start_call_indirect := start_call_indirect;
     call_indirect := call_indirect;
+    invoke_direct := invoke_direct;
+    invoke_indirect := invoke_indirect;
+    landing_pad := landing_pad;
     pop_param := pop_param;
     pop_struct := pop_struct;
     pop_static_link := pop_static_link;
@@ -986,6 +989,23 @@ BEGIN
 self.Add(NEW(call_indirect_t, op := Op.call_indirect, type := type, callingConvention := callingConvention));
 END call_indirect;
 
+PROCEDURE invoke_direct(self: T; proc: Proc; type: Type; next,handler : Label) =
+BEGIN
+self.Add(NEW(invoke_direct_t, op := Op.invoke_direct, proc := NARROW(proc, proc_t).tag, type := type, next := next, handler := handler));
+END invoke_direct;
+
+PROCEDURE invoke_indirect(self: T; type: Type; callingConvention : CallingConvention; next,handler : Label) =
+BEGIN
+self.Add(NEW(invoke_indirect_t, op := Op.invoke_indirect, type := type, callingConvention := callingConvention, next := next, handler := handler));
+END invoke_indirect;
+
+PROCEDURE landing_pad(self: T; type: ZType; handler : Label; READONLY catches : ARRAY OF TypeUID) =
+VAR a := NEW(REF ARRAY OF TypeUID, NUMBER(catches));
+BEGIN
+a^ := catches;
+self.Add(NEW(landing_pad_t, op := Op.landing_pad, type := type, handler := handler, catches := a));
+END landing_pad;
+
 PROCEDURE load_procedure(self: T; proc: Proc) =
 BEGIN
 self.Add(NEW(load_procedure_t, op := Op.load_procedure, proc := NARROW(proc, proc_t).tag));
@@ -1309,6 +1329,9 @@ PROCEDURE replay_pop_param(self: pop_param_t; <*UNUSED*>replay: Replay_t; cg: cg
 PROCEDURE replay_pop_struct(self: pop_struct_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.pop_struct(self.typeid, self.byte_size, self.alignment); END replay_pop_struct;
 PROCEDURE replay_pop_static_link(<*UNUSED*>self: pop_static_link_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.pop_static_link(); END replay_pop_static_link;
 PROCEDURE replay_call_indirect(self: call_indirect_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.call_indirect(self.type, self.callingConvention); END replay_call_indirect;
+PROCEDURE replay_invoke_direct(self: invoke_direct_t; replay: Replay_t; cg: cg_t) = BEGIN cg.invoke_direct(replay.GetProc(self.proc), self.type, self.next, self.handler); END replay_invoke_direct;
+PROCEDURE replay_invoke_indirect(self: invoke_indirect_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.invoke_indirect(self.type, self.callingConvention, self.next, self.handler); END replay_invoke_indirect;
+PROCEDURE replay_landing_pad(self: landing_pad_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.landing_pad(self.type, self.handler, self.catches^); END replay_landing_pad;
 PROCEDURE replay_comment(self: comment_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.comment(self.a, self.b, self.c, self.d); END replay_comment;
 PROCEDURE replay_store_ordered(self: store_ordered_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.store_ordered(self.ztype, self.mtype, self.order); END replay_store_ordered;
 PROCEDURE replay_load_ordered(self: load_ordered_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.load_ordered(self.mtype, self.ztype, self.order); END replay_load_ordered;

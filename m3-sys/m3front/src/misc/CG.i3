@@ -667,6 +667,20 @@ PROCEDURE Gen_Call_indirect (t: Type;  cc: CallingConvention);
    procedure returns a value of type t.   Note: may also generate
    NIL checking code.  *)
 
+PROCEDURE Invoke_direct (p: Proc;  t: Type; handler : Label);
+(* call the procedure 'p' from within a TRY block. If the outcome is
+   an exception resume execution at 'handler' which will be a 
+   landing_pad, else at the label immediately succeeding the call. *)
+
+PROCEDURE Invoke_indirect (t: Type; cc: CallingConvention; handler : Label);
+(* call the procedure whose address is in s0.A from within a TRY block. If
+   the outcome is an exception resume executeion at 'handler' which will be
+   a landing_pad, else at the label immediately succeeding the call.*)
+
+PROCEDURE Landing_pad (handler : Label; READONLY catches : ARRAY OF TypeUID);
+(* resume as a result of an exception which handles any of the 'catches'
+   type uids *)
+
 PROCEDURE Pop_param (t: Type);
 (* pop s0.t and make it the "next" parameter in the current call *)
 

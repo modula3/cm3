@@ -180,6 +180,9 @@ CONST
     Desc { "start_call_indirect", Op.start_call_indirect },
 
     Desc { "call_indirect", Op.call_indirect },
+    Desc { "invoke_direct", Op.invoke_direct },
+    Desc { "invoke_indirect", Op.invoke_indirect },
+    Desc { "landing_pad", Op.landing_pad },
     Desc { "pop_param", Op.pop_param },
     Desc { "pop_struct", Op.pop_struct },
     Desc { "pop_static_link", Op.pop_static_link },

@@ -24,10 +24,11 @@ TYPE
     saved      : BOOLEAN;
     returnSeen : BOOLEAN;
     exitSeen   : BOOLEAN;
+    invokeSeen : BOOLEAN;
     info       : CG.Var;
     start      : CG.Label;
     stop       : CG.Label;
-    nextStop   : CG.Label;
+    stopBody   : CG.Label;
     type       : Type.T;     (* kind = PROC *)
     variable   : Variable.T; (* kind = PROC *)
     tmp_result : CG.Var;     (* kind = PROC *)
@@ -49,7 +50,7 @@ CONST
     ORD (M3RT.HandlerClass.Except),
     ORD (M3RT.HandlerClass.ExceptElse),
     ORD (M3RT.HandlerClass.Raises),
-    -1 (* proc *)
+    -1  (* proc *)
   };
 
 VAR
@@ -87,11 +88,11 @@ PROCEDURE SaveFrame () =
     <*ASSERT save_depth >= 0*>
   END Pop;
 
-PROCEDURE PushFinally (l_start, l_stop, l_nextstop: CG.Label;  info: CG.Var) =
+PROCEDURE PushFinally (l_start, l_stop, l_stopBody: CG.Label;  info: CG.Var) =
   BEGIN
     Push (Kind.zFINALLY, l_start, l_stop, info);
     WITH z = stack[tos - 1] DO
-      z.nextStop := l_nextstop
+      z.stopBody := l_stopBody
     END;
   END PushFinally;
 
@@ -117,19 +118,28 @@ PROCEDURE PushLock (l_start, l_stop: CG.Label;  mutex: CG.Var) =
     Push (Kind.zLOCK, l_start, l_stop, mutex);
   END PushLock;
 
-PROCEDURE PushTry (l_start, l_stop: CG.Label;  info: CG.Var;  ex: ESet.T) =
+PROCEDURE PushTry (l_start, l_stop, l_stopBody: CG.Label;  info: CG.Var;  ex: ESet.T) =
   BEGIN
     Push (Kind.zTRY, l_start, l_stop, info, ex);
+    WITH z = stack[tos - 1] DO
+      z.stopBody := l_stopBody
+    END;
   END PushTry;
 
-PROCEDURE PushTryElse (l_start, l_stop: CG.Label;  info: CG.Var) =
+PROCEDURE PushTryElse (l_start, l_stop, l_stopBody: CG.Label;  info: CG.Var) =
   BEGIN
     Push (Kind.zTRYELSE, l_start, l_stop, info);
+    WITH z = stack[tos - 1] DO
+      z.stopBody := l_stopBody
+    END;
   END PushTryElse;
 
 PROCEDURE PushExit (l_stop: CG.Label) =
   BEGIN
     Push (Kind.zEXIT, l_stop := l_stop);
+    WITH z = stack[tos - 1] DO
+      z.stopBody := l_stop
+    END;
   END PushExit;
 
 PROCEDURE PushRaises (l_start, l_stop: CG.Label;  ex: ESet.T;  info: CG.Var) =
@@ -157,6 +167,7 @@ PROCEDURE Push (k: Kind;  l_start, l_stop: CG.Label := CG.No_label;
       z.outermost  := FALSE;
       z.returnSeen := FALSE;
       z.exitSeen   := FALSE;
+      z.invokeSeen := FALSE;
       z.start      := l_start;
       z.stop       := l_stop;
       z.info       := info;
@@ -171,6 +182,16 @@ PROCEDURE Push (k: Kind;  l_start, l_stop: CG.Label := CG.No_label;
     END;
     INC (tos);
   END Push;
+
+PROCEDURE Invoked () =
+  BEGIN
+    stack[tos - 1].invokeSeen := TRUE;
+  END Invoked;
+
+PROCEDURE InvokeSeen () : BOOLEAN =
+  BEGIN
+    RETURN stack[tos - 1].invokeSeen;
+  END InvokeSeen;
 
 (*--------------------------------------------- explicit frame operations ---*)
 
@@ -351,24 +372,17 @@ PROCEDURE EmitExit1 () =
         | Kind.zTRYELSE =>
             CG.Load_intt (Exit_exception);
             CG.Store_int (Target.Integer.cg_type, z.info);
-CG.Jump (z.nextStop);
-(*
-            CG.Jump (z.stop);
-*)
+            CG.Jump (z.stopBody);
             EXIT;
         | Kind.zFINALLY, Kind.zFINALLYPROC =>
             CG.Load_intt (Exit_exception);
             CG.Store_int (Target.Integer.cg_type, z.info);
-CG.Jump (z.nextStop);
-(*
-            CG.Jump (z.stop);
-*)
+            CG.Jump (z.stopBody);
             EXIT;
         | Kind.zLOCK =>
             SetLock (FALSE, z.info, 0);
         | Kind.zEXIT =>
-(* what about this one ? *)
-            CG.Jump (z.stop);
+            CG.Jump (z.stopBody);
             EXIT;
         | Kind.zTRY =>
             (* ignore *)
@@ -589,18 +603,12 @@ PROCEDURE EmitReturn1 (): INTEGER =
         | Kind.zTRYELSE =>
             CG.Load_intt (Return_exception);
             CG.Store_int (Target.Integer.cg_type, z.info);
-CG.Jump (z.nextStop);
-(*
-            CG.Jump (z.stop);
-*)
+            CG.Jump (z.stopBody);
             EXIT;
         | Kind.zFINALLY, Kind.zFINALLYPROC =>
             CG.Load_intt (Return_exception);
             CG.Store_int (Target.Integer.cg_type, z.info);
-CG.Jump (z.nextStop);
-(*
-            CG.Jump (z.stop);
-*)
+            CG.Jump (z.stopBody);
             EXIT;
         | Kind.zLOCK =>
             SetLock (FALSE, z.info, 0);
@@ -733,7 +741,7 @@ PROCEDURE EmitExceptionTest (signature: Type.T;  need_value: BOOLEAN): CG.Val =
         | Kind.zTRYELSE     => EXIT;
         | Kind.zFINALLYPROC => (* ignore the runtime does it *)
         | Kind.zFINALLY     => EXIT;
-        | Kind.zLOCK        => (* ignore  (the runtime does the unlocks) *)
+        | Kind.zLOCK        => (* ignore *)
         | Kind.zEXIT        => (* ignore *)
         | Kind.zTRY         => EXIT;
         | Kind.zRAISES      => (* ignore *)
@@ -748,12 +756,13 @@ PROCEDURE EmitExceptionTest (signature: Type.T;  need_value: BOOLEAN): CG.Val =
     END;
 
     (* generate the conditional branch to the handler *)
-(* dont really need this code after every call to check if exc
-raised it only works with the old copy exception model
-*) 
+    (* Dont really need this code after every call - to check if an exception
+       raised. It only works with the old copy exception model.
+ 
     CG.Load_addr (stack[i].info, M3RT.EA_exception, Target.Address.align);
     CG.Load_nil ();
     CG.If_compare (CG.Type.Addr, CG.Cmp.NE, stack[i].stop, CG.Never);
+    *)
     IF NOT need_value AND (value # NIL) THEN
       CG.Push (value);
       CG.Free (value);
@@ -776,6 +785,7 @@ PROCEDURE CaptureResult (result: CG.Type): CG.Val =
   END CaptureResult;
 
 PROCEDURE NextHandler (VAR(*OUT*) handler: CG.Label;
+                       VAR(*OUT*) handler_body: CG.Label;
                        VAR(*OUT*) info: CG.Var): BOOLEAN =
   VAR i: INTEGER;
   BEGIN
@@ -790,7 +800,7 @@ PROCEDURE NextHandler (VAR(*OUT*) handler: CG.Label;
         | Kind.zTRYELSE     => EXIT;
         | Kind.zFINALLYPROC => (* ignore the runtime does it *)
         | Kind.zFINALLY     => EXIT;
-        | Kind.zLOCK        => (* ignore  (the runtime does the unlocks) *)
+        | Kind.zLOCK        => (* ignore *)
         | Kind.zEXIT        => (* ignore *)
         | Kind.zTRY         => EXIT;
         | Kind.zRAISES      => (* ignore *)
@@ -800,10 +810,31 @@ PROCEDURE NextHandler (VAR(*OUT*) handler: CG.Label;
       DEC (i);
     END;
 
+    handler_body := stack[i].stopBody;
     handler := stack[i].stop;
-    info    := stack[i].info;
+    info := stack[i].info;
     RETURN TRUE;
   END NextHandler;
+
+PROCEDURE Excepts() : ESet.EList =
+  VAR i: INTEGER; e,t,ret : ESet.EList := NIL;
+  BEGIN
+    IF NOT Target.Has_stack_walker THEN RETURN NIL END;
+
+    (* scan the frame stack getting each frames list of handled exceptions *)
+    i := tos - 1;
+    WHILE (i >= 0) DO
+      e := ESet.ListE(stack[i].e_set);
+      IF e # NIL THEN
+        t := e;
+        WHILE t.next # NIL DO t := t.next; END;
+        t.next := ret;
+        ret := e;
+      END;
+      DEC (i);
+    END;
+    RETURN ret;
+  END Excepts;
 
 (*----------------------------------------------------------------- misc. ---*)
 

@@ -506,6 +506,26 @@ PROCEDURE EmitNames (t: T) =
     END;
   END EmitNames;
 
+PROCEDURE ListE (t: T) : EList =
+  VAR e: Elt; x,ret : EList;
+  BEGIN
+    IF (t = NIL) THEN RETURN NIL END;
+    t := LookUp (t);
+    IF (t.any) THEN RETURN NIL END;
+
+    e := t.elts;  ret := NIL;
+    WHILE (e # NIL) DO
+      IF (e.except # NIL) THEN
+        x := NEW(EList);
+        x.e := e.except;
+        x.next := ret;
+        ret := x;
+      END;
+      e := e.next;
+    END;
+    RETURN ret;
+  END ListE;
+
 (*---------------------------------------------------------- fingerprints ---*)
 
 PROCEDURE AddFPTag (t: T;  VAR x: M3.FPInfo): CARDINAL =

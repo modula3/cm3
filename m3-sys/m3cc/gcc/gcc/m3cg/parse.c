@@ -5926,6 +5926,85 @@ M3CG_HANDLER (CALL_DIRECT)
   m3_call_direct (p, type);
 }
 
+M3CG_HANDLER (INVOKE_DIRECT)
+{
+  printf("invoke direct found\n");
+
+  //m3_call_direct (p, type);
+  
+  tree f = { 0 };
+  tree catch_t = { 0 };
+
+  p = m3_convert_function_to_builtin (p);
+  if (TREE_USED (p) == false)
+  {
+      TREE_USED (p) = true;
+      assemble_external (p);
+  }
+  tree call = build_call_list (type, proc_addr (p), CALL_TOP_ARG ());
+  CALL_EXPR_STATIC_CHAIN (call) = CALL_TOP_STATIC_CHAIN ();
+  // from call stuff
+  if (VOID_TYPE_P (type))
+  {
+    add_stmt (call);
+  }
+  else
+  {
+    TREE_SIDE_EFFECTS (call) = true; // needed? 
+    EXPR_PUSH (call);
+  }
+  CALL_POP ();
+
+
+// new stuff 
+/*
+  one_field (0, POINTER_SIZE, t_addr, &f, &catch_t);
+  TREE_USED (exchandler) = true;
+  TREE_VALUE (catch_t) = build1 (ADDR_EXPR, t_addr, exchandler);
+
+  tree handler = m3_build2 (CATCH_EXPR, void_type_node, v_null, catch_t);
+  tree exc = m3_build2 (TRY_CATCH_EXPR, void_type_node, call, handler); 
+*/
+
+/*
+  if (VOID_TYPE_P (type))
+  {
+    add_stmt (exc);
+  }
+  else
+  {
+//    TREE_SIDE_EFFECTS (exc) = true; // needed?
+    EXPR_PUSH (exc);
+  }
+
+  CALL_POP ();
+*/
+}
+
+M3CG_HANDLER (INVOKE_INDIRECT)
+{
+  printf("invoke indirect found\n");
+  m3_call_indirect (type, calling_convention);
+}
+
+M3CG_HANDLER (LANDING_PAD)
+{
+  printf("landing pad found\n");
+// lets do nothing for the moment
+  tree v = declare_temp (type);
+  EXPR_PUSH(v);
+}
+
+void m3cg_LANDING_PAD_t::read_extended ()
+{
+  /* landing_pad is a special case */
+  size_t j = n;
+  catches.resize(j);
+  for (size_t i = 0; i < j; ++i)
+	  //these are not labels need to turn typeid into tree ??
+    catches[i] = scan_label (0); //get_typeidi();
+}
+
 M3CG_HANDLER (START_CALL_INDIRECT)
 {
   m3_start_call ();
