@@ -1,7 +1,7 @@
-MODULE Scanner;
+MODULE JsonScanner;
 
 IMPORT Rd, Text, Thread, Fmt;
-IMPORT Keyword;
+IMPORT JsonKeyword;
 
 CONST
   EOFChar   = '\000';
@@ -63,7 +63,7 @@ PROCEDURE InitFromRd (t: Default;
                       source        : Rd.T;
                       skip_comments : BOOLEAN;
                       split_pragmas : BOOLEAN): T =
-  VAR len0 (*, len1*): INTEGER;
+  VAR len : INTEGER;
   BEGIN
     t.skip_comments := skip_comments;
     t.split_pragmas := split_pragmas;
@@ -74,9 +74,9 @@ PROCEDURE InitFromRd (t: Default;
     TRY
       t.source := source;
       t.buffer := NEW(Buf, MaxBuf);
-      len0 := Rd.GetSub (source, t.buffer^);
-      IF len0 < MaxBuf THEN
-        t.buffer[len0] := EOFChar;
+      len := Rd.GetSub (source, t.buffer^);
+      IF len < MaxBuf THEN
+        t.buffer[len] := EOFChar;
       END;
     EXCEPT
     | Rd.Failure     => Err (t, 0, "I/O failure reading the source");
@@ -160,7 +160,7 @@ PROCEDURE GetToken (t: Default) =
       | 'a'..'z', 'A'..'Z' =>
           (* scan an identifier *)
           WHILE AlphaNumerics[ch] DO INC (offset); ch := t.getCh(offset); END;
-          t.token := Keyword.Classify (SUBARRAY (t.buffer^, t.offset,
+          t.token := JsonKeyword.Classify (SUBARRAY (t.buffer^, t.offset,
                                                  offset - t.offset));
           EXIT;
       | '-', '0'..'9' => ScanNumber (t);                     RETURN;
@@ -339,4 +339,4 @@ BEGIN
   CharAlert ['\t'] := TRUE;
   CharAlert ['\\'] := TRUE;
   CharAlert [EOFChar] := TRUE;
-END Scanner.
+END JsonScanner.

@@ -1,6 +1,6 @@
-UNSAFE MODULE Keyword;
+UNSAFE MODULE JsonKeyword;
 
-FROM Scanner IMPORT TK, TK_Ident, TK_Null, TK_True, TK_False;
+FROM JsonScanner IMPORT TK, TK_Ident, TK_Null, TK_True, TK_False;
 
 (* Note: the module is unsafe because we use "p^[i]" instead
    of "x[i]", but since "p^" is a fixed length array we avoid
@@ -36,4 +36,4 @@ PROCEDURE Classify (READONLY x: ARRAY OF CHAR): TK =
   END Classify;
 
 BEGIN
-END Keyword.
+END JsonKeyword.

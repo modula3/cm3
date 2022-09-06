@@ -1,6 +1,6 @@
 (* Copied from M3Scanner.i3 and modified for json *)
 
-INTERFACE Scanner;
+INTERFACE JsonScanner;
 
 IMPORT Rd;
 
@@ -20,7 +20,7 @@ TYPE
     className (tk: INTEGER): TEXT;
   END;
 
-  Buf = BRANDED "JsonScanner.Buf" REF ARRAY OF CHAR;
+  Buf = REF ARRAY OF CHAR;
 
 TYPE
   Default <: T OBJECT METHODS
@@ -67,7 +67,7 @@ CONST
 
     "null", "true", "false"  };
 
-END Scanner.
+END JsonScanner.
 
 (*
 An "Scanner.T", or scanner, parses a stream of characters and

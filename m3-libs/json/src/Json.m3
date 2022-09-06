@@ -5,7 +5,7 @@ UNSAFE MODULE Json;
 
 IMPORT IO, Fmt, Rd, Text, Thread;
 IMPORT SortedTextRefTbl AS Tbl;
-IMPORT Scanner AS SK;
+IMPORT JsonScanner AS SK;
 IMPORT TextUtils,TextSeq,ASCII;
 
 CONST
@@ -242,6 +242,17 @@ PROCEDURE ParseBuf (buf: TEXT) : T RAISES{E} =
     node.parse();
     RETURN node;
   END ParseBuf;
+
+PROCEDURE ParseArr (arr: REF ARRAY OF CHAR) : T RAISES{E} =
+  VAR
+    s    : SK.Default;
+    node : T := NEW(T);
+  BEGIN
+    s := NEW(SK.Default);
+    node.tok := s.initFromBuf(arr);
+    node.parse();
+    RETURN node;
+  END ParseArr;
 
 PROCEDURE ParseFile (f: TEXT) : T RAISES{E} =
   VAR rd : Rd.T;

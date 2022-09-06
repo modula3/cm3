@@ -1,0 +1,15 @@
+This is a library which reads json text and allows
+operations upon it.
+
+The main data structure is Json.T which represents a node in
+a Json tree. Each node has a type corresponding to the basic Json
+types - array, obejct, text, int, float, bool and null.
+
+ParseFile will parse a json text file and return
+the root node to such a tree. ParseBuf and ParseStream are similar.
+
+Format will produce the textural representaion from the encoded tree,
+suitably formatted.
+
+All other operations decorate the tree by adding, deleting and updating
+nodes. 

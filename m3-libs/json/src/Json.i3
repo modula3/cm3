@@ -56,6 +56,7 @@ TYPE
   PROCEDURE ParseFile(f : TEXT) : T RAISES{E};
   PROCEDURE ParseStream(rd : Rd.T) : T RAISES{E};
   PROCEDURE ParseBuf(buf : TEXT) : T RAISES{E};
+  PROCEDURE ParseArr(arr : REF ARRAY OF CHAR) : T RAISES{E};
 
 END Json.
 
