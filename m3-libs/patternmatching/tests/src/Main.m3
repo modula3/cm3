@@ -223,7 +223,7 @@ BEGIN
       IF cmperr = NIL THEN
         start_time := Time.Now();
         FOR i := 1 TO reps DO
-          ret := RegEx.Execute(pat, dstr) # -1;
+          ret := RegEx.Execute(pat, dstr,0) # -1;
         END; (* for *)
         stop_time := Time.Now();
       END; (* if *)
