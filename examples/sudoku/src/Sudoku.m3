@@ -1,7 +1,7 @@
 (* Copyright (C) 2017 Peter McKinna. All rights reserved. *)
 (* See file COPYRIGHT-BSD for details. *)
 
-UNSAFE MODULE Sudoku EXPORTS Main;
+MODULE Sudoku EXPORTS Main;
 
 IMPORT IntSeq,IntRefTbl,Random,RandomPerm,Text,Word;
 IMPORT IO,Fmt;
@@ -354,7 +354,7 @@ PROCEDURE ParseGrid(READONLY puzzle : ARRAY OF CHAR) : ValuesType RAISES {Contra
   END ParseGrid;
     
 (* Depth first search for a solution *)
-PROCEDURE Search(values : ValuesType) : RefVal RAISES {NotFound} = <*NOWARN*>
+PROCEDURE Search(READONLY values : ValuesType) : RefVal RAISES {NotFound} =
   VAR
     min : Size;
     sol : RefVal;
