@@ -30,6 +30,9 @@ TYPE
     kind() : NodeKind;
     format() : TEXT;
     find(path : TEXT) : T;
+    getInt() : INTEGER;
+    getFloat() : LONGREAL;
+    getBool() : BOOLEAN;
     addText(name,value : TEXT) : T;
     addInt(name : TEXT; value : INTEGER) : T;
     addFloat(name : TEXT; value : LONGREAL) : T;
