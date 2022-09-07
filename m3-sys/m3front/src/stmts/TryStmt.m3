@@ -291,9 +291,7 @@ PROCEDURE Compile1 (p: P): Stmt.Outcomes =
     Marker.SaveFrame ();
       oc := Stmt.Compile (p.body);
     Marker.Pop ();
-    IF (Stmt.Outcome.FallThrough IN oc) THEN
-      CG.Jump (l+2);
-    END;
+    CG.Jump (l+2);
 
     IF (p.hasElse) THEN
       (* EXITs and RETURNs from the body are caught by the ELSE clause *)
