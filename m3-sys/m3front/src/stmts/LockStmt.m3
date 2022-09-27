@@ -91,6 +91,7 @@ PROCEDURE Compile1 (p: P): Stmt.Outcomes =
     (* compile the body *)
     lab := CG.Next_label (4);
     CG.Set_label (lab, barrier := TRUE);
+    CG.Start_try ();
 
     Marker.PushFinally (lab, lab+1, lab+2, info);
     Marker.SaveFrame ();
@@ -139,6 +140,7 @@ PROCEDURE Compile1 (p: P): Stmt.Outcomes =
     Procedure.EmitCall (proc);
 
     CG.Gen_location (p.tail);
+    CG.End_try ();
     CG.Set_label (lab+3, barrier := TRUE);
     RETURN oc;
   END Compile1;

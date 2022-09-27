@@ -446,6 +446,8 @@ M3CG (START_CALL_DIRECT,
 M3CG (CALL_DIRECT,
       PROC (p)
       MTYPE (type))
+M3CG (START_TRY, NOTHING)
+M3CG (END_TRY, NOTHING)
 M3CG (INVOKE_DIRECT,
       PROC (p)
       MTYPE (type)
@@ -461,7 +463,7 @@ M3CG (LANDING_PAD,
       LABEL (exchandler)
       UNSIGNED_INTEGER (n)
       M3CG_EXTRA_FIELDS (
-        std::vector<tree> catches;
+        std::vector<INT32> catches;
         virtual void read_extended();))
 M3CG (START_CALL_INDIRECT,
       MTYPE (type)

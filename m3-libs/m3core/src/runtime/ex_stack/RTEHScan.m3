@@ -202,18 +202,22 @@ PROCEDURE ScanEHActions() : BOOLEAN =
   BEGIN
     action := actionTableStart + (actionEntry - 1); 
     (* scan action entries until find a matching handler or end of list *)
-IF DEBUG THEN
-  RTIO.PutText("excuid "); RTIO.PutInt(excUid); RTIO.PutText("\n");
-  RTIO.PutText("actionentry "); RTIO.PutInt(actionEntry); RTIO.PutText("\n");
-  RTIO.Flush();
-END;
+
+    IF DEBUG THEN
+      RTIO.PutText("excuid "); RTIO.PutInt(excUid); RTIO.PutText("\n");
+      RTIO.PutText("actionentry "); RTIO.PutInt(actionEntry); RTIO.PutText("\n");
+      RTIO.Flush();
+    END;
+
     LOOP
       actionRecord := action;
       tTypeIndex := ReadSLEB(action);
-IF DEBUG THEN
-  RTIO.PutText("tTypeIndex "); RTIO.PutInt(tTypeIndex); RTIO.PutText("\n");
-  RTIO.Flush();
-END;
+      f.tTypeIndex := tTypeIndex;
+
+      IF DEBUG THEN
+        RTIO.PutText("tTypeIndex "); RTIO.PutInt(tTypeIndex); RTIO.PutText("\n");
+        RTIO.Flush();
+      END;
 
       IF tTypeIndex > 0 THEN
         (* found a catch check if correct one *)
@@ -229,10 +233,10 @@ END;
         scopeKind := Word.RightShift(info^,32);
         *)
 
-IF DEBUG THEN
-  RTIO.PutText("infoUid "); RTIO.PutInt(infoUid); RTIO.PutText("\n");
-  RTIO.Flush();
-END;
+        IF DEBUG THEN
+          RTIO.PutText("infoUid "); RTIO.PutInt(infoUid); RTIO.PutText("\n");
+          RTIO.Flush();
+        END;
 
         IF catchType = NIL THEN
           (* found a catch(...) catches everything *)
@@ -241,10 +245,6 @@ END;
         END;
         IF infoUid = excUid OR infoUid = 0 THEN
           (* matched the exception *)
-IF DEBUG THEN
-  RTIO.PutText("  FOUND EXC\n");
-  RTIO.Flush();
-END;
           RETURN TRUE;
         END;
       ELSIF tTypeIndex < 0 THEN
@@ -264,6 +264,7 @@ END;
 
   BEGIN
     lsda := f.lsda;
+    f.tTypeIndex := 0;
 
     (* get the current ip and offset it before the next instruction
        in the current frame which threw the exception *)

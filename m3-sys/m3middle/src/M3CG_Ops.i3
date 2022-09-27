@@ -676,6 +676,12 @@ call_indirect (t: Type;  cc: CallingConvention);
 (* call the procedure whose address is in s0.A and pop s0.  The
    procedure returns a value of type t. *)
 
+start_try ();
+(* start a try block *)
+
+end_try ();
+(* end a try block *)
+
 invoke_direct (p: Proc;  t: Type; next,handler : Label);
 (* call the procedure 'p' inside a try block.  It returns a value of type t.
    if the result of the call is normal, then resume at the next label otherwise

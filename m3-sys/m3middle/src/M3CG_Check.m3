@@ -156,6 +156,8 @@ invoke := FALSE;
         call_direct := call_direct;
         start_call_indirect := start_call_indirect;
         call_indirect := call_indirect;
+        start_try := start_try;
+        end_try := end_try;
         invoke_direct := invoke_direct;
         invoke_indirect := invoke_indirect;
         landing_pad := landing_pad;
@@ -1304,6 +1306,16 @@ PROCEDURE call_indirect (self: U; t: Type;  cc: CallingConvention) =
     IF (t # Type.Void) THEN self.s_push (t) END;
     self.child.call_indirect (t, cc);
   END call_indirect;
+
+PROCEDURE start_try (self: U) =
+  BEGIN
+    self.child.start_try ( );
+  END start_try;
+
+PROCEDURE end_try (self: U) =
+  BEGIN
+    self.child.end_try ( );
+  END end_try;
 
 PROCEDURE invoke_direct (self: U; p: Proc;  t: Type; next,handler : Label) =
   (* call the procedure identified by block b.  The procedure

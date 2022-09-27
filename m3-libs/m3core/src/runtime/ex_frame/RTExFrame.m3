@@ -232,6 +232,18 @@ PROCEDURE BadStack () =
     RTError.Msg (NIL, 0, "corrupt exception stack");
   END BadStack;
 
+TYPE
+  CharArr = REF ARRAY OF CHAR;
+
+(* The unwinder needs to alloc buffers for the context and the cursor.
+   This procedure never called by SJLJ exception handling. *)
+PROCEDURE AllocBuf(size : INTEGER) : ADDRESS =
+  VAR arr : CharArr;
+  BEGIN
+    arr := NEW(CharArr,size);
+    RETURN ADR(arr[0]);
+  END AllocBuf;
+
 (*----------------------------------------------------------- diagnostics ---*)
 
 PROCEDURE SanityCheck () =

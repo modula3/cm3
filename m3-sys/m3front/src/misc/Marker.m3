@@ -669,7 +669,7 @@ PROCEDURE EmitReturn2 (): INTEGER =
     RETURN -1;
   END EmitReturn2;
 
-PROCEDURE EmitScopeTable (): INTEGER =
+PROCEDURE EmitScopeTable (doEmit : BOOLEAN := FALSE): INTEGER =
   VAR
     Align := MAX (Target.Address.align, Target.Integer.align);
     f: FramePtr := all_frames;
@@ -677,6 +677,9 @@ PROCEDURE EmitScopeTable (): INTEGER =
     e_base: CG.Var;
     e_offset: INTEGER;
   BEGIN
+    (* the default is to not emit the scope table now we can
+       generate gcc_exception tables. *)
+    IF NOT doEmit THEN RETURN -1; END;
     IF (f = NIL) OR (NOT Target.Has_stack_walker) THEN RETURN -1; END;
 
     (* make sure that all the exception lists were declared *)

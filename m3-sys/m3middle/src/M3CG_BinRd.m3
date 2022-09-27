@@ -182,6 +182,8 @@ CONST
     Cmd {Bop.call_direct, call_direct},
     Cmd {Bop.start_call_indirect, start_call_indirect},
     Cmd {Bop.call_indirect, call_indirect},
+    Cmd {Bop.start_try, start_try},
+    Cmd {Bop.end_try, end_try},
     Cmd {Bop.invoke_direct, invoke_direct},
     Cmd {Bop.invoke_indirect, invoke_indirect},
     Cmd {Bop.landing_pad, landing_pad},
@@ -1617,6 +1619,16 @@ PROCEDURE call_indirect (VAR s: State) =
   BEGIN
     s.cg.call_indirect (type, calling);
   END call_indirect;
+
+PROCEDURE start_try (VAR s: State) =
+  BEGIN
+    s.cg.start_try ();
+  END start_try;
+
+PROCEDURE end_try (VAR s: State) =
+  BEGIN
+    s.cg.end_try ();
+  END end_try;
 
 PROCEDURE invoke_direct (VAR s: State) =
   VAR p       := Scan_proc (s);

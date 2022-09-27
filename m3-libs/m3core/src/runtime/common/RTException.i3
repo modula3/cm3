@@ -31,6 +31,9 @@ TYPE Backstop = PROCEDURE (VAR a: RT0.RaiseActivation;
 PROCEDURE DumpStack ();
 (* If possible, produce a diagnostic stack dump on stderr *)
 
+PROCEDURE AllocBuf(size : INTEGER) : ADDRESS;
+(* the stack unwinder needs to alloc mem *)
+
 END RTException.
 
 (* Implementation notes:

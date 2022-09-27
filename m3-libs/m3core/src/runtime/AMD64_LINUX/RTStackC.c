@@ -13,7 +13,6 @@
 #include <string.h>
 #include <setjmp.h>
 #include <signal.h>
-
 #include <libunwind.h>
 
 
@@ -23,7 +22,8 @@ extern "C" {
 
 //Define the exception handling register number. 0 should be safe
 //across most architectures.
-#define EHRegNo 0
+#define EHObjRegNo  0
+#define EHTypeRegNo 1
 
 //Obsolete defs used with LatchEHReg	
 //#define REG "rax"
@@ -34,7 +34,7 @@ extern "C" {
 void * __m3_personality_v0();
 
 //external M3 alloc memory
-extern char * RTExStack__AllocBuf(int size);
+extern char * RTException__AllocBuf(int size);
 
 /*
   FrameInfo = RECORD
@@ -43,6 +43,7 @@ extern char * RTExStack__AllocBuf(int size);
     bp  : ADDRESS;        (* base pointer *)
     lock: INTEGER;        (* to ensure that cxt isn't overrun!! *)
     excRef  : ADDRESS;    (* ref to the exception activation *)
+    tTypeIndex : INTEGER; (* tTypeIndex from exception table *)
     cursor : ADDRESS;     (* libunwind cursor to cur frame *)
     startIP : ADDRESS;    (* libunwind start ip of current proc *)
     endIP : ADDRESS;      (* libunwind end ip of current proc *)
@@ -60,6 +61,7 @@ typedef struct {
   unsigned long bp;
   long lock;
   unsigned long exceptionRef;
+  long tTypeIndex;
   unw_cursor_t *cursor;
   unw_word_t start_ip;
   unw_word_t end_ip;
@@ -147,8 +149,8 @@ void RTStack__CurFrame (Frame *f)
   //we alloc in m3 otherwise a serious memory leak 
   //uc = (unw_context_t *) malloc(sizeof(unw_context_t));
   //cursor = (unw_cursor_t *) malloc(sizeof(unw_cursor_t));
-  uc = (unw_context_t *) RTExStack__AllocBuf(sizeof(unw_context_t));
-  cursor = (unw_cursor_t *) RTExStack__AllocBuf(sizeof(unw_cursor_t));
+  uc = (unw_context_t *) RTException__AllocBuf(sizeof(unw_context_t));
+  cursor = (unw_cursor_t *) RTException__AllocBuf(sizeof(unw_cursor_t));
 
   f->lock = FrameLock;
   unw_getcontext(uc);
@@ -164,6 +166,7 @@ void RTStack__CurFrame (Frame *f)
   f->sp = sp;
   f->bp = bp;
   RTStack__GetProcInfo(f);
+
   if (f->lock != FrameLock) abort ();
 }
 
@@ -195,6 +198,7 @@ void RTStack__PrevFrame (Frame* callee, Frame* caller)
     caller->sp = sp;
     caller->bp = bp;
     RTStack__GetProcInfo(caller);
+
   } else {
     caller->pc = 0;
     caller->sp = 0;
@@ -218,18 +222,24 @@ void RTStack__Unwind (Frame *target)
   if (target->lock != FrameLock) abort ();
   
   //for the copy exc model we have to disable the 2 set regs below
-  //set ip to landingPad 
+  //
+  //set the IP to landingPad 
   unw_set_reg(target->cursor, UNW_REG_IP, target->landingPad);
   
-  //set the eh register to return the exception object
+  //set the eh register zero to return the exception object
   unw_set_reg(target->cursor,
-	      __builtin_eh_return_data_regno(EHRegNo),
+	      __builtin_eh_return_data_regno(EHObjRegNo),
 	      target->exceptionRef);
+  //
+  //set the eh register one to the tTypeIndex for gcc
+  unw_set_reg(target->cursor,
+	      __builtin_eh_return_data_regno(EHTypeRegNo),
+	      target->tTypeIndex);
 
   res = unw_resume(target->cursor);
   //success means unreachable from here
   if (res < 0) {
-    printf("unwind error\n");
+    printf("RTStack__Unwind - unw_resume error\n");
     abort();
   }
 }

@@ -3635,6 +3635,16 @@ PROCEDURE Gen_Call_indirect (t: Type;  cc: CallingConvention) =
     PushResult (t);
   END Gen_Call_indirect;
 
+PROCEDURE Start_try () =
+  BEGIN
+    cg.start_try ();
+  END Start_try;
+
+PROCEDURE End_try () =
+  BEGIN
+    cg.end_try ();
+  END End_try;
+
 PROCEDURE Invoke_direct (p: Proc;  t: Type; handler : Label) =
   VAR next := Next_label ();
   BEGIN

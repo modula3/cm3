@@ -274,10 +274,14 @@ PROCEDURE Handled(p : P) : Caught =
       e := e.next; INC(n);
     END;
 
-    catches := NEW(Caught, n);
-    e := el; i := 0;
-    WHILE e # NIL DO
-      catches[i] := Exceptionz.UID(e.e); e := e.next; INC(i);
+    IF n = 0 THEN
+      catches := NEW(Caught, 1); catches[0] := 0; 
+    ELSE
+      catches := NEW(Caught, n);
+      e := el; i := 0;
+      WHILE e # NIL DO
+        catches[i] := Exceptionz.UID(e.e); e := e.next; INC(i);
+      END;
     END;
     RETURN catches;
   END Handled;
@@ -296,12 +300,10 @@ PROCEDURE Compile (p: P): Stmt.Outcomes =
 PROCEDURE Compile1 (p: P): Stmt.Outcomes =
   VAR
     oc: Stmt.Outcomes;
+    l, next_handler, handler_body: CG.Label;
+    info, next_info: CG.Var;
     h: Handler;
-    l: CG.Label;
-    info: CG.Var;
-    next_handler, handler_body: CG.Label;
     another: BOOLEAN;
-    next_info: CG.Var;
     proc: Procedure.T;
     catches : Caught;
   BEGIN
@@ -316,6 +318,7 @@ PROCEDURE Compile1 (p: P): Stmt.Outcomes =
     (* compile the body *)
     l := CG.Next_label (4);
     CG.Set_label (l, barrier := TRUE);
+    CG.Start_try ();
     IF (p.hasElse)
       THEN Marker.PushTryElse (l, l+1, l+2, info);
       ELSE Marker.PushTry (l, l+1, l+2, info, p.handled);
@@ -324,11 +327,13 @@ PROCEDURE Compile1 (p: P): Stmt.Outcomes =
       oc := Stmt.Compile (p.body);
       (* Emit noop to satisfy landingpad - for degenerate case of a
          try block without an invoke. *)
+(*
       IF NOT Marker.InvokeSeen() THEN
         proc := RunTyme.LookUpProc (RunTyme.Hook.NoOp);
         Procedure.StartCall (proc);
         Procedure.EmitCall (proc);
       END;
+*)
     Marker.Pop ();
 
     IF (Stmt.Outcome.FallThrough IN oc) THEN
@@ -377,6 +382,7 @@ PROCEDURE Compile1 (p: P): Stmt.Outcomes =
 
     (* restore the "Compiler.ThisException()" globals *)
     PopHandler ();
+    CG.End_try ();
     CG.Set_label (l+3);
     RETURN oc;
   END Compile1;

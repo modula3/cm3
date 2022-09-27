@@ -139,10 +139,20 @@ PROCEDURE Compile1 (p: P): Stmt.Outcomes =
     (* compile the body *)
     lab := CG.Next_label (4);
     CG.Set_label (lab, barrier := TRUE);
+    CG.Start_try ();
 
     Marker.PushFinally (lab, lab+1, lab+2, info);
     Marker.SaveFrame ();
       oc := Stmt.Compile (p.body);
+(* this?? needed for gcc
+      (* Emit noop to satisfy landingpad - for degenerate case of a
+         try block without an invoke. *)
+      IF NOT Marker.InvokeSeen() THEN
+        proc := RunTyme.LookUpProc (RunTyme.Hook.NoOp);
+        Procedure.StartCall (proc);
+        Procedure.EmitCall (proc);
+      END;
+*)
     Marker.PopFinally (returnSeen, exitSeen);
 
     CG.Jump (lab+2);
@@ -196,6 +206,7 @@ PROCEDURE Compile1 (p: P): Stmt.Outcomes =
       CG.Set_label (lab+3, barrier := TRUE);
     END;
 
+    CG.End_try ();
     (* restore the "Compiler.ThisException()" globals *)
     TryStmt.PopHandler ();
 

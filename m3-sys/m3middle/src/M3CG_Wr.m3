@@ -166,6 +166,8 @@ TYPE
         call_direct := call_direct;
         start_call_indirect := start_call_indirect;
         call_indirect := call_indirect;
+        start_try := start_try;
+        end_try := end_try;
         invoke_direct := invoke_direct;
         invoke_indirect := invoke_indirect;
         landing_pad := landing_pad;
@@ -1696,6 +1698,18 @@ PROCEDURE call_indirect (u: U;  t: Type;  cc: CallingConvention) =
     Int   (u, cc.m3cg_id);
     NL    (u);
   END call_indirect;
+
+PROCEDURE start_try (u: U) =
+  BEGIN
+    Cmd   (u, "start_try");
+    NL    (u);
+  END start_try;
+
+PROCEDURE end_try (u: U) =
+  BEGIN
+    Cmd   (u, "end_try");
+    NL    (u);
+  END end_try;
 
 PROCEDURE invoke_direct (u: U; p: Proc;  t: Type; next,handler : Label) =
   (* call the procedure identified by block b.  The procedure

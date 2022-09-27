@@ -1000,6 +1000,8 @@ static GTY (()) tree set_le_proc;
 static GTY (()) tree set_range_proc;
 static GTY (()) tree fault_proc;
 static GTY (()) tree fault_handler;
+//test noop func
+static GTY (()) tree m3_noop_proc;
 
 /* Miscellaneous. */
 static GTY (()) tree global_decls;
@@ -1015,7 +1017,20 @@ static GTY (()) tree current_stmts;
 static GTY (()) tree pending_stmts;
 static GTY (()) tree pending_inits;
 
-static tree m3_current_scope (void)
+/* Exceptions. */
+//static GTY (()) tree etypes_list;
+static GTY (()) tree m3_eh_personality_decl;
+
+static tree
+m3_eh_personality(void)
+{
+  if (!m3_eh_personality_decl)
+   m3_eh_personality_decl  = build_personality_function("m3");
+  return m3_eh_personality_decl;
+}
+
+static tree
+m3_current_scope (void)
 {
   return current_function_decl ? current_function_decl : global_decls;
 }
@@ -1091,6 +1106,8 @@ set_volatize (bool a ATTRIBUTE_UNUSED)
 #define LANG_HOOKS_HANDLE_OPTION m3_handle_option
 #undef LANG_HOOKS_POST_OPTIONS
 #define LANG_HOOKS_POST_OPTIONS m3_post_options
+#undef LANG_HOOKS_EH_PERSONALITY
+#define LANG_HOOKS_EH_PERSONALITY m3_eh_personality
 #if GCC46
 /* Return language mask for option parsing. (gcc 4.6) */
 #undef LANG_HOOKS_OPTION_LANG_MASK
@@ -2103,6 +2120,8 @@ m3_init_decl_processing (void)
   set_inter_proc  = builtin_function ("set_intersection", t, ezero, NOT_BUILT_IN, 0, 0);
   set_sdiff_proc  = builtin_function ("set_sym_difference", t, ezero, NOT_BUILT_IN, 0, 0);
   set_range_proc  = builtin_function ("set_range", t, ezero, NOT_BUILT_IN, 0, 0);
+  //test no_op
+  m3_noop_proc  = builtin_function ("RTHooks__NoOp", t, ezero, NOT_BUILT_IN, 0, 0);
 
   t = build_function_type_list (t_int, NULL_TREE);
   set_gt_proc = builtin_function ("set_gt", t, ezero, NOT_BUILT_IN, 0, 0);
@@ -2141,6 +2160,7 @@ static std::vector<tree> all_procs;
 static std::vector<tree> all_labels;
 static std::vector<tree> expr_stack;
 static std::vector<tree> call_stack;
+static std::vector<tree> exc_stack;
 
 static void STACK_PUSH(std::vector<tree>& stack, tree x) { stack.push_back(x); }
 static void STACK_POP(std::vector<tree>& stack) { stack.pop_back(); }
@@ -2192,6 +2212,7 @@ m3_init_parse (void)
   all_labels.reserve(100);
   expr_stack.reserve(100);
   call_stack.reserve(200 * 2);
+  exc_stack.reserve(100);
 }
 
 static void
@@ -4797,6 +4818,7 @@ M3CG_HANDLER (NOTE_PROCEDURE_ORIGIN)
 
 M3CG_HANDLER (SET_LABEL)
 {
+
   DECL_CONTEXT (label) = current_function_decl;
   DECL_MODE (label) = VOIDmode;
   DECL_SOURCE_LOCATION (label) = input_location;
@@ -5926,73 +5948,82 @@ M3CG_HANDLER (CALL_DIRECT)
   m3_call_direct (p, type);
 }
 
+M3CG_HANDLER (START_TRY)
+{
+  pending_stmts = tree_cons (NULL_TREE, current_stmts, pending_stmts);
+  current_stmts = alloc_stmt_list ();
+
+  //setup for nested try's
+  exc_stack.push_back(NULL_TREE);
+  exc_stack.push_back(NULL_TREE);
+}
+
+M3CG_HANDLER (END_TRY)
+{
+  tree etypes =  exc_stack[exc_stack.size()-1];
+  tree exc_stmts =  exc_stack[exc_stack.size()-2];
+
+  // current_stmts should be the catch block
+  tree handler = m3_build2 (CATCH_EXPR, void_type_node, etypes, current_stmts);
+  tree exc = m3_build2 (TRY_CATCH_EXPR, void_type_node, exc_stmts, handler); 
+
+  current_stmts = TREE_VALUE (pending_stmts);
+  pending_stmts = TREE_CHAIN (pending_stmts);
+  add_stmt (exc);
+
+  exc_stack.pop_back();
+  exc_stack.pop_back();
+}
+
 M3CG_HANDLER (INVOKE_DIRECT)
 {
-  printf("invoke direct found\n");
-
-  //m3_call_direct (p, type);
-  
-  tree f = { 0 };
-  tree catch_t = { 0 };
-
-  p = m3_convert_function_to_builtin (p);
-  if (TREE_USED (p) == false)
-  {
-      TREE_USED (p) = true;
-      assemble_external (p);
-  }
-  tree call = build_call_list (type, proc_addr (p), CALL_TOP_ARG ());
-  CALL_EXPR_STATIC_CHAIN (call) = CALL_TOP_STATIC_CHAIN ();
-  // from call stuff
-  if (VOID_TYPE_P (type))
-  {
-    add_stmt (call);
-  }
-  else
-  {
-    TREE_SIDE_EFFECTS (call) = true; // needed? 
-    EXPR_PUSH (call);
-  }
-  CALL_POP ();
-
-
-// new stuff 
-/*
-  one_field (0, POINTER_SIZE, t_addr, &f, &catch_t);
-  TREE_USED (exchandler) = true;
-  TREE_VALUE (catch_t) = build1 (ADDR_EXPR, t_addr, exchandler);
-
-  tree handler = m3_build2 (CATCH_EXPR, void_type_node, v_null, catch_t);
-  tree exc = m3_build2 (TRY_CATCH_EXPR, void_type_node, call, handler); 
-*/
-
-/*
-  if (VOID_TYPE_P (type))
-  {
-    add_stmt (exc);
-  }
-  else
-  {
-//    TREE_SIDE_EFFECTS (exc) = true; // needed?
-    EXPR_PUSH (exc);
-  }
-
-  CALL_POP ();
-*/
+  m3_call_direct (p, type);
 }
 
 M3CG_HANDLER (INVOKE_INDIRECT)
 {
-  printf("invoke indirect found\n");
   m3_call_indirect (type, calling_convention);
 }
 
 M3CG_HANDLER (LANDING_PAD)
 {
-  printf("landing pad found\n");
-// lets do nothing for the moment
-  tree v = declare_temp (type);
-  EXPR_PUSH(v);
+  /* kludge in case of no invoke for a try finally causing segv in compile
+   * the optimiser should remove it, if optimisations work */
+  m3_start_call();
+  m3_call_direct (m3_noop_proc, t_void);
+
+  tree etypes_list = NULL_TREE;
+  for (size_t i = 0; i < n; ++i) {
+    // is this t_int or t_int_32?
+    // whatever it is, it should match the type for etype below
+    tree tid = build_int_cst (t_int, catches[i]);
+
+    //could optimise this a bit and lookup tid to reuse it so as to
+    //not allocate an etype if already have one.
+    tree etype = declare_temp (t_int);
+    TREE_STATIC (etype) = true;
+    DECL_NAME (etype) = get_identifier("M3EXC");
+    DECL_INITIAL (etype) = tid;
+ 
+    etype = m3_build1 (ADDR_EXPR, t_addr, etype);
+    etypes_list = tree_cons(NULL_TREE, etype, etypes_list);
+  }
+
+  //save the exception stmts at this point
+  exc_stack[exc_stack.size()-1] = etypes_list;
+  exc_stack[exc_stack.size()-2] = current_stmts;
+
+  //end old block
+  current_stmts = TREE_VALUE (pending_stmts);
+  pending_stmts = TREE_CHAIN (pending_stmts);
+  //start new block
+  pending_stmts = tree_cons (NULL_TREE, current_stmts, pending_stmts);
+  current_stmts = alloc_stmt_list ();
+  
+  m3_start_call ();
+  EXPR_PUSH (integer_zero_node);
+  m3_pop_param (t_addr);
+  m3_call_direct (builtin_decl_explicit (BUILT_IN_EH_POINTER), t_addr);
 }
 
 void m3cg_LANDING_PAD_t::read_extended ()
@@ -6000,9 +6031,9 @@ void m3cg_LANDING_PAD_t::read_extended ()
   /* landing_pad is a special case */
   size_t j = n;
   catches.resize(j);
-  for (size_t i = 0; i < j; ++i)
-	  //these are not labels need to turn typeid into tree ??
-    catches[i] = scan_label (0); //get_typeidi();
+  for (size_t i = 0; i < j; ++i) {
+    catches[i] = get_typeid();
+  }
 }
 
 M3CG_HANDLER (START_CALL_INDIRECT)
@@ -6458,7 +6489,10 @@ m3_post_options (PCSTR* /*pfilename*/)
   flag_reorder_blocks_and_partition = false;    /* breaks our exception handling? */
   flag_strict_aliasing = false;                 /* ? */
   flag_strict_overflow = false;                 /* ? */
-  flag_exceptions = true;                       /* ? */
+  flag_exceptions = true;                       /* enable exceptions */
+  flag_non_call_exceptions = true;              /* ? */
+  //flag_delete_dead_exceptions = true;         /* not in this version */
+  init_eh();                                    /* init eh in gcc */
 #if !GCC45
   flag_tree_store_ccp = false;                  /* needs retesting */
   flag_tree_salias = false;                     /* needs retesting */

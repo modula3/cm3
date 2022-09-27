@@ -294,6 +294,8 @@ OVERRIDES
     call_direct := call_direct;
     start_call_indirect := start_call_indirect;
     call_indirect := call_indirect;
+    start_try := start_try;
+    end_try := end_try;
     invoke_direct := invoke_direct;
     invoke_indirect := invoke_indirect;
     landing_pad := landing_pad;
@@ -4849,6 +4851,16 @@ PROCEDURE ExtendScalar(v : LLVM.ValueRef; t : Type) : LLVM.ValueRef =
     RETURN v;
   END ExtendScalar;
 
+PROCEDURE start_try (<*UNUSED*> self : U) =
+  BEGIN
+    (* nothing to do *)
+  END start_try;
+
+PROCEDURE end_try (<*UNUSED*> self : U) =
+  BEGIN
+    (* nothing to do *)
+  END end_try;
+
 (* a common method for building a call or invoke *)
 PROCEDURE call_invoke_direct (self : U; p: Proc; <*UNUSED*> t: Type; next,handler : Label;  call : BOOLEAN) =
   VAR
@@ -4985,10 +4997,9 @@ PROCEDURE landing_pad (self : U; t: ZType; handler : Label;
     typesArr : TypeArrType;
     typesRef : TypeRefType;
     name : TEXT;
-    defaultCatch := ARRAY[0..0] OF TypeUID{0}; 
     excepts : REF ARRAY OF TypeUID;
     exc : REFANY;
-    nn,mm : INTEGER;
+    nn : INTEGER;
   BEGIN
     curBB := LLVM.LLVMGetInsertBlock(builderIR);
     catchBB := self.getLabel(handler,"").labBB;
@@ -5003,10 +5014,8 @@ PROCEDURE landing_pad (self : U; t: ZType; handler : Label;
     landingVal := LLVM.LLVMBuildLandingPad (builderIR, landingTy, self.persFn, 1, LT("lpad"));
 
     nn := NUMBER(catches);
-    IF nn = 0 THEN mm := 1 ELSE mm := nn; END;
-    excepts := NEW(REF ARRAY OF TypeUID, mm);
-    IF nn = 0 THEN excepts^ := defaultCatch; ELSE excepts^ := catches; END;
-
+    <*ASSERT nn > 0 *>
+    excepts := NEW(REF ARRAY OF TypeUID, nn);
     FOR i := FIRST(excepts^) TO LAST(excepts^) DO
       IF NOT self.exceptsTable.get(excepts[i], exc) THEN
         INC(self.catchId);

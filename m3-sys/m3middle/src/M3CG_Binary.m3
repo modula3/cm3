@@ -180,6 +180,8 @@ CONST
     Desc { "start_call_indirect", Op.start_call_indirect },
 
     Desc { "call_indirect", Op.call_indirect },
+    Desc { "start_try", Op.start_try },
+    Desc { "end_try", Op.end_try },
     Desc { "invoke_direct", Op.invoke_direct },
     Desc { "invoke_indirect", Op.invoke_indirect },
     Desc { "landing_pad", Op.landing_pad },

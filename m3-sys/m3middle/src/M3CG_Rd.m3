@@ -39,7 +39,7 @@ TYPE
   END;
 
 CONST
-  CmdMap = ARRAY [0..163] OF Cmd {
+  CmdMap = ARRAY [0..165] OF Cmd {
     Cmd {"begin_unit", begin_unit},
     Cmd {"end_unit", end_unit},
     Cmd {"import_unit", import_unit},
@@ -184,6 +184,8 @@ CONST
     Cmd {"call_direct", call_direct},
     Cmd {"start_call_indirect", start_call_indirect},
     Cmd {"call_indirect", call_indirect},
+    Cmd {"start_try", start_try},
+    Cmd {"end_try", end_try},
     Cmd {"invoke_direct", invoke_direct},
     Cmd {"invoke_indirect", invoke_indirect},
     Cmd {"landing_pad", landing_pad},
@@ -1736,6 +1738,16 @@ PROCEDURE call_indirect (VAR s: State) =
   BEGIN
     s.cg.call_indirect (type, calling);
   END call_indirect;
+
+PROCEDURE start_try (VAR s: State) =
+  BEGIN
+    s.cg.start_try ();
+  END start_try;
+
+PROCEDURE end_try (VAR s: State) =
+  BEGIN
+    s.cg.end_try ();
+  END end_try;
 
 PROCEDURE invoke_direct (VAR s: State) =
   VAR p       := Scan_proc (s);

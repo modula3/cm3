@@ -25,6 +25,7 @@ TYPE
     bp  : ADDRESS;        (* base pointer *)
     lock: INTEGER;        (* to ensure that cxt isn't overrun!! *)
     excRef  : ADDRESS;    (* ref to the exception activation *)
+    tTypeIndex : INTEGER; (* tTypeIndex from the unwinder *)
     cursor : ADDRESS;     (* libunwind cursor to cur frame *)
     startIP : ADDRESS;    (* libunwind start ip of current proc *)
     endIP : ADDRESS;      (* libunwind end ip of current proc *)

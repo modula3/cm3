@@ -667,6 +667,12 @@ PROCEDURE Gen_Call_indirect (t: Type;  cc: CallingConvention);
    procedure returns a value of type t.   Note: may also generate
    NIL checking code.  *)
 
+PROCEDURE Start_try ();
+(* Start a try block. *)
+
+PROCEDURE End_try ();
+(* End a try block. *)
+
 PROCEDURE Invoke_direct (p: Proc;  t: Type; handler : Label);
 (* call the procedure 'p' from within a TRY block. If the outcome is
    an exception resume execution at 'handler' which will be a 

@@ -55,7 +55,7 @@ PROCEDURE ReturnOK      (): BOOLEAN;
 PROCEDURE EmitExit ();
 PROCEDURE AllocReturnTemp ();
 PROCEDURE EmitReturn (expr: Expr.T;  fromFinally: BOOLEAN);
-PROCEDURE EmitScopeTable (): INTEGER;
+PROCEDURE EmitScopeTable (doEmit : BOOLEAN := FALSE): INTEGER;
 PROCEDURE EmitExceptionTest (signature: Type.T;  need_value: BOOLEAN): CG.Val;
 PROCEDURE NextHandler (VAR(*OUT*) handler: CG.Label;
                        VAR(*OUT*) handler_body: CG.Label;

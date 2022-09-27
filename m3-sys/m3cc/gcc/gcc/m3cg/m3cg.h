@@ -148,26 +148,28 @@ typedef enum {
   M3CG_CALL_DIRECT,            /* 141 */
   M3CG_START_CALL_INDIRECT,    /* 142 */
   M3CG_CALL_INDIRECT,          /* 143 */
-  M3CG_INVOKE_DIRECT,          /* 144 */
-  M3CG_INVOKE_INDIRECT,        /* 145 */
-  M3CG_LANDING_PAD,            /* 146 */
-  M3CG_POP_PARAM,              /* 147 */
-  M3CG_POP_STRUCT,             /* 148 */
-  M3CG_POP_STATIC_LINK,        /* 149 */
-  M3CG_LOAD_PROCEDURE,         /* 150 */
-  M3CG_LOAD_STATIC_LINK,       /* 151 */
-  M3CG_COMMENT,                /* 152 */
-  M3CG_STORE_ORDERED,          /* 153 */
-  M3CG_LOAD_ORDERED,           /* 154 */
-  M3CG_EXCHANGE,               /* 155 */
-  M3CG_COMPARE_EXCHANGE,       /* 156 */
-  M3CG_FENCE,                  /* 157 */
-  M3CG_FETCH_AND_ADD,          /* 158 */
-  M3CG_FETCH_AND_SUB,          /* 159 */
-  M3CG_FETCH_AND_OR,           /* 160 */
-  M3CG_FETCH_AND_AND,          /* 161 */
-  M3CG_FETCH_AND_XOR,          /* 162 */
-  M3CG_WIDECHAR_SIZE,          /* 163 */
+  M3CG_START_TRY,              /* 144 */
+  M3CG_END_TRY,                /* 145 */
+  M3CG_INVOKE_DIRECT,          /* 146 */
+  M3CG_INVOKE_INDIRECT,        /* 147 */
+  M3CG_LANDING_PAD,            /* 148 */
+  M3CG_POP_PARAM,              /* 149 */
+  M3CG_POP_STRUCT,             /* 150 */
+  M3CG_POP_STATIC_LINK,        /* 151 */
+  M3CG_LOAD_PROCEDURE,         /* 152 */
+  M3CG_LOAD_STATIC_LINK,       /* 153 */
+  M3CG_COMMENT,                /* 154 */
+  M3CG_STORE_ORDERED,          /* 155 */
+  M3CG_LOAD_ORDERED,           /* 156 */
+  M3CG_EXCHANGE,               /* 157 */
+  M3CG_COMPARE_EXCHANGE,       /* 158 */
+  M3CG_FENCE,                  /* 159 */
+  M3CG_FETCH_AND_ADD,          /* 160 */
+  M3CG_FETCH_AND_SUB,          /* 161 */
+  M3CG_FETCH_AND_OR,           /* 162 */
+  M3CG_FETCH_AND_AND,          /* 163 */
+  M3CG_FETCH_AND_XOR,          /* 164 */
+  M3CG_WIDECHAR_SIZE,          /* 165 */
   LAST_OPCODE } M3CG_opcode;
 
 static const char *M3CG_opnames[] = {
@@ -315,26 +317,28 @@ static const char *M3CG_opnames[] = {
   "call_direct",            /* 141 */
   "start_call_indirect",    /* 142 */
   "call_indirect",          /* 143 */
-  "invoke_direct",          /* 144 */
-  "invoke_indirect",        /* 145 */
-  "landing_pad",            /* 146 */
-  "pop_param",              /* 147 */
-  "pop_struct",             /* 148 */
-  "pop_static_link",        /* 149 */
-  "load_procedure",         /* 150 */
-  "load_static_link",       /* 151 */
-  "comment",                /* 152 */
-  "store_ordered",          /* 153 */
-  "load_ordered",           /* 154 */
-  "exchange",               /* 155 */
-  "compare_exchange",       /* 156 */
-  "fence",                  /* 157 */
-  "fetch_and_add",          /* 158 */
-  "fetch_and_sub",          /* 159 */
-  "fetch_and_or",           /* 160 */
-  "fetch_and_and",          /* 161 */
-  "fetch_and_xor",          /* 162 */
-  "widechar_size",          /* 163 */
+  "start_try",              /* 144 */
+  "end_try",                /* 145 */
+  "invoke_direct",          /* 146 */
+  "invoke_indirect",        /* 147 */
+  "landing_pad",            /* 148 */
+  "pop_param",              /* 149 */
+  "pop_struct",             /* 150 */
+  "pop_static_link",        /* 151 */
+  "load_procedure",         /* 152 */
+  "load_static_link",       /* 153 */
+  "comment",                /* 154 */
+  "store_ordered",          /* 155 */
+  "load_ordered",           /* 156 */
+  "exchange",               /* 157 */
+  "compare_exchange",       /* 158 */
+  "fence",                  /* 159 */
+  "fetch_and_add",          /* 160 */
+  "fetch_and_sub",          /* 161 */
+  "fetch_and_or",           /* 162 */
+  "fetch_and_and",          /* 163 */
+  "fetch_and_xor",          /* 164 */
+  "widechar_size",          /* 165 */
   0 };
 
 
