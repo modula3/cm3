@@ -5,10 +5,8 @@
 interface      ("RTMachine")
 c_source       ("RTStackC")
 
-%import_lib("unwind","/usr/lib")
-%import_lib("unwind-x86_64","/usr/lib")
-%not sure why need lzma but it needs to be in this order for linker
-%not sure if this is correct place for the import_lib
+%needs to be in this order for linking
+%not sure if this is correct place for these import_lib
 import_lib("lzma","/usr/lib/x86_64-linux-gnu")
 import_lib("unwind-x86_64","/usr/lib/x86_64-linux-gnu")
 import_lib("unwind","/usr/lib/x86_64-linux-gnu")

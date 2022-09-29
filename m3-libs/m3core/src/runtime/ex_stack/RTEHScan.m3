@@ -204,20 +204,14 @@ PROCEDURE ScanEHActions() : BOOLEAN =
     (* scan action entries until find a matching handler or end of list *)
 
     IF DEBUG THEN
-      RTIO.PutText("excuid "); RTIO.PutInt(excUid); RTIO.PutText("\n");
-      RTIO.PutText("actionentry "); RTIO.PutInt(actionEntry); RTIO.PutText("\n");
-      RTIO.Flush();
+      RTIO.PutText("          --- actions --- \n");
+      RTIO.PutText("          tTypeIndex excUid\n");
     END;
 
     LOOP
       actionRecord := action;
       tTypeIndex := ReadSLEB(action);
       f.tTypeIndex := tTypeIndex;
-
-      IF DEBUG THEN
-        RTIO.PutText("tTypeIndex "); RTIO.PutInt(tTypeIndex); RTIO.PutText("\n");
-        RTIO.Flush();
-      END;
 
       IF tTypeIndex > 0 THEN
         (* found a catch check if correct one *)
@@ -234,8 +228,9 @@ PROCEDURE ScanEHActions() : BOOLEAN =
         *)
 
         IF DEBUG THEN
-          RTIO.PutText("infoUid "); RTIO.PutInt(infoUid); RTIO.PutText("\n");
-          RTIO.Flush();
+          RTIO.PutText("       "); RTIO.PutInt(tTypeIndex,4); 
+          RTIO.PutText("         "); RTIO.PutHex(infoUid,10);
+          RTIO.PutText("\n");
         END;
 
         IF catchType = NIL THEN
@@ -299,6 +294,11 @@ PROCEDURE ScanEHActions() : BOOLEAN =
     actionTableStart := callSiteTableEnd;
     callSitePtr := callSiteTableStart;
 
+    IF DEBUG THEN
+      RTIO.PutText("      ---- call sites -----\n");
+      RTIO.PutText("    lpad              ip-start  ip-end action\n");
+    END;
+
     WHILE callSitePtr < callSiteTableEnd DO
       (* there is one entry per call-site.
          the call-sites are non-overlapping in [start, start+length]
@@ -319,6 +319,12 @@ PROCEDURE ScanEHActions() : BOOLEAN =
 
         INC(landingPad, LOOPHOLE(lpStart,INTEGER));
 
+        IF DEBUG THEN
+          RTIO.PutText("    "); RTIO.PutAddr(landingPad);
+          RTIO.PutAddr(start,8);  RTIO.PutText("  "); RTIO.PutAddr(end,8);
+          RTIO.PutInt(actionEntry,4); RTIO.PutText("\n");
+        END;
+
         (* save landingPad to pass to unwinder *)
         f.landingPad := landingPad;
         IF actionEntry = 0 THEN
@@ -335,5 +341,5 @@ PROCEDURE ScanEHActions() : BOOLEAN =
   END ScanEHTable;
 
 BEGIN
-  DEBUG := RTParams.IsPresent ("debugehtab");
+  DEBUG := RTParams.IsPresent ("debugex");
 END RTEHScan.

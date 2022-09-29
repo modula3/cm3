@@ -207,7 +207,6 @@ void RTStack__PrevFrame (Frame* callee, Frame* caller)
   if (caller->lock != FrameLock) abort ();
 }
 
-
 /*---------------------------------------------------------------------------*/
 /* PROCEDURE Unwind (READONLY f: Frame);
    Restore the machine state back to the frame "f".  All callee-saved

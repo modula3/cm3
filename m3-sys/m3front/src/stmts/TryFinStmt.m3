@@ -125,8 +125,8 @@ PROCEDURE Compile1 (p: P): Stmt.Outcomes =
     oc, xc, o: Stmt.Outcomes;
     lab, xx: CG.Label;
     info: CG.Var;
-    returnSeen, exitSeen : BOOLEAN;
     proc: Procedure.T;
+    returnSeen, exitSeen : BOOLEAN;
     catches := ARRAY[0..0] OF CG.TypeUID{0};
   BEGIN
     (* declare and initialize the info record *)
@@ -144,15 +144,6 @@ PROCEDURE Compile1 (p: P): Stmt.Outcomes =
     Marker.PushFinally (lab, lab+1, lab+2, info);
     Marker.SaveFrame ();
       oc := Stmt.Compile (p.body);
-(* this?? needed for gcc
-      (* Emit noop to satisfy landingpad - for degenerate case of a
-         try block without an invoke. *)
-      IF NOT Marker.InvokeSeen() THEN
-        proc := RunTyme.LookUpProc (RunTyme.Hook.NoOp);
-        Procedure.StartCall (proc);
-        Procedure.EmitCall (proc);
-      END;
-*)
     Marker.PopFinally (returnSeen, exitSeen);
 
     CG.Jump (lab+2);

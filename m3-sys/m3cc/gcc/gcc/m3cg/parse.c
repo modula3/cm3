@@ -1000,7 +1000,6 @@ static GTY (()) tree set_le_proc;
 static GTY (()) tree set_range_proc;
 static GTY (()) tree fault_proc;
 static GTY (()) tree fault_handler;
-//test noop func
 static GTY (()) tree m3_noop_proc;
 
 /* Miscellaneous. */
@@ -1018,7 +1017,6 @@ static GTY (()) tree pending_stmts;
 static GTY (()) tree pending_inits;
 
 /* Exceptions. */
-//static GTY (()) tree etypes_list;
 static GTY (()) tree m3_eh_personality_decl;
 
 static tree
@@ -5953,7 +5951,7 @@ M3CG_HANDLER (START_TRY)
   pending_stmts = tree_cons (NULL_TREE, current_stmts, pending_stmts);
   current_stmts = alloc_stmt_list ();
 
-  //setup for nested try's
+  //setup for nested try's push 2
   exc_stack.push_back(NULL_TREE);
   exc_stack.push_back(NULL_TREE);
 }
@@ -5971,6 +5969,7 @@ M3CG_HANDLER (END_TRY)
   pending_stmts = TREE_CHAIN (pending_stmts);
   add_stmt (exc);
 
+  //pop 2
   exc_stack.pop_back();
   exc_stack.pop_back();
 }
@@ -5988,7 +5987,7 @@ M3CG_HANDLER (INVOKE_INDIRECT)
 M3CG_HANDLER (LANDING_PAD)
 {
   /* kludge in case of no invoke for a try finally causing segv in compile
-   * the optimiser should remove it, if optimisations work */
+   * the optimiser should remove this call, if optimisations work */
   m3_start_call();
   m3_call_direct (m3_noop_proc, t_void);
 
@@ -6028,7 +6027,6 @@ M3CG_HANDLER (LANDING_PAD)
 
 void m3cg_LANDING_PAD_t::read_extended ()
 {
-  /* landing_pad is a special case */
   size_t j = n;
   catches.resize(j);
   for (size_t i = 0; i < j; ++i) {

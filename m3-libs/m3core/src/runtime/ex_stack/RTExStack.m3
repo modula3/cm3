@@ -6,42 +6,8 @@ UNSAFE MODULE RTExStack EXPORTS RTException;
 
 IMPORT RT0, RTOS, RTError, RTIO, RTStack, RTParams, RTEHScan;
 IMPORT RTProcedureSRC, Cstring;
-(*
-IMPORT RTProcedureSRC, RTModule, RTProcedure, CString;
-*)
 FROM RT0 IMPORT RaiseActivation;
 
-(*----------------------------------------- compiler generated descriptors --*)
-
-(* This defines the low-level data structures
-   used by the exception runtime's stack walker.
-   See also m3middle/src/M3RT, which also describes these structures.
-*)
-
-(*
-TYPE
-  ScopeKind = { Except, ExceptElse,
-                Finally, FinallyProc,
-                Raises, RaisesNone,
-                Lock };
-
-TYPE
-  Scope = UNTRACED REF RECORD
-    kind        : CHAR;    (* ScopeKind *)
-    outermost   : CHAR;    (* BOOLEAN => last scope that covers [start..stop]*)
-    end_of_list : CHAR;    (* BOOLEAN => last scope in module list *)
-    pad         : CHAR;
-    start       : ADDRESS; (* first PC of the handled scope *)
-    stop        : ADDRESS; (* last PC of the handled scope *)
-    excepts     : ExceptionList; (* NIL-terminated list of handled exceptions *)
-    offset      : INTEGER; (* frame offset of ExceptionInfo *)
-  END;
-
-TYPE
-  ExceptionList = UNTRACED REF (*ARRAY OF*) RT0.ExceptionUID;
-*)
-
-(*---------------------------------------------------------------------------*)
 
 VAR
   DEBUG := FALSE;
@@ -70,7 +36,7 @@ PROCEDURE Raise (VAR act: RaiseActivation) RAISES ANY =
   BEGIN
     IF DEBUG THEN
       PutExcept ("RAISE", act);
-      DumpStack ();
+      PrintStack (act.exception.uid);
     END;
 
     RTStack.CurrentFrame (here);
@@ -103,7 +69,7 @@ PROCEDURE ResumeRaise (VAR a: RaiseActivation) RAISES ANY =
   BEGIN
     IF DEBUG THEN
       PutExcept ("RERAISE", a);
-      DumpStack ();
+      PrintStack (a.exception.uid);
     END;
 
     RTStack.CurrentFrame (here);
@@ -138,33 +104,33 @@ VAR NoName := ARRAY [0..15] OF CHAR {'s','t','a','t','i','c',' ',
                                      'p','r','o','c','e','d','u','r','e'};
 
 PROCEDURE DumpStack () =
+  BEGIN
+    PrintStack(0);
+  END DumpStack;
+
+PROCEDURE PrintStack (uid : INTEGER) =
   CONST CallInstructionSize = 8; (* was 4 - should be gotten from Target *)
   VAR
     here, f: RTStack.Frame;
     name: RTProcedureSRC.Name;
     scan : BOOLEAN;
   BEGIN
-    (* reimplement this proc *)
     IF NOT DEBUG AND NOT dump_enabled THEN RETURN; END;
 
     RTOS.LockHeap (); (* disable thread switching... (you wish!) *)
 
     RTIO.PutText ("------------------------- STACK DUMP ---------------------------\n");
-    RTIO.PutText ("----PC----  ----SP----  \n");
+    RTIO.PutText ("----PC----      ----SP----  \n");
+
     RTStack.CurrentFrame (here);
     RTStack.PreviousFrame (here, f); (* skip self *)
 
     WHILE (f.pc # NIL) DO
 
-      (* print the active scopes *)
-
-(* think the best we can do here is call EHScan and enable debug so it
-prints out the exception table and action list *)
       IF f.lsda # NIL THEN
         (* scan the dwarf eh scopes found by the unwinder *)
-(* dont have a uid maybe change scanehtable to take another parm debug
-*)
-        scan := RTEHScan.ScanEHTable(f, 0 (*a.exception.uid*));
+        scan := RTEHScan.ScanEHTable(f, uid);
+        RTIO.PutText ("\n");
       END;
 
       (* print the procedure's frame *)
@@ -187,117 +153,7 @@ prints out the exception table and action list *)
     RTIO.Flush ();
 
     RTOS.UnlockHeap (); (* re-enable thread switching *)
-  END DumpStack;
-
-(*
-VAR NoName := ARRAY [0..15] OF CHAR {'s','t','a','t','i','c',' ',
-                                     'p','r','o','c','e','d','u','r','e'};
-PROCEDURE DumpStack () =
-  CONST CallInstructionSize = 8; (* was 4 - should be gotten from Target *)
-  VAR
-    here, f: RTStack.Frame;
-    s: Scope;
-    ex: ExceptionList;
-    name: RTProcedureSRC.Name;
-    file: RTProcedureSRC.Name;
-    proc: RTProcedure.Proc;
-    offset: INTEGER;
-    info: ADDRESS;
-  BEGIN
-    IF NOT DEBUG AND NOT dump_enabled THEN RETURN; END;
-
-    RTOS.LockHeap (); (* disable thread switching... (you wish!) *)
-
-    RTIO.PutText ("------------------------- STACK DUMP ---------------------------\n");
-    RTIO.PutText ("----PC----  ----SP----  \n");
-    RTStack.CurrentFrame (here);
-    RTStack.PreviousFrame (here, f); (* skip self *)
-
-    WHILE (f.pc # NIL) DO
-
-      (* print the active scopes *)
-      s := FindScope (f.pc);
-      IF (s # NIL) THEN
-        LOOP
-          IF (s.start <= f.pc) AND (f.pc <= s.stop) THEN
-            RTIO.PutText ("   [");
-            RTIO.PutAddr (s.start);
-            RTIO.PutText ("..");
-            RTIO.PutAddr (s.stop);
-            RTIO.PutText ("]  ");
-(* problem here with offset *)
-            info := f.sp + s.offset;
-            CASE ORD (s.kind) OF
-            | ORD (ScopeKind.Finally),
-              ORD (ScopeKind.FinallyProc) =>
-                RTIO.PutText ("TRY-FINALLY");
-                DumpInfo (info);
-            | ORD (ScopeKind.Lock) =>
-                RTIO.PutText ("LOCK");
-                DumpInfo (info);
-                RTIO.PutText ("  mutex = ");
-                RTIO.PutAddr (LOOPHOLE (info, UNTRACED REF ADDRESS)^);
-            | ORD (ScopeKind.Except) =>
-                ex := s.excepts;
-                RTIO.PutText ("TRY-EXCEPT");  DumpHandles (ex);
-                DumpInfo (info);
-            | ORD (ScopeKind.ExceptElse) =>
-                RTIO.PutText ("TRY-EXCEPT-ELSE");
-                DumpInfo (info);
-            | ORD (ScopeKind.Raises),
-              ORD (ScopeKind.RaisesNone) =>
-                RTIO.PutText ("RAISES");
-                DumpHandles (s.excepts);
-            ELSE
-                (* we found a mysterious scope!? *)
-                RTIO.PutText ("??? BAD EXCEPTION SCOPE, kind = ");
-                RTIO.PutInt (ORD (s.kind));
-                RTIO.PutText (" ???\n");
-                EXIT;
-            END;
-            RTIO.PutText ("\n");
-
-            IF (s.outermost # '\000') THEN EXIT END;
-          END;
-
-          IF (s.end_of_list # '\000') THEN EXIT END;
-
-          (* try the next scope in the list *)
-          INC (s, ADRSIZE (s^));
-        END;
-      END;
-
-      (* print the procedure's frame *)
-      RTIO.PutAddr (f.pc-CallInstructionSize, 10);
-      RTIO.PutText ("  ");
-      RTIO.PutAddr (f.sp, 10);
-      (*
-      RTProcedureSRC.FromPC (f.pc, proc, file, name);
-      IF (name # NIL) THEN
-        offset := f.pc - proc;
-        IF (0 <= offset) AND (offset < 2048) THEN
-          RTIO.PutText ("  ");  RTIO.PutString (name);
-          IF (offset # 0) THEN RTIO.PutText (" + "); RTIO.PutHex (offset); END;
-          IF (file # NIL) THEN RTIO.PutText(" in "); RTIO.PutString(file); END;
-        END;
-      END;
-      *)
-      name := RTStack.ProcName (f);
-      IF (name # NIL)
-        AND Cstring.memcmp (name, ADR(NoName), NUMBER(NoName)) # 0 THEN
-        RTIO.PutText ("  [");  RTIO.PutString (name);  RTIO.PutText ("]");
-      END;
-      RTIO.PutText ("\n");
-
-      (* try the previous frame *)
-      RTStack.PreviousFrame (f, f);
-    END;
-    RTIO.PutText ("----------------------------------------------------------------\n");
-    RTIO.Flush ();
-
-    RTOS.UnlockHeap (); (* re-enable thread switching *)
-  END DumpStack;
-*)
+  END PrintStack;
 
 PROCEDURE PutExcept (tag: TEXT;  READONLY a: RaiseActivation) =
   BEGIN

@@ -699,6 +699,8 @@ VAR
                         If we do it ourselves we sidestep the standard abi
                         and cannot be called from gcc compiled code *)
 
+  UseStackWalker := FALSE;
+
 (*--------------------------------------------------------------- Utility ---*)
 
 PROCEDURE TIntToint64_t(Val: TInt.Int) : int64_t =
@@ -1077,10 +1079,12 @@ PROCEDURE EmbedVersion() =
   VAR
     mdNode : LLVM.ValueRef;
     identMD : ARRAY[0..0] OF REFANY;
-    cm3Ver,llvmVer,ident : TEXT;
+    cm3Ver,llvmVer,walker,ident : TEXT;
   BEGIN
     cm3Ver := Version.CM3VER;
     llvmVer := Version.LLVMVER;
+    walker := Version.M3_STACK_WALKER;
+    IF Text.Equal(walker,"true") THEN UseStackWalker := TRUE; END;
     ident := "versions- cm3: " & cm3Ver & " llvm: " & llvmVer;
 
     identMD[0] := ident;
@@ -1407,9 +1411,10 @@ PROCEDURE SetBBVolatile(bb : LLVM.BasicBlockRef) =
       opCode := LLVM.LLVMGetInstructionOpcode(instr);
       IF opCode = LLVM.Opcode.Store OR
          opCode = LLVM.Opcode.Load THEN
-(* temp disable volatiles to test optimising
-        LLVM.LLVMSetVolatile(instr, TRUE);
-*)
+        (* set volatiles only if using sjlj exceptions *) 
+        IF NOT UseStackWalker THEN
+          LLVM.LLVMSetVolatile(instr, TRUE);
+        END;
       END;
       instr := LLVM.LLVMGetNextInstruction(instr);
     END;
@@ -1443,7 +1448,11 @@ PROCEDURE end_unit (self: U) =
 
       (* If a label specifies an exception barrier set volatile on
          all loads and stores in the bb to prevent optimisers moving
-         code *)
+         code. This is a kludge since code can be moved safely with the
+         zero cost exception model. ie using landing_pad etc. And we are
+         just copying what cm3cg does when maybe disabling code motion
+         passes would be a better option. That said we are still volatiling
+         things in the case of sjlj exceptions until further notice. *)
       IF label.barrier THEN
         SetBBVolatile(label.labBB);
         (* set the 'second' bb volatile as well. This is where locals

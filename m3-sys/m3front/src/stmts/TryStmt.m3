@@ -9,7 +9,7 @@
 MODULE TryStmt;
 
 IMPORT M3ID, CG, Variable, Scope, Exceptionz, Value, Error, Marker;
-IMPORT Type, Stmt, StmtRep, TryFinStmt, Token, RunTyme, Procedure;
+IMPORT Type, Stmt, StmtRep, TryFinStmt, Token;
 IMPORT Scanner, ESet, Target, M3RT, Tracer, Jmpbufs;
 FROM Scanner IMPORT Match, MatchID, GetToken, Fail, cur;
 FROM M3 IMPORT QID;
@@ -304,7 +304,6 @@ PROCEDURE Compile1 (p: P): Stmt.Outcomes =
     info, next_info: CG.Var;
     h: Handler;
     another: BOOLEAN;
-    proc: Procedure.T;
     catches : Caught;
   BEGIN
     (* declare and initialize the info record *)
@@ -325,15 +324,6 @@ PROCEDURE Compile1 (p: P): Stmt.Outcomes =
     END;
     Marker.SaveFrame ();
       oc := Stmt.Compile (p.body);
-      (* Emit noop to satisfy landingpad - for degenerate case of a
-         try block without an invoke. *)
-(*
-      IF NOT Marker.InvokeSeen() THEN
-        proc := RunTyme.LookUpProc (RunTyme.Hook.NoOp);
-        Procedure.StartCall (proc);
-        Procedure.EmitCall (proc);
-      END;
-*)
     Marker.Pop ();
 
     IF (Stmt.Outcome.FallThrough IN oc) THEN

@@ -482,8 +482,7 @@ PROCEDURE EmitReturn (expr: Expr.T;  fromFinally: BOOLEAN) =
   VAR
     i: INTEGER;
     ret_info: Type.Info;
-    simple: BOOLEAN;
-    is_large: BOOLEAN;
+    simple, is_large: BOOLEAN;
   BEGIN
     (* mark every frame out to the procedure boundary as 'returnSeen' *)
     i := tos - 1;
@@ -673,9 +672,8 @@ PROCEDURE EmitScopeTable (doEmit : BOOLEAN := FALSE): INTEGER =
   VAR
     Align := MAX (Target.Address.align, Target.Integer.align);
     f: FramePtr := all_frames;
-    base, x, size: INTEGER;
+    base, x, size, e_offset: INTEGER;
     e_base: CG.Var;
-    e_offset: INTEGER;
   BEGIN
     (* the default is to not emit the scope table now we can
        generate gcc_exception tables. *)
