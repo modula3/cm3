@@ -307,10 +307,12 @@ PROCEDURE Compile1 (p: P): Stmt.Outcomes =
     catches : Caught;
   BEGIN
     (* declare and initialize the info record *)
+
     info := CG.Declare_local (M3ID.NoID, Target.Address.size,
                               Target.Address.align, CG.Type.Addr, 0,
                               in_memory := TRUE, up_level := FALSE,
                               f := CG.Never);
+
     CG.Load_nil ();
     CG.Store_addr (info, M3RT.EA_exception);
 
@@ -339,7 +341,7 @@ PROCEDURE Compile1 (p: P): Stmt.Outcomes =
     another := Marker.NextHandler (next_handler, handler_body, next_info);
 
     (* set the "Compiler.ThisException()" globals *)
-    PushHandler (info, 0, direct := TRUE);
+    PushHandler (info, 0, direct := FALSE);
 
     CG.Set_label (l+1, barrier := TRUE);
     Scanner.offset := p.h_origin;

@@ -41,6 +41,7 @@ if defined("M3_USE_STACK_WALKER")
     if HAS_STACK_WALKER{TARGET}
       include_dir("ex_stack")
       include_dir(TARGET)
+      import_sys_lib ("UNWIND")
     else
       include_dir("ex_frame")
     end

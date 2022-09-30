@@ -147,13 +147,13 @@ PROCEDURE Compile1 (p: P): Stmt.Outcomes =
     Marker.PopFinally (returnSeen, exitSeen);
 
     CG.Jump (lab+2);
-    CG.Set_label (lab+1, barrier := TRUE);
+    CG.Set_label (lab+1);
     CG.Landing_pad(lab+1, catches);
     CG.Store_addr (info);
     CG.Set_label (lab+2);
 
     (* set the "Compiler.ThisException()" globals *)
-    TryStmt.PushHandler (info, 0, direct := TRUE);
+    TryStmt.PushHandler (info, 0, direct := FALSE);
 
     (* compile the handler *)
     Scanner.offset := p.forigin;
@@ -197,9 +197,9 @@ PROCEDURE Compile1 (p: P): Stmt.Outcomes =
       CG.Set_label (lab+3, barrier := TRUE);
     END;
 
-    CG.End_try ();
     (* restore the "Compiler.ThisException()" globals *)
     TryStmt.PopHandler ();
+    CG.End_try ();
 
     o := Stmt.Outcomes {};
     IF Outcome.FallThrough IN xc THEN o := oc END;
