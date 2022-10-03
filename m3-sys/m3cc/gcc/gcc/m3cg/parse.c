@@ -277,6 +277,7 @@ static bool M3_TYPES_SEGMENT = false;
 static bool M3_TYPES_CHECK_RECORD_SIZE = false;
 static bool M3_TYPES_REQUIRE_ALL_FIELD_TYPES = false;
 static bool M3_LOOPHOLE_VIEW_CONVERT = false;
+static int M3_EXC_ID = 0;
 
 #if GCC45
 
@@ -5986,6 +5987,8 @@ M3CG_HANDLER (INVOKE_INDIRECT)
 
 M3CG_HANDLER (LANDING_PAD)
 {
+  char exc_name[20];
+
   /* kludge in case of no invoke for a try finally causing segv in compile
    * the optimiser should remove this call, if optimisations work */
   m3_start_call();
@@ -6001,7 +6004,10 @@ M3CG_HANDLER (LANDING_PAD)
     //not allocate an etype if already have one.
     tree etype = declare_temp (t_int);
     TREE_STATIC (etype) = true;
-    DECL_NAME (etype) = get_identifier("M3EXC");
+    TREE_PUBLIC (etype) = true;
+    sprintf(exc_name, "__%s_Exc_%d",aux_base_name,M3_EXC_ID);
+    M3_EXC_ID++;
+    DECL_NAME (etype) = get_identifier(exc_name);
     DECL_INITIAL (etype) = tid;
  
     etype = m3_build1 (ADDR_EXPR, t_addr, etype);
