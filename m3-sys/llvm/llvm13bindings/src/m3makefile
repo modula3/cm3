@@ -19,7 +19,7 @@ Module    ("M3DebugInfo")
 
 if equal (OS_TYPE, "POSIX")
 % set the location of posix libraries llvm depends on
-  LIB_DIR = "/usr/local/lib"
+  LIB_DIR = ""
 % set the location of the llvm libraries
   LLVM_LIB_DIR = LIB_DIR
 
@@ -77,6 +77,7 @@ proc llvmlibs() is
         lib = lib_tab{key}
         if equal (OS_TYPE, "POSIX")
           lib = sub(lib,3,len(lib)) %remove lib prefix
+          lib = subst(lib,".so","",1) %remove lib suffix
 	end
         if equal(OS, "Windows_NT")	
           lib = subst(lib,".lib","",1) %remove suffix
