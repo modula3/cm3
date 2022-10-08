@@ -1941,7 +1941,11 @@ PROCEDURE AllocVar(self : U; v : LvVar) =
     LLVM.LLVMSetAlignment(v.lv,v.align);
 
    (* calc the offset from the stack pointer for the unwinder *)
-   (* can delete this stuff if landing pad design works. *)
+   (* Leave this calc in but it is no longer used now that the landing_pad
+      generates the gcc_except_tables and since the front end is not
+      emitting the scope table we do not get an init_label and init_offset
+      This is arch dependant since dont know if the offset is positive
+      or negative from stack pointer and cannot be optimised. *)
    size := VAL(LLVM.LLVMStoreSizeOfType(targetData,v.lvType),INTEGER);
    INC(size,7);
    size := size - (size MOD 8);
@@ -6159,7 +6163,6 @@ PROCEDURE DebugSubrange(self : U; subrange : SubrangeDebug)
     MLBase : BaseDebug;
     baseName,srName : TEXT;
     card : BOOLEAN := FALSE;
-v13test : BOOLEAN := FALSE;
   BEGIN
     srName := M3ID.ToText(subrange.typeName);
     IF Text.Length(srName) = 0 THEN srName := "AnonSR"; END;
@@ -6193,10 +6196,6 @@ v13test : BOOLEAN := FALSE;
        SizeInBits := VAL(subrange.bitSize,uint64_t),
        Encoding   := subrange.encoding,
        Flags      := 0);
-(* temp until DebugInfo updated *)
-IF v13test THEN
-  RETURN baseType;
-END;
 
     IF MLBase = NIL AND card = FALSE THEN
       (* this case is for inbuilt integer longint char boolean widechar,
@@ -6212,7 +6211,7 @@ END;
       END;
     END;
 
-(* not in debuginfo yet *)
+(* needs llvm13 *)
     Result := M3DIB.GetSubrangeConst (self.debugRef,
                  Scope := DebugScope(self,subrange),
                  Name  := srName,
@@ -6288,7 +6287,6 @@ PROCEDURE DebugOpenArray(self : U; a : OpenArrayDebug; ofs : CARDINAL := 0) : Me
     elts : MetadataRef;
     typeName : TEXT;
     srBaseType : MetadataRef;
-v13test : BOOLEAN := FALSE; (* temp until debuginfo has open array support *)
   BEGIN
     (* data location only really meaningful for outermost dimension *)
     IF ofs = 0 THEN
@@ -6312,14 +6310,8 @@ v13test : BOOLEAN := FALSE; (* temp until debuginfo has open array support *)
 
     srBaseType := DebugLookupLL(self,UID_INTEGER);
 
-IF v13test THEN
-   subrange := M3DIB.GetOrCreateSubrange(self.debugRef,
-        LowerBound := TIntToint64_t(TInt.Zero),
-        Count := TIntToint64_t(TInt.One));
-ELSE
+(* needs llvm13 *)
     typeName := M3ID.ToText(a.typeName) & "_rng";
-(* not in v13 *)
-
     subrange := M3DIB.GetSubrangeExpr (self.debugRef,
                  Scope := DebugScope(self,a),
                  Name  := typeName,
@@ -6329,20 +6321,10 @@ ELSE
                  LowerBound := low,
                  Count := cnt);
 
-END;
-
     NewArrayRefOfMetadataRef(1, (*OUT*)paramsArr, (*OUT*)paramsMetadata);
     paramsArr[0] := subrange;
 
-IF v13test THEN
-    oarrDIT := M3DIB.CreateArrayType(self.debugRef,
-        Size        := VAL(a.bitSize,uint64_t),
-        AlignInBits := VAL(a.align,uint32_t),
-        Ty          := elts,
-        Subscripts  := paramsMetadata.Data,
-        NumSubscripts := 1);
-ELSE
-(* not in v13 actually not in DebugInfo since the guy who did 
+(* needs llvm13 -  actually not in DebugInfo since the guy who did 
 the fortran updates didnt do the C interface.*)
 
     oarrDIT := M3DIB.CreateDynamicArrayType(self.debugRef,
@@ -6356,8 +6338,6 @@ the fortran updates didnt do the C interface.*)
         Allocated    := NIL,
         Rank         := NIL); (* rank needed if genericsubrange used *)
 
-END;
-
     a.diType := oarrDIT;
 
     RETURN oarrDIT;
@@ -6368,16 +6348,11 @@ PROCEDURE DebugSet(self : U; s : SetDebug) : MetadataRef =
     baseType : MetadataRef;
     setDIT : MetadataRef;
     typeName : TEXT;
-v13test : BOOLEAN := FALSE; (* temp until set in debuginfo *)
   BEGIN
     baseType := DebugLookupLL(self,s.domain);
 
-(* not in  debuginfo *)
-IF v13test THEN
-    setDIT := baseType;
-ELSE
+(* needs llvm13 *)
     typeName := M3ID.ToText(s.typeName);
-(* not in debuginfo yet *)
     setDIT := M3DIB.CreateSetType(self.debugRef,
                Scope       := DebugScope(self,s),
                Name        := typeName,
@@ -6388,7 +6363,6 @@ ELSE
                AlignInBits := VAL(s.align,uint32_t),
                BaseTy      := baseType);
 
-END;
     RETURN setDIT;
   END DebugSet;
 
@@ -6662,7 +6636,7 @@ PROCEDURE DebugObject(self : U; o : ObjectDebug) : MetadataRef =
       INC(nextMemberNo);
     END;
 
-(* this works *)
+(* needs llvm13 *)
    M3DIB.LLVMReplaceArrays(self.debugRef,
       T        := ADR(heapObjectDIT),
       Elements := paramsMetadata.Data,
