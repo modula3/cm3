@@ -2079,7 +2079,7 @@ PROCEDURE CompileLV
   END CompileLV;
 
 (* Externally dispatched-to: *)
-PROCEDURE Compile (top: T; <*UNUSED*> StaticOnly: BOOLEAN) =
+PROCEDURE Compile (top: T; StaticOnly: BOOLEAN) =
 (* PRE: top.depth = 0 *)
 (* PRE: LHS addr is on CG stack IFF UsesAssignProtocol. *)
   BEGIN

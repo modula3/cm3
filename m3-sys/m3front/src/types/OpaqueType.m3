@@ -132,7 +132,9 @@ PROCEDURE IsSubtype (a, b: Type.T): BOOLEAN =
 VAR Depth: CARDINAL := 0;
 VAR StopDepth: INTEGER := LAST (INTEGER);
 VAR bkpt: INTEGER := 0;
+(*
 VAR is: BOOLEAN;
+*)
 
 PROCEDURE Subtyper (a: P;  b: Type.T): BOOLEAN =
   VAR t: Type.T;  x: Revelation.TypeSet;

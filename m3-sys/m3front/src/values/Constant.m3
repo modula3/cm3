@@ -105,7 +105,6 @@ PROCEDURE DeclareGlobal
   (name: TEXT;  valExpr: Expr.T;  reserved := FALSE): T =
 (* Declare in the global scope. *)
   VAR t: T;
-  VAR oldScope: Scope.T;
   BEGIN
     t := Create (M3ID.Add (name));
     t.tipe := Expr.TypeOf (valExpr);

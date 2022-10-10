@@ -753,6 +753,7 @@ PROCEDURE Free_all_values () =
     WHILE (busy_values # NIL) DO  Free (busy_values); END;
   END Free_all_values;
 
+(*
 PROCEDURE XForce () =
   (* force the value enough so that we can do a simple indirect load/store *)
   VAR offs: INTEGER;
@@ -770,6 +771,7 @@ PROCEDURE XForce () =
       END;
     END;
   END XForce;
+*)
 
 PROCEDURE ForceStacked (s: Size := 0) =
 (* s needs to be provided only if s0 could be structured and packed.
@@ -949,6 +951,7 @@ PROCEDURE Force_byte_align (VAR x: ValRec; s: Size) =
     END;
   END Force_byte_align;
 
+(*
 PROCEDURE Force_LValue (VAR x: ValRec) =
   BEGIN
     IF x.type # Type.Addr THEN
@@ -961,6 +964,7 @@ PROCEDURE Force_LValue (VAR x: ValRec) =
       Err ("####### attempt to force a bit-level L-value...");
     END;
   END Force_LValue;
+*)
 
 PROCEDURE Release_temps (VAR x: ValRec) =
   BEGIN
@@ -3961,6 +3965,7 @@ PROCEDURE cg_load_word (i: INTEGER) =
     cg.load_integer (Target.Word.cg_type, val);
   END cg_load_word;
 
+(*
 PROCEDURE cg_load_addr (addr: INTEGER) =
 (* push addr on the M3CG stack, with type Address.
    No action on CG stack. *) 
@@ -3973,6 +3978,7 @@ PROCEDURE cg_load_addr (addr: INTEGER) =
     cg.load_integer (Target.Word.cg_type, val);
     cg.loophole (Target.Word.cg_type, Type.Addr); 
   END cg_load_addr;
+*)
 
 PROCEDURE Force_pair (commute: BOOLEAN): BOOLEAN =
   (* Returns TRUE if it leaves the items are stacked in the wrong order *)
@@ -3997,20 +4003,24 @@ PROCEDURE Force_pair (commute: BOOLEAN): BOOLEAN =
     RETURN commute;
   END Force_pair;
 
+(*
 PROCEDURE stack_old_align (n: INTEGER): INTEGER =
   BEGIN
     RETURN stack [SCheck (n, "stack_addr_align")].old_align; 
   END stack_old_align;
+*)
 
 PROCEDURE stack_addr_align (n: INTEGER): INTEGER =
   BEGIN
     RETURN stack [SCheck (n, "stack_addr_align")].addr_align; 
   END stack_addr_align;
 
+(*
 PROCEDURE SLV_align (n: INTEGER): INTEGER =
   BEGIN
     RETURN LV_align (stack [SCheck (n, "SLV_align")]);
   END SLV_align;
+*)
 
 PROCEDURE LV_align (READONLY x: ValRec): INTEGER =
   (* Largest alignment x is statically sure to have. *) 

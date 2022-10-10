@@ -11,7 +11,7 @@ MODULE RecordType;
 
 IMPORT M3, M3ID, CG, Type, TypeRep, Scope, Expr, Value, Token;
 IMPORT Error, Field, Ident, PackedType, Target, TipeDesc;
-IMPORT Module, Word, AssignStmt, M3Buf;
+IMPORT Word, AssignStmt, M3Buf;
 FROM Scanner IMPORT Match, GetToken, cur;
 
 VAR MaxBitSize := LAST (INTEGER);
@@ -52,7 +52,6 @@ PROCEDURE ParseFieldList () =
   VAR
     j, n    : INTEGER;
     nFields := 0;
-    name    : M3ID.T;
     info    : Field.Info;
   BEGIN
     info.offset := 0;

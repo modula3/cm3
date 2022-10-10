@@ -9,7 +9,7 @@
 MODULE Tipe;
 
 IMPORT M3, M3ID, CG, Value, ValueRep, Scope, OpaqueType, WebInfo, TypeRep;
-IMPORT Token, Type, Decl, Scanner, NamedType, RefType, ObjectType, Module, Target;
+IMPORT Token, Type, Decl, Scanner, NamedType, RefType, ObjectType, Module;
 FROM Scanner IMPORT GetToken, Fail, Match, MatchID, cur;
 FROM M3 IMPORT QID;
 

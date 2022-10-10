@@ -54,14 +54,21 @@ PROCEDURE Open (library (* or program *): TEXT;
       (* cg.comment would not appear at the top because
        * earlier passes ignore it
        *)
-      Wr.PutText(target_wr, "// library:");
-      Wr.PutText(target_wr, library);
-      Wr.PutText(target_wr, "\n// source_base_name:");
-      Wr.PutText(target_wr, M3ID.ToText(source_base_name));
-      Wr.PutText(target_wr, "\n// target_name:");
-      Wr.PutText(target_wr, target_name);
-      Wr.PutText(target_wr, "\n");
-      RETURN TeeBinWr (cg, f_ir_name);
+      TRY
+        Wr.PutText(target_wr, "// library:");
+        Wr.PutText(target_wr, library);
+        Wr.PutText(target_wr, "\n// source_base_name:");
+        Wr.PutText(target_wr, M3ID.ToText(source_base_name));
+        Wr.PutText(target_wr, "\n// target_name:");
+        Wr.PutText(target_wr, target_name);
+        Wr.PutText(target_wr, "\n");
+        RETURN TeeBinWr (cg, f_ir_name);
+      EXCEPT
+      | Wr.Failure (args) =>
+          Msg.FatalError (args, "unable to write IR file: ", f_ir_name);
+      | Thread.Alerted =>
+          Msg.FatalError (NIL, "unable to write IR file: ", f_ir_name);
+      END;
     END;
 
     (* LLVM backend: *)
