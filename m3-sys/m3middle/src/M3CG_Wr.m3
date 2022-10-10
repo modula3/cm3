@@ -166,6 +166,11 @@ TYPE
         call_direct := call_direct;
         start_call_indirect := start_call_indirect;
         call_indirect := call_indirect;
+        start_try := start_try;
+        end_try := end_try;
+        invoke_direct := invoke_direct;
+        invoke_indirect := invoke_indirect;
+        landing_pad := landing_pad;
         pop_param := pop_param;
         pop_struct := pop_struct;
         pop_static_link := pop_static_link;
@@ -1693,6 +1698,54 @@ PROCEDURE call_indirect (u: U;  t: Type;  cc: CallingConvention) =
     Int   (u, cc.m3cg_id);
     NL    (u);
   END call_indirect;
+
+PROCEDURE start_try (u: U) =
+  BEGIN
+    Cmd   (u, "start_try");
+    NL    (u);
+  END start_try;
+
+PROCEDURE end_try (u: U) =
+  BEGIN
+    Cmd   (u, "end_try");
+    NL    (u);
+  END end_try;
+
+PROCEDURE invoke_direct (u: U; p: Proc;  t: Type; next,handler : Label) =
+  (* call the procedure identified by block b.  The procedure
+     returns a value of type t. *)
+  BEGIN
+    Cmd   (u, "invoke_direct");
+    PName (u, p);
+    TName (u, t);
+    Lab   (u, next);
+    Lab   (u, handler);
+    NL    (u);
+  END invoke_direct;
+
+PROCEDURE invoke_indirect (u: U;  t: Type;  cc: CallingConvention; next,handler : Label) =
+  (* call the procedure whose address is in s0.A and pop s0.  The
+     procedure returns a value of type t. *)
+  BEGIN
+    Cmd   (u, "invoke_indirect");
+    TName (u, t);
+    Int   (u, cc.m3cg_id);
+    Lab   (u, next);
+    Lab   (u, handler);
+    NL    (u);
+  END invoke_indirect;
+
+PROCEDURE landing_pad (u: U;  t: ZType; handler : Label; READONLY catches : ARRAY OF TypeUID) =
+  (* push; build a landingpad for a stack unwind. to capture the exception of type t.
+     handler should be the label immediately preceding this instruction. *)
+  BEGIN
+    Cmd   (u, "landing_pad");
+    TName (u, t);
+    Lab   (u, handler);
+    Int   (u, NUMBER(catches));
+    FOR i := FIRST (catches) TO LAST (catches) DO  Tipe (u, catches [i]);  END;
+    NL    (u);
+  END landing_pad;
 
 (*------------------------------------------- procedure and closure types ---*)
 

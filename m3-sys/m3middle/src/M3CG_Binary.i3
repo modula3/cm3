@@ -22,7 +22,7 @@ INTERFACE M3CG_Binary;
 *) 
 
 CONST
-  Version = 16_110;  (* version 1.10 *)
+  Version = 16_120;  (* version 1.20 *)
   (* Please update Version if you change the codes in this file. *) 
 
 TYPE
@@ -58,8 +58,9 @@ TYPE
     extract_mn, insert, insert_n, insert_mn, swap, pop, copy_n, copy,
     zero_n, zero, loophole, abort, check_nil, check_lo, check_hi,
     check_range, check_index, check_eq, add_offset, index_address,
-    start_call_direct, call_direct, start_call_indirect,
-    call_indirect, pop_param, pop_struct, pop_static_link,
+    start_call_direct, call_direct, start_call_indirect, call_indirect,
+    start_try, end_try, invoke_direct, invoke_indirect, landing_pad,
+    pop_param, pop_struct, pop_static_link,
     load_procedure, load_static_link, comment,
     store_ordered, load_ordered, exchange, compare_exchange, fence,
     fetch_and_add,      (* file only; in-memory uses fetch_and_op *)

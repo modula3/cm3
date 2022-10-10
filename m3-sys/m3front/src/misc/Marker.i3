@@ -16,6 +16,10 @@ CONST
   Exit_exception = -2;
 
 PROCEDURE Pop ();
+PROCEDURE InvokeSeen () : BOOLEAN;
+PROCEDURE Invoked ();
+PROCEDURE Excepts() : ESet.EList;
+
 (* pop to top scope. *)
 
 PROCEDURE SaveFrame ();
@@ -23,11 +27,11 @@ PROCEDURE SaveFrame ();
    global table of scopes *)
 
 (* TRY-EXCEPT *)
-PROCEDURE PushTry     (l_start, l_stop: CG.Label;  info: CG.Var;  ex: ESet.T); 
-PROCEDURE PushTryElse (l_start, l_stop: CG.Label;  info: CG.Var);
+PROCEDURE PushTry     (l_start, l_stop, l_stopBody: CG.Label;  info: CG.Var;  ex: ESet.T); 
+PROCEDURE PushTryElse (l_start, l_stop, l_stopBody: CG.Label;  info: CG.Var);
 
 (* TRY-FINALLY *)
-PROCEDURE PushFinally     (l_start, l_stop: CG.Label;  info: CG.Var);
+PROCEDURE PushFinally     (l_start, l_stop, l_stopBody: CG.Label;  info: CG.Var);
 PROCEDURE PushFinallyProc (l_start, l_stop: CG.Label;  info: CG.Var;
                            handler: CG.Proc;  h_level: INTEGER);
 PROCEDURE PopFinally      (VAR(*OUT*) returnSeen, exitSeen: BOOLEAN);
@@ -51,11 +55,11 @@ PROCEDURE ReturnOK      (): BOOLEAN;
 PROCEDURE EmitExit ();
 PROCEDURE AllocReturnTemp ();
 PROCEDURE EmitReturn (expr: Expr.T;  fromFinally: BOOLEAN);
-PROCEDURE EmitScopeTable (): INTEGER;
+PROCEDURE EmitScopeTable (doEmit : BOOLEAN := FALSE): INTEGER;
 PROCEDURE EmitExceptionTest (signature: Type.T;  need_value: BOOLEAN): CG.Val;
 PROCEDURE NextHandler (VAR(*OUT*) handler: CG.Label;
+                       VAR(*OUT*) handler_body: CG.Label;
                        VAR(*OUT*) info: CG.Var): BOOLEAN;
-
 PROCEDURE PushFrame (frame: CG.Var;  class: M3RT.HandlerClass);
 PROCEDURE PopFrame (frame: CG.Var);
 (* generate code to link and unlink 'frame' from the global

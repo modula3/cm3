@@ -323,7 +323,7 @@ PROCEDURE DoIt () =
     IF GCharTarget = NIL OR Text.Equal(GCharTarget, "") THEN
       (*use this for the default target. Should only occur in development.*)
       GCharTarget := "AMD64_LINUX";
-      IO.Put("Target not specicified: Using default AMD64_LINUX ");
+      IO.Put("Target not specified: Using default AMD64_LINUX ");
       IO.Put(Wr.EOL);
     END;
 

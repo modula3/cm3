@@ -5,6 +5,10 @@
 % Last modified on Tue May  2 11:37:20 PDT 1995 by kalsow
 
 implementation ("RTExFrame")
+c_source ("RTStackC")
+
+/* this seems garbled - the whole mechanism to compile the stack walker
+   is messy.
 if HAS_STACK_WALKER contains TARGET
   if not HAS_STACK_WALKER{TARGET}
     c_source ("RTStackC")
@@ -12,3 +16,4 @@ if HAS_STACK_WALKER contains TARGET
 else
   c_source ("RTStackC")
 end
+*/

@@ -3640,6 +3640,44 @@ PROCEDURE Gen_Call_indirect (t: Type;  cc: CallingConvention) =
     PushResult (t);
   END Gen_Call_indirect;
 
+PROCEDURE Start_try () =
+  BEGIN
+    cg.start_try ();
+  END Start_try;
+
+PROCEDURE End_try () =
+  BEGIN
+    cg.end_try ();
+  END End_try;
+
+PROCEDURE Invoke_direct (p: Proc;  t: Type; handler : Label) =
+  VAR next := Next_label ();
+  BEGIN
+    SEmpty ("Invoke_direct");
+    cg.invoke_direct (p, t, next, handler);
+    cg.set_label(next);
+    PushResult (t);
+  END Invoke_direct;
+
+PROCEDURE Invoke_indirect (t: Type; cc: CallingConvention; handler : Label) =
+  VAR next := Next_label ();
+  BEGIN
+    IF Host.doProcChk THEN Check_nil (RuntimeError.BadMemoryReference); END;
+    ForceStacked ();
+    cg.invoke_indirect (t, cc, next, handler);
+    cg.set_label(next);
+    SPop (1, "Invoke_indirect");
+    SEmpty ("Invoke_indirect");
+    PushResult (t);
+  END Invoke_indirect;
+
+PROCEDURE Landing_pad (handler : Label; READONLY catches : ARRAY OF TypeUID) =
+  BEGIN
+    SEmpty ("Landing_pad");
+    cg.landing_pad (Type.Addr, handler, catches);
+    PushResult (Type.Addr);
+  END Landing_pad;
+
 PROCEDURE PushResult (t: Type) =
   BEGIN
     IF (t # Type.Void) THEN  SPush (t)  END;

@@ -754,17 +754,33 @@ PROCEDURE StartCall (t: T) =
 
 PROCEDURE EmitValueCall (t: T): CG.Val =
   VAR result := ProcType.CGResult (t.signature);
+      handler,handler_body : CG.Label;
+      info : CG.Var;
   BEGIN
     IF (t.impl_peer # NIL) THEN t := t.impl_peer; END;
-    CG.Call_direct (t.cg_proc, result);
+
+    IF Marker.NextHandler(handler,handler_body,info) THEN
+      CG.Invoke_direct (t.cg_proc, result, handler);
+      Marker.Invoked();
+    ELSE
+      CG.Call_direct (t.cg_proc, result);
+    END;
     RETURN Marker.EmitExceptionTest (t.signature, need_value := TRUE);
   END EmitValueCall;
 
 PROCEDURE EmitCall (t: T) =
   VAR result := ProcType.CGResult (t.signature);
+      handler,handler_body : CG.Label;
+      info : CG.Var;
   BEGIN
     IF (t.impl_peer # NIL) THEN t := t.impl_peer; END;
-    CG.Call_direct (t.cg_proc, result);
+
+    IF Marker.NextHandler(handler,handler_body,info) THEN
+      CG.Invoke_direct (t.cg_proc, result, handler);
+      Marker.Invoked();
+    ELSE
+      CG.Call_direct (t.cg_proc, result);
+    END;
     EVAL Marker.EmitExceptionTest (t.signature, need_value := FALSE);
   END EmitCall;
 

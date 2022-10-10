@@ -10,6 +10,7 @@ readonly HAS_STACK_WALKER = {
 % "DS3100"     : TRUE,
 % "SOLgnu"     : TRUE,
 % "SOLsun"     : TRUE,
+ "AMD64_LINUX" : TRUE,
 }
 
 include_dir ("common")
@@ -44,6 +45,8 @@ if defined("M3_USE_STACK_WALKER")
   if M3_USE_STACK_WALKER and HAS_STACK_WALKER contains TARGET
     if HAS_STACK_WALKER{TARGET}
       include_dir("ex_stack")
+      include_dir(TARGET)
+      import_sys_lib ("UNWIND")
     else
       include_dir("ex_frame")
     end

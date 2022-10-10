@@ -57,6 +57,12 @@ proc version_impl(name) is
         return
     end
 
+    if defined("M3_USE_STACK_WALKER")
+        M3_STACK_WALKER = "true"
+    else
+        M3_STACK_WALKER = "false"
+    end
+
     > tempname in
         write("INTERFACE ", name, ";", CR)
     end
@@ -67,6 +73,7 @@ proc version_impl(name) is
         write("CONST", CR)
         write("  CM3VER = \"", CM3VERSION, "\";", CR)
         write("  LLVMVER = \"", llvmver, "\";", CR)
+        write("  M3_STACK_WALKER = \"", M3_STACK_WALKER, "\";", CR)
         write("END ", name, ".", CR)
     end
     cp_if(tempname, filename)

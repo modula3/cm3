@@ -57,6 +57,9 @@ PROCEDURE InnerPrep (ce: CallExpr.T) =
     n            : INTEGER;
     result_info  : Type.Info;
     callConv     : CG.CallingConvention;
+    handler      : CG.Label;
+    handler_body : CG.Label;
+    info         : CG.Var;
   BEGIN
     (* If this is a direct structure return, the LHS has already
      * been prepped and compiled -- save it.  *)
@@ -141,7 +144,12 @@ PROCEDURE InnerPrep (ce: CallExpr.T) =
       CG.Free (p_temp);
     ELSE
       CG.Push (p_temp);
-      CG.Gen_Call_indirect (cg_result, callConv);
+      IF Marker.NextHandler(handler, handler_body, info) THEN
+        CG.Invoke_indirect(cg_result, callConv, handler);
+        Marker.Invoked();
+      ELSE
+        CG.Gen_Call_indirect (cg_result, callConv);
+      END;
       ce.tmp := Marker.EmitExceptionTest (p_type, need_value := TRUE);
       CG.Free (p_temp);
     END;
@@ -211,6 +219,8 @@ PROCEDURE GenResultArg (lhs: CG.Val;  tmp: CG.Var;  align: CG.Alignment) =
 PROCEDURE GenClosureCall (p_temp: CG.Val;  result: CG.Type;
                           sig: Type.T;  cc: CG.CallingConvention): CG.Val =
   VAR skip := CG.Next_label ();
+      handler,handler_body : CG.Label;
+      info : CG.Var;
   BEGIN
     CG.If_closure (p_temp, CG.No_label, skip, CG.Maybe);
     CG.Push (p_temp);
@@ -221,7 +231,12 @@ PROCEDURE GenClosureCall (p_temp: CG.Val;  result: CG.Type;
     CG.Store_temp (p_temp);
     CG.Set_label (skip);
     CG.Push (p_temp);
-    CG.Gen_Call_indirect (result, cc);
+    IF Marker.NextHandler(handler, handler_body, info) THEN
+      CG.Invoke_indirect(result, cc, handler);
+      Marker.Invoked();
+    ELSE
+      CG.Gen_Call_indirect (result, cc);
+    END;
     RETURN Marker.EmitExceptionTest (sig, need_value := TRUE);
   END GenClosureCall;
 

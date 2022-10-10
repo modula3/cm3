@@ -128,5 +128,9 @@ PROCEDURE AssertFailed (module: ADDRESS(*RT0.ModulePtr*);  line: INTEGER;
     RTException.Raise (a);
   END AssertFailed;
 
+PROCEDURE NoOp() =
+  BEGIN
+  END NoOp;
+
 BEGIN
 END RTHooks.

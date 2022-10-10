@@ -20,13 +20,16 @@ Module    ("M3DebugInfo")
 if equal (OS_TYPE, "POSIX")
 % set the location of posix libraries llvm depends on
   LIB_DIR = "/usr/local/lib"
+  LIB_DIR1 = "/usr/lib/x86_64-linux-gnu"
+  LIB_DIR2 = "/usr/lib/gcc/x86_64-linux-gnu/8"
 % set the location of the llvm libraries
   LLVM_LIB_DIR = LIB_DIR
 
-  import_lib("curses",LIB_DIR) 
-  import_lib("dl",LIB_DIR)
-  import_lib("stdc++",LIB_DIR)
-  import_lib("z",LIB_DIR)
+  import_lib("curses",LIB_DIR1) 
+  import_lib("termcap",LIB_DIR1) 
+  import_lib("dl",LIB_DIR1)
+  import_lib("z",LIB_DIR1)
+  import_lib("stdc++",LIB_DIR2)
 else
 
 % Windows

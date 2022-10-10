@@ -676,6 +676,29 @@ call_indirect (t: Type;  cc: CallingConvention);
 (* call the procedure whose address is in s0.A and pop s0.  The
    procedure returns a value of type t. *)
 
+start_try ();
+(* start a try block *)
+
+end_try ();
+(* end a try block *)
+
+invoke_direct (p: Proc;  t: Type; next,handler : Label);
+(* call the procedure 'p' inside a try block.  It returns a value of type t.
+   if the result of the call is normal, then resume at the next label otherwise
+   the stack unwinder will resume at the handler label. *)
+
+invoke_indirect (t: Type;  cc: CallingConvention; next,handler : Label);
+(* call the procedure whose address is in s0.A and pop s0.  The
+   procedure returns a value of type t.
+   If the result of the call is normal, then resume at the next label otherwise
+   the stack unwinder will resume at the handler label. *)
+
+landing_pad (t: ZType; handler : Label; READONLY catches : ARRAY OF TypeUID);
+(* generate a landing pad for the handler label which should immediately precede the
+   landing pad. This corresponds to the back edge of the invoke instruction in the
+   event of a stack unwind result of type t, which should be an address of the exception.
+   push the result *)
+
 pop_param (t: MType);
 (* pop s0.t and make it the "next" parameter in the current call. *)
 

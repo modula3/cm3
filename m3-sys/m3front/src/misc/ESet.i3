@@ -50,4 +50,12 @@ PROCEDURE AddFPEdges (t: T;  VAR x: M3.FPInfo;  n: CARDINAL): CARDINAL;
 
 PROCEDURE Reset ();
 
+TYPE
+  EList = REF RECORD
+    e : Value.T;
+    next : EList;
+  END;
+
+PROCEDURE ListE(t : T) : EList;
+
 END ESet.

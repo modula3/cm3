@@ -46,5 +46,12 @@ if defined("MYSQLLIB")
   SYSTEM_LIBS{"MYSQL"} = [ MYSQLLIB, MYSQLDB ]
 end
 
+if defined("M3_USE_STACK_WALKER")
+  SYSTEM_LIBS{"UNWIND"} = [ "-L/usr/lib/x86_64-linux-gnu",
+                            "-lunwind-x86_64",
+                            "-lunwind",
+                            "-lunwind-generic" ]
+end
+
 %SYSTEM_LIBS{"ODBC"}       = [ "-lodbc" ]
 %SYSTEM_LIBS{"POSTGRES95"} = [ "-L/usr/local/pgsql/lib", "-lpq" ]

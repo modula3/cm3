@@ -153,6 +153,11 @@ OVERRIDES
     compare_exchange := compare_exchange;
     fence := fence;
     fetch_and_op := fetch_and_op;
+    start_try := start_try;
+    end_try := end_try;
+    invoke_direct := invoke_direct;
+    invoke_indirect := invoke_indirect;
+    landing_pad := landing_pad;
 END;
 
 PROCEDURE AssertFalse() =
@@ -342,6 +347,11 @@ END declare_procedure;
 <*NOWARN*>PROCEDURE pop_static_link(self: T) = BEGIN AssertFalse(); END pop_static_link;
 <*NOWARN*>PROCEDURE call_direct(self: T; proc: Proc; type: Type) = BEGIN AssertFalse(); END call_direct;
 <*NOWARN*>PROCEDURE call_indirect(self: T; type: Type; callingConvention: CallingConvention) = BEGIN AssertFalse(); END call_indirect;
+<*NOWARN*>PROCEDURE start_try(self: T) = BEGIN AssertFalse(); END start_try;
+<*NOWARN*>PROCEDURE end_try(self: T) = BEGIN AssertFalse(); END end_try;
+<*NOWARN*>PROCEDURE invoke_direct(self: T; proc: Proc; type: Type; next,handler : Label) = BEGIN AssertFalse(); END invoke_direct;
+<*NOWARN*>PROCEDURE invoke_indirect(self: T; type: Type; callingConvention: CallingConvention; next,handler : Label) = BEGIN AssertFalse(); END invoke_indirect;
+<*NOWARN*>PROCEDURE landing_pad(self: T; t : ZType; handler : Label; READONLY catches : ARRAY OF TypeUID) = BEGIN AssertFalse(); END landing_pad;
 <*NOWARN*>PROCEDURE load_procedure(self: T; proc: Proc) = BEGIN AssertFalse(); END load_procedure;
 <*NOWARN*>PROCEDURE load_static_link(self: T; proc: Proc) = BEGIN AssertFalse(); END load_static_link;
 <*NOWARN*>PROCEDURE comment(self: T; a, b, c, d: TEXT := NIL) = BEGIN AssertFalse(); END comment;

@@ -39,7 +39,7 @@ TYPE
   END;
 
 CONST
-  CmdMap = ARRAY [0..160] OF Cmd {
+  CmdMap = ARRAY [0..165] OF Cmd {
     Cmd {"begin_unit", begin_unit},
     Cmd {"end_unit", end_unit},
     Cmd {"import_unit", import_unit},
@@ -184,6 +184,11 @@ CONST
     Cmd {"call_direct", call_direct},
     Cmd {"start_call_indirect", start_call_indirect},
     Cmd {"call_indirect", call_indirect},
+    Cmd {"start_try", start_try},
+    Cmd {"end_try", end_try},
+    Cmd {"invoke_direct", invoke_direct},
+    Cmd {"invoke_indirect", invoke_indirect},
+    Cmd {"landing_pad", landing_pad},
     Cmd {"pop_param", pop_param},
     Cmd {"pop_struct", pop_struct},
     Cmd {"pop_static_link", pop_static_link},
@@ -1733,6 +1738,44 @@ PROCEDURE call_indirect (VAR s: State) =
   BEGIN
     s.cg.call_indirect (type, calling);
   END call_indirect;
+
+PROCEDURE start_try (VAR s: State) =
+  BEGIN
+    s.cg.start_try ();
+  END start_try;
+
+PROCEDURE end_try (VAR s: State) =
+  BEGIN
+    s.cg.end_try ();
+  END end_try;
+
+PROCEDURE invoke_direct (VAR s: State) =
+  VAR p       := Scan_proc (s);
+      type    := Scan_type (s);
+      next    := Scan_label (s);
+      handler := Scan_label (s);
+  BEGIN
+    s.cg.invoke_direct (p, type, next, handler);
+  END invoke_direct;
+
+PROCEDURE invoke_indirect (VAR s: State) =
+  VAR type    := Scan_type (s);
+      calling := Scan_callConv (s);
+      next    := Scan_label (s);
+      handler := Scan_label (s);
+  BEGIN
+    s.cg.invoke_indirect (type, calling, next, handler);
+  END invoke_indirect;
+
+PROCEDURE landing_pad (VAR s: State) =
+  VAR type    := Scan_type (s);
+      handler := Scan_label (s);
+      n       := Scan_int (s);
+      x       := NEW (REF ARRAY OF M3CG.TypeUID, n);
+  BEGIN
+    FOR i := 0 TO n-1 DO x[i] := Scan_tipe (s) END;
+    s.cg.landing_pad (type, handler, x^);
+  END landing_pad;
 
 (*------------------------------------------- procedure and closure types ---*)
 

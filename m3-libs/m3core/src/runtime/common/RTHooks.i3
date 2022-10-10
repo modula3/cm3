@@ -106,6 +106,10 @@ PROCEDURE CheckLoadTracedRef (ref: REFANY);
 
 PROCEDURE CheckStoreTraced (ref: REFANY);
 
+PROCEDURE NoOp ();
+(* Used to guarantee a landingpad is reachable in cases of try blocks
+   having no invokeable procedures. Does nothing. *)
+
 (*-------------------------------------------------------- runtime errors ---*)
 
 PROCEDURE ReportFault (module: ADDRESS(*RT0.ModulePtr*);  info: INTEGER)

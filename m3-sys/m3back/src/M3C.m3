@@ -226,6 +226,11 @@ T = M3CG_DoNothing.T OBJECT
         call_direct := call_direct;
         start_call_indirect := start_call_indirect;
         call_indirect := call_indirect;
+        start_try := start_try;
+        end_try := end_try;
+        invoke_direct := invoke_direct;
+        invoke_indirect := invoke_indirect;
+        landing_pad := landing_pad;
         pop_param := pop_param;
         pop_struct := pop_struct;
         pop_static_link := pop_static_link;
@@ -7928,6 +7933,45 @@ BEGIN
     call_helper (self, type, "((" & cgtypeToText[type] & " (__cdecl*)(" & param_types & "))" & s0.CText() & ")");
 
 END call_indirect;
+
+PROCEDURE start_try (self : T) =
+  BEGIN
+    IF debug THEN
+      self.comment("start_try");
+    END;
+  END start_try;
+
+PROCEDURE end_try (self : T) =
+  BEGIN
+    IF debug THEN
+      self.comment("end_try");
+    END;
+  END end_try;
+
+<*NOWARN*>PROCEDURE invoke_direct (self : T; p : M3CG.Proc; t : CGType; next,handler : Label) =
+  BEGIN
+    IF debug THEN
+      self.comment("invoke_direct");
+    END;
+    self.call_direct(p,t);
+  END invoke_direct;
+
+<*NOWARN*>PROCEDURE invoke_indirect (self : T; t : CGType; cc : CallingConvention; next,handler : Label) =
+  BEGIN
+    IF debug THEN
+      self.comment("invoke_indirect");
+    END;
+    self.call_indirect(t,cc);
+  END invoke_indirect;
+
+
+<*NOWARN*>PROCEDURE landing_pad (self : T; t : ZType; handler : Label; READONLY catches : ARRAY OF TypeUID) =
+  BEGIN
+    IF debug THEN
+      self.comment("landing_pad");
+    END;
+    push(self, CGType.Addr, CTextToExpr("0"));
+  END landing_pad;
 
 (*------------------------------------------- procedure and closure types ---*)
 

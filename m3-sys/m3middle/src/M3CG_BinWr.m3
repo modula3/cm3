@@ -166,6 +166,11 @@ TYPE
         call_direct := call_direct;
         start_call_indirect := start_call_indirect;
         call_indirect := call_indirect;
+        start_try := start_try;
+        end_try := end_try;
+        invoke_direct := invoke_direct;
+        invoke_indirect := invoke_indirect;
+        landing_pad := landing_pad;
         pop_param := pop_param;
         pop_struct := pop_struct;
         pop_static_link := pop_static_link;
@@ -1568,6 +1573,50 @@ PROCEDURE call_indirect (u: U;  t: Type;  cc: CallingConvention) =
     TName (u, t);
     OutB  (u, cc.m3cg_id);
   END call_indirect;
+
+PROCEDURE start_try (u: U) =
+  BEGIN
+    Cmd   (u, Bop.start_try);
+  END start_try;
+
+PROCEDURE end_try (u: U) =
+  BEGIN
+    Cmd   (u, Bop.end_try);
+  END end_try;
+
+PROCEDURE invoke_direct (u: U; p: Proc;  t: Type; next,handler : Label) =
+  (* call the procedure identified by proc p.  The procedure
+     returns a value of type t. if the outcome is normal resume at next
+     otherwise the unwinder will resume at handler. *)
+  BEGIN
+    Cmd   (u, Bop.invoke_direct);
+    PName (u, p);
+    TName (u, t);
+    Lab   (u, next);
+    Lab   (u, handler);
+  END invoke_direct;
+
+PROCEDURE invoke_indirect (u: U; t: Type; cc : CallingConvention; next,handler : Label) =
+  (* call the procedure whose address is in s0.A and pop s0.  The procedure
+     returns a value of type t. if the outcome is normal resume at next
+     otherwise the unwinder will resume at handler. *)
+  BEGIN
+    Cmd   (u, Bop.invoke_indirect);
+    TName (u, t);
+    OutB  (u, cc.m3cg_id);
+    Lab   (u, next);
+    Lab   (u, handler);
+  END invoke_indirect;
+
+PROCEDURE landing_pad (u: U; t : ZType; handler : Label; READONLY catches : ARRAY OF TypeUID) =
+  (* push; build a landing pad as a result of a stack unwind *)
+  BEGIN
+    Cmd   (u, Bop.landing_pad);
+    TName (u, t);
+    Lab   (u, handler);
+    Int   (u, NUMBER(catches));
+    FOR i := FIRST (catches) TO LAST (catches) DO  Tipe (u, catches [i]);  END;
+  END landing_pad;
 
 (*------------------------------------------- procedure and closure types ---*)
 

@@ -66,7 +66,15 @@ proc FileExists(a) is
     return not stale (a, a)
 end
 
+/* dont think this has been tested with a target that has
+   a stack walker. As soon as the target exists RTMachine does
+   not get compiled when m3_use_stack_walker is true.
 if     not FileExists(path() & "/../" & TARGET & "/RTMachine.i3")
     or not FileExists(path() & "/../" & TARGET & "/m3makefile")
   interface      ("RTMachine")   
-end 
+end
+*/
+if not defined("M3_USE_STACK_WALKER")
+  interface      ("RTMachine")   
+end  
+

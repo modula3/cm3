@@ -48,6 +48,7 @@ TYPE
         top_of_stack := 0;
         in_init      := 0;
         init_cursor  := 0;
+invoke := FALSE;
         note_error   : M3CG_Ops.ErrorHandler := NIL;
         runtime      : IntIntTbl.T := NIL;  (* Name -> BOOL *)
 (*        temps        : IntIntTbl.T  := NIL; (* Var -> line number *) *)
@@ -155,6 +156,11 @@ TYPE
         call_direct := call_direct;
         start_call_indirect := start_call_indirect;
         call_indirect := call_indirect;
+        start_try := start_try;
+        end_try := end_try;
+        invoke_direct := invoke_direct;
+        invoke_indirect := invoke_indirect;
+        landing_pad := landing_pad;
         pop_param := pop_param;
         pop_struct := pop_struct;
         pop_static_link := pop_static_link;
@@ -604,9 +610,10 @@ PROCEDURE CheckLabel (self: U;  l: Label) =
 PROCEDURE set_label (self: U;  l: Label;  barrier: BOOLEAN) =
   (* define 'l' to be at the current pc *)
   BEGIN
-    IF (self.clean_jumps) THEN self.s_empty () END;
+    IF (self.clean_jumps AND NOT self.invoke) THEN self.s_empty () END;
     CheckLabel (self, l);
     self.child.set_label (l, barrier);
+    self.invoke := FALSE;
   END set_label;
 
 PROCEDURE jump (self: U; l: Label) =
@@ -1299,6 +1306,44 @@ PROCEDURE call_indirect (self: U; t: Type;  cc: CallingConvention) =
     IF (t # Type.Void) THEN self.s_push (t) END;
     self.child.call_indirect (t, cc);
   END call_indirect;
+
+PROCEDURE start_try (self: U) =
+  BEGIN
+    self.child.start_try ( );
+  END start_try;
+
+PROCEDURE end_try (self: U) =
+  BEGIN
+    self.child.end_try ( );
+  END end_try;
+
+PROCEDURE invoke_direct (self: U; p: Proc;  t: Type; next,handler : Label) =
+  (* call the procedure identified by block b.  The procedure
+     returns a value of type t. *)
+  BEGIN
+    CheckProc (self, p);
+    DoCall (self);
+    IF (t # Type.Void) THEN self.s_push (t) END;
+    self.child.invoke_direct (p, t, next, handler);
+    self.invoke := TRUE;
+  END invoke_direct;
+
+PROCEDURE invoke_indirect (self: U; t: Type;  cc: CallingConvention; next,handler : Label) =
+  (* call the procedure whose address is in s0.A and pop s0.  The
+     procedure returns a value of type t. *)
+  BEGIN
+    self.s_pop (ST.Addr);
+    DoCall (self);
+    IF (t # Type.Void) THEN self.s_push (t) END;
+    self.child.invoke_indirect (t, cc, next, handler);
+    self.invoke := TRUE;
+  END invoke_indirect;
+
+PROCEDURE landing_pad (self: U; t: ZType; handler : Label; READONLY catches : ARRAY OF TypeUID) =
+  BEGIN
+    self.s_push (t);
+    self.child.landing_pad (t, handler, catches);
+  END landing_pad;
 
 (*------------------------------------------- procedure and closure types ---*)
 
