@@ -204,36 +204,6 @@ PROCEDURE CreateEnumerationType (Builder, Scope: ADDRESS;
                                  ClassTy       : ADDRESS;              ):
   ADDRESS;
 
-(* 2021-11-26: temporary disabled
-<* EXTERNAL LLVMDIBuilderCreateSetType *>
-PROCEDURE CreateSetType (Builder, Scope: ADDRESS;
-                         Name          : C.char_star;
-                         NameLen       : C.unsigned_int;
-                         File          : ADDRESS;
-                         LineNumber    : C.unsigned_int;
-                         SizeInBits    : C.unsigned_long_long;
-                         AlignInBits   : C.unsigned_int;
-                         BaseTy        : ADDRESS;              ): ADDRESS;
-*)
-
-(* 2021-11-26: temporary disabled
-<* EXTERNAL LLVMDIBuilderGetSubrangeConst *>
-PROCEDURE GetSubrangeConst (Builder, Scope   : ADDRESS;
-                            Name             : C.char_star;
-                            NameLen          : C.unsigned_int;
-                            File, BaseTy     : ADDRESS;
-                            LowerBound, Count: C.long_long;    ): ADDRESS;
-*)
-
-(* 2021-11-26: temporary disabled
-<* EXTERNAL LLVMDIBuilderGetSubrangeExpr *>
-PROCEDURE GetSubrangeExpr (Builder, Scope: ADDRESS;
-                           Name          : C.char_star;
-                           NameLen       : C.unsigned_int;
-                           File, BaseTy, LowerBound, Count: ADDRESS; ):
-  ADDRESS;
-*)
-
 <* EXTERNAL LLVMDIBuilderCreateUnionType *>
 PROCEDURE CreateUnionType (Builder, Scope: ADDRESS;
                            Name          : C.char_star;
@@ -257,19 +227,6 @@ PROCEDURE CreateArrayType (Builder      : ADDRESS;
                            Subscripts   : ADDRESS;
                            NumSubscripts: C.unsigned_int;       ): ADDRESS;
 
-(* 2021-11-26: temporary disabled
-<* EXTERNAL LLVMDIBuilderCreateDynamicArrayType *>
-PROCEDURE CreateDynamicArrayType
-  (Builder                                  : ADDRESS;
-   Size                                     : C.unsigned_long_long;
-   AlignInBits                              : C.unsigned_int;
-   Ty                                       : ADDRESS;
-   Subscripts                               : ADDRESS;
-   NumSubscripts                            : C.unsigned_int;
-   DataLocation, Associated, Allocated, Rank: ADDRESS;              ):
-  ADDRESS;
-*)
- 
 <* EXTERNAL LLVMDIBuilderCreateVectorType *>
 PROCEDURE CreateVectorType (Builder      : ADDRESS;
                             Size         : C.unsigned_long_long;
@@ -614,11 +571,5 @@ PROCEDURE LLVMInstructionSetDebugLoc (Inst, Loc: ADDRESS; );
 
 <* EXTERNAL LLVMGetMetadataKind *>
 PROCEDURE LLVMGetMetadataKind (Metadata: ADDRESS; ): C.unsigned_int;
-
-(* 2021-11-26: temporary disabled
-<* EXTERNAL LLVMReplaceArrays *>
-PROCEDURE LLVMReplaceArrays
-  (Builder: ADDRESS; T, Elements: ADDRESS; NumElements: C.unsigned_int; );
-*)
 
 END M3DebugInfoRaw.

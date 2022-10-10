@@ -215,6 +215,14 @@ DoEnum(LLVMDWARFMacinfoRecordType);
 //Useful in development where you ignore everything except 
 //the method you are working on and want to cut the error list down.
 
+
+%ignore LLVMDIBuilderCreateSetType;
+%ignore LLVMDIBuilderGetSubrangeConst;
+%ignore LLVMDIBuilderGetSubrangeExpr;
+%ignore LLVMDIBuilderCreateDynamicArrayType;
+%ignore LLVMReplaceArrays;
+
+
 /*
 %ignore LLVMDebugMetadataVersion;
 %ignore LLVMGetModuleDebugMetadataVersion;

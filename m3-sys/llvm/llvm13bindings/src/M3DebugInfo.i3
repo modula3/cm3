@@ -676,73 +676,6 @@ PROCEDURE CreateEnumerationType (Builder    : BuilderRef;
 
 
 (**
- * Create debugging information entry for a set.<br>
- * @param Builder        The DIBuilder.<br>
- * @param Scope          The scope this module is imported into.<br>
- * @param Name           A name that uniquely identifies this set.<br>
- * @param NameLen        The length of the C string passed to <code>Name</code>.<br>
- * @param File           File where the set is located.<br>
- * <br>
- * @param SizeInBits     Set size.<br>
- * @param AlignInBits    Set alignment.<br>
- * @param BaseTy         The base type of the set.
- *)
-
-(* 2021-11-26: temporary disabled
-PROCEDURE CreateSetType (Builder    : BuilderRef;
-                         Scope      : MetadataRef;
-                         Name       : TEXT;
-                         NameLen    : uint32_t;
-                         File       : MetadataRef;
-                         LineNumber : uint;
-                         SizeInBits : uint64_t;
-                         AlignInBits: uint32_t;
-                         BaseTy     : MetadataRef; ): MetadataRef;
-*)
-
-(**
- * Create a descriptor for a subrange with constant bounds.<br>
- * @param Builder    The DIBuilder.<br>
- * @param Scope      The scope this module is imported into.<br>
- * @param Name       A name that uniquely identifies this set.<br>
- * @param NameLen    The length of the C string passed to <code>Name</code>.<br>
- * @param File       File where the subrange is located.<br>
- * @param BaseTy     The base type of the subrange. eg integer or enumeration<br>
- * @param LowerBound Lower bound of the subrange.<br>
- * @param Count      Count of elements in the subrange.
- *)
-
-(* VVM
-PROCEDURE GetSubrangeConst (Builder          : BuilderRef;
-                            Scope            : MetadataRef;
-                            Name             : TEXT;
-                            NameLen          : uint32_t;
-                            File, BaseTy     : MetadataRef;
-                            LowerBound, Count: int64_t;     ): MetadataRef;
-*)
-
-(**
- * Create a descriptor for a subrange with dynamic bounds.<br>
- * @param Builder    The DIBuilder.<br>
- * @param Scope      The scope this module is imported into.<br>
- * @param Name       A name that uniquely identifies this set.<br>
- * @param NameLen    The length of the C string passed to <code>Name</code>.<br>
- * @param File       File where the subrange is located.<br>
- * @param BaseTy     The base type of the subrange. eg integer or enumeration<br>
- * @param LowerBound Lower bound of the subrange.<br>
- * @param Count      Count of elements in the subrange.
- *)
-
-(* 2021-11-26: temporary disabled
-PROCEDURE GetSubrangeExpr (Builder                        : BuilderRef;
-                           Scope                          : MetadataRef;
-                           Name                           : TEXT;
-                           NameLen                        : uint32_t;
-                           File, BaseTy, LowerBound, Count: MetadataRef; ):
-  MetadataRef;
-*)
-
-(**
  * Create debugging information entry for a union.<br>
  * @param Builder      The DIBuilder.<br>
  * @param Scope        Scope in which this union is defined.<br>
@@ -794,32 +727,6 @@ PROCEDURE CreateArrayType (Builder      : BuilderRef;
                            NumSubscripts: uint;                     ):
   MetadataRef;
 
-
-(**
- * Create debugging information entry for a dynamic array.<br>
- * @param Builder      The DIBuilder.<br>
- * @param Size         Array size.<br>
- * @param AlignInBits  Alignment.<br>
- * @param Ty           Element type.<br>
- * @param Subscripts   Subscripts.<br>
- * @param NumSubscripts Number of subscripts.<br>
- * @param DataLocation DataLocation.<br>
- * @param Associated   Associated.<br>
- * @param Allocated    Allocated.<br>
- * @param Rank         Rank.
- *)
-
-(* 2021-11-26: temporary disabled
-PROCEDURE CreateDynamicArrayType
-  (Builder                                  : BuilderRef;
-   Size                                     : uint64_t;
-   AlignInBits                              : uint32_t;
-   Ty                                       : MetadataRef;
-   Subscripts                               : UNTRACED REF MetadataRef;
-   NumSubscripts                            : uint;
-   DataLocation, Associated, Allocated, Rank: MetadataRef;              ):
-  MetadataRef;
-*)
 
 (**
  * Create debugging information entry for a vector type.<br>
@@ -1727,10 +1634,5 @@ PROCEDURE LLVMInstructionSetDebugLoc (Inst: ValueRef; Loc: MetadataRef; );
 
 PROCEDURE LLVMGetMetadataKind (Metadata: MetadataRef; ): CARDINAL;
 
-(* 2021-11-26: temporary disabled
-PROCEDURE LLVMReplaceArrays (Builder    : BuilderRef;
-                             T, Elements: UNTRACED REF MetadataRef;
-                             NumElements: uint;                     );
-*)
 
 END M3DebugInfo.
