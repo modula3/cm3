@@ -8,8 +8,8 @@ IMPORT Test, Wr, Stdio, Fmt;
 <*FATAL ANY*>
 
 TYPE
-  Int32A = BITS 32 FOR [16_80000000..16_7FFFFFFF];
-  Int32B = (*BITS 32 FOR*) [16_80000000..16_7FFFFFFF];
+  Int32A = BITS 32 FOR [-16_7fffffff-1..16_7FFFFFFF];
+  Int32B = (*BITS 32 FOR*) [-16_7fffffff-1..16_7FFFFFFF];
 
   EventIDA = ARRAY [0..1] OF Int32A; (* lsw..msw *)
   EventIDB = ARRAY [0..1] OF Int32B; (* lsw..msw *)
@@ -41,8 +41,9 @@ TYPE
       occupied: BOOLEAN;
     END;
 
+(*
   Buckets = REF ARRAY OF EntryA;
-
+*)
 
 PROCEDURE Out (tag: TEXT;  val: INTEGER) =
   BEGIN
@@ -63,6 +64,8 @@ BEGIN
   Test.checkI (BITSIZE (ValueA), BITSIZE (ValueB));
   Out ("Entry", BITSIZE (EntryA));
   Test.checkI (BITSIZE (EntryA), BITSIZE (EntryB));
+(* outputs 32 or 64 depending on arch
   Out ("Buckets", BITSIZE (Buckets));
+*)
   Test.done ();
 END Main.

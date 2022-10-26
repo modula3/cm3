@@ -1030,8 +1030,8 @@
   ToLongFloat => 1234.567890123456   / 19
   FromLongFloat [AltSci] => 1.234567890123456D3
   ToLongFloat => 1234.567890123456   / 19
-  FromLongFloat [Mix]    => 1234.567890123455982
-  ToLongFloat => 1234.567890123456   / 20
+  FromLongFloat [Mix]    => 1.234567890123456D3
+  ToLongFloat => 1234.567890123456   / 19
 
 
 1.234567890123456e27

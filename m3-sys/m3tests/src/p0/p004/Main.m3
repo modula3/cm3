@@ -56,19 +56,19 @@ TRY
     TRY
       msg ("1  raising outer h (" & Fmt.Int (7) & ")");
       RAISE h (7);
-      msg ("OOPS .........");
+<*NOWARN*>      msg ("OOPS .........");
     FINALLY
       TRY
         msg ("2  raising finally h (" & Fmt.Int (2) & ")");
         RAISE h (2);
-        msg ("OOPS .........");
+<*NOWARN*>        msg ("OOPS .........");
       EXCEPT 
         | h(i) => msg ("3  handling finally h (" & Fmt.Int (i) & ")"); END;
       msg ("4  finishing the inner finally"); END;
-    msg ("OOPS ........");
+<*NOWARN*>    msg ("OOPS ........");
   FINALLY 
     msg ("5  a simpler finally"); END;
-  msg ("OOPS .........");
+<*NOWARN*>  msg ("OOPS .........");
 EXCEPT 
   | h(i) => msg ("6  handling outer h (" & Fmt.Int (i) & ")"); END;
 
@@ -79,11 +79,11 @@ FOR i := 0 TO 10 DO
   TRY
     msg ("1  before the exit");
     EXIT;
-    msg ("OOPS ........");
+<*NOWARN*>    msg ("OOPS ........");
   FINALLY
     msg ("2  finally during an exit");
   END;
-  msg ("OOPS ........");
+<*NOWARN*>  msg ("OOPS ........");
 END;
 
 msg ("\n--------------");

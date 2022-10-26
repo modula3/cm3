@@ -14,7 +14,8 @@ FROM Test IMPORT msg, done;
 IMPORT Fmt, Thread;
 
 BEGIN
-  FOR i := 1 TO 10 DO
+(* 3 loops is surely enough *)
+  FOR i := 1 TO 3 DO
     msg (Fmt.Int (i));
     Thread.Pause (1.0d0);
   END;
