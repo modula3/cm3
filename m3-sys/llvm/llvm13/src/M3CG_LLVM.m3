@@ -5012,7 +5012,6 @@ PROCEDURE landing_pad (self : U; t: ZType; handler : Label;
     typesArr : TypeArrType;
     typesRef : TypeRefType;
     name : TEXT;
-    excepts : REF ARRAY OF TypeUID;
     exc : REFANY;
     nn : INTEGER;
   BEGIN
@@ -5030,17 +5029,16 @@ PROCEDURE landing_pad (self : U; t: ZType; handler : Label;
 
     nn := NUMBER(catches);
     <*ASSERT nn > 0 *>
-    excepts := NEW(REF ARRAY OF TypeUID, nn);
-    FOR i := FIRST(excepts^) TO LAST(excepts^) DO
-      IF NOT self.exceptsTable.get(excepts[i], exc) THEN
+    FOR i := FIRST(catches) TO LAST(catches) DO
+      IF NOT self.exceptsTable.get(catches[i], exc) THEN
         INC(self.catchId);
         name := "__" & Pathname.LastBase(self.curFile) & "_Exc_" & ItoT(self.catchId);
         catchVal := LLVM.LLVMAddGlobal(modRef, LLVM.LLVMInt64Type(), LT(name));
-        uidVal := LLVM.LLVMConstInt(LLVM.LLVMInt64Type(), VAL(excepts[i],LONGINT), TRUE);
+        uidVal := LLVM.LLVMConstInt(LLVM.LLVMInt64Type(), VAL(catches[i],LONGINT), TRUE);
         LLVM.LLVMSetInitializer(catchVal, uidVal);
         LLVM.LLVMSetGlobalConstant(catchVal, TRUE);
         LLVM.LLVMSetLinkage(catchVal, LLVM.Linkage.Internal);
-        EVAL self.exceptsTable.put(excepts[i], NEW(LvExpr, lVal := catchVal));
+        EVAL self.exceptsTable.put(catches[i], NEW(LvExpr, lVal := catchVal));
       ELSE
         catchVal := NARROW(exc, LvExpr).lVal;
       END;
