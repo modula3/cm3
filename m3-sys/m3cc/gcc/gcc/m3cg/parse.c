@@ -2160,6 +2160,7 @@ static std::vector<tree> all_labels;
 static std::vector<tree> expr_stack;
 static std::vector<tree> call_stack;
 static std::vector<tree> exc_stack;
+static std::map<int, tree> exc_catch;
 
 static void STACK_PUSH(std::vector<tree>& stack, tree x) { stack.push_back(x); }
 static void STACK_POP(std::vector<tree>& stack) { stack.pop_back(); }
@@ -6000,15 +6001,17 @@ M3CG_HANDLER (LANDING_PAD)
     // whatever it is, it should match the type for etype below
     tree tid = build_int_cst (t_int, catches[i]);
 
-    //could optimise this a bit and lookup tid to reuse it so as to
-    //not allocate an etype if already have one.
-    tree etype = declare_temp (t_int);
-    TREE_STATIC (etype) = true;
-    TREE_PUBLIC (etype) = true;
-    sprintf(exc_name, "__%s_Exc_%d",aux_base_name,M3_EXC_ID);
-    M3_EXC_ID++;
-    DECL_NAME (etype) = get_identifier(exc_name);
-    DECL_INITIAL (etype) = tid;
+    tree etype = exc_catch[catches[i]];
+    if (etype == NULL) {
+      etype = declare_temp (t_int);
+      TREE_STATIC (etype) = true;
+      TREE_PUBLIC (etype) = true;
+      sprintf(exc_name, "__%s_Exc_%d",aux_base_name,M3_EXC_ID);
+      M3_EXC_ID++;
+      DECL_NAME (etype) = get_identifier(exc_name);
+      DECL_INITIAL (etype) = tid;
+      exc_catch[catches[i]] = etype;
+    }
  
     etype = m3_build1 (ADDR_EXPR, t_addr, etype);
     etypes_list = tree_cons(NULL_TREE, etype, etypes_list);
