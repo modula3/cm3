@@ -1,9 +1,121 @@
+(* Copyright (C) 2022 Peter McKinna. All rights reserved. *)
+(* See file COPYRIGHT-BSD for details. *)
+
 UNSAFE MODULE RTEHScan;
 
-(* Scan the gcc except table embedded in the code stream to find
-   an exception handling address and match the exception type uid. *)
-
 IMPORT RTStack,RTError,RTIO,RTParams,Word;
+
+(*
+  Scan the gcc except table embedded in the code stream to find
+  an exception handling address and match the exception type uid.
+
+  Inspired by and borrowed from cxa_personality.cpp in the llvm project
+  libcxxabi. Included below is their description for the gcc_except_table
+  which may help understanding the code. Be aware that it describes c++
+  and uses its terminology which Modula-3 does not support. eg throw, catch
+  It also describes the layout for SJLJ exceptions which is not supported
+  currently.
+
+
+    Exception Handling Table Layout:
+
++-----------------+--------+
+| lpStartEncoding | (char) |
++---------+-------+--------+---------------+-----------------------+
+| lpStart | (encoded with lpStartEncoding) | defaults to funcStart |
++---------+-----+--------+-----------------+---------------+-------+
+| ttypeEncoding | (char) | Encoding of the type_info table |
++---------------+-+------+----+----------------------------+----------------+
+| classInfoOffset | (ULEB128) | Offset to type_info table, defaults to null |
++-----------------++--------+-+----------------------------+----------------+
+| callSiteEncoding | (char) | Encoding for Call Site Table |
++------------------+--+-----+-----+------------------------+--------------------------+
+| callSiteTableLength | (ULEB128) | Call Site Table length, used to find Action table |
++---------------------+-----------+---------------------------------------------------+
+#ifndef __USING_SJLJ_EXCEPTIONS__
++---------------------+-----------+------------------------------------------------+
+| Beginning of Call Site Table            The current ip lies within the           |
+| ...                                     (start, length) range of one of these    |
+|                                         call sites. There may be action needed.  |
+| +-------------+---------------------------------+------------------------------+ |
+| | start       | (encoded with callSiteEncoding) | offset relative to funcStart | |
+| | length      | (encoded with callSiteEncoding) | length of code fragment      | |
+| | landingPad  | (encoded with callSiteEncoding) | offset relative to lpStart   | |
+| | actionEntry | (ULEB128)                       | Action Table Index 1-based   | |
+| |             |                                 | actionEntry == 0 -> cleanup  | |
+| +-------------+---------------------------------+------------------------------+ |
+| ...                                                                              |
++----------------------------------------------------------------------------------+
+#else  // __USING_SJLJ_EXCEPTIONS__
++---------------------+-----------+------------------------------------------------+
+| Beginning of Call Site Table            The current ip is a 1-based index into   |
+| ...                                     this table.  Or it is -1 meaning no      |
+|                                         action is needed.  Or it is 0 meaning    |
+|                                         terminate.                               |
+| +-------------+---------------------------------+------------------------------+ |
+| | landingPad  | (ULEB128)                       | offset relative to lpStart   | |
+| | actionEntry | (ULEB128)                       | Action Table Index 1-based   | |
+| |             |                                 | actionEntry == 0 -> cleanup  | |
+| +-------------+---------------------------------+------------------------------+ |
+| ...                                                                              |
++----------------------------------------------------------------------------------+
+#endif // __USING_SJLJ_EXCEPTIONS__
++---------------------------------------------------------------------+
+| Beginning of Action Table       ttypeIndex == 0 : cleanup           |
+| ...                             ttypeIndex  > 0 : catch             |
+|                                 ttypeIndex  < 0 : exception spec    |
+| +--------------+-----------+--------------------------------------+ |
+| | ttypeIndex   | (SLEB128) | Index into type_info Table (1-based) | |
+| | actionOffset | (SLEB128) | Offset into next Action Table entry  | |
+| +--------------+-----------+--------------------------------------+ |
+| ...                                                                 |
++---------------------------------------------------------------------+-----------------+
+| type_info Table, but classInfoOffset does *not* point here!                           |
+| +----------------+------------------------------------------------+-----------------+ |
+| | Nth type_info* | Encoded with ttypeEncoding, 0 means catch(...) | ttypeIndex == N | |
+| +----------------+------------------------------------------------+-----------------+ |
+| ...                                                                                   |
+| +----------------+------------------------------------------------+-----------------+ |
+| | 1st type_info* | Encoded with ttypeEncoding, 0 means catch(...) | ttypeIndex == 1 | |
+| +----------------+------------------------------------------------+-----------------+ |
+| +---------------------------------------+-----------+------------------------------+  |
+| | 1st ttypeIndex for 1st exception spec | (ULEB128) | classInfoOffset points here! |  |
+| | ...                                   | (ULEB128) |                              |  |
+| | Mth ttypeIndex for 1st exception spec | (ULEB128) |                              |  |
+| | 0                                     | (ULEB128) |                              |  |
+| +---------------------------------------+------------------------------------------+  |
+| ...                                                                                   |
+| +---------------------------------------+------------------------------------------+  |
+| | 0                                     | (ULEB128) | throw()                      |  |
+| +---------------------------------------+------------------------------------------+  |
+| ...                                                                                   |
+| +---------------------------------------+------------------------------------------+  |
+| | 1st ttypeIndex for Nth exception spec | (ULEB128) |                              |  |
+| | ...                                   | (ULEB128) |                              |  |
+| | Mth ttypeIndex for Nth exception spec | (ULEB128) |                              |  |
+| | 0                                     | (ULEB128) |                              |  |
+| +---------------------------------------+------------------------------------------+  |
++---------------------------------------------------------------------------------------+
+
+Notes:
+
+*  ttypeIndex in the Action Table, and in the exception spec table, is an index,
+     not a byte count, if positive.  It is a negative index offset of
+     classInfoOffset and the sizeof entry depends on ttypeEncoding.
+   But if ttypeIndex is negative, it is a positive 1-based byte offset into the
+     type_info Table.
+   And if ttypeIndex is zero, it refers to a catch (...).
+
+*  landingPad can be 0, this implies there is nothing to be done.
+
+*  landingPad != 0 and actionEntry == 0 implies a cleanup needs to be done
+     @landingPad.
+
+*  A cleanup can also be found under landingPad != 0 and actionEntry != 0 in
+     the Action Table with ttypeIndex == 0.
+
+*)
+
 
 CONST
   DW_EH_PE_absptr   = 16_00;
@@ -221,10 +333,10 @@ PROCEDURE ScanEHActions() : BOOLEAN =
         infoUid := info^;
         (*
           If we ever have to handle scope kind. The uid is in the right
-          32 bits and the scope kind the left. Would need changes to
+          32 bits and the scope kind the left. Would need changes to the
           front end.
-        infoUid := Word.And(info^,16_FFFFFFFF); <- fix this preserve sign
-        scopeKind := Word.RightShift(info^,32);
+          infoUid := Word.And(info^,16_FFFFFFFF); <- fix this preserve sign
+          scopeKind := Word.RightShift(info^,32);
         *)
 
         IF DEBUG THEN
