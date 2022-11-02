@@ -1,80 +1,81 @@
-m3core base core front unicode min
-libm3 base core front unicode min
-set base core front
-windowsResources core
-parseparams base core
-patternmatching core
-sysutils core front
-unittest core
-m3middle base core front unicode
-m3objfile core front unicode
-m3linker core front unicode
-m3back core front unicode
-m3cggen base core front
-m3staloneback tool
-m3quake base core front unicode
-m3front core front unicode
-m3scanner base core
-m3tools base core
-m3cgcat base core front unicode tool
-libunicode unicode
-m3gdb m3gnudevtool m3gdb
-m3bundle base core
-mklib base core front
-fix_nl tool
-libdump tool
-tempfiles base core
-arithmetic math
-unittest-numeric math
-bitvector base core
-digraph base core
-realgeometry base core
-slisp base core
-sortedtableextras base core
-table-list base core
-tcl
-tcp base core comm
-cm3ide core
-udp comm devlib
-libsio devlib
-libbuf devlib
-debug devlib
-listfuncs devlib
+m3core base core front headless min unicode
+libm3 base core front headless min unicode
+set base core front headless
+windowsResources core headless
+parseparams base core headless
+patternmatching core headless
+sysutils core front headless
+unittest core headless
+m3middle base core front headless unicode
+m3objfile core front headless unicode
+m3linker core front headless unicode
+m3back core front headless unicode
+m3cggen base core front headless
+m3staloneback headless tool
+m3quake base core front headless unicode
+m3front core front headless unicode
+m3scanner base core headless
+m3tools base core headless
+m3cgcat base core front headless tool unicode
+libunicode headless unicode
+m3gdb headless m3gdb m3gnudevtool
+m3bundle base core headless
+mklib base core front headless
+fix_nl headless tool
+libdump headless tool
+tempfiles base core headless
+arithmetic headless math
+unittest-numeric headless math
+bitvector base core headless
+digraph base core headless
+realgeometry base core headless
+slisp base core headless
+sortedtableextras base core headless
+table-list base core headless
+tcl headless
+tcp base comm core headless
+cm3ide core headless
+udp comm devlib headless
+libsio devlib headless
+libbuf devlib headless
+debug devlib headless
+listfuncs devlib headless
 embutils obliq
-m3tk-misc comm devlib
+m3tk-misc comm devlib headless
 http webdev
-binIO devlib
-commandrw devlib
-tapi base comm devlib
-serial base comm devlib
-m3tk comm devlib
-mtex core
+binIO devlib headless
+commandrw devlib headless
+tapi base comm devlib headless
+serial base comm devlib headless
+m3crypto headless
+m3tk comm devlib headless
+mtex core headless
 m3totex m3devtool
 m3tohtml m3devtool
-m3scan devlib
-m3markup devlib
+m3scan devlib headless
+m3markup devlib headless
 m3browser m3devtool
-cmpdir tool
-cmpfp tool
-dirfp tool
-uniq tool
-netobj comm devlib
+cmpdir headless tool
+cmpfp headless tool
+dirfp headless tool
+uniq headless tool
+netobj comm devlib headless
 netobjd comm m3devtool
 stubgen comm m3devtool
-events devlib
-rdwr devlib
+events devlib headless
+rdwr devlib headless
 sharedobj obliq
 sharedobjgen obliq
-odbc database
-mysql database
-postgres95 database
-db database
-smalldb database
+odbc database headless
+mysql database headless
+postgres95 database headless
+db database headless
+smalldb database headless
 stablegen m3devtool
 stable m3devtool
 X11R4 gui
 ui gui
-PEX 
+PEX headless
 vbtkit gui
 cmvbt gui
 jvideo gui
@@ -133,7 +134,7 @@ cit_common caltech-parser
 m3tmplhack caltech-parser
 cit_util caltech-parser
 term caltech-parser
-deepcopy devlib
+deepcopy devlib headless
 paneman caltech-parser
 paneman/kemacs caltech-parser
 drawcontext caltech-parser
@@ -152,7 +153,7 @@ parserlib/parserlib caltech-parser
 parserlib/parserlib/test_parserlib caltech-parser
 
 kate gui
-sgml devlib
+sgml devlib headless
 deckscape webdev
 webscape webdev
 webcat webdev
@@ -187,7 +188,7 @@ elego/pkg_vc elego
 elego/pkgvm elego
 elego/prjbase elego
 elego/prjm elego
-m3sleep core
+m3sleep core headless
 
 semaphore caltech-other
 trie caltech-other
@@ -228,5 +229,6 @@ schemereadline m3-scheme
 mscheme-interactive m3-scheme
 mscheme-interactive_r m3-scheme
 mscheme-threads m3-scheme
-cm3 core front unicode
+
+cm3 core front headless unicode
 m3cc core front headless m3gnudevtool unicode
