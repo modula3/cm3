@@ -23,7 +23,9 @@ if equal (OS_TYPE, "POSIX")
   LIB_DIR1 = "/usr/lib/x86_64-linux-gnu"
   LIB_DIR2 = "/usr/lib/gcc/x86_64-linux-gnu/8"
 % set the location of the llvm libraries
-  LLVM_LIB_DIR = LIB_DIR
+%  LLVM_LIB_DIR = LIB_DIR
+% if using the built version of llvm use LIB_DIR else use the specific version
+  LLVM_LIB_DIR = "/usr/lib/llvm-13/lib"
 
   import_lib("curses",LIB_DIR1) 
   import_lib("termcap",LIB_DIR1) 
@@ -62,7 +64,7 @@ end
 
 proc llvmlibs() is
 
-      local libnames = q_exec_get ("llvm-config --libnames")
+      local libnames = q_exec_get ("llvm-config-13 --libnames")
       local lib_arr = split(skipr(libnames[1])," ")
       
       local lib_tab = {}
@@ -85,6 +87,7 @@ proc llvmlibs() is
           lib = subst(lib,".lib","",1) %remove suffix
 	else
           lib = subst(lib,".a","",1) %remove suffix
+          lib = subst(lib,".so","",1) %remove suffix
 	end
         %write("key: " & key & " val " & lib & "\n")
         import_lib(lib,LLVM_LIB_DIR)
