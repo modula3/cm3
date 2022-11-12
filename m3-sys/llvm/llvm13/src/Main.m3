@@ -233,7 +233,7 @@ CONST VersionString = "0.1";
 PROCEDURE DisplayVersion () =
   BEGIN
     IO.Put(GExecutableName);
-    IO.Put(": standalone converter from cm3 IR to llvm IR, version ");
+    IO.Put(" (llvm13): standalone converter from cm3 IR to llvm IR, version ");
     IO.Put(VersionString);
     IO.Put(" ");
     IO.Put(Wr.EOL);
