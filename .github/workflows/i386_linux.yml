@@ -10,11 +10,11 @@ on:
         required: false
         type: string
       release:
-        default: https://github.com/modula3/cm3/releases/download/d5.11.4
+        default: https://github.com/VictorMiasnikov/cm3/releases/download/d5.11.9-ZZYYXX-20221019_15-00
         required: false
         type: string
       bootstrap:
-        default: cm3-boot-I386_LINUX-d5.11.4.tar.xz
+        default: cm3-boot-I386_LINUX-None.tar.xz
         required: false
         type: string
 

@@ -3,26 +3,26 @@ name: integration
 # Build and test starting from latest bootstrap release.
 
 on:
-  pull_request: {branches: master}
+  pull_request: {branches: d5.11.9-ZZYYXX-20221028_21-54}
   push:
 
 concurrency: ci
 
 jobs:
   AMD64_DARWIN:
-    uses: modula3/cm3/.github/workflows/amd64_darwin.yml@master
+    uses: VictorMiasnikov/cm3/.github/workflows/amd64_darwin.yml@d5.11.9-ZZYYXX-20221028_21-54
 
   AMD64_LINUX:
-    uses: modula3/cm3/.github/workflows/amd64_linux.yml@master
+    uses: VictorMiasnikov/cm3/.github/workflows/amd64_linux.yml@d5.11.9-ZZYYXX-20221028_21-54
 
   AMD64_MINGW:
-    uses: modula3/cm3/.github/workflows/amd64_mingw.yml@master
+    uses: VictorMiasnikov/cm3/.github/workflows/amd64_mingw.yml@d5.11.9-ZZYYXX-20221028_21-54
 
   AMD64_NT:
-    uses: modula3/cm3/.github/workflows/amd64_nt.yml@master
+    uses: VictorMiasnikov/cm3/.github/workflows/amd64_nt.yml@d5.11.9-ZZYYXX-20221028_21-54
 
   I386_LINUX:
-    uses: modula3/cm3/.github/workflows/i386_linux.yml@master
+    uses: VictorMiasnikov/cm3/.github/workflows/i386_linux.yml@d5.11.9-ZZYYXX-20221028_21-54
 
   I386_NT:
-    uses: modula3/cm3/.github/workflows/i386_nt.yml@master
+    uses: VictorMiasnikov/cm3/.github/workflows/i386_nt.yml@d5.11.9-ZZYYXX-20221028_21-54
