@@ -27,7 +27,7 @@ PROCEDURE DoIt () =
       END;
     END;
 
-    scan := NEW (M3Scanner.Default).init (Stdio.stdin, cmt, prag);
+    scan := NEW (M3Scanner.Default).initFromRd (Stdio.stdin, cmt, prag);
     IF (scan.token = TK.Comment) THEN scan.next () END;
 
     LOOP
