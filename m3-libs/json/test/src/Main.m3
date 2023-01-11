@@ -1,6 +1,6 @@
 MODULE Main;
 
-IMPORT Json,IO,Scan,Text;
+IMPORT Json,IO,Scan,Text,Wr,Rd,Pickle2;
 (* IMPORT Rd,FS;*)
 
 <*FATAL ANY *>
@@ -48,9 +48,11 @@ PROCEDURE FindText(jp : Json.T; txt : TEXT) : Json.T =
 PROCEDURE TestParser() =
 VAR
   buf,arr,obj,name : TEXT;
-  node,n2,n3 : Json.T;
+  node,n2,n3,r : Json.T;
   iter : Json.Iterator;
   pval : REAL;
+  rd : Rd.T;
+  wrt : Wr.T;
 BEGIN
 
   buf := "\"name\"";
@@ -208,6 +210,15 @@ BEGIN
   
   IO.Put(node.root().format() & "\n");
 
+  (* pickle test *)
+  wrt := IO.OpenWrite("json.pkl");
+  Pickle2.Write(wrt,n2);
+  Wr.Close(wrt);
+  rd := IO.OpenRead("json.pkl");
+  r := NARROW(Pickle2.Read(rd), Json.T);
+  IO.Put(r.root().format() & "\n");
+
+  (* iterator test *)
   n2 := node.root().find("/cars");
   iter := n2.iterate();
   WHILE iter.next(name,n3) DO
