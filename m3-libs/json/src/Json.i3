@@ -29,6 +29,7 @@ TYPE
     value() : TEXT;
     kind() : NodeKind;
     format() : TEXT;
+    rawText() : TEXT;
     find(path : TEXT) : T;
     getInt() : INTEGER;
     getFloat() : LONGREAL;
@@ -81,7 +82,7 @@ END Json.
   The call "json.kind" returns the type of the node.
 
   The call "json.format" returns the textual representation of the
-  json tree. eg.
+  json tree, indented and prettied. eg.
   "{
      "name": "sam",
      "obj": {
@@ -89,6 +90,9 @@ END Json.
         "elt2": "oxygen"a},
      "arr1": [red,yellow,blue]
    }"
+
+  The call "json.format" returns the raw textual representation of the
+  json tree.
 
   The call "json.find" returns the node which matches the path. A path is
   defined as a sequence of names separated by "/" much like a unix directory

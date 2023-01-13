@@ -138,11 +138,17 @@ BEGIN
 
   (* tests on json file *)
   node := Json.ParseFile("json.txt");
+  IO.Put(node.rawText() & "\n");
   IO.Put(node.format() & "\n");
+
+  n2 := FindText(node,"/params/contentChanges/0/text"); (* return object *)
+  <*ASSERT n2 # NIL *>
+  IO.Put(n2.value());
 
   n2 := FindText(node,"/"); (* return object *)
   n2 := FindText(node,"/billTo"); (* return object *)
   n2 := FindText(n2,"zip");
+
   EVAL node.addText("email","fred@gmail.com");
   EVAL node.addInt("number",3334);
   n2 := n2.addInt("number2",3334); (* error returns nil *)

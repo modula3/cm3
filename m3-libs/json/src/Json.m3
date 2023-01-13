@@ -45,12 +45,13 @@ REVEAL
       error (n: INTEGER) RAISES {E} := Error;
       struct (): BOOLEAN := StructNode;
       update (name,value : TEXT; nodeKind : NodeKind) := Update;
-      doFormat(node : T; indent: TEXT): TEXT := DoFormat;
+      doFormat(node : T; indent: TEXT; pretty : BOOLEAN): TEXT := DoFormat;
     OVERRIDES
       name       := Name;
       value      := Value;
       kind       := Kind;
       format     := Format;
+      rawText    := RawText;
       find       := Find;
       getInt     := GetInt;
       getFloat   := GetFloat;
@@ -284,12 +285,17 @@ PROCEDURE ParseStream (rd : Rd.T) : T RAISES{E} =
     RETURN node;
   END ParseStream;
 
+PROCEDURE RawText(self : T) : TEXT =
+  BEGIN
+    RETURN self.doFormat(self, "", FALSE);
+  END RawText;
+
 PROCEDURE Format(self : T) : TEXT =
   BEGIN
-    RETURN self.doFormat(self, "");
+    RETURN self.doFormat(self, "", TRUE);
   END Format;
 
-PROCEDURE DoFormat(self : T; node : T; indent: TEXT): TEXT =
+PROCEDURE DoFormat(self : T; node : T; indent: TEXT; pretty : BOOLEAN): TEXT =
   VAR
     prefix,res,key : TEXT;
     value : REFANY;
@@ -304,18 +310,20 @@ PROCEDURE DoFormat(self : T; node : T; indent: TEXT): TEXT =
     IF node.list = NIL OR node.list.size() = 0 THEN
       RETURN " ";
     END;
-    res := "\n";
+    res := "";
     count := node.list.size() - 1;
-    s := indent & "    ";
+    s := indent;
+    IF pretty THEN res := "\n"; s := s & "    "; END;
     i := 0;
     iter := node.list.iterateOrdered(TRUE);
     WHILE iter.next(key,value) DO
       anode := NARROW(value,T);
-      res := res & self.doFormat(anode,s);
+      res := res & self.doFormat(anode, s, pretty);
       IF i < count THEN
-        res := res & ",\n";
+        res := res & ",";
+        IF pretty THEN res := res & "\n"; END;
       ELSE
-        res := res & "\n" & indent;
+        IF pretty THEN res := res & "\n" & indent; END;
       END;
       INC(i);
     END;
