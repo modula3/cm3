@@ -3,7 +3,7 @@
 
 UNSAFE MODULE Json;
 
-IMPORT IO, Fmt, Scan, Rd, Text, Thread;
+IMPORT IO, Fmt, Scan, Rd, Wr, Text, Thread;
 IMPORT SortedTextRefTbl AS Tbl;
 IMPORT JsonScanner AS SK;
 IMPORT TextUtils, TextSeq, ASCII;
@@ -89,7 +89,7 @@ PROCEDURE Error (self: T; n: INTEGER) RAISES {E} =
         IO.Put(" : token error " & self.tok.msg & " ");
       END;
       IO.Put(" - line " & Fmt.Int(self.tok.line) & " offset "
-             & Fmt.Int(self.tok.offset) & "\n");
+             & Fmt.Int(self.tok.offset) & Wr.EOL);
     END;
     RAISE E;
   END Error;
@@ -301,6 +301,7 @@ PROCEDURE DoFormat(self : T; node : T; indent: TEXT; pretty : BOOLEAN): TEXT =
     value : REFANY;
 
   PROCEDURE DoItems(): TEXT =
+  CONST Indent = "    ";
   VAR
     anode : T;
     count, i : INTEGER;
@@ -313,7 +314,7 @@ PROCEDURE DoFormat(self : T; node : T; indent: TEXT; pretty : BOOLEAN): TEXT =
     res := "";
     count := node.list.size() - 1;
     s := indent;
-    IF pretty THEN res := "\n"; s := s & "    "; END;
+    IF pretty THEN res := Wr.EOL; s := s & Indent; END;
     i := 0;
     iter := node.list.iterateOrdered(TRUE);
     WHILE iter.next(key,value) DO
@@ -321,9 +322,9 @@ PROCEDURE DoFormat(self : T; node : T; indent: TEXT; pretty : BOOLEAN): TEXT =
       res := res & self.doFormat(anode, s, pretty);
       IF i < count THEN
         res := res & ",";
-        IF pretty THEN res := res & "\n"; END;
+        IF pretty THEN res := res & Wr.EOL; END;
       ELSE
-        IF pretty THEN res := res & "\n" & indent; END;
+        IF pretty THEN res := res & Wr.EOL & indent; END;
       END;
       INC(i);
     END;
