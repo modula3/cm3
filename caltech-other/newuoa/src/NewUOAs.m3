@@ -1,4 +1,14 @@
 MODULE NewUOAs;
+
+(*
+Derivative-free minimization algorithm based on:
+
+Zhang, Zaikun: On derivative-free optimization methods (in Chinese).
+Ph.D. thesis, Chinese Academy of Sciences, Beijing, CN (2012)
+
+Algorithm 5.18 of the thesis.
+*)
+
 IMPORT LRVector, LRScalarField;
 IMPORT LRMatrix2 AS LRMat; IMPORT Matrix AS Mat;
 FROM LRMatrix2 IMPORT NewM, NewV, AddV, MulMV, V, M, MulSV, AddSV, SubV,
