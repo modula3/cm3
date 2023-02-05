@@ -33,6 +33,20 @@ much more efficient when N is large, because the work of each iteration is
 much less than before, and in some experiments the number of calculations
 of the objective function seems to be only of magnitude N.
 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~   
+
+Portions also Copyright (C) Zaikun Zhang
+
+NEWUOAs ; Derivative-free minimization algorithm based on:
+Zhang, Zaikun: On derivative-free optimization methods (in Chinese).
+Ph.D. thesis, Chinese Academy of Sciences, Beijing, CN (2012)
+
+Algorithm 5.18 of the thesis.
+
+This code may not be copied, translated, or derived from without also 
+being accompanied by a copy of this statement, in addition to any and all other 
+copyright restrictions hereto pertaining.
+
      The attachments in sequence are a suitable Makefile, followed by a main
 program and a CALFUN routine for the Chebyquad problems, in order to provide
 an example for testing. Then NEWUOA and its five auxiliary routines, namely
