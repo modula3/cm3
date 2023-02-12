@@ -20,7 +20,7 @@ INTERFACE M3CGoList;
 (***************************************************************************)
 
 IMPORT M3AST_AS;
-IMPORT M3CUnit, M3Context, M3Conventions;
+IMPORT M3CUnit, M3Context, M3Conventions, Rd;
 
 PROCEDURE CompileUnitsInContext(
     VAR (*inout*) context: M3Context.T;
@@ -90,5 +90,16 @@ called in the order that they were added. *)
 
 PROCEDURE RemoveNotification(e: Notification) RAISES {};
 (* Remove notification "e". *)
+
+TYPE
+  Streamer <: Streamer_public;
+  Streamer_public = OBJECT
+  METHODS
+    getStream(
+      cu: M3AST_AS.Compilation_Unit;
+      VAR stream : Rd.T);
+  END;
+
+PROCEDURE SetStreamer(s: Streamer) RAISES {};
 
 END M3CGoList.

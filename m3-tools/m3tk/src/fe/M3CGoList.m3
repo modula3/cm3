@@ -109,6 +109,14 @@ PROCEDURE Notify(
     END;
   END Notify;
 
+REVEAL Streamer = Streamer_public BRANDED OBJECT END;
+VAR streamer_g: Streamer := NIL;
+
+PROCEDURE SetStreamer(s: Streamer) RAISES {}=
+  BEGIN
+    streamer_g := s;
+  END SetStreamer;
+
 (***************************************************************************)
 (*                            Error handling                               *)
 (***************************************************************************)
@@ -396,6 +404,10 @@ PROCEDURE UnpickleOrCompileSource(
 
       IF uf = M3CUnit.Form.Source THEN        (* needs compiling from source *)
         saveErrCuList := InitErrorObserver(cd.en, cu);
+        IF streamer_g # NIL THEN
+          (* overwrite stream *)
+          streamer_g.getStream(cu,stream);
+        END;
         M3CGo.CompileUnit(cu, context, stream, FindUnpickleOrCompileSource,
             cd.phases, compTime, cd.headerOnly);
         <*FATAL Rd.Failure, Thread.Alerted*> BEGIN

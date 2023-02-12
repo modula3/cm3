@@ -106,6 +106,11 @@ PROCEDURE ErrorProc(<*UNUSED*> t: ErrorHandler; dir: M3PathElem.T;
     RETURN TRUE;
   END ErrorProc;
 
+PROCEDURE GetTool() : M3Args.T =
+  BEGIN
+    RETURN tool_g;
+  END GetTool;
+
 BEGIN
   M3Args.RegisterPrefix(tool_g, Define_Arg,
     "specify an explicit path to be used for file searching");

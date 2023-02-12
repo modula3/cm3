@@ -27,5 +27,10 @@ PROCEDURE Startup(worker: Worker; compile := TRUE): INTEGER RAISES ANY=
     RETURN worker.work(context, compileResult);
   END Startup;
 
+PROCEDURE ResetPath(context: M3Context.T) =
+  BEGIN
+    context.put(M3PathTool.Check());
+  END ResetPath;
+
 BEGIN
 END M3ToolFrame.
