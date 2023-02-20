@@ -1,7 +1,17 @@
 MODULE Main;
 
-IMPORT Json,IO,Scan,Text,Wr,Rd,Pickle2;
-(* IMPORT Rd,FS;*)
+(*
+  need to update this test suit and need some requrements
+  1 a test procedure should test a single component? and be verified
+  ie compared against expected results.
+  2 each test should have the input created as a text so the first set
+    of tests just show that parsing works.
+  3 to compare the expected with the input do we just compare texts?
+    well that wont be possible with the update set of tests
+
+*)
+
+IMPORT Json,IO,Text,Fmt,Wr,Rd,FS,Pickle2;
 
 <*FATAL ANY *>
 
@@ -29,7 +39,7 @@ PROCEDURE FindText(jp : Json.T; txt : TEXT) : Json.T =
       IO.Put("Not found - " & txt & "\n");
     ELSE
       IO.Put("Found - name- " & node.name() & " kind- " & Json.NK[node.kind()] & " value- " & node.value() & "\n");
-      (*
+      
       CASE node.kind() OF
       | Json.NodeKind.nkText => IO.Put("text");
       | Json.NodeKind.nkInt => IO.Put("int");
@@ -40,202 +50,541 @@ PROCEDURE FindText(jp : Json.T; txt : TEXT) : Json.T =
       | Json.NodeKind.nkObject => IO.Put("obj");
       | Json.NodeKind.nkArray => IO.Put("array");
       END; 
-      *)
     END;
     RETURN node;
   END FindText;
 
-PROCEDURE TestParser() =
-VAR
-  buf,arr,obj,name : TEXT;
-  node,n2,n3,r : Json.T;
-  iter : Json.Iterator;
-  pval : REAL;
-  rd : Rd.T;
-  wrt : Wr.T;
-BEGIN
+PROCEDURE P1() =
+  VAR
+    buf : TEXT;
+    node : Json.T;
+  BEGIN
+    (* parsing - simplest *)
+    buf := "\"name\"";
+    node := Json.ParseBuf(buf);
+    <*ASSERT node # NIL *>
+    <*ASSERT node.kind() = Json.NodeKind.nkText *>
+    <*ASSERT node.size() = 0 *>
+    <*ASSERT Text.Equal(node.name(),"root")  *>
+    <*ASSERT Text.Equal(node.value(),"name")  *>
+    IO.Put(node.format() & "\n");
+  END P1;
 
-  buf := "\"name\"";
-  node := Json.ParseBuf(buf);
-  <*ASSERT node # NIL *>
-  IO.Put(node.format() & "\n");
+PROCEDURE P2() =
+  VAR
+    buf : TEXT;
+    node,n1 : Json.T;
+  BEGIN
+    (* parsing - simple object with a text *)
+    buf := "{ \"name\" : \"john\" }";
+    node := Json.ParseBuf(buf);
+    <*ASSERT node # NIL *>
+    <*ASSERT node.kind() = Json.NodeKind.nkObject *>
+    <*ASSERT node.size() = 1 *>
+    <*ASSERT Text.Equal(node.name(),"root")  *>
+    <*ASSERT Text.Equal(node.value(),"_Obj_")  *>
+    n1 := node.find("name");
+    <*ASSERT n1 # NIL *>
+    <*ASSERT n1.kind() = Json.NodeKind.nkText *>
+    <*ASSERT n1.size() = 0 *>
+    <*ASSERT Text.Equal(n1.name(),"name")  *>
+    <*ASSERT Text.Equal(n1.value(),"john")  *>
+    IO.Put(node.format() & "\n");
+  END P2;
 
-  buf := "{ \"fred\" : \"myval\" }";
-  node := Json.ParseBuf(buf);
-  IO.Put(node.format() & "\n");
+PROCEDURE P3() =
+  VAR
+    buf : TEXT;
+    node,n1 : Json.T;
+  BEGIN
+    (* parsing - simple array *)
+    buf := "[1,2,\"name\",true,null,2.3e4]";
+    node := Json.ParseBuf(buf);
+    <*ASSERT node # NIL *>
+    <*ASSERT node.kind() = Json.NodeKind.nkArray *>
+    <*ASSERT node.size() = 6 *>
+    <*ASSERT Text.Equal(node.name(),"root")  *>
+    <*ASSERT Text.Equal(node.value(),"_Arr_")  *>
+    n1 := node.find("0");
+    <*ASSERT n1 # NIL *>
+    <*ASSERT n1.kind() = Json.NodeKind.nkInt *>
+    <*ASSERT n1.size() = 0 *>
+    <*ASSERT Text.Equal(n1.name(),"0")  *>
+    <*ASSERT Text.Equal(n1.value(),"1")  *>
+    n1 := node.find("2");
+    <*ASSERT n1 # NIL *>
+    <*ASSERT n1.kind() = Json.NodeKind.nkText *>
+    <*ASSERT n1.size() = 0 *>
+    <*ASSERT Text.Equal(n1.name(),"2")  *>
+    <*ASSERT Text.Equal(n1.value(),"name")  *>
+    n1 := node.find("3");
+    <*ASSERT n1 # NIL *>
+    <*ASSERT n1.kind() = Json.NodeKind.nkBool *>
+    <*ASSERT n1.size() = 0 *>
+    <*ASSERT Text.Equal(n1.name(),"3")  *>
+    <*ASSERT Text.Equal(n1.value(),"true")  *>
+    n1 := node.find("4");
+    <*ASSERT n1 # NIL *>
+    <*ASSERT n1.kind() = Json.NodeKind.nkNull *>
+    <*ASSERT n1.size() = 0 *>
+    <*ASSERT Text.Equal(n1.name(),"4")  *>
+    <*ASSERT Text.Equal(n1.value(),"null")  *>
+    n1 := node.find("5");
+    <*ASSERT n1 # NIL *>
+    <*ASSERT n1.kind() = Json.NodeKind.nkFloat *>
+    <*ASSERT n1.size() = 0 *>
+    <*ASSERT Text.Equal(n1.name(),"5")  *>
+    <*ASSERT Text.Equal(n1.value(),"2.3e4")  *>
+    IO.Put(node.format() & "\n");
+  END P3;
 
-  obj := "{ \"arr\" : [1,3,5,true,null,2.3e4] }";
-  node := Json.ParseBuf(obj);
-  <*ASSERT node.kind() = Json.NodeKind.nkObject *>
+PROCEDURE P4() =
+  VAR
+    buf : TEXT;
+    node,n1,n2 : Json.T;
+  BEGIN
+    (* parsing - object in object *)
+    buf := "{ \"someobj\" : { \"ABCD\" : \"value\"}}";
+    node := Json.ParseBuf(buf);
+    <*ASSERT node # NIL *>
+    <*ASSERT node.kind() = Json.NodeKind.nkObject *>
+    <*ASSERT node.size() = 1 *>
+    <*ASSERT Text.Equal(node.name(),"root")  *>
+    <*ASSERT Text.Equal(node.value(),"_Obj_")  *>
+    n1 := node.find("someobj");
+    <*ASSERT n1 # NIL *>
+    <*ASSERT n1.kind() = Json.NodeKind.nkObject *>
+    <*ASSERT n1.size() = 1 *>
+    <*ASSERT Text.Equal(n1.name(),"someobj")  *>
+    <*ASSERT Text.Equal(n1.value(),"_Obj_")  *>
+    n2 := n1.find("ABCD");
+    <*ASSERT n2 # NIL *>
+    <*ASSERT n2.kind() = Json.NodeKind.nkText *>
+    <*ASSERT n2.size() = 0 *>
+    <*ASSERT Text.Equal(n2.name(),"ABCD")  *>
+    <*ASSERT Text.Equal(n2.value(),"value")  *>
+    IO.Put(node.format() & "\n");
+  END P4;
 
-  arr := "[1,3,5,true,null,2.3e4]";
-  node := Json.ParseBuf(arr);
-  <*ASSERT node.kind() = Json.NodeKind.nkArray *>
+PROCEDURE P5() =
+  VAR
+    buf : TEXT;
+    node,n1,n2 : Json.T;
+  BEGIN
+    (* parsing - array in object *)
+    buf := "{ \"arr\" : [1,5,2.3e4] }";
+    node := Json.ParseBuf(buf);
+    <*ASSERT node # NIL *>
+    <*ASSERT node.kind() = Json.NodeKind.nkObject *>
+    <*ASSERT node.size() = 1 *>
+    <*ASSERT Text.Equal(node.name(),"root")  *>
+    <*ASSERT Text.Equal(node.value(),"_Obj_")  *>
+    n1 := node.find("arr");
+    <*ASSERT n1 # NIL *>
+    <*ASSERT n1.kind() = Json.NodeKind.nkArray *>
+    <*ASSERT n1.size() = 3 *>
+    <*ASSERT Text.Equal(n1.name(),"arr")  *>
+    <*ASSERT Text.Equal(n1.value(),"_Arr_")  *>
+    n2 := node.find("arr/0");
+    <*ASSERT n2 # NIL *>
+    <*ASSERT n2.kind() = Json.NodeKind.nkInt *>
+    <*ASSERT n2.size() = 0 *>
+    <*ASSERT Text.Equal(n2.name(),"0")  *>
+    <*ASSERT Text.Equal(n2.value(),"1")  *>
+    n2 := n1.find("0");
+    <*ASSERT n2 # NIL *>
+    <*ASSERT n2.kind() = Json.NodeKind.nkInt *>
+    <*ASSERT n2.size() = 0 *>
+    <*ASSERT Text.Equal(n2.name(),"0")  *>
+    <*ASSERT Text.Equal(n2.value(),"1")  *>
+    IO.Put(node.format() & "\n");
+  END P5;
 
-  obj := "{ \"myobj\" : { \"n1\\uABCD\" : \"n1val\"}}";
-  node := Json.ParseBuf(obj);
-  <*ASSERT node.kind() = Json.NodeKind.nkObject *>
+PROCEDURE P6() =
+  VAR
+    buf : TEXT;
+    node,n1 : Json.T;
+  BEGIN
+    (* array in array *)
+    buf := "[1,2,\"name\",true,[5,6,7],null,2.3e4]";
+    node := Json.ParseBuf(buf);
+    <*ASSERT node # NIL *>
+    <*ASSERT node.kind() = Json.NodeKind.nkArray *>
+    <*ASSERT node.size() = 7 *>
+    <*ASSERT Text.Equal(node.name(),"root")  *>
+    <*ASSERT Text.Equal(node.value(),"_Arr_")  *>
+    n1 := node.find("4");
+    <*ASSERT n1 # NIL *>
+    <*ASSERT n1.kind() = Json.NodeKind.nkArray *>
+    <*ASSERT n1.size() = 3 *>
+    <*ASSERT Text.Equal(n1.name(),"4")  *>
+    <*ASSERT Text.Equal(n1.value(),"_Arr_")  *>
+    n1 := node.find("4/2");
+    <*ASSERT n1 # NIL *>
+    <*ASSERT n1.kind() = Json.NodeKind.nkInt *>
+    <*ASSERT n1.size() = 0 *>
+    <*ASSERT Text.Equal(n1.name(),"2")  *>
+    <*ASSERT Text.Equal(n1.value(),"7")  *>
+  END P6;
 
-  obj := "{ \"arr\" : [1,3,5,\"txt\",true,null,2.3e4] }";
-  node := Json.ParseBuf(obj);
-  n3 := node.find("/arr");
-  <*ASSERT n3 # NIL *>
-  <*ASSERT n3.kind() = Json.NodeKind.nkArray *>
+PROCEDURE P7() =
+  VAR
+    buf : TEXT;
+    node,n1 : Json.T;
+  BEGIN
+    (* find stuff *)
+    buf := "{\"name\" : \"X\", \"A\" : {\"B\" : 55}, \"arr\" : [1,5,2.3e4] }";
+    node := Json.ParseBuf(buf);
+    <*ASSERT node # NIL *>
+    <*ASSERT node.kind() = Json.NodeKind.nkObject *>
+    <*ASSERT node.size() = 3 *>
+    n1 := node.find("/");
+    <*ASSERT n1 # NIL *>
+    <*ASSERT n1.kind() = Json.NodeKind.nkObject *>
+    <*ASSERT Text.Equal(n1.name(),"root")  *>
+    n1 := node.find("/name");
+    <*ASSERT n1 # NIL *>
+    <*ASSERT n1.kind() = Json.NodeKind.nkText *>
+    <*ASSERT Text.Equal(n1.name(),"name")  *>
+    n1 := node.find("name");
+    <*ASSERT n1 # NIL *>
+    <*ASSERT n1.kind() = Json.NodeKind.nkText *>
+    <*ASSERT Text.Equal(n1.name(),"name")  *>
+    n1 := node.find("A/B");
+    <*ASSERT n1 # NIL *>
+    <*ASSERT n1.kind() = Json.NodeKind.nkInt *>
+    <*ASSERT Text.Equal(n1.name(),"B")  *>
+    n1 := node.find("arr/1");
+    <*ASSERT n1 # NIL *>
+    <*ASSERT n1.kind() = Json.NodeKind.nkInt *>
+    <*ASSERT Text.Equal(n1.name(),"1")  *>
+    n1 := node.find("arr/9");
+    <*ASSERT n1 = NIL *>
+  END P7;
 
-  (* add an empty array *)
-  EVAL node.addArr("emptyarr");
-  IO.Put(node.format() & "\n");
+PROCEDURE P8() =
+  VAR
+    buf,txt : TEXT;
+    node,n1 : Json.T;
+    int : INTEGER;
+    bool : BOOLEAN;
+    float : LONGREAL;
+  BEGIN
+    (* get things and test conversions *)
+    buf := "[1,2,\"name\",true,[5,6,7],null,2.3e4]";
+    node := Json.ParseBuf(buf);
+    <*ASSERT node # NIL *>
+    <*ASSERT node.kind() = Json.NodeKind.nkArray *>
+    n1 := node.find("1");
+    <*ASSERT n1 # NIL *>
+    int := n1.getInt();
+    <*ASSERT int = 2 *>
+    n1 := node.find("2");
+    <*ASSERT n1 # NIL *>
+    txt := n1.value();
+    <*ASSERT Text.Equal(txt,"name") *>
+    n1 := node.find("3");
+    <*ASSERT n1 # NIL *>
+    bool := n1.getBool();
+    <*ASSERT bool = TRUE *>
+    n1 := node.find("4");
+    <*ASSERT n1 # NIL *>
+    <*ASSERT n1.kind() = Json.NodeKind.nkArray *>
+    n1 := node.find("6");
+    <*ASSERT n1 # NIL *>
+    float := n1.getFloat();
+    <*ASSERT float = 2.3D4 *>
+    n1 := node.find("2");
+    <*ASSERT n1 # NIL *>
+    TRY
+      int := n1.getInt();
+      <*ASSERT FALSE *>
+    EXCEPT
+    | Json.E => 
+    END;
+  END P8;
 
-  (* add the n3 array which duplicates the array *)
-  EVAL node.addArr("myarr",n3);
-  IO.Put(node.format() & "\n");
+PROCEDURE P9() =
+  VAR
+    buf : TEXT;
+    node,n1 : Json.T;
+  BEGIN
+    (* simple node additions *)
+    buf := "{}";
+    node := Json.ParseBuf(buf);
+    <*ASSERT node # NIL *>
+    <*ASSERT node.kind() = Json.NodeKind.nkObject *>
+    n1 := node.addText("email","fred@gmail.com");
+    <*ASSERT Text.Equal(n1.value(),"fred@gmail.com") *>
+    n1 := node.addInt("number",1234567);
+    <*ASSERT Text.Equal(n1.value(),"1234567") *>
+    n1 := node.addFloat("float",-2356.323D3);
+    <*ASSERT Text.Equal(n1.value(),"-2.356323e6") *>
+    n1 := node.addBool("istrue",TRUE);
+    <*ASSERT Text.Equal(n1.value(),"true") *>
+    <*ASSERT n1.getBool() = TRUE *>
+    n1 := node.addBool("isfalse",FALSE);
+    <*ASSERT Text.Equal(n1.value(),"false") *>
+    <*ASSERT n1.getBool() = FALSE *>
+    n1 := node.addNull("isnull");
+    <*ASSERT Text.Equal(n1.value(),"null") *>
+    (* adding with the same name replaces the original *)
+    EVAL node.addInt("number",9876);
+    n1 := node.find("number");
+    <*ASSERT Text.Equal(n1.value(),"9876") *>
+    IO.Put(node.format() & "\n");
+  END P9;
 
-  obj := "{ \"myobj\" : { \"n1\\uABCD\" : \"n1val\"}}";
-  n3 := Json.ParseBuf(obj);
-  IO.Put(n3.format() & "\n");
-  n3 := n3.find("/myobj");
+PROCEDURE P10() =
+  VAR
+    buf : TEXT;
+    node,n1,n2 : Json.T;
+  BEGIN
+    (* array additions *)
+    buf := "[1,[],2,\"name\",true,[5,6,7],null,2.3e4]";
+    node := Json.ParseBuf(buf);
+    <*ASSERT node # NIL *>
+    <*ASSERT node.kind() = Json.NodeKind.nkArray *>
+    n1 := node.addText("","test");
+    <*ASSERT n1 # NIL AND Text.Equal(n1.value(),"test") AND node.size() = 9 *>
+    n2 := node.find("5");
+    <*ASSERT n2.kind() = Json.NodeKind.nkArray *>
+    n1 := n2.addInt("",9999);
+    <*ASSERT n1 # NIL AND n1.getInt() = 9999 AND n2.size() = 4 *>
+    IO.Put(node.format() & "\n");
+    (* array in object *)
+    buf := "{ \"arr\" :[1,2] }";
+    node := Json.ParseBuf(buf);
+    (* this replaces the existing arr with new type text *)
+    n1 := node.addText("arr","newtext");
+    <*ASSERT n1.kind() = Json.NodeKind.nkText *>
+    IO.Put(node.format() & "\n");
+  END P10;
 
-  (* replace arr with myobj *)
-  node.updateArrObj("myarr",n3);
-  IO.Put(node.format() & "\n");
+PROCEDURE P11() =
+  VAR
+    buf : TEXT;
+    node : Json.T;
+  BEGIN
+    (* simple node updates *)
+    buf := "{\"email\" : \"X\", \"number\" : 23, \"float\" : 2.3e4, \"istrue\" : true, \"isfalse\" : false, \"isnull\" : null }";
+    node := Json.ParseBuf(buf);
+    <*ASSERT node # NIL *>
+    node.updateText("email","bob@hotmail.com");
+    node.updateInt("number",98765);
+    node.updateFloat("float",1.23d1);
+    node.updateBool("istrue",TRUE);
+    node.updateBool("isfalse",FALSE);
+    IO.Put(node.format() & "\n");
+  END P11;
 
-  obj := "{\"name1\" : \"val1\" , \"name2\" : \"val2\"}";
-  node := Json.ParseBuf(obj);
-  n2 := FindText(node,"name2");
-  <*ASSERT n2 # NIL *>
+PROCEDURE P12() =
+  VAR
+    buf : TEXT;
+    node,n1,n2 : Json.T;
+  BEGIN
+    (* update array *)
+    buf := "[1,2,\"name\",true,[5,6,7],null,2.3e4]";
+    node := Json.ParseBuf(buf);
+    <*ASSERT node # NIL *>
+    <*ASSERT node.kind() = Json.NodeKind.nkArray *>
+    buf := "{\"fred\" : \"sam\"}";
+    n1 := Json.ParseBuf(buf);
+    (* update an array element with an object *)
+    node.updateArrObj("6",n1);
+    node.updateArrObj("4/2",n1);
+    (* update an array element with an array *)
+    buf := "[true,false,null]";
+    n2 := Json.ParseBuf(buf);
+    <*ASSERT n2.kind() = Json.NodeKind.nkArray *>
+    node.updateArrObj("1",n2);
+    n1 := node.find("1");
+    <*ASSERT n1.kind() = Json.NodeKind.nkArray *>
+    (* update an array element with a text *)
+    node.updateText("2","12 main st");
+    (* update an array element with an int *)
+    node.updateInt("4/1",777);
+    IO.Put(node.format() & "\n");
+  END P12;
 
-  (* simple node additions *)
-  EVAL node.addText("email","fred@gmail.com");
-  EVAL node.addInt("number",1234567);
-  EVAL node.addFloat("float",-2356.323D3);
-  EVAL node.addBool("istrue",TRUE);
-  EVAL node.addBool("isfalse",FALSE);
-  EVAL node.addNull("isnull");
-  IO.Put(node.format() & "\n");
+PROCEDURE P13() =
+  VAR
+    buf : TEXT;
+    node,n1 : Json.T;
+  BEGIN
+    (* update object *)
+    buf := "{\"A\" : \"X\", \"B\" : {\"C\" : 55}, \"D\" : 11, \"arr\" : [1,5,2.3e4] }";
+    node := Json.ParseBuf(buf);
+    <*ASSERT node # NIL *>
+    <*ASSERT node.kind() = Json.NodeKind.nkObject *>
+    buf := "{\"fred\" : \"sam\"}";
+    n1 := Json.ParseBuf(buf);
+    (* update an array element with an object *)
+    node.updateArrObj("D",n1);
+    node.updateArrObj("B/C",n1);
+    (* update an array element with an array *)
+    IO.Put(node.format() & "\n");
+  END P13;
 
-  (* find and convert *)
-  n2 := node.find("/float");
-  pval := Scan.Real(n2.value());
-  IO.Put("found number "); IO.PutReal(pval); IO.Put("\n");
+PROCEDURE P14() =
+  VAR
+    buf : TEXT;
+    node,n1 : Json.T;
+  BEGIN
+    (* deletes *)
+    buf := "{\"name\" : \"X\", \"A\" : {\"B\" : 55}, \"arr\" : [1,5,2.3e4] }";
+    node := Json.ParseBuf(buf);
+    <*ASSERT node # NIL *>
+    <*ASSERT node.kind() = Json.NodeKind.nkObject *>
+    n1 := node.delete("name");
+    <*ASSERT n1 # NIL AND Text.Equal(n1.value(),"X") AND node.size() = 2 *>
+    n1 := node.delete("A/B");
+    <*ASSERT n1 # NIL AND Text.Equal(n1.value(),"55")
+        AND node.size() = 2 AND n1.size() = 0 *>
+    (* delete second elt of arr *)
+    n1 := node.delete("arr/1");
+    <*ASSERT n1 # NIL AND Text.Equal(n1.value(),"5")
+        AND node.size() = 2 AND n1.size() = 0 *>
+    (* delete object A *)
+    n1 := node.delete("A");
+    <*ASSERT n1 # NIL AND node.size() = 1 AND n1.size() = 0 *>
+    IO.Put(node.format() & "\n");
+  END P14;
 
-  (* simple node updates *)
-  node.updateText("email","bob@hotmail.com");
-  node.updateInt("number",98765);
-  node.updateFloat("float",1.23d1);
-  node.updateBool("istrue",FALSE);
-  node.updateBool("isfalse",TRUE);
-  IO.Put(node.format() & "\n");
+PROCEDURE P15() =
+  VAR
+    buf : TEXT;
+    node,n1,n2 : Json.T;
+  BEGIN
+    (* misc *)
+    buf := "{\"name\" : \"X\", \"A\" : {\"B\" : 55}, \"arr\" : [1,5,2.3e4] }";
+    node := Json.ParseBuf(buf);
+    <*ASSERT node # NIL *>
+    <*ASSERT node.kind() = Json.NodeKind.nkObject *>
+    (* copy a node *)
+    n1 := node.copy();
+    <*ASSERT n1 # NIL AND node.size() = n1.size() *>
+    n2 := n1.root();
+    (* delete entire tree *)
+    n2.clear();
+    <*ASSERT n2 # NIL AND n2.size() = 0 *>
+    IO.Put(n2.rawText() & "\n");
+  END P15;
 
-  (* simple delete n2 contains deleted node *)
-  n2 := node.delete("isfalse"); 
-  IO.Put(node.format() & "\n");
+PROCEDURE P16() =
+  VAR
+    buf,name : TEXT;
+    node,n1 : Json.T;
+    iter : Json.Iterator;
+  BEGIN
+    (* iterator test *)
+    buf := "{\"name\" : \"X\", \"A\" : {\"B\" : 55}, \"arr\" : [1,5,2.3e4] }";
+    node := Json.ParseBuf(buf);
+    iter := node.iterate();
+    WHILE iter.next(name,n1) DO
+      IO.Put("name:" & name & " kind " & Json.NK[n1.kind()] & "\n");
+    END;
 
-  (* overwrite number as it already exists *)
-  n2 := node.addInt("number",3334);
-  n2 := n2.addInt("number",3334); (* error returns nil n2 is not an object*)
-  <*ASSERT n2 = NIL *>
-  IO.Put(node.format() & "\n");
+    IterAll(node.root());
+  END P16;
 
-  (* tests on json file *)
-  node := Json.ParseFile("json.txt");
-  IO.Put(node.rawText() & "\n");
-  IO.Put(node.format() & "\n");
+PROCEDURE P17() =
+  VAR
+    rd : Rd.T;
+    wrt : Wr.T;
+    buf : TEXT;
+    node,n1 : Json.T;
+  BEGIN
+    (* pickle test *)
+    buf := "{\"name\" : \"X\", \"A\" : {\"B\" : 55}, \"arr\" : [1,5,2.3e4] }";
+    node := Json.ParseBuf(buf);
+    wrt := IO.OpenWrite("json.pkl");
+    Pickle2.Write(wrt,node);
+    Wr.Close(wrt);
+    rd := IO.OpenRead("json.pkl");
+    n1 := NARROW(Pickle2.Read(rd), Json.T);
+    Rd.Close(rd);
+    IO.Put(n1.root().format() & "\n");
+  END P17;
 
-  n2 := FindText(node,"/params/contentChanges/0/text"); (* return object *)
-  <*ASSERT n2 # NIL *>
-  IO.Put(n2.value());
+PROCEDURE P19() =
+  VAR
+    node,n2,n3 : Json.T;
+  BEGIN
+    (* tests on json file - produces a lot of output *)
+    node := Json.ParseFile("json.txt");
+    IO.Put("root size " & Fmt.Int(node.size()) & "\n");
+    n2 := FindText(node,"/billTo"); (* return object *)
+    IO.Put("billto size " & Fmt.Int(n2.size()) & "\n");
+    n3 := FindText(node,"nothing");
+    IO.Put("nothing size " & Fmt.Int(n3.size()) & "\n");
+    (* dont need / before first search term *)
+    n3 := FindText(n2,"address");
+    IO.Put("address size " & Fmt.Int(n3.size()) & "\n");
+    n3 := FindText(n2,"/address");
+    n3 := FindText(n2,"names/second");
+    n2 := FindText(node,"nest");
+    n3 := FindText(n2,"0");
+    (* array of array same as [0,0] *)
+    n3 := FindText(n2,"0/0");
+    (* find all elts of array *)
+    IO.Put("size " & Fmt.Int(n2.size()) & "\n");
+    FOR i := 0 TO n2.size() - 1 DO
+      n3 := FindText(n2,Fmt.Int(i));
+    END;
 
-  n2 := FindText(node,"/"); (* return object *)
-  n2 := FindText(node,"/billTo"); (* return object *)
-  n2 := FindText(n2,"zip");
+    IO.Put(node.format() & "\n");
+    n3 := FindText(node,"/billTo");
 
-  EVAL node.addText("email","fred@gmail.com");
-  EVAL node.addInt("number",3334);
-  n2 := n2.addInt("number2",3334); (* error returns nil *)
-  <*ASSERT n2 = NIL *>
-  n2 := node.addFloat("float",-2356.323D302);
-  n2 := node.addNull("mynull");
-  node.updateText("city","Paris");
+    (* this replaces the object replaceme in node with billTo but
+       the new node is named billTo *)
+    node.updateArrObj("replaceme",n3);
 
-  n2 := FindText(node,"/billTo/surcharge");
-  n2 := FindText(node,"/addr");
-  n2 := FindText(node,"/name");
-  n2 := FindText(node,"/price");
-  pval := Scan.Real(n2.value());
+    IO.Put(node.rawText() & "\n");
 
-  n2 := FindText(node,"/cars"); (* second elt of cars *)
-  <*ASSERT n2 # NIL AND n2.kind() = Json.NodeKind.nkArray *>
-  n2 := FindText(node,"/cars/1"); (* second elt of cars *)
-  <*ASSERT n2 # NIL AND n2.kind() = Json.NodeKind.nkText *>
-  n2 := FindText(node,"/billTo/name");
-  <*ASSERT n2 # NIL AND n2.kind() = Json.NodeKind.nkText *>
-  n2 := FindText(node,"/billTo/testnotfound"); (* returns nil *)
-  <*ASSERT n2 = NIL  *>
-  n2 := FindText(node,"/billTo/names/first");
-  <*ASSERT n2 # NIL AND n2.kind() = Json.NodeKind.nkText *>
+    n2 := FindText(node,"/params/contentChanges/0/text"); (* return object *)
+    <*ASSERT n2 # NIL *>
+    IO.Put(n2.value());
 
-  n2 := FindText(node,"/billTo");
-  <*ASSERT n2 # NIL AND n2.kind() = Json.NodeKind.nkObject *>
-  n3 := n2.delete("state"); (* single node *)
-  <*ASSERT n3 # NIL AND n3.kind() = Json.NodeKind.nkText *>
-  n3 := n2.delete("names"); (* struct node *)
-  <*ASSERT n3 # NIL AND n3.kind() = Json.NodeKind.nkObject *>
+    n2 := FindText(node,"/"); (* return object *)
+    n2 := FindText(node,"/billTo"); (* return object *)
+    n2 := FindText(n2,"zip");
 
-  (* delete 3rd item of array cars which must be a string rep of index*)
-  n2 := FindText(node,"/cars");
-  <*ASSERT n2 # NIL AND n2.kind() = Json.NodeKind.nkArray *>
-  n3 := n2.delete("2"); (* 3rd element *)
+    n2 := FindText(node,"/cars"); (* second elt of cars *)
+    <*ASSERT n2 # NIL AND n2.kind() = Json.NodeKind.nkArray *>
+    n2 := FindText(node,"/cars/1"); (* second elt of cars *)
+    <*ASSERT n2 # NIL AND n2.kind() = Json.NodeKind.nkText *>
+    n2 := FindText(node,"/billTo/name");
+    <*ASSERT n2 # NIL AND n2.kind() = Json.NodeKind.nkText *>
+    n2 := FindText(node,"/billTo/testnotfound"); (* returns nil *)
+    <*ASSERT n2 = NIL  *>
+    n2 := FindText(node,"/billTo/names/first");
+    <*ASSERT n2 # NIL AND n2.kind() = Json.NodeKind.nkText *>
 
-  IO.Put(node.format() & "\n");
-  n2 := FindText(node,"/");
-  <*ASSERT n2 # NIL AND n2.kind() = Json.NodeKind.nkObject AND Text.Equal(n2.name(),"root") *>
+    n2 := FindText(node,"/billTo");
+    <*ASSERT n2 # NIL AND n2.kind() = Json.NodeKind.nkObject *>
+    n3 := n2.delete("state"); (* single node *)
+    <*ASSERT n3 # NIL AND n3.kind() = Json.NodeKind.nkText *>
+    n3 := n2.delete("names"); (* struct node *)
+    <*ASSERT n3 # NIL AND n3.kind() = Json.NodeKind.nkObject *>
 
-  n2 := node.find("/shipTo");
-  IF n2 # NIL THEN
-    EVAL n2.delete("name");
-  END;
-  IO.Put(node.format() & "\n");
+    (* delete 3rd item of array cars which must be a string rep of index*)
+    n2 := FindText(node,"/cars");
+    <*ASSERT n2 # NIL AND n2.kind() = Json.NodeKind.nkArray *>
+    n3 := n2.delete("2"); (* 3rd element *)
 
-  node := node.root();
-  (* delete shipto object node from main tree and add to billto *)
-  n2 := node.delete("shipTo");
-  n3 := node.find("/billTo");
-  EVAL n3.addObj("ignoreme",n2);
-  IO.Put(node.format() & "\n");
+    IO.Put(node.format() & "\n");
+    n2 := FindText(node,"/");
+    <*ASSERT n2 # NIL AND n2.kind() = Json.NodeKind.nkObject AND Text.Equal(n2.name(),"root") *>
 
-  (* nodes within nodes *)
-  node := node.find("/nest");
-  node := node.addObj("firstobject");
-  node := node.addObj("newobject");
-  node := node.addObj("newobject");
-  n2 := node.addInt("secondnumber",3334);
+    n2 := node.find("/shipTo");
+    IF n2 # NIL THEN
+      EVAL n2.delete("name");
+    END;
+    IO.Put(node.format() & "\n");
+  END P19;
 
-  node := node.root().find("/billTo");
-  n2 := node.addArr("NewArr");
-  n2 := n2.addText("noname","FIRST");
-  
-  IO.Put(node.root().format() & "\n");
-
-  (* pickle test *)
-  wrt := IO.OpenWrite("json.pkl");
-  Pickle2.Write(wrt,n2);
-  Wr.Close(wrt);
-  rd := IO.OpenRead("json.pkl");
-  r := NARROW(Pickle2.Read(rd), Json.T);
-  IO.Put(r.root().format() & "\n");
-
-  (* iterator test *)
-  n2 := node.root().find("/cars");
-  iter := n2.iterate();
-  WHILE iter.next(name,n3) DO
-    IO.Put(name & " kind " & Json.NK[n3.kind()] & "\n");
-  END;
-
-  IterAll(node.root());
-END TestParser;
-
-(*
-PROCEDURE TestSuite() =
+PROCEDURE P20() =
   VAR
     jsonParser : Json.T;
     iter : FS.Iterator;
@@ -244,7 +593,7 @@ PROCEDURE TestSuite() =
     rd : Rd.T;
   BEGIN
 (*
-  iterate over a directory and parse files.
+  Iterate over a directory and parse files.
   Used in the Json test directory.
 *)
     jsonParser := NEW(Json.T);
@@ -258,12 +607,29 @@ PROCEDURE TestSuite() =
       IO.Put(txt);
       res := iter.next(f);
     END;
-  END TestSuite;
-*)
+  END P20;
 
 BEGIN
-
-  TestParser();
-
+  P1();
+  P2();
+  P3();
+  P4();
+  P5();
+  P6();
+  P7();
+  P8();
+  P9();
+  P10();
+  P11();
+  P12();
+  P13();
+  P14();
+  P15();
+  P16();
+  P17();
+(* 
+  P19();
+  P20();
+*)
 END Main.
 

@@ -28,19 +28,23 @@ TYPE
     name() : TEXT;
     value() : TEXT;
     kind() : NodeKind;
+    size() : CARDINAL;
     format() : TEXT;
     rawText() : TEXT;
     find(path : TEXT) : T;
-    getInt() : INTEGER;
-    getFloat() : LONGREAL;
-    getBool() : BOOLEAN;
-    addText(name,value : TEXT) : T;
-    addInt(name : TEXT; value : INTEGER) : T;
-    addFloat(name : TEXT; value : LONGREAL) : T;
-    addBool(name : TEXT; value : BOOLEAN) : T;
-    addNull(name : TEXT) : T;
-    addObj(name : TEXT; obj : T := NIL) : T;
-    addArr(name : TEXT; arr : T := NIL) : T;
+    copy() : T;
+    root() : T;
+    clear();
+    getInt() : INTEGER RAISES {E};
+    getFloat() : LONGREAL RAISES {E};
+    getBool() : BOOLEAN RAISES {E};
+    addText(name,value : TEXT) : T RAISES {E};
+    addInt(name : TEXT; value : INTEGER) : T RAISES {E};
+    addFloat(name : TEXT; value : LONGREAL) : T RAISES {E};
+    addBool(name : TEXT; value : BOOLEAN) : T RAISES {E};
+    addNull(name : TEXT) : T RAISES {E};
+    addObj(name : TEXT; obj : T := NIL) : T RAISES {E};
+    addArr(name : TEXT; arr : T := NIL) : T RAISES {E};
     updateText(name,value : TEXT);
     updateInt(name : TEXT; value : INTEGER);
     updateBool(name : TEXT; value : BOOLEAN);
@@ -48,8 +52,6 @@ TYPE
     updateArrObj(name : TEXT; value : T);
     delete(name : TEXT) : T;
     iterate() : Iterator;
-    clear();
-    root() : T;
   END;
 
   Iterator = OBJECT METHODS
@@ -87,20 +89,34 @@ END Json.
      "name": "sam",
      "obj": {
         "elt1": "hydrogen",
-        "elt2": "oxygen"a},
-     "arr1": [red,yellow,blue]
+        "elt2": "oxygen",
+        "number" : 23
+      },
+     "arr1": [
+       "red",
+       "yellow",
+       "blue",
+       "green",
+       9,
+       8
+     ]
    }"
 
-  The call "json.format" returns the raw textual representation of the
+  The call "json.rawText" returns the raw textual representation of the
   json tree.
 
   The call "json.find" returns the node which matches the path. A path is
   defined as a sequence of names separated by "/" much like a unix directory
-  path. eg the path "/obj/elt2" would return the text node for "elt2" in
-  the previous example. 
+  path. To refer to an array element use the text format of the index.
+
+  eg the path "/obj/elt2" would return the text node for "elt2" in
+  the previous example, whose value is "oxygen".
+  Similarly "/arr1/2" would refer to the "blue" item above.  
 
   The call "json.addText(name,value)" adds a text node with the value "value"
   the node can only be added to a structured node array or object.
+  If the name already exists in the structured object then it is
+  replaced. The new value does not have to be the same type.
 
   Similarly the other calls except addObj and addArr add the appropriate
   typed node with a conversion of the value argument to a text. eg
@@ -112,21 +128,30 @@ END Json.
   The call "json.addArr(name,arr := NIL) adds an array. If arr is NIL the
   node added to json is empty otherwise the arr becomes a child of json.
 
-  The calls updateText, updateInt, updateBool, updateFloat update the node
-  whose name is name with the new value value.
+  The call "updateText(name, value)" updates the node whose name is name
+  with the new value "value". The "name" can be a path to directly update
+  nested objects and arrays. The same applies to updateInt, updateBool,
+  updateFloat except the value is converted to text before the update
+  is done.
 
   The call "json.updateArrObj(name, value)" updates the node json with
   name "name" with the new value "value", overwriting the old value.
+  Value must be an object or array. It can overwrite any other type.
 
   The call "json.delete(name)" deletes the child node named "name" of json.
+  As with update the name can be a path to simplify deletion of nested nodes.
 
   The call "json.iterate" returns a new iterator of the node json.
   The iterator calls "next(name,value)" return the next name and value
   until it returns false.
 
-  The call "json.clear" deletes all children of json.
+  The call "json.size()" returns the number of children of json.
 
-  The call "json.root" returns the root node of the tree of nodes.
+  The call "json.copy()" returns a copy of the json tree.
+
+  The call "json.clear()" deletes all children of json.
+
+  The call "json.root()" returns the root node of the tree of nodes.
   
   The procedure ParseFile(f) parses the input file "f" and returns a 
   root node of a tree of json nodes if successful. Otherwise it raises 
