@@ -1,0 +1,7 @@
+import("libm3")
+import("fft")
+
+implementation("Main")
+
+program("test")
+
