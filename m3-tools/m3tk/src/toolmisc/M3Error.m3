@@ -32,6 +32,7 @@ IMPORT M3AST_LX_F, (*M3AST_AS_F,*) M3AST_SM_F, M3AST_TM_F, M3AST_FE_priv_F;
 
 IMPORT M3CSrcPos, M3CId, M3CUnit, M3ASTWalk;
 IMPORT M3Assert;
+IMPORT RefSeq;
 
 (* This version records error message strings in a hash table, and records
    nodes with errors on a list, plus the args if any. 
@@ -44,6 +45,7 @@ VAR
   cu_g: M3AST_AS.Compilation_Unit := NIL;
   stream_g: Wr.T := Stdio.stderr;
   warn_g := TRUE;
+  errSeq := NEW(RefSeq.T).init();
 
 REVEAL Notification = Notification_public BRANDED OBJECT END;
 
@@ -292,6 +294,7 @@ PROCEDURE PutError(name: TEXT; pos: M3CSrcPos.T;
   VAR
     line, linePos: CARDINAL;
     t, messageWithIds: TEXT;
+    refErr : RefErr;
   BEGIN
     t := Fmt.F("\"%s\"", name);
     IF pos # M3CSrcPos.Null THEN
@@ -315,7 +318,19 @@ PROCEDURE PutError(name: TEXT; pos: M3CSrcPos.T;
     WITH err = stream_g DO
       Wr.PutText(err, t); Wr.PutChar(err, '\n');
     END;
+
+    refErr := NEW(RefErr);
+    refErr.name := name;
+    refErr.msg := messageWithIds;
+    refErr.line := line;
+    refErr.col := linePos;
+    errSeq.addhi(refErr);
   END PutError;
+
+PROCEDURE GetErrSeq() : RefSeq.T =
+  BEGIN
+    RETURN errSeq;
+  END GetErrSeq;
 
 PROCEDURE SafeIdToText(id: M3AST_LX.Symbol_rep): TEXT RAISES {}=
   BEGIN

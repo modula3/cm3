@@ -21,6 +21,7 @@ INTERFACE M3Error;
 
 IMPORT M3AST_LX, M3AST_AS;
 IMPORT M3CSrcPos;
+IMPORT RefSeq;
 
 (* This interface supports the reporting and subsequent display
    of errors. Errors can be reported with reference to source
@@ -77,6 +78,22 @@ in the current unit. The error is forgotten unless 'forget = FALSE'. *)
 PROCEDURE ShowAll(n: ERROR_NODE; forget := TRUE) RAISES {};
 (* Calls 'Show' for the entire subtree rooted at 'n', in the current
    unit. *)
+
+TYPE
+  ErrRec = RECORD
+    name : TEXT;
+    msg : TEXT;
+    line : INTEGER;
+    col : INTEGER;
+  END;
+  RefErr = REF ErrRec;
+
+PROCEDURE GetErrSeq() : RefSeq.T;
+(* Retrive the sequence or errors from last compile. The sequence is of type
+   RefErr. Clients are expected to remove items from the sequence once
+   processed. One use of this error sequence is for language servers
+   which dont wish to parse the normal text based error stream. Note that
+   the sequence is not monitored. *) 
 
 TYPE
   Notification <: Notification_public;
