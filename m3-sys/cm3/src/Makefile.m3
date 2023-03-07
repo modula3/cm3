@@ -289,6 +289,9 @@ PROCEDURE ConvertOption (VAR s: State;  arg: TEXT;  arg_len: INTEGER)
                M3Timers.Start ();  ok := TRUE;
              ELSIF Text.Equal (arg, "-trace") THEN
                Out (wr, "TRACE_INSTR()");  ok := TRUE;
+             ELSIF Text.Equal (arg, "-tfile") THEN
+               (* special flag to generate the .M3IMPTAB file *)
+               Out (wr, "TFILE = TRUE");  ok := TRUE;
              END;
 
     | 'v' => IF Text.Equal (arg, "-verbose") THEN
@@ -717,6 +720,7 @@ CONST
     "  -gui           produce a Windows GUI subsystem program",
     "  -windows       produce a Windows GUI subsystem program",
     "  -pretend <val> pretend to run as CM3_Version <val>",
+    "  -tfile         generate the .M3IMPTAB file",
     "  -gw            install group writable files",
     "  -group-writable \"",
     "  -pb <n>        allow <n> parallelism in running back-end (experimental)",

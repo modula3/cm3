@@ -1518,6 +1518,11 @@ PROCEDURE BuildProgram (t: T;  nm: M3ID.T)
   CONST Junk = ARRAY OF TEXT { ".map", ".lst", ".pdb" };
   VAR name := M3ID.ToText (nm);
   BEGIN
+    (* if we detect this flag just generate the .M3IMPTAB file and return *)
+    IF GetConfigBool (t, "TFILE") THEN
+      DoGenTFile(t,0);
+      RETURN;
+    END;
     (*** AddDerived (t, nm, UK.EXE, hidden := TRUE);  -- not needed ***)
     GenM3Exports (t, "_define_pgm(\"" & name & QRPCR);
     IF (t.mode = MM.Build) THEN
