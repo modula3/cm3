@@ -706,7 +706,9 @@ PROCEDURE PrintTypeSpec(s: IO.Stream; t: M3AST_AS.TYPE_SPEC) RAISES {IO.Error}=
     ELSE
     END;
     IF t.tmp_unit_id # NIL THEN
-      line := M3CSrcPos.Unpack(t.lx_srcpos, column);
+      line := t.lx_srcpos.line;
+      column := t.lx_srcpos.col;
+
       cu := NARROW(t.tmp_unit_id.sm_spec, M3AST_AS.UNIT).sm_comp_unit;
       IO.PutF(s, "  File \'%s\' line %s column %s\n",
           M3CUnit.TextName(cu.fe_uid), Fmt.Int(line), Fmt.Int(column));

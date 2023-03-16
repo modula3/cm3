@@ -1027,6 +1027,14 @@ PROCEDURE Compare_C(e1, e2: M3AST_SM.Exp_value): INTEGER RAISES {}=
             ELSE
               RETURN 1
             END; (* if *)
+        | Longint_value(eiv2) =>
+            IF VAL(eiv1.sm_value,LONGINT) = eiv2.sm_value THEN
+              RETURN 0
+            ELSIF VAL(eiv1.sm_value,LONGINT) < eiv2.sm_value THEN
+              RETURN -1
+            ELSE
+              RETURN 1
+            END; (* if *)
         ELSE
           RETURN 1;
         END;
@@ -1037,6 +1045,14 @@ PROCEDURE Compare_C(e1, e2: M3AST_SM.Exp_value): INTEGER RAISES {}=
             IF eiv1.sm_value = eiv2.sm_value THEN
               RETURN 0
             ELSIF eiv1.sm_value < eiv2.sm_value THEN
+              RETURN -1
+            ELSE
+              RETURN 1
+            END; (* if *)
+        | Integer_value(eiv2) =>
+            IF eiv1.sm_value = VAL(eiv2.sm_value,LONGINT) THEN
+              RETURN 0
+            ELSIF eiv1.sm_value < VAL(eiv2.sm_value,LONGINT) THEN
               RETURN -1
             ELSE
               RETURN 1

@@ -85,6 +85,7 @@ TYPE
     msg : TEXT;
     line : INTEGER;
     col : INTEGER;
+    len : INTEGER;
   END;
   RefErr = REF ErrRec;
 

@@ -37,6 +37,8 @@ IMPORT M3Assert;
 IMPORT M3LTypeEquiv, M3CTypesMisc;
 IMPORT M3LTypeSpecToText, M3LFingerPrint;
 
+IMPORT M3CSrcPos;
+
 (* We keep a list of opaque types so that we can quickly set their
    typecode to that of the concrete counterpart.
 *)
@@ -241,11 +243,11 @@ PROCEDURE GetHackUniqueId(t: M3AST_AS.TYPE_SPEC): INTEGER RAISES {}=
         cu := t.tmp_unit_id.sm_spec.sm_comp_unit;
         ri: REF INTEGER := PropertyV.Get(cu.tl_pset, TYPECODE(REF INTEGER));
       BEGIN
-        M3Assert.Check(t.lx_srcpos # 0);
+        M3Assert.Check(t.lx_srcpos #  M3CSrcPos.Null);
         x := ri^;
       END;
     END;
-    RETURN Word.Or(Word.Shift(x, 16), t.lx_srcpos);
+    RETURN Word.Or(Word.Shift(x, 16), M3CSrcPos.Hash(t.lx_srcpos));
   END GetHackUniqueId;
 
 BEGIN

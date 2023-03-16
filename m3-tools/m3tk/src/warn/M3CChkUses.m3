@@ -32,6 +32,8 @@ IMPORT M3AST_LX_F, M3AST_AS_F, M3AST_SM_F, M3AST_TM_F;
 IMPORT SeqM3AST_AS_DECL_REVL;
 IMPORT M3Error;
 
+IMPORT M3CSrcPos;
+
 CONST
   DefIdTableSize = 256;
 
@@ -75,12 +77,12 @@ PROCEDURE AddDefId(
       d := NEW(Import, defId := defId, usedId := usedId);
     END;
     (* Assert: not in the table already *)
-    IF h.table.get(defId.lx_srcpos, ra) THEN
+    IF h.table.get(M3CSrcPos.Hash(defId.lx_srcpos), ra) THEN
       (* lx_srcpos clash *)
       l := NARROW(ra, DefIdList);
     ELSE
       l := NEW(DefIdList);
-      EVAL h.table.put(defId.lx_srcpos, l);
+      EVAL h.table.put(M3CSrcPos.Hash(defId.lx_srcpos), l);
     END;
     l^ := RefList.Cons(d, l^);
     RETURN d;
@@ -99,7 +101,7 @@ PROCEDURE Lookup(
   BEGIN
     (* cant hash references with a copying collector, so hash on
     source position and then use straight comparisions *)
-    IF h.table.get(defId.lx_srcpos, ra) THEN
+    IF h.table.get(M3CSrcPos.Hash(defId.lx_srcpos), ra) THEN
       l := NARROW(ra, DefIdList);
       dl := l^;
       WHILE dl # NIL DO

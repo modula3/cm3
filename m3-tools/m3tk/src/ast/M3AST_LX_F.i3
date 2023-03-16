@@ -9,7 +9,7 @@ IMPORT SeqM3AST_LX_SRC_NODE;
 
 TYPE
   SRC_NODE = M3AST.NODE OBJECT
-    lx_srcpos: M3AST_LX.SrcPos := 0;
+    lx_srcpos: M3AST_LX.SrcPos;
   END;
 
   SRC_NODE_C = M3AST_LX.SRC_NODE OBJECT

@@ -23,26 +23,24 @@ CONST
   PackingFactor = 1024;
   MaxOffset = PackingFactor - 1;
   
-
-
-<*INLINE*> PROCEDURE Pack(line, offset: CARDINAL): T RAISES {}=
+PROCEDURE Hash(t : T) : INTEGER =
   BEGIN
-    RETURN line * PackingFactor + MIN(MaxOffset, offset);
-  END Pack;
+    RETURN t.line * PackingFactor + MIN(MaxOffset, t.col);
+  END Hash;
 
-
-<*INLINE*> PROCEDURE Unpack(t: T; VAR offset: CARDINAL): CARDINAL RAISES {}=
+<*INLINE*> PROCEDURE Set(line, offset, len: CARDINAL): T RAISES {}=
+  VAR t : T;
   BEGIN
-    offset := t MOD PackingFactor;
-    RETURN t DIV PackingFactor;
-  END Unpack;
-
+    t.line := line;
+    t.col := offset;
+    t.len := len;
+    RETURN t;
+  END Set;
 
 PROCEDURE Compare(pos1, pos2: T): INTEGER RAISES {}=
   BEGIN
-    RETURN pos1 - pos2;
+    RETURN Hash(pos1) - Hash(pos2);
   END Compare;
-
 
 BEGIN
 

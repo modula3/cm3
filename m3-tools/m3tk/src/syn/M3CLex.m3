@@ -28,7 +28,6 @@ IMPORT Text, Fmt, Thread;
 IMPORT Rd, ASCII, RdExtras;
 IMPORT M3CToken, M3CHash, M3CReservedWord, M3CSrcPos, M3CLexF;
 
-
 CONST
   MaxLookahead = 3;
 (* Need three characters lookahead for lexing, for example
@@ -890,8 +889,12 @@ PROCEDURE GetNext(t: T) RAISES {Rd.Failure}=
 
 
 <*INLINE*> PROCEDURE Position(t: T): M3CSrcPos.T=
+  VAR ret : M3CSrcPos.T;
   BEGIN
-    RETURN M3CSrcPos.Pack(t.line - t.linesInToken, t.startOfToken);
+    ret := M3CSrcPos.Set(t.line - t.linesInToken,
+                         t.startOfToken,
+                         CurrentTokenLen(t));
+    RETURN ret;
   END Position;
 
 
@@ -916,7 +919,8 @@ PROCEDURE Reset(t: T; pos := M3CSrcPos.Null; s: Rd.T := NIL)=
       END;
     END;
     IF pos # M3CSrcPos.Null THEN
-      t.line := M3CSrcPos.Unpack(pos, t.offset);
+      t.line := pos.line;
+      t.offset := pos.col;
     END;
     t.currentTok := M3CToken.Void;
     t.cur_identifier := NIL;
@@ -1016,6 +1020,8 @@ PROCEDURE TokenToText(token: M3CToken.T): TEXT=
         RETURN "\'=>\'";
     | M3CToken.Void =>
         RETURN "end of stream";
+    ELSE
+      RETURN "";
     END; (* case *)
   END TokenToText;
 
@@ -1033,6 +1039,21 @@ PROCEDURE CurrentTokenToText(t: T): TEXT=
     END;
     RETURN text;
   END CurrentTokenToText;
+
+
+PROCEDURE CurrentTokenLen(t: T) : INTEGER =
+  VAR
+    text := TokenToText(t.currentTok);
+  BEGIN
+    CASE t.currentTok OF
+    | M3CToken.Identifier =>
+        text := t.cur_identifier.toText();
+    | ORD(FIRST(M3CToken.Literal))..ORD(LAST(M3CToken.Literal)) =>
+        text := t.cur_literal.toText();
+    ELSE
+    END;
+    RETURN Text.Length(text);
+  END CurrentTokenLen;
 
 
 BEGIN

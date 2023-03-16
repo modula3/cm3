@@ -397,7 +397,9 @@ PROCEDURE TypeCheck(
             END; (* if *)
         | M3CStdProcs.T.Abs =>
             IF NOT
-                (M3CTypeChkUtil.IsSubTypeOfInteger(type) OR IsReal(type)) THEN
+                (M3CTypeChkUtil.IsSubTypeOfInteger(type) OR
+                 M3CTypeChkUtil.IsSubTypeOfLongint(type) OR
+                 IsReal(type)) THEN
               error := WrongType;
             END; (* if *)
         | M3CStdProcs.T.Float =>
@@ -423,7 +425,8 @@ PROCEDURE TypeCheck(
             IF NOT M3COrdinal.Is(type, baseType) THEN error := WrongType END;
         | M3CStdProcs.T.Val =>
             IF pos = 0 THEN
-              IF NOT M3CTypeChkUtil.IsSubTypeOfInteger(type) THEN
+              IF NOT (M3CTypeChkUtil.IsSubTypeOfInteger(type) OR
+                      M3CTypeChkUtil.IsSubTypeOfLongint(type)) THEN
                 error := WrongType;
               END;
             ELSE

@@ -37,12 +37,16 @@ TYPE
   Literal_rep <: REFANY;      (* all literals *)
   Number_rep <: Literal_rep;  (* numeric literals *)
   Text_rep <: Literal_rep;    (* text and character literals *)
-  SrcPos = INTEGER;           (* source positions *)
+  SrcPos = SrcRec;            (* source positions *)
   Whitespace_rep <: REFANY;   (* whitespace *)
   BadChar_rep <: REFANY;      (* illlegal character *)
   Comment_rep <: REFANY;      (* a comment *)
   Pragma_rep <: REFANY;       (* a pragma *)
   Token_rep <: REFANY;        (* reserved word or symbol *)
+
+  SrcRec = RECORD
+    line,col,len : INTEGER := 0;
+  END;
 
 (* The AST is capable of recording the complete set of characters that
 were present in the original source file, allowing exact reproduction.

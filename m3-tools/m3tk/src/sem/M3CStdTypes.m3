@@ -185,7 +185,7 @@ PROCEDURE RegisterMutex(ts: M3AST_AS.TYPE_SPEC) RAISES {}=
 PROCEDURE Init(n: M3AST_AS.SRC_NODE) RAISES {}=
   BEGIN
     INC(charpos);
-    n.lx_srcpos := M3CSrcPos.Pack(0, charpos);
+    n.lx_srcpos := M3CSrcPos.Set(0, charpos, 0);
   END Init;
 
 BEGIN

@@ -298,7 +298,8 @@ PROCEDURE PutError(name: TEXT; pos: M3CSrcPos.T;
   BEGIN
     t := Fmt.F("\"%s\"", name);
     IF pos # M3CSrcPos.Null THEN
-      line := M3CSrcPos.Unpack(pos, linePos);
+      line := pos.line;
+      linePos := pos.col;
       t := Fmt.F("%s, line %s,%s", t, Fmt.Int(line), Fmt.Int(linePos));
     END; (* if *)
     IF id1 = NIL THEN
@@ -319,11 +320,13 @@ PROCEDURE PutError(name: TEXT; pos: M3CSrcPos.T;
       Wr.PutText(err, t); Wr.PutChar(err, '\n');
     END;
 
+    (* add the error to the error sequence as an alternative *)
     refErr := NEW(RefErr);
     refErr.name := name;
     refErr.msg := messageWithIds;
     refErr.line := line;
     refErr.col := linePos;
+    refErr.len := pos.len;
     errSeq.addhi(refErr);
   END PutError;
 

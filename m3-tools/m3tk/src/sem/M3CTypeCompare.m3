@@ -33,7 +33,7 @@ IMPORT M3AST_LX_F, M3AST_AS_F, M3AST_SM_F, M3AST_TM_F;
 IMPORT SeqM3AST_AS_Fields, SeqM3AST_AS_Method, SeqM3AST_AS_Override,
     SeqM3AST_AS_Formal_param, SeqM3AST_AS_M3TYPE;
 
-IMPORT M3CSrcPos, M3CTypesMisc, M3CRaisesSet, M3COrdinal;
+IMPORT M3CTypesMisc, M3CRaisesSet, M3COrdinal;
 IMPORT M3CExpValue;
 
 
@@ -536,9 +536,10 @@ of that supertype. *)
           EXIT; (* also NIL case *)
       | M3AST_AS.Opaque_type(opaqueType) =>
           VAR
-            pos: CARDINAL;
-            line := M3CSrcPos.Unpack(opaqueType.lx_srcpos, pos);
+            line,pos: CARDINAL;
           BEGIN
+            line := opaqueType.lx_srcpos.line;
+            pos := opaqueType.lx_srcpos.col;
             hash := Word.Plus(Word.Times(Word.Plus(Word.Times(
                 line, 256), pos), 256), hash);
           END;
