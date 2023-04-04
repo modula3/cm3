@@ -1469,6 +1469,10 @@ PROCEDURE DoLibrary (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
     lib_a   := M3Path.Join (NIL, name, UK.M3LIB);
     lib_m3x := M3Path.Join (NIL, name, UK.LIBX);
     IF (t.mode = MM.Build) THEN
+      IF GetConfigBool (t, "TFILE") THEN
+        DoGenTFile(t,0);
+        RETURN;
+      END;
       Builder.BuildLib (name, t.units, SysLibs (t), t.build_shared, t);
       InstallDerived (t, lib_a);
       InstallDerived (t, lib_m3x);
