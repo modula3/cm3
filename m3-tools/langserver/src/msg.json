@@ -1,0 +1,122 @@
+{
+  "diagnostic": {
+    "severity": 0,
+    "range": {
+      "start": {"line": 0, "character": 0},
+      "end": {"line": 0, "character": 0}
+    }, 
+    "message": "",
+    "source": "" 
+  },
+  "params": {
+    "uri": "",
+    "diagnostics": []
+  },
+  "notify": {
+    "method": "",
+    "params": {}
+  },
+  "hover": {
+    "contents": [""],
+    "range": {
+      "start": {"line": 0, "character": 0},
+      "end": {"line": 0, "character": 0}
+    } 
+  },
+  "location": {
+    "uri": "",
+    "range": {
+      "start": {"line": 0, "character": 0},
+      "end": {"line": 0, "character": 0}
+    } 
+  },
+  "registration" : {
+    "method": "client/registerCapability",
+    "params": {
+      "registrations": [
+        {
+          "id": "",
+          "method": "",
+          "registerOptions": {}
+        }
+      ]
+    }
+  },
+  "unregistration": {
+    "method": "client/unregisterCapability",
+    "params": {
+      "unregisterations": [
+        {
+          "id": "",
+          "method": ""
+        }
+      ]
+    }
+  },
+  "initreply": {
+    "capabilities": {
+      "textDocumentSync": 1,
+      "completionProvider": {
+        "triggerCharacters": [
+          ":",
+          ".",
+          "\u003e",
+          "@"
+        ]
+      },
+      "signatureHelpProvider": {
+        "triggerCharacters": [
+          "(",
+          ","
+        ]
+      },
+      "hoverProvider": true,
+      "declarationProvider": true,
+      "typeDefinitionProvider": true,
+      "implementationProvider": false,
+      "documentSymbolProvider": false,
+      "workspaceSymbolProvider": false,
+      "foldingRangeProvider": false,
+      "codeActionProvider": false,
+      "codeLensProvider": {},
+      "documentFormattingProvider": true,
+      "documentRangeFormattingProvider": true,
+      "renameProvider": {
+        "prepareProvider": true
+      },
+      "semanticTokensProvider": {
+        "legend": {
+          "tokenTypes": [
+            "namespace",
+            "type",
+            "class",
+            "enum",
+            "interface",
+            "struct",
+            "typeParameter",
+            "parameter",
+            "variable",
+            "property",
+            "enumMember",
+            "function",
+            "method"
+          ],
+          "tokenModifiers": [
+            "declaration",
+            "readonly",
+            "documentation"
+          ]
+        },
+        "full": {
+          "delta": false
+        }
+      },
+      "experimental": {
+        "astProvider": true,
+        "apiEditorProvider": true,
+        "examplesProvider": true
+      }
+    }
+  }
+}
+
