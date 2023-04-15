@@ -1,0 +1,43 @@
+{
+	"name": "modula-3-lang-server",
+	"displayName": "Modula-3 Language Server",
+	"description": "Provides basic language server functions for Modula-3",
+	"author": "Peter McKinna",
+	"license": "MIT",
+	"version": "1.0.1",
+	"publisher": "infernus-cm3",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/modula3/cm3"
+	},
+	"engines": {
+		"vscode": "^1.26.0"
+	},
+	"activationEvents": [
+		"onLanguage:m3"
+	],
+	"main": "./dist/main",
+	"categories": [
+		"Programming Languages"
+	],
+	"keywords": [
+		"Modula-3",
+		"Modula",
+		"cm3"
+	],
+	"icon": "images/icon.png",
+	"scripts": {
+		"bundle": "webpack --mode production"
+	},
+	"dependencies": {
+		"ts-loader": "^9.4.2",
+		"vscode-languageclient": "^5.1.0-next.9",
+		"ws": "^6.2.2"
+	},
+	"devDependencies": {
+		"@types/ws": "^6.0.0",
+		"vscode": "^1.1.34",
+		"webpack": "^5.78.0",
+		"webpack-cli": "^5.0.1"
+	}
+}

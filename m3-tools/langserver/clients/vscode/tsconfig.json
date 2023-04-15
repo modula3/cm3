@@ -1,0 +1,17 @@
+{
+	"compilerOptions": {
+		"module": "commonjs",
+		"target": "es2019",
+		"lib": ["ES2019"],
+		"noImplicitAny": true,
+		"noImplicitReturns": true,
+		"noUnusedLocals": true,
+		"noUnusedParameters": true,
+		"moduleResolution": "nodenext",
+		"outDir": "out",
+		"rootDir": "src",
+		"sourceMap": true
+	},
+	"include": ["src"],
+	"exclude": ["node_modules"]
+}
