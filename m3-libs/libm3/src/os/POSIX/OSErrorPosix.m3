@@ -10,7 +10,7 @@ IMPORT Atom, AtomList, Cerrno, Fmt, OSError, Text, Uerror;
 IMPORT RTIO, <*NOWARN*>RTParams;
 
 VAR debug: BOOLEAN;
-VAR cache := ARRAY [0..Uerror.Max] OF Atom.T {NIL, ..};
+VAR cache_of_OSErrorPosix_m3 := ARRAY [0..Uerror.Max] OF Atom.T {NIL, ..};
 (* The table is initialized lazily. *)
 
 PROCEDURE NewAtom (n: INTEGER): Atom.T =
@@ -20,9 +20,9 @@ PROCEDURE NewAtom (n: INTEGER): Atom.T =
 
 PROCEDURE ErrnoAtom(n: INTEGER): Atom.T =
   BEGIN
-    IF n >= 0 AND n < NUMBER (cache) THEN
-      IF cache[n] = NIL THEN cache[n] := NewAtom(n) END;
-      RETURN cache[n]
+    IF n >= 0 AND n < NUMBER (cache_of_OSErrorPosix_m3) THEN
+      IF cache_of_OSErrorPosix_m3[n] = NIL THEN cache_of_OSErrorPosix_m3[n] := NewAtom(n) END;
+      RETURN cache_of_OSErrorPosix_m3[n]
     ELSE
       RETURN NewAtom (n);
     END;
