@@ -178,7 +178,10 @@ PROCEDURE Node (cl: WalkClosure; n: AST.NODE; vm: ASTWalk.VisitMode) =
               (* display the name of the type not its expanded rep.
                  Change byName to FALSE if not. *)
               typeTxt := Type.ToText(type,byName := TRUE);
-              cl.c.typeDef := UnitFile(tt.sm_type_spec.tmp_unit_id.sm_spec);
+              (* for loop locals do not have a tmp_unit_id *)
+              IF tt.sm_type_spec.tmp_unit_id # NIL THEN
+                cl.c.typeDef := UnitFile(tt.sm_type_spec.tmp_unit_id.sm_spec);
+              END;
               cl.c.typeLoc :=  tt.sm_type_spec.lx_srcpos;
             | M3AST_AS.UNIT_ID(tt) =>
               cl.c.typeDef := UnitFile(tt.tmp_unit_id.sm_spec);

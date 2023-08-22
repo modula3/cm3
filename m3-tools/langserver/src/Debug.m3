@@ -21,6 +21,11 @@ PROCEDURE Close() =
     END;
   END Close;
 
+PROCEDURE IsDebug() : BOOLEAN =
+  BEGIN
+    RETURN debug;
+  END IsDebug;
+
 (* this is how to debug to stderr
 Wr.PutText(Stdio.stderr,"testtest\n");
 Wr.Flush(Stdio.stderr);

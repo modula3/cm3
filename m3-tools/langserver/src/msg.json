@@ -78,8 +78,8 @@
       "workspaceSymbolProvider": false,
       "foldingRangeProvider": false,
       "codeActionProvider": false,
-      "codeLensProvider": {},
-      "documentFormattingProvider": true,
+      "codeLensProvider": false,
+      "documentFormattingProvider": false,
       "documentRangeFormattingProvider": true,
       "renameProvider": {
         "prepareProvider": true

@@ -7,12 +7,14 @@ MODULE AstToVal;
 IMPORT Value, M3AST_AS, M3CBackEnd_C;
 IMPORT M3AST_SM_F;
 IMPORT RTTypeSRC;
-IMPORT Debug;
+IMPORT Wr, Stdio;
 
-PROCEDURE Die(m : TEXT) =
+<*FATAL ANY*>
+
+PROCEDURE Error(m : TEXT) =
   BEGIN
-    Debug.Write("AstToVal: " & m & "\n");
-  END Die;
+    Wr.PutText(Stdio.stderr, "AstToVal error:" & m & "\n");
+  END Error;
 
 PROCEDURE ProcessExp(exp: M3AST_AS.EXP): Value.T =
   BEGIN
@@ -34,8 +36,8 @@ PROCEDURE ProcessExp(exp: M3AST_AS.EXP): Value.T =
       |  M3CBackEnd_C.Array_or_record_constructor_value => 
       |  M3CBackEnd_C.Proc_value => 
       *)
-      ELSE Die("AstToVal.ProcessExp: unsupported value: "
-                & RTTypeSRC.TypeName (exp.sm_exp_value));
+      ELSE Error("AstToVal.ProcessExp: unsupported value: "
+                 & RTTypeSRC.TypeName (exp.sm_exp_value));
     END;
     RETURN NIL;
   END ProcessExp;

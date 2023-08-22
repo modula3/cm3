@@ -32,10 +32,10 @@ CONST
 
   (* error codes *)
   ParseError = -32700;
+  InvalidParams = -32602;
+  MethodNotFound = -32601;
 (*
   InvalidRequest = -32600;
-  MethodNotFound = -32601;
-  InvalidParams = -32602;
   InternalError = -32603;
 
   ServerNotInitialized = -32002;
@@ -64,22 +64,24 @@ TYPE
              Save,
              Change,
              (* not part of protocol *)
-             NotFound,
              Error};
+
+  MsgClass = {Request,Notification};
 
   VS = OBJECT
     id : INTEGER;
     type : MsgType;
     method : TEXT;
-    mtype : TEXT;
+    msgClass : MsgClass;
     json : Json.T;
     cm3Ok : BOOLEAN := TRUE;
+    errorCode : INTEGER := 0;
   END;
 
   CompilerClosure = Thread.Closure OBJECT
     count : CARDINAL;
     text,uri : TEXT;
-    cnt1,cnt2 : INTEGER := 0;
+    cnt1,cnt2 : CARDINAL := 0;
     finish : BOOLEAN := FALSE;
     mu : MUTEX;
   METHODS
@@ -95,7 +97,6 @@ VAR
   wc := AstCompile.wc;
   msgMu : MUTEX;
   useCompThread := TRUE;
-  shutdown := FALSE;
 
 (* Debug proc for testing via command line *)
 PROCEDURE CheckFile(uri : TEXT) =
@@ -218,16 +219,19 @@ PROCEDURE Classify(vs : VS) : MsgType =
   BEGIN
     node := vs.json.find("id");
     IF node = NIL THEN
-      vs.id := -1; vs.mtype := "notification";
+      vs.id := -1; vs.msgClass := MsgClass.Notification;
     ELSE
-      vs.id := node.getInt(); vs.mtype :="request";
+      vs.id := node.getInt(); vs.msgClass := MsgClass.Request;
     END;
 
     node := vs.json.find("method");
     IF node = NIL THEN
+      vs.errorCode := InvalidParams;
       RETURN MsgType.Error;
     END;
     vs.method := node.value();
+
+    (* Messages *)
 
     IF Text.Equal(vs.method,"initialize") THEN
       ret := MsgType.Initialize;
@@ -259,7 +263,8 @@ PROCEDURE Classify(vs : VS) : MsgType =
     ELSIF Text.Equal(vs.method,"textDocument/didSave") THEN
       ret := MsgType.Save;
     ELSE
-      ret := MsgType.NotFound;
+      vs.errorCode := MethodNotFound;
+      ret := MsgType.Error;
     END;
 
     RETURN ret;
@@ -269,8 +274,9 @@ PROCEDURE CheckResult(msg : TEXT) =
   VAR
     json : Json.T;
   BEGIN
+(*
     Debug.Write("Result json " & msg & "\n");
-
+*)
     (* debug check if result is correct json.*)
     json := Json.ParseBuf(msg);
   END CheckResult;
@@ -332,6 +338,9 @@ PROCEDURE CodeLensResponse(vs : VS) =
     uri,msg : TEXT;
     node : Json.T;
   BEGIN
+    IF NOT vs.cm3Ok THEN
+      (* send error *)
+    END;
     (* get the input message details *)
     node := vs.json.find("/params/textDocument/uri"); 
     (* get the uri *)
@@ -461,10 +470,10 @@ PROCEDURE DidOpen(vs : VS) =
 
     Debug.Write("DidOpen uri-" & uri & "version " & version & "\n");
 
-    text := Utils.Substitute(text);
+    text := Utils.UnEncode(text);
 
-(* test our subs algorithm
-Debug.Write("Substitute-" & text & "<<<<<\n");
+(* test our unencode algorithm
+Debug.Write("UnEncode-" & text & "<<<<<\n");
 *)
 
     CheckText(uri, text);
@@ -523,7 +532,7 @@ PROCEDURE DidChangeResponse(vs : VS) =
     node := vs.json.find("/params/textDocument/version"); 
     version := node.value();
 
-    text := Utils.Substitute(text);
+    text := Utils.UnEncode(text);
 
     IF useCompThread THEN
       compilerClosure.update(uri,text);
@@ -533,11 +542,11 @@ PROCEDURE DidChangeResponse(vs : VS) =
     END;
   END DidChangeResponse;
 
-PROCEDURE ErrorResponse(vs : VS; error : INTEGER) =
+PROCEDURE ErrorResponse(vs : VS) =
   VAR
     msg : TEXT;
   BEGIN
-    msg := Msg.BuildErrorReply(vs.id, error);
+    msg := Msg.BuildErrorReply(vs.id, vs.errorCode);
     SendResult(msg);
   END ErrorResponse;
 
@@ -545,6 +554,7 @@ PROCEDURE HandleMsg(msg : TEXT) : BOOLEAN =
   VAR
     json : Json.T;
     type : MsgType;
+    exit : BOOLEAN := FALSE;
     vs : VS;
   BEGIN
     TRY
@@ -552,46 +562,34 @@ PROCEDURE HandleMsg(msg : TEXT) : BOOLEAN =
       vs := NEW(VS, json := json);
       type := Classify(vs);
     EXCEPT
-    | Json.E => type := MsgType.Error;
+    | Json.E => type := MsgType.Error; vs.errorCode := ParseError;
     END;
 
-    IF type = MsgType.Error THEN
-      Debug.Write("Parse Error\n");
-      ErrorResponse(vs,ParseError);
-      RETURN FALSE;
+    Debug.Write("New Message: type " & Fmt.Int(ORD(vs.msgClass)) & " id: " & Fmt.Int(ORD(vs.id)) & "\n");
+    IF Debug.IsDebug() THEN
+      Debug.Write(json.format() & "\n");
     END;
 
-    Debug.Write("New Message: type " & vs.mtype & " id: " & Fmt.Int(ORD(vs.id)) & "\n");
-(* even if debug is off we still format the json - need a way to not do it *)
-    Debug.Write(json.format() & "\n");
-
-    IF type = MsgType.Initialize THEN
-      InitResponse(vs);
-    ELSIF type = MsgType.Open THEN
-      DidOpen(vs);
-    ELSIF type = MsgType.Close THEN
-      DidClose(vs);
-    ELSIF type = MsgType.Save THEN
-      DidSave(vs);
-    ELSIF type = MsgType.Change THEN
-      DidChangeResponse(vs);
-    ELSIF type = MsgType.FoldingRange THEN
-      FoldingRangeResponse(vs);
-    ELSIF type = MsgType.CodeLens THEN
-      CodeLensResponse(vs);
-    ELSIF type = MsgType.Declaration THEN
-      DeclarationResponse(vs);
-    ELSIF type = MsgType.TypeDefinition THEN
-      TypeDefinitionResponse(vs);
-    ELSIF type = MsgType.Hover THEN
-      HoverResponse(vs);
-    ELSIF type = MsgType.Shutdown THEN
-      ShutdownResponse(vs);
-      shutdown := TRUE;
+    CASE type OF
+    | MsgType.Initialize => InitResponse(vs);
+    | MsgType.Initialized => (* notification - no response *)
+    | MsgType.Open => DidOpen(vs);
+    | MsgType.Close => DidClose(vs);
+    | MsgType.Save => DidSave(vs);
+    | MsgType.Change => DidChangeResponse(vs);
+    | MsgType.FoldingRange => FoldingRangeResponse(vs);
+    | MsgType.CodeLens => CodeLensResponse(vs);
+    | MsgType.Declaration => DeclarationResponse(vs);
+    | MsgType.TypeDefinition => TypeDefinitionResponse(vs);
+    | MsgType.Hover => HoverResponse(vs);
+    | MsgType.Shutdown => ShutdownResponse(vs);
+    | MsgType.Error => 
+        (* not sending errors for notifications *)
+        IF vs.msgClass = MsgClass.Request THEN ErrorResponse(vs); END;
+    | MsgType.Exit => exit := TRUE;
     END;
 
-    RETURN type = MsgType.Exit;
-
+    RETURN exit;
   END HandleMsg;
 
 BEGIN

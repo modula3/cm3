@@ -14,17 +14,21 @@ IMPORT SeqM3AST_AS_Enum_id, SeqM3AST_AS_Fields,
        SeqM3AST_AS_Field_id, SeqM3AST_AS_Method, 
        SeqM3AST_AS_Qual_used_id; (*SeqM3AST_AS_TYPE_SPEC,*)
 IMPORT M3CBackEnd_C, M3CTypesMisc;
-IMPORT Debug;
+IMPORT Wr, Stdio;
 
-REVEAL Handle = Public BRANDED OBJECT
+<*FATAL ANY*>
+
+REVEAL
+
+   Handle = Public BRANDED OBJECT
      astMap: RefRefTbl.T;
      nameMap: TextRefTbl.T;
-     END;
+   END;
 
-PROCEDURE Die(m : TEXT) =
+PROCEDURE Error(m : TEXT) =
   BEGIN
-    Debug.Write("AstToType exit: " & m & "\n");
-  END Die;
+    Wr.PutText(Stdio.stderr, "AstToType error:" & m & "\n");
+  END Error;
 
 PROCEDURE NewHandle (context: M3Context.T): Handle =
   VAR
@@ -189,7 +193,7 @@ PROCEDURE ProcessTypeSpec (h: Handle; ts: M3AST_AS.TYPE_SPEC): Type.T =
           | M3AST_AS.Object_type (ob) =>
             t := ProcessObject(h, ob, branded, brandName, trace);
           ELSE
-            Die("AstToType.ProcessTypeSpec: unrecognized reference type");
+            Error("AstToType.ProcessTypeSpec: unrecognized reference type");
           END;
         END;
       | M3AST_AS.Opaque_type (o) =>
@@ -242,7 +246,7 @@ PROCEDURE ProcessTypeSpec (h: Handle; ts: M3AST_AS.TYPE_SPEC): Type.T =
             | M3AST_AS.F_Readonly_id =>
               formals[i].mode := Type.Mode.Readonly;
             ELSE
-              Die("AstToType.ProcessTypeSpec: unrecognized parameter mode");
+              Error("AstToType.ProcessTypeSpec: unrecognized parameter mode");
             END;
             formals[i].outOnly := FALSE;
             (* Change to depend on <*OUTPUT*> *)

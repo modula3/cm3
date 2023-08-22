@@ -15,7 +15,7 @@ TYPE
 
   NotifyRef = REF NotifyRec;
 
-  PROCEDURE Substitute(s : TEXT) : TEXT;
+  PROCEDURE UnEncode(s : TEXT) : TEXT;
 
 END Utils.
 
