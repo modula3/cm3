@@ -36,6 +36,10 @@ PROCEDURE FromImage (st          : VBT.ScreenType;
    responsible for freeing /image/ as Picture.T will not do so for storage
    it has not allocated.  /sharedMemory/ is a hint to the implementation *)
 
+PROCEDURE GetXpmImage (screenType : VBT.ScreenType; file : TEXT) : T
+  RAISES {TrestleFail};
+(* read an XPM type image file *)
+
 TYPE FreeProc = PROCEDURE (param: REFANY);
 PROCEDURE Paint (         v        : VBT.Leaf;
                           src      : T;

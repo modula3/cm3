@@ -40,4 +40,10 @@ PROCEDURE New (): T;
 (* pictures got from this procedure will be returned to the free list when
    done with *)
 
+PROCEDURE GetXpmImage (screenType : VBT.ScreenType; file : TEXT) : Picture.T
+  RAISES {Picture.TrestleFail};
+
+PROCEDURE GetXpmPixmap (screenType : VBT.ScreenType; win : X.Drawable;
+                        file : TEXT) : Picture.T RAISES {Picture.TrestleFail};
+
 END XPicture.

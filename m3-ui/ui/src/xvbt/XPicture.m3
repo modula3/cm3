@@ -8,8 +8,8 @@
 
 UNSAFE MODULE XPicture;
 
-IMPORT Completion, Ctypes, Picture, PictureRep, Point, Rect, TrestleComm, VBT, X,
-       XClientF, XImUtil, XScreenType;
+IMPORT Completion, Ctypes, Picture, PictureRep, Point, Rect, TrestleComm,
+       VBT, X, XClientF, XImUtil, XScreenType, TrestleOnX, Xpm, M3toC;
 
 (* New() exported by XPictureFree *)
 
@@ -132,6 +132,57 @@ PROCEDURE MakeCompletion (<*UNUSED*> picture: T): Completion.T =
   BEGIN
     RETURN Completion.New();
   END MakeCompletion;
+
+PROCEDURE GetXpmImage (screenType : VBT.ScreenType; file : TEXT) : Picture.T
+  RAISES {Picture.TrestleFail} =
+  VAR
+    picture : T;
+    ximage,xshape : X.XImageStar;
+    res : Ctypes.int;
+    fileName := M3toC.CopyTtoS(file);
+  BEGIN
+    picture := NEW(T);
+    TYPECASE screenType OF
+    | XScreenType.T (st) =>
+
+      TrestleOnX.Enter(st.trsl); <*NOWARN*>  
+        res := Xpm.ReadFileToImage(st.trsl.dpy, fileName, ximage, xshape, NIL);
+      TrestleOnX.Exit(st.trsl); <*NOWARN*> 
+      IF res # 0 THEN
+        RAISE Picture.TrestleFail;
+      END;
+
+      picture.image := LOOPHOLE(ximage, Picture.ImageStar);
+      picture.shape := LOOPHOLE(xshape, Picture.ImageStar);
+    ELSE
+      RAISE Picture.TrestleFail;
+    END;
+    RETURN picture;
+  END GetXpmImage;
+
+PROCEDURE GetXpmPixmap (screenType : VBT.ScreenType; win : X.Drawable;
+                        file : TEXT) : Picture.T RAISES {Picture.TrestleFail} =
+  VAR
+    xpixmap, shape : X.Pixmap;
+    picture : T;
+    res : Ctypes.int;
+    cfile := M3toC.CopyTtoS(file);
+  BEGIN
+    picture := NEW(T);
+    TYPECASE screenType OF
+    | XScreenType.T (st) =>
+      X.XLockDisplay(st.trsl.dpy);
+        res := Xpm.ReadFileToPixmap(st.trsl.dpy, win, cfile, xpixmap, shape, NIL);
+      X.XUnlockDisplay(st.trsl.dpy);
+
+      IF res # 0 THEN
+        RAISE Picture.TrestleFail;
+      END;
+    ELSE
+      RAISE Picture.TrestleFail;
+    END;
+    RETURN picture;
+  END GetXpmPixmap;
 
 BEGIN
 END XPicture.

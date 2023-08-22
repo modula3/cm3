@@ -20,6 +20,7 @@ TYPE
       (* if TRUE, Picture belongs to the caller, so should not be freed by
          destroy *)
       image: Picture.ImageStar := NIL;
+      shape: Picture.ImageStar := NIL;
       next : Picture.T         := NIL; (* for free list *)
     METHODS
       init (st: VBT.ScreenType; width, height: CARDINAL): Picture.T

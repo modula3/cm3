@@ -84,6 +84,12 @@ PROCEDURE Supported (st: VBT.ScreenType; sharedMem := FALSE): BOOLEAN =
     END;
   END Supported;
 
+PROCEDURE GetXpmImage (screenType : VBT.ScreenType; file : TEXT) : T
+  RAISES {TrestleFail} =
+  BEGIN
+    RETURN XPicture.GetXpmImage(screenType, file);
+  END GetXpmImage;
+
 BEGIN
   (* this is a dumb check to try to keep Picture and XPicture in step *)
   <*ASSERT BYTESIZE(X.XImage) = BYTESIZE(ImageRec)*>

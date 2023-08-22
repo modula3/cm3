@@ -52,6 +52,12 @@ PROCEDURE MakeCompletion (<*UNUSED*> picture: T): Completion.T =
     RETURN Completion.New();
   END MakeCompletion;
 
+PROCEDURE GetXpmImage (<*UNUSED*>screenType : VBT.ScreenType;
+                       <*UNUSED*> file : TEXT) : T
+  RAISES {TrestleFail} =
+  BEGIN
+    RAISE TrestleFail;
+  END GetXpmImage;
 
 BEGIN
 END PictureImpl.
