@@ -25,11 +25,6 @@ extern "C" {
 #define EHObjRegNo  0
 #define EHTypeRegNo 1
 
-//Obsolete defs used with LatchEHReg	
-//#define REG "rax"
-//#define EHRegNo 1
-//#define REG "rdx"
-
 //declare a personality function
 void * __m3_personality_v0();
 
@@ -58,7 +53,7 @@ extern char * RTException__AllocBuf(int size);
 typedef struct {
   unsigned long pc;
   unsigned long sp;
-  unsigned long bp;
+  unsigned long bp; //not used
   long lock;
   unsigned long exceptionRef;
   long tTypeIndex;
@@ -144,7 +139,7 @@ void RTStack__CurFrame (Frame *f)
 {
   unw_context_t *uc;
   unw_cursor_t *cursor;
-  unw_word_t ip, sp, bp = 0;
+  unw_word_t ip, sp = 0;
 
   //we alloc in m3 otherwise a serious memory leak 
   //uc = (unw_context_t *) malloc(sizeof(unw_context_t));
@@ -158,13 +153,9 @@ void RTStack__CurFrame (Frame *f)
   unw_get_reg(cursor, UNW_REG_IP, &ip);
   unw_get_reg(cursor, UNW_REG_SP, &sp);
   
-  //if using the copy exception model must use bp for stack pointer
-  //unw_get_reg(cursor, UNW_X86_64_RBP, &bp);
-
   f->cursor = cursor;
   f->pc = ip;
   f->sp = sp;
-  f->bp = bp;
   RTStack__GetProcInfo(f);
 
   if (f->lock != FrameLock) abort ();
@@ -178,7 +169,7 @@ void RTStack__CurFrame (Frame *f)
 
 void RTStack__PrevFrame (Frame* callee, Frame* caller)
 {
-  unw_word_t ip, sp, bp = 0;
+  unw_word_t ip, sp = 0;
   int res;
 
   if (!callee->cursor) abort();
@@ -191,18 +182,13 @@ void RTStack__PrevFrame (Frame* callee, Frame* caller)
     unw_get_reg(caller->cursor, UNW_REG_IP, &ip);
     unw_get_reg(caller->cursor, UNW_REG_SP, &sp);
     
-    //if using the copy exception model must use bp for stack pointer
-    //unw_get_reg(caller->cursor, UNW_X86_64_RBP, &bp);
-
     caller->pc = ip;
     caller->sp = sp;
-    caller->bp = bp;
     RTStack__GetProcInfo(caller);
 
   } else {
     caller->pc = 0;
     caller->sp = 0;
-    caller->bp = 0;
   }
   if (caller->lock != FrameLock) abort ();
 }
@@ -220,8 +206,6 @@ void RTStack__Unwind (Frame *target)
   if (!target->cursor) abort();
   if (target->lock != FrameLock) abort ();
   
-  //for the copy exc model we have to disable the 2 set regs below
-  //
   //set the IP to landingPad 
   unw_set_reg(target->cursor, UNW_REG_IP, target->landingPad);
   
@@ -229,7 +213,7 @@ void RTStack__Unwind (Frame *target)
   unw_set_reg(target->cursor,
 	      __builtin_eh_return_data_regno(EHObjRegNo),
 	      target->exceptionRef);
-  //
+ 
   //set the eh register one to the tTypeIndex for gcc
   unw_set_reg(target->cursor,
 	      __builtin_eh_return_data_regno(EHTypeRegNo),
@@ -242,18 +226,6 @@ void RTStack__Unwind (Frame *target)
     abort();
   }
 }
-
-/*
- * Latch the exception pointer from the builtin eh reg
- * This is defined as int* but we are just returning a pointer
- * of size address.
- * - obsolete - used in building versions before introduction of landingpad
-*/
-int *RTStack__LatchEHReg() {
-//  register int *ehReg asm(REG);
-//  return ehReg;
-}
-
 
 /*
 //a test of generating a backtrace with libunwind.
