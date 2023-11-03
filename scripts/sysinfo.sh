@@ -272,8 +272,7 @@ if [ "x$CM3_TARGET" = "x" ] ; then
         x86_64)  CM3_TARGET=AMD64_LINUX;;
         sparc64) CM3_TARGET=SPARC32_LINUX;;
         arm*)    CM3_TARGET=ARM_LINUX;; # Raspberry Pi and BeagleBone Black 
-        i*86)    CM3_TARGET=LINUXLIBC6;;
-                 #CM3_TARGET=I386_LINUX;;
+        i*86)    CM3_TARGET=I386_LINUX;;
       esac;;
   
     NetBSD)
