@@ -1,0 +1,14 @@
+import("libm3")
+import("m3middle")
+import("m3quake")
+import("llvm18bindings")
+include("version.quake")
+version_impl("Version")
+
+module("M3CG_LLVM")
+
+implementation("Main")
+
+build_standalone()
+
+Program("m3llvm")
