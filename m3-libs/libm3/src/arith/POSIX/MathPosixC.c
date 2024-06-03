@@ -13,7 +13,6 @@
  */
 
 #include <math.h>
-#include <complex.h>
 
 double
 MathPosixC__frexp_result_glue(double x)
@@ -31,14 +30,6 @@ MathPosixC__frexp_exp_glue(double x)
   (void)frexp(x, &exp);
 
   return exp;
-}
-
-double
-MathPosixC__cabs_glue(double x, double y)
-{
-  double complex z = x + I * y;
-
-  return cabs(z);
 }
 
 double

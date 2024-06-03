@@ -31,7 +31,7 @@ PROCEDURE modf (x: LONGREAL; VAR i: LONGREAL): LONGREAL =
 
 PROCEDURE cabs (z: Complex): LONGREAL =
   BEGIN
-    RETURN MathPosixC.cabs_glue(z.x, z.y)
+    RETURN hypot(z.x, z.y)
   END cabs;
 
 BEGIN END MathPosix.
