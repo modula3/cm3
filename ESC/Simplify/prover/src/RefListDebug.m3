@@ -71,10 +71,10 @@ PROCEDURE Apply(v: T; a: ADDRESS) =
             END (* BEGIN *)
           END (* BEGIN *)
         ELSE
-          IF hra.spare = v.gen THEN
+          IF RT0.Spare(hra) = v.gen THEN
             RETURN
           ELSE
-            hra.spare := v.gen;
+            RT0.SetSpare(hra, gen);
             v.todo.addhi(ra)
           END (* IF *)
         END (* IF *)
@@ -91,10 +91,10 @@ PROCEDURE RefListSize(ra: REFANY; gen: INTEGER): INTEGER =
         VAR h: RTHeapMap.ObjectPtr :=
             LOOPHOLE(rl, ADDRESS)-BYTESIZE(RT0.RefHeader);
         BEGIN
-          IF h.spare = gen THEN
+          IF RT0.Spare(h) = gen THEN
             RETURN 0
           ELSE
-            h.spare := gen;
+            RT0.SetSpare(h, gen);
             RETURN RefListSize(rl.head, gen) + RefListSize(rl.tail, gen) + 1
           END (* IF *);
         END (* BEGIN *)
