@@ -78,10 +78,18 @@ TYPE
     init(ch: VBT.T;
       menu: VBT.T;
       n: CARDINAL := 0;
+      style : Style := Style.New;
       anchorParent: VBT.T := NIL;
       hfudge, vfudge := 0.0;
       ref: REFANY := NIL): T
   END;
+
+  (* In the original version a user must keep his mouse button pressed as he rolls
+     over the menu items, otherwise the menu closes. The new style follows a modern
+     practice whereby a single click activates the menubar and just moving the mouse
+     activates and deactivates menus. *)
+ 
+  Style = {New, Original};
 
 (* The call "v.init(...)" initializes the button with the given
    attributes, and adds "ref" to "v"'s property set if it is not "NIL".
@@ -94,6 +102,7 @@ PROCEDURE New(
   ch: VBT.T;
   menu: VBT.T;
   n: CARDINAL := 0;
+  style : Style := Style.New;
   anchorParent: VBT.T := NIL;
   hfudge, vfudge := 0.0;
   ref: REFANY := NIL): T; <* LL.sup <= VBT.mu *>
@@ -120,6 +129,3 @@ PROCEDURE IsActive(v: T): BOOLEAN; <* LL.sup = VBT.mu *>
 (* Return "TRUE" if and only if "v" is active. *)
 
 END AnchorBtnVBT.
-
-
-

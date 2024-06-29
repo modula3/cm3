@@ -14,14 +14,17 @@ MODULE AnchorBtnVBT;
 
 IMPORT VBT, Filter, ZSplit, Point, Rect, ButtonVBT, Trestle, Axis,
 HighlightVBT, Split, VBTClass, TrestleComm;
+IMPORT Evt, EvtRep, EventTypes;
 
 FROM VBT IMPORT ClickType;
 
 REVEAL
   T = Public BRANDED OBJECT
     n: CARDINAL;
+    style : Style;
     anchorParent: VBT.T := NIL;
-    hfudge, vfudge: REAL
+    hfudge, vfudge: REAL;
+    mouseGone : BOOLEAN := FALSE;
   OVERRIDES
     mouse := Mouse;
     position := Position;
@@ -29,19 +32,37 @@ REVEAL
   END;
 
 TYPE
-  AnchorRef = REF RECORD activeAnchor: T END;
+  MenuEvent = EventTypes.MenuEvent BRANDED OBJECT
+  OVERRIDES
+    callback := MenuGone;
+  END;
+  AnchorRef = REF RECORD activeAnchor: T; evt : MenuEvent END;
+
+PROCEDURE MenuGone(evt : MenuEvent) =
+  VAR
+    ref : AnchorRef;
+  BEGIN
+    ref := evt.private;
+    IF ref.activeAnchor # NIL AND ref.activeAnchor.mouseGone THEN
+      Evt.RevokeInterest(ref.evt);
+      Deactivate(ref.activeAnchor);
+      ref.activeAnchor := NIL;
+    END;
+  END MenuGone;
 
 PROCEDURE Be(
   v: T;
   ch: VBT.T;
   menu: VBT.T;
   n: CARDINAL := 0;
+  style : Style := Style.New;
   anchorParent: VBT.T := NIL;
   hfudge, vfudge := 0.0;
   ref: REFANY := NIL): T RAISES {} =
   BEGIN
     v.menu := menu;
     v.n := n;
+    v.style := style;
     v.anchorParent := anchorParent;
     v.hfudge := hfudge;
     v.vfudge := vfudge;
@@ -53,12 +74,13 @@ PROCEDURE New(
   ch: VBT.T;
   menu: VBT.T;
   n: CARDINAL := 0;
+  style : Style := Style.New;
   anchorParent: VBT.T := NIL;
   hfudge, vfudge := 0.0;
   ref: REFANY := NIL): T RAISES {} =
   VAR res := NEW(T);
   BEGIN
-    RETURN Be(res, ch, menu, n, anchorParent, hfudge, vfudge, ref)
+    RETURN Be(res, ch, menu, n, style, anchorParent, hfudge, vfudge, ref)
   END New;
 
 PROCEDURE Mouse(v: T; READONLY cd: VBT.MouseRec) RAISES {} =
@@ -66,12 +88,13 @@ PROCEDURE Mouse(v: T; READONLY cd: VBT.MouseRec) RAISES {} =
     Filter.T.mouse(v, cd);
     IF cd.clickType = ClickType.FirstDown THEN
        WITH ref = GetAnchorRef(v) DO
+         IF ref.activeAnchor = v THEN RETURN; END;
          ref.activeAnchor := v;
          Activate(v, ref)
        END
     ELSE
       WITH ref = GetAnchorRef(v) DO
-        IF ref.activeAnchor # NIL THEN
+        IF ref.activeAnchor # NIL AND v.style = Style.Original THEN
           Deactivate(ref.activeAnchor);
           ref.activeAnchor := NIL
         END
@@ -100,11 +123,15 @@ PROCEDURE GetAnchorRef(v: T): AnchorRef =
 PROCEDURE Position(v: T; READONLY cd: VBT.PositionRec) RAISES {} =
   BEGIN
     Filter.T.position(v, cd);
+    v.mouseGone := cd.cp.gone;
     IF cd.cp.gone THEN VBT.SetCage(v, VBT.GoneCage); RETURN END;
     VBT.SetCage(v, VBT.InsideCage);
     WITH ref = GetAnchorRef(v) DO
       IF (ref.activeAnchor # NIL)
          AND (ref.activeAnchor # v) THEN
+        IF v.style = Style.New THEN
+          Evt.RevokeInterest(ref.evt);
+        END;
         Deactivate(ref.activeAnchor);
         ref.activeAnchor := v;
         Activate(v, ref)
@@ -150,7 +177,12 @@ PROCEDURE Activate(v: T; ref: AnchorRef) =
       (* insert menu in z *)
       dom := Shift(MinRect(v.menu, pt), VBT.Domain(z));
       ZSplit.Insert(z, HighlightVBT.New(v.menu), dom)
-    END
+    END;
+
+    IF v.style = Style.New THEN
+      ref.evt := NEW(MenuEvent, private := ref);
+      Evt.ExpressInterest(ref.evt, TRUE);
+    END;
   END Activate;
 
 PROCEDURE Shift(READONLY menu, parent: Rect.T): Rect.T =
@@ -227,5 +259,6 @@ PROCEDURE Crash () =
     RAISE FatalError;
   END Crash;
 
-BEGIN END AnchorBtnVBT.
+BEGIN
+END AnchorBtnVBT.
 
