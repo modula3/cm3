@@ -33,14 +33,14 @@ LLVMValueRef LLVMConstQuad(LLVMContextRef C, QuadRec *q) {
 %}
 
 %insert(m3wrapimpl) %{
-FROM LLVM IMPORT ModuleRef,BuilderRef,ContextRef,ValueRef,BasicBlockRef;
+FROM LLVM IMPORT ModuleRef,BuilderRef,ContextRef,ValueRef,BasicBlockRef,DbgRecordRef;
 FROM LLVMTypes IMPORT MetadataRef,int64_t,uint64_t,uint32_t,unsigned;
 %}
 
 %insert(m3wrapintf) %{
 IMPORT LLVMTypes;
 FROM LLVMTypes IMPORT MetadataRef,int64_t,uint64_t,uint32_t,unsigned;
-FROM LLVM IMPORT ModuleRef,BuilderRef,ContextRef,ValueRef,BasicBlockRef;
+FROM LLVM IMPORT ModuleRef,BuilderRef,ContextRef,ValueRef,BasicBlockRef,DbgRecordRef;
 
 %}
 
@@ -96,6 +96,7 @@ DoRefs(LLVMDIBuilderRef,BuilderRef);
 DoRefs(LLVMContextRef,ContextRef);
 DoRefs(LLVMValueRef,ValueRef);
 DoRefs(LLVMBasicBlockRef,BasicBlockRef);
+DoRefs(LLVMDbgRecordRef,DbgRecordRef);
 
 //enums
 DoEnum(LLVMDWARFSourceLanguage);

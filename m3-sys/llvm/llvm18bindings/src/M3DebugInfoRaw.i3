@@ -565,20 +565,20 @@ PROCEDURE CreateTempGlobalVariableFwdDecl
    Decl          : ADDRESS;
    AlignInBits   : C.unsigned_int; ): ADDRESS;
 
-<* EXTERNAL LLVMDIBuilderInsertDeclareBefore *>
-PROCEDURE InsertDeclareBefore
+<* EXTERNAL LLVMDIBuilderInsertDeclareRecordBefore *>
+PROCEDURE InsertDeclareRecordBefore
   (Builder, Storage, VarInfo, Expr, DebugLoc, Instr: ADDRESS; ): ADDRESS;
 
-<* EXTERNAL LLVMDIBuilderInsertDeclareAtEnd *>
-PROCEDURE InsertDeclareAtEnd
+<* EXTERNAL LLVMDIBuilderInsertDeclareRecordAtEnd *>
+PROCEDURE InsertDeclareRecordAtEnd
   (Builder, Storage, VarInfo, Expr, DebugLoc, Block: ADDRESS; ): ADDRESS;
 
-<* EXTERNAL LLVMDIBuilderInsertDbgValueBefore *>
-PROCEDURE InsertDbgValueBefore
+<* EXTERNAL LLVMDIBuilderInsertDbgValueRecordBefore *>
+PROCEDURE InsertDbgValueRecordBefore
   (Builder, Val, VarInfo, Expr, DebugLoc, Instr: ADDRESS; ): ADDRESS;
 
-<* EXTERNAL LLVMDIBuilderInsertDbgValueAtEnd *>
-PROCEDURE InsertDbgValueAtEnd
+<* EXTERNAL LLVMDIBuilderInsertDbgValueRecordAtEnd *>
+PROCEDURE InsertDbgValueRecordAtEnd
   (Builder, Val, VarInfo, Expr, DebugLoc, Block: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL LLVMDIBuilderCreateAutoVariable *>

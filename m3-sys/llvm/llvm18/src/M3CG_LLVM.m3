@@ -3049,8 +3049,7 @@ PROCEDURE GetAddrOfUplevelVar(self : U; var : LvVar) : LLVM.ValueRef =
     localto_Proc := var.inProc;
     <*ASSERT localto_Proc.state = procState.complete *>
     displayIndex := var.locDisplayIndex;
-    IF localto_Proc.parent # NIL
-    THEN
+    IF localto_Proc.parent # NIL THEN
       <* ASSERT localto_Proc.parent.state = procState.complete *>
       INC (displayIndex, localto_Proc.parent.cumUplevelRefdCt)
     END;
@@ -4304,7 +4303,7 @@ PROCEDURE insert_n (self: U; t: IType; n: CARDINAL) =
       offset := Extend(offset,t,intTy);
       maskTy := LLVM.LLVMIntType(n);
       mask := LLVM.LLVMConstAllOnes(maskTy);
-      mask := LLVM.LLVMConstZExtOrBitCast(mask, intTy);
+      mask := LLVM.LLVMBuildZExtOrBitCast(builderIR,mask,intTy, LT("zext"));
       res := DoInsert(value,target,mask,offset);
       NARROW(s2,LvExpr).lVal := res;
     END;
@@ -4327,7 +4326,7 @@ PROCEDURE insert_mn (self: U; t: IType; m,n : CARDINAL) =
       offset := LLVM.LLVMConstInt(intTy, VAL(m,LONGINT), TRUE);
       maskTy := LLVM.LLVMIntType(n);
       mask := LLVM.LLVMConstAllOnes(maskTy);
-      mask := LLVM.LLVMConstZExtOrBitCast(mask, intTy);
+      mask := LLVM.LLVMBuildZExtOrBitCast(builderIR,mask,intTy, LT("zext"));
       res := DoInsert(value,target,mask,offset);
       NARROW(s1,LvExpr).lVal := res;
     END;
@@ -6800,7 +6799,7 @@ PROCEDURE GetVarExpr(self : U; v : LvVar) : MetadataRef =
 (* debug for locals and params *)
 PROCEDURE DebugVar(self : U; v : LvVar; argNum : CARDINAL := 0) =
   VAR
-    decl : LLVM.ValueRef;
+    decl : LLVM.DbgRecordRef;
     lvDebug, tyVal, scope, diLoc, expr : MetadataRef;
     name : TEXT;
   BEGIN
@@ -6845,7 +6844,7 @@ PROCEDURE DebugVar(self : U; v : LvVar; argNum : CARDINAL := 0) =
     diLoc := M3DIB.CreateDebugLocation(globContext,self.curLine,0,scope,NIL);
     expr := GetVarExpr(self,v);
 
-    decl := M3DIB.InsertDeclareAtEnd(self.debugRef,
+    decl := M3DIB.InsertDeclareRecordAtEnd(self.debugRef,
               Storage  := v.lv,
               VarInfo  := lvDebug,
               Expr     := expr,

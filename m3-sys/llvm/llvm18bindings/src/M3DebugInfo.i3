@@ -12,7 +12,8 @@ INTERFACE M3DebugInfo;
 
 IMPORT LLVMTypes;
 FROM LLVMTypes IMPORT MetadataRef, int64_t, uint64_t, uint32_t, unsigned;
-FROM LLVM IMPORT ModuleRef, BuilderRef, ContextRef, ValueRef, BasicBlockRef;
+FROM LLVM IMPORT ModuleRef, BuilderRef, ContextRef, ValueRef,
+                 BasicBlockRef, DbgRecordRef;
 
 
 
@@ -82,7 +83,13 @@ TYPE
      DWARFSourceLanguageCPlusPlus17, DWARFSourceLanguageCPlusPlus20,
      DWARFSourceLanguageC17, DWARFSourceLanguageFortran18,
      DWARFSourceLanguageAda2005, DWARFSourceLanguageAda2012,
-     DWARFSourceLanguageMojo, DWARFSourceLanguageMipsAssembler,
+     DWARFSourceLanguageHIP, DWARFSourceLanguageAssembly,
+     DWARFSourceLanguageCSharp, DWARFSourceLanguageMojo,
+     DWARFSourceLanguageGLSL, DWARFSourceLanguageGLSLES,
+     DWARFSourceLanguageHLSL, DWARFSourceLanguageOpenCLCPP,
+     DWARFSourceLanguageCPPForOpenCL, DWARFSourceLanguageSYCL,
+     DWARFSourceLanguageRuby, DWARFSourceLanguageMove,
+     DWARFSourceLanguageHylo, DWARFSourceLanguageMipsAssembler,
      DWARFSourceLanguageGOOGLERenderScript,
      DWARFSourceLanguageBORLANDDelphi};
 
@@ -1576,75 +1583,97 @@ PROCEDURE CreateTempGlobalVariableFwdDecl (Builder    : BuilderRef;
 
 
 (**
- * Insert a new llvm.dbg.declare intrinsic call before the given instruction.<br>
+ * Only use in "new debug format" (LLVMIsNewDbgInfoFormat() is true).<br>
+ * See https://llvm.org/docs/RemoveDIsDebugInfo.html#c-api-changes<br>
+ * <br>
+ * The debug format can be switched later after inserting the records using<br>
+ * LLVMSetIsNewDbgInfoFormat, if needed for legacy or transitionary reasons.<br>
+ * <br>
+ * Insert a Declare DbgRecord before the given instruction.<br>
  * @param Builder     The DIBuilder.<br>
  * @param Storage     The storage of the variable to declare.<br>
  * @param VarInfo     The variable's debug info descriptor.<br>
  * @param Expr        A complex location expression for the variable.<br>
  * @param DebugLoc    Debug info location.<br>
- * @param Instr       Instruction acting as a location for the new intrinsic.
+ * @param Instr       Instruction acting as a location for the new record.
  *)
 
-PROCEDURE InsertDeclareBefore (Builder                : BuilderRef;
-                               Storage                : ValueRef;
-                               VarInfo, Expr, DebugLoc: MetadataRef;
-                               Instr                  : ValueRef;    ):
-  ValueRef;
+PROCEDURE InsertDeclareRecordBefore
+  (Builder                : BuilderRef;
+   Storage                : ValueRef;
+   VarInfo, Expr, DebugLoc: MetadataRef;
+   Instr                  : ValueRef;    ): DbgRecordRef;
 
 
 (**
- * Insert a new llvm.dbg.declare intrinsic call at the end of the given basic<br>
- * block. If the basic block has a terminator instruction, the intrinsic is<br>
- * inserted before that terminator instruction.<br>
+ * Only use in "new debug format" (LLVMIsNewDbgInfoFormat() is true).<br>
+ * See https://llvm.org/docs/RemoveDIsDebugInfo.html#c-api-changes<br>
+ * <br>
+ * The debug format can be switched later after inserting the records using<br>
+ * LLVMSetIsNewDbgInfoFormat, if needed for legacy or transitionary reasons.<br>
+ * <br>
+ * Insert a Declare DbgRecord at the end of the given basic block. If the basic<br>
+ * block has a terminator instruction, the record is inserted before that<br>
+ * terminator instruction.<br>
  * @param Builder     The DIBuilder.<br>
  * @param Storage     The storage of the variable to declare.<br>
  * @param VarInfo     The variable's debug info descriptor.<br>
  * @param Expr        A complex location expression for the variable.<br>
  * @param DebugLoc    Debug info location.<br>
- * @param Block       Basic block acting as a location for the new intrinsic.
+ * @param Block       Basic block acting as a location for the new record.
  *)
 
-PROCEDURE InsertDeclareAtEnd (Builder                : BuilderRef;
-                              Storage                : ValueRef;
-                              VarInfo, Expr, DebugLoc: MetadataRef;
-                              Block                  : BasicBlockRef; ):
-  ValueRef;
+PROCEDURE InsertDeclareRecordAtEnd (Builder                : BuilderRef;
+                                    Storage                : ValueRef;
+                                    VarInfo, Expr, DebugLoc: MetadataRef;
+                                    Block: BasicBlockRef; ): DbgRecordRef;
 
 
 (**
- * Insert a new llvm.dbg.value intrinsic call before the given instruction.<br>
+ * Only use in "new debug format" (LLVMIsNewDbgInfoFormat() is true).<br>
+ * See https://llvm.org/docs/RemoveDIsDebugInfo.html#c-api-changes<br>
+ * <br>
+ * The debug format can be switched later after inserting the records using<br>
+ * LLVMSetIsNewDbgInfoFormat, if needed for legacy or transitionary reasons.<br>
+ * <br>
+ * Insert a new debug record before the given instruction.<br>
  * @param Builder     The DIBuilder.<br>
  * @param Val         The value of the variable.<br>
  * @param VarInfo     The variable's debug info descriptor.<br>
  * @param Expr        A complex location expression for the variable.<br>
  * @param DebugLoc    Debug info location.<br>
- * @param Instr       Instruction acting as a location for the new intrinsic.
+ * @param Instr       Instruction acting as a location for the new record.
  *)
 
-PROCEDURE InsertDbgValueBefore (Builder                : BuilderRef;
-                                Val                    : ValueRef;
-                                VarInfo, Expr, DebugLoc: MetadataRef;
-                                Instr                  : ValueRef;    ):
-  ValueRef;
+PROCEDURE InsertDbgValueRecordBefore
+  (Builder                : BuilderRef;
+   Val                    : ValueRef;
+   VarInfo, Expr, DebugLoc: MetadataRef;
+   Instr                  : ValueRef;    ): DbgRecordRef;
 
 
 (**
- * Insert a new llvm.dbg.value intrinsic call at the end of the given basic<br>
- * block. If the basic block has a terminator instruction, the intrinsic is<br>
- * inserted before that terminator instruction.<br>
+ * Only use in "new debug format" (LLVMIsNewDbgInfoFormat() is true).<br>
+ * See https://llvm.org/docs/RemoveDIsDebugInfo.html#c-api-changes<br>
+ * <br>
+ * The debug format can be switched later after inserting the records using<br>
+ * LLVMSetIsNewDbgInfoFormat, if needed for legacy or transitionary reasons.<br>
+ * <br>
+ * Insert a new debug record at the end of the given basic block. If the<br>
+ * basic block has a terminator instruction, the record is inserted before<br>
+ * that terminator instruction.<br>
  * @param Builder     The DIBuilder.<br>
  * @param Val         The value of the variable.<br>
  * @param VarInfo     The variable's debug info descriptor.<br>
  * @param Expr        A complex location expression for the variable.<br>
  * @param DebugLoc    Debug info location.<br>
- * @param Block       Basic block acting as a location for the new intrinsic.
+ * @param Block       Basic block acting as a location for the new record.
  *)
 
-PROCEDURE InsertDbgValueAtEnd (Builder                : BuilderRef;
-                               Val                    : ValueRef;
-                               VarInfo, Expr, DebugLoc: MetadataRef;
-                               Block                  : BasicBlockRef; ):
-  ValueRef;
+PROCEDURE InsertDbgValueRecordAtEnd (Builder                : BuilderRef;
+                                     Val                    : ValueRef;
+                                     VarInfo, Expr, DebugLoc: MetadataRef;
+                                     Block: BasicBlockRef; ): DbgRecordRef;
 
 
 (**

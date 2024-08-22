@@ -175,6 +175,9 @@ TYPE NamedMDNodeRef = UNTRACED BRANDED "LLVMNamedMDNode" REF Opaque;
 TYPE ValueMetadataEntryRef = UNTRACED BRANDED "LLVMValueMetadataEntry" REF Opaque;
 TYPE DiagnosticInfoRef = UNTRACED BRANDED "LLVMDiagnosticInfo" REF Opaque;
 
+(* 18.0 *)
+TYPE DbgRecordRef = UNTRACED BRANDED "LLVMDbgRecordRef" REF Opaque;
+
 (* for Debug *)
 TYPE LLVMDIScope = MetadataRef;
 
@@ -2618,9 +2621,6 @@ PROCEDURE LLVMIntrinsicIsOverloaded(ID : unsigned) : Bool;
    to be used initialising a 128 bit float constant
 *)
 TYPE
-(*
-  Quad = RECORD a,b : uint64_t; END;
-*)
   QuadArr = ARRAY[0..1] OF uint64_t;
   QuadRef = UNTRACED REF QuadArr;
 

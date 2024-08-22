@@ -7,7 +7,7 @@
 
 % This package contains Modula-3 bindings to the llvm infrastructure,
 % You should have installed the llvm libraries in the appropriate place
-% for this version of the bindings ie llvm version 13
+% for this version of the bindings ie llvm version 18
 
 import ("m3core")
 

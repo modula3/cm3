@@ -14,7 +14,8 @@ IMPORT Ctypes AS C;
 IMPORT M3toC;
 
 
-FROM LLVM IMPORT ModuleRef, BuilderRef, ContextRef, ValueRef, BasicBlockRef;
+FROM LLVM IMPORT ModuleRef, BuilderRef, ContextRef, ValueRef,
+                 BasicBlockRef, DbgRecordRef;
 FROM LLVMTypes IMPORT MetadataRef, int64_t, uint64_t, uint32_t, unsigned;
 
 PROCEDURE LLVMDebugMetadataVersion (): unsigned =
@@ -1115,45 +1116,44 @@ PROCEDURE CreateTempGlobalVariableFwdDecl (Builder    : BuilderRef;
     RETURN result;
   END CreateTempGlobalVariableFwdDecl;
 
-PROCEDURE InsertDeclareBefore (Builder                : BuilderRef;
-                               Storage                : ValueRef;
-                               VarInfo, Expr, DebugLoc: MetadataRef;
-                               Instr                  : ValueRef;    ):
-  ValueRef =
+PROCEDURE InsertDeclareRecordBefore
+  (Builder                : BuilderRef;
+   Storage                : ValueRef;
+   VarInfo, Expr, DebugLoc: MetadataRef;
+   Instr                  : ValueRef;    ): DbgRecordRef =
   BEGIN
-    RETURN M3DebugInfoRaw.InsertDeclareBefore(
+    RETURN M3DebugInfoRaw.InsertDeclareRecordBefore(
              Builder, Storage, VarInfo, Expr, DebugLoc, Instr);
-  END InsertDeclareBefore;
+  END InsertDeclareRecordBefore;
 
-PROCEDURE InsertDeclareAtEnd (Builder                : BuilderRef;
-                              Storage                : ValueRef;
-                              VarInfo, Expr, DebugLoc: MetadataRef;
-                              Block                  : BasicBlockRef; ):
-  ValueRef =
+PROCEDURE InsertDeclareRecordAtEnd (Builder                : BuilderRef;
+                                    Storage                : ValueRef;
+                                    VarInfo, Expr, DebugLoc: MetadataRef;
+                                    Block: BasicBlockRef; ): DbgRecordRef =
   BEGIN
-    RETURN M3DebugInfoRaw.InsertDeclareAtEnd(
+    RETURN M3DebugInfoRaw.InsertDeclareRecordAtEnd(
              Builder, Storage, VarInfo, Expr, DebugLoc, Block);
-  END InsertDeclareAtEnd;
+  END InsertDeclareRecordAtEnd;
 
-PROCEDURE InsertDbgValueBefore (Builder                : BuilderRef;
-                                Val                    : ValueRef;
-                                VarInfo, Expr, DebugLoc: MetadataRef;
-                                Instr                  : ValueRef;    ):
-  ValueRef =
+PROCEDURE InsertDbgValueRecordBefore
+  (Builder                : BuilderRef;
+   Val                    : ValueRef;
+   VarInfo, Expr, DebugLoc: MetadataRef;
+   Instr                  : ValueRef;    ): DbgRecordRef =
   BEGIN
-    RETURN M3DebugInfoRaw.InsertDbgValueBefore(
+    RETURN M3DebugInfoRaw.InsertDbgValueRecordBefore(
              Builder, Val, VarInfo, Expr, DebugLoc, Instr);
-  END InsertDbgValueBefore;
+  END InsertDbgValueRecordBefore;
 
-PROCEDURE InsertDbgValueAtEnd (Builder                : BuilderRef;
-                               Val                    : ValueRef;
-                               VarInfo, Expr, DebugLoc: MetadataRef;
-                               Block                  : BasicBlockRef; ):
-  ValueRef =
+PROCEDURE InsertDbgValueRecordAtEnd (Builder                : BuilderRef;
+                                     Val                    : ValueRef;
+                                     VarInfo, Expr, DebugLoc: MetadataRef;
+                                     Block: BasicBlockRef; ):
+  DbgRecordRef =
   BEGIN
-    RETURN M3DebugInfoRaw.InsertDbgValueAtEnd(
+    RETURN M3DebugInfoRaw.InsertDbgValueRecordAtEnd(
              Builder, Val, VarInfo, Expr, DebugLoc, Block);
-  END InsertDbgValueAtEnd;
+  END InsertDbgValueRecordAtEnd;
 
 PROCEDURE CreateAutoVariable (Builder       : BuilderRef;
                               Scope         : MetadataRef;
