@@ -2411,7 +2411,7 @@ PROCEDURE DoGenTFile (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
     (* count the local sources *)
     u := t.units.head;
     WHILE (u # NIL) DO
-      IF u.kind IN UKImportableSet AND NOT (u.hidden AND u.imported) THEN
+      IF u.kind IN UKImportableSet THEN
         INC (n_visible);
       END;
       u := u.next;
@@ -2423,7 +2423,7 @@ PROCEDURE DoGenTFile (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
     n_visible := 0;
     u := t.units.head;
     WHILE (u # NIL) DO
-      IF u.kind IN UKImportableSet AND NOT (u.hidden AND u.imported) THEN
+      IF u.kind IN UKImportableSet THEN
         srcs [n_visible] := u;
         map  [n_visible] := n_visible;
         INC (n_visible);
