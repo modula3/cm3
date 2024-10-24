@@ -12,9 +12,6 @@
 MODULE Type;
 
 IMPORT Atom, Fmt, Text, Value, ValueProc;
-(*
-IMPORT Debug;
-*)
 
 TYPE
   Foo = OBJECT
@@ -58,8 +55,8 @@ PROCEDURE ToText (t: T; byName: BOOLEAN := TRUE): Text.T =
             RETURN "[" & Fmt.LongInt(min) & "L.." & Fmt.LongInt(max) & "L]";
           END;
         END;
-        min := NARROW(sub.min, Value.Integer).val;
-        max := NARROW(sub.max, Value.Integer).val;
+        min := NARROW(sub.min, Value.Ordinal).ord;
+        max := NARROW(sub.max, Value.Ordinal).ord;
         IF sub.base = integer THEN
           RETURN "[" & Fmt.Int(min) & ".." & Fmt.Int(max) & "]"
         END;
@@ -94,8 +91,10 @@ PROCEDURE ToText (t: T; byName: BOOLEAN := TRUE): Text.T =
         END;
         TYPECASE ref OF
         | Object(o) => 
-          RETURN ToText(o.super) & " " & text & "OBJECT " &
-                 FieldsToText(o.fields) &
+(* 2 newlines "\\n\\n" for new paragraph and 2 spaces and a newline "  \\n"
+   for a newline *)
+          RETURN ToText(o.super) & " " & text & "OBJECT  \\n" &
+                 FieldsToText(o, o.fields) &
                  " METHODS " & MethodsToText(t, o.methods) & " END";
         | Ref (r) => 
           IF NOT r.traced THEN text := "UNTRACED " & text END;
@@ -114,7 +113,7 @@ PROCEDURE ToText (t: T; byName: BOOLEAN := TRUE): Text.T =
       END;
       RETURN "ARRAY " & text & " OF " & ToText(arr.element);
     | Packed (p) => RETURN "BITS " & Fmt.Int(p.size) & " FOR " & ToText(p.base);
-    | Record (rec) => RETURN "RECORD " & FieldsToText(rec.fields) & " END";
+    | Record (rec) => RETURN "RECORD " & FieldsToText(rec, rec.fields) & " END";
     | Set (set) => RETURN "SET OF " & ToText(set.range);
     | Procedure (proc) => RETURN "PROCEDURE" & SigToText(t, proc.sig);
     ELSE
@@ -159,7 +158,7 @@ PROCEDURE SigToText (t : T; sig: Signature): TEXT =
     RETURN "(" & FormalsToText(sig.formals) & ")" & result & raises;
   END SigToText;
 
-PROCEDURE FieldsToText (f: REF ARRAY OF Field): TEXT =
+PROCEDURE FieldsToText (p : T; f: REF ARRAY OF Field): TEXT =
   VAR
     notFirst := FALSE;
     text     := "";
@@ -167,7 +166,11 @@ PROCEDURE FieldsToText (f: REF ARRAY OF Field): TEXT =
     FOR i := 0 TO LAST(f^) DO
       IF notFirst THEN text := text & "; "; END;
       notFirst := TRUE;
-      text := text & Atom.ToText(f[i].name) & ": " & ToText(f[i].type);
+      IF p # f[i].type THEN
+        text := text & Atom.ToText(f[i].name) & ": " & ToText(f[i].type);
+      ELSE
+        text := text & Atom.ToText(f[i].name) (*& QidToText(f[i].type.name)*) & " DELME OR FIXME";
+      END;
       IF f[i].default # NIL THEN
         text := text & ":= " & ValueProc.ToText(f[i].default, f[i].type);
       END;
@@ -210,9 +213,8 @@ PROCEDURE FormalsToText (f: REF ARRAY OF Formal): TEXT =
       IF notFirst THEN text := text & "; "; END;
       notFirst := TRUE;
       IF f[i].outOnly THEN outPrag := "<*OUT*> " ELSE outPrag := "" END;
-      text :=
-          text & modeName[f[i].mode] & " " & outPrag &
-          Atom.ToText(f[i].name) & ": " & ToText(f[i].type);
+      text := text & modeName[f[i].mode] & " " & outPrag &
+                Atom.ToText(f[i].name) & ": " & ToText(f[i].type);
       IF f[i].default # NIL THEN
         text := text & ":= " & ValueProc.ToText(f[i].default, f[i].type);
       END;
@@ -272,8 +274,8 @@ BEGIN
   nullAtm := Atom.FromText("");
   integer := NEW(Subrange, name := NEW(Qid, intf := nullAtm,
                                        item := Atom.FromText("INTEGER")),
-                 min := NEW(Value.Integer, val := FIRST(INTEGER)),
-                 max := NEW(Value.Integer, val := LAST(INTEGER)));
+                 min := NEW(Value.Ordinal, ord := FIRST(INTEGER)),
+                 max := NEW(Value.Ordinal, ord := LAST(INTEGER)));
   integer.base := integer;
   longint := NEW(Subrange, name := NEW(Qid, intf := nullAtm,
                                        item := Atom.FromText("LONGINT")),
@@ -283,7 +285,7 @@ BEGIN
 
   cardinal := NEW(Subrange, name := NEW(Qid, intf := nullAtm,
                                         item := Atom.FromText("CARDINAL")),
-                  base := integer, min := NEW(Value.Integer, val := 0),
+                  base := integer, min := NEW(Value.Ordinal, ord := 0),
                   max := integer.max);
   longcard := NEW(Subrange, name := NEW(Qid, intf := nullAtm,
                                         item := Atom.FromText("LONGCARD")),

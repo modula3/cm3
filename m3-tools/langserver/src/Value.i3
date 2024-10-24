@@ -3,6 +3,7 @@
 (* See the file COPYRIGHT for a full description.              *)
 
 INTERFACE Value;
+IMPORT Atom;
 
 (* A Value.T is a representation for a Modula-3 value; it is intended 
    to be used in conjunction with the typed Abstract Syntax Tree 
@@ -15,12 +16,13 @@ INTERFACE Value;
 
 TYPE 
   T <: ROOT;
-  (* Integer | Longint | Float | LongFloat | Extended | Array | Set | Record | 
+  (* Ordinal | Longint | Float | LongFloat | Extended | ArrayOrRecord | Set | 
      Text | Null *)
 
-    Integer = T OBJECT val: INTEGER END;
+    Ordinal = T OBJECT ord: INTEGER END;
+    (* ORD(the value) *)
 
-    Longint = T OBJECT val: LONGINT END;
+    Longint = T OBJECT val: LONGINT (*REFANY*) (* REF LONGINT *) END;
 
     Float = T OBJECT val: REAL END;
 
@@ -28,17 +30,41 @@ TYPE
 
     Extended  = T OBJECT val: EXTENDED END;
 
-    Array = T OBJECT elements: REF ARRAY OF T END;
+    ArrayOrRecord = T OBJECT elements: REF ARRAY OF Element END;
+    (* for array, elements can be either a normal T or a Propagate. 
+       for record, he field values in the order the fields are declared. *)
+       
+    Set = T OBJECT elements: REF ARRAY OF BOOLEAN (*Ordinal*) END;
+    (* the ordinals corresponding to the base type of the set.
+       note that this declaration has changed from what's in the SRC
+       code, because 
+       (1) AstToValue doesn't have enough information to generate the 
+           old format
+       (2) The old format can grow exponentially with the program text
+           (TYPE S = SET OF [0..1024*1024]), whereas this version only 
+           grows linearly with the program text.
+    *)
 
-    Set = T OBJECT elements: REF ARRAY OF BOOLEAN END;
-
-    Record = T OBJECT elements: REF ARRAY OF T END;
-    (* The field values in the order the fields are declared. *)
 
     Txt = T OBJECT val: TEXT END;
 
     Null = T OBJECT END;
     (* The value NIL. *)
 
+    Proc = T OBJECT intf, item : Atom.T END;
+
+    (************************************************************)
+
+    (* special things for ArrayOrRecord *)
+    Element = BRANDED OBJECT END;
+
+    Propagate = Element BRANDED OBJECT END; (* the last init. is propagated *)
+
+    Range = Element OBJECT val : T END;
+
+    Actual = Range OBJECT field : Atom.T END; 
+    (* really not quite right, an Actual can also be a TYPE, but
+       not in this context *)
+    
 END Value.
 

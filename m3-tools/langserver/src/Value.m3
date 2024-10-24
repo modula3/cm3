@@ -18,32 +18,29 @@ REVEAL T =  ROOT BRANDED OBJECT END;
 PROCEDURE ToText(v: T; type: Type.T): TEXT =
   BEGIN
     TYPECASE v OF
-    | Integer (i) => 
+    | Ordinal (ordinal) => 
         IF (type = Type.integer) OR (type = Type.cardinal) THEN
-          RETURN Fmt.Int(i.val); 
-        ELSIF type = Type.boolean THEN 
-          RETURN Fmt.Bool(VAL(i.val, BOOLEAN));
-        ELSE TYPECASE type OF
-          | Type.Char =>  RETURN "VAL(" & Fmt.Int(i.val) & ", CHAR)";
-          | Type.WideChar =>  RETURN "VAL(" & Fmt.Int(i.val) & ", WIDECHAR)";
-          | Type.UserDefined (ud) => 
-             RETURN Atom.ToText(ud.elts[i.val]);
-          | Type.Subrange (sub) =>
-             RETURN ToText(NEW(Integer,
-                               val := i.val +  NARROW(sub.min, Integer).val),
-                           sub.base);
-          ELSE RETURN "Value.ToText: unsupported ordinal type";
+          IF ordinal.ord = LAST(INTEGER) THEN
+            RETURN "MAXINT";
+          ELSIF ordinal.ord = FIRST(INTEGER) THEN
+            RETURN "MININT";
+          ELSE
+            RETURN Fmt.Int(ordinal.ord); 
           END;
-        END;
-    | Longint (i) =>
-        IF (type = Type.longint) OR (type = Type.longcard) THEN
-          RETURN Fmt.LongInt(i.val); 
+        ELSIF type = Type.boolean THEN 
+          RETURN Fmt.Bool(VAL(ordinal.ord, BOOLEAN));
         ELSE TYPECASE type OF
+            Type.Char =>  RETURN "VAL(" & Fmt.Int(ordinal.ord) & ", CHAR)";
+          | Type.UserDefined (ud) => 
+             RETURN Atom.ToText(ud.elts[ordinal.ord]);
           | Type.Subrange (sub) =>
-             RETURN ToText(NEW(Longint,
-                               val := i.val +  NARROW(sub.min, Longint).val),
+             RETURN ToText(NEW(Ordinal, 
+                    ord := ordinal.ord +  NARROW(sub.min, Ordinal).ord),
                            sub.base);
-          ELSE RETURN "Value.ToText: unsupported ordinal type";
+(*
+| Type.Reference (n) => RETURN ("NIL");
+*)
+          ELSE RETURN("Value.ToText: unsupported ordinal type");
           END;
         END;
     | Float (f) =>
@@ -58,55 +55,82 @@ PROCEDURE ToText(v: T; type: Type.T): TEXT =
           RETURN Text.Sub(txt, 0, pos) & "X" & 
                  Text.Sub(txt, pos+1, Text.Length(txt));
         END;
-    | Array (arr) =>
+    | ArrayOrRecord (aor) =>
+      (* arrays and records use same format for initialization *)
+      TYPECASE type OF
+        Type.Array(arrType) =>
         VAR eltList: TEXT;
-            eltType: Type.T := NARROW(type, Type.Array).element;
+            eltType:= arrType.element;
         BEGIN 
-          IF NUMBER(arr.elements^) = 0 THEN 
+          IF NUMBER(aor.elements^) = 0 THEN 
             eltList := "";
           ELSE
-            eltList := ToText(arr.elements[0], eltType);
-            FOR i := 1 TO LAST(arr.elements^) DO
+            eltList := ArrayOrRecordElemToText(aor.elements[0], eltType);
+            FOR i := 1 TO LAST(aor.elements^) DO
               eltList := eltList & ", " & 
-                 ToText(arr.elements[i], eltType);
+                           ArrayOrRecordElemToText(aor.elements[i], eltType);
             END;
           END;
           RETURN Type.ToText(type) & "{" & eltList & "}";
         END;
+      |
+        Type.Record(recType) =>
+        VAR fieldList: TEXT := "";
+            notFirst := FALSE;
+        BEGIN
+          FOR i := 0 TO LAST(aor.elements^) DO
+            IF notFirst THEN fieldList := fieldList & ", "; END;
+            notFirst := TRUE;
+            fieldList := fieldList & 
+               ArrayOrRecordElemToText(aor.elements[i], recType.fields[i].type);
+          END;
+          RETURN Type.ToText(type) & "{" & fieldList & "}";          
+        END;
+      ELSE
+        RETURN("Value.ToText: Array or record constructor but type isn't Type.Array or Type.Record")
+      END
     | Set (set) =>
         VAR eltList: TEXT := "";
             baseType: Type.T := NARROW(type, Type.Set).range;
             notFirst := FALSE;
         BEGIN 
           FOR i := 0 TO LAST(set.elements^) DO
-            IF set.elements[i] THEN
+
+            IF set.elements[i]  THEN
+
               IF notFirst THEN eltList := eltList & ", "; END;
               notFirst := TRUE;
               eltList := eltList & 
-                 ToText(NEW(Integer, val:=i), baseType);
+(*
+                           ToText(NEW(Integer, val := i), baseType);
+*)
+ 
+                           ToText(NEW(Ordinal, 
+                                    ord:=i (*set.elements[i].ord*)), baseType);
+
+
             END;
+
           END;
           RETURN Type.ToText(type) & "{" & eltList & "}";
         END;
-    | Record (rec) =>
-        VAR fieldList: TEXT := "";
-            recType := NARROW(type, Type.Record);
-            notFirst := FALSE;
-        BEGIN
-          FOR i := 0 TO LAST(rec.elements^) DO
-            IF notFirst THEN fieldList := fieldList & ", "; END;
-            notFirst := TRUE;
-            fieldList := fieldList & 
-               ToText(rec.elements[i], recType.fields[i].type);
-          END;
-          RETURN Type.ToText(type) & "{" & fieldList & "}";          
-        END;
     | Txt (text) => RETURN "\"" & text.val & "\"";
     | Null  => RETURN "NIL";
-    ELSE RETURN "Value.ToText: unsupported type";
+    ELSE RETURN("Value.ToText: unsupported type");
     END;
-
   END ToText;
+
+PROCEDURE ArrayOrRecordElemToText(elem : Element; type : Type.T) : TEXT =
+  BEGIN
+    TYPECASE elem OF
+      Propagate => RETURN ".." (* propagate array initializer *)
+    |
+      Range(ran) => RETURN ToText(ran.val, type)
+    |
+      Actual(act) => RETURN Atom.ToText(act.field) & " := " & ToText(act.val, type)
+    ELSE RETURN("Value.ArrayOrRecordElemToText: unsupported type");
+    END
+  END ArrayOrRecordElemToText;
 
 BEGIN
 END Value.

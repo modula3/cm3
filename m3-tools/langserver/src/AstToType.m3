@@ -11,7 +11,7 @@ IMPORT M3AST_AS_F, M3AST_SM, M3AST_SM_F, M3AST_TM_F, M3ASTNext,
        M3AST_TL_F, M3AST_LX, 
        M3Context, M3CConcTypeSpec, M3CStdTypes;
 IMPORT SeqM3AST_AS_Enum_id, SeqM3AST_AS_Fields,
-       SeqM3AST_AS_Field_id, SeqM3AST_AS_Method, 
+       SeqM3AST_AS_Field_id, SeqM3AST_AS_Method, SeqM3AST_AS_Override,
        SeqM3AST_AS_Qual_used_id; (*SeqM3AST_AS_TYPE_SPEC,*)
 IMPORT M3CBackEnd_C, M3CTypesMisc;
 IMPORT Wr, Stdio;
@@ -160,8 +160,8 @@ PROCEDURE ProcessTypeSpec (h: Handle; ts: M3AST_AS.TYPE_SPEC): Type.T =
                i2 = NARROW(e2.sm_exp_value,
                            M3CBackEnd_C.Integer_value).sm_value DO
             t := NEW(Type.Subrange, base := baseType,
-                     min := NEW(Value.Integer, val := i1),
-                     max := NEW(Value.Integer, val := i2));
+                     min := NEW(Value.Ordinal, ord := i1),
+                     max := NEW(Value.Ordinal, ord := i2));
           END;
         END;
       | M3AST_AS.Record_type (rec) => 
@@ -364,9 +364,9 @@ PROCEDURE ProcessObject (h      : Handle;
     END;
     t.fields := ProcessFields(h, o.as_fields_s);
     t.methods := ProcessMethods(h, o.as_method_s);
+    t.overrides := ProcessOverrides(o.as_override_s);
     RETURN t;
   END ProcessObject;
-
 
 PROCEDURE ProcessFields (h: Handle; f: SeqM3AST_AS_Fields.T):
   REF ARRAY OF Type.Field =
@@ -392,7 +392,7 @@ PROCEDURE ProcessFields (h: Handle; f: SeqM3AST_AS_Fields.T):
         ELSE
           fields[j].type := ProcessM3Type(h, astFields.as_type);
         END;
-        IF (*fieldId.vINIT_ID.sm_init_exp*) astFields.as_default # NIL THEN
+        IF astFields.as_default # NIL THEN
           fields[j].default :=
               AstToVal.ProcessExp((*h,*)
                                   (*fieldId.vINIT_ID.sm_init_exp);*)
@@ -421,6 +421,7 @@ PROCEDURE ProcessMethods (h: Handle; m: SeqM3AST_AS_Method.T):
       methods[i].sig :=
           NARROW(ProcessTypeSpec(h, astMethod.as_type), Type.Procedure).sig;
       IF astMethod.as_default # NIL THEN
+        methods[i].default := ProcessMethodDefault(astMethod.as_default)
 (*
         methods[i].default := AstToVal.Val(
                                   astMethod.vINIT_ID.sm_init_exp,
@@ -430,6 +431,39 @@ PROCEDURE ProcessMethods (h: Handle; m: SeqM3AST_AS_Method.T):
     END;
     RETURN methods;
   END ProcessMethods;
+
+PROCEDURE ProcessOverrides(o : SeqM3AST_AS_Override.T):
+  REF ARRAY OF Type.Override =
+  VAR nOverrides:= SeqM3AST_AS_Override.Length(o);
+      overrides: REF ARRAY OF Type.Override;
+      iter := SeqM3AST_AS_Override.NewIter(o);
+      astOverride: M3AST_AS.Override;
+  BEGIN
+    overrides := NEW(REF ARRAY OF Type.Override, nOverrides);
+    FOR i := 0 TO nOverrides-1 DO
+      EVAL SeqM3AST_AS_Override.Next(iter, astOverride);
+      overrides[i] := NEW(Type.Override);
+      overrides[i].name := 
+          Atom.FromText(M3CId.ToText(astOverride.as_id.lx_symrep));
+      IF astOverride.as_default # NIL THEN
+        overrides[i].default := ProcessMethodDefault(astOverride.as_default)
+      END
+      (*overrides[i].default := AstToVal.Val(
+        astOverride.vINIT_ID.sm_init_exp,
+        overrides[i].type).sm_exp_value   *)
+    END;
+    RETURN overrides;
+  END ProcessOverrides;
+
+PROCEDURE ProcessMethodDefault(as_default : M3AST_AS_F.Exp_used_id) : Type.MethodDefault =
+  BEGIN
+    WITH used_id = as_default.vUSED_ID,
+         intf = Atom.FromText(M3CId.ToText(used_id.sm_def.tmp_unit_id.lx_symrep)),
+         item = Atom.FromText(M3CId.ToText(used_id.lx_symrep)) DO
+      RETURN NEW(Type.MethodDefault1,
+                 qid := NEW(Type.Qid, intf:= intf, item:= item))
+    END
+  END ProcessMethodDefault;
 
 BEGIN
 END AstToType.
