@@ -109,11 +109,17 @@ ThreadPThread__pthread_mutex_setprioceiling(pthread_mutex_t *mutex,
 // Affinity 
 /* affinity is non portable (with the np sufix) */
 
+#if defined(__linux__)
+#define cpuSetType cpu_set_t
+#else
+#define cpuSetType int 
+#endif
+
 int
 __cdecl
 ThreadPThread__pthread_setaffinity_np(pthread_t t, 
                                       int cpuSetSize,
-                                      cpu_set_t *cpuSet) 
+                                      cpuSetType *cpuSet) 
 {
 #if defined(__linux__)  
   return pthread_setaffinity_np(t, cpuSetSize, cpuSet);
@@ -126,7 +132,7 @@ int
 __cdecl
 ThreadPThread__pthread_getaffinity_np(pthread_t t, 
                                       int cpuSetSize,
-                                      cpu_set_t *cpuSet) 
+                                      cpuSetType *cpuSet) 
 {
 #if defined(__linux__)  
   return pthread_getaffinity_np(t, cpuSetSize, cpuSet);
@@ -137,7 +143,7 @@ ThreadPThread__pthread_getaffinity_np(pthread_t t,
 
 // set functions for affinity support
 
-cpu_set_t *
+cpuSetType *
 __cdecl
 ThreadPThread__alloc_cpuset(int num_cpus, int *size)
 {
@@ -151,7 +157,7 @@ ThreadPThread__alloc_cpuset(int num_cpus, int *size)
 
 void
 __cdecl
-ThreadPThread__free_cpuset(cpu_set_t *cpuset)
+ThreadPThread__free_cpuset(cpuSetType *cpuset)
 {
 #if defined(__linux__)  
   CPU_FREE(cpuset);
@@ -160,7 +166,7 @@ ThreadPThread__free_cpuset(cpu_set_t *cpuset)
 
 void
 __cdecl
-ThreadPThread__zero_cpuset(int size, cpu_set_t *cpuset)
+ThreadPThread__zero_cpuset(int size, cpuSetType *cpuset)
 {
 #if defined(__linux__)  
   CPU_ZERO_S(size, cpuset);
@@ -169,7 +175,7 @@ ThreadPThread__zero_cpuset(int size, cpu_set_t *cpuset)
 
 int
 __cdecl
-ThreadPThread__in_cpuset(int cpu, int size, cpu_set_t *cpuset)
+ThreadPThread__in_cpuset(int cpu, int size, cpuSetType *cpuset)
 {
 #if defined(__linux__)  
   return CPU_ISSET_S(cpu, size, cpuset);
@@ -180,7 +186,7 @@ ThreadPThread__in_cpuset(int cpu, int size, cpu_set_t *cpuset)
 
 void
 __cdecl
-ThreadPThread__add_core_to_cpuset(int core_id, int size, cpu_set_t *cpuset)
+ThreadPThread__add_core_to_cpuset(int core_id, int size, cpuSetType *cpuset)
 {
 #if defined(__linux__)  
    CPU_SET_S(core_id, size, cpuset); 
