@@ -19,4 +19,4 @@ DarwinArch = "x86_64"
 include("AMD64.common")
 include("Darwin.common")
 
-SYSTEM_LIBS{"X11"} = ["-L/opt/X11/lib", "-lXft", "-lfontconfig", "-lXaw", "-lXmu", "-lXext", "-lXt", "-lSM", "-lICE", "-lX11" ]
+SYSTEM_LIBS{"X11"} = ["-L/opt/X11/lib", "-lXft", "-lfontconfig", "-lXaw", "-lXmu", "-lXext", "-lXt", "-lSM", "-lICE", "-lXpm", "-lX11" ]
