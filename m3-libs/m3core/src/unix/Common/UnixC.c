@@ -112,7 +112,8 @@ int __cdecl Unix__open (const char* path, int flags, m3_mode_t mode)
     if (m3core_trace.s.open)
     {
         char* buf = (char*)alloca (256 + strlen (path));
-        int len = sprintf (buf, "open (%s):%d\n", path, result);
+	int maxlen = sizeof buf;
+        int len = snprintf (buf, maxlen, "open (%s):%d\n", path, result);
         write (1, buf, len);
     }
 #endif
@@ -137,7 +138,8 @@ int __cdecl Unix__creat (const char* path, m3_mode_t mode)
     if (m3core_trace.s.creat)
     {
         char* buf = (char*)alloca (256 + strlen (path));
-        int len = sprintf (buf, "creat (%s):%d\n", path, result);
+	int maxlen = sizeof buf;
+        int len = snprintf (buf, maxlen, "creat (%s):%d\n", path, result);
         write (1, buf, len);
     }
 #endif
@@ -159,7 +161,8 @@ int __cdecl Unix__close (int fd)
     if (m3core_trace.s.close)
     {
         char* buf = (char*)alloca (256);
-        int len = sprintf (buf, "close (%d):%d\n", fd, result);
+	int maxlen = sizeof buf;
+        int len = snprintf (buf, maxlen, "close (%d):%d\n", fd, result);
         write (1, buf, len);
     }
 #endif
@@ -180,7 +183,8 @@ int __cdecl Unix__chdir (const char* path)
     if (m3core_trace.s.chdir)
     {
         char* buf = (char*)alloca (256 + strlen (path));
-        int len = sprintf (buf, "chdir (%s):%d\n", path, result);
+	int maxlen = sizeof buf;
+        int len = snprintf (buf, maxlen, "chdir (%s):%d\n", path, result);
         write (1, buf, len);
     }
 #endif

@@ -78,7 +78,8 @@ Ustat__stat(const char* path, m3_stat_t* m3st)
     if (m3core_trace.s.stat)
     {
         char* buf = (char*)alloca (256 + strlen (path));
-        int len = sprintf (buf, "stat (%s):mode:%X,%d\n", path, (unsigned)st.st_mode, result);
+	int maxlen = sizeof buf;
+        int len = snprintf (buf, maxlen, "stat (%s):mode:%X,%d\n", path, (unsigned)st.st_mode, result);
         write (1, buf, len);
     }
 #endif
@@ -108,7 +109,8 @@ Ustat__fstat(int fd, m3_stat_t* m3st)
     if (m3core_trace.s.fstat)
     {
         char* buf = (char*)alloca (256);
-        int len = sprintf (buf, "fstat (%d):mode:%X,%d\n", fd, (unsigned)st.st_mode, result);
+	int maxlen = sizeof buf;
+        int len = snprintf (buf, maxlen, "fstat (%d):mode:%X,%d\n", fd, (unsigned)st.st_mode, result);
         write (1, buf, len);
     }
 #endif
