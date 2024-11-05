@@ -10,13 +10,14 @@ IMPORT Word;
 FROM Word IMPORT T;
 
 VAR
-  a, b, c: T;
+  a, b, c: T := 1;
   z : BOOLEAN;
 
 BEGIN
 
 a := Word.Plus (b, c);
 a := Word.Times (b, c);
+a := Word.Divide (b, c);
 a := Word.Minus (b, c);
 z := Word.LT (b, c);
 z := Word.LE (b, c);
