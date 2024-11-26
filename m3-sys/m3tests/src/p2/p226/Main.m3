@@ -1,6 +1,7 @@
 UNSAFE MODULE Main;
 IMPORT AtomicAddress, AtomicBoolean, AtomicChar, AtomicInteger, AtomicLongint, AtomicRefany;
 IMPORT AtomicWideChar, Address, Boolean, Char, Integer, Longint, Refany, WideChar;
+IMPORT IO;
 
 VAR
   atomicBooleanA: AtomicBoolean.T;
@@ -284,12 +285,17 @@ BEGIN
 END Test_AtomicRefany_IsLockFree;
 
 PROCEDURE Test_AtomicRefany_LoadStore() =
-VAR refanyC: Refany.T;
+TYPE
+  AA = REF INTEGER;
+VAR
+   refanyC: Refany.T;
+  xxx := NEW(AA);
 BEGIN
+  xxx^ := 23;
   refanyB := AtomicRefany.Load(atomicRefanyA);
-  AtomicRefany.Store(atomicRefanyA, LOOPHOLE(1 + 2 + 3, REFANY));
+  AtomicRefany.Store(atomicRefanyA, LOOPHOLE(xxx, REFANY));
   refanyB := AtomicRefany.Load(atomicRefanyA);
-  AtomicRefany.Store(atomicRefanyA, LOOPHOLE(1 + 2 + 3, REFANY));
+  AtomicRefany.Store(atomicRefanyA, LOOPHOLE(xxx, REFANY));
 
   refanyC := AtomicRefany.Load(atomicRefanyA);
   refanyC := AtomicRefany.Load(atomicRefanyA);
@@ -402,6 +408,15 @@ END Test_AtomicInteger_Fence;
 PROCEDURE Test_AtomicInteger_CompareSwap() =
 BEGIN
   bool := AtomicInteger.CompareSwap(atomicIntegerA, integerB, integerC);
+(*peter*)
+integerB := 3;
+integerC := 5;
+
+atomicIntegerA.rep := 9;
+
+  integerC := AtomicInteger.Swap(atomicIntegerA, integerB);
+IO.PutInt(integerC);
+IO.PutInt(atomicIntegerA.rep);
 END Test_AtomicInteger_CompareSwap;
 
 PROCEDURE Test_AtomicInteger_FetchAnd() =
