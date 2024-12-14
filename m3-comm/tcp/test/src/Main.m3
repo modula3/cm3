@@ -7,7 +7,14 @@ TYPE
 
 PROCEDURE BoolToText(a: BOOLEAN) : TEXT =
   BEGIN
+    (* this constructor is producing erronious code
     RETURN ARRAY OF TEXT{"FALSE", "TRUE"}[ORD(a)];
+    *)
+    IF a THEN
+      RETURN("TRUE");
+    ELSE
+      RETURN("FALSE");
+    END;
   END BoolToText;
 
 PROCEDURE PrintBool(f: BOOLEAN) =
@@ -40,7 +47,6 @@ BEGIN
 
   RTIO.PutText("GetHostByName:");
   PrintBool(ok);
-  RTIO.PutText("\n");
   PrintAddress(address);
   RTIO.PutText("\n");
 
@@ -48,11 +54,11 @@ BEGIN
   PrintAddress(IP.GetHostAddr());
   RTIO.PutText("\n");
 
-  RTIO.PutText("GetCanonicalByName:");
+  RTIO.PutText("GetCanonicalByName:192.168.0.1");
   RTIO.PutText(IP.GetCanonicalByName("192.168.0.1"));
   RTIO.PutText("\n");
 
-  RTIO.PutText("GetCanonicalByName:");
+  RTIO.PutText("GetCanonicalByName:www.google.com");
   RTIO.PutText(IP.GetCanonicalByName("www.google.com"));
   RTIO.PutText("\n");
 
@@ -63,11 +69,11 @@ BEGIN
       RTIO.PutText(text);
   EXCEPT
   ELSE
-    RTIO.PutText("exception");
+    RTIO.PutText("GetCanonicalByAddr exception");
   END;
   RTIO.PutText("\n");
 
-  RTIO.PutText("GetAddrInfo+GetNameInfo:192.168 ");
+  RTIO.PutText("GetAddrInfo+GetNameInfo:192.168.0.1 ");
   ep := IP.GetAddrInfo("192.168.0.1", "https");
   IP.GetNameInfo(ep, host, service);
   RTIO.PutText("host:");
@@ -76,7 +82,7 @@ BEGIN
   RTIO.PutText(service);
   RTIO.PutText("\n");
 
-  RTIO.PutText("GetAddrInfo+GetNameInfo:goog ");
+  RTIO.PutText("GetAddrInfo+GetNameInfo:www.google.com ");
   ep := IP.GetAddrInfo("www.google.com", "https");
   IP.GetNameInfo(ep, host, service);
   RTIO.PutText("host:");
@@ -84,7 +90,8 @@ BEGIN
   RTIO.PutText(" service:");
   RTIO.PutText(service);
   RTIO.PutText("\n");
-
+(*
+*)
   RTIO.Flush();
 
 
