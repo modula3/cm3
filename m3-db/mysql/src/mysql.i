@@ -51,6 +51,7 @@
 %ignore mysql_optionsv;
 %ignore mysql_get_optionv;
 %ignore st_ma_const_string;
+%ignore st_ma_const_data;
 %ignore st_mysql_client_plugin;
 %ignore st_ma_used_mem;
 %ignore st_ma_mem_root;
