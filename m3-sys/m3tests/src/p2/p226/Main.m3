@@ -1,7 +1,6 @@
 UNSAFE MODULE Main;
 IMPORT AtomicAddress, AtomicBoolean, AtomicChar, AtomicInteger, AtomicLongint, AtomicRefany;
 IMPORT AtomicWideChar, Address, Boolean, Char, Integer, Longint, Refany, WideChar;
-IMPORT IO;
 
 VAR
   atomicBooleanA: AtomicBoolean.T;
@@ -408,15 +407,7 @@ END Test_AtomicInteger_Fence;
 PROCEDURE Test_AtomicInteger_CompareSwap() =
 BEGIN
   bool := AtomicInteger.CompareSwap(atomicIntegerA, integerB, integerC);
-(*peter*)
-integerB := 3;
-integerC := 5;
-
-atomicIntegerA.rep := 9;
-
   integerC := AtomicInteger.Swap(atomicIntegerA, integerB);
-IO.PutInt(integerC);
-IO.PutInt(atomicIntegerA.rep);
 END Test_AtomicInteger_CompareSwap;
 
 PROCEDURE Test_AtomicInteger_FetchAnd() =
