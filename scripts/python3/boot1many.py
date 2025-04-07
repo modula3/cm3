@@ -1,0 +1,133 @@
+#! /usr/bin/env python
+
+import os, sys
+argv = sys.argv
+
+def RemoveTrailingSpaces(a):
+    while len(a) > 0 and a[-1] == ' ':
+        a = a[:-1]
+    return a
+
+def Run(command):
+    command = RemoveTrailingSpaces(command + " " + " ".join(argv[1:]))
+    print("'" + command + "'")
+    os.system(command) and sys.exit("ERROR: " + command)
+
+for a in [
+#"IA64_VMS",        # TODO no config files
+#"MIPS32_IRIX",     # TODO no config files
+#"MIPS64_IRIX",     # TODO no config files
+"ALPHA_OPENBSD",
+"AMD64_OPENBSD",
+"I386_OPENBSD",
+"MIPS64_OPENBSD",
+"MIPS64EL_OPENBSD",
+"PPC32_OPENBSD",
+"SPARC64_OPENBSD",
+"ALPHA_FREEBSD",
+"ALPHA_LINUX",
+"ALPHA_NETBSD",
+"ALPHA_OSF",
+"ALPHA32_VMS",
+"ALPHA64_VMS",
+"AMD64_DARWIN",
+"AMD64_FREEBSD",
+"AMD64_LINUX",
+"AMD64_NETBSD",
+"AMD64_SOLARIS",
+"ARMEL_LINUX",
+"I386_CYGWIN",
+"I386_DARWIN",
+"I386_FREEBSD",
+"I386_INTERIX",
+"I386_LINUX",
+"I386_MINGW",
+"I386_MSDOS",
+"I386_NETBSD",
+"I386_NT",
+"I386_SOLARIS",
+"IA64_FREEBSD",
+"IA64_HPUX",
+"IA64_LINUX",
+"MIPS32_LINUX",
+"MIPS64_LINUX",
+"PA32_HPUX",
+"PA32_LINUX",
+"PA64_HPUX",
+"PA64_LINUX",
+"PPC32_AIX",
+"PPC64_AIX",
+"PPC_DARWIN",
+"PPC64_DARWIN",
+"PPC_LINUX",
+"PPC64_LINUX",
+"SPARC32_LINUX",
+"SPARC32_SOLARIS",
+"SPARC64_LINUX",
+"SPARC64_SOLARIS",
+"SPARC_SOLARIS",
+"AMD64_NT",
+"ARM_DARWIN",
+#"IA64_NT",
+]:
+    Run("./boot1.py c " + a)
+
+
+for a in [
+#"IA64_VMS",        # TODO no config files
+#"MIPS32_IRIX",     # TODO no config files
+#"MIPS64_IRIX",     # TODO no config files
+"ALPHA_OPENBSD",
+"AMD64_OPENBSD",
+"I386_OPENBSD",
+#"MIPS64_OPENBSD",  # TODO gcc backend fails
+"MIPS64EL_OPENBSD",
+"PPC32_OPENBSD",
+"SPARC64_OPENBSD",
+"ALPHA_FREEBSD",
+"ALPHA_LINUX",
+"ALPHA_NETBSD",
+"ALPHA_OSF",
+"ALPHA32_VMS",
+"ALPHA64_VMS",
+"AMD64_DARWIN",
+"AMD64_FREEBSD",
+"AMD64_LINUX",
+"AMD64_NETBSD",
+"AMD64_SOLARIS",
+"ARMEL_LINUX",
+"I386_CYGWIN",
+"I386_DARWIN",
+"I386_FREEBSD",
+"I386_INTERIX",
+"I386_LINUX",
+"I386_MINGW",
+"I386_MSDOS",
+"I386_NETBSD",
+"I386_NT",
+"I386_SOLARIS",
+"IA64_FREEBSD",
+"IA64_HPUX",
+"IA64_LINUX",
+"MIPS32_LINUX",
+"MIPS64_LINUX",
+"PA32_HPUX",
+"PA32_LINUX",
+"PA64_HPUX",
+"PA64_LINUX",
+"PPC32_AIX",
+"PPC64_AIX",
+"PPC_DARWIN",
+"PPC64_DARWIN",
+"PPC_LINUX",
+"PPC64_LINUX",
+"SPARC32_LINUX",
+"SPARC32_SOLARIS",
+"SPARC64_LINUX",
+"SPARC64_SOLARIS",
+"SPARC_SOLARIS",
+"AMD64_NT",
+"ARM_DARWIN",
+#"IA64_NT",
+]:
+    Run("./boot1.py " + a)
