@@ -28,6 +28,7 @@ CONST
   p = Set{E.a2, E.c4, E.e6};
   q = Set{};
   r = Set{E.a2 .. E.b3, E.a2 .. E.a2, E.a4 .. E.a4, E.d5 .. E.b1};
+  s = SET OF CHAR {'0' .. '9'};
 
 BEGIN
   Test.check (E.a2 IN p);
