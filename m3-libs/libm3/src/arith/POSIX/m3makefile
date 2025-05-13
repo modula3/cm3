@@ -7,3 +7,6 @@
 %      modified on Tue Feb 11 16:29:34 PST 1992 by muller
 
 Interface ("Math")
+implementation ("MathPosix")
+c_source ("MathPosixC")
+interface ("MathPosixC")
