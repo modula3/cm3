@@ -187,8 +187,8 @@ PROCEDURE SetupNamingConventionsInternal (VAR s : State; mach : Quake.Machine) =
 
 PROCEDURE FormatErrorAvailableEnumValues(
     min, max: INTEGER; READONLY map: ARRAY OF TEXT): TEXT =
-VAR result := "\navailable values: ";
-BEGIN
+  VAR result := "\navailable values: ";
+  BEGIN
     FOR i := min TO max DO
       IF i # min THEN
         result := Text.Cat(result, ", ");
@@ -196,7 +196,7 @@ BEGIN
     result := Text.Cat(result, map[i]);
     END;
     RETURN result;
-END FormatErrorAvailableEnumValues;
+  END FormatErrorAvailableEnumValues;
 
 PROCEDURE ConvertStringToEnum(s: State; name : TEXT; binding: QValue.Binding;
                               min, max: INTEGER; READONLY map: ARRAY OF TEXT):
@@ -255,7 +255,7 @@ PROCEDURE ConvertNamingConventionStringToEnum(s: State;
   END ConvertNamingConventionStringToEnum;
 
 PROCEDURE SetupNamingConventions (mach : Quake.Machine) =
-VAR s := NEW (State); (* TODO: Refactor to avoid creating garbage. *)
+  VAR s := NEW (State); (* TODO: Refactor to avoid creating garbage. *)
   BEGIN
     SetupNamingConventionsInternal (s, mach);
   END SetupNamingConventions;
@@ -609,7 +609,6 @@ PROCEDURE BuildLibraryPool (s: State) =
   BEGIN
     WHILE (src # NIL) DO
       IF (src.imported) AND (src.kind = UK.M3LIB) THEN
-        (* Msg.Explain ("imported package ", M3ID.ToText(src.name)); *)
         ETimer.Push (M3Timers.inhale);
         Msg.Commands ("inhale ", UnitPath (src));
         ux := GetUnitLinkInfo (src, imported := TRUE);
@@ -1070,7 +1069,7 @@ PROCEDURE CompileEverything (s: State;  schedule: SourceList) =
     END;
 
     IF s.parallelback > 1 THEN
-      Msg.Explain ("****  PARALLEL BACK-END BUILD, M3_PARALLEL_BACK = ", Fmt.Int(s.parallelback))
+      Msg.Commands ("****  PARALLEL BACK-END BUILD, M3_PARALLEL_BACK = ", Fmt.Int(s.parallelback))
     END;
 
     ForceAllPromisesInParallel(s.machine.promises,s.parallelback);
@@ -2661,7 +2660,8 @@ PROCEDURE GenCGMain (s: State;  object: TEXT) =
     Utils.CloseWriter (wr, object);
     ETimer.Pop ();
   END GenCGMain;
-(*------------------------------------------------ compilations and links ---*)
+
+(*------------------------------------------------ libraries and links ---*)
 
 PROCEDURE BuildCProgram (s: State;  shared: BOOLEAN) =
   VAR
@@ -2719,7 +2719,6 @@ PROCEDURE BuildCProgram (s: State;  shared: BOOLEAN) =
       END;
     ETimer.Pop ();
   END BuildCProgram;
-
 
 PROCEDURE BuildProgram (s: State;  shared: BOOLEAN) =
   CONST Desc_file = ".M3LINK";
@@ -2829,64 +2828,6 @@ PROCEDURE GetObjects (s: State;  result_time: INTEGER;
     END;
     RETURN objs;
   END GetObjects;
-
-(* Original: 
-PROCEDURE GetLibraries (s: State;  result_time: INTEGER;
-                         VAR valid: BOOLEAN;  verb, result: TEXT;
-                         use_links: BOOLEAN; shared: BOOLEAN): Arg.List =
-  VAR
-    u := s.units.head;
-    libs := Arg.NewList ();
-    lib_file : TEXT;
-    lib_link : TEXT;
-    lib_path := NEW (IntRefTbl.Default).init();
-    link_dir : TEXT := NIL;
-  BEGIN
-    (* NOTE: we build the m3 library list in reverse order since
-       they're discovered in bottom-up order and Unix linkers prefer
-       them in top-down order... *)
-     WHILE (u # NIL) DO
-      IF (u.imported AND u.kind = UK.M3LIB) OR (u.kind = UK.LIB) THEN
-        lib_file := UnitPath (u);
-        IF valid AND (Utils.ModificationTime (lib_file) > result_time) THEN
-          IF (verb # NIL) THEN
-            Msg.Explain ("new \"",lib_file,"\" -> ", verb & result);
-          END;
-          valid := FALSE;
-        END;
-        IF use_links THEN
-          IF link_dir = NIL THEN
-            link_dir := result & ".libs";
-            IF NOT M3File.IsDirectory (link_dir) THEN
-              Dirs.MkDir (link_dir);
-            END;
-          END;
-          IF (u.loc.path # NIL) THEN
-            lib_link := M3Path.New (link_dir, M3Unit.FileName (u));
-            Utils.SymbolicLinkFile (lib_file, lib_link);
-          END;
-          Arg.Prepend (libs, "-l" & M3ID.ToText (u.name));
-        ELSIF (NOT shared OR s.keep_resolved) THEN
-          Arg.Prepend (libs, lib_file);
-        ELSE
-          Arg.Prepend (libs, "-l" & M3ID.ToText (u.name));
-          IF (u.loc.path # NIL)
-            AND NOT lib_path.put (M3ID.Add (u.loc.path), NIL) THEN
-            Arg.Prepend (libs, "-L" & u.loc.path);
-            IF (s.Rpath_flag # NIL) AND (Text.Length (s.Rpath_flag) > 0) THEN
-              (* For shared libs, augment the run-time library search path. *)
-              Arg.Prepend (libs, s.Rpath_flag & u.loc.path)
-            END;
-          END;
-        END;
-      END;
-      u := u.next;
-    END;
-    IF link_dir # NIL THEN Arg.Prepend (libs, "-L" & link_dir); END;
-    Arg.AppendL (libs, s.sys_libs);
-    RETURN libs;
-  END GetLibraries;
-*) 
 
 PROCEDURE GetLibraries (s: State;  result_time: INTEGER;
                          VAR valid: BOOLEAN;  verb, result: TEXT;
