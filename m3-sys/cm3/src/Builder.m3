@@ -27,9 +27,11 @@ PROCEDURE BuildPgm (prog: TEXT;  READONLY units: M3Unit.Set;
                     sys_libs: Arg.List;  shared: BOOLEAN;  m: Quake.Machine) =
   VAR s := CompileUnits (prog, units, sys_libs, UK.PGMX, m);
   BEGIN
-    IF s.bootstrap_mode
-      THEN BuildBootProgram (s);
-      ELSE BuildProgram (s, shared);
+    IF NOT s.compile_only THEN
+      IF s.bootstrap_mode
+        THEN BuildBootProgram (s);
+        ELSE BuildProgram (s, shared);
+      END;
     END;
     IF s.compile_failed THEN M3Options.exit_code := 1; END;
   END BuildPgm;
@@ -38,25 +40,22 @@ PROCEDURE BuildLib (lib: TEXT;  READONLY units: M3Unit.Set;
                     sys_libs: Arg.List;  shared: BOOLEAN;  m: Quake.Machine) =
   VAR s := CompileUnits (lib, units, sys_libs, UK.LIBX, m);
   BEGIN
-    IF s.bootstrap_mode
-      THEN BuildBootLibrary (s);
-      ELSE BuildLibrary (s, shared);
+    IF NOT s.compile_only THEN
+      IF s.bootstrap_mode
+        THEN BuildBootLibrary (s);
+        ELSE BuildLibrary (s, shared);
+      END;
     END;
     IF s.compile_failed THEN M3Options.exit_code := 1; END;
   END BuildLib;
-
-PROCEDURE JustCompile (READONLY units: M3Unit.Set;
-                       sys_libs: Arg.List;  m: Quake.Machine) =
-  VAR s := CompileUnits ("noname", units, sys_libs, UK.PGMX, m);
-  BEGIN
-    IF s.compile_failed THEN M3Options.exit_code := 1; END;
-  END JustCompile;
 
 PROCEDURE BuildCPgm (prog: TEXT;  READONLY units: M3Unit.Set;
                      sys_libs: Arg.List;  shared: BOOLEAN;  m: Quake.Machine) =
   VAR s := CompileUnits (prog, units, sys_libs, UK.PGMX, m);
   BEGIN
-    BuildCProgram (s, shared);
+    IF NOT s.compile_only THEN
+      BuildCProgram (s, shared);
+    END;
     IF s.compile_failed THEN M3Options.exit_code := 1; END;
   END BuildCPgm;
 
@@ -133,6 +132,7 @@ REVEAL
     broken_linker : BOOLEAN;            (* linker can't do build_standalone() *)
     lazy_init     : BOOLEAN;            (* only initialize the main module and
                                            its imports *)
+    compile_only  : BOOLEAN;            (* compile only => only run m3front *)
     Rpath_flag    : TEXT;               (* linker needs -R switches too... *)
     link_coverage : TEXT;               (* coverage library *)
     m3_front_flags: Arg.List;           (* configuration options for the front *)
@@ -205,7 +205,6 @@ PROCEDURE ConvertStringToEnum(s: State; name : TEXT; binding: QValue.Binding;
     i : INTEGER;
     value := BindingToText (s, binding);
   BEGIN
-
     IF Text.Length (value) = 0 THEN
         Msg.FatalError (NIL, "unrecognized " & name & ": ", "(empty)",
           FormatErrorAvailableEnumValues(min, max, map));
@@ -308,7 +307,8 @@ PROCEDURE CompileUnits (main     : TEXT;
       END;
     END;
 
-    IF NOT Target.Init (s.target, GetConfigItem (s, "OS_TYPE", "POSIX"), s.m3backend_mode) THEN
+    IF NOT Target.Init (s.target, GetConfigItem (s, "OS_TYPE", "POSIX"),
+                        s.m3backend_mode) THEN
       Msg.FatalError (NIL, "unrecognized target machine: TARGET = ", s.target);
     END;
 
@@ -335,6 +335,7 @@ PROCEDURE CompileUnits (main     : TEXT;
     s.has_loader     := GetConfigBool (s, "SYS_HAS_LOADER");
     s.skip_link      := GetConfigBool (s, "M3_SKIP_LINK");
     s.keep_resolved  := NOT GetConfigBool (s, "M3_SPLIT_LIBNAMES");
+    s.compile_only   := GetConfigBool (s, "M3_COMPILE_ONLY");
     IF s.m3backend_mode IN Target.BackendIntegratedSet 
        OR s.m3backend_mode IN Target.BackendM3ccSet
     THEN
@@ -362,10 +363,10 @@ PROCEDURE CompileUnits (main     : TEXT;
     ETimer.Pop ();
     BuildSearchPaths (s);
 
-     (* WIDECHAR can be 16 or 32 bits subject to command line and config
-      * If not specified on command line, check config. Default is 16.
-      * "Unicode" means 32.
-      *)
+    (* WIDECHAR can be 16 or 32 bits subject to command line and config
+     * If not specified on command line, check config. Default is 16.
+     * "Unicode" means 32.
+     *)
     Utils.InitWidechar (s);
 
     InhaleLinkInfo (s);
@@ -395,12 +396,12 @@ PROCEDURE BindingToText (s: State; bind: QValue.Binding; default: TEXT := NIL): 
     RETURN NIL;
   END BindingToText;
 
-PROCEDURE GetConfigItem (s: State;  symbol: TEXT; default: TEXT := NIL): TEXT =
+PROCEDURE GetConfigItem (s: State; symbol: TEXT; default: TEXT := NIL): TEXT =
   BEGIN
     RETURN BindingToText (s, GetDefn (s, symbol), default);
   END GetConfigItem;
 
-PROCEDURE GetConfigProc (s: State;  symbol: TEXT;
+PROCEDURE GetConfigProc (s: State; symbol: TEXT;
                          n_args: INTEGER): ConfigProc =
   VAR x: ConfigProc;
   BEGIN
@@ -410,7 +411,7 @@ PROCEDURE GetConfigProc (s: State;  symbol: TEXT;
     RETURN x;
   END GetConfigProc;
 
-PROCEDURE GetConfigInt (s: State;  symbol: TEXT): INTEGER =
+PROCEDURE GetConfigInt (s: State; symbol: TEXT): INTEGER =
   VAR bind := GetDefn (s, symbol);
   BEGIN
     IF (bind = NIL) THEN ConfigErr (s, symbol, "not defined"); END;
@@ -422,7 +423,7 @@ PROCEDURE GetConfigInt (s: State;  symbol: TEXT): INTEGER =
     RETURN 0;
   END GetConfigInt;
 
-PROCEDURE GetConfigBool (s: State;  symbol: TEXT; default := FALSE): BOOLEAN =
+PROCEDURE GetConfigBool (s: State; symbol: TEXT; default := FALSE): BOOLEAN =
   VAR bind := GetDefn (s, symbol);
   BEGIN
     IF (bind = NIL) THEN RETURN default; END;
@@ -434,7 +435,7 @@ PROCEDURE GetConfigBool (s: State;  symbol: TEXT; default := FALSE): BOOLEAN =
     END;
   END GetConfigBool;
 
-PROCEDURE GetConfigText (s: State;  symbol: TEXT): TEXT =
+PROCEDURE GetConfigText (s: State; symbol: TEXT): TEXT =
   VAR bind := GetDefn (s, symbol);
   BEGIN
     IF (bind = NIL) THEN RETURN NIL; END;
@@ -446,7 +447,7 @@ PROCEDURE GetConfigText (s: State;  symbol: TEXT): TEXT =
     END;
   END GetConfigText;
 
-PROCEDURE GetConfigArray (s: State;  symbol: TEXT): Arg.List =
+PROCEDURE GetConfigArray (s: State; symbol: TEXT): Arg.List =
   VAR
     bind := GetDefn (s, symbol);
     args := Arg.NewList ();
@@ -471,12 +472,12 @@ PROCEDURE GetConfigArray (s: State;  symbol: TEXT): Arg.List =
     RETURN args;
   END GetConfigArray;
 
-PROCEDURE GetDefn (s: State;  symbol: TEXT): QValue.Binding =
+PROCEDURE GetDefn (s: State; symbol: TEXT): QValue.Binding =
   BEGIN
     RETURN s.machine.lookup (M3ID.Add (symbol));
   END GetDefn;
 
-PROCEDURE ConfigErr (s: State;  symbol, msg: TEXT) =
+PROCEDURE ConfigErr (s: State; symbol, msg: TEXT) =
   BEGIN
     Msg.FatalError (NIL, "Unable to use definition of \"" & symbol
                      & "\" from configuration file \"" & s.config_file
@@ -541,7 +542,7 @@ PROCEDURE InhaleLinkInfo (s: State) =
     ETimer.Pop ();
   END InhaleLinkInfo;
 
-PROCEDURE MatchLocalUnit (s: State;  uu: Mx.Unit;  imported: BOOLEAN): M3Unit.T =
+PROCEDURE MatchLocalUnit (s: State; uu: Mx.Unit; imported: BOOLEAN): M3Unit.T =
   CONST KMap = ARRAY BOOLEAN OF UK { UK.M3, UK.I3 };
   VAR unit: M3Unit.T;
   BEGIN
@@ -550,7 +551,8 @@ PROCEDURE MatchLocalUnit (s: State;  uu: Mx.Unit;  imported: BOOLEAN): M3Unit.T 
     unit := M3Unit.Get (s.units, uu.name, KMap [uu.interface]);
     IF (unit = NIL) THEN
       (* no source to match this unit (=> probably M3_BUILTIN.i3) *)
-      IF (uu.interface AND Text.Equal (M3ID.ToText (uu.name), "M3_BUILTIN")) THEN
+      IF (uu.interface AND
+          Text.Equal (M3ID.ToText (uu.name), "M3_BUILTIN")) THEN
         unit := M3Unit.Get (s.units, M3ID.Add ("RTBuiltin"), UK.PGMX);
       END;
       IF (unit = NIL) THEN
@@ -559,9 +561,11 @@ PROCEDURE MatchLocalUnit (s: State;  uu: Mx.Unit;  imported: BOOLEAN): M3Unit.T 
                               M3Loc.New (M3Loc.noPkg, M3ID.Add ("."), "."),
                               hidden := TRUE, imported := imported);
           M3Unit.Add (s.units, unit);
-          Msg.Verbose ("no source to match imported link unit ", UnitPath (unit));
+          Msg.Verbose ("no source to match imported link unit ",
+                       UnitPath (unit));
         ELSE
-          Msg.Verbose ("no source to match local link unit ", M3ID.ToText (uu.name));
+          Msg.Verbose ("no source to match local link unit ",
+                       M3ID.ToText (uu.name));
           RETURN NIL;
         END;
       END;
@@ -579,7 +583,7 @@ PROCEDURE MatchLocalUnit (s: State;  uu: Mx.Unit;  imported: BOOLEAN): M3Unit.T 
   END MatchLocalUnit;
 
 PROCEDURE DumpLinkInfo (s: State) =
-  VAR src := s.units.head;  units: Mx.UnitList := NIL;  wr: Wr.T;
+  VAR src := s.units.head; units: Mx.UnitList := NIL; wr: Wr.T;
   BEGIN
     IF NOT s.new_link_info THEN RETURN END;
     s.new_link_info := FALSE;  (* in case we die writing the info *)
@@ -605,7 +609,7 @@ PROCEDURE DumpLinkInfo (s: State) =
 (*---------------------------------------------------------- library pool ---*)
 
 PROCEDURE BuildLibraryPool (s: State) =
-  VAR src := s.units.head;  ux: Mx.UnitList;
+  VAR src := s.units.head; ux: Mx.UnitList;
   BEGIN
     WHILE (src # NIL) DO
       IF (src.imported) AND (src.kind = UK.M3LIB) THEN
@@ -628,7 +632,7 @@ PROCEDURE BuildLibraryPool (s: State) =
     END;
   END BuildLibraryPool;
 
-PROCEDURE AddLibraryUnit (s: State;  uu: Mx.Unit;  lib: M3Unit.T) =
+PROCEDURE AddLibraryUnit (s: State; uu: Mx.Unit;  lib: M3Unit.T) =
   CONST suffix = ARRAY BOOLEAN OF TEXT {".m3", ".i3"};
   VAR u: M3Unit.T;
   BEGIN
@@ -645,7 +649,6 @@ PROCEDURE AddLibraryUnit (s: State;  uu: Mx.Unit;  lib: M3Unit.T) =
       END;
     END;
   END AddLibraryUnit;
-
 
 (*------------------------------------------- interface -> exporter links ---*)
 
@@ -673,7 +676,7 @@ PROCEDURE FindLocalExporters (s: State) =
     END;
   END FindLocalExporters;
 
-PROCEDURE AddExportHook (s: State;  intf_name: M3ID.T;  impl: M3Unit.T) =
+PROCEDURE AddExportHook (s: State; intf_name: M3ID.T; impl: M3Unit.T) =
   VAR intf: M3Unit.T;
   BEGIN
     intf := M3Unit.Get (s.units, intf_name, UK.I3);
@@ -696,7 +699,7 @@ PROCEDURE AddExportHook (s: State;  intf_name: M3ID.T;  impl: M3Unit.T) =
     END;
   END AddExportHook;
 
-PROCEDURE AddExportGuess (s: State;  impl: M3Unit.T) =
+PROCEDURE AddExportGuess (s: State; impl: M3Unit.T) =
   (* Guess that module "M" exports interface "M". *)
   VAR intf: M3Unit.T;
   BEGIN
@@ -705,7 +708,7 @@ PROCEDURE AddExportGuess (s: State;  impl: M3Unit.T) =
       (* No such interface.  The guess must be no good. *)
     ELSIF (intf.name = s.main) THEN
       (* Ignore "EXPORTS Main".  The linker is responsible for finding and
-         explicitly initializing modules that claim to be the main program.  *)
+         explicitly initializing modules that claim to be the main program. *)
     ELSIF (intf.imported # impl.imported) THEN
       (* Nope.  We don't allow exports to cross library boundaries. *)
     ELSE
@@ -727,16 +730,16 @@ PROCEDURE BadExport (intf, impl: M3Unit.T) =
       & X0[intf.imported] & " interface (" & M3Unit.FileName (intf) & ")");
   END BadExport;
 
-PROCEDURE ResetExports (s: State;  u: M3Unit.T) =
+PROCEDURE ResetExports (s: State; u: M3Unit.T) =
   (* Forget any export information we may have for "u" because
      we're about the recompile it. *)
   VAR ex := u.exporters;
   BEGIN
     (* for interfaces, mark all the exporters "unused" *)
-    WHILE (ex # NIL) DO  ex.used := FALSE;  ex := ex.next; END;
+    WHILE (ex # NIL) DO ex.used := FALSE; ex := ex.next; END;
 
     (* for implementations, mark all the exporters "unverified" *)
-    IF (u.kind =  UK.M3) AND (u.link_info # NIL) THEN
+    IF (u.kind = UK.M3) AND (u.link_info # NIL) THEN
       WITH z = u.link_info.exported_units DO
         FOR i := z.start TO z.start + z.cnt - 1 DO
           ForgetExport (s, u.link_info.info[i], u);
@@ -745,8 +748,8 @@ PROCEDURE ResetExports (s: State;  u: M3Unit.T) =
     END;
   END ResetExports;
 
-PROCEDURE ForgetExport (s: State;  intf_name: M3ID.T;  impl: M3Unit.T) =
-  VAR intf: M3Unit.T;  ex: M3Unit.Exporter;
+PROCEDURE ForgetExport (s: State; intf_name: M3ID.T; impl: M3Unit.T) =
+  VAR intf: M3Unit.T; ex: M3Unit.Exporter;
   BEGIN
     intf := M3Unit.Get (s.units, intf_name, UK.I3);
     IF (intf # NIL) THEN
@@ -759,7 +762,7 @@ PROCEDURE ForgetExport (s: State;  intf_name: M3ID.T;  impl: M3Unit.T) =
   END ForgetExport;
 
 PROCEDURE GetExporters (intf: M3Unit.T): M3Compiler.ImplList =
-  VAR ex: M3Unit.Exporter;  xx: M3Compiler.ImplList := NIL;
+  VAR ex: M3Unit.Exporter; xx: M3Compiler.ImplList := NIL;
   BEGIN
     ex := intf.exporters;
     WHILE (ex # NIL) DO
@@ -798,7 +801,7 @@ PROCEDURE UsedBogusExportList (intf: M3Unit.T): BOOLEAN =
     RETURN FALSE;
   END UsedBogusExportList;
 
-PROCEDURE NoteExporter (s: State;  intf_name: M3ID.T;  impl: M3Unit.T) =
+PROCEDURE NoteExporter (s: State; intf_name: M3ID.T; impl: M3Unit.T) =
   VAR intf: M3Unit.T;  ex: M3Unit.Exporter;
   BEGIN
     IF (impl = NIL) OR (impl.kind # UK.M3) THEN RETURN; END;
@@ -1006,7 +1009,9 @@ PROCEDURE VisitProbe (VAR scc: SCCState;  class: INTEGER;
 
 *)
 
-TYPE SeqClosure = Thread.Closure OBJECT seq : QPromiseSeq.T; OVERRIDES apply := SeqApply END;
+TYPE SeqClosure = Thread.Closure OBJECT
+                    seq : QPromiseSeq.T;
+                  OVERRIDES apply := SeqApply END;
 
 PROCEDURE SeqApply(cl : SeqClosure) : REFANY =
   BEGIN
@@ -1067,9 +1072,14 @@ PROCEDURE CompileEverything (s: State;  schedule: SourceList) =
 
       s.machine.promises.addhi(NEW(QPromise.Empty));
     END;
+    IF s.compile_only THEN
+      FlushPending (s);
+      RETURN;
+    END;
 
     IF s.parallelback > 1 THEN
-      Msg.Commands ("****  PARALLEL BACK-END BUILD, M3_PARALLEL_BACK = ", Fmt.Int(s.parallelback))
+      Msg.Explain ("****  PARALLEL BACK-END BUILD, M3_PARALLEL_BACK = ",
+                    Fmt.Int(s.parallelback))
     END;
 
     ForceAllPromisesInParallel(s.machine.promises,s.parallelback);
@@ -1144,7 +1154,8 @@ PROCEDURE CompileOne (s: State;  u: M3Unit.T) =
       IF (u.link_info.interface) THEN
         Merge (s, u);
       ELSE (* defer this guy as long as possible *)
-        s.pending_impls := NEW (M3Unit.TList, head := u, tail := s.pending_impls);
+        s.pending_impls := NEW (M3Unit.TList, head := u,
+                                tail := s.pending_impls);
       END;
     ELSE
       BadFile ("missing source file", u);
@@ -1213,7 +1224,8 @@ PROCEDURE CompileS (s: State; u: M3Unit.T) =
       PullForBootstrap (u);
       EVAL Utils.NoteModification (u.object);
     ELSIF (u.kind = UK.S) THEN
-      EVAL RunCC (s, UnitPath (u), u.object, u.debug, u.optimize, s.include_path_empty);
+      EVAL RunCC (s, UnitPath (u), u.object, u.debug, u.optimize,
+                  s.include_path_empty);
       Utils.NoteNewFile (u.object);
     ELSE (* UK.IS or UK.MS *)
       EVAL RunAsm (s, UnitPath (u), u.object);
@@ -1239,7 +1251,8 @@ PROCEDURE CompileC (s: State; u: M3Unit.T) =
         Utils.NoteNewFile (u.object);
 *) 
       ELSE
-        EVAL RunCC (s, UnitPath (u), u.object, u.debug, u.optimize, s.include_path);
+        EVAL RunCC (s, UnitPath (u), u.object, u.debug, u.optimize,
+                    s.include_path);
         Utils.NoteNewFile (u.object);
       END; 
     END;
@@ -1643,36 +1656,38 @@ PROCEDURE PushOneM3 (s: State;  u: M3Unit.T): BOOLEAN =
     IF NOT ok THEN 
       Msg.Error (NIL, "m3front failed compiling: ", UnitPath (u));
     ELSE (* Front succeeded. *) 
-      IF s.delayBackend THEN (* parallel/delayed version of back-end code *)
-        s.machine.record(TRUE);
-      END;
-      TRY
-        IF ok AND DoRunM3cc THEN
-          ok := RunM3Back (s, cm3IRName, codeGenOutName, u.debug, u.optimize);
-        END; 
-        IF ok AND DoRunM3llvm THEN
-          ok := RunM3Llvm (s, cm3IRName, llvmIRName, u.debug, u.optimize);
-        END; 
-        IF ok AND DoRunLlc THEN
-          IF u.optimize THEN
-            EVAL RunLlvmOpt(s, llvmIRName, llvmIROptName);
-            llvmIRName := llvmIROptName;
+      IF NOT s.compile_only THEN
+        IF s.delayBackend THEN (* parallel/delayed version of back-end code *)
+          s.machine.record(TRUE);
+        END;
+        TRY
+          IF ok AND DoRunM3cc THEN
+            ok := RunM3Back (s, cm3IRName, codeGenOutName, u.debug, u.optimize);
+          END; 
+          IF ok AND DoRunM3llvm THEN
+            ok := RunM3Llvm (s, cm3IRName, llvmIRName, u.debug, u.optimize);
+          END; 
+          IF ok AND DoRunLlc THEN
+            IF u.optimize THEN
+              EVAL RunLlvmOpt(s, llvmIRName, llvmIROptName);
+              llvmIRName := llvmIROptName;
+            END;
+            ok := RunLlcBack 
+                   (s, llvmIRName, codeGenOutName, u.debug, u.optimize, 
+                    Asm := DoWriteAsm);
+          END; 
+          IF ok AND DoRunC THEN 
+            ok := RunCC (s, CCodeName, u.object, TRUE, FALSE, s.include_path_empty);
           END;
-          ok := RunLlcBack 
-                 (s, llvmIRName, codeGenOutName, u.debug, u.optimize, 
-                  Asm := DoWriteAsm);
-        END; 
-        IF ok AND DoRunC THEN 
-          ok := RunCC (s, CCodeName, u.object, TRUE, FALSE, s.include_path_empty);
+          IF ok AND DoRunAsm THEN 
+            ok := RunAsm (s, asmName, u.object);
+          END;
+        FINALLY
+          IF s.delayBackend THEN
+            s.machine.record(FALSE);
+          END;
+          need_merge := TRUE;
         END;
-        IF ok AND DoRunAsm THEN 
-          ok := RunAsm (s, asmName, u.object);
-        END;
-      FINALLY
-        IF s.delayBackend THEN
-          s.machine.record(FALSE);
-        END;
-        need_merge := TRUE;
       END;
     END;
 
@@ -1815,10 +1830,6 @@ PROCEDURE CheckImports (s: State;  u: Mx.Unit) =
   BEGIN
     CheckImp (s, u, u.imported_units,  UK.I3);
     CheckImp (s, u, u.exported_units,  UK.I3);
-    (****  not needed with the new sort order...
-    CheckImp (s, u, u.used_interfaces, UK.I3);
-    CheckImp (s, u, u.used_modules,    UK.M3);
-    ****)
   END CheckImports;
 
 PROCEDURE CheckImp (s: State;  u: Mx.Unit;  READONLY z: Mx.InfoList;  kind: UK) =

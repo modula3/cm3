@@ -166,8 +166,7 @@ PROCEDURE ConvertOption (VAR s: State;  arg: TEXT;  arg_len: INTEGER)
              END;
 
     | 'c' => IF (arg_len = 2) THEN
-               Out (wr, "m3_compile_only ()");  ok := TRUE;
-               s.found_work := TRUE;
+               Out (wr, "M3_COMPILE_ONLY = TRUE");  ok := TRUE;
              ELSIF Text.Equal (arg, "-commands") THEN
                Msg.SetLevel (Msg.Level.Commands);  ok := TRUE;
                Out (wr, "m3_option (\"-commands\")");
@@ -664,7 +663,7 @@ CONST
     "  -find          locate source files",
     "  -depend        output package dependencies",
     "",
-    "compile options:  (default: -g -w1)",
+    "compile options:  (default: -g -O0 -w1)",
     "  -g             produce symbol table information for debugger",
     "  -g0            disable debugger output",
     "  -O             optimize code (defaults to -O2)",
@@ -688,6 +687,21 @@ CONST
     "  -a <foo>       build library <foo>",
     "  -o <foo>       build program <foo>",
     "  -skiplink      skip the final link step",
+    "",
+    "m3front runtime checking options:  (default: all checks enabled)",
+    "  -X-NoAsserts     disable ASSERT pragmas (same as -A)",
+    "  -X-NoDebug       disable DEBUG pragmas",
+    "  -X-NoNarrowChk   disable NARROW checks",
+    "  -X-NoRangeChk    disable range checks",
+    "  -X-NoReturnChk   disable RETURN checks",
+    "  -X-NoCaseChk     disable CASE checks",
+    "  -X-NoTypecaseChk disable TYPECASE checks",
+    "  -X-NoNilChk      disable NIL checks",
+    "  -X-NoRaisesChk   disable RAISES checks",
+    "  -X-NoChecks      disable all runtime checks",
+    "",
+    "m3front misc options:",
+    "  -X-stats         report simple frontend stats",
     "",
     "messages:  (default: -why)",
     "  -silent        produce no diagnostic output",
@@ -723,7 +737,7 @@ CONST
     "  -tfile         generate the .M3IMPTAB file",
     "  -gw            install group writable files",
     "  -group-writable \"",
-    "  -pb <n>        allow <n> parallelism in running back-end (experimental)",
+    "  -pb <n>        allow <n> parallelism in running back-end",
     "  -no-m3ship-resolution use quake variables in .M3SHIP (experimental)",
     "",
     "environment variables:",
