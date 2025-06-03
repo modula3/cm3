@@ -106,5 +106,6 @@ BEGIN
   Test.check (NOT (p >= x));
   y := p;
   Test.check (x / y = Set{E.b7, E.c4});
+  Test.check ('8' IN s);
   Test.done ();
 END Main.
