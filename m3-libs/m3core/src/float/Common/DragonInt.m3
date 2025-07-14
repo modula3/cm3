@@ -287,6 +287,82 @@ PROCEDURE diff (s: Session;  READONLY a,b: T): T =
     RETURN res;
   END diff;
 
+PROCEDURE and (s: Session;  READONLY a,b: T): T =
+  VAR
+    res: T;
+    ap, bp, cp: Ptr;
+    a_w, b_w, a_s, b_s: INTEGER;
+  BEGIN
+    IF a.s < b.s THEN (* swap a & b *)
+      a_w := b.w;  a_s := b.s;
+      b_w := a.w;  b_s := a.s;
+    ELSE
+      a_w := a.w;  a_s := a.s;
+      b_w := b.w;  b_s := b.s;
+    END;
+    (* INV: a.s >= b.s *)
+
+    cp := InitValue (s, a_s, res);
+    VAR s_base := ADR (s.w[0]); BEGIN
+      ap := s_base + a_w * ADRSIZE (Word.T);  (* = ADR (s.w[a.w]) *)
+      bp := s_base + b_w * ADRSIZE (Word.T);  (* = ADR (s.w[b.w]) *)
+    END;
+
+    FOR i := 0 TO b_s - 1 DO
+      cp^ := Word.And(Word.And (ap^, bp^), SigBits);
+      INC (ap, ADRSIZE (ap^));
+      INC (bp, ADRSIZE (bp^));
+      INC (cp, ADRSIZE(cp^));
+    END;
+
+    FOR i := b_s TO a_s - 1 DO
+      cp^ := Word.And (ap^, 0);
+      INC (ap, ADRSIZE (ap^));
+      INC (cp, ADRSIZE (cp^));
+    END;
+
+    FixSize (s, res);
+    RETURN res;
+  END and;
+
+PROCEDURE or (s: Session;  READONLY a,b: T): T =
+  VAR
+    res: T;
+    ap, bp, cp: Ptr;
+    a_w, b_w, a_s, b_s: INTEGER;
+  BEGIN
+    IF a.s < b.s THEN (* swap a & b *)
+      a_w := b.w;  a_s := b.s;
+      b_w := a.w;  b_s := a.s;
+    ELSE
+      a_w := a.w;  a_s := a.s;
+      b_w := b.w;  b_s := b.s;
+    END;
+    (* INV: a.s >= b.s *)
+
+    cp := InitValue (s, a_s, res);
+    VAR s_base := ADR (s.w[0]); BEGIN
+      ap := s_base + a_w * ADRSIZE (Word.T);  (* = ADR (s.w[a.w]) *)
+      bp := s_base + b_w * ADRSIZE (Word.T);  (* = ADR (s.w[b.w]) *)
+    END;
+
+    FOR i := 0 TO b_s - 1 DO
+      cp^ := Word.And(Word.Or (ap^, bp^), SigBits);
+      INC (ap, ADRSIZE (ap^));
+      INC (bp, ADRSIZE (bp^));
+      INC (cp, ADRSIZE(cp^));
+    END;
+
+    FOR i := b_s TO a_s - 1 DO
+      cp^ := Word.Or (ap^, 0);
+      INC (ap, ADRSIZE (ap^));
+      INC (cp, ADRSIZE (cp^));
+    END;
+
+    FixSize (s, res);
+    RETURN res;
+  END or;
+
 PROCEDURE compare (s: Session;  READONLY a, b: T): [-1..1] =
   VAR
     ap, bp : Ptr;

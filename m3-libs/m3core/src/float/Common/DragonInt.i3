@@ -57,6 +57,12 @@ PROCEDURE diff (s: Session;  READONLY a,b: T): T;
 PROCEDURE mult (s: Session; READONLY a,b: T) : T;
 (* returns a * b *)
 
+PROCEDURE and (s: Session; READONLY a,b: T) : T;
+(* returns a AND b *)
+
+PROCEDURE or (s: Session; READONLY a,b: T) : T;
+(* returns a OR b *)
+
 PROCEDURE compare (s: Session;  READONLY a, b: T): [-1..1];
 (* returns -1, 0, or 1 when a < b, a = b, or a > b *)
 
