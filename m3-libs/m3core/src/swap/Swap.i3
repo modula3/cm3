@@ -13,6 +13,15 @@ TYPE Endian = {Big, Little};
 
 PROCEDURE GetEndian(): Endian;
 
+<*OBSOLETE*>VAR endian: Endian;
+  (* This variable is set at initialization.  If the endian is not
+     one of Big or Little, initialization will generate a checked runtime
+     error. 
+
+     New code should not use this declaration.  They should use GetEndian() 
+     above instead.
+  *)
+    
 CONST
   FirstInt32 = -1 - 16_7FFFFFFF;
     (* This value is computed in such a way that it will have the same value
