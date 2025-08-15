@@ -1,7 +1,0 @@
-/* $Id$ */
-
-import ("libm3")
-
-c_source ("program")
-
-C_program("readlinefe")

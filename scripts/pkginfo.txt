@@ -220,6 +220,7 @@ conflictdensity caltech-other
 gentest caltech-other
 magraster caltech-other
 mergealiases caltech-other
+m3readline/readlinefe caltech-other
 
 scheme-lib m3-scheme
 mscheme m3-scheme
