@@ -69,6 +69,15 @@ mod3_addsite(Point p)
 
 }
 
+void  
+mod3_addsite2(double x, double y)
+{
+  Point p;
+  p.x = x;
+  p.y = y;
+  mod3_addsite(p);
+}
+
 /* sort sites on y, then x, coord */
 static
 int scomp(
@@ -146,6 +155,39 @@ int mod3_gettriple(TripleArg *t)
   return 1;
 }
 
+Triple *
+mod3_getnext(void)
+{
+  Triple *t;
+  if (!triples) 
+    return (void *)0;
+  
+  {
+    struct Triple *u=triples;
+    t = triples;
+
+    triples=u->next;
+    return t;
+  }
+}
+
+int
+mod3_isnull(Triple *t)
+{
+  return !(t);
+}
+
+int
+mod3_getidx(Triple *t, int idx)
+{
+  switch (idx) {
+  case 0 : return t->d.s1; break;
+  case 1 : return t->d.s2; break;
+  case 2 : return t->d.s3; break;
+  default: assert(0);
+  }
+}
+
 void
 mod3_voronoi(void)
 {
@@ -161,7 +203,6 @@ geominit();
 
 voronoi(triangulate, next); 
 }
-
 
 /* return a single in-storage site */
 Site *nextone(void)

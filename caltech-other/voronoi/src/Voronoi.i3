@@ -22,11 +22,25 @@ PROCEDURE Finish();
 <* EXTERNAL mod3_addsite *>
 PROCEDURE AddSite(p : Point);
 
+<* EXTERNAL mod3_addsite2 *>
+PROCEDURE AddSite2(x, y : LONGREAL);
+
 <* EXTERNAL mod3_delaunay *>
 PROCEDURE Delaunay();
 
 <* EXTERNAL mod3_gettriple *>
 PROCEDURE NextTriple(VAR tri : Triple) : BOOLEAN;
+
+TYPE CTriple = ADDRESS;
+
+<*EXTERNAL mod3_getnext*>
+PROCEDURE Next() : CTriple;
+
+<*EXTERNAL mod3_isnull*>
+PROCEDURE IsNull(tri : CTriple) : BOOLEAN;
+
+<*EXTERNAL mod3_getidx*>
+PROCEDURE GetIdx(tri : CTriple; idx : INTEGER (* 0..2 *)) : INTEGER;
 
 <* EXTERNAL mod3_voronoi *>
 PROCEDURE Voronoi();
