@@ -1,0 +1,1156 @@
+# To unbundle, sh this file
+echo Makefile 1>&2
+sed 's/.//' >Makefile <<'//GO.SYSIN DD Makefile'
+-C=edgelist.c geometry.c heap.c main.c memory.c output.c voronoi.c 
+-O=edgelist.o geometry.o heap.o main.o memory.o output.o voronoi.o
+-
+-tt: voronoi t
+-	voronoi -t <t >tt
+-voronoi: $O
+-	cc -o voronoi $O -lm
+-$O:defs.h
+//GO.SYSIN DD Makefile
+echo defs.h 1>&2
+sed 's/.//' >defs.h <<'//GO.SYSIN DD defs.h'
+-#ifndef NULL
+-#define NULL 0
+-#endif
+-#define DELETED -2
+-
+-int triangulate, sorted, plot, debug;
+-
+-struct	Freenode	{
+-struct	Freenode	*nextfree;
+-};
+-struct	Freelist	{
+-struct	Freenode	*head;
+-int			nodesize;
+-};
+-char *getfree();
+-char *malloc();
+-char *myalloc();
+-
+-float xmin, xmax, ymin, ymax, deltax, deltay;
+-
+-
+-struct Point	{
+-float x,y;
+-};
+-
+-/* structure used both for sites and for vertices */
+-struct Site	{
+-struct	Point	coord;
+-int		sitenbr;
+-int		refcnt;
+-};
+-
+-
+-struct	Site	*sites;
+-int		nsites;
+-int		siteidx;
+-int		sqrt_nsites;
+-int		nvertices;
+-struct 	Freelist sfl;
+-struct	Site	*bottomsite;
+-
+-
+-struct Edge	{
+-float		a,b,c;
+-struct	Site 	*ep[2];
+-struct	Site	*reg[2];
+-int		edgenbr;
+-};
+-#define le 0
+-#define re 1
+-int nedges;
+-struct	Freelist efl;
+-
+-int has_endpoint(),right_of();
+-struct Site *intersect();
+-float dist();
+-struct Point PQ_min();
+-struct Halfedge *PQextractmin();
+-struct Edge *bisect();
+-
+-struct Halfedge {
+-struct Halfedge	*ELleft, *ELright;
+-struct Edge	*ELedge;
+-int		ELrefcnt;
+-char		ELpm;
+-struct	Site	*vertex;
+-float		ystar;
+-struct	Halfedge *PQnext;
+-};
+-
+-struct   Freelist	hfl;
+-struct	Halfedge *ELleftend, *ELrightend;
+-int 	ELhashsize;
+-struct	Halfedge **ELhash;
+-struct	Halfedge *HEcreate(), *ELleft(), *ELright(), *ELleftbnd();
+-struct	Site *leftreg(), *rightreg();
+-
+-
+-int PQhashsize;
+-struct	Halfedge *PQhash;
+-struct	Halfedge *PQfind();
+-int PQcount;
+-int PQmin;
+-int PQempty();
+-
+-
+//GO.SYSIN DD defs.h
+echo voronoi.man 1>&2
+sed 's/.//' >voronoi.man <<'//GO.SYSIN DD voronoi.man'
+-.TH VORONOI 7
+-.SH NAME
+-voronoi - compute Voronoi diagram or Delaunay triangulation
+-.SH SYNOPSIS
+-.B voronoi 
+-[
+-.B -s -t -p
+-]
+-.SH DESCRIPTION
+-.I Voronoi 
+-reads the standard input for a set of points in the plane and writes either
+-the Voronoi diagram or the Delaunay triangulation to the standard output.
+-Each input line should consist of two real numbers, separated by white space.
+-.PP
+-If option
+-.B -t
+-is present, the Delaunay triangulation is produced. 
+-Each output line is a triple
+-.I i j k,
+-which are the indices of the three points in a Delaunay triangle. Points are
+-numbered starting at 0.
+-.PP
+-If option
+-.B -t
+-is not present, the Voronoi diagram is produced.
+-There are four output record types.
+-.TP
+-.I s a b
+-indicates that an input point at coordinates 
+-.I a b 
+-was seen.
+-.TP
+-.I l a b c
+-indicates a line with equation
+-.I ax + by = c.
+-.TP
+-.I v a b
+-indicates a vertex at 
+-.I a b.
+-.TP
+-.I e l v1 v2
+-indicates a Voronoi segment which is a subsegment of line number 
+-.I l
+-with endpoints numbered 
+-.I v1
+-and
+-.I v2.
+-If 
+-.I v1
+-or
+-.I v2
+-is -1, the line extends to infinity.
+-.PP
+-The other options are:
+-.TP
+-.B s
+-The input is sorted by 
+-.I y
+-coordinate (the second number in the pair).  The first input line should be
+-.I npoints xmin xmax ymin ymax.
+-This describes the number of points and the range of the points.  This
+-line is used to determine internal hash table size; it need not be exact
+-but performance suffers if it is grossly wrong.
+-.TP
+-.B p
+-Produce output suitable for input to 
+-.I plot 
+-(1), rather than the forms described above.
+-.PP
+-On unsorted data uniformly distributed in the unit square,
+-.I voronoi
+-uses about 
+-.I 20n+140\(srn
+-bytes of storage.  On sorted data,
+-.I voronoi
+-uses about
+-.I 160\(srn
+-bytes.
+-.SH AUTHOR
+-Steve J. Fortune (1987) A Sweepline Algorithm for Voronoi Diagrams,
+-Algorithmica 2, 153-174.
+-.SH DIAGNOSTICS
+-Insufficient memory.
+-.SH BUGS
+-The sort used by 
+-.I voronoi
+-is much faster than 
+-.I sort 
+-(1).
+-Also
+-.I sort
+-(1) does not correctly sort real data with embedded exponent fields.
+-Very strange output results if 
+-.B -s
+-is used on unsorted data.
+-Binary input-output would probably halve execution time.
+//GO.SYSIN DD voronoi.man
+echo edgelist.c 1>&2
+sed 's/.//' >edgelist.c <<'//GO.SYSIN DD edgelist.c'
+-#
+-#include "defs.h"
+-
+-int ntry, totalsearch;
+-
+-ELinitialize()
+-{
+-int i;
+-	freeinit(&hfl, sizeof **ELhash);
+-	ELhashsize = 2 * sqrt_nsites;
+-	ELhash = (struct Halfedge **) myalloc ( sizeof *ELhash * ELhashsize);
+-	for(i=0; i<ELhashsize; i +=1) ELhash[i] = (struct Halfedge *)NULL;
+-	ELleftend = HEcreate( (struct Edge *)NULL, 0);
+-	ELrightend = HEcreate( (struct Edge *)NULL, 0);
+-	ELleftend -> ELleft = (struct Halfedge *)NULL;
+-	ELleftend -> ELright = ELrightend;
+-	ELrightend -> ELleft = ELleftend;
+-	ELrightend -> ELright = (struct Halfedge *)NULL;
+-	ELhash[0] = ELleftend;
+-	ELhash[ELhashsize-1] = ELrightend;
+-}
+-
+-
+-struct Halfedge *HEcreate(e, pm)
+-struct Edge *e;
+-int pm;
+-{
+-struct Halfedge *answer;
+-	answer = (struct Halfedge *) getfree(&hfl);
+-	answer -> ELedge = e;
+-	answer -> ELpm = pm;
+-	answer -> PQnext = (struct Halfedge *) NULL;
+-	answer -> vertex = (struct Site *) NULL;
+-	answer -> ELrefcnt = 0;
+-	return(answer);
+-}
+-
+-
+-ELinsert(lb, new)
+-struct	Halfedge *lb, *new;
+-{
+-	new -> ELleft = lb;
+-	new -> ELright = lb -> ELright;
+-	(lb -> ELright) -> ELleft = new;
+-	lb -> ELright = new;
+-}
+-
+-/* Get entry from hash table, pruning any deleted nodes */
+-struct Halfedge *ELgethash(b)
+-int b;
+-{
+-struct Halfedge *he;
+-
+-	if(b<0 || b>=ELhashsize) return((struct Halfedge *) NULL);
+-	he = ELhash[b]; 
+-	if (he == (struct Halfedge *) NULL || 
+-	    he -> ELedge != (struct Edge *) DELETED ) return (he);
+-
+-/* Hash table points to deleted half edge.  Patch as necessary. */
+-	ELhash[b] = (struct Halfedge *) NULL;
+-	if ((he -> ELrefcnt -= 1) == 0) makefree(he, &hfl);
+-	return ((struct Halfedge *) NULL);
+-}	
+-
+-struct Halfedge *ELleftbnd(p)
+-struct Point *p;
+-{
+-int i, bucket;
+-struct Halfedge *he;
+-
+-/* Use hash table to get close to desired halfedge */
+-	bucket = (p->x - xmin)/deltax * ELhashsize;
+-	if(bucket<0) bucket =0;
+-	if(bucket>=ELhashsize) bucket = ELhashsize - 1;
+-	he = ELgethash(bucket);
+-	if(he == (struct Halfedge *) NULL)
+-	{   for(i=1; 1 ; i += 1)
+-	    {	if ((he=ELgethash(bucket-i)) != (struct Halfedge *) NULL) break;
+-		if ((he=ELgethash(bucket+i)) != (struct Halfedge *) NULL) break;
+-	    };
+-	totalsearch += i;
+-	};
+-	ntry += 1;
+-/* Now search linear list of halfedges for the corect one */
+-	if (he==ELleftend  || (he != ELrightend && right_of(he,p)))
+-	{do {he = he -> ELright;} while (he!=ELrightend && right_of(he,p));
+-	 he = he -> ELleft;
+-	}
+-	else 
+-	do {he = he -> ELleft;} while (he!=ELleftend && !right_of(he,p));
+-
+-/* Update hash table and reference counts */
+-	if(bucket > 0 && bucket <ELhashsize-1)
+-	{	if(ELhash[bucket] != (struct Halfedge *) NULL) 
+-			ELhash[bucket] -> ELrefcnt -= 1;
+-		ELhash[bucket] = he;
+-		ELhash[bucket] -> ELrefcnt += 1;
+-	};
+-	return (he);
+-}
+-
+-	
+-/* This delete routine can't reclaim node, since pointers from hash
+-   table may be present.   */
+-ELdelete(he)
+-struct Halfedge *he;
+-{
+-	(he -> ELleft) -> ELright = he -> ELright;
+-	(he -> ELright) -> ELleft = he -> ELleft;
+-	he -> ELedge = (struct Edge *)DELETED;
+-}
+-
+-
+-struct Halfedge *ELright(he)
+-struct Halfedge *he;
+-{
+-	return (he -> ELright);
+-}
+-
+-struct Halfedge *ELleft(he)
+-struct Halfedge *he;
+-{
+-	return (he -> ELleft);
+-}
+-
+-
+-struct Site *leftreg(he)
+-struct Halfedge *he;
+-{
+-	if(he -> ELedge == (struct Edge *)NULL) return(bottomsite);
+-	return( he -> ELpm == le ? 
+-		he -> ELedge -> reg[le] : he -> ELedge -> reg[re]);
+-}
+-
+-struct Site *rightreg(he)
+-struct Halfedge *he;
+-{
+-	if(he -> ELedge == (struct Edge *)NULL) return(bottomsite);
+-	return( he -> ELpm == le ? 
+-		he -> ELedge -> reg[re] : he -> ELedge -> reg[le]);
+-}
+-
+-
+//GO.SYSIN DD edgelist.c
+echo geometry.c 1>&2
+sed 's/.//' >geometry.c <<'//GO.SYSIN DD geometry.c'
+-#
+-#include "defs.h"
+-#include <math.h>
+-
+-geominit()
+-{
+-struct Edge e;
+-float sn;
+-
+-	freeinit(&efl, sizeof e);
+-	nvertices = 0;
+-	nedges = 0;
+-	sn = nsites+4;
+-	sqrt_nsites = sqrt(sn);
+-	deltay = ymax - ymin;
+-	deltax = xmax - xmin;
+-}
+-
+-
+-struct Edge *bisect(s1,s2)
+-struct	Site *s1,*s2;
+-{
+-float dx,dy,adx,ady;
+-struct Edge *newedge;
+-
+-	newedge = (struct Edge *) getfree(&efl);
+-
+-	newedge -> reg[0] = s1;
+-	newedge -> reg[1] = s2;
+-	ref(s1); 
+-	ref(s2);
+-	newedge -> ep[0] = (struct Site *) NULL;
+-	newedge -> ep[1] = (struct Site *) NULL;
+-
+-	dx = s2->coord.x - s1->coord.x;
+-	dy = s2->coord.y - s1->coord.y;
+-	adx = dx>0 ? dx : -dx;
+-	ady = dy>0 ? dy : -dy;
+-	newedge -> c = s1->coord.x * dx + s1->coord.y * dy + (dx*dx + dy*dy)*0.5;
+-	if (adx>ady)
+-	{	newedge -> a = 1.0; newedge -> b = dy/dx; newedge -> c /= dx;}
+-	else
+-	{	newedge -> b = 1.0; newedge -> a = dx/dy; newedge -> c /= dy;};
+-
+-	newedge -> edgenbr = nedges;
+-	out_bisector(newedge);
+-	nedges += 1;
+-	return(newedge);
+-}
+-
+-
+-struct Site *intersect(el1, el2, p)
+-struct Halfedge *el1, *el2;
+-struct Point *p;
+-{
+-struct	Edge *e1,*e2, *e;
+-struct  Halfedge *el;
+-float d, xint, yint;
+-int right_of_site;
+-struct Site *v;
+-
+-	e1 = el1 -> ELedge;
+-	e2 = el2 -> ELedge;
+-	if(e1 == (struct Edge*)NULL || e2 == (struct Edge*)NULL) 
+-		return ((struct Site *) NULL);
+-	if (e1->reg[1] == e2->reg[1]) return ((struct Site *) NULL);
+-
+-	d = e1->a * e2->b - e1->b * e2->a;
+-	if (-1.0e-10<d && d<1.0e-10) return ((struct Site *) NULL);
+-
+-	xint = (e1->c*e2->b - e2->c*e1->b)/d;
+-	yint = (e2->c*e1->a - e1->c*e2->a)/d;
+-
+-	if( (e1->reg[1]->coord.y < e2->reg[1]->coord.y) ||
+-	    (e1->reg[1]->coord.y == e2->reg[1]->coord.y &&
+-		e1->reg[1]->coord.x < e2->reg[1]->coord.x) )
+-	{	el = el1; e = e1;}
+-	else
+-	{	el = el2; e = e2;};
+-	right_of_site = xint >= e -> reg[1] -> coord.x;
+-	if ((right_of_site && el -> ELpm == le) ||
+-	   (!right_of_site && el -> ELpm == re)) return ((struct Site *) NULL);
+-
+-	v = (struct Site *) getfree(&sfl);
+-	v -> refcnt = 0;
+-	v -> coord.x = xint;
+-	v -> coord.y = yint;
+-	return(v);
+-}
+-
+-/* returns 1 if p is to right of halfedge e */
+-int right_of(el, p)
+-struct Halfedge *el;
+-struct Point *p;
+-{
+-struct Edge *e;
+-struct Site *topsite;
+-int right_of_site, above, fast;
+-float dxp, dyp, dxs, t1, t2, t3, yl;
+-
+-e = el -> ELedge;
+-topsite = e -> reg[1];
+-right_of_site = p -> x > topsite -> coord.x;
+-if(right_of_site && el -> ELpm == le) return(1);
+-if(!right_of_site && el -> ELpm == re) return (0);
+-
+-if (e->a == 1.0)
+-{	dyp = p->y - topsite->coord.y;
+-	dxp = p->x - topsite->coord.x;
+-	fast = 0;
+-	if ((!right_of_site &e->b<0.0) | (right_of_site&e->b>=0.0) )
+-	{	above = dyp>= e->b*dxp;	
+-		fast = above;
+-	}
+-	else 
+-	{	above = p->x + p->y*e->b > e-> c;
+-		if(e->b<0.0) above = !above;
+-		if (!above) fast = 1;
+-	};
+-	if (!fast)
+-	{	dxs = topsite->coord.x - (e->reg[0])->coord.x;
+-		above = e->b * (dxp*dxp - dyp*dyp) <
+-		        dxs*dyp*(1.0+2.0*dxp/dxs + e->b*e->b);
+-		if(e->b<0.0) above = !above;
+-	};
+-}
+-else  /*e->b==1.0 */
+-{	yl = e->c - e->a*p->x;
+-	t1 = p->y - yl;
+-	t2 = p->x - topsite->coord.x;
+-	t3 = yl - topsite->coord.y;
+-	above = t1*t1 > t2*t2 + t3*t3;
+-};
+-return (el->ELpm==le ? above : !above);
+-}
+-
+-
+-endpoint(e, lr, s)
+-struct Edge *e;
+-int	lr;
+-struct Site *s;
+-{
+-e -> ep[lr] = s;
+-ref(s);
+-if(e -> ep[re-lr]== (struct Site *) NULL) return;
+-out_ep(e);
+-deref(e->reg[le]);
+-deref(e->reg[re]);
+-makefree(e, &efl);
+-}
+-
+-
+-float dist(s,t)
+-struct Site *s,*t;
+-{
+-float dx,dy;
+-	dx = s->coord.x - t->coord.x;
+-	dy = s->coord.y - t->coord.y;
+-	return(sqrt(dx*dx + dy*dy));
+-}
+-
+-
+-int makevertex(v)
+-struct Site *v;
+-{
+-v -> sitenbr = nvertices;
+-nvertices += 1;
+-out_vertex(v);
+-}
+-
+-
+-deref(v)
+-struct	Site *v;
+-{
+-v -> refcnt -= 1;
+-if (v -> refcnt == 0 ) makefree(v, &sfl);
+-}
+-
+-ref(v)
+-struct Site *v;
+-{
+-v -> refcnt += 1;
+-}
+//GO.SYSIN DD geometry.c
+echo heap.c 1>&2
+sed 's/.//' >heap.c <<'//GO.SYSIN DD heap.c'
+-#
+-#include "defs.h"
+-
+-
+-PQinsert(he, v, offset)
+-struct Halfedge *he;
+-struct Site *v;
+-float 	offset;
+-{
+-struct Halfedge *last, *next;
+-
+-he -> vertex = v;
+-ref(v);
+-he -> ystar = v -> coord.y + offset;
+-last = &PQhash[PQbucket(he)];
+-while ((next = last -> PQnext) != (struct Halfedge *) NULL &&
+-      (he -> ystar  > next -> ystar  ||
+-      (he -> ystar == next -> ystar && v -> coord.x > next->vertex->coord.x)))
+-	{	last = next;};
+-he -> PQnext = last -> PQnext; 
+-last -> PQnext = he;
+-PQcount += 1;
+-}
+-
+-PQdelete(he)
+-struct Halfedge *he;
+-{
+-struct Halfedge *last;
+-
+-if(he ->  vertex != (struct Site *) NULL)
+-{	last = &PQhash[PQbucket(he)];
+-	while (last -> PQnext != he) last = last -> PQnext;
+-	last -> PQnext = he -> PQnext;
+-	PQcount -= 1;
+-	deref(he -> vertex);
+-	he -> vertex = (struct Site *) NULL;
+-};
+-}
+-
+-int PQbucket(he)
+-struct Halfedge *he;
+-{
+-int bucket;
+-
+-bucket = (he->ystar - ymin)/deltay * PQhashsize;
+-if (bucket<0) bucket = 0;
+-if (bucket>=PQhashsize) bucket = PQhashsize-1 ;
+-if (bucket < PQmin) PQmin = bucket;
+-return(bucket);
+-}
+-
+-
+-
+-int PQempty()
+-{
+-	return(PQcount==0);
+-}
+-
+-
+-struct Point PQ_min()
+-{
+-struct Point answer;
+-
+-	while(PQhash[PQmin].PQnext == (struct Halfedge *)NULL) {PQmin += 1;};
+-	answer.x = PQhash[PQmin].PQnext -> vertex -> coord.x;
+-	answer.y = PQhash[PQmin].PQnext -> ystar;
+-	return (answer);
+-}
+-
+-struct Halfedge *PQextractmin()
+-{
+-struct Halfedge *curr;
+-
+-	curr = PQhash[PQmin].PQnext;
+-	PQhash[PQmin].PQnext = curr -> PQnext;
+-	PQcount -= 1;
+-	return(curr);
+-}
+-
+-
+-PQinitialize()
+-{
+-int i; struct Point *s;
+-
+-	PQcount = 0;
+-	PQmin = 0;
+-	PQhashsize = 4 * sqrt_nsites;
+-	PQhash = (struct Halfedge *) myalloc(PQhashsize * sizeof *PQhash);
+-	for(i=0; i<PQhashsize; i+=1) PQhash[i].PQnext = (struct Halfedge *)NULL;
+-}
+-
+//GO.SYSIN DD heap.c
+echo main.c 1>&2
+sed 's/.//' >main.c <<'//GO.SYSIN DD main.c'
+-/*
+- * The author of this software is Steven Fortune.  Copyright (c) 1994 by AT&T
+- * Bell Laboratories.
+- * Permission to use, copy, modify, and distribute this software for any
+- * purpose without fee is hereby granted, provided that this entire notice
+- * is included in all copies of any software which is or includes a copy
+- * or modification of this software and in all copies of the supporting
+- * documentation for such software.
+- * THIS SOFTWARE IS BEING PROVIDED "AS IS", WITHOUT ANY EXPRESS OR IMPLIED
+- * WARRANTY.  IN PARTICULAR, NEITHER THE AUTHORS NOR AT&T MAKE ANY
+- * REPRESENTATION OR WARRANTY OF ANY KIND CONCERNING THE MERCHANTABILITY
+- * OF THIS SOFTWARE OR ITS FITNESS FOR ANY PARTICULAR PURPOSE.
+- */
+-#
+-#include <stdio.h>
+-#include "defs.h"
+-struct Site *readone();
+-struct Site *nextone();
+-
+-main(argc,argv) 
+-char **argv; 
+-int argc;
+-{	
+-int c;
+-struct Site *(*next)();
+-
+-sorted = 0; triangulate = 0; plot = 0; debug = 0;
+-while((c=getopt(argc,argv,"dpst")) != EOF)
+-	switch(c) {
+-	case 'd': debug = 1;
+-		  break;
+-	case 's': sorted = 1;
+-		  break;
+-	case 't': triangulate = 1;
+-		  break;
+-	case 'p': plot = 1;
+-		  break;
+-		  };
+-
+-freeinit(&sfl, sizeof *sites);
+-if(sorted)
+-{	scanf("%d %f %f %f %f", &nsites, &xmin, &xmax, &ymin, &ymax);
+-	next = readone;
+-}
+-else 
+-{	readsites();
+-	next = nextone;
+-};
+-
+-siteidx = 0;
+-geominit();
+-if(plot) plotinit();
+-
+-voronoi(triangulate, next); 
+-
+-}
+-
+-/* sort sites on y, then x, coord */
+-int scomp(s1,s2)
+-struct Point *s1,*s2;
+-{
+-	if(s1 -> y < s2 -> y) return(-1);
+-	if(s1 -> y > s2 -> y) return(1);
+-	if(s1 -> x < s2 -> x) return(-1);
+-	if(s1 -> x > s2 -> x) return(1);
+-	return(0);
+-}
+-
+-/* return a single in-storage site */
+-struct Site *nextone()
+-{
+-struct Site *s;
+-if(siteidx < nsites)
+-{	s = &sites[siteidx];
+-	siteidx += 1;
+-	return(s);
+-}
+-else	return( (struct Site *)NULL);
+-}
+-
+-
+-/* read all sites, sort, and compute xmin, xmax, ymin, ymax */
+-readsites()
+-{
+-int i;
+-
+-nsites=0;
+-sites = (struct Site *) myalloc(4000*sizeof *sites);
+-while(scanf("%f %f", &sites[nsites].coord.x, &sites[nsites].coord.y)!=EOF)
+-{	sites[nsites].sitenbr = nsites;
+-	sites[nsites].refcnt = 0;
+-	nsites += 1;
+-	if (nsites % 4000 == 0) 
+-		sites = (struct Site *) realloc(sites,(nsites+4000)*sizeof*sites);
+-};
+-qsort(sites, nsites, sizeof *sites, scomp);
+-xmin=sites[0].coord.x; 
+-xmax=sites[0].coord.x;
+-for(i=1; i<nsites; i+=1)
+-{	if(sites[i].coord.x < xmin) xmin = sites[i].coord.x;
+-	if(sites[i].coord.x > xmax) xmax = sites[i].coord.x;
+-};
+-ymin = sites[0].coord.y;
+-ymax = sites[nsites-1].coord.y;
+-}
+-
+-/* read one site */
+-struct Site *readone()
+-{
+-struct Site *s;
+-
+-s = (struct Site *) getfree(&sfl);
+-s -> refcnt = 0;
+-s -> sitenbr = siteidx;
+-siteidx += 1;
+-if(scanf("%f %f", &(s->coord.x), &(s->coord.y)) == EOF)
+-	return ((struct Site *) NULL );
+-return(s);
+-}
+//GO.SYSIN DD main.c
+echo memory.c 1>&2
+sed 's/.//' >memory.c <<'//GO.SYSIN DD memory.c'
+-#
+-#include "defs.h"
+-#include <stdio.h>
+-
+-freeinit(fl, size)
+-struct	Freelist *fl;
+-int	size;
+-{
+-fl -> head = (struct Freenode *) NULL;
+-fl -> nodesize = size;
+-}
+-
+-char *getfree(fl)
+-struct	Freelist *fl;
+-{
+-int i; struct Freenode *t;
+-if(fl->head == (struct Freenode *) NULL)
+-{	t =  (struct Freenode *) myalloc(sqrt_nsites * fl->nodesize);
+-	for(i=0; i<sqrt_nsites; i+=1) 	
+-		makefree((struct Freenode *)((char *)t+i*fl->nodesize), fl);
+-};
+-t = fl -> head;
+-fl -> head = (fl -> head) -> nextfree;
+-return((char *)t);
+-}
+-
+-
+-
+-makefree(curr,fl)
+-struct Freenode *curr;
+-struct Freelist *fl;
+-{
+-curr -> nextfree = fl -> head;
+-fl -> head = curr;
+-}
+-
+-int total_alloc;
+-char *myalloc(n)
+-unsigned n;
+-{
+-char *t;
+-if ((t=malloc(n)) == (char *) 0)
+-{    fprintf(stderr,"Insufficient memory processing site %d (%d bytes in use)\n",
+-		siteidx, total_alloc);
+-     exit();
+-};
+-total_alloc += n;
+-return(t);
+-}
+//GO.SYSIN DD memory.c
+echo output.c 1>&2
+sed 's/.//' >output.c <<'//GO.SYSIN DD output.c'
+-#
+-#include "defs.h"
+-#include <stdio.h>
+-/* for those who don't have Cherry's plot */
+-/* #include <plot.h> */
+-openpl(){}
+-line(){}
+-circle(){}
+-range(){}
+-
+-float pxmin, pxmax, pymin, pymax, cradius;
+-
+-out_bisector(e)
+-struct Edge *e;
+-{
+-if(triangulate & plot &!debug)
+-	line(e->reg[0]->coord.x, e->reg[0]->coord.y, 
+-	     e->reg[1]->coord.x, e->reg[1]->coord.y);
+-if(!triangulate & !plot &!debug)
+-	printf("l %f %f %f", e->a, e->b, e->c);
+-if(debug)
+-	printf("line(%d) %gx+%gy=%g, bisecting %d %d\n", e->edgenbr,
+-	    e->a, e->b, e->c, e->reg[le]->sitenbr, e->reg[re]->sitenbr);
+-}
+-
+-
+-out_ep(e)
+-struct Edge *e;
+-{
+-if(!triangulate & plot) 
+-	clip_line(e);
+-if(!triangulate & !plot)
+-{	printf("e %d", e->edgenbr);
+-	printf(" %d ", e->ep[le] != (struct Site *)NULL ? e->ep[le]->sitenbr : -1);
+-	printf("%d\n", e->ep[re] != (struct Site *)NULL ? e->ep[re]->sitenbr : -1);
+-};
+-}
+-
+-out_vertex(v)
+-struct Site *v;
+-{
+-if(!triangulate & !plot &!debug)
+-	printf ("v %f %f\n", v->coord.x, v->coord.y);
+-if(debug)
+-	printf("vertex(%d) at %f %f\n", v->sitenbr, v->coord.x, v->coord.y);
+-}
+-
+-
+-out_site(s)
+-struct Site *s;
+-{
+-if(!triangulate & plot & !debug)
+-	circle (s->coord.x, s->coord.y, cradius);
+-if(!triangulate & !plot & !debug)
+-	printf("s %f %f\n", s->coord.x, s->coord.y);
+-if(debug)
+-	printf("site (%d) at %f %f\n", s->sitenbr, s->coord.x, s->coord.y);
+-}
+-
+-
+-out_triple(s1, s2, s3)
+-struct Site *s1, *s2, *s3;
+-{
+-if(triangulate & !plot &!debug)
+-	printf("%d %d %d\n", s1->sitenbr, s2->sitenbr, s3->sitenbr);
+-if(debug)
+-	printf("circle through left=%d right=%d bottom=%d\n", 
+-		s1->sitenbr, s2->sitenbr, s3->sitenbr);
+-}
+-
+-
+-
+-plotinit()
+-{
+-float dx,dy,d;
+-
+-dy = ymax - ymin;
+-dx = xmax - xmin;
+-d = ( dx > dy ? dx : dy) * 1.1;
+-pxmin = xmin - (d-dx)/2.0;
+-pxmax = xmax + (d-dx)/2.0;
+-pymin = ymin - (d-dy)/2.0;
+-pymax = ymax + (d-dy)/2.0;
+-cradius = (pxmax - pxmin)/350.0;
+-openpl();
+-range(pxmin, pymin, pxmax, pymax);
+-}
+-
+-
+-int clip_line(e)
+-struct Edge *e;
+-{
+-struct Site *s1, *s2;
+-float x1,x2,y1,y2;
+-
+-	if(e -> a == 1.0 && e ->b >= 0.0)
+-	{	s1 = e -> ep[1];
+-		s2 = e -> ep[0];
+-	}
+-	else 
+-	{	s1 = e -> ep[0];
+-		s2 = e -> ep[1];
+-	};
+-
+-	if(e -> a == 1.0)
+-	{
+-		y1 = pymin;
+-		if (s1!=(struct Site *)NULL && s1->coord.y > pymin)
+-			 y1 = s1->coord.y;
+-		if(y1>pymax) return;
+-		x1 = e -> c - e -> b * y1;
+-		y2 = pymax;
+-		if (s2!=(struct Site *)NULL && s2->coord.y < pymax) 
+-			y2 = s2->coord.y;
+-		if(y2<pymin) return(0);
+-		x2 = e -> c - e -> b * y2;
+-		if ((x1> pxmax & x2>pxmax) | (x1<pxmin&x2<pxmin)) return;
+-		if(x1> pxmax)
+-		{	x1 = pxmax; y1 = (e -> c - x1)/e -> b;};
+-		if(x1<pxmin)
+-		{	x1 = pxmin; y1 = (e -> c - x1)/e -> b;};
+-		if(x2>pxmax)
+-		{	x2 = pxmax; y2 = (e -> c - x2)/e -> b;};
+-		if(x2<pxmin)
+-		{	x2 = pxmin; y2 = (e -> c - x2)/e -> b;};
+-	}
+-	else
+-	{
+-		x1 = pxmin;
+-		if (s1!=(struct Site *)NULL && s1->coord.x > pxmin) 
+-			x1 = s1->coord.x;
+-		if(x1>pxmax) return(0);
+-		y1 = e -> c - e -> a * x1;
+-		x2 = pxmax;
+-		if (s2!=(struct Site *)NULL && s2->coord.x < pxmax) 
+-			x2 = s2->coord.x;
+-		if(x2<pxmin) return(0);
+-		y2 = e -> c - e -> a * x2;
+-		if ((y1> pymax & y2>pymax) | (y1<pymin&y2<pymin)) return(0);
+-		if(y1> pymax)
+-		{	y1 = pymax; x1 = (e -> c - y1)/e -> a;};
+-		if(y1<pymin)
+-		{	y1 = pymin; x1 = (e -> c - y1)/e -> a;};
+-		if(y2>pymax)
+-		{	y2 = pymax; x2 = (e -> c - y2)/e -> a;};
+-		if(y2<pymin)
+-		{	y2 = pymin; x2 = (e -> c - y2)/e -> a;};
+-	};
+-	
+-	line(x1,y1,x2,y2);
+-}
+//GO.SYSIN DD output.c
+echo voronoi.c 1>&2
+sed 's/.//' >voronoi.c <<'//GO.SYSIN DD voronoi.c'
+-#
+-#include "defs.h"
+-
+-
+-/* implicit parameters: nsites, sqrt_nsites, xmin, xmax, ymin, ymax,
+-   deltax, deltay (can all be estimates).
+-   Performance suffers if they are wrong; better to make nsites,
+-   deltax, and deltay too big than too small.  (?) */
+-
+-voronoi(triangulate, nextsite)
+-int triangulate;
+-struct Site *(*nextsite)();
+-{
+-struct Site *newsite, *bot, *top, *temp, *p;
+-struct Site *v;
+-struct Point newintstar;
+-int pm;
+-struct Halfedge *lbnd, *rbnd, *llbnd, *rrbnd, *bisector;
+-struct Edge *e;
+-
+-
+-PQinitialize();
+-bottomsite = (*nextsite)();
+-out_site(bottomsite);
+-ELinitialize();
+-
+-newsite = (*nextsite)();
+-while(1)
+-{
+-	if(!PQempty()) newintstar = PQ_min();
+-
+-	if (newsite != (struct Site *)NULL 
+-	   && (PQempty() 
+-		 || newsite -> coord.y < newintstar.y
+-	 	 || (newsite->coord.y == newintstar.y 
+-		     && newsite->coord.x < newintstar.x)))
+-	{/* new site is smallest */
+-		out_site(newsite);
+-		lbnd = ELleftbnd(&(newsite->coord));
+-		rbnd = ELright(lbnd);
+-		bot = rightreg(lbnd);
+-		e = bisect(bot, newsite);
+-		bisector = HEcreate(e, le);
+-		ELinsert(lbnd, bisector);
+-		if ((p = intersect(lbnd, bisector)) != (struct Site *) NULL) 
+-		{	PQdelete(lbnd);
+-			PQinsert(lbnd, p, dist(p,newsite));
+-		};
+-		lbnd = bisector;
+-		bisector = HEcreate(e, re);
+-		ELinsert(lbnd, bisector);
+-		if ((p = intersect(bisector, rbnd)) != (struct Site *) NULL)
+-		{	PQinsert(bisector, p, dist(p,newsite));	
+-		};
+-		newsite = (*nextsite)();	
+-	}
+-	else if (!PQempty()) 
+-	/* intersection is smallest */
+-	{	lbnd = PQextractmin();
+-		llbnd = ELleft(lbnd);
+-		rbnd = ELright(lbnd);
+-		rrbnd = ELright(rbnd);
+-		bot = leftreg(lbnd);
+-		top = rightreg(rbnd);
+-		out_triple(bot, top, rightreg(lbnd));
+-		v = lbnd->vertex;
+-		makevertex(v);
+-		endpoint(lbnd->ELedge,lbnd->ELpm,v);
+-		endpoint(rbnd->ELedge,rbnd->ELpm,v);
+-		ELdelete(lbnd); 
+-		PQdelete(rbnd);
+-		ELdelete(rbnd); 
+-		pm = le;
+-		if (bot->coord.y > top->coord.y)
+-		{	temp = bot; bot = top; top = temp; pm = re;}
+-		e = bisect(bot, top);
+-		bisector = HEcreate(e, pm);
+-		ELinsert(llbnd, bisector);
+-		endpoint(e, re-pm, v);
+-		deref(v);
+-		if((p = intersect(llbnd, bisector)) != (struct Site *) NULL)
+-		{	PQdelete(llbnd);
+-			PQinsert(llbnd, p, dist(p,bot));
+-		};
+-		if ((p = intersect(bisector, rrbnd)) != (struct Site *) NULL)
+-		{	PQinsert(bisector, p, dist(p,bot));
+-		};
+-	}
+-	else break;
+-};
+-
+-for(lbnd=ELright(ELleftend); lbnd != ELrightend; lbnd=ELright(lbnd))
+-	{	e = lbnd -> ELedge;
+-		out_ep(e);
+-	};
+-}
+//GO.SYSIN DD voronoi.c
+echo t 1>&2
+sed 's/.//' >t <<'//GO.SYSIN DD t'
+-0.532095 0.894141
+-0.189043 0.613426
+-0.550977 0.415724
+-0.00397384 0.60576
+-0.89423 0.666812
+-0.0730728 0.740658
+-0.64018 0.926186
+-0.389914 0.553149
+-0.046918 0.172275
+-0.820327 0.578957
+-0.166575 0.597895
+-0.587999 0.824301
+-0.184717 0.0608049
+-0.264707 0.661072
+-0.564959 0.824897
+-0.986991 0.654621
+-0.214221 0.611877
+-0.997171 0.807318
+-0.233578 0.380796
+-0.209772 0.585171
+-0.631619 0.418295
+-0.441601 0.474479
+-0.246242 0.196578
+-0.243191 0.428592
+-0.129101 0.460463
+-0.808454 0.240363
+-0.23591 0.362678
+-0.841259 0.0182264
+-0.825533 0.867529
+-0.780973 0.282859
+-0.492706 0.0717757
+-0.0641069 0.0241644
+-0.711451 0.621806
+-0.532239 0.872561
+-0.264527 0.947361
+-0.984485 0.373498
+-0.890788 0.0900603
+-0.81489 0.765458
+-0.656357 0.383494
+-0.161836 0.878997
+-0.789622 0.367808
+-0.00529994 0.694075
+-0.751558 0.0541492
+-0.315169 0.989785
+-0.0675723 0.642346
+-0.144209 0.130059
+-0.755242 0.723929
+-0.0258396 0.306045
+-0.00905612 0.544864
+-0.0917369 0.0311395
+-0.000120247 0.760615
+-0.599014 0.406906
+-0.0209242 0.0676926
+-0.402961 0.743223
+-0.536965 0.776167
+-0.791622 0.4288
+-0.0492686 0.546021
+-0.321031 0.883358
+-0.45994 0.0493888
+-0.306635 0.920045
+-0.290264 0.480864
+-0.117081 0.709596
+-0.663268 0.827229
+-0.25703 0.908703
+-0.138396 0.712536
+-0.37325 0.578061
+-0.792062 0.598336
+-0.761925 0.679885
+-0.498106 0.0823257
+-0.0791993 0.879007
+-0.389481 0.161374
+-0.909555 0.33623
+-0.78771 0.527877
+-0.87391 0.282804
+-0.914291 0.579771
+-0.126212 0.635836
+-0.962689 0.412397
+-0.662097 0.205412
+-0.514842 0.35217
+-0.573771 0.571652
+-0.541641 0.302552
+-0.880047 0.447681
+-0.854456 0.455932
+-0.882323 0.00625933
+-0.0835167 0.817145
+-0.868329 0.54442
+-0.211671 0.598359
+-0.169315 0.4421
+-0.116072 0.753312
+-0.900911 0.0493624
+-0.889781 0.970528
+-0.209244 0.783234
+-0.0556217 0.973298
+-0.787673 0.0775736
+-0.327654 0.267293
+-0.571657 0.956988
+-0.519674 0.443726
+-0.0206049 0.472568
+-0.00635056 0.409455
+-0.414254 0.229849
+//GO.SYSIN DD t

@@ -1,0 +1,11 @@
+/* $Id: m3makefile,v 1.2 2004/10/28 20:48:41 mika Exp $ */
+
+import("libm3")
+import("cit_util")
+import("bool")
+import("voronoi")
+import("sysiphus_lib")
+
+implementation("Main")
+
+program("x")

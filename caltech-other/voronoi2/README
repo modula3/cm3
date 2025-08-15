@@ -1,0 +1,3 @@
+This is a newer version of ../voronoi.  It is not enabled because it's not to the standards of the rest of CM3 and needs some significant software engineering to make work.
+
+The code is originally by Stephen Fortune at Bell Labs.  Mika Nystrom added the Modula-3 interfaces at Caltech some years ago, and the code has seen some use at Intel.  It is being archived here so that if anyone is interested in the future, it can be resurrected and merged into the older version already in CM3.
