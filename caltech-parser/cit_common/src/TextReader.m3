@@ -35,6 +35,9 @@ REVEAL
     (* the line contains valid data from character 0 to Text.Length(line) *)
     pushback, line : TEXT;
     start : CARDINAL := 0;
+
+    skipsAlways := FALSE; (* ignore skipNulls and always skip *)
+    
   OVERRIDES
     next := Next;
     nextS := NextS;
@@ -57,6 +60,8 @@ REVEAL
     continue := Unwind;
   END;
 
+  Skips = T BRANDED Brand & " (Skips)" OBJECT END;
+  
 (**********************************************************************)
 
 REVEAL
@@ -94,17 +99,18 @@ PROCEDURE Get(self : T) : TEXT RAISES { NoMore } =
     RETURN self.nextSE(Delims,TRUE)
   END Get;
 
-PROCEDURE NextE(self : T; 
-                delims : TEXT; skipNulls : BOOLEAN) : TEXT RAISES { NoMore } = 
+PROCEDURE NextE(self      : T; 
+                delims    : TEXT;
+                skipNulls : BOOLEAN) : TEXT RAISES { NoMore } = 
   VAR res : TEXT; BEGIN 
     IF self.next(delims,res,skipNulls) THEN RETURN res
     ELSE RAISE NoMore
     END
   END NextE;
 
-PROCEDURE NextSE(self : T; 
+PROCEDURE NextSE(self           : T; 
                 READONLY delims : SET OF CHAR; 
-                skipNulls : BOOLEAN) : TEXT RAISES { NoMore } = 
+                skipNulls       : BOOLEAN) : TEXT RAISES { NoMore } = 
   VAR res : TEXT; BEGIN 
     IF self.nextS(delims,res,skipNulls) THEN RETURN res
     ELSE RAISE NoMore
@@ -122,7 +128,7 @@ PROCEDURE NextS(self : T;
   BEGIN
     IF Text.Length(self.pushback) > 0 THEN
       VAR
-        saveLine := self.line;
+        saveLine  := self.line;
         (* savePB := self.pushback; *)
         saveStart := self.start;
         found: BOOLEAN;
@@ -138,7 +144,7 @@ PROCEDURE NextS(self : T;
           (* actually could merge with next. oops. *)
           RETURN TRUE;
         ELSE
-          <* ASSERT skipNulls *>
+          <* ASSERT skipNulls OR self.skipsAlways *>
         END;
       END;
     END;
@@ -157,7 +163,7 @@ PROCEDURE NextS(self : T;
     self.start := min+1;
 
     (* clear out any stray delimiters after the end, if skipNulls is true *)
-    IF skipNulls THEN
+    IF skipNulls OR self.skipsAlways THEN
       VAR
         len := Text.Length(self.line);
       BEGIN
@@ -175,7 +181,7 @@ PROCEDURE NextS(self : T;
       END;
     END;
     
-    IF Text.Length(res) = 0 AND skipNulls THEN
+    IF Text.Length(res) = 0 AND (skipNulls OR self.skipsAlways) THEN
       RETURN NextS(self,delims,res,skipNulls)
     END;
 
@@ -195,6 +201,7 @@ PROCEDURE Next(self : T;
 
 PROCEDURE Init(self: T; line : TEXT) : T =
   BEGIN
+    self.skipsAlways := ISTYPE(self, Skips);
     self.line := line;
     self.start := 0;
     self.pushback := "";
