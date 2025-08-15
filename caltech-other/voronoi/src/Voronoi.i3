@@ -7,7 +7,7 @@ TYPE
   END;
 
   Triple = RECORD
-    s1, s2, s3 : CARDINAL;
+    s1, s2, s3 : [ -1 .. LAST(CARDINAL) ];
   END;
 
 <* EXTERNAL mod3_start *>
