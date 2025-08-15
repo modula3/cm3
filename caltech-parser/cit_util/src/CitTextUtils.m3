@@ -21,7 +21,7 @@
 (*                                                                           *)
 (* $Id$ *)
 
-MODULE TextUtils;
+MODULE CitTextUtils;
 IMPORT IntList, ScanList;
 IMPORT TextReader;
 IMPORT Text;
@@ -413,4 +413,4 @@ PROCEDURE FormatInfixArr(READONLY seq : ARRAY OF TEXT;
     RETURN Wx.ToText(wx)
   END FormatInfixArr;
 
-BEGIN END TextUtils.
+BEGIN END CitTextUtils.

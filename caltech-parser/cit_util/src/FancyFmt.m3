@@ -11,7 +11,7 @@ MODULE FancyFmt;
 FROM Fmt IMPORT Style, Base;
 IMPORT Fmt;
 IMPORT Wr, CharSeq;
-IMPORT Word, Text, TextUtils, TextWr;
+IMPORT Word, Text, CitTextUtils AS TextUtils, TextWr;
 IMPORT Thread;
 
 PROCEDURE Reformat(what                        : TEXT; 

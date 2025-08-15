@@ -14,7 +14,7 @@ IMPORT SchemeLongReal;
 IMPORT SchemeBoolean, SchemeSymbol;
 IMPORT CharSeq;
 IMPORT Text;
-IMPORT Scan, FloatMode, Lex, TextUtils;
+IMPORT Scan, FloatMode, Lex, CitTextUtils AS TextUtils;
 FROM SchemeChar IMPORT IChr, Character, Delims, White, NumberChars;
 IMPORT Thread;
 IMPORT SchemeString;

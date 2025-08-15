@@ -31,7 +31,7 @@ FROM SchemeChar IMPORT Character, Char, IChr, LowerCase, UpperCase, Digits,
 IMPORT SchemeChar;
 IMPORT SchemeSymbol;
 IMPORT SchemeLongReal;
-IMPORT SchemeBoolean, TextUtils;
+IMPORT SchemeBoolean, CitTextUtils AS TextUtils;
 
 IMPORT Fmt, Text, Wx, Wr;
 IMPORT Math, Scan, Lex, FloatMode;

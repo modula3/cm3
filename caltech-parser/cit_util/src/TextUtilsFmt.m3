@@ -21,7 +21,7 @@
 (*                                                                           *)
 (* $Id$ *)
 
-MODULE TextUtilsFmt EXPORTS TextUtils;
+MODULE TextUtilsFmt EXPORTS CitTextUtils;
 IMPORT TextList;
 IMPORT Text;
 

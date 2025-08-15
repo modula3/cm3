@@ -4,7 +4,7 @@ IMPORT TextReader;
 IMPORT Rd;
 IMPORT Text;
 IMPORT Wr;
-IMPORT TextUtils;
+IMPORT CitTextUtils AS TextUtils;
 IMPORT TextList;
 IMPORT Args;
 IMPORT FileRd;
