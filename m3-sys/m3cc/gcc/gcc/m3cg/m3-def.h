@@ -75,6 +75,8 @@ M3CG (DECLARE_OBJECT,
       UNSIGNED_INTEGER (n_fields)
       UNSIGNED_INTEGER (n_methods)
       BITSIZE (field_size)
+      INTEGER (field_offset)
+      INTEGER (method_offset)
       M3CG_EXTRA_FIELDS (tree t;))
 M3CG (DECLARE_METHOD,
       STRING (name, name_length)

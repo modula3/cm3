@@ -767,9 +767,12 @@ PROCEDURE declare_object (VAR s: State) =
       n_fields   := Scan_int (s);
       n_methods  := Scan_int (s);
       field_size := Scan_int (s);
+      field_offset  := Scan_int (s);
+      method_offset := Scan_int (s);
   BEGIN
     s.cg.declare_object (type, super, brand, traced,
-                         n_fields, n_methods, field_size);
+                         n_fields, n_methods, field_size, field_offset,
+                         method_offset);
   END declare_object;
 
 PROCEDURE declare_method (VAR s: State) =

@@ -3856,7 +3856,7 @@ END declare_raises;
 (* TODO check that objects are really described correctly; I think they are not,
  * in that base type layout is not always known at compile-time.
  *)
-PROCEDURE declare_object(self: DeclareTypes_t; typeid, super: TypeUID; brand: TEXT; traced: BOOLEAN; field_count, method_count: INTEGER; field_size: BitSize; <*UNUSED*>super_typename: Name) =
+PROCEDURE declare_object(self: DeclareTypes_t; typeid, super: TypeUID; brand: TEXT; traced: BOOLEAN; field_count, method_count: INTEGER; field_size: BitSize; field_offset, method_offset : INTEGER; <*UNUSED*>super_typename: Name) =
 VAR record: Record_t := NIL;
     x := self.self;
 BEGIN
@@ -3867,6 +3867,8 @@ BEGIN
             & " traced:" & BoolToText[traced]
             & " field_count:" & IntToDec(field_count)
             & " method_count:" & IntToDec(method_count)
+            & " field_offset:" & IntToDec(field_offset)
+            & " method_offset:" & IntToDec(method_offset)
             & " field_size:" & IntToDec(field_size));
     ELSIF debug THEN
         x.comment("declare_object");
