@@ -395,7 +395,7 @@ Usocket__recv (int a, void* b, size_t c, int d)
     ssize_t result = {0};                       \
     NativeSockAddrUnionAll native;              \
     M3SockAddrUnionAll m3;                      \
-    m3c_socklen_t len = (m3c_socklen_t) {*plen};\
+    m3c_socklen_t len = (m3c_socklen_t) *plen;  \
     ZERO_MEMORY(native);                        \
     ZERO_MEMORY(m3);                            \
     ASSERT_PLEN_IN                              \
