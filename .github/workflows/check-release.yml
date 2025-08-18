@@ -13,7 +13,7 @@ env:
 
 jobs:
   AMD64_DARWIN:
-    runs-on: macos-latest
+    runs-on: macos-latest-large
     env:
       CM3DIST: cm3-dist-AMD64_LINUX-${{ github.event.inputs.tag }}.tar.xz
     steps:
