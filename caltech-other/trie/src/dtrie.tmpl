@@ -1,0 +1,15 @@
+/* $Id$ */
+
+readonly proc dtrie(nm, value) is
+	local nam = nm & "DTrie"
+
+	build_generic_intf(nam, "Trie", ["Cardinal", value], HIDDEN)
+	build_generic_impl(nam, "DTrie", [value])
+end
+
+readonly proc Dtrie(nm, value) is
+	local nam = nm & "DTrie"
+
+	build_generic_intf(nam, "Trie", ["Cardinal", value], VISIBLE)
+	build_generic_impl(nam, "DTrie", [value])
+end

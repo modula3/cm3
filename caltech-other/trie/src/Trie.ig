@@ -23,6 +23,8 @@ TYPE
     
     init(READONLY defValue : Value.T) : T;
 
+    initD(alphabetSz : CARDINAL; READONLY defValue : Value.T) : T; (* for DTrie.mg *)
+
     iterate() : Iterator;
   END;
 

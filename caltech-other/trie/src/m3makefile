@@ -1,12 +1,16 @@
 /* $Id$ */
 
 import ("libm3")
+import ("cit_util")
 
 Generic_module ("Trie")
+Generic_module ("DTrie")
 template ("trie")
+template ("dtrie")
 
 Interface("Alpha")
 
 Trie("AlphaRef", "Alpha", "Refany")
+Dtrie("Ref", "Refany")
 
 library("trie")

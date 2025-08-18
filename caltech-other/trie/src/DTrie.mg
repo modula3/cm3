@@ -1,9 +1,10 @@
 (* $Id$ *)
 
-GENERIC MODULE Trie(Key, Value);
+GENERIC MODULE DTrie(Value);
+IMPORT Cardinal AS Key;
 
 TYPE Data = RECORD value : Value.T; next : INTEGER := 0 END;
-TYPE Tab = ARRAY Key.T OF Data;
+TYPE Tab = REF ARRAY OF Data;
 TYPE TabArr = REF ARRAY OF Tab;
 
 REVEAL
@@ -11,19 +12,22 @@ REVEAL
     tab : TabArr;
     defValue : Value.T;
     last : CARDINAL := 0;
+    alphabetSz : CARDINAL;
   OVERRIDES
     get := Get;
     put := Put;
-    init := Init;
+    initD := Init;
     iterate := Iterate;
   END;
 
-PROCEDURE Init(t : T; READONLY defValue : Value.T) : T =
+PROCEDURE Init(t : T; alphabetSz : CARDINAL; READONLY defValue : Value.T) : T =
   BEGIN
     t.defValue := defValue;
+    t.alphabetSz := alphabetSz;
     t.tab := NEW(TabArr,1);
     t.last := 0;
-    FOR i := FIRST(t.tab[0]) TO LAST(t.tab[0]) DO
+    t.tab[0] := NEW(Tab, alphabetSz);
+    FOR i := 0 TO t.alphabetSz-1 DO
       t.tab[0][i] := Data { t.defValue, 0 }
     END;
     RETURN t
@@ -33,9 +37,6 @@ PROCEDURE Get(t : T; READONLY k : ARRAY OF Key.T) : Value.T =
   VAR
     p := 0;
   BEGIN
-    IF NUMBER(k) = 0 THEN
-      RETURN t.defValue
-    END;
     FOR i := FIRST(k) TO LAST(k) DO
       WITH next = t.tab[p][k[i]].next DO
         IF next = 0 THEN 
@@ -57,7 +58,8 @@ PROCEDURE Expand(VAR tab : TabArr) =
     tab := new
   END Expand;
 
-PROCEDURE Put(t : T; READONLY k : ARRAY OF Key.T; 
+PROCEDURE Put(t          : T;
+              READONLY k : ARRAY OF Key.T; 
               READONLY v : Value.T) : Value.T =
   VAR
     p := 0;
@@ -69,7 +71,7 @@ PROCEDURE Put(t : T; READONLY k : ARRAY OF Key.T;
         IF t.last > LAST(t.tab^) THEN Expand(t.tab) END;
         
         t.tab[p][k[i]].next := t.last;
-        FOR i := FIRST(Key.T) TO LAST(Key.T) DO
+        FOR i := 0 TO t.alphabetSz - 1 DO
           t.tab[t.last][i] := Data { t.defValue, 0 }
         END
       END;
@@ -98,8 +100,8 @@ PROCEDURE INext(i : Iterator; VAR v : Value.T) : BOOLEAN =
 
   PROCEDURE Inc() =
     BEGIN
-      IF i.k = LAST(Key.T) THEN
-        i.k := FIRST(Key.T); INC(i.p)
+      IF i.k = i.t.alphabetSz - 1 THEN
+        i.k := 0; INC(i.p)
       ELSE
         INC(i.k)
       END
@@ -117,4 +119,4 @@ PROCEDURE INext(i : Iterator; VAR v : Value.T) : BOOLEAN =
     END
   END INext;
 
-BEGIN END Trie.
+BEGIN END DTrie.
