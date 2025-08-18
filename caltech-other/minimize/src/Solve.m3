@@ -1,9 +1,12 @@
-(* $Id$ *)
+(* $Id: Solve.m3,v 1.4 2002/04/10 09:14:54 mika Exp $ *)
 MODULE Solve;
-IMPORT Debug, LRFunction;
+IMPORT LRFunction;
+IMPORT MapError;
+<*FATAL MapError.E*>
 
 PROCEDURE WDB(f : LRFunction.T; 
-              x1, x2 : LONGREAL; tol : LONGREAL) : LONGREAL =
+              x1, x2 : LONGREAL; tol : LONGREAL) : LONGREAL
+  RAISES { Error } =
   CONST
     ItMax = 200;
     EPS = 3.0d-8;
@@ -18,7 +21,7 @@ PROCEDURE WDB(f : LRFunction.T;
     fa := f.eval(a);
     fb := f.eval(b);
     IF fa > 0.0d0 AND fb > 0.0d0 OR fa < 0.0d0 AND fb < 0.0d0 THEN
-      Debug.Error("Solve.WDB: van Wijngaarden-Dekker-Brent method requires bracketed input!")
+      RAISE Error("Solve.WDB: van Wijngaarden-Dekker-Brent method requires bracketed input!")
     END;
 
     c := b; fc := fb;
@@ -63,8 +66,7 @@ PROCEDURE WDB(f : LRFunction.T;
       END;
       fb := f.eval(b)
     END;
-    Debug.Error("Solve.WDB: van Wijngaarden-Dekker-Brent method exceeding max iterations!");
-    RETURN b
+    RAISE Error("Solve.WDB: van Wijngaarden-Dekker-Brent method exceeding max iterations!");
   END WDB;
 
 BEGIN END Solve.
