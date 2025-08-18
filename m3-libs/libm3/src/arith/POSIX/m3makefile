@@ -9,4 +9,4 @@
 Interface ("Math")
 implementation ("MathPosix")
 c_source ("MathPosixC")
-interface ("MathPosixC")
+Interface ("MathPosixC")
