@@ -1,5 +1,5 @@
 (*                                                                           *)
-(*  TextUtils.i3                                                             *)
+(*  TextUtilsFmt.m3                                                          *)
 (*                                                                           *)
 (*  Some useful text processing routines for the PL1 compiler.               *)
 (*                                                                           *)
@@ -19,31 +19,41 @@
 (*  software outside of the United States of America may require an          *)
 (*  export license.                                                          *)
 (*                                                                           *)
-(* $Id: TextUtils.i3,v 1.2 2001-09-19 14:07:43 wagner Exp $ *)
-INTERFACE TextUtils;
-IMPORT TextList, TextSet;
+(* $Id$ *)
 
-(* replace every occurrence of "old" by "new" in "in" *)
-PROCEDURE Replace(in, old, new : TEXT) : TEXT;
-PROCEDURE ReplaceChar(in : TEXT; old, new : CHAR) : TEXT;
-PROCEDURE CountCharOccurences(in: TEXT; c: CHAR): CARDINAL;
+MODULE CitTextUtilsFmt EXPORTS CitTextUtils;
+IMPORT TextList;
+IMPORT Text;
 
-(* find first occurrence of sub in in *)
-PROCEDURE FindSub(in, sub : TEXT; VAR pos : CARDINAL; start := 0) : BOOLEAN;
+PROCEDURE InfixFormat(sep : TEXT; list : TextList.T; 
+                      ignoreNulls : BOOLEAN ) : TEXT =
+  VAR
+    res := "";
+  BEGIN
+    IF ignoreNulls THEN list := StripNulls(list) END;
+    WHILE list # NIL DO
+      res := res & list.head;
+      IF list.tail # NIL THEN res := res & sep END;
+      list := list.tail
+    END;
+    RETURN res
+  END InfixFormat;
 
-(* have substr? *)
-PROCEDURE HaveSub(in, sub : TEXT) : BOOLEAN;
-PROCEDURE HavePrefix(in, prefix: TEXT): BOOLEAN;
-PROCEDURE HaveSuffix(in, suffix: TEXT): BOOLEAN;
-PROCEDURE RemoveSuffix(in, suffix: TEXT): TEXT;
+PROCEDURE StripNulls(list : TextList.T) : TextList.T =
+  VAR
+    res, strip : TextList.T := NIL;
+  BEGIN
+    WHILE list # NIL DO
+      IF NOT Text.Equal("", list.head) THEN 
+        strip := TextList.Cons(list.head,strip)
+      END;
+      list := list.tail
+    END;
+    WHILE strip # NIL DO
+      res := TextList.Cons(strip.head,res);
+      strip := strip.tail
+    END;
+    RETURN res
+  END StripNulls;
 
-PROCEDURE InfixFormat(sep : TEXT; list : TextList.T; ignoreNulls := FALSE) : TEXT;
-
-PROCEDURE Pluralize(noun : TEXT; count : INTEGER; 
-                    ending := "s"; printNum := TRUE) : TEXT ;
-
-PROCEDURE ListToSet(list : TextList.T) : TextSet.T;
-PROCEDURE SetToList(set : TextSet.T) : TextList.T;
-
-
-END TextUtils.
+BEGIN END CitTextUtilsFmt.
