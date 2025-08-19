@@ -19,7 +19,7 @@
 (*  software outside of the United States of America may require an          *)
 (*  export license.                                                          *)
 (*                                                                           *)
-(* $Id$ *)
+(* $Id: TextUtils.i3,v 1.24 2008/12/18 00:38:12 mika Exp $ *)
 INTERFACE CitTextUtils;
 IMPORT TextList, TextSet, IntList;
 IMPORT TextSeq;
@@ -28,13 +28,16 @@ IMPORT TextSeq;
 PROCEDURE Replace(in, old, new : TEXT) : TEXT;
 PROCEDURE ReplaceChar(in : TEXT; old, new : CHAR) : TEXT;
 PROCEDURE CountCharOccurences(in: TEXT; c: CHAR): CARDINAL;
+PROCEDURE Tr(in : TEXT; READONLY old, new : ARRAY OF CHAR) : TEXT;
 
 PROCEDURE Filter(in: TEXT; keep: SET OF CHAR): TEXT;
 PROCEDURE FilterOut(in: TEXT; remove := SET OF CHAR{' ', '\t', '\n'}): TEXT;
 PROCEDURE FilterEdges(in: TEXT; remove := SET OF CHAR{' ', '\t', '\n'}): TEXT;
+PROCEDURE FilterIdent(in : TEXT) : TEXT; (* filter anything that's not a legal
+                                            identifier *)
 
 PROCEDURE FindSub(in, sub : TEXT; VAR pos : CARDINAL; start := 0) : BOOLEAN;
-(* find first occurrence of sub in in.  If not found, pos is not touched. *)
+(* find first occurrence of sub in in *)
 
 PROCEDURE FindText(in, sub : TEXT; start := 0) : [-1..LAST(CARDINAL)];
 (* as FindSub but returns -1 if not found *)
@@ -51,8 +54,20 @@ PROCEDURE HaveSuffix(in, suffix: TEXT): BOOLEAN;
 PROCEDURE RemovePrefix(in, prefix: TEXT): TEXT;
   (* checked runtime error for prefix not to be as stated *)
 
+PROCEDURE CheckPrefix(in, prefix: TEXT): TEXT;
+  (* remove prefix and return suffix, if prefix is there; else return NIL *)
+
+PROCEDURE ReplacePrefix(in, oprefix, nprefix: TEXT): TEXT;
+  (* checked runtime error for prefix not to be as stated *)
+
 PROCEDURE RemoveSuffix(in, suffix: TEXT): TEXT;
   (* checked runtime error for suffix not to be as stated *)
+
+PROCEDURE ReplaceSuffix(in, osuffix, nsuffix: TEXT): TEXT;
+  (* checked runtime error for suffix not to be as stated *)
+
+PROCEDURE CheckSuffix(in, suffix : TEXT) : TEXT;
+  (* remove suffix and return prefix, if suffix is there; else return NIL *)
 
 PROCEDURE RemoveSuffixes(in : TEXT; READONLY suffixes : ARRAY OF TEXT):TEXT;
   (* removes any matching suffix; do nothing if no match *)
@@ -106,5 +121,8 @@ PROCEDURE FormatInfix(seq : TextSeq.T; operator : TEXT) : TEXT;
 
 PROCEDURE FormatInfixArr(READONLY arr : ARRAY OF TEXT; operator : TEXT) : TEXT;
   (* same, for an array *)
+
+PROCEDURE MakeM3Literal(of : TEXT) : TEXT;
+  (* put in double quotes and escape anything dubious *)
 
 END CitTextUtils.

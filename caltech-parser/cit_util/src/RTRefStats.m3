@@ -1,7 +1,6 @@
 UNSAFE MODULE RTRefStats;
-(* $Id$ *)
+(* $Id: RTRefStats.m3,v 1.8 2008/06/06 00:15:20 mika Exp $ *)
 
-FROM Debug IMPORT S;
 IMPORT Fmt;
 IMPORT RTHeapRep;
 IMPORT RTType;
@@ -10,6 +9,10 @@ FROM RT0 IMPORT Typecode;
 IMPORT IntPQ;
 IMPORT Cprintf;
 IMPORT M3toC;
+IMPORT Debug;
+IMPORT Wr;
+IMPORT Time;
+IMPORT Thread;
 
 TYPE
   Counts = REF ARRAY OF R;
@@ -23,8 +26,24 @@ TYPE
     visit := Visit;
   END;
 
-PROCEDURE Visit(self: T; tc: Typecode;
-                r: REFANY; size: CARDINAL): BOOLEAN =
+PROCEDURE S(wr : Wr.T; t: TEXT; minLevel : CARDINAL := 5) =
+  BEGIN
+    IF wr = NIL THEN
+      Debug.S(t, minLevel)
+    ELSE
+      TRY
+        Wr.PutText(wr, t);
+        Wr.PutChar(wr, '\n')
+      EXCEPT
+      ELSE
+      END
+    END
+  END S;
+
+PROCEDURE Visit(self : T;
+                tc   : Typecode;
+                r    : REFANY;
+                size : CARDINAL): BOOLEAN =
   BEGIN
     IF self.printTexts AND ISTYPE(r, TEXT) THEN
       VAR
@@ -42,9 +61,9 @@ PROCEDURE Visit(self: T; tc: Typecode;
 TYPE
   E = IntPQ.Elt OBJECT tc, count: INTEGER; END;
 
-PROCEDURE Line(tc: INTEGER; name: TEXT; size, count: INTEGER) =
+PROCEDURE Line(wr : Wr.T; tc: INTEGER; name: TEXT; size, count: INTEGER) =
   BEGIN
-          S(Fmt.Pad(Fmt.Int(tc),5) & "  " &
+          S(wr, Fmt.Pad(Fmt.Int(tc),5) & "  " &
             Fmt.Pad(name,40,' ',Fmt.Align.Left) &
             Fmt.Pad(Fmt.Int(size),14) &
             Fmt.Pad(Fmt.Int(count),12) &
@@ -52,15 +71,15 @@ PROCEDURE Line(tc: INTEGER; name: TEXT; size, count: INTEGER) =
             0);
   END Line;
 
-PROCEDURE ReportReachable(printTexts := FALSE) =
+PROCEDURE ReportReachable(printTexts : BOOLEAN; wr : Wr.T) =
   <* FATAL IntPQ.Empty *>
   VAR
-    n := RTType.MaxTypecode()+1;
+    n    := RTType.MaxTypecode()+1;
     self := NEW(T, x := NEW(REF ARRAY OF R, n), printTexts:=printTexts);
   BEGIN
-    S("visiting references...", 0);
+    S(wr, "visiting references...", 0);
     RTHeapRep.VisitAllRefs(self);
-    S("sorting stats by size...", 0);
+    S(wr, "sorting stats by size...", 0);
     VAR
       q := NEW(IntPQ.Default).init();
       e: E;
@@ -74,17 +93,77 @@ PROCEDURE ReportReachable(printTexts := FALSE) =
                        tc := tc));
         END;
       END;
-      S("   TC  Name                                         totalSize       count  avgSize",0);
+      S(wr, "   TC  Name                                         totalSize       count  avgSize",0);
       WHILE q.size() > 0 DO
         e := q.deleteMin();
-        Line(e.tc, RTName.GetByTC(e.tc), e.priority, e.count);
+        Line(wr, e.tc, RTName.GetByTC(e.tc), e.priority, e.count);
         INC(totalCount, e.count);
         INC(totalSize, e.priority);
       END;
-      Line(n, "<- Number of typecodes         totals ->",
+      Line(wr, n, "<- Number of typecodes         totals ->",
            totalSize,totalCount)
+    END;
+    TRY
+      IF wr # NIL THEN Wr.Flush(wr) END
+    EXCEPT
+    ELSE
     END
   END ReportReachable;
 
+REVEAL
+  Reporter = PublicReporter BRANDED OBJECT
+    mu         : MUTEX;
+    enabled    : BOOLEAN;
+    interval   : Time.T;
+    wr         : Wr.T;
+    printTexts : BOOLEAN;
+  OVERRIDES
+    init  := Init;
+    start := Start;
+    stop  := Stop;
+  END;
+
+TYPE
+  Closure = Thread.Closure OBJECT
+    reporter : Reporter;
+  OVERRIDES
+    apply := Apply;
+  END;
+
+PROCEDURE Init(r : Reporter;
+               interval : Time.T;
+               printTexts : BOOLEAN;
+               wr : Wr.T) : Reporter =
+  BEGIN
+    r.mu := NEW(MUTEX);
+    r.interval := interval;
+    r.printTexts := printTexts;
+    r.wr := wr;
+    r.enabled := FALSE;
+    EVAL Thread.Fork(NEW(Closure, reporter := r));
+    RETURN r
+  END Init;
+
+PROCEDURE Start(r : Reporter) =
+  BEGIN LOCK r.mu DO r.enabled := TRUE END END Start;
+    
+PROCEDURE Stop(r : Reporter) =
+  BEGIN LOCK r.mu DO r.enabled := FALSE END END Stop;
+
+PROCEDURE Apply(cl : Closure) : REFANY =
+  VAR
+    en : BOOLEAN;
+  BEGIN
+    LOOP
+      Thread.Pause(cl.reporter.interval);
+      LOCK cl.reporter.mu DO
+        en := cl.reporter.enabled
+      END;
+      IF en THEN
+        ReportReachable(cl.reporter.printTexts, cl.reporter.wr)
+      END
+    END
+  END Apply;
+    
 BEGIN
 END RTRefStats.

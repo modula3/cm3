@@ -19,7 +19,7 @@
 (*  software outside of the United States of America may require an          *)
 (*  export license.                                                          *)
 (*                                                                           *)
-(* $Id$ *)
+(* $Id: TextUtils.m3,v 1.25 2008/12/18 00:38:12 mika Exp $ *)
 
 MODULE CitTextUtils;
 IMPORT IntList, ScanList;
@@ -63,28 +63,43 @@ PROCEDURE ReplaceChar(in : TEXT; old, new : CHAR) : TEXT =
     RETURN Text.FromChars(res^)
   END ReplaceChar;
 
+PROCEDURE Tr(in : TEXT; READONLY old, new : ARRAY OF CHAR) : TEXT =
+  VAR
+    s   := SET OF CHAR {};
+    res := NEW(REF ARRAY OF CHAR, TL(in));
+  BEGIN
+    <*ASSERT NUMBER(old) = NUMBER(new)*>
+    FOR j := FIRST(old) TO LAST(old) DO
+      s := s + SET OF CHAR { old[j] }
+    END;
+    
+    FOR i := 0 TO TL(in) - 1 DO
+      WITH char = Text.GetChar(in,i) DO
+        IF char IN s THEN
+          FOR j := FIRST(old) TO LAST(old) DO
+            IF char = old[j] THEN res[i] := new[j] END
+          END
+        ELSE
+          res[i] := char
+        END
+      END
+    END;
+    RETURN Text.FromChars(res^)
+  END Tr;
+
 PROCEDURE Replace(in, old, new : TEXT) : TEXT =
-  VAR 
+  VAR
     s, p : CARDINAL := 0;
     wx := Wx.New();
     ol := TL(old);
   BEGIN
     <*ASSERT ol>0*>
     WHILE FindSub(in, old, p, s) DO
-      (*Wx.PutText(wx, Text.Sub(in, s, p - s));*)
-      FOR i := s TO p-1 DO
-        Wx.PutChar(wx, Text.GetChar(in, i))
-      END;
+      Wx.PutText(wx, Text.Sub(in, s, p - s));
       Wx.PutText(wx, new);
       s := p + ol
     END;
-
-    (* copy remainder *)
-    (*Wx.PutText(wx, Text.Sub(in, s));*)
-    FOR i := s TO Text.Length(in)-1 DO
-      Wx.PutChar(wx, Text.GetChar(in,i))
-    END;
-
+    Wx.PutText(wx, Text.Sub(in, s));
     RETURN Wx.ToText(wx)
   END Replace;
 
@@ -92,15 +107,17 @@ PROCEDURE Replace(in, old, new : TEXT) : TEXT =
 (* not a good algorithm: if necessary, code up Knuth-Morris-Pratt instead. *)
 PROCEDURE FindSub(in, sub : TEXT; VAR pos : CARDINAL; start := 0) : BOOLEAN =
   VAR
-    inN  := Text.Length(in);
-    subN := Text.Length(sub);
+    inA := NEW(REF ARRAY OF CHAR, TL(in));
+    subA := NEW(REF ARRAY OF CHAR, TL(sub));
   BEGIN
-    FOR i := start TO inN-subN DO
+    Text.SetChars(inA^,in);
+    Text.SetChars(subA^,sub);
+    FOR i := start TO LAST(inA^) - LAST(subA^) DO
       VAR
         success := TRUE;
       BEGIN
-        FOR j := 0 TO subN-1 DO
-          IF Text.GetChar(sub,j) # Text.GetChar(in,i+j) THEN 
+        FOR j := 0 TO LAST(subA^) DO
+          IF subA[j] # inA[i + j] THEN 
             success := FALSE; 
             EXIT 
           END
@@ -161,6 +178,24 @@ PROCEDURE RemoveSuffix(in, suffix: TEXT): TEXT =
     RETURN Text.Sub(in, 0, pos);
   END RemoveSuffix;
 
+PROCEDURE CheckSuffix(in, suffix : TEXT) : TEXT =
+  BEGIN
+    IF HaveSuffix(in, suffix) THEN
+      RETURN RemoveSuffix(in, suffix)
+    ELSE
+      RETURN NIL
+    END
+  END CheckSuffix;
+
+PROCEDURE CheckPrefix(in, prefix : TEXT) : TEXT =
+  BEGIN
+    IF HavePrefix(in, prefix) THEN
+      RETURN RemovePrefix(in, prefix)
+    ELSE
+      RETURN NIL
+    END
+  END CheckPrefix;
+
 PROCEDURE RemoveSuffixes(fn : TEXT; READONLY exts : ARRAY OF TEXT) : TEXT =
   (* remove extension, if any from list *)
   BEGIN
@@ -175,6 +210,16 @@ PROCEDURE RemoveSuffixes(fn : TEXT; READONLY exts : ARRAY OF TEXT) : TEXT =
     END;
     RETURN fn
   END RemoveSuffixes;
+
+PROCEDURE ReplacePrefix(in, oprefix, nprefix: TEXT): TEXT =
+  BEGIN
+    RETURN nprefix & RemovePrefix(in, oprefix)
+  END ReplacePrefix;
+
+PROCEDURE ReplaceSuffix(in, osuffix, nsuffix: TEXT): TEXT =
+  BEGIN
+    RETURN RemoveSuffix(in, osuffix) & nsuffix
+  END ReplaceSuffix;
 
 PROCEDURE Pluralize(noun : TEXT; n : INTEGER; 
                     ending : TEXT; printNum : BOOLEAN) : TEXT =
@@ -233,6 +278,34 @@ PROCEDURE Filter(in: TEXT; keep: SET OF CHAR): TEXT =
     END;
     RETURN Text.FromChars(SUBARRAY(result^, 0, len));
   END Filter;
+
+PROCEDURE FilterIdent(in: TEXT): TEXT =
+  TYPE
+    SC      = SET OF CHAR;
+  CONST
+    Lower   = SC { 'a' .. 'z' };
+    Upper   = SC { 'A' .. 'Z' };
+    Alpha   = Lower + Upper;
+    Digit   = SC { '0' .. '9' };
+    Ident1  = Alpha + SC { '_' };
+    Ident2  = Ident1 + Digit;
+  VAR
+    result := NEW(REF ARRAY OF CHAR, TL(in));
+    len := 0;
+    last := TL(in) - 1;
+    c: CHAR;
+    first := TRUE;
+  BEGIN
+    FOR i := 0 TO last DO
+      c := Text.GetChar(in, i);
+      IF c IN Ident1 OR ((NOT first) AND c IN Ident2) THEN
+        result[len] := c;
+        INC(len);
+        first := FALSE;
+      END;
+    END;
+    RETURN Text.FromChars(SUBARRAY(result^, 0, len));
+  END FilterIdent;
 
 PROCEDURE FilterOut(in: TEXT; remove := SET OF CHAR{' ', '\t', '\n'}): TEXT =
   BEGIN
@@ -413,4 +486,36 @@ PROCEDURE FormatInfixArr(READONLY seq : ARRAY OF TEXT;
     RETURN Wx.ToText(wx)
   END FormatInfixArr;
 
+PROCEDURE MakeM3Literal(of : TEXT) : TEXT =
+
+  CONST DQ = '"';
+  CONST BS = '\\';
+  
+  PROCEDURE Put(c : CHAR) =
+    BEGIN
+      arr[p] := c;
+      INC(p)
+    END Put;
+    
+  VAR
+    n   := Text.Length(of);
+    arr := NEW(REF ARRAY OF CHAR, n * 2 + 2);
+    p   := 0;
+  BEGIN
+    Put(DQ);
+    FOR i := 0 TO n - 1 DO
+      WITH c = Text.GetChar(of, i) DO
+        CASE c OF
+          DQ => Put(BS); Put(DQ)
+        |
+          BS => Put(BS); Put(BS)
+        ELSE
+          Put(c)
+        END
+      END
+    END;
+    Put(DQ);
+    RETURN Text.FromChars(SUBARRAY(arr^, 0, p))
+  END MakeM3Literal;
+  
 BEGIN END CitTextUtils.

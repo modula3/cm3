@@ -37,6 +37,7 @@ Pqueue("Longreal","LongrealType")
 module("ScanList")
 
 Generic_module("OpenArrayTable")
+template ("openarray_table")
 template("dbltable")
 Generic_module("DblTable")
 
