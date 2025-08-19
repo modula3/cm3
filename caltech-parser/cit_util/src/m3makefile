@@ -47,6 +47,7 @@ LockedTable("TextRef", "Text", "Refany", "TextRefTbl")
 MkLockedSetDef("Text", "Text")
 
 LockedTable("TextBoolean", "Text", "Boolean", "TextBooleanTbl")
+LockedTable("TextText", "Text", "Text", "TextTextTbl")
 
 Generic_module("BrandedSet")
 template("brandedset")
@@ -92,7 +93,7 @@ Sequence("RefPair", "RefPair")
 Sequence("IntPair", "IntPair")
 
 List("IntPair", "IntPair")
-Interface("IntTriple")
+Module("IntTriple")
 Table("Int_IntTriple", "Integer", "IntTriple")
 
 KeyPair("Card", "Cardinal", "Cardinal")
@@ -404,6 +405,15 @@ c_source ("UtimeOpsC")
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Module ("FastNumParse")
+
+Module ("ExceptionInfo")
+
+Table ("TextCard", "Text", "Cardinal")
+
+Table ("LRVectorLR", "LRVector", "LongrealType")
+
+Module ("RepeatMe")
+Module ("Watchdog")
 
 Library("cit_util")
 
