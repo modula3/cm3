@@ -18,10 +18,12 @@ TYPE
     p: Pathname.T;
   END;
 
-PROCEDURE Error(message: TEXT) =
+PROCEDURE Error(message: TEXT; fatal:=TRUE) =
   BEGIN
     Wr.PutText(Stdio.stderr, message & "\n");
-    Process.Exit(1);
+    IF fatal THEN
+      Process.Exit(1);
+    END;
   END Error;
 
 PROCEDURE Open(p: Pathname.T; searchDirs: TextList.T := NIL): T =
@@ -67,7 +69,7 @@ PROCEDURE LineNo(rd: Rd.T): INTEGER =
     RETURN result;
   END LineNo;
 
-PROCEDURE E(rd: T; message: TEXT) =
+PROCEDURE E(rd: T; message: TEXT; fatal:=TRUE) =
   VAR
     acc := "";
     lineNo: INTEGER;
@@ -91,7 +93,7 @@ PROCEDURE E(rd: T; message: TEXT) =
       END;
     END;
     acc := acc & message;
-    Error(acc);
+    Error(acc, fatal);
   END E;
 
 PROCEDURE Stdin(): T =

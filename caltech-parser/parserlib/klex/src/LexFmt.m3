@@ -1,6 +1,6 @@
 (* Copyright (c) 2000 California Institute of Technology *)
 (* All rights reserved. See the file COPYRIGHT for a full description. *)
-(* $Id: LexFmt.m3,v 1.2 2001-09-19 15:05:08 wagner Exp $ *)
+(* $Id: LexFmt.m3,v 1.7 2007/07/12 06:43:55 mika Exp $ *)
 
 MODULE LexFmt;
 IMPORT Wr, Thread;
@@ -142,6 +142,21 @@ PROCEDURE FmtTrans(trans: DFATrans.T): TEXT =
 
 TYPE
   TableKind = {First, States, Trans};
+
+PROCEDURE FmtCharCmt(c : CHAR) : TEXT = 
+  VAR res := "(* "; BEGIN
+    IF ORD(c) >= 32 AND ORD(c) <= 126 THEN
+      res := res & "'" & Text.FromChar(c) & "'"
+    ELSIF c = '\n' THEN
+      res := res & "'\\n'"
+    ELSIF c = '\t' THEN
+      res := res & "'\\t'"
+    ELSIF c = '\r' THEN
+      res := res & "'\\r'"
+    END;
+    RETURN res & " *)"
+  END FmtCharCmt;
+
 PROCEDURE FmtTable(self: T; kind: TableKind): TEXT =
   CONST
     lmargin = "    ";
@@ -169,7 +184,7 @@ PROCEDURE FmtTable(self: T; kind: TableKind): TEXT =
     CASE kind OF
     | TableKind.First =>
       FOR i := FIRST(CHAR) TO LAST(CHAR) DO
-        PutEntry(Fmt.Int(ORD(dfa.first[i])));
+        PutEntry(FmtCharCmt(i)& " " & Fmt.Int(ORD(dfa.first[i])));
       END;
     | TableKind.States =>
       FOR i := 1 TO dfa.numStates DO
@@ -262,4 +277,6 @@ PROCEDURE Test(self: T) =
   END Test;
 
 BEGIN
+  (* stderr := NEW(FileWr.T).init(FilePosix.New(2, FilePosix.Write)); *)
+  (* Wr.PutText(stderr, "Warning: here we are.\n"); *)
 END LexFmt.

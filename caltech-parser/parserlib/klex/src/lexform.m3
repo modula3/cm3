@@ -8,7 +8,7 @@ FROM %tok IMPORT Token;
 <* FATAL Rd.Failure, Thread.Alerted *>
 
 REVEAL
-  T = Public BRANDED "%lex" OBJECT
+  T = Public BRANDED Brand OBJECT
     textCache: TEXT;
     charCache: CHAR;
     posBeforeToken: INTEGER;
@@ -167,6 +167,10 @@ PROCEDURE FromText(self: T; t: TEXT): %tok.RdLexer =
 
 PROCEDURE Error(self: T; message: TEXT) =
   BEGIN SeekRd.E(self.rd, message); END Error;
+
+(* generics stuff *)
+PROCEDURE Hash(<*UNUSED*>a: T): INTEGER = BEGIN RETURN 0; END Hash;
+PROCEDURE Equal(a,b:T): BOOLEAN = BEGIN RETURN a=b; END Equal;
 
 (* default token methods *)
 %default\

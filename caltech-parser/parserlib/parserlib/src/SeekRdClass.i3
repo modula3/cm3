@@ -13,4 +13,8 @@ TYPE
     lineNo(): INTEGER;
     (* number of newLines before cur(rd), plus one *)
   END;
+
+PROCEDURE Check(rd: T);
+(* debugging: checks invariants *)
+
 END SeekRdClass.

@@ -1,6 +1,6 @@
 (* Copyright (c) 2000 California Institute of Technology *)
 (* All rights reserved. See the file COPYRIGHT for a full description. *)
-(* $Id: RuleListState.m3,v 1.2 2001-09-19 15:13:58 wagner Exp $ *)
+(* $Id: RuleListState.m3,v 1.3 2003/01/09 17:43:33 kp Exp $ *)
 
 MODULE RuleListState;
 IMPORT Pos;
@@ -90,8 +90,9 @@ PROCEDURE AddMark(self: T; READONLY mark: Mark.T) =
     IF mark.current.cell = NIL THEN
       (* return without adding to table *)
       IF mark.return.rule = NIL THEN
-        <* ASSERT mark.return.index # -1 *>
-        self.finish := mark.current.rule;
+        IF mark.return.index # -1 THEN
+          self.finish := mark.current.rule;
+        END;
       ELSE
         first := mark.first;
         IF first = NIL THEN
