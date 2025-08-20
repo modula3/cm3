@@ -110,13 +110,17 @@ CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
           FOPT=F
           KOPT=1
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-          XOPT(1:N)=XPT(1, 1:N) !!!
+          DO 701 IX=1,N
+             XOPT(IX)=XPT(1, IX) !!!
+ 701      CONTINUE
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
       ELSE IF (F .LT. FOPT) THEN
           FOPT=F
           KOPT=NF
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-          XOPT(1:N)=XPT(NF, 1:N) !!!
+          DO 702 IX=1,N
+             XOPT(IX)=XPT(NF, IX) !!!
+ 702      CONTINUE
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
       END IF
 C
@@ -340,8 +344,10 @@ CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
           IF (X(I) .NE. X(I)) THEN
               F = X(I) ! Set F to NaN
               IF (NF .EQ. 1) THEN
-                  FOPT = F
-                  XOPT(1:N) = ZERO 
+                 FOPT = F
+                 DO 321 IX=1,N 
+                    XOPT(IX) = ZERO
+ 321             CONTINUE
               ENDIF
               INFO = -1 
               GOTO 530
@@ -355,16 +361,20 @@ CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
       IF (F .NE. F .OR. F .GT. ALMOST_INFINITY) THEN
           IF (NF .EQ. 1) THEN
               FOPT = F
-              XOPT(1:N) = ZERO 
+              DO 322 IX=1,N 
+                 XOPT(IX) = ZERO
+ 322          CONTINUE
           ENDIF
           INFO = -2 
           GOTO 530
       END IF
       IF (F .LE. FTARGET) THEN
-          FOPT = F
-          XOPT(1:N) = XNEW(1:N)
-          INFO = 1 
-          GOTO 530
+         FOPT = F
+         DO 323 IX=1,N
+            XOPT(IX) = XNEW(IX)
+ 323     CONTINUE
+         INFO = 1 
+         GOTO 530
       END IF
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
 

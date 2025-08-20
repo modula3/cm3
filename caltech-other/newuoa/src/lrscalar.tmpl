@@ -1,0 +1,12 @@
+readonly proc _lrScalarPll(nm, base, lrvectortbl, vis) is
+         build_generic_intf(nm, "LRScalarPll", [base], vis)
+         build_generic_impl(nm, "LRScalarPll", [base, lrvectortbl])
+end
+
+readonly proc lrScalarPll(nm, base, lrvectortbl) is
+         _lrScalarPll(nm, base, lrvectortbl, HIDDEN)
+end
+
+readonly proc LrScalarPll(nm, base, lrvectortbl) is
+         _lrScalarPll(nm, base, lrvectortbl, VISIBLE)
+end              
