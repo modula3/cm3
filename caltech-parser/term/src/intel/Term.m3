@@ -1,37 +1,50 @@
-(* $Id: Term.m3,v 1.4 2010-05-09 09:12:35 jkrell Exp $ *)
+(* $Id: Term.m3,v 1.8 2005/05/24 16:39:38 kp Exp $ *)
 
-UNSAFE MODULE Term;
+UNSAFE MODULE Term EXPORTS Term, TermHooks;
 IMPORT Debug;
 IMPORT Stdio;
 IMPORT Wr AS Wrr;
 IMPORT Rd;
 IMPORT Termios;
 IMPORT Text;
+IMPORT RTCollector;
 IMPORT Thread;
-IMPORT TermC;
 
 <* FATAL Thread.Alerted, Wrr.Failure, Rd.Failure, Rd.EndOfFile *>
 
 VAR
   Endl: TEXT := "\n";
   Raw: BOOLEAN := FALSE;
+  TermCooked, TermRaw: Termios.T := NIL;
 
 PROCEDURE MakeRaw(flag: BOOLEAN) =
   VAR
     termNew: Termios.T;
   BEGIN
-    IF flag # Raw THEN
-      Raw := flag;
-      Wrr.Flush(Stdio.stdout);
-      IF Raw THEN
-          termNew := TermC.GetTermRaw();
-          Endl := "\015\012";
-        ELSE
-          termNew := TermC.GetTermCooked();
-          Endl := "\n";
+    TRY
+      RTCollector.Disable();
+      IF flag # Raw THEN
+        Raw := flag;
+        Wrr.Flush(Stdio.stdout);
+        IF Raw THEN
+            IF TermCooked = NIL THEN
+              TermCooked := NEW(Termios.T);
+              TermRaw := NEW(Termios.T);
+              Termios.tcgetattr(Termios.Stdin, TermCooked);
+              TermRaw^ := TermCooked^;
+              Termios.cfmakeraw(TermRaw);
+            END;
+            termNew := TermRaw;
+            Endl := "\015\012";
+          ELSE
+            termNew := TermCooked;
+            Endl := "\n";
+          END;
+        Termios.tcsetattr(Termios.Stdin, Termios.Tcsanow, termNew);
         END;
-      Termios.tcsetattr(Termios.Stdin, Termios.Tcsanow, termNew);
-      END;
+    FINALLY
+      RTCollector.Enable()
+    END
   END MakeRaw;
 
 PROCEDURE GetCharDR(): CHAR RAISES {SpecialChar} =
@@ -67,11 +80,19 @@ PROCEDURE GetCharE(special: TEXT): CHAR RAISES {SpecialChar} =
     END;
   END GetCharE;
 
+VAR
+  gcHook: CharGetter := NIL;
 PROCEDURE GetChar(): CHAR =
   BEGIN
+    IF gcHook # NIL THEN RETURN gcHook.get(); END;
     Wrr.Flush(Stdio.stdout);
     RETURN Rd.GetChar(Stdio.stdin);
   END GetChar;
+
+PROCEDURE SetCharInput(c: CharGetter) =
+  BEGIN
+    gcHook := c;
+  END SetCharInput;
 
 PROCEDURE Wr0(wr: Wrr.T; s: TEXT) =
 
@@ -113,14 +134,18 @@ PROCEDURE Wr1(s: TEXT) =
 
 PROCEDURE WrLn(s: TEXT; flush := FALSE) =
   BEGIN
-    Wrr.PutText(Stdio.stdout, s);
+    IF Text.FindChar(s, '\n') = -1 THEN
+      Wrr.PutText(Stdio.stdout, s);
+    ELSE
+      Wr0(Stdio.stdout, s);
+    END;
     Wrr.PutText(Stdio.stdout, Endl);
     IF flush THEN
       Wrr.Flush(Stdio.stdout);
     END;
   END WrLn;
 
+
 BEGIN
-  TermC.Init();
   Debug.RegisterHook(Wr1);
 END Term.

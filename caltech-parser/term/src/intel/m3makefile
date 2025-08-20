@@ -1,15 +1,19 @@
+
 import("libm3")
 import("cit_util")
+
+
+% system header glue  -- why was it here?
+
+/* h_source("termios") */
 interface("Termios")
-c_source("Termios")
 Interface("TermHooks")
 
-Module("Term")
-interface("TermC")
-c_source("TermC")
-h_source("TermC")
-Module("TermIO")
 
+% terminal interfaces
+
+Module("Term")
+Module("TermIO")
 implementation("TermObject")
 
 
@@ -25,5 +29,7 @@ QueueTbl("TextCommand", "TextCommandTbl", "Text",
 	"BrandedCommand", "TextRefTbl")
 Module("ScalarVar")
 
-
-Library("term")
+if equal(TARGET,"NT386GNU")
+  c_source("termiosNTextra")
+end
+library("term")
