@@ -9,19 +9,31 @@ if not defined("_PARSER_TOP")
 end
 
 if not defined("_PARSER_CMDS")
-	local _TOK = _PARSER_TOP & SL & "ktok" & SL & BUILD_DIR & SL & "ktok"
-	local _LEX = _PARSER_TOP & SL & "klex" & SL & BUILD_DIR & SL & "klex"
-	local _YACC= _PARSER_TOP & SL & "kyacc" & SL& BUILD_DIR & SL & "kyacc"
-	local _EXT = _PARSER_TOP & SL & "kext" & SL & BUILD_DIR & SL & "kext"
+%	local _TOK = _PARSER_TOP & SL & "ktok" & SL & BUILD_DIR & SL & "ktok"
+%	local _LEX = _PARSER_TOP & SL & "klex" & SL & BUILD_DIR & SL & "klex"
+%	local _YACC= _PARSER_TOP & SL & "kyacc" & SL& BUILD_DIR & SL & "kyacc"
+%	local _EXT = _PARSER_TOP & SL & "kext" & SL & BUILD_DIR & SL & "kext"
+
+% use the shipped versions instead
+
+        local _TOK = "ktok"
+        local _LEX = "klex"
+        local _YACC= "kyacc"
+        local _EXT = "kext"
+        
 	_PARSER_CMDS = {"t": _TOK, "l": _LEX, "y": _YACC, "e": _EXT}
 	_PARSER_SOURCES = []
 end
 
 if not defined("_exec")
     readonly proc _exec(cmd) is
-	local ret = exec(cmd)
 	write (cmd, CR)
-	if not equal(ret, 0) error("command failed with error code: ", ret) end
+	if defined("CM3_VERSION")
+		exec(cmd)
+	else
+                local ret = exec(cmd)
+	        if not equal(ret, 0) error("command failed with error code: ", ret) end
+        end    
     end
 end
 
