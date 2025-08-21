@@ -1,0 +1,15 @@
+
+> (define a '(1 2 10 8 1))
+a
+> a
+(1 2 10 8 1)
+> (define b (list a))
+b
+> b
+((1 2 10 8 1))
+> (scheme-procedure-stubs-call '(Bubble . Sort) b)
+#t
+> b
+((1 1 2 8 10))
+> 
+

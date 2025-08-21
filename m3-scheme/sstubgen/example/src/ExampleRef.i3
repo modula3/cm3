@@ -1,0 +1,16 @@
+(* $Id: ExampleRef.i3,v 1.1 2009/05/02 11:18:04 mika Exp $ *)
+
+INTERFACE ExampleRef;
+
+TYPE
+  T1 = REF RECORD a, b : CARDINAL END;
+
+  T2 = REF INTEGER;
+
+  T3 = REF ARRAY OF INTEGER;
+
+  T4 = REF ARRAY OF REF ARRAY OF INTEGER;
+
+  T5 = REF ARRAY OF ARRAY OF INTEGER;
+
+END ExampleRef.

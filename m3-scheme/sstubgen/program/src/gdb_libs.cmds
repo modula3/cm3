@@ -1,0 +1,7 @@
+dir .
+cd ../example/FreeBSD4
+#break AstToType.m3:483
+break SchemeUtils__Warn
+#break AstToType__ProcessObject
+#break ValueTranslator__Translate
+run  -si Rd Wr FileRd FileWr -T.M3IMPTAB -scm /home/mika/t/mscheme/sstubgen/src/sstubgen.scm

@@ -1,0 +1,37 @@
+/* $Id$ */
+
+_SSTUBGEN    = TOP & "/mscheme/sstubgen/program/" & BUILD_DIR & "/sstubgen"
+_SDWSCM      = TOP & "/mscheme/sstubgen/program/src/schedulerdisablewrap.scm"
+_SEXIT       = "exit"
+
+readonly proc SchedulerWrap(intf) is
+	local nam = intf & "SchedulerWrap"
+
+	local cmd = "(make-standard-stuff \"" & nam & "\")"
+
+%	if stale("build_dw.scm", sources) 
+%	end
+
+% problem here: we can build SchemeStubs for things *not* in this
+% package.  stale() doesn't seem to catch those, at least not the
+% way we've coded it here.
+
+	intfs=intfs & " " & nam
+	
+	%write(path_of(intf & ".i3"), CR)
+
+	if stale(nam & ".i3", path_of(intf & ".i3"))
+		generate_tfile()
+
+		> "build_dw.scm" in
+ 			write (cmd, CR)
+		end
+
+
+		_exec([_SSTUBGEN, "-nointeractive", "-unsafe", "-si", intf, "-T.M3IMPTAB", "-scm", _SDWSCM, "build_dw.scm", _SEXIT])
+	end
+
+	derived_interface(nam, VISIBLE)
+	derived_implementation(nam)
+
+end

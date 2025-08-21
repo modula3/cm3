@@ -24,6 +24,11 @@ IMPORT SchemeDefsBundle, Bundle;
 IMPORT SchemeProfiler;
 IMPORT SchemeUnixDeps;
 IMPORT SchemeEnvironmentBinding;
+IMPORT SchemeEnvironmentInstanceRep; (* for pickling *)
+IMPORT Pickle;
+IMPORT BigInt;
+IMPORT TextWr;
+FROM Fmt IMPORT F;
 
 TYPE Binding = SchemeEnvironmentBinding.T;
 
@@ -36,11 +41,13 @@ CONST ProfileProcedures = TRUE;
 REVEAL
   T = SchemeClass.Private BRANDED Brand OBJECT
     globalEnvironment : SchemeEnvironment.T;
-    interrupter : Interrupter := NIL;
-    prims : SchemePrimitive.Definer := NIL;
+    interrupter       : Interrupter := NIL;
+    prims             : SchemePrimitive.Definer := NIL;
 
-    mapRTErrors := TRUE;
+    mapRTErrors                                 := TRUE;
 
+    errorEnvironment  : SchemeEnvironment.T;
+    errorEvalX        : Object;
   METHODS
     readInitialFiles(READONLY files : ARRAY OF Pathname.T) RAISES { E } := ReadInitialFiles;
   OVERRIDES
@@ -68,8 +75,40 @@ REVEAL
     getGlobalEnvironment := GetGlobalEnvironment;
     attemptToMapRuntimeErrors := AttemptToMapRuntimeErrors;
     setRTErrorMapping := SetRTErrorMapping;
+    copy              := Copy;
+    initCopy          := InitCopy;
+    clearErrorEnvironment  := ClearErrorEnvironment;
+    getErrorEvalX     := GetErrorEvalX;
+
+    pickleGlobalEnv   := PickleGlobalEnv;
+    unpickleGlobalEnv := UnpickleGlobalEnv;
   END;
 
+PROCEDURE GetErrorEvalX(t : T) : Object =
+  BEGIN RETURN t.errorEvalX END GetErrorEvalX;
+
+PROCEDURE Copy(t : T) : T =
+  BEGIN
+    WITH new = NEW(T) DO
+      t.initCopy(new);
+      RETURN new
+    END
+  END Copy;
+
+PROCEDURE InitCopy(t : T; new : T) =
+  BEGIN
+    new.input             := t.input;
+    new.output            := t.output;
+    IF t.globalEnvironment = NIL THEN
+      new.globalEnvironment := NIL
+    ELSE
+      new.globalEnvironment := t.globalEnvironment.copy()
+    END;
+    new.interrupter       := t.interrupter;
+    new.prims             := t.prims;
+    new.mapRTErrors       := t.mapRTErrors;
+  END InitCopy;
+  
 PROCEDURE AttemptToMapRuntimeErrors(scm : T) : BOOLEAN = 
   BEGIN RETURN scm.mapRTErrors END AttemptToMapRuntimeErrors;
 
@@ -137,6 +176,10 @@ PROCEDURE Init2(t : T;
       EVAL t.prims.installPrimitives(t.globalEnvironment)
     END;
     t.readInitialFiles(files);
+
+    t.defineInGlobalEnv(SchemeSymbol.FromText("*the-global-environment*"),
+                        t.globalEnvironment);
+    
     RETURN t
   END Init2;
 
@@ -356,6 +399,15 @@ PROCEDURE TruncateText(txt : TEXT; maxLen : CARDINAL) : TEXT =
     END(* WITH *)
   END TruncateText;
 
+PROCEDURE ClearErrorEnvironment(t : T) : SchemeEnvironmentSuper.T =
+  BEGIN
+    TRY
+      RETURN t.errorEnvironment
+    FINALLY
+      t.errorEnvironment := NIL
+    END
+  END ClearErrorEnvironment;
+  
 PROCEDURE Eval(t : T; x : Object; envP : SchemeEnvironmentSuper.T) : Object 
   RAISES { E } =
   CONST
@@ -369,6 +421,11 @@ PROCEDURE Eval(t : T; x : Object; envP : SchemeEnvironmentSuper.T) : Object
       EXCEPT
         E(txt) =>
 
+        IF t.errorEnvironment = NIL THEN
+          t.errorEnvironment := envP;
+          t.errorEvalX       := x
+        END;
+        
         IF Text.Equal(txt, "CallCC123") THEN 
           (* don't intercept call/cc, see SchemePrimitive.m3 *)
           RAISE E(txt) 
@@ -416,9 +473,9 @@ PROCEDURE EvalInternal(t   : T;
 
     savedEnv : SchemeEnvironment.Instance := NIL;
   BEGIN
+    <*ASSERT env # NIL*>
     LOOP
       IF DebugLevel >= 20 THEN Debug.Out("EVAL: " & Stringify(x)) END;
-
 
       IF t.interrupter # NIL AND t.interrupter.interrupt() THEN
         RAISE E("Command interrupted")
@@ -448,11 +505,13 @@ PROCEDURE EvalInternal(t   : T;
                 TRY
                   x := t.eval(protected,env)
                 FINALLY
-                  EVAL t.eval(cleanup,env)
+                  IF cleanup # NIL THEN
+                    x := t.eval(cleanup,env)
+                  END
                 END
               EXCEPT
                 E =>
-                EVAL t.eval(error,env)
+                x := t.eval(error,env)
               END
             END
           ELSIF fn = SYMbegin THEN
@@ -479,6 +538,8 @@ PROCEDURE EvalInternal(t   : T;
                be a Primitive either (with the current design of the interpreter) 
              *)
             RETURN t.eval(t.eval(First(args),env),env)
+          ELSIF fn = SYMcurrentEnvironment THEN
+            RETURN env
           ELSIF fn = SYMif THEN
             IF TruthO(t.eval(First(args), env)) THEN
               x := Second(args) 
@@ -774,6 +835,7 @@ VAR
   SYMarrow := SchemeSymbol.Symbol("=>");
   SYMrip := SchemeSymbol.Symbol("####r.i.p.-dead-cons-cell####");
   SYMunwindProtect := SchemeSymbol.Symbol("unwind-protect");
+  SYMcurrentEnvironment := SchemeSymbol.Symbol("current-environment");
 
 (* the following for testing Bindings in Closure building! *)
 
@@ -795,6 +857,80 @@ PROCEDURE IsSpecialForm(s : Symbol) : BOOLEAN =
       s =  SYMrip OR 
       s =  SYMunwindProtect 
   END IsSpecialForm;
+
+PROCEDURE PickleGlobalEnv(self : T; to : Wr.T)
+  RAISES { Wr.Failure } =
+  <*FATAL E*>
+  VAR
+    env  : SchemeEnvironment.Instance := self.globalEnvironment;
+    vars := env.getLocalNames();
+    p    := vars;
+  BEGIN
+    WHILE p # NIL DO
+      (* here we should check for some forbidden types I think *)
+      WITH nm  = p.head,
+           val = env.lookup(nm)
+       DO
+        
+
+        IF Debug.GetLevel() >= 20 THEN
+          Debug.Out(F("PickleGlobalEnv : %s = \n%s\n",
+                      Stringify(nm),
+                      Stringify(val)))
+        END;
+
+        WITH twr = TextWr.New() DO
+          TRY
+            Pickle.Write(twr, nm);
+            Pickle.Write(twr, val);
+            Debug.Out("Pickle OK : " & (Stringify(nm)));
+            Wr.PutText(to, TextWr.ToText(twr))
+          EXCEPT
+            Pickle.Error =>
+            Debug.Out("Couldn't pickle.")
+          END
+        END;
+        p := p.tail
+      END
+    END
+  END PickleGlobalEnv;
+
+TYPE
+  PickleReader = Pickle.Reader OBJECT
+  OVERRIDES
+    read := PRRead;
+  END;
+
+PROCEDURE PRRead(pr : PickleReader) : REFANY
+  RAISES { Pickle.Error, Rd.EndOfFile, Rd.Failure } =
+  BEGIN
+    WITH draft = Pickle.Reader.read(pr) DO
+      IF draft # NIL AND ISTYPE(draft, BigInt.T) THEN
+        RETURN BigInt.Uniq(draft)
+      ELSE
+        RETURN draft
+      END
+    END
+  END PRRead;
+  
+PROCEDURE UnpickleGlobalEnv(self : T; from : Rd.T)
+  RAISES { Rd.Failure, Pickle.Error } =
+  VAR
+    env : SchemeEnvironment.Instance := self.globalEnvironment;
+  BEGIN
+    TRY
+      LOOP
+        WITH
+          pr  = NEW(PickleReader, rd := from),
+          nm  = pr.read(),
+          val = pr.read() DO
+          EVAL env.define(nm, val)
+        END
+      END
+    EXCEPT
+      Rd.EndOfFile => RETURN
+    END
+  END UnpickleGlobalEnv;
 
 BEGIN 
   EnvDisablesTracebacks := Env.Get("NOMSCHEMETRACEBACKS") # NIL;

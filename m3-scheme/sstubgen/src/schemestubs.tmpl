@@ -5,3 +5,33 @@ if defined("CM3_VERSION") and defined ("PARALLEL_SSTUBGEN")
 else
 	include ("schemestubs_ser.tmpl")
 end
+
+readonly proc smodule(nam) is
+  module(nam)
+  SchemeStubs(nam)
+end
+
+readonly proc Smodule(nam) is
+  Module(nam)
+  SchemeStubs(nam)
+end
+
+readonly proc sinterface(nam) is
+  interface(nam)
+  SchemeStubs(nam)
+end
+
+readonly proc Sinterface(nam) is
+  Interface(nam)
+  SchemeStubs(nam)
+end
+
+readonly proc Ssequence(nam0, nam1) is
+  Sequence(nam0, nam1)
+  SchemeStubs(nam0 & "Seq")
+end              
+
+readonly proc ssequence(nam0, nam1) is
+  sequence(nam0, nam1)
+  SchemeStubs(nam0 & "Seq")
+end              

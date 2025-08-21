@@ -44,6 +44,8 @@ IMPORT RefSeq;
 IMPORT XTime AS Time;
 IMPORT RefRecord;
 IMPORT SchemeClosure;
+IMPORT BigInt;
+IMPORT Pickle, Rd;
 
 <* FATAL Thread.Alerted *>
 
@@ -91,7 +93,7 @@ TYPE
         Divide, Length, List, ListQ, Apply,
         Max, Min, Minus, Newline, 
         Not, NullQ, NumberQ, PairQ, Plus, 
-        ProcedureQ, Read, Cdr, Round, Second, 
+        ProcedureQ, Read, ReadBigInt, Cdr, Round, Second, 
         SymbolQ, Times, Truncate, Write, Append,
         BooleanQ, Sqrt, Expt, Reverse, Assoc, 
         AssQ, AssV, Member, MemQ, MemV, EqvQ,
@@ -132,14 +134,18 @@ TYPE
         SetCar, SetCdr, TimeCall, MacroExpand,
         Error, ListStar,
         
-        Random, Normal, SetWarningsAreErrors, NumberToLONGREAL, StringHaveSub,
+        Random, Normal, SetWarningsAreErrors, NumberToLONGREAL, NumberToEXTENDED, NumberToREAL, StringHaveSub,
         EnableTracebacks, DisableTracebacks, RefRecordFormat, SetRTErrorMapping,
 
         DisplayNoFlush, WriteNoFlush,
 
         EqMemo, EqualMemo,
 
-        Cosh, Sinh, Tanh, Acosh, Asinh, Atanh
+        Cosh, Sinh, Tanh, Acosh, Asinh, Atanh,
+
+        ChangeGlobalEnv, GetParentEnv,
+
+        DumpEnvironment, LoadEnvironment
   };
 
 REVEAL 
@@ -382,6 +388,7 @@ PROCEDURE InstallSandboxPrimitives(dd : Definer;
     .defPrim("quotient",       ORD(P.Quotient), dd, 2)
     .defPrim("rational?",      ORD(P.IntegerQ), dd,1)
     .defPrim("read",           ORD(P.Read), dd,     0, 1)
+    .defPrim("read-big-int",   ORD(P.ReadBigInt), dd,     0, 1)
     .defPrim("read-char",      ORD(P.ReadChar), dd, 0, 1)
     .defPrim("real?",          ORD(P.NumberQ), dd,  1)
     .defPrim("remainder",      ORD(P.Remainder), dd,2)
@@ -470,15 +477,26 @@ PROCEDURE InstallDefaultExtendedPrimitives(dd : Definer;
     EVAL env
     (*///////////// Extensions ////////////////*)
 
-    .defPrim("set-warnings-are-errors!",     ORD(P.SetWarningsAreErrors), dd,      1, 1)
-    .defPrim("random",                ORD(P.Random), dd,      0, 0)
-    .defPrim("enable-tracebacks!",                ORD(P.EnableTracebacks), dd,      0, 0)
-    .defPrim("disable-tracebacks!",                ORD(P.DisableTracebacks), dd,      0, 0)
+    .defPrim("set-warnings-are-errors!",
+             ORD(P.SetWarningsAreErrors), dd,      1, 1)
+    .defPrim("random",
+             ORD(P.Random), dd,      0, 0)
+    .defPrim("enable-tracebacks!",
+             ORD(P.EnableTracebacks), dd,      0, 0)
+    .defPrim("disable-tracebacks!",
+             ORD(P.DisableTracebacks), dd,      0, 0)
     .defPrim("number->LONGREAL", ORD(P.NumberToLONGREAL), dd, 1, 1)
+    .defPrim("number->EXTENDED", ORD(P.NumberToEXTENDED), dd, 1, 1)
+    .defPrim("number->REAL", ORD(P.NumberToREAL), dd, 1, 1)
     .defPrim("string-havesub?", ORD(P.StringHaveSub), dd, 2, 2)
     .defPrim("normal",                ORD(P.Normal), dd,      0, 2)
     .defPrim("refrecord-format", ORD(P.RefRecordFormat), dd, 1, 1)
-    .defPrim("set-rt-error-mapping!", ORD(P.SetRTErrorMapping), dd, 1, 1);
+    .defPrim("set-rt-error-mapping!", ORD(P.SetRTErrorMapping), dd, 1, 1)
+    .defPrim("change-global-environment!", ORD(P.ChangeGlobalEnv), dd, 1, 1)
+    .defPrim("get-parent-environment", ORD(P.GetParentEnv), dd, 1, 1)
+    .defPrim("dump-environment", ORD(P.DumpEnvironment), dd, 1, 1)
+    .defPrim("load-environment!", ORD(P.LoadEnvironment), dd, 1, 1)
+    ;
     RETURN env;
 
   END InstallDefaultExtendedPrimitives;
@@ -583,10 +601,10 @@ PROCEDURE CheckVectorIdx(vec : Vector; idx : INTEGER) RAISES { E } =
     END
   END CheckVectorIdx;
 
-PROCEDURE Prims(t : T; 
-                interp : Scheme.T; 
+PROCEDURE Prims(t          : T; 
+                interp     : Scheme.T; 
                 args, x, y : Object; 
-                VAR free : BOOLEAN) : Object
+                VAR free   : BOOLEAN) : Object
   RAISES { E } =
   VAR z : Object;
   BEGIN
@@ -674,6 +692,8 @@ PROCEDURE Prims(t : T;
         P.ProcedureQ => RETURN Truth(x # NIL AND ISTYPE(x,Procedure))
       |
         P.Read => RETURN InPort(x, interp).read()
+      |
+        P.ReadBigInt => RETURN InPort(x, interp).readBigInt()
       |
         P.Cdr => RETURN PedanticRest(x)
       |
@@ -1108,6 +1128,10 @@ PROCEDURE Prims(t : T;
       |
         P.NumberToLONGREAL => RETURN NumberToLONGREAL(x)
       |
+        P.NumberToEXTENDED => RETURN NumberToEXTENDED(x)
+      |
+        P.NumberToREAL => RETURN NumberToREAL(x)
+      |
         P.RefRecordFormat => RETURN SchemeString.FromText(
                                         RefRecord.Format(x))
       |
@@ -1173,9 +1197,83 @@ PROCEDURE Prims(t : T;
         P.EqMemo => RETURN DoEqMemo(x)
       |
         P.EqualMemo => RETURN DoEqualMemo(x)
+      |
+        P.ChangeGlobalEnv => RETURN ChangeGlobalEnv(interp, x)
+      |
+        P.GetParentEnv => RETURN GetParentEnv(x)
+      |
+        P.DumpEnvironment => RETURN DumpEnvironment(interp, x)
+      |
+        P.LoadEnvironment => RETURN LoadEnvironment(interp, x)
       END
     END
   END Prims;
+
+PROCEDURE DumpEnvironment( interp : Scheme.T; x : Object ) : Object 
+  RAISES { E } =
+  BEGIN
+    IF x = NIL OR NOT ISTYPE(x, Wr.T) OR Wr.Closed(x) THEN
+      RAISE E ("not an open Wr.T : " & Stringify(x))
+    END;
+
+    TRY
+      interp.pickleGlobalEnv(x);
+      RETURN x
+    EXCEPT
+      Wr.Failure(e) =>
+      RAISE E ("Wr.Failure : " & AL.Format(e))
+    |
+      Pickle.Error =>
+      RAISE E ("Pickle.Error")
+    END
+  END DumpEnvironment;
+
+PROCEDURE LoadEnvironment( interp : Scheme.T; x : Object ) : Object 
+  RAISES { E } =
+  BEGIN
+    IF x = NIL OR NOT ISTYPE(x, Rd.T) OR Rd.Closed(x) THEN
+      RAISE E ("not an open Rd.T : " & Stringify(x))
+    END;
+
+    TRY
+      interp.unpickleGlobalEnv(x);
+      RETURN x
+    EXCEPT
+      Rd.Failure(e) =>
+      RAISE E ("Rd.Failure : " & AL.Format(e))
+    |
+      Rd.EndOfFile =>
+      RAISE E ("Rd.EndOfFile")
+    |
+      Pickle.Error =>
+      RAISE E ("Pickle.Error")
+    END
+  END LoadEnvironment;
+
+PROCEDURE GetParentEnv(   x      : Object) : Object
+  RAISES { E } =
+  BEGIN
+    TYPECASE x OF
+      SchemeEnvironment.T(env) => RETURN env.getParent()
+    ELSE
+      RAISE E ("expected an environment, got " & Stringify(x))
+    END;
+  END GetParentEnv;
+
+PROCEDURE ChangeGlobalEnv(interp : Scheme.T;
+                          x      : Object) : Object
+  RAISES { E } =
+  BEGIN
+    IF NOT ISTYPE(x, SchemeEnvironment.T) THEN
+      RAISE E ("expected an environment, got " & Stringify(x))
+    END;
+
+    WITH res = interp.getGlobalEnvironment() DO
+      interp.changeGlobalEnvironment(x);
+      RETURN res
+    END
+    
+  END ChangeGlobalEnv;
 
 PROCEDURE DoEqMemo(x : Object) : Object RAISES { E } =
   BEGIN
@@ -1279,7 +1377,14 @@ PROCEDURE Append2(x, y : Object; interp : Scheme.T := NIL) : Object =
 
 PROCEDURE IsExact(x : Object) : BOOLEAN RAISES { E } =
   BEGIN
-    IF x = NIL OR NOT ISTYPE(x, SchemeLongReal.T) THEN RETURN FALSE END;
+    IF x = NIL THEN
+      RETURN FALSE
+    ELSIF ISTYPE(x, BigInt.T) THEN
+      RETURN FALSE (* not YET supported *)
+    ELSIF NOT ISTYPE(x, SchemeLongReal.T) THEN
+      RETURN FALSE
+    END;
+
     WITH d = FromO(x) DO
       RETURN d = FLOAT(ROUND(d),LONGREAL) AND 
              ABS(d) < 102962884861573423.0d0 (* ??? *)
@@ -1394,6 +1499,16 @@ PROCEDURE NumberToLONGREAL(x : Object) : Object RAISES { E } =
     RETURN SchemeString.FromText(Fmt_LongReal(FromO(x), literal := TRUE))
   END NumberToLONGREAL;
 
+PROCEDURE NumberToEXTENDED(x : Object) : Object RAISES { E } =
+  BEGIN
+    RETURN SchemeString.FromText(Fmt_Extended(FromO(x), literal := TRUE))
+  END NumberToEXTENDED;
+
+PROCEDURE NumberToREAL(x : Object) : Object RAISES { E } =
+  BEGIN
+    RETURN SchemeString.FromText(Fmt_Real(FromO(x), literal := TRUE))
+  END NumberToREAL;
+
 PROCEDURE NumberToString(x, y : Object) : Object RAISES { E } =
   VAR
     base : INTEGER;
@@ -1413,34 +1528,117 @@ PROCEDURE NumberToString(x, y : Object) : Object RAISES { E } =
     END
   END NumberToString;
 
-PROCEDURE Fmt_LongReal(lr : LONGREAL; literal := FALSE) : TEXT =
+PROCEDURE Fmt_LongReal(lr : LONGREAL; literal := FALSE) : TEXT RAISES { E } =
   BEGIN
-    IF FLOAT(ROUND(lr),LONGREAL) = lr THEN
-      RETURN Fmt.Int(ROUND(lr))
-    ELSIF FLOAT(LAST(CARDINAL),LONGREAL) = lr THEN
-      (* tricky special case for 64-bit machines.  Possible loss
-         of precision! *)
-      RETURN Fmt.Int(LAST(CARDINAL))
-    ELSIF ABS(lr) > 1.0d10 AND FLOAT(FIRST(INTEGER),LONGREAL) = lr THEN
-      (* this is actually wrong... but compiler problems *)
-      RETURN "-" & Fmt.Int(LAST(INTEGER))
-    ELSIF ABS(lr) > 1.0d10 AND 
-      lr >= FLOAT(FIRST(INTEGER), LONGREAL) AND  
-      lr <= FLOAT(LAST(INTEGER), LONGREAL) THEN
-      WITH o  = Fmt.LongReal(ABS(lr)),
-           s  = Scan.LongReal(o),
-           o1 = Fmt.LongReal(ABS(lr)-1.0d0),
-           s1 = Scan.LongReal(o1) DO
-        IF s = s1 THEN
+    TRY
+      IF FLOAT(ROUND(lr),LONGREAL) = lr THEN
+        RETURN Fmt.Int(ROUND(lr))
+      ELSIF FLOAT(LAST(CARDINAL),LONGREAL) = lr THEN
+        (* tricky special case for 64-bit machines.  Possible loss
+           of precision! *)
+        RETURN Fmt.Int(LAST(CARDINAL))
+      ELSIF ABS(lr) > 1.0d10 AND FLOAT(FIRST(INTEGER),LONGREAL) = lr THEN
+        (* this is actually wrong... but compiler problems *)
+        RETURN "-" & Fmt.Int(LAST(INTEGER))
+      ELSIF ABS(lr) > 1.0d10 AND 
+        lr >= FLOAT(FIRST(INTEGER), LONGREAL) AND  
+        lr <= FLOAT(LAST(INTEGER), LONGREAL) THEN
+        WITH o  = Fmt.LongReal(ABS(lr)),
+             s  = Scan.LongReal(o),
+             o1 = Fmt.LongReal(ABS(lr)-1.0d0),
+             s1 = Scan.LongReal(o1) DO
+          IF s = s1 THEN
+            RETURN Fmt.Int(ROUND(lr))
+          ELSE
+            RETURN Fmt.LongReal(lr,literal := literal)
+          END
+        END
+      ELSE
+        RETURN Fmt.LongReal(lr,literal := literal)
+      END
+    EXCEPT
+      Lex.Error, FloatMode.Trap => RAISE E("Cannot format that as LONGREAL")
+    END 
+  END Fmt_LongReal;
+
+PROCEDURE Fmt_Extended(lr : LONGREAL; literal := FALSE) : TEXT RAISES { E } =
+  (* this is a hack ? *)
+  BEGIN
+    TRY
+      IF FLOAT(ROUND(lr),LONGREAL) = lr THEN
+        RETURN Fmt.Int(ROUND(lr))
+      ELSIF FLOAT(LAST(CARDINAL),LONGREAL) = lr THEN
+        (* tricky special case for 64-bit machines.  Possible loss
+           of precision! *)
+        RETURN Fmt.Int(LAST(CARDINAL))
+      ELSIF ABS(lr) > 1.0d10 AND FLOAT(FIRST(INTEGER),LONGREAL) = lr THEN
+        (* this is actually wrong... but compiler problems *)
+        RETURN "-" & Fmt.Int(LAST(INTEGER))
+      ELSIF ABS(lr) > 1.0d10 AND 
+        lr >= FLOAT(FIRST(INTEGER), LONGREAL) AND  
+        lr <= FLOAT(LAST(INTEGER), LONGREAL) THEN
+        WITH o  = Fmt.LongReal(ABS(lr)),
+             s  = Scan.LongReal(o),
+             o1 = Fmt.LongReal(ABS(lr)-1.0d0),
+             s1 = Scan.LongReal(o1) DO
+          IF s = s1 THEN
+            RETURN Fmt.Int(ROUND(lr))
+          ELSE
+            RETURN Fmt.Extended(FLOAT(lr,EXTENDED),literal := literal)
+          END
+        END
+      ELSE
+        RETURN Fmt.Extended(FLOAT(lr,EXTENDED),literal := literal)
+      END
+    EXCEPT
+      Lex.Error, FloatMode.Trap => RAISE E("Cannot format that as LONGREAL")
+    END 
+  END Fmt_Extended;
+
+PROCEDURE Fmt_Real(lr : LONGREAL; literal := FALSE) : TEXT RAISES { E } =
+  BEGIN
+    TRY
+      IF    lr < FLOAT(FIRST(REAL), LONGREAL) THEN
+        Debug.Warning("Loss of accuracy, number too negative for REAL type.");
+      RETURN Fmt.Real(FIRST(REAL), literal := literal)
+      ELSIF lr > FLOAT(LAST(REAL), LONGREAL) THEN
+        Debug.Warning("Loss of accuracy, number too positive for REAL type.");
+        RETURN Fmt.Real(LAST(REAL), literal := literal)
+      END;
+      
+      (* number is in range *)
+
+      WITH r = FLOAT(lr, REAL) DO
+        IF FLOAT(ROUND(lr),LONGREAL) = lr THEN
           RETURN Fmt.Int(ROUND(lr))
+        ELSIF FLOAT(LAST(CARDINAL),LONGREAL) = lr THEN
+          (* tricky special case for 64-bit machines.  Possible loss
+             of precision! *)
+          RETURN Fmt.Int(LAST(CARDINAL))
+        ELSIF ABS(lr) > 1.0d10 AND FLOAT(FIRST(INTEGER),LONGREAL) = lr THEN
+          (* this is actually wrong... but compiler problems *)
+          RETURN "-" & Fmt.Int(LAST(INTEGER))
+        ELSIF ABS(lr) > 1.0d10 AND 
+          lr >= FLOAT(FIRST(INTEGER), LONGREAL) AND  
+          lr <= FLOAT(LAST(INTEGER), LONGREAL) THEN
+          WITH o  = Fmt.Real(ABS(r)),
+               s  = Scan.Real(o),
+               o1 = Fmt.Real(ABS(r)-1.0e0),
+               s1 = Scan.Real(o1) DO
+            IF s = s1 THEN
+              RETURN Fmt.Int(ROUND(lr))
+            ELSE
+              RETURN Fmt.Real(r, literal := literal)
+            END
+          END
         ELSE
-          RETURN Fmt.LongReal(lr,literal := literal)
+          RETURN Fmt.Real(r, literal := literal)
         END
       END
-    ELSE
-      RETURN Fmt.LongReal(lr,literal := literal)
+    EXCEPT
+      Lex.Error, FloatMode.Trap => RAISE E("Cannot format that as REAL")
     END
-  END Fmt_LongReal;
+  END Fmt_Real;
 
 PROCEDURE StringToNumber(x, y : Object) : Object RAISES { E } = 
   VAR base : INTEGER;

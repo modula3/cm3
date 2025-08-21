@@ -14,10 +14,14 @@ IMPORT SeqM3AST_AS_CONS_ELEM;
 IMPORT Atom;
 IMPORT M3CId;
 
+VAR doDebug := Debug.DebugThis("AstToVal");
+
 PROCEDURE ProcessExp(h: AstToType.Handle; exp: M3AST_AS.EXP): Value.T =
   BEGIN
-    Debug.Out("AstToVal.ProcessExp : exp.sm_exp_value is " & 
-      RTBrand.GetName(TYPECODE(exp.sm_exp_value)));
+    IF doDebug THEN
+      Debug.Out("AstToVal.ProcessExp : exp.sm_exp_value is " & 
+        RTBrand.GetName(TYPECODE(exp.sm_exp_value)));
+    END;
 
     TYPECASE exp.sm_exp_value OF
       |  M3CBackEnd_C.Integer_value (int) =>
@@ -68,7 +72,9 @@ PROCEDURE ProcessExp(h: AstToType.Handle; exp: M3AST_AS.EXP): Value.T =
             p := 0;
           BEGIN
             IF con.as_propagate # NIL THEN
-              Debug.Out("Propagate!",10);
+              IF doDebug THEN
+                Debug.Out("Propagate!",10);
+              END;
               elements := NEW(REF ARRAY OF Value.Element, 
                       SeqM3AST_AS_CONS_ELEM.Length(con.as_element_s)+1);
               elements[LAST(elements^)] := NEW(Value.Propagate);
@@ -78,7 +84,9 @@ PROCEDURE ProcessExp(h: AstToType.Handle; exp: M3AST_AS.EXP): Value.T =
             END;
 
             WHILE SeqM3AST_AS_CONS_ELEM.Next(iter, cons_elem) DO
-              Debug.Out(RTBrand.GetName(TYPECODE(cons_elem)),10);
+              IF doDebug THEN
+                Debug.Out(RTBrand.GetName(TYPECODE(cons_elem)),10);
+              END;
               TYPECASE cons_elem OF
                 M3AST_AS.RANGE_EXP_elem(re) => 
                 elements[p] := NEW(Value.Range,
@@ -112,7 +120,9 @@ PROCEDURE ProcessExp(h: AstToType.Handle; exp: M3AST_AS.EXP): Value.T =
                        item := Atom.FromText(M3CId.ToText(x.vUSED_ID.lx_symrep)))
           END MakeValueProc;
         BEGIN                       
-          Debug.Out(RTBrand.GetName(TYPECODE(exp)),10);
+          IF doDebug THEN
+            Debug.Out(RTBrand.GetName(TYPECODE(exp)),10);
+          END;
           TYPECASE exp OF
             M3AST_AS.Select(s) => (* I.P *)
             RETURN MakeValueProc(s.as_id)

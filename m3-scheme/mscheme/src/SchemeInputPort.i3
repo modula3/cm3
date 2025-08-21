@@ -9,6 +9,7 @@
 INTERFACE SchemeInputPort;
 IMPORT Rd, SchemeObject, SchemeBoolean, SchemeSymbol;
 FROM Scheme IMPORT E;
+IMPORT BigInt;
 
 TYPE
   T <: Public;
@@ -22,6 +23,9 @@ TYPE
     popChar() : INTEGER;
     peekCh() : INTEGER RAISES { E } ;
     read() : SchemeObject.T RAISES { E };
+
+    readBigInt() : SchemeObject.T RAISES { E };
+    (* read numbers as base 10 big integers *)
 
     close() : SchemeBoolean.T RAISES { E }; (* Norvig has Scheme.Object *)
 
