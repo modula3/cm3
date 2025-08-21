@@ -22,7 +22,7 @@
 (* $Id: Debug.m3,v 1.33 2009/09/09 10:36:22 mika Exp $ *)
 
 MODULE Debug;
-FROM DebugClass IMPORT level;
+FROM DebugClass IMPORT level, DoInit, mu;
 IMPORT TextSet;
 IMPORT TextSetDef;
 IMPORT FileRd;
@@ -414,7 +414,6 @@ VAR
   (* ADDITIONAL warn Streams *)
   
   (* protected by mu *)
-  mu := NEW(MUTEX);
   calls := 0;
 
 CONST
@@ -601,7 +600,7 @@ PROCEDURE CallCallbacks() =
   END CallCallbacks;
   
 BEGIN
-
+  DoInit();
   FOR i := FIRST(Options) TO LAST(Options) DO
     WITH optionEnvName = "DEBUGOPT_" & OptionNames[i] DO
       IF HaveEnv(optionEnvName) THEN
