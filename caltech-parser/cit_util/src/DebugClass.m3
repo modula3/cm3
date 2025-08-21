@@ -4,9 +4,9 @@ MODULE DebugClass;
 (* initialize level from DEBUGLEVEL before doing anything else *)
 
 IMPORT Env, Scan, Lex, FloatMode, Debug, Fmt;
+IMPORT IO;
 IMPORT DebugStreamList, DebugStream;
 FROM Stdio IMPORT stderr;
-FROM DebugLevel IMPORT level;
 
 VAR init := FALSE;
 
@@ -17,7 +17,6 @@ BEGIN
   streams := DebugStreamList.List1(DebugStream.T { stderr });
 
   mu := NEW(MUTEX);
-  
   VAR
     debugStr := Env.Get("DEBUGLEVEL");
   BEGIN

@@ -22,8 +22,7 @@
 (* $Id: Debug.m3,v 1.33 2009/09/09 10:36:22 mika Exp $ *)
 
 MODULE Debug;
-FROM DebugLevel IMPORT level;
-FROM DebugClass IMPORT mu, DoInit;
+FROM DebugClass IMPORT level;
 IMPORT TextSet;
 IMPORT TextSetDef;
 IMPORT FileRd;
@@ -330,7 +329,6 @@ PROCEDURE DefaultOut(t: TEXT) =
   VAR
     reset := FALSE;
   BEGIN
-    <*ASSERT mu # NIL*>
     LOCK mu DO
       INC(calls);
       IF calls >= ResetInterval THEN
@@ -416,6 +414,7 @@ VAR
   (* ADDITIONAL warn Streams *)
   
   (* protected by mu *)
+  mu := NEW(MUTEX);
   calls := 0;
 
 CONST
@@ -602,8 +601,7 @@ PROCEDURE CallCallbacks() =
   END CallCallbacks;
   
 BEGIN
-  DoInit();
-  
+
   FOR i := FIRST(Options) TO LAST(Options) DO
     WITH optionEnvName = "DEBUGOPT_" & OptionNames[i] DO
       IF HaveEnv(optionEnvName) THEN
