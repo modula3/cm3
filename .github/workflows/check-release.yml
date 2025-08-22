@@ -23,6 +23,17 @@ jobs:
         cd ../build
         ../dist/scripts/concierge.py install --prefix ../install
 
+  ARM64_DARWIN:
+    runs-on: macos-latest
+    env:
+      CM3DIST: cm3-dist-AMD64_LINUX-${{ github.event.inputs.tag }}.tar.xz
+    steps:
+    - run: |
+        mkdir ../build ../dist
+        curl --location --silent "${CM3RELEASE}/${CM3DIST}" | gtar Jxf - --directory=../dist --strip-components=1
+        cd ../build
+        ../dist/scripts/concierge.py install --prefix ../install
+
   AMD64_LINUX:
     runs-on: ubuntu-latest
     env:
