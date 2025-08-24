@@ -24,7 +24,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        backend: [c]
+        backend: [c, gcc]
 
     env:
       CM3_TARGET: ARM64_DARWIN
