@@ -1,9 +1,14 @@
 PARALLEL_SSTUBGEN="T"
 
-if defined("CM3_VERSION") and defined ("PARALLEL_SSTUBGEN")
-	include ("schemestubs_pll.tmpl")
-else
-	include ("schemestubs_ser.tmpl")
+_SSTUBGEN    = "sstubgen"
+_SSTUBGENSCM = PKG_INSTALL & SL & "sstubgen_prog" & SL & "src" & SL & "sstubgen.scm"
+
+_SEXIT       = "exit"
+
+_EXPORTSSPECIAL = "__SCHEMEEXPORTS__"
+
+if not defined("ROOT")
+  ROOT = PKG_INSTALL
 end
 
 readonly proc smodule(nam) is

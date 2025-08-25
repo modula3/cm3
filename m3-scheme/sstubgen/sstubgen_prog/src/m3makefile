@@ -10,4 +10,7 @@ import ("sstubgen")
 
 implementation("Main")
 
-program ("sstubgen")
+ship_source("schedulerdisablewrap.scm")
+ship_source("sstubgen.scm")
+
+Program ("sstubgen")

@@ -231,6 +231,8 @@ schemereadline m3-scheme
 mscheme-interactive m3-scheme
 mscheme-interactive_r m3-scheme
 mscheme-threads m3-scheme
+sstubgen m3-scheme
+sstubgen/sstubgen_prog m3-scheme
 
 cm3 core front headless unicode
 m3cc core front headless m3gnudevtool unicode

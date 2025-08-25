@@ -1,4 +1,4 @@
-;; $Id$
+;; $Id: mergesort.scm,v 1.1 2008/11/08 10:09:08 mika Exp $
 ;;
 ;; Copyright (c) 2008, Generation Capital Ltd.  All rights reserved.
 ;;
@@ -12,10 +12,10 @@
   (define (mergelists L M)         ; assume L and M are sorted lists
     (cond ( (null? L) M)
 	  ( (null? M) L)
-	  ( (less-than? (car L)(car M))
-	    (cons (car L) (mergelists (cdr L)M)))
+	  ( (not (less-than? (car L)(car M)))
+	    (cons (car M) (mergelists L (cdr M))))
 	  (else
-	   (cons (car M) (mergelists L (cdr M))))
+	   (cons (car L) (mergelists (cdr L)M)))
 	  )
     )
   
