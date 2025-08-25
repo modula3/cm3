@@ -12,6 +12,9 @@ jobs:
   AMD64_DARWIN:
     uses: modula3/cm3/.github/workflows/amd64_darwin.yml@master
 
+  ARM64_DARWIN:
+    uses: modula3/cm3/.github/workflows/arm64_darwin.yml@master
+
   AMD64_LINUX:
     uses: modula3/cm3/.github/workflows/amd64_linux.yml@master
 
