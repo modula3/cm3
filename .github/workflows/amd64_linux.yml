@@ -34,7 +34,7 @@ jobs:
     - name: Install prerequisites
       run: |
         sudo apt-get update --quiet
-        sudo apt-get install --quiet --assume-yes libglu1-mesa-dev ninja-build xorg-dev
+        sudo apt-get install --quiet --assume-yes libglu1-mesa-dev ninja-build xorg-dev libreadline-dev
 
     - name: Define install location
       run: |
