@@ -14,6 +14,11 @@
 
 #include <math.h>
 
+#ifdef __cplusplus
+extern "C"
+{           
+#endif
+
 double
 MathPosixC__frexp_result_glue(double x)
 {
@@ -51,4 +56,7 @@ MathPosixC__modf_intpart_glue(double x)
 }
 
 
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
