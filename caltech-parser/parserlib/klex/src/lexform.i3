@@ -10,4 +10,10 @@ TYPE
     (* return Token for a regexp type *)
 %methods\
   END;
+
+(* generics stuff *)
+CONST
+  Brand = "%lex";
+PROCEDURE Hash(a: T): INTEGER;
+PROCEDURE Equal(a,b:T): BOOLEAN;
 END %lex.

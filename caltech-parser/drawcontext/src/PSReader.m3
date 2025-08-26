@@ -8,7 +8,7 @@ IMPORT PSReaderGuts;
 IMPORT LinoText;
 IMPORT Scan;
 IMPORT Text;
-IMPORT TextUtils;
+IMPORT CitTextUtils AS TextUtils;
 IMPORT TextReader;
 IMPORT TextTextTbl;
 IMPORT CacheDrawContext;

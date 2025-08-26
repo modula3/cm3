@@ -4,7 +4,7 @@ MODULE RectBins;
 IMPORT MagCell, MagLayerRect AS LayerRect;
 IMPORT MagRect, MagPoint;
 IMPORT BinsTbl;
-IMPORT Debug, TextUtils, Fmt;
+IMPORT Debug, CitTextUtils AS TextUtils, Fmt;
 IMPORT RectBinsClass;
 IMPORT IntPair;
 IMPORT MagLayerRectSet, MagLayerRectSetDef;

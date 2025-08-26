@@ -13,9 +13,13 @@ IMPORT Thread;
 
 <* FATAL FloatMode.Trap, Lex.Error, Rd.Failure, Wr.Failure, Thread.Alerted, OSError.E *>
 
+VAR
+  Int_Zero := Int.New(0);
+  Int_One  := Int.New(1);
+
 PROCEDURE ExtendedGCD(a, b: T; VAR aCoeff, bCoeff: T): T =
   BEGIN
-    IF Compare(a,Int.Zero) = -1 THEN
+    IF Compare(a,Int_Zero) = -1 THEN
       VAR
         g := ExtendedGCD(b,Negate(a),bCoeff,aCoeff);
       BEGIN
@@ -23,12 +27,12 @@ PROCEDURE ExtendedGCD(a, b: T; VAR aCoeff, bCoeff: T): T =
         RETURN g;
       END;
     END;
-    IF Compare(b,Int.Zero) = -1 THEN
+    IF Compare(b,Int_Zero) = -1 THEN
       RETURN ExtendedGCD(b,a,bCoeff,aCoeff);
     END;
     CASE Compare(a,b) OF
     | -1 => RETURN EGCD(a,b,aCoeff,bCoeff);
-    | 0 => aCoeff:=Int.One; bCoeff:=Int.Zero; RETURN a;
+    | 0 => aCoeff:=Int_One; bCoeff:=Int_Zero; RETURN a;
     | 1 => RETURN EGCD(b,a,bCoeff,aCoeff);
     END;
   END ExtendedGCD;
@@ -36,9 +40,9 @@ PROCEDURE ExtendedGCD(a, b: T; VAR aCoeff, bCoeff: T): T =
 (* assumes 0<=a<ABS(b) *)
 PROCEDURE EGCD(a,b: T; VAR aCoeff,bCoeff: T): T =
   BEGIN
-    IF Equal(a, Int.Zero) THEN
-      aCoeff := Int.Zero;
-      bCoeff := Int.One;
+    IF Equal(a, Int_Zero) THEN
+      aCoeff := Int_Zero;
+      bCoeff := Int_One;
       RETURN b;
     END;
     VAR
@@ -93,7 +97,7 @@ PROCEDURE Scan(t: TEXT; base : CARDINAL := 10) : T =
 
 PROCEDURE Exp(base, exp: T): T =
   BEGIN
-    RETURN MultiExp(base, exp, Int.Zero, FALSE);
+    RETURN MultiExp(base, exp, Int_Zero, FALSE);
   END Exp;
 
 PROCEDURE ModExp(base, exp, mod: T): T =
@@ -108,7 +112,7 @@ PROCEDURE ModExp(base, exp, mod: T): T =
 PROCEDURE MultiExp(base, exp, mod: T; useMod: BOOLEAN): T =
   BEGIN
     CASE Sign(exp) OF
-    | 0 => RETURN Int.One;
+    | 0 => RETURN Int_One;
     | -1 => <* ASSERT FALSE *>
     | 1 =>
       VAR
@@ -132,7 +136,7 @@ PROCEDURE ModInverse(a, mod: T): T RAISES {NoneExists} =
     aCoeff, bCoeff, g: T;
   BEGIN
     g := ExtendedGCD(a,mod,aCoeff,bCoeff);
-    IF NOT Equal(g, Int.One) THEN RAISE NoneExists; END;
+    IF NOT Equal(g, Int_One) THEN RAISE NoneExists; END;
     RETURN Mod(aCoeff, mod);
   END ModInverse;
 
@@ -169,23 +173,23 @@ PROCEDURE Write(fn: Pathname.T; tbl: TextIntTbl.T) =
   END Write;
 
 PROCEDURE ProbablyPrime(p: T): BOOLEAN =
-  BEGIN RETURN Equal(ModExp(New(17), Pred(p), p), Int.One) AND
-               Equal(ModExp(New(19), Pred(p), p), Int.One); END ProbablyPrime;
+  BEGIN RETURN Equal(ModExp(New(17), Pred(p), p), Int_One) AND
+               Equal(ModExp(New(19), Pred(p), p), Int_One); END ProbablyPrime;
 PROCEDURE Negate(a: T): T =
   BEGIN RETURN Mul(New(-1), a); END Negate;
 PROCEDURE Sub(a, b: T): T =
   BEGIN RETURN Add(a, Negate(b)); END Sub;
 PROCEDURE Square(a: T): T = BEGIN RETURN Mul(a,a); END Square;
 PROCEDURE Odd(a: T): BOOLEAN =
-  BEGIN RETURN Equal(Mod(a, New(2)),Int.One); END Odd;
+  BEGIN RETURN Equal(Mod(a, New(2)),Int_One); END Odd;
 PROCEDURE Pred(x: T): T = BEGIN RETURN Add(x, New(-1)); END Pred;
-PROCEDURE Succ(x: T): T = BEGIN RETURN Add(x, Int.One); END Succ;
+PROCEDURE Succ(x: T): T = BEGIN RETURN Add(x, Int_One); END Succ;
 PROCEDURE Half(x: T): T = BEGIN RETURN Div(x, New(2)); END Half;
 PROCEDURE GCD(a, b: T): T =
   VAR ac,bc: T; BEGIN RETURN ExtendedGCD(a,b,ac,bc); END GCD;
-PROCEDURE IsOne(x: T): BOOLEAN = BEGIN RETURN Equal(x, Int.One); END IsOne;
-PROCEDURE One(): T = BEGIN RETURN Int.One; END One;
-PROCEDURE Zero(): T = BEGIN RETURN Int.Zero; END Zero;
+PROCEDURE IsOne(x: T): BOOLEAN = BEGIN RETURN Equal(x, Int_One); END IsOne;
+PROCEDURE One(): T = BEGIN RETURN Int_One; END One;
+PROCEDURE Zero(): T = BEGIN RETURN Int_Zero; END Zero;
 PROCEDURE RelPrime(a,b: T): BOOLEAN=BEGIN RETURN IsOne(GCD(a,b));END RelPrime;
 PROCEDURE Old(a: T): INTEGER = BEGIN RETURN ROUND(Int.ToLongReal(a)); END Old;
 PROCEDURE Log2i(a:T):INTEGER=BEGIN RETURN Text.Length(Format(a,2))-1;END Log2i;

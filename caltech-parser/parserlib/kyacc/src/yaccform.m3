@@ -31,13 +31,14 @@ TYPE
   END;
 
 REVEAL
-  T = Public BRANDED "%yacc" OBJECT
+  T = Public BRANDED Brand OBJECT
     lex: %tok.Lexer;
     tokenLookup: IntIntTbl.T := NIL; (* M3 type code -> SymCode *)
     symbols: IntTextTbl.T;           (* SymCode -> name *)
 %alloc\
   OVERRIDES
     setLex := SetLex;
+    getLex := GetLex;
     parse := Parse;
     purge := Purge;
 %ovr\
@@ -92,6 +93,8 @@ VAR
 
 PROCEDURE SetLex(self: T; lex: %tok.Lexer): T =
   BEGIN self.lex := lex; RETURN self; END SetLex;
+PROCEDURE GetLex(self: T): %tok.Lexer =
+  BEGIN RETURN self.lex; END GetLex;
 
 PROCEDURE Init(self: T) =
   BEGIN (* called on first parse *)
@@ -236,10 +239,10 @@ PROCEDURE Parse(self: T; exhaustInput: BOOLEAN := TRUE): StartType =
         DebugPrint("parsing stopped with singleton start symbol on stack");
         <* ASSERT stack.ptr = 1 *>
         IF exhaustInput AND preservedToken = NoToken THEN
-          symbol := NextToken(self);
+          preservedToken := NextToken(self);
           DebugPrint("getting token to check that it's an EOF");
         END;
-        IF symbol.code # 0 THEN
+        IF preservedToken.code # 0 THEN
           IF exhaustInput THEN
             DebugPrint("Error: last token was not EOF");
             self.lex.unget();
@@ -277,6 +280,10 @@ PROCEDURE Purge(self: T): INTEGER =
   BEGIN
     RETURN 0%purge;
   END Purge;
+
+(* generics stuff *)
+PROCEDURE Hash(<*UNUSED*>a: T): INTEGER = BEGIN RETURN 0; END Hash;
+PROCEDURE Equal(a,b:T): BOOLEAN = BEGIN RETURN a=b; END Equal;
 
 (* default methods *)
 %defimpl\

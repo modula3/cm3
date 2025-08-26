@@ -53,6 +53,8 @@ TYPE
 
     getParent() : T;
     haveBinding(sym : SchemeSymbol.T) : BOOLEAN;
+    copy() : T;
+    initCopy(t : T);
   END;
 
   (* the following forces compile error if we try to init a T *)

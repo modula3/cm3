@@ -13,6 +13,12 @@ TYPE
 %public\
   END;
 %tkimp\
+
+(* generics stuff *)
+CONST
+  Brand = "%name";
+  Hash = %meth.Hash;
+  Equal = %meth.Equal;
 END %name.
 ~\
 PROCEDURE Proc_%name(self: T): Token =
@@ -27,7 +33,7 @@ IMPORT %meth;
 %module\
 
 REVEAL
-  T = Public BRANDED "%name" OBJECT
+  T = Public BRANDED Brand OBJECT
 %alloc\
 %private\
   OVERRIDES

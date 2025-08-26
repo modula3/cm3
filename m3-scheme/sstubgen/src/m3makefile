@@ -36,6 +36,9 @@ Module("FRefRefTbl")
 module("M3ASTScopeNames")
 
 template("schemestubs")
+template("schemestubs_pll")
+template("schemestubs_ser")
+
 template("schedulerwrap")
 
 interface("CM3Extensions")

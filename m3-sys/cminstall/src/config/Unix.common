@@ -47,7 +47,7 @@ SYSTEM_LIBS =
     "MOTIF"      : [ "-lXm" ],
     "TCP"        : [ ],
     "X11"        : [  "-L/usr/X11R6/lib", "-lXft", "-lfontconfig", "-lXaw", "-lXmu", "-lXext", "-lXt", "-lSM", "-lICE", "-lXpm", "-lX11" ],
-    "READLINE"   : [ "-lreadline" ],
+%    "READLINE"   : [ "-lreadline" ], % breaks CM3 compile in the github system?
     "MPFR"       : [ "-lmpfr" ],
     "EXPAT"      : [ "-lexpat" ]
 }

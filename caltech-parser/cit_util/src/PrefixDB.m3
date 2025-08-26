@@ -4,7 +4,7 @@ IMPORT Rd;
 IMPORT RegEx;
 IMPORT Text;
 IMPORT TextList;
-IMPORT TextUtils;
+IMPORT CitTextUtils AS TextUtils;
 IMPORT Thread;
 IMPORT OSError;
 

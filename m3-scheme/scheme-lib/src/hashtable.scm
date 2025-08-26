@@ -1,4 +1,4 @@
-;; $Id$ 
+;; $Id: hashtable.scm,v 1.8 2010/11/07 06:12:15 mika Exp $ 
 ;; 
 ;; Scheme hash tables
 ;;
@@ -57,7 +57,8 @@
            ((retrieve)
             (let* ((key (car args))
                    (index (hash-index-function key)))
-              (cond ( (assoc key (vector-ref table index))  (cdr (assoc key (vector-ref table index))))
+              (cond ( (assoc key (vector-ref table index))
+                      (cdr (assoc key (vector-ref table index))))
                     (else '*hash-table-search-failed*))))
 
            ((delete-entry!)

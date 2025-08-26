@@ -1,0 +1,8 @@
+/* $Id: m3makefile,v 1.1 2010/07/05 22:55:15 mika Exp $ */
+
+import ("libm3")
+import ("cit_util")
+
+implementation ("Main")
+
+program ("fastnumparse")

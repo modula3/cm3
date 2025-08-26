@@ -21,14 +21,15 @@ template("texthack")
 template("generics")
 Interface("DblRefany")
 Module("Debug")
+Module("DynDebug")
 Interface("DebugStream")
 List("DebugStream", "DebugStream")
 Module("DebugClass")
 implementation("DebugFmtPointer")
 Module("BreakHere")
-Module("TextUtils")
+Module("CitTextUtils")
 Module("WordUtils")
-implementation("TextUtilsFmt")
+implementation("CitTextUtilsFmt")
 Module("PrefixDB")
 Table("TextLongReal", "Text", "LongrealType")
 List("Longreal", "LongrealType")
@@ -36,6 +37,7 @@ Pqueue("Longreal","LongrealType")
 module("ScanList")
 
 Generic_module("OpenArrayTable")
+template ("openarray_table")
 template("dbltable")
 Generic_module("DblTable")
 
@@ -46,6 +48,7 @@ LockedTable("TextRef", "Text", "Refany", "TextRefTbl")
 MkLockedSetDef("Text", "Text")
 
 LockedTable("TextBoolean", "Text", "Boolean", "TextBooleanTbl")
+LockedTable("TextText", "Text", "Text", "TextTextTbl")
 
 Generic_module("BrandedSet")
 template("brandedset")
@@ -91,7 +94,7 @@ Sequence("RefPair", "RefPair")
 Sequence("IntPair", "IntPair")
 
 List("IntPair", "IntPair")
-Interface("IntTriple")
+Module("IntTriple")
 Table("Int_IntTriple", "Integer", "IntTriple")
 
 KeyPair("Card", "Cardinal", "Cardinal")
@@ -203,6 +206,10 @@ Sequence("Card","Cardinal")
 
 Module("IntForRat")
 Module("BigInt")
+Interface("BigIntRep")
+
+Table("BigIntBigInt", "BigInt", "BigInt")
+
 Gmodule("Rational")
 Rational("Int","IntForRat")
 Rational("Big", "BigInt")
@@ -399,6 +406,15 @@ c_source ("UtimeOpsC")
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Module ("FastNumParse")
+
+Module ("ExceptionInfo")
+
+Table ("TextCard", "Text", "Cardinal")
+
+Table ("LRVectorLR", "LRVector", "LongrealType")
+
+Module ("RepeatMe")
+Module ("Watchdog")
 
 Library("cit_util")
 

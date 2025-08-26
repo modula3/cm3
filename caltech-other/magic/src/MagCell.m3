@@ -10,7 +10,7 @@ IMPORT MagPath, TextList;
 IMPORT TextCellTbl;
 IMPORT Rd, FileRd;
 IMPORT OSError, Thread;
-IMPORT Text, TextUtils, TextSet, TextSetDef;
+IMPORT Text, CitTextUtils AS TextUtils, TextSet, TextSetDef;
 IMPORT MagSubCell AS SubCell, TextSubCellTbl;
 IMPORT Fmt, Debug;
 IMPORT Wr, Stdio;

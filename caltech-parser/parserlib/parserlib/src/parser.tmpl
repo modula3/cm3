@@ -9,26 +9,74 @@ if not defined("_PARSER_TOP")
 end
 
 if not defined("_PARSER_CMDS")
-	local _TOK = _PARSER_TOP & SL & "ktok" & SL & BUILD_DIR & SL & "ktok"
-	local _LEX = _PARSER_TOP & SL & "klex" & SL & BUILD_DIR & SL & "klex"
-	local _YACC= _PARSER_TOP & SL & "kyacc" & SL& BUILD_DIR & SL & "kyacc"
-	local _EXT = _PARSER_TOP & SL & "kext" & SL & BUILD_DIR & SL & "kext"
+%	local _TOK = _PARSER_TOP & SL & "ktok" & SL & BUILD_DIR & SL & "ktok"
+%	local _LEX = _PARSER_TOP & SL & "klex" & SL & BUILD_DIR & SL & "klex"
+%	local _YACC= _PARSER_TOP & SL & "kyacc" & SL& BUILD_DIR & SL & "kyacc"
+%	local _EXT = _PARSER_TOP & SL & "kext" & SL & BUILD_DIR & SL & "kext"
+
+% use the shipped versions instead
+
+        local _TOK = "ktok"
+        local _LEX = "klex"
+        local _YACC= "kyacc"
+        local _EXT = "kext"
+        
 	_PARSER_CMDS = {"t": _TOK, "l": _LEX, "y": _YACC, "e": _EXT}
 	_PARSER_SOURCES = []
 end
 
 if not defined("_exec")
     readonly proc _exec(cmd) is
-	local ret = exec(cmd)
 	write (cmd, CR)
-	if not equal(ret, 0) error("command failed with error code: ", ret) end
+	if defined("CM3_VERSION")
+		exec(cmd)
+	else
+                local ret = exec(cmd)
+	        if not equal(ret, 0) error("command failed with error code: ", ret) end
+        end    
     end
 end
 
+/* added "derived" rules 12/17/2020 mika:
+
+derived rules are prefixed "d"
+
+The only difference is that the d-rules do NOT perform "path_of", which
+goes into ../src ; instead the d-rules look directly in the CWD, which
+is going to be the derived directory while the compiler is building.
+
+*/
+
 readonly proc _xCons(tok_nm, tok_spec, out_nm, out_spec, kind, vis) is
+   /* generic rule to do everything, called by token, lexer, parser, etc. */
    if not defined("_clean")
 	local tok_source = path_of(tok_spec & ".t")
 	local out_source = path_of(out_spec & "." & kind)
+	if stale(out_nm & ".m3", [out_source, tok_source])
+		local args = [out_source, "-o", out_nm & ".i3"]
+		if not equal(kind, "t")
+		    args += ["-t", tok_source, "-ti3", tok_nm & ".i3"]
+		end
+		_exec([_PARSER_CMDS{kind}, args])
+	end
+	if equal(vis, VISIBLE)
+		local include_source = out_spec & "_" & kind
+		> include_source & ".tmpl" in
+			write("_PARSER_SOURCES += \"" & out_source & "\"",CR)
+		end
+		template(".." & SL & BUILD_DIR & SL & "" & include_source)
+		%%% LibExport(out_source)
+	end
+   end
+   derived_implementation(out_nm)
+   derived_interface(out_nm, vis)
+end
+
+readonly proc _dxCons(tok_nm, tok_spec, out_nm, out_spec, kind, vis) is
+   /* generic rule to do everything, called by token, lexer, parser, etc. */
+   if not defined("_clean")
+	local tok_source = tok_spec & ".t"
+	local out_source = out_spec & "." & kind
 	if stale(out_nm & ".m3", [out_source, tok_source])
 		local args = [out_source, "-o", out_nm & ".i3"]
 		if not equal(kind, "t")
@@ -64,16 +112,37 @@ readonly proc _extended(spec, vis) is
    derived_interface(spec, vis)
 end
 
+readonly proc _derived_extended(spec, vis) is
+   if not defined("_clean")
+	local source = spec & ".e"
+	if stale(spec & ".m3", source)
+		foreach s in _PARSER_SOURCES
+			_exec(["cp", s, "."])
+		end
+		_PARSER_SOURCES = []
+		_exec([_PARSER_CMDS{"e"}, source])
+	end
+   end
+   derived_implementation(spec)
+   derived_interface(spec, vis)
+end
+
 
 % macros for building tokens
 
 readonly proc _tCons(nm, spec, vis) is _xCons(nm, spec, nm, spec, "t", vis) end
 readonly proc _tConsUn(spec, vis) is _tCons(spec & "Tok", spec, vis) end
 
+readonly proc _dtCons(nm, spec, vis) is _dxCons(nm, spec, nm, spec, "t", vis) end
+readonly proc _dtConsUn(spec, vis) is _dtCons(spec & "Tok", spec, vis) end
+
 readonly proc token(spec) is _tConsUn(spec, HIDDEN) end
 readonly proc Token(spec) is _tConsUn(spec, VISIBLE) end
 readonly proc token_named(nm, spec) is _tCons(nm, spec, HIDDEN) end
 readonly proc Token_named(nm, spec) is _tCons(nm, spec, VISIBLE) end
+
+readonly proc derived_token(spec, vis) is _dtConsUn(spec, vis) end
+readonly proc derived_token_named(nm, spec, vis) is _dtCons(nm, spec, vis) end
 
 
 %macros for building lexers
@@ -83,12 +152,20 @@ readonly proc _lCons(tok_nm, tok_spec, out_nm, out_spec, vis) is
 readonly proc _lConsUn(tok, spec, vis) is
 	_lCons(tok & "Tok", tok, spec & "Lex", spec, vis) end
 
+readonly proc _dlCons(tok_nm, tok_spec, out_nm, out_spec, vis) is
+	_dxCons(tok_nm, tok_spec, out_nm, out_spec, "l", vis) end
+readonly proc _dlConsUn(tok, spec, vis) is
+	_dlCons(tok & "Tok", tok, spec & "Lex", spec, vis) end
+
 readonly proc lexer(tok, spec) is _lConsUn(tok, spec, HIDDEN) end
 readonly proc Lexer(tok, spec) is _lConsUn(tok, spec, VISIBLE) end
 readonly proc lexer_named(tok_nm, tok_spec, out_nm, out_spec) is
 	_lConsUn(tok_nm, tok_spec, out_nm, out_spec, HIDDEN) end
 readonly proc Lexer_named(tok_nm, tok_spec, out_nm, out_spec) is
 	_lConsUn(tok_nm, tok_spec, out_nm, out_spec, VISIBLE) end
+readonly proc derived_lexer(tok, spec, vis) is _dlConsUn(tok, spec, vis) end
+readonly proc derived_lexer_named(tok_nm, tok_spec, out_nm, out_spec, vis) is
+        _dlConsUn(tok_nm, tok_spec, out_nm, out_spec, vis) end
 
 
 %macros for building parsers
@@ -98,15 +175,25 @@ readonly proc _pCons(tok_nm, tok_spec, out_nm, out_spec, vis) is
 readonly proc _pConsUn(tok, spec, vis) is
 	_pCons(tok & "Tok", tok, spec & "Parse", spec, vis) end
 
+readonly proc _dpCons(tok_nm, tok_spec, out_nm, out_spec, vis) is
+	_dxCons(tok_nm, tok_spec, out_nm, out_spec, "y", vis) end
+readonly proc _dpConsUn(tok, spec, vis) is
+	_dpCons(tok & "Tok", tok, spec & "Parse", spec, vis) end
+
 readonly proc parser(tok, spec) is _pConsUn(tok, spec, HIDDEN) end
 readonly proc Parser(tok, spec) is _pConsUn(tok, spec, VISIBLE) end
 readonly proc parser_named(tok_nm, tok_spec, out_nm, out_spec) is
 	_pConsUn(tok_nm, tok_spec, out_nm, out_spec, HIDDEN) end
 readonly proc Parser_named(tok_nm, tok_spec, out_nm, out_spec) is
 	_pConsUn(tok_nm, tok_spec, out_nm, out_spec, VISIBLE) end
+readonly proc derived_parser(tok, spec, vis) is _dpConsUn(tok, spec, vis) end
+readonly proc derived_parser_named(tok_nm, tok_spec, out_nm, out_spec, vis) is
+        _dpConsUn(tok_nm, tok_spec, out_nm, out_spec, vis) end
 
 
 %macros for invoking the extender
 
 readonly proc extended(spec) is _extended(spec, HIDDEN) end
 readonly proc Extended(spec) is _extended(spec, VISIBLE) end
+
+readonly proc derived_extended(spec, vis) is _derived_extended(spec, vis) end
