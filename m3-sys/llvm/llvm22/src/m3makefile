@@ -1,0 +1,19 @@
+
+import("libm3")
+import("m3middle")
+import("m3quake")
+import("llvm22bindings")
+include("version.quake")
+version_impl("Version")
+
+module("M3CG_LLVM")
+
+implementation("Main")
+
+%if you want to build standalone you must set the STATIC var to true in
+%llvm22bindings and ensure you have installed the development (static)
+%versions of stdc++ and the compression lib z.
+%
+%build_standalone()
+
+Program("m3llvm")
