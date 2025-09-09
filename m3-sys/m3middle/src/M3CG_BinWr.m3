@@ -593,7 +593,9 @@ PROCEDURE declare_raises (u: U;  n: Name) =
 PROCEDURE declare_object (u: U;  t, super: TypeUID;
                           brand: TEXT;  traced: BOOLEAN;
                           n_fields, n_methods: INTEGER;
-                          field_size: BitSize; <*UNUSED*>super_typename: Name) =
+                          field_size: BitSize;
+                          field_offset, method_offset : INTEGER;
+                          <*UNUSED*>super_typename: Name) =
   BEGIN
     Cmd  (u, Bop.declare_object);
     Tipe (u, t);
@@ -603,6 +605,8 @@ PROCEDURE declare_object (u: U;  t, super: TypeUID;
     Int  (u, n_fields);
     Int  (u, n_methods);
     BInt (u, field_size);
+    Int  (u, field_offset);
+    Int  (u, method_offset);
   END declare_object;
 
 PROCEDURE declare_method (u: U;  n: Name;  signature: TypeUID) =

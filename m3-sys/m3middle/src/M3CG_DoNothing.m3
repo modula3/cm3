@@ -192,7 +192,7 @@ END;
 <*NOWARN*>PROCEDURE declare_proctype(self: T; typeid: TypeUID; n_formals: INTEGER; result: TypeUID; n_raises: INTEGER; callingConvention: CallingConvention; result_typename: Name) = BEGIN END declare_proctype;
 <*NOWARN*>PROCEDURE declare_formal(self: T; name: Name; typeid: TypeUID; typename: Name) = BEGIN END declare_formal;
 <*NOWARN*>PROCEDURE declare_raises(self: T; name: Name) = BEGIN END declare_raises;
-<*NOWARN*>PROCEDURE declare_object(self: T; typeid, super_typeid: TypeUID; brand: TEXT; traced: BOOLEAN; n_fields, n_methods: INTEGER; field_size: BitSize; super_typename: Name) = BEGIN END declare_object;
+<*NOWARN*>PROCEDURE declare_object(self: T; typeid, super_typeid: TypeUID; brand: TEXT; traced: BOOLEAN; n_fields, n_methods: INTEGER; field_size: BitSize; field_offset, method_offset : INTEGER; super_typename: Name) = BEGIN END declare_object;
 <*NOWARN*>PROCEDURE declare_method(self: T; name: Name; signature: TypeUID) = BEGIN END declare_method;
 <*NOWARN*>PROCEDURE declare_opaque(self: T; typeid, super_typeid: TypeUID) = BEGIN END declare_opaque;
 <*NOWARN*>PROCEDURE reveal_opaque(self: T; lhs_typeid, rhs_typeid: TypeUID) = BEGIN END reveal_opaque;
