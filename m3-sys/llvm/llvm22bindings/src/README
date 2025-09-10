@@ -1,0 +1,58 @@
+This creates the library llvm22bindings corresponding to llvm version 22.
+So it allows Modula-3 access to the llvm libs to build a backend code
+generator based on llvm.
+
+To create a functional llvm backend you will have to build and ship
+this package and then build and ship the program m3llvm in package llvm22.
+
+And as a prerequisite you will have to have llvm version 22 installed.
+You can install the binary only libs available at
+
+  https://releases.llvm.org 
+
+Check the version column and choose at least major version 22, then
+click the download link.
+
+The prebuilt binaries are only available for selected platforms and
+architectures (usually linux, windows, x86 and arm) The binaries you want
+have prefix "LLVM-"
+
+The release page documents the process and links to other sites if your
+preference is not available.
+
+It also includes the source archives.
+Building llvm from source is very resource intensive and time consuming.
+
+You may also install the llvm22-dev package from your distribution.
+
+After you have installed llvm run
+ llvm-config --version
+to check the llvm version. 
+ 
+ Posix
+
+  After you install llvm, check that the LIB_DIR1 and LIB_DIR2 values in 
+  the m3makefile point to the directories where the posix shared libs live.
+  If you have the developer or static libs installed and want to build
+  a standalone version read the instructions in the m3makefile in this package.
+ 
+ Windows
+
+  You dont have to copy windows libs to some random directory if you use the
+  correct LIB path as setup by using the approved cmd prompt from Visual Studio
+  which will point to the x86 or x64 version depending on the one you choose.
+  You can check if you have the correct one by typing
+   SET > temp.txt
+  and examine the LIB and LIBPATH vars which
+  should end in x64 or x86.
+
+ Place the libs in in c:/program files (x86)/llvm
+ and, - most importantly -
+ setup the environment - in system variables -
+   have to add the llvm/bin directory to the PATH
+   and the llvm/lib directory to the LIB variable which probably wont exist
+
+
+There are sure to be problems. If so, post to the list or raise an issue on
+github.
+

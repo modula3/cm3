@@ -1758,10 +1758,6 @@ PROCEDURE declare_object (self               : U;
     found    : BOOLEAN;
 *)
   BEGIN
-(*
-IO.Put(self.curFile & " declare_object \n");
-IO.Put("field offset "); IO.PutInt(field_offset); IO.Put("\n");
-*)
     objectRef :=
       NEW(ObjectDebug, tUid := t, superType := super, brand := brand,
           traced := traced, numFields := n_fields, numMethods := n_methods,
@@ -1784,7 +1780,7 @@ IO.Put("field offset "); IO.PutInt(field_offset); IO.Put("\n");
       objectRef.objSize := field_size;
     END;
 
-(* dont need all this if fieldoffset change is included *)
+(* dont need all this when fieldoffset change is included *)
 (*
     found := self.debugTable.get(super, (*OUT*) superObj);
     IF found THEN
@@ -5804,11 +5800,8 @@ PROCEDURE DebugInit (self: U) =
       Rd.Close(rd);
     END;
 
-    (* FIXME add checksum to CreateFile when DIBuilder has the optional parms
-       Checksum := "CSK_MD5", Source := chkSum); 
-       on reflection  checksum is the chkSum and need to pass in the kind
-       MD5 or SHA256 or whatever which is combined into csInfo, the source
-       is the source file as a text. but we wont embed it- see above *)
+    (* FIXME add checksum to CreateFile when DIBuilder
+        has the optional parms - see below *)
     self.fileRef := M3DIB.CreateFile(self.debugRef, Filename := self.debFile,
                                      FilenameLen := Text.Length(self.debFile),
                                      Directory := self.debDir,
@@ -6640,11 +6633,6 @@ PROCEDURE DebugObject (self: U; o: ObjectDebug): MetadataRef =
       paramsArr[0] := NIL;
     END;
 
-(*
-IO.Put("Object " & typeName & " fieldOffset ");
-IO.PutInt(o.fieldOffset); IO.Put("\n");
-*)
-
     (* if fieldOffset negative then skip generating fields - cant debug them *)
     IF o.fieldOffset >= 0 THEN
 
@@ -6653,19 +6641,7 @@ IO.PutInt(o.fieldOffset); IO.Put("\n");
         size := VAL(o.fields[i].bitSize, uint64_t);
         align := VAL(o.fields[i].align, uint32_t);
         offset := VAL(o.fieldOffset, uint64_t) + o.fields[i].bitOffset;
-(*
-old delete
-      offset := VAL(o.objSize - o.bitSize + o.fields[i].bitOffset +
-                    ptrBits (*For typecell pointer *), uint64_t);
-*)
 
-(*
-IO.Put("field " & fieldName & " "); IO.PutLongInt(o.objSize); IO.Put(" ");
-IO.PutInt(i); IO.Put(" ");  IO.PutInt(o.fieldOffset); IO.Put("\n");
-IO.PutLongInt(o.bitSize (*fieldSize*)); IO.Put(" ");
-IO.PutLongInt(o.fields[i].bitSize); IO.Put(" ");
-IO.PutLongInt(o.fields[i].bitOffset); IO.Put("\n");
-*)
         fieldDIT := DebugLookupLL(self, o.fields[i].tUid);
         IF o.fields[i].packed THEN
           memberDINode :=
@@ -7098,7 +7074,6 @@ PROCEDURE DebugGlobals (self: U) =
                  LineNo := 1, Ty := globType, LocalToUnit := TRUE,
                  Expr := exp, Decl := NIL, AlignInBits := 0);
 
-        (* set the !dbg tag for this global *)
 (*
   could use this but then need to know kindId
   VAR
@@ -7106,6 +7081,7 @@ PROCEDURE DebugGlobals (self: U) =
         LLVM.GlobalAddMetadata(globalLv, kindId, gve);
 *)
 
+        (* set the !dbg tag for this global *)
         LLVM.GlobalAddDebugInfo(globalLv, gve);
 
       END;
