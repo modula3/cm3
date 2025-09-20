@@ -507,6 +507,26 @@ PROCEDURE P17() =
     IO.Put(n1.root().format() & "\n");
   END P17;
 
+PROCEDURE P18() =
+  VAR
+    buf,name : TEXT;
+    node,n1,n2 : Json.T;
+    iter : Json.Iterator;
+    int : INTEGER;
+  BEGIN
+    (* iterator test over array *)
+    buf := "[{\"start\" : 2}, {\"start\" : 5}]";
+    node := Json.ParseBuf(buf);
+    iter := node.iterate();
+    WHILE iter.next(name,n1) DO
+      IO.Put("name:" & name & " kind " & Json.NK[n1.kind()] & "\n");
+      n2 := FindText(n1,"start");
+      int := n2.getInt();
+    END;
+
+    IterAll(node.root());
+  END P18;
+
 PROCEDURE P19() =
   VAR
     node,n2,n3 : Json.T;
@@ -627,6 +647,7 @@ BEGIN
   P15();
   P16();
   P17();
+  P18();
 (* 
   P19();
   P20();
