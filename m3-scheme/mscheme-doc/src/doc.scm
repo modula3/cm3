@@ -16,46 +16,46 @@
                x)))))
 
 (define (process-environments port texport)
-	(begin
-		(dis "(" dnl port)
-		(let loop ((to-go        environment-lst)
-							 (prims-sofar '()))
-			(if (null? to-go) 
-					;; null to-go, at end of list
-					#t
+  (begin
+    (dis "(" dnl port)
+    (let loop ((to-go        environment-lst)
+               (prims-sofar '()))
+      (if (null? to-go) 
+          ;; null to-go, at end of list
+          #t
 
-					;; non-null to-go
-					(begin
-						(dis "ENV \"" (car to-go) "\"" dnl '())
-						(dis dnl
-								 "  ;;; ENV \"" (car to-go) "\"" dnl 
-								 dnl
-								 port)
+          ;; non-null to-go
+          (begin
+            (dis "ENV \"" (car to-go) "\"" dnl '())
+            (dis dnl
+                 "  ;;; ENV \"" (car to-go) "\"" dnl 
+                 dnl
+                 port)
 
-						(dis "\\subsection{Environment ``" (car to-go) "''}" dnl texport)
+            (dis "\\subsection{Environment ``" (car to-go) "''}" dnl texport)
 
-						(dis-tablehead texport)
-						(set! lines 0)
-						(let ((done-this-step 
-									 (do-one (car to-go) prims-sofar port texport)))
-							(dis-tablefoot texport)
+            (dis-tablehead texport)
+            (set! lines 0)
+            (let ((done-this-step 
+                   (do-one (car to-go) prims-sofar port texport)))
+              (dis-tablefoot texport)
 
-							(loop (cdr to-go)
-										(append done-this-step prims-sofar))))))
-		(dis dnl 
-				 ")" dnl      
-				 port)))
+              (loop (cdr to-go)
+                    (append done-this-step prims-sofar))))))
+    (dis dnl 
+         ")" dnl      
+         port)))
 
 (define (dis-tablehead texport)
-	(dis "\\vbox{\\offinterlineskip{\\halign{" dnl
-			 "\\strut#\\hfil\\quad&#\\hfil\\quad&#\\hfil\\quad\\cr" dnl
-			 "\\bf Op & \\bf Category & \\bf Description\\cr" dnl
-			 texport)
-)
+  (dis "\\vbox{\\offinterlineskip{\\halign{" dnl
+       "\\strut#\\hfil\\quad&#\\hfil\\quad&#\\hfil\\quad\\cr" dnl
+       "\\bf Op & \\bf Category & \\bf Description\\cr" dnl
+       texport)
+  )
 
 (define (dis-tablefoot texport)
-	(dis "}}}" dnl dnl "\\medskip" dnl dnl texport)
-)
+  (dis "}}}" dnl dnl "\\medskip" dnl dnl texport)
+  )
 
 (define (get-named-env nam)
   (eval (symbol-append nam "-environment")))
@@ -72,52 +72,52 @@
     (let ((todo
            (filter (lambda (p) (not (memq (car p) prims-sofar))) these-prims)))
       (map 
-			 (lambda (p) (begin (dis-screen p '())
-													(dis-file p port)
-													(dis-tex p texport)
-													)					 
-							 )
-			 todo)
+       (lambda (p) (begin (dis-screen p '())
+                          (dis-file p port)
+                          (dis-tex p texport)
+                          )                                        
+               )
+       todo)
       (map car todo))))
 
 (define (dis-screen p port)
-	 (dis "prim: " (car p) dnl port) )
+  (dis "prim: " (car p) dnl port) )
 
 (define lines 0)
 (define max-lines 30)
 
 (define (dis-file p port)
 
-	(dis "(" (car p) 
-			 " \"" (get-cat (car p)) 
-			 "\" \""
-			 (get-desc (car p)) "\""
-			 ")" dnl port)
+  (dis "(" (car p) 
+       " \"" (get-cat (car p)) 
+       "\" \""
+       (get-desc (car p)) "\""
+       ")" dnl port)
 
-	)
+  )
 
 (define (dis-tex p port)
-	(begin
-		(set! lines (+ lines 1))
-		(if (> lines max-lines)
-				(begin
-					(set! lines 0)
-					(dis-tablefoot port)
-					(dis-tablehead port)))
-					
-		(dis "%%" dnl 
-				 "%% " p dnl 
-				 "\\verb|" (car p) "| & " (get-cat (car p)) " & " (get-desc (car p)) "\\cr" dnl
-				 port)))
+  (begin
+    (set! lines (+ lines 1))
+    (if (> lines max-lines)
+        (begin
+          (set! lines 0)
+          (dis-tablefoot port)
+          (dis-tablehead port)))
+    
+    (dis "%%" dnl 
+         "%% " p dnl 
+         "\\verb|" (car p) "| & " (get-cat (car p)) " & " (get-desc (car p)) "\\cr" dnl
+         port)))
 
 
 (define (get-cat prim) 
-	(let ((v (cats 'retrieve (symbol->string prim))))
-		(if (string? v) v "UNDEF")))
+  (let ((v (cats 'retrieve (symbol->string prim))))
+    (if (string? v) v "UNDEF")))
 
 (define (get-desc prim) 
-	(let ((v (descs 'retrieve (symbol->string prim))))
-		(if (string? v) v "UNDEF")))
+  (let ((v (descs 'retrieve (symbol->string prim))))
+    (if (string? v) v "UNDEF")))
 
 (define cats (make-string-hash-table 100))
 
@@ -126,26 +126,26 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define (do-it)
-	(let ((memory-port (open-output-file "memory.dat"))
-				(tex-port (open-output-file "prims.tex")))
-		(process-environments memory-port tex-port)
-		(close-output-port memory-port)
-		(close-output-port tex-port)
-		))
+  (let ((memory-port (open-output-file "memory.dat"))
+        (tex-port (open-output-file "prims.tex")))
+    (process-environments memory-port tex-port)
+    (close-output-port memory-port)
+    (close-output-port tex-port)
+    ))
 
 (define (load-old)
-	(let ((memory-port (open-input-file "memory.dat")))
-		(let ((prims (read memory-port)))
-			(close-input-port memory-port)
+  (let ((memory-port (open-input-file "memory.dat")))
+    (let ((prims (read memory-port)))
+      (close-input-port memory-port)
 
-			(cats 'clear!) 
-			(descs 'clear!)
-			
-			(map (lambda (p) 
-						 (let ((prim (symbol->string (car p))))
-							 (cats 'add-entry! prim (cadr p))
-							 (descs 'add-entry! prim (car (cddr p)))))
+      (cats 'clear!) 
+      (descs 'clear!)
+      
+      (map (lambda (p) 
+             (let ((prim (symbol->string (car p))))
+               (cats 'add-entry! prim (cadr p))
+               (descs 'add-entry! prim (car (cddr p)))))
 
-					 prims
-					 )
-			)))
+           prims
+           )
+      )))
