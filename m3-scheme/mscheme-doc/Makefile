@@ -8,11 +8,14 @@
 
 MAIN=mscheme
 TARGETS=$(MAIN).pdf
-SETINPUTS= TEXINPUTS=`pwd`/../../calarm/doc/common:${TEXINPUTS}; export TEXINPUTS
+SETINPUTS= TEXINPUTS=`pwd`/../common:${TEXINPUTS}; export TEXINPUTS
 LATEX= $(SETINPUTS); latex
 DVIPS= $(SETINPUTS); dvips
 X_ARGS= ./x_args.awk
 OTHERSRCS=*.tex
+
+# please change as needed:
+DERIVED=AMD64_LINUX
 
 GENFIGURES=
 
@@ -22,12 +25,11 @@ PRIMS=prims.tex
 	ps2pdf $*.ps
 
 .dvi.ps: 
-	$(DVIPS) -tletter -f -Pcmz < $*.dvi > $*.ps
+	$(DVIPS) -tletter $*.dvi 
 
 all: pdfs
 
-pdfs: $(TARGETS)
-	scp $(TARGETS) cam:public_html/${MAIN}
+pdfs: run.done $(TARGETS)
 
 nodist: $(TARGETS)
 
@@ -44,12 +46,19 @@ $(MAIN).dvi: $(MAIN).tex $(GENFIGURES) $(OTHERSRCS)
 	fig2dev -L eps $*.fig $*.eps
 
 clean::
-	rm -f $(MAIN).ps $(TARGETS) *.log *.aux *~ *.dvi *.toc $(GENFIGURES) *.lot *.lof 
-	rm -f ArbStrategy.m3 
-	rm -f tradeclient.src
+	rm -f $(MAIN).ps $(TARGETS) *.log *.aux *~ *.dvi *.toc $(GENFIGURES) *.lot *.lof
+	rm -rf $(DERIVED)
+	rm -f src/prims.tex
+	rm -f *.done
 
 copy: $(MAIN).pdf 	
 	scp $(MAIN).pdf cam:public_html
+
+build.done: src/Main.m3
+	cm3 && touch build.done
+
+run.done: build.done
+	cd src ; echo "(load \"rundoc.scm\")" | ../$(DERIVED)/mscheme-doc doc.scm && touch ../run.done
 
 .eps_bz2.eps:
 	bzcat < $*.eps_bz2 > $*.eps

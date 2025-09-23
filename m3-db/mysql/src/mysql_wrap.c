@@ -165,7 +165,7 @@
 #include <stdio.h>
 
 
-#include <mariadb/mysql.h>
+#include <mysql.h>
 
 
 #include <string.h>
