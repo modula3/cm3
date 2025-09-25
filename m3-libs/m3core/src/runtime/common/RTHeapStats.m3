@@ -75,12 +75,6 @@ VAR
 PROCEDURE ReportReachable () =
   CONST MByte = 1024 * 1024;
   BEGIN
-    (* allocate space for the stats *)
-    outerVisitor := NEW (RTHeapMap.Visitor, apply := Visit);
-    innerVisitor := NEW (RTHeapMap.Visitor, apply := InnerVisit);
-    rootVisitor  := NEW (RTHeapMap.Visitor, apply := VisitRoot);
-    visit_stack  := NEW (UNTRACED REF VisitStack);
-
     (* initialize the globals *)
     units.count       := 0;
     unit_roots.count  := 0;
@@ -96,7 +90,11 @@ PROCEDURE ReportReachable () =
     RTOS.LockHeap (); (* freeze the heap *)
     RTThread.SuspendOthers ();
 
-    (* Allocate the map. Heap must be locked. *)
+    (* allocate space for the stats *)
+    outerVisitor := NEW (RTHeapMap.Visitor, apply := Visit);
+    innerVisitor := NEW (RTHeapMap.Visitor, apply := InnerVisit);
+    rootVisitor  := NEW (RTHeapMap.Visitor, apply := VisitRoot);
+    visit_stack  := NEW (UNTRACED REF VisitStack);
     map := NEW (UNTRACED REF ARRAY OF Word.T,
                  (RTHeapRep.p1 - RTHeapRep.p0) * MapWordsPerHeapPage);
 
