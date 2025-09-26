@@ -202,7 +202,8 @@ PROCEDURE InnerVisit (<*UNUSED*> self: RTHeapMap.Visitor;  loc: ADDRESS) =
     IF (heap_min <= ref) AND (ref < heap_max)
       AND (Word.And (LOOPHOLE(ref, INTEGER), Mask) = 0) THEN
       typecode := RT0.GetTypecode (header);
-      IF (0 < typecode) AND (typecode < n_types) THEN
+      IF (0 < typecode) AND (typecode < n_types) AND
+         (typecode # RT0.TextLitTypecode) THEN
         cell := (ref - heap_min) DIV MapGrain;
         word := cell DIV BITSIZE (Word.T);
         bit  := cell - word * BITSIZE (Word.T);
