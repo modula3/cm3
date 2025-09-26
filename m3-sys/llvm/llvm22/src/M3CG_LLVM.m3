@@ -1108,31 +1108,38 @@ PROCEDURE ITEBlock (self: ITEObj; storeVal: LLVM.ValueRef; endBB: BOOLEAN):
    we built against however.
 *)
 PROCEDURE EmbedVersion () =
-(*
   CONST
     ident = "llvm.ident";
-*)
   VAR
     cm3Ver, llvmVer, versions: TEXT;
-    lVal : LLVM.ValueRef;
-    verMD : MetadataRef;
+    lVal           : LLVM.ValueRef;
+    verMD,identMD  : MetadataRef;
+    paramsArr      : REF ARRAY OF MetadataRef;
+    paramsMetadata : LLVMTypes.ArrayRefOfMetadataRef;
   BEGIN
     cm3Ver := Version.CM3VER;
     llvmVer := Version.LLVMVER;
     IF MxConfig.Get("M3_USE_STACK_WALKER") # NIL THEN
       UseStackWalker := TRUE;
     END;
+
+    NewArrayRefOfMetadataRef(
+      1, (*OUT*) paramsArr, (*OUT*) paramsMetadata);
     versions := "versions- cm3: " & cm3Ver & " llvm: " & llvmVer;
 
     verMD := LLVM.MDStringInContext2(globContext, versions,
                                      Text.Length(versions));
-    lVal := LLVM.MetadataAsValue(globContext, verMD);
 (*
   bug in llvm cannot add strings as metadata in asserts build
 fix is add || isa<MDString>(MD) to line 1093 of Core.cpp after ConstantAsMetadata thing. 
+    lVal := LLVM.MetadataAsValue(globContext, verMD);
     LLVM.AddNamedMetadataOperand(modRef, ident, lVal);
+however the workaround is this
 *)
-
+    paramsArr[0] := verMD; 
+    identMD := LLVM.MDNodeInContext2(globContext, paramsMetadata.Data, 1);
+    lVal := LLVM.MetadataAsValue(globContext, identMD);
+    LLVM.AddNamedMetadataOperand(modRef, ident, lVal);
   END EmbedVersion;
 
 PROCEDURE FloatType (t: RType): LLVM.TypeRef =
