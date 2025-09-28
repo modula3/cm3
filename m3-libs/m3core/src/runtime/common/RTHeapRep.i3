@@ -60,8 +60,9 @@ FROM RT0 IMPORT Typecode;
 *)
 
 CONST
-  BytesPerPage    = 65536;
-  LogBytesPerPage = 16;
+  LogBytesPerPage = 18;
+  (*16 -> 65536, 18 -> 262144, 20 -> 1048576*)
+  BytesPerPage    = Word.LeftShift(1, LogBytesPerPage);
   AdrPerPage      = BytesPerPage;
   LogAdrPerPage   = LogBytesPerPage;
 
