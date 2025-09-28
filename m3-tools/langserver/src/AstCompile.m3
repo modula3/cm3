@@ -52,6 +52,7 @@ REVEAL
     compile := Compile;
     fileName := FileName;
     path := Path;
+    getTargetDir := TargetDir;
     getUnit := GetUnit;
     work := Work;
   END;
@@ -128,6 +129,12 @@ PROCEDURE Path(self : WorkerClosure; uri : TEXT) : TEXT =
     RETURN self.prefix;
   END Path;
 
+PROCEDURE TargetDir(self : WorkerClosure; uri : TEXT) : TEXT =
+  BEGIN
+    self.getDirs(uri);
+    RETURN self.targetDir;
+  END TargetDir;
+
 PROCEDURE GetUnit(self : WorkerClosure; uri : TEXT) : TEXT =
   BEGIN
     self.getDirs(uri);
@@ -152,11 +159,11 @@ PROCEDURE Setup(self : WorkerClosure) =
     IF self.compType = CompType.Module OR
        self.compType = CompType.GenMod THEN
       M3Args.SetStringList(self.feTool, M3CFETool.Modules_Arg, unitList);
-      Debug.Write("Compiling a module\n");
+      Debug.Write("\nCompiling a module\n");
     ELSIF self.compType = CompType.Interface OR
           self.compType = CompType.GenInt THEN
       M3Args.SetStringList(self.feTool, M3CFETool.Interfaces_Arg, unitList);
-      Debug.Write("Compiling an interface\n");
+      Debug.Write("\nCompiling an interface\n");
     END;
     (* how to handle generics ? can only compile the instantiation *)
 
@@ -233,9 +240,10 @@ PROCEDURE GetDirs(self : WorkerClosure; name : TEXT) =
     file := Pathname.Last(self.uri);
     self.unit := Pathname.Base(file);
 
-    Debug.Write("module:" & file & "\n");
-    Debug.Write("unit:" & self.unit & "\n");
-    Debug.Write("path:" & self.prefix & "\n");
+    Debug.Write("\nGet Directories:\n");
+    Debug.Write("Module: " & file & "\n");
+    Debug.Write("Unit: " & self.unit & "\n");
+    Debug.Write("Path: " & self.prefix & "\n");
 
     posSrc := self.prefix;
     REPEAT
@@ -248,11 +256,11 @@ PROCEDURE GetDirs(self : WorkerClosure; name : TEXT) =
     (* go up dir tree until you find src then add ../target
        and all subdirs of src *)
     IF foundSrc THEN
-      Debug.Write("src dir:" & srcDir & "\n");
+      Debug.Write("Src Dir: " & srcDir & "\n");
       base := Pathname.Prefix(srcDir);
 
       self.targetDir := Pathname.Join(base,TargetDir);
-      Debug.Write("target dir:" & self.targetDir & "\n");
+      Debug.Write("Target Dir: " & self.targetDir & "\n");
 
       (* add srcDir and target_dir now recurse to find sub dirs *)
        self.dirs.addhi(self.targetDir);

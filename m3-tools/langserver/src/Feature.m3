@@ -215,7 +215,9 @@ PROCEDURE Node (cl: WalkClosure; n: AST.NODE; vm: ASTWalk.VisitMode) =
                 cl.c.defLoc := tt.lx_srcpos;
                 type := AstToType.ProcessM3Type(cl.c.h, tt.sm_type_spec);
                 typeTxt := Type.ToText(type,byName := TRUE);
-                cl.c.typeDef := UnitFile(tt.sm_type_spec.tmp_unit_id.sm_spec);
+                IF tt.sm_type_spec.tmp_unit_id # NIL THEN
+                  cl.c.typeDef := UnitFile(tt.sm_type_spec.tmp_unit_id.sm_spec);
+                END;
                 cl.c.typeLoc :=  tt.sm_type_spec.lx_srcpos;
               | M3AST_AS.UNIT_ID(tt) =>
                 cl.c.symDef := UnitFile(tt.sm_spec);
