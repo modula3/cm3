@@ -1296,6 +1296,7 @@ class UpgradeCommand(ConciergeCommand):
         if not self.install("bin/cm3.cfg").is_file():
             self._install_config()
 
+        os.environ["INSTALL_CM3_IN_BIN"] = "yes"
         # Build GCC first if we will need it.
         if self.use_gcc_backend() and not self.install("bin/cm3cg").is_file():
             self.buildship(["m3cc"])
