@@ -43,9 +43,12 @@
 #include "winsock2.h"
 #include "ws2tcpip.h"
 #endif
+#ifndef M3_BOOL_H_INCLUDED
+#define M3_BOOL_H_INCLUDED
 typedef int BOOL;
 #define TRUE 1
 #define FALSE 0
+#endif
 
 /* __DARWIN_UNIX03 defaults to 1 on older and newer headers,
  * but older headers still have context "ss" instead of "__ss"
@@ -695,7 +698,10 @@ typedef int/*not socklen_t*/ m3c_socklen_t;
 #endif
 
 #define Usocket__socklen_t Usocket__socklen_t /* inhibit m3c type */
+#ifndef M3_USOCKET__SOCKLEN_T_H_INCLUDED
+#define M3_USOCKET__SOCKLEN_T_H_INCLUDED
 typedef m3_socklen_t Usocket__socklen_t;
+#endif
 
 typedef struct {
 /* verified to exactly match struct linger in UnixC.c, except for Cygwin */
@@ -718,7 +724,10 @@ typedef struct {
 #define Usocket__socklen_t                     Usocket__socklen_t                     /* inhibit m3c type */
 typedef       M3SockAddrUnionAll*              Usocket__struct_sockaddr_in_star;
 typedef const M3SockAddrUnionAll*              Usocket__const_struct_sockaddr_in_star;
+#ifndef M3_USOCKET__SOCKLEN_T_H_INCLUDED
+#define M3_USOCKET__SOCKLEN_T_H_INCLUDED
 typedef m3_socklen_t                           Usocket__socklen_t;
+#endif
 typedef m3_socklen_t*                          Usocket__socklen_t_star;
 
 int __cdecl Usocket__listen(int s, int backlog);
