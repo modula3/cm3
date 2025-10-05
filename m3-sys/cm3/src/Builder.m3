@@ -1056,6 +1056,7 @@ PROCEDURE ForceAllPromisesInParallel(promises : QPromiseSeq.T;
 
 PROCEDURE CompileEverything (s: State;  schedule: SourceList) =
   VAR u: M3Unit.T;
+      backend : TEXT;
   BEGIN
     s.link_base := Mx.NewSet ();
     u := M3Unit.Get (s.units, M3ID.Add (Mx.BuiltinUnitName), UK.Unknown);
@@ -1078,8 +1079,19 @@ PROCEDURE CompileEverything (s: State;  schedule: SourceList) =
     END;
 
     IF s.parallelback > 1 THEN
-      Msg.Explain ("****  PARALLEL BACK-END BUILD, M3_PARALLEL_BACK = ",
-                    Fmt.Int(s.parallelback))
+      IF s.m3backend_mode IN Target.BackendStAloneLlvmSet THEN
+        backend := "(LLVM)";
+      ELSIF s.m3backend_mode IN Target.BackendIntegratedSet THEN
+        backend := "(Integrated)";
+      ELSIF s.m3backend_mode IN Target.BackendM3ccSet THEN
+        backend := "(GCC)";
+      ELSIF s.m3backend_mode IN Target.BackendCSet THEN
+        backend := "(C)";
+      ELSE
+        backend := "(Unknown)";
+      END;
+      Msg.Explain ("***  PARALLEL BACK-END " & backend &
+                   " BUILD, M3_PARALLEL_BACK = ", Fmt.Int(s.parallelback))
     END;
 
     ForceAllPromisesInParallel(s.machine.promises,s.parallelback);
