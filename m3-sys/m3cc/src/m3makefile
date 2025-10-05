@@ -503,7 +503,8 @@ end
 ConfigureGNUMake()
 write("GNU_MAKE is " & GNU_MAKE & CR)
 
-local MAKE_PARALLEL = " -j4 "
+%to get rid of most of the annoying warnings pass CFLAGS=-w to make
+local MAKE_PARALLEL = " CFLAGS=-w -j4 "
 %local MAKE_PARALLEL = ""
 
 env = env & " MAKE=\"" & GNU_MAKE & MAKE_PARALLEL & " \" "
