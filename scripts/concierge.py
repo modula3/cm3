@@ -610,6 +610,12 @@ class Cm3:
     def use_gcc_backend(self):
         return self.backend() == "gcc"
 
+    def get_backend(self):
+        return self._backend
+
+    def set_backend(self, be):
+        self._backend = be
+
 
 class WithCm3:
     "Provides access to cm3 build context"
@@ -635,6 +641,8 @@ class WithCm3:
             "source",
             "target",
             "use_c_backend",
+            "get_backend",
+            "set_backend",
             "use_gcc_backend"
         ]
         if method_name not in forwards:
@@ -852,7 +860,7 @@ class PackageAction(WithCm3):
         "Execute a cm3 child process"
         cwd  = self.source(package_path)
         args = [str(self.exe())] + args + self.defines() + self.flags()
-        print("cd", cwd)
+        print("\ncd", cwd, "\n")
         print(*args)
 
         if self.no_action():
@@ -888,6 +896,9 @@ class PackageAction(WithCm3):
         # to be specified.
         if self.use_c_backend():
             defines.append(f"-DM3_BACKEND_MODE=C")
+
+        if self.use_gcc_backend():
+            defines.append(f"-DM3_BACKEND_MODE=ExternalAssembly")
 
         # Include any defines given on the command-line.
         return defines + self.cm3().defines()
@@ -1218,13 +1229,13 @@ class ConciergeCommand(WithPackageActions):
     def cp(self, src, dst):
         "Copy a file"
         if src.is_file():
-            print("cp", "-P", src, dst)
+            print("\ncp", "-P", src, dst, "\n")
             if not self.no_action():
                 shutil.copy(src, dst)
 
     def mkdir(self, dir):
         "Create a directory"
-        print("mkdir", "-p", dir)
+        print("\nmkdir", "-p", dir, "\n")
         if not self.no_action():
             dir.mkdir(parents=True, exist_ok=True)
 
@@ -1290,27 +1301,107 @@ class UpgradeCommand(ConciergeCommand):
     "Upgrade compiler and core system"
 
     def execute(self):
-        base_packages = ["+front", "+m3bundle", "-m3cc"]
+        #reset the config files - we are doing an upgrade, so need a clean slate
+        self._install_config()
 
-        # Guarantee a basic config if we're on a clean system.
-        if not self.install("bin/cm3.cfg").is_file():
-            self._install_config()
+        if self.use_gcc_backend():
+            self._doGcc()
+        else:
+            self._doCandIntegrated()
 
-        # Build GCC first if we will need it.
-        if self.use_gcc_backend() and not self.install("bin/cm3cg").is_file():
+    def _doGcc(self):
+        "Do the gcc backend"
+
+        if not self.install("bin/cm3cg").is_file():
+            #assume CI/CD or corruption and build m3cc from scratch
+            #and front using C backend
+            base_packages = ["+front", "+m3bundle", "-m3cc"]
+
+            #after setting the backend we have to ensure the
+            #cm3.cfg installed config file has no M3_BACKEND_MODE
+            #setting as it overrides the one we place on the command line.
+
+            self.set_backend("c")
+            self._resetCfg()
+
+            self.realclean(base_packages)
+            self.buildship(base_packages)
+            self._ship_front()
+
+            #set backend back to gcc
+            self.set_backend("gcc")
+            self._resetCfg()
+
+            #build gcc backend and ship
+            self.realclean(["m3cc"])
             self.buildship(["m3cc"])
             self._ship_back()
 
-        # Then ensure we don't use an outdated GCC.
-        self._clean()
+            #build compiler with gcc backend
+            self.realclean(base_packages)
+            self.buildship(base_packages)
+            self._ship_front()
 
-        # Build the compiler using the installed version of the system.
-        self._run_pass(base_packages)
+            #and once more
+            self.realclean(base_packages)
+            self.buildship(base_packages)
+            self._ship_front()
+        else:
+            #build using installed gcc backend
+            base_packages = ["+front", "+m3bundle", "-m3cc", "-m3core", "-libm3"]
+            runtime_packages = ["+m3core", "+libm3"]
 
-        # Use the new compiler to build the core system.  There is no
-        # need to rebuild GCC in the second pass.
-        self._install_config()
-        self._run_pass(base_packages, build_gcc = False)
+            #we follow the design of upgrade.sh and not build the runtime first
+            #since the runtime could have been changed wrt to front end
+            #but this has problems when the runtime was previously built with
+            #the C backend. in this case one option is to manually
+            #compile and ship the runtime using the gcc backend
+            self.realclean(base_packages)
+            self.buildship(base_packages)
+            self._ship_front()
+
+            #force build of cm3cg
+            self.realclean(["m3cc"])
+            self.buildship(["m3cc"])
+            self._ship_back()
+
+            #second pass build runtime and base
+            self.realclean(runtime_packages)
+            self.buildship(runtime_packages)
+            self.realclean(base_packages)
+            self.buildship(base_packages)
+            self._ship_front()
+
+    def _doCandIntegrated(self):
+        "Do the C and integrated backends"
+
+        #assume front contains m3core and libm3 as first packages
+        base_packages = ["+front", "+m3bundle", "-m3cc"]
+
+        #first build
+        self.realclean(base_packages)
+        self.buildship(base_packages)
+        self._ship_front()
+
+        #second build
+        self.realclean(base_packages)
+        self.buildship(base_packages)
+        self._ship_front()
+
+    def _resetCfg(self):
+        "reset the cm3.cfg file"
+        backend = ''
+        cross_compile = ''
+
+        self.install("bin/cm3.cfg").write_text(
+            f"""{backend}if not defined("SL") SL = "/" end
+if not defined("HOST") HOST = "{self.config()}" end
+if not defined("TARGET") TARGET = HOST end
+INSTALL_ROOT = (path() & SL & "..")
+include(path() & SL & "config" & SL & TARGET)
+{cross_compile}"""
+        )
+
 
     def _clean(self):
         "Delete lingering cm3cg so we can't accidentally use an old version"
@@ -1389,7 +1480,11 @@ class UpgradeCommand(ConciergeCommand):
 
         backend = ''
         if self.use_c_backend():
-            backend = 'readonly M3_BACKEND_MODE = "C"\n'
+            #backend = 'readonly M3_BACKEND_MODE = "C"\n'
+            backend = ' M3_BACKEND_MODE = "C"\n'
+
+        if self.use_gcc_backend():
+            backend = ' M3_BACKEND_MODE = "ExternalAssembly"\n'
 
         cross_compile = ''
         if self.config() == "I386_LINUX":
