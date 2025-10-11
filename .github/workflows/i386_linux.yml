@@ -10,11 +10,11 @@ on:
         required: false
         type: string
       release:
-        default: https://github.com/modula3/cm3/releases/download/d5.11.4
+        default: https://github.com/modula3/cm3/releases/download/d5.11.9
         required: false
         type: string
       bootstrap:
-        default: cm3-boot-I386_LINUX-d5.11.4.tar.xz
+        default: cm3-boot-AMD64_LINUX-None.tar.xz
         required: false
         type: string
 
@@ -57,7 +57,7 @@ jobs:
         cmake --install ../build
         echo "${CM3_INSTALL}/bin" >> $GITHUB_PATH
 
-    - name: Build all the things
+    - name: Build everything
       run: |
         scripts/concierge.py full-upgrade --backend "${{ matrix.backend }}" -DM3CC_TARGET=I386_LINUX headless -m3gdb
 
