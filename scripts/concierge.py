@@ -1392,6 +1392,8 @@ class UpgradeCommand(ConciergeCommand):
         "reset the cm3.cfg file"
         backend = ''
         cross_compile = ''
+        if self.config() == "I386_LINUX":
+            cross_compile = 'SYSTEM_CC = SYSTEM_CC & " -I/usr/i686-linux-gnu/include"\n'
 
         self.install("bin/cm3.cfg").write_text(
             f"""{backend}if not defined("SL") SL = "/" end
