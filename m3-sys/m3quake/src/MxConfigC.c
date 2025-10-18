@@ -252,6 +252,10 @@ MxConfigC__HOST(void)
         amd64 = TRUE;
         uname_machine = "AMD64";
     }
+    else if (arm) 
+    {
+        uname_machine = "ARM";
+    }
     else if (arm64) // aarch64 => arm64
     {
         uname_machine = "ARM64";
