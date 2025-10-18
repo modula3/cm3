@@ -2,7 +2,7 @@
 (* All rights reserved.                               *)
 (* See the file COPYRIGHT for a full description.     *)
  
-MODULE Main;
+MODULE Main32 EXPORTS Main;
 IMPORT Test;
 IMPORT Word;
 
@@ -18,6 +18,6 @@ BEGIN
     w1 := FIRST(INTEGER);
     w2 := 15;
     w1 := Word.Divide(w1, w2);
-    Test.checkI(w1, 614891469123651720);
+    Test.checkI(w1, 143165576);
     Test.done ();
-END Main.
+END Main32.
