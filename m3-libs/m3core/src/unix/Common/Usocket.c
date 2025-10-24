@@ -265,6 +265,7 @@ SockAddrNativeToM3(const NativeSockAddrUnionAll* native, M3SockAddrUnionAll* m3)
         return SockAddrNativeToM3Un(&native->un, &m3->un);
 #endif
     }
+    return -1;
 }
 
 #define TYPE_IS_SIGNED(t) (((t)~(t)0) < (t)0)
