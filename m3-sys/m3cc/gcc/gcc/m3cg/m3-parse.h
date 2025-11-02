@@ -1,5 +1,8 @@
 #include <limits.h>
 
+#define LONG_DOUBLE_SIZE 64
+//#define LONG_DOUBLE_SIZE 128
+
 #if UCHAR_MAX == 0x0FFUL
 typedef   signed char        INT8;
 typedef unsigned char       UINT8;
