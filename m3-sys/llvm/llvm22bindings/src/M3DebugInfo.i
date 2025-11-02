@@ -88,6 +88,7 @@ DoEnum(LLVMDWARFSourceLanguage);
 DoEnum(LLVMDIFlags);
 DoEnum(LLVMDWARFEmissionKind);
 DoEnum(LLVMDWARFMacinfoRecordType);
+DoEnum(LLVMChecksumKind);
 
 // ***  basic typemaps ***
 //size_t

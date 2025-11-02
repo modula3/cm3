@@ -3350,8 +3350,13 @@ PROCEDURE ConvertFloat (t: RType; READONLY f: Target.Float): LLVM.ValueRef =
         result := LLVM.ConstReal(realTy, FLOAT(f.fraction, LONGREAL));
       ELSE
         (* extended is 128 bits *)
-        (* fix this.  Put ConstQuad in llvm c library
-        result := LLVM.ConstQuad(globContext,ADR(f.fraction));
+        (* fix this.  Put ConstFP128 in llvm c library
+        result := LLVM.ConstFP128(globContext,ADR(f.fraction));
+        latest can take diff types just 128 ? does not need context
+        it checks which type is passed in and produces an approp value
+
+        result := LLVM.ConstFP128(realTy, ADR(f.fraction));
+
           or in meantime use the string conversion InitExt.
         *)
         result := InitExt(realTy, f);
@@ -3782,7 +3787,7 @@ PROCEDURE DivMod (self: U; t: IType; isDiv: BOOLEAN): LLVM.ValueRef =
     modRes := NARROW(Get(self.exprStack, 0), LvExpr).lVal;
     IF isDiv THEN
       (* adjust div for neg operands *)
-      fixup := LLVM.ConstInt(LLvmType(t), VAL(-1, LONGINT), TRUE);
+      fixup := LLVM.ConstInt(LLvmType(t), -1L, TRUE);
     ELSE
       (* same for mod *)
       fixup := den;
@@ -5813,17 +5818,19 @@ PROCEDURE DebugInit (self: U) =
                                      FilenameLen := Text.Length(self.debFile),
                                      Directory := self.debDir,
                                      DirectoryLen := Text.Length(self.debDir));
-(*
-    self.fileRef := M3DIB.CreateFileWithCheckSum(self.debugRef,
-                                     Filename := self.debFile,
-                                     FilenameLen := Text.Length(self.debFile),
-                                     Directory := self.debDir,
-                                     DirectoryLen := Text.Length(self.debDir),
-                                     ChecksumKind := M3DIB.CSK_MD5,
-                                     CheckSum := chkSum,
-                                     CheckSumLen := Text.Length(chkSum),
-                                     Source := NIL,
-                                     SourceLen := 0);
+
+(* fixme for dwarf v 5 add checksum
+
+    self.fileRef := M3DIB.CreateFileWithChecksum(self.debugRef,
+                          Filename := self.debFile,
+                          FilenameLen := Text.Length(self.debFile),
+                          Directory := self.debDir,
+                          DirectoryLen := Text.Length(self.debDir),
+                          ChecksumKind := M3DIB.LLVMChecksumKind.CSK_MD5,
+                          Checksum := chkSum,
+                          ChecksumLen := Text.Length(chkSum),
+                          Source := NIL,
+                          SourceLen := 0);
 *)
 
     self.cuRef :=
