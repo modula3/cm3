@@ -11,19 +11,41 @@
 
 INTERFACE CConvert;
 
-FROM Ctypes IMPORT double, int, int_star, char_star, char_star_star, const_char_star;
+FROM Ctypes IMPORT float, double, long_double, int, int_star,
+                   char_star, char_star_star, const_char_star;
 
-<* EXTERNAL m3_strtod *>
-PROCEDURE strtod (str: const_char_star; ptr: char_star_star): double;
 (* Returns a nearest machine number to the input decimal string
    (or sets errno to ERANGE).  With IEEE arithmetic, ties are broken
    by the IEEE round-even rule.  Otherwise ties are broken by biased
    rounding (add half and chop).  *)
 
+<* EXTERNAL m3_strtof *>
+PROCEDURE strtof (str: const_char_star; ptr: char_star_star): float;
+
+<* EXTERNAL m3_strtod *>
+PROCEDURE strtod (str: const_char_star; ptr: char_star_star): double;
+
+<* EXTERNAL m3_strtoq *>
+PROCEDURE strtoq (str: const_char_star;
+                  ptr: char_star_star;
+                  rounding : int;
+                  VAR e : long_double) : int;
+
+<* EXTERNAL m3_ftoa *>
+PROCEDURE ftoa (f: float;  mode: int;  ndigits: int;  decpt: int_star;
+                sign: int_star;  rve: char_star_star): char_star;
+(* Converts a C float to an ASCII string. *)
+
 <* EXTERNAL m3_dtoa *>
 PROCEDURE dtoa (d: double;  mode: int;  ndigits: int;  decpt: int_star;
                 sign: int_star;  rve: char_star_star): char_star;
 (* Converts a C double to an ASCII string. *)
+
+<* EXTERNAL m3_qtoa *>
+PROCEDURE qtoa (q: long_double; mode: int; ndigits: int;
+                decpt: int_star; sign: int_star;
+                rve: char_star_star): char_star;
+(* Converts a C long_double ( __float128 ) to an ASCII string. *)
 
 (* Arguments ndigits, decpt, sign are similar to those
    of ecvt and fcvt; trailing zeros are suppressed from

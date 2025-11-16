@@ -10,7 +10,13 @@
 UNSAFE MODULE Convert;
 
 IMPORT Word, Long, Ctypes;
-FROM CConvert IMPORT strtod, dtoa, freedtoa;
+FROM CConvert IMPORT ftoa, dtoa, qtoa, strtod, strtoq, freedtoa;
+
+TYPE RoundMode = {	(* FPI.rounding values: same as FLT_ROUNDS *)
+	FPI_Round_zero,
+	FPI_Round_near,
+	FPI_Round_up,
+	FPI_Round_down};
 
 VAR
   Digits := ARRAY [0..15] OF CHAR {
@@ -230,7 +236,8 @@ PROCEDURE FromLongUnsigned (
     ELSE
       (* convert the bulk of the digits *)
       WHILE (value # 0L) DO
-        result [nDigits] := Digits [VAL(Long.Mod (value, VAL(base, LONGINT)), INTEGER)];
+        result [nDigits] := Digits [VAL(Long.Mod (value,
+                                    VAL(base, LONGINT)), INTEGER)];
         value := Long.Divide (value, VAL(base, LONGINT));
         INC (nDigits);
       END;
@@ -255,13 +262,185 @@ PROCEDURE FromLongUnsigned (
     RETURN j;
   END FromLongUnsigned;
 
+PROCEDURE GetPrecisionMode
+  (style: Style; p: Ctypes.int; VAR mode, precision: Ctypes.int; ) =
+  BEGIN
+    IF style = Style.Flo OR style = Style.AltFlo THEN
+      mode := 3;
+      precision := p;
+    ELSIF style = Style.Sci OR style = Style.AltSci OR style = Style.Mix THEN
+      mode := 2;
+      precision := p + 1;
+    END;
+  END GetPrecisionMode;
+
+PROCEDURE Format (VAR buf         : Buffer;
+                      p           : INTEGER            := 6;
+                      style                            := Style.Mix;
+                      decpt, sign : INTEGER;
+                      start, end  : Ctypes.char_star;
+                      exponentChar: CHAR                             ):
+  INTEGER RAISES {Failed} =
+  VAR
+    len, consumed                             := 0;
+    digits                : INTEGER;
+    d                     : REF ARRAY OF CHAR;
+    Af, Bf, Cf, Df, Ef, Xf: INTEGER           := 0;
+    Pf                                        := TRUE;
+    As, Bs, Cs, Ds, Es, Xs: INTEGER           := 0;
+    Ps                                        := TRUE;
+    A, B, C, D, E, X      : INTEGER           := 0;
+    P                                         := TRUE;
+  BEGIN
+    (* The string will consist of: - the first A digits from the conversion
+       - B '0's - '.' if P is TRUE - C '0's - the next D digits from the
+       conversion - E '0's - if X # LAST (INTEGER), " <expchar>
+       <exponent>" *)
+
+    Xf := LAST(INTEGER);
+    Xs := LAST(INTEGER);
+
+    digits := (end - start) DIV ADRSIZE(CHAR);
+
+    d := NEW(REF ARRAY OF CHAR, digits);
+    FOR i := 0 TO digits - 1 DO
+      d[i] := LOOPHOLE(start + i * ADRSIZE(CHAR), UNTRACED REF CHAR)^;
+    END;
+    freedtoa(start);
+
+    IF decpt = -32768 THEN       (* Special value returned by dtoa *)
+      IF sign # 0 THEN buf[0] := '-'; len := 1; ELSE len := 0; END;
+      SUBARRAY(buf, len, digits) := d^;
+      RETURN (len + digits);
+    END;
+
+    IF style = Style.Flo OR style = Style.AltFlo OR style = Style.Mix THEN
+      IF decpt <= 0 THEN
+        Af := 0;
+        Bf := 1;
+        Cf := MIN(-decpt, p);
+        Df := MIN(digits, p - Cf);
+        Ef := MAX(0, p - (Cf + Df));
+      ELSIF decpt <= digits THEN
+        Af := decpt;
+        Bf := 0;
+        Cf := 0;
+        Df := MIN(digits - decpt, p);
+        Ef := MAX(0, p - Df);
+      ELSE
+        Af := digits;
+        Bf := decpt - digits;
+        Cf := p;
+        Df := 0;
+        Ef := 0;
+      END;
+      IF style = Style.AltFlo OR style = Style.Mix THEN
+        Ef := 0;
+        WHILE Df > 0 AND d[Af + Df - 1] = '0' DO DEC(Df); END;
+        IF Df = 0 THEN Cf := 0; END;
+      END;
+    END;
+
+    IF style = Style.Sci OR style = Style.AltSci OR style = Style.Mix THEN
+      As := MIN(1, digits);
+      Bs := 0;
+      Cs := 0;
+      Ds := MIN(digits - 1, p);
+      Es := MAX(0, p - digits + 1);
+      Xs := decpt - 1;
+      IF style = Style.AltSci OR style = Style.Mix THEN
+        Es := 0;
+        WHILE Ds > 0 AND d[As + Ds - 1] = '0' DO DEC(Ds); END;
+        IF Ds = 0 THEN Cs := 0; END;
+      END;
+    END;
+
+    IF style = Style.Mix THEN
+      VAR
+        floLength := Af + Bf + 1 + Cf + Df + Ef;
+        sciLength := As + Bs + 1 + Cs + Ds + Es;
+      BEGIN
+        IF Xs # LAST(INTEGER) THEN
+          IF Xs < 0 THEN
+            INC(sciLength, 3);
+            VAR x := -X;
+            BEGIN
+              WHILE x >= 10 DO INC(sciLength); x := x DIV 10; END;
+            END;
+          ELSE
+            INC(sciLength, 2);
+            VAR x := X;
+            BEGIN
+              WHILE x >= 10 DO INC(sciLength); x := x DIV 10; END;
+            END;
+          END;
+        END;
+        IF floLength > sciLength THEN
+          style := Style.AltSci;
+        ELSE
+          style := Style.AltFlo;
+          IF Df = 0 AND Cf = 0 THEN Pf := FALSE; END;
+        END;
+      END;
+    END;
+
+    IF style = Style.Flo OR style = Style.AltFlo THEN
+      A := Af;
+      B := Bf;
+      C := Cf;
+      D := Df;
+      E := Ef;
+      X := Xf;
+      P := Pf;
+    ELSE
+      A := As;
+      B := Bs;
+      C := Cs;
+      D := Ds;
+      E := Es;
+      X := Xs;
+      P := Ps;
+    END;
+
+    (* Set the sign *)
+    IF sign # 0 THEN buf[len] := '-'; INC(len); END;
+
+    consumed := 0;
+    FOR i := 1 TO A DO
+      buf[len] := d[consumed];
+      INC(len);
+      INC(consumed);
+    END;
+    FOR i := 1 TO B DO buf[len] := '0'; INC(len); END;
+    IF P THEN buf[len] := '.'; INC(len); END;
+    FOR i := 1 TO C DO buf[len] := '0'; INC(len); END;
+    FOR i := 1 TO D DO
+      buf[len] := d[consumed];
+      INC(len);
+      INC(consumed);
+    END;
+    FOR i := 1 TO E DO buf[len] := '0'; INC(len); END;
+    IF X # LAST(INTEGER) THEN
+      buf[len] := exponentChar;
+      INC(len);
+      INC(len, FromInt(SUBARRAY(buf, len, NUMBER(buf) - len), X));
+    END;
+
+    RETURN (len);
+  END Format;
+
 PROCEDURE FromFloat (
     VAR buf : Buffer;
         v   : REAL;
         p   : INTEGER := 6;
         style := Style.Mix): INTEGER RAISES {Failed} =
-BEGIN
-  RETURN InternalFromLongFloat (buf, FLOAT (v, LONGREAL), p, style, 'E');
+  VAR
+    start, end                  : Ctypes.char_star;
+    sign, decpt, mode, precision: Ctypes.int;
+  BEGIN
+    GetPrecisionMode(style, p, mode, precision);
+    start := ftoa(v, mode, precision, ADR(decpt), ADR(sign), ADR(end));
+    RETURN Format(buf, p, style, decpt, sign, start, end, 'E');
 END FromFloat;
 
 PROCEDURE FromLongFloat (
@@ -269,184 +448,31 @@ PROCEDURE FromLongFloat (
         v   : LONGREAL;
         p   : INTEGER := 6;
         style := Style.Mix): INTEGER RAISES {Failed} =
-BEGIN
-  RETURN InternalFromLongFloat (buf, v, p, style, 'D');
+  VAR
+    start, end                  : Ctypes.char_star;
+    sign, decpt, mode, precision: Ctypes.int;
+  BEGIN
+    GetPrecisionMode(style, p, mode, precision);
+    start := dtoa(v, mode, precision, ADR(decpt), ADR(sign), ADR(end));
+    RETURN Format(buf, p, style, decpt, sign, start, end, 'D');
 END FromLongFloat;
 
-PROCEDURE FromExtended (
-    VAR buf : Buffer;
-        v   : EXTENDED;
-        p   : INTEGER := 6;
-        style := Style.Mix): INTEGER RAISES {Failed} =
-BEGIN
-  RETURN InternalFromLongFloat (buf, FLOAT (v, LONGREAL), p, style, 'X');
-END FromExtended;
-
-PROCEDURE InternalFromLongFloat (
-    VAR buf : Buffer;
-        v   : LONGREAL;
-        p   : INTEGER := 6;
-        style := Style.Mix;
-        exponentChar : CHAR): INTEGER RAISES {Failed} =
-VAR
-  len, consumed := 0;
-  digits: INTEGER;
-  sign: Ctypes.int;
-
-  start, end: Ctypes.char_star;
-  mode_i, p_i: Ctypes.int;
-  decpt  : Ctypes.int;
-
-  ds, df, d: REF ARRAY OF CHAR;
-  Af, Bf, Cf, Df, Ef, Xf: INTEGER := 0;   Pf := TRUE;
-  As, Bs, Cs, Ds, Es, Xs: INTEGER := 0;   Ps := TRUE;
-  A,  B,  C,  D,  E,  X : INTEGER := 0;   P  := TRUE;
-
-BEGIN
-  (* The string will consist of:
-      - the first A digits from the conversion
-      - B '0's
-      - '.' if P is TRUE
-      - C '0's
-      - the next D digits from the conversion
-      - E '0's
-      - if X # LAST (INTEGER), " <expchar> <exponent>" *)
-
-  Xf := LAST (INTEGER);
-  Xs := LAST (INTEGER);
-
-  IF style = Style.Flo OR style = Style.AltFlo OR style = Style.Mix THEN
-    mode_i := 3;
-    p_i := p;
-    start := dtoa (v, mode_i, p_i, ADR(decpt), ADR(sign), ADR (end));
-    digits := (end - start) DIV ADRSIZE (CHAR);
-
-    df := NEW (REF ARRAY OF CHAR, digits);
-    FOR i := 0 TO digits - 1 DO
-      df [i] := LOOPHOLE(start + i * ADRSIZE (CHAR), UNTRACED REF CHAR)^;
-    END;
-    freedtoa (start);
-
-    IF decpt = 9999 THEN (* Special value returned by dtoa *)
-      IF sign # 0 THEN
-        buf [0] := '-';
-        len := 1;
-      ELSE
-        len := 0; END;
-      SUBARRAY (buf, len, digits) := df^;
-      RETURN (len + digits); END;
-
-    IF decpt <= 0 THEN
-      Af := 0;
-      Bf := 1;
-      Cf := MIN (-decpt, p);
-      Df := MIN (digits, p - Cf);
-      Ef := MAX (0, p - (Cf + Df));
-    ELSIF decpt <= digits THEN
-      Af := decpt;
-      Bf := 0;
-      Cf := 0;
-      Df := MIN (digits - decpt, p);
-      Ef := MAX (0, p - Df);
+PROCEDURE FromExtended
+  (VAR buf: Buffer; v: EXTENDED; p: INTEGER := 6; style := Style.Mix):
+  INTEGER RAISES {Failed} =
+  VAR
+    start, end                  : Ctypes.char_star;
+    sign, decpt, mode, precision: Ctypes.int;
+  BEGIN
+    GetPrecisionMode(style, p, mode, precision);
+    IF BYTESIZE(v) = 8 THEN
+      start := dtoa(FLOAT(v, LONGREAL), mode, precision,
+                    ADR(decpt), ADR(sign), ADR(end));
     ELSE
-      Af := digits;
-      Bf := decpt - digits;
-      Cf := p;
-      Df := 0;
-      Ef := 0; END;
-    IF style = Style.AltFlo OR style = Style.Mix THEN
-      Ef := 0;
-      WHILE Df > 0 AND df [Af + Df - 1] = '0' DO
-        DEC (Df); END;
-      IF Df = 0 THEN
-        Cf := 0; END; END; END;
-
-  IF style = Style.Sci OR style = Style.AltSci OR style = Style.Mix THEN
-    mode_i := 2;
-    p_i := p + 1;
-    start := dtoa (v, mode_i, p_i, ADR(decpt), ADR(sign), ADR (end));
-    digits := (end - start) DIV ADRSIZE (CHAR);
-
-    ds := NEW (REF ARRAY OF CHAR, digits);
-    FOR i := 0 TO digits - 1 DO
-      ds [i] := LOOPHOLE(start + i * ADRSIZE (CHAR), UNTRACED REF CHAR)^;
+      start := qtoa(v, mode, precision, ADR(decpt), ADR(sign), ADR(end));
     END;
-    freedtoa (start);
-
-    IF decpt = 9999 THEN (* Special value returned by dtoa *)
-      IF sign # 0 THEN
-        buf [0] := '-';
-        len := 1;
-      ELSE
-        len := 0; END;
-      SUBARRAY (buf, len, digits) := ds^;
-      RETURN (len + digits); END;
-
-    As := MIN (1, digits);
-    Bs := 0;
-    Cs := 0;
-    Ds := MIN (digits - 1, p);
-    Es := MAX (0, p - digits + 1);
-    Xs := decpt - 1;
-    IF style = Style.AltSci OR style = Style.Mix THEN
-      Es := 0;
-      WHILE Ds > 0 AND ds [As + Ds - 1] = '0' DO
-        DEC (Ds); END;
-      IF Ds = 0 THEN
-        Cs := 0; END; END; END;
-
-  IF style = Style.Mix THEN
-    VAR  floLength := Af + Bf + 1 + Cf + Df + Ef;
-         sciLength := As + Bs + 1 + Cs + Ds + Es; BEGIN
-      IF Xs # LAST (INTEGER) THEN
-        IF Xs < 0 THEN
-          INC (sciLength, 3);
-          VAR x := -X; BEGIN
-            WHILE x >= 10 DO
-              INC (sciLength);
-              x := x DIV 10; END; END;
-        ELSE
-          INC (sciLength, 2);
-          VAR x := X; BEGIN
-            WHILE x >= 10 DO
-              INC (sciLength);
-              x := x DIV 10; END; END; END; END;
-      IF floLength > sciLength THEN
-        style := Style.AltSci;
-      ELSE
-        style := Style.AltFlo;
-        IF Df = 0 AND Cf = 0 THEN
-          Pf := FALSE; END; END; END; END;
-
-  IF style = Style.Flo OR style = Style.AltFlo THEN
-    A := Af; B := Bf; C := Cf; D := Df; E := Ef; X := Xf; P := Pf; d := df;
-  ELSE
-    A := As; B := Bs; C := Cs; D := Ds; E := Es; X := Xs; P := Ps; d := ds;END;
-
-  (* Set the sign *)
-  IF sign # 0 THEN
-    buf [len] := '-';
-    INC (len); END;
-
-  consumed := 0;
-  FOR i := 1 TO A DO
-    buf [len] := d [consumed]; INC (len); INC (consumed); END;
-  FOR i := 1 TO B DO
-    buf [len] := '0'; INC (len); END;
-  IF P THEN
-    buf [len] := '.'; INC (len); END;
-  FOR i := 1 TO C DO
-    buf [len] := '0'; INC (len); END;
-  FOR i := 1 TO D DO
-    buf [len] := d [consumed]; INC (len); INC (consumed); END;
-  FOR i := 1 TO E DO
-    buf [len] := '0'; INC (len); END;
-  IF X # LAST (INTEGER) THEN
-    buf [len] := exponentChar; INC (len);
-    INC (len, FromInt (SUBARRAY (buf, len, NUMBER (buf) - len), X)); END;
-
-  RETURN (len);
-END InternalFromLongFloat;
+    RETURN Format(buf, p, style, decpt, sign, start, end, 'X');
+  END FromExtended;
 
 PROCEDURE ToInt (
     READONLY buf  : Buffer;
@@ -785,22 +811,22 @@ PROCEDURE ToExtended (
     READONLY buf  : Buffer;
          VAR used : INTEGER): EXTENDED RAISES {Failed} =
   VAR
-    value  : LONGREAL;
+    value  : EXTENDED;
     chars  : BufPtr;
-    tmp    : ARRAY [0..31] OF CHAR;
+    tmp    : ARRAY [0..40] OF CHAR;
     ok     : BOOLEAN;
     nchars := NUMBER (buf);
   BEGIN
     IF (nchars < NUMBER (tmp)) THEN
-      ok := ToBinary (buf, 'X', 'x', tmp, used, value);
+      ok := ToBinaryExt (buf, 'X', 'x', tmp, used, value);
     ELSE (* we don't have enough space in 'tmp' *)
       chars := NEW (BufPtr, nchars + 1);
-      ok := ToBinary (buf, 'X', 'x', chars^, used, value);
+      ok := ToBinaryExt (buf, 'X', 'x', chars^, used, value);
       DISPOSE (chars);
     END;
-    IF (ok)
-      THEN RETURN FLOAT (value, EXTENDED);
-      ELSE RAISE Failed;
+
+    IF (ok) THEN RETURN value;
+    ELSE RAISE Failed;
     END;
   END ToExtended;
 
@@ -810,7 +836,8 @@ PROCEDURE ToBinary (
          VAR tmp        : Buffer;
          VAR used       : INTEGER;
          VAR value      : LONGREAL): BOOLEAN =
-  VAR ch: CHAR;  eptr: Ctypes.char_star := NIL;  nchars: INTEGER := NUMBER (source);
+  VAR ch: CHAR;  eptr: Ctypes.char_star := NIL;
+      nchars: INTEGER := NUMBER (source);
   BEGIN
     (* copy source to tmp, fix the exponent character and null terminate *)
     FOR i := 0 TO nchars -1 DO
@@ -827,6 +854,40 @@ PROCEDURE ToBinary (
       ELSE used := eptr - ADR (tmp [0]); RETURN TRUE;
     END;
   END ToBinary;
+
+PROCEDURE ToBinaryExt (READONLY source    : Buffer;
+                                exp1, exp2: CHAR;
+                       VAR      tmp       : Buffer;
+                       VAR      used      : INTEGER;
+                       VAR      value     : EXTENDED ): BOOLEAN =
+  VAR
+    ch    : CHAR;
+    eptr  : Ctypes.char_star := NIL;
+    nchars: INTEGER          := NUMBER(source);
+    ret   : Ctypes.int;
+    round : Ctypes.int       := ORD(RoundMode.FPI_Round_near);
+    double : LONGREAL;
+  BEGIN
+    (* copy source to tmp, fix the exponent character and null terminate *)
+    FOR i := 0 TO nchars - 1 DO
+      ch := source[i];
+      IF (ch = exp1) OR (ch = exp2) THEN ch := 'e' END;
+      tmp[i] := ch;
+    END;
+    tmp[nchars] := '\000';
+
+    (* finally, do the conversion *)
+    IF BYTESIZE(value) = 8 THEN
+      double := strtod (ADR (tmp [0]), ADR (eptr));
+      value := FLOAT(double, EXTENDED);
+    ELSE
+      ret := strtoq(ADR(tmp[0]), ADR(eptr), round, value);
+    END;
+    IF eptr = NIL THEN
+      RETURN FALSE;
+    ELSE used := eptr - ADR(tmp[0]); RETURN TRUE;
+    END;
+  END ToBinaryExt;
 
 BEGIN
 END Convert.
