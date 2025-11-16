@@ -266,7 +266,7 @@ char *m3_qtoa(long double V, int mode, int ndigits, int *decpt, int *asign, char
 
 float m3_strtof(CONST char *s, char **sp);
 //int m3_strtof(CONST char *s, char **sp, int rounding, float *f);
-double m3_strtod(CONST const char *s, char **sp);
+double m3_strtod(CONST char *s, char **sp);
 //int m3_strtod(CONST char *s, char **sp, int rounding, double *d);
 int m3_strtoq(CONST char *s, char **sp, int rounding, void *L);
 //long double m3_strtoq(CONST char *s, char **sp);
@@ -822,8 +822,8 @@ void Bfree_D2A(Bigint *v) {
 }
 
 int lo0bits_D2A(ULong *y) {
-  register int k;
-  register ULong x = *y;
+  int k;
+  ULong x = *y;
 
   if (x & 7) {
     if (x & 1)
@@ -912,8 +912,8 @@ Bigint *multadd_D2A(Bigint *b, int m, int a) /* multiply by m and add a */
   return b;
 }
 
-int hi0bits_D2A(register ULong x) {
-  register int k = 0;
+int hi0bits_D2A(ULong x) {
+  int k = 0;
 
   if (!(x & 0xffff0000)) {
     k = 16;
