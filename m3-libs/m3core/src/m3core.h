@@ -344,6 +344,7 @@ M3EXTERNC_END
 
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <stdint.h>
 #include <assert.h>
 #include <stddef.h>
 #include <stdio.h>
