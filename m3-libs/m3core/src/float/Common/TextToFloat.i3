@@ -18,7 +18,7 @@ INTERFACE TextToFloat;
    
 *)
 
-IMPORT RealRep,LongRealRep;
+IMPORT RealRep, LongRealRep, ExtendedRep;
 
 (* return codes *)
 CONST
@@ -43,21 +43,10 @@ CONST
 TYPE
   RoundingModes = {RoundZero, RoundNear, RoundUp, RoundDown};
 
-  (* Currently cm3 treats EXTENDED as LONGREAL but we need a 128 bit representation
-  Eventually this definition will replace the one in ExtendedRep.i3 *)
-  ExtendedRep = RECORD
-    significand3 : BITS 32 FOR [-16_7fffffff-1 .. 16_7fffffff] := 0;
-    significand2 : BITS 32 FOR [-16_7fffffff-1 .. 16_7fffffff] := 0;
-    significand1 : BITS 32 FOR [-16_7fffffff-1 .. 16_7fffffff] := 0;
-    significand0 : BITS 16 FOR [0..16_FFFF]       := 0;
-    exponent     : BITS 15 FOR [0..16_7FFF]       := 0;
-    sign         : BITS  1 FOR [0..1]             := 0;
-  END;
-  
 PROCEDURE StrToReal(in : TEXT; rounding : RoundingModes; VAR real : RealRep.T) : INTEGER;
 
 PROCEDURE StrToLongReal(in : TEXT; rounding : RoundingModes; VAR long : LongRealRep.T) : INTEGER;
 
-PROCEDURE StrToExtended(in : TEXT; rounding : RoundingModes; VAR quad : ExtendedRep) : INTEGER;
+PROCEDURE StrToExtended(in : TEXT; rounding : RoundingModes; VAR quad : ExtendedRep.T) : INTEGER;
 
 END TextToFloat.

@@ -20,7 +20,7 @@ UNSAFE MODULE TextToFloat;
 IMPORT Word,Text;
 IMPORT DragonInt AS DI;
 IMPORT FloatUtils AS FU;
-IMPORT RealRep,LongRealRep;
+IMPORT RealRep, LongRealRep, ExtendedRep;
 
 CONST
   MaxString = 100;
@@ -1017,7 +1017,8 @@ PROCEDURE Arr32toReal(bits : DI.RefInt32; exp, k : INTEGER) : RealRep.T =
     | STRTOG_Infinite =>
       real.exponent := 16_7F;
       real.significand := 0;
-    | STRTOG_NaN => (* quiet NaN msb of significand set to 1, however never set *)    
+    | STRTOG_NaN =>
+      (* quiet NaN msb of significand set to 1, however never set *)    
       real.exponent := 16_7F;
       real.significand := 16_8000;
     ELSE (* nothing *)
@@ -1059,9 +1060,9 @@ PROCEDURE Arr32toLongReal(bits : DI.RefInt32; exp, k : INTEGER) : LongRealRep.T 
     RETURN long;
   END Arr32toLongReal;
   
-PROCEDURE Arr32toQuad(bits : DI.RefInt32; exp, k : INTEGER) : ExtendedRep =
+PROCEDURE Arr32toQuad(bits : DI.RefInt32; exp, k : INTEGER) : ExtendedRep.T =
   VAR
-    ext : ExtendedRep;
+    ext : ExtendedRep.T;
   BEGIN
     ext.sign := 0; 
     IF Word.And(k, STRTOG_Neg) = STRTOG_Neg THEN
@@ -1110,7 +1111,7 @@ PROCEDURE StrToReal(in : TEXT; rounding : RoundingModes; VAR real : RealRep.T) :
     fpi : FPI;
   BEGIN
     fpi := NEW(FPI, nbits := 24, rounding := rounding, emin := 1-127-24+1,      
-                    emax := 254-127-24+1, suddenUnderflow := FALSE);  
+               emax := 254-127-24+1, suddenUnderflow := FALSE);  
     ret := StrToArr32(in, fpi, exp, bits );
     real := Arr32toReal(bits,exp,ret);
     RETURN ret;
@@ -1122,21 +1123,19 @@ PROCEDURE StrToLongReal(in : TEXT; rounding : RoundingModes; VAR long : LongReal
     bits : DI.RefInt32;
     fpi : FPI;
   BEGIN
-    fpi := NEW(FPI, nbits := 53, rounding := rounding, emin := 1-1023-53+1,      
-                    emax := 2046-1023-53+1, suddenUnderflow := FALSE);  
+    fpi := NEW(FPI, nbits := 53, rounding := rounding, emin := 1-1023-53+1,                    emax := 2046-1023-53+1, suddenUnderflow := FALSE);  
     ret := StrToArr32(in, fpi, exp, bits );
     long := Arr32toLongReal(bits,exp,ret);
     RETURN ret;
   END StrToLongReal;
 
-PROCEDURE StrToExtended(in : TEXT; rounding : RoundingModes; VAR quad : ExtendedRep) : INTEGER =
+PROCEDURE StrToExtended(in : TEXT; rounding : RoundingModes; VAR quad : ExtendedRep.T) : INTEGER =
   VAR
     ret,exp : INTEGER;
     bits : DI.RefInt32;
     fpi : FPI;
   BEGIN
-    fpi := NEW(FPI, nbits := 113, rounding := rounding, emin := 1-16383-113+1,      
-                    emax := 32766-16383-113+1, suddenUnderflow := FALSE);  
+    fpi := NEW(FPI, nbits := 113, rounding := rounding, emin := 1-16383-113+1,                 emax := 32766-16383-113+1, suddenUnderflow := FALSE);  
     ret := StrToArr32(in, fpi, exp, bits );
     quad := Arr32toQuad(bits,exp,ret);
     RETURN ret;
