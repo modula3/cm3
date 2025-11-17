@@ -1494,7 +1494,7 @@ CONST double tens[] = {1e0,
 };
 
 char *strcp_D2A(char *a, CONST char *b) {
-  while (*a = *b++)
+  while ((*a = *b++))
     a++;
   return a;
 }
@@ -2676,12 +2676,12 @@ rv_notOK:
     }
     if (e1 &= ~15) {
       e1 >>= 4;
-      while (e1 >= (1 << n_bigtens - 1)) {
+      while (e1 >= (1 << (n_bigtens - 1))) {
         e2 += ((word0(rv) & Exp_mask) >> Exp_shift1) - Bias;
         word0(rv) &= ~Exp_mask;
         word0(rv) |= Bias << Exp_shift1;
         dval(rv) *= bigtens[n_bigtens - 1];
-        e1 -= 1 << n_bigtens - 1;
+        e1 -= 1 << (n_bigtens - 1);
       }
       e2 += ((word0(rv) & Exp_mask) >> Exp_shift1) - Bias;
       word0(rv) &= ~Exp_mask;
@@ -2697,12 +2697,12 @@ rv_notOK:
     }
     if (e1 &= ~15) {
       e1 >>= 4;
-      while (e1 >= (1 << n_bigtens - 1)) {
+      while (e1 >= (1 << (n_bigtens - 1))) {
         e2 += ((word0(rv) & Exp_mask) >> Exp_shift1) - Bias;
         word0(rv) &= ~Exp_mask;
         word0(rv) |= Bias << Exp_shift1;
         dval(rv) *= tinytens[n_bigtens - 1];
-        e1 -= 1 << n_bigtens - 1;
+        e1 -= 1 << (n_bigtens - 1);
       }
 
       e2 += ((word0(rv) & Exp_mask) >> Exp_shift1) - Bias;
@@ -4089,7 +4089,7 @@ void ULtof(ULong *L, ULong *bits, Long exp, int k) {
 
   case STRTOG_Normal:
   case STRTOG_NaNbits:
-    L[0] = bits[0] & 0x7fffff | exp + 0x7f + 23 << 23;
+    L[0] = bits[0] & 0x7fffff | (exp + 0x7f + 23) << 23;
     break;
 
   case STRTOG_Denormal:
