@@ -23,8 +23,8 @@ Uuio__write (int fd, const void* buf, size_t n)
     result = write (fd, buf, n);
     if (m3core_trace.s.write)
     {
-        char* buf = (char*)alloca (256);
-	int maxlen = sizeof buf;
+	int maxlen = 256;
+        char* buf = (char*)alloca (maxlen);
         int len = snprintf (buf, maxlen, "write (fd:%d, buf:%p, n:%ld):%ld\n", fd, buf, (long)n, (long)result);
         write (1, buf, len);
     }
