@@ -118,7 +118,7 @@ CONST start = ARRAY OF TEXT{"AMD64", "86",
   END IsX86orAmd64;
 
 PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): BOOLEAN =
-  VAR sys := 0;  max_align := 64;
+  VAR sys := 0;  max_align := 128;
       casePreservedSystem := system;
   BEGIN
     (* lookup the system -- linear search *)

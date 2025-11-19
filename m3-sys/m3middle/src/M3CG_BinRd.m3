@@ -380,7 +380,7 @@ PROCEDURE Scan_float (VAR s: State): Target.Float =
     i       := GetByte (s);
     pre     := Target.Precision.Short;
     n_bytes : INTEGER;
-    bytes   : ARRAY [0..BYTESIZE(EXTENDED)] OF TFloat.Byte;
+    bytes   : ARRAY [0..4 * BYTESIZE(REAL)] OF TFloat.Byte;
     result  : Target.Float;
   BEGIN
     CASE i OF

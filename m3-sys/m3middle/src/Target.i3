@@ -275,7 +275,14 @@ VAR (*CONST*)
   Long      := Word64;
   Longreal  := Float_type{CGType.LReel, Precision.Long, 64, 64, 8, Float{Precision.Long, 0, -1.79769313486231570x+308}, Float{Precision.Long, 0, 1.79769313486231570x+308}};
 VAR
+(*
   Extended  := Float_type{CGType.XReel, Precision.Extended, 64, 64, 8, Float{Precision.Extended, 0, -1.79769313486231570x+308}, Float{Precision.Extended, 0, 1.79769313486231570x+308}};
+*)
+  Extended := Float_type{CGType.XReel, Precision.Extended, 128, 128, 16,
+                   Float{Precision.Extended, 0,
+                         -1.1897314953572317650857593266280070X+4932},
+                   Float{Precision.Extended, 0,
+                         1.1897314953572317650857593266280070X+4932}};
 
 CONST
   (*                   cg_type, size, align, pack, bytes, min, max *)
@@ -294,7 +301,7 @@ CONST
   Real      = Float_type{CGType.Reel, Precision.Short, 32, 32, 4, Float{Precision.Short, 0, -3.40282346638528860x+38}, Float{Precision.Short, 0, 3.40282346638528860x+38}};
 
 CONST (* sorted list of supported machine alignments *)
-  Alignments = ARRAY [0..3] OF CARDINAL{8, 16, 32, 64};
+  Alignments = ARRAY [0..4] OF CARDINAL{8, 16, 32, 64, 128};
 
 (*------------------------------------------------------- procedure calls ---*)
 
