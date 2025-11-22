@@ -21,8 +21,8 @@ dirent* Udir__readdir (DIR* d)
 #ifndef _WIN32
     if (result && m3core_trace.s.readdir)
     {
-        char* buf = (char*)alloca (256 + strlen (result->d_name));
-	int maxlen = sizeof buf;
+        int maxlen = 256 + strlen (result->d_name);
+        char* buf = (char*)alloca (maxlen);
         int len = snprintf (buf, maxlen, "readdir:%s\n", result->d_name);
         write (1, buf, len);
     }
