@@ -23,23 +23,23 @@ CONST
   Base: INTEGER = 2;
   (* The radix of the floating-point representation for T *)
 
-  Precision: INTEGER = 53;
+  Precision: INTEGER = 113;
   (* The number of digits of precision in the given Base for T. *)
 
-  MaxFinite: T = 1.7976931348623157X+308;
+  MaxFinite: T = 1.1897314953572317650857593266280070X+4932;
   (* The maximum finite value in T.  For non-IEEE implementations,
      this is the same as LAST(T). *)
 
-  MinPos: T = 4.9406564584124654X-324;
+  MinPos: T = 6.4751751194380251109244389582276466X-4966;
   (* The minimum positive value in T. *)
 
-  MinPosNormal: T = 2.2250738585072014X-308;
+  MinPosNormal: T = 3.3621031431120935062626778173217526X-4932;
   (* The minimum positive "normal" value in T; differs from MinPos
      only for implementations with denormalized numbers. *)
 
 CONST
-  MaxExpDigits = 3;
-  MaxSignifDigits = 17;
+  MaxExpDigits = 4;
+  MaxSignifDigits = 36;
 (* "MaxExpDigits" is the smallest integer with the property that every
    finite number of type "T" can be written in base-10 scientific notation
    using an exponent with at most "MaxExpDigits".  "MaxSignifDigits"

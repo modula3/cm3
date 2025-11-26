@@ -9,7 +9,7 @@
 
 UNSAFE MODULE RandomReal;
 
-IMPORT LongRealRep, RealRep, Random, Word;
+IMPORT ExtendedRep, LongRealRep, RealRep, Random, Word;
 
 (* Implements Random.Real and Random.LongReal for IEEE floating-point
    format (both big-endian and little-endian). *)
@@ -88,8 +88,42 @@ PROCEDURE Longreal (r: Random.T): LONGREAL =
   END Longreal;
 
 PROCEDURE Extended (r: Random.T): EXTENDED =
+  CONST ExponentBias = 16383; (* Exponent bias for EXTENDED *)
+        FractionBits = 16;    (* Number of fraction bits in the most sig word *)
+        WordSize = 32;        (* Size of INTEGER in bits *)
+  VAR frac, exp: INTEGER; result: EXTENDED;
   BEGIN
-    RETURN LOOPHOLE (Longreal (r), EXTENDED);
+    (* Generate a random fraction and get the first non-zero word: *)
+    exp := ExponentBias - 1;
+    frac := r.integer ();
+    WHILE (frac = 0) AND (exp >= WordSize) DO
+      (* This loop is (almost) never executed: *)
+      DEC (exp, WordSize);
+      frac := r.integer ();
+    END;
+ 
+    (* Normalize: *)
+    WHILE (frac > 0) AND (exp > 0) DO
+      (* This loop is executed about once on the average. *)
+      frac := Word.Shift (frac, 1);
+      DEC (exp);
+    END;
+    IF ((ExponentBias - 1 - exp) MOD WordSize) >  WordSize - FractionBits THEN
+      (* Needs more random bits *)
+      frac := r.integer ();
+    END;
+
+    (* Repack as Extended: *)
+    WITH er = LOOPHOLE (result, ExtendedRep.T) DO
+      er.sign := 0;
+      er.exponent := exp;
+      er.significand0 := Word.Shift (Word.And (frac, 16_7fffffff),
+                                      -(WordSize - 1 - FractionBits));
+      er.significand1 := r.integer (min := -16_7fffffff-1, max :=16_7fffffff);
+      er.significand2 := r.integer (min := -16_7fffffff-1, max :=16_7fffffff);
+      er.significand3 := r.integer (min := -16_7fffffff-1, max :=16_7fffffff);      
+    END;
+    RETURN result;
   END Extended;
 
 BEGIN

@@ -616,8 +616,18 @@ PROCEDURE OutLongreal(writer: Pickle.Writer; i: LONGREAL)
 
 PROCEDURE InExtended(reader: Pickle.Reader): EXTENDED
     RAISES {Pickle.Error, Rd.Failure, Thread.Alerted} =
+  VAR i: EXTENDED;    
   BEGIN
-    RETURN LOOPHOLE(InLongreal(reader), EXTENDED);
+    IF reader.packing.float # myPacking.float THEN
+      RaiseUnsupportedDataRep();
+    END;
+    IF reader.rd.getSub(
+        LOOPHOLE(i, ARRAY [0..BYTESIZE(EXTENDED)-1] OF CHAR)) #
+                       BYTESIZE(EXTENDED) THEN
+      RaiseUnmarshalFailure();
+    END;
+    IF NOT NativeEndian(reader.packing) THEN i := SwapExtended(i); END;
+    RETURN i;
   END InExtended;
 
 PROCEDURE OutExtended(writer: Pickle.Writer; i: EXTENDED)
@@ -786,6 +796,22 @@ PROCEDURE SwapLongReal(i: LONGREAL) : LONGREAL =
     RETURN res;
   END SwapLongReal;
 
+TYPE ER = RECORD a, b, c, d: Int32; END;
+
+PROCEDURE SwapExtended(i: EXTENDED) : EXTENDED =
+  VAR res: EXTENDED;
+  BEGIN
+    WITH p = LOOPHOLE(ADR(i), UNTRACED REF ER) DO
+      WITH r = LOOPHOLE(ADR(res), UNTRACED REF ER) DO
+        r.a := Swap.Swap4(p.d);
+        r.b := Swap.Swap4(p.c);
+        r.c := Swap.Swap4(p.b);
+        r.d := Swap.Swap4(p.a);
+      END;
+    END;
+    RETURN res;
+  END SwapExtended;
+  
 PROCEDURE NativeEndian(packing: RTPacking.T) : BOOLEAN =
   BEGIN
     RETURN packing.little_endian = myPacking.little_endian;

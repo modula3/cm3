@@ -19,6 +19,9 @@ PROCEDURE scalb (x: LONGREAL; n: INTEGER): LONGREAL =
 Now we're equating it to the externally-defined (ANSI C math library)
 procedure ldexp--see FPU.i3. *)
 
-<*EXTERNAL sqrt*> PROCEDURE sqrt  (x: LONGREAL): LONGREAL;
+<*EXTERNAL sqrt*> PROCEDURE sqrt (x: LONGREAL): LONGREAL;
+
+<*EXTERNAL ldexpq*> PROCEDURE scalbq (x : EXTENDED; n: Ctypes.int) : EXTENDED;
+<*EXTERNAL sqrtq*> PROCEDURE sqrtq (x: EXTENDED): EXTENDED;
 
 END FPU.

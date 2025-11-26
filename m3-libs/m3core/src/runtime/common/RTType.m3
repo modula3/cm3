@@ -317,7 +317,8 @@ PROCEDURE FinishTypecell (def: RT0.TypeDefn;  m: RT0.ModulePtr) =
 |          "addr + align [Word.And (addr, 7), alignment]"
        in "RTHeapRep.AllocTraced".*)
     IF  (def.dataAlignment # 4) AND (def.dataAlignment # 8)
-    AND (def.dataAlignment # 1) AND (def.dataAlignment # 2) THEN
+    AND (def.dataAlignment # 1) AND (def.dataAlignment # 2)
+    AND (def.dataAlignment # 16) THEN
       IF (m = NIL) THEN m := RTModule.FromDataAddress (m); END;
       Fail (RTE.ValueOutOfRange, m, def, NIL);
     END;
