@@ -17,7 +17,14 @@ PROCEDURE New (READONLY chars: ARRAY OF CHAR;  pre: Precision;
   BEGIN
     f.pre      := pre;
     f.exponent := 0;
-    TRY f.fraction := Convert.ToExtended (chars, used);
+    TRY
+      IF pre = Precision.Short THEN
+        f.fraction := FLOAT(Convert.ToFloat (chars, used), EXTENDED);
+      ELSIF pre = Precision.Long THEN
+        f.fraction := FLOAT(Convert.ToLongFloat (chars, used), EXTENDED);
+      ELSE
+        f.fraction := Convert.ToExtended (chars, used);
+      END;
     EXCEPT Convert.Failed => RETURN FALSE;
     END;
     RETURN (used = NUMBER (chars)) AND Normalize (f);
@@ -152,17 +159,25 @@ PROCEDURE Ceiling (READONLY a: Float): INTEGER =
 
 PROCEDURE ToChars (READONLY f: Float;  VAR buf: ARRAY OF CHAR): INTEGER =
   <*FATAL Convert.Failed *>
-  VAR zz: ARRAY [0..45] OF CHAR;  len: INTEGER;
+(* was 45 *)
+  VAR zz: ARRAY [0..31] OF CHAR;  len: INTEGER;
   BEGIN
     <*ASSERT f.exponent = 0*>
-    len := Convert.FromExtended (zz, f.fraction, 36, Convert.Style.Sci);
+    IF f.pre = Precision.Short THEN
+      len := Convert.FromFloat (zz, FLOAT(f.fraction, REAL), 13, Convert.Style.Sci);
+    ELSIF f.pre = Precision.Long THEN
+      len := Convert.FromLongFloat (zz, FLOAT(f.fraction, LONGREAL), 13, Convert.Style.Sci);
+    ELSE
+(* was 36 *)
+      len := Convert.FromExtended (zz, f.fraction, 13, Convert.Style.Sci);
+    END;
     IF (len > NUMBER (buf)) THEN RETURN -1 END;
     SUBARRAY (buf, 0, len) := SUBARRAY (zz, 0, len);
     RETURN len;
   END ToChars;
 
 TYPE
-  Ptr = UNTRACED REF ARRAY [0..4*BITSIZE(REAL) DIV BITSIZE(Byte) - 1] OF Byte;
+  Ptr = UNTRACED REF ARRAY [0..4 * BITSIZE(REAL) DIV BITSIZE(Byte) - 1] OF Byte;
 
 PROCEDURE ToBytes (READONLY f: Float;  VAR buf: ARRAY OF Byte): INTEGER =
   VAR
