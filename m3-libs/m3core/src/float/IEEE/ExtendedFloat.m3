@@ -15,9 +15,24 @@ UNSAFE MODULE ExtendedFloat;
 IMPORT ExtendedRep AS Rep;
 IMPORT DragonT, FPU, Word, Ctypes, Convert;
 
-PROCEDURE Scalb (x: T; n: INTEGER): T =
+PROCEDURE Sqrt (x: T): T =
+VAR t : EXTENDED;
   BEGIN
+    RETURN t;
+(*
+  fixme add quadmath to link
+    RETURN FPU.sqrtq(x);
+*)
+  END Sqrt;
+
+PROCEDURE Scalb (x: T; n: INTEGER): T =
+VAR t : EXTENDED;
+  BEGIN
+    RETURN t;
+(*
+  fixme add quadmath to link
     RETURN FPU.scalbq(x, n);
+*)
   END Scalb;
 
 PROCEDURE Logb (x: T): T =
@@ -215,11 +230,6 @@ PROCEDURE Class (x: T): IEEEClass =
       RETURN IEEEClass.SignalingNaN;
     END;
   END Class;
-
-PROCEDURE Sqrt (x: T): T =
-  BEGIN
-    RETURN FPU.sqrtq(x);
-  END Sqrt;
 
 PROCEDURE FromDecimal (sign   : [0..1];
               READONLY digits : ARRAY OF [0..9];
