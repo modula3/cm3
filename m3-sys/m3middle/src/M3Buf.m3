@@ -153,7 +153,13 @@ PROCEDURE PutFloat (t: T;  READONLY f: Target.Float) =
   VAR len: INTEGER;  buf: ARRAY [0..4 * BITSIZE(REAL) + 3] OF CHAR;
   BEGIN
     <*ASSERT f.exponent = 0*>
-    len := Convert.FromExtended (buf, f.fraction, 36, Convert.Style.Sci);
+    IF f.pre = Target.Precision.Short THEN
+      len := Convert.FromFloat (buf, FLOAT(f.fraction, REAL), 13, Convert.Style.Sci);
+    ELSIF f.pre = Target.Precision.Long THEN
+      len := Convert.FromLongFloat (buf, FLOAT(f.fraction, LONGREAL), 13, Convert.Style.Sci);
+    ELSE
+      len := Convert.FromExtended (buf, f.fraction, 13 (*36*), Convert.Style.Sci);
+    END;
     PutSub (t, SUBARRAY (buf, 0, len));
   END PutFloat;
 
