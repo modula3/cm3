@@ -159,8 +159,8 @@ PROCEDURE Ceiling (READONLY a: Float): INTEGER =
 
 PROCEDURE ToChars (READONLY f: Float;  VAR buf: ARRAY OF CHAR): INTEGER =
   <*FATAL Convert.Failed *>
-(* was 45 *)
-  VAR zz: ARRAY [0..31] OF CHAR;  len: INTEGER;
+(* was 45 orig 31*)
+  VAR zz: ARRAY [0..45] OF CHAR;  len: INTEGER;
   BEGIN
     <*ASSERT f.exponent = 0*>
     IF f.pre = Precision.Short THEN
@@ -169,7 +169,7 @@ PROCEDURE ToChars (READONLY f: Float;  VAR buf: ARRAY OF CHAR): INTEGER =
       len := Convert.FromLongFloat (zz, FLOAT(f.fraction, LONGREAL), 13, Convert.Style.Sci);
     ELSE
 (* was 36 *)
-      len := Convert.FromExtended (zz, f.fraction, 13, Convert.Style.Sci);
+      len := Convert.FromExtended (zz, f.fraction, 36, Convert.Style.Sci);
     END;
     IF (len > NUMBER (buf)) THEN RETURN -1 END;
     SUBARRAY (buf, 0, len) := SUBARRAY (zz, 0, len);
