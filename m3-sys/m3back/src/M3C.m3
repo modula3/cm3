@@ -380,6 +380,7 @@ CONST reservedWords = ARRAY OF TEXT{
 "UINT16",
 "UINT32",
 "UINT64",
+"_Float128",
 (* TODO fill in more strings here like INT8, STRUCT that we use,
 so i.e. they can be used for parameter, local, field names *)
 (*
@@ -2583,7 +2584,11 @@ CONST Prefix = ARRAY OF TEXT {
 
 "typedef float REAL;",
 "typedef double LONGREAL;",
-"typedef /*long*/ double EXTENDED;",
+"# if defined(_MSC_VER)",
+"typedef double EXTENDED;",
+"# else",
+"typedef _Float128 EXTENDED;",
+"# endif",
 
 "#ifdef __cplusplus",
 "extern \"C\" {",
@@ -2641,7 +2646,7 @@ CONST cgtypeToText = ARRAY CGType OF TEXT {
     Text_uint64, Text_int64,  (* 6 7 *)
     "float",  (* REAL *)        (* 8 *)
     "double", (* LONGREAL *)    (* 9 *)
-    "EXTENDED",                 (* A *) (* TODO change to double *)
+    "_Float128", (* EXTENDED *) (* A *)
     Text_address,               (* B *)
     "STRUCT",                   (* C *)
     "void"                      (* D *)
@@ -2653,7 +2658,7 @@ CONST cgtypeToParamText = ARRAY CGType OF TEXT {
     "unsigned short", "short",
     "unsigned", "int",
     "UINT64", "INT64",
-    "float", "double", "double",
+    "float", "double", "_Float128",
     "void*",
     NIL,
     NIL
@@ -3013,8 +3018,13 @@ BEGIN
     self.Type_Init (type);
     EVAL declare_typename_no_replace (self, type.typeid, M3ID.Add ("EXTENDED")); (* TODO remove this *)
     EVAL DeclareTypes_FlushOnce (self);
+    IF BYTESIZE(EXTENDED) = 8 THEN
     type.base_text := "double"; (* more readable output (fewer hashes) *)
     type.text := "double"; (* more readable output (fewer hashes) *)
+    ELSE
+    type.base_text := "_Float128"; (* more readable output (fewer hashes) *)
+    type.text := "_Float128"; (* more readable output (fewer hashes) *)
+    END;
 
     (* TODO: We do not have to predeclare BOOLEAN, m3front provides it.
      * But after it is declared, we should find it and rename it.
@@ -4762,7 +4772,8 @@ END HelperFunctions_min;
 
 PROCEDURE HelperFunctions_cvt_int(self: HelperFunctions_t; <*UNUSED*>rtype: RType; <*UNUSED*>itype: IType; op: ConvertOp) =
 CONST text = ARRAY ConvertOp OF TEXT{
-
+(* ceil below should be ceilq for extended so needs to be ifdefed or
+   something so get one version for longreal and another for extended *)
     "#ifndef m3_round\n#define m3_round m3_round\n"
     & "#ifdef _WIN32 /* temporary workaround */\n"
     & "static INT64 __stdcall m3_round(EXTENDED f) { return (INT64)f; }\n"
@@ -5928,7 +5939,7 @@ VAR suffix := '\000';
 BEGIN
 (* 1.2e3 => 1.2e3F float/REAL
    1.2d3 => 1.2e3  double/LONGREAL
-   1.2x3 => 1.2e3L long double/EXTENDED
+   1.2x3 => 1.2e3Q _Float128/EXTENDED
 *)
     FOR i := 0 TO len - 1 DO
         ch := modulaBuf[i];
@@ -5939,7 +5950,12 @@ BEGIN
             ch := 'e';
         ELSIF ch = 'x' OR ch = 'X' THEN
             (* suffix := 'L'; if actually using long double *)
+            (* suffix := 'Q'; if actually using _Float128 *)
+            IF BYTESIZE(EXTENDED) = 8 THEN
             suffix := '\000';
+            ELSE
+            suffix := 'Q';
+            END;
             ch := 'e';
         END;
         cBuf[j] := ch;
@@ -6708,7 +6724,7 @@ BEGIN
     IF debug THEN
       self.comment("load_float");
     END;
-    (* FloatLiteral includes suffixes like "F" for float, "" for double, "L" for long double *)
+    (* FloatLiteral includes suffixes like "F" for float, "" for double, "L" for long double "Q" for _Float128 *)
     push(self, type, cast(CTextToExpr(FloatLiteral(float)), type));
 END load_float;
 
