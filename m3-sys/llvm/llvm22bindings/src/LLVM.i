@@ -287,13 +287,13 @@ TYPE
 %typemap("m3wrapargraw")  LLVMYieldCallback %{$1%}
 
 // ***ConstFP128*** - for the function which should be in Core.h 
-%typemap("m3rawintype")   const uint64_t N[2] %{ADDRESS%}
-%typemap("m3wrapintype")  const uint64_t N[2] %{QuadRef%}
-%typemap("m3wrapargraw")  const uint64_t N[2] %{$1%}
-%typemap("m3wrapargvar")  const uint64_t N[2] %{$1: ADDRESS;%}
-%typemap("m3wrapinconv")  const uint64_t N[2] %{$1 := LOOPHOLE($1_name,ADDRESS);%}
-%typemap("m3rawinmode")   const uint64_t N[2] %{%}
-%typemap("m3wrapinmode")  const uint64_t N[2] %{%}
+%typemap("m3rawintype")   const uint64_t N[] %{ADDRESS%}
+%typemap("m3wrapintype")  const uint64_t N[] %{QuadRef%}
+%typemap("m3wrapargraw")  const uint64_t N[] %{$1%}
+%typemap("m3wrapargvar")  const uint64_t N[] %{$1: ADDRESS;%}
+%typemap("m3wrapinconv")  const uint64_t N[] %{$1 := LOOPHOLE($1_name,ADDRESS);%}
+%typemap("m3rawinmode")   const uint64_t N[] %{%}
+%typemap("m3wrapinmode")  const uint64_t N[] %{%}
 
 // ***pointers***
 DoPtrs(LLVMBasicBlockRef,BasicBlockRef);

@@ -325,6 +325,11 @@ PROCEDURE GetDebugLocColumn (Val: ADDRESS; ): C.unsigned_int;
 PROCEDURE AddFunction
   (M: ADDRESS; Name: C.char_star; FunctionTy: ADDRESS; ): ADDRESS;
 
+<* EXTERNAL LLVMGetOrInsertFunction *>
+PROCEDURE GetOrInsertFunction
+  (M: ADDRESS; Name: C.char_star; NameLen: Word.T; FunctionTy: ADDRESS; ):
+  ADDRESS;
+
 <* EXTERNAL LLVMGetNamedFunction *>
 PROCEDURE GetNamedFunction (M: ADDRESS; Name: C.char_star; ): ADDRESS;
 
@@ -1016,6 +1021,9 @@ PROCEDURE ConstRealOfString (RealTy: ADDRESS; Text: C.char_star; ):
 <* EXTERNAL LLVMConstRealOfStringAndSize *>
 PROCEDURE ConstRealOfStringAndSize
   (RealTy: ADDRESS; Text: C.char_star; SLen: C.unsigned_int; ): ADDRESS;
+
+<* EXTERNAL LLVMConstFPFromBits *>
+PROCEDURE ConstFPFromBits (Ty: ADDRESS; N: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL LLVMConstIntGetZExtValue *>
 PROCEDURE ConstIntGetZExtValue (ConstantVal: ADDRESS; ):
@@ -2340,7 +2348,7 @@ PROCEDURE BuildGlobalStringPtr (B: ADDRESS; Str, Name: C.char_star; ):
   ADDRESS;
 
 <* EXTERNAL LLVMGetVolatile *>
-PROCEDURE GetVolatile (MemoryAccessInst: ADDRESS; ): BOOLEAN;
+PROCEDURE GetVolatile (Inst: ADDRESS; ): BOOLEAN;
 
 <* EXTERNAL LLVMSetVolatile *>
 PROCEDURE SetVolatile (MemoryAccessInst: ADDRESS; IsVolatile: BOOLEAN; );

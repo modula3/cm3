@@ -3318,9 +3318,8 @@ PROCEDURE load_integer (self: U; t: IType; READONLY i: Target.Int) =
     Push(self.exprStack, NEW(LvExpr, lVal := lVal));
   END load_integer;
 
-(* use this proc temporarily until we get constquad into core.cpp *)
-PROCEDURE InitExt(realTy : LLVM.TypeRef;
-                  READONLY f : Target.Float) : LLVM.ValueRef =
+<*UNUSED*>PROCEDURE InitExt(realTy : LLVM.TypeRef;
+                            READONLY f : Target.Float) : LLVM.ValueRef =
   VAR
     buf : ARRAY[0..50] OF CHAR;
     size,index : INTEGER;
@@ -3350,16 +3349,9 @@ PROCEDURE ConvertFloat (t: RType; READONLY f: Target.Float): LLVM.ValueRef =
         result := LLVM.ConstReal(realTy, FLOAT(f.fraction, LONGREAL));
       ELSE
         (* extended is 128 bits *)
-        (* fix this.  Put ConstFP128 in llvm c library
-        result := LLVM.ConstFP128(globContext,ADR(f.fraction));
-        latest can take diff types just 128 ? does not need context
-        it checks which type is passed in and produces an approp value
-
-        result := LLVM.ConstFP128(realTy, ADR(f.fraction));
-
-          or in meantime use the string conversion InitExt.
-        *)
-        result := InitExt(realTy, f);
+        result := LLVM.ConstFPFromBits(realTy, ADR(f.fraction));
+        (* or use the string conversion functions but loses precision.
+          result := InitExt(realTy, f); *)
       END;
     END;
     RETURN result;

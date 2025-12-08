@@ -68,16 +68,16 @@ PROCEDURE CreateFile (Builder     : ADDRESS;
                       Directory   : C.char_star;
                       DirectoryLen: Word.T;      ): ADDRESS;
 
-<* EXTERNAL LLVMDIBuilderCreateFileWithCheckSum *>
-PROCEDURE CreateFileWithCheckSum
+<* EXTERNAL LLVMDIBuilderCreateFileWithChecksum *>
+PROCEDURE CreateFileWithChecksum
   (Builder     : ADDRESS;
    Filename    : C.char_star;
    FilenameLen : Word.T;
    Directory   : C.char_star;
    DirectoryLen: Word.T;
    ChecksumKind: C.int (* LLVMChecksumKind *);
-   CheckSum    : C.char_star;
-   CheckSumLen : Word.T;
+   Checksum    : C.char_star;
+   ChecksumLen : Word.T;
    Source      : C.char_star;
    SourceLen   : Word.T;                       ): ADDRESS;
 

@@ -131,37 +131,39 @@ PROCEDURE CreateFile (Builder     : BuilderRef;
     RETURN result;
   END CreateFile;
 
-PROCEDURE CreateFileWithCheckSum (Builder     : BuilderRef;
+PROCEDURE CreateFileWithChecksum (Builder     : BuilderRef;
                                   Filename    : TEXT;
                                   FilenameLen : Word.T;
                                   Directory   : TEXT;
                                   DirectoryLen: Word.T;
                                   ChecksumKind: LLVMChecksumKind;
-                                  CheckSum    : TEXT;
-                                  CheckSumLen : Word.T;
+                                  Checksum    : TEXT;
+                                  ChecksumLen : Word.T;
                                   Source      : TEXT;
                                   SourceLen   : Word.T;           ):
   MetadataRef =
   VAR
-    arg2  : C.char_star;
-    arg4  : C.char_star;
-    arg7  : C.char_star;
-    arg9  : C.char_star;
-    result: MetadataRef;
+    arg2   : C.char_star;
+    arg4   : C.char_star;
+    arg6tmp: C.int;
+    arg7   : C.char_star;
+    arg9   : C.char_star;
+    result : MetadataRef;
   BEGIN
     arg2 := M3toC.SharedTtoS(Filename);
     arg4 := M3toC.SharedTtoS(Directory);
-    arg7 := M3toC.SharedTtoS(CheckSum);
+    arg6tmp := ORD(ChecksumKind);
+    arg7 := M3toC.SharedTtoS(Checksum);
     arg9 := M3toC.SharedTtoS(Source);
-    result := M3DebugInfoRaw.CreateFileWithCheckSum(
-                Builder, arg2, FilenameLen, arg4, DirectoryLen,
-                ChecksumKind, arg7, CheckSumLen, arg9, SourceLen);
+    result := M3DebugInfoRaw.CreateFileWithChecksum(
+                Builder, arg2, FilenameLen, arg4, DirectoryLen, arg6tmp,
+                arg7, ChecksumLen, arg9, SourceLen);
     M3toC.FreeSharedS(Filename, arg2);
     M3toC.FreeSharedS(Directory, arg4);
-    M3toC.FreeSharedS(CheckSum, arg7);
+    M3toC.FreeSharedS(Checksum, arg7);
     M3toC.FreeSharedS(Source, arg9);
     RETURN result;
-  END CreateFileWithCheckSum;
+  END CreateFileWithChecksum;
 
 PROCEDURE CreateModule (Builder        : BuilderRef;
                         ParentScope    : MetadataRef;

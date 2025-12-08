@@ -1164,6 +1164,23 @@ PROCEDURE AddFunction (M: ModuleRef; Name: TEXT; FunctionTy: TypeRef; ):
 
 
 (**
+ * Obtain or insert a function into a module.
+ *
+ * If a function with the specified name already exists in the module, it
+ * is returned. Otherwise, a new function is created in the module with the
+ * specified name and type and is returned.
+ *
+ * The returned value corresponds to a llvm::Function instance.
+ *
+ * @see llvm::Module::getOrInsertFunction()
+ *)
+
+PROCEDURE GetOrInsertFunction
+  (M: ModuleRef; Name: TEXT; NameLen: Word.T; FunctionTy: TypeRef; ):
+  ValueRef;
+
+
+(**
  * Obtain a Function value from a Module by its name.
  *
  * The returned value corresponds to a llvm::Function value.
@@ -2408,6 +2425,15 @@ PROCEDURE ConstRealOfString (RealTy: TypeRef; Text: TEXT; ): ValueRef;
 
 PROCEDURE ConstRealOfStringAndSize
   (RealTy: TypeRef; Text: TEXT; SLen: uint32_t; ): ValueRef;
+
+
+(**
+ * Obtain a constant for a floating point value from array of 64 bit values.
+ * The length of the array N must be ceildiv(bits, 64), where bits is the
+ * scalar size in bits of the floating-point type.
+ *)
+
+PROCEDURE ConstFPFromBits (Ty: TypeRef; N: QuadRef; ): ValueRef;
 
 
 (**
@@ -5121,7 +5147,7 @@ PROCEDURE BuildGlobalString (B: BuilderRef; Str, Name: TEXT; ): ValueRef;
 PROCEDURE BuildGlobalStringPtr (B: BuilderRef; Str, Name: TEXT; ):
   ValueRef;
 
-PROCEDURE GetVolatile (MemoryAccessInst: ValueRef; ): BOOLEAN;
+PROCEDURE GetVolatile (Inst: ValueRef; ): BOOLEAN;
 
 PROCEDURE SetVolatile (MemoryAccessInst: ValueRef; IsVolatile: BOOLEAN; );
 

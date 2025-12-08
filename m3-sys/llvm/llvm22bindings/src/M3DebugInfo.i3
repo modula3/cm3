@@ -124,6 +124,9 @@ TYPE
      DIFixedPointTypeMetadataKind};
 
 
+TYPE LLVMChecksumKind = {CSK_MD5, CSK_SHA1, CSK_SHA256};
+
+
 TYPE
   LLVMDWARFMacinfoRecordType =
     {XXXX_0, DWARFMacinfoRecordTypeDefine, DWARFMacinfoRecordTypeMacro,
@@ -305,16 +308,6 @@ PROCEDURE CreateFile (Builder     : BuilderRef;
                       DirectoryLen: Word.T;     ): MetadataRef;
 
 
-CONST                            (* Enum LLVMChecksumKind *)
-  CSK_MD5    = 0;
-  CSK_SHA1   = 1;
-  CSK_SHA256 = 2;
-  CSK_Last   = 2;
-
-TYPE                             (* Enum LLVMChecksumKind *)
-  LLVMChecksumKind = [0 .. 2];
-
-
 (**
  * Create a file descriptor to hold debugging information for a file.<br>
  * @param Builder      The <code>DIBuilder</code>.<br>
@@ -323,20 +316,20 @@ TYPE                             (* Enum LLVMChecksumKind *)
  * @param Directory    Directory.<br>
  * @param DirectoryLen The length of the C string passed to <code>Directory</code>.<br>
  * @param ChecksumKind The kind of checksum. eg MD5, SHA256<br>
- * <br>
- * <br>
+ * @param Checksum     The checksum.<br>
+ * @param ChecksumLen  The length of the checksum.<br>
  * <br>
  * @param SourceLen    The length of the source.
  *)
 
-PROCEDURE CreateFileWithCheckSum (Builder     : BuilderRef;
+PROCEDURE CreateFileWithChecksum (Builder     : BuilderRef;
                                   Filename    : TEXT;
                                   FilenameLen : Word.T;
                                   Directory   : TEXT;
                                   DirectoryLen: Word.T;
                                   ChecksumKind: LLVMChecksumKind;
-                                  CheckSum    : TEXT;
-                                  CheckSumLen : Word.T;
+                                  Checksum    : TEXT;
+                                  ChecksumLen : Word.T;
                                   Source      : TEXT;
                                   SourceLen   : Word.T;           ):
   MetadataRef;

@@ -697,6 +697,19 @@ PROCEDURE AddFunction (M: ModuleRef; Name: TEXT; FunctionTy: TypeRef; ):
     RETURN result;
   END AddFunction;
 
+PROCEDURE GetOrInsertFunction
+  (M: ModuleRef; Name: TEXT; NameLen: Word.T; FunctionTy: TypeRef; ):
+  ValueRef =
+  VAR
+    arg2  : C.char_star;
+    result: ValueRef;
+  BEGIN
+    arg2 := M3toC.SharedTtoS(Name);
+    result := LLVMRaw.GetOrInsertFunction(M, arg2, NameLen, FunctionTy);
+    M3toC.FreeSharedS(Name, arg2);
+    RETURN result;
+  END GetOrInsertFunction;
+
 PROCEDURE GetNamedFunction (M: ModuleRef; Name: TEXT; ): ValueRef =
   VAR
     arg2  : C.char_star;
@@ -1892,6 +1905,13 @@ PROCEDURE ConstRealOfStringAndSize
     M3toC.FreeSharedS(Text, arg2);
     RETURN result;
   END ConstRealOfStringAndSize;
+
+PROCEDURE ConstFPFromBits (Ty: TypeRef; N: QuadRef; ): ValueRef =
+  VAR arg2: ADDRESS;
+  BEGIN
+    arg2 := LOOPHOLE(N, ADDRESS);
+    RETURN LLVMRaw.ConstFPFromBits(Ty, arg2);
+  END ConstFPFromBits;
 
 PROCEDURE ConstIntGetZExtValue (ConstantVal: ValueRef; ): uint64_t =
   BEGIN
@@ -4578,9 +4598,9 @@ PROCEDURE BuildGlobalStringPtr (B: BuilderRef; Str, Name: TEXT; ):
     RETURN result;
   END BuildGlobalStringPtr;
 
-PROCEDURE GetVolatile (MemoryAccessInst: ValueRef; ): BOOLEAN =
+PROCEDURE GetVolatile (Inst: ValueRef; ): BOOLEAN =
   BEGIN
-    RETURN LLVMRaw.GetVolatile(MemoryAccessInst);
+    RETURN LLVMRaw.GetVolatile(Inst);
   END GetVolatile;
 
 PROCEDURE SetVolatile (MemoryAccessInst: ValueRef; IsVolatile: BOOLEAN; ) =
