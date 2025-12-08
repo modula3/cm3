@@ -259,10 +259,10 @@ enum { /* FPI.rounding values: same as FLT_ROUNDS */
 extern "C" {
 #endif
 
-
 char *m3_ftoa(float f, int mode, int ndigits, int *decpt, int *asign, char **se);
 char *m3_dtoa(double d, int mode, int ndigits, int *decpt, int *asign, char **se);
-char *m3_qtoa(long double V, int mode, int ndigits, int *decpt, int *asign, char **se);
+//char *m3_qtoa(_Float128 V, int mode, int ndigits, int *decpt, int *asign, char **se);
+char *m3_qtoa(void *V, int mode, int ndigits, int *decpt, int *asign, char **se);
 
 float m3_strtof(CONST char *s, char **sp);
 //int m3_strtof(CONST char *s, char **sp, int rounding, float *f);
@@ -440,28 +440,6 @@ static const union {
 #define word1(x) ((U*)&x)->L[_11]
 #define dval(x) ((U*)&x)->d
 #endif
-
-/* old delete
-#ifdef YES_ALIAS
-#define dval(x) x
-#ifdef IEEE_8087
-#define word0(x) ((ULong *)&x)[1]
-#define word1(x) ((ULong *)&x)[0]
-#else
-#define word0(x) ((ULong *)&x)[0]
-#define word1(x) ((ULong *)&x)[1]
-#endif
-#else // !YES_ALIAS
-#ifdef IEEE_8087
-#define word0(x) ((U *)&x)->L[1]
-#define word1(x) ((U *)&x)->L[0]
-#else
-#define word0(x) ((U *)&x)->L[0]
-#define word1(x) ((U *)&x)->L[1]
-#endif
-#define dval(x) ((U *)&x)->d
-#endif // YES_ALIAS
-*/
 
 static const union {
     unsigned long i;
@@ -4258,9 +4236,11 @@ char *g_Qfmt(char *buf, void *V, int ndig, unsigned bufsize) {
   return g__fmt(buf, s, se, decpt, sign);
 }
 
-//char *m3_qtoa(void *V, int mode, int ndigits, int *decpt, int *asign, char **se)
-char *m3_qtoa(long double V, int mode, int ndigits, int *decpt,
-              int *asign, char **se)
+
+char *m3_qtoa(void *V, int mode, int ndigits, int *decpt, int *asign, char **se)
+//problem is MS C compiler doesnt have _Float128 type
+//char *m3_qtoa(_Float128 V, int mode, int ndigits, int *decpt,
+//              int *asign, char **se)
 {
   static FPI fpi = {113, 1 - 16383 - 113 + 1, 32766 - 16383 - 113 + 1, 1, 0};
   char *b, *s;
@@ -4271,8 +4251,9 @@ char *m3_qtoa(long double V, int mode, int ndigits, int *decpt,
     ndigits = 0;
   }
 
-  //L = (ULong *)V;
-  L = (ULong *)&V;
+  L = (ULong *)V;
+  //L = (ULong *)&V; //for float128
+
   sign = L[_0] & 0x80000000L;
   *asign = sign;
 
@@ -4280,6 +4261,7 @@ char *m3_qtoa(long double V, int mode, int ndigits, int *decpt,
   bits[2] = L[_1];
   bits[1] = L[_2];
   bits[0] = L[_3];
+
 
   if ((ex = (L[_0] & 0x7fff0000L) >> 16) != 0) {
     if (ex == 0x7fff) {
@@ -4401,7 +4383,7 @@ int m3_strtoq(CONST char *s, char **sp, int rounding, void *L) {
 /*
    we dont want to return a 16 byte struct, there's possibility of mixup
    in various backends returning structs plus how the c compiler does it
-long double m3_strtoq(CONST char *s, char **sp) {
+_Float128 m3_strtoq(CONST char *s, char **sp) {
   long double q;
   int flags;
   int rounding = FPI_Round_near;

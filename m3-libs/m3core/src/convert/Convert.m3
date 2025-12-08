@@ -469,7 +469,7 @@ PROCEDURE FromExtended
       start := dtoa(FLOAT(v, LONGREAL), mode, precision,
                     ADR(decpt), ADR(sign), ADR(end));
     ELSE
-      start := qtoa(v, mode, precision, ADR(decpt), ADR(sign), ADR(end));
+      start := qtoa(ADR(v), mode, precision, ADR(decpt), ADR(sign), ADR(end));
     END;
     RETURN Format(buf, p, style, decpt, sign, start, end, 'X');
   END FromExtended;
