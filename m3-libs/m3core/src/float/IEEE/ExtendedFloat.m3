@@ -13,27 +13,8 @@ UNSAFE MODULE ExtendedFloat;
    that do not depend on the operating system. *)
 
 IMPORT ExtendedRep AS Rep;
-IMPORT DragonT, FPU, Word, Ctypes, Convert;
+IMPORT DragonT, Word, Ctypes, Convert;
 
-PROCEDURE Sqrt (x: T): T =
-VAR t : EXTENDED;
-  BEGIN
-    RETURN t;
-(*
-  fixme add quadmath to link
-    RETURN FPU.sqrtq(x);
-*)
-  END Sqrt;
-
-PROCEDURE Scalb (x: T; n: INTEGER): T =
-VAR t : EXTENDED;
-  BEGIN
-    RETURN t;
-(*
-  fixme add quadmath to link
-    RETURN FPU.scalbq(x, n);
-*)
-  END Scalb;
 
 PROCEDURE Logb (x: T): T =
   CONST Log_of_zero = Rep.T {sign := 1, exponent := 16_7FFF,
@@ -74,14 +55,15 @@ PROCEDURE ILogb (x: T): INTEGER =
     | IEEEClass.Denormal =>
         IF xx.significand0 = 0 AND 
            xx.significand1 = 0 AND 
-           xx.significand2 = 0
-          THEN v := 16_80000000;  n := - 16383 - 32 -32 -16;  w := xx.significand3;
+           xx.significand2 = 0 THEN
+          v := 16_80000000;  n := - 16383 - 32 -32 -16; w := xx.significand3;
         ELSIF xx.significand0 = 0 AND 
-              xx.significand1 = 0
-          THEN v := 16_80000000;  n := - 16383 -32 -16;  w := xx.significand2;
-        ELSIF xx.significand0 = 0 
-          THEN v := 16_80000000;  n := - 16383 -16;  w := xx.significand1;
-        ELSE v := 16_00008000;  n := - 16383;  w := xx.significand0;
+              xx.significand1 = 0 THEN
+          v := 16_80000000;  n := - 16383 -32 -16;  w := xx.significand2;
+        ELSIF xx.significand0 = 0 THEN
+          v := 16_80000000;  n := - 16383 -16;  w := xx.significand1;
+        ELSE
+          v := 16_00008000;  n := - 16383;  w := xx.significand0;
         END;
         WHILE Word.And (v, w) = 0 DO
           v := Word.RightShift (v, 1);
@@ -245,9 +227,6 @@ PROCEDURE FromDecimal (sign   : [0..1];
     res: T;
     pBuf : REF Convert.Buffer;
   BEGIN
-    (* strategy:  build a C-style null terminated string and
-       call the C runtime library to convert it to binary value. *)
-
     (* Allocate the buffer to hold the digits, the exponent value, and the
        four characters: 1) the leading sign, 2) the decimal point, 3) the 'e'
        character, and 4) the terminating 0 character. *)

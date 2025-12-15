@@ -159,7 +159,6 @@ PROCEDURE Ceiling (READONLY a: Float): INTEGER =
 
 PROCEDURE ToChars (READONLY f: Float;  VAR buf: ARRAY OF CHAR): INTEGER =
   <*FATAL Convert.Failed *>
-(* was 45 orig 31*)
   VAR zz: ARRAY [0..45] OF CHAR;  len: INTEGER;
   BEGIN
     <*ASSERT f.exponent = 0*>
@@ -168,7 +167,6 @@ PROCEDURE ToChars (READONLY f: Float;  VAR buf: ARRAY OF CHAR): INTEGER =
     ELSIF f.pre = Precision.Long THEN
       len := Convert.FromLongFloat (zz, FLOAT(f.fraction, LONGREAL), 13, Convert.Style.Sci);
     ELSE
-(* was 36 *)
       len := Convert.FromExtended (zz, f.fraction, 36, Convert.Style.Sci);
     END;
     IF (len > NUMBER (buf)) THEN RETURN -1 END;

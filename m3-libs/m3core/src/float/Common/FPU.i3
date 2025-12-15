@@ -21,10 +21,4 @@ procedure ldexp--see FPU.i3. *)
 
 <*EXTERNAL sqrt*> PROCEDURE sqrt (x: LONGREAL): LONGREAL;
 
-(*
-<*EXTERNAL ldexpq*>
-PROCEDURE scalbq (x : EXTENDED; n: Ctypes.int) : EXTENDED;
-<*EXTERNAL sqrtq*>
-PROCEDURE sqrtq (x: EXTENDED): EXTENDED;
-*)
 END FPU.

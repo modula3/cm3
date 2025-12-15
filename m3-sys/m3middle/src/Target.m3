@@ -179,8 +179,9 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
     (* add the system-specific customization *)
 
     (* 32bit or 64bit *)
-	IF (TextUtils.StartsWith(system, "ALPHA") OR TextUtils.Contains(system, "64"))
-		AND NOT TextUtils.Contains(system, "32") THEN (* possibly IA64, Alpha *)
+    IF (TextUtils.StartsWith(system, "ALPHA") OR
+        TextUtils.Contains(system, "64")) AND NOT
+        TextUtils.Contains(system, "32") THEN (* possibly IA64, Alpha *)
       Init64();
     ELSIF backend_mode # M3BackendMode_t.C THEN
       (* Change only alignment.  Size is always 64:

@@ -2639,26 +2639,26 @@ CONST intLiteralSuffix = ARRAY CGType OF TEXT {
     NIL, ..     (* 8 REAL 9 LONGREAL A EXTENDED B ADDRESS C STRUCT D void *)
 };
 
-CONST cgtypeToText = ARRAY CGType OF TEXT {
+VAR cgtypeToText := ARRAY CGType OF TEXT {
     Text_uint8,  Text_int8,   (* 0 1 *)
     Text_uint16, Text_int16,  (* 2 3 *)
     Text_uint32, Text_int32,  (* 4 5 *)
     Text_uint64, Text_int64,  (* 6 7 *)
     "float",  (* REAL *)        (* 8 *)
     "double", (* LONGREAL *)    (* 9 *)
-    "_Float128", (* EXTENDED *) (* A *)
+    "EXTENDED", (* EXTENDED *)    (* A *)
     Text_address,               (* B *)
     "STRUCT",                   (* C *)
     "void"                      (* D *)
 };
 
 (* Mainly ADDRESS -> void* to avoid warnings but also cleanups *)
-CONST cgtypeToParamText = ARRAY CGType OF TEXT {
+VAR cgtypeToParamText := ARRAY CGType OF TEXT {
     "unsigned char",  "signed char",
     "unsigned short", "short",
     "unsigned", "int",
     "UINT64", "INT64",
-    "float", "double", "_Float128",
+    "float", "double", "EXTENDED",
     "void*",
     NIL,
     NIL
@@ -3018,13 +3018,8 @@ BEGIN
     self.Type_Init (type);
     EVAL declare_typename_no_replace (self, type.typeid, M3ID.Add ("EXTENDED")); (* TODO remove this *)
     EVAL DeclareTypes_FlushOnce (self);
-    IF BYTESIZE(EXTENDED) = 8 THEN
-    type.base_text := "double"; (* more readable output (fewer hashes) *)
-    type.text := "double"; (* more readable output (fewer hashes) *)
-    ELSE
-    type.base_text := "_Float128"; (* more readable output (fewer hashes) *)
-    type.text := "_Float128"; (* more readable output (fewer hashes) *)
-    END;
+    type.base_text := "EXTENDED"; (* more readable output (fewer hashes) *)
+    type.text := "EXTENDED"; (* more readable output (fewer hashes) *)
 
     (* TODO: We do not have to predeclare BOOLEAN, m3front provides it.
      * But after it is declared, we should find it and rename it.
@@ -4774,19 +4769,56 @@ PROCEDURE HelperFunctions_cvt_int(self: HelperFunctions_t; <*UNUSED*>rtype: RTyp
 CONST text = ARRAY ConvertOp OF TEXT{
 (* ceil below should be ceilq for extended so needs to be ifdefed or
    something so get one version for longreal and another for extended *)
-    "#ifndef m3_round\n#define m3_round m3_round\n"
-    & "#ifdef _WIN32 /* temporary workaround */\n"
-    & "static INT64 __stdcall m3_round(EXTENDED f) { return (INT64)f; }\n"
-    & "#else\n"
-    & "INT64 __cdecl llroundl(long double);\nstatic INT64 __stdcall m3_round(EXTENDED f) { return (INT64)llroundl(f); }\n"
-    & "#endif\n"
-    & "#endif",
+    "#ifndef m3_round\n#define m3_round m3_round\n" &
+    "#ifdef _WIN32 /* temporary workaround */\n" &
+    "static INT64 __stdcall m3_round(EXTENDED f) {\n" &
+    " return (INT64)f; }\n" &
+    "#else\n" &
+    "INT64 __cdecl llroundq(_Float128);\n" &
+    "static INT64 __stdcall m3_round(EXTENDED f) {\n" &
+    " return (INT64)llroundq(f); }\n" &
+    "#endif\n" &
+    "#endif", 
 
-    "#ifndef m3_trunc\n#define m3_trunc m3_trunc\nstatic INT64 __stdcall m3_trunc(EXTENDED f) { return (INT64)f; }\n#endif\n",
+    "#ifndef m3_trunc\n" &
+    "#define m3_trunc m3_trunc\n" &
+    "#ifdef _WIN32\n" &
+    "double __cdecl trunc(double);\n" &
+    "static INT64 __stdcall m3_trunc(EXTENDED f) {\n" &
+    " return (INT64)trunc(f); }\n" &
+    "#else\n" &
+    "_Float128 __cdecl truncq(_Float128);\n" &
+    "static INT64 __stdcall m3_trunc(EXTENDED f) {\n" &
+    " return (INT64)truncq(f); }\n" &
+    "#endif\n" &
+    "#endif", 
 
-    "#ifndef m3_floor\n#define m3_floor m3_floor\ndouble __cdecl floor(double);\nstatic INT64 __stdcall m3_floor(EXTENDED f) { return floor(f); } /* math.h */\n#endif\n",
+    "#ifndef m3_floor\n" &
+    "#define m3_floor m3_floor\n" &
+    "#ifdef _WIN32\n" &
+    "double __cdecl floor(double);\n" &
+    "static INT64 __stdcall m3_floor(EXTENDED f) {\n" &
+    " return (INT64)floor(f); }\n" &
+    "#else\n" &
+    "_Float128 __cdecl floorq(_Float128);\n" &
+    "static INT64 __stdcall m3_floor(EXTENDED f) {\n" &
+    " return (INT64)floorq(f); }\n" &
+    "#endif\n" &
+    "#endif", 
 
-    "#ifndef m3_ceil\n#define m3_ceil m3_ceil\ndouble __cdecl ceil(double);\nstatic INT64 __stdcall m3_ceil(EXTENDED f) { return ceil(f); } /* math.h */\n#endif\n"
+    "#ifndef m3_ceil\n" &
+    "#define m3_ceil m3_ceil\n" &
+    "#ifdef _WIN32\n" &
+    "double __cdecl ceil(double);\n" &
+    "static INT64 __stdcall m3_ceil(EXTENDED f) {\n" &
+    " return (INT64)ceil(f); }\n" &
+    "#else\n" &
+    "_Float128 __cdecl ceilq(_Float128);\n" &
+    "static INT64 __stdcall m3_ceil(EXTENDED f) {\n" &
+    " return (INT64)ceilq(f); }\n" &
+    "#endif\n" &
+    "#endif" 
+
     };
 BEGIN
     HelperFunctions_helper_with_boolean(self, self.data.cvt_int[op], text[op]);
@@ -5951,11 +5983,7 @@ BEGIN
         ELSIF ch = 'x' OR ch = 'X' THEN
             (* suffix := 'L'; if actually using long double *)
             (* suffix := 'Q'; if actually using _Float128 *)
-            IF BYTESIZE(EXTENDED) = 8 THEN
-            suffix := '\000';
-            ELSE
             suffix := 'Q';
-            END;
             ch := 'e';
         END;
         cBuf[j] := ch;
@@ -8174,4 +8202,5 @@ BEGIN
     debug := debug OR debug_verbose OR debug_types OR RTParams.IsPresent ("m3c-debug");
     debug_comment_stdio := debug_comment_stdio OR RTParams.IsPresent ("m3c-debug-comment-stdio");
     debug_comment := debug_comment OR debug_comment_stdio OR debug_types OR debug OR debug_verbose OR RTParams.IsPresent ("m3c-debug-comment");
+
 END M3C.
