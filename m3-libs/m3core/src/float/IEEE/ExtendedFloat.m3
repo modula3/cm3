@@ -15,6 +15,16 @@ UNSAFE MODULE ExtendedFloat;
 IMPORT ExtendedRep AS Rep;
 IMPORT DragonT, Word, Ctypes, Convert;
 
+(* Users needing scalb or sqrt should consult QuadMath.i3 in libm3 *)
+PROCEDURE Scalb (x : T; n: INTEGER) : T = <* NOWARN *>
+  BEGIN
+    <* ASSERT FALSE *>
+  END Scalb;
+
+PROCEDURE Sqrt (x: T): T = <* NOWARN *>
+  BEGIN
+    <* ASSERT FALSE *>
+  END Sqrt;
 
 PROCEDURE Logb (x: T): T =
   CONST Log_of_zero = Rep.T {sign := 1, exponent := 16_7FFF,
