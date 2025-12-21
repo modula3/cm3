@@ -2582,6 +2582,10 @@ CONST Prefix = ARRAY OF TEXT {
 "#define LONGREAL LONGREAL",
 "#define EXTENDED EXTENDED",
 
+"#include <cmath>",
+"#define Infinity INFINITY",
+"#define NaN NAN",
+
 "typedef float REAL;",
 "typedef double LONGREAL;",
 "# if defined(_MSC_VER)",
