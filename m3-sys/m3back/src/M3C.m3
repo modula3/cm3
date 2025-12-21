@@ -2577,6 +2577,10 @@ CONST Prefix = ARRAY OF TEXT {
 "# endif",
 "#endif",
 
+"#include <cmath>",
+"#define Infinity INFINITY",
+"#define NaN NAN",
+
 "#define REAL REAL",
 "#define LONGREAL LONGREAL",
 "#define EXTENDED EXTENDED",
