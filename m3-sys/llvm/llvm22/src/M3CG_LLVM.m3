@@ -673,7 +673,7 @@ TYPE
 VAR
   modRef     : LLVM.ModuleRef     := NIL;
   builderIR  : LLVM.BuilderRef;
-  globContext: LLVM.ContextRef;
+  ctx        : LLVM.ContextRef;
   moduleID   : TEXT;
   targetData : LLVM.TargetDataRef;
 
@@ -689,15 +689,21 @@ VAR
   AdrTy      : LLVM.TypeRef;     (* llvm i8* *)
   AdrAdrTy   : LLVM.TypeRef;     (* llvm i8** *)
   AdrAdrAdrTy: LLVM.TypeRef;     (* llvm i8*** *)
+  I8Type     : LLVM.TypeRef;     (* Byte type *)
+  I16Type    : LLVM.TypeRef;     (* 2 Byte type *)
+  I32Type    : LLVM.TypeRef;     (* 4 Byte type *)
+  I64Type    : LLVM.TypeRef;     (* 8 Byte type *)
 
-  i8Type                  := LLVM.Int8Type(); (* Byte type *)
-  wordSize: LLVM.ValueRef;       (* no of bits in word as llvm value *)
-  byteSize: LLVM.ValueRef;       (* no of bytes in word as llvm value *)
+  FltType    : LLVM.TypeRef;     (* float type *)
+  DblType    : LLVM.TypeRef;     (* double type *)
+  FP128Type  : LLVM.TypeRef;     (* fp128 type *)
 
   (* EXTENDED type is same size as Target extended which is usually double.  It
      will use 128 bit quad precision floating point if target upgrades*)
   ExtendedType: LLVM.TypeRef;
   ExtendedSize: INTEGER;
+  wordSize: LLVM.ValueRef;       (* no of bits in word as llvm value *)
+  byteSize: LLVM.ValueRef;       (* no of bytes in word as llvm value *)
 
   llvmByval := TRUE;             (* whether we do the copy ourselves or add the
                                     'byval' attribute to functions so that llvm
@@ -965,16 +971,16 @@ PROCEDURE TypeSize (t: Type): CARDINAL =
 PROCEDURE LLvmType (t: Type): LLVM.TypeRef =
   BEGIN
     CASE t OF
-    | Type.Int8, Type.Word8 => RETURN LLVM.Int8Type();
-    | Type.Int16, Type.Word16 => RETURN LLVM.Int16Type();
-    | Type.Int32, Type.Word32 => RETURN LLVM.Int32Type();
-    | Type.Int64, Type.Word64 => RETURN LLVM.Int64Type();
-    | Type.Reel => RETURN LLVM.FloatType();
-    | Type.LReel => RETURN LLVM.DoubleType();
+    | Type.Int8, Type.Word8 => RETURN I8Type;
+    | Type.Int16, Type.Word16 => RETURN I16Type;
+    | Type.Int32, Type.Word32 => RETURN I32Type;
+    | Type.Int64, Type.Word64 => RETURN I64Type;
+    | Type.Reel => RETURN FltType;
+    | Type.LReel => RETURN DblType;
     | Type.XReel => RETURN ExtendedType;
     | Type.Addr => RETURN AdrTy;
     | Type.Struct => RETURN AdrTy; (* never called *)
-    | Type.Void => RETURN LLVM.VoidType();
+    | Type.Void => RETURN LLVM.VoidTypeInContext(ctx);
     END;
   END LLvmType;
 
@@ -993,9 +999,9 @@ PROCEDURE StructType (self: U; size: ByteSize): LLVM.TypeRef =
       structTy := NARROW(structRef, LvStruct).struct;
     ELSE
       elemRef := NewTypeArr(elemArr, numElems);
-      arrTy := LLVM.ArrayType(i8Type, size);
+      arrTy := LLVM.ArrayType(I8Type, size);
       elemArr[0] := arrTy;
-      structTy := LLVM.StructCreateNamed(globContext, "struct");
+      structTy := LLVM.StructCreateNamed(ctx, "struct");
       LLVM.StructSetBody(structTy, elemRef, numElems, FALSE);
       (* save the type *)
       structRef := NEW(LvStruct, struct := structTy);
@@ -1029,7 +1035,7 @@ PROCEDURE EnumAttr (name: TEXT; val: LONGINT := 0L): LLVM.AttributeRef =
   BEGIN
     (* names are like nest, or sext*)
     attrKind := LLVM.GetEnumAttributeKindForName(name, Text.Length(name));
-    RETURN LLVM.CreateEnumAttribute(globContext, attrKind, val);
+    RETURN LLVM.CreateEnumAttribute(ctx, attrKind, val);
   END EnumAttr;
 
 PROCEDURE TypeAttr (name: TEXT; type: LLVM.TypeRef): LLVM.AttributeRef =
@@ -1037,7 +1043,7 @@ PROCEDURE TypeAttr (name: TEXT; type: LLVM.TypeRef): LLVM.AttributeRef =
   BEGIN
     (* names are like byval*)
     attrKind := LLVM.GetEnumAttributeKindForName(name, Text.Length(name));
-    RETURN LLVM.CreateTypeAttribute(globContext, attrKind, type);
+    RETURN LLVM.CreateTypeAttribute(ctx, attrKind, type);
   END TypeAttr;
 
 PROCEDURE SetBBVolatile (bb: LLVM.BasicBlockRef) =
@@ -1066,14 +1072,17 @@ PROCEDURE ITEInit (self: ITEObj): ITEObj =
 
     WITH cp = self.curObj.curProc.lvProc DO
       IF self.beforeBB = NIL THEN
-        self.exitBB := LLVM.AppendBasicBlock(cp, self.opName & "_end");
+        self.exitBB := LLVM.AppendBasicBlockInContext(ctx, cp,
+                                                      self.opName & "_end");
       ELSE
         (* nested if-then-else blocks *)
-        self.exitBB :=
-          LLVM.InsertBasicBlock(self.beforeBB, self.opName & "_end");
+        self.exitBB := LLVM.InsertBasicBlockInContext(ctx, self.beforeBB,
+                                                      self.opName & "_end");
       END;
-      self.elseBB := LLVM.InsertBasicBlock(self.exitBB, self.opName & "_else");
-      self.thenBB := LLVM.InsertBasicBlock(self.elseBB, self.opName & "_then");
+      self.elseBB := LLVM.InsertBasicBlockInContext(ctx, self.exitBB,
+                                                    self.opName & "_else");
+      self.thenBB := LLVM.InsertBasicBlockInContext(ctx, self.elseBB,
+                                                    self.opName & "_then");
     END;
     LLVM.PositionBuilderAtEnd(builderIR, self.curBB);
     EVAL LLVM.BuildCondBr(builderIR, self.cmpVal, self.thenBB, self.elseBB);
@@ -1127,18 +1136,17 @@ PROCEDURE EmbedVersion () =
       1, (*OUT*) paramsArr, (*OUT*) paramsMetadata);
     versions := "versions- cm3: " & cm3Ver & " llvm: " & llvmVer;
 
-    verMD := LLVM.MDStringInContext2(globContext, versions,
-                                     Text.Length(versions));
+    verMD := LLVM.MDStringInContext2(ctx, versions, Text.Length(versions));
 (*
   bug in llvm cannot add strings as metadata in asserts build
 fix is add || isa<MDString>(MD) to line 1093 of Core.cpp after ConstantAsMetadata thing. 
-    lVal := LLVM.MetadataAsValue(globContext, verMD);
+    lVal := LLVM.MetadataAsValue(ctx, verMD);
     LLVM.AddNamedMetadataOperand(modRef, ident, lVal);
 however the workaround is this
 *)
     paramsArr[0] := verMD; 
-    identMD := LLVM.MDNodeInContext2(globContext, paramsMetadata.Data, 1);
-    lVal := LLVM.MetadataAsValue(globContext, identMD);
+    identMD := LLVM.MDNodeInContext2(ctx, paramsMetadata.Data, 1);
+    lVal := LLVM.MetadataAsValue(ctx, identMD);
     LLVM.AddNamedMetadataOperand(modRef, ident, lVal);
   END EmbedVersion;
 
@@ -1146,8 +1154,8 @@ PROCEDURE FloatType (t: RType): LLVM.TypeRef =
   VAR res: LLVM.TypeRef;
   BEGIN
     CASE t OF
-    | Type.Reel => res := LLVM.FloatType();
-    | Type.LReel => res := LLVM.DoubleType();
+    | Type.Reel => res := FltType;
+    | Type.LReel => res := DblType;
     | Type.XReel => res := ExtendedType;
     END;
     RETURN res;
@@ -1181,7 +1189,7 @@ PROCEDURE IntrinsicFuncCall (m3Id      : M3Intrinsic;
         LLVM.LookupIntrinsicID(IA[m3Id].name, Text.Length(IA[m3Id].name));
       IA[m3Id].id := intrinId;
     END;
-    fnTy := LLVM.IntrinsicGetType(globContext, intrinId, types, numParms);
+    fnTy := LLVM.IntrinsicGetType(ctx, intrinId, types, numParms);
     fn := LLVM.GetIntrinsicDeclaration(modRef, intrinId, types, numParms);
     res := LLVM.BuildCall2(builderIR, fnTy, fn, params, numParms, fnName);
     RETURN res;
@@ -1405,16 +1413,25 @@ PROCEDURE set_error_handler
 PROCEDURE begin_unit (self: U; optimize: INTEGER) =
   BEGIN
     self.optLevel := optimize;
-    globContext := LLVM.GetGlobalContext();
-    builderIR := LLVM.CreateBuilderInContext(globContext);
+    ctx := LLVM.ContextCreate();
+    builderIR := LLVM.CreateBuilderInContext(ctx);
 
     targetData := LLVM.CreateTargetData(self.dataRep);
     ptrBytes := LLVM.PointerSize(targetData);
-    IntPtrTy := LLVM.IntPtrType(targetData);
+
+    I8Type    := LLVM.Int8TypeInContext(ctx);
+    I16Type   := LLVM.Int16TypeInContext(ctx);
+    I32Type   := LLVM.Int32TypeInContext(ctx);
+    I64Type   := LLVM.Int64TypeInContext(ctx);
+    FltType   := LLVM.FloatTypeInContext(ctx);
+    DblType   := LLVM.DoubleTypeInContext(ctx);
+    FP128Type := LLVM.FP128TypeInContext(ctx);
+    IntPtrTy  := LLVM.IntPtrTypeInContext(ctx, targetData);
     PtrTy := LLVM.PointerType(IntPtrTy);
-    AdrTy := LLVM.PointerType(LLVM.Int8Type());
+    AdrTy := LLVM.PointerType(I8Type);
     AdrAdrTy := LLVM.PointerType(AdrTy);
     AdrAdrAdrTy := LLVM.PointerType(AdrAdrTy);
+
     ptrBits := LLVM.SizeOfTypeInBits(targetData, PtrTy);
     intBits := LLVM.SizeOfTypeInBits(targetData, IntPtrTy);
     widecharBytes := 2;          (* May change. *)
@@ -1423,9 +1440,9 @@ PROCEDURE begin_unit (self: U; optimize: INTEGER) =
     byteSize := LLVM.ConstInt(IntPtrTy, VAL(ptrBytes, LONGINT), TRUE);
     ExtendedSize := Target.Extended.size;
     IF ExtendedSize = 64 THEN
-      ExtendedType := LLVM.DoubleType();
+      ExtendedType := DblType;
     ELSIF ExtendedSize = 128 THEN
-      ExtendedType := LLVM.FP128Type();
+      ExtendedType := FP128Type;
     ELSE
       <* ASSERT FALSE *>
     END;
@@ -1497,7 +1514,7 @@ PROCEDURE set_source_file (self: U; file: TEXT) =
     IF modRef = NIL THEN
       self.curFile := file;
       moduleID := file;
-      modRef := LLVM.ModuleCreateWithNameInContext(moduleID, globContext);
+      modRef := LLVM.ModuleCreateWithNameInContext(moduleID, ctx);
       LLVM.SetDataLayout(modRef, self.dataRep);
       LLVM.SetTarget(modRef, self.targetTriple);
 
@@ -1787,27 +1804,6 @@ PROCEDURE declare_object (self               : U;
       objectRef.objSize := field_size;
     END;
 
-(* dont need all this when fieldoffset change is included *)
-(*
-    found := self.debugTable.get(super, (*OUT*) superObj);
-    IF found THEN
-      IF ISTYPE(superObj, ObjectDebug) THEN
-        parentRef := NARROW(superObj, ObjectDebug);
-        (* keep cumulative total of object field_size *)
-        INC(objectRef.objSize, parentRef.objSize);
-      ELSIF ISTYPE(superObj, OpaqueDebug) THEN
-        IF objectRef.fieldOffset > 0 THEN
-          objectRef.objSize := VAL(objectRef.fieldOffset, LONGINT) +
-                                   objectRef.bitSize;
-        END;
-      ELSE
-        <*ASSERT FALSE*>
-      END;
-    ELSE
-      <*ASSERT FALSE*>  (* Super not found *)
-    END;
-*)
-
     EVAL self.debugTable.put(t, objectRef);
     self.debugObj := objectRef;  (* keep for the fields and methods *)
   END declare_object;
@@ -1958,12 +1954,12 @@ PROCEDURE declare_segment (self: U; n: Name; m3t: TypeUID; is_const: BOOLEAN):
       (* RMB: The name of the global data segment is the only name we can depend
          on getting to identify the module, so use it here. *)
       IF modRef = NIL THEN
-        modRef := LLVM.ModuleCreateWithNameInContext(segName, globContext);
+        modRef := LLVM.ModuleCreateWithNameInContext(segName, ctx);
       END;
     END;
 
     (* create an opaque struct type *)
-    v.lvType := LLVM.StructCreateNamed(globContext, segName & "_struct");
+    v.lvType := LLVM.StructCreateNamed(ctx, segName & "_struct");
     v.lv := LLVM.AddGlobal(modRef, v.lvType, segName);
     IF is_const THEN
       LLVM.SetGlobalConstant(v.lv, TRUE);
@@ -2012,7 +2008,7 @@ PROCEDURE declare_global (             self            : U;
 
     IF inited THEN
       (* this global is more like a segment and can expect inits *)
-      v.lvType := LLVM.StructCreateNamed(globContext, globName & "_struct");
+      v.lvType := LLVM.StructCreateNamed(ctx, globName & "_struct");
     END;
     v.lv := LLVM.AddGlobal(modRef, v.lvType, globName);
     LLVM.SetInitializer(v.lv, Zero(v.lvType));
@@ -2258,11 +2254,12 @@ PROCEDURE end_init (self: U; v: Var) =
       | VarVar (v) => v.lvTy := AdrTy;
       | TextVar (v) =>
           (* dont zero terminate the string *)
-          v.lvVal := LLVM.ConstString(v.value, Text.Length(v.value), TRUE);
+          v.lvVal := LLVM.ConstStringInContext(ctx, v.value,
+                                               Text.Length(v.value), TRUE);
           v.lvTy := LLVM.TypeOf(v.lvVal);
       | FloatVar (v) => v.lvTy := LLvmType(v.prec);
       | LabelVar (v) => v.lvTy := AdrTy;
-      | OfsVar (v) => v.lvTy := LLVM.Int64Type();
+      | OfsVar (v) => v.lvTy := I64Type;
       ELSE
         <* ASSERT FALSE *>
       END;
@@ -2274,7 +2271,7 @@ PROCEDURE end_init (self: U; v: Var) =
       (* add a filler *)
       IF fillLen > 0 THEN
         fillVar := NEW(FillerVar);
-        fillVar.lvTy := LLVM.ArrayType(i8Type, fillLen);
+        fillVar.lvTy := LLVM.ArrayType(I8Type, fillLen);
         INC(thisOfs, fillLen);
         PushRev(newInits, fillVar);
       END;
@@ -2287,7 +2284,7 @@ PROCEDURE end_init (self: U; v: Var) =
       fillLen := thisVar.size - thisOfs;
       INC(thisOfs, fillLen);
       fillVar := NEW(FillerVar);
-      fillVar.lvTy := LLVM.ArrayType(i8Type, fillLen);
+      fillVar.lvTy := LLVM.ArrayType(I8Type, fillLen);
       PushRev(newInits, fillVar);
     END;
 
@@ -2546,10 +2543,10 @@ PROCEDURE begin_procedure (self: U; p: Proc) =
 
     (* Create the entry and second basic blocks. *)
     proc.entryBB :=
-      LLVM.AppendBasicBlockInContext(globContext, self.curProc.lvProc, "entry");
+      LLVM.AppendBasicBlockInContext(ctx, self.curProc.lvProc, "entry");
     (* ^For stuff we generate: alloca's, display build, etc. *)
     proc.secondBB := LLVM.AppendBasicBlockInContext(
-                       globContext, self.curProc.lvProc, "second");
+                       ctx, self.curProc.lvProc, "second");
     (* ^For m3-coded operations. *)
     LLVM.PositionBuilderAtEnd(builderIR, proc.entryBB);
     (* Allocate and store parameters to memory. *)
@@ -2902,7 +2899,8 @@ PROCEDURE BuildCmp (             self: U;
 
     label.cmpInstr := cmpVal;
     label.elseBB :=
-      LLVM.AppendBasicBlock(self.curProc.lvProc, "else_" & ItoT(l));
+      LLVM.AppendBasicBlockInContext(
+       ctx, self.curProc.lvProc, "else_" & ItoT(l));
     EVAL LLVM.BuildCondBr(builderIR, cmpVal, label.labBB, label.elseBB);
     (* if mdbuilder::createBranchWeights was an api and condbr is extended to
        have weights as the last parm then could use frequency to do this weights
@@ -2966,7 +2964,8 @@ PROCEDURE GetLabel (self: U; l: Label; name: TEXT): LabelObj =
       EVAL self.labelTable.put(l, label);
     END;
     IF label.labBB = NIL THEN
-      label.labBB := LLVM.AppendBasicBlock(self.curProc.lvProc, name);
+      label.labBB := LLVM.AppendBasicBlockInContext(
+                       ctx, self.curProc.lvProc, name);
     END;
     RETURN label;
   END GetLabel;
@@ -3042,7 +3041,7 @@ PROCEDURE Gep
   BEGIN
     paramsRef := NewValueArr(paramsArr, numParams);
     paramsArr[0] := ofs;
-    ty := i8Type;                (* type will always be a byte offset *)
+    ty := I8Type;                (* type will always be a byte offset *)
 
     (* Front end will always have precluded out-of-bounds references, so we can
        assert inbounds to llvm. *)
@@ -3059,7 +3058,7 @@ PROCEDURE BuildGep (src: LLVM.ValueRef; ofs: ByteOffset; textName: TEXT := ""):
   LLVM.ValueRef =
   VAR gepVal, offset: LLVM.ValueRef;
   BEGIN
-    offset := LLVM.ConstInt(LLVM.Int64Type(), VAL(ofs, LONGINT), TRUE);
+    offset := LLVM.ConstInt(I64Type, VAL(ofs, LONGINT), TRUE);
     gepVal := Gep(src, offset, FALSE, textName);
     RETURN gepVal;
   END BuildGep;
@@ -3071,7 +3070,7 @@ PROCEDURE BuildDisplayGep
   VAR gepVal, offset: LLVM.ValueRef;
   BEGIN
     offset :=
-      LLVM.ConstInt(LLVM.Int64Type(), VAL(ofs * ptrBytes, LONGINT), TRUE);
+      LLVM.ConstInt(I64Type, VAL(ofs * ptrBytes, LONGINT), TRUE);
     gepVal := Gep(src, offset, FALSE, textName);
     RETURN gepVal;
   END BuildDisplayGep;
@@ -3079,7 +3078,7 @@ PROCEDURE BuildDisplayGep
 PROCEDURE BuildConstGep (src: LLVM.ValueRef; ofs: ByteOffset): LLVM.ValueRef =
   VAR gepVal, offset: LLVM.ValueRef;
   BEGIN
-    offset := LLVM.ConstInt(LLVM.Int64Type(), VAL(ofs, LONGINT), TRUE);
+    offset := LLVM.ConstInt(I64Type, VAL(ofs, LONGINT), TRUE);
     gepVal := Gep(src, offset, TRUE);
     RETURN gepVal;
   END BuildConstGep;
@@ -3546,7 +3545,7 @@ PROCEDURE IntAbs (a: LLVM.ValueRef; t: LLVM.TypeRef): LLVM.ValueRef =
     intMinPoison: LLVM.ValueRef;
   BEGIN
     (* if a is INT_MIN then result is INT_MIN not a poison value *)
-    intMinPoison := LLVM.ConstInt(LLVM.Int1Type(), 0L, TRUE);
+    intMinPoison := LLVM.ConstInt(LLVM.Int1TypeInContext(ctx), 0L, TRUE);
     paramsRef := NewValueArr(paramsArr, numParams);
     paramsArr[0] := a;
     paramsArr[1] := intMinPoison;
@@ -3732,9 +3731,12 @@ PROCEDURE GenDivMod (self                                  : U;
     tmpVar := self.declare_temp(size, size, t, TRUE);
     res := LLVM.BuildStore(builderIR, storeVal, tmpVar.lv);
 
-    thenBB := LLVM.AppendBasicBlock(self.curProc.lvProc, "divmod_then");
-    elseBB := LLVM.AppendBasicBlock(self.curProc.lvProc, "divmod_else");
-    exitBB := LLVM.AppendBasicBlock(self.curProc.lvProc, "divmod_end");
+    thenBB := LLVM.AppendBasicBlockInContext(
+                ctx, self.curProc.lvProc, "divmod_then");
+    elseBB := LLVM.AppendBasicBlockInContext(
+                ctx, self.curProc.lvProc, "divmod_else");
+    exitBB := LLVM.AppendBasicBlockInContext(
+                ctx, self.curProc.lvProc, "divmod_end");
     LLVM.PositionBuilderAtEnd(builderIR, curBB);
     (* check if mod is zero *)
     cmpVal := LLVM.BuildICmp(builderIR, LLVM.IntPredicate.LLVMIntEQ, modVal,
@@ -4190,13 +4192,12 @@ PROCEDURE widen (self: U; sign: BOOLEAN) =
   VAR
     s0                     := Get(self.exprStack, 0);
     a, lVal: LLVM.ValueRef;
-    Int64Ty                := LLVM.Int64Type();
   BEGIN
     a := NARROW(s0, LvExpr).lVal;
     IF sign THEN
-      lVal := LLVM.BuildSExt(builderIR, a, Int64Ty, "widen");
+      lVal := LLVM.BuildSExt(builderIR, a, I64Type, "widen");
     ELSE
-      lVal := LLVM.BuildZExt(builderIR, a, Int64Ty, "widen");
+      lVal := LLVM.BuildZExt(builderIR, a, I64Type, "widen");
     END;
     NARROW(s0, LvExpr).lVal := lVal;
   END widen;
@@ -4205,11 +4206,10 @@ PROCEDURE chop (self: U) =
   (* s0.I32 := Word.And (s0.I64, 16_ffffffff); *)
   VAR
     s0                     := Get(self.exprStack, 0);
-    Int32Ty                := LLVM.Int32Type();
     a, lVal: LLVM.ValueRef;
   BEGIN
     a := NARROW(s0, LvExpr).lVal;
-    lVal := LLVM.BuildTrunc(builderIR, a, Int32Ty, "chop");
+    lVal := LLVM.BuildTrunc(builderIR, a, I32Type, "chop");
     NARROW(s0, LvExpr).lVal := lVal;
   END chop;
 
@@ -4478,7 +4478,7 @@ PROCEDURE copy (self: U; n: INTEGER; t: MType; overlap: BOOLEAN) =
 
 PROCEDURE DoMemZero (dest, len: LLVM.ValueRef; align: INTEGER) =
   BEGIN
-    EVAL LLVM.BuildMemSet(builderIR, dest, Zero(i8Type), len, align);
+    EVAL LLVM.BuildMemSet(builderIR, dest, Zero(I8Type), len, align);
   END DoMemZero;
 
 PROCEDURE zero_n (self: U; <* UNUSED *> u: IType; t: MType) =
@@ -4492,7 +4492,7 @@ PROCEDURE zero_n (self: U; <* UNUSED *> u: IType; t: MType) =
     dest := NARROW(s1, LvExpr).lVal;
     len := NARROW(s0, LvExpr).lVal;
     align := TypeSize(t);
-    sizeVal := LLVM.ConstInt(LLVM.Int64Type(), VAL(align, LONGINT), TRUE);
+    sizeVal := LLVM.ConstInt(I64Type, VAL(align, LONGINT), TRUE);
     len := LLVM.BuildNSWMul(builderIR, len, sizeVal, "zero_mul");
     DoMemZero(dest, len, align);
     Pop(self.exprStack, 2);
@@ -4725,8 +4725,10 @@ PROCEDURE DoCheck
   BEGIN
     cmpVal := LLVM.BuildICmp(builderIR, pred, a, b, "checkcmp");
     curBB := LLVM.GetInsertBlock(builderIR);
-    errorBB := LLVM.AppendBasicBlock(self.curProc.lvProc, "abort_");
-    exitBB := LLVM.AppendBasicBlock(self.curProc.lvProc, "checkok_");
+    errorBB := LLVM.AppendBasicBlockInContext(
+                 ctx, self.curProc.lvProc, "abort_");
+    exitBB := LLVM.AppendBasicBlockInContext(
+                ctx, self.curProc.lvProc, "checkok_");
 
     LLVM.PositionBuilderAtEnd(builderIR, curBB);
     brVal := LLVM.BuildCondBr(builderIR, cmpVal, errorBB, exitBB);
@@ -4840,7 +4842,7 @@ PROCEDURE add_offset (self: U; i: INTEGER) =
     a, b: LLVM.ValueRef;
   BEGIN
     a := NARROW(s0, LvExpr).lVal;
-    b := LLVM.ConstInt(LLVM.Int64Type(), VAL(i, LONGINT), TRUE);
+    b := LLVM.ConstInt(I64Type, VAL(i, LONGINT), TRUE);
     NARROW(s0, LvExpr).lVal := Gep(a, b, FALSE);
   END add_offset;
 
@@ -4965,7 +4967,7 @@ PROCEDURE call_invoke_direct (             self         : U;
          the input is front-end-generated for a jmpbuf. *)
       arg := Get(self.callStack);
       Pop(self.callStack);
-      lVal := LLVM.BuildArrayAlloca(builderIR, i8Type, arg.lVal, "jmpbuf_size");
+      lVal := LLVM.BuildArrayAlloca(builderIR, I8Type, arg.lVal, "jmpbuf_size");
       Push(self.exprStack, NEW(LvExpr, lVal := lVal));
       self.callState := callStateTyp.outside;
       RETURN;
@@ -5019,7 +5021,7 @@ PROCEDURE call_invoke_direct (             self         : U;
       lVal := LLVM.BuildCall2(builderIR, calleeProc.procTy, fn, paramsRef,
                               passedParamsCt, returnName);
     ELSE
-      then_tmp := LLVM.CreateBasicBlockInContext(globContext, "invoke_tmp");
+      then_tmp := LLVM.CreateBasicBlockInContext(ctx, "invoke_tmp");
       catchLab := self.getLabel(handler, "catch_" & ItoT(handler));
       (* tag the catch label so that no jumps can be made to it.  See set_label
          try raise e except pattern needs this flag *)
@@ -5076,8 +5078,8 @@ PROCEDURE landing_pad
     typesRef := NewTypeArr(typesArr, 2);
     (* this should always be ptr ie address *)
     typesArr[0] := LLvmType(t);
-    typesArr[1] := LLVM.Int32Type();
-    landingTy := LLVM.StructType(typesRef, 2, FALSE);
+    typesArr[1] := I32Type;
+    landingTy := LLVM.StructTypeInContext(ctx, typesRef, 2, FALSE);
 
     landingVal :=
       LLVM.BuildLandingPad(builderIR, landingTy, self.persFn, 1, "lpad");
@@ -5089,9 +5091,9 @@ PROCEDURE landing_pad
         INC(self.catchId);
         name :=
           "__" & Pathname.LastBase(self.curFile) & "_Exc_" & ItoT(self.catchId);
-        catchVal := LLVM.AddGlobal(modRef, LLVM.Int64Type(), name);
+        catchVal := LLVM.AddGlobal(modRef, I64Type, name);
         uidVal :=
-          LLVM.ConstInt(LLVM.Int64Type(), VAL(catches[i], LONGINT), TRUE);
+          LLVM.ConstInt(I64Type, VAL(catches[i], LONGINT), TRUE);
         LLVM.SetInitializer(catchVal, uidVal);
         LLVM.SetGlobalConstant(catchVal, TRUE);
         LLVM.SetLinkage(catchVal, LLVM.Linkage.LLVMInternalLinkage);
@@ -5199,7 +5201,7 @@ PROCEDURE InnerCallIndirect (             self         : U;
           LLVM.BuildInvoke2(builderIR, funcTy, callVal, paramsRef, numFormals,
                             merge, catchLab.labBB, returnName);
       ELSE
-        then_tmp := LLVM.CreateBasicBlockInContext(globContext, "invoke_tmp");
+        then_tmp := LLVM.CreateBasicBlockInContext(ctx, "invoke_tmp");
         resultVal :=
           LLVM.BuildInvoke2(builderIR, funcTy, callVal, paramsRef, numFormals,
                             then_tmp, catchLab.labBB, returnName);
@@ -5292,7 +5294,8 @@ PROCEDURE call_invoke_indirect (self         : U;
         and is non-NIL, and paramStack, minus the SL if any, is otherwise
         correct for the call. *)
 
-      mergeBB := LLVM.AppendBasicBlock(self.curProc.lvProc, "indir_sl_merge");
+      mergeBB := LLVM.AppendBasicBlockInContext(
+                   ctx, self.curProc.lvProc, "indir_sl_merge");
 
       (* Let's switch to self.staticLinkBB first and take care of that case
          while exprStack is right for it. *)
@@ -5649,7 +5652,7 @@ PROCEDURE compare_exchange (             self            : U;
     lVal := LLVM.BuildExtractValue(builderIR, lVal, 1, "extract_value");
     (* the extract value is i1 which we need to extend for the store.  The
        result of Atomic CompareSwap is BOOLEAN which we know is i8 *)
-    lVal := LLVM.BuildZExt(builderIR, lVal, i8Type, "zext");
+    lVal := LLVM.BuildZExt(builderIR, lVal, I8Type, "zext");
 
     NARROW(s2, LvExpr).lVal := lVal;
     Pop(self.exprStack, 2);
@@ -5740,20 +5743,20 @@ PROCEDURE CreateModuleFlags (self: U) =
     END;
 
     LLVM.AddModuleFlag(modRef, behave, debugType, Text.Length(debugType),
-                       LLVM.ValueAsMetadata( LLVM.ConstInt(LLVM.Int32Type(),
+                       LLVM.ValueAsMetadata( LLVM.ConstInt(I32Type,
                        VAL(debugVer, LONGINT), TRUE)));
     LLVM.AddModuleFlag(modRef, behave, debugInfoVer, Text.Length(debugInfoVer),
-                       LLVM.ValueAsMetadata( LLVM.ConstInt(LLVM.Int32Type(),
+                       LLVM.ValueAsMetadata( LLVM.ConstInt(I32Type,
                        VAL(M3DIB.LLVMDebugMetadataVersion(), LONGINT), TRUE)));
     LLVM.AddModuleFlag(modRef, behave, wchar, Text.Length(wchar),
-                       LLVM.ValueAsMetadata( LLVM.ConstInt(LLVM.Int32Type(),
+                       LLVM.ValueAsMetadata( LLVM.ConstInt(I32Type,
                        VAL(self.widecharSize DIV 8, LONGINT), TRUE)));
     (* just copying C PIC and PIE levels, not sure where we get these vals *)
     LLVM.AddModuleFlag(modRef, behave, picLevel, Text.Length(picLevel),
-                       LLVM.ValueAsMetadata( LLVM.ConstInt(LLVM.Int32Type(),
+                       LLVM.ValueAsMetadata( LLVM.ConstInt(I32Type,
                        2L, TRUE)));
     LLVM.AddModuleFlag(modRef, behave, pieLevel, Text.Length(pieLevel),
-                       LLVM.ValueAsMetadata( LLVM.ConstInt(LLVM.Int32Type(),
+                       LLVM.ValueAsMetadata( LLVM.ConstInt(I32Type,
                        2L, TRUE)));
   END CreateModuleFlags;
 
@@ -6050,7 +6053,7 @@ PROCEDURE DebugLine (self: U; line: INTEGER := 0) =
       END;
       (* use self.curLine unless line is positive *)
       IF line = 0 THEN line := self.curLine; END;
-      mloc := M3DIB.CreateDebugLocation(globContext, line, 0, scope, NIL);
+      mloc := M3DIB.CreateDebugLocation(ctx, line, 0, scope, NIL);
       LLVM.SetCurrentDebugLocation2(builderIR, mloc);
     END;
   END DebugLine;
@@ -6292,9 +6295,9 @@ PROCEDURE DebugSubrange (self: U; subrange: SubrangeDebug): MetadataRef =
     EVAL TInt.ToInt(subrange.count, count);
     upper := lower + count - 1;
 
-    val := LLVM.ConstInt(LLVM.Int64Type(), VAL(lower, LONGINT), TRUE);
+    val := LLVM.ConstInt(I64Type, VAL(lower, LONGINT), TRUE);
     lowerBound := LLVM.ValueAsMetadata(val);
-    val := LLVM.ConstInt(LLVM.Int64Type(), VAL(upper, LONGINT), TRUE);
+    val := LLVM.ConstInt(I64Type, VAL(upper, LONGINT), TRUE);
     upperBound := LLVM.ValueAsMetadata(val);
 
     result := M3DIB.CreateSubrangeType(
@@ -6358,9 +6361,9 @@ PROCEDURE DebugArray (self: U; a: ArrayDebug): MetadataRef =
       EVAL TInt.ToInt(min, lower);
       EVAL TInt.ToInt(num, count);
       upper := lower + count - 1;
-      val := LLVM.ConstInt(LLVM.Int64Type(), VAL(lower, LONGINT), TRUE);
+      val := LLVM.ConstInt(I64Type, VAL(lower, LONGINT), TRUE);
       lowerBound := LLVM.ValueAsMetadata(val);
-      val := LLVM.ConstInt(LLVM.Int64Type(), VAL(upper, LONGINT), TRUE);
+      val := LLVM.ConstInt(I64Type, VAL(upper, LONGINT), TRUE);
       upperBound := LLVM.ValueAsMetadata(val);
       srBaseType := DebugLookupLL(self, UID_INTEGER);
       srName := typeName & "_SR";
@@ -6380,7 +6383,7 @@ PROCEDURE DebugArray (self: U; a: ArrayDebug): MetadataRef =
 
     elt := DebugType(self, a.elt);
     IF ISTYPE(elt, PackedDebug) THEN
-      stride := LLVM.ValueAsMetadata(LLVM.ConstInt(LLVM.Int64Type(),
+      stride := LLVM.ValueAsMetadata(LLVM.ConstInt(I64Type,
                                      elt.bitSize, TRUE));
     ELSE
       stride := NIL;
@@ -6421,7 +6424,7 @@ PROCEDURE DebugOpenArray (self: U; a: OpenArrayDebug; ofs: CARDINAL := 0):
     ELSE
       elts := DebugLookupLL(self, a.elt);
       IF ISTYPE(base, PackedDebug) THEN
-        stride := LLVM.ValueAsMetadata(LLVM.ConstInt(LLVM.Int64Type(),
+        stride := LLVM.ValueAsMetadata(LLVM.ConstInt(I64Type,
                                        base.bitSize, TRUE));
       ELSE
         stride := NIL;
@@ -6431,7 +6434,7 @@ PROCEDURE DebugOpenArray (self: U; a: OpenArrayDebug; ofs: CARDINAL := 0):
     EnsureDebugTypeName(a);
     typeName := M3ID.ToText(a.typeName);
     (* open arrays are zero indexed *)
-    lowerBound := LLVM.ValueAsMetadata(Zero(LLVM.Int64Type()));
+    lowerBound := LLVM.ValueAsMetadata(Zero(I64Type));
 
     INC(ofs, ADRSIZE(ADDRESS));  (* skip data pointer *)
     upperBound := Expr(self, DC.DW_OP_push_object_address,
@@ -6955,8 +6958,7 @@ PROCEDURE DebugVar (self: U; v: LvVar; argNum: CARDINAL := 0) =
                    Flags := 0, AlignInBits := 0);
     END;
 
-    diLoc :=
-      M3DIB.CreateDebugLocation(globContext, self.curLine, 0, scope, NIL);
+    diLoc := M3DIB.CreateDebugLocation(ctx, self.curLine, 0, scope, NIL);
     expr := GetVarExpr(self, v);
 
     decl := M3DIB.InsertDeclareRecordAtEnd(
