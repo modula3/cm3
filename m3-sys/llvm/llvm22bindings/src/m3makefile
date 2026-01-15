@@ -73,7 +73,7 @@ end
   Import the LLVM libraries using llvm-config.
   LLVM library order is important and hard to get correct with
   such a large number of libs and new libraries added with
-  each new version. Using llvm-config --libnames takes the guesswork out.
+  each new version. Using llvm-config --libs takes the guesswork out.
   We get the list of libraries in the order they are needed in the link.
   Then reverse the order.
 */
@@ -85,7 +85,10 @@ proc llvmlibs() is
       local libdir= skipr(llvm_libdir[1])
 
       % get the full list of lib names of which we only use a small number
-      local libnames = q_exec_get ("llvm-config --libnames")
+      %we only use components Core Target BitWriter TransformUtils which could
+      %be used to restrict the --libs in case of llvm build with multiple
+      %static libs but some distributions only generate the single LLVMLib
+      local libnames = q_exec_get ("llvm-config --libs")
       local lib_arr = split(skipr(libnames[1])," ")
 
       local lib_tab = {}
@@ -101,21 +104,17 @@ proc llvmlibs() is
         %lets hope there are no more than 500 libs
         key = sub(key,1,500)
         lib = lib_tab{key}
-        if equal (OS_TYPE, "POSIX")
-          lib = sub(lib,3,len(lib)) %remove lib prefix
-	end
-        if equal(OS, "Windows_NT")	
-          lib = subst(lib,".lib","",1) %remove suffix
-	else
-          lib = subst(lib,".a","",1) %remove suffix
-          lib = subst(lib,".so","",1) %or remove suffix
-	end
+
+        lib = sub(lib,2,len(lib)) %remove -l prefix
+
         %write("key: " & key & " val " & lib & "\n")
         import_lib(lib,libdir)
       end
 end
 
 %Find out which version of LLVM we have installed.
+%if this fails (llvm-config not found) check if your path
+%is set to the installed bin dir for llvm
 proc llvmver() is
       local llvm_version = q_exec_get ("llvm-config --version")
       local ver_arr = split(skipr(llvm_version[1]),".")
