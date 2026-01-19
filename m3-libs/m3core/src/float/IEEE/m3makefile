@@ -7,8 +7,11 @@
 
 Interface ("Real")
 Interface ("LongReal")
-Interface ("Extended")
+%Interface ("Extended")
 
-implementation ("RealFloat")
-implementation ("LongFloat")
-implementation ("ExtendedFloat")
+%Extended interface one of these dirs depending on backend
+if not equal (M3_BACKEND_MODE, "IntegratedObject")
+  include_dir ("ext64")
+else
+  include_dir ("ext128")
+end
