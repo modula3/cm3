@@ -5,5 +5,4 @@
 % Last modified on Fri Jul 30 09:36:28 PDT 1993 by kalsow
 %      modified on Fri May  7 14:19:12 PDT 1993 by muller
 
-Interface ("Ext128")
 Interface ("ExtendedRep")
