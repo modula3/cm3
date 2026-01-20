@@ -9,7 +9,7 @@ Interface ("Real")
 Interface ("LongReal")
 %Interface ("Extended")
 
-%Extended interface one of these dirs depending on backend
+%Extended interface - one of these dirs depending on backend
 if not equal (M3_BACKEND_MODE, "IntegratedObject")
   include_dir ("ext64")
 else

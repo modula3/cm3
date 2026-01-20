@@ -7,4 +7,11 @@
 
 Interface ("RealRep")
 Interface ("LongRealRep")
-Interface ("ExtendedRep")
+%Interface ("ExtendedRep")
+
+%ExtendedRep interface is one of these dirs depending on backend
+if equal (M3_BACKEND_MODE, "IntegratedObject")
+  include_dir ("ext64")
+else
+  include_dir ("ext128")
+end
