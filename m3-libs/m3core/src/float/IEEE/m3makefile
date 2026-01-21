@@ -13,7 +13,7 @@ implementation ("LongFloat")
 
 %Extended interface and ExtendedFloat implementation 
 % - one of these dirs depending on backend
-if equal (M3_BACKEND_MODE, "IntegratedObject")
+if equal (M3_BACKEND_MODE, "IntegratedObject") or equal (M3_BACKEND_MODE, "0")
   include_dir ("ext64")
 else
   include_dir ("ext128")
