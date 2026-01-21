@@ -11,8 +11,8 @@ UNSAFE MODULE RandomReal;
 
 IMPORT ExtendedRep, LongRealRep, RealRep, Random, Word;
 
-(* Implements Random.Real and Random.LongReal for IEEE floating-point
-   format (both big-endian and little-endian). *)
+(* Implements Random.Real, Random.LongReal and Random.Extended for
+   IEEE floating-point format (both big-endian and little-endian). *)
 
 PROCEDURE Real (r: Random.T): REAL =
   CONST ExponentBias = 127;  (* Exponent bias for REAL *)
