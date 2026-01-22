@@ -156,7 +156,8 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
       Typenames := TRUE;          (* on declare_param, etc. *)
     END;
 
-    IF backend_mode IN BackendIntegratedSet THEN
+    IF Text.Equal(OS_name, "WIN32") AND
+       NOT (backend_mode IN  BackendStAloneLlvmSet) THEN 
       (* treat EXTENDED AS LONGREAL *)
       Extended  := Float_type{CGType.XReel, Precision.Extended, 64, 64, 8,
                      Float{Precision.Extended, 0, -1.79769313486231570x+308},
