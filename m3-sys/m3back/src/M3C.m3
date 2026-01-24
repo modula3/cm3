@@ -4787,7 +4787,6 @@ CONST text = ARRAY ConvertOp OF TEXT{
     "#ifndef m3_trunc\n" &
     "#define m3_trunc m3_trunc\n" &
     "#ifdef _WIN32\n" &
-    "double __cdecl trunc(double);\n" &
     "static INT64 __stdcall m3_trunc(EXTENDED f) {\n" &
     " return (INT64)trunc(f); }\n" &
     "#else\n" &
@@ -4800,7 +4799,6 @@ CONST text = ARRAY ConvertOp OF TEXT{
     "#ifndef m3_floor\n" &
     "#define m3_floor m3_floor\n" &
     "#ifdef _WIN32\n" &
-    "double __cdecl floor(double);\n" &
     "static INT64 __stdcall m3_floor(EXTENDED f) {\n" &
     " return (INT64)floor(f); }\n" &
     "#else\n" &
@@ -4813,7 +4811,6 @@ CONST text = ARRAY ConvertOp OF TEXT{
     "#ifndef m3_ceil\n" &
     "#define m3_ceil m3_ceil\n" &
     "#ifdef _WIN32\n" &
-    "double __cdecl ceil(double);\n" &
     "static INT64 __stdcall m3_ceil(EXTENDED f) {\n" &
     " return (INT64)ceil(f); }\n" &
     "#else\n" &
@@ -5986,8 +5983,10 @@ BEGIN
             ch := 'e';
         ELSIF ch = 'x' OR ch = 'X' THEN
             (* suffix := 'L'; if actually using long double *)
-            (* suffix := 'Q'; if actually using _Float128 *)
-            suffix := 'Q';
+            (* suffix := 'Q'; if actually using _Float128 on POSIX *)
+            IF NOT Text.Equal(Target.OS_name,"WIN32") THEN
+              suffix := 'Q';
+            END;
             ch := 'e';
         END;
         cBuf[j] := ch;
