@@ -32,8 +32,7 @@ if not defined ("SYSTEM_LIBS")
 
 SYSTEM_LIBS =
 {
-    "LIBC"       : [ "-lm", "-pthread" ],
-    "QUADMATH"   : [ "-lquadmath" ],
+    "LIBC"       : [ "-lm", "-lquadmath", "-pthread" ],
     "LEX-YACC"   : [ "-ll" ],
     "FLEX-BISON" : [ "-lfl" ],
 % See Linux.common, FreeBSD.common, OpenBSD.common, NetBSD.common, etc.
