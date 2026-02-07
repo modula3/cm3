@@ -2,7 +2,7 @@
 name: AMD64_LINUX
 
 on:
-  workfloaw_dispatch:
+  workflow_dispatch:
     push:
 
   workflow_call:
