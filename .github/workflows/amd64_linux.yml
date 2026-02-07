@@ -9,7 +9,7 @@ on:
         required: false
         type: string
       release:
-        default: https://github.com/modula3/cm3/releases/download/d5.11.9
+        default: https://github.com/modula3/cm3/releases/download/d5.11.11
         required: false
         type: string
       bootstrap:
