@@ -2577,7 +2577,11 @@ CONST Prefix = ARRAY OF TEXT {
 "# endif",
 "#endif",
 
-"#include <cmath>",
+"//#include <cmath>",
+"//#define INFINITY 1e10000",
+"#define INFINITY (__builtin_inff ())",
+"//#define NAN (0.0f / 0.0f)",
+"#define NAN (__builtin_nanf(\"\"))",
 "#define Infinity INFINITY",
 "#define NaN NAN",
 
