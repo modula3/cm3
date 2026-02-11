@@ -735,6 +735,9 @@ extern double ulp ANSI((double));
  * and -DNAN_WORD1=...  values if necessary.  This should still work.
  * (On HP Series 700/800 machines, -DNAN_WORD0=0x7ff40000 works.)
  */
+
+#define INFNAN_CHECK
+#define No_Hex_NaN
 /*
 #ifdef IEEE_Arith
 #ifdef IEEE_MC68k
@@ -1324,9 +1327,8 @@ Bigint *d2b_D2A(double d, int *e, int *bits) {
 #ifndef Sudden_Underflow
   int i;
 #endif
-  int de, k, de2;
+  int de, k;
   ULong *x, y, z;
-  long int deb;
 #ifdef VAX
   ULong d0, d1;
   d0 = word0(d) >> 16 | word0(d) << 16;
@@ -1351,9 +1353,6 @@ Bigint *d2b_D2A(double d, int *e, int *bits) {
   z |= Exp_msk11;
 #endif
 #else
-  de2 = d0;
-  de2 = Exp_shift;
-  de2 = d0 >> Exp_shift;
 
   if ((de = (int)(d0 >> Exp_shift)) != 0)
     z |= Exp_msk1;
@@ -1707,7 +1706,6 @@ Bigint *s2b_D2A(CONST char *s, int nd0, int nd, ULong y9) {
 double ratio_D2A(Bigint *a, Bigint *b) {
   double da, db;
   int k, ka, kb;
-  unsigned long int deba, debb;
 
   dval(da) = b2d_D2A(a, &ka);
   dval(db) = b2d_D2A(b, &kb);
@@ -2139,7 +2137,7 @@ pcheck:
     case FPI_Round_zero:
       break;
     case FPI_Round_near:
-      if (lostbits & 2 && (lostbits & 1) | x[0] & 1)
+      if (lostbits & 2 && (lostbits & 1) | (x[0] & 1))
         up = 1;
       break;
     case FPI_Round_up:
@@ -2157,7 +2155,7 @@ pcheck:
             x[nbits >> kshift] & 1 << (nbits & kmask))
           irv = STRTOG_Normal;
       } else if (b->wds > k ||
-                 (n = nbits & kmask) != 0 && hi0bits_D2A(x[k - 1]) < 32 - n) {
+                 ((n = nbits & kmask) != 0 && hi0bits_D2A(x[k - 1]) < 32 - n)) {
         rshift_D2A(b, 1);
         if (++e > fpi->emax)
           goto ovfl;
@@ -2410,6 +2408,11 @@ int strtodg_D2A(CONST char *s00, char **se, FPI *fpi, Long *exp, ULong *bits) {
   ULong y, z;
   Bigint *ab, *bb, *bb1, *bd, *bd0, *bs, *delta, *rvb, *rvb0;
 
+  //silence warning about decpt
+  decpt = 0;
+  if (decpt > (int)*exp)
+	  ;
+
   irv = STRTOG_Zero;
   denorm = sign = nz0 = nz = 0;
   dval(rv) = 0.;
@@ -2551,9 +2554,9 @@ dig_done:
         switch (c) {
         case 'i':
         case 'I':
-          if (match(&s, "nf")) {
+          if (match_D2A(&s, "nf")) {
             --s;
-            if (!match(&s, "inity"))
+            if (!match_D2A(&s, "inity"))
               ++s;
             irv = STRTOG_Infinite;
             goto infnanexp;
@@ -2561,7 +2564,7 @@ dig_done:
           break;
         case 'n':
         case 'N':
-          if (match(&s, "an")) {
+          if (match_D2A(&s, "an")) {
             irv = STRTOG_NaN;
             *exp = fpi->emax + 1;
 #ifndef No_Hex_NaN
@@ -2910,7 +2913,7 @@ rv_notOK:
       } else
         irv = STRTOG_Normal | STRTOG_Inexhi;
 
-      if (bbbits < nbits && !denorm || !(rvb->x[0] & 1))
+      if ((bbbits < nbits && !denorm) || !(rvb->x[0] & 1))
         break;
       if (dsign) {
         rvb = increment_D2A(rvb);
@@ -3525,7 +3528,7 @@ char *gdtoa_D2A(FPI *fpi, int be, ULong *bits, int *kindp, int mode,
           goto ret1;
         }
         dval(d) += dval(d);
-        if (dval(d) > ds || dval(d) == ds && L & 1) {
+        if (dval(d) > ds || (dval(d) == ds && L & 1)) {
         bump_up:
           inex = STRTOG_Inexhi;
           while (*--s == '9')
@@ -3696,9 +3699,9 @@ char *gdtoa_D2A(FPI *fpi, int be, ULong *bits, int *kindp, int mode,
         goto ret;
       }
 #endif
-      if (j < 0 || j == 0 && !mode
+      if (j < 0 || (j == 0 && !mode
 #ifndef ROUND_BIASED
-                       && !(bits[0] & 1)
+                       && !(bits[0] & 1))
 #endif
       ) {
         if (rdir && (b->wds > 1 || b->x[0])) {
@@ -3723,7 +3726,7 @@ char *gdtoa_D2A(FPI *fpi, int be, ULong *bits, int *kindp, int mode,
         if (j1 > 0) {
           b = lshift_D2A(b, 1);
           j1 = cmp_D2A(b, S);
-          if ((j1 > 0 || j1 == 0 && dig & 1) && dig++ == '9')
+          if ((j1 > 0 || (j1 == 0 && dig & 1)) && dig++ == '9')
             goto round_9_up;
           inex = STRTOG_Inexhi;
         }
@@ -3766,13 +3769,13 @@ char *gdtoa_D2A(FPI *fpi, int be, ULong *bits, int *kindp, int mode,
   /* Round off last digit */
 
   if (rdir) {
-    if (rdir == 2 || b->wds <= 1 && !b->x[0])
+    if (rdir == 2 || (b->wds <= 1 && !b->x[0]))
       goto chopzeros;
     goto roundoff;
   }
   b = lshift_D2A(b, 1);
   j = cmp_D2A(b, S);
-  if (j > 0 || j == 0 && dig & 1) {
+  if (j > 0 || (j == 0 && dig & 1)) {
   roundoff:
     inex = STRTOG_Inexhi;
     while (*--s == '9')
@@ -4089,7 +4092,7 @@ void ULtof(ULong *L, ULong *bits, Long exp, int k) {
 
   case STRTOG_Normal:
   case STRTOG_NaNbits:
-    L[0] = bits[0] & 0x7fffff | (exp + 0x7f + 23) << 23;
+    L[0] = (bits[0] & 0x7fffff) | (exp + 0x7f + 23) << 23;
     break;
 
   case STRTOG_Denormal:
@@ -4337,10 +4340,9 @@ int strtof0(CONST char *s, char **sp, int rounding, float *f) {
 
 float m3_strtof(CONST char *s, char **sp) {
   float f;
-  int flags;
   int rounding = FPI_Round_near;
   //ignoring flags
-  flags = strtof0(s, sp, rounding, &f); 
+  /*flags = */ (void) strtof0(s, sp, rounding, &f); 
   return f;
 }
 
@@ -4368,10 +4370,9 @@ int strtod0(CONST char *s, char **sp, int rounding, double *d) {
 
 double m3_strtod(CONST char *s, char **sp) {
   double d;
-  int flags;
   int rounding = FPI_Round_near;
   //ignoring flags
-  flags = strtod0(s, sp, rounding, &d); 
+  /*flags = */ (void) strtod0(s, sp, rounding, &d); 
   return d;
 }
 
